@@ -1,174 +1,173 @@
 ---
 title: "Taildrop"
-description: "Send files between your personal devices on a Tailscale network."
+description: "在 Tailscale 网络上的个人设备之间互传文件。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** Taildrop is currently in alpha.
+> **注意：** Taildrop 目前处于 alpha 阶段。
 
-> **Note:** Taildrop is available for [all plans](https://tailscale.com/pricing).
+> **注意：** Taildrop 适用于[所有套餐](https://tailscale.com/pricing)。
 
-Taildrop lets you send files between your personal devices on a Tailscale network (known as a tailnet).
+Taildrop 让你能在 Tailscale 网络（即 tailnet）上的个人设备之间互传文件。
 
-Like all traffic sent over Tailscale, Taildrop transfers files over encrypted peer-to-peer connections, using the fastest available path. This makes it a great solution for sending sensitive or large files without third-party servers in the middle.
+与所有通过 Tailscale 发送的流量一样，Taildrop 会使用可用的最快路径，通过加密的点对点连接传输文件。这使它成为在不经过第三方服务器的情况下发送敏感文件或大文件的理想方案。
 
-> **Note:**
+> **注意：**
 >
-> Taildrop is in public alpha, with many planned improvements to the user interface and capabilities. To try Taildrop, you must [opt-in for your network][ar-enable-taildrop-for-your-network].
+> Taildrop 目前处于公开 alpha 阶段，用户界面和功能方面还有许多计划中的改进。要试用 Taildrop，你必须[为你的网络启用 Taildrop][ar-enable-taildrop-for-your-network]。
 
-## Enable Taildrop for your network
+## 为你的网络启用 Taildrop
 
-Because Taildrop is an alpha feature, you must opt-in your tailnet to the feature to use it. You can do so from the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console, by turning on the **Send Files** feature.
+由于 Taildrop 是 alpha 功能，你必须先让 tailnet 选择加入该功能才能使用。你可以在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 设置页面中，开启 **Send Files**（发送文件）功能。
 
-## Client setup
+## 客户端设置
 
-Except for network access storage (NAS) devices, Taildrop does not require client setup other than [installing Tailscale][docs-installation].
+除网络附加存储（NAS）设备外，Taildrop 无需任何客户端设置，只需[安装 Tailscale][docs-installation] 即可。
 
-If you need to set up Taildrop for a NAS device, refer to [Taildrop with NAS devices][docs-taildrop-nas].
+如果你需要为 NAS 设备设置 Taildrop，请参阅[Taildrop 与 NAS 设备][docs-taildrop-nas]。
 
-## Send files with Taildrop
+## 使用 Taildrop 发送文件
 
-You can transfer any kind of file with Taildrop.
+你可以用 Taildrop 传输任何类型的文件。
 
-Taildrop is currently limited to sending files between your own personal devices. You cannot send files to devices owned by other users (even users on the same Tailscale network).
+Taildrop 目前仅限在你自己的个人设备之间发送文件。你不能向其他用户的设备发送文件（即使这些用户在同一个 Tailscale 网络中）。
 
-> **Note:**
+> **注意：**
 >
-> Taildrop permits you to share files between devices that you are logged in to, even if access control policies are used to restrict access to the devices. You cannot use Taildrop to send files to and from nodes you have tagged.
+> Taildrop 允许你在已登录你自己账号的设备之间共享文件，即使这些设备使用了访问控制策略来限制访问。你不能使用 Taildrop 向已打标签的节点发送文件，也不能从这些节点接收文件。
 
-Taildrop also requires both devices to be running Tailscale.
+此外，Taildrop 要求两台设备都在运行 Tailscale。
 
 #### macOS
 
-Before using Taildrop for the first time, it must be enabled in **System Settings** > **General** > **Login Items & Extensions** > **Sharing**. Enable sharing for **Tailscale**.
+首次使用 Taildrop 之前，必须在**系统设置**（System Settings）> **通用**（General）> **登录项与扩展**（Login Items & Extensions）> **共享**（Sharing）中启用它。为 **Tailscale** 开启共享。
 
-*（图：The macOS System Settings window for the Tailscale extension with 'Sharing' checked.）*
+*（图：Tailscale 扩展的 macOS 系统设置窗口，已勾选"Sharing"。）*
 
-Send files to other devices by using the right-click **Share** menu.
+通过右键菜单中的**共享**（Share）向其他设备发送文件。
 
-*（图：A macOS Finder window with a file's context menu open. The 'Share' menu option is selected and opening a second menu. Tailscale is selected in the second menu.）*
+*（图：macOS Finder 窗口，打开了一个文件的右键菜单。已选中"Share"菜单项并展开二级菜单，二级菜单中选中了 Tailscale。）*
 
 #### iOS
 
-Send files to your other devices using the Share menu. Choose Tailscale and tap the device you'd like to send files to.
+使用共享菜单向你的其他设备发送文件。选择 Tailscale，然后点按你想发送到的设备。
 
-*（图：An example of the share options for a photo. In the list of applications, the Tailscale option is indicated with a red outline.）*
+*（图：一张照片的共享选项示例。应用列表中，Tailscale 选项用红色轮廓标出。）*
 
-> **Note:**
+> **注意：**
 >
-> The first time you use Taildrop, the **Tailscale** option may be hidden in the **More** section of the menu. iOS sorts Share apps by frequency of use, and so Tailscale should be visible once you've sent a file.
+> 首次使用 Taildrop 时，**Tailscale** 选项可能隐藏在菜单的**更多**（More）区域中。iOS 会按使用频率对共享应用排序，因此发送过一个文件之后，Tailscale 应该就会显示出来。
 
 #### Windows
 
-Send files to other devices by right-clicking on the files and choosing **Send with Tailscale** from the menu.
+右键点击文件，然后从菜单中选择 **Send with Tailscale**（通过 Tailscale 发送），即可向其他设备发送文件。
 
-*（图：A Windows desktop with a file's context menu open. The 'Send with Tailscale...' option is listed.）*
+*（图：Windows 桌面，打开了一个文件的右键菜单，列表中有"Send with Tailscale..."选项。）*
 
 #### Android
 
-Send files to your other devices using the **Share** button. Choose Tailscale and tap the device you'd like to send files to.
+使用**共享**（Share）按钮向你的其他设备发送文件。选择 Tailscale，然后点按你想发送到的设备。
 
-*（图：An example of the share options for a photo. In the list of applications, the Tailscale application is listed.）*
+*（图：一张照片的共享选项示例。应用列表中列出了 Tailscale 应用。）*
 
-> **Note:**
+> **注意：**
 >
-> The first time you use Taildrop, the **Tailscale** option may be hidden in the **More** section of the **Share to Apps** list. Android sorts Share apps by frequency of use, and so Tailscale should be visible once you've sent a file.
+> 首次使用 Taildrop 时，**Tailscale** 选项可能隐藏在 **Share to Apps**（共享到应用）列表的**更多**（More）区域中。Android 会按使用频率对共享应用排序，因此发送过一个文件之后，Tailscale 应该就会显示出来。
 
 #### Linux
 
-You can send files using the [`tailscale file`][docs-cli-file] command of the [command-line interface (CLI)][docs-cli].
+你可以使用[命令行界面（CLI）][docs-cli]的 [`tailscale file`][docs-cli-file] 命令发送文件。
 
 ```shell
 tailscale file cp <files> <name-or-ip>:
 ```
 
-For example, you can send a text file to your phone with the command:
+例如，你可以用以下命令向手机发送一个文本文件：
 
 ```shell
 tailscale file cp ./my-file.txt my-phone:
 ```
 
-The last argument is the name of the destination followed by a colon, intended to disambiguate filenames from device names, and to roughly match the `scp` syntax.
+最后一个参数是目标设备的名称加一个冒号，目的是区分文件名和设备名，并大致沿用 `scp` 的语法。
 
-You can find the IP addresses and names of your other nodes using the [`tailscale status`][docs-cli-status] command.
+你可以使用 [`tailscale status`][docs-cli-status] 命令查看其他节点的 IP 地址和名称。
 
-### Resume interrupted transfers
+### 恢复中断的传输
 
-If your Taildrop file transfer is interrupted, you can retry the transfer and Taildrop will attempt to resume the transmission where it left off. This is especially useful when transferring large files. In most cases, a transfer can be resumed for up to an hour after it failed. For now, Taildrop can resume transfers on all platforms except when a macOS or iOS device is receiving the file.
+如果 Taildrop 文件传输被中断，你可以重试传输，Taildrop 会尝试从中断处继续传输。这在传输大文件时尤其有用。在大多数情况下，传输失败后一小时内都可以恢复。目前，除 macOS 或 iOS 设备作为接收方的情况外，Taildrop 在所有平台上都支持恢复传输。
 
-## Receive files with Taildrop
+## 使用 Taildrop 接收文件
 
 #### macOS
 
-Files received on macOS will be placed in the `~/Downloads` directory.
+在 macOS 上接收的文件会放在 `~/Downloads` 目录中。
 
 #### iOS
 
-Files received on iOS will pop up a notification. Opening this notification will show the files in Files.app.
+在 iOS 上接收文件时会弹出通知。打开该通知即可在"文件" App 中查看这些文件。
 
 #### Windows
 
-Files received on Windows will be placed in the `C:\Users\(username)\Downloads` directory if you are running
-Tailscale v1.34 or later. If you are running an earlier version, files received will be placed in the `C:\Users\(username)\Desktop` directory.
+如果你运行的是 Tailscale v1.34 或更高版本，在 Windows 上接收的文件会放在 `C:\Users\(username)\Downloads` 目录中。如果运行的是更早的版本，接收的文件会放在 `C:\Users\(username)\Desktop` 目录中。
 
 #### Android
 
-Files received on Android will pop up a notification. Opening this notification will show the files in the Downloads section of the Files app.
+在 Android 上接收文件时会弹出通知。打开该通知即可在"文件" App 的"下载"分区中查看这些文件。
 
 #### Linux
 
-You can receive files using the [`tailscale file`][docs-cli-file] command of the [command-line interface (CLI)][docs-cli].
+你可以使用[命令行界面（CLI）][docs-cli]的 [`tailscale file`][docs-cli-file] 命令接收文件。
 
 ```shell
 sudo tailscale file get .
 ```
 
-Where `.` can be any directory you'd like to copy files to.
+其中 `.` 可以是任何你想要将文件复制到的目录。
 
-Because tailscaled runs as root, files are received by root. In the current version, root has to retrieve the files using sudo.
+由于 tailscaled 以 root 身份运行，文件由 root 接收。在当前版本中，root 必须使用 sudo 来取回这些文件。
 
-## Example: Securely transfer sensitive documents from your computer to mobile device for easier on-the-go access
+## 示例：将敏感文档从电脑安全传输到移动设备，方便随时随地访问
 
-Finding a way to transfer sensitive files (such as medical or tax documents) between your devices can be fairly involved. Cloud-based transfer or file storage solutions carry the security and vulnerability risks of having your documents accessible over the internet. Airdrop works without needing to upload anything to the internet, but only between Apple devices and only when they're close to one another.
+想在你的设备之间传输敏感文件（例如医疗或税务文档），往往相当麻烦。基于云的传输或文件存储方案会让你的文档可以通过互联网访问，带来安全和漏洞风险。AirDrop 无需将任何内容上传到互联网，但只能在 Apple 设备之间使用，而且要求设备彼此靠近。
 
-Taildrop provides an easy way to share your sensitive files between any of your devices. And no matter where your devices are, the files are sent over encrypted peer-to-peer connections. So, you're guaranteed the only machines that will ever have access to the files during the transfer are the sending and receiving devices.
+Taildrop 提供了一种在你的任意设备之间共享敏感文件的简便方法。而且无论你的设备在哪里，文件都通过加密的点对点连接发送。因此你可以确信，传输过程中能访问这些文件的只有发送和接收这两台设备。
 
-## Example: Send family photos from your phone to your computer
+## 示例：将家人照片从手机发送到电脑
 
-Taildrop lets you share your photos cross-platform without needing to upload them anywhere.
+Taildrop 让你可以跨平台共享照片，而无需将照片上传到任何地方。
 
-## Example: Share screenshots to your computer
+## 示例：将截图共享到电脑
 
-Ever take screenshots or screen recordings but don't actually need them on the device you captured them on? Here at Tailscale we take a lot of screenshots of our client apps during the development process that we then have to transfer to our computers so we can upload them to a desktop tool such as GitHub or Figma. Taildrop helps you quickly transfer these, so you can seamlessly switch back and forth between working on the sending and receiving devices.
+有没有截过图或录过屏，却发现其实并不需要它们留在截取时所用的设备上？在 Tailscale，我们在开发过程中会对客户端应用截取大量屏幕截图，然后必须把它们传到电脑上，才能上传到 GitHub 或 Figma 等桌面工具。Taildrop 帮你快速传输这些文件，让你可以在发送设备和接收设备之间无缝地来回切换工作。
 
-## Example: Transfer Google Photos albums to a personal photos server
+## 示例：将 Google Photos 相册传输到个人照片服务器
 
-If you're looking to transfer your photos out of Google Photos and to a personal media server, Taildrop may be able to help you out. The steps below describe how to move an album from Google Photos to a remote personal machine.
+如果你想把照片从 Google Photos 迁移到个人媒体服务器，Taildrop 或许能帮上忙。以下步骤介绍如何将一个相册从 Google Photos 移动到远程个人机器。
 
-**Steps:**
+**步骤：**
 
-1. From your computer's browser, go to the Google Photos website and select an album.
+1. 在电脑浏览器中打开 Google Photos 网站，选择一个相册。
 
-2. In the top right corner, select the rightmost menu item and choose **Download all**.
+2. 在右上角，选择最右侧的菜单项，然后选择 **Download all**（全部下载）。
 
-   *（图：Example of a Google Photos album. The rightmost menu is open and 'Download all' is selected.）*
+   *（图：Google Photos 相册示例。最右侧菜单已展开，选中了"Download all"。）*
 
-3. This will download a zip file of the album to your computer. If this computer is the end destination that you want your photos on, you can stop here, no need to Taildrop.
+3. 这样会将相册的 zip 文件下载到你的电脑。如果这台电脑就是照片的最终目的地，那么到此为止即可，无需再使用 Taildrop。
 
-4. But if you want to transfer your photos to a remote device (maybe a device you've dedicated as a media server), you can right-click on the zip file and choose to share with Taildrop.
+4. 但如果你想把照片传输到远程设备（比如一台专门用作媒体服务器的设备），可以右键点击该 zip 文件，选择通过 Taildrop 共享。
 
-   *（图：Context menu for a zip file of album photos. The 'Share' menu option is selected and opening a second menu. Tailscale is selected in the second menu.）*
+   *（图：相册照片 zip 文件的右键菜单。已选中"Share"菜单项并展开二级菜单，二级菜单中选中了 Tailscale。）*
 
-5. From the Taildrop modal, select your media server and the zip file will be transferred to that device.
+5. 在 Taildrop 弹窗中选择你的媒体服务器，zip 文件就会被传输到该设备。
 
-   *（图：The modal window with a list of devices. The selected device has a progress bar to indicate the transfer is in progress.）*
+   *（图：显示设备列表的弹窗。所选设备上有进度条，表示传输正在进行。）*
 
-   *（图：The modal window with a list of devices. The selected device has a checkmark to indicate the transfer is complete.）*
+   *（图：显示设备列表的弹窗。所选设备上有对勾，表示传输已完成。）*
 
-6. After the transfer completes, you can delete the zip file from your original device.
+6. 传输完成后，你可以从原设备上删除该 zip 文件。
 
-[ar-enable-taildrop-for-your-network]: #enable-taildrop-for-your-network
+[ar-enable-taildrop-for-your-network]: #为你的网络启用-taildrop
 
 [docs-cli-file]: /docs/reference/tailscale-cli#file
 

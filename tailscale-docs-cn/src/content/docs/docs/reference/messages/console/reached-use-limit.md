@@ -1,36 +1,36 @@
 ---
-title: "Reached use limit"
-description: "This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and "
+title: "已达到使用上限"
+description: "本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jul 31, 2025
+最后验证于 Jul 31, 2025
 
-This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the admin console
+## 管理控制台中显示的消息
 
 Reached use limit
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-This issue can occur for the following reasons:
+出现此问题的原因可能有：
 
-* You are trying to add more users than your current plan permits. This is most common with tailnets on the Personal plan. The Personal plan gives you six free users.
-* Your account was not properly updated after a plan change. For example, when upgrading from the Personal plan to the Standard plan.
-* Your organization's policies might have a usage that is limiting or preventing access to the tailnet.
+* 你尝试添加的用户数超出了当前套餐允许的数量。这种情况在 Personal 套餐的 tailnet 中最常见。Personal 套餐提供 6 个免费用户名额。
+* 你的账户在套餐变更后未正确更新。例如，从 Personal 套餐升级到 Standard 套餐时。
+* 你组织的策略中可能存在限制或阻止访问 tailnet 的使用条款。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决此问题：
 
-* If your tailnet is on the Personal plan, you can upgrade your plan to accommodate more users. Alternatively, you can remove unnecessary users and add new users.
-* If you are seeing this message for a tailnet on the Standard, Premium, or Enterprise plans, there is likely a configuration issue with your account, as there are no user limits for these plans. To resolve this issue, contact [Tailscale Support][co-support].
-* Contact your IT administrator to determine if there are restrictions related to Tailscale authentication for your custom/private domain.
+* 如果你的 tailnet 使用的是 Personal 套餐，可以升级套餐以容纳更多用户。也可以移除不需要的用户，再添加新用户。
+* 如果你是在 Standard、Premium 或 Enterprise 套餐的 tailnet 上看到这条消息，那么你的账户很可能存在配置问题，因为这些套餐没有用户数量限制。要解决此问题，请联系 [Tailscale 支持][co-support]。
+* 联系你的 IT 管理员，确认你的自定义/私有域名是否存在与 Tailscale 身份验证相关的限制。
 
-## Additional information
+## 更多信息
 
-* For information about the plans we offer, refer to our [Pricing][co-pricing] page.
-* For information about upgrading, refer to [Upgrade your plan][docs-plan-upgrade].
+* 有关我们提供的套餐的信息，请参阅 [定价][co-pricing] 页面。
+* 有关升级的信息，请参阅 [升级你的套餐][docs-plan-upgrade]。
 
 [co-pricing]: https://tailscale.com/pricing
 

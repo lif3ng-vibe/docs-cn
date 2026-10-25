@@ -1,31 +1,31 @@
 ---
-title: "Grant access to models"
-description: "Aperture denies model requests that do not match a grant. However, a new Aperture gateway's default configuration grants all users access to all models. First, allow network access to Aperture through"
+title: "授予模型访问权限"
+description: "Aperture 会拒绝不匹配任何授权的模型请求。不过，新建 Aperture 网关的默认配置会授予所有用户访问所有模型的权限。首先，允许"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
-Aperture denies model requests that do not match a grant. However, a new Aperture gateway's default configuration grants all users access to all models. First, allow network access to Aperture through your tailnet. Then narrow or replace the default grant to control which models each user or group can use.
+Aperture 会拒绝不匹配任何授权的模型请求。不过，新建 Aperture 网关的默认配置会授予所有用户访问所有模型的权限。首先，允许通过你的 tailnet 网络访问 Aperture，然后收窄或替换默认授权，控制每个用户或组可以使用哪些模型。
 
-For details about how Aperture uses Tailscale identity for authentication and access control, refer to [How Aperture works][docs-how-aperture-works]. For deny-by-default access and grant precedence, refer to [how Aperture grants work][docs-how-grants-work].
+关于 Aperture 如何使用 Tailscale 身份进行认证与访问控制的细节，参阅 [Aperture 的工作原理][docs-how-aperture-works]。默认拒绝的访问与授权优先级，参阅 [Aperture 授权的工作原理][docs-how-grants-work]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An [Aperture gateway][docs-get-started] with at least one configured provider.
-* [Admin access][docs-set-up-admin-access] to the Aperture admin dashboard.
-* Access to the Tailscale admin console.
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-get-started]。
+* Aperture 管理仪表盘的[管理员访问权限][docs-set-up-admin-access]。
+* Tailscale 管理控制台的访问权限。
 
-## Step 1: Allow network access to the Aperture gateway
+## 第 1 步：允许网络访问 Aperture 网关
 
-Your tailnet access control rules must allow users to reach the Aperture gateway before they can access models.
+在访问模型之前，你的 tailnet 访问控制规则必须允许用户连到 Aperture 网关。
 
-1. Sign in to the Tailscale admin console.
-2. Go to the [Access controls](https://console.tailscale.com/admin/acls/file) page.
-3. Confirm that your access control rules allow users to connect to the Aperture gateway.
+1. 登录 Tailscale 管理控制台。
+2. 前往 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
+3. 确认你的访问控制规则允许用户连接 Aperture 网关。
 
-The following tailnet policy file example permits all users in `group:ai-users` to connect to the Aperture gateway with the hostname `ai`:
+下面的 tailnet 策略文件示例允许 `group:ai-users` 中的所有用户连接主机名为 `ai` 的 Aperture 网关：
 
 ```json
 {
@@ -48,23 +48,23 @@ The following tailnet policy file example permits all users in `group:ai-users` 
 }
 ```
 
-Replace `<aperture-ip-address>` with the Tailscale IP address of your Aperture gateway.
+把 `<aperture-ip-address>` 替换为你的 Aperture 网关的 Tailscale IP 地址。
 
-> **Tip:**
+> **提示：**
 >
-> You can also use [Tailscale tags][docs-tags] to manage access to the Aperture gateway. Assign a tag such as `tag:ai` to the Aperture gateway. Use that tag as the `dst` in your grant rule. For details about specifying the Aperture gateway in tailnet policy file grants, refer to [Grants versus tailnet policy file grants][docs-aperture-vs-tailnet-grants].
+> 你也可以使用 [Tailscale 标签][docs-tags]来管理对 Aperture 网关的访问。给网关分配一个 `tag:ai` 之类的标签，并在授权规则中把该标签用作 `dst`。关于在 tailnet 策略文件授权中指定 Aperture 网关的细节，参阅[授权与 tailnet 策略文件授权的对比][docs-aperture-vs-tailnet-grants]。
 
-## Step 2: Configure grants to control model access
+## 第 2 步：配置授权以控制模型访问
 
-After users can reach the Aperture gateway, configure grants to define which models they can access. You can define these grants in the Aperture configuration or in the tailnet policy file. Aperture combines matching grants from both sources.
+用户能连到 Aperture 网关后，配置授权来定义他们可以访问哪些模型。你可以在 Aperture 配置或 tailnet 策略文件中定义这些授权。Aperture 会合并来自两个来源的匹配授权。
 
 \[Missing snippet: aperture\_admin\_nav.mdx]
 
-At `/admin/settings/grants`, use the visual grant editor, or edit the same grants as JSON at `/admin/settings/config`, on the **Administration** > **Configuration** page.
+在 `/admin/settings/grants` 使用可视化授权编辑器，或在 **Administration** > **Configuration** 页面的 `/admin/settings/config` 中以 JSON 编辑同样的授权。
 
-To change the configuration programmatically, refer to the [grants configuration reference][docs-aperture-grants].
+要以编程方式修改配置，参阅[授权配置参考][docs-aperture-grants]。
 
-The following example grants all users standard user access and lets them use all Anthropic models:
+下面的示例授予所有用户标准用户权限，并允许他们使用所有 Anthropic 模型：
 
 ```json
 {
@@ -82,15 +82,15 @@ The following example grants all users standard user access and lets them use al
 }
 ```
 
-To restrict access, replace `"*"` with any of these identity types:
+要限制访问，把 `"*"` 替换为以下任意身份类型：
 
-* Individual login names, such as `"alice@example.com"`.
-* Tailscale or SCIM groups, such as `"group:ai-users"`.
-* Tags, such as `"tag:ci"`.
+* 单个登录名，例如 `"alice@example.com"`。
+* Tailscale 或 SCIM 组，例如 `"group:ai-users"`。
+* 标签，例如 `"tag:ci"`。
 
-Use a tag to grant access to non-user devices such as CI runners or services. For group matching, enable [visible groups][docs-visible-groups] for the Aperture gateway.
+对非用户设备（例如 CI 运行器或服务），用标签授予权限。要匹配组，需要为 Aperture 网关启用[可见组][docs-visible-groups]。
 
-The following example grants members of `group:ai-users` access to all Anthropic models:
+下面的示例授予 `group:ai-users` 成员访问所有 Anthropic 模型：
 
 ```json
 {
@@ -110,45 +110,45 @@ The following example grants members of `group:ai-users` access to all Anthropic
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-Use these fields in capability entries under `tailscale.com/cap/aperture`:
+在 `tailscale.com/cap/aperture` 下的能力条目中使用以下字段：
 
-* **`role`**: Set to `"user"` for standard API access or `"admin"` for administrative access. The `admin` role grants access to the admin dashboard. Portal access is available by default and is controlled separately with `enable_portal`.
+* **`role`**：设为 `"user"` 表示标准 API 访问，设为 `"admin"` 表示管理访问。`admin` 角色可以访问管理仪表盘。门户访问默认可用，由 `enable_portal` 单独控制。
 
-* **`models`**: Optional. A glob pattern in `provider/model` format that specifies which models the user can access. For example, `"anthropic/**"` matches all Anthropic models, and `"**"` matches all models from all providers. An entry with no `models` field is floating: it applies regardless of model but grants no model access on its own.
+* **`models`**：可选。`provider/model` 格式的 glob 模式，指定用户可以访问哪些模型。例如 `"anthropic/**"` 匹配所有 Anthropic 模型，`"**"` 匹配所有提供商的所有模型。没有 `models` 字段的条目是"浮动"的：它与模型无关地生效，但本身不授予任何模型访问。
 
-  For a [model alias][docs-model-aliases], grant access to its destination. For example, if `team-chat` maps to `openai/gpt-5.4-mini`, the pattern must match `openai/gpt-5.4-mini`, not `team-chat`.
+  对[模型别名][docs-model-aliases]，要授予对其目标的访问。例如 `team-chat` 映射到 `openai/gpt-5.4-mini`，模式就必须匹配 `openai/gpt-5.4-mini`，而不是 `team-chat`。
 
-* **`enable_portal`**: Optional. Portal access is available by default. Set it to `false` to opt matched non-admin users out, or `true` to override a broader opt-out. Admins always retain portal access. The legacy `enable_chat_ui` field has the same effect.
+* **`enable_portal`**：可选。门户访问默认可用。设为 `false` 可让匹配的非管理员用户退出门户，设为 `true` 可覆盖更宽泛的退出设置。管理员始终保留门户访问。旧字段 `enable_chat_ui` 效果相同。
 
-* **`connectors`**: Optional. An array of FQN globs that grant access to MCP tools, resources, and HTTP connector proxies. Because Aperture is deny-by-default, users have no connector access until an entry matches. Refer to [grant MCP tool access][docs-grant-mcp-tool-access] for details.
+* **`connectors`**：可选。FQN glob 数组，授予 MCP 工具、资源和 HTTP 连接器代理的访问。由于 Aperture 默认拒绝，在没有条目匹配之前用户没有任何连接器访问。细节参阅[授予 MCP 工具访问权限][docs-grant-mcp-tool-access]。
 
-### Model pattern examples
+### 模型模式示例
 
-The following examples show how to use patterns to grant access to specific models:
+下面的示例展示如何用模式授予特定模型的访问权限：
 
-| Pattern              | Matches                                             |
+| 模式                 | 匹配                                                |
 | :------------------- | :-------------------------------------------------- |
-| `"**"`               | All models from all providers                       |
-| `"anthropic/**"`     | All Anthropic models                                |
-| `"openai/gpt-5.5"`   | Exactly `openai/gpt-5.5`                            |
-| `"*/claude-sonnet*"` | Any `claude-sonnet*` model from any single provider |
+| `"**"`               | 所有提供商的所有模型                                |
+| `"anthropic/**"`     | 所有 Anthropic 模型                                 |
+| `"openai/gpt-5.5"`   | 精确匹配 `openai/gpt-5.5`                           |
+| `"*/claude-sonnet*"` | 任意单个提供商的任意 `claude-sonnet*` 模型          |
 
-### Grant access to tagged devices
+### 授予打标签设备的访问权限
 
-Use a grant to give a CI runner or another tagged device access to models without giving access to every user. Find the device on the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and note its tags. Then choose a `src` value for the grant:
+用授权让 CI 运行器或其他打标签的设备访问模型，而不必给每个用户开放。在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面找到该设备并记下它的标签，然后为授权选择 `src` 值：
 
-* To match any device carrying one tag, use `"src": ["tag:ci-runner"]`. A device with additional tags still matches this grant.
-* To match only devices with an exact set of tags, use the synthetic login name for that tag set. To build it, sort the tags alphabetically and join them with commas, with no spaces. For example, a device with `tag:prod` and `tag:api` has the synthetic login name `tag:api,tag:prod`, so use `"src": ["tag:api,tag:prod"]`. This value matches every device with the same tag set, not one specific device. If the device's tags change, update the grant.
+* 要匹配带某一个标签的任意设备，使用 `"src": ["tag:ci-runner"]`。带有额外标签的设备同样匹配该授权。
+* 要只匹配具有某一精确标签组合的设备，使用该标签组合的合成登录名。构造方法：把标签按字母排序并用逗号连接，不带空格。例如同时带有 `tag:prod` 和 `tag:api` 的设备，其合成登录名为 `tag:api,tag:prod`，因此使用 `"src": ["tag:api,tag:prod"]`。该值匹配具有相同标签组合的所有设备，而不是某一台特定设备。如果设备的标签变化，需要更新授权。
 
-Add a `role` and a matching `models` capability, as shown in the earlier examples. Use `"src": ["*"]` only to give model access to everyone who can reach the gateway, including tagged devices. Do not use it to discover a device's tags.
+按前面的示例添加 `role` 和匹配的 `models` 能力。`"src": ["*"]` 只应用于让所有能连到网关的人（包括打标签设备）获得模型访问，不要用它来发现设备的标签。
 
-## Verify access
+## 验证访问权限
 
-After configuring grants, verify that users can access the expected models.
+配置授权后，验证用户可以访问预期的模型。
 
-1. Connect a test device to your tailnet.
+1. 把一台测试设备连接到你的 tailnet。
 
-2. Send a request to Aperture with `curl` or any HTTP client. Use a model ID that matches a configured provider and your `models` grant. Specify either the bare model name, for example, `claude-sonnet-5-5`, or the full `provider/model` form:
+2. 用 `curl` 或任意 HTTP 客户端向 Aperture 发送请求。使用与已配置提供商和你的 `models` 授权匹配的模型 ID。可以指定裸模型名（例如 `claude-sonnet-5-5`），也可以指定完整的 `provider/model` 形式：
 
    ```shell
    curl -s http://<aperture-hostname>/v1/messages \
@@ -160,21 +160,21 @@ After configuring grants, verify that users can access the expected models.
      }'
    ```
 
-3. Confirm that the request returns a successful response, which means the grant is working.
+3. 确认请求返回成功响应，即说明授权生效。
 
-If the request fails, use the status code to identify the cause:
+如果请求失败，根据状态码判断原因：
 
-* **HTTP 403**: The user has no `role` grant. Add a `{ "role": "user" }` entry.
-* **HTTP 404**: The user has a role, but either no `models` grant matches the requested model or no provider has that model configured. Check the `models` pattern and confirm the model ID matches a configured provider.
+* **HTTP 403**：用户没有 `role` 授权。添加一条 `{ "role": "user" }` 条目。
+* **HTTP 404**：用户有角色，但没有匹配所请求模型的 `models` 授权，或者没有提供商配置该模型。检查 `models` 模式，并确认模型 ID 与某个已配置的提供商匹配。
 
-Refer to [Troubleshooting Aperture][docs-troubleshooting] for help diagnosing access issues.
+诊断访问问题请参阅[Aperture 故障排除][docs-troubleshooting]。
 
-## Next steps
+## 后续步骤
 
-* [Grant access to connectors][docs-grant-mcp-tool-access] to control which MCP tools, resources, and HTTP APIs users can access.
-* [Set per-user spending limits][docs-set-per-user-spending-limits] to manage costs.
-* [Set up the chat UI][docs-set-up-chat-ui] to let users talk to models directly from their browser.
-* [Set up LLM clients][docs-use-your-tools] to connect through Aperture.
+* [授予连接器访问权限][docs-grant-mcp-tool-access]：控制用户可以访问哪些 MCP 工具、资源和 HTTP API。
+* [设置按用户的支出限额][docs-set-per-user-spending-limits]：管理成本。
+* [设置聊天界面][docs-set-up-chat-ui]：让用户直接在浏览器中与模型对话。
+* [设置 LLM 客户端][docs-use-your-tools]：通过 Aperture 连接。
 
 [docs-aperture-grants]: /docs/aperture/configuration#grants
 

@@ -1,38 +1,38 @@
 ---
-title: "Deploy Tailscale on iOS/tvOS using MDM"
-description: "This page contains technical information which you might find useful if you are a system administrator deploying Tailscale for iPhone, iPad, Vision Pro, or Apple TV in a corporate environment using MD"
+title: "使用 MDM 在 iOS/tvOS 上部署 Tailscale"
+description: "本页包含一些技术信息，供正在企业环境中使用 [Microsoft Intune][docs-mdm-microsoft-intune]、[Jamf Pro][docs-mdm-jamf]、[Iru][docs-mdm-iru]（原 Kandji）或 [SimpleMDM][docs-mdm-simplemdm] 等 MDM 解决方案为 iPhone、iPad、Vision Pro 或 Apple TV 部署 Tailscale 的系统管理员参考。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This page contains technical information which you might find useful if you are a system administrator deploying Tailscale for iPhone, iPad, Vision Pro, or Apple TV in a corporate environment using MDM solutions such as [Microsoft Intune][docs-mdm-microsoft-intune], [Jamf Pro][docs-mdm-jamf], [Iru][docs-mdm-iru] (formerly Kandji), or [SimpleMDM][docs-mdm-simplemdm].
+如果你是一名系统管理员，正在企业环境中使用 [Microsoft Intune][docs-mdm-microsoft-intune]、[Jamf Pro][docs-mdm-jamf]、[Iru][docs-mdm-iru]（原 Kandji）或 [SimpleMDM][docs-mdm-simplemdm] 等 MDM 解决方案，为 iPhone、iPad、Vision Pro 或 Apple TV 部署 Tailscale，本页包含的技术信息可能会对你有帮助。
 
-We are always working on providing more options for system administrators to programmatically manage their Tailscale deployments. If you are deploying Tailscale on the devices listed above and feel the need for a specific configuration option that is currently missing on this page, contact our support team.
+我们一直在为系统管理员提供更多以编程方式管理 Tailscale 部署的选项。如果你正在上述设备上部署 Tailscale，并且觉得本页目前缺少某个你需要的特定配置选项，请联系我们的支持团队。
 
-> **Note:**
+> **注意：**
 >
-> If you're looking to configure system policies in the Tailscale client for macOS, refer to the [dedicated topic][docs-macos-mdm].
+> 如果你想为 macOS 版 Tailscale 客户端配置系统策略，请参阅[专门的主题][docs-macos-mdm]。
 
-## Configuration profiles
+## 配置描述文件
 
-If you are deploying Tailscale for iOS/tvOS using MDM, you can use configuration profiles to automate parts of the onboarding process for the app, reducing prompt fatigue for the user.
+如果你在使用 MDM 为 iOS/tvOS 部署 Tailscale，可以使用配置描述文件（configuration profile）来自动完成应用引导流程中的部分步骤，减少用户被弹窗反复打扰。
 
-### Allow push notifications automatically
+### 自动允许推送通知
 
-> **Note:**
+> **注意：**
 >
-> The Tailscale app for tvOS does not use notifications as third-party apps are not allowed to deliver notifications on Apple TV.
+> tvOS 版 Tailscale 应用不使用通知，因为 Apple TV 不允许第三方应用发送通知。
 
-> **Note:**
+> **注意：**
 >
-> Unlike the other configuration profiles on this page, notification settings can only be deployed to supervised iOS devices.
+> 与本页的其他配置描述文件不同，通知设置只能部署到受监管（supervised）的 iOS 设备。
 
-Tailscale for iOS may sometimes use system notifications to inform the user. For instance, you will receive a notification when:
+Tailscale for iOS 有时会使用系统通知来告知用户。例如，以下情况下你会收到通知：
 
-* the device key is about to expire
-* a file was received using Taildrop
+* 设备密钥即将过期
+* 通过 Taildrop 收到了文件
 
-This is an example of a configuration profile payload to automatically allow notifications for Tailscale on iOS.
+以下是一个配置描述文件 payload 示例，用于在 iOS 上自动允许 Tailscale 发送通知。
 
 ```xml
 <dict>
@@ -68,15 +68,15 @@ This is an example of a configuration profile payload to automatically allow not
 </dict>
 ```
 
-### Install the Tailscale VPN configuration
+### 安装 Tailscale VPN 配置
 
-On the first time it launches on an iOS/tvOS device, the Tailscale app will install a NetworkExtension VPN configuration. You can choose to skip this step by providing a configuration profile which will configure the VPN configuration *before* the app launches. During the first launch, the Tailscale app will detect the pre-existing configuration and skip the installation step.
+Tailscale 应用在 iOS/tvOS 设备上首次启动时，会安装一个 NetworkExtension VPN 配置。你可以提供一个配置描述文件，在应用启动*之前*就配置好该 VPN 配置，从而跳过这一步。首次启动时，Tailscale 应用会检测到已存在的配置并跳过安装步骤。
 
-The following is a valid `.mobileconfig` property list file to set up such a VPN configuration.
+以下是一个有效的 `.mobileconfig` 属性列表文件，可用于建立这样的 VPN 配置。
 
-> **Note:**
+> **注意：**
 >
-> When creating a configuration profile for Tailscale for tvOS, replace the value `io.tailscale.ipn.ios.network-extension` with `io.tailscale.ipn.ios.network-extension-tvos` in the `ProviderBundleIdentifier` field. Leave the `VPNSubType` field untouched (our tvOS app uses the same bundle identifier as the iOS app).
+> 为 tvOS 版 Tailscale 创建配置描述文件时，请将 `ProviderBundleIdentifier` 字段中的值 `io.tailscale.ipn.ios.network-extension` 替换为 `io.tailscale.ipn.ios.network-extension-tvos`。`VPNSubType` 字段保持不变（我们的 tvOS 应用与 iOS 应用使用相同的 bundle identifier）。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -127,19 +127,19 @@ The following is a valid `.mobileconfig` property list file to set up such a VPN
 </plist>
 ```
 
-### Deploying system policies using AppConfig
+### 使用 AppConfig 部署系统策略
 
-> **Note:**
+> **注意：**
 >
-> System policies can only be deployed to the Tailscale apps for iOS and tvOS if the Tailscale app was installed/managed using an MDM solution. This is a limitation imposed by iOS/tvOS. You cannot deploy policies on these platforms by manually installing a `.mobileconfig` configuration profile file.
+> 只有当 Tailscale 应用是通过 MDM 解决方案安装/管理时，系统策略才能部署到 iOS 和 tvOS 版 Tailscale 应用。这是 iOS/tvOS 施加的限制。在这些平台上，你无法通过手动安装 `.mobileconfig` 配置描述文件的方式部署策略。
 
-If you're deploying the iOS/tvOS app using an MDM solution, AppConfig can be used to specify system policies for Tailscale. The Tailscale client will read these policies every time it launches, and apply them. Deploying AppConfig by using your MDM solution can let you configure specific settings of the Tailscale client on behalf of the user, providing an easier setup process.
+如果你正在使用 MDM 解决方案部署 iOS/tvOS 应用，可以使用 AppConfig 为 Tailscale 指定系统策略。Tailscale 客户端每次启动时都会读取这些策略并应用。通过 MDM 解决方案部署 AppConfig，可以代替用户配置 Tailscale 客户端的特定设置，让设置过程更加简单。
 
-Refer to our [full list of system policies][docs-mdm-keys] to discover all settings you can configure.
+请参阅[系统策略完整列表][docs-mdm-keys]，了解所有可配置的设置。
 
-To configure this, locate the Tailscale app within the admin console of your MDM solution, then go to the **Managed Configuration** or **AppConfig** settings for the app. The specific wording depends on the MDM solution you're using.
+要进行配置，请在你的 MDM 解决方案的管理控制台中找到 Tailscale 应用，然后进入该应用的 **托管配置**（Managed Configuration）或 **AppConfig** 设置。具体措辞取决于你使用的 MDM 解决方案。
 
-This is an example of an AppConfig XML to set the [**ManagedByOrganizationName**][docs-mdm-keys-org-name] system policy value:
+以下是一个 AppConfig XML 示例，用于设置 [**ManagedByOrganizationName**][docs-mdm-keys-org-name] 系统策略的值：
 
 ```xml
 <dict>
@@ -148,11 +148,11 @@ This is an example of an AppConfig XML to set the [**ManagedByOrganizationName**
 </dict>
 ```
 
-Deploying the AppConfig above will display **Managed by Tailscale, Inc.** in the Settings screen of the iOS app.
+部署上述 AppConfig 后，iOS 应用的设置界面中会显示 **由 Tailscale, Inc. 管理**（Managed by Tailscale, Inc.）。
 
-Note that the **ManagedByOrganizationName** system policy is not currently available on Apple TV, and won't result in any user-facing change.
+请注意，**ManagedByOrganizationName** 系统策略目前在 Apple TV 上尚不可用，也不会产生任何用户可见的变化。
 
-Refer to the [list of system policies][docs-mdm-keys] for other values you can configure on behalf of the user.
+请参阅[系统策略列表][docs-mdm-keys]，了解你可以代替用户配置的其他值。
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

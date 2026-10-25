@@ -1,18 +1,18 @@
 ---
-title: "Access or share resources from within your development environment"
-description: "Explore recommended developer tools to use with Tailscale."
+title: "在开发环境中访问或共享资源"
+description: "探索与 Tailscale 搭配使用的推荐开发者工具。"
 ---
 
-Last validated Jul 24, 2026
+最后验证于 Jul 24, 2026
 
-[**Develop with AI**](/docs/develop-with-ai) — Give AI coding agents and chat assistants accurate Tailscale information.
+[**用 AI 开发**](/docs/develop-with-ai) —— 为 AI 编码智能体和聊天助手提供准确的 Tailscale 信息。
 
-[**Setting up Docker Desktop to work with Tailscale**](/docs/features/containers/docker/docker-desktop) — Set up Docker Desktop containers that can be accessed in your tailnet.
+[**配置 Docker Desktop 与 Tailscale 协同工作**](/docs/features/containers/docker/docker-desktop) —— 设置可在 tailnet 中访问的 Docker Desktop 容器。
 
-[**Tailscale skill for coding agents**](/docs/features/tailscale-skill) — Install the Tailscale skill so a coding agent can work with Tailscale configuration and code.
+[**面向编码智能体的 Tailscale skill**](/docs/features/tailscale-skill) —— 安装 Tailscale skill，让编码智能体能够处理 Tailscale 配置与代码。
 
-[**Tailscale GitHub Action**](/docs/integrations/github/github-action) — Secure CI/CD workflows in GitHub using the Tailscale GitHub Action.
+[**Tailscale GitHub Action**](/docs/integrations/github/github-action) —— 使用 Tailscale GitHub Action 保护 GitHub 中的 CI/CD 工作流。
 
-[**Tailscale with GitLab CI/CD**](/docs/integrations/gitlab/gitlab-runner) — Connect your Tailscale network to a GitLab Runner.
+[**Tailscale 与 GitLab CI/CD**](/docs/integrations/gitlab/gitlab-runner) —— 将你的 Tailscale 网络连接到 GitLab Runner。
 
-[**Use the Tailscale extension for Visual Studio Code**](/docs/integrations/vscode-extension) — Use the Tailscale extension for VS Code.
+[**使用适用于 Visual Studio Code 的 Tailscale 扩展**](/docs/integrations/vscode-extension) —— 使用适用于 VS Code 的 Tailscale 扩展。

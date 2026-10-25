@@ -1,41 +1,41 @@
 ---
-title: "Integrate Cerbos with Aperture"
-description: "[Cerbos][xt-cerbos] is a policy engine that provides fine-grained, context-aware authorization. By connecting Aperture to Cerbos, you can send LLM request data to Cerbos so it can enforce authorizatio"
+title: "将 Cerbos 与 Aperture 集成"
+description: "[Cerbos][xt-cerbos] 是一个策略引擎，提供细粒度、上下文感知的授权。将 Aperture 连接到 Cerbos 后，你可以把 LLM 请求数据发送给 Cerbos，由它对 AI 使用强制执行授权策"
 ---
 
-Last validated Jun 26, 2026
+最后验证于 Jun 26, 2026
 
-[Cerbos][xt-cerbos] is a policy engine that provides fine-grained, context-aware authorization. By connecting Aperture to Cerbos, you can send LLM request data to Cerbos so it can enforce authorization policies on AI usage, such as controlling which users can access specific models or tools.
+[Cerbos][xt-cerbos] 是一个策略引擎，提供细粒度、上下文感知的授权。将 Aperture 连接到 Cerbos 后，你可以把 LLM 请求数据发送给 Cerbos，由它对 AI 使用强制执行授权策略，例如控制哪些用户可以访问特定模型或工具。
 
-Aperture sends data to Cerbos using the [hooks system][docs-configuration-hooks]. You configure a hook endpoint for your Cerbos deployment and a grant that specifies which requests trigger the hook and what data to include.
+Aperture 通过 [hook 系统][docs-configuration-hooks]向 Cerbos 发送数据。你需要为 Cerbos 部署配置一个 hook 端点，并创建一个授权（grant），指定哪些请求触发该 hook 以及包含哪些数据。
 
-Cerbos is a third-party service. When Aperture forwards request data to it, Cerbos's use of that data is governed by your agreement with Cerbos, not your agreement with Tailscale.
+Cerbos 是第三方服务。当 Aperture 将请求数据转发给它时，Cerbos 对这些数据的使用受你与 Cerbos 之间协议的约束，而非你与 Tailscale 之间的协议。
 
-\[Missing snippet: aperture\_async\_hook\_note.mdx]
+\[缺失片段：aperture\_async\_hook\_note.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* A running [Aperture gateway][docs-get-started] accessible from your device.
-* A [Cerbos][xt-cerbos] deployment (self-hosted or Cerbos Hub) with an API endpoint that can receive webhook data.
+* 一个正在运行且可从你的设备访问的 [Aperture 网关][docs-get-started]。
+* 一个 [Cerbos][xt-cerbos] 部署（自托管或 Cerbos Hub），具有可接收 webhook 数据的 API 端点。
 
-## Configure the Cerbos endpoint
+## 配置 Cerbos 端点
 
-To integrate Cerbos with Aperture, configure the Cerbos endpoint so you can use it as a hook in Aperture and set up a grant to send request data to that hook. This lets Cerbos receive real-time data about LLM requests for authorization decisions.
+要将 Cerbos 与 Aperture 集成，请配置 Cerbos 端点，使其可在 Aperture 中用作 hook，并设置一个授权来向该 hook 发送请求数据。这样 Cerbos 就能实时接收 LLM 请求数据，用于做出授权决策。
 
-1. In your Cerbos deployment, identify or create an endpoint that can receive HTTP POST requests from Aperture.
-2. Note the endpoint URL and any API key or authentication token. You'll use these when configuring the hook in Aperture.
+1. 在你的 Cerbos 部署中，找到或创建一个能接收来自 Aperture 的 HTTP POST 请求的端点。
+2. 记下端点 URL 以及 API 密钥或认证令牌（如有）。稍后在 Aperture 中配置 hook 时会用到。
 
-For details on setting up Cerbos, refer to the [Cerbos documentation][xt-cerbos-docs].
+设置 Cerbos 的详细信息请参阅 [Cerbos 文档][xt-cerbos-docs]。
 
-## Configure the Aperture hook
+## 配置 Aperture hook
 
-Configure a hook in Aperture that points to your Cerbos endpoint. This lets you send request data to Cerbos for authorization decisions.
+在 Aperture 中配置一个指向你的 Cerbos 端点的 hook。这样你就可以将请求数据发送给 Cerbos，用于做出授权决策。
 
-1. \[Missing snippet: aperture\_admin\_nav.mdx]
+1. \[缺失片段：aperture\_admin\_nav.mdx]
 
-2. Add a `cerbos` entry in the `hooks` section with the endpoint URL from your Cerbos deployment.
+2. 在 `hooks` 部分添加一个 `cerbos` 条目，填入你的 Cerbos 部署的端点 URL。
 
    ```json
    "hooks": {
@@ -46,9 +46,9 @@ Configure a hook in Aperture that points to your Cerbos endpoint. This lets you 
    }
    ```
 
-   Replace `<cerbos-endpoint-url>` with the URL of your Cerbos endpoint and `<cerbos-api-key>` with the API key from your Cerbos deployment.
+   将 `<cerbos-endpoint-url>` 替换为你的 Cerbos 端点的 URL，将 `<cerbos-api-key>` 替换为来自你的 Cerbos 部署的 API 密钥。
 
-3. Add a grant with a `send_hooks` entry that references the `cerbos` hook. The grant controls which requests trigger the hook and what data Aperture sends.
+3. 添加一个包含 `send_hooks` 条目（引用 `cerbos` hook）的授权。该授权控制哪些请求触发 hook，以及 Aperture 发送哪些数据。
 
    ```json
    "grants": [
@@ -71,27 +71,27 @@ Configure a hook in Aperture that points to your Cerbos endpoint. This lets you 
    ]
    ```
 
-   This configuration sends request data for all users. The `user_message` send type forwards prompt content to Cerbos, and the `grants` send type includes the user's custom capabilities, which Cerbos can use for authorization decisions. Send only what your policies need. To limit which users' requests trigger the hook, replace `"*"` in the `src` field with specific user identities or tags.
+   此配置会发送所有用户的请求数据。`user_message` 发送类型会将提示内容转发给 Cerbos，`grants` 发送类型会包含用户的自定义能力，Cerbos 可将其用于授权决策。只发送你的策略所需的内容。要限制哪些用户的请求会触发该 hook，请将 `src` 字段中的 `"*"` 替换为具体的用户身份或标签（tag）。
 
-4. Save the configuration.
+4. 保存配置。
 
-\[Missing snippet: aperture\_hooks\_config\_ref.mdx]
+\[缺失片段：aperture\_hooks\_config\_ref.mdx]
 
-\[Missing snippet: aperture\_grant\_dst\_note.mdx]
+\[缺失片段：aperture\_grant\_dst\_note.mdx]
 
-## Verify the integration
+## 验证集成
 
-After configuring the Cerbos hook, verify that Aperture is sending data to Cerbos and that Cerbos is evaluating it against your policies.
+配置好 Cerbos hook 后，请验证 Aperture 正在向 Cerbos 发送数据，且 Cerbos 正在根据你的策略对这些数据进行评估。
 
-1. Send a request through Aperture that matches your grant conditions.
-2. Check your Cerbos deployment to confirm the request data arrives.
-3. Verify that Cerbos evaluates the data against your authorization policies.
+1. 通过 Aperture 发送一个符合你的授权条件的请求。
+2. 检查你的 Cerbos 部署，确认请求数据已到达。
+3. 确认 Cerbos 根据你的授权策略对这些数据进行了评估。
 
-\[Missing snippet: aperture\_verify\_hook\_wiring.mdx]
+\[缺失片段：aperture\_verify\_hook\_wiring.mdx]
 
-## Next steps
+## 后续步骤
 
-\[Missing snippet: aperture\_hooks\_next\_steps.mdx]
+\[缺失片段：aperture\_hooks\_next\_steps.mdx]
 
 [docs-configuration-hooks]: /docs/aperture/configuration#hooks
 

@@ -1,27 +1,27 @@
 ---
-title: "Set up an OpenAI-compatible provider"
-description: "Configure an OpenAI-compatible provider in Aperture with the `/v1/chat/completions` API. Providers such as Groq, Together AI, Fireworks, Mistral, DeepSeek, and Perplexity expose OpenAI-compatible APIs"
+title: "设置 OpenAI 兼容提供商"
+description: "在 Aperture 中使用 `/v1/chat/completions` API 配置 OpenAI 兼容提供商。Groq、Together AI、Fireworks、Mistral、DeepSeek、Perplexity 等提供商都提供 OpenAI 兼容 API。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Configure an OpenAI-compatible provider in Aperture with the `/v1/chat/completions` API. Providers such as Groq, Together AI, Fireworks, Mistral, DeepSeek, and Perplexity expose OpenAI-compatible APIs. They are examples of this generic setup path, not individually verified integrations.
+在 Aperture 中使用 `/v1/chat/completions` API 配置 OpenAI 兼容提供商。Groq、Together AI、Fireworks、Mistral、DeepSeek、Perplexity 等提供商都提供 OpenAI 兼容 API。它们只是这条通用配置路径的示例，不是经过逐一验证的集成。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-Tailscale does not test or guarantee compatibility with every OpenAI-compatible provider. Verify your provider's API requirements before configuring it. For servers such as llama.cpp, vLLM, or Ollama, refer to [set up a self-hosted provider][docs-use-self-hosted].
+Tailscale 不测试也不保证与每个 OpenAI 兼容提供商的兼容性。配置之前请核实你的提供商的 API 要求。llama.cpp、vLLM、Ollama 这类服务器参阅[设置自托管提供商][docs-use-self-hosted]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* An API key from your provider's developer console or dashboard.
-* The provider's API base URL, including any required path prefix.
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 来自提供商开发者控制台或仪表板的 API key。
+* 提供商的 API base URL，包括所需的路径前缀。
 
-## Configure the provider
+## 配置提供商
 
-Add your provider in your [Aperture configuration][docs-aperture-configuration]:
+在你的 [Aperture 配置][docs-aperture-configuration]中添加你的提供商：
 
 ```json
 {
@@ -35,22 +35,22 @@ Add your provider in your [Aperture configuration][docs-aperture-configuration]:
 }
 ```
 
-Replace the example values:
+替换示例值：
 
-* `<provider-name>`: A short identifier, such as `groq` or `together`.
-* `<your-provider-key>`: Your provider's API key.
-* `baseurl`: The provider URL prefix before the incoming `/v1/...` path.
-* `models`: The model IDs your provider supports. Find them in the provider's documentation or its `/v1/models` endpoint.
+* `<provider-name>`：短标识符，例如 `groq` 或 `together`。
+* `<your-provider-key>`：你的提供商的 API key。
+* `baseurl`：在传入的 `/v1/...` 路径之前的提供商 URL 前缀。
+* `models`：你的提供商支持的模型 ID。可在提供商的文档或其 `/v1/models` 端点中查找。
 
-The default configuration uses `openai_chat` compatibility and `bearer` authorization. Change these settings if your provider requires a different API or authorization format.
+默认配置使用 `openai_chat` 兼容性和 `bearer` 授权。如果你的提供商要求不同的 API 或授权格式，请更改这些设置。
 
-> **Warning:**
+> **警告：**
 >
-> If the provider's API base URL ends in `/v1`, remove only that suffix. Keep any earlier path segments. For example, use `https://api.example.com/openai` for an API base URL of `https://api.example.com/openai/v1`. Aperture appends the full incoming path, such as `/v1/chat/completions`, to `baseurl`. Keeping the final `/v1` produces a doubled path. Refer to [how Aperture builds upstream URLs][docs-aperture-url-construction] for details.
+> 如果提供商的 API base URL 以 `/v1` 结尾，只去掉这个后缀，保留更早的路径段。例如，API base URL 为 `https://api.example.com/openai/v1` 时，`baseurl` 填 `https://api.example.com/openai`。Aperture 会把完整的传入路径（如 `/v1/chat/completions`）拼接到 `baseurl` 后面。保留末尾的 `/v1` 会导致路径重复。详情参阅 [Aperture 如何构造上游 URL][docs-aperture-url-construction]。
 
-### Providers that also support the Responses API
+### 同时支持 Responses API 的提供商
 
-If your provider supports the OpenAI Responses API (`/v1/responses`) in addition to chat completions, enable both compatibility flags explicitly:
+如果你的提供商除 chat completions 外还支持 OpenAI Responses API（`/v1/responses`），请显式启用两个兼容性开关：
 
 ```json
 {
@@ -68,17 +68,17 @@ If your provider supports the OpenAI Responses API (`/v1/responses`) in addition
 }
 ```
 
-If you enable another flag and omit `openai_chat`, Aperture disables Chat Completions. Set `"openai_chat": true` to keep it enabled alongside Responses, or `"openai_chat": false` to disable it explicitly.
+如果你启用了其他开关而省略 `openai_chat`，Aperture 会禁用 Chat Completions。设 `"openai_chat": true` 可在启用 Responses 的同时保留它，或设 `"openai_chat": false` 显式禁用。
 
-### Non-standard authorization
+### 非标准授权
 
-Most OpenAI-compatible providers use `bearer` authorization, which is the default. If your provider requires a different authorization header, set the `authorization` field. Refer to the [authorization types reference][docs-provider-compatibility] for the supported authorization types.
+大多数 OpenAI 兼容提供商使用 `bearer` 授权，这也是默认值。如果你的提供商要求不同的授权头，请设置 `authorization` 字段。支持的授权类型参阅[授权类型参考][docs-provider-compatibility]。
 
-### Cost estimation
+### 成本估算
 
-Aperture infers the [pricing source][docs-provider-compatibility-cost-basis] from the provider's `baseurl` host, then falls back to compatibility flags. With default Chat Completions compatibility, an unrecognized host uses `openai` pricing. Set `cost_basis` explicitly to use a different pricing source.
+Aperture 先根据提供商 `baseurl` 的主机名推断[定价来源][docs-provider-compatibility-cost-basis]，然后回退到兼容性开关。在默认的 Chat Completions 兼容性下，无法识别的主机使用 `openai` 定价。要使用其他定价来源，请显式设置 `cost_basis`。
 
-If your provider's model names are absent from that pricing source, use `model_cost_map` to map them to known models for cost estimation:
+如果你的提供商的模型名称不在该定价来源中，请用 `model_cost_map` 把它们映射到已知模型，以便估算成本：
 
 ```json
 {
@@ -95,9 +95,9 @@ If your provider's model names are absent from that pricing source, use `model_c
 }
 ```
 
-Refer to the [model cost map][docs-provider-compatibility-model-cost-map] reference for the full syntax.
+完整语法参阅[模型成本映射][docs-provider-compatibility-model-cost-map]参考。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 

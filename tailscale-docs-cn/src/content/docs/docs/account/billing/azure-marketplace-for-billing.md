@@ -1,44 +1,44 @@
 ---
-title: "Tailscale on Azure Marketplace"
-description: "You can set up Tailscale billing through the Microsoft Azure Marketplace."
+title: "Azure Marketplace 上的 Tailscale"
+description: "你可以通过 Microsoft Azure Marketplace 设置 Tailscale 账单。"
 ---
 
-Last validated Dec 20, 2024
+最后验证于 Dec 20, 2024
 
-You can set up Tailscale billing through the Microsoft Azure Marketplace.
+你可以通过 Microsoft Azure Marketplace 设置 Tailscale 账单。
 
-## Prerequisites
+## 前提条件
 
-* You must have an Azure account.
-* Your Azure Account ID must have a Billing ID with an active billing profile aligned to it.
+* 你必须拥有一个 Azure 账户。
+* 你的 Azure 账户 ID 必须关联一个带有生效计费配置文件的 Billing ID。
 
-## Purchase Tailscale on Azure Marketplace
+## 在 Azure Marketplace 上购买 Tailscale
 
-To set up billing for Tailscale from the Azure Marketplace:
+要从 Azure Marketplace 为 Tailscale 设置账单：
 
-1. Go to the [**Tailscale Plans + Pricing**][xt-azure-marketplace-tailscale] page in Azure Marketplace.
-2. Find the plan you want to buy and select **Get it now**.
-3. Respond to the prompts, read the policies, and accept the agreement if you agree.
+1. 前往 Azure Marketplace 中的 [**Tailscale Plans + Pricing**][xt-azure-marketplace-tailscale] 页面。
+2. 找到你想购买的套餐，选择 **Get it now**。
+3. 按提示操作，阅读相关政策，如果你同意该协议则予以接受。
 
-## Manage billing information and invoices
+## 管理账单信息和发票
 
-If you purchased Tailscale through the Azure Marketplace, manage your billing details and get invoices through the [Azure portal][xt-azure-portal]. This billing information is managed in the Azure portal, not the Tailscale admin console.
+如果你是通过 Azure Marketplace 购买的 Tailscale，请通过 [Azure 门户][xt-azure-portal]管理账单明细并获取发票。这些账单信息在 Azure 门户中管理，而不是在 Tailscale 管理控制台中。
 
-## Cancel your Tailscale subscription on Azure Marketplace
+## 在 Azure Marketplace 上取消你的 Tailscale 订阅
 
-> **Note:**
+> **注意：**
 >
-> Canceling your Tailscale billing subscription on Azure Marketplace does not delete your Tailscale network (known as a tailnet). For information about deleting your tailnet, refer to [Delete your tailnet][docs-delete-tailnet].
+> 在 Azure Marketplace 上取消你的 Tailscale 账单订阅并不会删除你的 Tailscale 网络（即 tailnet）。有关删除 tailnet 的信息，请参阅[删除你的 tailnet][docs-delete-tailnet]。
 
-To remove your billing subscription from Azure Marketplace:
+要从 Azure Marketplace 移除你的账单订阅：
 
-1. Go to the [**SaaS**][xt-azure-marketplace-saas] page in the [Azure portal][xt-azure-portal].
-2. Select the name of your Tailscale subscription and select **Delete**. You specified the name when you made your subscription.
-3. If you also want to delete your Tailscale network, refer to [Delete your tailnet][docs-delete-tailnet].
+1. 前往 [Azure 门户][xt-azure-portal]中的 [**SaaS**][xt-azure-marketplace-saas] 页面。
+2. 选择你的 Tailscale 订阅的名称，然后选择 **Delete**。该名称是你在创建订阅时自行指定的。
+3. 如果你还想删除自己的 Tailscale 网络，请参阅[删除你的 tailnet][docs-delete-tailnet]。
 
-## Considerations
+## 注意事项
 
-If you would like to discuss Tailscale custom pricing or a private offer by using the Microsoft Azure Marketplace, email `partnerships@tailscale.com`.
+如果你想通过 Microsoft Azure Marketplace 洽谈 Tailscale 定制定价或私有要约（private offer），请发送邮件至 `partnerships@tailscale.com`。
 
 [docs-delete-tailnet]: /docs/account/delete-tailnet
 

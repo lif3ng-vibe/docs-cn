@@ -1,87 +1,86 @@
 ---
-title: "Free pricing plans and discounts"
-description: "Tailscale offers several free plans and discounted pricing options to support individuals, open source projects, and eligible organizations. For an overview of Tailscale's pricing plans, including pai"
+title: "免费套餐与折扣"
+description: "Tailscale 提供多种免费套餐和折扣定价选项，支持个人、开源项目和符合条件的组织。有关 Tailscale 定价套餐（包括付"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Tailscale offers several free plans and discounted pricing options to support individuals, open source projects, and eligible organizations. For an overview of Tailscale's pricing plans, including paid plans, refer to our [Pricing][co-pricing] page.
+Tailscale 提供多种免费套餐和折扣定价选项，支持个人、开源项目和符合条件的组织。有关 Tailscale 定价套餐（包括付费套餐）的概览，请参阅我们的[定价][co-pricing]页面。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) to administer your Tailscale plan.
+> 你需要是[所有者、管理员或账单管理员](/docs/reference/user-roles)才能管理你的 Tailscale 套餐。
 
-## Personal plan
+## Personal 套餐
 
-The Personal plan permits 6 free users in a single Tailscale network, known as a tailnet. You can also share devices with other users with [node sharing][docs-sharing]. For more information on what is included in the Personal plan, refer to our [Pricing][co-pricing] page.
+Personal 套餐允许在一个 Tailscale 网络（即 tailnet）中免费使用 6 个用户。你还可以通过[节点共享][docs-sharing]（node sharing）与其他用户共享设备。有关 Personal 套餐所含内容的更多信息，请参阅我们的[定价][co-pricing]页面。
 
-## Community on GitHub
+## GitHub 社区计划（Community on GitHub）
 
-Your [GitHub organization][xt-gh-org] can use Tailscale for free if you're using it for an open source
-project which has an [OSI license][xt-opensource-license].
+如果你的 [GitHub 组织][xt-gh-org]用于拥有 [OSI 许可证][xt-opensource-license]的开源项目，就可以免费使用 Tailscale。
 
-> **Note:**
+> **注意：**
 >
-> You cannot use the [Billing](https://console.tailscale.com/admin/settings/billing) page of the Tailscale admin console to sign up for the Community on GitHub plan.
+> 你无法通过 Tailscale 管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面注册 GitHub 社区计划。
 
-Consider using this plan when you need the following:
+当你有以下需求时，可以考虑使用此套餐：
 
-* Access a shared build tool.
-* Access an internal test server for a given platform.
-* Share project resources with other developers.
+* 访问一个共享的构建工具。
+* 访问某个平台的内部测试服务器。
+* 与其他开发者共享项目资源。
 
-To use this pricing plan, you must be using [GitHub for authentication][docs-sso-providers]. For more information about this plan, contact [Tailscale Support][co-contact-support-billing].
+要使用此定价套餐，你必须使用 [GitHub 进行身份验证][docs-sso-providers]。有关此套餐的更多信息，请联系 [Tailscale 支持团队][co-contact-support-billing]。
 
-## Promo codes
+## 促销码
 
-Promo codes can be applied when upgrading to a new paid plan, or you can apply one to your existing paid plan in the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
+促销码（promo code）可以在升级到新的付费套餐时使用，也可以在管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面应用于你现有的付费套餐。
 
-There are several ways to obtain a Tailscale promo code for a discount when upgrading to a paid plan. We distribute promo codes at trade shows and conferences, as well as through our various marketing channels, including emails, YouTube videos, and advertisements.
+升级到付费套餐时，有多种途径可以获得 Tailscale 折扣促销码。我们在展会和会议上分发促销码，也通过电子邮件、YouTube 视频和广告等各种营销渠道分发。
 
-## Sales tax exemption
+## 销售税豁免
 
-If your organization is exempt from US sales tax, contact [Tailscale Support][co-contact-support-billing] and include the following information:
+如果你的组织免征美国销售税，请联系 [Tailscale 支持团队][co-contact-support-billing]并提供以下信息：
 
-* Your organization name.
-* Your [tailnet name][docs-tailnet-name].
-* A copy of your state sales tax exemption certificate.
+* 你的组织名称。
+* 你的 [tailnet 名称][docs-tailnet-name]。
+* 你所在州的销售税豁免证明副本。
 
-## Charities, not-for-profit organizations, and educational institutions
+## 慈善机构、非营利组织和教育机构
 
-Eligible charities, not-for-profit organizations, and educational institutions receive a 50% discount on Tailscale list prices.
+符合条件的慈善机构、非营利组织和教育机构可享受 Tailscale 定价 5 折优惠。
 
-### Who is eligible
+### 谁符合资格
 
-To qualify, your organization must meet the requirements for its location or organization type:
+要获得资格，你的组织必须满足其所在地或组织类型的要求：
 
-* **United States charities and not-for-profits**: Must have registered 501(c)(3) tax-exempt status with the IRS.
-* **Canadian charities and not-for-profits**: Must be a registered charity or not-for-profit entity.
-* **International charities and not-for-profits**: Must have recognized legal charitable or not-for-profit status in your country's jurisdiction.
-* **Educational institutions**: Must be an accredited primary, secondary, or post-secondary institution, college, university, or trade school using Tailscale for authorized academic or teaching purposes.
+* **美国慈善机构和非营利组织**：必须已在 IRS（美国国税局）注册 501(c)(3) 免税身份。
+* **加拿大慈善机构和非营利组织**：必须是注册的慈善机构或非营利实体。
+* **国际慈善机构和非营利组织**：必须在你所在国家的司法管辖区内拥有公认的合法慈善或非营利身份。
+* **教育机构**：必须是经认证的小学、中学或中学后院校、学院、大学或职业学校，并将 Tailscale 用于经授权的学术或教学用途。
 
-> **Note:**
+> **注意：**
 >
-> Commercial education technology (EdTech) companies and programs exclusively for individuals under 18 are not eligible for the education discount. For more information, refer to the [Special Terms][co-special-terms].
+> 商业教育科技（EdTech）公司以及专门面向 18 岁以下个人的项目不符合教育折扣资格。更多信息请参阅[特别条款][co-special-terms]。
 
-### Apply for the discount
+### 申请折扣
 
-If you do not have a paid subscription, contact [Tailscale Support][co-contact-support-billing] with the required verification information. After verifying your eligibility, Support will provide a one-time 50% discount coupon that you can apply during checkout.
+如果你没有付费订阅，请携带所需的验证信息联系 [Tailscale 支持团队][co-contact-support-billing]。验证资格后，支持团队会提供一张一次性 5 折优惠券，你可以在结账时使用。
 
-If you already have a paid subscription, contact [Tailscale Support][co-contact-support-billing] with the required verification information to have the discount applied to your subscription.
+如果你已有付费订阅，请携带所需的验证信息联系 [Tailscale 支持团队][co-contact-support-billing]，以便将折扣应用到你的订阅。
 
-### Required information
+### 所需信息
 
-When you contact Tailscale Support, include the following information:
+联系 Tailscale 支持团队时，请提供以下信息：
 
-* Your organization name.
-* Your [tailnet name][docs-tailnet-name].
-* Proof of eligibility:
-  * **US organizations**: A PDF or image of your official IRS 501(c)(3) determination letter.
-  * **Canadian organizations**: A link to your organization's official website or a copy of its Certificate of Incorporation.
-  * **International organizations**: A link to your organization's official website or registry entry confirming its charitable or not-for-profit status.
-  * **Educational institutions**: Verification of accredited academic status and your institutional email address.
+* 你的组织名称。
+* 你的 [tailnet 名称][docs-tailnet-name]。
+* 资格证明：
+  * **美国组织**：官方 IRS 501(c)(3) 认定信的 PDF 或图片。
+  * **加拿大组织**：组织官方网站的链接，或其公司注册证书（Certificate of Incorporation）副本。
+  * **国际组织**：组织官方网站或登记记录的链接，以确认其慈善或非营利身份。
+  * **教育机构**：经认证的学术身份证明和你的机构邮箱地址。
 
-After you provide the required information, Tailscale Support will review your eligibility and help apply the discount to your plan.
+你提供所需信息后，Tailscale 支持团队会审核你的资格，并协助将折扣应用到你的套餐。
 
 [co-contact-support-billing]: https://tailscale.com/contact/support/?type=billing
 

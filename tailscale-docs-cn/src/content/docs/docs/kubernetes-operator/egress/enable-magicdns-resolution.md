@@ -1,24 +1,24 @@
 ---
-title: "Enable MagicDNS resolution in your cluster"
-description: "By default, pods in your Kubernetes cluster cannot resolve Tailscale MagicDNS names (`.ts.net`). If your egress targets use HTTPS, the TLS certificate is issued for the MagicDNS name. For example, `my"
+title: "在集群中启用 MagicDNS 解析"
+description: "默认情况下，Kubernetes 集群中的 pod 无法解析 Tailscale MagicDNS 名称（`.ts.net`）。如果你的出站目标使用 HTTPS，TLS 证书是针对 MagicDNS 名称签发的。例如，`my"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-By default, pods in your Kubernetes cluster cannot resolve Tailscale MagicDNS names (`.ts.net`). If your egress targets use HTTPS, the TLS certificate is issued for the MagicDNS name. For example, `my-database.<tailnet>.ts.net`, and your workloads need to connect using that name for certificate validation to succeed.
+默认情况下，Kubernetes 集群中的 pod 无法解析 Tailscale MagicDNS 名称（`.ts.net`）。如果你的出站目标使用 HTTPS，TLS 证书是针对 MagicDNS 名称签发的，例如 `my-database.<tailnet>.ts.net`，你的工作负载需要使用该名称连接，证书验证才能成功。
 
-This guide describes how to deploy a [DNSConfig][docs-dnsconfig] resource to enable `.ts.net` resolution from within your cluster.
+本指南介绍如何部署 [DNSConfig][docs-dnsconfig] 资源，以支持在集群内解析 `.ts.net` 名称。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备以下条件：
 
-* [Install][docs-k8s-install] the Tailscale Kubernetes Operator.
-* An egress proxy configured for the tailnet device you want to reach. Refer to [Access a Tailscale Service][docs-access-service].
+* 已[安装][docs-k8s-install] Tailscale Kubernetes Operator。
+* 已为你要访问的 tailnet 设备配置出站代理。请参阅[访问 Tailscale Service][docs-access-service]。
 
-## Deploy the DNSConfig resource
+## 部署 DNSConfig 资源
 
-Create a `DNSConfig` resource to deploy the in-cluster nameserver:
+创建一个 `DNSConfig` 资源来部署集群内名称服务器：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -32,31 +32,31 @@ spec:
       tag: unstable
 ```
 
-Apply the manifest to your cluster:
+将清单应用到集群：
 
 ```shell
 kubectl apply -f dnsconfig.yaml
 ```
 
-## Get the nameserver IP
+## 获取名称服务器 IP
 
-After the nameserver is running, its `ClusterIP` is written to the `DNSConfig` status:
+名称服务器运行后，它的 `ClusterIP` 会写入 `DNSConfig` 状态：
 
 ```shell
 kubectl get dnsconfig ts-dns -o jsonpath='{.status.nameserver.ip}'
 ```
 
-## Configure CoreDNS
+## 配置 CoreDNS
 
-Add a stub domain to your CoreDNS configuration so that `.ts.net` queries are forwarded to the Tailscale nameserver.
+在 CoreDNS 配置中添加一个 stub domain，让 `.ts.net` 查询转发给 Tailscale 名称服务器。
 
-Edit the CoreDNS `ConfigMap`:
+编辑 CoreDNS 的 `ConfigMap`：
 
 ```shell
 kubectl edit configmap coredns -n kube-system
 ```
 
-Add a `ts.net` server block that forwards to the nameserver IP from the previous step:
+添加一个 `ts.net` server 块，转发到上一步获取的名称服务器 IP：
 
 ```
 ts.net:53 {
@@ -66,30 +66,30 @@ ts.net:53 {
 }
 ```
 
-Restart CoreDNS to pick up the change:
+重启 CoreDNS 以应用更改：
 
 ```shell
 kubectl rollout restart deployment coredns -n kube-system
 ```
 
-> **Note:**
+> **注意：**
 >
-> If your cluster uses `kube-dns` instead of CoreDNS (for example, some GKE configurations), refer to the [GKE documentation][xt-gke-kube-dns] for stub domain configuration.
+> 如果你的集群使用 `kube-dns` 而非 CoreDNS（例如某些 GKE 配置），stub domain 配置请参阅 [GKE 文档][xt-gke-kube-dns]。
 
-## Verify name resolution
+## 验证名称解析
 
-Test that `.ts.net` names resolve from within the cluster:
+测试 `.ts.net` 名称能否在集群内解析：
 
 ```shell
 kubectl run -it --rm dns-test --image=busybox -- nslookup <device>.<tailnet>.ts.net
 ```
 
-Replace `<device>.<tailnet>.ts.net` with the MagicDNS name of a tailnet device that has an egress proxy configured. If the lookup returns the egress proxy pod IP, MagicDNS resolution is working.
+将 `<device>.<tailnet>.ts.net` 替换为一台已配置出站代理的 tailnet 设备的 MagicDNS 名称。如果查询返回出站代理 pod 的 IP，说明 MagicDNS 解析已生效。
 
-## Further exploration
+## 进一步探索
 
-* [Learn about the DNSConfig resource][docs-dnsconfig] to understand how the in-cluster nameserver resolves MagicDNS names.
-* [Access a Tailscale Service][docs-access-service] to reach a tailnet device from your cluster through an egress proxy.
+* [了解 DNSConfig 资源][docs-dnsconfig]，理解集群内名称服务器如何解析 MagicDNS 名称。
+* [访问 Tailscale Service][docs-access-service]，从集群中通过出站代理访问 tailnet 设备。
 
 [docs-access-service]: /docs/kubernetes-operator/egress/access-tailnet-service
 

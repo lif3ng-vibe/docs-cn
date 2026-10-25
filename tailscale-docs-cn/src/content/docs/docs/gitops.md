@@ -1,25 +1,25 @@
 ---
-title: "GitOps for Tailscale"
-description: "Use GitOps to maintain your tailnet policy file as code."
+title: "面向 Tailscale 的 GitOps"
+description: "使用 GitOps 以代码方式维护你的 tailnet 策略文件。"
 ---
 
-Last validated May 2, 2025
+最后验证于 May 2, 2025
 
-> **Note:** GitOps for Tailscale is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 面向 Tailscale 的 GitOps 适用于[所有套餐](https://tailscale.com/pricing)。
 
-[GitOps][xt-opengitops] for Tailscale is an alternative to managing [access control policies][docs-access-control] and the [tailnet policy file][docs-tailnet-policy-file] using the admin console. Using GitOps offers some distinct advantages. It lets you leverage all the benefits of Git version control for your tailnet policy file such as maintaining multiple versions, auditing commits, and adopting a configuration-as-code approach.
+面向 Tailscale 的 [GitOps][xt-opengitops] 是一种替代方案，无需使用管理控制台来管理 [访问控制策略][docs-access-control] 和 [tailnet 策略文件][docs-tailnet-policy-file]。使用 GitOps 有几个独特的优势：你可以为 tailnet 策略文件充分利用 Git 版本控制的各种好处，例如维护多个版本、审计提交，以及采用配置即代码的方法。
 
-You can also require reviews before merging changes, invoke automatic tests to run upon tailnet policy file changes, and automatically apply validated changes to your policy file.
+你还可以要求在合并更改前进行评审、在 tailnet 策略文件发生更改时自动触发测试，并将通过验证的更改自动应用到策略文件。
 
-When you use GitOps, Tailscale automatically validates changes to the tailnet policy file when you push or pull changes using Git.
+使用 GitOps 时，当你用 Git 推送或拉取更改，Tailscale 会自动校验 tailnet 策略文件的更改。
 
-GitOps for Tailscale works with Bitbucket, GitHub Actions, and GitLab CI. Explore the following topics to enable, disable, and manage GitOps for Tailscale:
+面向 Tailscale 的 GitOps 可与 Bitbucket、GitHub Actions 和 GitLab CI 配合使用。浏览以下主题，了解如何启用、禁用和管理面向 Tailscale 的 GitOps：
 
-[**GitOps for Tailscale with Bitbucket**](/docs/integrations/bitbucket/gitops) — Use a Bitbucket CI to maintain your tailnet policy file as code.
+[**使用 Bitbucket 实现 Tailscale 的 GitOps**](/docs/integrations/bitbucket/gitops) —— 使用 Bitbucket CI 以代码方式维护你的 tailnet 策略文件。
 
-[**GitOps for Tailscale with GitHub Actions**](/docs/integrations/github/gitops) — Use a GitHub Action to maintain your tailnet policy file as code.
+[**使用 GitHub Actions 实现 Tailscale 的 GitOps**](/docs/integrations/github/gitops) —— 使用 GitHub Action 以代码方式维护你的 tailnet 策略文件。
 
-[**GitOps for Tailscale with GitLab CI**](/docs/integrations/gitlab/gitops) — Use a GitLab CI to maintain your tailnet policy file as code.
+[**使用 GitLab CI 实现 Tailscale 的 GitOps**](/docs/integrations/gitlab/gitops) —— 使用 GitLab CI 以代码方式维护你的 tailnet 策略文件。
 
 [docs-access-control]: /docs/features/access-control
 

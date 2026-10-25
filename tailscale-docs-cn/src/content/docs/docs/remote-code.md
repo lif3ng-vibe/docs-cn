@@ -1,18 +1,18 @@
 ---
-title: "Connect to your remote code environment"
-description: "Connect to remote code environments like code-server, Coder, GitHub Codespaces, Gitpod, and OpenVSCode."
+title: "连接你的远程代码环境"
+description: "连接 code-server、Coder、GitHub Codespaces、Gitpod 和 OpenVSCode 等远程代码环境。"
 ---
 
-Last validated Dec 20, 2024
+最后验证于 Dec 20, 2024
 
-[**Access your tailnet from Coder**](/docs/install/cloud/coder) — Write code remotely by installing Tailscale on Coder.
+[**从 Coder 访问你的 tailnet**](/docs/install/cloud/coder)——在 Coder 上安装 Tailscale，远程编写代码。
 
-[**Access your tailnet from CodeSandbox**](/docs/integrations/codesandbox) — Privately access CodeSandbox repositories.
+[**从 CodeSandbox 访问你的 tailnet**](/docs/integrations/codesandbox)——私密访问 CodeSandbox 仓库。
 
-[**Access your tailnet from code-server**](/docs/integrations/codeserver) — Write code remotely by installing Tailscale on code-server.
+[**从 code-server 访问你的 tailnet**](/docs/integrations/codeserver)——在 code-server 上安装 Tailscale，远程编写代码。
 
-[**Access your tailnet GitHub Codespaces**](/docs/integrations/github/github-codespaces) — Write code remotely by installing Tailscale on GitHub Codespaces.
+[**从 GitHub Codespaces 访问你的 tailnet**](/docs/integrations/github/github-codespaces)——在 GitHub Codespaces 上安装 Tailscale，远程编写代码。
 
-[**Access your tailnet from Gitpod**](/docs/install/cloud/gitpod) — Write code remotely by installing Tailscale on Gitpod.
+[**从 Gitpod 访问你的 tailnet**](/docs/install/cloud/gitpod)——在 Gitpod 上安装 Tailscale，远程编写代码。
 
-[**Access your tailnet from OpenVSCode**](/docs/integrations/open-vscode) — Write code remotely by installing Tailscale on OpenVSCode.
+[**从 OpenVSCode 访问你的 tailnet**](/docs/integrations/open-vscode)——在 OpenVSCode 上安装 Tailscale，远程编写代码。

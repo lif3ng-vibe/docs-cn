@@ -1,96 +1,96 @@
 ---
-title: "Network flow logs"
-description: "Network flow logs let you understand how and when nodes on your Tailscale network (known as a tailnet) connect to each other. You can export network logs for long-term storage, security analysis, thre"
+title: "网络流日志"
+description: "网络流日志让你了解 Tailscale 网络（即 tailnet）中的节点如何以及何时相互连接。你可以导出网络日志用于长期存储、安全分析、威胁检测或事件调查"
 ---
 
-Last validated Jan 23, 2026
+最后验证于 Jan 23, 2026
 
-Network flow logs let you understand how and when nodes on your Tailscale network (known as a tailnet) connect to each other. You can export network logs for long-term storage, security analysis, threat detection, or incident investigation. You can also [stream logs][docs-log-streaming] to a security information and event management ([SIEM][ln-security-info-event-management]) system.
+网络流日志让你了解 Tailscale 网络（即 tailnet）中的节点如何以及何时相互连接。你可以导出网络日志用于长期存储、安全分析、威胁检测或事件调查。你还可以把日志[流式传输][docs-log-streaming]到 SIEM（安全信息与事件管理，[SIEM][ln-security-info-event-management]）系统。
 
-The data captured in network logs is the flow of network traffic, not the contents of network traffic. Tailscale does not and cannot inspect your traffic. For more information about how your data stays private, refer to our [Security page][co-security].
+网络日志中捕获的数据是网络流量的流动情况，而不是网络流量的内容。Tailscale 不会也无法检查你的流量。有关你的数据如何保持私密的更多信息，参见我们的[安全页面][co-security]。
 
-Network flow logs are available for the most recent 30 days.
+网络流日志可查看最近 30 天的记录。
 
-> **Note:** This feature is available for [the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：**此功能[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> Only nodes using Tailscale v1.34 or later can send networking telemetry to the Tailscale logs service.
+> 只有运行 Tailscale v1.34 或更高版本的节点才能向 Tailscale 日志服务发送网络遥测数据。
 
-## How it works
+## 工作原理
 
-When network flow logs are enabled (and not using [`--no-logs-no-support`][docs-log-mesh-traffic-opt-out]), nodes report their flow information (for both ends of the connection) to the Tailscale logs service. A connection can be between:
+启用网络流日志后（且未使用 [`--no-logs-no-support`][docs-log-mesh-traffic-opt-out]），节点会向 Tailscale 日志服务报告其流量信息（包括连接的两端）。连接可以发生在：
 
-* Two nodes
-* A node and a device behind a subnet router
-* A node and a public device accessed through an exit node
+* 两个节点之间
+* 节点与子网路由器后面的设备之间
+* 节点与经由出口节点访问的公共设备之间
 
-When the connection is between a node and a device behind a subnet router, the subnet router logs the connection. When the connection is between a node and a public device accessed through an exit node, the exit node logs the connection.
+当连接发生在节点与子网路由器后面的设备之间时，由该子网路由器记录连接。当连接发生在节点与经由出口节点访问的公共设备之间时，由该出口节点记录连接。
 
-Logs occur between transferred and received network connections, and entries exist for both ends.
+日志记录发生在已发送和已接收的网络连接之间，并且连接两端都有条目。
 
-Logs occur at two layers: the virtual layer and the physical layer. The virtual layer is the Tailscale network (often with IP addresses in [`100.x.x.x`][docs-100.x-addresses]) that Tailscale provides for each device. The physical layer involves all the physical network interfaces on a device. When one node transmits a packet to another, the packet must cross through the physical layer. The summation of all traffic routed at the virtual layer is generally equal to the traffic routed at the physical layer.
+日志发生在两个层面：虚拟层和物理层。虚拟层是 Tailscale 为每台设备提供的 Tailscale 网络（通常使用 [`100.x.x.x`][docs-100.x-addresses] IP 地址）。物理层涉及设备上的所有物理网络接口。当一个节点向另一个节点发送数据包时，数据包必须穿过物理层。虚拟层路由的全部流量之和通常等于物理层路由的流量。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale centrally stores network logs and lets you export them. Tailscale does not log the actual contents or data of the network traffic.
+> Tailscale 集中存储网络日志并允许你导出。Tailscale 不会记录网络流量的实际内容或数据。
 
-## Network logs structure
+## 网络日志结构
 
-Network logs contain an array of messages that provide details about network flow activity. Each message contains the following components:
+网络日志包含一个消息数组，提供有关网络流活动的详细信息。每条消息包含以下组成部分：
 
-* `nodeId`: The node that generated this log message. It is a globally unique identifier of a node. It is not the same value as the node name. If you want to map `nodeId` to a node name, you can use the [`/api/v2/device/:nodeId`][co-api-devices] method and examine the `name` field.
-* `logged`: The time in UTC that the Tailscale logs service recorded the message. Generally, the logged time is after the end time within a message.
-* `start`: The start time in UTC for the network traffic flow data in the message, as recorded by the node that generated the message.
-* `end`: The end time in UTC for the network traffic flow data in the message, as recorded by the node that generated the message.
-* `srcNode`: Information about the source node itself, which is the node that generated this log message. Explore the `Node` type in the following section for more information.
-* `dstNodes`: List of information about all destination nodes that the source node (for example, this node) communicated with. Explore the `Node` type for more information.
-* `virtualTraffic`: Counters for the network flow's virtual traffic. Virtual traffic is traffic that occurs between nodes in your tailnet.
-* `subnetTraffic`: Counters for the network flow's traffic routed through an advertised subnet router.
-* `exitTraffic`: Counters for the network flow's traffic routed through an exit node. For traffic from a node to a public device through an exit node, the source is the Tailscale IP address, but the protocol, source port, and destination are empty. For traffic responses from a public device to a node through an exit node, the destination is the Tailscale IP address, but the protocol, destination port, and source are empty. Tailscale doesn't gather granular information about individual connections to preserve privacy. If an administrator enables [Destination Logging][docs-exit-nodes-logging], the protocol, source port, and destination information are logged.
-* `physicalTraffic`: Counters for the network flow's traffic on the physical network layer that operates below the virtual Tailscale network. Traffic information at the physical layer is gathered at a slightly different time than the virtual layer, so packets flowing through the virtual layer may not exactly line up with those at the physical layer.
+* `nodeId`：生成此日志消息的节点。它是节点的全局唯一标识符，与节点名称不同。如果要把 `nodeId` 映射到节点名称，可以使用 [`/api/v2/device/:nodeId`][co-api-devices] 方法并查看 `name` 字段。
+* `logged`：Tailscale 日志服务记录该消息的 UTC 时间。通常，记录时间晚于消息中的结束时间。
+* `start`：消息中网络流量数据的开始时间（UTC），由生成该消息的节点记录。
+* `end`：消息中网络流量数据的结束时间（UTC），由生成该消息的节点记录。
+* `srcNode`：源节点自身的信息，即生成此日志消息的节点。详见下一节的 `Node` 类型。
+* `dstNodes`：源节点（例如本节点）与之通信的所有目标节点的信息列表。详见 `Node` 类型。
+* `virtualTraffic`：网络流虚拟流量的计数器。虚拟流量是 tailnet 中节点之间发生的流量。
+* `subnetTraffic`：网络流经由已宣告的子网路由器路由的流量的计数器。
+* `exitTraffic`：网络流经由出口节点路由的流量的计数器。对于从节点经出口节点发往公共设备的流量，源为 Tailscale IP 地址，但协议、源端口和目标为空。对于从公共设备经出口节点返回节点的流量响应，目标为 Tailscale IP 地址，但协议、目标端口和源为空。为保护隐私，Tailscale 不会收集单个连接的细粒度信息。如果管理员启用了[目标日志记录][docs-exit-nodes-logging]，则会记录协议、源端口和目标信息。
+* `physicalTraffic`：网络流在虚拟 Tailscale 网络之下的物理网络层上的流量的计数器。物理层的流量信息收集时间与虚拟层略有不同，因此流经虚拟层的数据包可能与物理层的不完全对应。
 
-Start and end times are specific to the node that generated the message. Timestamps may be subject to clock skew across different nodes.
+开始和结束时间特定于生成该消息的节点。不同节点之间的时间戳可能存在时钟偏差。
 
-The virtual, subnet, exit, and physical traffic counters consist of the following components:
+虚拟、子网、出口和物理流量计数器由以下部分组成：
 
-* `proto`: The [IANA Protocol Number][xt-iana-protocol-numbers] for the network flow: 6 for TCP, 17 for UDP. Empty for exit traffic, unless [Destination Logging][docs-exit-nodes-logging] is enabled.
-* `src`: The Tailscale IP address and port for the source of the network flow. The port number is not included for exit traffic, unless [Destination Logging][docs-exit-nodes-logging] is enabled.
-* `dst`: The IP address and port for the destination of the network flow. This IP address can be either a Tailscale IP address or an external IP address, such as on a private network or a public IP. Empty for exit traffic, unless [Destination Logging][docs-exit-nodes-logging] is enabled.
-* `txPackets`: Number of packets transmitted.
-* `txBytes`: Number of bytes transmitted.
-* `rxPackets`: Number of packets received.
-* `rxBytes`: Number of bytes received.
+* `proto`：网络流的 [IANA 协议编号][xt-iana-protocol-numbers]：TCP 为 6，UDP 为 17。出口流量为空，除非启用了[目标日志记录][docs-exit-nodes-logging]。
+* `src`：网络流源的 Tailscale IP 地址和端口。出口流量不包含端口号，除非启用了[目标日志记录][docs-exit-nodes-logging]。
+* `dst`：网络流目标的 IP 地址和端口。该 IP 地址可以是 Tailscale IP 地址，也可以是外部 IP 地址（例如私有网络或公网 IP 上的地址）。出口流量为空，除非启用了[目标日志记录][docs-exit-nodes-logging]。
+* `txPackets`：已发送的数据包数量。
+* `txBytes`：已发送的字节数。
+* `rxPackets`：已接收的数据包数量。
+* `rxBytes`：已接收的字节数。
 
-## Enable network flow logs
+## 启用网络流日志
 
-Network flow logs are disabled by default.
+网络流日志默认停用。
 
-You must be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) of a tailnet to enable Network flow logs.
+你必须是 tailnet 的 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 才能启用网络流日志。
 
-1. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-2. Select **Start logging**.
-3. In the **Start logging network flows** dialog, select **Start logging**.
+1. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+2. 选择 **Start logging**。
+3. 在 **Start logging network flows** 对话框中，选择 **Start logging**。
 
-## Disable network flow logs
+## 停用网络流日志
 
-You must be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) of a tailnet to disable Network flow logs.
+你必须是 tailnet 的 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 才能停用网络流日志。
 
-1. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-2. Select **Stop logging**.
-3. In the **Stop logging network flows** dialog, select **Stop logging**.
+1. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+2. 选择 **Stop logging**。
+3. 在 **Stop logging network flows** 对话框中，选择 **Stop logging**。
 
-## Access network logs
+## 访问网络日志
 
-You must be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) of a tailnet to access network logs.
+你必须是 tailnet 的 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 才能访问网络日志。
 
-You can access network logs using the Tailscale [API][docs-api] or [log streaming][ar-network-flow-logs-streaming].
+你可以使用 Tailscale [API][docs-api] 或[日志流式传输][ar-network-flow-logs-streaming]访问网络日志。
 
-### Access network logs through the API
+### 通过 API 访问网络日志
 
-You need an [API access token][docs-api-authentication] with the `logs:network:read` scope to access network logs.
+你需要一个具有 `logs:network:read` 权限范围的 [API 访问令牌][docs-api-authentication]才能访问网络日志。
 
-The response from the `https://api.tailscale.com/api/v2/tailnet/{$TAILNET_ID}/logging/network` endpoint call is in the form of the `Response` struct:
+调用 `https://api.tailscale.com/api/v2/tailnet/{$TAILNET_ID}/logging/network` 端点的响应是 `Response` 结构体的形式：
 
 ```go
 type Response struct {
@@ -98,7 +98,7 @@ type Response struct {
 }
 ```
 
-Using Go syntax, the `Response` struct contains a slice of `Message` types. The `Message` struct is defined as:
+使用 Go 语法描述，`Response` 结构体包含一个 `Message` 类型的切片。`Message` 结构体定义如下：
 
 ```go
 type Message struct {
@@ -180,7 +180,7 @@ type Message struct {
 }
 ```
 
-Several fields in the `Message` struct use the type `ConnectionCounts`. The `ConnectionCounts` struct is defined as:
+`Message` 结构体中的若干字段使用 `ConnectionCounts` 类型。`ConnectionCounts` 结构体定义如下：
 
 ```go
 type ConnectionCounts struct {
@@ -195,7 +195,7 @@ type ConnectionCounts struct {
 }
 ```
 
-Several fields in the `Message` struct use the type `Node`. The `Node` struct is defined as:
+`Message` 结构体中的若干字段使用 `Node` 类型。`Node` 结构体定义如下：
 
 ```go
 type Node struct {
@@ -221,29 +221,29 @@ type Node struct {
 }
 ```
 
-The `Message.NodeID` field is verified by the Tailscale logs service as the actual node from which the message originated. The `Start`, `End`, `SrcNode`, `DstNodes`, `VirtualTraffic`, `SubnetTraffic`, `ExitTraffic`, and `PhysicalTraffic` fields are produced by individual nodes and recorded by the Tailscale logs service without validation. It is infeasible for Tailscale to verify the accuracy or truthfulness of this information. It is possible for malicious nodes to spoof this information.
+`Message.NodeID` 字段由 Tailscale 日志服务验证，确认为消息实际来源的节点。`Start`、`End`、`SrcNode`、`DstNodes`、`VirtualTraffic`、`SubnetTraffic`、`ExitTraffic` 和 `PhysicalTraffic` 字段由各节点生成，Tailscale 日志服务不加验证地记录。Tailscale 无法验证这些信息的准确性或真实性。恶意节点有可能伪造这些信息。
 
-When investigating network flow logs, you should identify a set of nodes that you consider more trustworthy (such as a server running in production) in contrast to those that might be more likely tampered with (such as an individual employee's work laptop). Discrepancies in network logs between the two might be indicative of malicious behavior.
+调查网络流日志时，你应当区分一组你认为更可信的节点（例如生产环境中运行的服务器）与那些可能更容易被篡改的节点（例如某位员工的工作笔记本电脑）。两者网络日志之间的不一致可能预示恶意行为。
 
-You can use the following query parameters with the API:
+你可以在 API 中使用以下查询参数：
 
-* `start`: Required. Start of the timeframe, in [RFC 3339][xt-rfc-3339] timestamp format, for the logs to retrieve. For example: `2022-07-20T00:00:00Z`.
-* `end`: Required. End of the timeframe, in RFC3339 timestamp format, for the logs to retrieve. If `end` is greater than the latest known timestamp in the log, the API call will not block the call. This means consecutive queries with the same `start` and `end` times range may return different log entries that were not available during the earlier query.
+* `start`：必填。要获取日志的时间范围起点，采用 [RFC 3339][xt-rfc-3339] 时间戳格式。例如：`2022-07-20T00:00:00Z`。
+* `end`：必填。要获取日志的时间范围终点，采用 RFC3339 时间戳格式。如果 `end` 大于日志中最新的已知时间戳，API 调用不会阻塞。这意味着以相同 `start` 和 `end` 时间范围连续查询时，可能返回上次查询时尚不可用的不同日志条目。
 
-`start` and `end` times are inclusive within nanosecond resolution.
+`start` 和 `end` 时间在纳秒精度上包含边界。
 
-All log messages are listed in chronological order from oldest to newest.
+所有日志消息按时间先后顺序列出，从最旧到最新。
 
-There is no pagination support or maximum page size for the API. All known logged network activity in the specified timeframe is returned.
+该 API 不支持分页，也没有最大页大小限制。指定时间范围内所有已知的已记录网络活动都会返回。
 
-#### Example API call
+#### API 调用示例
 
-This example assumes you have set up the following variables to use for your API call:
+本示例假设你已经设置好以下变量供 API 调用使用：
 
-* `$ACCESS_TOKEN`: An [API access token][docs-api-authentication] to use when calling the Tailscale API. You can create an API access token in the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-* `$TAILNET_ID`: Your tailnet ID. You can find your tailnet ID in the [General](https://console.tailscale.com/admin/settings/general) page of the admin console.
-* `$START`: The start of the timeframe for the logs to retrieve.
-* `$END`: The end of the timeframe for the logs to retrieve.
+* `$ACCESS_TOKEN`：调用 Tailscale API 时使用的 [API 访问令牌][docs-api-authentication]。你可以在管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面创建 API 访问令牌。
+* `$TAILNET_ID`：你的 tailnet ID。你可以在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 页面找到你的 tailnet ID。
+* `$START`：要获取日志的时间范围起点。
+* `$END`：要获取日志的时间范围终点。
 
 ```shell
 export ACCESS_TOKEN=tskey-api-k123456CNTRL-0123456789abcdef
@@ -252,16 +252,16 @@ export START=2022-10-28T22:40:00.000000000Z
 export END=2022-10-28T22:40:04.999999999Z
 ```
 
-This example makes a call to the `https://api.tailscale.com/api/v2/tailnet/{$TAILNET_ID}/logging/network` endpoint.
+本示例调用 `https://api.tailscale.com/api/v2/tailnet/{$TAILNET_ID}/logging/network` 端点。
 
 ```shell
 curl -u $ACCESS_TOKEN: \
   "https://api.tailscale.com/api/v2/tailnet/{$TAILNET_ID}/logging/network?start={$START}&end={$END}"
 ```
 
-(You can also copy the command above from the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.)
+（你也可以从管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面复制上面的命令。）
 
-The following code block contains an example log output:
+以下代码块包含示例日志输出：
 
 ```json
 {
@@ -370,7 +370,7 @@ The following code block contains an example log output:
 }
 ```
 
-You can use the Go binary [`netlogfmt`][xt-go-tailscale-netlogfmt] to make the output more readable:
+你可以使用 Go 程序 [`netlogfmt`][xt-go-tailscale-netlogfmt] 让输出更易读：
 
 ```shell
 curl -u $ACCESS_TOKEN: \
@@ -378,7 +378,7 @@ curl -u $ACCESS_TOKEN: \
   | go run tailscale.com/cmd/netlogfmt@latest
 ```
 
-The following code block contains an example log output:
+以下代码块包含示例日志输出：
 
 ```shell
 ===========================================================================================
@@ -416,13 +416,13 @@ PhysicalTraffic:                                          28.80    4.46Ki    46.
                  100.111.22.33 -> 192.168.0.102:41641      0.60    169.62     1.20    227.23
 ```
 
-To make it easier to recognize nodes in the output, the `netlogfmt` binary provides flags that resolve IP addresses to readable labels:
+为了让输出中的节点更易识别，`netlogfmt` 提供了把 IP 地址解析为可读标签的标志：
 
-* `--resolve-addrs`: Convert Tailscale IP addresses to readable labels. Valid values include `nodeids` (which resolves IP addresses as node IDs), `names` (which resolves IP addresses as hostnames), or `users` (which resolves IP addresses as the user or tags that own the machine). Since Tailscale v1.92, network flow logs automatically embed node information directly into the logs. For logs generated by older clients, you must also specify `--api-key` and `--tailnet-name` as parameters to `netlogfmt` when using the `--resolve-addrs` flag.
-* `--api-key`: Specifies the [API access token][docs-api-authentication] to use for the Tailscale API. This can be the same API access token you used for the `network-logs` endpoint or another valid API access token.
-* `--tailnet-name`: The same organization name you passed to the `network-logs` endpoint.
+* `--resolve-addrs`：把 Tailscale IP 地址转换为可读标签。有效值包括 `nodeids`（把 IP 地址解析为节点 ID）、`names`（把 IP 地址解析为主机名）或 `users`（把 IP 地址解析为拥有该机器的用户或标签）。自 Tailscale v1.92 起，网络流日志会自动把节点信息直接嵌入日志。对于由较旧客户端生成的日志，使用 `--resolve-addrs` 标志时还必须向 `netlogfmt` 传入 `--api-key` 和 `--tailnet-name` 参数。
+* `--api-key`：指定用于 Tailscale API 的 [API 访问令牌][docs-api-authentication]。可以是你用于 `network-logs` 端点的同一个 API 访问令牌，也可以是另一个有效的 API 访问令牌。
+* `--tailnet-name`：与你传给 `network-logs` 端点相同的组织名称。
 
-This example shows how to use the `netlogfmt` flags:
+本示例展示如何使用 `netlogfmt` 的标志：
 
 ```shell
 curl -u $ACCESS_TOKEN:  -X GET \
@@ -430,9 +430,9 @@ curl -u $ACCESS_TOKEN:  -X GET \
   | go run tailscale.com/cmd/netlogfmt@latest --resolve-addrs=names --api-key=$ACCESS_TOKEN --tailnet-name=$TAILNET
 ```
 
-As mentioned above, the `ACCESS_TOKEN` and `TAILNET`  is only needed to resolve addresses for clients older than v1.92.
+如前所述，`ACCESS_TOKEN` 和 `TAILNET` 仅在为 v1.92 之前的客户端解析地址时才需要。
 
-The following code block contains an example log output.
+以下代码块包含示例日志输出。
 
 ```shell
 =======================================================================================
@@ -470,25 +470,25 @@ PhysicalTraffic:                                   28.80    4.46Ki    46.41    7
               carbonite -> 192.168.0.102:41641      0.60    169.62     1.20    227.23
 ```
 
-## Network flow logs streaming
+## 网络流日志流式传输
 
-Log streaming lets you stream network flow logs into a security information and event management ([SIEM][ln-security-info-event-management]) system. For more information, refer to [Log streaming][docs-log-streaming].
+日志流式传输让你可以把网络流日志流式传输到 SIEM（安全信息与事件管理，[SIEM][ln-security-info-event-management]）系统。更多信息参见[日志流式传输][docs-log-streaming]。
 
-## Limitations
+## 限制
 
-* Only nodes using Tailscale v1.34 or later send networking telemetry to the Tailscale logs service.
-* You can only access network logs using the API and as a [streaming source][docs-log-streaming] for SIEM systems. There is no network logs viewing functionality in the Tailscale admin console.
-* Network flow logs are for logging, not monitoring. The admin console does not contain a live readout of the connections between nodes. Additionally, network logs don't include information on whether a node is online or idle. The logs only indicate whether there was network traffic.
-* Network logs do not include individual packet transfers. Logs capture when connections are active, which could include multiple data flows.
-* Tailscale only logs successful connects. If a connection attempt results in denied access, the attempt isn't logged.
-* Traffic information at the physical layer is gathered at a slightly different time than the virtual layer, so packets flowing through the virtual layer might not precisely line up with those at the physical layer.
-* Public IP addresses are not logged as either a destination or source. That is, a connection from your tailnet through an exit node does not log where the traffic is going, and a connection from the public internet through an exit node does not log where the traffic is returning from. To preserve privacy, Tailscale doesn't gather detailed information about individual connections.
-  * If [Destination Logging][docs-exit-nodes-logging] is enabled by the administrator, the protocol, source port, and destination information are logged.
-* The user authenticated on a source or destination host is not logged. To map a node to a user, you can use the [`/api/v2/tailnet/:tailnet/device`][co-api-devices] method and examine the `user` field.
-* Network logging is performed client-side. Tailscale cannot guarantee the delivery or integrity of the client logs. Tailscale cannot fully guarantee client log latency thresholds—that is, logs are not delivered in real-time.
-* Enabling network flow logs might result in a slight performance impact because the client does additional work to track necessary metrics. The incremental load is spread across the fleet, not concentrated on a single host.
+* 只有运行 Tailscale v1.34 或更高版本的节点才会向 Tailscale 日志服务发送网络遥测数据。
+* 你只能通过 API 以及作为 SIEM 系统的[流式传输来源][docs-log-streaming]访问网络日志。Tailscale 管理控制台没有网络日志查看功能。
+* 网络流日志用于记录，而不是监控。管理控制台不提供节点之间连接的实时读数。此外，网络日志不包含节点在线还是空闲的信息。日志只表明是否有网络流量。
+* 网络日志不包含单个数据包的传输记录。日志捕获的是连接处于活动状态的时间段，其中可能包含多个数据流。
+* Tailscale 只记录成功的连接。如果连接尝试被拒绝访问，该尝试不会被记录。
+* 物理层的流量信息收集时间与虚拟层略有不同，因此流经虚拟层的数据包可能与物理层的不完全对应。
+* 公共 IP 地址不会作为目标或源被记录。也就是说，从你的 tailnet 经出口节点发出的连接不会记录流量去向，从公共互联网经出口节点返回的连接不会记录流量来源。为保护隐私，Tailscale 不会收集单个连接的详细信息。
+  * 如果管理员启用了[目标日志记录][docs-exit-nodes-logging]，则会记录协议、源端口和目标信息。
+* 在源主机或目标主机上认证的用户不会被记录。要把节点映射到用户，可以使用 [`/api/v2/tailnet/:tailnet/device`][co-api-devices] 方法并查看 `user` 字段。
+* 网络日志由客户端侧执行记录。Tailscale 无法保证客户端日志的送达或完整性。Tailscale 也无法完全保证客户端日志的延迟阈值——也就是说，日志并非实时送达。
+* 启用网络流日志可能带来轻微的性能影响，因为客户端需要执行额外工作来跟踪必要的指标。增量负载会分散到整个设备群，而不是集中在单台主机上。
 
-[ar-network-flow-logs-streaming]: #network-flow-logs-streaming
+[ar-network-flow-logs-streaming]: #网络流日志流式传输
 
 [co-api-devices]: https://tailscale.com/api#tag/devices/GET/tailnet/%7Btailnet%7D/devices
 

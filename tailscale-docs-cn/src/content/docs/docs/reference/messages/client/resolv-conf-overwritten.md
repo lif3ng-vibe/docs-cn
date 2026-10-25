@@ -1,36 +1,36 @@
 ---
-title: "Linux DNS configuration issue"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "Linux DNS 配置问题"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Linux DNS configuration issue
 Linux DNS config not ideal. /etc/resolv.conf overwritten.
 
-## Reference ID
+## 参考 ID
 
 `resolv-conf-overwritten`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-Tailscale updates DNS settings on Linux clients to ensure that internal hostnames resolve correctly, especially when features like MagicDNS or split DNS are in use. An issue can arise if the client uses an unsupported DNS setup, such as a manually configured or locked `/etc/resolv.conf` file, or if a different network manager is overriding DNS changes. Problems may also occur if Tailscale doesn't have sufficient permissions or if the system is running in a restricted environment, such as a container. In cases such as these, Tailscale cannot apply its DNS configuration, which may lead to internal domains failing to resolve.
+Tailscale 会更新 Linux 客户端上的 DNS 设置，确保内部主机名能够正确解析，尤其是在使用 MagicDNS 或分割 DNS（split DNS）等功能时。如果客户端使用了不受支持的 DNS 配置（例如手动配置或被锁定的 `/etc/resolv.conf` 文件），或者其他网络管理器覆盖了 DNS 更改，就会出现问题。如果 Tailscale 权限不足，或者系统运行在容器这类受限环境中，也可能出现问题。在这些情况下，Tailscale 无法应用自己的 DNS 配置，可能导致内部域名无法解析。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Use the command `sudo systemctl enable --now systemd-resolved` if your Linux distribution supports it. This starts the Linux DNS resolver service immediately and ensures it runs automatically every time it boots up.
-* Run the `tailscaled` daemon as `root` to allow Tailscale to modify DNS settings and manage networking.
-* Manually configure DNS in your Linux network settings.
+* 如果你的 Linux 发行版支持，使用命令 `sudo systemctl enable --now systemd-resolved`。这会立即启动 Linux DNS 解析服务，并确保它在每次开机时自动运行。
+* 以 `root` 身份运行 `tailscaled` 守护进程，让 Tailscale 能够修改 DNS 设置并管理网络。
+* 在 Linux 网络设置中手动配置 DNS。
 
-## Additional information
+## 更多信息
 
-For information on `tailscaled`, refer to [tailscaled daemon][docs-tailscaled].
+有关 `tailscaled` 的信息，请参阅 [tailscaled 守护进程][docs-tailscaled]。
 
 [docs-messages]: /docs/reference/messages
 

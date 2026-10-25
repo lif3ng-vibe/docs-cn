@@ -1,52 +1,52 @@
 ---
-title: "Use Device Identity Collection"
-description: "Device Identity Collection collects identifiers such as serial numbers and MAC addresses from devices in your Tailscale network (known as a tailnet). It is required for device posture integrations lik"
+title: "使用设备身份收集"
+description: "设备身份收集（Device Identity Collection）会从 Tailscale 网络（即 tailnet）中的设备收集序列号、MAC 地址等标识符。CrowdStrike Falcon 等"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** Device Identity Collection is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 设备身份收集适用于[所有套餐](https://tailscale.com/pricing)。
 
-Device Identity Collection collects identifiers such as serial numbers and MAC addresses from devices in your Tailscale network (known as a tailnet). It is required for device posture integrations like [CrowdStrike Falcon][docs-crowdstrike-zta], and can be useful for correlating your devices between Tailscale and other systems.
+设备身份收集（Device Identity Collection）会从 Tailscale 网络（即 tailnet）中的设备收集序列号、MAC 地址等标识符。它对于 [CrowdStrike Falcon][docs-crowdstrike-zta] 等设备态势集成是必需的，也可用于在 Tailscale 与其他系统之间关联你的设备。
 
-This document provides instructions on:
+本文档提供以下操作说明：
 
-* How to enable Device Identity Collection for your tailnet.
-* How to enable Device Identity Collection on machines in your tailnet.
+* 如何为你的 tailnet 启用设备身份收集。
+* 如何为 tailnet 中的机器启用设备身份收集。
 
-## Prerequisites
+## 前提条件
 
-To configure the machines in your tailnet you will need either:
+要配置 tailnet 中的机器，你需要满足以下任一条件：
 
-* access to the machine to run the `tailscale` CLI; or
-* a Mobile Device Management (MDM) system.
+* 能访问机器并运行 `tailscale` CLI；或
+* 一个移动设备管理（MDM）系统。
 
-## Enabling Device Identity Collection for your tailnet
+## 为你的 tailnet 启用设备身份收集
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the Tailscale admin console.
-2. Under the **Device Posture Integrations** section, select the toggle under **Device Identity Collection**.
+1. 打开 Tailscale 管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
+2. 在 **Device Posture Integrations** 区域下，切换 **Device Identity Collection** 下方的开关。
 
-*（图：Device Identity Collection: toggle 'disabled'）*
+*（图：Device Identity Collection：开关为 disabled 状态。）*
 
-## Enabling Device Identity Collection for devices in your tailnet
+## 为 tailnet 中的设备启用设备身份收集
 
-Devices in your tailnet need to be individually opted-in to reporting their identity.
+tailnet 中的设备需要逐台选择加入身份上报。
 
-> **Note:**
+> **注意：**
 >
-> Device identity collection was added in Tailscale 1.52.
+> 设备身份收集功能在 Tailscale 1.52 中加入。
 
-There are two ways to opt-in a device to reporting its identity: by setting a system policy (for example, by using an MDM), or by using the CLI.
+让设备选择加入身份上报有两种方式：设置系统策略（例如通过 MDM），或使用 CLI。
 
-### Enabling Device Identity Collection by using system policies
+### 通过系统策略启用设备身份收集
 
-You can opt a device in to identity reporting by [setting the policy key][docs-mdm-keys] `PostureChecking` to `always`. This lets you opt-in devices using an MDM or configuration management system. Note that the Tailscale client needs to be restarted for this change to take effect. For more information on setting system policies, refer to [Customize Tailscale using system policies][docs-mdm-keys].
+你可以通过[将策略键][docs-mdm-keys] `PostureChecking` 设为 `always`，让设备选择加入身份上报。这种方式可以借助 MDM 或配置管理系统为设备启用。注意，Tailscale 客户端需要重启才能使更改生效。有关设置系统策略的更多信息，参见[使用系统策略自定义 Tailscale][docs-mdm-keys]。
 
-Using system policies is the recommended way to enable device identity collection on macOS and Windows. It takes priority over configuration set by using the CLI.
+在 macOS 和 Windows 上，推荐使用系统策略来启用设备身份收集。它的优先级高于通过 CLI 设置的配置。
 
-### Enabling Device Identity Collection by using the CLI
+### 通过 CLI 启用设备身份收集
 
-You can also opt-in a device by running the [`tailscale set`][docs-cli-set] CLI command on it and then reconnecting the client:
+你也可以在设备上运行 [`tailscale set`][docs-cli-set] CLI 命令，然后重新连接客户端，使设备选择加入：
 
 #### Linux
 
@@ -64,7 +64,7 @@ tailscale down
 tailscale up
 ```
 
-or
+或者
 
 ```shell
 /Applications/Tailscale.app/Contents/MacOS/Tailscale set --posture-checking=true
@@ -72,7 +72,7 @@ or
 /Applications/Tailscale.app/Contents/MacOS/Tailscale up
 ```
 
-To access the `tailscale` CLI on macOS, refer to the [CLI guide][docs-cli].
+要在 macOS 上使用 `tailscale` CLI，参见 [CLI 指南][docs-cli]。
 
 #### Windows
 
@@ -82,33 +82,33 @@ tailscale down
 tailscale up
 ```
 
-Using the CLI command is the only way to opt-in a Linux device to identity collection.
+对 Linux 设备而言，CLI 命令是让其选择加入身份收集的唯一方式。
 
-## Check collection progress
+## 查看收集进度
 
-In the **Device Posture** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page, you will find a summary of serial number collection.
+在 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Device Posture** 区域，你可以看到序列号收集情况的摘要。
 
-You can select **Inspect** to review which machines have a particular status, for example, to find machines that have not been opted in yet.
+你可以选择 **Inspect** 查看哪些机器处于特定状态，例如找出尚未选择加入的机器。
 
-*（图：Device Identity Collection: toggle 'enabled'. 22 of 582 devices opted-in. 21 returned serial numbers (inspect link). 1 returned only invalid serial numbers (inspect link). 196 did not have posture collection enabled (inspect link). 364 are yet to be checked (inspect link). Monitor changes to device identities in the audit logs.）*
+*（图：Device Identity Collection：开关为 enabled 状态。582 台设备中已有 22 台选择加入。21 台返回了序列号（inspect 链接）。1 台只返回了无效序列号（inspect 链接）。196 台未启用态势收集（inspect 链接）。364 台尚待检查（inspect 链接）。在审计日志中监控设备身份的变化。）*
 
-## Check device identifiers
+## 查看设备标识符
 
-You can review identifiers for your devices on the **Machine page** of the admin console.
+你可以在管理控制台的 **Machine page** 上查看设备的标识符。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Select a machine you want to inspect.
-3. Review the device identity and collection status in the **Machine Details** section.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择要查看的机器。
+3. 在 **Machine Details** 区域查看设备身份与收集状态。
 
-*（图：Machine details: Serial number: IB2HQE3XWO）*
+*（图：Machine details：Serial number：IB2HQE3XWO）*
 
-Device identity is also available from the [device API][co-api-get-device].
+设备身份也可以通过[设备 API][co-api-get-device] 获取。
 
-By default, Device Identity Collection fetches device serial numbers. Some posture integrations, like [CrowdStrike Falcon][docs-crowdstrike-zta], can also use MAC addresses for device matching, which will be collected if required by such an integration.
+默认情况下，设备身份收集会获取设备序列号。部分态势集成（如 [CrowdStrike Falcon][docs-crowdstrike-zta]）还可以使用 MAC 地址进行设备匹配，如果此类集成需要，也会一并收集。
 
-## Limitations
+## 限制
 
-* On iOS, tvOS, and Android, third-party apps like Tailscale cannot access the device serial number. On iOS or tvOS, an MDM solution can provide a serial number to the Tailscale client by using the `DeviceSerialNumber` [MDM key][docs-mdm-keys-sn].
+* 在 iOS、tvOS 和 Android 上，Tailscale 等第三方应用无法访问设备序列号。在 iOS 或 tvOS 上，MDM 方案可以通过 `DeviceSerialNumber` [MDM 键][docs-mdm-keys-sn]向 Tailscale 客户端提供序列号。
 
 [co-api-get-device]: https://tailscale.com/api#tag/devices/GET/device/%7BdeviceId%7D
 

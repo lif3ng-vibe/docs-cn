@@ -1,30 +1,30 @@
 ---
-title: "Get support"
-description: "Get support from Tailscale."
+title: "获取支持"
+description: "从 Tailscale 获取支持。"
 ---
 
-Last validated Aug 14, 2024
+最后验证于 Aug 14, 2024
 
-Use the various resources that Tailscale offers to help you troubleshoot your issues and interact with our support resources.
+利用 Tailscale 提供的各种资源来排查问题，并与我们的支持渠道互动。
 
-## Read our troubleshooting guides
+## 阅读我们的故障排查指南
 
-Are you encountering issues or have questions about using Tailscale? Our troubleshooting content covers a wide variety of topics and is continuously updated.
+你在使用 Tailscale 时遇到了问题或有疑问？我们的故障排查内容涵盖各种主题，并且持续更新。
 
-[**Troubleshooting guide**](/docs/reference/troubleshooting) — Troubleshoot common tailnet scenarios.
+[**故障排查指南**](/docs/reference/troubleshooting)——排查常见的 tailnet 场景问题。
 
-[**Device connectivity**](/docs/reference/device-connectivity) — Understand connectivity between Tailscale devices.
+[**设备连接性**](/docs/reference/device-connectivity)——理解 Tailscale 设备之间的连接。
 
-## Contact support
+## 联系支持
 
-There are multiple ways of interacting with the Tailscale Support team. Choose the option that best suits your needs.
+与 Tailscale 支持团队互动的方式有多种，请选择最适合你需求的方式。
 
-[**Support options**](/docs/reference/support-options) — Understand Tailscale's support options.
+[**支持选项**](/docs/reference/support-options)——了解 Tailscale 的支持选项。
 
-[**Contact support**](https://tailscale.com/contact/support) — Request assistance from the Support team.
+[**联系支持**](https://tailscale.com/contact/support)——向支持团队请求协助。
 
-## Send us a bug report
+## 向我们发送错误报告
 
-One of the most effective ways we can help resolve an issue is to have you generate and send us a bug report. This provides useful insights to determine the cause and help fix your issue.
+让我们帮你解决问题的最有效方式之一，就是由你生成并发送一份错误报告（bug report）。它能提供有用的线索，帮助确定原因并修复你的问题。
 
-[**Generate a bug report**](/docs/account/bug-report) — Generate a bug report to help troubleshoot issues with your tailnet.
+[**生成错误报告**](/docs/account/bug-report)——生成错误报告，帮助排查 tailnet 的问题。

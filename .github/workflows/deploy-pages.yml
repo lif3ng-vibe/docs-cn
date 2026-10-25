@@ -50,6 +50,7 @@ jobs:
             tester-army-e2e-docs-cn/package-lock.json
             claude-mem-docs-cn/package-lock.json
             pi-docs-cn/package-lock.json
+            openshell-docs-cn/package-lock.json
 
       - name: Prepare _site
         run: mkdir -p _site
@@ -334,6 +335,27 @@ jobs:
           npm run build
           mv dist ../_site/openrig
 
+      # OpenShell 是 Fern 托管站的 Starlight 重建（上游云端渲染无法离线自托管）。
+      # 纯 Starlight 无 authored-links，正文内链与 LinkCard 的 JSX href 都要 CI sed 加前缀。
+      - name: Restore openshell-docs-cn dist
+        id: dist-openshell
+        uses: actions/cache@v4
+        with:
+          path: _site/openshell
+          key: dist-openshell-${{ hashFiles('openshell-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build openshell-docs-cn
+        if: steps.dist-openshell.outputs.cache-hit != 'true'
+        working-directory: openshell-docs-cn
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/openshell/
+        run: |
+          find src/content/docs -name '*.mdx' -exec sed -i 's|](/|\](/docs-cn/openshell/|g' {} +
+          find src/content/docs -name '*.mdx' -exec sed -i 's|href="/|href="/docs-cn/openshell/|g' {} +
+          npm ci
+          npm run build
+          mv dist ../_site/openshell
       - name: Restore openrig-docs-en dist
         id: dist-openrig-en
         uses: actions/cache@v4

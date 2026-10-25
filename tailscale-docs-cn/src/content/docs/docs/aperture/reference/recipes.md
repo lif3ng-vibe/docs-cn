@@ -1,43 +1,43 @@
 ---
-title: "Aperture recipes"
-description: "[Aperture recipes][xt-recipes] is an open source repository of integration guides, examples, and templates maintained by Tailscale's Aperture team. It helps you connect third-party services and tools "
+title: "Aperture 配方（recipes）"
+description: "[Aperture recipes][xt-recipes] 是一个开源仓库，由 Tailscale 的 Aperture 团队维护，收录集成指南、示例和模板。它帮助你把第三方服务和工具连接到你的 Aperture 网关"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-[Aperture recipes][xt-recipes] is an open source repository of integration guides, examples, and templates maintained by Tailscale's Aperture team. It helps you connect third-party services and tools to your Aperture gateway. Partners, vendors, and community members can share integration instructions in one place so others can adopt their tools without starting from scratch.
+[Aperture recipes][xt-recipes] 是一个开源仓库，由 Tailscale 的 Aperture 团队维护，收录集成指南、示例和模板。它帮助你把第三方服务和工具连接到你的 Aperture 网关。合作伙伴、供应商和社区成员可以在同一个地方分享集成说明，让其他人无需从零开始就能采用他们的工具。
 
-## What's in the repository
+## 仓库里有什么
 
-Recipes cover four integration types:
+配方覆盖四种集成类型：
 
-* **Pre-request hooks**: Inspect, modify, or block requests before they reach an LLM provider.
-* **Post-response hooks**: Process completed requests for logging or auditing.
-* **Providers**: Connect Aperture to LLM providers or resellers.
-* **Tools**: Use Aperture with developer tools, platforms, or workflows.
+* **请求前 hook（pre-request hooks）**：在请求到达 LLM 提供商之前检查、修改或拦截请求。
+* **响应后 hook（post-response hooks）**：处理已完成的请求，用于记录或审计。
+* **提供商（providers）**：把 Aperture 连接到 LLM 提供商或转售商。
+* **工具（tools）**：把 Aperture 与开发者工具、平台或工作流配合使用。
 
-Each recipe has a `README.md` with setup instructions and examples. Recipes can include supporting scripts or configuration files, but the repository is not a collection of deployable applications.
+每个配方都有一个包含设置说明和示例的 `README.md`。配方可以附带配套脚本或配置文件，但这个仓库不是一组可部署的应用。
 
-## Use a recipe
+## 使用配方
 
-To use an existing integration:
+要使用现有集成：
 
-1. Browse the [integrations directory][xt-integrations] for a relevant recipe.
-2. Read its `README.md`, including prerequisites and any security considerations.
-3. Follow the setup instructions, adapting configuration examples to your environment.
-4. Follow the recipe's validation steps to check that the integration works.
+1. 浏览[集成目录][xt-integrations]，找到相关配方。
+2. 阅读它的 `README.md`，包括前提条件和安全注意事项。
+3. 按设置说明操作，并把配置示例调整到你的环境。
+4. 按配方的验证步骤检查集成是否正常工作。
 
-## Contribute a recipe
+## 贡献配方
 
-To share an integration:
+要分享一个集成：
 
-1. Fork the [repository][xt-recipes].
-2. Copy the [integration template][xt-template] into the appropriate category.
-3. Follow the [contributing guide][xt-contributing] to open a pull request.
+1. Fork 该[仓库][xt-recipes]。
+2. 把[集成模板][xt-template]复制到相应的类别目录。
+3. 按照[贡献指南][xt-contributing]发起 pull request。
 
-For hook integrations, start with the [protocol quick reference][xt-protocol].
+hook 类集成请从[协议快速参考][xt-protocol]开始。
 
-The Aperture team reviews submissions before merging them. Community recipes are maintained by their contributors and are not automatically part of the official Aperture documentation.
+Aperture 团队会在合并前审查提交内容。社区配方由其贡献者自行维护，不会自动成为 Aperture 官方文档的一部分。
 
 [xt-recipes]: https://github.com/tailscale/aperture-recipes
 

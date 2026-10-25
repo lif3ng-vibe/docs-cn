@@ -1,0 +1,202 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "监管中间件配置"
+sidebar-title: "配置"
+slug: "extensibility/supervisor-middleware/configure"
+description: "把监管中间件挂接到沙箱流量，注册你自己的中间件服务，并观测中间件判定。"
+keywords: "监管中间件, 配置, 网络策略, 操作, OCSF, 日志"
+---
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+import ParamField from '@components/ParamField.astro';
+
+在网关配置中注册你的中间件服务，然后在沙箱策略中把它挂接到目标主机。本页还涵盖排序、失败行为、服务生命周期与可观测性。内置中间件只需一条策略条目。
+
+## 使用你自己的中间件服务
+
+中间件服务是一个实现监管中间件协议的 gRPC 服务器。[内容守卫示例](https://github.com/NVIDIA/OpenShell/tree/main/examples/supervisor-middleware-content-guard)在一个服务中实现请求、响应与 WebSocket 检查，并附带一份策略和一个本地启动器。
+
+要使用你自己的服务：
+
+1. 在网关与沙箱监管器都能访问到的位置启动服务。
+2. 在网关配置中注册它。
+3. 重启网关。
+4. 在沙箱策略中把 `middleware` 设为注册的 `name` 来挂接它。
+
+在网关 TOML 中注册服务：
+
+```toml
+[[openshell.supervisor.middleware]]
+name = "content-guard"
+grpc_endpoint = "https://content-guard.example:50051"
+tls_ca_cert_path = "/path/to/content-guard-ca.pem"
+max_payload_bytes = 262144
+timeout = "500ms"
+```
+
+<ParamField path="name" type="string" required={true}>
+  策略用来挂接服务的唯一名称。`openshell/` 前缀保留给内置中间件。
+</ParamField>
+
+<ParamField path="grpc_endpoint" type="string" required={true}>
+  网关与沙箱监管器均可访问的服务地址。
+</ParamField>
+
+<ParamField path="max_payload_bytes" type="integer" required={true}>
+  服务所检查的最大请求体、响应体或 WebSocket 消息。不得超过 4 MiB，也不能大于服务公示的值。
+</ParamField>
+
+<ParamField path="timeout" type="string" default="500ms">
+  `Describe`、`ValidateConfig` 与单次求值或流式交换的时限。用整数后跟 `ms` 或 `s`，范围为 `10ms` 到 `30s`。绑定可以公示更短的求值超时。被接受的 HTTP 响应与 WebSocket 流没有连接级期限。
+</ParamField>
+
+<ParamField path="tls_ca_cert_path" type="string">
+  校验服务证书的私有 CA。不设置时，OpenShell 使用平台信任根。
+</ParamField>
+
+<ParamField path="audience" type="string" default="urn:openshell:extension:middleware:<name>">
+  令牌受众。参见[扩展认证](/extensibility/overview#扩展认证)。
+</ParamField>
+
+<ParamField path="allow_insecure_transport" type="boolean" default="false">
+  允许使用不做认证的明文 `http://` 端点。仅用于本地开发或已对调用方完成认证的网络。
+</ParamField>
+
+启动时，网关会联系每个已注册服务，读取其能力并校验[协议兼容性](/extensibility/overview#协议协商)。任一服务不可用或不兼容时网关拒绝启动。[网关配置](/how-it-works/gateways/configuration#监管中间件服务)描述了完整的 TOML 上下文。
+
+网关配置了 JWT 签名时，OpenShell 用短期令牌认证对服务的每一次调用。你的服务如何校验该令牌参见[扩展认证](/extensibility/overview#扩展认证)。
+
+## 在策略中挂接中间件
+
+在沙箱策略的顶层 `network_middlewares` 映射中添加条目。每个条目选择目标主机，并指定为它们运行的中间件：
+
+<Tabs>
+<TabItem label="中间件服务">
+
+按注册名挂接[已注册的服务](#使用你自己的中间件服务)。`config` 对象由你的服务定义并校验：
+
+```yaml showLineNumbers={false}
+network_middlewares:
+  content-guard:
+    middleware: content-guard
+    config:
+      mode: redact
+      terms: ["internal-only"]
+      replacement: "[FILTERED]"
+    endpoints:
+      include: ["api.example.com"]
+```
+
+</TabItem>
+<TabItem label="多个中间件">
+
+为同一批主机运行两个中间件。`regex-demo` 的 `order` 更小，因此先于 `content-guard` 运行；两者都不对 `trusted.example.com` 运行：
+
+```yaml showLineNumbers={false}
+network_middlewares:
+  regex-demo:
+    middleware: openshell/regex
+    order: 10
+    endpoints:
+      include: ["*.example.com"]
+      exclude: ["trusted.example.com"]
+  content-guard:
+    name: Content guard
+    middleware: content-guard
+    order: 20
+    endpoints:
+      include: ["*.example.com"]
+      exclude: ["trusted.example.com"]
+```
+
+</TabItem>
+<TabItem label="内置">
+
+把内置的 `openshell/regex` 中间件挂接到一个主机：
+
+```yaml showLineNumbers={false}
+network_middlewares:
+  regex-demo:
+    middleware: openshell/regex
+    endpoints:
+      include: ["api.example.com"]
+```
+
+<Aside type="note">
+
+`openshell/regex` 是一个仅用于演示的正则抹除器。它让你无需运行自己的服务就能试用中间件。它会替换 UTF-8 HTTP 正文与出站 WebSocket 文本消息中匹配固定 `sk-` 模式的文本，且该模式不可配置。不要依赖它检测或移除敏感数据。
+
+</Aside>
+
+</TabItem>
+</Tabs>
+
+### 条目字段
+
+映射键（如 `content-guard`）是条目在日志中的稳定标识。每个条目接受以下字段：
+
+<ParamField path="middleware" type="string" required={true}>
+  内置中间件名（如 `openshell/regex`），或已注册服务的 `name`。
+</ParamField>
+
+<ParamField path="endpoints.include" type="string[]" required={true}>
+  为其运行中间件的目标主机。使用与网络策略端点相同的主机模式。
+</ParamField>
+
+<ParamField path="endpoints.exclude" type="string[]">
+  要跳过的目标主机。优先于 `include`。
+</ParamField>
+
+<ParamField path="order" type="integer" default="0">
+  多个条目匹配同一主机时在链中的位置。值越小越先运行。取值在一份策略内必须唯一，因此策略有多个条目时应显式设置。
+</ParamField>
+
+<ParamField path="on_error" type="'fail_closed' | 'fail_open'" default="fail_closed">
+  中间件失败时发生什么。参见[选择失败行为](#选择失败行为)。
+</ParamField>
+
+<ParamField path="config" type="object">
+  传给中间件的配置。其格式由中间件定义并校验。
+</ParamField>
+
+<ParamField path="name" type="string">
+  显示名称。默认为映射键。
+</ParamField>
+
+[策略 schema](/how-it-works/policies/schema#网络中间件) 列出全部字段与限制。
+
+## 选择失败行为
+
+中间件无法完成检查即为失败，例如服务不可用、超时、返回无效结果，或收到超过其上限的载荷。默认情况下，OpenShell 阻断受影响的请求、响应或 WebSocket 连接。策略条目上的 `on_error` 字段控制该行为。
+
+<Aside type="caution">
+
+`fail_open` 跳过失败的中间件并放行流量。除非对该流量而言可用性比强制执行更重要，否则避免使用。未来版本可能移除它。OpenShell 每次跳过中间件都会发出一条检测发现。
+
+</Aside>
+
+无论 `on_error` 如何，中间件的拒绝判定始终阻断流量。端点使用 `enforcement: audit` 时，中间件判定同样保持强制。要观测流量而不阻断它，可让你的中间件放行流量并上报发现。
+
+`on_error` 不会扩大中间件的检查范围。[当前限制](/extensibility/supervisor-middleware#当前限制)在两种设置下都适用。默认行为下，条目不能选择 `tls: skip` 端点，因为 OpenShell 无法检查该流量。
+
+## 运维中间件服务
+
+中间件服务位于使用它的每个沙箱的请求路径上。请相应地规划其可用性：
+
+- 先启动已注册的服务再启动网关，并在更改注册后重启网关。
+- 创建或更新策略期间保持服务可用。网关在接受策略之前会让服务校验其 `config`。
+- 保持服务可从沙箱监管器访问，监管器会为每个请求直接调用它们。
+
+运行中的沙箱收到配置变更时，其监管器会在使用之前校验新的中间件设置。校验失败时，监管器保留先前的设置，并发出配置失败事件。
+
+## 观测中间件判定
+
+OpenShell 在其 [OCSF 日志](/observability/logging)中记录中间件活动：
+
+- 每次调用都记录策略条目、中间件名、判定、是否更改了流量，以及任何失败。
+- 失败的中间件会发出检测发现，无论 OpenShell 阻断流量还是跳过中间件。
+- 覆盖事件记录所选中间件无法检查的流量，例如 WebSocket 二进制消息。
+- 配置变更在成功与失败时都发出状态变更事件。
+
+对拒绝与发现，OpenShell 记录中间件名与经验证的原因代码或发现标签，不会记录来自你服务的自由文本。把这些事件发送到其他系统的方法参见 [OCSF JSON 导出](/observability/ocsf-json-export)。

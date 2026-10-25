@@ -1,23 +1,23 @@
 ---
-title: "Application capabilities"
-description: "Application capabilities, commonly referred to as \"app capabilities\", extend Tailscale's access control system beyond traditional network traffic rules. While standard grants control which devices can"
+title: "应用能力"
+description: "应用能力（app capabilities，常称 "app capabilities"）将 Tailscale 的访问控制系统扩展到传统网络流量规则之外。标准授权控制哪些设备可以在"
 ---
 
-Last validated Dec 1, 2025
+最后验证于 Dec 1, 2025
 
-Application capabilities, commonly referred to as "app capabilities", extend Tailscale's access control system beyond traditional network traffic rules. While standard grants control which devices can communicate with each other over specific ports and protocols, app capabilities provide fine-grained permissions for specific features and functionality operating at higher application layers. This enables precise control over what actions devices can perform, rather than only which network connections they can establish.
+应用能力（app capabilities，常称 "app capabilities"）将 Tailscale 的访问控制系统扩展到传统网络流量规则之外。标准授权控制哪些设备可以通过特定端口和协议相互通信，而应用能力则为运行在更高应用层的特定特性和功能提供细粒度权限。这使得你可以精确控制设备能执行哪些操作，而不只是能建立哪些网络连接。
 
-App capabilities go within the grants section of a [tailnet policy file][docs-tailnet-policy-file] using the `app` field. Each capability represents a specific permission or feature that you can enable between devices in your [tailnet][docs-tailnet]. This document explains how app capabilities work, their requirements and limitations, and provides details on all built-in Tailscale capabilities with practical examples.
+应用能力通过 `app` 字段写在 [tailnet 策略文件][docs-tailnet-policy-file]的 grants 部分。每个能力代表一项你可以为 [tailnet][docs-tailnet] 内设备之间启用的具体权限或特性。本文档说明应用能力的工作原理、要求与限制，并详细介绍所有 Tailscale 内置能力及其实用示例。
 
 \[Missing snippet: node\_attrs\_vs\_app\_caps\_note.mdx]
 
-## How app capabilities work
+## 应用能力的工作原理
 
-This section explains the core mechanisms behind app capabilities, including formatting and processing.
+本节介绍应用能力背后的核心机制，包括格式与处理流程。
 
-You define app capabilities within the `app` map of a grant rule. The grant itself defines which source devices (`src`) can access which destination devices (`dst`), and the app map defines the specific capabilities to grant for that connection. Each capability follows a domain name convention, typically in the format `domain.com/cap/feature`. The value associated with each capability is an array of JSON objects, each containing capability-specific configuration options.
+你在授权规则的 `app` 映射中定义应用能力。授权本身定义哪些来源设备（`src`）可以访问哪些目标设备（`dst`），而 app 映射定义要为该连接授予的具体能力。每个能力遵循域名命名约定，通常格式为 `domain.com/cap/feature`。与每个能力关联的值是一个 JSON 对象数组，每个对象包含该能力特有的配置选项。
 
-Basic structure within a grant:
+授权中的基本结构：
 
 ```json
 "grants": [
@@ -36,36 +36,36 @@ Basic structure within a grant:
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-To leverage granted capabilities in applications running on the destination, capabilities for a source device can be read from the `tailscale whois` command on the CLI, from [LocalAPI][xt-tailscale-localapi], the `tailscale serve` [application capabilities header][docs-serve-app-capabilities], or with the [`tsnet` Go library][docs-tsnet] for embedding Tailscale in a Go application.
+要在目标上运行的应用中使用所授予的能力，可以通过 CLI 的 `tailscale whois` 命令、[LocalAPI][xt-tailscale-localapi]、`tailscale serve` 的[应用能力请求头][docs-serve-app-capabilities]，或将 Tailscale 嵌入 Go 应用的 [`tsnet` Go 库][docs-tsnet]，从来源设备读取这些能力。
 
-## Requirements and limitations
+## 要求与限制
 
-App capabilities in Tailscale grants must conform to several technical requirements and are subject to specific limitations. This section outlines the validation rules, source and destination restrictions, and naming requirements that apply to app capabilities in your tailnet policy.
+Tailscale 授权中的应用能力必须满足若干技术要求，并受到特定限制。本节列出适用于 tailnet 策略中应用能力的校验规则、来源与目标限制以及命名要求。
 
-* Every grant rule must specify either `ip` or `app` fields (or both). At least one of these fields must exist.
-* Capability names must not be empty.
+* 每条授权规则必须指定 `ip` 或 `app` 字段（或两者兼有）。这两个字段至少要存在一个。
+* 能力名称不能为空。
 
-Certain restrictions apply to which sources and destinations you can use with app capabilities.
+在应用能力中可用的来源和目标存在某些限制。
 
-* When using `autogroup:self` as a destination, the source must be an individual user, group, or role-based autogroup (such as `autogroup:member`, `autogroup:admin`, `autogroup:owner`, and so on) to ensure proper permission mapping.
-* Destination restrictions prevent using `autogroup:shared` or `autogroup:danger-all` as destinations for capabilities.
-* App grants cannot target `autogroup:internet` destinations, nor can they use administrative autogroups such as `autogroup:admin` as destinations.
+* 使用 `autogroup:self` 作为目标时，来源必须是单个用户、组或基于角色的 autogroup（如 `autogroup:member`、`autogroup:admin`、`autogroup:owner` 等），以确保权限映射正确。
+* 目标限制不允许将 `autogroup:shared` 或 `autogroup:danger-all` 作为能力的目标。
+* 应用授权不能以 `autogroup:internet` 为目标，也不能使用 `autogroup:admin` 等管理类 autogroup 作为目标。
 
-Capability names must follow a specific format to ensure proper organization and prevent conflicts.
+能力名称必须遵循特定格式，以保证组织有序并避免冲突。
 
-* The format must follow the `{domain}/{path}` pattern, such as `example.com/cap/custom-app`.
-* Capabilities under `tailscale.com` and `tailscale.io` domains are reserved for Tailscale's use when developing application capabilities that you can use with the product.
-* When creating custom capabilities for your own applications, you should use a domain you control to avoid potential conflicts with built-in capabilities or third-party integrations.
+* 格式必须遵循 `{domain}/{path}` 模式，例如 `example.com/cap/custom-app`。
+* `tailscale.com` 和 `tailscale.io` 域名下的能力保留给 Tailscale 使用，用于开发你可以随产品使用的应用能力。
+* 为自己的应用创建自定义能力时，应使用你控制的域名，以避免与内置能力或第三方集成发生潜在冲突。
 
-## Built-in Tailscale capabilities
+## Tailscale 内置能力
 
-Tailscale provides a range of built-in capabilities that enable specific features and functions in Tailscale products or [Community Projects][co-community-projects]. This section documents all the standard capabilities that are provided by Tailscale, explaining their purpose, configuration options, and providing practical examples of their use in policy files.
+Tailscale 提供一系列内置能力，用于在 Tailscale 产品或[社区项目][co-community-projects]中启用特定特性与功能。本节记录 Tailscale 提供的所有标准能力，说明其用途和配置选项，并给出在策略文件中使用它们的实用示例。
 
 ### Taildrive
 
-[Taildrive][docs-taildrive] extends Tailscale's file sharing capabilities by allowing devices to share and access entire directories with other devices. Its capability (`tailscale.com/cap/drive`, `tailscale.com/cap/drive-sharer`) precisely controls who can read and write in shared directories.
+[Taildrive][docs-taildrive] 扩展了 Tailscale 的文件共享能力，允许设备与其他设备共享和访问整个目录。它的能力（`tailscale.com/cap/drive`、`tailscale.com/cap/drive-sharer`）可以精确控制谁能在共享目录中读写。
 
-The `shares` parameter accepts an array of share names or `"*"` to represent all shares. The `access` parameter determines whether the access is read-only (`"ro"`) or read-write (`"rw"`). The `drive-sharer` capability is automatically added to the source device, simplifying policy management. Administrators can specify different access levels for different shares, and using `"*"` grants access to all shares on the target device.
+`shares` 参数接受一个共享名称数组，或用 `"*"` 表示所有共享。`access` 参数决定访问是只读（`"ro"`）还是读写（`"rw"`）。`drive-sharer` 能力会自动添加到来源设备上，简化策略管理。管理员可以为不同共享指定不同访问级别，使用 `"*"` 则授予访问目标设备上所有共享的权限。
 
 ```json
 "grants": [
@@ -84,20 +84,20 @@ The `shares` parameter accepts an array of share names or `"*"` to represent all
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Tailscale Kubernetes operator
+### Tailscale Kubernetes Operator
 
-Tailscale's [Kubernetes capability][docs-kubernetes] (`tailscale.com/cap/kubernetes`) provides secure access to Kubernetes clusters through granular permission controls and optional session recording. The operator streamlines cluster management while maintaining strong security through your tailnet policy. The app capability lets you define precisely who can access which clusters and with what permissions, while optionally enforcing session recording for audit and compliance purposes.
+Tailscale 的 [Kubernetes 能力][docs-kubernetes]（`tailscale.com/cap/kubernetes`）通过细粒度权限控制和可选的会话录制，为 Kubernetes 集群提供安全访问。Operator 简化了集群管理，同时通过你的 tailnet 策略保持强安全性。借助该应用能力，你可以精确定义谁能访问哪些集群、拥有什么权限，还可以选择强制会话录制以满足审计与合规需求。
 
-Configuration options for the Kubernetes capability include
+Kubernetes 能力的配置选项包括：
 
-* `recorders`: an array of tags specifying devices to record sessions.
-* `enforceRecorder`: a boolean that determines whether connections fail when recorders are unavailable.
-* `impersonate`: an object defining Kubernetes impersonation configuration.
+* `recorders`：由标签组成的数组，指定用于录制会话的设备。
+* `enforceRecorder`：布尔值，决定在录制器不可用时连接是否失败。
+* `impersonate`：定义 Kubernetes 模拟（impersonation）配置的对象。
 
-The capability has two important implementation details:
+该能力有两个重要的实现细节：
 
-* Only one recorder tag is allowed per rule.
-* The recorder tag must be defined in the policy.
+* 每条规则只允许一个录制器标签。
+* 录制器标签必须在策略中定义。
 
 ```json
 "grants": [
@@ -123,15 +123,15 @@ The capability has two important implementation details:
 
 ### Tailscale PAM
 
-[Tailscale PAM][docs-tailscale-pam] is a next-generation Privileged Access Management (PAM) solution that provides application-aware access to your critical resources in your tailnet. Its capability (`tailscale.com/cap/pam`) provides secure access to Linux servers, databases, Kubernetes clusters, and more. It governs privileged sessions at the moment access happens, with complete session auditing and session recording, where applicable.
+[Tailscale PAM][docs-tailscale-pam] 是新一代特权访问管理（PAM）解决方案，为 tailnet 中的关键资源提供应用感知的访问。它的能力（`tailscale.com/cap/pam`）为 Linux 服务器、数据库、Kubernetes 集群等提供安全访问。它在访问发生的那一刻管控特权会话，并提供完整的会话审计和（在适用的地方）会话录制。
 
-A Tailscale PAM grant primarily defines three things:
+一条 Tailscale PAM 授权主要定义三件事：
 
-* Who can access a service.
-* Which Tailscale PAM service they can access.
-* What they can do within that service.
+* 谁可以访问某项服务。
+* 他们可以访问哪个 Tailscale PAM 服务。
+* 他们可以在该服务中做什么。
 
-The source can be an identity, group, device, or tag. The destination is a Tailscale PAM service. For example, consider the following `grants` definition.
+来源可以是身份、组、设备或标签。目标是某个 Tailscale PAM 服务。例如，考虑下面这个 `grants` 定义。
 
 ```json
 {
@@ -162,30 +162,30 @@ The source can be an identity, group, device, or tag. The destination is a Tails
 }
 ```
 
-The fields have the following purposes:
+各字段的用途如下：
 
-* `src` identifies who is requesting access. In this example, the `group:platform` group.
-* `dst` identifies the PAM service, `svc:production-database`.
-* `app` contains the application-level PAM permissions, which is read-only access to all databases.
+* `src` 标识请求访问的主体。在本例中是 `group:platform` 组。
+* `dst` 标识 PAM 服务，即 `svc:production-database`。
+* `app` 包含应用层的 PAM 权限，此处是对所有数据库的只读访问。
 
-The `app` field contains the PAM permissions that apply when the source accesses the destination service. The available permissions depend on the type of PAM service, such as database, SSH, Kubernetes, or Amazon S3.
+`app` 字段包含来源访问目标服务时生效的 PAM 权限。可用权限取决于 PAM 服务的类型，例如数据库、SSH、Kubernetes 或 Amazon S3。
 
-For more information about Tailscale PAM grants, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+有关 Tailscale PAM 授权的更多信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
 ### `setec`
 
-[`setec`][xt-gh-setec] is an open source secrets management tool maintained by Tailscale and used in our production environments. You can use it to provide secure access to sensitive credentials across all of your tailnet users and applications.
+[`setec`][xt-gh-setec] 是一个由 Tailscale 维护并用于其生产环境的开源密钥管理工具。你可以用它为所有 tailnet 用户和应用提供对敏感凭证的安全访问。
 
-The secrets capability (`tailscale.com/cap/secrets`) defines precisely which devices or users can perform which actions on specific secrets or secret paths. This provides a centralized and secure approach to managing sensitive information, such as API keys, credentials, and certificates, across your organization.
+密钥能力（`tailscale.com/cap/secrets`）精确定义哪些设备或用户可以对特定密钥或密钥路径执行哪些操作。这提供了一种集中、安全的方式来管理整个组织中的敏感信息，例如 API 密钥、凭证和证书。
 
-Configuration for the secrets capability centers on two key parameters:
+密钥能力的配置围绕两个关键参数：
 
-* `action`: an array of permitted actions (`"get"`, `"put"`, `"info"`, `"activate"`, `"delete"`).
-* `secret`: an array of secret path patterns that support wildcards (for example, `"dev/*"`, `"prod/db/creds"`).
+* `action`：允许的操作数组（`"get"`、`"put"`、`"info"`、`"activate"`、`"delete"`）。
+* `secret`：支持通配符的密钥路径模式数组（例如 `"dev/*"`、`"prod/db/creds"`）。
 
-Path patterns support flexible wildcards, allowing you to group secrets logically and assign permissions at the appropriate level of granularity. Different groups can have different permission levels, enabling a least-privilege approach to secrets management.
+路径模式支持灵活的通配符，让你可以按逻辑组织密钥，并在合适的粒度级别分配权限。不同组可以拥有不同权限级别，从而以最小权限方式管理密钥。
 
 ```json
 "grants": [
@@ -214,9 +214,9 @@ Path patterns support flexible wildcards, allowing you to group secrets logicall
 
 ### TailSQL
 
-[TailSQL][xt-gh-tailsql] is a SQL playground you can host in your tailnet.
+[TailSQL][xt-gh-tailsql] 是一个可以在你的 tailnet 中托管的 SQL 试验场。
 
-TailSQL expects an application capability (`tailscale.com/cap/tailsql`) that defines a `src`, in the form of an array of allowed data sources such as `"main"` or `"self"`. This determines which data stores the granted device can query, providing control over access to potentially sensitive information about your tailnet's configuration and state.
+TailSQL 需要一个应用能力（`tailscale.com/cap/tailsql`），其中定义一个 `src`，形式为允许的数据源数组，如 `"main"` 或 `"self"`。这决定了被授权的设备可以查询哪些数据存储，从而控制对 tailnet 配置与状态等潜在敏感信息的访问。
 
 ```json
 "grants": [
@@ -236,9 +236,9 @@ TailSQL expects an application capability (`tailscale.com/cap/tailsql`) that def
 
 ### Golink
 
-[Golink][xt-gh-golink] is an internal link shortening and management service within your tailnet that lets teams create memorable shortcuts to frequently accessed URLs.
+[Golink][xt-gh-golink] 是 tailnet 内部的链接缩短与管理服务，让团队为经常访问的 URL 创建易记的快捷方式。
 
-The Golink application capability (`tailscale.com/cap/golink`) expects an `admin` parameter set to `true` for any users or devices that should have elevated admin privileges in the service. You do not need to specify an application capability to provide basic access to Golink to your users.
+Golink 应用能力（`tailscale.com/cap/golink`）要求对需要在服务中拥有提升管理权限的用户或设备，将 `admin` 参数设为 `true`。若只是为用户提供 Golink 的基础访问，无需指定应用能力。
 
 ```json
 "grants": [
@@ -254,22 +254,22 @@ The Golink application capability (`tailscale.com/cap/golink`) expects an `admin
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-## Custom capabilities
+## 自定义能力
 
-You can create custom application capabilities for your own applications by integrating with Tailscale using [tsnet][docs-tsnet], the [`tailscale whois`][docs-cli-whois] CLI command, the `tailscale serve` [application capabilities header][docs-serve-app-capabilities] or [LocalAPI][xt-tailscale-localapi]. Custom capabilities let you define permissions for your own applications that go beyond network-level access control, letting you specify exactly what actions users can perform within your apps after they have network access.
+你可以通过 [tsnet][docs-tsnet]、[`tailscale whois`][docs-cli-whois] CLI 命令、`tailscale serve` 的[应用能力请求头][docs-serve-app-capabilities]或 [LocalAPI][xt-tailscale-localapi] 与 Tailscale 集成，为自己的应用创建自定义应用能力。自定义能力让你能为自己的应用定义超越网络级访问控制的权限，指定用户在获得网络访问之后能在你的应用中执行哪些操作。
 
-Tailscale offers four approaches for integrating app capabilities with your applications:
+Tailscale 提供四种将应用能力与应用集成的方式：
 
-* [**`tsnet`**][docs-tsnet] is a Go library that lets you embed Tailscale in a Go application. Your application receives a Tailscale IP address and hostname with built-in HTTPS certificate management. The entire solution deploys as a single binary, making it ideal for microservices and internal tools that benefit from dedicated network identities. You can use `tsnet` to read the capabilities that are granted to devices that make requests to your application inside the tailnet.
-* [**LocalAPI**][xt-tailscale-localapi] suits applications across any programming language. Your application can use the underlying host's Tailscale client to query application capabilities, requiring minimal architectural changes to add Tailscale functionality.
-* [**`tailscale whois`**][docs-cli-whois] provides application capability data for any device in the tailnet. It's best to use the `tailscale whois` CLI command for debugging. When writing code that understands app capabilities, querying LocalAPI is usually a better choice for receiving app capability data.
-* [**`tailscale serve`**][docs-serve-app-capabilities] lets you share an application that runs on a device in your tailnet, such as a website, with the rest of your tailnet. When other devices connect to the application, Serve can forward their capabilities to the application in a request header.
+* [**`tsnet`**][docs-tsnet] 是一个 Go 库，让你把 Tailscale 嵌入 Go 应用。你的应用会获得一个 Tailscale IP 地址和主机名，并内置 HTTPS 证书管理。整套方案以单个二进制文件部署，非常适合需要专用网络身份的微服务和内部工具。你可以用 `tsnet` 读取 tailnet 内向你的应用发起请求的设备所获得的那些能力。
+* [**LocalAPI**][xt-tailscale-localapi] 适用于任何编程语言的应用。你的应用可以使用所在主机的 Tailscale 客户端查询应用能力，只需很少的架构改动即可加入 Tailscale 功能。
+* [**`tailscale whois`**][docs-cli-whois] 为 tailnet 中的任意设备提供应用能力数据。`tailscale whois` CLI 命令最适合调试。在编写理解应用能力的代码时，查询 LocalAPI 通常是获取应用能力数据更好的选择。
+* [**`tailscale serve`**][docs-serve-app-capabilities] 让你把运行在 tailnet 内某台设备上的应用（例如一个网站）共享给 tailnet 中的其他设备。当其他设备连接到该应用时，Serve 可以在请求头中把它们的能力转发给应用。
 
-## Complete example with multiple capabilities
+## 包含多种能力的完整示例
 
-To demonstrate how multiple capabilities can work together in a comprehensive policy, this section provides a complete example of a tailnet policy file incorporating various capabilities for different user groups and resources.
+为了展示多种能力如何在一套完整策略中协同工作，本节给出一个完整的 tailnet 策略文件示例，其中为不同用户组和资源配置了多种能力。
 
-The following example showcases a more comprehensive tailnet policy that combines multiple capabilities to create a complete access control system. This demonstrates using different capabilities together to implement sophisticated permission models tailored to specific organizational needs.
+下面的示例展示了一套更全面的 tailnet 策略，它组合多种能力构建出一个完整的访问控制系统，演示了如何将不同能力结合使用，以实现针对特定组织需求的精细权限模型。
 
 ```json
 {
@@ -340,7 +340,7 @@ The following example showcases a more comprehensive tailnet policy that combine
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example shows how you can assign different capabilities to different groups based on their roles and responsibilities. Engineers can share files among themselves and access development secrets. DevOps personnel have broader access, including Kubernetes cluster management with mandatory session recording and full secrets management. Analysts have limited access to Grafana dashboards in a viewer role, allowing them to access monitoring data without the ability to make changes. This layered approach to permissions demonstrates the flexibility and power of Tailscale's application capabilities.
+这个示例展示了如何根据角色和职责为不同组分配不同能力。工程师可以在彼此之间共享文件并访问开发环境的密钥。DevOps 人员拥有更广的访问范围，包括强制会话录制的 Kubernetes 集群管理和完整的密钥管理。分析人员以查看者角色对 Grafana 面板只有有限访问，可以查看监控数据但无法做出更改。这种分层权限方式体现了 Tailscale 应用能力的灵活与强大。
 
 [co-community-projects]: https://tailscale.com/community/community-projects
 

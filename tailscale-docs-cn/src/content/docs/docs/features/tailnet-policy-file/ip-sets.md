@@ -1,34 +1,34 @@
 ---
-title: "IP sets"
-description: "An IP set is a way to manage groups of IP addresses. It can encapsulate a collection of [targets][docs-targets], such as IP addresses, CIDRs, hosts, [autogroups][docs-targets-autogroups], and other IP"
+title: "IP 集"
+description: "IP 集是一种管理 IP 地址组的方式。它可以封装一组[目标][docs-targets]，例如 IP 地址、CIDR、主机、[autogroup][docs-targets-autogroups] 以及其他 IP 集。"
 ---
 
-Last validated Oct 29, 2025
+最后验证于 Oct 29, 2025
 
-An IP set is a way to manage groups of IP addresses. It can encapsulate a collection of [targets][docs-targets], such as IP addresses, CIDRs, hosts, [autogroups][docs-targets-autogroups], and other IP sets. Tailscale translates everything in the IP set to a list of IP address ranges. You can use the [`ipset` syntax][ar-syntax] to create IP sets within your [tailnet policy file][docs-tailnet-policy-file] and [reference][ar-references] them from [access control][docs-access-control] policies such as [ACLs][docs-access-control-policies] and [grants][docs-grants].
+IP 集是一种管理 IP 地址组的方式。它可以封装一组[目标][docs-targets]，例如 IP 地址、CIDR、主机、[autogroup][docs-targets-autogroups] 以及其他 IP 集。Tailscale 会将 IP 集中的所有内容转换为 IP 地址范围列表。你可以使用 [`ipset` 语法][ar-syntax]在 [tailnet 策略文件][docs-tailnet-policy-file]中创建 IP 集，并在 [ACL][docs-access-control-policies] 和[授权][docs-grants]等[访问控制][docs-access-control]策略中[引用][ar-references]它们。
 
-The primary benefit of IP sets is that they let you group multiple network parts into a single collection, enabling you to apply access control policies to the collection rather than the individual IP addresses, hosts, or subnets.
+IP 集的主要好处在于，它让你能把网络的多个部分归入一个集合，从而可以对整个集合（而不是逐个 IP 地址、主机或子网）应用访问控制策略。
 
-You can leverage IP sets in a variety of ways. For example, you can:
+你可以通过多种方式使用 IP 集。例如：
 
-* Target and manage logical cross-sections of your tailnet independently of other groupings like [subnets][docs-subnets], [tags][docs-tags], and [groups][docs-acl-groups].
-* Target a subnet in access control policies while excluding a few specific hosts.
-* [Customize an autogroup][ar-customize-autogroup-Internet] to exclude some private or public subnets from global [exit node][docs-exit-node] access.
-* Facilitate a more modular organization of your [tailnet policy file][docs-tailnet-policy-file].
+* 独立于[子网][docs-subnets]、[标签][docs-tags]和[组][docs-acl-groups]等其他分组，定位并管理 tailnet 的逻辑切面。
+* 在访问控制策略中定位某个子网，同时排除少数特定主机。
+* [自定义 autogroup][ar-customize-autogroup-Internet]，将一些私有或公共子网排除在全局[出口节点][docs-exit-node]访问之外。
+* 让你的 [tailnet 策略文件][docs-tailnet-policy-file]组织得更加模块化。
 
-## Limitations
+## 局限性
 
-IP sets have the following limitations:
+IP 集有以下限制：
 
-* You can't include [tags][docs-tags], [users][docs-user-roles], or [groups][docs-acl-groups] in IP sets.
-* You can't use circular references to IP sets.
-* The only supported [autogroup][docs-autogroups] is `autogroup:internet`. This is because `autogroup:internet` is the only autogroup that refers to IP address ranges. The other autogroups refer to unsupported targets, such as tags, users, and dynamic sets of devices.
+* IP 集中不能包含[标签][docs-tags]、[用户][docs-user-roles]或[组][docs-acl-groups]。
+* 不能对 IP 集使用循环引用。
+* 唯一支持的 [autogroup][docs-autogroups] 是 `autogroup:internet`。这是因为 `autogroup:internet` 是唯一引用 IP 地址范围的 autogroup，其他 autogroup 引用的都是不受支持的目标，例如标签、用户和动态设备集合。
 
-## Syntax
+## 语法
 
-An `ipset` is an object within the tailnet policy file that defines one or more named `ipsets`. Each named `ipset` contains one or more [operations][ar-operations], each adding or removing a [target][ar-targets].
+`ipset` 是 tailnet 策略文件中的一个对象，用于定义一个或多个命名的 `ipset`。每个命名的 `ipset` 包含一个或多个[操作][ar-operations]，每个操作用于添加或移除一个[目标][ar-targets]。
 
-The following example demonstrates the basic syntax for creating an `ipset` in the tailnet policy file where `<name>` is the name of the IP set and `<target>` is a CIDR, IP address, host, autogroup, or IP set.
+以下示例演示了在 tailnet 策略文件中创建 `ipset` 的基本语法，其中 `<name>` 是 IP 集的名称，`<target>` 可以是 CIDR、IP 地址、主机、autogroup 或 IP 集。
 
 ```json
 "ipsets": {
@@ -41,58 +41,58 @@ The following example demonstrates the basic syntax for creating an `ipset` in t
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Operations
+### 操作
 
-The `ipset` syntax supports two operations: `add` and `remove`. Each named IP set can have one or more operations, which are processed in order.
+`ipset` 语法支持两种操作：`add` 和 `remove`。每个命名的 IP 集可以包含一个或多个操作，这些操作按顺序处理。
 
-You must include the operation type before the [target][ar-targets] unless the named [IP set only uses `add` operations][ar-create-ipsets-with-only-add-operations].
+除非命名的 [IP 集只使用 `add` 操作][ar-create-ipsets-with-only-add-operations]，否则你必须将操作类型写在[目标][ar-targets]之前。
 
-| **Operation** | **Description**                       |
+| **操作**      | **说明**                              |
 | ------------- | ------------------------------------- |
-| `add`         | Adds a target to a named IP set.      |
-| `remove`      | Removes a target from a named IP set. |
+| `add`         | 将一个目标添加到命名的 IP 集。        |
+| `remove`      | 从命名的 IP 集中移除一个目标。        |
 
-### Targets
+### 目标
 
-A target is a [CIDR][xt-rfc-4632-cidrs], IP address, [host][docs-acl-hosts], autogroup, or IP set that you add to or remove from a named IP set. Each target must be preceded by an [operation][ar-operations] (`add` or `remove`) unless the named IP set only adds targets (and doesn't remove any IP addresses).
+目标是你添加到命名 IP 集或从中移除的 [CIDR][xt-rfc-4632-cidrs]、IP 地址、[主机][docs-acl-hosts]、autogroup 或 IP 集。每个目标前必须有一个[操作][ar-operations]（`add` 或 `remove`），除非该命名 IP 集只添加目标（不移除任何 IP 地址）。
 
-| **Target**       | **Syntax**                        | **Example**                                          |
+| **目标**         | **语法**                          | **示例**                                             |
 | ---------------- | --------------------------------- | ---------------------------------------------------- |
-| CIDR             | `<cidr>`                          | `192.0.2.0/24`, `2001:db8::/32`                      |
-| IP address       | `<ip-address>`                    | `192.0.2.33`, `2001:db8::`                           |
-| IP address range | `<ip-range-start>-<ip-range-end>` | `192.0.2.50-192.0.2.100` , `2001:db8::5-2001:db8::9` |
-| Host             | `host:<name>`                     | `host:sql-server-1`                                  |
-| Autogroup        | `autogroup:internet`              | `autogroup:internet`                                 |
-| IP set           | `ipset:<name>`                    | `ipset:prod`                                         |
+| CIDR             | `<cidr>`                          | `192.0.2.0/24`、`2001:db8::/32`                      |
+| IP 地址          | `<ip-address>`                    | `192.0.2.33`、`2001:db8::`                           |
+| IP 地址范围      | `<ip-range-start>-<ip-range-end>` | `192.0.2.50-192.0.2.100`、`2001:db8::5-2001:db8::9`  |
+| 主机             | `host:<name>`                     | `host:sql-server-1`                                  |
+| autogroup        | `autogroup:internet`              | `autogroup:internet`                                 |
+| IP 集            | `ipset:<name>`                    | `ipset:prod`                                         |
 
-> **Note:**
+> **注意：**
 >
-> Hosts refers to the [hosts][docs-acl-hosts] section of the tailnet policy file, not MagicDNS names.
+> 此处的 Hosts 指 tailnet 策略文件的 [hosts][docs-acl-hosts] 分区，而非 MagicDNS 名称。
 
-### References
+### 引用
 
-You can reference named IP sets from specific parts of the tailnet policy file using the format `ipset:<name>` where `<name>` is the name of the IP set.
+你可以在 tailnet 策略文件的特定部分使用 `ipset:<name>` 格式引用命名的 IP 集，其中 `<name>` 是 IP 集的名称。
 
-The following sections of the tailnet policy file support referencing IP sets:
+tailnet 策略文件中支持引用 IP 集的分区包括：
 
-* [ACLs][docs-access-control-policies] (sources and destinations)
-* [Grants][docs-grants] (sources and destinations)
-* IP sets
+* [ACL][docs-access-control-policies]（源和目标）
+* [授权][docs-grants]（源和目标）
+* IP 集
 
-## Examples
+## 示例
 
-The following examples illustrate how to leverage IP sets.
+以下示例展示了如何使用 IP 集。
 
-* [Create an IP set with only add operations][ar-create-ipsets-with-only-add-operations].
-* [Create an IP set that contains several subnets and excludes a single IP address][ar-create-an-ipset-that-adds-several-subnets-and-excludes-a-single-ip-address].
-* [Create an IP set that excludes another IP set][ar-create-an-ipset-that-excludes-another-ipset].
-* [Reference IP sets in grants][ar-reference-ipsets-in-grants].
-* [Reference IP sets in ACLs][ar-reference-ipsets-in-acls].
-* [Customize `autogroup:internet`][ar-customize-autogroup-internet].
+* [创建仅含 add 操作的 IP 集][ar-create-ipsets-with-only-add-operations]。
+* [创建包含多个子网并排除单个 IP 地址的 IP 集][ar-create-an-ipset-that-adds-several-subnets-and-excludes-a-single-ip-address]。
+* [创建排除另一个 IP 集的 IP 集][ar-create-an-ipset-that-excludes-another-ipset]。
+* [在授权中引用 IP 集][ar-reference-ipsets-in-grants]。
+* [在 ACL 中引用 IP 集][ar-reference-ipsets-in-acls]。
+* [自定义 `autogroup:internet`][ar-customize-autogroup-internet]。
 
-### Create IP sets with only add operations
+### 创建仅含 add 操作的 IP 集
 
-The following IP sets don't remove any [targets][ar-targets]. As a result, they can use a simplified syntax that omits the [operation type][ar-operations] (because `add` is assumed).
+以下 IP 集不移除任何[目标][ar-targets]，因此可以使用省略[操作类型][ar-operations]的简化语法（因为默认为 `add`）。
 
 ```json
 "ipsets": {
@@ -107,9 +107,9 @@ The following IP sets don't remove any [targets][ar-targets]. As a result, they 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Create an IP set that adds several subnets and excludes a single IP address
+### 创建包含多个子网并排除单个 IP 地址的 IP 集
 
-The following example shows how to create an IP set that includes several subnets and excludes a single IP address.
+以下示例展示如何创建一个包含多个子网并排除单个 IP 地址的 IP 集。
 
 ```json
 "ipsets": {
@@ -125,9 +125,9 @@ The following example shows how to create an IP set that includes several subnet
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Create an IP set that excludes another IP set
+### 创建排除另一个 IP 集的 IP 集
 
-The following example creates a `dev` IP set and a `prod` IP set. The `prod` IP set excludes anything in the `dev` IP set.
+以下示例创建一个 `dev` IP 集和一个 `prod` IP 集。`prod` IP 集排除了 `dev` IP 集中的所有内容。
 
 ```json
 "ipsets": {
@@ -142,9 +142,9 @@ The following example creates a `dev` IP set and a `prod` IP set. The `prod` IP 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Reference IP sets in grants
+### 在授权中引用 IP 集
 
-The following example shows how to create [grants][docs-grants] that [reference][ar-references] the `dev` IP set.
+以下示例展示如何创建[引用][ar-references] `dev` IP 集的[授权][docs-grants]。
 
 ```json
 "grants": [
@@ -164,9 +164,9 @@ The following example shows how to create [grants][docs-grants] that [reference]
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Reference IP sets in ACLs
+### 在 ACL 中引用 IP 集
 
-The following example shows how to create [ACLs][docs-access-control-policies] that [reference][ar-references] the `prod` IP set.
+以下示例展示如何创建[引用][ar-references] `prod` IP 集的 [ACL][docs-access-control-policies]。
 
 ```json
 "acls": [
@@ -180,16 +180,16 @@ The following example shows how to create [ACLs][docs-access-control-policies] t
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Customize `autogroup:internet`
+### 自定义 `autogroup:internet`
 
-You can use IP sets to customize the traffic that flows through an exit node (when enabled) in the tailnet using [`autogroup:internet`][docs-autogroups].
+你可以使用 IP 集配合 [`autogroup:internet`][docs-autogroups]，自定义（启用后）流经 tailnet 中出口节点的流量。
 
-The following example creates an IP set named `internet` that customizes `autogroup:internet` by doing the following:
+以下示例创建一个名为 `internet` 的 IP 集，通过以下方式自定义 `autogroup:internet`：
 
-* Adds `autogroup:internet`.
-* Removes the production application gateways (`ipset:cdn-edge`).
-* Removes the publicly accessible partner network (`ipset:partner-net`).
-* [Grants][docs-grants] the `internet` IP set (a subset of internet-bound traffic) access to the Seattle and London office [exit nodes][docs-exit-node].
+* 添加 `autogroup:internet`。
+* 移除生产应用网关（`ipset:cdn-edge`）。
+* 移除公开可访问的合作伙伴网络（`ipset:partner-net`）。
+* [授权][docs-grants] `internet` IP 集（前往互联网的流量的一个子集）访问西雅图和伦敦办公室的[出口节点][docs-exit-node]。
 
 ```json
 "ipsets": {
@@ -219,25 +219,25 @@ The following example creates an IP set named `internet` that customizes `autogr
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-[ar-create-an-ipset-that-adds-several-subnets-and-excludes-a-single-ip-address]: #create-an-ip-set-that-adds-several-subnets-and-excludes-a-single-ip-address
+[ar-create-an-ipset-that-adds-several-subnets-and-excludes-a-single-ip-address]: #创建包含多个子网并排除单个-ip-地址的-ip-集
 
-[ar-create-an-ipset-that-excludes-another-ipset]: #create-an-ip-set-that-excludes-another-ip-set
+[ar-create-an-ipset-that-excludes-another-ipset]: #创建排除另一个-ip-集的-ip-集
 
-[ar-create-ipsets-with-only-add-operations]: #create-ip-sets-with-only-add-operations
+[ar-create-ipsets-with-only-add-operations]: #创建仅含-add-操作的-ip-集
 
-[ar-customize-autogroup-internet]: #customize-autogroupinternet
+[ar-customize-autogroup-internet]: #自定义-autogroupinternet
 
-[ar-operations]: #operations
+[ar-operations]: #操作
 
-[ar-reference-ipsets-in-acls]: #reference-ip-sets-in-acls
+[ar-reference-ipsets-in-acls]: #在-acl-中引用-ip-集
 
-[ar-reference-ipsets-in-grants]: #reference-ip-sets-in-grants
+[ar-reference-ipsets-in-grants]: #在授权中引用-ip-集
 
-[ar-references]: #references
+[ar-references]: #引用
 
-[ar-syntax]: #syntax
+[ar-syntax]: #语法
 
-[ar-targets]: #targets
+[ar-targets]: #目标
 
 [docs-access-control-policies]: /docs/features/access-control/acls
 

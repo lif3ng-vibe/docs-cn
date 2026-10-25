@@ -1,30 +1,27 @@
 ---
-title: "IP pool"
-description: "Configure Tailscale to assign IP addresses from a specific IP pool."
+title: "IP 地址池"
+description: "配置 Tailscale 从特定的 IP 池中分配 IP 地址。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-> **Note:** IP pool is currently in beta.
+> **注意：**IP 地址池目前处于 beta 阶段。
 
-By default, Tailscale assigns IPv4 addresses to nodes in your tailnet
-from the 100.64.0.0/10 [CGNAT range][docs-100.x-addresses].
-This is a private IP range not used on the public internet.
+默认情况下，Tailscale 会从 100.64.0.0/10 的 [CGNAT 地址段][docs-100.x-addresses]中为 tailnet 内的节点分配 IPv4 地址。
+这是一个公共互联网不使用的私有 IP 地址段。
 
-> **Note:**
+> **注意：**
 >
-> The following IP ranges are [reserved by Tailscale][docs-reserved-ip-addresses], and cannot be used in IP pools:
+> 以下 IP 地址段[由 Tailscale 保留][docs-reserved-ip-addresses]，不能用于 IP 池：
 >
 > * 100.100.0.0/24
 > * 100.100.100.0/24
 > * 100.115.92.0/23
 
-For corporate networks that use parts of the same range for other
-purposes, you can configure Tailscale to use a specific smaller
-subset of the CGNAT range.
+如果企业网络把同一地址段中的一部分用于其他用途，你可以配置 Tailscale 使用 CGNAT 地址段中一个更小的特定子集。
 
-To do this, you can configure an "IP pool" in your tailnet policy file.
-This is done using a node attribute that specifies an `ipPool`:
+为此，你可以在 tailnet 策略文件中配置一个"IP 池"（IP pool）。
+这通过一个指定 `ipPool` 的节点属性（node attribute）来完成：
 
 ```json
 {
@@ -44,13 +41,12 @@ This is done using a node attribute that specifies an `ipPool`:
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-With this [node attribute][docs-policy-syntax-nodeattrs] set, all new nodes managed by admins in your tailnet will be assigned an IP
-from the range: `100.81.0.0/16`, whereas nodes managed by members of `group:dev` will be assigned an IP from a subset
-from the range: `100.85.0.0/16`.
+设置好这个[节点属性][docs-policy-syntax-nodeattrs]后，你 tailnet 中由管理员管理的所有新节点都将从 `100.81.0.0/16` 地址段中获得 IP，
+而由 `group:dev` 成员管理的节点则会从 `100.85.0.0/16` 地址段的子集中获得 IP。
 
-You can also change the IPv4 address of a node at any time by an admin in your tailnet.
+你 tailnet 中的管理员也可以随时更改某个节点的 IPv4 地址。
 
-*（图：IPv4 Edit Dialog）*
+*（图：IPv4 编辑对话框）*
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

@@ -1,38 +1,38 @@
 ---
-title: "Route a ChatGPT subscription through Aperture"
-description: "In [passthrough mode][docs-use-passthrough-mode], Aperture forwards each client's own credential to the upstream provider instead of injecting a shared API key. This guide uses passthrough to route a "
+title: "把 ChatGPT 订阅经由 Aperture 路由"
+description: "在 [passthrough 模式][docs-use-passthrough-mode]下，Aperture 把每个客户端自己的凭证转发给上游提供商，而不是注入共享 API key。本指南使用 passthrough 来路由 ChatGPT 订阅。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-In [passthrough mode][docs-use-passthrough-mode], Aperture forwards each client's own credential to the upstream provider instead of injecting a shared API key. This guide uses passthrough to route a ChatGPT subscription: the Codex CLI signs in to the subscription and holds an OAuth token, and Aperture forwards that token to the ChatGPT backend unchanged.
+在 [passthrough 模式][docs-use-passthrough-mode]下，Aperture 把每个客户端自己的凭证转发给上游提供商，而不是注入共享 API key。本指南使用 passthrough 来路由 ChatGPT 订阅：Codex CLI 登录订阅并持有 OAuth 令牌，Aperture 把该令牌原样转发给 ChatGPT 后端。
 
-A ChatGPT subscription and an OpenAI platform API key are separate systems that use different endpoints and credentials:
+ChatGPT 订阅和 OpenAI 平台 API key 是两套独立系统，使用不同的端点和凭证：
 
-| Endpoint                        | Credential                                   | Billing                                            |
-| ------------------------------- | -------------------------------------------- | -------------------------------------------------- |
-| `chatgpt.com/backend-api/codex` | ChatGPT OAuth token                          | ChatGPT subscription (Plus, Pro, Team, Enterprise) |
-| `api.openai.com/v1`             | API key with the `api.responses.write` scope | Platform API credits                               |
+| 端点 | 凭证 | 计费 |
+| ---- | ---- | ---- |
+| `chatgpt.com/backend-api/codex` | ChatGPT OAuth 令牌 | ChatGPT 订阅（Plus、Pro、Team、Enterprise） |
+| `api.openai.com/v1` | 带 `api.responses.write` scope 的 API key | 平台 API 额度 |
 
-The ChatGPT backend does not accept API keys, and the platform API does not accept ChatGPT OAuth tokens. This guide covers the subscription (OAuth) path. To route platform API keys instead, refer to [use Codex with Aperture][docs-use-codex]. If you have both kinds of user, configure a separate provider for each.
+ChatGPT 后端不接受 API key，平台 API 也不接受 ChatGPT OAuth 令牌。本指南介绍订阅（OAuth）路径。要路由平台 API key，参阅[在 Aperture 中使用 Codex][docs-use-codex]。如果两类用户都有，请为每类分别配置一个提供商。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An [Aperture gateway][docs-get-started] accessible from your device, and admin access to edit its configuration.
-* A grant that permits the Codex models for the Tailscale identities that will use them. Aperture lists and routes only granted models.
-* A ChatGPT subscription for each user, and the [Codex CLI][xt-codex] installed and able to sign in to that subscription.
+* 一台你的设备可以访问的 [Aperture 网关][docs-get-started]，以及编辑其配置的管理员权限。
+* 一条授权，允许将使用这些模型的 Tailscale 身份访问 Codex 模型。Aperture 只列出并路由已获授权的模型。
+* 每个用户一个 ChatGPT 订阅，并已安装 [Codex CLI][xt-codex] 且能登录该订阅。
 
-## Configure the Codex provider
+## 配置 Codex 提供商
 
-Define a provider whose `baseurl` is the ChatGPT backend, with `auth_mode` set to `passthrough`.
+定义一个 `baseurl` 指向 ChatGPT 后端、`auth_mode` 设为 `passthrough` 的提供商。
 
 1. \[Missing snippet: aperture\_admin\_nav.mdx]
 
-2. Add a provider under the `providers` map, replacing the placeholders with your values:
+2. 在 `providers` 映射下添加一个提供商，把占位符替换为你的值：
 
    ```json
    "providers": {
@@ -49,22 +49,22 @@ Define a provider whose `baseurl` is the ChatGPT backend, with `auth_mode` set t
    }
    ```
 
-   * `authorization` is `bearer`: the ChatGPT backend expects the OAuth token in the `Authorization` header.
-   * `baseurl` is the ChatGPT backend, not `api.openai.com`. The two endpoints accept different credentials.
-   * No `apikey` is configured, so the provider is passthrough-only and works solely from each client's subscription token.
+   * `authorization` 为 `bearer`：ChatGPT 后端期望 OAuth 令牌放在 `Authorization` 头中。
+   * `baseurl` 是 ChatGPT 后端，而不是 `api.openai.com`。这两个端点接受的凭证不同。
+   * 未配置 `apikey`，因此该提供商是纯 passthrough 型，只依靠每个客户端的订阅令牌工作。
 
    \[Missing snippet: aperture\_model\_wildcards\_note.mdx]
 
-3. Save the configuration. Aperture hot-reloads it, so no restart is required. A successful save confirms the block passed validation.
+3. 保存配置。Aperture 会热加载配置，无需重启。保存成功即说明该块通过了校验。
 
-## Configure the Codex CLI
+## 配置 Codex CLI
 
-Point Codex at Aperture with a custom model provider, and let it send its subscription OAuth token.
+用自定义模型提供商把 Codex 指向 Aperture，并让它发送自己的订阅 OAuth 令牌。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
-1. Sign in to your ChatGPT subscription in Codex.
-2. Create or edit `~/.codex/config.toml`:
+1. 在 Codex 中登录你的 ChatGPT 订阅。
+2. 创建或编辑 `~/.codex/config.toml`：
 
    ```toml
    model = "gpt-6.1-sol"
@@ -77,30 +77,30 @@ Point Codex at Aperture with a custom model provider, and let it send its subscr
    requires_openai_auth = true
    ```
 
-   * `requires_openai_auth = true` tells Codex to send its ChatGPT OAuth token for subscription access. Omit it and supply `env_key` only for the platform API key path.
-   * Codex appends `/responses` to `base_url`, so requests arrive at Aperture as `/codex/responses`. Aperture strips the `/codex` prefix before proxying to `chatgpt.com/backend-api/codex/responses`.
+   * `requires_openai_auth = true` 告诉 Codex 发送它的 ChatGPT OAuth 令牌以进行订阅访问。只有走平台 API key 路径时才省略它并提供 `env_key`。
+   * Codex 会在 `base_url` 后追加 `/responses`，因此请求以 `/codex/responses` 的形式到达 Aperture。Aperture 在代理到 `chatgpt.com/backend-api/codex/responses` 之前会去掉 `/codex` 前缀。
 
-> **Warning:**
+> **警告：**
 >
-> `requires_openai_auth = true` with a `base_url` that points at the platform API does not work. The ChatGPT OAuth token lacks the `api.responses.write` scope the platform API requires. Use the subscription endpoint for OAuth tokens and the platform endpoint for API keys.
+> `requires_openai_auth = true` 配上指向平台 API 的 `base_url` 是行不通的。ChatGPT OAuth 令牌缺少平台 API 所要求的 `api.responses.write` scope。OAuth 令牌请走订阅端点，API key 请走平台端点。
 
-## Verify the connection
+## 验证连接
 
-1. Send a test message in Codex.
-2. Open Chat on your Aperture gateway and select **Sessions** in the sidebar. Confirm that your test request appears. If your account has no portal access, ask an administrator to check **Security** > **Logs**.
+1. 在 Codex 中发送一条测试消息。
+2. 在你的 Aperture 网关上打开 Chat，在侧边栏选择 **Sessions**。确认测试请求已出现。如果你的账户没有门户访问权，请让管理员检查 **Security** > **Logs**。
 
-If a request fails with a 401, confirm Codex is signed in to the subscription and that `requires_openai_auth = true` is set. If the request never reaches Aperture, confirm `base_url` includes the `/codex` path segment. For more checks, refer to the [passthrough troubleshooting steps][docs-use-passthrough-mode].
+如果请求失败并返回 401，请确认 Codex 已登录订阅，且已设置 `requires_openai_auth = true`。如果请求根本没到达 Aperture，请确认 `base_url` 包含 `/codex` 路径段。更多检查项参阅 [passthrough 故障排查步骤][docs-use-passthrough-mode]。
 
-## What routes through Aperture
+## 哪些流量经由 Aperture 路由
 
-Only inference traffic (`/responses`) routes through Aperture. Codex sends OAuth login and token refresh directly to the provider, bypassing the Aperture `base_url`. Aperture never sees the subscription's login or refresh, only the inference requests it authenticates by Tailscale identity and forwards.
+只有推理流量（`/responses`）经由 Aperture 路由。Codex 把 OAuth 登录和令牌刷新直接发送给提供商，绕过 Aperture 的 `base_url`。Aperture 从不接触订阅的登录或刷新，只看到它按 Tailscale 身份认证并转发的推理请求。
 
-## Next steps
+## 后续步骤
 
-After you configure and check the provider, complete the applicable tasks:
+配置并检查提供商之后，完成适用的任务：
 
-* [Grant model access][docs-grant-model-access] to control which users can access the passthrough provider.
-* [Set up LLM clients][docs-use-your-tools] to connect other clients that can send their own ChatGPT credentials.
+* [授予模型访问权][docs-grant-model-access]，控制哪些用户可以访问 passthrough 提供商。
+* [设置 LLM 客户端][docs-use-your-tools]，接入其他能发送自己的 ChatGPT 凭证的客户端。
 
 [docs-get-started]: /docs/aperture/get-started
 

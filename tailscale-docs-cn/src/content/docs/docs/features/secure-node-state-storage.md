@@ -1,95 +1,87 @@
 ---
-title: "Secure node state storage"
-description: "Encrypt Tailscale node state at rest."
+title: "安全的节点状态存储"
+description: "对 Tailscale 节点状态进行静态加密。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-Tailscale node state contains [node keys][docs-node-keys] and other sensitive data necessary for identifying the device to your Tailscale network (known as a [tailnet][docs-tailnet]) and for encrypting and decrypting traffic to other devices in the tailnet. This document covers how to configure Tailscale to encrypt the node state.
+Tailscale 节点状态包含[节点密钥][docs-node-keys]（node key）以及其他敏感数据，用于向你的 Tailscale 网络（即 [tailnet][docs-tailnet]）标识设备，并对发往 tailnet 中其他设备的流量进行加解密。本文介绍如何配置 Tailscale 对节点状态进行加密。
 
-> **Note:** Secure node state storage is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 安全的节点状态存储[对所有套餐](https://tailscale.com/pricing)可用。
 
-## Why it matters
+## 为什么重要
 
-Secure node state storage can help protect against a malicious actor copying node state from one device to another, effectively cloning the node. By using [platform-specific][ar-platform-support] capabilities, Tailscale ensures node state encrypts at rest, making theft from disk and node cloning more difficult.
+安全的节点状态存储有助于防范恶意行为者把节点状态从一台设备复制到另一台，从而有效克隆节点。借助[各平台特有的][ar-platform-support]能力，Tailscale 确保节点状态静态加密，让从磁盘窃取状态和克隆节点变得更加困难。
 
-## Platform support
+## 平台支持
 
-Secure node state storage implementations vary by platform and Tailscale client version.
+安全的节点状态存储的具体实现因平台和 Tailscale 客户端版本而异。
 
-| **Platform**                                    | **Implementation**                                                  | **Version support**                            |
+| **平台**                                        | **实现方式**                                                        | **版本支持**                                   |
 | ----------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------- |
-| Android                                         | [EncryptedSharedPreferences][xt-android-encryptedsharedpreferences] | All versions                                   |
-| Linux                                           | [Trusted Platform Module (TPM)][xt-trusted-platform-module]         | Tailscale [v1.86][co-changelog-1.86] and later |
-| macOS/iOS/tvOS from Mac App Store               | [Keychain][xt-apple-keychain]                                       | All versions                                   |
-| [macOS standalone][docs-mac-variant-standalone] | [Keychain][xt-apple-keychain]                                       | Tailscale [v1.86][co-changelog-1.86] and later |
-| Windows                                         | TPM                                                                 | Tailscale [v1.86][co-changelog-1.86] and later |
+| Android                                         | [EncryptedSharedPreferences][xt-android-encryptedsharedpreferences] | 所有版本                                       |
+| Linux                                           | [可信平台模块（TPM）][xt-trusted-platform-module]                   | Tailscale [v1.86][co-changelog-1.86] 及更高    |
+| 来自 Mac App Store 的 macOS/iOS/tvOS            | [Keychain][xt-apple-keychain]                                       | 所有版本                                       |
+| [macOS 独立版][docs-mac-variant-standalone]     | [Keychain][xt-apple-keychain]                                       | Tailscale [v1.86][co-changelog-1.86] 及更高    |
+| Windows                                         | TPM                                                                 | Tailscale [v1.86][co-changelog-1.86] 及更高    |
 
-## Prerequisites
+## 前提条件
 
-* Refer to [platform support][ar-platform-support] for the minimum required Tailscale version for your client platforms.
-* On Linux and Windows, your device must have a functioning TPM 2.0 device.
+* 请参阅[平台支持][ar-platform-support]，了解你的客户端平台所需的最低 Tailscale 版本。
+* 在 Linux 和 Windows 上，你的设备必须有一个可正常工作的 TPM 2.0 设备。
 
-## Configure secure node state storage
+## 配置安全的节点状态存储
 
-Configuration of node state storage differs by platform and version:
+节点状态存储的配置因平台和版本而异：
 
-* Tailscale 1.90.2 to 1.92.4: node state storage encryption is enabled by default on all supported platforms.
-* Tailscale 1.92.5 or later: node state storage encryption is opt-in on Windows and Linux, and enabled by default on all other supported platforms.
+* Tailscale 1.90.2 至 1.92.4：在所有受支持平台上，节点状态存储加密默认启用。
+* Tailscale 1.92.5 或更高：在 Windows 和 Linux 上，节点状态存储加密为可选启用；在所有其他受支持平台上默认启用。
 
 ### Android
 
-Secure node state storage encrypts by default and does not require extra configuration.
+安全的节点状态存储默认加密，无需额外配置。
 
 ### Linux
 
-Configure secure node state storage by passing the [`--encrypt-state`][docs-tailscaled-flags] flag to `tailscaled`. Apply the changes by [restarting `tailscaled`][docs-tailscaled-stop-and-start].
+向 `tailscaled` 传入 [`--encrypt-state`][docs-tailscaled-flags] 旗标来配置安全的节点状态存储，然后[重启 `tailscaled`][docs-tailscaled-stop-and-start] 使更改生效。
 
-### macOS/iOS/tvOS (from Mac App Store)
+### macOS/iOS/tvOS（来自 Mac App Store）
 
-Secure node state storage encrypts by default and does not require extra configuration.
+安全的节点状态存储默认加密，无需额外配置。
 
-### macOS standalone
+### macOS 独立版
 
-Configure secure node state storage by setting the [`EncryptState`][docs-mdm-key-encrypt-state] system policy. Apply the changes by [restarting `tailscaled`][docs-tailscaled-stop-and-start]. Refer to [Deploy Tailscale on macOS using MDM][docs-mdm-macos] for how to configure this on macOS.
+通过设置 [`EncryptState`][docs-mdm-key-encrypt-state] 系统策略来配置安全的节点状态存储，然后[重启 `tailscaled`][docs-tailscaled-stop-and-start] 使更改生效。有关在 macOS 上如何配置，请参阅[使用 MDM 在 macOS 上部署 Tailscale][docs-mdm-macos]。
 
 ### Windows
 
-Configure secure node state storage by setting the [`EncryptState`][docs-mdm-key-encrypt-state] system policy. Apply the changes by [restarting `tailscaled`][docs-tailscaled-stop-and-start]. Refer to [Deploy Tailscale on Windows using MDM][docs-mdm-windows] for how to configure this on Windows.
+通过设置 [`EncryptState`][docs-mdm-key-encrypt-state] 系统策略来配置安全的节点状态存储，然后[重启 `tailscaled`][docs-tailscaled-stop-and-start] 使更改生效。有关在 Windows 上如何配置，请参阅[使用 MDM 在 Windows 上部署 Tailscale][docs-mdm-windows]。
 
-## Disabling secure node state storage
+## 禁用安全的节点状态存储
 
-On supported platforms, disabling secure node state storage will migrate encrypted state to the prior plaintext format.
+在受支持的平台上，禁用安全的节点状态存储会把已加密的状态迁移回先前的明文格式。
 
-## Device posture attribute
+## 设备态势属性
 
-Devices have a `node:tsStateEncrypted` [device posture attribute][docs-device-posture-attributes] indicating whether the Tailscale node state encrypts.
+设备有一个 `node:tsStateEncrypted` [设备态势属性][docs-device-posture-attributes]（device posture attribute），指示 Tailscale 节点状态是否已加密。
 
-## Recover from TPM failures
+## 从 TPM 故障中恢复
 
-On [Linux and Windows][bl-encrypting-data-windowslinux], the Tailscale client
-encrypts the node state file with a TPM device. To read or modify the state
-file, Tailscale has to decrypt it with the exact same TPM device.
+在 [Linux 和 Windows][bl-encrypting-data-windowslinux] 上，Tailscale 客户端使用 TPM 设备加密节点状态文件。要读取或修改状态文件，Tailscale 必须用同一个 TPM 设备进行解密。
 
-In some uncommon situations the TPM device can get reset or disappear entirely,
-usually due to a bad firmware update or hardware failure. When this happens,
-Tailscale is unable to decrypt the state file, which causes the client to fail
-to start.
+在某些少见的情况下，TPM 设备可能被重置或完全消失，通常由固件更新失败或硬件故障导致。发生这种情况时，Tailscale 无法解密状态文件，导致客户端无法启动。
 
-You can verify that this is the reason for Tailscale not running by looking for
-errors containing `failed to unseal state file` in the [client
-logs][docs-client-logs].
+你可以在[客户端日志][docs-client-logs]中查找包含 `failed to unseal state file` 的错误，来确认这就是 Tailscale 无法运行的原因。
 
-If you are unable to determine why the TPM device is misbehaving and fix it, the
-only remaining solution is to reset the node state and register it again.
+如果你无法查明 TPM 设备异常的原因并加以修复，剩下的唯一办法就是重置节点状态并重新注册。
 
-1. [Remove the old device][docs-remove-device] from the admin console.
+1. 在管理控制台中[移除旧设备][docs-remove-device]。
 
-2. Remove the node state files.
+2. 删除节点状态文件。
 
    #### Windows
 
-   Remove the following directories:
+   删除以下目录：
 
    ```powershell
    C:\ProgramData\Tailscale
@@ -98,21 +90,20 @@ only remaining solution is to reset the node state and register it again.
 
    #### Linux
 
-   Remove the state file (requires `sudo`):
+   删除状态文件（需要 `sudo`）：
 
    ```shell
    /var/lib/tailscale/tailscaled.state
    ```
 
-3. Follow the usual login flow to register the node again.
+3. 按常规登录流程重新注册该节点。
 
-## Limitations
+## 限制
 
-* If secure node state storage is enabled on a Linux or Windows
-  device without TPM 2.0 support, Tailscale will fail to start.
-* Enabling secure node state storage can only be done using system policies or CLI flags, not through the graphical settings screen.
+* 如果在没有 TPM 2.0 支持的 Linux 或 Windows 设备上启用安全的节点状态存储，Tailscale 将无法启动。
+* 启用安全的节点状态存储只能通过系统策略或 CLI 旗标完成，无法通过图形设置界面完成。
 
-[ar-platform-support]: #platform-support
+[ar-platform-support]: #平台支持
 
 [bl-encrypting-data-windowslinux]: https://tailscale.com/blog/encrypting-data-at-rest#windowslinux
 

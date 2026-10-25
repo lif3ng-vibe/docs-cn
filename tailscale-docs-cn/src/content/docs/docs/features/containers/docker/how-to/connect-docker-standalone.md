@@ -1,77 +1,77 @@
 ---
-title: "Connect a Docker container to your tailnet with standalone Docker"
-description: "You can create a Docker container in a single command by specifying all required options inline. The advantage of this method is it's faster, and requires no additional setup."
+title: "使用独立 Docker 将 Docker 容器连接到你的 tailnet"
+description: "你可以通过在一条命令中内联指定所有必需选项来创建 Docker 容器。这种方法的优点是速度更快，且不需要额外的设置。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-You can create a Docker container in a single command by specifying all required options inline. The advantage of this method is it's faster, and requires no additional setup.
+你可以在一条命令中内联指定所有必需选项来创建 Docker 容器。这种方法的优点是速度更快，而且不需要额外的设置。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* A Tailscale account with permission to generate [auth keys][docs-auth-keys] from the admin console.
-* Basic familiarity with using a terminal or command line interface.
+* 一个 Tailscale 账户，且有权在管理控制台中生成[认证密钥][docs-auth-keys]。
+* 对使用终端或命令行界面有基本了解。
 
-Once you have these ready, you can start connecting Docker containers to your tailnet.
+准备好这些后，你就可以开始把 Docker 容器连接到你的 tailnet 了。
 
-## Pull the Tailscale Docker image
+## 拉取 Tailscale Docker 镜像
 
-Before running a container, Docker needs a copy of the image on your local system. You can download an image explicitly using `docker pull`, or you can let Docker handle it automatically when you run `docker run` or `docker compose up`. In most cases, Docker will pull the image for you if it is not already present. However, running `docker pull` manually is useful when you want to ensure you are using the most recent version or when preparing environments in advance.
+在运行容器之前，Docker 需要在本地系统上持有该镜像的副本。你可以用 `docker pull` 显式下载镜像，也可以在运行 `docker run` 或 `docker compose up` 时让 Docker 自动处理。在大多数情况下，如果镜像尚不存在，Docker 会自动帮你拉取。不过，当你想确保使用最新版本或需要提前准备环境时，手动运行 `docker pull` 会很有用。
 
-To get started, download the Tailscale image from a container registry such as Docker Hub or GitHub Container Registry to the machine where you plan to run containers. Pulling the image once lets you create as many containers as needed, and you can pull it again later to upgrade to a newer Tailscale version.
+首先，从 Docker Hub 或 GitHub Container Registry 等容器仓库把 Tailscale 镜像下载到你计划运行容器的那台机器上。镜像只需拉取一次，之后就可以按需创建任意数量的容器；以后还可以再次拉取，升级到更新的 Tailscale 版本。
 
-To pull the Docker image from Docker Hub, run:
+要从 Docker Hub 拉取 Docker 镜像，请运行：
 
 ```shell
 docker pull tailscale/tailscale:latest
 ```
 
-To pull the Docker image from GitHub Container Registry, run:
+要从 GitHub Container Registry 拉取 Docker 镜像，请运行：
 
 ```shell
 docker pull ghcr.io/tailscale/tailscale:latest
 ```
 
-To pull a specific stable version, either with or without the patch version number (for example, `.1`):
+要拉取特定的稳定版本（可带或不带补丁版本号，例如 `.1`）：
 
 ```shell
 docker pull tailscale/tailscale:v1.94.1
 ```
 
-To pull a specific unstable version:
+要拉取特定的不稳定版本：
 
 ```shell
 docker pull tailscale/tailscale:unstable-v1.94.38
 ```
 
-For information about Tailscale client releases and version, refer to [Tailscale client versions and release tracks][docs-versions].
+关于 Tailscale 客户端发布和版本的更多信息，请参阅 [Tailscale 客户端版本与发布通道][docs-versions]。
 
-## Generate an auth key
+## 生成认证密钥
 
-You can automatically connect Docker containers to your tailnet by generating an authentication key and adding it to your Docker configuration, eliminating the need to log in manually.
+生成认证密钥并将其添加到 Docker 配置中，即可自动把 Docker 容器连接到你的 tailnet，无需手动登录。
 
-1. Go to the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. In the **Auth keys** section, select **Generate auth key**.
-   1. Add a description to identify the key. The description does not affect configuration.
-   2. Leave all other options as-is.
-   3. Select **Generate key**.
-3. Copy the key now. After you close the dialog, you cannot view it again.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys)（密钥）页面。
+2. 在 **Auth keys**（认证密钥）部分，选择 **Generate auth key**（生成认证密钥）。
+   1. 添加一段描述以便识别该密钥。描述不影响配置。
+   2. 其他选项保持默认。
+   3. 选择 **Generate key**（生成密钥）。
+3. 立即复制该密钥。关闭对话框后将无法再次查看。
 
-For more information about Tailscale authentication keys, refer to [Auth keys][docs-auth-keys].
+关于 Tailscale 认证密钥的更多信息，请参阅[认证密钥][docs-auth-keys]。
 
-## Run the container
+## 运行容器
 
-The Tailscale Docker image is run using the `docker run` command with the various instructions and details that are specific to your setup.
+运行 Tailscale Docker 镜像时使用 `docker run` 命令，并附上针对你自身配置的各种指令和细节。
 
-> **Note:**
+> **注意：**
 >
-> Alternatively, you can use [Docker Compose][xt-docker-compose] which lets you define and manage multi container applications using a saved and reusable YAML file, instead of running a single Docker command. One of the main advantages of this method is that you can configure and start multiple related containers together as a single application stack. For information about installing Tailscale using Docker Compose, refer to [Connect Docker containers to your tailnet with Docker Compose][docs-docker-container].
+> 你也可以使用 [Docker Compose][xt-docker-compose]，通过保存下来、可复用的 YAML 文件来定义和管理多容器应用，而不必运行单条 Docker 命令。这种方式的主要优点之一，是可以把多个相关容器作为一个应用栈一起配置和启动。关于使用 Docker Compose 安装 Tailscale 的信息，请参阅[使用 Docker Compose 将 Docker 容器连接到你的 tailnet][docs-docker-container]。
 
-In the following example, a Docker container is created that runs only the Tailscale client and is automatically authenticated to your tailnet using a generated auth key.
+在下面的示例中，创建的 Docker 容器只运行 Tailscale 客户端，并使用生成的认证密钥自动认证到你的 tailnet。
 
-Make sure to replace `<tskey-YOUR-AUTH-KEY>` with the auth key you generated. You can also customize the field `--hostname=tailscale-nginx` to reflect the node name you want to appear in the Tailscale admin console.
+请务必将 `<tskey-YOUR-AUTH-KEY>` 替换为你生成的认证密钥。你也可以自定义 `--hostname=tailscale-nginx` 字段，改成你希望在 Tailscale 管理控制台中显示的节点名称。
 
 ```shell
 docker run -d \
@@ -86,11 +86,11 @@ docker run -d \
    tailscale/tailscale:latest
 ```
 
-Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and verify that `tailscale-nginx` entry displays. This confirms that the node is successfully added to your tailnet.
+打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines)（机器）页面，确认 `tailscale-nginx` 条目已显示。这表明节点已成功添加到你的 tailnet。
 
-Refer to [Connect a Docker container to your tailnet with Docker Compose][docs-docker-container], for an example YAML file as well as field and flag descriptions that you can also use for installing Docker in a container from either the command line or in the GUI of your [preferred container management tool][docs-docker-alt].
+关于示例 YAML 文件以及字段和标志说明（同样适用于在命令行或你[偏好的容器管理工具][docs-docker-alt]的图形界面中在容器内安装 Docker），请参阅[使用 Docker Compose 将 Docker 容器连接到你的 tailnet][docs-docker-container]。
 
-Refer to [Docker's official CLI documentation][xt-docker-docs-cli] for a list of Docker commands.
+Docker 命令列表请参阅 [Docker 官方 CLI 文档][xt-docker-docs-cli]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

@@ -1,39 +1,39 @@
 ---
-title: "OAuth apps"
-description: "Build internal tools that act on behalf of individual users through a standard OAuth 2.0 authorization code flow, so each action carries the consenting user's identity."
+title: "OAuth 应用"
+description: "通过标准 OAuth 2.0 授权码流程构建能代表单个用户执行操作的内网工具，让每个操作都携带授权用户的身份。"
 ---
 
-Last validated Jun 30, 2026
+最后验证于 Jun 30, 2026
 
-> **Note:** OAuth apps are currently in alpha.
+> **注意：** OAuth 应用目前处于 alpha 阶段。
 
-OAuth apps let internal tools act upon a tailnet on behalf of individual users through a standard OAuth 2.0 authorization code flow ([RFC 6749 section 4.1][xt-rfc-6749]). A user completes a Tailscale-hosted consent screen, and the resulting authorization carries that user's identity. Access control rules, audit log entries, and quotas apply to the user who granted consent, not to a shared service identity.
+OAuth 应用让内网工具通过标准 OAuth 2.0 授权码流程（[RFC 6749 section 4.1][xt-rfc-6749]）代表单个用户对 tailnet 执行操作。用户在 Tailscale 托管的授权确认页上完成确认，产生的授权会携带该用户的身份。访问控制规则、审计日志条目与配额都作用于授出确认的用户，而不是某个共享的服务身份。
 
-Each OAuth authorization flow follows the same pattern, so the topics below share a common structure. An [Owner](/docs/reference/user-roles) or [Admin](/docs/reference/user-roles) creates an OAuth app through the [Tailscale API][docs-api], and a developer implements the authorization code flow in their tool.
+每次 OAuth 授权流程都遵循相同的模式，因此下文各主题共用一套结构。[Owner（所有者）](/docs/reference/user-roles)或[管理员（Admin）](/docs/reference/user-roles)通过 [Tailscale API][docs-api] 创建 OAuth 应用，开发者则在其工具中实现授权码流程。
 
-> **Note:**
+> **注意：**
 >
-> OAuth apps and [OAuth clients][docs-oauth-clients] are different mechanisms. OAuth clients use the client credentials flow to create tag-owned resources tied to a service identity. OAuth apps use the authorization code flow to act on behalf of an individual user. For an overview of all OAuth-related documentation, refer to the [OAuth hub][docs-oauth-hub].
+> OAuth 应用与 [OAuth 客户端][docs-oauth-clients]是两种不同的机制。OAuth 客户端使用客户端凭证（client credentials）流程创建绑定到服务身份的、归属于标签的资源；OAuth 应用则使用授权码流程代表单个用户执行操作。如需所有 OAuth 相关文档的总览，请参阅 [OAuth 中心][docs-oauth-hub]。
 
-## Requirements
+## 要求
 
-Before you create an OAuth app, confirm you meet the following requirements.
+在创建 OAuth 应用之前，请确认你满足以下条件。
 
-* [Owner](/docs/reference/user-roles) or [Admin](/docs/reference/user-roles) role in the tailnet.
-* An API access token with admin scope for creating OAuth apps through the API.
-* The OAuth app and every user who authorizes through it must belong to the same tailnet. This flow does not support users from other tailnets.
-* For developers implementing the flow: working knowledge of OAuth 2.0 authorization code grants and the ability to handle HTTP redirects and token exchanges.
+* 在 tailnet 中拥有 [Owner（所有者）](/docs/reference/user-roles)或[管理员（Admin）](/docs/reference/user-roles)角色。
+* 拥有带 admin 作用域的 API 访问令牌，用于通过 API 创建 OAuth 应用。
+* OAuth 应用与每个通过它授权的用户必须属于同一个 tailnet。此流程不支持来自其他 tailnet 的用户。
+* 对实现该流程的开发者而言：需要具备 OAuth 2.0 授权码授予的工作知识，并能够处理 HTTP 重定向与令牌交换。
 
-## Guides
+## 指南
 
-The following guides cover specific tasks you can perform with OAuth apps.
+以下指南介绍使用 OAuth 应用可以完成的具体任务。
 
-[**Device provisioning with OAuth apps**](/docs/features/oauth-apps/device-provisioning) — Build internal tools that provision tailnet devices on behalf of individual users with a standard OAuth authorization code flow, so each device carries the consenting user's identity.
+[**使用 OAuth 应用进行设备预配**](/docs/features/oauth-apps/device-provisioning) —— 通过标准 OAuth 授权码流程构建代表单个用户预配 tailnet 设备的内网工具，让每台设备都携带授权用户的身份。
 
-## Limitations
+## 限制
 
-* Authorization is restricted to a single tailnet. Only users in the same tailnet as the OAuth app can authorize through it.
-* The Tailscale-hosted consent screen cannot be customized.
+* 授权仅限于单个 tailnet。只有与 OAuth 应用位于同一 tailnet 的用户才能通过它授权。
+* Tailscale 托管的授权确认页无法自定义。
 
 [docs-api]: /docs/reference/tailscale-api
 

@@ -1,47 +1,47 @@
 ---
-title: "Using Tailscale with your Palo Alto Networks firewall"
-description: "Tailscale tries to connect your nodes directly peer-to-peer, and does so nearly all the time. Where this is not possible, Tailscale will use [DERP relay servers][docs-derp-servers] to forward traffic "
+title: "将 Tailscale 与你的 Palo Alto Networks 防火墙配合使用"
+description: "Tailscale 会尝试将你的节点直接点对点连接，而且几乎总能做到。在无法直连时，Tailscale 会使用 [DERP 中继服务器][docs-derp-servers]转发流量。"
 ---
 
-Last validated Sep 30, 2025
+最后验证于 Sep 30, 2025
 
-## Types of connections
+## 连接类型
 
-Tailscale tries to connect your nodes directly peer-to-peer, and does so nearly all the time. Where this is not possible, Tailscale will use [DERP relay servers][docs-derp-servers] to forward traffic from one node to another. For more information about relays including how to determine whether relays are being used, refer to [Using Tailscale with your firewall][docs-firewalls].
+Tailscale 会尝试将你的节点直接点对点连接，而且几乎总能做到。在无法直连时，Tailscale 会使用 [DERP 中继服务器][docs-derp-servers]将流量从一个节点转发到另一个节点。有关中继的更多信息（包括如何判断是否正在使用中继），请参阅[将 Tailscale 与你的防火墙配合使用][docs-firewalls]。
 
-The default NAT translation type in [Palo Alto Networks][xt-paloaltonetworks] firewall products uses a random source port in every connection, and makes finding a direct connection more challenging. Connections involving a Palo Alto Networks firewall using the default NAT type will be able to establish a direct connection only if the other end of the connection uses a predictable port number.
+[Palo Alto Networks][xt-paloaltonetworks] 防火墙产品的默认 NAT 转换类型在每次连接中都使用随机源端口，这让寻找直连变得更加困难。涉及使用默认 NAT 类型的 Palo Alto Networks 防火墙的连接，只有在连接的另一端使用可预测的端口号时才能建立直连。
 
-## PAN-OS 11.1.x and later: Persistent Dynamic IP and Port
+## PAN-OS 11.1.x 及更高版本：Persistent Dynamic IP and Port
 
-> **Note:**
+> **注意：**
 >
-> Ensure stability and performance by referring to the list of preferred releases for PAN-OS.
+> 请参阅 PAN-OS 的首选发布版本列表，以确保稳定性与性能。
 
-PAN-OS 11.1.1 contains the translation type for NAT policies, [Persistent Dynamic IP and Port][xt-paloalto-pdipp]. In this translation type, once a client has sent a packet with a particular source port, the same NAT translated port number will be used for all destinations. This lets Tailscale to predict the port number and establish a direct connection.
+PAN-OS 11.1.1 包含用于 NAT 策略的转换类型 [Persistent Dynamic IP and Port][xt-paloalto-pdipp]。在这种转换类型下，一旦客户端用某个特定源端口发送了数据包，同一个 NAT 转换后的端口号就会被用于所有目的地。这使 Tailscale 能够预测端口号并建立直连。
 
-To use this translation type, go to **NAT Policy Rule**, select the **Translated Packet** tab, then select the **Translation Type** option **Persistent Dynamic IP and Port**.
+要使用这种转换类型，请前往 **NAT Policy Rule**，选择 **Translated Packet** 标签页，然后将 **Translation Type** 选项选为 **Persistent Dynamic IP and Port**。
 
-*（图：Palo Alto Networks interface for 'NAT Policy Rule'. The 'Translated Packet' tab is displayed. 'Translation Type' is set to 'Persistent Dynamic IP and Port'.）*
+*（图：Palo Alto Networks 的 'NAT Policy Rule' 界面。显示 'Translated Packet' 标签页。'Translation Type' 设为 'Persistent Dynamic IP and Port'。）*
 
-### Selective use of Persistent Dynamic IP and Port
+### 选择性使用 Persistent Dynamic IP and Port
 
-To incorporate Persistent Dynamic IP and Port into an existing set of NAT Policies, it may not be desirable to change all connections to use it. Use of persistent translation can be made conditional for just Tailscale's direct connectivity by configuring a Service for UDP source port 41641. We recommend setting the timeout to four minutes, more closely aligning with the idle timeout for direct connections.
+要将 Persistent Dynamic IP and Port 纳入一组现有的 NAT 策略，把所有连接都改为使用它可能并不合适。可以通过为 UDP 源端口 41641 配置一个服务（Service），让持久转换只针对 Tailscale 的直连流量生效。我们建议将超时时间设置为四分钟，以更贴近直连的空闲超时。
 
-*（图：Palo Alto Networks interface for a new 'Service'. 'Name' is set to 'Tailscale Direct Connections'. 'Summary' is set to 'WireGuard packets sent by Tailscale clients'. 'Protocol' is set to 'UDP'. A 'Destination Port' is set. 'Source Port' is set to '41641'. 'UDP Timeout' is set to '240'.）*
+*（图：Palo Alto Networks 新建 'Service' 的界面。'Name' 设为 'Tailscale Direct Connections'。'Summary' 设为 'WireGuard packets sent by Tailscale clients'。'Protocol' 设为 'UDP'。设置了 'Destination Port'。'Source Port' 设为 '41641'。'UDP Timeout' 设为 '240'。）*
 
-The Service is added as a match criteria in the **NAT Policy Rule**, **Original Packet** tab.
+该服务会作为匹配条件添加到 **NAT Policy Rule** 的 **Original Packet** 标签页中。
 
-*（图：Palo Alto Networks interface for 'NAT Policy Rule'. The 'Original Packet' tab is displayed. For the 'Destination Zone', the 'Service' is set to the Service that was created earlier.）*
+*（图：Palo Alto Networks 的 'NAT Policy Rule' 界面。显示 'Original Packet' 标签页。对于 'Destination Zone'，'Service' 设为先前创建的服务。）*
 
-For this to work, the `randomizeClientPort` setting described in [Using Tailscale with your firewall][docs-firewalls], must not be used. Packets will be matched only if they use the default port 41641.
+要使其生效，不得使用[将 Tailscale 与你的防火墙配合使用][docs-firewalls]中介绍的 `randomizeClientPort` 设置。只有使用默认端口 41641 的数据包才会被匹配。
 
-## Earlier PAN-OS releases: Static IP
+## 更早的 PAN-OS 版本：Static IP
 
-With older PAN-OS releases and the Dynamic IP and Port translation type, every UDP stream will translate to a random UDP port. Opening a specific port will not allow traffic through, and Tailscale cannot predict what port number to try for a direct connection.
+在更早的 PAN-OS 版本与 Dynamic IP and Port 转换类型下，每条 UDP 流都会转换到一个随机的 UDP 端口。打开特定端口无法让流量通过，而且 Tailscale 无法预测直连应尝试哪个端口号。
 
-With older PAN-OS releases it is possible to use the Static IP NAT Policy to enable one device within the protected zone to make direct connections. One might choose a subnet router or other high-traffic node to optimize. In the PAN-OS software create a NAT policy rule with **Translation Type** set to **Static IP**, instead of the default setting **Dynamic IP And Port**. This helps Tailscale figure out how to get packets through the NAT and establish direct connections.
+在更早的 PAN-OS 版本上，可以使用 Static IP NAT 策略，让受保护区域中的一台设备建立直连。你可以选择子网路由器或其他高流量节点进行优化。在 PAN-OS 软件中创建一条 NAT 策略规则，将 **Translation Type** 设为 **Static IP**，而不是默认设置 **Dynamic IP And Port**。这能帮助 Tailscale 找出让数据包穿过 NAT 并建立直连的方法。
 
-*（图：Older Palo Alto Networks interface for 'NAT Policy Rule'. The 'Translated Packet' tab is displayed. 'Transition Type' is set to 'Static IP'.）*
+*（图：较旧版 Palo Alto Networks 的 'NAT Policy Rule' 界面。显示 'Translated Packet' 标签页。'Transition Type' 设为 'Static IP'。）*
 
 [docs-derp-servers]: /docs/reference/derp-servers
 

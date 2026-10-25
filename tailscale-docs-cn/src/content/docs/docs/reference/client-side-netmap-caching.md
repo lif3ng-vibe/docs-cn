@@ -1,43 +1,43 @@
 ---
-title: "Client-side netmap caching"
-description: "Client-side network map caching, or \"netmap caching,\" lets nodes start or resume communication with peers when they temporarily cannot reach the Tailscale control plane, which provides the network sta"
+title: "客户端 netmap 缓存"
+description: "客户端网络地图缓存（"netmap caching"）让节点在暂时无法连接 Tailscale 控制平面（控制平面提供节点连接所需的网络状"
 ---
 
-Last validated Sep 1, 2026
+最后验证于 Sep 1, 2026
 
-> **Note:**
+> **注意：**
 >
-> Client-side netmap caching is available for Tailscale clients version 1.104 and later.
+> 客户端 netmap 缓存适用于 Tailscale 1.104 及更高版本的客户端。
 
-Client-side network map caching, or "netmap caching," lets nodes start or resume communication with peers when they temporarily cannot reach the Tailscale control plane, which provides the network state and peer information nodes need to connect. This scenario can occur for various reasons, including control plane downtime or an intermediary network explicitly blocking the control plane servers.
+客户端网络地图缓存（client-side network map caching，简称 "netmap 缓存"）让节点在暂时无法连接 Tailscale 控制平面时，也能开始或恢复与对等节点的通信；控制平面提供节点连接所需的网络状态与对等节点信息。这种情况可能由多种原因导致，包括控制平面停机，或中间网络明确阻断控制平面服务器。
 
-Network map caching can also reduce startup and profile-switching time.
+网络地图缓存还能缩短启动与切换 profile 的时间。
 
-> **Warning:**
+> **警告：**
 >
-> Client-side netmap caching does not guarantee that nodes can communicate using a cached network state. It is not intended for long-term operation without access to the control plane because the cached state can become stale or invalid over time.
+> 客户端 netmap 缓存并不保证节点能使用缓存的网络状态进行通信。它并非为长期脱离控制平面运行而设计，因为缓存状态会随时间推移而过时或失效。
 
-## Cache life cycle
+## 缓存生命周期
 
-A network map informs a node of its peers and how to connect to them. Without client-side netmap caching, clients can only get a netmap directly from the control plane. If the control plane is unreachable, an offline client is unable to connect to other nodes in the tailnet.
+网络地图（netmap）告知节点它的对等节点有哪些以及如何连接它们。在没有客户端 netmap 缓存的情况下，客户端只能直接从控制平面获取 netmap。如果控制平面不可达，离线客户端将无法连接 tailnet 中的其他节点。
 
-* **Cache initialization**: When client-side netmap caching is first enabled, the client initializes the cache with the current network map from the control plane.
-* **Cache loading**: When the client starts up or switches profiles, it loads an available cached network map and transitions immediately into a running state.
-* **Cache refresh**: After starting up from a cached network map, the client continues trying to contact to the control plane. Once reconnected, it updates the cache whenever the network map changes.
-* **Cache validity**: Cache validity is affected by node key expiry. If the node key for a peer expires, that key is no longer valid and the client will be unable to communicate with that peer. If the key for the node itself expires, it will no longer be able to communicate with other nodes in the tailnet, even if their cached keys are valid. Expired keys must be updated from the control plane for communication to resume.
-* **Cache reset**: There are two common scenarios where a cached netmap is cleared:
-  * Deleting the user profile from the client.
-  * Logging out of the tailnet.
+* **缓存初始化**：首次启用客户端 netmap 缓存时，客户端会用来自控制平面的当前网络地图初始化缓存。
+* **缓存加载**：客户端启动或切换 profile 时，会加载可用的缓存网络地图，并立即进入运行状态。
+* **缓存刷新**：从缓存网络地图启动后，客户端会持续尝试联系控制平面。重新连接后，只要网络地图发生变化，它就会更新缓存。
+* **缓存有效性**：缓存有效性受节点密钥（node key）过期的影响。如果某个对等节点的节点密钥过期，该密钥即告失效，客户端将无法与该对等节点通信。如果节点自身的密钥过期，即使其他节点缓存中的密钥仍然有效，它也无法与 tailnet 中的其他节点通信。过期密钥必须从控制平面更新后才能恢复通信。
+* **缓存重置**：有两种常见情况会清除缓存的 netmap：
+  * 从客户端删除用户 profile。
+  * 退出登录 tailnet。
 
-## Enable client-side netmap caching
+## 启用客户端 netmap 缓存
 
-> **Warning:**
+> **警告：**
 >
-> During the trial phase, client-side netmap caching is opt-in. Nodes use the feature only when they are granted the `cache-network-maps` node attribute.
+> 在试用阶段，客户端 netmap 缓存为可选启用。只有被授予 `cache-network-maps` 节点属性的节点才会使用该特性。
 
-To enable client-side netmap caching, grant the [`cache-network-maps` node attribute][docs-policy-file-attr] to the applicable nodes in your [tailnet policy file][docs-tailnet-policy-file].
+要启用客户端 netmap 缓存，请在 [tailnet 策略文件][docs-tailnet-policy-file]中向相应节点授予 [`cache-network-maps` 节点属性][docs-policy-file-attr]。
 
-The following example enables netmap caching for all nodes managed by tailnet members (`autogroup:member`) and all tagged nodes (`autogroup:tagged`):
+以下示例为 tailnet 成员（`autogroup:member`）管理的所有节点以及所有带标签节点（`autogroup:tagged`）启用 netmap 缓存：
 
 ```json
 "nodeAttrs": [
@@ -48,31 +48,31 @@ The following example enables netmap caching for all nodes managed by tailnet me
 ],
 ```
 
-> **Note:**
+> **注意：**
 >
-> Client-side netmap caching is not supported for all node types. Refer to [node type limitations][ar-node-type-limitations] for more information.
+> 并非所有节点类型都支持客户端 netmap 缓存。更多信息请参阅[节点类型限制][ar-node-type-limitations]。
 
-### Verify client-side netmap caching is enabled
+### 验证客户端 netmap 缓存已启用
 
-Use the following command to verify that the `client-network-maps` node attribute is present:
+使用以下命令验证 `client-network-maps` 节点属性是否存在：
 
 ```shell
 tailscale status --json | jq '.Self.CapMap|has("cache-network-maps")'
 ```
 
-Refer to the [Tailscale CLI reference][docs-tailscale-cli-status] for more information about this command.
+关于该命令的更多信息，请参阅 [Tailscale CLI 参考][docs-tailscale-cli-status]。
 
-## Disable client-side netmap caching
+## 禁用客户端 netmap 缓存
 
-> **Warning:**
+> **警告：**
 >
-> After the trial phase, client-side netmap caching will become the default behavior and you will have the option to disable client-side caching with a new node attribute.
+> 试用阶段结束后，客户端 netmap 缓存将成为默认行为，届时你可以选择通过一个新的节点属性来禁用客户端缓存。
 >
-> It is not necessary to apply this new node attribute during the trial phase. This section is provided in advance to inform on upcoming planned changes in functionality.
+> 试用阶段无需应用这个新节点属性。本节内容提前提供，用于告知即将推出的功能变更计划。
 
-Modify your [tailnet policy file][docs-tailnet-policy-file] to disable client-side netmap caching with [`disable-cache-network-maps` node attribute][docs-policy-file-attr].
+修改你的 [tailnet 策略文件][docs-tailnet-policy-file]，使用 [`disable-cache-network-maps` 节点属性][docs-policy-file-attr]来禁用客户端 netmap 缓存。
 
-The following rule targets all nodes tagged `uncached`.
+以下规则面向所有带有 `uncached` 标签的节点。
 
 ```json
 "nodeAttrs": [
@@ -83,47 +83,47 @@ The following rule targets all nodes tagged `uncached`.
 ],
 ```
 
-> **Note:**
+> **注意：**
 >
-> If both `cache-network-maps` and `disable-cache-network-maps` are set, the disable attribute takes precedence.
+> 如果同时设置了 `cache-network-maps` 和 `disable-cache-network-maps`，则禁用属性优先。
 
-### Verify client-side netmap caching is disabled
+### 验证客户端 netmap 缓存已禁用
 
-Use the following command to verify that the `cache-network-maps` node attribute is absent:
+使用以下命令验证 `cache-network-maps` 节点属性不存在：
 
 ```shell
 tailscale status --json | jq '.Self.CapMap|has("cache-network-maps")'
 ```
 
-Refer to the [Tailscale CLI reference][docs-tailscale-cli-status] for more information about this command.
+关于该命令的更多信息，请参阅 [Tailscale CLI 参考][docs-tailscale-cli-status]。
 
-## Considerations
+## 注意事项
 
-> **Note:**
+> **注意：**
 >
-> Client-side netmap caching is not supported for all node types. Refer to [node type limitations][ar-node-type-limitations] for more information.
+> 并非所有节点类型都支持客户端 netmap 缓存。更多信息请参阅[节点类型限制][ar-node-type-limitations]。
 
-Consider disabling netmap caching on durable connectors that do not frequently shut down or restart, to reduce disk activity and storage. These include app connectors, exit nodes, and subnet routers.
+对于不常关机或重启的长驻连接器，可以考虑禁用 netmap 缓存，以减少磁盘活动与存储占用。这类连接器包括应用连接器、出口节点和子网路由器。
 
-Also consider disabling netmap caching on small or embedded devices with expensive or limited storage, to avoid wear loading and write bandwidth concerns.
+对于存储昂贵或有限的小型或嵌入式设备，也可以考虑禁用 netmap 缓存，以避免磨损负载与写入带宽方面的问题。
 
-## Limitations
+## 限制
 
-Client-side network map caching has the following limitations:
+客户端网络地图缓存存在以下限制：
 
-* Mobile clients are not yet supported.
+* 暂不支持移动客户端。
 
-### Node type limitations
+### 节点类型限制
 
-Regardless of what the policy document says, client-side netmap caching is not available for:
+无论策略文档如何声明，以下节点均无法使用客户端 netmap 缓存：
 
-* [ephemeral nodes][docs-ephemeral-nodes]
+* [临时节点（ephemeral node）][docs-ephemeral-nodes]
 
-### New peers limitation
+### 新对等节点的限制
 
-A client operating from a cached state cannot establish connections to new peers that join the tailnet after the cache was created, until the cache is updated from the control plane. Clients without control connectivity will have no information about newer nodes.
+基于缓存状态运行的客户端，无法与缓存创建之后加入 tailnet 的新对等节点建立连接，除非缓存已从控制平面更新。未连接控制平面的客户端将无从得知较新的节点。
 
-[ar-node-type-limitations]: #node-type-limitations
+[ar-node-type-limitations]: #节点类型限制
 
 [docs-app-connectors]: /docs/features/app-connectors
 

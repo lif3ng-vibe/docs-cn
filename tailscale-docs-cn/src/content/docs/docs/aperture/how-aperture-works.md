@@ -1,108 +1,108 @@
 ---
-title: "How Aperture works"
-description: "Understand how Aperture uses Tailscale identity, model-based routing, and telemetry to secure and monitor LLM requests."
+title: "Aperture 的工作原理"
+description: "了解 Aperture 如何利用 Tailscale 身份、基于模型的路由和遥测来保护并监控 LLM 请求。"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
-Aperture routes the AI requests that clients send through its gateway, which gives organizations visibility into that traffic. This topic explains the four core mechanisms: identity and authentication, request routing by model, telemetry capture, and session tracking. Together, these enable auditing, cost awareness, and operational insight while letting teams safely adopt LLM clients.
+Aperture 让客户端发送的 AI 请求经由其网关路由，从而让组织能够掌握这些流量。本主题介绍四个核心机制：身份与认证、按模型路由请求、遥测捕获以及会话跟踪。它们共同支撑审计、成本感知和运维洞察，同时让团队能够安全地采用 LLM 客户端。
 
 \[Missing snippet: aperture\_openai\_compatible\_provider.mdx]
 
-## Identity and authentication
+## 身份与认证
 
-Traditional API proxies require clients to authenticate with tokens or API keys. You can eliminate this step by using [Tailscale's identity layer][docs-tailscale-identity].
+传统 API 代理要求客户端使用令牌或 API 密钥进行认证。你可以借助 [Tailscale 身份层][docs-tailscale-identity]省去这一步。
 
-Every connection to a tailnet carries cryptographic proof of identity. When a request arrives at Aperture, the proxy queries Tailscale with the remote IP address. Tailscale responds with the user's login name (for example, `alice@example.com`), a persistent device identifier, and any tags assigned to that device.
+每一条通往 tailnet 的连接都带有加密的身份证明。当请求到达 Aperture 时，代理会用远端 IP 地址查询 Tailscale。Tailscale 返回用户的登录名（例如 `alice@example.com`）、一个持久的设备标识符，以及分配给该设备的所有标签。
 
-This identity is trustworthy because it comes from Tailscale's control plane, not from the client. A user cannot forge their identity without compromising Tailscale's key exchange.
+这种身份之所以可信，是因为它来自 Tailscale 的控制平面，而不是客户端。除非攻破 Tailscale 的密钥交换，用户无法伪造自己的身份。
 
-The identity flows through the entire system. Every metric record includes the login name and device ID. Users access only their own sessions and usage in the web portal. Admins can filter organization-wide views by user in the admin dashboard. Access control uses roles assigned through grants, keyed on Tailscale identity.
+身份贯穿整个系统。每条指标记录都包含登录名和设备 ID。用户在 Web 门户中只能访问自己的会话和使用记录。管理员可以在管理仪表盘（admin dashboard）中按用户筛选全组织视图。访问控制使用通过授权分配的角色，并以 Tailscale 身份作为键。
 
-Clients [connecting from outside the tailnet][docs-aperture-connect-outside-tailnet] also authenticate through Tailscale identity. Each Aperture CLI bridge or `ts-unplug` instance joins the tailnet as its own device, so Aperture identifies requests by that device's login name. If each person runs their own instance, Aperture attributes activity to individual users. If multiple people share a single instance, all activity appears under the same identity.
+[从 tailnet 之外连接][docs-aperture-connect-outside-tailnet]的客户端同样通过 Tailscale 身份认证。每个 Aperture CLI 桥接或 `ts-unplug` 实例都会作为独立设备加入 tailnet，因此 Aperture 按该设备的登录名识别请求。如果每个人运行自己的实例，Aperture 会把活动归属到具体用户；如果多人共用一个实例，所有活动都会显示在同一个身份下。
 
-### Tagged device identity
+### 已打标签设备的身份
 
-When a [tagged Tailscale device][docs-tags] connects to Aperture, it does not have a user account associated with it. Instead, Aperture creates a synthetic identity from the device's tags.
+当[打有标签的 Tailscale 设备][docs-tags]连接 Aperture 时，它没有关联的用户账户。此时 Aperture 会基于设备的标签构造一个合成身份。
 
-Aperture sorts the device's tags alphabetically and joins them with commas to create a stable login name. For example, a device with the tags `tag:prod` and `tag:api` appears as `tag:api,tag:prod` in usage views, logs, and session tracking.
+Aperture 将设备的标签按字母排序并用逗号连接，生成一个稳定的登录名。例如，带有 `tag:prod` 和 `tag:api` 标签的设备，在使用视图、日志和会话跟踪中会显示为 `tag:api,tag:prod`。
 
-If a device has no user profile and no tags, identity resolution fails, and the device is denied access.
+如果设备既没有用户资料也没有标签，身份解析就会失败，该设备将被拒绝访问。
 
-To give tagged devices model access, a grant can match every device with a particular tag. It can also match every device with an exact tag set by using the synthetic login name. For `src` examples and configuration steps, refer to [Grant access to tagged devices][docs-aperture-grant-model-access].
+要让打标签的设备获得模型访问权限，授权可以匹配带有某个特定标签的所有设备，也可以通过合成登录名匹配具有某一精确标签组合的所有设备。`src` 示例与配置步骤请参阅[授予打标签设备的访问权限][docs-aperture-grant-model-access]。
 
-If all sessions from tagged nodes appear to come from the same user, refer to [all sessions appear to come from the same user][docs-aperture-incorrect-user-identity] in the troubleshooting guide.
+如果所有来自打标签节点的会话看起来都出自同一个用户，请参阅故障排除指南中的[所有会话看起来都来自同一个用户][docs-aperture-incorrect-user-identity]。
 
-## Request routing by model
+## 按模型路由请求
 
-When a request arrives, Aperture extracts the model name from the request body (for example, `claude-sonnet-5-5` or `gpt-5.5`). If the name matches a configured [model alias][docs-aperture-model-aliases], Aperture resolves it to a concrete destination before checking access and selecting a provider. The gateway checks the user's access and selects a provider that serves the model and supports the incoming API format. It forwards the request with the credentials selected by the provider's authentication configuration.
+请求到达时，Aperture 会从请求体中提取模型名称（例如 `claude-sonnet-5-5` 或 `gpt-5.5`）。如果名称匹配已配置的[模型别名][docs-aperture-model-aliases]，Aperture 会先把它解析为具体的目标，再检查访问权限并选择提供商。网关检查用户的访问权限，并选择一个能提供该模型且支持传入 API 格式的提供商，然后使用该提供商认证配置所选的凭证转发请求。
 
-From the client's perspective, the proxy appears as if it were the LLM provider itself. Clients connect to the proxy URL and send standard API requests. The proxy handles the routing transparently.
+在客户端看来，代理就像是 LLM 提供商本身。客户端连接代理 URL 并发送标准 API 请求，由代理透明地处理路由。
 
-Both legs of the connection are encrypted: clients reach Aperture over the tailnet using Tailscale encryption, and Aperture connects to upstream providers over TLS.
+连接的两端都是加密的：客户端通过 tailnet 使用 Tailscale 加密到达 Aperture，而 Aperture 通过 TLS 连接上游提供商。
 
-The following table summarizes API formats and example endpoints. For provider and client inventories and setup paths, refer to [Supported providers and clients][docs-aperture-provider-compatibility]. For compatibility flags, refer to [Provider configuration][docs-provider-flags].
+下表汇总了 API 格式与示例端点。提供商与客户端清单及接入路径请参阅[支持的提供商与客户端][docs-aperture-provider-compatibility]。兼容性开关请参阅[提供商配置][docs-provider-flags]。
 
-| Format                           | Endpoint                                                                               | Example providers                                   |
+| 格式                             | 端点                                                                                   | 示例提供商                                          |
 | :------------------------------- | :------------------------------------------------------------------------------------- | :-------------------------------------------------- |
-| OpenAI Chat Completions          | `POST /v1/chat/completions`                                                            | OpenAI, OpenRouter, and OpenAI-compatible providers |
+| OpenAI Chat Completions          | `POST /v1/chat/completions`                                                            | OpenAI、OpenRouter 及 OpenAI 兼容提供商             |
 | OpenAI Responses                 | `POST /v1/responses`                                                                   | OpenAI                                              |
 | Anthropic Messages               | `POST /v1/messages`                                                                    | Anthropic                                           |
 | Gemini                           | `POST /v1beta/models/{model}:generateContent`                                          | Google                                              |
 | Amazon Bedrock                   | `POST /bedrock/model/{model}/invoke`                                                   | Amazon Bedrock                                      |
 | Gemini Enterprise Agent Platform | `POST /v1/projects/{project}/locations/{region}/publishers/{publisher}/models/{model}` | Gemini Enterprise Agent Platform                    |
 
-## Telemetry capture
+## 遥测捕获
 
-The capture system records everything needed to reconstruct and analyze each LLM interaction:
+捕获系统会记录重建和分析每次 LLM 交互所需的一切：
 
-* **Request data**: HTTP method, path, full body, and headers. In stored captures, Aperture redacts the values of standard upstream authentication headers and of headers that providers or grants add through `add_headers`. Other headers, including client-supplied custom headers, remain in plaintext in local captures until Aperture removes the captured content. They also remain in S3 objects that Aperture exported earlier until you remove those objects.
-* **Response data**: Status code, headers, and full response body.
-* **Extracted metrics**: Token counts by type (input, output, cached, and reasoning), model name, request duration, and tool use count.
-* **Session context**: Session ID linking related requests with supported providers and agents such as Claude Code and Codex.
+* **请求数据**：HTTP 方法、路径、完整请求体和头部。在存储的捕获记录中，Aperture 会对标准上游认证头部以及提供商或授权通过 `add_headers` 添加的头部的值做脱敏处理。其他头部（包括客户端自定义头部）在本地捕获记录中以明文保留，直到 Aperture 清除捕获内容；在 Aperture 之前导出的 S3 对象中同样保留，直到你删除这些对象。
+* **响应数据**：状态码、头部和完整响应体。
+* **提取的指标**：按类型统计的 token 数（输入、输出、缓存和推理）、模型名称、请求时长和工具使用次数。
+* **会话上下文**：会话 ID，在支持的提供商和代理（如 Claude Code 与 Codex）中将相关请求关联起来。
 
-The proxy processes telemetry asynchronously after the response completes, so clients receive responses without significant delay.
+代理在响应完成后异步处理遥测，因此客户端收到响应不会有明显延迟。
 
-You can configure how long Aperture keeps captured content. With zero retention (`duration: "0"`, `require_export: false`), Aperture does not store captured request and response bodies, headers, or raw HTTP bytes. Usage metrics remain available. Capture retention does not delete Aperture Chat conversation history, and it does not stop most configured hooks from sending content. If you combine zero retention with `purge: ["captures", "tools"]`, Aperture skips tool extraction, so tool-call-triggered hooks do not fire. For the controls and instructions, refer to [Privacy and data retention][docs-aperture-privacy].
+你可以配置 Aperture 保留捕获内容的时长。在零保留（zero retention，即 `duration: "0"`、`require_export: false`）模式下，Aperture 不存储捕获的请求体、响应体、头部或原始 HTTP 字节，使用指标仍然可用。捕获保留不会删除 Aperture Chat 的会话历史，也不会阻止大多数已配置的钩子发送内容。如果你将零保留与 `purge: ["captures", "tools"]` 结合使用，Aperture 会跳过工具提取，因此由工具调用触发的钩子不会触发。相关控制与操作说明请参阅[隐私与数据保留][docs-aperture-privacy]。
 
-The proxy handles two technical challenges transparently:
+代理透明地处理两个技术难题：
 
-* **Compression**: The proxy decompresses response bodies that arrive compressed (`gzip`, `deflate`, or Brotli) before storing them.
-* **Streaming**: For streaming responses (Server-Sent Events), the proxy reconstructs a complete response object from the event stream for consistent metric extraction.
+* **压缩**：代理会在存储之前解压以压缩格式（`gzip`、`deflate` 或 Brotli）到达的响应体。
+* **流式**：对于流式响应（Server-Sent Events），代理会从事件流重建完整的响应对象，以保证指标提取的一致性。
 
-## Session tracking
+## 会话跟踪
 
-A single coding task or conversation typically involves many LLM requests. A developer using Claude Code can generate 50 or more requests while debugging one issue. Without grouping, these appear as 50 unrelated events. With session tracking, they form a coherent unit you can analyze as a whole.
+一个编码任务或一段对话通常涉及多次 LLM 请求。开发者使用 Claude Code 调试一个问题就可能产生 50 个以上的请求。如果不做分组，它们会显示为 50 个互不相关的事件；有了会话跟踪，它们就构成一个可以整体分析的连贯单元。
 
-Aperture identifies sessions using client-supplied identifiers or, when possible, a fingerprint of conversation content. The following table shows common cases:
+Aperture 使用客户端提供的标识符识别会话，或者在可能时基于对话内容生成指纹。下表列出常见情况：
 
-| Client type    | Identification method                                                           |
-| :------------- | :------------------------------------------------------------------------------ |
-| Claude Code    | Session ID included in each request body                                        |
-| OpenAI Codex   | Session ID sent as HTTP header                                                  |
-| OpenAI Chat    | Fingerprint generated from conversation content                                 |
-| Other requests | A new random ID for each request, so each request appears as a separate session |
+| 客户端类型     | 识别方式                                                                       |
+| :------------- | :----------------------------------------------------------------------------- |
+| Claude Code    | 每个请求体中包含的会话 ID                                                      |
+| OpenAI Codex   | 以 HTTP 头部发送的会话 ID                                                      |
+| OpenAI Chat    | 基于对话内容生成的指纹                                                         |
+| 其他请求       | 每个请求使用一个新的随机 ID，因此每个请求都显示为独立的会话                    |
 
-When Aperture can identify related requests, it groups them into a session. Users review their own sessions on the [**Sessions** page][docs-aperture-chat-sessions] in Chat. Admins review sessions across the organization on the admin dashboard's [**Logs** page][docs-aperture-dashboard-admin-logs]. Grouping requests by session helps you trace a task and compare costs across conversations. Aperture cannot group requests that have a random fallback ID.
+当 Aperture 能够识别相关请求时，会将它们归入一个会话。用户可以在 Chat 的 [**Sessions** 页面][docs-aperture-chat-sessions]查看自己的会话；管理员可以在管理仪表盘的 [**Logs** 页面][docs-aperture-dashboard-admin-logs]查看整个组织的会话。按会话给请求分组有助于你追溯任务并比较不同对话的成本。Aperture 无法对使用随机回退 ID 的请求进行分组。
 
-## Outbound integrations
+## 出站集成
 
-Beyond routing LLM requests, Aperture proxies connections to external MCP servers and HTTP APIs through connectors. This extends the gateway model from inbound AI traffic to outbound tool and service access.
+除了路由 LLM 请求，Aperture 还通过连接器代理到外部 MCP 服务器和 HTTP API 的连接。这将网关模型从入站 AI 流量扩展到了出站的工具与服务访问。
 
-Connectors support two protocols. With the `mcp` protocol, Aperture acts as an MCP server to clients and as an MCP client to remote MCP servers. Clients discover available tools through Aperture's MCP tool list without needing direct access to the remote server. With the `http` protocol, Aperture functions as an authenticated reverse proxy to REST APIs, forwarding requests and injecting the required credentials.
+连接器支持两种协议。使用 `mcp` 协议时，Aperture 对客户端充当 MCP 服务器，对远程 MCP 服务器充当 MCP 客户端。客户端通过 Aperture 的 MCP 工具列表发现可用工具，无需直接访问远程服务器。使用 `http` 协议时，Aperture 充当带认证的反向代理访问 REST API，转发请求并注入所需凭证。
 
-Authentication follows the same centralized model as LLM providers. An administrator configures credentials for each connector once in the Aperture configuration. When a user or agent makes a request through a connector, Aperture injects the appropriate authentication headers automatically. For most connectors, individual users do not need separate credentials configured in their local tools. Connectors using per-user OAuth 2.0 (`oauth2_authorization_code`) require each user to complete a one-time authorization flow through the Aperture UI, but the resulting tokens are managed by Aperture, not the user's local tools.
+认证遵循与 LLM 提供商相同的集中管理模式。管理员在 Aperture 配置中为每个连接器一次性配置凭证。当用户或代理通过连接器发起请求时，Aperture 自动注入相应的认证头部。对大多数连接器，单个用户无需在本地工具中单独配置凭证。使用按用户 OAuth 2.0（`oauth2_authorization_code`）的连接器要求每个用户通过 Aperture UI 完成一次授权流程，但生成的令牌由 Aperture 管理，而不是用户的本地工具。
 
-For detailed setup instructions, refer to the [connectors feature guide][docs-aperture-connectors] for HTTP API proxying and [MCP server proxying][docs-aperture-mcp-server] for MCP-specific configuration.
+详细设置说明请参阅[连接器功能指南][docs-aperture-connectors]（HTTP API 代理）和 [MCP 服务器代理][docs-aperture-mcp-server]（MCP 相关配置）。
 
-## Next steps
+## 后续步骤
 
-* [Get started with Aperture][docs-aperture-get-started]: sign up, configure providers, and connect your first LLM client.
-* [Control AI access][docs-aperture-control-access]: set up grants that define which models each user can access.
-* [How Aperture grants work][docs-aperture-how-grants-work]: understand deny-by-default access, additive grants, and how Aperture resolves precedence.
-* [Observe and export AI usage][docs-aperture-observe-and-export]: access dashboards and export usage data.
-* [Set up connectors][docs-aperture-connectors]: configure outbound integrations with MCP servers and HTTP APIs.
-* [Privacy and data retention][docs-aperture-privacy]: choose what the gateway stores and review where request content can go.
+* [开始使用 Aperture][docs-aperture-get-started]：注册、配置提供商并接入你的第一个 LLM 客户端。
+* [控制 AI 访问][docs-aperture-control-access]：设置授权，定义每个用户可以访问哪些模型。
+* [Aperture 授权的工作原理][docs-aperture-how-grants-work]：理解默认拒绝的访问、授权的叠加方式，以及 Aperture 如何解析优先级。
+* [观测并导出 AI 使用数据][docs-aperture-observe-and-export]：访问仪表盘并导出使用数据。
+* [设置连接器][docs-aperture-connectors]：配置与 MCP 服务器和 HTTP API 的出站集成。
+* [隐私与数据保留][docs-aperture-privacy]：选择网关存储哪些内容，并了解请求内容可能流向何处。
 
 [docs-aperture-chat-sessions]: /docs/aperture/reference/chat#sessions
 

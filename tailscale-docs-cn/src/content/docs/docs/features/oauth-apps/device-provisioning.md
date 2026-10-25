@@ -1,42 +1,42 @@
 ---
-title: "Device provisioning with OAuth apps"
-description: "Device provisioning with OAuth apps lets internal tools provision tailnet devices on behalf of individual users. Unlike approaches that create tag-owned devices, it uses a standard OAuth 2.0 authoriza"
+title: "使用 OAuth 应用进行设备预配"
+description: "使用 OAuth 应用进行设备预配，让内网工具能够代表单个用户预配 tailnet 设备。与创建标签归属设备的方法不同，它使用标准 OAuth 2.0 授权码流程创建携带授权用户完整身份的设备。"
 ---
 
-Last validated Jun 24, 2026
+最后验证于 Jun 24, 2026
 
-> **Note:** Device provisioning with OAuth apps is currently in alpha.
+> **注意：** 使用 OAuth 应用进行设备预配目前处于 alpha 阶段。
 
-Device provisioning with OAuth apps lets internal tools provision tailnet devices on behalf of individual users. Unlike approaches that create tag-owned devices, it uses a standard OAuth 2.0 authorization code flow to create devices that carry the full identity of the consenting user. Access control rules, audit log entries, and device quotas all apply to the user who authorized the device, not to a shared service identity.
+使用 OAuth 应用进行设备预配，让内网工具能够代表单个用户预配 tailnet 设备。与创建标签归属设备的方法不同，它使用标准 OAuth 2.0 授权码流程创建携带授权用户完整身份的设备。访问控制规则、审计日志条目与设备配额都作用于授权该设备的用户，而不是某个共享的服务身份。
 
-This flow works only within a single tailnet. The OAuth app and every user who completes the authorization flow must belong to the same tailnet. A user from a different tailnet cannot authorize a device through your app.
+此流程只在单个 tailnet 内有效。OAuth 应用与每个完成授权流程的用户必须属于同一个 tailnet。来自其他 tailnet 的用户无法通过你的应用授权设备。
 
-This page covers two roles: admins who create and configure the OAuth app, and developers who implement the authorization code flow in their tooling. The flow follows [RFC 6749 section 4.1][xt-rfc-6749] (authorization code grant), so standard OAuth libraries work with minimal customization.
+本页涉及两种角色：创建并配置 OAuth 应用的管理员，以及在自己的工具中实现授权码流程的开发者。该流程遵循 [RFC 6749 section 4.1][xt-rfc-6749]（授权码授予），因此标准 OAuth 库只需少量定制即可使用。
 
-## Use cases
+## 使用场景
 
-Device provisioning with OAuth apps supports the following use cases.
+使用 OAuth 应用进行设备预配支持以下场景。
 
-* **Internal developer tooling**: Platform teams build tools that create tailnet devices for individual developers. Each device carries the developer's identity, so access control rules apply correctly without shared credentials.
-* **Automated device provisioning with user attribution**: Provisioning workflows where each device requires association with a specific user for audit logging and quota accounting.
-* **Replacing shared auth key patterns**: Migrating from shared or tag-based auth keys to per-user authorization. Each device traces back to the user who authorized it, improving security posture and traceability.
+* **内网开发者工具**：平台团队构建为单个开发者创建 tailnet 设备的工具。每台设备都携带开发者的身份，因此访问控制规则能正确生效，无需共享凭证。
+* **带用户归因的自动化设备预配**：在预配工作流中，每台设备都需要与特定用户关联，用于审计日志与配额核算。
+* **取代共享认证密钥模式**：从共享的或基于标签的认证密钥（auth key）迁移到按用户授权。每台设备都能追溯到授权它的用户，提升安全态势与可追溯性。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you meet the following requirements.
+开始之前，请确认你满足以下条件。
 
-* [Owner](/docs/reference/user-roles) or [Admin](/docs/reference/user-roles) role in the tailnet.
-* The OAuth app and all users who authorize devices through it must be in the same tailnet. This flow does not support users from other tailnets.
-* An API access token with admin scope for creating OAuth apps through the API.
-* For developers implementing the flow: working knowledge of OAuth 2.0 authorization code grants and the ability to handle HTTP redirects and token exchanges.
+* 在 tailnet 中拥有 [Owner（所有者）](/docs/reference/user-roles)或[管理员（Admin）](/docs/reference/user-roles)角色。
+* OAuth 应用与所有通过它授权设备的用户必须位于同一个 tailnet。此流程不支持来自其他 tailnet 的用户。
+* 拥有带 admin 作用域的 API 访问令牌，用于通过 API 创建 OAuth 应用。
+* 对实现该流程的开发者而言：需要具备 OAuth 2.0 授权码授予的工作知识，并能够处理 HTTP 重定向与令牌交换。
 
-## Get started
+## 开始使用
 
-Setting up device provisioning with OAuth apps has two phases. An admin creates an OAuth app through the [Tailscale API][docs-api] (steps 1-2), then a developer implements the authorization code flow in their tool (steps 3-6).
+设置使用 OAuth 应用的设备预配有若干个阶段。管理员先通过 [Tailscale API][docs-api] 创建 OAuth 应用（第 1-2 步），然后开发者在其工具中实现授权码流程（第 3-6 步）。
 
-### Step 1: Create an OAuth app
+### 第 1 步：创建 OAuth 应用
 
-Create the OAuth app with a `POST` request to the Tailscale API. The request defines where users are redirected after consent and what scope the app requests. Only include the `allowedNodeAttributes` field if you intend to set `node_attributes`.
+向 Tailscale API 发送 `POST` 请求来创建 OAuth 应用。该请求定义用户完成授权确认后被重定向到哪里，以及应用请求什么作用域。只有当你打算设置 `node_attributes` 时才需要包含 `allowedNodeAttributes` 字段。
 
 ```shell
 curl -X POST "https://api.tailscale.com/api/v2/tailnet/-/oauth-apps" \
@@ -50,16 +50,16 @@ curl -X POST "https://api.tailscale.com/api/v2/tailnet/-/oauth-apps" \
   }'
 ```
 
-The request body accepts the following fields.
+请求体接受以下字段。
 
-| Field                   | Type             | Description                                                                                                                                                                                                                |
+| 字段                    | 类型             | 说明                                                                                                                                                                                                                       |
 | :---------------------- | :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                  | string           | A display name for the OAuth app.                                                                                                                                                                                          |
-| `redirectUris`          | array of strings | URIs where the user is sent after granting or denying consent.                                                                                                                                                             |
-| `scopes`                | array of strings | The scopes the app requests. Use `auth_keys:create:once`.                                                                                                                                                                  |
-| `allowedNodeAttributes` | array of strings | (Optional) Custom node attributes that may be assigned to devices provisioned through this OAuth app. Values must use the `custom:` prefix (for example, `custom:provisioned`). Only custom attributes can be allowlisted. |
+| `name`                  | string           | OAuth 应用的显示名称。                                                                                                                                                                                                     |
+| `redirectUris`          | array of strings | 用户同意或拒绝授权后被送往的 URI。                                                                                                                                                                                         |
+| `scopes`                | array of strings | 应用请求的作用域。使用 `auth_keys:create:once`。                                                                                                                                                                           |
+| `allowedNodeAttributes` | array of strings | （可选）可通过此 OAuth 应用分配给所预配设备的自定义节点属性。取值必须使用 `custom:` 前缀（例如 `custom:provisioned`）。只有自定义属性可以加入允许列表。                                                                     |
 
-A successful response includes the app credentials:
+成功的响应包含应用凭证：
 
 ```json
 {
@@ -71,62 +71,62 @@ A successful response includes the app credentials:
 }
 ```
 
-The `clientSecret` has the format `tskey-app-<clientID>-<secret>`. The client ID segment maps to the `id` field in the API response. Store the secret securely. The API returns it only at creation time and cannot retrieve it later.
+`clientSecret` 的格式为 `tskey-app-<clientID>-<secret>`。客户端 ID 段对应 API 响应中的 `id` 字段。请妥善保管该密钥：API 只在创建时返回它，之后无法再次获取。
 
-The custom node attributes you explicitly allowlist with `allowedNodeAttributes` can be assigned to devices provisioned through this OAuth app. You can then reference those attributes in [device posture][docs-device-posture] conditions and [grants][docs-node-attributes] to gate access based on how a device was provisioned. For more about how node attributes attach to devices, refer to the [node attributes reference][docs-node-attributes].
+你通过 `allowedNodeAttributes` 显式加入允许列表的自定义节点属性，可以分配给通过此 OAuth 应用预配的设备。随后你可以在[设备态势][docs-device-posture]（device posture）条件与[授权][docs-node-attributes]（grant）中引用这些属性，按设备的预配方式控制访问。有关节点属性如何附加到设备的更多信息，请参阅[节点属性参考][docs-node-attributes]。
 
-### Step 2: Verify the OAuth app
+### 第 2 步：验证 OAuth 应用
 
-After creating the OAuth app, verify it exists by querying the API with the app ID from the creation response:
+创建 OAuth 应用后，使用创建响应中的应用 ID 查询 API，验证它确实存在：
 
 ```shell
 curl -X GET "https://api.tailscale.com/api/v2/tailnet/-/oauth-apps/app-123456" \
   -u "<api-access-token>:"
 ```
 
-Confirm the response includes the correct scopes and redirect URIs.
+确认响应包含正确的作用域与重定向 URI。
 
-### Step 3: Build the authorization URL
+### 第 3 步：构建授权 URL
 
-With the OAuth app created, the developer integrates the authorization flow into their tool. The first step is constructing an authorization URL that redirects users to the Tailscale consent screen. When a user visits this URL, Tailscale displays a consent prompt asking them to approve the app.
+OAuth 应用创建完成后，开发者将授权流程集成到自己的工具中。第一步是构建一个授权 URL，把用户重定向到 Tailscale 的授权确认页。用户访问该 URL 时，Tailscale 会显示授权确认提示，请用户批准该应用。
 
-The authorization URL uses the following format:
+授权 URL 使用以下格式：
 
 ```
 https://login.tailscale.com/a/oauth_authorize?client_id=<client-id>&redirect_uri=<redirect-uri>&scope=auth_keys:create:once&state=<random-state>&response_type=code
 ```
 
-The URL accepts the following query parameters.
+该 URL 接受以下查询参数。
 
-| Parameter       | Description                                                                                                                                        |
-| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `client_id`     | The client ID from the OAuth app. This is the segment between `tskey-app-` and the second `-` in the client secret.                                |
-| `redirect_uri`  | One of the redirect URIs registered when creating the app. Must match exactly.                                                                     |
-| `scope`         | The scope to request. Use `auth_keys:create:once`.                                                                                                 |
-| `state`         | A unique, unguessable value your tool generates for CSRF protection. Your callback handler validates that the returned `state` matches this value. |
-| `response_type` | Must be `code`.                                                                                                                                    |
+| 参数            | 说明                                                                                                                                                |
+| :-------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client_id`     | OAuth 应用的客户端 ID。即客户端密钥中 `tskey-app-` 与第二个 `-` 之间的部分。                                                                         |
+| `redirect_uri`  | 创建应用时注册的重定向 URI 之一。必须完全匹配。                                                                                                     |
+| `scope`         | 要请求的作用域。使用 `auth_keys:create:once`。                                                                                                      |
+| `state`         | 你的工具生成的唯一且不可猜测的值，用于防范 CSRF。你的回调处理程序需校验返回的 `state` 与该值一致。                                                   |
+| `response_type` | 必须为 `code`。                                                                                                                                     |
 
-### Step 4: Handle user consent and the authorization code
+### 第 4 步：处理用户授权与授权码
 
-After the user visits the authorization URL, Tailscale displays a consent screen. What happens next depends on the user's response:
+用户访问授权 URL 后，Tailscale 会显示授权确认页。接下来发生什么取决于用户的选择：
 
-* **User grants consent**: Tailscale redirects to your `redirect_uri` with an authorization `code` and your `state` parameter as query parameters:
+* **用户同意授权**：Tailscale 重定向到你的 `redirect_uri`，并以查询参数附带授权 `code` 与你的 `state` 参数：
 
   ```
   https://your-tool.internal.example.com/callback?code=<authorization-code>&state=<random-state>
   ```
 
-* **User denies consent**: Tailscale redirects to your `redirect_uri` with an error parameter:
+* **用户拒绝授权**：Tailscale 重定向到你的 `redirect_uri`，并附带错误参数：
 
   ```
   https://your-tool.internal.example.com/callback?error=access_denied
   ```
 
-In your callback handler, validate that the returned `state` matches the value you sent in step 3 before proceeding. This prevents cross-site request forgery attacks.
+在你的回调处理程序中，继续下一步之前先校验返回的 `state` 与你在第 3 步发送的值一致。这可以防范跨站请求伪造（CSRF）攻击。
 
-### Step 5: Exchange the authorization code for an access token
+### 第 5 步：用授权码换取访问令牌
 
-Exchange the authorization code for an access token by making a `POST` request to the token endpoint. The `redirect_uri` must match the value used in step 3.
+向令牌端点发送 `POST` 请求，用授权码换取访问令牌。`redirect_uri` 必须与第 3 步使用的值一致。
 
 ```shell
 curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
@@ -138,7 +138,7 @@ curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
   -d "redirect_uri=https://your-tool.internal.example.com/callback"
 ```
 
-If you opted to include `allowedNodeAttributes` when creating your OAuth app in step 1, be sure to specify which attributes should be set on this device by passing the respective `node_attributes` values in your `POST` request, separated by commas. So, your payload would be as follows:
+如果你在第 1 步创建 OAuth 应用时选择包含 `allowedNodeAttributes`，请务必在 `POST` 请求中传入相应的 `node_attributes` 取值（以逗号分隔），指明应在此设备上设置哪些属性。此时你的请求负载如下：
 
 ```shell
 curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
@@ -151,7 +151,7 @@ curl -X POST "https://api.tailscale.com/api/v2/oauth/token" \
   -d "redirect_uri=https://your-tool.internal.example.com/callback"
 ```
 
-A successful response returns an access token:
+成功的响应返回一个访问令牌：
 
 ```json
 {
@@ -161,59 +161,59 @@ A successful response returns an access token:
 }
 ```
 
-The response does not include a refresh token. The access token expires after 1 hour (3600 seconds), and the lifetime is not configurable. The token is also single-use: the backend rejects it after its first successful use, even if it has not expired.
+响应不包含刷新令牌。访问令牌在 1 小时（3600 秒）后过期，且有效期不可配置。该令牌还是一次性的：在首次成功使用后，后端即拒绝它，即使它尚未过期。
 
-### Step 6: Use the access token as an auth key
+### 第 6 步：将访问令牌用作认证密钥
 
-The access token from step 5 is already a valid auth key. You do not need to make a separate API call to create one. Pass the access token directly to register a device in the tailnet:
+第 5 步得到的访问令牌本身就是有效的认证密钥，你无需再单独调用 API 创建。直接传递该访问令牌即可在 tailnet 中注册设备：
 
 ```shell
 tailscale up --auth-key=<access-token>
 ```
 
-The device inherits the full identity of the user who authorized the OAuth app:
+设备会继承授权该 OAuth 应用的用户的完整身份：
 
-* Access control rules that reference the user apply to this device.
-* Audit log entries for the device are attributed to the user.
-* The device counts against the user's device quota.
+* 引用该用户的访问控制规则对此设备生效。
+* 该设备的审计日志条目归属于该用户。
+* 该设备计入该用户的设备配额。
 
-This is the key difference from the [OAuth client credentials flow][docs-oauth-clients], which creates tag-owned devices with a separate auth key step. Here, the access token itself carries the user's identity and serves as the auth key in a single step.
+这正是与 [OAuth 客户端凭证流程][docs-oauth-clients]的关键区别——后者需要单独的认证密钥步骤来创建标签归属的设备。而在这里，访问令牌本身就携带用户身份，一步到位地充当认证密钥。
 
-## One-time authorization scope
+## 一次性授权作用域
 
-Device provisioning with OAuth apps uses one-time authorization, requested with the `auth_keys:create:once` scope. Each consent grants a single-use auth key, and the token exchange does not return a refresh token. The authorization is consumed on first use, so the user goes through the consent screen again for each new device.
+使用 OAuth 应用进行设备预配采用一次性授权，通过 `auth_keys:create:once` 作用域请求。每次授权确认只授予一个一次性的认证密钥，且令牌交换不返回刷新令牌。授权在首次使用时即被消耗，因此用户每预配一台新设备都要重新通过授权确认页。
 
-This scope is appropriate for tools where each device provisioning event is a deliberate, user-initiated action.
+该作用域适用于每次设备预配都是由用户主动发起的审慎操作的工具。
 
-## Identity model
+## 身份模型
 
-This flow creates user-owned devices, where each device carries the full identity of the user who authorized it through the consent screen. This is the fundamental difference from the [OAuth client credentials flow][docs-oauth-clients], which creates tag-owned devices.
+此流程创建的是归属用户的设备：每台设备都携带通过授权确认页授权它的用户的完整身份。这是它与 [OAuth 客户端凭证流程][docs-oauth-clients]的根本区别——后者创建的是标签归属的设备。
 
-| Behavior                       | Authorization code flow                   | OAuth client credentials flow            |
-| :----------------------------- | :---------------------------------------- | :--------------------------------------- |
-| **Device ownership**           | User-owned                                | Tag-owned                                |
-| **Identity**                   | Individual user who consented             | Service identity (tag)                   |
-| **Access control enforcement** | User-based rules apply                    | Tag-based rules apply                    |
-| **Audit logging**              | Actions attributed to the individual user | Actions attributed to the tag or service |
-| **Device quotas**              | Count against the authorizing user        | Count against the tag                    |
+| 行为                           | 授权码流程                     | OAuth 客户端凭证流程             |
+| :----------------------------- | :----------------------------- | :------------------------------- |
+| **设备归属**                   | 归属用户                       | 归属标签                         |
+| **身份**                       | 完成授权的单个用户             | 服务身份（标签）                 |
+| **访问控制执行**               | 应用基于用户的规则             | 应用基于标签的规则               |
+| **审计日志**                   | 操作归属于单个用户             | 操作归属于标签或服务             |
+| **设备配额**                   | 计入授权用户的配额             | 计入标签的配额                   |
 
-Devices provisioned this way appear in the admin console under the authorizing user's devices. Access control rules that reference the user (by email, group membership, or autogroup) apply to the device, and audit log entries identify the user by name.
+以此方式预配的设备会出现在管理控制台中授权用户的设备列表里。引用该用户的访问控制规则（按邮箱、组成员身份或 autogroup）对此设备生效，审计日志条目会按名称标识该用户。
 
-Choose this flow over the client credentials flow when you require devices traceable to individual users for security, compliance, or operational accountability.
+如果你出于安全、合规或运维问责的需要，要求设备可追溯到具体用户，请选择此流程而非客户端凭证流程。
 
-## Scopes reference
+## 作用域参考
 
-Device provisioning with OAuth apps uses the following scope.
+使用 OAuth 应用进行设备预配使用以下作用域。
 
-| Scope                   | Description                                                                                                                 |
+| 作用域                  | 说明                                                                                                                        |
 | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
-| `auth_keys:create:once` | Lets the app create a single auth key. No refresh token is returned, and the user re-authorizes for each additional device. |
+| `auth_keys:create:once` | 允许应用创建一个认证密钥。不返回刷新令牌，用户每多预配一台设备都要重新授权。                                                 |
 
-## Limitations
+## 限制
 
-* Authorization is restricted to a single tailnet. Only users in the same tailnet as the OAuth app can authorize devices through it. Users from other tailnets cannot complete the flow.
-* The Tailscale-hosted consent screen cannot be customized.
-* One-time authorization issues a single-use access token. The user re-authorizes through the consent screen for each new device.
+* 授权仅限于单个 tailnet。只有与 OAuth 应用位于同一 tailnet 的用户才能通过它授权设备。来自其他 tailnet 的用户无法完成此流程。
+* Tailscale 托管的授权确认页无法自定义。
+* 一次性授权签发的是一次性访问令牌。用户每预配一台新设备都要通过授权确认页重新授权。
 
 [docs-api]: /docs/reference/tailscale-api
 

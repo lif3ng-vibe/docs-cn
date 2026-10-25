@@ -1,185 +1,185 @@
 ---
-title: "macOS and iOS shortcuts"
-description: "Understand how Tailscale works with the Shortcuts app, allowing you to automate tasks."
+title: "macOS 与 iOS 快捷指令"
+description: "了解 Tailscale 如何与快捷指令（Shortcuts）应用配合，帮你自动化完成任务。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale works with the Shortcuts app on macOS and iOS to provide several built-in shortcut actions, allowing you to automate tasks. For example, you can create shortcuts to connect your device to a tailnet, use an exit node, or switch user accounts.
+Tailscale 与 macOS 和 iOS 上的快捷指令（Shortcuts）应用配合，提供多个内置快捷指令操作，让你可以自动化完成任务。例如，你可以创建快捷指令来把设备连接到 tailnet、使用出口节点或切换用户账户。
 
-You can combine the Tailscale actions with other available actions to customize tasks, such as automatically connecting to your tailnet if your device is not on your home Wi-Fi. Depending on how you set up your shortcuts, you access shortcuts in the Shortcuts app, the menu bar, in Spotlight, and other places.
+你可以把 Tailscale 操作与其他可用操作组合来自定义任务，例如当设备不在家庭 Wi-Fi 上时自动连接到你的 tailnet。根据你的设置方式，你可以在快捷指令应用、菜单栏、Spotlight 等地方访问快捷指令。
 
-> **Note:**
+> **注意：**
 >
-> For general information about macOS and iOS shortcuts, refer to Apple's [Shortcuts User Guide for Mac][xt-mac-shortcuts] and [Shortcuts User Guide for iOS][xt-ios-shortcuts].
+> 有关 macOS 和 iOS 快捷指令的一般信息，参见 Apple 的 [Shortcuts User Guide for Mac][xt-mac-shortcuts] 和 [Shortcuts User Guide for iOS][xt-ios-shortcuts]。
 
-## Prerequisites
+## 前提条件
 
-To use Tailscale with the Shortcuts app, you must meet the following requirements:
+要将 Tailscale 与快捷指令应用配合使用，你必须满足以下要求：
 
-* Tailscale version 1.36 or later
-* macOS Monterey 12.0 or later
-* iOS 15.0 or later
+* Tailscale 1.36 或更高版本
+* macOS Monterey 12.0 或更高版本
+* iOS 15.0 或更高版本
 
-## Available actions
+## 可用操作
 
-The Tailscale client offers actions for interacting with accounts, devices, exit nodes, and your tailnet.
+Tailscale 客户端提供用于与账户、设备、出口节点和你的 tailnet 交互的操作。
 
-### Accounts
+### 账户
 
-The following Tailscale actions let you manage your Tailscale accounts:
+以下 Tailscale 操作可让你管理 Tailscale 账户：
 
-* [Find Accounts][ar-find-accounts]
-* [Switch Accounts][ar-switch-accounts]
+* [查找账户][ar-find-accounts]
+* [切换账户][ar-switch-accounts]
 
-#### Find Accounts
+#### 查找账户
 
-Retrieve accounts signed into the Tailscale client that match the provided criteria. You can filter accounts by **Display Name** or **Login Name**. You can also specify the sort by, sort order, and limit of the results.
+检索已登录 Tailscale 客户端且符合给定条件的账户。你可以按 **Display Name** 或 **Login Name** 筛选账户，还可以指定排序字段、排序顺序和结果数量上限。
 
-#### Switch Accounts
+#### 切换账户
 
-[Switch Tailscale user accounts][docs-fast-user-switching]. You can optionally specify the account username to which to switch. If you don't specify an account username, the action will ask you to select one when it runs.
+[切换 Tailscale 用户账户][docs-fast-user-switching]。你可以选择指定要切换到的账户用户名。如果不指定，该操作在运行时会要求你选择一个。
 
-### Devices
+### 设备
 
-The following Tailscale actions let you manage devices:
+以下 Tailscale 操作可让你管理设备：
 
-* [Find Devices][ar-find-devices]
-* [Ping Devices][ar-ping-devices]
-* [Send File][ar-send-files]
+* [查找设备][ar-find-devices]
+* [Ping 设备][ar-ping-devices]
+* [发送文件][ar-send-files]
 
-#### Find Devices
+#### 查找设备
 
-Retrieve all devices in your tailnet that match the provided criteria. You can filter devices by **Name** or connection status (**Is Online** or **Is Offline**). You can also specify the sort by, sort order, and limit of the results.
+检索 tailnet 中所有符合给定条件的设备。你可以按 **Name** 或连接状态（**Is Online** 或 **Is Offline**）筛选设备，还可以指定排序字段、排序顺序和结果数量上限。
 
-#### Ping Devices
+#### Ping 设备
 
-Send a [ping][docs-tailscale-ping] to a device in your tailnet and retrieve the ping result. You can ping a device by its device name, [Tailscale IP address][docs-tailscale-ip-addresses], [MagicDNS][docs-magicdns] name, device ID, IPv4 address, or IPv6 address.
+向 tailnet 中的一台设备发送 [ping][docs-tailscale-ping] 并获取 ping 结果。你可以按设备名称、[Tailscale IP 地址][docs-tailscale-ip-addresses]、[MagicDNS][docs-magicdns] 名称、设备 ID、IPv4 地址或 IPv6 地址来 ping 设备。
 
-#### Send File
+#### 发送文件
 
-Use [Taildrop][docs-taildrop] to send one or more files to a device in your tailnet. You specify the files to send and the device to which to send the files.
+使用 [Taildrop][docs-taildrop] 向 tailnet 中的一台设备发送一个或多个文件。你指定要发送的文件以及接收这些文件的设备。
 
-### Exit nodes
+### 出口节点
 
-> **Note:**
+> **注意：**
 >
-> You must already have an exit node in your tailnet before using it from a macOS or iOS shortcut.
+> 在从 macOS 或 iOS 快捷指令中使用出口节点之前，你的 tailnet 中必须已经存在出口节点。
 >
-> Exit node actions are sensitive actions because an exit node affects all network traffic on your device. On iOS, you must unlock your device before using an exit node action.
+> 出口节点操作属于敏感操作，因为出口节点会影响你设备上的所有网络流量。在 iOS 上，你必须先解锁设备才能使用出口节点操作。
 
-The following Tailscale actions let you manage [exit nodes][docs-exit-nodes]:
+以下 Tailscale 操作可让你管理[出口节点][docs-exit-nodes]：
 
-* [Use Exit Node][ar-use-exit-node]
-* [Stop Using Exit Node][ar-stop-using-exit-node]
+* [使用出口节点][ar-use-exit-node]
+* [停止使用出口节点][ar-stop-using-exit-node]
 
-#### Use Exit Node
+#### 使用出口节点
 
-Set your device to use an exit node by its [name][docs-machine-names] or [Tailscale IP address][docs-tailscale-ip-addresses].
+让设备按[名称][docs-machine-names]或 [Tailscale IP 地址][docs-tailscale-ip-addresses]使用某个出口节点。
 
-#### Stop Using Exit Node
+#### 停止使用出口节点
 
-Set your device to stop using an exit node.
+让设备停止使用出口节点。
 
-### Tailnet management
+### tailnet 管理
 
-The following Tailscale actions let you manage your tailnet:
+以下 Tailscale 操作可让你管理 tailnet：
 
-* [Connect][ar-connect]
-* [Disconnect][ar-disconnect]
-* [Get Status][ar-get-status]
-* [Set Tailscale DNS][ar-set-tailscale-dns]
-* [Toggle][ar-toggle]
+* [连接][ar-connect]
+* [断开连接][ar-disconnect]
+* [获取状态][ar-get-status]
+* [设置 Tailscale DNS][ar-set-tailscale-dns]
+* [切换][ar-toggle]
 
-#### Connect
+#### 连接
 
-Connect your device to your tailnet.
+把你的设备连接到 tailnet。
 
-#### Disconnect
+#### 断开连接
 
-Disconnect your device from your tailnet.
+把你的设备从 tailnet 断开。
 
-#### Get Status
+#### 获取状态
 
-Retrieve status information about the Tailscale client. It returns the following values:
+检索 Tailscale 客户端的状态信息。它返回以下值：
 
-* **Connected** (`boolean`): Whether the device is connected to a tailnet.
-* **Account Name** (`string`): The Tailscale username (such as `alice@example.com`).
-* **Using Exit Node** (`boolean`): Whether the device currently uses an exit node.
-* **Exit Node Name** (`string`): The name of the exit node.
+* **Connected**（`boolean`）：设备是否已连接到某个 tailnet。
+* **Account Name**（`string`）：Tailscale 用户名（例如 `alice@example.com`）。
+* **Using Exit Node**（`boolean`）：设备当前是否正在使用出口节点。
+* **Exit Node Name**（`string`）：出口节点的名称。
 
-#### Set Tailscale DNS
+#### 设置 Tailscale DNS
 
-Modify whether your device uses [Tailscale DNS][docs-dns]. You can use this action to:
+修改设备是否使用 [Tailscale DNS][docs-dns]。你可以使用此操作：
 
-* Turn on Tailscale DNS.
-* Turn off Tailscale DNS.
-* Toggle using Tailscale DNS (the result varies depending on the status when the action runs).
+* 开启 Tailscale DNS。
+* 关闭 Tailscale DNS。
+* 切换 Tailscale DNS 的使用状态（结果取决于操作运行时的状态）。
 
-#### Toggle
+#### 切换
 
-Toggle the connection status of your device. You can use this action to connect to or disconnect from your tailnet. After the action runs, it returns either **Yes** or **No** to indicate whether the device is connected (Yes) or disconnected (No).
+切换设备的连接状态。你可以使用此操作连接到或断开 tailnet。操作运行后会返回 **Yes** 或 **No**，表示设备已连接（Yes）或已断开（No）。
 
-## Examples
+## 示例
 
-### Switch accounts
+### 切换账户
 
-This example shows how to create a [macOS shortcut][xt-mac-shortcuts] that switches between Tailscale accounts. The example uses the [Get Status][ar-get-status] and the [Switch Account][ar-switch-accounts] actions.
+本示例展示如何创建一个在 Tailscale 账户之间切换的 [macOS 快捷指令][xt-mac-shortcuts]。示例使用[获取状态][ar-get-status]和[切换账户][ar-switch-accounts]操作。
 
-1. In the **Shortcuts** app, select **File** and then select **New Shortcut**.
-2. Select **Shortcut Name** and provide a name, such as **Switch Tailscale user**.
-3. In the right-hand panel, select **Apps**.
-4. Search for or scroll to the **Tailscale** app and select it.
-5. Drag the **Get Status** action to the shortcut editor.
-6. In the right-hand panel, search for the **If** action, and drag the **If** action to the shortcut editor and place it below the **Get status** statement. You can also find the **If** action by selecting **Categories**, **Scripting**, and then **Control Flow**.
-7. For the **If** statement, select **Status** and choose the Tailscale **Account Name** variable.
-8. Select **Condition**, select **Is**, and then select **Text**. Enter a user account, such as `alice@example.com`.
-9. From the right-hand panel, drag the **Switch Account** action to the shortcut editor, and place it below the **If** statement but above the **Otherwise** statement.
-10. For the **Switch account to** statement, select **account name**. For the value, use a different user account, such as `alice@gmail.com`.
-11. From the right-hand panel, drag another **Switch Account** action to the shortcut editor, and place it below the **Otherwise** statement but above the **End if** statement.
-12. Edit this **Switch account to** statement to use the original user account value, `alice@example.com`.
-13. Test your shortcut by selecting the **Run** icon at the top of the shortcut editor.
+1. 在 **Shortcuts** 应用中，选择 **File**，然后选择 **New Shortcut**。
+2. 选择 **Shortcut Name** 并提供一个名称，例如 **Switch Tailscale user**。
+3. 在右侧面板中选择 **Apps**。
+4. 搜索或滚动找到 **Tailscale** 应用并选中它。
+5. 把 **Get Status** 操作拖到快捷指令编辑器中。
+6. 在右侧面板中搜索 **If** 操作，把 **If** 操作拖到快捷指令编辑器中，放在 **Get status** 语句下方。你也可以通过选择 **Categories**、**Scripting**，然后选择 **Control Flow** 来找到 **If** 操作。
+7. 在 **If** 语句中，选择 **Status**，并选择 Tailscale 的 **Account Name** 变量。
+8. 选择 **Condition**，选择 **Is**，然后选择 **Text**。输入一个用户账户，例如 `alice@example.com`。
+9. 从右侧面板把 **Switch Account** 操作拖到快捷指令编辑器中，放在 **If** 语句下方、**Otherwise** 语句上方。
+10. 在 **Switch account to** 语句中，选择 **account name**。值使用另一个用户账户，例如 `alice@gmail.com`。
+11. 从右侧面板把另一个 **Switch Account** 操作拖到快捷指令编辑器中，放在 **Otherwise** 语句下方、**End if** 语句上方。
+12. 编辑这条 **Switch account to** 语句，使其使用原始用户账户值 `alice@example.com`。
+13. 选择快捷指令编辑器顶部的 **Run** 图标来测试你的快捷指令。
 
-You can access and run the shortcut you created in the Shortcuts app **All Shortcuts** folder. You can also add the shortcut to the **Menu Bar** folder, which makes the shortcut appear in the macOS taskbar.
+你可以在快捷指令应用的 **All Shortcuts** 文件夹中访问并运行你创建的快捷指令。你也可以把快捷指令添加到 **Menu Bar** 文件夹，使其显示在 macOS 任务栏中。
 
-### Connect to your tailnet
+### 连接到你的 tailnet
 
-This example shows how to create an [iOS shortcut][xt-ios-shortcuts] that automatically connects your device to your tailnet when your devices joins a specific Wi-Fi network. The example uses the [Connect][ar-connect] action.
+本示例展示如何创建一个 [iOS 快捷指令][xt-ios-shortcuts]，当设备加入特定 Wi-Fi 网络时自动把设备连接到你的 tailnet。示例使用[连接][ar-connect]操作。
 
-In this example, the Wi-Fi network name is *PangoLAN*.
+在本示例中，Wi-Fi 网络名称为 *PangoLAN*。
 
-1. Launch the **Shortcuts app**, then select **Automation**.
-2. Select the **＋**, then select **Create Personal Automation**.
-3. From the **Wi-Fi** category, choose the "PangoLAN" network.
-4. Select **Next**.
-5. Select **Add Action**.
-6. From the **Tailscale** app group, select the **Connect** action.
-7. Select **Next**.
-8. Select **Done**.
+1. 打开 **Shortcuts 应用**，然后选择 **Automation**。
+2. 选择 **＋**，然后选择 **Create Personal Automation**。
+3. 在 **Wi-Fi** 类别中选择"PangoLAN"网络。
+4. 选择 **Next**。
+5. 选择 **Add Action**。
+6. 在 **Tailscale** 应用组中选择 **Connect** 操作。
+7. 选择 **Next**。
+8. 选择 **Done**。
 
-[ar-connect]: #connect
+[ar-connect]: #连接
 
-[ar-disconnect]: #disconnect
+[ar-disconnect]: #断开连接
 
-[ar-find-accounts]: #find-accounts
+[ar-find-accounts]: #查找账户
 
-[ar-find-devices]: #find-devices
+[ar-find-devices]: #查找设备
 
-[ar-get-status]: #get-status
+[ar-get-status]: #获取状态
 
-[ar-ping-devices]: #ping-devices
+[ar-ping-devices]: #ping-设备
 
-[ar-send-files]: #send-file
+[ar-send-files]: #发送文件
 
-[ar-set-tailscale-dns]: #set-tailscale-dns
+[ar-set-tailscale-dns]: #设置-tailscale-dns
 
-[ar-stop-using-exit-node]: #stop-using-exit-node
+[ar-stop-using-exit-node]: #停止使用出口节点
 
-[ar-switch-accounts]: #switch-accounts
+[ar-switch-accounts]: #切换账户
 
-[ar-toggle]: #toggle
+[ar-toggle]: #切换
 
-[ar-use-exit-node]: #use-exit-node
+[ar-use-exit-node]: #使用出口节点
 
 [docs-dns]: /docs/reference/dns-in-tailscale
 

@@ -1,97 +1,97 @@
 ---
-title: "Deploy Tailscale with Jamf Pro"
-description: "You can use the [Jamf Pro][xt-jamf-pro] mobile device management (MDM) solution to deploy Tailscale across your organization. Jamf Pro lets you distribute and install Tailscale automatically on your f"
+title: "使用 Jamf Pro 部署 Tailscale"
+description: "你可以使用 [Jamf Pro][xt-jamf-pro] 移动设备管理（MDM）解决方案在整个组织中部署 Tailscale。Jamf Pro 让你可以在设备群中自动分发并安装 Tailscale。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 本集成适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-You can use the [Jamf Pro][xt-jamf-pro] mobile device management (MDM) solution to deploy Tailscale across your organization. Jamf Pro lets you distribute and install Tailscale automatically on your fleet of devices. You can then configure a number of [system policies][docs-mdm-keys], and use Jamf Pro to deploy these policies across the devices in your organization. Tailscale system policies through Jamf Pro are supported on macOS and iOS.
+你可以使用 [Jamf Pro][xt-jamf-pro] 移动设备管理（MDM）解决方案在整个组织中部署 Tailscale。Jamf Pro 让你可以在设备群中自动分发并安装 Tailscale。之后你可以配置多个[系统策略][docs-mdm-keys]，并使用 Jamf Pro 将这些策略部署到组织中的各台设备。通过 Jamf Pro 使用 Tailscale 系统策略支持 macOS 和 iOS。
 
-If you need help deploying Tailscale using Jamf Pro, or would like to suggest any feature enhancements, contact our [support][co-contact-support-form] or [sales][co-contact-sales] teams.
+如果你在使用 Jamf Pro 部署 Tailscale 时需要帮助，或者想提出功能改进建议，请联系我们的[支持][co-contact-support-form]或[销售][co-contact-sales]团队。
 
-## Distributing Tailscale using Jamf Pro
+## 使用 Jamf Pro 分发 Tailscale
 
-> **Note:**
+> **注意：**
 >
-> Refer to [Deploy Tailscale on macOS using MDM][docs-macos-mdm] for general best practices and [Approve the Tailscale system extension automatically][docs-macos-mdm-approve-the-extension] to ensure the best end-user experience.
+> 一般最佳实践请参阅[使用 MDM 在 macOS 上部署 Tailscale][docs-macos-mdm]，并参阅[自动批准 Tailscale 系统扩展][docs-macos-mdm-approve-the-extension]以确保最终用户体验最佳。
 
-You can distribute Tailscale on the devices in your fleet using Jamf Pro. You can choose to deploy either the Mac App Store variant of the client, or the Standalone variant. You can find more information on the differences between the two variants at [Three ways to run Tailscale on macOS][docs-macos-variants].
+你可以使用 Jamf Pro 在设备群中的设备上分发 Tailscale。你可以选择部署 Mac App Store 版客户端，或独立（Standalone）版客户端。有关这两种变体差异的更多信息，请参阅[在 macOS 上运行 Tailscale 的三种方式][docs-macos-variants]。
 
-### Distributing the Mac App Store variant of the client
+### 分发 Mac App Store 版客户端
 
-1. Login to the Jamf Pro admin console for your organization at `<companyName>.jamfcloud.com`.
+1. 登录你组织的 Jamf Pro 管理控制台，地址为 `<companyName>.jamfcloud.com`。
 
-2. Select **Computers** in the sidebar, and then **Mac Apps** in the **Content Management** section. Move to the **App Store** tab.
+2. 在侧边栏中选择 **Computers**（计算机），然后在 **Content Management**（内容管理）部分选择 **Mac Apps**。切换到 **App Store** 标签页。
 
-3. Select the **New** button at the top-right to add a new app.
+3. 选择右上角的 **New**（新建）按钮添加一个新应用。
 
-   *（图：The Mac Apps view in the Jamf Pro admin console.）*
+   *（图：Jamf Pro 管理控制台中的 Mac Apps 视图。）*
 
-4. Choose **Mac App Store** as the source for the app.
+4. 选择 **Mac App Store** 作为应用来源。
 
-   *（图：Selecting the Mac App Store option.）*
+   *（图：选择 Mac App Store 选项。）*
 
-5. Search for **Tailscale** in the App Store for your current region.
+5. 在你所在区域的 App Store 中搜索 **Tailscale**。
 
-   *（图：Searching for Tailscale in the App store for a specific region.）*
+   *（图：在特定区域的 App Store 中搜索 Tailscale。）*
 
-6. Select the **Add** button for the Tailscale app in the search results.
+6. 在搜索结果中为 Tailscale 应用选择 **Add**（添加）按钮。
 
-   *（图：Add Tailscale as an app.）*
+   *（图：将 Tailscale 添加为应用。）*
 
-7. Set up any deployment options as needed, especially in the **Scope** tab.
+7. 根据需要设置部署选项，尤其是在 **Scope**（作用范围）标签页中。
 
-   *（图：View of deployment options.）*
+   *（图：部署选项视图。）*
 
-8. Tailscale should now be available in the Self Service app across your fleet.
+8. 现在，Tailscale 应该已在整个设备群的 Self Service 应用中可用。
 
-   *（图：View of Tailscale in the Self Service app.）*
+   *（图：Self Service 应用中的 Tailscale 视图。）*
 
-## Deploying system policies using Jamf Pro
+## 使用 Jamf Pro 部署系统策略
 
-We suggest reading the [system policies][docs-mdm-keys] topic to identify configuration options suitable for your organization. Once you know which policies you want to deploy to your fleet of devices, follow these steps to define them in Jamf:
+我们建议先阅读[系统策略][docs-mdm-keys]主题，确定适合你组织的配置选项。确定要部署到设备群的策略后，按以下步骤在 Jamf 中定义它们：
 
-1. Login to the Jamf Pro admin console for your organization at `<companyName>.jamfcloud.com`.
+1. 登录你组织的 Jamf Pro 管理控制台，地址为 `<companyName>.jamfcloud.com`。
 
-2. Select **Computers** in the sidebar, and then **Configuration Profiles** in the **Content Management** section.
+2. 在侧边栏中选择 **Computers**（计算机），然后在 **Content Management**（内容管理）部分选择 **Configuration Profiles**（配置描述文件）。
 
-   *（图：The Configuration Profiles settings.）*
+   *（图：Configuration Profiles 设置。）*
 
-3. Select the **New** button at the top-right to create a new configuration profile.
+3. 选择右上角的 **New**（新建）按钮创建一个新的配置描述文件。
 
-4. Enter a descriptive display name for the profile such as *Tailscale System Policies*.
+4. 为描述文件输入一个描述性的显示名称，例如 *Tailscale System Policies*。
 
-   *（图：A new configuration profile with the name Tailscale System Policies.）*
+   *（图：名为 Tailscale System Policies 的新配置描述文件。）*
 
-5. Select **Application & Custom Settings**, and then choose **External Applications** in the dropdown that appears.
+5. 选择 **Application & Custom Settings**（应用与自定义设置），然后在出现的下拉菜单中选择 **External Applications**（外部应用）。
 
-   *（图：External Applications settings.）*
+   *（图：External Applications 设置。）*
 
-6. Select the **Add** button at the top-right to add a new preference domain.
+6. 选择右上角的 **Add**（添加）按钮添加一个新的偏好设置域（preference domain）。
 
-7. Choose **Custom Schema** as the source to use for the preference domain.
+7. 选择 **Custom Schema**（自定义 Schema）作为该偏好设置域使用的来源。
 
-8. Enter the proper name for the preference domain, which matches the bundle identifier of the Tailscale client. If you're using the Mac App Store variant of Tailscale, enter `io.tailscale.ipn.macos`. If you're using the Standalone variant, enter `io.tailscale.ipn.macsys`.
+8. 输入偏好设置域的正式名称，它与 Tailscale 客户端的 bundle identifier 一致。如果你使用 Mac App Store 版 Tailscale，请输入 `io.tailscale.ipn.macos`。如果你使用独立（Standalone）版，请输入 `io.tailscale.ipn.macsys`。
 
-9. Select **Add Schema** to provide a JSON schema.
+9. 选择 **Add Schema**（添加 Schema）以提供 JSON schema。
 
-   *（图：External Applications settings for a Tailscale macOS variant.）*
+   *（图：Tailscale macOS 变体的 External Applications 设置。）*
 
-10. In the modal window that appears, select **Upload** to provide the latest version of the Tailscale JSON schema. The ProfileManifestsMirror project provides up-to-date versions of the Tailscale profile manifest compatible with the Jamf JSON schema. You can download them from [`io.tailscale.ipn.macos.json`][xt-gh-jamf-custom-schemas-macos] for the Mac App Store variant of the client, and from [`io.tailscale.ipn.macsys.json`][xt-gh-jamf-custom-schemas-macsys] for the Standalone variant. Upload the file to Jamf Pro once you have downloaded it from GitHub.
+10. 在出现的模态窗口中，选择 **Upload**（上传）以提供最新版本的 Tailscale JSON schema。ProfileManifestsMirror 项目提供了与 Jamf JSON schema 兼容的最新 Tailscale 描述文件清单（profile manifest）：Mac App Store 版客户端可从 [`io.tailscale.ipn.macos.json`][xt-gh-jamf-custom-schemas-macos] 下载，独立版可从 [`io.tailscale.ipn.macsys.json`][xt-gh-jamf-custom-schemas-macsys] 下载。从 GitHub 下载后，将该文件上传到 Jamf Pro。
 
-    *（图：Tailscale JSON schema for a Tailscale macOS variant.）*
+    *（图：Tailscale macOS 变体的 Tailscale JSON schema。）*
 
-11. After uploading the JSON file, Jamf Pro will display a user interface to configure the Tailscale system policies. Complete the form by providing values for any policies you would like to set up.
+11. 上传 JSON 文件后，Jamf Pro 会显示一个用于配置 Tailscale 系统策略的用户界面。为你要设置的策略填写相应的值，完成表单。
 
-    *（图：Tailscale system policies options.）*
+    *（图：Tailscale 系统策略选项。）*
 
-12. Remember to select the deployment scope for your configuration policies in the **Scope** tab. You may select **All Computers** as **Target Computers** to deploy the policies to all Macs in your organization.
+12. 记得在 **Scope**（作用范围）标签页中选择配置策略的部署范围。你可以将 **Target Computers**（目标计算机）选为 **All Computers**（所有计算机），将策略部署到组织中的所有 Mac。
 
-    *（图：Tailscale system policies scope.）*
+    *（图：Tailscale 系统策略作用范围。）*
 
-13. Select **Save** to save the configuration profile and begin deploying the policies. The Tailscale client must be restarted in order for all policies to be applied.
+13. 选择 **Save**（保存）保存配置描述文件并开始部署策略。Tailscale 客户端必须重启才能应用所有策略。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

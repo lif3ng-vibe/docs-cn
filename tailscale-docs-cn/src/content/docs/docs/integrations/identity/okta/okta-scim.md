@@ -1,89 +1,87 @@
 ---
-title: "User & group provisioning for Okta"
-description: "Tailscale supports System for Cross-domain Identity Management (SCIM) to integrate with Okta."
+title: "Okta 的用户与群组预配置"
+description: "Tailscale 支持跨域身份管理系统（SCIM），可与 Okta 集成。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** This feature is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此功能适用于[标准版、高级版和企业版套餐](https://tailscale.com/pricing)。
 
-Tailscale supports System for Cross-domain Identity Management (SCIM) to integrate with Okta.
+Tailscale 支持跨域身份管理系统（SCIM），可与 Okta 集成。
 
-## Features
+## 功能
 
-The following provisioning features are supported:
+支持以下预配置功能：
 
-* **Create users** in Tailscale from Okta
-* **Update user attributes** in Tailscale from Okta
-* **Deactivate users** in Okta to suspend them in Tailscale
-* **Group push** from Okta to Tailscale
+* **创建用户**：从 Okta 在 Tailscale 中创建
+* **更新用户属性**：从 Okta 更新 Tailscale 中的用户属性
+* **停用用户**：在 Okta 中停用用户会将其在 Tailscale 中暂停
+* **群组推送**：从 Okta 推送到 Tailscale
 
-## Requirements
+## 要求
 
-* Install the Tailscale app from the
-  [Okta Integration Network][xt-okta-integrations-tailscale] and [configure it][docs-sso-okta] to activate Okta for your domain.
+* 从
+  [Okta Integration Network][xt-okta-integrations-tailscale] 安装 Tailscale 应用，并[进行配置][docs-sso-okta]以在你的域名上激活 Okta。
 
-  If you're using Tailscale through a [custom app integration][xt-okta-docs-custom-app]
-  you'll need to replace that configuration with the Tailscale app and configuration.
-* You must use **Email** as the **Application username format**, and each Okta user's primary email must be identical to their application username. Failure to do so will result in errors.
+  如果你通过[自定义应用集成][xt-okta-docs-custom-app]使用 Tailscale，则需要将该配置替换为 Tailscale 应用及其配置。
+* 你必须使用 **Email** 作为 **Application username format**，并且每个 Okta 用户的主电子邮箱必须与其应用用户名一致。否则将导致错误。
 
-## Step-by-Step Configuration Instructions
+## 分步配置说明
 
-Use the following steps to enable provisioning in Tailscale.
+使用以下步骤在 Tailscale 中启用预配置。
 
-### Enable Provisioning
+### 启用预配置
 
-#### In Tailscale
+#### 在 Tailscale 中
 
-**Generate a SCIM API key**
+**生成 SCIM API 密钥**
 
-1. In the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, under **SCIM Provisioning**, select **Enable Provisioning**.
+1. 在管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面中，在 **SCIM Provisioning** 下选择 **Enable Provisioning**。
 
-   *（图：Enable Provisioning for Okta）*
+   *（图：为 Okta 启用预配置）*
 
-2. Copy the generated key to the clipboard.
+2. 将生成的密钥复制到剪贴板。
 
-   *（图：Generate SCIM API key）*
+   *（图：生成 SCIM API 密钥）*
 
-#### In Okta
+#### 在 Okta 中
 
-**Copy the key into the Tailscale app**
+**将密钥复制到 Tailscale 应用中**
 
-1. (Optional) On the **Sign On** tab, in **Advanced Sign-on Settings** select the Tailscale instance to connect to. For most users, leave the default option **Tailscale** selected. If you need to connect to the US high compliance server, select **Tailscale (US high compliance) – must be allowlisted** and fill out the [Identity provider configuration or change][co-contact-support-sso] section of the support form.
+1. （可选）在 **Sign On** 标签页的 **Advanced Sign-on Settings** 中，选择要连接的 Tailscale 实例。对大多数用户而言，保持默认选项 **Tailscale** 选中即可。如果你需要连接美国高合规服务器，请选择 **Tailscale (US high compliance) – must be allowlisted**，并填写支持表单中的 [Identity provider configuration or change][co-contact-support-sso] 部分。
 
-   *（图：Select Tailscale instance）*
+   *（图：选择 Tailscale 实例）*
 
-2. On the **Provisioning** tab, select **Integration**, then select **Configure API Integration**.
+2. 在 **Provisioning** 标签页中，选择 **Integration**，然后选择 **Configure API Integration**。
 
-   *（图：Configure SCIM API Integration in Okta Admin UI）*
+   *（图：在 Okta 管理界面中配置 SCIM API 集成）*
 
-3. Select **Enable API integration**. Paste the generated key into the API Token field. Note that Tailscale-generated SCIM API keys are case-sensitive.
+3. 选择 **Enable API integration**。将生成的密钥粘贴到 API Token 字段中。注意，Tailscale 生成的 SCIM API 密钥区分大小写。
 
-   *（图：Enable SCIM API Integration with Tailscale SCIM API Key）*
+   *（图：使用 Tailscale SCIM API 密钥启用 SCIM API 集成）*
 
-4. If there is an **Import Groups** checkbox, uncheck it.
+4. 如果存在 **Import Groups** 复选框，请取消勾选。
 
-5. Select **Test API Credentials** to verify the SCIM connection, and then select **Save**.
+5. 选择 **Test API Credentials** 验证 SCIM 连接，然后选择 **Save**。
 
-### Enable User Sync
+### 启用用户同步
 
-1. In Okta, under **Sign On** > **Credential Details**, select **Email** as the **Application username format**.
+1. 在 Okta 中，在 **Sign On** > **Credential Details** 下，选择 **Email** 作为 **Application username format**。
 
-   *（图：Select Email as the Application username format in Okta Admin UI）*
+   *（图：在 Okta 管理界面中选择 Email 作为应用用户名格式）*
 
-2. Under **Provisioning** > **Settings** > **To App**, select to enable **Create Users**, **Update User Attributes**,
-   and **Deactivate Users**, and then select **Save**.
+2. 在 **Provisioning** > **Settings** > **To App** 下，选择启用 **Create Users**、**Update User Attributes**、
+   **Deactivate Users**，然后选择 **Save**。
 
-   *（图：Enable User Sync features in Okta Admin UI）*
+   *（图：在 Okta 管理界面中启用用户同步功能）*
 
-3. Under **Assignments**, select **Provision User** to ensure that all users previously assigned to the application
-   are provisioned in Tailscale.
+3. 在 **Assignments** 下，选择 **Provision User**，确保之前分配到该应用的所有用户都已在 Tailscale 中完成预配置。
 
-   *（图：Provision Users in Tailscale）*
+   *（图：在 Tailscale 中预配置用户）*
 
-### Enable Group Sync
+### 启用群组同步
 
-With group sync, you can refer to a group from Okta in your tailnet policy file, with a human-readable name. For example:
+通过群组同步，你可以在 tailnet 策略文件中使用易读名称引用来自 Okta 的群组。例如：
 
 ```json
 {
@@ -109,29 +107,27 @@ With group sync, you can refer to a group from Okta in your tailnet policy file,
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Groups synced from Okta do not replace groups in Tailscale. You can use Okta group sync and also
-define groups in the tailnet policy file.
+从 Okta 同步的群组不会替换 Tailscale 中的群组。你可以使用 Okta 群组同步，同时在 tailnet 策略文件中定义群组。
 
-#### In Okta
+#### 在 Okta 中
 
-1. Under **Applications**, select the Tailscale app.
+1. 在 **Applications** 下，选择 Tailscale 应用。
 
-2. Under **Push Groups**, expand the **Push Groups** button, and select the group to push to Tailscale.
+2. 在 **Push Groups** 下，展开 **Push Groups** 按钮，并选择要推送到 Tailscale 的群组。
 
-   *（图：Enable Group Sync in Okta Admin UI）*
+   *（图：在 Okta 管理界面中启用群组同步）*
 
-3. Select **Save**, or select **Save & Add Another** if you want to push another group.
+3. 选择 **Save**，如果想推送另一个群组，则选择 **Save & Add Another**。
 
-In practice, changes to groups in Okta tend to be reflected to Tailscale in seconds, but that is not a guarantee.
+实践中，Okta 中群组的更改通常会在几秒内反映到 Tailscale，但这并没有保证。
 
-#### In Tailscale
+#### 在 Tailscale 中
 
-In the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, under **Group Sync** you
-should find the groups that you pushed from Okta.
+在管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面中，你应当能在 **Group Sync** 下找到从 Okta 推送的群组。
 
-*（图：Sync groups in Tailscale Access Controls UI）*
+*（图：在 Tailscale 访问控制界面中同步群组）*
 
-To use a pushed group in an [access rule][docs-access-control], either select **Copy** and paste it into a rule, or type it in:
+要在[访问规则][docs-access-control]中使用推送的群组，可以选择 **Copy** 后粘贴到规则中，也可以直接输入：
 
 ```json
 "grants": [
@@ -145,52 +141,47 @@ To use a pushed group in an [access rule][docs-access-control], either select **
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Synced group names are treated as lowercase. They can include spaces, but not the `@` symbol.
+同步的群组名称会被视为小写。名称可以包含空格，但不能包含 `@` 符号。
 
-#### Updating Okta Group Names
+#### 更新 Okta 群组名称
 
-If you change the name of your group in Okta, the Tailscale access control policy for that group will no longer apply. The access control policy is dependent on the name
-you configured in Okta, not on a group reference. Tailscale will fail closed, and you will find an error message in the
-admin console.
+如果你在 Okta 中更改了群组名称，该群组的 Tailscale 访问控制策略将不再生效。访问控制策略依赖于你在 Okta 中配置的名称，而不是群组引用。Tailscale 会进入失败关闭（fail closed）状态，你会在管理控制台中看到错误消息。
 
-*（图：Error message in UI for group not syncing）*
+*（图：群组未同步时界面中的错误消息）*
 
-If you modified the name of the group, update the group in the [access control policy][docs-access-control] to the new group name. You can also revert the
-name change in Okta if this was unintentional.
+如果你修改了群组名称，请将[访问控制策略][docs-access-control]中的该群组更新为新的群组名称。如果这是误操作，你也可以在 Okta 中撤销名称更改。
 
-### Disabling Group Sync
+### 停用群组同步
 
-#### In Okta
+#### 在 Okta 中
 
-1. Under **Applications**, select the Tailscale app.
+1. 在 **Applications** 下，选择 Tailscale 应用。
 
-2. Under **Push Groups**, expand the **Push Groups** button, deselect the groups you no longer want to push to
-   Tailscale, and select **Save**.
+2. 在 **Push Groups** 下，展开 **Push Groups** 按钮，取消选择不再想推送到
+   Tailscale 的群组，然后选择 **Save**。
 
-#### In Tailscale
+#### 在 Tailscale 中
 
-1. In the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, under **SCIM Provisioning**, select **Disable provisioning**, and then select **Disable provisioning** to confirm.
+1. 在管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面中，在 **SCIM Provisioning** 下选择 **Disable provisioning**，然后再次选择 **Disable provisioning** 以确认。
 
-2. In the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, update your rules to no
-   longer reference any group which is no longer pushed.
+2. 在管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面中，更新你的规则，移除对不再推送的群组的引用。
 
-3. If you no longer want to keep the SCIM API key that you used for Okta, [revoke the key][docs-auth-keys-revoke].
+3. 如果你不再想保留用于 Okta 的 SCIM API 密钥，请[吊销该密钥][docs-auth-keys-revoke]。
 
-### Known Limitations
+### 已知限制
 
-* If you configured Okta as your identity provider for Tailscale prior to November 2021, you will need to reconfigure your identity provider. To use user & group provisioning, use the new Tailscale app in Okta.
-* You must use **Email** as the **Application username format** for Tailscale in Okta.
-* Tailscale groups are parsed lowercased in the tailnet policy file, so any casing in Okta is ignored.
-* Groups from Okta cannot contain the `@` symbol.
-* If the name of your group changes, the access control policy for that group will no longer apply and Tailscale will fail closed. Refer to
-  [Updating Okta Group Names][ar-updating-okta-group-names] for recommended actions.
-* Users [suspended in Okta][xt-okta-docs-suspend-users] are not synced to Tailscale. Only users [deactivated][xt-okta-docs-deactivate-users] or [unassigned from the Tailscale app][xt-okta-docs-unassign-users] in Okta are [suspended in Tailscale][docs-remove-team-members-suspending-users].
-  * A user suspended in Okta will remain logged into Tailscale, and maintain access to all of their nodes and permissions granted by access control policies. They will only lose access as their device keys expire and they are blocked from re-authenticating new sessions with Okta.
-* Groups [unlinked in Okta that are retained in Tailscale][xt-okta-docs-group-push], as well as those [deactivated from group push][xt-okta-docs-push-groups] are not synced to Tailscale.
-* You cannot use group sync to assign Tailscale admins or other [user roles][docs-user-roles], only manage
-  permissions in access control policies.
+* 如果你在 2021 年 11 月之前将 Okta 配置为 Tailscale 的身份提供方，则需要重新配置你的身份提供方。要使用用户与群组预配置，请在 Okta 中使用新版 Tailscale 应用。
+* 你必须在 Okta 中为 Tailscale 使用 **Email** 作为 **Application username format**。
+* Tailscale 在 tailnet 策略文件中将群组解析为小写，因此 Okta 中的任何大小写形式都会被忽略。
+* 来自 Okta 的群组不能包含 `@` 符号。
+* 如果群组名称发生更改，该群组的访问控制策略将不再生效，Tailscale 会进入失败关闭状态。推荐的处理方式参见
+  [更新 Okta 群组名称][ar-updating-okta-group-names]。
+* 在 Okta 中被[暂停][xt-okta-docs-suspend-users]的用户不会同步到 Tailscale。只有在 Okta 中被[停用][xt-okta-docs-deactivate-users]或[取消分配 Tailscale 应用][xt-okta-docs-unassign-users]的用户，才会在 Tailscale 中被[暂停][docs-remove-team-members-suspending-users]。
+  * 在 Okta 中被暂停的用户将保持登录 Tailscale 的状态，并保留对其所有节点以及访问控制策略所授予权限的访问。只有当其设备密钥过期、且无法通过 Okta 重新认证新会话时，才会失去访问权限。
+* 在 Okta 中[解除链接但仍保留在 Tailscale 中的群组][xt-okta-docs-group-push]，以及[从群组推送中停用的群组][xt-okta-docs-push-groups]，都不会同步到 Tailscale。
+* 你不能使用群组同步来指派 Tailscale 管理员或其他[用户角色][docs-user-roles]，它只能管理访问控制策略中的权限。
 
-[ar-updating-okta-group-names]: #updating-okta-group-names
+[ar-updating-okta-group-names]: #更新-okta-群组名称
 
 [co-contact-support-sso]: https://tailscale.com/contact/support/?type=sso
 

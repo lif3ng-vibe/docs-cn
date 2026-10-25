@@ -1,0 +1,207 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "以容器方式运行网关"
+sidebar-title: "容器部署"
+description: "使用 docker run 或 docker-compose 运行 OpenShell 网关，无需安装器。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, Docker, Podman, docker-compose, 容器, 不可变 OS, bootc, rpm-ostree"
+position: 8
+---
+import { Aside } from '@astrojs/starlight/components';
+
+想以容器方式运行 OpenShell 网关而不是用系统软件包管理器安装时，采用本方法。它适用于标准安装程序不适用的不可变 OS 发行版（Fedora CoreOS、基于 bootc 的镜像、Silverblue），也适用于任何偏好容器优先工作流的场景。
+
+网关镜像发布在 `ghcr.io/nvidia/openshell/gateway`。
+
+## Docker 驱动的前置条件
+
+网关以容器方式运行并创建基于 Docker 的沙箱时，网关容器经挂载的 socket 与宿主机 Docker 守护进程通信。除基本 `docker run` 之外还需要三件事：
+
+1. **Docker socket 访问权限**。网关进程必须能读写 Docker socket。添加 `docker` 组（或 `/var/run/docker.sock` 的 GID），使 socket 无需以 root 运行即可访问。
+
+2. **gRPC 端点**。沙箱容器通过 `OPENSHELL_GRPC_ENDPOINT` 地址回调网关。Docker 驱动以 `host.openshell.internal` 作为主机名、以网关自身绑定端口作为端口，只保留 **scheme**（`http` 或 `https`）。TLS 禁用时使用 `http://host.openshell.internal:8080`，mTLS 启用时使用 `https://host.openshell.internal:8080`。Docker 驱动会自动把网关绑定到桥接网络接口，使沙箱容器可以访问它——你不需要在 `0.0.0.0` 上暴露端口。
+
+3. **宿主机上的监管器二进制**。网关把 `openshell-sandbox` 监管器二进制绑定挂载进每个沙箱容器。绑定挂载路径由宿主机 Docker 守护进程解析（不在网关容器内解析），因此该二进制必须存在于**宿主机**文件系统上的某个路径，并以**相同的绝对路径**挂载进网关容器。这样网关内部记录的路径才能与 Docker 创建沙箱容器时在宿主机上找到的路径一致。
+
+## 快速开始
+
+先把监管器二进制提取到宿主机，然后启动网关：
+
+```shell
+mkdir -p ~/openshell/supervisor
+docker create --name tmp-supervisor ghcr.io/nvidia/openshell/supervisor:latest
+docker cp tmp-supervisor:/openshell-sandbox ~/openshell/supervisor/openshell-sandbox
+docker rm tmp-supervisor
+chmod +x ~/openshell/supervisor/openshell-sandbox
+```
+
+启动网关：
+
+```shell
+docker run -d \
+  --name openshell-gateway \
+  --restart unless-stopped \
+  --group-add docker \
+  -p 127.0.0.1:8080:8080 \
+  -v openshell-state:/var/openshell \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/openshell/supervisor/openshell-sandbox:~/openshell/supervisor/openshell-sandbox:ro \
+  -e OPENSHELL_COMPUTE_DRIVER=docker \
+  -e OPENSHELL_GRPC_ENDPOINT=http://host.openshell.internal:8080 \
+  -e OPENSHELL_DOCKER_SUPERVISOR_BIN=~/openshell/supervisor/openshell-sandbox \
+  -e OPENSHELL_DB_URL=sqlite:/var/openshell/openshell.db \
+  -e OPENSHELL_DISABLE_TLS=true \
+  ghcr.io/nvidia/openshell/gateway:latest
+```
+
+该卷挂载的宿主机路径与容器路径都使用 `~/openshell/supervisor/openshell-sandbox`。shell 在把参数传给 Docker 之前会对两半部分都展开 `~`，因此两侧解析为同一个绝对路径（例如 `/home/user/openshell/supervisor/openshell-sandbox`）。这满足了同路径要求，使宿主机 Docker 守护进程创建沙箱容器时能找到该二进制。
+
+用 CLI 注册网关。在同一台机器上运行时使用 `--local`：
+
+```shell
+openshell gateway add http://127.0.0.1:8080 --local --name local
+```
+
+从同一网络中的另一台机器注册时，使用宿主机 IP 与 `--remote`：
+
+```shell
+openshell gateway add http://HOST_IP:8080 --remote --name remote
+```
+
+确认 CLI 能访问网关：
+
+```shell
+openshell status
+```
+
+<Aside type="caution">
+禁用 TLS 会移除认证。本示例绑定 `127.0.0.1`，因此只接受本地连接。要接受远程连接，请启用 mTLS 或用防火墙规则限制访问。
+</Aside>
+
+## 完整 mTLS 配置
+
+要以双向 TLS 运行网关，先生成 PKI 证书包，再用配置好的证书路径启动网关。
+
+把 PKI 引导到本地状态目录：
+
+```shell
+mkdir -p ~/.local/state/openshell/tls
+
+docker run --rm \
+  -v "$HOME/.local/state/openshell:/home/openshell/.local/state/openshell" \
+  -v "$HOME/.config/openshell:/home/openshell/.config/openshell" \
+  ghcr.io/nvidia/openshell/gateway:latest \
+  generate-certs \
+    --output-dir /home/openshell/.local/state/openshell/tls \
+    --server-san host.openshell.internal
+```
+
+它会把服务器与客户端证书写入 `~/.local/state/openshell/tls/`，把沙箱 JWT 签名密钥写入 `~/.local/state/openshell/tls/jwt/`，并把客户端证书包复制到 `~/.config/openshell/gateways/openshell/mtls/`，CLI 会自动加载。
+
+以启用的 mTLS 启动网关：
+
+```shell
+docker run -d \
+  --name openshell-gateway \
+  --restart unless-stopped \
+  --group-add docker \
+  -p 127.0.0.1:8080:8080 \
+  -v "$HOME/.local/state/openshell:/home/openshell/.local/state/openshell" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/openshell/supervisor/openshell-sandbox:~/openshell/supervisor/openshell-sandbox:ro \
+  -e OPENSHELL_COMPUTE_DRIVER=docker \
+  -e OPENSHELL_GRPC_ENDPOINT=https://127.0.0.1:8080 \
+  -e OPENSHELL_DOCKER_SUPERVISOR_BIN=~/openshell/supervisor/openshell-sandbox \
+  -e OPENSHELL_DB_URL=sqlite:/home/openshell/.local/state/openshell/openshell.db \
+  -e OPENSHELL_LOCAL_TLS_DIR=/home/openshell/.local/state/openshell/tls \
+  -e OPENSHELL_TLS_CERT=/home/openshell/.local/state/openshell/tls/server/tls.crt \
+  -e OPENSHELL_TLS_KEY=/home/openshell/.local/state/openshell/tls/server/tls.key \
+  -e OPENSHELL_TLS_CLIENT_CA=/home/openshell/.local/state/openshell/tls/ca.crt \
+  -e OPENSHELL_ENABLE_MTLS_AUTH=true \
+  -e OPENSHELL_DOCKER_TLS_CA=/home/openshell/.local/state/openshell/tls/ca.crt \
+  -e OPENSHELL_DOCKER_TLS_CERT=/home/openshell/.local/state/openshell/tls/client/tls.crt \
+  -e OPENSHELL_DOCKER_TLS_KEY=/home/openshell/.local/state/openshell/tls/client/tls.key \
+  ghcr.io/nvidia/openshell/gateway:latest
+```
+
+以 mTLS 注册网关：
+
+```shell
+openshell gateway add https://127.0.0.1:8080 --local --name local
+```
+
+## Docker Compose
+
+仓库中的 [`deploy/docker/`](https://github.com/NVIDIA/OpenShell/tree/main/deploy/docker) 目录包含一套生产可用的 Compose 配置，内联文档齐全：
+
+| 文件 | 用途 |
+|---|---|
+| `docker-compose.yml` | 网关与 init 服务、卷与环境变量 |
+| `gateway.toml` | 挂载进容器的 TOML 配置 |
+
+克隆或复制这些文件，然后启动网关：
+
+```shell
+docker compose -f deploy/docker/docker-compose.yml up -d
+```
+
+`init` 服务先运行，把沙箱 JWT 签名密钥写到宿主机的 `/var/lib/openshell/tls`。Docker 驱动需要这些密钥，已存在的密钥会保留。不要把它们提交进版本库。该配置禁用了 TLS 与用户认证，并且只在回环地址上发布端口。
+
+用 CLI 注册网关。从同一台机器注册时：
+
+```shell
+openshell gateway add http://127.0.0.1:8080 --local --name local
+```
+
+从同一网络中的另一台机器注册时，把 `HOST_IP` 替换为该机器的局域网地址：
+
+```shell
+openshell gateway add http://HOST_IP:8080 --remote --name remote
+```
+
+### 启用 mTLS
+
+`init` 服务已经把服务器、客户端与 CA 证书写入 `/var/lib/openshell/tls`，启用 mTLS 只需改配置：
+
+1. 在 `gateway.toml` 中，移除 `disable_tls = true` 与 `[openshell.gateway.auth]` 表。
+2. 在 `docker-compose.yml` 中，在 `gateway` 服务的 `environment` 下添加 `OPENSHELL_LOCAL_TLS_DIR: /var/lib/openshell/tls`。网关从该目录加载服务器证书、客户端 CA 与沙箱客户端证书包，并开启 mTLS 用户认证。
+3. 应用变更：
+
+   ```shell
+   docker compose -f deploy/docker/docker-compose.yml up -d
+   ```
+
+然后把客户端证书包复制到 `~/.config/openshell/gateways/local/mtls/`，CLI 从这里加载（参见[网关认证](/how-it-works/gateways/authentication#mtls)）。这些文件归 root 所有，请用 `sudo` 复制并把属主交给你的用户。如果你把明文网关注册为 `local`，先运行 `openshell gateway remove local`。
+
+```shell
+mtls=~/.config/openshell/gateways/local/mtls
+mkdir -p "$mtls"
+sudo cp /var/lib/openshell/tls/ca.crt \
+  /var/lib/openshell/tls/client/tls.crt \
+  /var/lib/openshell/tls/client/tls.key "$mtls"/
+sudo chown "$USER" "$mtls"/*
+openshell gateway add https://127.0.0.1:8080 --local --name local
+```
+
+## 使用 Podman
+
+把上面命令中的 `docker` 换成 `podman`。挂载 Podman socket 而不是 Docker socket，并把驱动设为 `podman`：
+
+```shell
+podman run -d \
+  --name openshell-gateway \
+  -p 127.0.0.1:8080:8080 \
+  -v openshell-state:/var/openshell \
+  -v "$XDG_RUNTIME_DIR/podman/podman.sock:/var/run/podman.sock" \
+  -e OPENSHELL_COMPUTE_DRIVER=podman \
+  -e OPENSHELL_PODMAN_SOCKET=/var/run/podman.sock \
+  -e OPENSHELL_DB_URL=sqlite:/var/openshell/openshell.db \
+  -e OPENSHELL_DISABLE_TLS=true \
+  ghcr.io/nvidia/openshell/gateway:latest
+```
+
+## 后续步骤
+
+- 准备镜像并启动智能体，参见[运行你的第一个智能体](/about/run-your-first-agent)。
+- 控制智能体可访问的内容，参见[策略](/how-it-works/policies/overview)。
+- 环境变量参考，参见[沙箱运行时](/how-it-works/sandboxes/runtimes)。

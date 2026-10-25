@@ -1,23 +1,12 @@
 ---
-title: "Deprecate complex physical network (wired and Wi-Fi) security schemes"
-description: "Use Tailscale to move off of complex physical networks."
+title: "弃用复杂的物理网络（有线与 Wi-Fi）安全方案"
+description: "使用 Tailscale 摆脱复杂的物理网络。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-People used to believe that security happened at the physical network layer:
-stop someone from getting into your office, so they can't plug into the
-Ethernet, so they can't hack your internal servers.
+人们曾经认为安全发生在物理网络层：只要不让外人进办公室，他们就插不了网线，也就无法入侵你的内部服务器。
 
-Then Wi-Fi happened, and now your network signal leaks outside your walls.
-WPA2-Personal (with only one password shared by everyone) isn't good enough
-for corporate networks, so then you have to deploy a certificate authority,
-RADIUS, and WPA2-Enterprise, a complex set of machinery that's hard to
-integrate with typical corporate identity systems and works differently with
-every brand of user device or Wi-Fi router.
+随后 Wi-Fi 出现了，你的网络信号会泄漏到墙外。WPA2-Personal（所有人共用一个密码）对企业网络来说远远不够，于是你不得不部署证书颁发机构、RADIUS 和 WPA2-Enterprise——这套复杂的机制既难以与常见的企业身份系统集成，而且在每种品牌的用户设备或 Wi-Fi 路由器上表现都不一样。
 
-Instead, let Tailscale move your devices off the "corporate" network and
-into the virtual world. Without a policy-compliant, encrypted, multifactor
-authenticated Tailscale connection, nobody can reach your servers even from
-your office Wi-Fi network, which means your office Wi-Fi network is no longer
-a risk.
+换个思路：让 Tailscale 把你的设备从"企业"网络迁入虚拟世界。只要没有符合策略的、加密且经过多因素认证的 Tailscale 连接，任何人都无法访问你的服务器——即使从办公室 Wi-Fi 网络也不例外。这意味着你的办公室 Wi-Fi 网络不再是一种风险。

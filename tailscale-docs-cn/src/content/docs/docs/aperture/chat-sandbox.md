@@ -1,122 +1,122 @@
 ---
-title: "Chat sandbox"
-description: "Run code, analyze data, and create downloadable files in an isolated Linux environment during a chat conversation."
+title: "Chat 沙盒"
+description: "在对话过程中于隔离的 Linux 环境中运行代码、分析数据并创建可下载的文件。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-> **Note:** Aperture chat sandbox is currently in alpha.
+> **注意：** Aperture chat 沙盒目前处于 alpha 阶段。
 
 \[Missing snippet: contact\_account\_manager.mdx]
 
-The chat sandbox gives the assistant a private Linux environment to run code, edit files, and share downloadable files during a conversation.
+chat 沙盒为助手提供一个私有 Linux 环境，可在对话过程中运行代码、编辑文件并分享可下载的文件。
 
-After Tailscale enables the sandbox for your Aperture gateway, it starts automatically on the first request that needs it. You do not need to launch a separate environment or select it for each conversation.
+Tailscale 为你的 Aperture 网关启用沙盒后，沙盒会在第一个需要它的请求到来时自动启动。你无需单独启动环境，也无需为每次对话手动选择。
 
-## What you can do with the sandbox
+## 用沙盒可以做什么
 
-The sandbox supports a broad range of tasks:
+沙盒支持广泛的任务：
 
-* **Run code and shell commands**: Execute Python, Node.js, Go, or shell scripts. Install additional packages with pip, npm, or apt as needed.
-* **Analyze data and create visualizations**: Upload a CSV or spreadsheet and ask the assistant to summarize it, compute statistics, or generate charts.
-* **Generate documents**: Produce reports, presentations (PPTX), Word documents (DOCX), spreadsheets, or any file format the assistant can build with available tools.
-* **Transform files**: Resize images, convert between formats, extract text from PDFs, or process uploaded files in other ways.
-* **Develop and iterate**: Write code across multiple turns, fix errors, rebuild, and refine output.
+* **运行代码和 shell 命令**：执行 Python、Node.js、Go 或 shell 脚本，并按需用 pip、npm 或 apt 安装额外的软件包。
+* **分析数据并创建可视化**：上传 CSV 或电子表格，让助手进行汇总、计算统计量或生成图表。
+* **生成文档**：产出报告、演示文稿（PPTX）、Word 文档（DOCX）、电子表格，或助手用现有工具能构建的任何文件格式。
+* **转换文件**：调整图片尺寸、在不同格式间转换、从 PDF 提取文本，或以其他方式处理上传的文件。
+* **开发与迭代**：跨多轮编写代码、修复错误、重新构建并完善输出。
 
-## How the sandbox works
+## 沙盒的工作原理
 
-Each conversation has an isolated Linux environment with development tools, writable storage, and restricted internet access:
+每段对话都有一个隔离的 Linux 环境，配备开发工具、可写存储和受限的互联网访问：
 
-* **Starts on demand**: The environment starts when the assistant first runs a command or creates a file. The first sandbox action in a conversation might take a few extra seconds.
-* **Provides temporary scratch space**: Scratch files and installed packages last only while the environment remains active. Saved uploads and output files remain associated with the conversation.
-* **Separates conversations**: Each conversation has its own environment and cannot access another conversation's files or state.
-* **Restricts outbound access**: The sandbox can reach only approved package registries and source hosts, such as PyPI, npm, Go, Maven, Ubuntu apt, and GitHub.
-* **Is isolated from your network**: Sandbox code cannot access your tailnet or Aperture internal systems.
+* **按需启动**：当助手首次运行命令或创建文件时环境才会启动。一段对话中的首个沙盒操作可能会多花几秒。
+* **提供临时工作空间**：临时文件和已安装的软件包仅在环境保持活跃期间存在。已保存的上传文件和输出文件会始终与该对话关联。
+* **隔离对话**：每段对话都有自己的环境，无法访问其他对话的文件或状态。
+* **限制出站访问**：沙盒只能访问经批准的软件包仓库和源码托管主机，例如 PyPI、npm、Go、Maven、Ubuntu apt 和 GitHub。
+* **与你的网络隔离**：沙盒代码无法访问你的 tailnet 或 Aperture 内部系统。
 
-## Working with files
+## 文件处理
 
-The sandbox organizes files into three areas with distinct roles:
+沙盒将文件划分为三个角色不同的区域：
 
-### Files you upload
+### 你上传的文件
 
-When you attach a file to a message, the assistant can read it inside the environment. Uploaded files are read-only from the assistant's perspective. If the assistant needs to modify an uploaded file, it copies the file to its working space first, then works on the copy.
+在消息中附加文件后，助手可以在环境内读取它。从助手的视角看，上传的文件是只读的。如果助手需要修改上传的文件，会先把文件复制到自己的工作空间，再在副本上操作。
 
-### Working space
+### 工作空间
 
-The assistant uses a private working directory for dependencies, draft scripts, and builds. You cannot view this scratch space, and its contents might disappear between turns.
+助手使用一个私有工作目录存放依赖、脚本草稿和构建产物。你无法查看这个临时空间，其内容在轮次之间可能会消失。
 
-### Output files
+### 输出文件
 
-When the assistant finishes a deliverable, it places the file in an output directory and shares it with you. Shared files appear as file cards in the chat. You can preview supported file types inline or download any file.
+助手完成交付物后，会把文件放入输出目录并分享给你。分享的文件在 chat 中以文件卡片形式出现。支持的文件类型可以内联预览，任何文件都可以下载。
 
-> **Note:**
+> **注意：**
 >
-> If you upload two files with the same name in a single conversation, the second file replaces the first. Use distinct filenames to avoid overwriting.
+> 如果你在同一段对话中上传两个同名文件，第二个文件会替换第一个。请使用不同的文件名以避免覆盖。
 
-## File preview support
+## 文件预览支持
 
-When the assistant shares a file, the chat interface renders it based on its type. Some file types display inline, while others are available as downloads.
+助手分享文件时，chat 界面会根据文件类型进行渲染。部分文件类型内联显示，其余则以下载形式提供。
 
-| File type                                              | Behavior                                         |
-| ------------------------------------------------------ | ------------------------------------------------ |
-| Images (PNG, JPG, GIF, WebP)                           | Inline image                                     |
-| SVG                                                    | Inline image (scripts sandboxed)                 |
-| PDF                                                    | Inline PDF viewer                                |
-| HTML                                                   | Sandboxed inline preview (no external resources) |
-| Markdown                                               | Rendered inline                                  |
-| Text and code files                                    | Syntax-highlighted with line numbers             |
-| Video                                                  | Inline playback                                  |
-| Audio                                                  | Inline playback                                  |
-| All other types (Office documents, archives, binaries) | Download only                                    |
+| 文件类型 | 行为 |
+| --- | --- |
+| 图片（PNG、JPG、GIF、WebP） | 内联图片 |
+| SVG | 内联图片（脚本已沙盒化） |
+| PDF | 内联 PDF 查看器 |
+| HTML | 沙盒化内联预览（无外部资源） |
+| Markdown | 内联渲染 |
+| 文本和代码文件 | 语法高亮并带行号 |
+| 视频 | 内联播放 |
+| 音频 | 内联播放 |
+| 其他所有类型（Office 文档、压缩包、二进制文件） | 仅下载 |
 
-Source files such as `.jsx`, `.tsx`, and `.mermaid` are shown as syntax-highlighted text. The chat interface does not execute React components or render Mermaid diagrams.
+`.jsx`、`.tsx`、`.mermaid` 等源文件以语法高亮文本显示。chat 界面不会执行 React 组件，也不会渲染 Mermaid 图表。
 
-> **Warning:**
+> **警告：**
 >
-> HTML previews run in a restricted environment. They can execute inline scripts, but they cannot load external resources, use browser storage (`localStorage` or `sessionStorage`), or access data from other pages. If you need full interactivity, download the HTML file and open it in your browser.
+> HTML 预览在受限环境中运行。它们可以执行内联脚本，但无法加载外部资源、无法使用浏览器存储（`localStorage` 或 `sessionStorage`）、也无法访问其他页面的数据。如需完整交互，请下载 HTML 文件并在浏览器中打开。
 
-## Limits
+## 限制
 
-The following limits apply to the sandbox:
+沙盒适用以下限制：
 
-| Limit                        | Value                                                       |
-| ---------------------------- | ----------------------------------------------------------- |
-| Sandbox execution capacity   | 5 GiB combined uploads and outputs                          |
-| Command timeout              | 10 minutes per command                                      |
-| Output per command           | 1 MiB (truncated with notice if exceeded)                   |
-| File upload size             | 25 MiB per file the model can read, 500 MiB for other files |
-| Attachments per conversation | 20 uploaded files                                           |
+| 限制 | 数值 |
+| --- | --- |
+| 沙盒执行容量 | 上传与输出合计 5 GiB |
+| 命令超时 | 每条命令 10 分钟 |
+| 单条命令输出 | 1 MiB（超出时截断并提示） |
+| 文件上传大小 | 模型可读取的文件每个 25 MiB，其他文件 500 MiB |
+| 每段对话的附件数 | 20 个上传文件 |
 
-Separate storage quotas can apply before the sandbox reaches its execution capacity:
+在沙盒达到执行容量之前，可能先触发独立的存储配额：
 
-* 500 MiB of saved files per conversation
-* 1 GiB of new file storage per user over a rolling 24 hours
-* 10 GiB of new file storage per gateway over a rolling 24 hours
+* 每段对话 500 MiB 已保存文件
+* 每用户在滚动 24 小时内 1 GiB 新文件存储
+* 每网关在滚动 24 小时内 10 GiB 新文件存储
 
-Aperture rejects uploads that exceed a quota and might not save generated files. Refer to the [sandbox reference][docs-sandbox-reference] for details.
+超出配额的上传会被 Aperture 拒绝，生成的文件也可能不会被保存。详情参阅[沙盒参考][docs-sandbox-reference]。
 
-Upload limits depend on how the assistant reads the file:
+上传限制取决于助手读取文件的方式：
 
-* **25 MiB** for files sent to the model with your message: JPEG, PNG, GIF, WebP, PDF, plain text, and supported office documents.
-* **500 MiB** for all other files, including video, audio, and archives. The model receives a placeholder and uses sandbox commands to work with the file.
+* **25 MiB**：随消息一起发送给模型的文件，包括 JPEG、PNG、GIF、WebP、PDF、纯文本和受支持的 Office 文档。
+* **500 MiB**：其他所有文件，包括视频、音频和压缩包。模型会收到一个占位符，并通过沙盒命令来处理该文件。
 
-The 20-attachment limit applies across the conversation, not per message. Uploading in smaller batches does not increase it. The next upload fails with `You can add at most 20 attachments to a conversation. Please select fewer attachments.`
+20 个附件的上限作用于整段对话，而非单条消息。分小批上传并不能提高上限。超出后再次上传会失败，并提示 `You can add at most 20 attachments to a conversation. Please select fewer attachments.`
 
-The separate 20-path limit on `aperture_present_files` controls how many output files the assistant can share in one call.
+`aperture_present_files` 另有 20 个路径的独立限制，控制助手一次调用可分享的输出文件数量。
 
-## Known limitations
+## 已知限制
 
-* **No state between conversations**: Each conversation starts with a fresh environment. The assistant cannot access files or packages from a previous conversation. If you need to continue work, upload the relevant files to a new conversation.
-* **Large command output is truncated**: Commands that produce more than 1 MiB of output are truncated. The assistant can work around this by redirecting output to a file and inspecting specific sections.
-* **HTML previews are restricted**: Previewed HTML files cannot load external scripts or stylesheets, use `localStorage` or `sessionStorage`, or access browser APIs that require a full origin. Interactive web applications that depend on these features will not work in the preview.
-* **No GPU access**: The environment does not have GPU hardware. Tasks that require GPU acceleration, such as training large machine learning models, are not supported.
+* **对话之间没有状态**：每段对话都在全新环境中开始。助手无法访问上一段对话的文件或软件包。如需继续之前的工作，请将相关文件上传到新对话。
+* **命令输出过大时会被截断**：输出超过 1 MiB 的命令会被截断。助手可以将输出重定向到文件并检查特定片段来绕过这一限制。
+* **HTML 预览受限**：预览的 HTML 文件无法加载外部脚本或样式表、无法使用 `localStorage` 或 `sessionStorage`，也无法访问需要完整 origin 的浏览器 API。依赖这些功能的交互式 Web 应用在预览中无法运行。
+* **无 GPU 访问**：环境中没有 GPU 硬件。需要 GPU 加速的任务（例如训练大型机器学习模型）不受支持。
 
-## Related
+## 相关内容
 
-* [Enable the chat sandbox][docs-enable-sandbox] for step-by-step setup instructions.
-* [Sandbox reference][docs-sandbox-reference] for tool parameters, size limits, timeouts, and error messages.
-* [Manage sandbox operations][docs-manage-sandbox] for monitoring and other operational tasks.
-* [Troubleshoot sandbox issues][docs-troubleshoot-sandbox] for diagnosing common problems.
+* [启用 chat 沙盒][docs-enable-sandbox]：分步设置说明。
+* [沙盒参考][docs-sandbox-reference]：工具参数、大小限制、超时和错误信息。
+* [管理沙盒运维][docs-manage-sandbox]：监控和其他运维任务。
+* [排查沙盒问题][docs-troubleshoot-sandbox]：诊断常见问题。
 
 [docs-enable-sandbox]: /docs/aperture/how-to/enable-sandbox
 

@@ -1,78 +1,78 @@
 ---
-title: "Downgrade your plan"
-description: "Use the steps in this section if you are downgrading your paid plan to a different paid plan or the free Personal plan. For information about current Tailscale plans and features, refer to our [Pricin"
+title: "降级你的套餐"
+description: "如果你要将付费套餐降级为其他付费套餐或免费的 Personal 套餐，请使用本节中的步骤。有关 Tailscale 当前套餐和功能的信息，请参阅我们的定价"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Use the steps in this section if you are downgrading your paid plan to a different paid plan or the free Personal plan. For information about current Tailscale plans and features, refer to our [Pricing][co-pricing] page.
+如果你要将付费套餐降级为其他付费套餐或免费的 Personal 套餐，请使用本节中的步骤。有关 Tailscale 当前套餐和功能的信息，请参阅我们的[定价][co-pricing]页面。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) for your tailnet to downgrade a plan.
+> 你需要是你 tailnet 的[所有者、管理员或账单管理员](/docs/reference/user-roles)才能降级套餐。
 
-> **Note:**
+> **注意：**
 >
-> To downgrade to the Personal plan, your tailnet cannot exceed six users. If your tailnet has more than six users, you will need to remove users before downgrading. The Personal plan is not intended for commercial use.
+> 要降级到 Personal 套餐，你的 tailnet 不能超过 6 个用户。如果你的 tailnet 用户超过 6 个，你需要先移除用户再降级。Personal 套餐不适用于商业用途。
 
-## Considerations
+## 注意事项
 
-When downgrading your Tailscale plan, consider the following:
+在降级 Tailscale 套餐时，请注意以下几点：
 
-* Downgrades take effect at the end of your current billing period. You keep access to your current plan and its features until then, and are not charged a prorated amount.
-* Feature availability may change once the downgrade takes effect, depending on the plan you select.
-* Monthly users are calculated at the end of the billing cycle.
-* You can cancel a scheduled downgrade at any time before it takes effect.
+* 降级将在你当前账单周期结束时生效。在此之前你仍可使用当前套餐及其功能，且不会按比例收取差额。
+* 降级生效后，功能可用性可能会发生变化，具体取决于你选择的套餐。
+* 月度用户数在账单周期结束时计算。
+* 你可以在已计划的降级生效前随时取消。
 
-For in-depth details about available plans and features, refer to our [Pricing][co-pricing] page.
+有关可用套餐和功能的详细信息，请参阅我们的[定价][co-pricing]页面。
 
-## Downgrade a plan
+## 降级套餐
 
-To downgrade your plan:
+要降级你的套餐：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select **Switch plan**.
-3. For the plan you wish to use, select **Downgrade**. Note that not all plans are available for all accounts.
-4. If you are downgrading to another paid plan, verify your **Billing email**, **Billing address**, and **Payment method**. Edit these if necessary.
-5. Select **Confirm downgrade**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Switch plan**。
+3. 对于你想使用的套餐，选择 **Downgrade**。请注意，并非所有套餐对所有账户都可用。
+4. 如果你降级到其他付费套餐，请核对 **Billing email**、**Billing address** 和 **Payment method**，必要时进行修改。
+5. 选择 **Confirm downgrade**。
 
-After you confirm, the downgrade is scheduled and will apply automatically when your current billing period ends. The [Billing](https://console.tailscale.com/admin/settings/billing) page will show a **Scheduled changes** banner with the date the change takes effect. Until that date, your plan, seats, and add-ons remain unchanged.
+确认后，降级会被排期，并在你当前账单周期结束时自动生效。[Billing](https://console.tailscale.com/admin/settings/billing) 页面会显示一个 **Scheduled changes** 横幅，注明更改生效的日期。在该日期之前，你的套餐、席位和附加项保持不变。
 
-> **Note:**
+> **注意：**
 >
-> If you do not have the option to downgrade a tailnet to the Personal plan, the likeliest reason is that the tailnet is considered commercial and is currently on a paid plan.
+> 如果你没有将 tailnet 降级到 Personal 套餐的选项，最可能的原因是该 tailnet 被视为商业用途，目前处于付费套餐上。
 
-## Cancel your subscription
+## 取消你的订阅
 
-Canceling your paid subscription downgrades your tailnet to the free Personal plan. As with any downgrade, the change takes effect at the end of your current billing period. You keep your paid plan and its features until then.
+取消你的付费订阅会将 tailnet 降级为免费的 Personal 套餐。与任何降级一样，该更改在当前账单周期结束时生效。在此之前你仍保留付费套餐及其功能。
 
-> **Note:**
+> **注意：**
 >
-> The Personal plan is limited to six users and is not intended for commercial use. If your tailnet has more than six users, you'll need to delete or suspend users before you can cancel. Refer to [Deleting and suspending users][docs-remove-team-members] for details.
+> Personal 套餐限制为 6 个用户，且不适用于商业用途。如果你的 tailnet 用户超过 6 个，你需要先删除或停用用户才能取消。详情请参阅[删除和停用用户][docs-remove-team-members]。
 
-To cancel your subscription:
+要取消你的订阅：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. In the **Your plan** section, select the  menu, then select **Cancel subscription**.
-3. Review the details of the Personal plan and the features you'll lose access to, then confirm the cancellation.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 在 **Your plan** 区域，选择  菜单，然后选择 **Cancel subscription**。
+3. 查看 Personal 套餐的详情以及你将失去的功能，然后确认取消。
 
-Your tailnet stays on its current plan until the end of the billing period, then automatically moves to the Personal plan. A **Scheduled changes** banner appears on the billing page with the effective date. If you change your mind before then, follow [Cancel a scheduled downgrade][ar-cancel-scheduled-downgrade] to keep your current subscription.
+你的 tailnet 在账单周期结束前保持在当前套餐，之后自动转为 Personal 套餐。账单页面上会出现一个 **Scheduled changes** 横幅，注明生效日期。如果你在此之前改变主意，按照[取消已计划的降级][ar-cancel-scheduled-downgrade]操作即可保留当前订阅。
 
-> **Note:**
+> **注意：**
 >
-> If you already have a scheduled plan downgrade, **Cancel subscription** is disabled. Cancel the scheduled change first (check below), then start the cancellation.
+> 如果你已有排期中的套餐降级，**Cancel subscription** 会被禁用。请先取消已排期的更改（见下文），再开始取消操作。
 
-## Cancel a scheduled downgrade
+## 取消已计划的降级
 
-If you change your mind before the downgrade takes effect, you can cancel it:
+如果你在降级生效前改变主意，可以取消它：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. In the **Scheduled changes** banner, select **Cancel scheduled change**.
-3. If more than one change is scheduled, for example, a plan downgrade along with an add-on removal, you can cancel individual changes or select **Cancel all scheduled changes**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 在 **Scheduled changes** 横幅中，选择 **Cancel scheduled change**。
+3. 如果排期中有多个更改，例如套餐降级加附加项移除，你可以取消单个更改，或选择 **Cancel all scheduled changes**。
 
-Your subscription then continues on its current plan with no further action needed.
+之后你的订阅将继续保持在当前套餐上，无需进一步操作。
 
-[ar-cancel-scheduled-downgrade]: #cancel-a-scheduled-downgrade
+[ar-cancel-scheduled-downgrade]: #取消已计划的降级
 
 [co-pricing]: https://tailscale.com/pricing
 

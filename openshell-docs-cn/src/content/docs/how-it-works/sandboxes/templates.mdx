@@ -1,0 +1,60 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "沙箱模板"
+sidebar-title: "模板"
+slug: "how-it-works/sandboxes/templates"
+description: "定义可复用的沙箱工作负载设置，并从模板创建沙箱。"
+keywords: "OpenShell, 沙箱, 工作负载模板, 镜像, 资源, 计算驱动"
+---
+
+沙箱工作负载模板（template）让工作区（workspace）管理员可以为工作区定义可复用的运行时形态。模板存储沙箱应继承的镜像、环境、资源请求与驱动专属配置。从模板创建沙箱时，创建请求仍然可以挂接提供商（provider）、标签与策略（policy），但工作负载来自指定模板。
+
+## 创建模板
+
+```shell
+openshell sandbox template create gpu-kata \
+  --image registry.example.com/agent:latest \
+  --cpu 2 \
+  --memory 4Gi \
+  --gpu 1 \
+  --label team=runtime \
+  --env FEATURE_FLAG=on
+```
+
+模板应请求活动驱动默认的 GPU 分配时，使用不带数量的 `--gpu`。模板需要特定数量的 GPU 时，使用 `--gpu COUNT`。
+
+要创建带驱动专属设置的独立模板，使用 `--driver-config-json` 创建：
+
+```shell
+openshell sandbox template create gpu-kata-custom \
+  --image registry.example.com/agent:latest \
+  --driver-config-json '{"kubernetes":{"pod":{"runtime_class_name":"kata-containers","node_selector":{"pool":"gpu"}}}}'
+```
+
+省略 `--image` 时，从模板创建沙箱时网关会应用其默认沙箱镜像。模板只需定义资源、环境或驱动设置时可以使用这种方式。
+
+## 从模板创建沙箱
+
+```shell
+openshell sandbox create --template gpu-kata --provider github -- claude
+```
+
+`--template` 参数不能与内联工作负载参数组合，例如 `--from`、`--cpu`、`--memory`、`--gpu`、`--env` 或 `--driver-config-json`。请把这些值放到模板上。创建时的策略与提供商挂接仍是沙箱请求的一部分，因此每个沙箱可以保留自己的访问边界。
+
+## 管理模板
+
+```shell
+openshell sandbox template list
+openshell sandbox template list --label-selector team=runtime
+openshell sandbox template get gpu-kata
+openshell sandbox template delete gpu-kata
+```
+
+需要跨工作区的管理员视图时，在 `sandbox template list` 上使用 `--all-workspaces`：
+
+```shell
+openshell sandbox template list --all-workspaces
+```
+
+JSON 或 YAML 格式下，模板列表输出包含 `templates` 与 `next_page_token` 字段。把返回的令牌传给 `--page-token` 可继续翻页。

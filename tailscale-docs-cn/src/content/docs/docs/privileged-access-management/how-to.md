@@ -1,36 +1,36 @@
 ---
-title: "Tailscale PAM how-to guides"
-description: "Step-by-step guides for configuring Tailscale PAM to provide privileged access to your services."
+title: "Tailscale PAM 操作指南"
+description: "分步指南：配置 Tailscale PAM，为你的服务提供特权访问。"
 ---
 
-Last validated Jul 31, 2026
+最后验证于 Jul 31, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Use the following [Tailscale PAM][docs-pam] guides to set up privileged access to services in your Tailscale network.
+使用以下 [Tailscale PAM][docs-pam] 指南，为 Tailscale 网络中的服务设置特权访问。
 
-* [Access a database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database) — Access a database with your Tailscale identity by using Tailscale PAM.
+* [使用 Tailscale PAM 访问数据库](/docs/privileged-access-management/how-to/access-database)——使用 Tailscale PAM，以你的 Tailscale 身份访问数据库。
 
-* [Access a Kubernetes cluster using Tailscale PAM](/docs/privileged-access-management/how-to/access-kubernetes) — Provide privileged access to a Kubernetes cluster using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Kubernetes 集群](/docs/privileged-access-management/how-to/access-kubernetes)——使用 Tailscale PAM 为 Kubernetes 集群提供特权访问。
 
-* [Access a TCP service using Tailscale PAM](/docs/privileged-access-management/how-to/access-tcp-service) — Provide privileged access to a TCP service using Tailscale PAM.
+* [使用 Tailscale PAM 访问 TCP 服务](/docs/privileged-access-management/how-to/access-tcp-service)——使用 Tailscale PAM 为 TCP 服务提供特权访问。
 
-* [Access a Windows server using RDP with Tailscale PAM](/docs/privileged-access-management/how-to/access-windows-server-rdp) — Access a Windows server with RDP by using Tailscale PAM.
+* [使用 Tailscale PAM 通过 RDP 访问 Windows 服务器](/docs/privileged-access-management/how-to/access-windows-server-rdp)——使用 Tailscale PAM 通过 RDP 访问 Windows 服务器。
 
-* [Access Amazon S3 buckets using Tailscale PAM](/docs/privileged-access-management/how-to/access-s3) — Access Amazon S3 buckets with your Tailscale identity by using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Amazon S3 存储桶](/docs/privileged-access-management/how-to/access-s3)——使用 Tailscale PAM，以你的 Tailscale 身份访问 Amazon S3 存储桶。
 
-* [Access an HTTP service using Tailscale PAM](/docs/privileged-access-management/how-to/access-http-service) — Provide privileged access to an HTTP service using Tailscale PAM.
+* [使用 Tailscale PAM 访问 HTTP 服务](/docs/privileged-access-management/how-to/access-http-service)——使用 Tailscale PAM 为 HTTP 服务提供特权访问。
 
-* [Access an SSH server (or shell) using Tailscale PAM](/docs/privileged-access-management/how-to/access-ssh) — Access your SSH servers with your Tailscale identity by using Tailscale PAM.
+* [使用 Tailscale PAM 访问 SSH 服务器（或 shell）](/docs/privileged-access-management/how-to/access-ssh)——使用 Tailscale PAM，以你的 Tailscale 身份访问 SSH 服务器。
 
-* [Control access to Tailscale PAM services](/docs/privileged-access-management/how-to/control-access) — Use Tailscale PAM to control access to the privileged resources in your Tailscale network.
+* [控制对 Tailscale PAM 服务的访问](/docs/privileged-access-management/how-to/control-access)——使用 Tailscale PAM 控制对 Tailscale 网络中特权资源的访问。
 
-* [Manage secrets and credentials with Tailscale PAM](/docs/privileged-access-management/how-to/manage-secrets) — Secure your secrets and credentials for the resources in your Tailscale network.
+* [使用 Tailscale PAM 管理密钥与凭证](/docs/privileged-access-management/how-to/manage-secrets)——保护 Tailscale 网络中资源的密钥与凭证。
 
-* [Manage Tailscale PAM resources using Terraform](/docs/privileged-access-management/how-to/manage-resources-terraform) — Use Terraform to manage Tailscale PAM connectors and services as Infrastructure as Code.
+* [使用 Terraform 管理 Tailscale PAM 资源](/docs/privileged-access-management/how-to/manage-resources-terraform)——使用 Terraform 以基础设施即代码（IaC）的方式管理 Tailscale PAM 连接器和服务。
 
-* [Store Tailscale PAM session recordings in S3](/docs/privileged-access-management/how-to/session-recordings-s3) — Store Tailscale PAM session recordings in your own Amazon S3 bucket.
+* [把 Tailscale PAM 会话录制保存到 S3](/docs/privileged-access-management/how-to/session-recordings-s3)——把 Tailscale PAM 会话录制保存到你自己的 Amazon S3 存储桶。
 
-* [Use a custom DNS domain with Tailscale PAM](/docs/privileged-access-management/how-to/custom-dns-domain) — Use your own DNS domain for Tailscale PAM HTTP services.
+* [在 Tailscale PAM 中使用自定义 DNS 域名](/docs/privileged-access-management/how-to/custom-dns-domain)——为 Tailscale PAM 的 HTTP 服务使用你自己的 DNS 域名。
 
 [docs-pam]: /docs/privileged-access-management

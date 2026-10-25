@@ -1,0 +1,472 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "在 Kubernetes 上安装 OpenShell"
+sidebar-title: "安装"
+description: "使用 GHCR 上的官方 Helm chart 把 OpenShell 网关部署到 Kubernetes 集群。"
+keywords: "生成式 AI, 网络安全, Kubernetes, Helm, 网关, 部署, OCI, GHCR, 安装"
+position: 1
+---
+import { Aside } from '@astrojs/starlight/components';
+import Steps from '@components/Steps.astro';
+
+<Aside type="caution">
+集群必须使用一种能在每个沙箱命名空间中对入站与出站强制执行 Kubernetes `NetworkPolicy` 的 CNI。策略由 OpenShell 创建，但即使没有 CNI 强制执行，Kubernetes 也会接受它们。没有强制执行时，沙箱工作负载可能直接访问网络并绕过监管器策略。安装 OpenShell 之前请确认 CNI 支持。
+</Aside>
+
+![OpenShell on Kubernetes：网关预置 Sandbox 资源、相互独立的监管器与工作负载 Pod、边界 Service、NetworkPolicy 与工作区 PVC。](/images/openshell-kubernetes-runtime.svg)
+
+网关的 Kubernetes 计算驱动创建一个 `Sandbox` 资源和一个单独的监管器 Pod。Agent Sandbox controller 依据该资源创建工作负载 Pod。一个 Service 为监管器提供工作负载已认证 TLS 边界的稳定地址，一个 PVC 让 `/sandbox` 在 Pod 重启后得以保留。网关可以与这些资源同命名空间运行，也可以在单独的命名空间运行。
+
+监管器打开边界连接，并维持一条到网关的出站会话。`NetworkPolicy` 只允许监管器入站访问工作负载的边界端口，拒绝工作负载发起的新连接。智能体的网络请求沿已建立的通道返回；监管器评估策略并打开已批准的上游连接。信任边界与请求流程参见[架构](/about/architecture)。
+
+## 前提条件
+
+安装之前请确认以下条件就绪。
+
+| 前提条件 | 是否必需 | 说明 |
+|---|---|---|
+| Kubernetes 1.29+ 且启用 RBAC | 是 | 无其他说明。 |
+| 能在沙箱命名空间中强制执行入站与出站 `NetworkPolicy` 的 CNI | 是 | 请在你的集群上确认已强制执行。 |
+| Helm 3.x | 是 | 无其他说明。 |
+| Agent Sandbox controller 与 CRD | 是 | 在 OpenShell chart 之前安装。参见[安装 Agent Sandbox](#安装-agent-sandbox)。 |
+| cert-manager | 否 | 参见[管理证书](/kubernetes/managing-certificates)。仅当你偏好 cert-manager 而非内置 PKI Job 时使用。 |
+| Kubernetes Gateway API | 否 | 参见 [Ingress](/kubernetes/ingress)。仅用于免 port-forward 的外部访问。 |
+
+## 安装 Agent Sandbox
+
+OpenShell 使用 Kubernetes SIG 项目 [Agent Sandbox](https://agent-sandbox.sigs.k8s.io) 预置沙箱 Pod。安装 OpenShell Helm chart 之前，请先在集群上安装 Agent Sandbox controller 及其 CRD。
+
+应用最新 release 的清单：
+
+```shell
+kubectl apply -f https://github.com/kubernetes-sigs/agent-sandbox/releases/latest/download/sandbox.yaml
+```
+
+该命令会创建 `agent-sandbox-system` 命名空间，安装 `sandboxes.agents.x-k8s.io` CRD，并启动 controller。
+
+Helm chart 在创建网关资源之前会检查受支持的 Agent Sandbox API。该预检默认启用。只有离线 `helm template` 渲染（Helm 无法发现集群 API）时才禁用：
+
+```shell
+helm template openshell oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --set agentSandbox.preflight.enabled=false
+```
+
+chart 不会安装或升级集群范围的 Agent Sandbox CRD 与 controller。
+
+<Aside type="note">
+**离线（air-gapped）集群**：把上面的清单以及其中引用的 `registry.k8s.io/agent-sandbox/agent-sandbox-controller` 镜像同步到你的内部镜像仓库，并在应用前把清单中的镜像引用指向内部镜像。OpenShell 网关、监管器与受信任沙箱运行时镜像也要同步到内部镜像仓库，然后把 `global.image.registry` 设为镜像地址。默认工作负载沙箱镜像单独配置，需要时用 `sandbox.image`。
+</Aside>
+
+继续之前确认 controller Pod 正在运行：
+
+```shell
+kubectl -n agent-sandbox-system get pods
+```
+
+controller Pod 应在几秒内进入 `Running` 状态。集群专属的安装说明（包括 KinD 与 GKE 实操演练）参见 [Agent Sandbox 入门指南](https://agent-sandbox.sigs.k8s.io/docs/getting_started/)。
+
+### 升级 Agent Sandbox
+
+Kubernetes 网关首次需要时会探测当前提供服务的 Agent Sandbox `Sandbox` API，并为网关进程缓存这一选择。就地升级 Agent Sandbox 后，请在 Agent Sandbox controller 与 CRD 发布完成后重启 OpenShell 网关，使其重新探测所提供的 API 版本。升级期间既有沙箱继续运行，重启后的网关可以继续管理它们。
+
+## 安装 OpenShell
+
+<Steps>
+
+## 创建命名空间
+
+```shell
+kubectl create namespace openshell
+```
+
+## 安装 chart
+
+从 GHCR 上的 OCI registry 安装。把 `<version>` 替换为你要安装的 chart 版本。
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell
+```
+
+要使用最新开发版而非稳定版：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version 0.0.0-dev \
+  --namespace openshell
+```
+
+首次安装时，chart 通过预安装 Helm 钩子自动生成 PKI Secret。无需手动创建 Secret。
+
+要为两个证书钩子 Pod 模板添加标签或注解，使用 `pkiInitJob.podLabels` 与 `pkiInitJob.podAnnotations`。自定义键冲突时，chart 自有的 Pod 标签优先。例如在注入了 Istio 的命名空间中禁用钩子 Pod 的 sidecar 注入：
+
+```yaml
+pkiInitJob:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+```
+
+默认的 Kubernetes 驱动把所有工作区放进一个沙箱命名空间。要让网关为每个工作区创建命名空间，参见 [Kubernetes 上的工作区](/kubernetes/workspaces)。
+
+### 拆分网关与工作区 release
+
+命名空间由平台管理时，先安装不带命名空间作用域沙箱资源的网关，再在沙箱命名空间安装工作区 chart：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set workspaceResources.enabled=false \
+  --set server.sandboxNamespace=app-a
+
+helm upgrade --install openshell-workspace \
+  oci://ghcr.io/nvidia/openshell/openshell-workspace \
+  --version <version> \
+  --namespace app-a \
+  --set gateway.serviceAccount.name=openshell \
+  --set gateway.serviceAccount.namespace=openshell
+```
+
+工作区 chart 不创建命名空间，也不部署网关。它只拥有其 release 命名空间中的沙箱 ServiceAccount、Role、RoleBinding 与 NetworkPolicy。单个预置命名空间的场景，保持 `server.drivers.kubernetes.workspaceMode=shared` 并设置 `server.sandboxNamespace=app-a`。要把多个工作区映射到分别预置的命名空间，使用 `workspaceMode=operator`，在 `operatorNamespaceLabel` 与 `operatorNamespaceFile` 中恰好配置一个，并在每个允许列表中的命名空间安装工作区 chart。operator 模式下，工作区 chart 的 Role 是网关在该命名空间唯一的 Secret 权限授予。
+
+在网关上启用 `server.drivers.kubernetes.allowDriverConfig` 时，也要在每个工作区 release 上设置 `gateway.allowDriverConfig=true`。这会授予准入调用方选择的 PVC 挂载所需的命名空间作用域 PVC 元数据读取权限。调用方不需要 driver config 时，两个值都保持禁用。
+
+### 将提供商凭据存入 Kubernetes Secret
+
+要把提供商凭据存为 Kubernetes Secret 而不是存进网关数据库，启用 Kubernetes Secrets 凭据驱动并指定专用命名空间：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set server.credentialDrivers.kubernetesSecrets.enabled=true \
+  --set server.credentialDrivers.kubernetesSecrets.namespace=openshell-credentials \
+  --set server.credentialDrivers.kubernetesSecrets.createNamespace=true
+```
+
+无论哪种工作区模式，驱动都把所有凭据存放在该命名空间。网关只通过该命名空间中的一个 Role 获得 Secret 权限。完整的选项集参见[网关配置参考](/how-it-works/gateways/configuration#凭据驱动)。
+
+## 等待网关就绪
+
+```shell
+kubectl -n openshell rollout status statefulset/openshell
+```
+
+设置 `workload.kind=deployment` 时，改为等待 Deployment：
+
+```shell
+kubectl -n openshell rollout status deployment/openshell
+```
+
+## 连接到网关
+
+本地评估使用 port-forward：
+
+```shell
+kubectl -n openshell port-forward svc/openshell 8080:8080
+```
+
+<Aside type="caution">
+port-forward 仅用于本地评估。共享环境请通过入站 controller 或访问代理暴露网关。外部访问选项参见 [Ingress](/kubernetes/ingress)。
+</Aside>
+
+## 安装 TLS 客户端证书包
+
+chart 会生成用于传输安全的 mTLS 证书包。Kubernetes 部署不用该证书包做用户认证；按[访问控制](/kubernetes/access-control)的说明配置 OIDC 或受信任的访问代理。本地 port-forward 访问时，复制生成的证书包，让 CLI 能校验网关证书：
+
+```shell
+mkdir -p ~/.config/openshell/gateways/k8s/mtls
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.ca\.crt}'  | base64 -d > ~/.config/openshell/gateways/k8s/mtls/ca.crt
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.tls\.crt}' | base64 -d > ~/.config/openshell/gateways/k8s/mtls/tls.crt
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.tls\.key}' | base64 -d > ~/.config/openshell/gateways/k8s/mtls/tls.key
+```
+
+服务器证书 SAN 包含 `localhost` 与 `127.0.0.1`，因此通过 port-forward 的主机名校验无需额外参数即可通过。
+
+## 在 CLI 中注册
+
+在另一个终端，用你配置的用户认证模式注册网关并验证可达。例如 OIDC：
+
+```shell
+openshell gateway add https://127.0.0.1:8080 --local --name k8s \
+  --oidc-issuer https://your-idp.example.com/realms/openshell \
+  --oidc-client-id openshell-cli
+openshell status
+```
+
+</Steps>
+
+## 升级 OpenShell
+
+升级时，用新的 `--version` 与安装时的 values 重新运行 `helm upgrade --install`。运行中的沙箱在停止之前继续使用其监管器与沙箱运行时镜像。停止的沙箱再次启动时，从升级后的网关取得这两个镜像，并保留其工作负载镜像与工作区。
+
+如果覆盖镜像，请把 `supervisor.image` 与 `sandboxRuntime.image` 设为同一 release，或只设置 `global.image.tag`。不兼容的镜像组合会让沙箱启动失败，启动过程中监管器日志会显示原因：
+
+```shell
+kubectl -n openshell logs -l openshell.ai/sandbox-id=<sandbox-id>,openshell.ai/component=supervisor
+```
+
+修正镜像后，按[沙箱生命周期](/how-it-works/sandboxes/overview#沙箱生命周期)的说明恢复启动超时的沙箱。
+
+## 配置 Chart values
+
+Helm chart 把 `gatewayConfig` 渲染进挂载的 `gateway.toml` ConfigMap。每个顶层键命名一个 TOML 表，字段名与[网关配置参考](/how-it-works/gateways/configuration)一致。例如设置网关日志级别：
+
+```shell
+helm upgrade openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set 'gatewayConfig.openshell\.gateway.log_level=debug'
+```
+
+凭据、数据库 URL 与私钥请存放在 Kubernetes Secret 中，使用 chart 提供的环境变量、文件或卷接线方式。chart 会拒绝 `gatewayConfig` 中的 `database_url`、内联 URL 凭据与 PEM 私钥，但并不能识别所有可能的机密。
+
+Service、探针、TLS 证书、Secret 引用、RBAC、NetworkPolicy 与挂载等 Helm values 仍然控制对应的 Kubernetes 资源。chart 会推导其对应的运行时设置，使网关配置与部署的资源保持一致。
+
+YAML 标量值保留其类型，标量列表变成 TOML 数组，嵌套映射变成内联表。顶层列表变成表数组并保持条目顺序。null 字段被省略；数组中的 null 元素无效。字符串中的 Helm 模板表达式不会被求值。
+
+既有应用 values 仍作为已弃用别名受支持。显式 `gatewayConfig` 字段优先，包括资源准入设置与 Kubernetes Secrets 凭据命名空间。全局镜像拉取策略作用于运行时与监管器镜像。工作负载镜像想用 Kubernetes 默认值时，`image_pull_policy` 与 `sandbox.image.pullPolicy` 都不设置。
+
+最常修改的 values 如下：
+
+| 值 | 用途 |
+|---|---|
+| `global.image.registry` / `global.image.tag` / `global.image.pullPolicy` | 网关、监管器与受信任沙箱运行时共享的镜像仓库、标签与拉取策略。单个镜像设置优先。 |
+| `gateway.image.registry` / `gateway.image.repository` / `gateway.image.tag` / `gateway.image.digest` | 网关容器镜像。默认 `ghcr.io/nvidia/openshell/gateway:latest`。 |
+| `replicaCount` | 网关副本数。大于 `1` 的值要求通过 `server.externalDbSecret` 共享 PostgreSQL。 |
+| `workload.kind` | 网关工作负载控制器。SQLite 用 `statefulset`，外部数据库配 `server.externalDbSecret` 时用 `deployment`。 |
+| `workload.allowMultiReplicaStatefulSet` | 允许 `workload.kind=statefulset` 下 `replicaCount > 1`。外部数据库支撑的多副本网关优先用 Deployment。 |
+| `autoscaling.enabled` / `autoscaling.minReplicas` / `autoscaling.maxReplicas` | 渲染 HorizontalPodAutoscaler 而非固定的 `replicaCount`。参见[高可用](/kubernetes/high-availability#扩缩网关)。 |
+| `server.sandboxNamespace` | 创建沙箱 Pod 的命名空间。留空时默认为 Helm release 命名空间。 |
+| `workspaceResources.enabled` | 由网关 chart 创建命名空间作用域的沙箱前置资源。单独安装工作区 chart 时禁用。 |
+| `server.externalDbSecret` | 在 `uri` 键中包含 PostgreSQL 连接 URI 的 Secret。数据库在 chart 之外管理时使用。 |
+| `server.dataStorageSize` | `workload.kind=statefulset` 下网关数据 PVC 的存储请求。默认 `1Gi`。必须带显式单位，如 `20Gi`。 |
+| `server.dataStorageClass` | `workload.kind=statefulset` 下网关数据 PVC 的 `StorageClass`。留空（默认）省略 `storageClassName`，使用集群默认 `StorageClass`。请使用块存储类，不要用 NFS。 |
+| `server.telemetryEnabled` | 启用来自网关及其沙箱监管器的匿名 OpenShell 遥测。设为 `false` 可退出。 |
+| `sandbox.image.repository` / `sandbox.image.tag` / `sandbox.image.digest` | 沙箱未指定镜像时使用的默认沙箱镜像。 |
+| `sandboxRuntime.image.registry` / `sandboxRuntime.image.repository` / `sandboxRuntime.image.tag` / `sandboxRuntime.image.digest` | 提供 `openshell-sandbox` 二进制的受信任工作负载侧镜像。摘要优先于标签。 |
+| `supervisor.image.registry` / `supervisor.image.repository` / `supervisor.image.tag` / `supervisor.image.digest` | 受信任的控制侧监管器镜像。 |
+| `server.sandboxImagePullSecrets` | 附加到沙箱 Pod 的镜像拉取 Secret。引用的 Secret 必须已存在于沙箱命名空间。 |
+| `server.grpcEndpoint` | 沙箱监管器回调网关使用的端点。必须能从集群内部访问。 |
+| `server.disableTls` | 以明文 HTTP 运行网关。仅在受信任的传输之后使用。 |
+| `server.auth.allowUnauthenticatedUsers` | 接受不携带 OIDC 或 mTLS 凭据的面向用户的调用。仅用于受信任的本地开发或完全受信任的访问代理。 |
+| `server.enableLoopbackServiceHttp` | 为回环沙箱服务 URL 启用本地明文 HTTP。默认 `true`。 |
+| `pkiInitJob.serverDnsNames` / `certManager.serverDnsNames` | 额外的网关服务器 DNS SAN。通配符 SAN 同时启用该域名下的沙箱服务 URL。 |
+| `supervisor.sandboxRuntime.boundaryPort` | 配对的监管器与沙箱 Pod 之间使用的非特权 TLS 端口。 |
+| `upstreamProxy` | 运维所有的企业 HTTP 正向代理，用于策略批准的 TLS 出站。参见[配置企业上游代理](#配置企业上游代理)。 |
+
+用 values 文件保证部署可重复：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --values my-values.yaml
+```
+
+<Aside type="caution">
+`server.dataStorageSize` 与 `server.dataStorageClass` 写入网关 StatefulSet 不可变的 `volumeClaimTemplates`。请在安装时设置。事后修改会导致升级失败，也不会迁移既有数据；迁移步骤参见 [Helm chart README](https://github.com/NVIDIA/OpenShell/blob/main/deploy/helm/openshell/README.md#data-pvc-storage)。
+</Aside>
+
+要使用私有沙箱镜像，在沙箱命名空间创建 `kubernetes.io/dockerconfigjson` 类型 Secret 并引用其名称：
+
+```shell
+kubectl -n openshell create secret docker-registry regcred \
+  --docker-server=registry.example.com \
+  --docker-username="$REGISTRY_USER" \
+  --docker-password="$REGISTRY_TOKEN"
+```
+
+```yaml
+server:
+  sandboxImage: registry.example.com/team/openshell-sandbox:latest
+  sandboxImagePullSecrets:
+    - name: regcred
+```
+
+## 配置企业上游代理
+
+沙箱 TLS 出站无法直接访问互联网时，配置企业正向代理。OpenShell 在通过代理打开 HTTP CONNECT 隧道之前会评估策略并执行 SSRF 检查。代理 URL 是运维所有的配置。沙箱环境变量无法选择、替换或绕过它。
+
+代理要求 Basic 认证时，在沙箱命名空间创建凭据 Secret。Secret 值采用 `user:pass` 形式。
+
+```shell
+kubectl -n openshell create secret generic corporate-proxy-auth \
+  --from-literal=credentials="$PROXY_USER:$PROXY_PASSWORD"
+```
+
+把代理设置加入 Helm values 文件。把 `noProxy` 中的 DNS 后缀与 CIDR 替换为你集群的值。`noProxy` 只旁路企业代理，OpenShell 策略评估仍然生效。
+
+```yaml
+upstreamProxy:
+  url: http://proxy.corp.example:8080
+  noProxy: .svc,.svc.cluster.local,10.96.0.0/12,10.244.0.0/16
+  authSecret:
+    name: corporate-proxy-auth
+    key: credentials
+  authAllowInsecure: true
+
+```
+
+只有当你接受发往 `http://` 代理的连接上 Basic 认证为明文时，才使用 `authAllowInsecure: true`。初始版本支持 `http://` 代理端点与 TLS CONNECT 出站；不支持 HTTPS 连代理、自定义企业 CA 包，以及明文 HTTP 出站经代理转发。
+
+凭据只挂载在单独调度的监管器 Pod 中。沙箱工作负载无法通过其环境或卷读取它。
+
+## RBAC
+
+chart 在 release 命名空间创建以下 RBAC 资源：
+
+| 资源 | 作用域 | 名称 |
+|---|---|---|
+| ServiceAccount | 命名空间 | `openshell` |
+| ServiceAccount | 命名空间 | `openshell-sandbox`（供沙箱 Pod 使用） |
+| Role + RoleBinding | 命名空间 | `openshell-sandbox` |
+| ClusterRole + ClusterRoleBinding | 集群 | `openshell-node-reader-<release namespace>` |
+
+chart 创建的其他对象都有命名空间作用域。最后一行的 `ClusterRole` 与 `ClusterRoleBinding` 是仅有的集群作用域对象。
+
+启用 Kubernetes Secrets 凭据驱动时，chart 还会在凭据命名空间创建 `openshell-credential-secrets` Role 与 RoleBinding。该 Role 授予对凭据命名空间中所有 Secret 的 `get`、`create`、`patch` 与 `delete` 权限，是网关对提供商凭据 Secret 的唯一权限授予。
+
+托管与 operator 工作区模式下，chart 会在沙箱命名空间创建 `openshell-workspace-secret-source` Role 与 RoleBinding。该 Role 只授予对网关客户端 TLS Secret 的 `get` 权限，托管模式下还包括配置的镜像拉取 Secret。网关把其内容暂存进工作区命名空间中每个沙箱运行时代次的 Secret。
+
+命名空间作用域的 Role 覆盖沙箱生命周期与身份：
+
+| API 组 | 资源 | 动词 |
+|---|---|---|
+| `agents.x-k8s.io` | `sandboxes`, `sandboxes/status` | create, delete, get, list, patch, update, watch |
+| `""` | `events` | get, list, watch |
+| `""` | `pods` | get |
+
+ClusterRole 授予节点检查与令牌校验权限：
+
+| API 组 | 资源 | 动词 |
+|---|---|---|
+| `authentication.k8s.io` | `tokenreviews` | create |
+| `""` | `nodes` | get, list, watch |
+
+要使用既有 ServiceAccount 而不是新建，设置 `serviceAccount.create=false` 并提供其名称：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=my-existing-sa
+```
+
+该 ServiceAccount 必须已具备上述 Role 与 ClusterRole 绑定。
+
+### 不使用 cluster-admin 安装
+
+默认情况下 release 会创建 `ClusterRole` 与 `ClusterRoleBinding`，因此安装者需要集群作用域权限。集群作用域 RBAC 由其他团队管理，或安装者是命名空间管理员级别的 GitOps controller 时，把安装拆成 cluster-admin 步骤与命名空间管理员步骤。
+
+cluster-admin 为每个网关 ServiceAccount 应用一次集群作用域对象。用与 release 相同的 values 渲染，使规则与配置的工作区模式及凭据驱动一致：
+
+```shell
+helm template openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  -f my-values.yaml \
+  --set rbac.create=true \
+  --set rbac.clusterScoped.create=true \
+  --set agentSandbox.preflight.enabled=false \
+  --show-only templates/clusterrole.yaml \
+  --show-only templates/clusterrolebinding.yaml | kubectl apply -f -
+```
+
+随后命名空间管理员在省略集群作用域对象的情况下安装与升级 chart。release 只渲染命名空间内对象，不需要 `clusterroles` 或 `clusterrolebindings` 权限：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  -f my-values.yaml \
+  --set rbac.clusterScoped.create=false
+```
+
+该参数不改变网关 ServiceAccount 的名称与命名空间，因此预创建的 `ClusterRoleBinding` 仍然绑定命名空间级 release 创建的 ServiceAccount。`serviceAccount.create=false` 时同理：绑定主体跟随 `serviceAccount.name`，所以两个步骤请传入相同的 values。
+
+#### 迁移既有 release
+
+Helm 会删除离开 release manifest 的对象，因此对已拥有 `ClusterRole` 与 `ClusterRoleBinding` 的 release 设置 `rbac.clusterScoped.create=false` 会删除它们。在 cluster-admin 重新应用之前，网关将失去 TokenReview 能力。先以 cluster-admin 身份移交所有权，避免任何删除：
+
+```shell
+kubectl annotate clusterrole "openshell-node-reader-<namespace>" \
+  helm.sh/resource-policy=keep --overwrite
+kubectl annotate clusterrolebinding "openshell-node-reader-<namespace>" \
+  helm.sh/resource-policy=keep --overwrite
+```
+
+这样这些对象能在设置该参数的升级中幸存，并且从那时起归 cluster-admin 所有。全新安装无需这一步。
+
+`rbac.clusterScoped.create` 与工作区模式无关。`managed` 与 `operator` 模式会改变 `ClusterRole` 授予的内容，但从不要求由命名空间管理员来应用它。修改任何影响 `ClusterRole` 规则的值之后，请重新执行 cluster-admin 步骤。
+
+命名由 cluster-admin 管理时，设置 `rbac.clusterScoped.clusterRoleName` 与 `rbac.clusterScoped.clusterRoleBindingName`。
+
+#### 安装者需要哪个参数
+
+默认的 `shared` 工作区模式下，release 还会创建一个命名空间作用域的沙箱 `Role`，授予 Agent Sandbox（`agents.x-k8s.io`）权限。Kubernetes 禁止授予自己不持有的权限，而内置的 `admin` ClusterRole 不覆盖该 CRD，因此只持有 `admin` 的安装者无法创建它。此时仅设 `rbac.clusterScoped.create=false` 不够，安装会以 `attempting to grant RBAC permissions not currently held` 失败。
+
+| 工作区模式 | 安装者持有 | 使用 |
+|---|---|---|
+| `shared` | 仅内置 `admin` | `rbac.create=false`，cluster-admin 预先创建全部网关 RBAC |
+| `shared` | `admin` 加上命名空间中的沙箱权限 | `rbac.clusterScoped.create=false` |
+| `managed`, `operator` | 仅内置 `admin` | `rbac.clusterScoped.create=false` |
+
+`managed` 与 `operator` 模式不渲染命名空间作用域的沙箱 `Role`，因此那里不需要额外授予。
+
+设置 `rbac.create=false` 时，cluster-admin 在同一步骤中把命名空间级 RBAC 加入渲染并应用：
+
+```shell
+helm template openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  -f my-values.yaml \
+  --set rbac.create=true \
+  --set rbac.clusterScoped.create=true \
+  --set agentSandbox.preflight.enabled=false \
+  --show-only templates/clusterrole.yaml \
+  --show-only templates/clusterrolebinding.yaml \
+  --show-only templates/role.yaml \
+  --show-only templates/rolebinding.yaml \
+  --show-only templates/peer-role.yaml | kubectl apply -f -
+```
+
+或者给安装者授予沙箱权限：把它绑定到一个 Role，其规则与 chart 的 `openshell-sandbox` Role 相同。
+
+## Pod 安全
+
+网关工作负载与 PKI 引导钩子满足 [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/)，因此 release 可以安装到打有 `pod-security.kubernetes.io/enforce=restricted` 标签的命名空间。
+
+## 探针
+
+网关在健康端口暴露 `/healthz` 用于进程存活检查，暴露 `/readyz` 用于感知依赖的就绪检查。Helm chart 把两者接入 Kubernetes 探针：
+
+- `startupProbe` 与 `livenessProbe` 使用 `/healthz`。
+- `readinessProbe` 使用 `/readyz`，它反映进程内后台数据库检查的最新结果。
+
+每个沙箱监管器 Pod 在端口 5501 上使用 `tcpSocket` 就绪探针。监管器只在网关会话就绪时接受该端口上的连接。给沙箱命名空间添加默认拒绝的入站策略时，请放行来自节点的 TCP 5501 端口，让 kubelet 能访问监管器 Pod。
+
+## 后续步骤
+
+- 要运行多个网关副本，参见[高可用](/kubernetes/high-availability)。
+- 要用 cert-manager 启用证书自动轮换，参见[管理证书](/kubernetes/managing-certificates)。
+- 要不经过 port-forward 从外部暴露网关，参见 [Ingress](/kubernetes/ingress)。
+- 要配置 OIDC 或反向代理认证，参见[访问控制](/kubernetes/access-control)。
+- 要创建第一个沙箱，参见[管理沙箱](/how-it-works/sandboxes/overview)。

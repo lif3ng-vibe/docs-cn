@@ -1,58 +1,58 @@
 ---
-title: "Tailnet policy file"
-description: "Understand the tailnet policy file."
+title: "Tailnet 策略文件"
+description: "了解 tailnet 策略文件。"
 ---
 
-Last validated May 21, 2025
+最后验证于 May 21, 2025
 
-The tailnet policy file is a centralized [human JSON (HuJSON)][xt-hujson] configuration file that stores parameters, policies, and settings for your Tailscale network (known as a tailnet). [Owners, Admins, and Network admins](/docs/reference/user-roles) can manage your tailnet policy file from the Tailscale admin console. You can also manage the tailnet policy file with [GitOps][docs-gitops] using GitHub, GitLab, or Bitbucket.
+tailnet 策略文件是一个集中式的 [human JSON（HuJSON）][xt-hujson] 配置文件，用于存储你的 Tailscale 网络（即 tailnet）的参数、策略和设置。[Owner、Admin 和 Network admin](/docs/reference/user-roles) 可以在 Tailscale 管理控制台中管理你的 tailnet 策略文件。你也可以结合 [GitOps][docs-gitops]，使用 GitHub、GitLab 或 Bitbucket 来管理 tailnet 策略文件。
 
-The tailnet policy file is organized into multiple top-level [sections][ar-sections], each offering different functionality. You can use the various sections of the tailnet policy file to:
+tailnet 策略文件由多个顶层[分区][ar-sections]组成，每个分区提供不同的功能。你可以使用 tailnet 策略文件的各个分区来：
 
-* Define named groupings of users, devices, and network segments with [tags][docs-tags], [groups][docs-targets-groups], and [IP sets][docs-ipsets].
-* Define access control policies at the [network layer][docs-osi-l3] using [ACLs][docs-acls].
-* Define access control policies at the [network layer][docs-osi-l3] and [application layer][docs-osi-l7] using [grants][docs-grants].
-* Assign aliases to IP addresses and [subnets][docs-subnets] (using the `hosts` section).
-* Define [device posture][docs-device-posture] rules.
-* Specify who can use [Tailscale SSH][docs-tailscale-ssh].
+* 使用[标签][docs-tags]、[组][docs-targets-groups]和 [IP 集][docs-ipsets]定义用户、设备和网段的命名分组。
+* 使用 [ACL][docs-acls] 在[网络层][docs-osi-l3]定义访问控制策略。
+* 使用[授权（grant）][docs-grants]在[网络层][docs-osi-l3]和[应用层][docs-osi-l7]定义访问控制策略。
+* 为 IP 地址和[子网][docs-subnets]分配别名（使用 `hosts` 分区）。
+* 定义[设备态势][docs-device-posture]规则。
+* 指定谁可以使用 [Tailscale SSH][docs-tailscale-ssh]。
 
-- Specify who can use which [tags][docs-tags] to authenticate devices.
-- Specify who can bypass the approval process to advertise [subnet routers][docs-subnets] and [exit nodes][docs-exit-nodes].
-- Apply additional attributes called [node attributes][docs-nodeattr-syntax] to devices and users.
-- Write tests to make assertions about access policies ([ACLs][docs-acls] and [Tailscale SSH][docs-tailscale-ssh]) that should not change.
-- Define tailnet-wide policy options (such as disabling IPv4).
+- 指定谁可以使用哪些[标签][docs-tags]来认证设备。
+- 指定谁可以绕过审批流程来通告[子网路由器][docs-subnets]和[出口节点][docs-exit-nodes]。
+- 为设备和用户应用称为[节点属性][docs-nodeattr-syntax]的附加属性。
+- 编写测试，对不应改变的访问策略（[ACL][docs-acls] 和 [Tailscale SSH][docs-tailscale-ssh]）做出断言。
+- 定义 tailnet 范围的策略选项（例如禁用 IPv4）。
 
-Using the different sections of the tailnet policy file in unison lets you manage your tailnet in a modular and fine-grained manner. For example, you can define a custom group of users, then create an access control policy to specify how the users in that group can traverse the resources in your tailnet.
+将 tailnet 策略文件的不同分区结合使用，让你能够以模块化、细粒度的方式管理 tailnet。例如，你可以先定义一个自定义用户组，再创建一条访问控制策略，规定该组中的用户可以如何访问你 tailnet 中的资源。
 
-## Sections
+## 分区
 
-The following table provides an overview of each top-level section of the tailnet policy file.
+下表概述了 tailnet 策略文件的每个顶层分区。
 
-| Section         | Name                        | What it's for                                                                                                                                                          | Resources                                       |
+| 分区            | 名称                        | 用途                                                                                                                                                                   | 资源                                            |
 | --------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `acls`          | Access control lists (ACLs) | Create network-level access control policies.                                                                                                                          | [Syntax reference →][docs-acls-syntax]          |
-| `autoApprovers` | Auto approvers              | Specify who can bypass the approval process to advertise [subnet routers][docs-subnets], and [exit nodes][docs-exit-nodes], and [app connectors][docs-app-connectors]. | [Syntax reference →][docs-autoapprovers-syntax] |
-| `grants`        | Grants                      | Define network-level and application-level access control policies.                                                                                                    | [Syntax reference →][docs-grants-syntax]        |
-| `groups`        | Groups                      | Define named groups of users, devices, and subnets to target in access control policies and other definitions.                                                         | [Syntax reference →][docs-groups-syntax]        |
-| `hosts`         | Hosts                       | Define named aliases for devices and subnets.                                                                                                                          | [Syntax reference →][docs-hosts-syntax]         |
-| `ipsets`        | IP sets                     | Define [named network segments][docs-ipsets] to target in access control policies and other definitions.                                                               | [Syntax reference →][docs-ipsets-syntax]        |
-| `nodeAttr`      | Node attributes             | Apply additional attributes to devices and users.                                                                                                                      | [Syntax reference →][docs-nodeattr-syntax]      |
-| `postures`      | Device posture policies     | Define [device posture][docs-device-posture] rules to target in access control policies.                                                                               | [Syntax reference →][docs-postures-syntax]      |
-| `ssh`           | Tailscale SSH               | Specify who can use [Tailscale SSH][docs-tailscale-ssh].                                                                                                               | [Syntax reference →][docs-ssh-syntax]           |
-| `sshTests`      | Tailscale SSH tests         | Write tests to make assertions about [Tailscale SSH][docs-tailscale-ssh] that should not change.                                                                       | [Syntax reference →][docs-ssh-tests-syntax]     |
-| `tagOwners`     | Tag owners                  | Define who can assign which [tags][docs-tags] to devices in your tailnet.                                                                                              | [Syntax reference →][docs-tag-owners-syntax]    |
-| `tests`         | Access control tests        | Write tests to make assertions about access policies ([ACLs][docs-acls] and network-level [grants][docs-grants]) that should not change.                               | [Syntax reference →][docs-acl-tests-syntax]     |
+| `acls`          | ACL（访问控制列表）         | 创建网络层访问控制策略。                                                                                                                                               | [语法参考 →][docs-acls-syntax]                  |
+| `autoApprovers` | 自动审批器                  | 指定谁可以绕过审批流程来通告[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]和[应用连接器][docs-app-connectors]。                                                | [语法参考 →][docs-autoapprovers-syntax]         |
+| `grants`        | 授权（grant）               | 定义网络层和应用层的访问控制策略。                                                                                                                                     | [语法参考 →][docs-grants-syntax]                |
+| `groups`        | 组                          | 定义用户、设备和子网的命名组，供访问控制策略和其他定义引用。                                                                                                           | [语法参考 →][docs-groups-syntax]                |
+| `hosts`         | 主机                        | 为设备和子网定义命名别名。                                                                                                                                             | [语法参考 →][docs-hosts-syntax]                 |
+| `ipsets`        | IP 集                       | 定义[命名的网段][docs-ipsets]，供访问控制策略和其他定义引用。                                                                                                          | [语法参考 →][docs-ipsets-syntax]                |
+| `nodeAttr`      | 节点属性                    | 为设备和用户应用附加属性。                                                                                                                                             | [语法参考 →][docs-nodeattr-syntax]              |
+| `postures`      | 设备态势策略                | 定义[设备态势][docs-device-posture]规则，供访问控制策略引用。                                                                                                          | [语法参考 →][docs-postures-syntax]              |
+| `ssh`           | Tailscale SSH               | 指定谁可以使用 [Tailscale SSH][docs-tailscale-ssh]。                                                                                                                   | [语法参考 →][docs-ssh-syntax]                   |
+| `sshTests`      | Tailscale SSH 测试          | 编写测试，对不应改变的 [Tailscale SSH][docs-tailscale-ssh] 行为做出断言。                                                                                              | [语法参考 →][docs-ssh-tests-syntax]             |
+| `tagOwners`     | 标签所有者                  | 定义谁可以将哪些[标签][docs-tags]分配给你 tailnet 中的设备。                                                                                                           | [语法参考 →][docs-tag-owners-syntax]            |
+| `tests`         | 访问控制测试                | 编写测试，对不应改变的访问策略（[ACL][docs-acls] 和网络层[授权][docs-grants]）做出断言。                                                                               | [语法参考 →][docs-acl-tests-syntax]             |
 
-There's also additional sections for [network policy options][docs-network-policy-options], such as disabling IPv4 and customizing the [DERP][docs-derp-servers] map. In most cases, these settings are unnecessary.
+此外还有用于[网络策略选项][docs-network-policy-options]的其他分区，例如禁用 IPv4 和自定义 [DERP][docs-derp-servers] map。在大多数情况下，这些设置并非必需。
 
-| Section               | What it's for                                                                                     | Resources                                                             |
+| 分区                  | 用途                                                                                              | 资源                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `derpMap`             | Customize the DERP servers that a tailnet uses.                                                   | [Syntax reference →][docs-network-policy-options-derpmap]             |
-| `disableIPv4`         | Disable using IPv4 in a tailnet.                                                                  | [Syntax reference →][docs-network-policy-options-disableipv4]         |
-| `OneCGNATRoute`       | Modify the routes the Tailscale clients generate.                                                 | [Syntax reference →][docs-network-policy-options-onecgnatroute]       |
-| `randomizeClientPort` | Control whether devices prefer a random port number or the default `41641` for WireGuard traffic. | [Syntax reference →][docs-network-policy-options-randomizeclientport] |
+| `derpMap`             | 自定义 tailnet 使用的 DERP 服务器。                                                               | [语法参考 →][docs-network-policy-options-derpmap]                     |
+| `disableIPv4`         | 在 tailnet 中禁用 IPv4。                                                                          | [语法参考 →][docs-network-policy-options-disableipv4]                 |
+| `OneCGNATRoute`       | 修改 Tailscale 客户端生成的路由。                                                                 | [语法参考 →][docs-network-policy-options-onecgnatroute]               |
+| `randomizeClientPort` | 控制设备的 WireGuard 流量是优先使用随机端口号还是默认端口 `41641`。                                | [语法参考 →][docs-network-policy-options-randomizeclientport]         |
 
-[ar-sections]: #sections
+[ar-sections]: #分区
 
 [docs-acl-tests-syntax]: /docs/reference/syntax/policy-file#tests
 

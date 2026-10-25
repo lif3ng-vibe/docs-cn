@@ -1,0 +1,100 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "可观测性概述"
+sidebar-title: "概述"
+description: "OpenShell 产生的追踪、指标与 OCSF 事件，各自的去向，以及如何启用。"
+keywords: "生成式 AI, 网络安全, 可观测性, OpenTelemetry, OTLP, 追踪, 指标, Prometheus, OCSF, SIEM"
+position: 1
+---
+
+OpenShell 产生三类可观测性信号：追踪（trace）、指标（metrics）与 OCSF 安全事件。本页说明每类信号的用途与开启方式，并链接到详细介绍各信号的页面。
+
+| 信号 | 产生方 | 去向 |
+|---|---|---|
+| 追踪 | 网关、计算驱动、沙箱监管器 | OTLP Collector |
+| 指标 | 网关 | Prometheus 抓取 |
+| OCSF 事件，简写 | 网关、沙箱监管器 | 网关控制台、`openshell logs`、监管器日志文件 |
+| OCSF 事件，JSONL | 网关、沙箱监管器 | 本地文件 |
+| OCSF 事件，OTLP | 网关、沙箱监管器 | OTLP Collector |
+
+本页示例均为 `gateway.toml` 表。在 Helm chart 中，把这些表逐个放到 `gatewayConfig` 下，参见[配置 Chart Values](/kubernetes/setup#配置-chart-values)。
+
+所有 OTLP 导出均使用 OTLP over gRPC。在 `gateway.toml` 中完成配置，网关会把设置传给它启动的沙箱监管器。监管器直接连接 Collector，因此 Collector 必须既能从沙箱访问，也能从网关访问。网关会忽略用于选择导出哪些信号及其去向的 `OTEL_*` 变量，但会采纳调整导出行为的变量，例如采样。完整列表参见[调优](/how-it-works/gateways/configuration#调优)。
+
+## 追踪
+
+追踪展示网关如何处理每个请求，包括它执行的计算驱动工作，以及每个沙箱监管器如何启动。可用它定位沙箱创建这类操作的耗时所在。
+
+要导出追踪，在 `gateway.toml` 中设置 OTLP Collector 端点：
+
+```toml
+[openshell.gateway.otlp]
+endpoint = "https://backend:4317"
+```
+
+Span 命名、资源属性与网关名称参见[追踪](/observability/traces)。
+
+## 指标
+
+网关在与 API 分离的监听器上提供 Prometheus 指标，覆盖 API 请求、就绪状态、网关拦截器、OCSF 输出与多副本容量。可用它对饱和状态告警，并选择自动扩缩信号。
+
+要启用该监听器，在 `gateway.toml` 中设置 `metrics_bind_address`：
+
+```toml
+[openshell.gateway]
+metrics_bind_address = "0.0.0.0:9090"
+```
+
+端口只是示例。监听器启用之前，网关不提供任何指标。该端点没有认证，请限制可访问者。指标名、部署默认值、完整目录与抓取配置参见[网关指标](/observability/gateway-metrics)。
+
+## OCSF 事件
+
+OCSF 事件记录与安全相关的活动，例如网络与 HTTP 策略判定、进程生命周期、SSH 会话与配置变更。事件遵循 [Open Cybersecurity Schema Framework](https://ocsf.io)。大部分事件由沙箱监管器产生，网关也为自己做出的判定产生事件，例如批准或拒绝策略规则草案。同一批事件有三种形态可用。
+
+### 简写日志
+
+简写（shorthand）日志始终开启。每个事件都以单行摘要的形式出现在网关控制台、`openshell logs` 与 TUI 读取的沙箱日志流，以及监管器日志文件中。例如，下面这条策略拒绝事件，就是沙箱在没有允许 `github.com` 的网络策略的情况下运行 `curl https://github.com` 时产生的：
+
+```text
+[1791996125.789] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/bin/curl(2187) -> github.com:443 [reason:transparent_tcp_policy_denied]
+```
+
+格式解读参见[沙箱日志](/observability/logging)。各计算驱动的日志位置参见[访问日志](/observability/accessing-logs)。
+
+### JSONL 文件
+
+JSONL 文件保存完整的 OCSF 记录，每行一个 JSON 对象，供日志采集器（log shipper）收集。网关与监管器分别启用：
+
+```toml
+# Gateway events, in gateway.toml.
+[openshell.gateway.ocsf_log]
+path = "/var/log/openshell/gateway-ocsf.jsonl"
+```
+
+```shell
+# Supervisor events, for every sandbox.
+openshell settings set --global --key ocsf_json_enabled --value true
+```
+
+记录结构、文件位置、轮转，以及面向旧版 SIEM 的 schema 版本降级，参见[OCSF JSON 导出](/observability/ocsf-json-export)。
+
+### OTLP 日志导出
+
+OTLP 日志导出把每个 OCSF 事件作为包含完整 JSON 事件的 OTLP 日志记录发送给 Collector。它默认关闭，即使追踪导出已开启也一样。在 `[openshell.gateway.otlp.ocsf]` 中设置 `enabled = true`，即可为网关以及网关启动的每个沙箱监管器打开：
+
+```toml
+[openshell.gateway.otlp]
+endpoint = "https://backend:4317"
+
+[openshell.gateway.otlp.ocsf]
+enabled = true
+```
+
+记录默认发送到 `[openshell.gateway.otlp]` 端点，除非该表自带 `endpoint`，例如对接 SIEM 的 Collector。记录格式、Collector 认证、投递保障与丢失上报参见[OCSF 日志导出](/how-it-works/gateways/configuration#ocsf-日志导出)。
+
+## 后续步骤
+
+- 了解 Span 如何命名与标识，参见[追踪](/observability/traces)。
+- 了解如何[阅读简写格式](/observability/logging)。
+- 了解 OpenShell 收集哪些匿名使用数据，参见[遥测](/observability/telemetry)（telemetry）。它与本页介绍的信号相互独立。

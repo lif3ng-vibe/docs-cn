@@ -1,100 +1,100 @@
 ---
-title: "Connection types"
-description: "Understand how Tailscale connects devices using either direct or relayed connections."
+title: "连接类型"
+description: "了解 Tailscale 如何使用直连或中继连接设备。"
 ---
 
-Last validated Jun 1, 2026
+最后验证于 Jun 1, 2026
 
-Tailscale [connects devices][docs-connect-to-devices] within a Tailscale network (known as a [tailnet][docs-tailnet]) using three connection types:
+Tailscale 使用三种连接类型在 Tailscale 网络（称为 [tailnet][docs-tailnet]）内[连接设备][docs-connect-to-devices]：
 
-* **Direct connections**: Devices send packets directly to each other using UDP.
-* **DERP relayed connections**: Devices send packets through [DERP servers][docs-derp-servers].
-* **Tailscale Peer Relay connections**: Devices send packets through another device in the same tailnet acting as a relay.
+* **直连（direct connections）**：设备通过 UDP 直接互发数据包。
+* **DERP 中继连接**：设备经由 [DERP 服务器][docs-derp-servers]发送数据包。
+* **Tailscale Peer Relay 连接**：设备经由同一 tailnet 中充当中继的另一台设备发送数据包。
 
-All three options are end-to-end [encrypted][docs-encryption] with [WireGuard][docs-wireguard]. The primary difference between them is performance, not security. Direct connections usually provide the lowest latency and highest throughput, while relayed connections are a fallback when direct connectivity isn't possible.
+三种方式都通过 [WireGuard][docs-wireguard] 进行端到端[加密][docs-encryption]。它们之间的主要差别是性能而非安全性。直连通常提供最低的延迟和最高的吞吐量，而中继连接是直连无法建立时的回退方案。
 
-## How Tailscale establishes connections
+## Tailscale 如何建立连接
 
-In a typical scenario, two devices in a tailnet follow a standard sequence when negotiating a [connection between them][docs-device-connectivity].
+在典型场景中，tailnet 内的两台设备在协商[彼此之间的连接][docs-device-connectivity]时会遵循一个标准流程。
 
-The following example scenario shows this sequence of events between two devices connected to the same tailnet, named `device-a` and `device-b`. Because both devices are connected to the tailnet, they each have a connection to the closest DERP server to help them negotiate and establish connections to other tailnet devices.
+下面的示例场景展示了连接到同一 tailnet 的两台设备（`device-a` 和 `device-b`）之间的这一事件序列。由于两台设备都已连接到 tailnet，它们各自都有一条到最近 DERP 服务器的连接，以帮助它们协商并建立与其他 tailnet 设备的连接。
 
-1. `device-a` starts a connection to `device-b`.
-2. `device-a` connects to the DERP server that `device-b` is already using.
-3. `device-a` sends the connection request to `device-b` through a DERP server.
-4. Devices exchange direct-connection details using their connected DERP servers.
-   1. `device-a` sends a request for direct connection details.
-   2. `device-b` responds with its direct connection details.
-5. Both devices perform NAT traversal. They try various NAT traversal strategies to establish a direct UDP tunnel between themselves.
-   1. If NAT traversal succeeds, `device-a` and `device-b` establish a direct (peer-to-peer) connection. They don't need to relay packets through a third device (such as a DERP server or a peer relay server).
-   2. If the devices can't establish a direct connection, they try to connect using a Tailscale Peer Relay server. For this to be possible, the tailnet must have at least one peer relay device that both `device-a` and `device-b` can access.
-   3. If there's no available peer relay, the devices remain connected using the DERP server to relay packets between them.
-6. Tailscale periodically re-checks if it can establish a direct connection or a peer relay connection.
+1. `device-a` 发起与 `device-b` 的连接。
+2. `device-a` 连接到 `device-b` 已在使用的 DERP 服务器。
+3. `device-a` 通过 DERP 服务器向 `device-b` 发送连接请求。
+4. 两台设备通过各自连接的 DERP 服务器交换直连细节。
+   1. `device-a` 发送对直连细节的请求。
+   2. `device-b` 以其直连细节作出响应。
+5. 两台设备执行 NAT 穿透。它们尝试多种 NAT 穿透策略，在彼此之间建立直连的 UDP 隧道。
+   1. 如果 NAT 穿透成功，`device-a` 与 `device-b` 建立直连（点对点）连接。它们无需再经第三方设备（如 DERP 服务器或对等中继服务器）中继数据包。
+   2. 如果无法建立直连，两台设备会尝试使用 Tailscale Peer Relay 服务器连接。为此，tailnet 必须至少有一台 `device-a` 和 `device-b` 都能访问的对等中继设备。
+   3. 如果没有可用的对等中继，两台设备将保持经由 DERP 服务器在彼此之间中继数据包的连接。
+6. Tailscale 会定期重新检查是否可以建立直连或对等中继连接。
 
-All connections start as relayed through a DERP server, and Tailscale then tries to upgrade them to a direct connection. If that fails, Tailscale tries to connect them using a peer relay. If that fails, the connection remains relayed through the DERP server.
+所有连接起初都经由 DERP 服务器中继，随后 Tailscale 会尝试将其升级为直连。如果失败，Tailscale 会尝试通过对等中继建立连接。如果仍然失败，连接就继续保持经由 DERP 服务器中继。
 
-## Direct connections
+## 直连
 
-A direct connection is a peer-to-peer connection between two tailnet devices where they can send packets directly to each other over UDP. In most cases, a direct connection is preferable to a relayed connection because it offers higher throughput and lower latency.
+直连是两台 tailnet 设备之间的点对点连接，设备可以通过 UDP 直接互发数据包。在大多数情况下，直连优于中继连接，因为它提供更高的吞吐量和更低的延迟。
 
-Tailscale's ability to establish a direct connection depends on its [NAT traversal logic][bl-how-nat-traversal-works] and the network configuration of the devices. In most environments, Tailscale successfully establishes direct connections, but some network configurations (hard NAT) can prevent this and force Tailscale to use relayed connections instead.
+Tailscale 能否建立直连，取决于它的 [NAT 穿透逻辑][bl-how-nat-traversal-works]以及设备的网络配置。在大多数环境中，Tailscale 都能成功建立直连，但某些网络配置（硬 NAT）会阻止直连，迫使 Tailscale 改用中继连接。
 
-## Relayed connections
+## 中继连接
 
-A relayed connection is a connection between two devices that is relayed through an intermediate host instead of going directly between the devices. Tailscale uses two kinds of relayed connections:
+中继连接是两台设备之间经由中间主机中继、而非在设备之间直接建立的连接。Tailscale 使用两种中继连接：
 
-* DERP relayed connections: Use Tailscale's DERP servers as relays.
-* Tailscale Peer relay connections: Use another device in the same tailnet as the relay.
+* DERP 中继连接：使用 Tailscale 的 DERP 服务器作为中继。
+* Tailscale Peer Relay 连接：使用同一 tailnet 中的另一台设备作为中继。
 
-### DERP connections
+### DERP 连接
 
-Tailscale operates a worldwide fleet of [DERP servers][docs-derp-servers]. These servers primarily:
+Tailscale 运营着遍布全球的 [DERP 服务器][docs-derp-servers]集群。这些服务器主要用于：
 
-* Help devices discover each other and negotiate connection details.
-* Facilitate the transition between connection types (for example, from relayed to direct).
-* Provide a fallback connection when a direct connection isn't possible.
+* 帮助设备相互发现并协商连接细节。
+* 协助在连接类型之间切换（例如从中继切换为直连）。
+* 在无法直连时提供回退连接。
 
-Any device that can open an HTTPS connection to an arbitrary host can build a tunnel using DERP relays. DERP servers are reliable but have limited quality of service ([QoS][xt-fortinet-docs-qos]) characteristics, so they are generally slower than direct connections and may offer lower maximum throughput.
+任何能对任意主机发起 HTTPS 连接的设备，都可以使用 DERP 中继建立隧道。DERP 服务器可靠，但服务质量（[QoS][xt-fortinet-docs-qos]）特性有限，因此通常比直连慢，且最大吞吐量可能更低。
 
-Because of this, using a relayed connection when a direct connection would be possible is one of the most common causes of [performance issues][docs-troubleshoot-connectivity].
+正因如此，在可以直连的情况下却使用中继连接，是造成[性能问题][docs-troubleshoot-connectivity]的最常见原因之一。
 
-### Peer relay connections
+### 对等中继连接
 
-Peer relay connections use [Tailscale Peer Relays][docs-peer-relays] to relay traffic through another device in the same tailnet when a direct connection between two devices isn't possible.
+当两台设备之间无法直连时，对等中继连接使用 [Tailscale Peer Relay][docs-peer-relays]，让流量经由同一 tailnet 中的另一台设备中继。
 
-Peer relay connections are usually faster than DERP connections because they avoid the extra latency of routing traffic through a geographically distant DERP server. However, they still introduce more latency than a fully direct connection, because traffic must pass through an additional hop.
+对等中继连接通常比 DERP 连接更快，因为它避免了流量绕行地理位置遥远的 DERP 服务器所带来的额外延迟。不过，由于流量必须多经过一跳，它的延迟仍高于完全直连。
 
-## Determine your connection type
+## 判断你的连接类型
 
-You can determine which connection type you're using by communicating between devices and then inspecting [`tailscale status`][docs-cli-status] or [`tailscale ping`][docs-cli-ping].
+你可以在设备间通信后，通过查看 [`tailscale status`][docs-cli-status] 或 [`tailscale ping`][docs-cli-ping] 的输出，判断当前使用的是哪种连接类型。
 
-### Using `tailscale status`
+### 使用 `tailscale status`
 
-Run [`tailscale status`][docs-cli-status] and examine the connection information for the peer device.
+运行 [`tailscale status`][docs-cli-status]，查看对端设备的连接信息。
 
-* If the output contains "`direct`", the connection is direct.
-* If the output includes "`relay`", the connection is relayed through a DERP server.
-* If the output includes "`peer-relay`", the connection is relayed through a peer relay device.
+* 如果输出包含 "`direct`"，则连接为直连。
+* 如果输出包含 "`relay`"，则连接经由 DERP 服务器中继。
+* 如果输出包含 "`peer-relay`"，则连接经由对等中继设备中继。
 
-The following output shows an example of a direct connection:
+以下输出是直连的示例：
 
 ```
 100.113.160.82 device-a tagged-devices linux active; offers exit node; direct 140.82.13.138:41641
 ```
 
-The following output shows an example of a relayed connection using a DERP server:
+以下输出是经由 DERP 服务器中继连接的示例：
 
 ```
 100.104.93.78 localhost-0 user@ android active; relay "tor"
 ```
 
-### Using `tailscale ping`
+### 使用 `tailscale ping`
 
-You can also use [`tailscale ping`][docs-cli-ping] to determine if you can establish a direct connection from your current device to another device in the tailnet.
+你也可以使用 [`tailscale ping`][docs-cli-ping] 判断能否从当前设备直连 tailnet 中的另一台设备。
 
-#### Direct connection example
+#### 直连示例
 
-The following output shows an example of `your-device` connected directly to `another-device`:
+以下输出展示 `your-device` 直连 `another-device` 的示例：
 
 ```
 > user@your-device:~$ tailscale ping another-device
@@ -105,11 +105,11 @@ pong from another-device (100.113.160.82) via DERP(nyc) in 38ms
 pong from another-device (100.113.160.82) via 140.82.13.138:41641 in 35ms
 ```
 
-Here, the first few packets go through the nearest DERP server while Tailscale negotiates a direct connection. After the direct connection is established, subsequent packets go directly to the destination.
+这里，前几个数据包经由最近的 DERP 服务器发送，同时 Tailscale 在协商直连。直连建立后，后续数据包直接发往目标。
 
-#### Peer relayed connection example
+#### 对等中继连接示例
 
-The following output shows an example of `your-device` connected to `another-device` using a peer relay server:
+以下输出展示 `your-device` 经对等中继服务器连接 `another-device` 的示例：
 
 ```
 > user@your-device:~$ tailscale ping another-device
@@ -121,14 +121,14 @@ pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1)
 pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 5ms
 pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 4ms
 pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 4ms
-pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 4ms
 pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 3ms
+pong from another-device (100.97.143.93) via peer-relay(192.168.64.2:7777:vni:1) in 4ms
 direct connection not established
 ```
 
-#### DERP relayed connection example
+#### DERP 中继连接示例
 
-The following output shows an example of `your-device` connected to `another-device` using a DERP server as a relay:
+以下输出展示 `your-device` 以 DERP 服务器为中继连接 `another-device` 的示例：
 
 ```
 > user@your-device:~$ tailscale ping another-device
@@ -145,47 +145,47 @@ pong from another-device (100.104.93.78) via DERP(tor) in 152ms
 direct connection not established
 ```
 
-## Why Tailscale can't always use direct connections
+## 为什么 Tailscale 并不总能使用直连
 
-Tailscale can't always establish a direct connection between devices. And if network conditions change, it's possible for an existing direct connection to fall back to a relayed connection if a direct connection is no longer possible. The most common scenarios that prevent direct connections include blocked UDP packets and hard NAT scenarios.
+Tailscale 并不总能在设备之间建立直连。而且当网络状况变化、直连不再可行时，现有直连也可能回退为中继连接。阻止直连的最常见情形包括 UDP 数据包被阻断以及硬 NAT 场景。
 
-### Blocked UDP packets
+### UDP 数据包被阻断
 
-To establish a direct connection, a device must be able to send and receive UDP packets. If something on the network blocks direct UDP connections, devices can't establish direct connections, but they can still use relayed connections using a [Tailscale Peer Relay server][docs-peer-relays] or a DERP server.
+要建立直连，设备必须能够收发 UDP 数据包。如果网络中的某些因素阻断了直接的 UDP 连接，设备便无法建立直连，但仍可使用 [Tailscale Peer Relay 服务器][docs-peer-relays]或 DERP 服务器进行中继连接。
 
-In these cases, to prevent relayed connections, work with your network or service provider to allow outbound and return UDP traffic.
+在这种情况下，若要避免中继连接，请与你的网络或服务提供商合作，放行出站及返回的 UDP 流量。
 
-### Hard NAT
+### 硬 NAT
 
-[Hard NAT][docs-hard-nat] scenarios make establishing direct connections difficult, and sometimes impossible. Hard NAT refers to a network scenario in which a device is behind a gateway with two characteristics that break peer-to-peer connections: each outbound connection gets its own port mapping that only accepts replies from that specific destination, and each connection uses a different external port that outside devices cannot predict. Tailscale can't establish a direct connection if both devices are behind a hard NAT.
+[硬 NAT][docs-hard-nat] 场景会让直连变得困难，有时甚至不可能。硬 NAT 指设备位于具有两个破坏点对点连接特性的网关之后的网络场景：每个出站连接都有各自的端口映射，且只接受来自该特定目的地的应答；每个连接使用不同的外部端口，外部设备无法预测。如果两台设备都位于硬 NAT 之后，Tailscale 就无法建立直连。
 
-But, even when a device is behind a hard NAT, you can take steps to improve the chances of establishing a direct connection.
+不过，即使设备位于硬 NAT 之后，你仍可以采取措施提高建立直连的可能性。
 
-#### Home and small office networks
+#### 家庭与小型办公网络
 
-On many routers, there are settings you can adjust to make direct connections more likely. For example, you can enable NAT-PMP or UPnP port mapping on your router to give Tailscale more predictable, reachable ports. This facilitates static port mapping to keep port numbers predictable. Predictable port numbers make it easier for Tailscale to reliably establish direct connections through a firewall.
+许多路由器上都有可以调整的设置，让直连更容易实现。例如，你可以在路由器上启用 NAT-PMP 或 UPnP 端口映射，给 Tailscale 提供更可预测、可达的端口。这有助于静态端口映射保持端口号可预测。可预测的端口号让 Tailscale 更容易可靠地穿过防火墙建立直连。
 
-By default, opening UDP port `41641` on a device's public IP address ensures a direct connection from any peer device, where possible. You can change this port number by passing `--port=<number>` to [`tailscaled`][docs-tailscaled]. On Linux, you can set this in `/etc/defaults/tailscaled`.
+默认情况下，只要在设备的公网 IP 上开放 UDP 端口 `41641`，就能尽可能保证来自任何对端设备的直连。你可以通过向 [`tailscaled`][docs-tailscaled] 传入 `--port=<number>` 来更改该端口号。在 Linux 上，可以在 `/etc/defaults/tailscaled` 中设置。
 
-#### Cloud platforms and NAT gateways
+#### 云平台与 NAT 网关
 
-Many cloud platforms, such as [AWS][docs-aws-reference-architecture], use NAT gateways that can behave like hard NATs. When devices are behind these gateways, relayed connections are often the result.
+许多云平台（例如 [AWS][docs-aws-reference-architecture]）使用的 NAT 网关行为可能类似硬 NAT。当设备位于这些网关之后时，往往只能建立中继连接。
 
-To improve the odds of direct connections, you can:
+要提高直连的可能性，你可以：
 
-* Expose public IP addresses (dynamic or static) for your Tailscale devices.
-* Ensure that UDP port `41641` is not blocked.
+* 为你的 Tailscale 设备暴露公网 IP 地址（动态或静态）。
+* 确保 UDP 端口 `41641` 未被阻断。
 
-If you can't make these changes, you can set up a [Tailscale Peer Relay][docs-peer-relays] server to relay communication between your devices. A peer relay server is generally faster than a DERP server and runs within your own infrastructure (so there's no need to traverse gateways or egress traffic).
+如果无法进行这些更改，你可以架设一台 [Tailscale Peer Relay][docs-peer-relays] 服务器来中继设备之间的通信。对等中继服务器通常比 DERP 服务器更快，并且运行在你自己的基础设施内（因此无需穿越网关或将流量传出外网）。
 
-#### Exit nodes and Terraform
+#### 出口节点与 Terraform
 
-For devices such as [exit nodes][docs-exit-nodes] that intentionally egress through a NAT gateway, you can use Tailscale's Terraform templates to:
+对于[出口节点][docs-exit-nodes]这类刻意经 NAT 网关出站的设备，你可以使用 Tailscale 的 Terraform 模板来：
 
-* Route incoming traffic through the public interface.
-* Route outgoing traffic through the NAT gateway.
+* 让入站流量经由公共接口路由。
+* 让出站流量经由 NAT 网关路由。
 
-Contact the Tailscale Solutions Engineering team at `se@tailscale.com` for assistance deploying this. This enables the egress traffic to have a predictable public IP address, but the ingress traffic establishes a direct connection to the exit node. This pattern also applies for other Tailscale connectors, including subnet routers and app connectors.
+如需协助部署此方案，请通过 `se@tailscale.com` 联系 Tailscale 解决方案工程团队。这样出站流量就能拥有可预测的公网 IP 地址，而入站流量则与出口节点建立直连。这一模式同样适用于其他 Tailscale 连接器，包括子网路由器和应用连接器。
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

@@ -1,122 +1,122 @@
 ---
 title: "Webhooks"
-description: "Set up a webhook to receive notification of events on your Tailscale network."
+description: "设置 webhook，接收 Tailscale 网络上的事件通知。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** This feature is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 此功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-Webhooks let you subscribe to certain events on your Tailscale network and process the event notifications through an integration or app. For example, you could integrate Tailscale events with a Slack channel. If subscribed to an event such as adding a node, your webhook endpoint can send a message in a Slack channel anytime a node is added to your tailnet.
+Webhook 让你能够订阅 Tailscale 网络上的特定事件，并通过集成或应用处理事件通知。例如，你可以把 Tailscale 事件集成到 Slack 频道。如果订阅了"添加节点"这类事件，那么每当有节点加入你的 tailnet，你的 webhook 端点就可以在 Slack 频道里发送一条消息。
 
-*（图：Tailscale events in a Slack channel）*
+*（图：Slack 频道中的 Tailscale 事件）*
 
-## How it works
+## 工作原理
 
-You provide a webhook endpoint which can receive HTTPS POST requests for subscribed Tailscale events. The body of the request provides information about the event. It is up to you to determine how the webhook should process a notification. Tailscale typically sends an event notification to a webhook within a few seconds of the event's occurrence.
+你提供一个 webhook 端点，用于接收所订阅 Tailscale 事件的 HTTPS POST 请求。请求正文包含该事件的相关信息。至于 webhook 应如何处理通知，完全由你决定。Tailscale 通常会在事件发生后的几秒内把事件通知发送到 webhook。
 
-You create and manage webhook endpoints in the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+你在管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面创建和管理 webhook 端点。
 
-Tailscale provides a digital signature for events that it sends, so you can verify whether an event was signed by a secret that is shared between you and Tailscale.
+Tailscale 会为它发送的事件提供数字签名，因此你可以验证事件是否由你与 Tailscale 之间共享的密钥签名。
 
-Webhook events are sent as JSON objects, with the format described in [events payload][ar-events-payload]. Optionally, you can configure webhooks to send events in a compatible format for the following destinations:
+Webhook 事件以 JSON 对象的形式发送，格式见[事件载荷][ar-events-payload]。你还可以选择把 webhook 配置为以兼容的格式向以下目的地发送事件：
 
-| Destination | Destination's webhook documentation                                            |
+| 目的地      | 目的地的 webhook 文档                                                            |
 | ----------- | ------------------------------------------------------------------------------ |
 | Discord     | [Intro to Discord webhooks][xt-discord-webhooks]                               |
 | Google Chat | [Send messages to Google Chat with incoming webhooks][xt-google-chat-webhooks] |
 | Mattermost  | [Mattermost webhooks][xt-mattermost-webhooks]                                  |
 | Slack       | [Sending Slack messages using incoming webhooks][xt-slack-webhooks]            |
 
-## Prerequisites
+## 前提条件
 
-* You need a webhook endpoint which will process the Tailscale event notifications.
+* 你需要一个用于处理 Tailscale 事件通知的 webhook 端点。
 
-* Your webhook endpoint must be able to process HTTPS POST requests and must use either port `80` or port `443`.
+* 你的 webhook 端点必须能处理 HTTPS POST 请求，并且必须使用 `80` 或 `443` 端口。
 
-* You need to be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) of a tailnet to create, modify, or delete webhooks.
+* 你必须是 tailnet 的 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 才能创建、修改或删除 webhook。
 
-## Setting up a webhook endpoint
+## 设置 webhook 端点
 
-Webhooks apply to a tailnet. If one user creates a webhook, other [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) users in the tailnet can modify or delete it. If a webhook is created by a user who is later removed or suspended from your tailnet, the webhook will still work.
+Webhook 作用于某个 tailnet。如果一个用户创建了 webhook，tailnet 中的其他 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 用户可以修改或删除它。如果创建 webhook 的用户后来被移除或暂停，该 webhook 仍会继续工作。
 
-1. Open the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+1. 打开管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面。
 
-2. Select **Add endpoint**.
+2. 选择 **Add endpoint**。
 
-3. In the **Add endpoint** page:
+3. 在 **Add endpoint** 页面：
 
-   1. For **Webhook URL**, provide the endpoint for your webhook. The endpoint URL must use the HTTPS protocol, and must use either port `80` or port `443`.
+   1. 在 **Webhook URL** 中提供你的 webhook 端点。端点 URL 必须使用 HTTPS 协议，并且必须使用 `80` 或 `443` 端口。
 
-   2. (Optional) For **Destination**, select the destination for the endpoint. Tailscale will send your webhook events in the format expected by the destination. (If you enter a Discord or Slack URL for **Webhook URL**, then the **Destination** field will be grayed out with the respective destination selected.)
+   2. （可选）在 **Destination** 中选择端点的目的地。Tailscale 会按目的地期望的格式发送你的 webhook 事件。（如果你在 **Webhook URL** 中填入 Discord 或 Slack 的 URL，**Destination** 字段会自动置灰并选中对应的目的地。）
 
-      *（图：The webhooks 'Webhook URL' UI in the admin console）*
+      *（图：管理控制台中 webhooks 的"Webhook URL"界面）*
 
-      Choose **None** if you are using the general Tailscale format for the events.
+      如果事件使用通用的 Tailscale 格式，请选择 **None**。
 
-   3. Select the event categories or events you want to receive as notifications.
+   3. 选择你想接收通知的事件类别或事件。
 
-      A category is a set of related events. For example, the **Tailnet Management** category contains events related to node actions and [tailnet policy file][docs-policy-syntax] updates. If you select a category, you will be subscribed to any new events that Tailscale adds to the category in the future.
+      类别是一组相关事件的集合。例如，**Tailnet Management** 类别包含与节点操作和 [tailnet 策略文件][docs-policy-syntax]更新相关的事件。如果你选择了一个类别，就等于订阅了 Tailscale 今后添加到该类别中的任何新事件。
 
-      If you don't want to use categories, you can select specific events.
+      如果不想使用类别，你也可以选择具体事件。
 
-      *（图：The webhooks 'Events' UI in the admin console）*
+      *（图：管理控制台中 webhooks 的"Events"界面）*
 
-   4. Select **Add endpoint**.
+   4. 选择 **Add endpoint**。
 
-4. On the subsequent **Webhook secret** popup, select **Copy** to copy the newly-created webhook secret. After you close the **Webhook secret** page, you won't be able to copy the secret again. Also, note that Tailscale-generated webhook secrets are case-sensitive.
+4. 在随后弹出的 **Webhook secret** 弹窗中，选择 **Copy** 复制新建的 webhook 密钥。关闭 **Webhook secret** 页面后，你将无法再次复制该密钥。另外请注意，Tailscale 生成的 webhook 密钥区分大小写。
 
-   > **Note:**
+   > **注意：**
    >
-   > Store the webhook secret securely.
+   > 请妥善保管 webhook 密钥。
 
-5. Select **Done**.
+5. 选择 **Done**。
 
-   Your webhook endpoint is now configured.
+   你的 webhook 端点现已配置完成。
 
-6. To ensure your webhook is configured correctly and can receive events from Tailscale, [test your webhook][ar-testing-your-webhook].
+6. 要确保你的 webhook 配置正确、能够接收来自 Tailscale 的事件，请[测试你的 webhook][ar-testing-your-webhook]。
 
-## Events
+## 事件
 
-You can subscribe to the following events:
+你可以订阅以下事件：
 
-| Category                | Event                                 | Description                                                                                                                                                                                  |
+| 类别                     | 事件                                   | 说明                                                                                                                                                                                         |
 | ----------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Device misconfiguration | `exitNodeIPForwardingNotEnabled`      | [Exit node][docs-exit-nodes] has [IP forwarding][docs-exit-nodes-linux-advertise] disabled.                                                                                                  |
-| Device misconfiguration | `subnetIPForwardingNotEnabled`        | [Subnet][docs-subnets] has [IP forwarding][docs-subnets-linux-ip-forwarding] disabled.                                                                                                       |
-| Tailnet management      | `nodeApproved`                        | Node was approved.                                                                                                                                                                           |
-| Tailnet management      | `nodeAuthorized` (deprecated)         | Node was authorized. This event is deprecated and is replaced by `nodeApproved`. Your endpoint will continue to receive this event until you turn it off.                                    |
-| Tailnet management      | `nodeCreated`                         | Node was created.                                                                                                                                                                            |
-| Tailnet management      | `nodeDeleted`                         | Node was deleted. This includes automatic deletion of [ephemeral nodes][docs-ephemeral-nodes].                                                                                               |
-| Tailnet management      | `nodeKeyExpired`                      | Node key recently expired.                                                                                                                                                                   |
-| Tailnet management      | `nodeKeyExpiringInOneDay`             | [Node key][bl-tailscale-key-management-node-keys] is going to expire in less than one day.                                                                                                   |
-| Tailnet management      | `nodeNeedsApproval`                   | Node needs [approval][docs-device-approval]. Note that any [pre-approved nodes][docs-device-approval-pre-approve] will not generate the `nodeApproved` event.                                |
-| Tailnet management      | `nodeNeedsAuthorization` (deprecated) | Node needs authorization. This event is deprecated and is replaced by `nodeNeedsApproval`. Your endpoint will continue to receive this event until you turn it off.                          |
-| Tailnet management      | `nodeNeedsSignature`                  | Node needs a signature from a trusted node. This event is only sent for nodes that belong to tailnets that enabled [Tailnet Lock][docs-tailnet-lock], and will not be sent for shared nodes. |
-| Tailnet management      | `nodeSigned`                          | Node was signed by a trusted node. This applies to tailnets that enabled Tailnet Lock.                                                                                                       |
-| Tailnet management      | `policyUpdate`                        | [Tailnet policy file][docs-tailnet-policy-file] updated.                                                                                                                                     |
-| Tailnet management      | `userApproved`                        | User was approved.                                                                                                                                                                           |
-| Tailnet management      | `userCreated`                         | User was created.                                                                                                                                                                            |
-| Tailnet management      | `userNeedsApproval`                   | User needs [approval][docs-user-approval].                                                                                                                                                   |
-| Tailnet management      | `userRoleUpdated`                     | User role was [changed][docs-changing-user-roles].                                                                                                                                           |
-| Webhook management      | `test`                                | Webhook test event was generated.                                                                                                                                                            |
-| Webhook management      | `webhookDeleted`                      | Webhook was deleted. This event is subscribed by default and cannot be disabled.                                                                                                             |
-| Webhook management      | `webhookUpdated`                      | Webhook was updated. This event is subscribed by default and cannot be disabled.                                                                                                             |
+| 设备配置错误             | `exitNodeIPForwardingNotEnabled`      | [出口节点][docs-exit-nodes]的 [IP 转发][docs-exit-nodes-linux-advertise]未启用。                                                                                                              |
+| 设备配置错误             | `subnetIPForwardingNotEnabled`        | [子网][docs-subnets]的 [IP 转发][docs-subnets-linux-ip-forwarding]未启用。                                                                                                                    |
+| tailnet 管理             | `nodeApproved`                        | 节点已获批准。                                                                                                                                                                               |
+| tailnet 管理             | `nodeAuthorized`（已弃用）            | 节点已获授权。此事件已弃用，由 `nodeApproved` 取代。在你关闭它之前，你的端点会继续接收此事件。                                                                                                 |
+| tailnet 管理             | `nodeCreated`                         | 节点已创建。                                                                                                                                                                                 |
+| tailnet 管理             | `nodeDeleted`                         | 节点已删除。包括[临时节点（ephemeral node）][docs-ephemeral-nodes]的自动删除。                                                                                                                |
+| tailnet 管理             | `nodeKeyExpired`                      | 节点密钥（node key）最近已过期。                                                                                                                                                             |
+| tailnet 管理             | `nodeKeyExpiringInOneDay`             | [节点密钥][bl-tailscale-key-management-node-keys]将在不到一天内过期。                                                                                                                         |
+| tailnet 管理             | `nodeNeedsApproval`                   | 节点需要[批准][docs-device-approval]。注意，任何[预先批准的节点][docs-device-approval-pre-approve]都不会生成 `nodeApproved` 事件。                                                              |
+| tailnet 管理             | `nodeNeedsAuthorization`（已弃用）    | 节点需要授权。此事件已弃用，由 `nodeNeedsApproval` 取代。在你关闭它之前，你的端点会继续接收此事件。                                                                                            |
+| tailnet 管理             | `nodeNeedsSignature`                  | 节点需要受信任节点的签名。此事件只针对启用了 [Tailnet Lock][docs-tailnet-lock] 的 tailnet 中的节点发送，且不会为共享节点发送。                                                                  |
+| tailnet 管理             | `nodeSigned`                          | 节点已由受信任节点签名。适用于启用了 Tailnet Lock 的 tailnet。                                                                                                                                 |
+| tailnet 管理             | `policyUpdate`                        | [tailnet 策略文件][docs-tailnet-policy-file]已更新。                                                                                                                                          |
+| tailnet 管理             | `userApproved`                        | 用户已获批准。                                                                                                                                                                               |
+| tailnet 管理             | `userCreated`                         | 用户已创建。                                                                                                                                                                                 |
+| tailnet 管理             | `userNeedsApproval`                   | 用户需要[批准][docs-user-approval]。                                                                                                                                                          |
+| tailnet 管理             | `userRoleUpdated`                     | 用户角色已[变更][docs-changing-user-roles]。                                                                                                                                                  |
+| webhook 管理             | `test`                                | 已生成 webhook 测试事件。                                                                                                                                                                    |
+| webhook 管理             | `webhookDeleted`                      | Webhook 已删除。此事件默认订阅，无法禁用。                                                                                                                                                    |
+| webhook 管理             | `webhookUpdated`                      | Webhook 已更新。此事件默认订阅，无法禁用。                                                                                                                                                    |
 
-## Events payload
+## 事件载荷
 
-Webhook events are sent as JSON objects with the following fields:
+Webhook 事件以 JSON 对象的形式发送，包含以下字段：
 
-* `timestamp`: Time the event occurred, formatted as a RFC 3339 string.
-* `version`: Version of the event payload.
-* `type`: Type of the event (as listed in the table above).
-* `tailnet`: Name of the tailnet where the event occurred.
-* `message`: Human-readable summary of the event.
-* `data` (Optional): Per-event payload with additional data. Most events will have an `actor` field that identifies the user or automated process that did the action that triggered the event. It is the same actor that is included in [configuration audit log entries][docs-audit-logging-log-structure].
+* `timestamp`：事件发生的时间，格式为 RFC 3339 字符串。
+* `version`：事件载荷的版本。
+* `type`：事件类型（见上表所列）。
+* `tailnet`：事件发生的 tailnet 的名称。
+* `message`：事件的人类可读摘要。
+* `data`（可选）：每个事件专属的附加数据载荷。大多数事件都会有一个 `actor` 字段，标识执行触发事件的操作的用户或自动化进程。它与[配置审计日志条目][docs-audit-logging-log-structure]中包含的是同一个 actor。
 
-Multiple events may be sent in one payload to minimize overhead. The root payload object is always an array of events.
+为减少开销，多个事件可以在一个载荷中发送。根载荷对象始终是一个事件数组。
 
-The following shows an example events payload sent to a webhook endpoint:
+以下是发送到 webhook 端点的事件载荷示例：
 
 ```json
 [
@@ -244,99 +244,99 @@ The following shows an example events payload sent to a webhook endpoint:
 ]
 ```
 
-## Testing your webhook
+## 测试你的 webhook
 
-To ensure an endpoint is properly configured and able to receive events from Tailscale, you can send a test event:
+要确保端点配置正确、能够接收来自 Tailscale 的事件，你可以发送一个测试事件：
 
-1. Open the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+1. 打开管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面。
 
-2. Find the endpoint that you want to test, select the  menu to the right of the page, and select **Test endpoint**.
+2. 找到要测试的端点，选择页面右侧的  菜单，然后选择 **Test endpoint**。
 
-3. Select **Send test event**. If your webhook is configured correctly, within a few seconds your webhook endpoint should receive an event with type of "test".
+3. 选择 **Send test event**。如果你的 webhook 配置正确，几秒内你的 webhook 端点应会收到一个类型为"test"的事件。
 
-## Retries for events that fail to send
+## 事件发送失败后的重试
 
-Tailscale typically sends an event notification to a webhook within a few seconds of the event's occurrence. If an event notification fails to successfully send (such as when Tailscale receives a `3xx`, `4xx`, or `5xx` error, or no response at all from your webhook endpoint), Tailscale will retry sending the event. For an event that fails to send, we'll retry sending the event hourly, up to a maximum of 24 hours.
+Tailscale 通常会在事件发生后的几秒内把事件通知发送到 webhook。如果事件通知未能成功发送（例如 Tailscale 收到 `3xx`、`4xx` 或 `5xx` 错误，或你的 webhook 端点完全没有响应），Tailscale 会重试发送该事件。对于发送失败的事件，我们会每小时重试一次，最长持续 24 小时。
 
-## Updating subscribed events
+## 更新订阅的事件
 
-1. Open the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+1. 打开管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面。
 
-2. Find the endpoint that you want to update, select the  menu to the right of the page, and select **Edit**.
+2. 找到要更新的端点，选择页面右侧的  菜单，然后选择 **Edit**。
 
-3. Select the events you want to receive as notifications, and deselect those you don't want to receive.
+3. 勾选你想接收通知的事件，取消勾选不想接收的事件。
 
-4. Select **Edit endpoint**.
+4. 选择 **Edit endpoint**。
 
-## Webhook secret
+## webhook 密钥
 
-The webhook secret is a signing secret shared between Tailscale and the creator of the webhook endpoint, and is unique per endpoint. If this shared secret is compromised or leaked, whomever knows the secret can send fake events. If you suspect your secret is compromised, [create a new secret][docs-rotate-webhook-secret].
+Webhook 密钥是 Tailscale 与 webhook 端点创建者之间共享的签名密钥，每个端点各不相同。如果这个共享密钥被窃取或泄露，任何知道该密钥的人都能发送伪造事件。如果你怀疑密钥已泄露，请[创建新密钥][docs-rotate-webhook-secret]。
 
-The webhook secret has no expiry.
+Webhook 密钥没有有效期。
 
-## Rotating a webhook secret
+## 轮换 webhook 密钥
 
-Refer to [rotate a new webhook secret][docs-rotate-webhook-secret] to create a new webhook secret. After you create the new secret, update your webhook endpoint to use the new secret.
+创建新 webhook 密钥请参阅[轮换新的 webhook 密钥][docs-rotate-webhook-secret]。创建新密钥后，请更新你的 webhook 端点以使用新密钥。
 
-## Deleting an endpoint
+## 删除端点
 
-1. Open the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+1. 打开管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面。
 
-2. Find the endpoint that you want to delete, select the  menu to the right of the page, and select **Delete**.
+2. 找到要删除的端点，选择页面右侧的  菜单，然后选择 **Delete**。
 
-3. Select **Delete endpoint** to confirm you want to delete the endpoint.
+3. 选择 **Delete endpoint**，确认你要删除该端点。
 
-## Using a new webhook for an existing endpoint
+## 为现有端点使用新 webhook
 
-To add a new webhook (subscribed event) for an existing endpoint, [edit the endpoint][ar-updating-subscribed-events] instead of setting up a new endpoint.
+要为现有端点添加新的 webhook（订阅事件），请[编辑该端点][ar-updating-subscribed-events]，而不是另建一个端点。
 
-## Audit logging of webhook actions
+## webhook 操作的审计日志
 
-In [configuration audit logging][docs-audit-logging], an action will be recorded in your audit log whenever a webhook is created, deleted, or updated. The log entry will show who performed the action, and when the action occurred.
+在[配置审计日志][docs-audit-logging]中，每当 webhook 被创建、删除或更新时，你的审计日志都会记录一条操作。日志条目会显示由谁执行了该操作，以及操作发生的时间。
 
-## Verifying an event signature
+## 验证事件签名
 
-You can verify whether an event was signed by the [webhook secret][ar-webhook-secret] that was shared between you and Tailscale. Note this doesn't necessarily mean that an event was sent from Tailscale. Rather, it means an event was sent from an entity that has knowledge of the secret shared between you and Tailscale.
+你可以验证事件是否由你与 Tailscale 之间共享的 [webhook 密钥][ar-webhook-secret]签名。注意，这并不一定意味着事件来自 Tailscale，而是意味着事件来自一个知晓你与 Tailscale 之间共享密钥的实体。
 
-An event sent from Tailscale contains a `Tailscale-Webhook-Signature` header. The `Tailscale-Webhook-Signature` header includes a timestamp and a signature:
+来自 Tailscale 的事件包含一个 `Tailscale-Webhook-Signature` 请求头。`Tailscale-Webhook-Signature` 请求头包括一个时间戳和一个签名：
 
 ```
 Tailscale-Webhook-Signature:t=1663781880,v1=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
-The timestamp, prefixed by `t=`, is the epoch time in seconds when the event occurred. The signature, prefixed by `v1=`, is a hash-based message authentication code (HMAC) using SHA-256. The only supported scheme for the signature is `v1`.
+以 `t=` 为前缀的时间戳是事件发生时的 epoch 时间（以秒计）。以 `v1=` 为前缀的签名是使用 SHA-256 的基于哈希的消息认证码（HMAC）。签名唯一支持的方案是 `v1`。
 
-Most modern programming languages provide libraries for computing and comparing HMACs. The following flow describes how to verify a signature.
+大多数现代编程语言都提供了用于计算和比较 HMAC 的库。以下流程描述了如何验证签名。
 
-1. Parse the event timestamp and signature from the `Tailscale-Webhook-Signature` header.
+1. 从 `Tailscale-Webhook-Signature` 请求头解析事件时间戳和签名。
 
-   Using the `,` character as the separator, split the `Tailscale-Webhook-Signature` data into a list of elements. Then, using the `=` character, split each element to get two key-value pairs. The first key is `t`, with the event timestamp as its value. The second key is `v1`, with the event signature as its value.
+   以 `,` 字符为分隔符，把 `Tailscale-Webhook-Signature` 数据拆分成元素列表。然后以 `=` 字符拆分每个元素，得到两个键值对。第一个键是 `t`，其值为事件时间戳；第二个键是 `v1`，其值为事件签名。
 
-2. Compare the event timestamp (the value for `t`) with the current time. For example, if your verification process acts on events as soon as they are received, and if the event time is more than 5 minutes prior to the current time, you might consider the event as a replay attack.
+2. 把事件时间戳（`t` 的值）与当前时间比较。例如，如果你的验证流程在事件一收到就立即处理，而事件时间比当前时间早 5 分钟以上，你可以将该事件视为重放攻击。
 
-3. Create a string, `string_to_sign`, to sign by concatenating:
+3. 创建一个待签名的字符串 `string_to_sign`，由以下内容拼接而成：
 
-   * The timestamp (the value of `t`) represented as a string.
-   * The `.` character.
-   * The decoded event request body. Note this is in the request itself, not in the `Tailscale-Webhook-Signature` header. The request body contains the encoded [events payload][ar-events-payload], you need to decode the request body for signing purposes.
+   * 时间戳（`t` 的值）的字符串表示。
+   * `.` 字符。
+   * 解码后的事件请求正文。注意它在请求本身中，而不是在 `Tailscale-Webhook-Signature` 请求头中。请求正文包含编码后的[事件载荷][ar-events-payload]，签名前你需要先解码请求正文。
 
-4. Compute the signature of `string_to_sign`.
+4. 计算 `string_to_sign` 的签名。
 
-   Create an HMAC with the SHA256 hash function. Use your webhook secret for the signing key, and use `string_to_sign` as the message to sign.
+   使用 SHA256 哈希函数创建 HMAC。用你的 webhook 密钥作为签名密钥，用 `string_to_sign` 作为待签名的消息。
 
-5. Use an HMAC compare function to compare the signature in the `Tailscale-Webhook-Signature` header (the value of `v1`) with the signature you created in the previous step. If they are not identical, that indicates the event's payload was not signed by your webhook's secret, and the event should not be considered an event sent from Tailscale.
+5. 使用 HMAC 比较函数，把 `Tailscale-Webhook-Signature` 请求头中的签名（`v1` 的值）与你在上一步创建的签名进行比较。如果两者不一致，说明该事件的载荷不是由你的 webhook 密钥签名的，该事件不应被视为来自 Tailscale 的事件。
 
-### Sample verification code
+### 验证代码示例
 
-Check out our [example Go code][xt-gh-tailscale-webhooks-example] for help verifying the signature.
+如需帮助验证签名，请查看我们的 [Go 示例代码][xt-gh-tailscale-webhooks-example]。
 
-[ar-events-payload]: #events-payload
+[ar-events-payload]: #事件载荷
 
-[ar-testing-your-webhook]: #testing-your-webhook
+[ar-testing-your-webhook]: #测试你的-webhook
 
-[ar-updating-subscribed-events]: #updating-subscribed-events
+[ar-updating-subscribed-events]: #更新订阅的事件
 
-[ar-webhook-secret]: #webhook-secret
+[ar-webhook-secret]: #webhook-密钥
 
 [bl-tailscale-key-management-node-keys]: https://tailscale.com/blog/tailscale-key-management#node-keys
 

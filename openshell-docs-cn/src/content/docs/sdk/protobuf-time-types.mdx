@@ -1,0 +1,37 @@
+---
+title: Protobuf 时间类型
+sidebar-title: "Protobuf 时间类型"
+description: OpenShell API 中的时间戳与 duration 表示
+---
+
+OpenShell 在其 protobuf API 中用 `google.protobuf.Timestamp` 表示绝对时间，用 `google.protobuf.Duration` 表示经过的时间。
+
+提供商配置档案的 YAML 与 JSON 接受规范 duration 字符串，如 `cache_ttl: "0.500s"`。对既有配置档案，旧式 `cache_ttl_seconds`、`refresh_before_seconds` 与 `max_lifetime_seconds` 输入仍然受支持。
+
+在 protobuf JSON 中，时间戳是 RFC 3339 字符串，duration 是以 `s` 结尾的字符串：
+
+```json
+{
+  "createdTime": "2026-08-31T14:05:06.123456789Z",
+  "executionTimeout": "1.500s"
+}
+```
+
+消息缺省表示未提供时间戳或 duration。它不同于 Unix 纪元（`1970-01-01T00:00:00Z`），也不同于零 duration（`0s`）。OpenShell 在 API 边界校验 protobuf 时间戳与 duration 的界限。
+
+## 从标量时间字段升级
+
+well-known 时间字段取代了早先编码为 Unix 毫秒、整数秒或 duration 字符串的公共字段。字段名与 protobuf tag 都变了，因此从旧 schema 生成的客户端与从新 schema 生成的网关线上不兼容。请把网关、CLI、所有 SDK 客户端、计算驱动、凭据驱动、中间件服务与沙箱监管器一起升级。混用版本可能静默丢弃 tag 变化的字段。例如，新网关不识别旧凭据驱动的 tag-3 过期时间，会把该凭据当作永不过期。
+
+升级带持久状态的网关之前：
+
+1. 停止所有网关副本。
+2. 备份 SQLite 数据库或 PostgreSQL 数据库。
+3. 用同一个 OpenShell 发布版本升级每个网关副本、客户端、驱动、中间件服务与沙箱监管器。
+4. 先启动一个网关副本并等待启动完成，再启动其余副本。
+
+启动时，网关在一个数据库事务中迁移受影响的 protobuf 载荷。旧式零时间戳变为缺省。expiry 映射中的零值被移除，旧式最大整数刷新哨兵值变为缺省的下一次刷新时间戳。数据库列 `created_at_ms` 与 `updated_at_ms` 保持不变，因为它们是内部排序元数据。
+
+旧式载荷畸形或超出 protobuf 时间界限时，启动会失败并报告受影响的对象类型与 ID，同时回滚事务。旧式沙箱 condition 迁移字符串不是有效 RFC 3339 时会被丢弃，因为更早的发布版本允许驱动提供的任意字符串。重试升级之前，用上一个 OpenShell 版本恢复备份或修复其他被报告的记录。
+
+面向用户的超时选项与网关 TOML 设置保留其既有单位。CLI 与 SDK 在 protobuf 边界转换这些值。

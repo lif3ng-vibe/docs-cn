@@ -1,0 +1,60 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "沙箱策略"
+sidebar-title: "概述"
+description: "了解沙箱策略控制什么，以及沙箱的策略来自哪里。"
+keywords: "生成式 AI, 网络安全, 策略, 网络策略, 沙箱, 安全, 热重载"
+position: 1
+---
+
+沙箱策略（policy）是一种 YAML 配置，控制沙箱可以访问什么。它定义沙箱内的进程可以读写哪些文件、以哪个用户运行、每个二进制可以访问哪些网络目的地，以及可以发送哪些请求。策略未允许的一切，OpenShell 一律拒绝。
+
+本页解释策略的工作方式。要在运行中的沙箱里实际试一次，请按照[编写你的第一个沙箱网络策略](/tutorials/first-network-policy)操作。要创建与修改策略，参见[管理沙箱策略](/how-it-works/policies/manage-policies)。
+
+## 策略控制什么
+
+策略文件设置 `version: 1`，并最多包含另外五个顶层小节。每个小节控制沙箱的不同部分，并在特定时间点生效：
+
+| 小节 | 控制内容 | 强制执行者 | 生效时机 |
+|---|---|---|---|
+| `filesystem_policy` | 沙箱进程可以读取、或读取与写入的路径。 | 内核中的 Landlock LSM。 | 沙箱启动时。 |
+| `landlock` | OpenShell 无法应用文件系统规则时，沙箱是否仍在缺少这些规则的情况下启动。 | 沙箱运行时。 | 沙箱启动时。 |
+| `process` | 沙箱进程运行所属的用户与组。 | 创建沙箱时的 Docker 与 Podman。 | 沙箱创建时。 |
+| `network_policies` | 每个二进制可以访问的目的地，以及它可以发送的请求。 | 沙箱网络代理。 | 沙箱运行期间。 |
+| `network_middlewares` | 对网络规则放行的流量做额外检查、改写或阻断。 | 沙箱网络代理。 | 沙箱运行期间。 |
+
+文件系统、Landlock 与进程设置在沙箱启动后即固定。网络规则与中间件可以在运行期间变更，参见[变更如何生效](/how-it-works/policies/manage-policies#变更如何生效)。
+
+典型策略的大部分由网络规则构成。除非 `network_policies` 中的某条规则放行，OpenShell 会拒绝沙箱发出的每一条出站连接。每条规则列出它允许的目的地与可以访问这些目的地的二进制，还可以进一步限制这些二进制发送的请求，例如允许读取某个 API 但不允许写入。[网络规则](/how-it-works/policies/network-rules)解释 OpenShell 如何评估规则，并给出可以改用的示例。
+
+[策略 Schema 参考](/how-it-works/policies/schema)描述每个小节的所有字段，[监管中间件](/extensibility/supervisor-middleware)解释中间件如何处理流量。
+
+## 生效策略来自哪里
+
+每个沙箱都在某个策略下运行，即使你没有提供策略。可用策略不止一个时，OpenShell 按以下顺序取第一个适用的来源：
+
+1. 全局策略，由网关管理员施加于每个沙箱。
+2. 沙箱已保存的策略。创建时 `--policy` 优先于 `OPENSHELL_SANDBOX_POLICY`；之后的策略变更会更新已保存的策略。
+3. 沙箱镜像内附的策略。
+4. OpenShell 严格受限的[默认策略](/how-it-works/policies/default-policy)。
+
+镜像策略无效时，工作负载将无法启动，直到你修复它。OpenShell 不会跳过它而改用默认策略。
+
+### 基础策略与生效策略
+
+被选中的沙箱策略是基础策略（base policy）。挂接的提供商可以贡献额外的网络规则，例如让 GitHub 提供商能够访问 GitHub API。生效策略（effective policy）把基础策略与这些提供商规则组合起来，沙箱强制执行的正是生效策略。
+
+编辑请从基础策略入手，避免把提供商自有的规则复制进你自己的配置。需要了解沙箱能访问什么时，检查生效策略。[检查当前策略](/how-it-works/policies/manage-policies#检查当前策略)展示了这两种视图。
+
+### 全局策略
+
+网关管理员可以对网关上的每个沙箱施加同一条策略。全局策略是替换每个沙箱自己的策略，而不是限制它。全局策略活动期间，OpenShell 会阻止沙箱策略变更与提案审批，并抑制提供商贡献的网络规则。删除全局策略即恢复正常策略选择与提供商规则。相关命令参见[应用全局策略](/how-it-works/policies/manage-policies#应用全局策略)。
+
+## 后续步骤
+
+- 阅读[网络规则](/how-it-works/policies/network-rules)，了解 OpenShell 如何评估网络规则，并为常见服务改用示例。
+- 阅读[管理沙箱策略](/how-it-works/policies/manage-policies)，创建、更新、校验与回滚策略。
+- 用[策略证明器](/how-it-works/policies/prover)检查策略授予的访问不超过你定义的边界。
+- 用[策略顾问](/how-it-works/policies/advisor)让智能体提出细粒度网络规则供你审阅。
+- 查阅[策略 Schema 参考](/how-it-works/policies/schema)获取所有字段、默认值与校验规则。

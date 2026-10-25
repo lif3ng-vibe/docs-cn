@@ -1,120 +1,120 @@
 ---
-title: "Set up a dog camera with Tailscale, Raspberry Pi, and Motion"
-description: "Set up a dog camera that you can securely access from anywhere."
+title: "使用 Tailscale、Raspberry Pi 和 Motion 搭建宠物摄像头"
+description: "搭建一个可以从任何地方安全访问的宠物摄像头。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale makes it easy to set up a dog camera that you can securely access from anywhere.
+Tailscale 让搭建一个可以从任何地方安全访问的宠物摄像头变得非常简单。
 
-Unlike an off-the-shelf dog camera, with Tailscale you don't need to trust a third-party service, or risk exposing a camera inside your home to the public internet. Every connection on Tailscale is encrypted and entirely private to your network.
+与现成的宠物摄像头不同，使用 Tailscale 你无需信任第三方服务，也不必冒着把家里的摄像头暴露到公共互联网上的风险。Tailscale 上的每个连接都是加密的，并且完全私有于你的网络。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need two things:
+开始本指南之前，你需要两样东西：
 
-1. A Raspberry Pi with Wi-Fi/Ethernet capabilities (for example, [Raspberry Pi 3 B+][xt-rpi-docs-configure])
-2. A USB webcam (for example, [Logitech C615][xt-amazon-webcam-c615])
+1. 一台带 Wi-Fi/以太网能力的 Raspberry Pi（例如 [Raspberry Pi 3 B+][xt-rpi-docs-configure]）
+2. 一个 USB 摄像头（例如 [Logitech C615][xt-amazon-webcam-c615]）
 
-This guide assumes your Raspberry Pi is already [set up with an internet connection][xt-rpi-wireless-cli], whether Wi-Fi or Ethernet.
+本指南假设你的 Raspberry Pi 已[配置好网络连接][xt-rpi-wireless-cli]，无论 Wi-Fi 还是以太网。
 
-You'll also need [a Tailscale account](https://login.tailscale.com/start). You don't need to pay for Tailscale—this is possible on the [Personal plan][co-pricing]!
+你还需要[一个 Tailscale 账户](https://login.tailscale.com/start)。你不必为 Tailscale 付费——[Personal 套餐][co-pricing]就可以做到！
 
-## Step 1: Install Tailscale on your Raspberry Pi
+## 第 1 步：在 Raspberry Pi 上安装 Tailscale
 
-SSH into the Raspberry Pi, and install Tailscale with a single command:
+通过 SSH 连接到 Raspberry Pi，用一条命令安装 Tailscale：
 
 ```shell
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-Alternatively, we provide [manual installation instructions for Raspberry Pi][co-download-linux-rpi].
+我们也提供了[针对 Raspberry Pi 的手动安装说明][co-download-linux-rpi]。
 
-Once it is installed, and you've run `tailscale up` on your Raspberry Pi, continue to the next step.
+安装完成并在 Raspberry Pi 上运行 `tailscale up` 之后，继续下一步。
 
-## Step 2: Install motion
+## 第 2 步：安装 motion
 
-Next, install [motion][xt-motion-project] using apt with this command
+接下来，使用 apt 安装 [motion][xt-motion-project]：
 
 ```shell
 sudo apt install motion
 ```
 
-## Step 3: Configure motion
+## 第 3 步：配置 motion
 
-First, we'll enable motion to run as a background service. Edit `/etc/default/motion` using `nano` or your favorite editor:
+首先，让 motion 以后台服务方式运行。使用 `nano` 或你喜欢的编辑器编辑 `/etc/default/motion`：
 
 ```shell
 sudo nano /etc/default/motion
 ```
 
-We'll change the `start_motion_daemon` setting to "yes":
+把 `start_motion_daemon` 设置改为 "yes"：
 
 ```shell
 start_motion_daemon=yes
 ```
 
-Save and close the file.
+保存并关闭文件。
 
-Next, we'll configure motion to expose a web page, and modify a few video capture settings too.
+接下来，配置 motion 暴露一个网页，并顺带修改几个视频采集设置。
 
-Open up `/etc/motion/motion.conf` with your editor
+用编辑器打开 `/etc/motion/motion.conf`：
 
 ```shell
 sudo nano /etc/motion/motion.conf
 ```
 
-Search for the following settings, updating their values to ones listed below.
+搜索以下设置，把它们的值更新为下面列出的值。
 
-*Enable viewing video streams over the web.* You can also change the port from the default value (8081) if you'd like.
+*启用通过网页查看视频流。*如果你愿意，也可以把端口从默认值（8081）改成别的。
 
 ```shell
 stream_port 8081
 stream_localhost off
 ```
 
-*Disable saving images or video to the SD card.* Since this is a dog camera, we only care about looking at live footage.
+*禁止把图片或视频保存到 SD 卡。*既然这是宠物摄像头，我们只关心查看实时画面。
 
 ```shell
 output_pictures off
 ffmpeg_output_movies off
 ```
 
-Save and close the file.
+保存并关闭文件。
 
-## Step 4: Restart motion
+## 第 4 步：重启 motion
 
-Once all your configuration settings have been updated, restart motion
+所有配置更新完毕后，重启 motion：
 
 ```shell
 sudo service motion restart
 ```
 
-## Step 5: Access your dog camera
+## 第 5 步：访问你的宠物摄像头
 
-From any device in your Tailscale network, you can now access the live webcam stream from `<raspberry pi tailscale ip>:8081`. [Find your Raspberry Pi's IP][docs-ip-and-dns-addresses] and type it into your browser.
+现在，从 Tailscale 网络中的任何设备，都可以通过 `<raspberry pi tailscale ip>:8081` 访问摄像头的实时画面。[找到你的 Raspberry Pi 的 IP][docs-ip-and-dns-addresses]，把它输入浏览器即可。
 
-*（图：On macOS, you can select the device name to copy the IP address.）*
+*（图：在 macOS 上，你可以点选设备名来复制 IP 地址。）*
 
-On macOS, you can select the device name to copy the IP address.
+在 macOS 上，你可以点选设备名来复制 IP 地址。
 
-A feed from your webcam will look like this.
+摄像头的画面大致如下。
 
-*（图：Theo and Casey are looking at something that's totally not a Tailscale employee running around in a backyard.）*
+*（图：Theo 和 Casey 正盯着某个东西看——那绝对不是在后院跑来跑去的 Tailscale 员工。）*
 
-Theo and Casey are looking at something that's totally not a Tailscale employee running around in a backyard.
+Theo 和 Casey 正盯着某个东西看——那绝对不是在后院跑来跑去的 Tailscale 员工。
 
-You now have a functioning dog camera, secured with Tailscale. This can only be accessed by devices on your personal Tailscale network, and no one else.
+你现在拥有一个用 Tailscale 保护起来的宠物摄像头了。只有你的个人 Tailscale 网络上的设备才能访问它，其他任何人都不能。
 
-> **Note:**
+> **注意：**
 >
-> Your browser may show an "insecure" warning, since your connection isn't over HTTPS. Tailscale secures your connection at a lower level, so rest easy knowing you are securely connected to any website at 100.x.y.z IP address.
+> 你的浏览器可能会显示"不安全"警告，因为连接没有走 HTTPS。Tailscale 在更底层保护了你的连接，所以尽管放心——你与 100.x.y.z IP 地址上任何网站的连接都是安全的。
 
-## Next steps
+## 后续步骤
 
-Install Tailscale onto your [Android][co-download-android] or [iOS][co-download-ios] device to check in on your dogs (or other pets) wherever you may be.
+在你的 [Android][co-download-android] 或 [iOS][co-download-ios] 设备上安装 Tailscale，无论身在何处都能看看你的狗（或其他宠物）。
 
-You may also want to experiment with other settings such as `width`, `height`, or `framerate`. If you make other changes, be sure to restart motion with `sudo service motion restart` afterwards.
+你还可以尝试其他设置，例如 `width`、`height` 或 `framerate`。如果做了其他改动，记得随后用 `sudo service motion restart` 重启 motion。
 
 [co-download-android]: https://tailscale.com/download/android
 

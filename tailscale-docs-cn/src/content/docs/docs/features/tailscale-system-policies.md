@@ -1,113 +1,113 @@
 ---
-title: "Customize Tailscale using system policies"
-description: "A list of configuration keys you can use to customize the Tailscale client using system policies, including MDM."
+title: "使用系统策略自定义 Tailscale"
+description: "可用于通过系统策略（包括 MDM）自定义 Tailscale 客户端的配置键列表。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-> **Note:** System policies are available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 系统策略适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-This page contains a list of policies observed by the Tailscale client. You might find these policies useful if you are a system administrator deploying Tailscale in a corporate environment, using a solution like mobile device management (MDM).
+本页列出了 Tailscale 客户端会读取的各项策略。如果你是使用移动设备管理（MDM）等方案在企业环境中部署 Tailscale 的系统管理员，这些策略可能会对你有所帮助。
 
-Setting these policies can improve the user experience for your users. For instance, you can hide UI items that might be confusing to less tech-savvy individuals in your organization. You can also enforce settings to improve your security posture.
+设置这些策略可以改善用户的使用体验。例如，你可以隐藏可能让组织中不太懂技术的成员感到困惑的 UI 项，也可以强制执行某些设置以提升安全态势。
 
-If you need help using any of the settings listed in this document, or would like to suggest any new policies, contact our support or sales teams.
+如果你在使用本文档列出的任何设置时需要帮助，或想建议新的策略，请联系我们的支持或销售团队。
 
-## Available settings
+## 可用设置
 
-| Category              | Policy key                                                                           | Supported platforms                             |
-| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Auto update           | [`ApplyUpdates`](#hide-the-auto-update-settings-macos)                               | macOS (standalone variant only)                 |
-| Auto update           | [`CheckUpdates`](#check-for-updates-automatically-windows)                           | Windows                                         |
-| Auto update           | [`InstallUpdates`](#install-updates-automatically-windows)                           | Windows                                         |
-| Auto update           | [`SUAutomaticallyUpdate`](#install-updates-automatically-macos)                      | macOS (standalone variant only)                 |
-| Auto update           | [`SUEnableAutomaticChecks`](#check-for-updates-automatically-macos)                  | macOS (standalone variant only)                 |
-| Auto update           | [`UnstableUpdates`](#manage-unstable-versions-availability)                          | macOS (standalone variant only)                 |
-| Exit nodes            | [`AdvertiseExitNode`](#advertise-exit-node)                                          | Android, Linux, macOS, tvOS, Windows            |
-| Exit nodes            | [`AllowedSuggestedExitNodes`](#suggest-allowed-forced-exit-nodes)                    | iOS, Linux, macOS, Windows                      |
-| Exit nodes            | [`ExitNode.AllowOverride`](#set-a-different-exit-node-when-forced)                   | Linux, macOS, Windows                           |
-| Exit nodes            | [`ExitNodeAllowLANAccess`](#toggle-local-network-access-when-an-exit-node-is-in-use) | Android, iOS, Linux, macOS, Windows             |
-| Exit nodes            | [`ExitNodeID`](#force-an-exit-node-to-always-be-used)                                | Android, iOS, Linux, macOS, Windows             |
-| Organization          | [`ManagedByCaption`](#set-an-info-message)                                           | Android, iOS, macOS, Windows                    |
-| Organization          | [`ManagedByOrganizationName`](#set-your-organization-name)                           | Android, iOS, macOS, Windows                    |
-| Organization          | [`ManagedByURL`](#set-a-support-url)                                                 | Android, iOS, macOS, Windows                    |
-| Runtime configuration | [`AllowIncomingConnections`](#set-whether-to-allow-incoming-connections)             | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`AlwaysOn.Enabled`](#set-tailscale-to-always-be-connected)                          | iOS, macOS, Windows                             |
-| Runtime configuration | [`AlwaysOn.OverrideWithReason`](#set-a-required-reason-for-disconnection)            | iOS, macOS, Windows                             |
-| Runtime configuration | [`AuthBrowser.macos`](#set-a-custom-browser-for-authentication)                      | macOS                                           |
-| Runtime configuration | [`AuthKey`](#set-an-auth-key)                                                        | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`DeviceSerialNumber`](#specify-the-device-serial-number)                            | iOS, tvOS                                       |
-| Runtime configuration | [`EnableDNSRegistration`](#force-tailscale-ip-registration-in-active-directory)      | Windows                                         |
-| Runtime configuration | [`EncryptState`](#encrypt-node-state-file)                                           | Linux, macOS (standalone variant only), Windows |
-| Runtime configuration | [`ExcludedPackageNames`](#set-excluded-applications)                                 | Android                                         |
-| Runtime configuration | [`ForceEnabled`](#force-tailscale-to-always-be-running)                              | Android, iOS, macOS                             |
-| Runtime configuration | [`HideDHCP121Warnings`](#suppress-dhcp-option-121-warnings)                          | macOS                                           |
-| Runtime configuration | [`Hostname`](#set-whether-device-hostnames-can-be-modified)                          | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`IncludedPackageNames`](#set-included-applications)                                 | Android                                         |
-| Runtime configuration | [`IPAddressCopiedAlertSuppressed`](#suppress-ip-address-copied-notifications)        | macOS                                           |
-| Runtime configuration | [`KeyExpirationNotice`](#set-the-key-expiration-notice-period)                       | iOS, macOS, Windows                             |
-| Runtime configuration | [`LoginURL`](#set-a-custom-control-server-url)                                       | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`MachineCertificateSubject`](#set-a-machine-certificate-subject)                    | Windows                                         |
-| Runtime configuration | [`PostureChecking`](#enable-gathering-device-posture-data)                           | iOS, Linux, macOS, tvOS, Windows                |
-| Runtime configuration | [`ReconnectAfter`](#set-a-reconnection-timer)                                        | Android, Linux, macOS, Windows                  |
-| Runtime configuration | [`Tailnet`](#set-a-suggested-or-required-tailnet)                                    | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`TailscaleStartOnLogin`](#automatically-start-tailscale-when-the-user-logs-in)      | macOS                                           |
-| Runtime configuration | [`UnattendedMode`](#set-unattended-mode)                                             | Windows                                         |
-| Runtime configuration | [`UseTailscaleDNSSettings`](#set-whether-the-device-uses-tailscale-dns-settings)     | Android, iOS, Linux, macOS, tvOS, Windows       |
-| Runtime configuration | [`UseTailscaleSubnets`](#set-whether-the-device-accepts-tailscale-subnets)           | Android, iOS, Linux, macOS, tvOS, Windows       |
-| UI visibility         | [`AdminConsole`](#hide-the-admin-console-menu-item)                                  | Windows                                         |
-| UI visibility         | [`AppIntroShown`](#suppress-the-app-window-intro-flow)                               | macOS                                           |
-| UI visibility         | [`CLIIntegration`](#hide-the-cli-integration-installer)                              | macOS                                           |
-| UI visibility         | [`DisableReauthWindow`](#block-re-authentication-window)                             | macOS                                           |
-| UI visibility         | [`ExitNodesPicker`](#hide-the-exit-node-picker)                                      | Android, iOS, macOS, Windows                    |
-| UI visibility         | [`HiddenNetworkDevices`](#hide-network-devices)                                      | Android, iOS, macOS                             |
-| UI visibility         | [`HideDockIcon`](#hide-the-macos-dock-icon-after-all-windows-close)                  | macOS                                           |
-| UI visibility         | [`ManageTailnetLock`](#hide-the-tailnet-lock-settings)                               | Android, iOS, macOS                             |
-| UI visibility         | [`NetworkDevices`](#hide-the-network-devices-menu)                                   | Windows                                         |
-| UI visibility         | [`OnboardingFlow`](#suppress-the-first-launch-onboarding-flow)                       | Android, macOS, Windows                         |
-| UI visibility         | [`PreferencesMenu`](#hide-the-preferences-menu)                                      | Windows                                         |
-| UI visibility         | [`ResetToDefaults`](#hide-the-reset-to-defaults-menu-item)                           | macOS                                           |
-| UI visibility         | [`RunExitNode`](#hide-the-run-as-exit-node-menu-item)                                | Android, macOS, tvOS, Windows                   |
-| UI visibility         | [`StartOnLoginMenuItem`](#hide-the-start-on-login-menu-item)                         | macOS                                           |
-| UI visibility         | [`TestMenu`](#hide-the-debug-menu)                                                   | macOS, Windows                                  |
-| UI visibility         | [`UpdateMenu`](#hide-the-update-menu)                                                | iOS, macOS (standalone variant only), Windows   |
-| UI visibility         | [`VPNOnDemandSettings`](#hide-the-vpn-on-demand-menu-item)                           | iOS, macOS                                      |
+| 类别         | 策略键                                                                               | 支持的平台                                      |
+| ------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| 自动更新     | [`ApplyUpdates`](#隐藏自动更新设置macos)                                             | macOS（仅 Standalone 变体）                     |
+| 自动更新     | [`CheckUpdates`](#自动检查更新windows)                                               | Windows                                         |
+| 自动更新     | [`InstallUpdates`](#自动安装更新windows)                                             | Windows                                         |
+| 自动更新     | [`SUAutomaticallyUpdate`](#自动安装更新macos)                                        | macOS（仅 Standalone 变体）                     |
+| 自动更新     | [`SUEnableAutomaticChecks`](#自动检查更新macos)                                      | macOS（仅 Standalone 变体）                     |
+| 自动更新     | [`UnstableUpdates`](#管理不稳定版本的可用性)                                         | macOS（仅 Standalone 变体）                     |
+| 出口节点     | [`AdvertiseExitNode`](#通告出口节点)                                                 | Android、Linux、macOS、tvOS、Windows            |
+| 出口节点     | [`AllowedSuggestedExitNodes`](#建议允许的强制出口节点)                               | iOS、Linux、macOS、Windows                      |
+| 出口节点     | [`ExitNode.AllowOverride`](#强制时设置不同的出口节点)                                | Linux、macOS、Windows                           |
+| 出口节点     | [`ExitNodeAllowLANAccess`](#使用出口节点时切换本地网络访问)                          | Android、iOS、Linux、macOS、Windows             |
+| 出口节点     | [`ExitNodeID`](#强制始终使用某个出口节点)                                            | Android、iOS、Linux、macOS、Windows             |
+| 组织         | [`ManagedByCaption`](#设置信息消息)                                                  | Android、iOS、macOS、Windows                    |
+| 组织         | [`ManagedByOrganizationName`](#设置组织名称)                                         | Android、iOS、macOS、Windows                    |
+| 组织         | [`ManagedByURL`](#设置支持-url)                                                      | Android、iOS、macOS、Windows                    |
+| 运行时配置   | [`AllowIncomingConnections`](#设置是否允许传入连接)                                  | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`AlwaysOn.Enabled`](#设置-tailscale-始终保持连接)                                   | iOS、macOS、Windows                             |
+| 运行时配置   | [`AlwaysOn.OverrideWithReason`](#设置断开连接的必填原因)                             | iOS、macOS、Windows                             |
+| 运行时配置   | [`AuthBrowser.macos`](#设置用于身份验证的自定义浏览器)                               | macOS                                           |
+| 运行时配置   | [`AuthKey`](#设置认证密钥)                                                           | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`DeviceSerialNumber`](#指定设备序列号)                                              | iOS、tvOS                                       |
+| 运行时配置   | [`EnableDNSRegistration`](#在-active-directory-中强制注册-tailscale-ip)              | Windows                                         |
+| 运行时配置   | [`EncryptState`](#加密节点状态文件)                                                  | Linux、macOS（仅 Standalone 变体）、Windows     |
+| 运行时配置   | [`ExcludedPackageNames`](#设置排除的应用)                                            | Android                                         |
+| 运行时配置   | [`ForceEnabled`](#强制-tailscale-始终运行)                                           | Android、iOS、macOS                             |
+| 运行时配置   | [`HideDHCP121Warnings`](#抑制-dhcp-选项-121-警告)                                    | macOS                                           |
+| 运行时配置   | [`Hostname`](#设置是否可以修改设备主机名)                                            | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`IncludedPackageNames`](#设置包含的应用)                                            | Android                                         |
+| 运行时配置   | [`IPAddressCopiedAlertSuppressed`](#抑制-ip-地址复制通知)                            | macOS                                           |
+| 运行时配置   | [`KeyExpirationNotice`](#设置密钥过期提醒期限)                                       | iOS、macOS、Windows                             |
+| 运行时配置   | [`LoginURL`](#设置自定义控制服务器-url)                                              | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`MachineCertificateSubject`](#设置机器证书主题)                                     | Windows                                         |
+| 运行时配置   | [`PostureChecking`](#启用设备态势数据收集)                                           | iOS、Linux、macOS、tvOS、Windows                |
+| 运行时配置   | [`ReconnectAfter`](#设置重新连接计时器)                                              | Android、Linux、macOS、Windows                  |
+| 运行时配置   | [`Tailnet`](#设置建议或强制的-tailnet)                                               | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`TailscaleStartOnLogin`](#用户登录时自动启动-tailscale)                             | macOS                                           |
+| 运行时配置   | [`UnattendedMode`](#设置无人值守模式)                                                | Windows                                         |
+| 运行时配置   | [`UseTailscaleDNSSettings`](#设置设备是否使用-tailscale-dns-设置)                    | Android、iOS、Linux、macOS、tvOS、Windows       |
+| 运行时配置   | [`UseTailscaleSubnets`](#设置设备是否接受-tailscale-子网)                            | Android、iOS、Linux、macOS、tvOS、Windows       |
+| UI 可见性    | [`AdminConsole`](#隐藏管理控制台菜单项)                                              | Windows                                         |
+| UI 可见性    | [`AppIntroShown`](#抑制应用窗口介绍流程)                                             | macOS                                           |
+| UI 可见性    | [`CLIIntegration`](#隐藏-cli-集成安装器)                                             | macOS                                           |
+| UI 可见性    | [`DisableReauthWindow`](#阻止重新身份验证窗口)                                       | macOS                                           |
+| UI 可见性    | [`ExitNodesPicker`](#隐藏出口节点选择器)                                             | Android、iOS、macOS、Windows                    |
+| UI 可见性    | [`HiddenNetworkDevices`](#隐藏网络设备)                                              | Android、iOS、macOS                             |
+| UI 可见性    | [`HideDockIcon`](#所有窗口关闭后隐藏-macos-dock-图标)                                | macOS                                           |
+| UI 可见性    | [`ManageTailnetLock`](#隐藏-tailnet-lock-设置)                                       | Android、iOS、macOS                             |
+| UI 可见性    | [`NetworkDevices`](#隐藏网络设备菜单)                                                | Windows                                         |
+| UI 可见性    | [`OnboardingFlow`](#抑制首次启动引导流程)                                            | Android、macOS、Windows                         |
+| UI 可见性    | [`PreferencesMenu`](#隐藏偏好设置菜单)                                               | Windows                                         |
+| UI 可见性    | [`ResetToDefaults`](#隐藏恢复默认设置菜单项)                                         | macOS                                           |
+| UI 可见性    | [`RunExitNode`](#隐藏以出口节点运行菜单项)                                           | Android、macOS、tvOS、Windows                   |
+| UI 可见性    | [`StartOnLoginMenuItem`](#隐藏登录时启动菜单项)                                      | macOS                                           |
+| UI 可见性    | [`TestMenu`](#隐藏调试菜单)                                                          | macOS、Windows                                  |
+| UI 可见性    | [`UpdateMenu`](#隐藏更新菜单)                                                        | iOS、macOS（仅 Standalone 变体）、Windows       |
+| UI 可见性    | [`VPNOnDemandSettings`](#隐藏-vpn-按需连接菜单项)                                    | iOS、macOS                                      |
 
-## How to apply system policies
+## 如何应用系统策略
 
-> **Note:**
+> **注意：**
 >
-> Tailscale v1.78 and later applies system policy updates automatically and does not require you to restart the client. Tailscale v1.76 and earlier requires you to restart the client for system policy changes to take effect.
+> Tailscale v1.78 及更高版本会自动应用系统策略更新，无需重启客户端。Tailscale v1.76 及更早版本需要重启客户端，系统策略的更改才会生效。
 
-While many of the configuration keys listed on this page are shared between platforms, different steps are required to configure these policies on each.
+虽然本页列出的许多配置键在各平台之间是通用的，但在每个平台上配置这些策略所需的步骤各不相同。
 
 ### Windows
 
-The Tailscale client for Windows reads and applies system policies stored in the Windows registry. These can be deployed using MDM solutions such as [Microsoft Intune][docs-mdm-microsoft-intune].
+Windows 版 Tailscale 客户端会读取并应用存储在 Windows 注册表中的系统策略。这些策略可以使用 [Microsoft Intune][docs-mdm-microsoft-intune] 等 MDM 解决方案部署。
 
-For more information, refer to the platform-specific documentation for [Windows][docs-windows-mdm].
+更多信息请参阅 [Windows][docs-windows-mdm] 的平台专属文档。
 
-### macOS and iOS / tvOS
+### macOS 与 iOS / tvOS
 
-The Tailscale clients for macOS, iOS, and tvOS read and apply system policies stored in the system user defaults. You can impose these policies by deploying a configuration profile using MDM solutions like [Microsoft Intune][docs-mdm-microsoft-intune], [Iru][docs-mdm-iru] (formerly Kandji), or [SimpleMDM][docs-mdm-simplemdm]. If you are not using server-based MDM, you can also manually install a configuration profile on target devices using Apple Configurator.
+macOS、iOS 和 tvOS 版 Tailscale 客户端会读取并应用存储在系统用户默认值中的系统策略。你可以通过 [Microsoft Intune][docs-mdm-microsoft-intune]、[Iru][docs-mdm-iru]（前身为 Kandji）或 [SimpleMDM][docs-mdm-simplemdm] 等 MDM 解决方案部署配置描述文件来实施这些策略。如果你没有使用基于服务器的 MDM，也可以使用 Apple Configurator 在目标设备上手动安装配置描述文件。
 
-For more information, refer to the platform-specific documentation for [macOS][docs-macos-mdm] or [iOS/tvOS][docs-ios-mdm].
+更多信息请参阅 [macOS][docs-macos-mdm] 或 [iOS/tvOS][docs-ios-mdm] 的平台专属文档。
 
 ### Android
 
-The Tailscale client for Android reads and applies system policies stored in the Android RestrictionsManager. This feature is available in Tailscale 1.66 or later. You can use your favorite MDM solution, such as [Google Workspace][docs-mdm-google-workspace], [Microsoft Intune][docs-mdm-microsoft-intune], or [TinyMDM][docs-mdm-tinymdm], to deploy restrictions.
+Android 版 Tailscale 客户端会读取并应用存储在 Android RestrictionsManager 中的系统策略。此功能在 Tailscale 1.66 或更高版本中可用。你可以使用你喜欢的 MDM 解决方案（例如 [Google Workspace][docs-mdm-google-workspace]、[Microsoft Intune][docs-mdm-microsoft-intune] 或 [TinyMDM][docs-mdm-tinymdm]）来部署限制。
 
-For more information, refer to the platform-specific documentation for [Android][docs-android-mdm].
+更多信息请参阅 [Android][docs-android-mdm] 的平台专属文档。
 
 ### Linux
 
-The Tailscale daemon (`tailscaled`) for Linux reads and applies system policies stored in a JSON (or [HuJSON][xt-hujson]) file, by default located at `/etc/tailscale/syspolicy.json`. This feature is available in Tailscale 1.102 or later. Unlike Windows, macOS, iOS, and Android, Linux does not have a single vendor-provided MDM framework — you can deploy this policy file using whichever configuration management tool you already use, such as Ansible, Puppet, or Chef.
+Linux 的 Tailscale 守护进程（`tailscaled`）会读取并应用存储在 JSON（或 [HuJSON][xt-hujson]）文件中的系统策略，该文件默认位于 `/etc/tailscale/syspolicy.json`。此功能在 Tailscale 1.102 或更高版本中可用。与 Windows、macOS、iOS 和 Android 不同，Linux 没有统一的厂商提供的 MDM 框架——你可以使用已有的任意配置管理工具（例如 Ansible、Puppet 或 Chef）来部署此策略文件。
 
-For more information, refer to the platform-specific documentation for [Linux][docs-linux-mdm].
+更多信息请参阅 [Linux][docs-linux-mdm] 的平台专属文档。
 
-## Review the system policy on a device
+## 查看设备上的系统策略
 
-You can review the system policies enforced for a client using the Tailscale CLI command [`tailscale syspolicy list`][docs-cli-syspolicy]. The output also includes system policy errors that exist.
+你可以使用 Tailscale CLI 命令 [`tailscale syspolicy list`][docs-cli-syspolicy] 查看对客户端强制执行的系统策略。输出中还会包含已存在的系统策略错误。
 
 ```shell
 Name                      Origin             Value        Error
@@ -117,9 +117,9 @@ Tailnet                   Platform (Device)  example.com
 TestMenu                  Platform (Device)  show
 ```
 
-## Reload the system policy on a device
+## 重新加载设备上的系统策略
 
-The Tailscale client automatically applies changes in the policy settings from MDM and Group Policy as soon as the OS notifies the client of the changes. If you configure policy settings using other mechanisms, such as by manually creating Registry values on Windows, you can use the Tailscale CLI command [`tailscale syspolicy reload`][docs-cli-syspolicy] to forcibly reload and reapply the changed policy settings. The output will also display system policy errors that exist.
+只要操作系统通知客户端策略设置发生变化，Tailscale 客户端就会自动应用来自 MDM 和组策略的更改。如果你使用其他机制配置策略设置（例如在 Windows 上手动创建注册表值），可以使用 Tailscale CLI 命令 [`tailscale syspolicy reload`][docs-cli-syspolicy] 强制重新加载并重新应用已更改的策略设置。输出中同样会显示已存在的系统策略错误。
 
 ```shell
 Name                      Origin             Value        Error
@@ -130,676 +130,676 @@ Tailnet                   Platform (Device)  example.com
 TestMenu                  Platform (Device)  show
 ```
 
-> **Note:**
+> **注意：**
 >
-> Using the Tailscale CLI command [`tailscale syspolicy reload`][docs-cli-syspolicy] does not trigger Group Policy or MDM synchronization. The timing of pushing configured policy settings to managed devices depends on the OS and the MDM solution.
+> 使用 Tailscale CLI 命令 [`tailscale syspolicy reload`][docs-cli-syspolicy] 不会触发组策略或 MDM 同步。将配置的策略设置推送到受管设备的时机取决于操作系统和 MDM 解决方案。
 
-## Available system policies
+## 可用的系统策略
 
-The following is a list of the system policies observed by the Tailscale clients.
+以下是 Tailscale 客户端会读取的系统策略列表。
 
-### Configure the auto-update settings
+### 配置自动更新设置
 
-#### Hide the auto-update settings (macOS)
+#### 隐藏自动更新设置（macOS）
 
-> **Note:**
+> **注意：**
 >
-> This system policy exclusively applies to the Standalone variant of Tailscale for macOS. When you download Tailscale from the Mac App Store, this setting is always hidden in Tailscale. Update settings should instead be managed in the Mac App Store.
+> 此系统策略仅适用于 macOS 版 Tailscale 的 Standalone 变体。从 Mac App Store 下载 Tailscale 时，此设置在 Tailscale 中始终隐藏。更新设置应改为在 Mac App Store 中管理。
 
-If you do not want to allow the user to turn the automatic installation of updates on or off, you can use the `ApplyUpdates` policy. When this setting is set to `hide`, the **Automatically install updates** menu item won't be shown to the user, and the user won't be able to configure automatic updates.
+如果你不想让用户自行开关更新的自动安装，可以使用 `ApplyUpdates` 策略。将此设置设为 `hide` 后，用户将看不到"自动安装更新"菜单项，也无法配置自动更新。
 
-* **Supported platforms:** macOS (standalone variant only)
+* **支持的平台：** macOS（仅 Standalone 变体）
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Check for updates automatically (Windows)
+#### 自动检查更新（Windows）
 
-The Tailscale client for Windows will periodically check for updates and notify the user that a new version is available. We recommend that you leave this feature on to ensure your users receive any security updates in a timely manner.
+Windows 版 Tailscale 客户端会定期检查更新，并在有新版本可用时通知用户。我们建议保持此功能开启，以确保你的用户能及时获得安全更新。
 
-However, you might prefer to manually deploy updates and disable notifications of new available versions, or enable auto-updates on all devices. To do so, use the policy with key `CheckUpdates`. The default `user-decides` value will enable update checks, but allow the user to manually disable them. Set this value to `never` to disable automatically checking for updates. Set this value to `always` to disallow users to opt-out of update checks.
+不过，你可能更希望手动部署更新、禁用新版本通知，或在所有设备上启用自动更新。为此，请使用键为 `CheckUpdates` 的策略。默认值 `user-decides` 会启用更新检查，但允许用户手动禁用。将此值设为 `never` 可禁用自动检查更新。将此值设为 `always` 可禁止用户退出更新检查。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56
+* **加入的 Tailscale 版本：** 1.56
 
-#### Install updates automatically (Windows)
+#### 自动安装更新（Windows）
 
-The Tailscale client for Windows can also install updates automatically. We recommend that you always turn this feature on to ensure your users receive any security updates in a timely manner.
+Windows 版 Tailscale 客户端还可以自动安装更新。我们建议始终开启此功能，以确保你的用户能及时获得安全更新。
 
-To control auto-updates on all devices you can set the key `InstallUpdates` in your policy. Setting it to `always` enables auto-updates in the client, setting it to `never` disables them. The default value `user-decides` will use the value set in the admin console under **Settings > Device management > Auto-update Tailscale**, and let the user locally override that value in Tailscale app settings.
+要在所有设备上控制自动更新，你可以在策略中设置 `InstallUpdates` 键。设为 `always` 会在客户端中启用自动更新，设为 `never` 则禁用。默认值 `user-decides` 会使用管理控制台中 **Settings > Device management > Auto-update Tailscale** 下设置的值，并允许用户在 Tailscale 应用设置中本地覆盖该值。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56
+* **加入的 Tailscale 版本：** 1.56
 
-#### Install updates automatically (macOS)
+#### 自动安装更新（macOS）
 
-> **Note:**
+> **注意：**
 >
-> This system policy exclusively applies to the Standalone variant of Tailscale for macOS. When you download Tailscale from the Mac App Store, the system automatically updates it for you, provided that automatic app updates are enabled.
+> 此系统策略仅适用于 macOS 版 Tailscale 的 Standalone 变体。从 Mac App Store 下载 Tailscale 时，只要开启了应用的自动更新，系统就会自动为你更新。
 
-If you are using the Standalone version of Tailscale for macOS, the client can install updates automatically. This uses the Sparkle framework. We recommend that you always turn this feature on to make sure your users receive any security updates in a timely manner. To do so, use the boolean policy with key `SUAutomaticallyUpdate`. Note, when the policy is set to `true` users may need to confirm the update before it is applied.
+如果你使用的是 macOS 版 Tailscale 的 Standalone 版本，客户端可以自动安装更新。这使用的是 Sparkle 框架。我们建议始终开启此功能，以确保你的用户能及时获得安全更新。为此，请使用键为 `SUAutomaticallyUpdate` 的布尔策略。注意，当该策略设为 `true` 时，用户可能需要在更新应用前进行确认。
 
-However, if you manually manage updates, or prefer your users to be notified to manually update, you can disable the automatic installation. When `SUAutomaticallyUpdate` is set to `false`, the Standalone variant of Tailscale for macOS will require user input before updates are installed.
+不过，如果你手动管理更新，或希望用户收到手动更新的提醒，可以禁用自动安装。当 `SUAutomaticallyUpdate` 设为 `false` 时，macOS 版 Tailscale 的 Standalone 变体会在安装更新前要求用户确认。
 
-* **Supported platforms:** macOS (standalone variant only)
+* **支持的平台：** macOS（仅 Standalone 变体）
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Check for updates automatically (macOS)
+#### 自动检查更新（macOS）
 
-> **Note:**
+> **注意：**
 >
-> This system policy exclusively applies to the Standalone variant of Tailscale for macOS. When you download Tailscale from the Mac App Store, the system automatically updates it for you, provided that automatic app updates are enabled.
+> 此系统策略仅适用于 macOS 版 Tailscale 的 Standalone 变体。从 Mac App Store 下载 Tailscale 时，只要开启了应用的自动更新，系统就会自动为你更新。
 
-If you are using the Standalone version of Tailscale for macOS, the client will periodically check for updates automatically and notify the user that a new version is available. This uses the Sparkle framework. We recommend that you leave this feature on to ensure your users receive any security updates in a timely manner.
+如果你使用的是 macOS 版 Tailscale 的 Standalone 版本，客户端会定期自动检查更新，并在有新版本可用时通知用户。这使用的是 Sparkle 框架。我们建议保持此功能开启，以确保你的用户能及时获得安全更新。
 
-However, you might prefer to manually deploy updates and disable notifications of new available versions. To do so, use the boolean policy with key `SUEnableAutomaticChecks`. When it is set to `true`, the Standalone variant of Tailscale for macOS will automatically check for updates. Set this value to `false` to disable automatically checking for updates.
+不过，你可能更希望手动部署更新并禁用新版本通知。为此，请使用键为 `SUEnableAutomaticChecks` 的布尔策略。设为 `true` 时，macOS 版 Tailscale 的 Standalone 变体会自动检查更新。将此值设为 `false` 可禁用自动检查更新。
 
-* **Supported platforms:** macOS (standalone variant only)
+* **支持的平台：** macOS（仅 Standalone 变体）
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.46
+* **加入的 Tailscale 版本：** 1.46
 
-#### Manage unstable versions availability
+#### 管理不稳定版本的可用性
 
-Starting in Tailscale v1.60, the Standalone variant of Tailscale for macOS lets a user opt into receiving unstable releases of the client, with a toggle presented in the **Settings** user interface:
+从 Tailscale v1.60 开始，macOS 版 Tailscale 的 Standalone 变体允许用户选择接收客户端的不稳定版本，**设置**界面中会有相应的开关：
 
-*（图：The macOS client Settings dialog with the About pane opened. Highlighting the 'Update to unstable versions' toggle.）*
+*（图：macOS 客户端设置对话框，打开了 About 面板，突出显示"Update to unstable versions"开关。）*
 
-You can set a value for the `UnstableUpdates` policy to force a specific value for this setting. For example, setting `UnstableUpdates` to `never` means that your users won't be able to update to unstable versions of the client. You can deploy this policy to prevent non-tech-savvy users from enrolling in pre-release builds of the client, which might be more prone to issues.
+你可以为 `UnstableUpdates` 策略设置一个值来强制指定此设置。例如，将 `UnstableUpdates` 设为 `never` 意味着你的用户将无法更新到客户端的不稳定版本。你可以部署此策略，防止不太懂技术的用户加入可能更容易出问题的客户端预发布版本。
 
-* **Supported platforms:** macOS (standalone variant only)
+* **支持的平台：** macOS（仅 Standalone 变体）
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.60
+* **加入的 Tailscale 版本：** 1.60
 
-### Configure the exit node settings
+### 配置出口节点设置
 
-#### Advertise exit node
+#### 通告出口节点
 
-The `AdvertiseExitNode` policy controls whether the device advertises itself as an exit node for use by other users and their devices.
+`AdvertiseExitNode` 策略控制设备是否将自身通告为出口节点，供其他用户及其设备使用。
 
-* **Supported platforms:** Android, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、Linux、macOS、tvOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.102（Linux）
 
-#### Suggest allowed forced exit nodes
+#### 建议允许的强制出口节点
 
-The `AllowedSuggestedExitNodes` policy controls which exit nodes Tailscale recommends in its clients and through the [`tailscale exit-node suggest`][docs-cli-exit-node] command. It also limits automatic selection when [`ExitNodeID`][ar-exit-node-force-use] is `auto:any`. Set this policy to a list of exit node IDs. Find each ID on the [Machines](https://console.tailscale.com/admin/machines) page of the admin console or through the [Tailscale API][docs-api].
+`AllowedSuggestedExitNodes` 策略控制 Tailscale 在客户端中以及通过 [`tailscale exit-node suggest`][docs-cli-exit-node] 命令推荐哪些出口节点。当 [`ExitNodeID`][ar-exit-node-force-use] 为 `auto:any` 时，它还会限制自动选择的范围。将此策略设置为出口节点 ID 的列表。每个 ID 都可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面或通过 [Tailscale API][docs-api] 找到。
 
-If `AllowedSuggestedExitNodes` is unset, then all exit nodes are allowed. If `AllowedSuggestedExitNodes` is set but empty (contains no exit node IDs), then no exit nodes are allowed.
+如果未设置 `AllowedSuggestedExitNodes`，则允许所有出口节点。如果设置了 `AllowedSuggestedExitNodes` 但为空（不包含任何出口节点 ID），则不允许任何出口节点。
 
-Other exit nodes not specified by this policy are allowed to be used, but they won't be recommended.
+此策略未指定的其他出口节点仍然可以使用，但不会被推荐。
 
-* **Supported platforms:** iOS, Linux, macOS, Windows
+* **支持的平台：** iOS、Linux、macOS、Windows
 
-* **Possible values:** Not set, an empty set, or a list of strings of exit node device IDs
+* **可选值：** 未设置、空集合，或由出口节点设备 ID 字符串组成的列表
 
-* **Added in Tailscale versions:** 1.70, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.70、1.102（Linux）
 
-#### Toggle Local Network Access when an exit node is in use
+#### 使用出口节点时切换本地网络访问
 
-The **Allow Local Network Access** menu item lets your users control whether they can still access devices on the local network while using an exit node. If you prefer to control this setting on behalf of your users, the `ExitNodeAllowLANAccess` policy can be used to do so. For more information about this feature, refer to the [Exit Nodes topic][docs-exit-nodes-use-exit-node].
+**允许本地网络访问**菜单项让你的用户可以控制在使用的出口节点期间，是否仍能访问本地网络上的设备。如果你希望代用户控制此设置，可以使用 `ExitNodeAllowLANAccess` 策略。有关此功能的更多信息，请参阅[出口节点主题][docs-exit-nodes-use-exit-node]。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56, 1.66 (Android), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.66（Android）、1.102（Linux）
 
-#### Force an exit node to always be used
+#### 强制始终使用某个出口节点
 
-The `ExitNodeID` policy forces the Tailscale client to always use the given exit node. This can be useful if you prefer to route all internet traffic through a node for inspection or logging purposes. Users won't be able to disable or choose another exit node when this policy is active. A message will be displayed in the client UI informing users about this restriction.
+`ExitNodeID` 策略强制 Tailscale 客户端始终使用指定的出口节点。如果你希望将所有互联网流量路由经过某个节点以进行检查或日志记录，这会很有用。此策略生效时，用户将无法禁用或选择其他出口节点。客户端 UI 中会显示一条消息，告知用户这一限制。
 
-The value for this key should be the ID of an exit node device, or `auto:any`.
+此键的值应为某台出口节点设备的 ID，或 `auto:any`。
 
-If you specify the ID of an exit node device, that device will serve as the mandated exit node for your tailnet. You can find the ID for any device in your tailnet by looking at the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, or by using the [Tailscale API][docs-api].
+如果你指定了某台出口节点设备的 ID，该设备将作为你 tailnet 的强制出口节点。你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面或通过 [Tailscale API][docs-api] 找到 tailnet 中任何设备的 ID。
 
-Set `ExitNodeID` to `auto:any` to require an exit node that Tailscale selects automatically. To limit the choices, set [`AllowedSuggestedExitNodes`][ar-exit-node-allowed] to a list of permitted exit nodes.
+将 `ExitNodeID` 设为 `auto:any` 可要求使用由 Tailscale 自动选择的出口节点。要限制可选范围，可将 [`AllowedSuggestedExitNodes`][ar-exit-node-allowed] 设置为允许的出口节点列表。
 
-If you use this policy but want to let users select a different exit node, you can include the `ExitNode.AllowOverride` system policy as well.
+如果你使用此策略但又想让用户选择其他出口节点，可以同时加入 `ExitNode.AllowOverride` 系统策略。
 
-Note that if a forced exit node goes offline, internet connectivity will be unavailable on client devices until the exit node comes back online. The same is true if you specify `auto:any` and all of your exit nodes go offline.
+请注意，如果被强制使用的出口节点离线，客户端设备将无法访问互联网，直到该出口节点恢复在线。如果你指定 `auto:any` 且所有出口节点都离线，情况也是如此。
 
-Also note that if a client device is unable to reach a specified exit node, internet connectivity will be unavailable. This scenario can occur when there is a captive portal (such as when needing to authenticate to Tailscale), or when the client is unable to reach the Tailscale coordination server.
+另请注意，如果客户端设备无法连接到指定的出口节点，互联网连接将不可用。当存在强制门户（例如需要向 Tailscale 进行身份验证）或客户端无法连接到 Tailscale 协调服务器时，就可能出现这种情况。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、Windows
 
-* **Possible values:** String, either an exit node ID or auto:any
+* **可选值：** 字符串，出口节点 ID 或 auto:any
 
-* **Added in Tailscale versions:** 1.56, 1.66 (Android), 1.70.0 for auto:any, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.66（Android）、1.70.0（auto:any）、1.102（Linux）
 
-*（图：The macOS client menu with 'Using Exit Node'. The exit node menu has disabled options.）*
+*（图：macOS 客户端菜单，显示"Using Exit Node"。出口节点菜单中的选项已禁用。）*
 
-#### Set a different exit node when forced
+#### 强制时设置不同的出口节点
 
-The `ExitNode.AllowOverride` system policy lets users select a different exit node when the`ExitNodeID=auto:any` system policy is enabled, requiring the use of an exit node.
+`ExitNode.AllowOverride` 系统策略允许用户在启用了要求使用出口节点的 `ExitNodeID=auto:any` 系统策略时，选择其他出口节点。
 
-* **Supported platforms:** Linux, macOS, Windows
+* **支持的平台：** Linux、macOS、Windows
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.88, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.88、1.102（Linux）
 
-### Show contact information for your organization
+### 显示组织的联系信息
 
-#### Set an info message
+#### 设置信息消息
 
-Use the `ManagedByCaption` policy to specify a caption to be displayed in the **Managed By** section in the Tailscale client. Use this string value to provide your users with information on how to reach support resources for Tailscale in your organization.
+使用 `ManagedByCaption` 策略指定一条显示在 Tailscale 客户端 **Managed By** 区域的说明文字。你可以使用这个字符串值，向用户提供如何联系你组织内 Tailscale 支持资源的信息。
 
-* **Supported platforms:** Android, iOS, macOS, Windows
+* **支持的平台：** Android、iOS、macOS、Windows
 
-* **Possible values:** any String
+* **可选值：** 任意字符串
 
-* **Added in Tailscale versions:** 1.52, 1.62 (Windows), 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.52、1.62（Windows）、1.66（Android）
 
-#### Set your organization name
+#### 设置组织名称
 
-Use the `ManagedByOrganizationName` policy to specify the name of the organization managing Tailscale, for instance *"XYZ Corp, Inc."*.
+使用 `ManagedByOrganizationName` 策略指定管理 Tailscale 的组织名称，例如 *"XYZ Corp, Inc."*。
 
-The value will be displayed in the Tailscale client, so that users can reach your internal support resources.
+该值会显示在 Tailscale 客户端中，方便用户联系你的内部支持资源。
 
-* **Supported platforms:** Android, iOS, macOS, Windows
+* **支持的平台：** Android、iOS、macOS、Windows
 
-* **Possible values:** any String
+* **可选值：** 任意字符串
 
-* **Added in Tailscale versions:** 1.52, 1.62 (Windows), 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.52、1.62（Windows）、1.66（Android）
 
-#### Set a support URL
+#### 设置支持 URL
 
-Use the `ManagedByURL` policy to specify a URL pointing to a help desk webpage, or other helpful resources for users in the organization. Selecting the **Support** button in the Tailscale UI will open this webpage.
+使用 `ManagedByURL` 策略指定一个指向服务台网页或组织内其他用户帮助资源的 URL。在 Tailscale UI 中选择 **Support** 按钮时会打开该网页。
 
-* **Supported platforms:** Android, iOS, macOS, Windows
+* **支持的平台：** Android、iOS、macOS、Windows
 
-* **Possible values:** a valid URL
+* **可选值：** 有效 URL
 
-* **Added in Tailscale versions:** 1.52, 1.62 (Windows), 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.52、1.62（Windows）、1.66（Android）
 
-### Other settings
+### 其他设置
 
-#### Set whether to allow incoming connections
+#### 设置是否允许传入连接
 
-The `AllowIncomingConnections` policy decides whether Tailscale should allow incoming connections to the device (also known as "shields up"). This blocks any incoming connections over Tailscale by overriding the [access control policies][docs-access-control] to deny access to the device.
+`AllowIncomingConnections` 策略决定 Tailscale 是否应允许指向该设备的传入连接（也称为"shields up"）。它会覆盖[访问控制策略][docs-access-control]以拒绝对该设备的访问，从而阻止所有通过 Tailscale 的传入连接。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56, 1.66 (Android), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.66（Android）、1.102（Linux）
 
-#### Set Tailscale to always be connected
+#### 设置 Tailscale 始终保持连接
 
-The `AlwaysOn.Enabled` system policy prevents users from disconnecting from the tailnet or exiting the client. When you enable this policy, you can also enable the [`AlwaysOn.OverrideWithReason`][ar-disconnect-reason] policy to require a reason for disconnecting, and then use the [`ReconnectAfter`][ar-reconnect-timer] system policy to set a timer that defines how long the client can stay disconnected from the tailnet.
+`AlwaysOn.Enabled` 系统策略阻止用户断开与 tailnet 的连接或退出客户端。启用此策略后，你还可以启用 [`AlwaysOn.OverrideWithReason`][ar-disconnect-reason] 策略来要求提供断开连接的原因，并使用 [`ReconnectAfter`][ar-reconnect-timer] 系统策略设置一个计时器，定义客户端可以与 tailnet 保持断开的时长。
 
-> **Warning:**
+> **警告：**
 >
-> Tailscale deprecated the `ForceEnabled` system policy in version 1.84. It will continue to work, however, we recommend using the [`AlwaysOn.Enabled`][ar-always-connected] system policy instead.
+> Tailscale 在 1.84 版本中弃用了 `ForceEnabled` 系统策略。它仍可继续工作，但我们建议改用 [`AlwaysOn.Enabled`][ar-always-connected] 系统策略。
 
-* **Supported platforms:** iOS, macOS, Windows
+* **支持的平台：** iOS、macOS、Windows
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.84
+* **加入的 Tailscale 版本：** 1.84
 
-#### Set a required reason for disconnection
+#### 设置断开连接的必填原因
 
-The `AlwaysOn.OverrideWithReason` system policy requires users to submit a reason when disconnecting the Tailscale client. This system policy is only available if [`AlwaysOn.Enabled`][ar-always-connected] is also enabled. User-provided reasons display in the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
+`AlwaysOn.OverrideWithReason` 系统策略要求用户在断开 Tailscale 客户端时提交原因。此系统策略仅在 [`AlwaysOn.Enabled`][ar-always-connected] 也被启用时可用。用户提供的原因会显示在管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面中。
 
-On Windows and macOS, a user can provide a reason in one of the following ways:
+在 Windows 和 macOS 上，用户可以通过以下方式之一提供原因：
 
-* Enter the reason in a dialog that appears in the client UI when attempting to disconnect from the tailnet or exit the client.
-* Use the CLI command [`tailscale down --reason "<description>"`][docs-cli-down], providing the description in quotes. For example, `tailscale down --reason "DNS issues"`.
+* 在尝试断开 tailnet 或退出客户端时，在客户端 UI 弹出的对话框中输入原因。
+* 使用 CLI 命令 [`tailscale down --reason "<description>"`][docs-cli-down]，并在引号中提供描述。例如 `tailscale down --reason "DNS issues"`。
 
-On iOS, a user can provide a reason from the dialog box that displays in the client UI. The CLI command method is not supported.
+在 iOS 上，用户可以在客户端 UI 显示的对话框中提供原因。不支持 CLI 命令方式。
 
-* **Supported platforms:** iOS, macOS, Windows
+* **支持的平台：** iOS、macOS、Windows
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.84
+* **加入的 Tailscale 版本：** 1.84
 
-#### Set an auth key
+#### 设置认证密钥
 
-The `AuthKey` system policy lets you specify an [auth key][docs-auth-keys] to authenticate managed devices without user interaction. All clients automatically try to use the auth key when launched unless the client is already logged in to Tailscale.
+`AuthKey` 系统策略允许你指定一个[认证密钥][docs-auth-keys]，无需用户交互即可对受管设备进行身份验证。所有客户端在启动时都会自动尝试使用该认证密钥，除非客户端已经登录 Tailscale。
 
-> **Danger:**
+> **危险：**
 >
-> Storing authentication keys within an MDM solution poses a significant security risk. If the MDM becomes compromised, the attacker could access the auth keys and use them to authenticate with their target's network. Only consider this option after carefully reviewing the organization's security posture. For example, ensure you configure the auth keys specifically for the [tags][docs-tags] of the device and that [access control policies][docs-access-control] only grant necessary access between the tailnet and the tagged device.
+> 将认证密钥存储在 MDM 解决方案中存在重大安全风险。如果 MDM 被攻破，攻击者就可以获取这些认证密钥，并用它们接入目标网络。请仔细评估组织的安全态势后再考虑此选项。例如，确保为设备的[标签][docs-tags]专门配置认证密钥，并确保[访问控制策略][docs-access-control]只在 tailnet 与带标签设备之间授予必要的访问权限。
 >
-> If you suspect an auth key has been compromised, [revoke the auth key][docs-auth-keys-revoke].
+> 如果你怀疑某个认证密钥已泄露，请[撤销该认证密钥][docs-auth-keys-revoke]。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** A Tailscale auth key. We recommend you use a one-off auth key.
+* **可选值：** Tailscale 认证密钥。建议使用一次性认证密钥。
 
-* **Added in Tailscale versions:** 1.74, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.74、1.102（Linux）
 
-#### Specify the device serial number
+#### 指定设备序列号
 
-On iOS and tvOS, third-party apps like Tailscale cannot access the device serial number unless an MDM solution is configured to provide Tailscale with it. The `DeviceSerialNumber` policy can be set to a string value to provide Tailscale with the serial number of the device. When [posture checking is enabled][ar-posture-checking] on these two platforms and `DeviceSerialNumber` is non-empty, the serial number will be reported to the coordination server and will appear in the admin console.
+在 iOS 和 tvOS 上，像 Tailscale 这样的第三方应用无法访问设备序列号，除非 MDM 解决方案配置为向 Tailscale 提供该信息。可以将 `DeviceSerialNumber` 策略设置为一个字符串值，向 Tailscale 提供设备的序列号。当这两个平台上[启用了态势检查][ar-posture-checking]且 `DeviceSerialNumber` 非空时，序列号会上报给协调服务器，并显示在管理控制台中。
 
-* **Supported platforms:** iOS, tvOS
+* **支持的平台：** iOS、tvOS
 
-* **Possible values:** a String containing the device serial number
+* **可选值：** 包含设备序列号的字符串
 
-* **Added in Tailscale versions:** 1.70
+* **加入的 Tailscale 版本：** 1.70
 
-#### Set excluded applications
+#### 设置排除的应用
 
-The `ExcludedPackageNames` system policy lets you specify a comma-separated list of Android package names that will be excluded from routing and DNS using Tailscale, even when Tailscale is connected. For more information, refer to the [app-based split tunneling][docs-android-app-split-tunneling] topic.
+`ExcludedPackageNames` 系统策略允许你指定一个以逗号分隔的 Android 软件包名称列表，这些应用将被排除在 Tailscale 的路由和 DNS 之外，即使 Tailscale 已连接。更多信息请参阅[基于应用的拆分隧道][docs-android-app-split-tunneling]主题。
 
-This policy is only supported on Android.
+此策略仅在 Android 上受支持。
 
-* **Supported platforms:** Android
+* **支持的平台：** Android
 
-* **Possible values:** String (a comma-separated list of application package names, such as com.google.android.apps.maps,com.google.android.calendar)
+* **可选值：** 字符串（以逗号分隔的应用软件包名称列表，例如 com.google.android.apps.maps,com.google.android.calendar）
 
-* **Added in Tailscale versions:** 1.70
+* **加入的 Tailscale 版本：** 1.70
 
-#### Force Tailscale IP registration in Active Directory
+#### 在 Active Directory 中强制注册 Tailscale IP
 
-The `EnableDNSRegistration` system policy enforces DNS registration and dynamic DNS updates for the Tailscale interface in Active Directory. This policy also prevents Tailscale from modifying the settings configured in the network adapter's properties or by other means.
+`EnableDNSRegistration` 系统策略为 Active Directory 中的 Tailscale 接口强制执行 DNS 注册和动态 DNS 更新。此策略还会阻止 Tailscale 修改在网络适配器属性中或通过其他方式配置的设置。
 
-This policy is only supported on Windows.
+此策略仅在 Windows 上受支持。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.84
+* **加入的 Tailscale 版本：** 1.84
 
-#### Force Tailscale to always be running
+#### 强制 Tailscale 始终运行
 
-> **Warning:**
+> **警告：**
 >
-> Tailscale deprecated the `ForceEnabled` system policy in version 1.84. It will continue to work, however, we recommend using the [`AlwaysOn.Enabled`][ar-always-connected] system policy instead.
+> Tailscale 在 1.84 版本中弃用了 `ForceEnabled` 系统策略。它仍可继续工作，但我们建议改用 [`AlwaysOn.Enabled`][ar-always-connected] 系统策略。
 
-When set to true, the `ForceEnabled` boolean policy instructs Tailscale to always be connected and actively monitor the tunnel state for disconnections. The **Disconnect** toggle will be disabled, to prevent users from disabling the VPN themselves. An attempt to disconnect will present a banner informing the user the organization's policy prevents Tailscale from being disconnected. If the client detects the VPN tunnel is down because the Tailscale VPN process was terminated, Tailscale will automatically restart it and reconnect.
+设置为 true 时，`ForceEnabled` 布尔策略指示 Tailscale 始终保持连接，并主动监控隧道状态以发现断开。**断开连接**开关将被禁用，以防止用户自行关闭 VPN。尝试断开时会显示一条横幅，告知用户组织策略禁止断开 Tailscale。如果客户端检测到因 Tailscale VPN 进程被终止而导致 VPN 隧道断开，Tailscale 会自动重启并重新连接。
 
-This policy should always be used together with an always-on VPN configuration profile (available on supervised iOS devices). You might also want to set `VPNOnDemandSettings` to `hide`, to prevent the user from interacting with your on-demand VPN configuration.
+此策略应始终与始终开启的 VPN 配置描述文件（在受监管的 iOS 设备上可用）配合使用。你可能还想将 `VPNOnDemandSettings` 设为 `hide`，以防止用户与你配置的按需 VPN 设置交互。
 
-* **Supported platforms:** Android, iOS, macOS
+* **支持的平台：** Android、iOS、macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Suppress DHCP Option 121 warnings
+#### 抑制 DHCP 选项 121 警告
 
-DHCP Option 121 lets a DHCP server on a LAN advertise routing rules for a given CIDR range without user input. While this feature is used on a very small number of networks to deploy routing rules to clients, it can also be misused by an attacker in a privileged position on the LAN to mislead clients into routing traffic meant for the Tailscale interface outside of the Tailscale tunnel. This malicious use of DHCP 121 is also known as the [TunnelVision][bl-tunnelvision] vulnerability (CVE-2024-3661).
+DHCP 选项 121 允许局域网上的 DHCP 服务器在无需用户输入的情况下通告给定 CIDR 范围的路由规则。虽然只有极少数网络使用此功能向客户端部署路由规则，但它也可能被局域网中处于特权位置的攻击者滥用，误导客户端将本应送往 Tailscale 接口的流量路由到 Tailscale 隧道之外。这种对 DHCP 121 的恶意利用也被称为 [TunnelVision][bl-tunnelvision] 漏洞（CVE-2024-3661）。
 
-By default, Tailscale v1.68 and later detect when DHCP Option 121 is being used, and the client will display a warning to the user in the UI when usage of this option is detected. You may set the `HideDHCP121Warnings` system policy to `true` to hide such warnings if you have a legitimate need to use Option 121.
+默认情况下，Tailscale v1.68 及更高版本会检测 DHCP 选项 121 的使用，并在检测到使用该选项时在 UI 中向用户显示警告。如果你确有使用选项 121 的正当需求，可以将 `HideDHCP121Warnings` 系统策略设为 `true` 来隐藏此类警告。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.68
+* **加入的 Tailscale 版本：** 1.68
 
-#### Set included applications
+#### 设置包含的应用
 
-The `IncludedPackageNames` system policy lets you specify a comma-separated list of Android package names that will be forced to use Tailscale for routing and DNS whenever Tailscale is connected. Other apps will ignore Tailscale whenever a value is defined for this policy. For more information, refer to the [app-based split tunneling][docs-android-app-split-tunneling] topic.
+`IncludedPackageNames` 系统策略允许你指定一个以逗号分隔的 Android 软件包名称列表，只要 Tailscale 已连接，这些应用就会被强制使用 Tailscale 进行路由和 DNS。定义了此策略的值后，其他应用都会忽略 Tailscale。更多信息请参阅[基于应用的拆分隧道][docs-android-app-split-tunneling]主题。
 
-This policy is only supported on Android.
+此策略仅在 Android 上受支持。
 
-* **Supported platforms:** Android
+* **支持的平台：** Android
 
-* **Possible values:** String (a comma-separated list of application package names, such as com.google.android.apps.maps,com.google.android.calendar)
+* **可选值：** 字符串（以逗号分隔的应用软件包名称列表，例如 com.google.android.apps.maps,com.google.android.calendar）
 
-* **Added in Tailscale versions:** 1.70
+* **加入的 Tailscale 版本：** 1.70
 
-#### Suppress IP Address Copied notifications
+#### 抑制 IP 地址复制通知
 
-When you use the Tailscale menu bar item to copy to the Clipboard the IP address of a device, a notification displaying the IP address is presented. The `IPAddressCopiedAlertSuppressed` policy can be used to suppress this **Copied IP address to clipboard** notification.
+当你使用 Tailscale 菜单栏图标将设备的 IP 地址复制到剪贴板时，会显示一条包含该 IP 地址的通知。可以使用 `IPAddressCopiedAlertSuppressed` 策略来抑制这条**已将 IP 地址复制到剪贴板**通知。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Set the key expiration notice period
+#### 设置密钥过期提醒期限
 
-The `KeyExpirationNotice` policy controls how long before key expiry should a notice be displayed. The default is 24 hours.
+`KeyExpirationNotice` 策略控制密钥过期前多久显示提醒。默认为 24 小时。
 
-* **Supported platforms:** iOS, macOS, Windows
+* **支持的平台：** iOS、macOS、Windows
 
-* **Possible values:** Go-style Duration, for example, 24h or 5h25m30s
+* **可选值：** Go 风格的时长，例如 24h 或 5h25m30s
 
-* **Added in Tailscale versions:** 1.50 (Windows), 1.58 (macOS, iOS)
+* **加入的 Tailscale 版本：** 1.50（Windows）、1.58（macOS、iOS）
 
-#### Set a custom browser for authentication
+#### 设置用于身份验证的自定义浏览器
 
-The `AuthBrowser.macos` policy controls the browser used to open authentication URLs. The value should be set to the bundle identifier of the preferred browser. If the specified bundle is not present, the user's default system browser will be used.
+`AuthBrowser.macos` 策略控制用于打开身份验证 URL 的浏览器。该值应设置为首选浏览器的 bundle identifier。如果指定的应用包不存在，将使用用户的系统默认浏览器。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** A String value such as com.apple.Safari
+* **可选值：** 字符串值，例如 com.apple.Safari
 
-* **Added in Tailscale versions:** 1.94
+* **加入的 Tailscale 版本：** 1.94
 
-#### Set a custom control server URL
+#### 设置自定义控制服务器 URL
 
-The `LoginURL` policy can be used to specify a custom control server URL. This should not be changed unless you are not using the standard Tailscale server. Use this policy if you're deploying your own server, such as Headscale.
+`LoginURL` 策略可用于指定自定义控制服务器 URL。除非你没有使用标准的 Tailscale 服务器，否则不应更改此设置。如果你部署的是自己的服务器（例如 Headscale），请使用此策略。
 
-\- The now-deprecated key `ControlURL` was used in early versions of Tailscale for macOS and iOS
+\- 现已弃用的键 `ControlURL` 曾在 macOS 和 iOS 版 Tailscale 的早期版本中使用
 
-#### Set a machine certificate subject
+#### 设置机器证书主题
 
-The `MachineCertificateSubject` policy enables signed registration requests with an externally-provisioned machine certificate. This policy is only applicable to particular enterprise customers and they receive further documentation on how to correctly configure this option.
+`MachineCertificateSubject` 策略支持使用外部预配的机器证书进行签名注册请求。此策略仅适用于特定的企业客户，这些客户会收到关于如何正确配置此选项的进一步文档。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** consult customer-specific documentation
+* **可选值：** 请查阅客户专属文档
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Enable gathering device posture data
+#### 启用设备态势数据收集
 
-The `PostureChecking` policy enables gathering of [device posture][docs-device-posture] data.
+`PostureChecking` 策略用于启用[设备态势][docs-device-posture]数据的收集。
 
-* **Supported platforms:** iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.52, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.52、1.102（Linux）
 
-#### Set a reconnection timer
+#### 设置重新连接计时器
 
-The `ReconnectAfter` system policy lets your organization set a timer that indicates how long the client can remain disconnected from the tailnet. You can use this with or without the [`AlwaysOn.Enabled`][ar-always-connected] policy.
+`ReconnectAfter` 系统策略允许你的组织设置一个计时器，指示客户端可以与 tailnet 保持断开的时长。你可以单独使用它，也可以与 [`AlwaysOn.Enabled`][ar-always-connected] 策略配合使用。
 
-* **Supported platforms:** Android, Linux, macOS, Windows
+* **支持的平台：** Android、Linux、macOS、Windows
 
-* **Possible values:** Refer to https\://pkg.go.dev/time#ParseDuration for information about the supported duration strings.
+* **可选值：** 有关支持的时长字符串，请参阅 https\://pkg.go.dev/time#ParseDuration。
 
-* **Added in Tailscale versions:** 1.84, 1.86 (macOS), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.84、1.86（macOS）、1.102（Linux）
 
-#### Set a suggested or required tailnet
+#### 设置建议或强制的 tailnet
 
-The `Tailnet` policy lets the organization specify one or more tailnets to suggest or require during device registration. Set the policy value to a comma-separated list of [tailnet IDs][docs-tailnet-name-tailnet-id] or organization IDs such as `T123456CNTRL,o123456CNTRL` or `required:T123456CNTRL,o123456CNTRL`. A tailnet ID will suggest or restrict logging in to a specific tailnet. An organization ID will suggest or restrict logging to any tailnet in that organization.
+`Tailnet` 策略允许组织指定一个或多个 tailnet，在设备注册时予以建议或强制要求。将策略值设置为以逗号分隔的 [tailnet ID][docs-tailnet-name-tailnet-id] 或组织 ID 列表，例如 `T123456CNTRL,o123456CNTRL` 或 `required:T123456CNTRL,o123456CNTRL`。tailnet ID 会建议或限制登录到特定的 tailnet。组织 ID 会建议或限制登录到该组织下的任何 tailnet。
 
-Users will be guided to the correct IdP and tailnet based on the policy. If the policy value is prefixed with `required:`, Tailscale requires one of those values and won't allow devices to be registered in any other tailnet.
+系统会根据策略引导用户前往正确的 IdP 和 tailnet。如果策略值带有 `required:` 前缀，Tailscale 将要求使用其中之一的值，不允许设备注册到任何其他 tailnet。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** String (a comma-separated list of tailnet IDs or organization IDs)
+* **可选值：** 字符串（以逗号分隔的 tailnet ID 或组织 ID 列表）
 
-* **Added in Tailscale versions:** 1.52, 1.66 (Android), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.52、1.66（Android）、1.102（Linux）
 
-#### Suppress the first launch onboarding flow
+#### 抑制首次启动引导流程
 
-The `OnboardingFlow` policy lets you disable the client onboarding flow that appears when you start Tailscale on a device for the first time. You might disable it if end-users are already familiar with the product and can get started on their own. On macOS, you would typically set up the VPN configuration automatically using a configuration profile when disabling the onboarding flow.
+`OnboardingFlow` 策略允许你禁用首次在设备上启动 Tailscale 时出现的客户端引导流程。如果最终用户已经熟悉该产品、可以自行上手，你可以禁用它。在 macOS 上禁用引导流程时，通常会改用配置描述文件自动完成 VPN 配置。
 
-> **Warning:**
+> **警告：**
 >
-> Tailscale deprecated the `TailscaleOnboardingSeen` system policy in version 1.86. It will continue to work, but we recommend using the `OnboardingFlow` system policy instead.
+> Tailscale 在 1.86 版本中弃用了 `TailscaleOnboardingSeen` 系统策略。它仍可继续工作，但我们建议改用 `OnboardingFlow` 系统策略。
 
-* **Supported platforms:** Android, macOS, Windows
+* **支持的平台：** Android、macOS、Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.86
+* **加入的 Tailscale 版本：** 1.86
 
-#### Suppress the app window intro flow
+#### 抑制应用窗口介绍流程
 
-The `AppIntroShown` policy lets you disable the "Welcome to the Tailscale app" modal window introduction that appears when you log in to Tailscale on a device for the first time. You might disable it if end-users are already familiar with the product and can get started on their own.
+`AppIntroShown` 策略允许你禁用首次在设备上登录 Tailscale 时出现的"欢迎使用 Tailscale 应用"模态窗口介绍。如果最终用户已经熟悉该产品、可以自行上手，你可以禁用它。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.96
+* **加入的 Tailscale 版本：** 1.96
 
-#### Automatically start Tailscale when the user logs in
+#### 用户登录时自动启动 Tailscale
 
-The first time the application is opened on a Mac, Tailscale installs a macOS login helper. This lets Tailscale start automatically when the user logs into their account. The `TailscaleStartOnLogin` boolean policy controls whether the login helper should start Tailscale at login time.
+在 Mac 上首次打开该应用时，Tailscale 会安装一个 macOS 登录助手。这使 Tailscale 可以在用户登录其账户时自动启动。`TailscaleStartOnLogin` 布尔策略控制登录助手是否应在登录时启动 Tailscale。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.46
+* **加入的 Tailscale 版本：** 1.46
 
-#### Set unattended mode
+#### 设置无人值守模式
 
-The `UnattendedMode` policy sets the **Unattended Mode** option.
+`UnattendedMode` 策略用于设置**无人值守模式**选项。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Set whether the device uses Tailscale DNS settings
+#### 设置设备是否使用 Tailscale DNS 设置
 
-The `UseTailscaleDNSSettings` policy instructs Tailscale whether to apply its DNS configuration when the tunnel is connected. This policy is the equivalent to [`tailscale set --accept-dns`][docs-cli-set] and lets administrators override the DNS preference chosen by the user when necessary.
+`UseTailscaleDNSSettings` 策略指示 Tailscale 在隧道连接时是否应用其 DNS 配置。此策略等效于 [`tailscale set --accept-dns`][docs-cli-set]，让管理员可以在必要时覆盖用户选择的 DNS 偏好。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56, 1.66 (Android), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.66（Android）、1.102（Linux）
 
-#### Set whether the device accepts Tailscale subnets
+#### 设置设备是否接受 Tailscale 子网
 
-The `UseTailscaleSubnets` policy instructs Tailscale whether to accept subnets advertised by other nodes in your tailnet. This is the equivalent of [`tailscale set --accept-routes`][docs-cli-set]. If this is off, the device won't reach other devices behind a subnet router. When no value is specified for this policy, Tailscale defaults to `true` on Windows, macOS, Android, and iOS and `false` on Linux/BSD.
+`UseTailscaleSubnets` 策略指示 Tailscale 是否接受 tailnet 中其他节点通告的子网。这等效于 [`tailscale set --accept-routes`][docs-cli-set]。如果关闭此选项，设备将无法访问子网路由器背后的其他设备。当此策略未指定值时，Tailscale 在 Windows、macOS、Android 和 iOS 上默认为 `true`，在 Linux/BSD 上默认为 `false`。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** always, never, user-decides
+* **可选值：** always、never、user-decides
 
-* **Added in Tailscale versions:** 1.56, 1.66 (Android), 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.56、1.66（Android）、1.102（Linux）
 
-#### Set whether device hostnames can be modified
+#### 设置是否可以修改设备主机名
 
-The `Hostname` policy lets IT administrators override the hostname configured in the operating system and reported to the coordination server. This can be particularly useful on mobile devices, where the hostname provided by the operating system usually only contains the device's manufacturer name and model.
+`Hostname` 策略允许 IT 管理员覆盖操作系统中配置并上报给协调服务器的主机名。这在移动设备上尤其有用，因为操作系统提供的主机名通常只包含设备制造商名称和型号。
 
-* **Supported platforms:** Android, iOS, Linux, macOS, tvOS, Windows
+* **支持的平台：** Android、iOS、Linux、macOS、tvOS、Windows
 
-* **Possible values:** A String value such as user-macbook-pro
+* **可选值：** 字符串值，例如 user-macbook-pro
 
-* **Added in Tailscale versions:** 1.80, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.80、1.102（Linux）
 
-#### Encrypt node state file
+#### 加密节点状态文件
 
-The `EncryptState` policy instructs Tailscale to only store the node state file in encrypted format on disk. The node state file contains credentials, like the [node and machine keys][bl-key-management], that could be copied to a different device if stored unencrypted.
+`EncryptState` 策略指示 Tailscale 在磁盘上仅以加密格式存储节点状态文件。节点状态文件包含[节点密钥和机器密钥][bl-key-management]等凭证，如果以未加密形式存储，可能会被复制到其他设备上。
 
-> **Note:**
+> **注意：**
 >
-> Android, iOS, macOS (App Store variant), and tvOS always store the state file encrypted regardless of this policy. This policy only affects the behavior on Windows and macOS (Standalone variant).
+> 无论此策略如何设置，Android、iOS、macOS（App Store 变体）和 tvOS 始终以加密方式存储状态文件。此策略仅影响 Windows 和 macOS（Standalone 变体）上的行为。
 
-* **Supported platforms:** Linux, macOS (standalone variant only), Windows
+* **支持的平台：** Linux、macOS（仅 Standalone 变体）、Windows
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.86, 1.102 (Linux)
+* **加入的 Tailscale 版本：** 1.86、1.102（Linux）
 
-### Change the visibility of UI items
+### 更改 UI 项的可见性
 
-#### Hide the Admin Console menu item
+#### 隐藏管理控制台菜单项
 
-The `AdminConsole` policy can be used to show or hide the **Admin Console** item in the Tailscale menu.
+`AdminConsole` 策略可用于显示或隐藏 Tailscale 菜单中的 **Admin Console** 项。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the CLI integration installer
+#### 隐藏 CLI 集成安装器
 
-The `CLIIntegration` policy can be used to show or hide the **CLI Integration** item in the Tailscale settings page.
+`CLIIntegration` 策略可用于显示或隐藏 Tailscale 设置页面中的 **CLI Integration** 项。
 
-When this policy is set to `hide`, the following message will be displayed if the user attempts to use the app settings to install the Tailscale CLI helper in `/usr/local/bin/tailscale`:
+当此策略设为 `hide` 时，如果用户尝试通过应用设置将 Tailscale CLI 助手安装到 `/usr/local/bin/tailscale`，将显示以下消息：
 
-* This Tailscale install is managed by your organization. Contact your administrator to get started with the Tailscale CLI.
+* 此 Tailscale 安装由你的组织管理。请联系管理员以开始使用 Tailscale CLI。
 
-- **Supported platforms:** macOS
+- **支持的平台：** macOS
 
-- **Possible values:** show, hide
+- **可选值：** show、hide
 
-- **Added in Tailscale versions:** 1.68
+- **加入的 Tailscale 版本：** 1.68
 
-#### Block re-authentication window
+#### 阻止重新身份验证窗口
 
-The `DisableReauthWindow` policy lets you suppress Tailscale's native notifications for user re-authentication. You might disable it if you do not want Tailscale to directly notify users that their key has expired. When disabled, Tailscale will attempt to send a macOS system notification when the key is expired.
+`DisableReauthWindow` 策略允许你抑制 Tailscale 原生的用户重新身份验证通知。如果你不希望 Tailscale 直接通知用户其密钥已过期，可以禁用它。禁用后，当密钥过期时，Tailscale 会尝试发送一条 macOS 系统通知。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.104
+* **加入的 Tailscale 版本：** 1.104
 
-#### Hide the exit node picker
+#### 隐藏出口节点选择器
 
-The `ExitNodesPicker` policy can be used to show or hide all UI items to choose an exit node in the Tailscale client.
+`ExitNodesPicker` 策略可用于显示或隐藏 Tailscale 客户端中用于选择出口节点的所有 UI 项。
 
-* **Supported platforms:** Android, iOS, macOS, Windows
+* **支持的平台：** Android、iOS、macOS、Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50, 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.50、1.66（Android）
 
-#### Hide network devices
+#### 隐藏网络设备
 
-The `HiddenNetworkDevices` policy can be used to hide one or more categories of network devices normally displayed in the Tailscale client. Administrators can choose to hide:
+`HiddenNetworkDevices` 策略可用于隐藏 Tailscale 客户端中通常显示的一类或多类网络设备。管理员可以选择隐藏：
 
-* devices owned by the current user
-* devices owned by other users
-* tagged devices
+* 当前用户拥有的设备
+* 其他用户拥有的设备
+* 带标签的设备
 
-If all three options are chosen, the **Network Devices** menu item disappears entirely and users aren't able to discover any device in the tailnet.
+如果三个选项全部选择，**Network Devices** 菜单项将完全消失，用户将无法发现 tailnet 中的任何设备。
 
-* **Supported platforms:** Android, iOS, macOS
+* **支持的平台：** Android、iOS、macOS
 
-* **Possible values:** String Array. Use one or more of: current-user, other-users, tagged-devices.
+* **可选值：** 字符串数组。使用以下一项或多项：current-user、other-users、tagged-devices。
 
-* **Added in Tailscale versions:** 1.52, 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.52、1.66（Android）
 
-#### Hide the Tailnet Lock settings
+#### 隐藏 Tailnet Lock 设置
 
-The `ManageTailnetLock` policy can be used to show or hide the **Manage Tailnet Lock** menu item.
+`ManageTailnetLock` 策略可用于显示或隐藏 **Manage Tailnet Lock** 菜单项。
 
-* **Supported platforms:** Android, iOS, macOS
+* **支持的平台：** Android、iOS、macOS
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50, 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.50、1.66（Android）
 
-#### Hide the Network Devices menu
+#### 隐藏网络设备菜单
 
-The `NetworkDevices` policy can be used to show or hide the **Network Devices** menu item from the Tailscale client.
+`NetworkDevices` 策略可用于显示或隐藏 Tailscale 客户端中的 **Network Devices** 菜单项。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the Preferences Menu
+#### 隐藏偏好设置菜单
 
-The `PreferencesMenu` policy can be used to show or hide the **Preferences** menu item from the Tailscale client.
+`PreferencesMenu` 策略可用于显示或隐藏 Tailscale 客户端中的 **Preferences** 菜单项。
 
-* **Supported platforms:** Windows
+* **支持的平台：** Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the Reset To Defaults menu item
+#### 隐藏恢复默认设置菜单项
 
-The `ResetToDefaults` policy can be used to show or hide the **Reset to Defaults** menu item in the Tailscale client.
+`ResetToDefaults` 策略可用于显示或隐藏 Tailscale 客户端中的 **Reset to Defaults** 菜单项。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the Run as Exit Node menu item
+#### 隐藏以出口节点运行菜单项
 
-The `RunExitNode` policy can be used to show or hide the **Run as Exit Node** menu item.
+`RunExitNode` 策略可用于显示或隐藏 **Run as Exit Node** 菜单项。
 
-* **Supported platforms:** Android, macOS, tvOS, Windows
+* **支持的平台：** Android、macOS、tvOS、Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50, 1.66 (Android)
+* **加入的 Tailscale 版本：** 1.50、1.66（Android）
 
-#### Hide the Start on Login menu item
+#### 隐藏登录时启动菜单项
 
-The `StartOnLoginMenuItem` policy can be used to show or hide the **Start on Login** menu item.
+`StartOnLoginMenuItem` 策略可用于显示或隐藏 **Start on Login** 菜单项。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the debug menu
+#### 隐藏调试菜单
 
-The `TestMenu` policy can be used to show or hide the [debug menu][docs-troubleshooting-debug] in the Tailscale client. On macOS, this system policy will also hide any information displayed when holding down the Option key while selecting the Tailscale menu bar item.
+`TestMenu` 策略可用于显示或隐藏 Tailscale 客户端中的[调试菜单][docs-troubleshooting-debug]。在 macOS 上，此系统策略还会隐藏按住 Option 键并选择 Tailscale 菜单栏图标时显示的所有信息。
 
-* **Supported platforms:** macOS, Windows
+* **支持的平台：** macOS、Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50
+* **加入的 Tailscale 版本：** 1.50
 
-#### Hide the update menu
+#### 隐藏更新菜单
 
-The `UpdateMenu` policy can be used to show or hide the **Update Tailscale** menu option on Windows, and **Update Available** options on macOS and iOS.
+`UpdateMenu` 策略可用于显示或隐藏 Windows 上的 **Update Tailscale** 菜单选项，以及 macOS 和 iOS 上的 **Update Available** 选项。
 
-* **Supported platforms:** iOS, macOS (standalone variant only), Windows
+* **支持的平台：** iOS、macOS（仅 Standalone 变体）、Windows
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.50 (Windows), 1.56 (macOS \[Standalone variant only], iOS)
+* **加入的 Tailscale 版本：** 1.50（Windows）、1.56（macOS \[仅 Standalone 变体]、iOS）
 
-#### Hide the VPN On Demand menu item
+#### 隐藏 VPN 按需连接菜单项
 
-The `VPNOnDemandSettings` policy can be used to show or hide the **VPN On Demand** menu item. You might want to use this setting if you're deploying your own VPN configuration profile for Tailscale, and you don't want your users to interact with the on-demand VPN configuration you set up for them.
+`VPNOnDemandSettings` 策略可用于显示或隐藏 **VPN On Demand** 菜单项。如果你正在为 Tailscale 部署自己的 VPN 配置描述文件，且不希望用户与你为其设置的按需 VPN 配置交互，可以使用此设置。
 
-* **Supported platforms:** iOS, macOS
+* **支持的平台：** iOS、macOS
 
-* **Possible values:** show, hide
+* **可选值：** show、hide
 
-* **Added in Tailscale versions:** 1.52
+* **加入的 Tailscale 版本：** 1.52
 
-#### Hide the macOS dock icon after all windows close
+#### 所有窗口关闭后隐藏 macOS Dock 图标
 
-The Tailscale dock icon on macOS appears whenever an application window exists. By default, Tailscale leaves an icon in the dock to support quickly reopening the main application window. The `HideDockIcon` policy can be set to `true` to prevent this behavior and hide the dock icon after all windows close.
+macOS 上的 Tailscale Dock 图标在存在应用窗口时显示。默认情况下，Tailscale 会在 Dock 中保留一个图标，以便快速重新打开主应用窗口。可以将 `HideDockIcon` 策略设为 `true` 来阻止此行为，在所有窗口关闭后隐藏 Dock 图标。
 
-* **Supported platforms:** macOS
+* **支持的平台：** macOS
 
-* **Possible values:** Boolean
+* **可选值：** 布尔值
 
-* **Added in Tailscale versions:** 1.94
+* **加入的 Tailscale 版本：** 1.94
 
-[ar-always-connected]: #set-tailscale-to-always-be-connected
+[ar-always-connected]: #设置-tailscale-始终保持连接
 
-[ar-disconnect-reason]: #set-a-required-reason-for-disconnection
+[ar-disconnect-reason]: #设置断开连接的必填原因
 
-[ar-exit-node-allowed]: #suggest-allowed-forced-exit-nodes
+[ar-exit-node-allowed]: #建议允许的强制出口节点
 
-[ar-exit-node-force-use]: #force-an-exit-node-to-always-be-used
+[ar-exit-node-force-use]: #强制始终使用某个出口节点
 
-[ar-posture-checking]: #enable-gathering-device-posture-data
+[ar-posture-checking]: #启用设备态势数据收集
 
-[ar-reconnect-timer]: #set-a-reconnection-timer
+[ar-reconnect-timer]: #设置重新连接计时器
 
 [bl-key-management]: https://tailscale.com/blog/tailscale-key-management
 

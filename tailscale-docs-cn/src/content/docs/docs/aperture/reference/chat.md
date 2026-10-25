@@ -1,153 +1,153 @@
 ---
-title: "Aperture Chat interface reference"
-description: "The Aperture Chat interface combines conversations with tools for reviewing your own activity and connecting other clients. For a capability overview, refer to [Chat][docs-chat]. For organization-wide"
+title: "Aperture Chat 界面参考"
+description: "Aperture Chat 界面将对话与审查自己活动、连接其他客户端的工具结合在一起。功能概览请参阅 [Chat][docs-chat]。组织级分析与配置请使用独立的[管理仪表板]"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-The Aperture Chat interface combines conversations with tools for reviewing your own activity and connecting other clients. For a capability overview, refer to [Chat][docs-chat]. For organization-wide analytics and configuration, use the separate [admin dashboard][docs-admin-dashboard].
+Aperture Chat 界面将对话与审查自己活动、连接其他客户端的工具结合在一起。功能概览请参阅 [Chat][docs-chat]。组织级的分析和配置请使用独立的[管理仪表板][docs-admin-dashboard]。
 
-## Open Chat
+## 打开 Chat
 
-Open your Aperture hostname or `/chat` on that hostname. You must be authenticated and have portal access. Portal access is available by default, but an administrator can disable it for API-only users. Your grants separately control access to models and connectors.
+打开你的 Aperture 主机名，或该主机名上的 `/chat`。你必须通过身份验证并拥有门户（portal）访问权限。门户访问默认开放，但管理员可以为仅使用 API 的用户禁用它。模型和连接器的访问权限由你的授权单独控制。
 
-The sidebar provides **New chat**, **Projects**, your conversation history, and the personal pages described below. **Skills** appears when a personal library is available for your account. **Quotas** appears when quota buckets apply to you.
+侧边栏提供 **New chat**、**Projects**、你的对话历史以及下文介绍的个人页面。当你的账户可以使用个人库时，会出现 **Skills**。当有适用于你的配额桶时，会出现 **Quotas**。
 
-Administrators also find **Admin console** in the sidebar footer. This opens `/admin/` in a new tab. Non-admin users cannot use the admin dashboard.
+管理员还会在侧边栏底部看到 **Admin console**。它会在新标签页中打开 `/admin/`。非管理员用户无法使用管理仪表板。
 
-## Start a conversation
+## 开始对话
 
-1. Select **New chat**.
-2. Open the model selector next to the send button and choose a model. Use search to find a model in a long list.
-3. If the model supports reasoning effort, select the effort you want in the same selector.
-4. Optionally attach files or open **Tools** to choose capabilities for the conversation.
-5. Enter your message and send it.
+1. 选择 **New chat**。
+2. 打开发送按钮旁边的模型选择器并选择一个模型。列表很长时可以用搜索查找模型。
+3. 如果模型支持推理投入（reasoning effort），请在同一选择器中选择你想要的投入程度。
+4. 也可以选择附加文件，或打开 **Tools** 为对话选择能力。
+5. 输入你的消息并发送。
 
-While the assistant generates a response, the send control becomes a stop control. Select it to stop generation. Conversations appear in the sidebar so you can return to them later.
+助手生成响应时，发送按钮会变成停止按钮。选择它即可停止生成。对话会出现在侧边栏中，方便你以后回来继续。
 
-### Model and reasoning selection
+### 模型与推理选择
 
-The composer shows models that your administrator offers for chat and your grants allow. The **Models** directory can include models that are available through other clients but are not offered in the chat selector.
+编写器（composer）显示管理员为聊天提供、且你的授权允许的模型。**Models** 目录中可能包含可通过其他客户端使用、但未在聊天选择器中提供的模型。
 
-Reasoning choices depend on the selected model. A higher effort asks a supported model to spend more reasoning on a response. If you attach an image to a model that does not support images, the composer prevents sending and asks you to change the model or remove the attachment.
+推理选项取决于所选模型。更高的投入程度会让支持的模型在响应上投入更多推理。如果你给不支持图像的模型附加图片，编写器会阻止发送，并要求你更换模型或移除附件。
 
-Administrators curate the selector in **Administration** > **Chat** > **Models** in the admin dashboard. Curation does not grant access to a model.
+管理员在管理仪表板的 **Administration** > **Chat** > **Models** 中管理选择器的内容。管理选择器并不会授予对模型的访问权限。
 
-### Tools
+### 工具
 
-Open **Tools** in the composer to choose capabilities and connector tools. Availability depends on the gateway, your grants, your authorizations, and any project restrictions.
+在编写器中打开 **Tools**，选择能力和连接器工具。可用性取决于网关、你的授权（grant）、你的连接授权以及任何项目限制。
 
-* **Web** provides web tools when available.
-* **Code Sandbox** lets the assistant run code and work with files when available. If it is unavailable, the menu directs you to contact support.
-* **Location** lets you share your location through your browser's permission controls.
-* Connector entries let you choose tools from services you can access. Open an entry to review and select individual tools.
+* **Web**：在可用时提供网页工具。
+* **Code Sandbox**：在可用时让助手运行代码并处理文件。不可用时，菜单会提示你联系支持团队。
+* **Location**：让你通过浏览器的权限控制共享你的位置。
+* 连接器条目让你从可访问的服务中选择工具。打开条目可以查看并勾选具体工具。
 
-When the **Tool search** setting is available, **On** loads tools when needed. **Off** loads all tools, which can require conversation compaction more often.
+如果 **Tool search** 设置可用，**On** 表示按需加载工具；**Off** 表示加载全部工具，后者可能需要更频繁地压缩对话。
 
-Selecting a tool does not grant access to it. To authorize a connector, use the [Connectors][ar-connectors] page. Project restrictions can prevent you from enabling a tool in a project conversation.
+选择工具并不会授予对它的访问权限。要对连接器进行连接授权，请使用[连接器（Connectors）][ar-connectors]页面。项目限制可能会阻止你在项目对话中启用某个工具。
 
-### Attachments and output files
+### 附件与输出文件
 
-Select **Attach files** in the composer to add files. Supported attachment handling depends on the file type and the available tools:
+在编写器中选择 **Attach files** 添加文件。支持的附件处理方式取决于文件类型和可用工具：
 
-* Files sent to the model have a 25 MiB per-file limit.
-* Files handled only by the code sandbox have a 500 MiB per-file limit.
-* A conversation can have up to 20 attachments.
+* 发送给模型的文件，每个文件上限 25 MiB。
+* 仅由代码沙箱处理的文件，每个文件上限 500 MiB。
+* 每个对话最多可附加 20 个文件。
 
-Select an output file to open the file viewer. The viewer supports text, code, images, Markdown, HTML, SVG, and PDF. Download files you want to keep outside the conversation.
+选择输出文件即可打开文件查看器。查看器支持文本、代码、图像、Markdown、HTML、SVG 和 PDF。想要在对话之外保留的文件请下载保存。
 
-## Projects
+## 项目（Projects）
 
-**Projects** (`/projects`) groups conversations with shared instructions and tool restrictions. Select a project to review its chats, edit its instructions, or start a conversation in that project.
+**Projects**（`/projects`）把具有共享指令和工具限制的对话归为一组。选择一个项目可以查看其对话、编辑其指令，或在该项目中开始对话。
 
-Project instructions apply to conversations in the project and have a 16 KiB (16,384-byte) limit. Tool restrictions narrow the tools available in those conversations. They do not grant access to otherwise unavailable connectors or tools.
+项目指令应用于该项目中的对话，上限为 16 KiB（16,384 字节）。工具限制会缩小这些对话中可用的工具范围，但不会让你使用原本不可用的连接器或工具。
 
-When node selection is available, assigned tailnet nodes guide which machines chat tries first. Assignment does not grant Tailscale SSH access or restrict chat to those nodes. Your tailnet's Tailscale SSH policy remains authoritative.
+当节点选择可用时，被指派的 tailnet 节点会引导聊天优先尝试哪些机器。指派不会授予 Tailscale SSH 访问权限，也不会把聊天限制在这些节点上。你 tailnet 的 Tailscale SSH 策略仍然具有最终决定权。
 
-For creation, conversation organization, instructions, and node selection procedures, refer to [Chat projects][docs-projects].
+创建、对话组织、指令和节点选择的操作步骤请参阅 [Chat 项目][docs-projects]。
 
-## Models
+## 模型（Models）
 
-**Models** (`/models`) is the directory of models available to you through Aperture. Use it to review model identifiers, capabilities, context limits, and pricing where that information is available.
+**Models**（`/models`）是可通过 Aperture 供你使用的模型目录。你可以在其中查看模型标识符、能力、上下文限制，以及（在信息可用时的）定价。
 
-Use the model identifier when configuring an API client or agent. If a model you expect is missing, ask an administrator to check its provider configuration and your grants. The directory does not let ordinary users change providers or grant themselves model access.
+配置 API 客户端或 agent 时请使用模型标识符。如果你期望的模型缺失，请让管理员检查其提供商配置和你的授权。普通用户无法通过该目录更改提供商或给自己授予模型访问权限。
 
-## Connectors
+## 连接器（Connectors）
 
-**Connectors** (`/connectors`) lists the services your grants let you use. Aperture omits configured connectors that your grants deny instead of showing them as inaccessible.
+**Connectors**（`/connectors`）列出你的授权允许使用的服务。对于你的授权拒绝的已配置连接器，Aperture 会直接隐藏，而不是把它们显示为不可访问。
 
-Use the page to find connectors that are ready to use, connect an account, or reconnect an expired or unusable authorization. Select a connector to review its details and MCP tools, where applicable.
+你可以在此页面找到可直接使用的连接器、连接账户，或重新连接过期或不可用的授权。选择一个连接器可以查看其详情和（如适用）MCP 工具。
 
-A **Ready** status describes your access and authorization. It is not an upstream health check. For a ready MCP connector, **Refresh tools** contacts the upstream service to request the current tool list. A refresh error does not by itself change the connector's authorization status.
+**Ready** 状态描述的是你的访问权限和连接授权情况，它不是上游健康检查。对于已就绪的 MCP 连接器，**Refresh tools** 会联系上游服务请求当前的工具列表。刷新出错本身不会改变连接器的授权状态。
 
-For status descriptions and authorization steps, refer to [Use a connector][docs-use-connector]. Administrators configure connectors separately in **Administration** > **Connectors** in the admin dashboard.
+状态说明和连接授权步骤请参阅[使用连接器][docs-use-connector]。管理员在管理仪表板的 **Administration** > **Connectors** 中单独配置连接器。
 
-## Skills
+## 技能（Skills）
 
-**Skills** (`/skills`) is your personal library of reusable instructions and supporting files. It appears only when the library is available for your account.
+**Skills**（`/skills`）是你的可复用指令与配套文件的个人库。只有当该库对你的账户可用时才会显示。
 
-Use the library to search for skills, import a skill, or inspect its instructions and files. Aperture stages edits as a draft. Select **Save changes** to validate the skill and update your personal library. This does not make the skill public.
+你可以在此库中搜索技能、导入技能，或查看其指令和文件。Aperture 会把编辑暂存为草稿。选择 **Save changes** 可校验技能并更新你的个人库。这不会把技能公开。
 
-Select **Use in chat** from a skill to start a conversation with it, or select a skill from the composer's skill suggestions. Review imported instructions and files before using them, especially when the conversation has tools that can change external systems.
+在技能上选择 **Use in chat** 即可与它开始对话，或在编写器的技能建议中选择一个技能。使用导入的指令和文件之前请先审查，尤其是当对话中包含可以更改外部系统的工具时。
 
-## Sessions
+## 会话（Sessions）
 
-**Sessions** (`/sessions`) shows your LLM request sessions through Aperture, including traffic from coding agents. It is not the same as the chat conversation list in the sidebar.
+**Sessions**（`/sessions`）显示你经由 Aperture 的 LLM 请求会话，包括来自编码 agent 的流量。它与侧边栏中的聊天对话列表不是一回事。
 
-Select a session to inspect its request timeline. Select a request to inspect available details such as its model, token usage, timing, headers, and captured payloads. Request and response bodies are available only when captured and retained under the gateway's retention policy.
+选择一个会话可以查看其请求时间线。选择一个请求可以查看可用详情，例如模型、token 用量、耗时、header 和捕获的负载。请求体和响应体只有在网关留存策略捕获并保留时才可用。
 
-Use this view to investigate your own requests. Administrators use **Security** > **Logs** in the admin dashboard for organization-wide request inspection.
+请用此视图排查你自己的请求。管理员使用管理仪表板中的 **Security** > **Logs** 进行组织级的请求检查。
 
-## Usage
+## 用量（Usage）
 
-**Usage** (`/usage`) shows your personal token usage and estimated costs across requests routed through Aperture.
+**Usage**（`/usage`）显示你经由 Aperture 路由的各请求的个人 token 用量和估算成本。
 
-Choose a time range, switch between cost and token views, and group the breakdown by model or agent. The page includes token totals and request counts. Costs are estimates based on the pricing information available to Aperture, not a provider invoice.
+可以选择时间范围、在成本视图和 token 视图之间切换，并按模型或 agent 对明细分组。页面包含 token 总数和请求数。成本是基于 Aperture 可获得的定价信息做出的估算，并非提供商账单。
 
-For organization-wide comparisons, administrators use **Usage & Adoption** in the admin dashboard. The personal **Usage** page does not expose other users' activity.
+组织级对比请由管理员使用管理仪表板中的 **Usage & Adoption**。个人 **Usage** 页面不会暴露其他用户的活动。
 
-## Quotas
+## 配额（Quotas）
 
-**Quotas** (`/quotas`) shows the spending limits that apply to your available models. The sidebar entry is hidden when no quota buckets apply.
+**Quotas**（`/quotas`）显示适用于你可用模型的支出限额。当没有适用于你的配额桶时，侧边栏条目会隐藏。
 
-Review balances and refill information to understand when you can continue using a model. The page identifies low balances, use of backup funds, and models blocked by exhausted quotas. Use **Refresh quotas** to update the view.
+查看余额和补充信息，了解何时还能继续使用某个模型。页面会标出低余额、使用备用额度和因配额耗尽而被阻塞的模型。使用 **Refresh quotas** 更新视图。
 
-Non-admin users can inspect their limits but cannot refill or change them. Administrators can adjust balances, control refills, and manage other users' limits in the admin dashboard. For the available actions, refer to [Check and refill budgets][docs-budgets].
+非管理员用户可以查看自己的限额，但不能补充或更改。管理员可以在管理仪表板中调整余额、控制补充并管理其他用户的限额。可用操作请参阅[查看并补充预算][docs-budgets]。
 
 ## Agents
 
-**Agents** (`/agents`) provides setup instructions for supported clients, using your Aperture gateway URL and configured providers. Select the client you want to connect and follow its displayed instructions.
+**Agents**（`/agents`）基于你的 Aperture 网关 URL 和已配置的提供商，为受支持的客户端提供设置说明。选择你要连接的客户端并按照显示的说明操作。
 
-If no compatible provider is configured, the page explains that an administrator needs to add one. This is a setup page, not a scheduler or an interface for running agents in the browser.
+如果没有配置兼容的提供商，页面会说明需要管理员添加一个。这是一个设置页面，不是调度器，也不是在浏览器中运行 agent 的界面。
 
-For command-line setup, refer to the [Aperture CLI][docs-cli] and [Use your tools][docs-use-tools].
+命令行设置请参阅 [Aperture CLI][docs-cli] 和[使用你的工具][docs-use-tools]。
 
-## Share a conversation
+## 共享对话
 
-Conversation sharing creates a read-only snapshot of the selected conversation branch. Recipients need the link, authenticated access to the gateway, and portal access. The link does not make the conversation publicly accessible on the internet.
+对话共享会为所选对话分支创建一个只读快照。接收者需要链接、对网关的已验证访问以及门户访问权限。该链接不会让对话在互联网上公开可访问。
 
-> **Warning:**
+> **警告：**
 >
-> A shared snapshot includes thinking, tool results, and attachments in the shared conversation path. Review that content before sharing. Recipients can learn information returned by your tools even if they do not have access to the underlying service.
+> 共享快照包含共享对话路径中的思维过程（thinking）、工具结果和附件。共享之前请先审查这些内容。即使接收者无权访问底层服务，他们也能了解到你的工具返回的信息。
 
-1. In the conversation header, select **Share** > **Share link**.
-2. Select **Create link**.
-3. Copy the link and send it only to the intended recipients.
+1. 在对话标题栏中选择 **Share** > **Share link**。
+2. 选择 **Create link**。
+3. 复制链接并只发送给预期的接收者。
 
-New messages are not automatically added to an existing shared snapshot. Select **Shared** > **Manage share link**, then **Share new messages** to update it to the current conversation branch. Select **Unshare** to revoke the link. Revoking access does not remove copies a recipient already saved.
+新消息不会自动加入已有的共享快照。选择 **Shared** > **Manage share link**，再选择 **Share new messages**，即可将其更新到当前对话分支。选择 **Unshare** 可撤销链接。撤销访问不会删除接收者已保存的副本。
 
-## Feedback
+## 反馈
 
-Open **Feedback** (`/feedback`) to send feedback about Aperture. For access problems, missing models, or unavailable connectors, contact your gateway administrator.
+打开 **Feedback**（`/feedback`）提交关于 Aperture 的反馈。访问问题、缺失模型或连接器不可用等情况，请联系你的网关管理员。
 
-## Related
+## 相关内容
 
-* [Chat overview][docs-chat]
-* [Set up the chat UI][docs-chat-setup]
-* [Admin dashboard reference][docs-admin-dashboard]
-* [Privacy and data retention][docs-privacy]
+* [Chat 概览][docs-chat]
+* [设置聊天界面][docs-chat-setup]
+* [管理仪表板参考][docs-admin-dashboard]
+* [隐私与数据留存][docs-privacy]
 
-[ar-connectors]: #connectors
+[ar-connectors]: #连接器connectors
 
 [docs-admin-dashboard]: /docs/aperture/reference/dashboard-admin
 

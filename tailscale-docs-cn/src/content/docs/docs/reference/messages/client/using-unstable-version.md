@@ -1,35 +1,35 @@
 ---
-title: "Using an unstable version"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "使用不稳定版本"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jul 31, 2025
+最后验证于 Jul 31, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Using an unstable version
 This is an unstable version of Tailscale meant for testing and
 development purposes. Please report any issues to Tailscale.
 
-## Message ID
+## 消息 ID
 
 `is-using-unstable-version`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-Unstable versions of the Tailscale client are for testing and are not recommended for use in production environments. Therefore, this message displays for cautionary purposes only.
+Tailscale 客户端的不稳定（unstable）版本仅供测试使用，不建议在生产环境中使用。因此，这条消息仅作提醒之用。
 
-## What to do
+## 处理方法
 
-If you are intentionally using an unstable version of the Tailscale client in a non-production environment or for other testing, you do not need to take any action.
+如果你是在非生产环境或有其他测试用途下有意使用 Tailscale 客户端的不稳定版本，则无需采取任何操作。
 
-## Additional reference
+## 更多参考
 
-* For information about installing the Tailscale client, refer to [Install Tailscale][docs-installation].
-* For information about updating the Tailscale client, refer to [Update Tailscale][docs-update].
-* For information about Tailscale release tracks such as stable, unstable, and release candidates, refer to [Tailscale client versions and release tracks][docs-versions].
+* 有关安装 Tailscale 客户端的信息，请参阅 [安装 Tailscale][docs-installation]。
+* 有关更新 Tailscale 客户端的信息，请参阅 [更新 Tailscale][docs-update]。
+* 有关 stable、unstable 和候选发布版等 Tailscale 发布轨道的信息，请参阅 [Tailscale 客户端版本与发布轨道][docs-versions]。
 
 [docs-installation]: /docs/install
 

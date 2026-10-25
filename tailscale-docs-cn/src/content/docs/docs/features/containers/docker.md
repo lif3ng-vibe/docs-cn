@@ -1,29 +1,29 @@
 ---
 title: "Docker"
-description: "Installing applications like web servers, databases, or self-hosted services directly on your machine can create challenges. Each service needs specific dependencies that can conflict with other softw"
+description: "直接在机器上安装 Web 服务器、数据库或自托管服务等应用会带来各种挑战。每个服务都需要特定的依赖，这些依赖可能与其他软件冲突。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-Installing applications like web servers, databases, or self-hosted services directly on your machine can create challenges. Each service needs specific dependencies that can conflict with other software, setup requires multiple steps, and removal can be difficult. To access these services remotely, you typically need to expose them to the public internet, which creates security risks. [Docker][xt-docker] containers solve these problems by packaging each application with everything it needs in an isolated environment. You can run multiple services without conflicts, test software without cluttering your system, and remove containers cleanly. When you connect Docker containers to your tailnet, you can securely access these services from anywhere without public exposure.
+直接在机器上安装 Web 服务器、数据库或自托管服务等应用会带来各种挑战：每个服务都需要特定的依赖，这些依赖可能与其他软件冲突；安装需要多个步骤；移除也可能很麻烦。要远程访问这些服务，你通常需要把它们暴露到公共互联网上，这会带来安全风险。[Docker][xt-docker] 容器把每个应用及其所需的全部内容打包进隔离的环境，从而解决这些问题。你可以无冲突地运行多个服务，在不弄乱系统的前提下测试软件，并干净地移除容器。将 Docker 容器连接到你的 tailnet 后，你就能从任何地方安全地访问这些服务，而无需公开暴露。
 
-Common use cases include running self-hosted applications such as Plex, Grafana, and Home Assistant, accessing development databases and tools remotely, connecting microservices across different hosts, and testing applications in isolated environments. Refer to [Tailscale Docker code examples][xt-gh-tailscale-docker-examples] in GitHub, for more ideas and examples of what you can install alongside the Tailscale client in a container.
+常见用例包括运行 Plex、Grafana、Home Assistant 等自托管应用，远程访问开发数据库和工具，连接跨不同主机的微服务，以及在隔离环境中测试应用。更多创意和示例（看看可以在容器中与 Tailscale 客户端一起安装什么），请参阅 GitHub 上的 [Tailscale Docker 代码示例][xt-gh-tailscale-docker-examples]。
 
-[**Understanding Docker components**](/docs/features/containers/docker/docker-components) — Docker components overview covering Engine that runs containers, Dockerfiles that define images, images that package apps, containers that run them, and Compose for multi container setups.
+[**了解 Docker 组件**](/docs/features/containers/docker/docker-components) — Docker 组件概览：运行容器的 Engine、定义镜像的 Dockerfile、打包应用的镜像、运行应用的容器，以及用于多容器部署的 Compose。
 
-[**Connect a Docker container to your tailnet with standalone Docker**](/docs/features/containers/docker/how-to/connect-docker-standalone) — Run the Tailscale Docker image using a single command to create and authenticate a container to your tailnet.
+[**使用独立 Docker 将 Docker 容器连接到你的 tailnet**](/docs/features/containers/docker/how-to/connect-docker-standalone) — 用一条命令运行 Tailscale Docker 镜像，创建容器并认证到你的 tailnet。
 
-[**Connect a Docker container to your tailnet with Docker Compose**](/docs/features/containers/docker/how-to/connect-docker-container) — Set up a Tailscale-connected container using Docker Compose with nginx, allowing secure access to the service over your tailnet.
+[**使用 Docker Compose 将 Docker 容器连接到你的 tailnet**](/docs/features/containers/docker/how-to/connect-docker-container) — 用 Docker Compose 搭配 nginx 搭建连接 Tailscale 的容器，让你能通过 tailnet 安全访问该服务。
 
-[**Connect a Docker container to your tailnet with an alternative Docker manager**](/docs/features/containers/docker/how-to/connect-docker-alt-manager) — Run the Tailscale Docker image with alternative container managers like Podman, Portainer, or Colima using the same configuration.
+[**使用其他 Docker 管理器将 Docker 容器连接到你的 tailnet**](/docs/features/containers/docker/how-to/connect-docker-alt-manager) — 用相同的配置，在 Podman、Portainer 或 Colima 等其他容器管理器中运行 Tailscale Docker 镜像。
 
-[**Docker configuration parameters**](/docs/features/containers/docker/docker-params) — Use Docker environment variables to configure how a Tailscale container authenticates, connects to your tailnet, and exposes services.
+[**Docker 配置参数**](/docs/features/containers/docker/docker-params) — 使用 Docker 环境变量配置 Tailscale 容器如何进行认证、连接到你的 tailnet 以及对外提供服务。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下面的相关视频提供了更多背景信息和示例。
 
-[Get started with Docker and Tailscale (video)](https://www.youtube.com/watch?v=YTjYXii4WzI)
+[Docker 与 Tailscale 入门（视频）](https://www.youtube.com/watch?v=YTjYXii4WzI)
 
 [xt-docker]: https://www.docker.com/
 

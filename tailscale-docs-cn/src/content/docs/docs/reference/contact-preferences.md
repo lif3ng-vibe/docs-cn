@@ -1,122 +1,102 @@
 ---
-title: "Contact preferences"
-description: "Set contacts for account changes, configuration issues, security issues, and billing."
+title: "联系人偏好设置"
+description: "为账户变更、配置问题、安全问题和账单设置联系人。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-When we discover issues that affect your tailnet, and we have your contact information, we
-will contact you. For example, if a security issue affects your tailnet and we have a security
-contact email for you, we will send you an email.
+当我们发现影响你的 tailnet 的问题且掌握你的联系信息时，会主动与你联系。例如，如果某个安全问题影响了你的 tailnet，而我们留有你的安全联系人邮箱，我们会给你发送邮件。
 
-You can add, review, and update your account changes, configuration issues, and security issues
-contacts in the [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) page of the admin console, if you have a
-[user role][docs-user-roles] that is permitted access. For information about updating your billing contact,
-refer to [Billing email][docs-billing-information-billing-email].
+如果你拥有具备相应访问权限的[用户角色][docs-user-roles]，可以在管理控制台的 [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) 页面添加、查看和更新账户变更、配置问题和安全问题联系人。更新账单联系人的信息，请参阅[账单邮箱][docs-billing-information-billing-email]。
 
-You cannot disable or unsubscribe from account changes, configuration issues, security issues, or billing emails. These emails notify you about transactional events; they are not marketing emails.
+你无法禁用或退订账户变更、配置问题、安全问题或账单邮件。这些邮件通知的是事务性事件，并非营销邮件。
 
-> **Note:**
+> **注意：**
 >
-> If you are using GitHub as your identity provider, we have no contact email information unless you
-> add an email address to your contact preferences.
+> 如果你使用 GitHub 作为身份提供方，那么除非你在联系人偏好设置中添加了邮箱地址，否则我们没有可用的联系邮箱。
 
-## Types of contact emails
+## 联系人邮件的类型
 
-The types of contact emails are for account changes, configuration issues, security issues, and billing.
-A billing email is not enabled unless you're on a [paid Tailscale plan][co-pricing].
+联系人邮件类型包括账户变更、配置问题、安全问题和账单。只有订阅了 [Tailscale 付费套餐][co-pricing]，账单邮件才会启用。
 
-If you do not set an email for a contact type, Tailscale sends emails to the tailnet owner address by default.
+如果某类联系人未设置邮箱，Tailscale 默认将邮件发送到 tailnet 所有者的地址。
 
-### Account changes email
+### 账户变更邮件
 
-Tailscale uses the account changes email for notifications about changes to your account. For example, approvals for access to new features requests, or changes to rate limits.
+Tailscale 使用账户变更邮件通知你账户的变动。例如，新功能访问请求的批准，或速率限制的变更。
 
-### Configuration issues email
+### 配置问题邮件
 
-Tailscale uses the configuration issues email for notifications if there is an issue with your tailnet configuration. For
-example, you have a [tailnet policy file][docs-acls] misconfiguration.
+如果你的 tailnet 配置存在问题，Tailscale 会使用配置问题邮件发出通知。例如，你的 [tailnet 策略文件][docs-acls]存在配置错误。
 
-### Security issues email
+### 安全问题邮件
 
-Tailscale uses the security issues email for notifications about security issues affecting your tailnet. For
-example, if we need to email a [security bulletin][co-security-bulletins] for an issue that affects you.
+Tailscale 使用安全问题邮件通知影响你 tailnet 的安全问题。例如，当某个问题影响到你、我们需要通过邮件发送[安全公告][co-security-bulletins]时。
 
-### Billing email
+### 账单邮件
 
-Tailscale uses the billing email to send you invoices and other billing-related email. If you are not paying for a [paid Tailscale plan][co-pricing], a billing email does not exist for your tailnet.
+Tailscale 使用账单邮件向你发送发票及其他账单相关邮件。如果你没有订阅 [Tailscale 付费套餐][co-pricing]，你的 tailnet 就不存在账单邮件。
 
-## Setting the account changes email
+## 设置账户变更邮件
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to update the account email.
+你需要是 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能更新账户邮箱。
 
-1. Open the [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) page in the admin console.
+1. 在管理控制台中打开 [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) 页面。
 
-2. In the **Account changes** text box, enter an email address.
+2. 在 **Account changes** 文本框中输入一个邮箱地址。
 
-3. Select **Save**.
+3. 选择 **Save**。
 
-   You'll receive a verification URL at the new email address.
+   新邮箱地址会收到一个验证 URL。
 
-4. Follow the verification URL to confirm the email address. If the email address is not verified, Tailscale sends any new
-   account changes emails to the last verified account email (or the tailnet owner email if there is no previously verified
-   account changes email).
+4. 打开验证 URL 以确认该邮箱地址。如果邮箱地址未通过验证，Tailscale 会将新的账户变更邮件发送到上一个已验证的账户邮箱（如果此前没有已验证的账户变更邮箱，则发送到 tailnet 所有者邮箱）。
 
-Once you have verified the new email address, Tailscale will use it for future account changes emails.
+新邮箱地址通过验证后，Tailscale 之后的账户变更邮件都会使用它。
 
-## Setting the configuration issues email
+## 设置配置问题邮件
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to update the support email.
+你需要是 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能更新支持邮箱。
 
-1. Open the [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) page in the admin console.
+1. 在管理控制台中打开 [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) 页面。
 
-2. In the **Configuration issues** text box, enter an email address.
+2. 在 **Configuration issues** 文本框中输入一个邮箱地址。
 
-3. Select **Save**.
+3. 选择 **Save**。
 
-   You'll receive a verification URL at the new email address.
+   新邮箱地址会收到一个验证 URL。
 
-4. Follow the verification URL to confirm the email address. If the email address is not verified, Tailscale sends any new
-   configuration issues emails to the last verified configuration issues email (or the tailnet owner email if there is no
-   previously verified configuration issues email).
+4. 打开验证 URL 以确认该邮箱地址。如果邮箱地址未通过验证，Tailscale 会将新的配置问题邮件发送到上一个已验证的配置问题邮箱（如果此前没有已验证的配置问题邮箱，则发送到 tailnet 所有者邮箱）。
 
-Once you have verified the new email address, Tailscale will use it to send future support issue emails.
+新邮箱地址通过验证后，Tailscale 之后的支持问题邮件都会使用它发送。
 
-## Setting the security issues email
+## 设置安全问题邮件
 
-You need to be an [Owner or Admin](/docs/reference/user-roles) of a tailnet to update the security email.
+你需要是 tailnet 的 [Owner 或 Admin](/docs/reference/user-roles) 才能更新安全邮箱。
 
-1. Open the [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) page in the admin console.
+1. 在管理控制台中打开 [Contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) 页面。
 
-2. In the **Security issues** text box, enter an email address.
+2. 在 **Security issues** 文本框中输入一个邮箱地址。
 
-3. Select **Save**.
+3. 选择 **Save**。
 
-   You'll receive a verification URL at the new email address.
+   新邮箱地址会收到一个验证 URL。
 
-4. Follow the verification URL to confirm the email address. If the email address is not verified, Tailscale sends any new
-   security issue emails to the last verified security issues email (or the tailnet owner email if there is no previously
-   verified security issues email).
+4. 打开验证 URL 以确认该邮箱地址。如果邮箱地址未通过验证，Tailscale 会将新的安全问题邮件发送到上一个已验证的安全问题邮箱（如果此前没有已验证的安全问题邮箱，则发送到 tailnet 所有者邮箱）。
 
-Once you have verified the new email address, Tailscale will use it to send future security issue emails.
+新邮箱地址通过验证后，Tailscale 之后的安全问题邮件都会使用它发送。
 
-## Setting the billing email
+## 设置账单邮箱
 
-For information about updating your billing contact preference, refer to [Billing email][docs-billing-information-billing-email].
+关于更新账单联系人偏好的信息，请参阅[账单邮箱][docs-billing-information-billing-email]。
 
-## Audit logging of contact preference updates and verification
+## 联系人偏好更新与验证的审计日志
 
-In [configuration audit logging][docs-audit-logging], Tailscale records an action in your audit log whenever there's a change to a contact preference. Tailscale records the update and the verification.
-The log entry will show who performed the action and when the action occurred. For a contact preference update, the log entry will also show both the new value and old value for the email address.
+在[配置审计日志][docs-audit-logging]中，只要联系人偏好发生变更，Tailscale 就会在审计日志中记录一个操作，包括更新与验证。日志条目会显示谁执行了操作以及操作发生的时间。对于联系人偏好更新，日志条目还会显示邮箱地址的新值和旧值。
 
-## Limitations
+## 限制
 
-* While the account changes, configuration issues, security issues, and billing contacts can differ, each of them can
-  have only one email. If you want multiple users to be notified, consider using an email group. For example, use
-  `security@example.com`, instead of `alice@example.com`, for security issue notifications.
-* The account changes, configuration issues, and security issues emails cannot be disabled or unsubscribed from. Since
-  these are transactional emails, they will always be sent, even if you have unsubscribed from marketing emails.
-  Similarly, if you are paying by invoice, you cannot disable or unsubscribe from billing notifications.
+* 账户变更、配置问题、安全问题和账单联系人可以各不相同，但每类联系人只能设置一个邮箱。如果希望通知多名用户，可以考虑使用邮件组。例如，安全问题通知使用 `security@example.com` 而不是 `alice@example.com`。
+* 账户变更、配置问题和安全问题邮件无法禁用或退订。这些是事务性邮件，即使你退订了营销邮件，它们也始终会发送。同样，如果你按发票付款，账单通知也无法禁用或退订。
 
 [co-pricing]: https://tailscale.com/pricing
 

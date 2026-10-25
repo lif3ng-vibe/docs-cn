@@ -1,172 +1,172 @@
 ---
-title: "Docker configuration parameters"
-description: "Configuration parameters are passed as environment variables in your container definition. These parameters control how a Tailscale container authenticates to your tailnet, manages networking, and exp"
+title: "Docker 配置参数"
+description: "配置参数以环境变量的形式在容器定义中传入。这些参数控制 Tailscale 容器如何认证到你的 tailnet、管理网络以及暴露服务。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-Configuration parameters are passed as environment variables in your container definition. These parameters control how a Tailscale container authenticates to your tailnet, manages networking, and exposes services.
+配置参数以环境变量的形式在容器定义中传入。这些参数控制 Tailscale 容器如何认证到你的 tailnet、管理网络以及暴露服务。
 
-You can use parameters to configure authentication methods, enable features like DNS, metrics, and health checks, advertise routes, or forward traffic to other services. Set these variables in your Docker configuration (such as Docker run, Compose, or Kubernetes manifests) to customize how the container joins and operates within your tailnet.
+你可以使用这些参数配置认证方式、启用 DNS、指标和健康检查等功能、通告路由，或将流量转发到其他服务。在 Docker 配置（如 Docker run、Compose 或 Kubernetes 清单）中设置这些变量，即可自定义容器加入 tailnet 及在其中运行的方式。
 
 ## TS\_ACCEPT\_DNS
 
-Accept [DNS configuration][docs-dns] from the Tailscale admin console. Defaults to not accepted. Enable this if you want your container to use [MagicDNS][docs-magicdns] and custom DNS settings from your tailnet. Without this, the container uses Docker's default DNS configuration.
+接受来自 Tailscale 管理控制台的 [DNS 配置][docs-dns]。默认不接受。如果你希望容器使用 [MagicDNS][docs-magicdns] 和 tailnet 中的自定义 DNS 设置，请启用此项。否则，容器将使用 Docker 的默认 DNS 配置。
 
 ## TS\_AUDIENCE
 
-The audience to use when requesting an ID token from a well-known identity provider for workload identity federation. Use this parameter in environments that support automatic ID token generation, such as GitHub Actions, Google Cloud, or AWS. You must use this with `TS_CLIENT_ID`.
-You cannot use this parameter with `TS_CLIENT_SECRET` or `TS_ID_TOKEN`.
+在为工作负载身份联合（workload identity federation）从知名身份提供方请求 ID 令牌时使用的 audience。请在支持自动生成 ID 令牌的环境中使用此参数，例如 GitHub Actions、Google Cloud 或 AWS。此参数必须与 `TS_CLIENT_ID` 一起使用。
+不能与 `TS_CLIENT_SECRET` 或 `TS_ID_TOKEN` 一起使用。
 
 ## TS\_AUTH\_ONCE
 
-Controls login behavior. Set to false by default, which forces login every time the container starts. Set `TS_AUTH_ONCE=true` to log in only if the container isn't already authenticated. Use this when you're persisting state and don't want unnecessary re-authentication.
+控制登录行为。默认为 false，即容器每次启动都强制登录。设置 `TS_AUTH_ONCE=true` 后，只有当容器尚未通过认证时才会登录。当你持久化状态、不希望多余的重认证时可以使用此项。
 
 ## TS\_AUTHKEY
 
-Authenticates a container to your tailnet. Create an [authentication key][docs-auth-keys] in the Tailscale admin console, then paste it here. This is equivalent to what you would pass to [`tailscale login --auth-key=`][docs-cli-login]. You can also use an [OAuth client][docs-oauth-clients-register-new-nodes] secret here, but you must provide the associated tag using `TS_EXTRA_ARGS=--advertise-tags=tag:ci`.
+将容器认证到你的 tailnet。在 Tailscale 管理控制台中创建[认证密钥（auth key）][docs-auth-keys]，然后粘贴到这里。这等同于传给 [`tailscale login --auth-key=`][docs-cli-login] 的内容。你也可以在这里使用 [OAuth 客户端][docs-oauth-clients-register-new-nodes]的 secret，但必须通过 `TS_EXTRA_ARGS=--advertise-tags=tag:ci` 提供关联的标签。
 
-An [ephemeral node][docs-ephemeral-nodes] is automatically removed from your tailnet shortly after it disconnects, which is useful for temporary containers or CI/CD environments.
+[临时节点（ephemeral node）][docs-ephemeral-nodes]会在断开连接后很快从你的 tailnet 中自动移除，这对临时容器或 CI/CD 环境很有用。
 
-To make a node ephemeral depends on the credential you use.
+节点是否为临时节点取决于你使用的凭证。
 
-* If you use an [OAuth client secret][docs-oauth-clients-setup], the node is ephemeral by default. To register a non-ephemeral node, append `?ephemeral=false` to the secret.
-* If you use an [auth key][docs-auth-key-generate], set the key's ephemeral property when you create the key in the admin console.
+* 如果使用 [OAuth 客户端 secret][docs-oauth-clients-setup]，节点默认是临时节点。要注册非临时节点，请在 secret 后附加 `?ephemeral=false`。
+* 如果使用[认证密钥][docs-auth-key-generate]，请在管理控制台创建密钥时设置其 ephemeral 属性。
 
-You cannot use this parameter with `TS_CLIENT_ID`, `TS_CLIENT_SECRET`, `TS_ID_TOKEN`, or `TS_AUDIENCE`.
+此参数不能与 `TS_CLIENT_ID`、`TS_CLIENT_SECRET`、`TS_ID_TOKEN` 或 `TS_AUDIENCE` 一起使用。
 
 ## TS\_CLIENT\_ID
 
-The OAuth client ID for authentication. You can use it alone (for example, when an ID token auto-generates in well-known environments like GitHub Actions), with `TS_CLIENT_SECRET` for OAuth authentication, with `TS_ID_TOKEN` for [workload identity federation][docs-workload-identity-federation], or with `TS_AUDIENCE` for automatic ID token generation in supported environments.
+用于认证的 OAuth 客户端 ID。你可以单独使用它（例如在 GitHub Actions 等知名环境中自动生成 ID 令牌时）、与 `TS_CLIENT_SECRET` 一起用于 OAuth 认证、与 `TS_ID_TOKEN` 一起用于[工作负载身份联合][docs-workload-identity-federation]，或在受支持的环境中与 `TS_AUDIENCE` 一起用于自动生成 ID 令牌。
 
-If the value begins with `file:`, Tailscale treats it as a path to a file containing the client ID.
+如果值以 `file:` 开头，Tailscale 会将其视为包含客户端 ID 的文件路径。
 
 ## TS\_CLIENT\_SECRET
 
-The OAuth client secret for generating auth keys. You must use this with `TS_CLIENT_ID` for OAuth authentication. If the value begins with `file:`, Tailscale treats it as a path to a file containing the secret. This is more secure than embedding secrets directly in your setup. You cannot use this parameter with `TS_ID_TOKEN` or `TS_AUDIENCE`.
+用于生成认证密钥的 OAuth 客户端 secret。进行 OAuth 认证时必须与 `TS_CLIENT_ID` 一起使用。如果值以 `file:` 开头，Tailscale 会将其视为包含 secret 的文件路径。这比在配置中直接内嵌 secret 更安全。此参数不能与 `TS_ID_TOKEN` 或 `TS_AUDIENCE` 一起使用。
 
 ## TS\_DEST\_IP
 
-Proxies all incoming Tailscale traffic to the specified destination IP.
-Use this when you want all traffic that reaches your Tailscale container to forward to a specific service. For example, `TS_DEST_IP=100.0.0.5` sends all traffic to that IP address.
+把所有进入的 Tailscale 流量代理到指定的目标 IP。
+当你希望到达 Tailscale 容器的所有流量都转发到某个特定服务时使用。例如，`TS_DEST_IP=100.0.0.5` 会把所有流量发送到该 IP 地址。
 
 ## TS\_ENABLE\_HEALTH\_CHECK
 
-> **Note:**
+> **注意：**
 >
-> This functionality is available in Tailscale 1.78 and later.
+> 此功能在 Tailscale 1.78 及更高版本中可用。
 
-Set to true to enable an unauthenticated `/healthz` endpoint at the address you specify with `TS_LOCAL_ADDR_PORT`. The health check returns `200 OK` if the node has at least one tailnet IP address. Otherwise it returns `503`. Use this for container orchestration health checks.
+设为 true 时，会在你通过 `TS_LOCAL_ADDR_PORT` 指定的地址上启用一个无需认证的 `/healthz` 端点。如果节点至少拥有一个 tailnet IP 地址，健康检查返回 `200 OK`；否则返回 `503`。可用于容器编排的健康检查。
 
 ## TS\_ENABLE\_METRICS
 
-> **Note:**
+> **注意：**
 >
-> This functionality is available in Tailscale 1.78 and later.
+> 此功能在 Tailscale 1.78 及更高版本中可用。
 
-Set to true to enable an unauthenticated `/metrics` endpoint at the address you specify with `TS_LOCAL_ADDR_PORT`. Refer to [client metrics][docs-client-metrics] for more information about the available metrics. This is useful for monitoring your Tailscale container's performance and connection status.
+设为 true 时，会在你通过 `TS_LOCAL_ADDR_PORT` 指定的地址上启用一个无需认证的 `/metrics` 端点。可用指标的更多信息请参阅[客户端指标][docs-client-metrics]。这有助于监控 Tailscale 容器的性能和连接状态。
 
 ## TS\_HEALTHCHECK\_ADDR\_PORT
 
-> **Note:**
+> **注意：**
 >
-> This functionality is deprecated in Tailscale 1.78 and later. Use `TS_ENABLE_HEALTH_CHECK` instead.
+> 此功能在 Tailscale 1.78 及更高版本中已弃用。请改用 `TS_ENABLE_HEALTH_CHECK`。
 
 ## TS\_HOSTNAME
 
-Sets a custom hostname for your container in the tailnet. Without this, Docker generates a random hostname. This is equivalent to [`tailscale set --hostname=`][docs-cli-set]. For example, `TS_HOSTNAME=my-dev-database` makes your container accessible at my-dev-database in your tailnet.
+为容器在 tailnet 中设置自定义主机名。不设置时，Docker 会生成随机主机名。等同于 [`tailscale set --hostname=`][docs-cli-set]。例如，`TS_HOSTNAME=my-dev-database` 使你的容器可以在 tailnet 中通过 my-dev-database 访问。
 
 ## TS\_ID\_TOKEN
 
-The ID token from the identity provider for [workload identity federation][docs-workload-identity-federation]. You must use this with `TS_CLIENT_ID`. If the value begins with `file:`, Tailscale treats it as a path to a file containing the token.
+来自身份提供方、用于[工作负载身份联合][docs-workload-identity-federation]的 ID 令牌。必须与 `TS_CLIENT_ID` 一起使用。如果值以 `file:` 开头，Tailscale 会将其视为包含令牌的文件路径。
 
-You cannot use this parameter with `TS_CLIENT_SECRET` or `TS_AUDIENCE`.
+此参数不能与 `TS_CLIENT_SECRET` 或 `TS_AUDIENCE` 一起使用。
 
 ## TS\_KUBE\_SECRET
 
-If you're running in Kubernetes, this is the Kubernetes name where Tailscale stores state. Defaults to `tailscale`. If you don't set `TS_AUTHKEY`, and `TS_KUBE_SECRET` contains a secret with an auth key field, Tailscale uses that key as the auth key.
+如果你在 Kubernetes 中运行，这是 Tailscale 存储状态的 Kubernetes 资源名称。默认为 `tailscale`。如果你没有设置 `TS_AUTHKEY`，而 `TS_KUBE_SECRET` 包含一个带有 auth key 字段的 secret，Tailscale 会使用该密钥作为认证密钥。
 
 ## TS\_LOCAL\_ADDR\_PORT
 
-> **Note:**
+> **注意：**
 >
-> This functionality is available in Tailscale 1.78 and later.
+> 此功能在 Tailscale 1.78 及更高版本中可用。
 
-Specifies the `[<addr>]:<port>` where Tailscale serves local metrics and health check HTTP endpoints if you enable them through `TS_ENABLE_METRICS` or `TS_ENABLE_HEALTH_CHECK`. Defaults to `[::]:9002` on all available interfaces.
+指定 Tailscale 提供本地指标和健康检查 HTTP 端点的 `[<addr>]:<port>`（需通过 `TS_ENABLE_METRICS` 或 `TS_ENABLE_HEALTH_CHECK` 启用）。默认在所有可用接口上为 `[::]:9002`。
 
 ## TS\_OUTBOUND\_HTTP\_PROXY\_LISTEN
 
-Sets an address and port for the [HTTP proxy][docs-userspace-networking-socks5-vs-http]. Tailscale passes this to `tailscaled --outbound-http-proxy-listen=`. For example, `TS_OUTBOUND_HTTP_PROXY_LISTEN=:8080` creates an HTTP proxy on port `8080`, which is equivalent to `tailscaled --outbound-http-proxy-listen=:8080`.
+为 [HTTP 代理][docs-userspace-networking-socks5-vs-http]设置地址和端口。Tailscale 会把它传给 `tailscaled --outbound-http-proxy-listen=`。例如，`TS_OUTBOUND_HTTP_PROXY_LISTEN=:8080` 会在端口 `8080` 上创建 HTTP 代理，等同于 `tailscaled --outbound-http-proxy-listen=:8080`。
 
 ## TS\_ROUTES
 
-Advertises [subnet routes][docs-subnets] so other devices in your tailnet can reach networks accessible from this container. This is equivalent to [`tailscale set --advertise-routes=`][docs-cli-set]. For example, `TS_ROUTES=192.168.1.0/24` lets other tailnet devices access your local network through this container.
+通告[子网路由][docs-subnets]，让 tailnet 中的其他设备可以访问此容器所能到达的网络。等同于 [`tailscale set --advertise-routes=`][docs-cli-set]。例如，`TS_ROUTES=192.168.1.0/24` 让其他 tailnet 设备能通过此容器访问你的本地网络。
 
-To accept routes advertised by other nodes, use `TS_EXTRA_ARGS` to pass in `--accept-routes`.
+要接受其他节点通告的路由，请通过 `TS_EXTRA_ARGS` 传入 `--accept-routes`。
 
 ## TS\_SERVE\_CONFIG
 
-Accepts a JSON file to programmatically configure [Tailscale Serve][docs-tailscale-serve] and [Tailscale Funnel][docs-tailscale-funnel] functionality. Use [`tailscale serve status --json`][docs-tailscale-serve] to export your current configuration in the correct format. If you bind mount this file using a Docker volume, you must mount it as a directory (not an individual file) for Tailscale to correctly detect configuration updates.
+接受一个 JSON 文件，以编程方式配置 [Tailscale Serve][docs-tailscale-serve] 和 [Tailscale Funnel][docs-tailscale-funnel] 功能。使用 [`tailscale serve status --json`][docs-tailscale-serve] 以正确格式导出你当前的配置。如果你通过 Docker 卷以绑定挂载（bind mount）方式挂载此文件，必须将其作为目录挂载（而不是单个文件），Tailscale 才能正确检测配置更新。
 
 ## TS\_SOCKET
 
-The Unix socket path where the tailscaled LocalAPI socket lives. Defaults to `/var/run/tailscale/tailscaled.sock`. This is equivalent to `tailscaled tailscale --socket=`. You typically don't need to change this unless you have specific socket path requirements.
+tailscaled LocalAPI 套接字所在的 Unix 套接字路径。默认为 `/var/run/tailscale/tailscaled.sock`。等同于 `tailscaled tailscale --socket=`。除非你对套接字路径有特殊要求，否则通常无需更改。
 
 ## TS\_SOCKS5\_SERVER
 
-Sets an address and port for the [SOCKS5 proxy][docs-userspace-networking-socks5-vs-http]. Tailscale passes this to `tailscaled --socks5-server=`. For example, `TS_SOCKS5_SERVER=:1055` creates a SOCKS5 proxy on port `1055`, which is equivalent to `tailscaled --socks5-server=:1055`.
+为 [SOCKS5 代理][docs-userspace-networking-socks5-vs-http]设置地址和端口。Tailscale 会把它传给 `tailscaled --socks5-server=`。例如，`TS_SOCKS5_SERVER=:1055` 会在端口 `1055` 上创建 SOCKS5 代理，等同于 `tailscaled --socks5-server=:1055`。
 
 ## TS\_STATE\_DIR
 
-Specifies where `tailscaled` stores its state. The `TS_STATE_DIR` volume ensures the container keeps its identity across restarts. Without it, each restart creates a new node in the admin console. This directory must persist across container restarts or your container will appear as a new node each time. Tailscale passes this to `tailscaled --statedir=`. For example, `TS_STATE_DIR=/var/lib/tailscale` stores state in that directory, which you should mount as a volume.
+指定 `tailscaled` 存储状态的位置。`TS_STATE_DIR` 卷可确保容器在重启后保持其身份。否则，每次重启都会在管理控制台中创建一个新节点。该目录必须在容器重启之间持久保存，否则你的容器每次都会显示为新节点。Tailscale 会把它传给 `tailscaled --statedir=`。例如，`TS_STATE_DIR=/var/lib/tailscale` 会把状态存储在该目录中，你应将其挂载为卷。
 
-When running on Kubernetes, Tailscale stores state by default in the Kubernetes secret with `name:tailscale`. To store state on local disk instead, set `TS_KUBE_SECRET=""` and `TS_STATE_DIR=/path/to/storage/dir`.
+在 Kubernetes 上运行时，Tailscale 默认把状态存储在 `name:tailscale` 的 Kubernetes secret 中。要改为把状态存储在本地磁盘上，请设置 `TS_KUBE_SECRET=""` 和 `TS_STATE_DIR=/path/to/storage/dir`。
 
 ## TS\_TAILNET\_TARGET\_FQDN
 
-Proxies all incoming non-Tailscale traffic to the specified tailnet FQDN. Functions like `TS_TAILNET_TARGET_IP` but resolves a MagicDNS name instead of using a static IP. Not compatible with `TS_USERSPACE` mode. Cannot be used together with `TS_TAILNET_TARGET_IP`.
+把所有进入的非 Tailscale 流量代理到指定的 tailnet FQDN。功能类似于 `TS_TAILNET_TARGET_IP`，但解析的是 MagicDNS 名称而不是使用静态 IP。与 `TS_USERSPACE` 模式不兼容。不能与 `TS_TAILNET_TARGET_IP` 同时使用。
 
 ## TS\_TAILNET\_TARGET\_IP
 
-Proxies all incoming non-Tailscale traffic to the specified destination IP within the tailnet. This sets up the container as an egress proxy, forwarding traffic from outside the tailnet to a Tailscale IP. Not compatible with `TS_USERSPACE` mode. Cannot be used together with `TS_TAILNET_TARGET_FQDN`.
+把所有进入的非 Tailscale 流量代理到 tailnet 内指定的目标 IP。这会把容器设置为出站代理（egress proxy），把来自 tailnet 之外的流量转发到某个 Tailscale IP。与 `TS_USERSPACE` 模式不兼容。不能与 `TS_TAILNET_TARGET_FQDN` 同时使用。
 
 ## TS\_USERSPACE
 
-Controls whether to use [userspace networking][docs-userspace-networking-socks5-vs-http] instead of kernel networking. Enabled by default. This is equivalent to `tailscaled --tun=userspace-networking`.
+控制是否使用[用户态网络模式][docs-userspace-networking-socks5-vs-http]而不是内核网络。默认启用。等同于 `tailscaled --tun=userspace-networking`。
 
-Userspace networking works everywhere but has lower performance. Set `TS_USERSPACE=false` to use kernel networking for better speed, but you'll also need to add devices and `cap_add` sections to setup. Kernel networking provides better performance but requires `/dev/net/tun` and additional capabilities.
+用户态网络在任何环境都能工作，但性能较低。设置 `TS_USERSPACE=false` 可使用内核网络以获得更快速度，但还需要在配置中添加 devices 和 `cap_add` 段。内核网络性能更好，但需要 `/dev/net/tun` 和额外权限（capabilities）。
 
-## Extra arguments
+## 额外参数
 
-The parameters above cover common Tailscale configurations, but Tailscale supports many additional CLI flags. Use the extra arguments parameters below to pass any flags that don't have dedicated parameters. For example, if you want to advertise your container as an exit node or enable SSH, you can pass those flags through `TS_EXTRA_ARGS` since they don't have specific `TS_` parameters.
+上面的参数涵盖了常见的 Tailscale 配置，但 Tailscale 还支持许多其他 CLI 标志。使用下面的额外参数可以传入没有专用参数的任何标志。例如，如果你想把容器通告为出口节点或启用 SSH，可以通过 `TS_EXTRA_ARGS` 传递这些标志，因为它们没有对应的 `TS_` 参数。
 
 ## TS\_EXTRA\_ARGS
 
-Pass other Tailscale CLI flags you want to use with the [`tailscale up`][docs-cli-up] command. For example, `TS_EXTRA_ARGS=--advertise-exit-node --ssh`.
+传入你想在 [`tailscale up`][docs-cli-up] 命令中使用的其他 Tailscale CLI 标志。例如，`TS_EXTRA_ARGS=--advertise-exit-node --ssh`。
 
 ## TS\_TAILSCALED\_EXTRA\_ARGS
 
-Pass other Tailscale CLI flags you want to use with the [`tailscaled`][docs-tailscaled-flags-to-tailscaled] command. For example, `TS_TAILSCALED_EXTRA_ARGS=--verbose=2`.
+传入你想在 [`tailscaled`][docs-tailscaled-flags-to-tailscaled] 命令中使用的其他 Tailscale CLI 标志。例如，`TS_TAILSCALED_EXTRA_ARGS=--verbose=2`。
 
-## Experimental parameters
+## 实验性参数
 
-> **Warning:**
+> **警告：**
 >
-> `TS_EXPERIMENTAL` parameters are subject to change and should not be considered as permanently supported.
+> `TS_EXPERIMENTAL` 参数可能随时变更，不应被视为永久受支持。
 
 ## TS\_EXPERIMENTAL\_SERVICE\_AUTO\_ADVERTISEMENT
 
-> **Note:**
+> **注意：**
 >
-> This functionality is available in Tailscale v1.96 and later.
+> 此功能在 Tailscale v1.96 及更高版本中可用。
 
-For `containerboot` instances not running in Kubernetes, this parameter handles the automatic advertisement of any [Tailscale Services][docs-tailscale-services] defined in the Serve configuration on startup and un-advertises on shutdown.
+对于不在 Kubernetes 中运行的 `containerboot` 实例，此参数会在启动时自动通告 Serve 配置中定义的所有 [Tailscale Services][docs-tailscale-services]，并在关闭时取消通告。
 
-Defaults to `true` but can be disabled to allow user-specific advertisement configuration.
+默认为 `true`，但可以禁用，以便使用用户自定义的通告配置。
 
-> **Note:**
+> **注意：**
 >
-> This addresses a change in default behavior. Previously, service advertisement had to be enabled manually for each container and did not persist across restarts. This parameter can be used to restore previous behavior for scenarios that require it.
+> 此参数对应一次默认行为的变更。以前，服务通告必须为每个容器手动启用，且不会在重启后保留。对于需要旧行为的场景，可以使用此参数恢复。
 >
 > ```shell
 > TS_EXPERIMENTAL_SERVICE_AUTO_ADVERTISEMENT=false

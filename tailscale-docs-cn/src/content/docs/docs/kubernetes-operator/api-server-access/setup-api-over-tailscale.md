@@ -1,25 +1,25 @@
 ---
-title: "Set up the Kubernetes API server over Tailscale"
-description: "This topic describes how to set up the Tailscale API server proxy in auth mode. In this mode, the proxy impersonates the caller's Tailscale identity when forwarding requests to the Kubernetes API serv"
+title: "通过 Tailscale 设置 Kubernetes API 服务器"
+description: "本主题介绍如何以 auth 模式设置 Tailscale API 服务器代理。在该模式下，代理在将请求转发给 Kubernetes API 服务器时会模拟调用者的 Tailscale 身份"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This topic describes how to set up the Tailscale API server proxy in auth mode. In this mode, the proxy impersonates the caller's Tailscale identity when forwarding requests to the Kubernetes API server. This lets you use standard Kubernetes RBAC. For details on how impersonation works, refer to [Configure authentication and authorization][docs-auth-rbac].
+本主题介绍如何以 auth 模式设置 Tailscale API 服务器代理。在该模式下，代理在将请求转发给 Kubernetes API 服务器时会模拟调用者的 Tailscale 身份。这样你就可以使用标准的 Kubernetes RBAC。有关模拟机制的详细信息，请参阅[配置身份验证与授权][docs-auth-rbac]。
 
-> **Tip:**
+> **提示：**
 >
-> If you want to use Tailscale only for connectivity and handle authentication through another mechanism (for example, cloud provider IAM), refer to [Proxy without authentication (noauth mode)][docs-noauth].
+> 如果你只想用 Tailscale 提供连接性、通过其他机制处理身份验证（例如云提供商 IAM），请参阅[不进行身份验证的代理（noauth 模式）][docs-noauth]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, complete the following:
+开始之前，请完成以下操作：
 
-* [Install the Tailscale Kubernetes Operator][docs-k8s-install].
-* [Enable HTTPS][docs-enabling-https] for your tailnet.
-* Ensure your [access control policies][docs-acls] permit devices to access the proxy on port `443` over TCP.
+* [安装 Tailscale Kubernetes Operator][docs-k8s-install]。
+* 为你的 tailnet [启用 HTTPS][docs-enabling-https]。
+* 确保你的[访问控制策略][docs-acls]允许设备通过 TCP 端口 `443` 访问代理。
 
-For example, if your operator uses `tag:k8s-operator`, permit access for devices tagged with `tag:engineering`:
+例如，如果你的 Operator 使用 `tag:k8s-operator`，可以为带有 `tag:engineering` 标签的设备开放访问：
 
 ```json
 "grants": [
@@ -31,19 +31,19 @@ For example, if your operator uses `tag:k8s-operator`, permit access for devices
 ]
 ```
 
-> **Note:**
+> **注意：**
 >
-> Access to the proxy over the tailnet does not grant users any default permissions to the Kubernetes API. Users can only access resources they have been explicitly authorized to access through Kubernetes RBAC.
+> 通过 tailnet 访问代理并不会赋予用户任何访问 Kubernetes API 的默认权限。用户只能访问通过 Kubernetes RBAC 明确授权其访问的资源。
 >
-> For a quick single-replica setup, you can enable the [in-process proxy][docs-in-process] on the operator itself. Refer to the [overview page][docs-overview] for details.
+> 如果想要快速的单副本设置，你可以在 Operator 自身上启用[进程内代理][docs-in-process]。详情请参阅[概览页面][docs-overview]。
 
-## Deploy a high-availability proxy with ProxyGroup
+## 使用 ProxyGroup 部署高可用代理
 
-For production, deploy the API server proxy as a dedicated [`ProxyGroup`][docs-proxygroup]. This separates the proxy lifecycle from the operator and provides multiple replicas.
+对于生产环境，请将 API 服务器代理部署为专用 [`ProxyGroup`][docs-proxygroup]。这样可以将代理的生命周期与 Operator 分离，并提供多个副本。
 
-### Enable impersonation RBAC
+### 启用模拟 RBAC
 
-The `ProxyGroup` pods need Kubernetes RBAC permissions to impersonate users and groups when proxying requests. If you haven't already enabled the in-process proxy, set `allowImpersonation` to provision the required RBAC:
+`ProxyGroup` pod 在代理请求时需要 Kubernetes RBAC 权限来模拟用户和组。如果你尚未启用进程内代理，请设置 `allowImpersonation` 来预置所需的 RBAC：
 
 ```shell
 helm upgrade tailscale-operator tailscale/tailscale-operator \
@@ -52,13 +52,13 @@ helm upgrade tailscale-operator tailscale/tailscale-operator \
   --reuse-values
 ```
 
-> **Note:**
+> **注意：**
 >
-> If you already have `apiServerProxyConfig.mode` set, the RBAC is already provisioned and this step is not needed.
+> 如果你已经设置了 `apiServerProxyConfig.mode`，则 RBAC 已预置完成，无需此步骤。
 
-### Configure access control
+### 配置访问控制
 
-Ensure your access control policies permit access on both port `80` and `443`:
+确保你的访问控制策略允许端口 `80` 和 `443` 上的访问：
 
 ```json
 "grants": [
@@ -70,7 +70,7 @@ Ensure your access control policies permit access on both port `80` and `443`:
 ]
 ```
 
-Configure [auto-approvers][docs-auto-approvers] to let the `ProxyGroup` advertise Tailscale Services:
+配置[自动审批][docs-auto-approvers]，让 `ProxyGroup` 能够通告 Tailscale Services：
 
 ```json
 "autoApprovers": {
@@ -80,9 +80,9 @@ Configure [auto-approvers][docs-auto-approvers] to let the `ProxyGroup` advertis
 }
 ```
 
-### Create the ProxyGroup
+### 创建 ProxyGroup
 
-Create a `ProxyGroup` resource with `spec.type: kube-apiserver`:
+创建具有 `spec.type: kube-apiserver` 的 `ProxyGroup` 资源：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -96,15 +96,15 @@ spec:
     mode: auth
 ```
 
-Wait for the `ProxyGroup` to become ready:
+等待 `ProxyGroup` 就绪：
 
 ```shell
 kubectl wait proxygroup my-cluster --for=condition=ProxyGroupReady=true
 ```
 
-## Configure kubeconfig
+## 配置 kubeconfig
 
-After the `ProxyGroup` is ready, get the proxy URL from the `ProxyGroup` status:
+`ProxyGroup` 就绪后，从 `ProxyGroup` 状态中获取代理 URL：
 
 ```shell
 kubectl get proxygroup my-cluster
@@ -115,19 +115,19 @@ NAME         STATUS            URL                                 TYPE         
 my-cluster   ProxyGroupReady   https://my-cluster.tailxyz.ts.net   kube-apiserver   31s
 ```
 
-Use the Tailscale CLI to configure kubectl to connect through the proxy:
+使用 Tailscale CLI 配置 kubectl 通过代理连接：
 
 ```shell
 tailscale configure kubeconfig https://my-cluster.tailxyz.ts.net
 ```
 
-The hostname defaults to the `ProxyGroup` name, but you can customize it using `spec.kubeAPIServer.hostname`.
+主机名默认为 `ProxyGroup` 名称，你可以使用 `spec.kubeAPIServer.hostname` 自定义。
 
-## Configure Kubernetes RBAC
+## 配置 Kubernetes RBAC
 
-The proxy impersonates the caller's Tailscale identity, but Kubernetes won't grant any permissions by default. You need to create Kubernetes RBAC bindings to grant access.
+代理会模拟调用者的 Tailscale 身份，但 Kubernetes 默认不会授予任何权限。你需要创建 Kubernetes RBAC 绑定来授予访问权限。
 
-For example, to grant your Tailscale user read-only access to the cluster:
+例如，为你的 Tailscale 用户授予集群只读访问权限：
 
 ```shell
 kubectl create clusterrolebinding my-user-view \
@@ -135,7 +135,7 @@ kubectl create clusterrolebinding my-user-view \
   --clusterrole=view
 ```
 
-Or to grant all devices tagged with `tag:engineering` read-only access:
+或者，为所有带有 `tag:engineering` 标签的设备授予只读访问权限：
 
 ```shell
 kubectl create clusterrolebinding engineering-view \
@@ -143,13 +143,13 @@ kubectl create clusterrolebinding engineering-view \
   --clusterrole=view
 ```
 
-For more advanced configurations using grants and group impersonation, refer to [Configure authentication and authorization][docs-auth-rbac].
+有关使用授权和组模拟的更高级配置，请参阅[配置身份验证与授权][docs-auth-rbac]。
 
-## Further exploration
+## 进一步探索
 
-* [Configure][docs-auth-rbac] authentication and authorization for API server access.
-* Run the API server proxy in [noauth mode][docs-noauth] to bypass authentication.
-* [Record][docs-session-recording] kubectl sessions for auditing and compliance.
+* 为 API 服务器访问[配置][docs-auth-rbac]身份验证与授权。
+* 以 [noauth 模式][docs-noauth]运行 API 服务器代理，跳过身份验证。
+* [录制][docs-session-recording] kubectl 会话，以满足审计与合规需求。
 
 [docs-in-process]: /docs/kubernetes-operator/api-server-access#in-process-proxy
 

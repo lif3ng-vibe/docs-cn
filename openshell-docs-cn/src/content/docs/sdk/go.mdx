@@ -1,0 +1,117 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "Go SDK"
+sidebar-title: "Go"
+description: "安装 OpenShell Go SDK，连接网关并管理沙箱。"
+keywords: "OpenShell, SDK, Go, Golang, gRPC, 沙箱"
+position: 1
+---
+
+用 Go SDK 从 Go 应用、operator 与控制器管理 OpenShell 资源。它的带类型子客户端沿用熟悉的 Kubernetes 客户端模式。尽量使用同一 OpenShell 发布版本的 SDK 与网关。
+
+## 安装 SDK
+
+SDK 要求 Go 1.25.13 或更高版本。把它加入你的 Go module：
+
+```shell
+go get github.com/NVIDIA/OpenShell/sdk/go@latest
+```
+
+## 连接到网关
+
+把 `host:port` 地址传给 `NewClient`。本地网关允许未认证的明文连接时：
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+
+    v1 "github.com/NVIDIA/OpenShell/sdk/go/openshell/v1"
+)
+
+func main() {
+    client, err := v1.NewClient(v1.Config{
+        Address: "127.0.0.1:8080",
+        Auth:    v1.NoAuth(),
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Close()
+
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+    defer cancel()
+
+    health, err := client.Health().Check(ctx)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("gateway healthy: %v\n", health.Healthy)
+}
+```
+
+对启用了认证的 TLS 网关，提供 Bearer 令牌与 TLS 设置：
+
+```go
+client, err := v1.NewClient(v1.Config{
+    Address: "gateway.example.com:443",
+    Auth:    v1.StaticToken(os.Getenv("OPENSHELL_TOKEN")),
+    TLS:     &v1.TLSConfig{CAFile: "/path/to/ca.crt"},
+})
+```
+
+省略 `CAFile` 即使用系统根证书。需要可续期的 OIDC 服务凭据时，使用 `github.com/NVIDIA/OpenShell/sdk/go/openshell/v1/oidc` 中的 `oidc.NewClientCredentialsAuth`。
+
+## 创建并使用沙箱
+
+资源方法要求显式工作区。下例在 `default` 中创建沙箱、等待就绪、运行命令并请求删除：
+
+```go
+sandbox, err := client.Sandboxes().Create(
+    ctx,
+    "default",
+    "sdk-example",
+    &v1.SandboxSpec{
+        Template: &v1.SandboxTemplate{
+            Image: "registry.example.com/team/python-agent:1.0",
+        },
+    },
+    nil,
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+sandbox, err = client.Sandboxes().WaitReady(ctx, "default", sandbox.Name)
+if err != nil {
+    log.Fatal(err)
+}
+
+result, err := client.Exec().Run(
+    ctx,
+    "default",
+    sandbox.Name,
+    []string{"python", "-c", "print('hello from OpenShell')"},
+)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Print(string(result.Stdout))
+
+if _, err := client.Sandboxes().Delete(ctx, "default", sandbox.Name); err != nil {
+    log.Fatal(err)
+}
+```
+
+根客户端还暴露提供商、服务、文件、SSH、TCP 转发、策略、配置、模板与工作区的子客户端。list 方法返回惰性分页器，由调用方决定何时取下一页。
+
+## 后续步骤
+
+- 把服务接入生产网关之前，先阅读[网关认证](/how-it-works/gateways/authentication)。
+- 阅读 [API 错误](/sdk/api-errors)了解网关错误模型。
+- 浏览 [Go 包参考](https://pkg.go.dev/github.com/NVIDIA/OpenShell/sdk/go/openshell/v1)查看所有导出的类型与方法。

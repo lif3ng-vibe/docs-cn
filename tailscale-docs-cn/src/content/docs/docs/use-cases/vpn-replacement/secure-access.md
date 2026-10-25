@@ -1,27 +1,27 @@
 ---
-title: "Secure remote access to internal corporate applications and data"
-description: "Employees need access to internal dashboards, file shares, SaaS tools, and infrastructure, but that access needs to be controlled so only the right people can reach the right resources. Tailscale uses"
+title: "安全地远程访问公司内部应用与数据"
+description: "员工需要访问内部仪表盘、文件共享、SaaS 工具和基础设施，但这些访问必须受到控制，只有合适的人才能触达合适的资源。Tailscale 使用访问控制策略精"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured solution guide:
+> 精选方案指南：
 >
-> [**Create a secure connection to MongoDB Atlas**](/docs/solutions/create-a-secure-connection-to-mongodb-atlas) — Securely connect to a MongoDB Atlas database and permit access only to your Tailscale network.
+> [**创建到 MongoDB Atlas 的安全连接**](/docs/solutions/create-a-secure-connection-to-mongodb-atlas) — 安全地连接 MongoDB Atlas 数据库，并只允许你的 Tailscale 网络访问。
 
-Employees need access to internal dashboards, file shares, SaaS tools, and infrastructure, but that access needs to be controlled so only the right people can reach the right resources. Tailscale uses access control policies to define exactly who can connect to which internal applications, based on identity rather than network location.
+员工需要访问内部仪表盘、文件共享、SaaS 工具和基础设施，但这些访问必须受到控制，只有合适的人才能触达合适的资源。Tailscale 使用访问控制策略精确定义谁能连接哪些内部应用，依据的是身份而非网络位置。
 
-## Control access to internal applications
+## 控制对内部应用的访问
 
-Access control policies give you fine-grained control over which employees can reach which internal resources. Use groups, hosts, tags, and grants to express these policies, such as [allowing access based on purpose using tags][docs-grants-tags], [restricting access by group][docs-grants-groups], or [gating access based on device posture][docs-grants-device-posture].
+访问控制策略让你可以细粒度地控制哪些员工能访问哪些内部资源。使用群组、主机、标签和授权来表达这些策略，例如[基于用途并借助标签来允许访问][docs-grants-tags]、[按群组限制访问][docs-grants-groups]，或[基于设备态势管控访问][docs-grants-device-posture]。
 
-The following example grants engineering and sales teams access to separate internal hosts.
+下面的示例为工程团队和销售团队分别授予对各自内部主机的访问权限。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console to manage your tailnet policy file.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 页面，管理你的 tailnet 策略文件。
 
-2. Define [groups][docs-visual-editor-groups] and associate them with users.
+2. 定义[群组][docs-visual-editor-groups]，并将其与用户关联。
 
    ```json
    {
@@ -32,9 +32,9 @@ The following example grants engineering and sales teams access to separate inte
    }
    ```
 
-   In this example, an "Engineering" (`eng`) group and a "Sales" (`sales`) group are created.
+   在此示例中，创建了一个 "Engineering"（`eng`）群组和一个 "Sales"（`sales`）群组。
 
-3. Define [hosts][docs-visual-editor-hosts].
+3. 定义[主机][docs-visual-editor-hosts]。
 
    ```json
    {
@@ -45,9 +45,9 @@ The following example grants engineering and sales teams access to separate inte
    }
    ```
 
-   In this example, the "Internal Bug Reports" (`internal-bugreports`) and "Internal Dashboard" (`internal-dashboard`) hosts are created.
+   在此示例中，创建了 "Internal Bug Reports"（`internal-bugreports`）和 "Internal Dashboard"（`internal-dashboard`）这两个主机。
 
-4. Define a grant and associate groups with hosts.
+4. 定义一条授权，将群组与主机关联。
 
    ```json
    {
@@ -66,21 +66,21 @@ The following example grants engineering and sales teams access to separate inte
    }
    ```
 
-> **Tip:**
+> **提示：**
 >
-> Use a [subnet router][docs-subnet-routers] to reach internal resources that can't have Tailscale installed directly, such as printers or legacy servers.
+> 对于无法直接安装 Tailscale 的内部资源（例如打印机或旧式服务器），可以使用[子网路由器][docs-subnet-routers]来访问。
 
-## Access servers securely with SSH
+## 使用 SSH 安全访问服务器
 
-For teams that need access to internal servers, [Tailscale SSH][docs-tailscale-ssh] replaces traditional SSH key management with identity-based authentication. SSH connections are authenticated using Tailscale identity and governed by the same access control policies as the rest of your tailnet, eliminating the need to distribute and rotate SSH keys.
+对于需要访问内部服务器的团队，[Tailscale SSH][docs-tailscale-ssh] 用基于身份的认证取代了传统的 SSH 密钥管理。SSH 连接使用 Tailscale 身份进行认证，并与 tailnet 其余部分遵循同一套访问控制策略，从此无需再分发和轮换 SSH 密钥。
 
-## Limit access with just-in-time approvals
+## 通过即时审批限制访问
 
-For sensitive resources, consider just-in-time access to ensure connections are temporary and intentional rather than always-on. Tailscale supports [just-in-time access][docs-jit] through [device posture][docs-device-posture] attributes and the [Tailscale Accessbot][docs-tailscale-accessbot-jit], which lets employees request time-limited access through a Slack workflow.
+对于敏感资源，可以考虑即时访问（JIT），确保连接是临时且有明确意图的，而不是长期常开。Tailscale 通过[设备态势][docs-device-posture]属性和 [Tailscale Accessbot][docs-tailscale-accessbot-jit]支持[即时访问][docs-jit]，员工可以通过 Slack 工作流申请限时访问权限。
 
-## Monitor and audit access
+## 监控与审计访问
 
-For compliance and incident response, Tailscale provides [configuration audit logging][docs-audit-logging] to track changes to your tailnet configuration, and [network flow logs][docs-network-flow-logs] to monitor which devices are communicating with which resources. Together, these give you visibility into both who changed what and who accessed what.
+为满足合规与事件响应需求，Tailscale 提供[配置审计日志][docs-audit-logging]来跟踪 tailnet 配置的变更，并提供[网络流日志][docs-network-flow-logs]来监控哪些设备正在与哪些资源通信。二者结合，让你既能看清谁改了什么，也能看清谁访问了什么。
 
 [docs-audit-logging]: /docs/features/logging/audit-logging
 

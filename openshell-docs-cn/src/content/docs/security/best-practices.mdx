@@ -1,0 +1,280 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "OpenShell 安全最佳实践：控制项、风险与配置指引"
+sidebar-title: "安全最佳实践"
+slug: "security/best-practices"
+description: "OpenShell 中每个可配置安全控制项的指南：默认值、可更改的内容，以及每种选择的风险。"
+keywords: "生成式 AI, 网络安全, 安全, 策略, 沙箱, Landlock, Seccomp"
+position: 1
+---
+import { Aside } from '@astrojs/starlight/components';
+
+OpenShell 在四个层面强制沙箱安全：网络、文件系统、进程与提供商凭据。本页记录每个可配置控制项、其默认值、它保护什么，以及放宽它的风险。
+
+完整的策略 YAML schema 参见[策略 Schema](/how-it-works/policies/schema)。各强制层的架构参见[架构](/about/architecture)。
+
+<Aside type="note">
+如果你使用 [NemoClaw](https://github.com/NVIDIA/NemoClaw)，它的[安全最佳实践](https://docs.nvidia.com/nemoclaw/latest/security/best-practices.html)指南涵盖 NemoClaw blueprint 特有的额外入口点级控制项、策略预设、提供商信任层级与安全态势配置档案。
+
+</Aside>
+
+## 强制层
+
+OpenShell 在两个强制点应用安全控制。静态控制在沙箱创建时锁定，更改它们需要销毁并重建沙箱。动态控制可以在运行中的沙箱上用 `openshell policy update` 或 `openshell policy set` 更新。
+
+| 层面 | 保护内容 | 强制点 | 运行时可更改 |
+| --- | --- | --- | --- |
+| 网络 | 未授权的出站连接与数据外泄。 | CONNECT 代理 + OPA 策略引擎 | 是。使用 `openshell policy update`、`openshell policy set` 或 TUI 中的操作员审批。 |
+| 文件系统 | 系统二进制篡改、凭据窃取、配置操纵。 | Landlock LSM（内核级） | 否。需要重建沙箱。 |
+| 进程 | 特权提升、fork 炸弹、危险系统调用。 | seccomp BPF + 降权（`setuid`/`setgid`） | 否。需要重建沙箱。 |
+| 提供商凭据 | 凭据暴露与未授权的服务访问。 | 网络策略加配置档案端点绑定与代理替换 | 是。挂接或分离提供商并更新动态策略。 |
+
+## 网络控制项
+
+CONNECT 代理与 OPA 策略引擎在网关级强制所有网络控制项。
+
+### 默认拒绝出站
+
+沙箱发出的每条出站连接都经过 CONNECT 代理。代理对照 OPA 策略引擎评估每条连接。如果没有 `network_policies` 条目匹配目的地主机、端口与调用方二进制，代理就拒绝该连接。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 所有出站流量被拒绝。只有 `network_policies` 列出的端点才能接收流量。 |
+| 可更改内容 | 在策略 YAML 中为 `network_policies` 添加条目。可在创建时静态应用（`--policy`），也可动态应用（`openshell policy update` 用于增量更改，`openshell policy set` 用于整体替换）。 |
+| 放宽后的风险 | 每个被允许的端点都是一条潜在的数据外泄路径。智能体可以把工作区内容、凭据或对话历史发送到任何可达的主机。 |
+| 建议 | 只添加智能体任务所需的端点。从最小策略开始，用被拒绝请求的日志（`openshell logs <name> --source sandbox`）发现缺失的端点。 |
+
+### 网络命名空间隔离
+
+沙箱运行在带 veth 对的专用 Linux 网络命名空间中。所有流量都经由代理监听的宿主机侧 veth IP（`10.200.0.1`）路由。即使进程忽略代理环境变量，它也只能到达代理。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 始终启用。沙箱在网络层面无法绕过代理。 |
+| 可更改内容 | 这不是面向用户的开关。OpenShell 在代理模式下始终强制它。 |
+| 被绕过的风险 | 没有网络命名空间隔离，进程可以绕过所有策略强制直接连接互联网。 |
+| 建议 | 无需操作。OpenShell 自动强制此项。 |
+
+### 用户命名空间隔离
+
+Kubernetes 用户命名空间（`hostUsers: false`）把容器 UID 0 映射为无特权的宿主机 UID。`CAP_SYS_ADMIN` 等能力变为命名空间内的能力，只授予对容器本地资源的权力，不涉及宿主机。这提供了纵深防御：即使存在容器逃逸漏洞，攻击者也只会以无特权宿主机用户的身份落地。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 禁用。在 Helm values 中设置 `gatewayConfig.openshell.drivers.kubernetes.enable_user_namespaces: true` 以在全集群范围启用。 |
+| 可更改内容 | 通过 Helm 或网关配置在全集群范围启用。通过 API 中 `SandboxTemplate` 的 `user_namespaces` 字段按沙箱覆盖。 |
+| 前提条件 | Kubernetes 1.33+ 且用户命名空间支持可用（1.35 及之前为 beta，1.36+ 为 GA）、支持用户命名空间的容器运行时（containerd 2.0+、CRI-O 1.25+），以及支持 ID 映射挂载的 Linux 5.12+。 |
+| 与 GPU 同启的风险 | NVIDIA device plugin 与用户命名空间的兼容性未经校验。同一沙箱上 GPU 与用户命名空间同时生效时，OpenShell 会记录一条警告。 |
+| 建议 | 在运行支持用户命名空间的 Kubernetes（1.33+ beta，1.36+ GA）的非 GPU 集群上启用，以获得更强的宿主机隔离。在 GPU 集群上启用之前，单独测试 GPU 工作负载。 |
+
+### 二进制身份绑定
+
+OpenShell 把每条连接绑定到可信隔离边界观察到的可执行文件身份。网络策略可以授权拥有该连接的可执行文件，或其某个可执行祖先。OpenShell 把每个具备授权能力的路径钉定为其首次运行时观察到的 SHA256 摘要（首次使用即信任，trust on first use），之后的摘要不匹配会立即触发拒绝。完整性证据缺失或冲突同样按 fail closed 处理。命令行路径只作为诊断上下文，绝不用于授权访问。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 每个 `network_policies` 条目都要求一个 `binaries` 列表。只有列出的二进制才能访问相关端点。二进制路径支持 glob 模式（`*` 匹配单段路径，`**` 递归匹配）。 |
+| 可更改内容 | 向端点条目添加二进制。用 glob 模式做目录范围的访问（例如 `/sandbox/.vscode-server/**`）。 |
+| 放宽后的风险 | 宽泛的 glob 模式（如 `/**`）允许任何叶子或祖先可执行文件授权该端点，使按二进制限定强制的目的落空。 |
+| 建议 | 把二进制限定为需要每个端点的具体叶子或启动器可执行文件。确切路径会变化时（例如跨 Python 虚拟环境）使用窄 glob。有意替换授权路径上的可执行文件后，重启沙箱运行时，让新的运行时建立新的钉定。 |
+
+### 仅 L4 与 L7 检查
+
+端点上的 `protocol` 字段控制代理是否检查隧道内的单条 HTTP 请求。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 没有 `protocol` 字段的端点不应用请求规则。代理检查主机、端口与二进制，仍会终结 TLS 并解析 HTTP 请求，要求请求 authority 与目的地匹配，但允许任何 HTTP 方法与路径。非 HTTP 流量不经检查直接转发。`protocol: tcp` 端点同样不应用请求规则；`tls: skip` 端点在不终结 TLS 的情况下转发流量。带提供商凭据的端点拒绝未检查模式，除非操作员显式选择加入。 |
+| 可更改内容 | 添加 `protocol: rest` 启用逐请求的 HTTP 方法/路径检查，`protocol: websocket` 检查 RFC 6455 升级握手与客户端文本消息，或 `protocol: graphql` 检查 GraphQL-over-HTTP 的操作类型、操作名与根字段。WebSocket 端点也可用 GraphQL 操作规则处理 GraphQL-over-WebSocket 消息。受检查协议要与 `rules` 或访问预设（`full`、`read-only`、`read-write`）搭配。需要在受支持文本请求体中解析凭据占位符的 REST 端点可设置 `request_body_credential_rewrite: true`。`allow_uninspected_credentials: true` 只能作为无法走受检查路径的带凭据流量的显式例外。 |
+| 放宽后的风险 | 没有请求规则的端点允许智能体在连接被允许之后向目的地发送任何请求或数据。代理不限制 HTTP 方法、路径或 GraphQL 操作。`access: full` 加 L7 检查带来可观测性，但允许所有受检查的动作。 |
+| 建议 | 意图编码在方法与路径中的 API 用 `protocol: rest` 加具体 `rules`。`request_body_credential_rewrite: true` 只用于要求在 UTF-8 JSON、表单或文本请求体中携带 OpenShell 管理凭据的 REST API。破坏性操作编码在请求体中的 GraphQL-over-HTTP API 用 `protocol: graphql`。RFC 6455 端点用 `protocol: websocket`，原始文本协议配显式 `GET` 与 `WEBSOCKET_TEXT` 规则，GraphQL-over-WebSocket 配显式 GraphQL 操作规则。优先 `access: read-only` 或显式允许列表；除非维护受信任的注册表，否则拒绝仅有哈希的持久化查询。数据库等原生非 HTTP 客户端用 `protocol: tcp`，何时加 `tls: skip` 参见[允许原生 TCP](/how-it-works/policies/network-rules#允许原生-tcp)。必须在客户端文本帧携带占位符凭据的 WebSocket 端点，添加 `websocket_credential_rewrite: true`。 |
+
+### 强制模式（`audit` 与 `enforce`）
+
+L7 检查生效时，`enforcement` 字段控制代理是阻断还是记录规则违规。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | `audit`。代理记录违规但转发流量。 |
+| 可更改内容 | 设置 `enforcement: enforce` 阻断不匹配任何 `rules` 条目的请求。被拒绝的请求收到 `403 Forbidden` 响应，JSON 正文描述违规内容。 |
+| 放宽后的风险 | `audit` 模式提供可见性但不阻止未授权动作。即使规则会拒绝，智能体仍可以对 API 执行写或删除操作。 |
+| 建议 | 先用 `audit` 了解流量模式并核实规则正确。确认规则符合预期访问模式后切换到 `enforce`。 |
+
+### TLS 处理
+
+代理通过窥探首字节在每个隧道上自动检测 TLS。检测到 TLS ClientHello 时，代理用每个沙箱的临时 CA 透明地终结 TLS。这无需显式配置即可实现凭据注入与 L7 检查。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 自动检测并终结。OpenShell 在启动时生成沙箱 CA，并注入进程信任存储（`NODE_EXTRA_CA_CERTS`、`DENO_CERT`、`SSL_CERT_FILE`、`REQUESTS_CA_BUNDLE`、`CURL_CA_BUNDLE`、`GIT_SSL_CAINFO`）。 |
+| 可更改内容 | 在端点上设置 `tls: skip`，对该端点禁用 TLS 检测与终结。用于上游需要客户端证书 mTLS 或非标准二进制协议的场景。 |
+| 放宽后的风险 | `tls: skip` 对该端点禁用占位符凭据改写、动态令牌授予注入与 L7 检查。代理在看不到内容的情况下转发加密流量。 |
+| 建议 | 多数端点使用自动检测（默认值）。仅当上游要求客户端自己的 TLS 证书（mTLS）或使用非 HTTP 协议时使用 `tls: skip`。带提供商凭据的端点还需要显式的 `allow_uninspected_credentials: true` 例外。 |
+
+### SSRF 防护
+
+OPA 策略允许连接之后，代理解析 DNS 并拒绝未声明的内部目的地。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 代理对未声明端点、通配符端点与无主机端点，以及经策略顾问添加的端点阻断私有 IP。用户策略中声明的精确主机名可以解析为私有 RFC 1918 地址。回环（`127.0.0.0/8`）、链路本地（`169.254.0.0/16`）与未指定（`0.0.0.0`）地址始终被阻断，且不能用 `allowed_ips` 覆盖。 |
+| 可更改内容 | 把已知内部服务声明为精确 `host` 端点，或在端点上添加 `allowed_ips`（CIDR 记法），为通配符或无主机策略放行特定私有 IP 段。仅按主机名授权时，监管器解析器是权威。能访问工作负载进程命名空间的 Linux 显式代理路径，只有在端点配置了 `allowed_ips` 时才能为普通端点使用沙箱 `/etc/hosts` 条目（包括 Kubernetes `hostAliases`）；此时每个解析出的地址都会对照允许列表检查。驱动管理的 host-gateway 别名使用单独的可信 IP 钉定。`allowed_ips` 条目与回环、链路本地或未指定地址重叠的策略会加载失败，并给出明确的校验错误。 |
+| 放宽后的风险 | 没有 SSRF 防护时，配置错误的策略可能让智能体经 DNS 重绑定访问云元数据服务（`169.254.169.254`）、内部数据库或其他基础设施端点。 |
+| 建议 | 稳定的内部服务优先用精确主机名端点。需要无主机或通配符授权时使用 `allowed_ips`，并把 CIDR 限定得尽量窄（例如单台主机用 `10.0.5.20/32`）。无论 `allowed_ips` 如何设置，回环、链路本地与未指定地址始终被阻断。在支持沙箱主机别名的部署上，先同时声明 `host: searxng.local` 与 `allowed_ips: [192.168.1.105/32]`，再依赖 Kubernetes `hostAliases` 映射；别名改变解析，允许列表提供可信地址约束。策略顾问不会为始终被阻断的目的地提议规则，私有 IP 端点仍需单独编辑 `allowed_ips`。 |
+
+### 操作员审批
+
+智能体请求策略中不存在的端点时，OpenShell 阻断该请求，并在 TUI 中呈现给操作员审核。系统把获批端点作为一个新的持久修订合并进沙箱策略。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 启用。代理阻断未列出的端点并要求审批。 |
+| 可更改内容 | 获批端点在同一沙箱实例内的沙箱重启后保留。沙箱销毁重建时重置。 |
+| 放宽后的风险 | 批准端点会永久放宽运行中沙箱的策略。批准前逐条审核请求。 |
+| 建议 | 探索性工作使用操作员审批。反复出现的端点，加进策略 YAML 并配上合适的二进制与路径限制。要重置全部获批端点，销毁并重建沙箱。 |
+
+## 文件系统控制项
+
+Landlock LSM 在内核级限制沙箱进程可以读写哪些路径。
+
+### Landlock LSM
+
+Landlock 在内核级强制文件系统访问。`read_only` 列出的路径获得只读访问。`read_write` 列出的路径获得完全访问。其余路径不可访问。
+
+沙箱在运行智能体代码之前安装强制的 Landlock 基线。它要求 Linux 6.2 引入的 ABI 3 或更新版本，因此被拒绝的写操作包括文件截断。基线只向显式打开的、被允许的根目录子项授予访问，从而对智能体隐藏私有通道与引导根；构建该允许列表时它绝不授予文件系统根目录，也不跟随根级符号链接。无法强制该基线时启动失败。配置的文件系统策略在基线之上追加限制。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 强制基线始终要求 Landlock ABI 3 或更新。额外文件系统策略默认 `compatibility: best_effort`，可能跳过不可用的策略路径；无法完整应用该策略时会发出 High 级 OCSF `DetectionFinding`。 |
+| 可更改内容 | 设置 `compatibility: hard_requirement`，在额外文件系统策略无法应用时拒绝启动。两种设置都不放宽私有文件基线。 |
+| 放宽后的风险 | 被跳过的额外策略可能把原本被允许的镜像或工作区文件暴露给智能体。它无法授予对强制基线排除文件的访问。 |
+| 建议 | 要求启用 Landlock 的 Linux 6.2 或更新版本，或提供 ABI 3 的合格发行版向后移植。所有已配置文件系统限制都必须生效的场合使用 `hard_requirement`。要调查 High 级 Landlock 发现，而不是把它们当作受支持的降级安全模式。 |
+
+### 只读与读写路径
+
+策略把文件系统路径分为只读与读写两组。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 系统路径（`/usr`、`/lib`、`/etc`、`/var/log`）只读。解析出的工作目录与 `/tmp` 可读写。列出工作负载需要的其他路径，如 `/app`。 |
+| 可更改内容 | 在 `filesystem_policy.read_only` 与 `filesystem_policy.read_write` 中增删路径。 |
+| 放宽后的风险 | 系统路径可写会让智能体替换二进制、修改 TLS 信任存储或更改 DNS 解析。校验拒绝过宽的读写路径（如 `/`）。 |
+| 建议 | 保持系统路径只读。智能体需要额外可写空间时，添加具体子目录。 |
+
+### 路径校验
+
+OpenShell 在策略生效之前校验策略。
+
+| 约束 | 行为 |
+|---|---|
+| 路径必须是绝对路径（以 `/` 开头）。 | 以 `INVALID_ARGUMENT` 拒绝。 |
+| 路径不得包含 `..` 穿越。 | 以 `INVALID_ARGUMENT` 拒绝。 |
+| 读写路径不得过宽（例如仅 `/`）。 | 以 `INVALID_ARGUMENT` 拒绝。 |
+| 每个路径不得超过 4096 字符。 | 以 `INVALID_ARGUMENT` 拒绝。 |
+| `read_only` + `read_write` 路径总数不得超过 256。 | 以 `INVALID_ARGUMENT` 拒绝。 |
+
+## 进程控制项
+
+沙箱监管器在启动期间降权、应用 seccomp 过滤器并强制进程级限制。
+
+### 降权
+
+沙箱进程在显式降权之后以非 root 用户运行。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 计算驱动选择非 root 身份。Docker 与 Podman 在字段级回退到镜像的 OCI `USER`。监管器调用 `setuid()`/`setgid()` 并做事后条件校验，用 `RLIMIT_CORE=0` 禁用核心转储，在 Linux 上设置 `PR_SET_DUMPABLE=0`。 |
+| 可更改内容 | 在 `process` 节设置 `run_as_user` 与 `run_as_group` 中的一个或两个。每个显式字段优先生效，且必须是 `sandbox` 或 `1` 到 `4294967294` 之间的数字 UID/GID。Docker 与 Podman 可经 OCI `USER` 回退使用命名身份。root 与无效身份哨兵值始终被拒绝。 |
+| 放宽后的风险 | 数字身份继承同一 UID/GID 在镜像文件、挂载卷或设备上被授予的所有权限。低位 ID 常与系统账户和组冲突。 |
+| 建议 | 使用专用的非 root 镜像身份或显式的数字策略身份。不要尝试设为 root。 |
+
+### seccomp 过滤器
+
+OpenShell 分两个阶段应用 seccomp。一个窄的监管器启动前奏在 CLI 解析与异步运行时初始化之前运行，然后子进程在降权之后接收更宽的运行时 seccomp 过滤器。
+
+| 方面 | 说明 |
+|---|---|
+| 启动前奏 | 特权引导辅助流程完成后，包括网络搭建与提供商令牌 SPIFFE 子挂载命名空间准备，监管器设置 `PR_SET_NO_NEW_PRIVS`，并在所有运行时线程间同步一个 seccomp 过滤器，阻断 `mount`、新挂载 API 系统调用、`pivot_root`、`umount2`、`bpf`、`perf_event_open`、`userfaultfd`、模块加载系统调用与 kexec。这关闭了长期存在的特权重挂载与内核暴露窗口，同时保留 `setns` 等必需的搭建系统调用。 |
+| socket 域 | 过滤器只允许 `AF_UNIX`、`AF_NETLINK` 以及受代理的 `AF_INET` 与 `AF_INET6` 族。其余所有族，包括 `AF_PACKET`、`AF_VSOCK`、`AF_RXRPC`、`AF_SMC`、`AF_KCM` 与 `AF_ALG`，都以 `EPERM` 失败；`socketpair(2)` 限于 `AF_UNIX`。`AF_NETLINK` 部分放行：只允许 `NETLINK_ROUTE`（协议 0），使 `getifaddrs(3)` 可用；其余 netlink 协议全部阻断。经 `NETLINK_ROUTE` 的写操作仍要求 `CAP_NET_ADMIN`，沙箱不授予该能力。 |
+| 运行时无条件系统调用阻断 | `memfd_create`, `ptrace`, `bpf`, `process_vm_readv`, `process_vm_writev`, `pidfd_open`, `pidfd_getfd`, `pidfd_send_signal`, `io_uring_setup`, `mount`, `fsopen`, `fsconfig`, `fsmount`, `fspick`, `move_mount`, `open_tree`, `setns`, `umount2`, `pivot_root`, `userfaultfd`, `perf_event_open`。 |
+| 条件性系统调用阻断 | 带 `AT_EMPTY_PATH` 的 `execveat`、带 `CLONE_NEWUSER` 的 `unshare` 与 `clone`，以及 `seccomp(SECCOMP_SET_MODE_FILTER)`，都以 `EPERM` 拒绝。 |
+| 可更改内容 | 这不是面向用户的开关。OpenShell 自动强制此项。 |
+| 放宽后的风险 | 被阻断的系统调用支撑容器逃逸（`mount`、`pivot_root`、`move_mount`、命名空间创建）、跨进程观察（`ptrace`、`process_vm_readv`、`pidfd_*`）、裸内核旁路（`bpf`、`io_uring_setup`、`perf_event_open`）与过滤器规避（`seccomp`、`userfaultfd`）。 |
+| 建议 | 无需操作。OpenShell 自动强制此项。 |
+
+### 强制措施的应用顺序
+
+沙箱监管器在进程启动期间按特定顺序应用强制措施。这一顺序是有意的：命名网络命名空间的搭建仍依赖特权辅助流程，而降权仍需要 `/etc/group` 与 `/etc/passwd`，Landlock 随后才会限制它们。
+
+1. 特权监管器引导辅助流程，包括网络命名空间搭建、提供商令牌 SPIFFE 子挂载命名空间搭建与可选的 `nft` 探测。
+2. 监管器启动前奏 seccomp（`PR_SET_NO_NEW_PRIVS` 加早期系统调用拒绝列表），在运行时线程间同步。
+3. 在子进程 `pre_exec` 中进入网络与仅子进程的挂载命名空间（`setns`）。
+4. 降权（`initgroups` + `setgid` + `setuid`）。
+5. 核心转储加固（`RLIMIT_CORE=0`，Linux 上另加 `PR_SET_DUMPABLE=0`）。
+6. Landlock 文件系统限制。
+7. 运行时 seccomp socket 域与系统调用过滤器。
+
+## 推理控制项
+
+推理提供商使用与其他提供商相同的端点绑定凭据机制。只把配置档案支撑的提供商挂接到需要的沙箱。智能体收到的是不透明占位符，而不是真实的 API 密钥或访问令牌。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 默认无模型提供商访问。沙箱必须挂接提供商，策略必须准入原生端点与调用方二进制。 |
+| 凭据边界 | 占位符只对提供商配置档案授权的主机、端口与路径解析。 |
+| 可更改内容 | 挂接或分离提供商，调整配置档案或沙箱策略。模型与超时配置仍留在原生客户端。 |
+| 放宽后的风险 | 过宽的端点路径或二进制 glob 会暴露超出工作负载所需的提供商 API。`allow_uninspected_credentials` 移除 L7 可见性，只能作为例外。 |
+| 建议 | 使用窄的端点路径与二进制，检查生效策略，并把凭据保存在提供商记录中而非工作负载环境配置里。 |
+
+## 网关安全
+
+网关用双向 TLS 与基于令牌的认证保护 CLI、沙箱工作负载与外部客户端之间的通信。
+
+### mTLS
+
+网关传输使用 TLS，部署提供客户端 CA 时可启用客户端证书检查。mTLS 用户认证是网关策略，不依赖计算驱动。沙箱监管器只接收网关 CA，并用网关铸造的沙箱 JWT 认证 API 调用。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 配置了客户端 CA 且未启用 OIDC 时启用 mTLS 用户认证。沙箱监管器使用仅 CA 的 TLS 加网关铸造的沙箱 JWT。启用 TLS 的回环网关默认也接受针对沙箱服务主机名的明文 HTTP。 |
+| 可更改内容 | 在网关配置 mTLS 用户认证、OIDC 或受信任的访问代理；`server.auth.allowUnauthenticatedUsers=true` 只用于受信任的本地 Kubernetes 开发或完全受信任的代理；仅对受信任的反向代理部署禁用 TLS；或用 `--enable-loopback-service-http=false` 禁用回环服务 HTTP。 |
+| 放宽后的风险 | 禁用 TLS 会完全移除传输层保护。允许未认证用户会移除网关用户认证边界，绝不能暴露在共享或公共网络中。把用户客户端证书挂载进沙箱会瓦解用户与沙箱的信任边界。回环服务 HTTP 仅限本地且拒绝跨源浏览器请求，但任何本地进程仍可直接访问暴露的服务 URL。 |
+| 建议 | 保持沙箱身份与用户身份分离：只向沙箱暴露网关 CA，并要求沙箱 JWT。证书分发不适合共享用户时，使用托管 OIDC 或受信任的访问代理。 |
+
+### SSH 隧道认证
+
+到沙箱的 SSH 连接经网关沿沙箱监管器已认证的控制路径传输。每次 SSH connect 调用还携带限定于特定沙箱的短期会话令牌。沙箱从不在网络上暴露 SSH 端口。其 SSH 守护进程监听一个只有沙箱自己的监管器进程能到达的本地 Unix socket。
+
+服务转发（`openshell forward`）使用相同的中继路径，但不携带会话令牌。网关对照调用方的网关身份与工作区成员资格授权每条转发连接，并适用每沙箱连接限制。
+
+| 方面 | 说明 |
+|---|---|
+| 默认 | 会话令牌 24 小时后过期。并发连接限制为每令牌 3 条、每沙箱 20 条。 |
+| 可更改内容 | 配置 `ssh_session_ttl_secs`。设为 0 表示不过期。 |
+| 放宽后的风险 | 更长的 TTL 或不过期会扩大被盗令牌被重用的窗口。更高的连接限制会扩大令牌失陷后的影响范围。 |
+| 建议 | 保持 24 小时默认值。通过 TUI 监控连接数。 |
+
+## 常见错误
+
+以下模式削弱安全却没有带来有意义的收益。
+
+| 错误 | 为什么重要 | 应该怎么做 |
+|---------|---------------|-------------------|
+| 在 REST 或 WebSocket API 端点省略受检查协议 | 没有 `protocol: rest` 或 `protocol: websocket` 时，代理不应用请求规则。它检查主机、端口与二进制后允许任何 HTTP 方法与路径，且不检查 WebSocket 文本消息。 | 添加 `protocol: rest` 或 `protocol: websocket` 配具体 `rules`，启用方法与路径控制。 |
+| 更细的规则就够用时使用 `access: full` | `access: full` 配 `protocol: rest` 或 `protocol: websocket` 启用检查，但允许该协议的所有方法与路径。 | 使用 `access: read-only` 或显式 `rules`，限制智能体在 L7 层能做什么。 |
+| 操作员审批就够用时永久添加端点 | 把端点加进策略 YAML 会让它在所有实例中永久可达。 | 使用操作员审批。获批端点在沙箱实例内保留，重建时重置。 |
+| 使用宽泛的二进制 glob | `/**` 这样的 glob 允许任何二进制访问端点，使按二进制限定强制落空。 | 把 glob 限定到具体目录（例如 `/sandbox/.vscode-server/**`）。 |
+| 在 HTTPS API 上跳过 TLS 终结 | 设置 `tls: skip` 会禁用占位符凭据改写、动态令牌授予注入与 L7 检查。 | 除非上游要求客户端证书 mTLS，否则使用默认的自动检测行为。 |
+| 未经审计就设置 `enforcement: enforce` | 不先以 `audit` 模式运行就直接切到 `enforce`，有破坏智能体工作流的风险。 | 先用 `audit`，查看日志，确认规则无误后再切换到 `enforce`。 |
+| 在缺陷报告中粘贴原始堆栈跟踪 | 一些框架会在错误对象中包含完整请求配置，其中可能含凭据。沙箱不清除应用层输出。 | 分享前先检查错误输出。抹除所有凭据、API 密钥或令牌。 |
+
+## 相关主题
+
+- [沙箱策略](/how-it-works/policies/overview)：策略如何评估与应用。
+- [管理沙箱策略](/how-it-works/policies/manage-policies)：应用与迭代沙箱策略。
+- [策略 Schema](/how-it-works/policies/schema)：逐字段的完整 YAML 参考。
+- [默认策略](/how-it-works/policies/default-policy)：内置默认策略的分解。
+- [网关认证](/how-it-works/gateways/authentication)：网关认证细节。
+- [架构](/about/architecture)：系统架构。
+- NemoClaw [安全最佳实践](https://docs.nvidia.com/nemoclaw/latest/security/best-practices.html)：入口点级控制项（能力裁剪、PATH 加固、构建工具链移除）、策略预设、提供商信任层级与安全态势配置档案。

@@ -1,107 +1,107 @@
 ---
-title: "Get started with Tailscale PAM"
-description: "Sign up for Tailscale PAM and use it to provide privileged access to resources in your Tailscale network."
+title: "开始使用 Tailscale PAM"
+description: "注册 Tailscale PAM，并使用它为 Tailscale 网络中的资源提供特权访问。"
 ---
 
-Last validated Jun 2, 2026
+最后验证于 Jun 2, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-This guide walks you through enabling Tailscale PAM so you can begin to provide privileged access for your Tailscale network (known as a tailnet). To learn more about what Tailscale PAM does before you start, refer to [What is Tailscale PAM?][docs-pam-what-is-tailscale-pam].
+本指南带你启用 Tailscale PAM，开始为你的 Tailscale 网络（即 tailnet）提供特权访问。如果想在开始前进一步了解 Tailscale PAM 的功能，参见[什么是 Tailscale PAM？][docs-pam-what-is-tailscale-pam]。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景信息和示例。
 
-[Getting started | Tailscale PAM (video)](https://www.youtube.com/watch?v=rvYO9VgXlk4)
+[入门 | Tailscale PAM（视频）](https://www.youtube.com/watch?v=rvYO9VgXlk4)
 
-What happens when you enable Tailscale PAM
+启用 Tailscale PAM 后会发生什么
 
-When you enable Tailscale PAM from the [PAM](https://console.tailscale.com/admin/settings/pam) page in the Tailscale admin console, Tailscale automatically configures your tailnet with everything needed to start using PAM. This lets you get started without manually configuring tags, service approvals, credentials, or initial access rules.
+当你在 Tailscale 管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 页面启用 Tailscale PAM 时，Tailscale 会自动为你的 tailnet 配置好开始使用 PAM 所需的一切。你无需手动配置标签、服务审批、凭证或初始访问规则即可上手。
 
-Tailscale automatically:
+Tailscale 会自动：
 
-* **Creates the `tag:border0-managed` tag**. PAM-managed resources, including connectors and services, use this tag. The tag is owned by `autogroup:admin`.
-* **Adds an `autoApprovers` rule**. Connectors tagged with `tag:border0-managed` can automatically approve PAM services using the same tag. This means you don't need to manually approve each PAM service advertisement.
-* **Adds an initial PAM application grant**. Members of `autogroup:admin` are granted access to PAM services tagged with `tag:border0-managed`, giving administrators initial access to supported PAM services such as SSH, databases, Kubernetes, RDP, and HTTP.
-* **Creates a trust credential for Tailscale PAM**. This OpenID Connect (OIDC) trust credential is used for the integration between your tailnet and the Tailscale PAM API service. You can view it in the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page. The automatically created credential is tagged with `tag:border0-managed`.
+* **创建 `tag:border0-managed` 标签**。由 PAM 管理的资源（包括连接器和服务）都使用这个标签。该标签由 `autogroup:admin` 所有。
+* **添加一条 `autoApprovers` 规则**。带有 `tag:border0-managed` 标签的连接器可以自动批准使用同一标签的 PAM 服务。这意味着你无需手动批准每一条 PAM 服务通告。
+* **添加初始 PAM 应用授权（grant）**。`autogroup:admin` 的成员会获得对带有 `tag:border0-managed` 标签的 PAM 服务的访问权限，让管理员能够初步访问受支持的 PAM 服务，例如 SSH、数据库、Kubernetes、RDP 和 HTTP。
+* **为 Tailscale PAM 创建信任凭证（trust credentials）**。这条 OpenID Connect（OIDC）信任凭证用于你的 tailnet 与 Tailscale PAM API 服务之间的集成。你可以在 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面查看它。自动创建的凭证带有 `tag:border0-managed` 标签。
 
-These settings are created automatically so PAM works out of the box. Avoid removing or modifying the automatically created tag, `autoApprovers` rule, or trust credential unless you intend to replace that configuration, as doing so can prevent parts of the PAM integration from working correctly.
+这些设置会自动创建，以便 PAM 开箱即用。除非你打算替换相应配置，否则不要删除或修改自动创建的标签、`autoApprovers` 规则或信任凭证，否则可能导致 PAM 集成的部分功能无法正常工作。
 
-You can customize the automatically created PAM grant as needed to control which users can access your PAM services and what they are allowed to do.
+你可以按需自定义自动创建的 PAM 授权，以控制哪些用户可以访问你的 PAM 服务以及他们能做什么。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，确认你具备以下条件：
 
-* A tailnet. If you do not have a tailnet, [sign up](https://login.tailscale.com/start).
+* 一个 tailnet。如果没有，请[注册](https://login.tailscale.com/start)。
 
-* Tailscale PAM integration is enabled for your tailnet. If you want to try Tailscale PAM for free, [join the waitlist][co-pam-waitlist]. To learn more about Tailscale PAM for your organization, contact [Tailscale Sales][co-contact-sales-border0].
+* 你的 tailnet 已启用 Tailscale PAM 集成。想免费试用 Tailscale PAM，请[加入等候名单][co-pam-waitlist]；想为你的组织进一步了解 Tailscale PAM，请联系 [Tailscale 销售][co-contact-sales-border0]。
 
-* A Tailscale account with [Owner, Admin, or IT admin](/docs/reference/user-roles) permissions, so you can use the Tailscale admin console to enable Tailscale PAM for your tailnet.
+* 一个拥有 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 权限的 Tailscale 账户，以便你使用 Tailscale 管理控制台为 tailnet 启用 Tailscale PAM。
 
-* A device to use as a Tailscale PAM connector. This topic will show you how to configure this device as a Tailscale PAM connector. The device must satisfy one of the following options:
+* 一台用作 Tailscale PAM 连接器的设备。本主题会介绍如何把该设备配置为 Tailscale PAM 连接器。设备必须满足以下选项之一：
 
   * Linux
   * AWS EC2
   * Docker
   * Kubernetes
 
-* A device with a browser OR a device with the [Tailscale client][co-download] installed. This will be used to access the PAM service.
+* 一台带浏览器的设备，或一台安装了 [Tailscale 客户端][co-download]的设备。它将用于访问 PAM 服务。
 
-## Step 1: Enable the Tailscale PAM integration for your tailnet
+## 步骤 1：为你的 tailnet 启用 Tailscale PAM 集成
 
-Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page of the Tailscale admin console and select **Enable**.
+打开 Tailscale 管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面，选择 **Enable**。
 
-## Step 2: Create a Tailscale PAM connector
+## 步骤 2：创建 Tailscale PAM 连接器
 
-1. Open the [Connectors](https://console.tailscale.com/admin/connectors) page of the admin console.
-2. Select **Add connector**.
-3. Select the platform that you want to use for the connector.
-4. In the **Launch new connector** section, follow the instructions and apply them to the device that you want to use as your connector.
+1. 打开管理控制台的 [Connectors](https://console.tailscale.com/admin/connectors) 页面。
+2. 选择 **Add connector**。
+3. 选择你要用于连接器的平台。
+4. 在 **Launch new connector** 部分，按照说明操作，并将其应用到你要用作连接器的设备上。
 
-The PAM connector has Tailscale capability built into it and will automatically join your tailnet. For more information about Tailscale PAM connector installation, refer to [Installing a Tailscale PAM connector][docs-pam-connectors-install].
+PAM 连接器内置 Tailscale 能力，会自动加入你的 tailnet。关于 Tailscale PAM 连接器安装的更多信息，参见[安装 Tailscale PAM 连接器][docs-pam-connectors-install]。
 
-## Step 3: Define a PAM service
+## 步骤 3：定义 PAM 服务
 
-You can now use Tailscale PAM to create secure access to resources in your networks. The resources that you secure are referred to as PAM services. Tailscale PAM uses the PAM connector to securely proxy sessions to PAM services.
+现在你可以使用 Tailscale PAM 为网络中的资源创建安全访问。你加以保护的资源称为 PAM 服务。Tailscale PAM 使用 PAM 连接器把会话安全地代理到 PAM 服务。
 
-For an example, use Tailscale's sandbox server. In this example, you can use Secure Shell (SSH):
+以 Tailscale 的沙箱服务器为例。本例中使用安全外壳协议（SSH）：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
-2. Select **Add service**.
-3. Select **PAM service**.
-4. Select **Secure Shell - Standard Shell**.
-5. On the right, select **Use Tailscale sandbox server**.
-6. Select the PAM connector that you created.
-7. Select **Continue**.
-8. Select **Save**, as the username and password are already filled in.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择 **Add service**。
+3. 选择 **PAM service**。
+4. 选择 **Secure Shell - Standard Shell**。
+5. 在右侧，选择 **Use Tailscale sandbox server**。
+6. 选择你创建的 PAM 连接器。
+7. 选择 **Continue**。
+8. 选择 **Save**，用户名和密码已经填好。
 
-## Step 4: Access a service
+## 步骤 4：访问服务
 
-Once you create a service, members of your tailnet have two ways to access the service:
+创建服务后，tailnet 成员有两种方式访问该服务：
 
-* They can [download the Tailscale client][co-download] and join their device to your tailnet.
-* They can use a browser by accessing <https://my.tailscale.com>. This is the web-based client for PAM service access and does not require any downloads. When prompted, members of your tailnet can log in with the same account they use for Tailscale.
+* [下载 Tailscale 客户端][co-download]，把他们的设备加入你的 tailnet。
+* 使用浏览器访问 <https://my.tailscale.com>。这是基于 Web 的 PAM 服务访问客户端，无需任何下载。收到提示时，tailnet 成员可以用他们登录 Tailscale 的同一账户登录。
 
-Once logged in to either the Tailscale desktop client or the browser client, members of your tailnet can access the services that you configured for them.
+登录 Tailscale 桌面客户端或浏览器客户端后，tailnet 成员即可访问你为他们配置的服务。
 
-## Next steps
+## 后续步骤
 
-Explore the following resources on the Tailscale PAM site.
+探索 Tailscale PAM 站点上的以下资源。
 
-Configure your own PAM Services:
+配置你自己的 PAM 服务：
 
-* [Access a database][docs-pam-access-database]
-* [Access an HTTP service][docs-pam-access-http-service]
-* [Access an SSH server (or shell)][docs-pam-access-ssh]
+* [访问数据库][docs-pam-access-database]
+* [访问 HTTP 服务][docs-pam-access-http-service]
+* [访问 SSH 服务器（或 shell）][docs-pam-access-ssh]
 
-Learn more about Tailscale PAM:
+进一步了解 Tailscale PAM：
 
-* [Understand the Tailscale PAM architecture and core concepts][docs-pam-architecture-and-concepts] to get the most out of Tailscale PAM.
-* [Get full visibility][docs-pam-sessions] into Tailscale PAM connections. Not just IP addresses and ports, but the full context behind who did what and when.
-* [Use secret stores][docs-pam-manage-secrets] to securely store your upstream credentials when configuring services.
-* [Configure policies][docs-pam-policies] to define granular access rules.
+* [了解 Tailscale PAM 的架构与核心概念][docs-pam-architecture-and-concepts]，充分利用 Tailscale PAM。
+* [全面掌握][docs-pam-sessions] Tailscale PAM 连接的情况。不只是 IP 地址和端口，还有谁在何时做了什么背后的完整上下文。
+* 配置服务时，[使用密钥存储（secret store）][docs-pam-manage-secrets]安全保存你的上游凭证。
+* [配置策略][docs-pam-policies]，定义细粒度的访问规则。
 
 [co-contact-sales-border0]: https://tailscale.com/contact/sales-border0
 

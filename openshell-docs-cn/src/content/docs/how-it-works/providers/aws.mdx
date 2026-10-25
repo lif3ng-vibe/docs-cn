@@ -1,0 +1,174 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "AWS SigV4 凭据签名"
+sidebar-title: "AWS"
+description: "配置代理侧的 AWS SigV4 请求签名，让沙箱智能体无需持有真实凭据即可通过 CONNECT 隧道访问 AWS 服务。"
+keywords: "生成式 AI, 网络安全, AI 智能体, AWS, SigV4, Bedrock, S3, 凭据签名, 沙箱"
+---
+import { Aside } from '@astrojs/starlight/components';
+
+AWS SigV4 凭据签名让沙箱智能体通过代理的 CONNECT 隧道调用 AWS 服务（Bedrock、S3、STS 等）。代理拦截出站请求，剥离沙箱客户端的占位符 `Authorization` 头部，并用提供商的真实 AWS 凭据重新签名请求。沙箱永远看不到真实凭据。
+
+## 前提条件
+
+- 一个配置了 `AWS_ACCESS_KEY_ID` 与 `AWS_SECRET_ACCESS_KEY` 凭据的提供商。STS 临时凭据可选配 `AWS_SESSION_TOKEN`。
+- 沙箱策略定义服务端点时使用无端点的 `aws` 提供商配置档案，或使用 `aws-s3` 这类带端点的服务配置档案。
+- 目标端点上启用了 `credential_signing` 的沙箱策略。对无端点的 `aws` 配置档案，该端点还必须把 `credential_binding.provider` 设为挂接的提供商名。
+
+## 提供商设置
+
+先导入 `aws` 配置档案；网关只提供你导入的配置档案：
+
+```shell
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/aws.yaml --global
+```
+
+用 AWS 凭据创建提供商：
+
+```shell
+openshell provider create \
+  --name aws-prod \
+  --type aws \
+  --credential AWS_ACCESS_KEY_ID=AKIA... \
+  --credential AWS_SECRET_ACCESS_KEY=wJalr...
+```
+
+STS 临时凭据请包含会话令牌：
+
+```shell
+openshell provider create \
+  --name aws-sts \
+  --type aws \
+  --credential AWS_ACCESS_KEY_ID=ASIA... \
+  --credential AWS_SECRET_ACCESS_KEY=secret... \
+  --credential AWS_SESSION_TOKEN=FwoGZX...
+```
+
+要让网关替你铸造并轮换 STS 凭据而不是静态提供，请使用 `aws` 或 `aws-s3` 配置档案加 `aws_sts_assume_role` 刷新策略。一次 `sts:AssumeRole` 会铸造签名器读取的全部三个环境变量（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN`）。参见[管理提供商](/how-it-works/providers/overview#aws-sts)。
+
+## 策略配置
+
+逐端点启用 SigV4 签名。绑定选择由哪个提供商实例提供凭据，签名字段则控制代理如何应用它们：
+
+| 字段 | 类型 | 是否必需 | 说明 |
+|---|---|---|---|
+| `credential_binding.provider` | string | 无端点配置档案必需 | 提供 AWS 凭据的挂接提供商实例的确切名称。 |
+| `credential_signing` | string | 是 | 签名模式：`sigv4`、`sigv4:body` 或 `sigv4:no_body`。 |
+| `signing_service` | string | 是 | SigV4 签名使用的 AWS 服务名（如 `bedrock`、`s3`、`sts`）。 |
+| `signing_region` | string | 否 | AWS 区域覆盖。省略时从端点主机名提取。非标准端点必须设置。 |
+
+### Bedrock 示例
+
+```yaml
+network_policies:
+  aws_bedrock:
+    endpoints:
+      - host: bedrock-runtime.us-east-1.amazonaws.com
+        port: 443
+        protocol: rest
+        credential_binding:
+          provider: aws-prod
+        credential_signing: sigv4
+        signing_service: bedrock
+        rules:
+          - allow:
+              method: POST
+              path: /model/*/invoke
+```
+
+<Aside type="note">
+Bedrock 示例用 `rules` 做细粒度访问控制。`rules` 存在时省略 `access` 字段——二者互斥。
+</Aside>
+
+### S3 示例
+
+```yaml
+network_policies:
+  aws_s3:
+    endpoints:
+      - host: "*.s3.us-east-1.amazonaws.com"
+        port: 443
+        protocol: rest
+        access: full
+        credential_binding:
+          provider: aws-prod
+        credential_signing: sigv4
+        signing_service: s3
+```
+
+### STS 示例
+
+```yaml
+network_policies:
+  aws_sts:
+    endpoints:
+      - host: sts.us-east-1.amazonaws.com
+        port: 443
+        protocol: rest
+        access: full
+        credential_binding:
+          provider: aws-prod
+        credential_signing: sigv4
+        signing_service: sts
+```
+
+## 签名模式
+
+`credential_signing` 字段接受三个值：
+
+| 取值 | 行为 | 适用场景 |
+|---|---|---|
+| `sigv4` | 从客户端 SDK 的 `x-amz-content-sha256` 头部自动检测载荷模式。 | 默认值。适用于大多数 AWS 服务。 |
+| `sigv4:body` | 始终缓冲请求体并把其 SHA-256 哈希纳入签名。请求体上限 10 MiB。 | 要求请求体签名的服务（Bedrock）。 |
+| `sigv4:no_body` | 只签名头部，使用 `UNSIGNED-PAYLOAD`。不缓冲直接透传请求体。 | 大文件上传（S3 PutObject）、分块传输，或任何不适合缓冲请求体的场景。 |
+
+`sigv4` 自动检测模式下，代理检查客户端 SDK 发送的 `x-amz-content-sha256` 头部：
+
+- 十六进制哈希 → 缓冲请求体并签名（同 `sigv4:body`）。
+- `UNSIGNED-PAYLOAD` → 只签名头部（同 `sigv4:no_body`）。
+- `STREAMING-UNSIGNED-PAYLOAD-TRAILER` → 只签名头部，透传请求体。
+- 缺失 → 有 `Content-Length` 时签名请求体，否则使用未签名载荷。
+
+<Aside type="note">
+不支持 `STREAMING-AWS4-HMAC-SHA256-PAYLOAD` 这类分块签名的流式模式。代理无法复现逐块签名。客户端 SDK 发送分块签名请求时，请改用 `sigv4:no_body`。
+</Aside>
+
+## 区域检测
+
+代理自动从端点主机名提取 AWS 区域。它支持标准、dualstack、FIPS、虚拟主机式、GovCloud 与中国分区主机名。
+
+主机名无法推断区域时，请显式设置 `signing_region`：
+
+```yaml
+endpoints:
+  - host: custom-vpc-endpoint.example.com
+    port: 443
+    protocol: rest
+    access: full
+    credential_binding:
+      provider: aws-prod
+    credential_signing: sigv4
+    signing_service: s3
+    signing_region: us-west-2
+```
+
+## 限制
+
+- 同一端点上 `credential_signing` 与 `request_body_credential_rewrite` 互斥。策略校验器会拒绝同时设置两者的策略。
+- `credential_binding.provider` 必须指名挂接到该沙箱的提供商。只在所选提供商配置档案没有端点时使用它。带端点的配置档案已定义自己的凭据边界。
+- 端点没有可解析的 AWS 凭据来源时，OpenShell 会在激活之前拒绝带签名的沙箱策略。带端点的配置档案必须声明 `AWS_ACCESS_KEY_ID` 与 `AWS_SECRET_ACCESS_KEY`，并覆盖被签名的主机、端口与路径。无端点配置档案必须声明这些键，并在被签名端点上通过 `credential_binding.provider` 选中。
+- `sigv4:body` 模式最多缓冲 10 MiB。更大的请求体会被拒绝。大载荷请使用 `sigv4:no_body` 或 `sigv4`（自动检测）。
+- 活动提供商必须包含最新的 `AWS_ACCESS_KEY_ID` 与 `AWS_SECRET_ACCESS_KEY` 值。策略激活后任一变得不可用时，请求按 fail closed 失败。
+
+## 在沙箱中使用
+
+在沙箱内，用占位符凭据配置 AWS SDK。代理会在重新签名时把它们替换为真实凭据：
+
+```shell
+export AWS_ACCESS_KEY_ID=placeholder
+export AWS_SECRET_ACCESS_KEY=placeholder
+export AWS_DEFAULT_REGION=us-east-1
+```
+
+然后正常使用任意 AWS SDK 或 CLI。代理会在转发到 AWS 之前透明地重新签名请求。

@@ -1,56 +1,56 @@
 ---
-title: "Technical overviews"
-description: "Get in-depth technical details about Tailscale."
+title: "技术概览"
+description: "深入了解 Tailscale 的技术细节。"
 ---
 
-Last validated Feb 13, 2025
+最后验证于 Feb 13, 2025
 
-This section contains in-depth topics about networking and security in a Tailscale network (known as a tailnet).
+本节包含关于 Tailscale 网络（即 tailnet）中网络与安全主题的深入内容。
 
-## Networking and device connectivity
+## 网络与设备连接
 
-Tailscale modernizes your network through underlying technology to securely connect users, services, and devices.
+Tailscale 通过底层技术让你的网络现代化，安全地连接用户、服务和设备。
 
-[**VPN from the couch to the office and HQ**](/docs/concepts/all-your-offices) — Tailscale's encryption, low latency, easy configuration, and robust access controls like SSO and MFA make it an ideal modern office VPN solution for remote and distributed workforces.
+[**从家中沙发到办公室和总部的 VPN**](/docs/concepts/all-your-offices) —— Tailscale 的加密、低延迟、简单配置，以及 SSO 和 MFA 等强大的访问控制，使其成为面向远程和分布式团队的理想现代办公 VPN 方案。
 
-[**Corporate VPN, explained**](/docs/concepts/corporate-vpn) — Secure your corporate VPN with direct device-to-device encryption, seamless identity provider integration, and flexible access controls.
+[**企业 VPN 详解**](/docs/concepts/corporate-vpn) —— 通过直接的设备到设备加密、无缝的身份提供方集成和灵活的访问控制来保护你的企业 VPN。
 
-[**Deprecate complex physical network (wired and Wi-Fi) security schemes**](/docs/concepts/deprecated-physical-security) — Use Tailscale to move off of complex physical networks.
+[**弃用复杂的物理网络（有线和 Wi-Fi）安全方案**](/docs/concepts/deprecated-physical-security) —— 使用 Tailscale 告别复杂的物理网络。
 
-[**Transparently interconnect microservices between data centers and pods**](/docs/concepts/interconnect-microservices) — Use Tailscale to transparently interconnect microservices between data centers and pods.
+[**在数据中心与 Pod 之间透明互联微服务**](/docs/concepts/interconnect-microservices) —— 使用 Tailscale 在数据中心与 Pod 之间透明地互联微服务。
 
-[**Deploy internal apps anywhere, without changing firewall settings**](/docs/concepts/internal-apps-anywhere) — Deploying servers without modifying firewall settings using Tailscale.
+[**随处部署内部应用，无需更改防火墙设置**](/docs/concepts/internal-apps-anywhere) —— 使用 Tailscale，无需修改防火墙设置即可部署服务器。
 
-[**Connect to your corporate laptop no matter where you left it**](/docs/concepts/laptop-anywhere) — Connect to your corporate laptop no matter where it is.
+[**无论把公司笔记本落在哪，都能连上它**](/docs/concepts/laptop-anywhere) —— 无论你的公司笔记本电脑在哪里，都能连接到它。
 
-[**Connect to colleagues' local servers from anywhere**](/docs/concepts/local-team-server) — Discover how Tailscale helps you to securely connect to colleagues and servers.
+[**从任何地方连接同事的本地服务器**](/docs/concepts/local-team-server) —— 了解 Tailscale 如何帮助你安全地连接到同事和服务器。
 
-[**How Tailscale assigns IP addresses**](/docs/concepts/ip-and-dns-addresses) — Understand how Tailscale assigns stable IP addresses based on the device and authorization credentials.
+[**Tailscale 如何分配 IP 地址**](/docs/concepts/ip-and-dns-addresses) —— 了解 Tailscale 如何基于设备和授权凭证分配稳定的 IP 地址。
 
-[**Device connectivity**](/docs/reference/device-connectivity) — Understand connectivity between Tailscale devices.
+[**设备连接**](/docs/reference/device-connectivity) —— 了解 Tailscale 设备之间的连接方式。
 
-[**DERP servers**](/docs/reference/derp-servers) — Tailscale uses Designated Encrypted Relay for Packets (DERP) servers for secure, low-latency connections in your tailnet. Customization options let you optimize device communication and NAT traversal.
+[**DERP 服务器**](/docs/reference/derp-servers) —— Tailscale 使用 Designated Encrypted Relay for Packets（DERP）服务器在 tailnet 内实现安全、低延迟的连接。自定义选项让你可以优化设备通信和 NAT 穿透。
 
-[**Client-side netmap caching**](/docs/reference/client-side-netmap-caching) — Use client-side netmap caching for continuous connectivity with peers in scenarios when the control plane is temporarily unavailable.
+[**客户端 netmap 缓存**](/docs/reference/client-side-netmap-caching) —— 在控制平面暂时不可用的场景下，使用客户端 netmap 缓存来保持与对等节点的持续连接。
 
-[**CGNAT interoperability**](/docs/reference/cgnat-interoperability) — Disable the CGNAT drop rule to use Tailscale alongside networks that consume CGNAT address space.
+[**CGNAT 互操作性**](/docs/reference/cgnat-interoperability) —— 禁用 CGNAT 丢弃规则，让 Tailscale 与使用运营商级 NAT（CGNAT）地址空间的网络共存。
 
-[**IPv4 vs. IPv6 FAQ**](/docs/reference/faq/ipv6) — Answers to common questions around IPv6.
+[**IPv4 与 IPv6 常见问题**](/docs/reference/faq/ipv6) —— 解答与 IPv6 相关的常见问题。
 
-[**Add multifactor authentication to any legacy service**](/docs/reference/multifactor-auth) — Explore how Tailscale integrates with SSO providers for authentication, including for 2FA/MFA.
+[**为任何旧式服务添加多因素认证**](/docs/reference/multifactor-auth) —— 探索 Tailscale 如何与 SSO 提供商集成进行身份验证，包括 2FA/MFA。
 
-[**Replace site-to-site VPNs with Tailscale and WireGuard**](/docs/reference/subnet-site-to-site) — Use Tailscale for site-to-site VPN to forward network traffic between local networks.
+[**用 Tailscale 和 WireGuard 取代站点到站点 VPN**](/docs/reference/subnet-site-to-site) —— 使用 Tailscale 实现站点到站点 VPN，在本地网络之间转发网络流量。
 
-[**WireGuard VPN with a dynamic IP address**](/docs/reference/wireguard-dynamic-ip) — How WireGuard VPN works with dynamic IP addresses.
+[**动态 IP 地址下的 WireGuard VPN**](/docs/reference/wireguard-dynamic-ip) —— WireGuard VPN 如何在动态 IP 地址下工作。
 
-## Security, authentication, and encryption
+## 安全、身份验证与加密
 
-Tailscale enforces secure authorization and encryption for tailnet traffic based on identity.
+Tailscale 基于身份为 tailnet 流量实施安全的授权与加密。
 
-[**Protect your SSH servers using Tailscale**](/docs/reference/ssh-over-tailscale) — Understand how Tailscale works well with SSH clients and SSH servers, improving security and offering a better user experience.
+[**使用 Tailscale 保护你的 SSH 服务器**](/docs/reference/ssh-over-tailscale) —— 了解 Tailscale 如何与 SSH 客户端和 SSH 服务器良好配合，提升安全性并带来更好的用户体验。
 
-[**Node keys**](/docs/concepts/node-keys) — How Tailscale uses node keys as the mechanism for which machines can join a tailnet.
+[**节点密钥**](/docs/concepts/node-keys) —— Tailscale 如何使用节点密钥（node key）作为控制哪些机器可以加入 tailnet 的机制。
 
-[**Tailscale encryption**](/docs/concepts/tailscale-encryption) — Review how Tailscale uses encryption.
+[**Tailscale 加密**](/docs/concepts/tailscale-encryption) —— 了解 Tailscale 如何使用加密。
 
-[**Tailscale identity**](/docs/concepts/tailscale-identity) — Understand how identity is established and used in Tailscale.
+[**Tailscale 身份**](/docs/concepts/tailscale-identity) —— 了解 Tailscale 中身份的建立与使用方式。

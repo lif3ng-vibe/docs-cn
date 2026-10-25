@@ -1,10 +1,10 @@
 ---
-title: "Can Tailscale decrypt my traffic?"
-description: "Understand why Tailscale cannot decrypt your traffic."
+title: "Tailscale 能解密我的流量吗？"
+description: "了解为什么 Tailscale 无法解密你的流量。"
 ---
 
-Last validated Jun 18, 2024
+最后验证于 Jun 18, 2024
 
-No.
+不能。
 
-Devices running Tailscale only exchange their public keys. Private keys never leave the device. All traffic is end-to-end encrypted, always.
+运行 Tailscale 的设备只交换各自的公钥。私钥从不离开设备。所有流量始终都是端到端加密的。

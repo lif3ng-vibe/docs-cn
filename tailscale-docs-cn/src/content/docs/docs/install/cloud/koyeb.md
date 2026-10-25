@@ -1,99 +1,99 @@
 ---
-title: "Tailscale on Koyeb"
-description: "[Koyeb][xt-koyeb] is a serverless platform for seamlessly deploying AI applications and databases on high-performance infrastructure, including CPUs, GPUs, and Accelerators around the world. You can a"
+title: "在 Koyeb 上使用 Tailscale"
+description: "[Koyeb][xt-koyeb] 是一个无服务器平台，用于在全球高性能基础设施（包括 CPU、GPU 和加速器）上无缝部署 AI 应用与数据库。你可以"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[Koyeb][xt-koyeb] is a serverless platform for seamlessly deploying AI applications and databases on high-performance infrastructure, including CPUs, GPUs, and Accelerators around the world.
-You can add Tailscale to a Koyeb application to let your Koyeb Services communicate with other devices and services in your tailnet.
+[Koyeb][xt-koyeb] 是一个无服务器平台，用于在全球高性能基础设施（包括 CPU、GPU 和加速器）上无缝部署 AI 应用与数据库。
+你可以在 Koyeb 应用中加入 Tailscale，让 Koyeb 服务与 tailnet 中的其他设备和服务通信。
 
-## Step 1: Generate an auth key to authenticate your Service on Koyeb
+## 步骤 1：生成认证密钥，在 Koyeb 上认证你的服务
 
-Start by [generating an auth key][docs-auth-keys] to let your Koyeb service join your tailnet.
+首先[生成认证密钥（auth key）][docs-auth-keys]，让你的 Koyeb 服务加入你的 tailnet。
 
-Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console and select **Generate auth key**. It's best practice to use a reusable and pre-authorized [ephemeral key][docs-ephemeral-nodes] for this purpose because it automatically cleans up devices after they shut down.
+打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面，选择**生成认证密钥**（Generate auth key）。此处最佳做法是使用可复用且已预授权的[临时密钥][docs-ephemeral-nodes]（ephemeral key），因为设备关机后它会被自动清理。
 
-*（图：Tailscale's auth key generation page）*
+*（图：Tailscale 认证密钥生成页面）*
 
-> **Note:**
+> **注意：**
 
-Next, open a terminal and use the following command to create a [Koyeb Secret][xt-koyeb-secret] to securely store the auth key on Koyeb.
+接下来，打开终端，使用以下命令创建一个 [Koyeb Secret][xt-koyeb-secret]，将认证密钥安全地存储在 Koyeb 上。
 
 ```shell
 koyeb secrets create TAILSCALE_AUTHKEY -v "tskey-<key>"
 ```
 
-Pass this Secret using an environment variable to your Koyeb Service to authenticate your application and join your tailnet.
+通过环境变量把这个 Secret 传给你的 Koyeb 服务，以认证你的应用并加入 tailnet。
 
-## Step 2: Configure your Dockerfile to install Tailscale
+## 步骤 2：配置 Dockerfile 以安装 Tailscale
 
-Next, build a [multistage Dockerfile][xt-docker-multi-stage-builds] with two stages:
+接下来，构建一个包含两个阶段的[多阶段 Dockerfile][xt-docker-multi-stage-builds]：
 
-* The first stage compiles and builds your application code.
-* The second stage pulls your application code and Tailscale into a final image that you can deploy to Koyeb.
+* 第一个阶段编译并构建你的应用代码。
+* 第二个阶段把你的应用代码与 Tailscale 一起拉取进最终镜像，供你部署到 Koyeb。
 
-In your `Dockerfile`:
+在你的 `Dockerfile` 中：
 
 ```docker
 FROM alpine:latest as builder
 WORKDIR /app
 COPY . ./
-# This is where you build the application code as well.
+# 这里也是你构建应用代码的地方。
 
 # https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
 FROM alpine:latest
 RUN apk update && apk add ca-certificates iptables ip6tables && rm -rf /var/cache/apk/*
 
-# Copy binary to production image.
+# 将二进制文件复制到生产镜像。
 COPY --from=builder /app/start.sh /app/start.sh
 
-# Copy Tailscale binaries from the tailscale image on Docker Hub.
+# 从 Docker Hub 上的 tailscale 镜像复制 Tailscale 二进制文件。
 COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscaled /app/tailscaled
 COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscale /app/tailscale
 RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
 
-# Run on container startup.
+# 在容器启动时运行。
 CMD ["/app/start.sh"]
 ```
 
-The Dockerfile specifies the `/app/start.sh` script as the initial process to run. This script starts Tailscale, then runs the application binary. This is where you use the `TAILSCALE_AUTHKEY` variable you defined when you generated an auth key.
+Dockerfile 指定 `/app/start.sh` 脚本作为初始运行进程。该脚本先启动 Tailscale，再运行应用二进制文件。你在这里会用到生成认证密钥时定义的 `TAILSCALE_AUTHKEY` 变量。
 
-Create a new file named `start.sh` in the root directory of your application and add the following content to the file to start Tailscale and launch your app:
+在你的应用根目录下新建一个名为 `start.sh` 的文件，并向文件中添加以下内容，用于启动 Tailscale 并运行你的应用：
 
 ```shell
 #!/bin/sh
-# Start Tailscale
+# 启动 Tailscale
 /app/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
 /app/tailscale up --ssh --auth-key=${TAILSCALE_AUTHKEY} --hostname=tailscale-on-koyeb
 
-# Start your app
+# 启动你的应用
 /app/my-app
 ```
 
-You pass the `--ssh` flag to `/app/tailscale up` to authorize SSH connections to the node. This will let you ensure everything is working as expected and let you connect to the node using SSH from your tailnet. Refer to [Tailscale SSH documentation][docs-tailscale-ssh] for more information.
+你向 `/app/tailscale up` 传入 `--ssh` 标志，以授权对该节点的 SSH 连接。这样你就能确认一切按预期工作，并能从 tailnet 中通过 SSH 连接该节点。更多信息请参阅 [Tailscale SSH 文档][docs-tailscale-ssh]。
 
-Save the file. You're ready to deploy.
+保存文件，即可开始部署。
 
-## Step 3: Deploy your app to Koyeb
+## 步骤 3：将应用部署到 Koyeb
 
-To deploy the application on Koyeb, run the following command from your application's root directory. This command creates and deploys a new Koyeb service that connects to your tailnet:
+要在 Koyeb 上部署该应用，请从应用根目录运行以下命令。此命令会创建并部署一个连接到你 tailnet 的新 Koyeb 服务：
 
 ```
 koyeb deploy . myapp/main --instance-type small --region was --type worker --archive-builder docker --env TAILSCALE_AUTHKEY=@TAILSCALE_AUTHKEY --privileged
 ```
 
-Run the following command to use SSH to confirm you can connect to the service:
+运行以下命令，通过 SSH 确认你能连接到该服务：
 
 ```shell
 tailscale ssh root@tailscale-on-koyeb
 ```
 
-For more information about Koyeb, the Koyeb CLI, resources, service types, and deployment options, refer to the [Koyeb documentation][xt-koyeb-docs].
+有关 Koyeb、Koyeb CLI、资源、服务类型与部署选项的更多信息，请参阅 [Koyeb 文档][xt-koyeb-docs]。
 
-## Remove ephemeral nodes from a tailnet
+## 从 tailnet 中移除临时节点
 
-When an ephemeral node goes offline, it is automatically removed from your tailnet. You can also control ephemeral node removal using the [`tailscale logout`][docs-cli-logout] command to either manually force the removal or incorporate the command into the [`tailscaled`][docs-tailscaled] Tailscale daemon. For more information, refer to [Ephemeral nodes][docs-ephemeral-nodes-faq].
+临时节点（ephemeral node）离线后会被自动从你的 tailnet 中移除。你也可以使用 [`tailscale logout`][docs-cli-logout] 命令控制临时节点的移除：手动强制移除，或将该命令加入 [`tailscaled`][docs-tailscaled] Tailscale 守护进程。更多信息请参阅[临时节点][docs-ephemeral-nodes-faq]。
 
 [docs-tailscale-ssh]: /docs/features/tailscale-ssh
 

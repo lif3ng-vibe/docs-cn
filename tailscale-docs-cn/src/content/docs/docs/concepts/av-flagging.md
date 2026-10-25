@@ -1,33 +1,33 @@
 ---
-title: "Antivirus flagging of the Tailscale client"
-description: "What to do when Tailscale is being flagged by antivirus software and how to report legitimate concerns."
+title: "杀毒软件对 Tailscale 客户端的标记"
+description: "当 Tailscale 被杀毒软件标记时该怎么办，以及如何报告确实可疑的情况。"
 ---
 
-Last validated Apr 1, 2025
+最后验证于 Apr 1, 2025
 
-The Tailscale client can sometimes be falsely flagged by antivirus software, especially with new Tailscale releases, because many antivirus engines use machine learning and other automated tools that can result in false positives.
+Tailscale 客户端有时会被杀毒软件错误标记，尤其是在新版本 Tailscale 发布时，因为许多杀毒引擎使用机器学习和其他自动化工具，可能产生误报。
 
-> **Note:**
+> **注意：**
 >
-> Do not disregard your antivirus alerts. There are possible scenarios of a supply chain attack or malware masquerading as the Tailscale client, even though this has not yet happened.
+> 不要忽视杀毒软件的警报。虽然目前尚未发生过，但确实存在供应链攻击或恶意软件伪装成 Tailscale 客户端的可能性。
 
-You can compare the antivirus alert details to the recent changes in [our client changelog][co-changelog-client] to determine when an alert corresponds to intended new behavior of Tailscale.
+你可以将杀毒软件警报的详细信息与[我们的客户端更新日志][co-changelog-client]中的近期变更进行对比，判断警报是否对应 Tailscale 有意引入的新行为。
 
-## Manage false positives
+## 处理误报
 
-If your antivirus software flags the Tailscale client, and you are confident that the warning is a false positive, you can take the following actions:
+如果你的杀毒软件标记了 Tailscale 客户端，而你确信该警告是误报，可以采取以下措施：
 
-* Report the false positive to the antivirus vendor.
-* Add Tailscale to your local allow list in your antivirus software settings. When Tailscale is upgraded, your antivirus may flag the new version again, and you may need to re-add the Tailscale client to your allow list, depending on which antivirus software you use.
-* Email screenshots and information about the antivirus software you are using, including the name and version, to `security@tailscale.com`. This may result in us contacting the antivirus vendor directly to raise the urgency.
+* 向杀毒软件厂商报告该误报。
+* 在杀毒软件设置的本地允许列表（allow list）中添加 Tailscale。Tailscale 升级后，杀毒软件可能会再次标记新版本，视你所用的杀毒软件而定，你可能需要重新将 Tailscale 客户端加入允许列表。
+* 将截图以及你所用杀毒软件的信息（包括名称和版本）发送到 `security@tailscale.com`。我们可能会直接联系该杀毒软件厂商，以提高处理的紧迫性。
 
-## Manage true positives
+## 处理真实告警
 
-If you believe the antivirus software is flagging a true positive, or you are not sure, you can email `security@tailscale.com` with the following information:
+如果你认为杀毒软件标记的是真实威胁，或者你不确定，可以发送电子邮件至 `security@tailscale.com`，并提供以下信息：
 
-* Screenshots that display the flagged warning message in your antivirus software.
-* Details about the antivirus product you are using, including the name and version.
-* Information about recent Tailscale client upgrades or tailnet changes.
-* A description of why you suspect that the flagging is a true positive.
+* 显示杀毒软件中被标记警告消息的截图。
+* 你所用杀毒产品的详细信息，包括名称和版本。
+* 近期 Tailscale 客户端升级或 tailnet 变更的相关信息。
+* 说明你为什么怀疑该标记是真实威胁。
 
 [co-changelog-client]: https://tailscale.com/changelog#client

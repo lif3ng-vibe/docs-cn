@@ -1,20 +1,20 @@
 ---
-title: "Integrations"
-description: "How to use Tailscale to various kinds of servers, services, or devices."
+title: "集成"
+description: "如何将 Tailscale 用于各类服务器、服务或设备。"
 ---
 
-Last validated Jun 18, 2024
+最后验证于 Jun 18, 2024
 
-* [Connect to a cloud server][docs-cloud-server]
-* [Integrate with containers or virtualized environments][docs-containers-and-virtualization]
-* [Connect to a serverless app][docs-serverless]
-* [Connect to a database][docs-database]
-* [Connect to your remote code environment][docs-remote-code]
-* [Access or share resources from within your development environment][docs-developer-tools]
-* [Integrate with a firewall][docs-firewall]
-* [Integrate with a web server][docs-webserver]
-* [Connect to network attached storage (NAS)][docs-nas]
-* [Integrate with your MDM solution][docs-mdm]
+* [连接到云服务器][docs-cloud-server]
+* [与容器或虚拟化环境集成][docs-containers-and-virtualization]
+* [连接到无服务器应用][docs-serverless]
+* [连接到数据库][docs-database]
+* [连接到你的远程代码环境][docs-remote-code]
+* [在开发环境中访问或共享资源][docs-developer-tools]
+* [与防火墙集成][docs-firewall]
+* [与 Web 服务器集成][docs-webserver]
+* [连接到网络附加存储（NAS）][docs-nas]
+* [与你的 MDM 解决方案集成][docs-mdm]
 
 [docs-cloud-server]: /docs/cloud-server
 

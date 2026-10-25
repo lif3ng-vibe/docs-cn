@@ -1,12 +1,12 @@
 ---
-title: "Reference architectures"
-description: "Last validated Aug 21, 2026"
+title: "参考架构"
+description: "最后验证于 Aug 21, 2026"
 ---
 
-Last validated Aug 21, 2026
+最后验证于 Aug 21, 2026
 
-* [AWS reference architecture](/docs/reference/reference-architectures/aws) — Deploy Tailscale to Amazon Web Services (AWS) with best practices, security, and production readiness in mind.
+* [AWS 参考架构](/docs/reference/reference-architectures/aws)——本着最佳实践、安全性与生产就绪的原则，将 Tailscale 部署到 Amazon Web Services（AWS）。
 
-* [Azure reference architecture](/docs/reference/reference-architectures/azure) — Deploy Tailscale to Microsoft Azure with best practices, security, and production readiness in mind.
+* [Azure 参考架构](/docs/reference/reference-architectures/azure)——本着最佳实践、安全性与生产就绪的原则，将 Tailscale 部署到 Microsoft Azure。
 
-* [Google Cloud Platform reference architecture](/docs/reference/reference-architectures/gcp) — Deploy Tailscale to Google Cloud Platform (GCP) with best practices, security, and production readiness in mind.
+* [Google Cloud Platform 参考架构](/docs/reference/reference-architectures/gcp)——本着最佳实践、安全性与生产就绪的原则，将 Tailscale 部署到 Google Cloud Platform（GCP）。

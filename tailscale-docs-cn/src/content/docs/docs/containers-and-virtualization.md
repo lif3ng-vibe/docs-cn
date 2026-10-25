@@ -1,12 +1,12 @@
 ---
-title: "Containers and virtualization"
-description: "Integrate Tailscale with container and virtualization technologies."
+title: "容器与虚拟化"
+description: "将 Tailscale 与容器和虚拟化技术集成。"
 ---
 
-Last validated Jun 18, 2024
+最后验证于 Jun 18, 2024
 
-[**Docker**](/docs/features/containers/docker) — Explore how to use Tailscale inside Docker containers.
+[**Docker**](/docs/features/containers/docker) —— 探索如何在 Docker 容器内使用 Tailscale。
 
-[**Tailscale in LXC containers**](/docs/features/containers/lxc/lxc-unprivileged) — Use Tailscale in LXC containers.
+[**LXC 容器中的 Tailscale**](/docs/features/containers/lxc/lxc-unprivileged) —— 在 LXC 容器中使用 Tailscale。
 
-[**Tailscale on a Proxmox host**](/docs/integrations/proxmox) — Optimally configure Proxmox for use with Tailscale.
+[**Proxmox 主机上的 Tailscale**](/docs/integrations/proxmox) —— 针对 Tailscale 的使用场景优化配置 Proxmox。

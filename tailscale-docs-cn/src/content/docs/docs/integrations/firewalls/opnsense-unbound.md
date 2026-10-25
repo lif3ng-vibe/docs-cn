@@ -1,37 +1,31 @@
 ---
-title: "Unbound DNS in OPNsense"
-description: "[OPNsense][xt-opnsense] is an open source router and firewall platform built using FreeBSD. Tailscale can be [installed on an OPNsense platform][docs-install-opnsense], joining it to your WireGuard-ba"
+title: "OPNsense 中的 Unbound DNS"
+description: "[OPNsense][xt-opnsense] 是一个基于 FreeBSD 构建的开源路由器与防火墙平台。Tailscale 可以[安装在 OPNsense 平台上][docs-install-opnsense]，让它加入你基于 WireGuard 的网状网络。"
 ---
 
-Last validated May 6, 2025
+最后验证于 May 6, 2025
 
-[OPNsense][xt-opnsense] is an open source router and firewall platform built using
-FreeBSD. Tailscale can be [installed on an OPNsense platform][docs-install-opnsense],
-joining it to your WireGuard-based mesh network.
+[OPNsense][xt-opnsense] 是一个基于 FreeBSD 构建的开源路由器与防火墙平台。Tailscale 可以[安装在 OPNsense 平台上][docs-install-opnsense]，让它加入你基于 WireGuard 的网状网络。
 
-## Unbound DNS configuration
+## Unbound DNS 配置
 
-OPNsense is often configured with a local Unbound DNS server to use for
-its own lookups and to provide as a recursive DNS service to LAN clients.
-Tailscale DNS settings are not currently implemented for Unbound DNS;
-instead, the 100.100.100.100 DNS server will be written to
-`/etc/resolv.conf`. This will effectively disable Unbound.
+OPNsense 通常配置了本地 Unbound DNS 服务器，用于自身的域名查询，并向局域网（LAN）客户端提供递归 DNS 服务。目前 Tailscale 的 DNS 设置尚未针对 Unbound DNS 实现；
+相反，100.100.100.100 这个 DNS 服务器会被写入
+`/etc/resolv.conf`。这实际上会禁用 Unbound。
 
-It may be preferable to not use the Tailscale DNS settings:
-`tailscale set --accept-dns=false`.
-Instead, Unbound can be configured to be able to resolve MagicDNS names.
-The tiny 100.100.100.100 DNS server running within the `tailscaled` process
-will always answer queries specifically sent to it.
+或许更好的做法是不使用 Tailscale 的 DNS 设置：
+`tailscale set --accept-dns=false`。
+这样反而可以把 Unbound 配置成能够解析 MagicDNS 名称。
+运行在 `tailscaled` 进程内的小巧的 100.100.100.100 DNS 服务器
+始终会应答专门发给它的查询。
 
-In **System > Settings > General**, add a search domain for the [MagicDNS name][docs-magicdns]
-of the tailnet such as `tails-scales.ts.net` or `tail0123456.ts.net`.
+在 **System > Settings > General** 中，为 tailnet 的 [MagicDNS 名称][docs-magicdns]添加一个搜索域，例如 `tails-scales.ts.net` 或 `tail0123456.ts.net`。
 
-*（图：Set tails-scales.ts.net in the OPNsense Settings : General : DNS search domain）*
+*（图：在 OPNsense 的 Settings : General : DNS search domain 中设置 tails-scales.ts.net）*
 
-In **Services > Unbound DNS > Query Forwarding**, add an entry for the [MagicDNS name][docs-magicdns]
-directed to 100.100.100.100.
+在 **Services > Unbound DNS > Query Forwarding** 中，为该 [MagicDNS 名称][docs-magicdns]添加一条指向 100.100.100.100 的条目。
 
-*（图：Set Services : Unbound DNS : Query Forwarding to send tails-scales.ts.net to 100.100.100.100）*
+*（图：将 Services : Unbound DNS : Query Forwarding 设置为把 tails-scales.ts.net 发往 100.100.100.100）*
 
 [docs-install-opnsense]: /docs/install/opnsense
 

@@ -1,83 +1,83 @@
 ---
-title: "How app connectors work"
-description: "Route SaaS application traffic in your tailnet using app connectors."
+title: "应用连接器的工作原理"
+description: "使用应用连接器在 tailnet 中路由 SaaS 应用流量。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-> **Note:** App connectors are available for [all plans](https://tailscale.com/pricing).
+> **注意：** 应用连接器适用于[所有套餐](https://tailscale.com/pricing)。
 
-App connectors let you route your self-hosted applications and software as a service (SaaS) applications through dedicated devices in your Tailscale network (known as a tailnet). An app connector works like a [subnet router][docs-subnets] with the added benefit of routing your users and devices to applications by domain names instead of IP addresses, providing more reliable connectivity.
+应用连接器让你可以把自托管应用和软件即服务（SaaS）应用的流量经由 Tailscale 网络（即 tailnet）中的专用设备路由。应用连接器的工作方式类似[子网路由器][docs-subnets]，额外的好处是按域名（而非 IP 地址）把用户和设备路由到应用，从而提供更可靠的连接。
 
-Additionally, you can use app connectors to accommodate additional needs related to application connectivity, monitoring, optimization, security, and reliability.
+此外，你还可以使用应用连接器满足应用连接性、监控、优化、安全性和可靠性方面的更多需求。
 
-**Application types**
+**应用类型**
 
-* Internally hosted resources.
-* Cloud infrastructure or virtual private cloud (VPC).
-* SaaS applications including Amplitude, Confluence, GitHub, Looker, Office 365, Salesforce, and Stripe.
-* Managed platforms such as Mongo Atlas, Amazon RDS, and Planetscale.
+* 内部托管的资源。
+* 云基础设施或虚拟私有云（VPC）。
+* SaaS 应用，包括 Amplitude、Confluence、GitHub、Looker、Office 365、Salesforce 和 Stripe。
+* 托管平台，例如 Mongo Atlas、Amazon RDS 和 Planetscale。
 
-**Management options and benefits**
+**管理选项与优势**
 
-* Centrally manage application access for your app connector devices instead of managing access to your applications for each individual device in the tailnet.
-* Monitor activity for new or removed app connectors in your tailnet in the [configuration audit logs][docs-audit-logging].
-* Monitor app connector and application traffic using third-party tools.
-* Optionally restrict all application access through the app connector device by configuring IP allowlisting in your application settings. This ensures that only the permitted devices in your tailnet can access the application if they are granted access to the app connector.
+* 集中管理应用连接器设备的应用访问，而不必为 tailnet 中的每台设备分别管理对应用的访问。
+* 在[配置审计日志][docs-audit-logging]中监控 tailnet 内新增或移除的应用连接器的活动。
+* 使用第三方工具监控应用连接器与应用流量。
+* 可选择在应用设置中配置 IP 白名单，将所有应用访问限制为必须经过应用连接器设备。这样，tailnet 中只有被授予应用连接器访问权限的设备才能访问该应用。
 
-**Reliability options and benefits**
+**可靠性选项与优势**
 
-* Deploy multiple app connector devices for the same application to provide redundancy.
-* Choose how Tailscale selects among eligible connectors using the tailnet's [route selection option][docs-route-selection].
+* 为同一应用部署多台应用连接器设备以提供冗余。
+* 使用 tailnet 的[路由选择选项][docs-route-selection]选择 Tailscale 在合格连接器之间的选取方式。
 
-For deployment instructions, refer to [Set up high availability][docs-high-availability].
+部署说明参见[设置高可用][docs-high-availability]。
 
-## How it works
+## 工作原理
 
-Here are some terms and definitions for understanding how app connectors work.
+以下术语与定义有助于理解应用连接器的工作方式。
 
-* **App connector**: The general overall term for the feature, as well as the admin console settings that let you add and remove app connectors in your tailnet.
-* **App connector device**: The Linux device in your tailnet designated for routing traffic to your application.
-* **Application**: The self-hosted, cloud-based, or SaaS application to which the app connector device routes tailnet traffic.
+* **应用连接器**：这一特性的总称，也指管理控制台中用于在 tailnet 内添加和移除应用连接器的设置。
+* **应用连接器设备**：tailnet 中被指定用于将流量路由到应用的 Linux 设备。
+* **应用**：应用连接器设备将 tailnet 流量路由到的自托管、云端或 SaaS 应用。
 
-Here's how you set up an app connector. For more information, refer to [Set up an app connector in your tailnet][docs-app-connectors-setup].
+应用连接器的设置方式如下。更多信息参见[在 tailnet 中设置应用连接器][docs-app-connectors-setup]。
 
-1. Configure your [tailnet policy file][docs-tailnet-policy-file] to define device permissions for the app connector in your tailnet, including tags.
-2. Assign devices in your tailnet with the tag you configured to permit access to the app connector.
-3. Configure a Linux device in your tailnet to act as the designated app connector that will route the traffic to the application. This device must have a public IP address, and IP forwarding must be enabled.
-4. Configure the app connector in the admin console to specify the tag and the domain names for the applications.
-5. Configure the application to manage additional access and security needs, including optional IP allowlisting to only permit requests from the app connector device IP addresses.
+1. 配置 [tailnet 策略文件][docs-tailnet-policy-file]，定义 tailnet 内应用连接器的设备权限，包括标签。
+2. 为 tailnet 中你已配置为可访问应用连接器的设备分配相应标签。
+3. 将 tailnet 中的一台 Linux 设备配置为承担应用连接器角色，负责把流量路由到应用。该设备必须拥有公网 IP 地址，并且必须启用 IP 转发。
+4. 在管理控制台中配置应用连接器，指定标签以及各应用的域名。
+5. 配置应用本身以满足额外的访问与安全需求，包括可选的 IP 白名单，只允许来自应用连接器设备 IP 地址的请求。
 
-Here's how app connectors work at a high level, assuming access control policy only lets a specific group of users and devices in your tailnet access the application by way of the app connector.
+以下是应用连接器的高层工作流程，假设访问控制策略只允许 tailnet 中特定组的用户和设备通过应用连接器访问应用：
 
-1. A device with the designated tagging accesses an application.
-2. The request is passed to the device designated as the app connector.
-3. The app connector routes the traffic to the application by egressing to the IP addresses advertised by the application domains.
-4. (Optional) The application verifies that the request is coming from the app connector's public IP address.
-5. Traffic from the application is routed back through the app connector and then passed along to the user device in the tailnet.
+1. 带有指定标签的设备访问某个应用。
+2. 请求被传递给被指定为应用连接器的设备。
+3. 应用连接器通过向应用域名所通告的 IP 地址发出出站流量，将流量路由到该应用。
+4. （可选）应用验证请求是否来自应用连接器的公网 IP 地址。
+5. 来自应用的流量经应用连接器路由回来，再传递给 tailnet 中的用户设备。
 
-### DNS discovery mechanism
+### DNS 发现机制
 
-App connectors use the PeerAPI to perform DNS discovery through DoH (DNS over HTTPS):
+应用连接器使用 PeerAPI 通过 DoH（DNS over HTTPS）执行 DNS 发现：
 
-1. **Access requirement**: Client devices must have access to the app connector tag for it to appear as a peer.
-2. **DNS resolution**: App connectors use DoH to resolve configured domains to IP addresses.
-3. **Route advertisement**: Discovered IP addresses are automatically advertised as routes to the tailnet.
+1. **访问要求**：客户端设备必须能够访问应用连接器标签，连接器才会作为对等节点出现。
+2. **DNS 解析**：应用连接器使用 DoH 将已配置的域名解析为 IP 地址。
+3. **路由通告**：发现的 IP 地址会自动作为路由通告给 tailnet。
 
-Minimal access (such as ICMP) is sufficient to enable peer discovery—full application access is not required.
+最小访问权限（例如 ICMP）足以启用对等节点发现——无需完整的应用访问权限。
 
-## Considerations
+## 注意事项
 
-* If a user is not connected to the tailnet, they will still have access to the application unless IP allowlisting is configured in the [application settings][docs-app-connectors-setup-apps]. If you set up IP allowlisting, you can also enforce system policy settings such as [`AlwaysOn.Enabled`][docs-mdm-keys-always-on] to ensure that devices are always connected to the tailnet.
-* If a user disables the [accept routes][docs-client-preferences-accept-routes] option on their Tailscale client, their device will not route through the app connectors. You can use the [`UseTailscaleSubnets`][docs-mdm-keys-tailscale-subnets] system policy to prevent users from disabling this setting.
-* Linux devices in a tailnet do not accept routes by default. Make sure to use the Tailscale CLI command [`tailscale set --accept-routes=true`][docs-client-preferences-accept-routes] on all the Linux devices that require access to the app connectors, if not previously set.
-* When manually configuring an application, the provider often uses multiple domains. You must add all of these domains to your app connector configuration. Refer to the GitHub [V2Fly project][xt-gh-domain-list-community] for a curated list of known applications and the corresponding domains for each one.
-* If multiple Fully Qualified Domain Names (FQDNs) share an IP address and one of those FQDNs is an app connector target, connections to all FQDNs sharing the resolved IPs will be routed through the app connector. This is because once an app connector resolves an IP address, it will route traffic to that IP through the connector—regardless of how it was resolved or even if the IP address was used instead of a DNS name.
-* Multiple app connector devices for a single app connector are recommended for optimal performance and reliability.
-* If an app connector becomes unavailable while in use, and no other app connectors are available, resolution to the domain will begin to fail until the app connector is back online.
-* If you manage your tailnet policy file using an external provider like [Terraform][docs-terraform-provider] or [GitOps][docs-gitops], any changes you make to app connectors in the admin console will be overwritten during the next sync. Make sure to manage app connectors through your external provider.
+* 如果用户未连接到 tailnet，除非在[应用设置][docs-app-connectors-setup-apps]中配置了 IP 白名单，否则他们仍能访问应用。如果你设置了 IP 白名单，还可以强制执行系统策略设置（例如 [`AlwaysOn.Enabled`][docs-mdm-keys-always-on]），确保设备始终连接到 tailnet。
+* 如果用户在其 Tailscale 客户端上禁用了[接受路由][docs-client-preferences-accept-routes]选项，其设备将不会经由应用连接器路由。你可以使用 [`UseTailscaleSubnets`][docs-mdm-keys-tailscale-subnets] 系统策略防止用户禁用该设置。
+* tailnet 中的 Linux 设备默认不接受路由。如果尚未设置，请务必在所有需要访问应用连接器的 Linux 设备上使用 Tailscale CLI 命令 [`tailscale set --accept-routes=true`][docs-client-preferences-accept-routes]。
+* 手动配置应用时，提供商往往使用多个域名。你必须把这些域名全部加入应用连接器配置。GitHub 上的 [V2Fly 项目][xt-gh-domain-list-community]提供了一份精选清单，收录了常见应用及各自对应的域名。
+* 如果多个完全限定域名（FQDN）共享同一个 IP 地址，而其中一个 FQDN 是应用连接器的目标，那么与所有共享该解析 IP 的 FQDN 的连接都会经由应用连接器路由。这是因为应用连接器一旦解析出某个 IP 地址，就会把发往该 IP 的流量经由连接器路由——无论该 IP 是如何解析得到的，甚至即使流量直接使用 IP 地址而非 DNS 名称也一样。
+* 为获得最佳性能与可靠性，建议为单个应用连接器部署多台应用连接器设备。
+* 如果某台应用连接器在使用中变得不可用，且没有其他可用的应用连接器，该域名的解析将开始失败，直到应用连接器恢复在线。
+* 如果你使用 [Terraform][docs-terraform-provider] 或 [GitOps][docs-gitops] 等外部提供方管理 tailnet 策略文件，那么在管理控制台中对应用连接器所做的任何更改都会在下次同步时被覆盖。请务必通过你的外部提供方来管理应用连接器。
 
-### Expired device keys
+### 设备密钥过期
 
 \[Missing snippet: expired\_device\_keys\_fail\_close.mdx]
 

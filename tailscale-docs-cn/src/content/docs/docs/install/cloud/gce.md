@@ -1,66 +1,66 @@
 ---
-title: "Access Google Compute Engine VMs privately using Tailscale"
-description: "Google Cloud provides Linux virtual machines and you can use Tailscale to provide secure connectivity."
+title: "使用 Tailscale 私有访问 Google Compute Engine 虚拟机"
+description: "Google Cloud 提供 Linux 虚拟机，你可以使用 Tailscale 提供安全连接。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-Google Cloud provides Linux virtual machines and you can use Tailscale to provide secure connectivity.
+Google Cloud 提供 Linux 虚拟机，你可以使用 Tailscale 提供安全连接。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need a Tailscale network (known as a tailnet) set up and configured with at least one existing device. Read our [getting started guide][docs-install] if you need help with this.
+在开始本指南之前，你需要先搭建并配置好一个 Tailscale 网络（即 tailnet），且其中至少有一台现有设备。如果需要帮助，请阅读我们的[入门指南][docs-install]。
 
-## Step 1: Set up the Tailscale client for the VM
+## 第 1 步：为虚拟机设置 Tailscale 客户端
 
-First, [create a Virtual Machine in the GCE Console][xt-google-vm-create-start].
+首先，[在 GCE 控制台中创建一台虚拟机][xt-google-vm-create-start]。
 
-When creating the instance select **Management, security, disks, networking, sole tenancy**, select **Networking**, and select the **Network Interface**. Because we're later going to enable subnet routing on this VM, we want to set **IP forwarding** to **On**.
+创建实例时，选择 **Management, security, disks, networking, sole tenancy**，然后选择 **Networking**，再选择 **Network Interface**。因为我们稍后要在这台虚拟机上启用子网路由，所以需要将 **IP forwarding** 设为 **On**。
 
-*（图：The Network Interface configurations featuring the IP forwarding setting.）*
+*（图：网络接口配置，其中显示 IP forwarding 设置）*
 
-Once you create the VM, SSH to the system and follow the steps to [install Tailscale on Linux][docs-install-linux].
+虚拟机创建完成后，通过 SSH 连入该系统，按照步骤[在 Linux 上安装 Tailscale][docs-install-linux]。
 
-## Step 2: Allow UDP port 41641
+## 第 2 步：放行 UDP 端口 41641
 
-If at least one side of a tunnel has "easy NAT," where Tailscale can determine the UDP port number on the far side of the NAT device, then it will make [direct connections to minimize latency.][bl-how-tailscale-works]. We ensure that GCE nodes can make direct connections by allowing UDP port `41641` to ingress through the firewall.
+只要隧道至少有一端是"简单 NAT"（easy NAT），即 Tailscale 能够确定 NAT 设备另一侧的 UDP 端口号，它就会建立[直连以降低延迟][bl-how-tailscale-works]。为了让 GCE 节点能够建立直连，我们通过防火墙放行 UDP 端口 `41641` 的入站流量。
 
-In **VPC Network** > **Firewall** we add two rules:
+在 **VPC Network** > **Firewall** 中，我们添加两条规则：
 
-1. An ingress rule to allow `0.0.0.0/0` for UDP port `41641` to all instances.
-2. An ingress rule to allow `::/0` for UDP port `41641` to all instances.
+1. 一条入站规则，允许来自 `0.0.0.0/0` 的 UDP 端口 `41641` 流量访问所有实例。
+2. 一条入站规则，允许来自 `::/0` 的 UDP 端口 `41641` 流量访问所有实例。
 
-*（图：The firewall rule for an example project featuring Direction of traffic set to Ingress and Protocols and ports set to 41641.）*
+*（图：示例项目的防火墙规则，流量方向设为 Ingress，协议和端口设为 41641）*
 
-## Step 3: Advertise routes from the VM
+## 第 3 步：从虚拟机宣告路由
 
-To enable connections from your tailnet to the GCP subnet, configure the VM to act as a [subnet router][docs-subnets].
+要让你的 tailnet 能够连接到 GCP 子网，请将这台虚拟机配置为[子网路由器][docs-subnets]。
 
-First, enable IP forwarding on the VM.
+首先，在虚拟机上启用 IP 转发。
 
 \[Missing snippet: EnableIPForwarding.mdx]
 
-After enabling IP forwarding, configure the VM to advertise routes for the subnet it sits on. For example, if the subnet address range is `10.182.0.0/24`, the command would be:
+启用 IP 转发后，配置虚拟机宣告它所在子网的路由。例如，如果子网地址范围为 `10.182.0.0/24`，命令就是：
 
 ```shell
 tailscale set --advertise-routes=10.182.0.0/24 --accept-dns=false
 ```
 
-> **Note:**
+> **注意：**
 >
-> For GCE VMs it is generally best to let Google handle the DNS configuration, not have Tailscale override it, so we added `--accept-dns=false`.
+> 对 GCE 虚拟机来说，通常最好让 Google 处理 DNS 配置，而不要让 Tailscale 覆盖它，所以我们加上了 `--accept-dns=false`。
 
-## Step 4: Add GCE DNS for your tailnet
+## 第 4 步：为你的 tailnet 添加 GCE DNS
 
-For the benefit of the *other* nodes in the tailnet we'll set up [split DNS][docs-dns-using-settings] to allow use of the same DNS names as the ones that are inside of GCE.
+为了方便 tailnet 中*其他*节点，我们将设置[拆分 DNS][docs-dns-using-settings]（split DNS），使其能够使用与 GCE 内部相同的 DNS 名称。
 
-The hostnames inside of GCE are of the form:
+GCE 内部的主机名格式如下：
 
 ```shell
 <vm-name>.<gce-project-name>.internal
 ```
 
-Use the Google Cloud CLI command [`gcloud dns policies create`][xt-google-dns-policies-create] to create a new [Cloud DNS][xt-google-cloud-dns] policy that lets inbound forwarding for your tailnet:
+使用 Google Cloud CLI 命令 [`gcloud dns policies create`][xt-google-dns-policies-create] 创建一个新的 [Cloud DNS][xt-google-cloud-dns] 政策，为你的 tailnet 开启入站转发：
 
 ```shell
 gcloud dns policies create inbound-dns \
@@ -70,12 +70,12 @@ gcloud dns policies create inbound-dns \
   --enable-inbound-forwarding
 ```
 
-where:
+其中：
 
-* `YOUR_VPC_PROJECT` is your Google Cloud [project ID][xt-google-reference-project].
-* `YOUR_VPC` is the comma separated list of network names to associate with the policy.
+* `YOUR_VPC_PROJECT` 是你的 Google Cloud [项目 ID][xt-google-reference-project]。
+* `YOUR_VPC` 是要与该政策关联的网络名称列表，以逗号分隔。
 
-Use the [`gcloud compute addresses list`][xt-google-compute-address-list] to verify that your tailnet recognizes the DNS resolver for your tailnet subnet:
+使用 [`gcloud compute addresses list`][xt-google-compute-address-list] 验证你的 tailnet 子网的 DNS 解析器：
 
 ```shell
 gcloud compute addresses list \
@@ -85,30 +85,30 @@ gcloud compute addresses list \
   | grep YOUR_TAILNET_SUBNET
 ```
 
-where:
+其中：
 
-* `YOUR_VPC_PROJECT` is your Google Cloud [project ID][xt-google-reference-project].
-* `YOUR_TAILNET_SUBNET` is your subnet machine name.
+* `YOUR_VPC_PROJECT` 是你的 Google Cloud [项目 ID][xt-google-reference-project]。
+* `YOUR_TAILNET_SUBNET` 是你子网机器的名称。
 
-Use the IP address returned from this command as a DNS resolver for your tailnet:
+将此命令返回的 IP 地址用作你 tailnet 的 DNS 解析器：
 
-1. Open the [DNS](https://console.tailscale.com/admin/dns) page in the admin console.
-2. Select **Add name server**.
-3. Select **Custom**.
-4. For **Nameserver**, enter the IP address from the `gcloud compute addresses list` command that you ran above. In this example, we use `10.243.117.59`.
-5. Ensure **Restrict to search domain** is checked.
-6. For **Search Domain**, enter **internal**.
-7. Select **Save**.
+1. 打开管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。
+2. 选择**添加名称服务器**（Add name server）。
+3. 选择**自定义**（Custom）。
+4. 在 **Nameserver** 中输入你之前运行的 `gcloud compute addresses list` 命令返回的 IP 地址。本示例使用 `10.243.117.59`。
+5. 确保勾选**限制到搜索域**（Restrict to search domain）。
+6. 在 **Search Domain** 中输入 **internal**。
+7. 选择**保存**（Save）。
 
-   *（图：The Add nameserver configuration with an IP address and Search Domain set to internal.）*
+   *（图：添加名称服务器配置，填入 IP 地址并将 Search Domain 设为 internal）*
 
-Now the same hostnames which work between nodes running within GCE will also be available to all nodes in your tailnet.
+这样，在 GCE 内部节点之间有效的主机名，对你 tailnet 中的所有节点也同样可用。
 
-## Step 5: Remove public SSH access
+## 第 5 步：移除公开的 SSH 访问
 
-As we can now SSH to the system over the private Tailscale network, there is no reason to leave the SSH port open on a public IP address. You can delete the `default-allow-ssh` rule from **VPC network** > **Firewall**.
+既然现在已经可以通过私有 Tailscale 网络 SSH 到该系统，就没有理由继续在公有 IP 地址上开放 SSH 端口了。你可以在 **VPC network** > **Firewall** 中删除 `default-allow-ssh` 规则。
 
-*（图：The firewall rule details for an example project highlighting a the Delete command in the top right.）*
+*（图：示例项目的防火墙规则详情，突出显示右上角的 Delete 命令）*
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

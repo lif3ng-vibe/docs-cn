@@ -1,35 +1,35 @@
 ---
-title: "Performance best practices"
-description: "Tailscale continuously seeks ways to improve performance, such as [making significant changes to `wireguard-go`][bl-throughput-improvements] (the userspace WireGuard implementation that Tailscale uses"
+title: "性能最佳实践"
+description: "Tailscale 一直在寻求提升性能的方法，例如[对 `wireguard-go`（Tailscale 所使用的用户态 WireGuard 实现）做出重大改进][bl-throughput-improvements]，以及利用传输层卸载引擎"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-Tailscale continuously seeks ways to improve performance, such as [making significant changes to `wireguard-go`][bl-throughput-improvements] (the userspace WireGuard implementation that Tailscale uses) and taking advantage of the [transport layer offload engine][xt-tcp-offload-engine] to push Tailscale to [10Gb/s and beyond][bl-more-throughput].
+Tailscale 一直在寻求提升性能的方法，例如[对 `wireguard-go` 做出重大改进][bl-throughput-improvements]（这是 Tailscale 所使用的用户态 WireGuard 实现），以及利用[传输层卸载引擎][xt-tcp-offload-engine]将 Tailscale 推向 [10Gb/s 甚至更高][bl-more-throughput]。
 
-In most cases, Tailscale delivers the best possible performance without additional configuration or customization. But there are some situations in which you can use best practices to achieve the highest performance. The following sections offer best practices for getting the most out of Tailscale in various environments, operating systems, and modes of operation ([exit nodes][docs-exit-nodes], [subnet routers][docs-subnets], and the like).
+在大多数情况下，Tailscale 无需额外配置或定制即可提供尽可能好的性能。但在某些情况下，你可以借助最佳实践来达到最高性能。以下各节介绍了在各种环境、操作系统与运行模式（[出口节点][docs-exit-nodes]、[子网路由器][docs-subnets]等）下充分利用 Tailscale 的最佳实践。
 
-## Direct connections
+## 直连
 
-Tailscale uses [direct and relayed connections][docs-connection-types], opting for direct connections when possible. Direct connections nearly always result in lower latency and higher throughput.
+Tailscale 使用[直连与中继连接][docs-connection-types]，并尽可能选择直连。直连几乎总能带来更低的延迟和更高的吞吐量。
 
-To increase the likelihood of a direct connection, you can:
+要提高直连的可能性，你可以：
 
-* Expose a public IP address for your tailnet devices.
-* [Open a firewall port][docs-firewall-ports] when necessary.
-* Use the [device connectivity guide][docs-device-connectivity] to troubleshoot why a device might be using a relayed connection.
+* 为 tailnet 设备暴露一个公网 IP 地址。
+* 必要时[开放防火墙端口][docs-firewall-ports]。
+* 使用[设备连接指南][docs-device-connectivity]排查设备为何可能正在使用中继连接。
 
-> **Tip:**
+> **提示：**
 >
-> You can also set up one or more [Tailscale Peer Relay servers][docs-peer-relays] in your tailnet. These are devices in your own infrastructure that Tailscale clients can use to connect to each other when a direct connection isn't possible. Peer relay servers are usually faster than DERP relay servers.
+> 你还可以在 tailnet 中设置一台或多台 [Tailscale Peer Relay 服务器][docs-peer-relays]。这类服务器位于你自己的基础设施中，当无法直连时，Tailscale 客户端可以借助它们相互连接。对等中继服务器通常比 DERP 中继服务器更快。
 
-## Operating system recommendations
+## 操作系统建议
 
-Use a recent version of your preferred operating system because it typically offers the most recent software and hardware optimizations. For example, using [Linux kernel version 6.2 or later][xt-linux-kernel-releases] provides the best performance by enabling Tailscale to use the latest kernel features.
+请使用你惯用操作系统的较新版本，因为较新版本通常包含最新的软件与硬件优化。例如，使用 [Linux 内核 6.2 或更高版本][xt-linux-kernel-releases]可以让 Tailscale 使用最新的内核特性，从而获得最佳性能。
 
-### Linux optimizations for subnet routers and exit nodes
+### 针对子网路由器和出口节点的 Linux 优化
 
-Tailscale version 1.54 or later used with a Linux 6.2 or later kernel enables UDP throughput improvements using [transport layer offloads][xt-kernel-segmentation-offloads]. If a Linux device is acting as an exit node or subnet router, make sure the following network device configuration is in place for the best results:
+Tailscale 1.54 或更高版本搭配 Linux 6.2 或更高版本内核，可以通过[传输层卸载][xt-kernel-segmentation-offloads]提升 UDP 吞吐量。如果某台 Linux 设备正充当出口节点或子网路由器，请确保完成以下网络设备配置以获得最佳效果：
 
 ```shell
 NETDEVS=$(
@@ -42,27 +42,27 @@ for NETDEV in $NETDEVS; do
 done
 ```
 
-These commands look up the IPv4 and IPv6 routes to the internet to determine the network device each route uses, such as `eth0`. The `awk` command finds the device name that follows `dev` in each route. The `sort -u` command removes duplicates so a network device that carries both IPv4 and IPv6 traffic is only configured once. Then `ethtool` turns `rx-udp-gro-forwarding` on and `rx-gro-list` off for each network device. If there's no IPv4 or IPv6 route, the commands skip it.
+这些命令会查询通往互联网的 IPv4 与 IPv6 路由，以确定每条路由所使用的网络设备（例如 `eth0`）。`awk` 命令找出每条路由中 `dev` 之后的设备名。`sort -u` 命令去除重复项，这样同时承载 IPv4 与 IPv6 流量的网络设备只会被配置一次。随后 `ethtool` 为每个网络设备开启 `rx-udp-gro-forwarding` 并关闭 `rx-gro-list`。如果不存在 IPv4 或 IPv6 路由，命令会跳过对应部分。
 
-> **Note:**
+> **注意：**
 >
-> `8.8.8.8` and `2001:4860:4860::8888` are the IPv4 and IPv6 addresses for Google Public DNS. The commands use them as well-known internet addresses.
+> `8.8.8.8` 和 `2001:4860:4860::8888` 分别是 Google Public DNS 的 IPv4 和 IPv6 地址。这些命令把它们当作众所周知的互联网地址来使用。
 
-By default, changes made using the `ethtool` command don't persist after a reboot. To make them persist, follow the steps for the network service your device uses.
+默认情况下，使用 `ethtool` 命令所做的更改在重启后不会保留。要让更改持久生效，请按照你的设备所使用的网络服务执行相应步骤。
 
-> **Note:**
+> **注意：**
 >
-> If both `networkd-dispatcher` and `NetworkManager` are enabled, only follow the `NetworkManager` steps. If neither is enabled, you may need to consider a "oneshot" `systemd` service.
+> 如果 `networkd-dispatcher` 和 `NetworkManager` 都已启用，只需按照 `NetworkManager` 的步骤操作。如果两者都未启用，你可能需要考虑创建一个 "oneshot" 型的 `systemd` 服务。
 
 #### `networkd-dispatcher`
 
-Some Linux distributions use `networkd-dispatcher`. Check with the following command:
+有些 Linux 发行版使用 `networkd-dispatcher`。可用以下命令检查：
 
 ```shell
 systemctl is-enabled networkd-dispatcher
 ```
 
-Run the following commands to create a script that configures these settings each time the network connects:
+运行以下命令创建一个脚本，以便每次网络连接时都配置这些设置：
 
 ```shell
 NETDEVS=$(
@@ -81,7 +81,7 @@ else
 fi
 ```
 
-Run the following commands to test that the script runs successfully:
+运行以下命令测试脚本能否成功运行：
 
 ```shell
 sudo /etc/networkd-dispatcher/routable.d/50-tailscale
@@ -90,13 +90,13 @@ test $? -eq 0 || echo 'An error occurred.'
 
 #### `NetworkManager`
 
-Distributions such as Raspberry Pi OS (Bookworm and later), Fedora, and Red Hat Enterprise Linux use `NetworkManager` by default. Check with the following command:
+Raspberry Pi OS（Bookworm 及更高版本）、Fedora 和 Red Hat Enterprise Linux 等发行版默认使用 `NetworkManager`。可用以下命令检查：
 
 ```shell
 systemctl is-enabled NetworkManager
 ```
 
-Run the following commands to save these settings in the `NetworkManager` connection profile for each network device, so the settings persist after a reboot:
+运行以下命令，把这些设置保存到每个网络设备的 `NetworkManager` 连接配置文件中，使设置在重启后依然生效：
 
 ```shell
 NETDEVS=$(
@@ -123,21 +123,21 @@ else
 fi
 ```
 
-## Machine sizing recommendations
+## 机器规格建议
 
-For best performance, use the most recent generation of CPU architecture available to you. In general, higher CPU clock speed is more important than more cores.
+为获得最佳性能，请使用你所能获得的最新一代 CPU 架构。总体而言，更高的 CPU 主频比更多的核心数更重要。
 
-### Provider-specific recommendations
+### 各提供商的规格建议
 
-Refer to the following for provider-specific sizing recommendations:
+各云提供商的规格建议请参阅：
 
-* [Amazon Elastic Compute Cloud (EC2) instance sizing][docs-aws-recommended-instance-sizing]
-* [Google Compute Engine (GCE) sizing][docs-gce-recommended-instance-sizing]
-* [Microsoft Azure virtual machine sizing][docs-azure-recommended-vm-sizing]
+* [Amazon Elastic Compute Cloud (EC2) 实例规格][docs-aws-recommended-instance-sizing]
+* [Google Compute Engine (GCE) 规格][docs-gce-recommended-instance-sizing]
+* [Microsoft Azure 虚拟机规格][docs-azure-recommended-vm-sizing]
 
-#### AWS single-flow bandwidth limitation
+#### AWS 单流带宽限制
 
-\[Missing snippet: aws\_single\_flow\_bandwidth\_limitation.mdx]
+\[缺失片段：aws\_single\_flow\_bandwidth\_limitation.mdx]
 
 [bl-more-throughput]: https://tailscale.com/blog/more-throughput
 

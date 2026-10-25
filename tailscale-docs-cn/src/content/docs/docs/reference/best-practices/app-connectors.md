@@ -1,64 +1,64 @@
 ---
-title: "Best practices for using app connectors"
-description: "To ensure reliable performance of your app connectors, we recommend several best practices. Approaches like preconfiguring settings and using deferred approvals can streamline setup and reduce potenti"
+title: "应用连接器使用最佳实践"
+description: "为确保应用连接器的可靠运行，我们推荐多项最佳实践。预先配置设置与采用延迟批准等方法可以简化设置流程并减少潜在"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-> **Note:** App connectors are available for [all plans](https://tailscale.com/pricing).
+> **注意：** [所有套餐](https://tailscale.com/pricing)均提供应用连接器（app connector）。
 
-To ensure reliable performance of your app connectors, we recommend several best practices. Approaches like preconfiguring settings and using deferred approvals can streamline setup and reduce potential disruptions. Understanding how traffic routes, especially in complex or multi-tenant environments can also help prevent issues related to performance and unintended access to your applications.
+要确保应用连接器的可靠运行，我们推荐以下几项最佳实践。预先配置设置、采用延迟批准等方法可以简化设置流程并减少潜在的中断。了解流量的路由方式——尤其是在复杂或多租户环境中——也有助于避免性能问题以及对你的应用的非预期访问。
 
-## Configure apps for route discovery
+## 配置应用以进行路由发现
 
-You can optimize route discovery and efficiency for your app connectors using domain names, CNAME records, and wildcards.
+你可以使用域名、CNAME 记录和通配符来优化应用连接器的路由发现与效率。
 
-### Domains
+### 域名
 
-You can configure app connectors with a list of valid, fully qualified domain names (FQDNs). Tailscale routes DNS records like `A` for IPv4 addresses and `AAAA` for IPv6 addresses through app connectors.
+你可以为应用连接器配置一列有效的完全限定域名（FQDN）。Tailscale 会将 IPv4 地址的 `A` 记录、IPv6 地址的 `AAAA` 记录等 DNS 记录经由应用连接器路由。
 
-App connectors automatically discover routes when you add a domain to their configuration. Without pre-configured routes, the app connector enters a learning period where it proxies DNS requests for configured domains from end-users. The app connector identifies routing records from these requests and advertises them as routes.
+向应用连接器的配置中添加域名后，它会自动发现路由。在没有预配置路由的情况下，应用连接器会进入学习期，在此期间代理终端用户对已配置域名的 DNS 请求。应用连接器从这些请求中识别路由记录，并将其作为路由对外通告。
 
-With [auto approval][docs-policy-syntax-autoapprovers] enabled, Tailscale automatically approves newly discovered routes and immediately advertises them to devices. The learning period ends when the app connector discovers all routes. This typically happens quickly for smaller domains. Large domain lists or domains with wildcards can take longer.
+启用[自动批准][docs-policy-syntax-autoapprovers]后，Tailscale 会自动批准新发现的路由，并立即向设备通告。当应用连接器发现全部路由后，学习期即告结束。较小的域名通常很快就能完成；大型域名列表或带通配符的域名则可能需要更长时间。
 
-If multiple app connectors advertise a route, Tailscale uses the tailnet's [route selection option][docs-route-selection] to choose an eligible app connector for each client.
+如果多个应用连接器通告了同一路由，Tailscale 会使用 tailnet 的[路由选择选项][docs-route-selection]为每个客户端挑选一个合适的应用连接器。
 
-### DNS lookups
+### DNS 查找
 
-App connectors work by acting as the authoritative nameserver for the domains configured on an app. For example, when you configure an app for a domain (such as `*.example.com`), it creates an invisible [split DNS][docs-dns] entry. Tailscale sends any subsequent DNS lookups for `*.example.com` to the appropriate app connectors. Each app connector performs the DNS lookup. If the lookup succeeds, it introduces a new subnet route for the resolved IP address before returning the response to the device that initiated the DNS lookup.
+应用连接器的工作方式是充当应用所配置域名的权威域名服务器。例如，当你为某个域名（如 `*.example.com`）配置应用时，会创建一条不可见的分割 DNS（split DNS）条目。此后，所有针对 `*.example.com` 的 DNS 查找都会被 Tailscale 发送给相应的应用连接器。每个应用连接器都会执行该 DNS 查找；如果查找成功，它会先为解析出的 IP 地址引入一条新的子网路由，再把响应返回给发起 DNS 查找的设备。
 
-### Port access for DNS discovery
+### DNS 发现所需的端口访问
 
-Client devices require access to the app connector tag for DNS discovery to function. The discovery mechanism uses the PeerAPI, which requires the app connector to be visible as a peer.
+要让 DNS 发现正常工作，客户端设备需要能够访问应用连接器的标签（tag）。发现机制使用 PeerAPI，这要求应用连接器以对等节点（peer）的身份可见。
 
-Grant minimal access, such as TCP or UDP on port `53` (`tcp:53` or `udp:53`), to enable peer discovery. Without this access, DNS lookups won't reach the app connector, and route discovery won't occur.
+授予最小访问权限即可启用对等发现，例如端口 `53` 上的 TCP 或 UDP（`tcp:53` 或 `udp:53`）。若没有该访问权限，DNS 查找将无法到达应用连接器，路由发现也就不会发生。
 
-### CNAME records
+### CNAME 记录
 
-App connectors support (CNAME) records by resolving them to their target addresses and automatically advertising the resulting routes. Since CNAMEs are DNS aliases (not routing records), the connector follows the chain and automatically advertise the resulting routes. A CNAME chain is a sequence of DNS records where each CNAME points to another domain name, until it resolves to an A record that indicates destination's IP address.
+应用连接器支持 CNAME 记录：它会将 CNAME 解析到目标地址，并自动通告最终得到的路由。由于 CNAME 是 DNS 别名（而非路由记录），连接器会沿着别名链逐级解析，并自动通告最终得到的路由。CNAME 链是一串 DNS 记录，其中每条 CNAME 都指向另一个域名，直到最终解析为一条表明目标 IP 地址的 A 记录。
 
-Use the [`dig`][xt-wikipedia-dig] command to verify CNAME configuration. The following code block contains an example of the expected output:
+使用 [`dig`][xt-wikipedia-dig] 命令验证 CNAME 配置。下面的代码块是预期输出的示例：
 
 ```shell
 .1. app.acme.com IN CNAME acme.backend.com
 .2. acme.backend.com A ...
 ```
 
-In the above example, the target of the `CNAME` chain, `acme.backend.com`, will route advertisements instead of `app.acme.com`.
+在上面的示例中，将发布路由通告的是 `CNAME` 链的目标 `acme.backend.com`，而不是 `app.acme.com`。
 
-If a web service uses geographic DNS load balancing, `CNAME` records might return different results in different locations. We recommend deploying app connectors in locations that match your organization's global footprint. Use regional routing or MagicRoute to select among eligible app connectors for each client. Refer to [Route selection][docs-route-selection] for details.
+如果 Web 服务使用基于地理位置的 DNS 负载均衡，`CNAME` 记录在不同位置可能返回不同结果。我们建议在与你组织全球部署相匹配的位置部署应用连接器，并使用区域路由或 MagicRoute 为每个客户端在合适的应用连接器之间做出选择。详情参见[路由选择][docs-route-selection]。
 
-### Wildcards
+### 通配符
 
-Your app connector configuration can include wildcards (`*`). Wildcard behavior is non-inclusive of the parent domain. For example:
+应用连接器配置中可以包含通配符（`*`）。通配符不包含父域名本身。例如：
 
-* To include all of `acme.com` and its subdomains, use both `acme.com` and `*.acme.com`.
-* To only include the top-level domain, include `acme.com` and omit `*.acme.com`.
-* To include only subdomains, include `*.acme.com` and omit `acme.com`.
+* 要包含 `acme.com` 及其全部子域，请同时使用 `acme.com` 和 `*.acme.com`。
+* 只想包含顶级域名时，加入 `acme.com` 并省略 `*.acme.com`。
+* 只想包含子域时，加入 `*.acme.com` 并省略 `acme.com`。
 
-## Access control policy-driven route configuration
+## 基于访问控制策略的路由配置
 
-You can manually pre-configure routes as [access control policies][docs-access-control] in your [tailnet policy file][docs-tailnet-policy-file] inside the `nodeAttrs` top-level field, including domain configuration. For example:
+你可以在 [tailnet 策略文件][docs-tailnet-policy-file]的 `nodeAttrs` 顶层字段中，以[访问控制策略][docs-access-control]的形式手动预配置路由，包括域名配置。例如：
 
 ```json
 {
@@ -76,89 +76,89 @@ You can manually pre-configure routes as [access control policies][docs-access-c
 }
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺失片段：visual\_policy\_editor.mdx]
 
-The app connector devices in your tailnet automatically advertise these routes as soon as you apply the [access control policy][docs-access-control] change to the tailnet policy file. App connectors for the application will immediately advertise these routes, and routes added using the access control policy section of the tailnet policy file are implicitly approved and do not require a sibling [`autoApprovers`][docs-policy-syntax-autoapprovers] entry.
+对 tailnet 策略文件应用[访问控制策略][docs-access-control]变更后，tailnet 中的应用连接器设备会立即自动通告这些路由。该应用的应用连接器会马上通告这些路由；通过 tailnet 策略文件的访问控制策略部分添加的路由会被隐式批准，无需同时添加 [`autoApprovers`][docs-policy-syntax-autoapprovers] 条目。
 
-This maintains strict routing control as part of the access control and approval process. In many instances, it also removes the need to use large `--advertise-routes` arguments for device configurations to avoid lengthy discovery periods with disruptive routing changes.
+这把严格的路由控制纳入了访问控制与批准流程之中。在许多情况下，它还免除了在设备配置中使用庞大的 `--advertise-routes` 参数的需要，从而避免漫长的发现期以及具破坏性的路由变更。
 
-## Route coalescing
+## 路由合并
 
-Routes populated by access control policy-driven route configuration coalesce or replace routes that are a sub-route of the new advertisement. For example, if the app connector previously discovered `192.0.2.5/32` and `192.0.2.67/32`, and you update the [access control policy][docs-access-control] to include `192.0.2.0/24`, the connector replaces both `/32` routes with the single `192.0.2.0/24` entry.
+由基于访问控制策略的路由配置填充的路由，会与新通告所覆盖的子路由合并或将其替换。例如，如果应用连接器此前发现了 `192.0.2.5/32` 和 `192.0.2.67/32`，而你更新[访问控制策略][docs-access-control]加入 `192.0.2.0/24`，连接器就会用单一的 `192.0.2.0/24` 条目替换这两条 `/32` 路由。
 
-## Reduce reconfiguration during route discovery
+## 减少路由发现期间的重配置
 
-App connector route discovery can be disruptive in environments with strict firewall configurations. In these environments, new routes can disrupt route-aware software like Google Chrome.
+在防火墙配置严格的环境中，应用连接器的路由发现可能造成干扰。在这类环境中，新路由可能会干扰 Google Chrome 等具备路由感知能力的软件。
 
-App connectors immediately advertise all discovered IPs for a single domain resolution as a single route change containing all newly discovered routes for that domain resolution.
+对于单次域名解析发现的所有 IP，应用连接器会将其作为一次路由变更立即通告，其中包含该次域名解析新发现的全部路由。
 
-To reduce reconfiguration time during discovery, we recommend you choose one of the following strategies:
+为缩短发现期间的重配置时间，我们建议你从以下策略中选择一种：
 
-* Use [preconfigurations][ar-preconfiguration] and access control policy-driven route configurations as extensively as possible.
-* Use [deferred approvals][ar-deferred-approvals]. With deferred approvals, you delay enabling app firewalls until you discover the routes in an unapproved state, then approve them all in batches.
+* 尽可能广泛地使用[预配置][ar-preconfiguration]和基于访问控制策略的路由配置。
+* 采用[延迟批准][ar-deferred-approvals]。在延迟批准模式下，你先推迟启用应用防火墙，待以未批准状态发现路由后，再分批全部批准。
 
-## Configure apps with multi-tenant IP space
+## 配置使用多租户 IP 空间的应用
 
-Some apps use content delivery networks (CDNs) or shared IP space to serve static assets. For example, `*.static.example.com` or `*.assets.acme.com`.
+有些应用使用内容分发网络（CDN）或共享 IP 空间来提供静态资源，例如 `*.static.example.com` 或 `*.assets.acme.com`。
 
-Publishing these routes to your app connectors might force unrelated traffic through the app connector, as CDNs often share IPs and can include traffic to other content on those same public IP addresses. As a side effect, this can cause high bandwidth through those connectors for sites unrelated to the target app. Therefore, we recommend serving CDN and multi-tenant content outside app connectors.
+将这些路由发布给应用连接器，可能会迫使无关流量经过应用连接器，因为 CDN 常常共享 IP，同一批公共 IP 地址上可能还承载着指向其他内容的流量。其副作用是，这些连接器可能因与目标应用无关的站点而产生很高的带宽占用。因此，我们建议在应用连接器之外提供 CDN 与多租户内容。
 
-## Connect large SaaS services
+## 连接大型 SaaS 服务
 
-New route advertisements trigger client network modifications that might raise errors. For example, Google Chrome might report errors like `ERR_NETWORK_CHANGED`. You can reduce the frequency of these events using [deferred approvals][ar-deferred-approvals] or [preconfigurations][ar-preconfiguration].
+新的路由通告会触发客户端网络变更，进而可能引发报错。例如，Google Chrome 可能会报告 `ERR_NETWORK_CHANGED` 之类的错误。你可以借助[延迟批准][ar-deferred-approvals]或[预配置][ar-preconfiguration]来降低此类事件的发生频率。
 
-### Deferred approvals
+### 延迟批准
 
-The deferred approvals approach builds in a non-disruptive learning period for new app connectors. You can defer approvals by temporarily disabling route approval or using upstream IP firewalls.
+延迟批准方法为新应用连接器内置了一段不造成干扰的学习期。你可以暂时禁用路由批准，或使用上游 IP 防火墙，来推迟批准。
 
-*（图：Defer route approval until after a representative business cycle has elapsed.）*
+*（图：待具有代表性的业务周期结束后，再批准路由。）*
 
-Install app connectors separately to prevent overlapping [autoApprovers][docs-policy-syntax-autoapprovers]. The app connectors receive DNS queries from the client fleet and configure advertised routes. But routes remain unapproved, and traffic maintains its regular pattern. Running in this state for a representative sample of business operations (such as a week) collects the bulk of affected routes. You can then transfer the routes to an `autoApprovers` clause.
+单独安装各个应用连接器，以避免 [autoApprovers][docs-policy-syntax-autoapprovers] 相互重叠。应用连接器会接收来自客户端集群的 DNS 查询并配置要通告的路由，但路由保持未批准状态，流量也维持原有模式。让系统在这种状态下运行业务运营的代表性时段（例如一周），即可收集到绝大多数受影响的路由。随后你就可以把这些路由转移进 `autoApprovers` 子句。
 
-Deferred approval blocks users from accessing an application until you approve the routes.
+在你批准路由之前，延迟批准会阻止用户访问相应应用。
 
-### Preconfiguration
+### 预配置
 
-*（图：Configure routes while setting up connectors）*
+*（图：在设置连接器的同时配置路由）*
 
-You can preconfigure apps if you can't run apps in a non-disruptive learning period long enough to collect all the affected routes for the [deferred approvals][ar-deferred-approvals] approach. We recommend you configure routes when setting up app connectors and configure known subdomains when configuring applications.
+如果无法让应用在不造成干扰的学习期内运行足够长的时间，以收集[延迟批准][ar-deferred-approvals]方法所需的全部受影响路由，你可以对应用进行预配置。我们建议你在设置应用连接器时配置路由，并在配置应用时配置已知子域。
 
-Even in cases where deferred approval is possible, preconfiguration can reduce the learning phase.
+即使在可以采用延迟批准的情况下，预配置也能缩短学习期。
 
-#### Routes
+#### 路由
 
-Many services, such as GitHub and Okta, publish IP address lists that you can collect into `--advertise-routes` preferences for the app connectors. Preconfiguring routes optimizes them in the following ways:
+诸如 GitHub、Okta 等许多服务都会发布 IP 地址列表，你可以将其汇集到应用连接器的 `--advertise-routes` 偏好设置中。预配置路由能在以下方面带来优化：
 
-* It reduces the routing table size and costs by using address ranges rather than single IP addresses.
-* You can enable upstream WAF immediately because most service-used routes are configured at boot.
+* 使用地址段而非单个 IP 地址，减小路由表规模并降低成本。
+* 由于服务所用的大多数路由在启动时即已配置，你可以立即启用上游 WAF。
 
-#### Domains
+#### 域名
 
-Many applications have wildcard domains that the app connector cannot pre-flight because it does not know all the subdomains it needs to resolve. If you know all the subdomains, you can explicitly add them alongside the wildcard domains to generate a list of preconfigured routes.
+许多应用带有通配符域名，应用连接器由于不知道需要解析的全部子域而无法预先探测。如果你知道全部子域，可以在通配符域名之外显式添加它们，以生成一份预配置路由列表。
 
-Tip: You can gather subdomains from browser histories, DNS server histories, and DNS logs.
+提示：你可以从浏览器历史、DNS 服务器历史和 DNS 日志中收集子域。
 
-#### Automate preconfiguration
+#### 自动化预配置
 
-You can automate preconfiguration with a tool Tailscale offers called [connector-gen][xt-gh-tailscale-cmd-connector-gen]. It provides a simple example of parsing some common providers and producing [tailnet policy file][docs-tailnet-policy-file] snippets and [`--advertise-routes`][docs-subnet-router] flags that you can use to manually perform the preconfiguration of routes strategy.
+你可以使用 Tailscale 提供的 [connector-gen][xt-gh-tailscale-cmd-connector-gen] 工具实现预配置自动化。它提供了一个简单示例，演示如何解析一些常见提供商，并生成 [tailnet 策略文件][docs-tailnet-policy-file]片段和 [`--advertise-routes`][docs-subnet-router] 标志，供你手动执行路由预配置策略。
 
-To run the connector-gen tool:
+运行 connector-gen 工具：
 
 ```shell
  ./tool/go run ./cmd/connector-gen github
 ```
 
-The example above produces snippets of JSON for the access control policy and an `--advertise-routes` flag.
+上面的示例会生成访问控制策略的 JSON 片段和一个 `--advertise-routes` 标志。
 
-#### Automation with Terraform
+#### 使用 Terraform 自动化
 
-> **Warning:**
+> **警告：**
 >
-> Using Terraform to manage your tailnet policy file will overwrite any manual changes made in the admin console during the next sync. Ensure that all app connector configurations are managed through Terraform to prevent loss of settings.
+> 使用 Terraform 管理 tailnet 策略文件，会在下一次同步时覆盖你在管理控制台中所做的任何手动更改。请确保所有应用连接器配置都通过 Terraform 管理，以免丢失设置。
 
-Terraform has an HTTP data provider that you can use to consume IP address lists from upstream providers. You can then use the IP address lists to preconfigure routes when you deploy an app connector.
+Terraform 提供一种 HTTP 数据源（data provider），可用于读取来自上游提供商的 IP 地址列表，进而在部署应用连接器时用这些列表预配置路由。
 
-The following example shows preconfigurations for services like Okta, GitHub, and Amazon Web Services (AWS).
+下面的示例展示了 Okta、GitHub、Amazon Web Services（AWS）等服务的预配置。
 
 ```hcl
 data "http" "okta_ip_range_json" {
@@ -195,9 +195,9 @@ locals {
 }
 ```
 
-[ar-deferred-approvals]: #deferred-approvals
+[ar-deferred-approvals]: #延迟批准
 
-[ar-preconfiguration]: #preconfiguration
+[ar-preconfiguration]: #预配置
 
 [docs-access-control]: /docs/features/access-control
 

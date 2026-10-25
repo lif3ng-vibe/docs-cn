@@ -1,35 +1,35 @@
 ---
-title: "High availability for the Tailscale Kubernetes Operator"
-description: "The Tailscale Kubernetes Operator provides [`ProxyGroup`][docs-proxy-group] for high availability. A `ProxyGroup` manages a `StatefulSet` of Tailscale proxy replicas, giving you:"
+title: "Tailscale Kubernetes Operator 的高可用"
+description: "Tailscale Kubernetes Operator 提供 [`ProxyGroup`][docs-proxy-group] 来实现高可用。`ProxyGroup` 管理一个由 Tailscale 代理副本组成的 `StatefulSet`，为你带来："
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The Tailscale Kubernetes Operator provides [`ProxyGroup`][docs-proxy-group] for high availability. A `ProxyGroup` manages a `StatefulSet` of Tailscale proxy replicas, giving you:
+Tailscale Kubernetes Operator 提供 [`ProxyGroup`][docs-proxy-group] 来实现高可用。`ProxyGroup` 管理一个由 Tailscale 代理副本组成的 `StatefulSet`，为你带来：
 
-* **No downtime during pod restarts**: multiple active replicas serve traffic simultaneously.
-* **Resource consolidation**: serve many `Service` and `Ingress` resources from a shared set of proxy pods, rather than a dedicated proxy per resource.
+* **Pod 重启期间不宕机**：多个活跃副本同时服务流量。
+* **资源整合**：由一组共享的代理 pod 服务多个 `Service` 和 `Ingress` 资源，而不是每个资源独占一个代理。
 
-`ProxyGroup` supports three modes:
+`ProxyGroup` 支持三种模式：
 
-* `ingress`: Expose Kubernetes workloads to your tailnet ([L3][docs-expose-l3], [L7][docs-expose-l7]).
-* `egress`: Access tailnet resources from your cluster. Refer to the [egress guide][docs-egress].
-* `kube-apiserver`: Securely access the Kubernetes API over Tailscale. Refer to the [API server proxy guide][docs-api-server].
+* `ingress`：把 Kubernetes 工作负载公开到你的 tailnet（[L3][docs-expose-l3]、[L7][docs-expose-l7]）。
+* `egress`：从你的集群访问 tailnet 资源。请参阅[出站指南][docs-egress]。
+* `kube-apiserver`：经 Tailscale 安全访问 Kubernetes API。请参阅 [API 服务器代理指南][docs-api-server]。
 
-This guide covers how to configure a `ProxyGroup` and [`ProxyClass`][docs-proxy-class] for high availability. For step-by-step deployment, refer to [further exploration][ar-further-exploration].
+本指南介绍如何为高可用配置 `ProxyGroup` 和 [`ProxyClass`][docs-proxy-class]。分步部署请参阅[进一步探索][ar-further-exploration]。
 
-## Replicas
+## 副本
 
-Set `spec.replicas` to control how many proxy pods the `ProxyGroup` runs. The default is `2`. Increasing this gives you more resilience: if a pod or node goes down, the remaining replicas continue serving traffic.
+设置 `spec.replicas` 控制 `ProxyGroup` 运行多少个代理 pod。默认值为 `2`。调大该值可获得更强的韧性：如果某个 pod 或节点宕机，其余副本会继续服务流量。
 
 ```yaml
 spec:
   replicas: 3
 ```
 
-## Configure with ProxyClass
+## 使用 ProxyClass 进行配置
 
-A [`ProxyClass`][docs-proxy-class] lets you customize the `StatefulSet` and `Pod` spec of your `ProxyGroup` replicas. For example, to reference a `ProxyClass` called `ha-production`:
+[`ProxyClass`][docs-proxy-class] 让你可以自定义 `ProxyGroup` 副本的 `StatefulSet` 和 `Pod` 规范。例如，引用一个名为 `ha-production` 的 `ProxyClass`：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -42,34 +42,34 @@ spec:
   proxyClass: ha-production
 ```
 
-> **Note:**
+> **注意：**
 >
-> The `ProxyClass` must exist and be in a `Ready` state before the `ProxyGroup` will reconcile.
+> 在 `ProxyGroup` 开始调谐之前，`ProxyClass` 必须已存在并处于 `Ready` 状态。
 
-The following sections cover the most relevant `ProxyClass` options for high availability.
+以下小节介绍与高可用最相关的 `ProxyClass` 选项。
 
-### Scheduling
+### 调度
 
-`ProxyClass` exposes Kubernetes scheduling fields on proxy pods, which you can use to spread replicas for resilience:
+`ProxyClass` 在代理 pod 上暴露 Kubernetes 调度字段，你可以用它把副本分散开以增强韧性：
 
-* `spec.statefulSet.pod.topologySpreadConstraints`: spread replicas across zones or nodes.
-* `spec.statefulSet.pod.affinity`: configure affinity or anti-affinity rules for replica placement.
-* `spec.statefulSet.pod.nodeSelector`: constrain proxies to specific nodes.
-* `spec.statefulSet.pod.tolerations`: let proxies be scheduled on tainted nodes (for example, dedicated proxy nodes).
+* `spec.statefulSet.pod.topologySpreadConstraints`：把副本分散到不同区域或节点。
+* `spec.statefulSet.pod.affinity`：为副本放置配置亲和性或反亲和性规则。
+* `spec.statefulSet.pod.nodeSelector`：把代理约束到特定节点。
+* `spec.statefulSet.pod.tolerations`：允许代理被调度到带有污点的节点上（例如专用代理节点）。
 
-Refer to the [Kubernetes scheduling documentation][xt-k8s-scheduling] for details on these fields.
+这些字段的详情请参阅 [Kubernetes 调度文档][xt-k8s-scheduling]。
 
-### Pod disruption budgets
+### Pod 中断预算
 
-Voluntary disruptions (node drains, cluster upgrades) can terminate all proxy pods simultaneously. Create a Kubernetes `PodDisruptionBudget` to prevent this. Use `spec.statefulSet.pod.labels` on your `ProxyClass` to add a label to proxy pods, then reference it in the `PodDisruptionBudget` selector.
+主动中断（节点排空、集群升级）可能同时终止所有代理 pod。可以创建一个 Kubernetes `PodDisruptionBudget` 来防止这种情况。在 `ProxyClass` 上使用 `spec.statefulSet.pod.labels` 为代理 pod 添加标签，然后在 `PodDisruptionBudget` 选择器中引用它。
 
-### Resource requests and limits
+### 资源请求与限制
 
-`ProxyClass` supports `spec.statefulSet.pod.tailscaleContainer.resources` for setting resource requests and limits on the proxy container, ensuring predictable scheduling and preventing unexpected eviction.
+`ProxyClass` 支持 `spec.statefulSet.pod.tailscaleContainer.resources`，用于为代理容器设置资源请求和限制，确保可预测的调度并防止意外驱逐。
 
-### Metrics
+### 指标
 
-Enable Prometheus metrics to monitor proxy health across replicas:
+启用 Prometheus 指标来监控各副本的代理健康状况：
 
 ```yaml
 spec:
@@ -77,7 +77,7 @@ spec:
     enable: true
 ```
 
-Metrics are served at `<pod-ip>:9002/metrics`. To create a Prometheus `ServiceMonitor` automatically:
+指标在 `<pod-ip>:9002/metrics` 提供。要自动创建 Prometheus `ServiceMonitor`：
 
 ```yaml
 spec:
@@ -87,44 +87,44 @@ spec:
       enable: true
 ```
 
-## TLS certificates
+## TLS 证书
 
-For HA ingress, proxy replicas share a TLS `Secret` for Let's Encrypt certificates. All replicas can serve TLS traffic after the certificate has been issued.
+对于高可用入站，代理副本共享一个存放 Let's Encrypt 证书的 TLS `Secret`。证书签发后，所有副本都可以服务 TLS 流量。
 
-Proxies can also share a Let's Encrypt account so that certificate renewals keep their [rate limit exemption][docs-lets-encrypt-rate-limits] when Pods are recreated.
+代理还可以共享一个 Let's Encrypt 账户，这样即使 Pod 被重建，证书续期也能保持[速率限制豁免][docs-lets-encrypt-rate-limits]。
 
-When testing, use the Let's Encrypt staging environment through a `ProxyClass` to avoid [rate limits][docs-lets-encrypt-rate-limits]:
+测试时，请通过 `ProxyClass` 使用 Let's Encrypt 暂存环境，以避免触发[速率限制][docs-lets-encrypt-rate-limits]：
 
 ```yaml
 spec:
   useLetsEncryptStagingEnvironment: true
 ```
 
-## Egress graceful failover
+## 出站优雅故障转移
 
-Egress `ProxyGroup` replicas support graceful failover: when a pod is terminated, in-flight connections are drained to other replicas automatically.
+出站 `ProxyGroup` 副本支持优雅故障转移：当某个 pod 被终止时，进行中的连接会自动排空到其他副本。
 
-> **Warning:**
+> **警告：**
 >
-> Setting a custom `TS_LOCAL_ADDR_PORT` environment variable on egress `ProxyGroup` pods disables graceful failover.
+> 在出站 `ProxyGroup` 的 pod 上设置自定义 `TS_LOCAL_ADDR_PORT` 环境变量会禁用优雅故障转移。
 
-## Static endpoints
+## 静态端点
 
-Configure [static endpoints][docs-static-endpoints] to let clients connect directly to proxy pods through NodePort. This reduces latency for production workloads by establishing direct connections rather than relying on relay servers. Refer to the [static endpoints guide][docs-static-endpoints] for configuration details.
+配置[静态端点][docs-static-endpoints]，让客户端能够通过 NodePort 直连代理 pod。这会建立直连而非依赖中继服务器，从而降低生产工作负载的延迟。配置详情请参阅[静态端点指南][docs-static-endpoints]。
 
-## Multi-cluster
+## 多集群
 
-If the same `Ingress` configuration is applied across multiple clusters, `ProxyGroup` proxies from each cluster become valid targets for the same `ts.net` DNS name. Client routing follows the same rules as [high availability subnet routers][docs-ha-subnet-routers]. Refer to the [multi-cluster ingress guide][docs-multi-cluster] for details.
+如果相同的 `Ingress` 配置被应用到多个集群，各集群的 `ProxyGroup` 代理都会成为同一个 `ts.net` DNS 名称的有效目标。客户端路由遵循与[高可用子网路由器][docs-ha-subnet-routers]相同的规则。详情请参阅[多集群入站指南][docs-multi-cluster]。
 
-## Further exploration
+## 进一步探索
 
-* [Expose][docs-expose-l3] a workload to your tailnet at Layer 3.
-* [Expose][docs-expose-l7] a workload to your tailnet at Layer 7.
-* [Access][docs-egress] tailnet resources from Kubernetes.
-* [Access][docs-api-server] the Kubernetes API over Tailscale.
-* Configure [multi-cluster ingress][docs-multi-cluster].
+* 在第 3 层把工作负载[公开][docs-expose-l3]到你的 tailnet。
+* 在第 7 层把工作负载[公开][docs-expose-l7]到你的 tailnet。
+* 从 Kubernetes[访问][docs-egress] tailnet 资源。
+* 经 Tailscale [访问][docs-api-server] Kubernetes API。
+* 配置[多集群入站][docs-multi-cluster]。
 
-[ar-further-exploration]: #further-exploration
+[ar-further-exploration]: #进一步探索
 
 [docs-api-server]: /docs/kubernetes-operator/api-server-access
 

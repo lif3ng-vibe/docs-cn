@@ -1,0 +1,193 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "使用 OpenRouter 运行 Pi"
+description: "构建 Pi 编码智能体镜像，配置 OpenRouter 访问，并在 OpenShell 沙箱内运行 Pi。"
+keywords: "生成式 AI, 网络安全, 教程, Pi 编码智能体, OpenRouter, 沙箱, 提供商配置档案"
+---
+import { Aside } from '@astrojs/starlight/components';
+import Steps from '@components/Steps.astro';
+
+在本教程中，我们将在 OpenShell 沙箱（sandbox）内运行终端编码智能体 [Pi](https://pi.dev)。Pi 开箱即用支持多种模型提供商，其中包括本文用到的 [OpenRouter](https://openrouter.ai)。
+
+我们将构建一个 Pi 镜像，让沙箱获得对 OpenRouter 的访问权，然后启动 Pi。沙箱只允许 Pi 访问 OpenRouter，网络上其他一切均不可达，而且 Pi 永远看不到你真实的 API 密钥。
+
+## 前提条件
+
+你需要：
+
+- 可用的 OpenShell 安装，且有一个活动网关（gateway）。参见[安装](/about/installation)。
+- 用于构建镜像的 Docker 或 Podman。
+- 一个 OpenRouter API 密钥。
+
+<Steps>
+
+## 构建 Pi 镜像
+
+Pi 没有发布官方容器镜像，我们基于 Pi 的[容器化指南](https://pi.dev/docs/latest/containerization)，从它的 npm 包构建一个。将以下 Dockerfile 保存为 `Dockerfile.pi`：
+
+```dockerfile
+FROM node:24-bookworm-slim
+
+ARG PI_VERSION=latest
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bash ca-certificates fd-find git ripgrep \
+    && ln -s /usr/bin/fdfind /usr/local/bin/fd \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g --ignore-scripts "@earendil-works/pi-coding-agent@${PI_VERSION}"
+
+RUN mkdir -p /workspace && chown node:node /workspace
+USER node
+WORKDIR /workspace
+
+ENV PI_CODING_AGENT_DIR=/tmp/pi-agent
+```
+
+相比 Pi 的指南，我们额外做了两处修改，因为沙箱限制了 Pi 能访问的范围：
+
+- 我们安装了 `fd`。Pi 使用 `fd` 与 `ripgrep` 搜索文件，若缺失会在首次使用时从 GitHub 下载。沙箱会阻断这一下载，所以镜像里预先装好了这两个工具。
+- 我们设置了 `PI_CODING_AGENT_DIR`，让 Pi 把设置与会话保存在 `/tmp`，这是沙箱允许 Pi 写入的少数位置之一。
+
+现在构建镜像：
+
+```shell
+docker build -t pi-agent:local -f Dockerfile.pi .
+```
+
+<Aside type="note">
+如果你的网关使用 Podman，请用 `podman build -t localhost/pi-agent:local -f Dockerfile.pi .` 构建，并在下面的命令中使用 `localhost/pi-agent:local`。如果你的网关运行在另一台机器上，请把镜像推送到网关可以拉取的镜像仓库，并在 `--from` 中使用该镜像引用。
+</Aside>
+
+## 让 Pi 访问 OpenRouter
+
+沙箱在你授予权限之前没有任何网络访问能力。为了让 Pi 能访问 OpenRouter，我们将创建一个提供商（provider），它会存储你的 API 密钥并开通对该服务的访问。Pi 看到的始终只是密钥的占位符，OpenShell 只在 Pi 调用 OpenRouter 时才换入真实密钥。
+
+提供商由描述该服务的配置档案（provider profile）构建而成。将以下内容保存为 `provider-openrouter.yaml`：
+
+```yaml
+id: openrouter
+display_name: OpenRouter
+description: Direct OpenRouter inference access
+category: inference
+inference_capable: true
+
+credentials:
+  - name: api_key
+    description: OpenRouter API key
+    env_vars:
+      - OPENROUTER_API_KEY
+    required: true
+    auth_style: bearer
+    header_name: authorization
+
+discovery:
+  credentials:
+    - api_key
+
+endpoints:
+  - host: openrouter.ai
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+
+binaries:
+  - /usr/local/bin/node
+```
+
+主要字段的作用如下：
+
+- `credentials` 声明 API 密钥。Pi 从 `OPENROUTER_API_KEY` 中读取占位符。
+- `endpoints` 只放行 `openrouter.ai`，OpenShell 不会把密钥发送到任何其他地方。
+- `binaries` 只允许 `node` 使用这条访问通道。Pi 运行在 Node.js 上，因此涵盖了 Pi。
+
+检查配置档案，导入它，然后创建名为 `openrouter` 的提供商：
+
+```shell
+openshell profile lint -f provider-openrouter.yaml
+openshell profile import -f provider-openrouter.yaml
+
+OPENROUTER_API_KEY=your-key \
+  openshell provider create \
+    --name openrouter \
+    --type openrouter \
+    --from-existing
+```
+
+将 `your-key` 替换为你的 OpenRouter API 密钥；若 shell 中已设置 `OPENROUTER_API_KEY`，则可去掉这一前缀。`--from-existing` 告诉 OpenShell 从该变量读取密钥。
+
+## 在沙箱中启动 Pi
+
+接下来，用该镜像创建沙箱，挂接（attach）提供商，并启动 Pi：
+
+```shell
+openshell sandbox create \
+  --name pi \
+  --from pi-agent:local \
+  --provider openrouter \
+  -- pi
+```
+
+`--` 之后的命令都在沙箱内运行，因此 Pi 及其执行的任何命令都被约束在沙箱中。
+
+Pi 以其默认的 OpenRouter 模型启动。想换一个模型，输入 `/model` 并从列表中选择任意 OpenRouter 模型。OpenRouter 通常提供一些免费模型，带有 `:free` 后缀，适合在不消耗额度的情况下试用本教程。
+
+然后试试 Pi：
+
+```text
+Explain what files are available in this workspace.
+```
+
+工作区初始为空，后面的步骤会把你自己代码交给 Pi。
+
+## 检查沙箱
+
+Pi 运行期间，打开另一个终端，查看沙箱的状态、访问、提供商与日志：
+
+```shell
+openshell sandbox list
+openshell policy get pi --full
+openshell sandbox provider list pi
+openshell logs pi --tail
+```
+
+`openshell logs` 实时流式输出沙箱的活动，包括它阻断的连接。完成后，在 Pi 中输入 `/quit` 退出。
+
+## 处理本地项目
+
+要让 Pi 处理你自己的代码，请在项目目录下运行以下命令。`--upload` 会把目录复制进沙箱，并跳过 `.gitignore` 排除的内容。`--upload` 不能与尾随命令组合使用，因此请在打开的 shell 中启动 Pi。
+
+```shell
+openshell sandbox create \
+  --name pi-project \
+  --from pi-agent:local \
+  --provider openrouter \
+  --upload .:/workspace
+```
+
+在沙箱 shell 中运行 `pi`。
+
+Pi 的改动只留在沙箱内。要取回这些改动，请在 Pi 仍在运行时从另一个终端运行 `openshell sandbox download`。参见[传输文件](/how-it-works/sandboxes/overview#传输文件)。
+
+## 清理
+
+完成后，删除两个沙箱：
+
+```shell
+openshell sandbox delete pi pi-project
+```
+
+</Steps>
+
+## 故障排查
+
+- 如果网关找不到 `pi-agent:local`，请确认构建镜像所用的容器引擎与网关一致，或已将镜像推送到网关可访问的镜像仓库。
+- 如果 Pi 对 OpenRouter 的请求被拒绝，请确认配置档案中的 `binaries` 路径与镜像中 `node` 的安装位置一致。在上面的镜像中，该路径是 `/usr/local/bin/node`。
+
+## 后续步骤
+
+- 要给 Pi 更多工具，把它们加进镜像即可。要让 Pi 访问包仓库、代码托管主机或其他服务，请通过[沙箱策略](/how-it-works/policies/overview)授予访问权。
+- 要使用其他模型服务，为它编写一个配置档案。[`providers/`](https://github.com/NVIDIA/OpenShell/tree/main/providers) 目录中有示例，[配置档案](/how-it-works/providers/profiles)逐一说明了各字段。
+- 要了解镜像、资源、文件传输与沙箱生命周期，参见[沙箱](/how-it-works/sandboxes/overview)。

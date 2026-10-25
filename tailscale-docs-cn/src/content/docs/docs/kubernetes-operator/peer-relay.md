@@ -1,25 +1,25 @@
 ---
-title: "Host peer relays in Kubernetes with PeerRelay"
-description: "Deploy Tailscale peer relays on Kubernetes using the PeerRelay custom resource."
+title: "使用 PeerRelay 在 Kubernetes 中托管对等中继"
+description: "使用 PeerRelay 自定义资源在 Kubernetes 上部署 Tailscale 对等中继（peer relay）。"
 ---
 
-Last validated Oct 8, 2026
+最后验证于 Oct 8, 2026
 
-A `PeerRelay` is a [Custom Resource Definition (CRD)][xt-k8s-custom-resources] provided by the Tailscale Kubernetes Operator. It lets you deploy one or more [peer relay][docs-peer-relay] devices inside your cluster that other tailnet devices can use to relay traffic when direct connections aren't possible.
+`PeerRelay` 是 Tailscale Kubernetes Operator 提供的一个[自定义资源定义（CRD）][xt-k8s-custom-resources]。它让你可以在集群内部署一个或多个[对等中继（peer relay）][docs-peer-relay]设备，当无法直连时，其他 tailnet 设备可以用它们来中继流量。
 
-Because a `PeerRelay` is fronted by a Kubernetes `type: LoadBalancer` Service, the underlying peer relay pods are reachable at a stable public UDP endpoint even when they restart or reschedule.
+由于 `PeerRelay` 前面有一个 Kubernetes `type: LoadBalancer` Service，底层的对等中继 pod 即使重启或重新调度，也仍能通过一个稳定的公网 UDP 端点访问。
 
-## Prerequisites
+## 前提条件
 
-Complete the following before deploying a `PeerRelay`:
+在部署 `PeerRelay` 之前，请先完成以下操作：
 
-* [Install][docs-operator-setup] the Tailscale Kubernetes Operator, version 1.102 or later.
-* Configure a [grant policy][ar-configure-a-grant-policy] that permits tailnet devices to use the peer relay.
-* On AWS/EKS, install the [AWS Load Balancer Controller][xt-aws-lb-controller].
+* [安装][docs-operator-setup] Tailscale Kubernetes Operator（1.102 或更高版本）。
+* 配置一条允许 tailnet 设备使用该对等中继的[授权策略][ar-configure-a-grant-policy]。
+* 在 AWS/EKS 上，安装 [AWS Load Balancer Controller][xt-aws-lb-controller]。
 
-## Example PeerRelay configuration
+## PeerRelay 配置示例
 
-Apply the following manifest to create a `PeerRelay` with a single replica:
+应用以下清单来创建一个单副本的 `PeerRelay`：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -30,13 +30,13 @@ spec:
   replicas: 1
 ```
 
-## Configure a grant policy
+## 配置授权策略
 
-Before other tailnet devices can use the peer relay, you must create a [grant policy][docs-grants] that gives them permission to use it. The policy uses the `tailscale.com/cap/relay` [application capability][docs-grant-app-capabilities].
+在其他 tailnet 设备能够使用该对等中继之前，你必须创建一条[授权策略][docs-grants]，授予它们使用权限。该策略使用 `tailscale.com/cap/relay` 这个[应用能力（application capability）][docs-grant-app-capabilities]。
 
-By default, the operator tags peer relay devices with `tag:k8s`. If you use a custom tag, update `spec.tags` and make sure the operator's tag is an [owner][docs-acls-tag-owners] of the tag you choose.
+默认情况下，Operator 会为对等中继设备打上 `tag:k8s` 标签。如果你使用自定义标签，请更新 `spec.tags`，并确保 Operator 的标签是你所选标签的[所有者（owner）][docs-acls-tag-owners]。
 
-Add a grant that lets the intended source devices use the tag your peer relay uses:
+添加一条授权，让目标源设备能够使用你的对等中继所用的标签：
 
 ```json
 {
@@ -52,11 +52,11 @@ Add a grant that lets the intended source devices use the tag your peer relay us
 }
 ```
 
-## Deploy a PeerRelay
+## 部署 PeerRelay
 
-1. (Optional) Set the [tag][docs-tags] of the peer relay devices so they are [automatically approved][docs-acls-autoapprovers]. If you set a custom tag, make sure the operator is an [owner][docs-acls-tag-owners] of that tag.
+1. （可选）设置对等中继设备的[标签][docs-tags]，使其被[自动批准][docs-acls-autoapprovers]。如果设置了自定义标签，请确保 Operator 是该标签的[所有者][docs-acls-tag-owners]。
 
-2. Create a `PeerRelay` resource:
+2. 创建一个 `PeerRelay` 资源：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -67,17 +67,17 @@ Add a grant that lets the intended source devices use the tag your peer relay us
      replicas: 1
    ```
 
-   > **Note:**
+   > **注意：**
    >
-   > On AWS/EKS, this manifest is all you need. The operator reads the address of the Network Load Balancer the AWS Load Balancer Controller provisions and advertises it for you. Configure [Elastic IPs][ar-pin-replicas-to-elastic-ips] only if the peer relay must be reachable on addresses you control.
+   > 在 AWS/EKS 上，你只需要这个清单。Operator 会读取 AWS Load Balancer Controller 所预置的网络负载均衡器的地址，并替你通告它。只有当对等中继必须能在你控制的地址上访问时，才需要配置[弹性 IP][ar-pin-replicas-to-elastic-ips]。
 
-3. Wait for the `PeerRelay` to become ready:
+3. 等待 `PeerRelay` 就绪：
 
    ```shell
    kubectl wait --for=condition=PeerRelayReady=true peerrelay my-relay
    ```
 
-4. Inspect the `PeerRelay` to verify the public endpoints each replica advertises:
+4. 检查 `PeerRelay`，确认每个副本通告的公网端点：
 
    ```shell
    kubectl get peerrelay my-relay
@@ -88,13 +88,13 @@ Add a grant that lets the intended source devices use the tag your peer relay us
    my-relay   2m    PeerRelayReady    203.0.113.10
    ```
 
-Once at least one replica is ready, tailnet devices with the relay grant automatically discover the peer relay and use it for traffic they can't send directly.
+只要至少有一个副本就绪，拥有该中继授权的 tailnet 设备就会自动发现该对等中继，并把无法直接发送的流量交给它。
 
-## High availability for a peer relay
+## 对等中继的高可用
 
-To improve resilience, run more than one replica of a `PeerRelay`. Each replica joins the tailnet as its own device with its own public UDP endpoint. If one replica becomes unreachable, tailnet devices with the relay grant fall back to the remaining replicas.
+为了提升韧性，可以运行多个 `PeerRelay` 副本。每个副本都会作为独立设备加入 tailnet，拥有自己的公网 UDP 端点。如果某个副本变得不可达，拥有该中继授权的 tailnet 设备会回退到其余副本。
 
-Apply the following manifest to run a `PeerRelay` with three replicas:
+应用以下清单来运行一个三副本的 `PeerRelay`：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -105,17 +105,17 @@ spec:
   replicas: 3
 ```
 
-> **Note:**
+> **注意：**
 >
-> Each replica of a `PeerRelay` is fronted by its own `LoadBalancer` Service, which provisions a separate cloud load balancer (and, on AWS, a separate Elastic IP). Scaling replicas up increases your cloud provider bill accordingly, so pick the replica count that matches your resilience needs rather than the maximum.
+> `PeerRelay` 的每个副本都有自己的 `LoadBalancer` Service 前置，会预置一个独立的云负载均衡器（在 AWS 上还是一个独立的弹性 IP）。调大副本数会相应增加云服务商账单，因此请根据韧性需要而非上限来选择副本数。
 
-On GCP, Azure, and AWS, you only need `spec.replicas`. Each replica's Service gets its own load balancer with a distinct public address, and the operator advertises that address as the replica's endpoint.
+在 GCP、Azure 和 AWS 上，你只需要 `spec.replicas`。每个副本的 Service 都会获得一个拥有独立公网地址的负载均衡器，Operator 会把这个地址作为该副本的端点进行通告。
 
-## Customize the LoadBalancer Service
+## 自定义 LoadBalancer Service
 
-The operator applies default annotations to every `LoadBalancer` Service it creates so the Service is provisioned with a public IP address on GCP, AWS, and Azure. If you're targeting a different cloud provider or an in-cluster load balancer controller, use `spec.service.annotations` to supply the annotations your controller expects. These annotations apply uniformly to every replica.
+Operator 会为它创建的每个 `LoadBalancer` Service 应用默认注解，使 Service 在 GCP、AWS 和 Azure 上预置公网 IP 地址。如果你的目标是其他云提供商或集群内的负载均衡控制器，请使用 `spec.service.annotations` 提供你的控制器所期望的注解。这些注解会统一应用于每个副本。
 
-For example, to steer [MetalLB][xt-metallb] to a specific address pool:
+例如，将 [MetalLB][xt-metallb] 引导到特定的地址池：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -129,11 +129,11 @@ spec:
       metallb.io/address-pool: peer-relays
 ```
 
-### Change the UDP port
+### 更改 UDP 端口
 
-By default, each replica listens on UDP port `41641`, and its `LoadBalancer` Service exposes the same port. To use a different port, such as when a firewall permits only specific ports, set `spec.service.port`. The replica and its Service always use the same port, because the peer relay advertises its address and port to other tailnet devices and the load balancer must not rewrite the port. This field requires the Tailscale Kubernetes Operator version 1.104 or later.
+默认情况下，每个副本监听 UDP 端口 `41641`，其 `LoadBalancer` Service 也暴露同一端口。要使用其他端口（例如防火墙只允许特定端口时），请设置 `spec.service.port`。副本与其 Service 始终使用相同的端口，因为对等中继会向其他 tailnet 设备通告自己的地址和端口，负载均衡器不能改写端口。此字段要求 Tailscale Kubernetes Operator 1.104 或更高版本。
 
-The following manifest runs a `PeerRelay` on UDP port `40000`:
+以下清单让 `PeerRelay` 运行在 UDP 端口 `40000` 上：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -146,23 +146,23 @@ spec:
     port: 40000
 ```
 
-Changing the port on an existing `PeerRelay` briefly interrupts relay traffic while the load balancer updates.
+在已有 `PeerRelay` 上更改端口，会在负载均衡器更新期间短暂中断中继流量。
 
-## Deploy on AWS
+## 在 AWS 上部署
 
-The AWS Load Balancer Controller provisions a Network Load Balancer (NLB) for each `LoadBalancer` Service the operator creates. By default the operator does not pin any subnets, so the controller places the load balancer in every availability zone it discovers and gives it an address in each. The operator turns on cross-zone load balancing, which lets any of those addresses reach the replica's pod whichever zone Kubernetes schedules it into. AWS NLBs are exposed as DNS names rather than IP addresses, so the operator resolves the name and advertises the resulting addresses as the replica's endpoint.
+AWS Load Balancer Controller 会为 Operator 创建的每个 `LoadBalancer` Service 预置一个网络负载均衡器（NLB）。默认情况下，Operator 不固定任何子网，因此控制器会把负载均衡器放到它发现的每个可用区中，并在每个可用区各分配一个地址。Operator 会开启跨可用区负载均衡，这样无论 Kubernetes 把副本的 pod 调度到哪个可用区，这些地址中的任何一个都能到达该 pod。AWS NLB 以 DNS 名称而非 IP 地址的形式暴露，因此 Operator 会解析该名称，并把得到的地址作为副本的端点进行通告。
 
-This means no AWS-specific configuration is required. Deploy a `PeerRelay` on EKS the same way you would on any other cluster.
+这意味着不需要任何 AWS 特有配置。在 EKS 上部署 `PeerRelay` 的方式与在任何其他集群上相同。
 
-### Pin replicas to Elastic IPs
+### 将副本固定到弹性 IP
 
-Use `spec.aws.elasticIPs` when the peer relay must be reachable on addresses you control, such as when the addresses are referenced by a firewall rule elsewhere. Each entry pairs an Elastic IP (EIP) allocation ID with the subnet its load balancer is provisioned in, and replica `N` uses entry `N`.
+当对等中继必须能在你控制的地址上访问时（例如这些地址被别处的防火墙规则引用），请使用 `spec.aws.elasticIPs`。每个条目将一个弹性 IP（EIP）分配 ID 与预置其负载均衡器的子网配对，副本 `N` 使用条目 `N`。
 
-Pinning a subnet enables only that subnet's availability zone on the replica's load balancer, and a Network Load Balancer only forwards to targets in a zone enabled on it. Otherwise, nothing else constrains where Kubernetes schedules the replica's pod, so you must also keep the pods in that zone with a [ProxyClass][docs-operator-proxyclass].
+固定子网只会在副本的负载均衡器上启用该子网所在可用区，而网络负载均衡器只会转发到已启用可用区中的目标。除此之外，没有其他因素约束 Kubernetes 把副本的 pod 调度到哪里，因此你还必须使用 [ProxyClass][docs-operator-proxyclass] 把 pod 固定在该可用区。
 
-1. Allocate one EIP per intended replica.
+1. 为每个预期副本分配一个 EIP。
 
-2. Create a `ProxyClass` that pins pods to the zone where your subnets are located:
+2. 创建一个把 pod 固定到子网所在可用区的 `ProxyClass`：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -176,7 +176,7 @@ Pinning a subnet enables only that subnet's availability zone on the replica's l
            topology.kubernetes.io/zone: us-east-1a
    ```
 
-3. Create the `PeerRelay` resource referencing that `ProxyClass`, with a paired list of allocations and subnets. The list must be at least as long as `spec.replicas`, and every subnet must be a public subnet in the zone the `ProxyClass` pins:
+3. 创建引用该 `ProxyClass` 的 `PeerRelay` 资源，并提供配对的分配 ID 与子网列表。该列表长度必须不小于 `spec.replicas`，且每个子网都必须是 `ProxyClass` 所固定可用区内的公共子网：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -196,19 +196,19 @@ Pinning a subnet enables only that subnet's availability zone on the replica's l
            subnetID: subnet-0cccccccccccccccc
    ```
 
-Each replica has its own load balancer, so several replicas can name subnets in the same zone, each with its own Elastic IP. A standard VPC Elastic IP is regional rather than zonal, so it takes the zone of whichever subnet you pair it with.
+每个副本都有自己的负载均衡器，因此多个副本可以指定同一可用区内的子网，每个副本使用自己的弹性 IP。标准 VPC 弹性 IP 是区域级的而不是可用区级的，它的可用区取决于与它配对的子网。
 
-> **Warning:**
+> **警告：**
 >
-> Every replica of a `PeerRelay` shares one pod template, so a `ProxyClass` can hold the pods in a single zone but cannot place different replicas in different zones. Therefore, pinning Elastic IPs confines the whole `PeerRelay` to one availability zone, which gives up the zone redundancy that running several replicas otherwise provides. Omit `spec.aws` if you want replicas spread across zones.
+> `PeerRelay` 的所有副本共享同一个 pod 模板，因此 `ProxyClass` 可以把 pod 固定在单一可用区，却无法把不同副本放到不同可用区。所以，固定弹性 IP 会把整个 `PeerRelay` 限制在一个可用区内，放弃了运行多个副本本可提供的可用区冗余。如果你希望副本分散在多个可用区，请省略 `spec.aws`。
 
-> **Note:**
+> **注意：**
 >
-> `spec.aws.elasticIPs` overrides any `service.beta.kubernetes.io/aws-load-balancer-eip-allocations` or `service.beta.kubernetes.io/aws-load-balancer-subnets` annotations supplied via `spec.service.annotations`. If both are set the per-replica values in `spec.aws.elasticIPs` take precedence.
+> `spec.aws.elasticIPs` 会覆盖通过 `spec.service.annotations` 提供的任何 `service.beta.kubernetes.io/aws-load-balancer-eip-allocations` 或 `service.beta.kubernetes.io/aws-load-balancer-subnets` 注解。如果两者都设置了，`spec.aws.elasticIPs` 中每个副本的值优先。
 
-## Customization
+## 自定义
 
-You can customize the resources the operator creates for a `PeerRelay` with a [ProxyClass][docs-operator-proxyclass]. Reference the ProxyClass by name using `spec.proxyClass`:
+你可以使用 [ProxyClass][docs-operator-proxyclass] 自定义 Operator 为 `PeerRelay` 创建的资源。通过 `spec.proxyClass` 按名称引用 ProxyClass：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -220,21 +220,21 @@ spec:
   proxyClass: my-proxy-class
 ```
 
-You can find the full list of configuration options in the [PeerRelay API reference][xt-gh-tailscale-k8s-peerrelay].
+完整的配置选项列表请参阅 [PeerRelay API 参考][xt-gh-tailscale-k8s-peerrelay]。
 
-## Static endpoints
+## 静态端点
 
-Peer relays advertise one or more [static endpoints][docs-peer-relay-static-endpoints] so that other tailnet devices can reach them at a stable `ip:port` even when the device is behind a load balancer or NAT. Outside Kubernetes you configure static endpoints yourself with `tailscale set --relay-server-static-endpoints`.
+对等中继会通告一个或多个[静态端点][docs-peer-relay-static-endpoints]，这样即使设备位于负载均衡器或 NAT 之后，其他 tailnet 设备也能通过稳定的 `ip:port` 访问它。在 Kubernetes 之外，你可以用 `tailscale set --relay-server-static-endpoints` 自行配置静态端点。
 
-The `PeerRelay` CRD handles this for you: for each replica, the operator reads the public address the cloud has assigned to the replica's `LoadBalancer` Service and writes it into the replica's tailscaled configuration as the static endpoint. You don't need to run `tailscale set` on the pods and you don't need to know the public IPs in advance.
+`PeerRelay` CRD 会替你处理这件事：对每个副本，Operator 会读取云分配给该副本 `LoadBalancer` Service 的公网地址，并将其写入该副本的 tailscaled 配置中作为静态端点。你不需要在 pod 上运行 `tailscale set`，也不需要预先知道公网 IP。
 
-Use the CLI approach for peer relays running on standalone devices where you manage the network configuration yourself. Use the `PeerRelay` CRD for peer relays running inside a Kubernetes cluster.
+对于运行在独立设备上、由你自己管理网络配置的对等中继，请使用 CLI 方式。对于运行在 Kubernetes 集群内的对等中继，请使用 `PeerRelay` CRD。
 
-### Add static endpoints
+### 添加静态端点
 
-Tailnet devices might not be able to reach a replica at the address its load balancer reports. For example, a NAT device or firewall might sit in front of the cluster, or no load balancer controller might assign the `LoadBalancer` Service an address. In these cases, list the addresses that tailnet devices can reach in `spec.staticEndpoints`. This field requires the Tailscale Kubernetes Operator version 1.104 or later.
+tailnet 设备可能无法通过副本负载均衡器报告的地址访问该副本。例如，集群前面可能有 NAT 设备或防火墙，或者没有负载均衡控制器为 `LoadBalancer` Service 分配地址。在这些情况下，请在 `spec.staticEndpoints` 中列出 tailnet 设备可以访问的地址。此字段要求 Tailscale Kubernetes Operator 1.104 或更高版本。
 
-Each entry is an `ip:port` pair. Enclose IPv6 addresses in brackets, and quote those entries in YAML:
+每个条目都是一个 `ip:port` 对。IPv6 地址要加方括号，并在 YAML 中给这些条目加引号：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -248,33 +248,33 @@ spec:
     - "[2001:db8::10]:41641"
 ```
 
-The operator advertises these endpoints for every replica, alongside the addresses it discovers from each replica's load balancer, and lists them in `status.endpoints`. If an entry uses an address that a replica's load balancer already provides, the entry's port replaces the port the load balancer provides for that address. Each address can appear only once across all entries.
+Operator 会为每个副本通告这些端点，与它从各副本负载均衡器发现的地址并列，并把它们列在 `status.endpoints` 中。如果某个条目使用的地址已被某个副本的负载均衡器提供，该条目的端口会替换负载均衡器为该地址提供的端口。每个地址在所有条目中只能出现一次。
 
-A replica with only static endpoints still becomes ready. This lets you run a `PeerRelay` in a cluster where no load balancer controller assigns addresses to `LoadBalancer` Services.
+只配置了静态端点的副本同样可以就绪。这让你能在没有负载均衡控制器为 `LoadBalancer` Service 分配地址的集群中运行 `PeerRelay`。
 
-## Verify the peer relay
+## 验证对等中继
 
-To verify that peer relay traffic is flowing, generate traffic between two tailnet devices that can't reach each other directly and run `tailscale status`. When a device uses a peer relay, its connection type is reported as `peer-relay`:
+要验证对等中继流量在流动，请在两台无法直连的 tailnet 设备之间产生流量，并运行 `tailscale status`。当设备使用了对等中继时，其连接类型会显示为 `peer-relay`：
 
 ```shell
 tailscale status | grep peer-relay
 ```
 
-You can also list the peer relays the local device knows about:
+你还可以列出本地设备所知道的对等中继：
 
 ```shell
 tailscale debug peer-relay-servers
 ```
 
-Refer to the [peer relay documentation][docs-peer-relay] for more detail on how peer relay connections are established and verified.
+关于对等中继连接如何建立和验证的更多细节，请参阅[对等中继文档][docs-peer-relay]。
 
-## Troubleshooting
+## 故障排查
 
-If you encounter issues, refer to [Troubleshooting the Tailscale Kubernetes Operator][docs-operator-troubleshooting].
+如果遇到问题，请参阅[排查 Tailscale Kubernetes Operator 问题][docs-operator-troubleshooting]。
 
-[ar-configure-a-grant-policy]: #configure-a-grant-policy
+[ar-configure-a-grant-policy]: #配置授权策略
 
-[ar-pin-replicas-to-elastic-ips]: #pin-replicas-to-elastic-ips
+[ar-pin-replicas-to-elastic-ips]: #将副本固定到弹性-ip
 
 [docs-acls-autoapprovers]: /docs/reference/syntax/policy-file#auto-approvers
 

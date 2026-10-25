@@ -1,15 +1,15 @@
 ---
-title: "Configure workload identity federation for the Tailscale Kubernetes Operator"
-description: "Tailscale supports [workload identity federation][docs-wif] for authenticating to a tailnet using provider-native identity tokens. The operator can use its ServiceAccount token as an OIDC identity and"
+title: "为 Tailscale Kubernetes Operator 配置工作负载身份联合"
+description: "Tailscale 支持[工作负载身份联合（workload identity federation）][docs-wif]，可使用提供商原生的身份令牌向 tailnet 进行身份验证。Operator 可以将其 ServiceAccount 令牌作为 OIDC 身份"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-Tailscale supports [workload identity federation][docs-wif] for authenticating to a tailnet using provider-native identity tokens. The operator can use its ServiceAccount token as an OIDC identity and authenticate without requiring a long-lived OAuth client secret.
+Tailscale 支持[工作负载身份联合（workload identity federation）][docs-wif]，可使用提供商原生的身份令牌向 tailnet 进行身份验证。Operator 可以将其 ServiceAccount 令牌用作 OIDC 身份，无需长期有效的 OAuth 客户端密钥即可完成身份验证。
 
-## Prepare the cluster
+## 准备集群
 
-The Kubernetes cluster's OIDC discovery endpoints must be publicly accessible. Bind the `"unauthenticated"` group to the `"system:service-account-issuer-discovery"` `ClusterRole` to allow unauthenticated access:
+Kubernetes 集群的 OIDC 发现端点必须可公开访问。将 `"unauthenticated"` 组绑定到 `"system:service-account-issuer-discovery"` `ClusterRole`，以允许未经身份验证的访问：
 
 ```shell
 kubectl create clusterrolebinding oidc-discovery \
@@ -17,47 +17,47 @@ kubectl create clusterrolebinding oidc-discovery \
   --group=system:unauthenticated
 ```
 
-## Get your cluster's issuer
+## 获取集群的颁发者（issuer）
 
-> **Note:**
+> **注意：**
 >
-> The following command has a `jq` dependency. You may need to install `jq` on your device.
+> 以下命令依赖 `jq`。你可能需要在你的设备上安装 `jq`。
 
-To get your cluster's issuer, run the following command:
+要获取集群的颁发者，请运行以下命令：
 
 ```shell
 ISSUER="$(kubectl get --raw /.well-known/openid-configuration | jq '.issuer')"
 ```
 
-## Configure a federated identity
+## 配置联合身份
 
-Follow the steps to [configure a federated identity][docs-wif-configure] in the admin console using the following values:
+按照管理控制台中[配置联合身份][docs-wif-configure]的步骤操作，并使用以下值：
 
-* Set the **Issuer** to **Custom issuer**.
-* Set the **Issuer URL** to the value of `$ISSUER` from the previous step.
-* Set the **Subject** to `system:serviceaccount:tailscale:operator`.
-* Leave the **Audience** field blank.
-* Create the client with `write` scope for:
-  * `General/Services` (with the `tag:k8s-operator` tag)
-  * `Devices/Core` (with the `tag:k8s-operator` tag)
-  * `Keys/Auth Keys` (with the `tag:k8s-operator` tag)
+* 将 **Issuer** 设置为 **Custom issuer**。
+* 将 **Issuer URL** 设置为上一步中 `$ISSUER` 的值。
+* 将 **Subject** 设置为 `system:serviceaccount:tailscale:operator`。
+* 将 **Audience** 字段留空。
+* 创建客户端时授予 `write` 作用域：
+  * `General/Services`（附带 `tag:k8s-operator` 标签）
+  * `Devices/Core`（附带 `tag:k8s-operator` 标签）
+  * `Keys/Auth Keys`（附带 `tag:k8s-operator` 标签）
 
-## Install or upgrade the Tailscale Kubernetes Operator
+## 安装或升级 Tailscale Kubernetes Operator
 
-> **Note:**
+> **注意：**
 >
-> Make note of the required changes for your installation method before proceeding to the [installation guide][docs-install-operator].
+> 在继续[安装指南][docs-install-operator]之前，请先记下你的安装方式所需的更改。
 
 ### Helm
 
-* Replace `--set-string oauth.clientSecret="<OAuth client secret>"` with `--set-string oauth.audience="<OIDC Audience>"` when following the [Helm installation guide][docs-install-helm].
+* 在按照 [Helm 安装指南][docs-install-helm]操作时，把 `--set-string oauth.clientSecret="<OAuth client secret>"` 替换为 `--set-string oauth.audience="<OIDC Audience>"`。
 
-### Static manifests
+### 静态清单
 
-Make the following changes in the manifest file when following the guide to [install using static manifests][docs-install-static-manifests]
+在按照[使用静态清单安装][docs-install-static-manifests]指南操作时，对清单文件做以下更改
 
-* Remove the `operator-oauth` secret definition (not needed).
-* Edit the Deployment:
+* 移除 `operator-oauth` secret 定义（不再需要）。
+* 编辑 Deployment：
 
 ```yaml
 apiVersion: apps/v1
@@ -134,12 +134,12 @@ spec:
                   path: token
 ```
 
-After you have applied the manifest and verified that the `operator-oauth` secret is no longer being used, you can delete the secret.
+应用清单并确认 `operator-oauth` secret 已不再被使用后，你可以删除该 secret。
 
-## Further exploration
+## 进一步探索
 
-* Understand how [workload identity federation][docs-wif] works and how it integrates with Tailscale.
-* [Install][docs-install-operator] the Tailscale Kubernetes Operator.
+* 了解[工作负载身份联合][docs-wif]的工作原理及其与 Tailscale 的集成方式。
+* [安装][docs-install-operator] Tailscale Kubernetes Operator。
 
 [docs-install-helm]: /docs/kubernetes-operator/install-operator#install-using-helm
 

@@ -1,39 +1,39 @@
 ---
-title: "Tailscale IPv6 support"
-description: "Understand how Tailscale works with IPv6."
+title: "Tailscale 的 IPv6 支持"
+description: "了解 Tailscale 如何配合 IPv6 工作。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-Internet Protocol version 6 (IPv6) is defined in [RFC8200][xt-rfc-8200] and is the latest version of the Internet Protocol and the successor to IPv4. Tailscale supports both IPv4 and IPv6 and even facilitates connections between IPv4-only devices and IPv6-only devices using DERP servers.
+互联网协议第 6 版（IPv6）定义于 [RFC8200][xt-rfc-8200]，是互联网协议的最新版本，也是 IPv4 的后继者。Tailscale 同时支持 IPv4 和 IPv6，甚至能借助 DERP 服务器促成仅支持 IPv4 的设备与仅支持 IPv6 的设备之间的连接。
 
-## Private and public IPv6 addresses
+## 私有与公共 IPv6 地址
 
-Similar to IPv4 addresses, there are two types of IPv6 addresses: private IPv6 addresses and public IPv6 addresses.
+与 IPv4 地址类似，IPv6 地址也分两类：私有 IPv6 地址和公共 IPv6 地址。
 
-Private IPv6 refers to the internal IPv6 addresses used within your Tailscale network (known as a [tailnet][docs-tailnet]). These addresses are not exposed to the public internet. Tailscale assigns every device in your tailnet a private IPv6 address from the `fd7a:115c:a1e0::/48` [unique local prefix][xt-wiki-unique-local-address]. This prefix is part of Tailscale's [reserved IP addresses][docs-reserved-ip-addresses]. As a result, IPv6 connectivity always works within your tailnet, even if your internet service provider (ISP) doesn't support IPv6. In [userspace networking mode][docs-userspace-networking], Tailscale emulates IPv6 support. This ensures IPv6 functionality even on devices that don't natively support it.
+私有 IPv6 指 Tailscale 网络（即 [tailnet][docs-tailnet]）内部使用的 IPv6 地址。这些地址不会暴露给公共互联网。Tailscale 从 `fd7a:115c:a1e0::/48` 这一[唯一本地前缀][xt-wiki-unique-local-address]（unique local prefix）中为 tailnet 内的每台设备分配私有 IPv6 地址。该前缀属于 Tailscale [保留 IP 地址][docs-reserved-ip-addresses]的一部分。因此，即使你的互联网服务提供商（ISP）不支持 IPv6，tailnet 内的 IPv6 连接也始终可用。在[用户态网络模式][docs-userspace-networking]下，Tailscale 会模拟 IPv6 支持，确保即使在不原生支持 IPv6 的设备上也能使用 IPv6 功能。
 
-Public IPv6 refers to using IPv6 addresses provided by internet service providers (ISPs) for communication over the public internet. Tailscale can use public IPv6 addresses from a device's ISP when negotiating connections between devices, but only if both devices have public IPv6 addresses.
+公共 IPv6 指使用互联网服务提供商（ISP）提供的 IPv6 地址在公共互联网上通信。在协商设备间连接时，Tailscale 可以使用设备 ISP 提供的公共 IPv6 地址，但前提是两台设备都拥有公共 IPv6 地址。
 
-> **Tip:**
+> **提示：**
 >
-> [Exit nodes][docs-exit-nodes] fully support IPv6. This means you can route traffic through an IPv6-supporting exit node even if your ISP doesn't provide IPv6 connectivity.
+> [出口节点][docs-exit-nodes]完全支持 IPv6。这意味着即使你的 ISP 不提供 IPv6 连接，你也可以经由支持 IPv6 的出口节点路由流量。
 
-## IPv4 interoperability
+## IPv4 互操作性
 
-Tailscale's [DERP servers][docs-derp-servers] can facilitate connections between IPv6-only and IPv4-only devices when direct connections aren't possible. For direct connections where one device lacks an IPv6 address, Tailscale defaults to using an IPv4 connection. The following table shows the IP address type two devices use given different conditions.
+当无法建立直连时，Tailscale 的 [DERP 服务器][docs-derp-servers]可以促成仅支持 IPv6 的设备与仅支持 IPv4 的设备之间的连接。对于直连中缺少 IPv6 地址的一方，Tailscale 默认使用 IPv4 连接。下表展示了两台设备在不同条件下使用的 IP 地址类型。
 
-| **Device A**  | **Device B** | **Connection**                          |
+| **设备 A**    | **设备 B**   | **连接类型**                            |
 | :------------ | :----------- | :-------------------------------------- |
-| IPv6-only     | IPv4-only    | [Relayed connection][docs-derp-servers] |
-| IPv4 and IPv6 | IPv4-only    | IPv4                                    |
-| IPv4 and IPv6 | IPv6-only    | IPv6                                    |
+| IPv6-only     | IPv4-only    | [中继连接][docs-derp-servers]           |
+| IPv4 和 IPv6  | IPv4-only    | IPv4                                    |
+| IPv4 和 IPv6  | IPv6-only    | IPv6                                    |
 | IPv4-only     | IPv4-only    | IPv4                                    |
 | IPv6-only     | IPv6-only    | IPv6                                    |
 
-IPv6 can improve [network address translation (NAT) traversal][bl-how-nat-traversal-works] efficiency or eliminate the need for it entirely. However, Tailscale functions effectively over IPv4 when public IPv6 isn't available on both ends.
+IPv6 可以提高[网络地址转换（NAT）穿透][bl-how-nat-traversal-works]的效率，甚至完全省去穿透的必要。不过，当两端都没有公共 IPv6 时，Tailscale 在 IPv4 上同样运行良好。
 
-For more information about IPv4 and IPv6, refer to the [IPv4 vs. IPv6 FAQ][docs-ipv4-vs-ipv6].
+有关 IPv4 和 IPv6 的更多信息，请参阅 [IPv4 与 IPv6 常见问题][docs-ipv4-vs-ipv6]。
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

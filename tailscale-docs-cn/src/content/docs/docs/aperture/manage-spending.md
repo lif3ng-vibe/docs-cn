@@ -1,21 +1,21 @@
 ---
-title: "Manage AI spending"
-description: "Set budgets, buy tokens, control per-user spending limits, and monitor quota balances in Aperture."
+title: "管理 AI 支出"
+description: "在 Aperture 中设置预算、购买 token、控制单用户支出限额并监控配额余额。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Aperture tracks token usage and cost. You can buy tokens through Aperture or use any supported provider without buying tokens.
+Aperture 会跟踪 token 用量和成本。你可以通过 Aperture 购买 token，也可以不购买 token、直接使用任何受支持的提供商。
 
-Admins set user and team spending limits in the [Aperture configuration][docs-aperture-configuration] and monitor usage in the [admin dashboard][docs-web-dashboard]. Users check their own usage at `/usage` and quota balances at `/quotas` in [Chat][docs-chat-reference].
+管理员在 [Aperture 配置][docs-aperture-configuration]中设置用户和团队的支出限额，并在[管理仪表板][docs-web-dashboard]中监控用量。用户可以在 [Chat][docs-chat-reference] 中通过 `/usage` 查看自己的用量，通过 `/quotas` 查看配额余额。
 
-[**Buy tokens through Aperture**](/docs/aperture/buy-tokens-through-aperture) — Buy tokens through Aperture for model usage, or continue using your own supported providers.
+[**通过 Aperture 购买 token**](/docs/aperture/buy-tokens-through-aperture)——通过 Aperture 购买 token 供模型使用，或继续使用你自己的受支持提供商。
 
-[**Set per-user spending limits**](/docs/aperture/how-to/set-per-user-spending-limits) — Configure quota buckets in Aperture to set spending limits for individual users.
+[**设置单用户支出限额**](/docs/aperture/how-to/set-per-user-spending-limits)——在 Aperture 中配置配额桶，为单个用户设置支出限额。
 
-[**Set a team-wide budget**](/docs/aperture/how-to/set-team-budget) — Configure a shared quota bucket in Aperture to cap total AI spending across your organization.
+[**设置团队级预算**](/docs/aperture/how-to/set-team-budget)——在 Aperture 中配置共享配额桶，限制整个组织的 AI 总支出。
 
-[**Check and refill budgets**](/docs/aperture/how-to/check-and-refill-budgets) — Check personal and organization quota status, and manually refill balances as an Aperture admin.
+[**查看并补充预算**](/docs/aperture/how-to/check-and-refill-budgets)——查看个人和组织的配额状态，并以 Aperture 管理员身份手动补充余额。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

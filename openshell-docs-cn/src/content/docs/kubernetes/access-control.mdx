@@ -1,0 +1,120 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "访问控制"
+sidebar-title: "访问控制"
+description: "为 Kubernetes 部署的 OpenShell 网关配置 OIDC 用户认证或反向代理认证终止。"
+keywords: "生成式 AI, 网络安全, Kubernetes, 认证, mTLS, OIDC, Keycloak, Entra ID, Okta, 网关认证"
+position: 6
+---
+import { Aside } from '@astrojs/starlight/components';
+
+OpenShell 网关为 Kubernetes 上的人类调用方支持以下访问控制模型：
+
+| 模型 | 适用场景 |
+|---|---|
+| mTLS | 配置了客户端 CA 且没有 OIDC issuer 的网关。网关把验证过的客户端证书映射为用户身份。 |
+| OIDC（推荐） | 生产部署。与既有身份提供方集成，支持基于角色的访问控制，让每个用户拥有自己的身份，无需分发证书。 |
+| 反向代理认证终止 | 访问代理（Cloudflare Access、ngrok、企业 SSO）在网关之前对调用方认证。网关信任该代理并跳过自身的客户端证书检查。 |
+
+Helm chart 在安装时生成网关 TLS 证书与用户客户端证书。监管器 Pod 只从客户端 Secret 投影 `ca.crt`，用于认证网关；客户端证书与私钥不会暴露给沙箱。监管器用网关签发的沙箱 JWT 认证其 RPC。
+
+CLI 如何解析网关与存储凭据，参见[网关认证](/how-it-works/gateways/authentication)。
+
+## 沙箱监管器身份
+
+Kubernetes 沙箱监管器以沙箱工作负载身份向网关认证。默认情况下，Kubernetes 计算驱动校验每个投影的 ServiceAccount 令牌，把认证后的沙箱 ID 与稳定的运行时身份返回给网关。网关在自行签发沙箱 JWT 之前，要求该身份与预置时记录的命名空间、不可变 Sandbox 资源 UID 及监管器 Pod UID 一致。
+
+动态提供商令牌授予可以使用 SPIFFE，而监管器到网关的认证方式不变。设置 `gatewayConfig.openshell.drivers.kubernetes.provider_spiffe_workload_api_socket_path` 可把 SPIFFE CSI Workload API socket 挂载进网关与沙箱 Pod，同时保留投影 ServiceAccount 令牌引导与网关签发沙箱 JWT 的路径。
+
+提供商令牌授予需要 SPIFFE 实现（如 SPIRE）以及网关与沙箱 Pod 的身份。仓库本地的 SPIRE overlay 从 Pod 的 `openshell.ai/sandbox-id` 注解为沙箱分配 ID，但网关校验路径只要求监管器 SVID 有效且与网关 SVID 处于同一 SPIFFE 信任域。带 `token_grant` 元数据的提供商配置档案会让沙箱监管器请求 JWT-SVID 并交换为上游 OAuth2 访问令牌。令牌交换型配置档案还要求网关具备 SPIFFE 身份，因为中间的令牌交换由网关用自己的 JWT-SVID 居间完成。
+
+网关用从 SPIFFE Workload API 获取的 JWT 包校验监管器 JWT-SVID，因此中间令牌交换不需要网关访问 SPIRE OIDC 发现端点或其 TLS CA。
+
+## OIDC 用户认证
+
+设置 `gatewayConfig.openshell.gateway.oidc.issuer` 即启用 OIDC。网关针对 issuer 的 JWKS 端点校验每个请求上的 `Authorization: Bearer <token>` 头部。它接受由 issuer JWKS 中发布的 RS256、RS384、RS512、PS256、PS384、PS512、ES256、ES384 或 EdDSA（Ed25519）密钥签名的 JWT。用 ES256 签名访问令牌的 Okta 租户无需额外网关配置即可使用。
+
+```shell
+helm upgrade openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.issuer=https://your-idp.example.com/realms/openshell' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.audience=openshell-cli' \
+  --set server.tls.clientCaSecretName=""
+```
+
+客户端证书在 TLS 握手时是可选的，OIDC 调用方可以在没有证书的情况下连接。设置 `server.tls.clientCaSecretName=""` 可完全禁用客户端证书校验。chart 会在 `gateway.toml` 中省略 `client_ca_path` 且不挂载客户端 CA 卷，从而形成仅 HTTPS 传输加 OIDC 用户认证的组合。不要把该值设为 `null`；想用 chart 默认值就省略该键，想禁用客户端证书校验就设为 `""`。
+
+`audience` 的值必须与身份提供方中为 OpenShell 资源服务器配置的 client ID 一致。
+
+### OIDC values 参考
+
+| 值 | 默认值 | 用途 |
+|---|---|---|
+| `gatewayConfig.openshell.gateway.oidc.issuer` | `""` | OIDC issuer URL。为空即禁用 OIDC。 |
+| `gatewayConfig.openshell.gateway.oidc.audience` | `openshell-cli` | JWT 中预期的 `aud` 声明。 |
+| `gatewayConfig.openshell.gateway.oidc.jwks_ttl_secs` | `3600` | JWKS 密钥缓存 TTL（秒）。必须大于零。 |
+| `gatewayConfig.openshell.gateway.oidc.roles_claim` | `""` | JWT claims 中角色数组的点分路径。 |
+| `gatewayConfig.openshell.gateway.oidc.admin_role` | `""` | 授予管理员访问权限的角色名。 |
+| `gatewayConfig.openshell.gateway.oidc.user_role` | `""` | 授予标准用户访问权限的角色名。 |
+| `gatewayConfig.openshell.gateway.oidc.scopes_claim` | `""` | JWT claims 中 scopes 数组的点分路径。 |
+
+issuer 必须使用 HTTPS。网关拒绝发现与 JWKS 重定向，限制响应大小，要求 JSON 媒体类型，并且拒绝不同来源的 `jwks_uri`，除非该来源出现在 `jwks_allowed_origins` 中。issuer 由私有 CA 签名时使用 `server.oidc.caConfigMapName`。
+
+### 仅认证模式与 RBAC 模式
+
+`admin_role` 与 `user_role` 都留空即为仅认证模式：凡携带来自所配 issuer 的有效 JWT 的请求都会被接受，但不做任何角色区分。
+
+两个值都设置即启用 RBAC 模式，网关检查角色声明并按分配的角色强制访问控制：
+
+```shell
+helm upgrade openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set server.tls.clientCaSecretName="" \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.issuer=https://your-idp.example.com/realms/openshell' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.audience=openshell-cli' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.roles_claim=realm_access.roles' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.admin_role=openshell-admin' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.user_role=openshell-user'
+```
+
+`admin_role` 与 `user_role` 必须同时设置，或同时留空。不支持只设置其中一个。
+
+OIDC RBAC 是方法级授权。它控制调用方能执行哪些 API 操作，但提供商与沙箱记录并不归属于单个 OIDC 主体。共享集群中，请把提供商凭据视为网关级资源；当用户不得查看或挂接彼此的提供商与沙箱时，使用独立网关或外部多租户控制。
+
+### 各提供商的 rolesClaim 路径
+
+| 提供商 | rolesClaim 值 |
+|---|---|
+| Keycloak | `realm_access.roles` |
+| Microsoft Entra ID | `roles` |
+| Okta | `groups` |
+
+## 反向代理认证终止
+
+当访问代理（如 Cloudflare Access、ngrok 或企业 SSO 网关）在 OpenShell 网关之前终止 TLS 并处理认证时，请把网关配置为接受来自该受信任代理的明文流量，并显式允许未认证的用户调用：
+
+```shell
+helm upgrade openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set server.disableTls=true \
+  --set 'gatewayConfig.openshell\.gateway\.auth.allow_unauthenticated_users=true'
+```
+
+网关在受信任代理之后以明文 HTTP 监听，而沙箱监管器仍用网关签发的沙箱 JWT 认证。不携带 OIDC 或 mTLS 凭据的面向用户的 CLI/API 调用会被接受为未认证的本地开发者主体。代理负责认证调用方，并只转发已授权的流量。
+
+<Aside type="caution">
+仅当网关无法从受信任的本地开发环境之外访问，或代理路径完全可信时，才启用未认证用户。绝不要把明文且关闭认证的网关暴露到公共网络。
+</Aside>
+
+用代理的公网 URL 在 CLI 中注册网关。基于浏览器的登录流程会在首次使用时自动运行：
+
+```shell
+openshell gateway add https://gateway.example.com --name production
+```

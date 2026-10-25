@@ -1,48 +1,48 @@
 ---
-title: "Technical reference"
-description: "Explore reference guides for Tailscale tools and features, including access control policies, command-line interface (Tailscale CLI), API, and best practices for managing your tailnet. Understand access controls, production strategies, security, and key terminology."
+title: "技术参考"
+description: "探索 Tailscale 工具与功能的参考指南，包括访问控制策略、命令行界面（Tailscale CLI）、API，以及管理 tailnet 的最佳实践。了解访问控制、生产环境策略、安全性与关键术语。"
 ---
 
-Last validated May 7, 2025
+最后验证于 May 7, 2025
 
-These topics provide technical reference about Tailscale tools and features in your Tailscale network (known as a tailnet).
+这些主题提供 Tailscale 网络（即 tailnet）中 Tailscale 工具与功能的技术参考。
 
-## Access control policies
+## 访问控制策略
 
-You can use access control policies to enforce access for users, devices, and applications in your tailnet.
+你可以使用访问控制策略，对 tailnet 中的用户、设备和应用强制实施访问规则。
 
-[**Syntax reference for the tailnet policy file**](/docs/reference/syntax/policy-file) — Reference syntax for the tailnet policy file.
+[**tailnet 策略文件语法参考**](/docs/reference/syntax/policy-file)——tailnet 策略文件的语法参考。
 
-[**ACL policy examples**](/docs/reference/examples/acls) — View example ACL policies for common scenarios.
+[**ACL 策略示例**](/docs/reference/examples/acls)——查看常见场景的 ACL 策略示例。
 
-[**Node attributes vs. grant app capabilities**](/docs/reference/node-attributes-vs-app-capabilities) — Understand whether a capability belongs on a device or on a connection, and how node attributes and grant app capabilities differ.
+[**节点属性与授权应用能力对比**](/docs/reference/node-attributes-vs-app-capabilities)——理解一种能力应属于设备还是连接，以及节点属性与授权应用能力的区别。
 
-## Tailscale command line interface (CLI)
+## Tailscale 命令行界面（CLI）
 
-The Tailscale client includes a built-in CLI tool you can use to manage and troubleshoot your device within your Tailscale network (known as a tailnet).
+Tailscale 客户端内置了一个 CLI 工具，你可以用它管理和排查设备在 Tailscale 网络（即 tailnet）中的问题。
 
-[**Tailscale CLI**](/docs/reference/tailscale-cli) — Manage and troubleshoot your tailnet with the Tailscale command-line interface (Tailscale CLI).
+[**Tailscale CLI**](/docs/reference/tailscale-cli)——使用 Tailscale 命令行界面（Tailscale CLI）管理和排查你的 tailnet。
 
-## Tailscale application programming interface (API)
+## Tailscale 应用编程接口（API）
 
-You can use the Tailscale API to automate and manage various aspects of your tailnet.
+你可以使用 Tailscale API 自动化并管理 tailnet 的各个方面。
 
-[**Tailscale API**](/docs/reference/tailscale-api) — Explore the Tailscale application programming interface (API).
+[**Tailscale API**](/docs/reference/tailscale-api)——探索 Tailscale 应用编程接口（API）。
 
-[**OAuth clients**](/docs/features/oauth-clients) — Use OAuth clients to provide ongoing access to the Tailscale API.
+[**OAuth 客户端**](/docs/features/oauth-clients)——使用 OAuth 客户端为 Tailscale API 提供持续访问。
 
-[**tsnet**](/docs/features/tsnet) — Use the tsnet package to embed Tailscale inside a Go program.
+[**tsnet**](/docs/features/tsnet)——使用 tsnet 包将 Tailscale 嵌入 Go 程序。
 
-## Technical overviews and production best practices
+## 技术概览与生产环境最佳实践
 
-Read in-depth topics about Tailscale networking, security, and production best practices.
+阅读关于 Tailscale 网络、安全性和生产环境最佳实践的深入主题。
 
-[**Technical overviews**](/docs/concepts) — Get in-depth technical details about Tailscale.
+[**技术概览**](/docs/concepts)——获取关于 Tailscale 的深入技术细节。
 
-[**Production best practices**](/docs/reference/best-practices/production) — Follow production and security best practices for deploying Tailscale.
+[**生产环境最佳实践**](/docs/reference/best-practices/production)——遵循部署 Tailscale 的生产环境与安全最佳实践。
 
-## Terminology and concepts
+## 术语与概念
 
-Familiarize yourself with Tailscale terminology and concepts.
+熟悉 Tailscale 的术语与概念。
 
-[**Terminology and concepts**](/docs/reference/glossary) — Review Tailscale terminology and concepts.
+[**术语与概念**](/docs/reference/glossary)——查阅 Tailscale 的术语与概念。

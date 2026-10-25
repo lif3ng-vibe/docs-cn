@@ -1,23 +1,23 @@
 ---
-title: "Record kubectl sessions"
-description: "This guide explains how to configure [grants][docs-grants] in your tailnet policy file to enable kubectl session recording. Grants control which users or devices have their sessions recorded, which `t"
+title: "录制 kubectl 会话"
+description: "本指南介绍如何在 tailnet 策略文件中配置[授权（grant）][docs-grants]来启用 kubectl 会话录制。授权决定哪些用户或设备的会话会被录制、由哪个 `t"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide explains how to configure [grants][docs-grants] in your tailnet policy file to enable kubectl session recording. Grants control which users or devices have their sessions recorded, which `tsrecorder` instance receives the recordings, and whether recording is enforced.
+本指南介绍如何在 tailnet 策略文件中配置[授权（grant）][docs-grants]来启用 kubectl 会话录制。授权决定哪些用户或设备的会话会被录制、由哪个 `tsrecorder` 实例接收录制，以及是否强制录制。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你具备以下条件：
 
-* [Install the Tailscale Kubernetes Operator][docs-k8s-install].
-* [Deploy a recorder][docs-deploy-tsrecorder].
-* An [API server proxy][docs-api-server-access] configured in your cluster.
+* [安装 Tailscale Kubernetes Operator][docs-k8s-install]。
+* [部署一个录制器][docs-deploy-tsrecorder]。
+* 在你的集群中配置了 [API 服务器代理][docs-api-server-access]。
 
-## Basic recording
+## 基本录制
 
-Record sessions for `group:engineering` connecting to any proxy tagged `tag:k8s-operator`:
+录制 `group:engineering` 连接到任何打有 `tag:k8s-operator` 标签的代理的会话：
 
 ```json
 "grants": [
@@ -33,9 +33,9 @@ Record sessions for `group:engineering` connecting to any proxy tagged `tag:k8s-
 ]
 ```
 
-## Enforced recording
+## 强制录制
 
-Block sessions if the recorder is unreachable by setting `enforceRecorder` to `true`:
+把 `enforceRecorder` 设置为 `true`，在录制器不可达时阻止会话：
 
 ```json
 "grants": [
@@ -52,9 +52,9 @@ Block sessions if the recorder is unreachable by setting `enforceRecorder` to `t
 ]
 ```
 
-## Combining with impersonation
+## 与身份模拟结合使用
 
-Record the session while also granting Kubernetes RBAC permissions:
+在录制会话的同时授予 Kubernetes RBAC 权限：
 
 ```json
 "grants": [
@@ -71,13 +71,13 @@ Record the session while also granting Kubernetes RBAC permissions:
 ]
 ```
 
-## Enable API request event recording
+## 启用 API 请求事件录制
 
-> **Note:**
+> **注意：**
 >
-> API request event recording is in beta.
+> API 请求事件录制目前处于测试阶段。
 
-Add `"enableEvents": true` to record all Kubernetes API requests in addition to kubectl sessions:
+添加 `"enableEvents": true`，在 kubectl 会话之外同时录制所有 Kubernetes API 请求：
 
 ```json
 "acls": [
@@ -101,13 +101,13 @@ Add `"enableEvents": true` to record all Kubernetes API requests in addition to 
 ]
 ```
 
-Session recording captures more than interactive kubectl sessions. It also records all API requests that pass through the proxy, including `get`, `list`, `create`, and `delete` operations.
+会话录制能捕获的不只是交互式 kubectl 会话。它还会记录所有经过代理的 API 请求，包括 `get`、`list`、`create` 和 `delete` 操作。
 
-## Further exploration
+## 进一步探索
 
-* [Deploy][docs-deploy-tsrecorder] a recorder.
-* Understand how session recording works in the [recorder overview][docs-recorder].
-* [Configure][docs-auth-rbac] authentication and RBAC.
+* [部署][docs-deploy-tsrecorder]一个录制器。
+* 在[录制器概述][docs-recorder]中了解会话录制的工作原理。
+* [配置][docs-auth-rbac]身份验证和 RBAC。
 
 [docs-api-server-access]: /docs/kubernetes-operator/api-server-access
 

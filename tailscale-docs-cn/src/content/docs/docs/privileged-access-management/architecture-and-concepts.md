@@ -1,23 +1,23 @@
 ---
-title: "Tailscale PAM architecture and core concepts"
-description: "Get an overview of the Tailscale PAM architecture and core concepts."
+title: "Tailscale PAM 的架构与核心概念"
+description: "概览 Tailscale PAM 的架构与核心概念。"
 ---
 
-Last validated Aug 17, 2026
+最后验证于 Aug 17, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Designed for high availability and low latency, Tailscale PAM is part of the Tailscale platform, combining secure application access with Tailscale's globally distributed networking infrastructure. This gives you fast, secure access to resources in your Tailscale network from anywhere, without adding operational overhead.
+Tailscale PAM 为高可用和低延迟而设计，是 Tailscale 平台的一部分，把安全的应用访问与 Tailscale 全球分布的网络基础设施结合在一起。这让你能从任何位置快速、安全地访问 Tailscale 网络中的资源，而不增加运维负担。
 
-The following sections describe the architecture and core concepts for Tailscale PAM.
+以下小节介绍 Tailscale PAM 的架构与核心概念。
 
-## Services
+## 服务
 
-Tailscale PAM services represent the resources in your Tailscale network that you make available to users. These can be any service that you need to securely expose, such as:
+Tailscale PAM 服务代表你在 Tailscale 网络中向用户开放的资源。可以是任何你需要安全暴露的服务，例如：
 
 * HTTP/HTTPS
 * SSH
-* Databases, such as:
+* 数据库，例如：
   * Amazon RDS
   * Elasticsearch
   * Google Cloud SQL
@@ -27,101 +27,101 @@ Tailscale PAM services represent the resources in your Tailscale network that yo
   * PostgreSQL
   * Snowflake
 * Kubernetes
-* Remote Desktop Protocol (RDP)
-* Virtual Network Computing (VNC)
-* Any TCP port
+* 远程桌面协议（RDP）
+* 虚拟网络计算（VNC）
+* 任意 TCP 端口
 
-Tailscale PAM securely proxies user sessions to these PAM services and provides additional capabilities like credential injection and session recording/playback.
+Tailscale PAM 会把用户会话安全地代理到这些 PAM 服务，并提供凭证注入、会话录制/回放等额外能力。
 
-## Policies
+## 策略
 
-Policies are key to managing access to your services. By default, no one has access to your services unless you explicitly grant it. Unlike traditional firewalls, which restrict access based on IP address and port number, Tailscale PAM lets you control access with more granular conditions such as:
+策略是管理服务访问的关键。默认情况下，除非你明确授权，否则任何人都无法访问你的服务。传统防火墙基于 IP 地址和端口号限制访问，与此不同，Tailscale PAM 让你用更细粒度的条件控制访问，例如：
 
-* **Who**: The identity of the user.
-* **To what**: The specific PAM services.
-* **From what**: Device posture or MDM requirements.
-* **When**: Always or by request.
-* **Where**: IP addresses or countries.
+* **谁**：用户的身份。
+* **访问什么**：具体的 PAM 服务。
+* **从什么访问**：设备态势（device posture）或 MDM 要求。
+* **何时**：始终允许或按请求放行。
+* **从哪里**：IP 地址或国家/地区。
 
-This fine-grained control ensures that only authorized users can access your services under specific conditions.
+这种细粒度控制确保只有获得授权的用户才能在特定条件下访问你的服务。
 
-Policies are managed in the [tailnet policy file][docs-tailnet-policy-file], which you can access in the [Access controls](https://console.tailscale.com/admin/acls) page of the Tailscale admin console.
+策略在 [tailnet 策略文件][docs-tailnet-policy-file]中管理，你可以在 Tailscale 管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面访问它。
 
-## Sessions
+## 会话
 
-A session represents the connection between a user and a service. This lets you track who accessed what resource, when, and from where. Each session log include details such as:
+会话代表用户与服务之间的连接。这让你能够追踪谁在何时从何处访问了什么资源。每条会话日志都包含以下细节：
 
-* User single sign-on identity.
-* IP address.
-* Geolocation.
-* Device information.
-* Connection time and duration.
+* 用户单点登录（SSO）身份。
+* IP 地址。
+* 地理位置。
+* 设备信息。
+* 连接时间与时长。
 
-Additionally, Tailscale PAM provides session recording, which means you can replay sessions for services like SSH, databases, Kubernetes, and HTTP/HTTPS, to review precisely what happened during a session. This is particularly useful for security audits or troubleshooting.
+此外，Tailscale PAM 提供会话录制功能，你可以回放 SSH、数据库、Kubernetes 和 HTTP/HTTPS 等服务的会话，精确审查会话期间发生了什么。这对安全审计或故障排查尤其有用。
 
-## Connectors
+## 连接器
 
-A Tailscale PAM connector acts as a bridge between your infrastructure and the Tailscale platform, serving as an [identity-aware][docs-tailscale-identity] application proxy. It handles critical functions like:
+Tailscale PAM 连接器是你的基础设施与 Tailscale 平台之间的桥梁，充当具有身份感知能力的应用代理。它处理以下关键功能：
 
-* **Session termination**: Securely terminates all client sessions.
-* **Policy enforcement**: Evaluates policies in real-time to control access.
-* **Session recording**: Captures session data for auditing and replay (SSH, database, HTTP/HTTPS).
-* **Secrets injection**: Seamlessly injects credentials and authentication tokens.
+* **会话终结**：安全地终结所有客户端会话。
+* **策略执行**：实时评估策略以控制访问。
+* **会话录制**：捕获会话数据用于审计和回放（SSH、数据库、HTTP/HTTPS）。
+* **密钥注入**：无缝注入凭证和认证令牌。
 
-A connector is deployed inside your infrastructure, ensuring that sensitive traffic remains private. Connections between clients and the connector are fully encrypted, meaning Tailscale PAM never sees your traffic. This gives you full control over your security while benefiting from the platform's ease of use.
+连接器部署在你的基础设施内部，确保敏感流量保持私密。客户端与连接器之间的连接完全加密，这意味着 Tailscale PAM 永远看不到你的流量。你在享受平台易用性的同时，对安全性保有完全控制。
 
-## Tunnels
+## 隧道
 
-Tunnels are secure, encrypted connections between a Tailscale PAM connector and a user's device, enabling seamless access to private resources. Tunnels provide the following functions:
+隧道是 Tailscale PAM 连接器与用户设备之间安全加密的连接，让私有资源的访问无缝进行。隧道提供以下功能：
 
-* **Encryption**: Tunnels use [WireGuard][xt-wireguard], a modern, high-performance VPN protocol, to create end-to-end encryption.
-* **Automated management**: The Tailscale PAM platform automatically manages tunnel creation and orchestration, requiring no manual setup from the user.
-* **Seamless connectivity**: Whether connecting to SSH, databases, Kubernetes, or internal web applications, tunnels provide secure, low-latency access without exposing services to the internet.
+* **加密**：隧道使用现代高性能 VPN 协议 [WireGuard][xt-wireguard] 建立端到端加密。
+* **自动管理**：Tailscale PAM 平台自动管理隧道的创建和编排，用户无需手动设置。
+* **无缝连接**：无论连接 SSH、数据库、Kubernetes 还是内部 Web 应用，隧道都提供安全、低延迟的访问，且不把服务暴露到互联网。
 
-## Users, group, and identity providers
+## 用户、组与身份提供方
 
-Tailscale PAM uses [Tailscale identity][docs-tailscale-identity] as the source of truth. The users and groups in your tailnet are synchronized with Tailscale PAM automatically.
+Tailscale PAM 使用 [Tailscale 身份][docs-tailscale-identity]作为权威来源。tailnet 中的用户和组会自动与 Tailscale PAM 同步。
 
-### How Tailscale roles map to Tailscale PAM roles
+### Tailscale 角色如何映射到 Tailscale PAM 角色
 
-During synchronization, each user's [Tailscale role][docs-user-roles] determines the Tailscale PAM role they receive. Tailscale PAM has three roles: **Admin**, **Read Only**, and **Client Access Only**. Tailscale roles map to Tailscale PAM roles as follows:
+同步时，每个用户的 [Tailscale 角色][docs-user-roles]决定其获得的 Tailscale PAM 角色。Tailscale PAM 有三种角色：**Admin**、**Read Only** 和 **Client Access Only**。Tailscale 角色与 Tailscale PAM 角色的映射如下：
 
-| Tailscale role                                 | Tailscale PAM role |
-| ---------------------------------------------- | ------------------ |
-| [Owner][docs-user-roles-owner]                 | Admin              |
-| [Admin][docs-user-roles-admin]                 | Admin              |
-| [Member][docs-user-roles-member]               | Client Access Only |
+| Tailscale 角色 | Tailscale PAM 角色 |
+| --- | --- |
+| [Owner][docs-user-roles-owner] | Admin |
+| [Admin][docs-user-roles-admin] | Admin |
+| [Member][docs-user-roles-member] | Client Access Only |
 | [Billing admin][docs-user-roles-billing-admin] | Client Access Only |
-| [IT admin][docs-user-roles-it-admin]           | Admin              |
-| [Network admin][docs-user-roles-network-admin] | Read Only          |
-| [Auditor][docs-user-roles-auditor]             | Read Only          |
+| [IT admin][docs-user-roles-it-admin] | Admin |
+| [Network admin][docs-user-roles-network-admin] | Read Only |
+| [Auditor][docs-user-roles-auditor] | Read Only |
 
-Because a user's Tailscale PAM role is derived from their Tailscale role, changing that role in the Tailscale admin console updates their Tailscale PAM role automatically.
+由于用户的 Tailscale PAM 角色派生自其 Tailscale 角色，在 Tailscale 管理控制台中更改该角色会自动更新其 Tailscale PAM 角色。
 
-### Tailscale PAM roles
+### Tailscale PAM 角色
 
-The following provides information about the Tailscale PAM roles:
+以下是关于 Tailscale PAM 角色的说明：
 
-* **Admin**: This role grants full privileges for Tailscale PAM management, including user, group, and service account management as well as the ability to modify all configuration and settings.
-* **Client Access Only**: This role has no privileges for Tailscale PAM management. Assign this role to users who will only be clients of services in your tailnet. Access to services is managed through the tailnet policy file. Adding a user with this role to your tailnet is not enough to grant the user access to a service as a client. A user or service account must be referenced in a grant attached to the desired service for them to have access to the service.
-* **Read Only**: This role has read privileges for the Tailscale PAM configuration, but no write privileges.
+* **Admin**：此角色拥有 Tailscale PAM 管理的全部特权，包括用户、组和服务账户的管理，以及修改所有配置和设置的能力。
+* **Client Access Only**：此角色没有 Tailscale PAM 管理特权。把此角色分配给只作为 tailnet 中服务客户端的用户。对服务的访问通过 tailnet 策略文件管理。把拥有此角色的用户加入你的 tailnet，并不足以让该用户作为客户端访问服务。必须在挂接到目标服务的授权（grant）中引用该用户或服务账户，他们才能访问该服务。
+* **Read Only**：此角色对 Tailscale PAM 配置有读权限，但没有写权限。
 
-## Tailscale client
+## Tailscale 客户端
 
-The [Tailscale client][co-download] offers a modern graphical user interface (GUI) for end-users, streamlining the process of connecting to services and discovering available services. In a single action, users can securely access any service for which they have permission, including servers, databases, web applications, desktops, and Kubernetes clusters.
+[Tailscale 客户端][co-download]为最终用户提供现代化的图形用户界面（GUI），简化了连接服务和发现可用服务的过程。用户只需一步操作，即可安全访问自己有权限的任何服务，包括服务器、数据库、Web 应用、桌面和 Kubernetes 集群。
 
-## Browser client
+## 浏览器客户端
 
-The Tailscale PAM [Border0 web client](https://my.tailscale.com) provides users with secure access to services without installing the native Tailscale client on their desktop. The browser client is built on [WebAssembly][xt-webassembly] (Wasm). This clientless browser access provides quick and seamless access to your services.
+Tailscale PAM 的 [Border0 web 客户端](https://my.tailscale.com)让用户无需在桌面安装原生 Tailscale 客户端就能安全访问服务。浏览器客户端基于 [WebAssembly][xt-webassembly]（Wasm）构建。这种免客户端的浏览器访问方式能快速、无缝地访问你的服务。
 
-The key benefits of the browser client include:
+浏览器客户端的主要优势包括：
 
-* **No installation required**: Access your resources directly from the browser.
-* **User-friendly resource discovery**: A visual and intuitive interface helps users determine what they have access to.
-* **Web-based access to critical services**: Use SSH, databases (MySQL/Postgres), and even RDP directly in the browser.
-* **End-to-end encryption**: With Wasm-powered VPN technology, the browser client runs entirely in the browser, ensuring that connections remain fully encrypted and secure.
+* **无需安装**：直接从浏览器访问你的资源。
+* **易用的资源发现**：可视化、直观的界面帮助用户弄清自己可以访问什么。
+* **基于 Web 访问关键服务**：直接在浏览器中使用 SSH、数据库（MySQL/Postgres），甚至 RDP。
+* **端到端加密**：借助 Wasm 驱动的 VPN 技术，浏览器客户端完全在浏览器中运行，确保连接始终完全加密且安全。
 
-Users can connect to their infrastructure instantly, without requiring complex setup.
+用户可以立即连接到自己的基础设施，无需复杂设置。
 
 [co-download]: https://tailscale.com/download
 

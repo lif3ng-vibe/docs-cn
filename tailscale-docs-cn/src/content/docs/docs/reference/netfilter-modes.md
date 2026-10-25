@@ -1,84 +1,84 @@
 ---
-title: "Tailscale netfilter modes"
-description: "Information about the netfilter modes supported by Tailscale on Linux devices."
+title: "Tailscale netfilter 模式"
+description: "有关 Tailscale 在 Linux 设备上支持的 netfilter 模式的信息。"
 ---
 
-Last validated Dec 29, 2025
+最后验证于 Dec 29, 2025
 
-> **Note:**
+> **注意：**
 >
-> This topic applies only to Linux devices running Tailscale.
+> 本主题仅适用于运行 Tailscale 的 Linux 设备。
 
-[Netfilter][xt-netfilter] is a framework built into the Linux kernel that provides hooks at key points in the networking stack that let you inspect, modify, drop, and redirect packets as they flow through the system. It's the underlying engine for firewall tools like [iptables][xt-iptables] and [nftables][xt-nftables]. By default, when you install Tailscale on a Linux device, Tailscale creates its own firewall rules and configures them to be evaluated automatically. This approach lets Tailscale manage its required rules while preserving your ability to add custom rules when needed.
+[Netfilter][xt-netfilter] 是 Linux 内核内置的一个框架，它在网络栈的关键位置提供钩子（hook），让你可以在数据包流经系统时检查、修改、丢弃和重定向数据包。它是 [iptables][xt-iptables] 和 [nftables][xt-nftables] 等防火墙工具的底层引擎。默认情况下，在 Linux 设备上安装 Tailscale 时，Tailscale 会创建自己的防火墙规则，并将其配置为自动参与规则评估。这种方式让 Tailscale 管理自身所需的规则，同时保留了你在需要时添加自定义规则的能力。
 
-This default configuration (`on` mode) works for most deployments, but there are other Tailscale netfilter modes, including `nodivert` and `off`. You might consider using another mode and customizing Tailscale's netfilter behavior in the following scenarios:
+这一默认配置（`on` 模式）适用于大多数部署，但 Tailscale 还有其他 netfilter 模式，包括 `nodivert` 和 `off`。在以下场景中，你可以考虑改用其他模式并自定义 Tailscale 的 netfilter 行为：
 
-* You need exceptions to Tailscale's [CGNAT][xt-cgnat] traffic filtering. For example, you might need exceptions when other software conflicts with Tailscale's automatic rule management.
-* You need to prevent [`tailscaled`][docs-tailscaled] from periodically repositioning its rules to ensure they're evaluated first.
-* You need other firewall rules evaluated before Tailscale's rules.
+* 你需要为 Tailscale 的 [CGNAT][xt-cgnat] 流量过滤设置例外。例如，当其他软件与 Tailscale 的自动规则管理冲突时，可能就需要设置例外。
+* 你需要阻止 [`tailscaled`][docs-tailscaled] 周期性地重新调整其规则位置以确保规则被优先评估。
+* 你需要让其他防火墙规则先于 Tailscale 的规则接受评估。
 
-You can customize how Tailscale integrates with netfilter by setting the netfilter mode. There are several places where you can configure netfilter mode in Tailscale including the `tailscaled` configuration file's `netfilterMode` option and the [Tailscale CLI][docs-cli] `--netfilter-mode` flag (which applies to `tailscale up`, `tailscale login`, and `tailscale set`).
+你可以通过设置 netfilter 模式来自定义 Tailscale 与 netfilter 的集成方式。Tailscale 中有几处可以配置 netfilter 模式，包括 `tailscaled` 配置文件中的 `netfilterMode` 选项，以及 [Tailscale CLI][docs-cli] 的 `--netfilter-mode` 标志（适用于 `tailscale up`、`tailscale login` 和 `tailscale set`）。
 
-## Netfilter mode options
+## Netfilter 模式选项
 
-Tailscale has three netfilter mode options: `on`, `nodivert`, and `off`. These values are the same for the Tailscale CLI flag (`--netfilter-mode`) and the Tailscale daemon configuration file value (`netfilterMode`).
+Tailscale 有三种 netfilter 模式选项：`on`、`nodivert` 和 `off`。这些取值对 Tailscale CLI 标志（`--netfilter-mode`）和 Tailscale 守护进程配置文件取值（`netfilterMode`）是相同的。
 
-| Mode                      | Description                                                                                                                     |
+| 模式                      | 说明                                                                                                                            |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| [`on`][ar-on]             | (Default) Tailscale creates its firewall rules and ensures they're evaluated for relevant traffic.                              |
-| [`nodivert`][ar-nodivert] | Tailscale creates its firewall rules but does not activate them. Traffic does not automatically flow through Tailscale's rules. |
-| [`off`][ar-off]           | Tailscale does not create or manage any firewall rules. You must write all required rules yourself.                             |
+| [`on`][ar-on]             | （默认）Tailscale 创建自己的防火墙规则，并确保相关流量会评估这些规则。                                                          |
+| [`nodivert`][ar-nodivert] | Tailscale 创建防火墙规则但不激活它们。流量不会自动经过 Tailscale 的规则。                                                       |
+| [`off`][ar-off]           | Tailscale 不创建也不管理任何防火墙规则。你必须自行编写所有必需的规则。                                                          |
 
 ### `on`
 
-On is the default mode. When using `on` mode, Tailscale creates firewall rules and ensures they're evaluated for relevant traffic. How Tailscale integrates depends on which tool is in use:
+`on` 是默认模式。使用 `on` 模式时，Tailscale 会创建防火墙规则，并确保相关流量会评估这些规则。Tailscale 的集成方式取决于使用的工具：
 
-* **With iptables**: Tailscale creates custom chains and inserts [jump rules][xt-netfilter-jumps] at the start of the built-in chains (`INPUT` and `FORWARD` in the `filter` table, `POSTROUTING` in the `nat` table) to direct traffic through its rules.
-* **With nftables**: Tailscale creates its own table containing chains that are [registered directly at hooks][xt-netfilter-chains] with high priority, ensuring its rules are evaluated early.
+* **使用 iptables 时**：Tailscale 创建自定义链，并在内置链的开头（`filter` 表的 `INPUT` 和 `FORWARD`、`nat` 表的 `POSTROUTING`）插入[跳转规则（jump rule）][xt-netfilter-jumps]，引导流量经过它的规则。
+* **使用 nftables 时**：Tailscale 创建自己的表，其中的链以高优先级[直接注册到钩子上][xt-netfilter-chains]，确保其规则被尽早评估。
 
-Tailscale's rules enforce several security policies:
+Tailscale 的规则强制执行多项安全策略：
 
-* **Accept tailnet traffic**: Traffic arriving through the `tailscale0` interface is accepted.
-* **Prevent CGNAT spoofing**: Traffic from the CGNAT range (`100.64.0.0/10`) that does not arrive through the `tailscale0` interface is dropped. This prevents attackers from spoofing [Tailscale IP addresses][docs-100.x-addresses] on other interfaces.
-* **Accept Tailscale protocol traffic**: UDP traffic on Tailscale's listening port is accepted to maintain connectivity.
-* **Enable routing features**: Forwarded traffic is marked and accepted appropriately for [subnet routing][docs-subnets] and [exit node][docs-exit-nodes] functionality.
+* **接受 tailnet 流量**：通过 `tailscale0` 接口到达的流量会被接受。
+* **防止 CGNAT 欺骗**：来自 CGNAT 地址段（`100.64.0.0/10`）但不是通过 `tailscale0` 接口到达的流量会被丢弃。这可以防止攻击者在其他接口上伪造 [Tailscale IP 地址][docs-100.x-addresses]。
+* **接受 Tailscale 协议流量**：Tailscale 监听端口上的 UDP 流量会被接受，以维持连接。
+* **启用路由功能**：为[子网路由][docs-subnets]和[出口节点][docs-exit-nodes]功能适当地标记并接受转发流量。
 
-When set to `on`, Tailscale periodically verifies its rules remain positioned for early evaluation. If other software changes this, Tailscale restores its configuration.
+设置为 `on` 时，Tailscale 会定期验证其规则是否仍处于可被尽早评估的位置。如果其他软件改变了这一点，Tailscale 会恢复自己的配置。
 
 ### `nodivert`
 
-No divert (`nodivert`) mode creates Tailscale's firewall rules but does not activate them. The rules exist, but traffic doesn't automatically flow through them.
+no divert（`nodivert`）模式会创建 Tailscale 的防火墙规则，但不激活它们。规则存在，但流量不会自动经过这些规则。
 
-How this works depends on which tool is in use:
+具体行为取决于使用的工具：
 
-* **With iptables**: Tailscale creates its custom chains but does not insert jump rules into the built-in chains.
-* **With nftables**: Tailscale creates its table and chains but does not register them at hooks.
+* **使用 iptables 时**：Tailscale 会创建自定义链，但不向内置链插入跳转规则。
+* **使用 nftables 时**：Tailscale 会创建自己的表和链，但不把它们注册到钩子上。
 
-Use `nodivert` mode when you need to:
+在需要以下操作时使用 `nodivert` 模式：
 
-* Control the order of firewall rules so that your custom rules are evaluated before Tailscale's rules.
-* Add exceptions to Tailscale's default behavior of dropping [CGNAT][xt-cgnat] traffic that does not pass through the `tailscale0` interface.
-* Prevent [`tailscaled`][docs-tailscaled] from periodically repositioning its rules for early evaluation.
+* 控制防火墙规则的顺序，让你的自定义规则先于 Tailscale 的规则接受评估。
+* 为 Tailscale 丢弃不经过 `tailscale0` 接口的 [CGNAT][xt-cgnat] 流量的默认行为添加例外。
+* 阻止 [`tailscaled`][docs-tailscaled] 周期性地重新调整规则位置以抢先评估。
 
-> **Warning:**
+> **警告：**
 >
-> When using `nodivert` mode, Tailscale's rules exist but are not referenced. You must manually configure your firewall to direct traffic through Tailscale's rules. With iptables, this means adding jump rules to the built-in chains. With nftables, this means registering Tailscale's chains at the appropriate hooks.
+> 使用 `nodivert` 模式时，Tailscale 的规则虽然存在，但没有被引用。你必须手动配置防火墙，引导流量经过 Tailscale 的规则。对 iptables 来说，这意味着向内置链添加跳转规则；对 nftables 来说，这意味着把 Tailscale 的链注册到相应的钩子上。
 
-> **Note:**
+> **注意：**
 >
-> Before using `nodivert` to disable dropping of CGNAT traffic, consider if [disabling the CGNAT drop rule][docs-cgnat-interoperability] satisfies your needs.
+> 在使用 `nodivert` 来停用 CGNAT 流量丢弃之前，先考虑[停用 CGNAT 丢弃规则][docs-cgnat-interoperability]是否能满足你的需求。
 
 ### `off`
 
-Use the `off` mode to prevent Tailscale from making any changes to netfilter. There's usually not a good reason to set the netfilter mode to `off`. When using this mode, Tailscale makes no changes to `iptables` or `nftables`. You must write all required firewall rules yourself, including the rules that Tailscale would normally create in its chains.
+使用 `off` 模式可以阻止 Tailscale 对 netfilter 做任何更改。通常没有充分的理由把 netfilter 模式设为 `off`。使用此模式时，Tailscale 不会对 `iptables` 或 `nftables` 做任何更改。你必须自行编写所有必需的防火墙规则，包括 Tailscale 通常会在自己的链中创建的那些规则。
 
-> **Warning:**
+> **警告：**
 >
-> Only use `off` mode if you have a specific requirement that `nodivert` cannot address. With netfilter mode set to `off`, you are responsible for:
+> 只有在 `nodivert` 无法满足特定需求时才使用 `off` 模式。netfilter 模式设为 `off` 后，以下事项由你负责：
 >
-> * Accepting traffic on the `tailscale0` interface.
-> * Accepting UDP traffic on Tailscale's listening port.
-> * Configuring NAT rules for subnet routing and exit node functionality.
+> * 接受 `tailscale0` 接口上的流量。
+> * 接受 Tailscale 监听端口上的 UDP 流量。
+> * 为子网路由和出口节点功能配置 NAT 规则。
 
 [ar-nodivert]: #nodivert
 

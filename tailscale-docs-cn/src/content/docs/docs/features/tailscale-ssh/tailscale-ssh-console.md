@@ -1,119 +1,108 @@
 ---
 title: "Tailscale SSH Console"
-description: "Tailscale SSH Console lets you establish a [Tailscale SSH][docs-tailscale-ssh] session in your browser. Use this feature to create a browser-based SSH session from the admin console to a node in your "
+description: "Tailscale SSH Console 让你可以在浏览器中建立 [Tailscale SSH][docs-tailscale-ssh] 会话。使用此功能可以从管理控制台创建一条到 tailnet 中节点的基于浏览器的 SSH 会话。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale SSH Console lets you establish a [Tailscale SSH][docs-tailscale-ssh] session in your browser. Use
-this feature to create a browser-based SSH session from the admin console to a node in your tailnet.
+Tailscale SSH Console 让你可以在浏览器中建立 [Tailscale SSH][docs-tailscale-ssh] 会话。使用此功能可以从管理控制台创建一条到 tailnet 中节点的基于浏览器的 SSH 会话。
 
-> **Note:** Tailscale SSH Console  is currently in beta.
+> **注意：** Tailscale SSH Console 目前处于 beta 阶段。
 
-The Tailscale SSH Console feature is available on all plans.
+Tailscale SSH Console 功能适用于所有套餐。
 
-## How it works
+## 工作原理
 
-Using [WebAssembly][xt-webassembly] (also known as Wasm), Tailscale SSH Console runs in the browser: the Tailscale client code, WireGuard®, a userspace networking stack, and an SSH client. When you establish a session, Tailscale generates an [ephemeral][docs-ephemeral-nodes] auth key with your identity, and then uses the auth key to create a new ephemeral node for your browser session. The ephemeral node can be used as a source for Tailscale SSH, and is automatically removed when the browser session is terminated.
+借助 [WebAssembly][xt-webassembly]（也称 Wasm），Tailscale SSH Console 在浏览器中运行：包括 Tailscale 客户端代码、WireGuard®、一个用户态网络栈和一个 SSH 客户端。建立会话时，Tailscale 会生成一个带有你身份的[临时][docs-ephemeral-nodes]认证密钥，然后使用该认证密钥为你的浏览器会话创建一个新的临时节点。该临时节点可以作为 Tailscale SSH 的来源，并在浏览器会话终止时被自动移除。
 
-The ephemeral node is named with a format like `tailscale-ssh-console-hostname-nnnnn` (explained in [more detail][ar-ephemeral-tailscale-ssh-console-node]).
+该临时节点的命名格式类似于 `tailscale-ssh-console-hostname-nnnnn`（[更详细的说明][ar-ephemeral-tailscale-ssh-console-node]见下文）。
 
-Once the ephemeral node is authorized, the auth key used to authorize the node is revoked. The auth key will appear in the [Keys](https://console.tailscale.com/admin/settings/keys) in the admin console, and it will have the **SSH Console** badge. The auth key's creation and revocation events will appear in the [configuration audit logs][docs-audit-logging].
+临时节点获得授权后，用于授权该节点的认证密钥会被撤销。该认证密钥会出现在管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面中，并带有 **SSH Console** 徽章。认证密钥的创建和撤销事件会出现在[配置审计日志][docs-audit-logging]中。
 
-With Tailscale SSH Console, your browser is a node in your tailnet. Like other connections in Tailscale, Tailscale Console SSH session is end-to-end encrypted using WireGuard. The node's WireGuard key for the SSH client is stored in memory in the browser, and is available for the length of the browser session. Tailscale cannot access nor read your session traffic. Note that traffic is relayed over our [encrypted TCP relays (DERP)][docs-derp-servers], but the DERP servers cannot decrypt your traffic.
+使用 Tailscale SSH Console 时，你的浏览器就是 tailnet 中的一个节点。与 Tailscale 中的其他连接一样，Tailscale Console SSH 会话通过 WireGuard 进行端到端加密。SSH 客户端所用节点的 WireGuard 密钥存储在浏览器的内存中，在浏览器会话期间可用。Tailscale 无法访问或读取你的会话流量。注意，流量会经由我们的[加密 TCP 中继（DERP）][docs-derp-servers]转发，但 DERP 服务器无法解密你的流量。
 
-## Prerequisites
+## 前提条件
 
-* You need to be an [Owner, Admin, IT admin, or Network admin](/docs/reference/user-roles) of a
-  tailnet to use the Tailscale SSH Console feature.
-* The node that you want to connect to needs to be [configured for Tailscale SSH][docs-tailscale-ssh].
-* There needs to be a [Tailscale SSH policy][docs-policy-syntax-ssh] rule that enables access to the node on port `22`. Access control policies can be written only for nodes that you own or [tagged][docs-tags] nodes.
-* If you are using [Device Posture Conditions][docs-device-posture-device-posture-conditions] to restrict SSH access, you will need to make sure that connections from Tailscale SSH console are being permitted. You can find the values of [posture attributes][docs-device-posture-device-posture-attributes] for the SSH client ephemeral node while it's running on the **Machine Details** page. Since the SSH Console is running in a browser, its `node:os` attribute has the value of `js`.
+* 你必须是 tailnet 的 [Owner、Admin、IT admin 或 Network admin](/docs/reference/user-roles) 才能使用 Tailscale SSH Console 功能。
+* 你要连接的节点需要已[配置 Tailscale SSH][docs-tailscale-ssh]。
+* 需要存在一条 [Tailscale SSH 策略][docs-policy-syntax-ssh]规则，允许在 `22` 端口访问该节点。访问控制策略只能针对你拥有的节点或[带标签][docs-tags]的节点编写。
+* 如果你使用[设备态势条件][docs-device-posture-device-posture-conditions]来限制 SSH 访问，需要确保来自 Tailscale SSH Console 的连接被允许。在 SSH 客户端临时节点运行期间，你可以在 **Machine Details**（机器详情）页面查看其[态势属性][docs-device-posture-device-posture-attributes]的值。由于 SSH Console 运行在浏览器中，其 `node:os` 属性的值为 `js`。
 
-## Creating a Tailscale SSH Console session
+## 创建 Tailscale SSH Console 会话
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
 
-2. Locate the node that you want to connect to. You can search for the node by machine name, owner, whether it has Tailscale SSH enabled, and the like. For more information, refer to [Filter devices in the admin console][docs-filter-devices].
+2. 找到你要连接的节点。你可以按机器名称、所有者、是否启用了 Tailscale SSH 等条件搜索节点。更多信息请参阅[在管理控制台中筛选设备][docs-filter-devices]。
 
-3. Select the  menu at the far right of the node and select **SSH to machine**. Alternatively, you can hover over
-   the node and select **SSH**.
+3. 选择节点最右侧的菜单，然后选择 **SSH to machine**（SSH 到机器）。也可以将鼠标悬停在该节点上并选择 **SSH**。
 
-   *（图：The Machine page of the admin console filtered to a specific machine. An SSH option is available for the example node.）*
+   *（图：管理控制台的 Machines 页面，筛选出特定机器。示例节点显示了 SSH 选项。）*
 
-   If you can't find the **SSH** option, then either the node isn't configured for Tailscale SSH, or access control policies do not permit you to use Tailscale SSH for the node.
+   如果找不到 **SSH** 选项，说明该节点未配置 Tailscale SSH，或者访问控制策略不允许你对该节点使用 Tailscale SSH。
 
-4. In the new window that pops up, select the local username that you want to connect as. If there is no dropdown, type the local username in the text box.
+4. 在弹出的新窗口中，选择你要用于连接的本地用户名。如果没有下拉菜单，请在文本框中输入本地用户名。
 
-   *（图：SSH to machine dialog. It features a select menu for 'Local username', a Cancel button, and a SSH button.）*
+   *（图：SSH to machine 对话框，包含"Local username"选择菜单、Cancel 按钮和 SSH 按钮。）*
 
-   Any local usernames listed in the dropdown are generated from the users explicitly listed in the [SSH][docs-policy-syntax-ssh] section
-   of the [tailnet policy file][docs-acls]. There might be more users than are listed in the dropdown. For example, if the SSH policy specifies
-   `autogroup:nonroot`, any non-root users recognized locally would work. In that case, you can select **Other** as the value for
-   **Local username**, and enter the local username in the text box that appears when you select **Other**.
+   下拉菜单中列出的本地用户名是根据 [tailnet 策略文件][docs-acls] 的 [SSH][docs-policy-syntax-ssh] 分区中明确列出的用户生成的。实际可用的用户可能比下拉菜单中列出的更多。例如，如果 SSH 策略指定了 `autogroup:nonroot`，那么本地识别的任何非 root 用户都可以使用。在这种情况下，你可以选择 **Other**（其他）作为 **Local username** 的值，并在选择 **Other** 后出现的文本框中输入本地用户名。
 
-5. Select **SSH**.
+5. 选择 **SSH**。
 
-6. In the authentication window that pops up, follow the prompts to re-authenticate. You will need to re-authenticate every new Tailscale SSH Console session.
+6. 在弹出的身份验证窗口中，按照提示重新进行身份验证。每个新的 Tailscale SSH Console 会话都需要重新验证。
 
-   *（图：The re-authentication window.）*
+   *（图：重新身份验证窗口。）*
 
-7. Assuming your re-authentication is successful, a new browser window with the title **Tailscale — SSH to *Machine name***
-   opens. You are now in the Tailscale SSH Console session.
+7. 如果重新验证成功，会打开一个标题为 **Tailscale — SSH to *Machine name*** 的新浏览器窗口。此时你已进入 Tailscale SSH Console 会话。
 
-If you are still in the browser session and SSH to another device, the browser will re-use this same Tailscale SSH Console session.
+如果你仍在该浏览器会话中 SSH 到另一台设备，浏览器会复用同一个 Tailscale SSH Console 会话。
 
-## Ephemeral Tailscale SSH Console node
+## 临时 Tailscale SSH Console 节点
 
-When you create a Tailscale SSH Console session, Tailscale creates a new [ephemeral][docs-ephemeral-nodes] node in your tailnet. You can find it in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console. This node does not require manual authorization—the authorization is assumed because an admin
-created the session. The node is owned by the user that created the session and has a machine name of the form:
+创建 Tailscale SSH Console 会话时，Tailscale 会在你的 tailnet 中创建一个新的[临时][docs-ephemeral-nodes]节点。你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面找到它。此节点无需手动授权——因为会话由管理员创建，所以视为已获得授权。该节点归属于创建会话的用户，机器名称的格式为：
 
-  `tailscale-ssh-console-hostname-nnnnn`
+  `tailscale-ssh-console-hostname-nnnnn`
 
-where:
+其中：
 
-* `hostname` is the "email-ish" name of the user with disallowed characters replaced by dashes. For most users,
-  the hostname is based on an email address; the user `alice@example.com` has a Tailscale SSH Console hostname of
-  `alice-example-com`). For users that sign in with GitHub, the hostname is of the form `username-github`.
-* `nnnnn` is a randomly assigned string.
+* `hostname` 是用户的"类邮箱"名称，其中不允许的字符被替换为连字符。对大多数用户来说，主机名基于电子邮件地址；例如用户 `alice@example.com` 的 Tailscale SSH Console 主机名是 `alice-example-com`。对于使用 GitHub 登录的用户，主机名格式为 `username-github`。
+* `nnnnn` 是随机分配的字符串。
 
-For example, if the user `alice@example.com` creates a Tailscale SSH Console session, the ephemeral node name would look like `tailscale-ssh-console-alice-example-com-12345abcde`.
+例如，如果用户 `alice@example.com` 创建了 Tailscale SSH Console 会话，临时节点的名称将类似于 `tailscale-ssh-console-alice-example-com-12345abcde`。
 
-This node also has the **Ephemeral** and **SSH Console** badges. The **SSH Console** badge indicates the node is a browser running Tailscale SSH Console. Because it is an ephemeral node, the node will be automatically removed shortly after the session is terminated.
+该节点还带有 **Ephemeral** 和 **SSH Console** 徽章。**SSH Console** 徽章表示该节点是运行 Tailscale SSH Console 的浏览器。由于它是临时节点，会话终止后不久就会被自动移除。
 
-## Ending a Tailscale SSH Console session
+## 结束 Tailscale SSH Console 会话
 
-There are multiple ways to end a Tailscale SSH Console session.
+结束 Tailscale SSH Console 会话有多种方式。
 
-* Within the **Tailscale — SSH** browser window, you can end the session by running the `exit` command or closing the window.
+* 在 **Tailscale — SSH** 浏览器窗口中，你可以通过运行 `exit` 命令或关闭窗口来结束会话。
 
-* If you reload or end the browser session that you used to create the Tailscale SSH Console session, the Tailscale SSH Console will end.
+* 如果你重新加载或结束用于创建 Tailscale SSH Console 会话的浏览器会话，Tailscale SSH Console 也会结束。
 
-* A Tailscale SSH Console session will end automatically if access control policies are changed to no longer allow the user with access.
+* 如果访问控制策略被修改为不再允许该用户访问，Tailscale SSH Console 会话会自动结束。
 
-## Audit logging of Tailscale SSH Console sessions
+## Tailscale SSH Console 会话的审计日志
 
-When a user starts a Tailscale SSH Console session, the creation of the session will appear in
-[configuration audit logs][docs-audit-logging]. This includes the following events:
+当用户启动 Tailscale SSH Console 会话时，会话的创建会出现在[配置审计日志][docs-audit-logging]中。这包括以下事件：
 
-* Creating an auth key
-* Creating a node and naming it in the `tailscale-ssh-console-hostname-nnnnn` format
-* Authorizing the node using the auth key
-* Revoking the auth key
-* Updating the key expiry time for the node
-* Logging in to the node
+* 创建认证密钥
+* 创建节点并按 `tailscale-ssh-console-hostname-nnnnn` 格式命名
+* 使用该认证密钥授权节点
+* 撤销认证密钥
+* 更新节点的密钥过期时间
+* 登录该节点
 
-When the Tailscale Console SSH session is terminated, the node deletion will appear as an event in the configuration audit log.
+Tailscale Console SSH 会话终止后，节点的删除会作为事件出现在配置审计日志中。
 
-For each of the logged events, the log entry will show who performed the action, and when the action occurred.
+对于每个被记录的事件，日志条目会显示执行操作的人以及操作发生的时间。
 
-## Limitations
+## 局限性
 
-* Tailscale SSH Console sessions must be initiated from the Tailscale admin console—you cannot generate a standalone SSH session.
-* Only [Owner, Admin, IT admin, or Network admin](/docs/reference/user-roles) users of a tailnet can use Tailscale SSH Console.
-* All Tailscale SSH Console traffic uses [DERP relay servers][docs-derp-servers].
+* Tailscale SSH Console 会话必须从 Tailscale 管理控制台发起——你无法创建独立的 SSH 会话。
+* 只有 tailnet 的 [Owner、Admin、IT admin 或 Network admin](/docs/reference/user-roles) 用户才能使用 Tailscale SSH Console。
+* 所有 Tailscale SSH Console 流量都经由 [DERP 中继服务器][docs-derp-servers]。
 
-[ar-ephemeral-tailscale-ssh-console-node]: #ephemeral-tailscale-ssh-console-node
+[ar-ephemeral-tailscale-ssh-console-node]: #临时-tailscale-ssh-console-节点
 
 [docs-policy-syntax-ssh]: /docs/reference/syntax/policy-file#ssh
 

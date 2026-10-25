@@ -1,91 +1,91 @@
 ---
-title: "Use exit nodes"
-description: "[Exit Nodes | Tailscale Explained (video)](https://www.youtube.com/watch?v=Ad7D2pkFNdA)"
+title: "使用出口节点"
+description: "[Exit Nodes | Tailscale Explained（视频）](https://www.youtube.com/watch?v=Ad7D2pkFNdA)"
 ---
 
-Last validated Sep 19, 2025
+最后验证于 Sep 19, 2025
 
-> **Note:**
+> **注意：**
 >
-> This topic is a quick guide for configuring exit nodes in a tailnet. For more detailed information, refer to [Exit nodes][docs-exit-nodes].
+> 本主题是在 tailnet 中配置出口节点的快速指南。更详细的信息参见[出口节点][docs-exit-nodes]。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景说明与示例。
 
-[Exit Nodes | Tailscale Explained (video)](https://www.youtube.com/watch?v=Ad7D2pkFNdA)
+[Exit Nodes | Tailscale Explained（视频）](https://www.youtube.com/watch?v=Ad7D2pkFNdA)
 
-## Advertise a device as an exit node
+## 将设备宣告为出口节点
 
-To use a tailnet device as an exit node, select an OS and complete the steps.
+要将 tailnet 设备用作出口节点，选择一个操作系统并完成相应步骤。
 
 #### Linux
 
-1. [Download and install][docs-install-linux] the Tailscale client.
+1. [下载并安装][docs-install-linux] Tailscale 客户端。
 
-2. Open a terminal session on the device and enable IP forwarding.
+2. 在设备上打开一个终端会话，并启用 IP 转发。
 
-   \[Missing snippet: EnableIPForwarding.mdx]
+   \[缺少代码片段：EnableIPForwarding.mdx]
 
-3. In the terminal session, advertise the device as an exit node.
+3. 在终端会话中，将设备宣告为出口节点。
 
    ```shell
    sudo tailscale set --advertise-exit-node
    ```
 
-4. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+4. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
 
-5. Locate the device in the list. It should display the **Exit Node** badge.
+5. 在列表中找到该设备。它应显示 **Exit Node** 徽标。
 
-6. Select the  menu, then select **Edit exit node**.
+6. 选择该设备的菜单，然后选择 **Edit exit node**。
 
-7. Check the **Use as exit node** box, then select **Save**.
+7. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
 #### macOS
 
-1. [Download and install][docs-install-macos] the Tailscale client.
-2. Open the Tailscale client installed on the device, select **Exit Node**, then **Run Exit Node**.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Exit Node** badge.
-4. Select the  menu, then select **Edit exit node**.
-5. Check the **Use as exit node** box, then select **Save**.
+1. [下载并安装][docs-install-macos] Tailscale 客户端。
+2. 打开设备上安装的 Tailscale 客户端，选择 **Exit Node**，然后选择 **Run Exit Node**。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Exit Node** 徽标。
+4. 选择该设备的菜单，然后选择 **Edit exit node**。
+5. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
 #### Windows
 
-1. [Download and install][docs-install-windows] the Tailscale client.
-2. Open the Tailscale client installed on the device, select **Exit Node**, then **Run as exit node**.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Exit Node** badge.
-4. Select the  menu, then select **Edit exit node**.
-5. Check the **Use as exit node** box, then select **Save**.
+1. [下载并安装][docs-install-windows] Tailscale 客户端。
+2. 打开设备上安装的 Tailscale 客户端，选择 **Exit Node**，然后选择 **Run as exit node**。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Exit Node** 徽标。
+4. 选择该设备的菜单，然后选择 **Edit exit node**。
+5. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
 #### tvOS
 
-1. [Download and install][docs-install-tvos] the Tailscale client.
-2. Open the Tailscale app on your Apple TV, go to the **Exit Node** section, select **None**, then **Run Exit Node**, and confirm the change.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Exit Node** badge.
-4. Select the  menu, then select **Edit exit node**.
-5. Check the **Use as exit node** box, then select **Save**.
+1. [下载并安装][docs-install-tvos] Tailscale 客户端。
+2. 在 Apple TV 上打开 Tailscale 应用，进入 **Exit Node** 区域，依次选择 **None**、**Run Exit Node**，然后确认更改。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Exit Node** 徽标。
+4. 选择该设备的菜单，然后选择 **Edit exit node**。
+5. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
 #### iOS
 
-1. [Download and install][docs-install-ios] the Tailscale client.
-2. Open the Tailscale app on your iPhone, go to the **Exit Node** section, select **Run Exit Node**, and confirm the change.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Exit Node** badge.
-4. Select the  menu, then select **Edit exit node**.
-5. Check the **Use as exit node** box, then select **Save**.
+1. [下载并安装][docs-install-ios] Tailscale 客户端。
+2. 在 iPhone 上打开 Tailscale 应用，进入 **Exit Node** 区域，选择 **Run Exit Node**，然后确认更改。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Exit Node** 徽标。
+4. 选择该设备的菜单，然后选择 **Edit exit node**。
+5. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
 #### Android
 
-1. [Download and install][docs-install-android] the Tailscale client.
-2. Open the Tailscale app on the device, tap **Exit Node**, then **Run as exit node**.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Exit Node** badge.
-4. Select the  menu, then select **Edit exit node**.
-5. Check the **Use as exit node** box, then select **Save**.
+1. [下载并安装][docs-install-android] Tailscale 客户端。
+2. 在设备上打开 Tailscale 应用，依次点按 **Exit Node**、**Run as exit node**。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Exit Node** 徽标。
+4. 选择该设备的菜单，然后选择 **Edit exit node**。
+5. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
-## Grant access to use an exit node
+## 授予使用出口节点的权限
 
-By default, any user in your tailnet can use a configured exit node. You don't need to add any grants or ACLs.
+默认情况下，tailnet 中的任何用户都可以使用已配置的出口节点，你无需添加任何授权（grant）或 ACL。
 
-This changes if you customize your tailnet's [access control policy][docs-acls]. For example, suppose you replace the default policy with one that only lets your developers access a few internal servers:
+如果你自定义了 tailnet 的[访问控制策略][docs-acls]，情况就会改变。例如，假设你用一个只允许开发人员访问几台内部服务器的策略替换默认策略：
 
 ```json
 {
@@ -99,47 +99,47 @@ This changes if you customize your tailnet's [access control policy][docs-acls].
 }
 ```
 
-Your developers can still reach the production servers, but they can no longer use an exit node. The policy never grants access to [`autogroup:internet`][docs-grants-allow-exit-nodes], so Tailscale has no permission to route internet traffic through the exit node.
+你的开发人员仍然可以访问生产服务器，但再也无法使用出口节点。该策略从未向 [`autogroup:internet`][docs-grants-allow-exit-nodes] 授予访问权限，因此 Tailscale 无权将互联网流量经由出口节点路由。
 
-A common point of confusion is to add the exit node device itself as the destination. That only permits connections to the exit node, such as SSH. It does not permit using the device as an internet gateway.
+一个常见的困惑是把出口节点设备本身添加为目标（destination）。那只会允许连接到出口节点（例如 SSH），并不允许把这台设备当作互联网网关使用。
 
-To permit exit node use, add a [grant][docs-grants] or ACL whose `dst` is `autogroup:internet`. This grants permission to route internet traffic through any configured exit node rather than to connect to the exit node device itself.
+要允许使用出口节点，请添加一条 `dst` 为 `autogroup:internet` 的[授权][docs-grants]或 ACL。这授予的是把互联网流量经由任意已配置出口节点路由的权限，而不是连接到出口节点设备本身的权限。
 
-## Use an exit node
+## 使用出口节点
 
-Each device must enable the exit node separately. The instructions for enabling an exit node vary depending on the device's operating system.
+每台设备都必须单独启用出口节点。启用出口节点的步骤因设备操作系统而异。
 
 #### Android
 
-1. Open the Tailscale app on the Android device and go to the **Exit Node** section.
-2. Select the exit node that you want to use. If you want to allow direct access to your local network when routing traffic through an exit node, toggle **Allow LAN access** on.
-3. On the app home screen, confirm that the selected device displays in the **Exit Node** section. When an exit node is being used for the device, the section will turn blue.
+1. 在 Android 设备上打开 Tailscale 应用，进入 **Exit Node** 区域。
+2. 选择你想使用的出口节点。如果你希望在流量经由出口节点路由时允许直接访问本地网络，请打开 **Allow LAN access** 开关。
+3. 在应用主屏幕上，确认所选设备显示在 **Exit Node** 区域。当设备正在使用某个出口节点时，该区域会变成蓝色。
 
-To stop a device from using an exit node, go to the **Exit Node** section and select **None**.
+要让设备停止使用出口节点，进入 **Exit Node** 区域并选择 **None**。
 
 #### iOS
 
-You can use an exit node from the top of the screen.
+你可以从屏幕顶部使用出口节点。
 
-Select the exit node that you want to use. To stop using an exit node, disable the one you currently use or select **None** from the **Exit Node** list.
+选择你想使用的出口节点。要停止使用出口节点，禁用当前使用的节点，或在 **Exit Node** 列表中选择 **None**。
 
 #### Linux
 
-Run `tailscale set` with the `--exit-node=` flag, passing the Tailscale `100.x.y.z` IP address of the exit node.
+运行带 `--exit-node=` 标志的 `tailscale set`，传入出口节点的 Tailscale `100.x.y.z` IP 地址。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip>
 ```
 
-You can find the IP address for the device from the admin console or by running `tailscale status`.
+你可以在管理控制台中找到设备的 IP 地址，也可以运行 `tailscale status` 查看。
 
-Alternatively, set `--exit-node-allow-lan-access` to `true` to allow direct access to your local network when routing traffic through an exit node.
+另外，可将 `--exit-node-allow-lan-access` 设为 `true`，以便在流量经由出口节点路由时允许直接访问本地网络。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip> --exit-node-allow-lan-access=true
 ```
 
-To stop using an exit node, run the `--exit-node` flag without passing in an IP address.
+要停止使用出口节点，运行 `--exit-node` 标志但不传入 IP 地址。
 
 ```shell
 sudo tailscale set --exit-node=
@@ -147,21 +147,21 @@ sudo tailscale set --exit-node=
 
 #### macOS
 
-You can use an exit node from the menu bar. Open the Tailscale menu and select **Exit Nodes**. (If you are running a Tailscale client version earlier than **v1.60.0**, the menu string to select is **Use exit node**.) Then, select the machine name of the exit node to use.
+你可以从菜单栏使用出口节点。打开 Tailscale 菜单并选择 **Exit Nodes**。（如果你运行的 Tailscale 客户端版本低于 **v1.60.0**，要选择的菜单项是 **Use exit node**。）然后选择要使用的出口节点的机器名。
 
-To allow direct access to your local network when routing traffic through an exit node, select **Allow Local Network Access**.
+要在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow Local Network Access**。
 
 #### tvOS
 
-To allow your Apple TV to use another device in your tailnet as an exit node, refer to [Install Tailscale on an Apple TV][docs-appletv-use-exit-node].
+要让 Apple TV 使用 tailnet 中的另一台设备作为出口节点，参见[在 Apple TV 上安装 Tailscale][docs-appletv-use-exit-node]。
 
 #### Windows
 
-You can use an exit node from the system tray menu. Select the Tailscale icon, then **Use exit node**. Next, select the machine name of the exit node to use.
+你可以从系统托盘菜单使用出口节点。选择 Tailscale 图标，然后选择 **Use exit node**。接着选择要使用的出口节点的机器名。
 
-If you want to allow direct access to your local network when routing traffic through an exit node, select **Allow local network access**.
+如果你希望在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow local network access**。
 
-You can turn off routing through an exit node by selecting **None** from the **Exit Node** drop-down.
+要关闭经由出口节点路由，在 **Exit Node** 下拉框中选择 **None**。
 
 [docs-acls]: /docs/features/access-control/acls
 

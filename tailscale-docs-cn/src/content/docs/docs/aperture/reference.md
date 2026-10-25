@@ -1,31 +1,31 @@
 ---
-title: "Aperture reference"
-description: "Reference documentation for Aperture interfaces, configuration, provider compatibility, CLI, and integration recipes."
+title: "Aperture 参考"
+description: "Aperture 接口、配置、提供商兼容性、CLI 和集成配方的参考文档。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-The following topics contain reference documentation for Aperture configuration and tools. For step-by-step instructions, refer to the [Aperture how-to guides][docs-how-to]. For troubleshooting, visit [troubleshooting Aperture][docs-troubleshooting].
+以下主题包含 Aperture 配置和工具的参考文档。分步操作说明请参阅 [Aperture 操作指南][docs-how-to]。故障排查请前往 [Aperture 故障排除][docs-troubleshooting]。
 
-[**Aperture Chat interface reference**](/docs/aperture/reference/chat) — Reference for the Aperture Chat composer, projects, connectors, skills, personal sessions, usage, and quotas.
+[**Aperture Chat 界面参考**](/docs/aperture/reference/chat)——Aperture Chat 的编写器、项目、连接器、技能、个人会话、用量和配额参考。
 
-[**Aperture admin dashboard reference**](/docs/aperture/reference/dashboard-admin) — Reference for the pages, controls, and configuration editors available in the Aperture admin dashboard.
+[**Aperture 管理仪表板参考**](/docs/aperture/reference/dashboard-admin)——Aperture 管理仪表板中可用页面、控件和配置编辑器的参考。
 
-[**Sandbox reference**](/docs/aperture/reference/sandbox) — Reference for Aperture chat sandbox tools, parameters, size limits, timeouts, file system layout, and error messages.
+[**沙箱（Sandbox）参考**](/docs/aperture/reference/sandbox)——Aperture 聊天沙箱的工具、参数、大小限制、超时、文件系统布局和错误消息参考。
 
-[**Aperture configuration reference**](/docs/aperture/configuration) — Reference for Aperture configuration fields, defaults, and validation errors.
+[**Aperture 配置参考**](/docs/aperture/configuration)——Aperture 配置字段、默认值和校验错误参考。
 
-[**Provider configuration**](/docs/aperture/provider-compatibility) — Reference for Aperture provider compatibility flags, authorization, credential sources, custom headers, and cost estimates.
+[**提供商配置**](/docs/aperture/provider-compatibility)——Aperture 提供商兼容性标志、认证方式、凭证来源、自定义 header 和成本估算的参考。
 
-[**Supported providers and clients**](/docs/aperture/reference/supported-providers-clients) — Compare Aperture provider and client compatibility, API formats, requirements, and setup options.
+[**受支持的提供商和客户端**](/docs/aperture/reference/supported-providers-clients)——对比 Aperture 提供商和客户端的兼容性、API 格式、要求和设置选项。
 
-[**Aperture grants vs. tailnet policy file grants**](/docs/aperture/reference/aperture-vs-tailnet-grants) — How Aperture configuration grants differ from tailnet policy file grants, why the \`dst\` field is required in the policy file, and how to convert grants between the two.
+[**Aperture 授权与 tailnet 策略文件授权对比**](/docs/aperture/reference/aperture-vs-tailnet-grants)——Aperture 配置授权与 tailnet 策略文件授权的差异、为什么策略文件中必须使用 `dst` 字段，以及如何在两者之间转换授权。
 
-[**Aperture connectors reference**](/docs/aperture/connectors/reference) — Complete reference for Aperture connectors, including field definitions, authentication types, MCP and HTTP protocol behavior, grants, dynamic registration through the legacy MCP section, and migration from the deprecated MCP servers syntax.
+[**Aperture 连接器参考**](/docs/aperture/connectors/reference)——Aperture 连接器的完整参考，包括字段定义、认证类型、MCP 和 HTTP 协议行为、授权、经由旧版 MCP 部分的动态注册，以及从已弃用的 MCP servers 语法的迁移。
 
-[**Aperture CLI**](/docs/aperture/cli) — Use the Aperture CLI to discover, configure, and run coding agents that connect through your Aperture gateway.
+[**Aperture CLI**](/docs/aperture/cli)——使用 Aperture CLI 发现、配置并运行经由你的 Aperture 网关连接的编码 agent。
 
-[**Aperture recipes**](/docs/aperture/reference/recipes) — Find, use, and contribute integration guides and examples in the open source aperture-recipes repository.
+[**Aperture 配方（recipes）**](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
 
 [docs-how-to]: /docs/aperture/how-to
 

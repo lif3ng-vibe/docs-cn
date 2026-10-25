@@ -1,62 +1,62 @@
 ---
-title: "Configure zero-retention mode"
-description: "By default, Aperture captures request and response bodies so you can browse them in the dashboard. This topic uses [retention settings][docs-aperture-retention] to prevent Aperture from storing proxy "
+title: "配置零保留模式"
+description: "默认情况下，Aperture 会捕获请求体和响应体，以便你在仪表盘中浏览。本主题使用[保留设置][docs-aperture-retention]来阻止 Aperture 存储代理"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
 \[Missing snippet: aperture\_terms.mdx]
 
-By default, Aperture captures request and response bodies so you can browse them in the dashboard. This topic uses [retention settings][docs-aperture-retention] to prevent Aperture from storing proxy capture content. You do not need to change code. The setting does not delete Aperture Chat history or stop most configured hooks from sending content. If you also exclude tool data, tool-call-triggered hooks do not fire.
+默认情况下，Aperture 会捕获请求体和响应体，以便你在仪表盘中浏览。本主题使用[保留设置][docs-aperture-retention]来阻止 Aperture 存储代理捕获内容。你无需修改代码。该设置不会删除 Aperture Chat 的历史记录，也不会阻止大多数已配置的钩子发送内容。如果你同时排除工具数据，由工具调用触发的钩子就不会触发。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-aperture-get-started] with at least one provider configured.
-* Admin access to the [Aperture configuration][docs-aperture-configuration], including either the **Data Export** settings page at `/admin/settings/database` or the raw configuration editor at `/admin/settings/config`.
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-aperture-get-started]。
+* 对 [Aperture 配置][docs-aperture-configuration]的管理员访问权限，包括 `/admin/settings/database` 的 **Data Export** 设置页面，或 `/admin/settings/config` 的原始配置编辑器。
 
-The configuration is written in HuJSON, which is JSON that also permits comments and trailing commas. Standard JSON is valid HuJSON.
+配置使用 HuJSON 编写，它是允许注释和尾随逗号的 JSON。标准 JSON 是合法的 HuJSON。
 
-## How retention works
+## 保留机制的工作原理
 
-Aperture removes captured content after its configured retention window. Set these fields in the top-level [`database.retention`][docs-aperture-retention] block:
+Aperture 会在配置的保留窗口之后移除捕获的内容。在顶层的 [`database.retention`][docs-aperture-retention] 块中设置以下字段：
 
-* `duration` sets the retention window. The special value `"0"` enables zero data retention. For non-zero values, the minimum is one hour and the maximum is 3650 days (10 years).
-* `purge` lists which categories of captured data Aperture removes. The name of this configuration field is `purge`, but removing captured content does not delete request metadata or usage metrics.
-* `require_export` optionally requires successful S3 export before Aperture removes local captured content.
+* `duration` 设置保留窗口。特殊值 `"0"` 表示启用零数据保留。非零值最小为一小时，最大为 3650 天（10 年）。
+* `purge` 列出 Aperture 移除哪些类别的捕获数据。该配置字段的名称是 `purge`，但移除捕获内容并不会删除请求元数据或使用指标。
+* `require_export` 可选择要求在 Aperture 移除本地捕获内容之前，必须先成功导出到 S3。
 
-These settings apply to stored proxy captures. *Captured content* includes request and response bodies, headers, and raw HTTP bytes. *Tool data* includes tool names, parameters, and counts. Aperture keeps request and session metadata and usage metrics (identity, model, token counts, and estimated cost). Capture retention does not delete Aperture Chat conversation history. Guardrails and `entire_request` hooks can still receive the payload fields that their grants allow. If zero retention also excludes tool data, Aperture skips tool extraction, so `tool_call_entire_request` hooks do not fire.
+这些设置适用于存储的代理捕获。*捕获内容*包括请求体、响应体、头部和原始 HTTP 字节。*工具数据*包括工具名称、参数和调用次数。Aperture 会保留请求与会话元数据以及使用指标（身份、模型、token 数和估算成本）。捕获保留不会删除 Aperture Chat 的会话历史。护栏和 `entire_request` 钩子仍能收到其授权允许的载荷字段。如果零保留同时排除工具数据，Aperture 会跳过工具提取，因此 `tool_call_entire_request` 钩子不会触发。
 
-With `duration: "0"` and `require_export: false`, Aperture does not store captured request and response bodies, headers, or raw HTTP bytes, regardless of the `purge` list. This also applies when `database.save_raws` is enabled or a provider response fails JSON parsing. Add `"tools"` to `purge` to omit captured tool data, which might contain sensitive arguments.
+在 `duration: "0"`、`require_export: false` 下，无论 `purge` 列表如何，Aperture 都不存储捕获的请求体、响应体、头部或原始 HTTP 字节。这在 `database.save_raws` 启用或提供商响应 JSON 解析失败时同样适用。在 `purge` 中加入 `"tools"` 可一并省略捕获的工具数据，其中可能包含敏感参数。
 
-With `require_export: true`, Aperture keeps captured content until it exports successfully to S3. A successful export lets Aperture remove local content later, but it does not guarantee immediate deletion. The exported copy remains in S3.
+在 `require_export: true` 下，Aperture 会保留捕获内容，直到成功导出到 S3。导出成功后 Aperture 稍后可以移除本地内容，但并不保证立即删除。导出的副本仍保留在 S3 中。
 
-## Step 1: Choose a retention posture
+## 第 1 步：选择保留策略
 
-The three fields combine into different behaviors. Choose the row that matches your requirement:
+三个字段组合出不同的行为。请选择符合你需求的一行：
 
-| Goal                                 | `duration` | `purge`                 | `require_export` |
+| 目标                                 | `duration` | `purge`                 | `require_export` |
 | ------------------------------------ | ---------- | ----------------------- | ---------------- |
-| Storage management only              | `"30d"`    | `["captures"]`          | `false`          |
-| Storage management, strict           | `"30d"`    | `["captures", "tools"]` | `false`          |
-| Never store capture content on disk  | `"0"`      | `["captures", "tools"]` | `false`          |
-| Archive to S3, then scrub locally    | `"0"`      | `["captures"]`          | `true`           |
-| Keep a 90-day debug window, archived | `"90d"`    | `["captures"]`          | `true`           |
+| 仅做存储管理                         | `"30d"`    | `["captures"]`          | `false`          |
+| 严格存储管理                         | `"30d"`    | `["captures", "tools"]` | `false`          |
+| 不在磁盘上存储捕获内容               | `"0"`      | `["captures", "tools"]` | `false`          |
+| 归档到 S3 后在本地清除               | `"0"`      | `["captures"]`          | `true`           |
+| 保留 90 天调试窗口并归档             | `"90d"`    | `["captures"]`          | `true`           |
 
-For the strictest capture posture, choose **Never store capture content on disk**. With `duration: "0"`, `purge: ["captures", "tools"]`, and `require_export: false`, Aperture clears captured request and response bodies, headers, raw HTTP bytes, and tool arguments before writing capture records. It keeps request and session metadata. This setting does not delete Chat history or stop configured pre-request guardrails and `entire_request` hooks from receiving content. Tool-call-triggered hooks do not fire because Aperture skips tool extraction.
+要采用最严格的捕获策略，选择**不在磁盘上存储捕获内容**。在 `duration: "0"`、`purge: ["captures", "tools"]`、`require_export: false` 下，Aperture 会在写入捕获记录之前清除捕获的请求体、响应体、头部、原始 HTTP 字节和工具参数，但保留请求与会话元数据。该设置不会删除 Chat 历史，也不会阻止已配置的请求前护栏和 `entire_request` 钩子接收内容。由工具调用触发的钩子不会触发，因为 Aperture 跳过了工具提取。
 
-If you need an off-gateway copy for long-term archiving, choose **Archive to S3, then scrub locally**. Confirm that [S3 export][docs-aperture-export-s3] is configured. A successful export lets Aperture remove the local captured content later, but it does not guarantee immediate deletion.
+如果你需要一个网关之外的副本用于长期归档，选择**归档到 S3 后在本地清除**。请确认已配置 [S3 导出][docs-aperture-export-s3]。导出成功后 Aperture 稍后可以移除本地捕获内容，但并不保证立即删除。
 
-## Step 2: Back up the current configuration
+## 第 2 步：备份当前配置
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Copy the current configuration to a local file before you change anything, so you can revert if needed.
+\[Missing snippet: aperture\_admin\_nav.mdx] 在做任何修改之前，先把当前配置复制到本地文件，以便在需要时回退。
 
-The **Data Export** settings page at `/admin/settings/database` lets you set retention duration, categories of data to remove, and whether export is required. It also shows a live preview of how many stored captures a duration would affect. You can instead edit the `database` block directly in the configuration editor at `/admin/settings/config`. This topic shows the values to use with either method.
+`/admin/settings/database` 的 **Data Export** 设置页面可以设置保留时长、要移除的数据类别以及是否要求导出，还会实时预览某个时长会影响多少条已存储的捕获。你也可以在 `/admin/settings/config` 的配置编辑器中直接编辑 `database` 块。本主题给出两种方法各自要用的值。
 
-## Step 3: Set the never-store configuration
+## 第 3 步：设置"不存储"配置
 
-Set the `database` block so its `retention` matches your chosen posture. For the never-store-capture-content posture, use the following:
+设置 `database` 块，使其 `retention` 与你选择的策略一致。对于"不存储捕获内容"策略，使用以下配置：
 
 ```json
 "database": {
@@ -68,80 +68,80 @@ Set the `database` block so its `retention` matches your chosen posture. For the
 }
 ```
 
-If you chose **Archive to S3, then scrub locally**, set `duration` to `"0"`, keep `purge` at `["captures"]`, and set `require_export` to `true`. Configure [S3 export][docs-aperture-export-s3] and verify that it succeeds. With `require_export: true`, Aperture keeps local captured content until export succeeds. Export does not guarantee immediate removal, and the exported copy remains in S3.
+如果你选择**归档到 S3 后在本地清除**，请将 `duration` 设为 `"0"`，`purge` 保持为 `["captures"]`，并将 `require_export` 设为 `true`。配置 [S3 导出][docs-aperture-export-s3]并确认导出成功。在 `require_export: true` 下，Aperture 会保留本地捕获内容直到导出成功。导出不保证立即移除，且导出的副本仍保留在 S3 中。
 
-## Step 4: Preview the impact before saving
+## 第 4 步：保存前预览影响
 
-Setting `duration` to `"0"` makes existing captured content eligible for removal under the new policy. Aperture keeps request metadata and usage metrics. Review the impact before saving.
+把 `duration` 设为 `"0"` 会使已存在的捕获内容在新策略下符合移除条件。Aperture 保留请求元数据和使用指标。保存前请先评估影响。
 
-On the **Data Export** settings page, the retention section shows a live preview of how many captures the new duration would affect. Viewing the preview does not save the policy or pause removals under the saved policy. **Delete after** has a 1-hour minimum. To set `"0"`, choose **Zero retention**. Aperture caps a duration above the Tailscale-set maximum, so the preview might reflect a shorter window than you entered. The dashboard asks you to confirm destructive changes. For the changes that require confirmation, refer to [Privacy and data retention][docs-aperture-privacy].
+在 **Data Export** 设置页面，保留部分会实时预览新时长会影响多少条捕获。查看预览不会保存策略，也不会暂停已保存策略的移除操作。**Delete after** 最小值为 1 小时；要设置 `"0"`，请选择 **Zero retention**。如果时长超过 Tailscale 设定的上限，Aperture 会将其封顶，因此预览可能显示比你输入的更短的窗口。仪表盘会要求你确认破坏性变更。哪些变更需要确认，请参阅[隐私与数据保留][docs-aperture-privacy]。
 
-Admins can also retrieve the affected count and the timestamp of the oldest affected capture from the endpoint used by the preview:
+管理员还可以通过预览使用的端点获取受影响数量以及最早一条受影响捕获的时间戳：
 
 ```shell
 curl "https://<aperture-hostname>/api/retention/impact?duration=0"
 ```
 
-The response contains `affected_count` and, when available, `oldest_capture`. The endpoint requires admin access and a `duration` query parameter. If the requested duration exceeds the retention limit Tailscale configured for your managed Aperture service, the preview uses that limit so it matches the effective retention policy.
+响应包含 `affected_count`，以及在可用时的 `oldest_capture`。该端点需要管理员访问权限和一个 `duration` 查询参数。如果请求的时长超过了 Tailscale 为你的托管 Aperture 服务配置的保留上限，预览会使用该上限，以与实际生效的保留策略保持一致。
 
-## Step 5: Save and verify
+## 第 5 步：保存并验证
 
-Saving applies the new policy to subsequent requests. Requests already in progress might use the old policy. Aperture removes previously stored captures later, under the new policy. Zero retention alone does not remove content from hook payloads, so check hooks before you send a test request.
+保存后，新策略适用于后续请求。已在进行中的请求可能仍使用旧策略。Aperture 会在之后按新策略移除先前存储的捕获。仅靠零保留不会把内容从钩子载荷中移除，因此在发送测试请求前请先检查钩子。
 
-To save and verify the policy:
+保存并验证策略的步骤：
 
-1. Review the `send_hooks` `send` arrays in every grant that can match the test request. Matching grants combine their allowed fields for each hook, so a change to one grant is not enough.
-2. If your policy forbids content leaving through hooks, remove `request_body`, `response_body`, `user_message`, and `raw_responses` from each matching hook binding. You can instead set `send: []` in each matching grant, or set `disabled: true` on the top-level hook.
-3. Save the hook changes.
-4. Save the retention configuration. If you use the raw editor, the save succeeds without a validation error. A common cause of errors is a missing comma in the `database` block.
-5. Send a request that contains only non-sensitive test content through the gateway.
-6. On the admin dashboard's [**Logs** page][docs-aperture-dashboard-admin-logs] at `/admin/logs`, find the request and open its capture.
+1. 检查每条可能匹配测试请求的授权中的 `send_hooks` `send` 数组。匹配的授权会为每个钩子合并允许的字段，因此只改一条授权是不够的。
+2. 如果你的策略禁止内容经钩子外发，请从每个匹配的钩子绑定中移除 `request_body`、`response_body`、`user_message` 和 `raw_responses`。也可以在每个匹配的授权中设置 `send: []`，或在顶层钩子上设置 `disabled: true`。
+3. 保存钩子改动。
+4. 保存保留配置。如果使用原始编辑器，保存应当成功且没有校验错误。常见的出错原因是 `database` 块中缺少逗号。
+5. 通过网关发送一条只包含非敏感测试内容的请求。
+6. 在管理仪表盘 `/admin/logs` 的 [**Logs** 页面][docs-aperture-dashboard-admin-logs]中找到该请求并打开其捕获记录。
 
-Check the result for the posture you saved:
+根据你保存的策略检查结果：
 
-* **Never store capture content on disk** (`duration: "0"`, `require_export: false`): The new request still shows usage metrics, such as the model, token counts, and estimated cost when available. Its capture shows a retention notice instead of request and response bodies and headers. This check does not verify Chat history or hook delivery.
-* **Archive to S3, then scrub locally** (`duration: "0"`, `require_export: true`): The new request's capture can show bodies and headers until the export and the later purge finish. [Verify that the expected record was exported][docs-aperture-export-s3-verification], then return to the same capture. A retention notice in place of its bodies and headers shows that Aperture purged this capture locally. An S3 object alone does not prove that it contains this request or that Aperture removed the local content. Until the notice appears, the local scrub is not verified. Because this posture uses `purge: ["captures"]`, Aperture keeps tool data after the scrub.
+* **不在磁盘上存储捕获内容**（`duration: "0"`、`require_export: false`）：新请求仍会显示使用指标，例如模型、token 数，以及可用时的估算成本。其捕获记录显示的是保留提示，而不是请求体、响应体和头部。该检查不验证 Chat 历史或钩子投递。
+* **归档到 S3 后在本地清除**（`duration: "0"`、`require_export: true`）：在导出和随后的清除完成之前，新请求的捕获记录可能仍显示请求体和头部。[确认预期记录已导出][docs-aperture-export-s3-verification]后，回到同一条捕获记录。如果请求体和头部的位置出现了保留提示，说明 Aperture 已在本地清除该捕获。仅存在一个 S3 对象并不能证明它包含该请求，也不能证明 Aperture 已移除本地内容。在提示出现之前，本地清除尚未得到验证。由于该策略使用 `purge: ["captures"]`，清除后 Aperture 仍保留工具数据。
 
-A request without tool calls cannot test how the never-store posture handles tool data. If your model and client support tool calls, send a separate test request with synthetic, non-sensitive tool arguments. Check that its capture does not contain tool names or parameters. Their absence is consistent with the capture policy, but the dashboard cannot show whether a hook or another data store received them. Review matching hooks before this test as well.
+没有工具调用的请求无法测试"不存储"策略对工具数据的处理。如果你的模型和客户端支持工具调用，请另发一条带有合成、非敏感工具参数的测试请求，并确认其捕获记录不包含工具名称或参数。它们缺失与捕获策略一致，但仪表盘无法显示是否有钩子或其他数据存储收到了它们。此测试前同样要检查匹配的钩子。
 
-## Troubleshooting
+## 故障排除
 
-Use these checks when request content or tool parameters remain visible after you change retention settings.
+当你更改保留设置后，请求内容或工具参数仍然可见时，使用以下检查。
 
-### Content is still visible in the admin dashboard
+### 管理仪表盘中内容仍然可见
 
-First, confirm the configuration saved. Reopen the configuration editor at `/admin/settings/config` or the **Data Export** settings page at `/admin/settings/database`. Check that `retention.duration` is `"0"` and that `purge` lists the categories you intended.
+首先确认配置已保存。重新打开 `/admin/settings/config` 的配置编辑器或 `/admin/settings/database` 的 **Data Export** 设置页面，检查 `retention.duration` 是否为 `"0"`，以及 `purge` 是否列出了你想要的类别。
 
-Aperture does not remove previously stored captured content as soon as you save. The impact preview shows what the new policy would remove. New requests after the save store no captured body content when `duration: "0"` and `require_export: false`. Use a fresh request rather than an old one to verify the policy.
+Aperture 不会在你保存后立即移除先前存储的捕获内容。影响预览会显示新策略将移除哪些内容。保存之后的新请求，在 `duration: "0"`、`require_export: false` 下不会存储任何捕获的正文内容。验证策略时请使用新请求，而不是旧请求。
 
-Aperture stores indexed header values separately, and a capture purge does not remove them. Zero-retention mode stops new header-index writes but does not remove values that are already indexed.
+Aperture 将建立了索引的头部值单独存储，清除捕获记录不会移除它们。零保留模式会停止新的头部索引写入，但不会移除已建立索引的值。
 
-### Tool parameters still appear though bodies are gone
+### 请求体已消失但工具参数仍然出现
 
-Check that you are viewing a request made after you saved the never-store settings. With `purge: ["captures"]` only, Aperture keeps tool names, parameters, and counts as a separate category. If your policy requires removing them, add `"tools"` to `purge`. For an archived request, wait for its local purge before you check tool data. The archive-to-S3 example does not purge tools.
+确认你查看的是保存"不存储"设置之后发出的请求。若只设置 `purge: ["captures"]`，Aperture 会把工具名称、参数和次数作为单独类别保留。如果你的策略要求移除它们，请在 `purge` 中加入 `"tools"`。对已归档的请求，请等待其本地清除完成后再检查工具数据。归档到 S3 的示例不会清除工具数据。
 
-### Captured content remains in archive-to-S3 mode
+### 归档到 S3 模式下捕获内容仍然存在
 
-When `require_export` is `true`, Aperture removes local captured content only after successfully exporting the capture to S3. If exports fail or S3 is not configured, Aperture keeps captured content past its retention window instead of deleting data that was never archived. Check that [S3 export][docs-aperture-export-s3] is configured and succeeding.
+当 `require_export` 为 `true` 时，Aperture 只有在成功把捕获导出到 S3 之后才会移除本地捕获内容。如果导出失败或未配置 S3，Aperture 会让捕获内容保留超过保留窗口，而不是删除从未归档过的数据。请检查 [S3 导出][docs-aperture-export-s3]已配置且在成功运行。
 
-## Security considerations
+## 安全注意事项
 
-With `duration: "0"`, `purge: ["captures", "tools"]`, and `require_export: false`, Aperture clears captured prompt and response bodies, headers, raw HTTP bytes, and tool arguments before writing capture records to disk. This reduces captured content at rest but does not mean other gateway data stores are content-free.
+在 `duration: "0"`、`purge: ["captures", "tools"]`、`require_export: false` 下，Aperture 会在把捕获记录写入磁盘之前清除捕获的提示词、响应体、头部、原始 HTTP 字节和工具参数。这减少了静态存储的捕获内容，但不意味着网关的其他数据存储都不含内容。
 
-Zero capture retention has these boundaries:
+零捕获保留有以下边界：
 
-* Request and session metadata and usage metrics (identity, model, token counts, and estimated cost) remain available. Zero retention is not a no-logs setting. Unless you add `"tools"` to `purge`, Aperture also keeps captured tool arguments and other tool data.
-* Aperture Chat conversation messages remain in a separate store. Proxy capture retention does not delete Chat history.
-* Zero retention does not stop most hooks from sending content. Pre-request guardrails can receive prompts without redaction, and post-response `entire_request` hooks can receive prompts or completions. With `duration: "0"`, `require_export: false`, and `purge: ["captures", "tools"]`, Aperture skips tool extraction, so `tool_call_entire_request` hooks do not fire. For hooks that do fire, check `send_hooks` `send` in every matching grant. Fields such as `request_body`, `response_body`, `user_message`, and `raw_responses` can carry content. Matching grants combine allowed fields for each hook. When content must not leave, restrict all matching bindings to metadata, set `send: []` in each binding, or set `disabled: true` on the top-level hook. Aperture omits excluded fields from webhook JSON rather than sending them blank.
-* Aperture does not change how the upstream provider handles your content. Tailnet connections use Tailscale encryption, and Aperture reaches upstream providers over TLS. Review each provider's data handling separately.
+* 请求与会话元数据以及使用指标（身份、模型、token 数和估算成本）仍然可用。零保留不是"无日志"设置。除非你在 `purge` 中加入 `"tools"`，否则 Aperture 还会保留捕获的工具参数和其他工具数据。
+* Aperture Chat 的会话消息保存在独立的存储中。代理捕获保留不会删除 Chat 历史。
+* 零保留不会阻止大多数钩子发送内容。请求前护栏可以在不脱敏的情况下收到提示词，响应后的 `entire_request` 钩子可以收到提示词或补全内容。在 `duration: "0"`、`require_export: false`、`purge: ["captures", "tools"]` 下，Aperture 跳过工具提取，因此 `tool_call_entire_request` 钩子不会触发。对仍然触发的钩子，检查每条匹配授权中的 `send_hooks` `send`。`request_body`、`response_body`、`user_message`、`raw_responses` 等字段可能携带内容。匹配的授权会为每个钩子合并允许的字段。当内容不得外发时，把所有匹配的绑定限制为元数据，或在每个绑定中设置 `send: []`，或在顶层钩子上设置 `disabled: true`。Aperture 会从 webhook JSON 中省略被排除的字段，而不是发送空值。
+* Aperture 不会改变上游提供商处理你内容的方式。tailnet 连接使用 Tailscale 加密，Aperture 通过 TLS 访问上游提供商。请分别审查每个提供商的数据处理方式。
 
-The archive-to-S3 option keeps a copy of captured content in an external bucket after Aperture removes it locally. Removing local content does not delete S3 objects. Apply the same access control and encryption requirements to the bucket.
+归档到 S3 的选项会在 Aperture 本地移除内容后，把捕获内容的副本保留在外部存储桶中。移除本地内容不会删除 S3 对象。请对该存储桶施加同等的访问控制和加密要求。
 
-## Next steps
+## 后续步骤
 
-* Refer to [Privacy and data retention][docs-aperture-privacy] for an overview of how Aperture stores, retains, and exports captured data.
-* Refer to the [`database` configuration reference][docs-aperture-retention] for the complete field reference.
-* [Export usage data to S3][docs-aperture-export-s3] to keep a durable, off-gateway archive.
+* 阅读[隐私与数据保留][docs-aperture-privacy]，了解 Aperture 如何存储、保留和导出捕获数据。
+* 完整字段参考请参阅 [`database` 配置参考][docs-aperture-retention]。
+* [将使用数据导出到 S3][docs-aperture-export-s3]，保留一个持久的、网关之外的归档。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

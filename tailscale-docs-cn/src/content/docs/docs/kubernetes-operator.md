@@ -1,46 +1,46 @@
 ---
 title: "Tailscale Kubernetes Operator"
-description: "The Tailscale Kubernetes Operator provides secure connectivity to and from your Kubernetes cluster."
+description: "Tailscale Kubernetes Operator 为进出你的 Kubernetes 集群提供安全连接。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-> **Note:** Tailscale Kubernetes Operator is available for [all plans](https://tailscale.com/pricing).
+> **注意：** Tailscale Kubernetes Operator 适用于[所有套餐](https://tailscale.com/pricing)。
 
-The Tailscale Kubernetes Operator provides a Kubernetes-native way to ensure secure connectivity to and from your cluster using Tailscale.
+Tailscale Kubernetes Operator 提供一种 Kubernetes 原生的方式，借助 Tailscale 确保进出集群的连接安全。
 
-Using the Kubernetes Operator lets you:
+使用 Kubernetes Operator，你可以：
 
-* Enable secure, private Kubernetes API access by exposing the Kubernetes control plane over your tailnet. Administrators and automation systems can manage clusters from anywhere without opening public endpoints, configuring VPNs, or maintaining complex network access controls.
-* Connect devices in your tailnet to Kubernetes workloads (ingress) to provide secure access to applications and services running inside your clusters. Applications, developers, and end-users can securely reach workloads using Tailscale identities and policies.
-* Connect Kubernetes workloads to other devices and services in your tailnet (egress) so applications running in the cluster can securely communicate with laptops, servers, databases, and cloud resources across your private network. This creates a unified connectivity layer without exposing services to the public internet.
-* Route [multi-cluster traffic][docs-operator-multi-cluster-ingress] across Kubernetes environments, regions, and cloud providers through your tailnet. Use cross-cluster communication, service-to-service connectivity, and hybrid deployments while maintaining consistent security policies and identity-based access controls.
-* Record and audit Kubernetes sessions for compliance and security with detailed visibility into administrative activity. Capture session data, maintain audit trails, and support regulatory, governance, and forensic requirements with centralized recording and monitoring capabilities.
-* Host Tailscale infrastructure components in Kubernetes, including session [recorders][docs-operator-tsrecorder], [exit nodes][docs-operator-connector], and [subnet routers][docs-operator-connector].
+* 通过在 tailnet 上暴露 Kubernetes 控制平面，启用安全、私有的 Kubernetes API 访问。管理员和自动化系统可以从任何地方管理集群，无需开放公共端点、配置 VPN 或维护复杂的网络访问控制。
+* 把 tailnet 中的设备连接到 Kubernetes 工作负载（入站流量，ingress），为集群内运行的应用和服务提供安全访问。应用、开发者和最终用户可以使用 Tailscale 身份和策略安全地访问工作负载。
+* 把 Kubernetes 工作负载连接到 tailnet 中的其他设备和服务（出站流量，egress），让集群中运行的应用能够与私有网络中的笔记本电脑、服务器、数据库和云资源安全通信。这会形成一个统一的连接层，同时不把服务暴露给公共互联网。
+* 通过 tailnet 路由跨越 Kubernetes 环境、区域和云提供商的[多集群流量][docs-operator-multi-cluster-ingress]。在保持一致的安全策略和基于身份的访问控制的同时，实现跨集群通信、服务到服务的连接以及混合部署。
+* 录制并审计 Kubernetes 会话，满足合规与安全要求，并详细掌握管理活动。通过集中式的录制和监控能力，捕获会话数据、维护审计轨迹，并满足监管、治理和取证需求。
+* 在 Kubernetes 中托管 Tailscale 基础设施组件，包括会话[录制器][docs-operator-tsrecorder]、[出口节点][docs-operator-connector]和[子网路由器][docs-operator-connector]。
 
-*（图：A diagram showing the Tailscale Kubernetes Operator architecture with ingress proxies, egress proxies, an API server proxy, and the operator inside a Kubernetes cluster, connected to Tailscale devices in the tailnet.）*
+*（图：展示 Tailscale Kubernetes Operator 架构的示意图——Kubernetes 集群内的 Ingress 代理、Egress 代理、API 服务器代理和 operator，与 tailnet 中的 Tailscale 设备相连。）*
 
-## Explore the documentation
+## 探索文档
 
-Find guides, concepts, and reference material for the Tailscale Kubernetes Operator.
+查找 Tailscale Kubernetes Operator 的指南、概念和参考资料。
 
-[**Quickstart tutorial for the Tailscale Kubernetes Operator**](/docs/kubernetes-operator/quickstart) — A hands-on guide to the Tailscale Kubernetes Operator and its key features.
+[**Tailscale Kubernetes Operator 快速开始教程**](/docs/kubernetes-operator/quickstart) —— 一份关于 Tailscale Kubernetes Operator 及其关键功能的实操指南。
 
-[**Tailscale Kubernetes Operator concepts explained**](/docs/kubernetes-operator/concepts) — Learn about the architecture and key resources of the Tailscale Kubernetes Operator.
+[**Tailscale Kubernetes Operator 概念解析**](/docs/kubernetes-operator/concepts) —— 了解 Tailscale Kubernetes Operator 的架构和关键资源。
 
-[**Expose cluster workloads to your tailnet with Ingress**](/docs/kubernetes-operator/ingress) — Expose Kubernetes workloads to your tailnet or the internet using the Tailscale Kubernetes Operator.
+[**使用 Ingress 将集群工作负载暴露给你的 tailnet**](/docs/kubernetes-operator/ingress) —— 使用 Tailscale Kubernetes Operator 将 Kubernetes 工作负载暴露给你的 tailnet 或互联网。
 
-[**Access tailnet resources from your cluster with Egress**](/docs/kubernetes-operator/egress) — Access tailnet resources from your Kubernetes cluster using the Tailscale Kubernetes Operator.
+[**使用 Egress 从集群访问 tailnet 资源**](/docs/kubernetes-operator/egress) —— 使用 Tailscale Kubernetes Operator 从 Kubernetes 集群访问 tailnet 资源。
 
-[**Host Tailscale resources in Kubernetes with Connector**](/docs/kubernetes-operator/connector) — Deploy subnet routers and exit nodes on Kubernetes using the Connector resource
+[**使用 Connector 在 Kubernetes 中托管 Tailscale 资源**](/docs/kubernetes-operator/connector) —— 使用 Connector 资源在 Kubernetes 上部署子网路由器和出口节点。
 
-[**Access the Kubernetes API server over Tailscale**](/docs/kubernetes-operator/api-server-access) — Securely access the Kubernetes API server over Tailscale.
+[**通过 Tailscale 访问 Kubernetes API 服务器**](/docs/kubernetes-operator/api-server-access) —— 通过 Tailscale 安全地访问 Kubernetes API 服务器。
 
-[**Session recording with the Tailscale Kubernetes Operator**](/docs/kubernetes-operator/recorder) — Deploy and configure session recording using the Tailscale Kubernetes Operator.
+[**使用 Tailscale Kubernetes Operator 进行会话录制**](/docs/kubernetes-operator/recorder) —— 使用 Tailscale Kubernetes Operator 部署并配置会话录制。
 
-[**Manage and configure the Tailscale Kubernetes Operator**](/docs/kubernetes-operator/manage-and-configure) — Manage and configure your Tailscale Kubernetes Operator cluster.
+[**管理与配置 Tailscale Kubernetes Operator**](/docs/kubernetes-operator/manage-and-configure) —— 管理和配置你的 Tailscale Kubernetes Operator 集群。
 
-[**Tailscale Kubernetes Operator reference**](/docs/kubernetes-operator/reference) — Reference documentation for the Tailscale Kubernetes Operator.
+[**Tailscale Kubernetes Operator 参考**](/docs/kubernetes-operator/reference) —— Tailscale Kubernetes Operator 的参考文档。
 
 [docs-operator-connector]: /docs/kubernetes-operator/connector/deploy-subnet-router
 

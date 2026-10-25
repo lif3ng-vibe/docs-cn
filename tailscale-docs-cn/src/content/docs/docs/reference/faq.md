@@ -1,42 +1,42 @@
 ---
-title: "FAQ"
-description: "Answers to common questions."
+title: "常见问题"
+description: "常见问题的解答。"
 ---
 
-Last validated Aug 22, 2025
+最后验证于 Aug 22, 2025
 
-## Getting started
+## 开始使用
 
-* [What is Tailscale?][docs-what-is-tailscale]
-* [What is a tailnet?][docs-tailnet]
-* [What are these `100.x.y.z` addresses?][docs-100.x-addresses]
+* [什么是 Tailscale？][docs-what-is-tailscale]
+* [什么是 tailnet？][docs-tailnet]
+* [这些 `100.x.y.z` 地址是什么？][docs-100.x-addresses]
 
-## Deploying Tailscale
+## 部署 Tailscale
 
-* [Can I use Tailscale alongside other VPNs?][docs-other-vpns]
-* [I can't install Tailscale. How can I connect?][docs-devices-without-tailscale]
-* [What firewall ports should I open to use Tailscale?][docs-firewall-ports]
+* [可以与其他 VPN 一起使用 Tailscale 吗？][docs-other-vpns]
+* [我无法安装 Tailscale，该如何连接？][docs-devices-without-tailscale]
+* [使用 Tailscale 需要开放哪些防火墙端口？][docs-firewall-ports]
 
-## Reliability
+## 可靠性
 
-* [What happens if the coordination server is down?][docs-what-happens-coordination-server-down]
-* [Is my traffic routed through your servers?][docs-routed-through-tailscale]
+* [协调服务器宕机会发生什么？][docs-what-happens-coordination-server-down]
+* [我的流量会经过你们的服务器吗？][docs-routed-through-tailscale]
 
-Explore more about [how Tailscale works][bl-how-tailscale-works].
+进一步了解 [Tailscale 的工作原理][bl-how-tailscale-works]。
 
-## Security and privacy
+## 安全与隐私
 
-* [Can Tailscale decrypt my traffic?][docs-can-tailscale-decrypt-my-traffic]
-* [If I use Tailscale on my work device, will my personal devices be visible to my co-workers?][docs-device-visibility]
+* [Tailscale 能解密我的流量吗？][docs-can-tailscale-decrypt-my-traffic]
+* [如果我在工作设备上使用 Tailscale，我的个人设备会对同事可见吗？][docs-device-visibility]
 
-Explore more about [Tailscale security][co-security].
+进一步了解 [Tailscale 的安全性][co-security]。
 
-## Other
+## 其他
 
-* [Does Tailscale support IPv6?][docs-ipv6]
-* [Why is MagicDNS fetching records on port `433`?][docs-dns-over-https]
-* [Do admin console sessions expire?][docs-admin-console-session-expiry]
-* [What is STUN?][docs-what-is-stun]
+* [Tailscale 支持 IPv6 吗？][docs-ipv6]
+* [为什么 MagicDNS 在端口 `433` 上获取记录？][docs-dns-over-https]
+* [管理控制台会话会过期吗？][docs-admin-console-session-expiry]
+* [什么是 STUN？][docs-what-is-stun]
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

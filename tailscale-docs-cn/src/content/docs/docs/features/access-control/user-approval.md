@@ -1,83 +1,62 @@
 ---
-title: "User approval"
-description: "User approval is a feature that lets Tailscale network administrators to review and approve new users before they can join your Tailscale network (known as a tailnet)."
+title: "用户审批"
+description: "用户审批功能让 Tailscale 网络管理员可以在新用户加入 Tailscale 网络（即 tailnet）之前进行审核与批准。"
 ---
 
-Last validated Sep 25, 2025
+最后验证于 Sep 25, 2025
 
-User approval is a feature that lets Tailscale network administrators to review and approve new
-users before they can join your Tailscale network (known as a tailnet).
+用户审批功能让 Tailscale 网络管理员可以在新用户加入 Tailscale 网络（即 tailnet）之前进行审核与批准。
 
-> **Note:** This feature is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 此功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-When user approval is enabled, the first time a new user logs in to a tailnet, the user's status
-is set to needs approval. While in an unapproved state, the user can connect their device to the Tailscale
-coordination server, but cannot connect to other devices in the tailnet. An
-[Owner, Admin, or IT admin](/docs/reference/user-roles) of the tailnet can review the user information and set the
-user status to approved, or remove the user.
+启用用户审批后，新用户首次登录 tailnet 时，其状态会被设为"待审批"。在未获批准的状态下，用户可以将设备连接到 Tailscale 协调服务器（coordination server），但无法连接 tailnet 中的其他设备。tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 可以查看用户信息，将用户状态设为已批准，或移除该用户。
 
-> **Note:**
+> **注意：**
 >
-> For tailnets created May 22, 2025 or later, user approval is enabled by default. For tailnets created prior to May 22, 2025, user approval was disabled by default.
+> 对于 2025 年 5 月 22 日及以后创建的 tailnet，用户审批默认启用。对于在此之前创建的 tailnet，用户审批默认关闭。
 
-## Enable user approval for your network
+## 为你的网络启用用户审批
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles)
-of a tailnet to enable user approval.
+你需要成为 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能启用用户审批。
 
-To enable user approval, open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console and enable **User Approval**.
+要启用用户审批，请打开管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面，并启用 **User Approval**。
 
-Once this setting is enabled, new users that access your network cannot send or receive traffic
-to other devices until they are approved. When a new user logs in, the user's device appears in the
-[Machines](https://console.tailscale.com/admin/machines) page of the admin console with the **User needs approval** badge. You can
-[use a filter](https://console.tailscale.com/admin/machines/?q=disabled%3Auser-needs-approval) to find all machines that have the **User needs approval** badge.
+启用此设置后，访问你的网络的新用户在获得批准之前，无法与其他设备收发流量。新用户登录时，其设备会以 **User needs approval** 徽标显示在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。你可以[使用筛选器](https://console.tailscale.com/admin/machines/?q=disabled%3Auser-needs-approval)找出所有带有 **User needs approval** 徽标的机器。
 
-## Approve an unapproved user
+## 批准待审批用户
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles)
-of a tailnet to approve a user.
+你需要成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能批准用户。
 
-To approve a user, open the [Users](https://console.tailscale.com/admin/users) page of the admin console. At the top of the list you will
-find the user with a **Needs approval** badge beneath them. You can find the user by user name, and also the [`status:needsapproval`](https://console.tailscale.com/admin/users?q=status%3Aneedsapproval) filter.
+要批准用户，请打开管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。列表顶部会显示带有 **Needs approval** 徽标的用户。你可以按用户名查找该用户，也可以使用 [`status:needsapproval`](https://console.tailscale.com/admin/users?q=status%3Aneedsapproval) 筛选器。
 
-You can review details about the user before deciding whether to approve the user. You can also change the role to assign the
-user. For example, an Admin could change an unapproved user's role from Member to IT admin, before approving the user.
+在决定是否批准之前，你可以查看该用户的详细信息。你还可以更改要分配给该用户的角色。例如，Admin 可以在批准用户之前，把待审批用户的角色从 Member 改为 IT admin。
 
-When you're ready to approve the user, select the  menu and select **Approve** to allow the user to
-connect to your network.
+准备好批准该用户时，选择菜单并选择 **Approve**，允许该用户连接到你的网络。
 
-After approval, the user will immediately be able to connect.
+批准后，用户将立即能够连接。
 
-## Remove an unapproved user
+## 移除待审批用户
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles)
-of a tailnet to remove a user whose status needs approval.
+你需要成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能移除状态为待审批的用户。
 
-To remove a user, open the [Users](https://console.tailscale.com/admin/users) page of the admin console. At the top of the list you will
-find the user with a **Needs approval** badge beneath them. You can find the user by user name, and also the [`status:needsapproval`](https://console.tailscale.com/admin/users?q=status%3Aneedsapproval) filter.
+要移除用户，请打开管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。列表顶部会显示带有 **Needs approval** 徽标的用户。你可以按用户名查找该用户，也可以使用 [`status:needsapproval`](https://console.tailscale.com/admin/users?q=status%3Aneedsapproval) 筛选器。
 
-For the user that you want to remove, select the  menu and select **Remove**.
+对于要移除的用户，选择其菜单并选择 **Remove**。
 
-Note that removing an unapproved user does not prevent them from trying to log in (to an unapproved state)
-again.
+注意，移除待审批用户并不能阻止他们再次尝试登录（再次进入待审批状态）。
 
-## Disable user approval for your network
+## 为你的网络禁用用户审批
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles)
-of a tailnet to disable user approval.
+你需要成为 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能禁用用户审批。
 
-To disable user approval, open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console and disable **User Approval**.
+要禁用用户审批，请打开管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面，并关闭 **User Approval**。
 
-## Impact on other features
+## 对其他功能的影响
 
-If you enable [User & group provisioning][docs-user-group-provisioning] for your tailnet, you cannot enable user
-approval because both cannot be enabled. If user approval is enabled, and then you enable User and
-group provisioning, the user approval feature will be disabled—you will need to manually
-approve or remove any users whose status still needs approval.
+如果你为 tailnet 启用了[用户与组预配置][docs-user-group-provisioning]，就无法启用用户审批，因为两者不能同时启用。如果先启用了用户审批、之后又启用用户与组预配置，用户审批功能将被禁用——你需要手动批准或移除状态仍为待审批的用户。
 
-## Limitations
+## 限制
 
-A tailnet can enable either user approval or [User & group provisioning][docs-user-group-provisioning], but not
-both.
+tailnet 只能在用户审批和[用户与组预配置][docs-user-group-provisioning]之间二选一启用，不能同时启用两者。
 
 [docs-user-group-provisioning]: /docs/features/user-group-provisioning

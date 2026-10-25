@@ -1,58 +1,57 @@
 ---
-title: "Tailscale SSH session recording"
-description: "Tailscale SSH session recording lets you stream logs of [Tailscale SSH][docs-tailscale-ssh] sessions to another node in your tailnet. These recordings are encrypted end-to-end just like all other Tail"
+title: "Tailscale SSH 会话录制"
+description: "Tailscale SSH 会话录制让你可以将 [Tailscale SSH][docs-tailscale-ssh] 会话的日志流式传输到 tailnet 中的另一个节点。与其他所有 Tailscale 流量一样，这些录制内容经过端到端加密。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Deprecation:**
+> **弃用通知：**
 >
-> Tailscale no longer offers Tailscale SSH session recording through `tsrecorder`. Support for existing users is scheduled to end on August 2027. For session recording and privileged access management, use [Tailscale PAM][docs-tailscale-pam] or contact [Tailscale Sales][co-contact-sales].
+> Tailscale 不再通过 `tsrecorder` 提供 Tailscale SSH 会话录制。对现有用户的支持计划于 2027 年 8 月结束。对于会话录制和特权访问管理，请使用 [Tailscale PAM][docs-tailscale-pam] 或联系 [Tailscale 销售团队][co-contact-sales]。
 
-Tailscale SSH session recording lets you stream logs of [Tailscale SSH][docs-tailscale-ssh] sessions to another node in your tailnet. These recordings are encrypted end-to-end just like all other Tailscale traffic.
+Tailscale SSH 会话录制让你可以将 [Tailscale SSH][docs-tailscale-ssh] 会话的日志流式传输到 tailnet 中的另一个节点。与其他所有 Tailscale 流量一样，这些录制内容经过端到端加密。
 
-> **Note:** Tailscale SSH session recording is currently in beta.
+> **注意：** Tailscale SSH 会话录制目前处于 beta 阶段。
 
-> **Note:** Tailscale SSH session recording is available for [the Personal and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** Tailscale SSH 会话录制适用于 [Personal 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> The Tailscale session recorder now supports recording all [Kubernetes sessions and API requests][docs-operator-session-recording].
+> Tailscale 会话录制器现在支持录制所有 [Kubernetes 会话和 API 请求][docs-operator-session-recording]。
 
-## How it works
+## 工作原理
 
-Tailscale SSH session recording lets you stream recordings of Tailscale SSH sessions from the destination node to a recorder node in your tailnet. The recorder is a [`tsnet` binary][bl-tsnet-virtual-private-services], which you deploy to a machine or [Kubernetes cluster][docs-operator-session-recording] you manage. Logs are streamed over your tailnet to your node, so they are end-to-end encrypted and not visible to Tailscale. The recorder can either store the log files on the host filesystem, or export them to Amazon S3 or another S3-compatible storage service.
+Tailscale SSH 会话录制让你可以将 Tailscale SSH 会话的录制内容从目标节点流式传输到 tailnet 中的录制节点。录制器是一个 [`tsnet` 二进制程序][bl-tsnet-virtual-private-services]，你可以将它部署到你管理的机器或 [Kubernetes 集群][docs-operator-session-recording]上。日志通过你的 tailnet 流式传输到你的节点，因此是端到端加密的，Tailscale 无法看到。录制器可以将日志文件存储在主机文件系统上，也可以将其导出到 Amazon S3 或其他兼容 S3 的存储服务。
 
-Tailscale SSH session recording captures terminal sessions in [`asciinema`][xt-asciinema] format. These recordings are newline-delimited JSON files that can be searched as text, and replayed from the recorder node's optional web UI or the `asciinema` CLI.
+Tailscale SSH 会话录制以 [`asciinema`][xt-asciinema] 格式捕获终端会话。这些录制内容是以换行符分隔的 JSON 文件，可以当作文本进行搜索，并可以从录制节点的可选 Web UI 或 `asciinema` CLI 回放。
 
-> **Note:**
+> **注意：**
 >
-> Session recording captures all terminal output, meaning any text that appears on the terminal screen during a Tailscale SSH session. This could include sensitive data. No keystrokes are captured.
+> 会话录制会捕获所有终端输出，即在 Tailscale SSH 会话期间出现在终端屏幕上的任何文本。其中可能包含敏感数据。不会捕获按键。
 
-> **Note:**
+> **注意：**
 >
-> When using binary protocols like older versions of `scp`, session recording will capture the transmitted binary data. This could include sensitive data.
+> 使用二进制协议（例如旧版本的 `scp`）时，会话录制会捕获传输的二进制数据。其中可能包含敏感数据。
 
-## Set up session recording for Tailscale SSH
+## 为 Tailscale SSH 设置会话录制
 
-### Prerequisites
+### 前提条件
 
-Session recording is only available for SSH connections over Tailscale SSH.
+会话录制仅适用于通过 Tailscale SSH 进行的 SSH 连接。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles)
-of a tailnet to set up session recording.
+你必须具有 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 身份才能设置会话录制。
 
-To enable session recording, you must:
+要启用会话录制，你必须：
 
-* Ensure that Tailscale SSH is properly configured in your tailnet.
-* Deploy a recorder node in your tailnet.
-* Turn on session recording in your tailnet policy file by adding a `recorder:["tag:<tag-name>"]` field to each SSH policy entry. SSH sessions permitted by that stanza will be streamed to any recorder with the named tag.
+* 确保在你的 tailnet 中正确配置了 Tailscale SSH。
+* 在你的 tailnet 中部署一个录制节点。
+* 在 tailnet 策略文件中启用会话录制，方法是在每个 SSH 策略条目中添加 `recorder:["tag:<tag-name>"]` 字段。该条目允许的 SSH 会话将被流式传输到带有指定标签的所有录制器。
 
-The recorder node binary will run on any platform as a Docker container. Because the binary uses [`tsnet`][bl-tsnet-virtual-private-services] to join your tailnet as a node, the Docker host does not need to be a member of your tailnet. The application listens on port `80` to receive session recordings, and provides an optional, built-in web application for viewing session recordings at port `443`.
+录制节点二进制程序可以作为 Docker 容器在任何平台上运行。由于该二进制程序使用 [`tsnet`][bl-tsnet-virtual-private-services] 以节点身份加入你的 tailnet，因此 Docker 主机不必是 tailnet 的成员。该应用监听 `80` 端口以接收会话录制，并在 `443` 端口提供一个可选的内置 Web 应用来查看会话录制。
 
-### Create a tag and auth key for session recorders
+### 为会话录制器创建标签和认证密钥
 
-A recorder node must be associated with a tag. We recommend that you create a new [tag][docs-tags] specifically to use with SSH session recording. You can do this by visiting the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console and defining an owner of the tag in access control policies.
+录制节点必须关联一个标签。我们建议专门为 SSH 会话录制创建一个新的[标签][docs-tags]。你可以访问管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面，在访问控制策略中定义该标签的所有者。
 
 ```json
 // Example tag for SSH session recorders
@@ -63,27 +62,27 @@ A recorder node must be associated with a tag. We recommend that you create a ne
 }
 ```
 
-Next, visit the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console to create an auth key. Assign the new tag you created to this auth key. If your tailnet has device approval enabled, use a pre-approved key. Be sure to copy this auth key to your clipboard.
+接下来，访问管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面创建一个认证密钥。将你刚创建的新标签分配给该认证密钥。如果你的 tailnet 启用了设备批准，请使用预批准密钥。务必将此认证密钥复制到剪贴板。
 
-On the host where you will deploy the recorder node container, set the `TS_AUTHKEY` environment variable to the auth key. This is only necessary the first time you start the recorder application.
+在将要部署录制节点容器的主机上，将 `TS_AUTHKEY` 环境变量设置为该认证密钥。只有第一次启动录制应用时才需要这样做。
 
 ```
 export TS_AUTHKEY=<your-auth-key>
 ```
 
-### Deploy a recorder node
+### 部署录制节点
 
-The recorder is provided as a Docker container, and you can find it on [Tailscale's DockerHub profile][xt-docker-tailscale-tsrecorder-tags].
+录制器以 Docker 容器的形式提供，你可以在 [Tailscale 的 DockerHub 主页][xt-docker-tailscale-tsrecorder-tags]找到它。
 
-> **Note:**
+> **注意：**
 >
-> If you use Tailscale's Kubernetes operator, you can also deploy the recorder using the [`Recorder` Custom Resource][docs-operator-session-recording].
+> 如果你使用 Tailscale 的 Kubernetes Operator，还可以使用 [`Recorder` 自定义资源][docs-operator-session-recording]部署录制器。
 
 ```shell
 docker pull tailscale/tsrecorder:stable
 ```
 
-To run the container and save recordings to the Docker host's filesystem:
+要运行容器并将录制内容保存到 Docker 主机的文件系统：
 
 ```shell
 docker run --name tsrecorder --rm -it \
@@ -93,31 +92,31 @@ docker run --name tsrecorder --rm -it \
   /tsrecorder --dst=/data/recordings --statedir=/data/state --ui
 ```
 
-Required flags:
+必需标志：
 
-* `--dst` Specifies where recordings will be saved. Accepts a local file path or an S3 region URL. You can alternatively define the value as an environment variable, `TSRECORDER_DST`.
+* `--dst` 指定录制内容的保存位置。接受本地文件路径或 S3 区域 URL。也可以将该值定义为环境变量 `TSRECORDER_DST`。
 
-Optional flags:
+可选标志：
 
-* `--hostname` Specifies a hostname to use for the recorder node. Defaults to `recorder`. You can alternatively define the value as an environment variable, `TSRECORDER_HOSTNAME`.
-* `--access-key` The AWS access key for an IAM user that can upload recordings to an S3 bucket. Required when using S3 as a storage backend if no IAM role is passed to the instance. You can alternatively define the secret access key as an environment variable, `AWS_ACCESS_KEY_ID`.
-* `--secret-key` The AWS secret access key for an IAM user that can upload recordings to an S3 bucket. Required when using S3 as a storage backend if no IAM role is passed to the instance. You can alternatively define the secret access key as an environment variable, `AWS_SECRET_ACCESS_KEY`.
-* `--bucket` The name of the S3 bucket where the recorder should upload recordings. Required when using S3 as a storage backend. You can alternatively define the secret access key as an environment variable, `TSRECORDER_BUCKET`.
-* `--state` Path to Tailscale state file, used to persist recorder state across container restarts. This can be a persistent volume or a Kubernetes [`Secret`][xt-kubernetes-secret]. You can alternatively define this value as an environment variable, `TS_STATE`.
-  * To use a `Secret`, specify `kube:<secret-name>`. If set to use a `Secret` for state storage, the recorder must have permissions to read, update, and patch the `Secret`. If the `Secret` does not exist, the recorder will create it, and must have permissions to do so.
-  * If `--state` is unset, the state will be stored in the directory set by using `--statedir`.
-* `--statedir`  Specifies where the recorder should store its internal state. Accepts a local file path. If storage backend is filesystem, defaults to `<recordings-destination>/state`. Required unless statefile path is set. Alternatively can be set by using `TS_STATE_DIR` environment variable.
-* `--ui` Enables the recorder container web UI for viewing recorded SSH sessions. Defaults to `false` if this flag is not present. You can alternatively define this value as an environment variable, `TSRECORDER_UI`.
-  * If you deploy the recorder with the UI, you must have HTTPS enabled in your tailnet.
-  * If you enable the recorder container web UI, you should restrict access to port `443` on the recorder in your access control policies to prevent unauthorized members of your tailnet from viewing sensitive recordings.
+* `--hostname` 指定录制节点使用的主机名。默认为 `recorder`。也可以将该值定义为环境变量 `TSRECORDER_HOSTNAME`。
+* `--access-key` 可将录制内容上传到 S3 存储桶的 IAM 用户的 AWS 访问密钥。当使用 S3 作为存储后端且未向实例传递 IAM 角色时为必需项。也可以将该值定义为环境变量 `AWS_ACCESS_KEY_ID`。
+* `--secret-key` 可将录制内容上传到 S3 存储桶的 IAM 用户的 AWS 秘密访问密钥。当使用 S3 作为存储后端且未向实例传递 IAM 角色时为必需项。也可以将该秘密访问密钥定义为环境变量 `AWS_SECRET_ACCESS_KEY`。
+* `--bucket` 录制器上传录制内容的 S3 存储桶名称。使用 S3 作为存储后端时为必需项。也可以将该值定义为环境变量 `TSRECORDER_BUCKET`。
+* `--state` Tailscale 状态文件的路径，用于在容器重启之间持久化录制器状态。可以是持久卷或 Kubernetes [`Secret`][xt-kubernetes-secret]。也可以将该值定义为环境变量 `TS_STATE`。
+  * 要使用 `Secret`，请指定 `kube:<secret-name>`。如果设置为使用 `Secret` 存储状态，录制器必须拥有读取、更新和修补该 `Secret` 的权限。如果该 `Secret` 不存在，录制器会创建它，因此也必须拥有相应权限。
+  * 如果未设置 `--state`，状态将存储在使用 `--statedir` 设置的目录中。
+* `--statedir` 指定录制器存储其内部状态的位置。接受本地文件路径。如果存储后端是文件系统，默认为 `<recordings-destination>/state`。除非已设置状态文件路径，否则为必需项。也可以通过环境变量 `TS_STATE_DIR` 设置。
+* `--ui` 启用录制器容器的 Web UI 以查看已录制的 SSH 会话。如果未提供此标志，默认为 `false`。也可以将该值定义为环境变量 `TSRECORDER_UI`。
+  * 如果部署录制器时启用了 UI，你的 tailnet 必须已启用 HTTPS。
+  * 如果启用录制器容器的 Web UI，你应在访问控制策略中限制对录制器 `443` 端口的访问，以防止 tailnet 中未经授权的成员查看敏感的录制内容。
 
-### Turn on session recording in your tailnet policy file
+### 在 tailnet 策略文件中开启会话录制
 
-You can turn on session recording on a per-access rule basis for SSH [access rules][docs-policy-syntax-acls] in your tailnet policy file. For each rule, add a `recorder` field and specify the tag (`["tag:<tag-name>"]`) that is attached to the recorder node. If no `recorder` is specified, the session is not recorded.
+你可以在 tailnet 策略文件中针对每条 SSH [访问规则][docs-policy-syntax-acls]分别开启会话录制。为每条规则添加一个 `recorder` 字段，并指定附加在录制节点上的标签（`["tag:<tag-name>"]`）。如果未指定 `recorder`，则不会录制会话。
 
-By default, Tailscale will allow a Tailscale SSH session to connect when session recording is enabled for its SSH access rule even if the recorder nodes are unreachable. We refer to this as "failing open." You can adjust this behavior by adding the `enforceRecorder` field and setting it to `true`. This will deny and/or stop any Tailscale SSH session that should be recorded when the recorder nodes are unreachable. We refer to this behavior as "failing closed".
+默认情况下，当某条 SSH 访问规则启用了会话录制时，即使录制节点不可达，Tailscale 也允许相应的 Tailscale SSH 会话建立连接。我们称之为"失败放行"（failing open）。你可以通过添加 `enforceRecorder` 字段并将其设置为 `true` 来调整此行为。这样，当录制节点不可达时，任何应当被录制的 Tailscale SSH 会话都会被拒绝和/或终止。我们称之为"失败关闭"（failing closed）。
 
-If an SSH connection is allowed by two or more SSH access rules, and the access rules specify different values for `enforceRecorder`, Tailscale will follow the behavior that is listed first in the tailnet policy file.
+如果某个 SSH 连接被两条或更多 SSH 访问规则允许，且这些规则为 `enforceRecorder` 指定了不同的值，Tailscale 将遵循 tailnet 策略文件中排在最前面的规则的行为。
 
 ```json
 {
@@ -130,82 +129,82 @@ If an SSH connection is allowed by two or more SSH access rules, and the access 
 },
 ```
 
-> **Note:**
+> **注意：**
 >
-> If `enforceRecorder` is `true` and the recorder node becomes unavailable after session recording is enabled in access control policies, Tailscale SSH sessions will be refused. Any active Tailscale SSH sessions will be terminated. To establish a Tailscale SSH session when the recorder node is unreachable and set to fail closed, remove the `recorder` field in access control policies.
+> 如果 `enforceRecorder` 为 `true`，且在访问控制策略中启用会话录制之后录制节点变得不可用，Tailscale SSH 会话将被拒绝，所有活动的 Tailscale SSH 会话都会被终止。在录制节点不可达且设置为失败关闭的情况下，要建立 Tailscale SSH 会话，请从访问控制策略中移除 `recorder` 字段。
 
-## Scope access to the recorder node and host
+## 限制对录制节点和主机的访问
 
-Each Tailscale SSH server sends its SSH session recordings to the recorder node on port `80`. Tailscale will automatically ensure that traffic is permitted between Tailscale SSH servers and the recorder nodes to which they send sessions. You don't need to make any changes in access control policies to allow this.
+每台 Tailscale SSH 服务器都会通过 `80` 端口将其 SSH 会话录制发送到录制节点。Tailscale 会自动确保 Tailscale SSH 服务器与其发送会话的录制节点之间的流量被允许。你无需在访问控制策略中做任何更改。
 
-If you enabled the recorder container web UI, you should be sure to allow access to port `443` for the appropriate users. Like before, use the associated tag to write this access rule.
+如果你启用了录制器容器的 Web UI，请确保为适当的用户开放 `443` 端口的访问。与前面一样，使用关联的标签来编写这条访问规则。
 
-Because the recorder stores the session recordings on the host disk, you should ensure that you have restricted access to these environments to the right users. We recommend scoping access to the recorder node and its host to the fewest number of users necessary, and recall that Owners, Admins, and Network admins will all have access to change access rules for this feature.
+由于录制器会将会话录制存储在主机磁盘上，你应确保只有合适的用户才能访问这些环境。我们建议将录制节点及其主机的访问范围限制到必要的最少用户，并注意 Owner、Admin 和 Network admin 都有权更改此功能的访问规则。
 
-## Disable session recording
+## 禁用会话录制
 
-You can disable Tailscale SSH session recording for specific SSH access rules, or for the whole tailnet.
+你可以针对特定 SSH 访问规则或整个 tailnet 禁用 Tailscale SSH 会话录制。
 
-### Disable session recording for specific Tailscale SSH access rules
+### 针对特定 Tailscale SSH 访问规则禁用会话录制
 
-To disable Tailscale SSH session recording for specific SSH access rules, remove the `recorder` line from the SSH access rule. SSH sessions that meet that rule will no longer be recorded.
+要针对特定 SSH 访问规则禁用 Tailscale SSH 会话录制，请从该 SSH 访问规则中移除 `recorder` 行。符合该规则的 SSH 会话将不再被录制。
 
-Previous recordings will not be removed, and need to be deleted from the recorder node.
+先前的录制内容不会被删除，需要你从录制节点上手动删除。
 
-### Disable session recording for all Tailscale SSH sessions
+### 针对所有 Tailscale SSH 会话禁用会话录制
 
-To disable Tailscale SSH session recording for all Tailscale SSH sessions in the tailnet:
+要针对 tailnet 中的所有 Tailscale SSH 会话禁用 Tailscale SSH 会话录制：
 
-* Remove the `recorder` rule from all SSH access rules in the `ssh` section of your tailnet policy file
-* Remove the recorder node from your tailnet. This can be done by removing the device from the [Machines](https://console.tailscale.com/admin/machines) tab of the admin console.
+* 从 tailnet 策略文件 `ssh` 分区的所有 SSH 访问规则中移除 `recorder` 规则
+* 将录制节点从你的 tailnet 中移除。可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 标签页中删除该设备。
 
-## Session recordings
+## 会话录制内容
 
-Recordings are stored at the directory you specified, as `/dir/<stablenodeid>/<timestamp>.cast`. The `<stablenodeid>` directory corresponds to the [stable node ID][co-api-devices] of the SSH servers being accessed.
+录制内容存储在你指定的目录中，路径为 `/dir/<stablenodeid>/<timestamp>.cast`。`<stablenodeid>` 目录对应被访问的 SSH 服务器的[稳定节点 ID][co-api-devices]。
 
-If you run out of disk on the host, the recorder can no longer store sessions and will fail. This will cause open sessions to be terminated and new sessions to be refused. To fix this, remove the `recorder` field from the SSH access rule for your machine, access the node host, clear space or add storage, and replace the `recorder` field.
+如果主机磁盘空间耗尽，录制器将无法继续存储会话并会失败。这会导致已打开的会话被终止、新会话被拒绝。要解决此问题，请从你机器的 SSH 访问规则中移除 `recorder` 字段，访问该节点主机，清理空间或增加存储，然后恢复 `recorder` 字段。
 
-### Reviewing recordings
+### 查看录制内容
 
-Tailscale SSH session recording captures each SSH session in `asciinema` format. This format can be played to review what occurred in a session.
+Tailscale SSH 会话录制以 `asciinema` 格式捕获每个 SSH 会话。这种格式可以回放，用于查看会话中发生的内容。
 
-If you are deploying the recorder with the built-in web UI turned on, you can review your recordings from a web browser at the URL. You can find your [tailnet DNS name][docs-tailnet-name-tailnet-dns] in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+如果你部署录制器时开启了内置 Web UI，可以在浏览器中通过该 URL 查看录制内容。你的 [tailnet DNS 名称][docs-tailnet-name-tailnet-dns]可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面找到。
 
 `https://{recorder-name}.{tailnet-dns-name}.ts.net`
 
-From the CLI, you can access the recording data using the command:
+在 CLI 中，你可以使用以下命令访问录制数据：
 
 ```shell
 cat <session-recording.cast>
 ```
 
-You can also watch recordings from the CLI with `asciinema` using the command:
+你也可以在 CLI 中使用 `asciinema` 通过以下命令观看录制：
 
 ```shell
 play <session-recording.cast>
 ```
 
-To install `asciinema` locally, refer to the [installation docs][xt-asciinema-install] for your platform.
+要在本地安装 `asciinema`，请参阅适用于你平台的[安装文档][xt-asciinema-install]。
 
-You can also convert the recording to a GIF using [`agg`][xt-gh-agg].
+你还可以使用 [`agg`][xt-gh-agg] 将录制内容转换为 GIF。
 
-### Analyzing recordings
+### 分析录制内容
 
-Recordings use the `asciinema` format, so they are newline-delimited JSON files that can be searched as text. For example, to search a recording for `sudo`:
+录制内容使用 `asciinema` 格式，因此是以换行符分隔的 JSON 文件，可以当作文本搜索。例如，在录制内容中搜索 `sudo`：
 
 ```shell
 grep "sudo" <session-recording.cast>
 ```
 
-### Example recording
+### 录制示例
 
-Here's an example of a short session recording being replayed using `asciinema`:
+以下是使用 `asciinema` 回放一段简短会话录制的示例：
 
-*（图：A recording of a terminal, made with asciinema, where the user types 'echo hi' and the terminal prints 'hi'.）*
+*（图：用 asciinema 制作的终端录制，用户输入"echo hi"，终端输出"hi"。）*
 
-A demo of the asciinema session recording playback.
+asciinema 会话录制回放的演示。
 
-This is how the same recording is represented in the `asciinema` file. It's easy to search this file for keywords or patterns that interest you.
+同一段录制在 `asciinema` 文件中的表示如下。你可以轻松地在这个文件中搜索你感兴趣的关键字或模式。
 
 ```
 {"version":2,"width":203,"height":38,"timestamp":1679441819,"env":{"TERM":"xterm-256color"},"srcNode":"srcnode.ts.net","srcNodeID":"nguedK2CNTRL","srcNodeTags":null,"sshUser":"alice","localUser":"alice","srcNodeUserID":30585448562688899,"srcNodeUser":"alice@tailscale.com"}
@@ -231,16 +230,16 @@ This is how the same recording is represented in the `asciinema` file. It's easy
 [2.89156075,"o","\u001b[?2004l\r\r\n"]
 ```
 
-### (Optional) Deploy multiple recorders for failover
+### （可选）部署多个录制器以实现故障切换
 
-If you are running Tailscale SSH session recording in a production environment, you may want to [deploy multiple recorders in a failover configuration][docs-multiple-recorder-nodes] to prevent unwanted downtime.
+如果你在生产环境中运行 Tailscale SSH 会话录制，可能需要[以故障切换配置部署多个录制器][docs-multiple-recorder-nodes]，以避免意外停机。
 
-## Limitations
+## 局限性
 
-* Recordings are only available for Tailscale SSH sessions, not other SSH sessions over Tailscale.
-* Recordings are streamed from the destination node of the Tailscale SSH connection, and cannot be configured to be streamed from the source node.
-* Session recording only records outputs from an SSH session, not inputs.
-* All outputs are logged, including any sensitive data that might be in the output.
+* 录制内容仅适用于 Tailscale SSH 会话，不适用于其他通过 Tailscale 进行的 SSH 会话。
+* 录制内容从 Tailscale SSH 连接的目标节点流式传输，无法配置为从源节点传输。
+* 会话录制只记录 SSH 会话的输出，不记录输入。
+* 所有输出都会被记录，包括输出中可能包含的敏感数据。
 
 [bl-tsnet-virtual-private-services]: https://tailscale.com/blog/tsnet-virtual-private-services
 

@@ -1,34 +1,34 @@
 ---
-title: "Manage your organization"
-description: "Manage your contact information, your account, the plans we offer, and how to manage your tailnet DNS name and domain."
+title: "管理你的组织"
+description: "管理你的联系信息、账户、我们提供的套餐，以及如何管理你的 tailnet DNS 名称和域名。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Use these resources to manage your contact, billing, tailnet name, and domain name information.
+使用这些资源管理你的联系信息、账单、tailnet 名称和域名信息。
 
-## Manage your contact information
+## 管理你的联系信息
 
-We may need to contact you for matters related to general account information, security, and billing. You can customize your contact information, depending on the type of interaction.
+我们可能因一般账户信息、安全以及账单相关事宜与你联系。你可以根据交互类型自定义你的联系信息。
 
-[**Contact preferences**](/docs/reference/contact-preferences) — Set contacts for account changes, configuration issues, security issues, and billing.
+[**联系偏好设置**](/docs/reference/contact-preferences) —— 为账户变更、配置问题、安全问题以及账单设置联系人。
 
-## Manage your plan and billing
+## 管理你的套餐与账单
 
-Use the following resources to explore the plans we offer and how to modify an existing Tailscale account based on your needs.
+使用以下资源了解我们提供的套餐，以及如何根据你的需求修改现有的 Tailscale 账户。
 
-[**Manage billing**](/docs/account/billing) — Change billing information related to your Tailscale account.
+[**管理账单**](/docs/account/billing) —— 修改与你的 Tailscale 账户相关的账单信息。
 
-[**Manage your plan**](/docs/account/manage-plans) — Change your Tailscale plan by upgrading or downgrading to a different plan to suit your needs.
+[**管理你的套餐**](/docs/account/manage-plans) —— 通过升级或降级到其他套餐来更改你的 Tailscale 套餐，以满足你的需求。
 
-[**Pricing ↗**](https://tailscale.com/pricing) — View and compare all current Tailscale plans.
+[**定价 ↗**](https://tailscale.com/pricing) —— 查看并比较所有当前的 Tailscale 套餐。
 
-[**Pricing FAQs ↗**](https://tailscale.com/pricing#faqs) — Get answers to common questions related to plans and billing.
+[**定价常见问题 ↗**](https://tailscale.com/pricing#faqs) —— 解答与套餐和账单相关的常见问题。
 
-## Manage your tailnet names and domain
+## 管理你的 tailnet 名称与域名
 
-Use the following resources to manage tailnet names and domains with Tailscale.
+使用以下资源通过 Tailscale 管理 tailnet 名称和域名。
 
-[**Tailnet names and types**](/docs/concepts/tailnet-name) — A tailnet uses several name types to identify devices and manage access, including Tailnet DNS, machine, Tailnet ID, and Legacy ID, each serving unique purposes.
+[**Tailnet 名称与类型**](/docs/concepts/tailnet-name) —— tailnet 使用多种名称类型来标识设备和管理访问，包括 Tailnet DNS、机器名称、Tailnet ID 和 Legacy ID，每种名称都有各自的用途。
 
-[**Domain ownership**](/docs/concepts/domain-ownership) — Explore how your tailnet is tied to your domain.
+[**域名所有权**](/docs/concepts/domain-ownership) —— 了解你的 tailnet 如何与你的域名绑定。

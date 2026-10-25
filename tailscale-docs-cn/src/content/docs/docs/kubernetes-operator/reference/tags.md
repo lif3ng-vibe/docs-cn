@@ -1,25 +1,25 @@
 ---
-title: "Tag customization for the Tailscale Kubernetes Operator"
-description: "The Tailscale Kubernetes Operator uses [tags][docs-tags] to identify and control access to the devices it manages. Tags control which tailnet identities can reach operator-managed devices, and which d"
+title: "Tailscale Kubernetes Operator 的标签自定义"
+description: "Tailscale Kubernetes Operator 使用[标签][docs-tags]来标识其管理的设备并控制对它们的访问。标签决定哪些 tailnet 身份可以访问 operator 管理的设备，以及哪些设备可以通告 Tailscale Service。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The Tailscale Kubernetes Operator uses [tags][docs-tags] to identify and control access to the devices it manages. Tags control which tailnet identities can reach operator-managed devices, and which devices can advertise Tailscale Services.
+Tailscale Kubernetes Operator 使用[标签][docs-tags]来标识其管理的设备并控制对它们的访问。标签决定哪些 tailnet 身份可以访问 operator 管理的设备，以及哪些设备可以通告 Tailscale Service。
 
-The operator uses two default tags:
+operator 使用两个默认标签：
 
-* **`tag:k8s-operator`**: Applied to the operator device itself.
-* **`tag:k8s`**: Applied to all proxy devices the operator creates (ingress proxies, egress proxies, connectors, and ProxyGroup replicas).
+* **`tag:k8s-operator`**：应用于 operator 设备本身。
+* **`tag:k8s`**：应用于 operator 创建的所有代理设备（入站代理、出站代理、连接器与 ProxyGroup 副本）。
 
-## Default tags
+## 默认标签
 
-You configure default tags during [operator installation][docs-install-operator] using [Helm][xt-helm] values:
+你在[安装 operator][docs-install-operator]时使用 [Helm][xt-helm] 值配置默认标签：
 
-* **`operatorConfig.defaultTags`**: Tags for the operator device. Defaults to `tag:k8s-operator`.
-* **`proxyConfig.defaultTags`**: Tags for all proxy devices the operator creates. Defaults to `tag:k8s`.
+* **`operatorConfig.defaultTags`**：operator 设备的标签。默认为 `tag:k8s-operator`。
+* **`proxyConfig.defaultTags`**：operator 创建的所有代理设备的标签。默认为 `tag:k8s`。
 
-To set custom defaults during installation:
+安装时设置自定义默认值：
 
 ```shell
 helm upgrade --install tailscale-operator tailscale/tailscale-operator \
@@ -28,11 +28,11 @@ helm upgrade --install tailscale-operator tailscale/tailscale-operator \
   --set-json 'proxyConfig.defaultTags=["tag:k8s","tag:prod"]'
 ```
 
-## Tag ownership
+## 标签所有权
 
-The operator's tag must own the proxy tags in your tailnet policy file. Without this, the operator cannot create devices with those tags.
+operator 的标签必须在你的 tailnet 策略文件中拥有这些代理标签。否则，operator 无法创建带有这些标签的设备。
 
-For the default tags, add the following to your tailnet policy file from the [Access controls](https://console.tailscale.com/admin/acls):
+对于默认标签，请从 [访问控制](https://console.tailscale.com/admin/acls) 页面向 tailnet 策略文件添加以下内容：
 
 ```json
 "tagOwners": {
@@ -41,9 +41,9 @@ For the default tags, add the following to your tailnet policy file from the [Ac
 }
 ```
 
-This configuration makes `tag:k8s-operator` owned by tailnet admins, and lets devices tagged as `tag:k8s-operator` (the operator) create devices tagged `tag:k8s`.
+此配置使 `tag:k8s-operator` 由 tailnet 管理员拥有，并允许带有 `tag:k8s-operator` 标签的设备（即 operator）创建带有 `tag:k8s` 标签的设备。
 
-If you use custom tags, the operator's tag must also own those tags. For example, if you tag proxies with `tag:prod`:
+如果你使用自定义标签，operator 的标签也必须拥有这些标签。例如，如果你为代理打 `tag:prod` 标签：
 
 ```json
 "tagOwners": {
@@ -53,13 +53,13 @@ If you use custom tags, the operator's tag must also own those tags. For example
 }
 ```
 
-## Customize tags per resource
+## 按资源自定义标签
 
-You can override default proxy tags on individual resources.
+你可以在单个资源上覆盖默认的代理标签。
 
 ### Connector
 
-Set tags in the `Connector` spec:
+在 `Connector` 规范中设置标签：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -77,7 +77,7 @@ spec:
 
 ### ProxyGroup
 
-Set tags in the `ProxyGroup` spec:
+在 `ProxyGroup` 规范中设置标签：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -90,9 +90,9 @@ spec:
     - "tag:eu-cluster"
 ```
 
-### Service or Ingress (standalone proxies)
+### Service 或 Ingress（独立代理）
 
-Use the `tailscale.com/tags` annotation:
+使用 `tailscale.com/tags` 注解：
 
 ```yaml
 apiVersion: v1
@@ -109,36 +109,36 @@ spec:
     - port: 80
 ```
 
-As with all custom tags, the operator's tag must be a `tagOwner` of these tags. Refer to [tag ownership][ar-tag-ownership] for details.
+与所有自定义标签一样，operator 的标签必须是这些标签的 `tagOwner`。详情参阅[标签所有权][ar-tag-ownership]。
 
-## Tags in access control
+## 访问控制中的标签
 
-Tags are the primary mechanism for controlling access to operator-managed devices. Use tags in your tailnet policy file to:
+标签是控制对 operator 管理设备的访问的主要机制。请在 tailnet 策略文件中使用标签来：
 
-* **Grant access with ACLs or grants**: Lets specific tailnet identities reach devices with a given tag. Refer to [grants][docs-grants] and [ACLs][docs-acls].
-* **Approve Tailscale Service advertisers**: Use [`autoApprovers`][docs-auto-approvers] to permit ProxyGroup devices to advertise Tailscale Services. Refer to [permissions and RBAC][docs-rbac] for examples.
+* **用 ACL 或授权授予权限**：让特定 tailnet 身份可以访问带有给定标签的设备。参阅[授权][docs-grants]与 [ACL][docs-acls]。
+* **批准 Tailscale Service 通告方**：使用 [`autoApprovers`][docs-auto-approvers] 允许 ProxyGroup 设备通告 Tailscale Service。示例参阅[权限与 RBAC][docs-rbac]。
 
-## Tags and the API server proxy
+## 标签与 API server 代理
 
-When a tagged device connects to the [API server proxy][docs-auth-rbac], the proxy impersonates the request using the device's tags as Kubernetes groups. For example, a device tagged `tag:ci-runner` is impersonated with the Kubernetes group `tag:ci-runner`. You can bind these groups to Kubernetes roles using standard RBAC.
+当带有标签的设备连接到 [API server 代理][docs-auth-rbac]时，代理会使用该设备的标签作为 Kubernetes 组来模拟（impersonate）请求。例如，带有 `tag:ci-runner` 标签的设备会以 Kubernetes 组 `tag:ci-runner` 的身份被模拟。你可以使用标准 RBAC 将这些组绑定到 Kubernetes 角色。
 
-If [grants][docs-grants] define additional Kubernetes groups for the device, those take precedence over tag-based groups.
+如果[授权][docs-grants]为该设备定义了额外的 Kubernetes 组，这些组会优先于基于标签的组。
 
-## Limitations
+## 限制
 
-* The operator applies tags only during initial device provisioning. If you modify the `tailscale.com/tags` annotation on an already-exposed `Service`, the tags do not update until you recreate the `Service`.
-* `Connector` tags cannot be changed after the connector device is created.
+* operator 只在初始置备设备时应用标签。如果你修改已暴露 `Service` 上的 `tailscale.com/tags` 注解，标签不会更新，直到你重建该 `Service`。
+* 连接器设备创建后，`Connector` 标签无法更改。
 
-For a full list, refer to [limitations][docs-limitations].
+完整列表参阅[限制][docs-limitations]。
 
-## Next steps
+## 后续步骤
 
-* [Install the operator][docs-install-operator] for configuring default tags.
-* Use [permissions and RBAC][docs-rbac] for tag-based access control examples.
-* Use [auth and RBAC for the API server proxy][docs-auth-rbac] for tag-based impersonation.
-* Refer to [Tags][docs-tags] for more general information about using Tailscale tags.
+* [安装 operator][docs-install-operator]以配置默认标签。
+* 使用[权限与 RBAC][docs-rbac]查看基于标签的访问控制示例。
+* 使用 [API server 代理的认证与 RBAC][docs-auth-rbac]了解基于标签的模拟。
+* 参阅[标签][docs-tags]了解有关使用 Tailscale 标签的更多一般信息。
 
-[ar-tag-ownership]: #tag-ownership
+[ar-tag-ownership]: #标签所有权
 
 [docs-acls]: /docs/features/access-control/acls
 

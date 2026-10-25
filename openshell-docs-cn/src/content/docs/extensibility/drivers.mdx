@@ -1,0 +1,62 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "驱动"
+description: "了解 OpenShell 的计算驱动与凭据驱动扩展点。"
+keywords: "OpenShell 扩展, 计算驱动, 凭据驱动, 扩展性"
+---
+
+OpenShell 用驱动把网关连接到工作负载运行时与凭据存储。驱动实现稳定的能力边界，而公开 API、授权、工作区作用域与资源生命周期归网关掌控。
+
+## 计算驱动
+
+计算驱动创建、检查并删除沙箱工作负载。OpenShell 内置 Kubernetes、Docker、Podman、虚拟机与 Windows MXC 驱动。外部计算驱动经 Unix domain socket 与网关通信，并在服务请求之前协商其协议版本与能力。
+
+内置驱动的配置与行为参见[运行时](/how-it-works/sandboxes/runtimes)。实现细节参见各驱动的 crate：
+
+| 驱动 | Crate |
+|---|---|
+| Docker | [`openshell-driver-docker`](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-driver-docker/README.md) |
+| Podman | [`openshell-driver-podman`](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-driver-podman/README.md) |
+| MicroVM | [`openshell-driver-vm`](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-driver-vm/README.md) |
+| Kubernetes | [`openshell-driver-kubernetes`](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-driver-kubernetes/README.md) |
+| Windows MXC | [`openshell-driver-mxc`](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-driver-mxc/README.md) |
+
+### 使用外部计算驱动
+
+外部计算驱动必须实现 [`compute_driver.proto`](https://github.com/NVIDIA/OpenShell/blob/main/proto/compute_driver.proto)。元数据与能力要求参见[协议协商](/extensibility/overview#协议协商)，工作负载运行时契约参见[隔离后端](/extensibility/isolation-backends)。你的驱动还必须确认网关的[资源准入策略](/how-it-works/gateways/configuration#外部资源准入)。
+
+把驱动作为独立服务运行，监听 Unix domain socket。网关不会启动或监管它。请把 socket 访问限制为网关用户，并保证 socket 可从网关所在的宿主机或容器访问。
+
+选择一个未被内置驱动保留的名称，然后把它与 socket 路径加入你现有的 `gateway.toml`：
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+compute_driver = "example-compute"
+
+[openshell.drivers.example-compute]
+socket_path = "/run/openshell/example-compute.sock"
+```
+
+启动驱动，然后用这份配置启动或重启网关。用连接到该网关的 CLI 执行 `openshell gateway info`，验证生效的驱动与协商出的能力。配置细节参见[扩展驱动配置参考](/how-it-works/gateways/configuration#扩展驱动)。
+
+## 凭据驱动
+
+凭据驱动把提供商凭据存放在不透明句柄之后。挂接提供商时网关解析这些句柄，不会把机密值持久化到提供商记录中。OpenShell 内置数据库、Kubernetes Secret 与 Vault 兼容的凭据驱动。
+
+生效的凭据驱动在[网关配置](/how-it-works/gateways/configuration#凭据驱动)中设置。实现细节参见各驱动的 crate：
+
+| 驱动 | Crate |
+|---|---|
+| 数据库 | [`openshell-driver-db-credstore`](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-driver-db-credstore) |
+| Kubernetes Secrets | [`openshell-driver-kubernetes-secrets`](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-driver-kubernetes-secrets) |
+| Vault | [`openshell-driver-vault`](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-driver-vault) |
+
+外部凭据驱动实现 [`credential_driver.proto`](https://github.com/NVIDIA/OpenShell/blob/main/proto/credential_driver.proto)。
+
+## 兼容性
+
+驱动与网关交换对端元数据，并公示其扩展协议族能力。协议版本变化时，双方请一起升级。协商契约参见[扩展协议协商](/extensibility/overview#协议协商)。

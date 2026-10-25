@@ -1,58 +1,58 @@
 ---
-title: "Scanning for exposed Tailscale secrets"
-description: "Find out how Tailscale partners scan for exposed Tailscale secrets and provide notifications to help prevent fraudulent access."
+title: "扫描暴露的 Tailscale 密钥"
+description: "了解 Tailscale 合作伙伴如何扫描暴露的 Tailscale 密钥并发送通知，帮助防止欺诈性访问。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale provides a variety of [keys][docs-key-prefixes] that are used for automation and integration. Treat these keys as secrets and handle them securely. If they are leaked, someone could take harmful action on your Tailscale network (known as a tailnet). To help mitigate accidental disclosure and prevent fraudulent use, Tailscale partners with the following companies to provide secret scanning of source code repositories and other data sources to find leaked Tailscale keys:
+Tailscale 提供多种用于自动化和集成的[密钥][docs-key-prefixes]。请将这些密钥视为机密（secret），并安全地加以保管。一旦泄露，有人可能会对你的 Tailscale 网络（即 tailnet）采取有害操作。为帮助减轻意外泄露的影响并防止欺诈性使用，Tailscale 与以下公司合作，对源代码仓库和其他数据源进行机密扫描（secret scanning），以发现泄露的 Tailscale 密钥：
 
 * [GitGuardian][xt-gitguardian]
 * [GitHub][xt-github]
 * [GitLab][xt-gitlab]
 * [TruffleHog][xt-trufflesecurity-trufflehog]
 
-This topic describes the scanning performed by these companies, and the actions taken when they believe they have discovered an exposed Tailscale secret.
+本主题介绍这些公司执行的扫描，以及当他们认为自己发现了暴露的 Tailscale 机密时会采取的行动。
 
-The types of Tailscale keys that are in scope for secret scanning are:
+机密扫描涵盖的 Tailscale 密钥类型包括：
 
-* [API access tokens][docs-api-authentication] (also known as "API keys")
-* [OAuth clients][docs-oauth-clients]
-* [Pre-authentication keys][docs-auth-keys] (also known as "auth keys")
-* [System for Cross-domain Identity Management (SCIM) keys][ln-what-is-scim]
-* [Webhook keys][docs-webhooks-webhook-secret]
+* [API 访问令牌][docs-api-authentication]（也称为"API 密钥"）
+* [OAuth 客户端][docs-oauth-clients]
+* [预认证密钥][docs-auth-keys]（也称为"认证密钥"）
+* [跨域身份管理系统（SCIM）密钥][ln-what-is-scim]
+* [Webhook 密钥][docs-webhooks-webhook-secret]
 
-If you are notified or otherwise believe that one of your Tailscale keys has been compromised, refer to [Key and secret management][docs-key-secret-management] for recommended actions.
+如果你收到通知，或以其他方式认为你的某个 Tailscale 密钥已遭泄露，请参阅[密钥与机密管理][docs-key-secret-management]了解建议采取的行动。
 
-> **Note:** Secret scanning is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 机密扫描适用于[所有套餐](https://tailscale.com/pricing)。
 
 ## GitGuardian
 
-[GitGuardian][xt-gitguardian] scans across your platforms to look for leaked secrets. If it detects a possible Tailscale secret, GitGuardian makes an API call to a Tailscale endpoint to determine whether the secret is an actual active secret. If the secret is active, GitGuardian contacts the user whose data source contains the secret.
+[GitGuardian][xt-gitguardian] 会跨你的各个平台扫描泄露的机密。如果它检测到可能的 Tailscale 机密，GitGuardian 会调用一个 Tailscale 端点的 API，以确定该机密是否确实处于活跃状态。如果该机密是活跃的，GitGuardian 会联系其数据源中包含该机密的用户。
 
-The GitGuardian API call to the Tailscale endpoint does not modify your tailnet, it merely checks if a secret is an active Tailscale key.
+GitGuardian 对 Tailscale 端点的 API 调用不会修改你的 tailnet，它只是检查某个机密是否为活跃的 Tailscale 密钥。
 
-GitGuardian does not notify Tailscale about any potentially exposed Tailscale secrets that GitGuardian detects.
+GitGuardian 不会将其检测到的任何潜在暴露的 Tailscale 机密通知 Tailscale。
 
 ## GitHub
 
-[GitHub][xt-github] automatically scans all public repositories (including issues, pull requests, comments, and wikis) and all public npm packages. If GitHub finds a Tailscale secret in those sources, GitHub makes an API call to a Tailscale endpoint to determine whether the secret is an active secret. If it is an active secret, Tailscale will revoke the secret and send an email to the [security issues contact][docs-security-contact] for the tailnet to which the leaked secret belongs.
+[GitHub][xt-github] 会自动扫描所有公开仓库（包括 issue、pull request、评论和 wiki）以及所有公开的 npm 软件包。如果 GitHub 在这些来源中发现 Tailscale 机密，GitHub 会调用一个 Tailscale 端点的 API，以确定该机密是否为活跃的机密。如果是活跃机密，Tailscale 将撤销该机密，并向泄露机密所属 tailnet 的[安全问题联系人][docs-security-contact]发送电子邮件。
 
-If you have configured GitHub to scan your private repositories and issues and GitHub finds a Tailscale secret in those sources, GitHub makes an API call to a Tailscale endpoint to determine whether the secret is an active secret. If it is an active secret, Tailscale will revoke secret and send an email to the security issues contact for the tailnet to which the leaked secret belongs. Additionally, GitHub will report the leaked secret as an alert on the **Security** tab of the GitHub repository. GitHub's scanning of a private repository's issues includes scanning the titles, descriptions, and comments in open and historical issues.
+如果你已将 GitHub 配置为扫描你的私有仓库和 issue，并且 GitHub 在这些来源中发现了 Tailscale 机密，GitHub 会调用一个 Tailscale 端点的 API，以确定该机密是否为活跃的机密。如果是活跃机密，Tailscale 将撤销该机密，并向泄露机密所属 tailnet 的安全问题联系人发送电子邮件。此外，GitHub 还会在该 GitHub 仓库的 **Security**（安全）标签页中将泄露的机密报告为告警。GitHub 对私有仓库 issue 的扫描包括扫描未关闭和历史 issue 的标题、描述和评论。
 
-For more information about GitHub secret scanning, refer to the GitHub [About secret scanning][xt-github-secret-scanning] topic.
+有关 GitHub 机密扫描的更多信息，请参阅 GitHub 的[关于机密扫描][xt-github-secret-scanning]主题。
 
 ## GitLab
 
-[GitLab][xt-gitlab] provides GitLab Secret Detection, which [when enabled][xt-gitlab-secret-detection-enable] scans all text files in your GitLab repository to find leaked secrets. GitLab uses a regular expression (also known as a regex) provided by Tailscale as the scan criteria for leaked secrets. If a secret that is believed to be a Tailscale secret is discovered, GitLab will report the leaked secret in a [GitLab artifact report][xt-gitlab-artifact-report] for the GitLab repository. GitLab does not notify Tailscale about any potentially exposed Tailscale secrets in GitLab repositories. For more information about GitLab secret scanning, refer to the GitLab [Secret Detection][xt-gitlab-secret-detection] topic.
+[GitLab][xt-gitlab] 提供 GitLab Secret Detection 功能，[启用后][xt-gitlab-secret-detection-enable]会扫描 GitLab 仓库中的所有文本文件，以发现泄露的机密。GitLab 使用由 Tailscale 提供的正则表达式（regex）作为泄露机密的扫描标准。如果发现了被认为是 Tailscale 机密的内容，GitLab 会在该 GitLab 仓库的 [GitLab 产物报告（artifact report）][xt-gitlab-artifact-report]中报告泄露的机密。GitLab 不会将其仓库中任何潜在暴露的 Tailscale 机密通知 Tailscale。有关 GitLab 机密扫描的更多信息，请参阅 GitLab 的 [Secret Detection][xt-gitlab-secret-detection] 主题。
 
 ## TruffleHog
 
-[TruffleHog][xt-trufflesecurity-trufflehog] scans across your platforms to look for leaked secrets. If it detects a possible Tailscale secret, TruffleHog makes an API call to a Tailscale endpoint to determine whether the secret is an actual active secret. If the secret is active, TruffleHog contacts the user whose data source contains the secret.
+[TruffleHog][xt-trufflesecurity-trufflehog] 会跨你的各个平台扫描泄露的机密。如果它检测到可能的 Tailscale 机密，TruffleHog 会调用一个 Tailscale 端点的 API，以确定该机密是否确实处于活跃状态。如果该机密是活跃的，TruffleHog 会联系其数据源中包含该机密的用户。
 
-The TruffleHog API call to the Tailscale endpoint does not modify your tailnet, it merely checks if a secret is an active Tailscale key.
+TruffleHog 对 Tailscale 端点的 API 调用不会修改你的 tailnet，它只是检查某个机密是否为活跃的 Tailscale 密钥。
 
-When Tailscale receives notice of an exposed secret from TruffleHog, Tailscale does **not** automatically revoke the secret.
+当 Tailscale 收到来自 TruffleHog 的暴露机密通知时，Tailscale **不会**自动撤销该机密。
 
 [docs-api-authentication]: /docs/reference/tailscale-api#authentication
 

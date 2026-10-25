@@ -1,49 +1,43 @@
 ---
-title: "Access your tailnet from Gitpod"
-description: "[Gitpod][xt-gitpod] is a way to spin up automated development environments for each task, in the cloud, in seconds, from any Git context you want."
+title: "从 Gitpod 访问你的 tailnet"
+description: "[Gitpod][xt-gitpod] 是一种在云端秒级为每个任务启动自动化开发环境的方式，可以使用你想要的任何 Git 上下文。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[Gitpod][xt-gitpod] is a way to spin up automated development
-environments for each task, in the cloud, in seconds, from any Git context you want.
+[Gitpod][xt-gitpod] 是一种在云端秒级为每个任务启动自动化开发环境的方式，可以使用你想要的任何 Git 上下文。
 
-Tailscale can be installed within a Gitpod workspace to be able to access private
-resources securely, such as package registries, or to share an environment with
-your colleagues for code review or pair programming.
+你可以在 Gitpod 工作区内安装 Tailscale，从而安全地访问私有资源（例如软件包仓库），或者与同事共享环境，进行代码评审或结对编程。
 
-## Start Tailscale
+## 启动 Tailscale
 
-If you're already using Gitpod, Tailscale is installed in the [default `full` workspace base image][xt-docker-workspace-full] for Gitpod. To use it, in your workspace:
+如果你已经在使用 Gitpod，那么 Gitpod 的[默认 `full` 工作区基础镜像][xt-docker-workspace-full]中已安装 Tailscale。要使用它，请在你的工作区中：
 
-1. Run `sudo tailscaled` in a separate shell to start the process.
-2. In your main shell, run `tailscale up` and authenticate using your browser or using an auth key.
+1. 在一个单独的 shell 中运行 `sudo tailscaled` 来启动进程。
+2. 在主 shell 中运行 `tailscale up`，然后使用浏览器或认证密钥进行认证。
 
-### Add Tailscale to a custom base image
+### 将 Tailscale 添加到自定义基础镜像
 
-If you're managing your own base image instead of using the default `full` workspace image, you can still use Tailscale as part of a [custom Docker image][xt-gitpod-config-docker] for your project in Gitpod. The following files from the [`gitpod-io/template-tailscale` repository][xt-gh-gitpod-tailscale] or the [`tailscale/gitpod` repository][xt-gh-tailscale-gitpod] will need to be incorporated:
+如果你管理自己的基础镜像而不使用默认的 `full` 工作区镜像，仍然可以在 Gitpod 中将 Tailscale 作为项目[自定义 Docker 镜像][xt-gitpod-config-docker]的一部分来使用。需要合并以下文件，它们来自 [`gitpod-io/template-tailscale` 仓库][xt-gh-gitpod-tailscale]或 [`tailscale/gitpod` 仓库][xt-gh-tailscale-gitpod]：
 
-1. `.gitpod.Dockerfile` should be a layer in the build, or incorporated into the project Dockerfile.
-2. The Tailscale task in `.gitpod.yml` needs to be incorporated into the project `.gitpod.yml` file.
+1. `.gitpod.Dockerfile` 应作为构建中的一层，或合并进项目的 Dockerfile。
+2. `.gitpod.yml` 中的 Tailscale 任务需要合并进项目的 `.gitpod.yml` 文件。
 
-## Authenticate to Tailscale
+## 向 Tailscale 认证
 
-To allow the Gitpod workspace to join the tailnet, create an
-[auth key][docs-auth-keys]
-for your tailnet and add it as a [Gitpod environment variable][xt-gitpod-variables]
-named `TAILSCALE_AUTHKEY`.
+要让 Gitpod 工作区加入 tailnet，请为你的 tailnet 创建一个[认证密钥][docs-auth-keys]，并将其添加为名为 `TAILSCALE_AUTHKEY` 的 [Gitpod 环境变量][xt-gitpod-variables]。
 
-Once you're connected, you should find your Gitpod workspace in your tailnet following the naming convention `gitpod--{user-name}--{repo-name}`. Consider [enabling MagicDNS][docs-magicdns] to get a stable domain for your workspace, reachable from other nodes in your tailnet, such as your local machine.
+连接成功后，你可以在 tailnet 中按照 `gitpod--{user-name}--{repo-name}` 的命名约定找到你的 Gitpod 工作区。建议[启用 MagicDNS][docs-magicdns]，为你的工作区获取一个稳定域名，可从 tailnet 中的其他节点（例如你的本地机器）访问。
 
-### Use an ephemeral auth key for ephemeral workspaces
+### 为临时工作区使用临时认证密钥
 
-If you use a normal auth key, the Tailscale machine state will be stored in your Gitpod account, and your workspace will always reconnect as the same node.
+如果你使用普通认证密钥，Tailscale 的机器状态会存储在你的 Gitpod 账户中，你的工作区总是以同一个节点重新连接。
 
-Several Gitpod workspaces started relatively close together will get incrementing hostnames like `gitpod--{user-name}--{repo-name}-1` and `gitpod--{user-name}--{repo-name}-2`.
+在相近时间启动的多个 Gitpod 工作区会得到递增的主机名，例如 `gitpod--{user-name}--{repo-name}-1` 和 `gitpod--{user-name}--{repo-name}-2`。
 
-If you want to treat your Gitpod workspaces as ephemeral, instead use an [ephemeral auth key][docs-ephemeral-nodes].
+如果你想把 Gitpod 工作区当作临时节点来对待，请改用[临时认证密钥][docs-ephemeral-nodes]。
 
-*（图：Gitpod composing some Markdown）*
+*（图：Gitpod 中编辑 Markdown）*
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

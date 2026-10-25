@@ -1,24 +1,24 @@
 ---
-title: "Set per-user spending limits"
-description: "When multiple people use LLMs through Aperture, a single user can consume a disproportionate share of your AI budget. Per-user spending limits give each person an independent budget that refills autom"
+title: "设置按用户的支出限额"
+description: "当多人通过 Aperture 使用 LLM 时，单个用户可能消耗掉不成比例的 AI 预算。按用户的支出限额给每个人一份会自动"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-When multiple people use LLMs through Aperture, a single user can consume a disproportionate share of your AI budget. Per-user spending limits give each person an independent budget that refills automatically, so no one exhausts the team's resources.
+当多人通过 Aperture 使用 LLM 时，单个用户可能消耗掉不成比例的 AI 预算。按用户的支出限额给每个人一份自动补充的独立预算，谁也不会耗尽团队的资源。
 
-Aperture uses quota buckets to enforce spending limits. Each bucket has a capacity (maximum balance), a refill rate, and a behavior when the limit is exceeded. Using the `<user>` template variable in the bucket name creates a separate bucket for each person who sends requests through Aperture.
+Aperture 使用配额桶来执行支出限额。每个桶有一个容量（最大余额）、一个补充速率，以及超限时的行为。在桶名中使用 `<user>` 模板变量，即可为每个通过 Aperture 发送请求的人创建一个独立的桶。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-get-started] with at least one provider configured.
-* Admin access to the [Aperture configuration][docs-aperture-configuration].
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-get-started]。
+* 对 [Aperture 配置][docs-aperture-configuration]的管理员访问权限。
 
-## Define a per-user quota bucket
+## 定义按用户的配额桶
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Add a `quotas` section to your configuration. The following example creates a per-user bucket with a $10 capacity that refills at $5 per day:
+\[Missing snippet: aperture\_admin\_nav.mdx] 在配置中添加 `quotas` 部分。下面的示例创建一个按用户的桶，容量为 $10，每天补充 $5：
 
 ```json
 "quotas": {
@@ -30,15 +30,15 @@ Before you begin, ensure you have the following:
 }
 ```
 
-The `<user>` template expands to each caller's Tailscale login name at request time. For example, when `alice@example.com` sends a request, Aperture charges the bucket `daily:alice@example.com`. When `bob@example.com` sends a request, Aperture charges `daily:bob@example.com`. Each bucket tracks its balance independently.
+`<user>` 模板在请求时展开为每个调用者的 Tailscale 登录名。例如，`alice@example.com` 发送请求时，Aperture 记入 `daily:alice@example.com` 桶；`bob@example.com` 发送请求时，Aperture 记入 `daily:bob@example.com` 桶。每个桶独立跟踪自己的余额。
 
-The `capacity` field sets the maximum balance the bucket can hold. This is also the starting balance. The `rate` field controls how fast the bucket refills. Supported time units are `min`, `hour`, `day`, `week`, and `month` (30 days).
+`capacity` 字段设置桶可持有的最大余额，也是初始余额。`rate` 字段控制桶的补充速度。支持的时间单位为 `min`、`hour`、`day`、`week` 和 `month`（30 天）。
 
-When `on_exceed` is set to `"reject"`, Aperture blocks requests that would bring the bucket below zero and returns HTTP 429 with a `Retry-After` header. `"reject"` is the only supported value for `on_exceed`.
+当 `on_exceed` 设为 `"reject"` 时，Aperture 会拦截会把桶扣到零以下的请求，并返回带 `Retry-After` 头部的 HTTP 429。`"reject"` 是 `on_exceed` 唯一支持的值。
 
-## Attach the quota to a grant
+## 把配额挂到授权上
 
-A quota bucket has no effect until a grant references it. Add a `quotas` entry to the capability in your `grants` section that should enforce the limit:
+配额桶在授权引用它之前不会生效。在 `grants` 部分中需要执行该限额的能力里添加一个 `quotas` 条目：
 
 ```json
 "grants": [
@@ -59,13 +59,13 @@ A quota bucket has no effect until a grant references it. Add a `quotas` entry t
 ]
 ```
 
-This grant applies the per-user quota to all models for all users. When a request matches the grant, Aperture checks the user's bucket balance before forwarding the request. After the response completes, Aperture deducts the estimated cost from the bucket.
+这条授权把按用户配额应用到所有用户的所有模型上。当请求匹配授权时，Aperture 会在转发请求前检查该用户的桶余额；响应完成后，Aperture 从桶中扣除估算成本。
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-## Scope a quota to specific models
+## 把配额限定到特定模型
 
-To limit spending on expensive models while leaving others unmetered, create a quota that applies only to specific model patterns:
+要限制昂贵模型上的支出而让其他模型不计费，可以创建只作用于特定模型模式的配额：
 
 ```json
 "quotas": {
@@ -93,24 +93,24 @@ To limit spending on expensive models while leaving others unmetered, create a q
 ]
 ```
 
-In this configuration, requests to Opus models are metered against the `opus:<user>` bucket, while all other models have no spending limit.
+在这份配置中，发往 Opus 模型的请求按 `opus:<user>` 桶计费，其余模型没有支出限制。
 
-For [model aliases][docs-aperture-model-aliases], quota model patterns match the resolved destination model, not the alias name.
+对[模型别名][docs-aperture-model-aliases]，配额的模型模式匹配的是解析后的目标模型，而不是别名名称。
 
-## Verify the configuration
+## 验证配置
 
-After saving the configuration, confirm the quota is active:
+保存配置后，确认配额已生效：
 
-1. Send a test request through Aperture.
-2. Check the [quota status][docs-monitor-quotas] using the API (`GET /api/quotas`) or the personal **Quotas** page at `/quotas` in the chat portal. The quota bucket for your user should appear with the correct capacity and a balance reduced by the cost of your test request.
+1. 通过 Aperture 发送一条测试请求。
+2. 通过 API（`GET /api/quotas`）或聊天门户中 `/quotas` 的个人 **Quotas** 页面查看[配额状态][docs-monitor-quotas]。你的用户对应的配额桶应该已出现，容量正确，且余额因测试请求的成本而减少。
 
-If a request exceeds the quota, Aperture returns an error formatted to match the provider's native error format (for example, `rate_limit_error` for Anthropic, `insufficient_quota` for OpenAI). For troubleshooting details, refer to [Troubleshooting Aperture][docs-troubleshooting].
+如果请求超出配额，Aperture 会返回与其提供商原生错误格式一致的错误（例如 Anthropic 的 `rate_limit_error`、OpenAI 的 `insufficient_quota`）。故障排除细节请参阅 [Aperture 故障排除][docs-troubleshooting]。
 
-## Next steps
+## 后续步骤
 
-* [Set a team-wide budget][docs-set-team-budget] to add an organization-level spending cap alongside per-user limits.
-* [Check and refill budgets][docs-monitor-quotas] to monitor bucket balances and manually add funds.
-* Refer to the [quotas configuration reference][docs-aperture-quotas] for the complete field reference and additional examples.
+* [设置团队预算][docs-set-team-budget]，在按用户限额之外增加组织级的支出上限。
+* [检查并补充预算][docs-monitor-quotas]，监控桶余额并手动添加额度。
+* 完整字段参考与更多示例请参阅[配额配置参考][docs-aperture-quotas]。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

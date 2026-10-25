@@ -1,81 +1,81 @@
 ---
-title: "What is Tailscale PAM?"
-description: "Tailscale PAM provides privileged and auditable access to resources like Linux servers, databases, and Kubernetes clusters in your Tailscale network."
+title: "什么是 Tailscale PAM？"
+description: "Tailscale PAM 为 Tailscale 网络中的 Linux 服务器、数据库和 Kubernetes 集群等资源提供特权且可审计的访问。"
 ---
 
-Last validated Aug 17, 2026
+最后验证于 Aug 17, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Organizations struggle to answer two questions about their modern infrastructure: *Who has access to what?* and *What did they do?* Traditional Privileged Access Management (PAM) solutions tried to solve this with credential vaulting, password rotation, and activity recording. Modern infrastructure makes that model increasingly untenable: cloud, Kubernetes, databases, ephemeral developer environments, AI agents, and CI/CD all create privileged pathways that are not just "admin passwords in a vault".
+各组织一直难以回答关于其现代基础设施的两个问题：*谁能访问什么？*以及*他们做了什么？*传统的特权访问管理（PAM）方案试图用凭证保管库、密码轮换和活动录制来解决这个问题。而现代基础设施让这一模式越来越难以为继：云、Kubernetes、数据库、临时开发环境、AI 代理和 CI/CD 都在创建特权通道，它们早已不只是"保管库里的管理员密码"。
 
-Tailscale PAM is a next-generation PAM solution that provides application-aware access to your critical resources in your Tailscale network (known as a tailnet). It provides secure access to Linux servers, databases, Kubernetes clusters, and more. Tailscale PAM eliminates the risks of shared and static credentials. It governs privileged sessions at the moment access happens, with complete session auditing and session recording, where applicable.
+Tailscale PAM 是新一代 PAM 方案，为 Tailscale 网络（即 tailnet）中的关键资源提供应用感知的访问。它为 Linux 服务器、数据库、Kubernetes 集群等提供安全访问。Tailscale PAM 消除了共享凭证和静态凭证带来的风险。它在访问发生的时刻治理特权会话，并在适用时提供完整的会话审计与会话录制。
 
-Tailscale PAM uses the same [identity layer][docs-tailscale-identity] and underlying [WireGuard][docs-wireguard] encryption protocol as Tailscale, because it is built on the Tailscale platform. You don't need to add new identity providers or passwords to manage privileged pathways to resources in your tailnet.
+Tailscale PAM 构建在 Tailscale 平台之上，使用与 Tailscale 相同的[身份层][docs-tailscale-identity]和底层 [WireGuard][docs-wireguard] 加密协议。你无需添加新的身份提供方或密码，即可管理通往 tailnet 内资源的特权通道。
 
-## Use cases
+## 使用场景
 
-Tailscale PAM addresses common challenges organizations face when providing privileged access.
+Tailscale PAM 解决各组织在提供特权访问时面临的常见挑战。
 
-* **Eliminating static and shared credentials**:
+* **消除静态与共享凭证**：
 
-  Distributing credentials to developers and admins creates security risks and an administrative burden. Credentials get shared insecurely, persisted without password rotation, or forgotten when employees leave.
+  向开发人员和管理员分发凭证会带来安全风险和管理负担。凭证可能被不安全地共享、在缺乏密码轮换的情况下长期留存，或在员工离职时被遗忘。
 
-  Tailscale PAM eliminates shared credentials. User identity comes from Tailscale's identity layer, which automatically identifies users based on their device and Tailscale login, with continuous authentication and authorization on every connection.
+  Tailscale PAM 消除了共享凭证。用户身份来自 Tailscale 的身份层，它基于用户的设备和 Tailscale 登录自动识别用户，并在每次连接时进行持续的身份验证与授权。
 
-* **Preventing long-standing and overly broad privilege**:
+* **防止长期存在且过度宽泛的权限**：
 
-  In many organizations, developers and admins accumulate broad, persistent access "just in case". This is a security risk and violates the [principle of least privilege][ln-polp].
+  在许多组织中，开发人员和管理员会"以防万一"地积累宽泛且持久的访问权限。这是一种安全风险，也违背了[最小权限原则][ln-polp]。
 
-  Tailscale PAM enables just-in-time, scoped, and time-bound access. Access is granted when needed, for the right user, to the right resource, and under the right policy.
+  Tailscale PAM 支持即时（just-in-time）、限定范围且有时限的访问。在需要时授予访问权限——只授予合适的用户、只访问合适的资源、只依据合适的策略。
 
-* **Making network access application-aware**:
+* **让网络访问具备应用感知能力**：
 
-  Legacy access controls are often based on IP address, making it difficult to secure access to an application. IP-based access to a resource like a server is too broad for many modern workloads. There is no need to provide complete server access if a user only needs to access an SSH session, query a database, or use Kubernetes resources.
+  传统的访问控制往往基于 IP 地址，难以保护对应用程序的访问。对服务器这类资源而言，基于 IP 的访问对许多现代工作负载来说过于宽泛。如果用户只需要访问一个 SSH 会话、查询一个数据库或使用 Kubernetes 资源，就没有必要开放整台服务器的完整访问。
 
-  Tailscale PAM lets you manage application-aware access. Instead of asking *Can this IP address reach this server?*, Tailscale PAM asks *Can this person run this SSH command, query this database, or interact with this Kubernetes resource?* This granular control reduces your attack surface and ensures only authorized users have access to sensitive data.
+  Tailscale PAM 让你管理应用感知的访问。它不再问*这个 IP 地址能否访问这台服务器？*，而是问*这个人能否运行这条 SSH 命令、查询这个数据库或操作这个 Kubernetes 资源？*这种细粒度控制能缩小攻击面，确保只有经授权的用户才能访问敏感数据。
 
-* **Providing auditability and session evidence**:
+* **提供可审计性与会话证据**：
 
-  Security teams, auditors, and incident responders need to know not just that someone connected, but what they did. Without an adequate audit system, they often cannot prove what happened or quickly detect bad changes. They might also be unable to satisfy auditors or meet compliance goals.
+  安全团队、审计人员和事件响应人员不仅需要知道有人连接了，还需要知道他们做了什么。缺乏足够的审计系统时，他们往往无法证明发生了什么，也无法快速发现有害变更，还可能无法应对审计或达成合规目标。
 
-  Tailscale PAM provides [session logs][docs-session-logs], recordings, approvals, and traceability so privileged activity is reviewable after the fact.
+  Tailscale PAM 提供[会话日志][docs-session-logs]、录制、审批与可追溯性，让特权活动可以事后审查。
 
-* **Preventing brittle access patterns**:
+* **避免脆弱的访问模式**：
 
-  Organizations rely on hybrid and distributed infrastructure. Disparate access mechanisms for different types of infrastructure increase complexity, reduce efficiency, and can lead to security risks.
+  各组织依赖混合式和分布式基础设施。针对不同类型基础设施采用各自为政的访问机制，会增加复杂性、降低效率，并可能带来安全风险。
 
-  Tailscale PAM provides privileged access to cloud, on-premises, hybrid environments, private infrastructure, and browser-based workflows, all from a single platform.
+  Tailscale PAM 通过单一平台提供对云、本地部署、混合环境、私有基础设施以及基于浏览器的工作流的特权访问。
 
-## Requirements
+## 系统要求
 
-Before setting up Tailscale PAM, confirm you have the following:
+设置 Tailscale PAM 之前，请确认你已具备以下条件：
 
-* A tailnet. If you do not have a tailnet, [sign up](https://login.tailscale.com/start).
-* A Tailscale account with [Owner, Admin, or IT admin](/docs/reference/user-roles) permissions, so you can use the Tailscale admin console to enable Tailscale PAM for your tailnet.
+* 一个 tailnet。如果你还没有 tailnet，请[注册](https://login.tailscale.com/start)。
+* 一个具有 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 权限的 Tailscale 账户，以便使用 Tailscale 管理控制台为你的 tailnet 启用 Tailscale PAM。
 
-## Get started
+## 开始使用
 
-If you want to try Tailscale PAM for free, [join the waitlist][co-pam-waitlist]. If you want to learn more about Tailscale PAM for your organization, contact [Tailscale Sales][co-contact-sales-border0].
+如果你想免费试用 Tailscale PAM，请[加入等候名单][co-pam-waitlist]。如果你想为所在组织进一步了解 Tailscale PAM，请联系 [Tailscale 销售团队][co-contact-sales-border0]。
 
-Once you have access to Tailscale PAM, refer to [Get started with Tailscale PAM][docs-pam-get-started].
+获得 Tailscale PAM 的访问权限后，请参阅 [Tailscale PAM 入门][docs-pam-get-started]。
 
-## Common scenarios
+## 常见场景
 
-The following sections describe common tasks related to providing privileged access.
+以下小节介绍与提供特权访问相关的常见任务。
 
-* **SSH into Linux servers without shared keys**: Let an engineer connect to servers through Tailscale PAM using their Tailscale identity. Each session is authorized, logged, and available as a recording to replay.
-* **Grant database access to an on-call engineer**: Issue time-bound, identity-based access to a production database without distributing credentials. Revoke automatically when the session ends.
-* **Control access to Kubernetes clusters**: Apply application-aware policies to `kubectl` operations so a user can run only the commands and reach only the resources their role permits.
-* **Onboard a new team member**: Add a user to your identity provider and automatically provision access to applications and services based on group membership. No per-app provisioning and no shared credentials.
-* **Connect to a home lab or self-hosted service**: Reach private resources securely without exposing them publicly, modifying firewalls, or running a traditional VPN.
-* **Produce a compliance-ready audit trail**: Hand auditors identity-based [session logs][docs-session-logs] and recordings showing who accessed a resource, when it was accessed, and what they did.
+* **免共享密钥 SSH 登录 Linux 服务器**：让工程师使用其 Tailscale 身份通过 Tailscale PAM 连接服务器。每个会话都会被授权、记录，并可生成可供回放的录制。
+* **向值班工程师授予数据库访问权限**：向生产数据库签发基于身份、有时限的访问权限，无需分发凭证。会话结束后自动撤销。
+* **控制对 Kubernetes 集群的访问**：对 `kubectl` 操作应用应用感知的策略，让用户只能运行其角色允许的命令、只能访问其角色允许的资源。
+* **为新团队成员开通权限**：将用户添加到你的身份提供方，并根据组成员身份自动开通对应用程序和服务的访问。无需逐个应用开通权限，也没有共享凭证。
+* **连接家庭实验室或自托管服务**：安全地访问私有资源，无需将其公开暴露、修改防火墙或运行传统 VPN。
+* **生成符合合规要求的审计轨迹**：向审计人员提供基于身份的[会话日志][docs-session-logs]和录制，展示谁访问了资源、何时访问以及做了什么。
 
-## Resources
+## 相关资源
 
-* For information about the Tailscale PAM architecture, refer to [Tailscale PAM architecture and core concepts][docs-pam-architecture-and-concepts].
-* For information about using Tailscale PAM for your tailnet, refer to [Getting started with Tailscale PAM][docs-pam-get-started].
-* For information about accessing resources in your tailnet, refer to [Tailscale PAM how-to guides][docs-pam-how-to].
+* 有关 Tailscale PAM 架构的信息，请参阅 [Tailscale PAM 架构与核心概念][docs-pam-architecture-and-concepts]。
+* 有关在 tailnet 中使用 Tailscale PAM 的信息，请参阅 [Tailscale PAM 入门][docs-pam-get-started]。
+* 有关访问 tailnet 内资源的信息，请参阅 [Tailscale PAM 操作指南][docs-pam-how-to]。
 
 [co-contact-sales-border0]: https://tailscale.com/contact/sales-border0
 

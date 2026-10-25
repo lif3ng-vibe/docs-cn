@@ -1,50 +1,50 @@
 ---
-title: "Rotate a webhook secret"
-description: "[Webhook][docs-webhooks] secrets authenticate incoming webhook events from Tailscale to your endpoint. You rotate a webhook secret when you need to replace the existing secret with a new one, either a"
+title: "轮换 webhook 密钥"
+description: "[Webhook][docs-webhooks] 密钥用于对从 Tailscale 发送到你端点的传入 webhook 事件进行认证。当你需要用新密钥替换现有密钥时——无论是作为常规安全维护的一部分，还是在疑似泄露之后——就轮换 webhook 密钥。"
 ---
 
-Last validated Jan 20, 2026
+最后验证于 Jan 20, 2026
 
-[Webhook][docs-webhooks] secrets authenticate incoming webhook events from Tailscale to your endpoint. You rotate a webhook secret when you need to replace the existing secret with a new one, either as part of regular security maintenance or after a potential compromise. This process generates a new secret while maintaining your webhook endpoint configuration.
+[Webhook][docs-webhooks] 密钥用于对从 Tailscale 发送到你端点的传入 webhook 事件进行认证。当你需要用新密钥替换现有密钥时——无论是作为常规安全维护的一部分，还是在疑似泄露之后——就需要轮换 webhook 密钥。此过程会生成一个新密钥，同时保持你的 webhook 端点配置不变。
 
-## Prerequisites
+## 前提条件
 
-To rotate a webhook secret, ensure you meet the following prerequisites:
+要轮换 webhook 密钥，请确保满足以下前提条件：
 
-* [Be an Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles).
-* Have an existing webhook endpoint configured in the admin console.
+* [是 Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles)。
+* 已在管理控制台中配置了一个 webhook 端点。
 
-## Instructions
+## 操作步骤
 
-The following instructions guide you through the process of rotating a webhook secret in the Tailscale admin console.
+以下步骤指导你完成在 Tailscale 管理控制台中轮换 webhook 密钥的过程。
 
-Rotating a webhook secret replaces the existing secret with a new one. The old secret stops working immediately after rotation, so you need to update your verification routine with the new secret to continue receiving events.
+轮换 webhook 密钥会用新密钥替换现有密钥。旧密钥在轮换后立即失效，因此你需要用新密钥更新你的验证程序，才能继续接收事件。
 
-1. Open the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+1. 打开管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面。
 
-2. Find the endpoint for which to rotate the secret, then select the  menu > **Rotate webhook secret**. This opens the **Rotate webhook secret** modal.
+2. 找到要轮换密钥的端点，然后选择  菜单 > **Rotate webhook secret**。这会打开 **Rotate webhook secret** 模态框。
 
-3. Select **Rotate** to confirm you want a new secret.
+3. 选择 **Rotate**，确认你要获取新密钥。
 
-4. In the **Rotate webhook secret** modal, select **Copy** to copy the new secret.
+4. 在 **Rotate webhook secret** 模态框中，选择 **Copy** 复制新密钥。
 
-5. Save the secret in a secure location. You won't be able to access it again after closing the modal.
+5. 把密钥保存在安全的位置。关闭模态框后你将无法再次查看它。
 
-   > **Warning:**
+   > **警告：**
    >
-   > Treat the webhook secret like a password. Make sure to store it in a secure location.
+   > 请像对待密码一样对待 webhook 密钥。务必将其存储在安全的位置。
 
-6. Select **Done**.
+6. 选择 **Done**。
 
-The new secret takes effect immediately for all new events. Update your [signature verification][docs-verify-event-signature] routine with the new secret to continue processing webhook events.
+新密钥立即对所有新事件生效。请用新密钥更新你的[签名验证][docs-verify-event-signature]程序，以便继续处理 webhook 事件。
 
-## Next steps
+## 后续步骤
 
-After rotating your webhook secret, consider the following next steps:
+轮换 webhook 密钥后，考虑执行以下后续步骤：
 
-* [Verify webhook signatures][docs-verify-event-signature]: Update your verification code with the new secret.
-* [Test webhook endpoints][docs-test-webhooks]: Send test events to confirm your endpoint works with the new secret.
-* [Configure webhook events][docs-configure-webhook]: Manage which events trigger notifications to your endpoint.
+* [验证 webhook 签名][docs-verify-event-signature]：用新密钥更新你的验证代码。
+* [测试 webhook 端点][docs-test-webhooks]：发送测试事件，确认你的端点在新密钥下工作正常。
+* [配置 webhook 事件][docs-configure-webhook]：管理哪些事件会向你的端点触发通知。
 
 [docs-configure-webhook]: /docs/features/webhooks#setting-up-a-webhook-endpoint
 

@@ -1,37 +1,37 @@
 ---
-title: "Visible groups for Aperture"
-description: "Use Tailscale groups and SCIM groups to control access to Aperture models and admin roles."
+title: "Aperture 的可见组"
+description: "使用 Tailscale 组和 SCIM 组控制对 Aperture 模型和管理员角色的访问。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Visible groups let Aperture resolve Tailscale group memberships so you can use `group:` identifiers in [grant `src` fields][docs-aperture-grants]. Without visible groups, Aperture can only match individual login names (`alice@example.com`) and tagged devices (`tag:ci-runner`). With visible groups enabled, you can grant model access or admin roles to entire teams.
+可见组（visible groups）让 Aperture 能够解析 Tailscale 组成员身份，使你可以在[授权的 `src` 字段][docs-aperture-grants]中使用 `group:` 标识符。没有可见组时，Aperture 只能匹配单个登录名（`alice@example.com`）和带标签的设备（`tag:ci-runner`）。启用可见组后，你可以为整个团队授予模型访问权限或管理员角色。
 
-Aperture supports two kinds of groups:
+Aperture 支持两类组：
 
-* **Tailscale groups**: defined in your [tailnet policy file][docs-tailnet-policy-file] (for example, `group:engineering`).
-* **SCIM groups**: [synchronized from your identity provider][docs-user-group-provisioning] (for example, `group:sales@example.com` or matched by email like `engineering@example.com`).
+* **Tailscale 组**：定义在你的 [tailnet 策略文件][docs-tailnet-policy-file]中（例如 `group:engineering`）。
+* **SCIM 组**：[从你的身份提供方（IdP）同步][docs-user-group-provisioning]（例如 `group:sales@example.com`，或通过电子邮件匹配如 `engineering@example.com`）。
 
-## How it works
+## 工作原理
 
-By default, the Tailscale control plane does not send group membership information to devices. To make groups available to Aperture, you add a `tailscale.com/visible-groups` [node attribute][docs-node-attributes] to your tailnet policy file targeting the Aperture device. After it's configured, the Aperture device receives group membership data for connecting users, and Aperture can evaluate `group:` entries in grant `src` fields.
+默认情况下，Tailscale 控制平面不会向设备发送组成员身份信息。要让组对 Aperture 可用，你需要把 `tailscale.com/visible-groups` [节点属性（node attribute）][docs-node-attributes]添加到 tailnet 策略文件中，并以 Aperture 设备为目标。配置之后，Aperture 设备会收到连接用户的组成员身份数据，Aperture 便能评估授权 `src` 字段中的 `group:` 条目。
 
-For a detailed explanation of how visible groups work at the Tailscale platform level, refer to [group visibility on Tailscale clients][docs-group-visibility-clients].
+关于可见组在 Tailscale 平台层面如何工作的详细说明，参见 [Tailscale 客户端上的组可见性][docs-group-visibility-clients]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，确保你具备以下条件：
 
-* An [Aperture gateway][docs-get-started] with at least one configured provider.
-* Permission to edit your [tailnet policy file][docs-tailnet-policy-file]. You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles).
-* (Optional) [SCIM groups][docs-user-group-provisioning] configured if you want to match identity provider groups.
+* 一台 [Aperture 网关][docs-get-started]，且至少配置了一个提供商。
+* 编辑 [tailnet 策略文件][docs-tailnet-policy-file]的权限。你需要是 [Owner、Admin 或 Network admin](/docs/reference/user-roles)。
+* （可选）如果你想匹配身份提供方的组，需已配置 [SCIM 组][docs-user-group-provisioning]。
 
-## Configure the node attribute
+## 配置节点属性
 
-Add a `tailscale.com/visible-groups` [node attribute][docs-node-attributes] to your tailnet policy file. This tells the control plane which groups are visible to the Aperture device.
+把 `tailscale.com/visible-groups` [节点属性][docs-node-attributes]添加到你的 tailnet 策略文件中。这会告诉控制平面哪些组对 Aperture 设备可见。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console.
-2. Add a `nodeAttrs` entry that targets your Aperture device and specifies which groups to expose.
+1. 前往管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
+2. 添加一条 `nodeAttrs` 条目，以你的 Aperture 设备为目标，并指定要暴露哪些组。
 
 ```json
 "nodeAttrs": [
@@ -48,7 +48,7 @@ Add a `tailscale.com/visible-groups` [node attribute][docs-node-attributes] to y
 ]
 ```
 
-The `"groups": ["*"]` wildcard makes all groups visible to the Aperture device. To restrict visibility to specific groups, list them explicitly:
+`"groups": ["*"]` 通配符让所有组对 Aperture 设备可见。要把可见性限制到特定组，请显式列出它们：
 
 ```json
 "groups": [
@@ -58,19 +58,19 @@ The `"groups": ["*"]` wildcard makes all groups visible to the Aperture device. 
 ]
 ```
 
-> **Note:**
+> **注意：**
 >
-> The tailnet policy file validation does not check whether the groups you list exist in your tailnet.
+> tailnet 策略文件校验不会检查你列出的组是否存在于你的 tailnet 中。
 
-## Use groups in Aperture grants
+## 在 Aperture 授权中使用组
 
-After configuring the node attribute, you can use `group:` identifiers in grant `src` fields. Aperture evaluates group membership at request time using the identity of the connecting user.
+配置节点属性之后，你可以在授权 `src` 字段中使用 `group:` 标识符。Aperture 会在请求时使用连接用户的身份评估组成员身份。
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-### Grant model access to a group
+### 为组授予模型访问权限
 
-The following example grants members of `group:ai-users` access to all Anthropic models:
+以下示例向 `group:ai-users` 的成员授予所有 Anthropic 模型的访问权限：
 
 ```json
 {
@@ -88,9 +88,9 @@ The following example grants members of `group:ai-users` access to all Anthropic
 }
 ```
 
-### Grant admin access to a group
+### 为组授予管理员权限
 
-The following example grants admin access to members of `group:aperture-admins` and standard user access to members of `group:ai-users`:
+以下示例向 `group:aperture-admins` 的成员授予管理员访问权限，并向 `group:ai-users` 的成员授予标准用户权限：
 
 ```json
 {
@@ -115,27 +115,27 @@ The following example grants admin access to members of `group:aperture-admins` 
 }
 ```
 
-If a user matches both grants, the admin role takes precedence.
+如果用户同时匹配两条授权，管理员角色优先。
 
-### Match SCIM groups
+### 匹配 SCIM 组
 
-You can match SCIM groups using either the `group:` prefix or the group email directly:
+你可以使用 `group:` 前缀或直接使用组电子邮件来匹配 SCIM 组：
 
-* `"group:sales@example.com"`: matches members of the SCIM group with that email.
-* `"sales@example.com"`: also matches SCIM group members by email.
+* `"group:sales@example.com"`：匹配具有该电子邮件的 SCIM 组的成员。
+* `"sales@example.com"`：同样按电子邮件匹配 SCIM 组成员。
 
-Both formats work in grant `src` fields.
+两种格式都可用于授权 `src` 字段。
 
-## Verify group visibility
+## 验证组可见性
 
-Open the admin dashboard's [**Quota Usage** page][docs-admin-quota-usage]. Confirm that group members have the quotas granted to their groups.
+打开管理控制台的 [**Quota Usage** 页面][docs-admin-quota-usage]。确认组成员拥有其组被授予的配额。
 
-## Next steps
+## 后续步骤
 
-* [Grant model access][docs-grant-model-access]: configure which models users and groups can access.
-* [Set up admin access][docs-set-up-admin-access]: assign admin roles using groups.
-* [Aperture configuration reference][docs-aperture-configuration]: full syntax for grants including `src` match patterns.
-* [Group visibility on Tailscale clients][docs-group-visibility-clients]: platform-level details on how visible groups work.
+* [为模型授予访问权限][docs-grant-model-access]：配置用户和组可以访问哪些模型。
+* [设置管理员访问][docs-set-up-admin-access]：使用组分配管理员角色。
+* [Aperture 配置参考][docs-aperture-configuration]：授权的完整语法，包括 `src` 匹配模式。
+* [Tailscale 客户端上的组可见性][docs-group-visibility-clients]：可见组工作方式的平台级细节。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

@@ -1,114 +1,114 @@
 ---
-title: "Restrict device access with Iru"
-description: "Use signals reported by Iru (formerly Kandji) as device posture attributes for use in access rules."
+title: "使用 Iru 限制设备访问"
+description: "将 Iru（前称 Kandji）上报的信号用作设备态势属性，以用于访问规则。"
 ---
 
-Last validated Jan 28, 2026
+最后验证于 Jan 28, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此集成适用于[标准版、高级版和企业版套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> Iru is formerly known as Kandji. Several references to Kandji may still be found in instructions, code examples, and user interfaces.
+> Iru 的前称是 Kandji。在说明文档、代码示例和用户界面中，你可能仍会看到多处 Kandji 的提法。
 
-[Iru][xt-iru] collects a series of signals from its agent installed on each device that can be used to determine the security posture of a device. Tailscale can fetch these signals from Iru and use them as device posture attributes in access rules, which can then be used by organizations to grant access to sensitive resources only to devices that have a high level of trust.
+[Iru][xt-iru] 通过安装在每个设备上的代理采集一系列信号，可用于判定设备的安全态势。Tailscale 可以从 Iru 获取这些信号，并将其用作访问规则中的设备态势属性，从而让组织只向具有高信任级别的设备授予对敏感资源的访问权限。
 
-You can achieve this Tailscale's [device posture management][docs-device-posture] features:
+你可以借助 Tailscale 的[设备态势管理][docs-device-posture]功能实现这一点：
 
-* Kandji posture integration, which synchronizes signals from Kandji to device posture attributes in Tailscale.
-* [Device Identity Collection][docs-device-identity-collection], which collects identifiers (for example, serial numbers), used to match devices in Tailscale to devices in Kandji.
-* [Posture conditions in access rules][docs-device-posture-postures-and-conditions], which enables configuration of access restrictions based on device attributes.
+* Kandji 态势集成，将 Kandji 的信号同步到 Tailscale 中的设备态势属性。
+* [设备身份收集（Device Identity Collection）][docs-device-identity-collection]，采集标识符（例如序列号），用于将 Tailscale 中的设备与 Kandji 中的设备进行匹配。
+* [访问规则中的态势条件][docs-device-posture-postures-and-conditions]，支持基于设备属性配置访问限制。
 
-This guide explains how to enable Device Identity collection for your Tailscale network (tailnet) and configure Kandji posture integration.
+本指南介绍如何为你的 Tailscale 网络（tailnet）启用设备身份收集，以及如何配置 Kandji 态势集成。
 
-## What is Kandji posture integration?
+## 什么是 Kandji 态势集成？
 
-Kandji posture integration lets you connect your Tailscale network to Kandji. The integration runs periodically and copies signals from Kandji to device posture attributes.
+Kandji 态势集成让你可以将 Tailscale 网络连接到 Kandji。该集成会周期性运行，并将 Kandji 的信号复制到设备态势属性。
 
-When configured, it will periodically:
+配置完成后，它会周期性地：
 
-* Fetch a list of devices recorded in your Kandji account, and their details.
-* Match Kandji devices with corresponding devices in your tailnet, based on the serial number associated with a device.
-* Write the data from each device into the following Tailscale device posture attributes:
+* 获取你的 Kandji 账户中记录的设备列表及其详情。
+* 根据设备关联的序列号，将 Kandji 设备与你 tailnet 中的对应设备进行匹配。
+* 将每台设备的数据写入以下 Tailscale 设备态势属性：
 
 \[Missing snippet: attributes-kandji.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you can set up the Kandji integration, make sure you have:
+在设置 Kandji 集成之前，请确保你已具备：
 
-* [Device Identity Collection][docs-device-identity-collection] enabled, and devices in your tailnet are reporting identifiers.
-* A Kandji account for which you have permission to create an API token.
+* 已启用[设备身份收集][docs-device-identity-collection]，并且 tailnet 中的设备正在上报标识符。
+* 一个你有权创建 API 令牌的 Kandji 账户。
 
-## Create Kandji API Token
+## 创建 Kandji API 令牌
 
-To authenticate your Kandji account with Tailscale, you'll need to create a Kandji API Token.
-The Kandji integration uses these to fetch a list of devices and their data from Kandji.
+要将你的 Kandji 账户与 Tailscale 进行认证，你需要创建一个 Kandji API 令牌。
+Kandji 集成会使用它从 Kandji 获取设备列表及其数据。
 
-To create a Kandji API Token:
+创建 Kandji API 令牌的方法：
 
-1. In Kandji, in the left-hand panel, select **Settings**.
+1. 在 Kandji 中，在左侧面板选择 **Settings**。
 
-2. From the top menu, select **Access** and select **Add Token**.
+2. 在顶部菜单中选择 **Access**，然后选择 **Add Token**。
 
-3. Add a name for the API token and select **Create**.
+3. 为 API 令牌添加名称，然后选择 **Create**。
 
-   *（图：The Kandji Add an API token dialog）*
+   *（图：Kandji 的 Add an API token 对话框）*
 
-4. The **API Token** will be shown once, make sure to copy it for use later and select **Next**.
+4. **API Token** 只会显示一次，务必复制保存以备后用，然后选择 **Next**。
 
-5. In the new dialog, select **Configure** to configure the permissions for the API token.
+5. 在新对话框中，选择 **Configure** 来配置该 API 令牌的权限。
 
-6. Under **Prism**, select **Device Information** (`/api/v1/prism/device_information`) and select **Save** in the right corner.
+6. 在 **Prism** 下，选择 **Device Information**（`/api/v1/prism/device_information`），然后在右上角选择 **Save**。
 
-7. Under **Access**, make note of your organization's API URL, for example `https://your-organization.api.kandji.io`.
+7. 在 **Access** 下，记下你组织的 API URL，例如 `https://your-organization.api.kandji.io`。
 
-## Configure Kandji posture integration
+## 配置 Kandji 态势集成
 
-To configure Tailscale to fetch data about devices from Kandji:
+要让 Tailscale 从 Kandji 获取设备数据：
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
 
-2. Under the **Device Posture Integrations** section, locate the Kandji integration, then select **Connect**.
+2. 在 **Device Posture Integrations** 区域，找到 Kandji 集成，然后选择 **Connect**。
 
-3. Enter your **Kandji API URL**, the URL you use to access the Kandji console.
+3. 输入你的 **Kandji API URL**，即你用于访问 Kandji 控制台的 URL。
 
-4. Enter your **API Token**.
+4. 输入你的 **API Token**。
 
-   *（图：The configuration screen for connecting to Kandji from the Tailscale admin console.）*
+   *（图：在 Tailscale 管理控制台中连接 Kandji 的配置界面。）*
 
-5. Select **Connect to Kandji**.
+5. 选择 **Connect to Kandji**。
 
-## Review the integration status
+## 检查集成状态
 
-Next, check to ensure the Kandji integration has run successfully.
+接下来，确认 Kandji 集成已成功运行。
 
-1. Go to the **Device Posture Integrations** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page.
-2. Locate the Kandji integration under the **Integrations** section.
+1. 前往 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Device Posture Integrations** 区域。
+2. 在 **Integrations** 区域下找到 Kandji 集成。
 
-After the Kandji integration runs successfully, it shows the time of the most recent sync, the number of synced devices, and any errors that occurred while synchronizing.
+Kandji 集成成功运行后，会显示最近一次同步的时间、已同步的设备数量，以及同步过程中发生的任何错误。
 
-*（图：Integrations: Kandji: Last sync 4 minutes ago, 1 match between 2 Tailscale devices with identifies and 3 Kandji devices）*
+*（图：Integrations: Kandji：Last sync 为 4 分钟前，2 台带标识符的 Tailscale 设备与 3 台 Kandji 设备之间匹配到 1 台）*
 
-## Check device attributes
+## 检查设备属性
 
-After you set up the Kandji integration, you can confirm that Tailscale is writing the new device attributes for your Kandji devices from the Tailscale admin console.
+设置好 Kandji 集成后，你可以在 Tailscale 管理控制台中确认 Tailscale 正在为你的 Kandji 设备写入新的设备属性。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-2. Select a device to inspect.
-3. The device attributes for the device are in the **Machine Details** section. This should include the set of `kandji:` attributes listed previously.
+1. 打开 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择要检查的设备。
+3. 该设备的设备属性位于 **Machine Details** 区域。其中应包含前面列出的 `kandji:` 属性集合。
 
-*（图：View of the machine attributes in the Machines page.）*
+*（图：Machines 页面中机器属性的视图。）*
 
-> **Tip:**
+> **提示：**
 >
-> You can also check device attributes using the [Tailscale API][co-device-posture-get-via-api].
+> 你也可以使用 [Tailscale API][co-device-posture-get-via-api] 检查设备属性。
 
-## Adjust Tailscale access rules
+## 调整 Tailscale 访问规则
 
-After you set up the Kandji posture integration, and your devices have device posture attributes that reflect their signals as reported by Kandji, you can use those device posture attributes as part of your posture rules.
+设置好 Kandji 态势集成、且你的设备已拥有反映 Kandji 所上报信号的设备态势属性后，你就可以将这些设备态势属性用于你的态势规则。
 
-For example, to only permit access to `tag:production` from devices that have an active Kandji agent, you can create a new posture and use it as part of a corresponding access rule:
+例如，要只允许拥有活跃 Kandji 代理的设备访问 `tag:production`，你可以创建一个新的态势（posture），并将其用在相应的访问规则中：
 
 ```json
 "postures": {

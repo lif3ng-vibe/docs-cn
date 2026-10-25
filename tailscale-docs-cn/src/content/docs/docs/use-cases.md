@@ -1,20 +1,20 @@
 ---
-title: "Use cases"
-description: "Explore how you can use Tailscale at home and at work."
+title: "使用场景"
+description: "探索你在家中和工作中的 Tailscale 用法。"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-Tailscale works for a wide range of use cases, from securing home networks to managing enterprise infrastructure. Whether you're evaluating Tailscale for the first time or looking to get more out of your existing tailnet, these guides show how people use Tailscale at home and at work.
+Tailscale 适用于广泛的使用场景，从保护家庭网络安全到管理企业基础设施。无论你是第一次评估 Tailscale，还是想从现有 tailnet 中获得更多价值，这些指南都展示了人们在家中和工作中的 Tailscale 用法。
 
-[**VPN replacement**](/docs/use-cases/vpn-replacement) — Replace your legacy corporate VPN with Tailscale for faster and more secure remote access to your devices.
+[**VPN 替代方案**](/docs/use-cases/vpn-replacement)——用 Tailscale 取代老旧的企业 VPN，实现更快、更安全的远程设备访问。
 
-[**Personal or at-home use**](/docs/use-cases/personal-or-at-home-use) — Connect and manage your home network devices and services from anywhere with Tailscale.
+[**个人或家庭使用**](/docs/use-cases/personal-or-at-home-use)——使用 Tailscale 从任何地方连接和管理你的家庭网络设备与服务。
 
-[**AI infrastructure access**](/docs/use-cases/ai-infrastructure-access) — Secure access to AI infrastructure, GPU clusters, and private LLM deployments across your network.
+[**AI 基础设施访问**](/docs/use-cases/ai-infrastructure-access)——安全访问整个网络中的 AI 基础设施、GPU 集群和私有 LLM 部署。
 
-[**Infrastructure access**](/docs/use-cases/infrastructure-access) — Manage secure, audited access to production servers, Kubernetes clusters, and cloud environments.
+[**基础设施访问**](/docs/use-cases/infrastructure-access)——管理对生产服务器、Kubernetes 集群和云环境的安全、可审计的访问。
 
-[**Application testing**](/docs/use-cases/application-testing) — Share local development servers, test webhooks, and simulate geo-specific traffic without deploying to the cloud.
+[**应用测试**](/docs/use-cases/application-testing)——共享本地开发服务器、测试 webhook、模拟特定地区的流量，而无需部署到云端。
 
-[**Accessing a regulated environment**](/docs/use-cases/regulated-environment) — Meet compliance requirements with static egress IPs, device posture checks, and access controls you can audit.
+[**访问受监管环境**](/docs/use-cases/regulated-environment)——借助静态出站 IP、设备态势检查和可审计的访问控制来满足合规要求。

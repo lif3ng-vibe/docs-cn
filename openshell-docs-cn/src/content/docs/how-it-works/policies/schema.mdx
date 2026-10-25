@@ -1,0 +1,508 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "策略 Schema 参考"
+sidebar-title: "Schema 参考"
+description: "沙箱策略 schema 的字段、默认值与约束。"
+keywords: "生成式 AI, 网络安全, 策略, Schema, YAML, 参考, 安全"
+position: 7
+---
+
+本参考定义沙箱策略 schema。策略是至多 4 MiB 的 YAML 文件。包含未知字段或重复键的策略会被 OpenShell 拒绝。
+
+## 顶层字段
+
+```yaml showLineNumbers={false}
+version: 1
+filesystem_policy: { ... }
+landlock: { ... }
+process: { ... }
+network_policies: { ... }
+network_middlewares: { ... }
+```
+
+| 字段 | 类型 | 必需 | 生效时机 | 描述 |
+|---|---|---|---|---|
+| `version` | 整数 | 是 | -- | 架构版本。必须为 `1`。 |
+| `filesystem_policy` | 对象 | 否 | 启动 | 工作负载可以读写的路径。 |
+| `landlock` | 对象 | 否 | 启动 | Landlock 强制行为。 |
+| `process` | 对象 | 否 | 启动 | 工作负载运行所属的用户与组。 |
+| `network_policies` | 映射 | 否 | 运行 | 哪些二进制可以访问哪些网络端点。 |
+| `network_middlewares` | 映射 | 否 | 运行 | 应用于被允许流量的中间件。 |
+
+启动字段在沙箱启动时生效。运行字段可以在沙箱运行期间变更。参见[变更如何生效](/how-it-works/policies/manage-policies#变更如何生效)。
+
+## 文件系统策略
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `include_workdir` | 布尔 | 见下文 | 把沙箱工作目录加入 `read_write`。 |
+| `read_only` | 字符串列表 | `[]` | 工作负载可以读取的路径。 |
+| `read_write` | 字符串列表 | `[]` | 工作负载可以读写的路径。 |
+
+省略 `filesystem_policy` 时 `include_workdir` 为 `true`；存在 `filesystem_policy` 时 `include_workdir` 默认为 `false`。未列出的路径不可访问。生效策略包含至少一条网络规则时，OpenShell 还会添加[默认策略](/how-it-works/policies/default-policy#基线文件系统路径)所述的基线路径。
+
+监管器或独立代理直接加载本地策略文件时，同样适用这些默认值与下文的文件系统路径限制。本地加载强制与类型化策略相同的非 root 进程身份。它会拒绝无效的文件系统、Landlock 与进程字段类型，这些小节中的未知字段，以及显式 `null` 的 JSON-RPC 或 MCP 选项。网络设置同样必须使用声明的类型：例如 `allow_encoded_slash: "true"` 与取值为数组的拒绝规则 `method` 都会被拒绝。被拒绝的重载保持活动 OPA 策略及其代次不变。
+
+每个路径必须是绝对路径，不得包含 `..`，不得超过 4096 字节。`read_write` 不能包含 `/`。一条策略最多列出 256 个路径。
+
+```yaml showLineNumbers={false}
+filesystem_policy:
+  include_workdir: true
+  read_only: [/usr, /lib, /etc]
+  read_write: [/tmp]
+```
+
+## Landlock
+
+| 字段 | 类型 | 默认值 | 取值 |
+|---|---|---|---|
+| `compatibility` | 字符串 | `best_effort` | `best_effort` 或 `hard_requirement` |
+
+两个取值都会跳过缺失或工作负载无法打开的单个路径。区别在于列出的路径全部无法应用，或 Landlock 无法强制策略规则时：
+
+| 取值 | 行为 |
+|---|---|
+| `best_effort` | 沙箱在没有这些文件系统规则的情况下运行，并记录一条高严重度发现。 |
+| `hard_requirement` | 沙箱启动失败。 |
+
+两种模式下，沙箱都要求内核具备 Landlock ABI v3 或更高版本。较旧的内核上启动会失败，错误信息指明所需与检测到的 ABI。沙箱日志的 `Landlock ruleset built` 事件报告应用与跳过了多少路径。
+
+## 进程
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `run_as_user` | 字符串 | 驱动默认 | 工作负载的 `sandbox` 或数字 UID。 |
+| `run_as_group` | 字符串 | 驱动默认 | 工作负载的 `sandbox` 或数字 GID。 |
+
+数字 ID 必须在 `1` 到 `4294967294` 之间，因此 OpenShell 拒绝 root。两个字段相互独立，可以只设置一个而让计算驱动选择另一个。Docker 与 Podman 用这些字段从创建时传入的策略中选择工作负载身份；省略的字段使用镜像的 `USER`。Kubernetes 使用其驱动配置的身份。
+
+MicroVM 保留驱动解析出的 overlay 属主。显式数字选择器必须匹配该属主；`sandbox` 指名与之对齐的 guest 账户。冲突的选择器在工作负载启动之前失败；省略的字段接受驱动默认值。`openshell sandbox get <name>` 在其 `WorkloadIdentity` 条件中报告解析出的 UID:GID。该条件报告身份选择，不代表工作负载就绪。沙箱策略更新不能更改进程选择器；全局策略更新仍必须与解析出的身份匹配。普通 exec 使用与规范进程相同的身份。
+
+```yaml showLineNumbers={false}
+process:
+  run_as_user: "1500"
+  run_as_group: "1500"
+```
+
+## 网络策略
+
+命名规则的映射。键即规则名。每条规则允许每个列出的二进制访问每个列出的端点。OpenShell 如何评估规则及示例参见[网络规则](/how-it-works/policies/network-rules)。
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `name` | 字符串 | 否 | 日志中的显示名。默认为键。 |
+| `endpoints` | 端点对象列表 | 否 | 规则允许的目的地。 |
+| `binaries` | 二进制对象列表 | 否 | 规则适用的可执行文件。空列表不匹配任何二进制。 |
+
+规则键不能以 `_provider_` 开头，OpenShell 把它保留给提供商贡献的规则。
+
+### 端点对象
+
+端点字段分为四组。
+
+#### 目的地字段
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `host` | 字符串 | 条件必需 | 主机名、IP 地址或通配符模式，例如 `*.example.com`。 |
+| `port` | 整数 | 条件必需 | TCP 端口。设置 `port` 或 `ports`。 |
+| `ports` | 整数列表 | 条件必需 | TCP 端口。用它代替 `port`，不要同时使用。 |
+| `path` | 字符串 | 否 | 在同一主机与端口的被检查端点之间选择的路径 glob。最具体的匹配胜出。 |
+| `allowed_ips` | 字符串列表 | 否 | 解析出的地址必须落在其内的 IP 地址或 CIDR 范围。 |
+
+通配符主机必须至少有三个 DNS 标签。`*` 可以出现在第一个标签之内（例如 `*-api.example.com`），或整体作为后面的标签（例如 `api.*.example.com`）。`**` 只允许整体作为第一个标签。
+
+只有设置了 `allowed_ips` 的端点才能省略 `host`。精确主机名可以访问其解析到的私网地址，除非该端点来自已批准的策略顾问提案。通配符与无主机端点只能通过 `allowed_ips` 访问私网地址。
+
+网络策略绝不授权目的地为回环、链路本地或未指定地址的出站端点，包括云元数据地址 `169.254.169.254`。这不阻止工作负载连接到监听在回环上的沙箱本地服务。`openshell policy update` 拒绝与被阻断范围重叠的 `allowed_ips` 条目；在完整策略中，这样的条目会阻断到该端点的所有连接。对使用精确主机名、IP 地址或 `allowed_ips` 的端点，OpenShell 还阻断 Kubernetes 与 etcd 控制面端口 2379、2380、6443、10250 与 10255。`host.openshell.internal` 的规则仍可访问网关宿主机上的服务。
+
+#### 检查字段
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `protocol` | 字符串 | 无 | 请求检查用 `rest`、`websocket`、`graphql`、`mcp` 或 `json-rpc`；原生 TCP 连接用 `tcp`。`graphql`、`mcp` 与 `json-rpc` 端点以 `403` 拒绝携带 `Upgrade` 头部的请求。参见[连接与请求检查](/how-it-works/policies/network-rules#连接与请求检查)。 |
+| `tls` | 字符串 | 自动 | `skip` 不终结 TLS 直接转发流量，OpenShell 无法检查它。不要与请求协议同用。 |
+| `enforcement` | 字符串 | `audit` | `enforce` 阻断违反端点规则的请求；`audit` 记录并放行请求。 |
+| `access` | 字符串 | 无 | 访问预设：`read-only`、`read-write` 或 `full`。参见[访问预设](#访问预设)。 |
+| `rules` | 列表 | 无 | 允许规则。 |
+| `deny_rules` | 列表 | 无 | 拒绝规则，优先于允许规则。 |
+| `allow_encoded_slash` | 布尔 | `false` | 接受请求路径中的 `%2F`，npm 范围包会用到。 |
+
+#### 凭据字段
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `credential_binding.provider` | 字符串 | 无 | 绑定配置档案未定义端点的已挂接提供商的静态凭据。仅在沙箱策略中有效。 |
+| `request_body_credential_rewrite` | 布尔 | `false` | 替换 REST 请求体中的凭据占位符。 |
+| `websocket_credential_rewrite` | 布尔 | `false` | 替换客户端 WebSocket 文本消息中的凭据占位符。 |
+| `allow_uninspected_credentials` | 布尔 | `false` | 允许带提供商凭据的端点省略请求检查或使用 `tls: skip`。 |
+| `credential_signing` | 字符串 | 无 | AWS 请求签名：`sigv4`、`sigv4:body` 或 `sigv4:no_body`。 |
+| `signing_service` | 字符串 | 无 | AWS 服务名，例如 `bedrock` 或 `s3`。与 `credential_signing` 搭配时必需。 |
+| `signing_region` | 字符串 | 取自主机名 | AWS 区域覆盖，例如 `us-east-1`。 |
+
+凭据占位符使用 `openshell:resolve:env:KEY` 形式。请求体改写适用于至多 256 KiB 的 UTF-8 JSON、表单与文本请求体，不能与 `credential_signing` 组合。签名要求挂接带 AWS 凭据的提供商。参见 [AWS SigV4](/how-it-works/providers/aws) 与[静态凭据端点绑定](/how-it-works/providers/profiles#理解静态凭据端点绑定)。
+
+```yaml showLineNumbers={false}
+network_policies:
+  gcp_storage:
+    endpoints:
+      - host: storage.googleapis.com
+        port: 443
+        protocol: rest
+        access: full
+        credential_binding:
+          provider: work-gcp
+    binaries:
+      - path: /usr/bin/curl
+```
+
+#### 协议选项
+
+| 字段 | 类型 | 默认值 | 描述 |
+|---|---|---|---|
+| `persisted_queries` | 字符串 | `deny` | 仅含哈希的 GraphQL 查询：`deny` 或 `allow_registered`。 |
+| `graphql_persisted_queries` | 映射 | 无 | 受信任的持久化查询注册表，以哈希或保存查询 ID 为键。`allow_registered` 时 OpenShell 拒绝不在注册表中的仅哈希查询。 |
+| `graphql_max_body_bytes` | 整数 | `65536` | GraphQL 请求体检查的最大尺寸。 |
+| `mcp.versions` | 字符串列表 | `["2025-11-25"]` | 允许的 MCP 修订。参见 [MCP 版本选择](#mcp-版本选择)。 |
+| `mcp.max_body_bytes` | 整数 | `65536` | MCP 请求体检查的最大尺寸。 |
+| `mcp.strict_tool_names` | 布尔 | `true` | 要求工具名匹配 `^[A-Za-z0-9_.-]{1,128}$`。 |
+| `mcp.allow_all_known_mcp_methods` | 布尔 | `false` | 允许所选请求修订的核心 MCP 方法。工具限制仍然适用，拒绝规则优先。行为参见[允许核心 MCP 方法](#允许核心-mcp-方法)，方法列表参见[核心 MCP 方法](#核心-mcp-方法)。 |
+| `json_rpc.max_body_bytes` | 整数 | `65536` | JSON-RPC 请求体检查的最大尺寸。 |
+
+#### 端点约束
+
+违反以下规则的端点会被 OpenShell 拒绝：
+
+- `access` 与 `rules` 不能组合。`rest`、`websocket` 与 `graphql` 端点需要其中之一。`mcp` 与 `json-rpc` 端点需要 `rules`，除非 MCP 端点设置了 `mcp.allow_all_known_mcp_methods: true`。
+- `deny_rules` 要求 `protocol`，并且在 MCP 之外的端点上还要求 `rules` 或 `access`。
+- `protocol: tcp` 要求主机名与端口。它不接受任何请求字段，例如 `path`、`enforcement`、`access`、`rules`、凭据改写或签名，也不接受协议选项。
+- 主机可能（包括经通配符）在同一端口上匹配相同名字的端点必须使用相同的 `tls` 与 `allowed_ips` 取值。可能匹配同一请求的被检查端点还必须在 `protocol`、`enforcement` 与凭据设置上一致。
+
+没有 `protocol` 时，`access` 与 `rules` 不起作用。
+
+### 访问预设
+
+REST、WebSocket 与 GraphQL 端点接受这些预设。MCP 与 JSON-RPC 端点不接受。
+
+| 取值 | REST | WebSocket | GraphQL |
+|---|---|---|---|
+| `full` | 所有方法与路径。 | 升级与所有客户端文本消息。 | 所有操作。 |
+| `read-only` | `GET`、`HEAD`、`OPTIONS`。 | 仅升级。 | `query` 操作。 |
+| `read-write` | `GET`、`HEAD`、`OPTIONS`、`POST`、`PUT`、`PATCH`。 | 升级与客户端文本消息。 | `query` 与 `mutation` 操作。 |
+
+### 允许规则与拒绝规则
+
+`rules` 中的每个条目把匹配器字段包在 `allow` 之内。`deny_rules` 中的每个条目直接列出匹配器字段。`enforcement: enforce` 时，匹配任何拒绝规则的请求都被阻断，无论允许规则或访问预设如何。
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      method: GET
+      path: /repos/**
+deny_rules:
+  - method: GET
+    path: /repos/private/**
+```
+
+匹配器字段取决于端点的 `protocol`。
+
+### REST 规则
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `method` | 字符串 | 是 | HTTP 方法，或任意方法用 `*`。 |
+| `path` | 字符串 | 是 | 路径 glob。参见[匹配器语义](#匹配器语义)。 |
+| `query` | 映射 | 否 | 查询参数匹配器，以参数名为键。每个取值是一个 glob 或 `{ any: [globs] }`。 |
+
+允许规则中，重复出现的查询参数的每个取值都必须匹配。拒绝规则中，每个配置的参数都必须出现，每个参数有一个匹配取值即可。
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      method: GET
+      path: /api/v1/download
+      query:
+        platform:
+          any: ["linux-*", "darwin-*"]
+deny_rules:
+  - method: "*"
+    path: "/repos/*/*/rulesets"
+```
+
+### WebSocket 规则
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `method` | 字符串 | 是 | 升级请求用 `GET`，客户端文本消息用 `WEBSOCKET_TEXT`，两者都用 `*`。 |
+| `path` | 字符串 | 是 | 升级请求的路径 glob，不是消息内容。 |
+| `query` | 映射 | 否 | 升级请求的查询参数匹配器。 |
+
+OpenShell 不检查二进制帧或来自服务器的消息。
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      method: GET
+      path: /v1/realtime
+  - allow:
+      method: WEBSOCKET_TEXT
+      path: /v1/realtime
+deny_rules:
+  - method: WEBSOCKET_TEXT
+    path: /v1/admin/**
+```
+
+### GraphQL 规则
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `operation_type` | 字符串 | 是 | `query`、`mutation` 或 `subscription`。要允许所有操作类型，使用 `access: full`。 |
+| `operation_name` | 字符串 | 否 | 操作名 glob。 |
+| `fields` | 字符串列表 | 否 | 顶层字段 glob。 |
+
+允许规则中，每个顶层字段都必须匹配。拒绝规则中，一个匹配字段即可；省略 `fields` 会拒绝每个匹配的操作。一个被拒绝的操作会拒绝整个批量请求。
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      operation_type: query
+  - allow:
+      operation_type: mutation
+      fields: [createIssue]
+deny_rules:
+  - operation_type: mutation
+    fields: [deleteRepository]
+```
+
+WebSocket 上的 GraphQL，请用 `protocol: websocket`，升级用 `GET` 规则，操作用 GraphQL 规则。不要在同一条规则中混用 WebSocket 与 GraphQL 匹配器字段。
+
+### MCP 规则
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `method` | 字符串 | 条件必需 | MCP 方法，例如 `initialize` 或 `tools/call`。只有 `tools/` 家族允许 glob，且不允许 `*`。除非 `mcp.allow_all_known_mcp_methods` 为 `true`，否则必需。 |
+| `tool` | 字符串或 `{ any: [globs] }` | 否 | `tools/call` 的工具名匹配器。 |
+| `params.name` | 字符串或 `{ any: [globs] }` | 否 | 与 `tool` 等价的更低层写法。 |
+
+- 带 `tool` 或 `params.name` 的规则必须设置 `method: tools/call`，除非 `mcp.allow_all_known_mcp_methods` 为 `true`。
+- 匹配全部 `tools/call` 的规则不能与工具专属允许规则组合。
+- 通配符 `tool` 匹配器要求 `mcp.strict_tool_names: true`。
+- 不匹配工具参数，被允许的工具接受任意参数。
+- 一个被拒绝的调用会拒绝整个批量请求。
+- 服务器响应与服务器到客户端的消息不做检查。
+- 只有精确指名扩展方法的允许规则才能放行它；方法 glob 与 `mcp.allow_all_known_mcp_methods` 都不行。扩展方法是任何受支持 MCP 修订都未定义的方法。
+
+在 2025 系修订下，客户端在调用工具之前发送 `initialize` 与 `notifications/initialized`。`mcp.allow_all_known_mcp_methods` 省略或为 `false` 时，请显式允许这两者：
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      method: initialize
+  - allow:
+      method: notifications/initialized
+  - allow:
+      method: tools/call
+      tool:
+        any: [search_web, list_issues]
+deny_rules:
+  - method: tools/call
+    tool: send_email
+```
+
+OpenShell 用 `tower-mcp-types` 库按各请求的 MCP 修订检查每条请求。它检查 JSON-RPC 结构、客户端能否在该修订中发送该方法，以及已知方法的参数类型。它拒绝在任何 JSON 对象内重复键的请求体，以及 MCP 有定义但请求所选修订没有的方法，例如 `2025-11-25` 下的 `server/discover`。未通过这些检查的请求返回 `400` 与错误 `invalid_mcp_request`，即使端点使用 `enforcement: audit` 也是如此。这些类型检查不是完整的 JSON Schema 校验。
+
+#### 允许核心 MCP 方法
+
+设置 `mcp.allow_all_known_mcp_methods: true` 允许每条请求[所选 MCP 修订](#mcp-版本选择)中可用的[核心方法](#核心-mcp-方法)。接受多个修订的策略仍按各自修订检查每条请求。该选项不会合并各修订的方法集合。
+
+工具专属允许规则继续把 `tools/call` 限制到匹配的名字，拒绝规则优先于一切允许规则。没有工具专属允许规则时，该选项允许调用每个工具名，仍受拒绝规则与工具名校验约束。扩展方法要求精确指名该方法的允许规则。显式允许规则不能启用所选修订中不可用的核心方法。
+
+例如，该端点允许 `2025-11-25` 的核心方法，同时把工具调用限制到 `search_web` 与 `read_document`：
+
+```yaml showLineNumbers={false}
+endpoints:
+  - host: mcp.example.com
+    port: 443
+    protocol: mcp
+    enforcement: enforce
+    mcp:
+      versions: ["2025-11-25"]
+      allow_all_known_mcp_methods: true
+    rules:
+      - allow:
+          tool:
+            any: [search_web, read_document]
+```
+
+这里 `tools/call` 是 JSON-RPC 方法，`search_web` 是 `params.name` 中的工具名。允许某方法不代表服务器支持它，也不代表某工具是只读的。
+
+#### 核心 MCP 方法
+
+以下列表覆盖 OpenShell 经 HTTP 检查的客户端到服务器的请求与通知。服务器到客户端的方法（例如 `sampling/createMessage`、`roots/list` 与 `elicitation/create`）不在该检查范围内。每行列出可在 HTTP 上以客户端到服务器方向接受这些方法的修订。
+
+| 方法或通知 | MCP 修订 |
+|---|---|
+| `tools/list`、`tools/call` | 所有受支持的修订。 |
+| `resources/list`、`resources/templates/list`、`resources/read` | 所有受支持的修订。 |
+| `prompts/list`、`prompts/get`、`completion/complete` | 所有受支持的修订。 |
+| `notifications/cancelled` | `2025-03-26`、`2025-06-18`、`2025-11-25`。 |
+| `initialize`、`ping`、`logging/setLevel` | `2025-03-26`、`2025-06-18`、`2025-11-25`。 |
+| `resources/subscribe`、`resources/unsubscribe` | `2025-03-26`、`2025-06-18`、`2025-11-25`。 |
+| `notifications/initialized`、`notifications/progress`、`notifications/roots/list_changed` | `2025-03-26`、`2025-06-18`、`2025-11-25`。 |
+| `tasks/get`、`tasks/result`、`tasks/list`、`tasks/cancel`、`notifications/tasks/status` | 仅 `2025-11-25`；实验性。 |
+| `server/discover`、`subscriptions/listen` | 仅 `2026-07-28`。 |
+
+`2026-07-28` 的 HTTP 请求通过关闭其响应流取消。该修订下 OpenShell 拒绝经 HTTP 发送的 `notifications/cancelled`。
+
+MCP 在 `2025-11-25` 中以实验特性引入了 [tasks](https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks)，因此 2025 年 3 月与 6 月的修订不包含任务方法或 `notifications/tasks/status`。默认策略修订包含它们，但使用任务还需要对端具备任务能力，任务增强的工具调用还需要工具声明支持任务。策略选项不协商这些能力。
+
+#### MCP 版本选择
+
+`mcp.versions` 列出端点接受的 MCP 修订：`2025-03-26`、`2025-06-18`、`2025-11-25` 或 `2026-07-28`。省略时列表恰为 `["2025-11-25"]`，因此在列出之前端点不接受 `2026-07-28`。
+
+```yaml showLineNumbers={false}
+mcp:
+  versions: ["2025-03-26", "2025-11-25"]
+```
+
+OpenShell 从每条请求的 `MCP-Protocol-Version` 头部选择其修订。头部缺失时 OpenShell 选择 `2025-03-26`，因此客户端省略该头部的端点必须允许 `2025-03-26`。重复、为空或不受支持的头部取值返回 `400`；端点不允许的受支持修订返回 `403`。
+
+OpenShell 只按各请求所选修订检查它。例如只有 `2025-03-26` 接受 JSON-RPC 批量请求（每批至多 64 条消息），更晚的修订拒绝作为 JSON 数组的请求体。
+
+在 2025 系修订下，客户端以单条 `initialize` 请求开始，在正文中提议一个修订，因此 OpenShell 不对照 `mcp.versions` 检查该请求的修订。只允许 `2026-07-28` 的端点会拒绝 `initialize`。
+
+客户端需要不受支持的修订时，省略 `protocol` 与 `mcp`，不做 MCP 检查地放行其流量。
+
+#### 理解 MCP 拒绝
+
+用响应的错误码与详情区分协议问题与策略拒绝：
+
+- `unsupported_mcp_protocol_version`（`400`）表示此 OpenShell 构建不支持该头部的修订。把客户端配置为使用 OpenShell 与服务器都支持、且 `mcp.versions` 允许的修订。
+- `mcp_protocol_version_not_allowed`（`403`）表示所选修订受支持但被端点策略排除。改用策略允许的兼容修订，或请策略属主复查 `mcp.versions`。
+- 详情提到缺失头部回退时，表示 OpenShell 选择了 `2025-03-26`，即使策略默认是 `2025-11-25`。请在 `MCP-Protocol-Version` 中显式发送客户端/服务器修订；策略必须允许它。
+- `invalid_mcp_request`（`400`）可能表示该方法在所选修订中不可用。例如 `tasks/get` 在 `2025-06-18` 中不可用。改用该修订可用的方法，或把客户端与服务器配置为使用包含它且策略允许的兼容修订。添加允许规则或启用 `allow_all_known_mcp_methods` 不能覆盖该协议检查。
+- 规则拒绝（`enforcement: enforce` 下的 `403`）需要复查策略。扩展方法需要精确的方法允许规则；被拒绝的工具调用可能需要匹配的工具选择器。显式拒绝规则优先，添加允许规则不能覆盖它。请策略属主复查相关允许或拒绝规则。
+
+#### 无会话 MCP 请求
+
+`2026-07-28` 修订没有 `initialize` 握手或会话。每条请求携带客户端的协议版本与能力。客户端可以调用 `server/discover` 了解服务器支持什么，调用 `subscriptions/listen` 在该请求的响应流上接收通知。每条 HTTP `POST` 携带一条 JSON-RPC 请求或扩展通知。
+
+OpenShell 对每条 `2026-07-28` 请求检查以下内容：
+
+- `params._meta` 包含设为 `2026-07-28` 的 `io.modelcontextprotocol/protocolVersion` 与 `io.modelcontextprotocol/clientCapabilities`。扩展请求同样需要该元数据。
+- `MCP-Protocol-Version` 头部为 `2026-07-28`。没有它时 OpenShell 选择 `2025-03-26` 并拒绝该请求。
+- `Mcp-Method` 头部等于 JSON-RPC `method`。
+- 对 `tools/call` 与 `prompts/get`，`Mcp-Name` 头部等于 `params.name`；对 `resources/read`，它等于 `params.uri`。比较之前 OpenShell 会解码 `=?base64?...?=` 取值。
+
+元数据缺失或无效，或 `Mcp-Method`、`Mcp-Name` 头部缺失、重复或不匹配的请求返回 `400`。OpenShell 还拒绝 `initialize`、`notifications/initialized`、`notifications/cancelled`、来自客户端的 JSON-RPC 响应以及批量请求。使用 `POST` 之外 HTTP 方法的请求返回 `405`。
+
+中间件更改请求之后，OpenShell 会重复这些检查。替换 `2026-07-28` 请求正文的中间件还必须更新 `Mcp-Method` 与 `Mcp-Name` 以匹配新正文。
+
+扩展通知需要 `MCP-Protocol-Version: 2026-07-28` 与一条精确指名其 `method` 的允许规则，例如 `method: vendor/notice`。它不需要 `params._meta`、`Mcp-Method` 或 `Mcp-Name`。
+
+OpenShell 原样转发 `Mcp-Param-*` 头部，不与工具参数比较。
+
+### JSON-RPC 规则
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `method` | 字符串 | 是 | 精确方法名，或所有方法用 `*`。其他 glob 会被拒绝。 |
+
+不匹配参数。一个被拒绝的调用会拒绝整个批量请求。OpenShell 拒绝在任何 JSON 对象内重复键的请求体。
+
+```yaml showLineNumbers={false}
+rules:
+  - allow:
+      method: reports.search
+deny_rules:
+  - method: reports.delete
+```
+
+### 二进制对象
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `path` | 字符串 | 是 | 可执行文件路径或 glob，例如 `/usr/bin/curl` 或 `/usr/lib/jvm/*/bin/java`。 |
+
+二进制匹配打开连接的可执行文件或其任何父进程。脚本以解释器运行，因此 Python 脚本请列出解释器，例如 `/usr/bin/python3.12`。请列出可执行文件的真实路径，而不是指向它的符号链接。OpenShell 在每个可执行文件首次参与连接时记录其哈希，文件变化后拒绝后续连接。参见[二进制匹配](/how-it-works/policies/network-rules#二进制匹配)。
+
+## 网络中间件
+
+至多 10 条中间件配置的映射。中间件按 `order` 升序运行在网络规则放行的流量上。
+
+| 字段 | 类型 | 必需 | 描述 |
+|---|---|---|---|
+| `middleware` | 字符串 | 是 | 内置中间件（例如 `openshell/regex`），或已向网关注册的服务名。 |
+| `endpoints.include` | 字符串列表 | 是 | 中间件适用的主机模式。 |
+| `endpoints.exclude` | 字符串列表 | 否 | 跳过的主机模式。优先于 `include`。 |
+| `order` | 整数 | 否 | 运行顺序。值小的先运行。取值必须唯一。默认 `0`。 |
+| `config` | 对象 | 否 | 中间件的配置。 |
+| `on_error` | 字符串 | 否 | `fail_closed` 在中间件失败时阻断流量；`fail_open` 跳过它。默认 `fail_closed`。 |
+| `name` | 字符串 | 否 | 显示名。默认为键。 |
+
+主机模式的匹配方式与端点主机相同，每条配置至多 32 个模式。`fail_closed` 配置不能应用于带 `tls: skip` 的端点。参见[监管中间件](/extensibility/supervisor-middleware)。
+
+```yaml showLineNumbers={false}
+network_middlewares:
+  regex-redactor:
+    middleware: openshell/regex
+    order: 10
+    config:
+      mode: redact
+    on_error: fail_closed
+    endpoints:
+      include: ["*.example.com"]
+      exclude: ["trusted.example.com"]
+```
+
+## 匹配器语义
+
+glob 模式遵循同一套规则。每个匹配器在分隔符处切分取值：
+
+| 匹配器 | 分隔符 | 区分大小写 |
+|---|---|---|
+| 端点 `host` 与中间件主机 | `.` | 否 |
+| 二进制 `path` | `/` | 是 |
+| REST 与 WebSocket 规则 `path` | `/` | 是 |
+| 查询取值与 MCP 工具名 | `.` | 是 |
+
+- `*` 匹配分隔符之外的任意字符。
+- 只有整段出现时 `**` 才跨分隔符匹配，例如 `/repos/**`、`**.example.com` 或 `github.**`。紧邻其他字符时（例如 `**secret**`），它的行为与 `*` 相同。整段 `**` 至少需要一个段，因此 `/repos/**` 不匹配 `/repos`。
+- `?` 匹配分隔符之外的一个字符，`[0-9]` 这类方括号类匹配集合中的一个字符。端点主机只接受 `*` 与 `**`，参见[目的地字段](#目的地字段)。
+
+查询取值与 MCP 工具名以 `.` 为分隔符，因此 `*` 不匹配包含点的取值。例如 `1.*` 匹配 `1.2` 但不匹配 `1.2.3`；`github.*` 匹配 `github.search` 但不匹配 `github.search.code`。要匹配任意取值请用 `**`。
+
+在同一主机与端口的端点之间选择的端点 `path` 字段使用不同的规则。空路径、`**` 或 `/**` 匹配所有路径；`/v1/**` 匹配 `/v1` 及其下所有路径；其他模式中 `*` 也匹配 `/`。
+
+## 完整示例
+
+```yaml showLineNumbers={false}
+version: 1
+
+filesystem_policy:
+  include_workdir: true
+  read_only: [/usr, /lib, /etc]
+  read_write: [/tmp]
+
+network_policies:
+  github_rest_api:
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+    binaries:
+      - path: /usr/bin/gh
+  npm_registry:
+    endpoints:
+      - host: registry.npmjs.org
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+        allow_encoded_slash: true
+    binaries:
+      - path: /usr/bin/node
+```

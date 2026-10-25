@@ -1,99 +1,97 @@
 ---
-title: "Deleting and suspending users"
-description: "You can delete and suspend users who should no longer be on your Tailscale network (known as a tailnet) in the [Users](https://console.tailscale.com/admin/users) page of the admin console, to prevent "
+title: "删除与停用用户"
+description: "你可以在管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面删除或停用不应继续留在你的 Tailscale 网络（即 tailnet）中的用户，阻止其使用 Tailscale，而无需永久删除其设备。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-You can delete and suspend users who should no longer be on your Tailscale network (known as a tailnet) in the  [Users](https://console.tailscale.com/admin/users) page of the admin console, to prevent them from using Tailscale without permanently deleting their devices.
+你可以在管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面删除或停用不应继续留在你的 Tailscale 网络（即 tailnet）中的用户，阻止其使用 Tailscale，而无需永久删除他们的设备。
 
-> **Note:**
+> **注意：**
 >
-> Deleting, suspending, or deprovisioning a user vacates their seat for reuse. If a suspended user is later restored, they will consume an available seat again when they regain access to the tailnet.
+> 删除、停用或取消预配用户会释放其席位供再次使用。如果被停用的用户之后被恢复，他们重新获得 tailnet 访问权时会再次占用一个可用席位。
 
-## Deleting users
+## 删除用户
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to delete a user.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能删除用户。
 
-1. Open the [Users](https://console.tailscale.com/admin/users) page of the admin console.
-2. Find the row corresponding to the user you are interested in.
-3. Select the  menu at the far right and select the **Delete user** option.
-4. Done. The user is deleted.
+1. 打开管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。
+2. 找到目标用户所在的行。
+3. 选择最右侧的菜单，然后选择 **Delete user** 选项。
+4. 完成。该用户已被删除。
 
-When a user is deleted from your network:
+当用户从你的网络中被删除时：
 
-* User devices are deleted. The device keys are removed from the [coordination server][bl-how-tailscale-works] so that
-  any further requests from those devices to connect to the network are blocked.
-* API access tokens and auth keys for the user stop working
-* These actions usually happens within seconds
+* 该用户的设备会被删除。设备密钥会从[协调服务器][bl-how-tailscale-works]（coordination server）中移除，这些设备后续任何连接网络的请求都会被阻止。
+* 该用户的 API 访问令牌和认证密钥（auth key）随即失效。
+* 这些操作通常在几秒内完成。
 
-To delete a user with the Owner role, you must first [assign a different user as the tailnet Owner](/docs/reference/user-roles), then delete the desired user.
+要删除拥有 Owner 角色的用户，你必须先把另一个用户[指派为 tailnet 的 Owner](/docs/reference/user-roles)，然后再删除目标用户。
 
-### When using user & group provisioning
+### 使用用户与组预配时
 
-If you have [user & group provisioning][docs-user-group-provisioning] enabled in your tailnet, we recommend you use SCIM to automatically deprovision users.
+如果你的 tailnet 启用了[用户与组预配][docs-user-group-provisioning]，我们建议你使用 SCIM 自动取消用户预配。
 
-* If using [Okta][docs-sso-okta-scim], deactivate the user in Okta. This will automatically suspend the user in Tailscale. Then, you can delete the suspended user in Tailscale.
-* If using [Microsoft Entra ID][docs-sso-entra-id-scim], delete the user in Microsoft Entra ID. This will automatically suspend the user in Tailscale, and approximately 30 days later they are deleted in Tailscale.
+* 如果使用 [Okta][docs-sso-okta-scim]，在 Okta 中停用该用户。这会自动在 Tailscale 中停用该用户。然后，你可以在 Tailscale 中删除这个被停用的用户。
+* 如果使用 [Microsoft Entra ID][docs-sso-entra-id-scim]，在 Microsoft Entra ID 中删除该用户。这会自动在 Tailscale 中停用该用户，并在大约 30 天后将其从 Tailscale 中删除。
 
-## Suspending users
+## 停用用户
 
-If you don't want to delete a user from your network right away, but want to restrict them from using Tailscale, you can suspend the user.
+如果你不想立刻从网络中删除某个用户，但又想限制其使用 Tailscale，可以停用（suspend）该用户。
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to suspend and restore a user.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能停用和恢复用户。
 
-1. Go to the [Users](https://console.tailscale.com/admin/users) page of the admin console.
-2. Find the row corresponding to the user you are interested in.
-3. Select the  menu at the far right and select the **Suspend user** option.
+1. 前往管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。
+2. 找到目标用户所在的行。
+3. 选择最右侧的菜单，然后选择 **Suspend user** 选项。
 
-   The user is shown as **Suspended** in the users page.
+   该用户会在用户页面显示为 **Suspended**。
 
-When a user is suspended, they cannot use Tailscale on this tailnet. That means:
+用户被停用后，就无法在此 tailnet 上使用 Tailscale。这意味着：
 
-* Their devices are not able to connect to other devices in the tailnet, including other devices they own
+* 其设备无法连接 tailnet 中的其他设备，包括他们自己的其他设备。
 
-  > **Note:**
+  > **注意：**
   >
-  > Devices belonging to a suspended user may appear connected, but they cannot exchange traffic with other devices in the tailnet until the suspension is lifted.
-* They cannot add new devices to the tailnet. If they try to sign in on a device, they will get an error that they are suspended
-* They cannot access the admin console
-* Their API access tokens and auth keys stop working
+  > 被停用用户的设备可能显示为已连接，但在停用解除之前，它们无法与 tailnet 中的其他设备交换流量。
+* 他们无法向 tailnet 添加新设备。如果尝试在设备上登录，会收到已被停用的错误提示。
+* 他们无法访问管理控制台。
+* 其 API 访问令牌和认证密钥随即失效。
 
-If someone else has access to their devices, they can re-authenticate or tag these devices and use them in the same tailnet.
+如果其他人可以访问这些设备，可以重新认证这些设备或给它们打标签，从而在同一个 tailnet 中继续使用。
 
-## Unapproved users
+## 未批准的用户
 
-If you have enabled [user approval][docs-user-approval], new users are placed in a state that needs approval. For
-information about removing an unapproved user, refer to [Remove an unapproved user][docs-user-approval-remove-unapproved].
+如果你启用了[用户审批][docs-user-approval]，新用户会处于待批准状态。有关移除未批准用户的信息，请参阅[移除未批准的用户][docs-user-approval-remove-unapproved]。
 
-## Restoring users
+## 恢复用户
 
-You can restore a user from the [Users](https://console.tailscale.com/admin/users) page of the admin console by choosing the **Restore user** option.
+你可以在管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面选择 **Restore user** 选项来恢复用户。
 
-When a user is restored, they regain access to Tailscale on this tailnet, including the devices they owned when they were restored. More specifically, restored users can do the following:
+用户被恢复后，会重新获得在此 tailnet 上使用 Tailscale 的权限，包括恢复时其拥有的设备。更具体地说，被恢复的用户可以：
 
-* Reconnect to other devices in the tailnet, as allowed by [access control policies][docs-access-control]
-* Add new devices to the tailnet
-* Access the admin console, if allowed based on their [role][docs-user-roles]
-* Use pre-existing API access tokens and auth keys, if they have not expired
+* 在[访问控制策略][docs-access-control]允许的范围内，重新连接 tailnet 中的其他设备。
+* 向 tailnet 添加新设备。
+* 访问管理控制台（前提是其[角色][docs-user-roles]允许）。
+* 使用尚未过期的既有 API 访问令牌和认证密钥。
 
-## Managing user resources
+## 管理用户资源
 
-* Machines for suspended users are suspended, and can be deleted or reassigned. Machines for deleted users are deleted. A machine can be re-assigned to a tag, or a new user can log into it. If new user logs into the machine, it's recognized as a new machine.
-* API keys for suspended users are suspended. API keys for deleted users are automatically revoked. They cannot be reassigned. You must create a new [API key][docs-api-authentication] or an [OAuth][docs-oauth-clients] client.
-* Auth keys for suspended users are suspended. Auth keys for deleted users are automatically revoked. They cannot be reassigned. You must create a new [auth key][docs-auth-keys] or an [OAuth][docs-oauth-clients] client.
+* 被停用用户的机器会被一并停用，可以删除或重新指派。被删除用户的机器会被删除。机器可以重新指派给某个标签，也可以由新用户登录。如果有新用户登录该机器，它会被识别为一台新机器。
+* 被停用用户的 API 密钥会被停用；被删除用户的 API 密钥会被自动吊销。它们不能被重新指派。你必须创建新的 [API 密钥][docs-api-authentication]或 [OAuth][docs-oauth-clients] 客户端。
+* 被停用用户的认证密钥会被停用；被删除用户的认证密钥会被自动吊销。它们不能被重新指派。你必须创建新的[认证密钥][docs-auth-keys]或 [OAuth][docs-oauth-clients] 客户端。
 
-## Managing idle users
+## 管理空闲用户
 
-If a user is not the Owner and has not signed in or used Tailscale for more than 7 days, they are shown as **Idle** in the [Users](https://console.tailscale.com/admin/users) page of the admin console.
+如果某个用户不是 Owner，且超过 7 天未登录或使用 Tailscale，就会在管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面显示为 **Idle**。
 
-## Leaving a tailnet
+## 离开 tailnet
 
-You cannot delete yourself from a network or leave a network. Ask your administrator to remove your account. You can, however, delete your account by [contacting support][co-contact-support-accountdeletion].
+你无法把自己从网络中删除，也无法自行离开网络。请让你的管理员移除你的账户。不过，你可以通过[联系支持团队][co-contact-support-accountdeletion]来删除自己的账户。
 
-## Deleting a tailnet
+## 删除 tailnet
 
-If you decide you want to delete your entire tailnet, refer to the [Deleting your tailnet][docs-delete-tailnet] topic.
+如果你决定删除整个 tailnet，请参阅[删除你的 tailnet][docs-delete-tailnet]主题。
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

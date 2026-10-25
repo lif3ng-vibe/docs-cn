@@ -1,56 +1,56 @@
 ---
-title: "Deploy Tailscale with SimpleMDM"
-description: "[SimpleMDM][xt-simplemdm] is a common mobile device management (MDM) solution to manage Apple devices within an organization. You can use SimpleMDM to deploy Tailscale in your organization. You can co"
+title: "使用 SimpleMDM 部署 Tailscale"
+description: "[SimpleMDM][xt-simplemdm] 是一种常用于管理组织内 Apple 设备的移动设备管理（MDM）解决方案。你可以使用 SimpleMDM 在你的组织中部署 Tailscale。你可以配置多个[系统策略][docs-mdm-keys]，然后让 SimpleMDM 将这些策略部署到组织中的各台 Apple 设备。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 本集成适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-[SimpleMDM][xt-simplemdm] is a common mobile device management (MDM) solution to manage Apple devices within an organization. You can use SimpleMDM to deploy Tailscale in your organization. You can configure a number of [system policies][docs-mdm-keys], and you can then ask SimpleMDM to deploy these policies across the Apple devices in your organization. Tailscale system policies set through SimpleMDM are supported on macOS, iOS and tvOS.
+[SimpleMDM][xt-simplemdm] 是一种常用于管理组织内 Apple 设备的移动设备管理（MDM）解决方案。你可以使用 SimpleMDM 在你的组织中部署 Tailscale。你可以配置多个[系统策略][docs-mdm-keys]，然后让 SimpleMDM 将这些策略部署到组织中的各台 Apple 设备。通过 SimpleMDM 设置的 Tailscale 系统策略支持 macOS、iOS 和 tvOS。
 
-If you need help deploying Tailscale using SimpleMDM, or would like to suggest any feature enhancements, contact our [support][co-contact-support-form] or [sales][co-contact-sales] teams.
+如果你在使用 SimpleMDM 部署 Tailscale 时需要帮助，或者想提出功能改进建议，请联系我们的[支持][co-contact-support-form]或[销售][co-contact-sales]团队。
 
-Follow the steps in this document to get started. You'll create a configuration profile containing a system policy that displays the name of your organization in the Tailscale client. You'll then deploy it to a set of devices already enrolled in SimpleMDM.
+按照本文档中的步骤开始使用。你将创建一个包含系统策略的配置描述文件，在 Tailscale 客户端中显示你组织的名称，然后将其部署到一批已注册到 SimpleMDM 的设备。
 
-## Create and upload a Tailscale configuration profile
+## 创建并上传 Tailscale 配置描述文件
 
-> **Note:**
+> **注意：**
 >
-> Refer to [Deploy Tailscale on macOS using MDM][docs-macos-mdm] for general best practices and [Approve the Tailscale system extension automatically][docs-macos-mdm-approve-the-extension] to ensure the best end-user experience.
+> 一般最佳实践请参阅[使用 MDM 在 macOS 上部署 Tailscale][docs-macos-mdm]，并参阅[自动批准 Tailscale 系统扩展][docs-macos-mdm-approve-the-extension]以确保最终用户体验最佳。
 
-To get started with Tailscale and SimpleMDM, you'll first need to determine which [system policies][docs-mdm-keys] you wish to impose on your devices. Once you know which system policies to impose and the value for each, you'll then need to create an Apple configuration profile (`.mobileconfig` file) to define them, and upload the profile to the SimpleMDM admin console.
+要开始搭配使用 Tailscale 和 SimpleMDM，你首先需要确定要对设备施加哪些[系统策略][docs-mdm-keys]。确定要施加的系统策略及其各自的值后，你需要创建一个 Apple 配置描述文件（`.mobileconfig` 文件）来定义它们，并将该描述文件上传到 SimpleMDM 管理控制台。
 
-1. Paste the contents of our [configuration profile template][docs-macos-mdm-deploy-policies-profile], which provides preset values for the **ManagedByOrganizationName** and **IPAddressCopiedAlertSuppressed** policies into a new XML file called `Tailscale.mobileconfig`. This XML file with the `.mobileconfig` extension will become your configuration profile.
+1. 将我们[配置描述文件模板][docs-macos-mdm-deploy-policies-profile]的内容粘贴到一个名为 `Tailscale.mobileconfig` 的新 XML 文件中，该模板为 **ManagedByOrganizationName** 和 **IPAddressCopiedAlertSuppressed** 策略提供了预设值。这个带有 `.mobileconfig` 扩展名的 XML 文件将成为你的配置描述文件。
 
-2. Log in to the [SimpleMDM admin console][xt-a-simplemdm].
+2. 登录 [SimpleMDM 管理控制台][xt-a-simplemdm]。
 
-3. In the sidebar, select **Profiles** under the **Configs** section.
+3. 在侧边栏中，在 **Configs**（配置）部分下选择 **Profiles**（描述文件）。
 
-4. A list of currently configured profiles will appear. Select the **Create Profile** button at the top right.
+4. 此时将显示当前已配置的描述文件列表。选择右上角的 **Create Profile**（创建描述文件）按钮。
 
-5. Among the available profile types, choose **Custom Configuration Profile**.
+5. 在可用的描述文件类型中，选择 **Custom Configuration Profile**（自定义配置描述文件）。
 
-6. Assign a name to the profile. This will be displayed to the user in System Settings. For instance, `Tailscale Policies`.
+6. 为描述文件指定一个名称。该名称将向用户显示在"系统设置"中，例如 `Tailscale Policies`。
 
-7. Leave the **For macOS devices, deploy as a device profile instead of a user profile.** option selected.
+7. 将 **For macOS devices, deploy as a device profile instead of a user profile**（对于 macOS 设备，将其部署为设备描述文件而非用户描述文件）选项保持为选中状态。
 
-8. Use the **Choose File** button to upload the `.mobileconfig` file previously created.
+8. 使用 **Choose File**（选择文件）按钮上传之前创建的 `.mobileconfig` 文件。
 
-9. Save the profile.
+9. 保存描述文件。
 
-## Assign the Tailscale profile to a group of devices
+## 将 Tailscale 描述文件分配给一组设备
 
-SimpleMDM is now ready to deploy your configuration profile to one or more devices in your fleet. To do so, follow these steps.
+SimpleMDM 现在已准备好将你的配置描述文件部署到设备群中的一台或多台设备。为此，请按以下步骤操作。
 
-1. Log in to the [SimpleMDM admin console][xt-a-simplemdm].
-2. In the sidebar, select **Groups** under the **Devices** section.
-3. Select a group of devices to deploy Tailscale to. For instance, the **Default** group should already exist, and include all devices in your fleet.
-4. Once the group settings appear, go to the **Profiles** tab.
-5. Select the **Assign Profile** button.
-6. Identify the Tailscale profile you just created in the list of profiles, and select **Assign**.
+1. 登录 [SimpleMDM 管理控制台][xt-a-simplemdm]。
+2. 在侧边栏中，在 **Devices**（设备）部分下选择 **Groups**（组）。
+3. 选择要向其部署 Tailscale 的设备组。例如，**Default**（默认）组应该已经存在，并包含设备群中的所有设备。
+4. 组设置出现后，前往 **Profiles**（描述文件）标签页。
+5. 选择 **Assign Profile**（分配描述文件）按钮。
+6. 在描述文件列表中找到你刚创建的 Tailscale 描述文件，然后选择 **Assign**（分配）。
 
-SimpleMDM will momentarily begin deploying the profile to the devices in the selected group. After rebooting the device, each enrolled client should display the organization name in the Tailscale client menu as set in the sample configuration profile used.
+SimpleMDM 随即将开始向所选组中的设备部署该描述文件。设备重启后，每台已注册的客户端都应在 Tailscale 客户端菜单中显示所使用的示例配置描述文件中设置的组织名称。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

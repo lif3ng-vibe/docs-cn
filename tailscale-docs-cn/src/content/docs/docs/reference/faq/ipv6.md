@@ -1,246 +1,227 @@
 ---
-title: "IPv4 vs. IPv6 FAQ"
-description: "This topic attempts to resolve some of the most common misconceptions around IPv6."
+title: "IPv4 与 IPv6 常见问题"
+description: "本主题试图澄清围绕 IPv6 最常见的一些误解。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic attempts to resolve some of the
-most common misconceptions around IPv6.
+本主题试图澄清围绕 IPv6 最常见的一些误解。
 
-## What is IPv6?
+## 什么是 IPv6？
 
-IPv6 is the next generation of the Internet Protocol (IP), the successor to IPv4.
+IPv6 是互联网协议（IP）的新一代，是 IPv4 的继任者。
 
-According to the [history topic on ARIN][xt-arin-ipv6-history], IPv6 design began in the mid-1990s and the first IPv6 draft standard was published in 1998. The first public IPv6 address assignments were made in 1999, officially beginning the rollout process.
+根据 [ARIN 上的历史专题][xt-arin-ipv6-history]，IPv6 的设计始于 20 世纪 90 年代中期，第一份 IPv6 标准草案于 1998 年发布。首批公共 IPv6 地址于 1999 年分配，正式拉开了部署进程的序幕。
 
-IPv6 has several advantages, including a much larger address space. IPv4
-had only 232 addresses, less than one per person on earth. IPv6
-has 2128 addresses, an immensely larger number which is not
-expected ever to be exhausted. Estimates are that this is enough to assign
-100 IPv6 addresses to every atom on earth.
+IPv6 有许多优点，其中包括大得多的地址空间。IPv4 只有 232 个地址，还不到地球上人均一个。IPv6 拥有 2128 个地址，这个数字大得多，预计永远不会耗尽。据估算，这个数量足以给地球上的每一个原子分配 100 个 IPv6 地址。
 
-IPv6 also has simpler headers, cleaner extension support, and better multicast design, based on decades of experience with IPv4.
+基于数十年的 IPv4 经验，IPv6 还拥有更简洁的报头、更清晰的扩展支持以及更好的多播设计。
 
-On the other hand, IPv6's main disadvantages are additional complexity compared to IPv4, longer
-addresses that are hard to memorize, and an
-unfortunately slow rollout process that has still not completed, more than
-20 years later.
+另一方面，IPv6 的主要缺点是：相比 IPv4 增加了复杂性、地址更长难以记忆，以及一个遗憾地过于缓慢、20 多年后仍未完成的部署进程。
 
-Our CEO has written blog posts about [design goals of IPv6][xt-apenwarr-20170810]
-and [attitudes reflected in IPv4 and IPv6][bl-two-internets-both-flakey].
+我们的 CEO 撰写过关于 [IPv6 的设计目标][xt-apenwarr-20170810]以及 [IPv4 与 IPv6 所反映的态度][bl-two-internets-both-flakey]的博客文章。
 
-## Is IPv6 faster than IPv4?
+## IPv6 比 IPv4 更快吗？
 
-Most of the time, the performance difference is not noticeable.
+大多数情况下，性能差异并不明显。
 
-Still, several factors can create perceived or measured differences in speed between IPv4 and IPv6:
+不过，以下几种因素可能造成 IPv4 与 IPv6 之间感知上或实测出的速度差异：
 
-* Performance penalties incurred by [NAT traversal][bl-how-nat-traversal-works];
-* Performance penalties due to MTU and packet sizes;
-* Differences in global route optimization between IPv4 and IPv6.
+* [NAT 穿透][bl-how-nat-traversal-works]带来的性能损失；
+* MTU 与数据包大小导致的性能损失；
+* IPv4 与 IPv6 在全局路由优化上的差异。
 
-Despite persistent rumors to the contrary, NATs usually have no measurable impact on performance, neither in throughput nor latency. Modern router hardware, even consumer router hardware, can NAT at the line speed of your network. If someone tells you otherwise, we encourage you to benchmark it yourself.
+尽管相反的传言经久不息，NAT 通常对性能没有可测量的影响，无论吞吐量还是延迟都是如此。现代路由器硬件，即使是消费级路由器硬件，也能以你网络的线速执行 NAT。如果有人另有说法，我们建议你自行做基准测试。
 
-The minimum IPv6 header size (40) is 20 bytes longer than the minimum IPv4 header size (20). Given that the typical network maximum transmission unit (MTU) is 1500, this means IPv6 incurs a 20/1500 = 1.3% throughput slowdown compared to IPv4 on the same network. Such a difference is smaller than the random variation you usually notice in a network speed test, so it can be hard to measure in a benchmark.
+IPv6 最小报头长度（40）比 IPv4 最小报头长度（20）长 20 字节。考虑到典型的网络最大传输单元（MTU）是 1500，这意味着在同一网络上，IPv6 相比 IPv4 会带来 20/1500 = 1.3% 的吞吐量下降。这一差异比你在网络测速中通常注意到的随机波动还小，因此在基准测试中很难测出来。
 
-The biggest and most measurable performance differences between IPv4 and IPv6 are in route optimization. Internet Service Providers (ISPs) peer with other ISPs in the world to deliver your packets. Because of the way routing works, their IPv4 and IPv6 networks can end up routed completely differently, through different cables, countries, or even continents.
+IPv4 与 IPv6 之间最大、最可测量的性能差异在于路由优化。互联网服务提供商（ISP）与世界上的其他 ISP 对等互联来投递你的数据包。由于路由的工作方式，它们的 IPv4 与 IPv6 网络最终可能走完全不同的路径——经过不同的电缆、国家，甚至大洲。
 
-Empirically, some ISPs route IPv4 more efficiently and some route IPv6 more
-efficiently. You may find that one protocol or the other is faster depending
-which remote ISP you're talking to. Since there is no way to be sure which
-path will be consistently better, a heuristic called [Happy Eyeballs][xt-wikipedia-happy-eyeballs] (yes, really) is
-used by some software to automatically choose the "better" of the two for
-each connection attempt.
+从经验上看，有些 ISP 路由 IPv4 更高效，有些则路由 IPv6 更高效。你可能会发现哪个协议更快取决于你在和对端的哪家远程 ISP 通信。由于无法确定哪条路径会一直更好，一些软件采用名为 [Happy Eyeballs][xt-wikipedia-happy-eyeballs] 的启发式方法（没错，真的叫这个名字），在每次连接尝试时自动选择两者中"更好"的一个。
 
-To try to encourage migration from IPv4 to IPv6, [Happy Eyeballs (RFC6555)][xt-rfc-6555] and [Happy Eyeballs v2 (RFC8305)][xt-rfc-8305]
-recommend preferring IPv6 to IPv4 unless it is much slower, although
-implementations vary. The decision may be partly based on DNS response time.
+为了推动从 IPv4 向 IPv6 迁移，[Happy Eyeballs（RFC6555）][xt-rfc-6555]和 [Happy Eyeballs v2（RFC8305）][xt-rfc-8305]建议除非 IPv6 慢得多，否则优先选择 IPv6 而非 IPv4，尽管各实现有所不同。这一决策可能部分依据 DNS 响应时间。
 
-## Does IPv6 have built-in IPsec encryption for all connections?
+## IPv6 是否为所有连接内置了 IPsec 加密？
 
-We occasionally notice a rumor that every IPv6 connection is encrypted automatically. This is not true.
+我们偶尔会听到一种传言：每个 IPv6 连接都会自动加密。这不是真的。
 
-It is true that IPsec encryption was designed at the same time as IPv6, and is considered part of the "complete" IPv6
-standard. IPsec is optional in IPv6 and is almost never used, except for VPN tunnels, just like in IPv4.
+IPsec 加密确实是与 IPv6 同时设计的，并被认为属于"完整"IPv6 标准的一部分。但与 IPv4 一样，IPsec 在 IPv6 中是可选的，除了 VPN 隧道之外几乎从不使用。
 
-The IPsec design included a concept of "opportunistic encryption," which would try to figure out if an endpoint supported IPsec, and switch to an encrypted mode automatically when available. Unfortunately, this never worked: attackers could trick an IPv6 endpoint into thinking its peer was not IPsec capable, so this feature only provided a false sense of security. (This is called a [downgrade attack][xt-wikipedia-downgrade-attack]. In fairness, this type of attack was not well understood in 1998.)
+IPsec 的设计中包含一个"机会加密"（opportunistic encryption）的概念：尝试探测端点是否支持 IPsec，并在可用时自动切换到加密模式。遗憾的是，这从未真正可行：攻击者可以诱骗 IPv6 端点，让它以为对端不支持 IPsec，因此该功能只提供了虚假的安全感。（这称为[降级攻击][xt-wikipedia-downgrade-attack]（downgrade attack）。平心而论，1998 年时人们对这类攻击还没有充分认识。）
 
-## Is IPv6 a failure?
+## IPv6 失败了吗？
 
-This is a difficult question to answer. Opinions differ dramatically among network engineers.
+这是个难以回答的问题。网络工程师之间的看法大相径庭。
 
-Factually, it is safe to say that IPv6 met many of its design goals, but has not been rolled out as quickly or as fully as expected.
+客观地说，可以肯定 IPv6 实现了它的许多设计目标，但部署的速度和广度都不及预期。
 
-IPv6 has also not replaced IPv4, which its designers anticipated it would do. (This seemed like a reasonable expectation at the time. Remember that IPv4 had quickly replaced all previous versions of TCP/IP and its predecessor protocol suites.)
+IPv6 也没有像其设计者预期的那样取代 IPv4。（在当时这看似合理的预期。别忘了，IPv4 曾迅速取代了此前所有版本的 TCP/IP 及其前身协议套件。）
 
-That said, the rollout continues. IPv6 is already a better choice than IPv4 in several important scenarios.
+话虽如此，部署仍在继续。在一些重要场景中，IPv6 已经是比 IPv4 更好的选择。
 
-## Why isn't IPv6 more popular?
+## 为什么 IPv6 没有更流行？
 
-This is also a matter of opinion. If you ask around the internet for answers, you will find several candidates: politics, capitalism, and an arguably overly complex design.
+这同样见仁见智。如果你在互联网上四处打听，会得到好几种答案：政治、资本主义，以及一种可以说过于复杂的设计。
 
-At Tailscale we believe the main reason for the slow IPv6 rollout is that it has not been able to provide enough direct value, when deployed as a hybrid in parallel with IPv4. The intention was to deploy IPv6, then retire IPv4 completely, in which case IPv6 would have made the internet overall simpler and cheaper to manage, which is a big benefit. Unfortunately, this value doesn't materialize until the very end, after IPv6 has been fully deployed to billions of devices. This means companies usually will not recoup the costs of IPv6 deployment on a predictable timeline, which makes investment hard.
+在 Tailscale，我们认为 IPv6 部署缓慢的主要原因是：当它与 IPv4 以混合方式并行部署时，无法提供足够的直接价值。原本的设想是先部署 IPv6，再彻底退役 IPv4——那样的话，IPv6 本可以让整个互联网的管理更简单、更便宜，这是一大收益。遗憾的是，这一价值要等到最后、IPv6 完全部署到数十亿设备之后才会兑现。这意味着公司通常无法在可预期的时间内收回 IPv6 部署的成本，因而投资难以成立。
 
-We have our own ideas for how to help the IPv6 rollout by providing value more quickly.
+对于如何通过更快地提供价值来助力 IPv6 部署，我们有自己的想法。
 
-## Where has IPv6 seen major success?
+## IPv6 在哪些领域取得了重大成功？
 
-The primary purpose of IPv6 was to expand the address space of IPv4. The place where IPv4 address space is most restrictive is on private networks.
+IPv6 的首要目的是扩展 IPv4 的地址空间。而 IPv4 地址空间最捉襟见肘的地方就是私有网络。
 
-[RFC1918][xt-rfc-1918] reserved several IPv4 address ranges specifically for private network use. Unfortunately, the total number of private addresses reserved in this way is a bit less than 18 million. Some modern data centers need more than 18 million addresses just on their own. But separately from that, such a small number of addresses makes it hard to subdivide into separate routing domains. It's also virtually guaranteed that every organization will choose overlapping private addresses (10.0.0.1 anyone?), which works fine until you merge two companies together, or need to connect to a partner's API server on their private network.
+[RFC1918][xt-rfc-1918] 专门为私有网络保留了几个 IPv4 地址段。遗憾的是，以此方式保留的私有地址总数还不到 1800 万个。一些现代数据中心自身需要的地址就超过 1800 万个。此外，这么少的地址也很难细分为各自独立的路由域。而且几乎可以肯定，每个组织都会选择相互重叠的私有地址（10.0.0.1 有人用吗？），这在两家公司合并、或需要连接合作伙伴私有网络上的 API 服务器之前都相安无事。
 
-IPv6 completely solves this category of problem both for large data centers and for private personal networks. There are so many addresses available that entire subnets can be assigned randomly or algorithmically with almost no chance of an overlap, so you can merge them back together later.
+无论是大型数据中心还是个人私有网络，IPv6 都彻底解决了这类问题。可用地址多到可以把整个子网随机或按算法分配而几乎不可能重叠，因此以后你可以把它们重新合并起来。
 
-Data center servers are rarely exposed directly to the internet—there is generally some kind of firewall or load balancer in between—so it works fine to use pure-IPv6 internally, and remap addresses to IPv4 on the way out of the private network (that is, a form of NAT). This means your data center can be entirely IPv6 even if your customers or ISP only support IPv4.
+数据中心服务器很少直接暴露在互联网上——中间通常有某种防火墙或负载均衡器——因此在内部使用纯 IPv6、在离开私有网络时把地址重映射为 IPv4（即一种 NAT 形式）完全可行。这意味着即使你的客户或 ISP 只支持 IPv4，你的数据中心也可以完全使用 IPv6。
 
-Unfortunately, personal networks are less likely to rely on private IPv6 addresses, due to now-mostly-outdated concerns about application compatibility. Many users also continue to prefer IPv4 because of its shorter, more memorable addresses.
+遗憾的是，由于对应用兼容性的顾虑（如今大多已过时），个人网络不太倾向于依赖私有 IPv6 地址。许多用户也因为 IPv4 地址更短、更好记而继续偏爱 IPv4。
 
-## Does IPv6 give me a permanent, static IP address for free?
+## IPv6 会免费给我一个永久的静态 IP 地址吗？
 
-Unfortunately not. One of the dreams of having such a large address space was that everyone could have not just their own address, but their own subnet of billions of addresses, which would be globally unique and would never need to be renumbered.
+很遗憾，不能。拥有如此巨大地址空间的梦想之一是：每个人不仅能拥有自己的地址，还能拥有一个包含数十亿地址、全球唯一且永远无需重新编号的子网。
 
-This didn't happen, because the IPv6 address(es) assigned to your network depend on how your ISP's routing is set up. If you switch ISPs, or have multiple ISPs, or your ISP reorganizes their network, you will get entirely new IPv6 addresses assigned. This is roughly the same as how consumer address assignments worked on (pre-CGNAT) IPv4.
+这并没有实现，因为分配给你网络的 IPv6 地址取决于你 ISP 的路由设置方式。如果你更换 ISP、使用多个 ISP，或你的 ISP 重组网络，你就会被分配全新的 IPv6 地址。这与（前 CGNAT 时代）IPv4 上消费级地址分配的工作方式大致相同。
 
-As with IPv4, you can apply for your own special IPv6 address allocation, and then arrange for global routing of your addresses. This makes you, effectively, an ISP. These allocations cost money and are complex to manage, so most organizations don't bother.
+与 IPv4 一样，你可以申请自己的专属 IPv6 地址分配，然后安排这些地址的全球路由。这实际上让你成为一名 ISP。这类分配花钱且管理复杂，所以大多数组织都不愿折腾。
 
-## Does IPv6 work with mobile IP or multi-homed devices?
+## IPv6 适用于移动 IP 或多宿主设备吗？
 
-Yes, in the same way as IPv4 does.
+适用，情况和 IPv4 一样。
 
-Which is to say, not very well. Your IP address changes whenever your device roams around the network. And if your device is multi-homed (is connected to multiple ISPs at once), it will generally need to have one IP address per connection, just as with IPv4.
+也就是说，不太好用。设备在网络中漫游时，IP 地址会随之变化。如果你的设备是多宿主的（同时连接多个 ISP），通常每个连接都需要一个 IP 地址，与 IPv4 一样。
 
-Since TCP connections generally get interrupted whenever your IP address changes, you'll experience a glitch in connectivity whenever your device moves around. Although [Mobile IP][xt-wikipedia-mobile-ip] issues were discussed during IPv6 standardization, no solution was deployed. It was intended that the Mobile IP problem be resolved later, after IPv6 was fully rolled out.
+由于 IP 地址一变，TCP 连接通常就会中断，设备一移动你就会遇到连接故障。尽管在 IPv6 标准化过程中讨论过[移动 IP][xt-wikipedia-mobile-ip]（Mobile IP）问题，但并没有部署任何解决方案。按设想，移动 IP 问题要在 IPv6 全面部署之后再解决。
 
-## Will IPv6 ever be fully rolled out?
+## IPv6 终有一天会全面部署吗？
 
-That depends what you mean by "fully."
+这取决于你说的"全面"是什么意思。
 
-It is unlikely that, in our lifetimes, every device in the world will support IPv6. Imagine all the internet-connected light bulbs and virtual MS-DOS machines whose software will never change. Some kind of IPv4 compatibility layer will always be needed.
+在我们有生之年，世界上每台设备都支持 IPv6 可能性不大。想想那些联网灯泡和虚拟 MS-DOS 机器吧——它们的软件永远不会更新。某种 IPv4 兼容层将永远不可或缺。
 
-On the other hand, many devices, especially smartphones, are running IPv6-only even today, and they can talk to any device on the internet, including IPv4-only devices, with the help of NATs and proxies.
+另一方面，如今已有很多设备（尤其是智能手机）以纯 IPv6 方式运行，并且借助 NAT 和代理，它们可以与互联网上任何设备（包括仅支持 IPv4 的设备）通信。
 
-Thus, it is possible that someday, every consumer or client-side device will support IPv6. Some ISPs, especially cell phone carriers, are IPv6-only already. Several major ISPs support dual-stack IPv4 and IPv6.
+因此，有朝一日每台消费级或客户端设备都支持 IPv6 是可能的。一些 ISP——尤其是手机运营商——已经是纯 IPv6。还有几家大型 ISP 支持双栈（IPv4 与 IPv6）。
 
-## Should I support IPv6 on my server?
+## 我应该在服务器上支持 IPv6 吗？
 
-You can if you want, but despite what some people will claim, it probably won't make much difference.
+想支持也可以，但不管有些人怎么宣称，这大概率不会带来多大差别。
 
-As long as any client devices lack support for IPv6, your server will need to support IPv4. In contrast, thanks to NAT, an IPv6-only client device will always be able to connect to an IPv4-only server.
+只要有客户端设备不支持 IPv6，你的服务器就需要支持 IPv4。反过来说，多亏了 NAT，仅支持 IPv6 的客户端设备总能连上仅支持 IPv4 的服务器。
 
-This asymmetry occurs because servers generally must have "public-facing" addresses not behind NATs, while client devices can be behind NATs, and a NAT can translate from IPv6 to IPv4 if needed.
+这种不对称的原因在于：服务器通常必须拥有不在 NAT 后面的"面向公网"地址，而客户端设备可以位于 NAT 之后，且 NAT 可以在需要时把 IPv6 转换为 IPv4。
 
-In theory, removing the need for NAT to access your server could give a performance improvement. But as mentioned above, NATs generally do not create a noticeable performance impact.
+理论上，免去访问服务器所需的 NAT 可能带来性能提升。但如前所述，NAT 一般不会造成可感知的性能影响。
 
-## What can I do to encourage adoption of IPv6?
+## 我能做些什么来推动 IPv6 的普及？
 
-Not much. Petitions, letter-writing, and complaining have not been particularly effective despite 20+ years of trying.
+做不了太多。请愿、写信和抱怨在 20 多年的尝试中收效甚微。
 
-Running an IPv6-only server, so that only clients with IPv6 (either pure or with dual-stack IPv4) can reach your server, is a sometimes-proposed method. Unfortunately, no service that has tried this technique has ever become popular enough to apply any real pressure.
+有人提议运行仅支持 IPv6 的服务器，让只有具备 IPv6 能力（纯 IPv6 或带 IPv4 双栈）的客户端才能访问。遗憾的是，尝试过这一手段的服务没有一个流行到足以形成真正的压力。
 
-One thing you can do is build your new, private networks primarily on IPv6. This helps make sure that applications support IPv6, saves you the trouble of maintaining IPv4 inside your private network, and ensures you are IPv6-ready even if your ISP is not.
+你能做的一件事是把新的私有网络主要构建在 IPv6 上。这有助于确保应用支持 IPv6，省去在私有网络内维护 IPv4 的麻烦，并保证即使你的 ISP 不支持 IPv6，你也已为 IPv6 做好准备。
 
-## Are we really out of IPv4 addresses?
+## IPv4 地址真的耗尽了吗？
 
-Yes. All the IPv4 addresses have been allocated and no more will appear.
+是的。所有 IPv4 地址都已分配完毕，不会再有新的。
 
-However, there is an active market for IPv4 addresses. Recently (in 2021) it was announced that Amazon purchased millions of IP addresses at a cost of about $40 each. The total amount spent sounds spectacular in aggregate, but a single IPv4 address can be stretched very far. Thanks to [TLS SNI][xt-wikipedia-server-name-indication], load balancers, and NATs, you can share a single address across many devices. At the current price, even small organizations can afford to buy or rent hundreds of IPv4 addresses.
+不过，IPv4 地址的交易市场相当活跃。最近（2021 年）有消息称，亚马逊以每个约 40 美元的价格购入了数百万个 IP 地址。总花费听起来惊人，但单个 IPv4 地址可以挖掘的潜力很大。借助 [TLS SNI][xt-wikipedia-server-name-indication]、负载均衡器和 NAT，一个地址可以在许多设备之间共享。以当前价格，即便是小型组织也买得起或租得起数百个 IPv4 地址。
 
-What we expect is that more and more IPv4 addresses will be purchased for server use, while more and more client devices will be hidden behind fewer and fewer IPv4 addresses using [CGNAT][xt-wikipedia-carrier-grade-nat].
+我们预计，会有越来越多的 IPv4 地址被买下用于服务器，而越来越多的客户端设备将借助[运营商级 NAT（CGNAT）][xt-wikipedia-carrier-grade-nat]隐藏在越来越少的 IPv4 地址之后。
 
-The price of an IPv4 address will likely continue to rise, encouraging ever-more-complicated hacks and optimizations to conserve them.
+IPv4 地址的价格可能继续上涨，催生日益复杂的技巧和优化来节约地址。
 
-## Does IPv6 make peer-to-peer apps easier?
+## IPv6 让点对点应用更容易了吗？
 
-Yes. Kind of.
+是的，某种程度上。
 
-The dream of an IPv6 world where every device can connect to every other device, directly, will never materialize. Refer to our blog post, [Absolute scale corrupts absolutely][bl-absolute-scale], for why this ideal is no longer considered ideal.
+每台设备都能直接连接任何其他设备的 IPv6 世界之梦永远不会实现。至于为什么这一理想已不再被视为理想，请参阅我们的博客文章[《绝对的规模会让一切绝对腐化》][bl-absolute-scale]。
 
-In [How NAT traversal works][bl-how-nat-traversal-works], we discussed various techniques for opening firewall ports so a direct connection can be established between two devices, both behind firewalls or NATs. Because direct, un-firewalled connections are no longer considered desirable, all peer-to-peer connections will need to do such tricks to work, even in an IPv6 world. Luckily though, the tricks are likely to be easier and to have fewer edge cases in an IPv6 world.
+在[《NAT 穿透是如何工作的》][bl-how-nat-traversal-works]中，我们讨论了打开防火墙端口、让两台都位于防火墙或 NAT 之后的设备建立直连的各种技术。由于直连的、不经防火墙的连接已不再被视为理想选择，所有点对点连接都需要这类技巧才能工作，即使在 IPv6 世界里也一样。所幸在 IPv6 世界中，这些技巧很可能更容易实现，边界情况也更少。
 
-On the other hand, you usually cannot assume all your peers support IPv6, and you will not be able to do so for a very long time. That means every app now needs to support *both* IPv4 and IPv6, which creates more effort and frustration, not less. The resulting code is often poorly tested by developers (usually the IPv6 part).
+另一方面，你通常无法假定所有对端都支持 IPv6，而且在很长一段时间内都无法这样假定。这意味着每个应用现在都需要*同时*支持 IPv4 和 IPv6，带来的是更多的工作和挫败感，而不是更少。由此产生的代码往往得不到开发者充分测试（通常缺测的是 IPv6 部分）。
 
-In Tailscale, our goal is for every device on every tailnet to always have an IPv6 address, and be able to reach every other device in the tailnet using an IPv6 address. This means that if you use Tailscale for your peer-to-peer communication, you can write an IPv6-only app and save time. Tailscale will still carry it over IPv4 when needed.
+在 Tailscale，我们的目标是让每个 tailnet 上的每台设备始终拥有 IPv6 地址，并能用 IPv6 地址访问 tailnet 中的其他任何设备。这意味着如果你用 Tailscale 进行点对点通信，就可以只写支持 IPv6 的应用以节省时间；必要时 Tailscale 仍会经由 IPv4 传输。
 
-## Would fully deployed IPv6 eliminate NATs?
+## 全面部署 IPv6 能消除 NAT 吗？
 
-It could, but it probably won't.
+有可能，但大概率不会。
 
-First of all, as above, IPv4 is unlikely to completely go away, so you will always need some kind of NAT, whether IPv4-to-IPv4 or IPv6-to-IPv4.
+首先，如上所述，IPv4 不太可能彻底消失，因此你总会需要某种 NAT，无论是 IPv4 到 IPv4 还是 IPv6 到 IPv4。
 
-Secondly, various kinds of NATs are useful for network management. For example, some Mobile IP proposals involve NATting your packets so they can always appear to come from the same IP, even as your physical location on the network changes. Or, in complex network topologies, you may want packets forwarded through a mesh endpoint to appear as if they came from the mesh endpoint itself, to make it easier to route returning packets.
+其次，各类 NAT 对网络管理很有用。例如，一些移动 IP 方案会对你的数据包做 NAT 转换，使其看起来始终来自同一个 IP，即使你在网络中的物理位置不断变化。又或者，在复杂的网络拓扑中，你可能希望经 mesh 端点转发的数据包看起来就像来自该 mesh 端点本身，以便更容易路由返回的数据包。
 
-IPv6 does not usually give each device on a LAN its own subnet. Instead, subnets might be delegated to your local router, and then only individual addresses allocated to each device. If one of those devices then wants to route traffic on behalf of other devices (for example, to a sub-subnet behind a router, where the upstream router doesn't cooperate), it will need to use NAT. For example, this is how Tailscale [exit nodes][docs-exit-nodes] work, even with IPv6.
+IPv6 通常不会给局域网上的每台设备各自的子网。相反，子网可能委派给你的本地路由器，然后只为每台设备分配单个地址。如果其中一台设备想代表其他设备路由流量（例如，路由到某台路由器后面的子子网，而上游路由器不配合），它就需要使用 NAT。例如，Tailscale 的[出口节点][docs-exit-nodes]就是这样工作的，即便使用 IPv6 也是如此。
 
-## Does IPv6 eliminate CGNAT?
+## IPv6 能消除 CGNAT 吗？
 
-No, not if you still need to access IPv4-only servers. We expect this to be true for the foreseeable future.
+不能，只要你还需要访问仅支持 IPv4 的服务器就不行。我们预计在可预见的未来都会是如此。
 
-If you have an IPv6-only device, your ISP will need to provide CGNAT
-gateways to map your traffic to IPv4.
+如果你的设备只支持 IPv6，你的 ISP 就需要提供 CGNAT 网关，把你的流量映射到 IPv4。
 
-## Does IPv6 eliminate the problems of double NAT?
+## IPv6 能消除双重 NAT 的问题吗？
 
-In general, no. If you might need a NAT, then you might need a double NAT, for all the same reasons as with IPv4.
+总的来说，不能。如果你可能需要 NAT，那你就可能需要双重 NAT，理由与 IPv4 完全相同。
 
-The "double NAT problem" is often exaggerated. As mentioned above, NATs generally do not measurably affect throughput or latency. The main problem with double NATs is that protocols like UPnP, NAT-PMP, and PCP mostly don't support them. (PCP was created with the intention to support multi-level NAT, but there seem to be no implementations that actually do.) There is no particular reason that has to be true; we hope to find a port-control standard in the future that works with double NATs and CGNATs.
+"双重 NAT 问题"常被夸大。如前所述，NAT 一般不会对吞吐量或延迟造成可测量的影响。双重 NAT 的主要问题在于 UPnP、NAT-PMP 和 PCP 等协议大多不支持它。（PCP 的设计初衷就是支持多级 NAT，但似乎没有真正支持它的实现。）这并没有什么必然原因；我们希望未来能找到一种可用于双重 NAT 和 CGNAT 的端口控制标准。
 
-[Modern NAT traversal techniques][bl-how-nat-traversal-works], such as those used by Tailscale, generally try not to rely on those protocols, so double NATs mostly don't create problems. (There are some apps, particularly some video games, which unfortunately do not use modern NAT traversal techniques.)
+[现代 NAT 穿透技术][bl-how-nat-traversal-works]（例如 Tailscale 所用的技术）通常尽量不依赖那些协议，因此双重 NAT 大多不会造成问题。（不过仍有一些应用——尤其是一些电子游戏——遗憾的是没有使用现代 NAT 穿透技术。）
 
-## Do NATs increase security?
+## NAT 会提升安全性吗？
 
-Not exactly.
+不完全是。
 
-Some people argue that one advantage of a NAT is it makes it hard for an attacker to even address packets to a device hidden behind the NAT firewall. There is not a way to even make a packet addressed to that device, unless a session is already open.
+有人认为 NAT 的一个优点是：攻击者甚至很难把数据包定向到隐藏在 NAT 防火墙后面的设备——除非已有会话打开，否则连构造一个发往该设备的数据包都做不到。
 
-There are some weaknesses to that argument. First, a device really can be attacked, for example, using a man-in-the-middle attack, if a session is already open, since the UDP or TCP sessions themselves are usually not cryptographically secured. That means "[ping of death][xt-wikipedia-ping-of-death]" style attacks are possible even through a NAT, although they require more careful timing.
+这一论点存在一些漏洞。首先，如果已有会话打开，设备确实可能遭到攻击——例如通过中间人攻击——因为 UDP 或 TCP 会话本身通常没有加密保护。这意味着即使是"死亡之 ping"（[ping of death][xt-wikipedia-ping-of-death]）式的攻击也可能穿透 NAT，只是需要更精确的时机。
 
-Secondly, a router may be statically configured to forward certain ports back to devices behind the firewall. The NAT provides no protection in that case.
+其次，路由器可能被静态配置为把某些端口转发回防火墙后面的设备。这种情况下 NAT 提供不了任何保护。
 
-Thirdly, even without a NAT, [stateful firewalls][xt-wikipedia-stateful-firewall] usually provide the same level of protection, refusing to allow packets to enter the network except in response to an existing session. Since nearly all networks are nowadays deployed behind stateful firewalls, the fact that IPv6 does not need NAT usually does not make a difference for security.
+第三，即使没有 NAT，[有状态防火墙][xt-wikipedia-stateful-firewall]通常也能提供同等级别的保护：除响应已有会话外，拒绝任何数据包进入网络。既然如今几乎所有网络都部署在有状态防火墙之后，IPv6 不需要 NAT 这一事实通常对安全性没有什么影响。
 
-On the other hand, it is widely agreed that these stateful firewalls are a major security improvement.
+另一方面，人们普遍认同这些有状态防火墙是安全上的重大改进。
 
-## Do NATs increase privacy?
+## NAT 会增强隐私吗？
 
-As with security, there are two schools of thought on this topic.
+与安全性一样，这个问题也分为两派。
 
-On one side of the issue, people observe that the severely limited number of IPv4 addresses means that many people could be hidden behind a single NAT or (especially) a CGNAT, which makes it difficult to attribute traffic to a particular device.
+一派指出，IPv4 地址数量严重受限，意味着很多人可能隐藏在同一个 NAT 或（尤其是）CGNAT 之后，这使得很难把流量归因到特定设备。
 
-On the other hand, in IPv6, there are [privacy extensions][xt-ripe-ipv6-privacy-extension] that rotate through addresses periodically to try to make it hard to prove your identity. (Not all IPv6 implementations support privacy extensions, unfortunately. This leads some router manufacturers to use NAT instead, to make sure the addresses of all client devices rotate as expected.)
+另一派则指出，IPv6 中存在[隐私扩展][xt-ripe-ipv6-privacy-extension]（privacy extensions），会定期轮换地址，让人难以证明你的身份。（遗憾的是，并非所有 IPv6 实现都支持隐私扩展。这导致一些路由器厂商改用 NAT，以确保所有客户端设备的地址如期轮换。）
 
-Other people point out that modern tracking technology is much more advanced than just IP addresses. In particular, web-based tracking uses logins, cookies, and [browser fingerprinting][xt-pixelprivacy-browser-fingerprint], which are very reliable techniques even in the face of unpredictable IP addresses.
+还有人指出，现代追踪技术远不止利用 IP 地址。特别是基于 Web 的追踪会使用登录、cookie 和[浏览器指纹][xt-pixelprivacy-browser-fingerprint]，即使面对不可预测的 IP 地址，这些技术也非常可靠。
 
-Most privacy specialists would advise that your privacy on the web is very precarious, and you must use privacy-specific technologies such as Tor if you wish to stay completely anonymous. But others argue that, even so, defense in depth makes NATs and privacy extensions still worthwhile.
+大多数隐私专家会告诫你：你在网络上的隐私岌岌可危，如果想保持完全匿名，必须使用 Tor 等专门的隐私技术。但也有人认为，即便如此，出于纵深防御的考虑，NAT 和隐私扩展仍然值得使用。
 
-## Could a different design have rolled out faster than IPv6?
+## 换一种设计会比 IPv6 部署得更快吗？
 
-Hindsight is 20/20. It's possible to criticize some of the decisions made in IPv6's design and the process of rolling it out, but it's impossible to be sure what would have happened if we had done it differently.
+事后诸葛亮人人都会当。我们可以批评 IPv6 设计与部署过程中的某些决策，但无法确定换一种做法结果会怎样。
 
-At this point, most people would say that IPv6 could have benefited from a tighter focus (just add more address bits, don't add so many other features) and more backward compatibility with IPv4. But nobody is sure what exactly that would have looked like.
+事到如今，多数人会说 IPv6 本可以受益于更专注的目标（只增加地址位数，别加那么多其他功能）以及与 IPv4 更多的向后兼容。但没人说得清那具体会是什么样子。
 
-## What would a backward-compatible address extension to IPv4 look like?
+## 对 IPv4 做向后兼容的地址扩展会是什么样子？
 
-Is it possible to design an extension to IPv4 that would increase the address space without requiring a full upgrade of the entire internet?
+有没有可能设计一种 IPv4 扩展，在不要求整个互联网全面升级的情况下扩大地址空间？
 
-One common suggestion is to "just add more bits to IPv4." Unfortunately, if implemented in this fashion, the rollout would have had most of the same problems as IPv6. In particular, it would still be incompatible, so it would have to be rolled out in parallel with IPv4, and would have provided little value to anyone until it was fully deployed and old-IPv4 could be retired.
+一个常见的建议是"直接给 IPv4 加更多位"。遗憾的是，如果按这种方式实现，其部署会遇到与 IPv6 大体相同的问题。尤其是它仍然不兼容，因此必须与 IPv4 并行部署，而且在它完全部署、旧 IPv4 可以退役之前，几乎不能为任何人提供价值。
 
-To work around the problem of incompatibility, one suggestion was to use an IPv4 header extension, which would only need to be parsed by endpoint devices, not routers. This would allow individual endpoints to use the new system even before the various routers on the global internet were upgraded. In particular, if designed carefully, this could mean that your ISP could route the new-style packets even without understanding the new-style packets at all. This might have made deployment easier by reducing a three-sided problem (clients, servers, and routers) to a two-sided problem (clients and servers). But getting both clients and servers upgraded in parallel still would have been hard.
+为了绕开不兼容问题，有人建议使用 IPv4 报头扩展，只需由端点设备解析，无需路由器解析。这样即使全球互联网上的各种路由器尚未升级，单个端点也可以使用新系统。特别是，如果设计得当，这意味着你的 ISP 甚至可以在完全不理解新型数据包的情况下路由它们。这可能通过把一个三方问题（客户端、服务器和路由器）简化为两方问题（客户端和服务器）来降低部署难度。但让客户端和服务器并行升级仍然很难。
 
-(A variant of this proposal is wrapping an IPv6 packet inside of IPv4 as it traverses the internet. Many variants of this were tried and proposed, and they mostly were not adopted because of the same two-sided problem.)
+（这一提案的一个变体是在数据包穿越互联网时把 IPv6 包封装在 IPv4 里。人们尝试并提出过许多变体，但由于同样的两方问题，大多未被采纳。）
 
-Following the same line of argument, you could say that NATs are, in fact, exactly where a backward-compatible IPv4 address extension ends up. In a NAT system, only the client-side router needs to know anything about the "new protocol" (which lets a single IPv4 address refer to many possible devices). Neither the routers on the internet, nor the servers, need to know about NAT in order for the new system to work. Sure enough, NATs have let us greatly expand the effective address space of IPv4. (There are far more than 4 billion devices on the IPv4 internet today!) Unfortunately, as we all know, a major limitation of NATs is that there is no way to start a connection in the reverse direction.
+沿着同样的思路可以说，NAT 实际上正是向后兼容的 IPv4 地址扩展最终落脚的地方。在 NAT 系统中，只有客户端侧的路由器需要了解"新协议"（它让单个 IPv4 地址指代许多可能的设备）。互联网上的路由器和服务器都不需要了解 NAT，新系统就能工作。果不其然，NAT 让我们大幅扩展了 IPv4 的有效地址空间。（如今 IPv4 互联网上的设备远超 40 亿台！）遗憾的是，众所周知，NAT 的一个主要局限是无法反向发起连接。
 
-One could imagine various extensions to NATs that would let a client specify which IP address, behind the remote NAT, it wants to talk to. But such a protocol would require support from both the client and server, so again, it would be hard to adopt.
+可以想象对 NAT 的各种扩展，让客户端指定它想与远程 NAT 后面的哪个 IP 地址通信。但这样的协议需要客户端和服务器双方支持，因此同样难以推广。
 
-In turn, a variation of *that* idea is to allow services to occupy nonstandard port numbers, and to map different port numbers back to different servers behind the server-side firewall. This is one of the ideas behind [DNS SRV records][xt-wikipedia-srv-record], and it would extend IPv4 to effectively a 48-bit address space. To work, it would require support mainly just from web browsers. So far, though, it has not caught on, perhaps because IPv4 addresses are still too inexpensive.
+而那*个*想法的一个变体，是允许服务占用非标准端口号，并把不同端口号映射回服务器侧防火墙后面的不同服务器。这是 [DNS SRV 记录][xt-wikipedia-srv-record]背后的思路之一，它可以把 IPv4 实际扩展到 48 位地址空间。要让它工作，主要只需 Web 浏览器支持。不过迄今为止它并未流行起来，也许是因为 IPv4 地址仍然太便宜。
 
-A similar proposal has been used at the HTTP layer, namely [TLS SNI][xt-wikipedia-server-name-indication] and the HTTP Host: header. This lets an HTTP load balancer forward traffic to the right backend server based on name, rather than IP address, thus extending the address space effectively infinitely. Using this method, a cloud provider like AWS could put nearly all their customers' servers behind one giant HTTP proxy on a single IP address, if they someday need to. But given the current price of IPv4 addresses, this will probably not be needed for a long time.
+类似的方案已在 HTTP 层付诸使用，即 [TLS SNI][xt-wikipedia-server-name-indication] 和 HTTP Host: 标头。这让 HTTP 负载均衡器可以基于名称（而非 IP 地址）把流量转发到正确的后端服务器，实际上无限扩展了地址空间。利用这种方法，像 AWS 这样的云服务商将来如有需要，几乎可以把所有客户的服务器放在单一 IP 地址上的一台巨型 HTTP 代理后面。但以目前 IPv4 地址的价格，这在很长时间内可能都用不上。
 
-## Does Tailscale support IPv6?
+## Tailscale 支持 IPv6 吗？
 
-Yes. Tailscale [can route its packets peer-to-peer over IPv4 or IPv6][docs-ipv6],
-with and without NAT, multi-layer NAT, or CGNAT in the path. Inside the tunnel, Tailscale assigns private IPv4 and IPv6 addresses to every node. Your Tailscale private IPv6 addresses are usable even if the internet path it selects is IPv4-only.
+支持。Tailscale [可以通过 IPv4 或 IPv6 以点对点方式路由数据包][docs-ipv6]，无论路径上有无 NAT、多级 NAT 或 CGNAT。在隧道内部，Tailscale 为每个节点分配私有 IPv4 和 IPv6 地址。即使它选择的互联网路径仅支持 IPv4，你的 Tailscale 私有 IPv6 地址仍然可用。
 
 [bl-absolute-scale]: https://tailscale.com/blog/absolute-scale
 

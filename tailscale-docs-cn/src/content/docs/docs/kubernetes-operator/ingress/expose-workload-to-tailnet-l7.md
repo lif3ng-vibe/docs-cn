@@ -1,22 +1,22 @@
 ---
-title: "Expose a cluster workload to your tailnet (layer 7)"
-description: "This guide covers exposing a service running in your Kubernetes cluster to your tailnet with high availability. You use a `ProxyGroup` and a Kubernetes `Ingress` resource to create multiple ingress pr"
+title: "向 tailnet 公开集群工作负载（第 7 层）"
+description: "本指南介绍如何以高可用方式将 Kubernetes 集群中运行的服务公开到你的 tailnet。你将使用 `ProxyGroup` 和 Kubernetes `Ingress` 资源创建多个入站代理，"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide covers exposing a service running in your Kubernetes cluster to your tailnet with high availability. You use a `ProxyGroup` and a Kubernetes `Ingress` resource to create multiple ingress proxies, ensuring your service remains available even if one of the proxies fails.
+本指南介绍如何以高可用方式将 Kubernetes 集群中运行的服务公开到你的 tailnet。你将使用 `ProxyGroup` 和 Kubernetes `Ingress` 资源创建多个入站代理，即使其中某个代理发生故障，你的服务也能保持可用。
 
-## Prerequisites
+## 前提条件
 
-* [Install][docs-k8s-install] the Tailscale Kubernetes Operator.
-* Configure the [necessary permissions for Ingress][docs-operator-ingress-ha-permissions].
+* [安装][docs-k8s-install] Tailscale Kubernetes Operator。
+* 配置 [Ingress 所需的权限][docs-operator-ingress-ha-permissions]。
 
-## Create a ProxyGroup
+## 创建 ProxyGroup
 
-Create a `ProxyGroup` custom resource to manage a set of Tailscale proxies for your `Ingress`.
+创建一个 `ProxyGroup` 自定义资源，为你的 `Ingress` 管理一组 Tailscale 代理。
 
-Create a file named `ingress-proxygroup.yaml` with the following content:
+创建一个名为 `ingress-proxygroup.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -28,19 +28,19 @@ spec:
   replicas: 2
 ```
 
-Apply this manifest to your cluster:
+将该清单应用到你的集群：
 
 ```shell
 kubectl apply -f ingress-proxygroup.yaml
 ```
 
-This creates a `ProxyGroup` named `ingress-proxies` with two replicas. The operator creates a `StatefulSet` with 2 replicas in the `tailscale` namespace.
+这会创建一个名为 `ingress-proxies`、含两个副本的 `ProxyGroup`。Operator 会在 `tailscale` 命名空间中创建一个带 2 个副本的 `StatefulSet`。
 
-## Deploy a sample application
+## 部署示例应用
 
-Deploy an nginx application. This is the workload you expose.
+部署一个 nginx 应用，这就是你要公开的工作负载。
 
-Create a file named `nginx-deployment.yaml` with the following content:
+创建一个名为 `nginx-deployment.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: apps/v1
@@ -76,17 +76,17 @@ spec:
       targetPort: 80
 ```
 
-Apply this manifest to your cluster:
+将该清单应用到你的集群：
 
 ```shell
 kubectl apply -f nginx-deployment.yaml
 ```
 
-## Expose the service with an Ingress and ProxyGroup
+## 使用 Ingress 和 ProxyGroup 公开服务
 
-Expose the `nginx-service` using a Kubernetes `Ingress` resource that references your `ProxyGroup`.
+使用一个引用了你 `ProxyGroup` 的 Kubernetes `Ingress` 资源来公开 `nginx-service`。
 
-Create a file named `nginx-ha-ingress.yaml` with the following content:
+创建一个名为 `nginx-ha-ingress.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -112,36 +112,36 @@ spec:
               number: 80
 ```
 
-Apply this manifest to your cluster:
+将该清单应用到你的集群：
 
 ```shell
 kubectl apply -f nginx-ha-ingress.yaml
 ```
 
-The key fields in this manifest are:
+此清单中的关键字段如下：
 
-* `ingressClassName: tailscale`: Instructs the Tailscale operator to manage this `Ingress`.
-* `tailscale.com/proxy-group: ingress-proxies`: Instructs the operator to configure the ingress using the `ingress-proxies` `ProxyGroup`.
-* `tls.hosts`: Sets the desired MagicDNS name for the Tailscale service that maps to the `Ingress` through advertisement on the `ProxyGroup`.
+* `ingressClassName: tailscale`：指示 Tailscale Operator 管理此 `Ingress`。
+* `tailscale.com/proxy-group: ingress-proxies`：指示 Operator 使用名为 `ingress-proxies` 的 `ProxyGroup` 来配置入站。
+* `tls.hosts`：通过在 `ProxyGroup` 上进行通告，为映射到该 `Ingress` 的 Tailscale Service 设置所需的 MagicDNS 名称。
 
-## Access your service
+## 访问你的服务
 
-The operator configures a Tailscale Service and the proxies to route traffic to your nginx application. You can find the MagicDNS name in the ADDRESS field of the `Ingress` resource:
+Operator 会配置一个 Tailscale Service 和若干代理，将流量路由到你的 nginx 应用。你可以在 `Ingress` 资源的 ADDRESS 字段中找到 MagicDNS 名称：
 
 ```shell
 kubectl get ingress nginx-ha-ingress
 ```
 
-The output displays similar to following:
+输出类似于下面的内容：
 
 ```
 NAME               CLASS       HOSTS   ADDRESS                     PORTS   AGE
 nginx-ha-ingress   tailscale   *       nginx-ha.tailxxxxx.ts.net   443     1m
 ```
 
-After the ADDRESS field is populated with a MagicDNS name, you can access your nginx service from any device in your tailnet by navigating to `https://nginx-ha.tailxxxxx.ts.net` (full URI found in the ADDRESS field) in your browser.
+ADDRESS 字段填充 MagicDNS 名称后，你就可以在 tailnet 中的任何设备上，通过浏览器访问 `https://nginx-ha.tailxxxxx.ts.net`（完整 URI 见 ADDRESS 字段）来使用你的 nginx 服务。
 
-For more information, refer to the [Expose cluster workloads to your tailnet with Ingress][docs-operator-ingress].
+更多信息，请参阅[使用 Ingress 将集群工作负载公开到你的 tailnet][docs-operator-ingress]。
 
 [docs-k8s-install]: /docs/kubernetes-operator/install-operator
 

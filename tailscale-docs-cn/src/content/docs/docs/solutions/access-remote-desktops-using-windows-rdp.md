@@ -1,160 +1,160 @@
 ---
-title: "Access remote desktops using Windows RDP"
-description: "Access a Windows PC securely from anywhere using Remote Desktop and Tailscale. Connect devices on your private tailnet without port forwarding or public IPs."
+title: "使用 Windows RDP 访问远程桌面"
+description: "使用远程桌面和 Tailscale 从任何地方安全地访问 Windows PC。在私有 tailnet 上连接设备，无需端口转发或公网 IP。"
 ---
 
-Last validated Dec 15, 2025
+最后验证于 Dec 15, 2025
 
-Sometimes you need to access a remote Windows PC from another location. You might be working remotely and need to reach your office computer, or you may need to help someone troubleshoot their PC without being there in person.
+有时你需要从另一个位置访问远程 Windows PC。你可能正在远程办公，需要连回办公室的电脑；也可能需要帮别人排查 PC 问题，却无法到场。
 
-[Windows Remote Desktop Protocol (RDP)][xt-ms-rdp-explained] lets you connect to a remote Windows PC and use it as if you were sitting in front of it. Typically, setting up Windows RDP requires exposing ports on your network and configuring firewall rules to connect securely across the internet. These steps can be complex and introduce potential security risks.
+[Windows 远程桌面协议（RDP）][xt-ms-rdp-explained]让你可以连接到远程 Windows PC 并像坐在它面前一样使用它。通常，配置 Windows RDP 需要在网络上暴露端口并配置防火墙规则，才能通过互联网安全连接。这些步骤可能很复杂，并带来潜在的安全风险。
 
-With Tailscale, your devices automatically join a secure, encrypted network where they can reach each other directly, without manual port forwarding or public IPs. Once connected through your Tailscale network (known as a tailnet), you can access a remote Windows PC as if the devices were on the same local network.
+使用 Tailscale，你的设备会自动加入一个安全加密的网络，彼此可以直接互访，无需手动端口转发或公网 IP。通过你的 Tailscale 网络（称为 tailnet）建立连接后，你就可以像设备处于同一局域网一样访问远程 Windows PC。
 
-## Prerequisites
+## 前提条件
 
-To follow this guide, you need:
+要跟着本指南操作，你需要：
 
-* A computer running a Windows Professional, Enterprise, Education edition, or Windows Server edition. This is the Windows PC that you'll connect to remotely.
-* Another computer for connecting to tailnet and the remote Windows PC. This does not need to be running Windows but must be capable of using a compatible remote desktop application for connecting to the remote Windows PC.
-* An email account that uses a [single sign-on (SSO) identity provider][docs-sso-providers], such as Apple, Google, or Microsoft.
+* 一台运行 Windows Professional、Enterprise、Education 版本或 Windows Server 版本的计算机。这就是你将远程连接的 Windows PC。
+* 另一台用于加入 tailnet 并连接远程 Windows PC 的计算机。它不必运行 Windows，但必须能够使用兼容的远程桌面应用来连接远程 Windows PC。
+* 一个使用[单点登录（SSO）身份提供方][docs-sso-providers]（例如 Apple、Google 或 Microsoft）的电子邮件账户。
 
-## Step 1: Install Tailscale and create your tailnet
+## 第 1 步：安装 Tailscale 并创建你的 tailnet
 
-> **Tip:**
+> **提示：**
 >
-> Installing Tailscale on your first device and authenticating automatically creates your tailnet.
+> 在第一台设备上安装 Tailscale 并完成认证，即会自动创建你的 tailnet。
 
-To connect to a remote Windows PC with RDP, you need the Tailscale client installed on at least two devices. You need the remote Windows PC you want to access and the device you'll connect from.
+要通过 RDP 连接到远程 Windows PC，你至少需要在两台设备上安装 Tailscale 客户端：一台是你想要访问的远程 Windows PC，另一台是你用来连接的设备。
 
-[Download][co-download] the Tailscale client for your device and install it. When you launch the app, log in using an existing identity provider such as Apple, Google, or Microsoft. Choose the Personal option and follow the remaining instructions to complete the process. Your tailnet is now configured and ready to use.
+为你的设备[下载][co-download] Tailscale 客户端并安装。启动应用后，使用现有的身份提供方（例如 Apple、Google 或 Microsoft）登录。选择 Personal 选项，然后按照剩余提示完成流程。此时你的 tailnet 已配置完毕，可以使用了。
 
-*（图：Select a type of tailnet.）*
+*（图：选择 tailnet 类型。）*
 
-Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and confirm your device connects to your tailnet. The admin console lets you manage the users, devices, and permissions for your tailnet.
+前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，确认你的设备已连接到你的 tailnet。管理控制台让你可以管理 tailnet 的用户、设备和权限。
 
-*（图：Machines page of the admin console.）*
+*（图：管理控制台的 Machines 页面。）*
 
-Now download and install the Tailscale client on your other devices. For each device you add to your tailnet, log in using your identity provider from a web browser. After the confirmation screen displays, verify the device appears in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+现在，在你的其他设备上下载并安装 Tailscale 客户端。对于加入 tailnet 的每台设备，都通过网页浏览器使用你的身份提供方登录。确认屏幕显示后，验证该设备已出现在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中。
 
-## Step 2: (Optional) Manage key expiry
+## 第 2 步：（可选）管理密钥过期
 
-Devices in a tailnet periodically re-authenticate to stay secure through device key expiry, which requires re-authentication after a set period. For devices that should remain continuously connected, such as servers, Raspberry Pis, media centers, smart home hubs, Docker hosts, and NAS devices, you can disable key expiry to avoid any unnecessary disruptions.
+tailnet 中的设备会通过设备密钥过期机制定期重新认证以保障安全，即在设定的期限过后要求重新认证。对于应当持续保持连接的设备（例如服务器、Raspberry Pi、媒体中心、智能家居中枢、Docker 主机和 NAS 设备），你可以禁用密钥过期，避免不必要的中断。
 
-To disable key expiry for a device, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, select the  icon next to the device, then select **Disable key expiry**.
+要禁用某台设备的密钥过期，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，选择该设备旁边的图标，然后选择 **Disable key expiry**（禁用密钥过期）。
 
-> **Warning:**
+> **警告：**
 >
-> Disabling key expiry reduces security and can expose your network if the device or key is compromised. Only do this for trusted devices and revoke the key immediately if the device is lost or replaced. For more information, refer to [Key expiry][docs-key-expiry].
+> 禁用密钥过期会降低安全性，如果设备或密钥遭到入侵，可能会暴露你的网络。只对受信任的设备这样做，并且在设备丢失或更换时立即撤销密钥。更多信息请参阅[密钥过期][docs-key-expiry]。
 
-Next, you'll configure Windows RDP on the remote Windows PC.
+接下来，你将在远程 Windows PC 上配置 Windows RDP。
 
-## Step 3: Configure Windows RDP
+## 第 3 步：配置 Windows RDP
 
-The instructions for configuring Windows RDP vary between Windows distributions. For the purposes of this topic, we'll describe the setup for Windows RDP on Windows 11 Pro. To configure Windows RDP on non-Windows 11 Pro PCs, refer to [Enable Remote Desktop on your PC][xt-ms-rdp-setup].
+配置 Windows RDP 的步骤因 Windows 版本而异。本文以 Windows 11 Pro 上的 Windows RDP 设置为例进行说明。要在非 Windows 11 Pro 的 PC 上配置 Windows RDP，请参阅 [Enable Remote Desktop on your PC][xt-ms-rdp-setup]。
 
-To enable Windows RDP, go to **Settings**, **System**, then select **Remote Desktop**. Then toggle **Remote Desktop** to **On**, and select **Confirm**.
+要启用 Windows RDP，前往 **Settings**（设置）、**System**（系统），然后选择 **Remote Desktop**（远程桌面）。接着将 **Remote Desktop** 切换为 **On**（开），并选择 **Confirm**（确认）。
 
-If there are multiple accounts that you want to access on the remote Windows PC, select **Remote Desktop users** in the main **Remote Desktop** page. Select **Add**, **Advanced**, **Find Now**, select the users you want to add, then select **OK**. Then in the main **Remote Desktop users** dialog, select **OK** to confirm.
+如果你希望在远程 Windows PC 上访问多个账户，请在 **Remote Desktop**（远程桌面）主页面中选择 **Remote Desktop users**（远程桌面用户）。选择 **Add**（添加）、**Advanced**（高级）、**Find Now**（立即查找），选中你要添加的用户，然后选择 **OK**（确定）。随后在 **Remote Desktop users**（远程桌面用户）主对话框中，选择 **OK** 确认。
 
-If you want to make the remote Windows PC reachable after a reboot, you can enable [Unattended mode][docs-run-unattended]. Otherwise, a user will need to log in to the device after each reboot, either in person or through other means.
+如果你希望远程 Windows PC 在重启后仍可访问，可以启用[无人值守模式（Unattended mode）][docs-run-unattended]。否则，每次重启后都需要用户登录设备，无论是本人到场还是通过其他方式。
 
 #### Tailscale UI
 
-Select the Tailscale icon in the Windows system tray, then **Preferences**, and **Run Unattended**. Then select **Yes** to confirm.
+选择 Windows 系统托盘中的 Tailscale 图标，然后依次选择 **Preferences**（偏好设置）和 **Run Unattended**（以无人值守模式运行）。然后选择 **Yes**（是）确认。
 
 #### Tailscale CLI
 
-Open the Command Prompt or PowerShell tool on Windows and run:
+在 Windows 上打开命令提示符或 PowerShell 工具，运行：
 
 ```shell
 tailscale up --unattended
 ```
 
-#### System policy
+#### 系统策略
 
-If your organization uses system policies like mobile device management (MDM), you can configure the `UnattendedMode` policy. For more information, refer to [Set unattended mode][docs-mdm-keys-unattended].
+如果你的组织使用移动设备管理（MDM）等系统策略，可以配置 `UnattendedMode` 策略。更多信息请参阅[设置无人值守模式][docs-mdm-keys-unattended]。
 
-Next, you'll install software on the device you'll use to connect to the remote Windows PC.
+接下来，你将在用来连接远程 Windows PC 的设备上安装软件。
 
-## Step 4: Install an RDP app on other devices
+## 第 4 步：在其他设备上安装 RDP 应用
 
-To connect to the remote Windows PC from another device in your tailnet, you need to install an application on the device you want to connect from. The following is a list of known supported platforms and suggested apps for each one:
+要从 tailnet 中的另一台设备连接远程 Windows PC，你需要在发起连接的设备上安装一个应用。以下是已知受支持的平台及各平台的推荐应用：
 
-| Platform | Recommended apps                                                                                          |
+| 平台 | 推荐应用                                                                                                  |
 | -------- | --------------------------------------------------------------------------------------------------------- |
 | macOS    | [Windows App][xt-app-macos]                                                                               |
-| Windows  | Use the built-in Desktop Connection app                                                                   |
-| Linux    | [FreeRDP][xt-app-linux-freerdp], [Remmina][xt-app-linux-remmina], [GNOME Connections][xt-app-linux-gnome] |
+| Windows  | 使用内置的 Desktop Connection 应用                                                                         |
+| Linux    | [FreeRDP][xt-app-linux-freerdp]、[Remmina][xt-app-linux-remmina]、[GNOME Connections][xt-app-linux-gnome] |
 | iOS      | [Windows App Mobile][xt-app-ios]                                                                          |
 | Android  | [Windows App][xt-app-android]                                                                             |
 
-For more information about the supported platforms, installation and configuration instructions, refer to [Get started with Windows App to connect to devices and apps][xt-ms-rdp-apps].
+关于受支持平台以及安装和配置说明的更多信息，请参阅 [Get started with Windows App to connect to devices and apps][xt-ms-rdp-apps]。
 
-Next, you'll connect to the remote Windows PC.
+接下来，你将连接到远程 Windows PC。
 
-## Step 5: Configure and connect to Windows RDP
+## 第 5 步：配置并连接 Windows RDP
 
-To connect to a remote Windows PC over your tailnet, first find its Tailscale IP address. To do this, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, locate the device, and copy the `100.x.x.x` address. Alternatively, you can use the PC's tailnet hostname or [MagicDNS][docs-magic-dns] name. Now you can configure the app and connect to the remote Windows PC using one of the following methods:
+要通过 tailnet 连接到远程 Windows PC，首先要找到它的 Tailscale IP 地址。为此，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，找到该设备并复制其 `100.x.x.x` 地址。你也可以使用该 PC 的 tailnet 主机名或 [MagicDNS][docs-magic-dns] 名称。现在，你可以使用以下任一方法配置应用并连接到远程 Windows PC：
 
 #### macOS
 
-To add a remote Windows PC on macOS, open Windows App and select the **+** icon. In the **PC name** field, enter either the Tailscale IP or the MagicDNS name for the remote Windows PC, set the **Credentials** field to **Ask when required**, then select **Add**. In the Windows App, the newly created connection displays.
+要在 macOS 上添加远程 Windows PC，打开 Windows App 并选择 **+** 图标。在 **PC name**（PC 名称）字段中，输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称，将 **Credentials**（凭据）字段设为 **Ask when required**（需要时询问），然后选择 **Add**（添加）。新建的连接会显示在 Windows App 中。
 
-To connect to the remote Windows PC, right-click on the connection you created and select **Connect**. Enter the credentials for the remote Windows PC if necessary, then select **Continue**.
+要连接到远程 Windows PC，右键点击你创建的连接并选择 **Connect**（连接）。如有必要，输入远程 Windows PC 的凭据，然后选择 **Continue**（继续）。
 
 #### Windows
 
-Go to the **Remote Desktop Connection** app. This comes built-in to Windows so you do not need to download a third-party app. In the **Computer** field, enter either the Tailscale IP or the MagicDNS name for the remote Windows PC. Enter the credentials for the remote Windows PC if necessary, then select **OK**.
+打开 **Remote Desktop Connection**（远程桌面连接）应用。它是 Windows 内置的，因此无需下载第三方应用。在 **Computer**（计算机）字段中，输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称。如有必要，输入远程 Windows PC 的凭据，然后选择 **OK**（确定）。
 
-#### Linux (FreeRDP)
+#### Linux（FreeRDP）
 
-To connect to a remote Windows PC using FreeRDP, run the command substituting the placeholders for the details for the remote Windows PC.
+要使用 FreeRDP 连接到远程 Windows PC，请运行以下命令，并将占位符替换为该远程 Windows PC 的实际信息。
 
 ```shell
 xfreerdp /u:<username> /p:<password> /v:<hostaddress>
 ```
 
-#### Linux (Remmina)
+#### Linux（Remmina）
 
-To connect to a remote Windows PC using Remmina, create a new connection using the RDP protocol. Enter the remote Windows PC's Tailscale IP or MagicDNS name, along with your Windows username and password. Enable options like clipboard sharing or fullscreen if needed, then select **Connect**.
+要使用 Remmina 连接到远程 Windows PC，请使用 RDP 协议创建一个新连接。输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称，以及你的 Windows 用户名和密码。按需启用剪贴板共享或全屏等选项，然后选择 **Connect**（连接）。
 
-#### Linux (GNOME)
+#### Linux（GNOME）
 
-To connect to a remote Windows PC with GNOME Connections, open the app and select the **+** icon, then **Connect to a remote desktop**. In the address field, enter the remote Windows PC's Tailscale IP or MagicDNS name, then choose **RDP** as the connection type. When prompted, enter the remote Windows PC username and password, and select **Connect**.
+要使用 GNOME Connections 连接到远程 Windows PC，打开应用并选择 **+** 图标，然后选择 **Connect to a remote desktop**（连接到远程桌面）。在地址栏中输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称，然后选择 **RDP** 作为连接类型。出现提示时，输入远程 Windows PC 的用户名和密码，并选择 **Connect**（连接）。
 
 #### iOS
 
-To add a remote Windows PC on iOS, open Windows App and select the **+** icon. In the **PC name** field, enter either the Tailscale IP or the MagicDNS name for the remote Windows PC, set the **Credentials** field to **Ask when required**, then select **Add**. In the Windows App, the newly created connection displays.
+要在 iOS 上添加远程 Windows PC，打开 Windows App 并选择 **+** 图标。在 **PC name**（PC 名称）字段中，输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称，将 **Credentials**（凭据）字段设为 **Ask when required**（需要时询问），然后选择 **Add**（添加）。新建的连接会显示在 Windows App 中。
 
-To connect to the remote Windows PC, tap the connection you created and select **Connect**. Enter the credentials for the remote Windows PC if necessary, then select **Continue**.
+要连接到远程 Windows PC，点按你创建的连接并选择 **Connect**（连接）。如有必要，输入远程 Windows PC 的凭据，然后选择 **Continue**（继续）。
 
 #### Android
 
-To add a remote Windows PC on Android, open the Windows App and select **PC connection**. In the **PC Name** field, enter either the Tailscale IP or the MagicDNS name for the remote Windows PC, then select **Save**.
+要在 Android 上添加远程 Windows PC，打开 Windows App 并选择 **PC connection**（PC 连接）。在 **PC Name**（PC 名称）字段中，输入远程 Windows PC 的 Tailscale IP 或 MagicDNS 名称，然后选择 **Save**（保存）。
 
-To connect to the remote Windows PC from Android, tap on the connection you created. Enter the credentials for the remote Windows PC if necessary, then select **Continue**.
+要从 Android 连接到远程 Windows PC，点按你创建的连接。如有必要，输入远程 Windows PC 的凭据，然后选择 **Continue**（继续）。
 
-> **Tip:**
+> **提示：**
 >
-> When using any of the apps above, a warning message may display indicating that the computer you are connecting to might not be trusted. If this is a computer you own and trust, you can safely ignore this message. If you're unsure, check with your IT administrator.
+> 使用上述任何应用时，可能会显示一条警告消息，提示你要连接的计算机可能不受信任。如果这是你拥有并信任的计算机，可以放心忽略该消息。如果不确定，请咨询你的 IT 管理员。
 
-> **Tip:**
+> **提示：**
 >
-> If you are trying to connecting to the remote Windows PC from a Windows domain and encounter issues, refer to the [Windows][docs-troubleshooting-windows] section of our troubleshooting content.
+> 如果你从 Windows 域连接远程 Windows PC 时遇到问题，请参阅我们故障排除内容中的 [Windows][docs-troubleshooting-windows] 部分。
 
-Now you can remotely and securely access a remote Windows PC over your tailnet, as if you were physically in front of it.
+现在，你可以通过 tailnet 远程、安全地访问 Windows PC，就像亲临其前一样。
 
-## Conclusion
+## 结语
 
-In this guide, you configured Windows RDP with Tailscale to create a secure and private connection between devices. Using your tailnet, you can connect to a remote Windows PC without exposing ports or managing network configurations. This setup keeps your remote sessions encrypted and reliable, providing direct access to your desktop environment wherever you are.
+在本指南中，你配置了 Windows RDP 与 Tailscale，在设备之间建立了安全私密的连接。借助你的 tailnet，你可以连接远程 Windows PC，而无需暴露端口或管理网络配置。这一设置让你的远程会话保持加密且可靠，无论身在何处都能直接访问你的桌面环境。
 
-## Further exploration
+## 进一步探索
 
-* [Invite other users][docs-invite-any-user] to your tailnet to let them route their device traffic.
-* Configure ad blocking for your tailnet using [Raspberry Pi][docs-pi-hole], [Control D][docs-control-d], or [NextDNS][docs-nextdns].
-* Configure a device in your tailnet to [route your tailnet traffic][docs-exit-nodes] for secure browsing wherever you are.
-* Configure a device in your tailnet as a [subnet router][docs-subnets] to remotely access home network devices that don't have Tailscale installed, such as printers or smart home devices.
+* [邀请其他用户][docs-invite-any-user]加入你的 tailnet，让他们路由自己设备的流量。
+* 使用 [Raspberry Pi][docs-pi-hole]、[Control D][docs-control-d] 或 [NextDNS][docs-nextdns] 为你的 tailnet 配置广告拦截。
+* 将 tailnet 中的一台设备配置为[路由你的 tailnet 流量][docs-exit-nodes]，无论身在何处都能安全浏览。
+* 将 tailnet 中的一台设备配置为[子网路由器][docs-subnets]，远程访问未安装 Tailscale 的家庭网络设备，例如打印机或智能家居设备。
 
 [co-download]: https://tailscale.com/download
 

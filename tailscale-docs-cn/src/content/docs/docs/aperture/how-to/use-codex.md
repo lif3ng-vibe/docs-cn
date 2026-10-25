@@ -1,31 +1,31 @@
 ---
-title: "Use Codex with Aperture"
-description: "Configure [Codex][xt-codex] to send requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, and session logging."
+title: "在 Aperture 中使用 Codex"
+description: "配置 [Codex][xt-codex]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure [Codex][xt-codex] to send requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, and session logging.
+配置 [Codex][xt-codex]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。
 
-> **Note:**
+> **注意：**
 >
-> The [Aperture CLI][docs-aperture-cli] can set up this connection for you automatically. It writes the Codex configuration and launches it, so you can skip the manual steps below.
+> [Aperture CLI][docs-aperture-cli] 可以自动为你建立这一连接。它会写入 Codex 配置并启动 Codex，因此你可以跳过下面的手动步骤。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway with at least one configured OpenAI-compatible provider, accessible from your device. Refer to [get started with Aperture][docs-get-started] if you have not set this up.
-* The Aperture gateway URL accessible from your device. Use `http://`, not `https://`.
-* [Codex][xt-codex] installed on your device.
+* 一台 Aperture 网关，至少配置了一个 OpenAI 兼容提供商，并且你的设备可以访问。尚未设置时参阅[开始使用 Aperture][docs-get-started]。
+* 你的设备可以访问的 Aperture 网关 URL。使用 `http://`，不要用 `https://`。
+* 设备上已安装 [Codex][xt-codex]。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Configure Codex
+## 配置 Codex
 
-To configure Codex to use Aperture, create or edit the Codex configuration file (`~/.codex/config.toml`) to use the Aperture URL as the `base_url` and set the model to a Codex-compatible model:
+要配置 Codex 使用 Aperture，请创建或编辑 Codex 配置文件（`~/.codex/config.toml`），把 `base_url` 设为 Aperture URL，并把模型设为 Codex 兼容的模型：
 
 ```toml
 model = "gpt-5.3-codex"
@@ -40,18 +40,18 @@ base_url = "http://<aperture-hostname>/v1" # Required: Aperture URL
 wire_api = "responses"
 ```
 
-The `wire_api = "responses"` setting configures Codex to use the OpenAI Responses API format. You do not need to configure an API key because Aperture injects credentials automatically.
+`wire_api = "responses"` 设置让 Codex 使用 OpenAI Responses API 格式。你无需配置 API key，因为 Aperture 会自动注入凭证。
 
-> **Note:**
+> **注意：**
 >
-> To forward each client's own credential instead of injecting a shared key, set the upstream provider to passthrough mode. Aperture then forwards the credential the client sends. A personal OpenAI platform API key uses the `api.openai.com` endpoint, while a ChatGPT subscription account such as Plus, Pro, or Team uses the ChatGPT backend endpoint and a different configuration. For more information, refer to [Set up passthrough mode][docs-use-passthrough-mode] and [Route a ChatGPT subscription through Aperture][docs-codex-subscriptions].
+> 要转发每个客户端自己的凭证而不是注入共享密钥，请把上游提供商设为 passthrough 模式。此时 Aperture 会转发客户端发来的凭证。个人 OpenAI 平台 API key 走 `api.openai.com` 端点，而 Plus、Pro、Team 等 ChatGPT 订阅账户走 ChatGPT 后端端点，配置也不同。更多信息参阅[设置 passthrough 模式][docs-use-passthrough-mode]和[把 ChatGPT 订阅经由 Aperture 路由][docs-codex-subscriptions]。
 
-## Verify the connection
+## 验证连接
 
-1. Send a test message in Codex.
-2. Open Chat on your Aperture gateway and select **Sessions** in the sidebar. Confirm that your test request appears. If your account has no portal access, ask an administrator to check **Security** > **Logs**.
+1. 在 Codex 中发送一条测试消息。
+2. 在你的 Aperture 网关上打开 Chat，在侧边栏选择 **Sessions**。确认测试请求已出现。如果你的账户没有门户访问权，请让管理员检查 **Security** > **Logs**。
 
-If the request does not appear, refer to the [Aperture troubleshooting guide][docs-aperture-troubleshooting].
+如果请求没有出现，参阅 [Aperture 故障排查指南][docs-aperture-troubleshooting]。
 
 \[Missing snippet: aperture\_connect\_next\_steps.mdx]
 

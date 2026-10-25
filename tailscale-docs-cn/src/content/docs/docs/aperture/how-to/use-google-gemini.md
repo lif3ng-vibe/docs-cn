@@ -1,28 +1,28 @@
 ---
-title: "Set up Google Gemini"
-description: "Configure a Google Gemini provider in Aperture so your team can access Gemini models through your tailnet. This topic covers the direct Gemini API with API key authentication. The Gemini Enterprise Ag"
+title: "设置 Google Gemini"
+description: "在 Aperture 中配置 Google Gemini 提供商，让你的团队通过 tailnet 访问 Gemini 模型。本主题介绍使用 API key 认证的直连 Gemini API。Gemini Enterprise Agent Platform 则使用服务账户认证，且 Gemini 与 Anthropic 模型的端点格式不同。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure a Google Gemini provider in Aperture so your team can access Gemini models through your tailnet. This topic covers the direct Gemini API with API key authentication. The Gemini Enterprise Agent Platform uses service account authentication and separate endpoint formats for Gemini and Anthropic models.
+在 Aperture 中配置 Google Gemini 提供商，让你的团队通过 tailnet 访问 Gemini 模型。本主题介绍使用 API key 认证的直连 Gemini API。Gemini Enterprise Agent Platform 则使用服务账户认证，并且对 Gemini 与 Anthropic 模型使用不同的端点格式。
 
-> **Note:**
+> **注意：**
 >
-> For the Gemini Enterprise Agent Platform with service account authentication (which also supports Anthropic models), refer to [set up a Gemini Enterprise Agent Platform provider][docs-use-geap].
+> 使用服务账户认证的 Gemini Enterprise Agent Platform（同时支持 Anthropic 模型）参阅[设置 Gemini Enterprise Agent Platform 提供商][docs-use-geap]。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* A [Google AI Studio API key][xt-google-ai-studio].
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个 [Google AI Studio API key][xt-google-ai-studio]。
 
-## Configure the provider
+## 配置提供商
 
-Add Google Gemini as a provider in your [Aperture configuration][docs-aperture-configuration]:
+在 [Aperture 配置][docs-aperture-configuration]中把 Google Gemini 添加为提供商：
 
 ```json
 {
@@ -41,11 +41,11 @@ Add Google Gemini as a provider in your [Aperture configuration][docs-aperture-c
 }
 ```
 
-The `authorization` field controls how Aperture sends the API key. The `x-goog-api-key` value sends the key in a `x-goog-api-key` header, which the direct Gemini API requires. The `gemini_generate_content` flag configures Aperture to use the Gemini API format instead of the default OpenAI chat completions format.
+`authorization` 字段控制 Aperture 如何发送 API key。`x-goog-api-key` 值把 key 放在 `x-goog-api-key` 头中发送，直连 Gemini API 要求这样做。`gemini_generate_content` 开关让 Aperture 使用 Gemini API 格式，而不是默认的 OpenAI chat completions 格式。
 
-For available model IDs and aliases, refer to the [Google AI documentation][xt-google-models]. Refer to the [compatibility flags reference][docs-provider-compatibility] for the full list of flags.
+可用模型 ID 与别名参阅 [Google AI 文档][xt-google-models]。开关的完整列表参阅[兼容性开关参考][docs-provider-compatibility]。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 

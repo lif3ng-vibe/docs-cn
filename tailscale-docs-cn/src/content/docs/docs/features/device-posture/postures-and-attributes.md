@@ -1,70 +1,70 @@
 ---
-title: "Understand device postures and attributes"
-description: "A posture is a set of security rules that devices must meet to access your tailnet. You configure a posture to include assertions relating to specific device attributes, such as its operating system o"
+title: "理解设备态势与属性"
+description: "态势是设备访问你的 tailnet 时必须满足的一组安全规则。你可以将态势配置为包含与特定设备属性相关的断言，例如设备的操作系统或其所运行的 Tailscale 版本"
 ---
 
-Last validated Oct 6, 2026
+最后验证于 Oct 6, 2026
 
-A posture is a set of security rules that devices must meet to access your tailnet. You configure a posture to include assertions relating to specific device attributes, such as its operating system or the Tailscale version it runs. For example, a posture might include the assertion that a device's operating system (the attribute) is either macOS or Windows (the condition). You can also include specifications for how to alert users when a device fails to meet the posture.
+态势（posture）是设备访问你的 tailnet 时必须满足的一组安全规则。你可以将态势配置为包含与特定设备属性相关的断言（assertion），例如设备的操作系统或其所运行的 Tailscale 版本。例如，某个态势可能包含这样的断言：设备的操作系统（属性）必须是 macOS 或 Windows（条件）。你还可以指定当设备未满足态势时如何向用户告警。
 
-## Device posture attributes
+## 设备态势属性
 
-A device posture attribute is the device characteristic you want to check for. Attributes can include pre-populated host information such as the operating system version, custom attributes set with the postures API, or attributes synced from integrated endpoint detection and response (EDR) and mobile device management (MDM) tools. Note that attribute availability [varies by plan][docs-posture-plans].
+设备态势属性是你要检查的设备特征。属性可以包括预填充的主机信息（如操作系统版本）、通过 postures API 设置的自定义属性，或从集成的终端检测与响应（EDR）和移动设备管理（MDM）工具同步的属性。请注意，属性的可用性[因套餐而异][docs-posture-plans]。
 
-> **Note:**
+> **注意：**
 >
-> You can check a machine's attributes and respective values in the **Machine Details** page under **Attributes** for each device in your tailnet.
+> 你可以在 **Machine Details** 页面的 **Attributes** 区域查看 tailnet 中每台设备的属性及对应取值。
 
-Attributes are represented as key-value pairs of data attached to devices, can be strings, numbers, Boolean values, or IP addresses, and exist in namespaces. For example, the attribute key `node:os` is in the `node` namespace, and the key `custom:myAttribute` is in the `custom` namespace.
+属性以键值对数据的形式附加到设备上，可以是字符串、数字、布尔值或 IP 地址，并存在于命名空间中。例如，属性键 `node:os` 位于 `node` 命名空间，键 `custom:myAttribute` 位于 `custom` 命名空间。
 
-Posture attributes bring together data from several different sources all in one place:
+态势属性将来自多个不同来源的数据汇聚到一处：
 
-* Host information reported by devices, such as OS version and Tailscale version in the `node` namespace.
-* Information about client devices that is collected by Tailscale control plane, such as geolocation data for the public IP of a device in the `ip` namespace.
-* Custom posture attributes set by you, or software you have integrated with the Tailscale API, in the `custom` namespace. Custom attributes can also be assigned automatically when a device is provisioned through [device provisioning with OAuth apps][docs-device-provisioning].
-* Attributes set by device posture integrations like [CrowdStrike Falcon][docs-crowdstrike] and [others][docs-posture-integrations].
+* 设备报告的主机信息，例如 `node` 命名空间中的操作系统版本和 Tailscale 版本。
+* 由 Tailscale 控制平面收集的客户端设备信息，例如 `ip` 命名空间中设备公网 IP 的地理位置数据。
+* 由你自己或你接入 Tailscale API 的软件在 `custom` 命名空间中设置的自定义态势属性。当设备通过 [OAuth 应用进行设备预配][docs-device-provisioning]时，也可以自动分配自定义属性。
+* 由设备态势集成设置的属性，例如 [CrowdStrike Falcon][docs-crowdstrike] 和[其他集成][docs-posture-integrations]。
 
-> **Note:**
+> **注意：**
 >
-> Posture attributes are distinct from [`nodeAttrs`][docs-syntax-nodeattrs]. The existing `nodeAttrs` are set as flags only, not as key-value pairs.
+> 态势属性与 [`nodeAttrs`][docs-syntax-nodeattrs] 不同。已有的 `nodeAttrs` 仅作为标志（flag）设置，而不是键值对。
 
-### Default attributes
+### 默认属性
 
-The following posture attributes are currently available by default for use in access rule postures and for using with the device attribute API.
+以下态势属性目前默认可用，可在访问规则态势中使用，也可配合设备属性 API 使用。
 
-\[Missing snippet: attributes-tailscale.mdx]
+\[缺少代码片段：attributes-tailscale.mdx]
 
-> **Note:**
+> **注意：**
 >
-> The `node:tsAutoUpdate` attribute is only set to `true` when Tailscale's built-in [auto-update][docs-update-auto-updates] is enabled. It is set to `false` when Tailscale is updated using an external mechanism, such as the Apple App Store or Google Play Store.
+> 仅当启用 Tailscale 内置的[自动更新][docs-update-auto-updates]时，`node:tsAutoUpdate` 属性才会被设为 `true`。当 Tailscale 通过外部机制（如 Apple App Store 或 Google Play Store）更新时，该属性会被设为 `false`。
 
-### Geolocation attributes
+### 地理位置属性
 
-The Tailscale control plane also provides device posture attributes with geolocation data. These attributes are available with the Standard, Premium, and Enterprise plans.
+Tailscale 控制平面还提供带地理位置数据的设备态势属性。这些属性在 Standard、Premium 和 Enterprise 套餐中可用。
 
-\[Missing snippet: attributes-ip.mdx]
+\[缺少代码片段：attributes-ip.mdx]
 
-> **Note:** The \`ip:publicAddress\` device posture attribute is currently in beta.
+> **注意：**\`ip:publicAddress\` 设备态势属性目前处于 beta 阶段。
 
-> **Note:**
+> **注意：**
 >
-> The `ip:publicAddress` device posture attribute can be used with the `IN`, `NOT IN`, `==`, and `!=` operators. Allowed values for comparison are a single IPv4 or IPv6 address, IP subnets (CIDRs), or an [IP set][docs-ip-set].
+> `ip:publicAddress` 设备态势属性可与 `IN`、`NOT IN`、`==` 和 `!=` 运算符配合使用。用于比较的允许值为单个 IPv4 或 IPv6 地址、IP 子网（CIDR），或 [IP 集合（IP set）][docs-ip-set]。
 
-## Device postures
+## 设备态势
 
-A posture is a set of security rules that devices must meet. In a posture, you assert which attributes should meet what conditions. Each posture assertion must include an attribute, an operator, and a value. Every assertion in the posture must be met for a device to match the posture. You can also include failure behavior specifications for how to alert users when a device fails to meet the posture.
+态势是设备必须满足的一组安全规则。在态势中，你声明哪些属性应满足什么条件。每条态势断言必须包含一个属性、一个运算符和一个值。设备必须满足态势中的每一条断言才算匹配该态势。你还可以指定失败行为（failure behavior），说明当设备未满足态势时如何向用户告警。
 
-Postures are defined in your policy file, and can be added to the policy file by using the visual policy editor. You can create multiple postures in a policy file.
+态势定义在策略文件（tailnet policy file）中，也可以通过可视化策略编辑器添加到策略文件。你可以在一个策略文件中创建多个态势。
 
-If an attribute defined in the posture is unset for a particular device, the posture will not match that device, irrespective of the operator used. For example, a device that does not have the `custom:tier` attribute assigned to it will not match a posture that includes an attribute `custom:tier`, even if that condition is negative (for example, `custom:tier != 'prod'`).
+如果态势中定义的某个属性对某台设备未设置，则无论使用哪种运算符，该态势都不会匹配这台设备。例如，未被分配 `custom:tier` 属性的设备不会匹配包含属性 `custom:tier` 的态势，即使该条件是否定式的（例如 `custom:tier != 'prod'`）。
 
-> **Tip:**
+> **提示：**
 >
-> For information on checking a device's posture status and setting up alerts for devices that fail postures, refer to [Monitoring and alerts for device postures][docs-posture-failure].
+> 有关查看设备态势状态以及为未通过态势的设备设置警报的信息，参见[设备态势的监控与警报][docs-posture-failure]。
 
-### Example posture definitions
+### 态势定义示例
 
-The following posture definition shows the example posture, `latestApple`, with assertions and failure behavior.
+下面的态势定义展示了示例态势 `latestApple`，包含断言和失败行为。
 
 ```json
 "postures": {
@@ -84,22 +84,22 @@ The following posture definition shows the example posture, `latestApple`, with 
 }
 ```
 
-This example posture includes the following assertions:
+该示例态势包含以下断言：
 
-* The operating system must be either macOS or iOS.
-* The Tailscale version running on the device must be 1.98 or later.
+* 操作系统必须是 macOS 或 iOS。
+* 设备上运行的 Tailscale 版本必须是 1.98 或更高。
 
-The `onFailure` section in this example specifies that users of failing devices are notified in the following three ways:
+此示例中的 `onFailure` 部分规定，未通过设备的用户会通过以下三种方式收到通知：
 
-* Badges are added to the admin console.
-* A notification is sent to end-user's device.
-* The message `"Reach out to #helpdesk on Slack for help"` is sent to the end-user's client.
+* 在管理控制台中添加徽标。
+* 向最终用户的设备发送通知。
+* 将消息 `"Reach out to #helpdesk on Slack for help"` 发送到最终用户的客户端。
 
-For more information on failure behavior and user notifications, refer to [Monitoring and alerts for device postures][docs-posture-failure].
+有关失败行为和用户通知的更多信息，参见[设备态势的监控与警报][docs-posture-failure]。
 
-### Posture operators
+### 态势运算符
 
-You can use the following operators in postures.
+你可以在态势中使用以下运算符。
 
 * `==`
 * `!=`
@@ -107,21 +107,21 @@ You can use the following operators in postures.
 * `NOT IN`
 * `IS SET`
 * `NOT SET`
-* `<`, `<=`, `>=`, `>` (only for numbers and version attributes: `node:osVersion` and `node:tsVersion`)
+* `<`、`<=`、`>=`、`>`（仅适用于数字和版本属性：`node:osVersion` 和 `node:tsVersion`）
 
-Versions are compared using a [compare function][xt-gh-tailscale-cmpver] which takes into account versions with both numeric and non-numeric fields.
+版本比较使用一个[比较函数][xt-gh-tailscale-cmpver]，该函数能处理同时包含数字和非数字字段的版本号。
 
-### Adding postures to access rules
+### 将态势添加到访问规则
 
-Postures are a feature of access rules. Once a posture is created you must add it as a condition to an existing access rule so it can apply as an access requirement. An access rule that includes a posture is conditional on that posture in addition to its source, destination and protocol.
+态势是访问规则的一项功能。创建态势后，你必须将其作为条件添加到现有访问规则中，使其作为访问要求生效。包含态势的访问规则，除源、目标和协议外，还以该态势为条件。
 
-For more information on adding postures to access rules, refer to [Postures and access rules][docs-posture-access-rules].
+有关将态势添加到访问规则的更多信息，参见[态势与访问规则][docs-posture-access-rules]。
 
-## Default source posture
+## 默认源态势
 
-You can set a default posture that applies to all of your access rules that do not otherwise have a posture condition specified. It is not additive, meaning if an access rule specifies a posture condition, only that condition will apply, and the default source posture condition will not apply.
+你可以设置一个默认态势，应用到所有未另行指定态势条件的访问规则。默认态势不是叠加式的，也就是说，如果某个访问规则指定了态势条件，则只有该条件生效，默认源态势条件不会应用。
 
-In the default posture, you specify other postures that you have already created. If multiple postures are included, a device only has to meet one of them to fulfill the default posture.
+在默认态势中，你需要指定其他已创建的态势。如果包含多个态势，设备只需满足其中之一即视为满足默认态势。
 
 ```json
 "defaultSrcPosture": [
@@ -131,37 +131,37 @@ In the default posture, you specify other postures that you have already created
 ],
 ```
 
-For more information on default source postures and how they apply to access rules, refer to [Default postures and access rules][docs-device-posture-default-access].
+有关默认源态势及其如何应用于访问规则的更多信息，参见[默认态势与访问规则][docs-device-posture-default-access]。
 
-> **Warning:**
+> **警告：**
 >
-> `defaultSrcPosture` conditions only apply to traffic originating from Tailscale nodes within the same network, since only those devices have attribute values that can be evaluated against a defined posture. Shared nodes and devices behind [subnet routers][docs-subnets] will not have their traffic restricted based on postures, and will be permitted access if they match IP-based conditions (`src`, `dst`, `proto`).
+> `defaultSrcPosture` 条件只作用于来自同一网络内 Tailscale 节点的流量，因为只有这些设备具有可依据定义态势进行评估的属性值。共享节点以及[子网路由器][docs-subnets]后面的设备，其流量不会基于态势受到限制，只要它们匹配基于 IP 的条件（`src`、`dst`、`proto`）就会被允许访问。
 
-## Tailscale SSH and postures
+## Tailscale SSH 与态势
 
-Connections created with the [Tailscale SSH Console][docs-tailscale-ssh-console] are also subject to posture condition restrictions. To allow these connections, you can allow the posture condition `node:os == 'js'`.
+通过 [Tailscale SSH Console][docs-tailscale-ssh-console] 创建的连接同样受态势条件限制。要允许这些连接，你可以放行态势条件 `node:os == 'js'`。
 
-## Shared nodes and postures
+## 共享节点与态势
 
-Posture conditions specified with `srcPosture` and `defaultSrcPosture` are only applied to `src` devices within your tailnet. If you use Tailscale's [node sharing][docs-sharing] to grant access to a device to a user outside of your tailnet, that user's device can connect regardless of their posture.
+通过 `srcPosture` 和 `defaultSrcPosture` 指定的态势条件仅应用于你 tailnet 内的 `src` 设备。如果你使用 Tailscale 的[节点共享][docs-sharing]向 tailnet 之外的用户授予某台设备的访问权限，则该用户的设备无论态势如何都可以连接。
 
-If you want your posture conditions to apply to external users, consider [inviting them to your tailnet][docs-invite-any-user].
+如果你希望态势条件也作用于外部用户，考虑[邀请他们加入你的 tailnet][docs-invite-any-user]。
 
-## Posture attributes API
+## 态势属性 API
 
-Information about device posture attributes API is available in our [API documentation][co-api-get-device-posture-attrs].
+有关设备态势属性 API 的信息，见我们的 [API 文档][co-api-get-device-posture-attrs]。
 
-## Audit log events
+## 审计日志事件
 
-The following [audit log events][docs-audit-logging-events] are added for device posture.
+设备态势新增了以下[审计日志事件][docs-audit-logging-events]。
 
-| **Target**   | **Action**              | **Description**                                   |
+| **Target**   | **Action**              | **说明**                                   |
 | ------------ | ----------------------- | ------------------------------------------------- |
-| Node changed | Update device attribute | Device posture attributes for a node were changed |
+| Node changed | Update device attribute | 节点的设备态势属性发生了变更 |
 
-> **Note:**
+> **注意：**
 >
-> Changes to built-in attributes (those in `node` and `ip` namespaces) are only logged if an attribute is referenced by any of the postures used in the policy file. Changes to custom attributes and third-party attributes from device posture integrations are always logged.
+> 内置属性（`node` 和 `ip` 命名空间中的属性）的变更，只有在该属性被策略文件中任一态势引用时才会记录。来自设备态势集成的自定义属性和第三方属性的变更则始终会记录。
 
 [docs-posture-access-rules]: /docs/features/device-posture/postures-in-access-rules
 

@@ -1,125 +1,125 @@
 ---
-title: "Auth keys"
-description: "Pre-authentication keys (called auth keys) let you register new nodes without needing to sign in using a web browser. This is most useful when spinning up containers, IoT devices, using infrastructure"
+title: "认证密钥"
+description: "预认证密钥（auth key）让你无需通过网页浏览器登录即可注册新节点。在启动容器、物联网设备、使用基础设施"
 ---
 
-Last validated Jun 30, 2026
+最后验证于 Jun 30, 2026
 
-> **Note:** Auth keys are available for [all plans](https://tailscale.com/pricing).
+> **注意：** 认证密钥适用于[所有套餐](https://tailscale.com/pricing)。
 
-Pre-authentication keys (called auth keys) let you register new nodes without needing to sign in using a web browser. This is most useful when spinning up containers, IoT devices, using infrastructure-as-code systems like Terraform, or authenticating mobile devices including iOS and Android.
+预认证密钥（pre-authentication key，即认证密钥）让你无需通过网页浏览器登录即可注册新节点。这种方式最适合用于启动容器、物联网设备、使用 Terraform 等基础设施即代码（IaC）系统，或认证 iOS 和 Android 等移动设备。
 
-An auth key authenticates a device as the user who generated the key. That is, if Alice generates an auth key, and uses it to add a server to her tailnet, then that device is authenticated with Alice's identity. Think of it as logging into a device.
+认证密钥会将设备认证为生成该密钥的用户。也就是说，如果 Alice 生成了一个认证密钥，并用它把一台服务器加入她的 tailnet，那么这台设备就以 Alice 的身份完成认证。可以把它理解为登录一台设备。
 
-However, if you use [tags][docs-tags-auth-key-tag] with an auth key, after a device logs in as the user who generated the auth key, the device assumes the identity of the auth key's tags.
+不过，如果将[标签][docs-tags-auth-key-tag]与认证密钥配合使用，设备在以生成该认证密钥的用户身份登录后，会转而采用该认证密钥所含标签的身份。
 
-> **Note:**
+> **注意：**
 >
-> As an alternative to directly creating auth keys, consider using an [OAuth client][docs-oauth-clients]. You can use an OAuth client and the [Tailscale API][docs-api] to programmatically create auth keys. To provision devices that carry an individual user's identity rather than a tag's, refer to [device provisioning with OAuth apps][docs-device-provisioning].
+> 作为直接创建认证密钥的替代方案，可以考虑使用 [OAuth 客户端][docs-oauth-clients]。你可以使用 OAuth 客户端和 [Tailscale API][docs-api] 以编程方式创建认证密钥。若要为携带单个用户身份（而非标签身份）的设备进行配置，参见[使用 OAuth 应用预配置设备][docs-device-provisioning]。
 
-## Types of auth keys
+## 认证密钥的类型
 
-Auth keys can either be:
+认证密钥可以分为：
 
-* **One-off**, for one-time use. They can only be used to connect a device or server one time. This is meant for situations where you can't authenticate on the device yourself, so using a key is more practical. For example, a cloud server might use a one-off key to connect.
-* **Reusable**, for multiple uses. They can be used to connect multiple devices. For example, multiple instances of an on-premises database might use a reusable key to connect.
+* **一次性（one-off）**，仅限单次使用。它只能用来连接一台设备或服务器一次。适用于你无法在设备上亲自完成认证的场景，此时使用密钥更为实际。例如，云服务器可以用一次性密钥来连接。
+* **可重复使用（reusable）**，可多次使用。它可用于连接多台设备。例如，本地部署数据库的多个实例可以用可重复使用密钥来连接。
 
-> **Warning:**
+> **警告：**
 >
-> **Be very careful with reusable keys!** These can be very dangerous if stolen. They're best kept in a key vault product specially designed for the purpose.
+> **务必谨慎使用可重复使用的密钥！**一旦被窃取，后果可能非常严重。最好将其保存在专门为此设计的密钥保险库产品中。
 
-## Key expiry
+## 密钥过期
 
-An auth key automatically expires after the number of days you specified when you generated the key. You can choose the number of days, between 1 and 90 inclusive, for the key expiry. If you don't specify an expiry time, the auth key will expire after the maximum of 90 days. If you want to continue using an auth key after it expires, you need to generate a new key.
+认证密钥会在你生成密钥时所指定的天数之后自动过期。密钥过期的天数可自选，范围是 1 到 90 天（含两端）。如果不指定过期时间，认证密钥将在最长 90 天后过期。如果想在密钥过期后继续使用，需要生成新密钥。
 
-You can enable or disable key expiry on a device by using the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and by using the [Update device key][co-api-update-device-key] method in the [Tailscale API][docs-api].
+你可以通过管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，或 [Tailscale API][docs-api] 中的 [Update device key][co-api-update-device-key] 方法，在设备上启用或禁用密钥过期。
 
-If an auth key expires, any device authorized by it remains authorized until its [node key][docs-key-expiry] expires. Each device generates a node key when you log in to Tailscale and uses it to identify itself to the tailnet. By default, node keys automatically expire every 180 days. You can change the default node key expiry from the **Key Expiry** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the admin console.
+认证密钥过期后，由它授权的设备仍保持授权状态，直到其[节点密钥][docs-key-expiry]过期。每台设备在你登录 Tailscale 时都会生成一个节点密钥，并使用它向 tailnet 标识自己。默认情况下，节点密钥每 180 天自动过期。你可以在管理控制台 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Key Expiry** 区域更改默认的节点密钥过期时间。
 
-[Review key management][bl-tailscale-key-management-node-keys].
+[查看密钥管理相关内容][bl-tailscale-key-management-node-keys]。
 
-### Key expiry for tagged devices
+### 已打标签设备的密钥过期
 
-Key expiry for [tagged][docs-tags-auth-key-tag] devices is disabled by default. If you change the tags on the device through the admin console, [Tailscale CLI][docs-cli], or [Tailscale API][docs-api], the device's key expiry will not change unless you re-authenticate. That is, if it is enabled, it stays enabled; and if it is disabled, it stays disabled. After you re-authenticate, the device's key expiry will be disabled.
+[打了标签][docs-tags-auth-key-tag]设备的密钥过期默认处于禁用状态。如果你通过管理控制台、[Tailscale CLI][docs-cli] 或 [Tailscale API][docs-api] 更改设备上的标签，设备的密钥过期设置不会变化，除非你重新认证。也就是说，原本启用就保持启用，原本禁用就保持禁用。重新认证之后，设备的密钥过期将被禁用。
 
-> **Note:**
+> **注意：**
 >
-> You can find recently revoked or expired keys on the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
+> 你可以在管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面查看最近吊销或过期的密钥。
 
-## Generate an auth key
+## 生成认证密钥
 
-You must be an [Owner, Admin, IT admin, or Network admin](/docs/reference/user-roles) of a tailnet to generate a key.
+你必须成为 tailnet 的 [Owner、Admin、IT admin 或 Network admin](/docs/reference/user-roles) 才能生成密钥。
 
-To generate an auth key:
+要生成认证密钥：
 
-1. Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
 
-2. Select **Generate auth key**.
+2. 选择 **Generate auth key**。
 
-3. Fill out the form fields to specify characteristics about the auth key, such as the description, [whether its reusable][ar-types-of-auth-keys], when it expires, and device settings.
+3. 填写表单字段，指定认证密钥的各项特性，例如描述、[是否可重复使用][ar-types-of-auth-keys]、过期时间以及设备设置。
 
-   The device settings section lets you set special characteristic for the auth key:
+   设备设置区域可以为认证密钥设置特殊属性：
 
-   * Enable **Ephemeral** to automatically remove the auth key after the device goes offline.
-   * Enable **Pre-approved** to automatically authorize a device if you have [device approval][docs-device-approval] enabled for your tailnet.
-   * Enable **Tags** to automatically [tag][docs-tags-auth-key-tag] devices that use the auth key.
+   * 启用 **Ephemeral**，在设备离线后自动移除该认证密钥。
+   * 启用 **Pre-approved**，如果你的 tailnet 启用了[设备审批][docs-device-approval]，则自动授权设备。
+   * 启用 **Tags**，自动为使用该认证密钥的设备[打标签][docs-tags-auth-key-tag]。
 
-4. Select **Generate key**.
+4. 选择 **Generate key**。
 
-## Register a node with the auth key
+## 使用认证密钥注册节点
 
-When you register a node using the CLI, use the `--auth-key` option in the [`tailscale up`][docs-tailscale-up] command to supply the key and bypass interactive login:
+使用 CLI 注册节点时，请在 [`tailscale up`][docs-tailscale-up] 命令中使用 `--auth-key` 选项提供密钥，从而跳过交互式登录：
 
 ```shell
 sudo tailscale up --auth-key=tskey-abcdef1432341818
 ```
 
-> **Note:**
+> **注意：**
 >
-> Tailscale-generated auth keys are case-sensitive.
+> Tailscale 生成的认证密钥区分大小写。
 
-## Register a mobile device with the auth key
+## 使用认证密钥注册移动设备
 
-To register a mobile device using an auth key:
+要使用认证密钥注册移动设备：
 
-1. Open the Tailscale app on your iOS or Android device.
-2. On the sign-in screen, select the  menu in the top right corner.
-3. Select **Use an auth key**.
-4. Paste the auth key, then confirm.
+1. 在 iOS 或 Android 设备上打开 Tailscale 应用。
+2. 在登录界面，选择右上角的菜单。
+3. 选择 **Use an auth key**。
+4. 粘贴认证密钥，然后确认。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale-generated auth keys are case-sensitive.
+> Tailscale 生成的认证密钥区分大小写。
 
-> **Note:**
+> **注意：**
 >
-> To deploy auth keys across managed mobile devices, you can configure the `AuthKey` policy setting using your MDM solution. For more information, refer to [Customize Tailscale using system policies][docs-system-policies].
+> 要在受管理的移动设备上批量部署认证密钥，可以通过你的 MDM 方案配置 `AuthKey` 策略设置。更多信息参见[使用系统策略自定义 Tailscale][docs-system-policies]。
 
-## Revoke an auth key
+## 吊销认证密钥
 
-You must be an [Owner, Admin, IT admin, or Network admin](/docs/reference/user-roles) of a tailnet to revoke a key. And you can revoke only your own keys. Tailscale automatically revokes [one-off keys][ar-authkey-one-off] after they are used.
+你必须成为 tailnet 的 [Owner、Admin、IT admin 或 Network admin](/docs/reference/user-roles) 才能吊销密钥，并且只能吊销你自己创建的密钥。[一次性密钥][ar-authkey-one-off]在被使用后会被 Tailscale 自动吊销。
 
-To revoke a key:
+要吊销密钥：
 
-1. Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. Locate the key in the table at the bottom, and select **Revoke**.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
+2. 在下方表格中找到该密钥，选择 **Revoke**。
 
-> **Note:**
+> **注意：**
 >
-> Revoking a key does not deauthorize nodes using the key. To deauthorize a node, delete it from the [Machines](https://console.tailscale.com/admin/machines) page.
+> 吊销密钥不会取消使用该密钥的节点的授权。要取消节点授权，请在 [Machines](https://console.tailscale.com/admin/machines) 页面将其删除。
 
-## Best practices
+## 最佳实践
 
-Depending on what devices you're authenticating, consider using an auth key that is:
+根据你要认证的设备类型，可以考虑使用具备以下特性的认证密钥：
 
-* **Ephemeral**, for authenticating [ephemeral nodes][docs-ephemeral-nodes] as part of short-lived workloads. Because node keys do not persist when a workload restarts, they reconnect as a different node. Tailscale automatically removes inactive nodes. For example, containers or Lambda functions should use an ephemeral key to connect.
-* **Pre-approved**, for servers. If your tailnet has [device approval][docs-device-approval] enabled, this lets you add a device to your tailnet without further authorization. For example, shared devices, such as servers, should use a pre-approved auth key to connect in a network with device approval.
-* **Pre-signed**, for nodes whose auth keys are signed locally on a [signing node][docs-tailnet-lock-add], which applies to tailnets with [Tailnet Lock][docs-tailnet-lock] enabled. You can make an auth key (created by any means) pre-signed only by using the [`tailscale lock sign`][docs-tailscale-lock-lock-sign] CLI command.
-* **Tagged**, for servers. You can automatically apply a tag to a device by including the [tag][docs-tags-auth-key-tag] in the auth key. Access control policies restricting the device's permissions based on the tag apply after provisioning the device. For example, shared devices, such as servers, should use a tagged auth key to connect.
+* **临时（ephemeral）**，用于对作为短生命周期工作负载一部分的[临时节点][docs-ephemeral-nodes]进行认证。由于工作负载重启后节点密钥不会保留，它们会以另一个节点的身份重新连接。Tailscale 会自动移除不活跃的节点。例如，容器或 Lambda 函数应使用临时密钥来连接。
+* **预批准（pre-approved）**，适用于服务器。如果你的 tailnet 启用了[设备审批][docs-device-approval]，这种密钥让你无需额外授权即可将设备加入 tailnet。例如，在启用了设备审批的网络中，服务器这类共享设备应使用预批准认证密钥来连接。
+* **预签名（pre-signed）**，适用于认证密钥在[签名节点][docs-tailnet-lock-add]上本地签名的节点，适用于启用了 [Tailnet Lock][docs-tailnet-lock] 的 tailnet。只有通过 [`tailscale lock sign`][docs-tailscale-lock-lock-sign] CLI 命令，才能将认证密钥（无论以何种方式创建）变为预签名状态。
+* **带标签（tagged）**，适用于服务器。在认证密钥中包含[标签][docs-tags-auth-key-tag]即可自动为设备应用标签。基于标签限制设备权限的访问控制策略会在设备配置完成后生效。例如，服务器这类共享设备应使用带标签的认证密钥来连接。
 
 [ar-authkey-one-off]: #authkey-one-off
 
-[ar-types-of-auth-keys]: #types-of-auth-keys
+[ar-types-of-auth-keys]: #认证密钥的类型
 
 [bl-tailscale-key-management-node-keys]: https://tailscale.com/blog/tailscale-key-management#node-keys
 

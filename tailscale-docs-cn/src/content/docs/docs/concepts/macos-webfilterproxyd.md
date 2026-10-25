@@ -1,66 +1,66 @@
 ---
-title: "macOS Screen Time and Tailscale"
-description: "Identify conflicts between the macOS web content filter and Tailscale."
+title: "macOS 屏幕使用时间与 Tailscale"
+description: "排查 macOS 网页内容过滤器与 Tailscale 之间的冲突。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic addresses an incompatibility issue between the App Store variant of Tailscale for macOS and the Screen Time web filter built into macOS. Users experiencing connectivity issues with Tailscale while using Screen Time content restrictions should be aware of this conflict.
+本主题介绍 macOS 版 Tailscale 的 App Store 变体与 macOS 内置的屏幕使用时间（Screen Time）网页过滤器之间的不兼容问题。在使用屏幕使用时间内容限制时遇到 Tailscale 连接问题的用户，应了解这一冲突。
 
-## Issues with Screen Time and Tailscale
+## 屏幕使用时间与 Tailscale 的问题
 
-The App Store version of Tailscale for macOS will not function correctly if the Screen Time web filter is active. This is because Screen Time is monitoring and tampering with web traffic, including traffic necessary for Tailscale's correct operation.
+如果屏幕使用时间的网页过滤器处于启用状态，macOS 版 Tailscale 的 App Store 版本将无法正常工作。这是因为屏幕使用时间会监控并篡改网页流量，其中包括 Tailscale 正常运行所需的流量。
 
-Starting in v1.70, Tailscale detects this behavior, and displays the following notification:
+从 v1.70 开始，Tailscale 会检测到这一行为，并显示以下通知：
 
-*（图：The notification for 'Tailscale blocked by Screen Time' in macOS.）*
+*（图：macOS 中的"Tailscale blocked by Screen Time"通知。）*
 
-If you are using an older version of Tailscale and have the Screen Time web filter enabled, you will notice that Tailscale won't connect. In particular, the Tailscale icon will display a loading animation forever, and **Loading Backend...** will appear in the menu UI. An error similar to `read tcp [::1]:51178->[::1]:10011: read: connection reset by peer` will also appear in the Tailscale logs.
+如果你使用的是较旧版本的 Tailscale 并启用了屏幕使用时间的网页过滤器，你会发现 Tailscale 无法连接。具体表现为：Tailscale 图标会一直显示加载动画，菜单界面中出现 **Loading Backend...**。Tailscale 日志中还会出现类似 `read tcp [::1]:51178->[::1]:10011: read: connection reset by peer` 的错误。
 
-## Identify the conflict
+## 排查冲突
 
-Screen Time uses a process called `webfilterproxyd` to filter web traffic. To determine if `webfilterproxyd` is running and potentially causing issues with Tailscale:
+屏幕使用时间使用一个名为 `webfilterproxyd` 的进程来过滤网页流量。要判断 `webfilterproxyd` 是否正在运行并可能导致 Tailscale 出现问题：
 
-1. Open the **Activity Monitor** app on your Mac, by selecting **Applications**, then **Utilities**.
+1. 在 Mac 上依次选择 **Applications**（应用程序）和 **Utilities**（实用工具），打开 **Activity Monitor**（活动监视器）应用。
 
-2. Go to **View** then **All Processes** and ensure processes belonging to the `root` user are displayed.
+2. 依次进入 **View**（显示）和 **All Processes**（所有进程），确保显示了属于 `root` 用户的进程。
 
-3. Use the search field to type `webfilterproxyd`. If `webfilterproxyd` appears in the list of running processes, the Screen Time web filter is active and might conflict with Tailscale.
+3. 在搜索框中输入 `webfilterproxyd`。如果正在运行的进程列表中出现 `webfilterproxyd`，说明屏幕使用时间的网页过滤器处于启用状态，可能与 Tailscale 冲突。
 
-Alternatively, you may type `ps aux | grep "[w]ebfilterproxyd"` in the Terminal app. If an entry appears, it means that the web filter is active.
+你也可以在终端（Terminal）应用中输入 `ps aux | grep "[w]ebfilterproxyd"`。如果出现条目，说明网页过滤器处于启用状态。
 
-## Options if `webfilterproxyd` is running
+## `webfilterproxyd` 正在运行时的应对选项
 
-You have two options:
+你有两个选择：
 
-* You can attempt to disable the Screen Time web filter, or disable Screen Time entirely.
-* You can switch to the [Standalone variant][docs-macos-variants] of Tailscale for macOS (distributed outside the App Store), which is not affected by this issue. The Standalone variant requires administrator privileges on your Mac. Make sure to uninstall the Mac App Store variant before installing the Standalone one to avoid conflicts.
+* 尝试禁用屏幕使用时间的网页过滤器，或完全停用屏幕使用时间。
+* 切换到 macOS 版 Tailscale 的 [Standalone 变体][docs-macos-variants]（在 App Store 之外分发），它不受此问题影响。Standalone 变体需要你 Mac 上的管理员权限。为避免冲突，安装 Standalone 变体前请务必卸载 Mac App Store 变体。
 
-## Disable Screen Time
+## 停用屏幕使用时间
 
-To disable Screen Time in the System Settings app follow these steps, then reboot your Mac:
+要在系统设置（System Settings）应用中停用屏幕使用时间，请按以下步骤操作，然后重启 Mac：
 
-1. Open the **System Settings** app on your Mac.
-2. Select **Screen Time** in the sidebar.
-3. Select **Restrictions**, then **Content & Privacy**.
-4. Select **Store, Web, Siri & Game Center Content**.
-5. In the **Safari** section, ensure **Access to Web Content** is set to **Unrestricted Access**.
-6. Reboot your Mac to fully apply the new settings.
+1. 打开 Mac 上的 **System Settings**（系统设置）应用。
+2. 在侧边栏中选择 **Screen Time**（屏幕使用时间）。
+3. 选择 **Restrictions**（限制），然后选择 **Content & Privacy**（内容与隐私）。
+4. 选择 **Store, Web, Siri & Game Center Content**（商店、网页、Siri 与游戏中心内容）。
+5. 在 **Safari** 部分中，确保 **Access to Web Content**（网页内容访问权限）设置为 **Unrestricted Access**（不受限制）。
+6. 重启 Mac 以完全应用新设置。
 
-> **Note:**
+> **注意：**
 >
-> You must reboot your Mac after disabling Screen Time. We have observed in our testing that macOS does not terminate the `webfilterproxyd` process until the Mac is restarted. This appears to be a bug on macOS.
+> 停用屏幕使用时间后必须重启 Mac。我们在测试中观察到，macOS 在 Mac 重启之前不会终止 `webfilterproxyd` 进程。这似乎是 macOS 的一个 bug。
 
-### Identify an imposed web filter
+### 识别被强制启用的网页过滤器
 
-If after following the steps above and rebooting your Mac `webfilterproxyd` is still running, there might be a configuration profile installed on your Mac that is enforcing the enablement of the web filter. This is independent of Screen Time enablement, and is particularly common on Macs managed within an organization by using an MDM solution.
+如果按上述步骤操作并重启 Mac 后，`webfilterproxyd` 仍在运行，那么你的 Mac 上可能安装了强制启用网页过滤器的配置描述文件。这与屏幕使用时间是否启用无关，在使用 MDM 方案进行组织化管理的 Mac 上尤为常见。
 
-To identify a configuration profile that is forcing the enablement of `webfilterproxyd`, follow these steps:
+要找出强制启用 `webfilterproxyd` 的配置描述文件，请按以下步骤操作：
 
-1. Open the **Terminal** app on your Mac.
-2. Type `system_profiler SPManagedClientDataType` and hit Return.
-3. Scroll through the output, and check for entries titled `com.apple.familycontrols.contentfilter` where the `restrictWeb` or `useContentFilter` properties are set to `1` (enabled).
+1. 打开 Mac 上的 **Terminal**（终端）应用。
+2. 输入 `system_profiler SPManagedClientDataType` 并按回车。
+3. 滚动查看输出，检查是否有标题为 `com.apple.familycontrols.contentfilter` 且 `restrictWeb` 或 `useContentFilter` 属性被设为 `1`（启用）的条目。
 
-If the output contains an entry for `com.apple.familycontrols.contentfilter`, it means that your administrator has configured the web filter on your Mac. You should ask your administrator to disable it. You will not be able to disable this web filter on your own, and Tailscale support is unable to help you in doing so.
+如果输出中包含 `com.apple.familycontrols.contentfilter` 的条目，说明你的管理员已在你的 Mac 上配置了网页过滤器。你应请管理员将其禁用。你无法自行禁用该网页过滤器，Tailscale 支持团队也无法在这件事上提供帮助。
 
 [docs-macos-variants]: /docs/concepts/macos-variants

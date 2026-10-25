@@ -1,23 +1,23 @@
 ---
-title: "Integrate with external tools"
-description: "Connect Aperture with authorization engines, log aggregators, and external services."
+title: "与外部工具集成"
+description: "将 Aperture 与授权引擎、日志聚合器以及外部服务连接起来。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Aperture supports integration with external tools for authorization, observability, and custom automation. Use hooks in the [Aperture configuration][docs-aperture-configuration] to send event data to third-party services when requests match grant conditions. For built-in observability features, refer to [Observe and export AI usage][docs-observe-and-export].
+Aperture 支持与外部工具集成，用于授权、可观测性和自定义自动化。当请求匹配授权（grant）条件时，可以使用 [Aperture 配置][docs-aperture-configuration]中的 hook 将事件数据发送到第三方服务。内置的可观测性功能请参阅[观察并导出 AI 用量][docs-observe-and-export]。
 
-[**Integrate Cerbos with Aperture**](/docs/aperture/integrate/cerbos) — Send AI request data from Aperture to Cerbos for fine-grained authorization decisions on LLM access.
+[**将 Cerbos 与 Aperture 集成**](/docs/aperture/integrate/cerbos)——将 AI 请求数据从 Aperture 发送到 Cerbos，对 LLM 访问做出细粒度授权决策。
 
-[**Integrate Cribl with Aperture**](/docs/aperture/integrate/cribl) — Route AI usage data from Aperture to Cribl for processing and forwarding to your observability destinations.
+[**将 Cribl 与 Aperture 集成**](/docs/aperture/integrate/cribl)——将 AI 用量数据从 Aperture 路由到 Cribl，由其处理并转发到你的可观测性目的地。
 
-[**Integrate Highflame with Aperture**](/docs/aperture/integrate/highflame) — Connect Aperture to Highflame for synchronous pre-request enforcement and asynchronous post-response observability of LLM requests.
+[**将 Highflame 与 Aperture 集成**](/docs/aperture/integrate/highflame)——将 Aperture 连接到 Highflame，对 LLM 请求执行同步的请求前强制管控与异步的响应后可观测。
 
-[**Manage an existing Oso integration**](/docs/aperture/integrate/oso) — Review and update an existing Oso integration's hook and data-sharing grants as an Aperture admin.
+[**管理现有 Oso 集成**](/docs/aperture/integrate/oso)——以 Aperture 管理员身份查看并更新现有 Oso 集成的 hook 与数据共享授权。
 
-[**Build a custom webhook**](/docs/aperture/how-to/build-custom-webhook) — Create a custom webhook integration to send Aperture event data to your own services.
+[**构建自定义 webhook**](/docs/aperture/how-to/build-custom-webhook)——创建自定义 webhook 集成，把 Aperture 事件数据发送到你自己的服务。
 
-[**Aperture recipes**](/docs/aperture/reference/recipes) — Find, use, and contribute integration guides and examples in the open source aperture-recipes repository.
+[**Aperture 配方（recipes）**](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

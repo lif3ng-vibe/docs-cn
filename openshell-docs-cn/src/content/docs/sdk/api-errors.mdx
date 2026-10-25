@@ -1,0 +1,185 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "API 错误"
+sidebar-title: "API 错误"
+description: "检查结构化的网关失败并选择合适的恢复动作。"
+keywords: "OpenShell, SDK, gRPC, API 错误, 重试"
+---
+
+网关错误包含 gRPC 状态码与一条消息。共享的请求校验与并发检查还会在 `grpc-status-details-bin` 中返回标准 protobuf 详情。决策请依据状态码与结构化字段。消息只当作解释文本看待，其内容可能变化。
+
+## 结构化详情
+
+各 SDK 会解码这些标准详情类型，同时保留原始失败。尚未采用结构化详情的旧网关与检查可能只返回码与消息。详情缺失不改变状态码的含义。
+
+| 详情 | 含义 |
+|---|---|
+| `google.rpc.BadRequest` | `field_violations` 标识被拒绝的字段并解释每处违规。共享的沙箱、exec、提供商大小与工作区选择器检查提供这些详情。 |
+| `google.rpc.ErrorInfo` | `reason`、`domain` 与 `metadata` 无需解析消息即可标识一次失败。网关 reason 使用 `openshell.nvidia.com` domain。 |
+| `google.rpc.RetryInfo` | `retry_delay` 给出一次本可安全重试前的最小延迟。它的出现不保证变更尚未提交。 |
+
+已识别的网关 reason 如下。
+
+| Reason | 状态码 | 恢复动作 |
+|---|---|---|
+| `INVALID_ARGUMENT` | `INVALID_ARGUMENT` | 修正 `BadRequest` 列出的字段。 |
+| `RESOURCE_VERSION_CONFLICT` | `ABORTED` | 重新读取资源并构造新的条件写。`metadata.recovery` 为 `REFRESH_STATE`；已知时包含 `current_resource_version`。 |
+| `PROFILE_SOURCE_UNAVAILABLE` | `UNAVAILABLE` | 至少等待给定的延迟后重试配置档案快照读取。 |
+| `MUTATION_LOCK_TIMEOUT` | `UNAVAILABLE` | 请求等待并发变更释放沙箱、工作区或网关级锁超过 10 秒。至少等待给定的延迟后重试。携带 `request_id` 的请求会像其他任何错误一样让准入保持未决，因此用同一 ID 重试会返回 `REQUEST_OUTCOME_UNCERTAIN`。在用新 ID 发起新请求之前，先观察资源状态并核对效果。 |
+| `REQUEST_ID_PAYLOAD_MISMATCH` | `FAILED_PRECONDITION` | 保留该请求 ID 的原始载荷。提交不同的操作之前，先检查原操作。 |
+| `REQUEST_OUTCOME_UNCERTAIN` | `FAILED_PRECONDITION` | 一次尝试已被准入但没有已确认、可重放的成功。观察资源状态并核对效果。不要换新 ID 绕过准入。 |
+| `REQUEST_REPLAY_UNAVAILABLE` | `FAILED_PRECONDITION` | 原始作用域、资源、拦截器变换或指纹密钥不再可重放。请核对效果；网关不会再次执行该请求。私钥材料缺失也会在工作开始之前拒绝准入。 |
+| `REQUEST_STREAM_UNAVAILABLE` | `FAILED_PRECONDITION` | exec 尝试已终止，但其输出未被存储。请核对命令效果；网关不会再次启动它，也不会重建其流。 |
+
+## 状态与重试指引
+
+变更提交之后才发生超时或传输断开是可能的。不要仅凭瞬态状态自动重复创建、凭据轮换或命令执行。只有当变更记录在案的操作契约使重复请求安全时才重试。关联 ID 不提供这种保证。
+
+| 状态码 | 恢复动作 |
+|---|---|
+| `INVALID_ARGUMENT`, `OUT_OF_RANGE` | 修正请求。 |
+| `UNAUTHENTICATED` | 在新尝试之前刷新或更换凭据。 |
+| `PERMISSION_DENIED` | 取得所需的授权。 |
+| `NOT_FOUND` | 检查资源与工作区。遵循该操作关于资源缺失的契约。 |
+| `ALREADY_EXISTS` | 检查既有资源，再决定它是否满足请求。 |
+| `FAILED_PRECONDITION` | 解决所报告的状态或配置要求。 |
+| `ABORTED` | 重试条件操作之前先读取最新状态。 |
+| `UNAVAILABLE`, `RESOURCE_EXHAUSTED` | 瞬态条件可能自行恢复。退避与最小重试延迟只应用于可安全重试的操作。 |
+| `DEADLINE_EXCEEDED`, `CANCELLED` | 变更的结果可能未知。取消不意味着回滚。 |
+| `UNIMPLEMENTED` | 检查网关与 SDK 版本兼容性。 |
+| `INTERNAL`, `UNKNOWN`, `DATA_LOSS` | 保留状态码与关联元数据用于诊断。不要盲目重试变更。 |
+
+## SDK 访问
+
+每个 SDK 都暴露已解码字段，并提供获取完整传输数据的逃生通道。SDK 不认识其消息类型时，未知详情仍可通过原始错误获得。
+
+| SDK | 已解码详情 | 原始失败 |
+|---|---|---|
+| Rust | `SdkError::error_details()`, `retry_delay()` | `SdkError::grpc_status()` 返回原始 `tonic::Status`，包括详情字节与元数据。 |
+| Go | `StatusError.FieldViolations`, `ErrorInfo`, `RetryDelay`, `GRPCCode` | `StatusError.Cause` 保留 gRPC 错误。`status.FromError` 可经错误包装恢复其详情。 |
+| TypeScript | `SdkError.fieldViolations`, `errorInfo`, `retryDelayMs`, `connectCode` | `SdkError.cause` 保留 `ConnectError`，包括所有详情与元数据。原始调用请用 `fromConnect`。 |
+| Python | `GatewayError.field_violations`, `error_info`, `retry_delay` | `raw_error` 保留 gRPC 异常与元数据；`raw_status` 保留解析后的信封。原始调用请用 `from_grpc_error`。 |
+
+重试延迟在 Rust 与 Go 中是 duration，TypeScript 中是毫秒，Python 中是秒。延迟详情缺失或无效时不产生建议延迟。
+
+## 迁移
+
+既有错误码与人类可读消息仍然可用。Python 精选客户端现在抛出 `GatewayError`，它仍是 `grpc.RpcError`；既有 `except grpc.RpcError` 处理器继续工作。`GatewayError` 不是 `grpc.Call`。如果你的处理器检查该接口，请在检查状态之前先检查 `raw_error`，或直接调用 `GatewayError.code()`。Python 删除等待能透过包装识别 `NOT_FOUND`；托管沙箱清理会请求 `allow_missing=True` 并处理带类型的删除结果。其他失败仍然向上传播。Rust 错误变体现在保留状态字段；解构不需要这些字段的变体时用 `..`。Go 与 TypeScript 在既有错误类型上添加带类型的详情字段。
+
+没有任何 SDK 会因为解码这些详情而自动重试变更。
+
+## 持久请求准入
+
+三十个用户可调用的一元 RPC 在其 protobuf 请求中接受可选的 `request_id`。
+
+| 资源 | RPC |
+|---|---|
+| 工作区 | `CreateWorkspace`, `DeleteWorkspace` |
+| 工作区成员 | `AddWorkspaceMember`, `RemoveWorkspaceMember` |
+| 沙箱模板 | `CreateSandboxTemplate`, `DeleteSandboxTemplate` |
+| 沙箱 | `CreateSandbox`, `DeleteSandbox`, `StartSandbox`, `StopSandbox`, `AttachSandboxProvider`, `DetachSandboxProvider` |
+| 服务 | `ExposeService`, `DeleteService` |
+| 提供商 | `CreateProvider`, `UpdateProvider`, `DeleteProvider`, `ConfigureProviderRefresh`, `DeleteProviderRefresh`, `RotateProviderCredential` |
+| 提供商配置档案 | `ImportProviderProfiles`, `UpdateProviderProfiles`, `DeleteProviderProfile` |
+| 策略与配置 | `UpdateConfig`, `ApproveDraftChunk`, `RejectDraftChunk`, `EditDraftChunk`, `UndoDraftChunk`, `ApproveAllDraftChunks`, `ClearDraftChunks` |
+
+使用非零、带连字符、恰好 36 个字符的 UUID。大小写形式标识同一请求。空 ID 保留既有行为，不做去重。该 ID 与传输层关联元数据相互独立。网关把它限定到已认证的身份提供方、OIDC 签发方、主体、RPC 方法与所请求的工作区。检查一次已准入的尝试时，使用相同的身份、作用域、ID 与载荷。映射的顺序不影响载荷指纹；值变化或 protobuf 消息出现与否会影响。
+
+对 `CreateWorkspace` 与 `DeleteWorkspace`，所请求的工作区就是请求的 `name`。同一调用方可以对不同工作区名复用同一 ID 调用同一方法。在同一工作区名内，载荷变化仍返回 `REQUEST_ID_PAYLOAD_MISMATCH`。工作区删除重放不要求被删工作区存在，也不会删除同名替代者。
+
+使用未限定作用域工作区准入的预发布网关需要在升级前核对效果。其工作区创建/删除回执在修正后的名称限定命名空间下无法重放。升级后未核对原操作效果之前，不要重试那些 ID。
+
+网关在执行变更之前持久准入唯一属主。并发重复请求要么重放其已确认的成功，要么返回 `REQUEST_OUTCOME_UNCERTAIN`。断开或取消客户端不会停止已准入的工作。出错、进程中断或成功记录写入失败会让准入保持未决。任何网关副本都不会接管该准入，即使重启之后或 24 小时之后也是如此。仅凭状态码不能证明该尝试没有产生效果。
+
+成功结果有 24 小时重放窗口，自持久完成时起算。成功的重放包含 `openshell-replayed: true` 响应元数据，且不延长窗口。窗口过期后，同一 ID 可以准入一次新的执行。窗口过后未核对效果前，不要重试旧操作。未决准入永不过期。
+
+每次重放都检查当前授权，包括成员资格与分配工作区管理员的权限。替代工作区会使工作区作用域的重放不可用。目标就绪、条件写版本与草稿评审令牌是首次执行的前置条件，不是再次执行的条件。
+
+| 结果类别 | 重放行为 |
+|---|---|
+| 工作区、成员资格、模板、提供商与配置档案资源 | 按记录的版本加载原始 UUID。资源缺失或已更改会使重放不可用。提供商凭据保持脱敏。 |
+| 沙箱资源 | 连同当前状态加载原始 UUID，包括较新的状态或配置。挂接/分离标志描述原始操作。原始沙箱缺失会使重放不可用。 |
+| 提供商就绪回执 | 返回原始的挂接、分离或更新回执与变更 ID，包括原始更新目标集。之后的挂接变更不会替换这些回执。操作证据缺失会使重放不可用，且不会再次执行变更。 |
+| 服务端点 | 要求原始端点版本与沙箱身份。返回记录的 URL。 |
+| 刷新状态 | 返回原始提供商、刷新记录与授权纪元的当前状态。重新配置或删除会使重放不可用。不会重复轮换。 |
+| 策略与配置 | 在原始沙箱存在时返回原始版本、计数与非机密注解。全局配置没有沙箱保护。 |
+| 删除 | 返回原始结果，不要求被删目标或父级存在，也不删除替代者。`ACCEPTED` 仍是对原始清理的确认，不是完成证明。 |
+
+配置档案导入与更新也保留其原始公开诊断与成功标志。配置档案声明、诊断来源标签与注解不得包含机密。
+
+对沙箱、服务、提供商、配置档案与策略/配置方法，指纹使用 HMAC，其域分离材料来自配置的网关 JWT 私钥；未配置 JWT 签名时来自主 TLS 私钥。提供 ID 时这些方法要求可读且稳定的私钥材料。共享数据库的副本必须共享该材料。更换它会使既有受保护回执不可用，直到其成功重放窗口过期；未决准入无限期受保护。工作区、成员资格与模板方法保留其原始指纹格式。
+
+网关拦截器在每次尝试（包括重放）上运行其当前的修改与校验阶段。它们不能添加、移除或更改 `request_id`。网关对原始客户端载荷做指纹，并单独守护生效的变换后载荷与工作区。变换发生变化会使重放不可用。当前的拒绝仍是权威。成功的重放不会再次调用提交后观察者。提交后观察仍是尽力而为；这不是持久投递队列。
+
+重放行包含指纹、资源引用与显式选择的公开诊断或标量结果，不包含带凭据的响应快照。完成的回执上限 64 KiB。执行后未能捕获有界回执会让准入保持未决。每个调用方最多持有 1,000 条持久准入。达到容量时，网关移除已过期的成功记录；若仍无空间，则以 `RESOURCE_EXHAUSTED` 拒绝新准入。既有记录保持受保护。未决记录需要操作员调查；没有自动重置或接管 API。网关还把分离的准入工作器限制为每进程 64 个，这些请求消息限制为 4 MiB。
+
+通过生成的或原始的 RPC 客户端提供 ID。精选 SDK 的请求 ID 辅助方法与自动重试策略尚不属于该契约。SSH 会话、rootfs 暂存与监管器认证的变更不会从该特性获得去重。沙箱主体不能选择加入 `UpdateConfig` 准入。依赖 ID 之前请检查网关兼容性；较旧的 protobuf 服务器可能静默忽略未知字段。
+
+## exec 启动准入
+
+`ExecSandbox` 与 `ExecSandboxInteractive` 在 `ExecSandboxRequest` 中接受可选的 `request_id`。交互式 exec 在初始 `start` 消息中提供它。上述 UUID 规则、键控指纹、当前授权检查、每调用方配额与请求大小限制同样适用于 exec。
+
+网关在打开监管器中继之前准入唯一属主。两个 RPC 对命令、沙箱名、工作区选择器、环境、初始 stdin 与其他启动字段做指纹（不含请求 ID）。准入还绑定解析出的沙箱 UUID，因此同名替代沙箱无法接收原始启动。名称与工作区选择器未变但在两次授权查找之间沙箱被替换时，网关会在准入或启动命令之前返回 `REQUEST_REPLAY_UNAVAILABLE`。两个 RPC 使用独立的方法命名空间。后续交互式 stdin 与 resize 消息不属于指纹的一部分，不能经重复流提交。
+
+| 已准入的尝试 | 重复请求的响应 |
+|---|---|
+| 仍在运行、被中断、超时或缺少已确认的退出状态 | `REQUEST_OUTCOME_UNCERTAIN`。记录不过期，也不允许再次启动。 |
+| 已确认远端退出，包括非零退出码 | 持久完成后的 24 小时内为 `REQUEST_STREAM_UNAVAILABLE`。不重放任何输出、退出码、流附件或 stdin。 |
+| 启动载荷已变化 | `REQUEST_ID_PAYLOAD_MISMATCH`。变更后的命令不会运行。 |
+| 同名沙箱被替换 | `REQUEST_REPLAY_UNAVAILABLE`。替代沙箱不会接收该命令。 |
+
+终态回执只包含标记与完成时间，不包含命令、环境值、stdin、stdout 或 stderr。收到流句柄不代表完成。网关生成的超时退出码 `124` 不能证明远端进程已停止，因此它让准入保持未决。已确认的远端退出码 `124` 是终态结果。
+
+取消不会撤销准入。既有传输行为仍适用于原始执行，包括断开时关闭交互式 SSH；网关不承诺断开后的命令继续运行。丢失退出确认时，记录即使重启之后仍保持未决。重复查找之前先检查当前授权，且解析出的沙箱 UUID 必须匹配原始准入，网关才会返回其记录的结果。
+
+已确认终态的保留期过后，同一 ID 可以启动新命令。未核对效果前不要复用旧 ID。空 ID 保持既有流式行为，不做启动去重。该选择加入契约请使用生成的或原始的 RPC 客户端；精选 SDK 辅助方法与自动重试是分开的。
+
+## 删除结果
+
+删除、移除成员资格与撤销 SSH 的 RPC 返回带类型的结果。仅有传输成功不能确立完成。
+
+| 结果 | 含义 |
+|---|---|
+| `COMPLETED` | 网关资源已被移除，或既有 SSH 会话已被撤销。下游平台垃圾回收可能仍在进行。 |
+| `ACCEPTED` | 沙箱删除已启动，但网关沙箱记录仍存在。在假定完成之前先观察其移除。 |
+| `ALREADY_ABSENT` | 解析时目标已缺失，且请求设置了 `allow_missing=true`。 |
+| `UNSPECIFIED` 或未知取值 | 未确立完成。检查网关与 SDK 兼容性。 |
+
+请求默认 `allow_missing=false`：初始就缺失的目标返回 `NOT_FOUND`。允许目标缺席的清理请设为 `true`。该标志不抑制父级缺失、授权失败、无效请求、前置条件失败或后端错误。对已被撤销的既有会话再次撤销，授权后返回 `COMPLETED`，且不更改其资源版本。
+
+`DeleteSandbox` 找到目标时还会返回原始 `sandbox_id`。删除被接受后，轮询或监视该身份。ID 不同的同名沙箱不是正在被删除的沙箱。取消或客户端断开不会停止网关已启动的删除工作器。
+
+把删除结果的 ID 传给 SDK 等待辅助方法，避免跟进同名替代沙箱。
+
+| SDK | 感知身份的删除等待 |
+|---|---|
+| Rust | `client.wait_deleted(name, timeout, result.sandbox_id.as_deref()).await?` 在默认或工作区作用域客户端上皆可。 |
+| Python | `client.wait_deleted(name, workspace=workspace, expected_sandbox_id=result.sandbox_id)`。托管沙箱清理会自动提供该值。 |
+| TypeScript | `client.sandbox.waitDeleted(name, timeoutSecs, { workspace, expectedSandboxId: result.sandboxId })`。 |
+
+这些等待在 `NOT_FOUND` 或观察到不同 ID 时完成。没有预期 ID 时，它们等待名字消失。既有 Rust 调用方必须添加第三个参数；用 `None` 保持仅按名字的行为。
+
+`allow_missing` 不是请求去重。之后按名字的请求可能删除用该名字新建的资源。名字可能被复用时，不要盲目重复一次超时的删除。
+
+### 删除的 SDK 迁移
+
+网关与客户端一起升级。这项 1.0 之前的变更移除布尔响应字段，保留其名字与线上编号。读取旧响应的新客户端会看到 `UNSPECIFIED`；不得把它解读为完成。
+
+| RPC | 移除的字段 | 替代 |
+|---|---|---|
+| `DeleteSandboxTemplate` | `deleted` | `outcome` |
+| `DeleteSandbox` | `deleted` | `outcome`, `sandbox_id` |
+| `DeleteService` | `deleted` | `outcome` |
+| `DeleteProvider` | `deleted` | `outcome` |
+| `DeleteProviderRefresh` | `deleted` | `outcome` |
+| `DeleteProviderProfile` | `deleted` | `outcome` |
+| `DeleteWorkspace` | `deleted` | `outcome` |
+| `RemoveWorkspaceMember` | `removed` | `outcome` |
+| `RevokeSshSession` | `revoked` | `outcome` |
+
+这些 RPC 使用带类型的结果而非 `Empty`，因为调用方必须区分缺失、异步受理与完成。
+
+精选 SDK 方法返回 `DeletionResult` 而不是布尔值或无结果。Rust 接受 `DeleteOptions { allow_missing: true }`；Python 接受关键字 `allow_missing=True`；TypeScript 接受 `{ allowMissing: true }`；Go 接受可选的 `DeleteOptions{AllowMissing: true}` 并返回 `(result, error)`。Go 与 Python 保留未知数字结果，Rust 用 `Unknown(i32)`，TypeScript 返回 `outcome: 'unknown'` 与 `rawOutcome`。
+
+其他变更响应保持不变：提供商挂接/分离还返回结果沙箱，配置档案导入/更新返回资源与诊断，配置更新返回版本与应用信息。它们的补充布尔值不是唯一结果。内部计算驱动与监管器契约独立于这次公共 API 迁移。

@@ -1,117 +1,117 @@
 ---
-title: "Deployment checklist"
-description: "Your checklist to ensure a successful Tailscale deployment."
+title: "部署清单"
+description: "确保你的 Tailscale 部署取得成功的检查清单。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-There are a number of topics to consider for a successful and scalable Tailscale deployment beyond configuration of individual devices and [access controls][docs-access-control]. This topic details some of the less obvious, but still important, concerns for using and deploying Tailscale at scale. You can use this topic as your Tailscale deployment checklist.
+要实现成功且可扩展的 Tailscale 部署，除了配置单个设备和[访问控制][docs-access-control]之外，还有许多需要考虑的议题。本主题详细介绍了在大规模使用和部署 Tailscale 时那些不太显眼但依然重要的关注点。你可以将本主题用作你的 Tailscale 部署检查清单。
 
-## Support
+## 支持
 
-* **Internal support**—provide documentation to your users on how to get internal support within your organization. Refer to [end-user client configuration][ar-end-user-client-configuration] for ways to customize the Tailscale client to help with this.
-* **Tailscale support**—document how and when to [contact Tailscale support][co-contact-support] in internal documentation. Also include relevant departments (for example, IT help desk or production operations teams) and instructions to ask end-users to generate a [bug report][docs-bug-report] when reporting issues internally and share the bug report identifier when contacting Tailscale support.
+* **内部支持**——向你的用户提供文档，说明如何在组织内获得内部支持。有关自定义 Tailscale 客户端以提供帮助的方法，请参阅[终端用户客户端配置][ar-end-user-client-configuration]。
+* **Tailscale 支持**——在内部文档中记录[联系 Tailscale 支持][co-contact-support]的方式和时机。还应包含相关部门（例如 IT 服务台或生产运维团队），并说明要求终端用户在内部报告问题时生成 [bug 报告][docs-bug-report]、在联系 Tailscale 支持时提供 bug 报告标识符。
 
-## Stay up-to-date on Tailscale news
+## 及时了解 Tailscale 动态
 
-* Subscribe to the Tailscale [newsletter][xt-newsletter] and [blog][bl-blog-newsletter] to stay up-to-date on general Tailscale news. Use email addresses that go to a group of users rather than a single individual.
-* Subscribe to the Tailscale [changelog][co-changelog] RSS feed to stay up-to-date on client and service changes.
-* Subscribe to the Tailscale [security bulletins][co-security-bulletins] RSS feed to stay up-to-date on security notifications.
+* 订阅 Tailscale 的[新闻邮件][xt-newsletter]和[博客][bl-blog-newsletter]，及时了解 Tailscale 的一般动态。请使用指向一组用户而非单个人员的邮箱地址。
+* 订阅 Tailscale 的[更新日志（changelog）][co-changelog] RSS 源，及时了解客户端与服务的变化。
+* 订阅 Tailscale 的[安全公告][co-security-bulletins] RSS 源，及时了解安全通知。
 
-### Organization notifications
+### 组织通知
 
-* Set [contact preferences](https://console.tailscale.com/admin/settings/contact-preferences) to receive email notifications regarding account, configuration, and security updates. Use email addresses that go to a group of users rather than a single individual.
+* 设置[联系人偏好](https://console.tailscale.com/admin/settings/contact-preferences)，以接收有关账户、配置和安全更新的邮件通知。请使用指向一组用户而非单个人员的邮箱地址。
 
-## Production best practices
+## 生产环境最佳实践
 
-* Understand how Tailscale and customers [share security responsibilities][docs-shared-responsibility].
-* Implement [production best practices][docs-production-best-practices] related to [security][docs-security-hardening], [performance][docs-performance-best-practices], and specific providers.
-* Understand [direct vs relayed connections][docs-connection-types] and which [firewall ports to open][docs-firewall-ports], if any, to get the best performance from in your environment.
+* 了解 Tailscale 与客户之间如何[分担安全责任][docs-shared-responsibility]。
+* 落实与[安全][docs-security-hardening]、[性能][docs-performance-best-practices]及特定提供商相关的[生产环境最佳实践][docs-production-best-practices]。
+* 了解[直连与中继连接][docs-connection-types]的区别，以及在你的环境中需要[开放哪些防火墙端口][docs-firewall-ports]（如果需要）才能获得最佳性能。
 
-## Tailnet management
+## tailnet 管理
 
-The following sections detail how to manage your Tailscale network (known as a tailnet) at scale.
+以下各节详细介绍如何大规模管理你的 Tailscale 网络（即 tailnet）。
 
-### General settings
+### 常规设置
 
-* Configure [tailnet](https://console.tailscale.com/admin/settings/general), [user management](https://console.tailscale.com/admin/settings/user-management), and [device management](https://console.tailscale.com/admin/settings/device-management) settings per your organization's needs and security policies.
-* Manage your tailnet settings (such as device approval and key duration, DNS settings, log streaming and posture integrations, and more) with [infrastructure-as-code][docs-infrastructure-as-code] and [GitOps][docs-gitops-acls] to have an audit trail of changes to Tailscale access controls and configuration in your version control system with peer review of changes.
+* 根据你组织的需求和安全策略，配置 [tailnet](https://console.tailscale.com/admin/settings/general)、[用户管理](https://console.tailscale.com/admin/settings/user-management)和[设备管理](https://console.tailscale.com/admin/settings/device-management)设置。
+* 使用[基础设施即代码][docs-infrastructure-as-code]和 [GitOps][docs-gitops-acls] 管理 tailnet 设置（如设备审批与密钥有效期、DNS 设置、日志流式传输和态势集成等），从而在你的版本控制系统中留存 Tailscale 访问控制与配置变更的审计追踪，并由同伴评审变更。
 
-### Tailnet policy file management
+### tailnet 策略文件管理
 
-* Manage your tailnet policy file (which includes access control policies, tags, and other settings) with [infrastructure-as-code][docs-infrastructure-as-code] and [GitOps][docs-gitops-acls]. This provides an audit trail of changes to Tailscale access controls and configuration in your version control system with peer review of changes.
-* Review [common patterns for tag names][docs-tags-common-tag-names] and implement consistent tags that represent access patterns and network segments for your devices.
+* 使用[基础设施即代码][docs-infrastructure-as-code]和 [GitOps][docs-gitops-acls] 管理 tailnet 策略文件（其中包括访问控制策略、标签和其他设置）。这样可以在你的版本控制系统中留存 Tailscale 访问控制与配置变更的审计追踪，并由同伴评审变更。
+* 查看[标签命名的常见模式][docs-tags-common-tag-names]，并实现一致的标签，用以表示设备的访问模式与网段。
 
-## User management
+## 用户管理
 
-The following sections detail how to manage users in your tailnet at scale, including user provisioning, role assignments, and authentication requirements.
+以下各节详细介绍如何大规模管理 tailnet 中的用户，包括用户预配、角色分配和认证要求。
 
-### User and group provisioning
+### 用户与组预配
 
-* Configure [System for Cross-domain Identity Management (SCIM)][ln-what-is-scim] with a supported provider to enable automatic [user and group provisioning][docs-user-group-provisioning].
+* 使用受支持的提供商配置[跨域身份管理系统（SCIM）][ln-what-is-scim]，以启用自动[用户与组预配][docs-user-group-provisioning]。
 
-### Tailscale-specific roles
+### Tailscale 专属角色
 
-* Transfer organization [ownership][docs-user-roles-owner] to an appropriate team member. Oftentimes, the person that created the tailnet is not who should be the owner long-term.
-* Assign appropriate [Tailscale-specific roles][docs-user-roles] to team members based on their job function and responsibilities. Network admin, IT admin, and billing admin are common roles to assign.
+* 将组织的[所有权][docs-user-roles-owner]移交给合适的团队成员。创建 tailnet 的人往往并不是适合长期担任所有者的人。
+* 根据团队成员的职务职能与职责，为其分配合适的 [Tailscale 专属角色][docs-user-roles]。网络管理员（Network admin）、IT 管理员（IT admin）和账单管理员（Billing admin）是常见的分配角色。
 
-## Device management
+## 设备管理
 
-* Set a [custom authentication period][docs-key-expiry-custom-auth-period] to require users to re-authenticate with your identity provider per your company's security policies.
-* Enable [device identity collection][docs-device-identity] to accurately identify devices in your tailnet.
-* Set [default source posture rules][docs-device-posture-default-source-posture] to require minimum operating system and Tailscale client versions.
+* 设置[自定义认证周期][docs-key-expiry-custom-auth-period]，按照你公司的安全策略要求用户向你的身份提供方重新认证。
+* 启用[设备身份收集][docs-device-identity]，以准确识别 tailnet 中的设备。
+* 设置[默认源态势规则][docs-device-posture-default-source-posture]，要求最低的操作系统和 Tailscale 客户端版本。
 
-### EDR and MDM integrations
+### EDR 与 MDM 集成
 
-* Configure Tailscale with your [EDR and MDM tool][docs-device-posture-edr-and-mdm-integrations].
-* Define [device posture conditions][docs-device-posture-conditions] based on the device attributes available from your EDR and MDM tools.
+* 将 Tailscale 与你的 [EDR 和 MDM 工具][docs-device-posture-edr-and-mdm-integrations]集成配置。
+* 基于 EDR 和 MDM 工具提供的设备属性定义[设备态势条件][docs-device-posture-conditions]。
 
-### End-user client configuration
+### 终端用户客户端配置
 
-* Deploy Tailscale client applications to end-users using a [mobile device management (MDM)][docs-mdm] solution.
-* Enable [automatic client updates][docs-update-auto-updates] for end-user devices to ensure employee devices stay up-to-date.
-* Configure end-user client applications using [system policies][docs-mdm-keys] through your MDM solution. Review the full list of system policies to determine which options are important to your organization. Some common system policies include:
-  * Force client behavior end-users will depend on:
-    * [`Tailnet`][docs-mdm-keys-tailnet] to set a suggested or required tailnet.
-    * [`UseTailscaleDNSSettings`][docs-mdm-keys-use-tailscale-dns] to always or never apply Tailscale DNS configuration when the tunnel is connected.
-    * [`UseTailscaleSubnets`][docs-mdm-keys-use-tailscale-subnets] to always or never accept subnets advertised by other devices in your tailnet.
-    * [`PostureChecking`][docs-mdm-keys-posture-checking] to always or never gather device posture data.
-  * Hide unused capabilities in the client menu such as:
-    * [`AdminConsole`][docs-mdm-keys-hide-menu-item] to show or hide the Tailscale admin console menu.
-    * [`HiddenNetworkDevices`][docs-mdm-keys-hide-network-devices] to show or hide one or more categories of devices in the **Network Devices** menu.
-    * [`ManageTailnetLock`][docs-mdm-keys-tailnet-lock-settings] to show or hide the **Manage Tailnet Lock** menu.
-    * [`RunExitNode`][docs-mdm-keys-exit-node-picker] to show or hide the **Run as Exit Node** menu.
-  * Provide information for how to get support from Tailscale administrators or your IT team:
-    * [`ManagedByCaption`][docs-mdm-keys-info-message] to specify a caption to be displayed in the **Managed By** section.
-    * [`ManagedByOrganizationName`][docs-mdm-keys-org-name] to specify the name of the organization managing Tailscale, for instance "XYZ Corp IT."
-    * [`ManagedByURL`][docs-mdm-keys-support-url] to specify a URL pointing to a help desk webpage or Slack channel.
+* 使用[移动设备管理（MDM）][docs-mdm]方案向终端用户部署 Tailscale 客户端应用。
+* 为终端用户设备启用[客户端自动更新][docs-update-auto-updates]，确保员工设备保持最新。
+* 通过你的 MDM 方案，使用[系统策略][docs-mdm-keys]配置终端用户客户端应用。请查看完整的系统策略列表，确定哪些选项对你的组织重要。一些常见的系统策略包括：
+  * 强制终端用户所依赖的客户端行为：
+    * [`Tailnet`][docs-mdm-keys-tailnet]：设置建议或必需的 tailnet。
+    * [`UseTailscaleDNSSettings`][docs-mdm-keys-use-tailscale-dns]：设置隧道连接时始终或从不应用 Tailscale DNS 配置。
+    * [`UseTailscaleSubnets`][docs-mdm-keys-use-tailscale-subnets]：设置始终或从不接受 tailnet 中其他设备通告的子网。
+    * [`PostureChecking`][docs-mdm-keys-posture-checking]：设置始终或从不收集设备态势数据。
+  * 在客户端菜单中隐藏用不到的功能，例如：
+    * [`AdminConsole`][docs-mdm-keys-hide-menu-item]：显示或隐藏 Tailscale 管理控制台菜单。
+    * [`HiddenNetworkDevices`][docs-mdm-keys-hide-network-devices]：在 **Network Devices** 菜单中显示或隐藏一类或多类设备。
+    * [`ManageTailnetLock`][docs-mdm-keys-tailnet-lock-settings]：显示或隐藏 **Manage Tailnet Lock** 菜单。
+    * [`RunExitNode`][docs-mdm-keys-exit-node-picker]：显示或隐藏 **Run as Exit Node** 菜单。
+  * 提供如何向 Tailscale 管理员或你的 IT 团队寻求支持的信息：
+    * [`ManagedByCaption`][docs-mdm-keys-info-message]：指定显示在 **Managed By** 区域的说明文字。
+    * [`ManagedByOrganizationName`][docs-mdm-keys-org-name]：指定管理 Tailscale 的组织名称，例如 "XYZ Corp IT"。
+    * [`ManagedByURL`][docs-mdm-keys-support-url]：指定一个指向服务台网页或 Slack 频道的 URL。
 
-### Server configuration
+### 服务器配置
 
-* Automate server deployments using [infrastructure-as-code][docs-infrastructure-as-code] to provision devices in a repeatable manner less susceptible to human error.
+* 使用[基础设施即代码][docs-infrastructure-as-code]实现服务器部署自动化，以可重复、不易受人为差错影响的方式置备设备。
 
-## Monitoring
+## 监控
 
-### Client metrics
+### 客户端指标
 
-* Collect [client metrics][docs-client-metrics] for use with your monitoring system from your subnet routers, exit nodes, app connectors, and other important devices.
+* 从子网路由器、出口节点、应用连接器和其他重要设备收集[客户端指标][docs-client-metrics]，供你的监控系统使用。
 
-### Monitor tailnet changes
+### 监控 tailnet 变更
 
-* Configure [webhooks][docs-webhooks] to receive important notifications to your central monitoring and alerting system—for example, your monitoring service or Slack. In particular, we recommend notifications for the following [event types][docs-webhooks-events]:
-  * Device misconfiguration: `exitNodeIPForwardingNotEnabled`
-  * Device misconfiguration: `subnetIPForwardingNotEnabled`
-  * Tailnet management: `nodeNeedsApproval`
-  * Tailnet management: `userNeedsApproval`
-  * Tailnet management: `userRoleUpdated`
-  * Webhook management: `webhookUpdated`
-  * Webhook management: `webhookDeleted`
+* 配置 [webhook][docs-webhooks]，让你的中央监控与告警系统（例如监控服务或 Slack）接收重要通知。我们特别建议为以下[事件类型][docs-webhooks-events]开启通知：
+  * 设备配置错误：`exitNodeIPForwardingNotEnabled`
+  * 设备配置错误：`subnetIPForwardingNotEnabled`
+  * tailnet 管理：`nodeNeedsApproval`
+  * tailnet 管理：`userNeedsApproval`
+  * tailnet 管理：`userRoleUpdated`
+  * webhook 管理：`webhookUpdated`
+  * webhook 管理：`webhookDeleted`
 
-### Log streaming
+### 日志流式传输
 
-* Configure [log streaming][docs-log-streaming] to stream configuration and network flow logs to your [Security Information and Event Management (SIEM)][ln-siem] system.
-* Configure data retention of logs in your SIEM per your company's security policies.
-* Configure alerts in your SIEM to notify you of noteworthy events. In particular, we recommend alerts for events related to settings changed through the Tailscale admin console:
+* 配置[日志流式传输][docs-log-streaming]，将配置日志和网络流日志流式传输到你的[安全信息与事件管理（SIEM）][ln-siem]系统。
+* 按照你公司的安全策略，在 SIEM 中配置日志的数据保留期。
+* 在 SIEM 中配置告警，在发生值得注意的事件时通知你。我们特别建议针对与通过 Tailscale 管理控制台更改的设置相关的事件配置告警：
 
   ```json
   // Other fields omitted for brevity
@@ -132,9 +132,9 @@ The following sections detail how to manage users in your tailnet at scale, incl
   },
   ```
 
-  \[Missing snippet: visual\_policy\_editor.mdx]
+  \[缺失片段：visual\_policy\_editor.mdx]
 
-[ar-end-user-client-configuration]: #end-user-client-configuration
+[ar-end-user-client-configuration]: #终端用户客户端配置
 
 [bl-blog-newsletter]: https://tailscale.com/blog#blog-newsletter
 

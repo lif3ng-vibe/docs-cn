@@ -1,0 +1,227 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "OpenShift"
+sidebar-title: "OpenShift"
+description: "在 OpenShift 上安装 OpenShell Helm chart，沙箱工作负载无需任何 capability。"
+keywords: "生成式 AI, 网络安全, Kubernetes, OpenShift, SCC, Security Context Constraints, Helm, 网关, 安装"
+position: 7
+---
+import { Aside } from '@astrojs/starlight/components';
+
+Kubernetes 驱动会解析分配给每个 OpenShift 命名空间的 UID 范围，并以该范围内的数字非 root 身份渲染沙箱与监管器。OpenShell 不需要 `privileged` SCC，也不需要添加任何 Linux capability。
+
+<Aside type="caution">
+请确认所选的 OpenShift 运行时配置允许非特权进程安装嵌套 seccomp user-notification 过滤器并使用 Landlock。任一无 capability 运行时探测失败时，OpenShell 都会让沙箱启动失败。
+</Aside>
+
+## 节点内核
+
+OpenShell 要求 OpenShift 4.19 或更高版本。OpenShift 4.16 到 4.18 的 RHCOS 内核（RHEL 9.4，5.14.0-427）构建时未包含 Landlock，因此在这些版本上沙箱启动的 Landlock 探测会失败。
+
+## 前提条件
+
+- 已配置 `oc` 的 OpenShift 4.x 集群。
+- Helm 3.x。
+- [Agent Sandbox](/kubernetes/setup#安装-agent-sandbox) controller 与 CRD。
+- 能在沙箱命名空间中强制执行入站与出站 `NetworkPolicy` 的 CNI。
+
+<Aside type="caution">
+集群必须能在每个沙箱命名空间中强制执行入站与出站 `NetworkPolicy`。策略由 OpenShell 创建，但 CNI 是否真正应用它们，Kubernetes 并不校验。没有强制执行时，沙箱工作负载可能通过直连绕过监管器网络策略。
+</Aside>
+
+## 安装 OpenShell
+
+先预创建命名空间，再安装 chart。保持默认的受限安全姿态。
+
+```shell
+oc create ns openshell
+helm install openshell oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell
+```
+
+驱动读取命名空间的 `openshift.io/sa.scc.uid-range` 注解，并把得到的 UID/GID 用于沙箱、agent、受信任的 init 容器与监管器。每个容器都设置 `allowPrivilegeEscalation: false`，丢弃所有 Linux capability，并使用 `RuntimeDefault` seccomp。
+
+等待网关就绪：
+
+```shell
+oc -n openshell rollout status statefulset/openshell
+```
+
+设置 `workload.kind=deployment` 时，改为等待 `deployment/openshell`。
+
+## 托管工作区命名空间
+
+托管工作区模式下，Kubernetes 驱动为每个工作区创建一个命名空间。在 OpenShift 上，驱动不设置 SCC 注解，让集群的命名空间分配器为每个工作区分配自己的 MCS、UID 范围与附加组范围。驱动会等到这些注解就绪后才预置工作区 ServiceAccount 或沙箱 Pod。
+
+早期版本创建的命名空间可能有 UID 范围但没有 MCS 注解。OpenShift 不会为已有 UID 范围的命名空间再分配 MCS，因此请先保留所需的工作区数据并重建该工作区命名空间，再重试沙箱创建。
+
+## 连接到网关
+
+转发网关端口用于本地评估：
+
+```shell
+oc -n openshell port-forward svc/openshell 8080:8080
+openshell gateway add https://127.0.0.1:8080 --local --name openshift
+openshell status
+```
+
+## 端到端 TLS 的可选方案
+
+上述步骤以明文 HTTP 运行网关，便于快速评估。生产部署请根据 OpenShift 版本与偏好，从以下方案中选择。
+
+### 使用 Gateway API 与 BackendTLSPolicy 的端到端 TLS（OpenShift 4.22+）
+
+OpenShift 4.22 及更高版本支持 Gateway API 中的 `BackendTLSPolicy`，在 OpenShift router 与 OpenShell 网关 Pod 之间实现端到端 TLS。流量路径为：
+
+```text
+client → HTTPS → OpenShift Gateway (terminate TLS) → TLS (re-encrypt) → openshell gateway pod
+```
+
+这免除了以 `server.disableTls=true` 运行网关的要求。OpenShift router 在 listener 处终止面向客户端的 TLS，连接后端 Service 时重新加密，并对照你提供的 CA 校验后端证书。
+
+#### 前提条件
+
+- 已启用 Gateway API 的 OpenShift 4.22+ 集群
+- 已安装 cert-manager（推荐），或使用内置 pkiInitJob 签发服务器证书
+- 已为 OpenShift gateway controller 注册 `GatewayClass`
+
+#### 创建 GatewayClass
+
+集群尚无 OpenShift GatewayClass 时，创建一个：
+
+```shell
+oc apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: openshift-default
+spec:
+  controllerName: openshift.io/gateway-controller/v1
+EOF
+```
+
+#### 创建 Gateway
+
+在 `openshift-ingress` 命名空间创建 Gateway 资源。把 `<external-hostname>` 替换为集群的 route 主机名（通常是 `*.openshell-ingress-gw.example.com` 这样的通配符）：
+
+```shell
+oc apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: openshell-gateway
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: openshift-default
+  listeners:
+    - name: grpc
+      hostname: "<external-hostname>"
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: <listener-tls-secret>
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshell
+EOF
+```
+
+listener TLS Secret 应包含外部主机名的证书。
+
+#### 以端到端 TLS 安装
+
+安装 chart 并启用 GRPCRoute 与 BackendTLSPolicy。certgen 钩子会自动从生成的 PKI 包创建后端 CA ConfigMap：
+
+```shell
+helm install openshell oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set podSecurityContext.fsGroup=null \
+  --set securityContext.runAsUser=null \
+  --set server.tls.enableMtls=false \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.name=openshell-gateway \
+  --set grpcRoute.gateway.namespace=openshift-ingress \
+  --set 'grpcRoute.hostnames[0]=gateway.example.com' \
+  --set grpcRoute.backendTLSPolicy.enabled=true \
+  --set server.oidc.issuer=https://keycloak.example.com/realms/openshell \
+  --set server.oidc.audience=openshell-cli
+```
+
+| 覆盖项 | 原因 |
+|---|---|
+| `podSecurityContext.fsGroup=null` / `securityContext.runAsUser=null` | 让 OpenShift 的 SCC 准入分配 UID。 |
+| `server.tls.enableMtls=false` | 禁用 mTLS 客户端证书认证。BackendTLSPolicy 只校验服务器证书；入站代理无法向后端出示客户端证书。认证请改用 OIDC。 |
+| `grpcRoute.enabled=true` | 创建指向外部 Gateway 的 GRPCRoute。 |
+| `grpcRoute.gateway.name` / `namespace` | 引用上文在 `openshift-ingress` 创建的 Gateway。 |
+| `grpcRoute.backendTLSPolicy.enabled=true` | 创建 BackendTLSPolicy，使到网关 Pod 的流量重新加密。后端 CA ConfigMap 由 certgen 钩子自动创建。Gateway 代理按 Service FQDN 校验后端证书，该 FQDN 已在默认服务器证书 SAN 中。 |
+| `grpcRoute.hostnames` | GRPCRoute 的外部主机名。它出现在 Gateway listener 证书上，而不是后端证书上。 |
+
+注意 `server.disableTls` **不**设置：网关 Pod 通过 HTTPS 提供 TLS，不要求客户端证书。认证使用 OIDC（参见[访问控制](/kubernetes/access-control)）。
+
+**改用 cert-manager 而非 pkiInitJob**：在安装命令中加 `--set certManager.enabled=true`。默认的 `certManager.serverDnsNames` 已包含 BackendTLSPolicy 校验所需的 Service FQDN。Certificate 资源是普通的 release 对象，另有一个安装后/升级后 Job（`<release>-certgen-backend-ca`）会轮询最多 120 秒等待 cert-manager 签发服务器证书，然后创建后端 CA ConfigMap。大多数情况下一次 `helm install` 即可。
+
+cert-manager 签发证书超过 120 秒时，用 `--set pkiInitJob.timeoutSeconds=<seconds>` 调高轮询超时。钩子轮询的时长恰好等于该值，例如 `timeoutSeconds=180` 轮询 180 秒。默认（`pkiInitJob.failOnTimeout=true`）达到超时即安装失败，明确提示 BackendTLSPolicy 无法工作。
+
+#### 通过 HTTPS 注册
+
+```shell
+openshell gateway add https://gateway.example.com \
+  --name openshift \
+  --oidc-issuer https://keycloak.example.com/realms/openshell \
+  --oidc-client-id openshell-cli
+openshell status
+```
+
+### 使用透传 Route 的端到端 TLS（所有 OpenShift 版本）
+
+OpenShift 版本低于 4.22，或偏好基于 Route 的入站时，可以让 cert-manager 从真实 Issuer 或 ClusterIssuer（例如 LetsEncrypt/ACME issuer）签发网关服务器证书，再用带 TLS 透传的 OpenShift Route 对外暴露；网关继续自行终止 TLS 与 mTLS。
+
+先安装 cert-manager 并配置可用的 `ClusterIssuer`；`certManager.serverIssuerRef` 的细节参见[管理证书](/kubernetes/managing-certificates)。按[访问控制](/kubernetes/access-control)的说明配置 OIDC 提供方；远程网关通过 OIDC 而非 mTLS 认证 CLI 用户，因此网关必须知道 OIDC issuer URL。用以下命令安装 chart：
+
+```shell
+helm install openshell oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set podSecurityContext.fsGroup=null \
+  --set securityContext.runAsUser=null \
+  --set server.disableTls=false \
+  --set certManager.enabled=true \
+  --set certManager.serverIssuerRef.name=letsencrypt-prod \
+  --set certManager.serverIssuerRef.kind=ClusterIssuer \
+  --set certManager.serverDnsNames[0]=gateway.example.com \
+  --set openshiftRoute.enabled=true \
+  --set openshiftRoute.host=gateway.example.com \
+  --set server.oidc.issuer=https://keycloak.example.com/realms/openshell \
+  --set server.oidc.audience=openshell-cli
+```
+
+| 覆盖项 | 原因 |
+|---|---|
+| `certManager.serverIssuerRef` | 从你的 Issuer 或 ClusterIssuer 为外部客户端签发第二张服务器证书。网关用 SNI 为外部主机名出示这张证书，同时继续向监管器出示内部（chart CA）证书。内部证书的 `ca.crt` 是同样签发了客户端证书的 chart CA，因此默认的 `clientCaFromServerTlsSecret=true` 是正确的。 |
+| `openshiftRoute.enabled` / `openshiftRoute.host` | 创建带 TLS 透传的 OpenShift Route：router 按 SNI 转发加密连接而不解密，网关用 SNI 主机名选择外部证书。 |
+| `server.oidc.issuer` / `server.oidc.audience` | 配置服务端 OIDC 校验。缺少这些设置时，网关要求 mTLS 客户端证书并拒绝仅带 OIDC 的 CLI 连接。参见[访问控制](/kubernetes/access-control)。 |
+
+通过 OIDC 在 CLI 中注册网关。远程网关通过 OIDC 而非 mTLS 认证 CLI 用户，参见[访问控制](/kubernetes/access-control)：
+
+```shell
+openshell gateway add https://gateway.example.com \
+  --name openshift \
+  --oidc-issuer https://keycloak.example.com/realms/openshell \
+  --oidc-client-id openshell-cli
+openshell gateway login openshift
+```
+
+## 后续步骤
+
+- 证书预置模式的更多内容参见[管理证书](/kubernetes/managing-certificates)。
+- 要用 Kubernetes Gateway API（而非 Route）从外部暴露网关，参见 [Ingress](/kubernetes/ingress)。
+- 要配置 OIDC 认证，参见[访问控制](/kubernetes/access-control)。

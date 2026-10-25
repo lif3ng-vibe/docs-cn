@@ -1,52 +1,52 @@
 ---
-title: "Syntax reference for the tailnet policy file"
-description: "You can write Tailscale [access control][docs-access-control] rules such as [ACLs][docs-acls] and [grants][docs-grants] in the tailnet policy file, which is expressed in [human JSON (HuJSON)][xt-gh-ta"
+title: "tailnet 策略文件语法参考"
+description: "你可以在 tailnet 策略文件中编写 Tailscale [访问控制][docs-access-control]规则，例如 [ACL][docs-acls]和[授权][docs-grants]，策略文件以 [human JSON（HuJSON）][xt-gh-tailscale-hujson]表达。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-You can write Tailscale [access control][docs-access-control] rules such as [ACLs][docs-acls] and [grants][docs-grants] in the tailnet policy file, which is expressed in [human JSON (HuJSON)][xt-gh-tailscale-hujson].
+你可以在 tailnet 策略文件中编写 Tailscale [访问控制][docs-access-control]规则，例如 [ACL][docs-acls]和[授权][docs-grants]，策略文件以 [human JSON（HuJSON）][xt-gh-tailscale-hujson]表达。
 
-The tailnet policy file has the following top-level sections:
+tailnet 策略文件包含以下顶层部分：
 
-| Section                            | Key             | Type           | Purpose                                                                                                                                      |
+| 部分                               | 键              | 类型           | 用途                                                                                                                                         |
 | ---------------------------------- | --------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Grants][ar-grants]                | `grants`        | Access control | Create network-level and application-level access control policies with optional route filtering. Prefer grants for access control policies. |
-| [ACLs][ar-acls]                    | `acls`          | Access control | Create network-level access control policies.                                                                                                |
-| [SSH][ar-ssh]                      | `ssh`           | Access control | Specify who can use Tailscale SSH.                                                                                                           |
-| [Auto approvers][ar-autoapprovers] | `autoApprovers` | Automation     | Specify who can bypass the approval process to advertise subnet routers, exit nodes, and app connectors.                                     |
-| [Node attributes][ar-nodeattrs]    | `nodeAttrs`     | Attributes     | Apply additional attributes to devices and users.                                                                                            |
-| [Postures][ar-postures]            | `postures`      | Attributes     | Define device posture rules to target in access control policies.                                                                            |
-| [Tag owners][ar-tag-owners]        | `tagOwners`     | Targets        | Define who can assign which tags to devices in your tailnet.                                                                                 |
-| [Groups][ar-groups]                | `groups`        | Targets        | Define named groups of users, devices, and subnets to target in access control policies and other definitions.                               |
-| [Hosts][ar-hosts]                  | `hosts`         | Targets        | Define named aliases for devices and subnets.                                                                                                |
-| [IP sets][ar-ipsets]               | `ipsets`        | Targets        | Define named network segments to target in access control policies and other definitions.                                                    |
-| [Tests][ar-tests]                  | `tests`         | Tests          | Write tests to make assertions about access policies (ACLs and network-level grants) that should not change.                                 |
-| [SSH test][ar-sshtests]            | `sshTests`      | Tests          | Write tests to make assertions about Tailscale SSH that should not change.                                                                   |
+| [授权（grants）][ar-grants]        | `grants`        | 访问控制       | 创建网络级和应用级访问控制策略，支持可选的路由过滤。访问控制策略优先使用 grants。                                                            |
+| [ACL][ar-acls]                     | `acls`          | 访问控制       | 创建网络级访问控制策略。                                                                                                                     |
+| [SSH][ar-ssh]                      | `ssh`           | 访问控制       | 指定谁可以使用 Tailscale SSH。                                                                                                               |
+| [自动批准][ar-autoapprovers]       | `autoApprovers` | 自动化         | 指定谁可以跳过审批流程来通告子网路由器、出口节点和应用连接器。                                                                               |
+| [节点属性][ar-nodeattrs]           | `nodeAttrs`     | 属性           | 为设备和用户应用附加属性。                                                                                                                   |
+| [设备态势][ar-postures]            | `postures`      | 属性           | 定义设备态势规则，供访问控制策略引用。                                                                                                       |
+| [标签所有者][ar-tag-owners]        | `tagOwners`     | 目标           | 定义谁可以给你的 tailnet 中的设备分配哪些标签。                                                                                              |
+| [群组][ar-groups]                  | `groups`        | 目标           | 定义命名的用户、设备和子网群组，供访问控制策略及其他定义引用。                                                                               |
+| [主机][ar-hosts]                   | `hosts`         | 目标           | 为设备和子网定义命名别名。                                                                                                                   |
+| [IP 集][ar-ipsets]                 | `ipsets`        | 目标           | 定义命名的网段，供访问控制策略及其他定义引用。                                                                                               |
+| [测试][ar-tests]                   | `tests`         | 测试           | 编写测试，对不应发生变化的访问策略（ACL 和网络级授权）进行断言。                                                                             |
+| [SSH 测试][ar-sshtests]            | `sshTests`      | 测试           | 编写测试，对不应发生变化的 Tailscale SSH 进行断言。                                                                                          |
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-## Grants
+## 授权（grants）
 
-Grants are a new, more powerful approach to access control. They let you do everything you can with ACLs, plus more. When communicating with a destination device, you can grant [application layer][xt-wiki-application-layer] capabilities to a set of devices or users. You can also continue to define traditional [network layer][xt-wiki-network-layer] capabilities. For example, you can use a grant rule to give a group of users access to port `8443` on a server, *and* define the files they can edit on that server.
+授权（grant）是一种更新、更强大的访问控制方式。ACL 能做的它都能做，而且功能更多。在与目标设备通信时，你可以向一组设备或用户授予[应用层][xt-wiki-application-layer]能力。你也可以继续定义传统的[网络层][xt-wiki-network-layer]能力。例如，你可以用一条授权规则让一组用户访问服务器上的 `8443` 端口，*同时*定义他们可以在该服务器上编辑哪些文件。
 
-The grants system combines network layer and application layer capabilities into a shared syntax. As a result, it offers enhanced flexibility and fine-grained control over resource access. Each grant only requires a source and a destination. Because Tailscale takes a deny-by-default approach, each grant has an implied *accept* action.
+授权体系把网络层和应用层能力合并到同一套语法中，因此对资源访问提供了更强的灵活性和更细粒度的控制。每条授权只需要一个源和一个目标。由于 Tailscale 采用默认拒绝策略，每条授权都带有隐含的 *accept* 动作。
 
-[**Grants**](/docs/features/access-control/grants) — Grant access control permissions across both network connections and application permissions.
+[**授权**](/docs/features/access-control/grants)——跨网络连接和应用权限授予访问控制权限。
 
-[**Grants syntax**](/docs/reference/syntax/grants) — Complete reference documentation for Tailscale's grants system.
+[**授权语法**](/docs/reference/syntax/grants)——Tailscale 授权体系的完整参考文档。
 
-## ACLs
+## ACL
 
 \[Missing snippet: acls\_legacy\_note.mdx]
 
-The `acls` section lists access rules for your tailnet. Each rule grants access from a set of sources to a set of destinations.
+`acls` 部分列出你 tailnet 的访问规则。每条规则把访问权从一组来源授予一组目标。
 
-Access rules can use [groups][ar-groups] and [tags][docs-tags] to grant access to pre-defined sets of users and assign service role accounts to nodes. Together, groups and tags let you build powerful [role-based access control (RBAC)][bl-rbac-meant-to-be] policies.
+访问规则可以使用[群组][ar-groups]和[标签][docs-tags]把访问权授予预先定义的用户集合，并把服务角色账户分配给节点。群组和标签相结合，可以构建强大的[基于角色的访问控制（RBAC）][bl-rbac-meant-to-be]策略。
 
-Tailscale automatically translates all ACLs to lower-level rules that allow traffic from a source IP address to a destination IP address and port.
+Tailscale 会自动把所有 ACL 转换为更底层的规则，即允许从源 IP 地址到目标 IP 地址和端口的流量。
 
-The following example shows an access rule with an `action`, `src`, `proto`, and `dst`.
+以下示例展示了一条带有 `action`、`src`、`proto` 和 `dst` 的访问规则。
 
 ```json
 {
@@ -57,101 +57,101 @@ The following example shows an access rule with an `action`, `src`, `proto`, and
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> The `acl` section of the tailnet policy supports the legacy fields `users` and `ports`, but the best practice is to use `src` (instead of `users`) and `dst` (instead of `ports`).
+> tailnet 策略的 `acl` 部分支持旧字段 `users` 和 `ports`，但最佳实践是使用 `src`（代替 `users`）和 `dst`（代替 `ports`）。
 
 ### `action`
 
-Tailscale access rules deny access by default. As a result, the only possible `action` is `accept`. `accept` lets traffic flow from the source (`src`) to the destination (`dst`).
+Tailscale 访问规则默认拒绝访问。因此唯一可能的 `action` 是 `accept`。`accept` 允许流量从源（`src`）流向目标（`dst`）。
 
 ### `src`
 
-The `src` field specifies a list of sources to which the rule applies. Each element in the list can be one of the following:
+`src` 字段指定规则适用的来源列表。列表中的每个元素可以是以下之一：
 
-| **Type**                          | **Example**                  | **Description**                                                                                                                                                                                                 |
+| **类型**                          | **示例**                     | **描述**                                                                                                                                                                                                        |
 | --------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Any                               | `*`                          | All traffic originating from Tailscale devices in your tailnet, any approved subnets and `autogroup:shared`. It does not allow traffic originating from non-Tailscale devices (unless it is an approved route). |
-| User                              | `shreya@example.com`         | Includes all the provided user's devices.                                                                                                                                                                       |
-| [Group][ar-groups]                | `group:<group-name>`         | Includes all users in the provided group.                                                                                                                                                                       |
-| Tailscale IP                      | `100.100.123.123`            | Includes only the device that owns the provided Tailscale IP. IPv6 addresses must follow the format `[1:2:3::4]:80`.                                                                                            |
-| [Subnet][docs-subnets] CIDR Range | `192.168.1.0/24`             | Includes any IP address within the provided subnet.                                                                                                                                                             |
-| [Host][ar-hosts]                  | `my-host`                    | Includes the Tailscale IP address or CIDR in the `hosts` section.                                                                                                                                               |
-| [Tag][docs-tags]                  | `tag:production`             | Includes all devices with the provided tag.                                                                                                                                                                     |
-| [Autogroup][ar-autogroups]        | `autogroup:<role\|property>` | Includes devices of users, destinations, or usernames with the same properties or roles.                                                                                                                        |
-| [Autogroup (all)][ar-autogroups]  | `autogroup:danger-all`       | A special autogroup that selects all sources including those outside your tailnet.                                                                                                                              |
+| 任意                              | `*`                          | 来自你 tailnet 中 Tailscale 设备、任何已批准子网以及 `autogroup:shared` 的所有流量。不允许来自非 Tailscale 设备的流量（除非是已批准的路由）。                                                                   |
+| 用户                              | `shreya@example.com`         | 包含该用户的所有设备。                                                                                                                                                                                          |
+| [群组][ar-groups]                 | `group:<group-name>`         | 包含该群组中的所有用户。                                                                                                                                                                                        |
+| Tailscale IP                      | `100.100.123.123`            | 仅包含拥有该 Tailscale IP 的设备。IPv6 地址必须遵循 `[1:2:3::4]:80` 格式。                                                                                                                                      |
+| [子网][docs-subnets] CIDR 范围    | `192.168.1.0/24`             | 包含该子网内的任意 IP 地址。                                                                                                                                                                                    |
+| [主机][ar-hosts]                  | `my-host`                    | 包含 `hosts` 部分中的 Tailscale IP 地址或 CIDR。                                                                                                                                                                |
+| [标签][docs-tags]                 | `tag:production`             | 包含具有该标签的所有设备。                                                                                                                                                                                      |
+| [Autogroup][ar-autogroups]        | `autogroup:<role\|property>` | 包含具有相同属性或角色的用户设备、目标或用户名。                                                                                                                                                                |
+| [Autogroup（all）][ar-autogroups] | `autogroup:danger-all`       | 一个特殊的 autogroup，选择包括你 tailnet 之外在内的所有来源。                                                                                                                                                   |
 
-You can optionally include the `srcPosture` field to further restrict `src` devices to the ones matching a set of [device posture conditions][docs-device-posture-device-posture-conditions].
+你可以选择性地加入 `srcPosture` 字段，把 `src` 设备进一步限制为符合一组[设备态势条件][docs-device-posture-device-posture-conditions]的设备。
 
 ### `proto`
 
-The `proto` field is an optional field you can use to specify the protocol to which the rule applies. Without a protocol, the access rule applies to all TCP and UDP traffic.
+`proto` 字段是可选字段，用于指定规则适用的协议。不指定协议时，访问规则适用于所有 TCP 和 UDP 流量。
 
-You can specify `proto` as an [IANA IP protocol number][xt-iana-protocol-numbers] `1-255` (for example, `"16"`) or one of the supported named aliases.
+你可以把 `proto` 指定为 [IANA IP 协议编号][xt-iana-protocol-numbers] `1-255`（例如 `"16"`）或受支持的命名别名之一。
 
-Expand to view all named aliases.
+展开查看所有命名别名。
 
-| **Protocol**                                | **`proto`**        | **IANA protocol number** |
+| **协议**                                    | **`proto`**        | **IANA 协议编号**        |
 | ------------------------------------------- | ------------------ | ------------------------ |
-| Internet Group Management (IGMP)            | `igmp`             | `2`                      |
-| IPv4 encapsulation                          | `ipv4`, `ip-in-ip` | `4`                      |
-| Transmission Control (TCP)                  | `tcp`              | `6`                      |
-| Exterior Gateway Protocol (EGP)             | `egp`              | `8`                      |
-| Any private interior gateway                | `igp`              | `9`                      |
-| User Datagram (UDP)                         | `udp`              | `17`                     |
-| Generic Routing Encapsulation (GRE)         | `gre`              | `47`                     |
-| Encap Security Payload (ESP)                | `esp`              | `50`                     |
-| Authentication Header (AH)                  | `ah`               | `51`                     |
-| Stream Control Transmission Protocol (SCTP) | `sctp`             | `132`                    |
+| 互联网组管理协议（IGMP）                    | `igmp`             | `2`                      |
+| IPv4 封装                                   | `ipv4`, `ip-in-ip` | `4`                      |
+| 传输控制（TCP）                             | `tcp`              | `6`                      |
+| 外部网关协议（EGP）                         | `egp`              | `8`                      |
+| 任意私有内部网关                            | `igp`              | `9`                      |
+| 用户数据报（UDP）                           | `udp`              | `17`                     |
+| 通用路由封装（GRE）                         | `gre`              | `47`                     |
+| 封装安全载荷（ESP）                         | `esp`              | `50`                     |
+| 认证头（AH）                                | `ah`               | `51`                     |
+| 流控制传输协议（SCTP）                      | `sctp`             | `132`                    |
 
-> **Note:**
+> **注意：**
 >
-> Notes about the `proto` field:
+> 关于 `proto` 字段的说明：
 >
-> * You must use Tailscale version v1.18.2 or later to use the `proto` field. Earlier versions of Tailscale will fail and block access rules with protocols.
-> * If traffic is allowed for a given pair of IP addresses, then ICMP will also be allowed.
-> * Only TCP, UDP, and SCTP traffic support specifying ports. All other protocols only support `*` as the protocol port.
+> * 必须使用 Tailscale v1.18.2 或更高版本才能使用 `proto` 字段。更早的版本会失败并阻断带协议的访问规则。
+> * 如果某对 IP 地址之间的流量被允许，那么 ICMP 也会被允许。
+> * 只有 TCP、UDP 和 SCTP 流量支持指定端口。其他协议只支持 `*` 作为协议端口。
 
 ### `dst`
 
-The `dst` field specifies a list of destinations to which the rule applies. Each element in the list specifies a `host` and one or more `ports` in the format `<host>:<ports>`.
+`dst` 字段指定规则适用的目标列表。列表中的每个元素以 `<host>:<ports>` 格式指定一个 `host` 和一个或多个 `ports`。
 
-The `host` can be any of the following types:
+`host` 可以是以下任意类型：
 
-| **Type**                                                | **Example**               | **Description**                                                                                                                                                                                                                                         |
+| **类型**                                                | **示例**                  | **描述**                                                                                                                                                                                                                                                |
 | ------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Any                                                     | `*`                       | Includes any destination (no restrictions).                                                                                                                                                                                                             |
-| User                                                    | `shreya@example.com`      | Includes any device currently signed in as the provided user.                                                                                                                                                                                           |
-| [Group][ar-groups]                                      | `group:<group-name>`      | Includes all users in the provided group.                                                                                                                                                                                                               |
-| Tailscale IP address                                    | `100.100.123.123`         | Includes only the device that owns the provided Tailscale IP address.                                                                                                                                                                                   |
-| [Hosts][ar-hosts]                                       | `example-host-name`       | Includes the Tailscale IP address in the [`hosts` section][ar-hosts].                                                                                                                                                                                   |
-| [Subnet][docs-subnets] CIDR Range                       | `192.168.1.0/24`          | Includes any IP address within the given subnet.                                                                                                                                                                                                        |
-| [Tags][docs-tags]                                       | `tag:<tag-name>`          | Includes any device with the provided tag.                                                                                                                                                                                                              |
-| internet access through an [exit node][docs-exit-nodes] | `autogroup:internet`      | Includes devices with access to the internet through [exit nodes][docs-exit-nodes].                                                                                                                                                                     |
-| Own devices                                             | `autogroup:self`          | Select a user's devices. `autogroup:self` is a special autogroup selector that, when combined with a `src` selector of `autogroup:<role>`, `group:<name>`, or an individual user, lets you grant access to a user's own devices from their own devices. |
-| Tailnet devices                                         | `autogroup:member`        | Includes devices in the tailnet where the user is a direct member (not a shared user) of the tailnet.                                                                                                                                                   |
-| Admin devices                                           | `autogroup:admin`         | Includes devices where the user is an [Admin][docs-user-roles-admin].                                                                                                                                                                                   |
-| Network admin devices                                   | `autogroup:network-admin` | Includes devices where the user is a [Network admin][docs-user-roles-network-admin].                                                                                                                                                                    |
-| IT admin devices                                        | `autogroup:it-admin`      | Includes devices where the user is an [IT admin][docs-user-roles-it-admin].                                                                                                                                                                             |
-| Billing admin devices                                   | `autogroup:billing-admin` | Includes devices where the user is a [Billing admin][docs-user-roles-billing-admin].                                                                                                                                                                    |
-| Auditor devices                                         | `autogroup:auditor`       | Includes devices where the user is an [Auditor][docs-user-roles-auditor].                                                                                                                                                                               |
-| Owner devices                                           | `autogroup:owner`         | Includes devices where the user is the tailnet [Owner][docs-user-roles-owner].                                                                                                                                                                          |
-| [IP sets][docs-ipsets]                                  | `ipset:<ip-set-name>`     | Includes all targets in the IP set.                                                                                                                                                                                                                     |
+| 任意                                                    | `*`                       | 包含任何目标（无限制）。                                                                                                                                                                                                                                |
+| 用户                                                    | `shreya@example.com`      | 包含当前以该用户身份登录的任何设备。                                                                                                                                                                                                                    |
+| [群组][ar-groups]                                       | `group:<group-name>`      | 包含该群组中的所有用户。                                                                                                                                                                                                                                |
+| Tailscale IP 地址                                       | `100.100.123.123`         | 仅包含拥有该 Tailscale IP 地址的设备。                                                                                                                                                                                                                  |
+| [主机][ar-hosts]                                        | `example-host-name`       | 包含 [`hosts` 部分][ar-hosts]中的 Tailscale IP 地址。                                                                                                                                                                                                   |
+| [子网][docs-subnets] CIDR 范围                          | `192.168.1.0/24`          | 包含给定子网内的任意 IP 地址。                                                                                                                                                                                                                          |
+| [标签][docs-tags]                                       | `tag:<tag-name>`          | 包含具有该标签的任何设备。                                                                                                                                                                                                                              |
+| 通过[出口节点][docs-exit-nodes]访问互联网               | `autogroup:internet`      | 包含可以通过[出口节点][docs-exit-nodes]访问互联网的设备。                                                                                                                                                                                               |
+| 自己的设备                                              | `autogroup:self`          | 选择用户自己的设备。`autogroup:self` 是一个特殊的 autogroup 选择器，与 `autogroup:<role>`、`group:<name>` 或单个用户的 `src` 选择器组合使用时，可以允许用户从自己的设备访问自己的设备。                                                                 |
+| tailnet 设备                                            | `autogroup:member`        | 包含用户作为 tailnet 直接成员（而非共享用户）所在 tailnet 中的设备。                                                                                                                                                                                    |
+| 管理员设备                                              | `autogroup:admin`         | 包含用户为[管理员（Admin）][docs-user-roles-admin]的设备。                                                                                                                                                                                              |
+| 网络管理员设备                                          | `autogroup:network-admin` | 包含用户为[网络管理员][docs-user-roles-network-admin]的设备。                                                                                                                                                                                           |
+| IT 管理员设备                                           | `autogroup:it-admin`      | 包含用户为 [IT 管理员][docs-user-roles-it-admin]的设备。                                                                                                                                                                                                |
+| 计费管理员设备                                          | `autogroup:billing-admin` | 包含用户为[计费管理员][docs-user-roles-billing-admin]的设备。                                                                                                                                                                                           |
+| 审计员设备                                              | `autogroup:auditor`       | 包含用户为[审计员][docs-user-roles-auditor]的设备。                                                                                                                                                                                                     |
+| 所有者设备                                              | `autogroup:owner`         | 包含用户为 tailnet [所有者（Owner）][docs-user-roles-owner]的设备。                                                                                                                                                                                     |
+| [IP 集][docs-ipsets]                                    | `ipset:<ip-set-name>`     | 包含该 IP 集中的所有目标。                                                                                                                                                                                                                              |
 
-The `ports` field can be any of the following types:
+`ports` 字段可以是以下任意类型：
 
-| **Type** | **Description**                                        | **Example** |
+| **类型** | **描述**                                               | **示例**    |
 | -------- | ------------------------------------------------------ | ----------- |
-| Any      | Includes any port number.                              | `*`         |
-| Single   | Includes a single port number.                         | `22`        |
-| Multiple | Includes two or more port numbers separated by commas. | `80,443`    |
-| Range    | Includes a range of port numbers.                      | `1000-2000` |
+| 任意     | 包含任何端口号。                                       | `*`         |
+| 单个     | 包含单个端口号。                                       | `22`        |
+| 多个     | 包含以逗号分隔的两个或多个端口号。                     | `80,443`    |
+| 范围     | 包含一个端口范围。                                     | `1000-2000` |
 
-### Subnet routers and exit nodes
+### 子网路由器与出口节点
 
-ACLs don't limit the discovery of routes. If a device is a [subnet router][docs-subnets], you can restrict access to it independently from the subnet. If a device is an [exit node][docs-exit-nodes], you can restrict access to it independently from its public IP address.
+ACL 不会限制路由的发现。如果一台设备是[子网路由器][docs-subnets]，你可以独立于子网来限制对它的访问。如果一台设备是[出口节点][docs-exit-nodes]，你可以独立于其公网 IP 地址来限制对它的访问。
 
-To restrict access to a subnet, ensure that no ACL grants access to those routes. You can enforce this with a test that fails if any rule accidentally grants access. The following example demonstrates a test that fails if `not-allowed@example.com` is allowed access to `198.51.100.7:22`.
+要限制对某个子网的访问，请确保没有 ACL 授予对这些路由的访问。你可以用一条测试来强制做到这一点：如果任何规则意外授予了访问权，测试就会失败。以下示例演示了一条测试：如果 `not-allowed@example.com` 被允许访问 `198.51.100.7:22`，测试就会失败。
 
 ```json
 "tests": [
@@ -163,7 +163,7 @@ To restrict access to a subnet, ensure that no ACL grants access to those routes
 ],
 ```
 
-Only devices with access to `autogroup:internet` can use exit nodes. All other devices (without access to `autogroup:internet`) cannot use exit nodes. You can enforce this with a test that fails if any rule accidentally grants access to a public address. The following example test fails if `not-allowed@example.com` can access `198.51.100.8:22`.
+只有能访问 `autogroup:internet` 的设备才能使用出口节点。所有其他设备（无法访问 `autogroup:internet`）不能使用出口节点。你可以用一条测试来强制做到这一点：如果任何规则意外授予对公网地址的访问权，测试就会失败。以下示例测试在 `not-allowed@example.com` 能访问 `198.51.100.8:22` 时失败。
 
 ```json
 "tests": [
@@ -175,68 +175,68 @@ Only devices with access to `autogroup:internet` can use exit nodes. All other d
 ],
 ```
 
-You cannot restrict the use of specific exit nodes using ACLs. Refer to [issue #1567][xt-gh-tailscale-issue-1567] for updates.
+ACL 无法限制对特定出口节点的使用。相关进展请参阅 [issue #1567][xt-gh-tailscale-issue-1567]。
 
-### 4via6 requires IPv6 not IPv4
+### 4via6 需要 IPv6 而非 IPv4
 
-When writing access control rules targeting resources behind a [4via6 subnet][docs-4via6-subnets] router, use the IPv6 CIDR or address as the destination, not the IPv4 address.
+编写针对 [4via6 子网][docs-4via6-subnets]路由器后面资源的访问控制规则时，请使用 IPv6 CIDR 或地址作为目标，而不是 IPv4 地址。
 
-Use `tailscale debug via` to get the IPv6 CIDR.
+使用 `tailscale debug via` 获取 IPv6 CIDR。
 
-### Taildrop precedence
+### Taildrop 优先级
 
-Taildrop permits you to share files between devices you're logged in to, even if you use ACLs to restrict access.
+即使你使用 ACL 限制访问，Taildrop 仍允许你在已登录的设备之间共享文件。
 
-## Reference users
+## 引用用户
 
-> **Note:** Users are available for [all plans](https://tailscale.com/pricing).
+> **注意：**用户功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-You can specify users in an access rule's source (`src`) and destination (`dst`) fields. To specify a user, use one of the following formats (depending on how the user signs into Tailscale):
+你可以在访问规则的源（`src`）和目标（`dst`）字段中指定用户。指定用户时，请使用以下格式之一（取决于用户的 Tailscale 登录方式）：
 
-| **Format**             | **Description**                                             | **Example**         |
+| **格式**               | **描述**                                                    | **示例**            |
 | ---------------------- | ----------------------------------------------------------- | ------------------- |
-| `username@example.com` | Use if the user signs into Tailscale with an email address. | `alice@example.com` |
-| `username@github`      | Use if the user signs into Tailscale with a GitHub account. | `alice@github`      |
-| `username@passkey`     | Use if the user signs into Tailscale with a Passkey.        | `alice@passkey`     |
+| `username@example.com` | 用户使用电子邮件地址登录 Tailscale 时使用。                 | `alice@example.com` |
+| `username@github`      | 用户使用 GitHub 账户登录 Tailscale 时使用。                 | `alice@github`      |
+| `username@passkey`     | 用户使用 Passkey 登录 Tailscale 时使用。                    | `alice@passkey`     |
 
-You can use groups to reference sets of users. Groups let you define role-based access controls. There are multiple types of groups:
+你可以使用群组来引用一组用户。群组让你能够定义基于角色的访问控制。群组有多种类型：
 
-* Auto groups that reference all users with the same property.
-* Groups defined in the `groups` section of the tailnet policy file as a specific list of users.
-* Groups provisioned in the identity provider and synced through user and group provisioning.
+* 引用所有具有相同属性的用户的 autogroup。
+* 在 tailnet 策略文件的 `groups` 部分中定义为特定用户列表的群组。
+* 在身份提供方中预配置并通过用户和群组预配置同步的群组。
 
-## Autogroups
+## Autogroup
 
-> **Note:** Autogroups are available for [all plans](https://tailscale.com/pricing).
+> **注意：**Autogroup 适用于[所有套餐](https://tailscale.com/pricing)。
 
-An [autogroup][docs-targets-autogroups] is a special group that automatically includes users, destinations, or usernames with the same properties.
+[Autogroup][docs-targets-autogroups] 是一种特殊的群组，会自动包含具有相同属性的用户、目标或用户名。
 
-| **Allowed**                                        | **Autogroup**             | **Description**                                                                                                                                                                              | **Availability by plan**                                               |
+| **允许的用法**                                     | **Autogroup**             | **描述**                                                                                                                                                                                     | **各套餐可用性**                                                       |
 | -------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| As a `dst`                                         | `autogroup:internet`      | Use to allow access for any user through *any* [exit node][docs-exit-nodes] in your tailnet.                                                                                                 | Available on [all plans][co-pricing]                                   |
-| As a `dst`                                         | `autogroup:self`          | Use to allow access for any user that is authenticated as the same user as the source. Does not apply to tags.                                                                               | Available on [all plans][co-pricing]                                   |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:owner`         | Use to allow access for the tailnet [Owner][docs-user-roles-owner].                                                                                                                          | Available on [all plans][co-pricing]                                   |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:admin`         | Use to allow access for any user who has the role of [Admin][docs-user-roles-admin].                                                                                                         | Available on [all plans][co-pricing]                                   |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:member`        | Use to allow access for any user who is a direct member (including all invited users) of the tailnet. Does not include users from shared devices.                                            | Available on [all plans][co-pricing]                                   |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:tagged`        | Use to allow access for any user who is a device that is [tagged][docs-tags].                                                                                                                | Available on [all plans][co-pricing]                                   |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:auditor`       | Use to allow access for any user who has the role of [Auditor][docs-user-roles-auditor].                                                                                                     | Available on [the Standard, Premium, and Enterprise plans][co-pricing] |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:billing-admin` | Use to allow access for any user who has the role of [Billing admin][docs-user-roles-billing-admin].                                                                                         | Available on [the Standard, Premium, and Enterprise plans][co-pricing] |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:it-admin`      | Use to allow access for any user who has the role of [IT admin][docs-user-roles-it-admin].                                                                                                   | Available on [the Standard, Premium, and Enterprise plans][co-pricing] |
-| As a `src` or `dst`, `tagOwner`, or `autoApprover` | `autogroup:network-admin` | Use to allow access for any user who has the role of [Network admin][docs-user-roles-network-admin].                                                                                         | Available on [the Standard, Premium, and Enterprise plans][co-pricing] |
-| As a `src` or `dst`                                | `user:*@<domain>`         | Use to allow access for any user whose login belongs to the specified domain and who is a direct member of the tailnet, including invited users. Does not include users from shared devices. | Available on [all plans][co-pricing]                                   |
-| As a `src`                                         | `autogroup:shared`        | Use to allow access for any user who accepted a [sharing][docs-sharing] invitation to your network. This lets you write rules without knowing the email addresses in advance.                | Available on [all plans][co-pricing]                                   |
-| As an [SSH][ar-ssh] user                           | `autogroup:nonroot`       | Use to allow [Tailscale SSH][docs-tailscale-ssh] access to any user that is not `root`.                                                                                                      | Available on [all plans][co-pricing]                                   |
-| As an [SSH][ar-ssh] user                           | `localpart:*@<domain>`    | Use to allow [Tailscale SSH][docs-tailscale-ssh] access to the user whose name matches the [local-part][xt-rfc-2822-3.4.1] of the user's login.                                              | Available on [the Premium and Enterprise plans][co-pricing]            |
+| 作为 `dst`                                         | `autogroup:internet`      | 用于允许任何用户通过你 tailnet 中的*任意*[出口节点][docs-exit-nodes]进行访问。                                                                                                               | [所有套餐][co-pricing]可用                                             |
+| 作为 `dst`                                         | `autogroup:self`          | 用于允许任何通过与源相同的用户身份完成认证的用户进行访问。不适用于标签。                                                                                                                     | [所有套餐][co-pricing]可用                                             |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:owner`         | 用于允许 tailnet [所有者][docs-user-roles-owner]访问。                                                                                                                                       | [所有套餐][co-pricing]可用                                             |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:admin`         | 用于允许具有[管理员][docs-user-roles-admin]角色的任何用户访问。                                                                                                                              | [所有套餐][co-pricing]可用                                             |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:member`        | 用于允许作为 tailnet 直接成员（包括所有受邀用户）的任何用户访问。不包括来自共享设备的用户。                                                                                                  | [所有套餐][co-pricing]可用                                             |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:tagged`        | 用于允许作为[带标签][docs-tags]设备的任何用户访问。                                                                                                                                          | [所有套餐][co-pricing]可用                                             |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:auditor`       | 用于允许具有[审计员][docs-user-roles-auditor]角色的任何用户访问。                                                                                                                            | [Standard、Premium 和 Enterprise 套餐][co-pricing]可用                 |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:billing-admin` | 用于允许具有[计费管理员][docs-user-roles-billing-admin]角色的任何用户访问。                                                                                                                  | [Standard、Premium 和 Enterprise 套餐][co-pricing]可用                 |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:it-admin`      | 用于允许具有 [IT 管理员][docs-user-roles-it-admin]角色的任何用户访问。                                                                                                                       | [Standard、Premium 和 Enterprise 套餐][co-pricing]可用                 |
+| 作为 `src` 或 `dst`、`tagOwner` 或 `autoApprover`  | `autogroup:network-admin` | 用于允许具有[网络管理员][docs-user-roles-network-admin]角色的任何用户访问。                                                                                                                  | [Standard、Premium 和 Enterprise 套餐][co-pricing]可用                 |
+| 作为 `src` 或 `dst`                                | `user:*@<domain>`         | 用于允许登录名属于指定域名且是 tailnet 直接成员（包括受邀用户）的任何用户访问。不包括来自共享设备的用户。                                                                                     | [所有套餐][co-pricing]可用                                             |
+| 作为 `src`                                         | `autogroup:shared`        | 用于允许接受了你的网络[共享][docs-sharing]邀请的任何用户访问。这让你无需预先知道电子邮件地址即可编写规则。                                                                                    | [所有套餐][co-pricing]可用                                             |
+| 作为 [SSH][ar-ssh] 用户                            | `autogroup:nonroot`       | 用于允许 [Tailscale SSH][docs-tailscale-ssh] 访问除 `root` 之外的任何用户。                                                                                                                  | [所有套餐][co-pricing]可用                                             |
+| 作为 [SSH][ar-ssh] 用户                            | `localpart:*@<domain>`    | 用于允许 [Tailscale SSH][docs-tailscale-ssh] 访问其名称与用户登录名[本地部分（local-part）][xt-rfc-2822-3.4.1]匹配的用户。                                                                   | [Premium 和 Enterprise 套餐][co-pricing]可用                           |
 
-> **Note:**
+> **注意：**
 >
-> `autogroup:self` only applies to user-owned devices. It does not apply to tagged devices. You cannot use `autogroup:self` with `autogroup:tagged`.
+> `autogroup:self` 仅适用于用户自有设备，不适用于带标签的设备。`autogroup:self` 不能与 `autogroup:tagged` 一起使用。
 
-> **Note:**
+> **注意：**
 >
-> The legacy autogroup `autogroup:members` will continue to work, but it's best practice to use `autogroup:member` instead. You cannot use both `autogroup:member` and `autogroup:members` in the same tailnet policy file.
+> 旧版 autogroup `autogroup:members` 仍可继续使用，但最佳实践是改用 `autogroup:member`。同一个 tailnet 策略文件中不能同时使用 `autogroup:member` 和 `autogroup:members`。
 
-The following example [`ssh` rule][ar-ssh] lets all users have Tailscale SSH access to devices they own (as non-root):
+以下 [`ssh` 规则][ar-ssh]示例允许所有用户以非 root 身份通过 Tailscale SSH 访问他们自己的设备：
 
 ```json
 "ssh": [
@@ -250,28 +250,28 @@ The following example [`ssh` rule][ar-ssh] lets all users have Tailscale SSH acc
 ]
 ```
 
-In the default ACL, the `ssh` rule uses `autogroup:self` for the `dst` field and `autogroup:nonroot` in the `users` field. If you change the `dst` field from `autogroup:self` to some other destination, such as an [ACL tag](/docs/features/tags), also consider replacing `autogroup:nonroot` in the `users` field. If you don't remove `autogroup:nonroot` from the `users` field, then anyone permitted by the `src` setting will be able to SSH in as any nonroot user on the `dst` device.
+在默认 ACL 中，`ssh` 规则在 `dst` 字段使用 `autogroup:self`，并在 `users` 字段使用 `autogroup:nonroot`。如果你把 `dst` 字段从 `autogroup:self` 改为其他目标（例如某个 [ACL 标签](/docs/features/tags)），也请考虑替换 `users` 字段中的 `autogroup:nonroot`。如果不从 `users` 字段中移除 `autogroup:nonroot`，那么 `src` 设置所允许的任何人都能以 `dst` 设备上任意非 root 用户的身份 SSH 登录。
 
-### Domain based autogroups
+### 基于域名的 autogroup
 
-Some autogroups include a specific domain name. For example, `user:*@example.com` or `localpart:*@example.com`. These autogroups include users who are both members of the tailnet and whose login is in the autogroup domain. For example, if the tailnet `example.com` uses the autogroup `user:*@altostrat.com`, this group includes all members of the `example.com` tailnet who log in as a user at `@altostrat.com` (such as `laura@altostrat.com`).
+有些 autogroup 包含特定的域名，例如 `user:*@example.com` 或 `localpart:*@example.com`。这些 autogroup 包含这样的用户：既是 tailnet 的成员，其登录名又属于该 autogroup 的域名。例如，如果 tailnet `example.com` 使用 autogroup `user:*@altostrat.com`，该群组会包含 `example.com` tailnet 中所有以 `@altostrat.com` 用户身份登录的成员（例如 `laura@altostrat.com`）。
 
-The following restrictions apply to the domains used in autogroups:
+autogroup 中使用的域名受到以下限制：
 
-* The provided domain must not be a known shared domain (such as `gmail.com`).
-* If a tailnet uses domain aliases, you must explicitly specify the aliased domains in the ACL. For example, if `example.io` is aliased to `example.com` and you want to include users from both `example.com` and `example.io`, use both `user:*@example.com` and `user:*@example.io`.
-* Although the expressions use the wildcard `*`, it does not support arbitrary wildcards. For example, `user:b*b@example.com` will not match `bob@example.com`.
-* You cannot use domain based autogroups with [external invited users][docs-invite-any-user]. Domain based autogroups include only members of the tailnet whose emails match one of the tailnet's domains, either directly or through a domain alias.
+* 提供的域名不能是已知的共享域名（例如 `gmail.com`）。
+* 如果 tailnet 使用了域名别名，必须在 ACL 中显式指定这些别名域名。例如，如果 `example.io` 是 `example.com` 的别名，而你想同时包含来自 `example.com` 和 `example.io` 的用户，请同时使用 `user:*@example.com` 和 `user:*@example.io`。
+* 尽管表达式使用了通配符 `*`，但并不支持任意通配符。例如，`user:b*b@example.com` 不会匹配 `bob@example.com`。
+* 基于域名的 autogroup 不能与[外部受邀用户][docs-invite-any-user]一起使用。基于域名的 autogroup 只包含电子邮件直接匹配（或通过域名别名匹配）tailnet 域名的成员。
 
-## Groups
+## 群组（groups）
 
-> **Note:**
+> **注意：**
 >
-> Groups are available on all plans. However, the number of groups supported in your tailnet depends on your plan. For more information, refer to our [Pricing][co-pricing] page.
+> 群组功能在所有套餐上都可用。但你的 tailnet 支持的群组数量取决于套餐。更多信息请参阅我们的[定价][co-pricing]页面。
 
-The `groups` section lets you create groups of users, which you can use in access rules (instead of listing users out explicitly). Any change you make to the membership of a group propagates to all the rules that reference that group.
+`groups` 部分让你创建用户群组，你可以在访问规则中使用它们（而不必逐一列出用户）。对群组成员资格的任何更改都会传播到引用该群组的所有规则。
 
-The following example demonstrates creating an `engineering` group and a `sales` group.
+以下示例演示创建一个 `engineering` 群组和一个 `sales` 群组。
 
 ```json
 "groups": {
@@ -286,27 +286,27 @@ The following example demonstrates creating an `engineering` group and a `sales`
 },
 ```
 
-Every group name must start with the prefix `group:`. Each group member is specified by their full email address, as explained in the [users section][ar-reference-users] above. To avoid the risk of obfuscating group membership, groups cannot contain other groups.
+每个群组名都必须以 `group:` 前缀开头。每个群组成员都用其完整的电子邮件地址指定，如上文[用户部分][ar-reference-users]所述。为避免群组成员身份被混淆的风险，群组不能包含其他群组。
 
-You can add or remove a user's group membership by editing the tailnet policy file, as shown in the example `groups` definition above, and directly from the [Users](https://console.tailscale.com/admin/users) page of the admin console.
+你可以通过编辑 tailnet 策略文件（如上面的 `groups` 定义示例所示）来添加或移除用户的群组成员身份，也可以直接在管理控制台的[用户（Users）](https://console.tailscale.com/admin/users)页面操作。
 
-### Edit a user's group membership from the Users page
+### 从"用户"页面编辑用户的群组成员资格
 
-You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a user's group membership from the **Users** page.
+你必须拥有[所有者、管理员或网络管理员](/docs/reference/user-roles)角色，才能在**用户（Users）**页面编辑用户的群组成员资格。
 
-1. Open the [Users](https://console.tailscale.com/admin/users) page in the admin console.
-2. Find the user by name.
-3. Select the  menu > **Edit group membership**.
-4. In the **Edit group membership** dialog:
-   1. To add a group, select **Add to a group**, then the group to add.
-   2. To remove a group, select the **X** next to the group to delete.
-5. When you finish editing the groups for the user, select **Save**.
+1. 打开管理控制台中的[用户（Users）](https://console.tailscale.com/admin/users)页面。
+2. 按名称查找用户。
+3. 选择菜单 > **编辑群组成员资格**。
+4. 在**编辑群组成员资格**对话框中：
+   1. 要添加群组，选择**添加到群组**，然后选择要添加的群组。
+   2. 要移除群组，选择要删除的群组旁边的 **X**。
+5. 完成该用户的群组编辑后，选择**保存**。
 
-### Synced groups
+### 同步的群组
 
-You can create groups in your identity provider and sync them with Tailscale's access control policies with [user and group provisioning][docs-user-group-provisioning-sync-groups].
+你可以在身份提供方中创建群组，并通过[用户和群组预配置][docs-user-group-provisioning-sync-groups]把它们与 Tailscale 的访问控制策略同步。
 
-You can use the same human-readable group names in your identity provider to refer to groups in your tailnet policy file. The following example shows an access rule that manages access for the `security-team` group.
+你可以在身份提供方中使用相同的人类可读群组名来引用 tailnet 策略文件中的群组。以下示例展示了一条为 `security-team` 群组管理访问的访问规则。
 
 ```json
 {
@@ -323,32 +323,32 @@ You can use the same human-readable group names in your identity provider to ref
 }
 ```
 
-You can only edit groups defined in the tailnet policy file. You can use groups synced from a System for Cross-domain Identity Management (SCIM) integration or tailnet autogroups, but you cannot edit them.
+你只能编辑 tailnet 策略文件中定义的群组。你可以使用从 SCIM（跨域身份管理系统）集成同步来的群组或 tailnet 的 autogroup，但不能编辑它们。
 
-## Reference multiple devices
+## 引用多台设备
 
-You can define access rules for sets of devices using tags or hosts. Tags let you define role-based access controls so that different services have different access rules. Hosts let you define controls based on a reference to an IP address.
+你可以使用标签或主机为成组的设备定义访问规则。标签让你定义基于角色的访问控制，使不同的服务拥有不同的访问规则。主机让你基于对 IP 地址的引用来定义控制。
 
-* Tags reference groups of non-user devices (such as applications or servers). For example, you might have a tag that groups all servers in a particular data center.
-* Hosts reference groups of devices by IP address ranges (both on and beyond the tailnet). For example, you can use hosts to address applications with fixed IP addresses that you might be unable to modify.
+* 标签引用非用户设备的群组（例如应用或服务器）。例如，你可能有一个标签，把特定数据中心里的所有服务器归为一组。
+* 主机按 IP 地址范围引用设备群组（tailnet 内外皆可）。例如，你可以用主机来指代那些 IP 地址固定、可能无法修改的应用。
 
-### Tags
+### 标签
 
-> **Note:** Tags are available for [all plans](https://tailscale.com/pricing).
+> **注意：**标签功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `tags` section of the tailnet policy file lets you create [tags][docs-tags] that group non-human devices. You can then use the tags to select these devices in an ACL.
+tailnet 策略文件的 `tags` 部分让你创建把非人类设备分组的[标签][docs-tags]。然后你可以在 ACL 中使用这些标签来选择这些设备。
 
-> **Note:**
+> **注意：**
 >
-> You must [define the tag][docs-tags-defining-a-tag] in the [`tagOwners`][ar-tag-owners] section of the tailnet policy file before using it in an ACL. To tag a device, [authenticate as the tag on the device][docs-tags-tag-a-device].
+> 在 ACL 中使用标签之前，必须先在 tailnet 策略文件的 [`tagOwners`][ar-tag-owners] 部分[定义该标签][docs-tags-defining-a-tag]。要为设备打标签，请在设备上[以该标签身份进行认证][docs-tags-tag-a-device]。
 
-### Hosts
+### 主机
 
-> **Note:** Hosts are available for [all plans](https://tailscale.com/pricing).
+> **注意：**主机功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `hosts` section lets you define a human-friendly name for an IP address or CIDR range.
+`hosts` 部分让你为 IP 地址或 CIDR 范围定义一个人类友好的名称。
 
-The following example shows two host definitions: one for a single IP address and one for a CIDR range.
+以下示例展示了两个主机定义：一个针对单个 IP 地址，一个针对 CIDR 范围。
 
 ```json
 "hosts": {
@@ -357,36 +357,36 @@ The following example shows two host definitions: one for a single IP address an
 },
 ```
 
-> **Note:**
+> **注意：**
 >
-> The human-friendly hostname cannot include the character `@`.
+> 人类友好的主机名不能包含 `@` 字符。
 
-## Postures
+## 设备态势（postures）
 
-> **Note:** Postures are available for [all plans](https://tailscale.com/pricing).
+> **注意：**设备态势功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `postures` section lets you define a set of [device posture management][docs-device-posture] rules that a device must meet as part of a specific access rule.
+`postures` 部分让你定义一组[设备态势管理][docs-device-posture]规则，设备必须满足这些规则才能符合特定的访问规则。
 
-Each posture must start with the prefix `posture:` followed by a name, and is defined by a set of posture attributes and their allowed values.
+每条态势（posture）都必须以 `posture:` 前缀开头并跟一个名称，由一组态势属性及其允许的值定义。
 
-> **Note:**
+> **注意：**
 >
-> Individual postures can be defined in two ways: object syntax (recommended) and array syntax (legacy).
+> 单条态势可以用两种方式定义：对象语法（推荐）和数组语法（旧版）。
 >
-> The array-based syntax (a posture name mapped to a set of posture attribute rules) will continue to work and be supported indefinitely, **but it will not receive new features**.
+> 基于数组的语法（态势名映射到一组态势属性规则）将继续工作并被无限期支持，**但不会获得新特性**。
 >
-> New features, including [monitoring and alerts for failing postures][docs-device-posture-monitoring], are only available in the object-based syntax, and we recommend new and existing postures adopt it.
+> 新特性（包括[对未通过态势的监控与告警][docs-device-posture-monitoring]）仅在基于对象的语法中可用，我们建议新的和现有的态势都采用它。
 >
-> A single tailnet policy file may use both syntaxes within the same “postures” block for different postures.
+> 在同一个 tailnet 策略文件的同一个"postures"块中，可以对不同的态势混用两种语法。
 
-### Recommended syntax for postures
+### 推荐的态势语法
 
-The object-based syntax is recommended for device postures.
+设备态势推荐使用基于对象的语法。
 
-In the object-based syntax, each posture is a JSON object with an `assertions` array and an optional `onFailure` block.
+在基于对象的语法中，每条态势都是一个 JSON 对象，包含一个 `assertions` 数组和一个可选的 `onFailure` 块。
 
-The following example shows how to use `postures` to select macOS devices running `node` version 1.40 or later.
-Devices that are failing this posture will show a warning on their Tailscale client icon, and the warning message will be visible when users open the Tailscale app.
+以下示例展示如何使用 `postures` 选中运行 `node` 1.40 或更高版本的 macOS 设备。
+未通过该态势的设备会在其 Tailscale 客户端图标上显示警告，用户打开 Tailscale 应用时可以看到警告消息。
 
 ```json
 "postures": {
@@ -404,7 +404,7 @@ Devices that are failing this posture will show a warning on their Tailscale cli
 },
 ```
 
-The following example defines a simpler object-based posture with assertions only, which does not alert devices when they are failing the posture:
+以下示例定义了一条更简单的仅含断言（assertions）的基于对象的态势，设备未通过态势时不会收到告警：
 
 ```json
 "postures": {
@@ -420,33 +420,33 @@ The following example defines a simpler object-based posture with assertions onl
 
 #### `assertions`
 
-A list of posture conditions that the device must satisfy. Refer to [Device postures and attributes][docs-device-posture-device-posture-attributes] for a detailed explanation of the supported syntax.
+设备必须满足的态势条件列表。支持语法的详细说明请参阅[设备态势与属性][docs-device-posture-device-posture-attributes]。
 
 #### `onFailure`
 
-An optional block that defines how tailnet admins and users are notified when a device does not satisfy the posture's assertions. If omitted, the tailnet admin and user will not receive any alerts when a device is failing posture.
+一个可选的块，定义当设备不满足态势断言时如何通知 tailnet 管理员和用户。如果省略，设备未通过态势时管理员和用户不会收到任何告警。
 
-Refer to [device posture monitoring and alerts][docs-device-posture-monitoring] for more information about this feature.
+关于此功能的更多信息请参阅[设备态势监控与告警][docs-device-posture-monitoring]。
 
-The `onFailure` block supports the following fields:
+`onFailure` 块支持以下字段：
 
 ##### `showAlerts`
 
-A list of alert channels used to surface the failure to the user. For example, `warn-in-client` shows a warning banner in the Tailscale client.
+用于向用户呈现未通过情况的告警渠道列表。例如，`warn-in-client` 会在 Tailscale 客户端中显示一条警告横幅。
 
 ##### `endUserMessage`
 
-A message shown to the user whose device failed the posture check. Use it to give the user actionable instructions, for example how to update their device or who to contact for help.
+向未通过态势检查的设备的用户显示的消息。用它给用户提供可操作的指引，例如如何更新设备或向谁寻求帮助。
 
-### Legacy array-based syntax
+### 旧版数组语法
 
-> **Warning:**
+> **警告：**
 >
-> Postures written in the legacy array-based syntax will continue to work and be supported indefinitely, but will not receive new features.
+> 以旧版数组语法编写的态势将继续工作并被无限期支持，但不会获得新特性。
 >
-> New features, including [monitoring and alerts for failing postures][docs-device-posture-monitoring], are only available in the [object-based syntax][ar-object-syntax], and we recommend new and existing postures adopt it.
+> 新特性（包括[对未通过态势的监控与告警][docs-device-posture-monitoring]）仅在[基于对象的语法][ar-object-syntax]中可用，我们建议新的和现有的态势都采用它。
 
-The following example shows how to use `postures` to select macOS devices running `node` version 1.40 or later.
+以下示例展示如何使用 `postures` 选中运行 `node` 1.40 或更高版本的 macOS 设备。
 
 ```json
 "postures": {
@@ -458,19 +458,19 @@ The following example shows how to use `postures` to select macOS devices runnin
 },
 ```
 
-Each posture must start with the prefix posture: followed by a name, a set of posture attributes, and their allowed values, given as a list of strings.
+每条态势都必须以 posture: 前缀开头并跟一个名称、一组态势属性及其允许的值，以字符串列表的形式给出。
 
-## Tag owners
+## 标签所有者
 
-> **Note:** Tags are available for [all plans](https://tailscale.com/pricing).
+> **注意：**标签功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `tagOwners` section of the tailnet policy file defines the tags assignable to devices and the list of users allowed to assign each tag.
+tailnet 策略文件的 `tagOwners` 部分定义了可分配给设备的标签，以及允许分配每个标签的用户列表。
 
-The following example shows a `tagOwners` definition that:
+以下示例展示了一个 `tagOwners` 定义，它：
 
-* Sets the `engineering` group as the owner of the `webserver` tag.
-* Sets `president@example.com` and the `security-admins` group as owners of the `secure-server` tag.
-* Sets the `autogroup:member` autogroup as the owner of the `corp` tag.
+* 把 `engineering` 群组设为 `webserver` 标签的所有者。
+* 把 `president@example.com` 和 `security-admins` 群组设为 `secure-server` 标签的所有者。
+* 把 `autogroup:member` autogroup 设为 `corp` 标签的所有者。
 
 ```json
 "tagOwners": {
@@ -487,9 +487,9 @@ The following example shows a `tagOwners` definition that:
 }
 ```
 
-Every tag name must start with the prefix `tag:`. A tag owner can be a user's full login email address (as defined in the [users section][ar-reference-users] above), a [group name][ar-groups], an [autogroup][ar-autogroups], or another tag.
+每个标签名都必须以 `tag:` 前缀开头。标签所有者可以是用户的完整登录电子邮件地址（如上文[用户部分][ar-reference-users]所述）、[群组名][ar-groups]、[autogroup][ar-autogroups]或另一个标签。
 
-A shorthand notation, `[]`, is available for `autogroup:admin`. That is, the following are equivalent:
+可以使用简写 `[]` 来表示 `autogroup:admin`。也就是说，以下两种写法等价：
 
 ```json
 "tag:monitoring": [
@@ -501,27 +501,27 @@ A shorthand notation, `[]`, is available for `autogroup:admin`. That is, the fol
 "tag:monitoring": [],
 ```
 
-The autogroups `autogroup:admin` and `autogroup:network-admin` can assign all tags, so `[]` implicitly lets only `autogroup:admin` and `autogroup:network-admin` assign tags.
+autogroup `autogroup:admin` 和 `autogroup:network-admin` 可以分配所有标签，因此 `[]` 隐含表示只有 `autogroup:admin` 和 `autogroup:network-admin` 可以分配标签。
 
-## Auto approvers
+## 自动批准（autoApprovers）
 
-> **Note:** Auto approvers are available for [all plans](https://tailscale.com/pricing).
+> **注意：**自动批准功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `autoApprovers` section of the tailnet policy file defines the list of users who can perform specific actions without further approval from the admin console. Some actions in Tailscale require double opt-in: an [Admin](/docs/reference/user-roles) must enable them on the device running Tailscale and in the Tailscale admin console. These actions include:
+tailnet 策略文件的 `autoApprovers` 部分定义了无需在管理控制台进一步批准即可执行特定操作的用户列表。Tailscale 中的某些操作需要双重确认：[管理员](/docs/reference/user-roles)既要在运行 Tailscale 的设备上启用，也要在 Tailscale 管理控制台中启用。这些操作包括：
 
-* [Advertising a specified set of routes][docs-subnets-subnet-router] as a subnet router.
-* [Advertising an exit node][docs-exit-nodes-advertise-exit-node].
+* 作为子网路由器[通告一组指定路由][docs-subnets-subnet-router]。
+* [通告出口节点][docs-exit-nodes-advertise-exit-node]。
 
-For routes, this also permits the auto approvers to advertise a subnet of the specified routes.
+对于路由，这也允许自动批准者通告指定路由的子集路由。
 
-Tailscale stops advertising a route if one of the following occurs:
+出现以下情况之一时，Tailscale 会停止通告路由：
 
-* The device is re-authenticated by a different user (who cannot advertise the route or exit node).
-* The user who advertised the route is suspended or deleted.
+* 该设备被另一个（无法通告该路由或出口节点的）用户重新认证。
+* 通告该路由的用户被暂停或删除。
 
-To avoid a scenario where Tailscale stops advertising a route, consider using a [tag][docs-tags] as an auto approver.
+为了避免 Tailscale 停止通告路由的情况，可以考虑使用[标签][docs-tags]作为自动批准者。
 
-The following example shows an `autoApprovers` definition that automatically approves the `192.0.2.0/24` routes for `alice@example.com`, members of the `engineering` group, and devices tagged with `foo`. It also automatically approves an exit node advertisement for devices tagged with `bar`.
+以下示例展示了一个 `autoApprovers` 定义，它为 `alice@example.com`、`engineering` 群组成员以及打了 `foo` 标签的设备自动批准 `192.0.2.0/24` 路由，同时为打了 `bar` 标签的设备自动批准出口节点通告。
 
 ```json
 "autoApprovers": {
@@ -532,22 +532,22 @@ The following example shows an `autoApprovers` definition that automatically app
 }
 ```
 
-The auto approver of a route or exit node can be a user's full login email address (as defined in the [users section][ar-reference-users] above), a [group name][ar-groups], an [autogroup][ar-autogroups] or a tag.
+路由或出口节点的自动批准者可以是用户的完整登录电子邮件地址（如上文[用户部分][ar-reference-users]所述）、[群组名][ar-groups]、[autogroup][ar-autogroups]或标签。
 
-> **Warning:**
+> **警告：**
 >
-> Auto-approver policies only apply when Tailscale first receives a subnet route advertisement. Updating the tailnet policy file to add or modify auto-approvers does not retroactively approve existing unapproved routes. To trigger auto-approval for an existing unapproved route, remove the route from the subnet router and advertise it again.
+> 自动批准策略只在 Tailscale 首次收到子网路由通告时生效。更新 tailnet 策略文件以添加或修改自动批准者，不会追溯批准现有的未批准路由。要为现有的未批准路由触发自动批准，请从子网路由器中移除该路由并重新通告。
 
 ## Tailscale SSH
 
-> **Note:** Tailscale SSH tailnet policies are available for [all plans](https://tailscale.com/pricing).
+> **注意：**Tailscale SSH tailnet 策略适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `ssh` section of the tailnet policy file defines lists of users and devices that can use [Tailscale SSH][docs-tailscale-ssh] (and the SSH users). To allow a connection, the tailnet policy file must contain rules permitting both network access and SSH access:
+tailnet 策略文件的 `ssh` 部分定义了可以使用 [Tailscale SSH][docs-tailscale-ssh] 的用户和设备列表（以及 SSH 用户）。要允许一条连接，tailnet 策略文件必须同时包含允许网络访问和 SSH 访问的规则：
 
-1. An access rule to allow connections from the source to the destination on port 22.
-2. An SSH access rule to allow connections from the source to the destination and the given SSH users. Tailscale SSH uses this to distribute keys to authenticating SSH connections.
+1. 一条访问规则，允许从源到目标在 22 端口的连接。
+2. 一条 SSH 访问规则，允许从源到目标、以给定 SSH 用户的连接。Tailscale SSH 用它来为通过认证的 SSH 连接分发密钥。
 
-The following example shows an `ssh` definition that requires a list of sources, destinations, and SSH users to re-authenticate every 20 hours.
+以下示例展示了一个 `ssh` 定义，要求一组源、目标和 SSH 用户每 20 小时重新认证一次。
 
 ```json
 {
@@ -563,59 +563,59 @@ The following example shows an `ssh` definition that requires a list of sources,
 
 ### `action`
 
-Specifies whether to accept the connection or to perform additional checks on it.
+指定是接受连接，还是对连接执行额外检查。
 
-* `accept` accepts connections from users already authenticated in the tailnet.
-* `check` requires users to periodically reauthenticate according to the `checkPeriod`.
+* `accept` 接受已在 tailnet 中完成认证的用户的连接。
+* `check` 要求用户按照 `checkPeriod` 定期重新认证。
 
 ### `src`
 
-Specifies the source (where a connection originates from). You can only define an access rule's destination (`dst`) as yourself, a group, a tag, or an autogroup. You cannot use `*`, other users, IP addresses, or hostnames.
+指定来源（连接的发起方）。访问规则的目标（`dst`）只能定义为你自己、某个群组、某个标签或某个 autogroup。不能使用 `*`、其他用户、IP 地址或主机名。
 
-It's impossible to guarantee the ownership of an IP address or hostname when you create an access rule. As a security measure, Tailscale prevents using users, IP addresses, or hostnames in the `dst` field of access rules to protect against scenarios in which one user can unintentionally access a device that doesn't belong to them. Tailscale also prevents any `src` and `dst` combinations that allow multiple users to access a single user's device.
+创建访问规则时，无法保证 IP 地址或主机名的归属。作为安全措施，Tailscale 禁止在访问规则的 `dst` 字段中使用用户、IP 地址或主机名，以防止某个用户无意间访问不属于他的设备。Tailscale 还禁止任何允许多个用户访问单个用户设备的 `src` 和 `dst` 组合。
 
-> **Note:**
+> **注意：**
 >
-> Granting access to `autogroup:member` also grants access to [external invited users][docs-invite-any-user] if the destination device is [shared][docs-sharing] with them, even if they have no devices in your tailnet.
+> 向 `autogroup:member` 授予访问权时，如果目标设备与他们[共享][docs-sharing]，即使他们在你的 tailnet 中没有任何设备，也会同时向[外部受邀用户][docs-invite-any-user]授予访问权。
 
 ### `dst`
 
-Specifies the destination (where the connection goes). The destination can be a tag, `autogroup:self` (if the source contains only users or groups), or a single named user (if the source contains only the same named user). The reason for these limitations is Tailscale does not let a user start a Tailscale SSH session on a user-owned device, unless the source is a device owned by the same user.
+指定目标（连接的去向）。目标可以是标签、`autogroup:self`（当源只包含用户或群组时），或单个具名用户（当源只包含同一具名用户时）。存在这些限制是因为 Tailscale 不允许用户在用户自有设备上发起 Tailscale SSH 会话，除非源是同一用户拥有的设备。
 
-You cannot specify a port for the destination because the only allowed port is `22`. You cannot specify `*` as the destination.
+不能为目标指定端口，因为唯一允许的端口是 `22`。不能把 `*` 指定为目标。
 
 ### `users`
 
-> **Note:** This policy is available for [all plans](https://tailscale.com/pricing).
+> **注意：**此策略适用于[所有套餐](https://tailscale.com/pricing)。
 
-Specifies the set of allowed usernames on the host. Tailscale only uses user accounts that already exist on the host.
+指定主机上允许的用户名集合。Tailscale 只使用主机上已经存在的用户账户。
 
-* Specify `autogroup:nonroot` to allow any user that is not `root`.
-* Specify `localpart:*@<domain>` to allow the user on the host whose name matches the [local-part][xt-rfc-2822-3.4.1] of the user's login, if and only if the user's login email is in `<domain>`. Tailscale does not do any special processing on the local-part. For example, if the login is `dave+sshuser@example.com`, Tailscale will map this to the SSH user `dave+sshuser`. This method is available only on the [Premium and Enterprise plans][co-pricing].
-* If no user is specified, Tailscale will use the local host's user. That is, if the user is logged in as `alice` locally, then connects with SSH to another device, Tailscale SSH will try to log in as user `alice`.
+* 指定 `autogroup:nonroot` 以允许除 `root` 之外的任何用户。
+* 指定 `localpart:*@<domain>`，当且仅当用户的登录电子邮件属于 `<domain>` 时，允许主机上名称与用户登录名[本地部分（local-part）][xt-rfc-2822-3.4.1]匹配的用户。Tailscale 不会对本地部分做任何特殊处理。例如，如果登录名是 `dave+sshuser@example.com`，Tailscale 会把它映射为 SSH 用户 `dave+sshuser`。此方法仅在 [Premium 和 Enterprise 套餐][co-pricing]可用。
+* 如果未指定用户，Tailscale 将使用本地主机上的用户。也就是说，如果用户本地以 `alice` 登录，然后通过 SSH 连接到另一台设备，Tailscale SSH 会尝试以用户 `alice` 登录。
 
 ### `checkPeriod`
 
-> **Note:** This policy is available for [only on the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：**此策略仅在 [Premium 和 Enterprise 套餐](https://tailscale.com/pricing)可用。
 
-When `action` is `check`, `checkPeriod` specifies the time period for which to allow a connection before requiring a check. You can specify the time in minutes or hours. The time must be at least one minute and at most 168 hours (one week).
+当 `action` 为 `check` 时，`checkPeriod` 指定在要求重新检查之前允许连接存续的时间段。你可以以分钟或小时为单位指定时间。时间必须至少一分钟，至多 168 小时（一周）。
 
-* The default check period is 12 hours.
-* You can also specify `always` to require a check on every connection. Using `always` might cause unexpected behavior with automation tools that open many SSH connections in quick succession (such as [Ansible][xt-ansible]).
+* 默认检查周期为 12 小时。
+* 你也可以指定 `always`，要求每次连接都进行检查。使用 `always` 可能会导致快速连续打开大量 SSH 连接的自动化工具（例如 [Ansible][xt-ansible]）出现意外行为。
 
 ### `acceptEnv`
 
-> **Note:**
+> **注意：**
 >
-> The host must be running Tailscale v1.76.0 or later to use `acceptEnv`.
+> 主机必须运行 Tailscale v1.76.0 或更高版本才能使用 `acceptEnv`。
 
-Specifies the set of allowlisted environment variable names that clients can send to the host using [`SendEnv`][xt-ssh-send-env] or [`SetEnv`][xt-ssh-set-env].
+指定允许客户端通过 [`SendEnv`][xt-ssh-send-env] 或 [`SetEnv`][xt-ssh-set-env] 发送到主机的环境变量名白名单。
 
-Values can contain `*` and `?` wildcard characters. `*` matches zero or more characters and `?` matches a single character.
+值可以包含 `*` 和 `?` 通配符。`*` 匹配零个或多个字符，`?` 匹配单个字符。
 
-#### `acceptEnv` examples
+#### `acceptEnv` 示例
 
-| `acceptEnv` | Permitted                         | Rejected                  |
+| `acceptEnv` | 允许通过                          | 拒绝                      |
 | ----------- | --------------------------------- | ------------------------- |
 | `*`         | `FOO_A` `FOO_B` `FOO_OTHER` `BAZ` |                           |
 | `FOO_*`     | `FOO_A` `FOO_B` `FOO_OTHER`       | `BAZ`                     |
@@ -624,29 +624,29 @@ Values can contain `*` and `?` wildcard characters. `*` matches zero or more cha
 
 ### `srcPosture`
 
-The `srcPosture` field is an array of device posture conditions you can use to further restrict the network source (`src`). For example, you can use `srcPosture` to restrict access to only devices running a specific version of the Tailscale client.
+`srcPosture` 字段是一个设备态势条件数组，可用于进一步限制网络来源（`src`）。例如，你可以用 `srcPosture` 把访问限制为只允许运行特定版本 Tailscale 客户端的设备。
 
-### Order of evaluation
+### 评估顺序
 
-Tailscale evaluates SSH access rules using the most restrictive policies first:
+Tailscale 按从最严格到最宽松的顺序评估 SSH 访问规则：
 
-* Check policies
-* Accept policies
+* 先检查 check 策略
+* 再检查 accept 策略
 
-For example, if you have an access rule allowing the user `alice@example.com` to access a resource with an `accept` rule, and a rule allowing `group:devops` which `alice@example.com` belongs to, to access a resource with a `check` rule, then the `check` rule applies.
+例如，如果你有一条 `accept` 规则允许用户 `alice@example.com` 访问某个资源，还有一条规则允许 `alice@example.com` 所属的 `group:devops` 以 `check` 方式访问该资源，那么将适用 `check` 规则。
 
-> **Note:**
+> **注意：**
 >
-> Tailnets that have not modified their tailnet policy file have a [default SSH policy][docs-tailscale-ssh-ssh-access-rules] allowing users to access devices they own using check mode.
+> 未修改过 tailnet 策略文件的 tailnet 有一条[默认 SSH 策略][docs-tailscale-ssh-ssh-access-rules]，允许用户以检查模式访问自己拥有的设备。
 
-The only types of connections that are allowed are:
+允许的连接类型只有：
 
-* From a user to their own devices (as any user, including `root`).
-* From a user to a [tagged][docs-tags] device (as any user, including `root`).
-* From a tagged device to another tagged device (for any tags). An SSH access rule from a tagged device cannot be in [check mode][docs-tailscale-ssh-check-mode].
-* From a user to a tagged device that has been [shared][docs-sharing] with them, as long as the destination host has Tailscale configured with SSH and the destination's ACL lets the user connect over SSH.
+* 从用户到自己拥有的设备（以任意用户身份，包括 `root`）。
+* 从用户到[带标签][docs-tags]的设备（以任意用户身份，包括 `root`）。
+* 从带标签的设备到另一台带标签的设备（任意标签）。来自带标签设备的 SSH 访问规则不能处于[检查模式][docs-tailscale-ssh-check-mode]。
+* 从用户到与其[共享][docs-sharing]的带标签设备，前提是目标主机配置了 Tailscale SSH，且目标的 ACL 允许该用户通过 SSH 连接。
 
-That is, the broadest policy allowed would be:
+也就是说，允许的最宽泛策略是：
 
 ```json
 {
@@ -680,7 +680,7 @@ That is, the broadest policy allowed would be:
 }
 ```
 
-To allow a user to only SSH to their own devices (as non-`root`):
+要允许用户只 SSH 到自己拥有的设备（以非 `root` 身份）：
 
 ```json
 {
@@ -702,7 +702,7 @@ To allow a user to only SSH to their own devices (as non-`root`):
 }
 ```
 
-To allow `group:sre` to access devices in the production environment tagged `tag:prod`:
+要允许 `group:sre` 访问生产环境中打了 `tag:prod` 标签的设备：
 
 ```json
 {
@@ -731,7 +731,7 @@ To allow `group:sre` to access devices in the production environment tagged `tag
 }
 ```
 
-To allow Alice to access devices in the development environment tagged `tag:dev` that have been [shared][docs-sharing] with them:
+要允许 Alice 访问开发环境中打了 `tag:dev` 标签、且与她[共享][docs-sharing]的设备：
 
 ```json
 {
@@ -746,9 +746,9 @@ To allow Alice to access devices in the development environment tagged `tag:dev`
 }
 ```
 
-It might be useful to match host users with login emails. For example, you can allow `dave@example.com` to authenticate as the host user `dave`.
+把主机用户与登录邮箱匹配起来可能很有用。例如，你可以允许 `dave@example.com` 以主机用户 `dave` 的身份进行认证。
 
-To allow any tailnet member in the login domain `example.com` to access devices in the production environment that are tagged `tag:prod`, as a user that matches their login email local-part:
+要允许登录域名 `example.com` 中的任何 tailnet 成员，以其登录邮箱本地部分匹配的用户身份访问生产环境中打了 `tag:prod` 标签的设备：
 
 ```json
 {
@@ -770,13 +770,13 @@ To allow any tailnet member in the login domain `example.com` to access devices 
 }
 ```
 
-## Node attributes
+## 节点属性
 
-The `nodeAttrs` section of the tailnet policy file defines additional attributes that apply to specific devices in your tailnet.
+tailnet 策略文件的 `nodeAttrs` 部分定义应用于 tailnet 中特定设备的附加属性。
 
 \[Missing snippet: node\_attrs\_vs\_app\_caps\_note.mdx]
 
-One way you could use node attributes would be to set different [NextDNS configurations][docs-nextdns] for different devices in your tailnet. The following example shows a `nodeAttrs` definition that targets `my-kid@my-home.com` and `tag:server` with the attributes `nextdns:abc123` and `nextdns:no-device-info`.
+节点属性的一个用途是为 tailnet 中的不同设备设置不同的 [NextDNS 配置][docs-nextdns]。以下示例展示了一个 `nodeAttrs` 定义，它面向 `my-kid@my-home.com` 和 `tag:server`，应用属性 `nextdns:abc123` 和 `nextdns:no-device-info`。
 
 ```json
 "nodeAttrs": [
@@ -792,18 +792,18 @@ One way you could use node attributes would be to set different [NextDNS configu
 
 ### `target`
 
-Specifies which nodes (devices) the attributes apply to. You can select the devices using a tag (`tag:server`), user (`alice@example.com`), group (`group:kids`), or `*`.
+指定这些属性应用于哪些节点（设备）。你可以用标签（`tag:server`）、用户（`alice@example.com`）、群组（`group:kids`）或 `*` 来选择设备。
 
 ### `attr`
 
-Specifies which attributes apply to those nodes (devices).
+指定应用于这些节点（设备）的属性。
 
-For example:
+例如：
 
-* The attribute `nextdns:abc123` specifics the NextDNS configuration ID `abc123`. If this is used, the attribute overrides the global NextDNS configuration.
-* The attribute `nextdns:no-device-info` disables sending device metadata to NextDNS.
+* 属性 `nextdns:abc123` 指定 NextDNS 配置 ID `abc123`。使用时，该属性会覆盖全局 NextDNS 配置。
+* 属性 `nextdns:no-device-info` 禁止向 NextDNS 发送设备元数据。
 
-The following example lets members of the tailnet use [Tailscale Funnel][docs-funnel] on their nodes:
+以下示例让 tailnet 成员可以在其节点上使用 [Tailscale Funnel][docs-funnel]：
 
 ```json
 "nodeAttrs": [
@@ -814,7 +814,7 @@ The following example lets members of the tailnet use [Tailscale Funnel][docs-fu
 ],
 ```
 
-You can use a `nodeAttrs` policy to enable the `randomize-client-port` setting for specific devices instead of using a [network-wide policy setting][ar-randomizeclientport].
+你可以使用 `nodeAttrs` 策略为特定设备启用 `randomize-client-port` 设置，而不必使用[全网策略设置][ar-randomizeclientport]。
 
 ```json
 "nodeAttrs": [
@@ -827,9 +827,9 @@ You can use a `nodeAttrs` policy to enable the `randomize-client-port` setting f
 
 ### `app`
 
-Specifies which application layer capabilities apply to these nodes (devices).
+指定应用于这些节点（设备）的应用层能力。
 
-The following example node attribute definition configures the `example-connector` tag for the `example.com` domains.
+以下示例节点属性定义为 `example.com` 域配置 `example-connector` 标签。
 
 ```json
 {
@@ -847,21 +847,21 @@ The following example node attribute definition configures the `example-connecto
 }
 ```
 
-The specific application defines the names of capabilities in the format `<domainName>/<capabilityName>`. The example uses `tailscale.com/app-connectors`.
+具体的应用以 `<domainName>/<capabilityName>` 的格式定义能力名称。该示例使用的是 `tailscale.com/app-connectors`。
 
-The value associated with each capability is an array of JSON objects, each containing capability-specific configuration options.
+每个能力关联的值是一个 JSON 对象数组，每个对象包含该能力特定的配置选项。
 
-Refer to the [How app connectors work][docs-app-connectors] and [Best practices for using app connectors][docs-app-connectors-best-practices] topics.
+请参阅[应用连接器的工作方式][docs-app-connectors]和[使用应用连接器的最佳实践][docs-app-connectors-best-practices]主题。
 
-## Tests
+## 测试（tests）
 
-> **Note:** Tests are available for [all plans](https://tailscale.com/pricing).
+> **注意：**测试功能适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `tests` section lets you write assertions about your access control policies (grants and ACLs) that run as checks each time the tailnet policy file changes. If an assertion fails, Tailscale rejects the updated tailnet policy file with an error. The error message indicates the failing tests.
+`tests` 部分让你对访问控制策略（授权和 ACL）编写断言，这些断言会在每次 tailnet 策略文件变更时作为检查运行。如果某个断言失败，Tailscale 会拒绝更新后的 tailnet 策略文件并报错，错误消息会指出失败的测试。
 
-Tests let you ensure you don't accidentally revoke important permissions or expose a critical system.
+通过测试可以确保你不会意外撤销重要权限或暴露关键系统。
 
-A `tests` definition looks like this:
+`tests` 定义如下所示：
 
 ```json
 "tests": [
@@ -879,17 +879,17 @@ A `tests` definition looks like this:
 
 ### `src`
 
-Specifies the user identity to test, which can be a [user's email address][ar-reference-users], a [group][ar-groups], a [tag][docs-tags], or a [host][ar-hosts] that maps to an IP address. The test case runs from the perspective of a device authenticated with the provided identity.
+指定要测试的用户身份，可以是[用户的电子邮件地址][ar-reference-users]、[群组][ar-groups]、[标签][docs-tags]或映射到 IP 地址的[主机][ar-hosts]。测试用例从以该身份认证的设备的角度运行。
 
 ### `srcPostureAttrs`
 
-Specifies the [device posture attributes][docs-device-posture] (as key-value pairs) to use when evaluating posture conditions in access rules. You only need to use this field if the access rules contain [device posture conditions][docs-device-posture-device-posture-conditions].
+指定评估访问规则中的态势条件时使用的[设备态势属性][docs-device-posture]（以键值对形式）。只有当访问规则包含[设备态势条件][docs-device-posture-device-posture-conditions]时才需要使用此字段。
 
 ### `proto`
 
-Specifies the IP protocol for `accept` and `deny` rules, similar to the `proto` field in [ACL rules][ar-acls]. When omitted, the test checks for either TCP or UDP access.
+指定 `accept` 和 `deny` 规则的 IP 协议，类似于 [ACL 规则][ar-acls]中的 `proto` 字段。省略时，测试会检查 TCP 或 UDP 访问。
 
-When testing Internet Control Message Protocol (ICMP) access, set `"proto": "icmp"` and use port `0` in your destinations since ICMP doesn't use ports. The following example tests that user `alice@example.com` can `ping` devices tagged with `tag:production`:
+测试互联网控制报文协议（ICMP）访问时，设置 `"proto": "icmp"` 并在目标中使用端口 `0`，因为 ICMP 不使用端口。以下示例测试用户 `alice@example.com` 可以 `ping` 打了 `tag:production` 标签的设备：
 
 ```json
 "tests": [
@@ -901,42 +901,42 @@ When testing Internet Control Message Protocol (ICMP) access, set `"proto": "icm
 ],
 ```
 
-### `accept` and `deny` destinations
+### `accept` 和 `deny` 目标
 
-Specifies destinations to accept or deny. Each destination in the list is of the form `host:port` where `port` is a single numeric port and `host` is one of the following:
+指定要接受或拒绝的目标。列表中的每个目标都是 `host:port` 形式，其中 `port` 是单个数字端口，`host` 是以下之一：
 
-| **Type**                           | **Example**                  | **Description**                                                                                                    |
+| **类型**                           | **示例**                     | **描述**                                                                                                           |
 | ---------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Tailscale IP                       | `100.100.123.123`            | Includes the device with the provided Tailscale IP address. IPv6 addresses must follow the format `[1:2:3::4]:80`. |
-| [Host][ar-hosts]                   | `my-host`                    | Includes the Tailscale IP address in the `hosts` section.                                                          |
-| User                               | `shreya@example.com`         | Includes the Tailscale IP addresses of devices signed in as the provided user.                                     |
-| [Group][ar-groups]                 | `group:security@example.com` | Includes the Tailscale IP addresses of devices signed in as a representative member of the provided group.         |
-| [Tag][docs-tags]                   | `tag:production`             | Includes the Tailscale IP addresses of devices tagged with the provided tag.                                       |
-| [Service][docs-tailscale-services] | `svc:my-service`             | Includes the Tailscale Virtual IP addresses associated with the provided Service.                                  |
+| Tailscale IP                       | `100.100.123.123`            | 包含拥有该 Tailscale IP 地址的设备。IPv6 地址必须遵循 `[1:2:3::4]:80` 格式。                                       |
+| [主机][ar-hosts]                   | `my-host`                    | 包含 `hosts` 部分中的 Tailscale IP 地址。                                                                          |
+| 用户                               | `shreya@example.com`         | 包含以该用户身份登录的设备的 Tailscale IP 地址。                                                                   |
+| [群组][ar-groups]                  | `group:security@example.com` | 包含以该群组代表性成员身份登录的设备的 Tailscale IP 地址。                                                         |
+| [标签][docs-tags]                  | `tag:production`             | 包含打了该标签的设备的 Tailscale IP 地址。                                                                         |
+| [服务][docs-tailscale-services]    | `svc:my-service`             | 包含与该服务关联的 Tailscale 虚拟 IP 地址。                                                                        |
 
-> **Warning:**
+> **警告：**
 >
-> You cannot use CIDR (subnet) notation to test subnet ranges. For example, `192.168.1.0/24` is not valid. Instead, you must specify the individual IP addresses or hostnames.
+> 不能使用 CIDR（子网）表示法来测试子网范围。例如，`192.168.1.0/24` 无效。你必须改为逐个指定 IP 地址或主机名。
 
-Sources in `src` and destinations in `accept` and `deny` must refer to specific entities and do not support `*` wildcards. For example, an `accept` destination cannot be `tags:*`.
+`src` 中的来源以及 `accept` 和 `deny` 中的目标必须指向具体实体，不支持 `*` 通配符。例如，`accept` 目标不能是 `tags:*`。
 
-> **Note:**
+> **注意：**
 >
-> The legacy `allow` (instead of `accept`) continues to work in ACLs. However, it is best practice to use `accept`.
+> 旧版的 `allow`（而非 `accept`）在 ACL 中仍然可用。不过，最佳实践是使用 `accept`。
 
-## SSH Tests
+## SSH 测试
 
-> **Note:** SSH tests are available for [all plans](https://tailscale.com/pricing).
+> **注意：**SSH 测试适用于[所有套餐](https://tailscale.com/pricing)。
 
-The `sshTests` section lets you write assertions about your [Tailscale SSH][docs-tailscale-ssh] access rules. SSH tests function similarly to ACL [tests][ar-tests].
+`sshTests` 部分让你对 [Tailscale SSH][docs-tailscale-ssh] 访问规则编写断言。SSH 测试的工作方式与 ACL [测试][ar-tests]类似。
 
-SSH tests run when the tailnet policy file changes. If an assertion fails, Tailscale rejects the updated tailnet policy file with an error detailing the failing tests.
+SSH 测试在 tailnet 策略文件变更时运行。如果某个断言失败，Tailscale 会拒绝更新后的 tailnet 策略文件并报错，错误详情会指出失败的测试。
 
-The following example shows a `sshTests` definition that performs the following tests on connections from `dave@example.com` to `example-host-1`:
+以下示例展示了一个 `sshTests` 定义，对从 `dave@example.com` 到 `example-host-1` 的连接执行以下测试：
 
-* If the user is `dave`, it accepts the connection.
-* If the user is `admin`, it checks the connection.
-* If the user is `root`, it denies the connection.
+* 如果 SSH 用户是 `dave`，接受该连接。
+* 如果 SSH 用户是 `admin`，检查该连接。
+* 如果 SSH 用户是 `root`，拒绝该连接。
 
 ```json
 "sshTests": [
@@ -955,110 +955,110 @@ The following example shows a `sshTests` definition that performs the following 
 
 ### `src`
 
-Specifies the user identity that's attempting to connect as SSH, which can be a [user's email address][ar-reference-users], a [group][ar-groups], a [tag][docs-tags], or a [host][ar-hosts] that maps to an IP address. The test case runs from the perspective of a device authenticated with the provided identity.
+指定尝试以 SSH 连接的用户身份，可以是[用户的电子邮件地址][ar-reference-users]、[群组][ar-groups]、[标签][docs-tags]或映射到 IP 地址的[主机][ar-hosts]。测试用例从以该身份认证的设备的角度运行。
 
 ### `srcPostureAttrs`
 
-Specifies the [device posture attributes][docs-device-posture] (as key-value pairs) to use when evaluating posture conditions in access rules. You only need to use this field if the access rules contain [device posture conditions][docs-device-posture-device-posture-conditions].
+指定评估访问规则中的态势条件时使用的[设备态势属性][docs-device-posture]（以键值对形式）。只有当访问规则包含[设备态势条件][docs-device-posture-device-posture-conditions]时才需要使用此字段。
 
 ### `dst`
 
-Specifies one or more destinations to which the `src` user is connecting, which can be a [user's email address][ar-reference-users], a [group][ar-groups], a [tag][docs-tags], or a [host][ar-hosts] that maps to an IP address.
+指定 `src` 用户连接到的一个或多个目标，可以是[用户的电子邮件地址][ar-reference-users]、[群组][ar-groups]、[标签][docs-tags]或映射到 IP 地址的[主机][ar-hosts]。
 
 ### `accept`
 
-Specifies zero, one, or more usernames to disallow on the `dst` host without requiring an additional check. Refer to [action `accept`][ar-action-1].
+指定零个、一个或多个用户名，允许他们在 `dst` 主机上登录且无需额外检查。请参阅 [`accept` 动作][ar-action-1]。
 
 ### `check`
 
-Specifies zero, one, or more usernames to disallow on the `dst` host if the `src` user passes an additional check. Refer to [action `check`][ar-action-1].
+指定零个、一个或多个用户名，在 `src` 用户通过额外检查后允许他们在 `dst` 主机上登录。请参阅 [`check` 动作][ar-action-1]。
 
 ### `deny`
 
-Specifies zero, one, or more usernames to disallow on the `dst` host (under any circumstances).
+指定零个、一个或多个用户名，（在任何情况下都）不允许他们在 `dst` 主机上登录。
 
-## IP sets
+## IP 集
 
-An IP set is a way to manage groups of IP addresses. It can encapsulate a collection of IP addresses, CIDRs, hosts, autogroups, and other IP sets. The primary benefit of IP sets is that they let you group multiple network parts into a single collection, enabling you to apply access control policies to the collection rather than the individual IP addresses, hosts, or subnets.
+IP 集是一种管理 IP 地址群组的方式。它可以封装一组 IP 地址、CIDR、主机、autogroup 和其他 IP 集。IP 集的主要好处是让你可以把多个网络部分归入一个集合，从而对整个集合（而非单个 IP 地址、主机或子网）应用访问控制策略。
 
-Refer to the [IP sets documentation][docs-ipsets].
+请参阅 [IP 集文档][docs-ipsets]。
 
-## Network policy options
+## 网络策略选项
 
-> **Note:** Network policy options are available for [all plans](https://tailscale.com/pricing).
+> **注意：**网络策略选项适用于[所有套餐](https://tailscale.com/pricing)。
 
-In addition to access rules, the tailnet policy file includes a few network-wide policy settings for specialized purposes. Most networks should never need to specify these.
+除了访问规则，tailnet 策略文件还包含一些用于特定目的的全网策略设置。大多数网络永远不需要指定这些。
 
 ### `derpMap`
 
-The `derpMap` section lets you add [custom DERP servers][docs-custom-derp-servers] to your network, which your devices will use as needed to relay traffic. You can also use this section to disable using Tailscale-provided DERP servers. For example, you might want to disable tailnet-provided DERP servers to meet corporate compliance requirements. Refer to [running custom DERP servers][docs-custom-derp-servers] for more information.
+`derpMap` 部分让你向网络添加[自定义 DERP 服务器][docs-custom-derp-servers]，设备会按需使用它们来中继流量。你也可以用这部分禁用 Tailscale 提供的 DERP 服务器。例如，你可能想禁用 tailnet 提供的 DERP 服务器以满足公司合规要求。更多信息请参阅[运行自定义 DERP 服务器][docs-custom-derp-servers]。
 
 ### `disableIPv4`
 
-> **Note:**
+> **注意：**
 >
-> Instead of the `disableIPv4` field, it is recommended to use the `disable-ipv4` node attribute as described in [CGNAT conflicts][docs-troubleshooting-cgnat-conflicts].
+> 建议不要使用 `disableIPv4` 字段，而是按照 [CGNAT 冲突][docs-troubleshooting-cgnat-conflicts]中的说明使用 `disable-ipv4` 节点属性。
 
-The `disableIPv4` field (if set to `true`) stops assigning Tailscale IPv4 addresses to your devices. When IPv4 is disabled, all devices in your network receive exclusively IPv6 Tailscale addresses. Devices that do not support IPv6 (for example, systems that have IPv6 disabled in the operating system) will be unreachable. This option is intended for users with a pre-existing conflicting use of the `100.64.0.0/10` carrier-grade NAT address range.
+`disableIPv4` 字段（设为 `true` 时）会停止为你的设备分配 Tailscale IPv4 地址。禁用 IPv4 后，网络中的所有设备只接收 IPv6 Tailscale 地址。不支持 IPv6 的设备（例如在操作系统中禁用了 IPv6 的系统）将不可达。此选项面向已经在 `100.64.0.0/10` 运营商级 NAT 地址段上有既存冲突用途的用户。
 
 ### `OneCGNATRoute`
 
-The `OneCGNATRoute` field controls the routes that Tailscale clients generate.
+`OneCGNATRoute` 字段控制 Tailscale 客户端生成的路由。
 
-Tailscale clients can have either:
+Tailscale 客户端可以有两种选择：
 
-* One large `100.64/10` route to avoid churn in the routing table as devices go online and offline. (The churn is [disruptive][xt-chromium-issue-1076619] to Chromium-based browsers on macOS.)
-* Fine-grained `/32` routes.
+* 一条大的 `100.64/10` 路由，避免设备上下线时路由表的频繁变动。（这种变动对 macOS 上的 Chromium 内核浏览器有[干扰][xt-chromium-issue-1076619]。）
+* 细粒度的 `/32` 路由。
 
-The possible values for `OneCGNATRoute` are:
+`OneCGNATRoute` 的可能取值：
 
-* An empty string or not provided: Use default heuristics for each platform.
-  * For all platforms (other than macOS), Tailscale adds fine-grained `/32` routes for each device.
-  * On macOS (for Tailscale v1.28 or later), Tailscale adds one `100.64/10` route. Tailscale won't use one `100.64/10` route if other interfaces also route IP addresses in that range.
-* `"mac-always"`: macOS clients always add one `100.64/10` route.
-* `"mac-never"`: macOS clients always add fine-grained `/32` routes.
+* 空字符串或未提供：对每个平台使用默认启发式规则。
+  * 对于所有平台（macOS 除外），Tailscale 为每台设备添加细粒度的 `/32` 路由。
+  * 在 macOS 上（Tailscale v1.28 或更高版本），Tailscale 添加一条 `100.64/10` 路由。如果其他接口也路由该范围内的 IP 地址，Tailscale 就不会使用一条 `100.64/10` 路由。
+* `"mac-always"`：macOS 客户端始终添加一条 `100.64/10` 路由。
+* `"mac-never"`：macOS 客户端始终添加细粒度的 `/32` 路由。
 
 ### `randomizeClientPort`
 
-> **Warning:**
+> **警告：**
 >
-> You should only use the `randomizeClientPort` field as a workaround for some [firewall devices][docs-firewalls] after consulting with [Tailscale Support][co-contact-support].
+> 只有在咨询 [Tailscale 支持][co-contact-support]之后，才应将 `randomizeClientPort` 字段用作某些[防火墙设备][docs-firewalls]的变通方案。
 
-Setting the `randomizeClientPort` field to `true` makes devices use a random port for [WireGuard][docs-wireguard] traffic rather than the default static port `41641`.
+把 `randomizeClientPort` 字段设为 `true` 会让设备对 [WireGuard][docs-wireguard] 流量使用随机端口，而不是默认的静态端口 `41641`。
 
-[ar-acls]: #acls
+[ar-acls]: #acl
 
 [ar-action-1]: #action-1
 
-[ar-autoapprovers]: #autoapprovers
+[ar-autoapprovers]: #自动批准autoapprovers
 
-[ar-autogroups]: #autogroups
+[ar-autogroups]: #autogroup
 
-[ar-grants]: #grants
+[ar-grants]: #授权grants
 
-[ar-groups]: #groups
+[ar-groups]: #群组groups
 
-[ar-hosts]: #hosts
+[ar-hosts]: #主机
 
-[ar-ipsets]: #ipsets
+[ar-ipsets]: #ip-集
 
-[ar-nodeattrs]: #nodeattrs
+[ar-nodeattrs]: #节点属性
 
-[ar-object-syntax]: #recommended-syntax-for-postures
+[ar-object-syntax]: #推荐的态势语法
 
-[ar-postures]: #postures
+[ar-postures]: #设备态势postures
 
 [ar-randomizeclientport]: #randomizeclientport
 
-[ar-reference-users]: #reference-users
+[ar-reference-users]: #引用用户
 
-[ar-ssh]: #ssh
+[ar-ssh]: #tailscale-ssh
 
-[ar-sshtests]: #sshtests
+[ar-sshtests]: #ssh-测试
 
-[ar-tag-owners]: #tag-owners
+[ar-tag-owners]: #标签所有者
 
-[ar-tests]: #tests
+[ar-tests]: #测试tests
 
 [bl-rbac-meant-to-be]: https://tailscale.com/blog/rbac-like-it-was-meant-to-be
 

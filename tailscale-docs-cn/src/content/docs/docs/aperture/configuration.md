@@ -1,27 +1,27 @@
 ---
-title: "Aperture configuration reference"
-description: "Reference for Aperture configuration fields, defaults, and validation errors."
+title: "Aperture 配置参考"
+description: "Aperture 配置字段、默认值和校验错误参考。"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
-> **Note:**
+> **注意：**
 >
-> You can purchase tokens directly within Aperture. To use your own API keys with Aperture on a plan other than the personal Tailscale plan, [contact sales][co-contact-sales].
+> 你可以直接在 Aperture 内购买 token。如果你在个人版 Tailscale 套餐以外的套餐上想用你自己的 API 密钥搭配 Aperture，请[联系销售][co-contact-sales]。
 
-[Aperture by Tailscale][docs-aperture] uses a JSON configuration for LLM providers, access control, and integrations. It controls which models are available, how requests authenticate with providers, and who can access them.
+[Tailscale 的 Aperture][docs-aperture] 使用 JSON 配置来管理 LLM 提供商、访问控制和集成。它控制哪些模型可用、请求如何向提供商认证，以及谁可以访问它们。
 
-Admins can edit the complete configuration as HuJSON at `/admin/settings/config`, under **Administration** > **Configuration** in the [admin dashboard][docs-aperture-dashboard-admin]. HuJSON accepts comments and trailing commas, as shown in the following examples. Standard JSON is also valid. Visual editors include **Providers** at `/admin/settings/providers` and **Grants** at `/admin/settings/grants`.
+管理员可以在[管理仪表板][docs-aperture-dashboard-admin]的 **Administration** > **Configuration** 中，以 HuJSON 格式在 `/admin/settings/config` 编辑完整配置。如下方示例所示，HuJSON 接受注释和尾随逗号，标准 JSON 同样有效。可视化编辑器包括位于 `/admin/settings/providers` 的 **Providers** 和位于 `/admin/settings/grants` 的 **Grants**。
 
-This topic is part of the [Aperture reference][docs-aperture-reference] documentation.
+本主题属于 [Aperture 参考][docs-aperture-reference]文档。
 
-> **Note:**
+> **注意：**
 >
-> Use the visual editors under **Administration** for most configuration tasks. Use this reference to review the complete configuration, automate updates, or set options that the visual editors do not expose.
+> 大多数配置任务请使用 **Administration** 下的可视化编辑器。本参考用于查看完整配置、自动化更新，或设置可视化编辑器未暴露的选项。
 
-## Minimal configuration
+## 最小配置
 
-A typical setup includes at least one provider with a base URL and at least one model. If you use only MCP servers or connectors, you can omit providers. Keep or add [role and model grants][docs-aperture-grant-model-access] so that users can access the model. The following example is a provider-only fragment. Add it to your current configuration instead of using it to replace the configuration:
+典型设置至少包含一个带 base URL 的提供商和至少一个模型。如果只使用 MCP 服务器或连接器，可以省略提供商。保留或添加[角色与模型授权][docs-aperture-grant-model-access]，让用户能够访问模型。下面的示例只是一个仅含提供商的片段，请把它添加到当前配置中，而不是用它替换整个配置：
 
 ```json
 {
@@ -42,17 +42,17 @@ A typical setup includes at least one provider with a base URL and at least one 
 }
 ```
 
-If you omit `apikey`, Aperture continues to run. Most providers require an API key for authentication, so add one unless your provider handles authentication differently.
+省略 `apikey` 时 Aperture 仍会运行。大多数提供商需要 API 密钥认证，因此除非你的提供商以其他方式处理认证，否则请添加。
 
-> **Note:**
+> **注意：**
 >
-> The `apikey` field takes an API key from the provider's developer platform, which is the standard way to authenticate a provider. Consumer and business subscription plans such as [Claude Pro or Claude Max][xt-anthropic-plans], [ChatGPT Plus, Pro, or Team][xt-openai-plans], and [Gemini Advanced][xt-gemini-plans] issue OAuth tokens rather than API keys, so there is no key to put in this field. To use a subscription plan, configure the provider with `auth_mode: "passthrough"` and let each client forward its own credential to the upstream. For more information, refer to [Set up passthrough mode][docs-use-passthrough-mode].
+> `apikey` 字段填的是提供商开发者平台发放的 API 密钥，这是认证提供商的标准方式。[Claude Pro 或 Claude Max][xt-anthropic-plans]、[ChatGPT Plus、Pro 或 Team][xt-openai-plans]、[Gemini Advanced][xt-gemini-plans] 等消费级和商业订阅套餐发放的是 OAuth token 而非 API 密钥，因此没有可填入该字段的密钥。要使用订阅套餐，请为提供商配置 `auth_mode: "passthrough"`，让每个客户端把自己的凭证转发给上游。更多信息参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
-## Default configuration
+## 默认配置
 
-New Aperture gateways include the managed Aperture provider and subscription passthrough providers for Claude and ChatGPT. The default grants everyone who can reach the gateway admin access, access to all models, and access to Aperture's built-in system tools until you narrow the grants.
+新建的 Aperture 网关包含托管 Aperture 提供商以及面向 Claude 和 ChatGPT 的订阅 passthrough 提供商。默认授权会让所有能访问网关的人获得管理员权限、全部模型的访问权限，以及 Aperture 内置系统工具的访问权限，直到你收紧授权为止。
 
-The following configuration shows the shipped defaults. These model lists are a configuration snapshot, not recommendations or a guarantee of upstream availability. Refer to the [subscription passthrough guides][docs-use-passthrough-mode] when configuring clients and updating these lists.
+以下配置展示出厂默认值。这些模型列表只是配置快照，不构成推荐，也不保证上游可用性。配置客户端和更新这些列表时，请参阅[订阅 passthrough 指南][docs-use-passthrough-mode]。
 
 ```json
 {
@@ -116,29 +116,29 @@ The following configuration shows the shipped defaults. These model lists are a 
 }
 ```
 
-## Configuration reference
+## 配置参考
 
-The following table describes the top-level configuration sections and the Aperture behavior each controls:
+下表描述顶层配置段及其各自控制的 Aperture 行为：
 
-| Section           | Required | Description                                                                                                                                                                                                                                                                                                            |
-| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `providers`       | No       | Map of LLM provider configurations. Tailscale recommends at least one provider or MCP server/connector.                                                                                                                                                                                                                |
-| `model_aliases`   | No       | Model aliases that map names to `provider/model` destinations.                                                                                                                                                                                                                                                         |
-| `grants`          | No       | Access control policies for users, models, and quotas. Uses the Tailscale grant structure.                                                                                                                                                                                                                             |
-| `quotas`          | No       | Dollar-based spending limits using token buckets.                                                                                                                                                                                                                                                                      |
-| `hooks`           | No       | Webhook endpoint configurations.                                                                                                                                                                                                                                                                                       |
-| `exporters`       | No       | LLM session log export configuration. Supports S3-compatible storage.                                                                                                                                                                                                                                                  |
-| `database`        | No       | Data storage settings, including capture retention policies.                                                                                                                                                                                                                                                           |
-| `connectors`      | No       | Outbound integrations (MCP servers and HTTP APIs) with authentication.                                                                                                                                                                                                                                                 |
-| `auto_cost_basis` | No       | Boolean (default `true`). When `true` and no explicit `cost_basis` is set, Aperture recognizes OpenRouter and Vercel AI Gateway from the provider `baseurl`, then falls back to the provider's compatibility flags. Set to `false` to disable inferred token-rate estimates. Provider-supplied costs remain available. |
-| `flags`           | No       | Experimental feature flags. Each key is a flag ID containing a `value` boolean. Refer to the [flags reference][ar-flags-section] for flag statuses and validation behavior.                                                                                                                                            |
-| `virtual`         | No       | Deprecated model alias syntax. Use `model_aliases` instead.                                                                                                                                                                                                                                                            |
-| `mcp`             | No       | Deprecated MCP server proxying configuration. Use `connectors` instead.                                                                                                                                                                                                                                                |
-| `temp_grants`     | No       | Deprecated access control syntax. Use `grants` instead.                                                                                                                                                                                                                                                                |
+| 配置段 | 必填 | 描述 |
+| --- | --- | --- |
+| `providers` | 否 | LLM 提供商配置的映射。Tailscale 建议至少配置一个提供商或 MCP 服务器/连接器。 |
+| `model_aliases` | 否 | 模型别名，把名称映射到 `provider/model` 目标。 |
+| `grants` | 否 | 面向用户、模型和配额的访问控制策略。使用 Tailscale grant 结构。 |
+| `quotas` | 否 | 基于美元金额的支出限额，采用令牌桶实现。 |
+| `hooks` | 否 | webhook 端点配置。 |
+| `exporters` | 否 | LLM 会话日志导出配置。支持 S3 兼容存储。 |
+| `database` | 否 | 数据存储设置，包括抓包保留策略。 |
+| `connectors` | 否 | 带认证的出站集成（MCP 服务器和 HTTP API）。 |
+| `auto_cost_basis` | 否 | 布尔值（默认 `true`）。为 `true` 且未显式设置 `cost_basis` 时，Aperture 会从提供商 `baseurl` 识别 OpenRouter 和 Vercel AI Gateway，否则回退到提供商的兼容性标志。设为 `false` 可禁用推断的 token 费率估算。提供商自带的成本数据仍然可用。 |
+| `flags` | 否 | 实验性功能标志。每个键是一个标志 ID，包含 `value` 布尔值。标志状态与校验行为参阅[标志参考][ar-flags-section]。 |
+| `virtual` | 否 | 已弃用的模型别名语法。请改用 `model_aliases`。 |
+| `mcp` | 否 | 已弃用的 MCP 服务器代理配置。请改用 `connectors`。 |
+| `temp_grants` | 否 | 已弃用的访问控制语法。请改用 `grants`。 |
 
 ### `providers`
 
-The `providers` section specifies the LLM providers to which Aperture routes requests. A unique string key identifies each provider. The following example shows the basic structure:
+`providers` 段指定 Aperture 将请求路由到的 LLM 提供商。每个提供商由一个唯一的字符串键标识。基本结构如下例所示：
 
 ```json
 {
@@ -150,110 +150,110 @@ The `providers` section specifies the LLM providers to which Aperture routes req
 }
 ```
 
-Each provider configuration accepts the following fields:
+每个提供商配置接受以下字段：
 
-| Field            | Type   | Required | Default                                    | Description                                                                                                                                                                                                                               |
-| ---------------- | ------ | -------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `baseurl`        | string | Yes      | N/A                                        | Base URL for the provider's API.                                                                                                                                                                                                          |
-| `models`         | array  | Yes      | `[]`                                       | List of model IDs available from this provider. A provider with no models cannot serve requests.                                                                                                                                          |
-| `apikey`         | string | No       | `""`                                       | API key for authentication.                                                                                                                                                                                                               |
-| `authorization`  | string | No       | `"bearer"`                                 | Authorization header type.                                                                                                                                                                                                                |
-| `auth_mode`      | string | No       | `""` (override)                            | Source of the upstream credential. One of `""`/`override` (inject the configured `apikey`), `passthrough` (forward the client's credential, fall back to `apikey`), or `none` (send no credential). Refer to [`auth_mode`][ar-auth-mode]. |
-| `name`           | string | No       | `""`                                       | Display name for the UI.                                                                                                                                                                                                                  |
-| `description`    | string | No       | `""`                                       | Description shown in the UI.                                                                                                                                                                                                              |
-| `compatibility`  | object | No       | `openai_chat` enabled, all others disabled | API compatibility flags. Refer to [compatibility flags][docs-provider-flags] for details.                                                                                                                                                 |
-| `cost_basis`     | string | No       | Auto-inferred                              | Override the pricing service used for cost estimation. Refer to [cost basis][docs-aperture-provider-compatibility-cost-basis] in the provider configuration reference for valid values.                                                   |
-| `preference`     | int    | No       | `0`                                        | Routing priority when a model is available from multiple providers. Higher value wins.                                                                                                                                                    |
-| `disabled`       | bool   | No       | `false`                                    | Deactivates the provider without removing its configuration. Disabled providers are excluded from routing and `/v1/models`.                                                                                                               |
-| `add_headers`    | array  | No       | `[]`                                       | Custom headers added to every upstream request for this provider. Each entry uses `"Header-Name: value"` format. Aperture redacts the values of these headers in stored captures and S3 exports.                                          |
-| `model_cost_map` | array  | No       | `[]`                                       | Map unknown model names to known models for pricing. Refer to [model cost map][docs-aperture-provider-compatibility-model-cost-map].                                                                                                      |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `baseurl` | string | 是 | N/A | 提供商 API 的基础 URL。 |
+| `models` | array | 是 | `[]` | 该提供商可用的模型 ID 列表。没有模型的提供商无法处理请求。 |
+| `apikey` | string | 否 | `""` | 用于认证的 API 密钥。 |
+| `authorization` | string | 否 | `"bearer"` | 授权头类型。 |
+| `auth_mode` | string | 否 | `""`（覆盖） | 上游凭证的来源。取值为 `""`/`override`（注入配置的 `apikey`）、`passthrough`（转发客户端凭证，回退到 `apikey`）或 `none`（不发送凭证）。参阅 [`auth_mode`][ar-auth-mode]。 |
+| `name` | string | 否 | `""` | 界面中显示的名称。 |
+| `description` | string | 否 | `""` | 界面中显示的描述。 |
+| `compatibility` | object | 否 | 启用 `openai_chat`，其余禁用 | API 兼容性标志。详情参阅[兼容性标志][docs-provider-flags]。 |
+| `cost_basis` | string | 否 | 自动推断 | 覆盖用于成本估算的定价服务。有效取值参阅提供商配置参考中的 [cost basis][docs-aperture-provider-compatibility-cost-basis]。 |
+| `preference` | int | 否 | `0` | 同一模型可由多个提供商提供时的路由优先级，值越高越优先。 |
+| `disabled` | bool | 否 | `false` | 停用该提供商但不删除其配置。停用的提供商不参与路由，也不出现在 `/v1/models` 中。 |
+| `add_headers` | array | 否 | `[]` | 为该提供商的每个上游请求添加的自定义头。每项格式为 `"Header-Name: value"`。Aperture 会在存储的抓包记录和 S3 导出中隐去这些头的值。 |
+| `model_cost_map` | array | 否 | `[]` | 把未知模型名映射到已知模型用于计价。参阅[模型成本映射][docs-aperture-provider-compatibility-model-cost-map]。 |
 
 \[Missing snippet: aperture\_provider\_auth\_note.mdx]
 
 #### `auth_mode`
 
-The `auth_mode` field controls how Aperture obtains the credential it sends to the upstream provider. It does not affect routing, model selection, or the authorization header format. Use `authorization` to configure that format. Valid `auth_mode` values are:
+`auth_mode` 字段控制 Aperture 如何获取发送给上游提供商的凭证。它不影响路由、模型选择或授权头格式；该格式用 `authorization` 配置。`auth_mode` 的有效取值为：
 
-| Value          | Behavior                                                                                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `""` (default) | Inject the configured `apikey` on every request.                                                                                                                         |
-| `override`     | Explicit form of the default. Inject the configured `apikey`. Requires a non-empty `apikey`, or the configuration fails to save.                                         |
-| `passthrough`  | Forward the client's own `Authorization` or `x-api-key` header to the upstream unchanged. Fall back to the configured `apikey` only when the client sends no credential. |
-| `none`         | Strip all upstream credentials, for providers that need none.                                                                                                            |
+| 取值 | 行为 |
+| --- | --- |
+| `""`（默认） | 每个请求都注入配置的 `apikey`。 |
+| `override` | 默认项的显式形式。注入配置的 `apikey`。要求 `apikey` 非空，否则配置保存失败。 |
+| `passthrough` | 将客户端自己的 `Authorization` 或 `x-api-key` 头原样转发给上游。仅当客户端未发送任何凭证时才回退到配置的 `apikey`。 |
+| `none` | 剥除所有上游凭证，适用于不需要凭证的提供商。 |
 
-A `passthrough` provider with no configured `apikey` is passthrough-only. It serves only requests that carry a client credential. Its models still appear in the `/v1/models` endpoint, but Aperture hides them from the built-in chat UI, because server-originated chat requests carry no client credential. Configure a fallback `apikey` if you want the models available in the chat UI.
+未配置 `apikey` 的 `passthrough` 提供商是纯 passthrough 型，只处理携带客户端凭证的请求。其模型仍会出现在 `/v1/models` 端点中，但 Aperture 会在内置 chat UI 中隐藏它们，因为服务端发起的 chat 请求不携带客户端凭证。如果希望这些模型出现在 chat UI 中，请配置一个回退用的 `apikey`。
 
-For a full walkthrough, including using subscription-plan OAuth tokens, refer to [Set up passthrough mode][docs-use-passthrough-mode].
+包括使用订阅套餐 OAuth token 在内的完整流程，参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
-#### How Aperture builds upstream URLs
+#### Aperture 如何构造上游 URL
 
-Aperture appends the full incoming request path to the provider's `baseurl` to construct the upstream URL. For example, if `baseurl` is `https://api.openai.com` and a client sends `POST /v1/chat/completions`, the upstream URL is `https://api.openai.com/v1/chat/completions`.
+Aperture 会把完整的入站请求路径追加到提供商的 `baseurl` 后面来构造上游 URL。例如，`baseurl` 为 `https://api.openai.com` 且客户端发送 `POST /v1/chat/completions` 时，上游 URL 是 `https://api.openai.com/v1/chat/completions`。
 
-Set `baseurl` to the provider's API root. The `/v1` segment belongs in the request path, not in `baseurl`. Aperture does not strip `/v1` from `baseurl` before appending the path.
+把 `baseurl` 设为提供商 API 的根地址。`/v1` 段属于请求路径，不属于 `baseurl`。Aperture 在追加路径前不会从 `baseurl` 中剥掉 `/v1`。
 
-> **Warning:**
+> **警告：**
 >
-> If `baseurl` includes `/v1`, the upstream URL contains `/v1/v1/...`. The duplicated path can cause the upstream provider to return HTTP 405. Refer to [troubleshooting HTTP 405 errors][docs-aperture-troubleshoot-405] for resolution steps.
+> 如果 `baseurl` 包含 `/v1`，上游 URL 就会出现 `/v1/v1/...`。重复的路径可能导致上游提供商返回 HTTP 405。解决步骤参阅[排查 HTTP 405 错误][docs-aperture-troubleshoot-405]。
 
-**Exceptions**: Amazon Bedrock requests have the `/bedrock` prefix stripped before forwarding. Gemini Enterprise Agent Platform requests have auto-fill placeholders replaced in the path. All other providers receive the incoming path unchanged.
+**例外**：Amazon Bedrock 请求在转发前会剥掉 `/bedrock` 前缀；Gemini Enterprise Agent Platform 请求路径中的自动填充占位符会被替换；其余所有提供商收到的入站路径保持原样。
 
-For the correct `baseurl` for each supported provider, refer to the [provider matrix][docs-provider-matrix].
+每个受支持提供商的正确 `baseurl`，参阅[提供商矩阵][docs-provider-matrix]。
 
-#### Model names
+#### 模型名称
 
-Aperture registers each entry in a provider's `models` list as a literal model ID. It does not expand wildcards in this list or verify that the upstream provider serves an ID. Use IDs or aliases supported by the provider, and use glob patterns in [grants][ar-grants] to control access to the configured models.
+Aperture 把提供商 `models` 列表中的每一项注册为字面模型 ID，不会展开其中的通配符，也不会验证上游提供商是否真的提供该 ID。请使用该提供商支持的 ID 或别名，并在[授权][ar-grants]中用 glob 模式控制对已配置模型的访问。
 
-For valid model IDs, refer to the provider's documentation (for example, [Anthropic models][xt-anthropic-models] or [OpenAI models][xt-openai-models]) and the Aperture [provider setup guides][docs-aperture-set-up-providers].
+有效的模型 ID 参阅提供商文档（例如 [Anthropic 模型][xt-anthropic-models]或 [OpenAI 模型][xt-openai-models]）以及 Aperture 的[提供商设置指南][docs-aperture-set-up-providers]。
 
-Model alias destinations require explicit model IDs in the provider's `models` array, even if a wildcard covers them. Refer to [model alias destination requirements][docs-model-alias-destination-requirements].
+模型别名的目标要求提供商的 `models` 数组中有显式的模型 ID，即使通配符能覆盖它们。参阅[模型别名目标要求][docs-model-alias-destination-requirements]。
 
-#### Authorization types
+#### 授权类型
 
-Different providers require different authorization header formats. The `authorization` field supports `bearer` (default, used by OpenAI and most providers), `x-api-key` (Anthropic), and `x-goog-api-key` (Google Gemini). For the full authorization types table and provider-specific details, refer to [authorization types][docs-provider-authorization].
+不同提供商要求的授权头格式不同。`authorization` 字段支持 `bearer`（默认，OpenAI 和大多数提供商使用）、`x-api-key`（Anthropic）和 `x-goog-api-key`（Google Gemini）。完整的授权类型表和各提供商细节，参阅[授权类型][docs-provider-authorization]。
 
-#### Provider compatibility
+#### 提供商兼容性
 
-The `compatibility` object specifies which API formats the provider supports and which endpoints Aperture exposes for the provider's models. Flags include `openai_chat`, `openai_responses`, `anthropic_messages`, `gemini_generate_content`, `bedrock_model_invoke`, and others. The `openai_chat` flag is enabled by default. Aperture clears it if you enable another flag without explicitly setting `openai_chat`. For the complete table, refer to [compatibility flags][docs-provider-flags]. For provider API formats and setup links, refer to the [provider matrix][docs-provider-matrix].
+`compatibility` 对象指定提供商支持哪些 API 格式，以及 Aperture 为该提供商的模型暴露哪些端点。标志包括 `openai_chat`、`openai_responses`、`anthropic_messages`、`gemini_generate_content`、`bedrock_model_invoke` 等。`openai_chat` 标志默认启用；如果你启用了其他标志但没有显式设置 `openai_chat`，Aperture 会将其清空。完整表格参阅[兼容性标志][docs-provider-flags]。各提供商的 API 格式和设置链接，参阅[提供商矩阵][docs-provider-matrix]。
 
-#### Provider examples
+#### 提供商示例
 
-For complete configuration examples for each supported provider (OpenAI, Anthropic, Google Gemini, the Gemini Enterprise Agent Platform, Amazon Bedrock, OpenRouter, self-hosted LLMs, and [OpenAI-compatible providers][docs-aperture-openai-compatible-provider]), refer to the [provider setup guides][docs-aperture-set-up-providers].
+每个受支持提供商（OpenAI、Anthropic、Google Gemini、Gemini Enterprise Agent Platform、Amazon Bedrock、OpenRouter、自托管 LLM 和 [OpenAI 兼容提供商][docs-aperture-openai-compatible-provider]）的完整配置示例，参阅[提供商设置指南][docs-aperture-set-up-providers]。
 
-### Pricing and cost estimation
+### 定价与成本估算
 
-Aperture estimates the dollar cost of each LLM request for quota deductions, hook metadata, and per-model pricing in the admin dashboard. You can override inferred pricing with the `cost_basis` and `model_cost_map` provider fields. For supported pricing sources, refer to [cost basis][docs-aperture-provider-compatibility-cost-basis]. For mapping syntax, refer to [model cost map][docs-aperture-provider-compatibility-model-cost-map].
+Aperture 会估算每个 LLM 请求的美元成本，用于配额扣减、hook 元数据以及管理仪表板中的按模型定价。可以用提供商的 `cost_basis` 和 `model_cost_map` 字段覆盖推断出的定价。受支持的定价来源参阅 [cost basis][docs-aperture-provider-compatibility-cost-basis]，映射语法参阅[模型成本映射][docs-aperture-provider-compatibility-model-cost-map]。
 
-Aperture surfaces cost data in several places:
+Aperture 在多处展示成本数据：
 
-* **Models** (`/admin/models`): Each model shows per-million-token pricing (input/output) with a tooltip that includes cache, reasoning, image, and web search rates.
-* **Usage Overview** (`/admin/adoption`): The **CSV** button exports organization-wide usage data including token counts per model, user, and date.
-* **Hooks**: Include `"estimated_cost"` in a hook's `send` array to receive dollar cost, cost basis, and token usage with every hook call. Refer to [hook send types][ar-hook-send-types] for details.
+* **Models**（`/admin/models`）：每个模型显示每百万 token 的定价（输入/输出），悬停提示中还包含缓存、推理、图片和网络搜索费率。
+* **Usage Overview**（`/admin/adoption`）：**CSV** 按钮可导出组织范围的用量数据，包括按模型、用户和日期统计的 token 数。
+* **Hooks**：在 hook 的 `send` 数组中加入 `"estimated_cost"`，即可在每次 hook 调用时收到美元成本、定价依据和 token 用量。详情参阅 [hook 发送类型][ar-hook-send-types]。
 
 ### `model_aliases`
 
-The `model_aliases` section maps stable client model names to configured provider/model destinations. Its default selection strategy is `first`. An omitted or empty section defines no aliases unless the deprecated `virtual` fallback supplies them. For fields, defaults, and examples, refer to the [model alias configuration schema][docs-model-alias-schema].
+`model_aliases` 段把稳定的客户端模型名映射到已配置的 provider/model 目标，默认选择策略是 `first`。省略或留空该段时，除非由已弃用的 `virtual` 回退提供，否则不定义任何别名。字段、默认值和示例参阅[模型别名配置 schema][docs-model-alias-schema]。
 
 ### `grants`
 
-The `grants` section specifies access control policies that determine which users can access which models, what hooks fire, and which quotas apply. Grants use the [Tailscale grant structure][docs-tailscale-grants] with capabilities scoped under `"tailscale.com/cap/aperture"`. Aperture is deny-by-default: without a matching grant, a user cannot access any models.
+`grants` 段指定访问控制策略，决定哪些用户可以访问哪些模型、触发哪些 hook、应用哪些配额。授权使用 [Tailscale grant 结构][docs-tailscale-grants]，能力限定在 `"tailscale.com/cap/aperture"` 下。Aperture 默认拒绝：没有匹配授权的用户无法访问任何模型。
 
-For step-by-step instructions on configuring access, refer to [grant access to models][docs-aperture-grant-model-access], [grant access to MCP tools][docs-aperture-grant-mcp-tool-access], and [set up admin access][docs-aperture-set-up-admin-access].
+配置访问的分步说明参阅[授予模型访问权限][docs-aperture-grant-model-access]、[授予 MCP 工具访问权限][docs-aperture-grant-mcp-tool-access]和[设置管理员访问权限][docs-aperture-set-up-admin-access]。
 
-> **Note:**
+> **注意：**
 >
-> The `grants` section replaces the deprecated `temp_grants` syntax with a new structure. The `temp_grants` syntax still works but Tailscale does not recommend it for new configurations.
+> `grants` 段以新结构取代了已弃用的 `temp_grants` 语法。`temp_grants` 语法仍然可用，但 Tailscale 不建议在新配置中使用。
 
-Configure grants on **Administration** > **Grants** at `/admin/settings/grants` or in the **Configuration** editor at `/admin/settings/config`.
+在 `/admin/settings/grants` 的 **Administration** > **Grants** 或 `/admin/settings/config` 的 **Configuration** 编辑器中配置授权。
 
-To update grants through the API:
+通过 API 更新授权：
 
-1. Call `GET http://<aperture-hostname>/api/config` to get the complete configuration and its hash.
-2. Modify the returned configuration.
-3. Send a JSON object to `PUT http://<aperture-hostname>/api/config`. Set `config` to the complete HuJSON configuration string and `hash` to the original hash. This replaces the complete configuration.
+1. 调用 `GET http://<aperture-hostname>/api/config` 获取完整配置及其哈希。
+2. 修改返回的配置。
+3. 向 `PUT http://<aperture-hostname>/api/config` 发送一个 JSON 对象：`config` 设为完整的 HuJSON 配置字符串，`hash` 设为原哈希。这会替换整个配置。
 
-#### Basic structure
+#### 基本结构
 
-A grant specifies a source (`src`) and a set of app capabilities:
+一条授权指定一个来源（`src`）和一组 app 能力：
 
 ```json
 "grants": [
@@ -271,50 +271,50 @@ A grant specifies a source (`src`) and a set of app capabilities:
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-#### Source match (`src`)
+#### 来源匹配（`src`）
 
-The `src` field determines which users a grant applies to:
+`src` 字段决定授权适用于哪些用户：
 
-* `"*"`: Matches everyone.
-* `"alice@example.com"`: Matches a specific Tailscale login name.
-* `"group:engineering"`: Matches members of a Tailscale group or SCIM group. Requires [visible groups][docs-aperture-visible-groups] enabled for the Aperture gateway.
-* `"engineering@example.com"`: Matches members of a SCIM group (by email). Requires [visible groups][docs-aperture-visible-groups] enabled for the Aperture gateway.
-* `"tag:ci-runner"`: Matches a tagged device.
+* `"*"`：匹配所有人。
+* `"alice@example.com"`：匹配特定的 Tailscale 登录名。
+* `"group:engineering"`：匹配 Tailscale 组或 SCIM 组的成员。要求为 Aperture 网关启用[可见组][docs-aperture-visible-groups]。
+* `"engineering@example.com"`：匹配 SCIM 组的成员（按邮箱）。要求为 Aperture 网关启用[可见组][docs-aperture-visible-groups]。
+* `"tag:ci-runner"`：匹配带标签的设备。
 
-#### Model access
+#### 模型访问
 
-Each `models` field accepts one glob pattern string in `provider/model` format. To grant access to several specific models, use a separate capability entry for each. Do not use an array in a `models` field.
+每个 `models` 字段接受一个 `provider/model` 格式的 glob 模式字符串。要授予多个特定模型的访问权限，请为每个模型使用单独的能力条目。不要在 `models` 字段中使用数组。
 
-For [model aliases][docs-aperture-model-aliases], Aperture matches `models` against the destination, not the alias name. The following examples show model access patterns:
+对于[模型别名][docs-aperture-model-aliases]，Aperture 将 `models` 与目标匹配，而不是与别名匹配。以下示例展示模型访问模式：
 
-| Pattern              | Matches                                                      |
-| :------------------- | :----------------------------------------------------------- |
-| `"**"`               | All models from all providers                                |
-| `"anthropic/**"`     | All Anthropic models                                         |
-| `"openai/gpt-5.5"`   | Exactly `openai/gpt-5.5`                                     |
-| `"*/claude-sonnet*"` | Any `claude-sonnet*` model from any single provider          |
-| `"aperture-*/**"`    | Any model from a provider whose name starts with `aperture-` |
+| 模式 | 匹配范围 |
+| --- | --- |
+| `"**"` | 所有提供商的所有模型 |
+| `"anthropic/**"` | 所有 Anthropic 模型 |
+| `"openai/gpt-5.5"` | 精确匹配 `openai/gpt-5.5` |
+| `"*/claude-sonnet*"` | 任一单个提供商下的任意 `claude-sonnet*` 模型 |
+| `"aperture-*/**"` | 名称以 `aperture-` 开头的提供商提供的任意模型 |
 
-`*` matches any characters within a single path segment (it does not cross `/`). `**` matches zero or more segments.
+`*` 匹配单个路径段内的任意字符（不跨越 `/`）。`**` 匹配零个或多个段。
 
-A grant with no `models` field is "floating," meaning it applies globally (useful for hooks and quotas that apply regardless of model).
+没有 `models` 字段的授权是“浮动”授权，即全局生效（适用于与模型无关的 hook 和配额）。
 
-#### Role assignment
+#### 角色分配
 
-Roles determine a user's permission level:
+角色决定用户的权限级别：
 
 ```json
 { "role": "admin" }   // full admin access
 { "role": "user" }    // standard user access
 ```
 
-A role grant controls administrative privileges. The `admin` role grants access to the admin dashboard and organization-wide data. The chat portal is available to authenticated tailnet users by default unless a matching grant sets `enable_portal` to `false`. If multiple role grants match a user, the `admin` role takes precedence.
+角色授权控制管理权限。`admin` 角色可以访问管理仪表板和组织范围的数据。chat 门户默认对已认证的 tailnet 用户开放，除非匹配的授权把 `enable_portal` 设为 `false`。如果多条角色授权都匹配同一用户，`admin` 角色优先。
 
-#### Connector access
+#### 连接器访问
 
 \[Missing snippet: aperture\_mcp\_grant\_deprecation\_note.mdx]
 
-Grant access to connectors using the `connectors` field, which accepts an array of fully-qualified name (FQN) glob patterns in `"connectorID/category/resource"` format, and `label:<name>` patterns that match connectors by label:
+用 `connectors` 字段授予连接器访问权限。该字段接受 `"connectorID/category/resource"` 格式的完全限定名（FQN）glob 模式数组，以及按标签匹配连接器的 `label:<name>` 模式：
 
 ```json
 {
@@ -322,7 +322,7 @@ Grant access to connectors using the `connectors` field, which accepts an array 
 }
 ```
 
-More specific patterns:
+更具体的模式：
 
 ```json
 {
@@ -336,37 +336,37 @@ More specific patterns:
 }
 ```
 
-The `connectors` field uses the same `*` / `**` glob syntax as `models`. The `category` segment is one of `tools`, `resources`, `templates` (MCP connectors), or `proxy` (HTTP connectors). A pattern with an unrecognized category silently never matches, so it grants no access. For the per-category breakdown, refer to the [connectors reference][docs-aperture-connectors-reference].
+`connectors` 字段使用与 `models` 相同的 `*` / `**` glob 语法。`category` 段是 `tools`、`resources`、`templates`（MCP 连接器）或 `proxy`（HTTP 连接器）之一。类别无法识别的模式永远不会匹配，也不会授予任何访问权限。各类别的细分参阅[连接器参考][docs-aperture-connectors-reference]。
 
-A `label:<name>` pattern is matched exactly rather than expanded as a glob, and a match grants the connector at every category and resource. Labels are additive like every other grant, so they widen access and never restrict it. For the label grammar, the reserved `system` label, and the `system_labels` field, refer to [connector labels][docs-aperture-connectors-labels] and [Grant connector access by label][docs-aperture-grant-by-label].
+`label:<name>` 模式按精确匹配而非 glob 展开，一旦匹配即授予该连接器所有类别和资源的访问权限。标签与其他授权一样是叠加的，只会扩大访问而不会限制访问。标签语法、保留标签 `system` 和 `system_labels` 字段，参阅[连接器标签][docs-aperture-connectors-labels]和[按标签授予连接器访问权限][docs-aperture-grant-by-label]。
 
-> **Note:**
+> **注意：**
 >
-> The `mcp_tools`, `mcp_resources`, and `mcp_templates` fields are deprecated. They still work for backward compatibility, but new configurations should use the `connectors` field instead.
+> `mcp_tools`、`mcp_resources` 和 `mcp_templates` 字段已弃用。为向后兼容它们仍然可用，但新配置应改用 `connectors` 字段。
 
-#### More capability fields
+#### 更多能力字段
 
-Each capability object in the `tailscale.com/cap/aperture` array can also include these fields:
+`tailscale.com/cap/aperture` 数组中的每个能力对象还可以包含以下字段：
 
-| Field                          | Type       | Description                                                                                                                                                                                                                                                                                                                          |
-| ------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `connectors`                   | `[]string` | Array of FQN glob patterns for connector access (for example, `["aperture/**"]`, `["github/proxy"]`). Uses the same `*` / `**` glob syntax as `models`. Also accepts `label:<name>` patterns, which match connectors by [label][docs-aperture-connectors-labels] and are compared exactly rather than expanded as globs.             |
-| `add_headers`                  | array      | Custom headers prepended to upstream requests when this grant matches. Each entry uses `"Header-Name: value"` format. Aperture redacts the values of these headers in stored captures and S3 exports.                                                                                                                                |
-| `filterable_headers`           | array      | Indexed header names from `database.headers.filterable` that matched users can use as filters on supported admin dashboard pages. Use `["*"]` to grant every configured filterable header. Admins also need this grant. Edit it under **Header filter grants** on **Administration** > **Reporting** at `/admin/settings/reporting`. |
-| `enable_portal`                | bool       | Controls access to the web portal. Access is available by default. Set to `false` to disable it for a grant. An explicit `true` wins over a broader opt-out, and admins always retain portal access.                                                                                                                                 |
-| `enable_chat_ui`               | bool       | Legacy name for `enable_portal`. Existing configurations continue to work, but new configurations should use `enable_portal`.                                                                                                                                                                                                        |
-| `read_metrics`                 | bool       | Grants access to the `/metrics` Prometheus endpoint.                                                                                                                                                                                                                                                                                 |
-| `set_cors`                     | bool       | Enables CORS response header injection for this grant. Requires a non-empty `cors_paths` list.                                                                                                                                                                                                                                       |
-| `cors_paths`                   | array      | URL path glob patterns that activate CORS headers (for example, `["/v1/**", "/bedrock/**"]`). Uses the same glob syntax as `models` but applied to URL paths. An empty list disables CORS even when `set_cors` is `true`.                                                                                                            |
-| `Access-Control-Allow-Origin`  | string     | Value for the `Access-Control-Allow-Origin` response header.                                                                                                                                                                                                                                                                         |
-| `Access-Control-Allow-Methods` | string     | Value for the `Access-Control-Allow-Methods` response header.                                                                                                                                                                                                                                                                        |
-| `Access-Control-Allow-Headers` | string     | Value for the `Access-Control-Allow-Headers` response header.                                                                                                                                                                                                                                                                        |
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `connectors` | `[]string` | 用于连接器访问的 FQN glob 模式数组（例如 `["aperture/**"]`、`["github/proxy"]`）。使用与 `models` 相同的 `*` / `**` glob 语法。也接受 `label:<name>` 模式，按[标签][docs-aperture-connectors-labels]匹配连接器，比较方式为精确匹配而非 glob 展开。 |
+| `add_headers` | array | 该授权匹配时附加到上游请求前的自定义头。每项格式为 `"Header-Name: value"`。Aperture 会在存储的抓包记录和 S3 导出中隐去这些头的值。 |
+| `filterable_headers` | array | `database.headers.filterable` 中已索引的头名称，匹配用户可在支持的管理仪表板页面上将其用作筛选条件。用 `["*"]` 授予所有已配置的可筛选头。管理员也需要此授权。可在 **Administration** > **Reporting**（`/admin/settings/reporting`）的 **Header filter grants** 下编辑。 |
+| `enable_portal` | bool | 控制 web 门户访问。默认开放。对某条授权设为 `false` 即可为其禁用。显式 `true` 优先于更大范围的禁用，且管理员始终保留门户访问。 |
+| `enable_chat_ui` | bool | `enable_portal` 的旧名称。现有配置继续有效，但新配置应使用 `enable_portal`。 |
+| `read_metrics` | bool | 授予对 `/metrics` Prometheus 端点的访问权限。 |
+| `set_cors` | bool | 为该授权启用 CORS 响应头注入。要求 `cors_paths` 列表非空。 |
+| `cors_paths` | array | 激活 CORS 头的 URL 路径 glob 模式（例如 `["/v1/**", "/bedrock/**"]`）。使用与 `models` 相同的 glob 语法，但作用于 URL 路径。列表为空时即使 `set_cors` 为 `true` 也会禁用 CORS。 |
+| `Access-Control-Allow-Origin` | string | `Access-Control-Allow-Origin` 响应头的值。 |
+| `Access-Control-Allow-Methods` | string | `Access-Control-Allow-Methods` 响应头的值。 |
+| `Access-Control-Allow-Headers` | string | `Access-Control-Allow-Headers` 响应头的值。 |
 
-#### CORS headers
+#### CORS 头
 
-CORS header injection lets browser-based clients access Aperture's LLM endpoints directly. You configure CORS for each grant, so users can have different CORS policies or none. CORS does not grant model access. The user still needs a `models` grant, either in the same grant entry or a different one.
+CORS 头注入让基于浏览器的客户端可以直接访问 Aperture 的 LLM 端点。CORS 按授权逐条配置，因此不同用户可以有不同的 CORS 策略，也可以没有。CORS 不会授予模型访问权限；用户仍然需要 `models` 授权，可以在同一条授权里，也可以在另一条里。
 
-Aperture sets CORS headers only when both `set_cors: true` and a non-empty `cors_paths` list are configured. The `cors_paths` field uses the same glob syntax as `models`, but matches URL paths, which must begin with `/`. When a CORS grant matches, Aperture automatically returns `200 OK` with the configured headers for `OPTIONS` preflight requests.
+只有同时配置了 `set_cors: true` 和非空的 `cors_paths` 列表时，Aperture 才会设置 CORS 头。`cors_paths` 字段使用与 `models` 相同的 glob 语法，但匹配必须以 `/` 开头的 URL 路径。当 CORS 授权匹配时，Aperture 会自动对 `OPTIONS` 预检请求返回带已配置头的 `200 OK`。
 
 ```json
 {
@@ -385,13 +385,13 @@ Aperture sets CORS headers only when both `set_cors: true` and a non-empty `cors
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Using `Access-Control-Allow-Origin: *` lets any website make requests to Aperture on behalf of the matched user. Restrict the origin to specific domains when possible (for example, `"https://app.example.com"`).
+> 使用 `Access-Control-Allow-Origin: *` 会让任何网站都能代表匹配用户向 Aperture 发起请求。请尽可能把 origin 限制到特定域名（例如 `"https://app.example.com"`）。
 
-#### Custom app capabilities
+#### 自定义 app 能力
 
-Grants can include capability keys beyond `tailscale.com/cap/aperture`. Aperture passes these through to hooks when you include the `"grants"` send type:
+授权可以包含 `tailscale.com/cap/aperture` 之外的能力键。当你在 `send` 类型中加入 `"grants"` 时，Aperture 会把这些能力传递给 hook：
 
 ```json
 {
@@ -409,13 +409,13 @@ Grants can include capability keys beyond `tailscale.com/cap/aperture`. Aperture
 },
 ```
 
-When a hook includes `"grants"` in its `send` array, these custom capabilities appear in the hook metadata. External systems can use these capabilities to make authorization decisions.
+hook 的 `send` 数组包含 `"grants"` 时，这些自定义能力会出现在 hook 元数据中。外部系统可以利用这些能力做授权决策。
 
 ### `quotas`
 
-The `quotas` section specifies dollar-based spending limits using token buckets. Each bucket has a capacity (maximum balance) and a refill rate. When a request's estimated cost would bring a bucket below zero, Aperture rejects the request with HTTP 429.
+`quotas` 段指定基于美元金额的支出限额，采用令牌桶实现。每个桶有容量（最大余额）和补充速率。当请求的预估成本会把某个桶压到零以下时，Aperture 以 HTTP 429 拒绝该请求。
 
-For step-by-step instructions, refer to [set per-user spending limits][docs-aperture-set-per-user-spending-limits] and [set a team-wide budget][docs-aperture-set-team-budget]. To check and refill budgets, refer to [check and refill budgets][docs-aperture-monitor-quota-balances].
+分步说明参阅[设置每用户支出限额][docs-aperture-set-per-user-spending-limits]和[设置团队预算][docs-aperture-set-team-budget]。检查和补充预算参阅[检查并补充预算][docs-aperture-monitor-quota-balances]。
 
 ```json
 "quotas": {
@@ -442,30 +442,30 @@ For step-by-step instructions, refer to [set per-user spending limits][docs-aper
 }
 ```
 
-Each quota accepts the following fields:
+每个配额接受以下字段：
 
-| Field       | Format               | Description                                                                                                 |
-| :---------- | :------------------- | :---------------------------------------------------------------------------------------------------------- |
-| `capacity`  | `"$<amount>"`        | Maximum balance the bucket can hold (must be greater than zero). Also the starting balance for new buckets. |
-| `rate`      | `"$<amount>/<unit>"` | How fast the bucket refills. Units: `min`, `hour`, `day`, `week`, `month` (30 days).                        |
-| `on_exceed` | `"reject"`           | Action when a request would bring the bucket below zero. The supported value is `"reject"` (HTTP 429).      |
+| 字段 | 格式 | 描述 |
+| --- | --- | --- |
+| `capacity` | `"$<amount>"` | 桶可持有的最大余额（必须大于零），也是新桶的初始余额。 |
+| `rate` | `"$<amount>/<unit>"` | 桶的补充速度。单位：`min`、`hour`、`day`、`week`、`month`（30 天）。 |
+| `on_exceed` | `"reject"` | 请求会把桶压到零以下时执行的动作。支持的取值是 `"reject"`（HTTP 429）。 |
 
-Quota configuration uses dollar strings (for example, `"$10.00"`). [Hook payloads][ar-hooks] represent the same values in nanodollars (1 dollar = 1,000,000,000 nanodollars).
+配额配置使用美元字符串（例如 `"$10.00"`）。[Hook 载荷][ar-hooks]以纳美元表示同样的值（1 美元 = 1,000,000,000 纳美元）。
 
-#### Template variables
+#### 模板变量
 
-Quota names can include template variables that expand at request time:
+配额名称可以包含在请求时展开的模板变量：
 
-| Template | Expands to                                                                                  | Example                                             |
-| :------- | :------------------------------------------------------------------------------------------ | :-------------------------------------------------- |
-| `<user>` | Caller's Tailscale login name or tag combination                                            | `daily:<user>` expands to `daily:alice@example.com` |
-| `<node>` | Caller's node ID (a distinct quota for each node, even if nodes share the same user or tag) | `device:<node>` expands to `device:n8f3a2c9d1CNTRL` |
+| 模板 | 展开为 | 示例 |
+| --- | --- | --- |
+| `<user>` | 调用者的 Tailscale 登录名或标签组合 | `daily:<user>` 展开为 `daily:alice@example.com` |
+| `<node>` | 调用者的节点 ID（每个节点有独立配额，即使节点共享同一用户或标签） | `device:<node>` 展开为 `device:n8f3a2c9d1CNTRL` |
 
-Quotas without a template variable (for example, `eng-team-pool`) create a single shared bucket.
+不含模板变量的配额（例如 `eng-team-pool`）创建单个共享桶。
 
-#### Attach quotas to grants
+#### 将配额挂到授权上
 
-A quota defined in `quotas` takes effect only when a grant references it. When a request matches a grant, Aperture charges all quotas listed in that grant at the same time:
+`quotas` 中定义的配额只有在授权引用它时才生效。当请求匹配某条授权时，Aperture 会同时对该授权列出的所有配额计费：
 
 ```json
 "grants": [
@@ -486,19 +486,19 @@ A quota defined in `quotas` takes effect only when a grant references it. When a
 ]
 ```
 
-#### How multiple quotas interact
+#### 多个配额如何相互作用
 
-When a grant references multiple quota buckets, all buckets must have a positive balance for the request to proceed. If any single bucket is exhausted, Aperture rejects the request, even if other buckets have remaining balance.
+当一条授权引用多个配额桶时，所有桶都必须有正余额，请求才能继续。任何一个桶耗尽，Aperture 都会拒绝该请求，即使其他桶还有余额。
 
-After the response completes, Aperture deducts the estimated cost from every referenced bucket at the same time.
+响应完成后，Aperture 会同时从每个被引用的桶中扣除预估成本。
 
-A request can match multiple grants, each with their own quotas. Aperture collects and enforces all matching quotas together.
+一个请求可以匹配多条授权，每条授权有自己的配额。Aperture 会把所有匹配的配额合并起来一起执行。
 
-To charge buckets sequentially instead of in parallel, use overdrafts.
+要让桶按顺序而非并行扣费，请使用透支（overdraft）。
 
-#### Overdrafts
+#### 透支（overdraft）
 
-Overdrafts chain quota buckets so a request falls back to additional buckets when the primary bucket is exhausted. Add an `overdrafts` list to a quota entry in a grant. The list names the buckets to borrow from, in order. Overdrafts live on the grant assignment, not on the bucket definition, so the same bucket can be a primary quota for some users and an overflow target for others.
+透支把配额桶串成链，当主桶耗尽时请求会回退到其他桶。在授权中的配额条目上添加 `overdrafts` 列表，按顺序列出要借用的桶。透支配置在授权条目上，而不是桶定义上，因此同一个桶可以是一些用户的主配额，同时是另一些用户的溢出目标。
 
 ```json
 "grants": [
@@ -518,29 +518,29 @@ Overdrafts chain quota buckets so a request falls back to additional buckets whe
 ]
 ```
 
-A request draws from the primary bucket first, then from each overflow bucket in order. A single request can split across buckets: if the primary bucket has $0.50 left and the request costs $2.00, Aperture takes $0.50 from the primary bucket and $1.50 from the next bucket. The last bucket in a chain can go negative to cover a request. While the combined balance of the chain is at or below zero, Aperture rejects requests until a refill restores it. Aperture rejects a request only after the whole chain cannot cover its cost.
+请求先从主桶扣，再按顺序从每个溢出桶扣。单个请求可以拆分到多个桶：如果主桶还剩 $0.50 而请求花费 $2.00，Aperture 会从主桶扣 $0.50、从下一个桶扣 $1.50。链上最后一个桶可以透支为负来覆盖请求。当整条链的合并余额达到零或以下时，Aperture 会拒绝请求，直到补充使余额恢复。只有整条链都无法覆盖请求成本时，Aperture 才会拒绝该请求。
 
-An overflow target that references an undefined bucket is skipped and never makes the primary stricter.
+引用了未定义桶的溢出目标会被跳过，也不会让主桶的约束变严。
 
-When separate grants contribute overdrafts for the same primary bucket, Aperture merges them into one deterministic order, preserving the order within each grant. This merged order is hard to predict, so keep overdrafts that must run in a specific order within a single grant. If those grants disagree about the order, so that one grant lists a bucket before another while a second grant lists them in the opposite order, Aperture rejects the configuration when you save it and returns HTTP 400.
+当多条授权为同一个主桶提供透支时，Aperture 会把它们合并成一个确定的顺序，并保留每条授权内部的顺序。这个合并后的顺序难以预测，因此必须按特定顺序运行的透支应放在同一条授权里。如果各授权对顺序的约定相互矛盾——一条授权把某个桶排在另一个前面，另一条却相反——保存配置时 Aperture 会拒绝并返回 HTTP 400。
 
-Buckets that are referenced only as overflow targets are classified as overdraft-only and appear in a separate section of the quota usage views. For step-by-step setup and troubleshooting, refer to [Configure overdraft quotas][docs-aperture-configure-overdrafts].
+仅作为溢出目标被引用的桶被归类为“仅透支”，显示在配额用量视图的单独区域。分步设置与故障排查参阅[配置透支配额][docs-aperture-configure-overdrafts]。
 
-#### Bucket lifecycle
+#### 桶的生命周期
 
-Aperture persists quota bucket balances. When you update a quota definition (for example, changing the capacity or refill rate), Aperture adjusts existing balances to match the new settings and caps each balance at the new capacity. Aperture removes buckets whose quota definitions you delete from the configuration.
+Aperture 会持久化配额桶余额。更新配额定义（例如修改容量或补充速率）时，Aperture 会调整现有余额以匹配新设置，并把每个余额封顶到新容量。从配置中删除某个配额定义后，Aperture 会移除对应的桶。
 
-> **Note:**
+> **注意：**
 >
-> If you reduce a bucket's `capacity`, Aperture caps any existing balance above the new capacity to the new value. You cannot recover the excess.
+> 如果调低某个桶的 `capacity`，Aperture 会把高于新容量的现有余额封顶到新值，超出部分无法找回。
 
-#### Quota examples
+#### 配额示例
 
-The following examples show common quota configurations.
+以下示例展示常见的配额配置。
 
-##### Per-user quota
+##### 每用户配额
 
-Each user gets their own bucket with independent capacity and refill rate:
+每个用户都有自己的桶，容量和补充速率相互独立：
 
 ```json
 "quotas": {
@@ -564,11 +564,11 @@ Each user gets their own bucket with independent capacity and refill rate:
 ]
 ```
 
-This creates a separate bucket for each user (for example, `daily:alice@example.com`, `daily:bob@example.com`), each with $10 capacity and a $5/day refill.
+这会为每个用户创建一个独立的桶（例如 `daily:alice@example.com`、`daily:bob@example.com`），每个桶容量为 $10，补充速率为每天 $5。
 
-##### Quota scoped to specific models
+##### 限定特定模型的配额
 
-Apply a quota only when the request targets specific models:
+仅当请求针对特定模型时才应用配额：
 
 ```json
 "quotas": {
@@ -596,11 +596,11 @@ Apply a quota only when the request targets specific models:
 ]
 ```
 
-The `opus:<user>` quota applies only when the request targets an Opus model. Other models are unmetered.
+`opus:<user>` 配额只在请求针对 Opus 模型时生效。其他模型不计费。
 
-##### Combine per-user and shared quotas
+##### 合并每用户与共享配额
 
-Charge each request against both a personal budget and a shared team pool:
+让每个请求同时扣减个人预算和共享团队池：
 
 ```json
 "quotas": {
@@ -634,13 +634,13 @@ Charge each request against both a personal budget and a shared team pool:
 ]
 ```
 
-In this example, every request deducts from both the user's daily bucket and the shared team-monthly bucket. Aperture blocks a user who exhausts either bucket.
+在这个例子中，每个请求都会同时从用户的每日桶和共享的 team-monthly 桶扣减。任何一个桶耗尽，Aperture 都会阻止该用户。
 
 ### `hooks`
 
-The `hooks` section specifies webhook endpoints that Aperture calls when conditions match. A unique string key identifies each hook, and grants reference this key. For step-by-step setup, refer to [build a custom webhook][docs-aperture-build-custom-webhook]. For integration-specific guides, refer to [integrate Oso with Aperture][docs-aperture-integrate-oso] or [integrate Cerbos with Aperture][docs-aperture-integrate-cerbos].
+`hooks` 段指定条件匹配时 Aperture 会调用的 webhook 端点。每个 hook 由唯一的字符串键标识，授权通过该键引用。分步设置参阅[构建自定义 webhook][docs-aperture-build-custom-webhook]。具体集成指南参阅[将 Oso 与 Aperture 集成][docs-aperture-integrate-oso]或[将 Cerbos 与 Aperture 集成][docs-aperture-integrate-cerbos]。
 
-The following example shows the hooks configuration:
+以下示例展示 hooks 配置：
 
 ```json
 {
@@ -658,25 +658,25 @@ The following example shows the hooks configuration:
 }
 ```
 
-Each hook configuration accepts the following fields:
+每个 hook 配置接受以下字段：
 
-| Field           | Type    | Required | Default       | Description                                                                                                                                                                          |
-| --------------- | ------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `url`           | string  | Yes      | N/A           | HTTP or HTTPS endpoint to POST hook data to.                                                                                                                                         |
-| `apikey`        | string  | No       | `""`          | API key that Aperture sends to the hook endpoint using the method specified by `authorization`.                                                                                      |
-| `authorization` | string  | No       | `"bearer"`    | How Aperture sends the API key. Supports the same values as provider authorization: `bearer`, `x-api-key`, `x-goog-api-key`, `hec`, `cf-aig-authorization`.                          |
-| `timeout`       | string  | No       | `"5s"`        | Maximum duration to wait for the hook to respond.                                                                                                                                    |
-| `disabled`      | boolean | No       | `false`       | Skips this hook when Aperture would otherwise call it. Useful for temporarily disabling a hook without removing its configuration.                                                   |
-| `fail_policy`   | string  | No       | `"fail_open"` | Behavior when the hook is unreachable or returns an error. `fail_open` lets the request proceed. `fail_closed` blocks the request. Applies to `pre_request` hooks only.              |
-| `preference`    | int     | No       | `0`           | Execution priority among stacked hooks. Higher values run first. Hooks with equal preference run in alphabetical order by key. Not related to the provider-level `preference` field. |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `url` | string | 是 | N/A | 用于 POST hook 数据的 HTTP 或 HTTPS 端点。 |
+| `apikey` | string | 否 | `""` | Aperture 按 `authorization` 指定的方式发送给 hook 端点的 API 密钥。 |
+| `authorization` | string | 否 | `"bearer"` | Aperture 发送 API 密钥的方式。支持与提供商授权相同的取值：`bearer`、`x-api-key`、`x-goog-api-key`、`hec`、`cf-aig-authorization`。 |
+| `timeout` | string | 否 | `"5s"` | 等待 hook 响应的最长时间。 |
+| `disabled` | boolean | 否 | `false` | Aperture 本要调用该 hook 时跳过它。适用于临时禁用 hook 而不删除其配置。 |
+| `fail_policy` | string | 否 | `"fail_open"` | hook 不可达或返回错误时的行为。`fail_open` 放行请求；`fail_closed` 阻止请求。仅适用于 `pre_request` hook。 |
+| `preference` | int | 否 | `0` | 多个 hook 叠加时的执行优先级，值高者先运行。优先级相同的 hook 按键名的字母顺序运行。与提供商级的 `preference` 字段无关。 |
 
-The `timeout` field accepts Go duration strings such as `5s`, `30s`, or `1m`. Set to `0` to disable the timeout.
+`timeout` 字段接受 Go 时长字符串，例如 `5s`、`30s` 或 `1m`。设为 `0` 可禁用超时。
 
-The `send_hooks` entries in the `grants` section trigger hooks. A hook specified here does nothing until a grant references it.
+`grants` 段中的 `send_hooks` 条目触发 hook。在授权引用之前，此处指定的 hook 不会有任何动作。
 
-### Hook grants
+### Hook 授权
 
-To trigger a hook, add a `send_hooks` entry to a capability in the `grants` section. Hook grants specify which requests trigger the hook and what data to send.
+要触发 hook，在 `grants` 段的某个能力中加入 `send_hooks` 条目。Hook 授权指定哪些请求触发 hook，以及发送哪些数据。
 
 ```json
 {
@@ -702,40 +702,40 @@ To trigger a hook, add a `send_hooks` entry to a capability in the `grants` sect
 }
 ```
 
-Each `send_hooks` entry contains the following fields:
+每个 `send_hooks` 条目包含以下字段：
 
-| Field    | Type   | Description                                                        |
-| -------- | ------ | ------------------------------------------------------------------ |
-| `name`   | string | Key referencing a hook specified in the top-level `hooks` section. |
-| `events` | array  | Event types that trigger the hook.                                 |
-| `send`   | array  | List of data types to include in the hook payload.                 |
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `name` | string | 引用顶层 `hooks` 段中某个 hook 的键。 |
+| `events` | array | 触发该 hook 的事件类型。 |
+| `send` | array | 要包含在 hook 载荷中的数据类型列表。 |
 
-#### Hook events
+#### Hook 事件
 
-| Event                      | Description                                                                                                                                         |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre_request`              | Fires before the provider call. Synchronous: Aperture waits for the hook response. The hook can allow, block, or modify the request.                |
-| `entire_request`           | Fires for every completed request. Asynchronous: does not affect the request or response.                                                           |
-| `tool_call_entire_request` | Fires once after the response completes if any message in the response contained tool calls. Asynchronous: does not affect the request or response. |
+| 事件 | 描述 |
+| --- | --- |
+| `pre_request` | 在调用提供商之前触发。同步：Aperture 等待 hook 响应。hook 可以放行、阻止或修改请求。 |
+| `entire_request` | 每个完成的请求都会触发。异步：不影响请求或响应。 |
+| `tool_call_entire_request` | 响应完成后，若响应中任一消息包含工具调用则触发一次。异步：不影响请求或响应。 |
 
-#### Hook send types
+#### Hook 发送类型
 
-The `send` array specifies which data to include in the POST payload sent to the hook endpoint:
+`send` 数组指定发送给 hook 端点的 POST 载荷包含哪些数据：
 
-| Field            | Description                                                                 |
-| ---------------- | --------------------------------------------------------------------------- |
-| `tools`          | Array of tool calls extracted from the response.                            |
-| `request_body`   | The original request body sent to the LLM.                                  |
-| `user_message`   | The user's message from the request.                                        |
-| `response_body`  | The reconstructed response body JSON.                                       |
-| `raw_responses`  | Array of raw SSE messages (for streaming) or single response object.        |
-| `estimated_cost` | Dollar cost estimate, pricing basis, and token usage breakdown.             |
-| `grants`         | Non-Aperture app capabilities from the user's grants (custom capabilities). |
-| `quotas`         | Current state of all quota buckets that applied to this request.            |
+| 字段 | 描述 |
+| --- | --- |
+| `tools` | 从响应中提取的工具调用数组。 |
+| `request_body` | 发送给 LLM 的原始请求体。 |
+| `user_message` | 请求中用户的消息。 |
+| `response_body` | 重建的响应体 JSON。 |
+| `raw_responses` | 原始 SSE 消息数组（流式时）或单个响应对象。 |
+| `estimated_cost` | 美元成本估算、定价依据和 token 用量明细。 |
+| `grants` | 用户授权中非 Aperture 的 app 能力（自定义能力）。 |
+| `quotas` | 适用于该请求的所有配额桶的当前状态。 |
 
 #### `estimated_cost`
 
-Includes the dollar cost estimate, the pricing basis used, and a token usage breakdown. These fields appear inside the `metadata` object of the hook payload:
+包含美元成本估算、所用定价依据和 token 用量明细。这些字段出现在 hook 载荷的 `metadata` 对象中：
 
 ```json
 {
@@ -750,7 +750,7 @@ Includes the dollar cost estimate, the pricing basis used, and a token usage bre
 }
 ```
 
-The hook receives the cost data inside `metadata`. The `cost_basis` identifies the pricing lookup entry. The dollar amount and token counts below illustrate the payload structure, not a price quote:
+hook 在 `metadata` 中收到成本数据。`cost_basis` 标识定价查询条目。下面的金额和 token 数仅用于说明载荷结构，并非实际报价：
 
 ```json
 {
@@ -774,7 +774,7 @@ The hook receives the cost data inside `metadata`. The `cost_basis` identifies t
 
 #### `grants`
 
-Includes any non-Aperture app capabilities from the user's grants. This lets external systems (policy engines, audit logs) access custom capabilities attached to the user. The `grants` data appears inside the `metadata` object:
+包含用户授权中所有非 Aperture 的 app 能力。这使外部系统（策略引擎、审计日志）能够访问附着在用户身上的自定义能力。`grants` 数据出现在 `metadata` 对象中：
 
 ```json
 {
@@ -799,7 +799,7 @@ Includes any non-Aperture app capabilities from the user's grants. This lets ext
 }
 ```
 
-The hook receives the custom capabilities inside `metadata`:
+hook 在 `metadata` 中收到自定义能力：
 
 ```json
 {
@@ -818,13 +818,13 @@ The hook receives the custom capabilities inside `metadata`:
 
 #### `quotas`
 
-Includes the current state of all quota buckets that applied to the request. The `quotas` data appears inside the `metadata` object:
+包含适用于该请求的所有配额桶的当前状态。`quotas` 数据出现在 `metadata` 对象中：
 
 ```json
 "send": ["tools", "quotas"]
 ```
 
-The hook receives the bucket state inside `metadata`:
+hook 在 `metadata` 中收到桶状态：
 
 ```json
 {
@@ -842,9 +842,9 @@ The hook receives the bucket state inside `metadata`:
 }
 ```
 
-Values for `current` and `capacity` are in nanodollars (1 dollar = 1,000,000,000 nanodollars).
+`current` 和 `capacity` 的值以纳美元表示（1 美元 = 1,000,000,000 纳美元）。
 
-Every hook call automatically includes a `metadata` object with request context:
+每次 hook 调用都会自动附带包含请求上下文的 `metadata` 对象：
 
 ```json
 {
@@ -862,9 +862,9 @@ Every hook call automatically includes a `metadata` object with request context:
 }
 ```
 
-#### Hook grant example
+#### Hook 授权示例
 
-The following example sends tool call data and cost estimates to an audit service for all requests from a specific user:
+以下示例把工具调用数据和成本估算发送给审计服务，覆盖来自特定用户的所有请求：
 
 ```json
 {
@@ -902,55 +902,55 @@ The following example sends tool call data and cost estimates to an audit servic
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-#### Hook response format
+#### Hook 响应格式
 
-For `pre_request` hooks, the hook endpoint must return a JSON response that tells Aperture how to handle the request. Asynchronous hooks (`entire_request`, `tool_call_entire_request`) ignore the response body. Any valid JSON (including `{}`) is enough.
+对 `pre_request` hook，hook 端点必须返回一个 JSON 响应，告知 Aperture 如何处理该请求。异步 hook（`entire_request`、`tool_call_entire_request`）会忽略响应体，任何有效 JSON（包括 `{}`）即可。
 
-The response contains the following fields:
+响应包含以下字段：
 
-| Field          | Type   | Required              | Default                          | Description                                                          |
-| -------------- | ------ | --------------------- | -------------------------------- | -------------------------------------------------------------------- |
-| `action`       | string | Yes                   | N/A                              | How to handle the request. Valid values: `allow`, `block`, `modify`. |
-| `status_code`  | int    | No                    | `403`                            | HTTP status code returned to the client. Applies to `block` only.    |
-| `message`      | string | No                    | `"request blocked by guardrail"` | Error message returned to the client. Applies to `block` only.       |
-| `request_body` | object | Required for `modify` | N/A                              | Replacement request body forwarded to the provider.                  |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `action` | string | 是 | N/A | 如何处理请求。有效取值：`allow`、`block`、`modify`。 |
+| `status_code` | int | 否 | `403` | 返回给客户端的 HTTP 状态码。仅适用于 `block`。 |
+| `message` | string | 否 | `"request blocked by guardrail"` | 返回给客户端的错误消息。仅适用于 `block`。 |
+| `request_body` | object | `modify` 时必填 | N/A | 转发给提供商的替换请求体。 |
 
-The three actions:
+三种动作：
 
-* **`allow`**: The request proceeds unchanged. Aperture ignores other fields.
-* **`block`**: Aperture rejects the request without forwarding it to the provider. The client receives a format-specific error response with the `status_code` and `message`.
-* **`modify`**: Aperture replaces the forwarded request body with the `request_body` from the hook response and continues to the provider. The `request_body` must be a JSON object. If the hook returns a non-object, Aperture treats the response as `allow`.
+* **`allow`**：请求原样继续。Aperture 忽略其他字段。
+* **`block`**：Aperture 拒绝请求，不转发给提供商。客户端收到符合相应 API 格式、带 `status_code` 和 `message` 的错误响应。
+* **`modify`**：Aperture 用 hook 响应中的 `request_body` 替换转发的请求体，然后继续发给提供商。`request_body` 必须是 JSON 对象；如果 hook 返回非对象，Aperture 把响应当作 `allow` 处理。
 
-When a hook blocks a request, the client receives an error envelope that matches the API format of the original request:
+hook 阻止请求时，客户端会收到与原始请求 API 格式匹配的错误信封：
 
-| API format                                    | Error envelope                                                                    |
-| --------------------------------------------- | --------------------------------------------------------------------------------- |
-| OpenAI Chat / Responses                       | `{"error": {"message": "...", "type": "guardrail_blocked"}}`                      |
-| Anthropic Messages                            | `{"type": "error", "error": {"type": "invalid_request_error", "message": "..."}}` |
-| Gemini API / Gemini Enterprise Agent Platform | `{"error": {"code": ..., "message": "...", "status": "PERMISSION_DENIED"}}`       |
-| Bedrock Invoke/Converse                       | Header `x-amzn-ErrorType: AccessDeniedException`. Body `{"message": "..."}`       |
+| API 格式 | 错误信封 |
+| --- | --- |
+| OpenAI Chat / Responses | `{"error": {"message": "...", "type": "guardrail_blocked"}}` |
+| Anthropic Messages | `{"type": "error", "error": {"type": "invalid_request_error", "message": "..."}}` |
+| Gemini API / Gemini Enterprise Agent Platform | `{"error": {"code": ..., "message": "...", "status": "PERMISSION_DENIED"}}` |
+| Bedrock Invoke/Converse | 头为 `x-amzn-ErrorType: AccessDeniedException`，体为 `{"message": "..."}` |
 
-#### Hook chains
+#### Hook 链
 
-When multiple `pre_request` hooks match a request, Aperture calls them one at a time in the following order.
+当多个 `pre_request` hook 匹配同一请求时，Aperture 按以下顺序逐个调用。
 
-**Ordering**: Hooks with higher `preference` values run first. For example, `preference: 10` runs before `preference: 0`, the default. Hooks with equal preference run alphabetically by hook key: `audit-a` runs before `audit-z`.
+**排序**：`preference` 值较高的 hook 先运行。例如 `preference: 10` 先于默认的 `preference: 0` 运行。优先级相同的 hook 按键名字母顺序运行：`audit-a` 先于 `audit-z`。
 
-**Chain execution**:
+**链式执行**：
 
-* **`allow`** is a no-op. The chain proceeds to the next hook with the current request body.
-* **`modify`** rewrites the request body in place. The next hook in the chain receives the modified body, not the original.
-* **`block`** terminates the chain immediately. Hooks later in the chain do not run, and the client receives the block response.
+* **`allow`** 是空操作，链继续把当前请求体交给下一个 hook。
+* **`modify`** 原地改写请求体，链中下一个 hook 收到的是改写后的请求体，而不是原始请求体。
+* **`block`** 立即终止链，链中后面的 hook 不会运行，客户端收到阻止响应。
 
-If a hook modifies the request and a later hook blocks it, Aperture does not forward the modified request to the provider. The blocking hook receives the modified body. To let a blocking hook decide before other hooks modify the body, give it a higher `preference` so it runs first.
+如果某个 hook 修改了请求而后续某个 hook 阻止了它，Aperture 不会把修改后的请求转发给提供商。阻止的 hook 收到的是修改后的请求体。要让阻止型 hook 在其他 hook 修改请求体之前先行决策，请给它更高的 `preference`，让它先运行。
 
-**Failure handling**: When a `pre_request` hook fails (unreachable, timed out, non-2xx response, or unparseable body), the `fail_policy` on the hook definition controls what happens. `fail_open` proceeds to the next hook in the chain. `fail_closed` blocks the request with HTTP 503 and no subsequent hooks run. Asynchronous hooks always fail open: if the hook errors, the request still proceeds.
+**失败处理**：`pre_request` hook 失败（不可达、超时、非 2xx 响应或响应体无法解析）时，由 hook 定义上的 `fail_policy` 决定后续行为。`fail_open` 继续链中的下一个 hook；`fail_closed` 以 HTTP 503 阻止请求，后续 hook 不再运行。异步 hook 始终 fail open：hook 出错时请求仍然继续。
 
 ### `exporters`
 
-The `exporters` section configures periodic export of LLM session logs to external storage. Aperture supports exporting to S3-compatible storage, such as Amazon S3 and Google Cloud Storage. For step-by-step setup, refer to [export usage data to S3][docs-aperture-export-s3].
+`exporters` 段配置把 LLM 会话日志定期导出到外部存储。Aperture 支持导出到 S3 兼容存储，例如 Amazon S3 和 Google Cloud Storage。分步设置参阅[将用量数据导出到 S3][docs-aperture-export-s3]。
 
-The following example shows the exporters configuration:
+以下示例展示 exporters 配置：
 
 ```json
 {
@@ -969,28 +969,28 @@ The following example shows the exporters configuration:
 }
 ```
 
-Setting `bucket_name` to a non-empty value enables the S3 exporter. Each S3 exporter configuration accepts the following fields:
+把 `bucket_name` 设为非空值即启用 S3 导出器。每个 S3 导出器配置接受以下字段：
 
-| Field           | Type   | Required    | Default       | Description                                                                                                                                              |
-| --------------- | ------ | ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `endpoint`      | string | No          | `""`          | HTTP endpoint for an S3-compatible API. Required for non-AWS services such as GCS. Omit for Amazon S3, where Aperture infers the endpoint from `region`. |
-| `bucket_name`   | string | Conditional | `null`        | Name of the S3 bucket to upload exports to. Setting this field to a non-empty value enables the S3 exporter.                                             |
-| `region`        | string | No          | `"us-east-1"` | AWS region for the bucket. Required even for non-AWS endpoints because the AWS SDK validates this field.                                                 |
-| `prefix`        | string | No          | `""`          | Path prefix for new S3 objects. Must not end with `/`.                                                                                                   |
-| `access_key_id` | string | Conditional | `null`        | AWS access key ID used to authenticate. Required and must be non-empty when `bucket_name` is set and static credentials are used.                        |
-| `access_secret` | string | Conditional | `null`        | Secret key used with `access_key_id` to authenticate. Required and must be non-empty when `access_key_id` is set.                                        |
-| `every`         | int    | No          | `3600`        | Number of seconds to wait after the last export before starting another. Default is one hour.                                                            |
-| `limit`         | int    | No          | `1000`        | Maximum number of records per export. Aperture caps this value at `10000` and reduces higher values without a warning.                                   |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `endpoint` | string | 否 | `""` | S3 兼容 API 的 HTTP 端点。GCS 等非 AWS 服务必填。Amazon S3 可省略，Aperture 会根据 `region` 推断端点。 |
+| `bucket_name` | string | 条件必填 | `null` | 上传导出内容的目标 S3 桶名称。设为非空值即启用 S3 导出器。 |
+| `region` | string | 否 | `"us-east-1"` | 桶所在的 AWS 区域。即使是非 AWS 端点也必填，因为 AWS SDK 会校验该字段。 |
+| `prefix` | string | 否 | `""` | 新建 S3 对象的路径前缀。不得以 `/` 结尾。 |
+| `access_key_id` | string | 条件必填 | `null` | 用于认证的 AWS 访问密钥 ID。设置 `bucket_name` 且使用静态凭证时必填且不能为空。 |
+| `access_secret` | string | 条件必填 | `null` | 与 `access_key_id` 配合认证的私有密钥。设置 `access_key_id` 时必填且不能为空。 |
+| `every` | int | 否 | `3600` | 距上次导出后等待多少秒再开始下一次导出。默认为一小时。 |
+| `limit` | int | 否 | `1000` | 每次导出的最大记录数。Aperture 会把该值封顶为 `10000`，超出时静默调低且不发出警告。 |
 
 ### `connectors`
 
-The `connectors` section configures outbound integrations, including authenticated MCP servers and HTTP API proxies. Connectors replace the deprecated `mcp.servers` syntax and add support for authenticated connections and multiple protocols.
+`connectors` 段配置出站集成，包括带认证的 MCP 服务器和 HTTP API 代理。连接器取代了已弃用的 `mcp.servers` 语法，并新增对认证连接和多种协议的支持。
 
 \[Missing snippet: aperture\_mcp\_grant\_deprecation\_note.mdx]
 
-> **Note:**
+> **注意：**
 >
-> Connectors are always available and the previous feature flag `connectors` is deprecated. Aperture still accepts it for backward compatibility, but it has no effect, so you can remove it from your configuration.
+> 连接器始终可用，先前的功能标志 `connectors` 已弃用。为向后兼容 Aperture 仍会接受它，但已不产生任何效果，可以从配置中移除。
 
 ```json
 {
@@ -1014,52 +1014,52 @@ The `connectors` section configures outbound integrations, including authenticat
 }
 ```
 
-#### `connectors` fields
+#### `connectors` 字段
 
-| Field     | Type | Default | Description                                                                                                                                                                                                                        |
-| --------- | ---- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `servers` | map  | `{}`    | Map of connector ID to server configuration. The map key is the connector ID, which becomes the name prefix for tools (`connectorID_toolname`), resources (`connectorID-uri`), and resource templates (`connectorID-uriTemplate`). |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `servers` | map | `{}` | 连接器 ID 到服务器配置的映射。映射键是连接器 ID，会成为工具（`connectorID_toolname`）、资源（`connectorID-uri`）和资源模板（`connectorID-uriTemplate`）的名称前缀。 |
 
-#### `servers` fields
+#### `servers` 字段
 
-Each entry in the `servers` map accepts the following fields:
+`servers` 映射中的每一项接受以下字段：
 
-| Field         | Type             | Required | Default    | Description                                                                                                                                                                                                                                                                              |
-| ------------- | ---------------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `protocol`    | string           | Yes      | N/A        | How Aperture communicates with the upstream. One of `"mcp"` or `"http"`.                                                                                                                                                                                                                 |
-| `url`         | string           | No       | N/A        | Endpoint URL of the upstream server. Aperture warns if `url` is missing but still loads the configuration.                                                                                                                                                                               |
-| `provider`    | string           | No       | `"Custom"` | Provider identifier. Set automatically when using a verified connector from the registry (for example, `"Salesforce"`, `"Atlassian"`, `"Slack"`). Controls whether the connector appears in the "verified" or "custom" category in the admin dashboard.                                  |
-| `description` | string           | No       | `""`       | Human-readable label displayed in the Aperture UI. For granted HTTP connectors, `aperture_list_connectors` also returns it to permitted users.                                                                                                                                           |
-| `context`     | string or JSON   | No       | N/A        | Prompt or context information for a connector. Accepts a plain string or arbitrary JSON object. For granted HTTP connectors, `aperture_list_connectors` returns it to permitted users.                                                                                                   |
-| `labels`      | array of strings | No       | `[]`       | Flat labels that group the connector for access control. A grant pattern of `label:<name>` matches every connector carrying that label. Each label must match `[a-zA-Z0-9][a-zA-Z0-9._-]*`. The label `system` is reserved for built-in connectors and is stripped from user connectors. |
-| `auth`        | object           | No       | N/A        | Authentication configuration. Dispatched by the `type` field.                                                                                                                                                                                                                            |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `protocol` | string | 是 | N/A | Aperture 与上游通信的方式。取值为 `"mcp"` 或 `"http"`。 |
+| `url` | string | 否 | N/A | 上游服务器的端点 URL。缺少 `url` 时 Aperture 会发出警告，但仍会加载配置。 |
+| `provider` | string | 否 | `"Custom"` | 提供商标识。使用注册表中的经验证连接器时自动设置（例如 `"Salesforce"`、`"Atlassian"`、`"Slack"`）。决定连接器在管理仪表板中归入“verified”还是“custom”类别。 |
+| `description` | string | 否 | `""` | Aperture 界面中显示的人类可读标签。对已授权的 HTTP 连接器，`aperture_list_connectors` 也会把它返回给有权限的用户。 |
+| `context` | string 或 JSON | 否 | N/A | 连接器的提示或上下文信息。接受纯字符串或任意 JSON 对象。对已授权的 HTTP 连接器，`aperture_list_connectors` 会把它返回给有权限的用户。 |
+| `labels` | 字符串数组 | 否 | `[]` | 用于给连接器分组以控制访问的扁平标签。授权模式 `label:<name>` 会匹配携带该标签的每个连接器。每个标签必须匹配 `[a-zA-Z0-9][a-zA-Z0-9._-]*`。标签 `system` 为内置连接器保留，会从用户连接器上剥除。 |
+| `auth` | object | 否 | N/A | 认证配置。由 `type` 字段分发。 |
 
-The `connectors` section also accepts a `system_labels` map, which replaces the default labels on a built-in connector (for example, `{"aperture": ["system", "public"]}`). Refer to [connector labels][docs-aperture-connectors-labels].
+`connectors` 段还接受 `system_labels` 映射，用于替换内置连接器上的默认标签（例如 `{"aperture": ["system", "public"]}`）。参阅[连接器标签][docs-aperture-connectors-labels]。
 
-#### Connector ID rules
+#### 连接器 ID 规则
 
-Connector IDs must match the pattern `[a-zA-Z][a-zA-Z0-9]*` (letters and digits only, starting with a letter). Connector IDs cannot contain underscores or hyphens because the MCP wire format reserves these as separators: underscores separate the connector ID from the tool name (`snowflake_query`), and hyphens separate the connector ID from resource URIs (`snowflake-resource://...`).
+连接器 ID 必须匹配模式 `[a-zA-Z][a-zA-Z0-9]*`（仅字母和数字，以字母开头）。连接器 ID 不能包含下划线或连字符，因为 MCP 传输格式把它们保留为分隔符：下划线分隔连接器 ID 与工具名（`snowflake_query`），连字符分隔连接器 ID 与资源 URI（`snowflake-resource://...`）。
 
-Valid IDs: `github`, `snowflake`, `analyticsV2`. Invalid IDs: `my-mcp` (hyphen), `github_api` (underscore), `2fast` (starts with digit).
+有效 ID：`github`、`snowflake`、`analyticsV2`。无效 ID：`my-mcp`（连字符）、`github_api`（下划线）、`2fast`（以数字开头）。
 
-The IDs `tailscale`, `internal`, and `aperture` are reserved and cannot be used as connector IDs. The `aperture` ID is used by the built-in system connector.
+`tailscale`、`internal` 和 `aperture` 是保留 ID，不能用作连接器 ID。`aperture` ID 由内置系统连接器使用。
 
-The restriction on hyphens may be relaxed in a future release. Treat the letters-and-digits rule as current behavior, not a permanent guarantee. Refer to the [connectors reference][docs-aperture-connectors-reference] for the full ID rules.
+对连字符的限制可能在将来版本中放宽。请把“仅字母和数字”规则视为当前行为而非永久保证。完整的 ID 规则参阅[连接器参考][docs-aperture-connectors-reference]。
 
-#### Auth types
+#### 认证类型
 
-The `auth` object's `type` field selects the authentication scheme. The following table describes the available auth types:
+`auth` 对象的 `type` 字段选择认证方案。下表描述可用的认证类型：
 
-| Type                        | Required fields                           | Description                                                                                                                                                                                                                                     |
-| --------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bearer_token`              | `secret`                                  | Static `Authorization: Bearer <secret>` header.                                                                                                                                                                                                 |
-| `api_key`                   | `secret`, `name`, `in`                    | Credential injected as a named header or query parameter. `in` must be `"header"` or `"query"`.                                                                                                                                                 |
-| `basic`                     | `username`, `password`                    | HTTP Basic authentication.                                                                                                                                                                                                                      |
-| `oauth2_client_credentials` | `client_id`, `client_secret`, `token_url` | Machine-to-machine OAuth 2.0 token. Auto-refreshed. Optional `scopes` array.                                                                                                                                                                    |
-| `oauth2_authorization_code` | `client_id`, `auth_url`, `token_url`      | Per-user OAuth 2.0 consent flow. Optional `client_secret` (not required for PKCE-only), `scopes`, and `auth_params`.                                                                                                                            |
-| `oauth2_dcr`                | `url`                                     | Per-user OAuth 2.0 consent flow using dynamic client registration. Aperture discovers the authorization server and registers a client at runtime, so no `client_id`, `auth_url`, or `token_url` is needed. Optional `scopes` and `auth_params`. |
+| 类型 | 必填字段 | 描述 |
+| --- | --- | --- |
+| `bearer_token` | `secret` | 静态 `Authorization: Bearer <secret>` 头。 |
+| `api_key` | `secret`、`name`、`in` | 以命名头或查询参数注入的凭证。`in` 必须是 `"header"` 或 `"query"`。 |
+| `basic` | `username`、`password` | HTTP Basic 认证。 |
+| `oauth2_client_credentials` | `client_id`、`client_secret`、`token_url` | 机器对机器的 OAuth 2.0 token。自动刷新。可选 `scopes` 数组。 |
+| `oauth2_authorization_code` | `client_id`、`auth_url`、`token_url` | 按用户的 OAuth 2.0 授权同意流程。可选 `client_secret`（仅用 PKCE 时不需要）、`scopes` 和 `auth_params`。 |
+| `oauth2_dcr` | `url` | 使用动态客户端注册的按用户 OAuth 2.0 授权同意流程。Aperture 会在运行时发现授权服务器并注册客户端，因此不需要 `client_id`、`auth_url` 或 `token_url`。可选 `scopes` 和 `auth_params`。 |
 
-The following example shows a connector with OAuth 2.0 client credentials authentication:
+以下示例展示使用 OAuth 2.0 client credentials 认证的连接器：
 
 ```json
 {
@@ -1081,39 +1081,39 @@ The following example shows a connector with OAuth 2.0 client credentials authen
 }
 ```
 
-#### HTTP connectors
+#### HTTP 连接器
 
-When `protocol` is `"http"`, Aperture acts as an authenticated reverse proxy. Aperture forwards requests sent to `/v1/connectors/<id>/<path>` to the connector's upstream URL and injects credentials automatically. When at least one HTTP connector is configured, Aperture registers an `aperture_list_connectors` MCP tool so that AI models can discover available HTTP connectors.
+当 `protocol` 为 `"http"` 时，Aperture 充当带认证的反向代理。Aperture 把发往 `/v1/connectors/<id>/<path>` 的请求转发到连接器的上游 URL，并自动注入凭证。配置了至少一个 HTTP 连接器后，Aperture 会注册 `aperture_list_connectors` MCP 工具，让 AI 模型能够发现可用的 HTTP 连接器。
 
-> **Warning:**
+> **警告：**
 >
-> The authentication credentials configured on an HTTP connector are shared by all users with a matching `connectors` grant. Users must have a grant matching `"connectorID/proxy"` or a broader pattern like `"connectorID/**"` to access the proxy endpoint. Use the narrowest possible credential scope, preferably read-only. Do not put sensitive information in `description` or `context`. The `aperture_list_connectors` tool returns these fields to users who can call it.
+> HTTP 连接器上配置的认证凭证由所有拥有匹配 `connectors` 授权的用户共享。用户必须拥有匹配 `"connectorID/proxy"` 或更宽泛模式（如 `"connectorID/**"`）的授权才能访问代理端点。请使用尽可能窄的凭证范围，最好是只读。不要把敏感信息放进 `description` 或 `context`，`aperture_list_connectors` 工具会把这两个字段返回给能调用它的用户。
 
-#### Migration from `mcp.servers`
+#### 从 `mcp.servers` 迁移
 
-The `connectors` section replaces the deprecated `mcp.servers` syntax. At load time, Aperture automatically folds legacy `mcp.servers` entries into `connectors.servers` with `protocol: "mcp"` and no authentication. Both sections can coexist during migration, but connector IDs must be unique across both. Aperture rejects duplicate IDs at load time.
+`connectors` 段取代了已弃用的 `mcp.servers` 语法。加载时，Aperture 会自动把旧的 `mcp.servers` 条目并入 `connectors.servers`，设为 `protocol: "mcp"` 且不带认证。迁移期间两段可以共存，但连接器 ID 必须在两段之间保持唯一。加载时 Aperture 会拒绝重复 ID。
 
-Consider the following `mcp.servers` entry:
+考虑以下 `mcp.servers` 条目：
 
 ```json
 "mcp": { "servers": { "docs": { "url": "http://mcp-server.example.ts.net:8185/v1/mcp" } } }
 ```
 
-The equivalent `connectors` entry is:
+等价的 `connectors` 条目是：
 
 ```json
 "connectors": { "servers": { "docs": { "protocol": "mcp", "url": "http://mcp-server.example.ts.net:8185/v1/mcp" } } }
 ```
 
-For the full connectors schema and per-category grant reference, refer to the [connectors reference][docs-aperture-connectors-reference].
+完整的连接器 schema 和各类别授权参考，参阅[连接器参考][docs-aperture-connectors-reference]。
 
 ### `mcp`
 
-> **Note:**
+> **注意：**
 >
-> The `mcp.servers` syntax is deprecated. Use the [`connectors`][ar-connectors-section] section instead, which supports the same functionality plus authenticated connections and the `http` protocol. Aperture retains the `mcp` section for backward compatibility and for the `accept_registrations` field, which has no `connectors` equivalent.
+> `mcp.servers` 语法已弃用。请改用 [`connectors`][ar-connectors-section] 段，它支持相同功能，还支持认证连接和 `http` 协议。Aperture 保留 `mcp` 段是为了向后兼容以及 `accept_registrations` 字段——该字段在 `connectors` 中没有对应物。
 
-The `mcp` section configures MCP (Model Context Protocol) server proxying. Aperture connects to remote MCP servers, aggregates their tools, resources, and resource templates, and exposes them through a single `/v1/mcp` endpoint. Refer to [MCP server proxying][docs-aperture-set-up-mcp-servers] for setup instructions and troubleshooting.
+`mcp` 段配置 MCP（Model Context Protocol）服务器代理。Aperture 连接远程 MCP 服务器，聚合其工具、资源和资源模板，并通过单一的 `/v1/mcp` 端点暴露它们。设置说明与故障排查参阅 [MCP 服务器代理][docs-aperture-set-up-mcp-servers]。
 
 ```json
 {
@@ -1128,24 +1128,24 @@ The `mcp` section configures MCP (Model Context Protocol) server proxying. Apert
 }
 ```
 
-#### `mcp` fields
+#### `mcp` 字段
 
-| Field                  | Type    | Default | Description                                                                                                                                                                                                                                                                         |
-| ---------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accept_registrations` | boolean | `false` | Allow backends to register dynamically through `POST /v1/mcp/register`. Backends POST `{"url": "http://..."}` and keep the connection open. Tools are unregistered when the connection closes. This field has no `connectors` equivalent.                                           |
-| `servers`              | map     | `{}`    | Map of server ID to server configuration. Deprecated: use `connectors.servers` instead. The map key is the server ID, which becomes the name prefix for tools (`serverID_toolname`), resources (`serverID-uri`), and resource templates (`serverID-uriTemplate`) from that backend. |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `accept_registrations` | boolean | `false` | 允许后端通过 `POST /v1/mcp/register` 动态注册。后端 POST `{"url": "http://..."}` 并保持连接打开。连接关闭时工具即注销。该字段在 `connectors` 中没有对应物。 |
+| `servers` | map | `{}` | 服务器 ID 到服务器配置的映射。已弃用：请改用 `connectors.servers`。映射键是服务器 ID，会成为该后端工具（`serverID_toolname`）、资源（`serverID-uri`）和资源模板（`serverID-uriTemplate`）的名称前缀。 |
 
-#### `servers` fields
+#### `servers` 字段
 
-Each entry in the `servers` map accepts the following fields:
+`servers` 映射中的每一项接受以下字段：
 
-| Field | Type   | Required | Description                                                                                |
-| ----- | ------ | -------- | ------------------------------------------------------------------------------------------ |
-| `url` | string | Yes      | The MCP server endpoint URL (for example, `http://mcp-server.example.ts.net:8185/v1/mcp`). |
+| 字段 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `url` | string | 是 | MCP 服务器的端点 URL（例如 `http://mcp-server.example.ts.net:8185/v1/mcp`）。 |
 
 ### `database`
 
-The `database` section configures data storage behavior, including retention policies and header filtering for captured request and response data.
+`database` 段配置数据存储行为，包括所捕获请求与响应数据的保留策略和头筛选。
 
 ```json
 {
@@ -1161,72 +1161,72 @@ The `database` section configures data storage behavior, including retention pol
 }
 ```
 
-#### `database` fields
+#### `database` 字段
 
-| Field                  | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `save_raws`            | boolean | `false` | Saves original HTTP request and response bytes before JSON parsing alongside parsed JSON captures. When `false`, Aperture discards raw bodies for valid JSON responses. It retains raw bytes for responses that fail JSON parsing unless zero retention is configured (`duration: "0"`, `require_export: false`). Turning this off does not remove raw bodies that Aperture already saved. The retention policy removes them.                                                                                                                                         |
-| `keep_encrypted_blobs` | boolean | `false` | Aperture normally replaces provider-encrypted thinking-block signatures, web search encrypted content, citation indices, and encrypted response items with placeholders in parsed captures. Set to `true` to keep these fields for debugging or replay until the retention policy removes their captured content. This setting does not redact raw HTTP bodies, which can contain the original encrypted values when `save_raws` is enabled or response JSON parsing fails. Zero retention (`duration: "0"`, `require_export: false`) does not store captured bodies. |
-| `retention`            | object  | `{}`    | Capture data retention policy. Refer to the following retention fields.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `headers`              | object  | `{}`    | Header filtering policy. Controls which request and response headers are stored in a queryable form and can be used as filters on supported Aperture admin dashboard pages. Empty (the default) disables the feature. Refer to the following header fields.                                                                                                                                                                                                                                                                                                           |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `save_raws` | boolean | `false` | 在解析后的 JSON 抓包记录之外，保存 JSON 解析前的原始 HTTP 请求与响应字节。为 `false` 时，Aperture 会丢弃有效 JSON 响应的原始体；对 JSON 解析失败的响应仍保留原始字节，除非配置了零保留（`duration: "0"`、`require_export: false`）。关闭它不会删除 Aperture 已保存的原始体，由保留策略负责删除。 |
+| `keep_encrypted_blobs` | boolean | `false` | Aperture 通常会在解析后的抓包记录中，把提供商加密的思维块签名、网页搜索加密内容、引用索引和加密响应项替换为占位符。设为 `true` 可为调试或回放保留这些字段，直到保留策略删除其抓包内容。该设置不会隐去原始 HTTP 体——当启用 `save_raws` 或响应 JSON 解析失败时，原始体中可能包含原始加密值。零保留（`duration: "0"`、`require_export: false`）不会存储抓包体。 |
+| `retention` | object | `{}` | 抓包数据保留策略。参阅下方的保留字段。 |
+| `headers` | object | `{}` | 头筛选策略。控制哪些请求与响应头以可查询形式存储，并可在支持的 Aperture 管理仪表板页面上用作筛选条件。为空（默认）时禁用该功能。参阅下方的头字段。 |
 
-#### `database.retention` fields
+#### `database.retention` 字段
 
-| Field            | Type    | Default        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| :--------------- | :------ | :------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `duration`       | string  | `""`           | How long to keep captured content before deleting it, such as `"30d"` or `"720h"`. An empty string uses your gateway's default retention period, which is one year unless Tailscale configured a different default. The default is also the longest period Aperture applies. If you set a longer non-zero duration, Aperture uses the default instead. Non-zero values must be between 1 hour and 3650 days. Set to `"0"` for zero retention without export gating. The default limits only longer durations, so `"0"` always takes effect. |
-| `require_export` | boolean | `false`        | When `true`, Aperture removes local captured content only after successfully exporting the capture to an Amazon S3-compatible endpoint. Aperture keeps captures that have not yet been exported, regardless of `duration`. A successful export does not guarantee immediate removal.                                                                                                                                                                                                                                                        |
-| `purge`          | array   | `["captures"]` | Categories of content to remove. An omitted or empty list defaults to `["captures"]`. A non-empty list must include `"captures"` and cannot contain duplicates. `["captures"]` removes request and response bodies, headers, and raw bodies but keeps tool use data. `["captures", "tools"]` also removes tool use data.                                                                                                                                                                                                                    |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `duration` | string | `""` | 抓包内容删除前的保留时长，例如 `"30d"` 或 `"720h"`。空字符串使用网关的默认保留期——除非 Tailscale 配置了其他默认值，否则为一年。默认值同时也是 Aperture 应用到的最长期间；如果设置了更长的非零时长，Aperture 会改用默认值。非零取值必须在 1 小时到 3650 天之间。设为 `"0"` 表示不带导出门控的零保留。默认值只限制更长的时长，因此 `"0"` 始终生效。 |
+| `require_export` | boolean | `false` | 为 `true` 时，只有成功把抓包导出到 Amazon S3 兼容端点后，Aperture 才会删除本地抓包内容。无论 `duration` 如何，尚未导出的抓包都会保留。导出成功也不保证立即删除。 |
+| `purge` | array | `["captures"]` | 要移除的内容类别。省略或留空时默认为 `["captures"]`。非空列表必须包含 `"captures"` 且不能有重复。`["captures"]` 移除请求与响应体、头和原始体，但保留工具使用数据；`["captures", "tools"]` 还会移除工具使用数据。 |
 
-With `duration: "0"` and `require_export: false`, Aperture does not store captured request and response bodies, headers, or raw HTTP bytes. This applies even if `save_raws` or `keep_encrypted_blobs` is enabled or response JSON parsing fails. This does not depend on the `purge` list. To also omit captured tool data, add `"tools"` to `purge`.
+当 `duration: "0"` 且 `require_export: false` 时，Aperture 不存储捕获的请求与响应体、头或原始 HTTP 字节。即使启用了 `save_raws` 或 `keep_encrypted_blobs`，或响应 JSON 解析失败，也照样适用。这不依赖 `purge` 列表。要同时省略捕获的工具数据，请在 `purge` 中加入 `"tools"`。
 
-When you save, Aperture rejects malformed or negative durations and non-zero durations outside the range of 1 hour to 3650 days. A valid duration longer than your gateway's default retention period still saves, but Aperture applies the default instead. For example, with a one-year default, `"730d"` results in an effective retention period of one year.
+保存时，Aperture 会拒绝格式错误或为负的时长，以及超出 1 小时到 3650 天范围的非零时长。超过网关默认保留期的有效时长仍能保存，但 Aperture 会改用默认值。例如默认保留期为一年时，`"730d"` 的实际保留期仍是一年。
 
-Aperture removes captured content while keeping capture metadata, session records, usage metrics (token counts, model, cost estimate, duration, and status code), and separately indexed header values. Usage analytics and header filtering remain available after Aperture removes captured content. Capture retention does not delete Aperture Chat conversation history. Other lifecycle rules or user actions can affect data outside capture retention.
+Aperture 删除抓包内容的同时，会保留抓包元数据、会话记录、用量指标（token 数、模型、成本估算、时长和状态码）以及单独索引的头值。抓包内容删除后，用量分析和头筛选仍然可用。抓包保留不会删除 Aperture Chat 的对话历史。抓包保留之外的数据可能受其他生命周期规则或用户操作影响。
 
-> **Warning:**
+> **警告：**
 >
-> An omitted or empty `duration` uses the default retention period, not an unlimited one. That default is one year unless Tailscale configured a different default for your gateway. It is also the maximum: Aperture shortens a longer duration to the default. If `require_export` is `true`, Aperture keeps local captured content until export succeeds, even past the retention period. Contact your Tailscale account manager to confirm your gateway's default retention period.
+> 省略或留空 `duration` 使用的是默认保留期，而非无限保留。除非 Tailscale 为你的网关配置了其他默认值，否则默认期为一年。它同时也是上限：超过默认期的时长会被 Aperture 缩短到默认期。如果 `require_export` 为 `true`，即使过了保留期，Aperture 也会保留本地抓包内容直到导出成功。请联系你的 Tailscale 客户经理确认网关的默认保留期。
 
-> **Note:**
+> **注意：**
 >
-> For step-by-step guidance on zero retention for captured content, refer to [Configure zero-retention mode][docs-aperture-zero-retention]. For an overview of retention, redaction, and independent Chat and hook data handling, refer to [Privacy and data retention][docs-aperture-privacy].
+> 抓包内容零保留的分步指引参阅[配置零保留模式][docs-aperture-zero-retention]。保留、隐去以及 Chat 与 hook 数据独立处理的概览参阅[隐私与数据保留][docs-aperture-privacy]。
 
-#### `database.headers` fields
+#### `database.headers` 字段
 
-Aperture stores captured request and response headers in compressed form. The `headers` section specifies which headers Aperture indexes for filtering by presence or value. These filters are available on:
+Aperture 以压缩形式存储捕获的请求与响应头。`headers` 段指定 Aperture 为哪些头建立按存在性或值筛选的索引。这些筛选器可用于：
 
-* **User Dashboard** at `/admin/dashboard`
-* **Usage Overview** at `/admin/adoption`
-* **Model Activity** at `/admin/adoption/model-activity`
-* **Agent Activity** at `/admin/adoption/agent-activity`
-* **Logs** at `/admin/logs`
-* **Tool Use** at `/admin/tool-use`
+* **User Dashboard**（`/admin/dashboard`）
+* **Usage Overview**（`/admin/adoption`）
+* **Model Activity**（`/admin/adoption/model-activity`）
+* **Agent Activity**（`/admin/adoption/agent-activity`）
+* **Logs**（`/admin/logs`）
+* **Tool Use**（`/admin/tool-use`）
 
-Aperture retains indexed header values past the capture retention period. With write-time zero retention, Aperture writes no new header index values, including configured filterable headers.
+抓包保留期结束后，Aperture 仍保留已索引的头值。启用写入时零保留后，Aperture 不再写入新的头索引值，包括已配置的可筛选头。
 
-| Field        | Type  | Default | Description                                                                                                                                                                                                                                       |
-| :----------- | :---- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `filterable` | array | `[]`    | Objects describing the request and response headers to index by name and value. An empty array builds no header indexes. Edit this list under **Stored filterable headers** on **Administration** > **Reporting** at `/admin/settings/reporting`. |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `filterable` | array | `[]` | 描述要按名称和值建立索引的请求与响应头的对象。数组为空时不建立任何头索引。可在 **Administration** > **Reporting**（`/admin/settings/reporting`）的 **Stored filterable headers** 下编辑此列表。 |
 
-Each `filterable` entry has these fields:
+每个 `filterable` 条目包含以下字段：
 
-| Field           | Type    | Description                                                                                                                                                                                                                                                                                                                                                                     |
-| :-------------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`          | string  | Required. Header name to index. Case-insensitive, and applied to both the request and response hops.                                                                                                                                                                                                                                                                            |
-| `redact_values` | boolean | Optional, defaults to `false`. When `true`, Aperture stores only the header's presence, never its value. The header supports **Present** matching, but not **Contains** or **Is exactly**. Use it for headers whose values must not be stored durably. Set this field on **Administration** > **Configuration**. The **Reporting** page honors this field but does not edit it. |
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `name` | string | 必填。要建立索引的头名称。大小写不敏感，同时作用于请求与响应两个方向。 |
+| `redact_values` | boolean | 可选，默认 `false`。为 `true` 时，Aperture 只存储该头的存在性，从不存储其值。该头支持 **Present** 匹配，但不支持 **Contains** 或 **Is exactly**。适用于其值不能持久存储的头。在 **Administration** > **Configuration** 上设置此字段；**Reporting** 页面会遵循它但不能编辑它。 |
 
-Aperture builds no header indexes until you list at least one header. Only the headers you list are indexed. Other headers remain available only in retained captures.
+在列出至少一个头之前，Aperture 不会建立任何头索引。只有你列出的头会被索引，其余头仅保留在留存抓包中。
 
-Indexing a header does not grant access to filter by it. Users, including admins, need a grant that assigns the header through [`filterable_headers`][ar-grant-capability-fields]. They can then use it as a filter on any dashboard page that supports filtering.
+为头建立索引并不意味着有权用它筛选。包括管理员在内的用户都需要通过 [`filterable_headers`][ar-grant-capability-fields] 分配该头的授权，之后才能在任何支持筛选的仪表板页面上把它用作筛选条件。
 
-Aperture indexes the header for new requests immediately. Aperture backfills older requests from captures that remain within the retention window. It cannot backfill requests whose captures have already been purged.
+Aperture 会立即为新请求索引该头，并从仍在保留窗口内的抓包回填较早的请求。抓包已被清除的请求无法回填。
 
-> **Note:**
+> **注意：**
 >
-> The backfiller finishes all historical data, but might not immediately reindex the current calendar day. It fills in missed entries for the current day when the next day begins.
+> 回填器会处理完所有历史数据，但可能不会立即重新索引当前日历日；次日伊始会补齐当天的缺失条目。
 
-Aperture redacts detected credentials in stored header values. Built-in checks cover common formats, including bearer tokens, JWTs, and API keys with prefixes such as `sk-`, `AKIA`, `ghp_`, and `xoxb-`, plus high-entropy values. Matching values are stored as `(redacted)`. These checks are fixed and cannot detect every secret. To make sure Aperture never stores a header's value, set `redact_values` on that header.
+Aperture 会隐去存储头值中检测到的凭证。内置检查覆盖常见格式，包括 bearer token、JWT，以及带 `sk-`、`AKIA`、`ghp_`、`xoxb-` 等前缀的 API 密钥，还有高熵值。匹配的值存储为 `(redacted)`。这些检查是固定的，无法检测所有秘密。要确保 Aperture 从不存储某个头的值，请为该头设置 `redact_values`。
 
 ```json
 "headers": {
@@ -1238,21 +1238,21 @@ Aperture redacts detected credentials in stored header values. Built-in checks c
 },
 ```
 
-> **Note:**
+> **注意：**
 >
-> For step-by-step guidance, refer to [Filter logs by header][docs-aperture-filter-logs-by-header].
+> 分步指引参阅[按头筛选日志][docs-aperture-filter-logs-by-header]。
 
 ### `chat_models`
 
-The `chat_models` section controls which models appear in the Aperture chat UI picker, their display names and order, and their utility roles for title generation and summarization.
+`chat_models` 段控制哪些模型出现在 Aperture chat UI 选择器中、它们的显示名称和顺序，以及它们在标题生成和摘要方面的功能角色。
 
-This section does not grant access. When `chat_models` has entries, a model must match both a grant and a `chat_models` entry to appear in the picker. When the section is omitted or empty, the picker shows all granted models whose provider declares a chat-compatible API, labeled with their raw model IDs.
+该段不授予访问权限。`chat_models` 有条目时，模型必须同时匹配一条授权和一个 `chat_models` 条目才会出现在选择器中。该段省略或为空时，选择器显示所有已授权且提供商声明了 chat 兼容 API 的模型，并以原始模型 ID 作为标签。
 
-Use `provider/model` IDs or patterns in `chat_models`, not [model alias][docs-aperture-model-aliases] names. The `display_name` field changes the picker label. It does not create an alias for API requests.
+`chat_models` 中使用 `provider/model` ID 或模式，而不是[模型别名][docs-aperture-model-aliases]名称。`display_name` 字段只改变选择器标签，不会为 API 请求创建别名。
 
-> **Note:**
+> **注意：**
 >
-> The web portal is available by default. Set `enable_portal` to `false` in a [grant][ar-grant-capability-fields] to disable it for matched non-admin users. An explicit `true` wins over a broader opt-out, and admins always retain access. The legacy `enable_chat_ui` field has the same effect for existing configurations. The `chat_models` section controls what the chat model picker shows, not who can access the portal.
+> web 门户默认开放。在[授权][ar-grant-capability-fields]中把 `enable_portal` 设为 `false` 即可为其匹配的非管理员用户禁用。显式 `true` 优先于更大范围的禁用，且管理员始终保留访问权限。旧字段 `enable_chat_ui` 对现有配置有同样效果。`chat_models` 段控制 chat 模型选择器显示什么，而不控制谁能访问门户。
 
 ```json
 {
@@ -1266,31 +1266,31 @@ Use `provider/model` IDs or patterns in `chat_models`, not [model alias][docs-ap
 }
 ```
 
-#### `chat_models` fields
+#### `chat_models` 字段
 
-Each entry in the `chat_models` array accepts the following fields:
+`chat_models` 数组中的每个条目接受以下字段：
 
-| Field                   | Type    | Default               | Description                                                                                                                                                                                                                                      |
-| ----------------------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model`                 | string  | (required)            | Fully qualified `provider/model` glob pattern using the same syntax as `grants.models` (`*` matches any characters within a single path segment, `**` matches zero or more segments).                                                            |
-| `display_name`          | string  | `""`                  | Label shown in the chat picker. When empty, falls back to the model's short ID (the part after the provider prefix).                                                                                                                             |
-| `priority`              | integer | `0`                   | Picker ordering priority. Higher values appear first. Ties are broken alphabetically by model ID. Also used as the tiebreaker for utility model selection.                                                                                       |
-| `title_gen`             | boolean | `false`               | Flags this entry as eligible for conversation-title generation. The chat service selects the highest-priority `title_gen` entry whose model the user is granted. Falls back to the conversation's chosen model when nothing qualifies.           |
-| `summarize`             | boolean | `false`               | Flags this entry as eligible for summarizing extended reasoning blocks in chat responses. Selection follows the same rules as `title_gen`. The `title_gen` and `summarize` roles are independent.                                                |
-| `hidden`                | boolean | `false`               | Excludes matching models from the chat picker while keeping them eligible for the `title_gen` and `summarize` roles. Use it to reserve a model for background tasks without offering it for responses.                                           |
-| `context_window_tokens` | integer | (model catalog value) | Overrides the context window Aperture assumes for chat. Must be a positive integer.                                                                                                                                                              |
-| `max_output_tokens`     | integer | (model catalog value) | Maximum output tokens for chat responses. Aperture sends this value to the upstream provider, even for APIs where the limit is optional, and lowers it when the conversation leaves less room in the context window. Must be a positive integer. |
-| `native_tool_loading`   | boolean | `false`               | Uses the provider's own tool search instead of Aperture's. Applies only to Anthropic Messages and OpenAI Responses models, and only when `model` is an exact model ID rather than a pattern.                                                     |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `model` | string | 必填 | 完全限定的 `provider/model` glob 模式，使用与 `grants.models` 相同的语法（`*` 匹配单个路径段内的任意字符，`**` 匹配零个或多个段）。 |
+| `display_name` | string | `""` | chat 选择器中显示的标签。为空时回退到模型的短 ID（提供商前缀之后的部分）。 |
+| `priority` | integer | `0` | 选择器排序优先级，值高者在前。并列时按模型 ID 字母顺序排列。也用作功能模型选择的平局裁决。 |
+| `title_gen` | boolean | `false` | 标记该条目可用于生成对话标题。chat 服务会选择用户有权使用的优先级最高的 `title_gen` 条目；没有符合条件的条目时回退到对话所用的模型。 |
+| `summarize` | boolean | `false` | 标记该条目可用于摘要 chat 响应中的扩展推理块。选择规则与 `title_gen` 相同。`title_gen` 与 `summarize` 角色相互独立。 |
+| `hidden` | boolean | `false` | 把匹配的模型从 chat 选择器中排除，同时保留其 `title_gen` 和 `summarize` 角色资格。用于把某个模型保留给后台任务而不作为回复候选。 |
+| `context_window_tokens` | integer | 模型目录值 | 覆盖 Aperture 假定的 chat 上下文窗口。必须是正整数。 |
+| `max_output_tokens` | integer | 模型目录值 | chat 响应的最大输出 token 数。即使某些 API 中该限制可选，Aperture 也会把该值发送给上游提供商，并在对话在上下文窗口中剩余空间不足时调低它。必须是正整数。 |
+| `native_tool_loading` | boolean | `false` | 使用提供商自己的工具搜索而非 Aperture 的。仅适用于 Anthropic Messages 和 OpenAI Responses 模型，且仅当 `model` 是精确模型 ID 而非模式时。 |
 
-When multiple entries match the same model, the most specific glob wins. For example, `"anthropic/claude-opus-5-5"` takes precedence over `"anthropic/**"`, which takes precedence over `"**"`. If patterns are equally specific, the earlier entry in the configuration wins.
+多个条目匹配同一模型时，最具体的 glob 优先。例如 `"anthropic/claude-opus-5-5"` 优先于 `"anthropic/**"`，后者又优先于 `"**"`。模式同样具体时，配置中靠前的条目优先。
 
-> **Note:**
+> **注意：**
 >
-> The chat picker only includes models whose provider declares a chat-compatible API: `anthropic_messages`, `openai_chat`, `openai_responses`, `gemini_generate_content`, or `google_generate_content` (for Gemini models). Models served only through other formats, such as Amazon Bedrock, do not appear regardless of `chat_models` entries.
+> chat 选择器只包含提供商声明了 chat 兼容 API 的模型：`anthropic_messages`、`openai_chat`、`openai_responses`、`gemini_generate_content` 或 `google_generate_content`（针对 Gemini 模型）。仅通过其他格式（如 Amazon Bedrock）提供的模型无论 `chat_models` 如何设置都不会出现。
 
 ### `flags`
 
-The `flags` section enables experimental features that are not yet generally available. Each flag is identified by a string key and contains a `value` boolean. All flags default to disabled (`false`). Adding a flag to the configuration enables it.
+`flags` 段启用尚未正式发布的实验性功能。每个标志由字符串键标识，包含一个 `value` 布尔值。所有标志默认禁用（`false`）。把标志加入配置即启用。
 
 ```json
 {
@@ -1302,147 +1302,147 @@ The `flags` section enables experimental features that are not yet generally ava
 }
 ```
 
-Each key is a flag ID. The value object must contain a `value` field set to `true` to enable the flag. Setting `value` to `false` or omitting the flag entirely leaves the feature disabled. The preceding example enables the direct provider access API. Refer to [direct provider access][docs-aperture-direct-access] for what that flag turns on.
+每个键是一个标志 ID。要启用标志，值对象必须包含设为 `true` 的 `value` 字段。把 `value` 设为 `false` 或完全不写该标志都会保持功能禁用。上面的示例启用了直接提供商访问 API。该标志开启的功能参阅[直接提供商访问][docs-aperture-direct-access]。
 
-#### Flag reference
+#### 标志参考
 
-The flags in this reference carry one of two statuses:
+本参考中的标志有两种状态之一：
 
-* **Private.** Tailscale manages these outside your Aperture configuration. You cannot enable them, and Aperture rejects them in your configuration.
-* **Deprecated.** These no longer do anything. The feature they gated is always on.
+* **Private（私有）。** Tailscale 在你的 Aperture 配置之外管理这些标志。你无法启用它们，Aperture 会拒绝配置中出现它们。
+* **Deprecated（已弃用）。** 这些标志已不产生任何效果，它们所门控的功能始终开启。
 
-Tailscale manages the following flags outside your Aperture configuration. Do not add them to your configuration: Aperture reports each as `unknown flag "{key}" in flags config`, which blocks the save.
+Tailscale 在你的 Aperture 配置之外管理以下标志。不要把它们加入配置：Aperture 会针对每个标志报 `unknown flag "{key}" in flags config`，并阻止保存。
 
-| Flag ID                            | Name                             | Status  |
-| ---------------------------------- | -------------------------------- | ------- |
-| `mcp_apps`                         | MCP Apps                         | Private |
-| `disable_liveness_check`           | Disable Liveness Check           | Private |
+| 标志 ID | 名称 | 状态 |
+| --- | --- | --- |
+| `mcp_apps` | MCP Apps | Private |
+| `disable_liveness_check` | Disable Liveness Check | Private |
 | `disable_hook_request_compression` | Disable Hook Request Compression | Private |
-| `portal_root`                      | Portal Root                      | Private |
-| `connector_identity_headers`       | Connector Identity Headers       | Private |
+| `portal_root` | Portal Root | Private |
+| `connector_identity_headers` | Connector Identity Headers | Private |
 
-These flags are deprecated. The features they gated are always available, so you can remove them from your configuration.
+以下标志已弃用。它们门控的功能始终可用，可以从配置中移除。
 
-| Flag ID             | Name              | Status     |
-| ------------------- | ----------------- | ---------- |
-| `chat_ui`           | Chat UI           | Deprecated |
-| `connectors`        | Connectors        | Deprecated |
-| `web_tools`         | Web Tools         | Deprecated |
-| `connector_labels`  | Connector Labels  | Deprecated |
+| 标志 ID | 名称 | 状态 |
+| --- | --- | --- |
+| `chat_ui` | Chat UI | Deprecated |
+| `connectors` | Connectors | Deprecated |
+| `web_tools` | Web Tools | Deprecated |
+| `connector_labels` | Connector Labels | Deprecated |
 | `capture_retention` | Capture Retention | Deprecated |
 
-Web search and fetch no longer require the `web_tools` flag. Availability depends on your gateway's configuration.
+网页搜索与抓取不再需要 `web_tools` 标志。可用性取决于你的网关配置。
 
-The configuration API rejects a deprecated flag when you add it to a saved configuration. Aperture preserves an existing deprecated flag for compatibility. The flags have no effect and you can remove them.
+向已保存配置添加已弃用标志时，配置 API 会拒绝。为兼容起见，Aperture 会保留既有的已弃用标志。这些标志没有效果，可以移除。
 
-> **Note:**
+> **注意：**
 >
-> The **Administration** > **Feature Flags** page at `/admin/settings/feature-flags` never lists Private or Deprecated flags.
+> `/admin/settings/feature-flags` 的 **Administration** > **Feature Flags** 页面从不列出 Private 或 Deprecated 标志。
 
-#### Validation behavior
+#### 校验行为
 
-Unknown flag IDs produce a validation warning: `unknown flag "{key}" in flags config`. This warning blocks saves through the API or admin dashboard, where warnings are treated as errors.
+未知的标志 ID 会产生校验警告：`unknown flag "{key}" in flags config`。在通过 API 或管理仪表板保存时警告被视为错误，因此会阻止保存。
 
-#### Connectors flags
+#### Connectors 标志
 
-The `connectors` flag is deprecated. Connectors, including the [`connectors`][ar-connectors-section] configuration section, the **Connectors** page at `/admin/settings/connectors`, and the `/v1/connectors/` REST API endpoints, are always available and no longer require a flag. If your configuration still sets `connectors`, you can remove it.
+`connectors` 标志已弃用。连接器——包括 [`connectors`][ar-connectors-section] 配置段、`/admin/settings/connectors` 的 **Connectors** 页面以及 `/v1/connectors/` REST API 端点——始终可用，不再需要标志。如果配置中仍设置了 `connectors`，可以移除。
 
-The `connector_labels` flag is also deprecated. Connector labels, including the `labels` field on a connector, `label:<name>` grant matching, and the label fields at `/admin/settings/connectors`, are always available. Removing the gate cannot narrow anyone's access, because label grants only ever add access. If your configuration still sets `connector_labels`, you can remove it.
+`connector_labels` 标志同样已弃用。连接器标签——包括连接器上的 `labels` 字段、`label:<name>` 授权匹配以及 `/admin/settings/connectors` 的标签字段——始终可用。移除门控不会收窄任何人的访问，因为标签授权只会增加访问。如果配置中仍设置了 `connector_labels`，可以移除。
 
-For the full connectors configuration schema, refer to the [`connectors`][ar-connectors-section] section on this page and the [connectors feature guide][docs-aperture-connectors].
+完整的连接器配置 schema 参阅本页的 [`connectors`][ar-connectors-section] 段和[连接器功能指南][docs-aperture-connectors]。
 
-## Quota enforcement
+## 配额执行
 
-Aperture enforces quotas at request time by checking all referenced buckets before forwarding a request to the provider.
+Aperture 在请求时执行配额：转发请求给提供商之前检查所有被引用的桶。
 
-### What happens when a request exceeds a quota
+### 请求超出配额时会发生什么
 
-When a request would exceed any of its quota buckets, Aperture:
+当请求将超出其任一配额桶时，Aperture 会：
 
-1. Rejects the request with HTTP status **429 (Too Many Requests)**.
-2. Sets a `Retry-After` header with the estimated seconds until enough budget refills.
-3. Formats the error to match the provider's native error format.
-4. Logs a warning with the bucket detail, login name, and model.
+1. 以 HTTP 状态 **429（Too Many Requests）** 拒绝请求。
+2. 设置 `Retry-After` 头，给出预算补充充足所需的预计秒数。
+3. 把错误格式化为该提供商的原生错误格式。
+4. 记录包含桶详情、登录名和模型的警告日志。
 
-The following table describes the provider-specific error formats:
+下表描述各提供商特定的错误格式：
 
-| Provider                                      | Error format                                                                          |
-| :-------------------------------------------- | :------------------------------------------------------------------------------------ |
-| Anthropic                                     | `{"type":"error","error":{"type":"rate_limit_error","message":"..."}}`                |
-| OpenAI                                        | `{"error":{"message":"...","type":"insufficient_quota","code":"insufficient_quota"}}` |
-| Bedrock                                       | `{"message":"..."}` with `x-amzn-ErrorType: ThrottlingException`                      |
-| Gemini API / Gemini Enterprise Agent Platform | `{"error":{"code":429,"message":"...","status":"RESOURCE_EXHAUSTED"}}`                |
+| 提供商 | 错误格式 |
+| --- | --- |
+| Anthropic | `{"type":"error","error":{"type":"rate_limit_error","message":"..."}}` |
+| OpenAI | `{"error":{"message":"...","type":"insufficient_quota","code":"insufficient_quota"}}` |
+| Bedrock | `{"message":"..."}`，头为 `x-amzn-ErrorType: ThrottlingException` |
+| Gemini API / Gemini Enterprise Agent Platform | `{"error":{"code":429,"message":"...","status":"RESOURCE_EXHAUSTED"}}` |
 
-### How clients observe enforcement
+### 客户端如何感知执行
 
-When Aperture blocks a request for exceeding a quota, the client receives an HTTP 429 response. The blocked request also appears on the **Logs** page at `/admin/logs` with a 429 status.
+Aperture 因超出配额阻止请求时，客户端收到 HTTP 429 响应。被阻止的请求也会以 429 状态出现在 `/admin/logs` 的 **Logs** 页面上。
 
-## Validation
+## 校验
 
-Aperture validates configuration before saving it through the API or the admin dashboard. Both errors and warnings block the save. Correct the reported problems and save again.
+Aperture 在通过 API 或管理仪表板保存配置之前进行校验。错误和警告都会阻止保存。请修正报告的问题后重新保存。
 
-Use `POST /aperture/config:validate` to check a configuration before saving. Warnings set `Valid: false`, matching save behavior. The admin lockout check applies only when saving and prevents you from removing your own admin access.
+保存前可用 `POST /aperture/config:validate` 检查配置。警告会把 `Valid` 设为 `false`，与保存行为一致。管理员锁定检查仅在保存时进行，防止你移除自己的管理员权限。
 
-The following table lists validation errors and warnings.
+下表列出校验错误和警告。
 
-| Condition                                                                              | Message                                                                                                                                                                  | Severity |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| No providers or MCP servers                                                            | `no providers or mcp servers defined; users will not be able to access any models`                                                                                       | Warning  |
-| Provider missing `baseurl`                                                             | `provider {id} has no baseurl configured`                                                                                                                                | Warning  |
-| Invalid `authorization` type                                                           | `provider {id} has invalid authorization type: {type}`                                                                                                                   | Warning  |
-| Unresolved environment variable                                                        | `unsubstituted macros: [var_name]`                                                                                                                                       | Error    |
-| Invalid JSON or HUJSON syntax                                                          | Parse error details                                                                                                                                                      | Error    |
-| Invalid quota definition                                                               | `quota {name}: {details}`                                                                                                                                                | Error    |
-| **Structural / syntax**                                                                |                                                                                                                                                                          |          |
-| Duplicate keys in configuration                                                        | `duplicate config key "hostname"`                                                                                                                                        | Warning  |
-| Unknown configuration keys                                                             | `unknown config key "basurl"`                                                                                                                                            | Warning  |
-| Type mismatch in field value                                                           | Field name and `json.UnmarshalTypeError` details                                                                                                                         | Warning  |
-| **Provider**                                                                           |                                                                                                                                                                          |          |
-| Invalid `add_headers` format                                                           | `provider {id}: add_headers entry "Bad-Entry" must be in "Header-Name: value" format`                                                                                    | Warning  |
-| **Quota**                                                                              |                                                                                                                                                                          |          |
-| Invalid quota name template                                                            | `quota "{name}": quota name "{name}" has unsupported template "{template}" after colon`                                                                                  | Warning  |
-| **Grant**                                                                              |                                                                                                                                                                          |          |
-| Unknown fields in grant                                                                | Strict JSON parsing error for the unrecognized field                                                                                                                     | Warning  |
-| Grant `models` references undefined provider                                           | `models pattern "{pattern}" references provider "{name}" which does not match any declared provider`                                                                     | Warning  |
-| Grant `mcp_tools`, `mcp_resources`, or `mcp_templates` references undefined MCP server | `mcp_tools pattern "{pattern}" references server "{name}" which does not match any declared MCP server`                                                                  | Warning  |
-| Grant `send_hooks` references undefined hook                                           | `send_hooks references undefined hook "{name}"`                                                                                                                          | Warning  |
-| Grant `quotas` references undefined quota                                              | `quotas references undefined quota "{name}"`                                                                                                                             | Warning  |
-| Invalid quota bucket ref template in grant                                             | `grants[{n}] grant {n} quotas[{n}]: bucket ref "{ref}" has unsupported template...`                                                                                      | Warning  |
-| Grant-level `add_headers` invalid format                                               | `add_headers entry "{entry}" must be in "Header-Name: value" format`                                                                                                     | Warning  |
-| **Connector**                                                                          |                                                                                                                                                                          |          |
-| Connector missing `protocol`                                                           | `connectors.servers.{id}: protocol is required (e.g. "mcp" or "http")`                                                                                                   | Error    |
-| Unsupported connector protocol                                                         | `connectors.servers.{id}: unsupported protocol "{value}" (supported: "mcp", "http")`                                                                                     | Error    |
-| Invalid connector ID                                                                   | `connectors.servers.{id}: invalid ID "{id}"; connector IDs must match [a-zA-Z][a-zA-Z0-9]* (letters and digits only, starting with a letter; no hyphens or underscores)` | Error    |
-| Connector missing URL                                                                  | `connectors.servers.{id}: URL is required`                                                                                                                               | Warning  |
-| Connector auth validation failure                                                      | `connectors.servers.{id}.auth: {details}`                                                                                                                                | Error    |
-| Invalid connector label                                                                | `connectors.servers.{id}.labels: invalid label "{label}"; labels must match [a-zA-Z0-9][a-zA-Z0-9._-]* (no slashes)`                                                     | Error    |
-| Reserved label on a user connector                                                     | `connectors.servers.{id}.labels: removed reserved label "system"`                                                                                                        | Warning  |
-| Unknown system connector in `system_labels`                                            | `connectors.system_labels.{id}: unknown system connector ID`                                                                                                             | Error    |
-| Duplicate connector ID across `mcp` and `connectors`                                   | `config: server ID "{id}" is defined in both 'mcp.servers' and 'connectors.servers'; IDs must be unique across both sections`                                            | Error    |
-| **Hook**                                                                               |                                                                                                                                                                          |          |
-| Hook missing URL                                                                       | `hook {name} has no url configured`                                                                                                                                      | Warning  |
-| Hook invalid URL scheme                                                                | `hook {name} has invalid URL scheme (must be http:// or https://): {url}`                                                                                                | Warning  |
-| Hook invalid authorization type                                                        | `hook {name} has invalid authorization type: {type}`                                                                                                                     | Warning  |
-| **Exporter**                                                                           |                                                                                                                                                                          |          |
-| S3 prefix ends with `/`                                                                | `exporters.s3.prefix must not end with a slash`                                                                                                                          | Warning  |
-| **Structural warnings**                                                                |                                                                                                                                                                          |          |
-| No grants assign admin role                                                            | `no grant in grants or temp_grants assigns role:admin; nobody will be able to manage this instance`                                                                      | Warning  |
-| Providers configured but no grants defined                                             | `providers are configured but no grants or temp_grants defined; all access will be denied`                                                                               | Warning  |
-| **Save-only**                                                                          |                                                                                                                                                                          |          |
-| Empty configuration                                                                    | `config must not be empty`                                                                                                                                               | Error    |
-| Admin lockout prevention                                                               | Rejects saves that would remove the saving user's admin access                                                                                                           | Error    |
-| **Exporter silent cap**                                                                |                                                                                                                                                                          |          |
-| S3 exporter `limit` exceeds 10000                                                      | Aperture silently reduces `limit` to `10000`                                                                                                                             | Silent   |
+| 条件 | 消息 | 严重级别 |
+| --- | --- | --- |
+| 未配置提供商或 MCP 服务器 | `no providers or mcp servers defined; users will not be able to access any models` | 警告 |
+| 提供商缺少 `baseurl` | `provider {id} has no baseurl configured` | 警告 |
+| `authorization` 类型无效 | `provider {id} has invalid authorization type: {type}` | 警告 |
+| 未解析的环境变量 | `unsubstituted macros: [var_name]` | 错误 |
+| JSON 或 HUJSON 语法无效 | 解析错误详情 | 错误 |
+| 配额定义无效 | `quota {name}: {details}` | 错误 |
+| **结构/语法** | | |
+| 配置中存在重复键 | `duplicate config key "hostname"` | 警告 |
+| 未知的配置键 | `unknown config key "basurl"` | 警告 |
+| 字段值类型不匹配 | 字段名和 `json.UnmarshalTypeError` 详情 | 警告 |
+| **提供商** | | |
+| `add_headers` 格式无效 | `provider {id}: add_headers entry "Bad-Entry" must be in "Header-Name: value" format` | 警告 |
+| **配额** | | |
+| 配额名称模板无效 | `quota "{name}": quota name "{name}" has unsupported template "{template}" after colon` | 警告 |
+| **授权** | | |
+| 授权中存在未知字段 | 无法识别字段的严格 JSON 解析错误 | 警告 |
+| 授权 `models` 引用未定义的提供商 | `models pattern "{pattern}" references provider "{name}" which does not match any declared provider` | 警告 |
+| 授权 `mcp_tools`、`mcp_resources` 或 `mcp_templates` 引用未定义的 MCP 服务器 | `mcp_tools pattern "{pattern}" references server "{name}" which does not match any declared MCP server` | 警告 |
+| 授权 `send_hooks` 引用未定义的 hook | `send_hooks references undefined hook "{name}"` | 警告 |
+| 授权 `quotas` 引用未定义的配额 | `quotas references undefined quota "{name}"` | 警告 |
+| 授权中的配额桶引用模板无效 | `grants[{n}] grant {n} quotas[{n}]: bucket ref "{ref}" has unsupported template...` | 警告 |
+| 授权级 `add_headers` 格式无效 | `add_headers entry "{entry}" must be in "Header-Name: value" format` | 警告 |
+| **连接器** | | |
+| 连接器缺少 `protocol` | `connectors.servers.{id}: protocol is required (e.g. "mcp" or "http")` | 错误 |
+| 连接器协议不受支持 | `connectors.servers.{id}: unsupported protocol "{value}" (supported: "mcp", "http")` | 错误 |
+| 连接器 ID 无效 | `connectors.servers.{id}: invalid ID "{id}"; connector IDs must match [a-zA-Z][a-zA-Z0-9]* (letters and digits only, starting with a letter; no hyphens or underscores)` | 错误 |
+| 连接器缺少 URL | `connectors.servers.{id}: URL is required` | 警告 |
+| 连接器认证校验失败 | `connectors.servers.{id}.auth: {details}` | 错误 |
+| 连接器标签无效 | `connectors.servers.{id}.labels: invalid label "{label}"; labels must match [a-zA-Z0-9][a-zA-Z0-9._-]* (no slashes)` | 错误 |
+| 用户连接器上使用了保留标签 | `connectors.servers.{id}.labels: removed reserved label "system"` | 警告 |
+| `system_labels` 中出现未知的系统连接器 | `connectors.system_labels.{id}: unknown system connector ID` | 错误 |
+| `mcp` 与 `connectors` 中连接器 ID 重复 | `config: server ID "{id}" is defined in both 'mcp.servers' and 'connectors.servers'; IDs must be unique across both sections` | 错误 |
+| **Hook** | | |
+| Hook 缺少 URL | `hook {name} has no url configured` | 警告 |
+| Hook URL 协议无效 | `hook {name} has invalid URL scheme (must be http:// or https://): {url}` | 警告 |
+| Hook 授权类型无效 | `hook {name} has invalid authorization type: {type}` | 警告 |
+| **导出器** | | |
+| S3 前缀以 `/` 结尾 | `exporters.s3.prefix must not end with a slash` | 警告 |
+| **结构警告** | | |
+| 没有授权分配 admin 角色 | `no grant in grants or temp_grants assigns role:admin; nobody will be able to manage this instance` | 警告 |
+| 配置了提供商但未定义授权 | `providers are configured but no grants or temp_grants defined; all access will be denied` | 警告 |
+| **仅保存时** | | |
+| 配置为空 | `config must not be empty` | 错误 |
+| 防管理员锁定 | 拒绝会移除保存者管理员权限的保存 | 错误 |
+| **导出器静默上限** | | |
+| S3 导出器 `limit` 超过 10000 | Aperture 会静默把 `limit` 降到 `10000` | 静默 |
 
-For model alias validation errors and warnings, refer to [model alias configuration errors][docs-model-alias-errors]. For other common validation issues and how to resolve them, refer to [troubleshooting][docs-aperture-troubleshooting].
+模型别名校验错误和警告参阅[模型别名配置错误][docs-model-alias-errors]。其他常见校验问题及解决方法参阅[故障排查][docs-aperture-troubleshooting]。
 
-### Model alias destination validation
+### 模型别名目标校验
 
-For requirements that apply to every destination, including inactive destinations, refer to [model alias destination requirements][docs-model-alias-destination-requirements]. For save-blocking messages, refer to [model alias configuration errors][docs-model-alias-errors].
+适用于所有目标（包括未启用目标）的要求参阅[模型别名目标要求][docs-model-alias-destination-requirements]。阻止保存的消息参阅[模型别名配置错误][docs-model-alias-errors]。
 
-## Complete example
+## 完整示例
 
-The following example combines grants, quotas, exporters, providers, hooks, connectors, MCP registration, and database retention in one configuration. Before you save, replace the example credentials and endpoint URLs. Change `admin@company.com` to your own admin login. Aperture rejects a save that would remove your admin access.
+以下示例把授权、配额、导出器、提供商、hook、连接器、MCP 注册和数据库保留整合到一个配置中。保存前请替换示例凭证和端点 URL，并把 `admin@company.com` 改成你自己的管理员登录名。会移除你管理员权限的保存会被 Aperture 拒绝。
 
 ```json
 {
@@ -1625,17 +1625,17 @@ The following example combines grants, quotas, exporters, providers, hooks, conn
 }
 ```
 
-## Related
+## 相关内容
 
-The following topics provide more information about configuring and managing Aperture:
+以下主题提供有关配置和管理 Aperture 的更多信息：
 
-* For provider and client API formats and requirements, refer to [Supported providers and clients][docs-supported-providers-clients].
-* For compatibility flags, authorization, and cost basis values, refer to [Provider configuration][docs-aperture-provider-compatibility].
-* For step-by-step provider setup, refer to the [set up LLM providers][docs-aperture-set-up-providers] guides.
-* For stable model names, configuration, and provider switching, refer to [model aliases][docs-aperture-model-aliases].
-* For instructions on controlling model access, refer to [grant access to models][docs-aperture-grant-model-access].
-* For common configuration issues, refer to [troubleshooting][docs-aperture-troubleshooting].
-* For the Aperture admin dashboard, refer to the [admin dashboard reference][docs-aperture-dashboard-admin].
+* 提供商与客户端的 API 格式和要求参阅[受支持的提供商与客户端][docs-supported-providers-clients]。
+* 兼容性标志、授权类型和 cost basis 取值参阅[提供商配置][docs-aperture-provider-compatibility]。
+* 提供商分步设置参阅[设置 LLM 提供商][docs-aperture-set-up-providers]指南。
+* 稳定的模型名、配置和提供商切换参阅[模型别名][docs-aperture-model-aliases]。
+* 控制模型访问的说明参阅[授予模型访问权限][docs-aperture-grant-model-access]。
+* 常见配置问题参阅[故障排查][docs-aperture-troubleshooting]。
+* Aperture 管理仪表板参阅[管理仪表板参考][docs-aperture-dashboard-admin]。
 
 [ar-auth-mode]: #auth_mode
 
@@ -1643,11 +1643,11 @@ The following topics provide more information about configuring and managing Ape
 
 [ar-flags-section]: #flags
 
-[ar-grant-capability-fields]: #more-capability-fields
+[ar-grant-capability-fields]: #更多能力字段
 
 [ar-grants]: #grants
 
-[ar-hook-send-types]: #hook-send-types
+[ar-hook-send-types]: #hook-发送类型
 
 [ar-hooks]: #hooks
 

@@ -1,0 +1,301 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "沙箱日志"
+sidebar-title: "日志"
+description: "OpenShell 如何用标准追踪与 OCSF 结构化事件记录沙箱活动。"
+keywords: "生成式 AI, 网络安全, 日志, OCSF, 可观测性"
+---
+
+每个 OpenShell 沙箱都会产生一份日志，记录网络连接、进程生命周期事件、文件系统策略判定与配置变更。日志按事件类型使用两种格式。
+
+## 日志格式
+
+### 标准追踪
+
+内部运营事件使用 Rust 的 `tracing` 框架，采用常规格式：
+
+```text
+2026-04-01T03:28:39.160Z INFO openshell_sandbox: Fetching sandbox policy via gRPC
+2026-04-01T03:28:39.175Z INFO openshell_sandbox: Creating OPA engine from proto policy data
+```
+
+这些事件覆盖启动流程、gRPC 通信与内部状态转移，对调试有用，但不代表与安全相关的判定。
+
+### OCSF 结构化事件
+
+网络、进程、文件系统、配置与 API 活动事件使用 [Open Cybersecurity Schema Framework（OCSF）](https://ocsf.io) 格式。OCSF 是一个开放标准，用于在工具与平台之间规范化安全遥测。OpenShell 把沙箱事件映射到 OCSF v1.8.0 事件类。
+
+在日志文件中，OCSF 事件以简写格式出现，带 `OCSF` 级别标签，便于人和智能体快速扫读：
+
+```text
+2026-04-01T04:04:13.058Z INFO openshell_sandbox: Starting sandbox
+2026-04-01T04:04:13.065Z OCSF CONFIG:DISCOVERY [INFO] Server returned no policy; attempting local discovery
+2026-04-01T04:04:13.074Z INFO openshell_sandbox: Creating OPA engine from proto policy data
+2026-04-01T04:04:13.078Z OCSF CONFIG:VALIDATED [INFO] Validated 'sandbox' user exists in image
+2026-04-01T04:04:32.118Z OCSF NET:OPEN [INFO] ALLOWED /usr/bin/curl(58) -> api.github.com:443 [policy:github_api engine:opa]
+2026-04-01T04:04:32.190Z OCSF HTTP:GET [INFO] ALLOWED GET https://api.github.com/zen [policy:github_api engine:opa]
+2026-04-01T04:04:32.690Z OCSF NET:OPEN [MED] DENIED /usr/bin/curl(64) -> httpbin.org:443 [policy:- engine:opa] [reason:no matching policy]
+```
+
+第 25 列的 `OCSF` 标签把结构化事件与同一位置的标准 `INFO` 追踪区分开。两种格式出现在同一文件中。
+
+通过经 gRPC 接收日志的 CLI 或 TUI 查看时，同样的区分方式也适用：
+
+```text
+[1775014132.118] [sandbox] [OCSF ] [ocsf] NET:OPEN [INFO] ALLOWED /usr/bin/curl(58) -> api.github.com:443 [policy:github_api engine:opa]
+[1775014132.690] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/bin/curl(64) -> httpbin.org:443 [policy:- engine:opa] [reason:no matching policy]
+[1775014113.058] [sandbox] [INFO ] [openshell_sandbox] Starting sandbox
+```
+
+## OCSF 事件类
+
+OpenShell 把沙箱事件映射到这些 OCSF 类：
+
+| 简写前缀 | OCSF 类 | Class UID | 覆盖内容 |
+|---|---|---|---|
+| `EVENT` | Base Event | 0 | 无端点的中继、代理与中介失败 |
+| `NET:` | Network Activity | 4001 | TCP 代理 CONNECT 隧道、绕行检测、DNS 失败 |
+| `HTTP:` | HTTP Activity | 4002 | HTTP FORWARD 请求、L7 强制判定 |
+| `SSH:` | SSH Activity | 4007 | SSH 握手、认证、通道操作 |
+| `PROC:` | Process Activity | 1007 | 进程启动、退出、超时、信号失败 |
+| `FINDING:` | Detection Finding | 2004 | 安全发现（nonce 重放、代理绕行、不安全策略） |
+| `AUTH:` | Authentication | 3002 | 网关认证失败与凭据登录 |
+| `API:` | API Activity | 6003 | 推理调用、网关授权拒绝 |
+| `CONFIG:` | Device Config State Change | 5019 | 策略加载/重载、Landlock、TLS 设置、提供商与设置变更 |
+| `LIFECYCLE:` | Application Lifecycle | 6002 | 沙箱监管器启动、SSH 服务器就绪 |
+
+## 阅读简写格式
+
+简写格式遵循以下模式：
+
+```text
+CLASS:ACTIVITY [SEVERITY] ACTION DETAILS [CONTEXT]
+```
+
+Base Event 使用 `EVENT [SEVERITY] MESSAGE [CONTEXT]`。Unix socket 中继与中继控制通知，以及没有观测到端点的代理与中介失败，使用 `EVENT` 而不是网络或生命周期事件。
+
+### 组成部分
+
+**类与活动**（`NET:OPEN`、`HTTP:GET`、`PROC:LAUNCH`）标识 OCSF 事件类及发生的事情。类名总是从同一列位置开始，便于纵向扫读。
+
+**严重级别**表示事件的 OCSF 严重级别：
+
+| 标签 | 含义 | 使用场景 |
+|---|---|---|
+| `[INFO]` | 信息 | 允许的连接、成功的操作 |
+| `[LOW]` | 低 | DNS 失败、运营警告 |
+| `[MED]` | 中 | 被拒绝的连接、策略违规 |
+| `[HIGH]` | 高 | 安全发现（nonce 重放、绕行检测） |
+| `[CRIT]` | 严重 | 进程超时终止 |
+| `[FATAL]` | 致命 | 不可恢复的失败 |
+
+**动作**（`ALLOWED`、`DENIED`、`BLOCKED`）是安全控制的处置结果。并非所有事件都有动作；例如信息类配置事件就没有。
+
+**细节**按事件类而异：
+
+- 网络：`process(pid) -> host:port`，含进程身份与目标
+- HTTP：`METHOD url`，含 HTTP 方法与目标
+- SSH：对端地址与认证类型
+- 认证：`type:id` 形式的主体，未建立主体时为 `unknown`，以及已知时的对端地址
+- 授权拒绝：`type:id` 形式的主体与已知时的对端地址，被拒绝的沙箱或工作区在上下文中
+- 进程：`name(pid)`，含退出码或命令行
+- 配置：变更内容的描述
+- 发现：带引号的标题，含稳定的发现类型、可选置信度，以及可用时来源特有的上下文属性
+
+**上下文**放在方括号中，提供策略来源证明（policy provenance）、来源特有属性与拒绝原因等结构化字段。
+
+### 示例
+
+因未携带凭据而被拒绝的网关请求：
+
+```text
+OCSF AUTH:LOGON [LOW] DENIED unknown [op:/openshell.v1.OpenShell/ListSandboxes reason:missing_credential]
+```
+
+网关副本用用户 OIDC 令牌接受的第一个请求：
+
+```text
+OCSF AUTH:LOGON [INFO] ALLOWED user:8d2f6b1c-3e4a-4f5b-9c7d-0a1b2c3d4e5f from 203.0.113.7:51234 [protocol:OpenID op:/openshell.v1.OpenShell/ListSandboxes]
+```
+
+用于读取另一沙箱配置的沙箱凭据：
+
+```text
+OCSF API:OTHER [MED] DENIED sandbox:5d1c2e7a-0b3f-4c8e-9a61-7f2d4b6e8c10 from 10.42.0.7:51234 [op:/openshell.v1.OpenShell/GetSandboxConfig sandbox:9a3e61b0-4c2d-4f7e-8b15-2d6c0e9f7a43 reason:cross_sandbox]
+```
+
+一条被允许的 HTTPS 连接：
+
+```text
+OCSF NET:OPEN [INFO] ALLOWED /usr/bin/curl(58) -> api.github.com:443 [policy:github_api engine:opa]
+```
+
+L7 只读策略拒绝 POST：
+
+```text
+OCSF HTTP:POST [MED] DENIED POST https://api.github.com/user/repos [policy:github_api engine:opa]
+```
+
+因没有匹配策略而被拒绝的连接：
+
+```text
+OCSF NET:OPEN [MED] DENIED /usr/bin/curl(64) -> httpbin.org:443 [policy:- engine:opa] [reason:no matching policy]
+```
+
+因目标解析到始终阻断地址而被拒绝的连接：
+
+```text
+OCSF NET:OPEN [MED] DENIED /usr/bin/curl(1618) -> 169.254.169.254:80 [policy:- engine:ssrf] [reason:resolves to always-blocked address]
+```
+
+发往非默认端口的 HTTP 请求。端口不同于协议默认值（`http` 为 80，`https` 为 443）时，HTTP 日志 URL 总是包含端口：
+
+```text
+OCSF HTTP:GET [INFO] ALLOWED GET http://api.internal.corp:8080/v1/status [policy:internal_api engine:opa]
+```
+
+监管中间件的 HTTP 事件会记录它是否改写了请求。如果中间件还发出发现，那仍是一个独立事件：
+
+```text
+OCSF HTTP:POST [INFO] ALLOWED POST https://httpbin.org/anything [policy:httpbin engine:middleware] [failed:false transformed:true]
+OCSF FINDING:CREATE [MED] "configured content matched" [type:content_guard.match count:1 middleware:prototype-content-guard]
+```
+
+WebSocket 中间件对每个 preflight、会话启动或客户端文本消息判定发出一个安全事件。事件包含策略本地配置、注册的实现、序号、字节数、改写标志与校验过的 reason code，绝不包含消息载荷或服务方提供的自由文本原因：
+
+```text
+OCSF NET:OTHER [INFO] WEBSOCKET_MIDDLEWARE allow config=api-redactor implementation=openshell/regex sequence=3 input_bytes=128 replacement_bytes=96 transformed=true reason_code=-
+```
+
+覆盖事件与调用判定相互独立。`binding_not_selected` 表示主机匹配的挂接未声明该 WebSocket 操作。`unsupported_message_type` 表示活动的 WebSocket 阶段遇到二进制消息，V1 不做检查直接放行。两者都是信息级别，不适用 `on_error`，也绝不声称流量经过了检查：
+
+```text
+OCSF NET:OTHER [INFO] WEBSOCKET_MIDDLEWARE_COVERAGE state=binding_not_selected config=http-dlp implementation=example/http-dlp sequence=- message_type=- input_bytes=0
+OCSF NET:OTHER [INFO] WEBSOCKET_MIDDLEWARE_COVERAGE state=unsupported_message_type config=api-redactor implementation=openshell/regex sequence=4 message_type=binary input_bytes=512
+```
+
+fail-open 的流错误会同时发出中间件失败事件与 `openshell.middleware.websocket_stage_disabled`。后者记录 OpenShell 将在同一连接的后续消息上绕过该阶段。等待饱和的准入容量也会发出不含载荷内容的检测发现。当活动容量与有界等待队列都满时，HTTP 工作在载荷进入缓冲之前即被拒绝，返回 `503 Service Unavailable`，并发出 `openshell.middleware.admission_exhausted`。
+
+代理与 SSH 服务器就绪：
+
+```text
+OCSF NET:LISTEN [INFO] 10.200.0.1:3128
+OCSF SSH:LISTEN [INFO]
+```
+
+一条被接受的 SSH 连接（每次调用一个事件，经监管器的 Unix socket 到达，因此没有可记录的网络对端地址）：
+
+```text
+OCSF SSH:OPEN [INFO] ALLOWED
+```
+
+沙箱内启动的进程：
+
+```text
+OCSF PROC:LAUNCH [INFO] sleep(49)
+```
+
+设置变更后的策略重载：
+
+```text
+OCSF CONFIG:DETECTED [INFO] Settings poll: config change detected [old_revision:2915564174587774909 new_revision:11008534403127604466 policy_changed:true]
+OCSF CONFIG:LOADED [INFO] Policy reloaded successfully [policy_hash:0cc0c2b525573c07]
+```
+
+## 拒绝原因
+
+被拒绝的 `NET:` 与 `HTTP:` 事件带有 `[reason:...]` 后缀，呈现事件 `status_detail` 字段中的判定细节。该原因有助于在不查看完整 OCSF JSONL 记录的情况下区分策略未匹配、SSRF 加固与 L7 强制。
+
+对监管中间件的拒绝，`status_detail` 包含平台自有原因，由策略本地中间件配置名与可选的已校验 reason code 派生。中间件失败细节同样使用平台自有错误码。OpenShell 不会把针对单个请求的服务方文本或 WebSocket 消息内容复制进日志。
+
+沙箱发出的常见原因短语：
+
+| 原因 | 含义 |
+|---|---|
+| `no matching policy` | OPA 评估了请求，没有 allow 规则匹配。 |
+| `resolves to always-blocked address` | 出站策略端点解析到回环、链路本地或未指定地址。网络策略无法授权这些目标，即使它们出现在 `allowed_ips` 中；沙箱本地的回环连接不走该策略路径。 |
+| `resolves to <ip> which is not in allowed_ips, connection rejected` | 目标解析到策略 `allowed_ips` 允许列表之外的 IP。 |
+| `DNS resolution failed for <host>:<port>` | 代理无法解析目标。 |
+| `port <n> is a blocked control-plane port, connection rejected` | 目标端口匹配控制平面端口（etcd、Kubernetes API、kubelet），始终阻断。 |
+| `request-target contains an encoded '/' (%2F)` | L7 HTTP 解析器拒绝编码斜杠。上游需要编码斜杠时，在 REST 端点上配置 `allow_encoded_slash: true`。 |
+| `l7 deny` | 一条 L7 策略规则拒绝了请求。 |
+
+无效的 `allowed_ips` 条目以及与始终阻断范围重叠的条目会在策略加载时被拒绝，因此不会到达运行时拒绝路径。上述短语来自代理的逐 CONNECT `allowed_ips` 与 SSRF 检查，而不是策略校验。
+
+## 代理错误响应
+
+HTTP CONNECT 代理拒绝请求或无法到达上游时，返回带 JSON 正文体的 HTTP 错误响应。客户端可以解析正文，获得可操作的失败细节，而不是只看状态码。
+
+被拒绝的 CONNECT 返回 `403 Forbidden`：
+
+```json
+{
+  "error": "policy_denied",
+  "detail": "CONNECT api.example.com:443 not permitted by policy",
+  "reason": "binary '/usr/bin/node' not allowed in policy 'allow_api' (ancestors: [/usr/local/bin/claude])"
+}
+```
+
+策略引擎给出具体拒绝原因（例如哪个二进制或哪条规则导致拒绝）时包含 `reason` 字段；没有额外细节时省略。
+
+代理无法到达的上游返回 `502 Bad Gateway`：
+
+```json
+{
+  "error": "upstream_unreachable",
+  "detail": "connection to api.example.com:443 failed"
+}
+```
+
+`error` 字段是简短的机器可读代码（`policy_denied`、`middleware_denied`、`middleware_failed`、`ssrf_denied`、`upstream_unreachable`、`unsupported_l7_protocol`、`token_grant_failed`）。`detail` 字段是人类可读的解释，适合显示在智能体对话记录中。可选的 `reason` 字段在存在时给出策略引擎的具体拒绝原因（例如哪个二进制不被允许或哪条规则缺失）。
+
+L7 REST 策略拒绝时，正文还包含 `method`、`path`、`rule_missing` 与 `next_steps` 等结构化策略字段。启用策略顾问时，正文还包含 `agent_guidance`，一段简短的平实指示，告诉智能体阅读 `/etc/openshell/skills/policy_advisor.md`，通过 `http://policy.local/v1/proposals` 提出最窄的规则，等待 `policy_reloaded: true`，然后重试。中间件拒绝则改为在 `middleware` 中标识策略本地配置，并可包含已校验的 `reason_code`。fail-closed 的运行时失败使用 `middleware_failed` 与平台自有文本。两种中间件响应都省略 `rule_missing`、`next_steps` 与 `agent_guidance`，因为没有策略规则缺失。
+
+失败的[动态令牌授予](/how-it-works/providers/profiles#令牌授予失败)返回 `502 Bad Gateway` 与 `x-openshell-request-id` 头部。转发代理正文为 `{"error":"token_grant_failed","detail":"dynamic token grant failed"}`；L7 中继发送空正文。两者都不说明原因，请把请求 ID 交给能读取该沙箱的人。
+
+## 文件系统沙箱日志
+
+Landlock 文件系统限制在启动时以及沙箱不得不跳过请求路径时发出 `CONFIG:` 事件。
+
+这些事件起源于沙箱运行时，在运行时诊断日志过滤器允许时出现在[工作负载容器日志](/observability/accessing-logs#主进程输出)中。它们不包含在监管器的 JSONL 文件中，也不会推送到网关日志流。
+
+启动时，探测程序在请求路径计数之外还报告内核支持的 Landlock ABI 版本：
+
+```text
+OCSF CONFIG:ENABLED [INFO] Landlock filesystem sandbox available [abi:v2 compat:BestEffort ro:4 rw:2]
+OCSF CONFIG:ENABLED [INFO] Applying Landlock filesystem sandbox [abi:V2 compat:BestEffort ro:4 rw:2]
+OCSF CONFIG:ENABLED [INFO] Landlock ruleset built [rules_applied:5 skipped:1]
+```
+
+`landlock.compatibility` 为 `best_effort` 且请求路径因 `NotFound` 之外的原因打开失败（例如权限被拒或符号链接循环）时，沙箱不带该路径继续运行，并发出 `[MED]` 事件，使这种降级不是无声的：
+
+```text
+OCSF CONFIG:OTHER [MED] Skipping inaccessible Landlock path (best-effort) [path:/opt/data error:Permission denied (os error 13)]
+```
+
+在策略中把 `landlock.compatibility` 设为 `hard_requirement`，可让这些失败从降级变为致命。
+
+## 日志文件位置
+
+监管器把日志写入自己文件系统中的 `/var/log/`，与沙箱工作负载分开：
+
+| 文件 | 格式 | 轮转 |
+|---|---|---|
+| `openshell.YYYY-MM-DD.log` | 简写 + 标准追踪 | 每日 |
+| `openshell-ocsf.YYYY-MM-DD.jsonl` | 启用时的 OCSF JSONL | 每日 |
+
+每种格式每日轮转，独立限制为三个文件。
+
+配置监管器 OCSF 采集器时请匹配 `openshell-ocsf.*.jsonl`。简写文件名与 Windows MXC 网关文件名不变。
+
+文件输出需要可写的 `/var/log`，使用非阻塞写入器，在压力下可能丢弃事件。文件日志无法启动时，监管器回退到仅 stderr 输出。启用 `ocsf_json_enabled` 后，即使没有文件接收端（sink），stderr 也会加入完整的 `OCSF-JSON` 记录；参见[OCSF JSON 收集](/observability/ocsf-json-export#输出位置)。
+
+Docker 与 Podman 为该目录使用 tmpfs；Kubernetes 在监管器 Pod 中使用 `emptyDir`。要持久保留，请在轮转或拆除之前在外部收集日志。各驱动的访问方式与存储生命周期参见[访问日志](/observability/accessing-logs#直接文件系统访问)。
+
+## 后续步骤
+
+- OpenShell 产生的全部信号及启用方式参见[可观测性概述](/observability/overview)。
+- 通过 CLI、TUI 或监管器资源[访问日志](/observability/accessing-logs)。
+- [启用 OCSF JSON 导出](/observability/ocsf-json-export)，对接 SIEM 与合规。
+- 了解产生这些事件的[网络策略](/how-it-works/policies/overview)。

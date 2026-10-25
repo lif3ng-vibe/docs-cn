@@ -1,58 +1,58 @@
 ---
-title: "Install Tailscale on an AWS VM"
-description: "You can install the Tailscale client on an AWS EC2 VM to connect it to your Tailscale network (known as a tailnet) and configure common features such as subnet routers, exit nodes, and app connectors."
+title: "在 AWS 虚拟机上安装 Tailscale"
+description: "你可以在 AWS EC2 虚拟机上安装 Tailscale 客户端，将其连接到你的 Tailscale 网络（即 tailnet），并配置子网路由器、出口节点、应用连接器等常用功能。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-You can install the Tailscale client on an AWS EC2 VM to connect it to your Tailscale network (known as a tailnet) and configure common features such as subnet routers, exit nodes, and app connectors.
+你可以在 AWS EC2 虚拟机上安装 Tailscale 客户端，将其连接到你的 Tailscale 网络（即 tailnet），并配置子网路由器、出口节点、应用连接器等常用功能。
 
-## Install manually
+## 手动安装
 
-1. (Optional) Go to the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console and select **Generate auth key** to create an [authentication key][docs-auth-keys]. This lets you add the VM to the tailnet automatically without needing to manually authenticate using your credentials.
+1. （可选）打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面，选择**生成认证密钥**（Generate auth key）来创建[认证密钥][docs-auth-keys]。这样你可以自动将虚拟机加入 tailnet，而无需使用你的凭证手动认证。
 
-2. SSH into your EC2 VM.
+2. 通过 SSH 连入你的 EC2 虚拟机。
 
-3. [Install Tailscale][docs-install-linux] using the following command:
+3. 使用以下命令[安装 Tailscale][docs-install-linux]：
 
    ```shell
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-4. Start the Tailscale client using one of the following commands:
-   * If you want to use an auth key, use the command `sudo tailscale up --auth-key=foo` where `foo` is the auth key string that you generated in the first step.
-   * If you do not want to use an auth key, use the command `sudo tailscale up`, copy and paste the provided URL into your web browser, then authenticate to your tailnet with your credentials.
+4. 使用以下任一命令启动 Tailscale 客户端：
+   * 如果想使用认证密钥，请使用命令 `sudo tailscale up --auth-key=foo`，其中 `foo` 是你在第一步生成的认证密钥字符串。
+   * 如果不想使用认证密钥，请使用命令 `sudo tailscale up`，将给出的 URL 复制粘贴到网页浏览器中，然后使用你的凭证认证到 tailnet。
 
-5. In the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, verify that the VM is connected to the tailnet. If the VM you added is a server, you may want to consider [disabling key expiry][docs-key-expiry] to prevent the need to periodically re-authenticate.
+5. 在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中，确认虚拟机已连接到 tailnet。如果你添加的虚拟机是一台服务器，可以考虑[禁用密钥过期][docs-key-expiry]，以免需要定期重新认证。
 
-## Install automatically
+## 自动安装
 
-You can use our AWS installation wizard to deploy Tailscale on an AWS VM using an [AWS CloudFormation][xt-aws-cloudformation] template. To do this, you will need access to an account with AWS CloudFormation console and permission to create a new stack. You can use this to launch a user-owned node, or a tagged node. We recommend using tagged nodes for shared infrastructure. For more information, refer to [Group devices with tags][docs-tags].
+你可以使用我们的 AWS 安装向导，通过 [AWS CloudFormation][xt-aws-cloudformation] 模板在 AWS 虚拟机上部署 Tailscale。为此，你需要有一个能访问 AWS CloudFormation 控制台的账户，并拥有创建新堆栈的权限。你可以用它启动用户自有节点（user-owned node）或带标签的节点（tagged node）。对于共享基础设施，我们建议使用带标签的节点。更多信息请参阅[用标签为设备分组][docs-tags]。
 
-1. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console. In the **Add devices to your network** section, select **Add AWS VM**.
-   1. (Recommended) To make this a tagged node, toggle **Tags** to on, select **Add tags**, then choose the tag you want to use for the AWS VM.
-   2. (Optional) Toggle **Ephemeral** to on if you want the AWS VM to be removed from your tailnet when it goes offline.
-   3. (Optional) Toggle **Use as exit node** to on if you want to route tailnet traffic through your AWS VM. For more information, refer to [Advertise an exit node][docs-quick-guide-exit-node-advertise].
-   4. Select **Continue to AWS**. You will be redirected to the AWS CloudFormation console. If you are already authenticated, the **Quick create stack** page will display.
-2. From the CloudFormation console.
-   1. In the **Stack name** field, enter a name. This serves as a description of the stack you are creating.
-   2. (Optional) In the **ExtraArgs** field, specify functionality such as [Tailscale SSH][docs-quick-guide-ssh-linux-vm] (`--ssh`) and a [subnet router][docs-quick-guide-subnets] (`--advertise-routes=192.0.1.0/24`), if applicable. Each functionality should be separated by a space.
-   3. (Optional) In the **Hostname** field, enter a name for the VM that will display in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-   4. (Optional) In the **ImageId** field, change if you want to use another image ID for the VM. For more information about image IDs, refer to [Find an AMI that meets the requirements for your EC2 instance][xt-aws-ami].
-   5. (Optional) In the **InstanceType** field, change the VM size if you want to use a different Amazon EC2 instance.
-   6. (Optional) In the **VpcId** field, enter an Amazon Virtual Private Cloud (VPC) and subnet ID if you want the VM to be provisioned in a specific VPC.
-   7. Select **Create stack** to start provisioning.
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and verify that the VM is added. It may take up to 5 minutes for a provisioned VM to join your tailnet.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。在**向网络添加设备**（Add devices to your network）部分，选择**添加 AWS 虚拟机**（Add AWS VM）。
+   1. （推荐）要将此节点设为带标签的节点，请打开 **Tags** 开关，选择**添加标签**（Add tags），然后选择要为该 AWS 虚拟机使用的标签。
+   2. （可选）如果你希望该 AWS 虚拟机离线后从 tailnet 中移除，请打开 **Ephemeral** 开关。
+   3. （可选）如果你想让 tailnet 流量经由该 AWS 虚拟机转发，请打开**用作出口节点**（Use as exit node）开关。更多信息请参阅[宣告出口节点][docs-quick-guide-exit-node-advertise]。
+   4. 选择**继续前往 AWS**（Continue to AWS）。你会被重定向到 AWS CloudFormation 控制台。如果你已完成认证，将显示**快速创建堆栈**（Quick create stack）页面。
+2. 在 CloudFormation 控制台中：
+   1. 在 **Stack name** 字段中输入一个名称，作为对你所创建堆栈的描述。
+   2. （可选）在 **ExtraArgs** 字段中指定所需功能，例如 [Tailscale SSH][docs-quick-guide-ssh-linux-vm]（`--ssh`）和[子网路由器][docs-quick-guide-subnets]（`--advertise-routes=192.0.1.0/24`）（如适用）。每个功能之间用空格分隔。
+   3. （可选）在 **Hostname** 字段中为虚拟机输入一个名称，该名称将显示在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中。
+   4. （可选）在 **ImageId** 字段中，如果想为虚拟机使用其他镜像 ID，可以修改。有关镜像 ID 的更多信息，请参阅[查找符合 EC2 实例要求的 AMI][xt-aws-ami]。
+   5. （可选）在 **InstanceType** 字段中，如果想使用其他 Amazon EC2 实例类型，可以修改虚拟机大小。
+   6. （可选）在 **VpcId** 字段中，如果希望虚拟机预置在特定的 VPC 中，请输入 Amazon Virtual Private Cloud（VPC）和子网 ID。
+   7. 选择**创建堆栈**（Create stack）开始预置。
+3. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，确认虚拟机已添加。预置的虚拟机可能需要最多 5 分钟才能加入你的 tailnet。
 
-## Next steps
+## 后续步骤
 
-If you have not done so already, you can add the following tailnet functionality to your AWS VM.
+如果尚未配置，你可以为你的 AWS 虚拟机添加以下 tailnet 功能。
 
-* [SSH into your VM][docs-quick-guide-ssh-linux-vm] using Tailscale SSH.
-* [Advertise an exit node][docs-quick-guide-exit-node-advertise] to route traffic in your tailnet.
-* [Use an existing exit node][docs-quick-guide-exit-node-use] in your tailnet.
-* [Configure a subnet router][docs-quick-guide-subnets] to relay access in your network, including resources where Tailscale cannot be installed.
-* [Configure an app connector][docs-app-connectors] to route application-specific traffic from the tailnet through a selected device that serves as an app connector.
+* 使用 Tailscale SSH [通过 SSH 连接你的虚拟机][docs-quick-guide-ssh-linux-vm]。
+* [宣告出口节点][docs-quick-guide-exit-node-advertise]，转发你 tailnet 中的流量。
+* [使用 tailnet 中现有的出口节点][docs-quick-guide-exit-node-use]。
+* [配置子网路由器][docs-quick-guide-subnets]，为网络中的访问提供中继，包括无法安装 Tailscale 的资源。
+* [配置应用连接器][docs-app-connectors]，将 tailnet 中的应用特定流量经由选定的设备（充当应用连接器）转发。
 
 [docs-app-connectors]: /docs/features/app-connectors
 

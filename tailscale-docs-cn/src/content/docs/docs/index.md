@@ -1,52 +1,52 @@
 ---
-title: "Docs"
-description: "Use Tailscale to securely connect your devices, no matter where they live."
+title: "文档"
+description: "使用 Tailscale 安全地连接你的设备，无论它们身在何处。"
 ---
 
-Last validated Feb 4, 2026
+最后验证于 Feb 4, 2026
 
-Tailscale is a Zero Trust identity-based connectivity platform that replaces your legacy VPN, SASE, and PAM and connects remote teams, multi-cloud environments, CI/CD pipelines, Edge & IoT devices, and AI workloads.
+Tailscale 是一个基于身份的零信任连接平台，可取代你的传统 VPN、SASE 和特权访问管理（PAM），连接远程团队、多云环境、CI/CD 流水线、边缘与物联网（IoT）设备以及 AI 工作负载。
 
-## Get Started
+## 开始使用
 
-[**What is Tailscale?**](/docs/concepts/what-is-tailscale) — Get a brief introduction to Tailscale.
+[**Tailscale 是什么？**](/docs/concepts/what-is-tailscale) —— 简要介绍 Tailscale。
 
-[**Start using Tailscale**](/docs/install/start) — Install Tailscale, create a network, and invite your team.
+[**开始使用 Tailscale**](/docs/install/start) —— 安装 Tailscale、创建网络并邀请你的团队。
 
-[**Solutions**](/docs/solutions) — Explore how to use Tailscale in various scenarios through hands-on guides.
+[**解决方案**](/docs/solutions) —— 通过实操指南，探索如何在各种场景中使用 Tailscale。
 
-[**Use cases**](/docs/use-cases) — Explore how you can use Tailscale at home and at work.
+[**使用案例**](/docs/use-cases) —— 探索如何在家里和工作场所使用 Tailscale。
 
-[**FAQ**](/docs/reference/faq) — Answers to common questions.
+[**常见问题**](/docs/reference/faq) —— 常见问题的解答。
 
-## Manage your tailnet
+## 管理你的 tailnet
 
-[**Manage access**](/docs/manage) — Manage access to your Tailscale resources.
+[**管理访问**](/docs/manage) —— 管理对 Tailscale 资源的访问。
 
-[**Manage users**](/docs/manage-users) — Invite users, assign or change user roles, remove users, and quickly switch between accounts.
+[**管理用户**](/docs/manage-users) —— 邀请用户、分配或更改用户角色、移除用户，并在账户之间快速切换。
 
-[**Manage your organization**](/docs/account) — Manage your contact information, your account, the plans we offer, and how to manage your tailnet DNS name and domain.
+[**管理你的组织**](/docs/account) —— 管理你的联系信息、账户、我们提供的套餐，以及如何管理你的 tailnet DNS 名称和域名。
 
-## Expand your tailnet
+## 扩展你的 tailnet
 
-[**Subnet routers**](/docs/features/subnet-routers) — Use subnet routers to give devices outside your local network access to services within specific subnets. Extend your private network with Tailscale.
+[**子网路由器**](/docs/features/subnet-routers) —— 使用子网路由器让本地网络之外的设备能够访问特定子网内的服务。用 Tailscale 扩展你的私有网络。
 
-[**Exit nodes (route all traffic)**](/docs/features/exit-nodes) — Route all internet traffic through a specific device on your network.
+[**出口节点（路由全部流量）**](/docs/features/exit-nodes) —— 将所有互联网流量路由通过网络中的特定设备。
 
-[**Docker**](/docs/features/containers/docker) — Explore how to use Tailscale inside Docker containers.
+[**Docker**](/docs/features/containers/docker) —— 探索如何在 Docker 容器内使用 Tailscale。
 
-[**Logging overview**](/docs/features/logging) — Understand Tailscale's logging infrastructure.
+[**日志概览**](/docs/features/logging) —— 了解 Tailscale 的日志基础设施。
 
-[**Integrations**](/docs/integrations) — How to use Tailscale to various kinds of servers, services, or devices.
+[**集成**](/docs/integrations) —— 如何将 Tailscale 用于各类服务器、服务或设备。
 
-[**Automations**](/docs/automations) — Automate your tailnet using infrastructure-as-code providers, webhooks, and other integrations.
+[**自动化**](/docs/automations) —— 使用基础设施即代码（IaC）provider、webhook 和其他集成来自动化你的 tailnet。
 
-## Resources and reference
+## 资源与参考
 
-[**Technical overviews**](/docs/concepts) — Get in-depth technical details about Tailscale.
+[**技术概览**](/docs/concepts) —— 深入了解 Tailscale 的技术细节。
 
-[**Technical reference**](/docs/reference) — Explore reference guides for Tailscale tools and features, including access control policies, command-line interface (Tailscale CLI), API, and best practices for managing your tailnet. Understand access controls, production strategies, security, and key terminology.
+[**技术参考**](/docs/reference) —— 探索 Tailscale 工具和功能的参考指南，包括访问控制策略、命令行接口（Tailscale CLI）、API 以及管理 tailnet 的最佳实践。了解访问控制、生产环境策略、安全和关键术语。
 
-[**Resources**](/docs/resources) — Access resources about Tailscale software changes, comparisons with other products, open source community projects, security, privacy, and compliance.
+[**资源**](/docs/resources) —— 获取关于 Tailscale 软件变更、与其他产品的对比、开源社区项目、安全、隐私与合规的资源。
 
-[**Get support**](/docs/support) — Get support from Tailscale.
+[**获取支持**](/docs/support) —— 获取来自 Tailscale 的支持。

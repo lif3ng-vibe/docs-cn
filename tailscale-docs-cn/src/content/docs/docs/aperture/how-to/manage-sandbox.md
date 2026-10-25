@@ -1,52 +1,52 @@
 ---
-title: "Manage sandbox operations"
-description: "The [chat sandbox][docs-chat-sandbox] gives each conversation an isolated environment where the assistant can run code, create files, and produce downloadable artifacts. Tailscale manages sandbox avai"
+title: "管理沙箱运维"
+description: "[聊天沙箱][docs-chat-sandbox]让每段对话都有一个隔离环境，助手可以在其中运行代码、创建文件并生成可下载的产物。沙箱可用性由 Tailscale 管"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-> **Note:** Aperture chat sandbox is currently in alpha.
+> **注意：** Aperture 聊天沙箱目前处于 alpha 阶段。
 
 \[Missing snippet: contact\_account\_manager.mdx]
 
-The [chat sandbox][docs-chat-sandbox] gives each conversation an isolated environment where the assistant can run code, create files, and produce downloadable artifacts. Tailscale manages sandbox availability for your Aperture gateway. You do not configure or operate its infrastructure.
+[聊天沙箱][docs-chat-sandbox]让每段对话都有一个隔离环境，助手可以在其中运行代码、创建文件并生成可下载的产物。沙箱的可用性由 Tailscale 为你的 Aperture 网关管理，你无需配置或运维其基础设施。
 
-## Availability and support
+## 可用性与支持
 
-Tailscale enables the chat sandbox for your gateway. There is nothing to add to your Aperture configuration. To request access, refer to [enable the chat sandbox][docs-enable-sandbox].
+聊天沙箱由 Tailscale 为你的网关启用，你不需要在 Aperture 配置中添加任何内容。要申请访问，参阅[启用聊天沙箱][docs-enable-sandbox]。
 
-If the sandbox stops responding, returns repeated errors, or reports unexpected storage usage, refer to [troubleshoot sandbox issues][docs-troubleshoot-sandbox]. Contact your Tailscale account manager or email `aperture@tailscale.com` if failures persist across conversations.
+如果沙箱停止响应、反复报错，或报告意外的存储占用，参阅[排查沙箱问题][docs-troubleshoot-sandbox]。如果故障在多个对话中持续出现，请联系你的 Tailscale 客户经理或发送电子邮件至 `aperture@tailscale.com`。
 
-## Security considerations
+## 安全注意事项
 
-Each conversation gets its own isolated sandbox. The following properties apply:
+每段对话都有自己独立的沙箱。以下特性适用：
 
-* Conversations cannot access each other's files or state.
-* File downloads require conversation ownership. Users can download files only from their own conversations.
-* Outbound access is limited to approved package registries and source hosts. Sandbox code cannot reach your tailnet or Aperture internal systems.
-* HTML previews cannot load external resources or reach parent-page cookies, storage, or DOM.
+* 各对话之间无法访问彼此的文件或状态。
+* 文件下载需要对话所有权。用户只能从自己的对话中下载文件。
+* 出站访问仅限于获得批准的软件包仓库和源代码主机。沙箱代码无法触达你的 tailnet 或 Aperture 内部系统。
+* HTML 预览无法加载外部资源，也无法访问父页面的 cookie、存储或 DOM。
 
-> **Warning:**
+> **警告：**
 >
-> Restricted outbound access reduces, but does not eliminate, the risk of data leaving the sandbox. Some approved hosts can receive arbitrary content. Avoid placing highly sensitive data in a sandbox conversation.
+> 受限的出站访问降低了数据离开沙箱的风险，但并未消除。某些获批主机可以接收任意内容。请避免把高度敏感的数据放进沙箱对话。
 
-## Operational parameters reference
+## 运维参数参考
 
-| Parameter                               | Value   | Description                                                                                                                                                             |
+| 参数                                    | 值      | 说明                                                                                                                                                                    |
 | --------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Upload size limit, model-readable files | 25 MiB  | Maximum size of a single image, PDF, text, or office document upload. These files are sent to the model with the message.                                               |
-| Upload size limit, other files          | 500 MiB | Maximum size of a single upload the model cannot read, such as video, audio, an archive, or an unrecognized binary. These files are available to sandbox commands only. |
-| Attachments per conversation            | 20      | Cumulative limit on uploaded files in one conversation, not per message                                                                                                 |
-| Sandbox execution capacity              | 5 GiB   | Combined uploads and outputs available to sandbox commands                                                                                                              |
+| 上传大小限制（模型可读文件）            | 25 MiB  | 单个图像、PDF、文本或办公文档上传的大小上限。这些文件随消息一起发送给模型。                                                                                              |
+| 上传大小限制（其他文件）                | 500 MiB | 模型无法读取的单个上传的大小上限，例如视频、音频、压缩包或无法识别的二进制文件。这些文件仅对沙箱命令可用。                                                               |
+| 每个对话的附件数                        | 20      | 单个对话中上传文件的累计上限，不是按消息计                                                                                                                               |
+| 沙箱执行容量                            | 5 GiB   | 沙箱命令可用的上传与输出总量                                                                                                                                             |
 
-Separate storage quotas can reject uploads or prevent generated files from being saved at lower limits. Refer to [size limits and quotas][docs-sandbox-limits] for the conversation, user, and gateway limits.
+独立的存储配额可能在更低的限额下拒绝上传或阻止生成的文件被保存。对话、用户和网关各级的限制请参阅[大小限制与配额][docs-sandbox-limits]。
 
-## Related
+## 相关内容
 
-* [Aperture chat sandbox][docs-chat-sandbox] for a conceptual overview of the feature.
-* [Enable the chat sandbox][docs-enable-sandbox] for step-by-step setup instructions.
-* [Sandbox reference][docs-sandbox-reference] for tool parameters, size limits, timeouts, and error messages.
-* [Troubleshoot sandbox issues][docs-troubleshoot-sandbox] for diagnosing common problems.
+* [Aperture 聊天沙箱][docs-chat-sandbox]：该功能的概念概览。
+* [启用聊天沙箱][docs-enable-sandbox]：分步设置说明。
+* [沙箱参考][docs-sandbox-reference]：工具参数、大小限制、超时和错误消息。
+* [排查沙箱问题][docs-troubleshoot-sandbox]：诊断常见问题。
 
 [docs-chat-sandbox]: /docs/aperture/chat-sandbox
 

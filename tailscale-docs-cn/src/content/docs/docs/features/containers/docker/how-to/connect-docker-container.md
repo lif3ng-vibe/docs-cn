@@ -1,38 +1,38 @@
 ---
-title: "Connect a Docker container to your tailnet with Docker Compose"
-description: "Use this guide to run a container that combines the Tailscale client with an [nginx][xt-nginx] web server and reverse proxy, using the [Docker Compose][xt-docker-docs-compose] command line method. The"
+title: "使用 Docker Compose 将 Docker 容器连接到你的 tailnet"
+description: "本指南介绍如何使用 Docker Compose 命令行方式，运行一个将 Tailscale 客户端与 nginx Web 服务器及反向代理组合在一起的容器。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-Use this guide to run a container that combines the Tailscale client with an [nginx][xt-nginx] web server and reverse proxy, using the [Docker Compose][xt-docker-docs-compose] command line method. The nginx container shares the Tailscale network connection, allowing you to access it securely over your tailnet.
+本指南介绍如何使用 [Docker Compose][xt-docker-docs-compose] 命令行方式，运行一个把 Tailscale 客户端与 [nginx][xt-nginx] Web 服务器和反向代理组合在一起的容器。nginx 容器共享 Tailscale 的网络连接，让你可以通过 tailnet 安全地访问它。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* Docker Engine installed and running.
-* Docker Compose installed and accessible using the `docker compose` command.
-* A Tailscale account with permission to generate [auth keys][docs-auth-keys] from the admin console.
+* 已安装并正在运行 Docker Engine。
+* 已安装 Docker Compose，并可通过 `docker compose` 命令使用。
+* 一个 Tailscale 账户，且有权在管理控制台中生成[认证密钥][docs-auth-keys]。
 
-Once you have these ready, you can start connecting Docker containers to your tailnet.
+准备好这些后，你就可以开始把 Docker 容器连接到你的 tailnet 了。
 
-## Generate an auth key
+## 生成认证密钥
 
-You can automatically connect Docker containers to your tailnet by generating an authentication key and adding it to your Docker configuration, eliminating the need to log in manually.
+生成认证密钥并将其添加到 Docker 配置中，即可自动把 Docker 容器连接到你的 tailnet，无需手动登录。
 
-1. Go to the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. In the **Auth keys** section, select **Generate auth key**.
-   1. Add a description to identify the key. The description does not affect configuration.
-   2. Leave all other options as-is.
-   3. Select **Generate key**.
-3. Copy the key now. After you close the dialog, you cannot view it again.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys)（密钥）页面。
+2. 在 **Auth keys**（认证密钥）部分，选择 **Generate auth key**（生成认证密钥）。
+   1. 添加一段描述以便识别该密钥。描述不影响配置。
+   2. 其他选项保持默认。
+   3. 选择 **Generate key**（生成密钥）。
+3. 立即复制该密钥。关闭对话框后将无法再次查看。
 
-For more information about Tailscale authentication keys, refer to [Auth keys][docs-auth-keys].
+关于 Tailscale 认证密钥的更多信息，请参阅[认证密钥][docs-auth-keys]。
 
-## Create and run your containers
+## 创建并运行容器
 
-1. Create a new file named `docker-compose.yml` in your project directory and add your configuration instructions in the file. The following configuration defines two services. One for the Tailscale client and one for the nginx web server.
+1. 在项目目录中新建一个名为 `docker-compose.yml` 的文件，并在文件中添加配置指令。以下配置定义了两个服务：一个用于 Tailscale 客户端，另一个用于 nginx Web 服务器。
 
    ```yaml
    services:
@@ -61,54 +61,54 @@ For more information about Tailscale authentication keys, refer to [Auth keys][d
 
    ```
 
-   > **Note:**
+   > **注意：**
    >
-   > Correct YAML formatting is critical. The file uses indentation (spaces, not tabs) to show structure and hierarchy. Each level of indentation must be consistent, typically using two spaces. Incorrect indentation will cause Docker Compose to fail with parsing errors.
+   > 正确的 YAML 格式至关重要。文件使用缩进（空格，而不是制表符）来表示结构和层级。每一级缩进必须一致，通常使用两个空格。缩进不正确会导致 Docker Compose 解析出错而失败。
 
-2. Replace `<tskey-YOUR-AUTH-KEY>` with the auth key you generated.
+2. 将 `<tskey-YOUR-AUTH-KEY>` 替换为你生成的认证密钥。
 
-3. Save the file, then start the containers:
+3. 保存文件，然后启动容器：
 
    ```shell
    docker compose up -d
    ```
 
-4. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and verify that `tailscale-nginx` appears.
+4. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines)（机器）页面，确认 `tailscale-nginx` 已出现。
 
-From a browser on a device connected to your tailnet, go to `http://localhost:8080` on the Docker host. The "Welcome to nginx" page appears.
+在已连接到 tailnet 的设备上用浏览器访问 Docker 主机上的 `http://localhost:8080`。此时会显示 "Welcome to nginx" 页面。
 
-## Docker Compose example details
+## Docker Compose 示例详解
 
-Based on the Docker Compose YAML example in this topic, here is a breakdown of the included fields and flags for this setup:
+基于本主题中的 Docker Compose YAML 示例，以下是该配置所含字段和标志的逐一说明：
 
-**The Tailscale service components**
+**Tailscale 服务的组成部分**
 
-* `tailscale`: Runs the Tailscale client in a container.
-  * `image: tailscale/tailscale:latest`: Tells Docker to download the official Tailscale image and use the latest version.
-  * `container_name: tailscale`: Gives the container a fixed name so it is easier to find and manage with Docker commands.
-  * `hostname: tailscale-nginx`: Sets how this container identifies itself on your network and in your tailnet.
-  * `environment`: Defines environment variables to use on startup such as [Tailscale configuration parameters][docs-docker-parameters].
-    * `TS_AUTHKEY`: Authenticates the container using your Tailscale auth key.
-    * `TS_STATE_DIR`: Tells Tailscale where to store its login and connection data.
-  * `volumes`: Lets the container save data to your computer instead of losing it on restart.
-    * `./tailscale-state:/var/lib/tailscale`: Stores Tailscale data in a local folder so it stays logged in after restarts.
-  * `cap_add`: Adds extra system permissions that the container needs to work properly.
-    * `net_admin`: Lets the container configure network interfaces, routing tables, and other network settings. This capability is required when using kernel networking with Tailscale.
-    * `net_raw`: Lets the container work with network traffic at a deeper level, which is needed for things like Tailscale to create a VPN connection and for tools like `ping` to function properly.
-  * `restart: unless-stopped`: Automatically restarts the container unless you manually stop it.
+* `tailscale`：在容器中运行 Tailscale 客户端。
+  * `image: tailscale/tailscale:latest`：告诉 Docker 下载官方 Tailscale 镜像并使用最新版本。
+  * `container_name: tailscale`：为容器指定固定名称，便于用 Docker 命令查找和管理。
+  * `hostname: tailscale-nginx`：设置该容器在你的网络和 tailnet 中标识自己的方式。
+  * `environment`：定义启动时要使用的环境变量，例如 [Tailscale 配置参数][docs-docker-parameters]。
+    * `TS_AUTHKEY`：使用你的 Tailscale 认证密钥对容器进行认证。
+    * `TS_STATE_DIR`：告诉 Tailscale 在哪里存储登录和连接数据。
+  * `volumes`：让容器把数据保存到你的计算机上，而不是在重启时丢失。
+    * `./tailscale-state:/var/lib/tailscale`：把 Tailscale 数据存储在本地文件夹中，使其在重启后仍保持登录状态。
+  * `cap_add`：添加容器正常运行所需的额外系统权限。
+    * `net_admin`：让容器可以配置网络接口、路由表和其他网络设置。在 Tailscale 使用内核网络时需要此权限。
+    * `net_raw`：让容器能在更底层处理网络流量；Tailscale 建立 VPN 连接以及 `ping` 等工具正常工作都需要它。
+  * `restart: unless-stopped`：自动重启容器，除非你手动停止它。
 
-**The nginx service components**
+**nginx 服务的组成部分**
 
-* `nginx`: Runs the nginx web server.
-  * `image: nginx:latest`: Tells Docker to download the official nginx image and use the latest version.
-  * `container_name: nginx_server`: Gives the container a fixed name so it is easier to find and manage with Docker commands.
-  * `ports`: Defines how your computer can access the container.
-    * `"8080:80"`: Maps port 8080 on your computer to port 80 in the container so you can open the site at `http://localhost:8080`.
-  * `depends_on`: Lists the services that must start before this service.
-    * `tailscale`: Ensures the Tailscale service starts before this service.
-  * `restart: unless-stopped`: Automatically restarts the container unless you manually stop it.
+* `nginx`：运行 nginx Web 服务器。
+  * `image: nginx:latest`：告诉 Docker 下载官方 nginx 镜像并使用最新版本。
+  * `container_name: nginx_server`：为容器指定固定名称，便于用 Docker 命令查找和管理。
+  * `ports`：定义你的计算机如何访问容器。
+    * `"8080:80"`：把计算机上的 8080 端口映射到容器内的 80 端口，这样你就可以在 `http://localhost:8080` 打开该网站。
+  * `depends_on`：列出必须先于本服务启动的服务。
+    * `tailscale`：确保 Tailscale 服务先于本服务启动。
+  * `restart: unless-stopped`：自动重启容器，除非你手动停止它。
 
-There are many fields and flags options to include in a Docker Compose file, depending on your specific setup and needs. For more example configurations with Tailscale, refer to [`tailscale-dev/docker-guide-code-examples`][xt-gh-tailscale-docker-examples].
+Docker Compose 文件中可包含的字段和标志还有很多，取决于你的具体配置和需求。更多 Tailscale 配置示例，请参阅 [`tailscale-dev/docker-guide-code-examples`][xt-gh-tailscale-docker-examples]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

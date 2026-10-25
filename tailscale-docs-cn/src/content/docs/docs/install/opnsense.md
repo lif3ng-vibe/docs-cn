@@ -1,27 +1,27 @@
 ---
-title: "Using OPNsense with Tailscale"
-description: "Set up a Tailscale VPN on OPNsense. Get secure communication across your devices without the need for complex configuration."
+title: "将 OPNsense 与 Tailscale 搭配使用"
+description: "在 OPNsense 上设置 Tailscale VPN，无需复杂配置即可实现设备间的安全通信。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-[OPNsense][xt-opnsense] is an open source router and firewall platform built using FreeBSD. Tailscale can be installed on an OPNsense platform, joining it to your WireGuard-based mesh network.
+[OPNsense][xt-opnsense] 是一个基于 FreeBSD 构建的开源路由器与防火墙平台。你可以把 Tailscale 安装到 OPNsense 平台上，让它加入你基于 WireGuard 的网状网络。
 
-> **Note:**
+> **注意：**
 >
-> OPNsense is a community supported platform for Tailscale.
+> OPNsense 是 Tailscale 的社区支持平台。
 >
-> As of OPNsense v24.711, an `os-tailscale` community plugin is available.
+> 自 OPNsense v24.711 起，已提供 `os-tailscale` 社区插件。
 >
-> It can be installed through the GUI. **System** > **Firmware** > **Plugins**. Check the box **Show community plugins**.
+> 该插件可通过 GUI 安装：**System** > **Firmware** > **Plugins**，勾选 **Show community plugins**。
 >
-> This plugin does not require any of the following command-line steps.
+> 使用该插件时，无需执行下文的任何命令行步骤。
 
-## Installation
+## 安装
 
-Connect to the console of OPNsense using SSH or another preferred method. Select option `8) Shell` and ensure you are the root user.
+使用 SSH 或你偏好的其他方式连接到 OPNsense 控制台。选择 `8) Shell` 选项，并确认你当前是 root 用户。
 
-First we must download the ports tree. More information about this can be found in the OPNsense [documentation][xt-opnsense-included], and the FreeBSD ports [documentation][xt-freebsd-install].
+首先必须下载 ports 树（ports tree）。更多信息可参阅 OPNsense [文档][xt-opnsense-included]和 FreeBSD ports [文档][xt-freebsd-install]。
 
 ```shell
 # opnsense-code ports
@@ -32,16 +32,16 @@ Cloning into '/usr/ports'...
 Your branch is up to date with 'origin/master'.
 ```
 
-Make sure to run `opnsense-code ports` again even if you have done so previously, to update the ports tree to current versions. The version of Tailscale in the FreeBSD ports is periodically updated for new releases. More information on updates can be found below.
+即使之前运行过，也请务必再次运行 `opnsense-code ports`，把 ports 树更新到当前版本。FreeBSD ports 中 Tailscale 的版本会随新版本发布定期更新。有关更新的更多信息见下文。
 
-Once the ports tree is downloaded, execute the following steps as root to install Tailscale.
+ports 树下载完成后，以 root 身份执行以下步骤安装 Tailscale。
 
 ```shell
 # cd /usr/ports/security/tailscale
 # make install
 ```
 
-Once installed, start and enable the `tailscaled` daemon and verify that Tailscale is working properly with `tailscale version`.
+安装完成后，启动并启用 `tailscaled` 守护进程，然后用 `tailscale version` 验证 Tailscale 是否正常工作。
 
 ```shell
 # service tailscaled enable
@@ -52,9 +52,9 @@ root@opnsense:~ # tailscale version
   go version: go1.21.5
 ```
 
-## Connect
+## 连接
 
-To add the OPNsense machine as a node in your tailnet run the following command as root:
+要将 OPNsense 机器添加为你 tailnet 中的节点，请以 root 身份运行以下命令：
 
 ```shell
 # tailscale up
@@ -62,35 +62,35 @@ To authenticate, visit:
     https://tailscale.com/a/abc123abc123
 ```
 
-You'll be asked to authenticate to Tailscale in your browser. This is an appropriate time to specify other useful options such as [subnet-routes][docs-subnets], [exit nodes][docs-exit-nodes], and so on.
+系统会要求你在浏览器中认证到 Tailscale。此时正适合一并指定其他有用的选项，例如[子网路由][docs-subnets]、[出口节点][docs-exit-nodes]等。
 
-Once started, Tailscale should appear in the list of interfaces in the OPNsense UI. It can be used in firewall rules and other OPNsense functions.
+启动之后，Tailscale 应会出现在 OPNsense 界面的接口列表中。它可用于防火墙规则和其他 OPNsense 功能。
 
-*（图：The OPNsense UI with the TLSCL interface enabled.）*
+*（图：启用了 TLSCL 接口的 OPNsense 界面）*
 
-## Configure firewall rules
+## 配置防火墙规则
 
-After Tailscale connects, its interface appears in the OPNsense interface list, but OPNsense does not assign it automatically. Until you assign the interface and add a firewall rule, the default firewall policy blocks incoming Tailscale traffic to the OPNsense host, including ping, SSH, and web UI access. To confirm this, go to **Firewall** > **Log Files** > **Live View** and look for traffic on the `tailscale0` interface that is blocked by the default deny policy.
+Tailscale 连接后，其接口会出现在 OPNsense 的接口列表中，但 OPNsense 不会自动分配它。在你分配该接口并添加防火墙规则之前，默认防火墙策略会阻止进入 OPNsense 主机的 Tailscale 入站流量，包括 ping、SSH 和 Web UI 访问。要确认这一点，可前往 **Firewall** > **Log Files** > **Live View**，查看 `tailscale0` 接口上被默认拒绝策略拦截的流量。
 
-To permit tailnet traffic to reach the OPNsense host, assign the interface and add a firewall rule.
+要允许 tailnet 流量到达 OPNsense 主机，请分配该接口并添加防火墙规则。
 
-1. Go to **Interfaces** > **Assignments**.
-2. In the **New interface** section, select `tailscale0` from the device drop-down menu, then select **+** to add it.
-3. Select the new interface to edit it. Select **Enable interface**, enter a description such as `tailscale`, then select **Save**.
-4. Select **Apply changes**.
-5. Go to **Firewall** > **Rules** and select the Tailscale interface.
-6. Select **Add** to create a rule. Set **Action** to **Pass**, enter a description, then select **Save**.
-7. Select **Apply changes**.
+1. 前往 **Interfaces** > **Assignments**。
+2. 在 **New interface** 部分，从设备下拉菜单中选择 `tailscale0`，然后选择 **+** 添加它。
+3. 选择这个新接口进行编辑。选择 **Enable interface**，输入 `tailscale` 之类的描述，然后选择 **Save**。
+4. 选择 **Apply changes**。
+5. 前往 **Firewall** > **Rules**，选择 Tailscale 接口。
+6. 选择 **Add** 创建规则。将 **Action** 设为 **Pass**，输入描述，然后选择 **Save**。
+7. 选择 **Apply changes**。
 
-After you apply the rule, devices in your tailnet can reach the OPNsense host over Tailscale.
+规则生效后，tailnet 中的设备就可以通过 Tailscale 访问 OPNsense 主机了。
 
-> **Note:**
+> **注意：**
 >
-> A pass rule that matches all traffic lets any device in your tailnet reach the OPNsense host. To restrict access, create a **Firewall** > **Aliases** entry containing the Tailscale IP addresses of the devices that require access, then use that alias as the rule source.
+> 匹配所有流量的放行（pass）规则会让 tailnet 中的任何设备都能访问 OPNsense 主机。要限制访问，请在 **Firewall** > **Aliases** 中创建一个条目，包含需要访问权限的设备的 Tailscale IP 地址，然后将该别名用作规则来源。
 
-## Update Tailscale
+## 更新 Tailscale
 
-To update Tailscale perform the following steps as the root user:
+要更新 Tailscale，请以 root 用户身份执行以下步骤：
 
 ```shell
 # opnsense-code ports
@@ -101,29 +101,29 @@ To update Tailscale perform the following steps as the root user:
 # service tailscaled restart
 ```
 
-This might take a few minutes depending on the strength of the CPU in use. Verify Tailscale updated using `tailscale version`. Sometimes it is necessary to restart the tailscaled service with `service tailscaled restart`.
+这一过程可能需要几分钟，取决于所用 CPU 的性能。使用 `tailscale version` 验证 Tailscale 是否已更新。有时需要用 `service tailscaled restart` 重启 tailscaled 服务。
 
-## Direct Connections for LAN Clients
+## 让 LAN 客户端建立直连
 
-As a router/firewall, OPNsense may also be providing internet connectivity for LAN devices which themselves have a Tailscale client installed. The NAT implementation in OPNsense is an [Endpoint-Dependent Mapping, or "hard" NAT][bl-how-nat-traversal-works], which means that LAN devices have difficulty making direct connections and often resort to [DERP Relays][docs-derp-servers].
+作为路由器/防火墙，OPNsense 可能同时在为安装了 Tailscale 客户端的局域网（LAN）设备提供互联网连接。OPNsense 的 NAT 实现属于[端点相关映射（Endpoint-Dependent Mapping），即"困难"NAT（hard NAT）][bl-how-nat-traversal-works]，这意味着 LAN 设备难以建立直连，往往只能退而使用 [DERP 中继][docs-derp-servers]。
 
-There are a few options in which OPNsense can enable devices on the LAN to make direct connections to remote Tailscale nodes. Static NAT port mapping and NAT-PMP.
+有几种方法可以让 OPNsense 帮助 LAN 上的设备与远程 Tailscale 节点建立直连：静态 NAT 端口映射和 NAT-PMP。
 
-## Static NAT port mapping
+## 静态 NAT 端口映射
 
-By default, OPNsense software rewrites the source port on all outgoing connections to enhance security and prevent direct exposure of internal port numbers.
+默认情况下，OPNsense 会重写所有出站连接的源端口，以增强安全性，避免直接暴露内部端口号。
 
-Static port mapping in OPNsense involves creating a fixed association between a specific external port number and an internal IP address and port, allowing incoming traffic to be directed to the correct destination within the local network.
+OPNsense 中的静态端口映射是在特定外部端口号与内部 IP 地址和端口之间建立固定关联，让入站流量能被导向本地网络中的正确目的地。
 
-Go to **Firewall > NAT**, **Outbound** tab. Select **Hybrid Outbound NAT rule generation**. Select **Save**. Select **↑ Add** to create a new NAT rule to the top of the list.
+前往 **Firewall > NAT** 的 **Outbound** 选项卡。选择 **Hybrid Outbound NAT rule generation**。选择 **Save**。选择 **↑ Add**，在列表顶部新建一条 NAT 规则。
 
-Configure the rule to match UDP traffic as shown below. Note, for each rule, select the appropriate **Address Family** (IP version), **IPv4** for one and **IPv6** for the other.
+按照下图所示配置规则以匹配 UDP 流量。注意，每条规则都要选择合适的 **Address Family**（IP 版本）：一条选 **IPv4**，另一条选 **IPv6**。
 
-*（图：Example Static NAT port mapping configuration in Firewall : NAT : Outbound）*
+*（图：Firewall : NAT : Outbound 中的静态 NAT 端口映射配置示例）*
 
-Check **Static Port** in the **Translation** section of the page. Select **Save**. Select **Apply Changes**.
+在页面的 **Translation** 部分勾选 **Static Port**。选择 **Save**。选择 **Apply Changes**。
 
-In your ACLs, set [randomizeClientPort][docs-policy-syntax-network-policy-options].
+在你的 ACL 中设置 [randomizeClientPort][docs-policy-syntax-network-policy-options]。
 
 ```json
 {
@@ -132,23 +132,23 @@ In your ACLs, set [randomizeClientPort][docs-policy-syntax-network-policy-option
 }
 ```
 
-From the command line, use `tailscale ping node` to verify the connection path between two nodes. Also useful in this scenario is `tailscale netcheck`.
+在命令行中使用 `tailscale ping node` 验证两个节点之间的连接路径。在此场景下，`tailscale netcheck` 也很有用。
 
 ## NAT-PMP
 
-NAT-PMP is a protocol by which LAN clients can ask the firewall to temporarily create port mappings.
+NAT-PMP 是一种协议，LAN 客户端可以通过它请求防火墙临时创建端口映射。
 
-Enable the UPnP service and **Allow NAT-PMP Port Mapping** in **Services** > **Universal Plug and Play**. Only NAT-PMP is needed for Tailscale's use, but enabling UPnP can be helpful for other applications like gaming consoles.
+在 **Services** > **Universal Plug and Play** 中启用 UPnP 服务和 **Allow NAT-PMP Port Mapping**。Tailscale 只需要 NAT-PMP，但启用 UPnP 对游戏主机等其他应用也有帮助。
 
-*（图：Enabling Allow NAT-PMP Port Mapping in Services : Universal Plug and Play : Settings）*
+*（图：在 Services : Universal Plug and Play : Settings 中启用 Allow NAT-PMP Port Mapping）*
 
-## Further reading
+## 延伸阅读
 
-Setting up [subnet routing][docs-subnets] or acting as an [exit node][docs-exit-nodes] may be of interest for a router using OPNsense.
+对于使用 OPNsense 的路由器，设置[子网路由][docs-subnets]或充当[出口节点][docs-exit-nodes]可能也是你感兴趣的用法。
 
-## Special thanks
+## 特别致谢
 
-Special thanks to GitHub user [@newmy-de][xt-gh-newmy-de] who helped us provide these installation instructions.
+特别感谢 GitHub 用户 [@newmy-de][xt-gh-newmy-de]，他帮助我们提供了这些安装说明。
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

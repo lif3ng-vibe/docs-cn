@@ -1,53 +1,53 @@
 ---
-title: "Can I use Tailscale alongside other VPNs?"
-description: "It's theoretically possible to use Tailscale alongside other virtual private networks (VPNs). By default, Tailscale only routes a small subset of your internet traffic (using [Tailscale IP addresses]["
+title: "可以与其他 VPN 一起使用 Tailscale 吗？"
+description: "从理论上讲，可以同时使用 Tailscale 和其他虚拟专用网络（VPN）。默认情况下，Tailscale 只路由你互联网流量中的一小部分（使用 [Tailscale IP 地址][docs-100.x-addresses]）"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-It's theoretically possible to use Tailscale alongside other virtual private networks (VPNs). By default, Tailscale only routes a small subset of your internet traffic (using [Tailscale IP addresses][docs-100.x-addresses]), which leaves the rest of your internet traffic for other VPNs to manage. However, in most cases, you can't use Tailscale alongside other VPNs without a [workaround][ar-workarounds]. Usually, this is due to aggressive firewall rules, device limitations, or IP address conflicts.
+从理论上讲，可以同时使用 Tailscale 和其他虚拟专用网络（VPN）。默认情况下，Tailscale 只路由你互联网流量中的一小部分（使用 [Tailscale IP 地址][docs-100.x-addresses]），其余流量留给其他 VPN 处理。然而在大多数情况下，不借助[解决方法][ar-workarounds]就无法让 Tailscale 与其他 VPN 共存。原因通常是激进的防火墙规则、设备限制或 IP 地址冲突。
 
-* **Aggressive firewall rules**: Most VPNs set aggressive firewall rules to ensure all network traffic goes through them. This can result in the other VPN dropping all Tailscale traffic, which only Tailscale knows how to route. VPNs that don't use aggressive firewall rules might be able to run alongside Tailscale.
-* **Device limitations**: Not all devices support using multiple VPNs simultaneously. For example, iOS and Android enforce a limit of running only one VPN at a time. As a result, it is not possible to have more than one active VPN on these platforms.
-* **IP address conflicts**: If the other VPN uses IP addresses from the Carrier-Grade NAT (CGNAT) range (`100.64.0.0` through `100.127.255.255`) that Tailscale uses, they will conflict with `100.x.y.z` Tailscale IP addresses. For more information about Tailscale's IP addressing, refer to [reserved IP addresses][docs-reserved-ip-addresses].
+* **激进防火墙规则**：大多数 VPN 会设置激进的防火墙规则，确保所有网络流量都经过它们。这可能导致另一个 VPN 丢弃所有 Tailscale 流量——而只有 Tailscale 知道如何路由这些流量。不使用激进防火墙规则的 VPN 或许能与 Tailscale 并存。
+* **设备限制**：并非所有设备都支持同时使用多个 VPN。例如，iOS 和 Android 强制一次只能运行一个 VPN。因此在这些平台上无法同时启用多个活动的 VPN。
+* **IP 地址冲突**：如果另一个 VPN 使用的 IP 地址来自 Tailscale 所用的运营商级 NAT（CGNAT）范围（`100.64.0.0` 到 `100.127.255.255`），它们将与 `100.x.y.z` 的 Tailscale IP 地址冲突。有关 Tailscale IP 编址的更多信息，参阅[保留 IP 地址][docs-reserved-ip-addresses]。
 
-## Workarounds
+## 解决方法
 
-> **Note:**
+> **注意：**
 >
-> Before pursuing workarounds, determine if features like [Mullvad exit nodes (beta)][docs-mullvad-exit-nodes] meet your needs.
+> 在尝试解决方法之前，先确认 [Mullvad 出口节点（beta）][docs-mullvad-exit-nodes]之类的功能是否已能满足你的需求。
 
-If you must run Tailscale alongside another VPN and encounter an incompatibility, you might be able to resolve the incompatibility with a workaround, such as [userspace networking][ar-userspace-networking] mode or [split tunnels][ar-split-tunnels].
+如果你必须让 Tailscale 与另一个 VPN 同时运行并遇到不兼容，也许可以通过[用户态网络][ar-userspace-networking]模式或[分流隧道][ar-split-tunnels]等解决方法化解。
 
-### Userspace networking
+### 用户态网络
 
-Tailscale can run in either kernel networking mode or [userspace networking mode][docs-userspace-networking]. In the default kernel networking mode, Tailscale creates a network interface, changes firewall rules, and assigns your device a [Tailscale IP addresses][docs-100.x-addresses]. Kernel networking mode can conflict with other VPNs that use the same address space.
+Tailscale 可以在内核网络模式或[用户态网络模式][docs-userspace-networking]下运行。在默认的内核网络模式下，Tailscale 会创建网络接口、修改防火墙规则，并为你的设备分配 [Tailscale IP 地址][docs-100.x-addresses]。内核网络模式可能与使用相同地址空间的其他 VPN 冲突。
 
-You can configure Tailscale to use userspace networking mode instead to work around conflicts with [Tailscale IP addresses][docs-100.x-addresses]. In userspace networking mode, Tailscale exposes a SOCKS5 proxy to let you connect out to your Tailscale network (known as a tailnet). Tailscale then proxies any incoming connections to the same port on the localhost address (`127.0.0.1`).
+你可以改为配置 Tailscale 使用用户态网络模式，以绕开与 [Tailscale IP 地址][docs-100.x-addresses]的冲突。在用户态网络模式下，Tailscale 会暴露一个 SOCKS5 代理，让你连出至你的 Tailscale 网络（即 tailnet）。Tailscale 随后把任何入站连接代理到 localhost 地址（`127.0.0.1`）上的相同端口。
 
-> **Warning:**
+> **警告：**
 >
-> The standard `ping` command doesn't work for tailnet destinations when Tailscale is running in userspace networking mode. Use [`tailscale ping`][docs-cli-ping] instead.
+> 当 Tailscale 以用户态网络模式运行时，标准 `ping` 命令对 tailnet 目标无效。请改用 [`tailscale ping`][docs-cli-ping]。
 
-### Split tunnels
+### 分流隧道
 
-Split tunnel (or [restricted nameservers][docs-restricted-nameservers]) is a DNS configuration that resolves DNS queries differently based on the query destination. For example, a split tunnel configuration might send DNS queries for public IP addresses to one nameserver but to another for private IP addresses.
+分流隧道（split tunnel，或称[受限名称服务器][docs-restricted-nameservers]）是一种 DNS 配置，会根据查询目标以不同方式解析 DNS 查询。例如，分流隧道配置可能把针对公共 IP 地址的 DNS 查询发给一个名称服务器，而把针对私有 IP 地址的查询发给另一个。
 
-Some VPN providers let you use a split tunnel DNS configuration to bypass traffic for specific applications or address ranges. If the other VPN supports split tunnel DNS, you can add a configuration to handle Tailscale IP addresses separately from the rest of your traffic. Tailscale IP addresses use the subnets `100.64.0.0/10` and `fd7a:115c:a1e0::/48`.
+一些 VPN 提供商允许你使用分流隧道 DNS 配置来绕行特定应用或地址范围的流量。如果另一个 VPN 支持分流隧道 DNS，你可以添加配置，把 Tailscale IP 地址与流量其余部分分开处理。Tailscale IP 地址使用的子网是 `100.64.0.0/10` 和 `fd7a:115c:a1e0::/48`。
 
-If you use [subnet routes][docs-subnets] in your tailnet, make sure to add those to the split tunnel configuration, too.
+如果你的 tailnet 中使用了[子网路由][docs-subnets]，请务必把它们也加入分流隧道配置。
 
-> **Warning:**
+> **警告：**
 >
-> The split tunnel workaround does not work for devices using [exit nodes][docs-exit-nodes]. This is because when you use an exit node, Tailscale functions more like a traditional VPN and sets its own aggressive firewall rules to route all traffic to your exit node. Exit nodes only support one VPN at a time.
+> 分流隧道解决方法对使用[出口节点][docs-exit-nodes]的设备无效。这是因为使用出口节点时，Tailscale 的行为更像传统 VPN，会设置自己的激进防火墙规则，把所有流量路由到你的出口节点。出口节点一次只支持一个 VPN。
 
-[ar-workarounds]: #workarounds
+[ar-workarounds]: #解决方法
 
 [docs-restricted-nameservers]: /docs/reference/dns-in-tailscale#restricted-nameservers
 
-[ar-userspace-networking]: #userspace-networking
+[ar-userspace-networking]: #用户态网络
 
-[ar-split-tunnels]: #split-tunnels
+[ar-split-tunnels]: #分流隧道
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

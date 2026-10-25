@@ -1,56 +1,56 @@
 ---
-title: "Set up an app connector"
-description: "App connectors let you route Tailscale network (known as a tailnet) traffic to your software as a service (SaaS), cloud, and self-hosted applications, letting users and devices in the tailnet access a"
+title: "设置应用连接器"
+description: "应用连接器让你把 Tailscale 网络（即 tailnet）流量路由到软件即服务（SaaS）、云端和自托管应用，让 tailnet 中的用户和设备通过域名访问"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** App connectors are available for [all plans](https://tailscale.com/pricing).
+> **注意：** 应用连接器适用于[所有套餐](https://tailscale.com/pricing)。
 
-App connectors let you route Tailscale network (known as a tailnet) traffic to your software as a service (SaaS), cloud, and self-hosted applications, letting users and devices in the tailnet access applications by domain names instead of IP addresses. You can also incorporate monitoring, optimization, security, and reliability into your app connector setup.
+应用连接器让你把 Tailscale 网络（即 tailnet）流量路由到你的软件即服务（SaaS）、云端和自托管应用，让 tailnet 中的用户和设备通过域名（而非 IP 地址）访问应用。你还可以在应用连接器设置中融入监控、优化、安全与可靠性能力。
 
-For more in-depth information about app connectors, refer to [How app connectors work][docs-app-connectors].
+有关应用连接器的更多深入信息，参见[应用连接器的工作原理][docs-app-connectors]。
 
-> **Tip:**
+> **提示：**
 >
-> You can also [deploy an app connector to your Kubernetes cluster using the Kubernetes Operator][docs-kubernetes-app-connector].
+> 你也可以[使用 Kubernetes Operator 将应用连接器部署到你的 Kubernetes 集群][docs-kubernetes-app-connector]。
 
-## Requirements
+## 要求
 
-To set up an app connector, you must have the following:
+要设置应用连接器，你必须具备：
 
-* An existing tailnet and user account with the [Owner, Admin, or Network admin](/docs/reference/user-roles) role for editing the tailnet policy file and managing the app connector settings in the admin console.
-* The Linux device to use as the app connector with the following:
-  * A publicly accessible IP address.
-  * IP forwarding is enabled.
-  * You can use a physical device or a VM as the app connector device.
-* A SaaS or self-hosted application with administrative access.
+* 一个已有的 tailnet，以及一个拥有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 角色的用户账号，用于编辑 tailnet 策略文件和管理管理控制台中的应用连接器设置。
+* 一台用作应用连接器的 Linux 设备，且满足：
+  * 拥有可公开访问的 IP 地址。
+  * 已启用 IP 转发。
+  * 可以使用物理设备或虚拟机作为应用连接器设备。
+* 一个你拥有管理权限的 SaaS 或自托管应用。
 
-## Get started
+## 开始使用
 
-To add a [preset app][ar-preset-apps] type app connector in your tailnet, you must complete the following steps:
+要在 tailnet 中添加[预设应用][ar-preset-apps]类型的连接器，你需要完成以下步骤：
 
-1. Add the app connector in the admin console to route traffic to your application. When you add a preset app, the `nodeAttrs` section of your [tailnet policy file][docs-tailnet-policy-file] will automatically add a new `target` entry for the app connector. The `tagOwners`, `autoApprovers`, and `grants` entries must be manually added in the tailnet policy file.
-2. Update your tailnet policy file with the `tagOwners`, `autoApprovers`, and `grants` entries to let devices in your tailnet use the app connector.
-3. Configure a Linux node in your tailnet as an app connector device.
-4. (Optional) Restrict application access to only the app connector device by configuring an IP allowlist in your application.
+1. 在管理控制台中添加应用连接器，将流量路由到你的应用。添加预设应用时，[tailnet 策略文件][docs-tailnet-policy-file]的 `nodeAttrs` 部分会自动为该应用连接器新增一条 `target` 条目。`tagOwners`、`autoApprovers` 和 `grants` 条目则必须在 tailnet 策略文件中手动添加。
+2. 更新 tailnet 策略文件，加入 `tagOwners`、`autoApprovers` 和 `grants` 条目，让 tailnet 中的设备可以使用应用连接器。
+3. 将 tailnet 中的一台 Linux 节点配置为应用连接器设备。
+4. （可选）在应用中配置 IP 白名单，将应用访问限制为只能来自应用连接器设备。
 
-To add a [custom app][ar-custom-apps] type app connector in your tailnet, you must complete the following steps:
+要在 tailnet 中添加[自定义应用][ar-custom-apps]类型的连接器，你需要完成以下步骤：
 
-1. Update your [tailnet policy file][docs-tailnet-policy-file] to let devices in your tailnet use the app connector, by adding entries to the `nodeAttrs`, `tagOwners`, `autoApprovers`, and `grants` sections.
-2. Configure a Linux node in your tailnet as an app connector device.
-3. Add the app connector settings in the admin console to route traffic to your application.
-4. (Optional) Restrict application access to only the app connector device by configuring an IP allowlist in your application.
+1. 更新 [tailnet 策略文件][docs-tailnet-policy-file]，在 `nodeAttrs`、`tagOwners`、`autoApprovers` 和 `grants` 部分加入条目，让 tailnet 中的设备可以使用应用连接器。
+2. 将 tailnet 中的一台 Linux 节点配置为应用连接器设备。
+3. 在管理控制台中添加应用连接器设置，将流量路由到你的应用。
+4. （可选）在应用中配置 IP 白名单，将应用访问限制为只能来自应用连接器设备。
 
-### Update the tailnet policy file
+### 更新 tailnet 策略文件
 
-Configure your tailnet policy file with the necessary permissions to let devices use the app connector device.
+在 tailnet 策略文件中配置必要的权限，让设备可以使用应用连接器设备。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a tailnet policy file.
+你需要拥有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 权限才能编辑 tailnet 策略文件。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls)  page of the admin console.
+1. 前往管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
 
-2. Add a [`tagOwners`][docs-tags] rule to define the tag name and specify which users can assign that tag to other devices, letting them connect to the app connector. The following example defines the `github-admins` group as an owner of the `github-app-connector` tag.
+2. 添加一条 [`tagOwners`][docs-tags] 规则，定义标签名称并指定哪些用户可以把该标签分配给其他设备，使其能够连接到应用连接器。以下示例将 `github-admins` 组定义为 `github-app-connector` 标签的所有者。
 
    ```json
    "tagOwners": {
@@ -62,17 +62,17 @@ You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) t
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-3. Add an [`autoApprovers`][docs-policy-syntax-autoapprovers] rule to automatically approve specific routes for the app connector tag. After you configure app traffic to route through an app connector, any DNS request to the configured app domains triggers route discovery.
+3. 添加一条 [`autoApprovers`][docs-policy-syntax-autoapprovers] 规则，自动批准应用连接器标签的特定路由。配置应用流量经由应用连接器路由之后，任何对已配置应用域名的 DNS 请求都会触发路由发现。
 
-   > **Note:**
+   > **注意：**
    >
-   > Preset apps, in most cases, do not require an `autoApprovers` rule for routes. Tailscale updates and manages the routes for preset apps and these are automatically approved.
+   > 预设应用在多数情况下不需要为路由配置 `autoApprovers` 规则。Tailscale 会为预设应用更新并管理路由，这些路由会自动批准。
    >
-   > However, preset apps may also discover new routes through DNS. These learned routes are not automatically approved and will require an `autoApprovers` rule.
+   > 不过，预设应用也可能通过 DNS 发现新路由。这些学习到的路由不会自动批准，需要 `autoApprovers` 规则。
    >
-   > Custom apps routes always require an `autoApprovers` rule.
+   > 自定义应用的路由始终需要 `autoApprovers` 规则。
 
-   The following auto-approval policy example automatically approves all IPv4 and IPv6 routes for devices using the `github-app-connector` tag.
+   以下自动批准策略示例会自动批准使用 `github-app-connector` 标签的设备的所有 IPv4 和 IPv6 路由。
 
    ```json
    "autoApprovers": {
@@ -85,9 +85,9 @@ You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) t
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-4. Add a [`grants`][docs-policy-syntax-grants] rule to route application-specific traffic through the app connector tag.
+4. 添加一条 [`grants`][docs-policy-syntax-grants] 规则，把应用相关的流量路由到应用连接器标签。
 
-   You must allow tailnet devices to access the routes an app connector advertises. One way to do this is to add an access control policy to your tailnet policy file that grants access to `autogroup:internet` (any port number) for members of the tailnet, which will also grant users access to any exit nodes in the tailnet.
+   你必须允许 tailnet 设备访问应用连接器通告的路由。一种做法是在 tailnet 策略文件中加入一条访问控制策略，为 tailnet 成员授予对 `autogroup:internet`（任意端口号）的访问权，这同时也会授予用户访问 tailnet 内任何出口节点的权限。
 
    ```json
    "grants": [
@@ -101,9 +101,9 @@ You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) t
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-   > **Warning:**
+   > **警告：**
    >
-   > Devices require access to the app connector tag for DNS discovery. App connectors use the PeerAPI to perform DoH calls. Grant minimal access using TCP or UDP on port `53` to enable peer discovery:
+   > 设备需要能够访问应用连接器标签才能进行 DNS 发现。应用连接器使用 PeerAPI 执行 DoH 调用。请通过 TCP 或 UDP 端口 `53` 授予最小访问权限，以启用对等节点发现：
    >
    > ```json
    > "grants": [
@@ -117,11 +117,11 @@ You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) t
    >
    > \[Missing snippet: visual\_policy\_editor.mdx]
 
-5. Add a [`nodeAttrs`][docs-policy-syntax-node-attributes] rule to map the app connector tag to the application-specific domains. The following example node attribute definition configures the `github-app-connector` tag for GitHub domains.
+5. 添加一条 [`nodeAttrs`][docs-policy-syntax-node-attributes] 规则，把应用连接器标签映射到应用相关的域名。以下节点属性定义示例为 GitHub 域名配置 `github-app-connector` 标签。
 
-   > **Note:**
+   > **注意：**
    >
-   > If you are configuring a preset app type app connector, the `nodeAttrs` section is in your tailnet policy file is automatically updated, and you can skip this step.
+   > 如果你配置的是预设应用类型的应用连接器，tailnet 策略文件中的 `nodeAttrs` 部分会自动更新，你可以跳过这一步。
 
    ```json
    "nodeAttrs": [
@@ -145,91 +145,91 @@ You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) t
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Configure a device as an app connector
+### 将设备配置为应用连接器
 
-After updating the [tailnet policy file][ar-tailnet-policy-file], configure the device to function as an app connector.
+更新 [tailnet 策略文件][ar-tailnet-policy-file]之后，配置设备使其承担应用连接器职能。
 
-> **Warning:**
+> **警告：**
 >
-> The app connector device must be running Linux, already added to your tailnet, have a public IP address, and IP port forwarding enabled.
+> 应用连接器设备必须运行 Linux、已加入你的 tailnet、拥有公网 IP 地址，并且已启用 IP 端口转发。
 
-Run the following Tailscale CLI command, making sure to replace the variables in the angle brackets (`<>`) with the actual app connector tag name.
+运行以下 Tailscale CLI 命令，确保将尖括号（`<>`）中的变量替换为实际的应用连接器标签名称。
 
 ```shell
 tailscale up --advertise-connector --advertise-tags=tag:<connector-tag-name>
 ```
 
-The `--advertise-connector` flag enables the device to route traffic for specific domains according to the configuration in the tailnet policy file. The `--advertise-tags` flag tells the Tailscale client to authenticate the device with the provided tags.
+`--advertise-connector` 标志让设备根据 tailnet 策略文件中的配置为特定域名路由流量。`--advertise-tags` 标志让 Tailscale 客户端使用提供的标签对设备进行认证。
 
-#### Add a preset app
+#### 添加预设应用
 
-Preset apps are the applications we support for automatically adding the necessary domains needed for your application, and can reduce the time needed for app connector configuration. After set up, preset apps periodically fetch domains and routes from the application's authoritative configuration and propagate any changes to the tailnet.
+预设应用是我们支持自动添加应用所需域名的应用，可以减少应用连接器配置所需的时间。设置完成后，预设应用会定期从应用的权威配置获取域名和路由，并将任何变更传播到 tailnet。
 
-Tailscale supports the following preset apps:
+Tailscale 支持以下预设应用：
 
-* AWS CloudFront (global)
-* AWS Elastic Compute Cloud (EC2) / Elastic Load Balancing (ELB)
-* AWS Simple Storage Service (S3)
+* AWS CloudFront（全球）
+* AWS Elastic Compute Cloud（EC2）/ Elastic Load Balancing（ELB）
+* AWS Simple Storage Service（S3）
 * Confluence
 * GitHub
 * Google Workspace
 * Jira
 * Microsoft 365
 * Okta
-* Oracle Cloud Infrastructure (OCI)
+* Oracle Cloud Infrastructure（OCI）
 * Oracle Object Storage
-* Oracle Services Network (OSN) (global)
-* Salesforce (Hyperforce environment)
-* Salesforce (Salesforce-hosted)
+* Oracle Services Network（OSN）（全球）
+* Salesforce（Hyperforce 环境）
+* Salesforce（Salesforce 托管）
 * Stripe
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to configure a preset app.
+你需要成为 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能配置预设应用。
 
-1. Open the [Apps](https://console.tailscale.com/admin/apps) page of the admin console.
+1. 打开管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面。
 
-2. In the **Add an app** dialog, enter the following details.
+2. 在 **Add an app** 对话框中输入以下信息。
 
-   1. **Name**: Enter a unique name for identifying the application.
-   2. **Target**: Select a preset app to automatically add the domains for your application.
-   3. **Connectors**: Select a tag or set of tags that you configured for your app connector in your tailnet policy file.
+   1. **Name**：输入一个唯一名称，用于标识该应用。
+   2. **Target**：选择一个预设应用，自动添加你的应用的域名。
+   3. **Connectors**：选择你在 tailnet 策略文件中为应用连接器配置的一个或一组标签。
 
-3. Select **Save**.
+3. 选择 **Save**。
 
-A green icon next to the app connector name indicates that it is currently active and working as expected.
+应用连接器名称旁边的绿色图标表示它当前处于活动状态且工作正常。
 
-Select the app connector you added for additional details you can use to administer settings on both your tailnet and your application.
+选择你添加的应用连接器，可以查看更多详细信息，用于管理 tailnet 和应用两侧的设置。
 
-*（图：App connector details for a preset app.）*
+*（图：预设应用的应用连接器详情。）*
 
-Traffic to configured domains routes through tagged app connectors before reaching target domains on the internet. This routing occurs even when the originating device uses an exit node. The source IP address for this traffic appears as one of the public IP addresses from the devices running as app connectors.
+发往已配置域名的流量会先经过带标签的应用连接器，再到达互联网上的目标域名。即使发起设备使用出口节点，这种路由也会发生。这类流量的源 IP 地址会显示为承担应用连接器角色的设备的公网 IP 地址之一。
 
-#### Add a custom app
+#### 添加自定义应用
 
-If your application is not available as a preset app in the admin console, you can manually configure the settings.
+如果你的应用不在管理控制台的预设应用之列，可以手动配置设置。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to add and edit app connectors.
+你需要成为 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能添加和编辑应用连接器。
 
-1. Open the [Apps](https://console.tailscale.com/admin/apps) page of the admin console.
+1. 打开管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面。
 
-2. In the **Add an app** dialog, enter the following details.
+2. 在 **Add an app** 对话框中输入以下信息。
 
-   1. **Name**: Enter a unique name for identifying the application.
-   2. **Target**: Select **Custom** and manually enter the application domain names. If you need to add multiple domain entries, separate each one with a comma. When specifying domains, you can use wildcards for subdomains but not for top-level domains (TLDs). For example, `*.example.com`, `*.example.co.uk`, `*.example.info` are valid while `*.com`, `*.co.uk`, `*.info` are not valid.
-   3. **Connectors**: Select a tag or set of tags that you configured for your app connector in your tailnet policy file.
+   1. **Name**：输入一个唯一名称，用于标识该应用。
+   2. **Target**：选择 **Custom**，手动输入应用域名。如果需要添加多个域名条目，用逗号分隔每个域名。指定域名时，子域名可以使用通配符，但顶级域名（TLD）不可以。例如，`*.example.com`、`*.example.co.uk`、`*.example.info` 是有效的，而 `*.com`、`*.co.uk`、`*.info` 无效。
+   3. **Connectors**：选择你在 tailnet 策略文件中为应用连接器配置的一个或一组标签。
 
-3. Select **Save**.
+3. 选择 **Save**。
 
-A green icon next to the app connector name indicates that it is currently active and working as expected.
+应用连接器名称旁边的绿色图标表示它当前处于活动状态且工作正常。
 
-Select the app connector you added for additional details you can use to administer settings on both your tailnet and your application.
+选择你添加的应用连接器，可以查看更多详细信息，用于管理 tailnet 和应用两侧的设置。
 
-*（图：App connector details for a custom app.）*
+*（图：自定义应用的应用连接器详情。）*
 
-#### Edit preset apps
+#### 编辑预设应用
 
-The [Apps](https://console.tailscale.com/admin/apps) page of the admin console is the primary way to set up a preset app and automatically updates the `presetAppID` when you add an app connector. You can also manually modify the `presetAppID` for an app in your tailnet policy file.
+管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面是设置预设应用的主要方式，添加应用连接器时会自动更新 `presetAppID`。你也可以在 tailnet 策略文件中手动修改应用的 `presetAppID`。
 
-The following shows an example snippet with GitHub as a preset app.
+下面是一个以 GitHub 作为预设应用的示例片段。
 
 ```json
 "nodeAttrs": [
@@ -250,44 +250,44 @@ The following shows an example snippet with GitHub as a preset app.
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The following is the list of the supported preset apps as they appear in the tailnet policy file.
+以下是 tailnet 策略文件中支持的预设应用清单。
 
-| **Preset app name**                 | **`presetAppID` value**                             |
-| ----------------------------------- | --------------------------------------------------- |
-| AWS CloudFront (global)             | `aws-cloudfront-global`                             |
-| AWS EC2/ELB                         | `aws-ec2-<region>-<availability-zone>-<local-zone>` |
-| AWS S3                              | `aws-s3-<region>-<availability-zone>-<local-zone>`  |
-| Confluence                          | `confluence`                                        |
-| GitHub                              | `github`                                            |
-| Google Workspace                    | `google-workspace`                                  |
-| Jira                                | `jira`                                              |
-| Microsoft 365                       | `microsoft-365`                                     |
-| Okta                                | `okta`                                              |
-| Oracle Cloud Infrastructure (OCI)   | `oracle-oci-<region>`                               |
-| Oracle Object Storage               | `oracle-object-storage-<region>`                    |
-| Oracle Services Network (global)    | `oracle-osn-global`                                 |
-| Salesforce (Hyperforce environment) | `salesforce-hyperforce`                             |
-| Salesforce (Salesforce-hosted)      | `salesforce`                                        |
-| Stripe                              | `stripe`                                            |
+| **预设应用名称** | **`presetAppID` 值** |
+| --- | --- |
+| AWS CloudFront (global) | `aws-cloudfront-global` |
+| AWS EC2/ELB | `aws-ec2-<region>-<availability-zone>-<local-zone>` |
+| AWS S3 | `aws-s3-<region>-<availability-zone>-<local-zone>` |
+| Confluence | `confluence` |
+| GitHub | `github` |
+| Google Workspace | `google-workspace` |
+| Jira | `jira` |
+| Microsoft 365 | `microsoft-365` |
+| Okta | `okta` |
+| Oracle Cloud Infrastructure (OCI) | `oracle-oci-<region>` |
+| Oracle Object Storage | `oracle-object-storage-<region>` |
+| Oracle Services Network (global) | `oracle-osn-global` |
+| Salesforce (Hyperforce environment) | `salesforce-hyperforce` |
+| Salesforce (Salesforce-hosted) | `salesforce` |
+| Stripe | `stripe` |
 
-#### Remove an app connector
+#### 移除应用连接器
 
-You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to remove an app connector.
+你必须成为 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能移除应用连接器。
 
-1. Open the [Apps](https://console.tailscale.com/admin/apps)  page of the admin console.
-2. Select the  menu next to the app connector you want to remove, and select **Remove**.
+1. 打开管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面。
+2. 选择要移除的应用连接器旁边的菜单，然后选择 **Remove**。
 
-After you remove an app connector, traffic to the application no longer routes through the app connector. Instead, traffic to the application's domain names routes directly from the client device or through an exit node if the device uses one.
+移除应用连接器后，发往该应用的流量不再经由应用连接器路由。改为从客户端设备直接路由到应用的域名，如果设备使用出口节点，则经由出口节点路由。
 
-If you no longer need the app connector device in your tailnet, you can [remove it][docs-device-remove].
+如果你不再需要 tailnet 中的应用连接器设备，可以[将其移除][docs-device-remove]。
 
-### Restrict application access by IP address
+### 按 IP 地址限制应用访问
 
-Many applications let you control access by specifying which IP addresses can connect to them. When you use an app connector, all traffic from your tailnet to the target application appears to come from the app connector's public egress IP address. This means you can add the app connector's egress IP address to your target application's trusted list of ingress IP addresses (called an IP allowlist). This ensures only users with access to the app connector can access the target application.
+许多应用支持通过指定哪些 IP 地址可以连接来控制访问。使用应用连接器时，从你的 tailnet 发往目标应用的所有流量看起来都来自应用连接器的公网出站 IP 地址。这意味着你可以把应用连接器的出站 IP 地址加入目标应用的可信入站 IP 地址列表（称为 IP 白名单）。这确保只有能访问应用连接器的用户才能访问目标应用。
 
-To set this up, find your application's IP allowlist settings and add the public IP address of each device running as an app connector. If you use multiple app connectors for redundancy, add all their public IP addresses. You can find these IP addresses in your cloud provider's management interface.
+设置方法是：找到你应用的 IP 白名单设置，把每台承担应用连接器角色的设备的公网 IP 地址加入其中。如果你使用多台应用连接器做冗余，请把它们的公网 IP 地址全部加入。你可以在云服务商的管理界面找到这些 IP 地址。
 
-The following is a list of Tailscale's supported preset apps and links for configuring specific IP addresses (IP allowlisting) for providing exclusive access to your app connector devices.
+下面列出了 Tailscale 支持的预设应用，以及为它们配置特定 IP 地址（IP 白名单）以实现对应用连接器设备专属访问的链接。
 
 * [AWS][xt-ip-allow-aws]
 * [Confluence][xt-ip-allow-atlassian]
@@ -299,26 +299,26 @@ The following is a list of Tailscale's supported preset apps and links for confi
 * [Salesforce][xt-ip-allow-salesforce]
 * [Stripe][xt-ip-allow-stripe]
 
-Tailscale automatically finds the preset app's IP addresses. Go to the [Apps](https://console.tailscale.com/admin/apps) page in the admin console, select the app details you'd like to configure, and copy the **Egress IPs** listed. This list includes all IP addresses of all connectors configured on the associated tags. Remember to update your IP allowlist if you add new app connectors.
+Tailscale 会自动查找预设应用的 IP 地址。前往管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面，选择你要配置的应用详情，复制其中列出的 **Egress IPs**。该列表包含在相关标签上配置的所有连接器的全部 IP 地址。新增应用连接器时，记得同步更新你的 IP 白名单。
 
-> **Note:**
+> **注意：**
 >
-> App connector devices have two different IP addresses. The [Tailscale IP address][docs-tailscale-ip-addresses], which is private to your tailnet, and the public IP address, which other applications on the internet can reach. When configuring IP access controls, you need the public IP address, not the Tailscale IP address.
+> 应用连接器设备有两个不同的 IP 地址：一个是 tailnet 私有的 [Tailscale IP 地址][docs-tailscale-ip-addresses]，另一个是互联网上其他应用可以访问的公网 IP 地址。配置 IP 访问控制时，你需要的是公网 IP 地址，而不是 Tailscale IP 地址。
 
-## Limitations
+## 限制
 
-* Linux is the only operating system that can be used as an app connector device in a tailnet.
-* App connectors cannot be shared across multiple tailnets.
-* Advertising more than 10K routes on any instance, or across the whole tailnet, will cause significant functionality issues for connecting clients.
-* Tailnets are limited to advertising 250 domains across all applications.
-* Using frequently changing or [ephemeral][docs-ephemeral-nodes] resources as app connectors is not recommended. App connectors learn over time and build routes to connected domains, so using a stable routing infrastructure provides better performance and reliability.
-* If you manage your tailnet policy file using an external provider like [Terraform][docs-terraform-provider] or [GitOps][docs-gitops], any changes you make to app connectors in the admin console will be overwritten during the next sync. Make sure to manage app connectors through your external provider.
+* Linux 是唯一可以用作 tailnet 内应用连接器设备的操作系统。
+* 应用连接器不能跨多个 tailnet 共享。
+* 在单个实例上或整个 tailnet 范围内通告超过 1 万条路由，会给连接的客户端带来严重的功能问题。
+* tailnet 在所有应用范围内最多只能通告 250 个域名。
+* 不建议使用频繁变化或[临时（ephemeral）][docs-ephemeral-nodes]资源作为应用连接器。应用连接器会随时间学习并构建到所连域名的路由，因此使用稳定的路由基础设施能提供更好的性能和可靠性。
+* 如果你使用 [Terraform][docs-terraform-provider] 或 [GitOps][docs-gitops] 等外部提供方管理 tailnet 策略文件，那么在管理控制台中对应用连接器所做的任何更改都会在下次同步时被覆盖。请务必通过你的外部提供方来管理应用连接器。
 
-[ar-custom-apps]: #add-a-custom-app
+[ar-custom-apps]: #添加自定义应用
 
-[ar-preset-apps]: #add-a-preset-app
+[ar-preset-apps]: #添加预设应用
 
-[ar-tailnet-policy-file]: #update-the-tailnet-policy-file
+[ar-tailnet-policy-file]: #更新-tailnet-策略文件
 
 [docs-app-connectors]: /docs/features/app-connectors
 

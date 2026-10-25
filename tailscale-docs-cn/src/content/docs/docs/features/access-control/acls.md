@@ -1,25 +1,25 @@
 ---
-title: "Manage permissions using ACLs"
-description: "Tailscale's [access control][docs-access-control] methodology follows the [least privilege][ln-least-privilege] and [zero trust][docs-zero-trust] principles. There are two ways to define access contro"
+title: "使用 ACL 管理权限"
+description: "Tailscale 的[访问控制][docs-access-control]方法论遵循[最小权限][ln-least-privilege]与[零信任][docs-zero-trust]原则。有两种方式可以为 tailnet 定义访问控制"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
 \[Missing snippet: acls\_legacy\_note.mdx]
 
-> **Note:**
+> **注意：**
 >
-> ACLs are available on all plans, but certain functionality might be restricted on some plans.
+> ACL 在所有套餐上均可用，但某些功能在部分套餐上可能受限。
 
-Tailscale's [access control][docs-access-control] methodology follows the [least privilege][ln-least-privilege] and [zero trust][docs-zero-trust] principles. There are two ways to define access controls for your tailnet: access control lists (ACLs) and grants. Both methods follow a deny-by-default principle and are defined in the [tailnet policy file][docs-tailnet-policy-file] using a [declarative huJSON syntax][docs-policy-syntax].
+Tailscale 的[访问控制][docs-access-control]方法论遵循[最小权限][ln-least-privilege]与[零信任][docs-zero-trust]原则。为 tailnet 定义访问控制有两种方式：访问控制列表（ACL）和授权（grant）。两种方式都遵循默认拒绝原则，并使用[声明式 huJSON 语法][docs-policy-syntax]定义在 [tailnet 策略文件][docs-tailnet-policy-file]中。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下面的相关视频提供了更多背景与示例。
 
-[Tailscale ACLs Explained (video)](https://www.youtube.com/watch?v=Jn8_Sh4r8d4)
+[Tailscale ACL 详解（视频）](https://www.youtube.com/watch?v=Jn8_Sh4r8d4)
 
-ACLs represent the traditional [network layer][xt-wiki-network-layer] approach to managing access within your tailnet, where you define [a set of devices or users][docs-targets] who can access ports on other devices. Each ACL you create must define a source and a destination. They let you precisely define access controls for users and devices on your Tailscale network (known as a tailnet).
+ACL 是在 tailnet 内管理访问的传统[网络层][xt-wiki-network-layer]方式：你定义[一组设备或用户][docs-targets]，指定他们可以访问其他设备上的哪些端口。你创建的每条 ACL 都必须定义一个来源和一个目标。借助 ACL，你可以为 Tailscale 网络（即 tailnet）上的用户和设备精确设定访问控制。
 
 ```json
 {
@@ -35,55 +35,55 @@ ACLs represent the traditional [network layer][xt-wiki-network-layer] approach t
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-When you first create your tailnet, the [default tailnet policy file][docs-acl-samples-allow-all] enables communication between all devices within the tailnet. You can modify your policy file (including [editing ACLs][ar-edit-acls]) to fit your needs.
+初次创建 tailnet 时，[默认 tailnet 策略文件][docs-acl-samples-allow-all]会允许 tailnet 内所有设备互相通信。你可以按需修改策略文件（包括[编辑 ACL][ar-edit-acls]）。
 
-ACLs are deny-by-default, directional, locally enforced, and don't affect local network traffic.
+ACL 具有默认拒绝、有向、本地执行的特性，并且不影响本地网络流量。
 
-* **Deny-by-default**. Using a default deny policy prevents communication between devices without explicit access to each other. However, in the absence of an `acls` section in the tailnet policy file, Tailscale applies the [default allow all policy][docs-acl-samples-allow-all].
-* **Directional**. Allowing a source to connect to a destination doesn't mean the destination can connect to the source (unless a policy explicitly enables it).
-* **Locally enforced**. A device enforces incoming connections based on the access rules distributed to all devices in your tailnet. Rule enforcement happens on each device directly, without further involvement from Tailscale's coordination server.
-* ACLs do not affect what a device can or cannot access on its local network.
+* **默认拒绝**。采用默认拒绝策略，未经明确授权的设备之间无法通信。不过，如果 tailnet 策略文件中没有 `acls` 部分，Tailscale 会应用[默认全部允许策略][docs-acl-samples-allow-all]。
+* **有向**。允许来源连接到目标，不代表目标可以连接到来源（除非有策略明确允许）。
+* **本地执行**。设备依据分发给 tailnet 内所有设备的访问规则对入站连接进行控制。规则在每个设备上直接执行，无需 Tailscale 协调服务器（coordination server）进一步参与。
+* ACL 不影响设备能访问其本地网络上的哪些资源。
 
-For more information about Tailscale's approach to access control, refer to [RBAC like it was meant to be][bl-rbac-meant-to-be].
+如需了解 Tailscale 访问控制方案的更多背景，参见 [RBAC like it was meant to be][bl-rbac-meant-to-be]。
 
-> **Warning:**
+> **警告：**
 >
-> If you don't define any access control policies, Tailscale applies the [default allow all ACL policy][docs-acl-samples-allow-all]. To deny all traffic, use an [empty object for the `acls` section][docs-acl-samples-deny-all] in your tailnet policy file.
+> 如果你不定义任何访问控制策略，Tailscale 会应用[默认全部允许的 ACL 策略][docs-acl-samples-allow-all]。要拒绝所有流量，请在 tailnet 策略文件中为 `acls` 部分使用[空对象][docs-acl-samples-deny-all]。
 
-## Edit ACLs
+## 编辑 ACL
 
-You can edit your tailnet's access rules by using the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, [GitOps for Tailscale ACLs][docs-gitops-acls], or the [Tailscale API][docs-api]. Refer to [Editing ACLs][docs-edit-policies] for more information.
+你可以通过管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面、[GitOps for Tailscale ACLs][docs-gitops-acls] 或 [Tailscale API][docs-api] 编辑 tailnet 的访问规则。更多信息参见[编辑 ACL][docs-edit-policies]。
 
-Refer to [tailnet policy file syntax][docs-policy-syntax] to create access control policies or the [sample ACLs][docs-acl-samples] for examples of common policies.
+要创建访问控制策略，请参考 [tailnet 策略文件语法][docs-policy-syntax]；常见策略示例见 [ACL 示例][docs-acl-samples]。
 
-## Availability by plan
+## 各套餐的可用性
 
-ACLs are available on all plans, but certain functionality might be restricted on some plans.
+ACL 在所有套餐上均可用，但某些功能在部分套餐上可能受限。
 
-Availability
+可用性
 
-On all plans
+所有套餐
 
-On the Premium and Enterprise plans
+Premium 与 Enterprise 套餐
 
-Access rules for...
+访问规则可针对……
 
-Any
+任意目标
 Tailscale IP
-Subnet CIDR Range
+子网 CIDR 范围
 Autogroups
-Groups
-Users
-Tags
-Hosts
-IP sets
+组
+用户
+标签
+主机
+IP 集
 
-Access rules specifying...
+访问规则可指定……
 
-Ports
-Protocols
+端口
+协议
 
-ACL sections for...
+ACL 可包含的部分……
 
 acl
 
@@ -99,7 +99,7 @@ autoApprovers
 
 nodeAttrs
 
-postures with default device posture attributes only
+postures，仅限默认设备态势（device posture）属性
 
 ipsets
 
@@ -115,11 +115,11 @@ tagOwners
 
 autoApprovers
 
-postures with default, custom, and third-party attributes
+postures，支持默认、自定义与第三方属性
 
 ipsets
 
-[ar-edit-acls]: #edit-acls
+[ar-edit-acls]: #编辑-acl
 
 [bl-rbac-meant-to-be]: https://tailscale.com/blog/rbac-like-it-was-meant-to-be
 

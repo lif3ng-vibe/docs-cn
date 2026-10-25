@@ -1,23 +1,23 @@
 ---
-title: "Postures in access rules"
-description: "A device posture is a [set of security rules][docs-device-postures-attributes] that devices must meet to access your tailnet. Postures are a feature of access rules, and once a posture is created you "
+title: "访问规则中的态势"
+description: "设备态势是设备访问你的 tailnet 时必须满足的[一组安全规则][docs-device-postures-attributes]。态势是访问规则的一项功能，创建态势后，你必须将其作为条件添加到现有访问规则中"
 ---
 
-Last validated Oct 6, 2026
+最后验证于 Oct 6, 2026
 
-A device posture is a [set of security rules][docs-device-postures-attributes] that devices must meet to access your tailnet. Postures are a feature of access rules, and once a posture is created you must add it as a condition to an existing access rule.
+设备态势是设备访问你的 tailnet 时必须满足的[一组安全规则][docs-device-postures-attributes]。态势是访问规则的一项功能，创建态势后，你必须将其作为条件添加到现有访问规则中。
 
-> **Note:**
+> **注意：**
 >
-> Creating a device posture does not enforce any requirements. It must be added to an access rule for its restrictions to apply.
+> 创建设备态势本身不会强制执行任何要求。必须将其添加到访问规则，其限制才会生效。
 
-## Postures as conditions in access rules
+## 态势作为访问规则中的条件
 
-An access rule that includes a device posture condition is conditional on posture fulfillment in addition to its source, destination, and protocol requirements. Postures in a condition are not additive; if multiple postures are included in the condition, only one of them must be met to fulfill the posture requirement.
+包含设备态势条件的访问规则，除源、目标和协议要求外，还以态势是否满足为条件。条件中的态势不是叠加式的；如果条件中包含多个态势，只需满足其中一个即视为满足态势要求。
 
-## Examples
+## 示例
 
-The following examples show grants with a posture condition. Posture conditions are added with the `srcPosture` key to an access rule in your policy file.
+以下示例展示了带态势条件的授权（grant）。态势条件通过 `srcPosture` 键添加到策略文件（tailnet policy file）中的访问规则。
 
 ```json
 "grants": [
@@ -39,7 +39,7 @@ The following examples show grants with a posture condition. Posture conditions 
 ]
 ```
 
-You can add multiple postures to the same access rule. In the following example, the posture condition is fulfilled and access is permitted to production if the connecting device meets any of the three specified postures.
+你可以向同一条访问规则添加多个态势。在下面的示例中，只要连接设备满足三个指定态势中的任意一个，态势条件即告满足，允许访问生产环境。
 
 ```json
 "grants": [
@@ -52,11 +52,11 @@ You can add multiple postures to the same access rule. In the following example,
 ]
 ```
 
-## Default postures and access rules
+## 默认态势与访问规则
 
-You can set a default posture condition that applies to all of your access rules that do not otherwise have a posture condition specified. It is not additive, meaning if an access rule specifies a posture condition, only that condition will apply and the default source posture condition will not apply.
+你可以设置一个默认态势条件，应用到所有未另行指定态势条件的访问规则。默认态势不是叠加式的，也就是说，如果某个访问规则指定了态势条件，则只有该条件生效，默认源态势条件不会应用。
 
-A default posture is made up of one or more postures. As with the `srcPosture` condition in access rules, the default posture condition is fulfilled if any of the supplied postures are met. The example default posture below is fulfilled if a device meets any of the three listed postures.
+默认态势由一个或多个态势组成。与访问规则中的 `srcPosture` 条件一样，只要满足所提供的任意一个态势，默认态势条件即告满足。下面的示例默认态势，只要设备满足列出的三个态势中的任意一个即告满足。
 
 ```json
 "defaultSrcPosture": [
@@ -66,7 +66,7 @@ A default posture is made up of one or more postures. As with the `srcPosture` c
 ],
 ```
 
-The grant examples below show when a default posture condition is and isn't enforced by an access rule.
+下面的授权示例展示了默认态势条件何时会被访问规则强制执行、何时不会。
 
 ```json
 "grants": [
@@ -86,17 +86,17 @@ The grant examples below show when a default posture condition is and isn't enfo
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> `defaultSrcPosture` conditions only apply to traffic originating from Tailscale nodes within the same network, since only those devices have attribute values that can be evaluated against a defined posture. Shared nodes and devices behind [subnet routers][docs-subnets] will not have their traffic restricted based on postures, and will be permitted access if they match IP-based conditions (`src`, `dst`, `proto`).
+> `defaultSrcPosture` 条件只作用于来自同一网络内 Tailscale 节点的流量，因为只有这些设备具有可依据定义态势进行评估的属性值。共享节点以及[子网路由器][docs-subnets]后面的设备，其流量不会基于态势受到限制，只要它们匹配基于 IP 的条件（`src`、`dst`、`proto`）就会被允许访问。
 
 [docs-device-postures-attributes]: /docs/features/device-posture/postures-and-attributes
 
 [docs-subnets]: /docs/features/subnet-routers
 
-## Check device posture status
+## 查看设备态势状态
 
-For steps to check a device's posture status and to configure notifications related to failing postures, refer to [Monitoring and alerts for device postures][docs-posture-failure].
+有关查看设备态势状态以及配置与未通过态势相关通知的步骤，参见[设备态势的监控与警报][docs-posture-failure]。
 
 [docs-filter-devices]: /docs/features/access-control/device-management/how-to/filter
 

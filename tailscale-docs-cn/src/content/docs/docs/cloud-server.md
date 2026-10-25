@@ -1,22 +1,22 @@
 ---
-title: "Connect to a cloud server"
-description: "Connect your cloud server to Tailscale."
+title: "连接到云服务器"
+description: "将你的云服务器连接到 Tailscale。"
 ---
 
-Last validated Jun 18, 2024
+最后验证于 Jun 18, 2024
 
-[**Connect to an AWS VPC using subnet routes**](/docs/install/cloud/aws) — Deploy a Tailscale subnet router on an Amazon EC2 instance. Get secure access to your VPC's EC2 instances.
+[**使用子网路由连接到 AWS VPC**](/docs/install/cloud/aws) —— 在 Amazon EC2 实例上部署 Tailscale 子网路由器，安全地访问你 VPC 中的 EC2 实例。
 
-[**Tailscale on AWS Lightsail**](/docs/install/cloud/aws/aws-lightsail) — Install the Tailscale client in AWS Lightsail containers.
+[**在 AWS Lightsail 上使用 Tailscale**](/docs/install/cloud/aws/aws-lightsail) —— 在 AWS Lightsail 容器中安装 Tailscale 客户端。
 
-[**Using Tailscale on Azure App Service**](/docs/install/cloud/azure/azure-app-service) — Use Azure App Service with Tailscale.
+[**在 Azure App Service 上使用 Tailscale**](/docs/install/cloud/azure/azure-app-service) —— 将 Azure App Service 与 Tailscale 搭配使用。
 
-[**Access Azure Linux VMs privately using Tailscale**](/docs/install/cloud/azure/linux) — Access Azure Linux VMs privately with Tailscale.
+[**使用 Tailscale 私有访问 Azure Linux 虚拟机**](/docs/install/cloud/azure/linux) —— 通过 Tailscale 私有访问 Azure Linux 虚拟机。
 
-[**Access Azure Windows VMs privately using Tailscale**](/docs/install/cloud/azure/windows) — Use Tailscale to privately access Azure Windows VMs.
+[**使用 Tailscale 私有访问 Azure Windows 虚拟机**](/docs/install/cloud/azure/windows) —— 使用 Tailscale 私有访问 Azure Windows 虚拟机。
 
-[**Access Google Compute Engine VMs privately using Tailscale**](/docs/install/cloud/gce) — Access Google Compute Engine VMs privately using Tailscale.
+[**使用 Tailscale 私有访问 Google Compute Engine 虚拟机**](/docs/install/cloud/gce) —— 通过 Tailscale 私有访问 Google Compute Engine 虚拟机。
 
-[**Access Hetzner Servers privately using Tailscale**](/docs/install/cloud/hetzner) — Set up secure connections to Hetzner's Linux VMs, configure firewalls, and optimize performance with step-by-step instructions.
+[**使用 Tailscale 私有访问 Hetzner 服务器**](/docs/install/cloud/hetzner) —— 按照分步说明，建立到 Hetzner Linux 虚拟机的安全连接、配置防火墙并优化性能。
 
-[**Access Oracle Cloud VMs privately using Tailscale**](/docs/install/cloud/oracle-cloud) — Use Tailscale to privately access Oracle Cloud VMs.
+[**使用 Tailscale 私有访问 Oracle Cloud 虚拟机**](/docs/install/cloud/oracle-cloud) —— 使用 Tailscale 私有访问 Oracle Cloud 虚拟机。

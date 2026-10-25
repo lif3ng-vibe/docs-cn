@@ -1,48 +1,48 @@
 ---
-title: "Changing user roles"
-description: "You can change the [roles][docs-user-roles] users in your network have to restrict access to the admin console. (To restrict which users and devices can communicate in your tailnet, refer to [access c"
+title: "更改用户角色"
+description: "你可以更改网络中用户的角色，以限制其对管理控制台的访问。（要限制 tailnet 中哪些用户和设备可以相互通信，请参阅访问控制策略。）"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-You can change the [roles][docs-user-roles] users in your network have to restrict access to the admin console. (To restrict which users and devices can communicate in your tailnet, refer to [access control policies][docs-access-control].)
+你可以更改网络中用户的[角色][docs-user-roles]（role），以限制其对管理控制台的访问。（要限制 tailnet 中哪些用户和设备可以相互通信，请参阅[访问控制策略][docs-access-control]。）
 
-To remove or suspend users, refer to [Removing and suspending users][docs-remove-team-members].
+要移除或停用用户，请参阅[移除与停用用户][docs-remove-team-members]。
 
-## Change a user's role
+## 更改用户的角色
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to change a user's role.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能更改用户的角色。
 
-You can change a user's role from the [admin console](https://console.tailscale.com/admin):
+你可以在[管理控制台](https://console.tailscale.com/admin)中更改用户的角色：
 
-1. Open the [Users](https://console.tailscale.com/admin/users) page of the admin console.
-2. Find the row corresponding to the user you are interested in.
-3. Select the  menu at the far right, then select the **Edit role** option.
-4. Select the role you want the user to have, then select **Save**:
+1. 打开管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。
+2. 找到目标用户所在的行。
+3. 选择最右侧的菜单，然后选择 **Edit role** 选项。
+4. 选择你想赋予该用户的角色，然后选择 **Save**：
 
-   *（图：Select a role for the user.）*
+   *（图：为用户选择一个角色。）*
 
-> **Note:**
+> **注意：**
 >
-> A user cannot change their own role.
+> 用户不能更改自己的角色。
 
-## Change Owner
+## 更改 Owner
 
-You need to be the [Owner](/docs/reference/user-roles) of a tailnet to change the Owner.
+你需要是 tailnet 的 [Owner（所有者）](/docs/reference/user-roles)，才能更改 Owner。
 
-You can change a user's role from the [admin console](https://console.tailscale.com/admin):
+你可以在[管理控制台](https://console.tailscale.com/admin)中更改用户的角色：
 
-1. Open the [Users](https://console.tailscale.com/admin/users) page of the admin console.
-2. Find the row corresponding to the user you are interested in.
-3. Select the  menu at the far right, then select the **Edit role** option.
-4. Select **Owner**, then select **Save**.
+1. 打开管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面。
+2. 找到目标用户所在的行。
+3. 选择最右侧的菜单，然后选择 **Edit role** 选项。
+4. 选择 **Owner**，然后选择 **Save**。
 
-   *（图：Reassign the Owner role to a user.）*
+   *（图：将 Owner 角色重新指派给某个用户。）*
 
-### Limitations when changing Owner
+### 更改 Owner 的限制
 
-* If your tailnet uses a shared domain name (such as `gmail.com`), you cannot change ownership of the tailnet.
-* If your tailnet uses a custom domain name, you can change the owner only to a user on that same domain.
+* 如果你的 tailnet 使用共享域名（例如 `gmail.com`），你无法更改 tailnet 的所有者。
+* 如果你的 tailnet 使用自定义域名，你只能把所有者更改为同一域名下的用户。
 
 [docs-access-control]: /docs/features/access-control
 

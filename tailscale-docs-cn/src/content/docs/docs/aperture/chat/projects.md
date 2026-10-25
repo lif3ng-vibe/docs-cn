@@ -1,135 +1,135 @@
 ---
-title: "Chat projects"
-description: "Aperture chat projects organize conversations around a shared purpose. Set instructions once for every conversation in a project. You can also restrict which tools those conversations can use."
+title: "Chat 项目"
+description: "Aperture chat 项目围绕共同目的组织对话。为项目中的每段对话一次性设置指令，还可以限制这些对话可使用的工具。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Aperture chat projects organize conversations around a shared purpose. Set instructions once for every conversation in a project. You can also restrict which tools those conversations can use.
+Aperture chat 项目围绕共同目的组织对话。只需为项目中的每段对话设置一次指令，还可以限制这些对话可以使用哪些工具。
 
-Projects are personal. Other users in your tailnet cannot view or access them.
+项目是个人专属的。tailnet 中的其他用户无法查看或访问它们。
 
-## What you can do with projects
+## 项目能做什么
 
-* **Group conversations** by topic, client, or workflow.
-* **Write reusable instructions** for every conversation in the project.
-* **Restrict tool access** for project conversations.
-* **Assign tailnet nodes** to guide which machines conversations try first.
-* **Pin projects** to the sidebar for quick access.
+* **按主题、客户端或工作流分组对话**。
+* **为项目中的每段对话编写可复用的指令**。
+* **限制项目对话的工具访问**。
+* **分配 tailnet 节点**，引导对话优先尝试哪些机器。
+* **将项目固定到侧边栏**，便于快速访问。
 
-## Create a project
+## 创建项目
 
-You can create a project in two ways:
+有两种创建项目的方式：
 
-* **From the Projects page**: Open the **Projects** page from the sidebar and select **New project**. Enter a name and select **Create**.
-* **From the new chat composer**: Open the project picker in the composer and type a name. If no existing project matches, select the **Create project** row that appears.
+* **从 Projects 页面**：从侧边栏打开 **Projects** 页面并选择 **New project**，输入名称后选择 **Create**。
+* **从新建 chat 输入区**：在输入区打开项目选择器并输入名称。如果没有匹配的现有项目，选择出现的 **Create project** 行。
 
-Project names can be up to 120 characters.
+项目名称最长 120 个字符。
 
-## Write project instructions
+## 编写项目指令
 
-Each project has an instructions field where you describe what the project is about and how you want answers written. Instructions appear in an always-open text area on the project page.
+每个项目都有一个指令字段，用于描述项目的用途以及希望回答以何种方式撰写。指令显示在项目页面一个始终展开的文本区域中。
 
-To write or edit instructions:
+编写或编辑指令：
 
-1. Open **Projects** from the sidebar, then select the project.
-2. Type your instructions in the text area.
-3. Select **Save instructions**.
+1. 从侧边栏打开 **Projects**，然后选择该项目。
+2. 在文本区域输入你的指令。
+3. 选择 **Save instructions**。
 
-Changes take effect on the next message in any conversation in the project, including existing conversations.
+更改对项目中任何对话的下一条消息生效，包括已有对话。
 
-### How instructions reach the model
+### 指令如何到达模型
 
-Aperture appends project instructions to the system prompt without additional wrapping or formatting. Instructions guide responses. They do not grant access to models or tools.
+Aperture 会将项目指令追加到 system prompt 中，不做额外的包装或格式化。指令用于引导回复，并不会授予模型或工具的访问权限。
 
-## Manage conversations in a project
+## 管理项目中的对话
 
-A conversation belongs to one project at a time. Adding a conversation to a project removes it from any previous project. Conversations in a project also appear in your main **Chats** list.
+一段对话同一时间只属于一个项目。将对话添加到某个项目会把它从之前的项目中移除。项目中的对话也会显示在主 **Chats** 列表中。
 
-### Add a conversation
+### 添加对话
 
-You can add conversations to a project in several ways:
+可以通过多种方式把对话添加到项目：
 
-* **From the new chat composer**: Open the project picker and select the project. The current conversation moves to that project.
-* **From the conversation actions menu**: Open the actions menu for a conversation and select the project.
-* **From the project page**: Select **Add existing chat** and choose conversations to add.
-* **In bulk from recent chats**: Select multiple conversations in your recent chats list, then add them to a project.
+* **从新建 chat 输入区**：打开项目选择器并选择项目，当前对话即移入该项目。
+* **从对话操作菜单**：打开某段对话的操作菜单并选择目标项目。
+* **从项目页面**：选择 **Add existing chat**，再选择要添加的对话。
+* **从最近聊天批量添加**：在最近聊天列表中选择多段对话，然后添加到项目。
 
-### Remove a conversation
+### 移除对话
 
-To remove a conversation from a project, select **Remove from project** in the conversation actions menu or project picker.
+要把对话从项目中移除，可在对话操作菜单或项目选择器中选择 **Remove from project**。
 
-Removing a conversation from a project does not delete the conversation. It remains in your **Chats** list.
+把对话移出项目不会删除该对话，它仍保留在你的 **Chats** 列表中。
 
-### Start a new chat in a project
+### 在项目中开始新聊天
 
-Select **New chat** on the project page. The new conversation belongs to the project from the first message, so project instructions apply from the start.
+在项目页面选择 **New chat**。新对话从第一条消息起就属于该项目，因此项目指令从一开始就会生效。
 
-## Customize tool access
+## 自定义工具访问
 
-By default, conversations in a project can use all available tools. You can restrict tool access to a specific set.
+默认情况下，项目中的对话可以使用所有可用工具。你可以把工具访问限制到特定集合。
 
-To customize which tools are available in a project:
+自定义项目中可用的工具：
 
-1. Open **Projects** from the sidebar, then select the project.
-2. In **Tools**, select **Customize**.
-3. Turn off the tools you want to disable for this project.
+1. 从侧边栏打开 **Projects**，然后选择该项目。
+2. 在 **Tools** 中选择 **Customize**。
+3. 关闭你想在该项目中禁用的工具。
 
-Individual conversations within the project can use fewer tools than the project enables, but they cannot enable tools the project disables.
+项目内的单段对话可以使用的工具少于项目启用的范围，但不能启用项目已禁用的工具。
 
-To restore all available tools, select **Reset**.
+要恢复所有可用工具，选择 **Reset**。
 
-## Assign tailnet nodes
+## 分配 tailnet 节点
 
-Assign tailnet nodes to guide which machines chat tries first for tasks such as running commands or reading system state. Chat can use another visible node when your request calls for it. Assignment does not grant Tailscale SSH access or restrict chat to the assigned nodes. Your tailnet's Tailscale SSH policy remains authoritative.
+分配 tailnet 节点，可以引导 chat 在执行运行命令或读取系统状态等任务时优先尝试哪些机器。当请求需要时，chat 也可以使用其他可见节点。分配节点不会授予 Tailscale SSH 访问权限，也不会把 chat 限制在已分配的节点上。tailnet 的 Tailscale SSH 策略仍然具有最终决定权。
 
-To list available nodes, you need access to the Tailscale SSH connector. The node list contains machines visible to your Aperture gateway.
+要列出可用节点，你需要能访问 Tailscale SSH 连接器。节点列表包含你的 Aperture 网关可见的机器。
 
-1. Open **Projects** from the sidebar, then select the project.
-2. Select **Add node** in the project's node section.
-3. Search by node name or tag.
-4. Select a node to assign it to the project.
+1. 从侧边栏打开 **Projects**，然后选择该项目。
+2. 在项目的节点区域选择 **Add node**。
+3. 按节点名称或标签搜索。
+4. 选择一个节点，将其分配给项目。
 
-Changes save automatically. To remove an assignment, select the remove button next to the node.
+更改会自动保存。要移除分配，选择该节点旁边的移除按钮。
 
-If no nodes are available and none are assigned, the node section is hidden.
+如果没有可用节点也没有已分配的节点，该节点区域会隐藏。
 
-## Pin a project
+## 固定项目
 
-Select **Pin project** next to the project name to pin it to the sidebar. Pinned projects appear in **Pinned**, above recent chats. Expand a project to display its conversations. It expands automatically when you open one of its conversations.
+选择项目名称旁边的 **Pin project** 可将其固定到侧边栏。已固定的项目显示在最近聊天上方的 **Pinned** 区域。展开项目可显示其中的对话；打开其中一段对话时它会自动展开。
 
-## Search for projects
+## 搜索项目
 
-You can find projects from two places:
+可以在两个地方找到项目：
 
-* **Global search**: Press `CMD+K` (or `CTRL+K`) to open the search dialog. Projects appear first (up to three results), followed by conversations. Search matches against project names.
-* **Projects page**: The search field on the **Projects** page filters your project list. This search shows only projects, with no result limit.
+* **全局搜索**：按 `CMD+K`（或 `CTRL+K`）打开搜索对话框。项目排在最前（最多 3 个结果），其后是对话。搜索匹配项目名称。
+* **Projects 页面**：**Projects** 页面上的搜索框会过滤你的项目列表。此搜索只显示项目，没有结果数量限制。
 
-## Delete a project
+## 删除项目
 
-To delete a project:
+删除项目：
 
-1. Open **Projects** from the sidebar, then select the project.
-2. Open the project actions menu and select **Delete project**.
-3. If the project contains conversations, choose whether to delete them too:
-   * To keep them, leave the **Also delete the … chats in this project** checkbox cleared. The conversations remain in **Chats**.
-   * To delete them, select the checkbox and type the project name to confirm. This permanently deletes the conversations and cannot be undone.
-4. Select **Delete project**, or **Delete project and … chats** if you selected the checkbox. The checkbox and button show the number of chats affected.
+1. 从侧边栏打开 **Projects**，然后选择该项目。
+2. 打开项目操作菜单并选择 **Delete project**。
+3. 如果项目中包含对话，选择是否一并删除：
+   * 要保留对话，保持 **Also delete the … chats in this project** 复选框不勾选，对话会保留在 **Chats** 中。
+   * 要删除对话，勾选该复选框并输入项目名称确认。此操作会永久删除对话且无法撤销。
+4. 选择 **Delete project**；如果勾选了复选框，则选择 **Delete project and … chats**。复选框和按钮上会显示受影响的聊天数量。
 
-## Limits
+## 限制
 
-| Limit                      | Value                    |
-| -------------------------- | ------------------------ |
-| Project name length        | 120 characters (display) |
-| Instructions size          | 16 KiB (16,384 bytes)    |
-| Projects per conversation  | 1                        |
-| Assigned nodes per project | 25                       |
+| 限制 | 数值 |
+| --- | --- |
+| 项目名称长度 | 120 个字符（显示层） |
+| 指令大小 | 16 KiB（16,384 字节） |
+| 每段对话所属项目数 | 1 |
+| 每个项目可分配节点数 | 25 |
 
-## Related
+## 相关内容
 
-* [Chat projects reference][docs-chat-projects] for project behavior and limits.
-* [Chat connectors reference][docs-chat-connectors] for connector access in chat.
-* [Chat sandbox][docs-chat-sandbox] to run code in an isolated environment during a conversation.
+* [Chat 项目参考][docs-chat-projects]：项目行为与限制。
+* [Chat 连接器参考][docs-chat-connectors]：chat 中的连接器访问。
+* [Chat 沙盒][docs-chat-sandbox]：在对话中于隔离环境运行代码。
 
 [docs-chat-connectors]: /docs/aperture/reference/chat#connectors
 

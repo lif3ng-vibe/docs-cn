@@ -1,27 +1,27 @@
 ---
-title: "Tailscale MDM integration partners"
-description: "Mobile device management (MDM) solutions such as those listed below let you apply a set of [system policies][docs-mdm-keys] across all the devices in your fleet that are running Tailscale. System poli"
+title: "Tailscale MDM 集成合作伙伴"
+description: "下面列出的移动设备管理（MDM）解决方案可让你将一组[系统策略][docs-mdm-keys]应用到设备群中所有运行 Tailscale 的设备。系统策略可用于自定义 Tailscale 客户端的行为，使之符合你组织的策略和用例。"
 ---
 
-Last validated Dec 2, 2025
+最后验证于 Dec 2, 2025
 
-> **Note:** MDM integrations are available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** MDM 集成适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-Mobile device management (MDM) solutions such as those listed below let you apply a set of [system policies][docs-mdm-keys] across all the devices in your fleet that are running Tailscale. System policies can be used to customize the behavior of the Tailscale client to match the policies and use cases of your organization.
+下面列出的移动设备管理（MDM）解决方案可让你将一组[系统策略][docs-mdm-keys]应用到设备群中所有运行 Tailscale 的设备。系统策略可用于自定义 Tailscale 客户端的行为，使之符合你组织的策略和用例。
 
-* [Deploy Tailscale with Google Workspace][docs-mdm-google-workspace]
-* [Deploy Tailscale with Jamf][docs-mdm-jamf]
-* [Deploy Tailscale with JumpCloud][docs-mdm-jumpcloud]
-* [Deploy Tailscale with Iru][docs-mdm-iru] (formerly Kandji)
-* [Deploy Tailscale with Microsoft Intune][docs-mdm-microsoft-intune]
-* [Deploy Tailscale with SimpleMDM][docs-mdm-simplemdm]
-* [Deploy Tailscale with TinyMDM][docs-mdm-tinymdm]
+* [使用 Google Workspace 部署 Tailscale][docs-mdm-google-workspace]
+* [使用 Jamf 部署 Tailscale][docs-mdm-jamf]
+* [使用 JumpCloud 部署 Tailscale][docs-mdm-jumpcloud]
+* [使用 Iru 部署 Tailscale][docs-mdm-iru]（原 Kandji）
+* [使用 Microsoft Intune 部署 Tailscale][docs-mdm-microsoft-intune]
+* [使用 SimpleMDM 部署 Tailscale][docs-mdm-simplemdm]
+* [使用 TinyMDM 部署 Tailscale][docs-mdm-tinymdm]
 
-> **Tip:**
+> **提示：**
 >
-> While the list above includes MDM solutions we have configured, tested, and verified, Tailscale will work with other MDM solutions.
+> 虽然上面的列表只包含我们已经配置、测试并验证过的 MDM 解决方案，但 Tailscale 也可以与其他 MDM 解决方案配合使用。
 
-The Tailscale client can be both deployed and configured using MDM solutions. We support MDM functionality on [Android][docs-android-mdm], [iOS/tvOS][docs-ios-mdm], [macOS][docs-macos-mdm], and [Windows][docs-windows-mdm].
+Tailscale 客户端可以使用 MDM 解决方案进行部署和配置。我们在 [Android][docs-android-mdm]、[iOS/tvOS][docs-ios-mdm]、[macOS][docs-macos-mdm] 和 [Windows][docs-windows-mdm] 上支持 MDM 功能。
 
 [docs-android-mdm]: /docs/integrations/mdm/android
 

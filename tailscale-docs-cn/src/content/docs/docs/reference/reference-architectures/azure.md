@@ -1,150 +1,150 @@
 ---
-title: "Azure reference architecture"
-description: "This document details best practices and a reference architecture for Tailscale deployments on Microsoft Azure. The following guidance applies for all Tailscale modes of operation—such as devices, exi"
+title: "Azure 参考架构"
+description: "本文档详细介绍在 Microsoft Azure 上部署 Tailscale 的最佳实践与参考架构。以下指引适用于 Tailscale 的各种运行模式——例如设备、出口节点和子网路由器。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-This document details best practices and a reference architecture for Tailscale deployments on Microsoft Azure. The following guidance applies for all Tailscale modes of operation—such as devices, exit nodes, and subnet routers.
+本文档详细介绍在 Microsoft Azure 上部署 Tailscale 的最佳实践与参考架构。以下指引适用于 Tailscale 的各种运行模式——例如设备、出口节点和子网路由器。
 
-> **Note:**
+> **注意：**
 >
-> **Tailscale device**—for the purposes of this document Tailscale device can refer to a Tailscale node, exit node, subnet router, and the like. Refer to [Terminology and concepts][docs-terminology-and-concepts] for additional terms.
+> **Tailscale 设备**——就本文档而言，Tailscale 设备可以指 Tailscale 节点、出口节点、子网路由器等。更多术语请参阅[术语与概念][docs-terminology-and-concepts]。
 
-## High-level architecture
+## 总体架构
 
-*（图：Potential deployments of Tailscale to access Azure resources）*
+*（图：通过 Tailscale 访问 Azure 资源的可能部署方式）*
 
-## Ways to deploy Tailscale to connect to and from Azure resources
+## 部署 Tailscale 与 Azure 资源互连的几种方式
 
-Tailscale provides a few options for connecting to resources within Azure. At a high-level they are:
+Tailscale 提供了多种连接 Azure 内资源的方式。总体来看包括：
 
-* **[Agent-to-Agent connectivity][ar-agent-to-agent-connectivity]**—connect to "static" resources such as virtual machines (VMs). This is recommended where you can install and run Tailscale directly on the resource you wish to connect to.
-* **[IP-based connectivity with a Tailscale subnet router][ar-subnet-router-ip-connect]**—connect to managed Azure resources (such as Azure SQL or Azure Cosmos DB). This is recommended where you cannot run Tailscale on the resource you are connecting to, or want to expose an existing [subnet][docs-subnets] or services in a virtual network to your tailnet.
-* **[DNS-based routing with a Tailscale app connector][ar-dns-routing-with-app-connector]**—connect to software as a service (SaaS) applications or other resources over your tailnet with DNS-based routing.
-* **[Kubernetes services and auth proxy with the Tailscale Kubernetes Operator][ar-services-and-api-proxy]**—expose services in your Azure Kubernetes Service (AKS) cluster and your AKS cluster control plane directly to your Tailscale network. This is recommended where you are connecting to resources running in a Kubernetes cluster, or to a Kubernetes cluster's control plane.
-* **[Azure Functions, Azure App Service, and other container solutions][ar-functions-app-service-containers]**—access resources in your tailnet from Azure Functions, Azure App Service, and other container solutions.
+* **[代理到代理连接][ar-agent-to-agent-connectivity]**（Agent-to-Agent connectivity）——连接到虚拟机（VM）这类"静态"资源。适用于可以直接在要连接的资源上安装并运行 Tailscale 的场景。
+* **[通过 Tailscale 子网路由器实现基于 IP 的连接][ar-subnet-router-ip-connect]**——连接到 Azure 托管资源（如 Azure SQL 或 Azure Cosmos DB）。适用于无法在目标资源上运行 Tailscale，或希望把现有[子网][docs-subnets]或虚拟网络中的服务暴露给 tailnet 的场景。
+* **[通过 Tailscale 应用连接器实现基于 DNS 的路由][ar-dns-routing-with-app-connector]**——通过 tailnet 以基于 DNS 的路由方式连接软件即服务（SaaS）应用或其他资源。
+* **[通过 Tailscale Kubernetes Operator 提供 Kubernetes 服务与认证代理][ar-services-and-api-proxy]**——将 Azure Kubernetes Service（AKS）集群中的服务和 AKS 集群控制平面直接暴露到 Tailscale 网络。适用于连接 Kubernetes 集群中运行的资源，或连接 Kubernetes 集群控制平面的场景。
+* **[Azure Functions、Azure App Service 及其他容器解决方案][ar-functions-app-service-containers]**——从 Azure Functions、Azure App Service 及其他容器解决方案访问 tailnet 中的资源。
 
-### Agent-to-Agent connectivity
+### 代理到代理连接
 
-We recommend [installing the Tailscale agent][docs-installation] wherever possible—for example, [setting up servers][docs-set-up-servers] on Azure VMs. This generally provides the best and most scalable connectivity while enabling Tailscale agent-based functionality such as Tailscale SSH.
+我们建议尽可能[安装 Tailscale agent][docs-installation]——例如在 Azure VM 上[设置服务器][docs-set-up-servers]。这种方式通常能提供最佳、最易扩展的连接性，同时支持 Tailscale SSH 等基于 Tailscale agent 的功能。
 
-Refer to [Access Azure Linux VMs privately using Tailscale][docs-cloud-azure-linux] and [Access Azure Windows VMs privately using Tailscale][docs-cloud-azure-windows] for general guides.
+通用指南请参阅[使用 Tailscale 私有访问 Azure Linux VM][docs-cloud-azure-linux]和[使用 Tailscale 私有访问 Azure Windows VM][docs-cloud-azure-windows]。
 
-### IP-based connectivity with subnet router
+### 通过子网路由器实现基于 IP 的连接
 
-For managed resources where you cannot install the Tailscale agent, such as Azure SQL or Azure Cosmos DB, you can run a [subnet router][docs-subnets] within your virtual network to access these resources from Tailscale.
+对于无法安装 Tailscale agent 的托管资源（如 Azure SQL 或 Azure Cosmos DB），你可以在虚拟网络内运行[子网路由器][docs-subnets]，让 Tailscale 由此访问这些资源。
 
-### DNS-based routing with an app connector
+### 通过应用连接器实现基于 DNS 的路由
 
-[App connectors][docs-app-connectors] proxy DNS queries for configured domains and advertise routes for the returned IP addresses. For applications that use IP allowlists, add the app connectors' egress IP addresses to the allowlist. Client traffic then reaches the applications from an allowed address.
+[应用连接器][docs-app-connectors]会代理已配置域名的 DNS 查询，并为返回的 IP 地址通告路由。对于使用 IP 允许列表的应用，请将应用连接器的出站 IP 地址加入允许列表，客户端流量便会从被允许的地址到达这些应用。
 
-### Kubernetes services and API server proxy with Tailscale Kubernetes Operator
+### Tailscale Kubernetes Operator 的 Kubernetes 服务与 API 服务器代理
 
-The [Tailscale Kubernetes Operator][docs-kubernetes-operator] lets you expose services in your Kubernetes cluster to your Tailscale network, and use an API server proxy for secure connectivity to the Kubernetes control plane.
+[Tailscale Kubernetes Operator][docs-kubernetes-operator]让你可以把 Kubernetes 集群中的服务暴露到 Tailscale 网络，并使用 API 服务器代理安全地连接 Kubernetes 控制平面。
 
-### Azure Functions, Azure App Service, and other container solutions
+### Azure Functions、Azure App Service 及其他容器解决方案
 
-Tailscale supports [userspace networking][docs-userspace-networking] where processes in the container can connect to other resources on your Tailscale network by using a SOCKS5 or HTTP proxy. This lets [Azure Functions][xt-azure-functions], [Azure App Service][xt-azure-app-service], and other container-based solutions to connect to the Tailscale network with minimal configuration needed.
+Tailscale 支持[用户态网络模式][docs-userspace-networking]：容器内的进程可以通过 SOCKS5 或 HTTP 代理连接 Tailscale 网络上的其他资源。这让 [Azure Functions][xt-azure-functions]、[Azure App Service][xt-azure-app-service]及其他基于容器的方案只需极少配置即可接入 Tailscale 网络。
 
-Refer to [Using Tailscale on Azure App Service][docs-azure-app-service] for a general guide.
+通用指南请参阅[在 Azure App Service 上使用 Tailscale][docs-azure-app-service]。
 
-## Production best practices
+## 生产环境最佳实践
 
-Below are general recommendations and best practices for running Tailscale in production environments. Much of what is listed below is explained in greater detail throughout this document:
+以下是在生产环境中运行 Tailscale 的一般建议与最佳实践，其中大部分内容会在本文档中更详细地展开：
 
-* When possible deploy [subnet routers][docs-subnets], [exit nodes][docs-exit-nodes], [app connectors][docs-app-connectors], and the like, to public subnets with public IP addresses to ensure [direct connections][docs-connection-types] and optimal performance.
-* Run subnet routers, exit nodes, app connectors, and the like, separately from the systems you are administering with Tailscale—for example, run your subnet routers outside of your Azure AKS clusters.
-* Deploy dynamically scaled resources (for example, containers or serverless functions) as [ephemeral nodes][docs-ephemeral-nodes] to automatically clean up devices after they shut down.
+* 如果条件允许，请将[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]、[应用连接器][docs-app-connectors]等部署到拥有公网 IP 地址的公有子网，以确保[直连][docs-connection-types]并获得最佳性能。
+* 将子网路由器、出口节点、应用连接器等与你用 Tailscale 管理的系统分开运行——例如，把子网路由器运行在 Azure AKS 集群之外。
+* 将动态扩缩的资源（例如容器或无服务器函数）部署为[临时节点（ephemeral node）][docs-ephemeral-nodes]，以便在设备关闭后自动清理。
 
-### High availability and route selection
+### 高可用性与路由选择
 
-* Run multiple [subnet routers][docs-subnets] and [app connectors][docs-app-connectors] across Azure availability zones for [high availability][docs-high-availability]. For deployments across regions, compare the [route selection options][docs-route-selection].
-* Run multiple Tailscale SSH session recorder nodes across Azure availability zones for [recorder node failover][docs-multiple-recorder-nodes].
+* 跨 Azure 可用区运行多个[子网路由器][docs-subnets]和[应用连接器][docs-app-connectors]，以实现[高可用性][docs-high-availability]。对于跨区域部署，请对比各种[路由选择方案][docs-route-selection]。
+* 跨 Azure 可用区运行多个 Tailscale SSH 会话录制节点，实现[录制节点故障转移][docs-multiple-recorder-nodes]。
 
-## Performance best practices
+## 性能最佳实践
 
-Refer to [Performance best practices][docs-performance-best-practices] for general recommendations.
+一般性建议请参阅[性能最佳实践][docs-performance-best-practices]。
 
-### In-region load balancing
+### 区域内负载均衡
 
-With regional routing, deploy overlapping subnet routers or app connectors in the same [DERP][docs-derp-servers] region for [in-region load balancing][docs-high-availability-region-load-balancing] and redundancy. Tailscale distributes clients on a best-effort basis.
+启用区域路由后，在同一 [DERP][docs-derp-servers] 区域部署相互重叠的子网路由器或应用连接器，即可获得[区域内负载均衡][docs-high-availability-region-load-balancing]与冗余。Tailscale 会以尽力而为的方式分发客户端。
 
-### Recommended VM sizing
+### 推荐的 VM 规格
 
-When choosing an Azure VM size, consider whether the device will function as a normal device, or a device running as a subnet router, exit node, or app connector.
+选择 Azure VM 规格时，请考虑这台设备是用作普通设备，还是充当子网路由器、出口节点或应用连接器。
 
-#### Normal usage
+#### 常规用法
 
-When installing Tailscale on an Azure VM as a "normal" Tailscale device (for example, not a subnet router, exit node, and the like), you likely have already sized that VM to a suitable type for its workload and running Tailscale on it will likely add negligible resource usage.
+如果在 Azure VM 上安装 Tailscale 只是作为"普通"Tailscale 设备（例如并非子网路由器、出口节点等），那么该 VM 的规格大概率已适合其工作负载，在其上运行 Tailscale 带来的资源开销几乎可以忽略不计。
 
-#### Subnet routers, exit nodes, and app connectors
+#### 子网路由器、出口节点与应用连接器
 
-There are many variables that affect performance and workloads vary widely so we do not have specific size recommendations, but we do have general guidance for selecting a VM size for an Azure VM running as a [subnet router][docs-subnets], [exit node][docs-exit-nodes], or [app connector][docs-app-connectors]:
+影响性能的变量很多，工作负载也千差万别，因此我们无法给出具体的规格推荐，但对于以[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]或[应用连接器][docs-app-connectors]身份运行的 Azure VM，我们有以下一般性选型建议：
 
-* In general, higher CPU clock speed is more important than more cores.
-* In general, VMs with Ampere Altra ARM–based processors are quite cost effective for packet forwarding.
-* Use a non-burstable VM type to achieve consistent CPU performance.
-  * Per [Azure documentation][xt-entra-burstable-vms], burstable performance machine sizes (such as B-series VMs) use a CPU credit mechanism which can result in variable performance.
-* Tailscale will generally perform better on Linux than other operating systems due to additional optimizations that have been implemented.
+* 一般来说，更高的 CPU 主频比更多的核心数更重要。
+* 一般来说，采用 Ampere Altra ARM 处理器的 VM 在数据包转发方面性价比相当高。
+* 使用非突发型 VM 规格，以获得稳定的 CPU 性能。
+  * 根据 [Azure 文档][xt-entra-burstable-vms]，突发性能型机器规格（如 B 系列 VM）采用 CPU 积分机制，可能导致性能波动。
+* 由于做了额外的优化，Tailscale 在 Linux 上的表现通常优于其他操作系统。
 
-## Using Tailscale with Azure
+## 将 Tailscale 与 Azure 配合使用
 
-Depending on how you are using Azure and Tailscale, there are considerations for your network security groups, subnets, DNS, and virtual networks.
+根据你使用 Azure 和 Tailscale 的方式，需要考虑网络安全组、子网、DNS 和虚拟网络等方面的因素。
 
-### Network security groups
+### 网络安全组
 
-Tailscale uses various [NAT traversal techniques][bl-how-nat-traversal-works] to safely connect to other Tailscale nodes without manual intervention. Nearly all the time, you do not need to open any [firewall ports][docs-firewalls] for Tailscale. However, if your virtual network and network security groups are overly restrictive about internet-bound egress traffic, refer to [What firewall ports should I open to use Tailscale][docs-firewall-ports].
+Tailscale 使用各种 [NAT 穿透技术][bl-how-nat-traversal-works]，在无需人工干预的情况下安全地连接其他 Tailscale 节点。绝大多数情况下，你无需为 Tailscale 打开任何[防火墙端口][docs-firewalls]。但如果你的虚拟网络和网络安全组对发往互联网的出站流量限制过严，请参阅[使用 Tailscale 应打开哪些防火墙端口][docs-firewall-ports]。
 
-### Public vs private subnets
+### 公有子网与私有子网
 
-Tailscale devices deployed to a public subnet with a public IP address will benefit from [direct connections][docs-connection-types] between nodes for the best performance.
+部署在拥有公网 IP 地址的公有子网中的 Tailscale 设备可以在节点之间建立[直连][docs-connection-types]，获得最佳性能。
 
 #### Azure NAT Gateway
 
-Tailscale uses both [direct and relayed connections][docs-connection-types], opting for direct connections where possible. Azure NAT Gateway is a [Hard NAT][docs-device-connectivity-hard-nat] and will prevent direct connections causing connections to use [DERP relay servers][docs-derp-servers]. This can lead to lower throughput and performance than direct connections.
+Tailscale 同时使用[直连和中继连接][docs-connection-types]，并尽可能优先选择直连。Azure NAT Gateway 属于[硬 NAT（Hard NAT）][docs-device-connectivity-hard-nat]，会阻止直连，迫使连接改用 [DERP 中继服务器][docs-derp-servers]，这会导致吞吐量和性能低于直连。
 
-Tailscale [Peer Relays][docs-peer-relays] let you use devices in your tailnet as high-throughput relay servers when direct connections aren't possible due to network conditions such as being in a private subnet behind an Azure NAT Gateway. To bypass Azure NAT Gateway, follow the steps to deploy and [configure a peer relay][docs-peer-relays-get-started] to a public subnet in your virtual network, with a public IP address, and allow incoming UDP traffic to the relay port.
+Tailscale [对等中继（peer relay）][docs-peer-relays]让你在网络条件导致无法直连时（例如设备位于 Azure NAT Gateway 后面的私有子网中），把 tailnet 中的设备用作高吞吐量中继服务器。要绕过 Azure NAT Gateway，请按照相应步骤把对等中继部署并[配置][docs-peer-relays-get-started]到虚拟网络中拥有公网 IP 地址的公有子网，并允许 UDP 流量入站到中继端口。
 
-### Virtual network DNS resolution
+### 虚拟网络 DNS 解析
 
-To allow non-Azure devices in your tailnet to query Azure DNS private zones, create a [Azure DNS private resolver][xt-entra-dns-private-resolver] for your virtual network and configure [split DNS][docs-dns-using-settings] to forward queries for your virtual network's internal domain name suffix to the IP address of the DNS private resolver's inbound endpoint.
+要让 tailnet 中的非 Azure 设备能够查询 Azure DNS 私有区域，请为你的虚拟网络创建 [Azure DNS 私有解析程序][xt-entra-dns-private-resolver]，并配置[拆分 DNS（split DNS）][docs-dns-using-settings]，把针对虚拟网络内部域名后缀的查询转发到 DNS 私有解析程序入站端点的 IP 地址。
 
-### Virtual network peering
+### 虚拟网络对等互连
 
-[Virtual network peering][xt-entra-network-peering] is a common strategy for connecting multiple virtual networks together. You can deploy a subnet router (or a set for high availability) within a virtual network to allow access to multiple virtual networks.
+[虚拟网络对等互连][xt-entra-network-peering]是把多个虚拟网络连接起来的常用策略。你可以在一个虚拟网络中部署子网路由器（或部署多台以实现高可用），从而访问多个虚拟网络。
 
-If you have virtual networks or subnets with overlapping IPv4 addresses, use [4via6 subnet routers][docs-4via6-subnets] to access resources with unique IPv6 addresses for each overlapping subnet.
+如果你的虚拟网络或子网存在 IPv4 地址重叠，请使用 [4via6 子网路由器][docs-4via6-subnets]，为每个重叠子网分配唯一的 IPv6 地址来访问资源。
 
-### Subnet routers
+### 子网路由器
 
-Consider where you run subnet routers relative to the Azure resources they provide access to.
+请考虑子网路由器的运行位置与其提供访问的 Azure 资源之间的相对关系。
 
-#### Operating a subnet router within Azure AKS
+#### 在 Azure AKS 中运行子网路由器
 
-Oftentimes organizations are using Tailscale to connect to and administer their Azure AKS clusters. While Tailscale can [run within a container][docs-userspace-networking] and be deployed to AKS, we recommend running your [subnet routers][docs-subnets] externally to these clusters to ensure connectivity is available in the event your cluster is having issues. In other words, run your subnet router on dedicated VMs or an AKS cluster separate from the cluster you're administering.
+很多组织会使用 Tailscale 来连接和管理 Azure AKS 集群。虽然 Tailscale 可以[在容器中运行][docs-userspace-networking]并部署到 AKS，但我们建议把[子网路由器][docs-subnets]运行在这些集群之外，以确保集群出现问题时连接依然可用。换句话说，请把子网路由器运行在专用 VM 上，或运行在独立于被管理集群的另一套 AKS 集群上。
 
-### Tailscale SSH session recording
+### Tailscale SSH 会话录制
 
-Deploy [multiple session recorder instances][docs-multiple-recorder-nodes] across multiple availability zones to improve resiliency against zone failures. If your organization operates across multiple regions, consider deploying SSH session recording nodes in each region you operate and [configure SSH access rules][docs-tailscale-ssh-session-turn-on] to send recording information to the local region for your nodes.
+跨多个可用区部署[多个会话录制器实例][docs-multiple-recorder-nodes]，以提高对可用区故障的抵御能力。如果你的组织跨多个区域运营，请考虑在每个运营区域部署 SSH 会话录制节点，并[配置 SSH 访问规则][docs-tailscale-ssh-session-turn-on]，让节点把录制信息发送到所在区域。
 
-## Limitations
+## 局限性
 
-* Azure NAT Gateway is a [hard NAT][ar-azure-nat-gateway]. All devices and services behind an Azure NAT Gateway will connect using [DERP relay servers][docs-derp-servers]. For best performance, put devices in a [public subnet][ar-public-vs-private-subnets] to facilitate direct connections.
+* Azure NAT Gateway 是一种[硬 NAT][ar-azure-nat-gateway]。位于 Azure NAT Gateway 后面的所有设备和服务都会通过 [DERP 中继服务器][docs-derp-servers]建立连接。为获得最佳性能，请把设备放在[公有子网][ar-public-vs-private-subnets]中，以便建立直连。
 
-[ar-agent-to-agent-connectivity]: #agent-to-agent-connectivity
+[ar-agent-to-agent-connectivity]: #代理到代理连接
 
 [ar-azure-nat-gateway]: #azure-nat-gateway
 
-[ar-dns-routing-with-app-connector]: #dns-based-routing-with-an-app-connector
+[ar-dns-routing-with-app-connector]: #通过应用连接器实现基于-dns-的路由
 
-[ar-functions-app-service-containers]: #azure-functions-azure-app-service-and-other-container-solutions
+[ar-functions-app-service-containers]: #azure-functionsazure-app-service及其他容器解决方案
 
-[ar-public-vs-private-subnets]: #public-vs-private-subnets
+[ar-public-vs-private-subnets]: #公有子网与私有子网
 
-[ar-services-and-api-proxy]: #kubernetes-services-and-api-server-proxy-with-tailscale-kubernetes-operator
+[ar-services-and-api-proxy]: #tailscale-kubernetes-operator-的-kubernetes-服务与-api-服务器代理
 
-[ar-subnet-router-ip-connect]: #ip-based-connectivity-with-subnet-router
+[ar-subnet-router-ip-connect]: #通过子网路由器实现基于-ip-的连接
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

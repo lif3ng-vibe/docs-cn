@@ -1,47 +1,47 @@
 ---
-title: "Set up Gemini Enterprise Agent Platform"
-description: "Configure a Gemini Enterprise Agent Platform provider in Aperture so your team can access Google Gemini and Anthropic Claude models through Aperture. This topic covers creating a Google Cloud service "
+title: "设置 Gemini Enterprise Agent Platform"
+description: "在 Aperture 中配置 Gemini Enterprise Agent Platform 提供商，让你的团队通过 Aperture 访问 Google Gemini 和 Anthropic Claude 模型。本主题介绍如何创建 Google Cloud 服务账户、生成密钥文件，并把提供商添加到 Aperture 配置中。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Configure a Gemini Enterprise Agent Platform provider in Aperture so your team can access Google Gemini and Anthropic Claude models through Aperture. This topic covers creating a Google Cloud service account, generating a key file, and adding the provider to your Aperture configuration.
+在 Aperture 中配置 Gemini Enterprise Agent Platform 提供商，让你的团队通过 Aperture 访问 Google Gemini 和 Anthropic Claude 模型。本主题介绍如何创建 Google Cloud 服务账户、生成密钥文件，并把提供商添加到你的 Aperture 配置中。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* A Google Cloud project with the [Gemini Enterprise Agent Platform API][xt-geap-api] enabled.
-* The [Google Cloud CLI][xt-gcloud-cli] (`gcloud`) installed and authenticated.
-* Your Aperture gateway hostname, such as `ai` or `aperture.example.ts.net`. Tailscale's [MagicDNS][docs-magicdns] provides these names. If you [connect from outside your tailnet][docs-connect-outside-tailnet], use `localhost:<port-number>` instead.
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个已启用 [Gemini Enterprise Agent Platform API][xt-geap-api] 的 Google Cloud 项目。
+* 已安装并完成认证的 [Google Cloud CLI][xt-gcloud-cli]（`gcloud`）。
+* 你的 Aperture 网关主机名，例如 `ai` 或 `aperture.example.ts.net`。这些名称由 Tailscale 的 [MagicDNS][docs-magicdns] 提供。如果你[从 tailnet 外部连接][docs-connect-outside-tailnet]，请改用 `localhost:<port-number>`。
 
-## Set your Google Cloud project
+## 设置 Google Cloud 项目
 
-Set the active project for the `gcloud` commands that follow. Replace `<your-project>` with your Google Cloud project ID.
+为下面的 `gcloud` 命令设置当前项目。把 `<your-project>` 替换为你的 Google Cloud 项目 ID。
 
 ```shell
 gcloud config set project <your-project>
 ```
 
-## Create a service account
+## 创建服务账户
 
-Create a dedicated service account for Aperture to use when calling the Gemini Enterprise Agent Platform API.
+创建一个专用服务账户，供 Aperture 调用 Gemini Enterprise Agent Platform API 时使用。
 
 ```shell
 gcloud iam service-accounts create aperture-vertex \
   --display-name="Aperture Gemini Enterprise Agent Platform"
 ```
 
-This creates a service account named `aperture-vertex` in your project. Aperture uses this account to authenticate with the Gemini Enterprise Agent Platform API and generate bearer tokens for requests.
+这会在你的项目中创建一个名为 `aperture-vertex` 的服务账户。Aperture 用这个账户向 Gemini Enterprise Agent Platform API 认证，并为请求生成 bearer token。
 
-## Grant IAM roles
+## 授予 IAM 角色
 
-The service account requires two IAM roles: one to call the Gemini Enterprise Agent Platform API, and one to list available models.
+该服务账户需要两个 IAM 角色：一个用于调用 Gemini Enterprise Agent Platform API，一个用于列出可用模型。
 
-1. Grant the `aiplatform.user` role, which lets the service account send requests to models on the Gemini Enterprise Agent Platform:
+1. 授予 `aiplatform.user` 角色，让服务账户可以向 Gemini Enterprise Agent Platform 上的模型发送请求：
 
    ```shell
    gcloud projects add-iam-policy-binding <your-project> \
@@ -49,7 +49,7 @@ The service account requires two IAM roles: one to call the Gemini Enterprise Ag
      --role="roles/aiplatform.user"
    ```
 
-2. Grant the `serviceUsageConsumer` role, which lets the service account list available models:
+2. 授予 `serviceUsageConsumer` 角色，让服务账户可以列出可用模型：
 
    ```shell
    gcloud projects add-iam-policy-binding <your-project> \
@@ -57,46 +57,46 @@ The service account requires two IAM roles: one to call the Gemini Enterprise Ag
      --role="roles/serviceusage.serviceUsageConsumer"
    ```
 
-## Generate a JSON key file
+## 生成 JSON 密钥文件
 
-Create a JSON key file for the service account. Aperture uses this key file to mint bearer tokens for Gemini Enterprise Agent Platform requests.
+为该服务账户创建一个 JSON 密钥文件。Aperture 用这个密钥文件为 Gemini Enterprise Agent Platform 请求签发 bearer token。
 
 ```shell
 gcloud iam service-accounts keys create aperture-vertex-key.json \
   --iam-account=aperture-vertex@<your-project>.iam.gserviceaccount.com
 ```
 
-This creates a file named `aperture-vertex-key.json` in your current directory. The file contains the private key and project metadata that Aperture needs to authenticate.
+这会在当前目录创建一个名为 `aperture-vertex-key.json` 的文件。该文件包含 Aperture 认证所需的私钥和项目元数据。
 
-Store this file securely. You cannot recover the private key if lost, and anyone with access to the file can authenticate as the service account.
+请妥善保管该文件。私钥一旦丢失无法恢复，任何能访问该文件的人都可以以该服务账户的身份进行认证。
 
-## Base64-encode the key file
+## 对密钥文件进行 Base64 编码
 
-Aperture requires the key file as a base64-encoded string in the provider configuration. Encode the key file and copy the result to your clipboard.
+Aperture 要求在提供商配置中以 base64 编码字符串的形式提供密钥文件。对密钥文件编码，并把结果复制到剪贴板。
 
-On macOS:
+macOS 上：
 
 ```shell
 cat aperture-vertex-key.json | base64 | pbcopy
 ```
 
-On Linux:
+Linux 上：
 
 ```shell
 cat aperture-vertex-key.json | base64 -w 0
 ```
 
-On Windows (PowerShell):
+Windows（PowerShell）上：
 
 ```powershell
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("aperture-vertex-key.json")) | Set-Clipboard
 ```
 
-Use the encoded string in the next step as the value for the provider's `apikey` field.
+在下一步中，把这个编码后的字符串用作提供商 `apikey` 字段的值。
 
-## Configure the Gemini Enterprise Agent Platform provider in Aperture
+## 在 Aperture 中配置 Gemini Enterprise Agent Platform 提供商
 
-Add a Gemini Enterprise Agent Platform provider to your Aperture configuration at `/admin/settings/config`, on the **Administration** > **Configuration** page of the [Aperture admin dashboard][docs-web-dashboard-admin]. The following example shows the configuration with both Google and Anthropic models enabled.
+在 [Aperture 管理仪表板][docs-web-dashboard-admin]的 **Administration** > **Configuration** 页面（`/admin/settings/config`）中，把 Gemini Enterprise Agent Platform 提供商添加到你的 Aperture 配置中。下面的示例展示了同时启用 Google 与 Anthropic 模型的配置。
 
 ```json
 {
@@ -121,51 +121,51 @@ Add a Gemini Enterprise Agent Platform provider to your Aperture configuration a
 }
 ```
 
-Replace `<base64-encoded-key>` with the base64-encoded string from the previous step. The `keyfile::` prefix indicates that the value is a base64-encoded service account key file, not a plain API key. Aperture decodes the key file and extracts the `project_id`, which it uses to rewrite request paths for the Gemini Enterprise Agent Platform.
+把 `<base64-encoded-key>` 替换为上一步得到的 base64 编码字符串。`keyfile::` 前缀表示该值是 base64 编码的服务账户密钥文件，而不是普通 API key。Aperture 会解码密钥文件并提取 `project_id`，用它改写发往 Gemini Enterprise Agent Platform 的请求路径。
 
-LLM clients send requests with two placeholder values in the URL path. Aperture replaces `_aperture_auto_vertex_project_id_` with the project ID from the key file, and replaces `_aperture_auto_vertex_region_` with `global`. Aperture uses the `global` region because it has the widest model availability across both Google and Anthropic model catalogs.
+LLM 客户端发送的请求在 URL 路径中带有两个占位值。Aperture 把 `_aperture_auto_vertex_project_id_` 替换为密钥文件中的项目 ID，把 `_aperture_auto_vertex_region_` 替换为 `global`。Aperture 使用 `global` 区域，因为它在 Google 与 Anthropic 两个模型目录中的模型可用性最广。
 
-You do not need the `authorization` field when using `keyfile::` authentication. Aperture generates OAuth bearer tokens from the key file automatically, bypassing the `authorization` field.
+使用 `keyfile::` 认证时不需要 `authorization` 字段。Aperture 会自动从密钥文件生成 OAuth bearer token，绕过 `authorization` 字段。
 
-The `compatibility` flags control which Gemini Enterprise Agent Platform API formats the provider accepts:
+`compatibility` 开关控制该提供商接受哪些 Gemini Enterprise Agent Platform API 格式：
 
-* `google_generate_content` enables the Gemini Enterprise Agent Platform `generateContent` endpoint for Google-published models such as Gemini.
-* `google_raw_predict` enables the Gemini Enterprise Agent Platform raw predict endpoint for third-party models such as Anthropic Claude.
-* `openai_chat` enables the platform's OpenAI-compatible Chat Completions path for Gemini models. A client using this path sends Chat Completions requests to the Aperture gateway's `/v1` base URL. It does not use the native Google URL placeholders described above.
+* `google_generate_content` 为 Gemini 等 Google 发布的模型启用 Gemini Enterprise Agent Platform 的 `generateContent` 端点。
+* `google_raw_predict` 为 Anthropic Claude 等第三方模型启用 Gemini Enterprise Agent Platform 的原始 predict 端点。
+* `openai_chat` 为 Gemini 模型启用该平台的 OpenAI 兼容 Chat Completions 路径。使用该路径的客户端把 Chat Completions 请求发送到 Aperture 网关的 `/v1` base URL，不使用上文描述的 Google 原生 URL 占位符。
 
-Enable the flag for each model type your provider serves. Enable both `google_generate_content` and `google_raw_predict` if it serves Gemini and Anthropic models. To use a Chat Completions client with Gemini models, add `openai_chat`. Google-hosted Anthropic models require raw predict, not Chat Completions. These flags do not convert between arbitrary APIs. For all flags, refer to [compatibility flags][docs-provider-compatibility].
+为提供商服务的每种模型类型启用对应开关。如果同时服务 Gemini 和 Anthropic 模型，请同时启用 `google_generate_content` 和 `google_raw_predict`。要用 Chat Completions 客户端访问 Gemini 模型，请添加 `openai_chat`。Google 托管的 Anthropic 模型要求 raw predict，而不是 Chat Completions。这些开关不会在任意 API 之间做转换。所有开关参阅[兼容性开关][docs-provider-compatibility]。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 
-If the test request fails, refer to the [Aperture troubleshooting topic][docs-aperture-troubleshooting].
+测试请求失败时，参阅 [Aperture 故障排查主题][docs-aperture-troubleshooting]。
 
-## Manage service account keys
+## 管理服务账户密钥
 
-List or revoke service account keys when rotating credentials or decommissioning a provider.
+轮换凭证或下线提供商时，可以列出或撤销服务账户密钥。
 
-### List keys for the service account
+### 列出服务账户的密钥
 
-Run the following command to list all keys associated with the service account:
+运行以下命令列出与该服务账户关联的所有密钥：
 
 ```shell
 gcloud iam service-accounts keys list \
   --iam-account=aperture-vertex@<your-project>.iam.gserviceaccount.com
 ```
 
-The output lists all keys for the service account. The `key-id` in the output matches the `private_key_id` field in your JSON key file.
+输出会列出该服务账户的所有密钥。输出中的 `key-id` 与 JSON 密钥文件中的 `private_key_id` 字段一致。
 
-### Revoke a key
+### 撤销密钥
 
-Delete a specific key by its `key-id`:
+按 `key-id` 删除特定密钥：
 
 ```shell
 gcloud iam service-accounts keys delete <key-id> \
   --iam-account=aperture-vertex@<your-project>.iam.gserviceaccount.com
 ```
 
-After revoking a key, generate a new key file and update the base64-encoded value in your Aperture provider configuration. Requests that use the revoked key fail immediately.
+撤销密钥后，生成一个新的密钥文件，并更新 Aperture 提供商配置中的 base64 编码值。使用已撤销密钥的请求会立即失败。
 
 \[Missing snippet: aperture\_provider\_next\_steps.mdx]
 

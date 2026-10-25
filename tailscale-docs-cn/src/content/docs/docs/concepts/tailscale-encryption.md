@@ -1,89 +1,89 @@
 ---
-title: "Tailscale encryption"
-description: "Review how Tailscale uses encryption."
+title: "Tailscale 加密"
+description: "了解 Tailscale 如何使用加密。"
 ---
 
-Last validated Jan 7, 2026
+最后验证于 Jan 7, 2026
 
-[Tailscale's architecture][bl-how-tailscale-works] provides end-to-end encryption for all network communications, whether devices [connect directly][docs-connection-types-direct-connections] or through a [relayed connection][docs-connection-types-relayed-connections]⎯regardless of whether they're on the same local network or across the globe. The architecture uses multiple layers of encryption across the control plane and data plane to secure device connections throughout your Tailscale network (known as a [tailnet][docs-tailnet]).
+[Tailscale 的架构][bl-how-tailscale-works]为所有网络通信提供端到端加密——无论设备是[直连][docs-connection-types-direct-connections]还是通过[中继连接][docs-connection-types-relayed-connections]，也无论它们位于同一本地网络还是相隔全球。该架构在控制平面和数据平面上使用多层加密，保护 Tailscale 网络（即 [tailnet][docs-tailnet]）中的所有设备连接。
 
-The following sections explain Tailscale's use of encryption across the [control and data planes][ar-control-and-data-planes], [during NAT traversal operations][ar-device-discovery-and-nat-traversal], and throughout the [Tailscale ecosystem][ar-encryption-across-tailscale].
+以下各节将说明 Tailscale 在[控制平面与数据平面][ar-control-and-data-planes]、[NAT 穿透过程][ar-device-discovery-and-nat-traversal]以及 [Tailscale 生态][ar-encryption-across-tailscale]中对加密的运用。
 
-> **Note:**
+> **注意：**
 >
-> The information here represents the current implementation state as of **December 2024** and should not be interpreted as a commitment to maintain these exact mechanisms indefinitely. The cryptographic landscape continues to evolve, and Tailscale's implementations will likely adapt to incorporate new developments and address emerging security requirements.
+> 本文信息反映的是截至 **2024 年 12 月**的当前实现状态，不应被解读为承诺无限期维持这些具体机制。密码学领域仍在持续演进，Tailscale 的实现也很可能会随之调整，以纳入新的进展、应对新出现的安全需求。
 
-## Control and data planes
+## 控制平面与数据平面
 
-The control and data planes are fundamental network components that work together to manage and execute network operations. Each plane has a distinct division of responsibilities to minimize the impact of security breaches and facilitate independent scalability. The [control plane][ar-control-plane] manages how data flows, which includes policy management, routing, resource management, and signaling (session management). The [data plane][ar-data-plane] executes instructions from the control plane. These include packet forwarding, packet processing, and traffic management. In effect, the control plane makes the decisions, and the data plane executes those decisions.
+控制平面与数据平面是协同管理和执行网络操作的基础网络组件。两个平面职责划分明确，以尽量降低安全事件的影响并支持独立扩展。[控制平面][ar-control-plane]负责管理数据如何流动，包括策略管理、路由、资源管理和信令（会话管理）。[数据平面][ar-data-plane]负责执行控制平面的指令，包括数据包转发、数据包处理和流量管理。实际上，控制平面做决策，数据平面执行决策。
 
-> **Tip:**
+> **提示：**
 >
-> [Explore the control plane, data plane, and the coordination server][docs-control-data-planes].
+> [深入了解控制平面、数据平面与协调服务器][docs-control-data-planes]。
 
-### Control plane
+### 控制平面
 
-In Tailscale, the control plane performs many tasks, including device coordination, authentication, access control interpretation, and packet filter computation.
+在 Tailscale 中，控制平面承担许多任务，包括设备协调、身份验证、访问控制解析和数据包过滤器计算。
 
-Control plane communication, which includes key exchange and coordinating device connections, employs a custom [Noise IK][xt-noise-ik]-based protocol with [X25519][xt-rfc-7748-x25519] as described in [RFC7748][xt-rfc-7748]. While it can operate directly over plain TCP in environments that allow it, it also supports being wrapped in TLS when necessary for compatibility or additional security requirements.
+控制平面通信（包括密钥交换和设备连接协调）采用基于 [Noise IK][xt-noise-ik] 的自定义协议，并使用 [RFC7748][xt-rfc-7748] 所述的 [X25519][xt-rfc-7748-x25519]。在环境允许时，它可以直接运行在明文 TCP 之上；出于兼容性或额外安全要求的考虑，也支持在必要时用 TLS 包裹。
 
-### Data plane
+### 数据平面
 
-Tailscale's data plane uses [WireGuard][docs-wireguard] as its primary mechanism to encrypt communication between Tailscale devices. For more about WireGuard's cryptographic design, refer to the [WireGuard white paper][xt-wireguard-whitepaper].
+Tailscale 的数据平面使用 [WireGuard][docs-wireguard] 作为加密 Tailscale 设备间通信的主要机制。关于 WireGuard 密码学设计的更多信息，请参阅 [WireGuard 白皮书][xt-wireguard-whitepaper]。
 
-Tailnet devices start out using a [DERP server][docs-derp-servers] to establish a connection, then transition to a direct connection if possible. If a direct connection isn't possible, devices fall back to a relayed connection using DERP servers. DERP servers never access your unencrypted data; they only handle WireGuard packets that are already encrypted.
+tailnet 设备起初通过 [DERP 服务器][docs-derp-servers]建立连接，然后在可能的情况下切换为直连。如果无法直连，设备会退回使用 DERP 服务器的中继连接。DERP 服务器永远不会接触你的未加密数据，它们只处理已经加密的 WireGuard 数据包。
 
-The connection between devices and DERP servers are authenticated using a [NaCl box][xt-nacl-box] construction on top of TLS to verify that clients own their claimed WireGuard keys. This ensures only devices with the correct private key can establish a connection with the DERP server.
+设备与 DERP 服务器之间的连接在 TLS 之上使用 [NaCl box][xt-nacl-box] 构造进行身份验证，以确认客户端确实拥有其声称的 WireGuard 密钥。这确保只有持有正确私钥的设备才能与 DERP 服务器建立连接。
 
-## Device discovery and NAT traversal
+## 设备发现与 NAT 穿透
 
-[Tailscale's NAT traversal engine][bl-how-nat-traversal-works] implements a custom UDP protocol for path discovery, using NaCl box for authenticated encryption. This protocol operates separately from the main WireGuard data plane, and can only influence the efficiency of connections, not the security of the data they carry.
+[Tailscale 的 NAT 穿透引擎][bl-how-nat-traversal-works]实现了一个用于路径发现的自定义 UDP 协议，使用 NaCl box 进行认证加密。该协议独立于主 WireGuard 数据平面运行，只会影响连接的效率，而不会影响所承载数据的安全性。
 
-## Encryption across Tailscale
+## Tailscale 生态中的加密
 
-Tailscale also uses encryption for authentication, [secure node state storage][ar-secure-node-state-storage], [certificates][ar-device-certificates], and features like the [logging system][ar-log-system] and [Tailnet Lock][ar-tailnet-lock].
+Tailscale 还在身份验证、[节点状态安全存储][ar-secure-node-state-storage]、[证书][ar-device-certificates]，以及[日志系统][ar-log-system]和 [Tailnet Lock][ar-tailnet-lock] 等功能中使用加密。
 
-### Secure node state storage
+### 节点状态安全存储
 
-Tailscale devices can be configured to [secure node state storage][docs-secure-node-state-storage] by using encryption.
+Tailscale 设备可以配置为使用加密来实现[节点状态安全存储][docs-secure-node-state-storage]。
 
-### Device TLS certificates
+### 设备 TLS 证书
 
-Tailscale assists you with provisioning [TLS certificates][docs-device-certs] from [Let's Encrypt][xt-lets-encrypt] using hostnames within your [tailnet's MagicDNS domain][docs-tailnet-name-tailnet-dns-name]. These certificates ensure only authorized devices in your tailnet can present valid service identities for MagicDNS hostnames.
+Tailscale 帮助你使用 [tailnet 的 MagicDNS 域][docs-tailnet-name-tailnet-dns-name]内的主机名，从 [Let's Encrypt][xt-lets-encrypt] 获取 [TLS 证书][docs-device-certs]。这些证书确保只有 tailnet 中经授权的设备才能为 MagicDNS 主机名出示有效的服务身份。
 
-For example, a service advertising itself at `app.example-tailnet.ts.net` can only present a valid TLS certificate if it's an authorized device in your tailnet.
+例如，在 `app.example-tailnet.ts.net` 上对外提供服务的服务，只有当它是你 tailnet 中经授权的设备时，才能出示有效的 TLS 证书。
 
 ### Tailnet Lock
 
-The [Tailnet Lock][docs-tailnet-lock] feature uses ED25519 signatures for authentication. While this feature doesn't involve encryption directly, it ensures that only devices authorized by designated approvers (which are not under Tailscale's control) can communicate with devices in your tailnet.
+[Tailnet Lock][docs-tailnet-lock] 功能使用 ED25519 签名进行身份验证。虽然该功能并不直接涉及加密，但它确保只有经指定审批者（不由 Tailscale 控制）授权的设备才能与 tailnet 中的设备通信。
 
-### Log system
+### 日志系统
 
-All Tailscale [log data][docs-log-mesh-traffic] is sent over TLS without additional authentication or encryption.
+所有 Tailscale [日志数据][docs-log-mesh-traffic]都通过 TLS 发送，不再附加额外的身份验证或加密。
 
-## TLS and cryptography
+## TLS 与密码学
 
-Tailscale's [TLS (Transport Layer Security)][xt-transport-layer-security] implementation builds upon the Go [`crypto/tls`][xt-go-crypto-tls] package, requiring a minimum of TLS 1.2 while supporting TLS 1.3. The system uses the default cipher suite selection from the Go implementation, which includes ECDHE for [forward secrecy][xt-perfect-forward-secrecy] and AEAD schemes. The AEAD implementation can dynamically choose between AES-128-GCM or ChaCha20-Poly1305 based on the availability of hardware acceleration for AES operations.
+Tailscale 的 [TLS（传输层安全）][xt-transport-layer-security]实现基于 Go 的 [`crypto/tls`][xt-go-crypto-tls] 包，要求至少 TLS 1.2，同时支持 TLS 1.3。系统采用 Go 实现的默认密码套件选择机制，包括用于[前向保密][xt-perfect-forward-secrecy]的 ECDHE 和 AEAD 方案。AEAD 实现可以根据 AES 操作的硬件加速可用性，在 AES-128-GCM 与 ChaCha20-Poly1305 之间动态选择。
 
-## Compliance
+## 合规性
 
-Tailscale's cryptographic implementations are not [FIPS][xt-federal-information-processing-standards] compliant, and several of the primitive choices (including Curve25519, [XSalsa20][xt-salsa20], ChaCha20-Poly1305, and the Noise and WireGuard protocols) cannot be made compliant under current FIPS standards. While these implementations have been reviewed by cryptographers and are considered secure⎯in many cases, providing superior security to FIPS-approved alternatives⎯this might be a consideration for organizations requiring FIPS compliance. For more information, refer to [Tailscale FedRAMP and FIPS-140 considerations][docs-tailscale-fedramp-fips140].
+Tailscale 的密码学实现不符合 [FIPS][xt-federal-information-processing-standards] 要求，且部分原语选择（包括 Curve25519、[XSalsa20][xt-salsa20]、ChaCha20-Poly1305 以及 Noise 和 WireGuard 协议）在现行 FIPS 标准下无法做到合规。虽然这些实现经过密码学家审查并被认为安全——在许多情况下甚至比 FIPS 认可的替代方案更安全——但对于要求 FIPS 合规的组织来说，这可能是需要考虑的因素。更多信息请参阅 [Tailscale FedRAMP 与 FIPS-140 注意事项][docs-tailscale-fedramp-fips140]。
 
-[ar-control-and-data-planes]: #control-and-data-planes
+[ar-control-and-data-planes]: #控制平面与数据平面
 
-[ar-control-plane]: #control-plane
+[ar-control-plane]: #控制平面
 
-[ar-data-plane]: #data-plane
+[ar-data-plane]: #数据平面
 
-[ar-device-certificates]: #device-tls-certificates
+[ar-device-certificates]: #设备-tls-证书
 
-[ar-device-discovery-and-nat-traversal]: #device-discovery-and-nat-traversal
+[ar-device-discovery-and-nat-traversal]: #设备发现与-nat-穿透
 
-[ar-encryption-across-tailscale]: #encryption-across-tailscale
+[ar-encryption-across-tailscale]: #tailscale-生态中的加密
 
-[ar-log-system]: #log-system
+[ar-log-system]: #日志系统
 
-[ar-secure-node-state-storage]: #secure-node-state-storage
+[ar-secure-node-state-storage]: #节点状态安全存储
 
 [ar-tailnet-lock]: #tailnet-lock
 

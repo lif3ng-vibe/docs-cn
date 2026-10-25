@@ -1,19 +1,17 @@
 ---
-title: "Add custom extra DNS records to your tailnet"
-description: "Tailscale provides DNS to the nodes in your Tailscale network (known as a tailnet) to support MagicDNS node names and custom DNS configuration. Using Tailscale's DNS infrastructure, you can configure "
+title: "为你的 tailnet 添加自定义额外 DNS 记录"
+description: "Tailscale 为你的 Tailscale 网络（即 tailnet）中的节点提供 DNS，以支持 MagicDNS 节点名称和自定义 DNS 配置。借助 Tailscale 的 DNS 基础设施，你可以配置能在你的节点上解析的额外 DNS 记录。"
 ---
 
-Last validated Dec 10, 2025
+最后验证于 Dec 10, 2025
 
-Tailscale provides DNS to the nodes in your Tailscale network (known as a tailnet) to support MagicDNS node
-names and custom DNS configuration. Using Tailscale's DNS infrastructure, you can
-configure extra DNS records that will resolve on your nodes.
+Tailscale 为你的 Tailscale 网络（即 tailnet）中的节点提供 DNS，以支持 MagicDNS 节点名称和自定义 DNS 配置。借助 Tailscale 的 DNS 基础设施，你可以配置能在你的节点上解析的额外 DNS 记录。
 
-> **Note:** Custom extra DNS records are currently in alpha.
+> **注意：** 自定义额外 DNS 记录目前处于 alpha 阶段。
 
-1. [Contact Tailscale support][co-contact-support-billing] and have the `extraDNSRecords` setting enabled in your tailnet.
-2. Go to the [DNS](https://console.tailscale.com/admin/dns) page of the admin console. In the **Nameservers** section, go to **Global nameservers** and enable **Override DNS servers**.
-3. After you've confirmed the steps above, go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, and edit your policy file to include an `extraDNSRecords` field:
+1. [联系 Tailscale 支持团队][co-contact-support-billing]，为你的 tailnet 启用 `extraDNSRecords` 设置。
+2. 前往管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。在 **Nameservers**（名称服务器）区域中，找到 **Global nameservers**（全局名称服务器）并启用 **Override DNS servers**（覆盖 DNS 服务器）。
+3. 确认以上步骤后，前往管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面，编辑你的策略文件，加入一个 `extraDNSRecords` 字段：
 
    ```json
    {
@@ -26,7 +24,6 @@ configure extra DNS records that will resolve on your nodes.
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-This adds the domain name `custom.record` to each node in your tailnet,
-which resolves an `A` record pointing to `100.100.100.100`.
+这会将域名 `custom.record` 添加到你 tailnet 中的每个节点，并解析为一条指向 `100.100.100.100` 的 `A` 记录。
 
 [co-contact-support-billing]: https://tailscale.com/contact/support/?type=billing

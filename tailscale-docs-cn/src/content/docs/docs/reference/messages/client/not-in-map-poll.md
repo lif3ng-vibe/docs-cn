@@ -1,47 +1,47 @@
 ---
-title: "Out of sync"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "状态不同步"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Out of sync
 Unable to connect to the Tailscale coordination server to
 synchronize the state of your tailnet. Peer reachability
 might degrade over time.
 
-## Reference ID
+## 参考 ID
 
 `not-in-map-poll`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-Your Tailscale client cannot connect to the coordination server that synchronizes devices and nodes (peers) across your tailnet.
+你的 Tailscale 客户端无法连接到协调服务器（coordination server），该服务器负责在整个 tailnet 范围内同步各设备与节点（对等端）。
 
-This issue can occur for the following reasons:
+出现这个问题的原因可能有：
 
-* Internet connectivity issues.
-* Firewall restrictions are blocking the connection to the Tailscale coordination server.
-* The Tailscale background service, which runs on devices and nodes, is not running correctly.
-* Device controls are preventing connectivity. This may include features such as Screen Time on Apple devices.
+* 互联网连接存在问题。
+* 防火墙限制阻止了与 Tailscale 协调服务器的连接。
+* 运行在设备与节点上的 Tailscale 后台服务未能正常运行。
+* 设备管控阻止了连接。例如 Apple 设备上的屏幕使用时间等功能。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Restart your Tailscale client using the client UI, or run the CLI commands `tailscale down` followed by `tailscale up`.
-* Check your internet connection.
-* Adjust or remove controls of devices that might prevent connectivity.
-* If you are using a firewall, verify that the ports and domains used for connecting to Tailscale are not blocked.
+* 通过客户端 UI 重启 Tailscale 客户端，或者在 CLI 中先运行 `tailscale down`、再运行 `tailscale up`。
+* 检查你的互联网连接。
+* 调整或移除可能阻止连接的设备管控。
+* 如果你使用了防火墙，请确认连接 Tailscale 所用的端口和域名未被阻止。
 
-## Additional information
+## 更多信息
 
-* For information about the ports and domain names used to communicate with Tailscale, refer to [What firewall ports should I open to use Tailscale?][docs-firewall-ports].
-* For information about disabling Apple's Screen Time feature, refer to [macOS Screen Time and Tailscale][docs-macos-webfilterproxyd].
+* 有关与 Tailscale 通信所用的端口和域名，请参阅 [使用 Tailscale 应该打开哪些防火墙端口？][docs-firewall-ports]。
+* 有关禁用 Apple 屏幕使用时间功能的信息，请参阅 [macOS 屏幕使用时间与 Tailscale][docs-macos-webfilterproxyd]。
 
 [docs-firewall-ports]: /docs/reference/faq/firewall-ports
 

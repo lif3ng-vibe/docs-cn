@@ -1,58 +1,58 @@
 ---
-title: "Authorizing the Tailscale system extension on macOS"
-description: "Authorize Tailscale system extensions on macOS."
+title: "在 macOS 上授权 Tailscale 系统扩展"
+description: "在 macOS 上授权 Tailscale 系统扩展。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-When launching Tailscale for the first time on your Mac, you may be presented with one or more of the following warnings.
+在 Mac 上首次启动 Tailscale 时，你可能会看到以下一个或多个警告。
 
-* *（图：The warning for 'System Extension Blocked' in macOS. There are two prompts for 'OK' and 'Open System Settings'.）*
-* *（图：The warning for 'System Extension Approval Required' in the Tailscale app. There are two prompts of 'Ignore' and 'Open Settings'.）*
-* *（图：The warning for 'System Extension Approval Required...' in the Tailscale menu. This warning has an icon in the shape of an exclamation point in a triangle.）*
+* *（图：macOS 中的"System Extension Blocked"警告，有两个按钮"OK"和"Open System Settings"。）*
+* *（图：Tailscale 应用中的"System Extension Approval Required"警告，有两个按钮"Ignore"和"Open Settings"。）*
+* *（图：Tailscale 菜单中的"System Extension Approval Required..."警告，带有一个三角形感叹号图标。）*
 
-The above messages indicate that Tailscale launched successfully. However, granting permission to install the Tailscale system extension is necessary before Tailscale can connect your Mac to the network.
+以上消息表明 Tailscale 已成功启动。但在 Tailscale 将你的 Mac 连入网络之前，需要先授权安装 Tailscale 系统扩展。
 
-System extensions are a macOS technology used by Tailscale to extend the networking features of your Mac. For further information on system extensions, refer to [below][ar-what-is-a-system-extension].
+系统扩展是 macOS 的一项技术，Tailscale 用它来扩展你 Mac 的网络功能。有关系统扩展的更多信息，请参阅[下文][ar-what-is-a-system-extension]。
 
-## Configuration steps
+## 配置步骤
 
-The steps for granting permission to install the Tailscale extension will vary depending on the version of macOS you are using.
+授权安装 Tailscale 扩展的步骤因你使用的 macOS 版本而异。
 
-### macOS Sequoia 15 and later
+### macOS Sequoia 15 及更高版本
 
-1. Go to **System Settings** and open the **General** tab.
-2. In the **Login Items & Extensions** section, scroll down to **Network Extensions**, and select the information ⓘ icon.
-3. Toggle **Tailscale Network Extension** to on, then authorize the operation using Touch ID, or by providing an administrator password.
-4. Select **Done**. If a window appears asking to install a VPN configuration, choose **Allow**.
+1. 前往 **System Settings**（系统设置）并打开 **General**（通用）标签页。
+2. 在 **Login Items & Extensions**（登录项与扩展）部分，向下滚动到 **Network Extensions**（网络扩展），选择信息 ⓘ 图标。
+3. 将 **Tailscale Network Extension** 切换为开启，然后使用 Touch ID 或输入管理员密码授权该操作。
+4. 选择 **Done**（完成）。如果出现要求安装 VPN 配置的窗口，请选择 **Allow**（允许）。
 
-Tailscale will begin connecting. If you have never logged into Tailscale before, you'll have to log in by using the Tailscale menu bar item at the top right of your screen.
+Tailscale 将开始连接。如果你以前从未登录过 Tailscale，需要使用屏幕右上角的 Tailscale 菜单栏项进行登录。
 
-### macOS Sonoma 14 and earlier
+### macOS Sonoma 14 及更早版本
 
-1. Go to **System Settings** and open the **Privacy & Security** tab.
-2. Scroll down the list of options until you reveal the message **System software from application "Tailscale.app" was blocked from loading.**, and select **Allow**.
-3. Authorize the operation using Touch ID, or by providing an administrator password. If a window appears asking to install a VPN configuration, choose **Allow**.
+1. 前往 **System Settings**（系统设置）并打开 **Privacy & Security**（隐私与安全性）标签页。
+2. 向下滚动选项列表，直到看到消息 **System software from application "Tailscale.app" was blocked from loading.**，然后选择 **Allow**（允许）。
+3. 使用 Touch ID 或输入管理员密码授权该操作。如果出现要求安装 VPN 配置的窗口，请选择 **Allow**（允许）。
 
-Tailscale will begin connecting. If you have never logged into Tailscale before, you'll have to log in by using the Tailscale menu bar item at the top right of your screen.
+Tailscale 将开始连接。如果你以前从未登录过 Tailscale，需要使用屏幕右上角的 Tailscale 菜单栏项进行登录。
 
-## Manage using the CLI
+## 使用 CLI 管理
 
-You can manage system extensions for a device using the CLI command [`tailscale configure sysext`][docs-cli-configure].
+你可以使用 CLI 命令 [`tailscale configure sysext`][docs-cli-configure] 管理设备的系统扩展。
 
-## What is a system extension?
+## 什么是系统扩展？
 
-You might wonder why this is necessary. Behind the scenes, the Standalone variant of Tailscale for macOS uses a technology introduced in macOS Catalina 10.15 called [System Extensions][xt-apple-docs-system-extensions].
+你可能好奇为什么需要这么做。在幕后，macOS 版 Tailscale 的 Standalone 变体使用了一项随 macOS Catalina 10.15 引入的技术，名为[系统扩展][xt-apple-docs-system-extensions]（System Extensions）。
 
-System extensions represent a safer replacement for the legacy Kernel Extensions technology used by many security and networking tools in previous versions of macOS. They run within a sandbox, meaning that Tailscale runs isolated from the operating system kernel in your Mac. This can provide additional security guarantees. Additionally, system extensions can be distributed outside the Mac App Store. This lets us provide a variant of Tailscale which doesn't depend on Apple for distribution.
+系统扩展是旧式内核扩展（Kernel Extensions）技术的更安全替代品，后者被 macOS 早期版本中的许多安全与网络工具使用。系统扩展在沙箱中运行，这意味着 Tailscale 与你 Mac 的操作系统内核隔离运行，可以提供额外的安全保证。此外，系统扩展可以在 Mac App Store 之外分发，这让我们能够提供不依赖 Apple 分发渠道的 Tailscale 变体。
 
-Because system extensions are shared with other users of your Mac, explicit consent is required before they can be installed.
+由于系统扩展由你 Mac 上的所有用户共享，安装前需要获得明确同意。
 
-## Automate this process for your users
+## 为你的用户自动化此流程
 
-If you are a system administrator managing a fleet of Macs, you can use a mobile device management (MDM) solution to automatically pre-approve the Tailscale system extension. Refer to the [MDM documentation][docs-macos-mdm-approve-system-extension] for further details.
+如果你是管理大量 Mac 的系统管理员，可以使用移动设备管理（MDM）解决方案自动预批准 Tailscale 系统扩展。详情请参阅 [MDM 文档][docs-macos-mdm-approve-system-extension]。
 
-[ar-what-is-a-system-extension]: #what-is-a-system-extension
+[ar-what-is-a-system-extension]: #什么是系统扩展
 
 [docs-cli-configure]: /docs/reference/tailscale-cli#configure
 

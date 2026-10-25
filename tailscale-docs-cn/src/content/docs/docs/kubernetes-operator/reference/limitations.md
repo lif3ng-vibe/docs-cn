@@ -1,43 +1,43 @@
 ---
-title: "Limitations for the Tailscale Kubernetes Operator"
-description: "The Tailscale Kubernetes Operator has the following known limitations."
+title: "Tailscale Kubernetes Operator 的限制"
+description: "Tailscale Kubernetes Operator 存在以下已知限制。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The Tailscale Kubernetes Operator has the following known limitations.
+Tailscale Kubernetes Operator 存在以下已知限制。
 
-## General
+## 通用限制
 
-* The operator is not officially supported on platforms that restrict privileged pods, such as GKE Autopilot. Features are limited on these platforms.
+* 在限制特权 Pod 的平台（例如 GKE Autopilot）上，operator 不受官方支持。在这些平台上功能受限。
 
 ## Egress
 
-The following limitations apply to egress proxies that connect cluster workloads to tailnet devices:
+以下限制适用于将集群工作负载连接到 tailnet 设备的出站（egress）代理：
 
-* Egress does not support IP ranges in the `tailscale.com/tailnet-ip` annotation. You can specify only a single IPv4 or IPv6 address as a route.
-* Refer to [IPv6 support][docs-ipv6] for IPv6 cluster requirements.
+* Egress 不支持 `tailscale.com/tailnet-ip` 注解中的 IP 范围。你只能指定单个 IPv4 或 IPv6 地址作为路由。
+* IPv6 集群要求请参阅 [IPv6 支持][docs-ipv6]。
 
-## Layer 7 ingress
+## 七层入站
 
-The following limitations apply to ingress backed by a Kubernetes `Ingress` resource:
+以下限制适用于由 Kubernetes `Ingress` 资源承载的入站（ingress）：
 
-* The only supported [ingress path type][xt-ingress-paths] is `Prefix`. The operator routes requests for paths with other path types according to prefix rules.
-* `Ingress` resources only support TLS, and are only exposed over HTTPS using a MagicDNS name and publicly trusted certificates from Let's Encrypt. You must enable HTTPS and MagicDNS for your tailnet.
-* The operator provisions certificates on the first connection, so that connection can be slow or time out while provisioning runs.
+* 唯一支持的 [ingress 路径类型][xt-ingress-paths]是 `Prefix`。对于其他路径类型的路径请求，operator 会按前缀规则路由。
+* `Ingress` 资源只支持 TLS，并且只通过 MagicDNS 名称与 Let's Encrypt 公共可信证书以 HTTPS 暴露。你必须为 tailnet 启用 HTTPS 与 MagicDNS。
+* operator 在首次连接时置备证书，因此置备进行期间该连接可能较慢或超时。
 
-## Layer 3 ingress
+## 三层入站
 
-The following limitations apply to L3 ingress backed by a Kubernetes `Service` resource:
+以下限制适用于由 Kubernetes `Service` 资源承载的 L3 入站：
 
-* You cannot add the `tailscale.com/proxy-group` annotation to an existing standalone L3 ingress `Service`. Create a new `Service` with the annotation set to the name of the desired `ProxyGroup` instead.
-* Hostname changes using the `tailscale.com/hostname` annotation are not reliably applied to an already-exposed `Service` without recreating it.
+* 你不能向已有的独立 L3 入站 `Service` 添加 `tailscale.com/proxy-group` 注解。请改为新建一个 `Service`，并将该注解设置为所需 `ProxyGroup` 的名称。
+* 通过 `tailscale.com/hostname` 注解更改主机名时，更改不会可靠地应用到已暴露的 `Service`，除非重建该 `Service`。
 
-## Tags
+## 标签
 
-The following limitation applies to tags on operator-managed devices:
+以下限制适用于 operator 管理的设备上的标签：
 
-* The operator applies tags only during initial device provisioning. If you modify the `tailscale.com/tags` annotation on an already-exposed `Service`, the device tags do not update until you recreate the `Service`.
+* operator 只在初始置备设备时应用标签。如果你修改已暴露 `Service` 上的 `tailscale.com/tags` 注解，设备标签不会更新，直到你重建该 `Service`。
 
 [docs-ipv6]: /docs/kubernetes-operator/reference/ipv6
 

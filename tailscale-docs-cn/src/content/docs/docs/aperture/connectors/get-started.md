@@ -1,37 +1,37 @@
 ---
-title: "Get started with connectors"
-description: "Add your first Aperture connector, grant access to its capabilities, and verify the connection from a client. For background on how connectors work, refer to [How connectors work][docs-connectors-how-"
+title: "连接器入门"
+description: "添加你的第一个 Aperture 连接器，授予其能力访问权限，并从客户端验证连接。有关连接器工作原理的背景，参阅[连接器的工作原理][docs-connectors-how-it-works]。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Add your first Aperture connector, grant access to its capabilities, and verify the connection from a client. For background on how connectors work, refer to [How connectors work][docs-connectors-how-it-works]. For complete field definitions, refer to the [connectors reference][docs-connectors-reference].
+添加你的第一个 Aperture 连接器，授予其能力访问权限，并从客户端验证连接。连接器工作原理的背景参阅[连接器的工作原理][docs-connectors-how-it-works]。完整的字段定义参阅[连接器参考][docs-connectors-reference]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need the following:
+开始之前，你需要：
 
-* Aperture enabled for your [tailnet][docs-tailnet]. Refer to [Get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* Admin access to edit the `connectors` and `grants` sections of the Aperture configuration.
-* The URL of at least one upstream service such as an MCP server or HTTP API, reachable from the Aperture gateway.
+* 你的 [tailnet][docs-tailnet] 已启用 Aperture。如果尚未设置，参阅 [Aperture 入门][docs-aperture-get-started]。
+* 编辑 Aperture 配置中 `connectors` 和 `grants` 段的管理员权限。
+* 至少一个上游服务（例如 MCP 服务器或 HTTP API）的 URL，且可从 Aperture 网关访问。
 
-## Step 1: Add a connector
+## 第 1 步：添加连接器
 
-> **Note:**
+> **注意：**
 >
-> Connectors that use `oauth2_authorization_code` or `oauth2_client_credentials` require an upstream OAuth application. Authorization-code clients can use PKCE without a client secret, while client-credentials connectors require a client secret. On the MCP server or API provider:
+> 使用 `oauth2_authorization_code` 或 `oauth2_client_credentials` 的连接器需要一个上游 OAuth 应用。授权码型客户端可以使用 PKCE 而不用客户端密钥，而 client credentials 型连接器需要客户端密钥。在 MCP 服务器或 API 提供商处：
 >
-> * For either method, create the OAuth application and note the client ID and token URL. For client credentials, also note the required client secret. For authorization code, note the client secret only if the application uses one.
-> * For `oauth2_authorization_code`, register Aperture's callback URL (`https://<aperture-hostname>/aperture/auth/<connector-id>/callback`) and note the authorization URL and user authorization scopes.
+> * 无论哪种方式，都要创建 OAuth 应用，并记下客户端 ID 和 token URL。client credentials 方式还要记下所需的客户端密钥；authorization code 方式仅当应用使用了客户端密钥时才需要记。
+> * 对 `oauth2_authorization_code`，注册 Aperture 的回调 URL（`https://<aperture-hostname>/aperture/auth/<connector-id>/callback`），并记下授权 URL 和用户授权作用域。
 
-Connectors live in the `connectors` section of the Aperture configuration. \[Missing snippet: aperture\_admin\_nav.mdx] That page is the visual editor and holds the connector picker. To edit the `connectors` section as JSON instead, use the **Administration** > **Configuration** page.
+连接器位于 Aperture 配置的 `connectors` 段。\[Missing snippet: aperture\_admin\_nav.mdx] 该页面是可视化编辑器，也承载连接器选择器。若要以 JSON 编辑 `connectors` 段，使用 **Administration** > **Configuration** 页面。
 
-You can add connectors in two ways:
+有两种添加连接器的方式：
 
-* **From the verified registry**: The connector picker includes pre-configured defaults for common providers such as Salesforce, Atlassian, Slack, GitHub, Notion, and Linear. Open the picker for the current list. Selecting a provider pre-fills its configuration. Some require OAuth client credentials, but connectors using [`oauth2_dcr`][docs-connectors-reference-dcr], including Atlassian, Notion, and Linear, do not because Aperture registers the OAuth client automatically. For more information, refer to [Add a verified connector][docs-connectors-add-verified].
-* **Custom configuration**: Add a `connectors` section with one or more server entries. Each entry needs a `protocol` (`"mcp"` or `"http"`) and a `url`.
+* **从经验证注册表**：连接器选择器内置了 Salesforce、Atlassian、Slack、GitHub、Notion 和 Linear 等常见提供商的预配置默认值。打开选择器查看最新列表。选择某个提供商即可预填其配置。部分连接器需要 OAuth 客户端凭证，但使用 [`oauth2_dcr`][docs-connectors-reference-dcr] 的连接器（包括 Atlassian、Notion 和 Linear）不需要，因为 Aperture 会自动注册 OAuth 客户端。更多信息参阅[添加经验证的连接器][docs-connectors-add-verified]。
+* **自定义配置**：添加一个含一个或多个服务器条目的 `connectors` 段。每个条目需要 `protocol`（`"mcp"` 或 `"http"`）和 `url`。
 
-The following example adds an unauthenticated MCP server and an authenticated HTTP API:
+以下示例添加一个无认证的 MCP 服务器和一个带认证的 HTTP API：
 
 ```json
 {
@@ -55,21 +55,21 @@ The following example adds an unauthenticated MCP server and an authenticated HT
 }
 ```
 
-Each key in the `servers` map is a connector ID that Aperture uses as a name prefix. Connector IDs must contain only letters and digits, starting with a letter. The IDs `tailscale`, `internal`, and `aperture` are reserved. Refer to the [connectors reference][docs-connectors-reference] for the full ID rules and authentication types.
+`servers` 映射中的每个键都是一个连接器 ID，Aperture 用它作为名称前缀。连接器 ID 只能包含字母和数字，并以字母开头。`tailscale`、`internal` 和 `aperture` 是保留 ID。完整的 ID 规则和认证类型参阅[连接器参考][docs-connectors-reference]。
 
-Aperture supports `bearer_token`, `api_key`, `basic`, `oauth2_client_credentials`, `oauth2_authorization_code`, and `oauth2_dcr` authentication. Refer to the [connectors reference][docs-connectors-reference] for each type's fields.
+Aperture 支持 `bearer_token`、`api_key`、`basic`、`oauth2_client_credentials`、`oauth2_authorization_code` 和 `oauth2_dcr` 认证。各类型的字段参阅[连接器参考][docs-connectors-reference]。
 
-> **Tip:**
+> **提示：**
 >
-> The Aperture gateway uses its tailnet HTTP client for connections, so you can use [MagicDNS][docs-magicdns] hostnames (for example, `http://mcp-server.example.ts.net:8080/v1/mcp`) without additional network configuration.
+> Aperture 网关使用其 tailnet HTTP 客户端建立连接，因此可以直接使用 [MagicDNS][docs-magicdns] 主机名（例如 `http://mcp-server.example.ts.net:8080/v1/mcp`），无需额外的网络配置。
 
-## Step 2: Grant access
+## 第 2 步：授予访问权限
 
-Aperture denies connector access unless a grant matches the request. Add grants in the `grants` section of your configuration. \[Missing snippet: aperture\_admin\_nav.mdx] Use the visual grant editor, or edit the same grants as JSON on the **Administration** > **Configuration** page.
+除非有授权匹配请求，否则 Aperture 拒绝连接器访问。在配置的 `grants` 段中添加授权。\[Missing snippet: aperture\_admin\_nav.mdx] 可使用可视化授权编辑器，或在 **Administration** > **Configuration** 页面上以 JSON 编辑同一批授权。
 
-To change the configuration programmatically, refer to the [grants configuration reference][docs-aperture-grants].
+要以编程方式修改配置，参阅[授权配置参考][docs-aperture-grants]。
 
-The following example grants every capability from every connector, including Aperture's built-in tools:
+以下示例授予所有连接器的全部能力，包括 Aperture 的内置工具：
 
 ```json
 {
@@ -86,63 +86,63 @@ The following example grants every capability from every connector, including Ap
 }
 ```
 
-Connector grants use the `connectors` field with `"connectorID/category/resource"` glob patterns. The valid categories are `tools`, `resources`, `templates`, and `proxy`. Both MCP and HTTP connectors require grants. Refer to the [grants configuration reference][docs-aperture-grants] for the full syntax.
+连接器授权使用 `connectors` 字段配合 `"connectorID/category/resource"` glob 模式。有效类别是 `tools`、`resources`、`templates` 和 `proxy`。MCP 和 HTTP 连接器都需要授权。完整语法参阅[授权配置参考][docs-aperture-grants]。
 
-> **Warning:**
+> **警告：**
 >
-> A `"**"` grant reaches every connector you add later, including sensitive ones. Use it only while you verify your first connector.
+> `"**"` 授权会覆盖你以后添加的每一个连接器，包括敏感连接器。只在验证第一个连接器时使用它。
 
-Labels are another way to write a connector grant. A label is a flat string you set on a connector, and one `label:<name>` pattern grants every connector carrying that label. Once you have more than one connector, replace the broad grant with labeled groups. Refer to [Grant connector access by label][docs-grant-connector-access-by-label].
+标签是编写连接器授权的另一种方式。标签是你在连接器上设置的扁平字符串，一条 `label:<name>` 模式即可授予携带该标签的每个连接器。一旦拥有多个连接器，就用标签分组取代宽泛授权。参阅[按标签授予连接器访问权限][docs-grant-connector-access-by-label]。
 
-## Step 3: Verify the connection
+## 第 3 步：验证连接
 
-Verify the connector in Chat first, then verify client access.
+先在 Chat 中验证连接器，再验证客户端访问。
 
-### Check the connector status
+### 检查连接器状态
 
-1. Open **Connectors** in the [Aperture Chat portal][docs-aperture-chat-connectors].
-2. Select the connector.
-3. Confirm it appears under **Ready to use** and shows **Ready**.
-4. For MCP, confirm **Tools** contains the expected tools.
+1. 打开 [Aperture Chat 门户][docs-aperture-chat-connectors]中的 **Connectors**。
+2. 选择该连接器。
+3. 确认它出现在 **Ready to use** 下并显示 **Ready**。
+4. 对 MCP，确认 **Tools** 中包含预期的工具。
 
-**Ready** describes access and authorization, not upstream reachability. Select **Refresh tools** to contact the upstream and request current tools.
+**Ready** 描述的是访问与授权状态，不代表上游可达。选择 **Refresh tools** 可联系上游并获取当前工具。
 
-### Diagnose a connector that is not ready
+### 诊断未就绪的连接器
 
-* **Connect to use** with **Connect** means authorization is required.
-* **Needs reconnect** with **Reconnect** means saved authorization is unusable.
-* **Temporarily unavailable** means Aperture could not read credential state. Reload and retry.
+* **Connect to use** 配 **Connect** 表示需要授权。
+* **Needs reconnect** 配 **Reconnect** 表示已保存的授权无法使用。
+* **Temporarily unavailable** 表示 Aperture 无法读取凭证状态。刷新后重试。
 
-For non-admins, grant-denied configured connectors are omitted. Direct detail access uses the same not-found state as a nonexistent connector. Revisit [Step 2][ar-step-2-grant-access] rather than looking for **No access**.
+对非管理员而言，被授权拒绝的已配置连接器会被直接省略，直接访问详情页也会与不存在的连接器一样显示未找到状态。请回到[第 2 步][ar-step-2-grant-access]，而不要去找 **No access**。
 
-If **Refresh tools** returns `502 upstream error`, confirm the URL is correct and reachable from the Aperture gateway.
+如果 **Refresh tools** 返回 `502 upstream error`，请确认 URL 正确且可从 Aperture 网关访问。
 
-### Verify access from a client
+### 从客户端验证访问
 
-Once the connector shows **Ready**, verify access from a client. Run these commands from a device in your tailnet whose identity has the grants from [Step 2][ar-step-2-grant-access]. Aperture authorizes each request from the caller's tailnet identity, and `<aperture-hostname>` is the Aperture gateway's MagicDNS name.
+连接器显示 **Ready** 后，从客户端验证访问。在 tailnet 中身份拥有[第 2 步][ar-step-2-grant-access]授权的设备上运行以下命令。Aperture 按调用者的 tailnet 身份对每个请求授权，`<aperture-hostname>` 是 Aperture 网关的 MagicDNS 名称。
 
-For MCP connectors, point your MCP client at the Aperture URL and list available tools.
+对 MCP 连接器，把你的 MCP 客户端指向 Aperture URL 并列出可用工具。
 
 \[Missing snippet: aperture\_mcp\_list\_tools.mdx]
 
-The response contains a `tools` array with prefixed entries from your configured connectors (for example, `docs_search`).
+响应包含一个 `tools` 数组，其中是你所配置连接器带前缀的条目（例如 `docs_search`）。
 
-For HTTP connectors, send a request through the Aperture proxy path:
+对 HTTP 连接器，通过 Aperture 代理路径发送请求：
 
 ```shell
 curl http://<aperture-hostname>/v1/connectors/github/user
 ```
 
-Aperture forwards the request to `https://api.github.com/user` and injects the configured bearer token automatically.
+Aperture 会把请求转发到 `https://api.github.com/user`，并自动注入配置的 bearer token。
 
-## Next steps
+## 后续步骤
 
-* [Set up an HTTP API connector][docs-set-up-http-api-connector] to proxy requests to an upstream REST API with automatic authentication.
-* [Set up a per-user OAuth 2.0 connector][docs-set-up-per-user-oauth2-connector] to connect agents to services that require individual user authorization.
-* [Use a connector][docs-connectors-use] once it is configured, to authorize and call its tools as an end-user.
-* [Grant connector access by label][docs-grant-connector-access-by-label] to replace a broad `"**"` grant with labeled groups of connectors.
+* [设置 HTTP API 连接器][docs-set-up-http-api-connector]，把请求代理到上游 REST API 并自动认证。
+* [设置按用户 OAuth 2.0 连接器][docs-set-up-per-user-oauth2-connector]，把智能体连接到需要每个用户单独授权的服务。
+* 配置完成后，以最终用户身份[使用连接器][docs-connectors-use]完成授权并调用其工具。
+* [按标签授予连接器访问权限][docs-grant-connector-access-by-label]，用标签分组的连接器取代宽泛的 `"**"` 授权。
 
-[ar-step-2-grant-access]: #step-2-grant-access
+[ar-step-2-grant-access]: #第-2-步授予访问权限
 
 [docs-aperture-get-started]: /docs/aperture/get-started
 

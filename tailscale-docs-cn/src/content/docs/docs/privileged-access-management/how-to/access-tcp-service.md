@@ -1,98 +1,98 @@
 ---
-title: "Access a TCP service using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] gives users identity-based access to internal TCP services without requiring direct network access to those services."
+title: "使用 Tailscale PAM 访问 TCP 服务"
+description: "[Tailscale PAM][docs-pam] 让用户以基于身份的方式访问内部 TCP 服务，而无需与这些服务建立直接的网络访问。"
 ---
 
-Last validated Sep 3, 2026
+最后验证于 Sep 3, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] gives users identity-based access to internal TCP services without requiring direct network access to those services.
+[Tailscale PAM][docs-pam] 让用户以基于身份的方式访问内部 TCP 服务，而无需与这些服务建立直接的网络访问。
 
-You can make internal applications and services that communicate over TCP available without exposing them directly to the internet or giving users broader network access. Tailscale PAM determines whether users are allowed to access the service using the PAM grants in your tailnet access policy.
+你可以把通过 TCP 通信的内部应用和服务开放出来，而不必把它们直接暴露到互联网，也不必给用户更宽泛的网络访问权限。Tailscale PAM 依据 tailnet 访问策略中的 PAM 授权（grant）来判断用户是否可以访问该服务。
 
-The PAM connector handles the connection to the upstream TCP service on the user's behalf. The upstream service can remain on your private network as long as the connector can reach it.
+PAM 连接器代表用户处理与上游 TCP 服务的连接。只要连接器能到达上游服务，上游服务就可以继续留在你的私有网络里。
 
-## How TCP access works
+## TCP 访问的工作原理
 
-When you create a TCP PAM service, Tailscale PAM provides an endpoint that users can connect to with a TCP client.
+当你创建一个 TCP PAM 服务时，Tailscale PAM 会提供一个端点，用户可以用 TCP 客户端连接它。
 
-When a user connects:
+当用户连接时：
 
-1. Tailscale PAM authenticates the user with their [Tailscale identity][docs-tailscale-identity].
-2. Tailscale PAM checks whether their tailnet access policy lets them use the TCP service.
-3. If access is allowed, the PAM connector establishes a connection to the upstream TCP service.
-4. Tailscale PAM proxies traffic between the user and the upstream service.
+1. Tailscale PAM 使用用户的 [Tailscale 身份][docs-tailscale-identity]对其进行身份验证。
+2. Tailscale PAM 检查其 tailnet 访问策略是否允许该用户使用此 TCP 服务。
+3. 如果允许访问，PAM 连接器会建立到上游 TCP 服务的连接。
+4. Tailscale PAM 在用户与上游服务之间代理流量。
 
-Only the connector needs network connectivity to the upstream TCP service. The upstream service itself does not need to be directly reachable by the user or from the internet.
+只有连接器需要与上游 TCP 服务有网络连通。上游服务本身无需能被用户直接访问，也无需能从互联网访问。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，请确认你已具备：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* A connector that can reach the upstream TCP service.
-* The hostname or IP address and port of the upstream service.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native TCP client.
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 一个能到达上游 TCP 服务的连接器。
+* 上游服务的主机名或 IP 地址和端口。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
+* 如果你计划使用原生 TCP 客户端，请在你将用于连接的设备上[安装][docs-install] Tailscale 并登录。
 
-## Create a TCP PAM service
+## 创建 TCP PAM 服务
 
-To create the service:
+要创建该服务：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择**添加服务**。
 
-3. Select **PAM service**.
+3. 选择 **PAM 服务**。
 
-4. Select **TCP**.
+4. 选择 **TCP**。
 
-5. Select **Continue**.
+5. 选择**继续**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-   Use a name that makes the TCP service suitable for users to recognize when they browse the services they can access.
+   起一个能让用户在浏览自己可访问的服务时，一眼认出这个 TCP 服务的名字。
 
-7. (Optional) Enter a display name for the service.
+7. （可选）输入该服务的显示名称。
 
-8. (Optional) Enter a description for the service.
+8. （可选）输入该服务的描述。
 
-9. Select one or more Tailscale PAM connectors that can reach the TCP service.
+9. 选择一个或多个能到达该 TCP 服务的 Tailscale PAM 连接器。
 
-10. Select **Continue**.
+10. 选择**继续**。
 
-11. For **Upstream Hostname or IP**, enter the hostname or IP address of the TCP service.
+11. 在 **Upstream Hostname or IP** 中，输入该 TCP 服务的主机名或 IP 地址。
 
-    For example:
+    例如：
 
     ```text
     10.10.10.10
     ```
 
-    You can also use an internal DNS name:
+    也可以使用内部 DNS 名称：
 
     ```text
     service.internal.example.com
     ```
 
-12. For **Port**, enter the port on which the upstream TCP service is listening.
+12. 在 **Port** 中，输入上游 TCP 服务监听的端口。
 
-    For example:
+    例如：
 
     ```text
     9000
     ```
 
-13. Select **Save**.
+13. 选择**保存**。
 
-Your TCP PAM service is ready to use. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+你的 TCP PAM 服务已可使用。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the TCP service
+## 为 TCP 服务授予访问权限
 
-Before users try to connect, make sure a Tailscale PAM [grant gives them access][docs-pam-control-access] to the TCP service. Tailscale PAM uses your tailnet access policy to determine which users, groups, devices, or tags can connect to the service.
+在用户尝试连接之前，请确保有一条 Tailscale PAM [授权为他们开放访问][docs-pam-control-access]该 TCP 服务。Tailscale PAM 使用你的 tailnet 访问策略来决定哪些用户、用户组、设备或标签可以连接该服务。
 
-For example, the following grant permits any source to connect to PAM TCP services:
+例如，下面的授权允许任意来源连接到 PAM TCP 服务：
 
 ```json
 {
@@ -116,58 +116,58 @@ For example, the following grant permits any source to connect to PAM TCP servic
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, you can restrict the `src` and `dst` fields to control which users, groups, devices, or tags can access specific services.
+> 这是一条范围很宽的授权，适合上手试用。在生产环境中，你可以收紧 `src` 和 `dst` 字段，以控制哪些用户、用户组、设备或标签能访问特定服务。
 
-For more information about controlling access to PAM services, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+关于控制 PAM 服务访问的更多信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-## Connect to the TCP service
+## 连接到 TCP 服务
 
-After you've configured the service and granted access, users can connect to the TCP service using a compatible client.
+配置好服务并授予访问权限后，用户即可使用兼容的客户端连接该 TCP 服务。
 
-Use the hostname and port for the Tailscale PAM service instead of the private hostname or IP address of the upstream service.
+请使用 Tailscale PAM 服务的主机名和端口，而不是上游服务的私有主机名或 IP 地址。
 
-For example, you can test a TCP connection using `nc`:
+例如，你可以用 `nc` 测试 TCP 连接：
 
 ```shell
 nc -v <service-hostname> <port>
 ```
 
-Users don't need direct network connectivity to the upstream TCP service. Tailscale PAM authenticates the user and checks their access against the tailnet policy. If a matching PAM grant permits TCP access to the service, Tailscale PAM proxies the connection through the connector to the upstream service.
+用户不需要与上游 TCP 服务有直接的网络连通。Tailscale PAM 会对用户进行身份验证，并对照 tailnet 策略检查其访问权限。如果有一条匹配的 PAM 授权允许对该服务进行 TCP 访问，Tailscale PAM 就会通过连接器把连接代理到上游服务。
 
-Users can also connect to the TCP service by opening the Tailscale PAM [Border0 web client](https://my.tailscale.com) and selecting the service.
+用户也可以打开 Tailscale PAM [Border0 web 客户端](https://my.tailscale.com)并选择该服务来连接 TCP 服务。
 
-## Review TCP sessions
+## 查看 TCP 会话
 
-Tailscale PAM gives you a central place to review who accessed your internal TCP services and when they accessed them.
+Tailscale PAM 为你提供了一个集中位置，用于查看谁在什么时候访问了你的内部 TCP 服务。
 
-To review a TCP session, open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console and select the session you want to inspect. From there, you can review information about the user, the service they accessed, and the session.
+要查看 TCP 会话，请打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你要检查的会话。从中你可以查看关于用户、其访问的服务以及会话本身的信息。
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to a TCP PAM service, first confirm that the PAM connector is online.
+如果你无法连接到某个 TCP PAM 服务，请先确认 PAM 连接器在线。
 
-Then verify that:
+然后核实：
 
-* The connector can reach the configured upstream hostname or IP address.
-* The configured port is correct.
-* The upstream service is listening on the configured port.
-* The PAM grant gives your Tailscale identity TCP access to the service.
-* The connector can resolve the hostname if you configured the upstream service using a DNS name.
-* Firewalls between the connector and upstream service permit the TCP connection.
-* If you're connecting from the browser client and your tailnet uses [device approval][docs-device-approval], the browser device has been [approved][docs-device-approval-approve].
+* 连接器能否到达所配置的上游主机名或 IP 地址。
+* 所配置的端口是否正确。
+* 上游服务是否正在监听所配置的端口。
+* PAM 授权是否给你的 Tailscale 身份开放了对该服务的 TCP 访问。
+* 如果你用 DNS 名称配置上游服务，连接器能否解析该主机名。
+* 连接器与上游服务之间的防火墙是否允许该 TCP 连接。
+* 如果你从浏览器客户端连接，且你的 tailnet 使用了[设备审批][docs-device-approval]，浏览器设备是否已[获批准][docs-device-approval-approve]。
 
-You can also test connectivity to the upstream service from the connector's network. For example, depending on your connector's environment, use commands like:
+你也可以从连接器所在网络测试到上游服务的连通性。例如，视连接器所在环境而定，可以使用如下命令：
 
 * `nc -zv <upstream-hostname> <port>`
 * `telnet  <upstream-hostname> <port>`
 
-If the connection fails, resolve connectivity between the connector and upstream service before troubleshooting the user's Tailscale PAM connection.
+如果连接失败，请先解决连接器与上游服务之间的连通问题，再排查用户的 Tailscale PAM 连接。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the PAM [session logs][docs-session-logs]. The session details can help determine whether the connection was blocked by access controls, network connectivity, or authentication to the upstream Windows server.
+如果上述排查步骤都无法解决问题，请查看连接器日志以及 PAM [会话日志][docs-session-logs]中失败会话的详情。会话详情有助于判断连接是被访问控制、网络连通性还是到上游 Windows 服务器的身份验证所拦截的。
 
 [docs-device-approval-approve]: /docs/features/access-control/device-management/device-approval#approve-devices-from-the-admin-console
 

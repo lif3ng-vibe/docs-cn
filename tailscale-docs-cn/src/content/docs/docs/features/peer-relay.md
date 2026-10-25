@@ -1,101 +1,101 @@
 ---
-title: "Tailscale Peer Relays"
-description: "Use Tailscale Peer Relays for client-to-client connections when direct connections aren't possible."
+title: "Tailscale Peer Relay"
+description: "在无法建立直连时，使用 Tailscale Peer Relay 实现客户端到客户端的连接。"
 ---
 
-Last validated Feb 4, 2026
+最后验证于 Feb 4, 2026
 
-Tailscale Peer Relays let you use devices in your Tailscale network (known as a [tailnet][docs-tailnet]) as high-throughput relay servers when [direct connections][docs-connection-types] aren't possible due to network conditions such as [a strict NAT environment][docs-device-connectivity].
+Tailscale Peer Relay 让你在因[严格 NAT 环境][docs-device-connectivity]等网络条件而无法建立[直连][docs-connection-types]时，把 Tailscale 网络（即 [tailnet][docs-tailnet]）中的设备用作高吞吐量中继服务器。
 
-Normally, Tailscale relies on its globally distributed [DERP servers][docs-derp-servers] to relay traffic when Tailscale can't establish direct connections between devices. While DERP servers are effective at relaying traffic, they can introduce additional latency, especially for high-throughput applications. When you configure a device as a peer relay, other devices in the same tailnet can use it to relay traffic for client-to-client connections when a direct connection isn't possible. Tailscale first attempts to use any available peer relays in the tailnet before falling back to DERP servers.
+通常，当 Tailscale 无法在设备之间建立直连时，会依靠全球分布的 [DERP 服务器][docs-derp-servers]来中继流量。DERP 服务器虽能有效中继流量，但会引入额外延迟，对高吞吐量应用尤甚。当你把一台设备配置为对等中继（peer relay）后，同一 tailnet 中的其他设备就可以在无法直连时，用它来中继客户端到客户端的连接流量。Tailscale 会先尝试使用 tailnet 中任何可用的对等中继，回退无果时才改用 DERP 服务器。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下面的相关视频提供了更多背景与示例。
 
-[Peer Relays | Tailscale Explained (video)](https://www.youtube.com/watch?v=wkBSjT1hO6k)
+[Peer Relays | Tailscale Explained（视频）](https://www.youtube.com/watch?v=wkBSjT1hO6k)
 
-## Use cases
+## 使用场景
 
-Peer relays are particularly useful in scenarios where you can't establish direct connections between devices due to network restrictions and you require lower latency and higher throughput than what DERP servers can provide. Common use cases include:
+当网络限制导致设备之间无法建立直连，而你需要比 DERP 服务器更低的延迟和更高的吞吐量时，对等中继尤其有用。常见场景包括：
 
-* **Access restricted infrastructure**: Accessing devices behind strict NATs or firewalls where direct connections are not possible, such as in certain corporate or cloud environments.
-* **File transfers**: When transferring large files between devices, peer relays can offer higher throughput, speeding up the transfer process.
-* **Media streaming**: For streaming high-definition video or audio between devices, peer relays can help maintain a smooth streaming experience with less buffering.
+* **访问受限基础设施**：访问严格 NAT 或防火墙之后、无法直连的设备，例如某些企业或云环境中的设备。
+* **文件传输**：在设备之间传输大文件时，对等中继可提供更高吞吐量，加快传输过程。
+* **媒体流传输**：在设备之间串流高清视频或音频时，对等中继有助于减少缓冲、保持流畅的播放体验。
 
-> **Note:**
+> **注意：**
 >
-> Peer relays are not intended to replace DERP servers. They complement DERP by providing an additional option for relaying traffic within a tailnet, particularly when you require lower latency and higher throughput. DERP servers still play a crucial role in negotiating connections and providing fallback relay options when peer relays are unavailable.
+> 对等中继并非要取代 DERP 服务器。它是对 DERP 的补充，为 tailnet 内的流量中继提供了额外选择，尤其适合对延迟和吞吐量有更高要求的场合。DERP 服务器仍在协商连接、以及在对等中继不可用时提供回退中继等方面扮演关键角色。
 
-## How it works
+## 工作原理
 
-When you configure a device as a peer relay, it listens for incoming relay traffic on a specified UDP port. Other devices in the tailnet can then use this device to relay traffic for client-to-client connections when direct connections aren't possible.
+当你把一台设备配置为对等中继后，它会在指定的 UDP 端口上监听传入的中继流量。之后，tailnet 中的其他设备就能在无法直连时，用这台设备中继客户端到客户端的连接流量。
 
-When a device attempts to connect to another device in the tailnet, it first checks if a direct connection is possible. If not, it looks for available peer relays in the tailnet. If a peer relay is available and accessible, the device establishes a connection through the peer relay. If no peer relays are available, the device falls back to using DERP servers to relay the traffic.
+当一台设备尝试连接 tailnet 中的另一台设备时，会先检查能否直连。若不能，就查找 tailnet 中可用的对等中继。若有对等中继可用且可达，设备就通过对等中继建立连接；若没有任何可用对等中继，则回退为使用 DERP 服务器中继流量。
 
-## Prerequisites
+## 前提条件
 
-Before you can use the peer relay feature, ensure you meet the minimum requirements for your Tailscale account and the devices you want to configure as peer relays:
+在使用对等中继功能之前，请确保你的 Tailscale 账户以及想配置为对等中继的设备满足最低要求：
 
-### Account requirements
+### 账户要求
 
-To use the peer relay feature, you must have:
+要使用对等中继功能，你必须具备：
 
-* A Tailscale account with access to the tailnet where you want to set up peer relays.
-* At least one device in the tailnet that meets the peer relay device requirements.
-* An account with [Owner, Admin, or Network admin](/docs/reference/user-roles) permissions.
+* 一个 Tailscale 账户，且有权访问你想在其中设置对等中继的 tailnet。
+* tailnet 中至少有一台满足对等中继设备要求的设备。
+* 拥有 [Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)权限的账户。
 
-### Peer relay device requirements
+### 对等中继设备要求
 
-A device must meet the following requirements to function as a peer relay:
+一台设备必须满足以下要求才能充当对等中继：
 
-* A device running a supported operating system. You can use any operating system other than iOS, Apple TV, or Android.
-* Tailscale version 1.86 or later.
-* Sufficient network bandwidth and low latency to effectively relay traffic for other devices.
-* At least one configurable UDP port you can use for peer relay traffic. This port must be accessible from other devices in the tailnet. Refer to [security and access control][ar-security-and-access-control] for more information about configuring network settings.
+* 设备运行受支持的操作系统。除 iOS、Apple TV 或 Android 外的任何操作系统均可使用。
+* Tailscale 版本为 1.86 或更高。
+* 具备足够的网络带宽和低延迟，能高效地为其他设备中继流量。
+* 至少有一个可用于对等中继流量的可配置 UDP 端口。该端口必须能被 tailnet 中的其他设备访问。有关配置网络设置的更多信息，请参阅[安全与访问控制][ar-security-and-access-control]。
 
-### Other tailnet devices requirements
+### 其他 tailnet 设备的要求
 
-Devices in the tailnet that use peer relays must meet the following requirements:
+tailnet 中使用对等中继的设备必须满足以下要求：
 
-* Access to the peer relay devices (through applicable [access control policies][docs-access-control]).
-* Tailscale version 1.86 or later.
-* Access to the UDP port configured for peer relay traffic on the peer relay devices.
+* 能访问对等中继设备（通过适用的[访问控制策略][docs-access-control]）。
+* Tailscale 版本为 1.86 或更高。
+* 能访问对等中继设备上为对等中继流量配置的 UDP 端口。
 
-There are no operating system restrictions for devices that use peer relays; they can run any supported Tailscale operating system, including iOS and Apple TV.
+使用对等中继的设备没有操作系统限制：它们可以运行任何受 Tailscale 支持的操作系统，包括 iOS 和 Apple TV。
 
-## Get started
+## 开始使用
 
-Setting up peer relay functionality in a tailnet involves two primary steps. First, you need to configure a device to act as a peer relay. Then, you need to create a [grant policy][docs-grants] to permit other devices in the tailnet to use the peer relay.
+在 tailnet 中搭建对等中继功能主要分两步。首先，你需要把一台设备配置为对等中继；然后，你需要创建一条[授权策略][docs-grants]（grant），允许 tailnet 中的其他设备使用该对等中继。
 
-### Step 1: Configure a device as a peer relay
+### 第 1 步：将设备配置为对等中继
 
-To use the peer relay feature for faster relayed connections, you must configure at least one device in the tailnet to function as a peer relay. Only devices that meet the [peer relay requirements][ar-peer-relay-device-requirements] and that you explicitly designate can act as peer relays.
+要使用对等中继功能获得更快的[中继连接][docs-connection-types]，你必须把 tailnet 中至少一台设备配置为对等中继。只有满足[对等中继设备要求][ar-peer-relay-device-requirements]且被你明确指定的设备才能充当对等中继。
 
-To set up a device as a peer relay:
+将设备设置为对等中继的步骤：
 
-1. On the device you want to configure as a peer relay, start the Tailscale client and authenticate it to your tailnet.
-2. Open a terminal or command prompt on the device.
-3. Use the [`tailscale set`][docs-tailscale-cli-set] command with the `--relay-server-port` option to specify the UDP port for peer relay traffic. For example, to configure the device to use UDP port `40000` for peer relay traffic, run the following command:
+1. 在想配置为对等中继的设备上，启动 Tailscale 客户端并完成对你 tailnet 的身份认证。
+2. 在该设备上打开终端或命令提示符。
+3. 使用 [`tailscale set`][docs-tailscale-cli-set] 命令加 `--relay-server-port` 选项，指定对等中继流量使用的 UDP 端口。例如，要把设备配置为使用 UDP 端口 `40000` 传输对等中继流量，运行以下命令：
 
    ```shell
    tailscale set --relay-server-port=40000
    ```
 
-> **Tip:**
+> **提示：**
 >
-> You can also use the `--relay-server-static-endpoints` flag with the `tailscale set` command to specify additional [static endpoints][ar-static-endpoints] to advertise to peer relay participants.
+> 你也可以在 `tailscale set` 命令中使用 `--relay-server-static-endpoints` 旗标，指定要向对等中继参与者通告的额外[静态端点][ar-static-endpoints]。
 
-### Step 2: Create a peer relay policy
+### 第 2 步：创建对等中继策略
 
-Before devices in the tailnet can use devices you designate as peer relays, you need to create a [grant][docs-grants] policy that lets them do so. The grant policy uses the `tailscale.com/cap/relay` [application capability][docs-grant-app-capabilities] to specify which devices can use the peer relay functionality. You can create the grant policy using the admin console's JSON editor, the [visual policy editor][docs-visual-editor], or the [Tailscale API][docs-tailscale-api].
+在 tailnet 中的设备可以使用你指定为对等中继的设备之前，你需要创建一条允许这样做的[授权][docs-grants]策略。该授权策略使用 `tailscale.com/cap/relay` [应用能力][docs-grant-app-capabilities]来指定哪些设备可以使用对等中继功能。你可以通过管理控制台的 JSON 编辑器、[可视化策略编辑器][docs-visual-editor]或 [Tailscale API][docs-tailscale-api] 创建授权策略。
 
-To create a grant that enables peer relay capabilities using the JSON editor:
+用 JSON 编辑器创建一条启用对等中继能力的授权：
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console.
-2. Select the **JSON editor** tab to update the tailnet policy file using JSON.
-3. Locate the `grants` section of the policy file.
-4. Add a policy to the `grants` section of the policy file that specifies the `src` (devices behind a restrictive NAT that need to be accessed through the peer relay), the `dst` (the peer relay device), and the `peer-relay` application capability. For example, the following example lets all devices with the tag `tag:us-east-vpc` use peer relays tagged with `tag:us-east-relays`.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
+2. 选择 **JSON editor** 标签页，用 JSON 更新 tailnet 策略文件。
+3. 找到策略文件的 `grants` 部分。
+4. 在策略文件的 `grants` 部分添加一条策略，指定 `src`（位于受限 NAT 之后、需要通过对等中继访问的设备）、`dst`（对等中继设备）以及 `peer-relay` 应用能力。例如，下面的示例允许所有带 `tag:us-east-vpc` 标签的设备使用带 `tag:us-east-relays` 标签的对等中继。
 
 ```json
 {
@@ -111,59 +111,59 @@ To create a grant that enables peer relay capabilities using the JSON editor:
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> You can reference peer relay devices using [tags][docs-tags], hostname, [IP set][docs-ipsets], or Tailscale IP addresses in the `dst` field of the access rule. The `app` field must include the `tailscale.com/cap/relay` capability to enable peer relay functionality for the specified devices. It does not require any additional parameters.
+> 在访问规则的 `dst` 字段中，你可以用[标签][docs-tags]、主机名、[IP 集][docs-ipsets]（IP set）或 Tailscale IP 地址来引用对等中继设备。`app` 字段必须包含 `tailscale.com/cap/relay` 能力才能为指定设备启用对等中继功能，它不需要任何额外参数。
 
-After you create the peer relay grant policy, devices in the tailnet can start using the peer relay for client-to-client connections when direct connections aren't possible. When a device can't connect directly to another device, it first checks for available peer relays in the tailnet. If no peer relays are available, the device falls back to using DERP servers.
+创建对等中继授权策略后，当无法直连时，tailnet 中的设备就能开始使用对等中继进行客户端到客户端的连接。当设备无法直连另一台设备时，会先查找 tailnet 中可用的对等中继；若没有可用的对等中继，则回退为使用 DERP 服务器。
 
-> **Warning:**
+> **警告：**
 >
-> Avoid using overly permissive targets for the `src` field of the grant policy (such as `*`). For example, using `*` would make all devices in the tailnet attempt to use the peer relay devices in the `dst`, potentially leading to unintended traffic routing and high latency. Instead, specify precise device [tags][docs-tags], hostnames, or [IP sets][docs-ipsets] to limit which devices can use the peer relay.
+> 避免在授权策略的 `src` 字段使用过度宽松的目标（例如 `*`）。比如使用 `*` 会让 tailnet 中的所有设备都尝试使用 `dst` 中的对等中继设备，可能导致意料之外的流量路由和高延迟。请指定精确的设备[标签][docs-tags]、主机名或 [IP 集][docs-ipsets]，限制哪些设备可以使用对等中继。
 >
-> As a rule of thumb, the `src` devices in the grant policy should typically be devices in a stable physical location behind a strict NAT or firewall that prevents direct connections. This typically includes devices in corporate networks or cloud environments. It usually does not include mobile devices or laptops that frequently change locations and network conditions.
+> 根据经验，授权策略中的 `src` 设备通常应位于固定物理位置、处在阻止直连的严格 NAT 或防火墙之后，例如企业网络或云环境中的设备；通常不包括经常变换位置和网络环境的移动设备或笔记本电脑。
 
-### Step 3: Observe peer relay traffic
+### 第 3 步：观察对等中继流量
 
-Generate traffic to test the peer relay configuration. Then, use the `tailscale status` command to monitor the device's status and verify that it is functioning as a peer relay. When a tailnet device uses a peer relay, the connection type of that device changes to `peer-relay`.
+产生一些流量来测试对等中继配置。然后使用 `tailscale status` 命令监控设备状态，验证它确实在充当对等中继。当 tailnet 设备使用对等中继时，该设备的连接类型会变为 `peer-relay`。
 
-Run the [`tailscale status`][docs-tailscale-cli-status] command and filter the output for `peer-relay` entries:
+运行 [`tailscale status`][docs-tailscale-cli-status] 命令并过滤出 `peer-relay` 条目：
 
 ```shell
 tailscale status | grep peer-relay
 ```
 
-When a device is using a peer relay, it returns the device's connection type as `peer-relay` (instead of `direct` or `relay`). For example:
+当设备正在使用对等中继时，返回的设备连接类型为 `peer-relay`（而不是 `direct` 或 `relay`）。例如：
 
 ```shell
 <tailscale-ip-address> <hostname> <user> <os> active; peer-relay <ip-address>:<udp-port>:vni:<vni-id>, tx <bytes-sent> rx <bytes-received>
 ```
 
-> **Tip:**
+> **提示：**
 >
-> You can also use the [`tailscale ping`][docs-tailscale-cli-ping] command to test connectivity between devices and observe whether the connection uses a peer relay.
+> 你也可以使用 [`tailscale ping`][docs-tailscale-cli-ping] 命令测试设备之间的连通性，并观察连接是否使用了对等中继。
 
-## Disable Peer Relay
+## 禁用对等中继
 
-To disable peer relay for a device use the [`tailscale set`][docs-tailscale-cli-set] command with the `--relay-server-port` flag set to an empty string:
+要对某台设备禁用对等中继，请使用 [`tailscale set`][docs-tailscale-cli-set] 命令，把 `--relay-server-port` 旗标设为空字符串：
 
 ```shell
 tailscale set --relay-server-port=""
 ```
 
-## Examples
+## 示例
 
-Example scenarios in which you would use Tailscale Peer Relays include:
+适合使用 Tailscale Peer Relay 的示例场景包括：
 
-* Accessing devices in a specific geographic region using peer relays located in that region to reduce latency.
-* Using peer relays to connect to devices behind strict NATs or firewalls where direct connections are not possible.
-* Setting up dedicated peer relay devices to handle high-throughput traffic for specific applications or services.
+* 使用位于特定地理区域的对等中继来访问该区域的设备，以降低延迟。
+* 使用对等中继连接严格 NAT 或防火墙之后、无法直连的设备。
+* 设置专用的对等中继设备，为特定应用或服务处理高吞吐量流量。
 
-The following peer relay policy examples illustrate what the grant policy looks like in different scenarios.
+下面的对等中继策略示例展示了授权策略在不同场景下的样子。
 
-### Use tagged peer relay devices
+### 使用带标签的对等中继设备
 
-The following example lets all devices with the tag `tag:us-east-vpc` use peer relay devices tagged with `tag:us-east-relays` as underlay network relays when communicating with other devices in the tailnet. That means that other devices in the tailnet can use a device tagged with `tag:us-east-relays` as an underlay network relay when communicating with devices tagged with `tag:us-east-vpc`.
+下面的示例允许所有带 `tag:us-east-vpc` 标签的设备在与 tailnet 中其他设备通信时，使用带 `tag:us-east-relays` 标签的对等中继设备作为底层网络中继。也就是说，tailnet 中的其他设备与带 `tag:us-east-vpc` 标签的设备通信时，可以把带 `tag:us-east-relays` 标签的设备用作底层网络中继。
 
 ```json
 {
@@ -179,9 +179,9 @@ The following example lets all devices with the tag `tag:us-east-vpc` use peer r
 }
 ```
 
-For this to work, you must also [configure the peer relay devices][ar-step-1] using the `tailscale set` command and create a grant access control policy that permits overlay network access to devices with the `tag:us-east-vpc` tag.
+要使其生效，你还必须用 `tailscale set` 命令[配置对等中继设备][ar-step-1]，并创建一条允许对带 `tag:us-east-vpc` 标签的设备进行 overlay 网络访问的授权访问控制策略。
 
-For example, this grant policy lets all members of the tailnet access devices with the `tag:us-east-vpc` tag on TCP ports 80 and 443.
+例如，下面这条授权策略允许 tailnet 的所有成员通过 TCP 端口 80 和 443 访问带 `tag:us-east-vpc` 标签的设备。
 
 ```json
 {
@@ -195,9 +195,9 @@ For example, this grant policy lets all members of the tailnet access devices wi
 }
 ```
 
-### Use self as peer relay
+### 将自身用作对等中继
 
-It's possible for devices to use themselves as a peer relay. The following example lets the device with the hostname `us-west-1` use itself as a peer relay. You might use this configuration in a scenario where you need to block all incoming ports to a device except for the UDP port used for peer relay traffic.
+设备可以把自身用作对等中继。下面的示例让主机名为 `us-west-1` 的设备把自身用作对等中继。当你需要封禁设备的所有入站端口、只保留对等中继流量所用 UDP 端口时，可以使用这种配置。
 
 ```json
 {
@@ -213,37 +213,37 @@ It's possible for devices to use themselves as a peer relay. The following examp
 }
 ```
 
-For this to work, you must also [configure the device as a peer relay][ar-step-1] using the `tailscale set` with the UDP port for peer relay traffic.
+要使其生效，你还必须用 `tailscale set` 加上对等中继流量的 UDP 端口，[将该设备配置为对等中继][ar-step-1]。
 
-## Security and access control
+## 安全与访问控制
 
-Peer relays can only relay traffic for devices in the same tailnet. The grant rule that assigns the `tailscale.com/cap/relay` capability acts as the access control mechanism — a device without that grant can't allocate relay bindings on the peer relay. You don't need a separate network grant to the peer relay device itself.
+对等中继只能为同一 tailnet 中的设备中继流量。赋予 `tailscale.com/cap/relay` 能力的授权规则本身就是访问控制机制——没有该授权的设备无法在对等中继上分配中继绑定。你不需要对对等中继设备本身另建一条网络授权。
 
-The UDP port you configure for peer relay traffic must be open and accessible from other devices in the tailnet. For example, if you configure a peer relay to use UDP port `40000`, ensure that any firewalls or network security settings allow incoming traffic on that port.
+为对等中继流量配置的 UDP 端口必须开放，且能被 tailnet 中的其他设备访问。例如，如果你把对等中继配置为使用 UDP 端口 `40000`，请确保所有防火墙或网络安全设置都允许该端口的入站流量。
 
-## Static endpoints
+## 静态端点
 
-You can use the `--relay-server-static-endpoints` flag with the [`tailscale set`][docs-tailscale-cli-set] command to specify one or more additional static endpoints for the peer relay to advertise to other tailnet devices. Doing so is useful in network environments where users use port forwarding or users use load balancers like AWS Network Load Balancer ([NLB][xt-aws-nlb]). In these scenarios, the peer relay might not automatically discover all possible endpoints because it can't send outbound endpoint discovery packets over all possible paths.
+你可以在 [`tailscale set`][docs-tailscale-cli-set] 命令中使用 `--relay-server-static-endpoints` 旗标，为对等中继指定一个或多个要向其他 tailnet 设备通告的额外静态端点。这在用户使用端口转发、或使用 AWS Network Load Balancer（[NLB][xt-aws-nlb]）这类负载均衡器的网络环境中很有用。在这些场景下，对等中继可能无法自动发现所有可能的端点，因为它无法通过所有可能的路径发送出站端点发现包。
 
-It accepts a comma-separated list of `ip:port` pairs (or an empty string to not advertise any static endpoints). Each `ip:port` pair corresponds to an additional endpoint that the peer relay advertises to other tailnet devices.
+该旗标接受以逗号分隔的 `ip:port` 对列表（或空字符串，表示不通告任何静态端点）。每个 `ip:port` 对对应一个对等中继向其他 tailnet 设备通告的额外端点。
 
 ```shell
 tailscale set --relay-server-port=<port> --relay-server-static-endpoints="<ip-address-1>:<port>,<ip-address-2>:<port>"
 ```
 
-For example, to configure the peer relay to advertise two additional static endpoints (`[2001:db8::1]:40000` and `192.0.2.2:40000`), you would run the following command:
+例如，要配置对等中继通告两个额外的静态端点（`[2001:db8::1]:40000` 和 `192.0.2.2:40000`），运行以下命令：
 
 ```shell
 tailscale set --relay-server-port=40000 --relay-server-static-endpoints="[2001:db8::1]:40000,192.0.2.2:40000"
 ```
 
-[ar-peer-relay-device-requirements]: #peer-relay-device-requirements
+[ar-peer-relay-device-requirements]: #对等中继设备要求
 
-[ar-security-and-access-control]: #security-and-access-control
+[ar-security-and-access-control]: #安全与访问控制
 
-[ar-static-endpoints]: #static-endpoints
+[ar-static-endpoints]: #静态端点
 
-[ar-step-1]: #step-1
+[ar-step-1]: #第-1-步将设备配置为对等中继
 
 [docs-access-control]: /docs/features/access-control
 

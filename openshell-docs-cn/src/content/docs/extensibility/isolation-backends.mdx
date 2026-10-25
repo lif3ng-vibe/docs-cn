@@ -1,0 +1,37 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "隔离后端"
+description: "了解用于启动与监管沙箱化工作负载的运行时边界。"
+keywords: "OpenShell 扩展, 隔离后端, 沙箱运行时, 扩展性"
+---
+
+监管器使用 `IsolationBackend` RPC 服务发现并绑定隔离后端，然后使用 Sandbox Protocol 启动并控制智能体工作负载。内置的 `openshell-sandbox` 运行时与外部后端实现相同的服务，因此可以更换隔离机制，而无需更改网关 API 或策略模型。
+
+![监管器使用其 OpenShellRuntimeBackend 客户端经 Sandbox Protocol 与工作负载侧的 openshell-sandbox 运行时通信。](/images/openshell-isolation-backend.svg)
+
+## 协议
+
+这些服务定义在 [`isolation_backend.proto`](https://github.com/NVIDIA/OpenShell/blob/main/proto/isolation_backend.proto) 与 [`sandbox_protocol.proto`](https://github.com/NVIDIA/OpenShell/blob/main/proto/sandbox_protocol.proto) 中。监管器的具体 RPC 客户端 `OpenShellRuntimeBackend` 位于 [`openshell-sandbox-backend`](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-sandbox-backend)。
+
+| RPC | 作用 |
+|---|---|
+| `IsolationBackend.Describe` | 协商协议与能力。 |
+| `IsolationBackend.OpenBoundary` | 把预置资源绑定到一次经过认证的启动。 |
+| `IsolationBackend.SuspendBoundary` / `ResumeBoundary` | 可选地保留并恢复工作负载状态。 |
+| `SandboxProtocol.Exchange` | 承载准入、进程控制与 I/O、TCP 判定，以及中继数据。 |
+| `SandboxProtocol.Mediate` | 承载 DNS 调解握手、查询与响应。 |
+
+准入顺序为 Attach、Confirm，然后 StartAgent。在 StartAgent 之前没有任何工作负载代码运行。
+
+外部计算驱动公示 `openshell.compute.isolation-backend`，以接受运维选择的 `IsolationBackendRegistration`，包括其 Unix、TCP 或 vsock 端点。驱动预置资源，并把后端受信任的启动元数据交给监管器。
+
+## 职责划分
+
+| 组件 | 职责 |
+|---|---|
+| 监管器 | 策略判定。策略、凭据、DNS 解析与已批准的外部连接都保留在智能体工作负载之外。 |
+| 计算驱动 | 放置与围栏。驱动创建运行时资源，安装外层出站围栏，并提供经验证的描述符。 |
+| 隔离后端 | 强制执行。后端实现 RPC 契约，并在其预置资源内部强制执行已准入的策略。 |
+
+`openshell-sandbox` 如何强制执行该边界参见[沙箱边界内部](/about/architecture#沙箱边界之内)。驱动专属的工作负载行为参见[运行时](/how-it-works/sandboxes/runtimes)。

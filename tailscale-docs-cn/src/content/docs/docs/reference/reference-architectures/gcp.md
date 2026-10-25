@@ -1,133 +1,133 @@
 ---
-title: "Google Cloud Platform reference architecture"
-description: "This document details best practices and a reference architecture for Tailscale deployments on Google Cloud Platform (GCP). The following guidance applies for all Tailscale modes of operation—devices,"
+title: "Google Cloud Platform 参考架构"
+description: "本文档详细介绍在 Google Cloud Platform（GCP）上部署 Tailscale 的最佳实践与参考架构。以下指引适用于 Tailscale 的各种运行模式——设备、出口节点、子网路由器等。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-This document details best practices and a reference architecture for Tailscale deployments on Google Cloud Platform (GCP). The following guidance applies for all Tailscale modes of operation—devices, exit nodes, subnet routers, and the like.
+本文档详细介绍在 Google Cloud Platform（GCP）上部署 Tailscale 的最佳实践与参考架构。以下指引适用于 Tailscale 的各种运行模式——设备、出口节点、子网路由器等。
 
-> **Note:**
+> **注意：**
 >
-> For the purposes of this document, the following terminology is used:
+> 就本文档而言，采用以下术语：
 >
-> * **Tailscale device**—a Tailscale node, exit node, subnet router, and the like.
-> * **Tailscale agent**—the Tailscale client that runs on a device to allow it to connect to the Tailscale network.
-> * **GCP resource**—a resource in Google Cloud Platform. This can be a GCE instance, a Cloud SQL instance, a Cloud Run service, and the like.
+> * **Tailscale 设备**——Tailscale 节点、出口节点、子网路由器等。
+> * **Tailscale agent**——运行在设备上、使其能够连接 Tailscale 网络的 Tailscale 客户端。
+> * **GCP 资源**——Google Cloud Platform 中的资源，可以是 GCE 实例、Cloud SQL 实例、Cloud Run 服务等。
 
-## High-level architecture
+## 总体架构
 
-This diagram illustrates how Tailscale integrates with Google Cloud Platform to provide secure, reliable network connectivity across distributed cloud resources. The architecture shows a Virtual Private Cloud (VPC) divided into multiple zones, each containing both public and private subnets with strategically placed Tailscale components.
+此图展示了 Tailscale 如何与 Google Cloud Platform 集成，为分布式云资源提供安全、可靠的网络连接。该架构展示了一个划分为多个可用区（zone）的虚拟私有云（VPC），每个可用区同时包含公有子网和私有子网，并战略性地部署了 Tailscale 组件。
 
-*（图：Potential deployments of Tailscale to access Google Cloud resources）*
+*（图：通过 Tailscale 访问 Google Cloud 资源的可能部署方式）*
 
-Within the public subnets, Tailscale connectors are deployed with failover capabilities to handle inbound connections from external sources. These connectors serve as access points to GCP services including Cloud SQL, Cloud Storage, and other platform offerings. In parallel, private subnets host redundant Tailscale SSH session recorders to ensure high availability for security monitoring.
+在公有子网中，部署了具备故障转移能力的 Tailscale 连接器，用于处理来自外部源的入站连接。这些连接器充当访问 Cloud SQL、Cloud Storage 等 GCP 平台服务的入口。与此同时，私有子网中托管着冗余的 Tailscale SSH 会话录制器，以确保安全监控的高可用性。
 
-The architecture maintains clear separation between public-facing components and private infrastructure, with multiple connection pathways (Tailscale connectors, Tailscale instances, GKE Control Plane, and Cloud NAT) working together to enhance reliability, security, and accessibility across the entire cloud deployment.
+该架构在面向公众的组件与私有基础设施之间保持了清晰隔离，多条连接路径（Tailscale 连接器、Tailscale 实例、GKE 控制平面和 Cloud NAT）协同工作，提升整个云部署的可靠性、安全性与可访问性。
 
-## Ways to deploy Tailscale to connect to and from GCP resources
+## 部署 Tailscale 与 GCP 资源互连的几种方式
 
-Tailscale provides a few options for connecting to resources within GCP. At a high-level they are:
+Tailscale 提供了多种连接 GCP 内资源的方式。总体来看包括：
 
-* **[Agent-to-agent connectivity][ar-agent-to-agent-connectivity]**—connect to "static" resources such as Google Compute Engine (GCE) instances. This is recommended when you can install and run Tailscale directly on the resource you wish to connect to.
-* **[IP-based connectivity with a Tailscale subnet router][ar-subnet-router-ip-connect]**—connect to managed GCP resources such as Cloud SQL or Spanner. This is recommended when you either cannot run Tailscale on the resource you are connecting to or you want to expose an existing [subnet][docs-subnets] or services in a Virtual Private Cloud (VPC) to your tailnet.
-* **[DNS-based routing with a Tailscale app connector][ar-dns-routing-with-app-connector]**—connect to software as a service (SaaS) applications or other resources over your tailnet with DNS-based routing.
-* **[Kubernetes services and auth proxy with Tailscale Kubernetes operator][ar-services-and-api-proxy]**—expose services in your Google Kubernetes Engine (GKE) cluster and your GKE cluster control plane directly to your Tailscale network. This is recommended when you are connecting to resources running in a Kubernetes cluster, or to a Kubernetes cluster's control plane.
-* **[Cloud Run and other container services][ar-cloud-run-and-other-container-services]**—access resources in your tailnet from Cloud Run, Cloud Run functions, and other container solutions.
+* **[代理到代理连接][ar-agent-to-agent-connectivity]**（agent-to-agent connectivity）——连接到 Google Compute Engine（GCE）实例这类"静态"资源。适用于可以直接在要连接的资源上安装并运行 Tailscale 的场景。
+* **[通过 Tailscale 子网路由器实现基于 IP 的连接][ar-subnet-router-ip-connect]**——连接到 Cloud SQL、Spanner 等 GCP 托管资源。适用于无法在目标资源上运行 Tailscale，或希望把现有[子网][docs-subnets]或虚拟私有云（VPC）中的服务暴露给 tailnet 的场景。
+* **[通过 Tailscale 应用连接器实现基于 DNS 的路由][ar-dns-routing-with-app-connector]**——通过 tailnet 以基于 DNS 的路由方式连接软件即服务（SaaS）应用或其他资源。
+* **[通过 Tailscale Kubernetes Operator 提供 Kubernetes 服务与认证代理][ar-services-and-api-proxy]**——将 Google Kubernetes Engine（GKE）集群中的服务和 GKE 集群控制平面直接暴露到 Tailscale 网络。适用于连接 Kubernetes 集群中运行的资源，或连接 Kubernetes 集群控制平面的场景。
+* **[Cloud Run 及其他容器服务][ar-cloud-run-and-other-container-services]**——从 Cloud Run、Cloud Run functions 及其他容器解决方案访问 tailnet 中的资源。
 
-### Agent-to-agent connectivity
+### 代理到代理连接
 
-It's best practice to [install the Tailscale client (agent)][docs-installation] whenever possible—for example, [when setting up servers][docs-set-up-servers] on GCE instances. Installing Tailscale on your GCE instances directly generally provides the best and most scalable connectivity while enabling Tailscale agent-based functionality such as Tailscale SSH.
+最佳实践是尽可能[安装 Tailscale agent][docs-installation]——例如在 GCE 实例上[设置服务器][docs-set-up-servers]时。直接在 GCE 实例上安装 Tailscale 通常能提供最佳、最易扩展的连接性，同时支持 Tailscale SSH 等基于 Tailscale agent 的功能。
 
-### IP-based connectivity with subnet router
+### 通过子网路由器实现基于 IP 的连接
 
-For managed resources where you cannot install the Tailscale agent, such as Cloud SQL, Spanner, and similar services, you can run a [subnet router][docs-subnets] within your VPC to access these resources from Tailscale. Subnet routers can also be used to connect to resources using [Private Service Connect][xt-gcp-private-service-connect].
+对于无法安装 Tailscale agent 的托管资源（如 Cloud SQL、Spanner 等），你可以在 VPC 内运行[子网路由器][docs-subnets]，让 Tailscale 由此访问这些资源。子网路由器还可以用来连接使用 [Private Service Connect][xt-gcp-private-service-connect] 的资源。
 
-### DNS-based routing with an app connector
+### 通过应用连接器实现基于 DNS 的路由
 
-[App connectors][docs-app-connectors] proxy DNS queries for configured domains and advertise routes for the returned IP addresses. For applications that use IP allowlists, add the app connectors' egress IP addresses to the allowlist. Client traffic then reaches the applications from an allowed address.
+[应用连接器][docs-app-connectors]会代理已配置域名的 DNS 查询，并为返回的 IP 地址通告路由。对于使用 IP 允许列表的应用，请将应用连接器的出站 IP 地址加入允许列表，客户端流量便会从被允许的地址到达这些应用。
 
-### Kubernetes services and API server proxy with Tailscale Kubernetes Operator
+### Tailscale Kubernetes Operator 的 Kubernetes 服务与 API 服务器代理
 
-The [Tailscale Kubernetes operator][docs-kubernetes-operator] lets you expose services in your Kubernetes cluster to your Tailscale network, and use an API server proxy for secure connectivity to the Kubernetes control plane.
+[Tailscale Kubernetes Operator][docs-kubernetes-operator]让你可以把 Kubernetes 集群中的服务暴露到 Tailscale 网络，并使用 API 服务器代理安全地连接 Kubernetes 控制平面。
 
-### Cloud Run and other container services
+### Cloud Run 及其他容器服务
 
-Tailscale supports [userspace networking][docs-userspace-networking] where processes in the container can connect to other resources on your Tailscale network by using a SOCKS5 or HTTP proxy. This lets [Cloud Run][docs-cloudrun], Cloud Run functions, and other container-based solutions to connect to the Tailscale network with minimal configuration needed.
+Tailscale 支持[用户态网络模式][docs-userspace-networking]：容器内的进程可以通过 SOCKS5 或 HTTP 代理连接 Tailscale 网络上的其他资源。这让 [Cloud Run][docs-cloudrun]、Cloud Run functions 及其他基于容器的方案只需极少配置即可接入 Tailscale 网络。
 
-## Production best practices
+## 生产环境最佳实践
 
-Below are general recommendations and best practices for running Tailscale in production environments. Much of what is listed below is explained in greater detail throughout this document:
+以下是在生产环境中运行 Tailscale 的一般建议与最佳实践，其中大部分内容会在本文档中更详细地展开：
 
-* When possible deploy [subnet routers][docs-subnets], [exit nodes][docs-exit-nodes], [app connectors][docs-app-connectors], and the like, to public subnets with public IP addresses to ensure [direct connections][docs-connection-types] and optimal performance.
-* Run subnet routers, exit nodes, app connectors, and the like, separately from the systems you are administering with Tailscale—for example, run your subnet routers outside of your GKE clusters.
-* Deploy dynamically scaled resources (for example, containers or serverless functions) as [ephemeral nodes][docs-ephemeral-nodes] to automatically clean up devices after they shut down.
+* 如果条件允许，请将[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]、[应用连接器][docs-app-connectors]等部署到拥有公网 IP 地址的公有子网，以确保[直连][docs-connection-types]并获得最佳性能。
+* 将子网路由器、出口节点、应用连接器等与你用 Tailscale 管理的系统分开运行——例如，把子网路由器运行在 GKE 集群之外。
+* 将动态扩缩的资源（例如容器或无服务器函数）部署为[临时节点（ephemeral node）][docs-ephemeral-nodes]，以便在设备关闭后自动清理。
 
-### High availability and route selection
+### 高可用性与路由选择
 
-* Run multiple [subnet routers][docs-subnets] and [app connectors][docs-app-connectors] across GCP zones for [high availability][docs-high-availability]. For deployments across regions, compare the [route selection options][docs-route-selection].
-* Run multiple Tailscale SSH session recorder nodes across GCP zones for [recorder node failover][docs-multiple-recorder-nodes].
+* 跨 GCP 可用区运行多个[子网路由器][docs-subnets]和[应用连接器][docs-app-connectors]，以实现[高可用性][docs-high-availability]。对于跨区域部署，请对比各种[路由选择方案][docs-route-selection]。
+* 跨 GCP 可用区运行多个 Tailscale SSH 会话录制节点，实现[录制节点故障转移][docs-multiple-recorder-nodes]。
 
-## Performance best practices
+## 性能最佳实践
 
-When deploying Tailscale in Google Cloud Platform (GCP), several performance considerations should be taken into account. These include selecting appropriate instance types based on workload requirements, configuring Cloud NAT for optimal direct connections, deploying subnet routers strategically, and ensuring high availability through multi-zone deployments.
+在 Google Cloud Platform（GCP）上部署 Tailscale 时，需要考虑多项性能因素，包括根据工作负载需求选择合适的实例类型、配置 Cloud NAT 以获得最优直连、有策略地部署子网路由器，以及通过多可用区部署保证高可用性。
 
-Refer to [Performance best practices][docs-performance-best-practices] for general recommendations.
+一般性建议请参阅[性能最佳实践][docs-performance-best-practices]。
 
-### In-region load balancing
+### 区域内负载均衡
 
-With regional routing, deploy overlapping subnet routers or app connectors in the same [DERP][docs-derp-servers] region for [in-region load balancing][docs-high-availability-region-load-balancing] and redundancy. Tailscale distributes clients on a best-effort basis.
+启用区域路由后，在同一 [DERP][docs-derp-servers] 区域部署相互重叠的子网路由器或应用连接器，即可获得[区域内负载均衡][docs-high-availability-region-load-balancing]与冗余。Tailscale 会以尽力而为的方式分发客户端。
 
-### Recommended instance sizing
+### 推荐的实例规格
 
-When selecting instance types for Tailscale deployments on GCP, the requirements vary significantly based on the role of the instance. For normal Tailscale device usage, the instance type is typically determined by the primary workload rather than Tailscale's minimal resource needs. However, for specialized roles like subnet routers, exit nodes, and app connectors, careful consideration should be given to CPU performance, network bandwidth limits, and instance stability. Below are specific recommendations for different Tailscale deployment scenarios.
+为 GCP 上的 Tailscale 部署选择实例类型时，所需规格因实例角色而有很大差异。对于普通 Tailscale 设备，实例类型通常由主要工作负载决定，而非 Tailscale 的极低资源需求。但对于子网路由器、出口节点和应用连接器等特殊角色，则需要仔细考虑 CPU 性能、网络带宽上限和实例稳定性。以下是针对不同 Tailscale 部署场景的具体建议。
 
-#### Normal usage
+#### 常规用法
 
-When installing Tailscale on a GCE instance as a "normal" Tailscale device (for example, not a subnet router or exit node), you likely have already sized that instance to a suitable instance type for its workload and running Tailscale on it will likely add negligible resource usage.
+如果在 GCE 实例上安装 Tailscale 只是作为"普通"Tailscale 设备（例如并非子网路由器或出口节点），那么该实例的类型大概率已适合其工作负载，在其上运行 Tailscale 带来的资源开销几乎可以忽略不计。
 
-#### Subnet routers, exit nodes, and app connectors
+#### 子网路由器、出口节点与应用连接器
 
-There are many variables that affect performance and workloads vary widely so we do not have specific size recommendations, but we do have general guidance for selecting an instance type for a GCE instance running as a [subnet router][docs-subnets], [exit node][docs-exit-nodes], or [app connector][docs-app-connectors]. In general:
+影响性能的变量很多，工作负载也千差万别，因此我们无法给出具体的规格推荐，但对于以[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]或[应用连接器][docs-app-connectors]身份运行的 GCE 实例，我们有以下一般性选型建议：
 
-* Higher CPU clock speed is more important than more cores.
-* Instances with ARM-based processors are quite cost effective for packet forwarding.
-* Avoid shared-core machine types. These machine types timeshare a physical core and can result in inconsistent performance.
-* Consult Google's [network bandwidth][xt-gcp-network-bandwidth] documentation to better understand per-instance egress and ingress limitations.
+* 更高的 CPU 主频比更多的核心数更重要。
+* 采用 ARM 处理器的实例在数据包转发方面性价比相当高。
+* 避免使用共享核心（shared-core）机器类型。这类机器类型会分时共享物理核心，可能导致性能不稳定。
+* 请查阅 Google 的[网络带宽][xt-gcp-network-bandwidth]文档，以更好地了解单实例的出站和入站带宽限制。
 
-### Security groups
+### 安全组
 
-Tailscale uses various [NAT traversal techniques][bl-how-nat-traversal-works] to safely connect to other Tailscale nodes without manual intervention. Nearly all the time, you do not need to open any [firewall ports][docs-firewalls] for Tailscale. However, if your VPC and security groups are overly restrictive about internet-bound egress traffic, refer to [What firewall ports should I open to use Tailscale][docs-firewall-ports].
+Tailscale 使用各种 [NAT 穿透技术][bl-how-nat-traversal-works]，在无需人工干预的情况下安全地连接其他 Tailscale 节点。绝大多数情况下，你无需为 Tailscale 打开任何[防火墙端口][docs-firewalls]。但如果你的 VPC 和安全组对发往互联网的出站流量限制过严，请参阅[使用 Tailscale 应打开哪些防火墙端口][docs-firewall-ports]。
 
-### Public vs private subnets
+### 公有子网与私有子网
 
-Tailscale devices deployed to a public subnet with a public IP address will benefit from [direct connections][docs-connection-types] between nodes for the best performance.
+部署在拥有公网 IP 地址的公有子网中的 Tailscale 设备可以在节点之间建立[直连][docs-connection-types]，获得最佳性能。
 
 #### Cloud NAT
 
-Tailscale uses both [direct and relayed connections][docs-connection-types], opting for direct connections where possible. Enable [endpoint-independent mapping on Cloud NAT][xt-gcp-nat-endpoint-independent-mapping] to enable direct connections to resources behind NAT.
+Tailscale 同时使用[直连和中继连接][docs-connection-types]，并尽可能优先选择直连。启用 [Cloud NAT 的端点无关映射（endpoint-independent mapping）][xt-gcp-nat-endpoint-independent-mapping]，即可与 NAT 后面的资源建立直连。
 
-### VPC peering and Network Connectivity Center
+### VPC 对等互连与 Network Connectivity Center
 
-Deploy a subnet router (or a set for high availability) within a VPC to allow access to multiple VPCs through [VPC peering][xt-gcp-vpc-peering] or [Network Connectivity Center][xt-gcp-network-connectivity-center].
+在 VPC 内部署子网路由器（或部署多台以实现高可用），即可通过 [VPC 对等互连][xt-gcp-vpc-peering]或 [Network Connectivity Center][xt-gcp-network-connectivity-center]访问多个 VPC。
 
-If you have VPCs or subnets with overlapping IPv4 addresses, use [4via6 subnet routers][docs-4via6-subnets] to access resources with unique IPv6 addresses for each overlapping subnet.
+如果你的 VPC 或子网存在 IPv4 地址重叠，请使用 [4via6 子网路由器][docs-4via6-subnets]，为每个重叠子网分配唯一的 IPv6 地址来访问资源。
 
-### Subnet routers within GKE
+### GKE 中的子网路由器
 
-Oftentimes organizations use Tailscale to connect to and administer their GKE clusters. While Tailscale can [run within a container][docs-userspace-networking] and be deployed to GKE, we recommend running your [subnet routers][docs-subnets] externally to these clusters to ensure connectivity is available in the event your cluster is having issues. In other words, run your subnet router on dedicated GCE instances or a GKE cluster separate from the cluster you're administering.
+很多组织会使用 Tailscale 来连接和管理 GKE 集群。虽然 Tailscale 可以[在容器中运行][docs-userspace-networking]并部署到 GKE，但我们建议把[子网路由器][docs-subnets]运行在这些集群之外，以确保集群出现问题时连接依然可用。换句话说，请把子网路由器运行在专用 GCE 实例上，或运行在独立于被管理集群的另一套 GKE 集群上。
 
-### Linux VMs using exit nodes
+### 使用出口节点的 Linux VM
 
-> **Note:**
+> **注意：**
 >
-> This is no longer required for Tailscale v1.96 or later.
+> Tailscale v1.96 及更高版本已不再需要此操作。
 
-There is a [known GitHub issue][xt-gh-tailscale-issue-3310] that Linux instances with reverse path filtering (RPF) strict mode enabled can prevent packets from being forwarded to a Tailscale exit node as well as potentially breaking all egress connectivity from the VM, including to the Tailscale control plane. GCP specifically sets RPF with strict mode enabled on most Linux VMs by using the `sysctl` command `net.ipv4.conf.all.rp_filter = 1` in the file `/etc/sysctl.d/60-gce-network-security.conf`.
+目前有一个[已知的 GitHub issue][xt-gh-tailscale-issue-3310]：启用了反向路径过滤（reverse path filtering，RPF）严格模式的 Linux 实例，会阻止数据包转发到 Tailscale 出口节点，还可能破坏 VM 的所有出站连接，包括到 Tailscale 控制平面的连接。GCP 会通过在 `/etc/sysctl.d/60-gce-network-security.conf` 文件中设置 `sysctl` 命令 `net.ipv4.conf.all.rp_filter = 1`，在大多数 Linux VM 上默认启用 RPF 严格模式。
 
-While setting an exit node by using the `--exit-node` flag, normally the `tailscaled` daemon on the machine will add a warning to the local `syslog` but still end up setting the exit node and break connectivity.
+使用 `--exit-node` 标志设置出口节点时，机器上的 `tailscaled` 守护进程通常会在本地 `syslog` 中写入一条警告，但仍会照常设置出口节点并破坏连接性。
 
-The error log usually looks like this:
+报错日志通常如下所示：
 
 ```shell
 error: Exit node misconfiguration: The following issues on your machine will
@@ -137,23 +137,23 @@ enabled], please set rp_filter=2 instead of rp_filter=1;
 see https://github.com/tailscale/tailscale/issues/3310
 ```
 
-In this case, if you are accessing the VM remotely using SSH, you will immediately lose the session before the warning is displayed and will not know the root cause of why the VM has lost all network connectivity.
+这种情况下，如果你正通过 SSH 远程访问 VM，警告还没显示出来会话就会立即断开，你也就无从得知 VM 失去全部网络连接的根本原因。
 
-To work around this issue, you can disable RPF strict mode on the Linux instance by setting the `sysctl` values to `2` which uses loose mode. Set `net.ipv4.conf.all.rp_filter = 2` and `net.ipv4.conf.default.rp_filter = 2` in the file `/etc/sysctl.d/60-gce-network-security.conf` and reload `sysctl` with `sysctl -p /etc/sysctl.d/60-gce-network-security.conf` to verify that the values have been updated before setting the flag to make the instance use an exit node.
+要规避这个问题，你可以把 `sysctl` 值设为 `2`（宽松模式），从而在 Linux 实例上禁用 RPF 严格模式。在 `/etc/sysctl.d/60-gce-network-security.conf` 文件中设置 `net.ipv4.conf.all.rp_filter = 2` 和 `net.ipv4.conf.default.rp_filter = 2`，然后用 `sysctl -p /etc/sysctl.d/60-gce-network-security.conf` 重新加载 `sysctl` 并确认值已更新，之后再设置标志让实例使用出口节点。
 
-### Tailscale SSH session recording
+### Tailscale SSH 会话录制
 
-Deploy [multiple session recorder instances][docs-multiple-recorder-nodes] across multiple availability zones to improve resiliency against zone failures. If your organization operates across multiple regions, consider deploying SSH session recording nodes in each region you operate and [configure SSH access rules][docs-tailscale-ssh-session-turn-on] to send recording information to the local region for your nodes.
+跨多个可用区部署[多个会话录制器实例][docs-multiple-recorder-nodes]，以提高对可用区故障的抵御能力。如果你的组织跨多个区域运营，请考虑在每个运营区域部署 SSH 会话录制节点，并[配置 SSH 访问规则][docs-tailscale-ssh-session-turn-on]，让节点把录制信息发送到所在区域。
 
-[ar-agent-to-agent-connectivity]: #agent-to-agent-connectivity
+[ar-agent-to-agent-connectivity]: #代理到代理连接
 
-[ar-cloud-run-and-other-container-services]: #cloud-run-and-other-container-services
+[ar-cloud-run-and-other-container-services]: #cloud-run-及其他容器服务
 
-[ar-dns-routing-with-app-connector]: #dns-based-routing-with-an-app-connector
+[ar-dns-routing-with-app-connector]: #通过应用连接器实现基于-dns-的路由
 
-[ar-services-and-api-proxy]: #kubernetes-services-and-api-server-proxy-with-tailscale-kubernetes-operator
+[ar-services-and-api-proxy]: #tailscale-kubernetes-operator-的-kubernetes-服务与-api-服务器代理
 
-[ar-subnet-router-ip-connect]: #ip-based-connectivity-with-subnet-router
+[ar-subnet-router-ip-connect]: #通过子网路由器实现基于-ip-的连接
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

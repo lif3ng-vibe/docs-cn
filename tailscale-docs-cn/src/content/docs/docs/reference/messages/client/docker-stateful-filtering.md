@@ -1,42 +1,42 @@
 ---
-title: "Docker with stateful filtering"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "Docker 有状态过滤"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Dec 29, 2025
+最后验证于 Dec 29, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Docker with stateful filtering
 Stateful filtering is enabled and Docker was detected; this may prevent Docker containers on this host from resolving DNS and connecting to Tailscale nodes.
 
-## Reference ID
+## 参考 ID
 
 `docker-stateful-filtering`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-Stateful filtering occurs when a firewall tracks active connections and only lets traffic that is part of an established, approved connection. For example, the firewall permits a response because a node or device sent a request. When you configure Docker with its own firewall rules, such as iptables, they can conflict with the firewall or routing rules set by Tailscale, which may lead to connectivity issues or warnings like this message.
+有状态过滤是指防火墙跟踪活动连接，只放行属于已建立且已获批准连接的流量。例如，因为某个节点或设备发出过请求，防火墙才放行其响应。当你为 Docker 配置自己的防火墙规则（如 iptables）时，这些规则可能与 Tailscale 设置的防火墙或路由规则冲突，从而导致连接问题或出现这条消息之类的警告。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Disable Docker's iptables management, using the command `sudo dockerd --iptables=false`.
-* Use Tailscale Serve or Tailscale Funnel to expose services securely without relying on Docker port mappings.
-* Use the Tailscale CLI command `tailscale set --stateful-filtering=false` option to prevent dropping of inbound packets with another node's destination IP.
-* Use the Tailscale CLI command `tailscale up --netfilter-mode=off` in advanced setups where you're manually managing all iptables rules. Refer to [netfilter modes][docs-netfilter-mode] for more information.
-* Add custom iptables rules that allow Tailscale traffic, especially `ESTABLISHED` and `RELATED` connection states.
-* Verify routing and NAT behavior with tools like `iptables -L -v` and `tailscale netcheck`.
+* 使用命令 `sudo dockerd --iptables=false` 禁用 Docker 的 iptables 管理。
+* 使用 Tailscale Serve 或 Tailscale Funnel 安全地暴露服务，而不依赖 Docker 端口映射。
+* 使用 Tailscale CLI 命令 `tailscale set --stateful-filtering=false` 选项，避免丢弃目标 IP 为其他节点的入站数据包。
+* 在手动管理全部 iptables 规则的高级场景中，使用 Tailscale CLI 命令 `tailscale up --netfilter-mode=off`。更多信息请参阅 [netfilter 模式][docs-netfilter-mode]。
+* 添加允许 Tailscale 流量的自定义 iptables 规则，尤其是 `ESTABLISHED` 和 `RELATED` 连接状态。
+* 使用 `iptables -L -v`、`tailscale netcheck` 等工具核查路由与 NAT 行为。
 
-## Additional information
+## 更多信息
 
-* For information about configuring firewall rules in Docker, refer to [Packet filtering and firewalls][xt-docker-firewall-config].
-* For information about setting up Tailscale Serve, refer to [Tailscale Serve][docs-serve].
-* For information about setting up Tailscale Funnel, refer to [Tailscale Funnel][docs-funnel].
-* For information about Tailscale commands, refer to [Tailscale CLI][docs-cli].
+* 有关在 Docker 中配置防火墙规则的信息，请参阅 [数据包过滤与防火墙][xt-docker-firewall-config]。
+* 有关设置 Tailscale Serve 的信息，请参阅 [Tailscale Serve][docs-serve]。
+* 有关设置 Tailscale Funnel 的信息，请参阅 [Tailscale Funnel][docs-funnel]。
+* 有关 Tailscale 命令的信息，请参阅 [Tailscale CLI][docs-cli]。
 
 [docs-cli]: /docs/reference/tailscale-cli
 

@@ -1,0 +1,345 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "沙箱运行时"
+sidebar-title: "运行时"
+description: "配置运行 OpenShell 沙箱的 Docker、Podman、MicroVM 或 Kubernetes 运行时。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, Docker, Podman, MicroVM, Kubernetes, MXC, 参考"
+position: 4
+---
+import { Aside } from '@astrojs/starlight/components';
+
+每个网关在一个计算运行时（runtime）上运行智能体工作负载，运行时由其计算驱动选定。请选择与所需的隔离边界和基础设施相匹配的运行时。CLI 工作流在各运行时之间保持一致：你通过网关创建、连接、停止、启动与删除沙箱。
+
+主进程重启策略归网关所有。Docker、Podman、Kubernetes 与 MicroVM 的原生重启机制保持禁用。策略选择替换时，网关会停止再启动计算资源，同时保留沙箱记录与驱动支持的持久存储。
+
+| 运行时 | 驱动 | 适用场景 |
+|---|---|---|
+| [Docker](#docker-驱动) | `docker` | 本地开发与单机网关。 |
+| [Podman](#podman-驱动) | `podman` | 没有 Docker 守护进程的无 root Linux 工作站。 |
+| [MicroVM](#microvm-驱动) | `vm` | 工作负载需要 VM 边界而非容器边界。 |
+| [Kubernetes](#kubernetes-驱动) | `kubernetes` | 共享集群、远程计算与 GPU 调度。 |
+| Windows MXC | `mxc` | 即将推出。 |
+
+## 选择计算驱动
+
+在网关 TOML 文件中设置 `compute_driver`。一个网关同一时间只使用一个驱动。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+compute_driver = "docker"
+```
+
+每个网关 TOML 文件必须以 `[openshell]` 表和 `version = 2` 开头，否则 `openshell-gateway config preflight` 会以 `missing_version` 拒绝它。本页其余示例只展示其改动的表。
+
+`compute_driver` 未设置时，网关按 Kubernetes、Podman、Docker 的顺序自动检测。VM 驱动永远不会被自动检测。
+
+镜像、端点与容量规格等驱动专属的值在 `[openshell.drivers.<name>]` 下配置。全部选项参见[网关配置文件](/how-it-works/gateways/configuration)参考。
+
+Docker、Podman 与 Kubernetes 还接受通过 `OPENSHELL_SANDBOX_RUNTIME_IMAGE` 与 `OPENSHELL_SUPERVISOR_IMAGE` 对受信任的沙箱运行时镜像与监管器镜像做进程级覆盖。环境变量覆盖所选驱动 TOML 表中的值，驱动 TOML 覆盖编译期发布默认值。Helm 会把 Kubernetes 镜像字段渲染进 TOML，因此这些环境变量未设置时它们同样生效。沙箱请求不能覆盖任一受信任镜像。
+
+自行构建网关或监管器镜像时，`GATEWAY_BASE_IMAGE` 与 `SUPERVISOR_BASE_IMAGE` 构建参数可覆盖固定的基础镜像。构建命令与基础镜像兼容性要求参见 [Container Image Base Overrides](https://github.com/NVIDIA/OpenShell/blob/main/CONTRIBUTING.md#container-image-base-overrides)。
+
+对启用 TLS 的 Docker、Podman 与 MicroVM 网关，请在 `[openshell.gateway]` 中设置 `guest_tls_ca`，或使用软件包管理的本地 CA。移除已废弃的 `guest_tls_cert` 与 `guest_tls_key` 字段。监管器只接收 CA，并用沙箱 Bearer 令牌认证网关 RPC。Kubernetes 只从其配置的 TLS Secret 投影或暂存网关 CA；用户客户端证书与私钥留在沙箱边界之外。
+
+### 扩展驱动
+
+内置驱动以外的任何名称都会选择扩展驱动（extension driver）。把网关指向驱动监听的 Unix socket：
+
+```toml
+[openshell.gateway]
+compute_driver = "kyma"
+
+[openshell.drivers.kyma]
+socket_path = "/run/openshell/kyma.sock"
+```
+
+网关不会启动或监管扩展驱动。请限制该 socket 的权限，使只有网关用户可以访问。
+
+## 为沙箱设定规格
+
+在 `openshell sandbox create` 上使用 `--cpu`、`--memory` 与 `--gpu` 请求资源。单独的 `--gpu` 请求一个 GPU；`--gpu COUNT` 请求更多。
+
+| 驱动 | CPU 与内存 | GPU |
+|---|---|---|
+| Docker、Podman | 运行时限制 | NVIDIA CDI 设备 |
+| Kubernetes | 容器 request 与 limit | `nvidia.com/gpu` 资源限制 |
+| MicroVM | 忽略；使用 `vcpus` 与 `mem_mib` | 通过 `gpu_device_ids` 使用一个 GPU |
+
+## 传入驱动配置
+
+`--driver-config-json` 传入没有专属参数的驱动设置。该值是以驱动名为键的 JSON 对象，网关只转发活动驱动对应的块：
+
+```shell
+openshell sandbox create \
+  --from registry.example.com/team/claude-code:1.0 \
+  --driver-config-json '{"kubernetes":{"pod":{"runtime_class_name":"kata-containers"}}}' \
+  -- claude
+```
+
+驱动配置默认禁用。在该驱动的网关配置中用 `allow_driver_config = true` 启用。卷等挂接的资源必须携带运维批准的标签。参见[外部资源准入](/how-it-works/gateways/configuration#外部资源准入)。
+
+要固定具体 GPU，对 Docker 或 Podman 传入 `cdi_devices`，对 MicroVM 传入 `gpu_device_ids`，并同时带上 `--gpu`：
+
+```shell
+--gpu --driver-config-json '{"docker":{"cdi_devices":["nvidia.com/gpu=0"]}}'
+--gpu --driver-config-json '{"vm":{"gpu_device_ids":["0000:2d:00.0"]}}'
+```
+
+## Docker 驱动
+
+[Docker](https://www.docker.com/get-started/) 把沙箱作为容器运行在 Docker 守护进程宿主机上。网关通过其配置的 Unix socket 访问守护进程。
+
+```toml
+[openshell.gateway]
+compute_driver = "docker"
+
+[openshell.drivers.docker]
+socket_path = "/var/run/docker.sock"
+```
+
+`[openshell.drivers.docker]` 的常用选项有 `socket_path`、`grpc_endpoint`、`supervisor_network_mode`、`host_gateway_ip`、`sandbox_runtime_image`、`supervisor_image`、`image_pull_policy` 与 `sandbox_pids_limit`。`socket_path` 未设置时，驱动使用自动检测到的 socket。
+
+`supervisor_network_mode` 默认为 `host`。设为 `bridge` 可使用 Docker bridge 网络；`auto` 同样选择 host。工作负载始终保持 `network=none`。
+
+Docker Desktop 上的 host 模式要求启用宿主机网络。bridge 模式对 Desktop 宿主机上的网关自动使用 `host.docker.internal`。在原生 Linux 上，网关与宿主机服务必须监听 bridge 可达的地址。远程网关、重映射的发布端口或其他自定义布局请设置 `grpc_endpoint`。端点选择保留 TLS 校验，且不改变网关的监听器。参见 [Docker 配置](/how-it-works/gateways/configuration#docker)。
+
+bridge 模式下 OpenShell 自动发现 Docker 的宿主机地址。只有需要覆盖发现结果时才设置 `host_gateway_ip`。
+
+无论哪种网络模式，沙箱都必须通过 Landlock 与 seccomp 资格检查。GPU 沙箱需要在启动网关之前配置 Docker CDI。
+
+### Docker 企业代理出站
+
+对要求走代理的网络，Docker 驱动接受 `https_proxy`、`no_proxy`、`proxy_auth_file`、`proxy_auth_allow_insecure`、`proxy_connect_by_hostname` 与 `proxy_ca_bundle`。配套监管器通过代理以 HTTP CONNECT 串接策略批准的 TLS 隧道。
+
+`proxy_ca_bundle` 是运维所有的网关宿主机 PEM 路径。Docker 校验后把该包复制进仅供监管器使用的命名卷，因此远程 Docker 守护进程同样可用，也不会把宿主机路径暴露给工作负载。监管器把该包用于 HTTPS 代理连接，以及用于被 TLS 拦截代理重签的上游证书。工作负载进程通过生成的组合信任包获得同样的企业根证书。
+
+沙箱环境、镜像内容与 `template.driver_config.docker` 都不能更改这些设置。无效的代理关系或 CA 文件会阻止网关或沙箱启动，且绝不降级为直连出站。URL、认证、`NO_PROXY`、主机名 CONNECT 与 CA 校验细节参见[网关配置文件](/how-it-works/gateways/configuration)。
+
+### Docker 挂载
+
+通过驱动配置挂载已有的命名卷或 `tmpfs`。为卷打标签，使资源准入接受它们：
+
+```shell
+docker volume create --label openshell.ai/sandbox-attachable=true \
+  --label openshell.ai/sandbox-attachable-workspace=default openshell-work
+
+openshell sandbox create \
+  --from registry.example.com/team/claude-code:1.0 \
+  --driver-config-json '{"docker":{"mounts":[{"type":"volume","source":"openshell-work","target":"/sandbox/work","read_only":false}]}}' \
+  -- claude
+```
+
+| 类型 | 字段 |
+|---|---|
+| `volume` | `source`、`target`，可选 `read_only`（默认 `true`），可选 `subpath`。 |
+| `tmpfs` | `target`，可选 `options`、`size_bytes`、`mode`。 |
+| `bind` | `source`（绝对宿主机路径）、`target`，可选 `read_only`（默认 `true`），可选 `selinux_label`。 |
+
+<Aside type="caution">
+bind 挂载把网关宿主机的文件暴露给沙箱，可能绕过工作区隔离与文件系统策略。它们需要 `enable_bind_mounts = true`，并为该驱动禁用资源准入：
+
+```toml
+[openshell.drivers.docker]
+allow_driver_config = true
+enable_bind_mounts = true
+
+[openshell.drivers.docker.resource_admission]
+enabled = false
+```
+
+</Aside>
+
+挂载目标不能替换工作区根、容器根，以及 `/opt/openshell`、`/etc/openshell` 与 `/run/openshell` 下的 OpenShell 路径。
+
+## Podman 驱动
+
+[Podman](https://podman.io/) 把沙箱作为无 root 容器运行在网关宿主机上。它要求 Podman 5.x、cgroups v2 与活动的 Podman 用户 socket：
+
+```shell
+systemctl --user start podman.socket
+```
+
+```toml
+[openshell.gateway]
+compute_driver = "podman"
+```
+
+`[openshell.drivers.podman]` 的常用选项有 `socket_path`、`network_name`、`sandbox_runtime_image`、`supervisor_image`、`image_pull_policy`、`stop_timeout_secs` 与 `grpc_endpoint`。`socket_path` 未设置时，驱动会自动寻找 socket，包括 macOS 上的 `podman machine` socket。
+
+在 macOS 上，只有当 Podman machine 使用非标准宿主机回环地址时才设置 `host_gateway_ip`。网关为远程时设置 `grpc_endpoint`。
+
+要求企业代理的网络请设置 `https_proxy`、`no_proxy` 与相关 `proxy_*` 选项。参见[网关配置文件](/how-it-works/gateways/configuration)参考。
+
+要在没有企业代理的情况下信任私有 CA，以支持直连但经策略检查的 HTTPS 出站——例如监管器容器无法继承烘焙进工作负载镜像的私有 CA——请设置 `additional_ca_bundle`。监管器与工作负载都会为所有目的地信任该 CA，因此请使用你掌控的 CA。细节参见[网关配置文件](/how-it-works/gateways/configuration)参考。
+
+### Podman 挂载
+
+Podman 支持与 [Docker](#docker-挂载) 相同的 `volume`、`tmpfs` 与 `bind` 挂载，在驱动配置中使用 `podman` 键，同样的 bind 挂载警告也适用。Podman 的 `volume` 挂载不支持 `subpath`。
+
+Podman 还支持 `image` 挂载，把容器镜像以只读方式挂载到 `target`。镜像挂载要求禁用资源准入。
+
+## MicroVM 驱动
+
+MicroVM 驱动在各自的轻量级 VM 中运行每个沙箱。它要求宿主机虚拟化：macOS 上的 Apple Hypervisor 或 Linux 上的 KVM。
+
+VM 驱动需要显式启用。在网关 TOML 文件中启用：
+
+```toml
+[openshell.gateway]
+compute_driver = "vm"
+
+[openshell.drivers.vm]
+default_image = "registry.example.com/team/agent-base:1.0"
+vcpus = 4
+mem_mib = 8192
+```
+
+也可以在网关环境中设置 `OPENSHELL_COMPUTE_DRIVER=vm`。
+
+`[openshell.drivers.vm]` 的常用选项有 `default_image`、`bootstrap_image`、`vcpus`、`mem_mib`、`overlay_disk_mib`、`state_dir` 与 `grpc_endpoint`。默认镜像为 `nvcr.io/nvidia/base/ubuntu:24.04`。请使用包含你的工作负载所需智能体与工具的镜像。
+
+驱动在从镜像仓库拉取之前，会先在本地 Docker 或 Podman 中查找沙箱镜像。Linux 上使用 Podman 时，请启动 `podman.socket`，让驱动能找到本地镜像。
+
+镜像仓库下载必须与解析出的镜像摘要一致，多平台镜像还包括所选平台。不匹配会导致镜像准备失败。升级后，驱动会在首次使用时重建较旧的 bootstrap 与已准备镜像缓存条目，因此第一次沙箱启动可能耗时更长。
+
+VM 沙箱没有网络接口。所有流量都经过宿主机上的 OpenShell 监管器。要求企业代理的网络，VM 驱动接受与 Podman 相同的 `https_proxy` 与 `proxy_*` 选项。要访问网关宿主机上的代理，使用 `http://host.openshell.internal:<port>`。
+
+VM 启动期间网关短暂不可用时，其监管器会重试会话连接。在网关接受会话之前，沙箱保持在预置阶段。
+
+### MicroVM 停止持久性
+
+在主进程运行时执行 `openshell sandbox stop`，OpenShell 会先终止工作负载并冲刷 guest 根文件系统，然后确认终止。guest 最多等待 3 秒完成冲刷。宿主机允许监管器最多 22 秒完成关闭，之后最多 5 秒停止 VM。
+
+冲刷错误与超时会产生警告，同时关闭继续进行。信号杀死监管器时，驱动会警告 guest 冲刷未确认、最近的写入可能丢失。冲刷失败或超时之后，完成的停止不保证持久化。主进程已退出之后的停止不在该冲刷的覆盖范围内。
+
+### MicroVM 挂载
+
+VM 驱动用 virtiofs 把网关宿主机目录共享进 guest。`mounts` 中的每个条目接受 `source`（绝对宿主机目录）、`target`、可选 `read_only`（默认 `true`）与可选 `type`；`type` 必须为 `bind`，使 Docker 与 Podman 的 bind 条目无需改动即可工作：
+
+```shell
+openshell sandbox create \
+  --driver-config-json '{"vm":{"mounts":[{"type":"bind","source":"/srv/datasets","target":"/sandbox/datasets"}]}}' \
+  -- claude
+```
+
+在 arm64 网关宿主机上，每个沙箱最多 32 个挂载；在 x86_64 宿主机上最多 3 个。不支持单文件来源、符号链接来源、`selinux_label` 与其他挂载类型。VM 挂载只在 libkrun 后端下工作，因此 GPU 沙箱无法使用它们。
+
+<Aside type="caution">
+VM bind 挂载把宿主机文件暴露给沙箱工作负载。此外，libkrun 不会把被攻破的 guest 内核限制在配置的源目录内；它可能访问网关用户权限允许的其他宿主机文件。VM 挂载需要与 [Docker bind 挂载](#docker-挂载)相同的显式启用：
+
+```toml
+[openshell.drivers.vm]
+allow_driver_config = true
+enable_bind_mounts = true
+
+[openshell.drivers.vm.resource_admission]
+enabled = false
+```
+
+</Aside>
+
+目标不能替换工作区根、OpenShell 路径或 VM 内部路径（如 `/tmp`、`/proc`、`/dev` 与 `/srv`），也不能相互嵌套。guest 会拒绝经过镜像内符号链接的目标。
+
+在 Linux 上以非 root 运行网关时，只有沙箱的 UID 与 GID 匹配网关用户，它才能在读写挂载中创建文件。请在 `[openshell.drivers.vm]` 下设置 `sandbox_uid` 与 `sandbox_gid` 来匹配。否则沙箱无法创建文件，其对已有文件的访问遵循其数字 UID 与 GID 对应的宿主机权限位。
+
+## Kubernetes 驱动
+
+Kubernetes 驱动把沙箱作为 Pod 运行在沙箱命名空间中。它要求 [Agent Sandbox](https://github.com/kubernetes-sigs/agent-sandbox) controller。请用 Helm chart 安装网关；参见 [Kubernetes 安装](/kubernetes/setup)。
+
+<Aside type="caution">
+集群 CNI 必须在每个沙箱命名空间中强制执行 `NetworkPolicy`。没有它，沙箱 Pod 可以绕过 OpenShell 网络策略。
+
+只有 OpenShell 网关与 Agent Sandbox controller 应能管理这些命名空间中的沙箱 Pod 与沙箱 ServiceAccount。
+</Aside>
+
+| 网关选项 | Helm 值 | 说明 |
+|---|---|---|
+| `namespace` | `server.sandboxNamespace` | 沙箱资源的命名空间。默认为 release 命名空间。 |
+| `service_account_name` | `sandboxServiceAccount.name` | 沙箱 Pod 的 ServiceAccount。 |
+| `default_image` | `sandbox.image.repository` / `.tag` / `.digest` | 默认沙箱镜像。 |
+| `image_pull_policy` | `sandbox.image.pullPolicy` | `always`、`if_not_present` 或 `never`。 |
+| `image_pull_secrets` | `server.sandboxImagePullSecrets` | 沙箱 Pod 的镜像拉取 Secret。 |
+| `grpc_endpoint` | `server.grpcEndpoint` | 沙箱 Pod 可达的网关端点。 |
+| `client_tls_secret_name` | `server.tls.clientTlsSecretName` | 只把 `ca.crt` 投影或暂存进监管器 Pod，用于认证网关。 |
+| `sandbox_runtime_image` | `sandboxRuntime.image.*` | 覆盖沙箱运行时镜像。 |
+| `supervisor_image` | `supervisor.image.*` | 覆盖监管器镜像。 |
+| `workspace_default_storage_size` | `server.workspaceDefaultStorageSize` | 默认工作区 PVC 大小。 |
+| `workspace_storage_class` | `server.workspaceStorageClass` | 工作区 PVC 的 `StorageClass`。集群没有默认 `StorageClass` 时请设置。 |
+| `allowed_pod_annotations` | `gatewayConfig["openshell.drivers.kubernetes"].allowed_pod_annotations` | 沙箱模板可设置的 Pod 注解键，可以是精确键或 `<domain>/*` 通配。为空（默认）时拒绝所有模板注解。`openshell.ai` 与 `agents.x-k8s.io` 下的键是保留键，不能加入允许列表。 |
+| `allowed_pod_labels` | `gatewayConfig["openshell.drivers.kubernetes"].allowed_pod_labels` | 沙箱模板可设置的 Pod 标签键，格式与 `allowed_pod_annotations` 相同。为空（默认）时拒绝所有模板标签。标签会为 NetworkPolicy 规则与 Service 选中 Pod，因此只允许沙箱命名空间中没有其他规则基于其选择的键。 |
+| `sandbox_uid` / `sandbox_gid` | `server.sandboxUid` / `server.sandboxGid` | 沙箱 Pod 的 UID 与 GID。优先于 OpenShift SCC 命名空间注解。`sandbox_gid` 默认取 UID。 |
+| `https_proxy` | `upstreamProxy.url` | 沙箱出站的企业代理。 |
+| `no_proxy` | `upstreamProxy.noProxy` | 绕过企业代理的目的地。 |
+| `proxy_auth_secret_name` / `proxy_auth_secret_key` | `upstreamProxy.authSecret.name` / `.key` | 保存代理 `user:pass` 凭据的 Secret。 |
+| `proxy_ca_bundle` | `upstreamProxy.caBundle.configMapName` / `.key` | 含代理 CA 证书的 ConfigMap。 |
+
+完整列表参见[网关配置文件](/how-it-works/gateways/configuration)参考。
+
+在 OpenShift 上，把集群代理的 CA 复制到网关命名空间，并把 `upstreamProxy.caBundle.configMapName` 设为 `corporate-proxy-ca`：
+
+```shell
+CORP_CA=$(oc get proxy/cluster -o jsonpath='{.spec.trustedCA.name}')
+oc -n openshift-config get cm "$CORP_CA" -o jsonpath='{.data.ca-bundle\.crt}' > corp-ca.pem
+oc -n openshell create configmap corporate-proxy-ca --from-file=ca.crt=corp-ca.pem
+```
+
+升级 Agent Sandbox 之后，重启网关。
+
+<Aside type="note">
+工作区存储设置在沙箱创建后无法更改。要更改请删除并重建沙箱。
+</Aside>
+
+### Kubernetes PVC 挂载
+
+通过驱动配置把已有的 PersistentVolumeClaim 挂载进 agent 容器。`/sandbox` 之下的任何挂载都会替换该沙箱的默认工作区 PVC。
+
+```shell
+openshell sandbox create \
+  --from registry.example.com/team/claude-code:1.0 \
+  --driver-config-json '{
+    "kubernetes": {
+      "volumes": [{
+        "name": "user-data",
+        "persistent_volume_claim": {"claim_name": "pvc-user-data-123", "read_only": false}
+      }],
+      "containers": {
+        "agent": {
+          "volume_mounts": [
+            {"name": "user-data", "mount_path": "/sandbox/.openshell/workspace", "sub_path": "workspace", "read_only": false}
+          ]
+        }
+      }
+    }
+  }' \
+  -- claude
+```
+
+| 字段 | 说明 |
+|---|---|
+| `volumes[].name` | 卷名。 |
+| `volumes[].persistent_volume_claim.claim_name` | 沙箱命名空间中已有的 PVC。 |
+| `volumes[].persistent_volume_claim.read_only` | 默认为 `true`。 |
+| `containers.agent.volume_mounts[].name` | 要挂载的卷。 |
+| `containers.agent.volume_mounts[].mount_path` | agent 容器内的绝对路径。 |
+| `containers.agent.volume_mounts[].sub_path` | PVC 内的相对路径（可选）。 |
+| `containers.agent.volume_mounts[].read_only` | 默认为 `true`。读写挂载要求卷本身可读写。 |
+
+## 沙箱用户身份
+
+在 Docker 与 Podman 上，在创建策略中设置 `process.run_as_user` 与 `process.run_as_group` 来选择沙箱用户。选择器接受 `sandbox` 或 `1` 到 `4294967294` 的数字 ID。Kubernetes 与 MicroVM 通过驱动配置选择身份。字段未设置时由驱动提供：
+
+| 驱动 | 默认身份 |
+|---|---|
+| Docker、Podman | 镜像的 `USER`，否则 `1000`。 |
+| Kubernetes | OpenShift SCC 命名空间注解，否则 `1000`。可用 `sandbox_uid` 与 `sandbox_gid` 覆盖。 |
+| MicroVM | 镜像的 `sandbox` 账户，否则 `1000`。可用 `sandbox_uid` 与 `sandbox_gid` 覆盖。 |
+
+MicroVM 把解析出的 UID:GID 与可写 overlay 一起持久化，并在重启后保持，即使驱动默认值发生变化。显式策略选择器必须匹配该身份。例如 overlay 属主为 `1000:1000` 时，`run_as_user: "10000"` 会失败；OpenShell 报告两个值但不改变文件属主。符号选择器 `sandbox` 指该属主对应的 guest 账户，省略的选择器各自接受驱动默认值。`openshell sandbox get <name>` 中的 `WorkloadIdentity` 条件会与工作负载就绪状态分开显示解析出的 UID:GID 对。规范进程与 exec 进程使用同一对值；实时策略更新无法更改它。
+
+在 Docker 与 Podman 上，镜像的 `WORKDIR` 成为工作区。没有 `WORKDIR`、为 `/` 或为 `/sandbox` 的镜像使用 `/sandbox`。其他 `WORKDIR` 必须存在于镜像中且沙箱用户可写。Kubernetes 与 MicroVM 始终使用 `/sandbox`。
+
+自定义的 Docker 与 Podman 工作区使用工作负载容器的可写层，而不是受管理的命名卷。文件在同一容器的停止/启动中幸存，但移除或替换该容器会移除其工作区变更。删除沙箱之前，先导出需要保留的文件。

@@ -1,45 +1,45 @@
 ---
-title: "Access a Kubernetes cluster using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] gives users identity-based access to Kubernetes clusters without requiring them to manage cluster credentials or maintain and distribute `kubeconfig` files."
+title: "使用 Tailscale PAM 访问 Kubernetes 集群"
+description: "[Tailscale PAM][docs-pam] 让用户获得对 Kubernetes 集群的、基于身份的访问，而无需他们管理集群凭证，也无需维护和分发 `kubeconfig` 文件。"
 ---
 
-Last validated Aug 19, 2026
+最后验证于 Aug 19, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] gives users identity-based access to Kubernetes clusters without requiring them to manage cluster credentials or maintain and distribute `kubeconfig` files.
+[Tailscale PAM][docs-pam] 让用户获得对 Kubernetes 集群的、基于身份的访问，而无需他们管理集群凭证，也无需维护和分发 `kubeconfig` 文件。
 
-Users use their [Tailscale identity][docs-tailscale-identity] to access the Kubernetes cluster, and the PAM [connector][docs-pam-connectors] communicates with the Kubernetes API on their behalf. You can use Tailscale PAM [grants][docs-grants] in your tailnet access policy to control what each user or group is allowed to do, including which Kubernetes API operations, namespaces, and resources they can access.
+用户使用其 [Tailscale 身份][docs-tailscale-identity]访问 Kubernetes 集群，PAM [连接器][docs-pam-connectors]代表他们与 Kubernetes API 通信。你可以使用 tailnet 访问策略中的 Tailscale PAM [授权（grant）][docs-grants]来控制每个用户或组能做什么，包括可以访问哪些 Kubernetes API 操作、命名空间和资源。
 
-Users can keep working with the Kubernetes tools they already use, including `kubectl`, Lens, K9s, and other Kubernetes clients. They can also use the Tailscale [Border0 web client](https://my.tailscale.com) to interact with the cluster directly from their browser.
+用户可以继续使用他们已经在用的 Kubernetes 工具，包括 `kubectl`、Lens、K9s 和其他 Kubernetes 客户端。他们也可以使用 Tailscale 的 [Border0 web 客户端](https://my.tailscale.com)直接从浏览器与集群交互。
 
-## Supported Kubernetes service types
+## 受支持的 Kubernetes 服务类型
 
-Tailscale PAM supports a few different ways to connect to Kubernetes. Choose the service type that matches where your connector runs and how it reaches the cluster:
+Tailscale PAM 支持几种不同的 Kubernetes 连接方式。请根据连接器的运行位置及其访问集群的方式选择服务类型：
 
-* **Kubernetes - Standard**: Use this for a Kubernetes cluster that the connector can already reach and authenticate to. This works with self-managed Kubernetes as well as managed Kubernetes services.
-* **Kubernetes - AWS EKS within cluster**: Use this when the PAM connector runs inside the EKS cluster you want to access. If the connector runs inside the cluster, it can use its in-cluster configuration and service account.
-* **Kubernetes - AWS EKS outside cluster**: Use this when the PAM connector runs outside the EKS cluster and uses AWS credentials to discover and authenticate to it. If it runs outside the cluster, it needs a network path to the Kubernetes API and credentials that the cluster accepts.
+* **Kubernetes - Standard**：用于连接器已经能够访问并向其认证的 Kubernetes 集群。既适用于自建 Kubernetes，也适用于托管的 Kubernetes 服务。
+* **Kubernetes - AWS EKS within cluster**：当 PAM 连接器运行在你想要访问的 EKS 集群内部时使用。如果连接器在集群内运行，它可以使用集群内配置及其服务账户。
+* **Kubernetes - AWS EKS outside cluster**：当 PAM 连接器在 EKS 集群之外运行并使用 AWS 凭证来发现集群并向其认证时使用。如果在集群外运行，它需要一条通往 Kubernetes API 的网络路径，以及集群认可的凭证。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have:
+开始之前，确保你具备以下条件：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* A connector that can communicate with the Kubernetes API for the cluster.
-* A Kubernetes identity for the connector with the permissions required for the operations users will do.
-* Tailscale installed and signed in on the device you'll use to connect, if you plan to use `kubectl` or another local Kubernetes client.
-* A Tailscale PAM [grant][docs-grants] that gives users access to the Kubernetes PAM service.
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 一台能与该集群的 Kubernetes API 通信的连接器。
+* 为连接器准备的一个 Kubernetes 身份，具有用户将要执行的操作所需的权限。
+* 如果打算使用 `kubectl` 或其他本地 Kubernetes 客户端，你用来连接的设备上需已安装 Tailscale 并登录。
+* 一条让用户能访问该 Kubernetes PAM 服务的 Tailscale PAM [授权][docs-grants]。
 
-For an EKS cluster with the connector running outside the cluster, the connector also needs an AWS identity that can discover and authenticate to the EKS cluster.
+对于连接器在集群外运行的 EKS 集群，连接器还需要一个能够发现 EKS 集群并向其认证的 AWS 身份。
 
-## Configure Kubernetes permissions for the connector
+## 为连接器配置 Kubernetes 权限
 
-The PAM connector is what communicates with the Kubernetes API, so it needs enough Kubernetes permissions to do the operations you want users to be able to do.
+与 Kubernetes API 通信的是 PAM 连接器，因此它需要足够的 Kubernetes 权限来执行你希望用户能够进行的操作。
 
-Tailscale PAM grants sit on top of those permissions. They can narrow what a user or group is allowed to do, but they can't give the connector permissions that Kubernetes itself hasn't granted it.
+Tailscale PAM 授权建立在这些权限之上。它们可以收窄某个用户或组被允许做的事情，但无法赋予连接器 Kubernetes 本身没有授予它的权限。
 
-For example, if you want Tailscale PAM to handle the per-user authorization, you can give the connector a broad `ClusterRole`:
+例如，如果你想让 Tailscale PAM 负责逐用户授权，可以给连接器一个宽泛的 `ClusterRole`：
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -52,23 +52,23 @@ rules:
     verbs: ["*"]
 ```
 
-Bind the role to the Kubernetes identity used by your Tailscale PAM connector.
+把该角色绑定到你的 Tailscale PAM 连接器所使用的 Kubernetes 身份上。
 
-This gives the connector broad access to the cluster, while your Tailscale PAM grants determine what individual users and groups can do through the PAM service.
+这样连接器就对集群拥有宽泛的访问权，而你的 Tailscale PAM 授权决定各个用户和组能通过 PAM 服务做什么。
 
-You don't have to give the connector full cluster access. If users only need access to a smaller set of Kubernetes resources, you can give the connector a more restrictive Kubernetes role instead.
+你不必给连接器完整的集群访问权。如果用户只需要访问较小范围的 Kubernetes 资源，你可以改为给连接器一个限制更严的 Kubernetes 角色。
 
-## Use Kubernetes impersonation
+## 使用 Kubernetes 身份模拟（impersonation）
 
-You can also enable **impersonation** for the Kubernetes PAM service.
+你也可以为 Kubernetes PAM 服务启用**身份模拟**（impersonation）。
 
-Without impersonation, Kubernetes sees requests as coming from the connector's Kubernetes identity, and Tailscale PAM grants provide the per-user authorization.
+不启用模拟时，Kubernetes 把请求视为来自连接器的 Kubernetes 身份，逐用户授权由 Tailscale PAM 授权提供。
 
-With impersonation enabled, Tailscale PAM sends the Kubernetes `Impersonate-User` and `Impersonate-Group` headers. This lets Kubernetes apply its own role-based access control (RBAC) rules to the impersonated user and groups, in addition to the access controls you define with Tailscale PAM.
+启用模拟后，Tailscale PAM 会发送 Kubernetes 的 `Impersonate-User` 和 `Impersonate-Group` 头。这让 Kubernetes 在你用 Tailscale PAM 定义的访问控制之外，还能把自身的基于角色的访问控制（RBAC）规则应用到被模拟的用户和组上。
 
-This is useful if you already use Kubernetes RBAC and want to keep those permissions as part of the authorization decision.
+如果你已经在使用 Kubernetes RBAC 并希望把这些权限保留在授权决策中，这会很有用。
 
-The connector's Kubernetes identity needs permission to impersonate users and groups. For example:
+连接器的 Kubernetes 身份需要有模拟用户和组的权限。例如：
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -84,96 +84,96 @@ rules:
       - impersonate
 ```
 
-Bind this `ClusterRole` to the Kubernetes identity used by your PAM connector. You can then use your existing Kubernetes `Role`, `ClusterRole`, `RoleBinding`, and `ClusterRoleBinding` resources to control what impersonated users and groups are allowed to do.
+把这条 `ClusterRole` 绑定到你的 PAM 连接器所使用的 Kubernetes 身份上。之后，你就可以用现有的 Kubernetes `Role`、`ClusterRole`、`RoleBinding` 和 `ClusterRoleBinding` 资源来控制被模拟的用户和组能做什么。
 
-To confirm impersonation is working, run:
+要确认模拟已生效，运行：
 
 ```shell
 kubectl auth whoami
 ```
 
-The username should be your Tailscale login name rather than the connector's Kubernetes identity, and the groups should match your tailnet groups.
+用户名应该是你的 Tailscale 登录名而不是连接器的 Kubernetes 身份，组应该与你的 tailnet 组一致。
 
-### Impersonate tailnet groups
+### 模拟 tailnet 组
 
-The groups that Tailscale PAM impersonates are the connecting user's tailnet groups. These include [groups][docs-policy-file-groups] you define in your tailnet policy file and [groups synchronized][docs-user-group-provisioning] from your identity provider.
+Tailscale PAM 模拟的组是连接用户的 tailnet 组。这些组包括你在 tailnet 策略文件中定义的[组][docs-policy-file-groups]，以及[从身份提供方同步][docs-user-group-provisioning]来的组。
 
-The Tailscale control plane does not send group membership to devices by default. To make it available to the connector, add the `tailscale.com/visible-groups` [node attribute][docs-policy-file-node-attributes] to your tailnet policy file and target the devices that run your PAM connectors. For more information, refer to [group visibility on Tailscale clients][docs-group-visibility-clients].
+Tailscale 控制平面默认不向设备发送组成员身份。要让连接器拿到这些信息，请在你的 tailnet 策略文件中添加 `tailscale.com/visible-groups` [节点属性（node attribute）][docs-policy-file-node-attributes]，并以运行 PAM 连接器的设备为目标。更多信息参见 [Tailscale 客户端上的组可见性][docs-group-visibility-clients]。
 
-Until you add that node attribute, the connector has no group information and sends only the `Impersonate-User` header.
+在你添加该节点属性之前，连接器没有任何组信息，只会发送 `Impersonate-User` 头。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale PAM removes the `group:` prefix before it sends the header. A member of `group:engineering` is impersonated as the Kubernetes group `engineering`, so bind your Kubernetes RBAC to `engineering`.
+> Tailscale PAM 在发送该头之前会去掉 `group:` 前缀。`group:engineering` 的成员会被模拟为 Kubernetes 组 `engineering`，因此请把你的 Kubernetes RBAC 绑定到 `engineering`。
 
-A tagged device connects with a device identity rather than a user identity, so requests from a tagged device carry no groups.
+带标签的设备以设备身份而非用户身份连接，因此来自带标签设备的请求不携带任何组。
 
-## Create a Kubernetes PAM service
+## 创建 Kubernetes PAM 服务
 
-To create the Kubernetes PAM service:
+要创建 Kubernetes PAM 服务：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the admin console.
+1. 打开管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择 **Add service**。
 
-3. Select **PAM service**.
+3. 选择 **PAM service**。
 
-4. Choose the appropriate Kubernetes service type:
+4. 选择合适的 Kubernetes 服务类型：
    * **Kubernetes - Standard**
    * **Kubernetes - AWS EKS within cluster**
    * **Kubernetes - AWS EKS outside cluster**
 
-5. Select **Continue**.
+5. 选择 **Continue**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-7. (Optional) Enter a description.
+7. （可选）输入描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. (Optional) Enable **Enable impersonation** if you want Tailscale PAM to use Kubernetes impersonation.
+9. （可选）如果你想让 Tailscale PAM 使用 Kubernetes 身份模拟，启用 **Enable impersonation**。
 
-10. From **Connect via**, select one or more PAM connectors.
+10. 在 **Connect via** 中选择一个或多个 PAM 连接器。
 
-    Every connector selected for the service must be able to reach and authenticate to the Kubernetes API.
+    为该服务选择的每个连接器都必须能访问 Kubernetes API 并向其认证。
 
-11. Select **Continue**.
+11. 选择 **Continue**。
 
-12. How you configure the Kubernetes target depends on the Kubernetes service type you selected.
+12. 如何配置 Kubernetes 目标取决于你选择的 Kubernetes 服务类型。
 
     #### Kubernetes - Standard
 
-    Use this option when the connector already has Kubernetes configuration for the target cluster.
+    当连接器已经拥有目标集群的 Kubernetes 配置时，使用此选项。
 
-    For a connector using its current Kubernetes context, configure values for the following:
+    对于使用其当前 Kubernetes 上下文的连接器，配置以下值：
 
-    * **Configuration source:** Select **System's kubeconfig with current context**.
-    * **Target selection strategy:** Select **Kubernetes context**.
-    * **Authentication strategy:** Select **Kubernetes context**.
+    * **Configuration source:** 选择 **System's kubeconfig with current context**。
+    * **Target selection strategy:** 选择 **Kubernetes context**。
+    * **Authentication strategy:** 选择 **Kubernetes context**。
 
-    This tells the connector to use its existing Kubernetes configuration to determine the API server and upstream authentication credentials.
+    这会告诉连接器使用其现有的 Kubernetes 配置来确定 API 服务器和上游认证凭证。
 
     #### Kubernetes - AWS EKS within cluster
 
-    Use this option when the PAM connector runs as a workload inside the EKS cluster.
+    当 PAM 连接器作为工作负载运行在 EKS 集群内部时，使用此选项。
 
-    The connector can use Kubernetes's in-cluster configuration and its service account identity to communicate with the Kubernetes API.
+    连接器可以使用 Kubernetes 的集群内配置及其服务账户身份与 Kubernetes API 通信。
 
-    Make sure the connector's service account has the Kubernetes RBAC permissions required for the operations you want users to do.
+    确保连接器的服务账户拥有你希望用户执行的操作所需的 Kubernetes RBAC 权限。
 
-    If you enable impersonation, also give the connector's service account the required Kubernetes impersonation permissions.
+    如果你启用了模拟，还要给连接器的服务账户授予所需的 Kubernetes 模拟权限。
 
     #### Kubernetes - AWS EKS outside cluster
 
-    Use this option when the PAM connector runs outside the EKS cluster.
+    当 PAM 连接器运行在 EKS 集群之外时，使用此选项。
 
-    The connector needs:
+    连接器需要：
 
-    * Network connectivity to the EKS Kubernetes API endpoint.
-    * An AWS identity that can discover the EKS cluster.
-    * Authorization for that AWS identity to access the Kubernetes API.
+    * 与 EKS Kubernetes API 端点的网络连通性。
+    * 一个能发现该 EKS 集群的 AWS 身份。
+    * 该 AWS 身份访问 Kubernetes API 的授权。
 
-    The connector's AWS identity needs permission to list and describe EKS clusters. For example:
+    连接器的 AWS 身份需要有权列出和描述 EKS 集群。例如：
 
     ```json
     {
@@ -191,23 +191,23 @@ To create the Kubernetes PAM service:
     }
     ```
 
-    The connector's AWS IAM identity must also be authorized to access the EKS cluster.
+    连接器的 AWS IAM 身份还必须获得访问该 EKS 集群的授权。
 
-    You can use EKS access entries to associate the IAM identity with Kubernetes permissions or Kubernetes RBAC groups.
+    你可以使用 EKS 访问条目（access entry）把该 IAM 身份与 Kubernetes 权限或 Kubernetes RBAC 组关联起来。
 
-    For clusters that still use the `aws-auth` `ConfigMap`, you can instead map the connector's IAM role to the appropriate Kubernetes RBAC group.
+    对于仍在使用 `aws-auth` `ConfigMap` 的集群，你可以改为把连接器的 IAM 角色映射到合适的 Kubernetes RBAC 组。
 
-    The Kubernetes permissions assigned to that identity still determine the maximum access available through the PAM service.
+    分配给该身份的 Kubernetes 权限仍然决定了通过 PAM 服务可获得的访问上限。
 
-13. When you're finished configuring the Kubernetes target, select **Save**.
+13. 配置完 Kubernetes 目标后，选择 **Save**。
 
-The Kubernetes service is ready to proxy requests to the cluster through the connector.
+Kubernetes 服务已就绪，可以通过连接器把请求代理到集群。
 
-## Grant access to the Kubernetes service
+## 为 Kubernetes 服务授予访问权限
 
-Before users can connect, create a Tailscale PAM grant that gives them access to the Kubernetes service.
+在用户连接之前，创建一条 Tailscale PAM 授权，让他们能访问该 Kubernetes 服务。
 
-For example, an unrestricted Kubernetes permission looks like:
+例如，一条不受限制的 Kubernetes 权限如下所示：
 
 ```json
 {
@@ -227,27 +227,27 @@ For example, an unrestricted Kubernetes permission looks like:
 }
 ```
 
-This gives the user access to the Kubernetes operations available through the service. The connector still can't do anything that its Kubernetes identity isn't allowed to do.
+这让用户可以访问该服务提供的 Kubernetes 操作。连接器仍然无法做其 Kubernetes 身份不被允许的任何事情。
 
-> **Warning:**
+> **警告：**
 >
-> This is a useful grant for getting started. In production, restrict `src` and `dst` so the grant applies only to the users, groups, devices, and Kubernetes services that need it.
+> 这是一条适合入门使用的授权。在生产环境中，请限制 `src` 和 `dst`，让授权只作用于需要它的用户、组、设备和 Kubernetes 服务。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-### Control what users can do in Kubernetes
+### 控制用户在 Kubernetes 中能做什么
 
-You don't have to give users unrestricted Kubernetes access. Tailscale PAM grants can control operations based on:
+你不必给用户不受限制的 Kubernetes 访问权。Tailscale PAM 授权可以基于以下条件控制操作：
 
-* Kubernetes verbs, such as `get`, `list`, `create`, or `delete`.
-* Namespaces.
-* Resource types, such as `pods`, `deployments`, and `services`.
-* Resource names.
-* Kubernetes API groups.
+* Kubernetes 动词（verb），例如 `get`、`list`、`create` 或 `delete`。
+* 命名空间。
+* 资源类型，例如 `pods`、`deployments` 和 `services`。
+* 资源名称。
+* Kubernetes API 组。
 
-When you add Kubernetes rules, a request must match at least one rule to be allowed.
+添加 Kubernetes 规则后，请求必须至少匹配一条规则才会被允许。
 
-For example, the following grant limits access to the `staging` namespace:
+例如，以下授权把访问限制在 `staging` 命名空间：
 
 ```json
 {
@@ -277,99 +277,99 @@ For example, the following grant limits access to the `staging` namespace:
 }
 ```
 
-This permits Kubernetes operations only when they match the `staging` namespace rule.
+只有匹配 `staging` 命名空间规则的 Kubernetes 操作才会被允许。
 
-You can make this much more specific. For example, you could let developers `get`, `list`, and `watch` pods and deployments in `staging`, while preventing them from creating or deleting resources.
+你可以把规则写得具体得多。例如，你可以允许开发者在 `staging` 中对 pods 和 deployments 执行 `get`、`list` 和 `watch`，同时阻止他们创建或删除资源。
 
-Tailscale PAM and Kubernetes RBAC work together. The PAM grant must allow the request, and the connector or impersonated Kubernetes identity must also have permission to do it.
+Tailscale PAM 与 Kubernetes RBAC 协同工作。PAM 授权必须允许该请求，且连接器或被模拟的 Kubernetes 身份也必须有权执行它。
 
-For more Kubernetes grant examples and information about fine-grained Kubernetes access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 Kubernetes 授权示例以及细粒度 Kubernetes 访问控制的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Connect to the Kubernetes cluster
+## 连接到 Kubernetes 集群
 
-Once a user has access, they can keep working with the Kubernetes tools they already use or connect directly from their browser.
+用户获得访问权后，可以继续使用他们已经在用的 Kubernetes 工具，或直接从浏览器连接。
 
-1. Open the Tailscale client.
-2. Select **Services**.
-3. Select the Kubernetes service.
-4. Choose **kubectl** or **Web client**.
+1. 打开 Tailscale 客户端。
+2. 选择 **Services**。
+3. 选择该 Kubernetes 服务。
+4. 选择 **kubectl** 或 **Web client**。
 
-### Use kubectl and other Kubernetes tools
+### 使用 kubectl 和其他 Kubernetes 工具
 
-Select **kubectl** to add the Kubernetes service to your local `kubeconfig`.
+选择 **kubectl** 可把该 Kubernetes 服务添加到你的本地 `kubeconfig`。
 
-Tailscale automatically configures the cluster for you. You can also choose to make it your current Kubernetes context.
+Tailscale 会自动为你配置集群。你也可以选择把它设为你当前的 Kubernetes 上下文。
 
-Once it's configured, use `kubectl` as you normally would:
+配置完成后，像平常一样使用 `kubectl` 即可：
 
 ```shell
 kubectl get pods
 ```
 
-For example:
+例如：
 
 ```shell
 kubectl get deployments -n staging
 ```
 
-Because the cluster is added to your `kubeconfig`, other Kubernetes tools that use `kubeconfig`, such as Lens or K9s, can use the same configuration.
+由于集群已添加到你的 `kubeconfig`，其他使用 `kubeconfig` 的 Kubernetes 工具（例如 Lens 或 K9s）也可以使用同一配置。
 
-You don't need separate cluster credentials. Your requests are authorized using your Tailscale identity and the Kubernetes permissions in your PAM grants.
+你不需要单独的集群凭证。你的请求使用你的 Tailscale 身份以及 PAM 授权中的 Kubernetes 权限来授权。
 
-### Connect from the browser
+### 从浏览器连接
 
-Open the Tailscale PAM [Border0 web client](https://my.tailscale.com) to interact with the Kubernetes cluster directly from your browser.
+打开 Tailscale PAM 的 [Border0 web 客户端](https://my.tailscale.com)，即可直接从浏览器与 Kubernetes 集群交互。
 
-You don't need to install `kubectl` or configure a local `kubeconfig`.
+你无需安装 `kubectl`，也无需配置本地 `kubeconfig`。
 
-The same PAM grants apply whether you connect with `kubectl` or the web client, so users can only do the Kubernetes operations their access policy permits.
+无论你使用 `kubectl` 还是 Web 客户端连接，同样的 PAM 授权都适用，因此用户只能执行其访问策略允许的 Kubernetes 操作。
 
-## Review Kubernetes sessions
+## 查看 Kubernetes 会话
 
-Tailscale PAM gives you a central place to review who accessed your Kubernetes services and what happened during each session.
+Tailscale PAM 为你提供一个集中位置，用于审查谁访问了你的 Kubernetes 服务，以及每个会话期间发生了什么。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, and select a session that you want to inspect. From there, you can review details such as the Tailscale identity that connected, the originating device, the connection time, and the Kubernetes service that was accessed.
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，选择你想检查的会话。在那里你可以查看如下详情：连接所用的 Tailscale 身份、来源设备、连接时间，以及被访问的 Kubernetes 服务。
 
-When session recording is enabled, Tailscale PAM also captures the activity that took place during the session.
+启用会话录制后，Tailscale PAM 还会捕获会话期间发生的活动。
 
-For Kubernetes API activity, you can review each API call along with its HTTP response code. This gives you a detailed record of how the user interacted with the cluster and how Kubernetes responded.
+对于 Kubernetes API 活动，你可以逐条查看每个 API 调用及其 HTTP 响应码。这为你提供了用户如何与集群交互、Kubernetes 如何响应的详细记录。
 
-Interactive activity is recorded as well. For example, if a user starts an interactive `kubectl exec` session in a pod, you can replay the recorded session and review what happened inside the container.
+交互式活动也会被录制。例如，如果用户在某个 pod 中启动了交互式 `kubectl exec` 会话，你可以回放录制的会话并审查容器内发生了什么。
 
-Together, the session details, Kubernetes API activity, and interactive session recordings give you a clear record of:
+会话详情、Kubernetes API 活动和交互式会话录制合在一起，为你提供一份清晰的记录：
 
-* Who accessed the cluster.
-* What they did.
-* What Kubernetes returned.
+* 谁访问了集群。
+* 他们做了什么。
+* Kubernetes 返回了什么。
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to a Kubernetes service, start by checking that the PAM connector is online and can reach the Kubernetes API.
+如果你无法连接某个 Kubernetes 服务，首先检查 PAM 连接器是否在线、能否访问 Kubernetes API。
 
-Then check that the connector can authenticate to the cluster and that its Kubernetes identity has permission to do the operation you're trying to run.
+然后检查连接器能否向集群认证，以及其 Kubernetes 身份是否有权执行你要运行的操作。
 
-Also make sure your Tailscale PAM grant permits access to the service. If you've added Kubernetes rules, check that the requested verb, namespace, resource, resource name, and API group match one of those rules.
+同时确保你的 Tailscale PAM 授权允许访问该服务。如果你添加了 Kubernetes 规则，检查所请求的动词、命名空间、资源、资源名称和 API 组是否匹配其中某条规则。
 
-If impersonation is enabled, verify that:
+如果启用了模拟，验证：
 
-* The connector's Kubernetes identity can impersonate the required users or groups.
-* The impersonated identity has the appropriate Kubernetes `RoleBinding` or `ClusterRoleBinding`.
-* Kubernetes RBAC permits the requested action.
+* 连接器的 Kubernetes 身份能模拟所需的用户或组。
+* 被模拟的身份拥有相应的 Kubernetes `RoleBinding` 或 `ClusterRoleBinding`。
+* Kubernetes RBAC 允许所请求的操作。
 
-If group-based RBAC rules don't apply, run `kubectl auth whoami` and check the groups it reports:
+如果基于组的 RBAC 规则没有生效，运行 `kubectl auth whoami` 并检查它报告的组：
 
-* If it reports no groups, the connector isn't receiving group membership. Confirm that the `tailscale.com/visible-groups` node attribute targets the device that runs the connector, and that it makes the groups you need visible.
-* If it reports the groups you expect, check that your Kubernetes RBAC binds to the group name without the `group:` prefix.
-* If you connect from a tagged device, requests carry no groups. Connect from a device signed in as a user instead.
+* 如果没有报告任何组，说明连接器没有收到组成员身份。确认 `tailscale.com/visible-groups` 节点属性以运行连接器的设备为目标，并且它让你需要的组可见。
+* 如果报告的组与预期一致，检查你的 Kubernetes RBAC 是否绑定到了不带 `group:` 前缀的组名。
+* 如果你是从带标签的设备连接的，请求不携带任何组。请改为从以用户身份登录的设备连接。
 
-If you use the **AWS EKS outside cluster** option, also verify that:
+如果你使用的是 **AWS EKS outside cluster** 选项，还要验证：
 
-* The configured AWS credentials are valid.
-* The connector can list and describe the EKS cluster.
-* The connector's AWS IAM identity is authorized to access the EKS Kubernetes API.
-* The connector can reach the EKS API endpoint.
+* 所配置的 AWS 凭证有效。
+* 连接器能列出和描述该 EKS 集群。
+* 连接器的 AWS IAM 身份获得访问 EKS Kubernetes API 的授权。
+* 连接器能访问该 EKS API 端点。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the Tailscale PAM [session logs][docs-pam-session-logs]. These can help you tell whether the request was blocked by Tailscale PAM, Kubernetes RBAC, impersonation, authentication, or connectivity.
+如果以上排查步骤都无法解决问题，请查看连接器日志以及 Tailscale PAM [会话日志][docs-pam-session-logs]中失败会话的详情。这些信息有助于你判断请求是被 Tailscale PAM、Kubernetes RBAC、身份模拟、认证还是连通性问题所阻断。
 
 [docs-grants]: /docs/features/access-control/grants
 

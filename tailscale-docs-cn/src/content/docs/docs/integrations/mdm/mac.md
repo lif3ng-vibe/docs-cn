@@ -1,31 +1,31 @@
 ---
-title: "Deploy Tailscale on macOS using MDM"
-description: "This page contains technical information which you might find useful if you are a system administrator deploying Tailscale for macOS in a corporate environment using MDM solutions such as [Microsoft I"
+title: "使用 MDM 在 macOS 上部署 Tailscale"
+description: "本页包含一些技术信息，供正在企业环境中使用 [Microsoft Intune][docs-mdm-microsoft-intune]、[Jamf Pro][docs-mdm-jamf]、[JumpCloud][docs-mdm-jumpcloud]、[Iru][docs-mdm-iru]（原 Kandji）或 [SimpleMDM][docs-mdm-simplemdm] 等 MDM 解决方案为 macOS 部署 Tailscale 的系统管理员参考。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This page contains technical information which you might find useful if you are a system administrator deploying Tailscale for macOS in a corporate environment using MDM solutions such as [Microsoft Intune][docs-mdm-microsoft-intune], [Jamf Pro][docs-mdm-jamf], [JumpCloud][docs-mdm-jumpcloud], [Iru][docs-mdm-iru] (formerly Kandji), or [SimpleMDM][docs-mdm-simplemdm].
+如果你是一名系统管理员，正在企业环境中使用 [Microsoft Intune][docs-mdm-microsoft-intune]、[Jamf Pro][docs-mdm-jamf]、[JumpCloud][docs-mdm-jumpcloud]、[Iru][docs-mdm-iru]（原 Kandji）或 [SimpleMDM][docs-mdm-simplemdm] 等 MDM 解决方案为 macOS 部署 Tailscale，本页包含的技术信息可能会对你有帮助。
 
-We are always working on providing more options for system administrators to programmatically manage their Tailscale deployments. If you are deploying Tailscale and feel the need for a specific configuration option that is currently missing on this page, contact Tailscale Support.
+我们一直在为系统管理员提供更多以编程方式管理 Tailscale 部署的选项。如果你正在部署 Tailscale，并且觉得本页目前缺少某个你需要的特定配置选项，请联系 Tailscale 支持团队。
 
-> **Note:**
+> **注意：**
 >
-> The examples listed on this page use the bundle identifier for the Mac App Store variant of Tailscale, `io.tailscale.ipn.macos`. If you are configuring the Standalone variant of the app, replace it with the `io.tailscale.ipn.macsys` bundle identifier.
+> 本页列出的示例使用 Mac App Store 版 Tailscale 的 bundle identifier `io.tailscale.ipn.macos`。如果你配置的是应用的独立（Standalone）版，请将其替换为 `io.tailscale.ipn.macsys` 这个 bundle identifier。
 >
-> If you're looking to configure system policies on the Tailscale clients for iOS and tvOS, refer to the [dedicated topic][docs-ios-mdm].
+> 如果你想为 iOS 和 tvOS 版 Tailscale 客户端配置系统策略，请参阅[专门的主题][docs-ios-mdm]。
 
-## Configuration profiles
+## 配置描述文件
 
-If you are deploying Tailscale for macOS using MDM, you can use configuration profiles to automate parts of the setup process, reducing prompt fatigue for the user. You can also use configuration profiles to enforce specific system policies or set up automatic updates.
+如果你在使用 MDM 为 macOS 部署 Tailscale，可以使用配置描述文件（configuration profile）来自动完成设置流程中的部分步骤，减少用户被弹窗反复打扰。你还可以使用配置描述文件来强制执行特定的系统策略，或设置自动更新。
 
-### Deploying system policies in a configuration profile
+### 在配置描述文件中部署系统策略
 
-Configuration profiles can be used to specify user defaults for Tailscale. The Tailscale client will read its user defaults every time it launches, and apply any system policies it finds in the user defaults. Deploying a configuration profile containing user defaults by using your MDM solution can let you configure specific settings of the Tailscale client on behalf of the user, providing an easier setup process.
+配置描述文件可用于为 Tailscale 指定用户默认值（user defaults）。Tailscale 客户端每次启动时都会读取其用户默认值，并应用在其中找到的系统策略。通过 MDM 解决方案部署包含用户默认值的配置描述文件，可以代替用户配置 Tailscale 客户端的特定设置，让设置过程更加简单。
 
-Refer to our [full list of system policies][docs-mdm-keys] to discover all settings you can configure.
+请参阅我们的[系统策略完整列表][docs-mdm-keys]，了解所有可配置的设置。
 
-This is an example of a configuration profile to set the [**ManagedByOrganizationName**][docs-mdm-keys-org-name] and [**IPAddressCopiedAlertSuppressed**][docs-mdm-keys-suppress-address-copy] system policy values:
+以下是一个配置描述文件示例，用于设置 [**ManagedByOrganizationName**][docs-mdm-keys-org-name] 和 [**IPAddressCopiedAlertSuppressed**][docs-mdm-keys-suppress-address-copy] 系统策略的值：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -65,61 +65,61 @@ This is an example of a configuration profile to set the [**ManagedByOrganizatio
 </plist>
 ```
 
-The above configuration profile is equivalent to the following two instances of the `defaults` CLI tool.
+上述配置描述文件等效于下面两组 `defaults` CLI 工具命令。
 
-For the [Mac App Store][docs-mac-variants-app-store] variant use the bundle identifier.
+对于 [Mac App Store][docs-mac-variants-app-store] 版，使用 bundle identifier。
 
 ```shell
 defaults write io.tailscale.ipn.macos ManagedByOrganizationName "Tailscale, Inc."
 defaults write io.tailscale.ipn.macos IPAddressCopiedAlertSuppressed -bool true
 ```
 
-For the [Standalone][docs-mac-variants-standalone] variant specify the explicit Property List (`.plist`) path.
+对于[独立（Standalone）][docs-mac-variants-standalone]版，请指定明确的属性列表（`.plist`）路径。
 
 ```shell
 defaults write ~/Library/Preferences/io.tailscale.ipn.macsys.plist ManagedByOrganizationName "Tailscale, Inc."
 defaults write ~/Library/Preferences/io.tailscale.ipn.macsys.plist IPAddressCopiedAlertSuppressed -bool true
 ```
 
-Using this technique of writing directly to the application preferences can be used to test the effects of various MDM configurations without the need to set up a full MDM environment. Some settings will not be applied until the client and network extension are restarted.
+可以使用这种直接写入应用偏好设置的技术来测试各种 MDM 配置的效果，而无需搭建完整的 MDM 环境。某些设置在客户端和网络扩展重启之后才会生效。
 
-If you use this technique to test MDM configurations, you must clear them before setting up your full MDM environment.
+如果你使用这种技术测试 MDM 配置，必须在搭建完整的 MDM 环境之前将它们清除。
 
 ```shell
 defaults delete ~/Library/Preferences/io.tailscale.ipn.macsys.plist ManagedByOrganizationName
 defaults delete ~/Library/Preferences/io.tailscale.ipn.macsys.plist IPAddressCopiedAlertSuppressed
 ```
 
-Installing the configuration profile above, or running the commands will display **Managed by Tailscale, Inc.** in the app menu and suppress the notification banner when an IP address is copied to the clipboard.
+安装上述配置描述文件或运行上述命令后，应用菜单中会显示 **Managed by Tailscale, Inc.**（由 Tailscale, Inc. 管理），并且当 IP 地址被复制到剪贴板时不再显示通知横幅。
 
-Refer to the [list of system policies][docs-mdm-keys] for other values you can configure on behalf of the user.
+请参阅[系统策略列表][docs-mdm-keys]，了解你可以代替用户配置的其他值。
 
-#### Using the Tailscale profile manifest
+#### 使用 Tailscale 描述文件清单
 
-Tailscale maintains configuration profile manifests for both the variants of the client:
+Tailscale 为客户端的两种变体都维护了配置描述文件清单（profile manifest）：
 
-* [Mac App Store][xt-gh-profile-creator-manage] manifest
-* [Standalone][xt-gh-profile-creator-prefs] manifest
+* [Mac App Store][xt-gh-profile-creator-manage] 版清单
+* [独立（Standalone）][xt-gh-profile-creator-prefs]版清单
 
-Profile manifests contain a machine-readable description of all available system policies and their possible values. Apps such as [iMazing Profile Editor][xt-imazing] or [ProfileCreator][xt-gh-profile-creator] automatically fetch these manifests, and can provide you with a user-friendly GUI to create a configuration profile.
+描述文件清单包含对所有可用系统策略及其可能取值的机器可读描述。[iMazing Profile Editor][xt-imazing] 或 [ProfileCreator][xt-gh-profile-creator] 等应用会自动获取这些清单，并为你提供一个对用户友好的图形界面来创建配置描述文件。
 
-To get started, download either iMazing Profile Editor or ProfileCreator. Both Tailscale variants will appear in the sidebar among the applications you can configure, as shown in the screenshot below.
+要开始使用，请下载 iMazing Profile Editor 或 ProfileCreator。两种 Tailscale 变体都会出现在侧边栏的可配置应用列表中，如下方截图所示。
 
-*（图：The iMazing Profile Editor configuring Tailscale system policies.）*
+*（图：iMazing Profile Editor 正在配置 Tailscale 系统策略。）*
 
-### Allow push notifications automatically
+### 自动允许推送通知
 
-Tailscale for macOS may sometimes use system notifications to inform the user. For instance, you will receive a notification when:
+Tailscale for macOS 有时会使用系统通知来告知用户。例如，以下情况下你会收到通知：
 
-* the device key is about to expire
-* a file was received using Taildrop
-* an IP address was copied to the clipboard
+* 设备密钥即将过期
+* 通过 Taildrop 收到了文件
+* IP 地址被复制到剪贴板
 
-This is an example of a configuration profile payload to automatically allow notifications for Tailscale.
+以下是一个配置描述文件 payload 示例，用于自动允许 Tailscale 发送通知。
 
-> **Note:**
+> **注意：**
 >
-> Make sure you replace the bundle identifier `io.tailscale.ipn.macos` with `io.tailscale.ipn.macsys` if you are creating a configuration profile for the Standalone variant of Tailscale for macOS.
+> 如果你正在为独立（Standalone）版 Tailscale for macOS 创建配置描述文件，请确保将 bundle identifier `io.tailscale.ipn.macos` 替换为 `io.tailscale.ipn.macsys`。
 
 ```xml
 <dict>
@@ -155,15 +155,15 @@ This is an example of a configuration profile payload to automatically allow not
 </dict>
 ```
 
-### Install the Tailscale VPN configuration
+### 安装 Tailscale VPN 配置
 
-On the first time it launches on a Mac, the Tailscale app will install a NetworkExtension VPN configuration. You can choose to skip this step by providing a configuration profile which will configure the VPN configuration *before* the app launches. During the first launch, the Tailscale app will detect the pre-existing configuration and skip the installation step.
+Tailscale 应用在 Mac 上首次启动时，会安装一个 NetworkExtension VPN 配置。你可以提供一个配置描述文件，在应用启动*之前*就配置好该 VPN 配置，从而跳过这一步。首次启动时，Tailscale 应用会检测到已存在的配置并跳过安装步骤。
 
-The following is a valid `.mobileconfig` Property List (`.plist`) file to set up such a VPN configuration.
+以下是一个有效的 `.mobileconfig` 属性列表（`.plist`）文件，可用于建立这样的 VPN 配置。
 
-> **Note:**
+> **注意：**
 >
-> Make sure you replace `io.tailscale.ipn.macos` with `io.tailscale.ipn.macsys`, and `io.tailscale.ipn.macos.network-extension` with `io.tailscale.ipn.macsys.network-extension` if you are creating a configuration profile for the Standalone variant of Tailscale for macOS.
+> 如果你正在为独立（Standalone）版 Tailscale for macOS 创建配置描述文件，请确保将 `io.tailscale.ipn.macos` 替换为 `io.tailscale.ipn.macsys`，并将 `io.tailscale.ipn.macos.network-extension` 替换为 `io.tailscale.ipn.macsys.network-extension`。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -214,24 +214,24 @@ The following is a valid `.mobileconfig` Property List (`.plist`) file to set up
 </plist>
 ```
 
-### Approve the Tailscale system extension automatically
+### 自动批准 Tailscale 系统扩展
 
-> **Note:**
+> **注意：**
 >
-> This section exclusively applies to the Standalone variant of Tailscale for macOS. The variant of Tailscale distributed in the Mac App Store does not use a system extension, and only requires installing a VPN configuration.
+> 本节仅适用于独立（Standalone）版 Tailscale for macOS。Mac App Store 中分发的 Tailscale 变体不使用系统扩展，只需安装 VPN 配置即可。
 
-The section above explained how you can create a configuration profile to pre-install the Tailscale VPN configuration. However, when starting the Standalone variant of Tailscale for the first time, the app will also attempt to install a system extension. By default, macOS blocks this, and requires the user to manually approve Tailscale in the System Settings app:
+上一节介绍了如何创建配置描述文件来预装 Tailscale VPN 配置。但是，独立（Standalone）版 Tailscale 首次启动时，应用还会尝试安装一个系统扩展。默认情况下，macOS 会阻止此操作，并要求用户在"系统设置"应用中手动批准 Tailscale：
 
-*（图：The warning for 'System Extension Blocked' in macOS. There are two prompts for 'OK' and 'Open System Settings'.）*
+*（图：macOS 中的"System Extension Blocked"（系统扩展被阻止）警告。有两个按钮："OK"和"Open System Settings"。）*
 
-You can allow the system extension by default by adding a system extension policy to the configuration profile. The first thing to do is to set the scope of your configuration profile payload to `System`, as system extensions affect all users on a Mac. Add the following at the top level of your configuration file:
+你可以通过向配置描述文件添加系统扩展策略来默认允许该系统扩展。首先要将配置描述文件 payload 的作用范围设置为 `System`，因为系统扩展会影响 Mac 上的所有用户。在配置文件的顶层添加以下内容：
 
 ```xml
 <key>PayloadScope</key>
 <string>System</string>
 ```
 
-Then, add the system extension policy inside the `PayloadContent` array of the configuration file:
+然后，在配置文件的 `PayloadContent` 数组内添加该系统扩展策略：
 
 ```xml
 <dict>
@@ -258,35 +258,35 @@ Then, add the system extension policy inside the `PayloadContent` array of the c
 </dict>
 ```
 
-macOS enforces that a payload with system scope can only be deployed by an MDM server. This means that users won't be able to install the configuration profile you just created by themselves - your organization will need to push it using the MDM server.
+macOS 强制要求具有系统作用范围的 payload 只能由 MDM 服务器部署。这意味着用户无法自行安装你刚创建的配置描述文件——你的组织需要通过 MDM 服务器推送它。
 
-### Deploy a VPN On Demand configuration using MDM
+### 使用 MDM 部署 VPN On Demand 配置
 
-> **Note:**
+> **注意：**
 >
-> This is an advanced deployment option. Misconfigured VPN On Demand settings may prevent your users from connecting to their tailnet. Exercise caution when deploying VPN On Demand rules, especially if you're using any rule to disconnect the VPN on certain networks.
+> 这是一种高级部署选项。配置不当的 VPN On Demand 设置可能会阻止你的用户连接到其 tailnet。部署 VPN On Demand 规则时请务必谨慎，尤其是在你使用任何规则在特定网络上断开 VPN 的情况下。
 >
-> Caution must be exercised when deploying a managed VPN configuration with VPN On Demand rules. Managed VPN On Demand rules prevent the Tailscale client from installing and managing its own rules which affects the behavior of the `AlwaysOn` policies. The client will create rules to automatically to restart the VPN on system resets and restarts, and to manage behavior for the `AlwaysOn` and related MDM policies.
+> 部署带 VPN On Demand 规则的受管 VPN 配置时必须多加小心。受管的 VPN On Demand 规则会阻止 Tailscale 客户端安装和管理自己的规则，从而影响 `AlwaysOn` 策略的行为。客户端会自动创建规则，以便在系统重置和重启后自动重启 VPN，并管理 `AlwaysOn` 及相关 MDM 策略的行为。
 >
-> If `AlwaysOn` behavior is desired, rather than set VPN On Demand rules, consider using the `AlwaysOn.Enabled`, `AlwaysOn.OverrideWithReason`, and `RestartAfter` [policies][docs-mdm-keys]. The Tailscale client will use these to enable VPN On Demand rules automatically that ensure the VPN stays active. `AlwaysOn.OverrideWithReason` can be set to allow the user to temporarily disable Tailscale to work around cases such as networks blocking exit nodes, the Tailscale control plane or certain captive portals. `RestartAfter` can be set to ensure the client automatically restarts after a set amount of time.
+> 如果你希望获得 `AlwaysOn` 的行为，请考虑使用 `AlwaysOn.Enabled`、`AlwaysOn.OverrideWithReason` 和 `RestartAfter` [策略][docs-mdm-keys]，而不是设置 VPN On Demand 规则。Tailscale 客户端会利用这些策略自动启用 VPN On Demand 规则，确保 VPN 保持活跃。`AlwaysOn.OverrideWithReason` 可以设置为允许用户临时禁用 Tailscale，以绕开诸如网络阻止出口节点、Tailscale 控制平面或某些强制门户（captive portal）的情况。`RestartAfter` 可以设置为确保客户端在设定的时间后自动重启。
 
-If you are deploying your own VPN configuration (by following the steps in [Install the Tailscale VPN configuration][ar-install-the-tailscale-vpn-configuration]), Apple configuration profiles give you the ability to deploy a predefined VPN On Demand configuration to your users. This will automatically connect or disconnect Tailscale, depending on the rules you configure. Refer to [VPN On Demand][docs-ios-vpn-on-demand] for more information about this feature.
+如果你正在部署自己的 VPN 配置（按照[安装 Tailscale VPN 配置][ar-install-the-tailscale-vpn-configuration]中的步骤），Apple 配置描述文件让你能够向用户部署预定义的 VPN On Demand 配置。它会根据你配置的规则自动连接或断开 Tailscale。有关此功能的更多信息，请参阅 [VPN On Demand][docs-ios-vpn-on-demand]。
 
-VPN On Demand through configuration profiles for Tailscale is configured in two separate steps. First, you need to deploy two system policy keys. Then, use the `OnDemandRules` key in the VPN payload of your VPN configuration profile to define the rules. Rules can be used to do things like:
+通过配置描述文件为 Tailscale 配置 VPN On Demand 分为两个独立的步骤。首先，你需要部署两个系统策略键。然后，在 VPN 配置描述文件的 VPN payload 中使用 `OnDemandRules` 键来定义规则。规则可用于实现如下效果：
 
-* Detect when the iOS/macOS device is connected to your enterprise Wi-Fi network, so connecting to Tailscale is not required.
-* Detect when an unfamiliar Wi-Fi network is being used, so the Tailscale tunnel should be established.
+* 检测 iOS/macOS 设备何时连接到你的企业 Wi-Fi 网络，此时无需连接 Tailscale。
+* 检测何时在使用陌生的 Wi-Fi 网络，此时应建立 Tailscale 隧道。
 
-#### Configure the required system policy keys
+#### 配置所需的系统策略键
 
-Before adding the `OnDemandRules` object to your VPN configuration profile, deploy the following two system policies as part of the configuration profile you use to configure Tailscale:
+在向 VPN 配置描述文件添加 `OnDemandRules` 对象之前，先在你用于配置 Tailscale 的配置描述文件中部署以下两个系统策略：
 
 1. `VPNOnDemandIsUserConfigured`=`true`
 2. `VPNOnDemandSettings`=`hide`
 
-The combination of these policies instructs Tailscale to not modify the on demand configuration to ensure automatic restarts of the client, and hides the VPN On Demand configuration UI from the user.
+这两个策略组合起来，会指示 Tailscale 不要修改按需（on demand）配置以确保客户端自动重启，并对用户隐藏 VPN On Demand 配置界面。
 
-As an example, deploy this configuration profile:
+例如，部署以下配置描述文件：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -328,11 +328,11 @@ As an example, deploy this configuration profile:
 </plist>
 ```
 
-#### Configure the OnDemandRules dictionary
+#### 配置 OnDemandRules 字典
 
-Once the above two system policies have been deployed, you can configure the `OnDemandRules` dictionary on the VPN configuration. Refer to the [Apple Configuration Profile Reference][xt-apple-mobileconfig-reference] for the appropriate rules you can configure.
+部署上述两个系统策略后，你就可以在 VPN 配置上配置 `OnDemandRules` 字典。关于可以配置的适当规则，请参阅 [Apple 配置描述文件参考][xt-apple-mobileconfig-reference]。
 
-As an example of a common configuration, this profile will automatically connect Tailscale on any Wi-Fi or Cellular network, but disconnect on any Wi-Fi network matching the `TailAndScales` SSID:
+作为常见配置的一个示例，此描述文件会在任何 Wi-Fi 或蜂窝网络上自动连接 Tailscale，但在匹配 `TailAndScales` SSID 的任何 Wi-Fi 网络上断开连接：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -413,28 +413,28 @@ As an example of a common configuration, this profile will automatically connect
 </plist>
 ```
 
-#### MDM initial deployment
+#### MDM 初始部署
 
-If you are experiencing issues when deploying both the Tailscale `.pkg` installer and a set of configuration profiles at the same time, make sure your MDM solution is configured according to these rules:
+如果你在同时部署 Tailscale `.pkg` 安装包和一组配置描述文件时遇到问题，请确保你的 MDM 解决方案按照以下规则进行配置：
 
-1. The MDM solution should reboot the Mac after successfully running the `.pkg` installer and deploying the configuration profiles. Rebooting your Mac ensures all caches are updated, preventing errors during the first launch.
-2. If you are unable to reboot the Mac as part of the deployment process, the MDM solution should run the `.pkg` installer and clear the LaunchServices cache before deploying the VPN configuration profile. Refer to the following section.
+1. MDM 解决方案应在成功运行 `.pkg` 安装包并部署配置描述文件后重启 Mac。重启 Mac 可确保所有缓存得到更新，避免首次启动时出错。
+2. 如果无法在部署流程中重启 Mac，MDM 解决方案应在部署 VPN 配置描述文件之前运行 `.pkg` 安装包并清除 LaunchServices 缓存。请参阅下一节。
 
-##### Workarounds for macOS NetworkExtension framework bugs
+##### macOS NetworkExtension 框架 bug 的解决方法
 
-Long-standing bugs on macOS may cause issues when a VPN app is deployed simultaneously with a VPN configuration profile. These problems arise if the VPN configuration profile is applied before the app is fully installed and registered in the LaunchServices database, which tracks installed applications and extensions on macOS.
+macOS 上长期存在的 bug 可能会在 VPN 应用与 VPN 配置描述文件同时部署时引发问题。如果 VPN 配置描述文件在应用完全安装并在 LaunchServices 数据库（用于跟踪 macOS 上已安装的应用和扩展）中注册之前就被应用，就会出现这些问题。
 
-Specifically, if the VPN configuration profile is deployed before the application is fully installed, macOS may fail to start the VPN network extension when the Tailscale GUI asks the system to do so, or [VPN On Demand][docs-ios-vpn-on-demand] rules are triggered. The `nesessionmanager` process may print one of the following errors to the system log:
+具体来说，如果 VPN 配置描述文件在应用完全安装之前就已部署，那么当 Tailscale GUI 请求系统启动 VPN 网络扩展，或 [VPN On Demand][docs-ios-vpn-on-demand] 规则被触发时，macOS 可能无法启动该 VPN 网络扩展。`nesessionmanager` 进程可能会向系统日志输出以下错误之一：
 
 * `The VPN app used by the VPN configuration is not installed`
 * `status changed to disconnected, last stop reason Plugin was disabled`
 
-A reboot of the Mac will generally solve any issues, so we recommend that you reboot the Mac after deploying Tailscale.
+重启 Mac 通常可以解决所有此类问题，因此我们建议在部署 Tailscale 后重启 Mac。
 
-If you're unable to reboot your managed Macs (for instance, because you want to provide a button to install Tailscale by using the **Jamf Self-Service** app) and you observe the symptoms above, configure your MDM solution to do the following upon triggering the installer:
+如果你无法重启受管的 Mac（例如，因为你希望通过 **Jamf Self-Service** 应用提供一个安装 Tailscale 的按钮），并且观察到了上述症状，请将 MDM 解决方案配置为在触发安装程序时执行以下操作：
 
-1. Deploy the `.pkg` installer and ensure the installer has finished running.
-2. After running the installer, run a shell script on the Mac that will clear the LaunchServices caches (with some delays to ensure no timing issues will occur):
+1. 部署 `.pkg` 安装包，并确保安装程序已运行完毕。
+2. 运行安装程序后，在 Mac 上运行一个清除 LaunchServices 缓存的 shell 脚本（加入一些延时以避免出现时序问题）：
 
 ```bash
 #!/bin/bash
@@ -448,31 +448,31 @@ echo "LaunchServices cache cleared successfully, sleeping another 10 seconds"  |
 sleep 10
 ```
 
-Configure your MDM to deploy the VPN configuration profile only after executing the shell script. macOS should then allow the network extension to start correctly.
+将 MDM 配置为仅在执行完该 shell 脚本之后才部署 VPN 配置描述文件。这样，macOS 应该就能让网络扩展正常启动。
 
-#### MDM-based upgrades
+#### 基于 MDM 的升级
 
-If upgrading a previously installed the standalone Tailscale client, it is critical that Tailscale be properly stopped before upgrading. While the `.pkg` installer will attempt this with AppleScript, if you're using `AlwaysOn` policies, or you have built your own custom package installer, some care must be taken. Your pre-install script should run the following:
+升级之前安装的独立（Standalone）版 Tailscale 客户端时，关键是在升级前正确停止 Tailscale。虽然 `.pkg` 安装包会尝试通过 AppleScript 完成此操作，但如果你正在使用 `AlwaysOn` 策略，或者你构建了自己的自定义安装包，就需要格外小心。你的预安装脚本应运行以下命令：
 
 ```shell
 /Applications/Tailscale.app/Contents/MacOS/Tailscale down-for-update
 ```
 
-This will ensure that the system extension is in a state where it can be properly upgraded. The `down-for-update` command specifically handles overriding the `AlwaysOn` policies and must be run by an administrator. The usual `tailscale down` command is not available if `AlwaysOn.Enabled` is configured.
+这可以确保系统扩展处于能够正常升级的状态。`down-for-update` 命令专门用于覆盖 `AlwaysOn` 策略，且必须由管理员运行。如果配置了 `AlwaysOn.Enabled`，则无法使用通常的 `tailscale down` 命令。
 
-In your post-install script, the following will restart the Tailscale client and system extension.
+在你的安装后脚本中，以下命令会重启 Tailscale 客户端和系统扩展。
 
 ```shell
-#Restart the GUI
+#重启 GUI
 /Applications/Tailscale.app/Contents/MacOS/Tailscale rungui
 
-#Restart Tailscale if desired
+#如需要则重启 Tailscale
 /Applications/Tailscale.app/Contents/MacOS/Tailscale up
 ```
 
-The `rungui` and `down-for-update` CLI commands are only supported when run with the macOS `.app` package.
+`rungui` 和 `down-for-update` CLI 命令只有在通过 macOS `.app` 包运行时才受支持。
 
-[ar-install-the-tailscale-vpn-configuration]: #install-the-tailscale-vpn-configuration
+[ar-install-the-tailscale-vpn-configuration]: #安装-tailscale-vpn-配置
 
 [docs-ios-mdm]: /docs/integrations/mdm/ios
 

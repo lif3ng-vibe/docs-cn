@@ -1,43 +1,43 @@
 ---
-title: "Tailscale on AWS App Runner"
-description: "AWS App Runner is a fully managed means of running container workloads on AWS. Deployment in App Runner can make it difficult to use Tailscale, since it doesn't provide a /dev/net/tun device that Tail"
+title: "AWS App Runner 上的 Tailscale"
+description: "AWS App Runner 是一种在 AWS 上运行容器工作负载的全托管方式。在 App Runner 中部署时，由于它不提供 Tailscale 所需的 /dev/net/tun 设备，使用 Tailscale 会比较困难。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-AWS App Runner is a fully managed means of running container workloads on AWS. Deployment in App Runner can make it difficult to use Tailscale, since it doesn't provide a /dev/net/tun device that Tailscale needs.
+AWS App Runner 是一种在 AWS 上运行容器工作负载的全托管方式。在 App Runner 中部署时，由于它不提供 Tailscale 所需的 /dev/net/tun 设备，使用 Tailscale 会比较困难。
 
-You can use Tailscale's [userspace networking mode][docs-userspace-networking] to connect your AWS App Runner containers to your Tailscale network.
+你可以使用 Tailscale 的[用户态网络模式][docs-userspace-networking]，将 AWS App Runner 容器连接到你的 Tailscale 网络。
 
-## Step 1: Generate an auth key to authenticate your AWS App Runner containers
+## 第 1 步：生成认证密钥，用于认证你的 AWS App Runner 容器
 
-First, we'll [generate an auth key][docs-auth-keys] to allow AWS App Runner to authenticate our container to join our network.
+首先，我们要[生成一个认证密钥][docs-auth-keys]，让 AWS App Runner 能够认证我们的容器并加入网络。
 
-Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console and select **Generate auth key**. We recommend using an [ephemeral key][docs-ephemeral-nodes] for this purpose, since it will automatically clean up devices after they shut down.
+打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面，选择**生成认证密钥**（Generate auth key）。为此我们建议使用[临时密钥][docs-ephemeral-nodes]（ephemeral key），因为它会在设备关机后自动清理设备。
 
-*（图：Tailscale's auth key generation page）*
+*（图：Tailscale 认证密钥生成页面）*
 
-> **Note:**
+> **注意：**
 
-Next, [select the AWS App Runner][xt-aws-console] Services list, and create a new service. In the **Configuration** tab, scroll down to **Service Settings** and look for **Environment Variables**. Add a variable with key `TAILSCALE_AUTHKEY` and a value of the `tskey-<key>` string generated earlier.
+接下来，[选择 AWS App Runner][xt-aws-console] 服务列表，并创建一个新服务。在 **Configuration** 标签页中，向下滚动到 **Service Settings**，找到 **Environment Variables**。添加一个变量，键为 `TAILSCALE_AUTHKEY`，值为之前生成的 `tskey-<key>` 字符串。
 
-## Step 2: Configure your Dockerfile to install Tailscale
+## 第 2 步：配置 Dockerfile 以安装 Tailscale
 
-Next, we'll use a [multistage Dockerfile][xt-docker-multi-stage-builds], where the first stage builds your application, and the second stage pulls application code and Tailscale into the final image to be uploaded to AWS.
+接下来，我们将使用[多阶段 Dockerfile][xt-docker-multi-stage-builds]：第一阶段构建你的应用程序，第二阶段将应用代码和 Tailscale 拉入最终镜像并上传到 AWS。
 
-In your `Dockerfile`:
+在你的 `Dockerfile` 中：
 
 ```docker
 FROM alpine:latest as builder
 WORKDIR /app
 COPY . ./
-# This is where one could build the application code as well.
+# 这里也可以用来构建应用程序代码。
 
 FROM alpine:latest
-# Copy binary to production image.
+# 将二进制文件复制到生产镜像。
 COPY --from=builder /app/bootstrap /var/runtime/bootstrap
 
-# Copy Tailscale binaries from the tailscale image on Docker Hub.
+# 从 Docker Hub 上的 tailscale 镜像复制 Tailscale 二进制文件。
 COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscaled /var/runtime/tailscaled
 COPY --from=docker.io/tailscale/tailscale:stable /usr/local/bin/tailscale /var/runtime/tailscale
 RUN mkdir -p /var/run && ln -s /tmp/tailscale /var/run/tailscale && \
@@ -45,13 +45,13 @@ RUN mkdir -p /var/run && ln -s /tmp/tailscale /var/run/tailscale && \
     mkdir -p /var/lib && ln -s /tmp/tailscale /var/lib/tailscale && \
     mkdir -p /var/task && ln -s /tmp/tailscale /var/task/tailscale
 
-# Run on container startup.
+# 在容器启动时运行。
 ENTRYPOINT ["/var/runtime/bootstrap"]
 ```
 
-The Dockerfile specifies `/var/runtime/bootstrap` as the initial process to run. This script needs to bring Tailscale up and then start the application binary. This is where we can use the `TAILSCALE_AUTHKEY` variable we defined earlier.
+这个 Dockerfile 将 `/var/runtime/bootstrap` 指定为初始运行进程。该脚本需要先启动 Tailscale，再启动应用程序二进制文件。我们在这里可以使用前面定义的 `TAILSCALE_AUTHKEY` 变量。
 
-Then, create a file named `bootstrap` at the root of your app:
+然后，在应用根目录下创建一个名为 `bootstrap` 的文件：
 
 ```shell
 #!/bin/sh
@@ -63,11 +63,11 @@ echo Tailscale started
 ALL_PROXY=socks5://localhost:1055/ /var/runtime/my-app
 ```
 
-When your AWS App Runner container deploys, it will be able to connect to your private Tailscale network.
+AWS App Runner 容器部署完成后，就能连接到你的私有 Tailscale 网络。
 
-## Remove ephemeral nodes from a tailnet
+## 从 tailnet 中移除临时节点
 
-When an ephemeral node goes offline, it is automatically removed from your tailnet. You can also control ephemeral node removal using the [`tailscale logout`][docs-cli-logout] command to either manually force the removal or incorporate the command into the [`tailscaled`][docs-tailscaled] Tailscale daemon. For more information, refer to [Ephemeral nodes][docs-ephemeral-nodes-faq].
+临时节点（ephemeral node）离线后会自动从你的 tailnet 中移除。你也可以使用 [`tailscale logout`][docs-cli-logout] 命令来控制临时节点的移除——既可以手动强制移除，也可以将该命令集成到 Tailscale 守护进程 [`tailscaled`][docs-tailscaled] 中。更多信息请参阅[临时节点][docs-ephemeral-nodes-faq]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

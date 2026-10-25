@@ -1,84 +1,84 @@
 ---
-title: "OAuth clients"
-description: "Use OAuth clients to provide ongoing access to the Tailscale API."
+title: "OAuth 客户端"
+description: "使用 OAuth 客户端为 Tailscale API 提供持续访问能力。"
 ---
 
-Last validated Jun 30, 2026
+最后验证于 Jun 30, 2026
 
-OAuth clients allow for ongoing access to the [Tailscale API][docs-api] using the [client credentials flow][xt-rfc-6749-4.4] of the [OAuth 2.0 protocol][xt-rfc-6749].
+OAuth 客户端使用 [OAuth 2.0 协议][xt-rfc-6749]的[客户端凭证流程][xt-rfc-6749-4.4]，为 [Tailscale API][docs-api] 提供持续访问能力。
 
-## How it works
+## 工作原理
 
-You create an OAuth client that defines the [scopes][docs-trust-credentials-scopes] to allow when your client application uses the Tailscale API. An example scope is `dns:read`, which grants read-only access to a tailnet's DNS settings. Another example is the `devices:core` scope, which grants access to read and write the list of devices in the tailnet, authorize or remove machines, and manipulate tags on devices.
+你创建一个 OAuth 客户端，在其中定义客户端应用使用 Tailscale API 时允许的[作用域][docs-trust-credentials-scopes]。例如作用域 `dns:read` 授予对 tailnet DNS 设置的只读访问；又如 `devices:core` 作用域，授予读取和写入 tailnet 设备列表、授权或移除机器、以及操作设备上标签的权限。
 
-Tailscale restricts scopes to only the necessary Tailscale API endpoints needed for an operation. For example, tokens with the `dns:read` scope can access only the following Tailscale API endpoints:
+Tailscale 会把作用域限制为一次操作所需的必要 Tailscale API 端点。例如，持有 `dns:read` 作用域的令牌只能访问以下 Tailscale API 端点：
 
 * `GET /api/v2/tailnet/:tailnet/dns/nameservers`
 * `GET /api/v2/tailnet/:tailnet/dns/preferences`
 * `GET /api/v2/tailnet/:tailnet/dns/searchpaths`
-* `GET /api/v2/tailnet/:tailnet/keys/:keyID` (for itself only)
+* `GET /api/v2/tailnet/:tailnet/keys/:keyID`（仅限其自身）
 
-An OAuth client consists of a client ID and a client secret. When you create an OAuth client, Tailscale creates these for you. Within your client application, use the client ID and client secret to request an API access token from the [Tailscale OAuth token endpoint][ar-tailscale-oauth-token-endpoint]. You use the access token to make calls to the Tailscale API. The access token grants permission only for the scopes that you defined when you created the OAuth client.
+一个 OAuth 客户端由客户端 ID 和客户端密钥组成。创建 OAuth 客户端时，Tailscale 会为你生成这两者。在客户端应用中，使用客户端 ID 和客户端密钥向 [Tailscale OAuth 令牌端点][ar-tailscale-oauth-token-endpoint]请求 API 访问令牌，再用该访问令牌调用 Tailscale API。访问令牌只授予你创建 OAuth 客户端时定义的作用域内的权限。
 
-An API access token expires after one hour. For continuous access, shortly before an API access token expires, request a new API access token from the Tailscale OAuth token endpoint.
+API 访问令牌会在一小时后过期。要持续访问，请在令牌即将过期前，向 Tailscale OAuth 令牌端点请求一个新的 API 访问令牌。
 
-OAuth client libraries in popular programming languages can handle the API access token generation and renewal.
+主流编程语言的 OAuth 客户端库都能处理 API 访问令牌的生成与续期。
 
-The Tailscale OAuth implementation uses the [OAuth 2.0 protocol][xt-rfc-6749].
+Tailscale 的 OAuth 实现遵循 [OAuth 2.0 协议][xt-rfc-6749]。
 
-## Prerequisites
+## 前提条件
 
-You need to be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) of a tailnet to create, revoke, or delete OAuth clients.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）、Network admin（网络管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能创建、撤销或删除 OAuth 客户端。
 
-Owners and Admins can create an OAuth client with any scope and any [tag][docs-tags] that is in the tailnet. Other users can create an OAuth client with only the scopes and tags for which they have permissions. For example, a Network admin cannot grant the `devices:core` scope, but an IT admin can.
+Owner 和 Admin 可以用 tailnet 中任意作用域和任意[标签][docs-tags]创建 OAuth 客户端。其他用户只能使用自己有权限的作用域和标签创建 OAuth 客户端。例如，Network admin 无法授予 `devices:core` 作用域，而 IT admin 可以。
 
-## Setting up an OAuth client
+## 设置 OAuth 客户端
 
-1. Open the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
+1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
 
-2. Select the **Credential** button.
+2. 选择 **Credential** 按钮。
 
-3. Select **OAuth**.
+3. 选择 **OAuth**。
 
-4. Select the set of operations that can be performed with tokens created by the new OAuth client. For a given operation, select **Read** or **Write**. For a description of the operations, refer to [Scopes][docs-trust-credentials-scopes].
+4. 选择新 OAuth 客户端创建的令牌可执行的一组操作。对每个操作，选择 **Read** 或 **Write**。各操作的说明参见 [Scopes][docs-trust-credentials-scopes]。
 
-5. Select **Generate credential**.
+5. 选择 **Generate credential**。
 
-6. In the **Credential created** page, you can access the new OAuth client's ID and secret. Copy both the client ID and secret, as you need them for your client code. Note that after you close the **Credential created** page, you won't be able to copy the secret again.
+6. 在 **Credential created** 页面上，你可以查看新 OAuth 客户端的 ID 和密钥。请把客户端 ID 和密钥都复制下来，客户端代码会用到它们。注意：关闭 **Credential created** 页面后，你将无法再次复制该密钥。
 
-   > **Note:**
+   > **注意：**
    >
-   > Store the client secret securely.
+   > 请妥善保管客户端密钥。
 
-   *（图：The 'Generate OAuth client' page in the admin console）*
+   *（图：管理控制台中的"Generate OAuth client"页面）*
 
-7. Select **Done**.
+7. 选择 **Done**。
 
-   Your OAuth client is now configured. Use the client ID and secret when you configure your OAuth client application. Note that Tailscale-generated OAuth client secrets are case-sensitive.
+   你的 OAuth 客户端现已配置完成。配置你的 OAuth 客户端应用时使用该客户端 ID 和密钥。注意，Tailscale 生成的 OAuth 客户端密钥区分大小写。
 
-If a user creates an OAuth client, the OAuth client will continue to function and generate API access tokens even if the user no longer has access to the tailnet. Admins can access all configured OAuth clients in the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
+如果某个用户创建了 OAuth 客户端，即使该用户此后不再拥有该 tailnet 的访问权，OAuth 客户端仍会继续工作并生成 API 访问令牌。管理员可以在管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面访问所有已配置的 OAuth 客户端。
 
-## Tailscale OAuth token endpoint
+## Tailscale OAuth 令牌端点
 
-The Tailscale OAuth token endpoint is `https://api.tailscale.com/api/v2/oauth/token`.
+Tailscale OAuth 令牌端点为 `https://api.tailscale.com/api/v2/oauth/token`。
 
-Make requests to the Tailscale OAuth token endpoint when you need an API access token. The Tailscale OAuth token endpoint accepts requests that conform to the OAuth 2.0 client credentials grant [request format][xt-rfc-6749-4.4.2], and returns responses that conform to the OAuth 2.0 client credentials grant [response format][xt-rfc-6749-4.4.3].
+需要 API 访问令牌时，向 Tailscale OAuth 令牌端点发起请求。该端点接受符合 OAuth 2.0 客户端凭证授予[请求格式][xt-rfc-6749-4.4.2]的请求，并返回符合 OAuth 2.0 客户端凭证授予[响应格式][xt-rfc-6749-4.4.3]的响应。
 
-Requests to the OAuth token endpoint can include `scope` and `tags` request parameters, which specify space-delimited lists of requested scopes and [tags][docs-tags], respectively. The OAuth client must have permission to grant the requested scopes and tags. For example, an OAuth client with the `all` scope (which grants all other scopes as well as all device tags) can request an access token with the `devices:core` scope and the `tag:server` tag.
+对 OAuth 令牌端点的请求可以包含 `scope` 和 `tags` 请求参数，分别指定以空格分隔的所请求作用域与[标签][docs-tags]列表。OAuth 客户端必须有权授予所请求的作用域和标签。例如，拥有 `all` 作用域（同时授予所有其他作用域及所有设备标签）的 OAuth 客户端，可以请求带有 `devices:core` 作用域和 `tag:server` 标签的访问令牌。
 
-Tags are only relevant for tokens with the `devices:core`, `auth_keys`, or `all` scopes. The OAuth client ignores tags if none of these scopes are present. The `tags` parameter is not part of the OAuth 2.0 specification, and not all clients might support it.
+标签只对带有 `devices:core`、`auth_keys` 或 `all` 作用域的令牌有意义。若这些作用域都不存在，OAuth 客户端会忽略标签。`tags` 参数不属于 OAuth 2.0 规范，并非所有客户端都支持它。
 
-## OAuth client libraries
+## OAuth 客户端库
 
-Popular programming languages provide OAuth client libraries for using OAuth clients. Here are several:
+主流编程语言都提供了配合 OAuth 客户端使用的 OAuth 客户端库，例如：
 
-* Go: `clientcredentials` [Visit page →][xt-go-oauth2-credentials]
-* Node: `OAuth2` [Visit page →][xt-gh-node-oauth]
-* PHP: `ClientCredentials.php` [Visit page →][xt-gh-oauth2-client-clientcredentials]
-* Ruby: `client_credentials.rb` [Visit page →][xt-gitlab-oauth2]
-* Rust: `Client Credentials Grant` [Visit page →][xt-rust-auth]
+* Go：`clientcredentials` [访问页面 →][xt-go-oauth2-credentials]
+* Node：`OAuth2` [访问页面 →][xt-gh-node-oauth]
+* PHP：`ClientCredentials.php` [访问页面 →][xt-gh-oauth2-client-clientcredentials]
+* Ruby：`client_credentials.rb` [访问页面 →][xt-gitlab-oauth2]
+* Rust：`Client Credentials Grant` [访问页面 →][xt-rust-auth]
 
-For example, the following Go code shows how to create an OAuth client object that uses your client ID and client secret to generate an API access token for calls to the Tailscale API:
+例如，下面的 Go 代码展示如何创建一个 OAuth 客户端对象，用你的客户端 ID 和客户端密钥生成 API 访问令牌，用于调用 Tailscale API：
 
 ```go
 package main
@@ -116,36 +116,36 @@ func main() {
 }
 ```
 
-The example requires that you define environment variables `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET`, with their values set to the **Client ID** and **Client secret** that you create when you [set up an OAuth client][ar-setting-up-an-oauth-client].
+该示例要求你定义环境变量 `OAUTH_CLIENT_ID` 和 `OAUTH_CLIENT_SECRET`，取值分别设置为[设置 OAuth 客户端][ar-setting-up-an-oauth-client]时创建的 **Client ID** 与 **Client secret**。
 
-## Verifying you can generate API access tokens
+## 验证你能否生成 API 访问令牌
 
-After you [set up an OAuth client][ar-setting-up-an-oauth-client], you can confirm that you can generate API access tokens by making a `curl` request to the [Tailscale OAuth token endpoint][ar-tailscale-oauth-token-endpoint].
+[设置 OAuth 客户端][ar-setting-up-an-oauth-client]之后，你可以向 [Tailscale OAuth 令牌端点][ar-tailscale-oauth-token-endpoint]发起一次 `curl` 请求，确认自己能够生成 API 访问令牌。
 
 ```shell
  curl -d "client_id=${OAUTH_CLIENT_ID}" -d "client_secret=${OAUTH_CLIENT_SECRET}" \
      "https://api.tailscale.com/api/v2/oauth/token"
 ```
 
-The example requires that you define environment variables `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET`, with their values set to your **Client ID** and **Client secret**.
+该示例要求你定义环境变量 `OAUTH_CLIENT_ID` 和 `OAUTH_CLIENT_SECRET`，取值分别设置为你的 **Client ID** 与 **Client secret**。
 
-Here's an example response showing the API access token:
+下面是一个展示 API 访问令牌的示例响应：
 
 ```json
 {"access_token":"tskey-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ","token_type":"Bearer","expires_in":3600,"scope":"devices"}
 ```
 
-## Generating long-lived auth keys
+## 生成长期认证密钥
 
-You cannot generate long-lived [auth keys][docs-auth-keys], because they expire after 90 days, or, for one-off keys, as soon as you use them.
+你无法生成长期的[认证密钥][docs-auth-keys]（auth key），因为密钥会在 90 天后过期；一次性密钥则在首次使用时立即失效。
 
-Instead of a long-lived auth key, you can generate an OAuth client with the `auth_keys` scope. Use the OAuth client to generate new auth keys as needed, by making a `POST` request to the [`/api/v2/tailnet/:tailnet/keys`][co-api-update-device-key] API method. When you create an OAuth client with the scope `auth_keys`, you must select one or more [tags][docs-tags], which can be any tag or set of tags in your tailnet. You must also specify these tags in the API call.
+作为长期认证密钥的替代方案，你可以创建一个带 `auth_keys` 作用域的 OAuth 客户端，并按需用它调用 [`/api/v2/tailnet/:tailnet/keys`][co-api-update-device-key] API 方法（`POST` 请求）生成新的认证密钥。创建带 `auth_keys` 作用域的 OAuth 客户端时，你必须选择一个或多个[标签][docs-tags]，可以是 tailnet 中任意标签或标签组合。你也必须在 API 调用中指定这些标签。
 
-For example, to assign your device a specific tag, such as `tag:server`, create an OAuth client with `tag:server`. When you create the auth key, specify `tag:server` as the tag for the auth key.
+例如，要给设备打上 `tag:server` 这样的特定标签，就创建一个带 `tag:server` 的 OAuth 客户端，并在创建认证密钥时把 `tag:server` 指定为该密钥的标签。
 
-Alternatively, if you need an OAuth client that supports more than one tag, set up [tag ownership][docs-tags-ownership]. For example, to tag some devices with `tag:server` and others with `tag:database`:
+或者，如果你需要一个支持多个标签的 OAuth 客户端，请设置[标签所有权][docs-tags-ownership]。例如，要给一部分设备打 `tag:server`、另一部分打 `tag:database`：
 
-1. Set up a tag owner `tag:terraform-tag-owner` for both `tag:server` and `tag:database`:
+1. 为 `tag:server` 和 `tag:database` 都设置一个标签所有者 `tag:terraform-tag-owner`：
 
    ```json
    {
@@ -157,126 +157,126 @@ Alternatively, if you need an OAuth client that supports more than one tag, set 
    }
    ```
 
-2. Create an OAuth client with tag `tag:terraform-tag-owner`.
+2. 创建一个带标签 `tag:terraform-tag-owner` 的 OAuth 客户端。
 
-3. Create an auth key from that OAuth client, and specify either `tag:server` or `tag:database` as the tag for the auth key.
+3. 用该 OAuth 客户端生成认证密钥，并把 `tag:server` 或 `tag:database` 指定为密钥的标签。
 
-## Shorthand notation for tailnet ID
+## tailnet ID 的简写
 
-When you use an access token to make an API call, you can optionally use the value `-` as the [tailnet ID][docs-tailnet-name-tailnet-id]. You can find your tailnet ID in the [General](https://console.tailscale.com/admin/settings/general) page of the admin console. You do not need to specify the tailnet ID.
+使用访问令牌发起 API 调用时，可以选择用值 `-` 作为 [tailnet ID][docs-tailnet-name-tailnet-id]。你可以在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 页面找到自己的 tailnet ID。你不指定 tailnet ID 也可以。
 
-For example, this command:
+例如，这条命令：
 
 ```shell
 curl -u $ACCESS_TOKEN: "https://api.tailscale.com/api/v2/tailnet/example.com/devices"
 ```
 
-is equivalent to:
+等价于：
 
 ```shell
 curl -u $ACCESS_TOKEN: "https://api.tailscale.com/api/v2/tailnet/-/devices"
 ```
 
-as long as the access token is owned by the `example.com` tailnet.
+前提是访问令牌归属于 `example.com` 这个 tailnet。
 
-You can also include the access token in the request header by using the `-H` option:
+你也可以用 `-H` 选项把访问令牌放进请求头：
 
 ```shell
 curl -H "Authorization: Bearer $ACCESS_TOKEN" "https://api.tailscale.com/api/v2/tailnet/-/devices"
 ```
 
-## Register new nodes using OAuth credentials
+## 使用 OAuth 凭证注册新节点
 
-You can use an OAuth secret directly in [`tailscale up`][docs-tailscale-up] to register a new node:
+你可以在 [`tailscale up`][docs-tailscale-up] 中直接使用 OAuth 密钥来注册新节点：
 
 ```shell
 tailscale up --auth-key=${OAUTH_CLIENT_SECRET} --advertise-tags=tag:ci
 ```
 
-The OAuth client must have the `auth_keys` scope. When you [create a client][ar-setting-up-an-oauth-client] with the `auth_keys` scope, you assign one or more [tags][docs-tags] for the scope. You must pass in one or more of those tags to the `--advertise-tags` flag.
+OAuth 客户端必须带有 `auth_keys` 作用域。[创建客户端][ar-setting-up-an-oauth-client]时，你要为该作用域指定一个或多个[标签][docs-tags]，并且必须把其中至少一个标签传给 `--advertise-tags` 旗标。
 
-> **Note:**
+> **注意：**
 >
-> Devices registered with OAuth client credentials are tag-owned. To provision devices that instead carry the identity of an individual user, refer to [device provisioning with OAuth apps][docs-device-provisioning].
+> 用 OAuth 客户端凭证注册的设备归属标签。若要预配携带单个用户身份的设备，请参阅[使用 OAuth 应用进行设备预配][docs-device-provisioning]。
 
-The `--auth-key` flag can accept additional URL-style parameters when used with OAuth secrets:
+`--auth-key` 旗标配合 OAuth 密钥使用时，还可以接受额外的 URL 风格参数：
 
 ```shell
 tailscale up --auth-key='${OAUTH_CLIENT_SECRET}?ephemeral=false&preauthorized=true' --advertise-tags=tag:ci
 ```
 
-The available parameters are:
+可用参数如下：
 
-* `ephemeral`: register as an [ephemeral node][docs-ephemeral-nodes] (defaults to `true`)
-* `preauthorized`: skip manual [device approval][docs-device-approval] (defaults to `false`)
-* `baseURL`: base URL for the Tailscale API (defaults to `https://api.tailscale.com`)
+* `ephemeral`：注册为[临时节点][docs-ephemeral-nodes]（默认为 `true`）
+* `preauthorized`：跳过手动[设备审批][docs-device-approval]（默认为 `false`）
+* `baseURL`：Tailscale API 的基础 URL（默认为 `https://api.tailscale.com`）
 
-## get-authkey utility
+## get-authkey 工具
 
-The `get-authkey` utility returns a new auth key to `stdout`, based on environment variables that contain values for your OAuth client ID and secret. Use `get-authkey` to generate auth keys for scripts or other automation.
+`get-authkey` 工具基于包含 OAuth 客户端 ID 和密钥取值的环境变量，向 `stdout` 返回一个新的认证密钥。可以用 `get-authkey` 为脚本或其他自动化流程生成认证密钥。
 
-All auth keys created from an OAuth client must use [tags][docs-tags]. You can optionally pass in arguments to `get-authkey` to specify whether the [key type][docs-auth-keys-types] is ephemeral, reusable, and/or pre-authorized.
+从 OAuth 客户端创建的所有认证密钥都必须使用[标签][docs-tags]。你可以选择向 `get-authkey` 传入参数，指定[密钥类型][docs-auth-keys-types]为临时、可复用和/或预授权。
 
-> **Warning:**
+> **警告：**
 >
-> `get-authkey` requires Go 1.23 or later.
+> `get-authkey` 需要 Go 1.23 或更高版本。
 
-To build and run `get-authkey` directly:
+直接构建并运行 `get-authkey`：
 
-1. Set the following environment variables:
+1. 设置以下环境变量：
 
-   * `TS_API_CLIENT_ID`: The OAuth client ID for your tailnet.
-   * `TS_API_CLIENT_SECRET`: The OAuth client secret for your tailnet.
+   * `TS_API_CLIENT_ID`：你的 tailnet 的 OAuth 客户端 ID。
+   * `TS_API_CLIENT_SECRET`：你的 tailnet 的 OAuth 客户端密钥。
 
    ```shell
    export TS_API_CLIENT_ID=<clientID> TS_API_CLIENT_SECRET=<secret>
    ```
 
-2. Run:
+2. 运行：
 
    ```shell
    go run tailscale.com/cmd/get-authkey@latest -tags tag:development
    ```
 
-You can pass in the following parameters:
+你可以传入以下参数：
 
-* `-tags`: Required. Apply the comma-separated list of tags to the auth key.
-* `-reusable` (Optional): Allocate a reusable auth key. If not set, defaults to false.
-* `-ephemeral` (Optional): Allocate an ephemeral auth key. If not set, defaults to false.
-* `-preauth` (Optional): Allocate the auth key as pre-authorized. If not set, defaults to true.
+* `-tags`：必需。把以逗号分隔的标签列表应用到认证密钥。
+* `-reusable`（可选）：分配可复用的认证密钥。未设置时默认为 false。
+* `-ephemeral`（可选）：分配临时认证密钥。未设置时默认为 false。
+* `-preauth`（可选）：将认证密钥分配为预授权密钥。未设置时默认为 true。
 
-For example:
+例如：
 
 ```shell
 go run tailscale.com/cmd/get-authkey@latest -reusable -tags tag:development
 ```
 
-As an alternative, you can download the `get-authkey` source code and run it from a local repository:
+另一种方式是下载 `get-authkey` 源码，从本地仓库运行：
 
-1. Clone the [`tailscale/tailscale`][xt-gh-tailscale-repo] repository.
-2. Open a command prompt and change directories to the root of the local `tailscale/` folder.
-3. Run `get-authkey`:
+1. 克隆 [`tailscale/tailscale`][xt-gh-tailscale-repo] 仓库。
+2. 打开命令提示符，切换到本地 `tailscale/` 目录的根目录。
+3. 运行 `get-authkey`：
 
    ```shell
    go run ./cmd/get-authkey/main.go -tags tag:development
    ```
 
-## Scopes
+## 作用域
 
-Information about our scopes has moved to the [trust credentials][docs-trust-credentials-scopes] topic.
+有关作用域的信息已迁移至 [trust credentials][docs-trust-credentials-scopes] 主题。
 
-## Legacy scopes
+## 旧版作用域
 
-Information about our legacy scopes has moved to the [trust credentials][docs-trust-credentials-legacy-scopes] topic.
+有关旧版作用域的信息已迁移至 [trust credentials][docs-trust-credentials-legacy-scopes] 主题。
 
-## Limitations
+## 限制
 
-* OAuth clients must be owned by the tailnet, and not by an individual user.
-* An OAuth access token expires after 1 hour. This time cannot be modified.
+* OAuth 客户端必须由 tailnet 持有，而不能由单个用户持有。
+* OAuth 访问令牌在 1 小时后过期，该时长不可修改。
 
-[ar-setting-up-an-oauth-client]: #setting-up-an-oauth-client
+[ar-setting-up-an-oauth-client]: #设置-oauth-客户端
 
-[ar-tailscale-oauth-token-endpoint]: #tailscale-oauth-token-endpoint
+[ar-tailscale-oauth-token-endpoint]: #tailscale-oauth-令牌端点
 
 [co-api-update-device-key]: https://tailscale.com/api#tag/devices/POST/device/%7BdeviceId%7D/key
 

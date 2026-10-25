@@ -1,31 +1,31 @@
 ---
-title: "Post-quantum cryptography"
-description: "Explore post-quantum cryptography in relation to Tailscale."
+title: "后量子密码学"
+description: "探索后量子密码学与 Tailscale 的关系。"
 ---
 
-Last validated May 2, 2025
+最后验证于 May 2, 2025
 
-Post-quantum cryptography (PQC) is cryptography designed to withstand key exchange attacks that could be possible from adversaries with access to quantum computers. At a high level, quantum computers could be used to break asymmetric cryptography. Symmetric cryptography is not affected.
+后量子密码学（post-quantum cryptography，PQC）是一种为抵御密钥交换攻击而设计的密码学，这类攻击可能来自拥有量子计算机的攻击者。从高层次看，量子计算机可用于破解非对称加密，而对称加密不受影响。
 
-Standards for post-quantum asymmetric cryptography are just starting to emerge. An example is [Module-Lattice-Based Key-Encapsulation Mechanism][xt-ml-kem] (ML-KEM, formerly known as Kyber). Some companies (like major browser vendors) are early in the process of using ML-KEM in their Transport Layer Security (TLS) implementations to mitigate future risk of an adversary having a quantum computer.
+后量子非对称加密的标准才刚刚开始出现。例如 [Module-Lattice-Based Key-Encapsulation Mechanism][xt-ml-kem]（ML-KEM，前称 Kyber）。一些公司（如主流浏览器厂商）已经开始在各自的传输层安全（TLS）实现中采用 ML-KEM，以降低攻击者未来拥有量子计算机所带来的风险。
 
-## PQC and WireGuard
+## PQC 与 WireGuard
 
-During the handshake between two connecting devices, WireGuard, like many other protocols, uses asymmetric cryptography to negotiate a per-connection symmetric key. The rest of the connection is then encrypted by using the symmetric key, with periodic rotation of the symmetric key. If an adversary can break the asymmetric key during the negotiation phase, they can decrypt the rest of the connection data.
+在两台设备建立连接的握手过程中，WireGuard 与许多其他协议一样，使用非对称加密来协商每条连接专属的对称密钥。连接的其余部分随后使用该对称密钥加密，并定期轮换。如果攻击者能在协商阶段破解非对称密钥，就能解密连接的其余数据。
 
-WireGuard's design doesn't provide the ability to change symmetric/asymmetric algorithms that both sides of the connection agree on. Specifically, as mentioned in [WireGuard: Next Generation Kernel Network Tunnel][xt-wireguard-whitepaper], WireGuard intentionally avoids protocol agility. As a result, Tailscale cannot use ML-KEM in WireGuard directly, as it would be just a different new protocol.
+WireGuard 的设计不允许更改连接双方协商一致的对称/非对称算法。具体来说，正如 [WireGuard: Next Generation Kernel Network Tunnel][xt-wireguard-whitepaper] 所述，WireGuard 有意避免协议灵活性（protocol agility）。因此，Tailscale 无法在 WireGuard 中直接使用 ML-KEM，否则它就只是一个另外的新协议了。
 
-In theory, an adversary's use of quantum computers could determine the symmetric key exchanged during the handshake. To mitigate this threat, one solution suggested by WireGuard's creator is to use the optional pre-shared key (PSK) feature that is already present in the WireGuard protocol. It involves both peers of a connection mixing in the same symmetric key (configured separately ahead of time) into the asymmetric handshake. Because symmetric cryptography is not considered at risk from quantum computers, the use of the PSK protects the handshake and therefore the rest of the WireGuard connection.
+理论上，攻击者使用量子计算机有可能推算出握手期间交换的对称密钥。为缓解这一威胁，WireGuard 作者提出的一种方案是使用 WireGuard 协议中已有的可选预共享密钥（PSK）功能：连接的两端各自将同一个对称密钥（提前单独配置好）混入非对称握手中。由于对称加密被认为不受量子计算机威胁，使用 PSK 即可保护握手过程，进而保护 WireGuard 连接的其余部分。
 
-This presents a different challenge: generating and distributing unique PSKs to WireGuard peers. The distribution step should use some PQC mechanism, like a TLS connection using ML-KEM.
+这也带来了另一个挑战：如何生成唯一的 PSK 并分发给各个 WireGuard 对端。分发环节应使用某种 PQC 机制，例如基于 ML-KEM 的 TLS 连接。
 
-## PQC and Tailscale
+## PQC 与 Tailscale
 
-Tailscale builds on top of WireGuard by adding automatic mesh configuration, single sign-on (SSO), NAT traversal, TCP transport, and centralized [access control policies][docs-access-control].
+Tailscale 在 WireGuard 之上构建，增加了自动 mesh 组网配置、单点登录（SSO）、NAT 穿透、TCP 传输，以及集中式的[访问控制策略][docs-access-control]。
 
-Today, Tailscale's WireGuard implementation is not post-quantum secure and does not use PSKs. There is also no way for Tailscale users to configure PSKs manually.
+目前，Tailscale 的 WireGuard 实现尚不具备后量子安全性，也未使用 PSK。Tailscale 用户同样无法手动配置 PSK。
 
-Eventually, we intend to build automatic PSK provisioning and distribution to devices. This should allow us to make Tailscale post-quantum secure out of the box in the future.
+最终，我们计划构建自动向设备供应并分发 PSK 的能力。这将使 Tailscale 在未来实现开箱即用的后量子安全。
 
 [docs-access-control]: /docs/features/access-control
 

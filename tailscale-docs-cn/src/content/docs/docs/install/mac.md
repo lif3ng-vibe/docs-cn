@@ -1,33 +1,33 @@
 ---
-title: "Install Tailscale on macOS"
-description: "Install the Tailscale client on macOS."
+title: "在 macOS 上安装 Tailscale"
+description: "在 macOS 上安装 Tailscale 客户端。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:**
+> **注意：**
 >
-> The current version of the Tailscale client requires macOS Monterey 12.0 or later.
+> 当前版本的 Tailscale 客户端要求 macOS Monterey 12.0 或更高版本。
 
-1. Download and install the Tailscale client using one of the following options:
+1. 使用以下任一方式下载并安装 Tailscale 客户端：
 
-   * [Standalone variant][pk-stable-macos] from Tailscale's package server (recommended).
-   * [Mac App Store][xt-apple-tailscale-macos] variant. The Tailscale client is free to download, but downloading any app from the Mac App Store may require an Apple ID with a valid credit card attached.
-   * [Our open source][xt-gh-tailscale-macos] variant from our GitHub repository.
+   * [独立版本][pk-stable-macos]（Standalone variant），来自 Tailscale 的软件包服务器（推荐）。
+   * [Mac App Store][xt-apple-tailscale-macos] 版本。Tailscale 客户端可免费下载，但从 Mac App Store 下载任何应用都可能需要绑定了有效信用卡的 Apple ID。
+   * [我们的开源][xt-gh-tailscale-macos]版本，来自 GitHub 仓库。
 
-2. Follow the Tailscale onboarding flow, which will guide you to install the Tailscale VPN configuration.
+2. 按照 Tailscale 的引导流程操作，它会指引你安装 Tailscale VPN 配置。
 
-3. Sign up with [your SSO identity provider][docs-sso-providers].
+3. 使用[你的 SSO 身份提供方][docs-sso-providers]注册。
 
-For more information about the different variant options, refer to [Three ways to run Tailscale on macOS][docs-macos-variants].
+有关不同版本选项的更多信息，请参阅[在 macOS 上运行 Tailscale 的三种方式][docs-macos-variants]。
 
-## MDM deployments
+## MDM 部署
 
-You can use [configuration profiles and user defaults][docs-macos-mdm] to personalize your setup of Tailscale for macOS programmatically. This can help you deploy Tailscale using solutions like MDM.
+你可以使用[配置描述文件与用户默认设置][docs-macos-mdm]（configuration profiles and user defaults），以编程方式对 macOS 版 Tailscale 的设置进行个性化。这有助于你借助 MDM 之类的解决方案部署 Tailscale。
 
-## Troubleshooting
+## 故障排除
 
-For common macOS issues and suggestions to help resolve them, refer to the [Troubleshooting guide][docs-troubleshooting-apple].
+有关常见的 macOS 问题及解决建议，请参阅[故障排除指南][docs-troubleshooting-apple]。
 
 [docs-macos-mdm]: /docs/integrations/mdm/mac
 

@@ -1,24 +1,24 @@
 ---
-title: "Set up Anthropic"
-description: "Configure an Anthropic provider in Aperture so your team can access Claude models through your tailnet. Anthropic uses the `x-api-key` authorization type and the `anthropic_messages` compatibility fla"
+title: "设置 Anthropic"
+description: "在 Aperture 中配置 Anthropic 提供商，让你的团队通过 tailnet 访问 Claude 模型。Anthropic 使用 `x-api-key` 授权类型和 `anthropic_messages` 兼容性开关，两者都与默认值不同。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure an Anthropic provider in Aperture so your team can access Claude models through your tailnet. Anthropic uses the `x-api-key` authorization type and the `anthropic_messages` compatibility flag, which differ from the defaults.
+在 Aperture 中配置 Anthropic 提供商，让你的团队通过 tailnet 访问 Claude 模型。Anthropic 使用 `x-api-key` 授权类型和 `anthropic_messages` 兼容性开关，两者都与默认值不同。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* An [Anthropic API key][xt-anthropic-api-keys].
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个 [Anthropic API key][xt-anthropic-api-keys]。
 
-## Configure the provider
+## 配置提供商
 
-Add Anthropic as a provider in your [Aperture configuration][docs-aperture-configuration]:
+在 [Aperture 配置][docs-aperture-configuration]中把 Anthropic 添加为提供商：
 
 ```json
 {
@@ -36,11 +36,11 @@ Add Anthropic as a provider in your [Aperture configuration][docs-aperture-confi
 }
 ```
 
-The `authorization` field is set to `x-api-key` because Anthropic uses the `x-api-key` header instead of a bearer token. The `anthropic_messages` flag tells Aperture to use the Anthropic message format instead of the default OpenAI chat completions format. Refer to the [compatibility flags reference][docs-provider-compatibility] for the full list of flags.
+`authorization` 字段设为 `x-api-key`，因为 Anthropic 使用 `x-api-key` 头而不是 bearer token。`anthropic_messages` 开关让 Aperture 使用 Anthropic 消息格式，而不是默认的 OpenAI chat completions 格式。开关的完整列表参阅[兼容性开关参考][docs-provider-compatibility]。
 
-By default, Aperture injects the configured `apikey` on every request to Anthropic. To forward each client's own credential to Anthropic instead, set `auth_mode: "passthrough"` on the provider. The client then supplies its own credential, which can be a personal API key or a subscription OAuth token, such as a Claude Pro or Max account. Refer to [Set up passthrough mode][docs-use-passthrough-mode] for the full configuration.
+默认情况下，Aperture 在每个发往 Anthropic 的请求中注入配置的 `apikey`。若要把每个客户端自己的凭证转发给 Anthropic，请在该提供商上设置 `auth_mode: "passthrough"`。此时由客户端提供自己的凭证，可以是个人 API key，也可以是订阅 OAuth 令牌（如 Claude Pro 或 Max 账户）。完整配置参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 

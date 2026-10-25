@@ -1,46 +1,46 @@
 ---
-title: "Coordination server reports an issue"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "协调服务器报告问题"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Aug 1, 2025
+最后验证于 Aug 1, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Coordination server reports an issue
 The coordination server is reporting a health issue: `<reported-issue>`
 
-## Reference ID
+## 参考 ID
 
 `control-health`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-The coordination server is responsible for device discovery, authentication, key distribution, policy enforcement, and distributing network configurations to all devices in your tailnet.
+协调服务器（coordination server）负责设备发现、身份验证、密钥分发、策略执行，以及向 tailnet 中的所有设备分发网络配置。
 
-This message may appear when the coordination server is not reachable. There are multiple reasons why this can happen, including the following:
+当协调服务器不可达时，可能会显示这条消息。造成这种情况的原因有多种，包括：
 
-* There is an issue on our end.
-* A router, firewall, or network configuration was recently updated, causing connectivity issues.
-* You were recently assigned a new public IP address and the client is attempting to re-establishing a connection to the coordination server.
+* 我们这边出现了问题。
+* 路由器、防火墙或网络配置最近被更新，导致连接问题。
+* 你最近被分配了新的公网 IP 地址，客户端正在尝试重新建立与协调服务器的连接。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Restart your Tailscale client using the client UI, or run the CLI commands `tailscale down` followed by `tailscale up`.
-* Check your internet connection.
-* Wait a few minutes and restart the Tailscale client.
-* Check your firewall rules.
-* Check the [Tailscale Status][xt-tailscale-status] page. If there is an issue on our end that impacts any of our services, it will be reported here.
+* 通过客户端 UI 重启 Tailscale 客户端，或者在 CLI 中先运行 `tailscale down`、再运行 `tailscale up`。
+* 检查你的互联网连接。
+* 等待几分钟，然后重启 Tailscale 客户端。
+* 检查你的防火墙规则。
+* 查看 [Tailscale Status][xt-tailscale-status] 页面。如果我们这边出现了影响任何服务的问题，都会在那里报告。
 
-## Additional information
+## 更多信息
 
-* For information about coordination server outages, refer to [What happens if the coordination server is down?][docs-coordination server-down].
-* For information about the Tailscale coordination server, refer to [Control and data planes][docs-control-data-planes].
-* For information about using firewalls with Tailscale, refer to [Using Tailscale with your firewall][docs-firewalls].
+* 有关协调服务器中断的信息，请参阅 [协调服务器宕机会怎样？][docs-coordination server-down]。
+* 有关 Tailscale 协调服务器的信息，请参阅 [控制平面与数据平面][docs-control-data-planes]。
+* 有关在 Tailscale 中使用防火墙的信息，请参阅 [将 Tailscale 与你的防火墙配合使用][docs-firewalls]。
 
 [docs-control-data-planes]: /docs/concepts/control-data-planes
 

@@ -1,0 +1,183 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "使用配置档案轮换 Microsoft Graph 凭据"
+sidebar-title: "Microsoft Graph 提供商刷新"
+description: "配置 Microsoft Graph 提供商配置档案，使用网关托管的 OAuth2 刷新令牌轮换。"
+keywords: "生成式 AI, 网络安全, 教程, 提供商, Microsoft Graph, OAuth2, 凭据刷新, 沙箱"
+---
+import { Aside } from '@astrojs/starlight/components';
+import Steps from '@components/Steps.astro';
+
+使用提供商配置档案（provider profile），让 Microsoft Graph 访问令牌保持短时效，而沙箱始终收到稳定的 `MS_GRAPH_ACCESS_TOKEN` 占位符。OpenShell 把不可注入的刷新材料（refresh material）保存在网关（gateway）上，在 Microsoft Graph 访问令牌过期前刷新它，更新提供商记录，并把当前凭据（credential）注入新启动的沙箱进程。
+
+完成本教程后，你将拥有：
+
+- 一个自定义的 Microsoft Graph 邮件提供商配置档案。
+- 一个配置了 `oauth2-refresh-token` 的提供商实例。
+- 一个能用 `curl` 通过提供商自有策略读取 Microsoft Graph 邮件的沙箱。
+
+<Aside type="note">
+本教程从你的 OAuth 客户端已完成 Microsoft 初始登录流程之后开始，不提供令牌引导脚本。请参考 Microsoft 标识平台文档中的[设备授权授予流程](https://learn.microsoft.com/en-ie/entra/identity-platform/v2-oauth2-device-code)或[授权码流程](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)，并使用任何符合标准、能返回访问令牌（token）、刷新令牌与过期时间的客户端。
+</Aside>
+
+## 前提条件
+
+- 可用的 OpenShell 安装，且有一个活动网关。继续之前请先阅读[安装](/about/installation)。
+- 一个能够获取委托式（delegated）Microsoft Graph 邮件访问权的 Microsoft Entra 应用注册。
+- 已登录用户的委托式 Microsoft Graph 邮件权限。`Mail.Read` 允许读取已登录用户的邮箱；参见 [Microsoft Graph 权限参考](https://learn.microsoft.com/en-us/graph/permissions-reference)。
+
+来自你 Microsoft 初始登录流程的 OAuth 材料：
+
+| 变量 | 值 |
+|---|---|
+| `MS_TENANT_ID` | Microsoft Entra 租户 ID、域名或 `common`。 |
+| `MS_CLIENT_ID` | Microsoft Entra 应用程序客户端 ID。 |
+| `MS_GRAPH_ACCESS_TOKEN` | 当前的委托式 Microsoft Graph 访问令牌。 |
+| `MS_GRAPH_REFRESH_TOKEN` | 委托式 OAuth 刷新令牌。 |
+| `MS_GRAPH_ACCESS_TOKEN_EXPIRES_AT` | 当前访问令牌的绝对过期时间。 |
+
+`MS_GRAPH_ACCESS_TOKEN_EXPIRES_AT` 可以是 RFC3339 时间戳（如 `2026-01-01T00:00:00Z`），也可以是 Unix 纪元毫秒时间戳。
+
+<Aside type="caution">
+不要提交访问令牌、刷新令牌或本地 `.env` 文件。下面的命令会把令牌材料传给网关，它们不是可存入版本控制的值示例。
+</Aside>
+
+<Steps>
+
+## 创建 Microsoft Graph 提供商配置档案
+
+用以下配置档案创建 `microsoft-graph-mail.yaml`：
+
+```yaml showLineNumbers={false}
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+id: microsoft-graph-mail
+display_name: Microsoft Graph Mail
+description: Delegated Microsoft Graph mail read access
+category: messaging
+credentials:
+  - name: graph_access_token
+    description: Microsoft Graph delegated access token
+    env_vars: [MS_GRAPH_ACCESS_TOKEN]
+    required: true
+    auth_style: bearer
+    header_name: authorization
+    refresh:
+      strategy: oauth2_refresh_token
+      token_url: https://login.microsoftonline.com/common/oauth2/v2.0/token
+      scopes: [https://graph.microsoft.com/.default]
+      refresh_before: "600s"
+      max_lifetime: "3600s"
+      material:
+        - name: tenant_id
+          description: Microsoft Entra tenant ID
+          required: true
+        - name: client_id
+          description: Microsoft Entra application client ID
+          required: true
+        - name: refresh_token
+          description: Delegated OAuth refresh token
+          required: true
+          secret: true
+endpoints:
+  - host: graph.microsoft.com
+    port: 443
+    protocol: rest
+    access: read-only
+    enforcement: enforce
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+```
+
+对配置档案执行 lint 并导入：
+
+```shell
+openshell profile lint -f microsoft-graph-mail.yaml
+openshell profile import -f microsoft-graph-mail.yaml
+```
+
+该配置档案定义了刷新策略与 Graph 网络策略。`tenant_id` 刷新材料会在网关托管的刷新过程中选定 Microsoft 令牌端点。
+
+## 创建提供商
+
+用当前的 Microsoft Graph 访问令牌创建提供商：
+
+```shell
+openshell provider create \
+  --name microsoft-mail \
+  --type microsoft-graph-mail \
+  --credential MS_GRAPH_ACCESS_TOKEN="$MS_GRAPH_ACCESS_TOKEN"
+```
+
+当前版本的 CLI 要求在创建提供商时提供初始凭据。刷新材料单独配置，不会注入沙箱。
+
+## 配置刷新
+
+配置网关托管的 OAuth2 刷新令牌轮换（rotate）：
+
+```shell
+openshell provider refresh configure microsoft-mail \
+  --credential-key MS_GRAPH_ACCESS_TOKEN \
+  --strategy oauth2-refresh-token \
+  --material tenant_id="$MS_TENANT_ID" \
+  --material client_id="$MS_CLIENT_ID" \
+  --material refresh_token="$MS_GRAPH_REFRESH_TOKEN" \
+  --secret-material-key refresh_token \
+  --credential-expires-at "$MS_GRAPH_ACCESS_TOKEN_EXPIRES_AT"
+```
+
+`--secret-material-key refresh_token` 指定要标记为敏感的材料键，它不是刷新令牌的值。如果 Microsoft 在刷新期间返回了轮换后的新刷新令牌，OpenShell 会存储新的 `refresh_token` 材料并自动将其标记为机密（secret）。
+
+立即强制执行第一次刷新：
+
+```shell
+openshell provider refresh rotate microsoft-mail \
+  --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+检查刷新状态：
+
+```shell
+openshell provider refresh status microsoft-mail \
+  --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+状态输出显示刷新状态、过期时间、下次刷新与上次刷新时间。它不会打印访问令牌的值或刷新材料。
+
+## 启动沙箱
+
+挂接 Microsoft Graph 提供商并启动沙箱（sandbox）：
+
+```shell
+openshell sandbox create \
+  --name microsoft-graph-mail \
+  --from registry.example.com/team/agent-tools:1.0 \
+  --provider microsoft-mail \
+  --no-auto-providers \
+  -- /bin/sh
+```
+
+提供商策略允许 `curl` 访问 `graph.microsoft.com:443`。沙箱进程收到的 `MS_GRAPH_ACCESS_TOKEN` 是一个 OpenShell 占位符；当 `curl` 把它放进 authorization 头部（header）发送时，代理会将该占位符解析为当前网关托管的访问令牌。
+
+## 验证 Microsoft Graph 访问
+
+在沙箱内，列出一小页邮箱消息：
+
+```shell
+curl -sS \
+  -H "Authorization: Bearer $MS_GRAPH_ACCESS_TOKEN" \
+  'https://graph.microsoft.com/v1.0/me/messages?$select=sender,subject&$top=5'
+```
+
+该请求使用 [Microsoft Graph 列出消息 API](https://learn.microsoft.com/en-us/graph/api/user-list-messages?view=graph-rest-1.0)。如果令牌具备委托式邮件读取权限，Microsoft Graph 会返回已登录用户邮箱的消息元数据。
+
+## 更新运行中的沙箱
+
+提供商刷新会更新网关上的提供商记录。运行中的沙箱会轮询提供商环境修订版，但已在运行的进程保留启动时的环境。
+
+如果你把该提供商挂接（attach）到现有沙箱，或在进程启动之后更新提供商凭据，需要先在沙箱内启动一个新进程，`MS_GRAPH_ACCESS_TOKEN` 才会出现在该进程的环境中。
+
+</Steps>

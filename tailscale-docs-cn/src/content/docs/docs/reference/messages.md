@@ -1,47 +1,47 @@
 ---
-title: "Tailscale messages"
-description: "Tailscale client and admin console messages to help you understand, manage, and troubleshoot tailnet-related issues."
+title: "Tailscale 消息"
+description: "Tailscale 客户端与管理控制台消息，帮助你理解、管理和排查 tailnet 相关问题。"
 ---
 
-Last validated Jan 30, 2026
+最后验证于 Jan 30, 2026
 
-Informational and error messages can appear in the admin console, the Tailscale client UI, and the Tailscale client command-line interface (CLI). Understanding the context and purpose of these different message types can help you manage and troubleshoot issues related to your tailnet.
+信息性消息和错误消息可能出现在管理控制台、Tailscale 客户端 UI 以及 Tailscale 客户端命令行界面（CLI）中。理解这些不同消息类型的上下文和用途，有助于你管理和排查 tailnet 相关问题。
 
-If the information in these topics doesn't resolve your issue and the message persists, contact [Tailscale Support][co-support].
+如果这些主题中的信息未能解决你的问题、消息仍然存在，请联系 [Tailscale 支持][co-support]。
 
-## Admin console messages
+## 管理控制台消息
 
-* [Authentication failed while retrieving details from your identity provider][docs-messages-console-auth-failed-sso]
-* [Failed to load sharing information][docs-messages-console-sharing-failure]
-* [Login name change detected][docs-messages-console-login-name-change]
-* [Multiple users with login][docs-messages-console-multi-user-login]
-* [No auth service][docs-messages-console-no-auth-service]
-* [Reached use limit][docs-messages-console-reached-use-limit]
-* [You don't have access to the admin console][docs-messages-console-no-access]
-* [Your account is not an administrator][docs-messages-console-account-not-admin]
-* [Your organization has restricted members from joining external tailnets][docs-messages-console-org-has-restrictions]
+* [从身份提供方获取详情时身份验证失败][docs-messages-console-auth-failed-sso]
+* [共享信息加载失败][docs-messages-console-sharing-failure]
+* [检测到登录名变更][docs-messages-console-login-name-change]
+* [多个用户使用同一登录名][docs-messages-console-multi-user-login]
+* [无身份验证服务][docs-messages-console-no-auth-service]
+* [已达到使用上限][docs-messages-console-reached-use-limit]
+* [你无权访问管理控制台][docs-messages-console-no-access]
+* [你的账户不是管理员][docs-messages-console-account-not-admin]
+* [你的组织已限制成员加入外部 tailnet][docs-messages-console-org-has-restrictions]
 
-## Client messages
+## 客户端消息
 
-* [Coordination server reports an issue][docs-messages-client-control-health]
-* [Could not apply configuration][docs-messages-client-apply-disk-config]
-* [Docker with stateful filtering][docs-messages-client-docker-stateful-filtering]
-* [Encrypted connection failed][docs-messages-client-tls-connection-failed]
-* [Invalid packet filter][docs-messages-client-invalid-packet-filter]
-* [Linux DNS configuration issue][docs-messages-client-resolv-conf-overwritten]
-* [Local log misconfiguration][docs-messages-client-local-log-config-error]
-* [MagicSock function not running][docs-messages-client-magicsock-receive-func-error]
-* [Network down][docs-messages-client-network-down]
-* [Network map response timeout][docs-messages-client-mapresponse-timeout]
-* [No home relay server][docs-messages-client-no-derp-home]
-* [Out of sync][docs-messages-client-not-in-map-poll]
-* [Relay server unavailable][docs-messages-client-no-derp-connection]
-* [Security update available][docs-messages-client-security-update-available]
-* [Tailscale blocked by Screen Time][docs-messages-client-macos-screen-time-controlclient]
-* [Tailscale SSH and SELinux][docs-messages-client-ssh-unavailable-selinux-enabled]
-* [Update available][docs-messages-client-update-available]
-* [Using an unstable version][docs-messages-client-is-using-unstable-version]
-* [Windows network configuration failed][docs-messages-client-set-network-category-failed]
+* [协调服务器报告问题][docs-messages-client-control-health]
+* [无法应用配置][docs-messages-client-apply-disk-config]
+* [Docker 有状态过滤][docs-messages-client-docker-stateful-filtering]
+* [加密连接失败][docs-messages-client-tls-connection-failed]
+* [无效的数据包过滤器][docs-messages-client-invalid-packet-filter]
+* [Linux DNS 配置问题][docs-messages-client-resolv-conf-overwritten]
+* [本地日志配置错误][docs-messages-client-local-log-config-error]
+* [MagicSock 函数未运行][docs-messages-client-magicsock-receive-func-error]
+* [网络断开][docs-messages-client-network-down]
+* [网络映射响应超时][docs-messages-client-mapresponse-timeout]
+* [没有归属中继服务器][docs-messages-client-no-derp-home]
+* [状态不同步][docs-messages-client-not-in-map-poll]
+* [中继服务器不可用][docs-messages-client-no-derp-connection]
+* [安全更新可用][docs-messages-client-security-update-available]
+* [Tailscale 被屏幕使用时间阻止][docs-messages-client-macos-screen-time-controlclient]
+* [Tailscale SSH 与 SELinux][docs-messages-client-ssh-unavailable-selinux-enabled]
+* [有可用更新][docs-messages-client-update-available]
+* [正在使用不稳定版本][docs-messages-client-is-using-unstable-version]
+* [Windows 网络配置失败][docs-messages-client-set-network-category-failed]
 
 [co-support]: https://tailscale.com/contact/support
 

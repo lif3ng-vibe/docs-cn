@@ -1,77 +1,77 @@
 ---
-title: "Provide a static IP egress address to a regulated environment"
-description: "To meet the security and compliance requirements of regulated environments such as banking, healthcare, and government, organizations often need to route network traffic through fixed IP addresses for"
+title: "为受监管环境提供静态 IP 出站地址"
+description: "为满足银行、医疗和政府等受监管环境的安全与合规要求，组织通常需要让网络流量经由固定 IP 地址进行"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Subnet routers**](/docs/features/subnet-routers) — Use subnet routers to give devices outside your local network access to services within specific subnets. Extend your private network with Tailscale.
+> [**子网路由器**](/docs/features/subnet-routers)——使用子网路由器让本地网络之外的设备访问特定子网内的服务，用 Tailscale 扩展你的私有网络。
 
-To meet the security and compliance requirements of regulated environments such as banking, healthcare, and government, organizations often need to route network traffic through fixed IP addresses for allowlisting. You can use Tailscale for this task, by setting up a [subnet router][docs-subnet-routers] and providing the regulated environment with a static egress IP address.
+为满足银行、医疗和政府等受监管环境的安全与合规要求，组织通常需要让网络流量经由固定 IP 地址路由，以便进行白名单登记。你可以用 Tailscale 完成这项任务：设置一台[子网路由器][docs-subnet-routers]，并向受监管环境提供一个静态出站 IP 地址。
 
-In this guide, you will update your [tailnet policy file][docs-tailnet-policy-file] to restrict access to your cloud VM, configure and run a cloud VM to route requests to the regulated environment, and update the regulated environment's IP address allowlist to accept traffic only from the cloud VM. When you finish this guide, you'll have set access restrictions to let only your tailnet users access the regulated environment.
+在本指南中，你将更新 [tailnet 策略文件][docs-tailnet-policy-file]以限制对云虚拟机的访问，配置并运行一台云虚拟机把请求路由到受监管环境，并更新受监管环境的 IP 地址白名单，使其只接受来自该云虚拟机的流量。完成本指南后，你将设置好访问限制，只允许你的 tailnet 用户访问受监管环境。
 
-## Update your tailnet policy file
+## 更新你的 tailnet 策略文件
 
-Configure your [tailnet policy file][docs-tailnet-policy-file] to securely route tailnet traffic to your regulated environment. You need to make the following updates to your tailnet policy file:
+配置你的 [tailnet 策略文件][docs-tailnet-policy-file]，把 tailnet 流量安全地路由到受监管环境。你需要在 tailnet 策略文件中做以下更新：
 
-* Create a tag to use for your cloud VM, which will connect your tailnet users to your regulated environment.
-* Create a group to ensure only specific users route traffic through the cloud VM.
-* Create a grant that lets your tailnet users access the cloud VM to reach your regulated environment.
+* 创建一个用于云虚拟机的标签，由它把你的 tailnet 用户连接到受监管环境。
+* 创建一个分组，确保只有特定用户经由云虚拟机路由流量。
+* 创建一条授权，让 tailnet 用户可以访问云虚拟机，进而访问受监管环境。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a tailnet policy file.
+> 编辑 tailnet 策略文件需要拥有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 角色。
 
-### Create a tag
+### 创建标签
 
-Tailscale [tags][docs-tags] let you authenticate and identify non-user devices. A tag consists of an identifier and the users and groups that can apply the tag. Create a `tag:regulated-egress-node` tag so that you and other admins can apply the tag to the cloud VMs you want to use as subnet routers.
+Tailscale [标签][docs-tags]让你认证并标识非用户设备。一个标签由标识符以及可应用该标签的用户和分组组成。创建 `tag:regulated-egress-node` 标签，让你和其他管理员能把它应用到要用作子网路由器的云虚拟机上。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的[可视化编辑器](https://console.tailscale.com/admin/acls/visual)标签页。
 
-2. Select **Tags**, and then select **Create tag**.
+2. 选择**标签**（Tags），然后选择**创建标签**（Create tag）。
 
-3. For **Tag name**, enter `regulated-egress-node`.
+3. 在**标签名称**（Tag name）中输入 `regulated-egress-node`。
 
-4. For **Tag owner**, select `autogroup:admin`.
+4. 在**标签所有者**（Tag owner）中选择 `autogroup:admin`。
 
-5. (Optional) For **Note**, enter any note you'd like to keep for this tag.
+5. （可选）在**备注**（Note）中输入你想为该标签保留的任何说明。
 
-6. Select **Save tag**.
+6. 选择**保存标签**（Save tag）。
 
-Now that you have the tag named `regulated-egress-node`, you can apply it to any device that you want to use for routing traffic to the regulated environment.
+现在你有了名为 `regulated-egress-node` 的标签，可以把它应用到任何你想用来把流量路由到受监管环境的设备上。
 
-### Create a group
+### 创建分组
 
-Tailscale [groups][docs-policy-file-groups] let you create groups of users, which you can use in access rules (instead of listing users out explicitly). Create a group named `regulated-access-users` so that you can add all of your intended regulated environment users into a single group.
+Tailscale [分组][docs-policy-file-groups]让你创建用户分组，并可在访问规则中使用（而不必逐一列出用户）。创建名为 `regulated-access-users` 的分组，把你所有需要访问受监管环境的用户放进同一个分组。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的[可视化编辑器](https://console.tailscale.com/admin/acls/visual)标签页。
 
-2. Select **Groups**, and then select **Create group**.
+2. 选择**分组**（Groups），然后选择**创建分组**（Create group）。
 
-3. For **Group name**, enter `regulated-access-users`.
+3. 在**分组名称**（Group name）中输入 `regulated-access-users`。
 
-4. For **Members**, add the set of users in your tailnet for which you want to provide access to the regulated environment. You can add users by name, group, or use an [`autogroup`][docs-targets-and-selectors-autogroups], such as `autogroup:member` if you want all members of your tailnet to access the regulated environment.
+4. 在**成员**（Members）中添加 tailnet 里你希望授予受监管环境访问权限的那批用户。可以按名称、分组添加用户，或使用 [`autogroup`][docs-targets-and-selectors-autogroups]，例如想让 tailnet 的所有成员都能访问受监管环境时使用 `autogroup:member`。
 
-5. (Optional) For **Note**, enter any note you'd like to keep for this group.
+5. （可选）在**备注**（Note）中输入你想为该分组保留的任何说明。
 
-6. Select **Save group**.
+6. 选择**保存分组**（Save group）。
 
-Now that you have the `regulated-access-users` group, you can use it to provide access to the cloud VM.
+现在你有了 `regulated-access-users` 分组，可以用它来授予对云虚拟机的访问权限。
 
-### Create a grant
+### 创建授权
 
-Add a [`grants`][docs-grants] rule to route traffic through the cloud VM for allowed users.
+添加一条 [`grants`][docs-grants] 规则，让获准的用户经由云虚拟机路由流量。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
+1. 前往管理控制台的[访问控制](https://console.tailscale.com/admin/acls)页面。
 
-2. If you don't already have a `grants` section, create it.
+2. 如果还没有 `grants` 部分，先创建一个。
 
-3. Within the `grants` section, create a new `grant`:
+3. 在 `grants` 部分内，创建一条新的 `grant`：
 
    ```json
    "grants": [
@@ -84,30 +84,30 @@ Add a [`grants`][docs-grants] rule to route traffic through the cloud VM for all
    ]
    ```
 
-   In this grant example:
+   在这条授权示例中：
 
-   * `src` is the group you set up for your tailnet users that need access to the regulated environment.
-   * `dst` is the range of IP addresses for the regulated environment. Replace `"1.2.3.4/32"` with the actual values for your regulated environment.
-   * `ip` is the set of IP protocols and ports. In this case, all protocols and all ports.
-   * `via` is how the source (`src`) routes to the destination (`dst`). In this case, the traffic routes through the cloud VMs that have the tag `tag:regulated-egress-node`.
+   * `src` 是你为需要访问受监管环境的 tailnet 用户设置的分组。
+   * `dst` 是受监管环境的 IP 地址范围。把 `"1.2.3.4/32"` 替换为你的受监管环境的实际值。
+   * `ip` 是 IP 协议和端口的集合。本例中为所有协议和所有端口。
+   * `via` 指定源（`src`）如何路由到目标（`dst`）。本例中，流量经由带有 `tag:regulated-egress-node` 标签的云虚拟机路由。
 
-4. Select **Save**.
+4. 选择**保存**（Save）。
 
-## Configure the cloud VM
+## 配置云虚拟机
 
-Set up the cloud VM so that it routes traffic to the regulated environment.
+设置云虚拟机，让它把流量路由到受监管环境。
 
-1. Refer to your cloud provider's documentation for setting up a cloud VM with Linux as the operating system. Ensure the VM has a static IP address.
+1. 参阅云提供商的文档，设置一台以 Linux 为操作系统的云虚拟机。确保该虚拟机拥有静态 IP 地址。
 
-2. On the Linux device, run the Tailscale install script:
+2. 在 Linux 设备上运行 Tailscale 安装脚本：
 
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-   This script detects your Linux distribution and installs Tailscale using the appropriate package manager. It works on a variety of Linux platforms. For distributions not covered by the script, refer to [Install Tailscale on Linux][docs-install-linux] for alternative installation methods.
+   该脚本会检测你的 Linux 发行版，并用相应的包管理器安装 Tailscale，适用于多种 Linux 平台。脚本未覆盖的发行版，请参阅[在 Linux 上安装 Tailscale][docs-install-linux]了解其他安装方法。
 
-3. Subnet routers must have IP forwarding enabled so they can route traffic between the tailnet and the local network. Run the following commands to enable IP forwarding and make it persistent across reboots:
+3. 子网路由器必须启用 IP 转发，才能在 tailnet 与本地网络之间路由流量。运行以下命令启用 IP 转发并使其在重启后依然生效：
 
    ```bash
    echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -115,61 +115,61 @@ Set up the cloud VM so that it routes traffic to the regulated environment.
    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
    ```
 
-4. Run the [`tailscale up`][docs-up] command on the cloud VM:
+4. 在云虚拟机上运行 [`tailscale up`][docs-up] 命令：
 
    ```bash
    sudo tailscale up --advertise-routes=198.51.100.5/32 --advertise-tags=tag:regulated-egress-node
    ```
 
-   Replace `198.51.100.5/32` with the actual IP address values of the regulated environment network you want to advertise.
+   把 `198.51.100.5/32` 替换为你要宣告的受监管环境网络的实际 IP 地址值。
 
-5. The command outputs a URL. Open the URL in a browser, log in with your identity provider, and authorize the device. Once authorized, the device joins your tailnet and begins advertising routes to the specified subnet.
+5. 该命令会输出一个 URL。在浏览器中打开该 URL，用你的身份提供方（IdP）登录并授权该设备。授权完成后，设备会加入你的 tailnet，并开始向指定子网宣告路由。
 
-> **Tip:**
+> **提示：**
 >
-> For headless servers where you can't open a browser locally, copy the URL and open it on any other device. The authorization applies to the cloud VM regardless of which device you use to complete it.
+> 对于无法在本地打开浏览器的无头（headless）服务器，复制该 URL 并在任何其他设备上打开。无论你用哪台设备完成授权，授权都作用于云虚拟机。
 
-Advertised subnet routes must be approved before other devices can use them.
+在其他设备能够使用宣告的子网路由之前，必须先批准这些路由。
 
-1. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Select the  icon next to the cloud VM, then select **Edit subnet routes**.
-3. Enable the routes you want to approve and select **Save**.
+1. 前往管理控制台的[机器](https://console.tailscale.com/admin/machines)页面。
+2. 选择云虚拟机旁边的图标，然后选择**编辑子网路由**（Edit subnet routes）。
+3. 启用你想批准的路由，然后选择**保存**（Save）。
 
-## Allowlist the cloud VM IP address
+## 将云虚拟机 IP 地址列入白名单
 
-Provide the regulated environment with the cloud VM's static IP address.
+把云虚拟机的静态 IP 地址提供给受监管环境。
 
-1. Retrieve the cloud VM IP address from your cloud provider management console. Your cloud provider controls this IP address, not Tailscale.
+1. 从云提供商的管理控制台获取云虚拟机的 IP 地址。该 IP 地址由云提供商控制，而非 Tailscale。
 
-2. Update your regulated environment's set of allowlisted IP addresses to contain the cloud VM IP address. For guidance, refer to the regulated environment's documentation for allowlisting IP addresses.
+2. 更新受监管环境的白名单 IP 地址集合，加入云虚拟机的 IP 地址。操作指引请参阅受监管环境关于 IP 地址白名单的文档。
 
-3. On Linux devices in your tailnet that need to reach services on the advertised subnet, run the following to accept the routes:
+3. 在 tailnet 中需要访问宣告子网上服务的 Linux 设备上，运行以下命令以接受路由：
 
 ```bash
 tailscale set --accept-routes
 ```
 
-Tailscale clients on other operating systems accept subnet routes by default.
+其他操作系统上的 Tailscale 客户端默认接受子网路由。
 
-Your tailnet users should now be able to connect to the regulated environment.
+现在你的 tailnet 用户应该能够连接到受监管环境了。
 
-## (Optional) Keep the cloud VM persistently connected
+## （可选）让云虚拟机保持持久连接
 
-For servers and other always-on devices, consider disabling key expiry to prevent the subnet router from needing to re-authenticate periodically, which would interrupt connectivity for any device using it.
+对于服务器和其他长期在线的设备，考虑禁用密钥过期，避免子网路由器需要周期性重新认证——那会中断所有使用它的设备的连接。
 
-To disable key expiry, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, select the  icon next to the device, then select **Disable key expiry**.
+要禁用密钥过期，前往管理控制台的[机器](https://console.tailscale.com/admin/machines)页面，选择设备旁边的图标，然后选择**禁用密钥过期**（Disable key expiry）。
 
-> **Warning:**
+> **警告：**
 >
-> Disabling key expiry reduces security and can expose your network if the device or key is compromised. Only do this for trusted devices and revoke the key immediately if the device is lost or replaced. For more information, refer to [Key expiry][docs-key-expiry].
+> 禁用密钥过期会降低安全性，如果设备或密钥泄露，可能暴露你的网络。只对受信任的设备这样做，一旦设备丢失或更换，立即吊销密钥。更多信息请参阅[密钥过期][docs-key-expiry]。
 
-You can also verify that the `tailscaled` service is configured to start automatically on boot:
+你也可以确认 `tailscaled` 服务已配置为开机自启：
 
 ```bash
 sudo systemctl enable --now tailscaled
 ```
 
-Your Linux device now acts as a subnet router with a stable, persistent egress IP address. Any tailnet device that connects to services on the regulated environment subnet will appear to those services as coming from the subnet router's local IP address, regardless of where that device is physically located. You can allowlist that egress IP address in services, APIs, or firewalls on the local network with confidence that it will not change.
+现在，你的 Linux 设备充当一台拥有稳定、持久出站 IP 地址的子网路由器。任何连接受监管环境子网上服务的 tailnet 设备，在这些服务看来都来自子网路由器的本地 IP 地址，无论该设备实际位于何处。你可以放心地把这个出站 IP 地址列入本地网络上的服务、API 或防火墙白名单，因为它不会改变。
 
 [docs-grants]: /docs/features/access-control/grants
 

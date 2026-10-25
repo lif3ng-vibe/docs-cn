@@ -1,30 +1,30 @@
 ---
-title: "Let's Encrypt rate limits with the Kubernetes Operator"
-description: "The operator provisions TLS certificates from [Let's Encrypt][xt-letsencrypt] for `Ingress` proxies, the API server proxy, and other operator components. Let's Encrypt enforces [rate limits][xt-letsen"
+title: "Kubernetes Operator 的 Let's Encrypt 速率限制"
+description: "Operator 会从 [Let's Encrypt][xt-letsencrypt] 为 `Ingress` 代理、API 服务器代理及其他 Operator 组件签发 TLS 证书。Let's Encrypt 对证书签发实施[速率限制（rate limits）][xt-letsen"
 ---
 
-Last validated Jul 21, 2026
+最后验证于 Jul 21, 2026
 
-The operator provisions TLS certificates from [Let's Encrypt][xt-letsencrypt] for `Ingress` proxies, the API server proxy, and other operator components. Let's Encrypt enforces [rate limits][xt-letsencrypt-rate-limit] on certificate issuance, which can start to matter as your deployment grows.
+Operator 会从 [Let's Encrypt][xt-letsencrypt] 为 `Ingress` 代理、API 服务器代理及其他 Operator 组件签发 TLS 证书。Let's Encrypt 对证书签发实施[速率限制][xt-letsencrypt-rate-limit]，随着部署规模增长，这可能开始产生影响。
 
-The following [rate limits][xt-letsencrypt-rate-limit] apply:
+适用以下[速率限制][xt-letsencrypt-rate-limit]：
 
-* **50 certificates per week**: Unique hostnames per tailnet.
-* **5 duplicate certificates per week**: Hostnames across different clusters.
+* **每周 50 张证书**：每个 tailnet 的唯一主机名。
+* **每周 5 张重复证书**：跨不同集群的主机名。
 
-Hitting the rate limit doesn't affect existing certificates, but new issuance fails until the limit window passes.
+触发速率限制不影响已有证书，但在限制窗口过去之前，新签发会失败。
 
-## Avoid the rate limits
+## 避开速率限制
 
-The operator supports the following options for making efficient use of certificate issuance.
+Operator 支持以下选项来高效利用证书签发额度。
 
-> **Note:**
+> **注意：**
 >
-> If you need more certificates than the limits provide, you can [request a rate limit adjustment][xt-letsencrypt-rate-limit-form] from Let's Encrypt.
+> 如果你需要的证书数量超过限额，可以向 Let's Encrypt[申请速率限制调整][xt-letsencrypt-rate-limit-form]。
 
-### Test with the staging environment
+### 使用暂存环境测试
 
-When testing operator deployments, use the Let's Encrypt staging environment so that test certificates don't count against production rate limits. Configure it through a `ProxyClass`:
+测试 Operator 部署时，请使用 Let's Encrypt 暂存环境，这样测试证书就不会占用生产速率限制。通过 `ProxyClass` 配置：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -35,22 +35,22 @@ spec:
   useLetsEncryptStagingEnvironment: true
 ```
 
-Clients don't trust certificates issued by the staging environment, so use staging only for testing.
+客户端不信任暂存环境签发的证书，因此请仅在测试时使用暂存环境。
 
-### Use a shared ACME account
+### 使用共享的 ACME 账户
 
-Certificate renewals are exempt from rate limits, but only when the renewal comes from the ACME account that issued the previous certificate. By default each proxy has its own ACME account, so recreating a proxy Pod loses the exemption.
+证书续期免受速率限制，但前提是续期必须来自签发上一张证书的那个 ACME 账户。默认情况下每个代理都有自己的 ACME 账户，因此重建代理 Pod 会失去豁免。
 
-Configure the operator to share one ACME account across proxies instead, and renewals keep their exemption across Pod restarts, `ProxyGroup` recreation, and cluster migrations. The operator stores the shared account key in a `Secret` named `tailscale-acme-accounts` in its namespace.
+改为让 Operator 在各代理之间共享一个 ACME 账户，续期就能在 Pod 重启、`ProxyGroup` 重建和集群迁移时保持豁免。Operator 会把共享账户密钥存储在其命名空间中名为 `tailscale-acme-accounts` 的 `Secret` 里。
 
-To enable the shared account for all `ProxyGroup` resources, set the following value in the operator's Helm chart:
+要为所有 `ProxyGroup` 资源启用共享账户，请在 Operator 的 Helm chart 中设置以下值：
 
 ```yaml
 operatorConfig:
   sharedACMEAccountKey: true
 ```
 
-To control the shared account for an individual `ProxyGroup`, set the `tailscale.com/share-acme-account` annotation. The annotation works with or without the Helm value and takes precedence over it, so you can opt individual `ProxyGroup` resources in without enabling the shared account operator-wide:
+要为单个 `ProxyGroup` 控制共享账户，请设置 `tailscale.com/share-acme-account` 注解。该注解无论是否设置 Helm 值都有效，并且优先于 Helm 值，因此你可以在不必 Operator 范围内启用共享账户的情况下，让单个 `ProxyGroup` 资源选择加入：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -63,48 +63,48 @@ spec:
   type: ingress
 ```
 
-The operator creates the `tailscale-acme-accounts` `Secret` when the first opted-in `ProxyGroup` reconciles. Proxies populate the account key when they next issue or renew a certificate.
+Operator 会在第一个选择加入的 `ProxyGroup` 调谐时创建 `tailscale-acme-accounts` `Secret`。代理会在下次签发或续期证书时填充账户密钥。
 
-#### Enable on an existing deployment
+#### 在现有部署上启用
 
-Enabling the shared account on a running deployment is safe: it doesn't reissue certificates or interrupt traffic. The operator restarts the affected `Ingress` proxy Pods, and each keeps serving its existing certificate across the restart.
+在运行中的部署上启用共享账户是安全的：它不会重新签发证书，也不会中断流量。Operator 会重启受影响的 `Ingress` 代理 Pod，每个 Pod 在重启期间会继续使用其现有证书服务。
 
-Certificates move onto the shared account as they renew on their normal schedule, not all at once. The exemption isn't retroactive, so full rate-limit relief lands once every certificate has renewed at least once under the shared account, which can take up to a certificate lifetime. Enabling it costs no extra rate-limit budget beyond the renewals you'd already spend.
+证书按正常排期续期时逐步迁移到共享账户，而不是一次性全部迁移。豁免不具追溯性，因此要等到每张证书都在共享账户下完成至少一次续期后，速率限制才会完全缓解，这可能需要一张证书的整个生命周期。启用它除了你本来就要花费的续期额度之外，不会消耗额外的速率限制额度。
 
-Don't delete certificates to force the migration. That triggers an immediate reissue, spending a rate-limit slot now instead of at the next scheduled renewal, and if you're at the limit, it can fail.
+不要通过删除证书来强制迁移。那会立即触发重新签发，现在就消耗一个速率限制额度而不是留到下次计划续期时，如果你已处于限额边缘，还可能失败。
 
-If you're already hitting the rate limit, enable the shared account as soon as possible so the exemption is in place before your renewals come due.
+如果你已经触发速率限制，请尽快启用共享账户，以便在你的续期到期之前豁免已生效。
 
-#### Deletion protection
+#### 删除保护
 
-The `tailscale-acme-accounts` `Secret` carries the `tailscale.com/acme-account-protection` finalizer because losing the account key removes the renewal exemption for every certificate in the tailnet. If you delete the `Secret`, it remains in a `Terminating` state and its data stays readable until you remove the finalizer. The operator emits a warning event on the `Secret` while it is in this state.
+`tailscale-acme-accounts` `Secret` 带有 `tailscale.com/acme-account-protection` finalizer，因为丢失账户密钥会移除 tailnet 中所有证书的续期豁免。如果你删除该 `Secret`，它会停留在 `Terminating` 状态，数据仍可读取，直到你移除 finalizer。在此状态下，Operator 会在该 `Secret` 上发出警告事件。
 
-Kubernetes cannot cancel a deletion. If you delete the `Secret`, back up its data first if you haven't already, then remove the finalizer to let the deletion complete. The operator recreates the `Secret`, and running proxies restore the account key on their next certificate issuance or renewal.
+Kubernetes 无法取消删除。如果你删除了该 `Secret`，请先备份其数据（如果尚未备份），然后移除 finalizer 让删除完成。Operator 会重建该 `Secret`，运行中的代理会在下次签发或续期证书时恢复账户密钥。
 
-The operator creates the `Secret` rather than the Helm chart, so `helm uninstall` leaves it in place. Keeping it preserves your renewal exemptions if you reinstall the operator. If you want to remove it permanently, remove the finalizer and delete it after uninstalling.
+该 `Secret` 由 Operator 而不是 Helm chart 创建，因此 `helm uninstall` 不会删除它。保留它可以在你重新安装 Operator 时保持续期豁免。如果你想永久移除它，请在卸载后移除 finalizer 并删除它。
 
-> **Note:**
+> **注意：**
 >
-> You can back up the `tailscale-acme-accounts` `Secret` so you can restore the shared account key if it's lost. Losing the key removes the renewal exemption for every certificate in the tailnet, forcing them all to reissue under a new account.
+> 你可以备份 `tailscale-acme-accounts` `Secret`，以便在丢失时恢复共享账户密钥。丢失密钥会移除 tailnet 中所有证书的续期豁免，迫使它们全部在新账户下重新签发。
 
-### Roll out large deployments gradually
+### 逐步上线大规模部署
 
-Nothing exempts *initial* issuance from rate limits: every new hostname needs a brand-new certificate, and each one counts against the 50-certificates-per-week limit. A large deployment that brings many `Ingress` resources online at once, such as installing the operator into a cluster that already has dozens of HTTPS workloads, or a bulk GitOps sync, can exhaust the weekly budget before every certificate is issued. When that happens, the remaining certificates fail to issue until the limit window passes, and those workloads serve no TLS in the meantime.
+没有任何机制能让*首次*签发免受速率限制：每个新主机名都需要一张全新的证书，每张都计入每周 50 张的限制。一次性让大量 `Ingress` 资源上线的大规模部署——比如把 Operator 安装到一个已有数十个 HTTPS 工作负载的集群，或者批量 GitOps 同步——可能在所有证书签发完成之前就耗尽每周额度。一旦发生，剩余的证书在限制窗口过去之前都无法签发，期间这些工作负载无法提供 TLS。
 
-To stay within the limit, bring HTTPS workloads online in batches rather than all at once. Keep each week's new hostnames under the 50-certificate limit. For example, expose one group of `Ingress` resources, confirm their certificates have issued, then expose the next group the following week.
+为了保持在限额之内，请分批上线 HTTPS 工作负载，而不是一次性全部上线。让每周的新主机名保持在 50 张证书限额以下。例如，先公开一组 `Ingress` 资源，确认其证书已签发，然后在下周公开下一组。
 
-If you need to bring a large deployment online faster than the limit provides, [request a rate limit adjustment][xt-letsencrypt-rate-limit-form] from Let's Encrypt before you start, and account for the higher limit when planning your batches.
+如果你需要比限额允许的速度更快地上线大规模部署，请在开始前向 Let's Encrypt[申请速率限制调整][xt-letsencrypt-rate-limit-form]，并在规划批次时把更高的限额考虑进去。
 
-> **Note:**
+> **注意：**
 >
-> Enable the [shared ACME account][ar-use-a-shared-acme-account] before you begin a staged rollout. Each certificate then joins the shared account as it's issued, so its future renewals are exempt from the start and don't compete with new issuance for rate-limit budget in later weeks.
+> 在开始分批上线之前，先启用[共享 ACME 账户][ar-use-a-shared-acme-account]。这样每张证书在签发时就加入共享账户，其后续续期从一开始就获得豁免，不会在之后的几周里与新签发竞争速率限制额度。
 
-## Further exploration
+## 进一步探索
 
-* Expose cluster workloads with [Ingress][docs-ingress].
-* Configure [high availability][docs-ha] for `ProxyGroup` resources that share TLS certificates.
+* 使用 [Ingress][docs-ingress] 公开集群工作负载。
+* 为共享 TLS 证书的 `ProxyGroup` 资源配置[高可用][docs-ha]。
 
-[ar-use-a-shared-acme-account]: #use-a-shared-acme-account
+[ar-use-a-shared-acme-account]: #使用共享的-acme-账户
 
 [docs-ha]: /docs/kubernetes-operator/manage-and-configure/high-availability
 

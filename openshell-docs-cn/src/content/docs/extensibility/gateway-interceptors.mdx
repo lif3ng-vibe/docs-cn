@@ -1,0 +1,174 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "网关拦截器"
+sidebar-title: "网关拦截器"
+slug: "extensibility/gateway-interceptors"
+description: "用部署特定的治理与业务逻辑扩展 OpenShell 网关操作。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 网关拦截器, 扩展性, 治理"
+---
+网关拦截器让运维无需修改网关，即可为 OpenShell 控制平面操作加入部署特定的治理。外部 gRPC 服务可以在网关处理选定的 API 写入之前修改或校验它们，并在提交之后观测成功的响应。
+
+完整的服务示例参见[治理拦截器示例](https://github.com/NVIDIA/OpenShell/tree/main/examples/governance-interceptor)，它供应提供商配置档案（provider profile）、把签名策略应用到新沙箱，并拒绝削弱该策略的尝试。
+
+## 何时使用网关拦截器
+
+当外部服务需要治理网关 API 操作时，使用网关拦截器。例如，拦截器可以：
+
+- 把已批准的策略应用到每个新沙箱。
+- 拒绝违反组织规则的提供商或策略变更。
+- 强制租户配额或命名约定。
+- 为审计或清单服务观测已提交的操作。
+- 供应权威或组合的配置档案目录。
+
+网关拦截器不取代网关的持久化、认证、授权、策略安全检查或驱动校验。网关仍是记录系统，并在拦截器修改之后校验操作。
+
+## 拦截的工作方式
+
+网关在认证之后、把请求分派给 handler 之前运行拦截器：
+
+`authenticate → decode and omit secrets → modify_operation → validate → gateway handler → post_commit`
+
+| 阶段 | 输入 | 能力 |
+| ------------------ | ------------------------------------------- | ------------------------------------------------ |
+| `modify_operation` | 拟议请求 | 放行、拒绝或返回 RFC 6902 JSON 补丁。 |
+| `validate` | 修改后的请求与可选的当前状态 | 放行或拒绝。 |
+| `post_commit` | 成功的网关响应 | 观测响应并附加日志注解。 |
+
+只有显式加入允许列表的一元变更 RPC 可被拦截。网关在求值之前把操作转换为 protobuf JSON 表示。它原子性地应用补丁，对照该 RPC 的 protobuf schema 校验结果，并在 handler 收到之前把操作转换回 protobuf。
+
+网关在 `modify_operation` 之后运行内置的操作与驱动校验。打过补丁的操作无法绕过网关自有的不变量。
+
+`post_commit` 是观测性的。它不能拒绝或修改网关已提交的操作。
+
+## 实现拦截器服务
+
+拦截器实现 [`proto/gateway_interceptor.proto`](https://github.com/NVIDIA/OpenShell/blob/main/proto/gateway_interceptor.proto) 中定义的 `openshell.gateway_interceptor.v1.GatewayInterceptor` gRPC 服务：
+
+- `Describe` 声明服务的绑定与能力。
+- `Evaluate` 处理一个选定的操作阶段。
+- `SnapshotProviderProfiles` 可选地返回一个配置档案目录。
+
+`DescribeRequest` 携带网关协议元数据，`InterceptorManifest.extension` 返回拦截器的协议与实现元数据。在接受绑定之前，网关会拒绝缺失元数据、不兼容的主版本与未满足的必需能力。参见[扩展协议协商](/extensibility/overview#协议协商)。
+
+每个 `InterceptorEvaluation` 标识所配置的拦截器、manifest 绑定、公开的 OpenShell 服务与方法、经认证的主体（principal），以及当前阶段。阶段决定载荷包含拟议操作、可选的当前状态还是已提交的响应。
+
+拦截器返回一个 `InterceptorResult`，包含放行或拒绝判定、可选的拒绝状态与原因、`modify_operation` 阶段的 JSON 补丁，以及非机密的日志注解。
+
+## 声明并授权绑定
+
+拦截器在 `Describe` 返回的 `InterceptorManifest` 中声明绑定。每个绑定选择一个公开的 OpenShell RPC 与一个或多个阶段。网关在启动时对照编译好的 protobuf 描述符与显式的可拦截 RPC 允许列表校验这些声明。
+
+运维用 `binding_policy` 选择 manifest 与网关配置如何组合：
+
+| 策略 | 行为 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dynamic` | 启用有效的 manifest 绑定。网关配置可以收窄或禁用它们。这是兼容性默认值，并发出启动警告。 |
+| `allowlist` | 只启用运维配置的 RPC 与阶段。多余的 manifest 绑定被忽略并记录。 |
+| `exact` | 要求配置的 RPC 与阶段与 manifest 完全一致。 |
+
+当拦截器权限是安全边界的一部分时，使用 `allowlist` 或 `exact`。这些模式按公开 RPC 而非 manifest 绑定 ID 选择绑定，因此重命名绑定不会改变其权限。
+
+## 注册拦截器服务
+
+先启动拦截器再启动网关，然后在网关 TOML 中注册它：
+
+```toml
+[[openshell.gateway.interceptors]]
+name               = "policy-governance"
+grpc_endpoint      = "https://governance.example:18081"
+tls_ca_cert_path   = "/path/to/governance-ca.pem"
+audience           = "urn:example:governance"
+order              = 10
+failure_policy     = "fail_closed"
+binding_policy     = "allowlist"
+timeout            = "500ms"
+max_response_bytes = 1048576
+max_patches        = 32
+
+[[openshell.gateway.interceptors.bindings]]
+rpc    = "openshell.v1.OpenShell/CreateSandbox"
+phases = ["modify_operation", "validate"]
+
+[[openshell.gateway.interceptors.bindings]]
+rpc    = "openshell.v1.OpenShell/UpdateConfig"
+phases = ["validate"]
+```
+
+网关支持 `http://`、`https://` 与 `unix://` 拦截器端点。配置了网关 JWT 签名时，经过认证的网络拦截器使用 `https://`；Unix socket 仍可用于本地集成。HTTPS 使用平台信任根，除非 `tls_ca_cert_path` 提供私有 CA，且正常的主机名校验保持启用。网关在启动期间调用 `Describe` 并构建不可变的执行计划。服务不可用、manifest 无效、凭据缺失或配置的绑定未获授权都会阻止网关启动。
+
+配置了网关 JWT 签名时，网关用短期令牌认证对拦截器的每一次调用。你的服务如何校验该令牌参见[扩展认证](/extensibility/overview#扩展认证)。设置 `allow_insecure_transport = true` 可使用不做认证的明文 `http://` 端点，适用于本地开发或已对调用方完成认证的网络。
+
+注册是静态的。添加、移除或更改拦截器后请重启网关。完整的字段参考参见[网关配置](/how-it-works/gateways/configuration#网关拦截器)。
+
+## 选择 RPC 与阶段
+
+从拦截器必须维护的不变量出发，再找出每个能建立或削弱它的网关 RPC。例如，掌管沙箱策略的拦截器可以在 `CreateSandbox` 上用 `modify_operation` 应用已批准的初始策略，并在 `UpdateConfig` 上用 `validate` 拒绝未经授权的变更。
+
+网关维护权威的[可拦截路由允许列表](https://github.com/NVIDIA/OpenShell/blob/main/crates/openshell-gateway-interceptors/src/routes.rs)。选择绑定时请阅读拦截器 manifest 与网关启动诊断。未知、流式、只读与未列入允许列表的 RPC 不可被拦截。
+
+按意图选择阶段：
+
+- 用 `modify_operation` 应用默认值或受控变更。
+- 用 `validate` 在不更改请求的情况下强制规则。
+- 用 `post_commit` 在成功之后通知或审计外部系统。
+
+## 安全地变更操作
+
+操作与已提交的响应使用 protobuf JSON 字段名与形状。只有 `modify_operation` 接受 RFC 6902 JSON 补丁。
+
+网关把一个绑定返回的所有补丁作为一个原子候选应用。随后它把该候选编码为该 RPC 的 protobuf 请求类型，再解码回规范的 protobuf JSON。任一补丁或所得操作无效时，网关丢弃完整候选并应用该绑定的失败策略。后续绑定只会看到 handler 能接收的、通过 schema 校验的操作。
+
+protobuf schema 中标记为 secret 的字段会从拦截器请求与已提交响应中递归省略。拦截器不能为被省略的字段打补丁、把它用作补丁来源，或替换包含它的对象。网关 handler 保留完整操作，并继续接收从拦截器视图中省略的 secret 字段。
+
+## 配置失败行为
+
+失败策略控制网关无法获得或应用有效结果时发生什么。失败包括超时、传输错误、无效响应、响应尺寸超限、无效阶段行为与补丁数量超限。
+
+| 策略 | 行为 |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| `fail_closed` | 在分派给 handler 之前拒绝该 API 操作。 |
+| `fail_open` | 跳过失败结果，沿用上一个有效操作，并发出警告遥测。 |
+
+`modify_operation` 或 `validate` 阶段的有效拒绝结果始终拒绝该操作。它不属于拦截器失败，也不遵循失败策略。
+
+包含 `post_commit` 的绑定必须解析为 `fail_open`。网关在启动时拒绝 fail-closed 的 post-commit 配置，因为观测者无法吊销已提交的响应。post-commit 观测或求值失败会被记录与计数，但不会替换成功的网关响应。
+
+仅当绕过不可用或无效的拦截器仍能保持预期治理边界时，才使用 `fail_open`。
+
+## 供应配置档案
+
+拦截器可以在 manifest 中公示 `provider_profiles = true` 并实现 `SnapshotProviderProfiles`。该 RPC 返回一个 `ProviderProfileSnapshot`。把该拦截器加入 `provider_profile_sources`，其配置档案就会进入网关的生效目录。
+
+只选择该拦截器，让它的目录成为权威来源：
+
+```toml
+[openshell.gateway]
+provider_profile_sources = [
+  { type = "interceptor", name = "provider-governance" },
+]
+```
+
+加入一个 `{ type = "user" }` 条目可把拦截器配置档案与导入的配置档案组合。规范化后重复的配置档案 ID 会导致失败，而不是一个来源覆盖另一个来源，因此拦截器供应的配置档案与导入的配置档案不能共用一个 ID。
+
+网关校验快照结构与配置档案语义。它把配置的拦截器视为受信任来源，不校验拦截器自定义的签名、哈希或密钥注解。
+
+## 运维并观测拦截器
+
+围绕以下边界规划拦截器部署：
+
+- 在网关之前启动每个已配置的服务。
+- 更改注册或绑定后重启网关。
+- 网关接受写入期间，保持 fail-closed 服务可用。
+- 把端点及其运维配置视为网关信任边界的一部分。
+- 不要在拒绝原因或日志注解中包含机密。
+
+网关发出结构化求值日志，包含拦截器名、绑定 ID、RPC、阶段、判定、补丁数量与拦截器提供的日志注解。指标记录求值判定、延迟、补丁应用、fail-open 与 fail-closed 结果，以及 post-commit 观测失败。
+
+## 当前限制
+
+- 只有显式列入允许列表的一元写入 RPC 可被拦截。新网关 RPC 在加入允许列表之前不可被拦截。
+- `current_state` 仅在 `validate` 契约中可用。网关尚未用方法专属状态填充它。
+- 注册变更需要重启网关。
+- 不提供服务健康检查与运行时注册。[扩展认证限制](/extensibility/overview#当前限制)列出认证方面的限制。
+- 拦截器无法接收或变更标记为 secret 的 protobuf 字段。

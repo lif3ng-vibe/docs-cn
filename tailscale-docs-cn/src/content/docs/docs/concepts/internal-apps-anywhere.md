@@ -1,19 +1,12 @@
 ---
-title: "Deploy internal apps anywhere, without changing firewall settings"
-description: "Deploying servers without modifying firewall settings using Tailscale."
+title: "在任何地方部署内部应用，无需改动防火墙设置"
+description: "使用 Tailscale 部署服务器，无需修改防火墙设置。"
 ---
 
-Last validated Aug 22, 2025
+最后验证于 Aug 22, 2025
 
-Processing security tickets to open a firewall port is time consuming,
-tedious, and it creates more security problems than it solves. Why are your
-employee-only internal servers on the internet at all?
+走安全工单流程去开通一个防火墙端口既耗时又乏味，而且带来的安全问题比解决的还多。你那些仅供员工访问的内部服务器，为什么要暴露在互联网上呢？
 
-Tailscale lets you deploy servers anywhere you want, in any data center,
-behind a firewall, without opening any ports. The Tailscale agent then uses
-NAT traversal (a reversed outgoing connection) to connect to the users,
-devices, and other servers that want to reach it.
+Tailscale 让你把服务器部署在任何想要的地方——任何数据中心、防火墙之后，无需开放任何端口。之后 Tailscale 代理会利用 NAT 穿透（反向的出站连接）与想要访问它的用户、设备和其他服务器建立连接。
 
-Every Tailscale connection follows your centralized corporate policy
-automatically, and it's never available on the open internet, so there's no
-chance to misconfigure it.
+每条 Tailscale 连接都会自动遵循你的集中式企业策略，且永远不会暴露在开放的互联网上，因此不存在配置出错的机会。

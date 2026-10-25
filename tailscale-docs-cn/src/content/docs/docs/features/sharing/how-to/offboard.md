@@ -1,43 +1,43 @@
 ---
-title: "Offboarding users"
-description: "User offboarding occurs when you want to delete, suspend, or deactivate users in your environment. While the steps for [deleting or suspending users][docs-remove-team-members] in Tailscale is always t"
+title: "用户离职处理"
+description: "当你想删除、停用或停权环境中的用户时，就需要进行用户离职处理。[在 Tailscale 中删除或停用用户][docs-remove-team-members]的步骤始终相同，但你需要执行的具体操作取决于是否使用 SCIM。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-User offboarding occurs when you want to delete, suspend, or deactivate users in your environment. While the steps for [deleting or suspending users][docs-remove-team-members] in Tailscale is always the same, the specific actions you need to take will depend whether or not you use System for Cross-domain Identity Management (SCIM). For non-SCIM setups, you must manually suspend users in Tailscale. When using SCIM, users are automatically suspended in Tailscale.
+当你想删除、停用或停权环境中的用户时，就需要进行用户离职处理（offboarding）。[在 Tailscale 中删除或停用用户][docs-remove-team-members]的步骤始终相同，但你需要执行的具体操作取决于是否使用跨域身份管理系统（SCIM）。对于非 SCIM 部署，你必须在 Tailscale 中手动停用用户；使用 SCIM 时，用户会在 Tailscale 中自动被停用。
 
-## Offboarding for non-SCIM environments
+## 非 SCIM 环境下的用户离职处理
 
-The following guidelines explain offboarding users when using an identity provider without user & group provisioning (that is, without SCIM).
+以下指南说明在使用不带用户与组预配（即不带 SCIM）的身份提供方时，如何进行用户离职处理。
 
-1. Disable or suspend the user in your environment, such as Google.
+1. 在你的环境中（例如 Google）禁用或停用该用户。
 
-2. [Suspend the user][docs-remove-team-members-suspending-users] in Tailscale. This lets you [manage resources][docs-remove-team-members-resources] before deleting a user.
+2. 在 Tailscale 中[停用该用户][docs-remove-team-members-suspending-users]。这让你可以在删除用户之前[管理其资源][docs-remove-team-members-resources]。
 
-   * The user will not be able to connect to the tailnet, add devices, or access the admin console. Their API keys and auth keys will also stop working. For more information about user resources for suspended or deleted users, refer to [Managing user resources][docs-remove-team-members-resources].
-   * The user suspension can be verified in the [Users](https://console.tailscale.com/admin/users) page of the Tailscale admin console.
-   * Suspending a user can be ideal if they are temporarily away and you'll want to re-activate them at a later date.
+   * 该用户将无法连接 tailnet、添加设备或访问管理控制台，其 API 密钥和认证密钥（auth key）也会失效。有关被停用或被删除用户资源的更多信息，请参阅[管理用户资源][docs-remove-team-members-resources]。
+   * 可以在 Tailscale 管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面核实用户已被停用。
+   * 如果用户只是暂时离开，而你希望日后重新启用他们，那么停用用户是理想选择。
 
-3. Re-assign necessary devices to other users, and verify that API keys and auth keys that you need to retain still work. At this point, you can restore the suspended user in Tailscale if necessary.
+3. 把必要的设备重新指派给其他用户，并核实你需要保留的 API 密钥和认证密钥仍然有效。此时如有需要，你还可以在 Tailscale 中恢复该被停用的用户。
 
-4. [Delete the user][docs-remove-team-members-deleting-users].
+4. [删除该用户][docs-remove-team-members-deleting-users]。
 
-## Offboarding when using user & group provisioning (SCIM)
+## 使用用户与组预配（SCIM）时的用户离职处理
 
-The following guidelines explain offboarding users with [user & group provisioning][docs-user-group-provisioning], which uses SCIM.
+以下指南说明在使用[用户与组预配][docs-user-group-provisioning]（基于 SCIM）时，如何进行用户离职处理。
 
-1. If using Okta, deactivate the user in Okta. If using Microsoft Entra ID, delete the user in Microsoft Entra ID.
+1. 如果使用 Okta，在 Okta 中停用该用户；如果使用 Microsoft Entra ID，在 Microsoft Entra ID 中删除该用户。
 
-   This will automatically [suspend the user][docs-remove-team-members-suspending-users] in Tailscale.
+   这会自动在 Tailscale 中[停用该用户][docs-remove-team-members-suspending-users]。
 
-   * The user will not be able to connect to the tailnet, add devices, or access the admin console. Their API keys and auth keys will also stop working. For more information about user resources for suspended or deleted users, refer to [Managing user resources][docs-remove-team-members-resources].
-   * The user suspension can be verified in the [Users](https://console.tailscale.com/admin/users) page of the Tailscale admin console.
-   * Suspending a user can be ideal if they are temporarily away and you'll want to re-activate them at a later date.
+   * 该用户将无法连接 tailnet、添加设备或访问管理控制台，其 API 密钥和认证密钥也会失效。有关被停用或被删除用户资源的更多信息，请参阅[管理用户资源][docs-remove-team-members-resources]。
+   * 可以在 Tailscale 管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面核实用户已被停用。
+   * 如果用户只是暂时离开，而你希望日后重新启用他们，那么停用用户是理想选择。
 
-2. Re-assign necessary devices to other users, and verify that API keys and auth keys that you need to retain still work. At this point, you can restore the suspended user in Tailscale if necessary.
+2. 把必要的设备重新指派给其他用户，并核实你需要保留的 API 密钥和认证密钥仍然有效。此时如有需要，你还可以在 Tailscale 中恢复该被停用的用户。
 
-We recommend you use SCIM to automatically deprovision users as part of offboarding. You can also optionally [delete][docs-remove-team-members-deleting-users] the suspended users from the tailnet. There is no need to delete those users for security reasons, as they cannot log in. There is no reason to delete those users for billing reasons, as you are not charged for inactive users.
+我们建议把 SCIM 自动取消用户预配作为离职处理的一部分。你也可以选择从 tailnet 中[删除][docs-remove-team-members-deleting-users]被停用的用户。出于安全考虑没有必要删除这些用户，因为他们已经无法登录；出于计费考虑也没有理由删除，因为非活跃用户不计费。
 
 [docs-remove-team-members-deleting-users]: /docs/features/sharing/how-to/remove-team-members#deleting-users
 

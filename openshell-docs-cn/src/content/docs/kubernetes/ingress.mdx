@@ -1,0 +1,272 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "Ingress"
+sidebar-title: "Ingress"
+description: "使用 Kubernetes Gateway API 与 GRPCRoute 从外部暴露 OpenShell 网关。"
+keywords: "生成式 AI, 网络安全, Kubernetes, Gateway API, Envoy Gateway, GRPCRoute, Ingress, 外部访问"
+position: 5
+---
+
+默认情况下，OpenShell 网关只能从集群内部访问。要让 CLI 客户端无需 `kubectl port-forward` 即可连接，请通过入站入口暴露网关。
+
+OpenShell 使用 [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io) 处理入站流量。chart 会创建一个 `GRPCRoute`，把入站 gRPC 流量路由到网关 Pod。集群上需要安装一个 Gateway API 实现来落实 `GRPCRoute`。示例使用 [Envoy Gateway](https://gateway.envoyproxy.io)，你也可以通过 `grpcRoute.gateway.className` 选择其他实现。
+
+## 安装 Envoy Gateway
+
+Envoy Gateway 会安装 Gateway API CRD 与 controller：
+
+```shell
+helm install eg \
+  oci://docker.io/envoyproxy/gateway-helm \
+  --version v1.8.1 \
+  --namespace envoy-gateway-system \
+  --create-namespace \
+  --wait
+```
+
+## 创建 GatewayClass
+
+创建 OpenShell chart 引用的 `eg` GatewayClass：
+
+```shell
+kubectl apply -f - <<'EOF'
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+EOF
+```
+
+确认 GatewayClass 已被接受：
+
+```shell
+kubectl get gatewayclass eg
+```
+
+`ACCEPTED` 列应显示 `True`。
+
+## 启用 Gateway API 安装 OpenShell
+
+启用 GRPCRoute，让 chart 在 `openshell` 命名空间创建 Gateway 资源：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.create=true \
+  --set grpcRoute.gateway.class=eg
+```
+
+生成的 Gateway 默认使用 chart fullname。
+
+### 使用其他 GatewayClass
+
+把 `grpcRoute.gateway.className` 设为你的 Gateway API 实现安装的任意 GatewayClass：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.create=true \
+  --set grpcRoute.gateway.class=<gateway-class> \
+  --set grpcRoute.gateway.name=openshell-ingress
+```
+
+一些 Gateway API 实现会以 Gateway 命名其代理 Service。默认名称会与 OpenShell Service 冲突时，请设置一个不同的 Gateway 名称，例如 `openshell-ingress`。在入站场景中，OpenShell chart 只创建 Gateway 与 GRPCRoute；所选 controller、GatewayClass 与 Gateway API CRD 请单独安装和管理。
+
+### 使用既有 Gateway
+
+要把 OpenShell 挂到平台管理的 Gateway 上，禁用 Gateway 创建并设置父 Gateway 的名称与命名空间。路由需要挂到特定 listener 时，设置 `sectionName`：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.create=false \
+  --set grpcRoute.gateway.name=platform-gateway \
+  --set grpcRoute.gateway.namespace=gateway-system \
+  --set grpcRoute.gateway.sectionName=grpc
+```
+
+既有 Gateway listener 必须允许来自 OpenShell release 命名空间的路由。
+
+## 获取外部地址
+
+按上面的 Envoy Gateway 示例，controller 会在 `openshell` 命名空间创建 LoadBalancer Service。等待它获得外部地址：
+
+```shell
+kubectl -n openshell get svc -l gateway.envoyproxy.io/owning-gateway-name=openshell
+```
+
+使用其他 Gateway API 实现或既有 Gateway 时，按该实现的说明查找外部地址。
+
+`EXTERNAL-IP` 分配完成后，在 CLI 中注册网关：
+
+```shell
+openshell gateway add http://<external-ip> --name production
+openshell status
+```
+
+这套配置端到端都是明文，仅面向开发。对外访问请按下文在网关处终止 TLS。
+
+## HTTPS（TLS 终止）
+
+Envoy Gateway 可以在 listener 处终止 TLS，并把明文转发给 OpenShell 网关 Pod：
+
+```text
+client → HTTPS → Envoy Gateway (terminate TLS) → plaintext → openshell gateway pod
+```
+
+Envoy Gateway 在这里只终止 TLS，不做 OIDC。不要在网关前面启用 Envoy Gateway 的 OIDC `SecurityPolicy`：该流程依赖浏览器重定向与 cookie，无法配合 OpenShell CLI 或无头智能体工作。OpenShell 网关改为校验客户端在 gRPC `authorization` 元数据中发送的 OIDC bearer 令牌，Envoy 原样转发这些元数据。
+
+由于 TLS 由 Envoy 终止，OpenShell 网关看不到客户端证书，因此在这条路径上客户端 mTLS 无法提供身份。客户端身份请改用 OIDC bearer 令牌。
+
+在无头机器上交互式登录时，运行 `openshell gateway add` 之前设置 `OPENSHELL_NO_BROWSER=1`。CLI 使用带 S256 PKCE 的 Device Authorization Grant，提示用户在另一台浏览器上批准登录。无人值守的智能体与 CI 场景，设置 `OPENSHELL_OIDC_CLIENT_SECRET` 改用 OAuth2 客户端凭据授予。client id 来自 `--oidc-client-id`（默认 `openshell-cli`）；身份提供方使用其他 id 时请显式传入。有本地浏览器的交互式用户默认获得带 PKCE 的 Authorization Code 流程。
+
+### 提供 TLS 证书
+
+在 `openshell` 命名空间创建 `kubernetes.io/tls` 类型的 Secret，放入外部主机名的证书：
+
+```shell
+kubectl -n openshell create secret tls openshell-ingress-tls \
+  --cert=tls.crt --key=tls.key
+```
+
+该 Secret 也可以由 cert-manager 签发；chart 既有的 `openshell-server-tls` Secret 的 SAN 包含外部主机名时，也可以直接引用它。
+
+### 以 HTTPS 终止安装
+
+启用 HTTPS listener 并指向该 Secret，禁用网关 Pod TLS 让 Envoy 转发明文，再配置 OIDC issuer 用于客户端身份：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.create=true \
+  --set grpcRoute.gateway.class=eg \
+  --set grpcRoute.gateway.listener.protocol=HTTPS \
+  --set grpcRoute.gateway.listener.port=443 \
+  --set 'grpcRoute.gateway.listener.tls.certificateRefs[0].name=openshell-ingress-tls' \
+  --set server.disableTls=true \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.issuer=https://keycloak.example.com/realms/openshell' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.audience=openshell-cli' \
+  --set 'grpcRoute.hostnames[0]=gateway.example.com'
+```
+
+证书 Secret 请放在 release 命名空间。引用其他命名空间的 Secret 需要 `ReferenceGrant`。
+
+### 通过 HTTPS 注册
+
+```shell
+openshell gateway add https://gateway.example.com \
+  --name production \
+  --oidc-issuer https://keycloak.example.com/realms/openshell \
+  --oidc-client-id openshell-cli
+openshell status
+```
+
+OIDC issuer、audience 与角色配置参见[认证](/kubernetes/setup)。
+
+## 端到端 TLS（BackendTLSPolicy）
+
+作为上面明文后端路径的替代，chart 可以创建 `BackendTLSPolicy`，让 Gateway 代理在连接 OpenShell 网关 Pod 时重新加密流量：
+
+```text
+client → HTTPS → Gateway (terminate TLS) → TLS (re-encrypt) → openshell gateway pod
+```
+
+这使 TLS 保持在网关 Pod 上。Gateway 代理对照 certgen 钩子自动创建的 CA ConfigMap 校验后端证书。
+
+BackendTLSPolicy 是标准的 Gateway API 资源。OpenShift 4.22+（经 OpenShift gateway controller）以及 Gateway API 实现支持它的其他平台都可用（请查阅所用 controller 的文档）。
+
+### 以端到端 TLS 安装
+
+启用 `backendTLSPolicy` 时，certgen 钩子会自动创建后端 CA ConfigMap：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set server.tls.enableMtls=false \
+  --set grpcRoute.enabled=true \
+  --set grpcRoute.gateway.create=true \
+  --set grpcRoute.gateway.class=eg \
+  --set grpcRoute.gateway.listener.protocol=HTTPS \
+  --set grpcRoute.gateway.listener.port=443 \
+  --set 'grpcRoute.gateway.listener.tls.certificateRefs[0].name=openshell-ingress-tls' \
+  --set grpcRoute.backendTLSPolicy.enabled=true \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.issuer=https://keycloak.example.com/realms/openshell' \
+  --set 'gatewayConfig.openshell\.gateway\.oidc.audience=openshell-cli' \
+  --set 'grpcRoute.hostnames[0]=gateway.example.com'
+```
+
+网关 Pod 继续提供 TLS，而 `server.tls.enableMtls=false` 禁用 mTLS 客户端证书认证，因为 Gateway 代理无法向后端出示客户端证书。同时启用 `grpcRoute.backendTLSPolicy.enabled=true` 与 `server.tls.enableMtls=true` 会导致安装失败。BackendTLSPolicy 主机名默认为 Service 的 FQDN，与服务器证书上的 SAN 一致。认证使用 OIDC（在 `gatewayConfig.openshell.gateway.oidc` 中配置）。
+
+上面的示例使用默认的 `pkiInitJob` 处理 TLS，它会立即创建后端 CA ConfigMap。改用 cert-manager（`--set certManager.enabled=true`）时，Certificate 资源是普通的 release 对象，另有一个安装后/升级后 Job（`<release>-certgen-backend-ca`）会轮询最多 120 秒等待 cert-manager 签发服务器证书，然后创建后端 CA ConfigMap。也就是说，大多数情况下一次 `helm install` 就足够。
+
+cert-manager 签发证书超过 120 秒时，用 `--set pkiInitJob.timeoutSeconds=<seconds>` 调高轮询超时。钩子轮询的时长恰好等于该值，例如 `timeoutSeconds=180` 轮询 180 秒。默认（`pkiInitJob.failOnTimeout=true`）达到超时即安装失败，明确提示 BackendTLSPolicy 无法工作。
+
+### 故障排查
+
+经 Gateway 连接时看到错误 `remote connection failure, transport failure reason: TLS error: Secret is not supplied by SDS` 的处理步骤：
+
+1. 检查后端 CA ConfigMap 是否存在：
+
+   ```shell
+   kubectl get configmap <release-name>-backend-ca -n <namespace>
+   ```
+
+2. ConfigMap 不存在时，确认 TLS Secret 是否存在：
+
+   ```shell
+   kubectl get secret <release-name>-server-tls -n <namespace>
+   ```
+
+3. Secret 存在而 ConfigMap 不存在时，运行 `helm upgrade` 创建它：
+
+   ```shell
+   helm upgrade <release-name> oci://ghcr.io/nvidia/openshell/helm-chart \
+     --reuse-values --namespace <namespace>
+   ```
+
+设置 `pkiInitJob.failOnTimeout=false` 且 cert-manager 在钩子超时之后才签发证书时，就可能出现这种情况。
+
+OpenShift 4.22+ 的平台专属说明（含 Gateway 与 GatewayClass 设置）参见 [OpenShift](/kubernetes/openshift#使用-gateway-api-与-backendtlspolicy-的端到端-tlsopenshift-422)。
+
+## 副本路由
+
+网关副本多于一个时，沙箱的 SSH、端口转发与 exec 连接可能落在不持有该沙箱监管器会话的副本上，由它把连接中继给持有会话的副本。启用副本路由可以把这些连接直接送往归属副本：
+
+```shell
+helm upgrade <release-name> oci://ghcr.io/nvidia/openshell/helm-chart \
+  --reuse-values --namespace <namespace> \
+  --set workload.kind=statefulset \
+  --set workload.allowMultiReplicaStatefulSet=true \
+  --set grpcRoute.replicaRouting.enabled=true
+```
+
+chart 为每个副本渲染一个 Service，并渲染一条匹配 `x-openshell-replica` 请求头部的 GRPCRoute 规则。CLI 根据网关上报的归属副本设置该头部；所指副本不可用时改用不带该头部的方式重试。副本路由要求 `workload.kind=statefulset`、`workload.allowMultiReplicaStatefulSet=true`，且副本数至多 15 个。
+
+release 使用 `workload.kind=deployment` 时，这次升级会用 StatefulSet 取代 Deployment，所有网关 Pod 会同时重启。StatefulSet 还会为每个副本申请一个 1Gi PersistentVolumeClaim；在没有默认 StorageClass 的集群上它会保持 `Pending`。
+
+## SSH 中继
+
+沙箱 SSH 使用在 CLI 中注册的网关端点。不需要单独的 Helm SSH 主机或端口 values。
+
+Gateway 终止 TLS 时，请把其外部可达的 `https://` 端点注册到 CLI。即使网关 Pod 上报的是内部明文端点，OpenShell 的 `sandbox connect`、`sandbox exec` 与端口转发也使用注册端点。
+
+## 后续步骤
+
+返回[安装](/kubernetes/setup)完成安装。

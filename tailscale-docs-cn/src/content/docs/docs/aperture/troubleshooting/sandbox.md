@@ -1,113 +1,113 @@
 ---
-title: "Troubleshoot sandbox issues"
-description: "Use this topic to troubleshoot sandbox tools, storage, and file downloads."
+title: "排查沙箱问题"
+description: "使用本主题排查沙箱工具、存储和文件下载方面的问题。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-> **Note:** Aperture chat sandbox is currently in alpha.
+> **注意：** Aperture 聊天沙箱目前处于 alpha 阶段。
 
 \[Missing snippet: contact\_account\_manager.mdx]
 
-Use this topic to troubleshoot sandbox tools, storage, and file downloads.
+使用本主题排查沙箱工具、存储和文件下载方面的问题。
 
-## Sandbox tools do not appear in conversations
+## 沙箱工具不出现在会话中
 
-Open **Tools** in a conversation and check **Code Sandbox**:
+在会话中打开 **Tools** 并检查 **Code Sandbox**：
 
-1. If **Code Sandbox** shows **Contact support**, sandbox service is unavailable for that gateway. Contact your Tailscale account manager or email `aperture@tailscale.com`.
-2. If **Code Sandbox** is available but not selected, select it for the conversation.
-3. If the conversation belongs to a project, check whether the project's tool policy disables the sandbox.
-4. Confirm the user has portal access. Portal access is available by default, but `enable_portal: false` makes matching non-admin users API-only. Admins always retain portal access, and an explicit `enable_portal: true` in any matching grant overrides a matching `false`.
+1. 如果 **Code Sandbox** 显示 **Contact support**，说明该网关的沙箱服务不可用。请联系你的 Tailscale 客户经理，或发送邮件至 `aperture@tailscale.com`。
+2. 如果 **Code Sandbox** 可用但未被选中，请为该会话选中它。
+3. 如果该会话属于某个项目，检查该项目的工具策略是否禁用了沙箱。
+4. 确认用户拥有门户访问权限。门户访问默认可用，但 `enable_portal: false` 会让匹配到的非管理员用户只能使用 API。管理员始终保留门户访问，而且任何匹配授权中显式设置的 `enable_portal: true` 会覆盖匹配到的 `false`。
 
-## Tool calls fail with connection errors
+## 工具调用因连接错误而失败
 
-The assistant tries to use a sandbox tool but the tool call fails with an error such as `exec failed:` followed by a connection-related message.
+助手尝试使用沙箱工具，但工具调用失败，出现 `exec failed:` 之类的错误，后面跟着与连接相关的消息。
 
-1. Retry the request.
-2. Start a new conversation to determine whether the failure is limited to one conversation.
-3. If the errors persist across conversations, contact your Tailscale account manager or email `aperture@tailscale.com` with the approximate time and error message.
+1. 重试该请求。
+2. 开启新会话，判断失败是否仅限于单个会话。
+3. 如果错误在多个会话中持续出现，请联系你的 Tailscale 客户经理，或附上大致时间和错误消息发送邮件至 `aperture@tailscale.com`。
 
-## Storage limit exceeded
+## 超出存储上限
 
-Storage errors can come from saved-file quotas or sandbox execution capacity.
+存储错误可能来自已保存文件配额，也可能来自沙箱执行容量。
 
-### Upload or saved-file quota
+### 上传或已保存文件配额
 
-An upload fails with HTTP 429 and one of these messages:
+上传失败并返回 HTTP 429，伴随以下消息之一：
 
-* `Conversation storage limit reached. You can contact support to request a limit increase.` Start a new conversation with fewer files or contact support.
-* `Storage limit reached. Try again later or contact support.` A rolling user or gateway quota is reached. Wait before retrying. Starting another conversation does not reset these quotas.
+* `Conversation storage limit reached. You can contact support to request a limit increase.` 请用更少文件开启新会话，或联系支持团队。
+* `Storage limit reached. Try again later or contact support.` 已达到滚动的用户或网关配额。请等待后重试。开启另一个会话不会重置这些配额。
 
-On gateways where these quotas apply, saved uploads and generated outputs share a 500 MiB conversation limit. New file storage also has rolling 24-hour limits of 1 GiB per user and 10 GiB per gateway.
+在适用这些配额的网关上，保存的上传文件和生成的输出共享 500 MiB 的会话上限。新文件存储还有滚动的 24 小时限制：每用户 1 GiB、每网关 10 GiB。
 
-A command can succeed without saving its output if the output exceeds a quota. The file might be unavailable for download. For a conversation quota, rerun the task in a new conversation with fewer files. For a rolling user or gateway quota, wait before retrying or contact support.
+如果输出超出配额，命令可能执行成功但未能保存其输出，文件可能无法下载。对于会话配额，请在文件更少的新会话中重跑该任务。对于滚动的用户或网关配额，请等待后重试或联系支持团队。
 
-### Sandbox execution capacity
+### 沙箱执行容量
 
-Sandbox commands or file mutations fail with the message:
+沙箱命令或文件修改失败，并显示消息：
 
-> This conversation's attached files exceed the sandbox capacity (5 GiB combined). Archive or remove some files and try again.
+> 此会话附加的文件超出了沙箱容量（合计 5 GiB）。请归档或移除部分文件后重试。
 
-The files made available to sandbox commands exceed the separate 5 GiB execution capacity. This is not the saved-file quota described earlier.
+可供沙箱命令使用的文件超出了独立的 5 GiB 执行容量。这不是前文所述的已保存文件配额。
 
-To resolve this, start a new conversation. To reduce storage use, keep intermediate work in the scratch directory and place only final deliverables in the output directory. Scratch files might disappear between later turns.
+要解决此问题，请开启新会话。为减少存储占用，把中间工作保存在暂存目录（scratch directory）中，只把最终交付物放入输出目录。暂存文件可能会在后续轮次之间消失。
 
-## File downloads fail
+## 文件下载失败
 
-Clicking a download link for a sandbox-generated file returns an error. The following table lists common HTTP status codes and their causes.
+点击沙箱生成文件的下载链接会返回错误。下表列出了常见的 HTTP 状态码及其原因。
 
-| Status code | Cause                                                                                | Resolution                                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| 401         | The user is not authenticated.                                                       | Verify the request comes through the tailnet with valid Tailscale authentication.                                           |
-| 403         | The user does not have portal access.                                                | Check matching `enable_portal` grants. Portal access is on by default for non-admin users, and admins always retain access. |
-| 404         | The conversation or file does not exist, or the user is not authorized to access it. | Verify the conversation and file. Only an authorized conversation owner can download the file.                              |
-| 502         | The sandbox service returned an upstream error.                                      | Retry the download. If it keeps failing, contact your Tailscale account manager or email `aperture@tailscale.com`.          |
-| 503         | Sandbox storage is unavailable for the gateway.                                      | Contact your Tailscale account manager or email `aperture@tailscale.com`.                                                   |
+| 状态码 | 原因 | 解决办法 |
+| --- | --- | --- |
+| 401 | 用户未通过认证。 | 验证请求经由 tailnet 且带有有效的 Tailscale 认证。 |
+| 403 | 用户没有门户访问权限。 | 检查匹配的 `enable_portal` 授权。门户访问对非管理员用户默认开启，管理员始终保留访问权限。 |
+| 404 | 会话或文件不存在，或该用户无权访问。 | 核实会话和文件。只有获得授权的会话所有者才能下载该文件。 |
+| 502 | 沙箱服务返回了上游错误。 | 重试下载。如果持续失败，请联系你的 Tailscale 客户经理，或发送邮件至 `aperture@tailscale.com`。 |
+| 503 | 该网关的沙箱存储不可用。 | 联系你的 Tailscale 客户经理，或发送邮件至 `aperture@tailscale.com`。 |
 
-> **Note:**
+> **注意：**
 >
-> Aperture returns 404 when a conversation does not exist or the requesting user is not its owner. This prevents disclosure of other users' conversations.
+> 当会话不存在或请求用户不是其所有者时，Aperture 会返回 404。这可以防止泄露其他用户的会话。
 
-> **Note:**
+> **注意：**
 >
-> Aperture checks portal access before looking up a file. Non-admin users without portal access receive 403. Admins always retain portal access.
+> Aperture 在查找文件之前会先检查门户访问权限。没有门户访问权限的非管理员用户会收到 403。管理员始终保留门户访问。
 
-## Command output is truncated
+## 命令输出被截断
 
-The assistant's command output ends with a truncation notice such as `... output truncated (exceeded 1 MiB) ...` or `... output truncated ...`.
+助手的命令输出以截断提示结尾，例如 `... output truncated (exceeded 1 MiB) ...` 或 `... output truncated ...`。
 
-Sandbox tools limit the output they return to the assistant:
+沙箱工具会限制返回给助手的输出：
 
-* `aperture_bash` output: 1 MiB (1,048,576 bytes)
-* `aperture_read_file`, `aperture_list_files`, and `aperture_grep` output: 16,000 bytes
+* `aperture_bash` 输出：1 MiB（1,048,576 字节）
+* `aperture_read_file`、`aperture_list_files` 和 `aperture_grep` 输出：16,000 字节
 
-For large output, ask the assistant to redirect command output to a file, search for relevant lines, and read bounded sections.
+对于大输出，让助手把命令输出重定向到文件，搜索相关行，然后读取有限的部分。
 
-## Verify sandbox health
+## 验证沙箱健康状态
 
-To check that commands and file downloads work:
+要检查命令和文件下载是否正常：
 
-1. Start a new conversation in `/` or `/chat`.
-2. Open **Tools** and confirm **Code Sandbox** is available and selected.
-3. Ask the assistant, "What is the output of `echo hello`?"
-4. Confirm the assistant runs the command and returns `hello`.
-5. Ask the assistant to create and present a file.
-6. Confirm a file card appears and the file downloads.
+1. 在 `/` 或 `/chat` 开启新会话。
+2. 打开 **Tools**，确认 **Code Sandbox** 可用且已选中。
+3. 向助手提问："What is the output of `echo hello`?"
+4. 确认助手运行了该命令并返回 `hello`。
+5. 让助手创建并展示一个文件。
+6. 确认出现了文件卡片且文件可以下载。
 
-If **Code Sandbox** shows **Contact support**, contact your Tailscale account manager or email `aperture@tailscale.com`.
+如果 **Code Sandbox** 显示 **Contact support**，请联系你的 Tailscale 客户经理，或发送邮件至 `aperture@tailscale.com`。
 
-## Related
+## 相关内容
 
-* [Aperture chat sandbox][docs-chat-sandbox] for a conceptual overview of the feature.
-* [Sandbox reference][docs-sandbox-reference] for tool parameters, size limits, timeouts, and error messages.
-* [Manage sandbox operations][docs-manage-sandbox] for monitoring and other operational tasks.
-* [Aperture configuration reference][docs-aperture-configuration]
-* [Troubleshoot Aperture][docs-troubleshooting]
+* [Aperture 聊天沙箱][docs-chat-sandbox]：该功能的概念性概述。
+* [沙箱参考][docs-sandbox-reference]：工具参数、大小限制、超时和错误消息。
+* [管理沙箱运维][docs-manage-sandbox]：监控与其他运维任务。
+* [Aperture 配置参考][docs-aperture-configuration]
+* [Aperture 故障排查][docs-troubleshooting]
 
-[ar-connection-errors]: #tool-calls-fail-with-connection-errors
+[ar-connection-errors]: #工具调用因连接错误而失败
 
-[ar-file-downloads-fail]: #file-downloads-fail
+[ar-file-downloads-fail]: #文件下载失败
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

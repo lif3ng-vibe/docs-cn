@@ -1,48 +1,48 @@
 ---
-title: "Upgrade your plan"
-description: "Upgrade your Tailscale plan to access additional features, support more users, or move to a plan that better fits your needs."
+title: "升级你的套餐"
+description: "升级你的 Tailscale 套餐，以使用更多功能、支持更多用户，或迁移到更适合你需求的套餐。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Upgrade your Tailscale plan to access additional features, support more users, or move to a plan that better fits your needs.
+升级你的 Tailscale 套餐，以使用更多功能、支持更多用户，或迁移到更适合你需求的套餐。
 
-> **Note:**
+> **注意：**
 >
-> You must be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) of your tailnet to upgrade a plan.
+> 你必须是你 tailnet 的[所有者、管理员或账单管理员](/docs/reference/user-roles)才能升级套餐。
 
-## Considerations
+## 注意事项
 
-When upgrading your Tailscale plan consider the following:
+在升级 Tailscale 套餐时，请注意以下几点：
 
-* Feature availability may change depending on the plan you select.
-* Monthly user counts are calculated at the end of the billing cycle.
-* Charges are prorated based on time spent on each plan during the billing period.
+* 功能可用性可能会因你选择的套餐而变化。
+* 月度用户数在账单周期结束时计算。
+* 费用按你在账单周期内各套餐上使用的时间按比例计算。
 
-For in-depth details about available plans and features, refer to our [Pricing][co-pricing] page.
+有关可用套餐和功能的详细信息，请参阅我们的[定价][co-pricing]页面。
 
-## Upgrade from the Personal plan
+## 从 Personal 套餐升级
 
-These steps let you upgrade from the Personal plan to a paid plan. If you want to upgrade to the Enterprise plan, contact our Sales team.
+以下步骤可将你从 Personal 套餐升级到付费套餐。如果你想升级到 Enterprise 套餐，请联系我们的销售团队。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page in the admin console.
-2. Select **Switch plan**.
-3. Select **Upgrade** for the plan you want to use.
-4. In the **Seats to purchase** section, add the number of users you want to purchase for the plan, then select **Continue to billing details**.
-5. Enter your email address and billing address in the corresponding fields, verify the number of seats you are purchasing, then select **Continue to payment details**.
-6. Confirm your email and billing address, and enter your payment details.
-7. Select **Confirm upgrade**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Switch plan**。
+3. 对你想使用的套餐选择 **Upgrade**。
+4. 在 **Seats to purchase** 区域，输入你想为该套餐购买的用户数量，然后选择 **Continue to billing details**。
+5. 在相应字段中输入你的邮箱地址和账单地址，核对你要购买的席位数，然后选择 **Continue to payment details**。
+6. 确认你的邮箱和账单地址，并输入付款信息。
+7. 选择 **Confirm upgrade**。
 
-## Upgrade a paid plan
+## 付费套餐之间升级
 
-Follow these steps to upgrade from one paid plan to another.
+按照以下步骤从一个付费套餐升级到另一个付费套餐。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page in the admin console.
-2. Select **Upgrade plan**.
-3. Locate the plan you want, then select **Upgrade**. Some plans may not be available for all accounts.
-4. Review your **Billing email**, **Billing address**, and **Payment method**, and update them if needed.
-5. Select **Confirm upgrade**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Upgrade plan**。
+3. 找到你想要的套餐，然后选择 **Upgrade**。某些套餐可能并非对所有账户可用。
+4. 核对 **Billing email**、**Billing address** 和 **Payment method**，必要时进行修改。
+5. 选择 **Confirm upgrade**。
 
-After upgrading, your new plan takes effect immediately, and you can begin using its features immediately.
+升级后，你的新套餐立即生效，你可以立即开始使用其功能。
 
 [co-pricing]: https://tailscale.com/pricing

@@ -1,33 +1,33 @@
 ---
-title: "Failed to load sharing information"
-description: "This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and "
+title: "共享信息加载失败"
+description: "本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Oct 15, 2025
+最后验证于 Oct 15, 2025
 
-This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the admin console
+## 管理控制台中显示的消息
 
 Error: Failed to load sharing information. Please try again later or contact support.
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-This message might display when attempting to share a device in your tailnet by selecting **Share** for a device in the **Machines** page of the admin console. This may be the result of an issue with the Tailscale control server.
+当你尝试共享 tailnet 中的设备时（在管理控制台的 **Machines** 页面中选择某台设备的 **Share**），可能会显示这条消息。这可能是 Tailscale 控制服务器（control server）出现问题所致。
 
-The Tailscale coordination server is responsible for device discovery, authentication, key distribution, policy enforcement, and distributing network configurations to all devices in your tailnet.
+Tailscale 协调服务器（coordination server）负责设备发现、身份验证、密钥分发、策略执行，以及向 tailnet 中的所有设备分发网络配置。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决此问题：
 
-* Wait a while and retry accessing the Tailscale admin console.
-* Check the [Tailscale Status][xt-tailscale-status] page. If there is an issue on our end that impacts any of our services, it will be reported here.
+* 稍等片刻，然后重试访问 Tailscale 管理控制台。
+* 查看 [Tailscale Status][xt-tailscale-status] 页面。如果我们这边有影响任何服务的问题，都会在该页面报告。
 
-## Additional information
+## 更多信息
 
-* For information about the Tailscale coordination server, refer to [Control and data planes][docs-control-data-planes].
-* For information about sharing devices in a tailnet, refer to [Share your machines with other users][docs-sharing].
+* 有关 Tailscale 协调服务器的信息，请参阅 [控制平面与数据平面][docs-control-data-planes]。
+* 有关共享 tailnet 中设备的信息，请参阅 [将你的机器共享给其他用户][docs-sharing]。
 
 [docs-control-data-planes]: /docs/concepts/control-data-planes
 

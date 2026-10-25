@@ -1,31 +1,31 @@
 ---
 title: "tsnet"
-description: "Use the tsnet package to embed Tailscale inside a Go program."
+description: "使用 tsnet 包在 Go 程序中内嵌 Tailscale。"
 ---
 
-Last validated Jul 24, 2026
+最后验证于 Jul 24, 2026
 
-`tsnet` is a library that lets you embed Tailscale inside a Go program. With `tsnet`, you can programmatically make direct connections to devices on your Tailscale network (known as a tailnet), just like any other device in your tailnet would. When combined with other features of Tailscale, you can create new and interesting ways to use your tailnet.
+`tsnet` 是一个库，让你可以在 Go 程序中内嵌 Tailscale。借助 `tsnet`，你可以以编程方式与 Tailscale 网络（即 tailnet）上的设备建立直连，就像 tailnet 中的其他设备一样。与其他 Tailscale 功能结合使用时，你可以创造出使用 tailnet 的各种新颖方式。
 
-## Overview
+## 概述
 
-Typically, every IP address in your tailnet has to be strongly associated with a single device. This makes it difficult to run multiple services on a single device, especially if all of those services have different [access control][docs-access-control] rules. `tsnet` lets you run multiple services on the same device with different IP addresses, access control rules, and even user identities.
+通常，tailnet 中的每个 IP 地址都必须与单台设备强绑定。这使得在单台设备上运行多个服务变得困难，尤其当这些服务的[访问控制][docs-access-control]规则各不相同时。`tsnet` 让你可以在同一台设备上运行多个服务，它们可以使用不同的 IP 地址、访问控制规则，甚至不同的用户身份。
 
-`tsnet` uses a [userspace][docs-userspace-networking] TCP/IP networking stack.
+`tsnet` 使用[用户态][docs-userspace-networking] TCP/IP 网络栈。
 
-Inside Tailscale, we built and constantly use tools on top of `tsnet`. `tsnet` powers our internal URL shortener [golink][xt-gh-tailscale-golink]. It powers the support tooling that our support team uses daily to help you resolve problems. Without `tsnet`, our Tailscale-enabled tools would be far more difficult to create and maintain.
+在 Tailscale 内部，我们基于 `tsnet` 构建并持续使用着各种工具。`tsnet` 支撑着我们的内部 URL 缩短服务 [golink][xt-gh-tailscale-golink]，也支撑着支持团队每天用来帮你解决问题的支持工具。没有 `tsnet`，这些启用 Tailscale 的工具创建和维护起来会困难得多。
 
-Externally, people have used `tsnet` to provide metrics, deliver administrative endpoints, and create other features. For examples, visit the Go [`tsnet` known importers][xt-go-tailscale-tsnet-importedby] page.
+在外部，人们用 `tsnet` 来提供指标、交付管理端点以及创建其他功能。示例请访问 Go [`tsnet` known importers][xt-go-tailscale-tsnet-importedby] 页面。
 
-## Include `tsnet` in your program
+## 在程序中引入 `tsnet`
 
-Run the following command to add `tsnet` to your dependencies and make it available for use in your Go program:
+运行以下命令，把 `tsnet` 添加到你的依赖中，使其可以在 Go 程序中使用：
 
 ```shell
 go get tailscale.com/tsnet
 ```
 
-In your Go program, add the `tailscale.com/tsnet` package to the list of imports:
+在你的 Go 程序中，把 `tailscale.com/tsnet` 包加入导入列表：
 
 ```go
 package main
@@ -42,9 +42,9 @@ import (
 )
 ```
 
-## Make calls with `tsnet.Server`
+## 使用 `tsnet.Server` 进行调用
 
-The [`tsnet.Server`][docs-tsnet-server] object provides the entry point for your program to connect with other devices in your tailnet. Initialize `tsnet.Server` with a hostname for the device that will be created, then listen on an address to accept connections from your tailnet.
+[`tsnet.Server`][docs-tsnet-server] 对象是你的程序与 tailnet 中其他设备建立连接的入口。用将要创建的设备的主机名初始化 `tsnet.Server`，然后监听某个地址以接受来自 tailnet 的连接。
 
 ```go
 var (
@@ -72,19 +72,19 @@ func main() {
 }
 ```
 
-## Device creation and authentication
+## 设备创建与认证
 
-If you are not using an [auth key][docs-auth-keys], or [trust credentials][docs-trust-credentials], the call to the [`Server.Start`][docs-tsnet-server-serverstart] function will result in creation and display of a Tailscale authentication URL. Use the URL to log in to Tailscale, same as you would for other devices in your tailnet. If [device approval][docs-device-approval] is enabled for the tailnet, a tailnet admin will need to [approve the device][docs-device-approval-approve].
+如果你没有使用[认证密钥（auth key）][docs-auth-keys]或[信任凭证（trust credentials）][docs-trust-credentials]，调用 [`Server.Start`][docs-tsnet-server-serverstart] 函数将会创建并显示一个 Tailscale 认证 URL。使用该 URL 登录 Tailscale，操作与 tailnet 中的其他设备相同。如果 tailnet 启用了[设备审批][docs-device-approval]，则需要由 tailnet 管理员[批准该设备][docs-device-approval-approve]。
 
-As an alternative to logging in by using a Tailscale authentication URL, you can use an auth key as part of your `tsnet.Server` initialization. This lets you [pre-approve a device][docs-device-approval-pre-approve].
+除了通过 Tailscale 认证 URL 登录之外，你还可以在初始化 `tsnet.Server` 时使用认证密钥。这样你可以[预先批准设备][docs-device-approval-pre-approve]。
 
-The authentication process can occur even if `Server.Start` itself is not directly called in your code, because some `Server` functions will implicitly call `Server.Start`if it has not yet been called.
+即使你的代码中没有直接调用 `Server.Start`，认证过程也可能发生，因为某些 `Server` 函数会在 `Server.Start` 尚未被调用时隐式调用它。
 
-## Additional information
+## 更多信息
 
-* For more information about the `tsnet.Server` functions, refer to [`tsnet.Server`][docs-tsnet-server].
-* For a complete example that uses `tsnet`, refer to [Hello tsnet][docs-hello-tsnet].
-* For a complete example that uses `Server.ListenService` and `ServiceModeHTTP` with Tailscale Services, refer to [`tsnet` and Tailscale Services][docs-tsnet-services].
+* 有关 `tsnet.Server` 各函数的更多信息，请参阅 [`tsnet.Server`][docs-tsnet-server]。
+* 有关使用 `tsnet` 的完整示例，请参阅 [Hello tsnet][docs-hello-tsnet]。
+* 有关结合 Tailscale Services 使用 `Server.ListenService` 与 `ServiceModeHTTP` 的完整示例，请参阅 [`tsnet` 与 Tailscale Services][docs-tsnet-services]。
 
 \[Missing snippet: tailscale\_skill.mdx]
 

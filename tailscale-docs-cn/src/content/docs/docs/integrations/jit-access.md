@@ -1,16 +1,16 @@
 ---
-title: "Third-party integrations for JIT access"
-description: "Use third-party integrations for just-in-time access, also known as on-demand access, to your Tailscale network."
+title: "JIT 访问的第三方集成"
+description: "使用第三方集成为你的 Tailscale 网络提供即时访问（just-in-time access），也称为按需访问。"
 ---
 
-Last validated Nov 12, 2025
+最后验证于 Nov 12, 2025
 
-Use third-party integrations to provide just-in-time (JIT) access to your Tailscale network (known as a tailnet). Use these integrations to add, update, or remove group and user settings in your [tailnet policy file][docs-tailnet-policy-file].
+使用第三方集成为你的 Tailscale 网络（即 tailnet）提供即时访问（JIT）。借助这些集成，你可以在 [tailnet 策略文件][docs-tailnet-policy-file]中添加、更新或移除群组和用户设置。
 
-## Manage your JIT access with a third-party integration
+## 使用第三方集成管理你的 JIT 访问
 
-* [JIT access with ConductorOne][docs-jit-conductorone]
-* [JIT access with Opal][docs-jit-opal]
+* [使用 ConductorOne 实现 JIT 访问][docs-jit-conductorone]
+* [使用 Opal 实现 JIT 访问][docs-jit-opal]
 
 [docs-jit-conductorone]: /docs/integrations/jit-conductorone
 

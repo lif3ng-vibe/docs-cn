@@ -1,76 +1,55 @@
 ---
-title: "Access Azure Linux VMs privately using Tailscale"
-description: "Microsoft Azure is a cloud service provider offering Linux and Windows virtual machines, to which Tailscale can be used to provide secure connectivity. This topic covers Linux VMs running within Azure"
+title: "使用 Tailscale 私有访问 Azure Linux 虚拟机"
+description: "Microsoft Azure 是一家云服务提供商，提供 Linux 和 Windows 虚拟机，可以使用 Tailscale 为其提供安全连接。本主题介绍在 Azure 中运行的 Linux 虚拟机。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Microsoft Azure is a cloud service provider offering Linux and Windows virtual machines, to which Tailscale can be used to provide secure connectivity. This topic covers Linux VMs running within Azure. For Windows VMs, refer to [Access Azure Windows VMs privately using Tailscale][docs-azure-windows].
+Microsoft Azure 是一家云服务提供商，提供 Linux 和 Windows 虚拟机，可以使用 Tailscale 为其提供安全连接。本主题介绍在 Azure 中运行的 Linux 虚拟机。Windows 虚拟机请参阅[使用 Tailscale 私有访问 Azure Windows 虚拟机][docs-azure-windows]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need a Tailscale network set up and
-configured with at least one existing device. Read our [getting started guide][docs-install]
-if you need help with this.
+在开始本指南之前，你需要先搭建并配置好一个 Tailscale 网络，且其中至少有一台现有设备。如果需要帮助，请阅读我们的[入门指南][docs-install]。
 
-## Step 1: Set up the Tailscale client for Linux VMs
+## 第 1 步：为 Linux 虚拟机设置 Tailscale 客户端
 
-First, [create a Virtual Machine in the Azure Portal][xt-azure-vms]
-running Linux. Tailscale supports [many of the Linux distributions][docs-install-linux]
-offered by Azure Marketplace images.
+首先，在 Azure 门户中[创建一台运行 Linux 的虚拟机][xt-azure-vms]。Tailscale 支持 Azure Marketplace 镜像提供的[多种 Linux 发行版][docs-install-linux]。
 
-If at least one side of a tunnel has "easy NAT," where Tailscale can determine the UDP port
-number on the far side of the NAT device, then it will make
-[direct connections to minimize latency.][bl-how-tailscale-works]
-We ensure that the Azure nodes can make direct connections by allowing UDP port 41641 to
-ingress through the firewall.
+只要隧道至少有一端是"简单 NAT"（easy NAT），即 Tailscale 能够确定 NAT 设备另一侧的 UDP 端口号，它就会建立[直连以降低延迟][bl-how-tailscale-works]。为了让 Azure 节点能够建立直连，我们通过防火墙放行 UDP 端口 41641 的入站流量。
 
-In the Networking step of setting up the VM, choose Advanced for the NIC network security group
-and create a network security policy to allow UDP port 41641 to ingress.
+在设置虚拟机的**网络**（Networking）步骤中，将 NIC 网络安全组选为**高级**（Advanced），并创建一条网络安全策略，允许 UDP 端口 41641 入站。
 
-*（图：Network Security Group allow port 41641）*
+*（图：网络安全组放行 41641 端口）*
 
-Then SSH to the system and follow the steps to
-[install Tailscale on Linux][docs-install-linux].
+然后通过 SSH 连入该系统，按照步骤[在 Linux 上安装 Tailscale][docs-install-linux]。
 
-## Step 2: Advertise routes from the VM
+## 第 2 步：从虚拟机宣告路由
 
-For the benefit of the *other* nodes in the tailnet we'll set up
-[split DNS][docs-dns-using-settings] to allow
-use of the same DNS names as are used inside of Azure. The
-[Azure DNS server address is 168.63.129.16][xt-azure-name-resolution], which is an anycast address that will go
-to the nearest DNS server within Azure.
+为了方便 tailnet 中*其他*节点，我们将设置[拆分 DNS][docs-dns-using-settings]（split DNS），使其能够使用与 Azure 内部相同的 DNS 名称。[Azure DNS 服务器地址是 168.63.129.16][xt-azure-name-resolution]，这是一个任播（anycast）地址，会路由到 Azure 中最近的 DNS 服务器。
 
-We'll have our VM advertise routes for both the subnet it sits on as well as the Azure DNS
-server. For example, if the subnet address range is 10.1.0.0/24, the command would be:
+我们将让这台虚拟机宣告它所在子网以及 Azure DNS 服务器的路由。例如，如果子网地址范围为 10.1.0.0/24，命令就是：
 
 ```shell
 tailscale set --advertise-routes=10.1.0.0/24,168.63.129.16/32 --accept-dns=false
 ```
 
-> **Note:**
+> **注意：**
 >
-> For Azure VMs it is generally best to let Azure handle the DNS configuration,
-> not have Tailscale override it, so we added `--accept-dns=false`.
+> 对 Azure 虚拟机来说，通常最好让 Azure 处理 DNS 配置，而不要让 Tailscale 覆盖它，所以我们加上了 `--accept-dns=false`。
 
-## Step 3: Add Azure DNS for your tailnet
+## 第 3 步：为你的 tailnet 添加 Azure DNS
 
-In the [DNS](https://console.tailscale.com/admin/dns) page of the admin console we add a nameserver
-restricted to the `internal.cloudapp.net` domain, pointing to the Azure DNS server which we
-made available through our VM.
+在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面中，我们添加一个限制在 `internal.cloudapp.net` 域的名称服务器，指向我们通过虚拟机开放的 Azure DNS 服务器。
 
-*（图：Adding a Split DNS resolver for internal.cloudapp.net）*
+*（图：为 internal.cloudapp.net 添加拆分 DNS 解析器）*
 
-Now the same hostnames which work between nodes running within Azure will also be available
-to all nodes on our tailnet.
+这样，在 Azure 内部节点之间有效的主机名，对我们 tailnet 上的所有节点也同样可用。
 
-## Step 4: Remove public SSH access
+## 第 4 步：移除公开的 SSH 访问
 
-As we can now SSH to the system over the private Tailscale network, there is no reason to leave
-the SSH port open on a public IP address. In the Settings > Network tab select the ingress
-rule for "SSH" and delete it.
+既然现在已经可以通过私有 Tailscale 网络 SSH 到该系统，就没有理由继续在公有 IP 地址上开放 SSH 端口了。在**设置 > 网络**标签页中，选择 **SSH** 的入站规则并将其删除。
 
-*（图：Disable public SSH port.）*
+*（图：禁用公开的 SSH 端口）*
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

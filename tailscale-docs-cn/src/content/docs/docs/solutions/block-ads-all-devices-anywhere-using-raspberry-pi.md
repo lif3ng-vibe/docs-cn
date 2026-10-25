@@ -1,164 +1,164 @@
 ---
-title: "Block ads on all your devices from anywhere using a Raspberry Pi"
-description: "Increase privacy, security, and browsing performance in a cost-effective way by using a Raspberry Pi with Pi-hole to block ads."
+title: "使用 Raspberry Pi 从任何地方拦截所有设备上的广告"
+description: "用 Raspberry Pi 搭配 Pi-hole 拦截广告，以经济高效的方式提升隐私、安全性和浏览性能。"
 ---
 
-Last validated Dec 15, 2025
+最后验证于 Dec 15, 2025
 
-Online ads slow down browsing, reduce privacy, and create security risks. They can track activity without consent, carry malicious code, and many consume extra data and battery life with large images, animations, and videos. Ads can also interrupt the experience with pop-ups and auto-playing content. Blocking ads can help stop trackers, speed up browsing, save data, and make websites cleaner and easier to use.
+在线广告会拖慢浏览速度、损害隐私并带来安全风险。它们可能在未经同意的情况下跟踪你的活动、携带恶意代码，而且许多广告凭借大图片、动画和视频消耗额外的流量和电量。广告还会以弹窗和自动播放内容打断你的体验。拦截广告有助于阻止跟踪器、加快浏览速度、节省流量，并让网站更清爽、更易用。
 
-One method to block ads on devices in a network is to install [Pi-hole][xt-pi-hole] software on a Raspberry Pi device. Pi-hole acts as your network's DNS server and filters requests to ad and tracking servers before they reach devices, providing protection across the network without requiring additional software on the devices themselves.
+拦截网络内设备广告的一种方法，是在 Raspberry Pi 设备上安装 [Pi-hole][xt-pi-hole] 软件。Pi-hole 充当你网络的 DNS 服务器，在发往广告和跟踪服务器的请求到达设备之前将其过滤，从而为整个网络提供防护，设备本身无需安装额外软件。
 
-Combining Pi-hole with Tailscale provides the same protection beyond a home network. Tailscale creates a secure, private network that lets users remotely use the Pi-hole DNS server anywhere, enabling consistent ad blocking and privacy benefits at home, on public Wi-Fi, or while traveling.
+将 Pi-hole 与 Tailscale 结合，可以把同样的防护扩展到家庭网络之外。Tailscale 创建一个安全私密的网络，让你在任何地方都能远程使用 Pi-hole DNS 服务器，无论在家中、连着公共 Wi-Fi 还是旅途中，都能获得一致的广告拦截与隐私保护。
 
-The benefits of blocking ads using a Raspberry Pi and Pi-hole with a Tailscale network (known as a tailnet) include:
+使用 Raspberry Pi 和 Pi-hole 搭配 Tailscale 网络（称为 tailnet）拦截广告的好处包括：
 
-* Ad blocking on your devices, whether you're at home or away.
-* A Raspberry Pi is a cost-effective hardware solution.
-* A Raspberry Pi consumes very little power, so you can always leave it on and connected.
-* Pi-hole is a free and open source software.
-* Tailscale is free with the Personal plan that supports up to 6 users, unlimited user devices, and 50 tagged devices.
+* 无论在家还是在外，你的设备都能拦截广告。
+* Raspberry Pi 是经济实惠的硬件方案。
+* Raspberry Pi 功耗极低，可以一直开机并保持连接。
+* Pi-hole 是免费的开源软件。
+* Tailscale 的 Personal 套餐免费，支持最多 6 个用户、不限数量的用户设备和 50 台打了标签的设备。
 
-> **Tip:**
+> **提示：**
 >
-> While the instructions in this topic describe how to configure Pi-hole as the DNS server for blocking ads in your tailnet, you can also configure your router's DNS settings to point to the Raspberry Pi to use Pi-hole ad blocking across your entire network.
+> 本文介绍的是如何将 Pi-hole 配置为 tailnet 中拦截广告的 DNS 服务器；你也可以将路由器的 DNS 设置指向 Raspberry Pi，让整个网络都使用 Pi-hole 广告拦截。
 
-## Prerequisites
+## 前提条件
 
-To follow this guide, you need:
+要跟着本指南操作，你需要：
 
-* A device, such as a phone or laptop, to log in and create the tailnet. Tailscale runs on most operating systems, including Linux, Windows, macOS, iOS, and Android.
-* An email account that uses a [single sign-on (SSO) identity provider][docs-sso-providers], such as Apple, Google, or Microsoft.
-* A Raspberry Pi Model B or later, with a minimum of 2 GB of free space and 512 MB of RAM.
-* Raspberry Pi OS (latest version) installed on your Raspberry Pi.
-* Access to the Raspberry Pi OS command line interface (CLI). If you want to use the Raspberry Pi OS desktop, you can use the Terminal application. If you want to access the Raspberry Pi from another computer in your network, you'll need access to the CLI using a terminal client or command prompt on your computer.
+* 一台用于登录并创建 tailnet 的设备（例如手机或笔记本电脑）。Tailscale 可运行于大多数操作系统，包括 Linux、Windows、macOS、iOS 和 Android。
+* 一个使用[单点登录（SSO）身份提供方][docs-sso-providers]（例如 Apple、Google 或 Microsoft）的电子邮件账户。
+* 一台 Raspberry Pi Model B 或更新型号，至少有 2 GB 可用空间和 512 MB 内存。
+* 你的 Raspberry Pi 上已安装 Raspberry Pi OS（最新版本）。
+* 能访问 Raspberry Pi OS 的命令行界面（CLI）。如果你想使用 Raspberry Pi OS 桌面，可以使用 Terminal 应用。如果你想从网络中的另一台计算机访问 Raspberry Pi，则需要通过计算机上的终端客户端或命令提示符访问 CLI。
 
-## Step 1: Install and configure Pi-hole
+## 第 1 步：安装并配置 Pi-hole
 
-To install Pi-hole directly from the Raspberry Pi OS desktop, open the Terminal application. If you want to access the Raspberry Pi from another computer in your network, you can access the CLI from a terminal client or command prompt using the command `ssh <username>@<ip-address>`, where `<username>` is the user name and `<ip-address>` is the local IP address for the Raspberry Pi.
+要从 Raspberry Pi OS 桌面直接安装 Pi-hole，打开 Terminal 应用。如果你想从网络中的另一台计算机访问 Raspberry Pi，可以通过终端客户端或命令提示符执行 `ssh <username>@<ip-address>` 命令来访问 CLI，其中 `<username>` 是用户名，`<ip-address>` 是 Raspberry Pi 的本地 IP 地址。
 
-Make sure your Raspberry Pi software packages are up to date:
+确保你的 Raspberry Pi 软件包是最新的：
 
 ```shell
 sudo apt update
 sudo apt upgrade -y
 ```
 
-Now download and install Pi-hole:
+现在下载并安装 Pi-hole：
 
 ```shell
 curl -sSL https://install.pi-hole.net | bash
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Attackers can exploit `curl` with `| bash`. Review the code contained in this script before installing. You can do so by visiting the `https://install.pi-hole.net` URL from a web browser. Alternatively, you can install Pi-hole using [another method][xt-pi-hole-install].
+> 攻击者可以滥用 `curl` 配合 `| bash` 的方式。安装前请先审阅此脚本包含的代码。你可以用网页浏览器访问 `https://install.pi-hole.net` URL 来查看。你也可以改用[其他方法][xt-pi-hole-install]安装 Pi-hole。
 
-An installer displays in the terminal session, where you can configure the basic Pi-hole settings. Configure the initial setup for Pi-hole and access the Pi-hole web admin interface.
+终端会话中会显示一个安装器，你可以在其中配置 Pi-hole 的基本设置。完成 Pi-hole 的初始设置，并进入 Pi-hole 的网页管理界面。
 
-* Select **OK** to proceed.
-* In the **Static IP Address** section, select **Yes** to use the current IP address for the Raspberry Pi, and select **Continue**. This ensures the Raspberry Pi always has the same address and devices can reach the Pi-hole DNS server consistently and reliably. Alternatively, you can select **Skip** and configure a static IP address for the Raspberry Pi in your router's DHCP settings.
-* In the **Select Upstream DNS Provider** section, select a common DNS provider, then select **OK**. Pi-hole only blocks ads for the lists of sites that are configured in its settings. If Pi-hole does not recognize the site, it passes the request to the DNS server that you specify here.
-* In the **Blocklists** section, select **Yes** to use the [Steven Black unified host list][xt-github-stevenblack]. This is a reliable and community-maintained block list that combines many ad, tracker, and malware lists into one single list for broad protection.
-* In the **Web Admin Interface** section, select **Yes** to install the GUI interface that lets you manage all the Pi-hole settings.
-* In the **Web Server** section, select **Yes**, as this is necessary to use the web admin interface.
-* In the **Enable Query Logging** section, select whether you want Pi-hole to record every DNS request your devices make. You can use this information to modify the settings in Pi-hole to suit your needs.
-* In the **Select a privacy mode for FTL**, select the level of detail that Pi-hole logs collect, then select **Continue**. The installer returns you to the command line.
+* 选择 **OK**（确定）继续。
+* 在 **Static IP Address**（静态 IP 地址）部分，选择 **Yes**（是）以沿用 Raspberry Pi 当前的 IP 地址，然后选择 **Continue**（继续）。这能确保 Raspberry Pi 始终使用同一地址，设备可以稳定可靠地访问 Pi-hole DNS 服务器。你也可以选择 **Skip**（跳过），然后在路由器的 DHCP 设置中为 Raspberry Pi 配置静态 IP 地址。
+* 在 **Select Upstream DNS Provider**（选择上游 DNS 提供方）部分，选择一个常见 DNS 提供方，然后选择 **OK**。Pi-hole 只拦截其设置中已配置站点列表里的广告。如果 Pi-hole 无法识别某个站点，就会把请求转发给你在此处指定的 DNS 服务器。
+* 在 **Blocklists**（拦截列表）部分，选择 **Yes** 以使用 [Steven Black unified host list][xt-github-stevenblack]。这是一个由社区维护的可靠拦截列表，将众多广告、跟踪器和恶意软件列表合并为一份单一列表，提供广泛防护。
+* 在 **Web Admin Interface**（网页管理界面）部分，选择 **Yes** 安装这个让你管理所有 Pi-hole 设置的图形界面。
+* 在 **Web Server**（网页服务器）部分，选择 **Yes**，因为使用网页管理界面必须有它。
+* 在 **Enable Query Logging**（启用查询日志）部分，选择是否让 Pi-hole 记录你的设备发出的每一条 DNS 请求。你可以利用这些信息调整 Pi-hole 设置，以满足自己的需求。
+* 在 **Select a privacy mode for FTL**（为 FTL 选择隐私模式）部分，选择 Pi-hole 日志收集的详细程度，然后选择 **Continue**（继续）。安装器会返回命令行。
 
-Before you access the Pi-hole web admin interface, change your Pi-hole password from the default, which is blank.
+在访问 Pi-hole 网页管理界面之前，先把 Pi-hole 密码从默认值（空白）改掉。
 
-If you are using Pi-hole v6, use the following command, then enter and re-enter your new password:
+如果你使用的是 Pi-hole v6，使用以下命令，然后输入并再次输入你的新密码：
 
 ```shell
 pihole setpassword
 ```
 
-> **Note:**
+> **注意：**
 >
-> If you are using Pi-hole v5, use the following command. then enter and re-enter your new password:
+> 如果你使用的是 Pi-hole v5，请使用以下命令，然后输入并再次输入你的新密码：
 >
 > ```shell
 > pihole -a -p
 > ```
 
-After the initial setup is complete, go to `http://<raspberry-pi>/admin`, where `<raspberry-pi>` is the IP address for the Raspberry Pi and enter the new password.
+初始设置完成后，前往 `http://<raspberry-pi>/admin`（其中 `<raspberry-pi>` 是 Raspberry Pi 的 IP 地址），并输入新密码。
 
-When a device connects to a tailnet, it's assigned a `100.x.x.x` IP address on the `tailscale0` interface, in addition to the existing local IP address, such as `192.168.x.x` on interface `eth0`. So you need to configure Pi-hole to listen on the Tailscale interface.
+设备连接到 tailnet 时，除了原有的本地 IP 地址（例如 `eth0` 接口上的 `192.168.x.x`），还会在 `tailscale0` 接口上分配到一个 `100.x.x.x` IP 地址。因此你需要配置 Pi-hole 监听 Tailscale 接口。
 
-In the Pi-hole web admin interface, go to **Settings**, then **DNS**, and in the upper right-hand corner, toggle the **Basic** button to **Expert** to display advanced settings. Within the **Interface settings** section, check the **Permit all origins** box.
+在 Pi-hole 网页管理界面中，前往 **Settings**（设置），然后 **DNS**，在右上角将 **Basic**（基础）按钮切换为 **Expert**（专家）以显示高级设置。在 **Interface settings**（接口设置）部分，勾选 **Permit all origins**（允许所有来源）。
 
-> **Warning:**
+> **警告：**
 >
-> If you enable **Permit all origins**, ensure:
+> 如果你启用 **Permit all origins**，请确保：
 >
-> * Your Raspberry Pi is behind a firewall.
-> * You secure the Pi-hole web admin interface with a strong password to reduce security risks.
+> * 你的 Raspberry Pi 位于防火墙之后。
+> * 你用强密码保护 Pi-hole 网页管理界面，以降低安全风险。
 
-Next, you'll create your personal tailnet.
+接下来，你将创建自己的个人 tailnet。
 
-## Step 2: Create your tailnet
+## 第 2 步：创建你的 tailnet
 
-To create a tailnet, [download][co-download] and install the client on a device such as a phone or laptop, and log in using your existing identity provider. Choose the **Personal** option and follow the remaining instructions to complete the process. Your personal tailnet is now configured and ready to use.
+要创建 tailnet，在一台设备（例如手机或笔记本电脑）上[下载][co-download]并安装客户端，然后使用你现有的身份提供方登录。选择 **Personal**（个人）选项，并按照剩余提示完成流程。此时你的个人 tailnet 已配置完毕，可以使用了。
 
-*（图：Select a type of tailnet.）*
+*（图：选择 tailnet 类型。）*
 
-Now go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console to confirming it's connected to your tailnet. The admin console is where you can manage the users, devices, and permissions for your tailnet.
+接着前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，确认设备已连接到你的 tailnet。管理控制台是你可以管理 tailnet 用户、设备和权限的地方。
 
-*（图：Machines page of the admin console.）*
+*（图：管理控制台的 Machines 页面。）*
 
-Next, you'll install and configure Tailscale on your Raspberry Pi.
+接下来，你将在 Raspberry Pi 上安装并配置 Tailscale。
 
-## Step 3: Install Tailscale on your Raspberry Pi
+## 第 3 步：在 Raspberry Pi 上安装 Tailscale
 
-To install the Tailscale client, open a terminal session or use the same one from the previous section if it's still open. Then use the following command to download and install the Tailscale package:
+要安装 Tailscale 客户端，打开一个终端会话（如果上一节的会话还开着，也可以继续使用它）。然后使用以下命令下载并安装 Tailscale 软件包：
 
 ```shell
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-Now enable the Tailscale client and instruct the Raspberry Pi not to automatically use the DNS settings for your tailnet, since the Raspberry Pi is the DNS server.
+现在启用 Tailscale 客户端，并指示 Raspberry Pi 不要自动采用 tailnet 的 DNS 设置，因为 Raspberry Pi 本身就是 DNS 服务器。
 
 ```shell
 sudo tailscale up --accept-dns=false
 ```
 
-When you run the [`tailscale up`][docs-cli-up] command for the first time, a URL displays in the terminal. Paste the URL into a web browser and log in with the same email address you used to set up your tailnet. You can do this from any device you want, such as a phone or a laptop. Once logged in, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the Raspberry Pi in the list to confirm that it's added to your tailnet.
+第一次运行 [`tailscale up`][docs-cli-up] 命令时，终端里会显示一个 URL。把该 URL 粘贴到网页浏览器中，并使用创建 tailnet 时所用的同一电子邮箱地址登录。你可以在任何设备上完成这一步，例如手机或笔记本电脑。登录后，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到 Raspberry Pi，确认它已加入你的 tailnet。
 
-Devices in a tailnet periodically re-authenticate to stay secure through device key expiry, which requires re-authentication after a set period. For devices that should remain continuously connected, such as servers, Raspberry Pis, media centers, smart home hubs, Docker hosts, and NAS devices, you can disable key expiry to avoid any unnecessary disruptions.
+tailnet 中的设备会通过设备密钥过期机制定期重新认证以保障安全，即在设定的期限过后要求重新认证。对于应当持续保持连接的设备（例如服务器、Raspberry Pi、媒体中心、智能家居中枢、Docker 主机和 NAS 设备），你可以禁用密钥过期，避免不必要的中断。
 
-To disable key expiry for a device, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, select the  icon next to the device, then select **Disable key expiry**.
+要禁用某台设备的密钥过期，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，选择该设备旁边的图标，然后选择 **Disable key expiry**（禁用密钥过期）。
 
-> **Warning:**
+> **警告：**
 >
-> Disabling key expiry reduces security and can expose your network if the device or key is compromised. Only do this for trusted devices and revoke the key immediately if the device is lost or replaced. For more information, refer to [Key expiry][docs-key-expiry].
+> 禁用密钥过期会降低安全性，如果设备或密钥遭到入侵，可能会暴露你的网络。只对受信任的设备这样做，并且在设备丢失或更换时立即撤销密钥。更多信息请参阅[密钥过期][docs-key-expiry]。
 
-Next, you'll configure your tailnet DNS settings to point to the Raspberry Pi.
+接下来，你将配置 tailnet 的 DNS 设置，使其指向 Raspberry Pi。
 
-## Step 4: Set Raspberry Pi as the DNS server for your tailnet
+## 第 4 步：将 Raspberry Pi 设为 tailnet 的 DNS 服务器
 
-To configure the Raspberry Pi as the DNS server for your tailnet, go to the [DNS](https://console.tailscale.com/admin/dns) page of the admin console, and in the **Nameservers** section, select **Add nameserver**, then **Custom**. Then enter the IP address for the Raspberry Pi, select **Save**, and enable the **Override DNS servers** toggle.
+要将 Raspberry Pi 配置为 tailnet 的 DNS 服务器，前往管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面，在 **Nameservers**（名称服务器）部分选择 **Add nameserver**（添加名称服务器），然后选择 **Custom**（自定义）。接着输入 Raspberry Pi 的 IP 地址，选择 **Save**（保存），并启用 **Override DNS servers**（覆盖 DNS 服务器）开关。
 
-*（图：Configure a custom DNS server in the admin console.）*
+*（图：在管理控制台中配置自定义 DNS 服务器。）*
 
-When your devices connect to the tailnet, they use the Raspberry Pi as the DNS server to block most ads. When they're not connected to the tailnet, they use the DNS server set up on the local network, such as your home router.
+你的设备连接到 tailnet 时，会使用 Raspberry Pi 作为 DNS 服务器来拦截大部分广告。未连接 tailnet 时，则使用本地网络上设置的 DNS 服务器，例如你的家用路由器。
 
-To verify that your device is using Pi-hole for ad blocking, visit a website that you know contains ads, and they will not display for most sites. You can also try turning the Tailscale client off to make the ads re-appear, then re-enable the Tailscale client.
+要验证你的设备正在使用 Pi-hole 拦截广告，可以访问一个你确定含广告的网站，大多数站点上的广告都不会再显示。你也可以尝试关闭 Tailscale 客户端让广告重新出现，再重新启用 Tailscale 客户端。
 
-You can also configure your router's DNS settings to point to the Raspberry Pi to use Pi-hole ad blocking across your entire network.
+你还可以将路由器的 DNS 设置指向 Raspberry Pi，让整个网络都使用 Pi-hole 广告拦截。
 
-## Conclusion
+## 结语
 
-In this guide, you set up a Raspberry Pi with Pi-hole and connected it to your tailnet using Tailscale. This configuration gives you an always-on way to block ads and stop trackers, whether you're at home, on public Wi-Fi, or traveling. By routing DNS requests through your Pi-hole, you maintain a cleaner, faster, and more private browsing experience across all your devices, wherever you are.
+在本指南中，你用 Pi-hole 搭建了一台 Raspberry Pi，并使用 Tailscale 将其接入你的 tailnet。这一配置为你提供了一种常驻的广告拦截与跟踪器阻止方案，无论在家中、连着公共 Wi-Fi 还是旅途中都能生效。通过将 DNS 请求经由你的 Pi-hole 路由，你在所有设备上都能获得更清爽、更快速、更私密的浏览体验，无论身在何处。
 
-The Pi-hole application is highly configurable, so be sure to browse the settings and choose what's best suited for your needs. For information, refer to the official [Pi-hole documentation][xt-pi-hole-docs].
+Pi-hole 应用高度可配置，请务必浏览各项设置，选择最适合你需求的配置。更多信息请参阅官方 [Pi-hole 文档][xt-pi-hole-docs]。
 
-## Further exploration
+## 进一步探索
 
-* [Add additional devices][docs-device-add] to your tailnet.
-* [Invite other users][docs-invite-any-user] to your tailnet to let them route their device traffic.
-* Configure your Raspberry Pi to [route your tailnet traffic][docs-exit-nodes] for secure browsing wherever you are.
-* Configure your Raspberry Pi as a [subnet router][docs-subnets] to let you remotely access home network devices that don't have Tailscale installed, such as printers or smart home devices.
-* Use [Control D][docs-control-d] or [NextDNS][docs-nextdns] as an alternative for ad blocking in your tailnet.
+* 向你的 tailnet[添加更多设备][docs-device-add]。
+* [邀请其他用户][docs-invite-any-user]加入你的 tailnet，让他们路由自己设备的流量。
+* 将你的 Raspberry Pi 配置为[路由你的 tailnet 流量][docs-exit-nodes]，无论身在何处都能安全浏览。
+* 将你的 Raspberry Pi 配置为[子网路由器][docs-subnets]，让你能远程访问未安装 Tailscale 的家庭网络设备，例如打印机或智能家居设备。
+* 使用 [Control D][docs-control-d] 或 [NextDNS][docs-nextdns] 作为 tailnet 广告拦截的替代方案。
 
 [co-download]: https://tailscale.com/download
 

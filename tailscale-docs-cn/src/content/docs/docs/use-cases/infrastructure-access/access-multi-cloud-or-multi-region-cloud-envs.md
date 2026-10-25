@@ -1,47 +1,47 @@
 ---
-title: "Manage access across multi-cloud or multi-region cloud environments"
-description: "Managing infrastructure across multiple cloud providers or regions typically requires VPN gateways, VPC peering agreements, and cloud-specific routing configuration. Tailscale provides an alternative "
+title: "管理多云或多地区云环境的访问"
+description: "跨多个云提供商或地区管理基础设施，通常需要 VPN 网关、VPC 对等互连协议以及各云平台特有的路由配置。Tailscale 提供了另一种"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Subnet routers**](/docs/features/subnet-routers) — Use subnet routers to give devices outside your local network access to services within specific subnets. Extend your private network with Tailscale.
+> [**子网路由器**](/docs/features/subnet-routers)——使用子网路由器让本地网络之外的设备访问特定子网内的服务，用 Tailscale 扩展你的私有网络。
 
-Managing infrastructure across multiple cloud providers or regions typically requires VPN gateways, VPC peering agreements, and cloud-specific routing configuration. Tailscale provides an alternative by creating an encrypted overlay network across all your environments. Devices anywhere in the tailnet can reach cloud-private resources without opening inbound firewall ports or managing complex peering configurations.
+跨多个云提供商或地区管理基础设施，通常需要 VPN 网关、VPC 对等互连协议以及各云平台特有的路由配置。Tailscale 提供了另一种选择：在所有环境中创建一张加密的覆盖网络。tailnet 中任何位置的设备都能访问云上私有资源，而无需开放入站防火墙端口或管理复杂的对等互连配置。
 
-## Connect cloud VPCs with subnet routers
+## 用子网路由器连接云 VPC
 
-A [subnet router][docs-subnet-routers] exposes a private IP range to the tailnet so that any tailnet device can reach hosts in that network without running Tailscale directly on each one. Deploy a subnet router in each VPC or cloud region to make its private CIDR range reachable across all your environments.
+[子网路由器][docs-subnet-routers]把一段私有 IP 范围暴露给 tailnet，让任何 tailnet 设备都能访问该网络中的主机，而无需在每台主机上运行 Tailscale。在每个 VPC 或云地区部署一台子网路由器，让它的私有 CIDR 网段在你的所有环境中可达。
 
-1. Install Tailscale on a VM on each VPC:
+1. 在每个 VPC 中的一台虚拟机上安装 Tailscale：
 
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-2. Advertise its private subnet:
+2. 宣告它的私有子网：
 
    ```bash
    sudo tailscale up --advertise-routes=10.0.0.0/16 --advertise-tags=tag:subnet-router
    ```
 
-3. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and approve the advertised routes for each subnet router. Repeat this for each cloud environment or region. Tailscale handles routing so that clients reach the correct subnet router for each CIDR range.
+3. 打开管理控制台的[机器](https://console.tailscale.com/admin/machines)页面，批准每台子网路由器宣告的路由。每个云环境或地区都要重复此操作。Tailscale 会处理好路由，让客户端针对每个 CIDR 网段找到正确的子网路由器。
 
-## Resolve internal hostnames across environments
+## 跨环境解析内部主机名
 
-[MagicDNS][docs-magicdns] assigns a consistent `<device-name>.<tailnet-name>.ts.net` hostname to every device in your tailnet. Engineers and services can use these hostnames to reach any cloud resource regardless of which provider or region it runs in.
+[MagicDNS][docs-magicdns] 会为 tailnet 中的每台设备分配一个一致的 `<device-name>.<tailnet-name>.ts.net` 主机名。工程师和服务都可以使用这些主机名访问任何云资源，无论它运行在哪个提供商或地区。
 
-For cloud-internal DNS zones, use [split DNS][docs-split-dns] to forward queries for a specific domain through the subnet router in that environment. This lets devices resolve private cloud hostnames from anywhere in the tailnet without exposing those zones publicly.
+对于云内部 DNS 区域，使用 [split DNS][docs-split-dns]（分流 DNS）把特定域名的查询转发给该环境中的子网路由器。这样设备就能从 tailnet 中的任何位置解析云上私有主机名，同时不公开暴露这些区域。
 
-## Control access between cloud environments
+## 控制云环境之间的访问
 
-[Tags][docs-tags] and [grants][docs-grants] let you define which workloads can reach which cloud networks. Tag subnet routers and destination services by environment so that access policies remain consistent as you add new cloud regions or providers.
+[标签][docs-tags]和[授权][docs-grants]让你定义哪些工作负载可以访问哪些云网络。按环境为子网路由器和目标服务打标签，这样在新增云地区或提供商时，访问策略仍能保持一致。
 
-This grant enables services tagged as `tag:app-server` to reach any host advertised by the AWS subnet router:
+下面这条授权让打有 `tag:app-server` 标签的服务可以访问 AWS 子网路由器宣告的任何主机：
 
 ```json
 "grants": [
@@ -53,11 +53,11 @@ This grant enables services tagged as `tag:app-server` to reach any host adverti
 ]
 ```
 
-Add grants to the tailnet policy file through the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console. Tag each subnet router with a cloud-specific tag to make grants easier to reason about and audit as your environment grows.
+通过管理控制台的[访问控制](https://console.tailscale.com/admin/acls/file)页面将授权添加到 tailnet 策略文件。为每台子网路由器打上云平台专属的标签，随着环境规模扩大，授权会更易于理解和审计。
 
-## Connect Kubernetes clusters
+## 连接 Kubernetes 集群
 
-The [Kubernetes operator][docs-k8s-operator] integrates Tailscale into your clusters so that pods, services, and the Kubernetes API server are reachable from anywhere in the tailnet. You can expose cluster services as tailnet devices, route cluster egress traffic through the tailnet, and connect services across clusters without configuring cloud load balancers or public endpoints.
+[Kubernetes Operator][docs-k8s-operator] 将 Tailscale 集成到你的集群中，让 pod、服务和 Kubernetes API 服务器从 tailnet 中的任何位置都可达。你可以把集群服务作为 tailnet 设备对外提供、让集群出站流量经由 tailnet 路由，以及连接跨集群的服务，而无需配置云负载均衡器或公网端点。
 
 [docs-grants]: /docs/features/access-control/grants
 

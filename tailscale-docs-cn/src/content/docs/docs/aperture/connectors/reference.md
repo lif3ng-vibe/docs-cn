@@ -1,43 +1,43 @@
 ---
-title: "Aperture connectors reference"
-description: "The `connectors` section of the [Aperture configuration][docs-aperture-configuration] configures outbound integrations with external services. Connectors support two protocols:"
+title: "Aperture 连接器参考"
+description: "[Aperture 配置][docs-aperture-configuration]中的 `connectors` 段配置与外部服务的出站集成。连接器支持两种协议。"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
-The `connectors` section of the [Aperture configuration][docs-aperture-configuration] configures outbound integrations with external services. Connectors support two protocols:
+[Aperture 配置][docs-aperture-configuration]中的 `connectors` 段配置与外部服务的出站集成。连接器支持两种协议：
 
-* **MCP** (`"protocol": "mcp"`): Aperture connects to remote [Model Context Protocol][xt-mcp-spec] servers, aggregates their tools and resources, and exposes them through the `/v1/mcp` endpoint.
-* **HTTP** (`"protocol": "http"`): Aperture acts as an authenticated reverse proxy, forwarding requests to upstream HTTP APIs with credentials injected automatically.
+* **MCP**（`"protocol": "mcp"`）：Aperture 连接远程 [Model Context Protocol][xt-mcp-spec] 服务器，聚合其工具和资源，并通过 `/v1/mcp` 端点暴露它们。
+* **HTTP**（`"protocol": "http"`）：Aperture 充当带认证的反向代理，把请求转发给上游 HTTP API 并自动注入凭证。
 
-Connectors replace the deprecated `mcp.servers` syntax and add support for authenticated connections and multiple protocols.
+连接器取代了已弃用的 `mcp.servers` 语法，并新增对认证连接和多种协议的支持。
 
-For setup and verification steps, refer to [Get started with connectors][docs-connectors-get-started].
+设置与验证步骤参阅[连接器入门][docs-connectors-get-started]。
 
-## `connectors` fields
+## `connectors` 字段
 
-The `connectors` section accepts the following top-level fields:
+`connectors` 段接受以下顶层字段：
 
-| Field           | Type | Default | Description                                                                                                                                                                                                                                      |
-| --------------- | ---- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `servers`       | map  | `{}`    | Map of connector ID to server configuration. The map key is the connector ID, which becomes the name prefix for tools (`connectorID_toolname`), resources (`connectorID-uri`), and resource templates (`connectorID-uriTemplate`).               |
-| `system_labels` | map  | `{}`    | Map of system connector ID to a list of labels, replacing that connector's default labels. Keys must name a known system connector (currently `aperture`). Any other key is a load-time error. Refer to [connector labels][ar-connector-labels]. |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `servers` | map | `{}` | 连接器 ID 到服务器配置的映射。映射键是连接器 ID，会成为工具（`connectorID_toolname`）、资源（`connectorID-uri`）和资源模板（`connectorID-uriTemplate`）的名称前缀。 |
+| `system_labels` | map | `{}` | 系统连接器 ID 到标签列表的映射，用于替换该连接器的默认标签。键必须是已知的系统连接器（目前是 `aperture`）。其他任何键都是加载时错误。参阅[连接器标签][ar-connector-labels]。 |
 
-## `servers` fields
+## `servers` 字段
 
-Each entry in the `servers` map accepts the following fields:
+`servers` 映射中的每一项接受以下字段：
 
-| Field         | Type             | Required | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------- | ---------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `protocol`    | string           | Yes      | N/A          | How Aperture communicates with the upstream. One of `"mcp"` or `"http"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `url`         | string           | No       | N/A          | Endpoint URL of the upstream server. A missing `url` produces a load-time warning rather than a fatal error, so Aperture still loads the configuration. The dashboard's connector save path, however, rejects it as an error.                                                                                                                                                                                                                                                                                                               |
-| `provider`    | string           | No       | `"Custom"`   | Provider identifier. Set automatically when using a verified connector from the registry (for example, `"Salesforce"`, `"Atlassian"`, `"Slack"`). Custom connectors use the default value `"Custom"`. Controls whether the connector appears in the "verified" or "custom" category in the UI. If set manually, `provider` must exactly match a verified connector ID from the registry or be `"Custom"`. Any other value is a load-time error. Verified provider IDs are case-sensitive (for example, `"Salesforce"`, not `"salesforce"`). |
-| `description` | string           | No       | unset (`""`) | Human-readable label displayed in the Aperture UI. For granted HTTP connectors, `aperture_list_connectors` also returns it to permitted users. When empty, the field is omitted from the stored configuration.                                                                                                                                                                                                                                                                                                                              |
-| `context`     | string or JSON   | No       | N/A          | Prompt or context information for a connector. Accepts a plain string or arbitrary JSON object. For granted HTTP connectors, `aperture_list_connectors` returns it to permitted users.                                                                                                                                                                                                                                                                                                                                                      |
-| `labels`      | array of strings | No       | `[]`         | Flat labels that group the connector for access control. A grant pattern of `label:<name>` matches every connector carrying that label. Each label must match `[a-zA-Z0-9][a-zA-Z0-9._-]*`. The label `system` is reserved. Refer to [connector labels][ar-connector-labels].                                                                                                                                                                                                                                                               |
-| `auth`        | object           | No       | N/A          | Authentication configuration. Dispatched by the `type` field.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 字段 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | --- | --- |
+| `protocol` | string | 是 | N/A | Aperture 与上游通信的方式。取值为 `"mcp"` 或 `"http"`。 |
+| `url` | string | 否 | N/A | 上游服务器的端点 URL。缺少 `url` 会产生加载时警告而非致命错误，Aperture 仍会加载配置。但仪表板的连接器保存路径会将其作为错误拒绝。 |
+| `provider` | string | 否 | `"Custom"` | 提供商标识。使用注册表中的经验证连接器时自动设置（例如 `"Salesforce"`、`"Atlassian"`、`"Slack"`）。自定义连接器使用默认值 `"Custom"`。决定连接器在界面中归入“verified”还是“custom”类别。手动设置时，`provider` 必须与注册表中某个经验证连接器 ID 完全一致，或为 `"Custom"`。其他任何值都是加载时错误。经验证提供商 ID 区分大小写（例如是 `"Salesforce"` 而不是 `"salesforce"`）。 |
+| `description` | string | 否 | 未设置（`""`） | Aperture 界面中显示的人类可读标签。对已授权的 HTTP 连接器，`aperture_list_connectors` 也会把它返回给有权限的用户。为空时，该字段不会写入存储的配置。 |
+| `context` | string 或 JSON | 否 | N/A | 连接器的提示或上下文信息。接受纯字符串或任意 JSON 对象。对已授权的 HTTP 连接器，`aperture_list_connectors` 会把它返回给有权限的用户。 |
+| `labels` | 字符串数组 | 否 | `[]` | 用于给连接器分组以控制访问的扁平标签。授权模式 `label:<name>` 会匹配携带该标签的每个连接器。每个标签必须匹配 `[a-zA-Z0-9][a-zA-Z0-9._-]*`。标签 `system` 是保留标签。参阅[连接器标签][ar-connector-labels]。 |
+| `auth` | object | 否 | N/A | 认证配置。由 `type` 字段分发。 |
 
-Example with both protocols:
+同时使用两种协议的示例：
 
 ```json
 {
@@ -61,19 +61,19 @@ Example with both protocols:
 }
 ```
 
-In this example, `github` is a custom HTTP connector (its `provider` is unset, so it defaults to `"Custom"`). It is distinct from the verified `GitHub` MCP connector in the registry, which uses the case-sensitive provider ID `"GitHub"`.
+在这个例子中，`github` 是自定义 HTTP 连接器（未设置 `provider`，因此默认为 `"Custom"`）。它与注册表中的经验证 `GitHub` MCP 连接器不同——后者使用区分大小写的提供商 ID `"GitHub"`。
 
-## Connector ID rules
+## 连接器 ID 规则
 
-Connector IDs must match the pattern `[a-zA-Z][a-zA-Z0-9]*` (letters and digits only, starting with a letter). Connector IDs cannot contain underscores or hyphens because the MCP wire format reserves these as separators: underscores separate the connector ID from the tool name (`snowflake_query`), and hyphens separate the connector ID from resource URIs (`snowflake-resource://...`).
+连接器 ID 必须匹配模式 `[a-zA-Z][a-zA-Z0-9]*`（仅字母和数字，以字母开头）。连接器 ID 不能包含下划线或连字符，因为 MCP 传输格式把它们保留为分隔符：下划线分隔连接器 ID 与工具名（`snowflake_query`），连字符分隔连接器 ID 与资源 URI（`snowflake-resource://...`）。
 
-Valid IDs: `github`, `snowflake`, `analyticsV2`. Invalid IDs: `my-mcp` (hyphen), `github_api` (underscore), `2fast` (starts with digit).
+有效 ID：`github`、`snowflake`、`analyticsV2`。无效 ID：`my-mcp`（连字符）、`github_api`（下划线）、`2fast`（以数字开头）。
 
-The IDs `tailscale`, `internal`, and `aperture` are reserved and cannot be used as connector IDs. The `aperture` ID is used by the built-in system connector and produces a distinct error message from `tailscale` and `internal` (refer to [validation errors][ar-validation-errors]).
+`tailscale`、`internal` 和 `aperture` 是保留 ID，不能用作连接器 ID。`aperture` ID 由内置系统连接器使用，其报错信息与 `tailscale` 和 `internal` 不同（参阅[校验错误][ar-validation-errors]）。
 
-## Connector labels
+## 连接器标签
 
-Labels are flat strings that group connectors for access control. Set the `labels` field on any connector, then grant access to the group with a `label:<name>` pattern in the `connectors` field of a grant:
+标签是把连接器分组以控制访问的扁平字符串。在任意连接器上设置 `labels` 字段，然后在授权的 `connectors` 字段里用 `label:<name>` 模式向该组授权：
 
 ```json
 {
@@ -89,27 +89,27 @@ Labels are flat strings that group connectors for access control. Set the `label
 }
 ```
 
-Each label must match `[a-zA-Z0-9][a-zA-Z0-9._-]*`. A label starts with a letter or digit and contains only letters, digits, dots, underscores, and hyphens. Slashes are rejected to avoid ambiguity with slash-separated FQN patterns. Because dots and hyphens are legal, labels can be namespaced (`team.eng`), but Aperture neither requires nor interprets that convention.
+每个标签必须匹配 `[a-zA-Z0-9][a-zA-Z0-9._-]*`。标签以字母或数字开头，只能包含字母、数字、点、下划线和连字符。斜杠会被拒绝，以避免与斜杠分隔的 FQN 模式产生歧义。由于点和连字符合法，标签可以带命名空间（`team.eng`），但 Aperture 既不要求也不解释这一约定。
 
-Beyond that grammar, labels are free text. Aperture defines no vocabulary and attaches no meaning to a label's value. The dashboard suggests labels already in use on other connectors so an Aperture gateway converges on one vocabulary rather than accumulating near-duplicates. Common schemes classify a connector by data sensitivity (`public`, `private`, `restricted`), by team ownership (`eng`, `sales`), or by provenance (`system`).
+除语法之外，标签是自由文本。Aperture 不定义词汇表，也不赋予标签值任何含义。仪表板会建议其他连接器已在使用的标签，让一个 Aperture 网关趋向统一词汇，而不是堆积近似重复项。常见方案按数据敏感性（`public`、`private`、`restricted`）、团队归属（`eng`、`sales`）或来源（`system`）对连接器分类。
 
-Label matching has two characteristics that differ from FQN patterns:
+标签匹配有两个与 FQN 模式不同的特点：
 
-* **Exact match, no globs.** A `label:<name>` pattern is compared literally against a connector's labels, the same way `tag:` and `group:` behave in Tailscale grants. Wildcard forms such as `label:team.*` match nothing.
-* **Whole-connector access.** A matching label grants every category and resource the connector exposes, including HTTP `proxy` access. Labels have no per-tool granularity. For tool-level or resource-level access, use an FQN pattern that names the connector ID.
+* **精确匹配，无 glob。** `label:<name>` 模式与连接器的标签做字面比较，行为与 Tailscale 授权中的 `tag:` 和 `group:` 相同。`label:team.*` 这样的通配形式什么都匹配不到。
+* **整连接器授权。** 匹配到的标签授予该连接器暴露的所有类别和资源，包括 HTTP `proxy` 访问。标签没有单工具粒度。需要工具级或资源级访问时，请使用点名连接器 ID 的 FQN 模式。
 
-> **Warning:**
+> **警告：**
 >
-> Labels widen access and never restrict it. Grants are additive and allow-only, so labeling a connector `restricted` documents intent without enforcing it: a user holding `{"connectors": ["**"]}` still reaches that connector. To limit a sensitive connector, remove the broad wildcard grants that reach it and grant it narrowly by label or by connector ID.
+> 标签只会扩大访问，绝不会限制访问。授权是叠加且只允许的，因此把连接器标为 `restricted` 只是记录意图而不构成强制：持有 `{"connectors": ["**"]}` 的用户仍然能访问该连接器。要限制敏感连接器，请移除能到达它的宽泛通配授权，改用标签或连接器 ID 从窄授权。
 
-### The reserved `system` label
+### 保留的 `system` 标签
 
-Aperture applies the `system` label to the built-in `aperture` system connector automatically. The shipped default configuration grants `label:system`, so this connector works on a new Aperture gateway without configuration. The configured [`Tailnet` and `TailnetSSH` connectors][docs-connectors-built-in] never receive the label, because they are entries under `connectors.servers`. Because the default grant reaches every user, `system` is reserved under `connectors.servers`:
+Aperture 会自动把 `system` 标签应用到内置的 `aperture` 系统连接器。出厂默认配置授予 `label:system`，因此该连接器在新的 Aperture 网关上无需配置即可工作。已配置的 [`Tailnet` 和 `TailnetSSH` 连接器][docs-connectors-built-in]永远不会获得该标签，因为它们是 `connectors.servers` 下的条目。由于默认授权覆盖所有用户，`system` 在 `connectors.servers` 下被保留：
 
-* The dashboard and the connector API reject `system` when you save a connector.
-* A configuration that already carries the label loads with a warning, and Aperture strips the label before evaluating any grant. An upgraded gateway still boots, and the label never reaches grant evaluation.
+* 保存连接器时，仪表板和连接器 API 会拒绝 `system`。
+* 已携带该标签的配置加载时会报警告，并且 Aperture 会在评估任何授权之前剥除该标签。升级后的网关仍能启动，标签也永远不会进入授权评估。
 
-The label remains valid under `connectors.system_labels`, which exists to assign labels to built-in connectors. `system_labels` replaces a built-in connector's default labels rather than adding to them, so omitting `system` from the list stops the default `label:system` grant from matching that connector:
+该标签在 `connectors.system_labels` 下仍然有效，`system_labels` 的用途正是给内置连接器分配标签。`system_labels` 是替换而非追加内置连接器的默认标签，因此从列表中省略 `system` 会让默认的 `label:system` 授权不再匹配该连接器：
 
 ```json
 {
@@ -121,92 +121,92 @@ The label remains valid under `connectors.system_labels`, which exists to assign
 }
 ```
 
-For step-by-step instructions, refer to [Grant connector access by label][docs-grant-connector-access-by-label].
+分步说明参阅[按标签授予连接器访问权限][docs-grant-connector-access-by-label]。
 
-## System connectors
+## 系统连接器
 
-Aperture includes built-in system connectors that appear independently of the `connectors.servers` configuration. System connectors appear in the `GET /api/connectors` response with `category: "system"`.
+Aperture 包含独立于 `connectors.servers` 配置出现的内置系统连接器。系统连接器在 `GET /api/connectors` 响应中以 `category: "system"` 出现。
 
-The `aperture` connector's `list_connectors` tool is registered only when at least one HTTP connector is configured. With no HTTP connectors, the connector still appears in the listing, but the tool is absent from `tools/list`.
+`aperture` 连接器的 `list_connectors` 工具只在配置了至少一个 HTTP 连接器时注册。没有 HTTP 连接器时，该连接器仍出现在列表中，但 `tools/list` 中没有该工具。
 
-| ID         | Provider | Protocol | Tools             | Labels   | Description                                               |
-| ---------- | -------- | -------- | ----------------- | -------- | --------------------------------------------------------- |
-| `aperture` | Aperture | MCP      | `list_connectors` | `system` | Lists all HTTP API connectors available through Aperture. |
+| ID | 提供商 | 协议 | 工具 | 标签 | 描述 |
+| --- | --- | --- | --- | --- | --- |
+| `aperture` | Aperture | MCP | `list_connectors` | `system` | 列出通过 Aperture 可用的所有 HTTP API 连接器。 |
 
-The `aperture` system connector helps AI models discover available HTTP connectors and construct requests to `/v1/connectors/<id>/<path>`. The `aperture` ID is reserved and cannot be used as a custom connector ID.
+`aperture` 系统连接器帮助 AI 模型发现可用的 HTTP 连接器并构造对 `/v1/connectors/<id>/<path>` 的请求。`aperture` ID 是保留的，不能用作自定义连接器 ID。
 
-The `system` label states provenance only. Aperture ships no sensitivity labels on built-in connectors, because how sensitive a connector is depends on the deployment rather than on the connector. Override the defaults with [`connectors.system_labels`][ar-the-reserved-system-label]. `system_labels` keys must name a connector in this table, and any other key is a load-time error.
+`system` 标签只表明来源。Aperture 不给内置连接器附带敏感性标签，因为连接器有多敏感取决于具体部署而不取决于连接器本身。可以用 [`connectors.system_labels`][ar-the-reserved-system-label] 覆盖默认值。`system_labels` 的键必须是本表中的连接器，其他任何键都是加载时错误。
 
-Aperture ships two further built-in connectors, `Tailnet` and `TailnetSSH`, whose tools it supplies rather than proxying. Those are `connectors.servers` entries with a reserved `provider` value rather than rows in this table, so they take a configuration key you choose and are granted by ID. Refer to [Built-in connectors][docs-connectors-built-in].
+Aperture 还内置了 `Tailnet` 和 `TailnetSSH` 两个连接器，其工具由 Aperture 提供而非代理。它们是带保留 `provider` 值的 `connectors.servers` 条目，不属于本表，因此使用你自选的配置键，并按 ID 授权。参阅[内置连接器][docs-connectors-built-in]。
 
-## Verified connectors registry
+## 经验证连接器注册表
 
-Aperture maintains a registry of verified connectors with pre-configured defaults for known providers. The registry is accessible through `GET /api/connectors-registry` and is used by the dashboard's connector picker to pre-fill configuration fields.
+Aperture 维护着一个经验证连接器注册表，为已知提供商提供预配置默认值。注册表可通过 `GET /api/connectors-registry` 访问，仪表板的连接器选择器用它预填配置字段。
 
-Each registry entry carries the fields that apply to its authentication type. Authorization-code entries can include `auth_url`, `token_url`, `scopes`, and `auth_params`. Dynamic client registration entries do not define authorization or token URLs. The following row illustrates an authorization-code entry:
+每个注册表条目携带适用于其认证类型的字段。授权码型条目可以包含 `auth_url`、`token_url`、`scopes` 和 `auth_params`。动态客户端注册条目不定义授权 URL 和 token URL。下侧行展示一个授权码型条目：
 
-| Provider | Protocol | Auth type                   | URL                         | Scopes                                                                                |
-| -------- | -------- | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------- |
-| Slack    | MCP      | `oauth2_authorization_code` | `https://mcp.slack.com/mcp` | `channels:read`, `channels:history`, `users:read`, `search:read.public`, `chat:write` |
+| 提供商 | 协议 | 认证类型 | URL | 作用域 |
+| --- | --- | --- | --- | --- |
+| Slack | MCP | `oauth2_authorization_code` | `https://mcp.slack.com/mcp` | `channels:read`、`channels:history`、`users:read`、`search:read.public`、`chat:write` |
 
-Aperture ships more than a dozen verified connectors. Field values (including `auth_url`, `token_url`, `scopes`, and `auth_params`) change as providers update their endpoints, so query `GET /api/connectors-registry` for the authoritative current list rather than copying values from this page.
+Aperture 内置了十多个经验证连接器。字段值（包括 `auth_url`、`token_url`、`scopes` 和 `auth_params`）会随提供商更新端点而变化，因此请查询 `GET /api/connectors-registry` 获取权威的最新列表，不要照抄本页的值。
 
-Verified connector defaults are starting points. Once an admin saves a connector, the stored configuration values are the authoritative source of truth. The registry values are not enforced at runtime.
+经验证连接器默认值只是起点。管理员保存连接器后，存储的配置值才是权威来源。运行时不会强制执行注册表值。
 
-The verified registry supplies presets to **Add connector** in the admin dashboard. The admin page presents configured connectors in one searchable list. Unconfigured catalog and built-in entries appear under **Available to add** in Chat. Admins can select **Configure**. Ordinary configuration opens `/admin/settings/connectors`.
+经验证注册表为管理仪表板的 **Add connector** 提供预设。管理页面以单一可搜索列表呈现已配置的连接器。未配置的目录条目和内置条目显示在 Chat 的 **Available to add** 下。管理员可以选择 **Configure**。普通配置打开 `/admin/settings/connectors`。
 
-## Connector categories
+## 连接器类别
 
-Each connector belongs to one of three categories based on its origin:
+每个连接器按来源属于三个类别之一：
 
-| Category   | Description                                                                         | Example                                      |
-| ---------- | ----------------------------------------------------------------------------------- | -------------------------------------------- |
-| `system`   | Built-in connectors provided by Aperture. Always present.                           | `aperture`                                   |
-| `custom`   | Connectors configured by an admin with `provider: "Custom"` or no `provider` field. | `github`, `weather`                          |
-| `verified` | Connectors whose `provider` is set to any value other than `Custom`.                | `salesforce` (with `provider: "Salesforce"`) |
+| 类别 | 描述 | 示例 |
+| --- | --- | --- |
+| `system` | Aperture 提供的内置连接器。始终存在。 | `aperture` |
+| `custom` | 管理员以 `provider: "Custom"` 或不带 `provider` 字段配置的连接器。 | `github`、`weather` |
+| `verified` | `provider` 设置为 `Custom` 以外任何值的连接器。 | `salesforce`（带 `provider: "Salesforce"`） |
 
-## Connector statuses
+## 连接器状态
 
-The connector list includes a `status` field for each connector that is visible to the caller. Admins can get the list from `GET /api/connectors`. Other users get it through the **Connectors** page in Aperture Chat, which applies the same visibility and status rules. Only admins can call the connector management REST endpoints.
+连接器列表为调用者可见的每个连接器包含一个 `status` 字段。管理员可从 `GET /api/connectors` 获取列表。其他用户通过 Aperture Chat 的 **Connectors** 页面获取，适用同样的可见性与状态规则。只有管理员能调用连接器管理 REST 端点。
 
-The following table lists each API status, how Aperture Chat displays it, and how to resolve it:
+下表列出每个 API 状态、Aperture Chat 的显示方式以及解决办法：
 
-| API status       | Chat display                                                              | Meaning                                                                                                                                                          | Resolution                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ready`          | **Ready**, under **Ready to use**                                         | The caller has access and is authorized. This does not confirm that the upstream is reachable, that the tool list is current, or that a live tool call succeeds. | If the tool list is missing or outdated, select **Refresh tools**. To confirm that the connector works, call a permitted tool or proxy path. |
-| `needs_auth`     | **Connect**, under **Connect to use**, with no status badge               | The caller has a grant but has not authorized this per-user OAuth connector.                                                                                     | Select **Connect**.                                                                                                                          |
-| `misconfigured`  | **Needs reconnect** with **Reconnect**                                    | Authorization needs renewal. The access token expired without a refresh token, or the provider rejected a token refresh and requires new consent.                | Select **Reconnect**. If the problem recurs after token expiry, check the provider's offline-access configuration.                           |
-| `unavailable`    | **Temporarily unavailable**                                               | Aperture could not read the caller's credential state.                                                                                                           | Reload or retry later. Reconnecting is not necessary.                                                                                        |
-| `no_access`      | Hidden                                                                    | The caller has no matching `connectors` grant.                                                                                                                   | An admin adds a matching grant.                                                                                                              |
-| `not_configured` | **Available to add** for admins, **Requires admin setup** for other users | A built-in connector has no configured instance. The API returns it as a setup placeholder.                                                                      | An admin selects **Configure**.                                                                                                              |
+| API 状态 | Chat 显示 | 含义 | 解决办法 |
+| --- | --- | --- | --- |
+| `ready` | **Ready**，位于 **Ready to use** 下 | 调用者有访问权限且已授权。这不确认上游可达、工具列表最新，也不确认实时工具调用会成功。 | 工具列表缺失或过期时，选择 **Refresh tools**。要确认连接器可用，调用一个有权限的工具或代理路径。 |
+| `needs_auth` | **Connect**，位于 **Connect to use** 下，无状态徽章 | 调用者有授权，但尚未对这个按用户 OAuth 连接器授权。 | 选择 **Connect**。 |
+| `misconfigured` | **Needs reconnect** 配 **Reconnect** | 授权需要更新。访问令牌过期且没有刷新令牌，或提供商拒绝了令牌刷新并要求重新授权。 | 选择 **Reconnect**。若令牌过期后问题反复出现，检查提供商的离线访问配置。 |
+| `unavailable` | **Temporarily unavailable** | Aperture 无法读取调用者的凭证状态。 | 刷新或稍后重试，无需重新连接。 |
+| `no_access` | 隐藏 | 调用者没有匹配的 `connectors` 授权。 | 由管理员添加匹配的授权。 |
+| `not_configured` | 管理员看到 **Available to add**，其他用户看到 **Requires admin setup** | 内置连接器尚无已配置实例。API 把它作为设置占位符返回。 | 由管理员选择 **Configure**。 |
 
-If the provider does not issue a refresh token, a new authorization reports `ready` until its access token expires.
+如果提供商不发放刷新令牌，新的授权会一直报告 `ready`，直到其访问令牌过期。
 
-The `no_access` status follows these rules:
+`no_access` 状态遵循以下规则：
 
-* For non-admin callers, the list omits configured connectors that have no matching grant.
-* Admins receive those configured connectors as `no_access`.
-* Built-in system connectors appear in the list for every caller, with `no_access` if the caller has no grant.
-* Aperture Chat hides `no_access` entries, including for admins. The exception is the built-in `aperture` system connector: Chat still lists it when **Web** or **Code Sandbox** is available.
-* If a non-admin opens a configured connector in Aperture Chat without a grant, Aperture returns `404 Not Found` and does not reveal that the connector exists.
-* A non-admin request to any `/api/connectors` REST endpoint returns `403 Forbidden` before Aperture looks up the connector.
+* 对非管理员调用者，列表会省略没有匹配授权的已配置连接器。
+* 管理员会以 `no_access` 收到这些已配置连接器。
+* 内置系统连接器对每个调用者都出现在列表中，调用者没有授权时状态为 `no_access`。
+* Aperture Chat 会隐藏 `no_access` 条目，包括对管理员。例外是内置的 `aperture` 系统连接器：当 **Web** 或 **Code Sandbox** 可用时，Chat 仍会列出它。
+* 非管理员在 Aperture Chat 中打开未授权的已配置连接器时，Aperture 返回 `404 Not Found`，不暴露该连接器存在。
+* 非管理员请求任何 `/api/connectors` REST 端点，Aperture 都会在查找连接器之前返回 `403 Forbidden`。
 
-If a configured connector is missing from a user's list, check that user's connector grants.
+如果某用户列表中缺少某个已配置连接器，请检查该用户的连接器授权。
 
-Status describes caller access and authorization, not upstream health. The connector detail page shows cached capabilities and does not contact the upstream. A `ready` per-user connector can show an empty tool list if the first [capability discovery][ar-capability-population] did not complete. A later request or **Refresh tools** can discover the tools. **Refresh tools** contacts the upstream and can return a connection error. A populated tool list does not prove that a live tool call succeeds.
+状态描述的是调用者的访问与授权，不代表上游健康。连接器详情页显示缓存的能力，不联系上游。按用户的 `ready` 连接器在首次[能力填充][ar-capability-population]未完成时可能显示空工具列表。后续请求或 **Refresh tools** 可以发现工具。**Refresh tools** 会联系上游，可能返回连接错误。工具列表非空并不证明实时工具调用会成功。
 
-## Authentication
+## 认证
 
-The `auth` object's `type` field selects the authentication scheme. The following table describes the available auth types:
+`auth` 对象的 `type` 字段选择认证方案。下表描述可用的认证类型：
 
-| Type                        | Required fields                           | Description                                                                                                                                                                                                                                               |
-| --------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bearer_token`              | `secret`                                  | Static `Authorization: Bearer <secret>` header.                                                                                                                                                                                                           |
-| `api_key`                   | `secret`, `name`, `in`                    | Credential injected as a named header or query parameter. `in` must be `"header"` or `"query"`.                                                                                                                                                           |
-| `basic`                     | `username`, `password`                    | HTTP Basic authentication.                                                                                                                                                                                                                                |
-| `oauth2_client_credentials` | `client_id`, `client_secret`, `token_url` | Machine-to-machine OAuth 2.0 token. Auto-refreshed. Optional `scopes` array.                                                                                                                                                                              |
-| `oauth2_authorization_code` | `client_id`, `auth_url`, `token_url`      | Per-user OAuth 2.0 consent flow. Optional `client_secret` (not required for PKCE-only), `scopes`, and `auth_params`.                                                                                                                                      |
-| `oauth2_dcr`                | `url`                                     | Per-user OAuth 2.0 consent flow using [dynamic client registration][ar-dcr]. Aperture discovers the authorization server and registers a client at runtime, so no `client_id`, `auth_url`, or `token_url` is needed. Optional `scopes` and `auth_params`. |
+| 类型 | 必填字段 | 描述 |
+| --- | --- | --- |
+| `bearer_token` | `secret` | 静态 `Authorization: Bearer <secret>` 头。 |
+| `api_key` | `secret`、`name`、`in` | 以命名头或查询参数注入的凭证。`in` 必须是 `"header"` 或 `"query"`。 |
+| `basic` | `username`、`password` | HTTP Basic 认证。 |
+| `oauth2_client_credentials` | `client_id`、`client_secret`、`token_url` | 机器对机器的 OAuth 2.0 token。自动刷新。可选 `scopes` 数组。 |
+| `oauth2_authorization_code` | `client_id`、`auth_url`、`token_url` | 按用户的 OAuth 2.0 授权同意流程。可选 `client_secret`（仅用 PKCE 时不需要）、`scopes` 和 `auth_params`。 |
+| `oauth2_dcr` | `url` | 使用[动态客户端注册][ar-dcr]的按用户 OAuth 2.0 授权同意流程。Aperture 会在运行时发现授权服务器并注册客户端，因此不需要 `client_id`、`auth_url` 或 `token_url`。可选 `scopes` 和 `auth_params`。 |
 
 ### API key
 
@@ -229,53 +229,53 @@ The `auth` object's `type` field selects the authentication scheme. The followin
 }
 ```
 
-The `in` field must be `"header"` or `"query"`. When set to `"header"`, Aperture injects the credential as a request header with the name specified in `name`. When set to `"query"`, Aperture appends it as a URL query parameter.
+`in` 字段必须是 `"header"` 或 `"query"`。设为 `"header"` 时，Aperture 把凭证作为名为 `name` 所指定名称的请求头注入；设为 `"query"` 时，Aperture 把它追加为 URL 查询参数。
 
-### Per-user OAuth 2.0 authorization code flow
+### 按用户 OAuth 2.0 授权码流程
 
-When a connector uses `oauth2_authorization_code`, each user must complete an individual consent flow. Aperture uses PKCE with the S256 challenge method. Each user gets an isolated MCP client session, so backends that tie session state to a bearer token cannot mix up cross-user state.
+连接器使用 `oauth2_authorization_code` 时，每个用户都必须单独完成一次授权同意流程。Aperture 使用 S256 挑战方法的 PKCE。每个用户获得隔离的 MCP 客户端会话，因此把会话状态绑定到 bearer token 的后端不会混用跨用户状态。
 
-#### Initiating the flow
+#### 发起流程
 
-The connect and disconnect endpoints apply only to connectors that use a per-user interactive OAuth flow (`oauth2_authorization_code` or [`oauth2_dcr`][ar-dcr]). Other connectors return a "not found" error.
+连接与断开端点只适用于使用按用户交互式 OAuth 流程的连接器（`oauth2_authorization_code` 或 [`oauth2_dcr`][ar-dcr]）。其他连接器返回“未找到”错误。
 
-Users start authorization in Aperture Chat. They open **Connectors**, find the connector under **Connect to use**, and select **Connect**. An admin can also start authorization with a `POST` request:
+用户在 Aperture Chat 中发起授权：打开 **Connectors**，在 **Connect to use** 下找到连接器，选择 **Connect**。管理员也可以用 `POST` 请求发起授权：
 
 ```
 POST /api/connectors/<id>/connect
 ```
 
-Aperture returns a JSON response containing the provider's authorization URL:
+Aperture 返回包含提供商授权 URL 的 JSON 响应：
 
 ```json
 {"auth_url": "https://provider.example.com/oauth2/authorize?client_id=...&code_challenge=..."}
 ```
 
-The user opens this URL in a browser to complete consent. The provider sends the user back to Aperture through `/aperture/auth/<id>/callback`. Aperture then redirects the browser to the connector detail page, which shows **Connected.** When you create the OAuth application, register `https://<aperture-hostname>/aperture/auth/<id>/callback` with the provider.
+用户在浏览器中打开该 URL 完成同意。提供商通过 `/aperture/auth/<id>/callback` 把用户送回 Aperture。随后 Aperture 把浏览器重定向到连接器详情页，页面显示 **Connected.** 创建 OAuth 应用时，请把 `https://<aperture-hostname>/aperture/auth/<id>/callback` 注册到提供商。
 
-Pending authorization flows expire after 15 minutes. If the user does not complete consent in that time, Aperture rejects the flow. Select **Connect** again to start a new flow.
+未完成的授权流程会在 15 分钟后过期。用户未在时限内完成同意时，Aperture 会拒绝该流程。再次选择 **Connect** 可发起新流程。
 
-#### Token lifecycle
+#### 令牌生命周期
 
-Aperture stores tokens per user. It treats an access token as expired 60 seconds before its actual expiry.
+Aperture 按用户存储令牌。它把访问令牌视为在实际过期时间前 60 秒即已过期。
 
-* A connector without a refresh token stays `ready` while its access token is usable. When that token expires, the connector reports `misconfigured`, and Chat shows **Needs reconnect**.
-* A connector also reports `misconfigured` if the provider rejects a token refresh and requires new consent.
-* A temporary refresh failure, such as a timeout or a server error, does not change the status. Aperture retries the refresh on the next request.
+* 没有刷新令牌的连接器在其访问令牌可用期间保持 `ready`。令牌过期后，连接器报告 `misconfigured`，Chat 显示 **Needs reconnect**。
+* 提供商拒绝令牌刷新并要求重新授权时，连接器同样报告 `misconfigured`。
+* 暂时的刷新失败（例如超时或服务器错误）不会改变状态。Aperture 会在下一次请求时重试刷新。
 
-To renew authorization, users select **Reconnect** in Aperture Chat. Admins can also use the connector management REST endpoints.
+要更新授权，用户在 Aperture Chat 中选择 **Reconnect**。管理员也可以使用连接器管理 REST 端点。
 
-#### Capability population
+#### 能力填充
 
-For per-user OAuth connectors (`oauth2_authorization_code` and `oauth2_dcr`), Aperture tries to fetch tools with the user's credentials after consent. It does this before it redirects the user to Aperture Chat. If the fetch times out or fails, the connector can be `ready` with an empty tool list. A later request can then populate that user's catalog. One user's consent or tool list does not populate the catalog of another user.
+对按用户 OAuth 连接器（`oauth2_authorization_code` 和 `oauth2_dcr`），Aperture 会在用户同意后尝试用其凭证获取工具，并且这一步在把用户重定向到 Aperture Chat 之前进行。如果获取超时或失败，连接器可能处于 `ready` 状态但工具列表为空。该用户的目录可由后续请求填充。一个用户的授权或工具列表不会填充另一个用户的目录。
 
-The connector detail page shows the capabilities available to the user. Select **Refresh tools** if tools are missing or outdated. Refresh contacts the upstream and can fail if the upstream is unreachable.
+连接器详情页显示该用户可用的能力。工具缺失或过期时选择 **Refresh tools**。刷新会联系上游，上游不可达时可能失败。
 
 #### `auth_params`
 
-The `auth_params` field appends custom parameters to both the authorization URL and the token exchange request body. Some providers require specific parameters to issue refresh tokens:
+`auth_params` 字段把自定义参数同时追加到授权 URL 和 token 交换请求体。部分提供商需要特定参数才会发放刷新令牌：
 
-* **Google**: `{"access_type": "offline", "prompt": "consent"}`. Without `access_type: offline`, Google does not issue a refresh token.
+* **Google**：`{"access_type": "offline", "prompt": "consent"}`。没有 `access_type: offline`，Google 不会发放刷新令牌。
 
 \[Missing snippet: aperture\_google\_workspace\_dpp\_note.mdx]
 
@@ -301,15 +301,15 @@ The `auth_params` field appends custom parameters to both the authorization URL 
 }
 ```
 
-The `auth` block rejects unknown fields. A typo in a field name (for example, `"secert"` instead of `"secret"`) produces a validation error at load time.
+`auth` 块会拒绝未知字段。字段名拼错（例如把 `"secret"` 写成 `"secert"`）会在加载时产生校验错误。
 
-### Dynamic client registration (oauth2\_dcr)
+### 动态客户端注册（oauth2\_dcr）
 
-`oauth2_dcr` is a per-user OAuth 2.0 flow for MCP servers that support dynamic client registration ([RFC 7591][xt-rfc-7591]). Instead of registering an OAuth application yourself and supplying a `client_id`, `auth_url`, and `token_url`, Aperture discovers the authorization server from the connector's `url` ([RFC 9728][xt-rfc-9728] protected-resource metadata, then [RFC 8414][xt-rfc-8414] authorization-server metadata) and registers a client at runtime.
+`oauth2_dcr` 是面向支持动态客户端注册（[RFC 7591][xt-rfc-7591]）的 MCP 服务器的按用户 OAuth 2.0 流程。无需自己注册 OAuth 应用并提供 `client_id`、`auth_url` 和 `token_url`，Aperture 会从连接器的 `url` 发现授权服务器（先 [RFC 9728][xt-rfc-9728] 受保护资源元数据，再 [RFC 8414][xt-rfc-8414] 授权服务器元数据）并在运行时注册客户端。
 
-The only required field is `url`, the MCP server's resource URL. Optional `scopes` and `auth_params` are supported. Because nothing is registered at the provider ahead of time, a DCR connector has no client ID or secret.
+唯一必填字段是 `url`，即 MCP 服务器的资源 URL。支持可选的 `scopes` 和 `auth_params`。由于没有预先在提供商处注册任何东西，DCR 连接器没有客户端 ID 或密钥。
 
-A DCR connector uses the same per-user [connect flow][ar-connect-flow], [token lifecycle][ar-token-lifecycle], and [capability population][ar-capability-population] as `oauth2_authorization_code`, with one difference: every `oauth2_dcr` connector authorizes through a single shared callback, `https://<aperture-hostname>/aperture/auth/dcr/callback`, rather than a per-connector callback.
+DCR 连接器使用与 `oauth2_authorization_code` 相同的按用户[连接流程][ar-connect-flow]、[令牌生命周期][ar-token-lifecycle]和[能力填充][ar-capability-population]，只有一个区别：每个 `oauth2_dcr` 连接器都通过单一共享回调 `https://<aperture-hostname>/aperture/auth/dcr/callback` 授权，而不是每连接器一个回调。
 
 ```json
 {
@@ -369,86 +369,86 @@ A DCR connector uses the same per-user [connect flow][ar-connect-flow], [token l
 }
 ```
 
-## MCP connectors
+## MCP 连接器
 
-When `protocol` is `"mcp"`, Aperture connects to remote MCP servers, aggregates their tools and resources, and exposes them through the `/v1/mcp` endpoint.
+`protocol` 为 `"mcp"` 时，Aperture 连接远程 MCP 服务器，聚合其工具和资源，并通过 `/v1/mcp` 端点暴露它们。
 
-### Name prefixing
+### 名称加前缀
 
-Each key in the `servers` map is a connector ID that Aperture uses as a name prefix:
+`servers` 映射中的每个键都是一个连接器 ID，Aperture 用它作为名称前缀：
 
-* Aperture prefixes tools with the connector ID and an underscore. For example, a tool named `search` on the `docs` connector becomes `docs_search`.
-* Resources use a hyphen instead of an underscore. For example, `docs-files://readme.md`.
+* Aperture 给工具名加连接器 ID 前缀和下划线。例如 `docs` 连接器上名为 `search` 的工具变成 `docs_search`。
+* 资源用连字符代替下划线。例如 `docs-files://readme.md`。
 
-Name prefixing prevents collisions when multiple servers expose tools with the same name. Clients receive the prefixed names and Aperture automatically strips the prefix when forwarding calls to the remote server.
+名称加前缀避免了多台服务器暴露同名工具时的冲突。客户端收到带前缀的名称，Aperture 在把调用转发给远程服务器时自动剥掉前缀。
 
-### Transport auto-detection
+### 传输自动探测
 
-Aperture automatically detects whether each remote MCP server supports Streamable HTTP (the current protocol) or legacy SSE. When connecting to a remote server, Aperture tries Streamable HTTP first and falls back to SSE if the server does not support it. You can upgrade remote servers to a later protocol version without restarting Aperture.
+Aperture 自动探测每台远程 MCP 服务器支持 Streamable HTTP（当前协议）还是旧版 SSE。连接远程服务器时，Aperture 先尝试 Streamable HTTP，服务器不支持时回退到 SSE。远程服务器升级到更新的协议版本无需重启 Aperture。
 
-The same auto-detection applies to clients connecting to Aperture's `/v1/mcp` endpoint. Aperture serves both Streamable HTTP and legacy SSE clients.
+对连接到 Aperture `/v1/mcp` 端点的客户端同样适用自动探测。Aperture 同时服务 Streamable HTTP 和旧版 SSE 客户端。
 
-### Capability updates
+### 能力更新
 
-Aperture polls each MCP connector that does not use per-user credentials every few seconds. When a server adds or removes tools or resources, Aperture updates the capabilities available to connected clients.
+Aperture 每隔几秒轮询每个不使用按用户凭证的 MCP 连接器。服务器新增或移除工具、资源时，Aperture 会更新已连接客户端可用的能力。
 
-If Aperture cannot connect to a remote server, it removes that server's tools from `/v1/mcp` until the server recovers. If Aperture connects but cannot list the server's capabilities, it keeps the capabilities from the last successful check. In both cases, Aperture Chat can still show the last cached tool list, so a listed tool does not guarantee that a live call succeeds.
+如果 Aperture 无法连接某台远程服务器，它会把该服务器的工具从 `/v1/mcp` 中移除，直到服务器恢复。如果连接成功但无法列出服务器能力，Aperture 会保留上次成功检查时的能力。两种情况下，Aperture Chat 仍可显示最近缓存的工具列表，因此列出某个工具并不保证实时调用会成功。
 
-> **Note:**
+> **注意：**
 >
-> Per-user OAuth connectors do not use this periodic check. They load capabilities with each user's credentials after consent or on a later request. To request current capabilities, select **Refresh tools** in Aperture Chat. Refresh contacts the upstream server. It can return a connection error while the status stays **Ready**.
+> 按用户 OAuth 连接器不使用这种周期性检查。它们在用户同意后或后续请求时用该用户的凭证加载能力。要请求当前能力，在 Aperture Chat 中选择 **Refresh tools**。刷新会联系上游服务器，可能在状态仍为 **Ready** 的情况下返回连接错误。
 
-### System connectors
+### 系统连接器
 
-Aperture includes a built-in `aperture` system connector that exposes the `list_connectors` tool. This tool lists all HTTP API connectors available through Aperture, helping AI models discover which APIs they can access and how to call them. To grant access, use `"label:system"`, which matches the built-in `aperture` connector, or an FQN pattern such as `"aperture/**"` or `"aperture/tools/*"`.
+Aperture 内置一个暴露 `list_connectors` 工具的 `aperture` 系统连接器。该工具列出通过 Aperture 可用的所有 HTTP API 连接器，帮助 AI 模型发现可以访问哪些 API 以及如何调用。要授权，可使用 `"label:system"`（匹配内置的 `aperture` 连接器），或 `"aperture/**"`、`"aperture/tools/*"` 这样的 FQN 模式。
 
-The `aperture` system connector always appears in `GET /api/connectors`. Its `aperture_list_connectors` MCP tool is available when at least one HTTP connector is configured.
+`aperture` 系统连接器始终出现在 `GET /api/connectors` 中。配置了至少一个 HTTP 连接器时，其 `aperture_list_connectors` MCP 工具可用。
 
-On the `/v1/mcp` endpoint, this tool appears with the connector-ID prefix as `aperture_list_connectors`, consistent with the name-prefixing rule. Grants reference the unprefixed tool name (for example, `"aperture/tools/list_connectors"`).
+在 `/v1/mcp` 端点上，该工具按连接器 ID 前缀规则显示为 `aperture_list_connectors`。授权引用不带前缀的工具名（例如 `"aperture/tools/list_connectors"`）。
 
-System connectors require grants like custom and verified connectors. Without a matching `connectors` grant, users cannot access the `aperture` connector's tools. The default configuration grants `label:system` to every user. Removing that grant makes the built-in tools unavailable.
+系统连接器与自定义和经验证连接器一样需要授权。没有匹配的 `connectors` 授权，用户无法访问 `aperture` 连接器的工具。默认配置向每个用户授予 `label:system`，移除该授权会让内置工具不可用。
 
-> **Tip:**
+> **提示：**
 >
-> The Aperture host uses its tailnet HTTP client for connections to remote MCP servers, so you can use tailnet hostnames (for example, `http://mcp-server.example.ts.net:8080/v1/mcp`) without additional network configuration.
+> Aperture 主机使用其 tailnet HTTP 客户端连接远程 MCP 服务器，因此可以直接使用 tailnet 主机名（例如 `http://mcp-server.example.ts.net:8080/v1/mcp`），无需额外的网络配置。
 
-## HTTP connectors
+## HTTP 连接器
 
-When `protocol` is `"http"`, Aperture acts as an authenticated reverse proxy. Aperture forwards requests sent to `/v1/connectors/<id>/<path>` to the connector's upstream URL and injects credentials automatically. When at least one HTTP connector is configured, Aperture registers an `aperture_list_connectors` MCP tool so that AI models can discover available HTTP connectors.
+`protocol` 为 `"http"` 时，Aperture 充当带认证的反向代理。Aperture 把发往 `/v1/connectors/<id>/<path>` 的请求转发到连接器的上游 URL，并自动注入凭证。配置了至少一个 HTTP 连接器后，Aperture 会注册 `aperture_list_connectors` MCP 工具，让 AI 模型能够发现可用的 HTTP 连接器。
 
-> **Warning:**
+> **警告：**
 >
-> The authentication credentials configured on an HTTP connector are shared by all users with a matching `connectors` grant. Users must have a grant matching `"connectorID/proxy"` or a broader pattern like `"connectorID/**"` to access the proxy endpoint. Use the narrowest possible credential scope, preferably read-only. Do not put sensitive information in `description` or `context`. The `aperture_list_connectors` tool returns these fields to users who can call it.
+> HTTP 连接器上配置的认证凭证由所有拥有匹配 `connectors` 授权的用户共享。用户必须拥有匹配 `"connectorID/proxy"` 或更宽泛模式（如 `"connectorID/**"`）的授权才能访问代理端点。请使用尽可能窄的凭证范围，最好是只读。不要把敏感信息放进 `description` 或 `context`，`aperture_list_connectors` 工具会把这两个字段返回给能调用它的用户。
 
-### Allowed HTTP methods
+### 允许的 HTTP 方法
 
-HTTP connectors accept the following request methods: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`. Aperture rejects all other methods, including `TRACE` and `CONNECT`, with `405 Method Not Allowed`. Aperture blocks `TRACE` because it reflects request headers, which would expose injected authentication credentials.
+HTTP 连接器接受以下请求方法：`GET`、`HEAD`、`POST`、`PUT`、`PATCH`、`DELETE` 和 `OPTIONS`。其他所有方法（包括 `TRACE` 和 `CONNECT`）都会被拒绝，返回 `405 Method Not Allowed`。阻止 `TRACE` 是因为它会回显请求头，从而暴露注入的认证凭证。
 
-### Request and response handling
+### 请求与响应处理
 
-Aperture modifies requests and responses passing through the HTTP connector proxy:
+Aperture 会修改经过 HTTP 连接器代理的请求和响应：
 
-* **Request headers**: Aperture strips `Authorization` and `Cookie` headers from client requests before forwarding to the upstream. This prevents clients from injecting credentials that could leak to the upstream server. Aperture injects the correct credentials separately based on the connector's `auth` configuration.
-* **Response headers**: Aperture strips `Set-Cookie` headers from upstream responses, preventing the upstream from setting cookies on Aperture's origin.
-* **Hop-by-hop headers**: Standard hop-by-hop headers (`Connection`, `Keep-Alive`, `Proxy-Authenticate`, `Proxy-Authorization`, `Te`, `Trailer`, `Transfer-Encoding`, `Upgrade`) are stripped in both directions per HTTP specification.
-* **Request body**: Forwarded as-is with no size limit.
-* **Response body**: Limited to 50 MB. Responses exceeding this limit are truncated.
+* **请求头**：转发给上游前，Aperture 从客户端请求中剥除 `Authorization` 和 `Cookie` 头，防止客户端注入可能泄露给上游服务器的凭证。Aperture 会根据连接器的 `auth` 配置单独注入正确的凭证。
+* **响应头**：Aperture 从上游响应中剥除 `Set-Cookie` 头，防止上游在 Aperture 的源上设置 cookie。
+* **逐跳头（hop-by-hop headers）**：标准逐跳头（`Connection`、`Keep-Alive`、`Proxy-Authenticate`、`Proxy-Authorization`、`Te`、`Trailer`、`Transfer-Encoding`、`Upgrade`）按 HTTP 规范在双向剥除。
+* **请求体**：原样转发，无大小限制。
+* **响应体**：上限 50 MB，超出部分被截断。
 
-### Security behavior
+### 安全行为
 
-HTTP connectors enforce the following security restrictions:
+HTTP 连接器实施以下安全限制：
 
-* **URL restrictions**: Connector URLs are validated against a safe dialer that blocks internal and reserved address ranges. RFC 1918 (private), ULA, and Tailscale CGNAT addresses are permitted.
-* **Redirect blocking**: HTTP connectors block all redirects from upstream servers to prevent credential exfiltration through redirect chains.
-* **Credential injection**: Aperture injects credentials on every proxied request based on the connector's `auth` configuration. Client-supplied `Authorization` headers are always replaced.
+* **URL 限制**：连接器 URL 经过安全拨号器校验，阻止内部和保留地址段。RFC 1918（私有）、ULA 和 Tailscale CGNAT 地址是允许的。
+* **重定向阻止**：HTTP 连接器阻止来自上游服务器的所有重定向，防止凭证经由重定向链外泄。
+* **凭证注入**：Aperture 根据连接器的 `auth` 配置在每个被代理的请求上注入凭证。客户端提供的 `Authorization` 头总是被替换。
 
-## Dynamic registration
+## 动态注册
 
-> **Note:**
+> **注意：**
 >
-> Dynamic registration is configured only through the legacy `mcp` section and has no `connectors` equivalent. The behavior described here applies to the `mcp` section.
+> 动态注册只能通过旧版 `mcp` 段配置，`connectors` 中没有对应物。此处描述的行为适用于 `mcp` 段。
 
-Dynamic registration lets MCP servers register themselves with Aperture at runtime instead of through static configuration. Set `accept_registrations` to `true` in the `mcp` section of your configuration. This field requires the `mcp` section and has no equivalent in `connectors`.
+动态注册让 MCP 服务器在运行时向 Aperture 自行注册，而不是通过静态配置。在配置的 `mcp` 段把 `accept_registrations` 设为 `true`。该字段要求 `mcp` 段，在 `connectors` 中没有等价物。
 
 ```json
 {
@@ -459,7 +459,7 @@ Dynamic registration lets MCP servers register themselves with Aperture at runti
 }
 ```
 
-Remote servers register by sending a `POST` request to `/v1/mcp/register` with a JSON body containing their URL:
+远程服务器通过向 `/v1/mcp/register` 发送包含其 URL 的 JSON `POST` 请求来注册：
 
 ```shell
 curl -X POST http://<aperture-hostname>/v1/mcp/register \
@@ -467,28 +467,28 @@ curl -X POST http://<aperture-hostname>/v1/mcp/register \
   -d '{"url": "http://my-mcp-server:8080/v1/mcp"}'
 ```
 
-Aperture validates the registering server before it responds with `200 OK`. Each dynamically registered server receives a sequential ID such as `auto1` or `auto2`, and Aperture prefixes its tools accordingly, for example `auto1_search`.
+Aperture 会先校验注册服务器，然后响应 `200 OK`。每个动态注册的服务器会获得顺序 ID（如 `auto1` 或 `auto2`），Aperture 相应地为其工具加前缀，例如 `auto1_search`。
 
-> **Warning:**
+> **警告：**
 >
-> The registration endpoint requires Tailscale authentication, the same as all other Aperture endpoints. The registering server must be accessible through the tailnet.
+> 注册端点要求 Tailscale 认证，与所有其他 Aperture 端点一样。注册服务器必须能通过 tailnet 访问。
 >
-> The registering server must keep the HTTP connection to `/v1/mcp/register` open. When the server closes the connection, Aperture automatically unregisters all of its tools and resources.
+> 注册服务器必须保持与 `/v1/mcp/register` 的 HTTP 连接打开。连接关闭时，Aperture 会自动注销其所有工具和资源。
 
-You can combine static connectors and dynamic registration in the same configuration. Static connectors are always available, while dynamically registered servers come and go as they connect and disconnect.
+静态连接器和动态注册可以在同一配置中共存。静态连接器始终可用，动态注册的服务器则随连接与断开来去。
 
-### `mcp` fields
+### `mcp` 字段
 
-| Field                  | Type    | Default | Description                                                                                                                                                                                                                                                                         |
-| ---------------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accept_registrations` | boolean | `false` | Allow backends to register dynamically through `POST /v1/mcp/register`. Backends send `{"url": "http://..."}` in a `POST` request and keep the connection open. Aperture unregisters their tools when the connection closes. This field has no `connectors` equivalent.             |
-| `servers`              | map     | `{}`    | Map of server ID to server configuration. Deprecated: use `connectors.servers` instead. The map key is the server ID, which becomes the name prefix for tools (`serverID_toolname`), resources (`serverID-uri`), and resource templates (`serverID-uriTemplate`) from that backend. |
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `accept_registrations` | boolean | `false` | 允许后端通过 `POST /v1/mcp/register` 动态注册。后端以 `POST` 发送 `{"url": "http://..."}` 并保持连接打开。连接关闭时 Aperture 注销其工具。该字段在 `connectors` 中没有对应物。 |
+| `servers` | map | `{}` | 服务器 ID 到服务器配置的映射。已弃用：请改用 `connectors.servers`。映射键是服务器 ID，会成为该后端工具（`serverID_toolname`）、资源（`serverID-uri`）和资源模板（`serverID-uriTemplate`）的名称前缀。 |
 
-## Grants for connector resources
+## 连接器资源的授权
 
-Aperture is deny-by-default. Without grants, users cannot access any connector capabilities. This applies to both MCP and HTTP connectors. Add grants in the `grants` section of the Aperture configuration.
+Aperture 默认拒绝。没有授权时，用户无法访问任何连接器能力。MCP 和 HTTP 连接器都是如此。在 Aperture 配置的 `grants` 段中添加授权。
 
-Connector grants use the `connectors` field with `"connectorID/category/resource"` FQN glob patterns, or with `label:<name>` patterns that match by [label][ar-connector-labels]. The following example grants all users the built-in Aperture tools through the `system` label, all tools from the `docs` connector, and proxy access to the `github` HTTP connector:
+连接器授权使用 `connectors` 字段配合 `"connectorID/category/resource"` FQN glob 模式，或按[标签][ar-connector-labels]匹配的 `label:<name>` 模式。以下示例通过 `system` 标签向所有用户授予内置 Aperture 工具、授予 `docs` 连接器的所有工具，以及 `github` HTTP 连接器的代理访问：
 
 ```json
 {
@@ -508,108 +508,108 @@ Connector grants use the `connectors` field with `"connectorID/category/resource
 }
 ```
 
-The `connectors` field accepts an array of FQN glob strings and `label:<name>` strings. Each FQN pattern has up to three segments: `connectorID/category/resource`.
+`connectors` 字段接受 FQN glob 字符串和 `label:<name>` 字符串的数组。每个 FQN 模式最多三段：`connectorID/category/resource`。
 
-### Grant categories
+### 授权类别
 
-| Category    | Applies to      | Description                                     | Example               |
-| :---------- | :-------------- | :---------------------------------------------- | :-------------------- |
-| `tools`     | MCP connectors  | MCP tools exposed by the connector              | `"docs/tools/search"` |
-| `resources` | MCP connectors  | MCP resources exposed by the connector          | `"docs/resources/*"`  |
-| `templates` | MCP connectors  | MCP resource templates exposed by the connector | `"docs/templates/*"`  |
-| `proxy`     | HTTP connectors | Proxy access to the HTTP connector endpoint     | `"github/proxy"`      |
+| 类别 | 适用于 | 描述 | 示例 |
+| --- | --- | --- | --- |
+| `tools` | MCP 连接器 | 连接器暴露的 MCP 工具 | `"docs/tools/search"` |
+| `resources` | MCP 连接器 | 连接器暴露的 MCP 资源 | `"docs/resources/*"` |
+| `templates` | MCP 连接器 | 连接器暴露的 MCP 资源模板 | `"docs/templates/*"` |
+| `proxy` | HTTP 连接器 | HTTP 连接器端点的代理访问 | `"github/proxy"` |
 
-### Grant patterns
+### 授权模式
 
-You can use `*` to match any characters within a segment and `**` to match across segments:
+`*` 匹配段内任意字符，`**` 跨段匹配：
 
-* `"docs/tools/search"`: the `search` tool from the `docs` connector.
-* `"docs/tools/*"`: all tools from the `docs` connector.
-* `"docs/**"`: all capabilities from the `docs` connector (tools, resources, templates).
-* `"github/proxy"`: proxy access to the `github` HTTP connector.
-* `"github/**"`: every category and resource under `github`, including proxy access and any future categories. Use `"github/proxy"` when only HTTP proxy access is needed.
-* `"**"`: all capabilities from all connectors.
-* `"label:system"`: every connector labeled `system`. By default, this is the built-in `aperture` system connector. This pattern is in the shipped default configuration.
-* `"label:team.eng"`: every connector labeled `team.eng`, at every category and resource.
+* `"docs/tools/search"`：`docs` 连接器的 `search` 工具。
+* `"docs/tools/*"`：`docs` 连接器的所有工具。
+* `"docs/**"`：`docs` 连接器的所有能力（工具、资源、模板）。
+* `"github/proxy"`：`github` HTTP 连接器的代理访问。
+* `"github/**"`：`github` 下所有类别和资源，包括代理访问和将来新增的类别。只需要 HTTP 代理访问时请用 `"github/proxy"`。
+* `"**"`：所有连接器的所有能力。
+* `"label:system"`：所有带 `system` 标签的连接器。默认即内置的 `aperture` 系统连接器。该模式包含在出厂默认配置中。
+* `"label:team.eng"`：所有带 `team.eng` 标签的连接器，覆盖所有类别和资源。
 
-A top-level pattern like `"connectorID/*"` is automatically expanded to `"connectorID/**"`, so it covers all categories and sub-resources.
+`"connectorID/*"` 这样的顶层模式会自动展开为 `"connectorID/**"`，覆盖所有类别和子资源。
 
-A `label:<name>` pattern is matched exactly rather than expanded as a glob, and a match grants the whole connector. Refer to [connector labels][ar-connector-labels] for the label grammar and matching rules.
+`label:<name>` 模式按精确匹配而非 glob 展开，匹配即授予整个连接器。标签语法和匹配规则参阅[连接器标签][ar-connector-labels]。
 
-Aperture checks grants when clients list available tools and resources. Users can access only the items their grants permit. Aperture also enforces grants at invocation time: when a client calls a tool, reads a resource, or sends a proxy request, Aperture checks the session's grants before dispatching the request. If no grant matches, Aperture rejects the call with a "forbidden" or "unknown tool" error.
+Aperture 在客户端列出可用工具和资源时检查授权，用户只能访问其授权允许的条目。Aperture 还在调用时强制执行授权：客户端调用工具、读取资源或发送代理请求时，Aperture 在分发请求前检查会话的授权。没有匹配授权时，Aperture 以“forbidden”或“unknown tool”错误拒绝调用。
 
-> **Note:**
+> **注意：**
 >
-> The deprecated `mcp_tools`, `mcp_resources`, and `mcp_templates` grant fields continue to work for backward compatibility with the `"server/item"` pattern syntax. New configurations should use the `connectors` field, which supports all connector types including HTTP proxy access.
+> 已弃用的 `mcp_tools`、`mcp_resources` 和 `mcp_templates` 授权字段为兼容 `"server/item"` 模式语法仍可继续使用。新配置应使用 `connectors` 字段，它支持所有连接器类型，包括 HTTP 代理访问。
 >
-> Resource grants are now matched against the resource's name, not its URI. Legacy `mcp_resources` patterns written against resource URIs no longer match. Rewrite them against the resource name using `connectors` with the `resources` category.
+> 资源授权现在按资源名称而非 URI 匹配。针对资源 URI 编写的旧版 `mcp_resources` 模式不再匹配。请改用 `connectors` 字段的 `resources` 类别，按资源名称重写。
 
-Refer to the [grants configuration reference][docs-aperture-grants] for the full grants syntax.
+完整的授权语法参阅[授权配置参考][docs-aperture-grants]。
 
-## Migration from `mcp.servers`
+## 从 `mcp.servers` 迁移
 
-The `connectors` section replaces the deprecated `mcp.servers` syntax. At load time, Aperture automatically folds legacy `mcp.servers` entries into `connectors.servers` with `protocol: "mcp"` and no authentication. Both sections can coexist during migration, but connector IDs must be unique across both. Aperture rejects duplicate IDs at load time.
+`connectors` 段取代了已弃用的 `mcp.servers` 语法。加载时，Aperture 自动把旧的 `mcp.servers` 条目并入 `connectors.servers`，设为 `protocol: "mcp"` 且不带认证。迁移期间两段可以共存，但连接器 ID 必须在两段之间保持唯一。加载时 Aperture 拒绝重复 ID。
 
-Legacy `mcp.servers` entries that use connector IDs not conforming to the `[a-zA-Z][a-zA-Z0-9]*` pattern generate a warning but are still accepted for backward compatibility. New entries in the `connectors` section must conform to the ID rules.
+使用不符合 `[a-zA-Z][a-zA-Z0-9]*` 模式连接器 ID 的旧 `mcp.servers` 条目会产生警告，但为向后兼容仍被接受。`connectors` 段中的新条目必须符合 ID 规则。
 
-Consider the following `mcp.servers` entry:
+考虑以下 `mcp.servers` 条目：
 
 ```json
 "mcp": { "servers": { "docs": { "url": "http://mcp-server.example.ts.net:8185/v1/mcp" } } }
 ```
 
-The equivalent `connectors` entry is:
+等价的 `connectors` 条目是：
 
 ```json
 "connectors": { "servers": { "docs": { "protocol": "mcp", "url": "http://mcp-server.example.ts.net:8185/v1/mcp" } } }
 ```
 
-The `mcp` section is retained for backward compatibility and for the `accept_registrations` field, which has no `connectors` equivalent.
+保留 `mcp` 段是为了向后兼容以及 `accept_registrations` 字段，后者在 `connectors` 中没有等价物。
 
-## Validation errors
+## 校验错误
 
-Aperture validates connector configuration at load time. The following table describes connector-specific validation messages:
+Aperture 在加载时校验连接器配置。下表描述连接器相关的校验消息：
 
-| Condition                                            | Message                                                                                                                                                                  | Severity |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| Connector missing `protocol`                         | `connectors.servers.{id}: protocol is required (e.g. "mcp" or "http")`                                                                                                   | Error    |
-| Unsupported connector protocol                       | `connectors.servers.{id}: unsupported protocol "{value}" (supported: "mcp", "http")`                                                                                     | Error    |
-| Invalid connector ID                                 | `connectors.servers.{id}: invalid ID "{id}"; connector IDs must match [a-zA-Z][a-zA-Z0-9]* (letters and digits only, starting with a letter; no hyphens or underscores)` | Error    |
-| Reserved connector ID (`tailscale`, `internal`)      | `connectors.servers.{id}: "{id}" is a reserved identifier`                                                                                                               | Error    |
-| Reserved system connector ID (`aperture`)            | `connectors.servers.{id}: "{id}" is a reserved system connector identifier`                                                                                              | Error    |
-| Connector sets an unknown provider                   | `connectors.servers.{id}: unknown provider "{value}"; use a verified ID or omit for custom connectors`                                                                   | Error    |
-| Connector missing URL                                | `connectors.servers.{id}: URL is required`                                                                                                                               | Warning  |
-| Connector URL uses restricted address                | `connectors.servers.{id}: URL {details}`                                                                                                                                 | Warning  |
-| Connector auth validation failure                    | `connectors.servers.{id}.auth: {details}`                                                                                                                                | Error    |
-| Invalid connector label                              | `connectors.servers.{id}.labels: invalid label "{label}"; labels must match [a-zA-Z0-9][a-zA-Z0-9._-]* (no slashes)`                                                     | Error    |
-| Reserved label on a user connector                   | `connectors.servers.{id}.labels: removed reserved label "system"`                                                                                                        | Warning  |
-| Unknown system connector in `system_labels`          | `connectors.system_labels.{id}: unknown system connector ID`                                                                                                             | Error    |
-| Duplicate connector ID across `mcp` and `connectors` | `config: server ID "{id}" is defined in both 'mcp.servers' and 'connectors.servers'; IDs must be unique across both sections`                                            | Error    |
+| 条件 | 消息 | 严重级别 |
+| --- | --- | --- |
+| 连接器缺少 `protocol` | `connectors.servers.{id}: protocol is required (e.g. "mcp" or "http")` | 错误 |
+| 连接器协议不受支持 | `connectors.servers.{id}: unsupported protocol "{value}" (supported: "mcp", "http")` | 错误 |
+| 连接器 ID 无效 | `connectors.servers.{id}: invalid ID "{id}"; connector IDs must match [a-zA-Z][a-zA-Z0-9]* (letters and digits only, starting with a letter; no hyphens or underscores)` | 错误 |
+| 保留连接器 ID（`tailscale`、`internal`） | `connectors.servers.{id}: "{id}" is a reserved identifier` | 错误 |
+| 保留系统连接器 ID（`aperture`） | `connectors.servers.{id}: "{id}" is a reserved system connector identifier` | 错误 |
+| 连接器设置了未知提供商 | `connectors.servers.{id}: unknown provider "{value}"; use a verified ID or omit for custom connectors` | 错误 |
+| 连接器缺少 URL | `connectors.servers.{id}: URL is required` | 警告 |
+| 连接器 URL 使用受限地址 | `connectors.servers.{id}: URL {details}` | 警告 |
+| 连接器认证校验失败 | `connectors.servers.{id}.auth: {details}` | 错误 |
+| 连接器标签无效 | `connectors.servers.{id}.labels: invalid label "{label}"; labels must match [a-zA-Z0-9][a-zA-Z0-9._-]* (no slashes)` | 错误 |
+| 用户连接器上使用了保留标签 | `connectors.servers.{id}.labels: removed reserved label "system"` | 警告 |
+| `system_labels` 中出现未知的系统连接器 | `connectors.system_labels.{id}: unknown system connector ID` | 错误 |
+| `mcp` 与 `connectors` 中连接器 ID 重复 | `config: server ID "{id}" is defined in both 'mcp.servers' and 'connectors.servers'; IDs must be unique across both sections` | 错误 |
 
-Refer to the [Aperture configuration reference][docs-aperture-configuration] for the full validation table.
+完整的校验表参阅 [Aperture 配置参考][docs-aperture-configuration]。
 
-## Admin REST API endpoints
+## 管理 REST API 端点
 
-The following endpoints manage connectors at runtime. They require Tailscale authentication and admin permissions. Other callers receive `403 Forbidden`. Users who are not admins list connectors, review and refresh tools, connect, and disconnect in Aperture Chat. The REST endpoints apply the admin caller's own grants and credentials.
+以下端点在运行时管理连接器。它们要求 Tailscale 认证和管理员权限，其他调用者收到 `403 Forbidden`。非管理员用户在 Aperture Chat 中列出连接器、查看和刷新工具、连接与断开。REST 端点按管理员调用者自身的授权和凭证执行。
 
-| Method | Path                                | Description                                                                                                              | Access                    |
-| ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
-| `GET`  | `/api/connectors`                   | List visible connectors (system, custom, verified) with status for the current user.                                     | Admin                     |
-| `GET`  | `/api/connectors/<id>/capabilities` | Get cached MCP capabilities (tools, resources, templates) for a connector. A per-user cache miss can return empty lists. | Admin and connector grant |
-| `PUT`  | `/api/connectors/<id>/capabilities` | Force-refresh capabilities from the upstream MCP server. Upstream errors can fail the request.                           | Admin and connector grant |
-| `POST` | `/api/connectors/<id>/connect`      | Start a per-user OAuth flow. Returns `{"auth_url": "..."}`.                                                              | Admin and connector grant |
-| `POST` | `/api/connectors/<id>/disconnect`   | Forget the current user's OAuth token for a connector.                                                                   | Admin and connector grant |
-| `GET`  | `/api/connectors-registry`          | List the verified connectors registry (pre-configured providers).                                                        | Admin                     |
+| 方法 | 路径 | 描述 | 访问权限 |
+| --- | --- | --- | --- |
+| `GET` | `/api/connectors` | 列出当前用户可见的连接器（system、custom、verified）及其状态。 | 管理员 |
+| `GET` | `/api/connectors/<id>/capabilities` | 获取某连接器缓存的 MCP 能力（工具、资源、模板）。按用户缓存未命中时可能返回空列表。 | 管理员加连接器授权 |
+| `PUT` | `/api/connectors/<id>/capabilities` | 从上游 MCP 服务器强制刷新能力。上游错误可能使请求失败。 | 管理员加连接器授权 |
+| `POST` | `/api/connectors/<id>/connect` | 发起按用户 OAuth 流程。返回 `{"auth_url": "..."}`。 | 管理员加连接器授权 |
+| `POST` | `/api/connectors/<id>/disconnect` | 忘记当前用户在某连接器上的 OAuth 令牌。 | 管理员加连接器授权 |
+| `GET` | `/api/connectors-registry` | 列出经验证连接器注册表（预配置提供商）。 | 管理员 |
 
-The HTTP connector proxy endpoint uses `/v1/connectors` rather than the admin REST API:
+HTTP 连接器代理端点使用 `/v1/connectors` 而非管理 REST API：
 
-| Method        | Path                         | Description                                        | Access                             |
-| ------------- | ---------------------------- | -------------------------------------------------- | ---------------------------------- |
-| Any supported | `/v1/connectors/<id>/<path>` | Reverse proxy to an HTTP connector's upstream URL. | Requires `connectorID/proxy` grant |
+| 方法 | 路径 | 描述 | 访问权限 |
+| --- | --- | --- | --- |
+| 任意受支持方法 | `/v1/connectors/<id>/<path>` | 反向代理到 HTTP 连接器的上游 URL。 | 需要 `connectorID/proxy` 授权 |
 
-## Full annotated example
+## 完整注释示例
 
-The following example shows a complete connector configuration with both MCP and HTTP protocols, authentication, grants, and dynamic registration:
+以下示例展示同时包含 MCP 与 HTTP 协议、认证、授权和动态注册的完整连接器配置：
 
 ```json
 {
@@ -676,73 +676,73 @@ The following example shows a complete connector configuration with both MCP and
 }
 ```
 
-## Troubleshooting
+## 故障排查
 
-Connector problems fall into two flows with different causes and fixes: an admin setting up and configuring a connector, and a user authorizing and using a connector's tools. Use the section that matches your role.
+连接器问题分为两类，成因与解法不同：管理员设置和配置连接器，用户授权并使用连接器工具。请按你的角色选择对应章节。
 
-The connector list and **Ready** status do not probe upstream health. **Refresh tools** is the explicit upstream capability check.
+连接器列表和 **Ready** 状态不会探测上游健康。**Refresh tools** 才是显式的上游能力检查。
 
-### For admins setting up connectors
+### 面向设置连接器的管理员
 
-These issues affect connector configuration and reachability. Admins manage and verify configuration and grants under **Administration** > **Connectors**.
+以下问题影响连接器配置与可达性。管理员在 **Administration** > **Connectors** 下管理和校验配置与授权。
 
-#### Missing Chat connectors or tools
+#### Chat 中缺少连接器或工具
 
-If a configured connector does not appear in Chat, it may be grant-denied and omitted. Admins verify connector configuration and grants under **Administration** > **Connectors**.
+已配置的连接器没出现在 Chat 中，可能是被授权拒绝而省略。管理员在 **Administration** > **Connectors** 下校验连接器配置和授权。
 
-For missing MCP tools, the admin verifies the upstream URL, authentication configuration, and capability filters. A granted user then opens the connector detail page in Chat and selects **Refresh tools**. If refresh returns an error, verify reachability from the Aperture gateway and confirm credential validity.
+MCP 工具缺失时，管理员应校验上游 URL、认证配置和能力过滤器。被授权的用户随后在 Chat 中打开连接器详情页并选择 **Refresh tools**。如果刷新返回错误，校验从 Aperture 网关的可达性并确认凭证有效。
 
-#### Connection refused or host not found
+#### 连接被拒或主机未找到
 
-These errors indicate the connector URL is unreachable from the Aperture gateway.
+这些错误表明连接器 URL 无法从 Aperture 网关访问。
 
-* **Connection refused**: The server is not running or is not listening on the configured port.
-* **Host not found**: DNS cannot resolve the hostname. For tailnet hostnames, verify the device is connected to the tailnet and check with `tailscale status`.
+* **Connection refused**：服务器未运行或未在配置的端口监听。
+* **Host not found**：DNS 无法解析主机名。对 tailnet 主机名，确认设备已连接 tailnet，并用 `tailscale status` 检查。
 
-#### Auth configuration rejected with unknown field error
+#### 认证配置因未知字段被拒绝
 
-The `auth` block uses strict field validation. If a field name is misspelled (for example, `"secert"` instead of `"secret"`), the configuration fails to load with a JSON decoder error. Double-check field names against the auth types table above.
+`auth` 块使用严格的字段校验。字段名拼错（例如把 `"secret"` 写成 `"secert"`）会导致配置加载失败并报 JSON 解码错误。请对照上文的认证类型表仔细核对字段名。
 
-#### Dynamic registration fails
+#### 动态注册失败
 
-If remote servers cannot register dynamically:
+远程服务器无法动态注册时：
 
-1. Verify `accept_registrations` is set to `true` in the `mcp` section of your configuration (this field is not available in the `connectors` section).
-2. Make sure the remote server sends a valid `POST` request to `/v1/mcp/register` with a JSON body containing `{"url": "<mcp-server-url>"}`.
-3. The remote server must keep the HTTP connection open after registration. If the connection closes, Aperture unregisters the server's tools immediately.
+1. 确认配置的 `mcp` 段中 `accept_registrations` 已设为 `true`（该字段在 `connectors` 段中不可用）。
+2. 确认远程服务器向 `/v1/mcp/register` 发送了包含 `{"url": "<mcp-server-url>"}` JSON 体的有效 `POST` 请求。
+3. 远程服务器必须在注册后保持 HTTP 连接打开。连接关闭时，Aperture 会立即注销其工具。
 
-### For users authorizing and using connectors
+### 面向授权和使用连接器的用户
 
-These issues affect authorizing a connector and calling its tools. Users can check status, refresh tools, and reconnect in Aperture Chat. If a refresh or tool call still fails after authorization, an admin might need to check the upstream service or the connector configuration.
+以下问题影响连接器授权和工具调用。用户可以在 Aperture Chat 中查看状态、刷新工具和重新连接。授权后刷新或工具调用仍然失败时，可能需要管理员检查上游服务或连接器配置。
 
-#### Authorizing and reconnecting
+#### 授权与重新连接
 
-* **Connect**: Each user must authorize a per-user OAuth connector individually. Select **Connect** and complete the provider's consent flow. If tools are still missing after the connector is **Ready**, select **Refresh tools**. Discovery can fail while the upstream is unreachable.
-* **Needs reconnect**: The access token expired without a refresh token, or a token-refresh failure requires new consent. Select **Reconnect**. If the problem recurs after token expiry, ask your admin to check the provider's offline-access configuration.
-* **Temporarily unavailable**: Aperture could not read the credential state. Reload the page. Reconnecting is not necessary.
-* **Reset authorization**: To clear your per-user authorization, select **Disconnect**. Then select **Connect** to authorize again.
+* **Connect**：每个用户都必须单独授权按用户 OAuth 连接器。选择 **Connect** 并完成提供商的同意流程。连接器已是 **Ready** 但工具仍然缺失时，选择 **Refresh tools**。上游不可达时发现可能失败。
+* **Needs reconnect**：访问令牌过期且没有刷新令牌，或令牌刷新失败要求重新授权。选择 **Reconnect**。令牌过期后问题反复出现时，请管理员检查提供商的离线访问配置。
+* **Temporarily unavailable**：Aperture 无法读取凭证状态。刷新页面即可，无需重新连接。
+* **重置授权**：要清除你的按用户授权，选择 **Disconnect**，然后选择 **Connect** 重新授权。
 
-#### Tools stop working after previously working
+#### 工具此前正常，现在失效
 
-If a connector is **Ready** but its tools fail, check for temporary provider downtime, timeouts, or rate limits. Do not disconnect a valid authorization only because a tool call fails.
+连接器是 **Ready** 但工具失败时，检查提供商是否临时停机、超时或触发限流。不要仅因一次工具调用失败就断开有效的授权。
 
-#### Tool calls time out
+#### 工具调用超时
 
-If tool calls fail with timeout errors, the remote MCP server is not responding quickly enough. After a connection error, Aperture reconnects to the remote server and retries the tool call one time. If timeouts continue, ask your admin to check the remote server's performance and logs.
+工具调用因超时失败时，说明远程 MCP 服务器响应不够快。连接错误后，Aperture 会重连远程服务器并重试一次工具调用。超时持续时，请管理员检查远程服务器的性能和日志。
 
-[ar-capability-population]: #capability-population
+[ar-capability-population]: #能力填充
 
-[ar-connect-flow]: #initiating-the-flow
+[ar-connect-flow]: #发起流程
 
-[ar-connector-labels]: #connector-labels
+[ar-connector-labels]: #连接器标签
 
-[ar-dcr]: #dynamic-client-registration-oauth2_dcr
+[ar-dcr]: #动态客户端注册oauth2_dcr
 
-[ar-the-reserved-system-label]: #the-reserved-system-label
+[ar-the-reserved-system-label]: #保留的-system-标签
 
-[ar-token-lifecycle]: #token-lifecycle
+[ar-token-lifecycle]: #令牌生命周期
 
-[ar-validation-errors]: #validation-errors
+[ar-validation-errors]: #校验错误
 
 [docs-aperture-admin-connectors]: /docs/aperture/reference/dashboard-admin#connectors
 

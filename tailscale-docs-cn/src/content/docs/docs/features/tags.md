@@ -1,118 +1,118 @@
 ---
-title: "Group devices with tags"
-description: "Use Tailscale tags to authenticate and identify non-user devices, such as a server."
+title: "用标签为设备分组"
+description: "使用 Tailscale 标签来认证和标识服务器等非用户设备。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-> **Note:** Tags are available for [all plans](https://tailscale.com/pricing).
+> **注意：** [所有套餐](https://tailscale.com/pricing)都可以使用标签。
 
-> **Note:**
+> **注意：**
 >
-> All plans include 50 tagged devices. You can purchase more tagged resources from the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console, or through our [Sales team][co-contact-sales].
+> 所有套餐都包含 50 台带标签设备。你可以从管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面购买更多带标签资源，或联系我们的[销售团队][co-contact-sales]。
 
-Tailscale tags are how you authenticate and identify non-user devices, such as servers and [ephemeral nodes][docs-ephemeral-nodes]. They serve two primary purposes: to provide an identity to non-user devices and to let you manage [access control policies][docs-access-control] based on *purpose*. In this context, a purpose could be anything from hosting a web server to serving as a [subnet router][docs-subnets] for employees in a specific geographic location.
+Tailscale 标签（tag）用于认证和标识服务器、[临时节点][docs-ephemeral-nodes]（ephemeral node）等非用户设备。它们有两个主要用途：为非用户设备提供身份，以及让你按*用途*管理[访问控制策略][docs-access-control]。这里的用途可以是任何事情，从托管一个 Web 服务器，到为特定地理位置的员工充当[子网路由器][docs-subnets]。
 
-Tags are essentially service accounts, but with more flexibility⎯you can assign multiple tags to a device to account for multiple purposes. For example, you might have a device that runs a PostgreSQL database and serves as a web server for internal access. In such a scenario, you could assign the device the following tags (each of which you could target individually using access control policies): `tag:postgresql`, `tag:internal-access`, and `tag:web-server`.
+标签本质上是服务账户，但更灵活——你可以给一台设备分配多个标签来对应多种用途。例如，你可能有一台设备既运行 PostgreSQL 数据库，又充当内部访问用的 Web 服务器。在这种场景下，你可以给该设备分配以下标签（每个标签都可以用访问控制策略单独定向）：`tag:postgresql`、`tag:internal-access` 和 `tag:web-server`。
 
-Other key characteristics of tags include:
+标签的其他关键特性包括：
 
-* Applying a tag to a device removes any user-based authentication.
-* Each non-user device can have as many tags as you need.
-* Tags are defined in the tailnet policy file in the `tagOwners` section.
-* Only designated tag owners can apply tags to devices; each tag can have as many owners as necessary.
+* 给设备应用标签会移除所有基于用户的认证。
+* 每台非用户设备可以按需拥有任意数量的标签。
+* 标签在 tailnet 策略文件的 `tagOwners` 部分定义。
+* 只有指定的标签所有者才能给设备应用标签；每个标签可以按需拥有任意数量的所有者。
 
-## Requirements
+## 要求
 
-Tags are a free feature and are available for all pricing plans. However, you must have permission to perform some tag-related operations:
+标签是免费功能，所有套餐均可用。但执行某些与标签相关的操作需要相应权限：
 
-* You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to define a tag in the tailnet policy file.
-* You must be a tag owner to assign a tag to a device. [Owner, Admin, or Network admin](/docs/reference/user-roles) can apply any tag, even if they don't own the tag.
+* 在 tailnet 策略文件中定义标签，你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)。
+* 给设备分配标签，你需要是该标签的所有者。[Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)可以应用任何标签，即使他们不拥有该标签。
 
-## Limitations
+## 限制
 
-Tags have the following limitations and restrictions:
+标签有以下限制与约束：
 
-* You cannot remove all tags from a device. A device with a tag-based identity must have at least one tag.
-* You cannot remove tags using the `--advertise-tags` flag if the device uses an auth key. Instead, generate a new auth key with the latest set of tags.
-* [IP sets][docs-ipsets] do not support tags.
-* Devices with a tag-based identity can only SSH into other tagged devices; they cannot SSH into devices with a user-based identity.
-* Some restrictions exist around using tags to define a group or as the SSH source.
+* 你不能移除设备上的所有标签。以标签为身份的设备必须至少保留一个标签。
+* 如果设备使用认证密钥（auth key）认证，你不能用 `--advertise-tags` 旗标移除标签。此时应生成一个带最新标签集合的新认证密钥。
+* [IP 集][docs-ipsets]（IP set）不支持标签。
+* 以标签为身份的设备只能 SSH 到其他带标签的设备，不能 SSH 到以用户为身份的设备。
+* 在用标签定义组或作为 SSH 来源方面存在一些限制。
 
-## Use cases
+## 使用场景
 
-Tags are ideal for managing devices you don't want to link to a specific user (such as a server hosting a web application) because removing a user also removes all their devices. If you link a service-providing device to a user, you lose that device if you remove the user. Removing a user won't affect the device if you use tags to manage the device instead. Do not use tags to associate a user device with a user account. Tags are not designed to tie individual users to a device. They're intended to manage devices with service account roles. Using tags as a substitute for users poses a security risk because the user's devices will remain on your network even if you remove the user.
+标签非常适合管理你不想绑定到特定用户的设备（例如托管 Web 应用的服务器），因为删除用户会连带删除其所有设备。如果你把提供服务的设备关联到某个用户，删除该用户就会失去这台设备；而改用标签管理设备时，删除用户不会影响设备。不要用标签把用户设备关联到用户账户——标签的设计目的不是把单个用户绑定到设备，而是管理承担服务账户角色的设备。用标签替代用户会带来安全风险：即使你删除了用户，其设备仍会留在你的网络中。
 
-Tags provide a way to allow multiple users to manage a device. When you manage devices with users, you must link each device to a single user, which isn't ideal for devices that host shared resources. However, when you manage devices with tags, you can assign one or more users as tag owners with tags. These users can manage all the devices with the tags they own.
+标签还提供了一种让多个用户共同管理设备的方式。用用户管理设备时，每台设备必须绑定到单个用户，这对承载共享资源的设备并不理想。而用标签管理设备时，你可以把一个或多个用户指派为标签的标签所有者，这些用户就能管理所有带有其所属标签的设备。
 
-> **Warning:**
+> **警告：**
 >
-> **Warnings about tags**
+> **关于标签的警告**
 >
-> Only use tags for non-human machines. Users can only access and use Tailscale through their designated user accounts. Using tags to annotate user devices is poor practice because a device cannot simultaneously have a user and a tag. Adding a tag to a device removes the associated user. Devices can have tags or a user account, not both.
+> 标签只应用于非人类操作的机器。用户只能通过其指定的用户账户访问和使用 Tailscale。用标签标注用户设备是不良实践，因为一台设备不能同时拥有用户和标签——给设备加标签会移除其关联用户。设备可以有标签或用户账户，但不能兼得。
 >
-> Use tags to:
+> 应该用标签来：
 >
-> * Manage devices you don't have tied to a specific user (such as a server hosting a web application).
-> * Manage devices you want to allow multiple users to manage.
+> * 管理未绑定到特定用户的设备（例如托管 Web 应用的服务器）。
+> * 管理希望允许多个用户共同管理的设备。
 >
-> Do not use tags to:
+> 不要用标签来：
 >
-> * Annotate user devices.
-> * Link a user device with a user.
-> * Authenticate end-user devices, such as laptops or mobile devices.
+> * 标注用户设备。
+> * 把用户设备与用户关联。
+> * 认证笔记本电脑或移动设备等终端用户设备。
 
-## Ownership
+## 所有权
 
-There's no "tag" section of the tailnet policy file. Instead, you define tags by their owners in the `tagOwners` section of the tailnet policy file. Only owners of a tag can apply that tag to devices in your Tailscale network (known as a tailnet). Tag owners can be users, groups, or even other tags, which means you can create complex tag [ownership hierarchies][ar-ownership-hierarchies].
+tailnet 策略文件中没有"tag"部分。你通过 tailnet 策略文件 `tagOwners` 部分中的所有者来定义标签。只有标签的所有者才能把该标签应用到 Tailscale 网络（即 tailnet）中的设备。标签所有者可以是用户、组，甚至其他标签，这意味着你可以构建复杂的标签[所有权层级][ar-ownership-hierarchies]。
 
-A tagged device's identity is the combination of all its tags (not the intersection). You can assign any number of tags to a device and manage the permissions for each tag separately. For example, if you have a device with the tags `tag:postgresql`, `tag:prod`, and `tag:ci-cd`, an access control policy for any one of these tags would apply to the device.
+带标签设备的身份是其所有标签的组合（而非交集）。你可以给一台设备分配任意数量的标签，并分别管理每个标签的权限。例如，如果一台设备带有 `tag:postgresql`、`tag:prod` 和 `tag:ci-cd` 标签，那么针对其中任何一个标签的访问控制策略都会作用于这台设备。
 
-[Owner, Admin, or Network admin](/docs/reference/user-roles) can apply any tag, even if they aren't tag owners.
+[Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)可以应用任何标签，即使他们不是该标签的所有者。
 
-## Tag vs. user authentication
+## 标签认证与用户认证的对比
 
-Tags are parallel to user authentication. They serve the same role as a user account, except they're intended for service-based devices, such as a web server or an app connector. As a result, it's impossible for a user account identity and a tag identity to exist on the same device. Applying a tag to a device previously authenticated with a user account removes the user account. Similarly, authenticating a device with a user account removes all tags from the device.
+标签与用户认证并行。它们扮演与用户账户相同的角色，只是面向服务型设备，例如 Web 服务器或应用连接器。因此，用户账户身份和标签身份不可能同时存在于同一台设备上。给先前用用户账户认证的设备应用标签会移除该用户账户；同样，用用户账户认证设备会移除其所有标签。
 
-Because tags are for non-user devices, they have qualities and limitations that make them unsuitable for authenticating end-user devices, such as a MacBook or a mobile device. For example, devices with a tag-based identity cannot use SSH to connect to a device with a user-based identity.
+由于标签面向非用户设备，它们具备一些使其不适合认证 MacBook 或移动设备等终端用户设备的特性与限制。例如，以标签为身份的设备无法通过 SSH 连接以用户为身份的设备。
 
-## Key expiry
+## 密钥过期
 
-When you apply a tag to a device for the first time and authenticate it, the tagged device's key expiry is disabled by default.
+当你第一次给设备应用标签并进行认证时，该带标签设备的密钥过期（key expiry）默认是禁用的。
 
-> **Note:**
+> **注意：**
 >
-> If you re-authenticate a device tagged before March 10, 2022, its expiry will be disabled by default.
+> 如果你重新认证一台在 2022 年 3 月 10 日之前加标签的设备，其过期时间也会默认禁用。
 
-If you change the tags on the device from the admin console, [Tailscale CLI][docs-cli], or the [Tailscale API][docs-api], the device's key expiry will not change unless you re-authenticate. After you re-authenticate, Tailscale disables the device's key expiry.
+如果你从管理控制台、[Tailscale CLI][docs-cli] 或 [Tailscale API][docs-api] 更改设备上的标签，除非重新认证，设备的密钥过期设置不会改变。重新认证之后，Tailscale 会禁用该设备的密钥过期。
 
-You can enable or disable key expiry on a device from the [Machines](https://console.tailscale.com/admin/machines) page of the admin console or by using the Tailscale API.
+你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面或通过 Tailscale API 启用或禁用设备的密钥过期。
 
-## Tags in the Tailscale ecosystem
+## Tailscale 生态中的标签
 
-Like many aspects of a tailnet, you can define and manage tags in the tailnet policy file. While limitations prevent you from using them to authenticate end-user devices, they work seamlessly with nearly every other Tailscale feature, including exit nodes, subnet routers, app connectors, access control lists, and grants.
+与 tailnet 的许多方面一样，你可以在 tailnet 策略文件中定义和管理标签。虽然有限制使你不能用它们认证终端用户设备，但它们几乎能与所有其他 Tailscale 功能无缝配合，包括出口节点、子网路由器、应用连接器、访问控制列表和授权。
 
-### Exit nodes
+### 出口节点
 
-Using a device as an [exit node][docs-exit-nodes] means that other tailnet devices can choose to route all their internet traffic through that device. Routing all traffic through an exit node lets you encrypt internet traffic and access internal networks. For example, you could run a device as an exit node in a corporate office. That way, employees can access the corporate office's internal network when they use that exit node. Although end-user devices can function as exit nodes, it's more common for exit nodes to use a tag-based identity.
+把一台设备用作[出口节点][docs-exit-nodes]，意味着其他 tailnet 设备可以选择把全部互联网流量都经由该设备路由。让所有流量经过出口节点，既能加密互联网流量，又能访问内部网络。例如，你可以在公司办公室把一台设备运行为出口节点，员工使用该出口节点时就能访问公司办公室的内部网络。虽然终端用户设备也能充当出口节点，但出口节点更常使用基于标签的身份。
 
-### Subnet routers
+### 子网路由器
 
-A [subnet router][docs-subnets] is a tailnet device you use to advertise subnet routes to the rest of your tailnet. They're a great way to add entire subnets to your tailnet without installing the Tailscale client to any of the devices (except the subnet router). Although end-user devices can function as subnet routers, it's more common for subnet routers to use a tag-based identity.
+[子网路由器][docs-subnets]是一台向 tailnet 其余部分通告子网路由的 tailnet 设备。它是把整个子网加入 tailnet 的好办法，而且无需给子网内任何设备安装 Tailscale 客户端（子网路由器本身除外）。虽然终端用户设备也能充当子网路由器，但子网路由器更常使用基于标签的身份。
 
-### App connectors
+### 应用连接器
 
-An [app connector][docs-app-connectors] is a device that routes app-specific traffic in your tailnet. A device running as an app connector is strictly a service-based device. As a result, you must use a tag-based identity to authenticate a device you plan to use as an app connector.
+[应用连接器][docs-app-connectors]是在 tailnet 中路由特定应用流量的设备。作为应用连接器运行的设备严格来说就是服务型设备，因此必须使用基于标签的身份来认证你计划用作应用连接器的设备。
 
-### Access controls
+### 访问控制
 
-You can use tags to select and target service-based devices in your tailnet to create access control policies using ACLs and grants. Because Tailscale can identify tagged devices by any one of their assigned tags, the access control policies that apply to a device with many tags could become complex. As a result, it's best practice to maintain clear documentation of how you leverage and manage tags in your tailnet.
+你可以用标签在 tailnet 中选择和定向服务型设备，用 ACL 和授权创建访问控制策略。由于 Tailscale 可以凭设备被分配的任意一个标签识别它，作用于拥有众多标签的设备的访问控制策略可能变得复杂。因此，最佳实践是清晰记录你在 tailnet 中使用和管理标签的方式。
 
-#### ACLs
+#### ACL
 
-You can use tags as part of [access control lists (ACLs)][docs-acls] to make it easier to manage which types of devices should be able to communicate. For example, you might use a tag named `tag:prod` for production servers and production databases, then allow all devices with the `tag:prod` tag to communicate with each other.
+你可以把标签用作[访问控制列表（ACL）][docs-acls]的一部分，更轻松地管理哪些类型的设备可以相互通信。例如，你可以用名为 `tag:prod` 的标签标记生产服务器和生产数据库，然后允许所有带 `tag:prod` 标签的设备相互通信。
 
-The following example [tailnet policy file][docs-tailnet-policy-file] lets all devices tagged `tag:prod` communicate with each other.
+下面的 [tailnet 策略文件][docs-tailnet-policy-file]示例允许所有带 `tag:prod` 标签的设备相互通信。
 
 ```json
 {
@@ -128,9 +128,9 @@ The following example [tailnet policy file][docs-tailnet-policy-file] lets all d
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You can also ensure that the ACLs for your tagged devices work as expected with [tests][docs-policy-syntax-tests], which verify your tailnet policy file before saving and applying it.
+你还可以用[测试][docs-policy-syntax-tests]确保带标签设备的 ACL 按预期工作——测试会在保存并应用 tailnet 策略文件之前对其进行校验。
 
-For example, to verify that your tailnet policy file lets users in the `tag:sre` group to access devices tagged `tag:prod`, you might write an ACL like the following example:
+例如，要验证 tailnet 策略文件允许 `tag:sre` 组中的用户访问带 `tag:prod` 标签的设备，可以编写如下 ACL：
 
 ```json
 "tests": [
@@ -143,9 +143,9 @@ For example, to verify that your tailnet policy file lets users in the `tag:sre`
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-#### Grants
+#### 授权
 
-Like ACLs, you can use tags in grants to target a group of tagged devices. The following example grants devices with the `tag:prod` tag access to devices with the `tag:tailsql` tag.
+与 ACL 一样，你可以在授权中使用标签来定向一组带标签的设备。下面的示例允许带 `tag:prod` 标签的设备访问带 `tag:tailsql` 标签的设备。
 
 ```json
 {
@@ -161,58 +161,58 @@ Like ACLs, you can use tags in grants to target a group of tagged devices. The f
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Autogroups
+### Autogroup
 
-[Autogroups][docs-targets] are pre-defined groups of devices in your tailnet that would be difficult to create as custom groups. One of these autogroups is `autogroup:tagged`, which selects all devices with a tag-based identity.
+[Autogroup][docs-targets] 是 tailnet 中预先定义的设备组，这类分组用自定义组很难创建。其中一个 autogroup 是 `autogroup:tagged`，它会选中所有以标签为身份的设备。
 
-You cannot use `autogroup:tagged` to define an IP set or a custom group.
+你不能用 `autogroup:tagged` 定义 IP 集或自定义组。
 
-## Advanced tag hierarchies
+## 高级标签层级
 
-Designating tag owners is flexible by design. You can assign as many tag owners as you need to a device, and these tag owners can be users, groups, or other tags. Because you can assign a tag as an owner of another tag, it's possible to create complex hierarchies of tag ownership. As a result, it's best practice to maintain clear documentation of how you use tags and to audit tags using tools such as [access control policy tests][docs-policy-syntax-tests].
+指派标签所有者在设计上就很灵活。你可以按需给设备指派任意数量的标签所有者，标签所有者可以是用户、组或其他标签。由于可以把一个标签指派为另一个标签的所有者，就能构建复杂的标签所有权层级。因此，最佳实践是清晰记录你的标签使用方式，并使用[访问控制策略测试][docs-policy-syntax-tests]等工具审计标签。
 
-## Best practices
+## 最佳实践
 
-To leverage tags effectively, consider the following best practices:
+要有效利用标签，请考虑以下最佳实践：
 
-* **Define clear naming conventions for tags**. Ideally, tag names should follow a consistent and descriptive pattern throughout your tailnet. Defining and enforcing a naming convention early on reduces the likelihood of problems such as ambiguous tag names later on. For example, a tag named "foo-bar" doesn't tell you anything about what the tag is intended for, but a tag name "prod-postgresql-server" tells you that the tag is for PostgreSQL servers in a production environment. However, even with descriptive names, it's a good idea to document your organization's tag conventions.
-* **Use auth keys**. By using [auth keys][docs-auth-keys] with pre-assigned tags, you can streamline the process of authenticating and approving tagged devices.
-* **Don't use tags to authenticate user-owned devices**. Tags are intended to authenticate servers and devices that provide a service, which means they have qualities that make them unsuitable for end-user devices, such as a MacBook or an Android phone. Additionally, a device cannot simultaneously use tag-based and user-based identities. Adding a tag to a previously user-authenticated device removes the user's identity.
-* **Carefully consider each tag's owners**. Tags are defined by their owners in the `tagOwners` section of the tailnet policy file. Because of their flexibility and the ability for a tag to own another tag, tags can take on [complex ownership hierarchies][ar-ownership-hierarchies].
+* **为标签定义清晰的命名规范**。理想情况下，标签名称应在你整个 tailnet 中遵循一致且具描述性的模式。尽早定义并执行命名规范，可以减少日后出现标签名称含糊等问题的可能性。例如，名为"foo-bar"的标签看不出任何用途，而"prod-postgresql-server"则表明它用于生产环境中的 PostgreSQL 服务器。即便名称够描述性，也建议把组织的标签规范记录成文。
+* **使用认证密钥**。使用预先分配好标签的[认证密钥][docs-auth-keys]，可以简化带标签设备的认证与审批流程。
+* **不要用标签认证用户自有的设备**。标签用于认证服务器和提供服务的设备，其特性并不适合 MacBook 或 Android 手机等终端用户设备。此外，一台设备不能同时使用基于标签和基于用户的身份——给先前以用户认证的设备加标签会移除用户的身份。
+* **慎重考虑每个标签的所有者**。标签由 tailnet 策略文件 `tagOwners` 部分中的所有者定义。由于标签的灵活性以及标签可以拥有另一个标签，标签可能形成[复杂的所有权层级][ar-ownership-hierarchies]。
 
-### Common patterns for tag names
+### 标签命名的常见模式
 
-Tags let you reflect access patterns and network segments based on your organization's requirements. These access patterns and network segments usually fall into a few common categories. Use consistent patterns for tag names based on these categories to make your access control policies easier to understand and maintain over time. Some common categories of access to consider in your tag names are:
+标签让你能按照组织的需求反映访问模式和网络分段。这些访问模式和网络分段通常可以归入几个常见类别。按这些类别为标签名称使用一致的模式，能让你的访问控制策略更易理解和长期维护。在标签名称中值得考虑的常见访问类别有：
 
-* **Server role**: for example, application server, database, or queue.
-* **Application name**: for example, support console, finance reporting, or operations dashboard.
-* **Environment**: for example, production, staging, or development
-* **Location**: for example, Americas, EMEA, South Asia.
+* **服务器角色**：例如应用服务器、数据库或队列。
+* **应用名称**：例如支持控制台、财务报表或运维仪表盘。
+* **环境**：例如生产、预发布（staging）或开发。
+* **位置**：例如美洲、EMEA、南亚。
 
-While a device can have many tags assigned to it, tags are not "joined" for access rules. For example, you cannot define a rule that permits access to devices with both `tag:prod` and `tag:database`. Instead, you can use a composite tag such as `tag:prod-database` to represent this type of segmented access pattern. Below are some examples of composite tags.
+虽然一台设备可以拥有多个标签，但标签在访问规则中不会"联合"生效。例如，你不能定义一条同时要求 `tag:prod` 和 `tag:database` 才允许访问的规则。作为替代，你可以使用组合标签（如 `tag:prod-database`）来表示这种分段访问模式。下面是一些组合标签示例。
 
-| **Tag**                             | **Access control**                                       |
+| **标签**                            | **访问控制**                                             |
 | :---------------------------------- | :------------------------------------------------------- |
-| `tag:prod-app`                      | To production application servers                        |
-| `tag:nonprod-db`                    | To non-production database servers                       |
-| `tag:prod-app-finance-reporting`    | To the production finance reporting application          |
-| `tag:prod-emea-app-support-console` | To the production support console application in EMEA    |
-| `tag:prod-asiasouth-ingest-logging` | To the production logging ingest endpoint in South Asia. |
+| `tag:prod-app`                      | 面向生产应用服务器                                       |
+| `tag:nonprod-db`                    | 面向非生产数据库服务器                                   |
+| `tag:prod-app-finance-reporting`    | 面向生产环境的财务报表应用                               |
+| `tag:prod-emea-app-support-console` | 面向 EMEA 生产环境的支持控制台应用                       |
+| `tag:prod-asiasouth-ingest-logging` | 面向南亚生产环境的日志采集端点                           |
 
-## Working with tags
+## 使用标签
 
-Use the following sections to find more information about working with tags:
+使用以下章节了解有关使用标签的更多信息：
 
-* [Define a tag][ar-define-a-tag].
-* [Define tag owners][ar-define-tag-owners].
-* [Apply tags to a device][ar-apply-a-tag-to-a-device].
-* [Apply a tag from another tag][ar-apply-a-tag-from-another-tag].
+* [定义标签][ar-define-a-tag]。
+* [定义标签所有者][ar-define-tag-owners]。
+* [为设备应用标签][ar-apply-a-tag-to-a-device]。
+* [从另一个标签应用标签][ar-apply-a-tag-from-another-tag]。
 
-### Define a tag
+### 定义标签
 
-Before assigning a tag to a device, you must create the tag in the [tailnet policy file][docs-policy-syntax] and define who can use that tag to authenticate devices. You create a tag by defining it in the [`tagOwners`][docs-policy-syntax-tag-owners] section of the tailnet policy file.
+在给设备分配标签之前，你必须先在 [tailnet 策略文件][docs-policy-syntax]中创建该标签，并定义谁可以用它来认证设备。你通过在 tailnet 策略文件的 [`tagOwners`][docs-policy-syntax-tag-owners] 部分定义标签来创建它。
 
-The following example creates the tag `tag:server` and assigns `dave@example.com` as the sole owner. Only the tag owner can apply the tag.
+下面的示例创建标签 `tag:server` 并指定 `dave@example.com` 为唯一所有者。只有标签所有者才能应用该标签。
 
 ```json
 {
@@ -224,15 +224,15 @@ The following example creates the tag `tag:server` and assigns `dave@example.com
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Tailscale ignores tag name case and parses all tags in the tailnet policy file as lowercase.
+Tailscale 忽略标签名称的大小写，会把 tailnet 策略文件中的所有标签按小写解析。
 
-### Define tag owners
+### 定义标签所有者
 
-You must explicitly define who can use a tag to grant its permissions on a device. You can define tag owners in the [`tagOwners`][docs-policy-syntax-tag-owners] section of the tailnet policy file.
+你必须显式定义谁可以使用某个标签来把其权限授予设备。你可以在 tailnet 策略文件的 [`tagOwners`][docs-policy-syntax-tag-owners] 部分定义标签所有者。
 
-A tag can also have an empty list of owners in the tailnet policy file. All tags are implicitly owned by [Owners, Admins, and Network admins](/docs/reference/user-roles) of a tailnet. You can apply these tags to devices from the admin console and as part of an [auth key][docs-auth-keys].
+标签在 tailnet 策略文件中也可以拥有空的所有者列表。所有标签都隐式地由 tailnet 的 [Owner（所有者）、Admin（管理员）和 Network admin（网络管理员）](/docs/reference/user-roles)拥有。你可以在管理控制台中把这些标签应用到设备，也可以把它们包含在[认证密钥][docs-auth-keys]中。
 
-The following example shows the `tag:infrastructure` with no tag owners.
+下面的示例展示了没有任何标签所有者的 `tag:infrastructure`。
 
 ```json
 {
@@ -245,69 +245,69 @@ The following example shows the `tag:infrastructure` with no tag owners.
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Apply a tag to a device
+### 为设备应用标签
 
-You can tag devices using the admin console, the [Tailscale CLI][docs-cli], or the Tailscale API.
+你可以使用管理控制台、[Tailscale CLI][docs-cli] 或 Tailscale API 给设备加标签。
 
-> **Note:**
+> **注意：**
 >
-> When you re-authenticate and tag a device, it generates a new [node key][docs-node-keys] for the device. The [Tailscale IP address][docs-100.x-addresses] for the device does not change.
+> 重新认证并给设备加标签时，会为该设备生成新的[节点密钥][docs-node-keys]（node key）。设备的 [Tailscale IP 地址][docs-100.x-addresses]不会改变。
 
-#### Apply a tag to a device in the admin console
+#### 在管理控制台中为设备应用标签
 
-You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to tag a device from the [admin console](https://console.tailscale.com/admin). You don't need to re-authenticate because the current user is automatically used to authenticate the device.
+从[管理控制台](https://console.tailscale.com/admin)给设备加标签，你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)。你无需重新认证，因为系统会自动用当前用户认证设备。
 
-To tag a device from the admin console:
+在管理控制台中给设备加标签的步骤：
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page in the admin console.
-2. Find the row corresponding to the device you are interested in.
-3. Select on the  menu at the far right, then select the **Edit tags** option.
-4. Add, change, or remove desired tags. To apply a tag, it must already exist in the [tailnet policy file][docs-tailnet-policy-file].
-5. Select **Save** to apply tags.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 找到目标设备所在的行。
+3. 选择最右侧的菜单，然后选择 **Edit tags** 选项。
+4. 添加、更改或移除所需的标签。要应用的标签必须已存在于 [tailnet 策略文件][docs-tailnet-policy-file]中。
+5. 选择 **Save** 应用标签。
 
-[Owners, Admins, and Network admins](/docs/reference/user-roles) can apply any tag from the admin console even if they don't own the tag.
+[Owner（所有者）、Admin（管理员）和 Network admin（网络管理员）](/docs/reference/user-roles)可以在管理控制台应用任何标签，即使他们不拥有该标签。
 
-> **Note:**
+> **注意：**
 >
-> You cannot remove all tags from a tagged device in the admin console because the device must have an identity. Either assign the device a new tag or re-authenticate to Tailscale from the device.
+> 你不能在管理控制台中移除带标签设备的全部标签，因为设备必须保有身份。要么给设备分配一个新标签，要么让设备重新认证到 Tailscale。
 
-#### Apply a tag to a device with the CLI
+#### 使用 CLI 为设备应用标签
 
-You can use the [Tailscale CLI][docs-cli] to add and remove tags from devices running Linux, macOS, or Windows. To tag other devices, use the admin console.
+你可以使用 [Tailscale CLI][docs-cli] 为运行 Linux、macOS 或 Windows 的设备添加和移除标签。要给其他设备加标签，请使用管理控制台。
 
-To assign tags to a device using the CLI, run `tailscale login` command with the `--advertise-tags=tag:<tag-name>` flag.
+用 CLI 给设备分配标签时，运行带 `--advertise-tags=tag:<tag-name>` 旗标的 `tailscale login` 命令。
 
 ```shell
 sudo tailscale login --advertise-tags=tag:server
 ```
 
-To assign multiple tags to a device, pass multiple tags (separated with commas) to the `--advertise-tags` flag.
+要给设备分配多个标签，把多个标签（以逗号分隔）传给 `--advertise-tags` 旗标。
 
 ```shell
 sudo tailscale login --advertise-tags=tag:server,tag:development
 ```
 
-To remove all tags from a device, use the `--advertise-tags=` flag without any values.
+要移除设备的所有标签，使用不带任何取值的 `--advertise-tags=` 旗标。
 
 ```shell
 sudo tailscale login --advertise-tags=
 ```
 
-> **Note:**
+> **注意：**
 >
-> You cannot remove tags using the `--advertise-tags` flag if the device uses an auth key. Instead, generate a new auth key with the new set of tags.
+> 如果设备使用认证密钥认证，你不能用 `--advertise-tags` 旗标移除标签。此时应生成一个带新标签集合的认证密钥。
 
-You might need to change the signed-in user on the device if it's already authenticated with another user. To re-authenticate with the current user, add the `--force-reauth` flag to the `tailscale up` command:
+如果设备已经用其他用户认证过，你可能需要更换设备上登录的用户。要以当前用户重新认证，请给 `tailscale up` 命令加上 `--force-reauth` 旗标：
 
 ```shell
 sudo tailscale up --advertise-tags=tag:server --force-reauth
 ```
 
-#### Apply a tag to a device using the API
+#### 通过 API 为设备应用标签
 
-You can apply a tag to a device using the [Update device tags][co-api-update-tags] method from the [Tailscale API][docs-api].
+你可以使用 [Tailscale API][docs-api] 的 [Update device tags][co-api-update-tags] 方法给设备应用标签。
 
-To apply a tag this way, send a `POST` request for a device, with the body specifying the desired `tags`. For example:
+用这种方式应用标签时，向设备发送 `POST` 请求，并在请求体中指定所需的 `tags`。例如：
 
 ```shell
 curl https://api.tailscale.com/api/v2/device/11055/tags \
@@ -316,17 +316,17 @@ curl https://api.tailscale.com/api/v2/device/11055/tags \
 --data-binary '{"tags": ["tag:foo", "tag:bar"]}'
 ```
 
-### Apply a tag from another tag
+### 从另一个标签应用标签
 
-You can apply different tags from those in the [auth key][docs-auth-keys] when you authenticate, as long as each different tag is directly owned by an original tag applied to the auth key. Doing so replaces the device's existing tags.
+认证时，你可以应用与[认证密钥][docs-auth-keys]中不同的标签，前提是每个不同的标签都由应用于该认证密钥的原始标签直接拥有。这样做会替换设备现有的标签。
 
-To apply a different tag, the original tag must directly own the different tag. For example, if `tag:a` owns `tag:b`, you can apply `tag:b` to a device authenticated with an auth key that applied `tag:a`. However, if `tag:a` owns `tag:b` and `tag:b` owns `tag:c`, you cannot apply `tag:c` to a device authenticated with an auth key that applied `tag:a`, because `tag:a` does not directly own `tag:c`.
+要应用不同的标签，原始标签必须直接拥有那个标签。例如，如果 `tag:a` 拥有 `tag:b`，你可以把 `tag:b` 应用到用带 `tag:a` 的认证密钥认证的设备。但如果 `tag:a` 拥有 `tag:b`，而 `tag:b` 拥有 `tag:c`，你就不能把 `tag:c` 应用到用带 `tag:a` 的认证密钥认证的设备，因为 `tag:a` 并不直接拥有 `tag:c`。
 
-> **Note:**
+> **注意：**
 >
-> **Important for OAuth authentication**: When an OAuth client or auth key assigns tags to a device, the requested tags must either exactly match the full set of tags on the OAuth client or auth key, or each requested tag must be owned by one of the authenticating entity's tags as defined in the `tagOwners` section. The exact-match check does not consult `tagOwners`—it merely verifies the requested tags are identical to the authenticating tags. For any other combination, including applying a subset of tags, ownership must be explicitly configured in `tagOwners`.
+> **对 OAuth 认证很重要**：当 OAuth 客户端或认证密钥给设备分配标签时，所请求的标签必须与该 OAuth 客户端或认证密钥上的完整标签集合完全一致，或者每个所请求的标签都必须由认证实体的某个标签在 `tagOwners` 部分中所拥有。完全一致检查不会查询 `tagOwners`——它只验证所请求的标签与认证标签完全相同。对其他任何组合（包括应用标签的子集），都必须在 `tagOwners` 中显式配置所有权。
 
-Applying a tag from another tag is useful for larger infrastructure deployments, where you might need to tag many servers, typically using a deployment tool. For example, you could have your deployment system tagged with `tag:deployment-1`, which owns both `tag:prod-2` and `tag:test-2`:
+从另一个标签应用标签适用于较大规模的基础设施部署——你可能需要用部署工具给许多服务器加标签。例如，你可以让你的部署系统带 `tag:deployment-1` 标签，它同时拥有 `tag:prod-2` 和 `tag:test-2`：
 
 ```json
   "TagOwners": {
@@ -338,7 +338,7 @@ Applying a tag from another tag is useful for larger infrastructure deployments,
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-In this configuration, an OAuth client with `tag:deployment-1` can apply either `tag:prod-2` or `tag:test-2` to devices. An OAuth client whose only tag is `tag:prod-2` can also apply `tag:prod-2`, since the tags are an exact match. However, if an OAuth client holds multiple tags and needs to apply only a subset of them, each requested tag must be owned by one of the authenticating tags. To support this, add the tag as its own owner:
+在此配置中，带 `tag:deployment-1` 的 OAuth 客户端可以把 `tag:prod-2` 或 `tag:test-2` 应用到设备。只有一个标签 `tag:prod-2` 的 OAuth 客户端也可以应用 `tag:prod-2`，因为标签完全一致。但如果 OAuth 客户端持有多个标签而只需应用其中一部分，那么每个所请求的标签都必须由某个认证标签拥有。为支持这一点，把该标签加为它自己的所有者：
 
 ```json
   "TagOwners": {
@@ -350,21 +350,21 @@ In this configuration, an OAuth client with `tag:deployment-1` can apply either 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You could generate an [auth key][docs-auth-keys] `<key-1>` with the tag `tag:deployment-1`, and make it available to the deployment tool. Then, depending on what workload you deploy, the system authenticates the device and applies the correct infrastructure tag, which enforces the correct [access controls][docs-access-control]. When spinning up a new production server, the deployment tool could tag the device as `tag:prod-2`:
+你可以生成一个带 `tag:deployment-1` 标签的[认证密钥][docs-auth-keys] `<key-1>`，并提供给部署工具。之后，根据部署的工作负载，系统会认证设备并应用正确的基础设施标签，从而实施正确的[访问控制][docs-access-control]。在启动新的生产服务器时，部署工具可以把设备标记为 `tag:prod-2`：
 
 ```shell
 sudo tailscale up --auth-key=<key-1> --advertise-tags=tag:prod-2
 ```
 
-[ar-apply-a-tag-from-another-tag]: #apply-a-tag-from-another-tag
+[ar-apply-a-tag-from-another-tag]: #从另一个标签应用标签
 
-[ar-apply-a-tag-to-a-device]: #apply-a-tag-to-a-device
+[ar-apply-a-tag-to-a-device]: #为设备应用标签
 
-[ar-define-a-tag]: #define-a-tag
+[ar-define-a-tag]: #定义标签
 
-[ar-define-tag-owners]: #define-tag-owners
+[ar-define-tag-owners]: #定义标签所有者
 
-[ar-ownership-hierarchies]: #advanced-tag-hierarchies
+[ar-ownership-hierarchies]: #高级标签层级
 
 [co-api-update-tags]: https://tailscale.com/api#tag/devices/POST/device/%7BdeviceId%7D/tags
 

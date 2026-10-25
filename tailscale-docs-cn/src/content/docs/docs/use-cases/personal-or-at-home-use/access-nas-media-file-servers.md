@@ -1,78 +1,78 @@
 ---
-title: "Access NAS, media servers, or file shares remotely"
-description: "Accessing your home NAS, media library, or file share from outside your network normally means opening firewall ports or running a traditional VPN. Tailscale creates an encrypted, peer-to-peer connect"
+title: "远程访问 NAS、媒体服务器或文件共享"
+description: "从网络之外访问家里的 NAS、媒体库或文件共享，通常意味着要开放防火墙端口或运行传统 VPN。Tailscale 会在你的设备之间创建加密的点对点连"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Connect to network attached storage (NAS)**](/docs/integrations/nas) — Install the Tailscale client on supported network-attached storage (NAS) devices.
+> [**连接网络附加存储（NAS）**](/docs/integrations/nas)——在受支持的网络附加存储（NAS）设备上安装 Tailscale 客户端。
 
-Accessing your home NAS, media library, or file share from outside your network normally means opening firewall ports or running a traditional VPN. Tailscale creates an encrypted, peer-to-peer connection between your devices so you can reach those services from anywhere, without exposing them to the internet.
+从网络之外访问家里的 NAS、媒体库或文件共享，通常意味着要开放防火墙端口或运行传统 VPN。Tailscale 会在你的设备之间创建加密的点对点连接，让你从任何地方都能访问这些服务，而不必把它们暴露到互联网上。
 
-## Install the Tailscale client on your server
+## 在服务器上安装 Tailscale 客户端
 
-Install the Tailscale client on the device that hosts your files or media to connect it to your Tailscale network (known as a tailnet). If you don't already have a tailnet, one will be created automatically when you authenticate.
+在存放文件或媒体的设备上安装 Tailscale 客户端，将其接入你的 Tailscale 网络（即 tailnet）。如果你还没有 tailnet，认证时会自动创建一个。
 
-#### NAS devices
+#### NAS 设备
 
-Tailscale is available as a native package on popular NAS platforms. After installing, sign in with your identity provider to join your tailnet.
+Tailscale 在主流 NAS 平台上都有原生软件包。安装后，用你的身份提供方（IdP）登录即可加入 tailnet。
 
-* **Synology**: Install from Package Center. Refer to [Tailscale on Synology][docs-synology].
-* **QNAP**: Install from App Center. Refer to [Tailscale on QNAP][docs-qnap].
-* **Unraid**: Install from the Community Applications plugin. Refer to [Tailscale on Unraid][docs-unraid].
-* **TrueNAS Community**: Install from the Apps catalog. Refer to [Tailscale on TrueNAS][docs-truenas].
+* **Synology**：从套件中心（Package Center）安装。参阅 [Tailscale on Synology][docs-synology]。
+* **QNAP**：从 App Center 安装。参阅 [Tailscale on QNAP][docs-qnap]。
+* **Unraid**：从 Community Applications 插件安装。参阅 [Tailscale on Unraid][docs-unraid]。
+* **TrueNAS Community**：从 Apps 目录安装。参阅 [Tailscale on TrueNAS][docs-truenas]。
 
 #### Windows
 
-1. [Download and install the Tailscale client][docs-install-windows], then sign in.
-2. Share the folders you want to access: right-click the folder, open **Properties > Sharing**, and configure sharing.
-3. Note the machine's Tailscale hostname or IP address. You'll use this to connect from other devices.
+1. [下载并安装 Tailscale 客户端][docs-install-windows]，然后登录。
+2. 共享你想访问的文件夹：右键点击文件夹，打开**属性 > 共享**，并配置共享。
+3. 记下该机器的 Tailscale 主机名或 IP 地址，之后你要从其他设备用它来连接。
 
 #### macOS
 
-1. [Download and install][docs-install-macos] the Tailscale client, then sign in.
-2. Enable File Sharing: open **System Settings > General > Sharing**, then turn on **File Sharing**. Add the folders you want to share.
-3. Note the machine's Tailscale hostname or IP address. You'll use this to connect from other devices.
+1. [下载并安装][docs-install-macos] Tailscale 客户端，然后登录。
+2. 启用文件共享：打开**系统设置 > 通用 > 共享**，然后打开**文件共享**，添加你想共享的文件夹。
+3. 记下该机器的 Tailscale 主机名或 IP 地址，之后你要从其他设备用它来连接。
 
 #### Linux
 
-1. Install the Tailscale client:
+1. 安装 Tailscale 客户端：
 
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-2. Authenticate and connect to your tailnet:
+2. 完成认证并连接到你的 tailnet：
 
    ```bash
    sudo tailscale up
    ```
 
-3. Set up your file-sharing service, such as Samba for SMB shares or JellyFin, Emby, or Plex for media. Tailscale handles network access, so only tailnet members can reach your services.
+3. 设置你的文件共享服务，例如用于 SMB 共享的 Samba，或用于媒体的 JellyFin、Emby、Plex。网络访问由 Tailscale 负责，因此只有 tailnet 成员才能访问你的服务。
 
-## Install the Tailscale client on your devices
+## 在你的设备上安装 Tailscale 客户端
 
-Download and install the Tailscale client on every device you'll be connecting from, then sign in with the same account.
+在你将要用来连接的每台设备上下载并安装 Tailscale 客户端，然后用同一账号登录。
 
 #### Windows
 
-[Download and install][docs-install-windows] the Tailscale client, then sign in. Tailscale appears in the system tray and your tailnet devices are immediately reachable by hostname or Tailscale IP.
+[下载并安装][docs-install-windows] Tailscale 客户端，然后登录。Tailscale 会出现在系统托盘中，你的 tailnet 设备立刻就能通过主机名或 Tailscale IP 访问。
 
 #### macOS
 
-[Download and install][docs-install-macos] the Tailscale client, then sign in. The Tailscale menu bar icon confirms your connection status and shows your tailnet devices.
+[下载并安装][docs-install-macos] Tailscale 客户端，然后登录。Tailscale 的菜单栏图标会显示你的连接状态，并列出你的 tailnet 设备。
 
 #### iOS / iPadOS
 
-[Download and install][docs-install-ios] the Tailscale client, then sign in. Tailscale runs as a VPN profile, giving all apps on your device access to your tailnet.
+[下载并安装][docs-install-ios] Tailscale 客户端，然后登录。Tailscale 以 VPN 描述文件的形式运行，让设备上的所有应用都能访问你的 tailnet。
 
 #### Android
 
-[Download and install][docs-install-android] the Tailscale client, then sign in. All apps on your device can reach tailnet services once connected.
+[下载并安装][docs-install-android] Tailscale 客户端，然后登录。连接建立后，设备上的所有应用都能访问 tailnet 服务。
 
 #### Linux
 
@@ -81,56 +81,56 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-Run `tailscale ip` to confirm your assigned Tailscale IP address and verify the connection.
+运行 `tailscale ip` 确认分配给你的 Tailscale IP 地址，验证连接。
 
-## Access your files and services
+## 访问你的文件和服务
 
-The device you're connecting from must have [Tailscale installed and signed in][docs-install] to the same tailnet as your server. Use the server's Tailscale hostname if [MagicDNS][docs-magicdns] is enabled, or find its Tailscale IP address on the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+你用来连接的设备必须[安装 Tailscale 并登录][docs-install]到与服务器相同的 tailnet。如果已启用 [MagicDNS][docs-magicdns]，使用服务器的 Tailscale 主机名；否则可在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面找到它的 Tailscale IP 地址。
 
 #### Windows
 
-For file access, open **File Explorer** and enter `\\hostname` or `\\100.x.y.z` in the address bar. To map a persistent drive, right-click **This PC > Map network drive**, enter the path, and choose to reconnect at sign-in.
+文件访问：打开**文件资源管理器**，在地址栏输入 `\\hostname` 或 `\\100.x.y.z`。要映射一个持久驱动器，右键点击**此电脑 > 映射网络驱动器**，输入路径并选择登录时重新连接。
 
-For JellyFin and Emby, go to `http://hostname:8096` or `http://100.x.y.z:8096`. For Plex, go to `http://hostname:32400` or `http://100.x.y.z:32400`.
+JellyFin 和 Emby：访问 `http://hostname:8096` 或 `http://100.x.y.z:8096`。Plex：访问 `http://hostname:32400` 或 `http://100.x.y.z:32400`。
 
 #### macOS
 
-For file access, go to **Finder**, choose **Go > Connect to Server** and enter `smb://hostname` or `smb://100.x.y.z`. Enter your credentials when prompted. The share mounts as a network drive in Finder.
+文件访问：打开**访达**（Finder），选择**前往 > 连接服务器**，输入 `smb://hostname` 或 `smb://100.x.y.z`，在提示时输入你的凭证。共享会作为网络驱动器挂载到访达中。
 
-For JellyFin and Emby, go to `http://hostname:8096` or `http://100.x.y.z:8096`. For Plex, go to `http://hostname:32400` or `http://100.x.y.z:32400`.
+JellyFin 和 Emby：访问 `http://hostname:8096` 或 `http://100.x.y.z:8096`。Plex：访问 `http://hostname:32400` 或 `http://100.x.y.z:32400`。
 
 #### iOS / iPadOS
 
-For file access, open the **Files** app, tap **…**, and select **Connect to Server**. Enter `smb://hostname` or `smb://100.x.y.z` and sign in. The share appears under **Network** in the sidebar.
+文件访问：打开**文件**（Files）应用，点按 **…**，选择**连接服务器**，输入 `smb://hostname` 或 `smb://100.x.y.z` 并登录。共享会显示在侧边栏的**网络**（Network）下方。
 
-For JellyFin or Emby, add your server using `http://hostname:8096` or `http://100.x.y.z:8096`. For Plex, add your server using `http://hostname:32400` or `http://100.x.y.z:32400`.
+JellyFin 或 Emby：用 `http://hostname:8096` 或 `http://100.x.y.z:8096` 添加你的服务器。Plex：用 `http://hostname:32400` 或 `http://100.x.y.z:32400` 添加你的服务器。
 
 #### Android
 
-For file access, use [Files by Google][xt-files-by-google] or another SMB-capable file manager such as [Solid Explorer][xt-solid-explorer] or [MiXplorer][xt-mixplorer]. Add a network connection using `smb://hostname` or `smb://100.x.y.z`.
+文件访问：使用 [Files by Google][xt-files-by-google] 或其他支持 SMB 的文件管理器，如 [Solid Explorer][xt-solid-explorer] 或 [MiXplorer][xt-mixplorer]。用 `smb://hostname` 或 `smb://100.x.y.z` 添加网络连接。
 
-For JellyFin or Emby, add your server using `http://hostname:8096` or `http://100.x.y.z:8096`. For Plex, add your server using `http://hostname:32400` or `http://100.x.y.z:32400`.
+JellyFin 或 Emby：用 `http://hostname:8096` 或 `http://100.x.y.z:8096` 添加你的服务器。Plex：用 `http://hostname:32400` 或 `http://100.x.y.z:32400` 添加你的服务器。
 
 #### Linux
 
-Mount an SMB share from the command line:
+从命令行挂载 SMB 共享：
 
 ```bash
 sudo mount -t cifs //hostname/sharename /mnt/myshare -o username=<user>
 ```
 
-Replace `hostname` with the server's Tailscale IP address if MagicDNS is not enabled.
+如果未启用 MagicDNS，把 `hostname` 替换为服务器的 Tailscale IP 地址。
 
-For JellyFin and Emby, open `http://hostname:8096` or `http://100.x.y.z:8096` in a browser. For Plex, open `http://hostname:32400` or `http://100.x.y.z:32400`.
+JellyFin 和 Emby：在浏览器中打开 `http://hostname:8096` 或 `http://100.x.y.z:8096`。Plex：打开 `http://hostname:32400` 或 `http://100.x.y.z:32400`。
 
-## Further exploration
+## 延伸探索
 
-* Enable [MagicDNS][docs-magicdns] to use friendly hostnames instead of IP addresses across your tailnet.
-* Use [Taildrive][docs-taildrive] to access shared folders directly across your tailnet without configuring SMB.
-* Try [Taildrop][docs-taildrop] to send files peer-to-peer between any tailnet devices.
-* Use [Tailscale Serve][docs-serve] to expose a local service to other devices in your tailnet.
-* [Invite users][docs-invite-users] to join your tailnet and access your shared files and media.
-* Use the [tailnet policy file][docs-policy-file] to restrict which tailnet devices and users can reach your server.
+* 启用 [MagicDNS][docs-magicdns]，在整个 tailnet 中使用友好主机名而不是 IP 地址。
+* 使用 [Taildrive][docs-taildrive] 直接访问 tailnet 内的共享文件夹，无需配置 SMB。
+* 试试 [Taildrop][docs-taildrop]，在任意 tailnet 设备之间以点对点方式发送文件。
+* 使用 [Tailscale Serve][docs-serve] 把本地服务展现给 tailnet 中的其他设备。
+* [邀请用户][docs-invite-users]加入你的 tailnet，访问你共享的文件和媒体。
+* 使用 [tailnet 策略文件][docs-policy-file]限制哪些 tailnet 设备和用户可以访问你的服务器。
 
 [docs-install]: /docs/install
 

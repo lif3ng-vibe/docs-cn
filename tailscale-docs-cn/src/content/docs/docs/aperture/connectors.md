@@ -1,45 +1,45 @@
 ---
-title: "Connectors"
-description: "Find documentation for Aperture connectors, including setup guides, conceptual explanations, and configuration reference."
+title: "连接器"
+description: "查找 Aperture 连接器相关文档，包括设置指南、概念说明和配置参考。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Connectors let Aperture reach external [MCP][xt-mcp-spec] servers and HTTP APIs through a single authenticated gateway. Aperture handles credentials, request proxying, and access control, so agents do not need separate service connections. Connectors complement [providers][docs-aperture-set-up-providers]: providers route model requests, and connectors route tool calls and API requests.
+连接器让 Aperture 能通过单一且带认证的网关访问外部 [MCP][xt-mcp-spec] 服务器和 HTTP API。Aperture 负责凭证、请求代理和访问控制，智能体无需单独建立服务连接。连接器与[提供商][docs-aperture-set-up-providers]互为补充：提供商路由模型请求，连接器路由工具调用和 API 请求。
 
-The MCP servers and HTTP APIs you connect to are third-party services. When Aperture forwards requests and credentials to them, their handling of that data is governed by your agreement with each service, not your agreement with Tailscale.
+你连接的 MCP 服务器和 HTTP API 是第三方服务。当 Aperture 把请求和凭证转发给它们时，其对数据的处理遵循你与各个服务之间的协议，而不是你与 Tailscale 之间的协议。
 
-## Set up connectors
+## 设置连接器
 
-[**Get started with connectors**](/docs/aperture/connectors/get-started) — Add a connector, grant access, and verify the connection in Aperture.
+[**连接器入门**](/docs/aperture/connectors/get-started) —— 在 Aperture 中添加连接器、授予访问权限并验证连接。
 
-[**Add a verified connector**](/docs/aperture/connectors/add-verified-connector) — Configure a verified connector such as Salesforce or Slack from the Aperture connector picker, supplying OAuth client credentials when required.
+[**添加经验证的连接器**](/docs/aperture/connectors/add-verified-connector) —— 从 Aperture 连接器选择器配置 Salesforce 或 Slack 等经验证的连接器，并在需要时提供 OAuth 客户端凭证。
 
-[**Set up an authenticated MCP connector**](/docs/aperture/connectors/set-up-authenticated-mcp-connector) — Connect Aperture to an MCP server that requires authentication using a shared bearer token or OAuth 2.0 client credentials.
+[**设置带认证的 MCP 连接器**](/docs/aperture/connectors/set-up-authenticated-mcp-connector) —— 使用共享 bearer token 或 OAuth 2.0 client credentials，把 Aperture 连接到需要认证的 MCP 服务器。
 
-[**Set up an HTTP API connector**](/docs/aperture/how-to/set-up-http-api-connector) — Configure Aperture to proxy requests to an upstream REST API with automatic credential injection.
+[**设置 HTTP API 连接器**](/docs/aperture/how-to/set-up-http-api-connector) —— 配置 Aperture 代理访问上游 REST API 的请求，并自动注入凭证。
 
-[**Set up a per-user OAuth 2.0 connector**](/docs/aperture/how-to/set-up-per-user-oauth2-connector) — Connect Aperture to an external service that requires individual user consent using the OAuth 2.0 authorization code flow.
+[**设置按用户 OAuth 2.0 连接器**](/docs/aperture/how-to/set-up-per-user-oauth2-connector) —— 使用 OAuth 2.0 授权码流程，把 Aperture 连接到需要每个用户单独授权的外部服务。
 
-[**Grant access to MCP tools**](/docs/aperture/how-to/grant-mcp-tool-access) — Configure Aperture grants to control which connector capabilities users can access, including MCP tools, resources, templates, and HTTP proxy access.
+[**授予 MCP 工具访问权限**](/docs/aperture/how-to/grant-mcp-tool-access) —— 配置 Aperture 授权，控制用户可以访问哪些连接器能力，包括 MCP 工具、资源、模板和 HTTP 代理访问。
 
-[**Grant connector access by label**](/docs/aperture/how-to/grant-connector-access-by-label) — Label Aperture connectors and grant access by label so a single grant covers every connector in a group instead of naming each connector ID.
+[**按标签授予连接器访问权限**](/docs/aperture/how-to/grant-connector-access-by-label) —— 为 Aperture 连接器打标签并按标签授权，让一条授权覆盖一组连接器，而不必逐一列出连接器 ID。
 
-[**Built-in connectors**](/docs/aperture/connectors/built-in-connectors) — Set up the built-in Aperture connectors that provision tailnet nodes and run shell commands over Tailscale SSH.
+[**内置连接器**](/docs/aperture/connectors/built-in-connectors) —— 设置内置的 Aperture 连接器，用于预配 tailnet 节点并通过 Tailscale SSH 运行 shell 命令。
 
-## Use connectors
+## 使用连接器
 
-[**Use a connector**](/docs/aperture/connectors/use-a-connector) — Authorize a connector, discover and call its tools, and reconnect when access expires.
+[**使用连接器**](/docs/aperture/connectors/use-a-connector) —— 授权连接器、发现并调用其工具，以及在访问过期后重新连接。
 
-## Understand connectors
+## 理解连接器
 
-[**How connectors work**](/docs/aperture/connectors/how-connectors-work) — Understand built-in, verified, and custom Aperture connectors, how they relate to providers, and how authentication and access control apply.
+[**连接器的工作原理**](/docs/aperture/connectors/how-connectors-work) —— 了解内置、经验证和自定义 Aperture 连接器，它们与提供商的关系，以及认证和访问控制如何生效。
 
-[**Kinds of connector**](/docs/aperture/connectors/kinds-of-connector) — Aperture has five kinds of tool integration. They differ by who runs the tool and who can reach it, which determines their configuration, grants, and failure behavior.
+[**连接器的种类**](/docs/aperture/connectors/kinds-of-connector) —— Aperture 有五种工具集成。它们的区别在于谁来运行工具、谁能访问工具，这决定了它们的配置、授权和失败行为。
 
-## Reference
+## 参考
 
-[**Aperture connectors reference**](/docs/aperture/connectors/reference) — Complete reference for Aperture connectors, including field definitions, authentication types, MCP and HTTP protocol behavior, grants, dynamic registration through the legacy MCP section, and migration from the deprecated MCP servers syntax.
+[**Aperture 连接器参考**](/docs/aperture/connectors/reference) —— Aperture 连接器完整参考，包括字段定义、认证类型、MCP 与 HTTP 协议行为、授权、通过旧版 MCP 段的动态注册，以及从已弃用的 MCP servers 语法的迁移。
 
 [docs-aperture-set-up-providers]: /docs/aperture/set-up-providers
 

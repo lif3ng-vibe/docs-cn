@@ -1,112 +1,112 @@
 ---
-title: "4via6 subnet routers"
-description: "Separate virtual private clouds (VPCs) can use identical IPv4 address ranges. If a subnet router in each VPC advertises the same range, Tailscale treats them as [overlapping subnet routers][docs-high-"
+title: "4via6 子网路由器"
+description: "相互独立的虚拟私有云（VPC）可以使用相同的 IPv4 地址范围。如果每个 VPC 中的子网路由器通告了相同的范围，Tailscale 会把它们视为[重叠的子网路由器][docs-high-availability]。"
 ---
 
-Last validated Oct 5, 2026
+最后验证于 Oct 5, 2026
 
-Separate virtual private clouds (VPCs) can use identical IPv4 address ranges. If a subnet router in each VPC advertises the same range, Tailscale treats them as [overlapping subnet routers][docs-high-availability]. Traffic to `10.0.0.5` goes to that address behind whichever subnet router Tailscale selects. The IPv4 address alone does not identify the intended VPC.
+相互独立的虚拟私有云（VPC）可以使用相同的 IPv4 地址范围。如果每个 VPC 中的子网路由器通告了相同的范围，Tailscale 会把它们视为[重叠的子网路由器][docs-high-availability]。发往 `10.0.0.5` 的流量会到达 Tailscale 所选子网路由器后面的那个地址。仅凭 IPv4 地址无法确定目标 VPC 是哪一个。
 
-The 4via6 ("4 via 6") feature gives each overlapping subnet a unique IPv6 address. Tailscale uses this address to route traffic to the correct device.
+4via6（"4 via 6"）功能为每个重叠的子网分配一个唯一的 IPv6 地址。Tailscale 用这个地址把流量路由到正确的设备。
 
-> **Note:** This feature is available for [all plans](https://tailscale.com/pricing).
+> **注意：** [所有套餐](https://tailscale.com/pricing)都可以使用此功能。
 
-This feature is useful when:
+以下情况适合使用此功能：
 
-* A network contains subnets with overlapping IP or CIDR ranges
-* Cloud resources or SaaS apps are rolled out to a network that contains subnets with overlapping IP or CIDR ranges
-* A partner or contractor network contains subnets with IP or CIDR ranges that overlap those of an organization that would like to share access
+* 网络中包含 IP 或 CIDR 范围重叠的子网。
+* 云资源或 SaaS 应用要部署到包含 IP 或 CIDR 范围重叠子网的网络中。
+* 合作伙伴或承包商网络的子网 IP 或 CIDR 范围与希望共享访问权限的组织的范围重叠。
 
-## How it works
+## 工作原理
 
-When you use this feature, your subnet router advertises an IPv6 subnet (using a Tailscale-specific address) that maps to the desired IPv4 subnet. Devices connecting to the IPv6 subnet router will have the IPv6 packets rewritten by Tailscale for IPv4, so the IPv4 addresses do not need to be changed.
+使用此功能时，你的子网路由器会通告一个映射到目标 IPv4 子网的 IPv6 子网（使用 Tailscale 专有地址）。连接到该 IPv6 子网路由器的设备，其 IPv6 包会被 Tailscale 改写为 IPv4，因此 IPv4 地址无需做任何更改。
 
-The Tailscale-specific IPv6 subnet address is of the form:
+Tailscale 专有的 IPv6 子网地址形如：
 
 `fd7a:115c:a1e0:b1a:0:XXXX:YYYY:YYYY`
 
-where:
+其中：
 
-* `fd7a:115c:a1e0:b1a` is the 64-bit fixed prefix used for Tailscale 4via6-routed packets.
-* `0:XXXX` is the 32-bit translator identifier. The site ID is the location that the IPv6 packets should arrive at before being translated to IPv4. Only the lower 16 bits may be used to specify a site ID—allowed values are 0 to 65535 inclusive. You choose which site IDs to assign to your subnet routes. For example, you might want to use `1` for your first subnet route, so the translator identifier would be `0:1`. A site ID of `0` is valid, but note the resulting IPv6 address, while allowed, would have an empty string for the translator identifier: fd7a:115c:a1e0:b1a::YYYY:YYYY.
-* `YYYY:YYYY` is the IPv4 address represented as 16 bit hex numbers.
+* `fd7a:115c:a1e0:b1a` 是用于 Tailscale 4via6 路由数据包的 64 位固定前缀。
+* `0:XXXX` 是 32 位转换器标识符。站点 ID（site ID）表示 IPv6 包在转换为 IPv4 之前应到达的位置。只有低 16 位可用于指定站点 ID——允许的取值为 0 到 65535（含）。站点 ID 由你自行分配给子网路由。例如，你可以给第一条子网路由用 `1`，那么转换器标识符就是 `0:1`。站点 ID 为 `0` 是有效的，但注意所得的 IPv6 地址（虽然被允许）转换器标识符会是空字符串：fd7a:115c:a1e0:b1a::YYYY:YYYY。
+* `YYYY:YYYY` 是以 16 位十六进制数表示的 IPv4 地址。
 
-For example, this would be the IPv6 subnet route for a site with ID `7` and IPv4 subnet address range `10.1.1.0/24` (which is represented as `a01:100/120` in 16 bit hex):
+例如，站点 ID 为 `7`、IPv4 子网地址范围为 `10.1.1.0/24`（以 16 位十六进制表示为 `a01:100/120`）时，其 IPv6 子网路由为：
 
-*（图：fd7a:115c:a1e0:b1a:7:a01:100/120 where 'fd7a:115c:a1e0:b1a' is the 64-bit fixed prefix used for Tailscale 4via6-routed packets, '7' is the site ID, and 'a01:100/120' is the IPv4 range represented in 16 bit hex）*
+*（图：fd7a:115c:a1e0:b1a:7:a01:100/120，其中"fd7a:115c:a1e0:b1a"是用于 Tailscale 4via6 路由数据包的 64 位固定前缀，"7"是站点 ID，"a01:100/120"是以 16 位十六进制表示的 IPv4 范围）*
 
-Tailscale uses the IPv6 subnet address to route your tailnet traffic to the appropriate IPv4 destination.
+Tailscale 使用该 IPv6 子网地址，把你的 tailnet 流量路由到相应的 IPv4 目的地。
 
-The [Tailscale CLI][docs-cli] provides the `tailscale debug via` command to help you create the IPv6 subnet route.
+[Tailscale CLI][docs-cli] 提供 `tailscale debug via` 命令，帮助你创建 IPv6 子网路由。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale versions before v1.58 can advertise only 4via6 addresses with site IDs from 0 to 255. They can access 4via6 subnets with larger site IDs but cannot advertise them.
+> v1.58 之前的 Tailscale 版本只能通告站点 ID 为 0 到 255 的 4via6 地址。它们可以访问站点 ID 更大的 4via6 子网，但无法通告它们。
 
-## Setting up overlapping subnet routers
+## 设置重叠的子网路由器
 
-To set up a 4via6 subnet router, generate an IPv6 subnet route for each overlapping IPv4 subnet, then advertise that route from the subnet router.
+要设置 4via6 子网路由器，先为每个重叠的 IPv4 子网生成一条 IPv6 子网路由，然后在子网路由器上通告该路由。
 
-### Step 1: Generate the IPv6 subnet route
+### 第 1 步：生成 IPv6 子网路由
 
-Generate the IPv6 subnet route for your IPv4 subnet by running the Tailscale CLI command `tailscale debug via` with arguments for the site ID and IPv4 route. This example generates the IPv6 subnet route for a subnet with site ID `7` and IPv4 route `10.1.1.0/24`.
+运行 Tailscale CLI 命令 `tailscale debug via` 并传入站点 ID 与 IPv4 路由参数，为你的 IPv4 子网生成 IPv6 子网路由。本例为站点 ID 为 `7`、IPv4 路由为 `10.1.1.0/24` 的子网生成 IPv6 子网路由。
 
 ```shell
 tailscale debug via 7 10.1.1.0/24
 ```
 
-The resulting IPv6 subnet route is:
+得到的 IPv6 子网路由为：
 
 `fd7a:115c:a1e0:b1a:0:7:a01:100/120`
 
-### Step 2: Advertise the IPv6 subnet route
+### 第 2 步：通告 IPv6 子网路由
 
-Follow the steps for [setting up a subnet router][docs-subnets-setup-subnet-router]. However, when you advertise the route, use the IPv6 route that you created in Step 1 above. For example:
+按照[设置子网路由器][docs-subnets-setup-subnet-router]的步骤操作。但在通告路由时，请使用你在上面第 1 步中创建的 IPv6 路由。例如：
 
 ```shell
 # Update to use the values for your subnet
 tailscale set --advertise-routes=fd7a:115c:a1e0:b1a:0:7:a01:100/120
 ```
 
-Now a device in your tailnet can connect to distinct overlapping subnets with the same IPv4 addresses.
+现在，tailnet 中的设备就可以连接 IPv4 地址相同但相互独立的不同重叠子网了。
 
-You can advertise both IPv4 and IPv6 subnet routes in the same subnet router.
+你可以在同一台子网路由器上同时通告 IPv4 和 IPv6 子网路由。
 
-Note that if you expose the same IPv6 routes (that is, the same IPv4 routes with the same site ID) from multiple subnet routers, you are using [high availability][docs-high-availability].
+注意，如果你从多台子网路由器暴露相同的 IPv6 路由（即相同 IPv4 路由加相同站点 ID），你就是在使用[高可用][docs-high-availability]。
 
-## MagicDNS name for the IPv4 subnet devices
+## IPv4 子网设备的 MagicDNS 名称
 
-If you have enabled [MagicDNS][docs-magicdns], you can use an automatically-created MagicDNS name to access devices in the overlapped subnets that you advertised. This name is of the form:
+如果你启用了 [MagicDNS][docs-magicdns]，可以使用自动创建的 MagicDNS 名称访问你通告的重叠子网中的设备。该名称形如：
 
 `Q-R-S-T-via-X`
 
-where:
+其中：
 
-* `Q-R-S-T` is the IPv4 address of the device
-* `X` is the site ID of the subnet router used when you created the [Tailscale-specific IPv6 address][ar-4via6-address-format]
+* `Q-R-S-T` 是设备的 IPv4 地址。
+* `X` 是你创建 [Tailscale 专有 IPv6 地址][ar-4via6-address-format]时使用的子网路由器站点 ID。
 
-For example, if IP address `10.1.1.16` is in the subnet you advertised by using `10.1.1.0/24` with site ID of 7, you can access it from your tailnet with the name `10-1-1-16-via-7`.
+例如，如果 IP 地址 `10.1.1.16` 位于你用 `10.1.1.0/24` 加站点 ID 7 通告的子网中，你可以在 tailnet 中用名称 `10-1-1-16-via-7` 访问它。
 
-## High availability with 4via6 subnet routers
+## 4via6 子网路由器的高可用
 
-4via6 subnet routers support [high availability][docs-high-availability]. For example, suppose two VPCs use `172.16.0.0/16`. Configure a 4via6 subnet router in each VPC. Use site ID 1 for the first VPC and site ID 2 for the second.
+4via6 子网路由器支持[高可用][docs-high-availability]。例如，假设两个 VPC 都使用 `172.16.0.0/16`。在每个 VPC 中配置一台 4via6 子网路由器：第一台用站点 ID 1，第二台用站点 ID 2。
 
-To add failover for the first VPC, configure another 4via6 subnet router attached to that VPC. Use the same site ID 1 and `172.16.0.0/16` route. With the default [active-passive failover][docs-route-selection] option, Tailscale uses one subnet router as the primary and the other as a standby.
+要为第一个 VPC 添加故障转移，在该 VPC 上再配置一台 4via6 子网路由器，使用相同的站点 ID 1 和 `172.16.0.0/16` 路由。在使用默认的[主备故障转移][docs-route-selection]（active-passive failover）选项时，Tailscale 会把一台子网路由器用作主节点，另一台作为备用。
 
-For failover in the second VPC, add another 4via6 subnet router there with site ID 2 and the same route.
+要为第二个 VPC 实现故障转移，在该 VPC 中再添加一台使用站点 ID 2 和相同路由的 4via6 子网路由器。
 
-## Access control rules
+## 访问控制规则
 
-When writing [access control][docs-access-control] rules targeting resources behind a 4via6 subnet router, use the IPv6 CIDR or address as the destination, not the IPv4 address.
+编写针对 4via6 子网路由器后方资源的[访问控制][docs-access-control]规则时，请使用 IPv6 CIDR 或地址作为目的地，而不是 IPv4 地址。
 
-Use `tailscale debug via` to get the IPv6 CIDR.
+使用 `tailscale debug via` 获取 IPv6 CIDR。
 
-## Limitations
+## 限制
 
-* A 4via6 subnet router requires Tailscale v1.24 or later. Other Tailscale clients that use the 4via6 subnet router to reach the remote devices can use older releases.
-* For security, upgrade 4via6 subnet routers to Tailscale v1.102.3 or later. Refer to [TS-2026-011][co-security-ts-2026-011] for details.
-* Currently, only the IPv6 subnet address is shown in the admin console, not the IPv4 address that it maps to.
-* A tailnet can have a maximum of 65,536 site IDs. For each site ID, you can have any number of IPv4 CIDRs mapped.
+* 4via6 子网路由器需要 Tailscale v1.24 或更高版本。使用该 4via6 子网路由器访问远程设备的其他 Tailscale 客户端可以使用更早的版本。
+* 出于安全考虑，请把 4via6 子网路由器升级到 Tailscale v1.102.3 或更高版本。详情请参阅 [TS-2026-011][co-security-ts-2026-011]。
+* 目前管理控制台中只显示 IPv6 子网地址，不显示它映射的 IPv4 地址。
+* 一个 tailnet 最多可有 65,536 个站点 ID。每个站点 ID 可以映射任意数量的 IPv4 CIDR。
 
 [ar-4via6-address-format]: #4via6-address-format
 

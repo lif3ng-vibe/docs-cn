@@ -1,45 +1,45 @@
 ---
-title: "Set up an HTTP API connector"
+title: "设置 HTTP API 连接器"
 description: "\\[Missing snippet: aperture\\_mcp\\_grant\\_deprecation\\_note.mdx]"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
 \[Missing snippet: aperture\_mcp\_grant\_deprecation\_note.mdx]
 
-AI agents often need to call REST APIs, but distributing API keys to every agent runtime increases the risk of credential leakage. HTTP connectors let Aperture act as an authenticated reverse proxy: agents send requests to Aperture, and Aperture forwards them to the upstream API with credentials injected automatically.
+AI 智能体经常需要调用 REST API，但把 API 密钥分发给每个智能体运行时会加大凭证泄露的风险。HTTP 连接器让 Aperture 充当已认证的反向代理：智能体把请求发给 Aperture，Aperture 再把请求转发给上游 API，并自动注入凭证。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you must meet the following requirements:
+开始之前，你必须满足以下要求：
 
-* You have an [Aperture gateway][docs-get-started] with at least one provider configured.
-* You have admin access to the [Aperture configuration][docs-aperture-configuration].
-* You have an API credential (token, API key, or username/password) for the upstream service.
-* You have the base URL of the upstream REST API.
-* You are running the test request from a device on the same tailnet as the Aperture gateway. Aperture identifies the caller from their Tailscale identity. Requests without a tailnet identity are rejected.
+* 你有一台 [Aperture 网关][docs-get-started]，且至少配置了一个提供商。
+* 你有 [Aperture 配置][docs-aperture-configuration]的管理权限。
+* 你有上游服务的 API 凭证（token、API key 或用户名/密码）。
+* 你有上游 REST API 的 base URL。
+* 你要从与 Aperture 网关位于同一 tailnet 的设备上发起测试请求。Aperture 依据调用者的 Tailscale 身份识别调用者，没有 tailnet 身份的请求会被拒绝。
 
-## Step 1: Choose the upstream base URL
+## 步骤 1：选择上游 base URL
 
-The `url` field is the base URL of the upstream API. Aperture appends the request path from each proxied request to this base, so point the URL at the API root. A trailing slash is optional. Aperture normalizes it.
+`url` 字段是上游 API 的 base URL。Aperture 会把每个代理请求的路径拼接到这个 base 后面，因此 URL 应指向 API 根路径。末尾斜杠可有可无，Aperture 会自动归一化。
 
-For example:
+例如：
 
-* `https://api.github.com` for the GitHub REST API
-* `https://your-org.atlassian.net/rest/api/3` for the Jira Cloud REST API
-* `https://api.stripe.com/v1` for the Stripe API
+* `https://api.github.com` —— GitHub REST API
+* `https://your-org.atlassian.net/rest/api/3` —— Jira Cloud REST API
+* `https://api.stripe.com/v1` —— Stripe API
 
-> **Note:**
+> **注意：**
 >
-> Aperture warns about unsafe connector URLs when you load the configuration and refuses the connection at request time. Saving an unsafe URL through the admin dashboard is rejected as an error. Internal and reserved address ranges are blocked. RFC 1918 private addresses, ULA addresses, and Tailscale CGNAT addresses are permitted, so you can proxy to services in your tailnet or private network.
+> 加载配置时，Aperture 会对不安全的连接器 URL 发出警告，并在请求时拒绝该连接。通过管理仪表板保存不安全 URL 会被当作错误拒绝。内部地址段与保留地址段会被阻止。RFC 1918 私有地址、ULA 地址和 Tailscale CGNAT 地址是允许的，因此你可以代理到 tailnet 或私有网络中的服务。
 
-## Step 2: Configure authentication
+## 步骤 2：配置认证
 
-Open the admin dashboard and go to **Administration** > **Connectors**. Select **Add connector** > **Custom connector**, then choose **HTTP**. To edit JSON, go to **Administration** > **Configuration**. Each connector entry needs a `protocol` set to `"http"`, a `url`, and an `auth` block that matches your upstream API's authentication scheme.
+打开管理仪表板，进入 **Administration** > **Connectors**。选择 **Add connector** > **Custom connector**，再选择 **HTTP**。要编辑 JSON，进入 **Administration** > **Configuration**。每个连接器条目都需要：`protocol` 设为 `"http"`、一个 `url`，以及一个与上游 API 认证方式匹配的 `auth` 块。
 
 ### Bearer token
 
-Use `bearer_token` when the upstream API expects an `Authorization: Bearer <token>` header. This is the most common pattern for APIs like GitHub and Stripe.
+上游 API 期望收到 `Authorization: Bearer <token>` 头时，使用 `bearer_token`。这是 GitHub、Stripe 这类 API 最常见的模式。
 
 ```json
 {
@@ -61,7 +61,7 @@ Use `bearer_token` when the upstream API expects an `Authorization: Bearer <toke
 
 ### API key
 
-Use `api_key` when the upstream API expects a credential as a named header or query parameter. Set `in` to `"header"` or `"query"`, and `name` to the header or parameter name.
+上游 API 期望通过命名请求头或查询参数传递凭证时，使用 `api_key`。把 `in` 设为 `"header"` 或 `"query"`，`name` 设为该请求头或参数的名称。
 
 ```json
 {
@@ -84,7 +84,7 @@ Use `api_key` when the upstream API expects a credential as a named header or qu
 
 ### HTTP Basic
 
-Use `basic` when the upstream API uses HTTP Basic authentication. This is common for Atlassian APIs (Jira, Confluence) that use an email address and API token.
+上游 API 使用 HTTP Basic 认证时，使用 `basic`。Atlassian API（Jira、Confluence）常用这种方式，以邮箱地址加 API token 认证。
 
 ```json
 {
@@ -106,7 +106,7 @@ Use `basic` when the upstream API uses HTTP Basic authentication. This is common
 
 ### OAuth 2.0 client credentials
 
-Use `oauth2_client_credentials` for machine-to-machine OAuth 2.0 flows. Aperture obtains and auto-refreshes access tokens using the client credentials grant.
+机器对机器的 OAuth 2.0 流程使用 `oauth2_client_credentials`。Aperture 通过客户端凭证（client credentials）授权模式获取并自动刷新访问令牌。
 
 ```json
 {
@@ -129,18 +129,18 @@ Use `oauth2_client_credentials` for machine-to-machine OAuth 2.0 flows. Aperture
 }
 ```
 
-Aperture also supports `oauth2_authorization_code` for per-user consent flows. Refer to the [connectors reference][docs-connectors-reference] for details.
+Aperture 还支持面向每用户同意流程的 `oauth2_authorization_code`。详情参阅[连接器参考][docs-connectors-reference]。
 
-Connector IDs (the map keys like `github`, `weather`, `jira`) must contain only letters and digits and start with a letter. The IDs `tailscale`, `internal`, and `aperture` are reserved.
+连接器 ID（即 `github`、`weather`、`jira` 这类映射键）只能包含字母和数字，且必须以字母开头。`tailscale`、`internal` 和 `aperture` 是保留 ID。
 
-## Step 3: Set description and context for agent discovery
+## 步骤 3：设置 description 与 context 供智能体发现
 
-The `description` and `context` fields help AI models and human operators understand what each HTTP connector does.
+`description` 和 `context` 字段帮助 AI 模型和人类操作者理解每个 HTTP 连接器的用途。
 
-* `description` is a short human-readable label that appears in the Aperture admin dashboard.
-* `context` provides instructions or metadata to help AI models decide when and how to use the connector. It accepts a plain string or a JSON object.
+* `description` 是显示在 Aperture 管理仪表板中的简短人类可读标签。
+* `context` 提供指令或元数据，帮助 AI 模型判断何时以及如何使用该连接器。它可以是纯字符串或 JSON 对象。
 
-For granted HTTP connectors, the `aperture_list_connectors` tool returns both fields to users who can call the tool.
+对已授权的 HTTP 连接器，`aperture_list_connectors` 工具会把这两个字段返回给能调用该工具的用户。
 
 ```json
 {
@@ -161,15 +161,15 @@ For granted HTTP connectors, the `aperture_list_connectors` tool returns both fi
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Do not include secrets, internal URLs, or other sensitive information in `description` or `context`. Users who can call `aperture_list_connectors` can access these fields for their granted HTTP connectors.
+> 不要在 `description` 或 `context` 中放入密钥、内部 URL 或其他敏感信息。能调用 `aperture_list_connectors` 的用户可以读取其已授权 HTTP 连接器的这些字段。
 
-## Step 4: Grant users access to the connector
+## 步骤 4：向用户授予连接器访问权
 
-Aperture is deny-by-default. Without a matching `connectors` grant, users receive `403 Forbidden` when calling the proxy endpoint. Add grants in the `grants` section of your configuration.
+Aperture 默认拒绝所有请求。没有匹配的 `connectors` 授权时，用户调用代理端点会收到 `403 Forbidden`。请在配置的 `grants` 段中添加授权。
 
-For HTTP connectors, the `proxy` category controls access to the proxy endpoint at `/v1/connectors/<id>/<path>`. The following grant gives all users proxy access to the `github` connector and access to the built-in Aperture tools including `aperture_list_connectors`, which lets AI models discover available HTTP connectors:
+对 HTTP 连接器来说，`proxy` 类别控制对 `/v1/connectors/<id>/<path>` 代理端点的访问。下面的授权让所有用户获得对 `github` 连接器的代理访问权，以及内置 Aperture 工具的访问权，其中包括 `aperture_list_connectors`，它让 AI 模型能发现可用的 HTTP 连接器：
 
 ```json
 {
@@ -188,9 +188,9 @@ For HTTP connectors, the `proxy` category controls access to the proxy endpoint 
 }
 ```
 
-The pattern `"github/**"` grants all access to the `github` connector (proxy and any future categories). You can also use the more specific pattern `"github/proxy"` to grant only proxy access.
+模式 `"github/**"` 授予对 `github` 连接器的全部访问权（代理及未来可能新增的类别）。你也可以用更具体的模式 `"github/proxy"` 只授予代理访问权。
 
-The `aperture_list_connectors` tool is exposed to models over their MCP connection, so models reach it through MCP rather than the dashboard. When a model calls `aperture_list_connectors`, Aperture returns a structured text response listing each HTTP connector's ID, proxy endpoint, upstream URL, description, and context:
+`aperture_list_connectors` 工具通过模型的 MCP 连接暴露给模型，因此模型是通过 MCP（而非仪表板）访问它。模型调用 `aperture_list_connectors` 时，Aperture 返回一段结构化文本，列出每个 HTTP 连接器的 ID、代理端点、上游 URL、描述和上下文：
 
 ```text
 Aperture HTTP API Connectors
@@ -210,87 +210,87 @@ Available connectors:
 - Context: Use this connector to look up repository metadata and pull request status.
 ```
 
-## Step 5: Verify the proxy works
+## 步骤 5：验证代理是否生效
 
-After saving the configuration and adding a grant, send a test request through the Aperture gateway. Use this URL pattern:
+保存配置并添加授权后，通过 Aperture 网关发送一个测试请求。使用如下 URL 模式：
 
 ```text
 /v1/connectors/<connector-id>/<path>
 ```
 
-Aperture appends `<path>` to the connector's base URL and injects the configured credentials automatically. For the GitHub connector configured above:
+Aperture 会把 `<path>` 拼接到连接器的 base URL 后面，并自动注入已配置的凭证。对上文配置的 GitHub 连接器：
 
 ```shell
 curl http://<aperture-hostname>/v1/connectors/github/user
 ```
 
-Aperture forwards this request to `https://api.github.com/user` with the bearer token injected as an `Authorization` header. The response from the upstream API is returned to the caller.
+Aperture 把该请求转发到 `https://api.github.com/user`，并把 bearer token 注入为 `Authorization` 头。上游 API 的响应会返回给调用方。
 
-Query parameters are forwarded as-is. For example, to list open pull requests:
+查询参数原样透传。例如，列出处于打开状态的 pull request：
 
 ```shell
 curl "http://<aperture-hostname>/v1/connectors/github/repos/tailscale/tailscale/pulls?state=open&per_page=5"
 ```
 
-Aperture forwards the request to `https://api.github.com/repos/tailscale/tailscale/pulls?state=open&per_page=5` with credentials injected.
+Aperture 把请求转发到 `https://api.github.com/repos/tailscale/tailscale/pulls?state=open&per_page=5`，并注入凭证。
 
-If you have not yet added a grant (Step 4), this request returns `403 Forbidden`. Add the grant first, then retry. For other errors, refer to [troubleshooting][ar-troubleshooting].
+如果尚未添加授权（见步骤 4），该请求会返回 `403 Forbidden`。请先添加授权再重试。其他错误参阅[故障排查][ar-troubleshooting]。
 
-## Security behavior
+## 安全行为
 
-HTTP connectors apply several security restrictions to limit credential exposure.
+HTTP 连接器实施了若干安全限制，以减少凭证暴露。
 
-**Shared credentials**: The authentication credentials configured on an HTTP connector are shared by all users with a matching `connectors` grant. Users must have a grant matching `"connectorID/proxy"` or a broader pattern like `"connectorID/**"` to access the proxy endpoint. Use the narrowest possible credential scope (ideally read-only) for each connector.
+**共享凭证**：HTTP 连接器上配置的认证凭证由所有拥有匹配 `connectors` 授权的用户共用。用户必须持有匹配 `"connectorID/proxy"` 或更宽泛模式（如 `"connectorID/**"`）的授权才能访问代理端点。请为每个连接器使用尽可能窄的凭证权限范围（最好是只读）。
 
-**Allowed HTTP methods**: Aperture accepts GET, HEAD, POST, PUT, PATCH, DELETE, and OPTIONS. Aperture rejects all other methods (including TRACE and CONNECT) with `405 Method Not Allowed`. Aperture blocks TRACE because it reflects request headers, which would expose injected authentication credentials.
+**允许的 HTTP 方法**：Aperture 接受 GET、HEAD、POST、PUT、PATCH、DELETE 和 OPTIONS。其他所有方法（包括 TRACE 和 CONNECT）都会被拒绝，返回 `405 Method Not Allowed`。Aperture 阻止 TRACE 是因为它会回显请求头，从而暴露注入的认证凭证。
 
-**Header stripping**: Aperture strips `Authorization` and `Cookie` headers from client requests before forwarding to the upstream, then injects the correct credentials from the connector's `auth` configuration. Aperture also strips `Set-Cookie` headers from upstream responses and removes standard hop-by-hop headers (`Connection`, `Keep-Alive`, `Proxy-Authenticate`, `Proxy-Authorization`, `Te`, `Trailer`, `Transfer-Encoding`, `Upgrade`) in both directions.
+**请求头剥离**：转发到上游之前，Aperture 会从客户端请求中剥掉 `Authorization` 和 `Cookie` 头，再从连接器的 `auth` 配置注入正确的凭证。Aperture 还会从上游响应中剥掉 `Set-Cookie` 头，并在两个方向上移除标准逐跳头（hop-by-hop headers）（`Connection`、`Keep-Alive`、`Proxy-Authenticate`、`Proxy-Authorization`、`Te`、`Trailer`、`Transfer-Encoding`、`Upgrade`）。
 
-**Redirect blocking**: Aperture blocks all redirects from upstream servers. This reduces the risk of credential exfiltration through redirect chains, where a compromised upstream could redirect to an attacker-controlled URL with the injected credentials.
+**阻止重定向**：Aperture 会阻止来自上游服务器的所有重定向。这降低了凭证经由重定向链外泄的风险——被攻陷的上游可能把请求重定向到攻击者控制的 URL，并带上注入的凭证。
 
-**Response size limit**: Aperture limits responses to 50 MB and silently truncates responses that exceed this limit. The response still returns `200` with a truncated body rather than an error status, so clients should not rely on `Content-Length` matching the body.
+**响应大小上限**：Aperture 将响应限制在 50 MB 以内，超出上限的响应会被静默截断。此时响应仍返回 `200` 和被截断的正文，而不是错误状态码，因此客户端不应依赖 `Content-Length` 与正文一致。
 
-## Troubleshooting
+## 故障排查
 
-Use the following sections to diagnose common issues with HTTP connectors.
+使用以下小节排查 HTTP 连接器的常见问题。
 
 ### 405 Method Not Allowed
 
-The request used an HTTP method that Aperture does not permit. HTTP connectors accept GET, HEAD, POST, PUT, PATCH, DELETE, and OPTIONS. If your API client uses TRACE or CONNECT, switch to a supported method.
+请求使用了 Aperture 不允许的 HTTP 方法。HTTP 连接器接受 GET、HEAD、POST、PUT、PATCH、DELETE 和 OPTIONS。如果你的 API 客户端使用 TRACE 或 CONNECT，请改用受支持的方法。
 
 ### 502 Bad Gateway
 
-Aperture could not reach the upstream server. Possible causes:
+Aperture 无法连接上游服务器。可能的原因：
 
-* The connector's `url` is incorrect or the upstream server is not running.
-* DNS cannot resolve the upstream hostname. For tailnet hostnames, verify the device is connected with `tailscale status`.
-* The upstream URL uses a restricted internal or reserved address that the safe dialer blocks. RFC 1918 and Tailscale CGNAT addresses are allowed.
+* 连接器的 `url` 不正确，或上游服务器没有运行。
+* DNS 无法解析上游主机名。对 tailnet 主机名，请用 `tailscale status` 确认设备已连接。
+* 上游 URL 使用了受限的内部地址或保留地址，被安全拨号器（safe dialer）阻止。RFC 1918 地址和 Tailscale CGNAT 地址是允许的。
 
-### Unexpected 403 or 401 from upstream
+### 上游返回意外的 403 或 401
 
-Aperture successfully reached the upstream, but the upstream rejected the request. Possible causes:
+Aperture 成功连接到上游，但上游拒绝了请求。可能的原因：
 
-* The credential in the `auth` block is invalid, expired, or has insufficient permissions.
-* The `auth` type does not match what the upstream expects (for example, using `bearer_token` when the API requires `api_key` in a custom header).
-* For `basic` auth, confirm the `username` and `password` fields are correct. Atlassian APIs require an API token, not a user password.
+* `auth` 块中的凭证无效、已过期或权限不足。
+* `auth` 类型与上游期望的不一致（例如，API 要求在自定义头中传 `api_key`，却用了 `bearer_token`）。
+* 对 `basic` 认证，请确认 `username` 和 `password` 字段正确。Atlassian API 要求使用 API token，而不是用户密码。
 
-### Response truncated
+### 响应被截断
 
-Aperture limits response bodies to 50 MB. If the upstream returns a larger response, the body is silently truncated. Use API parameters (pagination, field selection) to reduce the response size.
+Aperture 将响应体限制在 50 MB 以内。上游返回更大的响应时，响应体会被静默截断。请使用 API 参数（分页、字段筛选）来减小响应体积。
 
-### Auth configuration rejected with unknown field error
+### auth 配置因未知字段错误被拒
 
-The `auth` block uses strict field validation. A misspelled field name (for example, `"secert"` instead of `"secret"`) causes the configuration to fail with a JSON decoder error. Double-check field names against the authentication types described in [Step 2: Configure authentication][ar-step-2] or the [connectors reference][docs-connectors-reference].
+`auth` 块使用严格的字段校验。字段名拼错（例如把 `"secret"` 写成 `"secert"`）会导致配置解析失败，报 JSON 解码错误。请对照[步骤 2：配置认证][ar-step-2]或[连接器参考][docs-connectors-reference]中描述的认证类型，仔细核对字段名。
 
-## Next steps
+## 后续步骤
 
-* Refer to the [connectors reference][docs-connectors-reference] for the complete field reference, including all authentication types and validation rules.
-* Refer to the [connectors feature guide][docs-aperture-connectors] for an overview of both MCP and HTTP connectors, including dynamic registration and migration from `mcp.servers`.
-* Refer to [control access][docs-control-access] for information about controlling access to Aperture resources with grants.
+* 完整字段参考（包括所有认证类型与校验规则）参阅[连接器参考][docs-connectors-reference]。
+* MCP 与 HTTP 两类连接器的总览（包括动态注册和从 `mcp.servers` 迁移）参阅[连接器功能指南][docs-aperture-connectors]。
+* 使用授权控制对 Aperture 资源的访问，参阅[控制访问][docs-control-access]。
 
-[ar-step-2]: #step-2-configure-authentication
+[ar-step-2]: #步骤-2配置认证
 
-[ar-troubleshooting]: #troubleshooting
+[ar-troubleshooting]: #故障排查
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

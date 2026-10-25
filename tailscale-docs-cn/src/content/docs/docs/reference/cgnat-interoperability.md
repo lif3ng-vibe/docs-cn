@@ -1,79 +1,79 @@
 ---
-title: "CGNAT interoperability"
-description: "Disable the CGNAT drop rule to use Tailscale alongside networks that consume CGNAT address space."
+title: "CGNAT 互操作性"
+description: "禁用 CGNAT 丢弃规则，让 Tailscale 与占用 CGNAT 地址空间的网络并存使用。"
 ---
 
-Last validated Jul 1, 2026
+最后验证于 Jul 1, 2026
 
-Tailscale assigns addresses in the [CGNAT range][docs-ip-addresses] (`100.64.0.0/10`). To protect this range, the Linux client installs a firewall rule that drops any traffic in it that is not valid Tailscale traffic.
+Tailscale 在 [CGNAT 地址段][docs-ip-addresses]（`100.64.0.0/10`）内分配地址。为保护这一地址段，Linux 客户端会安装一条防火墙规则，丢弃其中所有非有效 Tailscale 流量。
 
-> **Note:**
+> **注意：**
 >
-> CGNAT interoperability applies only to Linux clients. Windows and macOS do not implement the drop rule.
+> CGNAT 互操作性仅适用于 Linux 客户端。Windows 和 macOS 不实现该丢弃规则。
 
-That default assumes Tailscale is the only thing using the range. But `100.64.0.0/10` is the general carrier-grade NAT range, and some organizations already run their own infrastructure there, including:
+这一默认行为假设该地址段只有 Tailscale 在使用。但 `100.64.0.0/10` 是通用的运营商级 NAT（CGNAT）地址段，一些组织已经在其中运行自己的基础设施，包括：
 
-* Existing VPNs or private networking systems.
-* Kubernetes clusters (for example, API servers in CGNAT address space).
-* Subnet-routed internal services.
+* 现有的 VPN 或私有组网系统。
+* Kubernetes 集群（例如位于 CGNAT 地址空间中的 API 服务器）。
+* 通过子网路由的内部服务。
 
-The drop rule cannot tell legitimate internal traffic apart from spoofed Tailscale traffic, so it blocks both. As a result, devices cannot reach local CGNAT-addressed services while Tailscale is running. Disabling the drop rule lets those devices use Tailscale and reach internal CGNAT-addressed services at the same time.
+丢弃规则无法区分合法的内部流量与伪造的 Tailscale 流量，因此会一并阻断。结果是，Tailscale 运行期间设备无法访问本地的 CGNAT 地址服务。禁用丢弃规则后，这些设备就能同时使用 Tailscale 并访问内部 CGNAT 地址服务。
 
-Only disable the drop rule if you have non-Tailscale services in `100.64.0.0/10`. If you do not, keep it enabled.
+只有当你在 `100.64.0.0/10` 中部署了非 Tailscale 服务时才禁用丢弃规则。如果没有，请保持启用。
 
-## Least privilege model behavior change
+## 最小权限模型的行为变更
 
-> **Danger:**
+> **危险：**
 >
-> If you disable the CGNAT drop rule and RPF is not enabled, your system is more vulnerable to spoofed traffic.
+> 如果禁用 CGNAT 丢弃规则且未启用 RPF，你的系统会更容易受到伪造流量的攻击。
 
-Disabling the CGNAT drop rule removes a built-in protection against IP spoofing from local networks.
+禁用 CGNAT 丢弃规则会移除一项内置防护，即防范来自本地网络的 IP 欺骗。
 
-Without the drop rule, a device on the local network could send packets that appear to come from a Tailscale IP. This weakens Tailscale's default [least-privilege model][ln-least-privilege].
+没有丢弃规则时，本地网络中的设备可以发送看似来自 Tailscale IP 的数据包。这会削弱 Tailscale 默认的[最小权限模型][ln-least-privilege]。
 
-To mitigate this, make sure Reverse Path Filtering (RPF) is enabled:
+为缓解这一风险，请确保已启用反向路径过滤（RPF）：
 
-* RPF verifies packets arrive on the correct interface.
-* Prevent spoofed traffic from being accepted.
-* Enabled by default on modern Linux distributions.
+* RPF 验证数据包从正确的接口到达。
+* 防止伪造流量被接受。
+* 在现代 Linux 发行版上默认启用。
 
-### Verify RPF status
+### 查看 RPF 状态
 
-On many distributions, you can check the RPF status with:
+在许多发行版上，可以用以下命令检查 RPF 状态：
 
 ```shell
 sysctl net.ipv4.conf.all.rp_filter
 ```
 
-* `0`: disabled (not recommended)
-* `1`: strict
-* `2`: loose
+* `0`：已禁用（不推荐）
+* `1`：严格（strict）
+* `2`：宽松（loose）
 
-> **Note:**
+> **注意：**
 >
-> Some distributions such as Fedora, disable RPF globally and enable it on a per-interface basis. You can replace `all` with your particular interface name. For example, using `sysctl net.ipv4.conf.wlp2s0.rp_filter` will check the `wlp2s0` interface.
+> 一些发行版（如 Fedora）会在全局禁用 RPF，而按接口启用。你可以把 `all` 替换为你的具体接口名。例如，使用 `sysctl net.ipv4.conf.wlp2s0.rp_filter` 将检查 `wlp2s0` 接口。
 
-### Troubleshoot RPF warnings
+### 排查 RPF 警告
 
-You may receive warnings indicating:
+你可能会收到如下警告：
 
-* CGNAT drop rule is disabled.
+* CGNAT 丢弃规则已被禁用。
 
-  This means:
+  这意味着：
 
-  * The system may accept spoofed CGNAT traffic.
+  * 系统可能接受伪造的 CGNAT 流量。
 
-* RPF is not enabled.
+* RPF 未启用。
 
-  This means:
+  这意味着：
 
-  * You should enable RPF or apply firewall controls.
+  * 你应当启用 RPF 或应用防火墙管控。
 
-## Disable the CGNAT drop rule
+## 禁用 CGNAT 丢弃规则
 
-Modify your [tailnet policy file][docs-tailnet-policy-file] to enable client-side netmap caching with [`disable-linux-cgnat-drop-rule` node attribute][docs-policy-file-attr].
+修改你的 [tailnet 策略文件][docs-tailnet-policy-file]，通过 [`disable-linux-cgnat-drop-rule` 节点属性][docs-policy-file-attr]来启用客户端 netmap 缓存。
 
-This example targets all devices tagged `internal-subnet-routers`.
+本示例面向所有带有 `internal-subnet-routers` 标签的设备。
 
 ```json
 {
@@ -86,29 +86,29 @@ This example targets all devices tagged `internal-subnet-routers`.
 }
 ```
 
-Removing the attribute restores the drop rule automatically.
+移除该属性后，丢弃规则会自动恢复。
 
-## Verify the CGNAT drop rule is disabled
+## 验证 CGNAT 丢弃规则已禁用
 
-Use the `iptables` command with the `-L` flag (list):
+使用带 `-L`（列出）标志的 `iptables` 命令：
 
 ```shell
 iptables -L
 ```
 
-Check the `ts-input` chain has a `RETURN` rule instead of a `DROP` rule for `100.64.0.0/10`.
+检查 `ts-input` 链对 `100.64.0.0/10` 使用的是 `RETURN` 规则而不是 `DROP` 规则。
 
-## Limitations
+## 限制
 
-* Linux only by design. Other platforms do not implement a CGNAT drop rule.
-* No partial range control.
-* Does not address [`via`][docs-access-controls-via] route restrictions for CGNAT rules.
+* 仅限 Linux，这是设计使然。其他平台不实现 CGNAT 丢弃规则。
+* 不支持部分地址段控制。
+* 不处理 CGNAT 规则的 [`via`][docs-access-controls-via] 路由限制。
 
-### Interaction with `nodivert`
+### 与 `nodivert` 的交互
 
-Before `disable-linux-cgnat-drop-rule` being available, [`--netfilter-mode=nodivert`][docs-netfilter-modes-nodivert] was a recommended solution for letting devices to continue using Tailscale and reach internal CGNAT-addressed services simultaneously.
+在 `disable-linux-cgnat-drop-rule` 出现之前，[`--netfilter-mode=nodivert`][docs-netfilter-modes-nodivert] 是让设备继续使用 Tailscale 并同时访问内部 CGNAT 地址服务的推荐方案。
 
-If both `disable-linux-cgnat-drop-rule` and `nodivert` are configured, `nodivert` takes precedence. You are expected to manage firewall behavior manually in this mode.
+如果同时配置了 `disable-linux-cgnat-drop-rule` 和 `nodivert`，则以 `nodivert` 为准。在该模式下，你需要自行管理防火墙行为。
 
 [docs-access-controls-via]: /docs/features/access-control/grants/grants-via
 

@@ -1,0 +1,119 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "NVIDIA OpenShell 开发者指南"
+description: "OpenShell 是自主 AI 智能体编队的安全私有运行时。在保护你的数据、凭据与基础设施的沙箱环境中运行智能体。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 安全, 隐私, 提供商凭据"
+position: 1
+---
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+import Badge from '@components/Badge.astro';
+import BadgeLinks from '@components/BadgeLinks.astro';
+import CommandTerminal from '@components/CommandTerminal.astro';
+
+<BadgeLinks
+  badges={[
+    {
+      href: "https://github.com/NVIDIA/OpenShell",
+      src: "https://img.shields.io/badge/github-repo-green?logo=github",
+      alt: "GitHub",
+    },
+    {
+      href: "https://github.com/NVIDIA/OpenShell/blob/main/LICENSE",
+      src: "https://img.shields.io/badge/License-Apache_2.0-blue",
+      alt: "License",
+    },
+    {
+      href: "https://pypi.org/project/openshell/",
+      src: "https://img.shields.io/badge/PyPI-openshell-orange?logo=pypi",
+      alt: "PyPI",
+    },
+  ]}
+/>
+
+NVIDIA OpenShell 是一个面向自主 AI 智能体编队的开源安全私有运行时。它提供沙箱化的执行环境，保护你的数据、凭据与基础设施。智能体以恰好满足所需的权限运行，不多不少；声明式策略约束其行为，阻止未经授权的文件访问、数据外泄与失控的网络活动。
+
+<Aside type="note">
+OpenShell 0.1.x 的新变化：[稳定的发布节奏](/about/support-matrix#发布)、新的[隔离原语](/about/architecture)，以及大幅扩展的[扩展面](/extensibility/overview)等。
+
+所有变更详见[升级指南](/upgrade/0-1-0)。
+</Aside>
+
+## 快速开始
+
+两条命令安装 OpenShell 并创建你的第一个沙箱。
+
+<CommandTerminal command="curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh" />
+
+完整的镜像、提供商与策略工作流参见[运行你的第一个智能体](/about/run-your-first-agent)。
+
+---
+
+## 探索
+
+<CardGrid>
+
+<LinkCard title="关于 OpenShell" href="/about/overview">
+
+了解 OpenShell 及其能力。
+
+<Badge intent="tip">概念</Badge>
+</LinkCard>
+
+<LinkCard title="运行你的第一个智能体" href="/about/run-your-first-agent">
+
+准备镜像、挂接提供商，在沙箱中启动智能体。
+
+<Badge intent="tip">教程</Badge>
+</LinkCard>
+
+<LinkCard title="教程" href="/tutorials">
+
+从第一个沙箱到自定义策略的实操演练。
+
+<Badge intent="tip">概念</Badge>
+</LinkCard>
+
+<LinkCard title="网关与沙箱" href="/how-it-works/gateways/overview">
+
+为 AI 智能体部署网关、创建沙箱，配置策略、提供商与工作负载镜像。
+
+<Badge intent="tip">概念</Badge>
+</LinkCard>
+
+<LinkCard title="推理" href="/how-it-works/inference">
+
+将模型提供商挂接到指定沙箱，直接调用其原生端点而不暴露凭据。
+
+<Badge intent="tip">概念</Badge>
+</LinkCard>
+
+<LinkCard title="可观测性" href="/observability">
+
+理解沙箱日志，通过 CLI 与 TUI 访问日志，导出 OCSF JSON 记录。
+
+<Badge intent="tip">操作指南</Badge>
+</LinkCard>
+
+<LinkCard title="策略" href="/how-it-works/policies/overview">
+
+为沙箱工作负载定义文件系统、进程与网络控制。
+
+<Badge intent="tip">参考</Badge>
+</LinkCard>
+
+<LinkCard title="安全最佳实践" href="/security/best-practices">
+
+每一项可配置的安全控制、其默认值，以及修改它带来的风险。
+
+<Badge intent="tip">概念</Badge>
+</LinkCard>
+
+</CardGrid>
+
+---
+
+<Aside type="caution" title="声明与免责">
+  本软件会自动获取、访问或与外部材料交互。这些被获取的材料不随本软件分发，仅受各自独立的条款、条件与许可证约束。查找、审查并遵守所有适用的条款、条件与许可证，以及验证这些材料对你的使用场景的安全性、完整性与适用性，由你自行负责。本软件按“原样”提供，不作任何形式的保证。作者不对任何被获取的材料作任何陈述或保证，且对因使用或无法使用本软件或任何被获取材料造成的损失、损害、责任或法律后果不承担责任。使用本软件及被获取材料的风险由你自行承担。
+</Aside>

@@ -1,120 +1,120 @@
 ---
-title: "Access PiKVM from anywhere"
-description: "Set up Tailscale on PiKVM."
+title: "从任何位置访问 PiKVM"
+description: "在 PiKVM 上设置 Tailscale。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-PiKVM is a Raspberry Pi based KVM (keyboard, video, and mouse) over IP solution. It lets you connect to a computer remotely and use it as if you were in front of it. This guide shows you how to set up Tailscale on PiKVM.
+PiKVM 是一种基于 Raspberry Pi 的 IP KVM（键盘、视频和鼠标）解决方案。它让你可以远程连接到一台计算机并使用它，就像坐在它面前一样。本指南向你展示如何在 PiKVM 上设置 Tailscale。
 
-To find out more about PiKVM, visit [`pikvm.org`][xt-pikvm].
+要进一步了解 PiKVM，请访问 [`pikvm.org`][xt-pikvm]。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下方相关视频提供了更多背景信息和示例。
 
-[Remotely access any system with a PiKVM and Tailscale (video)](https://www.youtube.com/watch?v=Btqw56DFhro)
+[使用 PiKVM 和 Tailscale 远程访问任意系统（视频）](https://www.youtube.com/watch?v=Btqw56DFhro)
 
-## Prerequisites
+## 前提条件
 
-* A PiKVM device or a Raspberry Pi with PiKVM installed.
-  * The PiKVM project [recommends][xt-pikvm-faq] a Pi 4. The Pi 5 provides little to no performance improvement for this use case.
-* [A Tailscale account](https://login.tailscale.com/start)-the free [Personal plan][co-pricing] includes all you need to get started.
+* 一台 PiKVM 设备，或一台安装了 PiKVM 的 Raspberry Pi。
+  * PiKVM 项目[推荐][xt-pikvm-faq]使用 Pi 4。对于此用例，Pi 5 几乎没有性能提升。
+* [一个 Tailscale 账户](https://login.tailscale.com/start)——免费的 [Personal 套餐][co-pricing]已包含入门所需的全部功能。
 
-## Install Tailscale
+## 安装 Tailscale
 
-1. Access your PiKVM through the web interface and open the web terminal.
+1. 通过 Web 界面访问你的 PiKVM，并打开 Web 终端。
 
-   *（图：The pikvm web interface. Highlighting the 'Terminal' option.）*
+   *（图：PiKVM Web 界面，突出显示"Terminal"选项。）*
 
-2. Elevate to root.
+2. 提权到 root。
 
    ```shell
-   # default password is 'root'
+   # 默认密码为 'root'
    su -
    ```
 
-3. Enable read-write mode.
+3. 启用读写模式。
 
    ```shell
    rw
    ```
 
-> **Note:**
+> **注意：**
 >
-> If you reboot your PiKVM during this process, you will need to re-enable read-write mode.
+> 如果在此过程中重启了 PiKVM，你需要重新启用读写模式。
 
-4. Install the `tailscale-pikvm` package.
+4. 安装 `tailscale-pikvm` 软件包。
 
    ```shell
    pacman -Sy tailscale-pikvm
    ```
 
-> **Note:**
+> **注意：**
 >
-> We recommend the `tailscale-pikvm` package as a result of [this issue][xt-issue2934]
+> 我们推荐使用 `tailscale-pikvm` 软件包，原因参见[此 issue][xt-issue2934]。
 
-5. Enable and start the Tailscale service.
+5. 启用并启动 Tailscale 服务。
 
    ```shell
    systemctl enable --now tailscaled
    ```
 
-6. Log in to Tailscale.
+6. 登录 Tailscale。
 
-   For more information on the available login options, refer to our [Command Reference][docs-cli-up].
+   有关可用登录选项的更多信息，请参阅我们的[命令参考][docs-cli-up]。
 
    ```shell
    tailscale up
    ```
 
-7. (Optional) Enable [Tailscale SSH][docs-ssh].
+7. （可选）启用 [Tailscale SSH][docs-ssh]。
 
    ```shell
    tailscale set --ssh
    ```
 
-8. Revert to read-only mode.
+8. 恢复只读模式。
 
    ```shell
    ro
    ```
 
-> **Note:**
+> **注意：**
 >
-> You might prefer to disable key expiry on your subnet nodes to avoid having to periodically reauthenticate. Refer to [key expiry][docs-key-expiry] for more information about machine keys and how to disable their expiry. If you use [tags][docs-tags], [key expiry is disabled by default][docs-tags-key-expiry].
+> 你可能希望为你的子网节点禁用密钥过期，以避免定期重新认证。有关机器密钥以及如何禁用其过期的更多信息，请参阅[密钥过期][docs-key-expiry]。如果你使用[标签][docs-tags]，[密钥过期默认是禁用的][docs-tags-key-expiry]。
 
-## Access your PiKVM device
+## 访问你的 PiKVM 设备
 
-Once you have installed Tailscale on your PiKVM device, you can access it from anywhere using the Tailscale network.
+在 PiKVM 设备上安装 Tailscale 后，你可以随时随地通过 Tailscale 网络访问它。
 
-Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and find your PiKVM device.
+打开管理控制台的[机器](https://console.tailscale.com/admin/machines)页面，找到你的 PiKVM 设备。
 
-You can access the web interface by visiting `https://<your-pikvm>.<your-tailnet>.ts.net`. For example, if your PiKVM device is named `pikvm` and your Tailscale network is named `pango-lin`, you would visit `https://pikvm.pango-lin.ts.net`.
+你可以访问 `https://<your-pikvm>.<your-tailnet>.ts.net` 来打开 Web 界面。例如，如果你的 PiKVM 设备名为 `pikvm`，而你的 Tailscale 网络名为 `pango-lin`，那么你应访问 `https://pikvm.pango-lin.ts.net`。
 
-### Use Tailscale Serve to access your PiKVM device
+### 使用 Tailscale Serve 访问你的 PiKVM 设备
 
-You can set up Tailscale Serve to proxy your PiKVM's web interface. This provides a valid TLS certificate for your PiKVM device, preventing your browser from displaying a security warning.
+你可以设置 Tailscale Serve 来代理 PiKVM 的 Web 界面。这会为你的 PiKVM 设备提供有效的 TLS 证书，避免浏览器显示安全警告。
 
-To setup Tailscale Serve, follow the instructions below. You can also find more information on our [Use Tailscale Funnel and Serve][docs-funnel-examples] topic.
+要设置 Tailscale Serve，请按照以下说明操作。你也可以在我们的 [Tailscale Funnel 与 Serve 使用][docs-funnel-examples]主题中找到更多信息。
 
-> **Note:**
+> **注意：**
 >
-> A Tailscale Serve server can only be accessed over your tailnet. It is not accessible from the public internet. Using [Tailscale Funnel][docs-funnel] would open your PiKVM device to the public internet, which is not recommended.
+> Tailscale Serve 服务器只能在你的 tailnet 内访问，无法从公共互联网访问。使用 [Tailscale Funnel][docs-funnel] 会将你的 PiKVM 设备暴露给公共互联网，不建议这样做。
 
 ```shell
 tailscale serve --bg https+insecure://localhost:443
 ```
 
-After running the command above, you can access your PiKVM device, as before, by visiting `https://<your-pikvm>.<your-tailnet>.ts.net`. The difference is that the connection is proxied through your Tailscale Serve server, providing a valid TLS certificate for your PiKVM device.
+运行上述命令后，你可以像之前一样访问 `https://<your-pikvm>.<your-tailnet>.ts.net` 来访问你的 PiKVM 设备。区别在于连接是通过你的 Tailscale Serve 服务器代理的，这会为你的 PiKVM 设备提供有效的 TLS 证书。
 
-> **Note:**
+> **注意：**
 >
-> The first request to your PiKVM device may take a few seconds to complete. This is because Tailscale Serve needs to fetch a valid TLS certificate for your PiKVM device. Subsequent requests will be much faster.
+> 对 PiKVM 设备的首次请求可能需要几秒钟才能完成。这是因为 Tailscale Serve 需要为你的 PiKVM 设备获取有效的 TLS 证书。后续请求会快得多。
 
-### Use your PiKVM node as an exit node or subnet router
+### 将你的 PiKVM 节点用作出口节点或子网路由器
 
-Now that PiKVM is in your tailnet, you can configure it to do other useful things, such as functioning an [exit node][docs-exit-node] or a [subnet router][docs-subnet-router].
+现在 PiKVM 已加入你的 tailnet，你可以将其配置为执行其他有用的功能，例如充当[出口节点][docs-exit-node]或[子网路由器][docs-subnet-router]。
 
 [co-pricing]: https://tailscale.com/pricing
 

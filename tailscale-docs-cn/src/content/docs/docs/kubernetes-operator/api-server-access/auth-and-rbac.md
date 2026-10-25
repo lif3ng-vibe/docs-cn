@@ -1,30 +1,30 @@
 ---
-title: "Configure Kubernetes RBAC for the API server proxy"
-description: "The API server proxy in auth mode impersonates requests from the tailnet to the Kubernetes API server using the caller's Tailscale identity. You can then use Kubernetes RBAC to control what API server"
+title: "为 API 服务器代理配置 Kubernetes RBAC"
+description: "auth 模式下的 API 服务器代理使用调用者的 Tailscale 身份，模拟（impersonate）从 tailnet 发往 Kubernetes API 服务器的请求。随后你可以使用 Kubernetes RBAC 控制 tailnet 身份可访问哪些 API 服务器"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The API server proxy in auth mode impersonates requests from the tailnet to the Kubernetes API server using the caller's Tailscale identity. You can then use Kubernetes RBAC to control what API server resources tailnet identities can access.
+auth 模式下的 API 服务器代理使用调用者的 Tailscale 身份，模拟从 tailnet 发往 Kubernetes API 服务器的请求。随后你可以使用 Kubernetes RBAC 控制 tailnet 身份可访问哪些 API 服务器资源。
 
-> **Note:**
+> **注意：**
 >
-> Access to the proxy over the tailnet does not grant tailnet users any default permissions to access Kubernetes API server resources. Tailnet users can only access API server resources that they have been explicitly authorized to access through Kubernetes RBAC.
+> 通过 tailnet 访问代理并不会赋予 tailnet 用户任何访问 Kubernetes API 服务器资源的默认权限。tailnet 用户只能访问通过 Kubernetes RBAC 明确授权其访问的 API 服务器资源。
 
-## How impersonation works
+## 模拟机制的工作原理
 
-> **Tip:**
+> **提示：**
 >
-> Impersonation only applies when the proxy is running in auth mode. If you want to use Tailscale only for connectivity and handle authentication separately, refer to [Proxy without authentication (noauth mode)][docs-noauth].
+> 模拟仅在代理以 auth 模式运行时生效。如果你只想用 Tailscale 提供连接性、另行处理身份验证，请参阅[不进行身份验证的代理（noauth 模式）][docs-noauth]。
 
-The proxy sets Kubernetes [impersonation headers][xt-k8s-impersonation] on each request based on the caller's Tailscale identity:
+代理会基于调用者的 Tailscale 身份，在每个请求上设置 Kubernetes [模拟头][xt-k8s-impersonation]：
 
-* **User devices**: `Impersonate-User` is set to the Tailscale user's login name. For example, `alice@example.com`. If [grants][docs-grants] define Kubernetes groups for the user, those are added as `Impersonate-Group` headers.
-* **Tagged devices**: `Impersonate-User` is set to the node's FQDN. If grants define Kubernetes groups, those are used as `Impersonate-Group` headers. If no grants apply, the node's [tags][docs-tags] are used as groups instead.
+* **用户设备**：`Impersonate-User` 设置为该 Tailscale 用户的登录名，例如 `alice@example.com`。如果[授权][docs-grants]为该用户定义了 Kubernetes 组，这些组会作为 `Impersonate-Group` 头添加。
+* **带标签的设备**：`Impersonate-User` 设置为节点的 FQDN。如果授权定义了 Kubernetes 组，这些组会作为 `Impersonate-Group` 头使用。如果没有适用的授权，则改用节点的[标签][docs-tags]作为组。
 
-## Use grants to impersonate Kubernetes groups
+## 使用授权模拟 Kubernetes 组
 
-[Grants][docs-grants] let you map Tailscale user groups to Kubernetes groups. For example, to give `group:prod` cluster admin access and `group:k8s-readers` read-only access:
+[授权][docs-grants]让你可以把 Tailscale 用户组映射到 Kubernetes 组。例如，要让 `group:prod` 获得集群管理员访问权限、`group:k8s-readers` 获得只读访问权限：
 
 ```json
 {
@@ -55,31 +55,31 @@ The proxy sets Kubernetes [impersonation headers][xt-k8s-impersonation] on each 
 }
 ```
 
-* `grants.dst` must match the tag of your API server proxy. The operator's tag for in-process mode, or the `ProxyGroup`'s tag for dedicated mode.
-* `system:masters` is a built-in Kubernetes group with cluster-admin privileges.
-* `tailnet-readers` is a custom Kubernetes group name. Group names do not need to be pre-created in Kubernetes.
+* `grants.dst` 必须与你的 API 服务器代理的标签匹配：进程内模式下是 Operator 的标签，专用模式下是 `ProxyGroup` 的标签。
+* `system:masters` 是内置的 Kubernetes 组，拥有 cluster-admin 权限。
+* `tailnet-readers` 是自定义的 Kubernetes 组名。组名无需在 Kubernetes 中预先创建。
 
-Then bind the custom group to a Kubernetes `ClusterRole`:
+然后将自定义组绑定到 Kubernetes `ClusterRole`：
 
 ```shell
 kubectl create clusterrolebinding tailnet-readers-view --group=tailnet-readers --clusterrole=view
 ```
 
-## Use tags to impersonate Kubernetes groups
+## 使用标签模拟 Kubernetes 组
 
-If no grants apply and the request comes from a tagged device, the proxy impersonates a Kubernetes group matching each of the device's tags.
+如果没有适用的授权且请求来自带标签的设备，代理会为该设备的每个标签模拟一个对应的 Kubernetes 组。
 
-For example, a device tagged with `tag:k8s-readers` is authenticated as Kubernetes group `tag:k8s-readers`. Bind it to a `ClusterRole`:
+例如，带有 `tag:k8s-readers` 标签的设备会以 Kubernetes 组 `tag:k8s-readers` 的身份通过验证。将其绑定到 `ClusterRole`：
 
 ```shell
 kubectl create clusterrolebinding tailnet-readers --group="tag:k8s-readers" --clusterrole=view
 ```
 
-## Use Tailscale user identity
+## 使用 Tailscale 用户身份
 
-If the request comes from an untagged device and no grants apply, the proxy impersonates a Kubernetes user matching the sender's Tailscale login name.
+如果请求来自不带标签的设备且没有适用的授权，代理会模拟一个与发送者 Tailscale 登录名匹配的 Kubernetes 用户。
 
-For example, to grant `alice@tailscale.com` read-only access:
+例如，要授予 `alice@tailscale.com` 只读访问权限：
 
 ```shell
 kubectl create clusterrolebinding alice-view --user="alice@tailscale.com" --clusterrole=view

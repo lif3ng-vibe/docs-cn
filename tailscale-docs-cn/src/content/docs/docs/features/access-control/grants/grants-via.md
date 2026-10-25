@@ -1,32 +1,32 @@
 ---
-title: "Route filtering with Via"
-description: "Via introduces routing awareness to [grants][docs-grants] by letting you include a `via` field to specify *how* Tailscale can route the destination (`dst`) from the source (`src`)."
+title: "使用 Via 进行路由过滤"
+description: "Via 通过引入 `via` 字段，为[授权][docs-grants]带来路由感知能力，让你指定 Tailscale 可以*以何种方式*把来源（`src`）路由到目标（`dst`）。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Via introduces routing awareness to [grants][docs-grants] by letting you include a `via` field to specify *how* Tailscale can route the destination (`dst`) from the source (`src`).
+Via 通过引入 `via` 字段，为[授权][docs-grants]带来路由感知能力，让你指定 Tailscale 可以*以何种方式*把来源（`src`）路由到目标（`dst`）。
 
-You can use the [`via` syntax][ar-syntax] to define the [exit nodes][docs-exit-nodes], [subnet routers][docs-subnets], or [app connectors][docs-app-connectors] a source can access when they use a specific destination. For example, you can create a grant that forces traffic through a specific exit node when it goes from the engineering team group to the GitHub app connector.
+你可以使用 [`via` 语法][ar-syntax]定义来源访问特定目标时可以经过哪些[出口节点][docs-exit-nodes]、[子网路由器][docs-subnets]或[应用连接器][docs-app-connectors]。例如，你可以创建一条授权，强制从工程团队组发往 GitHub 应用连接器的流量经由特定的出口节点。
 
-Using the `via` field in grants lets you do things like:
+在授权中使用 `via` 字段可以实现诸如：
 
-* Route traffic to an enterprise application through a specific exit node.
-* Route traffic from devices through different exit nodes based on whether they meet device posture criteria.
-* Route traffic from specific users through a subnet router.
+* 将发往企业应用的流量经由特定出口节点路由。
+* 根据设备是否满足设备态势标准，让设备的流量经由不同出口节点路由。
+* 将特定用户的流量经由某个子网路由器路由。
 
-> **Note:**
+> **注意：**
 >
-> You can omit the `via` field (or set it to `[]` or `null`) when you create a grant to allow any group of devices to access a resource (through any exit node, subnet router, or app connector).
+> 创建授权时可以省略 `via` 字段（或将其设为 `[]` 或 `null`），从而允许任意一组设备通过任意出口节点、子网路由器或应用连接器访问资源。
 
-## Limitations
+## 限制
 
-* You can only use [tags][docs-tags] within the `via` field.
-* For [failover and regional routing reasons][docs-high-availability], you can only use accessible routers as `via` candidates. The routers accessible to users depends on applicable [access policies][docs-acls].
+* `via` 字段中只能使用[标签][docs-tags]。
+* 出于[故障转移和区域路由方面的考虑][docs-high-availability]，只能将可访问的路由器作为 `via` 候选。用户可访问哪些路由器取决于适用的[访问策略][docs-acls]。
 
-## Syntax
+## 语法
 
-Via is an extension of the grant syntax. It adds a single field, `via`, that you can use to specify how the source routes to the destination. The following example shows how to use the `via` field.
+Via 是授权语法的扩展。它增加了一个字段 `via`，用于指定来源以何种方式路由到目标。以下示例展示了 `via` 字段的用法。
 
 ```json
 "grants": [
@@ -41,21 +41,21 @@ Via is an extension of the grant syntax. It adds a single field, `via`, that you
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example ensures traffic from `<source>` to `<destination>` goes through a device with the tag `<tag-name>`.
+这个例子确保从 `<source>` 到 `<destination>` 的流量经过一台带有 `<tag-name>` 标签的设备。
 
-## Examples
+## 示例
 
-The following examples illustrate using the `via` field in grants for common use cases.
+以下示例展示了在授权中使用 `via` 字段应对常见使用场景的方式。
 
-* [Route traffic based on device posture rules][ar-routers-to-device-postures].
-* [Route users through exit nodes based on location][ar-exit-nodes-to-users].
-* [Route users through app connectors][ar-app-connectors-to-users].
+* [根据设备态势规则路由流量][ar-routers-to-device-postures]。
+* [按所在位置通过出口节点路由用户流量][ar-exit-nodes-to-users]。
+* [通过应用连接器路由用户流量][ar-app-connectors-to-users]。
 
-### Route traffic based on device posture rules
+### 根据设备态势规则路由流量
 
-You can use the `via` field to segment access to resources through different [routers based on device posture][docs-block-unencrypted-laptops-database-access] management rules.
+你可以使用 `via` 字段，依据不同的[设备态势][docs-block-unencrypted-laptops-database-access]管理规则，让对资源的访问经由不同路由器进行分段。
 
-The following example demonstrates a scenario in which the engineering team group can access a `192.0.2.0/24` using any available router if they comply with the `latestMac` posture (which ensures they are running the latest stable version of the Tailscale client for macOS). Anyone else (`autogroup:member`) can access `192.0.2.0/24` using the designated office router (`tag:office-router`).
+下面的示例演示了这样一个场景：工程团队组的成员如果满足 `latestMac` 态势（确保他们运行最新稳定版的 macOS Tailscale 客户端），就可以使用任意可用路由器访问 `192.0.2.0/24`。其他所有人（`autogroup:member`）则只能使用指定的办公室路由器（`tag:office-router`）访问 `192.0.2.0/24`。
 
 ```json
 "postures": {
@@ -83,13 +83,13 @@ The following example demonstrates a scenario in which the engineering team grou
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Route users through exit nodes based on location
+### 按所在位置通过出口节点路由用户流量
 
-You can use the `via` field to segment different [exit nodes][docs-exit-nodes] to different users.
+你可以使用 `via` 字段，将不同的[出口节点][docs-exit-nodes]分配给不同的用户。
 
-The following example demonstrates a scenario where users can access internet resources through an exit node based on the user's home office location.
+下面的示例演示了这样一个场景：用户可以根据其所属办公室的位置，通过出口节点访问互联网资源。
 
-Users in the Toronto (`group:tor`) and Seattle (`group:sea`) offices can access internet resources using exit nodes near their home offices (or directly from their device when exit nodes are not selected). Users on the engineering team (`group:eng`) can access internet resources using any exit node in the tailnet (or directly from their device when exit nodes are not selected).
+多伦多（`group:tor`）和西雅图（`group:sea`）办公室的用户可以使用靠近其所属办公室的出口节点访问互联网资源（未选择出口节点时则直接从本机访问）。工程团队（`group:eng`）的用户可以使用 tailnet 中的任意出口节点访问互联网资源（未选择出口节点时则直接从本机访问）。
 
 ```json
 "grants": [
@@ -115,11 +115,11 @@ Users in the Toronto (`group:tor`) and Seattle (`group:sea`) offices can access 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Route users through app connectors
+### 通过应用连接器路由用户流量
 
-You can use the `via` field to segment different [app connectors][docs-app-connectors] to different users.
+你可以使用 `via` 字段，将不同的[应用连接器][docs-app-connectors]分配给不同的用户。
 
-The following example demonstrates a scenario in which users in the group `group:github-users` can access GitHub through an app connector tagged `tag:github-appconnector` while users in the group `group:salesforce-users` can access Salesforce through an app connector tagged `tag:salesforce-appconnector`.
+下面的示例演示了这样一个场景：`group:github-users` 组的用户可以通过打有 `tag:github-appconnector` 标签的应用连接器访问 GitHub，而 `group:salesforce-users` 组的用户可以通过打有 `tag:salesforce-appconnector` 标签的应用连接器访问 Salesforce。
 
 ```json
 "grants": [
@@ -140,13 +140,13 @@ The following example demonstrates a scenario in which users in the group `group
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-[ar-app-connectors-to-users]: #route-users-through-app-connectors
+[ar-app-connectors-to-users]: #通过应用连接器路由用户流量
 
-[ar-exit-nodes-to-users]: #route-users-through-exit-nodes-based-on-location
+[ar-exit-nodes-to-users]: #按所在位置通过出口节点路由用户流量
 
-[ar-routers-to-device-postures]: #route-traffic-based-on-device-posture-rules
+[ar-routers-to-device-postures]: #根据设备态势规则路由流量
 
-[ar-syntax]: #syntax
+[ar-syntax]: #语法
 
 [docs-acls]: /docs/features/access-control/acls
 

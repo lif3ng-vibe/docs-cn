@@ -1,24 +1,24 @@
 ---
-title: "Tailscale quick guides"
-description: "Configure some of Tailscale's most popular features."
+title: "Tailscale 快速指南"
+description: "配置 Tailscale 一些最常用的功能。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This section provides condensed topics to help you quickly set up specific parts of your tailnet. For additional guidance on getting started, refer to [Tailscale quickstart][docs-install].
+本节提供精简的主题，帮助你快速设置 tailnet 的特定部分。更多入门指引请参考 [Tailscale 快速开始][docs-install]。
 
-[**Use exit nodes**](/docs/features/exit-nodes/how-to/setup) — Route traffic through a specific device in your tailnet, and configure devices to use an exit node.
+[**使用出口节点**](/docs/features/exit-nodes/how-to/setup)——让流量经由 tailnet 中的特定设备路由，并配置设备使用出口节点。
 
-[**Configure a subnet router**](/docs/features/subnet-routers/how-to/setup) — Configure a subnet router to relay access in your network, including resources where Tailscale cannot be installed.
+[**配置子网路由器**](/docs/features/subnet-routers/how-to/setup)——配置子网路由器在网络上中继访问，包括无法安装 Tailscale 的资源。
 
-[**Host a website using a tailnet device**](/docs/features/tailscale-funnel/how-to/host-websites) — Host a website from a device in your tailnet.
+[**用 tailnet 设备托管网站**](/docs/features/tailscale-funnel/how-to/host-websites)——从 tailnet 中的一台设备托管网站。
 
-[**Install Tailscale on an AWS VM**](/docs/install/cloud/aws/quickstart) — Install the Tailscale client on an AWS Linux VM and use some common features.
+[**在 AWS 虚拟机上安装 Tailscale**](/docs/install/cloud/aws/quickstart)——在 AWS Linux 虚拟机上安装 Tailscale 客户端并使用部分常用功能。
 
-[**SSH into a Linux VM**](/docs/how-to/connect-ssh-linux-vm) — Use Tailscale SSH to connect securely to a Linux VM.
+[**SSH 连接 Linux 虚拟机**](/docs/how-to/connect-ssh-linux-vm)——使用 Tailscale SSH 安全连接到 Linux 虚拟机。
 
-[**Access your virtual private cloud (VPC)**](/docs/how-to/connect-vpc) — Access your virtual private cloud (VPC) and configure a subnet router using Tailscale.
+[**访问你的虚拟私有云（VPC）**](/docs/how-to/connect-vpc)——访问你的虚拟私有云（VPC），并使用 Tailscale 配置子网路由器。
 
-[**Connect a Docker container to your tailnet with Docker Compose**](/docs/features/containers/docker/how-to/connect-docker-container) — Set up a Tailscale-connected container using Docker Compose with nginx, allowing secure access to the service over your tailnet.
+[**使用 Docker Compose 将 Docker 容器接入你的 tailnet**](/docs/features/containers/docker/how-to/connect-docker-container)——使用 Docker Compose 和 nginx 搭建接入 Tailscale 的容器，通过 tailnet 安全访问该服务。
 
 [docs-install]: /docs/how-to/quickstart

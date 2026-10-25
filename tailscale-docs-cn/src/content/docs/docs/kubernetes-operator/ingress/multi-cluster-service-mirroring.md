@@ -1,20 +1,20 @@
 ---
-title: "Connect services across clusters"
-description: "You can use the Tailscale Kubernetes Operator to expose a `Service` in one cluster to another cluster by combining [cluster ingress][docs-ingress] and [cluster egress][docs-egress]. Expose the `Servic"
+title: "跨集群连接服务"
+description: "你可以将 Tailscale Kubernetes Operator 的[集群入站][docs-ingress]与[集群出站][docs-egress]结合使用，把一个集群中的 `Service` 公开到另一个集群。将集群 A 中的 `Servic"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-You can use the Tailscale Kubernetes Operator to expose a `Service` in one cluster to another cluster by combining [cluster ingress][docs-ingress] and [cluster egress][docs-egress]. Expose the `Service` in cluster A to the tailnet through ingress, then connect to it from cluster B through egress.
+你可以将 Tailscale Kubernetes Operator 的[集群入站][docs-ingress]与[集群出站][docs-egress]结合使用，把一个集群中的 `Service` 公开到另一个集群：先通过入站把集群 A 中的 `Service` 公开到 tailnet，再从集群 B 通过出站连接到它。
 
-For GitOps workflows that need to manage deployments across multiple clusters, refer to [Deploy across clusters with ArgoCD][docs-argocd].
+对于需要跨多个集群管理部署的 GitOps 工作流，请参阅[使用 ArgoCD 跨集群部署][docs-argocd]。
 
-## How it works
+## 工作原理
 
-1. Expose the `Service` you want to access in cluster A using [ingress][docs-ingress].
-2. In cluster B, create an egress `Service` that connects to the tailnet address of the `Service` exposed in cluster A. Refer to the [egress guide][docs-egress] for details.
+1. 使用[入站][docs-ingress]在集群 A 中公开你想访问的 `Service`。
+2. 在集群 B 中创建一个出站 `Service`，连接到集群 A 中所公开 `Service` 的 tailnet 地址。详情请参阅[出站指南][docs-egress]。
 
-This creates a mirror of cluster A's `Service` inside cluster B, accessible to workloads in cluster B as a regular Kubernetes `Service`.
+这会在集群 B 内创建集群 A `Service` 的镜像，集群 B 中的工作负载可以像访问普通 Kubernetes `Service` 一样访问它。
 
 [docs-argocd]: /docs/solutions/manage-multi-cluster-kubernetes-deployments-argocd
 

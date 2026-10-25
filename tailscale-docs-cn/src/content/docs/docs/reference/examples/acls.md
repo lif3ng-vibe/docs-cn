@@ -1,56 +1,56 @@
 ---
-title: "ACL policy examples"
-description: "This topic provides example [access controls (ACLs)][docs-acls] for common scenarios. For information about the syntax, refer to the [tailnet policy syntax][docs-policy-syntax]."
+title: "ACL 策略示例"
+description: "本主题提供常见场景的 [access controls (ACLs)][docs-acls] 示例。语法相关信息请参阅 [tailnet policy syntax][docs-policy-syntax]。"
 ---
 
-Last validated Feb 2, 2026
+最后验证于 Feb 2, 2026
 
-\[Missing snippet: acls\_legacy\_note.mdx]
+\[缺失片段：acls\_legacy\_note.mdx]
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺失片段：visual\_policy\_editor.mdx]
 
-This topic provides example [access controls (ACLs)][docs-acls] for common scenarios. For information about the syntax, refer to the [tailnet policy syntax][docs-policy-syntax].
+本主题提供常见场景的[访问控制（ACL）][docs-acls]示例。语法相关信息请参阅 [tailnet 策略语法][docs-policy-syntax]。
 
-| **Example**                                                                                                               | **Description**                                                                                                                                                    | **Uses**                                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [Allow all][ar-allow-all-default-acl]                                                                                     | The default tailnet policy that lets all devices within the tailnet access other devices in the tailnet.                                                           | [ACLs][docs-acls], [SSH][docs-policy-syntax-ssh]                                                                                                       |
-| [Deny all][ar-deny-all]                                                                                                   | Deny all connections.                                                                                                                                              | [ACLs][docs-acls]                                                                                                                                      |
-| [Users can access their own devices][ar-users-can-access-their-own-devices]                                               | All tailnet users can access devices they own unless another policy prevents it.                                                                                   | [ACLs][docs-acls], [SSH][docs-policy-syntax-ssh]                                                                                                       |
-| [Resource-level access policies][ar-resource-level-access-policies]                                                       | Allow specific devices to access specific resources within the tailnet.                                                                                            | [ACLs][docs-acls], [hosts][docs-policy-syntax-hosts]                                                                                                   |
-| [Restrict based on purpose (tags)][ar-restrict-based-on-purpose-tags]                                                     | Allow specific devices to access specific resources within the tailnet using tags.                                                                                 | [ACLs][docs-acls]                                                                                                                                      |
-| [Restrict based on group][ar-restrict-based-on-group]                                                                     | Manage access to resources using autogroups, custom groups, and provisioned groups.                                                                                | [ACLs][docs-acls], [groups][docs-policy-syntax-groups]                                                                                                 |
-| [Restrict based on individual users][ar-restrict-based-on-individual-user]                                                | Manage access to resources for specific users.                                                                                                                     | [ACLs][docs-acls]                                                                                                                                      |
-| [Standard plan ACL][ar-standard-plan-acl]                                                                                 | Use a basic standard plan that lets employees access their own devices and devices tagged with `corp` and lets admins access devices tagged with `corp` or `prod`. | [ACLs][docs-acls], [tag owners][docs-policy-syntax-tagowners]                                                                                          |
-| [Access to an internal application (VPN)][ar-access-to-an-internal-application-vpn]                                       | Manage user access applications based on their job role.                                                                                                           | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Access to an internal application (VPN) with synced groups][ar-access-to-an-internal-application-vpn-with-synced-groups] | Manage access to internal resources using groups synced to an identity provider.                                                                                   | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Remote access to a production environment][ar-remote-access-to-production-environment]                                   | Manage user access to the production environment based on their job role.                                                                                          | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners], [tests][docs-policy-syntax-tests]                  |
-| [VPC access (VPC peering)][ar-vpc-access-vpc-peering]                                                                     | Manage access to a virtual private cloud using access control lists.                                                                                               | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners], [auto approvers][docs-policy-syntax-autoapprovers] |
-| [Share access with a contractor][ar-share-access-with-a-contractor]                                                       | Allow a third-party contractor to access shared resources in the development environment.                                                                          | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Remote development][ar-remote-development]                                                                               | Manage access to a remote development environment.                                                                                                                 | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Pair programming][ar-pair-programming]                                                                                   | Create a paired programming environment multiple engineers can connect to using SSH.                                                                               | [ACLs][docs-acls], [tag owners][docs-policy-syntax-tagowners]                                                                                          |
-| [CI/CD deployment pipeline][ar-ci-cd-deployment-pipeline]                                                                 | Manage access to resources based on job roles.                                                                                                                     | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Monitoring access to applications][ar-monitoring-access-to-applications]                                                 | Allow a monitoring server to access all applications on common ports.                                                                                              | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Application peering][ar-application-peering]                                                                             | Allow multiple cloud providers or applications to access each other.                                                                                               | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners]                                                     |
-| [Network microsegmentation][ar-network-microsegmentation]                                                                 | Allow access to network microsegments, but deny access between them.                                                                                               | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tag owners][docs-policy-syntax-tagowners], [tests][docs-policy-syntax-tests]                  |
+| **示例** | **描述** | **用途** |
+| --- | --- | --- |
+| [允许所有][ar-allow-all-default-acl] | 默认的 tailnet 策略，允许 tailnet 内的所有设备访问 tailnet 中的其他设备。 | [ACL][docs-acls]，[SSH][docs-policy-syntax-ssh] |
+| [拒绝所有][ar-deny-all] | 拒绝所有连接。 | [ACL][docs-acls] |
+| [用户可以访问自己的设备][ar-users-can-access-their-own-devices] | 所有 tailnet 用户都可以访问自己拥有的设备，除非其他策略阻止。 | [ACL][docs-acls]，[SSH][docs-policy-syntax-ssh] |
+| [资源级访问策略][ar-resource-level-access-policies] | 允许特定设备访问 tailnet 内的特定资源。 | [ACL][docs-acls]，[hosts][docs-policy-syntax-hosts] |
+| [按用途限制（标签）][ar-restrict-based-on-purpose-tags] | 使用标签允许特定设备访问 tailnet 内的特定资源。 | [ACL][docs-acls] |
+| [按组限制][ar-restrict-based-on-group] | 使用 autogroup、自定义组和预配组管理对资源的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups] |
+| [按单个用户限制][ar-restrict-based-on-individual-user] | 管理特定用户对资源的访问。 | [ACL][docs-acls] |
+| [Standard 套餐 ACL][ar-standard-plan-acl] | 使用基础的 Standard 套餐策略：员工可以访问自己的设备及带 `corp` 标签的设备，管理员可以访问带 `corp` 或 `prod` 标签的设备。 | [ACL][docs-acls]，[标签所有者][docs-policy-syntax-tagowners] |
+| [访问内部应用（VPN）][ar-access-to-an-internal-application-vpn] | 按职务角色管理用户对应用的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [使用同步组访问内部应用（VPN）][ar-access-to-an-internal-application-vpn-with-synced-groups] | 使用从身份提供方同步的组管理对内部资源的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [远程访问生产环境][ar-remote-access-to-production-environment] | 按职务角色管理用户对生产环境的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners]，[测试][docs-policy-syntax-tests] |
+| [VPC 访问（VPC 对等连接）][ar-vpc-access-vpc-peering] | 使用访问控制列表管理对虚拟私有云的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners]，[自动批准者][docs-policy-syntax-autoapprovers] |
+| [与承包商共享访问权限][ar-share-access-with-a-contractor] | 允许第三方承包商访问开发环境中的共享资源。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [远程开发][ar-remote-development] | 管理对远程开发环境的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [结对编程][ar-pair-programming] | 创建多个工程师可以通过 SSH 连接的结对编程环境。 | [ACL][docs-acls]，[标签所有者][docs-policy-syntax-tagowners] |
+| [CI/CD 部署流水线][ar-ci-cd-deployment-pipeline] | 按职务角色管理对资源的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [监控对应用的访问][ar-monitoring-access-to-applications] | 允许监控服务器访问常用端口上的所有应用。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [应用对等连接][ar-application-peering] | 允许多个云提供商或应用相互访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners] |
+| [网络微分段][ar-network-microsegmentation] | 允许访问网络微分段，但拒绝微分段之间的访问。 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签所有者][docs-policy-syntax-tagowners]，[测试][docs-policy-syntax-tests] |
 
-## Allow all (default ACL)
+## 允许所有（默认 ACL）
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                               |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| All plans                       | [ACLs][docs-policy-syntax], [SSH][docs-policy-syntax-ssh], [autogroups][docs-policy-syntax-autogroups] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-policy-syntax]，[SSH][docs-policy-syntax-ssh]，[autogroup][docs-policy-syntax-autogroups] |
 
-When you first create your Tailscale network (known as a tailnet), Tailscale initializes it with a default *allow all* access policy so you can connect to and use Tailscale without restricting any traffic in your network.
+首次创建 Tailscale 网络（即 tailnet）时，Tailscale 会用默认的*允许所有（allow all）*访问策略初始化它，让你无需限制网络中的任何流量即可连接并使用 Tailscale。
 
-You can reset your ACL policy file to the original default by deleting the existing policy file contents and selecting **Reset to default**. Policy file changes can also be [reverted][docs-edit-policies-reverted] from the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
+删除现有策略文件内容并选择 **Reset to default**，即可将 ACL 策略文件重置为最初的默认值。策略文件的变更也可以在管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面[回退][docs-edit-policies-reverted]。
 
-Here's a breakdown of what the default policy does:
+默认策略的具体作用如下：
 
-* Lets all devices in the tailnet access all other devices in the tailnet.
-* Lets all users establish a [Tailscale SSH][docs-tailscale-ssh] session to their own devices using [check mode][docs-tailscale-ssh-check-mode], as either root or non-root.
-* If you have a [subnet router initialized with `--snat-subnet-routes=false`][docs-troubleshooting-disable-route-masquerading] (Linux only), then any devices on the same local network as the subnet router can also access all devices in the tailnet.
-* If you have a [device shared from another network][docs-sharing-acl] in your tailnet, that device cannot access any devices in the tailnet. The device [can only respond to incoming connections][docs-sharing-quarantine] from the tailnet.
+* 允许 tailnet 中的所有设备访问 tailnet 中的所有其他设备。
+* 允许所有用户以 root 或非 root 身份，通过[检查模式][docs-tailscale-ssh-check-mode]对自己的设备建立 [Tailscale SSH][docs-tailscale-ssh] 会话。
+* 如果你有一台[以 `--snat-subnet-routes=false` 初始化的子网路由器][docs-troubleshooting-disable-route-masquerading]（仅限 Linux），与该子网路由器处于同一本地网络的设备也能访问 tailnet 中的所有设备。
+* 如果你的 tailnet 中有一台[从其他网络共享而来的设备][docs-sharing-acl]，该设备无法访问 tailnet 中的任何设备，只能[响应来自 tailnet 的入站连接][docs-sharing-quarantine]。
 
 ```json
 {
@@ -83,25 +83,25 @@ Here's a breakdown of what the default policy does:
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> Omitting the `acls` field from the tailnet policy file is equivalent to the default allow all policy. To deny all connections, [use an empty object for the `acls` field][ar-deny-all] in your policy file.
+> 在 tailnet 策略文件中省略 `acls` 字段，等同于默认的允许所有策略。要拒绝所有连接，请在策略文件中为 `acls` 字段[使用空对象][ar-deny-all]。
 >
 > ```json
 > {} // Tailscale applies the default allow all policy if the acls section is empty.
 > ```
 
-In the default ACL, the `ssh` rule uses `autogroup:self` for the `dst` field and `autogroup:nonroot` in the `users` field. If you change the `dst` field from `autogroup:self` to some other destination, such as an [ACL tag](/docs/features/tags), also consider replacing `autogroup:nonroot` in the `users` field. If you don't remove `autogroup:nonroot` from the `users` field, then anyone permitted by the `src` setting will be able to SSH in as any nonroot user on the `dst` device.
+在默认 ACL 中，`ssh` 规则的 `dst` 字段使用 `autogroup:self`，`users` 字段使用 `autogroup:nonroot`。如果你把 `dst` 字段从 `autogroup:self` 改为其他目标（例如某个 [ACL 标签](/docs/features/tags)），也应考虑替换 `users` 字段中的 `autogroup:nonroot`。如果不从 `users` 字段中移除 `autogroup:nonroot`，那么 `src` 设置所允许的任何人都将能以 `dst` 设备上的任意非 root 用户身份通过 SSH 登录。
 
-## Deny all
+## 拒绝所有
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                   |
-| ------------------------------- | -------------------------- |
-| All plans                       | [ACLs][docs-policy-syntax] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-policy-syntax] |
 
-You can deny all connections in your tailnet by using an empty option for the `acls` field in your policy file. This configuration prevents all devices from communicating with each other. This configuration is not recommended for general use because nothing in the tailnet will work.
+在策略文件中为 `acls` 字段使用空值，即可拒绝 tailnet 中的所有连接。这种配置会阻止所有设备相互通信。由于 tailnet 中将没有任何东西能正常工作，不建议在一般场景中使用这种配置。
 
 ```json
 {
@@ -109,19 +109,19 @@ You can deny all connections in your tailnet by using an empty option for the `a
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Omitting the `acls` field from the tailnet policy file is not the equivalent of a "deny all" policy. Instead, Tailscale applies the [default allow all policy][ar-allow-all-default-acl], which lets all devices within the tailnet access other devices in the tailnet.
+> 在 tailnet 策略文件中省略 `acls` 字段并不等同于"拒绝所有"策略。相反，Tailscale 会应用[默认的允许所有策略][ar-allow-all-default-acl]，允许 tailnet 内的所有设备访问 tailnet 中的其他设备。
 
-## Users can access their own devices
+## 用户可以访问自己的设备
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                         |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-This example lets all users access their own devices. It is suitable for many use cases where you want to allow users to access their own devices, but not other devices in the tailnet.
+本示例允许所有用户访问自己的设备。适用于许多希望允许用户访问自己的设备、但不允许访问 tailnet 中其他设备的场景。
 
 ```json
 {
@@ -139,22 +139,22 @@ This example lets all users access their own devices. It is suitable for many us
 }
 ```
 
-## Resource-level access policies
+## 资源级访问策略
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                             |
-| ------------------------------- | ---------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [hosts][docs-policy-syntax-hosts] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[hosts][docs-policy-syntax-hosts] |
 
-You can enable connectivity from one device or network to another using their IP addresses. Additionally, the [`hosts`][docs-policy-syntax-hosts] section lets you define a human-friendly name for an IP address or CIDR range, to make access rules more readable.
+你可以使用 IP 地址启用一台设备或网络到另一台设备或网络的连接。此外，[`hosts`][docs-policy-syntax-hosts] 部分让你可以为 IP 地址或 CIDR 段定义易读的名称，使访问规则更具可读性。
 
-What this example does:
+本示例的作用：
 
-* The device with the IP address `100.100.123.124` can access the device with the IP address `100.100.123.123`.
-* The device with the IP address `100.100.123.124` can access devices in the subnet `192.0.2.0/24` through a [subnet router][docs-subnets].
-* The device with the hostname `frontend-server-01` can access devices in the subnet `192.0.2.0/24`.
-* The device with the hostname `frontend-server-01` can access the device with the hostname `dev-network-01`.
+* IP 地址为 `100.100.123.124` 的设备可以访问 IP 地址为 `100.100.123.123` 的设备。
+* IP 地址为 `100.100.123.124` 的设备可以通过[子网路由器][docs-subnets]访问子网 `192.0.2.0/24` 中的设备。
+* 主机名为 `frontend-server-01` 的设备可以访问子网 `192.0.2.0/24` 中的设备。
+* 主机名为 `frontend-server-01` 的设备可以访问主机名为 `dev-network-01` 的设备。
 
 ```json
 {
@@ -203,26 +203,26 @@ What this example does:
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> When writing access control rules targeting resources behind a [4via6 subnet][docs-4via6-subnets] router, use the IPv6 CIDR or address as the destination, not the IPv4 address.
+> 编写针对 [4via6 子网][docs-4via6-subnets]路由器背后资源的访问控制规则时，请使用 IPv6 CIDR 或地址作为目标，而不是 IPv4 地址。
 >
-> Use `tailscale debug via` to get the IPv6 CIDR.
+> 使用 `tailscale debug via` 获取 IPv6 CIDR。
 
-## Restrict based on purpose (tags)
+## 按用途限制（标签）
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                             |
-| ------------------------------- | ------------------------------------ |
-| All plans                       | [ACLs][docs-acls], [tags][docs-tags] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[标签][docs-tags] |
 
-[Tags][docs-tags] let you assign an identity to a device that is separate from human users, and use that identity as part of an ACL to restrict access. Tags should be used when adding servers to your Tailscale network, so that their access is based on their purpose, not based on which member of your operations team enrolled them.
+[标签][docs-tags]让你为设备分配一个独立于人类用户的身份，并在 ACL 中使用该身份来限制访问。向 Tailscale 网络添加服务器时应使用标签，使其访问基于用途，而不是基于哪位运维团队成员注册了它。
 
-What this example does:
+本示例的作用：
 
-* Devices tagged with `tag:frontend` can access devices tagged with `tag:backend`.
-* Devices tagged with `tag:backend` can access devices tagged with `tag:logging`.
+* 带 `tag:frontend` 标签的设备可以访问带 `tag:backend` 标签的设备。
+* 带 `tag:backend` 标签的设备可以访问带 `tag:logging` 标签的设备。
 
 ```json
 {
@@ -249,26 +249,26 @@ What this example does:
 }
 ```
 
-## Restrict based on group
+## 按组限制
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-You can enable access to resources in your tailnet with [autogroups][ar-autogroups], [custom groups][ar-custom-groups], or [groups provisioned from supported identity providers][ar-provisioned-groups].
+你可以借助 [autogroup][ar-autogroups]、[自定义组][ar-custom-groups]或[从受支持身份提供方预配的组][ar-provisioned-groups]来启用对 tailnet 中资源的访问。
 
-### With autogroups
+### 使用 autogroup
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                          |
-| ------------------------------- | --------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags] |
 
-[Autogroups][docs-policy-syntax-autogroups] are built-in groups that automatically include users, destinations, or usernames with the same properties.
+[Autogroup][docs-policy-syntax-autogroups] 是内置的组，会自动纳入具有相同属性的用户、目标或用户名。
 
-What this example does:
+本示例的作用：
 
-* All tailnet members `autogroup:member` can access devices tagged with `tag:frontend`.
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) can access devices tagged with `tag:backend` or `tag:logging`.
+* 所有 tailnet 成员 `autogroup:member` 可以访问带 `tag:frontend` 标签的设备。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）可以访问带 `tag:backend` 或 `tag:logging` 标签的设备。
 
 ```json
 {
@@ -296,22 +296,22 @@ What this example does:
 }
 ```
 
-### With custom groups
+### 使用自定义组
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags] |
 
-[Custom groups][docs-policy-syntax-groups] let you define a shorthand for a group of users, which you can then use in access rules instead of listing users out explicitly.
+[自定义组][docs-policy-syntax-groups]让你为一组用户定义简称，随后即可在访问规则中使用该简称，而无需逐一列出用户。
 
-What this example does:
+本示例的作用：
 
-* The Engineering team `group:engineering` consists of `alice@example.com` and `bob@example.com`.
-* The DevOps team `group:engineering` consists of `amelie@example.com` and `carl@example.com`.
-* The Engineering team `group:engineering` can access devices tagged with `tag:frontend` or `tag:backend`.
-* The DevOps team `group:devops` can access devices tagged with `tag:frontend`, `tag:backend`, or `tag:logging`.
+* 工程团队 `group:engineering` 由 `alice@example.com` 和 `bob@example.com` 组成。
+* DevOps 团队 `group:engineering` 由 `amelie@example.com` 和 `carl@example.com` 组成。
+* 工程团队 `group:engineering` 可以访问带 `tag:frontend` 或 `tag:backend` 标签的设备。
+* DevOps 团队 `group:devops` 可以访问带 `tag:frontend`、`tag:backend` 或 `tag:logging` 标签的设备。
 
 ```json
 {
@@ -351,11 +351,11 @@ What this example does:
 }
 ```
 
-### With provisioned groups
+### 使用预配组
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-You can use [group provisioning from supported identity providers][docs-user-group-provisioning] and avoid maintaining custom groups in your ACLs.
+你可以使用[来自受支持身份提供方的组预配][docs-user-group-provisioning]，避免在 ACL 中维护自定义组。
 
 ```json
 {
@@ -385,20 +385,20 @@ You can use [group provisioning from supported identity providers][docs-user-gro
 }
 ```
 
-## Restrict based on individual user
+## 按单个用户限制
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                             |
-| ------------------------------- | ------------------------------------ |
-| All plans                       | [ACLs][docs-acls], [tags][docs-tags] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[标签][docs-tags] |
 
-You can enable access to resources based on individual users.
+你可以按单个用户启用对资源的访问。
 
-What this example does:
+本示例的作用：
 
-* User Alice can access devices tagged with `tag:frontend`.
-* User Bob can access devices tagged with `tag:backend`.
+* 用户 Alice 可以访问带 `tag:frontend` 标签的设备。
+* 用户 Bob 可以访问带 `tag:backend` 标签的设备。
 
 ```json
 {
@@ -425,24 +425,24 @@ What this example does:
 }
 ```
 
-## Standard plan ACL
+## Standard 套餐 ACL
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                      |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-This example provides remote access to corp and prod devices. It is suitable for many Standard plan use cases.
+本示例提供对企业（corp）和生产（prod）设备的远程访问。适用于许多 Standard 套餐的使用场景。
 
-Your team can use Tailscale to access remote devices. In this scenario, all users can access their own remote devices, as well as any common corporate devices, such as servers, that are tagged. Only Tailscale [Admins](/docs/reference/user-roles) can access production devices. Admins can configure which devices are tagged. No corporate or production devices can access each other, and no shared users can access devices.
+你的团队可以使用 Tailscale 访问远程设备。在这一场景中，所有用户都可以访问自己的远程设备，以及任何带标签的公共公司设备（如服务器）。只有 Tailscale [管理员（Admin）](/docs/reference/user-roles)可以访问生产设备。管理员可以配置哪些设备被打上标签。公司设备和生产设备之间不能互相访问，共享用户也不能访问设备。
 
-What this example does:
+本示例的作用：
 
-* All employees can access their own devices.
-* All employees can access corporate devices tagged with `tag:corp`.
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) can access devices tagged with `tag:prod`.
-* All Tailscale [Admins](/docs/reference/user-roles) can manage which devices are tagged with `tag:corp` and `tag:prod`.
+* 所有员工都可以访问自己的设备。
+* 所有员工都可以访问带 `tag:corp` 标签的公司设备。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）可以访问带 `tag:prod` 标签的设备。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)可以管理哪些设备带 `tag:corp` 和 `tag:prod` 标签。
 
 ```json
 {
@@ -486,23 +486,23 @@ What this example does:
 }
 ```
 
-## Access to an internal application (VPN)
+## 访问内部应用（VPN）
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-You can use Tailscale to allow users to access internal applications, including both custom internal applications and third-party applications hosted internally. In this scenario, users in your tailnet can access applications based on their job role. The IT team can set up internal applications.
+你可以使用 Tailscale 允许用户访问内部应用，既包括自定义的内部应用，也包括托管在内部的三方应用。在这一场景中，tailnet 中的用户可以按其职务角色访问应用。内部应用可以由 IT 团队搭建。
 
-What this example does:
+本示例的作用：
 
-* Members of the engineering team `group:engineering` can access the devices tagged with `tag:engineering`.
-* Members of the finance team `group:finance` can access the devices tagged with `tag:finance`.
-* Members of the legal team `group:legal` can access the devices tagged with `tag:legal`.
-* All employees can access the devices tagged with `tag:internal`.
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) (such as the IT team) can manage which devices are tagged with `tag:engineering`, `tag:finance`, `tag:legal`, and `tag:internal`.
+* 工程团队成员 `group:engineering` 可以访问带 `tag:engineering` 标签的设备。
+* 财务团队成员 `group:finance` 可以访问带 `tag:finance` 标签的设备。
+* 法务团队成员 `group:legal` 可以访问带 `tag:legal` 标签的设备。
+* 所有员工都可以访问带 `tag:internal` 标签的设备。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）（如 IT 团队）可以管理哪些设备带 `tag:engineering`、`tag:finance`、`tag:legal` 和 `tag:internal` 标签。
 
 ```json
 {
@@ -572,23 +572,23 @@ What this example does:
 }
 ```
 
-### Access to an internal application (VPN) with synced groups
+### 使用同步组访问内部应用（VPN）
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Enterprise                      | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| Enterprise | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-You can use [user and group provisioning][docs-user-group-provisioning] to include groups synced from your identity provider in access rules. Tailscale treats synced group names as lowercase. They can include spaces, but not the `@` symbol.
+你可以使用[用户与组预配][docs-user-group-provisioning]，把从身份提供方同步而来的组纳入访问规则。Tailscale 将同步的组名视为小写。组名可以包含空格，但不能包含 `@` 符号。
 
-What this example does:
+本示例的作用：
 
-* Members of the engineering team in the synced group `group:engineering@example.com` can access the devices tagged with `tag:engineering`.
-* Members of the finance team in the synced group `group:finance team@example.com` can access the devices tagged with `tag:finance`.
-* Members of the legal team in the synced group `group:Legal@example.com` can access the devices tagged with `tag:legal`.
-* All employees can access the devices tagged with `tag:internal`.
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) (such as the IT team) can manage which devices are tagged with `tag:engineering`, `tag:finance`, `tag:legal`, and `tag:internal`.
+* 同步组 `group:engineering@example.com` 中的工程团队成员可以访问带 `tag:engineering` 标签的设备。
+* 同步组 `group:finance team@example.com` 中的财务团队成员可以访问带 `tag:finance` 标签的设备。
+* 同步组 `group:Legal@example.com` 中的法务团队成员可以访问带 `tag:legal` 标签的设备。
+* 所有员工都可以访问带 `tag:internal` 标签的设备。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）（如 IT 团队）可以管理哪些设备带 `tag:engineering`、`tag:finance`、`tag:legal` 和 `tag:internal` 标签。
 
 ```json
 {
@@ -648,26 +648,26 @@ What this example does:
 }
 ```
 
-## Remote access to production environment
+## 远程访问生产环境
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                                                              |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners], [tests][docs-policy-syntax-tests] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners]，[测试][docs-policy-syntax-tests] |
 
-Your DevOps, infrastructure, or SRE team can use Tailscale to access their sensitive and highly protected production environment. In this scenario, a DevOps team might be able to access the production environment, whereas other developers might only be able to access resources in a development environment. All developers are able to access monitoring tools, such as [Grafana][bl-grafana-auth].
+你的 DevOps、基础设施或 SRE 团队可以使用 Tailscale 访问敏感且受高度保护的生产环境。在这一场景中，DevOps 团队或许可以访问生产环境，而其他开发者可能只能访问开发环境中的资源。所有开发者都能访问监控工具，例如 [Grafana][bl-grafana-auth]。
 
-What this example does:
+本示例的作用：
 
-* All employees can access their own devices (such as remote workstations).
-* Members of the development team `group:dev` can access the devices tagged with `tag:dev` (such as license servers).
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) (such as members of the DevOps team) can access the devices tagged with `tag:prod` (such as the production environment).
-* All employees can access devices tagged with `tag:monitoring` on ports `80` and `443` (such as monitoring dashboards).
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) can manage which devices are tagged with `tag:dev`, `tag:prod`, and `tag:monitoring`
-* [Tests][docs-policy-syntax-tests] ensure that if ACLs change:
-  * Carl will still be able to access devices tagged with `tag:prod` on port `80`.
-  * Alice will still be able to access devices tagged with `tag:dev` (but not devices tagged with `tag:prod`) on port `80`.
+* 所有员工都可以访问自己的设备（如远程工作站）。
+* 开发团队成员 `group:dev` 可以访问带 `tag:dev` 标签的设备（如许可证服务器）。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）（如 DevOps 团队成员）可以访问带 `tag:prod` 标签的设备（如生产环境）。
+* 所有员工都可以通过端口 `80` 和 `443` 访问带 `tag:monitoring` 标签的设备（如监控仪表盘）。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）可以管理哪些设备带 `tag:dev`、`tag:prod` 和 `tag:monitoring` 标签。
+* [测试][docs-policy-syntax-tests]确保在 ACL 变更时：
+  * Carl 仍能通过端口 `80` 访问带 `tag:prod` 标签的设备。
+  * Alice 仍能通过端口 `80` 访问带 `tag:dev` 标签的设备（但不能访问带 `tag:prod` 标签的设备）。
 
 ```json
 {
@@ -746,23 +746,23 @@ What this example does:
 }
 ```
 
-## VPC access (VPC peering)
+## VPC 访问（VPC 对等连接）
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                                                                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners], [auto approvers][docs-policy-syntax-autoapprovers] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners]，[自动批准者][docs-policy-syntax-autoapprovers] |
 
-Your DevOps team can use Tailscale to allow developers to access existing internal applications running in a Virtual Private Cloud (VPC) on a private or hosted cloud provider. In this scenario, developers can access resources in the VPC, and the DevOps team is able to manage access to the VPC. VPCs can be peered to each other if they don't have [overlapping IP ranges][docs-4via6-subnets]. To connect an existing subnet to your Tailscale network without installing Tailscale on every device, you can use a [subnet router][docs-subnets]. Run a subnet router in the subnet, and advertise the routes so that Tailscale can route traffic for the subnet to the device for forwarding. For devices on a subnet to connect to devices in your tailnet, [disable subnet route masquerading][docs-troubleshooting-disable-route-masquerading]. You can also use [auto approvers][docs-policy-syntax-autoapprovers] to automatically approve routes.
+你的 DevOps 团队可以使用 Tailscale，允许开发者访问运行在私有云或托管云提供商的虚拟私有云（VPC）中的现有内部应用。在这一场景中，开发者可以访问 VPC 中的资源，而 DevOps 团队能够管理对 VPC 的访问。如果多个 VPC 的 [IP 网段不重叠][docs-4via6-subnets]，它们可以互相建立对等连接。要在不逐台安装 Tailscale 的情况下把现有子网接入你的 Tailscale 网络，可以使用[子网路由器][docs-subnets]：在该子网中运行一台子网路由器并通告路由，Tailscale 就能把发往该子网的流量路由到该设备进行转发。要让子网上的设备连接到你 tailnet 中的设备，请[禁用子网路由伪装][docs-troubleshooting-disable-route-masquerading]。你还可以使用[自动批准者][docs-policy-syntax-autoapprovers]自动批准路由。
 
-What this example does:
+本示例的作用：
 
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) (such as the IT team) can access the devices tagged with `tag:vpc-peering` (for maintenance).
-* Members of the development team `group:dev` can access devices in the subnets `192.0.2.0/24` and `198.51.100.0/24`.
-* The subnet `192.0.2.0/24` can access the subnet `198.51.100.0/24` and vice versa (if [subnet route masquerading is disabled][docs-troubleshooting-disable-route-masquerading]).
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) (such as the IT team) can manage which devices are tagged with `tag:vpc-peering`.
-* All Tailscale [Admins](/docs/reference/user-roles) (`autogroup:admin`) and devices tagged with `tag:vpc-peering` can auto-approve routes for `192.0.2.0/24` and `198.51.100.0/24`.
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）（如 IT 团队）可以访问带 `tag:vpc-peering` 标签的设备（用于维护）。
+* 开发团队成员 `group:dev` 可以访问子网 `192.0.2.0/24` 和 `198.51.100.0/24` 中的设备。
+* 子网 `192.0.2.0/24` 可以访问子网 `198.51.100.0/24`，反之亦然（如果[子网路由伪装已禁用][docs-troubleshooting-disable-route-masquerading]）。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）（如 IT 团队）可以管理哪些设备带 `tag:vpc-peering` 标签。
+* 所有 Tailscale [管理员（Admin）](/docs/reference/user-roles)（`autogroup:admin`）和带 `tag:vpc-peering` 标签的设备可以自动批准 `192.0.2.0/24` 和 `198.51.100.0/24` 的路由。
 
 ```json
 {
@@ -815,21 +815,21 @@ What this example does:
 }
 ```
 
-## Share access with a contractor
+## 与承包商共享访问权限
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your development team can use Tailscale to share access to specific resources, such as a database or a hosted code repository, with a contractor. In this scenario, developers can access internal development resources. Specific devices can be [shared][docs-sharing] with a contractor as part of their job.
+你的开发团队可以使用 Tailscale 与承包商共享对特定资源（如数据库或托管代码仓库）的访问。在这一场景中，开发者可以访问内部开发资源。作为其工作的一部分，特定设备可以[共享][docs-sharing]给承包商。
 
-What this example does:
+本示例的作用：
 
-* All employees can access their own devices.
-* Members of the development team `group:dev` can access devices tagged with `tag:dev` (such as package registries and databases)
-* Contractors who have accepted a share invite can access devices tagged with `tag:dev` (that have been shared with them).
+* 所有员工都可以访问自己的设备。
+* 开发团队成员 `group:dev` 可以访问带 `tag:dev` 标签的设备（如软件包仓库和数据库）
+* 已接受共享邀请的承包商可以访问带 `tag:dev` 标签的设备（已与其共享的设备）。
 
 ```json
 {
@@ -868,21 +868,21 @@ What this example does:
 }
 ```
 
-## Remote development
+## 远程开发
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [autogroups][docs-policy-syntax-autogroups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[autogroup][docs-policy-syntax-autogroups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your development team can use Tailscale as part of their remote development setup. In this scenario, a developer might have a local device, like a laptop, and use it to access a remote workstation, hosted in the cloud or hosted on another device in their network. This is useful if you're accessing a workstation with more processing power, for example, for machine learning or for building. You might also use a remote code environment like [GitHub Codespaces][docs-github-codespaces], [Gitpod][docs-gitpod], or [Coder][docs-coder]. From your development environment, you might access a license server, a package registry, a production database, or another development or build resource. You might also access a self-hosted or private code repository.
+你的开发团队可以把 Tailscale 纳入其远程开发环境。在这一场景中，开发者可能有一台本地设备（如笔记本电脑），并用它访问托管在云端或网络中另一台设备上的远程工作站。当你需要访问算力更强的工作站（例如用于机器学习或构建）时，这非常有用。你也可以使用 [GitHub Codespaces][docs-github-codespaces]、[Gitpod][docs-gitpod] 或 [Coder][docs-coder] 等远程代码环境。在开发环境中，你可能需要访问许可证服务器、软件包仓库、生产数据库或其他开发或构建资源，也可能需要访问自托管或私有的代码仓库。
 
-What this example does:
+本示例的作用：
 
-* All employees can access their own devices.
-* Members of the development team `group:dev` can access devices tagged with `tag:dev` (such as package registries and databases).
-* The development team `group:dev` can manage which devices are tagged with `tag:dev`.
+* 所有员工都可以访问自己的设备。
+* 开发团队成员 `group:dev` 可以访问带 `tag:dev` 标签的设备（如软件包仓库和数据库）。
+* 开发团队 `group:dev` 可以管理哪些设备带 `tag:dev` 标签。
 
 ```json
 {
@@ -920,20 +920,20 @@ What this example does:
 }
 ```
 
-## Pair programming
+## 结对编程
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                         |
-| ------------------------------- | -------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your development team can use Tailscale to pair program on the same device remotely. In this scenario, two or more developers can use SSH to connect to a corporate device, such as a virtual machine (VM), and share a terminal (such as a `tmux` session).
+你的开发团队可以使用 Tailscale 远程在同一台设备上结对编程。在这一场景中，两名或更多开发者可以通过 SSH 连接到一台公司设备（如虚拟机（VM）），并共享一个终端（如 `tmux` 会话）。
 
-What this example does:
+本示例的作用：
 
-* Users Alice and Bob can access the corporate device tagged `tag:pair-programming` on port `22` (for SSH).
-* Bob can manage which devices are tagged `tag:pair-programming`.
+* 用户 Alice 和 Bob 可以通过端口 `22`（SSH）访问带 `tag:pair-programming` 标签的公司设备。
+* Bob 可以管理哪些设备带 `tag:pair-programming` 标签。
 
 ```json
 {
@@ -957,22 +957,22 @@ What this example does:
 }
 ```
 
-## CI/CD deployment pipeline
+## CI/CD 部署流水线
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your DevOps or infrastructure team can use Tailscale to restrict access to your deployment pipeline. In this scenario, developers can access your development tools, such as your code repository. Then, an automated CI/CD pipeline builds and deploys code. The DevOps team can access the deployment pipeline and production environment.
+你的 DevOps 或基础设施团队可以使用 Tailscale 限制对部署流水线的访问。在这一场景中，开发者可以访问你的开发工具（如代码仓库），随后由自动化的 CI/CD 流水线构建并部署代码。DevOps 团队可以访问部署流水线和生产环境。
 
-What this example does:
+本示例的作用：
 
-* Members of the development team `group:dev` can access the devices tagged with `tag:dev` (such as code repositories and license servers).
-* Members of the DevOps team `group:devops` can access the devices tagged with `tag:ci` (such as the build tooling) and `tag:prod` (such as the production environment).
-* The DevOps team `group:devops` can manage which devices are tagged with `tag:dev`, `tag:ci`, and `tag:prod`.
-* The tag `tag:ci` can manage which device are tagged with `tag:prod` and `tag:dev` (to apply tags as part of the deployment pipeline).
+* 开发团队成员 `group:dev` 可以访问带 `tag:dev` 标签的设备（如代码仓库和许可证服务器）。
+* DevOps 团队成员 `group:devops` 可以访问带 `tag:ci` 标签（如构建工具）和 `tag:prod` 标签（如生产环境）的设备。
+* DevOps 团队 `group:devops` 可以管理哪些设备带 `tag:dev`、`tag:ci` 和 `tag:prod` 标签。
+* 标签 `tag:ci` 可以管理哪些设备带 `tag:prod` 和 `tag:dev` 标签（以便在部署流水线中应用标签）。
 
 ```json
 {
@@ -1022,22 +1022,22 @@ What this example does:
 }
 ```
 
-## Monitoring access to applications
+## 监控对应用的访问
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your DevOps team can use Tailscale to query logs from services in your network and report these as part of your monitoring tooling. In this scenario, your monitoring server (such as Prometheus) can access all applications in your network on common ports.
+你的 DevOps 团队可以使用 Tailscale 查询网络中服务的日志，并把它们作为监控工具的一部分进行上报。在这一场景中，你的监控服务器（如 Prometheus）可以通过常用端口访问网络中的所有应用。
 
-What this example does:
+本示例的作用：
 
-* Devices tagged with `tag:monitoring` can access services on ports `80`, `443`, `9100`.
-* Devices tagged with `tag:monitoring` can access services tagged `tag:logging`.
-* The DevOps team `group:devops` can access devices tagged with `tag:monitoring` and `tag:logging`.
-* The DevOps team `group:devops` can manage which devices are tagged with `tag:monitoring` and `tag:logging`.
+* 带 `tag:monitoring` 标签的设备可以访问端口 `80`、`443`、`9100` 上的服务。
+* 带 `tag:monitoring` 标签的设备可以访问带 `tag:logging` 标签的服务。
+* DevOps 团队 `group:devops` 可以访问带 `tag:monitoring` 和 `tag:logging` 标签的设备。
+* DevOps 团队 `group:devops` 可以管理哪些设备带 `tag:monitoring` 和 `tag:logging` 标签。
 
 ```json
 {
@@ -1079,22 +1079,22 @@ What this example does:
 }
 ```
 
-## Application peering
+## 应用对等连接
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners] |
 
-Your infrastructure team can use Tailscale to connect applications or services running in multiple cloud providers or SaaS applications together. In this scenario, one application can connect with another application in your network, for example, to stream from one database to another, such as with
-[Materialize][xt-materialize-tailscale].
+你的基础设施团队可以使用 Tailscale 把运行在多个云提供商或 SaaS 应用中的应用或服务连接起来。在这一场景中，一个应用可以连接你网络中的另一个应用，例如把数据从一个数据库流式传输到另一个，如
+[Materialize][xt-materialize-tailscale]。
 
-What this example does:
+本示例的作用：
 
-* Devices tagged with `tag:database` can access other devices tagged with `tag:database`.
-* Devices tagged with `tag:gcp` and `tag:aws` can access devices tagged with `tag:database`, but not vice versa.
-* The infrastructure team `group:infra` can manage which devices are tagged with `tag:database`, `tag:gcp`, and `tag:aws`.
+* 带 `tag:database` 标签的设备可以访问其他带 `tag:database` 标签的设备。
+* 带 `tag:gcp` 和 `tag:aws` 标签的设备可以访问带 `tag:database` 标签的设备，反之则不行。
+* 基础设施团队 `group:infra` 可以管理哪些设备带 `tag:database`、`tag:gcp` 和 `tag:aws` 标签。
 
 ```json
 {
@@ -1130,25 +1130,25 @@ What this example does:
 }
 ```
 
-## Network microsegmentation
+## 网络微分段
 
-\[Missing snippet: prefer\_grant\_examples.mdx]
+\[缺失片段：prefer\_grant\_examples.mdx]
 
-| [Plan availability][co-pricing] | Features                                                                                                                                                 |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| All plans                       | [ACLs][docs-acls], [groups][docs-policy-syntax-groups], [tags][docs-tags], [tag owners][docs-policy-syntax-tagowners], [tests][docs-policy-syntax-tests] |
+| [套餐可用性][co-pricing] | 功能 |
+| --- | --- |
+| 所有套餐 | [ACL][docs-acls]，[组][docs-policy-syntax-groups]，[标签][docs-tags]，[标签所有者][docs-policy-syntax-tagowners]，[测试][docs-policy-syntax-tests] |
 
-[Network microsegmentation][ln-network-microsegmentation] is a security technique that divides network devices, access, and communications into unique logical units. There are many use cases for this—segmenting data centers, virtual networks, customer deployments, and others. Each microsegment is a logical unit that cannot access other microsegments. In some cases, you might still need a support team or tagged devices that can access all segments.
+[网络微分段][ln-network-microsegmentation]是一种安全技术，将网络设备、访问和通信划分为独立的逻辑单元。它有很多用例——划分数据中心、虚拟网络、客户部署等等。每个微分段都是一个无法访问其他微分段（microsegment）的逻辑单元。在某些情况下，你可能仍然需要一支支持团队或一些带标签的设备能够访问所有分段。
 
-What this example does:
+本示例的作用：
 
-* Members of the support team `group:support` can access devices tagged `tag:segment-abc` and `tag:segment-xyz` on port `443`.
-* Devices tagged with `tag:support` can access devices tagged `tag:segment-abc` and `tag:segment-xyz` on port `443`.
-* [Tests][docs-policy-syntax-tests] ensure that if ACLs change:
-  * Members of the support team `group:support` will still be able to access devices tagged `tag:segment-abc` and `tag:segment-xyz` on port `443`.
-  * Devices tagged with `tag:support` will still be able to access devices tagged `tag:segment-abc` and `tag:segment-xyz` on port `443`.
-  * Devices tagged with `tag:segment-abc` are denied access to devices tagged `tag:segment-xyz` on port `443`.
-  * Devices tagged with `tag:segment-xyz` are denied access to devices tagged `tag:segment-abc` on port `443`.
+* 支持团队成员 `group:support` 可以通过端口 `443` 访问带 `tag:segment-abc` 和 `tag:segment-xyz` 标签的设备。
+* 带 `tag:support` 标签的设备可以通过端口 `443` 访问带 `tag:segment-abc` 和 `tag:segment-xyz` 标签的设备。
+* [测试][docs-policy-syntax-tests]确保在 ACL 变更时：
+  * 支持团队 `group:support` 的成员仍能通过端口 `443` 访问带 `tag:segment-abc` 和 `tag:segment-xyz` 标签的设备。
+  * 带 `tag:support` 标签的设备仍能通过端口 `443` 访问带 `tag:segment-abc` 和 `tag:segment-xyz` 标签的设备。
+  * 带 `tag:segment-abc` 标签的设备被拒绝通过端口 `443` 访问带 `tag:segment-xyz` 标签的设备。
+  * 带 `tag:segment-xyz` 标签的设备被拒绝通过端口 `443` 访问带 `tag:segment-abc` 标签的设备。
 
 ```json
 {
@@ -1216,49 +1216,49 @@ What this example does:
 }
 ```
 
-[ar-access-to-an-internal-application-vpn-with-synced-groups]: #access-to-an-internal-application-vpn-with-synced-groups
+[ar-access-to-an-internal-application-vpn-with-synced-groups]: #使用同步组访问内部应用vpn
 
-[ar-access-to-an-internal-application-vpn]: #access-to-an-internal-application-vpn
+[ar-access-to-an-internal-application-vpn]: #访问内部应用vpn
 
-[ar-allow-all-default-acl]: #allow-all-default-acl
+[ar-allow-all-default-acl]: #允许所有默认-acl
 
-[ar-application-peering]: #application-peering
+[ar-application-peering]: #应用对等连接
 
-[ar-autogroups]: #with-autogroups
+[ar-autogroups]: #使用-autogroup
 
-[ar-ci-cd-deployment-pipeline]: #cicd-deployment-pipeline
+[ar-ci-cd-deployment-pipeline]: #cicd-部署流水线
 
-[ar-custom-groups]: #with-custom-groups
+[ar-custom-groups]: #使用自定义组
 
-[ar-deny-all]: #deny-all
+[ar-deny-all]: #拒绝所有
 
-[ar-monitoring-access-to-applications]: #monitoring-access-to-applications
+[ar-monitoring-access-to-applications]: #监控对应用的访问
 
-[ar-network-microsegmentation]: #network-microsegmentation
+[ar-network-microsegmentation]: #网络微分段
 
-[ar-pair-programming]: #pair-programming
+[ar-pair-programming]: #结对编程
 
-[ar-provisioned-groups]: #with-provisioned-groups
+[ar-provisioned-groups]: #使用预配组
 
-[ar-remote-access-to-production-environment]: #remote-access-to-production-environment
+[ar-remote-access-to-production-environment]: #远程访问生产环境
 
-[ar-remote-development]: #remote-development
+[ar-remote-development]: #远程开发
 
-[ar-resource-level-access-policies]: #resource-level-access-policies
+[ar-resource-level-access-policies]: #资源级访问策略
 
-[ar-restrict-based-on-group]: #restrict-based-on-group
+[ar-restrict-based-on-group]: #按组限制
 
-[ar-restrict-based-on-individual-user]: #restrict-based-on-individual-user
+[ar-restrict-based-on-individual-user]: #按单个用户限制
 
-[ar-restrict-based-on-purpose-tags]: #restrict-based-on-purpose-tags
+[ar-restrict-based-on-purpose-tags]: #按用途限制标签
 
-[ar-share-access-with-a-contractor]: #share-access-with-a-contractor
+[ar-share-access-with-a-contractor]: #与承包商共享访问权限
 
-[ar-standard-plan-acl]: #standard-plan-acl
+[ar-standard-plan-acl]: #standard-套餐-acl
 
-[ar-users-can-access-their-own-devices]: #users-can-access-their-own-devices
+[ar-users-can-access-their-own-devices]: #用户可以访问自己的设备
 
-[ar-vpc-access-vpc-peering]: #vpc-access-vpc-peering
+[ar-vpc-access-vpc-peering]: #vpc-访问vpc-对等连接
 
 [bl-grafana-auth]: https://tailscale.com/blog/grafana-auth
 

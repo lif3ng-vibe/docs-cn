@@ -1,37 +1,26 @@
 ---
-title: "Machine names"
-description: "Understand how Tailscale determines machine names, and how you can rename a machine."
+title: "机器名"
+description: "了解 Tailscale 如何确定机器名，以及如何重命名机器。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-On Tailscale, machines are distinguishable by a [100.x.y.z][docs-100.x-addresses]
-IP address, and by a **machine name**.
+在 Tailscale 上，机器通过 [100.x.y.z][docs-100.x-addresses] IP 地址和**机器名（machine name）**加以区分。
 
-The machine name, shown throughout the admin console and the native Tailscale
-apps, is the canonical name for your machine on your Tailscale network. If you
-use [MagicDNS][docs-magicdns], the machine name also determines the URL your machine
-is accessible at.
+机器名显示在管理控制台和 Tailscale 原生应用的各个角落，是机器在 Tailscale 网络上的规范名称。如果你使用 [MagicDNS][docs-magicdns]，机器名还决定了访问你机器所用的 URL。
 
-## How machine names are determined
+## 机器名如何确定
 
-When a new machine is added to a Tailscale network, we automatically generate
-its machine name from its OS hostname. The OS hostname is the machine's operating
-system name for the device. This field gets reported to Tailscale on startup.
+新机器加入 Tailscale 网络时，我们会根据它的操作系统主机名（OS hostname）自动生成机器名。OS 主机名是设备的操作系统所用的名称，会在启动时上报给 Tailscale。
 
-Often, the name ends up being exactly the hostname. But sometimes if a device
-already on the network has the same name, the new machine will get a name like
-`<hostname>-1`. If the conflicting machine's name is later changed, this machine
-will still maintain the `<hostname>-1` machine name.
+通常，机器名最终与主机名完全一致。但如果网络上已有设备同名，新机器有时会得到类似 `<hostname>-1` 的名称。即使之后冲突设备的名称改了，这台机器仍会保留 `<hostname>-1` 这个机器名。
 
-OS hostnames can also have characters that we don't allow in machine names, so
-we derive the names following a number of rules that aim to produce sensible
-results.
+OS 主机名还可能包含我们不允许出现在机器名中的字符，因此我们按照一系列规则来推导名称，力求得到合理的结果。
 
-For example:
+例如：
 
-OS Hostname
-Machine Name
+OS 主机名
+机器名
 
 monitoring
 monitoring
@@ -42,49 +31,37 @@ johns-iphone-6s
 🎊 free form 🎊
 free-form
 
-As corner cases in these rules are found, they will change, so they are not
-listed here. We enforce unique machine names across a Tailscale network so they
-may be used as part of the [MagicDNS][docs-magicdns] domain name for a machine.
+这些规则中的极端情况一经发现就会调整，因此此处不一一列出。我们在整个 Tailscale 网络范围内强制机器名唯一，这样机器名才能用作机器 [MagicDNS][docs-magicdns] 域名的一部分。
 
-## Renaming a machine
+## 重命名机器
 
-Sometimes the default machine name for a device can be pretty messy and unclear,
-such as `laptop-a4og4947`. Because of this, we've added the ability to edit the machine
-name for a device from the admin console.
+有时设备的默认机器名相当杂乱难懂，例如 `laptop-a4og4947`。为此，我们提供了在管理控制台中编辑设备机器名的功能。
 
-You can edit the machine name through the UI in the admin console, or through the Tailscale CLI.
+你可以通过管理控制台的 UI 编辑机器名，也可以通过 Tailscale CLI 编辑。
 
-> **Note:**
+> **注意：**
 >
-> If [MagicDNS][docs-magicdns] is enabled for your network, editing the machine name also edits
-> the MagicDNS domain name. Once renamed, your machine will be accessible over MagicDNS using its new name.
+> 如果你的网络启用了 [MagicDNS][docs-magicdns]，编辑机器名也会同时编辑 MagicDNS 域名。重命名后，你的机器将可以使用新名称通过 MagicDNS 访问。
 
-### Renaming a machine in the admin console
+### 在管理控制台中重命名机器
 
-In either the [Machines](https://console.tailscale.com/admin/machines)
-page of the admin console or the **Machine Details** page, select the&#x20;
-menu to the right of the page and select **Edit machine name**. This will open
-up the machine name editor.
+在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面或 **Machine Details**（机器详情）页面中，选择页面右侧的&#x20;菜单，然后选择 **Edit machine name**（编辑机器名）。这将打开机器名编辑器。
 
-*（图：Machine name editing view）*
+*（图：机器名编辑视图）*
 
-> **Note:**
+> **注意：**
 >
-> When the **Auto-generate from OS hostname** box is checked, as it is by default,
-> the machine name is generated from the OS hostname as described above. If the
-> OS updates the hostname, the machine name will also get updated the next time
-> Tailscale is started up. To avoid these automatic name changes, uncheck this box.
+> 当勾选 **Auto-generate from OS hostname** 复选框时（默认勾选），机器名会按上文所述从 OS 主机名生成。如果操作系统更新了主机名，机器名也会在下次启动 Tailscale 时随之更新。要避免这种自动改名，请取消勾选该复选框。
 
-*（图：Machine name editing view）*
+*（图：机器名编辑视图）*
 
-Once you've made your update, you'll find the new name across the admin console and the
-Tailscale apps.
+完成修改后，新名称会显示在管理控制台和 Tailscale 应用的所有位置。
 
-*（图：Updated machine page）*
+*（图：更新后的机器页面）*
 
-### Renaming a machine in the CLI
+### 在 CLI 中重命名机器
 
-In the Tailscale CLI, set the machine name as part of `tailscale set`:
+在 Tailscale CLI 中，通过 `tailscale set` 设置机器名：
 
 ```shell
 tailscale set --hostname=<name>

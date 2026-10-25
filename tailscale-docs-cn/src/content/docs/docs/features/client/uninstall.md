@@ -1,17 +1,17 @@
 ---
-title: "Uninstall Tailscale"
-description: "Here's how to uninstall Tailscale from your device, or completely reset Tailscale for debugging purposes."
+title: "卸载 Tailscale"
+description: "本文介绍如何从设备上卸载 Tailscale，或为调试目的彻底重置 Tailscale。"
 ---
 
-Last validated Jul 22, 2026
+最后验证于 Jul 22, 2026
 
-Here's how to uninstall Tailscale from your device, or completely reset Tailscale for debugging purposes.
+本文介绍如何从设备上卸载 Tailscale，或为调试目的彻底重置 Tailscale。
 
 #### Windows
 
-Tailscale for Windows can be uninstalled like any Windows app, by using the Windows Control Panel. Go to **Settings** > **Apps**, find **Tailscale**, and press the **Uninstall** button.
+Windows 版 Tailscale 可以像任何 Windows 应用一样，通过 Windows 控制面板卸载。依次进入 **设置**（Settings）> **应用**（Apps），找到 **Tailscale**，然后点击 **卸载**（Uninstall）按钮。
 
-If you want to completely delete Tailscale, removing any state or local information, you can also remove the files at the following paths:
+如果你想彻底删除 Tailscale（移除所有状态和本地信息），还可以删除以下路径下的文件：
 
 ```powershell
 C:\ProgramData\Tailscale
@@ -19,17 +19,17 @@ C:\Users\%USERNAME%\AppData\Local\Tailscale
 C:\Windows\System32\config\systemprofile\AppData\Local\Tailscale
 ```
 
-The path under `System32` was only used in older versions of the Tailscale client and may not be present on your system.
+`System32` 下的路径只在旧版本的 Tailscale 客户端中使用过，你的系统上可能不存在。
 
-After uninstalling Tailscale, if you install Tailscale on a device again at a later time, it will have a [new IP address][docs-ip-and-dns-addresses].
+卸载 Tailscale 后，如果日后在这台设备上重新安装 Tailscale，它将获得一个[新的 IP 地址][docs-ip-and-dns-addresses]。
 
-#### macOS (App Store)
+#### macOS（App Store）
 
-Tailscale is a standard Mac App Store app. To uninstall it, [delete it like any other Mac app][xt-apple-docs-mac-uninstall].
+Tailscale 是标准的 Mac App Store 应用。要卸载它，请[像删除其他 Mac 应用一样删除它][xt-apple-docs-mac-uninstall]。
 
-If you want to completely delete Tailscale, removing any state or local information, you can also take the following steps:
+如果你想彻底删除 Tailscale（移除所有状态和本地信息），还可以执行以下步骤：
 
-1. Remove the following files if they exist in the specified paths. As some of these may be owned by the root user, deleting them may require using `sudo rm -rf <path>` in the Terminal.
+1. 如果指定路径下存在以下文件，请将其删除。其中一些可能归 root 用户所有，删除时可能需要在终端中使用 `sudo rm -rf <path>`。
 
    ```shell
    ~/Library/Application Scripts/*.io.tailscale.ipn.macos
@@ -48,29 +48,29 @@ If you want to completely delete Tailscale, removing any state or local informat
    ~/Library/Tailscale
    ```
 
-2. Remove the Tailscale VPN configuration if it still exists.
+2. 如果 Tailscale VPN 配置仍然存在，请将其移除。
 
-   **macOS Ventura 13.0 or later**: Open **System Settings** > **Network** > **VPN**. Look for **Tailscale Tunnel** in the list of services. If it's there, select the circled **i** and then select the **Remove Configuration** button. Be sure to apply your changes.
+   **macOS Ventura 13.0 或更高版本**：打开 **系统设置**（System Settings）> **网络**（Network）> **VPN**。在服务列表中查找 **Tailscale Tunnel**。如果有，选中它并点击带圈 **i** 图标，然后点击 **移除配置**（Remove Configuration）按钮。记得应用更改。
 
-   **Previous macOS versions**: Open **System Preferences** > **Network**. Look for **Tailscale Tunnel** in the list of services. If it's there, remove it by selecting it and pressing the **-** button at the bottom. Be sure to apply your changes.
+   **更早的 macOS 版本**：打开 **系统偏好设置**（System Preferences）> **网络**（Network）。在服务列表中查找 **Tailscale Tunnel**。如果有，选中它并点击底部的 **-** 按钮将其移除。记得应用更改。
 
-3. Open **Keychain Access** and search for `tailscale`, and delete any entries you find. This includes `tailscale-machinekey`, `tailscale-logdata` and `tailscale-preferences`.
+3. 打开 **钥匙串访问**（Keychain Access），搜索 `tailscale`，删除找到的所有条目，包括 `tailscale-machinekey`、`tailscale-logdata` 和 `tailscale-preferences`。
 
-After taking these steps, if you install Tailscale on this device again at a later time, it will have a [new IP address][docs-ip-and-dns-addresses].
+完成这些步骤后，如果日后在这台设备上重新安装 Tailscale，它将获得一个[新的 IP 地址][docs-ip-and-dns-addresses]。
 
-#### macOS (Standalone)
+#### macOS（独立版）
 
-To uninstall the [Standalone variant][docs-macos-variants] of Tailscale, drag its icon to the Trash and confirm that macOS also removes the system extension.
+要卸载[独立版（Standalone）][docs-macos-variants] Tailscale，请将其图标拖到废纸篓，并确认 macOS 同时移除了系统扩展。
 
-If you want to completely delete Tailscale, removing any state or local information, you can also take the following steps:
+如果你想彻底删除 Tailscale（移除所有状态和本地信息），还可以执行以下步骤：
 
-1. Remove the Tailscale VPN configuration if it still exists.
+1. 如果 Tailscale VPN 配置仍然存在，请将其移除。
 
-   **macOS Ventura 13.0 or later**: Open **System Settings** > **Network** > **VPN**. Look for **Tailscale** in the list of services. If it's there, select the circled **i** and then select the **Remove Configuration** button. Be sure to apply your changes.
+   **macOS Ventura 13.0 或更高版本**：打开 **系统设置**（System Settings）> **网络**（Network）> **VPN**。在服务列表中查找 **Tailscale**。如果有，选中它并点击带圈 **i** 图标，然后点击 **移除配置**（Remove Configuration）按钮。记得应用更改。
 
-   **Previous macOS versions**: Open **System Preferences** > **Network**. Look for **Tailscale Tunnel** in the list of services. If it's there, remove it by selecting it and pressing the **-** button at the bottom. Be sure to apply your changes.
+   **更早的 macOS 版本**：打开 **系统偏好设置**（System Preferences）> **网络**（Network）。在服务列表中查找 **Tailscale Tunnel**。如果有，选中它并点击底部的 **-** 按钮将其移除。记得应用更改。
 
-2. Remove the following files if they exist in the specified paths. As some of these may be owned by the root user, deleting them may require using `sudo rm -rf <path>` in the Terminal.
+2. 如果指定路径下存在以下文件，请将其删除。其中一些可能归 root 用户所有，删除时可能需要在终端中使用 `sudo rm -rf <path>`。
 
    ```shell
    ~/Library/Application Scripts/*.io.tailscale.ipn.macsys
@@ -88,77 +88,77 @@ If you want to completely delete Tailscale, removing any state or local informat
    /Library/Tailscale
    ```
 
-   Alternatively, if [Homebrew][xt-homebrew] is installed, you may automate the files deletion by running this command which will perform the uninstall steps defined in the [Tailscale cask][xt-homebrew-tailscale-cask].
+   另外，如果安装了 [Homebrew][xt-homebrew]，你也可以运行以下命令自动完成这些文件的删除，该命令会执行 [Tailscale cask][xt-homebrew-tailscale-cask] 中定义的卸载步骤。
 
    ```shell
    brew uninstall --cask --zap --force tailscale
    ```
 
-3. Open **Keychain Access**, search for `tailscale`, and delete any entries you find. This includes `tailscale-machinekey`, `tailscale-logdata` and `tailscale-preferences`.
+3. 打开 **钥匙串访问**（Keychain Access），搜索 `tailscale`，删除找到的所有条目，包括 `tailscale-machinekey`、`tailscale-logdata` 和 `tailscale-preferences`。
 
-After taking these steps, if you install Tailscale on this device again at a later time, it will have a [new IP address][docs-ip-and-dns-addresses].
+完成这些步骤后，如果日后在这台设备上重新安装 Tailscale，它将获得一个[新的 IP 地址][docs-ip-and-dns-addresses]。
 
 #### iOS
 
-Uninstall Tailscale as you would any iOS app by long pressing its icon in the iOS home screen and tapping the **X** button that appears. No extra steps are needed.
+像卸载任何 iOS 应用一样卸载 Tailscale：在 iOS 主屏幕上长按其图标，然后点按出现的 **X** 按钮。无需其他步骤。
 
 #### tvOS
 
-Uninstall Tailscale as you would any tvOS app by long pressing its icon in the Apple TV home screen, and selecting **Delete Tailscale**. No extra steps are needed.
+像卸载任何 tvOS 应用一样卸载 Tailscale：在 Apple TV 主屏幕上长按其图标，然后选择 **删除 Tailscale**（Delete Tailscale）。无需其他步骤。
 
 #### Android
 
-Uninstall Tailscale as you would any Android app. No extra steps are needed.
+像卸载任何 Android 应用一样卸载 Tailscale 即可。无需其他步骤。
 
 #### Linux
 
-Uninstall Tailscale by using the uninstall command of the package manager you used to install the binary in the first place:
+使用你当初安装二进制包时所用的包管理器的卸载命令来卸载 Tailscale：
 
-For all **Ubuntu and Debian versions**, uninstall using apt-get:
+对于所有 **Ubuntu 和 Debian 版本**，使用 apt-get 卸载：
 
 ```shell
 sudo apt-get remove tailscale
 ```
 
-For **CentOS 7 and Amazon Linux 2**, uninstall using yum:
+对于 **CentOS 7 和 Amazon Linux 2**，使用 yum 卸载：
 
 ```shell
 sudo yum remove tailscale
 ```
 
-For **openSUSE Leap 15.1, 15.2, and openSUSE Tumbleweed**, uninstall using `zypper`:
+对于 **openSUSE Leap 15.1、15.2 和 openSUSE Tumbleweed**，使用 `zypper` 卸载：
 
 ```shell
 sudo zypper rm tailscale
 ```
 
-For **CentOS 8, CentOS Stream 9, RHEL 8, and Fedora**, uninstall using `dnf`:
+对于 **CentOS 8、CentOS Stream 9、RHEL 8 和 Fedora**，使用 `dnf` 卸载：
 
 ```shell
 sudo dnf remove tailscale
 ```
 
-## Completely delete Tailscale
+## 彻底删除 Tailscale
 
-If you want to completely delete Tailscale and remove all state and local information, you can also remove the file at:
+如果你想彻底删除 Tailscale 并移除所有状态和本地信息，还可以删除以下文件：
 
 ```shell
 /var/lib/tailscale/tailscaled.state
 ```
 
-After uninstalling Tailscale, if you install Tailscale on a device again at a later time, it will have a [new IP address][docs-ip-and-dns-addresses].
+卸载 Tailscale 后，如果日后在这台设备上重新安装 Tailscale，它将获得一个[新的 IP 地址][docs-ip-and-dns-addresses]。
 
 #### Synology
 
-1. Uninstall Tailscale from Synology package center.
-2. Delete Synology node from Tailscale admin console.
-3. Remove the files at the following paths:
+1. 从 Synology 套件中心卸载 Tailscale。
+2. 在 Tailscale 管理控制台中删除 Synology 节点。
+3. 删除以下路径下的文件：
    ```
    /var/packages/Tailscale/var/*
    /var/packages/Tailscale/etc/*
    ```
 
-After uninstalling Tailscale, if you install Tailscale on a device again at a later time, it will have a [new IP address][docs-ip-and-dns-addresses].
+卸载 Tailscale 后，如果日后在这台设备上重新安装 Tailscale，它将获得一个[新的 IP 地址][docs-ip-and-dns-addresses]。
 
 [docs-ip-and-dns-addresses]: /docs/concepts/ip-and-dns-addresses
 

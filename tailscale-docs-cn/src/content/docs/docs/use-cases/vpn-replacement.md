@@ -1,16 +1,16 @@
 ---
-title: "VPN replacement"
-description: "Replace your legacy corporate VPN with Tailscale for faster and more secure remote access to your devices."
+title: "VPN 替代"
+description: "用 Tailscale 取代老旧的企业 VPN，实现更快、更安全的设备远程访问。"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-Tailscale replaces traditional corporate VPNs with a modern, zero-configuration networking solution. Employees get fast, secure access to internal apps and resources without the complexity of legacy VPN infrastructure, while IT teams benefit from simplified provisioning and granular access control.
+Tailscale 用一套现代的零配置网络方案取代传统企业 VPN。员工可以快速、安全地访问内部应用和资源，不必再面对老旧 VPN 基础设施的复杂性；IT 团队则受益于简化的开通流程和细粒度的访问控制。
 
-## Popular workflows
+## 常用工作流
 
-[**Secure remote access to internal corporate applications and data**](/docs/use-cases/vpn-replacement/secure-access) — Use Tailscale configurations to secure remote access to dashboards, file shares, SaaS, infra, and more.
+[**保护对企业内部应用与数据的远程访问**](/docs/use-cases/vpn-replacement/secure-access)——使用 Tailscale 配置保护对仪表板、文件共享、SaaS、基础设施等的远程访问。
 
-[**Secure remote access for work from home or remote employees**](/docs/use-cases/vpn-replacement/remote-workers) — Use Tailscale configurations to secure remote access to on-prem or in-office resources.
+[**为居家办公或远程员工提供安全的远程访问**](/docs/use-cases/vpn-replacement/remote-workers)——使用 Tailscale 配置保护对本地部署或办公室内资源的远程访问。
 
-[**Automate employee onboarding and offboarding**](/docs/use-cases/vpn-replacement/employee-onboarding-offboarding) — Use SCIM to automate employee onboarding and offboarding in Tailscale.
+[**自动化员工入职与离职流程**](/docs/use-cases/vpn-replacement/employee-onboarding-offboarding)——使用 SCIM 在 Tailscale 中自动化员工的入职与离职流程。

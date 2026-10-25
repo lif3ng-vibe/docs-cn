@@ -1,81 +1,81 @@
 ---
-title: "Switch identity provider"
-description: "You can use the Tailscale admin console to switch the identity provider (IdP) for the following IdPs:"
+title: "更换身份提供方"
+description: "你可以使用 Tailscale 管理控制台为以下身份提供方（IdP）执行更换："
 ---
 
-Last validated Oct 14, 2026
+最后验证于 Oct 14, 2026
 
-You can use the Tailscale admin console to switch the identity provider (IdP) for the following IdPs:
+你可以使用 Tailscale 管理控制台为以下身份提供方（IdP）执行更换：
 
-* [Google Workspace (G Suite)][docs-sso-google]
-* [Microsoft][docs-sso-microsoft], including Microsoft Accounts, Office 365, Active Directory, and Microsoft Entra ID when a custom domain is used.
+* [Google Workspace（G Suite）][docs-sso-google]
+* [Microsoft][docs-sso-microsoft]，包括 Microsoft 账户、Office 365、Active Directory，以及使用自定义域名时的 Microsoft Entra ID
 * [Okta][docs-sso-okta]
 * [OneLogin][docs-sso-onelogin]
-* [OpenID Connect][docs-custom-oidc] (OIDC)
+* [OpenID Connect][docs-custom-oidc]（OIDC）
 
-For other identity providers, contact [Tailscale Support][co-contact-support-sso] when you need to switch to a different IdP.
+对于其他身份提供方，当你需要更换 IdP 时，请联系 [Tailscale 支持团队][co-contact-support-sso]。
 
-## Switch to a different identity provider
+## 更换为其他身份提供方
 
-You need to be an [Owner](/docs/reference/user-roles) to switch the identity provider for your tailnet.
+你需要是[所有者（Owner）](/docs/reference/user-roles)才能为你的 tailnet 更换身份提供方。
 
-To switch to another IdP:
+要更换到其他 IdP：
 
-1. Open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
 
-2. Under the **Identity Provider** section, select the  menu and then select **Switch identity provider**.
+2. 在 **Identity Provider** 区域，选择菜单，然后选择 **Switch identity provider**。
 
-3. Select the IdP that you want to use for your tailnet.
+3. 选择你想为 tailnet 使用的 IdP。
 
-4. Authenticate to the new IdP. This step varies depending on which IdP you selected.
+4. 向新 IdP 进行认证。此步骤因你选择的 IdP 而异。
 
    #### Google
 
-   1. Under the **Authenticate** section, select **Sign in to Google**.
-   2. Log in with the email you use for Tailscale.
+   1. 在 **Authenticate** 区域，选择 **Sign in to Google**。
+   2. 使用你用于 Tailscale 的电子邮件登录。
 
    #### Microsoft
 
-   1. Under the **Authenticate** section, select **Sign in to Microsoft**.
-   2. Log in with the email you use for Tailscale.
+   1. 在 **Authenticate** 区域，选择 **Sign in to Microsoft**。
+   2. 使用你用于 Tailscale 的电子邮件登录。
 
-   > **Note:**
+   > **注意：**
    >
-   > If you are using a Microsoft 365 Government Community Cloud (GCC) High account, contact [Tailscale Support][co-contact-support-sso] to change your identity provider.
+   > 如果你使用的是 Microsoft 365 Government Community Cloud（GCC）High 账户，请联系 [Tailscale 支持团队][co-contact-support-sso]来更换你的身份提供方。
 
-   #### Okta or OneLogin
+   #### Okta 或 OneLogin
 
-   1. Under the **Authenticate** section, enter values for the following:
+   1. 在 **Authenticate** 区域，输入以下项的值：
 
       * SSO issuer
       * Client ID
       * Client secret
 
-      You can retrieve this information from your identity provider.
+      你可以从你的身份提供方获取这些信息。
 
-   2. Select **Authenticate**.
+   2. 选择 **Authenticate**。
 
    #### OIDC
 
-   1. Under the **Authenticate** section, enter values for the following:
+   1. 在 **Authenticate** 区域，输入以下项的值：
 
       * Client ID
       * Client secret
 
-      The [WebFinger][docs-webfinger] URL is pre-filled and must be available at the displayed URL. You can retrieve the Client ID and Client secret information from your identity provider.
+      [WebFinger][docs-webfinger] URL 已预先填好，并且必须能在显示的 URL 处访问。你可以从你的身份提供方获取 Client ID 和 Client secret 信息。
 
-   2. (Optional) Configure custom OIDC prompts for this provider.
+   2. （可选）为此提供方配置自定义 OIDC prompts。
 
-   3. Select **Authenticate**.
+   3. 选择 **Authenticate**。
 
-5. Select **Switch identity provider**.
+5. 选择 **Switch identity provider**。
 
-Your chosen identity provider is now ready to use.
+你选择的身份提供方现在已可使用。
 
-## Limitations
+## 限制
 
-* You cannot change the tailnet's primary domain name while changing the IdP unless you contact [Tailscale Support][co-contact-support-sso]. For example, you cannot change your IdP from Entra ID, using `example.com` as the primary domain, to Okta using `example.org` as the primary domain.
-* If you are using a shared domain tailnet, such as those created with a Gmail addresses, you cannot switch your IdP unless you contact [Tailscale Support][co-contact-support-sso].
+* 更换 IdP 时，除非联系 [Tailscale 支持团队][co-contact-support-sso]，否则你无法同时更改 tailnet 的主域名。例如，你无法将 IdP 从以 `example.com` 为主域名的 Entra ID 更换为以 `example.org` 为主域名的 Okta。
+* 如果你使用的是共享域名 tailnet（例如用 Gmail 地址创建的 tailnet），除非联系 [Tailscale 支持团队][co-contact-support-sso]，否则无法更换 IdP。
 
 [co-contact-support-sso]: https://tailscale.com/contact/support/?type=sso
 

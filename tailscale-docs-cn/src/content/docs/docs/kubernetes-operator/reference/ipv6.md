@@ -1,30 +1,30 @@
 ---
-title: "IPv6 support for the Tailscale Kubernetes Operator"
-description: "Last validated Jun 5, 2026"
+title: "Tailscale Kubernetes Operator 对 IPv6 的支持"
+description: "最后验证于 Jun 5, 2026"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The following summarizes IPv6 support for each proxy mode.
+以下内容总结了各代理模式对 IPv6 的支持情况。
 
-## Singleton proxy
+## 单例代理
 
-| Feature          | IPv6 support | Cluster requirement                                                                                                                |
+| 功能             | IPv6 支持 | 集群要求                                                                                                        |
 | ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Ingress          | Supported    | Dual-stack cluster required to expose Kubernetes `Service`s over both IPv4 and IPv6 ClusterIPs (including [4via6][docs-4via6]).    |
-| Egress           | Supported    | The cluster must support IPv6 networking if a tailnet target is reachable only over IPv6. This includes egress to 4via6 addresses. |
-| API Server Proxy | Supported    | None                                                                                                                               |
+| Ingress          | 支持         | 需要双栈（dual-stack）集群，才能通过 IPv4 与 IPv6 两个 ClusterIP（包括 [4via6][docs-4via6]）暴露 Kubernetes `Service`。            |
+| Egress           | 支持         | 如果 tailnet 目标只能通过 IPv6 访问（包括到 4via6 地址的出站流量），集群必须支持 IPv6 网络。 |
+| API Server Proxy | 支持         | 无                                                                                                                               |
 
 ## ProxyGroup
 
-| Feature          | IPv6 support | Cluster requirement                                                                                                                |
+| 功能             | IPv6 支持 | 集群要求                                                                                                        |
 | ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Ingress          | Supported    | Dual-stack cluster required to expose Kubernetes `Service`s over both IPv4 and IPv6 ClusterIPs.                                    |
-| Egress           | Supported    | The cluster must support IPv6 networking if a tailnet target is reachable only over IPv6. This includes egress to 4via6 addresses. |
-| API Server Proxy | Supported    | None                                                                                                                               |
+| Ingress          | 支持         | 需要双栈（dual-stack）集群，才能通过 IPv4 与 IPv6 两个 ClusterIP 暴露 Kubernetes `Service`。                                       |
+| Egress           | 支持         | 如果 tailnet 目标只能通过 IPv6 访问（包括到 4via6 地址的出站流量），集群必须支持 IPv6 网络。 |
+| API Server Proxy | 支持         | 无                                                                                                                               |
 
-> **Note:**
+> **注意：**
 >
-> Pods cannot reach tailnet devices by raw Tailscale IP address (CGNAT/ULA). Use the Cluster IP address (IPv4 or IPv6 if dualstack cluster) or MagicDNS name if `DNSConfig` is configured.
+> Pod 无法通过裸 Tailscale IP 地址（CGNAT/ULA）访问 tailnet 设备。请使用 Cluster IP 地址（双栈集群可用 IPv4 或 IPv6）；如果配置了 `DNSConfig`，则可使用 MagicDNS 名称。
 
 [docs-4via6]: /docs/features/subnet-routers/4via6-subnets

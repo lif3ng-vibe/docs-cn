@@ -1,76 +1,76 @@
 ---
 title: "tsidp"
-description: "Use tsidp to secure any service that supports OIDC/OAuth with no additional login while in a tailnet, including self-hosted apps like Grafana and MCP servers."
+description: "使用 tsidp 保护 tailnet 内任何支持 OIDC/OAuth 的服务，无需额外登录，包括 Grafana 等自托管应用和 MCP 服务器。"
 ---
 
-Last validated Mar 10, 2026
+最后验证于 Mar 10, 2026
 
-`tsidp` is a lightweight OIDC/OAuth server that leverages Tailscale's cryptographically guaranteed [network identity][docs-tailscale-identity] to eliminate authentication prompts while also improving security posture. With Tailscale and `tsidp`, you can securely isolate and authorize any service that supports OIDC/OAuth including self-hosted apps like Grafana and even Model Context Protocol (MCP) servers for private AI deployments with minimal effort.
+`tsidp` 是一个轻量级 OIDC/OAuth 服务器，它利用 Tailscale 以密码学方式保证的[网络身份][docs-tailscale-identity]来消除认证提示，同时提升安全态势。借助 Tailscale 和 `tsidp`，你可以用极小的代价安全地隔离并授权任何支持 OIDC/OAuth 的服务，包括 Grafana 等自托管应用，甚至面向私有 AI 部署的 Model Context Protocol（MCP）服务器。
 
-`tsidp` is available as an open source project at [https://github.com/tailscale/tsidp][xt-github-tailscale-tsidp].
+`tsidp` 是一个开源项目，托管于 [https://github.com/tailscale/tsidp][xt-github-tailscale-tsidp]。
 
-> **Warning:**
+> **警告：**
 >
-> `tsidp` is an experimental project. It is under active development and might experience breaking changes.
+> `tsidp` 是一个实验性项目，目前仍在积极开发中，可能出现破坏性变更。
 
-## How it works
+## 工作原理
 
-When you run `tsidp` on your Tailscale network (known as a tailnet), it exposes standard OIDC endpoints so OIDC-capable applications like Grafana and Proxmox can use it as an identity provider. The application performs OIDC discovery against the `tsidp` endpoints. When a user needs to access the application, the application presents a **Log in using Tailscale** option, and then redirects the login request to `tsidp`. `tsidp` uses the LocalAPI `whois` functionality to determine the caller's identity. `tsidp` and the application exchange information with `tsidp` ultimately sending an ID token and access token to the application. The application can verify the ID token digital signature. Optionally, the application can retrieve `userinfo` contents to retrieve information such as the user name, email, or picture, if available.
+在 Tailscale 网络（即 tailnet）上运行 `tsidp` 时，它会暴露标准的 OIDC 端点，Grafana、Proxmox 等支持 OIDC 的应用可以把它用作身份提供方（IdP）。应用会针对 `tsidp` 端点执行 OIDC 发现。当用户需要访问应用时，应用会提供 **Log in using Tailscale**（使用 Tailscale 登录）选项，并把登录请求重定向到 `tsidp`。`tsidp` 使用 LocalAPI 的 `whois` 功能来确定调用者的身份。`tsidp` 与应用相互交换信息，最终由 `tsidp` 向应用发送 ID token 和访问 token。应用可以验证 ID token 的数字签名。此外，应用还可以选择检索 `userinfo` 内容，以获取用户名、邮箱或头像等信息（如可用）。
 
-`tsidp` uses [`tsnet`][docs-tsnet], which lets applications programmatically make direct connections to devices in your tailnet. Among other functionality, `tsnet` provides `tsidp` with access to [LocalAPI][xt-gh-tailscale-tailscale-ipn-localapi], which lets applications programmatically retrieve information about the Tailscale client, including the `whois` identity.
+`tsidp` 基于 [`tsnet`][docs-tsnet] 构建，后者让应用能够以编程方式与 tailnet 中的设备建立直连。在众多功能之中，`tsnet` 为 `tsidp` 提供了对 [LocalAPI][xt-gh-tailscale-tailscale-ipn-localapi] 的访问能力，应用因此能够以编程方式获取 Tailscale 客户端的信息，包括 `whois` 身份。
 
-## Prerequisites
+## 前提条件
 
-To set up `tsidp`, you need the following prerequisites:
+要设置 `tsidp`，你需要满足以下前提条件：
 
-* A tailnet. If you do not have a tailnet, [sign up](https://login.tailscale.com/start).
+* 一个 tailnet。如果你还没有 tailnet，请[注册](https://login.tailscale.com/start)。
 
-* A Tailscale account with [Owner, Admin, or Network admin](/docs/reference/user-roles) permissions, so you can perform the following tasks in the tailnet where you want to set up `tsidp`:
+* 一个拥有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 权限的 Tailscale 账户，以便你能在要设置 `tsidp` 的 tailnet 中执行以下任务：
 
-  * Enable MagicDNS.
-  * Enable HTTPS.
-  * Edit the tailnet policy file.
-  * (Optional) Create an [authentication key][docs-auth-keys] (auth key) or an [OAuth client][docs-oauth-clients]. The purpose is to pre-approve the `tsidp` instance when it joins your tailnet, without requiring an interactive login.
+  * 启用 MagicDNS。
+  * 启用 HTTPS。
+  * 编辑 tailnet 策略文件。
+  * （可选）创建一个[认证密钥（auth key）][docs-auth-keys]或一个 [OAuth client][docs-oauth-clients]。目的是在 `tsidp` 实例加入你的 tailnet 时预先批准它，无需交互式登录。
 
-* A device in your tailnet upon which you will run the `tsidp` binary.
+* tailnet 中的一台设备，你将在其上运行 `tsidp` 二进制文件。
 
-* (Recommended) Docker installed on your device. This topic assumes you have Docker installed.
+* （推荐）设备上已安装 Docker。本文假设你已安装 Docker。
 
-* Ability to create a configuration file and run CLI commands so you can run the `tsidp` binary.
+* 能够创建配置文件并运行 CLI 命令，以便运行 `tsidp` 二进制文件。
 
-To use `tsidp` with an application, the application needs to support OIDC/OAuth and needs to know which endpoints to use for a `tsidp` server. Configuring an application to know which endpoints to use is application-specific, so it is not documented here.
+要把 `tsidp` 与某个应用搭配使用，该应用需要支持 OIDC/OAuth，并且需要知道 `tsidp` 服务器使用哪些端点。为应用配置端点因应用而异，故此处不做说明。
 
-## Configure your tailnet
+## 配置你的 tailnet
 
-You need to perform the following tasks to configure your tailnet for `tsidp`.
+你需要执行以下任务来为 `tsidp` 配置 tailnet。
 
-### Enable MagicDNS
+### 启用 MagicDNS
 
-MagicDNS automatically registers DNS names for devices in your tailnet. Tailnets created on or after October 20, 2022 have MagicDNS enabled by default. For information about enabling MagicDNS, refer to [Enabling MagicDNS][docs-magicdns-enable].
+MagicDNS 会为 tailnet 中的设备自动注册 DNS 名称。2022 年 10 月 20 日及之后创建的 tailnet 默认已启用 MagicDNS。有关启用 MagicDNS 的信息，请参阅[启用 MagicDNS][docs-magicdns-enable]。
 
-### Enable HTTPS
+### 启用 HTTPS
 
-Enabling HTTPS lets you provision Transport Layer Security (TLS) certificates for devices in your tailnet. The `tsidp` functionality requires your `tsidp` server to have a TLS certificate. For information about enabling HTTPS, refer to [Configure HTTPS][docs-enabling-https-configure].
+启用 HTTPS 后，你可以为 tailnet 中的设备配置传输层安全（TLS）证书。`tsidp` 功能要求你的 `tsidp` 服务器持有 TLS 证书。有关启用 HTTPS 的信息，请参阅[配置 HTTPS][docs-enabling-https-configure]。
 
-### (Optional) Create an auth key or other credential
+### （可选）创建 auth key 或其他凭证
 
-If you want to pre-approve adding the `tsidp` instance to your tailnet, you need an [authentication key][docs-auth-keys] (auth key) or an [OAuth client][docs-oauth-clients]. Without one of these credentials, you need to interactively log in the `tsidp` instance, before it can join your tailnet.
+如果你想预先批准把 `tsidp` 实例加入 tailnet，你需要一个[认证密钥（auth key）][docs-auth-keys]或一个 [OAuth client][docs-oauth-clients]。没有这类凭证的话，你需要交互式登录 `tsidp` 实例，它才能加入你的 tailnet。
 
-For purposes of this topic, the credential is an auth key.
+就本文而言，凭证使用 auth key。
 
-1. Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. Select **Generate auth key**.
-3. For **Description**, enter `tsidp` or another string that you want. This value is used only for organizing your auth keys.
-4. (Optional) Configure other settings for the auth key. For information about auth key settings, refer to [Auth keys][docs-auth-keys].
-5. Select **Generate key**.
-6. Copy the auth key value and keep it secure. It won't be shown in full again. You need the auth key value later, when you set the `TS_AUTHKEY` environment variable.
-7. Select **Done**.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
+2. 选择 **Generate auth key**。
+3. 在 **Description** 中输入 `tsidp` 或你想要的其他字符串。该值仅用于整理你的认证密钥。
+4. （可选）为认证密钥配置其他设置。有关认证密钥设置的信息，请参阅 [Auth keys][docs-auth-keys]。
+5. 选择 **Generate key**。
+6. 复制认证密钥的值并妥善保管。之后不会再完整显示。稍后设置 `TS_AUTHKEY` 环境变量时需要用到该值。
+7. 选择 **Done**。
 
-### Set up an application capability grant
+### 设置应用能力授权
 
-Access to the `tsidp` admin user interface and dynamic client registration (DCR) endpoints are denied by default.
+默认情况下，`tsidp` 管理界面和动态客户端注册（DCR）端点的访问都被拒绝。
 
-To allow access, you need to set up a `tailscale.com/cap/tsidp` [application capability][docs-grants-app-capabilities] (app capability) grant. For example, to let your tailnet admins access devices with the [tag][docs-tags] `tag:server`, [create the tag][docs-tags-define-a-tag] and [edit your tailnet policy file][docs-edit-policies] to add a grant like the following:
+要允许访问，你需要设置一个 `tailscale.com/cap/tsidp` [应用能力（app capability）][docs-grants-app-capabilities]授权（grant）。例如，要让 tailnet 管理员访问带有 [tag][docs-tags] `tag:server` 的设备，请先[创建该 tag][docs-tags-define-a-tag]，再[编辑 tailnet 策略文件][docs-edit-policies]并添加如下授权：
 
 ```json
 "grants": [
@@ -108,31 +108,31 @@ To allow access, you need to set up a `tailscale.com/cap/tsidp` [application cap
 ],
 ```
 
-The following table describes the `app` fields when you define a `tailscale.com/cap/tsidp` app capability.
+下表描述了定义 `tailscale.com/cap/tsidp` 应用能力时 `app` 各字段的含义。
 
-| Field               | Description                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `allow_admin_ui`    | Whether the users specified in `users` can access the `tsidp` admin user interface. |
-| `users`             | The users that are allowed to request a security token from the STS.                |
-| `resources`         | The resources that a security token provides access to.                             |
-| `extraClaims`       | Any extra claims to include in the security token.                                  |
-| `includeInUserInfo` | Whether to include extra claims in `/userinfo` responses.                           |
+| 字段                | 说明                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| `allow_admin_ui`    | `users` 中指定的用户能否访问 `tsidp` 管理界面。                                        |
+| `users`             | 允许向 STS 请求安全令牌（security token）的用户。                                      |
+| `resources`         | 安全令牌可提供访问权限的资源。                                                         |
+| `extraClaims`       | 要包含在安全令牌中的额外 claims。                                                      |
+| `includeInUserInfo` | 是否在 `/userinfo` 响应中包含额外 claims。                                             |
 
-You can add more grants as needed. As an example, you could allow `group:sales` to access devices that are tagged as `tag:sales`. That would be a separate grant, containing its own `tailscale.com/cap/tsidp` definition.
+你可以按需添加更多授权。例如，你可以允许 `group:sales` 访问打了 `tag:sales` 标签的设备。那会是一条独立的授权，包含它自己的 `tailscale.com/cap/tsidp` 定义。
 
-> **Warning:**
+> **警告：**
 >
-> The `tsidp` app capability schema is in development and might change at any time.
+> `tsidp` 应用能力的 schema 仍在开发中，可能随时变更。
 
-App capability grants are per request and are updated immediately. There is no need to restart `tsidp` when you create or modify your app capability grant.
+应用能力授权按请求生效并立即更新。创建或修改应用能力授权后，无需重启 `tsidp`。
 
-## Deploy a tsidp instance
+## 部署 tsidp 实例
 
-The `tsidp` source code is at [https://github.com/tailscale/tsidp][xt-github-tailscale-tsidp]. We recommend that you use the pre-built Docker image, as shown in the following steps.
+`tsidp` 的源码位于 [https://github.com/tailscale/tsidp][xt-github-tailscale-tsidp]。我们推荐使用预构建的 Docker 镜像，如下列步骤所示。
 
-1. On a device in your tailnet that is running Docker, create a folder that you want to use for `tsidp` and make it the active working directory.
+1. 在 tailnet 中一台运行 Docker 的设备上，创建一个打算用于 `tsidp` 的文件夹，并将其设为当前工作目录。
 
-2. Create a `compose.yaml` file and use the following template for its content:
+2. 创建一个 `compose.yaml` 文件，内容使用以下模板：
 
    ```yaml
    services:
@@ -142,101 +142,101 @@ The `tsidp` source code is at [https://github.com/tailscale/tsidp][xt-github-tai
        volumes:
          - tsidp-data:/data
        environment:
-         - TAILSCALE_USE_WIP_CODE=1 # tsidp is experimental - needed while version <1.0.0
-         - TS_STATE_DIR=/data # store persistent tsnet and tsidp state
-         - TS_HOSTNAME=idp # Hostname on tailnet (becomes idp.your-tailnet.ts.net)
-         - TSIDP_ENABLE_STS=1 # Enable OAuth token exchange
+         - TAILSCALE_USE_WIP_CODE=1 # tsidp 为实验性项目——版本 <1.0.0 期间必需
+         - TS_STATE_DIR=/data # 存储 tsnet 与 tsidp 的持久化状态
+         - TS_HOSTNAME=idp # tailnet 内的主机名（会成为 idp.your-tailnet.ts.net）
+         - TSIDP_ENABLE_STS=1 # 启用 OAuth token 交换
    volumes:
      tsidp-data:
    ```
 
-3. Create the `TS_ADVERTISE_TAGS` environment variable and assign it the tag that you created earlier, in your tailnet policy file:
+3. 创建 `TS_ADVERTISE_TAGS` 环境变量，并在 tailnet 策略文件中为其赋值为先前创建的 tag：
 
    ```shell
    export TS_ADVERTISE_TAGS=tag:tsidp
    ```
 
-4. Create the `TS_AUTHKEY` environment variable and assign it the auth key that you created earlier:
+4. 创建 `TS_AUTHKEY` 环境变量，并为其赋值为先前创建的认证密钥：
 
    ```shell
    export TS_AUTHKEY=<your-auth-key>
    ```
 
-   Replace `<your-auth-key>` with your auth key. Alternatively, if you created an OAuth client, replace `<your-auth-key>` with the OAuth client secret.
+   把 `<your-auth-key>` 替换为你的认证密钥。或者，如果你创建的是 OAuth client，就把 `<your-auth-key>` 替换为 OAuth client 的 secret。
 
-5. Run the `tsidp` binary:
+5. 运行 `tsidp` 二进制文件：
 
    ```shell
    docker compose up -d
    ```
 
-6. (Optional) Stream output from `stdout` and `stderr` for the `tsidp` container:
+6. （可选）持续输出 `tsidp` 容器的 `stdout` 与 `stderr` 日志：
 
    ```shell
    docker compose logs -f
    ```
 
-   When you want to stop streaming the logs output, press `Ctrl+C`.
+   想停止查看日志输出时，按 `Ctrl+C`。
 
-   As part of the initialization, the `tsidp` binary generates a TLS certificate for the `tsidp` instance.
+   在初始化过程中，`tsidp` 二进制文件会为 `tsidp` 实例生成一张 TLS 证书。
 
-   > **Note:**
+   > **注意：**
    >
-   > If you're running `tsidp` for the first time, it might take a few minutes for the TLS certificate to generate. You might not be able to access the `tsidp` server until the certificate is ready.
+   > 如果你是第一次运行 `tsidp`，TLS 证书的生成可能需要几分钟。在证书就绪之前，你可能无法访问 `tsidp` 服务器。
 
-7. After `tsidp` starts, from a device in your tailnet, open `https://idp.<your-tailnet-dns-name>`, replacing `<your-tailnet-dns-name>` with your actual [tailnet DNS name][docs-tailnet-name-tailnet-dns-name]. You can find your tailnet DNS name in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console. For example, `https://idp.cat-crocodile.ts.net`.
+7. `tsidp` 启动后，从 tailnet 中的设备打开 `https://idp.<your-tailnet-dns-name>`，把 `<your-tailnet-dns-name>` 替换为你实际的 [tailnet DNS 名称][docs-tailnet-name-tailnet-dns-name]。你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面找到你的 tailnet DNS 名称。例如 `https://idp.cat-crocodile.ts.net`。
 
-Now that you have `tsidp` running in your tailnet, you can use it to manage credentials.
+现在 `tsidp` 已经在你的 tailnet 中运行，你可以用它来管理凭证。
 
-## Use tsidp to manage credentials
+## 使用 tsidp 管理凭证
 
-After you start your `tsidp` server, use the `tsidp` admin user interface to create, update, or delete an OIDC client.
+启动 `tsidp` 服务器后，使用 `tsidp` 管理界面来创建、更新或删除 OIDC 客户端。
 
-### Create an OIDC client
+### 创建 OIDC 客户端
 
-1. Open the **Tailscale OIDC Identity Provider** URL that was provided by your `tsidp` application.
-2. Select **Create Client**.
-3. For **Client Name**, provide a name for the client.
-4. For **Redirect URIs**, provide the one or more redirect URIs that users will be redirected to after authentication. Enter one redirect per line.
-5. Select **Create Client**.
-6. Copy both the Client ID and the Client Secret. The Client Secret will not be visible again, after you close the Add New OIDC Client page.
-7. Use the Client ID and the Client Secret in your Hosted or SaaS applications as needed. Information on how to do so is application-specific, so it is not documented here.
+1. 打开你的 `tsidp` 应用提供的 **Tailscale OIDC Identity Provider** URL。
+2. 选择 **Create Client**。
+3. 在 **Client Name** 中为客户端提供一个名称。
+4. 在 **Redirect URIs** 中提供一个或多个重定向 URI，用户在认证完成后会被重定向到这些地址。每行填写一个重定向 URI。
+5. 选择 **Create Client**。
+6. 同时复制 Client ID 和 Client Secret。关闭 Add New OIDC Client 页面后，Client Secret 将不再可见。
+7. 按需在你的托管或 SaaS 应用中使用 Client ID 和 Client Secret。具体做法因应用而异，故此处不做说明。
 
-### Update an OIDC client
+### 更新 OIDC 客户端
 
-1. Open the **Tailscale OIDC Identity Provider** URL that was provided by your `tsidp` application.
-2. For the client that you want to update, select **Edit**.
-3. Update the client name and redirect URIs as needed.
-4. Select **Update Client**.
+1. 打开你的 `tsidp` 应用提供的 **Tailscale OIDC Identity Provider** URL。
+2. 找到要更新的客户端，选择 **Edit**。
+3. 按需更新客户端名称和重定向 URI。
+4. 选择 **Update Client**。
 
-### Regenerate a client secret
+### 重新生成客户端密钥
 
-1. Open the **Tailscale OIDC Identity Provider** URL that was provided by your `tsidp` application.
-2. For the client whose secret you plan to update, select **Edit**.
-3. Select **Regenerate Secret**.
-4. Select **OK** to confirm you want to regenerate the secret.
-5. Copy the new Client Secret. The Client Secret will not be visible again, after you close the **Edit OIDC Client** page.
-6. Use the new Client Secret in your Hosted or SaaS applications as needed.
+1. 打开你的 `tsidp` 应用提供的 **Tailscale OIDC Identity Provider** URL。
+2. 找到要更新密钥的客户端，选择 **Edit**。
+3. 选择 **Regenerate Secret**。
+4. 选择 **OK**，确认你要重新生成密钥。
+5. 复制新的 Client Secret。关闭 **Edit OIDC Client** 页面后，Client Secret 将不再可见。
+6. 按需在你的托管或 SaaS 应用中使用新的 Client Secret。
 
-### Delete an OIDC client
+### 删除 OIDC 客户端
 
-1. Open the **Tailscale OIDC Identity Provider** URL that was provided by your `tsidp` application.
-2. For the client that you want to delete, select **Edit**.
-3. Select **Delete Client**.
-4. Select **OK** to confirm you want to delete the client.
+1. 打开你的 `tsidp` 应用提供的 **Tailscale OIDC Identity Provider** URL。
+2. 找到要删除的客户端，选择 **Edit**。
+3. 选择 **Delete Client**。
+4. 选择 **OK**，确认你要删除该客户端。
 
-## Next steps
+## 后续步骤
 
-* To configure `tsidp` as an identity provider for [Proxmox][xt-proxmox], refer to the [`tsidp` Proxmox example][xt-github-tailscale-tsidp-proxmox].
+* 要把 `tsidp` 配置为 [Proxmox][xt-proxmox] 的身份提供方，请参阅 [`tsidp` Proxmox 示例][xt-github-tailscale-tsidp-proxmox]。
 
-* `tsidp` supports endpoints required and suggested by the [MCP Authorization specification][xt-mcp-authorization], including [Dynamic Client Registration][xt-rfc-7591]. For more information, refer to the following examples:
+* `tsidp` 支持 [MCP Authorization 规范][xt-mcp-authorization]要求和建议的端点，包括[动态客户端注册（Dynamic Client Registration）][xt-rfc-7591]。更多信息请参阅以下示例：
 
   * [MCP Client / Server][xt-github-tsidp-mcp-server]
   * [MCP Client / Gateway Server][xt-github-tsidp-mcp-gateway]
 
-* As an alternative to using an auth key, you can use an OAuth client to pre-approve your `tsidp` instance. For more information, refer to [OAuth clients][docs-oauth-clients].
+* 作为认证密钥的替代方案，你可以使用 OAuth client 来预先批准你的 `tsidp` 实例。更多信息请参阅 [OAuth clients][docs-oauth-clients]。
 
-* For more information about `tsidp` configuration, refer to [`tsidp` configuration][docs-tsidp-configuration].
+* 有关 `tsidp` 配置的更多信息，请参阅 [`tsidp` 配置][docs-tsidp-configuration]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

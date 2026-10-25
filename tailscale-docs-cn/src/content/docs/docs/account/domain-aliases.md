@@ -1,45 +1,45 @@
 ---
-title: "Domain aliases"
-description: "Understand how domain aliases work for tailnets and where they affect Tailscale behavior."
+title: "域别名"
+description: "了解域别名对 tailnet 的工作方式，以及它们会在哪些方面影响 Tailscale 的行为。"
 ---
 
-Last validated May 11, 2026
+最后验证于 May 11, 2026
 
-When you create a Tailscale network (known as a tailnet), the domain of the first user's email address is set as the primary domain. For example, if `bob@example.com` creates a tailnet, the tailnet's domain will be `example.com`. If you have users in your identity provider whose email addresses use a different domain (like `example.io`), you can create a domain alias in the tailnet to allow those users to sign in to the tailnet too. Once you create a domain alias, other tailnets outside your organization cannot use that domain to authenticate.
+创建 Tailscale 网络（即 tailnet）时，第一个用户的电子邮箱地址的域名会被设为主域名（primary domain）。例如，如果 `bob@example.com` 创建了一个 tailnet，该 tailnet 的域名就是 `example.com`。如果你的身份提供方（IdP）中有用户的邮箱地址使用其他域名（例如 `example.io`），你可以在 tailnet 中创建一个域别名（domain alias），让这些用户也能登录该 tailnet。一旦创建了域别名，组织之外的其他 tailnet 就无法使用该域名进行身份验证。
 
-> **Note:**
+> **注意：**
 >
-> Domain aliases can only be created for tailnets where users sign in with accounts under a custom domain, such as `example.com`. Shared domain tailnets, such as those created with `@gmail.com` addresses, cannot set up domain aliases. Tailnets using GitHub as their identity provider also cannot use domain aliases.
+> 只能为用户使用自定义域（如 `example.com`）下账户登录的 tailnet 创建域别名。共享域名 tailnet（例如使用 `@gmail.com` 地址创建的）无法设置域别名。使用 GitHub 作为身份提供方的 tailnet 也无法使用域别名。
 
-*（图：A diagram illustrating that at a company with users under two domains, example.com and example.io, where example.com is the primary domain, users under the example.io domain will only be able to authenticate to the tailnet if example.io is added as a domain alias.）*
+*（图：示意图，展示一家公司拥有两个域名下的用户 example.com 和 example.io，其中 example.com 为主域名；只有将 example.io 添加为域别名后，example.io 域名下的用户才能通过 tailnet 的身份验证。）*
 
-## Create a domain alias
+## 创建域别名
 
-You need to be an [Owner or Admin](/docs/reference/user-roles) of a tailnet to create a domain alias.
+你需要是 tailnet 的[所有者或管理员](/docs/reference/user-roles)才能创建域别名。
 
-1. Open the [Domains](https://console.tailscale.com/admin/settings/domains) page.
-2. [Verify the domain][docs-domain-verification] that you wish to add as a domain alias.
-3. Once the domain has been successfully verified, select the  menu and select **Set as domain alias**.
-4. Confirm that you want to enable the domain alias.
+1. 打开 [Domains](https://console.tailscale.com/admin/settings/domains) 页面。
+2. [验证][docs-domain-verification]你想添加为域别名的域名。
+3. 域名成功验证后，选择  菜单，然后选择 **Set as domain alias**。
+4. 确认你要启用该域别名。
 
-## Remove a domain alias
+## 移除域别名
 
-You need to be an [Owner or Admin](/docs/reference/user-roles) of a tailnet to remove a domain alias.
+你需要是 tailnet 的[所有者或管理员](/docs/reference/user-roles)才能移除域别名。
 
-1. Open the [Domains](https://console.tailscale.com/admin/settings/domains) page.
-2. Find the domain alias you wish to remove, select the  menu, then select **Remove domain alias**.
-3. If there are users associated with the alias, optionally select the checkbox to also delete those users from the tailnet. If you choose not to delete the users, any existing users under that domain will still be able to sign in to the tailnet, but new users under the formerly-aliased domain will not be able to sign in.
-4. Enter the domain name to confirm, then select **Remove alias**.
+1. 打开 [Domains](https://console.tailscale.com/admin/settings/domains) 页面。
+2. 找到你想移除的域别名，选择  菜单，然后选择 **Remove domain alias**。
+3. 如果有用户与该别名关联，可选择勾选复选框，将这些用户也从 tailnet 中删除。如果你选择不删除这些用户，该域名下的现有用户仍能登录该 tailnet，但原别名域名下的新用户将无法登录。
+4. 输入域名以确认，然后选择 **Remove alias**。
 
-## Handle legacy domain aliases
+## 处理旧版域别名
 
-If you previously configured a domain alias by working directly with our support team, that alias will show up on the [Domains](https://console.tailscale.com/admin/settings/domains) page with a **Legacy** identifier. While it is not considered actively verified, the domain alias is still active. You can update the verification of this domain alias by selecting the  menu and selecting **Verify**.
+如果你此前是通过直接联系我们的支持团队配置的域别名，该别名会显示在 [Domains](https://console.tailscale.com/admin/settings/domains) 页面上，并带有 **Legacy** 标识。虽然它不被视为已主动验证，但该域别名仍然生效。你可以选择  菜单并选择 **Verify** 来更新此域别名的验证。
 
-You can also remove legacy domain aliases on the [Domains](https://console.tailscale.com/admin/settings/domains) page. This option behaves the same as removing a domain alias for an actively-verified domain name.
+你也可以在 [Domains](https://console.tailscale.com/admin/settings/domains) 页面上移除旧版域别名。此选项的行为与移除已主动验证域名的域别名相同。
 
-## Limitations
+## 限制
 
-* Domain aliases can only be created for tailnets using a custom domain.
-* Domain aliases can not be created for tailnets using GitHub as an identity provider.
+* 只能为使用自定义域的 tailnet 创建域别名。
+* 使用 GitHub 作为身份提供方的 tailnet 不能创建域别名。
 
 [docs-domain-verification]: /docs/account/domain-verification

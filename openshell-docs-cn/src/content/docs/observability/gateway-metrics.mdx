@@ -1,0 +1,269 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "网关指标"
+sidebar-title: "网关指标"
+description: "从 OpenShell 网关抓取 Prometheus 指标，包括监管器会话、中继容量、对等路由与多副本部署的变更锁信号。"
+keywords: "生成式 AI, 网络安全, 可观测性, 指标, Prometheus, 网关, Kubernetes, 高可用"
+position: 3
+---
+import { Aside } from '@astrojs/starlight/components';
+
+网关导出 Prometheus 指标，覆盖 API 请求、数据库就绪状态、网关拦截器、OCSF 日志文件与多副本容量。可用它对饱和状态告警、跟踪发布，并选择自动扩缩信号。
+
+## 启用指标端点
+
+网关在自己的监听器上以 Prometheus 文本格式提供 `GET /metrics`，与 API 及健康检查端口相互分离。监听器禁用时，网关不记录任何指标。通过以下任一方式启用：
+
+- 在 `gateway.toml` 的 `[openshell.gateway]` 下设置 `metrics_bind_address`，例如 `metrics_bind_address = "0.0.0.0:9090"`。参见[网关配置](/how-it-works/gateways/configuration)。
+- 在命令行传 `--metrics-port`，或设置 `OPENSHELL_METRICS_PORT`。独立网关二进制默认为 `0`，即禁用该端点。
+- 在 Helm chart 中设置 `service.metricsPort`，默认 `9090`。chart 会渲染该 TOML 键、名为 `metrics` 的容器端口以及网关 Service 上的 `metrics` 端口。设为 `0` 可禁用该端点。
+
+正在停止的网关会继续提供指标，直到进程退出。
+
+<Aside type="caution">
+指标端点使用明文 HTTP，且无认证。任何能访问该端口的人都能读取指标。Helm chart 把该端口发布在网关 Service 上，`LoadBalancer` 或 `NodePort` 类型的 Service 会把它暴露到集群之外。请保持 Service 仅限内部访问，并把端口限制给你的监控系统。
+</Aside>
+
+以下 NetworkPolicy 保持 API 与健康检查端口开放，且只接受来自 `monitoring` 命名空间的指标抓取。如果修改过 `service.port`、`service.healthPort` 或 `service.metricsPort`，请相应调整端口。
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openshell-gateway-metrics
+  namespace: openshell
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: openshell
+      app.kubernetes.io/instance: openshell
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 8080
+        - port: 8081
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9090
+```
+
+## 抓取每个副本
+
+容量指标描述的是单个网关副本，因此请抓取每个网关 Pod 而不是 Service，并在每条序列上保留 `namespace` 与 `pod` 标签。使用 Prometheus Operator 时，PodMonitor 会自动添加这些标签：
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: openshell-gateway
+  namespace: openshell
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openshell
+      app.kubernetes.io/instance: openshell
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+```
+
+使用普通 Prometheus 配置时，用 Pod 发现并自行复制标签：
+
+```yaml
+scrape_configs:
+  - job_name: openshell-gateway
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [openshell]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+        regex: openshell
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: metrics
+        action: keep
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+```
+
+要在没有 Prometheus 的情况下检查单个 Pod，可通过 Kubernetes API server 代理读取其指标：
+
+```shell
+kubectl get --raw "/api/v1/namespaces/openshell/pods/<pod>:9090/proxy/metrics" \
+  | grep '^openshell_server_supervisor_sessions'
+```
+
+API server 从控制平面连接 Pod。类似上文的 NetworkPolicy 会阻断该连接，除非它同时允许控制平面访问指标端口。`kubectl port-forward` 经由 kubelet 到达 Pod，NetworkPolicy 不会阻断它。启动 port-forward：
+
+```shell
+kubectl -n openshell port-forward pod/<pod> 9090:9090
+```
+
+然后在另一个终端读取指标：
+
+```shell
+curl -s http://localhost:9090/metrics | grep '^openshell_server_supervisor_sessions'
+```
+
+## 指标名
+
+每个指标名以 `openshell_` 开头，后跟记录它的子系统：
+
+| 前缀 | 覆盖范围 |
+|---|---|
+| `openshell_server_` | API 请求、就绪状态、监管器会话、中继，以及副本间转发的请求 |
+| `openshell_gateway_interceptor_` | 网关拦截器评估、失败与延迟 |
+| `openshell_ocsf_log_` | 网关的 OCSF JSONL 文件 |
+| `openshell_ocsf_otlp_` | 经 OTLP 的 OCSF 日志导出 |
+
+命名遵循 Prometheus 惯例。计数器（Counter）以 `_total` 结尾，带单位的指标名以该单位结尾，例如 `_seconds` 或 `_bytes`。指标不带网关名称标签，请通过抓取配置区分各安装。
+
+## 直方图与摘要
+
+多副本延迟指标以及配置构建与应用时长指标是 Prometheus 直方图（histogram），带 `_bucket`、`_sum` 与 `_count` 序列，桶范围为 1 毫秒到 15 秒，因此 `histogram_quantile` 可以跨副本聚合它们。较旧的 `*_duration_seconds` 指标与拦截器延迟指标是带 `quantile` 标签的摘要（Summary），由每个副本各自计算。不要跨 Pod 平均 Summary 分位数。
+
+## 多副本容量指标
+
+这些指标描述单个副本承载的工作量以及副本之间的交互。任何指标都不携带沙箱、通道、端点或副本标识，因为抓取目标本身已经标识了副本。
+
+监管器会话：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_server_supervisor_sessions` | Gauge | 无 | 本副本持有的监管器控制会话数。发布稳定后，各 Pod 之和等于已连接沙箱数。 |
+
+中继：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_server_relay_pending` | Gauge | 无 | 本副本上等待监管器回连的中继通道数，包括为对等副本打开的通道。调用方已放弃的通道在被认领或清理之前仍计入，最长约 40 秒。 |
+| `openshell_server_relay_pending_capacity` | Gauge | 无 | 每副本待处理中继上限，为 `256`。 |
+| `openshell_server_relay_rejected_total` | Counter | `reason` | 因达到上限而被拒绝的中继打开请求。被拒绝的中继会使客户端请求失败，检测饱和请用该计数器，而不是客户端错误码。 |
+| `openshell_server_relay_expired_total` | Counter | 无 | 监管器未在 10 秒内回连而被丢弃的待处理中继。 |
+| `openshell_server_relay_claim_duration_seconds` | Histogram | 无 | 从打开中继到监管器认领它的时间。 |
+
+路由请求包括本地中继建立，以及发往拥有沙箱监管器会话的副本的出站请求：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_server_routed_request_attempts_total` | Counter | `operation`、`route`、`relay_kind`、`outcome`、`grpc_code` | 本地中继建立与出站对等尝试，在完成或取消时计数一次。每次重试单独计数。 |
+| `openshell_server_peer_request_duration_seconds` | Histogram | `operation`、`outcome` | 仅出站对等请求（`route="peer"`）的延迟。对中继而言，是到归属副本的监管器认领该中继为止的延迟。 |
+
+变更锁：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_server_mutation_lock_wait_seconds` | Histogram | `scope` | 获取变更锁的耗时，仅记录成功获取。 |
+| `openshell_server_mutation_lock_hold_seconds` | Histogram | `scope` | 变更锁的持有时长，在释放时记录，包括持有期间被取消的请求。冲突获取会在 10 秒后超时，因此网关释放持锁超过该时长的锁时，还会记录带 `scope` 与 `held_ms` 的 `mutation lock held longer than the lock wait timeout` 日志。 |
+| `openshell_server_mutation_lock_timeouts_total` | Counter | `scope` | 等待超过 10 秒的获取，包括监管器断开处理与提供商凭据刷新这类后台工作。API 请求以 `UNAVAILABLE` 失败，原因为 `MUTATION_LOCK_TIMEOUT`，重试方式参见[API 错误](/sdk/api-errors)。PostgreSQL 未能打开锁连接（且等待期还剩至少一秒）的情况不计入此处，而计入 `openshell_server_mutation_lock_errors_total`。 |
+| `openshell_server_mutation_lock_errors_total` | Counter | `scope` | 未超时但失败的获取：PostgreSQL 未能打开锁连接，或锁语句执行失败。API 请求以 `INTERNAL` 失败。 |
+| `openshell_server_provisioning_deadline_skips_total` | Counter | `overdue` | 预置期限检查因本副本上其他操作持有沙箱锁而跳过该沙箱的次数。该检查约每秒运行一次，对忙碌的锁总共等待约 500 毫秒，跳过锁仍然忙碌的沙箱并在下次检查重试，因此沙箱每错过一次检查计一次。多副本部署中，只有运行后台调和的副本记录跳过。`overdue="true"` 的持续速率说明到期被全局策略、设置或平台配置档案变更、沙箱所属工作区内的提供商或配置档案变更、或该沙箱上的其他操作推迟。网关以 debug 级别记录每次跳过，带 `sandbox_id`。 |
+| `openshell_server_mutation_lock_connections_in_use` | Gauge | 无 | 本副本已借出的 PostgreSQL 锁池连接数：持有变更锁、等待 PostgreSQL 锁，或正在归还池中（归还最多可能花费 5 秒）。仅在 PostgreSQL 下导出。 |
+| `openshell_server_mutation_lock_connections_capacity` | Gauge | 无 | 每副本锁池大小，默认 `4`，除非 [`database_lock_max_connections`](/how-it-works/gateways/configuration#数据库连接池) 另有设置。仅在 PostgreSQL 下导出。 |
+
+标签取值：
+
+- `operation` 取 `relay`、`report_provider_readiness`、`report_endpoint_status` 或 `get_sandbox_provider_status`。只有中继建立计入本地路由；其他操作统计的是出站对等调用，不是本地 API 处理。在归属副本上，`openshell_server_grpc_requests_total` 会记录对应的 `method`，例如 `relay` 对应 `PeerRelay`。
+- `relay_kind` 对中继取 `ssh` 或 `tcp`，其他操作取 `none`。省略中继目标按 `ssh` 计，与协议的兼容行为一致。TCP 主机名与端口不作为标签。
+- `route` 为 `local` 表示本副本尝试自己的监管器会话，为 `peer` 表示尝试其他副本。一次路由重试会再次计数，包括从 local 改为 peer 的路由切换。等待归属副本不计入。入站 `PeerRelay` 请求不会在接收副本上增加该计数器；它们出现在该副本的 gRPC 请求计数器中。该计数器不度量活动连接数、去重后的客户端请求数或未完成的尝试。
+- `reason` 为 `replica_capacity` 表示网关副本的待处理中继预算已满，为 `sandbox_capacity` 表示该副本上单个沙箱的预算（32 个待处理中继）已满。
+- `outcome` 取 `success`、`local_error` 或 `remote_error`。中继在监管器认领它时算成功；这不度量数据流。`local_error` 表示尝试在本副本上失败；`remote_error` 表示归属副本返回错误，或者到它的连接建立失败。在 `route="local"` 上本副本就是归属者，因此在 peer 路由上表现为 `remote_error` 的失败，例如未被认领的中继（`deadline_exceeded`）或中继预算已满（`resource_exhausted`），在本地路由上表现为 `local_error`。被取消的尝试记录 `local_error` 与 `grpc_code="cancelled"`，即使归属者已经在处理它。
+- `grpc_code` 是小写的 gRPC 状态名，例如 `ok`、`unavailable` 或 `resource_exhausted`，来自本地建立、本地监管器认领或对等 RPC。对等中继失败时，网关随后向客户端报告 `UNAVAILABLE`。其他 RPC 把归属者的状态原样返回给客户端。该标签不叫 `code`，因为 `openshell_server_grpc_requests_total` 用这个名字存放数值状态码。
+- `scope` 取 `global`、`workspace` 或 `sandbox`。
+- `overdue` 为 `true` 表示被跳过的沙箱已超过其预置期限，否则为 `false`。
+
+Gauge 与 Counter 从启动起就存在，初始值为 `0`，但 `openshell_server_relay_pending_capacity` 与 `openshell_server_mutation_lock_connections_capacity` 例外，它们初始为各自的上限。`openshell_server_routed_request_attempts_total` 初始有七条 `outcome="success", grpc_code="ok"` 序列：四种 relay kind 与 route 组合，以及三种带 `relay_kind="none"` 的其他对等操作。其他 outcome 与代码以及所有直方图都在首个样本之后才出现，因此告警表达式应容忍序列缺失。
+
+## 请求与就绪指标
+
+网关还记录每个 API 请求及其后台数据库检查：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_server_grpc_requests_total` | Counter | `method`、`code` | 按方法名与数值状态码统计的 gRPC 请求，包括内部对等请求。流式 RPC 记录发送响应头部时已知的状态。 |
+| `openshell_server_grpc_request_duration_seconds` | Summary | `method`、`code` | 到发送响应头部为止的耗时。对流式 RPC 只覆盖建立阶段。 |
+| `openshell_server_http_requests_total` | Counter | `path`、`status` | API 端口上的 HTTP 请求。`path` 为 `/_ws_tunnel`、`/auth` 或 `unknown`。 |
+| `openshell_server_http_request_duration_seconds` | Summary | `path`、`status` | 这些 HTTP 请求的时长。 |
+| `openshell_server_readiness_database_healthy` | Gauge | 无 | 最近一次后台数据库检查成功为 `1`，否则为 `0`。 |
+| `openshell_server_readiness_database_probe_duration_seconds` | Summary | `outcome` | 后台数据库检查的时长。`outcome` 取 `success`、`db_error` 或 `timeout`。 |
+
+## 配置下发指标
+
+`config_delivery_mode = "push"` 时，网关为每个监管器构建配置并通过监管器会话发送。轮询模式下这些指标保持为空，此时请求指标中的 `GetSandboxConfig` 与 `GetSandboxProviderEnvironment` 承担同样的工作。
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_supervisor_config_builds_total` | Counter | `outcome` | 本副本上各会话的配置构建。 |
+| `openshell_supervisor_config_build_duration_seconds` | Histogram | `outcome` | 构建一份配置的时间，包括存储读取与凭据解析。 |
+| `openshell_supervisor_config_queue_wait_seconds` | Summary | 无 | 从会话需要重建到构建开始的时间。 |
+| `openshell_supervisor_config_dirty_sessions` | Gauge | 无 | 有重建待处理的会话数。 |
+| `openshell_supervisor_config_deliveries_total` | Counter | `outcome` | 每份已构建配置的下发结果。 |
+| `openshell_supervisor_config_apply_results_total` | Counter | `outcome` | 监管器上报的应用结果。 |
+| `openshell_supervisor_config_apply_duration_seconds` | Histogram | `outcome` | 从在监管器会话上排队一次更新到收到其应用结果的时间。 |
+| `openshell_supervisor_policy_apply_results_total` | Counter | `source`、`outcome` | 监管器上报的沙箱策略加载结果。`source` 取 `polling` 或 `stream`，`outcome` 取 `loaded` 或 `failed`。 |
+| `openshell_supervisor_config_bootstrap_total` | Counter | `outcome` | 会话引导：`built`、`rejected`（存储的配置无效）、`provider_environment_failed`（未解析就下发并重建）、`build_failed` 或 `payload_too_large`。 |
+| `openshell_supervisor_config_peer_notifications_total` | Counter | `outcome` | 发送给拥有沙箱会话的副本的通知。 |
+
+标签取值：
+
+- 每份配置携带沙箱配置及其指名的提供商环境。只有该提供商环境发生变化时才解析凭据。
+- 构建时 `outcome` 取 `ok`、`failed` 或 `timeout`。失败的构建按每会话 1 到 30 秒的退避重试。每个会话还会每 30 秒重建一次配置，以修复错过的变更。
+- 下发时 `outcome` 取 `queued`、`coalesced`（保持到监管器应答其上一次更新）、`unchanged`、`no_active_session`、`unsupported_session`、`payload_too_large`、`stream_closed`（会话的流停止排空，因此关闭会话让监管器重连）、`owner_moved` 或 `owner_lookup_failed`。
+- `apply_results_total` 与 `apply_duration_seconds` 上，`outcome` 是 `ConfigApplyOutcome` 名称，例如 `CONFIG_APPLY_OUTCOME_APPLIED`。
+- 对等通知上，`outcome` 取 `accepted`、`stale_owner`、`unsupported_peer`、`peer_error` 或 `timeout`。
+
+## 网关拦截器指标
+
+配置了[网关拦截器](/extensibility/gateway-interceptors)的网关会记录其评估：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_gateway_interceptor_latency_seconds` | Summary | 无 | 拦截器调用的时长。 |
+| `openshell_gateway_interceptor_evaluations_total` | Counter | `decision`、`interceptor`、`binding_id` | 按判定统计的拦截器评估。 |
+| `openshell_gateway_interceptor_patches_total` | Counter | `interceptor`、`binding_id` | 拦截器应用的补丁。 |
+| `openshell_gateway_interceptor_fail_open_total` | Counter | 无 | 放行请求的拦截器失败。 |
+| `openshell_gateway_interceptor_fail_closed_total` | Counter | 无 | 拒绝请求的拦截器失败。 |
+| `openshell_gateway_interceptor_post_commit_observation_failures_total` | Counter | `stage` | 失败的提交后观测。`stage` 取 `response_body` 或 `evaluation`。 |
+| `openshell_server_provider_profile_source_refreshes_total` | Counter | `outcome` | 拦截器提供商配置档案快照的刷新。`outcome` 取 `ok` 或 `failed`。 |
+| `openshell_server_provider_profile_source_snapshot_age_seconds` | Gauge | 无 | 上次刷新后最旧缓存提供商配置档案快照的年龄。超过三个刷新间隔后，读取按失败关闭（fail closed）处理。 |
+
+## OCSF 日志指标
+
+写入 [OCSF JSONL 文件](/how-it-works/gateways/configuration#ocsf-jsonl-输出)的网关会记录其队列与写入器：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_ocsf_log_queued_total` | Counter | 无 | 已排队等待写入文件的记录。 |
+| `openshell_ocsf_log_written_total` | Counter | 无 | 已写入文件的记录。 |
+| `openshell_ocsf_log_dropped_total` | Counter | `reason` | 被丢弃的记录，按有限集合的 `reason` 分类。 |
+| `openshell_ocsf_log_writer_errors_total` | Counter | 无 | 失败的写入、重新打开与保留清理。 |
+| `openshell_ocsf_log_recovery_discarded_bytes_total` | Counter | 无 | 写入器打开文件时移除的不完整末行字节数。 |
+| `openshell_ocsf_log_queue_records` | Gauge | 无 | 等待写入的记录数。 |
+| `openshell_ocsf_log_queue_bytes` | Gauge | 无 | 等待写入的已编码字节数。 |
+
+## OCSF 日志导出指标
+
+启用了 [OCSF 日志导出](/how-it-works/gateways/configuration#ocsf-日志导出)的网关会记录其队列与导出器：
+
+| 指标 | 类型 | 标签 | 说明 |
+|---|---|---|---|
+| `openshell_ocsf_otlp_queued_total` | Counter | 无 | 已排队等待导出的记录。 |
+| `openshell_ocsf_otlp_exported_total` | Counter | 无 | Collector 已确认的批次中的记录，包括它在部分成功中拒绝的记录。 |
+| `openshell_ocsf_otlp_dropped_total` | Counter | `reason` | 网关丢弃的记录：`queue_capacity`、`queue_bytes`、`oversized`、`export_failed`、`serialization` 或 `closed`。 |
+| `openshell_ocsf_otlp_export_errors_total` | Counter | 无 | 失败的导出尝试，包括会重试的尝试。 |
+| `openshell_ocsf_otlp_retries_total` | Counter | 无 | 失败后重试的导出尝试。 |
+
+## 后续步骤
+
+- 追踪与 OCSF 事件参见[可观测性概述](/observability/overview)。
+- 要监控多网关副本的容量并选择自动扩缩信号，参见[高可用](/kubernetes/high-availability#监控容量)。
+- 要在 `gateway.toml` 中配置指标监听器，参见[网关配置](/how-it-works/gateways/configuration)。

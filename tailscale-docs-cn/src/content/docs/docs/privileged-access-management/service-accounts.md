@@ -1,98 +1,98 @@
 ---
-title: "Tailscale PAM service accounts"
-description: "Use service accounts to manage Tailscale PAM programmatically and to access an HTTP service without the Tailscale client."
+title: "Tailscale PAM 服务账户"
+description: "使用服务账户以编程方式管理 Tailscale PAM，并在没有 Tailscale 客户端的情况下访问 HTTP 服务。"
 ---
 
-Last validated Aug 13, 2026
+最后验证于 Aug 13, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Service accounts are machine identities that let AI agents and applications interact with Tailscale PAM.
+服务账户是机器身份，让 AI 代理和应用程序能够与 Tailscale PAM 交互。
 
-You can use service accounts for two primary purposes:
+服务账户有两个主要用途：
 
-* **Manage Tailscale PAM programmatically**: Create a service account and token for automation that uses the Tailscale PAM API, such as Terraform or scripts that manage services, connectors, policies, or session data.
-* **Access an HTTP service without the Tailscale client**: Tailscale [tags][docs-tags] are represented in PAM as client service accounts. You can create a token for one of these identities when a workload needs clientless access to an HTTP service.
+* **以编程方式管理 Tailscale PAM**：为使用 Tailscale PAM API 的自动化创建服务账户和令牌，例如管理服务、连接器、策略或会话数据的 Terraform 或脚本。
+* **在没有 Tailscale 客户端的情况下访问 HTTP 服务**：Tailscale [标签（tag）][docs-tags]在 PAM 中表示为客户端服务账户。当工作负载需要以无客户端方式访问 HTTP 服务时，你可以为其中一个身份创建令牌。
 
-> **Note:**
+> **注意：**
 >
-> Programmatic management of Tailscale PAM currently uses the Border0 API at `https://api.border0.com`, not the Tailscale API. As a result, you need a separate Tailscale PAM service account and token for API access.
+> Tailscale PAM 的编程管理目前使用 `https://api.border0.com` 的 Border0 API，而不是 Tailscale API。因此，你需要一个单独的 Tailscale PAM 服务账户和令牌来进行 API 访问。
 
-For other machine-to-machine access to PAM services, use a tagged device running Tailscale. Tailscale tags provide identities for non-user devices and let you control their access through your tailnet policy.
+对于其他机器对机器访问 PAM 服务的场景，请使用运行 Tailscale 的带标签设备。Tailscale 标签为非用户设备提供身份，并让你可以通过 tailnet 策略控制它们的访问。
 
-## Service accounts and Tailscale tags
+## 服务账户与 Tailscale 标签
 
-Tailscale PAM automatically represents each Tailscale tag as a service account with the `client` role. You can find these identities in the [PAM](https://console.tailscale.com/admin/settings/pam) settings page of the admin console, under **Service accounts**.
+Tailscale PAM 会自动把每个 Tailscale 标签表示为一个具有 `client` 角色的服务账户。你可以在管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面的 **Service accounts** 下找到这些身份。
 
-You don't need to create a PAM service account for a tagged device. If the workload has the Tailscale client installed, use its tag identity to access PAM services.
+你无需为带标签的设备创建 PAM 服务账户。如果工作负载上安装了 Tailscale 客户端，直接使用它的标签身份来访问 PAM 服务即可。
 
-A token is only needed for a tag-backed client service account when a workload programmatically accesses an HTTP service without the Tailscale client. Other PAM service types do not require a service account token.
+只有当工作负载在不使用 Tailscale 客户端的情况下以编程方式访问 HTTP 服务时，才需要为标签背后的客户端服务账户创建令牌。其他 PAM 服务类型不需要服务账户令牌。
 
-| Use case                                                       | Identity                            | PAM token required |
+| 使用场景                                                       | 身份                                | 是否需要 PAM 令牌 |
 | -------------------------------------------------------------- | ----------------------------------- | ------------------ |
-| Manage PAM resources with Terraform or another automation tool | PAM service account                 | Yes                |
-| Access PAM services from a machine running Tailscale           | Tagged Tailscale device             | No                 |
-| Access an HTTP service without the Tailscale client            | Tag-backed `client` service account | Yes                |
+| 使用 Terraform 或其他自动化工具管理 PAM 资源                   | PAM 服务账户                        | 是                 |
+| 从运行 Tailscale 的机器访问 PAM 服务                           | 带标签的 Tailscale 设备             | 否                 |
+| 在没有 Tailscale 客户端的情况下访问 HTTP 服务                  | 标签背后的 `client` 服务账户        | 是                 |
 
-The `client` role lets the identity act as a client of PAM services. It doesn't provide permission to manage PAM configuration, and the identity must still be allowed to access the target service by your [tailnet policy file][docs-tailnet-policy-file].
+`client` 角色让该身份可以作为 PAM 服务的客户端。它不提供管理 PAM 配置的权限，而且该身份仍必须被你的 [tailnet 策略文件][docs-tailnet-policy-file]允许访问目标服务。
 
-## Create a service account for API access
+## 为 API 访问创建服务账户
 
-Create a service account when an application, script, or automation tool needs to manage Tailscale PAM resources programmatically.
+当应用程序、脚本或自动化工具需要以编程方式管理 Tailscale PAM 资源时，请创建服务账户。
 
-For example, you can use a service account with Terraform to create and manage PAM services, connectors, and policies. Tailscale PAM currently uses the [Border0 Terraform provider][xt-border0-terraform-docs] for this workflow.
+例如，你可以让服务账户配合 Terraform 来创建和管理 PAM 服务、连接器和策略。Tailscale PAM 目前在此工作流中使用 [Border0 Terraform provider][xt-border0-terraform-docs]。
 
-To create a service account:
+要创建服务账户：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page.
-2. In the **Service accounts** section, select **Add service account**.
-3. Enter a **Name** for the service account.
-4. (Optional) Enter a description.
-5. Select the role that provides the permissions required by your automation.
-6. Select **Add service account**.
+1. 打开 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面。
+2. 在 **Service accounts** 部分选择**添加服务账户**。
+3. 输入服务账户的**名称**。
+4. （可选）输入描述。
+5. 选择能为你的自动化提供所需权限的角色。
+6. 选择**添加服务账户**。
 
-For Terraform configurations that manage services and connectors, use the **Member** role. For more limited automation, select a more restrictive role when possible.
+对于管理服务和连接器的 Terraform 配置，请使用 **Member** 角色。对于受限更多的自动化，请尽量选择限制更强的角色。
 
-### Service account roles
+### 服务账户角色
 
-Select the least-privileged role that provides the access your automation requires.
+请选择既能满足自动化所需访问、又具备最小权限的角色。
 
-| Role                | Permissions                                                                                                                                   |
+| 角色                | 权限                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Administrator**   | Full read-write access to the Border0 API used by Tailscale PAM.                                                                              |
-| **Member**          | Manage services, connectors, and policies, and view other PAM resources. Does not provide access to organization settings or user management. |
-| **Service Manager** | Manage services and connectors only.                                                                                                          |
-| **Read Only**       | View PAM resources without making changes.                                                                                                    |
+| **Administrator**   | 对 Tailscale PAM 所用的 Border0 API 拥有完整的读写权限。                                                                              |
+| **Member**          | 管理服务、连接器和策略，并查看其他 PAM 资源。不提供对组织设置或用户管理的访问。 |
+| **Service Manager** | 仅能管理服务和连接器。                                                                                                          |
+| **Read Only**       | 只读查看 PAM 资源，不能做更改。                                                                                                    |
 
-These roles determine what the service account can do through the Border0 API used by Tailscale PAM.
+这些角色决定了服务账户可以通过 Tailscale PAM 所用的 Border0 API 做什么。
 
-For automation such as Terraform, choose the narrowest role that covers the resources managed by your configuration.
+对于 Terraform 这类自动化，请选择能覆盖你配置所管理资源的最窄角色。
 
-## Create a service account token
+## 创建服务账户令牌
 
-After creating the service account, create a token that your application can use to authenticate to the Border0 API used by Tailscale PAM.
+创建服务账户后，为你的应用程序创建一个用于向 Tailscale PAM 所用 Border0 API 进行身份验证的令牌。
 
-To create a token:
+要创建令牌：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page.
-2. In the **Service accounts** section, find the service account, select the  menu, and select **Edit**.
-3. Select **Create token**.
-4. Enter a name for the token.
-5. Select the token lifetime.
-6. Select **Save**.
-7. Copy the token and store it securely.
+1. 打开 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面。
+2. 在 **Service accounts** 部分找到该服务账户，选择该菜单，然后选择**编辑**。
+3. 选择**创建令牌**。
+4. 输入令牌名称。
+5. 选择令牌的有效期。
+6. 选择**保存**。
+7. 复制令牌并妥善保管。
 
-Treat service account tokens as secrets. The token inherits the permissions of its service account.
+请把服务账户令牌当作机密对待。令牌会继承其服务账户的权限。
 
-When possible, use an expiring token and choose the shortest lifetime that works for your automation.
+只要可能，请使用有过期时间的令牌，并选择能满足你自动化的最短有效期。
 
-## Use a service account with the Tailscale PAM API
+## 配合 Tailscale PAM API 使用服务账户
 
-Tailscale PAM currently uses the Border0 API at `https://api.border0.com` for programmatic management. Authentication for this API is separate from authentication for the Tailscale API.
+Tailscale PAM 目前的编程管理使用 `https://api.border0.com` 上的 Border0 API。该 API 的身份验证与 Tailscale API 的身份验证是分开的。
 
-Use the token created for your PAM service account to authenticate API requests.
+使用为你的 PAM 服务账户创建的令牌来对 API 请求进行身份验证。
 
-For example:
+例如：
 
 ```shell
 curl https://api.border0.com/api/v1/connectors \
@@ -100,41 +100,41 @@ curl https://api.border0.com/api/v1/connectors \
   -H "Authorization: <your-token>"
 ```
 
-Replace `<your-token>` with the token that you created.
+把 `<your-token>` 替换为你创建的令牌。
 
-The permissions available to the application are determined by the role assigned to the service account.
+应用程序可用的权限由分配给服务账户的角色决定。
 
-## Use Terraform with Tailscale PAM
+## 配合 Tailscale PAM 使用 Terraform
 
-You can use the Border0 Terraform provider to manage Tailscale PAM resources as infrastructure as code.
+你可以使用 Border0 Terraform provider 以基础设施即代码的方式管理 Tailscale PAM 资源。
 
-Create a PAM service account with the permissions required by your Terraform configuration, create a token for that service account, and use the token to authenticate the provider.
+创建一个具备你 Terraform 配置所需权限的 PAM 服务账户，为该服务账户创建令牌，并使用该令牌对 provider 进行身份验证。
 
-Refer to the following resources for provider configuration and examples:
+provider 配置和示例参见以下资源：
 
-* [Border0 Terraform provider documentation][xt-border0-terraform-docs]
-* [Border0 Terraform examples][xt-border0-terraform-examples]
+* [Border0 Terraform provider 文档][xt-border0-terraform-docs]
+* [Border0 Terraform 示例][xt-border0-terraform-examples]
 
-The Terraform provider and examples currently use Border0 API and resource terminology. For example, resources that appear as **services** of the Tailscale admin console might be called **sockets** in the Terraform provider.
+Terraform provider 和示例目前使用的是 Border0 的 API 和资源术语。例如，在 Tailscale 管理控制台中显示为**服务**的资源，在 Terraform provider 中可能被称为 **socket**。
 
-## Access an HTTP service with a client service account
+## 使用客户端服务账户访问 HTTP 服务
 
-HTTP services can be accessed programmatically without installing the Tailscale client on the requesting machine. For this use case, create a token for the tag-backed client service account that represents the workload's Tailscale identity.
+无需在发起请求的机器上安装 Tailscale 客户端，就可以以编程方式访问 HTTP 服务。对于这种场景，请为代表该工作负载 Tailscale 身份的标签背后客户端服务账户创建一个令牌。
 
-You don't need to create another service account.
+你不需要再创建别的服务账户。
 
-To create the token:
+要创建令牌：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page.
-2. In the **Service accounts** section, find the service account corresponding to the Tailscale tag you want to use. Tag-backed identities have the `client` role.
-3. Select the  menu, and select **Edit**.
-4. Select **Create token**.
-5. Enter a name for the token.
-6. Select the token lifetime.
-7. Select **Save**.
-8. Copy the token.
+1. 打开 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面。
+2. 在 **Service accounts** 部分找到与你想要使用的 Tailscale 标签对应的服务账户。标签背后的身份具有 `client` 角色。
+3. 选择该菜单，然后选择**编辑**。
+4. 选择**创建令牌**。
+5. 输入令牌名称。
+6. 选择令牌的有效期。
+7. 选择**保存**。
+8. 复制该令牌。
 
-Pass the token to the HTTP service using the `Border0-Token` request header, replacing `<your-token>` with the token that you created.
+通过 `Border0-Token` 请求头把令牌传给 HTTP 服务，并把 `<your-token>` 替换为你创建的令牌。
 :
 
 ```shell
@@ -144,19 +144,19 @@ curl https://nginx1-demo.border0.io \
   -H "Border0-Token: $BORDER0_TOKEN"
 ```
 
-Tailscale PAM uses the `Border0-Token` header instead of the standard `Authorization` header so that PAM authentication doesn't conflict with authentication headers required by the upstream HTTP application.
+Tailscale PAM 使用 `Border0-Token` 请求头而不是标准的 `Authorization` 请求头，这样 PAM 身份验证就不会与上游 HTTP 应用所需的身份验证请求头发生冲突。
 
-The token identifies the request as the corresponding tagged client identity. Creating a token does not grant additional access. Your [tailnet policy file][docs-tailnet-policy-file] still determines which PAM services that identity can use.
+该令牌把请求标识为对应的带标签客户端身份。创建令牌本身不会授予额外访问权限。该身份能使用哪些 PAM 服务，仍由你的 [tailnet 策略文件][docs-tailnet-policy-file]决定。
 
-## Best practices to protect service account tokens
+## 保护服务账户令牌的最佳实践
 
-Service account tokens provide non-human access to PAM resources, so protect them like other privileged credentials.
+服务账户令牌为非人类主体提供对 PAM 资源的访问，因此请像对待其他特权凭证一样保护它们。
 
-* Use the least-privileged service account role appropriate for the workload.
-* Prefer expiring tokens instead of tokens that never expire.
-* Store tokens in a secrets manager or another secure credential store instead of source code or configuration files.
-* Create separate service accounts or tokens for separate automation workloads when doing so makes ownership and rotation clearer.
-* Remove tokens that are no longer required, and replace a token if you believe it has been exposed.
+* 为工作负载选用权限最小的服务账户角色。
+* 优先使用会过期的令牌，而不是永不过期的令牌。
+* 把令牌存储在密钥管理器或其他安全的凭证存储中，而不是源代码或配置文件里。
+* 当分开创建服务账户或令牌能让归属和轮换更清晰时，为不同的自动化工作负载创建不同的服务账户或令牌。
+* 移除不再需要的令牌；如果你认为某个令牌已经泄露，请立即更换。
 
 [docs-tags]: /docs/features/tags
 

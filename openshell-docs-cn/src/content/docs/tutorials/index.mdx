@@ -1,0 +1,35 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "教程"
+description: "OpenShell 分步实操演练，从第一个沙箱到可用于生产的策略。"
+keywords: "生成式 AI, 网络安全, 教程, 沙箱, 策略"
+position: 1
+---
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+通过动手实操演练，在构建真实配置的过程中掌握 OpenShell 概念。每个教程都在前一个的基础上展开，从沙箱核心机制起步，逐步进阶到生产级工作流。
+
+<CardGrid>
+
+<LinkCard title="使用 OpenRouter 运行 Pi" href="/tutorials/run-pi-with-openrouter">
+
+构建 Pi 编码智能体镜像，配置 OpenRouter 访问，并在 OpenShell 沙箱内运行。
+</LinkCard>
+
+<LinkCard title="第一个网络策略" href="/tutorials/first-network-policy">
+
+创建沙箱，观察默认拒绝（default-deny）的网络行为，应用只读 L7 策略，并检查审计日志。无需 AI 智能体。
+</LinkCard>
+
+<LinkCard title="GitHub 推送访问" href="/tutorials/github-push-access">
+
+在沙箱中启动 Claude Code，诊断一次策略拒绝，并在沙箱外迭代自定义 GitHub 策略。
+</LinkCard>
+
+<LinkCard title="Microsoft Graph 提供商刷新" href="/tutorials/microsoft-graph-provider-refresh">
+
+配置 Microsoft Graph 配置档案（provider profile），并使用网关托管的 OAuth2 刷新令牌轮换。
+</LinkCard>
+
+</CardGrid>

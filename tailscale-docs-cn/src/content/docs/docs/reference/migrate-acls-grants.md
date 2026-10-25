@@ -1,60 +1,60 @@
 ---
-title: "Migrate from ACLs to grants"
-description: "Convert ACLs to grants."
+title: "从 ACL 迁移到授权"
+description: "将 ACL 转换为授权。"
 ---
 
-Last validated Mar 13, 2026
+最后验证于 Mar 13, 2026
 
-The [tailnet policy file][docs-tailnet-policy-file] is the foundation for defining who can access what in your Tailscale network (known as a [tailnet][docs-tailnet]), controlling [device connections][docs-connect-to-devices], and managing [logical groupings and assignments][docs-targets]. Traditionally, access control lists ([ACLs][docs-acls]) have been the primary method for defining these permissions at the network layer. However, Tailscale has introduced a more powerful and flexible system called [grants][docs-grants]. While ACLs will continue to function indefinitely, the recommended best practice is to prefer grants. This guide walks you through the process of migrating from ACLs to grants. It also explains the benefits, provides conversion examples, and offers best practices to ensure a smooth transition.
+[tailnet 策略文件][docs-tailnet-policy-file] 是定义 Tailscale 网络（即 [tailnet][docs-tailnet]）中谁可以访问什么的基础，用于控制[设备连接][docs-connect-to-devices]和管理[逻辑分组与指派][docs-targets]。传统上，访问控制列表（[ACL][docs-acls]）一直是在网络层定义这些权限的主要方法。不过，Tailscale 推出了一个更强大、更灵活的系统，叫做[授权（grant）][docs-grants]。虽然 ACL 会一直可用，但推荐的最佳实践是优先使用授权。本指南将带你完成从 ACL 迁移到授权的过程，并说明其优势、提供转换示例，还给出确保顺利过渡的最佳实践。
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-## Understanding the differences
+## 了解差异
 
-ACLs and grants both use a [least privilege][ln-principle-of-least-privilege] and [deny-by-default][xt-wiki-deny-by-default] approach, but grants provide several advantages.
+ACL 和授权都采用[最小权限][ln-principle-of-least-privilege]和[默认拒绝][xt-wiki-deny-by-default]的方法，但授权具备多项优势。
 
-ACLs focus primarily on network layer permissions, using a syntax that combines destinations and ports into a single field. Each ACL entry also requires an explicit `action` field, even though `accept` is the only possible value. This structure can become more complex and difficult to read as your tailnet grows.
+ACL 主要关注网络层权限，其语法将目标和端口合并到一个字段中。每条 ACL 条目还需要显式的 `action` 字段，尽管 `accept` 是唯一可能的取值。随着 tailnet 规模扩大，这种结构会变得越来越复杂、难以阅读。
 
-Grants, on the other hand, expand upon ACLs by unifying network and application layer capabilities under a shared syntax. They also separate destinations and ports/protocols into distinct fields for better readability and eliminate the redundant `action` field.
+而授权在 ACL 的基础上更进一步，用统一的语法涵盖网络层和应用层能力。它还把目标与端口/协议拆分到不同字段，可读性更好，并去掉了多余的 `action` 字段。
 
-For more information, refer to [grants vs. ACLs][docs-grants-vs-acls].
+更多信息请参阅 [授权与 ACL 的对比][docs-grants-vs-acls]。
 
-## Benefits of migrating to grants
+## 迁移到授权的好处
 
-Migrating to grants offers several benefits:
+迁移到授权有以下几个好处：
 
-* **Network and application level permissions**: The most significant advantage of grants is their ability to control both network and application layer access. While ACLs can only determine if a connection is allowed at the network level, grants can specify what actions are permitted in applications running at the destination once that connection is established.
-* **More intuitive syntax**: Grants provide a more intuitive and consistent syntax. By separating the destination and port specifications, they make your tailnet policy file easier to read, write, and maintain.
-* **Routing awareness**: The [`via`][docs-via] field in grants gives the ability to control how traffic flows through subnet routers, exit nodes, or app connectors on its way to the destination. This means you can control not only who can access what, but also how that access is routed.
+* **网络层与应用层权限**：授权最显著的优势是能够同时控制网络层和应用层的访问。ACL 只能判断连接在网络层是否被允许，而授权还能规定连接建立后，在目标上运行的应用中允许执行哪些操作。
+* **更直观的语法**：授权提供更直观、更一致的语法。通过将目标与端口规范分开，tailnet 策略文件更易于阅读、编写和维护。
+* **路由感知**：授权中的 [`via`][docs-via] 字段可以控制流量在前往目标的途中如何经过子网路由器、出口节点或应用连接器。这意味着你不仅能控制谁可以访问什么，还能控制访问的路由方式。
 
-## Structural mapping between ACLs and grants
+## ACL 与授权的结构映射
 
-The following table outlines the mapping between the ACLs and grants structure to help visualize the conversion process.
+下表列出了 ACL 与授权结构之间的映射，帮助你直观了解转换过程。
 
-| ACLs element                           | Grants element                   | Notes                                      |
+| ACL 元素                               | 授权元素                         | 说明                                       |
 | :------------------------------------- | :------------------------------- | :----------------------------------------- |
-| `"acls": [...]`                        | `"grants": [...]`                | Top-level array changes name               |
-| `"action": "accept"`                   | *Removed*                        | Implied in grants format                   |
-| `"src": [...]`                         | `"src": [...]`                   | Source principals remain the same          |
-| `"dst": [...]`                         | `"dst": [...]` and `"ip": [...]` | Destination principals and ports separated |
-| Port in destination: `"tag:server:80"` | Port in `"ip"` field: `"80"`     | Port specification moves to IP field       |
-| `"proto": "tcp"`                       | Part of `"ip"` field: `"tcp:80"` | Protocol embedded in IP field              |
-| `"srcPosture": [...]`                  | `"srcPosture": [...]`            | Same in both formats                       |
-| *Not available*                        | `"app": {...}`                   | New field for application capabilities     |
-| *Not available*                        | `"via": [...]`                   | New field for routing control              |
+| `"acls": [...]`                        | `"grants": [...]`                | 顶层数组更改名称                           |
+| `"action": "accept"`                   | *已移除*                         | 在授权格式中隐含                           |
+| `"src": [...]`                         | `"src": [...]`                   | 源主体保持不变                             |
+| `"dst": [...]`                         | `"dst": [...]` 和 `"ip": [...]`  | 目标主体与端口分离                         |
+| 端口在目标中：`"tag:server:80"`        | 端口在 `"ip"` 字段中：`"80"`     | 端口规范移至 `ip` 字段                     |
+| `"proto": "tcp"`                       | `"ip"` 字段的一部分：`"tcp:80"`  | 协议嵌入 `ip` 字段                         |
+| `"srcPosture": [...]`                  | `"srcPosture": [...]`            | 两种格式中相同                             |
+| *不可用*                               | `"app": {...}`                   | 用于应用层能力的新字段                     |
+| *不可用*                               | `"via": [...]`                   | 用于路由控制的新字段                       |
 
-This structural mapping provides a foundation for the systematic conversion process that follows.
+这一结构映射为下文的系统性转换过程奠定了基础。
 
-## Basic migration patterns
+## 基本迁移模式
 
-The process of converting ACLs to grants follows some patterns that you can apply systematically to your tailnet policy file. This section outlines the basic conversion steps with practical examples.
+将 ACL 转换为授权的过程遵循一些固定模式，你可以系统地将这些模式应用到 tailnet 策略文件中。本节通过实际示例说明基本的转换步骤。
 
-The fundamental pattern for converting a standard ACL entry to a grant is to reorganize the components while maintaining the same access permissions.
+将标准 ACL 条目转换为授权的基本模式是：在保持访问权限不变的前提下重新组织各个组成部分。
 
-1. Remove the `action` field.
-2. Combine port specifications from destination with protocols from the `proto` field into the `ip` field.
+1. 移除 `action` 字段。
+2. 将目标中的端口规范与 `proto` 字段中的协议合并到 `ip` 字段。
 
-In an ACL, you typically have a structure such as:
+在 ACL 中，你通常会看到这样的结构：
 
 ```json
 "acls": [
@@ -67,7 +67,7 @@ In an ACL, you typically have a structure such as:
 ]
 ```
 
-When converting to a grant, you'll reorganize this into:
+转换为授权时，需要把它重组为：
 
 ```json
 "grants": [
@@ -79,13 +79,13 @@ When converting to a grant, you'll reorganize this into:
 ]
 ```
 
-Key differences: the grant removes the `action` field, as it's implied in grants, and moves the port specification from the `dst` field to a separate `ip` field. This separation makes the policy more readable and easier to maintain, especially when dealing with multiple ports or protocols.
+主要区别：授权中 `action` 字段是隐含的，因此被移除；端口规范则从 `dst` 字段移到单独的 `ip` 字段。这种拆分让策略更易读、更易维护，在处理多个端口或协议时尤其明显。
 
-> **Tip:**
+> **提示：**
 >
-> If the ACL doesn't specify the protocol, you don't need to specify it in the grant.
+> 如果 ACL 未指定协议，授权中也无需指定协议。
 
-For ACLs that specify multiple ports:
+对于指定了多个端口的 ACL：
 
 ```json
 "acls": [
@@ -97,7 +97,7 @@ For ACLs that specify multiple ports:
 ]
 ```
 
-Becomes:
+转换为：
 
 ```json
 "grants": [
@@ -109,7 +109,7 @@ Becomes:
 ]
 ```
 
-However, if the original destination (`dst` field) targeted two different [tags][docs-tags], you must create two grants⎯one for each tag.
+但如果原始目标（`dst` 字段）指向两个不同的[标签][docs-tags]，你必须创建两条授权——每条对应一个标签。
 
 ```json
 "acls": [
@@ -121,7 +121,7 @@ However, if the original destination (`dst` field) targeted two different [tags]
 ]
 ```
 
-Becomes:
+转换为：
 
 ```json
 "grants": [
@@ -138,60 +138,60 @@ Becomes:
 ]
 ```
 
-If you were to convert this ACL into a single grant, it would allow port `80` and port `22` for both the `dev-server` and `web-server` tags, which is a different permission outcome than the original ACL.
+如果把这个 ACL 转换成单条授权，`dev-server` 和 `web-server` 两个标签都会同时获得端口 `80` 和端口 `22` 的访问权限，这与原始 ACL 的权限结果不同。
 
-### Convert ACLs to grants using the admin console
+### 使用管理控制台将 ACL 转换为授权
 
-The admin console includes a **Convert to grants** button next to the JSON editor that automatically converts your entire `acls` section to equivalent `grants` entries.
+管理控制台在 JSON 编辑器旁提供了一个 **Convert to grants** 按钮，可自动将整个 `acls` 部分转换为等效的 `grants` 条目。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Select **JSON editor**.
-3. Under **Convert ACLs to grants**, select **Convert to grants**.
-4. Review the converted grants in the editor. The conversion removes the `acls` section and replaces it with an equivalent `grants` section.
-5. Select **Save** to apply the changes.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 选择 **JSON editor**。
+3. 在 **Convert ACLs to grants** 下方，选择 **Convert to grants**。
+4. 在编辑器中检查转换后的授权。转换会移除 `acls` 部分，并替换为等效的 `grants` 部分。
+5. 选择 **Save** 应用更改。
 
-The **Convert to grants** button is always visible in the JSON editor but is disabled when your tailnet policy file does not contain an `acls` section.
+**Convert to grants** 按钮始终显示在 JSON 编辑器中，但当你的 tailnet 策略文件不包含 `acls` 部分时，该按钮处于禁用状态。
 
-> **Warning:**
+> **警告：**
 >
-> The conversion takes effect in the editor immediately with no confirmation dialog. Review the converted grants before saving. Tailscale logs all tailnet policy file changes in the [configuration audit logs][docs-audit-logging], which lets you revert changes.
+> 转换会在编辑器中立即生效，不会弹出确认对话框。保存前请仔细检查转换后的授权。Tailscale 会将所有 tailnet 策略文件变更记录在[配置审计日志][docs-audit-logging]中，你可以借此还原更改。
 
-### Manually convert ACLs to grants
+### 手动将 ACL 转换为授权
 
-This section outlines a step-by-step process for manually converting your ACLs to grants, with considerations for different scenarios that might add complexity.
+本节介绍手动将 ACL 转换为授权的分步流程，并说明一些可能增加复杂度的情形。
 
-> **Tip:**
+> **提示：**
 >
-> Tailscale logs all tailnet policy file changes in the [configuration audit logs][docs-audit-logging], which lets you revert changes.
+> Tailscale 会将所有 tailnet 策略文件变更记录在[配置审计日志][docs-audit-logging]中，你可以借此还原更改。
 
-First, identify all ACL entries in your tailnet policy file and categorize them by their function or the resources they protect. This organization will help you convert related entries together and maintain a coherent structure in your grants.
+首先，找出 tailnet 策略文件中的所有 ACL 条目，并按其功能或所保护的资源进行分类。这样组织有助于你把相关条目放在一起转换，并让授权保持清晰连贯的结构。
 
-For each ACL entry, follow this conversion process:
+对每条 ACL 条目，按以下流程转换：
 
-1. Create a new grant object with a `src` array containing the values from the ACLs `src` array.
-2. Create a `dst` array in the grant object.
-3. Create an `ip` array in the grant object.
-4. For each entry in the ACLs `dst` array:
-   1. Split the entry on the colon (`:`) to separate the destination and ports.
-   2. Add the destination (part before the colon) to the `dst` array.
-   3. If the ACL rule has a `proto` field, add that protocol to the ports from the `dst` field (for example, `"tcp:80", "tcp:443"`).
-   4. If no `proto` field is specified, don't use a protocol prefix.
-   5. Add the resulting protocol string to the `ip` array.
-5. If the ACL rule has a `srcPosture` array, copy it directly to the grant object.
+1. 创建一个新的授权对象，其 `src` 数组包含 ACL 中 `src` 数组的值。
+2. 在授权对象中创建 `dst` 数组。
+3. 在授权对象中创建 `ip` 数组。
+4. 对 ACL 中 `dst` 数组的每个条目：
+   1. 按冒号（`:`）拆分条目，分离出目标和端口。
+   2. 将目标（冒号前的部分）加入 `dst` 数组。
+   3. 如果 ACL 规则有 `proto` 字段，就把该协议加到 `dst` 字段的端口前面（例如 `"tcp:80", "tcp:443"`）。
+   4. 如果未指定 `proto` 字段，则不加协议前缀。
+   5. 将得到的协议字符串加入 `ip` 数组。
+5. 如果 ACL 规则有 `srcPosture` 数组，直接把它复制到授权对象中。
 
-If multiple destinations in a single ACL rule have different port requirements, create separate grant rules for each destination to maintain clear and specific permissions.
+如果同一条 ACL 规则中的多个目标有不同的端口要求，应为每个目标创建单独的授权规则，以保持权限清晰、明确。
 
-For complex policies, consider a phased approach by converting one section or functional area at a time. This incremental strategy reduces risk and makes it easier to identify and resolve any issues that arise during the migration.
+对于复杂的策略，可以考虑分阶段进行，每次转换一个部分或一个功能区域。这种渐进策略可以降低风险，也更容易发现并解决迁移过程中出现的问题。
 
-After converting all ACLs to grants, review the entire tailnet policy file for consistency and completeness. Check that all necessary permissions have been preserved and that the resulting grants structure is logical and maintainable.
+把所有 ACL 都转换为授权后，请通读整个 tailnet 策略文件，检查其一致性和完整性。确认所有必需的权限都得到保留，并且最终的授权结构合理、可维护。
 
-## Migration scenarios
+## 迁移场景
 
-Beyond the basic patterns, you might encounter more complex ACL configurations that require special attention during migration. This section explores these scenarios and provides guidance on converting them to grants.
+除了基本模式之外，迁移时你还可能遇到需要特殊处理的更复杂 ACL 配置。本节讨论这些场景，并给出转换为授权的指导。
 
-### Wildcards
+### 通配符
 
-When dealing with ACLs that use wildcard ports or protocol (`*`) specifications, the conversion to grants follows specific rules. For example, an ACL that permits access to all ports:
+处理使用通配符端口或协议（`*`）的 ACL 时，转换为授权需遵循特定规则。例如，允许访问所有端口的 ACL：
 
 ```json
 "acls": [
@@ -203,7 +203,7 @@ When dealing with ACLs that use wildcard ports or protocol (`*`) specifications,
 ]
 ```
 
-Converts to:
+转换为：
 
 ```json
 "grants": [
@@ -215,9 +215,9 @@ Converts to:
 ]
 ```
 
-### IP address ranges and CIDR notations
+### IP 地址段与 CIDR 表示法
 
-For ACLs that use IP address ranges or [CIDR notation][xt-wiki-cidr], the conversion is similar, but you must be careful about how you structure the `dst` and `ip` fields. In grants, the CIDR notation stays in the `dst` field, while protocol and port specifications move to the `ip` field:
+对于使用 IP 地址段或 [CIDR 表示法][xt-wiki-cidr] 的 ACL，转换方法类似，但要注意 `dst` 和 `ip` 字段的组织方式。在授权中，CIDR 表示法保留在 `dst` 字段，协议和端口规范则移到 `ip` 字段：
 
 ```json
 "acls": [
@@ -230,7 +230,7 @@ For ACLs that use IP address ranges or [CIDR notation][xt-wiki-cidr], the conver
 ]
 ```
 
-Becomes:
+转换为：
 
 ```json
 "grants": [
@@ -242,9 +242,9 @@ Becomes:
 ]
 ```
 
-### Autogroups
+### autogroup
 
-If you've been using [autogroup selectors][docs-targets-autogroups] such as `autogroup:member` or `autogroup:self` in your ACLs, these convert directly to grants without any special handling:
+如果你在 ACL 中使用了 `autogroup:member` 或 `autogroup:self` 等 [autogroup 选择器][docs-targets-autogroups]，它们可以直接转换为授权，无需任何特殊处理：
 
 ```json
 "acls": [
@@ -256,7 +256,7 @@ If you've been using [autogroup selectors][docs-targets-autogroups] such as `aut
 ]
 ```
 
-Becomes:
+转换为：
 
 ```json
 "grants": [
@@ -268,33 +268,33 @@ Becomes:
 ]
 ```
 
-## SSH rules
+## SSH 规则
 
-[Tailscale SSH][docs-tailscale-ssh] uses a separate section in the policy file (`ssh`), separate from both ACLs and grants. During your migration, maintain these SSH rules in their original format.
+[Tailscale SSH][docs-tailscale-ssh] 在策略文件中使用单独的 `ssh` 部分，与 ACL 和授权都相互独立。迁移期间，这些 SSH 规则保持原格式不变。
 
-## Testing your migration
+## 测试迁移结果
 
-You can write access control [tests][docs-tests] in the tailnet policy file to ensure that your migrated policies grant the expected access.
+你可以在 tailnet 策略文件中编写访问控制[测试][docs-tests]，确保迁移后的策略授予预期的访问权限。
 
-You can also use the **Preview rules** tab in the admin console editor. When you modify your tailnet policy file through the Tailscale admin console, you can preview the changes before applying them to check if the policies grant the expected access.
+你也可以使用管理控制台编辑器中的 **Preview rules** 标签页。通过 Tailscale 管理控制台修改 tailnet 策略文件时，可以在应用更改前先预览，检查策略是否授予预期的访问权限。
 
-## Best practices for grant management
+## 授权管理最佳实践
 
-As you transition to grants and begin managing your policy in this new format, following these best practices will help ensure a smooth and maintainable access control system.
+在你过渡到授权并开始以这种新格式管理策略时，遵循以下最佳实践有助于确保访问控制系统平稳且可维护。
 
-* Organize your grants logically, grouping related permissions together and using comments to explain the purpose of each section.
-* Consider implementing a staged migration approach, particularly for larger organizations. Start by converting your most basic ACLs to grants, then gradually migrate more complex rules, adding application capabilities as the final step. This phased approach reduces risk and makes it easier to identify and resolve any issues that arise during the migration.
-* Document your grant structure and the reasoning behind it, especially for application layer capabilities. This documentation will be valuable for onboarding new team members who need to understand or modify the policy.
+* 合理组织授权，把相关权限归为一组，并用注释说明每个部分的用途。
+* 考虑采用分阶段迁移方式，对大型组织尤其如此。先把最基本的 ACL 转换为授权，再逐步迁移更复杂的规则，最后一步再添加应用层能力。这种分阶段方式可以降低风险，也更容易发现并解决迁移过程中出现的问题。
+* 为授权结构及其设计理由编写文档，应用层能力尤其如此。这些文档对新团队成员的上手很有价值，方便他们理解或修改策略。
 
-## Troubleshooting common issues
+## 常见问题排查
 
-Even with careful planning and testing, you might encounter some challenges during your migration.
+即使经过周密的规划和测试，迁移过程中仍可能遇到一些挑战。
 
-If you notice missing permissions after migration, double-check that you converted all ACL entries to grants correctly. A common mistake is forgetting to include all ports or protocols in the `ip` field or omitting certain destinations when consolidating multiple ACL entries.
+如果迁移后发现权限缺失，请仔细检查是否正确转换了所有 ACL 条目。常见错误包括：忘记在 `ip` 字段中包含所有端口或协议，或者在合并多条 ACL 条目时遗漏了某些目标。
 
-In complex setups, you might encounter overlapping grants that create unexpected access patterns. Review your grants to ensure that they don't inadvertently provide more access than intended, particularly when dealing with wildcards or ranges in the `ip` field.
+在复杂环境中，你可能遇到授权相互重叠、产生意外访问路径的情况。请检查你的授权，确保它们没有在无意中提供超出预期的访问权限，在处理 `ip` 字段中的通配符或地址段时尤其要注意。
 
-For more troubleshooting guidance, refer to [Troubleshooting grants][docs-grants-troubleshooting].
+更多排查指导请参阅 [授权问题排查][docs-grants-troubleshooting]。
 
 [docs-acls]: /docs/features/access-control/acls
 

@@ -1,107 +1,107 @@
 ---
-title: "Connect to devices"
-description: "Connect to devices in your tailnet."
+title: "连接到设备"
+description: "连接到 tailnet 中的设备。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale automatically assigns each device on your network a unique [Tailscale IP address][docs-tailscale-ip-addresses] and [MagicDNS][docs-magicdns] name so that you can establish stable connections between devices anywhere in the world, even if they're behind a firewall or change networks. This guide covers connecting to devices in your tailnet after you've installed Tailscale on two or more devices.
+Tailscale 会为网络上的每台设备自动分配唯一的 [Tailscale IP 地址][docs-tailscale-ip-addresses] 和 [MagicDNS][docs-magicdns] 名称，让你无论身处世界何处、设备是否位于防火墙之后或刚刚更换网络，都能在设备之间建立稳定连接。本指南介绍在两台及以上设备安装 Tailscale 之后，如何连接 tailnet 中的设备。
 
-> **Note:**
+> **注意：**
 >
-> Before you explore the connection process, it's crucial to understand that Tailscale provides network connectivity between devices, but you must run a specific [service][docs-services] (like SSH or a web server) on the destination device. Tailscale does not provide these services automatically.
+> 在了解连接流程之前，必须先明白一点：Tailscale 负责在设备之间提供网络连通性，但目标设备上必须运行特定的[服务][docs-services]（如 SSH 或 Web 服务器）。Tailscale 不会自动提供这些服务。
 
-## Prerequisites
+## 前提条件
 
-* Tailscale installed on at least two devices.
-* [Access control policies][docs-acls] that allow the devices to connect. If you're using the [default access control policies][docs-default-acl], all connections will be allowed between any device in your tailnet.
-* At least one [service][docs-services] running on one of the devices.
+* 至少两台设备上已安装 Tailscale。
+* [访问控制策略][docs-acls]允许设备之间连接。如果你使用[默认访问控制策略][docs-default-acl]，tailnet 中任意设备之间的所有连接都会被放行。
+* 至少一台设备上正在运行某个[服务][docs-services]。
 
-## Connect to devices in your tailnet
+## 连接到 tailnet 中的设备
 
-To connect to another device in your tailnet:
+要连接 tailnet 中的另一台设备：
 
-1. [Identify the device to connect to][ar-identify-devices].
-2. [Make sure the device is running a service you can access][ar-ensure-services-are-running].
-3. [Connect to the service][ar-connect-to-service].
+1. [确定要连接的设备][ar-identify-devices]。
+2. [确认设备上正在运行可访问的服务][ar-ensure-services-are-running]。
+3. [连接到该服务][ar-connect-to-service]。
 
-### Identify your devices
+### 识别你的设备
 
-Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console. You'll find a list of all devices in your tailnet, along with their hostnames ([device names][docs-machine-name]) and [Tailscale IP addresses][docs-tailscale-ip-addresses].
+打开管理控制台的 [机器](https://console.tailscale.com/admin/machines) 页面。你会看到 tailnet 中所有设备的列表，以及它们的主机名（[设备名称][docs-machine-name]）和 [Tailscale IP 地址][docs-tailscale-ip-addresses]。
 
-### Ensure services are running
+### 确保服务正在运行
 
-Remember, you can only connect to services running on your devices. Common services include:
+请记住，你只能连接设备上正在运行的服务。常见服务包括：
 
-* SSH (usually on port `22`)
-  You can also use [Tailscale SSH][docs-tailscale-ssh].
-* Web servers (often on port `80` or `443`)
-* File sharing services (such as SFTP)
-* Remote access tools (such as RDP)
+* SSH（通常在端口 `22`）
+  也可以使用 [Tailscale SSH][docs-tailscale-ssh]。
+* Web 服务器（通常在端口 `80` 或 `443`）
+* 文件共享服务（如 SFTP）
+* 远程访问工具（如 RDP）
 
-Ensure the [service][docs-services] you want to access runs on the target device. You can do so by checking the [Services](https://console.tailscale.com/admin/services) page of the admin console, or by confirming the service is running on the destination device.
+确保你要访问的[服务][docs-services]正在目标设备上运行。可以通过管理控制台的 [服务](https://console.tailscale.com/admin/services) 页面确认，也可以直接在目标设备上确认服务正在运行。
 
-### Connect to a service
+### 连接到服务
 
-> **Note:**
+> **注意：**
 >
-> Tailscale offers a feature called [MagicDNS][docs-magicdns], which lets you use [device names][docs-machine-name] instead of Tailscale IP addresses. It's enabled by default, so you can use it right away.
+> Tailscale 提供一项名为 [MagicDNS][docs-magicdns] 的功能，让你可以用 [设备名称][docs-machine-name] 代替 Tailscale IP 地址。该功能默认启用，可以直接使用。
 
-To connect to a service on a device in your tailnet:
+要连接 tailnet 中某台设备上的服务：
 
-* Use the [device name][docs-machine-name] or [Tailscale IP address][docs-tailscale-ip-addresses] of the target device.
-* Specify the port of the service you're trying to access.
+* 使用目标设备的 [设备名称][docs-machine-name] 或 [Tailscale IP 地址][docs-tailscale-ip-addresses]。
+* 指明要访问的服务所在的端口。
 
-For example, if you want to SSH into a device with the [MagicDNS][docs-magicdns] [name][docs-machine-name] `dev-build-server`, you can use the following command in a terminal emulator:
+例如，要通过 SSH 连接一台 [MagicDNS][docs-magicdns] [名称][docs-machine-name] 为 `dev-build-server` 的设备，可以在终端模拟器中使用以下命令：
 
 ```shell
 ssh username@dev-build-server
 ```
 
-Visit the following topics to find more information more about connecting to different types of services:
+访问以下主题，了解更多连接不同类型服务的方法：
 
-* [Connect to a database][docs-database].
-* [Connect to a Windows server using RDP][docs-secure-rdp-windows].
-* [Connect to a cloud server][docs-cloud-server].
-* [Connect to a remote development environment][docs-remote-code].
-* [Connect to a network attached storage (NAS)][docs-nas].
+* [连接数据库][docs-database]。
+* [使用 RDP 连接 Windows 服务器][docs-secure-rdp-windows]。
+* [连接云服务器][docs-cloud-server]。
+* [连接远程开发环境][docs-remote-code]。
+* [连接网络附加存储（NAS）][docs-nas]。
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to a service:
+如果无法连接到某个服务：
 
-* Check if you can reach the device using [`tailscale ping`][docs-tailscale-ping].
-* Verify that you're using the correct connection information.
-* Ensure the service is running on the target device at the expected port number.
-* Check if any [firewalls][docs-firewalls] (including the built-in firewall on the target device) are blocking the connection.
-* Ensure that your [tailnet policy file][docs-edit-policies] doesn't contain any [grants][docs-grants] or [ACLs][docs-acls] that prevent a connection between the two devices.
-* Visit [troubleshooting device connectivity][docs-device-connectivity].
+* 检查能否通过 [`tailscale ping`][docs-tailscale-ping] 访问该设备。
+* 确认你使用的连接信息正确无误。
+* 确认服务正在目标设备上按预期端口运行。
+* 检查是否有[防火墙][docs-firewalls]（包括目标设备上的内置防火墙）阻止了连接。
+* 确认 [tailnet 策略文件][docs-edit-policies] 中没有阻止两台设备之间连接的 [授权][docs-grants] 或 [ACL][docs-acls]。
+* 参阅[设备连接故障排查][docs-device-connectivity]。
 
-## Advanced topics
+## 进阶主题
 
-The following sections cover other ways you can manage connections to devices in your tailnet.
+以下小节介绍管理 tailnet 内设备连接的其他方式。
 
-### Access control
+### 访问控制
 
-When you create a tailnet, Tailscale automatically applies a [default access control policy][docs-default-acl] that lets you connect to all devices you own. You can customize [access control policies][docs-access-control] (such as [ACLs][docs-acls] or [grants][docs-grants]) in the [tailnet policy file][docs-edit-policies] to create policies that control how devices in your tailnet connect to each other and other devices on the internet.
+创建 tailnet 时，Tailscale 会自动应用[默认访问控制策略][docs-default-acl]，允许你连接自己拥有的所有设备。你可以在 [tailnet 策略文件][docs-edit-policies] 中自定义 [访问控制策略][docs-access-control]（如 [ACL][docs-acls] 或 [授权][docs-grants]），控制 tailnet 内设备之间以及与互联网上其他设备之间的连接方式。
 
 ### Tailscale SSH
 
-Tailscale offers a built-in SSH feature that extends and simplifies SSH connections between your devices. When enabled, [Tailscale SSH][docs-tailscale-ssh] manages the authentication and authorization of SSH connections in your tailnet, letting you add additional security checks and providing a web console interface.
+Tailscale 提供内置的 SSH 功能，扩展并简化设备之间的 SSH 连接。启用后，[Tailscale SSH][docs-tailscale-ssh] 会接管 tailnet 内 SSH 连接的身份认证与授权，让你可以增加额外的安全检查，还提供网页控制台界面。
 
-### Sharing devices
+### 共享设备
 
-You can [share devices][docs-sharing] or [specific services][docs-tailscale-serve] with other Tailscale users, allowing collaboration while maintaining security.
+你可以与其他 Tailscale 用户[共享设备][docs-sharing]或[特定服务][docs-tailscale-serve]，在保持安全的同时开展协作。
 
-### Routing
+### 路由
 
-You can configure a device to route outbound traffic by running it as an [exit node][docs-exit-nodes] or inbound traffic by running it as a [subnet router][docs-subnets]. Using a device as a subnet router lets you access devices without installing the Tailscale client.
+你可以把一台设备配置为[出口节点][docs-exit-nodes]来路由出站流量，或配置为[子网路由器][docs-subnets]来路由入站流量。将设备用作子网路由器后，无需安装 Tailscale 客户端就能访问其背后的设备。
 
-[ar-connect-to-service]: #connect-to-a-service
+[ar-connect-to-service]: #连接到服务
 
-[ar-ensure-services-are-running]: #ensure-services-are-running
+[ar-ensure-services-are-running]: #确保服务正在运行
 
-[ar-identify-devices]: #identify-your-devices
+[ar-identify-devices]: #识别你的设备
 
 [docs-access-control]: /docs/features/access-control
 

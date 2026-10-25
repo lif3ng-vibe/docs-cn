@@ -1,0 +1,97 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "Kubernetes 上的工作区"
+sidebar-title: "工作区"
+description: "配置 OpenShell 工作区到 Kubernetes 命名空间的映射方式，包括为每个工作区托管命名空间的托管模式。"
+keywords: "Kubernetes, 工作区, 命名空间, 托管模式, Helm, RBAC"
+position: 2
+---
+import { Aside } from '@astrojs/starlight/components';
+
+Kubernetes 计算驱动把每个 OpenShell 工作区映射到一个 Kubernetes 命名空间，映射方式在配置网关时选定。OpenShell 工作区成员资格与角色同 Kubernetes 命名空间访问相互独立；创建工作区与分配成员参见[工作区](/how-it-works/workspaces)。
+
+| 模式 | 命名空间映射 | 命名空间所有者 |
+|---|---|---|
+| `shared`（默认） | 所有工作区共用一个沙箱命名空间。 | 平台运维人员。 |
+| `managed` | 每个工作区使用 `openshell-{gateway_id}-{workspace}`。 | OpenShell Kubernetes 驱动。 |
+| `operator` | 每个工作区映射到运维允许列表中的一个预置命名空间。 | 平台运维人员。 |
+
+[RFC 0011](https://github.com/NVIDIA/OpenShell/tree/main/rfc/0011-multi-player-design#kubernetes-compute-driver-workspace-mapping) 解释了工作区到命名空间的设计。上表反映的是当前驱动支持的模式与默认值。
+
+## 配置托管工作区
+
+当网关需要为每个 OpenShell 工作区创建和删除 Kubernetes 命名空间时，使用托管模式。前提是一个可用的 [Kubernetes 安装](/kubernetes/setup)：Agent Sandbox controller 与 CRD 必须已安装，集群 CNI 必须能在每个沙箱命名空间中强制执行入站与出站 `NetworkPolicy`。
+
+在 Helm values 文件中设置 Kubernetes 驱动模式：
+
+```yaml
+gatewayConfig:
+  openshell.drivers.kubernetes:
+    workspace_mode: managed
+```
+
+使用这些 values 安装或升级网关：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  -f my-values.yaml
+```
+
+保持 chart 托管的集群级 RBAC 开启，或者以命名空间管理员身份安装之前，让集群管理员应用渲染出的 `ClusterRole` 与 `ClusterRoleBinding`。托管模式需要集群范围的权限来创建和删除命名空间，并管理其中的沙箱资源。单独的 RBAC 流程参见[不使用 cluster-admin 安装](/kubernetes/setup#不使用-cluster-admin-安装)。驱动会在每个托管命名空间中创建沙箱 `ServiceAccount`，不要在该命名空间安装 `openshell-workspace` chart。
+
+<Aside type="note">
+如果该网关已经以 `shared` 模式运行沙箱，在更改 `workspace_mode` 之前先规划好这些沙箱的删除或迁移。新模式把工作区映射到不同的 Kubernetes 命名空间；它不会移动已有的沙箱资源。
+</Aside>
+
+chart 默认用其 fullname 作为 `gateway_id`。使用默认 fullname `openshell` 时，工作区 `team-ml` 使用的命名空间是 `openshell-openshell-team-ml`。创建工作区之后请保持网关 ID 稳定，因为它是这些命名空间名称的一部分。网关 ID 与由此得到的命名空间名称必须满足 Kubernetes DNS-1123 标签的 63 字符上限。驱动字段参见[网关配置参考](/how-it-works/gateways/configuration#kubernetes)。
+
+## 创建并验证工作区
+
+OpenShell 工作区由平台管理员（Platform Admin）创建。仅创建工作区记录并不会创建对应的 Kubernetes 命名空间。驱动在某个操作首次需要时才创建命名空间与沙箱 `ServiceAccount`，例如预置沙箱时：
+
+```shell
+openshell workspace create --name team-ml
+openshell sandbox create --workspace team-ml
+```
+
+OIDC 部署中，请在该用户使用工作区之前分配 Workspace Admin 或 Workspace User 成员身份。参见[创建工作区并添加成员](/how-it-works/workspaces#创建工作区并添加成员)。
+
+沙箱预置完成后检查命名空间：
+
+```shell
+kubectl get namespace openshell-openshell-team-ml
+kubectl -n openshell-openshell-team-ml get serviceaccount openshell-sandbox
+```
+
+如果使用其他 chart fullname 或网关 ID，请相应替换命名空间名称。网关为托管命名空间打上 `openshell.ai/managed-by=openshell`、`openshell.ai/gateway-id` 与 `openshell.ai/sandbox-workspace` 标签。
+
+### 从私有镜像仓库拉取镜像
+
+如果沙箱镜像需要镜像拉取 Secret，请在配置的源命名空间（`server.sandboxNamespace`，默认为 Helm release 命名空间）中创建该 Secret，并在网关 values 中列出其名称：
+
+```yaml
+gatewayConfig:
+  openshell.drivers.kubernetes:
+    workspace_mode: managed
+    image_pull_secrets: [regcred]
+```
+
+驱动会在每个沙箱运行时代次把每个配置的 Secret 复制进托管工作区命名空间，并随该代次删除副本。其他镜像设置参见 [Kubernetes 驱动配置](/how-it-works/gateways/configuration#kubernetes)。
+
+## 删除托管工作区
+
+先移除其中的沙箱及其他工作区资源，再通过 OpenShell 删除工作区：
+
+```shell
+openshell workspace delete team-ml
+```
+
+删除工作区时，网关会请求 Kubernetes 驱动删除托管命名空间。OpenShell 工作区仍然存在时不要直接删除该命名空间。必须先移除的资源完整列表参见[删除工作区](/how-it-works/workspaces#删除工作区)。
+
+## 使用 operator 管理的命名空间
+
+如果平台自行预置工作区命名空间，请改用 `operator` 模式。在 `gatewayConfig.openshell.drivers.kubernetes` 中配置 `operator_namespace_label` 或 `operator_namespace_file` 之一，然后在每个允许列表中的命名空间安装 `openshell-workspace` chart。这些命名空间的创建与删除都不由网关负责。参见[拆分网关与工作区 release](/kubernetes/setup#拆分网关与工作区-release)。

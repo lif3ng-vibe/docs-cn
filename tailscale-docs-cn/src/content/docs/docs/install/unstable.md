@@ -1,34 +1,32 @@
 ---
-title: "Install unstable Tailscale clients"
-description: "Find out how to test new features before they are released to the wider community."
+title: "安装 Tailscale 不稳定版客户端"
+description: "了解如何在面向更广泛社区发布之前测试新功能。"
 ---
 
-Last validated Jan 7, 2025
+最后验证于 Jan 7, 2025
 
-Tailscale tests new features and fixes in unstable release clients before releasing updates
-to the wider community. If you'd like to help test new features, you can download and install unstable clients
-from the links below.
+在向更广泛社区发布更新之前，Tailscale 会先在不稳定版客户端中测试新功能和修复。如果你愿意帮助测试新功能，可以从以下链接下载并安装不稳定版客户端。
 
-Features can be in various [release stages][docs-release-stages]. Beta features do not necessarily require an unstable release client to test.
+功能可能处于不同的[发布阶段][docs-release-stages]。测试 Beta 功能不一定需要不稳定版客户端。
 
-> **Note:**
+> **注意：**
 >
-> Installing unstable builds are recommended for testing purposes only. While we strive to keep these builds reliable, they are experimental, and some are not signed for distribution.
+> 建议仅出于测试目的安装不稳定版构建。虽然我们尽力保持这些构建的可靠性，但它们属于实验性质，且部分构建未经分发签名。
 
 ## Linux
 
-To install an unstable build of the Tailscale client on Linux, use one of the following methods.
+要在 Linux 上安装 Tailscale 客户端的不稳定版构建，可使用以下任一方法。
 
-#### Packages site
+#### 软件包站点
 
-1. Go to the Tailscale Packages site, [unstable][pk-unstable] page.
-2. Download the build for your distribution.
-3. Follow the instructions for the distribution you are using to install the unstable build.
+1. 前往 Tailscale Packages 站点的 [unstable][pk-unstable] 页面。
+2. 下载适用于你的发行版的构建。
+3. 按照你所用发行版的说明安装该不稳定版构建。
 
 #### Tailscale CLI
 
-1. Open a terminal session.
-2. Use the Tailscale CLI command [`tailscale update`][docs-cli-update] with the `--track` flag to set the release track to `unstable`.
+1. 打开终端会话。
+2. 使用 Tailscale CLI 命令 [`tailscale update`][docs-cli-update] 加上 `--track` 标志，把发布通道设置为 `unstable`。
 
    ```shell
    tailscale update --track=unstable
@@ -36,18 +34,18 @@ To install an unstable build of the Tailscale client on Linux, use one of the fo
 
 ## Windows
 
-To install an unstable build of the Tailscale client on Windows, use one of the following methods.
+要在 Windows 上安装 Tailscale 客户端的不稳定版构建，可使用以下任一方法。
 
-#### Packages site
+#### 软件包站点
 
-1. Go to the Tailscale Packages site, [unstable][pk-unstable-windows] page, Windows section.
-2. Download the Windows version applicable to your version.
-3. Install the build.
+1. 前往 Tailscale Packages 站点的 [unstable][pk-unstable-windows] 页面的 Windows 部分。
+2. 下载适用于你系统版本的 Windows 版本。
+3. 安装该构建。
 
 #### Tailscale CLI
 
-1. Open a command line session.
-2. Use the Tailscale CLI command [`tailscale update`][docs-cli-update] with the `--track` flag to set the release track to `unstable`.
+1. 打开命令行会话。
+2. 使用 Tailscale CLI 命令 [`tailscale update`][docs-cli-update] 加上 `--track` 标志，把发布通道设置为 `unstable`。
 
    ```shell
    tailscale update --track=unstable
@@ -55,18 +53,18 @@ To install an unstable build of the Tailscale client on Windows, use one of the 
 
 ## macOS
 
-To install an unstable build of the Tailscale client on macOS, use one of the following methods.
+要在 macOS 上安装 Tailscale 客户端的不稳定版构建，可使用以下任一方法。
 
-#### Packages site
+#### 软件包站点
 
-1. Go to the Tailscale Packages site, [unstable][pk-unstable-macos] page, macOS section.
-2. Download either the `.zip` or `.pkg` version of macOS build.
-3. Install the build.
+1. 前往 Tailscale Packages 站点的 [unstable][pk-unstable-macos] 页面的 macOS 部分。
+2. 下载 `.zip` 或 `.pkg` 版本的 macOS 构建。
+3. 安装该构建。
 
 #### Tailscale CLI
 
-1. Open a terminal session.
-2. Use the Tailscale CLI command [`tailscale update`][docs-cli-update] with the `--track` flag to set the release track to `unstable`.
+1. 打开终端会话。
+2. 使用 Tailscale CLI 命令 [`tailscale update`][docs-cli-update] 加上 `--track` 标志，把发布通道设置为 `unstable`。
 
    ```shell
    tailscale update --track=unstable
@@ -74,37 +72,37 @@ To install an unstable build of the Tailscale client on macOS, use one of the fo
 
 #### App Store
 
-[Join our TestFlight unstable track][xt-apple-testflight-tailscale-beta]. TestFlight requires macOS Monterey 12 or later.
+[加入我们的 TestFlight 不稳定通道][xt-apple-testflight-tailscale-beta]。TestFlight 要求 macOS Monterey 12 或更高版本。
 
-To stop testing unstable versions:
+要停止测试不稳定版本：
 
-1. Open the TestFlight app.
-2. Select **Tailscale**.
-3. Scroll to the bottom, then select **Stop Testing**.
+1. 打开 TestFlight 应用。
+2. 选择 **Tailscale**。
+3. 滚动到底部，然后选择**停止测试**（Stop Testing）。
 
 ## iOS
 
-To install an unstable build of the Tailscale client on iOS, join our [TestFlight unstable track][xt-apple-testflight-tailscale-beta-2].
+要在 iOS 上安装 Tailscale 客户端的不稳定版构建，请加入我们的 [TestFlight 不稳定通道][xt-apple-testflight-tailscale-beta-2]。
 
-To stop testing unstable versions:
+要停止测试不稳定版本：
 
-1. Open the TestFlight app.
-2. Select **Tailscale**.
-3. Scroll to the bottom, then select **Stop Testing**.
+1. 打开 TestFlight 应用。
+2. 选择 **Tailscale**。
+3. 滚动到底部，然后选择**停止测试**（Stop Testing）。
 
 ## Android
 
-To install an unstable build of the Tailscale client on Android, join our [Play Store unstable track][xt-google-play-tailscale-test].
+要在 Android 上安装 Tailscale 客户端的不稳定版构建，请加入我们的 [Play Store 不稳定通道][xt-google-play-tailscale-test]。
 
 ## tvOS
 
-To install an unstable build of the Tailscale client on tvOS for an Apple TV, join our [TestFlight unstable track][xt-apple-testflight-tailscale-beta-2]. This requires tvOS 17 or later.
+要在 Apple TV 的 tvOS 上安装 Tailscale 客户端的不稳定版构建，请加入我们的 [TestFlight 不稳定通道][xt-apple-testflight-tailscale-beta-2]。这要求 tvOS 17 或更高版本。
 
-To stop testing unstable versions:
+要停止测试不稳定版本：
 
-1. Open the TestFlight app.
-2. Select **Tailscale**.
-3. Select the  menu, then **Stop Testing**.
+1. 打开 TestFlight 应用。
+2. 选择 **Tailscale**。
+3. 选择菜单图标，然后选择**停止测试**（Stop Testing）。
 
 [docs-cli-update]: /docs/reference/tailscale-cli#update
 

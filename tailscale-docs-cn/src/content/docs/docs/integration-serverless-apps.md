@@ -1,18 +1,18 @@
 ---
-title: "Connect to a serverless app"
-description: "Securely connect to serverless applications using Tailscale"
+title: "连接到无服务器应用"
+description: "使用 Tailscale 安全地连接到无服务器应用"
 ---
 
-Last validated Apr 23, 2025
+最后验证于 Apr 23, 2025
 
-[**Tailscale on AWS App Runner**](/docs/install/cloud/aws/aws-app-runner) — Install the Tailscale client on AWS App Runner.
+[**在 AWS App Runner 上使用 Tailscale**](/docs/install/cloud/aws/aws-app-runner) —— 在 AWS App Runner 上安装 Tailscale 客户端。
 
-[**Tailscale on AWS Lambda**](/docs/install/cloud/aws/aws-lambda) — Run Tailscale on AWS Lambda functions.
+[**在 AWS Lambda 上使用 Tailscale**](/docs/install/cloud/aws/aws-lambda) —— 在 AWS Lambda 函数上运行 Tailscale。
 
-[**Tailscale on Google Cloud Run**](/docs/install/cloud/cloudrun) — Install the Tailscale client on containers in Google Cloud Run.
+[**在 Google Cloud Run 上使用 Tailscale**](/docs/install/cloud/cloudrun) —— 在 Google Cloud Run 的容器上安装 Tailscale 客户端。
 
-[**Tailscale on Fly.io**](/docs/install/cloud/flydotio) — Use Tailscale with Fly.io.
+[**在 Fly.io 上使用 Tailscale**](/docs/install/cloud/flydotio) —— 将 Tailscale 与 Fly.io 搭配使用。
 
-[**Tailscale on Heroku**](/docs/install/cloud/heroku) — Use Tailscale on Heroku.
+[**在 Heroku 上使用 Tailscale**](/docs/install/cloud/heroku) —— 在 Heroku 上使用 Tailscale。
 
-[**Tailscale on Koyeb**](/docs/install/cloud/koyeb) — Use Tailscale with Koyeb.
+[**在 Koyeb 上使用 Tailscale**](/docs/install/cloud/koyeb) —— 将 Tailscale 与 Koyeb 搭配使用。

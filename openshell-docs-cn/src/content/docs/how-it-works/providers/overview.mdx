@@ -1,0 +1,413 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "提供商"
+sidebar-title: "概览"
+description: "创建并管理向 OpenShell 沙箱注入 API 密钥与令牌的凭据提供商。"
+keywords: "生成式 AI, 网络安全, 提供商, 凭据, API 密钥, 沙箱, 安全"
+position: 4
+---
+import { Aside } from '@astrojs/starlight/components';
+
+AI 智能体通常需要凭据（credential）才能访问外部服务：AI 模型提供商（provider）的 API 密钥、GitHub 或 GitLab 的令牌，等等。OpenShell 把这些凭据作为名为*提供商*的一等实体来管理。
+
+创建并管理向沙箱提供凭据的提供商。
+
+<Aside type="note">
+提供商配置档案（profile）定义提供商凭据、策略与刷新行为。配置档案格式与自定义配置档案工作流参见[配置档案](/how-it-works/providers/profiles)。
+</Aside>
+
+提供商配置档案包含已知端点与二进制的元数据。创建提供商之前，先查看可用的配置档案：
+
+```shell
+openshell profile list
+openshell profile describe github
+```
+
+## 创建提供商
+
+提供商可以从本地环境变量创建，也可以用显式凭据值创建。
+
+对 `google-vertex-ai --from-gcloud-adc` 这类带刷新支持的提供商，`openshell provider create` 现在会等网关配置好刷新元数据并铸造出初始访问令牌之后才报告成功。
+
+### 从本地凭据创建
+
+创建提供商最快的方式是让 CLI 从你的 shell 环境中发现凭据：
+
+```shell
+openshell provider create --name my-claude --type claude-code --from-existing
+```
+
+这会从当前环境读取 `ANTHROPIC_API_KEY` 或 `CLAUDE_API_KEY`，并存储到该提供商中。
+
+### 用显式凭据创建
+
+直接提供凭据值：
+
+```shell
+openshell provider create --name my-nvidia --type nvidia --credential NVIDIA_API_KEY=nvapi-example
+```
+
+### 裸键形式
+
+只传键名不传值，即可从同名环境变量读取值：
+
+```shell
+openshell provider create --name my-nvidia --type nvidia --credential NVIDIA_API_KEY
+```
+
+这会在 shell 中查找 `$NVIDIA_API_KEY` 的当前值并存储。
+
+### 从当前 OIDC 登录创建
+
+基于配置档案的令牌交换提供商可以把当前网关 OIDC 访问令牌存储为主题（subject）凭据。主题凭据只在网关内部使用，不会进入沙箱环境材料或静态凭据绑定：
+
+```shell
+openshell provider create \
+  --name custom-api \
+  --type custom-api \
+  --from-oidc-token
+```
+
+配置档案中恰好只有一个 `token_grant.subject_token.credential` 时，OpenShell 会从提供商配置档案推断目标凭据。多于一个时请传 `--credential <key>`。之后用以下命令刷新存储的主题令牌：
+
+```shell
+openshell provider update custom-api --from-oidc-token
+```
+
+这会从活动网关登录复制当前 OIDC 访问令牌与过期时间。它要求存在一个为 OIDC 注册的活动命名网关。存储的网关访问令牌已过期且刷新令牌可用时，CLI 会在存储提供商凭据之前先刷新它。OIDC 刷新令牌不会存储进提供商。
+
+`--from-existing` 使用基于配置档案的发现。所请求的 `--type` 必须是已导入且带 `discovery` 节的提供商配置档案的名称。没有匹配的配置档案时，CLI 返回错误，而不是回退到旧版发现。
+
+配置档案不需要静态凭据的提供商可以直接创建，无需凭据来源：
+
+```shell
+openshell provider create --name public-pypi --type pypi
+```
+
+提供商创建会拒绝无配置档案（profileless）的类型。对自定义 GitLab 部署，先导入包含该部署端点的配置档案，再用该配置档案 ID 创建实例。既有的无配置档案提供商记录仍然可用，但 OpenShell 不会再创建新的。
+
+更新自定义提供商配置档案：先导出，编辑其端点、二进制或凭据元数据，并保留导出的 `resource_version`：
+
+```shell
+openshell profile export my-api -o yaml > my-api-profile.yaml
+openshell profile update my-api -f my-api-profile.yaml
+```
+
+导入保持只创建语义，配置档案 ID 已存在时会失败。已有配置档案请用 `profile update <id>`。拦截器管理的配置档案是只读的。目标 ID 必须与文件中的配置档案 ID 一致。更新一次只接受一个文件，并拒绝过期的资源版本。更新后的配置档案策略会在下一次沙箱配置同步时应用到该类型的所有提供商实例。
+
+按 ID 删除一个或多个自定义提供商配置档案：
+
+```shell
+openshell profile delete custom-api custom-alt
+```
+
+多配置档案删除中某个条目失败时，CLI 会报告该配置档案的失败并继续处理其余 ID。只要任一条目失败，命令在尝试完所有请求的删除后以错误退出。
+
+<Aside type="caution">
+静态凭据要求已导入的提供商配置档案。配置档案通常至少定义一个端点。无端点配置档案要求在沙箱策略端点上有显式的 `credential_binding.provider`。OpenShell 不会激活来自无配置档案提供商的静态凭据，因为它无法确定适用哪个凭据定义。
+</Aside>
+
+## 获取运行时凭据
+
+[mTLS operator](/how-it-works/gateways/authentication#mtls-operator) 可以通过 [Python SDK](/sdk/python#获取提供商凭据)、[TypeScript SDK](/sdk/typescript#获取提供商凭据) 或生成的/原生 gRPC 客户端调用 `openshell.v1.OpenShell/GetProviderCredentials`。选择一个明确的工作区、按规范名选择一个提供商，以及 1 到 32 个运行时环境键。例如 GitHub 提供商的请求体为：
+
+```json
+{
+  "workspace_scope": { "workspace": "default" },
+  "name": "my-github",
+  "credential_keys": ["GITHUB_TOKEN"]
+}
+```
+
+响应把每个选中的键映射到其 `value` 与可选的 `expiration_time`。网关返回所有选中的值或一个错误。它会复用仍然足够有效的凭据，并在必要时刷新网关管理的凭据。`minimum_remaining_lifetime` 接受最长 24 小时的 protobuf duration；省略或为零时使用 5 分钟的安全裕量。不过期的静态凭据满足生命周期要求。无法满足所请求生命周期的凭据会导致调用失败。
+
+OAuth 刷新管理的凭据返回访问令牌，绝不返回仅网关可用的刷新令牌、客户端机密或签名材料。监管器侧、端点专属与 SPIFFE 绑定的动态授予返回 `FAILED_PRECONDITION`。即使另一个选中的键导致请求失败，刷新效果也可能已经持久化。不确定的轮换令牌交换需要重新授权或重新配置刷新，而不是自动重试。
+
+<Aside type="caution">
+获取操作会把真实凭据值导出到沙箱端点强制范围之外。不要让它们进入日志、命令历史与共享输出。普通用户与 OIDC 管理员无法调用此 RPC。没有提供专用 CLI 命令。
+</Aside>
+
+## 管理提供商
+
+在活动网关上列出、查看、更新与删除提供商。
+
+列出所有提供商：
+
+```shell
+openshell provider list
+```
+
+机器可读输出请用 `-o json` 或 `-o yaml`：
+
+```shell
+openshell provider list -o json
+openshell provider list -o yaml
+```
+
+结构化列表输出是一个包含 `providers` 与 `next_page_token` 字段的信封。每个提供商包含元数据（`id`、`name`、`type`）、凭据键名、配置键名、标签、创建时间戳、资源版本与凭据过期时间。只暴露凭据与配置键名，绝不暴露值，防止凭据意外泄漏到日志或输出中。把返回的令牌传给 `--page-token` 可继续翻页。凭据如何注入沙箱的细节参见[凭据注入](#凭据注入的工作原理)。
+
+查看提供商：
+
+```shell
+openshell provider get my-claude
+```
+
+更新提供商的凭据：
+
+```shell
+openshell provider update my-claude --from-existing
+```
+
+要等待挂接的沙箱应用更新后的凭据，添加 `--wait`：
+
+```shell
+openshell provider update my-claude --from-existing --wait --timeout 30 --output json
+```
+
+更新会在保存新凭据之前记录哪些沙箱已挂接。其结果包含其中每个沙箱的变更 ID 与结果。之后才挂接的沙箱不在该等待范围内。超时作用于整组；任何一个被选中的沙箱失败或超时，命令都会以错误退出，但仍会报告每个沙箱的结果。没有沙箱挂接时，它报告已保存的变更与空目标列表。
+
+凭据刷新状态告诉你 OpenShell 是否拿到了凭据。[提供商就绪状态](/how-it-works/providers/profiles#检查提供商就绪状态)告诉你沙箱是否已为新进程应用凭据、策略与环境。它不测试对后端模型的访问，也不会取消已发往上游的请求。
+
+静态凭据更新完成后，请启动新的客户端进程来使用更新后的引用。既有进程保留其版本限定的引用；就绪状态不会让旧引用解析到新值。已确认的分离会吊销保留的引用，并从未来启动的环境中移除它们。
+
+设置或清除凭据过期时间戳：
+
+```shell
+openshell provider update my-graph \
+  --credential MS_GRAPH_ACCESS_TOKEN="$MS_GRAPH_ACCESS_TOKEN" \
+  --credential-expires-at MS_GRAPH_ACCESS_TOKEN=1767225600000
+```
+
+时间戳用 `0` 即可清除某个凭据键的过期时间。
+
+## 为提供商打标签
+
+创建提供商时附加标签，用于跟踪环境或团队归属。每个键值对重复一次 `--label`。本例使用已导入的 `pypi` 配置档案，它不需要静态凭据。
+
+```shell
+openshell provider create --name public-pypi --type pypi --label env=dev --label team=ml
+```
+
+列出匹配逗号分隔选择器中每个键值对的提供商。过滤在分页之前应用，只返回所选工作区中的提供商。平台管理员可以用 `--all-workspaces` 跨工作区过滤。
+
+```shell
+openshell provider list --label-selector env=dev,team=ml
+openshell provider list --all-workspaces --label-selector team=ml --output json
+openshell provider get public-pypi
+```
+
+`get` 会显示已附加的标签。JSON 与 YAML 列表输出也包含标签。用 `--page-token` 继续分页列表时，保持选择器与工作区范围不变。
+
+API 客户端设置 `CreateProviderRequest.provider.metadata.labels`，并用 `ListProvidersRequest.label_selector` 过滤。网关在 `provider.metadata.labels` 中返回标签。提供商更新会保留既有标签且不改动它们，因此请在创建时设置标签。
+
+## 凭据刷新
+
+提供商刷新把不可注入的刷新材料与提供商当前凭据值分开存储。网关可以铸造 OAuth2 refresh-token 令牌、OAuth2 client credentials 令牌、Google 服务账户 JWT 令牌与 AWS STS 临时凭据，然后把当前访问令牌写回提供商记录供沙箱注入。
+
+为一个可注入的凭据键配置刷新元数据：
+
+```shell
+openshell provider refresh configure my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN \
+  --strategy oauth2-client-credentials \
+  --material tenant_id="$TENANT_ID" \
+  --material client_id="$CLIENT_ID" \
+  --secret-material-env client_secret=CLIENT_SECRET \
+  --credential-expires-at 1767225600000
+```
+
+用 `--secret-material-env KEY[=ENVVAR]` 传入机密材料（`ENVVAR` 默认为 `KEY`）：CLI 从自己的环境读取值，因此机密绝不会像展开的 `--material KEY="$VALUE"` 参数那样出现在宿主机进程表中，且 `KEY` 会被自动标记为机密。非机密材料继续放在 `--material` 上；`--secret-material-key KEY` 仍可把通过 `--material` 提供的键标记为机密。
+
+查看刷新状态：
+
+```shell
+openshell provider refresh status my-graph
+```
+
+删除某个凭据的刷新元数据：
+
+```shell
+openshell provider refresh delete my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+为某个凭据强制执行一次网关管理的刷新：
+
+```shell
+openshell provider refresh rotate my-graph --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+### AWS STS
+
+网关调用 `sts:AssumeRole`，并原子性地把三个短期凭据（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN`）写入提供商记录。`aws` 与 `aws-s3` 配置档案把 `AWS_SECRET_ACCESS_KEY` 与 `AWS_SESSION_TOKEN` 声明为 `AWS_ACCESS_KEY_ID` 刷新的 `additional_outputs`，因此三个凭据都由网关铸造。用 `--runtime-credentials` 创建提供商即可——不需要占位凭据。
+
+```shell
+openshell provider create --name my-aws --type aws-s3 --runtime-credentials
+
+openshell provider refresh configure my-aws \
+  --credential-key AWS_ACCESS_KEY_ID \
+  --strategy aws-sts-assume-role \
+  --material role_arn="arn:aws:iam::123456789012:role/SandboxS3Writer" \
+  --material session_name="openshell-sandbox"
+
+openshell provider refresh rotate my-aws --credential-key AWS_ACCESS_KEY_ID
+```
+
+网关使用默认凭据链（实例角色、IRSA、ECS 任务角色、环境变量）解析自己的 AWS 凭据。不在 AWS 上运行的网关，请通过刷新材料提供显式 IAM 密钥：
+
+```shell
+openshell provider refresh configure my-aws \
+  --credential-key AWS_ACCESS_KEY_ID \
+  --strategy aws-sts-assume-role \
+  --material role_arn="arn:aws:iam::123456789012:role/SandboxS3Writer" \
+  --material aws_access_key_id="$AWS_ACCESS_KEY_ID" \
+  --secret-material-env aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+```
+
+长期机密请用 `--secret-material-env` 传入，让 CLI 从自己的环境读取，而不是把它展开成进程参数（那样会出现在宿主机进程表中）。
+
+对临时来源凭据（AWS SSO 或先前的 `AssumeRole`），还要用 `--secret-material-env aws_session_token=AWS_SESSION_TOKEN` 传入会话令牌。它要求同时提供 `aws_access_key_id` 与 `aws_secret_access_key` 对。
+
+多服务访问请使用通用的 `aws` 配置档案类型，并用沙箱网络策略限定端点范围。S3 专属端点规则请使用 `aws-s3`。
+
+代理在转发到 AWS 之前用 SigV4 重新签名请求。curl 与 Python boto3 都受支持。
+
+外部刷新系统应继续通过 `openshell provider update` 推送新的当前凭据。`--credential-expires-at` 选项适用于静态凭据、外部刷新的凭据与网关管理的刷新策略。
+
+删除提供商：
+
+```shell
+openshell provider delete my-claude
+```
+
+在一条命令中列出多个名字即可批量删除提供商：
+
+```shell
+openshell provider delete my-claude my-github
+```
+
+多提供商删除中某个条目失败时，CLI 会报告该提供商的失败并继续处理其余名字。只要任一条目失败，命令在尝试完所有请求的删除后以错误退出。
+
+## 把提供商挂接到沙箱
+
+创建沙箱时传一个或多个 `--provider` 参数：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --provider my-claude --provider my-github -- claude
+```
+
+每个 `--provider` 参数挂接一个提供商。沙箱在运行时以占位符形式接收来自每个已挂接提供商的合格凭据。每个静态凭据只为该提供商配置档案中的端点解析；配置档案无端点时，只为显式绑定的沙箱策略端点解析。配置档案管理的提供商还会贡献提供商生成的网络策略条目。端点绑定独立地限制每个静态凭据可以在哪里解析。
+
+<Aside type="note">
+创建沙箱时用 `--provider` 挂接提供商。要更改运行中沙箱挂接的提供商，使用 `openshell sandbox provider attach` 与 `openshell sandbox provider detach`。细节参见[配置档案](/how-it-works/providers/profiles#挂接与分离提供商)。
+
+</Aside>
+
+### 自动发现快捷方式
+
+用 `--provider` 指定提供商名。该名字的提供商不存在且名字匹配某个已导入配置档案 ID 时，CLI 会从本地配置档案发现创建一个，因此无需单独创建：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --provider claude-code -- claude
+```
+
+这会找到你的 `ANTHROPIC_API_KEY`，创建一个 `claude-code` 提供商，挂接到沙箱，并启动 Claude Code。加 `--auto-providers` 跳过确认提示，或加 `--no-auto-providers` 完全跳过创建。
+
+只有你指名时提供商才会挂接。OpenShell 不会从尾随命令推导提供商：配置档案的 `binaries` 列表授权某个二进制访问该配置档案的端点，这不代表运行该二进制就是在请求该提供商。没有提供商的沙箱是正常的、完全受支持的状态。
+
+## 凭据注入的工作原理
+
+沙箱内的智能体进程永远看不到真实凭据值。启动时，OpenShell 在智能体环境中用不透明的占位符令牌替换每个凭据。智能体发出包含占位符的 HTTP 请求时，代理会在转发请求之前立即解析它。
+
+静态凭据解析有两个独立的授权边界：
+
+1. 网络策略必须允许调用方二进制与请求目的地。
+2. 凭据绑定必须包含请求的主机、端口与路径。配置档案端点默认提供该绑定。无端点配置档案可以使用通过 `credential_binding.provider` 指名已挂接提供商实例的沙箱策略端点。
+
+两项检查都必须通过。除非提供商策略组合或沙箱自身策略允许该请求，提供商配置档案端点不会授予网络访问。除非配置档案已覆盖或该端点显式绑定无端点提供商，普通沙箱策略端点不会授予凭据使用。
+
+提供商声明的每个静态凭据都获得该提供商配置档案的完整端点集合；无端点配置档案则获得显式绑定的沙箱策略端点。
+
+凭据解析要求代理以 HTTP 方式处理请求。原始 `tls: skip` 与非 HTTP 隧道保持不透明，不支持凭据改写。端点匹配与迁移指引参见[配置档案](/how-it-works/providers/profiles#理解静态凭据端点绑定)。
+
+### 支持的注入位置
+
+代理解析 HTTP 请求中以下位置的凭据占位符：
+
+| 位置 | 智能体的用法 | 示例 |
+|---|---|---|
+| 头部值 | 智能体从环境读取 `$API_KEY` 并放进头部。 | `Authorization: Bearer <placeholder>` |
+| 头部值（Basic 认证） | 智能体把 `user:<placeholder>` base64 编码进 `Authorization: Basic` 头部。代理解码、解析并重新编码。 | `Authorization: Basic <base64>` |
+| 查询参数值 | 智能体把占位符放进 URL 查询参数。 | `GET /api?key=<placeholder>` |
+| URL 路径段 | 智能体构建路径中含占位符的 URL。支持拼接模式。 | `POST /bot<placeholder>/sendMessage` |
+| 受支持的请求体 | 受检查的 REST 端点用 `request_body_credential_rewrite: true` 选择加入。 | `{"api_key":"<placeholder>"}` |
+| WebSocket 文本消息 | REST 或 WebSocket 端点用 `websocket_credential_rewrite: true` 选择加入。 | `{"token":"<placeholder>"}` |
+| AWS SigV4 签名 | 端点配置 `credential_signing`，代理用绑定到端点的 AWS 凭据签名。 | `credential_signing: sigv4` |
+
+代理不改写 Cookie、响应内容、不受支持的请求体或 WebSocket 二进制帧。
+
+### 解析 JWT 声明的客户端
+
+客户端需要本地账户元数据时，受信任的启动器可以把签发的占位符包装成 JWT 形态的别名。签名段保留原始占位符后缀：
+
+```text
+base64url(header).base64url(claims).OPENSHELL-RESOLVE-ENV-<issued-placeholder-suffix>
+```
+
+例如，以 `openshell:resolve:env:s` 开头的占位符变成签名以 `OPENSHELL-RESOLVE-ENV-s` 开头的 JWT，保留完整的句柄与环境键。请使用提供给运行中工作负载的占位符；不要替换成裸环境键，也不要伪造句柄。OpenShell 用解析出的凭据替换整个别名，并保留其端点、授权纪元与过期检查。claims 只提供本地元数据；该别名不是签名的身份令牌，也不是上游凭据。
+
+### fail-closed 行为
+
+策略允许请求但凭据绑定不包含请求端点时，代理以 HTTP 403 与 `credential_endpoint_mismatch` 原因拒绝请求。它发出一条拒绝活动事件与一条安全发现，且不记录机密、占位符、环境键或查询字符串。
+
+未知、畸形、过期或其他无法解析的占位符同样按 fail closed 处理，而不是转发给上游服务。
+
+### 检查端点绑定
+
+导出提供商所用的配置档案，检查其凭据边界：
+
+```shell
+openshell profile export github -o yaml
+```
+
+对 GitHub 示例配置档案，`GITHUB_TOKEN` 与 `GH_TOKEN` 可在该配置档案的 `api.github.com:443` 与 `github.com:443` 端点上解析。即使沙箱策略允许 `uploads.example.com:443`，把任一占位符发往那里也会返回 `credential_endpoint_mismatch`。
+
+对其他服务，请在其自己的提供商配置档案中定义凭据。把稳定端点放进配置档案，或让配置档案保持无端点，再从沙箱策略绑定每个具体的提供商实例。配置档案工作流与 schema 参见[配置档案](/how-it-works/providers/profiles#提供商配置档案)。
+
+## 可用的提供商类型
+
+`--type` 可用的提供商类型就是你已导入配置档案的 ID。列出它们：
+
+```shell
+openshell provider list-profiles
+```
+
+仓库的 [`providers/`](https://github.com/NVIDIA/OpenShell/tree/main/providers) 目录附带 GitHub、PyPI 与主要推理及智能体提供商的示例配置档案。每个文件的头部说明了它声明的凭据环境变量、它授权的二进制与它授予的端点。阅读后，为你的镜像调整二进制路径，再导入你的副本。
+
+<Aside type="note">
+`ANTHROPIC_API_KEY` 是来自 [console.anthropic.com](https://console.anthropic.com) 的 API 密钥，不是订阅令牌。订阅用户必须在 Anthropic Console 中另外生成 API 密钥。
+</Aside>
+
+## 推理提供商访问
+
+给每个需要推理提供商的沙箱挂接一个，并配置工作负载调用该提供商的原生端点。由工作负载而不是 OpenShell 选择模型与请求超时。
+
+| 提供商 | 示例配置档案 | 原生 base URL | 凭据变量 |
+|---|---|---|---|
+| OpenAI | `openai` | `https://api.openai.com/v1` | `OPENAI_API_KEY` |
+| Anthropic | `anthropic` | `https://api.anthropic.com` | `ANTHROPIC_API_KEY` |
+| NVIDIA API Catalog | `nvidia` | `https://integrate.api.nvidia.com/v1` | `NVIDIA_API_KEY` |
+| DeepInfra | `deepinfra` | `https://api.deepinfra.com/v1/openai` | `DEEPINFRA_API_KEY` |
+| Google Vertex AI | `google-vertex-ai` | 取决于区域与模型 | `GOOGLE_VERTEX_AI_TOKEN` 或 `GOOGLE_VERTEX_AI_SERVICE_ACCOUNT_TOKEN` |
+
+OpenAI 兼容协议并不意味着 `openai` 配置档案对任意主机都是安全的。Baseten、Bitdeer、Groq、Ollama、LM Studio、自托管 NIM 与其他替代端点需要自己的配置档案，声明实际的主机、端口、凭据与允许的二进制。完整示例与迁移指引参见[推理](/how-it-works/inference)。
+
+## 后续步骤
+
+探索相关主题：
+
+- 要管理提供商的工作区访问，参见[工作区](/how-it-works/workspaces)。
+- 要控制智能体可访问的内容，参见[策略](/how-it-works/policies/overview)。
+- 要使用默认工作负载镜像，参见[沙箱](/how-it-works/sandboxes/overview#默认工作负载镜像)。
+- 要查看策略 YAML 的完整字段参考，参见[策略 Schema 参考](/how-it-works/policies/schema)。

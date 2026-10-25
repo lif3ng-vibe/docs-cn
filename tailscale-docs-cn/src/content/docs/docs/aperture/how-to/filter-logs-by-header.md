@@ -1,47 +1,47 @@
 ---
-title: "Filter logs by header"
-description: "Aperture stores request and response headers in captures as compressed data. By default, it does not index them. Index specific headers to filter requests by their presence or value on supported admin"
+title: "按头部过滤日志"
+description: "Aperture 把请求和响应头部以压缩数据的形式存入捕获记录，默认不为它们建立索引。为特定头部建立索引后，即可在受支持的管理"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
 \[Missing snippet: aperture\_terms.mdx]
 
-Aperture stores request and response headers in captures as compressed data. By default, it does not index them. Index specific headers to filter requests by their presence or value on supported admin dashboard pages.
+Aperture 把请求和响应头部以压缩数据的形式存入捕获记录，默认不为它们建立索引。为特定头部建立索引后，你就可以在受支持的管理仪表盘页面上按头部的有无或取值过滤请求。
 
-The steps below edit the configuration JSON directly. You can also use **Administration** > **Reporting** at `/admin/settings/reporting` in the [admin dashboard][docs-aperture-dashboard-admin]. Each step includes instructions for both methods.
+下面的步骤直接编辑配置 JSON。你也可以在[管理仪表盘][docs-aperture-dashboard-admin]中使用 `/admin/settings/reporting` 的 **Administration** > **Reporting** 页面。每个步骤都给出两种方法的操作说明。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An [Aperture gateway][docs-aperture-get-started] with at least one provider configured.
-* Admin access to the [Aperture configuration][docs-aperture-configuration], through either `/admin/settings/reporting`, the **Reporting** page, or `/admin/settings/config`, the raw configuration editor.
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-aperture-get-started]。
+* 对 [Aperture 配置][docs-aperture-configuration]的管理员访问权限，可以通过 `/admin/settings/reporting`（**Reporting** 页面）或 `/admin/settings/config`（原始配置编辑器）。
 
-The configuration is written in HUJSON, which is JSON that also permits comments and trailing commas. Standard JSON is valid HUJSON.
+配置使用 HUJSON 编写，它是允许注释和尾随逗号的 JSON。标准 JSON 是合法的 HUJSON。
 
-## How header filtering works
+## 头部过滤的工作原理
 
-Header filtering has two parts:
+头部过滤由两部分组成：
 
-* The `filterable` list controls which headers Aperture indexes by name and value. It starts empty. Headers outside this list remain available only in captures.
-* The filter controls on supported [admin dashboard][docs-aperture-dashboard-admin] pages query those indexes.
+* `filterable` 列表控制 Aperture 按名称和取值为哪些头部建立索引，初始为空。列表之外的头部只保留在捕获记录中。
+* 受支持的[管理仪表盘][docs-aperture-dashboard-admin]页面上的过滤控件查询这些索引。
 
-Indexing a header does not by itself let anyone filter on it. A caller, including an admin, can use an indexed header as a filter on supported Aperture admin dashboard pages, but only when a grant assigns them that header through the `filterable_headers` capability.
+为一个头部建立索引本身并不让任何人都能过滤它。调用者（包括管理员）只有在授权通过 `filterable_headers` 能力把该头部分配给他们时，才能在受支持的 Aperture 管理仪表盘页面上把该索引用作过滤器。
 
-Indexed header values are retained past the capture retention period. Capture retention only limits how far back Aperture can backfill a newly configured header. When you add a header, it becomes filterable for new requests immediately, and Aperture backfills history from captures that are still within the capture retention window. Requests whose captures have already been purged cannot be backfilled.
+已建立索引的头部值的保留时间会超过捕获保留期。捕获保留只限制 Aperture 能为新配置的头部回填多久之前的历史。添加头部后，它对新请求立即可过滤，Aperture 会从仍在捕获保留窗口内的捕获记录回填历史。捕获记录已被清除的请求无法回填。
 
-Header values are scrubbed before storage as a safeguard against durably storing a secret. Aperture always redacts values that match a built-in set of credential patterns, and this set cannot be extended. To keep a header's value out of storage entirely, mark it presence-only. Refer to [Store a header as presence-only][ar-store-a-header-as-presence-only].
+头部值在存储前会做清洗，以避免持久保存密钥。Aperture 总会对匹配内置凭证模式的值做脱敏，且该模式集合无法扩展。要让某个头部的值完全不进入存储，把它标记为仅记录存在。参阅[将头部存为仅记录存在][ar-store-a-header-as-presence-only]。
 
-The following steps use `x-request-id` to trace requests across your logs. Index the header, grant access to it, then filter **Logs** for matching requests.
+以下步骤用 `x-request-id` 在日志中追踪请求。为该头部建立索引、授予其访问权限，然后在 **Logs** 中过滤出匹配的请求。
 
-## Step 1: Choose the headers to index
+## 第 1 步：选择要建立索引的头部
 
-Decide which headers you want to filter on. Good candidates are low-cardinality, stable headers that identify or classify a request, such as `user-agent`, a routing or trace identifier, or a header your gateway adds. Avoid per-request unique headers such as `date`, which are not useful as filters.
+先确定要按哪些头部过滤。合适的候选是低基数、稳定、能标识或分类请求的头部，例如 `user-agent`、路由或追踪标识符，或你的网关添加的头部。避免每个请求都唯一的头部（如 `date`），它们作为过滤器没什么用。
 
-## Step 2: Add the headers to your configuration
+## 第 2 步：把头部添加到配置中
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Add a `headers` block inside the top-level `database` object, listing each header as an object under `filterable`:
+\[Missing snippet: aperture\_admin\_nav.mdx] 在顶层 `database` 对象内添加 `headers` 块，把每个头部作为对象列在 `filterable` 下：
 
 ```json
 "database": {
@@ -54,13 +54,13 @@ Decide which headers you want to filter on. Good candidates are low-cardinality,
 }
 ```
 
-Header names are case-insensitive and apply to both the request and response hops. After you save, Aperture indexes the listed headers for new requests and backfills recent history.
+头部名称不区分大小写，并同时作用于请求和响应两个方向。保存后，Aperture 会为新请求索引所列头部，并回填近期历史。
 
-You can also manage this list without editing JSON. At `/admin/settings/reporting`, on the **Administration** > **Reporting** page, under **Stored filterable headers**, select **Add header**, type the header name, then select **Save header filtering**. Use the trash icon next to a row to stop indexing that header. The page reports how many headers are configured, and its **Header backfill status** panel shows how much closed-day history Aperture has indexed.
+你也可以不编辑 JSON 来管理该列表。在 `/admin/settings/reporting` 的 **Administration** > **Reporting** 页面，于 **Stored filterable headers** 下选择 **Add header**，输入头部名称，然后选择 **Save header filtering**。用行旁的垃圾桶图标可停止索引该头部。页面会显示已配置的头部数量，其 **Header backfill status** 面板显示 Aperture 已索引了多少已完结日期的历史。
 
-## Step 3: Grant filter access
+## 第 3 步：授予过滤访问权限
 
-Indexing a header does not let anyone filter on it, not even an admin, until a grant assigns it. In the grant that covers the users who should filter logs, add a `filterable_headers` capability listing the header names:
+在授权分配之前，任何人都无法按该头部过滤，管理员也不例外。在覆盖需要过滤日志的用户的那条授权中，添加 `filterable_headers` 能力并列出头部名称：
 
 ```json
 "grants": [
@@ -75,16 +75,16 @@ Indexing a header does not let anyone filter on it, not even an admin, until a g
 ]
 ```
 
-Use `["*"]` to grant every indexed header. For those users, the granted headers appear as options in the **Header** filter on supported Aperture admin dashboard pages. For the full grant structure, refer to [grants][docs-aperture-grants].
+使用 `["*"]` 可授予所有已建立索引的头部。对这些用户，被授予的头部会作为选项出现在受支持的 Aperture 管理仪表盘页面的 **Header** 过滤器中。完整授权结构请参阅[授权][docs-aperture-grants]。
 
-You can also create and manage these grants without editing JSON:
+你也可以不编辑 JSON 来创建和管理这些授权：
 
-* At `/admin/settings/reporting`, on the **Administration** > **Reporting** page, under **Header filter grants**, select **Add assignment**. Set **Source** to the users, groups, or tags that should filter logs, such as `alice@example.com`, `group:eng`, `tag:api`, or `*`. List the header names under **Filterable headers**, then select **Save assignment**. The table below lists every existing assignment with its sources and headers, and each row has controls to edit or delete it. The header field suggests the headers you configured in Step 2 and rejects a name that is not one of them, so save the header list first.
-* At `/admin/settings/grants`, on the **Administration** > **Grants** page, a grant that already carries the capability shows a **Filterable headers** field you can edit in place. Use the **Reporting** page or the configuration editor to add the capability to a grant that does not have it yet.
+* 在 `/admin/settings/reporting` 的 **Administration** > **Reporting** 页面，于 **Header filter grants** 下选择 **Add assignment**。把 **Source** 设为需要过滤日志的用户、组或标签，例如 `alice@example.com`、`group:eng`、`tag:api` 或 `*`。在 **Filterable headers** 下列出头部名称，然后选择 **Save assignment**。下方的表格列出所有已存在的分配及其来源与头部，每行都有编辑或删除的控件。头部字段会提示你在第 2 步中配置的头部，并拒绝不在其中的名称，因此请先保存头部列表。
+* 在 `/admin/settings/grants` 的 **Administration** > **Grants** 页面，已带有该能力的授权会显示可就地编辑的 **Filterable headers** 字段。要给尚无该能力的授权添加能力，请使用 **Reporting** 页面或配置编辑器。
 
-## Step 4: Store a header as presence-only (optional)
+## 第 4 步：将头部存为仅记录存在（可选）
 
-By default Aperture stores each indexed header's value, after redaction, so you can match on a substring or an exact value. To index a header for presence checks only and never store its value, set `redact_values` on that header:
+默认情况下，Aperture 会在脱敏后存储每个已索引头部的值，因此你可以按子串或精确值匹配。如果只想为存在性检查建立索引、永不存储其值，请在该头部上设置 `redact_values`：
 
 ```json
 "database": {
@@ -97,31 +97,31 @@ By default Aperture stores each indexed header's value, after redaction, so you 
 }
 ```
 
-A presence-only header supports the **Present** match only. **Contains** and **Is exactly** are unavailable for it. Use it for headers whose values are sensitive or too high-cardinality to store durably.
+仅记录存在的头部只支持 **Present** 匹配；**Contains** 和 **Is exactly** 对它不可用。适用于取值敏感或基数过高、不宜持久存储的头部。
 
-Set `redact_values` on the **Administration** > **Configuration** page. The **Reporting** page honors this field but does not edit it.
+在 **Administration** > **Configuration** 页面设置 `redact_values`。**Reporting** 页面会遵循该字段，但不编辑它。
 
-## Step 5: Filter the Logs page
+## 第 5 步：在 Logs 页面过滤
 
-Open [**Logs**][docs-aperture-dashboard-admin] at `/admin/logs` and select **Filter +** > **Header**. For each header filter, set:
+打开 `/admin/logs` 的 [**Logs**][docs-aperture-dashboard-admin]，选择 **Filter +** > **Header**。对每个头部过滤器设置：
 
-* The hop: **Req** to match the request header, **Resp** to match the response header, or **Any** to match either.
-* The header name, chosen from the headers you are granted.
-* The match: **Present** (the header exists), **Contains** (the value contains a substring), or **Is exactly** (the value equals the string you enter). **Contains** and **Is exactly** match case-insensitively, and are unavailable for presence-only headers.
+* 方向：**Req** 匹配请求头部，**Resp** 匹配响应头部，**Any** 匹配任一。
+* 头部名称：从你被授予的头部中选择。
+* 匹配方式：**Present**（头部存在）、**Contains**（值包含某子串）或 **Is exactly**（值等于你输入的字符串）。**Contains** 和 **Is exactly** 不区分大小写，且对仅记录存在的头部不可用。
 
-The filter pill summarizes your choice, reading `Req x-request-id contains abc`, `Req x-request-id is exactly abc`, or `Any x-request-id present`.
+过滤胶囊（filter pill）会汇总你的选择，显示为 `Req x-request-id contains abc`、`Req x-request-id is exactly abc` 或 `Any x-request-id present`。
 
-To match one header against several values, select **+ header** within the filter to add an OR condition. The pill joins the conditions with `OR`, for example `Req x-request-id contains abc OR Req x-request-id contains def`.
+要让一个头部匹配多个值，请在过滤器内选择 **+ header** 添加 OR 条件。胶囊会用 `OR` 连接条件，例如 `Req x-request-id contains abc OR Req x-request-id contains def`。
 
-To narrow further, add more **Header** filters. Conditions within a single pill combine with `OR`. Separate **Header** filters, together with any other active filters such as user or date, combine with `AND`. A request must match every pill to appear.
+要进一步收窄，添加更多 **Header** 过滤器。单个胶囊内的条件用 `OR` 组合；多个独立的 **Header** 过滤器以及其他生效的过滤器（如用户或日期）之间用 `AND` 组合。请求必须匹配每一个胶囊才会显示。
 
-If no headers are available, the **Header** filter says so instead of listing options and links to the **Reporting** page.
+如果没有可用的头部，**Header** 过滤器会直接说明而不列出选项，并链接到 **Reporting** 页面。
 
-## Reference
+## 参考
 
-For the full field descriptions, refer to the [`database.headers`][docs-aperture-configuration-headers] configuration reference.
+完整字段说明请参阅 [`database.headers`][docs-aperture-configuration-headers] 配置参考。
 
-[ar-store-a-header-as-presence-only]: #step-4-store-a-header-as-presence-only-optional
+[ar-store-a-header-as-presence-only]: #第-4-步将头部存为仅记录存在可选
 
 [docs-aperture-configuration-headers]: /docs/aperture/configuration#databaseheaders-fields
 

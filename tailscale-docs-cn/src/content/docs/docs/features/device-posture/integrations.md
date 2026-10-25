@@ -1,14 +1,14 @@
 ---
-title: "Integrations for device posture management"
-description: "You can manage device posture integrations with the [device posture][co-api-device-posture] API."
+title: "设备态势管理的集成"
+description: "你可以使用[设备态势][co-api-device-posture] API 管理设备态势集成。"
 ---
 
-Last validated Oct 6, 2026
+最后验证于 Oct 6, 2026
 
-\[Missing snippet: edr-mdm-integrations.mdx]
+\[缺少代码片段：edr-mdm-integrations.mdx]
 
-## Manage device posture integrations with the Tailscale API
+## 使用 Tailscale API 管理设备态势集成
 
-You can manage device posture integrations with the [device posture][co-api-device-posture] API.
+你可以使用[设备态势][co-api-device-posture] API 管理设备态势集成。
 
 [co-api-device-posture]: https://tailscale.com/api#tag/deviceposture

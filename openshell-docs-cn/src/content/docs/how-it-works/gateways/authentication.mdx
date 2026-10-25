@@ -1,0 +1,334 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "网关认证"
+sidebar-title: "认证"
+description: "网关解析、认证模式、连接流程、OIDC 支持与凭据文件布局。"
+keywords: "生成式 AI, 网络安全, 网关, 认证, mTLS, OIDC, OpenID Connect, 边缘认证, 参考"
+position: 1
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+本页介绍 CLI 如何解析网关、如何完成认证，以及凭据的存储位置。部署或注册网关的方法参见[网关](/how-it-works/gateways/overview)。
+
+## 网关解析
+
+当任何 CLI 命令需要与网关通信时，它会按以下优先级链解析目标：
+
+1. `--gateway-endpoint <URL>` 参数（直接指定 URL）。
+2. `-g <NAME>` 参数。
+3. `OPENSHELL_GATEWAY` 环境变量。
+4. 来自 `~/.config/openshell/active_gateway` 的活动网关；不存在用户选择时回退到 `/etc/openshell/active_gateway`。
+
+CLI 首先从 `~/.config/openshell/gateways/<name>/metadata.json` 加载网关元数据；不存在用户条目时回退到 `/etc/openshell/gateways/<name>/metadata.json`。
+
+## 认证状态
+
+`openshell status` 分别报告网关可达性与认证状态。公共健康 RPC 判断网关是否已连接并提供其版本。CLI 随后调用现有的受保护 gateway-info 能力查询来验证所配置的凭据。即使结果是授权被拒绝，也足以确认网关已对调用方完成认证。
+
+例如，过期的 Bearer 令牌会导致 `Status: Connected` 与 `Authentication: Failed` 并存。这表示网关健康，但受保护命令无法使用当前凭据。运行 `openshell gateway login <name>` 重新认证。当网关版本早于 gateway-info 能力查询时，CLI 会报告 `Authentication: Unverified`，而不会把成功的公共健康检查当作认证通过的证明。
+
+## 认证模式
+
+CLI 依据网关的配置选用以下认证模式之一。
+
+### mTLS
+
+对配置了客户端 CA 且没有 OIDC issuer 的网关，这是默认模式。CLI 在 TLS 握手期间出示客户端证书；启用 mTLS 用户认证时，网关可以把验证过的证书主体映射到本地用户主体（principal）。
+
+mTLS 用户认证属于网关策略，与计算驱动无关。共享部署可以改用 OIDC 或受信任的访问代理来管理用户身份与生命周期。
+
+启动网关前设置这些环境变量：
+
+| 环境变量 | 用途 |
+|---|---|
+| `OPENSHELL_TLS_CERT` | 网关服务器证书路径。 |
+| `OPENSHELL_TLS_KEY` | 网关服务器私钥路径。 |
+| `OPENSHELL_TLS_CLIENT_CA` | 用于校验 CLI 客户端证书的 CA 证书路径。 |
+| `OPENSHELL_ENABLE_MTLS_AUTH` | 设为 `true` 时基于已验证的客户端证书认证 CLI 调用方。配置了客户端 CA 且没有 OIDC issuer 时默认开启。 |
+
+本地访问时，服务器证书必须对 CLI 使用的端点有效。用户通过回环地址连接本地网关时，请在证书 SAN 中包含 `localhost`、`127.0.0.1` 与 `::1`。
+
+软件包管理的本地网关会为 `openshell` 网关名自动生成该证书包。Homebrew 注册 `https://localhost:17670`；Debian 与 RPM 使用 `https://127.0.0.1:17670`。
+使用 `openshell gateway add <endpoint> --local --name openshell` 注册软件包管理的本地网关时，CLI 会从软件包管理的 TLS 目录刷新 mTLS 证书包。
+在 Homebrew 上，网关服务还会在启动前把网关 CA 镜像到 `$HOME/.local/state/openshell/homebrew/tls`，以便 Docker Desktop 能把网关信任绑定挂载到监管器（supervisor）容器中。驱动不会挂载用户客户端证书或私钥。
+
+CLI 从 `~/.config/openshell/gateways/<name>/mtls/` 加载 mTLS 证书包：
+
+| 文件 | 用途 |
+|---|---|
+| `ca.crt` | 用于校验网关服务器证书的 CA 证书。 |
+| `tls.crt` | 客户端证书。必须链到 `OPENSHELL_TLS_CLIENT_CA`。 |
+| `tls.key` | `tls.crt` 对应的客户端私钥。 |
+
+连接流程：
+
+1. CLI 加载证书文件。
+2. 打开到网关端点的 TCP 连接。
+3. 执行 TLS 握手并出示客户端证书。
+4. 网关用自己的 CA 校验客户端证书。
+5. 启用 mTLS 用户认证时，网关将验证过的证书主体映射为用户主体。
+6. 网关对 gRPC 方法做授权。
+
+### mTLS Operator
+
+启用 `[openshell.gateway.mtls_auth] operator_enabled = true` 后，组织单元恰好为 `operator`（`OU=operator`）的可信客户端证书会被识别。这会创建一个独立的 operator 主体（operator principal），在所有工作区拥有用户与平台管理员能力，并获得调用 `GetProviderCredentials` 的权限。普通 mTLS 用户与 OIDC 管理员不具备该权限，即使带有 `operator` 声明（claim）或 `openshell:all` 也一样。
+
+operator 认证要求 TLS 与已配置的客户端 CA。它可以与 OIDC 并用，且不要求开启普通 mTLS 用户认证。使用证书及其私钥直接连接网关；不要在同一连接上发送 `Authorization` 头部。转发的证书头部与边缘隧道认证都无法建立 operator 身份。
+
+任何能在可信客户端 CA 之下签发证书的人都能签发 operator 证书。请限制 CA 签发权限与 operator 私钥的访问。正常的网关证书生成流程不会授予 operator 角色。证书有效期与 CA 变更只对新的 TLS 握手生效，不影响已建立连接上的请求；移除信任时应关闭现有连接。网关不通过该设置提供按证书的吊销。
+
+凭据获取契约参见[提供商](/how-it-works/providers/overview#获取运行时凭据)。
+
+### 使用 grpcurl 检查 API
+
+主网关监听器提供 gRPC reflection v1 协议。反射不要求应用层认证，但监听器的 TLS 与客户端证书要求仍然适用。
+
+对于明文本地开发网关：
+
+```shell
+grpcurl -plaintext localhost:18080 list
+grpcurl -plaintext localhost:18080 describe openshell.v1.OpenShell
+grpcurl -plaintext -d '{}' localhost:18080 openshell.v1.OpenShell/Health
+```
+
+对于 mTLS 网关，使用与该网关联的证书包：
+
+```shell
+grpcurl \
+  -cacert ~/.config/openshell/gateways/<name>/mtls/ca.crt \
+  -cert ~/.config/openshell/gateways/<name>/mtls/tls.crt \
+  -key ~/.config/openshell/gateways/<name>/mtls/tls.key \
+  <gateway-host>:<gateway-port> list
+```
+
+反射只公告 `openshell.v1.OpenShell`，不公告内部驱动、拦截器或中间件服务。
+
+启用网关 gRPC 速率限制时，反射使用一个独立计数器，但请求次数与时间窗口相同。打开反射 RPC 消耗一次全网关请求额度，通过该流发送的每个查询消耗一个反射计数单位。超出反射配额时，流会以 `RESOURCE_EXHAUSTED` 关闭。
+
+### OIDC
+
+网关可以在 gRPC 请求上校验 OpenID Connect 访问令牌。当希望用户或自动化程序通过 Keycloak、Entra ID 或 Okta 等身份提供商（identity provider）认证时，配置 OIDC。
+
+OIDC 是应用层认证。TLS 负责认证网关并保护传输层；OIDC 客户端不需要 TLS 客户端证书。网关会依据配置的客户端 CA 校验它们出示的任何客户端证书。
+
+为网关配置 issuer 与受众（audience）：
+
+```shell
+openshell-gateway \
+  --oidc-issuer https://idp.example.com/realms/openshell \
+  --oidc-audience openshell-cli \
+  --oidc-roles-claim realm_access.roles \
+  --oidc-admin-role openshell-admin \
+  --oidc-user-role openshell-user
+```
+
+相同的设置也可以通过环境变量完成：
+
+| 环境变量 | 用途 | 默认值 |
+|---|---|---|
+| `OPENSHELL_OIDC_ISSUER` | OIDC issuer URL。网关从该 URL 发现 `/.well-known/openid-configuration`。 | 无 |
+| `OPENSHELL_OIDC_DANGEROUSLY_ALLOW_INSECURE_HTTP` | 仅开发环境使用的确认项，允许数字回环地址上的 HTTP issuer。HTTP 主机名与非回环地址仍被拒绝。 | `false` |
+| `OPENSHELL_OIDC_JWKS_ALLOWED_ORIGINS` | 以逗号分隔的额外 HTTPS 来源，信任其提供 JWKS。 | 空 |
+| `OPENSHELL_OIDC_AUDIENCE` | 预期的 JWT `aud` 声明。 | `openshell-cli` |
+| `OPENSHELL_OIDC_JWKS_TTL` | JWKS 缓存 TTL（秒）。遇到未知密钥 ID 时网关也会刷新。必须大于零。 | `3600` |
+| `OPENSHELL_OIDC_ROLES_CLAIM` | 以点分隔的、包含角色的声明路径。 | `realm_access.roles` |
+| `OPENSHELL_OIDC_ADMIN_ROLE` | 管理员操作所需的角色。 | `openshell-admin` |
+| `OPENSHELL_OIDC_USER_ROLE` | 标准用户操作所需的角色。 | `openshell-user` |
+| `OPENSHELL_OIDC_SCOPES_CLAIM` | 以点分隔的、包含权限范围（scope）的声明路径。留空则禁用 scope 强制。 | 空 |
+
+Helm 部署时，在 `gatewayConfig` 中的 `openshell.gateway.oidc` TOML 表里设置相同的值：
+
+```yaml
+gatewayConfig:
+  openshell.gateway.oidc:
+    issuer: https://idp.example.com/realms/openshell
+    audience: openshell-cli
+    roles_claim: realm_access.roles
+    admin_role: openshell-admin
+    user_role: openshell-user
+    scopes_claim: ""
+```
+
+网关要求 OIDC 发现与 JWKS 获取使用 HTTPS，拒绝重定向，且默认信任 issuer 来源提供 JWKS。只有当身份提供商确实从另一个受信任来源提供密钥时，才添加 `jwks_allowed_origins` 条目。本地测试时，数字回环地址上的 HTTP 还需要 `dangerously_allow_insecure_http: true`；该设置绝不允许 HTTP 主机名或非回环地址。
+
+使用 CLI 注册 OIDC 网关：
+
+```shell
+openshell gateway add https://gateway.example.com \
+  --name production \
+  --oidc-issuer https://idp.example.com/realms/openshell \
+  --oidc-client-id openshell-cli \
+  --oidc-audience openshell-cli
+```
+
+注册或登录 OIDC 网关时，CLI 使用带 PKCE 的授权码流程（Authorization Code flow with PKCE）。它会打开浏览器，在 localhost 回调上接收授权码，用授权码换取令牌，并把令牌包存储在网关凭据目录下。执行 `openshell gateway logout` 之后，下一次浏览器登录会向身份提供商请求全新的登录提示，让你可以选择另一个浏览器用户，而不是静默复用上一次的会话。如果设置了 `OPENSHELL_OIDC_CLIENT_SECRET`，CLI 改用客户端凭据流程（client credentials flow）。该模式适用于 CI 与其他非交互式自动化。
+
+官方 Python、TypeScript 与 Go SDK 可以直接执行可续期的客户端凭据认证。在身份提供商处为服务账户配置网关要求的受众、角色、scope 与工作区成员资格。SDK 会发现令牌端点，把 Bearer 令牌附加到每个 RPC 上，并在过期前重复授权。它们把客户端机密与访问令牌保存在内存中，不更新 CLI 的 `oidc_token.json`。SDK 客户端向非回环网关发送这些凭据时要求 TLS。
+
+<Tabs>
+  <TabItem label="Python">
+
+```python
+from openshell import ClientCredentialsAuth, SandboxClient
+
+auth = ClientCredentialsAuth(
+    client_secret=lambda: load_secret(),
+    # Omit issuer/client_id/scopes/audience to use active gateway metadata.
+)
+client = SandboxClient.from_active_cluster(client_credentials=auth)
+```
+
+  </TabItem>
+  <TabItem label="TypeScript">
+
+```ts
+import { clientCredentials, OpenShellClient } from '@nvidia/openshell-sdk'
+
+const client = await OpenShellClient.connect({
+  gateway: 'https://gateway.example.com',
+  oidcTokenProvider: clientCredentials({
+    issuer: 'https://idp.example.com/realms/openshell',
+    clientId: 'openshell-service',
+    clientSecret: () => loadSecret(),
+    audience: 'openshell-gateway',
+    scopes: ['sandbox:read', 'sandbox:write'],
+  }),
+})
+```
+
+  </TabItem>
+  <TabItem label="Go">
+
+```go
+auth, err := oidc.NewClientCredentialsAuth(
+    oidc.WithGateway("production"),
+    oidc.WithClientSecretProvider(loadSecret),
+)
+client, err := v1.NewClient(v1.Config{Address: address, Auth: auth, TLS: tlsConfig})
+```
+
+  </TabItem>
+</Tabs>
+
+无头环境（headless）下，在注册或登录网关之前设置 `OPENSHELL_NO_BROWSER=1`。该变量已设置且未配置 `OPENSHELL_OIDC_CLIENT_SECRET` 时，CLI 使用带 S256 PKCE 的设备授权授予（Device Authorization Grant，RFC 8628）。该流程提示用户在任意有浏览器的设备上访问验证 URL 并输入显示的代码。CLI 轮询令牌端点直到用户完成授权。这要求身份提供商处为该 OIDC 客户端启用设备授权授予。
+
+连接流程：
+
+1. CLI 加载存储的 OIDC 令牌包。
+2. 访问令牌已过期或临近过期时，CLI 使用保存在网关元数据中的 OIDC scope 刷新它。刷新失败时，命令在发送受保护请求之前停止，并指引你运行 `openshell gateway login <name>`。
+3. CLI 连接网关，并为每个 gRPC 请求附加 `authorization: Bearer <token>` 元数据。
+4. 网关对照 issuer 的 JWKS 校验 JWT 签名、issuer、受众、过期时间、主题与密钥 ID。
+5. 网关从配置的声明路径提取角色与可选的 scope。
+6. 网关对 gRPC 方法做授权。平台级方法要求配置的管理员角色；工作区级方法要求配置的用户角色以及目标工作区的足够成员资格。持有管理员角色者满足用户角色检查并绕过工作区成员资格检查。
+
+平台管理员、工作区管理员与工作区用户权限参见[工作区](/how-it-works/workspaces)。
+
+#### JWT 校验
+
+网关对照 issuer 的 JWKS 端点校验 OIDC 访问令牌。签名算法从每个 JWK 的 `kty` 与 `crv` 字段推导，而不是从 JWT 头部读取：
+
+| JWK `kty` | `crv` | 算法 |
+|---|---|---|
+| RSA | — | RS256, RS384, RS512, PS256, PS384, 或 PS512 |
+| EC | P-256 | ES256 |
+| EC | P-384 | ES384 |
+| OKP | Ed25519 | EdDSA (Ed25519) |
+
+对 EC 与 OKP 密钥，`crv` 完全决定算法。对 RSA 密钥，当 JWK 声明的 `alg` 字段指向上表六种 RSA 算法之一时从中选择算法；`alg` 缺失时（如 Microsoft Entra ID 完全省略该字段），网关默认使用 RS256。若 `alg` 指向非 RSA 算法，该密钥被视为矛盾并跳过（见下文），而不是回退到 RS256。
+
+网关接受 `Authorization` 头部中任意大小写的 `Bearer` 方案。JWT 头部的 `alg` 与从 JWK 固定的算法不匹配时拒绝令牌。令牌必须包含 `iss`、`aud`、`exp` 与 `sub` 声明。`iss` 与 `aud` 的值必须与配置的 issuer 和受众匹配。
+
+带 `use: enc`、`alg` 与推导算法真正矛盾（例如声明 `ES256` 的 RSA 密钥）或 `key_ops` 不含 `verify` 的 JWK 会被跳过。遇到未知密钥 ID 时，网关会刷新 JWKS 缓存，速率限制为每秒最多一次，以约束未知 `kid` 查询对 issuer 请求的放大效应。如果刷新得到零个可用密钥，网关会继续使用上一次的密钥集，而不是丢弃全部签名密钥导致所有请求失败，但该状态最多维持配置 TTL 的三倍时间。宽限期后 JWKS 仍为空时，缓存的密钥被清除，所有令牌被拒绝，直到 issuer 恢复。
+
+Keycloak（RS256）、Microsoft Entra ID（RSA）与 Okta（常为 ES256）等常见身份提供商发布的签名密钥均兼容。
+
+设置了 `OPENSHELL_OIDC_SCOPES_CLAIM` 时，网关还会强制执行 scope。它接受空格分隔的 scope 字符串（如 `scope: "openid sandbox:read"`）与 JSON 数组（如 `scp: ["sandbox:read"]`）。`openid`、`profile`、`email`、`offline_access` 等标准 OIDC scope 在授权中被忽略。`openshell:all` 授予对所有带 scope 方法的访问。
+
+监管器到网关的 RPC 不使用用户 OIDC 令牌或 mTLS 用户身份。TLS 用配置的 CA 认证网关；用户客户端证书与私钥不会挂载进监管器或工作负载容器。每个沙箱监管器出示由网关签发、限定其沙箱 ID 的 `Authorization: Bearer` 令牌。在 Kubernetes 上，Kubernetes 计算驱动通过 TokenReview 校验投影的 ServiceAccount 令牌，验证实际 Pod UID 与控制方 `Sandbox` ownerReference，并返回已认证的沙箱 ID 与稳定的运行时身份。网关在签发 JWT 之前要求该运行时身份与预置沙箱时记录的值一致。日志上传、策略状态、提供商环境查询与沙箱配置同步以沙箱受限的 scope 运行；CLI 用户则通过 OIDC、边缘认证、本地 mTLS 用户认证或显式启用的免认证本地开发者模式进行认证。提供商环境响应只暴露挂接到该沙箱的凭据与配置，并受端点绑定与凭据过期检查约束。
+
+重新认证 OIDC 网关：
+
+```shell
+openshell gateway login production
+```
+
+查看网关校验过的身份：
+
+```shell
+openshell whoami
+openshell whoami --output json
+```
+
+输出包括用于工作区成员资格的稳定主题（subject）、可用的显示名称、身份提供商、角色与 scope。网关返回其校验过的身份；CLI 不会从未经校验的本地令牌载荷推断这些值。把用户加入工作区时使用 `subject` 值。成员管理命令参见[工作区](/how-it-works/workspaces)。
+
+### Edge JWT（云端网关）
+
+对于位于处理认证的反向代理之后的网关（例如 Cloudflare Access），CLI 使用基于浏览器的登录流程，并经由 WebSocket 隧道路由流量。隧道默认禁用；在 `[openshell.gateway]` 下设置 `enable_websocket_tunnel = true` 启用（Helm：`server.enableWebsocketTunnel=true`）。
+
+**注册流程**（`openshell gateway add https://gateway.example.com`）：
+
+1. CLI 存储网关元数据并标记边缘认证模式。
+2. 打开浏览器访问网关的认证端点。
+3. 反向代理处理登录（SSO、身份提供商等）。
+4. 认证完成后，浏览器通过 localhost 回调把授权令牌回传给 CLI。
+5. CLI 存储令牌并将该网关设为活动网关。
+
+**连接流程**（后续命令）：
+
+1. CLI 启动一个监听临时端口的本地代理。
+2. 代理打开到网关的 WebSocket 连接（`wss://`），在升级头部中附加存储的 Bearer 令牌。
+3. 反向代理认证 WebSocket 升级请求。
+4. 网关把 WebSocket 桥接到处理直接 mTLS 连接的同一服务。
+5. CLI 命令通过本地代理以隧道上的明文 HTTP/2 发送请求。
+
+这对用户完全透明。无论网关使用 mTLS、OIDC 还是边缘认证，所有 CLI 命令的工作方式都相同。
+
+**重新认证**：令牌过期时，运行 `openshell gateway login` 重新打开浏览器流程并更新存储的令牌。
+
+### 明文
+
+网关以 `disable_tls = true` 部署时（通过 Helm 设置为 `server.disableTls=true`），TLS 完全禁用，CLI 通过明文 HTTP/2 连接。该模式适用于本地端口转发，或位于受信任反向代理或隧道之后、在外部完成 TLS 终止的网关。
+
+使用显式 `http://` 端点注册明文网关：
+
+```shell
+openshell gateway add http://127.0.0.1:17670 --local
+```
+
+Kubernetes 本地开发时，Helm Skaffold overlay 会启用 `[openshell.gateway.auth] allow_unauthenticated_users = true`，使端口转发的明文网关无需 OIDC 或 mTLS 用户凭据即可使用。共享集群与生产集群请保持禁用。
+
+这会以 `auth_mode = plaintext` 存储网关，跳过 mTLS 客户端证书查找，并且不打开浏览器登录流程。
+
+## 文件布局
+
+用户管理的网关凭据与元数据存储在 `~/.config/openshell/` 下：
+
+```text
+openshell/
+  active_gateway                    # Plain text: active gateway name
+  gateways/
+    <name>/
+      metadata.json                 # Gateway metadata (endpoint, auth mode, type)
+      mtls/                         # mTLS bundle (local and remote gateways)
+        ca.crt                      # CA certificate
+        tls.crt                     # Client certificate
+        tls.key                     # Client private key
+      edge_token                    # Edge auth JWT (cloud gateways)
+      oidc_token.json               # OIDC access token, refresh token, and expiry metadata
+      last_sandbox                  # Last-used sandbox for this gateway
+```
+
+安装程序也可以在 `/etc/openshell/`（或非空绝对路径的 `OPENSHELL_SYSTEM_GATEWAY_DIR` 覆盖值）下预置只读默认值，使用相同的活动网关与元数据布局：
+
+```text
+/etc/openshell/
+  active_gateway
+  gateways/
+    <name>/
+      metadata.json
+```
+
+只有 `active_gateway` 与 `metadata.json` 会回退到系统布局。mTLS 证书包、OIDC 令牌、边缘令牌与 `last_sandbox` 仍是每用户状态。
+
+对 OIDC 网关，`metadata.json` 还会存储 issuer、CLI 客户端 ID、可选受众与请求的 scope。请把 `oidc_token.json` 当作凭据对待。OpenShell 以仅所有者可读的文件权限写入它。

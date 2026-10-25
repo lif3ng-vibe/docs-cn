@@ -1,39 +1,39 @@
 ---
 title: "Taildrive"
-description: "Share folders securely between devices on your Tailscale network."
+description: "在 Tailscale 网络上的设备之间安全地共享文件夹。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Taildrive lets you persistently share folders with other users and devices on your Tailscale network (known as a tailnet). Using Taildrive, you can:
+Taildrive 让你能在 Tailscale 网络（即 tailnet）上与其他用户和设备持久地共享文件夹。使用 Taildrive，你可以：
 
-* Share folders with your colleagues.
-* Access files from your desktop PC or NAS server from your phone, anywhere in the world.
-* Connect a backup utility, like [Duplicati][xt-duplicati] or [rclone][xt-rclone], to a Taildrive folder on your NAS.
+* 与同事共享文件夹。
+* 在世界任何地方用手机访问台式电脑或 NAS 服务器上的文件。
+* 将 [Duplicati][xt-duplicati] 或 [rclone][xt-rclone] 等备份工具连接到 NAS 上的 Taildrive 文件夹。
 
-> **Note:** Taildrive is currently in alpha.
+> **注意：** Taildrive 目前处于 alpha 阶段。
 
-## How it works
+## 工作原理
 
-Normally, maintaining a file server requires you to manage credentials and access rules separately from the connectivity layer. Taildrive offers a file server that unifies connectivity and [access controls][docs-access-control], allowing you to share directories directly from the Tailscale client. You can then use your tailnet policy file to define which members of your tailnet can access a particular shared directory, and even define specific read and write permissions.
+通常，维护一台文件服务器需要你在连接层之外单独管理凭证和访问规则。Taildrive 提供了一种将连接与[访问控制][docs-access-control]统一起来的文件服务器，让你可以直接从 Tailscale 客户端共享目录。随后，你可以用 tailnet 策略文件定义 tailnet 中哪些成员可以访问某个共享目录，甚至可以定义具体的读写权限。
 
-Beginning in version 1.64.0, the Tailscale client includes a Web-based Distributed Authoring and Versioning (WebDAV) server that runs on `100.100.100.100:8080` while Tailscale is connected. Every directory that you share receives a globally-unique path consisting of the tailnet, the machine name, and the share name: `/<tailnet>/<machine>/<share>`.
+从 1.64.0 版本开始，Tailscale 客户端内置了一个基于 Web 的分布式创作与版本控制（WebDAV）服务器，在 Tailscale 处于连接状态时运行在 `100.100.100.100:8080`。你共享的每个目录都会获得一个全局唯一的路径，由 tailnet、机器名和共享名称组成：`/<tailnet>/<machine>/<share>`。
 
-For example, if you shared a directory with the share name `docs` from the machine `nas-device` in the tailnet `example.com`, the share's path would be `/example.com/nas-device/docs`.
+例如，如果你在 tailnet `example.com` 中从机器 `nas-device` 上以共享名称 `docs` 共享了一个目录，那么该共享的路径就是 `/example.com/nas-device/docs`。
 
-## Configure Taildrive
+## 配置 Taildrive
 
-Taildrive's server component is only available on Linux, macOS, and Windows devices. iOS and Android devices can access directories shared from these platforms, but cannot share directories themselves.
+Taildrive 的服务器组件仅在 Linux、macOS 和 Windows 设备上可用。iOS 和 Android 设备可以访问从这些平台共享出来的目录，但自身不能共享目录。
 
-### Enable Taildrive in the policy file
+### 在策略文件中启用 Taildrive
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit the tailnet policy file. Enabling Taildrive requires two steps: Enabling Taildrive on devices by setting a `nodeAttr`, and defining sharing permissions using [grants][docs-grants].
+你需要是 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能编辑 tailnet 策略文件。启用 Taildrive 需要两个步骤：通过设置 `nodeAttr` 在设备上启用 Taildrive，以及使用[授权（grant）][docs-grants]定义共享权限。
 
-#### Add `nodeAttrs` to enable Taildrive on devices
+#### 添加 `nodeAttrs` 以在设备上启用 Taildrive
 
-To share directories or access directories shared by other devices, you need to enable Taildrive in the `nodeAttrs` section of your tailnet policy file. [Edit your policy file][docs-edit-tailnet-policy-file] to make this change.
+要共享目录或访问其他设备共享的目录，你需要在 tailnet 策略文件的 `nodeAttrs` 部分启用 Taildrive。请[编辑你的策略文件][docs-edit-tailnet-policy-file]来完成此项更改。
 
-For example, this policy will enable Taildrive on every member's devices. Every member of your tailnet will be able to share directories from their device and access shared directories.
+例如，以下策略会在每个成员的设备上启用 Taildrive。tailnet 中的每个成员都将能够从自己的设备共享目录，并访问共享目录。
 
 ```json
 "nodeAttrs": [
@@ -49,7 +49,7 @@ For example, this policy will enable Taildrive on every member's devices. Every 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The following policy enables Taildrive access on all devices, but only lets tailnet administrators share directories with Taildrive.
+以下策略在所有设备上启用 Taildrive 访问，但只允许 tailnet 管理员通过 Taildrive 共享目录。
 
 ```json
 "nodeAttrs": [
@@ -71,11 +71,11 @@ The following policy enables Taildrive access on all devices, but only lets tail
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-#### Define sharing permissions
+#### 定义共享权限
 
-Now that you've enabled Taildrive on your devices, you define specific sharing permissions using [grants][docs-grants].
+在设备上启用 Taildrive 之后，你就可以使用[授权][docs-grants]来定义具体的共享权限。
 
-The broadest possible policy lets all devices access all shares in the tailnet, no matter which user or tag owns the device:
+最宽松的策略允许所有设备访问 tailnet 中的所有共享，无论设备归属于哪个用户或标签：
 
 ```json
 "grants": [
@@ -94,7 +94,7 @@ The broadest possible policy lets all devices access all shares in the tailnet, 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You may also choose to allow members to read and write to their own shared directories from any of their devices. A policy to allow this would look like this:
+你也可以选择允许成员从自己的任意设备读写自己的共享目录。实现这一点的策略如下：
 
 ```json
 "grants": [
@@ -113,7 +113,7 @@ You may also choose to allow members to read and write to their own shared direc
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You can also limit write access or even define permissions for accessing specific shares. The following policy lets all tailnet members read files from the `company-docs` share with the tag `fileserver`, but does not grant access to any other shared directories besides `company-docs` and does not allow write access:
+你还可以限制写入权限，甚至为访问特定共享定义权限。以下策略允许所有 tailnet 成员读取带有 `fileserver` 标签的设备上 `company-docs` 共享中的文件，但除 `company-docs` 之外不会授予对任何其他共享目录的访问权限，也不允许写入：
 
 ```json
 "grants": [
@@ -132,102 +132,102 @@ You can also limit write access or even define permissions for accessing specifi
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Now that you've configured permissions, you can share your folders.
+权限配置完成后，你就可以开始共享自己的文件夹了。
 
-## Sharing and accessing folders with Taildrive
+## 使用 Taildrive 共享和访问文件夹
 
 #### macOS
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-On macOS, open **Settings** then **File Sharing** in the Tailscale client to manage Taildrive sharing. Because Taildrive is in alpha, the Tailscale client hides the **File Sharing** option by default. To show it, run one of the following commands in a terminal.
+在 macOS 上，打开 Tailscale 客户端中的**设置**（Settings），然后打开**文件共享**（File Sharing）来管理 Taildrive 共享。由于 Taildrive 处于 alpha 阶段，Tailscale 客户端默认隐藏**文件共享**选项。要显示该选项，请在终端中运行以下命令之一。
 
-For applications installed from the App store:
+对于从 App Store 安装的应用：
 
 ```shell
 defaults write io.tailscale.ipn.macos FileSharingConfiguration -string show
 ```
 
-For applications downloaded from `tailscale.com`:
+对于从 `tailscale.com` 下载的应用：
 
 ```shell
 defaults write /Users/$(whoami)/Library/Preferences/io.tailscale.ipn.macsys.plist FileSharingConfiguration show
 ```
 
-If the Tailscale application is already running, close and reopen it to pick up the new setting.
+如果 Tailscale 应用已经在运行，请将其关闭再重新打开，以应用新设置。
 
-Once you've enabled the Taildrive settings in the terminal, you will find a **File Sharing** tab on the Settings screen.
+在终端中启用 Taildrive 设置后，你会看到设置界面中出现一个**文件共享**标签页。
 
-Select **Choose Shared Folders** to start managing your shared folders.
+选择**选择共享文件夹**（Choose Shared Folders），开始管理你的共享文件夹。
 
-To add a new share, select the **+** (plus) button. Once you select a folder, the share will be automatically named after the selected folder.
+要添加新的共享，请选择 **+**（加号）按钮。选定文件夹后，该共享会自动以所选文件夹命名。
 
-You can rename the share by double selecting its name in the list.
+你可以通过在列表中双击共享名称来重命名该共享。
 
-To remove a share, select it in the list and select the **−** (minus) button.
+要移除共享，请在列表中选中它，然后选择 **−**（减号）按钮。
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-You can access Taildrive shares by connecting to the Taildrive server at `100.100.100.100:8080`.
+你可以通过连接 `100.100.100.100:8080` 上的 Taildrive 服务器来访问 Taildrive 共享。
 
-1. Open Finder, then select **Go** from the app menu. Choose **Connect to Server**. Alternatively, with Finder open, you can use the keyboard shortcut `Cmd` + `K`.
-2. In the **Server address** field, enter `http://100.100.100.100:8080`
-   You can add this address to your favorites by selecting the **+** icon below the **Favorite Servers** table.
-3. When the **Unsecured Connection** prompt appears, select **Continue**. While the connection takes place over HTTP, it is still encrypted in Tailscale's WireGuard tunnels, so your connection is still secure.
-4. Choose **Guest** in the **Connect As:** menu and select **Connect**.
+1. 打开 Finder，然后在应用菜单中选择**前往**（Go），再选择**连接服务器**（Connect to Server）。也可以在 Finder 打开时使用键盘快捷键 `Cmd` + `K`。
+2. 在**服务器地址**（Server address）字段中输入 `http://100.100.100.100:8080`
+   你可以通过选择**收藏的服务器**（Favorite Servers）表格下方的 **+** 图标，将该地址添加到收藏。
+3. 当出现**不安全连接**（Unsecured Connection）提示时，选择**继续**（Continue）。虽然连接通过 HTTP 进行，但它仍在 Tailscale 的 WireGuard 隧道中加密传输，因此你的连接依然是安全的。
+4. 在**连接身份**（Connect As:）菜单中选择**访客**（Guest），然后选择**连接**（Connect）。
 
-macOS will connect to the Taildrive WebDAV server and show a Finder window with your tailnet DNS name as a folder. Inside that folder, Taildrive will load a folder for each device in your tailnet, and any shares that are active on the devices will appear within those folders.
+macOS 会连接到 Taildrive WebDAV 服务器，并显示一个 Finder 窗口，其中以文件夹形式呈现你的 tailnet DNS 名称。在该文件夹内，Taildrive 会为 tailnet 中的每台设备加载一个文件夹，设备上处于活动状态的共享会出现在这些文件夹中。
 
 #### Windows
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-To use Taildrive on Windows, you use the Tailscale command-line interface (CLI).
+在 Windows 上使用 Taildrive 需要通过 Tailscale 命令行界面（CLI）。
 
-Open a new PowerShell window and run the following command to share a directory using Taildrive. Replace `<share-name>` and `<path>` with the correct values.
+打开一个新的 PowerShell 窗口，运行以下命令来使用 Taildrive 共享目录。将 `<share-name>` 和 `<path>` 替换为正确的值。
 
 ```shell
 tailscale drive share <share-name> <path>
 ```
 
-* `share-name`: A name for the share that will be used in the Taildrive path. It does not need to be identical to the directory name. Share names must only contain the lowercase letters a-z, underscores `_`, parentheses `()`, or spaces. Leading and trailing spaces are omitted. Lowercase letters are required to avoid problems with clients that don't support case-sensitive filenames.
-* `path`: The file system path to the directory that you will share.
+* `share-name`：共享的名称，将用于 Taildrive 路径中。它不必与目录名相同。共享名称只能包含小写字母 a-z、下划线 `_`、括号 `()` 或空格。首尾空格会被省略。要求使用小写字母，是为了避免不支持大小写敏感文件名的客户端出现问题。
+* `path`：要共享的目录的文件系统路径。
 
-#### Rename Taildrive shares
+#### 重命名 Taildrive 共享
 
-To rename a Taildrive share, run the following command. Replace `<old-share-name>` with the current name of the share and `<new-share-name>` with its intended new name.
+要重命名 Taildrive 共享，请运行以下命令。将 `<old-share-name>` 替换为该共享的当前名称，将 `<new-share-name>` 替换为想要使用的新名称。
 
 ```shell
 tailscale drive rename <old-share-name> <new-share-name>
 ```
 
-After you rename the share, users with sufficient permission can immediately access the share using the new name.
+重命名完成后，拥有足够权限的用户可以立即使用新名称访问该共享。
 
-#### Delete Taildrive shares
+#### 删除 Taildrive 共享
 
-To delete an existing Taildrive share, run the following command. Replace `<share-name>` with the name of the share to delete.
+要删除现有的 Taildrive 共享，请运行以下命令。将 `<share-name>` 替换为要删除的共享的名称。
 
 ```shell
 tailscale drive unshare <share-name>
 ```
 
-#### List existing Taildrive shares
+#### 列出现有 Taildrive 共享
 
-To list all existing Taildrive shares that are shared from a device, run the following CLI command on that device:
+要列出某台设备上通过 Taildrive 共享的所有现有共享，请在该设备上运行以下 CLI 命令：
 
 ```shell
 tailscale drive list
 ```
 
-The command displays a list showing the shared directories on the device, along with their share names and the local user whose permissions were used to share the folder.
+该命令会显示一个列表，其中包含设备上已共享的目录，以及它们的共享名称和共享该文件夹时所使用的本地用户权限。
 
 ```shell
 name      path                      as
@@ -236,85 +236,85 @@ Music     C:\Users\Amelie\Music
 Video     C:\Users\Amelie\Video
 ```
 
-The `as` column will be blank on Windows.
+`as` 列在 Windows 上为空。
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-You can access Taildrive shares by connecting to the Taildrive server at `100.100.100.100:8080`.
+你可以通过连接 `100.100.100.100:8080` 上的 Taildrive 服务器来访问 Taildrive 共享。
 
-1. Open File Explorer, then right-click on **This PC** in the left sidebar and select **Map network drive**
+1. 打开文件资源管理器，右键点击左侧边栏中的**此电脑**（This PC），然后选择**映射网络驱动器**（Map network drive）
 
-2. Select the **Drive letter** and the **Folder** that you want to map your Taildrive shares to on your local machine.
+2. 选择要在本地计算机上映射 Taildrive 共享所用的**驱动器号**（Drive letter）和**文件夹**（Folder）。
 
-3. Select the **Reconnect at sign-in** (optional) and **Connect using different credentials** checkboxes.
+3. 勾选**登录时重新连接**（Reconnect at sign-in）（可选）和**使用其他凭据连接**（Connect using different credentials）复选框。
 
-4. Select **Connect to a Web site that you can use to store your documents and pictures**.
+4. 选择**连接到可用于存储文档和图片的网站**。
 
-5. Select **Next**.
+5. 选择**下一步**（Next）。
 
-6. Select **Choose a custom network location** and then select **Next**.
+6. 选择**选择自定义网络位置**（Choose a custom network location），然后选择**下一步**（Next）。
 
-7. In the **Internet or network address** field, enter `http://100.100.100.100:8080` and then select **Next**.
+7. 在 **Internet 或网络地址**字段中输入 `http://100.100.100.100:8080`，然后选择**下一步**（Next）。
 
-8. Leave the **Username** and **Password** field blank in the pop-up box, and select **Ok**.
+8. 在弹出的对话框中将**用户名**（Username）和**密码**（Password）留空，然后选择**确定**（Ok）。
 
-9. Select the **Next** button, and then the **Finish** button.
+9. 选择**下一步**（Next）按钮，然后选择**完成**（Finish）按钮。
 
-Your Taildrive directory will appear as a mapped drive in Windows File Explorer, and will contain a folder with your tailnet name. Inside that folder, Taildrive will load a folder for each device in your tailnet, and any shares that are active on the devices will appear within those folders.
+你的 Taildrive 目录会作为映射驱动器显示在 Windows 文件资源管理器中，其中包含一个以你的 tailnet 名称命名的文件夹。在该文件夹内，Taildrive 会为 tailnet 中的每台设备加载一个文件夹，设备上处于活动状态的共享会出现在这些文件夹中。
 
-By default, Windows limits WebDAV files to 50MB. This can be changed by editing the registry key:
+默认情况下，Windows 将 WebDAV 文件大小限制为 50MB。可以通过编辑注册表项来更改此限制：
 
-1. Open the **Windows Run** dialog by using the keyboard shortcut `Windows` + `R`.
-2. In the dialogue box, type `Regedit` and select **Ok**.
-3. Locate the registry key at `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters`, under the entry `FileSizeLimitInBytes`.
-4. Change the value to `4294967295`, which is 4GB. This is the maximum allowed value.
+1. 使用键盘快捷键 `Windows` + `R` 打开 **Windows 运行**（Windows Run）对话框。
+2. 在对话框中输入 `Regedit`，然后选择**确定**（Ok）。
+3. 找到注册表项 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters` 下面的 `FileSizeLimitInBytes` 条目。
+4. 将该值更改为 `4294967295`，即 4GB。这是允许的最大值。
 
 #### Linux
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-Using the Tailscale command-line interface (CLI), run the following command to share a directory using Taildrive. Replace `<share-name>` and `<path>` with your own values.
+使用 Tailscale 命令行界面（CLI），运行以下命令来使用 Taildrive 共享目录。将 `<share-name>` 和 `<path>` 替换为你自己的值。
 
 ```shell
 tailscale drive share <share-name> <path>
 ```
 
-* `share-name`: A name for the share that will be used in the Taildrive path. It does not need to be identical to the directory name. Share names may only contain the lowercase letters a-z, underscores `_`, parentheses `()`, or spaces. Leading and trailing spaces are omitted. Lowercase letters are required to avoid problems with clients that don't support case-sensitive filenames.
-* `path`: The file system path to the directory that you will share.
+* `share-name`：共享的名称，将用于 Taildrive 路径中。它不必与目录名相同。共享名称只能包含小写字母 a-z、下划线 `_`、括号 `()` 或空格。首尾空格会被省略。要求使用小写字母，是为了避免不支持大小写敏感文件名的客户端出现问题。
+* `path`：要共享的目录的文件系统路径。
 
-#### Rename Taildrive shares
+#### 重命名 Taildrive 共享
 
-To rename a Taildrive share, run the following command. Replace `<old-share-name>` with the current name of the share, and `<new-share-name>` with its intended new name.
+要重命名 Taildrive 共享，请运行以下命令。将 `<old-share-name>` 替换为该共享的当前名称，将 `<new-share-name>` 替换为想要使用的新名称。
 
 ```shell
 tailscale drive rename <old-share-name> <new-share-name>
 ```
 
-After you rename the share, users with the sufficient access can immediately access the share by using the new name.
+重命名完成后，拥有足够权限的用户可以立即使用新名称访问该共享。
 
-#### Delete Taildrive shares
+#### 删除 Taildrive 共享
 
-To delete an existing Taildrive share, run the following command. Replace `<share-name>` with the name of the share to delete.
+要删除现有的 Taildrive 共享，请运行以下命令。将 `<share-name>` 替换为要删除的共享的名称。
 
 ```shell
 tailscale drive unshare <share-name>
 ```
 
-#### List existing Taildrive shares
+#### 列出现有 Taildrive 共享
 
-To list all existing Taildrive shares that are shared from a device, run the following CLI command on that device:
+要列出某台设备上通过 Taildrive 共享的所有现有共享，请在该设备上运行以下 CLI 命令：
 
 ```shell
 tailscale drive list
 ```
 
-The command displays a list showing the shared directories on the device, along with their share names and the local user whose permissions were used to share the folder.
+该命令会显示一个列表，其中包含设备上已共享的目录，以及它们的共享名称和共享该文件夹时所使用的本地用户权限。
 
-For example:
+例如：
 
 ```shell
 name      path                      as
@@ -324,11 +324,11 @@ docs      /pi/docs                  root
 backup    /pi/system-backups        root
 ```
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-You can access Taildrive shares by mounting the Taildrive server at `100.100.100.100:8080` with [davfs2][xt-davfs2].
+你可以使用 [davfs2][xt-davfs2] 挂载 `100.100.100.100:8080` 上的 Taildrive 服务器，从而访问 Taildrive 共享。
 
-For example:
+例如：
 
 ```shell
 # sudo mount -t davfs http://100.100.100.100:8080 /mount/tailscale
@@ -338,74 +338,74 @@ For example:
 
 #### Synology
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-> **Note:**
+> **注意：**
 >
-> Taildrive sharing is not compatible with DSM 6. You must use DSM 7 on your Synology NAS to share directories. Any version of DSM can view shared Taildrive directories.
+> Taildrive 共享与 DSM 6 不兼容。你必须使用群晖（Synology）NAS 上的 DSM 7 才能共享目录。任何版本的 DSM 都可以查看通过 Taildrive 共享的目录。
 
-Before you can use the `tailscale drive share` command to share a directory on a Synology NAS, you must give Tailscale permission to read and write inside your Synology volume. Additionally, you need to [enable Terminal access][xt-synology-terminal] for your Synology NAS to run Tailscale commands at the command line.
+在群晖 NAS 上使用 `tailscale drive share` 命令共享目录之前，你必须授予 Tailscale 在群晖存储空间（volume）内进行读写的权限。此外，你还需要为群晖 NAS [启用 Terminal 访问][xt-synology-terminal]，才能在命令行运行 Tailscale 命令。
 
-To share directories from a Synology device running DSM 7, you need to edit the permissions of the top-level Shared Folder in your volume.
+要从运行 DSM 7 的群晖设备共享目录，你需要编辑存储空间中顶层共享文件夹的权限。
 
-1. Access the Synology web interface and sign in.
-2. Open the **Control Panel**.
-3. Select **Shared Folder** under the **File Sharing** section.
-4. Select the Shared Folder that you wish to be able to share with Taildrive.
-5. Select **Edit** in the Control Panel task bar.
-6. Select the **Permissions** tab.
-7. Select **System internal user** from the dropdown menu.
-8. Find `tailscale` in the table.
-9. Check the **Read/Write** box in that row.
-10. Select **Save**.
-11. Repeat these steps for any other Shared Folders in your Synology volumes that you want to use with Taildrive.
+1. 访问群晖网页界面并登录。
+2. 打开**控制面板**（Control Panel）。
+3. 在**文件共享**（File Sharing）分区下选择**共享文件夹**（Shared Folder）。
+4. 选择你希望能够通过 Taildrive 共享的共享文件夹。
+5. 在控制面板任务栏中选择**编辑**（Edit）。
+6. 选择**权限**（Permissions）标签页。
+7. 从下拉菜单中选择**系统内部用户**（System internal user）。
+8. 在表格中找到 `tailscale`。
+9. 勾选该行中的**读/写**（Read/Write）复选框。
+10. 选择**保存**（Save）。
+11. 对群晖存储空间中其他想要配合 Taildrive 使用的共享文件夹重复上述步骤。
 
-This lets you share any sub-directory of that shared folder with your tailnet by Taildrive.
+这样你就可以通过 Taildrive 将该共享文件夹的任意子目录共享给你的 tailnet。
 
 [xt-synology-terminal]: https://kb.synology.com/en-global/DSM/help/DSM/AdminCenter/system_terminal?version=7
 
-Using the Tailscale command-line interface (CLI), run the following command to share a directory using Taildrive. Replace `<share-name>` and `<path>` with your own values.
+使用 Tailscale 命令行界面（CLI），运行以下命令来使用 Taildrive 共享目录。将 `<share-name>` 和 `<path>` 替换为你自己的值。
 
 ```shell
 tailscale drive share <share-name> <path>
 ```
 
-* `share-name`: A name for the share that will be used in the Taildrive path. It does not need to be identical to the directory name. Share names may only contain the lowercase letters a-z, underscores `_`, parentheses `()`, or spaces. Leading and trailing spaces are omitted. Lowercase letters are required to avoid problems with clients that don't support case-sensitive filenames.
-* `path`: The file system path to the directory that you will share.
+* `share-name`：共享的名称，将用于 Taildrive 路径中。它不必与目录名相同。共享名称只能包含小写字母 a-z、下划线 `_`、括号 `()` 或空格。首尾空格会被省略。要求使用小写字母，是为了避免不支持大小写敏感文件名的客户端出现问题。
+* `path`：要共享的目录的文件系统路径。
 
-#### Rename Taildrive shares
+#### 重命名 Taildrive 共享
 
-To rename a Taildrive share, run the following command. Replace `<old-share-name>` with the current name of the share, and `<new-share-name>` with its intended new name.
+要重命名 Taildrive 共享，请运行以下命令。将 `<old-share-name>` 替换为该共享的当前名称，将 `<new-share-name>` 替换为想要使用的新名称。
 
 ```shell
 tailscale drive rename <old-share-name> <new-share-name>
 ```
 
-After you rename the share, users with the sufficient access can immediately access the share by using the new name.
+重命名完成后，拥有足够权限的用户可以立即使用新名称访问该共享。
 
-#### Delete Taildrive shares
+#### 删除 Taildrive 共享
 
-To delete an existing Taildrive share, run the following command. Replace `<share-name>` with the name of the share to delete.
+要删除现有的 Taildrive 共享，请运行以下命令。将 `<share-name>` 替换为要删除的共享的名称。
 
 ```shell
 tailscale drive unshare <share-name>
 ```
 
-#### List existing Taildrive shares
+#### 列出现有 Taildrive 共享
 
-To list all existing Taildrive shares that are shared from a device, run the following CLI command on that device:
+要列出某台设备上通过 Taildrive 共享的所有现有共享，请在该设备上运行以下 CLI 命令：
 
 ```shell
 tailscale drive list
 ```
 
-The command displays a list showing the shared directories on the device, along with their share names and the local user whose permissions were used to share the folder.
+该命令会显示一个列表，其中包含设备上已共享的目录，以及它们的共享名称和共享该文件夹时所使用的本地用户权限。
 
-For example:
+例如：
 
 ```shell
 name      path                      as
@@ -415,98 +415,98 @@ docs      /pi/docs                  root
 backup    /pi/system-backups        root
 ```
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-These steps will work with any Synology device running DSM 6 or DSM 7. Remember, DSM 6 devices can access shared directories over Taildrive, but cannot share directories themselves.
+这些步骤适用于任何运行 DSM 6 或 DSM 7 的群晖设备。请注意，DSM 6 设备可以通过 Taildrive 访问共享目录，但自身不能共享目录。
 
-1. Access the Synology web interface and sign in.
+1. 访问群晖网页界面并登录。
 
-2. Open the **File Station** application.
+2. 打开 **File Station** 应用。
 
-3. Select the **Tools** dropdown from the task bar.
+3. 在任务栏中选择**工具**（Tools）下拉菜单。
 
-4. Select **Remote Connection** and then select **Connection Setup**.
+4. 选择**远程连接**（Remote Connection），然后选择**连接设置**（Connection Setup）。
 
-5. Choose **WebDAV / WebDAV HTTPS** from the list of connection options.
+5. 从连接选项列表中选择 **WebDAV / WebDAV HTTPS**。
 
-6. Enter `100.100.100.100` in the **Hostname or IP** field.
+6. 在**主机名或 IP**（Hostname or IP）字段中输入 `100.100.100.100`。
 
-7. Enter `8080` in the **Port** field.
+7. 在**端口**（Port）字段中输入 `8080`。
 
-8. Leave the **Account Name** and **Password** blank. No credentials are needed, since Taildrive uses your [Tailscale identity][docs-tailscale-identity] to determine your permissions.
+8. 将**账户名称**（Account Name）和**密码**（Password）留空。无需任何凭证，因为 Taildrive 会使用你的 [Tailscale 身份][docs-tailscale-identity]来确定你的权限。
 
-9. Ensure **Codepage** is set to `Unicode (UTF-8)`.
+9. 确保**代码页**（Codepage）设置为 `Unicode (UTF-8)`。
 
-10. Optionally, add a **Profile Name**. This lets you give a nickname the connection.
+10. （可选）添加一个**配置文件名称**（Profile Name）。这样你可以为该连接起一个别名。
 
-11. Select **Apply**.
+11. 选择**应用**（Apply）。
 
-Synology will display this connection in the left sidebar of the **File Station** application, under the **WebDAV** heading. Selecting the connection will show your tailnet DNS name as a folder. Inside that folder, Taildrive will load a folder for each device in your tailnet, and any shares that are active on the devices will appear within those folders.
+群晖会在 **File Station** 应用的左侧边栏中、**WebDAV** 标题下显示此连接。选择该连接后，会以文件夹形式显示你的 tailnet DNS 名称。在该文件夹内，Taildrive 会为 tailnet 中的每台设备加载一个文件夹，设备上处于活动状态的共享会出现在这些文件夹中。
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity
 
 #### iOS
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-Sharing folders from iOS is not supported.
+不支持从 iOS 共享文件夹。
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-Taildrive is available as a location in the Files app.
+Taildrive 在"文件"（Files）App 中作为一个位置提供。
 
-1. Open the Files app, and select **Browse** on the menu bar at the bottom of the screen.
-2. Select **Tailscale** from the list of locations.
-3. The first time you connect, a prompt will appear asking for permission to **Turn on "Tailscale"**. Tap **Turn On**.
+1. 打开"文件" App，然后选择屏幕底部菜单栏中的**浏览**（Browse）。
+2. 从位置列表中选择 **Tailscale**。
+3. 首次连接时，会出现一个提示，请求允许**开启"Tailscale"**（Turn on "Tailscale"）。点按**开启**（Turn On）。
 
-The Files app will display a folder with your tailnet name. Inside that folder, Taildrive will load a folder for each device in your tailnet, and any shares that are active on the devices will appear within those folders.
+"文件" App 会显示一个以你的 tailnet 名称命名的文件夹。在该文件夹内，Taildrive 会为 tailnet 中的每台设备加载一个文件夹，设备上处于活动状态的共享会出现在这些文件夹中。
 
-You can favorite any folder inside of the Tailscale file provider to gain quicker access to it.
+你可以收藏 Tailscale 文件提供方中的任意文件夹，以便更快地访问它。
 
-Now that you've set up Taildrive on your iOS device, you'll have access to read and write to the shared folders from any app that integrates with the iOS Files app.
+在 iOS 设备上设置好 Taildrive 之后，你就可以在任何与 iOS"文件" App 集成的应用中读取和写入这些共享文件夹。
 
 #### Android
 
-> **Note:**
+> **注意：**
 >
-> Tailscale must be running to access Taildrive shares at `100.100.100.100:8080`.
+> 必须保持 Tailscale 运行，才能访问 `100.100.100.100:8080` 上的 Taildrive 共享。
 
-### Share directories with Taildrive
+### 使用 Taildrive 共享目录
 
-Sharing folders from Android is not supported.
+不支持从 Android 共享文件夹。
 
-### Access directories shared with Taildrive
+### 访问通过 Taildrive 共享的目录
 
-To access Taildrive, you will need a WebDAV compatible file browser app from the [Play Store][xt-play-store].
+要访问 Taildrive，你需要从 [Play Store][xt-play-store] 安装一个兼容 WebDAV 的文件浏览器应用。
 
-> **Note:**
+> **注意：**
 >
-> Some WebDAV explorers only work with `https` URLs, but Taildrive only works on `http`.
+> 有些 WebDAV 浏览器只能使用 `https` URL，但 Taildrive 只能在 `http` 上工作。
 
-If your file browser requires a username/password for WebDAV connections, you may enter any username and password you like.
+如果你的文件浏览器在 WebDAV 连接时要求用户名/密码，你可以随意输入任意用户名和密码。
 
 #### Material Files
 
-[Material Files][xt-material-files] is a free and [open source][xt-gh-material-files] file browser that works with Taildrive.
+[Material Files][xt-material-files] 是一款免费且[开源][xt-gh-material-files]的文件浏览器，可与 Taildrive 配合使用。
 
-To access Taildrive from Material Files, follow these steps:
+要在 Material Files 中访问 Taildrive，请按以下步骤操作：
 
-1. Tap on the top-left hamburger menu.
-2. Select **+ Add storage...**.
-3. Select **WebDAV server**.
-4. Enter `100.100.100.100` for the **Hostname**.
-5. Enter `8080` for the **Port**.
-6. Leave **Path** empty.
-7. Enter any value for **Name**, such as `Tailscale`.
-8. Select `HTTP` as the **Protocol**.
-9. Select `None` for **Authentication**.
-10. Tap **Connect and add**.
+1. 点按左上角的汉堡菜单。
+2. 选择**+ 添加存储**（+ Add storage...）。
+3. 选择 **WebDAV 服务器**（WebDAV server）。
+4. 在**主机名**（Hostname）中输入 `100.100.100.100`。
+5. 在**端口**（Port）中输入 `8080`。
+6. 将**路径**（Path）留空。
+7. 在**名称**（Name）中输入任意值，例如 `Tailscale`。
+8. **协议**（Protocol）选择 `HTTP`。
+9. **身份验证**（Authentication）选择 `None`。
+10. 点按**连接并添加**。
 
-You can now find your WebDAV mount under the locations in the hamburger menu.
+现在，你可以在汉堡菜单中的位置列表里找到你的 WebDAV 挂载。
 
 [xt-gh-material-files]: https://github.com/zhanghai/MaterialFiles
 
@@ -514,10 +514,10 @@ You can now find your WebDAV mount under the locations in the hamburger menu.
 
 [xt-play-store]: https://play.google.com/store/search?q=webdav%20file%20browser&c=apps
 
-## Limitations
+## 局限性
 
-* A device [shared][docs-sharing] into your tailnet cannot access any Taildrive folders in your tailnet. Similarly, a device you share to another tailnet cannot access any Taildrive folders in the other tailnet
-* Using Taildrive with `rclone` on client version 1.64.2 or earlier will fail without the `--inplace` flag. Use [version 1.65.75][pk-1-65-75-unstable] or later to avoid this.
+* [共享][docs-sharing]到你 tailnet 中的设备无法访问你 tailnet 中的任何 Taildrive 文件夹。同样，你共享到其他 tailnet 的设备也无法访问该 tailnet 中的任何 Taildrive 文件夹。
+* 在 1.64.2 或更早版本的客户端上配合 `rclone` 使用 Taildrive 时，如果没有 `--inplace` 标志将会失败。请使用 [1.65.75 或更高版本][pk-1-65-75-unstable]以避免此问题。
 
 [docs-access-control]: /docs/features/access-control
 

@@ -1,75 +1,75 @@
 ---
-title: "Manage Tailscale PAM resources using Terraform"
-description: "You can use Terraform to manage [Tailscale PAM][docs-pam] connectors and services as Infrastructure as Code (IaC). This topic walks through configuring Terraform for Tailscale PAM and creating your fi"
+title: "使用 Terraform 管理 Tailscale PAM 资源"
+description: "你可以使用 Terraform 以基础设施即代码（IaC）的方式管理 [Tailscale PAM][docs-pam] 连接器和服务。本主题将带你完成为 Tailscale PAM 配置 Terraform 并创建第一批资源。"
 ---
 
-Last validated Aug 21, 2026
+最后验证于 Aug 21, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-You can use Terraform to manage [Tailscale PAM][docs-pam] connectors and services as Infrastructure as Code (IaC). This topic walks through configuring Terraform for Tailscale PAM and creating your first resources.
+你可以使用 Terraform 以基础设施即代码（IaC）的方式管理 [Tailscale PAM][docs-pam] 连接器和服务。本主题将带你完成为 Tailscale PAM 配置 Terraform 并创建第一批资源。
 
-Tailscale PAM currently uses the [Border0 Terraform provider][xt-terraform-border0] to manage PAM resources. This is separate from the [Tailscale Terraform provider][docs-terraform-provider] used to manage other tailnet resources.
+Tailscale PAM 目前使用 [Border0 Terraform provider][xt-terraform-border0] 来管理 PAM 资源。它与管理其他 tailnet 资源所用的 [Tailscale Terraform provider][docs-terraform-provider] 是分开的。
 
-For complete resource schemas and configuration options, refer to the Border0 Terraform provider [documentation][xt-terraform-border0-docs].
+完整的资源 schema 和配置选项，参见 Border0 Terraform provider 的[文档][xt-terraform-border0-docs]。
 
-You can also explore the [Border0 Terraform examples repository][xt-border0-terraform-examples-repository] for additional configuration examples. Keep in mind that these examples use Border0 terminology, so Tailscale PAM services might be described as **sockets**, and some older examples might include Border0 policy resources that don't apply to Tailscale PAM.
+你还可以浏览 [Border0 Terraform 示例仓库][xt-border0-terraform-examples-repository]获取更多配置示例。请注意，这些示例使用的是 Border0 术语，因此 Tailscale PAM 服务可能被描述为 **socket**，而且一些较早的示例可能包含不适用于 Tailscale PAM 的 Border0 策略资源。
 
-| Tailscale PAM  | Border0 Terraform provider |
+| Tailscale PAM | Border0 Terraform provider |
 | -------------- | -------------------------- |
-| PAM Connector  | `border0_connector`        |
-| PAM Service    | `border0_socket`           |
-| Access control | Tailscale grants           |
+| PAM 连接器     | `border0_connector`        |
+| PAM 服务       | `border0_socket`           |
+| 访问控制       | Tailscale 授权             |
 
-In particular, Tailscale PAM [services][docs-pam-services] are referred to as **sockets** in the Border0 Terraform provider.
+特别地，Tailscale PAM [服务][docs-pam-services]在 Border0 Terraform provider 中被称为 **socket**。
 
-> **Note:**
+> **注意：**
 >
-> For Tailscale PAM, use the Border0 Terraform provider only to manage **PAM connectors** (`border0_connector`) and **PAM services** (`border0_socket`). Don't use other Border0 resources, including policy resources, with Tailscale PAM. Use Tailscale [grants][docs-grants] to manage access to PAM services.
+> 对于 Tailscale PAM，只使用 Border0 Terraform provider 管理 **PAM 连接器**（`border0_connector`）和 **PAM 服务**（`border0_socket`）。不要在 Tailscale PAM 中使用其他 Border0 资源，包括策略资源。请使用 Tailscale [授权][docs-grants]来管理对 PAM 服务的访问。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* Access to Tailscale PAM.
-* Terraform installed.
+* 访问 Tailscale PAM 的权限。
+* 已安装 Terraform。
 
-You need to create a Tailscale PAM [service account][docs-pam-service-accounts] with a service account token, as described in this guide.
+你还需要按本指南所述，创建一个带有服务账户令牌的 Tailscale PAM [服务账户][docs-pam-service-accounts]。
 
-## Create a service account
+## 创建服务账户
 
-Terraform authenticates to the API using a Tailscale PAM service account.
+Terraform 使用 Tailscale PAM 服务账户向 API 进行身份验证。
 
-To create a service account:
+要创建服务账户：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page of the Tailscale admin console.
-2. In the **Service accounts** section, select **Add service account**.
-3. Enter a **Name** for the service account, such as `terraform`.
-4. (Optional) Enter a description.
-5. Select the **Member** role. This gives the service account the permissions needed to manage connectors and services.
-6. Select **Add service account**.
+1. 打开 Tailscale 管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面。
+2. 在 **Service accounts** 部分选择**添加服务账户**。
+3. 输入服务账户的**名称**，例如 `terraform`。
+4. （可选）输入描述。
+5. 选择 **Member** 角色。这会授予服务账户管理连接器和服务所需的权限。
+6. 选择**添加服务账户**。
 
-For more information, refer to Tailscale PAM [service accounts][docs-pam-service-accounts].
+更多信息，参见 Tailscale PAM [服务账户][docs-pam-service-accounts]。
 
-### Create a service account token
+### 创建服务账户令牌
 
-After creating the service account, create a token for Terraform:
+创建服务账户后，为 Terraform 创建一个令牌：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) settings page.
-2. In the **Service accounts** section, find the service account, select the  menu, and select **Edit**.
-3. Select **Create token**.
-4. Enter a name for the token, such as `terraform`.
-5. Select the token lifetime.
-6. Select **Save**.
-7. Copy the token and store it securely. You won't be able to get the token value again after you leave the page.
+1. 打开 [PAM](https://console.tailscale.com/admin/settings/pam) 设置页面。
+2. 在 **Service accounts** 部分找到该服务账户，选择该菜单，然后选择**编辑**。
+3. 选择**创建令牌**。
+4. 输入令牌名称，例如 `terraform`。
+5. 选择令牌的有效期。
+6. 选择**保存**。
+7. 复制令牌并妥善保管。离开该页面后，你将无法再次获取该令牌的值。
 
-> **Warning:**
+> **警告：**
 >
-> Treat service account tokens as secrets. The token inherits the permissions of its service account.
+> 请把服务账户令牌当作机密对待。令牌会继承其服务账户的权限。
 
-## Configure the Terraform provider
+## 配置 Terraform provider
 
-Add the Border0 provider to your Terraform configuration:
+把 Border0 provider 添加到你的 Terraform 配置中：
 
 ```hcl
 terraform {
@@ -83,22 +83,22 @@ terraform {
 provider "border0" {}
 ```
 
-The provider can read the service account token from the `BORDER0_TOKEN` environment variable. Using an environment variable or secrets manager avoids storing the token in your Terraform configuration.
+该 provider 可以从 `BORDER0_TOKEN` 环境变量读取服务账户令牌。使用环境变量或密钥管理器可以避免把令牌存储在 Terraform 配置里。
 
 ```shell
 export BORDER0_TOKEN="<service-account-token>"
 terraform init
 ```
 
-Replace `<service-account-token>` with your service account token.
+把 `<service-account-token>` 替换为你的服务账户令牌。
 
-You can now use the provider to manage Tailscale PAM resources.
+现在你可以使用该 provider 管理 Tailscale PAM 资源了。
 
-## Manage a Tailscale PAM connector
+## 管理 Tailscale PAM 连接器
 
-Use the `border0_connector` resource to manage a Tailscale PAM [connector][docs-pam-connectors].
+使用 `border0_connector` 资源管理 Tailscale PAM [连接器][docs-pam-connectors]。
 
-For example:
+例如：
 
 ```hcl
 resource "border0_connector" "production" {
@@ -107,15 +107,15 @@ resource "border0_connector" "production" {
 }
 ```
 
-Creating the connector resource configures the connector in Tailscale PAM. You must also install and run the connector on a host that can reach the resources you want to make available through PAM.
+创建连接器资源会在 Tailscale PAM 中完成连接器的配置。你还必须在一台能到达你想通过 PAM 开放的资源的主机上安装并运行该连接器。
 
-For connector installation instructions, refer to [Install a Tailscale PAM connector][docs-pam-connectors-install].
+连接器的安装说明，参见[安装 Tailscale PAM 连接器][docs-pam-connectors-install]。
 
-## Manage a Tailscale PAM service
+## 管理 Tailscale PAM 服务
 
-Tailscale PAM [services][docs-pam-services] are called **sockets** in the Border0 Terraform provider. Use the `border0_socket` resource to create and manage them.
+Tailscale PAM [服务][docs-pam-services]在 Border0 Terraform provider 中称为 **socket**。使用 `border0_socket` 资源来创建和管理它们。
 
-For example, the following configuration creates an HTTP service and associates it with the connector created above:
+例如，下面的配置创建一个 HTTP 服务，并将其关联到上面创建的连接器：
 
 ```hcl
 resource "border0_socket" "internal_admin" {
@@ -130,38 +130,38 @@ resource "border0_socket" "internal_admin" {
 }
 ```
 
-Run Terraform to review and apply the configuration:
+运行 Terraform 以检查并应用配置：
 
 ```shell
 terraform plan
 terraform apply
 ```
 
-You can also associate a service with a connector that isn't managed by the same Terraform configuration by providing its connector ID:
+你也可以通过提供连接器 ID，把服务关联到一个不受同一 Terraform 配置管理的连接器：
 
 ```hcl
 connector_ids = ["<connector-id>"]
 ```
 
-Replace `<connector-id>` with the ID of your connector.
+把 `<connector-id>` 替换为你的连接器 ID。
 
-The configuration available for a `border0_socket` depends on the type of service you are creating. Refer to the Border0 Terraform provider [documentation][xt-terraform-border0-docs] in the Terraform Registry for the complete resource schema and additional examples.
+`border0_socket` 可用的配置取决于你要创建的服务类型。完整的资源 schema 和更多示例，请参见 Terraform Registry 中的 Border0 Terraform provider [文档][xt-terraform-border0-docs]。
 
-## Control access to Terraform-managed services
+## 控制对 Terraform 管理的服务的访问
 
-Terraform manages the PAM connector and service infrastructure. Use **Tailscale grants** to control who can access those services and what they can do.
+Terraform 管理 PAM 连接器和服务基础设施。请使用 **Tailscale 授权**来控制谁能访问这些服务以及能做什么。
 
-> **Note:**
+> **注意：**
 >
-> There may be Border0 policy resources, such as `border0_policy`, in the Terraform provider documentation or older Border0 examples. These belong to the legacy Border0 access control model and don't apply to Tailscale PAM. Don't use them to configure access to Tailscale PAM services.
+> 在 Terraform provider 文档或较早的 Border0 示例中，可能会出现 `border0_policy` 等 Border0 策略资源。它们属于 Border0 旧版访问控制模型，不适用于 Tailscale PAM。不要用它们来配置对 Tailscale PAM 服务的访问。
 
-For information about configuring access using PAM grants, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+关于使用 PAM 授权配置访问的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Next steps
+## 后续步骤
 
-For the complete list of supported arguments and resources, refer to the Border0 Terraform provider [documentation][xt-terraform-border0-docs] in the Terraform Registry.
+受支持的参数和资源的完整列表，参见 Terraform Registry 中的 Border0 Terraform provider [文档][xt-terraform-border0-docs]。
 
-You can also explore the Border0 Terraform [examples repository][xt-border0-terraform-examples-repository] for additional Terraform configurations. Keep in mind that those examples use Border0 terminology, so Tailscale PAM services might be described as sockets. Older examples might include Border0 policy resources that aren't applicable to Tailscale PAM.
+你还可以浏览 Border0 Terraform [示例仓库][xt-border0-terraform-examples-repository]获取更多 Terraform 配置。请注意，那些示例使用的是 Border0 术语，因此 Tailscale PAM 服务可能被描述为 socket。较早的示例可能包含不适用于 Tailscale PAM 的 Border0 策略资源。
 
 [docs-grants]: /docs/features/access-control/grants
 

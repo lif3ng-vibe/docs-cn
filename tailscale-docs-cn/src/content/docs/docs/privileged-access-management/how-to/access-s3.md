@@ -1,95 +1,95 @@
 ---
-title: "Access Amazon S3 buckets using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] gives users [identity-based][docs-tailscale-identity] access to Amazon S3 without requiring you to distribute AWS credentials to each user."
+title: "使用 Tailscale PAM 访问 Amazon S3 存储桶"
+description: "[Tailscale PAM][docs-pam] 让用户以[基于身份][docs-tailscale-identity]的方式访问 Amazon S3，而无需你向每个用户分发 AWS 凭证。"
 ---
 
-Last validated Aug 17, 2026
+最后验证于 Aug 17, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] gives users [identity-based][docs-tailscale-identity] access to Amazon S3 without requiring you to distribute AWS credentials to each user.
+[Tailscale PAM][docs-pam] 让用户以[基于身份][docs-tailscale-identity]的方式访问 Amazon S3，而无需你向每个用户分发 AWS 凭证。
 
-The Tailscale PAM [connector][docs-pam-connectors] authenticates to AWS and sends S3 API requests on the user's behalf. Users access S3 with their Tailscale identity, while Tailscale PAM [grants][docs-grants] in your tailnet access policy control which buckets, paths, and actions they're allowed to use.
+Tailscale PAM [连接器][docs-pam-connectors]会向 AWS 进行身份验证，并代表用户发送 S3 API 请求。用户使用自己的 Tailscale 身份访问 S3，而 tailnet 访问策略中的 Tailscale PAM [授权（grant）][docs-grants]则控制他们可以使用哪些存储桶、路径和操作。
 
-Users can browse S3 from the Tailscale browser client or continue using familiar tools such as the AWS CLI and other S3-compatible clients. This gives users a simpler way to work with S3 while keeping AWS credentials with the connector and giving administrators centralized access control and visibility.
+用户可以在 Tailscale 浏览器客户端中浏览 S3，也可以继续使用熟悉的工具，例如 AWS CLI 和其他 S3 兼容客户端。这让用户能以更简单的方式使用 S3，同时把 AWS 凭证保留在连接器一侧，并为管理员提供集中式的访问控制和可见性。
 
-## How S3 access works
+## S3 访问的工作原理
 
-The PAM connector acts as a proxy between users and Amazon S3.
+PAM 连接器充当用户与 Amazon S3 之间的代理。
 
-When a user makes an S3 request, Tailscale PAM checks whether the request is allowed by the user's PAM grants before the connector sends it to AWS. The connector's AWS identity must also have permission to do the requested operation.
+当用户发起 S3 请求时，Tailscale PAM 会在连接器把请求发送到 AWS 之前，检查该请求是否被该用户的 PAM 授权所允许。连接器的 AWS 身份也必须拥有执行所请求操作的权限。
 
-This means two layers of access control apply:
+这意味着会有两层访问控制生效：
 
-* **AWS IAM** controls what the connector can do in S3.
-* **Tailscale PAM grants** control what individual users and groups can do through the service.
+* **AWS IAM** 控制连接器能在 S3 中做什么。
+* **Tailscale PAM 授权**控制各个用户和用户组能通过该服务做什么。
 
-Tailscale PAM can narrow the permissions available to users, but it can't provide access that the connector's AWS identity doesn't already have.
+Tailscale PAM 可以收窄用户可用的权限，但无法提供连接器的 AWS 身份本身不具备的访问能力。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have:
+开始之前，请确保你已具备：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* An AWS identity the connector can use to access S3.
-* The required AWS IAM permissions for the buckets and operations you want to make available.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 一个连接器可用来访问 S3 的 AWS 身份。
+* 你想开放的存储桶和操作所需的 AWS IAM 权限。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
 
-## Create an Amazon S3 PAM service
+## 创建 Amazon S3 PAM 服务
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择**添加服务**。
 
-3. Select **PAM service**.
+3. 选择 **PAM 服务**。
 
-4. Select **AWS S3**.
+4. 选择 **AWS S3**。
 
-5. Select **Continue**.
+5. 选择**继续**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-7. (Optional) Enter a description.
+7. （可选）输入描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. From **Connect via**, select one or more Tailscale PAM connectors.
+9. 在**通过以下方式连接**中，选择一个或多个 Tailscale PAM 连接器。
 
-   Choose a connector that can authenticate to AWS and reach the S3 API.
+   选择一个能向 AWS 进行身份验证并访问 S3 API 的连接器。
 
-10. Select **Continue**.
+10. 选择**继续**。
 
-11. (Optional) Configure the buckets available through the service and how the connector authenticates to AWS. Under **Bucket allowlist**, select **Add bucket** and enter a bucket name or pattern for each bucket setting you want to create. For example, you could use a bucket name like:
+11. （可选）配置可通过该服务访问的存储桶，以及连接器如何向 AWS 进行身份验证。在**存储桶允许列表**下，选择**添加存储桶**，并为要创建的每个存储桶设置输入存储桶名称或模式。例如，可以使用如下存储桶名称：
 
     ```shell
     production-artifacts
     ```
 
-    You can also use wildcards in bucket patterns, such as:
+    也可以在存储桶模式中使用通配符，例如：
 
     ```shell
     production-*
     ```
 
-    If you leave the allowlist empty, the service can make available any S3 bucket accessible to the connector's AWS identity. The connector's AWS IAM permissions still apply.
+    如果允许列表留空，该服务可以开放连接器的 AWS 身份可访问的任何 S3 存储桶。连接器的 AWS IAM 权限仍然生效。
 
-    You can use Tailscale PAM grants later to apply more specific restrictions for individual users, including restrictions on paths within a bucket.
+    之后你可以使用 Tailscale PAM 授权对单个用户施加更具体的限制，包括对存储桶内路径的限制。
 
-12. For **AWS authentication strategy**, choose how the connector authenticates to AWS. Select one of the following:
+12. 在 **AWS 身份验证策略**中，选择连接器向 AWS 进行身份验证的方式。从以下选项中选择：
 
-    * **Default credentials provider chain** uses credentials already available to the connector. If the connector runs in AWS, this can use the IAM role assigned to the instance or workload.
-    * **AWS profile** uses an AWS profile available in the connector's environment.
-    * **Static credentials** uses an AWS access key and secret access key configured for the service.
+    * **默认凭证提供程序链**使用连接器环境中已有的凭证。如果连接器运行在 AWS 中，可以使用分配给实例或工作负载的 IAM 角色。
+    * **AWS profile** 使用连接器环境中可用的 AWS profile。
+    * **静态凭证**使用为该服务配置的 AWS 访问密钥和秘密访问密钥。
 
-    Whichever method you choose, the AWS identity needs permission to do the S3 operations you want users to also do through the service.
+    无论选择哪种方式，该 AWS 身份都需要拥有执行你希望用户也能通过该服务执行的 S3 操作的权限。
 
-13. Select **Save**.
+13. 选择**保存**。
 
-## Grant access to S3
+## 为 S3 授予访问权限
 
-Use Tailscale PAM grants in your tailnet access policy to control who can use the service.
+使用 tailnet 访问策略中的 Tailscale PAM 授权来控制谁可以使用该服务。
 
-For example, the following grant gives the `group:engineering` group access to the S3 service:
+例如，下面的授权让 `group:engineering` 用户组可以访问该 S3 服务：
 
 ```json
 {
@@ -113,19 +113,19 @@ For example, the following grant gives the `group:engineering` group access to t
 }
 ```
 
-An unrestricted `aws_s3` permission makes the S3 operations available through the service and the connector's AWS identity.
+一个不做限制的 `aws_s3` 权限会把该服务与连接器 AWS 身份可用的 S3 操作全部开放。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的更多信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-### Control access by bucket, path, and action
+### 按存储桶、路径和操作控制访问
 
-For more granular access, S3 rules can restrict users by:
+如需更细粒度的访问控制，S3 规则可以按以下维度限制用户：
 
-* Bucket.
-* Object path.
-* Action: `list`, `read`, `write`, or `delete`.
+* 存储桶。
+* 对象路径。
+* 操作：`list`、`read`、`write` 或 `delete`。
 
-For example, the following rule gives users read-only access to objects under `development/` in the `company-data` bucket:
+例如，下面的规则让用户对 `company-data` 存储桶中 `development/` 下的对象拥有只读访问权限：
 
 ```json
 "aws_s3": {
@@ -139,27 +139,27 @@ For example, the following rule gives users read-only access to objects under `d
 }
 ```
 
-This is useful when multiple teams or environments share a bucket. The connector can have the AWS permissions it needs to access the bucket, while Tailscale PAM grants determine which parts of the bucket each user can access.
+当多个团队或环境共享一个存储桶时，这会很有用。连接器可以拥有访问该存储桶所需的 AWS 权限，而 Tailscale PAM 授权则决定每个用户能访问存储桶中的哪些部分。
 
-When S3 rules are configured, an operation must match at least one rule. Rules are additive and support wildcards for matching buckets and paths.
+配置了 S3 规则后，一个操作必须至少匹配一条规则才被允许。规则是累加式的，并支持使用通配符匹配存储桶和路径。
 
-For more information about grants, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+关于授权的更多信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Access S3
+## 访问 S3
 
-Users can access the service from the Tailscale browser client or with an S3-compatible client.
+用户可以通过 Tailscale 浏览器客户端或 S3 兼容客户端访问该服务。
 
-### Use the Tailscale browser client
+### 使用 Tailscale 浏览器客户端
 
-Open the S3 service from the Tailscale PAM [Border0 web client](https://my.tailscale.com) to browse the buckets and objects available to your Tailscale identity.
+从 Tailscale PAM [Border0 web 客户端](https://my.tailscale.com)打开该 S3 服务，即可浏览你的 Tailscale 身份可用的存储桶和对象。
 
-The file browser gives users a familiar way to browse S3 without needing to configure AWS credentials or use the AWS CLI. What each user can read and do is limited by their Tailscale PAM grants and the AWS permissions available to the connector. The original S3 service was designed to support both a browser-based file explorer and native S3 tooling.
+文件浏览器为用户提供了一种熟悉的方式来浏览 S3，无需配置 AWS 凭证或使用 AWS CLI。每个用户能读取什么、能做什么，都受其 Tailscale PAM 授权以及连接器可用的 AWS 权限的限制。原始的 S3 服务在设计上就同时支持基于浏览器的文件浏览器和原生 S3 工具。
 
-### Use the AWS CLI
+### 使用 AWS CLI
 
-You can configure the AWS CLI (`aws`) to send S3 requests through the Tailscale PAM service.
+你可以配置 AWS CLI（`aws`），让它通过 Tailscale PAM 服务发送 S3 请求。
 
-Create a profile similar to:
+创建一个类似如下的 profile：
 
 ```ini
 [profile private-s3]
@@ -169,77 +169,77 @@ endpoint_url = http://<your-service-hostname-or-ip>
 addressing_style = path
 ```
 
-Replace `<your-service-hostname-or-ip>` with the endpoint for your S3 PAM service.
+把 `<your-service-hostname-or-ip>` 替换为你的 S3 PAM 服务的端点。
 
-The access key and secret key values are unused placeholders but aren't used for authentication. The AWS CLI expects credentials to be present before it sends the request, but the connector uses the AWS credentials configured for the PAM service when communicating with S3.
+访问密钥和秘密密钥的值只是未使用的占位符，并不用于身份验证。AWS CLI 在发送请求前要求凭证必须存在，但在与 S3 通信时，连接器使用的是为 PAM 服务配置的 AWS 凭证。
 
-Use the profile with normal AWS CLI commands:
+在常规 AWS CLI 命令中使用该 profile：
 
 ```shell
 aws --profile private-s3 s3 ls
 ```
 
-Or:
+或者：
 
 ```shell
 AWS_PROFILE=private-s3 aws s3 ls
 ```
 
-You can continue using normal S3 commands. Whether an operation succeeds depends on both the user's PAM permissions and the connector's AWS IAM permissions.
+你可以继续使用常规的 S3 命令。一个操作能否成功，取决于用户的 PAM 权限和连接器的 AWS IAM 权限两者。
 
-## Review S3 sessions
+## 查看 S3 会话
 
-Tailscale PAM gives you a central place to review who accessed your S3 services.
+Tailscale PAM 为你提供了一个集中位置，用于查看谁访问了你的 S3 服务。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select an S3 session to review information about the user, originating device, connection time, and service that was accessed.
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择一个 S3 会话，即可查看有关用户、来源设备、连接时间和所访问服务的信息。
 
-When session recording is enabled, you can also review the S3 activity performed through the service. This gives you an audit trail of who accessed S3 and what S3 operations were performed. This lets you review what files were accessed by whom.
+启用会话录制后，你还可以查看通过该服务执行的 S3 活动。这为你提供了谁访问了 S3、执行了哪些 S3 操作的审计线索，让你能够查看谁访问了哪些文件。
 
-## Troubleshooting
+## 故障排查
 
-If you can't access an S3 service, check that the connector can authenticate to AWS and that its AWS identity can do the requested operation.
+如果你无法访问某个 S3 服务，请检查连接器能否向 AWS 进行身份验证，以及其 AWS 身份能否执行所请求的操作。
 
-If you can't access a specific bucket but can access the S3 service:
+如果你能访问 S3 服务但无法访问某个特定存储桶：
 
-* Verify that you added a bucket by using the **Bucket allowlist** option.
-* Verify that the user's Tailscale PAM grant permits the requested bucket, path, and action.
+* 确认你已经使用**存储桶允许列表**选项添加了该存储桶。
+* 确认该用户的 Tailscale PAM 授权允许所请求的存储桶、路径和操作。
 
-### AWS CLI can't find credentials
+### AWS CLI 找不到凭证
 
-If the AWS CLI returns:
+如果 AWS CLI 返回：
 
 ```shell
 Unable to locate credentials. You can configure credentials by running "aws configure".
 ```
 
-Make sure your local profile contains placeholder values for both fields:
+请确保你的本地 profile 中两个字段都填了占位值：
 
 ```ini
 aws_access_key_id = unused_placeholder
 aws_secret_access_key = unused_placeholder
 ```
 
-The AWS CLI requires credentials to be configured before sending the request, even though the `unused_placeholder` values aren't used to authenticate to the upstream S3 service.
+AWS CLI 在发送请求前要求凭证必须已配置，即使这些 `unused_placeholder` 值并不用于向上游 S3 服务进行身份验证。
 
-### Objects under a bucket prefix aren't visible
+### 存储桶前缀下的对象不可见
 
-If you use prefixes within a bucket to separate environments or teams, make sure the connector has enough AWS IAM permission to list the bucket.
+如果你在存储桶内使用前缀来区分环境或团队，请确保连接器拥有列出该存储桶所需的足够 AWS IAM 权限。
 
-You can then use Tailscale PAM grants to restrict the paths individual users can access. For example:
+然后你可以使用 Tailscale PAM 授权来限制单个用户可访问的路径。例如：
 
 ```json
 "paths": ["development/*"]
 ```
 
-This lets the connector list the bucket while Tailscale PAM limits the objects exposed to each user.
+这样连接器可以列出整个存储桶，而 Tailscale PAM 则限制每个用户能看到哪些对象。
 
-If the expected objects still don't appear, check both the connector's AWS permissions and the bucket and path patterns in the user's grant.
+如果预期中的对象仍然没有出现，请同时检查连接器的 AWS 权限以及用户授权中的存储桶和路径模式。
 
-### An S3 operation is denied
+### S3 操作被拒绝
 
-Both authorization layers must allow the operation.
+两层授权都必须允许该操作。
 
-For example, a Tailscale PAM grant that permits `write` operations doesn't permit uploads if the connector's AWS identity lacks the required S3 write permission. Likewise, broad AWS IAM permissions on the connector don't override a more restrictive Tailscale PAM grant.
+例如，如果连接器的 AWS 身份缺少所需的 S3 写入权限，那么一条允许 `write` 操作的 Tailscale PAM 授权也无法让上传成功。同样，连接器上宽泛的 AWS IAM 权限也不能覆盖更严格的 Tailscale PAM 授权。
 
 [docs-grants]: /docs/features/access-control/grants
 

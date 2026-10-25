@@ -1,31 +1,31 @@
 ---
-title: "Route a Claude subscription through Aperture"
-description: "In [passthrough mode][docs-use-passthrough-mode], Aperture forwards each client's own credential to the upstream provider instead of injecting a shared API key. This guide uses passthrough to route a "
+title: "把 Claude 订阅经由 Aperture 路由"
+description: "在 [passthrough 模式][docs-use-passthrough-mode]下，Aperture 把每个客户端自己的凭证转发给上游提供商，而不是注入共享 API key。本指南使用 passthrough 来路由 Claude Pro 或 Max 订阅。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-In [passthrough mode][docs-use-passthrough-mode], Aperture forwards each client's own credential to the upstream provider instead of injecting a shared API key. This guide uses passthrough to route a Claude Pro or Max subscription: Claude Code signs in to the subscription and holds an OAuth token, and Aperture forwards that token to Anthropic unchanged. Each user authenticates to Anthropic as themselves, and you get Aperture's identity, logging, and policy enforcement without re-issuing keys.
+在 [passthrough 模式][docs-use-passthrough-mode]下，Aperture 把每个客户端自己的凭证转发给上游提供商，而不是注入共享 API key。本指南使用 passthrough 来路由 Claude Pro 或 Max 订阅：Claude Code 登录订阅并持有 OAuth 令牌，Aperture 把该令牌原样转发给 Anthropic。每个用户都以自己的身份向 Anthropic 认证，而你能得到 Aperture 的身份识别、日志和策略执行，无需重新签发密钥。
 
-This guide covers the end-to-end setup: the Anthropic provider on the Aperture side, and Claude Code on the client side. For the full passthrough mechanism and `auth_mode` reference, refer to [set up passthrough mode][docs-use-passthrough-mode].
+本指南介绍端到端设置：Aperture 侧的 Anthropic 提供商和客户端侧的 Claude Code。passthrough 的完整机制与 `auth_mode` 参考参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An [Aperture gateway][docs-get-started] accessible from your device, and admin access to edit its configuration.
-* A grant that permits the Anthropic models for the Tailscale identities that will use them. Aperture lists and routes only granted models.
-* A Claude Pro or Max subscription for each user, and [Claude Code][xt-claude-code] installed and able to sign in to that subscription.
+* 一台你的设备可以访问的 [Aperture 网关][docs-get-started]，以及编辑其配置的管理员权限。
+* 一条授权，允许将使用这些模型的 Tailscale 身份访问 Anthropic 模型。Aperture 只列出并路由已获授权的模型。
+* 每个用户一个 Claude Pro 或 Max 订阅，并已安装 [Claude Code][xt-claude-code] 且能登录该订阅。
 
-## Configure the Anthropic provider
+## 配置 Anthropic 提供商
 
-Define an Anthropic provider with `auth_mode` set to `passthrough` so Aperture forwards the client's OAuth token.
+定义一个 `auth_mode` 设为 `passthrough` 的 Anthropic 提供商，让 Aperture 转发客户端的 OAuth 令牌。
 
 1. \[Missing snippet: aperture\_admin\_nav.mdx]
 
-2. Add a provider under the `providers` map, replacing the placeholders with your values:
+2. 在 `providers` 映射下添加一个提供商，把占位符替换为你的值：
 
    ```json
    "providers": {
@@ -41,21 +41,21 @@ Define an Anthropic provider with `auth_mode` set to `passthrough` so Aperture f
    }
    ```
 
-   * `authorization` is `x-api-key` for Anthropic. Aperture forwards whichever credential the client sends, including a `Bearer` OAuth token.
-   * No `apikey` is configured, so this provider is passthrough-only: it works solely from each client's subscription token. Add a fallback `apikey` if you also want these models to work in the chat UI, which sends server-side requests that carry no client credential.
+   * Anthropic 的 `authorization` 为 `x-api-key`。Aperture 会转发客户端发送的任何凭证，包括 `Bearer` OAuth 令牌。
+   * 未配置 `apikey`，因此该提供商是纯 passthrough 型：只依靠每个客户端的订阅令牌工作。如果你还想让这些模型在 chat UI 中可用（chat UI 发送的服务端请求不携带客户端凭证），请添加回退用的 `apikey`。
 
    \[Missing snippet: aperture\_model\_wildcards\_note.mdx]
 
-3. Save the configuration. Aperture hot-reloads it, so no restart is required. A successful save confirms the block passed validation.
+3. 保存配置。Aperture 会热加载配置，无需重启。保存成功即说明该块通过了校验。
 
-## Sign in Claude Code with the subscription
+## 在 Claude Code 中登录订阅
 
-Point Claude Code at Aperture and select the configured model. Let Claude Code send its subscription OAuth token without overriding its credentials.
+把 Claude Code 指向 Aperture 并选择已配置的模型。让 Claude Code 发送其订阅 OAuth 令牌，不要覆盖它的凭证。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
-1. Sign in to your Claude subscription in Claude Code using `claude` then `/login`, or the IDE sign-in flow.
-2. Create or edit `~/.claude/settings.json` and set the Aperture URL and model:
+1. 在 Claude Code 中登录你的 Claude 订阅：运行 `claude` 后执行 `/login`，或使用 IDE 登录流程。
+2. 创建或编辑 `~/.claude/settings.json`，设置 Aperture URL 和模型：
 
    ```json
    {
@@ -66,11 +66,11 @@ Point Claude Code at Aperture and select the configured model. Let Claude Code s
    }
    ```
 
-   Do not set `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN`. Setting either makes Claude Code send that value instead of its OAuth token, which suppresses the credential you want to pass through.
+   不要设置 `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`。设置了其中任何一个，Claude Code 都会发送该值而不是自己的 OAuth 令牌，从而压制了你想透传的凭证。
 
-> **Tip:**
+> **提示：**
 >
-> You can set the base URL and model with environment variables instead of the settings file:
+> 也可以不用设置文件，而是用环境变量设置 base URL 和模型：
 >
 > ```shell
 > export ANTHROPIC_BASE_URL="http://<aperture-hostname>"
@@ -78,24 +78,24 @@ Point Claude Code at Aperture and select the configured model. Let Claude Code s
 > # Do not set ANTHROPIC_API_KEY so the OAuth token passes through.
 > ```
 
-## Verify the connection
+## 验证连接
 
-1. Send a test message in Claude Code.
-2. Open Chat on your Aperture gateway and select **Sessions** in the sidebar. Confirm that your test request appears. If your account has no portal access, ask an administrator to check **Security** > **Logs**.
+1. 在 Claude Code 中发送一条测试消息。
+2. 在你的 Aperture 网关上打开 Chat，在侧边栏选择 **Sessions**。确认测试请求已出现。如果你的账户没有门户访问权，请让管理员检查 **Security** > **Logs**。
 
-If a request fails with a `401` error, confirm Claude Code is signed in to the subscription and that no API key or auth token is set on the client. If the request never reaches Aperture, confirm `ANTHROPIC_BASE_URL` points at the Aperture gateway. For more checks, refer to the [passthrough troubleshooting steps][docs-use-passthrough-mode].
+如果请求失败并报 `401` 错误，请确认 Claude Code 已登录订阅，且客户端上没有设置任何 API key 或认证令牌。如果请求根本没到达 Aperture，请确认 `ANTHROPIC_BASE_URL` 指向 Aperture 网关。更多检查项参阅 [passthrough 故障排查步骤][docs-use-passthrough-mode]。
 
-## What routes through Aperture
+## 哪些流量经由 Aperture 路由
 
-Only inference requests (`/v1/messages`) route through Aperture. Claude Code sends OAuth sign-in and token refresh requests directly to `api.anthropic.com`, bypassing `ANTHROPIC_BASE_URL`. Aperture never handles authentication or token refresh. It only authenticates inference requests by Tailscale identity before forwarding them to Anthropic.
+只有推理请求（`/v1/messages`）经由 Aperture 路由。Claude Code 把 OAuth 登录和令牌刷新请求直接发送到 `api.anthropic.com`，绕过 `ANTHROPIC_BASE_URL`。Aperture 从不处理认证或令牌刷新，只在把推理请求转发给 Anthropic 之前按 Tailscale 身份进行认证。
 
-## Next steps
+## 后续步骤
 
-After you configure and check the provider, complete the applicable tasks:
+配置并检查提供商之后，完成适用的任务：
 
-* [Grant model access][docs-grant-model-access] to control which users can access the passthrough provider.
-* [Set up LLM clients][docs-use-your-tools] to connect other clients that can send their own Anthropic credentials.
-* [Set up the chat UI][docs-set-up-chat-ui] only if you add a fallback `apikey`. A passthrough-only provider cannot serve requests from Aperture chat.
+* [授予模型访问权][docs-grant-model-access]，控制哪些用户可以访问 passthrough 提供商。
+* [设置 LLM 客户端][docs-use-your-tools]，接入其他能发送自己的 Anthropic 凭证的客户端。
+* [设置 chat 界面][docs-set-up-chat-ui]——仅在你添加了回退 `apikey` 时才需要。纯 passthrough 型提供商无法服务来自 Aperture chat 的请求。
 
 [docs-get-started]: /docs/aperture/get-started
 

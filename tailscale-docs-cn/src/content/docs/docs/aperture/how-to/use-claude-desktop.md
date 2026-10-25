@@ -1,123 +1,123 @@
 ---
-title: "Use Claude Desktop with Aperture"
-description: "Configure the [Claude Desktop][xt-claude-desktop] app to send model requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, an"
+title: "在 Aperture 中使用 Claude Desktop"
+description: "配置 [Claude Desktop][xt-claude-desktop] 应用，让模型请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Configure the [Claude Desktop][xt-claude-desktop] app to send model requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, and session logging.
+配置 [Claude Desktop][xt-claude-desktop] 应用，让模型请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。
 
-Claude Desktop's gateway connection uses the Anthropic Messages API. Configure it to send requests to your Aperture gateway.
+Claude Desktop 的网关连接使用 Anthropic Messages API。请把它配置为向你的 Aperture 网关发送请求。
 
-> **Note:**
+> **注意：**
 >
-> To skip the manual steps below, use the [Aperture CLI][docs-aperture-cli]. It lists Claude Desktop as **Claude Cowork**, writes the gateway configuration, and changes HTTP URLs to HTTPS. This connection uses Anthropic Messages. For Bedrock limitations, refer to [Use Amazon Bedrock models][ar-use-amazon-bedrock-models].
+> 要跳过下面的手动步骤，可以使用 [Aperture CLI][docs-aperture-cli]。它会以 **Claude Cowork** 的名称列出 Claude Desktop，写入网关配置，并把 HTTP URL 改为 HTTPS。该连接使用 Anthropic Messages。Bedrock 的限制参阅[使用 Amazon Bedrock 模型][ar-use-amazon-bedrock-models]。
 
-The manual configuration steps in this guide use the macOS Claude Desktop app and its menu paths. To deploy to Windows devices, refer to [Deploy across a fleet with MDM][ar-deploy-across-a-fleet-with-mdm].
+本指南的手动配置步骤以 macOS 版 Claude Desktop 应用及其菜单路径为准。要部署到 Windows 设备，参阅[使用 MDM 部署到多台设备][ar-deploy-across-a-fleet-with-mdm]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway with a provider that supports Anthropic Messages, such as Anthropic, and a model you have permission to use. The gateway must be accessible from your device. Refer to [get started with Aperture][docs-get-started] if you have not set this up.
-* The Aperture gateway URL accessible from your device over `https://`, with a trusted TLS certificate valid for that hostname.
-* The [Claude Desktop][xt-claude-desktop] app installed on macOS.
+* 一台 Aperture 网关，配有支持 Anthropic Messages 的提供商（如 Anthropic），以及一个你有权使用的模型。网关必须能从你的设备访问。尚未设置时参阅[开始使用 Aperture][docs-get-started]。
+* 你的设备可以通过 `https://` 访问的 Aperture 网关 URL，且具有对该主机名有效的受信任 TLS 证书。
+* macOS 上已安装 [Claude Desktop][xt-claude-desktop] 应用。
 
-> **Warning:**
+> **警告：**
 >
-> Claude Desktop requires an `https://` gateway URL and rejects `http://`. Use the full tailnet hostname covered by the gateway's TLS certificate, such as `https://<aperture-hostname>.<tailnet-name>.ts.net`. Configure that endpoint in the [Aperture CLI][docs-aperture-cli] before using its Claude Cowork setup. The CLI changes the URL scheme to HTTPS but does not expand a short hostname to its full tailnet name.
+> Claude Desktop 要求网关 URL 使用 `https://`，会拒绝 `http://`。请使用网关 TLS 证书覆盖的完整 tailnet 主机名，例如 `https://<aperture-hostname>.<tailnet-name>.ts.net`。使用 Aperture CLI 的 Claude Cowork 设置之前，先在 [Aperture CLI][docs-aperture-cli] 中配置好该端点。CLI 会把 URL 方案改成 HTTPS，但不会把短主机名展开为完整的 tailnet 名称。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-Claude Desktop's gateway connection is a per-user setting. Each person who uses Aperture configures it on their own device, or an admin deploys it across a fleet with MDM.
+Claude Desktop 的网关连接是按用户设置。每个使用 Aperture 的人在自己设备上配置，或者由管理员用 MDM 批量部署。
 
-## Enable Developer Mode
+## 启用开发者模式
 
-The gateway connection lives behind Developer Mode:
+网关连接藏在开发者模式（Developer Mode）后面：
 
-1. In the menu bar, select **Help** > **Troubleshooting** > **Enable Developer Mode**.
-2. Claude Desktop might restart. When Developer Mode is active, **Developer** appears in the menu bar.
+1. 在菜单栏中选择 **Help** > **Troubleshooting** > **Enable Developer Mode**。
+2. Claude Desktop 可能会重启。开发者模式启用后，菜单栏中会出现 **Developer**。
 
-## Configure the gateway connection
+## 配置网关连接
 
-Open the third-party inference configuration and point it at your Aperture gateway:
+打开第三方推理配置，把它指向你的 Aperture 网关：
 
-1. Select **Developer** > **Configure Third-Party Inference**.
+1. 选择 **Developer** > **Configure Third-Party Inference**。
 
-2. Set the connection type to **Gateway**.
+2. 把连接类型设为 **Gateway**。
 
-3. Set **Credential kind** to **Static API key**.
+3. 把 **Credential kind** 设为 **Static API key**。
 
-4. Set **Gateway base URL** to the full HTTPS hostname of your Aperture gateway:
+4. 把 **Gateway base URL** 设为你的 Aperture 网关的完整 HTTPS 主机名：
 
    ```text
    https://<aperture-hostname>.<tailnet-name>.ts.net
    ```
 
-5. Set **Gateway API key** to any non-empty placeholder, such as `aperture`. The field cannot be empty, but Aperture requires no API key and ignores the value. Aperture authenticates requests by tailnet identity and injects provider credentials automatically.
+5. 把 **Gateway API key** 设为任意非空占位值，例如 `aperture`。该字段不能为空，但 Aperture 不需要 API key，会忽略该值。Aperture 依据 tailnet 身份认证请求，并自动注入提供商凭证。
 
-6. Leave the **Custom inference headers** section empty. Aperture does not require an authorization header.
+6. **Custom inference headers** 段留空。Aperture 不要求授权头。
 
-7. In the **Models** section, add at least one model your admin has configured in Aperture. Aperture does not expose a discoverable model list, so enter models manually rather than relying on model discovery. For example:
+7. 在 **Models** 段中，至少添加一个管理员在 Aperture 中配置的模型。Aperture 不提供可发现的模型列表，因此请手动输入模型，不要依赖模型发现功能。例如：
 
-   | Field        | Value               |
-   | ------------ | ------------------- |
-   | Model ID     | `claude-sonnet-5-5` |
-   | Display name | Claude Sonnet       |
-   | Tier alias   | `sonnet`            |
+   | 字段 | 值 |
+   | ---- | -- |
+   | Model ID | `claude-sonnet-5-5` |
+   | Display name | Claude Sonnet |
+   | Tier alias | `sonnet` |
 
-8. Select **Save Changes**, then **Apply Changes**.
+8. 选择 **Save Changes**，然后 **Apply Changes**。
 
-9. Fully quit and reopen Claude Desktop to load the new configuration.
+9. 完全退出并重新打开 Claude Desktop，以加载新配置。
 
-> **Note:**
+> **注意：**
 >
-> Aperture routes to the native Anthropic Messages API (`/v1/messages`). Keep the connection type set to **Gateway**, not an OpenAI-compatible option.
+> Aperture 路由到原生 Anthropic Messages API（`/v1/messages`）。连接类型保持 **Gateway**，不要选择 OpenAI 兼容选项。
 
-## Use Amazon Bedrock models
+## 使用 Amazon Bedrock 模型
 
-Changing the model ID alone does not let this Anthropic Messages connection use Amazon Bedrock Runtime. Aperture routes Anthropic Messages and native Bedrock APIs separately.
+只改模型 ID 并不能让这条 Anthropic Messages 连接使用 Amazon Bedrock Runtime。Aperture 将 Anthropic Messages 与原生 Bedrock API 分开路由。
 
-To use a provider configured with `bedrock_model_invoke` or `bedrock_converse`, follow [Set up Amazon Bedrock][docs-use-amazon-bedrock] and use a client with the corresponding Bedrock back end. For example, the [Claude Code CLI configuration][docs-cli-claude-code] uses the native Bedrock InvokeModel path. Refer to [Supported providers and clients][docs-compatibility] before selecting a client and provider.
+要使用配置了 `bedrock_model_invoke` 或 `bedrock_converse` 的提供商，请按照[设置 Amazon Bedrock][docs-use-amazon-bedrock]操作，并使用带相应 Bedrock 后端的客户端。例如，[Claude Code CLI 配置][docs-cli-claude-code]走的是原生 Bedrock InvokeModel 路径。选择客户端和提供商之前，请参阅[支持的提供商与客户端][docs-compatibility]。
 
-## Verify the connection
+## 验证连接
 
-To verify that Claude Desktop routes requests through Aperture:
+要验证 Claude Desktop 是否经由 Aperture 路由请求：
 
-1. Start a conversation in Claude Desktop and send a test message.
-2. Open Chat on your Aperture gateway and select **Sessions** in the sidebar. Confirm that your test request appears. If your account has no portal access, ask an administrator to check **Security** > **Logs**.
+1. 在 Claude Desktop 中开始对话并发送一条测试消息。
+2. 在你的 Aperture 网关上打开 Chat，在侧边栏选择 **Sessions**。确认测试请求已出现。如果你的账户没有门户访问权，请让管理员检查 **Security** > **Logs**。
 
-If the request does not appear, refer to the [Aperture troubleshooting topic][docs-aperture-troubleshooting].
+如果请求没有出现，参阅 [Aperture 故障排查主题][docs-aperture-troubleshooting]。
 
-## Deploy across a fleet with MDM
+## 使用 MDM 部署到多台设备
 
-Because the gateway connection is a per-user setting, an admin can push it to every managed device instead of having each person configure it by hand. Claude Desktop's **Export** feature turns a working configuration into a deployment file for your device management platform.
+由于网关连接是按用户设置，管理员可以把它推送到每台受管设备，而不必让每个人手动配置。Claude Desktop 的 **Export** 功能可以把可用的配置转换为面向你的设备管理平台的部署文件。
 
-To generate and deploy the configuration:
+生成并部署配置：
 
-1. Configure the gateway connection on one device using the steps above, and confirm it works.
+1. 按上面的步骤在一台设备上配置网关连接，并确认它能正常工作。
 
-2. In the **Configure Third-Party Inference** window, open the **Export** dropdown at the top.
+2. 在 **Configure Third-Party Inference** 窗口中，打开顶部的 **Export** 下拉菜单。
 
-3. Choose the format that matches your management platform:
+3. 选择与管理平台匹配的格式：
 
-   | Format                       | File            | Use with                                      |
-   | ---------------------------- | --------------- | --------------------------------------------- |
-   | macOS configuration profile  | `.mobileconfig` | Jamf, Kandji, Intune, and other MDM platforms |
-   | Windows registry file        | `.reg`          | Windows deployment tooling                    |
-   | Group Policy template (ADMX) | `.zip`          | Intune or Group Policy managed consoles       |
+   | 格式 | 文件 | 配合使用 |
+   | ---- | ---- | -------- |
+   | macOS 配置描述文件 | `.mobileconfig` | Jamf、Kandji、Intune 及其他 MDM 平台 |
+   | Windows 注册表文件 | `.reg` | Windows 部署工具 |
+   | 组策略模板（ADMX） | `.zip` | Intune 或组策略管理的控制台 |
 
-4. Deploy the exported file with your management platform. For example, on macOS, push the `.mobileconfig` profile through your MDM to set managed preferences under the `com.anthropic.claudefordesktop` domain, which locks the gateway connection for every managed device.
+4. 用你的管理平台部署导出的文件。例如在 macOS 上，通过 MDM 推送 `.mobileconfig` 描述文件，在 `com.anthropic.claudefordesktop` 域下设置受管偏好，从而为每台受管设备锁定网关连接。
 
-> **Note:**
+> **注意：**
 >
-> The export writes the placeholder API key into the file in plain text. Because Aperture requires no API key, this value is not a secret and the exported file contains no real credentials.
+> 导出会把占位 API key 以明文写入文件。由于 Aperture 不需要 API key，这个值不是机密，导出的文件不包含任何真实凭证。
 
 \[Missing snippet: aperture\_connect\_next\_steps.mdx]
 
-[ar-deploy-across-a-fleet-with-mdm]: #deploy-across-a-fleet-with-mdm
+[ar-deploy-across-a-fleet-with-mdm]: #使用-mdm-部署到多台设备
 
-[ar-use-amazon-bedrock-models]: #use-amazon-bedrock-models
+[ar-use-amazon-bedrock-models]: #使用-amazon-bedrock-模型
 
 [docs-aperture-cli]: /docs/aperture/cli
 

@@ -1,48 +1,48 @@
 ---
-title: "Check and refill budgets"
-description: "After you configure [per-user spending limits][docs-aperture-set-per-user-spending-limits] or a [team-wide budget][docs-aperture-set-team-budget], you can check how budgets are being consumed and manu"
+title: "检查并补充预算"
+description: "配置[按用户的支出限额][docs-aperture-set-per-user-spending-limits]或[团队预算][docs-aperture-set-team-budget]后，你可以查看预算的消耗情况并手动"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-After you configure [per-user spending limits][docs-aperture-set-per-user-spending-limits] or a [team-wide budget][docs-aperture-set-team-budget], you can check how budgets are being consumed and manually refill depleted buckets.
+配置[按用户的支出限额][docs-aperture-set-per-user-spending-limits]或[团队预算][docs-aperture-set-team-budget]后，你可以查看预算的消耗情况，并手动补充已耗尽的配额桶。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-aperture-get-started] with quotas configured. Refer to the [quotas configuration reference][docs-aperture-quotas] for details.
-* Network access to the Aperture gateway URL (default: `http://ai`).
-* [Admin access][docs-aperture-set-up-admin-access] to inspect organization-wide quota data or refill buckets. Users can check their own quota status in the chat portal.
+* 一个已配置配额的 [Aperture 网关][docs-aperture-get-started]。详情参阅[配额配置参考][docs-aperture-quotas]。
+* 能通过网络访问 Aperture 网关 URL（默认为 `http://ai`）。
+* 查看组织范围的配额数据或补充配额桶需要[管理员访问权限][docs-aperture-set-up-admin-access]。用户可以在聊天门户中查看自己的配额状态。
 
-## Check quota status in the web interfaces
+## 在 Web 界面查看配额状态
 
-Users can open `/quotas` in the [Aperture chat portal][docs-aperture-chat] to view their personal quota buckets, balances, refill status, and affected models.
+用户可以在 [Aperture 聊天门户][docs-aperture-chat]中打开 `/quotas`，查看个人配额桶、余额、补充状态以及受影响的模型。
 
-Admins can inspect organization-wide quota coverage at `/admin/quotas`. To inspect or adjust the buckets for a specific user, open `/admin/dashboard` and select the user.
+管理员可以在 `/admin/quotas` 查看组织范围的配额覆盖情况。要查看或调整特定用户的配额桶，请打开 `/admin/dashboard` 并选择该用户。
 
-## Refill a quota bucket in the admin dashboard
+## 在管理仪表盘中补充配额桶
 
-1. Open `/admin/quotas`.
-2. Select the user whose quota you want to change.
-3. Locate the quota bucket and select **Adjust balance**.
-4. Select **Add funds**, enter the amount to add, then select **Add**.
+1. 打开 `/admin/quotas`。
+2. 选择要修改配额的用户。
+3. 找到对应的配额桶，选择 **Adjust balance**。
+4. 选择 **Add funds**，输入要添加的金额，然后选择 **Add**。
 
-To replace the current balance instead, select **Set balance**, enter the new balance, then select **Set**.
+如果想直接替换当前余额，请选择 **Set balance**，输入新余额，然后选择 **Set**。
 
-## Check quota status using the API
+## 使用 API 查看配额状态
 
-Admins can query the `GET /api/quotas` endpoint to retrieve the current status of all quota buckets:
+管理员可以查询 `GET /api/quotas` 端点，获取所有配额桶的当前状态：
 
 ```shell
 curl http://ai/api/quotas
 ```
 
-The response includes each bucket's name, current balance, capacity, and refill rate.
+响应包含每个桶的名称、当前余额、容量和补充速率。
 
-## Refill a quota bucket
+## 补充配额桶
 
-Admins can manually add funds to a depleted bucket using the `POST /api/quotas/refill` endpoint:
+管理员可以使用 `POST /api/quotas/refill` 端点手动为已耗尽的桶添加额度：
 
 ```shell
 curl -X POST http://ai/api/quotas/refill \
@@ -50,17 +50,17 @@ curl -X POST http://ai/api/quotas/refill \
   -d '{"bucket": "daily:alice@example.com", "amount": "$5.00"}'
 ```
 
-Replace the `bucket` value with the name of the bucket to refill. The `amount` value adds to the current balance up to the bucket's configured `capacity`. Aperture does not allow the balance to exceed `capacity`.
+把 `bucket` 的值替换为要补充的桶的名称。`amount` 的值会加到当前余额上，上限为该桶配置的 `capacity`。Aperture 不允许余额超过 `capacity`。
 
-> **Note:**
+> **注意：**
 >
-> Only users with [admin access][docs-aperture-set-up-admin-access] can refill quota buckets.
+> 只有拥有[管理员访问权限][docs-aperture-set-up-admin-access]的用户才能补充配额桶。
 
-## Next steps
+## 后续步骤
 
-* [Set per-user spending limits][docs-aperture-set-per-user-spending-limits] if you have not configured individual budgets yet.
-* [Set a team-wide budget][docs-aperture-set-team-budget] to cap total organizational spending.
-* [Export usage data to S3][docs-aperture-export-s3] for long-term cost analysis and reporting.
+* 如果还没有配置个人预算，先[设置按用户的支出限额][docs-aperture-set-per-user-spending-limits]。
+* [设置团队预算][docs-aperture-set-team-budget]，限制整个组织的总支出。
+* [将使用数据导出到 S3][docs-aperture-export-s3]，用于长期的成本分析与报告。
 
 [docs-aperture-chat]: /docs/aperture/reference/chat
 

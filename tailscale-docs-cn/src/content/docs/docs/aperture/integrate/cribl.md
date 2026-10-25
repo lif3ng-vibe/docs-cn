@@ -1,39 +1,39 @@
 ---
-title: "Integrate Cribl with Aperture"
-description: "[Cribl][xt-cribl] is a data pipeline platform that routes, reduces, and enriches observability data. By connecting Aperture to Cribl, you can route AI usage data through your existing Cribl pipelines "
+title: "将 Cribl 与 Aperture 集成"
+description: "[Cribl][xt-cribl] 是一个数据管道平台，可对可观测性数据进行路由、缩减和富化。将 Aperture 连接到 Cribl 后，你可以让 AI 用量数据经由现有的 Cribl 管道进行传输 "
 ---
 
-Last validated Jun 26, 2026
+最后验证于 Jun 26, 2026
 
-[Cribl][xt-cribl] is a data pipeline platform that routes, reduces, and enriches observability data. By connecting Aperture to Cribl, you can route AI usage data through your existing Cribl pipelines and forward it to any of Cribl's supported destinations (Splunk, Datadog, S3, and others).
+[Cribl][xt-cribl] 是一个数据管道平台，可对可观测性数据进行路由、缩减和富化。将 Aperture 连接到 Cribl 后，你可以让 AI 用量数据经由现有的 Cribl 管道传输，并转发到 Cribl 支持的任意目的地（Splunk、Datadog、S3 等）。
 
-Aperture sends data to Cribl using the [hooks system][docs-configuration-hooks]. You configure a webhook endpoint in Cribl, then add a hook in Aperture that sends event data to that endpoint when requests match your grant conditions.
+Aperture 通过 [hook 系统][docs-configuration-hooks]向 Cribl 发送数据。你需要在 Cribl 中配置一个 webhook 端点，然后在 Aperture 中添加一个 hook，当请求匹配你的授权条件时，它会把事件数据发送到该端点。
 
-Cribl, and the destinations you route to through it (such as Splunk, Datadog, or S3), are third-party services. When Aperture forwards data to them, that data is handled under your agreement with each provider, not your agreement with Tailscale.
+Cribl，以及你经由它路由到的目的地（如 Splunk、Datadog 或 S3），都是第三方服务。当 Aperture 向它们转发数据时，这些数据的处理受你与各提供商之间协议的约束，而非你与 Tailscale 之间的协议。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* A running [Aperture gateway][docs-get-started] accessible from your device.
-* A [Cribl Stream or Cribl Cloud][xt-cribl] deployment with a configured [webhook source][xt-cribl-webhook].
+* 一个正在运行且可从你的设备访问的 [Aperture 网关][docs-get-started]。
+* 一个已配置 [webhook source][xt-cribl-webhook] 的 [Cribl Stream 或 Cribl Cloud][xt-cribl] 部署。
 
-## Configure the Cribl webhook source
+## 配置 Cribl webhook source
 
-Get the webhook URL and authentication token from your Cribl deployment. You'll use these to configure a hook in Aperture that sends data to Cribl.
+从你的 Cribl 部署获取 webhook URL 和认证令牌。稍后配置 Aperture 中向 Cribl 发送数据的 hook 时会用到。
 
-1. In your Cribl deployment, create a webhook source to receive data from Aperture.
-2. Note the webhook URL and any authentication token Cribl provides. You'll use these when configuring the hook in Aperture.
+1. 在你的 Cribl 部署中，创建一个 webhook source 来接收来自 Aperture 的数据。
+2. 记下 webhook URL 以及 Cribl 提供的认证令牌（如有）。稍后在 Aperture 中配置 hook 时会用到。
 
-For details on configuring webhook sources in Cribl, refer to the [Cribl documentation][xt-cribl-docs].
+在 Cribl 中配置 webhook source 的详细信息，请参阅 [Cribl 文档][xt-cribl-docs]。
 
-## Configure the Aperture hook
+## 配置 Aperture hook
 
-To integrate Cribl with Aperture, configure a hook in Aperture that points to your Cribl endpoint. This lets you send request data to Cribl for processing and routing.
+要将 Cribl 与 Aperture 集成，请在 Aperture 中配置一个指向你的 Cribl 端点的 hook。这样你就可以将请求数据发送给 Cribl 进行处理和路由。
 
-1. \[Missing snippet: aperture\_admin\_nav.mdx]
+1. \[缺失片段：aperture\_admin\_nav.mdx]
 
-2. Add a `cribl` entry in the `hooks` section with the webhook URL from your Cribl source.
+2. 在 `hooks` 部分添加一个 `cribl` 条目，填入来自你的 Cribl source 的 webhook URL。
 
    ```json
    "hooks": {
@@ -44,9 +44,9 @@ To integrate Cribl with Aperture, configure a hook in Aperture that points to yo
    }
    ```
 
-   Replace `<cribl-webhook-url>` with the URL of your Cribl webhook source and `<cribl-auth-token>` with the authentication token from Cribl.
+   将 `<cribl-webhook-url>` 替换为你的 Cribl webhook source 的 URL，将 `<cribl-auth-token>` 替换为来自 Cribl 的认证令牌。
 
-3. Add a grant with a `send_hooks` entry that references the `cribl` hook. The grant controls which requests trigger the hook and what data Aperture sends.
+3. 添加一个包含 `send_hooks` 条目（引用 `cribl` hook）的授权。该授权控制哪些请求触发 hook，以及 Aperture 发送哪些数据。
 
    ```json
    "grants": [
@@ -69,27 +69,27 @@ To integrate Cribl with Aperture, configure a hook in Aperture that points to yo
    ]
    ```
 
-   This configuration sends data for every request from all users. The `request_body` and `response_body` send types contain the full prompt and model-output content, not just usage metrics, so this example forwards that content to Cribl and onward to your destinations. Adjust the `events` and `send` fields to the minimum your pipeline needs. To limit which users' requests trigger the hook, replace `"*"` in the `src` field with specific user identities or tags.
+   此配置会发送所有用户的每个请求的数据。`request_body` 和 `response_body` 发送类型包含完整的提示内容和模型输出内容，而不仅仅是用量指标，因此本示例会将这些内容转发给 Cribl，再转发到你的目的地。请将 `events` 和 `send` 字段精简到你的管道所需的最低限度。要限制哪些用户的请求会触发该 hook，请将 `src` 字段中的 `"*"` 替换为具体的用户身份或标签（tag）。
 
-4. Save the configuration.
+4. 保存配置。
 
-For details on hook events and send types, refer to the [hooks configuration reference][docs-configuration-hooks].
+hook 事件和发送类型的详细信息，请参阅 [hook 配置参考][docs-configuration-hooks]。
 
-\[Missing snippet: aperture\_grant\_dst\_note.mdx]
+\[缺失片段：aperture\_grant\_dst\_note.mdx]
 
-## Verify the integration
+## 验证集成
 
-After configuring the Cribl hook, verify that Aperture is sending data to Cribl and that Cribl is routing it to the expected destination.
+配置好 Cribl hook 后，请验证 Aperture 正在向 Cribl 发送数据，且 Cribl 正在将数据路由到预期的目的地。
 
-1. Send a request through Aperture that matches your grant conditions.
-2. Check your Cribl deployment to confirm the event data arrives at the webhook source.
-3. Verify that your Cribl pipeline routes the data to the expected destination.
+1. 通过 Aperture 发送一个符合你的授权条件的请求。
+2. 检查你的 Cribl 部署，确认事件数据已到达 webhook source。
+3. 确认你的 Cribl 管道将数据路由到了预期的目的地。
 
-If data doesn't appear, check that the `send_hooks` name matches the key in your `hooks` section and that the grant's `src` field includes the user who made the request.
+如果看不到数据，请检查 `send_hooks` 名称是否与 `hooks` 部分中的键一致，以及授权的 `src` 字段是否包含发起请求的用户。
 
-## Next steps
+## 后续步骤
 
-\[Missing snippet: aperture\_hooks\_next\_steps.mdx]
+\[缺失片段：aperture\_hooks\_next\_steps.mdx]
 
 [docs-configuration-hooks]: /docs/aperture/configuration#hooks
 

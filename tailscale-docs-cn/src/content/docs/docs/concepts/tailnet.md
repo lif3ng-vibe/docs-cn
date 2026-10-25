@@ -1,47 +1,47 @@
 ---
-title: "What is a tailnet?"
-description: "Understand what the term tailnet means."
+title: "什么是 tailnet？"
+description: "了解 tailnet 一词的含义。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-A Tailscale network (known as a tailnet) is a [secure][docs-security-hardening], interconnected collection of users, devices, and resources. Your tailnet is your private space, inaccessible from the public internet. It's akin to a secure conference room where only invited participants can enter. It forms the foundation of Tailscale's approach to networking, providing a flexible yet controlled space for [device connectivity][docs-device-connectivity], resource [sharing][docs-sharing], and collaboration across the internet.
+Tailscale 网络（称为 tailnet）是由用户、设备和资源组成的[安全][docs-security-hardening]且互联的集合。你的 tailnet 是你的私有空间，无法从公共互联网访问。它就像一间安全的会议室，只有受邀者才能进入。tailnet 构成了 Tailscale 组网理念的基础，为[设备连接][docs-device-connectivity]、资源[共享][docs-sharing]以及跨互联网协作提供了一个灵活而可控的空间。
 
-Tailscale creates a tailnet when you first log into Tailscale on any device, be it a phone, personal computer, or virtual machine (VM). Each time you (or another user in your organization) authenticate a device with Tailscale, it adds that device to the tailnet. You can authenticate devices using a Tailscale account (for users) or a [tag][docs-tags] (for service-based devices).
+当你首次在任意设备上登录 Tailscale 时——无论是手机、个人电脑还是虚拟机（VM）——Tailscale 就会创建一个 tailnet。每次你（或组织中的其他用户）用 Tailscale 对设备进行身份验证，该设备就会被加入 tailnet。你可以使用 Tailscale 账户（面向用户）或[标签][docs-tags]（tag，面向服务型设备）来验证设备。
 
-Each tailnet is identified by a [tailnet DNS name][docs-tailnet-name], and used for features like [MagicDNS][docs-magicdns], [HTTPS][docs-enabling-https], and sharing without revealing your organization's identity. You can choose between a [default tailnet name][docs-tailnet-name-default-tailnet-name] (for example, `tailfe8c.ts.net`) or a [personalized tailnet DNS name][docs-tailnet-name] (such as `yak-bebop.ts.net`). You can find and manage your tailnet DNS name on the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+每个 tailnet 都由一个 [tailnet DNS 名称][docs-tailnet-name]标识，供 [MagicDNS][docs-magicdns]、[HTTPS][docs-enabling-https]和共享等功能使用，同时不暴露你组织的身份。你可以在[默认 tailnet 名称][docs-tailnet-name-default-tailnet-name]（例如 `tailfe8c.ts.net`）和[个性化的 tailnet DNS 名称][docs-tailnet-name]（例如 `yak-bebop.ts.net`）之间选择。你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面查找并管理你的 tailnet DNS 名称。
 
-Each device in your tailnet receives a private [Tailscale IP address][docs-100.x-addresses] within the CGNAT (Carrier-Grade Network Address Translation) range. Some addresses within this range are [reserved for Tailscale services][docs-reserved-ip-addresses]. Tailscale IP addresses facilitate direct communication between all your devices, regardless of physical location. It's like having your own personal, secure internet that spans wherever your devices are located.
+tailnet 中的每台设备都会获得一个位于 CGNAT（运营商级 NAT，Carrier-Grade Network Address Translation）范围内的专用 [Tailscale IP 地址][docs-100.x-addresses]。该范围内的部分地址[保留给 Tailscale 服务使用][docs-reserved-ip-addresses]。Tailscale IP 地址让你所有设备之间无论身处何地都能直接通信——就像拥有一张属于自己的、安全的互联网，覆盖设备所在的每个角落。
 
-> **Tip:**
+> **提示：**
 >
-> Some [pricing plans][co-pricing] extend the functionality of tailnets, allowing businesses and organizations to accommodate numerous devices and users, integrating seamlessly with various identity providers such as [Microsoft Entra ID][docs-sso-microsoft], [Google Workspace][docs-sso-google-workspace], [GitHub organizations][docs-sso-github], or [Okta][docs-sso-okta] tenancies. These integrations streamline user access and resource management based on existing organizational structures.
+> 部分[付费套餐][co-pricing]可以扩展 tailnet 的功能，让企业和组织容纳大量设备与用户，并与 [Microsoft Entra ID][docs-sso-microsoft]、[Google Workspace][docs-sso-google-workspace]、[GitHub 组织][docs-sso-github]、[Okta][docs-sso-okta] 租户等各类身份提供方（IdP）无缝集成。这些集成基于现有的组织结构，简化了用户访问与资源管理。
 
-## Management
+## 管理
 
-You (or [another user with the correct permission][docs-roles]) can find and manage tailnet settings through the admin console. The admin console lists all devices and users within the tailnet and provides access to tailnet-wide settings and configurations. Some settings include [access control][docs-access-control] policies, [DNS][docs-dns] settings, and authentication settings.
+你（或[其他拥有相应权限的用户][docs-roles]）可以通过管理控制台查找并管理 tailnet 设置。管理控制台列出 tailnet 内的所有设备和用户，并提供 tailnet 级别的设置与配置入口，包括[访问控制][docs-access-control]策略、[DNS][docs-dns]设置和身份验证设置等。
 
-You can also manage your tailnet in other ways. For example, you can:
+你还可以通过其他方式管理 tailnet。例如：
 
-* Add entire subnets to your tailnet with [subnet routers][docs-subnets].
+* 使用[子网路由器][docs-subnets]将整个子网加入 tailnet。
 
-* Route traffic with [exit nodes][docs-exit-nodes].
+* 使用[出口节点][docs-exit-nodes]路由流量。
 
-* Route and manage application-specific traffic with [app connectors][docs-app-connectors].
+* 使用[应用连接器][docs-app-connectors]路由和管理特定应用的流量。
 
-* Set up [high availability][docs-high-availability] features.
+* 配置[高可用][docs-high-availability]特性。
 
-* Configure network and application based access policies using [grants][docs-grants].
+* 使用[授权][docs-grants]（grant）配置基于网络和应用的访问策略。
 
-* Control how traffic routes through your tailnet using [via][docs-via].
+* 使用 [via][docs-via] 控制流量在 tailnet 中的路由方式。
 
-* Increase security with features like [Tailnet Lock][docs-tailnet-lock].
+* 通过 [Tailnet Lock][docs-tailnet-lock] 等功能增强安全性。
 
-* Manage [logging, streaming, and events][docs-log-events].
+* 管理[日志、流式传输和事件][docs-log-events]。
 
-Tailnets also support [sharing][docs-sharing] features. You can [invite][docs-invite-any-user] users to your tailnet or share specific devices with them. Sharing and invites let you securely share internal services with other Tailscale users, including those outside your organization (such as [contractors][docs-acl-contractor-example]). Individuals can also share resources like a personal Minecraft server with friends while maintaining network security. You can create access control policies to manage what an invited user can do in your tailnet.
+tailnet 还支持[共享][docs-sharing]功能。你可以[邀请][docs-invite-any-user]用户加入你的 tailnet，或与他们共享特定设备。通过共享和邀请，你可以安全地与其他 Tailscale 用户共享内部服务，包括组织之外的用户（例如[承包商][docs-acl-contractor-example]）。个人用户也可以在保障网络安全的前提下，与朋友共享诸如个人 Minecraft 服务器之类的资源。你可以创建访问控制策略来管理受邀用户能在你的 tailnet 中做什么。
 
-In addition to sharing and invites, you can leverage features like [Tailscale Serve][docs-tailscale-serve] and [Tailscale Funnel][docs-tailscale-funnel] to temporarily share access to specific services running on a device in your tailnet.
+除共享和邀请外，你还可以利用 [Tailscale Serve][docs-tailscale-serve] 和 [Tailscale Funnel][docs-tailscale-funnel] 等功能，临时开放对 tailnet 中某台设备上运行的特定服务的访问。
 
 [co-pricing]: https://tailscale.com/pricing
 

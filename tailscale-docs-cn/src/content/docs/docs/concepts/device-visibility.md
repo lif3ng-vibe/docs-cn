@@ -1,90 +1,90 @@
 ---
-title: "What devices can connect to or know mine?"
-description: "Understand how Tailscale determines which devices can connect to or know about your devices."
+title: "哪些设备能连接或感知我的设备？"
+description: "了解 Tailscale 如何判定哪些设备可以连接或感知你的设备。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic explains how Tailscale manages device visibility and connections between devices in your Tailscale network (known as a [tailnet][docs-tailnet]). Understanding these concepts helps you control which devices can connect to each other and what resources they can access.
+本主题介绍 Tailscale 如何管理你 Tailscale 网络（即 [tailnet][docs-tailnet]）中的设备可见性以及设备间的连接。理解这些概念有助于你控制哪些设备可以互相连接，以及它们能访问哪些资源。
 
-## Device visibility in Tailscale
+## Tailscale 中的设备可见性
 
-Tailscale creates secure private networks (called tailnets) that connect your devices. By default, Tailscale organizes devices into tailnets based on [identity provider][docs-sso-providers] domains. This creates natural boundaries between different organizations:
+Tailscale 创建连接你设备的私密安全网络（称为 tailnet）。默认情况下，Tailscale 根据[身份提供方][docs-sso-providers]（IdP）的域名将设备组织进各个 tailnet。这在不同组织之间形成了天然边界：
 
-* Devices in different tailnets cannot know about or connect to each other by default.
-* Each tailnet has its own [tailnet policy file][docs-tailnet-policy-file] and [access controls][docs-access-control].
-* Cross-tailnet access requires explicit [sharing of devices][docs-sharing].
+* 默认情况下，不同 tailnet 中的设备无法感知彼此，也无法互相连接。
+* 每个 tailnet 拥有自己的 [tailnet 策略文件][docs-tailnet-policy-file]和[访问控制][docs-access-control]。
+* 跨 tailnet 访问需要显式[共享设备][docs-sharing]。
 
-These boundaries ensure that your organization's devices remain private and inaccessible to users in other organizations, even if they also use Tailscale.
+这些边界确保你组织的设备保持私密，其他组织的用户无法访问，即使他们也使用 Tailscale。
 
-> **Note:**
+> **注意：**
 >
-> When you create a Tailscale account using an [identity provider][docs-sso-providers] with a domain that you own or through a GitHub organization, Tailscale recognizes users as belonging to the same organization. As a result, they will be added to the same tailnet.
+> 当你使用自己拥有域名的[身份提供方][docs-sso-providers]创建 Tailscale 账户，或通过 GitHub 组织创建时，Tailscale 会将这些用户识别为同一组织，并将他们加入同一个 tailnet。
 
-The visibility of devices within a tailnet is governed by the tailnet policy file, which defines access controls determining which devices can communicate with each other. This follows a deny-by-default security model, meaning that two devices can only connect if an access rule explicitly lets it.
+tailnet 内设备的可见性由 tailnet 策略文件决定，其中定义的访问控制规定了哪些设备可以互相通信。这遵循"默认拒绝"的安全模型，也就是说，只有访问规则明确允许时，两台设备才能连接。
 
-> **Warning:**
+> **警告：**
 >
-> Although access control policies in Tailscale follow a deny-by-default security model, the default access control policy is to [allow all devices within a tailnet to connect to each other][docs-grants-allow-all].
+> 虽然 Tailscale 的访问控制策略遵循"默认拒绝"的安全模型，但默认访问控制策略是[允许 tailnet 内所有设备互相连接][docs-grants-allow-all]。
 
-### Default device visibility
+### 默认设备可见性
 
-When you create a new tailnet, the default access control policy lets all devices communicate with all other devices. This default policy also lets any device know about all other devices in the tailnet. For example, all other devices appear when running `tailscale status` or reviewing devices in all Tailscale clients.
+创建新 tailnet 时，默认访问控制策略允许所有设备与其他所有设备通信。该默认策略也让任何设备都能感知 tailnet 中的所有其他设备。例如，运行 `tailscale status` 或在任意 Tailscale 客户端中查看设备时，会看到所有其他设备。
 
-You can restrict which devices know about each other by implementing more prescriptive access control policies to limit which devices can *access* or *communicate* with other devices.
+你可以通过实施更明确的访问控制策略来限制哪些设备能*访问*或与哪些设备*通信*，从而约束设备之间的相互感知。
 
-If you'd like to restrict which devices can be accessed, implementing more prescriptive access control policies will limit which devices can *access* or *communicate* with other devices.
+如果你想限制哪些设备可被访问，实施更明确的访问控制策略即可限定哪些设备能*访问*或与哪些设备*通信*。
 
-### Device visibility principles
+### 设备可见性原则
 
-Tailscale implements a concept called *netmap trimming* that determines which devices appear in your Tailscale client. This mechanism helps keep larger tailnets manageable and enhances privacy by showing you only the devices relevant to your work. Your device's visible network map includes:
+Tailscale 实现了一种称为 *netmap trimming*（网络图裁剪）的机制，用于决定哪些设备会出现在你的 Tailscale 客户端中。它只向你展示与你的工作相关的设备，有助于让较大规模的 tailnet 保持可管理，并增强隐私性。你设备上可见的网络图包括：
 
-* Devices that your device can connect to as permitted by the tailnet policy file. This includes both devices in your tailnet and devices shared with you from other tailnets.
-* [Exit nodes][docs-exit-nodes] that your device can use, as permitted by your tailnet policy file.
-* All devices authenticated with the same user identity as your current device, even if the tailnet policy file doesn't permit you to connect to them. This lets you use [Taildrop][docs-taildrop] if it's enabled in your tailnet.
-* All devices that can connect to your device, even if you aren't permitted to connect to them. This visibility enables Tailscale to establish direct connections in as many environments as possible.
+* 根据 tailnet 策略文件，你的设备可以连接的设备。既包括你 tailnet 内的设备，也包括从其他 tailnet 共享给你的设备。
+* 根据 tailnet 策略文件，你的设备可以使用的[出口节点][docs-exit-nodes]。
+* 与你当前设备使用同一用户身份认证的所有设备，即使 tailnet 策略文件不允许你连接它们。这样，如果 tailnet 中启用了 [Taildrop][docs-taildrop]，你就能使用它。
+* 可以连接到你设备的所有设备，即使你不被允许连接它们。这种可见性使 Tailscale 能在尽可能多的环境中建立直连。
 
-## Manage device access
+## 管理设备访问
 
-By default, Tailscale organizes devices into tailnets based on identity provider domains. When you create a Tailscale account using an identity provider with a domain you own or through a GitHub organization, Tailscale recognizes users as belonging to the same organization and adds them to the same tailnet.
+默认情况下，Tailscale 根据身份提供方的域名将设备组织进各个 tailnet。当你使用自己拥有域名的身份提供方创建 Tailscale 账户，或通过 GitHub 组织创建时，Tailscale 会将这些用户识别为同一组织，并把它们加入同一个 tailnet。
 
-### Access control between devices
+### 设备间的访问控制
 
-The tailnet policy file controls access between devices using either [grants][docs-grants] (the preferred approach) or legacy access control lists ([access control policies][docs-access-control]). Both mechanisms follow the "default deny" principle, meaning:
+tailnet 策略文件通过[授权][docs-grants]（grant，推荐方式）或旧式访问控制列表（[访问控制策略][docs-access-control]，ACL）来控制设备间的访问。这两种机制都遵循"默认拒绝"原则，即：
 
-* Connections between devices are denied by default.
-* Connections are only allowed when explicitly permitted by a rule in the tailnet policy file.
-* Access control policies define which [users, groups, or tags][docs-targets] can access specific resources.
+* 设备间的连接默认被拒绝。
+* 只有 tailnet 策略文件中的规则明确允许时，才允许连接。
+* 访问控制策略定义哪些[用户、群组或标签][docs-targets]可以访问特定资源。
 
-### Cross-organization visibility
+### 跨组织可见性
 
-If you use Tailscale on your work device, your personal devices won't be visible to co-workers unless you've explicitly shared them. Device visibility follows these principles:
+如果你在工作设备上使用 Tailscale，你的个人设备不会对同事可见，除非你显式共享了它们。设备可见性遵循以下原则：
 
-* Co-workers who use a different tailnet than yours cannot connect to or know about your devices.
-* Co-workers on the same tailnet can know about and connect to your devices *if allowed by the tailnet policy file*.
-* Personal devices on a separate tailnet remain private unless explicitly [shared][docs-share].
+* 使用与你不同 tailnet 的同事无法连接你的设备，也无法感知它们。
+* 同一 tailnet 中的同事可以感知并连接你的设备，*前提是 tailnet 策略文件允许*。
+* 独立 tailnet 中的个人设备保持私密，除非被显式[共享][docs-share]。
 
-## Restrict access to your devices
+## 限制对你设备的访问
 
-There are two primary approaches to restricting which devices can connect to yours in a tailnet: access control policies through the tailnet policy file and individual device restrictions through the [Tailscale client preferences][docs-client-preferences].
+在 tailnet 中限制哪些设备可以连接你的设备主要有两种方法：通过 tailnet 策略文件设置访问控制策略，以及通过 [Tailscale 客户端偏好设置][docs-client-preferences]进行单台设备限制。
 
-### Access control policies
+### 访问控制策略
 
-Tailnet [Admins](/docs/reference/user-roles) can restrict which devices can connect to each other by defining appropriate access control policies (such as [grants][docs-grants]) in the tailnet policy file. This is the primary method for controlling access between devices and should be your first approach for managing device visibility.
+Tailnet [管理员](/docs/reference/user-roles)可以在 tailnet 策略文件中定义合适的访问控制策略（如[授权][docs-grants]），以限制哪些设备可以互相连接。这是控制设备间访问的主要方法，也应是你管理设备可见性的首选手段。
 
-For example, if a grant policy lets `device-a` connect to `device-b`, that means:
+例如，如果一条授权策略允许 `device-a` 连接 `device-b`，则意味着：
 
-* `device-a` can know about `device-b`.
-* `device-b` can know about `device-a`.
+* `device-a` 能感知 `device-b`。
+* `device-b` 能感知 `device-a`。
 
-Likewise, if there's no grant rule that lets `device-a` connect to `device-b`, that means:
+同样，如果没有允许 `device-a` 连接 `device-b` 的授权规则，则意味着：
 
-* `device-a` cannot know about `device-b`.
-* `device-b` cannot know about `device-a`.
+* `device-a` 无法感知 `device-b`。
+* `device-b` 无法感知 `device-a`。
 
-### Individual device restrictions
+### 单台设备限制
 
-You can also restrict incoming connections from Tailscale to your specific device through the [Tailscale client preferences][docs-client-preferences]. This provides an additional layer of control for situations where you need more granular restrictions beyond what the tailnet policy file provides.
+你还可以通过 [Tailscale 客户端偏好设置][docs-client-preferences]限制 Tailscale 对你这台特定设备的入站连接。当你需要比 tailnet 策略文件更细粒度的限制时，这提供了额外一层控制。
 
 [docs-access-control]: /docs/features/access-control
 

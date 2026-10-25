@@ -1,42 +1,42 @@
 ---
-title: "Expose a Kubernetes cluster workload to the public internet using Tailscale Funnel"
-description: "This guide explains how to expose a `Service` deployed in your Kubernetes cluster to the public internet using the Tailscale Kubernetes Operator and [Tailscale Funnel][docs-funnel]."
+title: "使用 Tailscale Funnel 将 Kubernetes 集群工作负载暴露到公共互联网"
+description: "本指南介绍如何使用 Tailscale Kubernetes Operator 和 [Tailscale Funnel][docs-funnel] 将部署在 Kubernetes 集群中的 `Service` 暴露到公共互联网。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide explains how to expose a `Service` deployed in your Kubernetes cluster to the public internet using the Tailscale Kubernetes Operator and [Tailscale Funnel][docs-funnel].
+本指南介绍如何使用 Tailscale Kubernetes Operator 和 [Tailscale Funnel][docs-funnel] 将部署在 Kubernetes 集群中的 `Service` 暴露到公共互联网。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备以下条件：
 
-* Tailscale Kubernetes Operator installed in your cluster.
-* Configure the [necessary permissions for `Ingress`][docs-ingress-permissions].
+* 集群中已安装 Tailscale Kubernetes Operator。
+* 已配置 [`Ingress` 所需的权限][docs-ingress-permissions]。
 
-## Update tailnet policy file
+## 更新 tailnet 策略文件
 
-For [Tailscale Funnel][docs-funnel] to work, the Operator's proxy nodes need explicit permission to use Funnel. Add a `nodeAttrs` section to your tailnet policy file in the [Access controls](https://console.tailscale.com/admin/acls):
+要使 [Tailscale Funnel][docs-funnel] 正常工作，Operator 的代理节点需要被显式授予使用 Funnel 的权限。在[访问控制](https://console.tailscale.com/admin/acls)页面的 tailnet 策略文件中添加一个 `nodeAttrs` 部分：
 
 ```json
 	"nodeAttrs": [
 		{
-			// 'tag:k8s' is the default tag used by the Tailscale Operator
+			// 'tag:k8s' 是 Tailscale Operator 默认使用的标签
 			"target": ["tag:k8s"],
 			"attr":   ["funnel"],
 		},
 	]
 ```
 
-> **Note:**
+> **注意：**
 >
-> Even if your policy has the `funnel` attribute assigned to `autogroup:member`, which is the default, you still need to add it to the tag used by proxies because `autogroup:member` does not include tagged devices.
+> 即使你的策略已将 `funnel` 属性授予默认的 `autogroup:member`，你仍需将其添加到代理使用的标签上，因为 `autogroup:member` 不包含带标签的设备。
 
-## Deploy a sample application
+## 部署示例应用
 
-Deploy an nginx application as the workload to expose.
+部署一个 nginx 应用作为要暴露的工作负载。
 
-Create a file named `nginx-deployment.yaml` with the following content:
+创建一个名为 `nginx-deployment.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: apps/v1
@@ -72,17 +72,17 @@ spec:
       targetPort: 80
 ```
 
-Apply this manifest to your cluster:
+将此清单应用到集群：
 
 ```shell
 kubectl apply -f nginx-deployment.yaml
 ```
 
-## Create the Funnel Ingress
+## 创建 Funnel Ingress
 
-To expose the nginx `Service` to the public internet, create an `Ingress` resource with the `tailscale.com/funnel: "true"` annotation.
+要将 nginx `Service` 暴露到公共互联网，请创建一个带有 `tailscale.com/funnel: "true"` 注解的 `Ingress` 资源。
 
-Create a file named `nginx-ingress.yaml`:
+创建一个名为 `nginx-ingress.yaml` 的文件：
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -90,7 +90,7 @@ kind: Ingress
 metadata:
   name: nginx-funnel-ingress
   annotations:
-    # This enables Tailscale Funnel for the Ingress
+    # 为该 Ingress 启用 Tailscale Funnel
     tailscale.com/funnel: "true"
 spec:
   ingressClassName: tailscale
@@ -104,34 +104,34 @@ spec:
         - nginx-public
 ```
 
-Apply the `Ingress`:
+应用该 `Ingress`：
 
 ```shell
 kubectl apply -f nginx-ingress.yaml
 ```
 
-## Access your service
+## 访问你的服务
 
-The operator configures a Tailscale Service and the proxies to route traffic to your nginx application. You can find the MagicDNS name in the ADDRESS field of the `Ingress` resource:
+operator 会配置一个 Tailscale Service 和若干代理，将流量路由到你的 nginx 应用。你可以在 `Ingress` 资源的 ADDRESS 字段中找到 MagicDNS 名称：
 
 ```shell
 kubectl get ingress nginx-funnel-ingress
 ```
 
-The output will display similar to the following:
+输出大致如下：
 
 ```
 NAME               CLASS       HOSTS   ADDRESS                     PORTS   AGE
 nginx-ha-ingress   tailscale   *       nginx-public.tailxxxxx.ts.net   80     1m
 ```
 
-After the ADDRESS field is populated with a MagicDNS name, access it from a device outside your tailnet, such as a mobile phone using cellular data.
+ADDRESS 字段填充 MagicDNS 名称后，你就可以从 tailnet 之外的设备（例如使用蜂窝数据的手机）访问它。
 
-## Further exploration
+## 进一步探索
 
-* Find practical configurations and deployment patterns in the [Tailscale Funnel examples][docs-funnel-examples].
-* Find detailed command syntax, flags, and usage information in the [Funnel CLI reference][docs-funnel-cli].
-* Deploy and manage Tailscale in Kubernetes with the [Tailscale Kubernetes Operator][docs-k8s-operator].
+* 在 [Tailscale Funnel 示例][docs-funnel-examples]中查找实用配置与部署模式。
+* 在 [Funnel CLI 参考][docs-funnel-cli]中查找详细的命令语法、标志和用法信息。
+* 使用 [Tailscale Kubernetes Operator][docs-k8s-operator] 在 Kubernetes 中部署和管理 Tailscale。
 
 [docs-funnel]: /docs/features/tailscale-funnel
 

@@ -1,24 +1,24 @@
 ---
-title: "Set up Vercel AI Gateway"
-description: "Configure a Vercel AI Gateway provider in Aperture so your team can access models from multiple LLM providers through a single gateway endpoint. The Aperture preset enables OpenAI Chat Completions, Op"
+title: "设置 Vercel AI Gateway"
+description: "在 Aperture 中配置 Vercel AI Gateway provider，让你的团队通过单一网关端点访问多家 LLM 提供商的模型。Aperture 预设会启用 OpenAI Chat Completions、Op"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Configure a Vercel AI Gateway provider in Aperture so your team can access models from multiple LLM providers through a single gateway endpoint. The Aperture preset enables OpenAI Chat Completions, OpenAI Responses, and Anthropic Messages. Select a model and client back end that support the API you intend to use.
+在 Aperture 中配置 Vercel AI Gateway provider，让你的团队通过单一网关端点访问多家 LLM 提供商的模型。Aperture 预设会启用 OpenAI Chat Completions、OpenAI Responses 和 Anthropic Messages。请选择支持你打算使用的 API 的模型和客户端后端。
 
-\[Missing snippet: aperture\_any\_provider.mdx]
+\[缺失片段：aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* A [Vercel API token][xt-vercel-tokens].
+* 一个可从你的设备访问的 Aperture 网关。如果尚未设置，请参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个 [Vercel API token][xt-vercel-tokens]。
 
-## Configure the provider
+## 配置 provider
 
-Add Vercel AI Gateway as a provider in your [Aperture configuration][docs-aperture-configuration]:
+在你的 [Aperture 配置][docs-aperture-configuration]中，将 Vercel AI Gateway 添加为 provider：
 
 ```json
 {
@@ -41,26 +41,26 @@ Add Vercel AI Gateway as a provider in your [Aperture configuration][docs-apertu
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Set `baseurl` to `https://ai-gateway.vercel.sh`, without `/v1`. Adding `/v1` produces the incorrect URL `https://ai-gateway.vercel.sh/v1/v1/chat/completions`. Refer to [how Aperture builds upstream URLs][docs-aperture-url-construction] for details.
+> 将 `baseurl` 设置为 `https://ai-gateway.vercel.sh`，不要带 `/v1`。加上 `/v1` 会生成错误的 URL `https://ai-gateway.vercel.sh/v1/v1/chat/completions`。详情请参阅 [Aperture 如何构建上游 URL][docs-aperture-url-construction]。
 
-Model names use a `provider/model` prefix format.
+模型名称使用 `provider/model` 前缀格式。
 
-The configuration fields work as follows:
+这些配置字段的作用如下：
 
-* **`cost_basis`**: Selects the pricing source for token-cost estimates. With `auto_cost_basis` enabled, Aperture uses `vercel` for the official `https://ai-gateway.vercel.sh` host. The example sets it explicitly for the same result. Set it explicitly for a custom gateway host. Costs reported directly by the gateway do not require this field.
-* **`openai_chat`**: Enables the chat completions API used by most OpenAI-compatible tools.
-* **`openai_responses`**: Enables the Responses API used by tools such as OpenAI Codex.
-* **`anthropic_messages`**: Enables the Anthropic Messages API. The selected model must support this API.
+* **`cost_basis`**：选择用于 token 成本估算的定价来源。启用 `auto_cost_basis` 后，对于官方 `https://ai-gateway.vercel.sh` 主机，Aperture 会使用 `vercel`。示例中显式设置了它，效果相同。使用自定义网关主机时请显式设置。网关直接上报的成本无需此字段。
+* **`openai_chat`**：启用大多数 OpenAI 兼容工具所使用的 chat completions API。
+* **`openai_responses`**：启用 OpenAI Codex 等工具使用的 Responses API。
+* **`anthropic_messages`**：启用 Anthropic Messages API。所选模型必须支持该 API。
 
-Refer to the [compatibility flags reference][docs-provider-compatibility] for the full list of flags.
+完整的标志列表请参阅[兼容性标志参考][docs-provider-compatibility]。
 
-## Verify the provider
+## 验证 provider
 
-\[Missing snippet: aperture\_verify\_provider.mdx]
+\[缺失片段：aperture\_verify\_provider.mdx]
 
-\[Missing snippet: aperture\_provider\_next\_steps.mdx]
+\[缺失片段：aperture\_provider\_next\_steps.mdx]
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

@@ -1,21 +1,21 @@
 ---
-title: "Tailscale Kubernetes Operator architecture"
-description: "The Tailscale Kubernetes Operator has a collection of use cases that can be combined as needed. The following diagrams illustrate how the Operator implements each use case. Each diagram shows which re"
+title: "Tailscale Kubernetes Operator 架构"
+description: "Tailscale Kubernetes Operator 拥有一组可按需组合的使用场景。下面的图示展示了 Operator 如何实现每个使用场景。每张图都标明了哪些资源运行在 Kubernetes 集群内、哪些位于集群外部"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The Tailscale Kubernetes Operator has a collection of use cases that can be combined as needed. The following diagrams illustrate how the Operator implements each use case. Each diagram shows which resources run inside the Kubernetes cluster and which are external. Resources inside the cluster are managed by the Operator after it has been deployed.
+Tailscale Kubernetes Operator 拥有一组可按需组合的使用场景。下面的图示展示了 Operator 如何实现每个使用场景。每张图都标明了哪些资源运行在 Kubernetes 集群内、哪些位于集群外部。集群内的资源在 Operator 部署完成后由它管理。
 
-## API server proxy
+## API 服务器代理
 
-The API server proxy lets tailnet devices securely access the Kubernetes API server. It can run in two modes:
+API 服务器代理让 tailnet 设备能够安全访问 Kubernetes API 服务器。它可以在两种模式下运行：
 
-### In-process
+### 进程内
 
-The operator runs the API server proxy within its own process. The client connects to the operator's tailnet address, and the operator proxies the request to the kube-apiserver.
+Operator 在自己的进程内运行 API 服务器代理。客户端连接到 Operator 的 tailnet 地址，Operator 再将请求代理到 kube-apiserver。
 
-If the proxy is running in "noauth" mode, it forwards HTTP requests unmodified. In "auth" mode, it deletes any existing auth headers and adds [impersonation headers][xt-k8s-impersonation] before forwarding. A request with impersonation headers looks something like:
+如果代理以 "noauth" 模式运行，它会原样转发 HTTP 请求。在 "auth" 模式下，它会删除现有的身份验证头，并在转发前添加[模拟头][xt-k8s-impersonation]。带有模拟头的请求大致如下：
 
 ```
 GET /api/v1/namespaces/default/pods HTTP/1.1
@@ -25,83 +25,83 @@ Impersonate-Group: tailnet-readers
 Accept: application/json
 ```
 
-*（图：A diagram showing the in-process API server proxy architecture. A client connects to the operator over the tailnet, and the operator proxies the request to the kube-apiserver inside the Kubernetes cluster.）*
+*（图：进程内 API 服务器代理架构图。客户端通过 tailnet 连接到 Operator，Operator 将请求代理到 Kubernetes 集群内的 kube-apiserver。）*
 
-### Dedicated (ProxyGroup)
+### 专用（ProxyGroup）
 
-The API server proxy can also be deployed as a dedicated `ProxyGroup`, running as separate pods from the operator. This provides high availability and separates the proxy lifecycle from the operator.
+API 服务器代理还可以部署为专用 `ProxyGroup`，以独立于 Operator 的 pod 运行。这样可以提供高可用性，并将代理的生命周期与 Operator 分离。
 
-*（图：A diagram showing the dedicated API server proxy architecture. A ProxyGroup StatefulSet with multiple replicas proxies requests from tailnet clients to the kube-apiserver, separate from the operator pod.）*
+*（图：专用 API 服务器代理架构图。具有多个副本的 ProxyGroup StatefulSet 将来自 tailnet 客户端的请求代理到 kube-apiserver，与 Operator pod 相互独立。）*
 
-## L3 ingress
+## L3 入站
 
-Refer to the [L3 ingress documentation][docs-l3-ingress] for configuration details.
+配置详情请参阅 [L3 入站文档][docs-l3-ingress]。
 
-The user deploys an app to the default namespace and creates a normal `Service` that selects the app's Pods. Either add the annotation `tailscale.com/expose: "true"` or specify `.spec.type` as `Loadbalancer` and `.spec.loadBalancerClass` as `tailscale`. The operator creates an ingress proxy that lets devices anywhere in the tailnet access the `Service`.
+用户将一个应用部署到 default 命名空间，并创建一个选择该应用 Pod 的普通 `Service`。可以添加注解 `tailscale.com/expose: "true"`，或者将 `.spec.type` 指定为 `Loadbalancer`、将 `.spec.loadBalancerClass` 指定为 `tailscale`。Operator 会创建一个入站代理，让 tailnet 中任意位置的设备都能访问该 `Service`。
 
-The proxy Pod uses `iptables` or `nftables` rules to DNAT traffic bound for the proxy's tailnet IP address to the `Service`'s internal `ClusterIP` instead.
+代理 Pod 使用 `iptables` 或 `nftables` 规则，将发往代理 tailnet IP 地址的流量 DNAT 到 `Service` 的内部 `ClusterIP`。
 
-*（图：A diagram showing L3 standalone ingress architecture. The operator creates an ingress proxy pod that uses iptables or nftables DNAT rules to forward traffic from tailnet devices to a Kubernetes Service.）*
+*（图：L3 独立入站架构图。Operator 创建一个入站代理 pod，使用 iptables 或 nftables DNAT 规则将来自 tailnet 设备的流量转发到 Kubernetes Service。）*
 
-## L7 ingress
+## L7 入站
 
-Refer to the [L7 ingress documentation][docs-l7-ingress] for configuration details.
+配置详情请参阅 [L7 入站文档][docs-l7-ingress]。
 
-The L7 ingress architecture diagram is similar to L3 ingress. It is configured through an `Ingress` object instead of a `Service`, and uses `tailscale serve` to accept traffic instead of configuring `iptables` or `nftables` rules. The operator uses tailscaled's local API (`SetServeConfig`) to set serve configuration, not the `tailscale serve` command.
+L7 入站架构图与 L3 入站类似。它通过 `Ingress` 对象而非 `Service` 配置，并使用 `tailscale serve` 接收流量，而不是配置 `iptables` 或 `nftables` 规则。Operator 使用 tailscaled 的本地 API（`SetServeConfig`）来设置 serve 配置，而不是使用 `tailscale serve` 命令。
 
-*（图：A diagram showing L7 standalone ingress architecture. The operator creates an ingress proxy pod that uses tailscale serve to accept HTTP traffic from tailnet devices and forward it to a Kubernetes Service.）*
+*（图：L7 独立入站架构图。Operator 创建一个入站代理 pod，使用 tailscale serve 接收来自 tailnet 设备的 HTTP 流量并转发到 Kubernetes Service。）*
 
-## L3 egress
+## L3 出站
 
-1. The user deploys a `Service` with `type: ExternalName` and an annotation `tailscale.com/tailnet-fqdn: db.tails-scales.ts.net`.
-2. The operator creates a proxy Pod managed by a single replica `StatefulSet`, and a headless `Service` pointing at the proxy Pod.
-3. The operator updates the `ExternalName` `Service`'s `spec.externalName` field to point at the headless `Service` it created in the previous step.
+1. 用户部署一个 `type: ExternalName` 且带有注解 `tailscale.com/tailnet-fqdn: db.tails-scales.ts.net` 的 `Service`。
+2. Operator 创建一个由单副本 `StatefulSet` 管理的代理 Pod，以及一个指向该代理 Pod 的 headless `Service`。
+3. Operator 更新 `ExternalName` `Service` 的 `spec.externalName` 字段，使其指向上一步创建的 headless `Service`。
 
-Refer to the [L3 egress documentation][docs-l3-egress] for configuration details.
+配置详情请参阅 [L3 出站文档][docs-l3-egress]。
 
-*（图：A diagram showing L3 standalone egress architecture. The operator creates an egress proxy pod, a headless Service, and a configuration Secret. The ExternalName Service resolves to the headless Service, which routes traffic through the egress proxy to a tailnet device.）*
+*（图：L3 独立出站架构图。Operator 创建一个出站代理 pod、一个 headless Service 和一个配置 Secret。ExternalName Service 解析到 headless Service，后者通过出站代理将流量路由到 tailnet 设备。）*
 
-(Optional) If the user also adds the `tailscale.com/proxy-group: egress-proxies` annotation to their `ExternalName` `Service`, the operator skips creating a proxy Pod and instead points the headless `Service` at the existing `ProxyGroup`'s pods. In this case, ports are also required in the `ExternalName` `Service` spec. The following diagram shows a more representative view.
+（可选）如果用户还在其 `ExternalName` `Service` 上添加 `tailscale.com/proxy-group: egress-proxies` 注解，Operator 会跳过创建代理 Pod，改为将 headless `Service` 指向现有 `ProxyGroup` 的 pod。在这种情况下，`ExternalName` `Service` 的 spec 中还需要声明端口。下面的示意图展示了一个更具代表性的视图。
 
 ## ProxyGroup
 
-The `ProxyGroup` custom resource manages a collection of proxy Pods. It supports both egress and ingress configurations.
+`ProxyGroup` 自定义资源管理一组代理 Pod。它同时支持出站和入站配置。
 
-### Egress
+### 出站
 
-The `ProxyGroup` custom resource manages a collection of proxy Pods that can be configured to egress traffic out of the cluster through `ExternalName` Services. A `ProxyGroup` is both a high availability (HA) version of L3 egress, and a mechanism to serve multiple `ExternalName` Services on a single set of Tailscale devices (coalescing).
+`ProxyGroup` 自定义资源管理一组代理 Pod，可将其配置为通过 `ExternalName` Service 把流量从集群发送出去（出站）。`ProxyGroup` 既是 L3 出站的高可用（HA）版本，也是在单组 Tailscale 设备上承载多个 `ExternalName` Service 的机制（合并部署）。
 
-In this diagram, the `ProxyGroup` is named `pg`. The Secrets associated with the `ProxyGroup` Pods are omitted for simplicity. They are similar to the L3 egress case, but there is a pair of configuration and state Secrets *per Pod*.
+在此图中，`ProxyGroup` 名为 `pg`。为简化起见，与 `ProxyGroup` Pod 关联的 Secret 省略未画。它们与 L3 出站的情况类似，但配置和状态 Secret 是*每个 Pod 一对*。
 
-Each `ExternalName` `Service` defines which ports should be mapped to their defined egress target. The operator maps from these ports to randomly chosen ephemeral ports through the `ClusterIP` `Service` and its `EndpointSlice`. The operator then generates the egress `ConfigMap` that tells the `ProxyGroup` Pods which incoming ports map to which egress targets.
+每个 `ExternalName` `Service` 定义哪些端口应映射到其声明的出站目标。Operator 通过 `ClusterIP` `Service` 及其 `EndpointSlice`，将这些端口映射到随机选择的临时端口。随后 Operator 生成出站 `ConfigMap`，告知 `ProxyGroup` Pod 哪个入站端口对应哪个出站目标。
 
-*（图：A diagram showing ProxyGroup egress architecture. Multiple proxy pod replicas in a StatefulSet forward traffic from ExternalName Services to tailnet devices through ClusterIP Services and EndpointSlices.）*
+*（图：ProxyGroup 出站架构图。StatefulSet 中的多个代理 pod 副本通过 ClusterIP Service 和 EndpointSlice，将来自 ExternalName Service 的流量转发到 tailnet 设备。）*
 
-Refer to the [`ProxyGroup` egress documentation][docs-proxygroup-egress] for configuration details.
+配置详情请参阅 [`ProxyGroup` 出站文档][docs-proxygroup-egress]。
 
-### Ingress
+### 入站
 
-A `ProxyGroup` can also serve as a highly available set of proxies for an `Ingress` resource. The `-0` Pod is always the replica that issues a certificate from Let's Encrypt.
+`ProxyGroup` 也可以为 `Ingress` 资源充当一组高可用的代理。`-0` Pod 始终是从 Let's Encrypt 签发证书的副本。
 
-If the same `Ingress` configuration is applied in multiple clusters, `ProxyGroup` proxies from each cluster are valid targets for the ts.net DNS name. The proxy each client is routed to depends on the same rules as for [high availability][docs-high-availability] subnet routers, and is encoded in the client's netmap.
+如果同一 `Ingress` 配置应用在多个集群中，各集群的 `ProxyGroup` 代理都是该 ts.net DNS 名称的有效目标。每个客户端被路由到哪个代理，取决于与[高可用][docs-high-availability]子网路由器相同的规则，并编码在客户端的 netmap 中。
 
-*（图：A diagram showing ProxyGroup ingress architecture. Multiple proxy pod replicas in a StatefulSet expose Kubernetes Services to the tailnet through a shared Tailscale Service.）*
+*（图：ProxyGroup 入站架构图。StatefulSet 中的多个代理 pod 副本通过共享的 Tailscale Service 将 Kubernetes Service 暴露给 tailnet。）*
 
 ## Connector
 
-The `Connector` custom resource can deploy either a subnet router, an exit node, or an app connector. The following diagram shows all three, but only one workflow can be configured per `Connector` resource.
+`Connector` 自定义资源可以部署子网路由器、出口节点或应用连接器。下面的图展示了全部三种，但每个 `Connector` 资源只能配置一种工作流。
 
-Refer to the [subnet router and exit node documentation][docs-connector] and [app connector documentation][docs-app-connector] for configuration details.
+配置详情请参阅[子网路由器与出口节点文档][docs-connector]和[应用连接器文档][docs-app-connector]。
 
-*（图：A diagram showing the Connector architecture. A Connector pod can be configured as a subnet router, exit node, or app connector to route traffic between the tailnet and cluster or external networks.）*
+*（图：Connector 架构图。Connector pod 可配置为子网路由器、出口节点或应用连接器，在 tailnet 与集群或外部网络之间路由流量。）*
 
-## Recorder nodes
+## Recorder 节点
 
-The `Recorder` custom resource makes it easier to deploy `tsrecorder` to a cluster. It supports a single replica.
+`Recorder` 自定义资源让向集群部署 `tsrecorder` 变得更简单。它支持单副本。
 
-Refer to the [Recorder documentation][docs-tsrecorder] for configuration details.
+配置详情请参阅 [Recorder 文档][docs-tsrecorder]。
 
-*（图：A diagram showing the Recorder architecture. A Recorder pod captures kubectl exec, attach, and debug sessions for audit and compliance.）*
+*（图：Recorder 架构图。Recorder pod 捕获 kubectl exec、attach 和 debug 会话，以供审计与合规使用。）*
 
 [docs-app-connector]: /docs/kubernetes-operator/connector/deploy-app-connector
 

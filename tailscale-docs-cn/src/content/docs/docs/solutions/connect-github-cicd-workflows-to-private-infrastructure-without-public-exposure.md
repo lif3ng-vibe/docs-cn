@@ -1,41 +1,41 @@
 ---
-title: "Connect GitHub CI/CD workflows to private infrastructure without public exposure"
-description: "Connect GitHub-hosted runners to private infrastructure without public exposure using Tailscale's ephemeral, authenticated connections."
+title: "将 GitHub CI/CD 工作流连接到私有基础设施，而不暴露于公网"
+description: "使用 Tailscale 的临时、经过认证的连接，将 GitHub 托管的运行器连接到私有基础设施，而不暴露于公网。"
 ---
 
-Last validated Jan 23, 2026
+最后验证于 Jan 23, 2026
 
-Continuous integration and continuous development (CI/CD) pipelines, such as [GitHub Actions][xt-gh-actions] workflows, often need to access private infrastructure including databases, internal APIs, and Kubernetes clusters. Traditional approaches force you into security compromises around the choice to use public infrastructure (GitHub-hosted runners) or maintain your own infrastructure (self-hosted runners). Hosted runners offer flexibility and zero maintenance, but risk exposing internal services and creating vulnerabilities. [Self-hosted runners][xt-gh-self-hosted-runners] increase security but remove the benefits of GitHub's managed infrastructure and add operational overhead.
+持续集成与持续开发（CI/CD）流水线（例如 [GitHub Actions][xt-gh-actions] 工作流）常常需要访问私有基础设施，包括数据库、内部 API 和 Kubernetes 集群。传统做法迫使你在安全上做取舍：要么使用公共基础设施（GitHub 托管的运行器），要么维护自己的基础设施（自托管运行器）。托管运行器灵活且零维护，但存在暴露内部服务、制造漏洞的风险。[自托管运行器][xt-gh-self-hosted-runners]安全性更高，却失去了 GitHub 托管基础设施的优势，还增加了运维负担。
 
-You can have the low-maintenance of GitHub-hosted runners and the security of self-hosted runners (with no need to [create complicated setups][xt-gh-secure-runners]) by using Tailscale to secure runner access to your private infrastructure. The Tailscale GitHub action creates ephemeral, authenticated connections that expire shortly after workflow execution. Your private resources remain unexposed while GitHub's hosted runners connect securely through your Tailscale network (known as a tailnet).
+使用 Tailscale 保护运行器对私有基础设施的访问，你可以同时兼得 GitHub 托管运行器的低维护和自托管运行器的安全性（而且无需[搭建复杂的环境][xt-gh-secure-runners]）。Tailscale GitHub Action 会创建临时的、经过认证的连接，这些连接在工作流执行结束后很快过期。GitHub 的托管运行器通过你的 Tailscale 网络（称为 tailnet）安全连接，而你的私有资源始终不对外暴露。
 
-In this guide, you'll implement secure CI/CD patterns using Tailscale's [OAuth clients][docs-oauth-clients], the [Tailscale GitHub Action][docs-tailscale-github-action], and the [`tsnet` library][docs-tsnet]. You'll build a demonstration app called `tshello` that proves GitHub runners can access internal services and authenticate connecting users through Tailscale's [identity][docs-tailscale-identity] layer. The patterns you establish extend directly to production scenarios, including database migrations, API testing, and Kubernetes deployments, without exposing services or managing persistent credentials.
+在本指南中，你将使用 Tailscale 的 [OAuth 客户端][docs-oauth-clients]、[Tailscale GitHub Action][docs-tailscale-github-action]和 [`tsnet` 库][docs-tsnet]实现安全的 CI/CD 模式。你将构建一个名为 `tshello` 的演示应用，证明 GitHub 运行器可以访问内部服务，并通过 Tailscale 的[身份][docs-tailscale-identity]层对连接用户进行认证。你建立的这些模式可以直接推广到生产场景，包括数据库迁移、API 测试和 Kubernetes 部署，既不暴露服务，也无需管理长期有效的凭证。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide you'll need:
+开始本指南之前，你需要：
 
-* A [Tailscale account][co-start] with [Owner, Admin, or Network admin](/docs/reference/user-roles) privileges.
-* A local device with Go 1.23 or later installed for creating and testing the demonstration app. The instructions in this guide assume the device is Unix-based (such as macOS or Linux).
-* A device running in your Tailscale network (known as a tailnet) to test connectivity with the [runner][xt-gh-runner].
-* A GitHub repository for which you have [collaborator permissions][xt-gh-account-and-profile].
-* Basic familiarity with [GitHub Actions workflow syntax][xt-gh-workflow-syntax], [Tailscale tags][docs-tags], [Go syntax][xt-go-syntax], and [Go tests][xt-go-tests].
+* 一个[拥有 Owner、Admin 或 Network admin](/docs/reference/user-roles) 权限的 [Tailscale 账户][co-start]。
+* 一台安装了 Go 1.23 或更高版本的本地设备，用于创建和测试演示应用。本指南的说明假设该设备基于 Unix（例如 macOS 或 Linux）。
+* 一台运行在你 Tailscale 网络（称为 tailnet）中的设备，用于测试与[运行器][xt-gh-runner]的连通性。
+* 一个你拥有[协作者权限][xt-gh-account-and-profile]的 GitHub 仓库。
+* 对 [GitHub Actions 工作流语法][xt-gh-workflow-syntax]、[Tailscale 标签][docs-tags]、[Go 语法][xt-go-syntax]和 [Go 测试][xt-go-tests]有基本了解。
 
-## Step 1: Create identity and access controls for workflow runners
+## 第 1 步：为工作流运行器创建身份与访问控制
 
-Start by creating an identity for the workflow runners. You'll use this identity to authenticate the [ephemeral nodes][docs-ephemeral-nodes] that the runners use and apply [access controls][docs-access-control] that restrict what resources the runners can access.
+首先要为工作流运行器创建一个身份。你将用这个身份对运行器使用的[临时节点][docs-ephemeral-nodes]进行认证，并应用[访问控制][docs-access-control]来限制运行器可以访问哪些资源。
 
-Do this by editing your [tailnet policy file][docs-tailnet-policy-file] to define ownership of the `tag:ci` tag through the `tagOwners` section and create access rules using the `grants` section.
+做法是编辑你的 [tailnet 策略文件][docs-tailnet-policy-file]，通过 `tagOwners` 部分定义 `tag:ci` 标签的所有权，并使用 `grants` 部分创建访问规则。
 
-The tag ownership section defines the tag and which users can apply it to devices while the grants determine what resources tagged devices can access.
+标签所有权部分定义标签以及哪些用户可以把标签应用到设备，而授权则决定打了标签的设备可以访问哪些资源。
 
-Open the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console. If you haven't customized your policy file before, it exhibits the default configuration. You'll add new sections while preserving any existing rules. You can edit the tailnet policy file using the JSON editor or the visual editor.
+打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。如果你之前没有自定义过策略文件，它会呈现默认配置。你将在保留现有规则的前提下添加新的部分。你可以使用 JSON 编辑器或可视化编辑器编辑 tailnet 策略文件。
 
-### Option 1: Use the JSON editor
+### 方式 1：使用 JSON 编辑器
 
-To use the JSON editor, select **JSON editor** at the top of the [Access controls](https://console.tailscale.com/admin/acls) page.
+要使用 JSON 编辑器，在 [Access controls](https://console.tailscale.com/admin/acls) 页面顶部选择 **JSON editor**（JSON 编辑器）。
 
-First, define the tag owner for the CI runners. Locate the `tagOwners` section or create it if it doesn't exist. Add the `ci` tag with an empty owner. By default, [Owners, Admins, and Network admins](/docs/reference/user-roles) can apply tags without explicit ownership.
+首先，为 CI 运行器定义标签所有者。找到 `tagOwners` 部分（如不存在则新建）。添加 `ci` 标签，所有者留空。默认情况下，[Owner、Admin 和 Network admin](/docs/reference/user-roles) 无需显式所有权即可应用标签。
 
 ```json
 "tagOwners": {
@@ -44,9 +44,9 @@ First, define the tag owner for the CI runners. Locate the `tagOwners` section o
 }
 ```
 
-[Owners, Admins, and Network admins](/docs/reference/user-roles) can manually tag devices with `tag:ci` if needed.
+如有需要，[Owner、Admin 和 Network admin](/docs/reference/user-roles) 可以手动为设备打上 `tag:ci` 标签。
 
-Next, create access rules for the CI runners. In the `grants` section, add rules that define what your GitHub runners can access. Start with a basic rule that lets CI runners to communicate with all devices in your tailnet:
+接下来，为 CI 运行器创建访问规则。在 `grants` 部分，添加定义 GitHub 运行器可访问内容的规则。先从一条基本规则开始，让 CI 运行器能与 tailnet 中的所有设备通信：
 
 ```json
 "grants": [
@@ -59,11 +59,11 @@ Next, create access rules for the CI runners. In the `grants` section, add rules
 ]
 ```
 
-This grant lets devices using the `tag:ci` identity access any other devices. This is a lenient policy for demonstration only. Do not use this access control policy in production environments.
+这条授权让使用 `tag:ci` 身份的设备可以访问任何其他设备。这是一条宽松的策略，仅用于演示。不要在生产环境中使用这条访问控制策略。
 
-> **Warning:**
+> **警告：**
 >
-> For production environments, you should restrict access further. Here's an example that limits CI runners to specific resources:
+> 对于生产环境，你应该进一步收紧访问。下面这个示例将 CI 运行器限制为只能访问特定资源：
 >
 > ```json
 > "grants": [
@@ -81,113 +81,113 @@ This grant lets devices using the `tag:ci` identity access any other devices. Th
 > ]
 > ```
 >
-> These example grants let CI runners access PostgreSQL databases tagged with `tag:prod-db` on port `5432` and staging APIs tagged with `tag:staging-api` on ports `443` and `8080`. Adjust these rules based on your infrastructure and security requirements.
+> 这些示例授权让 CI 运行器能访问打有 `tag:prod-db` 标签的 PostgreSQL 数据库（端口 `5432`），以及打有 `tag:staging-api` 标签的 staging API（端口 `443` 和 `8080`）。请根据你的基础设施和安全需求调整这些规则。
 
-Save your policy file changes. The admin console validates the syntax and applies the new rules immediately.
+保存你的策略文件更改。管理控制台会校验语法并立即应用新规则。
 
-### Option 2: Use the visual editor
+### 方式 2：使用可视化编辑器
 
-To use the visual editor, select **Visual editor** at the top of the [Access controls](https://console.tailscale.com/admin/acls) page.
+要使用可视化编辑器，在 [Access controls](https://console.tailscale.com/admin/acls) 页面顶部选择 **Visual editor**（可视化编辑器）。
 
-Select the **Tags** tab, then **Create tag**.
+选择 **Tags**（标签）页签，然后选择 **Create tag**（创建标签）。
 
-Set the tag name to `ci` and add a note explaining what the tag is for (CI/CD runners). You don't need specify any owners here; leave the owner list empty. By default, [Owners, Admins, and Network admins](/docs/reference/user-roles) can apply tags without explicit ownership.
+将标签名设为 `ci`，并添加一条说明该标签用途的备注（CI/CD 运行器）。这里无需指定任何所有者；把所有者列表留空。默认情况下，[Owner、Admin 和 Network admin](/docs/reference/user-roles) 无需显式所有权即可应用标签。
 
-Then, select **Save tag**.
+然后，选择 **Save tag**（保存标签）。
 
-Next, create access rules for your CI runners.
+接下来，为你的 CI 运行器创建访问规则。
 
-Select the **General access rules** tab, then **Add rule**.
+选择 **General access rules**（通用访问规则）页签，然后选择 **Add rule**（添加规则）。
 
-Set the source to `tag:ci`, the destination to **All users and devices**, and the port and protocol to **All ports and protocols**. Optionally, add a note to explain what the access rule is for. Then, select **Save grant**.
+将来源设为 `tag:ci`，目标设为 **All users and devices**（所有用户和设备），端口和协议设为 **All ports and protocols**（所有端口和协议）。可选：添加一条备注，说明该访问规则的用途。然后，选择 **Save grant**（保存授权）。
 
-This grant lets devices using the `tag:ci` identity access any other devices.
+这条授权让使用 `tag:ci` 身份的设备可以访问任何其他设备。
 
-> **Warning:**
+> **警告：**
 >
-> This is a lenient policy for demonstration only. Do not use this access control policy in production environments.
+> 这是一条宽松的策略，仅用于演示。不要在生产环境中使用这条访问控制策略。
 
-You've set up the appropriate permissions for your tailnet. Next you'll use the `ci` tag you created to configure a Tailscale OAuth client to create on-demand authentication for your workflow.
+你已经为 tailnet 配置好了相应的权限。接下来，你将使用刚创建的 `ci` 标签来配置 Tailscale OAuth 客户端，为你的工作流提供按需认证。
 
-## Step 2: Create an OAuth client for ephemeral access
+## 第 2 步：创建用于临时访问的 OAuth 客户端
 
-Before creating the GitHub Action workflow, you need to configure a [Tailscale OAuth client][docs-oauth-clients] that generates ephemeral auth keys on demand. These auth keys let the GitHub runners join your tailnet as [ephemeral nodes][docs-ephemeral-nodes] tagged with `tag:ci`. Each workflow run gets a unique auth key that expires shortly after job completion. This approach eliminates the need to manage long-lived credentials or manually clean up unused devices.
+在创建 GitHub Action 工作流之前，你需要配置一个能按需生成临时认证密钥（auth key）的 [Tailscale OAuth 客户端][docs-oauth-clients]。这些认证密钥让 GitHub 运行器以打有 `tag:ci` 标签的[临时节点][docs-ephemeral-nodes]身份加入你的 tailnet。每次工作流运行都会获得一个唯一的认证密钥，该密钥在作业完成后不久过期。这种方式让你无需管理长期凭证，也无需手动清理不再使用的设备。
 
-Create a Tailscale OAuth client:
+创建 Tailscale OAuth 客户端：
 
-1. Open the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
-2. Select **Credential**.
-3. Select **OAuth**.
-4. (Optional) Give the credential a **Description** to help identify the client's purpose when reviewing access logs or managing multiple OAuth clients.
-5. Select **Continue**.
-6. Select the following OAuth scopes:
+1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
+2. 选择 **Credential**（凭证）。
+3. 选择 **OAuth**。
+4. （可选）为该凭证填写 **Description**（描述），方便在审查访问日志或管理多个 OAuth 客户端时识别其用途。
+5. 选择 **Continue**（继续）。
+6. 选择以下 OAuth 作用域（scope）：
 
    * **Devices** > **Core** > **Write**
    * **Keys** > **Auth Keys** > **Write**
 
-   In the tags field, add the `tag:ci` tag you created earlier.
+   在标签字段中，添加你之前创建的 `tag:ci` 标签。
 
-   These scopes the OAuth client create **auth keys** that can register new devices (your GitHub runners) to your tailnet. The write permission is essential for the runners to join the tailnet.
-7. Select **Generate credential**.
-8. The admin console displays your client ID and client secret.
+   这些作用域让 OAuth 客户端能够创建可向你的 tailnet 注册新设备（你的 GitHub 运行器）的**认证密钥**（auth key）。写入权限对运行器加入 tailnet 至关重要。
+7. 选择 **Generate credential**（生成凭证）。
+8. 管理控制台会显示你的客户端 ID 和客户端密钥。
 
-   > **Warning:**
+   > **警告：**
    >
-   > Copy both values immediately, because you won't be able to access the secret again.
+   > 请立即复制这两个值，因为你之后将无法再次查看该密钥。
 
-Store these credentials as [secrets in your GitHub repository][xt-gh-actions].
+将这些凭证以[密钥（secret）的形式保存到你的 GitHub 仓库][xt-gh-actions]中。
 
-1. Open your repository in GitHub.
-2. Select **Settings** > **Secrets and variables** > **Actions**.
-3. Create a repository secret `TS_OAUTH_CLIENT_ID` and paste your OAuth client ID.
-4. Create a repository secret `TS_OAUTH_SECRET` and paste your OAuth client secret.
+1. 在 GitHub 中打开你的仓库。
+2. 选择 **Settings** > **Secrets and variables** > **Actions**。
+3. 创建仓库密钥 `TS_OAUTH_CLIENT_ID`，并粘贴你的 OAuth 客户端 ID。
+4. 创建仓库密钥 `TS_OAUTH_SECRET`，并粘贴你的 OAuth 客户端密钥。
 
-Your OAuth client is now ready to authenticate GitHub Actions workflows. Each workflow run will use these credentials to generate a unique, single-use auth key.
+你的 OAuth 客户端现在已可以为 GitHub Actions 工作流进行认证。每次工作流运行都会使用这些凭证生成一个唯一的、一次性的认证密钥。
 
-Next, you'll create an auth key that the Go test will use to verify connectivity.
+接下来，你将创建一个 Go 测试用来验证连通性的认证密钥。
 
-## Step 3: Create an auth key for the Go test
+## 第 3 步：为 Go 测试创建认证密钥
 
-For the Tailscale connectivity test (that you'll create in a later step) to work, you must create a reusable [auth key][docs-auth-keys] and use it to define the `TS_AUTHKEY` environment variable locally and in the GitHub repository secrets. The connectivity test part of the Go test you will create in a later step will use this auth key.
+为了让 Tailscale 连通性测试（你将在后面的步骤中创建）正常工作，你必须创建一个可重复使用的[认证密钥][docs-auth-keys]，并用它在本地和 GitHub 仓库密钥中定义 `TS_AUTHKEY` 环境变量。你稍后创建的 Go 测试中的连通性测试部分将使用这个认证密钥。
 
-1. Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. Select Generate auth key.
-3. Give the auth key a description to help you remember what it's for.
-4. Enable **Reusable**.
-5. Keep the expiration at 90 days.
-6. Enable **Ephemeral**.
-7. Enable **Tags**, then add the `tag:ci` tag you created earlier.
-8. Select **Generate key**.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
+2. 选择 Generate auth key（生成认证密钥）。
+3. 为认证密钥添加描述，方便你记住它的用途。
+4. 启用 **Reusable**（可重复使用）。
+5. 有效期保持 90 天。
+6. 启用 **Ephemeral**（临时）。
+7. 启用 **Tags**（标签），然后添加你之前创建的 `tag:ci` 标签。
+8. 选择 **Generate key**（生成密钥）。
 
-Save the auth key to a safe location where you can retrieve it later. You won't be able to access it again, and you'll need it to run the Go test you'll create later.
+将认证密钥保存到一个安全的地方，以便稍后取用。你将无法再次查看它，而稍后创建的 Go 测试需要用到它。
 
-Next, add the auth key as a [secret in your GitHub repository][xt-gh-actions]. Go to your repository on GitHub and go to **Settings** > **Secrets and variables** > **Actions**. Create a new repository secret and name the secret `TS_AUTHKEY` and paste your auth key.
+接下来，将认证密钥作为[密钥添加到你的 GitHub 仓库][xt-gh-actions]。前往你在 GitHub 上的仓库，进入 **Settings** > **Secrets and variables** > **Actions**。创建一个新的仓库密钥，命名为 `TS_AUTHKEY`，并粘贴你的认证密钥。
 
-You've created an auth key for the Go test. Next, you'll create a basic `tsnet` app that the test will verify.
+你已为 Go 测试创建好了认证密钥。接下来，你将创建一个该测试要验证的基础 `tsnet` 应用。
 
-You've created your auth keys. Now you'll build a demo app you'll use to test your workflow.
+你的认证密钥已创建完毕。现在你将构建一个用于测试工作流的演示应用。
 
-## Step 4: Create a basic `tsnet` app
+## 第 4 步：创建一个基础的 `tsnet` 应用
 
-For demonstration purposes, let's create a basic "Hello, world!" Go application that uses `tsnet`. The [`tsnet` library][docs-tsnet] lets you embed Tailscale functionality inside a Go program. For more detailed steps, refer to the instructions in [Hello `tsnet`][docs-hello-tsnet-create-a-tsnet].
+出于演示目的，我们来创建一个使用 `tsnet` 的基础 "Hello, world!" Go 应用。[`tsnet` 库][docs-tsnet]让你可以把 Tailscale 功能嵌入 Go 程序中。更详细的步骤请参阅 [Hello `tsnet`][docs-hello-tsnet-create-a-tsnet] 中的说明。
 
-Create a new directory for the `tshello` app:
+为 `tshello` 应用创建一个新目录：
 
 ```shell
 mkdir tshello
 cd tshello
 ```
 
-Start the Go module:
+启动 Go 模块：
 
 ```shell
 go mod init tshello
 go get tailscale.com/tsnet
 ```
 
-Create a file named `tshello.go`. This code is from the [Hello `tsnet`][docs-hello-tsnet-create-a-tsnet] guide. Visit that guide for a detailed explanation of how the code works.
+创建一个名为 `tshello.go` 的文件。这段代码来自 [Hello `tsnet`][docs-hello-tsnet-create-a-tsnet] 指南。关于代码工作原理的详细解释，请访问该指南。
 
-Start with the package declaration and import statements. The imports include standard Go libraries for networking, HTTP operations, and TLS, along with the Tailscale `tsnet` package.
+从包声明和导入语句开始。这些导入包括用于网络、HTTP 操作和 TLS 的标准 Go 库，以及 Tailscale 的 `tsnet` 包。
 
 ```go
 // This program demonstrates how to use tsnet as a library.
@@ -206,7 +206,7 @@ import (
 )
 ```
 
-Define a command-line flag for the server address. This lets you specify which port the server listens on, defaulting to port `80`.
+为服务器地址定义一个命令行标志。这让你可以指定服务器监听的端口，默认为 `80` 端口。
 
 ```go
 var (
@@ -214,7 +214,7 @@ var (
 )
 ```
 
-The main function parses command-line flags and initializes the `tsnet` server. The server creates a TCP listener and obtains a local client for interacting with the Tailscale network.
+main 函数解析命令行标志并初始化 `tsnet` 服务器。服务器创建一个 TCP 监听器，并获取一个用于与 Tailscale 网络交互的本地客户端。
 
 ```go
 func main() {
@@ -233,7 +233,7 @@ func main() {
     }
 ```
 
-When the server listens on port `443`, wrap the listener with TLS using Tailscale's automatic certificate provisioning. This provides HTTPS without manual certificate management.
+当服务器监听 `443` 端口时，使用 Tailscale 的自动证书供应功能为监听器包裹 TLS。这无需手动管理证书即可提供 HTTPS。
 
 ```go
     if *addr == ":443" {
@@ -243,7 +243,7 @@ When the server listens on port `443`, wrap the listener with TLS using Tailscal
     }
 ```
 
-The HTTP handler uses the `WhoIs` API to identify connecting clients through Tailscale's authentication. This demonstrates how the app can verify user identity without implementing separate authentication logic.
+HTTP 处理器使用 `WhoIs` API 通过 Tailscale 的认证来识别连接的客户端。这演示了应用如何在不单独实现认证逻辑的情况下验证用户身份。
 
 ```go
     log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -261,7 +261,7 @@ The HTTP handler uses the `WhoIs` API to identify connecting clients through Tai
 }
 ```
 
-Add a helper function that extracts the first label from a domain name. This utility function helps format the device name in the HTTP response.
+添加一个从域名中提取第一个标签的辅助函数。这个工具函数用于在 HTTP 响应中格式化设备名。
 
 ```go
 func firstLabel(s string) string {
@@ -270,30 +270,30 @@ func firstLabel(s string) string {
 }
 ```
 
-This application creates a `tsnet` server that joins your tailnet with the hostname "`tshello`". The HTTP handler identifies connecting users through [Tailscale's `WhoIs` API][xt-tailscale-go-whois], demonstrating that the app can authenticate connections through your tailnet's identity layer.
+这个应用创建一个 `tsnet` 服务器，以 "`tshello`" 为主机名加入你的 tailnet。HTTP 处理器通过 [Tailscale 的 `WhoIs` API][xt-tailscale-go-whois] 识别连接的用户，证明该应用可以通过 tailnet 的身份层对连接进行认证。
 
-Install the required dependencies:
+安装所需的依赖：
 
 ```shell
 go mod tidy
 ```
 
-The `go mod tidy` command downloads the `tsnet` library and its dependencies. Your `go.mod` file now includes the exact versions of all required packages.
+`go mod tidy` 命令会下载 `tsnet` 库及其依赖。你的 `go.mod` 文件现在包含所有所需包的确切版本。
 
-Test the app locally to make sure it compiles and runs:
+在本地测试该应用，确保它能编译并运行：
 
 ```shell
 go build -o tshello
 ./tshello -addr tshello
 ```
 
-The app starts and attempts to join your tailnet. If you're not already authenticated with Tailscale on your local device, it prompts you to authenticate. Follow the instructions to authenticate.
+应用启动后会尝试加入你的 tailnet。如果你本地设备尚未通过 Tailscale 认证，它会提示你进行认证。按照提示完成认证即可。
 
-After you connect, the app displays its [Tailscale IP address][docs-100.x-addresses]. You can access it from any device in your tailnet using the hostname you specified or the tailnet IP address.
+连接成功后，应用会显示它的 [Tailscale IP 地址][docs-100.x-addresses]。你可以从 tailnet 中的任何设备使用你指定的主机名或 tailnet IP 地址访问它。
 
-Stop the local test with `CTRL+C`. Your demonstration app is ready for automated testing in GitHub Actions.
+用 `CTRL+C` 停止本地测试。你的演示应用已准备好在 GitHub Actions 中进行自动化测试。
 
-Before continuing, initialize Git and link the local repository to your GitHub repository:
+在继续之前，初始化 Git 并将本地仓库关联到你的 GitHub 仓库：
 
 ```shell
 git init
@@ -302,31 +302,31 @@ git commit -m "Init tshello app"
 git push -u origin main
 ```
 
-You manually verified the program, but now you'll create a test that ensures it works. You'll eventually run this test within your GitHub action.
+你已经手动验证了程序，但现在要创建一个测试来确保它能正常工作。你最终会在 GitHub action 中运行这个测试。
 
-You have a basic `tsnet` app that joins your tailnet. Next, you'll create a Go test that verifies the app can communicate over Tailscale.
+你已经有了一个会加入 tailnet 的基础 `tsnet` 应用。接下来，你将创建一个 Go 测试，验证该应用可以通过 Tailscale 通信。
 
-> **Tip:**
+> **提示：**
 >
-> You can access the complete code for the guide in the [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] repository on GitHub.
+> 你可以在 GitHub 上的 [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] 仓库中获取本指南的完整代码。
 
-## Step 5: Create a Go test
+## 第 5 步：创建 Go 测试
 
-Next, you'll add a [Go test][xt-go-tests] file with tests that verify your GitHub Actions runner can successfully communicate over the Tailscale network. These tests ensure the `tshello` app functions correctly and can identify connecting clients through Tailscale's authentication.
+接下来，你将添加一个 [Go 测试][xt-go-tests]文件，其中的测试用于验证你的 GitHub Actions 运行器可以通过 Tailscale 网络成功通信。这些测试确保 `tshello` 应用正常工作，并能通过 Tailscale 的认证识别连接的客户端。
 
-> **Warning:**
+> **警告：**
 >
-> For this test to work, you need to have created an [auth key][docs-auth-keys] and used it to define the `TS_AUTHKEY` environment variable locally and in the GitHub repository secrets. If you skipped creating an auth key, the test will still run, but it will skip the Tailscale connectivity test.
+> 要让这个测试生效，你必须已经创建了[认证密钥][docs-auth-keys]，并用它在本地和 GitHub 仓库密钥中定义了 `TS_AUTHKEY` 环境变量。如果你跳过了创建认证密钥，测试仍会运行，但会跳过 Tailscale 连通性测试。
 
-Create a `.env` file and add the following to it (replacing the placeholder with your auth key):
+创建一个 `.env` 文件并添加以下内容（将占位符替换为你的认证密钥）：
 
 ```
 TS_AUTHKEY=<your-ts-auth-key>
 ```
 
-Create a Go test file named `tshello_test.go`. The test file includes integration tests that verify Tailscale network connectivity and unit tests that validate code behavior without network access. The integration tests verify server initialization, HTTP client connectivity over the tailnet, and DNS resolution across peers.
+创建一个名为 `tshello_test.go` 的 Go 测试文件。该测试文件包含验证 Tailscale 网络连通性的集成测试，以及无需网络即可验证代码行为的单元测试。集成测试验证服务器初始化、通过 tailnet 的 HTTP 客户端连通性，以及对等节点间的 DNS 解析。
 
-Start by declaring the package and importing the necessary dependencies. The imports include standard Go libraries for testing, networking, and HTTP operations, along with the Tailscale `tsnet` package for creating ephemeral Tailscale nodes.
+先声明包并导入必要的依赖。这些导入包括用于测试、网络和 HTTP 操作的标准 Go 库，以及用于创建临时 Tailscale 节点的 Tailscale `tsnet` 包。
 
 ```go
 package main
@@ -346,9 +346,9 @@ import (
 )
 ```
 
-The `tsnet` package provides the core functionality for creating temporary Tailscale devices (ephemeral nodes) that join your tailnet during test execution. The standard library packages handle HTTP operations, context management, and network operations.
+`tsnet` 包提供创建临时 Tailscale 设备（临时节点）的核心功能，这些设备会在测试执行期间加入你的 tailnet。标准库包负责 HTTP 操作、上下文管理和网络操作。
 
-The first test function verifies the `tshello` server can initialize correctly, create a listener, and shut down gracefully. This test creates a temporary `tsnet` server, starts an HTTP server, and validates the startup process.
+第一个测试函数验证 `tshello` 服务器能否正确初始化、创建监听器并优雅关闭。该测试创建一个临时 `tsnet` 服务器，启动一个 HTTP 服务器，并验证启动过程。
 
 ```go
 func TestTshelloServer(t *testing.T) {
@@ -412,9 +412,9 @@ func TestTshelloServer(t *testing.T) {
 }
 ```
 
-This test uses a temporary directory for the `tsnet` server state and verifies that the HTTP handler can identify connecting clients using Tailscale's authentication information. The test passes if the server starts successfully and shuts down cleanly within the timeout period.
+该测试使用临时目录存放 `tsnet` 服务器状态，并验证 HTTP 处理器能否使用 Tailscale 的认证信息识别连接的客户端。如果服务器在超时时间内成功启动并干净地关闭，测试即通过。
 
-The next test function creates a `tsnet` client and attempts to connect to running `tshello` instances over the tailnet. This integration test requires a valid auth key and attempts to reach both test and production servers.
+下一个测试函数创建一个 `tsnet` 客户端，并尝试通过 tailnet 连接到正在运行的 `tshello` 实例。这个集成测试需要有效的认证密钥，并会尝试访问测试服务器和生产服务器。
 
 ```go
 func TestTshelloHTTPClient(t *testing.T) {
@@ -487,9 +487,9 @@ func TestTshelloHTTPClient(t *testing.T) {
 }
 ```
 
-The test creates sub tests for each target hostname and gracefully skips targets that aren't available. When running locally without other devices in the tailnet, the test skips unavailable targets. In the GitHub Actions environment, the test connects to the runner's `tshello` instance.
+该测试为每个目标主机名创建子测试，并优雅地跳过不可用的目标。在本地运行且 tailnet 中没有其他设备时，测试会跳过不可用的目标。在 GitHub Actions 环境中，测试会连接运行器上的 `tshello` 实例。
 
-Add another test function that verifies DNS lookups work correctly for peers in your tailnet. This test retrieves the list of peers from the Tailscale status and attempts to resolve each peer's hostname.
+再添加一个测试函数，验证 tailnet 中对等节点的 DNS 查询是否正常。该测试从 Tailscale 状态中获取对等节点列表，并尝试解析每个对等节点的主机名。
 
 ```go
 func TestTshelloDNSResolution(t *testing.T) {
@@ -546,9 +546,9 @@ func TestTshelloDNSResolution(t *testing.T) {
 }
 ```
 
-The test logs information about the current device, the tailnet name, and each device in the tailnet. It attempts DNS resolution for each tailnet device and logs the results, helping you verify that MagicDNS is working correctly in your test environment.
+该测试记录当前设备、tailnet 名称以及 tailnet 中每台设备的信息。它会尝试对每台 tailnet 设备进行 DNS 解析并记录结果，帮助你验证 MagicDNS 在测试环境中是否正常工作。
 
-Finally, add a unit test for the `firstLabel` utility function that extracts the first label from a domain name. This test validates the function works correctly with various input formats.
+最后，为从域名中提取第一个标签的 `firstLabel` 工具函数添加一个单元测试。该测试验证该函数在各种输入格式下都能正确工作。
 
 ```go
 func TestFirstLabel(t *testing.T) {
@@ -574,23 +574,23 @@ func TestFirstLabel(t *testing.T) {
 }
 ```
 
-This table-driven test creates sub tests for each input case and verifies the function produces the expected output. The unit test runs without requiring network access or authentication.
+这个表驱动测试为每个输入用例创建子测试，并验证函数产生预期的输出。该单元测试无需网络访问或认证即可运行。
 
-Load the auth key from the `.env` file:
+从 `.env` 文件加载认证密钥：
 
 ```shell
 export $(cat .env | xargs)
 ```
 
-Run the tests locally to verify they work:
+在本地运行测试，验证它们可以正常工作：
 
 ```shell
 go test -v
 ```
 
-The unit test passes. The integration test doesn't run unless you have a `tshello` instance running in your tailnet. This behavior is intentional because the integration test will run successfully in your GitHub Actions workflow when the runner joins your tailnet.
+单元测试通过。集成测试只有在你 tailnet 中有 `tshello` 实例运行时才会执行。这是有意为之的设计，因为当运行器加入你的 tailnet 后，集成测试会在你的 GitHub Actions 工作流中成功运行。
 
-Commit and push your changes to your GitHub repository:
+提交并将更改推送到你的 GitHub 仓库：
 
 ```shell
 git add .
@@ -598,29 +598,29 @@ git commit -m "Add tshello test"
 git push -u origin main
 ```
 
-You now have a unit test and integration test. You're ready to run them on GitHub as part of an action.
+你现在有了一个单元测试和一个集成测试。可以准备在 GitHub 上作为 action 的一部分运行它们了。
 
-> **Tip:**
+> **提示：**
 >
-> You can access the complete code for the guide in the [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] repository on GitHub.
+> 你可以在 GitHub 上的 [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] 仓库中获取本指南的完整代码。
 
-## Step 6: Create the GitHub Actions workflow
+## 第 6 步：创建 GitHub Actions 工作流
 
-Next, you'll create a [GitHub Actions workflow][xt-gh-actions] that uses the [Tailscale GitHub Action][docs-tailscale-GitHub-action] to connect your runner to your tailnet, build the `tshello` app, and verify connectivity. This workflow demonstrates the complete pattern for accessing private resources from continuous integration continuous development (CI/CD) pipelines.
+接下来，你将创建一个 [GitHub Actions 工作流][xt-gh-actions]，使用 [Tailscale GitHub Action][docs-tailscale-GitHub-action] 把运行器连接到你的 tailnet，构建 `tshello` 应用并验证连通性。这个工作流演示了从 CI/CD 流水线访问私有资源的完整模式。
 
-Create the GitHub Actions workflow directory structure in your repository:
+在你的仓库中创建 GitHub Actions 工作流的目录结构：
 
 ```shell
 mkdir -p .github/workflows
 ```
 
-Create a YAML workflow file named `.github/workflows/<name>.yml`:
+创建一个名为 `.github/workflows/<name>.yml` 的 YAML 工作流文件：
 
 ```shell
 touch .github/workflows/<name>.yml
 ```
 
-Start by defining the workflow name and triggers. This configuration runs the workflow on pushes to the main branch, pull requests, and manual triggers through the GitHub Actions interface.
+先定义工作流名称和触发器。这份配置让工作流在推送到 main 分支、提交 pull request，以及通过 GitHub Actions 界面手动触发时运行。
 
 ```yaml
 name: Test tshello with Tailscale
@@ -633,7 +633,7 @@ on:
   workflow_dispatch:
 ```
 
-Define the job and specify the runner. The workflow uses an Ubuntu runner provided by GitHub Actions.
+定义作业并指定运行器。该工作流使用 GitHub Actions 提供的 Ubuntu 运行器。
 
 ```yaml
 jobs:
@@ -642,14 +642,14 @@ jobs:
     steps:
 ```
 
-The first step checks out your repository code, making it available to subsequent steps in the workflow.
+第一步检出你的仓库代码，使其对工作流中的后续步骤可用。
 
 ```yaml
     - name: Checkout code
       uses: actions/checkout@v4
 ```
 
-The next step sets up Go with the specified version. This ensures the runner has the correct Go toolchain for building and testing your application.
+下一步安装指定版本的 Go。这确保运行器拥有构建和测试你的应用所需的正确 Go 工具链。
 
 ```yaml
     - name: Set up Go
@@ -658,7 +658,7 @@ The next step sets up Go with the specified version. This ensures the runner has
         go-version: '1.23'
 ```
 
-The [Tailscale GitHub Action][docs-tailscale-GitHub-action] connects the runner to your tailnet. This step uses your OAuth credentials to authenticate and joins the runner as an [ephemeral node][docs-ephemeral-nodes] tagged with `tag:ci`. The runner receives a Tailscale IP address and can resolve other devices through [MagicDNS][docs-magicdns].
+[Tailscale GitHub Action][docs-tailscale-GitHub-action] 将运行器连接到你的 tailnet。这一步使用你的 OAuth 凭证进行认证，并以打有 `tag:ci` 标签的[临时节点][docs-ephemeral-nodes]身份加入。运行器会获得一个 Tailscale IP 地址，并能通过 [MagicDNS][docs-magicdns] 解析其他设备。
 
 ```yaml
     - name: Connect to Tailscale
@@ -670,7 +670,7 @@ The [Tailscale GitHub Action][docs-tailscale-GitHub-action] connects the runner 
         version: latest
 ```
 
-After connecting to Tailscale, build the `tshello` application. The build process downloads dependencies and compiles the code.
+连接到 Tailscale 后，构建 `tshello` 应用。构建过程会下载依赖并编译代码。
 
 ```yaml
     - name: Build tshello
@@ -680,7 +680,7 @@ After connecting to Tailscale, build the `tshello` application. The build proces
         go build -v ./...
 ```
 
-Run the test suite with a timeout to prevent the tests from hanging if it encounters an issue. The tests verify that the application functions correctly and can communicate over the Tailscale network.
+设置超时时间运行测试套件，防止测试在遇到问题时挂起。这些测试验证应用功能正常，并且可以通过 Tailscale 网络通信。
 
 ```yaml
     - name: Run tests
@@ -689,7 +689,7 @@ Run the test suite with a timeout to prevent the tests from hanging if it encoun
         go test -v -timeout 30s ./...
 ```
 
-Verify the runner's Tailscale connection by checking its status and IP address. This step demonstrates that the runner successfully joined your tailnet and received a valid Tailscale IP address.
+通过检查状态和 IP 地址验证运行器的 Tailscale 连接。这一步证明运行器成功加入了你的 tailnet，并获得了有效的 Tailscale IP 地址。
 
 ```yaml
     - name: Test connectivity
@@ -701,9 +701,9 @@ Verify the runner's Tailscale connection by checking its status and IP address. 
         tailscale ip -4
 ```
 
-This workflow shows how the runner joins your tailnet as an ephemeral node with the `tag:ci` tag. The `tshello` app runs on the same runner, creating its own `tsnet` node that other devices in your tailnet can access.
+这个工作流展示了运行器如何以带 `tag:ci` 标签的临时节点身份加入你的 tailnet。`tshello` 应用在同一运行器上运行，创建自己的 `tsnet` 节点，tailnet 中的其他设备可以访问它。
 
-Commit and push your workflow to GitHub:
+提交你的工作流并推送到 GitHub：
 
 ```shell
 git add .
@@ -711,31 +711,31 @@ git commit -m "Add GitHub workflow"
 git push origin main
 ```
 
-In a web browser, go to the **Actions** tab in your GitHub repository to ensure the workflow is running. Select it to [monitor][xt-gh-actions] the real-time logs as the runner connects to your tailnet, builds the `tshello` app, and runs the tests.
+在网页浏览器中，前往 GitHub 仓库的 **Actions** 标签页，确认工作流正在运行。选中它即可[实时监控][xt-gh-actions]日志，观察运行器连接 tailnet、构建 `tshello` 应用并运行测试的过程。
 
-Your GitHub Actions workflow is now running with a secure connection to your tailnet. You can verify this connection and observe how ephemeral nodes behave in your infrastructure.
+你的 GitHub Actions 工作流现在正通过到 tailnet 的安全连接运行。你可以验证这一连接，并观察临时节点在你的基础设施中的行为。
 
-While your workflow runs, open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and check to ensure a device with a name like `github-actions-runner` tagged with `tag:ci` exists. This is your ephemeral GitHub runner. The device shows as connected for the duration of the workflow, then automatically disappears when the job completes.
+在工作流运行期间，打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，检查是否存在一台名为 `github-actions-runner` 之类、打有 `tag:ci` 标签的设备。这就是你的临时 GitHub 运行器。该设备在工作流执行期间显示为已连接，作业完成后自动消失。
 
-You can also review the workflow logs in GitHub Actions. The "Verify Tailscale connection" step shows the runner's Tailscale IP address and status. This IP address is from the `100.64.0.0/10` [CGNAT][docs-100.x-addresses] range that Tailscale uses. Any device in your tailnet can reach this runner using this IP address during the workflow execution.
+你也可以在 GitHub Actions 中查看工作流日志。"Verify Tailscale connection" 步骤会显示运行器的 Tailscale IP 地址和状态。该 IP 地址来自 Tailscale 使用的 `100.64.0.0/10` [CGNAT][docs-100.x-addresses] 网段。在工作流执行期间，tailnet 中的任何设备都可以使用这个 IP 地址访问该运行器。
 
-The "Test connectivity to `tshello`" step demonstrates that the `tsnet`-based app successfully joined your tailnet. The app receives its own [Tailscale identity][docs-tailscale-identity] and can authenticate connecting clients. In a production scenario, this same pattern lets your services identify which CI runner or user is making requests.
+"Test connectivity to `tshello`" 步骤证明了基于 `tsnet` 的应用成功加入了你的 tailnet。该应用获得了自己的 [Tailscale 身份][docs-tailscale-identity]，并能对连接的客户端进行认证。在生产场景中，同样的模式可以让你的服务识别是哪个 CI 运行器或用户在发起请求。
 
-Check the [Logs](https://console.tailscale.com/admin/logs) page of the admin console. Here, you can access audit entries for the OAuth client creating an auth key and the ephemeral node joining and leaving your tailnet. These logs provide a complete audit trail of all CI/CD access to your infrastructure.
+查看管理控制台的 [Logs](https://console.tailscale.com/admin/logs) 页面。在这里，你可以查看 OAuth 客户端创建认证密钥、临时节点加入和离开 tailnet 的审计记录。这些日志为所有针对你基础设施的 CI/CD 访问提供了完整的审计追踪。
 
-The ephemeral nature of these connections provides security benefit because ephemeral nodes exist only during job execution, reducing the attack surface. Each job gets fresh credentials that can't be reused. There's no accumulation of stale devices in your tailnet because unused ephemeral nodes are automatically cleaned up. The automatic cleanup eliminates manual maintenance.
+这些连接的临时性带来了安全收益：临时节点只在作业执行期间存在，从而缩小了攻击面。每个作业获得的凭证都是全新的、无法重用的。你的 tailnet 中不会累积陈旧设备，因为不再使用的临时节点会被自动清理。自动清理消除了手动维护。
 
-You've successfully created a secure GitHub Actions workflow that connects to your private infrastructure without exposing services to the internet. Next, you'll explore how to extend this pattern to production scenarios.
+你已成功创建了一个连接私有基础设施而不向互联网暴露服务的安全 GitHub Actions 工作流。接下来，你将探索如何把这一模式扩展到生产场景。
 
-> **Tip:**
+> **提示：**
 >
-> You can access the complete code for the guide in the [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] repository on GitHub.
+> 你可以在 GitHub 上的 [`tailscale-dev/secure-github-runners`][xt-gh-secure-github-runners] 仓库中获取本指南的完整代码。
 
-## Step 7: Extend, monitor, and optimize for production use cases
+## 第 7 步：面向生产场景进行扩展、监控与优化
 
-The `tshello` demonstration illustrates core capabilities that extend directly to production use cases. Your GitHub Actions workflows can now access any private resource in your tailnet using the same pattern.
+`tshello` 演示所展示的核心能力可以直接推广到生产场景。你的 GitHub Actions 工作流现在可以使用同样的模式访问 tailnet 中的任何私有资源。
 
-For database migrations, your workflow can connect directly to PostgreSQL, MySQL, or MongoDB instances running in your tailnet. Replace the `tshello` test with actual migration commands:
+对于数据库迁移，你的工作流可以直接连接 tailnet 中运行的 PostgreSQL、MySQL 或 MongoDB 实例。把 `tshello` 测试替换为实际的迁移命令：
 
 ```yaml
 - name: Run database migrations
@@ -745,9 +745,9 @@ For database migrations, your workflow can connect directly to PostgreSQL, MySQL
     npm run migrate:status
 ```
 
-The database remains completely private with no internet-facing ports. The connection is encrypted and authenticated through Tailscale and your audit logs show exactly which workflow accessed the database and when.
+数据库保持完全私密，没有任何面向互联网的端口。连接经由 Tailscale 加密并认证，你的审计日志会准确记录哪个工作流在何时访问了数据库。
 
-For API testing, your integration tests can hit internal services that aren't exposed to the internet:
+对于 API 测试，你的集成测试可以访问未暴露到互联网的内部服务：
 
 ```yaml
 - name: Run API integration tests
@@ -756,9 +756,9 @@ For API testing, your integration tests can hit internal services that aren't ex
     npm test:integration
 ```
 
-Your staging environment stays private while still being accessible for automated testing. The tests run with the same network access they'd have in production.
+你的 staging 环境保持私密，同时仍可供自动化测试访问。这些测试运行时拥有的网络访问权限与生产环境一致。
 
-For Kubernetes deployments, you can use `kubectl` commands:
+对于 Kubernetes 部署，你可以使用 `kubectl` 命令：
 
 ```yaml
 - name: Deploy to Kubernetes
@@ -768,9 +768,9 @@ For Kubernetes deployments, you can use `kubectl` commands:
     kubectl rollout status deployment/my-app -n production
 ```
 
-Your Kubernetes API server needs no public endpoint. The connection goes through your secure tailnet with full audit logging.
+你的 Kubernetes API 服务器无需公开端点。连接通过你的安全 tailnet 进行，并带有完整的审计日志。
 
-For pulling from private registries, Docker commands work without exposing your registry:
+对于从私有镜像仓库拉取，Docker 命令无需暴露你的仓库即可工作：
 
 ```yaml
 - name: Build and push container
@@ -779,15 +779,15 @@ For pulling from private registries, Docker commands work without exposing your 
     docker push registry.tail-scale.ts.net/my-app:${{ github.sha }}
 ```
 
-Each of these scenarios follows the same pattern. Your workflow joins the tailnet, performs its operations with full access to private resources, then automatically disconnects. No manual cleanup, no lingering access, no exposed services.
+以上每个场景都遵循同一模式。你的工作流加入 tailnet，在完全访问私有资源的情况下执行操作，然后自动断开。没有手动清理，没有残留访问，没有暴露的服务。
 
-Monitoring ephemeral nodes and optimizing workflow performance ensures your CI/CD pipelines run efficiently and securely. The Tailscale admin console provides visibility into all ephemeral connections, while strategic optimization reduces workflow execution time.
+监控临时节点并优化工作流性能，能确保你的 CI/CD 流水线高效且安全地运行。Tailscale 管理控制台让你对所有临时连接一目了然，而有的放矢的优化可以缩短工作流执行时间。
 
-Monitor ephemeral nodes through the [Machines](https://console.tailscale.com/admin/machines) page during workflow execution. Each runner appears with its ephemeral status indicator and `tag:ci` label. The connection duration shows how long the workflow has been running. After job completion, these ephemeral nodes disappear automatically, keeping your machine list clean.
+在工作流执行期间，通过 [Machines](https://console.tailscale.com/admin/machines) 页面监控临时节点。每个运行器都会显示其临时状态标识和 `tag:ci` 标签。连接时长展示了工作流已运行多久。作业完成后，这些临时节点会自动消失，保持你的设备列表整洁。
 
-Review the authentication patterns in the [Logs](https://console.tailscale.com/admin/logs) page. Each workflow run generates log entries for auth key creation, node registration, and disconnection. Filter logs by the tag `tag:ci` to review all CI/CD activity. These logs help you understand usage patterns and troubleshoot connection issues.
+在 [Logs](https://console.tailscale.com/admin/logs) 页面审查认证模式。每次工作流运行都会生成认证密钥创建、节点注册和断开连接的日志条目。按 `tag:ci` 标签过滤日志，即可审查所有 CI/CD 活动。这些日志帮助你了解使用模式并排查连接问题。
 
-Optimize workflow performance by [caching the Tailscale binary][docs-tailscale-github-action-cache-tailscale]. The GitHub Action handles this automatically, but you can tune the behavior:
+通过[缓存 Tailscale 二进制文件][docs-tailscale-github-action-cache-tailscale]优化工作流性能。GitHub Action 会自动处理缓存，但你可以调整其行为：
 
 ```yaml
 - name: Connect to Tailscale
@@ -800,9 +800,9 @@ Optimize workflow performance by [caching the Tailscale binary][docs-tailscale-g
     use-cache: 'true' # Enable caching
 ```
 
-Pinning the Tailscale version ensures consistent behavior across workflow runs and maximizes cache hits, reducing download time.
+固定 Tailscale 版本能确保各次工作流运行行为一致，并最大化缓存命中，缩短下载时间。
 
-For workflows that run multiple jobs needing Tailscale access, consider using [matrix strategies][xt-gh-actions]:
+对于需要多个作业都访问 Tailscale 的工作流，可以考虑使用[矩阵策略（matrix strategy）][xt-gh-actions]：
 
 ```yaml
 strategy:
@@ -824,17 +824,17 @@ jobs:
         ./test-${{ matrix.service }}.sh
 ```
 
-Each matrix job gets its own ephemeral connection, allowing parallel testing against your private infrastructure.
+每个矩阵作业都会获得自己的临时连接，从而可以并行地针对你的私有基础设施进行测试。
 
-## Conclusion
+## 结语
 
-Your GitHub Actions workflows now securely access private infrastructure through temporary, authenticated Tailscale connections that exist only during job execution. You've eliminated public exposure of internal services while maintaining the simplicity of GitHub's hosted runners and removing the operational overhead of self-hosted infrastructure.
+你的 GitHub Actions 工作流现在通过只在作业执行期间存在的临时、经过认证的 Tailscale 连接安全地访问私有基础设施。你消除了内部服务的公网暴露，同时保留了 GitHub 托管运行器的简便性，并免除了自托管基础设施的运维负担。
 
-The `tshello` demonstration, while basic, proves powerful capabilities that extend to production scenarios. Database migrations execute from GitHub Actions without exposing database ports. API integration tests run against internal staging environments. Deployment scripts access on-premises resources securely. Multi-cloud architectures where GitHub Actions orchestrate resources across providers work seamlessly.
+`tshello` 演示虽然简单，却证明了可推广到生产场景的强大能力。数据库迁移可以从 GitHub Actions 执行而不暴露数据库端口。API 集成测试可以针对内部 staging 环境运行。部署脚本可以安全地访问本地部署的资源。GitHub Actions 跨云提供商编排资源的多云架构也能无缝工作。
 
-The pattern of ephemeral, tagged access provides a security model that scales with your infrastructure complexity. Each connection is authenticated, authorized, and audited. The automatic cleanup ensures no lingering access. Your security team gains complete visibility through audit logs while your development team maintains deployment velocity.
+这种临时、带标签的访问模式提供了一种能随基础设施复杂度扩展的安全模型。每个连接都经过认证、授权和审计。自动清理确保没有残留访问。你的安全团队通过审计日志获得完整的可见性，而开发团队则保持部署速度。
 
-This foundation enables advanced patterns like [blue-green deployments][xt-wikipedia-blue-green-deployment] to private Kubernetes clusters, automated security scanning of internal services, performance testing against production-like environments, and compliance workflows that access regulated systems. Each use case follows the same secure pattern you've implemented here.
+这一基础能力还能支撑更高级的模式，例如面向私有 Kubernetes 集群的[蓝绿部署][xt-wikipedia-blue-green-deployment]、对内部服务的自动化安全扫描、针对类生产环境的性能测试，以及访问受监管系统的合规性工作流。每个用例都遵循你在这里实现的同一安全模式。
 
 [co-start]: https://tailscale.com/start
 

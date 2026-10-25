@@ -1,0 +1,118 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "Rust SDK"
+sidebar-title: "Rust"
+description: "安装 OpenShell Rust SDK，连接网关并以异步方式管理沙箱。"
+keywords: "OpenShell, SDK, Rust, Cargo, Tonic, gRPC, 沙箱"
+position: 2
+---
+
+Rust SDK 是 OpenShell CLI 与 TUI 使用的异步网关客户端。它的精选 API 覆盖常见沙箱操作；`raw` 则暴露生成的 Tonic 客户端，提供完整的 RPC 表面。尽量使用同一 OpenShell 发布版本的 SDK 与网关。
+
+## 安装 SDK
+
+Rust SDK 目前从源码引入。把依赖钉定到与网关相同的发布 tag：
+
+```shell
+cargo add openshell-sdk \
+  --git https://github.com/NVIDIA/OpenShell \
+  --tag <release-tag>
+cargo add tokio --features macros,rt-multi-thread
+```
+
+## 连接到网关
+
+`ClientConfig` 接受完整的网关 URL。下面的本地示例使用明文传输且不做认证：
+
+```rust
+use openshell_sdk::{ClientConfig, OpenShellClient};
+
+let client = OpenShellClient::connect(
+    ClientConfig::new("http://127.0.0.1:8080"),
+)
+.await?;
+
+let health = client.health().await?;
+println!("gateway status: {:?}", health.status);
+```
+
+对 OIDC 网关，附加 Bearer 令牌并使用 HTTPS：
+
+```rust
+use openshell_sdk::{AuthConfig, ClientConfig, OpenShellClient};
+
+let client = OpenShellClient::connect(ClientConfig {
+    gateway: "https://gateway.example.com".to_string(),
+    auth: Some(AuthConfig::oidc(std::env::var("OPENSHELL_TOKEN")?)),
+    ..Default::default()
+})
+.await?;
+```
+
+网关使用私有 CA 时设置 `ca_cert`。Rust SDK 支持服务器认证 TLS 与 OIDC Bearer 认证，不支持 mTLS 客户端证书，也不从磁盘读取 CLI 网关配置。
+
+## 创建并使用沙箱
+
+精选操作使用 `default` 工作区。应用目标是其他工作区时，使用 `client.workspace("name")`。
+
+```rust
+use std::time::Duration;
+
+use openshell_sdk::{
+    ClientConfig, DeleteOptions, ExecOptions, OpenShellClient, SandboxSpec,
+};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = OpenShellClient::connect(
+        ClientConfig::new("http://127.0.0.1:8080"),
+    )
+    .await?;
+
+    let sandbox = client
+        .create_sandbox(SandboxSpec {
+            name: Some("sdk-example".to_string()),
+            image: Some(
+                "registry.example.com/team/python-agent:1.0"
+                    .to_string(),
+            ),
+            ..Default::default()
+        })
+        .await?;
+
+    client
+        .wait_ready(&sandbox.name, Duration::from_secs(120))
+        .await?;
+
+    let result = client
+        .exec(
+            &sandbox.name,
+            &["python".into(), "-c".into(), "print('hello from OpenShell')".into()],
+            ExecOptions::default(),
+        )
+        .await?;
+    print!("{}", String::from_utf8_lossy(&result.stdout));
+
+    let deletion = client
+        .delete_sandbox(&sandbox.name, DeleteOptions::default())
+        .await?;
+    client
+        .wait_deleted(
+            &sandbox.name,
+            Duration::from_secs(60),
+            deletion.sandbox_id.as_deref(),
+        )
+        .await?;
+
+    Ok(())
+}
+```
+
+精选 API 尚未包装的 RPC 请用 `raw_grpc_fresh()`。raw 客户端返回生成的 protobuf 类型，要求调用方自行组装完整请求。
+
+## 后续步骤
+
+- 传输与身份选择参见[网关认证](/how-it-works/gateways/authentication)。
+- 网关错误模型参见 [API 错误](/sdk/api-errors)。
+- 模块与高级传输行为参见 [Rust SDK 源码文档](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-sdk)。

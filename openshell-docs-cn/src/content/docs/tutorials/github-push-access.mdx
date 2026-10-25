@@ -1,0 +1,194 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "为沙箱内智能体授予 GitHub 推送访问权"
+sidebar-title: "GitHub 推送访问"
+slug: "tutorials/github-push-access"
+description: "带 GitHub 提供商启动智能体，诊断一次被拒的推送，并授予仓库范围的写访问权。"
+keywords: "生成式 AI, 网络安全, 教程, GitHub, 沙箱, 策略, Claude Code"
+---
+import Steps from '@components/Steps.astro';
+
+本教程展示提供商访问与沙箱策略如何协同工作。你将挂接一个贡献只读 GitHub 访问权的 GitHub 提供商（provider），观察一次被拒绝的推送，然后添加一条用户策略，放行对单个仓库的写操作。
+
+内置的[默认策略](/how-it-works/policies/default-policy)不授予任何网络访问权。导入的提供商配置档案（provider profile）则贡献其提供商所需的端点与可执行文件路径。
+
+## 前提条件
+
+你需要：
+
+- 可用的 OpenShell 安装和活动网关（gateway）。
+- 一个自行构建的 OCI 镜像，其中安装了 Claude Code、`git` 与 GitHub CLI。
+- 一个 Anthropic API 密钥。
+- 一个 GitHub 细粒度个人访问令牌（fine-grained personal access token），对目标仓库的内容有读写权限。
+- 一个可以随意推送的 GitHub 临时仓库。
+
+使用两个宿主机终端。终端 1 运行智能体，终端 2 检查拒绝并更新策略。
+
+<Steps>
+
+## 导入提供商配置档案
+
+先查看 [Claude Code 配置档案](https://github.com/NVIDIA/OpenShell/blob/main/providers/claude-code.yaml)和 [GitHub 配置档案](https://github.com/NVIDIA/OpenShell/blob/main/providers/github.yaml)。确认其中的 `binaries` 路径与你镜像中的可执行文件一致，然后直接导入。若需要修改某个路径或端点授予，改为编辑一份本地副本并用 `-f` 导入。
+
+```shell
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/claude-code.yaml --global
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/github.yaml --global
+```
+
+网关没有任何内置配置档案。在每个网关上、按用户所需的作用域各导入一次配置档案。
+
+## 创建提供商
+
+用宿主机环境中的凭据（credential）创建提供商实例。把凭据放在同一条命令行上传递，只会导出给该命令：
+
+```shell
+ANTHROPIC_API_KEY=<your-anthropic-key> \
+  openshell provider create --name my-claude --type claude-code --from-existing
+
+GITHUB_TOKEN=<your-github-token> \
+  openshell provider create --name my-github --type github --from-existing
+```
+
+OpenShell 通过所配置的凭据驱动存储这些凭据。智能体收到的是不透明的占位符；沙箱代理只对相应配置档案允许的端点解析它们。
+
+## 启动智能体
+
+在终端 1 中，从你的镜像启动 Claude Code，并挂接（attach）两个提供商：
+
+```shell
+openshell sandbox create \
+  --name github-demo \
+  --from registry.example.com/your-org/claude-agent:latest \
+  --provider my-claude \
+  --provider my-github \
+  -- claude
+```
+
+如果想复用现有沙箱，在宿主机终端挂接提供商，然后启动新的智能体进程，使其收到提供商的环境变量：
+
+```shell
+openshell sandbox provider attach <sandbox-name> my-claude
+openshell sandbox provider attach <sandbox-name> my-github
+openshell sandbox connect <sandbox-name>
+```
+
+## 尝试推送
+
+让智能体创建一个文件并推送到你的临时仓库。将 `<org>` 与 `<repo>` 替换为仓库的拥有者与名称：
+
+```md title="Prompt" wordWrap showLineNumbers={false}
+Create `hello_world.py`, commit it, and push it to
+`https://github.com/<org>/<repo>.git`. Use the GitHub credentials already
+available in the environment. Do not ask me to paste a token.
+```
+
+推送失败了。GitHub 配置档案允许 clone 与 fetch 操作，但不允许 `git-receive-pack`，即推送所用的 Git Smart HTTP 操作。凭据仍然保持挂接且限定在端点范围内；换一个令牌（token）并不能补上缺失的网络授权。
+
+## 检查拒绝
+
+在终端 2 中，检查最近的沙箱日志：
+
+```shell
+openshell logs github-demo --since 5m --source sandbox
+```
+
+你会看到针对类似下面这条请求的拒绝记录：
+
+```text
+[1775014140.412] [sandbox] [OCSF ] [ocsf] HTTP:POST [MED] DENIED POST https://github.com/<org>/<repo>.git/git-receive-pack [policy:_provider_my_github engine:l7] [reason:L7_REQUEST deny POST github.com:443/<org>/<repo>.git/git-receive-pack reason=POST /<org>/<repo>.git/git-receive-pack not permitted by policy]
+```
+
+`_provider_my_github` 是 OpenShell 从挂接的 `my-github` 提供商组合出的规则。策略事件是 INFO 级日志记录，因此不要用 `--level warn` 把它们过滤掉。
+
+也可以运行 `openshell term`，在终端仪表盘中检查策略判定。
+
+## 创建仓库作用域策略
+
+`policy set` 会整体替换基础策略（base policy），因此要先从沙箱当前策略出发。在终端 2 中打印它：
+
+```shell
+openshell policy get github-demo --base
+```
+
+该命令先打印修订版本详情，然后是策略本身。只把策略 YAML 部分保存为 `github-push.yaml`。其中的文件系统、Landlock 与进程设置保持不变，因为对运行中的沙箱，OpenShell 会拒绝删除文件系统路径或修改 Landlock、进程设置。
+
+在 `network_policies` 下添加以下条目，该节不存在则新建。替换 `<org>` 与 `<repo>`，并按你的镜像调整 `binaries`：
+
+```yaml
+network_policies:
+  github_repository_push:
+    name: github-repository-push
+    endpoints:
+      - host: github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow:
+              method: GET
+              path: "/<org>/<repo>.git/info/refs*"
+          - allow:
+              method: POST
+              path: "/<org>/<repo>.git/git-upload-pack"
+          - allow:
+              method: POST
+              path: "/<org>/<repo>.git/git-receive-pack"
+    binaries:
+      - path: /usr/bin/git
+      - path: /usr/local/bin/git
+
+  github_repository_api:
+    name: github-repository-api
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow:
+              method: "*"
+              path: "/repos/<org>/<repo>/**"
+    binaries:
+      - path: /usr/bin/gh
+      - path: /usr/local/bin/gh
+```
+
+第一个条目只对所选仓库授予 Git Smart HTTP 操作。第二个条目让 `gh` 使用限定在同一仓库范围内的 REST 操作。挂接的 GitHub 提供商继续负责凭据注入及其更宽的只读规则。
+
+## 应用策略
+
+应用策略并等待新修订版加载：
+
+```shell
+openshell policy set github-demo --policy github-push.yaml --wait
+```
+
+网络策略变更会热加载，无需重建沙箱。提供商规则会与这份用户编写的基础策略组合生效。
+
+## 重试并验证
+
+让智能体重试推送。然后确认代理放行了这条限定范围的请求：
+
+```shell
+openshell logs github-demo --since 5m
+openshell policy get github-demo --full
+```
+
+对所选仓库的推送成功。推送到其他仓库的请求仍然被拒绝。
+
+## 清理
+
+完成后删除沙箱：
+
+```shell
+openshell sandbox delete github-demo
+```
+
+</Steps>
+
+## 后续步骤
+
+- 查阅[配置档案](/how-it-works/providers/profiles)，了解端点范围内的凭据注入。
+- 查阅[管理沙箱策略](/how-it-works/policies/manage-policies)，了解增量策略更新与策略历史。
+- 查阅[策略 Schema](/how-it-works/policies/schema)，了解 REST、GraphQL 及其他协议的规则。

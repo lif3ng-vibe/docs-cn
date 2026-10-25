@@ -1,26 +1,26 @@
 ---
-title: "Access an IP address behind a subnet router"
-description: "You can make an IP address that is behind a [subnet router][docs-subnet-routers] accessible to your Kubernetes cluster workloads using an egress `ProxyGroup`. This is useful for accessing resources th"
+title: "访问子网路由器背后的 IP 地址"
+description: "你可以使用出站 `ProxyGroup`，让 Kubernetes 集群工作负载能够访问[子网路由器][docs-subnet-routers]背后的 IP 地址。这适用于访问不在 tailnet 中、但可经由子网路由器到达的资源"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-You can make an IP address that is behind a [subnet router][docs-subnet-routers] accessible to your Kubernetes cluster workloads using an egress `ProxyGroup`. This is useful for accessing resources that are not directly in your tailnet but are reachable through a subnet router, such as databases or internal services on a private network.
+你可以使用出站 `ProxyGroup`，让 Kubernetes 集群工作负载能够访问[子网路由器][docs-subnet-routers]背后的 IP 地址。这适用于访问不在 tailnet 中、但可经由子网路由器到达的资源，例如私有网络上的数据库或内部服务。
 
-Your cluster workloads access the target using a Kubernetes `Service` name, like any other in-cluster Kubernetes `Service`.
+你的集群工作负载使用 Kubernetes `Service` 名称访问目标，就像访问其他集群内 Kubernetes `Service` 一样。
 
-*（图：A diagram showing ProxyGroup egress architecture for accessing an IP address behind a subnet router.）*
+*（图：用于访问子网路由器背后 IP 地址的 ProxyGroup 出站架构图。）*
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备以下条件：
 
-* [Install][docs-k8s-install] the Tailscale Kubernetes Operator.
-* A [subnet router][docs-subnet-routers] advertising the route that contains the target IP address.
+* 已[安装][docs-k8s-install] Tailscale Kubernetes Operator。
+* 一个通告了包含目标 IP 地址的路由的[子网路由器][docs-subnet-routers]。
 
-## Create a ProxyClass to accept routes
+## 创建接受路由的 ProxyClass
 
-To reach the target IP address, the egress proxy must accept advertised subnet routes. Create a `ProxyClass` with `acceptRoutes` enabled:
+要访问目标 IP 地址，出站代理必须接受通告的子网路由。创建一个启用了 `acceptRoutes` 的 `ProxyClass`：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -32,9 +32,9 @@ spec:
     acceptRoutes: true
 ```
 
-## Create an egress ProxyGroup
+## 创建出站 ProxyGroup
 
-Create a `ProxyGroup` with `spec.type` set to `egress` and `spec.proxyClass` set to the `ProxyClass` created above:
+创建一个 `spec.type` 设为 `egress`、`spec.proxyClass` 设为上面创建的 `ProxyClass` 的 `ProxyGroup`：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -47,11 +47,11 @@ spec:
   proxyClass: accept-routes
 ```
 
-Refer to [High availability for the Tailscale Kubernetes Operator][docs-ha] for production configuration options.
+生产环境配置选项请参阅 [Tailscale Kubernetes Operator 高可用][docs-ha]。
 
-## Create an egress Kubernetes Service
+## 创建出站 Kubernetes Service
 
-Create a Kubernetes `ExternalName` `Service` that references the `ProxyGroup` and the target IP address:
+创建一个引用 `ProxyGroup` 和目标 IP 地址的 Kubernetes `ExternalName` `Service`：
 
 ```yaml
 apiVersion: v1
@@ -70,37 +70,37 @@ spec:
       name: http
 ```
 
-The `externalName` field is overwritten by the Operator. Set `spec.ports` to match the ports exposed by the target.
+`externalName` 字段会被 Operator 覆写。请将 `spec.ports` 设置为与目标暴露的端口一致。
 
-> **Note:**
+> **注意：**
 >
-> The Kubernetes `ExternalName` `Service` must explicitly list all ports you want to access in `spec.ports`. Only `port`, `protocol`, and `name` are used. Other port fields have no effect.
+> Kubernetes `ExternalName` `Service` 必须在 `spec.ports` 中显式列出你想访问的所有端口。只有 `port`、`protocol` 和 `name` 会被使用，其他端口字段不生效。
 
-## Verify access
+## 验证访问
 
-Wait for the Kubernetes `Service` to become ready:
+等待 Kubernetes `Service` 就绪：
 
 ```shell
 kubectl wait svc my-subnet-target --for=condition=TailscaleEgressSvcReady=true --timeout=5m
 ```
 
-Access the target from your workloads using the Kubernetes DNS name:
+使用 Kubernetes DNS 名称从工作负载访问目标：
 
 ```shell
 curl http://my-subnet-target.default.svc.cluster.local
 ```
 
-Traffic is round-robin load balanced across the `ProxyGroup` replicas. Any number of egress `Service` resources can reference a single `ProxyGroup`.
+流量会在 `ProxyGroup` 各副本之间以轮询方式负载均衡。任意数量的出站 `Service` 资源都可以引用同一个 `ProxyGroup`。
 
-## Access a 4via6 address
+## 访问 4via6 地址
 
-You can also access an IP address behind a [4via6 subnet router][docs-4via6]. The configuration is the same as above, but you target the 4via6 MagicDNS name or synthesized IPv6 address, instead of a plain IP address.
+你还可以访问 [4via6 子网路由器][docs-4via6]背后的 IP 地址。配置与上面相同，只是目标改为 4via6 MagicDNS 名称或合成 IPv6 地址，而不是普通 IP 地址。
 
-> **Note:**
+> **注意：**
 >
-> The egress proxy cluster must support IPv6 to use 4via6 addresses.
+> 出站代理所在的集群必须支持 IPv6 才能使用 4via6 地址。
 
-The MagicDNS name format is `<IPv4-with-hyphens>-via-<siteID>.<tailnet>.ts.net`:
+MagicDNS 名称格式为 `<IPv4-with-hyphens>-via-<siteID>.<tailnet>.ts.net`：
 
 ```yaml
 apiVersion: v1
@@ -119,9 +119,9 @@ spec:
       name: http
 ```
 
-Replace `<tailnet>` with your tailnet name and adjust the IPv4 address, site ID, and ports for your target.
+将 `<tailnet>` 替换为你的 tailnet 名称，并根据目标调整 IPv4 地址、站点 ID 和端口。
 
-You can also target the synthesized IPv6 address directly using `tailscale.com/tailnet-ip`:
+你也可以使用 `tailscale.com/tailnet-ip` 直接指向合成 IPv6 地址：
 
 ```yaml
 annotations:
@@ -129,22 +129,22 @@ annotations:
   tailscale.com/proxy-group: "egress-proxies"
 ```
 
-Use `tailscale debug via <siteID> <IPv4>` to generate the synthesized IPv6 address. A peer in your tailnet must be advertising a subnet route that contains the 4via6 address.
+使用 `tailscale debug via <siteID> <IPv4>` 生成合成 IPv6 地址。你的 tailnet 中必须有一个对等节点正在通告包含该 4via6 地址的子网路由。
 
-## Limitations
+## 限制
 
-The following limitations apply to IP-based egress access through subnet routers:
+以下限制适用于经由子网路由器的基于 IP 的出站访问：
 
-* Only single IP addresses are supported. IP ranges are not supported.
+* 仅支持单个 IP 地址，不支持 IP 网段。
 
-Refer to [IPv6 support][docs-ipv6] for more information.
+更多信息请参阅 [IPv6 支持][docs-ipv6]。
 
-## Further exploration
+## 进一步探索
 
-* [Access a tailnet device][docs-access-device] from your Kubernetes cluster using an egress proxy.
-* Learn more about [egress][docs-egress] in the Tailscale Kubernetes Operator.
-* Configure [high availability][docs-ha] for production deployments.
-* Learn more about [subnet routers][docs-subnet-routers]
+* 使用出站代理从 Kubernetes 集群[访问 tailnet 设备][docs-access-device]。
+* 进一步了解 Tailscale Kubernetes Operator 中的[出站][docs-egress]。
+* 为生产部署配置[高可用][docs-ha]。
+* 进一步了解[子网路由器][docs-subnet-routers]。
 
 [docs-4via6]: /docs/features/subnet-routers/4via6-subnets
 

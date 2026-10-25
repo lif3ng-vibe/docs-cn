@@ -1,94 +1,94 @@
 ---
-title: "tailscale funnel command"
-description: "`tailscale funnel` lets you share a local service over the internet. You can also choose to use [Tailscale Serve][docs-serve] using the [`tailscale serve`][docs-tailscale-serve] command to limit shari"
+title: "tailscale funnel 命令"
+description: "`tailscale funnel` 让你把本地服务分享到互联网。你也可以选择使用 [Tailscale Serve][docs-serve]（通过 [`tailscale serve`][docs-tailscale-serve] 命令）把分享范围限制在 tailnet 内。"
 ---
 
-Last validated Jan 26, 2026
+最后验证于 Jan 26, 2026
 
-> **Note:**
+> **注意：**
 >
-> The CLI commands for both Tailscale Funnel and Tailscale Serve have changed in the 1.52 version of the Tailscale client. If you've used Funnel or Serve in previous versions, we recommend reviewing the CLI documentation.
+> 在 1.52 版本的 Tailscale 客户端中，Tailscale Funnel 和 Tailscale Serve 的 CLI 命令都发生了变化。如果你在之前的版本中使用过 Funnel 或 Serve，我们建议你查阅 CLI 文档。
 
-`tailscale funnel` lets you share a local service over the internet. You can also choose to use [Tailscale Serve][docs-serve] using the [`tailscale serve`][docs-tailscale-serve] command to limit sharing within your tailnet.
+`tailscale funnel` 让你把本地服务分享到互联网。你也可以选择使用 [Tailscale Serve][docs-serve]（通过 [`tailscale serve`][docs-tailscale-serve] 命令）把分享范围限制在 tailnet 内。
 
 ```shell
 tailscale funnel [flags] <target>
 ```
 
-Subcommands:
+子命令：
 
-* [`status`][ar-get-the-status] Gets the status
-* [`reset`][ar-reset-tailscale-funnel] Resets the configuration
+* [`status`][ar-get-the-status] 获取状态
+* [`reset`][ar-reset-tailscale-funnel] 重置配置
 
-To explore various use cases and examples, refer to [Tailscale Funnel examples][docs-funnel-examples].
+要了解各种使用场景和示例，请参阅 [Tailscale Funnel 示例][docs-funnel-examples]。
 
-## Funnel command flags
+## Funnel 命令标志
 
-Available flags:
+可用标志：
 
-* `--bg` Determines whether the command should run as a background process.
-* `--https=<port>` Expose an HTTPS server at the specified port (default).
-* `--proxy-protocol=<version>` PROXY protocol version (1 or 2) for TCP forwarding.
-* `--set-path=<path>` Appends the specified path to the base URL for accessing the underlying service.
-* `--tcp=<port>` Expose a TCP forwarder to forward TCP packets at the specified port.
-* `--tls-terminated-tcp=<port>` Expose a TCP forwarder to forward TLS-terminated TCP packets at the specified port.
-* `--yes` Update without interactive prompts.
+* `--bg` 决定命令是否作为后台进程运行。
+* `--https=<port>` 在指定端口上暴露一个 HTTPS 服务器（默认）。
+* `--proxy-protocol=<version>` TCP 转发使用的 PROXY protocol 版本（1 或 2）。
+* `--set-path=<path>` 把指定路径附加到访问底层服务的基础 URL 之后。
+* `--tcp=<port>` 暴露一个 TCP 转发器，在指定端口转发 TCP 数据包。
+* `--tls-terminated-tcp=<port>` 暴露一个 TCP 转发器，在指定端口转发已终结 TLS 的 TCP 数据包。
+* `--yes` 更新时不进行交互式提示。
 
-The `tailscale funnel` command accepts a target that can be a file, directory, text, or most commonly, the location to a service running on the local machine. The location to the local service can be expressed as a port number (for example, `3000`), a partial URL (for example, `localhost:3000`), or a full URL including a path (for example, `tls-terminated-tcp://localhost:3000/foo`).
+`tailscale funnel` 命令接受一个 target（目标），可以是一个文件、目录、文本，或最常见的情况——本地机器上运行的服务的位置。本地服务的位置可以表示为端口号（例如 `3000`）、部分 URL（例如 `localhost:3000`）或包含路径的完整 URL（例如 `tls-terminated-tcp://localhost:3000/foo`）。
 
-## Use HTTPS and HTTP servers
+## 使用 HTTPS 和 HTTP 服务器
 
 ```shell
 tailscale funnel --https=<port> <target> [off]
 ```
 
-The `funnel` offers an HTTPS server that has a few modes: a reverse proxy, a file server, and a static text server. HTTPS traffic is secured using an automatically provisioned TLS certificate. By default, termination is done by your node's Tailscale daemon itself.
+`funnel` 提供一个 HTTPS 服务器，有几种模式：反向代理、文件服务器和静态文本服务器。HTTPS 流量使用自动配置的 TLS 证书来保护。默认情况下，TLS 终结由你节点的 Tailscale 守护进程自己完成。
 
-* `--https=<port>` Specifies the port to listen on. For Funnel, you must use one of the allowed ports: `443`, `8443`, or `10000`.
+* `--https=<port>` 指定监听端口。对于 Funnel，必须使用允许的端口之一：`443`、`8443` 或 `10000`。
 
-* `--set-path` Is a slash-separated URL path. The root-level mount point would be `/` and would be matched by making a request to `https://my-node.example.ts.net/`, for example. For more information on how these path patterns are matched, refer to the Go [ServeMux][xt-go-servemux] documentation. Our mount points behave similarly.
+* `--set-path` 是以斜杠分隔的 URL 路径。根级挂载点是 `/`，例如向 `https://my-node.example.ts.net/` 发起请求即可匹配。关于这些路径模式的匹配方式，请参阅 Go 的 [ServeMux][xt-go-servemux] 文档。我们的挂载点行为与之类似。
 
-* `<target>` Funnel provides 4 options for serving content: an HTTP reverse proxy, a file, a directory, and static text. A reverse proxy lets you forward requests to a local HTTP web server. Providing a local file path provides the ability to serve files or directories of files. Serving static text is available mostly for debugging purposes and serves a static response.
+* `<target>` Funnel 提供 4 种内容提供方式：HTTP 反向代理、文件、目录和静态文本。反向代理让你把请求转发到本地 HTTP web 服务器。提供本地文件路径可以提供单个文件或文件目录的服务。提供静态文本主要用于调试，会返回一个静态响应。
 
-  * **Reverse proxy**
+  * **反向代理**
 
-    To serve as a reverse proxy to a local backend, provide the location of the `<target>` argument. The location to the local service can be expressed as a port number (for example, `3000`), a partial URL (for example, `localhost:3000`), or a full URL including a path (for example, `tls-terminated-tcp://localhost:3000/foo`). Note that only `http://127.0.0.1` is currently supported for proxies.
+    要作为本地后端的反向代理，请在 `<target>` 参数中提供位置。本地服务的位置可以表示为端口号（例如 `3000`）、部分 URL（例如 `localhost:3000`）或包含路径的完整 URL（例如 `tls-terminated-tcp://localhost:3000/foo`）。注意，代理目前只支持 `http://127.0.0.1`。
 
-    Example: `tailscale funnel localhost:3000`
+    示例：`tailscale funnel localhost:3000`
 
-  * **File server**
+  * **文件服务器**
 
-    Provide a full, absolute path, to the file or directory of files you wish to serve. If a directory is specified, this will render a directory listing with links to files and subdirectories.
+    提供你想提供服务的文件或文件目录的完整绝对路径。如果指定的是目录，将渲染一个目录列表，其中包含指向文件和子目录的链接。
 
-    Example: `tailscale funnel /home/alice/blog/index.html`
+    示例：`tailscale funnel /home/alice/blog/index.html`
 
-    Due to macOS app sandbox limitations, this option is only available when using Tailscale's [open source variant][docs-macos-variants]. If you've installed Tailscale on macOS through the Mac App Store or as a Standalone variant system extension, you can use Funnel to share ports but not files or directories.
+    由于 macOS 应用沙盒的限制，此选项仅在使用 Tailscale 的[开源变体][docs-macos-variants]时可用。如果你通过 Mac App Store 或 Standalone 变体系统扩展在 macOS 上安装了 Tailscale，可以使用 Funnel 共享端口，但不能共享文件或目录。
 
-  * **Static text server**
+  * **静态文本服务器**
 
-    Specifying `text:<value>` as a `<target>` configures a static plain-text server.
+    把 `text:<value>` 指定为 `<target>` 即可配置一个静态纯文本服务器。
 
-    Example: `tailscale funnel text:"Hello, world!"`
+    示例：`tailscale funnel text:"Hello, world!"`
 
-## Use the PROXY protocol
+## 使用 PROXY protocol
 
 ```shell
 tailscale funnel --proxy-protocol=<version> <target>
 ```
 
-> **Note:**
+> **注意：**
 >
-> For most situations, users will likely use version `2`.
+> 在大多数情况下，用户很可能会使用版本 `2`。
 
-The [PROXY protocol][xt-haproxy-proxy-protocol] is a minimal network protocol that preserves information about a proxied connection (typically, the source IP address) through a proxy or load balancer and to the backend target. This lets the service that you're exposing with Funnel determine the original IP address and port for connecting clients.
+[PROXY protocol][xt-haproxy-proxy-protocol] 是一个极简的网络协议，它可以在经过代理或负载均衡器时保留被代理连接的信息（通常是源 IP 地址），并传递给后端目标。这让你用 Funnel 暴露的服务能够确定连接客户端的原始 IP 地址和端口。
 
-For example:
+例如：
 
 ```shell
 tailscale funnel --proxy-protocol=2 --tls-terminated-tcp=443 tcp://127.0.0.1:9899
 ```
 
-This command will return information similar to the following:
+此命令会返回类似如下的信息：
 
 ```shell
 Available on the internet:
@@ -101,97 +101,97 @@ Available on the internet:
 Press Ctrl+C to exit.
 ```
 
-The backend (running on `localhost:9899`) then gets the original source IP and port through the PROXY protocol.
+后端（运行在 `localhost:9899`）随后通过 PROXY protocol 获得原始源 IP 和端口。
 
-## Use a TCP forwarder
+## 使用 TCP 转发器
 
 ```shell
 tailscale funnel --tcp=<port> tcp://localhost:<local-port> [off]
 tailscale funnel --tls-terminated-tcp=<port> tcp://localhost:<local-port> [off]
 ```
 
-The `funnel` command offers a TCP forwarder to forward TLS-terminated TCP packets to a local TCP server like Caddy or other TCP-based protocols such as SSH or RDP. By default, the TCP forwarder forwards raw packets.
+`funnel` 命令提供 TCP 转发器，可以把已终结 TLS 的 TCP 数据包转发到本地 TCP 服务器（如 Caddy），或其他基于 TCP 的协议（如 SSH 或 RDP）。默认情况下，TCP 转发器转发原始数据包。
 
-* `--tcp=<port>` Sets up a raw TCP forwarder listening on the specified port. For Funnel, you must use one of the allowed ports: `443`, `8443`, or `10000`.
+* `--tcp=<port>` 设置一个监听指定端口的原始 TCP 转发器。对于 Funnel，必须使用允许的端口之一：`443`、`8443` 或 `10000`。
 
-* `--tls-terminated-tcp=<port>` Sets up a TLS-terminated TCP forwarder listening on the specified port. For Funnel, you must use one of the allowed ports: `443`, `8443`, or `10000`.
+* `--tls-terminated-tcp=<port>` 设置一个监听指定端口的 TLS 终结型 TCP 转发器。对于 Funnel，必须使用允许的端口之一：`443`、`8443` 或 `10000`。
 
-## Use valid certificates
+## 使用有效证书
 
 ```shell
 tailscale funnel <https:target>
 ```
 
-If you have a valid certificate, use `https` in the `<target>` argument.
+如果你有有效证书，请在 `<target>` 参数中使用 `https`。
 
-Example: `tailscale funnel https://localhost:8443`
+示例：`tailscale funnel https://localhost:8443`
 
-## Ignore invalid and self-signed certificate checks
+## 忽略无效和自签名证书检查
 
 ```shell
 tailscale funnel <https+insecure:target>
 ```
 
-If you run a local web server using HTTPS with a self-signed or otherwise invalid certificate, you can specify `https+insecure` as a special pseudo-protocol for your `tailscale funnel` commands.
+如果你运行的本地 web 服务器使用 HTTPS 且证书是自签名或其他无效证书，可以在 `tailscale funnel` 命令中把 `https+insecure` 指定为一种特殊的伪协议。
 
-Example: `tailscale funnel https+insecure://localhost:8443`
+示例：`tailscale funnel https+insecure://localhost:8443`
 
-## Get the status
+## 获取状态
 
 ```shell
 tailscale funnel status [--json]
 ```
 
-To get the status of your servers, you can use the `status` subcommand. This will list all the servers that are currently running on your node.
+要获取服务器的状态，可以使用 `status` 子命令。它会列出当前在你的节点上运行的所有服务器。
 
-* `--json` If you wish to get the status in JSON format, you can provide the `--json` argument.
+* `--json` 如果你想以 JSON 格式获取状态，可以提供 `--json` 参数。
 
-Example: `tailscale funnel status --json`
+示例：`tailscale funnel status --json`
 
-## Reset Tailscale Funnel
+## 重置 Tailscale Funnel
 
 ```shell
 tailscale funnel reset
 ```
 
-To clear the current `tailscale funnel` configuration, use the `reset` subcommand.
+要清除当前的 `tailscale funnel` 配置，请使用 `reset` 子命令。
 
-## Turn Tailscale Funnel off
+## 关闭 Tailscale Funnel
 
-* `[off]` To turn off a `tailscale funnel` command, you can add `off` to the end of the command you used to turn it on. This will remove the server from the list of active servers. In `off` commands, the `<target>` argument is optional, but all original flags are required.
+* `[off]` 要关闭某条 `tailscale funnel` 命令，可以在你当初开启它的命令末尾加上 `off`。这会把该服务器从活跃服务器列表中移除。在 `off` 命令中，`<target>` 参数是可选的，但所有原有标志都必须保留。
 
-If this command turned on a server:
+如果这条命令开启了一个服务器：
 
 ```shell
 tailscale funnel --https=443 /home/alice/blog/index.html
 ```
 
-You can turn it off by running:
+你可以这样关闭它：
 
 ```shell
 tailscale funnel --https=443 /home/alice/blog/index.html off
 ```
 
-You can omit the `<target>` argument, so these 2 commands are equivalent:
+你可以省略 `<target>` 参数，因此以下两条命令等价：
 
 ```shell
 tailscale funnel --https=443 --set-path=/foo /home/alice/blog/index.html off
 tailscale funnel --https=443 --set-path=/foo off
 ```
 
-## Effects of rebooting and restarting
+## 重启与重新启动的影响
 
-If you use the `tailscale funnel` command with the [`-bg`][ar-funnel-command-flags] flag, it runs persistently in the background until you [turn it off][ar-turn-funnel-off]. When you reboot the device or restart Tailscale from the command line using [`tailscale down`][docs-cli-down] and [`tailscale up`][docs-cli-up], Funnel will automatically resume sharing.
+如果你使用 [`-bg`][ar-funnel-command-flags] 标志运行 `tailscale funnel` 命令，它会持续在后台运行，直到你[关闭它][ar-turn-funnel-off]。当你重启设备，或在命令行中使用 [`tailscale down`][docs-cli-down]和[`tailscale up`][docs-cli-up]重启 Tailscale 时，Funnel 会自动恢复分享。
 
-If you use the `tailscale funnel` command without the `-bg` flag, then reboot the device or restart Tailscale from the command line, you must restart Funnel manually to resume sharing.
+如果你使用不带 `-bg` 标志的 `tailscale funnel` 命令，之后又重启设备或从命令行重启了 Tailscale，则必须手动重启 Funnel 才能恢复分享。
 
-[ar-funnel-command-flags]: #funnel-command-flags
+[ar-funnel-command-flags]: #funnel-命令标志
 
-[ar-get-the-status]: #get-the-status
+[ar-get-the-status]: #获取状态
 
-[ar-reset-tailscale-funnel]: #reset-tailscale-funnel
+[ar-reset-tailscale-funnel]: #重置-tailscale-funnel
 
-[ar-turn-funnel-off]: #turn-tailscale-funnel-off
+[ar-turn-funnel-off]: #关闭-tailscale-funnel
 
 [docs-cli-down]: /docs/reference/tailscale-cli#down
 

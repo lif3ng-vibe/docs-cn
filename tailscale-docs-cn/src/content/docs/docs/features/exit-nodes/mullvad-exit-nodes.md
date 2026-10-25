@@ -1,110 +1,110 @@
 ---
-title: "Mullvad exit nodes"
-description: "The Mullvad VPN add-on lets you use [Mullvad][xt-mullvad-why] VPN servers as [exit nodes][docs-exit-nodes] in a Tailscale network (known as a tailnet). Mullvad exit nodes function similarly to regular"
+title: "Mullvad 出口节点"
+description: "Mullvad VPN 附加服务让你可以在 Tailscale 网络（即 tailnet）中把 [Mullvad][xt-mullvad-why] VPN 服务器用作[出口节点][docs-exit-nodes]。Mullvad 出口节点的运作方式与常规出口节点类似"
 ---
 
-Last validated Jan 9, 2026
+最后验证于 Jan 9, 2026
 
-> **Note:** This feature is currently in beta.
+> **注意：**此功能目前处于 beta 阶段。
 
-The Mullvad VPN add-on lets you use [Mullvad][xt-mullvad-why] VPN servers as [exit nodes][docs-exit-nodes] in a Tailscale network (known as a tailnet). Mullvad exit nodes function similarly to regular exit nodes but use [Mullvad's pre-existing VPN infrastructure][xt-mullvad-server-list] instead of a device you own.
+Mullvad VPN 附加服务让你可以在 Tailscale 网络（即 tailnet）中把 [Mullvad][xt-mullvad-why] VPN 服务器用作[出口节点][docs-exit-nodes]。Mullvad 出口节点的运作方式与常规出口节点类似，但它使用的是 [Mullvad 现有的 VPN 基础设施][xt-mullvad-server-list]，而不是你自己的设备。
 
-Mullvad exit nodes support most of the same functionality as other exit nodes, such as [suggested exit nodes][docs-suggested-exit-nodes] and [mandatory exit nodes][docs-auto-exit-nodes], but they have some limitations.
+Mullvad 出口节点支持与其他出口节点相同的大部分功能，例如[建议出口节点][docs-suggested-exit-nodes]和[强制出口节点][docs-auto-exit-nodes]，但存在一些限制。
 
-## Requirements and limitations
+## 要求与限制
 
-Review the following requirements and limitations related to the Mullvad add-on:
+使用 Mullvad 附加服务前，请了解以下要求与限制：
 
-* You must purchase the Mullvad VPN add-on before you can access Mullvad exit nodes.
-* Mullvad exit nodes don't work with [custom DERP servers][docs-custom-derp-servers].
-* Access control policies for Mullvad exit nodes don't work with [Google-synced groups][docs-google-sso].
-* If you use [Tailnet Lock][docs-tailnet-lock] with the Mullvad VPN add-on, you must [sign each Mullvad exit node][ar-sign-mullvad-exit-nodes].
-* If you use [GitOps][docs-gitops-acls] to manage your [tailnet policy file][docs-tailnet-policy-file], the Mullvad VPN add-on checkout flow might be locked. To purchase additional licenses, go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console, then select **Manage add-ons**.
-* The Tailscale client for Windows does not support displaying the full list of Mullvad exit nodes. You can access a complete list of Mullvad exit nodes using the [Tailscale CLI][docs-cli].
-* You cannot use both the admin console and the tailnet policy file to [manage Mullvad access][ar-manage-mullvad-access]. If you use the tailnet policy file to manage Mullvad access, you must manage all Mullvad access through the tailnet policy file.
+* 你必须先购买 Mullvad VPN 附加服务，才能访问 Mullvad 出口节点。
+* Mullvad 出口节点不兼容[自定义 DERP 服务器][docs-custom-derp-servers]。
+* Mullvad 出口节点的访问控制策略不兼容 [Google 同步的群组][docs-google-sso]。
+* 如果你将 [Tailnet Lock][docs-tailnet-lock] 与 Mullvad VPN 附加服务配合使用，你必须为每个 Mullvad 出口节点[签名][ar-sign-mullvad-exit-nodes]。
+* 如果你使用 [GitOps][docs-gitops-acls] 管理[策略文件][docs-tailnet-policy-file]，Mullvad VPN 附加服务的结账流程可能被锁定。要购买更多许可，前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面，然后选择 **Manage add-ons**。
+* Windows 版 Tailscale 客户端不支持显示 Mullvad 出口节点的完整列表。你可以使用 [Tailscale CLI][docs-cli] 获取 Mullvad 出口节点的完整列表。
+* 你不能同时使用管理控制台和策略文件来[管理 Mullvad 访问][ar-manage-mullvad-access]。如果你用策略文件管理 Mullvad 访问，就必须全部通过策略文件管理。
 
-### Important DNS considerations
+### 重要的 DNS 注意事项
 
-> **Note:**
+> **注意：**
 >
-> Tailscale v1.48.3 and later don't require additional configuration.
+> Tailscale v1.48.3 及更高版本无需额外配置。
 
-Mullvad exit nodes with Tailscale v1.48.1 and v1.48.2 use the device's local DNS configuration. As a result, you might lose access to DNS (effectively losing internet access) unless you configure one of the following:
+Tailscale v1.48.1 和 v1.48.2 上的 Mullvad 出口节点会使用设备本地的 DNS 配置。因此，除非你配置以下选项之一，否则你可能失去 DNS 访问能力（等同于断网）：
 
-* [Allow local network access][docs-exit-node-local-network-access] for exit nodes.
-* Add a [global nameserver][docs-global-nameserver] and [override DNS servers settings][docs-override-dns-servers].
+* 为出口节点[允许本地网络访问][docs-exit-node-local-network-access]。
+* 添加[全局名称服务器][docs-global-nameserver]并[覆盖 DNS 服务器设置][docs-override-dns-servers]。
 
-Keep the following in mind when configuring either of these settings:
+配置这两项设置时请注意：
 
-* Overriding local DNS causes Tailscale to configure all clients to use the selected DNS server for all DNS queries while Tailscale is connected, even if you are not using an exit node. When used with the Mullvad Public DNS nameservers, this ensures all DNS routes through Mullvad and provides a green check for DNS leaks on [`mullvad.net/check`][xt-mullvad-dns-leaks].
-* Allowing exit nodes access to the local network might allow DNS leaks to occur but also ensures that local DNS names, such as a local printer name or a local NAS server name, continue to work.
+* 覆盖本地 DNS 会让 Tailscale 把所有客户端配置为在 Tailscale 连接期间对所有 DNS 查询使用所选 DNS 服务器，即使你没有在使用出口节点。配合 Mullvad 公共 DNS 名称服务器使用时，这能确保所有 DNS 都经由 Mullvad 路由，并让 [`mullvad.net/check`][xt-mullvad-dns-leaks] 上的 DNS 泄漏检测显示绿色对勾。
+* 允许出口节点访问本地网络可能导致 DNS 泄漏，但也能确保本地 DNS 名称（例如本地打印机名或本地 NAS 服务器名）继续可用。
 
-## Data privacy and anonymity
+## 数据隐私与匿名性
 
-When you use Mullvad with Tailscale, you allow Tailscale to generate, manage, renew, and remove Mullvad accounts on your behalf. As a result, there are some important privacy and anonymity considerations:
+将 Mullvad 与 Tailscale 配合使用时，你授权 Tailscale 代表你生成、管理、续期和移除 Mullvad 账户。因此，有几点重要的隐私与匿名性考量：
 
-* Tailscale generates and manages account information on users' behalf.
-* Tailscale is identity-aware (Tailscale doesn't support anonymous tailnets). All Tailscale users are connected to an email address or GitHub account.
-* Tailscale knows which Mullvad accounts belong to which Tailscale users.
-* Users establish [encrypted][docs-encryption] [WireGuard][docs-wireguard] connections with Mullvad servers. Tailscale can identify which users are connecting to which Mullvad servers using logs. If a device [opts out of client logging][docs-opt-out-logging], Tailscale does not have visibility into which Mullvad exit node that device uses. As with any traffic in your tailnet, Tailscale cannot access any user traffic sent to Mullvad servers. This is because all user traffic is encrypted in WireGuard tunnels, and Tailscale cannot decrypt this information.
-* Mullvad does not receive user identity information from Tailscale.
+* Tailscale 代表用户生成和管理账户信息。
+* Tailscale 是身份感知的（Tailscale 不支持匿名 tailnet）。所有 Tailscale 用户都关联一个邮箱地址或 GitHub 账户。
+* Tailscale 知道哪些 Mullvad 账户属于哪些 Tailscale 用户。
+* 用户与 Mullvad 服务器建立[加密][docs-encryption]的 [WireGuard][docs-wireguard] 连接。Tailscale 可以通过日志识别哪些用户在连接哪些 Mullvad 服务器。如果设备[选择退出客户端日志][docs-opt-out-logging]，Tailscale 无法得知该设备使用的是哪个 Mullvad 出口节点。与 tailnet 中的任何流量一样，Tailscale 无法访问发送到 Mullvad 服务器的任何用户流量——所有用户流量都在 WireGuard 隧道中加密，Tailscale 无法解密这些信息。
+* Mullvad 不会从 Tailscale 接收用户身份信息。
 
-## Available Mullvad regions
+## 可用的 Mullvad 区域
 
-You can purchase and use the Mullvad add-on for your tailnet in most countries, however, some countries and regions are excluded. If your region is not listed, you can subscribe to [the GitHub tracking issue][xt-gh-mullvad-issue] for updates and request updates. After you purchase the Mullvad add-on, you have access to all available Mullvad servers.
+你可以在大多数国家/地区为 tailnet 购买并使用 Mullvad 附加服务，但部分国家和地区除外。如果你的所在区域未被列出，可以订阅[该 GitHub 跟踪 issue][xt-gh-mullvad-issue]获取更新并提出请求。购买 Mullvad 附加服务后，你即可使用所有可用的 Mullvad 服务器。
 
-For a current list of the Mullvad servers that are available to use as exit nodes by country and city, refer to the Mullvad [Servers][xt-mullvad-servers] page. These regions are also displayed as exit node options in the Tailscale client.
+要查看按国家和城市划分、当前可用作出口节点的 Mullvad 服务器列表，参见 Mullvad 的 [Servers][xt-mullvad-servers] 页面。这些区域也会作为出口节点选项显示在 Tailscale 客户端中。
 
-## Mullvad licensing
+## Mullvad 许可
 
-You must purchase the Mullvad VPN add-on through the admin console before you can access Mullvad exit nodes. The base add-on includes five licenses, but you can purchase additional licenses during the initial checkout flow or afterward through the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
+你必须先通过管理控制台购买 Mullvad VPN 附加服务，才能访问 Mullvad 出口节点。基础附加服务包含五个许可，但你可以在初次结账流程中购买更多许可，也可以之后通过管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面购买。
 
-Users on the [Personal or GitHub Community plans][docs-free-plans] can purchase the Mullvad add-on on either a monthly or annual basis. Users on the [Standard and Premium plans][co-pricing] can purchase the Mullvad add-on on a monthly basis only. Users on the Enterprise plan must contact their account team to purchase the Mullvad add-on.
+[Personal 或 GitHub Community 套餐][docs-free-plans]的用户可以按月或按年购买 Mullvad 附加服务。[Standard 和 Premium 套餐][co-pricing]的用户只能按月购买。Enterprise 套餐的用户必须联系其客户团队购买 Mullvad 附加服务。
 
-## How-to guides
+## 操作指南
 
-### Enable Mullvad exit nodes
+### 启用 Mullvad 出口节点
 
-You can enable Mullvad exit nodes by purchasing the Mullvad VPN add-on and configuring device access.
+你可以通过购买 Mullvad VPN 附加服务并配置设备访问权限来启用 Mullvad 出口节点。
 
-1. From the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console, scroll down to **Mullvad VPN**.
-2. Select **Configure**.
-3. Continue with the checkout flow to purchase Mullvad licenses.
+1. 在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 设置页面向下滚动到 **Mullvad VPN**。
+2. 选择 **Configure**。
+3. 按结账流程继续，购买 Mullvad 许可。
 
-If you use [GitOps][docs-gitops-acls] to manage your tailnet policy file, the Mullvad VPN add-on checkout flow might be locked. To purchase additional licenses, go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console, then select **Manage add-ons**.
+如果你使用 [GitOps][docs-gitops-acls] 管理策略文件，Mullvad VPN 附加服务的结账流程可能被锁定。要购买更多许可，前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面，然后选择 **Manage add-ons**。
 
-### Manage Mullvad access
+### 管理 Mullvad 访问
 
-You can configure Mullvad access using the admin console user interface or the tailnet policy file. Using the tailnet policy file to manage Mullvad exit node access offers more flexibility. For example, it lets you assign Mullvad access to more devices than you have Mullvad licenses for.
+你可以使用管理控制台界面或策略文件来配置 Mullvad 访问。使用策略文件管理 Mullvad 出口节点访问更灵活。例如，它允许你把 Mullvad 访问权限分配给超过许可数量的设备。
 
-> **Warning:**
+> **警告：**
 >
-> You cannot use both the admin console and the tailnet policy file to manage Mullvad access. If you use the tailnet policy file to manage Mullvad access, you must manage all Mullvad access through the tailnet policy file.
+> 你不能同时使用管理控制台和策略文件来管理 Mullvad 访问。如果你用策略文件管理 Mullvad 访问，就必须全部通过策略文件管理。
 
-#### From the admin console
+#### 通过管理控制台
 
-You can manage Mullvad access through the admin console. If you manage Mullvad access this way, you must explicitly configure each device.
+你可以通过管理控制台管理 Mullvad 访问。如果采用这种方式，你必须为每台设备逐一显式配置。
 
-To grant devices access to Mullvad:
+向设备授予 Mullvad 访问权限的步骤：
 
-1. From the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console, scroll down to **Mullvad VPN**.
-2. Select **Configure**.
-3. Select **Add devices**.
-4. Select the devices to grant access to Mullvad's infrastructure as exit nodes.
-5. Then, save your changes.
+1. 在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 设置页面向下滚动到 **Mullvad VPN**。
+2. 选择 **Configure**。
+3. 选择 **Add devices**。
+4. 选择要把 Mullvad 基础设施用作出口节点的设备。
+5. 然后保存更改。
 
-Each device uses a slot in a Mullvad license. Each Mullvad license will allow up to five devices. Your monthly bill automatically updates as you add or remove devices.
+每台设备占用一个 Mullvad 许可名额。每个 Mullvad 许可最多允许五台设备。你的月度账单会随设备的增减自动更新。
 
-You can revoke a device's access to Mullvad by selecting **Remove**.
+选择 **Remove** 即可撤销设备对 Mullvad 的访问。
 
-#### From the tailnet policy file
+#### 通过 tailnet 策略文件
 
-You can also manage access to Mullvad exit nodes using [node attributes][docs-policy-syntax-nodeattrs] in the [tailnet policy file][docs-tailnet-policy-file].
+你也可以使用[策略文件][docs-tailnet-policy-file]中的[节点属性][docs-policy-syntax-nodeattrs]（node attributes）来管理 Mullvad 出口节点的访问。
 
-1. Go to the **Access controls** page of the admin console.
-2. Add a [`nodeAttrs`][docs-policy-syntax-nodeattrs] section to your tailnet policy file that assigns the `mullvad` attribute to the device you plan to use with Mullvad exit nodes.
+1. 进入管理控制台的 **Access controls** 页面。
+2. 在策略文件中添加 [`nodeAttrs`][docs-policy-syntax-nodeattrs] 部分，把 `mullvad` 属性分配给你计划配合 Mullvad 出口节点使用的设备。
 
-The following example grants access to all devices owned by `joe@example.com`:
+下面的示例向 `joe@example.com` 拥有的所有设备授予权限：
 
 ```json
 "nodeAttrs": [
@@ -117,15 +117,15 @@ The following example grants access to all devices owned by `joe@example.com`:
 ],
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-> **Warning:**
+> **警告：**
 >
-> When you use the tailnet policy file to manage Mullvad access, devices using a Mullvad license do not appear in the [Configure Mullvad VPN](https://console.tailscale.com/admin/settings/general/mullvad) page of the admin console. You must manage Mullvad access through the tailnet policy file.
+> 使用策略文件管理 Mullvad 访问时，使用 Mullvad 许可的设备不会出现在管理控制台的 [Configure Mullvad VPN](https://console.tailscale.com/admin/settings/general/mullvad) 页面中。你必须通过策略文件管理 Mullvad 访问。
 
-##### Share a pool of licenses
+##### 共享许可池
 
-This method lets you assign access to Mullvad for more devices than your Mullvad add-on current plan permits. For example, the following configuration lets all devices in the `mullvad` group to use Mullvad exit nodes:
+这种方法允许你把 Mullvad 访问权限分配给超出当前套餐许可数量的设备。例如，下面的配置让 `mullvad` 群组中的所有设备都能使用 Mullvad 出口节点：
 
 ```json
 "nodeAttrs": [
@@ -138,66 +138,66 @@ This method lets you assign access to Mullvad for more devices than your Mullvad
 ],
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-When you share a license pool in this manner, devices use available Mullvad licenses on a first-come, first-served basis as they connect to the tailnet. **Tailscale allocates Mullvad licenses to devices as they connect to the tailnet, not as they connect to Mullvad servers.** If all paid slots are in use, devices outside the selected quota will not have Mullvad exit nodes as an option.
+以这种方式共享许可池时，设备按先到先得的原则，在连接到 tailnet 时使用可用的 Mullvad 许可。**Tailscale 在设备连接到 tailnet 时分配 Mullvad 许可，而不是在连接 Mullvad 服务器时分配**。如果所有付费名额都被占用，配额之外的设备将无法选择 Mullvad 出口节点。
 
-> **Warning:**
+> **警告：**
 >
-> While it's possible to effectively share a pool of Mullvad licenses, it's important to ensure you have purchased enough Mullvad licenses to cover the needs of your environment.
+> 虽然共享 Mullvad 许可池切实可行，但请务必确保你购买了足够的 Mullvad 许可来满足环境需求。
 >
-> Consider the following example:
+> 考虑以下示例：
 >
-> The *Society of Pangolin Enthusiasts* organization has a tailnet with 100 devices in it, and they've purchased the Mullvad add-on with 50 licenses.
+> *Society of Pangolin Enthusiasts* 组织有一个包含 100 台设备的 tailnet，他们购买了带 50 个许可的 Mullvad 附加服务。
 >
-> Using the tailnet policy file, an administrator set up a `nodeAttrs` policy that lets all 100 devices use Mullvad exit nodes (if they're available). The 100 devices can then effectively share the pool of Mullvad exit nodes, even though there isn't a Mullvad exit node for each device.
+> 管理员使用策略文件设置了一条 `nodeAttrs` 策略，允许全部 100 台设备使用 Mullvad 出口节点（如果有空余名额）。这 100 台设备就能有效共享 Mullvad 出口节点池，即使每个设备没有专属的 Mullvad 出口节点。
 >
-> If 50 devices connect to the tailnet, Tailscale allocates a Mullvad license to each one. The next device (the 51st) won't get a Mullvad license allocated to it. As a result, if that device tries to use a Mullvad exit node, it **won't be able to access any Mullvad exit nodes** until one of the 50 devices releases a Mullvad license.
+> 如果有 50 台设备连接到 tailnet，Tailscale 会为每台分配一个 Mullvad 许可。下一台设备（第 51 台）将不会被分配 Mullvad 许可。结果，如果它尝试使用 Mullvad 出口节点，在这 50 台设备中的某一台释放 Mullvad 许可之前，它**将无法访问任何 Mullvad 出口节点**。
 >
-> You can [release a device's Mullvad license][ar-release-a-license] by removing the device from the tailnet policy file or by removing the device from the Mullvad VPN configuration in the admin console.
+> 你可以[释放设备的 Mullvad 许可][ar-release-a-license]，方法是把该设备从策略文件中移除，或在管理控制台的 Mullvad VPN 配置中移除该设备。
 
-### Use Mullvad exit nodes
+### 使用 Mullvad 出口节点
 
-After you enable Mullvad exit nodes and configure a device for Mullvad access, you can use the exit nodes from devices in your tailnet. Each device must enable an exit node separately. There might be a slight delay before Mullvad exit nodes appear in your Tailscale client.
+启用 Mullvad 出口节点并配置好设备访问权限后，你就可以在 tailnet 中的设备上使用这些出口节点了。每台设备都必须单独启用出口节点。Mullvad 出口节点出现在你的 Tailscale 客户端中之前可能稍有延迟。
 
-> **Tip:**
+> **提示：**
 >
-> You can also [get a suggested Mullvad exit node][docs-suggested-exit-nodes].
+> 你也可以[获取建议的 Mullvad 出口节点][docs-suggested-exit-nodes]。
 
-Instructions differ depending on the client operating system:
+具体步骤因客户端操作系统而异：
 
 #### Android
 
-1. From the  menu, select **Use exit node**.
-2. Choose the Mullvad exit node to use.
-3. (Optional) If you want to allow direct access to your local network when traffic routes through an exit node, select **Allow LAN access**.
+1. 从菜单中选择 **Use exit node**。
+2. 选择要使用的 Mullvad 出口节点。
+3. （可选）如果你希望在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow LAN access**。
 
-> **Note:**
+> **注意：**
 >
-> If you do not select **Allow LAN access**, you might need to configure [DNS][ar-important-dns-considerations]. You can also select **None** to disable using an exit node.
+> 如果你不选择 **Allow LAN access**，可能需要配置 [DNS][ar-important-dns-considerations]。你也可以选择 **None** 来停用出口节点。
 
 #### iOS
 
-1. Tap on **Exit Nodes**, then select **Location Based**.
-2. Select the Mullvad exit node you want to use.
+1. 轻点 **Exit Nodes**，然后选择 **Location Based**。
+2. 选择你想使用的 Mullvad 出口节点。
 
-> **Note:**
+> **注意：**
 >
-> You might need to configure **Override DNS servers** as described in the [DNS][ar-important-dns-considerations] section.
+> 你可能需要按照 [DNS][ar-important-dns-considerations] 一节所述配置 **Override DNS servers**。
 
 #### Linux
 
-You can select an exit node using the [`tailscale set`][docs-cli-set] or the [`tailscale up`][docs-cli-up] command.
+你可以使用 [`tailscale set`][docs-cli-set] 或 [`tailscale up`][docs-cli-up] 命令选择出口节点。
 
-With either command, pass the `--exit-node=` flag with the IP address of the Mullvad exit node. If [MagicDNS][docs-magicdns] is enabled, you can instead pass in the name of the Mullvad exit node.
+无论用哪个命令，都传入带 Mullvad 出口节点 IP 地址的 `--exit-node=` 标志。如果启用了 [MagicDNS][docs-magicdns]，也可以传入 Mullvad 出口节点的名称。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-name-or-ip>
 ```
 
-You can find the exit node's IP address (and name if MagicDNS is enabled) by running [`tailscale exit-node list`][docs-cli-exit-node].
+你可以运行 [`tailscale exit-node list`][docs-cli-exit-node] 查看出口节点的 IP 地址（启用 MagicDNS 时还有名称）。
 
-Set `--exit-node-allow-lan-access` to `true` to allow direct access to your local network when routing traffic through an exit node. If you do not configure this option, you might need to configure [DNS][ar-important-dns-considerations].
+将 `--exit-node-allow-lan-access` 设为 `true`，以便在流量经由出口节点路由时允许直接访问本地网络。如果不配置此选项，可能需要配置 [DNS][ar-important-dns-considerations]。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-name-or-ip> --exit-node-allow-lan-access=true
@@ -205,112 +205,112 @@ sudo tailscale set --exit-node=<exit-node-name-or-ip> --exit-node-allow-lan-acce
 
 #### macOS
 
-1. Open the Tailscale menu and select **Exit Nodes** > **Location Based Exit Nodes** > **Countries**. (If you are running a Tailscale client version earlier than v1.60.0, select **Use exit node** for the Mullvad option.)
-2. Select the Mullvad exit node you want to use.
+1. 打开 Tailscale 菜单，依次选择 **Exit Nodes** > **Location Based Exit Nodes** > **Countries**。（如果你运行的 Tailscale 客户端版本低于 v1.60.0，Mullvad 选项在 **Use exit node** 下选择。）
+2. 选择你想使用的 Mullvad 出口节点。
 
-If options do not appear in the **Countries** menu, ensure that the Mullvad add-on has been [enabled][ar-configure-devices-for-mullvad-access] for the Mac that you are using.
+如果 **Countries** 菜单中没有出现选项，请确认你正在使用的 Mac 已[启用][ar-configure-devices-for-mullvad-access] Mullvad 附加服务。
 
-If you want to allow direct access to your local network when routing traffic through an exit node, select **Allow Local Network Access**. If you do not select **Allow Local Network Access**, you might need to configure [DNS][ar-important-dns-considerations].
+如果你希望在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow Local Network Access**。如果不选择 **Allow Local Network Access**，可能需要配置 [DNS][ar-important-dns-considerations]。
 
 #### tvOS
 
-> **Note:**
+> **注意：**
 >
-> This option is only available in the Tailscale app on tvOS if you've already purchased Mullvad exit nodes for your tailnet.
+> 只有当你已为 tailnet 购买 Mullvad 出口节点后，tvOS 上的 Tailscale 应用才提供此选项。
 
-You can configure your Apple TV to use a Mullvad exit node (location-based) instead of using another tailnet device as an exit node. For more information on how to set this up, refer to [Apple TV][docs-appletv-use-mullvad-exit-node].
+你可以将 Apple TV 配置为使用 Mullvad 出口节点（基于位置），而不是使用 tailnet 中的另一台设备作为出口节点。有关设置方法的更多信息，参见 [Apple TV][docs-appletv-use-mullvad-exit-node]。
 
 #### Windows
 
-1. Open the Tailscale menu and select **Exit Nodes** > **Location Based Exit Nodes** > **Location Based**.
-2. Select the Mullvad exit node you want to use.
+1. 打开 Tailscale 菜单，依次选择 **Exit Nodes** > **Location Based Exit Nodes** > **Location Based**。
+2. 选择你想使用的 Mullvad 出口节点。
 
-If you want to allow direct access to your local network when routing traffic through an exit node, select **Allow local network access**.
+如果你希望在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow local network access**。
 
-### Disable Mullvad on a device
+### 在设备上停用 Mullvad
 
-> **Note:**
+> **注意：**
 >
-> You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to disable Mullvad exit nodes on a device.
+> 你必须是 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能在设备上停用 Mullvad 出口节点。
 
-You can revoke a device's access to Mullvad exit nodes through the admin console or the tailnet policy file. Use the same method you used to grant access.
+你可以通过管理控制台或策略文件撤销设备对 Mullvad 出口节点的访问。请使用你当初授予权限时的同一方法。
 
-To revoke a device's access to Mullvad exit nodes from the admin console:
+从管理控制台撤销设备对 Mullvad 出口节点的访问：
 
-1. Open the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console.
-2. Go to the **Mullvad VPN** section and select **Configure**.
-3. Select **Remove** next to the device you want to remove, then select **Save**.
+1. 打开管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 设置页面。
+2. 进入 **Mullvad VPN** 区域并选择 **Configure**。
+3. 在要移除的设备旁选择 **Remove**，然后选择 **Save**。
 
-To revoke a device's access to Mullvad exit nodes from the tailnet policy file:
+从策略文件撤销设备对 Mullvad 出口节点的访问：
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Update the `nodeAttrs` section of your tailnet policy file to exclude the `mullvad` attribute from the device.
+1. 进入管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 更新策略文件中的 `nodeAttrs` 部分，把 `mullvad` 属性从该设备上排除。
 
-> **Warning:**
+> **警告：**
 >
-> The exact way to exclude a device's access depends on how you configured its access. For example, if you granted a user explicit access using an email address, you can remove the line that assigns the `mullvad` attribute to that user. However, if you granted access using [groups][docs-targets-groups], [tags][docs-targets-groups], or other means, the process might involve more steps (such as removing the device from a group).
+> 排除设备访问的具体做法取决于你当初如何配置其访问。例如，如果你用邮箱地址向某用户显式授予了访问权限，可以删除将该用户的 `mullvad` 属性分配出去的那一行。但如果你是通过[群组][docs-targets-groups]、[标签][docs-targets-groups]或其他方式授予的访问权限，流程可能涉及更多步骤（例如把设备从群组中移除）。
 
-### Remove the Mullvad add-on
+### 移除 Mullvad 附加服务
 
-> **Note:**
+> **注意：**
 >
-> You must be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) of a tailnet to remove the Mullvad add-on.
+> 你必须是 tailnet 的 [Owner、Admin 或 Billing admin](/docs/reference/user-roles) 才能移除 Mullvad 附加服务。
 
-You can remove the Mullvad VPN add-on from the admin console.
+你可以在管理控制台中移除 Mullvad VPN 附加服务。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select **Manage add-ons**.
-3. Select **Mullvad VPN** > **Remove add-on**.
+1. 进入管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Manage add-ons**。
+3. 选择 **Mullvad VPN** > **Remove add-on**。
 
-### Migrate from Mullvad to Tailscale
+### 从 Mullvad 迁移到 Tailscale
 
-If you're migrating from using Mullvad VPN to Tailscale's Mullvad add-on, you might need to disable Mullvad's settings to block connections without a VPN.
+如果你从使用 Mullvad VPN 迁移到 Tailscale 的 Mullvad 附加服务，可能需要禁用 Mullvad 中阻止无 VPN 连接的设置。
 
-Before migrating from Mullvad to Tailscale's Mullvad add-on:
+从 Mullvad 迁移到 Tailscale 的 Mullvad 附加服务之前：
 
-1. Go to the Mullvad VPN application.
-2. Disable the Mullvad VPN.
-3. Turn off the **Block connections without VPN** setting.
+1. 打开 Mullvad VPN 应用。
+2. 停用 Mullvad VPN。
+3. 关闭 **Block connections without VPN** 设置。
 
-Devices that are registering with Mullvad for the first time might experience a delay when synchronizing with all the Mullvad exit nodes. The synchronization process can take up to two minutes when you first use Mullvad on a particular device or if you have not used it for several weeks. With regular usage, activating Mullvad is instantaneous.
+首次向 Mullvad 注册的设备在与所有 Mullvad 出口节点同步时可能出现延迟。首次在特定设备上使用 Mullvad 或连续数周未使用时，同步过程可能长达两分钟。正常使用情况下，Mullvad 的激活是即时的。
 
-### Sign Mullvad exit nodes
+### 签署 Mullvad 出口节点
 
-If you use [Tailnet Lock][docs-tailnet-lock] with the Mullvad VPN add-on, you must sign each Mullvad exit node. Additionally, the device you use to sign each Mullvad exit node must have access to the Mullvad exit nodes (it must have a valid Mullvad license). Otherwise, the Mullvad exit nodes are not included in the signing device's netmap and when it runs [`tailscale lock`][docs-cli-tailscale-lock], the list won't include the unsigned Mullvad exit nodes.
+如果你将 [Tailnet Lock][docs-tailnet-lock] 与 Mullvad VPN 附加服务配合使用，你必须为每个 Mullvad 出口节点签名。此外，用于签名的设备必须能访问这些 Mullvad 出口节点（即必须持有有效的 Mullvad 许可）。否则，Mullvad 出口节点不会包含在签名设备的 netmap 中，它运行 [`tailscale lock`][docs-cli-tailscale-lock] 时，列表里也不会包含未签名的 Mullvad 出口节点。
 
-This is an example of signing a single Mullvad exit node:
+以下是为单个 Mullvad 出口节点签名的示例：
 
-> **Note:**
+> **注意：**
 >
-> The following command has a `jq` dependency. You may need to install `jq` on your device.
+> 以下命令依赖 `jq`。你可能需要在设备上安装 `jq`。
 
-1. Acquire the `NodeKey` of your chosen Mullvad exit node.
+1. 获取你选定的 Mullvad 出口节点的 `NodeKey`。
 
    ```shell
    tailscale lock status --json | jq '[.FilteredPeers[] | select(.DNSName | contains("mullvad.ts.net")) | {DNSName, NodeKey: .NodeKey}] | sort_by(.DNSName)'
    ```
 
-2. Use `tailscale lock` to `sign` the exit node.
+2. 使用 `tailscale lock` 对出口节点执行 `sign`。
 
    ```shell
    tailscale lock sign nodekey <nodekey-of-exit-node>
    ```
 
-This `mullvad-script` can be used on Linux. macOS, and Windows devices to automate the signing of multiple Mullvad exit nodes with certain country codes:
+这个 `mullvad-script` 可以在 Linux、macOS 和 Windows 设备上用来自动为特定国家代码的多个 Mullvad 出口节点签名：
 
 [`https://github.com/tailscale-support/mullvad-script`][xt-gh-tailscale-support-mullvad-script]
 
-Either provide a specific two letter country code or `..` (two periods) to sign all Mullvad exit nodes. Refer to the Mullvad [Servers][xt-mullvad-servers] page for the list of supported countries.
+你可以提供特定的两位字母国家代码，或提供 `..`（两个句点）来为所有 Mullvad 出口节点签名。支持的国家列表参见 Mullvad 的 [Servers][xt-mullvad-servers] 页面。
 
-[ar-configure-devices-for-mullvad-access]: #enable-mullvad-exit-nodes
+[ar-configure-devices-for-mullvad-access]: #启用-mullvad-出口节点
 
-[ar-important-dns-considerations]: #important-dns-considerations
+[ar-important-dns-considerations]: #重要的-dns-注意事项
 
-[ar-manage-mullvad-access]: #manage-mullvad-access
+[ar-manage-mullvad-access]: #管理-mullvad-访问
 
-[ar-release-a-license]: #disable-mullvad-on-a-device
+[ar-release-a-license]: #在设备上停用-mullvad
 
-[ar-sign-mullvad-exit-nodes]: #sign-mullvad-exit-nodes
+[ar-sign-mullvad-exit-nodes]: #签署-mullvad-出口节点
 
 [co-pricing]: https://tailscale.com/pricing
 

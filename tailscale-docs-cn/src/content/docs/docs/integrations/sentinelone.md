@@ -1,111 +1,111 @@
 ---
-title: "Restrict device access with SentinelOne"
-description: "Use signals reported by SentinelOne agents as device posture attributes for use in access rules."
+title: "使用 SentinelOne 限制设备访问"
+description: "将 SentinelOne 代理上报的信号用作设备态势属性，以便在访问规则中使用。"
 ---
 
-Last validated Jan 28, 2026
+最后验证于 Jan 28, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此集成适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-SentinelOne collects a series of signals from its agents that can be used to determine the security posture of a device. Tailscale can fetch these signals from SentinelOne and use them as device posture attributes in access rules, which can allow organizations to grant access to sensitive resources only to devices that have a high enough level of trust.
+SentinelOne 会从其代理（agent）收集一系列信号，可用于判定设备的安全态势。Tailscale 可以从 SentinelOne 获取这些信号，并将它们用作访问规则中的设备态势属性，让组织只向信任级别足够高的设备授予对敏感资源的访问权限。
 
-You can achieve this Tailscale's [device posture management][docs-device-posture] features:
+你可以借助 Tailscale 的[设备态势管理][docs-device-posture]功能来实现这一点：
 
-* SentinelOne posture integration, which synchronizes signals from SentinelOne to device posture attributes in Tailscale.
-* [Device Identity Collection][docs-device-identity-collection], which collects identifiers (for example, serial numbers), used to match devices in Tailscale to devices in SentinelOne.
-* [Posture conditions in access rules][docs-device-posture-postures-and-conditions], which lets you configure access restrictions based on device attributes.
+* SentinelOne 态势集成（posture integration），将信号从 SentinelOne 同步到 Tailscale 中的设备态势属性。
+* [Device Identity Collection][docs-device-identity-collection]，收集标识符（例如序列号），用于将 Tailscale 中的设备与 SentinelOne 中的设备进行匹配。
+* [访问规则中的态势条件][docs-device-posture-postures-and-conditions]，让你可以基于设备属性配置访问限制。
 
-This guide explains how to enable Device Identity collection for your Tailscale network (tailnet) and configure SentinelOne posture integration.
+本指南介绍如何为你的 Tailscale 网络（即 tailnet）启用 Device Identity Collection，以及如何配置 SentinelOne 态势集成。
 
-## What is SentinelOne posture integration?
+## 什么是 SentinelOne 态势集成？
 
-The SentinelOne integration syncs data between SentinelOne and Tailscale on a recurring schedule.
-During each sync, Tailscale performs the following actions:
+SentinelOne 集成会按周期性计划在 SentinelOne 与 Tailscale 之间同步数据。
+每次同步时，Tailscale 会执行以下操作：
 
-1. Fetches a list of agents and their reported data from your SentinelOne account.
-2. Matches SentinelOne agents to devices in your tailnet based on serial numbers.
-3. Writes the SentinelOne data to device posture attributes on each matched device.
+1. 从你的 SentinelOne 账户获取代理列表及其上报的数据。
+2. 根据序列号将 SentinelOne 代理与 tailnet 中的设备进行匹配。
+3. 将 SentinelOne 数据写入每台匹配设备上的设备态势属性。
 
-The integration writes the following device posture attributes to matched devices:
+该集成会将以下设备态势属性写入匹配的设备：
 
 \[Missing snippet: attributes-sentinel-one.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you can set up the SentinelOne integration, make sure you have:
+在设置 SentinelOne 集成之前，请确保你已具备：
 
-* [Device Identity Collection][docs-device-identity-collection] enabled, and devices in your tailnet are reporting identifiers.
-* A SentinelOne account for which you have permission to create an API token.
+* 已启用 [Device Identity Collection][docs-device-identity-collection]，且 tailnet 中的设备正在上报标识符。
+* 一个你有权限创建 API 令牌（API token）的 SentinelOne 账户。
 
-## Create SentinelOne Service User and API Token
+## 创建 SentinelOne Service User 和 API 令牌
 
-To authenticate your SentinelOne account with Tailscale, you'll need to create a SentinelOne User and API token.
-The SentinelOne integration uses these to fetch a list of agents and their data from SentinelOne.
+要让 Tailscale 对你的 SentinelOne 账户进行身份验证，你需要创建一个 SentinelOne 用户和 API 令牌。
+SentinelOne 集成会用它们从 SentinelOne 获取代理列表及其数据。
 
-To create a SentinelOne User and API token:
+创建 SentinelOne 用户和 API 令牌的步骤如下：
 
-1. In SentinelOne, in the left-hand panel, select **Settings**.
+1. 在 SentinelOne 的左侧面板中选择 **Settings**。
 
-2. From the top menu, select **Users** and then in the left-hand panel, select **Service Users**.
+2. 在顶部菜单中选择 **Users**，然后在左侧面板中选择 **Service Users**。
 
-3. Select **Actions** and then select **Create New Service User**.
+3. 选择 **Actions**，然后选择 **Create New Service User**。
 
-4. Add a name and expiration date for the Service User and select **Next**.
+4. 为 Service User 添加名称和过期日期，然后选择 **Next**。
 
-   *（图：The SentinelOne Create New Service User dialog）*
+   *（图：SentinelOne 的 Create New Service User 对话框）*
 
-5. Choose the site or account that the Service User will have access to and select **Create**.
+5. 选择该 Service User 将有权访问的站点或账户，然后选择 **Create**。
 
-6. The **API Token** will be shown once, make sure to copy it for use later.
+6. **API Token** 只会显示一次，请务必复制以备后用。
 
-Also make a note of the **Base URL** (for example, `https://example.sentinelone.net/`).
+同时请记下 **Base URL**（例如 `https://example.sentinelone.net/`）。
 
-## Configure SentinelOne posture integration
+## 配置 SentinelOne 态势集成
 
-To configure Tailscale to fetch data about agents from SentinelOne:
+若要配置 Tailscale 从 SentinelOne 获取代理数据：
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
 
-2. Under the **Device Posture Integrations** section, locate the SentinelOne integration, then select **Connect**.
+2. 在 **Device Posture Integrations** 部分找到 SentinelOne 集成，然后选择 **Connect**。
 
-3. Enter your **SentinelOne URL**, the URL you use to access the SentinelOne console.
+3. 输入你的 **SentinelOne URL**，即你用来访问 SentinelOne 控制台的 URL。
 
-4. Enter your **API Token**.
+4. 输入你的 **API Token**。
 
-   *（图：The configuration screen for connecting to SentinelOne from the Tailscale admin console.）*
+   *（图：从 Tailscale 管理控制台连接 SentinelOne 的配置界面。）*
 
-5. Select **Connect to SentinelOne**.
+5. 选择 **Connect to SentinelOne**。
 
-## Review the integration status
+## 查看集成状态
 
-Next, check to ensure the SentinelOne integration has run successfully.
+接下来，检查 SentinelOne 集成是否已成功运行。
 
-1. Go to the **Device Posture Integrations** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page.
-2. Locate the SentinelOne integration under the **Integrations** section.
+1. 前往 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Device Posture Integrations** 部分。
+2. 在 **Integrations** 部分下找到 SentinelOne 集成。
 
-After the SentinelOne integration runs successfully, it shows the time of the most recent sync, the number of synced devices, and any errors that occurred while synchronizing.
+SentinelOne 集成成功运行后，会显示最近一次同步的时间、已同步的设备数量，以及同步期间发生的任何错误。
 
-*（图：Integrations: SentinelOne: Last sync 4 minutes ago, 1 match between 2 Tailscale devices with identifies and 3 SentinelOne agents.）*
+*（图：Integrations: SentinelOne：最近同步于 4 分钟前，2 台有标识符的 Tailscale 设备与 3 个 SentinelOne 代理之间匹配到 1 台。）*
 
-## Check device attributes
+## 检查设备属性
 
-After you set up the SentinelOne integration, you can confirm that Tailscale is writing the new device attributes for your SentinelOne devices from the Tailscale admin console.
+设置 SentinelOne 集成后，你可以在 Tailscale 管理控制台中确认 Tailscale 是否正在为你的 SentinelOne 设备写入新的设备属性。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-2. Select a device to inspect.
-3. The device attributes for the device are in the **Machine Details** section. This should include the set of `sentinelOne:` attributes listed previously.
+1. 打开 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择一台要查看的设备。
+3. 该设备的设备属性位于 **Machine Details** 部分。其中应包含前面列出的那组 `sentinelOne:` 属性。
 
-*（图：View of the machine attributes in the Machines page.）*
+*（图：Machines 页面中的机器属性视图。）*
 
-> **Tip:**
+> **提示：**
 >
-> You can also check device attributes using the [Tailscale API][co-device-posture-get-via-api].
+> 你也可以使用 [Tailscale API][co-device-posture-get-via-api] 检查设备属性。
 
-## Adjust Tailscale access rules
+## 调整 Tailscale 访问规则
 
-After you set up the SentinelOne posture integration, and your devices have device posture attributes that reflect their signals as reported by SentinelOne, you can use those device posture attributes as part of your posture rules.
+设置好 SentinelOne 态势集成、且你的设备拥有反映 SentinelOne 上报信号的设备态势属性之后，就可以把这些设备态势属性用作态势规则的一部分。
 
-For example, to only permit access to `tag:production` from devices that have an active SentinelOne agent, a good operational state, and have zero active threats, you can create a new posture and use it as part of a corresponding access rule:
+例如，若要只允许来自装有活跃 SentinelOne 代理、运行状态良好且活跃威胁数为零的设备访问 `tag:production`，你可以创建一个新的 posture（态势），并将其用作相应访问规则的一部分：
 
 ```json
 "postures": {
@@ -128,9 +128,9 @@ For example, to only permit access to `tag:production` from devices that have an
 
 \[Missing snippet: sync-schedule.mdx]
 
-## Limitations
+## 限制
 
-* We have observed that SentinelOne does not report serial numbers for some machines running Linux. Without serial number details, Tailscale will not be able to populate device posture attributes for such machines.
+* 我们观察到，SentinelOne 不会为某些运行 Linux 的机器上报序列号。缺少序列号信息时，Tailscale 将无法为这些机器填充设备态势属性。
 
 \[Missing snippet: auditlogs-integrations.mdx]
 

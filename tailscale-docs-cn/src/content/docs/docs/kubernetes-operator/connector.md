@@ -1,27 +1,27 @@
 ---
-title: "Host Tailscale resources in Kubernetes with Connector"
-description: "Deploy subnet routers and exit nodes on Kubernetes using the Connector resource"
+title: "使用 Connector 在 Kubernetes 中承载 Tailscale 资源"
+description: "使用 Connector 资源在 Kubernetes 上部署子网路由器和出口节点"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-A Connector is a [Custom Resource Definition (CRD)][xt-crd] provided by the Tailscale Kubernetes Operator. It lets you deploy a Tailscale device inside your cluster that bridges your tailnet and your cluster infrastructure.
+Connector 是 Tailscale Kubernetes Operator 提供的[自定义资源定义（CRD）][xt-crd]。它让你可以在集群内部署一个 Tailscale 设备，桥接你的 tailnet 与集群基础设施。
 
-## Connector capabilities
+## Connector 的能力
 
-The Connector resource lets a single Tailscale device serve one or more of the following roles:
+Connector 资源让单个 Tailscale 设备可以承担以下一个或多个角色：
 
-* **Subnet router**: Advertises routes to your cluster's internal networks, such as Pod and Service CIDRs, to your tailnet. [4via6 subnet routes][docs-4via6] are also supported.
-* **Exit node**: Routes all internet-bound traffic from other tailnet devices through your Kubernetes cluster. Use this to maintain a consistent public IP address or to route traffic through a specific geographic region.
-* **App connector**: Provides identity-aware access to public SaaS applications through your tailnet, centralizing egress and security policies.
+* **子网路由器**：向你的 tailnet 通告集群内部网络的路由，例如 Pod 和 Service CIDR。也支持 [4via6 子网路由][docs-4via6]。
+* **出口节点**：将其他 tailnet 设备的所有出站互联网流量经由你的 Kubernetes 集群路由。可用于维持一致的公网 IP 地址，或让流量经由特定地理区域。
+* **应用连接器**：通过你的 tailnet 提供对公共 SaaS 应用程序的身份感知访问，集中管理出站与安全策略。
 
-> **Note:**
+> **注意：**
 >
-> A single Connector can act as both a subnet router and an exit node simultaneously.
+> 单个 Connector 可以同时充当子网路由器和出口节点。
 
-## Example Connector configuration
+## Connector 配置示例
 
-The following manifest creates a subnet router that advertises the cluster's internal Pod CIDR:
+以下清单创建一个通告集群内部 Pod CIDR 的子网路由器：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -34,10 +34,10 @@ spec:
       - "10.40.0.0/14"
 ```
 
-## Further exploration
+## 进一步探索
 
-* [Deploy exit nodes and subnet routers on Kubernetes][docs-deploy-subnet-router] using the Connector custom resource.
-* [Deploy app connectors on Kubernetes][docs-deploy-app-connector] to provide identity-aware access to public SaaS applications.
+* 使用 Connector 自定义资源[在 Kubernetes 上部署出口节点和子网路由器][docs-deploy-subnet-router]。
+* [在 Kubernetes 上部署应用连接器][docs-deploy-app-connector]，为公共 SaaS 应用程序提供身份感知访问。
 
 [docs-4via6]: /docs/features/subnet-routers/4via6-subnets
 

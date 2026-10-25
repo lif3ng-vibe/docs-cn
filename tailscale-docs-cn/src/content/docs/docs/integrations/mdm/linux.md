@@ -1,46 +1,46 @@
 ---
-title: "Deploy Tailscale on Linux using MDM"
-description: "This page contains technical information useful to system administrators deploying Tailscale on Linux in a corporate environment."
+title: "使用 MDM 在 Linux 上部署 Tailscale"
+description: "本页包含对在企业环境中于 Linux 上部署 Tailscale 的系统管理员有用的技术信息。"
 ---
 
-Last validated Aug 11, 2026
+最后验证于 Aug 11, 2026
 
-This page contains technical information useful to system administrators deploying Tailscale on Linux in a corporate environment.
+本页包含对在企业环境中于 Linux 上部署 Tailscale 的系统管理员有用的技术信息。
 
-Unlike other platforms, Linux does not have a single vendor-provided mobile device management (MDM) framework. Instead, administrators typically manage fleets of Linux devices using configuration management tools such as Ansible, Puppet, or Chef, or by baking configuration into a golden image used for provisioning. Tailscale supports this workflow on Linux with a JSON policy file that you can deploy using whichever configuration management tool you already use.
+与其他平台不同，Linux 没有统一的由厂商提供的移动设备管理（MDM）框架。管理员通常使用 Ansible、Puppet 或 Chef 等配置管理工具来管理成批的 Linux 设备，或者将配置预先烧录进用于供应（provisioning）的黄金镜像中。Tailscale 在 Linux 上通过一个 JSON 策略文件支持这种工作流，你可以用已有的任意配置管理工具来部署它。
 
-> **Note:**
+> **注意：**
 >
-> System policies on Linux require Tailscale v1.102.0 or later. The feature is not available on earlier versions.
+> Linux 上的系统策略要求 Tailscale v1.102.0 或更高版本。更早的版本不支持此功能。
 
-## Installing Tailscale on Linux
+## 在 Linux 上安装 Tailscale
 
-Refer to our [Linux installation instructions][docs-install-linux] for the recommended way to install Tailscale on your distribution.
+有关在你的发行版上安装 Tailscale 的推荐方式，请参阅我们的 [Linux 安装说明][docs-install-linux]。
 
-## Using Tailscale system policies on Linux
+## 在 Linux 上使用 Tailscale 系统策略
 
-The `tailscaled` daemon reads system policies from a JSON file on disk. By default, this file is located at `/etc/tailscale/syspolicy.json`. You can deploy this file to your managed Linux devices using your preferred configuration management tool.
+`tailscaled` 守护进程会从磁盘上的一个 JSON 文件读取系统策略。默认情况下，该文件位于 `/etc/tailscale/syspolicy.json`。你可以使用自己偏好的配置管理工具将此文件部署到受管的 Linux 设备上。
 
-> **Note:**
+> **注意：**
 >
-> You can change the location of the policy file, or disable this feature entirely, using the [`--syspolicy-file`][docs-tailscaled-flags] flag when starting `tailscaled`. Passing an empty string disables the policy file loader.
+> 你可以在启动 `tailscaled` 时使用 [`--syspolicy-file`][docs-tailscaled-flags] 标志来更改策略文件的位置，或完全禁用此功能。传入空字符串会禁用策略文件加载器。
 
-Refer to our [system policies][docs-mdm-keys] page for the full list of configurable settings.
+请参阅我们的[系统策略][docs-mdm-keys]页面，获取可配置设置的完整列表。
 
-### File format
+### 文件格式
 
-The policy file uses JSON or [HuJSON][xt-hujson] format. Each policy key expects a specific value type:
+策略文件采用 JSON 或 [HuJSON][xt-hujson] 格式。每个策略键都要求特定的值类型：
 
-* **String** settings take a JSON string, for example `"ControlURL": "https://controlplane.example.com"`.
-* **Boolean** settings take a JSON boolean, for example `"AlwaysOn": true`.
-* **Integer** settings take a JSON number, for example `"KeyExpirationNotice": 86400`.
-* **String array** settings take a JSON array of strings, for example `"AllowedSuggestedExitNodes": ["node-a", "node-b"]`.
-* **Duration** settings take a string in the format accepted by [Go's `time.ParseDuration`][xt-go-parse-duration], for example `"ReconnectAfter": "24h"`.
-* Some settings only accept specific enumerated string values, such as `always`, `never`, or `user-decides` for preference settings, or `show` or `hide` for visibility settings.
+* **字符串**（String）设置接受 JSON 字符串，例如 `"ControlURL": "https://controlplane.example.com"`。
+* **布尔值**（Boolean）设置接受 JSON 布尔值，例如 `"AlwaysOn": true`。
+* **整数**（Integer）设置接受 JSON 数字，例如 `"KeyExpirationNotice": 86400`。
+* **字符串数组**（String array）设置接受 JSON 字符串数组，例如 `"AllowedSuggestedExitNodes": ["node-a", "node-b"]`。
+* **时长**（Duration）设置接受 [Go 的 `time.ParseDuration`][xt-go-parse-duration] 所接受格式的字符串，例如 `"ReconnectAfter": "24h"`。
+* 某些设置只接受特定的枚举字符串值，例如偏好设置中的 `always`、`never` 或 `user-decides`，可见性设置中的 `show` 或 `hide`。
 
-#### Example
+#### 示例
 
-For example, the following policy file enforces an auth key, restricts the device to a specific tailnet, restricts suggested exit nodes, and requires the device to accept subnet routes and DNS settings from the tailnet:
+例如，下面的策略文件强制使用认证密钥（auth key）、将设备限制到特定 tailnet、限制建议的出口节点，并要求设备接受来自 tailnet 的子网路由和 DNS 设置：
 
 ```json
 {

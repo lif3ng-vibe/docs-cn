@@ -1,103 +1,103 @@
 ---
-title: "Expose cluster workloads to your tailnet with Ingress"
-description: "Expose Kubernetes workloads to your tailnet or the internet using the Tailscale Kubernetes Operator."
+title: "使用 Ingress 将集群工作负载暴露给你的 tailnet"
+description: "使用 Tailscale Kubernetes Operator 将 Kubernetes 工作负载暴露给你的 tailnet 或互联网。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-Cluster ingress lets you expose cluster workloads to your tailnet, making them accessible to other devices on your Tailscale network. The operator deploys ingress proxy `Pods` that forward traffic to backend `Services`.
+集群入站（ingress）让你可以将集群工作负载暴露给 tailnet，使 Tailscale 网络上的其他设备能够访问它们。operator 会部署入站代理 `Pod`，将流量转发到后端 `Services`。
 
-You can expose Kubernetes `Services` to your tailnet at two different layers:
+你可以将 Kubernetes `Services` 在两个不同的层暴露给你的 tailnet：
 
-* [Layer 7 (HTTP/HTTPS)][ar-layer-7-ingress] for exposing web applications and APIs.
-* [Layer 3 (TCP/UDP)][ar-layer-3-ingress] for exposing services like databases or message queues.
+* [第 7 层（HTTP/HTTPS）][ar-layer-7-ingress]，用于暴露 Web 应用和 API。
+* [第 3 层（TCP/UDP）][ar-layer-3-ingress]，用于暴露数据库或消息队列等服务。
 
-At either layer, you can run ingress in standalone mode using a single proxy pod, or in [high availability][ar-ha-ingress] mode using a [ProxyGroup][docs-proxygroup] with multiple replicas. Tailscale recommends high availability mode for production use cases.
+在任一层，你都可以使用单个代理 pod 以独立模式运行入站，也可以使用具有多个副本的 [ProxyGroup][docs-proxygroup] 以[高可用][ar-ha-ingress]模式运行。生产环境 Tailscale 建议使用高可用模式。
 
-This page explains the ingress architecture for both layers, proxy modes, and TLS certificate provisioning.
+本页介绍这两层的入站架构、代理模式以及 TLS 证书的预置方式。
 
-> **Note:**
+> **注意：**
 >
-> Ingress does not expose services to the public internet by default. For more information, refer to [Expose a Kubernetes cluster workload to the public internet using Tailscale Funnel][docs-expose-internet].
+> Ingress 默认不会将服务暴露到公共互联网。更多信息请参阅[使用 Tailscale Funnel 将 Kubernetes 集群工作负载暴露到公共互联网][docs-expose-internet]。
 
-## Standalone layer 7 ingress for HTTP and HTTPS
+## 面向 HTTP 和 HTTPS 的独立 L7 入站
 
-Layer 7 `Ingress` lets you expose web applications and APIs.
+第 7 层 `Ingress` 让你可以暴露 Web 应用和 API。
 
-You configure this with an `Ingress` object with `ingressClassName: tailscale`. The proxy uses [Tailscale Serve][docs-serve] to accept traffic.
+你通过一个带有 `ingressClassName: tailscale` 的 `Ingress` 对象来配置。代理使用 [Tailscale Serve][docs-serve] 接收流量。
 
-On creation of an `Ingress`, the operator:
+创建 `Ingress` 时，operator 会：
 
-* Creates a (combined) configuration and state `Secret`.
-* Creates an ingress proxy `Pod` (single replica `StatefulSet`) that forwards traffic, letting devices anywhere in the tailnet access the `Ingress`.
-* Automatically provisions a secure **MagicDNS** name with a [valid **TLS certificate** for each Ingress][ar-tls-certificates].
+* 创建一个（合并的）配置与状态 `Secret`。
+* 创建一个转发流量的入站代理 `Pod`（单副本 `StatefulSet`），让 tailnet 中任意位置的设备都能访问该 `Ingress`。
+* 自动为每个 Ingress 预置一个安全的 **MagicDNS** 名称和一张[有效的 **TLS 证书**][ar-tls-certificates]。
 
-*（图：Architecture diagram showing the Tailscale Kubernetes Operator creating a Secret and StatefulSet for a Layer 7 ingress proxy. The proxy pod forwards traffic from a tailnet client to a Kubernetes Service.）*
+*（图：Tailscale Kubernetes Operator 为 L7 入站代理创建 Secret 和 StatefulSet 的架构图。代理 pod 将来自 tailnet 客户端的流量转发到 Kubernetes Service。）*
 
-L7 `Ingress` can also be used with [High availability][ar-ha-ingress] configuration.
+L7 `Ingress` 也可以搭配[高可用][ar-ha-ingress]配置使用。
 
-For more information about exposing a layer 7 workload, refer to [Expose a cluster workload to your tailnet at layer 7][docs-expose-l7].
+有关暴露第 7 层工作负载的更多信息，请参阅[在第 7 层将集群工作负载暴露给你的 tailnet][docs-expose-l7]。
 
-## Standalone layer 3 ingress for TCP/UDP
+## 独立 L3 入站（TCP/UDP）
 
-You can use Layer 3 ingress to expose services like databases or message queues.
+你可以使用第 3 层入站暴露数据库或消息队列等服务。
 
-You configure this with a `Service` object that selects the application's pods, using either:
+你通过一个选择应用 pod 的 `Service` 对象来配置，方式为以下二者之一：
 
-* The annotation `tailscale.com/expose: "true"`.
-* `.spec.type` set to `LoadBalancer` and `.spec.loadBalancerClass` set to `tailscale`.
+* 注解 `tailscale.com/expose: "true"`。
+* 将 `.spec.type` 设为 `LoadBalancer`，并将 `.spec.loadBalancerClass` 设为 `tailscale`。
 
-The operator creates:
+operator 会创建：
 
-* A combined configuration and state `Secret`.
-* An ingress proxy `Pod` using a single replica `StatefulSet` that forwards traffic, letting devices anywhere in the tailnet access the `Service`.
+* 一个合并的配置与状态 `Secret`。
+* 一个使用单副本 `StatefulSet`、转发流量的入站代理 `Pod`，让 tailnet 中任意位置的设备都能访问该 `Service`。
 
-This Pod uses `iptables` or `nftables` rules to DNAT traffic bound for the proxy's tailnet IP address to the `Service`'s internal cluster IP address instead.
+这个 Pod 使用 `iptables` 或 `nftables` 规则，将发往代理 tailnet IP 地址的流量 DNAT 到 `Service` 的内部集群 IP 地址。
 
-*（图：Architecture diagram showing the Tailscale Kubernetes Operator creating a Secret and StatefulSet for a Layer 3 ingress proxy. The proxy pod forwards traffic from a tailnet client to a Kubernetes Service.）*
+*（图：Tailscale Kubernetes Operator 为 L3 入站代理创建 Secret 和 StatefulSet 的架构图。代理 pod 将来自 tailnet 客户端的流量转发到 Kubernetes Service。）*
 
-You can use L3 `Ingress` with [high availability][ar-ha-ingress] configuration, and on new or existing Services.
+L3 `Ingress` 可以搭配[高可用][ar-ha-ingress]配置使用，并可作用于新建或已有的 Service。
 
-For more information about exposing a layer 3 workload, refer to [Expose a cluster workload to your tailnet at layer 3][docs-expose-l3].
+有关暴露第 3 层工作负载的更多信息，请参阅[在第 3 层将集群工作负载暴露给你的 tailnet][docs-expose-l3]。
 
-## High availability (HA) ingress
+## 高可用（HA）入站
 
-A high availability L7 or L3 `Ingress` is similar to the standalone variant, but uses a [ProxyGroup][docs-proxygroup] to deploy multiple replicas. This lets you:
+高可用的 L7 或 L3 `Ingress` 与独立版本类似，但使用 [ProxyGroup][docs-proxygroup] 部署多个副本。这让你可以：
 
-* Expose a Kubernetes `Service` or `Ingress` resource to your tailnet through multiple active ingress proxies, to prevent downtime during proxy `Pod` restarts.
-* Expose many `Service` and `Ingress` resources to your tailnet using a smaller number of proxy `Pods`.
+* 通过多个活跃的入站代理将 Kubernetes `Service` 或 `Ingress` 资源暴露给你的 tailnet，避免代理 `Pod` 重启期间服务中断。
+* 用较少数量的代理 `Pods` 向 tailnet 暴露大量 `Service` 和 `Ingress` 资源。
 
-You configure HA by adding a `tailscale.com/proxy-group` annotation to the `Ingress` or `Service`.
+你通过在 `Ingress` 或 `Service` 上添加 `tailscale.com/proxy-group` 注解来配置 HA。
 
-On creation of an `Ingress` or `Service`, the operator:
+创建 `Ingress` 或 `Service` 时，operator 会：
 
-* Configures a configuration `Secret` per replica.
-* Configures a `ConfigMap` with either Tailscale Serve configuration (L7) or `iptables`/`nftables` DNAT rules (L3).
-* Configures the `Ingress` `ProxyGroup`, which forwards traffic, letting devices anywhere in the tailnet access the `Service` your `Ingress` points to.
-* Creates a [Tailscale Service][docs-tailscale-services] for the `Ingress ProxyGroup`.
+* 为每个副本配置一个配置 `Secret`。
+* 配置一个包含 Tailscale Serve 配置（L7）或 `iptables`/`nftables` DNAT 规则（L3）的 `ConfigMap`。
+* 配置 `Ingress` `ProxyGroup`，由它转发流量，让 tailnet 中任意位置的设备都能访问你的 `Ingress` 指向的 `Service`。
+* 为该 `Ingress ProxyGroup` 创建一个 [Tailscale Service][docs-tailscale-services]。
 
-*（图：Architecture diagram showing the Tailscale Kubernetes Operator creating a per-replica Secret, a ConfigMap, and a Service for the Ingress ProxyGroup. The Operator configures the Ingress ProxyGroup to forward traffic from a tailnet client to a Kubernetes Service.）*
+*（图：Tailscale Kubernetes Operator 为 Ingress ProxyGroup 创建每副本 Secret、ConfigMap 和 Service 的架构图。Operator 配置 Ingress ProxyGroup 将来自 tailnet 客户端的流量转发到 Kubernetes Service。）*
 
-To get started with `Ingress` in HA mode, refer to the L7 or L3 setup guides linked above. `Ingress` `ProxyGroup` pods require [additional permissions][docs-permissions].
+要以 HA 模式开始使用 `Ingress`，请参阅上面链接的 L7 或 L3 设置指南。`Ingress` `ProxyGroup` pod 需要[额外权限][docs-permissions]。
 
-## TLS certificates and limits
+## TLS 证书与限制
 
-The operator and its proxies provision certificates from Let's Encrypt automatically. Let's Encrypt enforces rate limits on certificate issuance, which can affect busy or frequently redeployed clusters. To understand the limits and configure the operator to work within them, refer to [Let's Encrypt rate limits][docs-lets-encrypt-rate-limits].
+operator 及其代理会自动从 Let's Encrypt 签发证书。Let's Encrypt 对证书签发有速率限制，这可能影响繁忙或频繁重新部署的集群。要了解这些限制并配置 operator 在限制范围内工作，请参阅 [Let's Encrypt 速率限制][docs-lets-encrypt-rate-limits]。
 
-## Further exploration
+## 进一步探索
 
-* Expose a Kubernetes workload to the public internet with Tailscale Funnel in [Expose a Kubernetes cluster workload to the public internet using Tailscale Funnel][docs-expose-internet].
-* Configure ingress across multiple Kubernetes clusters with [Configure multi-cluster ingress with regional routing][docs-multi-cluster].
-* Enable communication between services running in different Kubernetes clusters with [Connect services across clusters][docs-multi-cluster-mirroring].
-* Deploy the Tailscale Kubernetes Operator in IPv6 environments with [IPv6 support for the Tailscale Kubernetes Operator][docs-ipv6].
+* 使用 Tailscale Funnel 将 Kubernetes 工作负载暴露到公共互联网，见[使用 Tailscale Funnel 将 Kubernetes 集群工作负载暴露到公共互联网][docs-expose-internet]。
+* 跨多个 Kubernetes 集群配置入站，见[配置带区域路由的多集群入站][docs-multi-cluster]。
+* 让运行在不同 Kubernetes 集群中的服务相互通信，见[跨集群连接服务][docs-multi-cluster-mirroring]。
+* 在 IPv6 环境中部署 Tailscale Kubernetes Operator，见 [Tailscale Kubernetes Operator 的 IPv6 支持][docs-ipv6]。
 
-[ar-ha-ingress]: #high-availability-ha-ingress
+[ar-ha-ingress]: #高可用ha入站
 
-[ar-layer-3-ingress]: #standalone-layer-3-ingress-for-tcpudp
+[ar-layer-3-ingress]: #独立-l3-入站tcpudp
 
-[ar-layer-7-ingress]: #standalone-layer-7-ingress-for-http-and-https
+[ar-layer-7-ingress]: #面向-http-和-https-的独立-l7-入站
 
-[ar-tls-certificates]: #tls-certificates-and-limits
+[ar-tls-certificates]: #tls-证书与限制
 
 [docs-expose-internet]: /docs/kubernetes-operator/ingress/expose-workload-to-internet
 

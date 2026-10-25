@@ -1,96 +1,96 @@
 ---
-title: "Secure your internet traffic on public Wi-Fi using an Apple TV"
-description: "Route Tailscale traffic through your Apple TV for secure, private browsing and access to region-locked content."
+title: "使用 Apple TV 保护公共 Wi-Fi 上的互联网流量"
+description: "把 Tailscale 流量经由你的 Apple TV 路由，实现安全私密的浏览，并访问受地区限制的内容。"
 ---
 
-Last validated Dec 15, 2025
+最后验证于 Dec 15, 2025
 
-When you connect to public Wi-Fi in places like hotels, airports, or cafés, your internet activity gets exposed to others on the same public network. This exposure can put your privacy at risk when you check email, log in to bank accounts, use cloud services, or engage in any other activity involving your personal information.
+当你在酒店、机场或咖啡馆等场所连接公共 Wi-Fi 时，你的互联网活动会暴露给同一公共网络上的其他人。当你查看电子邮件、登录银行账户、使用云服务或进行任何涉及个人信息的活动时，这种暴露会让你的隐私面临风险。
 
-By routing your internet traffic through your Apple TV, you protect that activity. Your device creates a secure, encrypted connection to your Apple TV, which then sends your traffic to the internet using your home network. This process keeps your browsing private, even while you use unfamiliar or unsecured networks. We also refer to this type of traffic routing as an [exit node][docs-exit-nodes].
+把你的互联网流量经由 Apple TV 路由，就能保护这些活动。你的设备会与 Apple TV 建立安全加密的连接，Apple TV 再用你的家庭网络把流量发送到互联网。这一过程让你的浏览保持私密，即使你正使用陌生或不安全的网络。我们也把这种流量路由方式称为[出口节点][docs-exit-nodes]。
 
-In addition to improving privacy, routing traffic through your Apple TV can help with location-based access. Some websites and streaming platforms only allow connections from your home country or region. By sending traffic through the Apple TV, those services identify it as coming from your home network, which can allow access to region-locked content.
+除了提升隐私，经由 Apple TV 路由流量还有助于基于位置的访问。某些网站和流媒体平台只允许来自你所在国家或地区的连接。通过 Apple TV 发送流量，这些服务会把它识别为来自你的家庭网络，从而可能解锁受地区限制的内容。
 
-The benefits of routing your Tailscale network (known as a tailnet) traffic using an Apple TV include:
+使用 Apple TV 路由 Tailscale 网络（称为 tailnet）流量的好处包括：
 
-* Use a device you may already own. No need for extra hardware or network configuration.
-* Apple TVs are typically always on and connected to your home internet, making them a reliable option for routing traffic when you're away.
-* Tailscale is free with the Personal plan that supports up to 6 users, unlimited user devices, and 50 tagged devices.
-* The Tailscale app for Apple TV is free and available in the Apple App Store.
+* 使用你可能已经拥有的设备，无需额外硬件或网络配置。
+* Apple TV 通常始终开机并连接家庭互联网，是你外出时可靠的流量路由选择。
+* Tailscale 的 Personal 套餐免费，支持最多 6 个用户、不限数量的用户设备和 50 台打了标签的设备。
+* Apple TV 版 Tailscale 应用免费，可在 Apple App Store 获取。
 
-## Prerequisites
+## 前提条件
 
-To follow this guide, you need:
+要跟着本指南操作，你需要：
 
-* A device such as a phone or laptop to log in and create the tailnet. Tailscale runs on most operating systems, including Linux, Windows, macOS, iOS, and Android.
-* An email account that uses a [single sign-on (SSO) identity provider][docs-sso-providers], such as Apple, Google, or Microsoft.
-* An Apple TV HD or Apple TV 4K running tvOS version 17 or later.
+* 一台用于登录并创建 tailnet 的设备（例如手机或笔记本电脑）。Tailscale 可运行于大多数操作系统，包括 Linux、Windows、macOS、iOS 和 Android。
+* 一个使用[单点登录（SSO）身份提供方][docs-sso-providers]（例如 Apple、Google 或 Microsoft）的电子邮件账户。
+* 一台运行 tvOS 17 或更高版本的 Apple TV HD 或 Apple TV 4K。
 
-## Step 1: Create your tailnet
+## 第 1 步：创建你的 tailnet
 
-To create your own tailnet, [download][co-download] and install the client on a device such as a phone or laptop, and log in using your existing identity provider. Choose the **Personal** option and follow the remaining instructions to complete the process. Your personal tailnet is now configured and ready to use.
+要创建自己的 tailnet，在一台设备（例如手机或笔记本电脑）上[下载][co-download]并安装客户端，然后使用你现有的身份提供方登录。选择 **Personal**（个人）选项，并按照剩余提示完成流程。此时你的个人 tailnet 已配置完毕，可以使用了。
 
-*（图：Choosing use case for tailnet creation.）*
+*（图：选择创建 tailnet 的使用场景。）*
 
-Now go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, confirming it's connected to your tailnet. The admin console is where you can manage the users, devices, and permissions for your tailnet.
+接着前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，确认设备已连接到你的 tailnet。管理控制台是你可以管理 tailnet 用户、设备和权限的地方。
 
-*（图：Choosing use case for tailnet creation.）*
+*（图：选择创建 tailnet 的使用场景。）*
 
-Next you'll configure Tailscale on your Apple TV.
+接下来，你将在 Apple TV 上配置 Tailscale。
 
-## Step 2: Install and configure Tailscale on your Apple TV to route traffic
+## 第 2 步：在 Apple TV 上安装并配置 Tailscale 以路由流量
 
-To install Tailscale on your Apple TV, open the App Store, search for the Tailscale app, and download it. Once installed, open the app, follow the prompts, and grant any requested permissions.
+要在 Apple TV 上安装 Tailscale，打开 App Store，搜索 Tailscale 应用并下载。安装后打开应用，按照提示操作并授予所有请求的权限。
 
-Launch the app and select **Connect** to add the Apple TV to your tailnet. A QR code will appear on screen. You can scan it with your phone or enter the provided URL into a browser on another device. This step signs you in and authorizes the Apple TV to join your tailnet. To confirm the connection, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and look for the Apple TV in the device list.
+启动应用并选择 **Connect**（连接），把 Apple TV 加入你的 tailnet。屏幕上会出现一个二维码。你可以用手机扫描它，或在另一台设备的浏览器中输入提供的 URL。这一步会让你登录，并授权 Apple TV 加入你的 tailnet。要确认连接，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在设备列表中找到 Apple TV。
 
-Now open the Tailscale app on the Apple TV and go to the **Exit Node** section. Select **Run as Exit Node**. Then, in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, find the Apple TV in the list, select the  button, choose **Set up exit node**, and toggle **Use as exit node** to enable it. Other devices in your tailnet can now route their traffic through your Apple TV.
+现在打开 Apple TV 上的 Tailscale 应用，进入 **Exit Node**（出口节点）部分。选择 **Run as Exit Node**（作为出口节点运行）。然后，在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中找到列表里的 Apple TV，选择按钮，选择 **Set up exit node**（设置出口节点），并把 **Use as exit node**（用作出口节点）开关打开以启用它。tailnet 中的其他设备现在可以把流量路由经过你的 Apple TV 了。
 
-Devices in a tailnet periodically re-authenticate to stay secure through device key expiry, which requires re-authentication after a set period. For devices that should remain continuously connected, such as servers, Raspberry Pis, media centers, smart home hubs, Docker hosts, and NAS devices, you can disable key expiry to avoid any unnecessary disruptions.
+tailnet 中的设备会通过设备密钥过期机制定期重新认证以保障安全，即在设定的期限过后要求重新认证。对于应当持续保持连接的设备（例如服务器、Raspberry Pi、媒体中心、智能家居中枢、Docker 主机和 NAS 设备），你可以禁用密钥过期，避免不必要的中断。
 
-To disable key expiry for a device, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, select the  icon next to the device, then select **Disable key expiry**.
+要禁用某台设备的密钥过期，前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，选择该设备旁边的图标，然后选择 **Disable key expiry**（禁用密钥过期）。
 
-> **Warning:**
+> **警告：**
 >
-> Disabling key expiry reduces security and can expose your network if the device or key is compromised. Only do this for trusted devices and revoke the key immediately if the device is lost or replaced. For more information, refer to [Key expiry][docs-key-expiry].
+> 禁用密钥过期会降低安全性，如果设备或密钥遭到入侵，可能会暴露你的网络。只对受信任的设备这样做，并且在设备丢失或更换时立即撤销密钥。更多信息请参阅[密钥过期][docs-key-expiry]。
 
-Next you'll configure devices to use the Apple TV to route traffic.
+接下来，你将配置各设备使用 Apple TV 路由流量。
 
-## Step 3: Configure devices to use Apple TV for traffic routing
+## 第 3 步：配置设备使用 Apple TV 路由流量
 
-To configure a device to route its traffic through your Apple TV, open the Tailscale app on a device, go to the **Exit Nodes** section, and select the Apple TV. The instructions for enabling an exit node vary depending on the device's operating system.
+要把某台设备配置为经由你的 Apple TV 路由流量，打开该设备上的 Tailscale 应用，进入 **Exit Nodes**（出口节点）部分，选择那台 Apple TV。启用出口节点的方法因设备操作系统而异。
 
 #### Android
 
-1. Open the Tailscale app on the Android device and go to the **Exit Node** section.
-2. Select the exit node that you want to use. If you want to allow direct access to your local network when routing traffic through an exit node, toggle **Allow LAN access** on.
-3. On the app home screen, confirm that the selected device displays in the **Exit Node** section. When an exit node is being used for the device, the section will turn blue.
+1. 在 Android 设备上打开 Tailscale 应用，进入 **Exit Node**（出口节点）部分。
+2. 选择你想使用的出口节点。如果你希望在流量经由出口节点路由时仍可直接访问本地网络，请打开 **Allow LAN access**（允许访问局域网）。
+3. 在应用主屏幕上，确认所选设备显示在 **Exit Node** 部分中。当出口节点正在被该设备使用时，该部分会变为蓝色。
 
-To stop a device from using an exit node, go to the **Exit Node** section and select **None**.
+要让设备停止使用出口节点，前往 **Exit Node** 部分并选择 **None**（无）。
 
 #### iOS
 
-You can use an exit node from the top of the screen.
+你可以从屏幕顶部使用出口节点。
 
-Select the exit node that you want to use. To stop using an exit node, disable the one you currently use or select **None** from the **Exit Node** list.
+选择你想使用的出口节点。要停止使用出口节点，禁用当前使用的那个，或在 **Exit Node** 列表中选择 **None**。
 
 #### Linux
 
-Run `tailscale set` with the `--exit-node=` flag, passing the [Tailscale IP address][docs-tailscale-ip-addresses] of the exit node.
+运行 `tailscale set` 并带上 `--exit-node=` 标志，传入出口节点的 [Tailscale IP 地址][docs-tailscale-ip-addresses]。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip>
 ```
 
-You can find the IP address for the device from the admin console or by running `tailscale status`.
+你可以在管理控制台中找到该设备的 IP 地址，也可以运行 `tailscale status` 查看。
 
-Alternatively, set `--exit-node-allow-lan-access` to `true` to allow direct access to your local network when routing traffic through an exit node.
+或者，把 `--exit-node-allow-lan-access` 设为 `true`，在流量经由出口节点路由时允许直接访问本地网络。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip> --exit-node-allow-lan-access=true
 ```
 
-To stop using an exit node, run the `--exit-node` flag without passing in an IP address.
+要停止使用出口节点，运行 `--exit-node` 标志但不传入 IP 地址。
 
 ```shell
 sudo tailscale set --exit-node=
@@ -98,34 +98,34 @@ sudo tailscale set --exit-node=
 
 #### macOS
 
-You can use an exit node from the menu bar. Open the Tailscale menu and select **Exit Nodes**. (If you are running a Tailscale client version earlier than **v1.60.0**, the menu string to select is **Use exit node**.) Then, select the machine name of the exit node to use.
+你可以从菜单栏使用出口节点。打开 Tailscale 菜单并选择 **Exit Nodes**（出口节点）。（如果你运行的 Tailscale 客户端版本早于 **v1.60.0**，要选择的菜单项是 **Use exit node**。）然后，选择要使用的出口节点的机器名。
 
-To allow direct access to your local network when routing traffic through an exit node, select **Allow Local Network Access**.
+要在流量经由出口节点路由时允许直接访问本地网络，请选择 **Allow Local Network Access**（允许访问本地网络）。
 
 #### tvOS
 
-To allow your Apple TV to use another device in your tailnet as an exit node, refer to [Install Tailscale on an Apple TV][docs-appletv-use-exit-node].
+要让你的 Apple TV 使用 tailnet 中的另一台设备作为出口节点，请参阅[在 Apple TV 上安装 Tailscale][docs-appletv-use-exit-node]。
 
 #### Windows
 
-You can use an exit node from the system tray menu. Select the Tailscale icon and select **Use exit node**. Then, select the machine name of the exit node to use.
+你可以从系统托盘菜单使用出口节点。选择 Tailscale 图标并选择 **Use exit node**（使用出口节点）。然后，选择要使用的出口节点的机器名。
 
-If you want to allow direct access to your local network when routing traffic through an exit node, select **Allow local network access**.
+如果你希望在流量经由出口节点路由时允许直接访问本地网络，请选择 **Allow local network access**（允许访问本地网络）。
 
-Now the device's internet traffic will be securely routed through the Apple TV's network connection.
+现在，该设备的互联网流量将安全地经由 Apple TV 的网络连接路由。
 
-## Conclusion
+## 结语
 
-In this guide, you configured your Apple TV as a secure routing point for your tailnet. This setup gives you an always-available way to protect your network traffic, whether you're on public Wi-Fi, traveling, or working remotely. By sending traffic through your home network, you maintain a trusted connection and can access region-specific content.
+在本指南中，你把 Apple TV 配置为 tailnet 的安全路由点。这一设置为你提供了一种随时可用的流量保护方式，无论你连着公共 Wi-Fi、身在旅途还是远程办公。通过家庭网络发送流量，你保持了一条受信任的连接，并能访问特定地区的内容。
 
-## Further exploration
+## 进一步探索
 
-* [Add additional devices][docs-device-add] to your tailnet.
-* [Invite other users][docs-invite-any-user] to your tailnet to let them route their device traffic.
-* Configure [VPN On Demand][docs-vpn-on-demand] on iOS and macOS devices to automatically enable traffic routing to your Apple TV when you leave your home.
-* Configure [shortcuts][docs-shortcuts] on iOS and macOS devices to enable or disable routing through your Apple TV.
-* Configure your Apple TV as a [subnet router][docs-appletv-subnet] to let you remotely access home network devices that don't have Tailscale installed, such as printers or smart home devices.
-* Refer to [Install Tailscale on an Apple TV][docs-apple-tv] for more information and troubleshooting tips.
+* 向你的 tailnet[添加更多设备][docs-device-add]。
+* [邀请其他用户][docs-invite-any-user]加入你的 tailnet，让他们路由自己设备的流量。
+* 在 iOS 和 macOS 设备上配置 [VPN On Demand][docs-vpn-on-demand]，在你离开家时自动启用经由 Apple TV 的流量路由。
+* 在 iOS 和 macOS 设备上配置[快捷指令][docs-shortcuts]，一键启用或禁用经由 Apple TV 的路由。
+* 将你的 Apple TV 配置为[子网路由器][docs-appletv-subnet]，让你能远程访问未安装 Tailscale 的家庭网络设备，例如打印机或智能家居设备。
+* 更多信息和故障排除技巧，请参阅[在 Apple TV 上安装 Tailscale][docs-apple-tv]。
 
 [co-download]: https://tailscale.com/download
 

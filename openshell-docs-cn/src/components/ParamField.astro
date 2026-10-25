@@ -1,0 +1,24 @@
+---
+// 参数字段：Fern <ParamField path type required default> 的等价组件
+interface Props {
+  path: string;
+  type?: string;
+  required?: boolean;
+  default?: string;
+}
+const { path, type, required = false, default: defaultValue } = Astro.props;
+---
+
+<div class="os-param">
+  <div class="os-param-head">
+    <code class="os-param-path">{path}</code>
+    {type && <span class="os-param-type">{type}</span>}
+    {required && <span class="os-param-req">必填</span>}
+    {defaultValue && (
+      <span class="os-param-default">默认 <code>{defaultValue}</code></span>
+    )}
+  </div>
+  <div class="os-param-desc">
+    <slot />
+  </div>
+</div>

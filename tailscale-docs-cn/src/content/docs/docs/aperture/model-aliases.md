@@ -1,59 +1,59 @@
 ---
-title: "Model aliases"
-description: "Configure model aliases, choose destinations, and apply grants, quotas, and hooks."
+title: "模型别名"
+description: "配置模型别名、选择目的地，并应用授权、配额和 hook。"
 ---
 
-Last validated Oct 22, 2026
+最后验证于 Oct 22, 2026
 
-A model alias maps a stable, client-facing model name to a concrete provider and model in your Aperture gateway. You can use model aliases to control the models your clients, harnesses, or agents access from a central point (the Aperture configuration), without changing configurations on client devices.
+模型别名（model alias）把一个稳定的、面向客户端的模型名称映射到 Aperture 网关中的具体提供商和模型。你可以用模型别名从一个中心位置（即 Aperture 配置）控制你的客户端、框架（harness）或 agent 能访问哪些模型，而无需更改客户端设备上的配置。
 
-Common use cases include:
+常见使用场景包括：
 
-* [Switch providers without changing the client model name][ar-switch-providers-without-changing-the-client-model-name]: Reroute requests to a backup provider during an upstream outage.
-* [Keep a model family on the latest approved version][ar-keep-a-model-family-on-the-latest-approved-version]: Update underlying model releases without modifying client settings.
-* [Give users a task-focused model name][ar-give-users-a-task-focused-model-name]: Provide recognizable names like `writing-assistant` that route to approved models.
+* [不更改客户端模型名称切换提供商][ar-switch-providers-without-changing-the-client-model-name]：在上游发生故障时把请求改道到备用提供商。
+* [让模型家族保持在最新已批准版本][ar-keep-a-model-family-on-the-latest-approved-version]：在不修改客户端设置的情况下更新底层模型版本。
+* [为用户提供面向任务的模型名称][ar-give-users-a-task-focused-model-name]：提供 `writing-assistant` 这样易于辨认的名称，路由到已批准的模型。
 
-## How aliases resolve
+## 别名如何解析
 
-Aperture resolves model aliases using the `model_aliases` section of the gateway configuration.
+Aperture 使用网关配置中的 `model_aliases` 部分来解析模型别名。
 
-To understand how resolution works, distinguish these concepts:
+要理解解析的工作方式，请先区分以下概念：
 
-* **Model alias**: The stable, exact-match name sent in a request's JSON `model` field. Its configuration is the corresponding entry in `model_aliases.models`.
-* **Destination array**: The ordered `dst` array belonging to one alias, not the alias itself and not a retry chain.
-* **Destination**: One string in that array in `provider/model` format. `provider` is the key configured under `providers`, not its display name. The model segment can contain slashes if the provider uses namespaced IDs.
-* **Strategy**: The rule that selects one array entry. The global setting is `model_aliases.strategy`. The per-alias setting is `model_aliases.models.<alias>.strategy`.
+* **模型别名**：请求的 JSON `model` 字段中发送的稳定、精确匹配的名称。其配置是 `model_aliases.models` 中的对应条目。
+* **目的地数组**：属于某个别名的有序 `dst` 数组，它不是别名本身，也不是重试链。
+* **目的地**：该数组中以 `provider/model` 格式表示的一个字符串。`provider` 是在 `providers` 下配置的键，而不是它的显示名称。如果提供商使用带命名空间的 ID，模型段可以包含斜杠。
+* **策略**：从数组中选出一个条目的规则。全局设置为 `model_aliases.strategy`，每个别名的设置为 `model_aliases.models.<alias>.strategy`。
 
-When a request arrives, Aperture compares the JSON `model` value against configured aliases. If a match exists, Aperture resolves the alias according to the active strategy and rewrites the request to the selected destination before checking authorization, quotas, hooks, and routing.
+请求到达时，Aperture 将 JSON `model` 值与已配置的别名进行比较。如果存在匹配，Aperture 会按照生效的策略解析该别名，并在检查授权、配额、hook 和路由之前，把请求改写为选定的目的地。
 
-### Configuration schema
+### 配置架构
 
-The `model_aliases` section accepts the following fields:
+`model_aliases` 部分接受以下字段：
 
-| Field                                   | Type             | Required            | Default                           | Description                                                                                                                  |
+| 字段                                    | 类型             | 是否必填           | 默认值                            | 描述                                                                                                                         |
 | --------------------------------------- | ---------------- | ------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `model_aliases.strategy`                | string           | No                  | `first`                           | Default destination selection strategy: `first` or `last`.                                                                   |
-| `model_aliases.models`                  | object           | No                  | Empty map                         | Map keyed by the exact alias name the client sends. Refer to the migration note below for the deprecated `virtual` fallback. |
-| `model_aliases.models.<alias>`          | object           | Yes, for each alias | N/A                               | Alias configuration. The alias name must not be empty. The object must not be null.                                          |
-| `model_aliases.models.<alias>.dst`      | array of strings | Yes                 | N/A                               | One or more `provider/model` destinations, in selection order.                                                               |
-| `model_aliases.models.<alias>.strategy` | string           | No                  | Inherits `model_aliases.strategy` | Selection strategy for this alias. Overrides the default with `first` or `last`.                                             |
+| `model_aliases.strategy`                | string           | 否                  | `first`                           | 默认的目的地选择策略：`first` 或 `last`。                                                                                   |
+| `model_aliases.models`                  | object           | 否                  | 空映射                            | 以客户端发送的精确别名为键的映射。已弃用的 `virtual` 回退请参阅下方的迁移说明。                                              |
+| `model_aliases.models.<alias>`          | object           | 是（每个别名必填）  | 不适用                            | 别名配置。别名名称不能为空，对象不能为 null。                                                                                |
+| `model_aliases.models.<alias>.dst`      | array of strings | 是                  | 不适用                            | 一个或多个 `provider/model` 目的地，按选择顺序排列。                                                                        |
+| `model_aliases.models.<alias>.strategy` | string           | 否                  | 继承 `model_aliases.strategy`     | 该别名的选择策略。用 `first` 或 `last` 覆盖默认值。                                                                          |
 
-Acceptable strategies are exactly `first` and `last`. An omitted or empty global strategy defaults to `first`. An omitted or empty per-alias strategy inherits the global value.
+可选的策略只有 `first` 和 `last`。全局策略省略或为空时默认为 `first`。每别名的策略省略或为空时继承全局值。
 
-An omitted or empty `model_aliases.models` map defines no aliases in that map. An alias routes requests only when a client sends its exact name.
+`model_aliases.models` 映射省略或为空时，该映射不定义任何别名。只有当客户端发送精确的别名名称时，别名才会为请求路由。
 
-Use `model_aliases` rather than deprecated `virtual`. Aperture reads `virtual` only when `model_aliases` has neither a nonempty `strategy` nor any entries in `models`. Move old entries instead of populating both sections, which blocks saving.
+请使用 `model_aliases`，而不要使用已弃用的 `virtual`。只有当 `model_aliases` 既没有非空 `strategy`、`models` 中也没有任何条目时，Aperture 才会读取 `virtual`。应把旧条目迁移过来，而不是同时填充两个部分——那样会阻止保存。
 
-### Selection strategies
+### 选择策略
 
-The selection strategy determines which destination Aperture picks from the `dst` array:
+选择策略决定 Aperture 从 `dst` 数组中挑选哪个目的地：
 
-* `first` selects index 0, the first destination in the array.
-* `last` selects the last destination in the array.
+* `first` 选择索引 0，即数组中的第一个目的地。
+* `last` 选择数组中的最后一个目的地。
 
-A per-alias `strategy` overrides the global default. If a destination array contains only one entry, Aperture selects that entry whether the strategy is `first` or `last`. If an array contains more than two entries, definitions between the first and last entries are never selected by either strategy. Aperture validates all entries in the array, including unselected middle entries.
+每别名的 `strategy` 会覆盖全局默认值。如果目的地数组只有一个条目，无论策略是 `first` 还是 `last`，Aperture 都会选择该条目。如果数组包含两个以上条目，两种策略都不会选中位于首尾之间的条目。Aperture 会校验数组中的所有条目，包括未被选中的中间条目。
 
-The following snippet illustrates how global and per-alias strategies interact:
+下面的代码片段展示了全局策略与每别名策略如何相互作用：
 
 ```json
 {
@@ -73,51 +73,51 @@ The following snippet illustrates how global and per-alias strategies interact:
 }
 ```
 
-In this example, the per-alias `strategy: "first"` overrides the global setting, so Aperture routes requests for `claude-opus-5-5` to `vercel/anthropic/claude-opus-5.5`. If you remove the per-alias `strategy` field, the alias inherits global `strategy: "last"`, which selects `anthropic/claude-opus-5-5`. Because there is no middle selection strategy, selecting `bedrock_mantle/anthropic.claude-opus-5-5` requires moving that entry to the first or last position in the array.
+在此示例中，每别名的 `strategy: "first"` 覆盖全局设置，因此 Aperture 把 `claude-opus-5-5` 的请求路由到 `vercel/anthropic/claude-opus-5.5`。如果移除每别名的 `strategy` 字段，该别名会继承全局 `strategy: "last"`，从而选择 `anthropic/claude-opus-5-5`。由于不存在中间选择策略，要选择 `bedrock_mantle/anthropic.claude-opus-5-5`，必须把该条目移到数组的第一位或最后一位。
 
-This example illustrates the inheritance hierarchy. Because a global change affects every alias that inherits it, it is best practice to use the per-alias `strategy` field for outage mitigation and operational changes instead of the global strategy.
+此示例展示了继承层级。由于全局变更会影响继承它的每个别名，最佳实践是在故障缓解和运维调整中使用每别名的 `strategy` 字段，而不是全局策略。
 
-No selection strategy discovers model versions, retries other destinations, or balances traffic across entries. An Aperture gateway admin must manually update the configuration file to change the model alias assignment or strategy.
+任何选择策略都不会发现模型版本、重试其他目的地或在条目之间均衡流量。要更改模型别名的指派或策略，Aperture 网关管理员必须手动更新配置文件。
 
-### Destination requirements
+### 目的地要求
 
-Every destination in a `dst` array must satisfy these requirements:
+`dst` 数组中的每个目的地都必须满足以下要求：
 
-* The provider part must identify an enabled, configured provider in the `providers` map. It cannot use the reserved provider ID `aperture`.
-* The model part must match a model explicitly listed in that provider's `models` array. A wildcard in the provider configuration does not satisfy this check.
-* A destination must be formatted as `provider/model`. Bare model names or references to other aliases are not valid. Aperture resolves an alias once to a concrete model, not another alias.
-* All distinct destinations in an array must share at least one API compatibility flag, such as `anthropic_messages`.
-* The selected destination must support the exact API format sent by the client. For example, if the client sends Anthropic Messages requests, the selected destination must have `anthropic_messages: true`. API compatibility across destinations and client request support are separate conditions.
+* 提供商部分必须标识 `providers` 映射中一个已启用、已配置的提供商。不能使用保留的提供商 ID `aperture`。
+* 模型部分必须匹配该提供商 `models` 数组中显式列出的模型。提供商配置中的通配符不满足此检查。
+* 目的地必须采用 `provider/model` 格式。裸模型名称或对其他别名的引用都无效。Aperture 只把别名解析一次到具体模型，而不是解析到另一个别名。
+* 数组中所有不同的目的地必须共享至少一个 API 兼容性标志，例如 `anthropic_messages`。
+* 被选中的目的地必须支持客户端发送的确切 API 格式。例如，客户端发送 Anthropic Messages 请求时，被选中的目的地必须设置 `anthropic_messages: true`。目的地之间的 API 兼容性与客户端请求支持是两个独立条件。
 
-Aperture validates every destination when you save the configuration. If an inactive destination is misconfigured, the save is rejected even if the active destination is valid.
+保存配置时，Aperture 会校验每个目的地。如果某个未启用的目的地配置有误，即使启用的目的地有效，保存也会被拒绝。
 
-## Supported requests and model discovery
+## 支持的请求与模型发现
 
-Model aliases work with requests that send a JSON `model` field to these endpoints:
+模型别名适用于向以下端点发送 JSON `model` 字段的请求：
 
 * `/v1/chat/completions`
 * `/v1/messages`
 * `/v1/responses`
 
-Model aliases do not convert API formats. The selected destination must support the request format your client sends. For supported endpoints by provider, refer to the [provider compatibility reference][docs-provider-compatibility].
+模型别名不转换 API 格式。被选中的目的地必须支持你的客户端发送的请求格式。各提供商支持的端点请参阅[提供商兼容性参考][docs-provider-compatibility]。
 
-Model aliases do not work with native APIs for Google Gemini, Gemini Enterprise Agent Platform, or Amazon Bedrock InvokeModel and Converse. Bedrock Mantle endpoints supporting standard Anthropic Messages work with model aliases. Legacy `/completions` and `/responses/compact` are not supported.
+模型别名不适用于 Google Gemini、Gemini Enterprise Agent Platform，以及 Amazon Bedrock InvokeModel 和 Converse 的原生 API。支持标准 Anthropic Messages 的 Bedrock Mantle 端点可与模型别名配合使用。旧版 `/completions` 和 `/responses/compact` 不受支持。
 
-Aliases do not add entries to `/v1/models` responses or the Aperture chat picker. Use a client that allows you to enter an explicit model name rather than relying on automatic discovery. To customize model labels and ordering in the web chat interface, use [`chat_models`][docs-chat-models].
+别名不会向 `/v1/models` 响应或 Aperture 聊天选择器添加条目。请使用允许你直接输入明确模型名称的客户端，而不要依赖自动发现。要自定义网页聊天界面中的模型标签和排序，请使用 [`chat_models`][docs-chat-models]。
 
-## Prerequisites
+## 前提条件
 
-Before configuring model aliases, ensure you have:
+配置模型别名之前，请确保你具备：
 
-* An [Aperture gateway][docs-get-started] with [admin access][docs-admin-access] to edit its configuration.
-* The provider or providers named in your chosen recipe, configured with credentials for the exact models. Refer to the [Anthropic][docs-use-anthropic] and [Vercel][docs-use-vercel] setup guides for provider credentials, and the [OpenAI][docs-use-openai] guide if you use the version-upgrade or task-focused recipes. Each provider used in the provider-switching recipe needs `anthropic_messages: true`, enabled status, valid credentials, and the exact model ID listed in its `models` array.
-* A device connected to your [tailnet][docs-tailnet] with `curl` installed, associated with a test user login.
+* 一个拥有[管理员权限][docs-admin-access]、可编辑其配置的 [Aperture 网关][docs-get-started]。
+* 你所选方案（recipe）中提到的提供商，已配置好对应确切模型的凭证。提供商凭证请参阅 [Anthropic][docs-use-anthropic] 和 [Vercel][docs-use-vercel] 设置指南；如果使用版本升级或面向任务名称的方案，请参阅 [OpenAI][docs-use-openai] 指南。提供商切换方案中用到的每个提供商都需要 `anthropic_messages: true`、已启用状态、有效凭证，并在其 `models` 数组中列出确切的模型 ID。
+* 一台安装了 `curl`、已连接到你的 [tailnet][docs-tailnet] 的设备，并关联一个测试用户登录。
 
-> **Note:**
+> **注意：**
 >
-> The JSON examples in this guide are fragments to merge, not full replacement configurations. When integrating these examples into a configuration, take care to preserve administrator grants, existing aliases, providers, credentials, quotas, hooks, and unrelated settings. Additionally, you should add capabilities to an existing grant or append the example grant without duplicating a top-level key. Replace `alice@example.com` with your test user's login and example provider keys with your configured keys. [Grants are additive][docs-how-grants-work], including grants in your tailnet policy file. Choose alias names carefully: defining an alias that matches a concrete model redirects requests for that model to the alias destination. Avoid unintended name collisions that could intercept traffic intended for other models.
+> 本指南中的 JSON 示例是需要合并的片段，而不是完整的替换配置。将这些示例整合进配置时，务必保留管理员授权、现有别名、提供商、凭证、配额、hook 以及无关设置。此外，应向现有授权添加能力，或在不重复顶层键的前提下追加示例授权。请将 `alice@example.com` 替换为你的测试用户登录名，并将示例中的提供商密钥替换为你已配置的密钥。[授权是可叠加的][docs-how-grants-work]，包括 tailnet 策略文件中的授权。请谨慎选择别名名称：定义一个与具体模型同名的别名，会把对该模型的请求重定向到别名目的地。避免意外的名称冲突截获本应发给其他模型的流量。
 
-Run requests from the test user's tailnet-connected device, replacing `<aperture-hostname>` with your Aperture gateway's address. After configuring `claude-opus-5-5` in the provider-switching recipe, send the following request:
+从测试用户的 tailnet 连接设备上发起请求，将 `<aperture-hostname>` 替换为你的 Aperture 网关地址。在提供商切换方案中配置好 `claude-opus-5-5` 后，发送以下请求：
 
 ```shell
 curl --fail-with-body http://<aperture-hostname>/v1/messages \
@@ -126,33 +126,33 @@ curl --fail-with-body http://<aperture-hostname>/v1/messages \
   -d '{"model":"claude-opus-5-5","max_tokens":1024,"messages":[{"role":"user","content":"Reply with hello."}]}'
 ```
 
-For the other recipes, use the alias names and prompts shown in their request examples.
+其他方案请使用其请求示例中展示的别名名称和提示。
 
-Because the test device connects over Tailscale, requests authenticate with the device's Tailscale identity. You do not need to pass a provider API key in the request.
+由于测试设备通过 Tailscale 连接，请求会以设备的 Tailscale 身份完成认证。你无需在请求中传递提供商 API 密钥。
 
-To verify requests, check the HTTP response body and open **Administration** > [**Logs**][docs-dashboard-logs] in the Aperture dashboard. The logs record the resolved provider and model. Log detail depends on your gateway capture and retention settings. The response body's `model` field can reflect the upstream provider's canonical model ID rather than the alias name. Model aliases route requests, but they do not guarantee identical response metadata or preserve chat sessions across different models.
+要核对请求，请查看 HTTP 响应体，并在 Aperture 仪表板中打开 **Administration** > [**Logs**][docs-dashboard-logs]。日志会记录解析出的提供商和模型。日志详细程度取决于你的网关捕获与留存设置。响应体中的 `model` 字段反映的可能是上游提供商的规范模型 ID，而不是别名名称。模型别名会为请求路由，但并不保证响应元数据一致，也不保证在不同模型之间保留聊天会话。
 
-## Use cases
+## 使用场景
 
-The first recipe configures three destinations and switches providers without changing the client request. The other recipes are independent and cover version upgrades and task-focused names.
+第一个方案配置三个目的地，并在不更改客户端请求的情况下切换提供商。其余方案相互独立，分别覆盖版本升级和面向任务的名称。
 
-### Switch providers without changing the client model name
+### 不更改客户端模型名称切换提供商
 
-Use a multi-destination alias to switch providers when an upstream provider experiences an outage. This recipe configures `claude-opus-5-5` with Vercel, AWS Bedrock Mantle, and Anthropic serving the exact same underlying Claude Opus model.
+使用多目的地别名在上游提供商发生故障时切换提供商。此方案为 `claude-opus-5-5` 配置 Vercel、AWS Bedrock Mantle 和 Anthropic，三者提供完全相同的底层 Claude Opus 模型。
 
-All three destinations pin the same model release across three providers:
+三个目的地在三个提供商处锁定同一个模型版本：
 
 * `vercel/anthropic/claude-opus-5.5`
 * `bedrock_mantle/anthropic.claude-opus-5-5`
 * `anthropic/claude-opus-5-5`
 
-Native Amazon Bedrock `bedrock_model_invoke` and `bedrock_converse` endpoints use AWS-specific schemas and cannot share an API compatibility flag with Anthropic Messages endpoints. To route Claude Messages requests to Bedrock alongside Anthropic and Vercel, configure a Bedrock Mantle provider endpoint using the standard [Anthropic Messages API on AWS Bedrock][xt-bedrock-opus-model-card].
+Amazon Bedrock 原生的 `bedrock_model_invoke` 和 `bedrock_converse` 端点使用 AWS 专属的架构，无法与 Anthropic Messages 端点共享 API 兼容性标志。要让 Claude Messages 请求与 Anthropic 和 Vercel 并行地路由到 Bedrock，请使用标准的 [AWS Bedrock 上的 Anthropic Messages API][xt-bedrock-opus-model-card] 配置 Bedrock Mantle 提供商端点。
 
-#### Configure the Bedrock Mantle provider
+#### 配置 Bedrock Mantle 提供商
 
-Before defining the alias, ensure that you have configured your Anthropic, Vercel, and Bedrock Mantle providers. Obtain an [AWS Bedrock API key][xt-bedrock-api-keys] with model access enabled in your target region. Bedrock Mantle supports standard bearer token authentication and does not require AWS SigV4 request signing.
+定义别名之前，请确保已配置 Anthropic、Vercel 和 Bedrock Mantle 提供商。获取一个在目标区域启用了模型访问的 [AWS Bedrock API 密钥][xt-bedrock-api-keys]。Bedrock Mantle 支持标准的 bearer token 认证，不需要 AWS SigV4 请求签名。
 
-Add the following `bedrock_mantle` provider fragment under `providers`:
+在 `providers` 下添加以下 `bedrock_mantle` 提供商片段：
 
 ```json
 {
@@ -173,23 +173,23 @@ Add the following `bedrock_mantle` provider fragment under `providers`:
 }
 ```
 
-Each provider must be enabled, supply valid credentials, and explicitly list its respective model ID in its `models` array:
+每个提供商都必须处于启用状态、提供有效凭证，并在其 `models` 数组中显式列出各自的模型 ID：
 
-* `anthropic`: includes `claude-opus-5-5` with `anthropic_messages: true`.
-* `vercel`: includes `anthropic/claude-opus-5.5` with `anthropic_messages: true`.
-* `bedrock_mantle`: includes `anthropic.claude-opus-5-5` with `anthropic_messages: true`.
+* `anthropic`：包含 `claude-opus-5-5`，且 `anthropic_messages: true`。
+* `vercel`：包含 `anthropic/claude-opus-5.5`，且 `anthropic_messages: true`。
+* `bedrock_mantle`：包含 `anthropic.claude-opus-5-5`，且 `anthropic_messages: true`。
 
-#### Configure and switch the alias
+#### 配置并切换别名
 
-Defining `claude-opus-5-5` redirects all requests that use that bare model name, not only the test user's requests. Before saving, grant every affected user access to all three destinations. Users with access only to the Anthropic destination can lose access when the alias selects Vercel or Bedrock Mantle.
+定义 `claude-opus-5-5` 会重定向所有使用该裸模型名称的请求，而不仅是测试用户的请求。保存之前，请向所有受影响的用户授予对全部三个目的地的访问权限。只有 Anthropic 目的地访问权限的用户，在别名选择 Vercel 或 Bedrock Mantle 时可能会失去访问权限。
 
-To configure provider switching:
+配置提供商切换的步骤：
 
-1. \[Missing snippet: aperture\_admin\_nav.mdx]
+1. \[缺失片段：aperture\_admin\_nav.mdx]
 
-2. Confirm that `anthropic`, `vercel`, and `bedrock_mantle` providers are configured and enabled, with `anthropic_messages: true` and their respective model IDs listed in `models`.
+2. 确认 `anthropic`、`vercel` 和 `bedrock_mantle` 提供商已配置并启用，`anthropic_messages: true`，且各自的模型 ID 已列入 `models`。
 
-3. Merge the following fragment into your configuration. Replace `alice@example.com` with your test user login:
+3. 将以下片段合并进你的配置。把 `alice@example.com` 替换为你的测试用户登录名：
 
    ```json
    {
@@ -221,9 +221,9 @@ To configure provider switching:
    }
    ```
 
-4. Save the configuration.
+4. 保存配置。
 
-5. Send a request using `claude-opus-5-5`:
+5. 使用 `claude-opus-5-5` 发送一个请求：
 
    ```shell
    curl --fail-with-body http://<aperture-hostname>/v1/messages \
@@ -232,9 +232,9 @@ To configure provider switching:
     -d '{"model":"claude-opus-5-5","max_tokens":1024,"messages":[{"role":"user","content":"Reply with hello."}]}'
    ```
 
-6. Confirm that the request succeeds and that **Logs** shows model `vercel/anthropic/claude-opus-5.5`.
+6. 确认请求成功，且 **Logs** 中显示模型 `vercel/anthropic/claude-opus-5.5`。
 
-7. During an outage of the primary provider, replace only the `model_aliases.models.claude-opus-5-5` object in **Administration** > **Configuration** with the following object to select `last`:
+7. 当主提供商发生故障时，在 **Administration** > **Configuration** 中，仅将 `model_aliases.models.claude-opus-5-5` 对象替换为以下对象，以选择 `last`：
 
    ```json
    {
@@ -247,9 +247,9 @@ To configure provider switching:
    }
    ```
 
-8. Save the configuration.
+8. 保存配置。
 
-9. Repeat the exact same `curl` request without changing the client payload:
+9. 在不更改客户端负载的情况下，原样重复同一个 `curl` 请求：
 
    ```shell
    curl --fail-with-body http://<aperture-hostname>/v1/messages \
@@ -258,27 +258,27 @@ To configure provider switching:
     -d '{"model":"claude-opus-5-5","max_tokens":1024,"messages":[{"role":"user","content":"Reply with hello."}]}'
    ```
 
-10. Confirm that the request succeeds and that **Logs** now shows model `anthropic/claude-opus-5-5`.
+10. 确认请求成功，且 **Logs** 现在显示模型 `anthropic/claude-opus-5-5`。
 
-11. When the primary provider recovers, change `strategy` back to `first` and save.
+11. 主提供商恢复后，把 `strategy` 改回 `first` 并保存。
 
-Because Aperture supports only `first` and `last` strategies, neither strategy selects middle entries such as `bedrock_mantle/anthropic.claude-opus-5-5`. To route traffic to Bedrock Mantle during an outage of both primary and secondary providers, move `bedrock_mantle/anthropic.claude-opus-5-5` to the first or last position in the `dst` array.
+由于 Aperture 只支持 `first` 和 `last` 两种策略，任何策略都不会选中 `bedrock_mantle/anthropic.claude-opus-5-5` 这样的中间条目。要在主、备提供商同时故障期间把流量路由到 Bedrock Mantle，请把 `bedrock_mantle/anthropic.claude-opus-5-5` 移到 `dst` 数组的第一位或最后一位。
 
-Provider switching is manual. If the selected destination fails, Aperture does not try another entry. Before relying on the switch, review permissions, quota and hook coverage, credentials, API support, and pricing for all three destinations.
+提供商切换是手动的。如果被选中的目的地失败，Aperture 不会尝试其他条目。在依赖该切换之前，请审查三个目的地的权限、配额与 hook 覆盖、凭证、API 支持和定价。
 
-### Keep a model family on the latest approved version
+### 让模型家族保持在最新已批准版本
 
-Use a model alias to provide a stable name such as `gpt-latest` that always routes to your organization's approved flagship model. When you approve a new version, update the alias destination in the gateway configuration. Client applications continue requesting `gpt-latest` without local changes.
+使用模型别名提供一个稳定名称（如 `gpt-latest`），让它始终路由到贵组织已批准的旗舰模型。批准新版本后，更新网关配置中的别名目的地即可。客户端应用继续请求 `gpt-latest`，本地无需更改。
 
-In Aperture, "latest" represents an administrator-maintained configuration choice. Aperture does not automatically detect upstream releases, query provider version APIs, or guarantee upstream availability.
+在 Aperture 中，"latest" 代表由管理员维护的配置选择。Aperture 不会自动检测上游发布、查询提供商版本 API，也不保证上游可用性。
 
-To configure and update a versioned alias:
+配置和更新版本化别名的步骤：
 
-1. \[Missing snippet: aperture\_admin\_nav.mdx]
+1. \[缺失片段：aperture\_admin\_nav.mdx]
 
-2. Confirm that your `openai` provider is enabled, has `openai_chat: true`, and explicitly includes both `gpt-5.5` and `gpt-6-sol` in its `models` array.
+2. 确认你的 `openai` 提供商已启用、设置了 `openai_chat: true`，并在其 `models` 数组中显式包含 `gpt-5.5` 和 `gpt-6-sol`。
 
-3. Merge the following fragment into your configuration. Replace `alice@example.com` with your test user login:
+3. 将以下片段合并进你的配置。把 `alice@example.com` 替换为你的测试用户登录名：
 
    ```json
    {
@@ -304,9 +304,9 @@ To configure and update a versioned alias:
    }
    ```
 
-4. Save the configuration.
+4. 保存配置。
 
-5. Send a request using the alias from your test device:
+5. 从测试设备使用该别名发送一个请求：
 
    ```shell
    curl --fail-with-body http://<aperture-hostname>/v1/chat/completions \
@@ -314,9 +314,9 @@ To configure and update a versioned alias:
      -d '{"model":"gpt-latest","messages":[{"role":"user","content":"Reply with hello."}]}'
    ```
 
-6. Confirm that the request succeeds and that the dashboard **Logs** show destination `openai/gpt-5.5`.
+6. 确认请求成功，且仪表板 **Logs** 显示目的地 `openai/gpt-5.5`。
 
-7. Replace only the `model_aliases.models.gpt-latest` object in **Administration** > **Configuration** with the following object:
+7. 在 **Administration** > **Configuration** 中，仅将 `model_aliases.models.gpt-latest` 对象替换为以下对象：
 
    ```json
    {
@@ -324,25 +324,25 @@ To configure and update a versioned alias:
    }
    ```
 
-8. Save the configuration.
+8. 保存配置。
 
-9. Repeat the exact same `curl` request. Confirm that the request succeeds and that **Logs** now shows destination `openai/gpt-6-sol`.
+9. 原样重复同一个 `curl` 请求。确认请求成功，且 **Logs** 现在显示目的地 `openai/gpt-6-sol`。
 
-Before approving future upgrades, review capabilities, cost differences, user grants, quotas, and hooks for the new destination.
+在批准未来的升级之前，请审查新目的地的能力、成本差异、用户授权、配额和 hook。
 
-### Give users a task-focused model name
+### 为用户提供面向任务的模型名称
 
-Evaluate a model for writing tasks, then give users a recognizable name such as `writing-assistant`. Users do not need to know its provider-specific model ID. The alias does not appear automatically in model pickers.
+先评估某个模型在写作任务上的表现，然后给用户一个易于辨认的名称，例如 `writing-assistant`。用户无需知道其提供商专属的模型 ID。别名不会自动出现在模型选择器中。
 
-An alias provides routing convenience only. It does not modify system prompts, enforce tone, or add specialized capabilities to the underlying model.
+别名只提供路由上的便利。它不会修改系统提示、强制语气，也不会为底层模型添加专门能力。
 
-To configure a task-focused alias:
+配置面向任务的别名的步骤：
 
-1. \[Missing snippet: aperture\_admin\_nav.mdx]
+1. \[缺失片段：aperture\_admin\_nav.mdx]
 
-2. Confirm that your `openai` provider is enabled and lists `gpt-5.4-mini` under `models` with `openai_chat: true`.
+2. 确认你的 `openai` 提供商已启用，并在 `models` 中列出了 `gpt-5.4-mini`，同时设置 `openai_chat: true`。
 
-3. Merge the following fragment into your configuration:
+3. 将以下片段合并进你的配置：
 
    ```json
    {
@@ -367,9 +367,9 @@ To configure a task-focused alias:
    }
    ```
 
-4. Save the configuration.
+4. 保存配置。
 
-5. Send a request with a writing prompt:
+5. 发送一个写作提示的请求：
 
    ```shell
    curl --fail-with-body http://<aperture-hostname>/v1/chat/completions \
@@ -377,60 +377,60 @@ To configure a task-focused alias:
      -d '{"model":"writing-assistant","messages":[{"role":"user","content":"Draft a short meeting follow-up."}]}'
    ```
 
-6. Confirm that the response returns generated text and **Logs** records destination `openai/gpt-5.4-mini`.
+6. 确认响应返回了生成的文本，且 **Logs** 记录了目的地 `openai/gpt-5.4-mini`。
 
-7. Share the exact alias name `writing-assistant` and supported API requirements with your team. Instruct users to enter the name directly in clients that support explicit model configuration.
+7. 与你的团队共享确切的别名 `writing-assistant` 以及所支持的 API 要求。告知用户在支持显式模型配置的客户端中直接输入该名称。
 
-## Access and usage
+## 访问与用量
 
-Grants, quotas, hooks, and usage tracking use the resolved destination. Captured request bodies also contain the rewritten destination model, not the alias.
+授权、配额、hook 和用量跟踪都以解析后的目的地为准。捕获的请求体中也包含改写后的目的地模型，而不是别名。
 
-### Grants
+### 授权
 
-Aperture grants authorize access to the resolved destination model, not the model alias name. To use an alias, a user must have:
+Aperture 授权的是对解析后的目的地模型的访问，而不是模型别名名称。要使用某个别名，用户必须拥有：
 
-* An Aperture role grant, such as `{ "role": "user" }`.
-* A model capability granting access to the destination model, such as `{ "models": "openai/gpt-5.4-mini" }`. For setup, refer to [grant access to models][docs-grant-model-access].
+* 一个 Aperture 角色授权，例如 `{ "role": "user" }`。
+* 一个授予目的地模型访问权限的模型能力，例如 `{ "models": "openai/gpt-5.4-mini" }`。设置方法请参阅[授予模型访问权限][docs-grant-model-access]。
 
-If you configure a multi-destination alias for provider switching, grant access to all destinations in the array before initiating a switch. Access to a destination model also allows users to request that concrete model directly. Model aliases do not prevent direct requests or restrict access to destination models.
+如果你为提供商切换配置了多目的地别名，请在发起切换之前向数组中所有目的地授予访问权限。对某个目的地模型的访问也允许用户直接请求该具体模型。模型别名不会阻止直接请求，也不会限制对目的地模型的访问。
 
-To verify access controls, test negative permissions using a separate user account:
+要验证访问控制，请用一个独立的用户账户测试反向权限：
 
-1. Identify a separate test user account with a `user` role.
-2. Verify that no grants in the Aperture configuration or tailnet policy file grant that user access to the alias destination model. Keep your administrative grants intact.
-3. Send a request specifying the alias as that test user.
-4. Confirm that Aperture returns HTTP 404 with a message such as `does not have permission to use model` that names the destination, not the alias.
+1. 找一个具有 `user` 角色的独立测试用户账户。
+2. 确认 Aperture 配置或 tailnet 策略文件中没有任何授权向该用户授予对别名目的地模型的访问。保持你的管理员授权不变。
+3. 以该测试用户身份发送一个指定别名的请求。
+4. 确认 Aperture 返回 HTTP 404，并附带类似 `does not have permission to use model` 的消息，消息中给出的是目的地而非别名。
 
-### Quotas
+### 配额
 
-Model-scoped quotas evaluate the resolved destination model rather than the alias name. When Aperture evaluates a request, it matches quota capabilities against the destination FQN.
+按模型划分的配额评估的是解析后的目的地模型，而不是别名名称。Aperture 评估请求时，会把配额能力与目的地的 FQN 进行匹配。
 
-Keep the following behaviors in mind:
+请注意以下行为：
 
-* **Shared buckets across destinations**: If destination grants reference the same quota bucket, such as `daily:<user>`, usage accrues to that bucket regardless of which destination serves the request. A destination change does not create an alias-specific bucket.
-* **Destination pricing**: Aperture calculates cost using the destination's configured or inferred pricing. Switching to a differently priced destination changes how quickly requests consume quota.
-* **Quotas across models**: Quota capabilities without a `models` restriction apply to all accessible models, including any model resolved through an alias.
+* **目的地之间共享配额桶**：如果各目的地的授权引用同一个配额桶（例如 `daily:<user>`），无论哪个目的地服务请求，用量都会累积到该桶。更改目的地不会创建别名专属的桶。
+* **目的地定价**：Aperture 使用目的地的已配置或推断定价计算成本。切换到定价不同的目的地会改变请求消耗配额的速度。
+* **跨模型配额**：不带 `models` 限制的配额能力适用于所有可访问的模型，包括通过别名解析出的任何模型。
 
-For full quota configuration options and bucket rules, refer to [Quotas][docs-quotas-config].
+完整的配额配置选项和配额桶规则请参阅[配额][docs-quotas-config]。
 
-### Hooks
+### Hook
 
-Model-scoped webhooks evaluate the resolved destination model rather than the alias name. When Aperture matches hooks, it uses the destination FQN.
+按模型划分的 webhook 评估的是解析后的目的地模型，而不是别名名称。Aperture 匹配 hook 时使用目的地的 FQN。
 
-Keep the following behaviors in mind:
+请注意以下行为：
 
-* **Hook scoping**: A grant with `send_hooks` scoped to a model pattern matches only when the resolved destination matches that pattern. Hooks without a `models` restriction match every model the user can access.
-* **Hook payload metadata**: The hook metadata and `model` field reflect the rewritten destination model, not the alias name. If your hook inspects the model name, configure it to expect the destination FQN.
-* **Request body capture**: If a hook includes `request_body` in its `send` list, the hook receives the rewritten JSON request containing the destination model.
-* **Hook definitions**: Defining a hook in the top-level `hooks` map does not attach it to requests. You must attach the hook through a grant's `send_hooks` array.
+* **Hook 作用域**：`send_hooks` 限定为某个模型模式的授权，只在解析出的目的地匹配该模式时生效。不带 `models` 限制的 hook 匹配用户可访问的每个模型。
+* **Hook 负载元数据**：hook 元数据和 `model` 字段反映的是改写后的目的地模型，而不是别名名称。如果你的 hook 检查模型名称，请将其配置为期待目的地 FQN。
+* **请求体捕获**：如果 hook 的 `send` 列表包含 `request_body`，hook 会收到包含目的地模型的改写后 JSON 请求。
+* **Hook 定义**：在顶层 `hooks` 映射中定义 hook 并不会把它附加到请求上。必须通过授权的 `send_hooks` 数组来附加 hook。
 
-Hooks are policy and monitoring tools. They cannot alter routing or redirect an alias to a different destination. For hook setup, refer to [Hooks][docs-hooks-config].
+hook 是策略和监控工具。它们不能改变路由，也不能把别名重定向到其他目的地。hook 设置请参阅 [Hook][docs-hooks-config]。
 
-### Policy integration example
+### 策略集成示例
 
-The following configuration fragment demonstrates how grants, quotas, and hooks interact for the `claude-opus-5-5` multi-destination alias.
+以下配置片段展示了 `claude-opus-5-5` 多目的地别名场景下授权、配额和 hook 的协同方式。
 
-Before using this example, define `daily:<user>` under top-level `quotas` and a hook named `audit` under top-level `hooks`. For setup, refer to [quotas][docs-quotas-config] and [hooks][docs-hooks-config]. Substitute your existing bucket and hook names. In the provider-switching recipe's grant, add the `quotas` and `send_hooks` fields shown below to its three model capabilities. Keep the existing `src` and role. Do not add a second `grants` key.
+使用此示例之前，请先在顶层 `quotas` 下定义 `daily:<user>`，并在顶层 `hooks` 下定义名为 `audit` 的 hook。设置方法请参阅[配额][docs-quotas-config]和 [Hook][docs-hooks-config]。请替换为你现有的配额桶和 hook 名称。在提供商切换方案的授权中，把下文所示的 `quotas` 和 `send_hooks` 字段添加到它的三个模型能力上。保留现有的 `src` 和角色。不要添加第二个 `grants` 键。
 
 ```json
 {
@@ -480,74 +480,74 @@ Before using this example, define `daily:<user>` under top-level `quotas` and a 
 }
 ```
 
-In this example:
+在此示例中：
 
-* All three destinations attach to the same `daily:<user>` bucket, preserving quota tracking across provider switches.
-* All three destinations trigger the `audit` hook on completion, sending cost metrics without exposing prompt contents.
-* If you opt into `request_body` in `send_hooks`, the webhook receives the rewritten request containing the concrete destination model.
+* 三个目的地都挂到同一个 `daily:<user>` 配额桶上，在提供商切换之间保持配额跟踪连续。
+* 三个目的地都在完成时触发 `audit` hook，发送成本指标而不暴露提示内容。
+* 如果你在 `send_hooks` 中选择加入 `request_body`，webhook 会收到包含具体目的地模型的改写后请求。
 
-## Limitations
+## 限制
 
-Keep the following limitations in mind when designing alias configurations:
+设计别名配置时请注意以下限制：
 
-* **No automatic failover or load balancing**: If the selected destination returns an error or is unreachable, Aperture does not fail over to another destination in the array. The destination array is not an automated fallback list. Switching requires an administrator to update the configuration.
-* **Configured concrete models only**: Destinations must be concrete models configured under enabled providers. An alias cannot point to another alias. Bare model names fail destination validation. The provider ID `aperture` is reserved.
-* **Name collisions**: An alias name overrides any concrete model with the same name, including models used by the Aperture chat interface. Here, defining the alias `claude-opus-5-5` intentionally matches the concrete model name and redirects requests for that model to the alias destination. Avoid unintended name collisions that could intercept traffic intended for other models.
-* **Supported APIs and explicit model names only**: Use a supported request format and a client that accepts an explicit model name. Aliases do not add entries to model lists or pickers. Refer to [supported requests and model discovery][ar-supported-requests-and-model-discovery].
+* **无自动故障转移或负载均衡**：如果被选中的目的地返回错误或不可达，Aperture 不会故障转移到数组中的其他目的地。目的地数组不是自动回退列表。切换需要管理员更新配置。
+* **仅限已配置的具体模型**：目的地必须是已启用提供商下配置的具体模型。别名不能指向另一个别名。裸模型名称无法通过目的地校验。提供商 ID `aperture` 为保留 ID。
+* **名称冲突**：别名名称会覆盖任何同名的具体模型，包括 Aperture 聊天界面使用的模型。在本页示例中，定义别名 `claude-opus-5-5` 是有意与具体模型名匹配，把对该模型的请求重定向到别名目的地。请避免意外的名称冲突截获本应发给其他模型的流量。
+* **仅支持受支持的 API 和显式模型名称**：请使用受支持的请求格式和接受显式模型名称的客户端。别名不会向模型列表或选择器添加条目。请参阅[支持的请求与模型发现][ar-supported-requests-and-model-discovery]。
 
-## Troubleshooting
+## 故障排除
 
-Aperture validates alias structure and destination requirements when you save the configuration in the dashboard or through the API. Both errors and warnings reject the save.
+在仪表板或通过 API 保存配置时，Aperture 会校验别名结构和目的地要求。错误（error）和警告（warning）都会导致保存被拒。
 
-### Configuration errors
+### 配置错误
 
-For configurations that use deprecated `virtual`, the validation messages use the `virtual.` prefix instead of `model_aliases.`.
+对于使用已弃用 `virtual` 的配置，校验消息会使用 `virtual.` 前缀而不是 `model_aliases.`。
 
-The following structural validation errors prevent configuration saves:
+以下结构性校验错误会阻止保存配置：
 
-| Condition                                         | Error or warning message                                                                       | Type    |
+| 条件                                              | 错误或警告消息                                                                                 | 类型    |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------- |
-| Invalid top-level strategy                        | `model_aliases.strategy: invalid value "{value}" (valid: "first", "last")`                     | Error   |
-| Empty alias name                                  | `model_aliases.models: model id must not be empty`                                             | Error   |
-| Null alias object                                 | `model_aliases.models.{alias}: model config must not be null`                                  | Error   |
-| Invalid per-alias strategy                        | `model_aliases.models.{alias}.strategy: invalid value "{value}" (valid: "first", "last")`      | Error   |
-| Missing or empty destination list                 | `model_aliases.models.{alias}.dst: must contain at least one destination`                      | Error   |
-| Empty destination string                          | `model_aliases.models.{alias}.dst[{index}]: destination must not be empty`                     | Error   |
-| Malformed destination string                      | `model_aliases.models.{alias}.dst[{index}]: "{destination}" is not a valid provider/model FQN` | Error   |
-| Both `model_aliases` and `virtual` contain values | `model_aliases and virtual must not both be nonempty; use model_aliases instead of virtual`    | Warning |
+| 顶层策略无效                                      | `model_aliases.strategy: invalid value "{value}" (valid: "first", "last")`                     | 错误    |
+| 别名名称为空                                      | `model_aliases.models: model id must not be empty`                                             | 错误    |
+| 别名对象为 null                                   | `model_aliases.models.{alias}: model config must not be null`                                  | 错误    |
+| 每别名策略无效                                    | `model_aliases.models.{alias}.strategy: invalid value "{value}" (valid: "first", "last")`      | 错误    |
+| 目的地列表缺失或为空                              | `model_aliases.models.{alias}.dst: must contain at least one destination`                      | 错误    |
+| 目的地字符串为空                                  | `model_aliases.models.{alias}.dst[{index}]: destination must not be empty`                     | 错误    |
+| 目的地字符串格式错误                              | `model_aliases.models.{alias}.dst[{index}]: "{destination}" is not a valid provider/model FQN` | 错误    |
+| `model_aliases` 与 `virtual` 同时包含值           | `model_aliases and virtual must not both be nonempty; use model_aliases instead of virtual`    | 警告    |
 
-The following destination validation errors prevent configuration saves:
+以下目的地校验错误会阻止保存配置：
 
-| Condition                                                | Error message                                                                                            |
+| 条件                                                     | 错误消息                                                                                                 |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Provider not configured or uses reserved ID `aperture`   | `model_aliases.models.{alias}.dst[{index}]: provider "{provider}" is not configured`                     |
-| Provider is disabled                                     | `model_aliases.models.{alias}.dst[{index}]: provider "{provider}" is disabled`                           |
-| Model not explicitly listed in provider's `models` array | `model_aliases.models.{alias}.dst[{index}]: model "{model}" is not configured for provider "{provider}"` |
-| Destinations do not share an API compatibility flag      | `model_aliases.models.{alias}.dst: destinations do not share any API compatibility: {details}`           |
+| 提供商未配置，或使用了保留 ID `aperture`                 | `model_aliases.models.{alias}.dst[{index}]: provider "{provider}" is not configured`                     |
+| 提供商已禁用                                             | `model_aliases.models.{alias}.dst[{index}]: provider "{provider}" is disabled`                           |
+| 模型未显式列入提供商的 `models` 数组                     | `model_aliases.models.{alias}.dst[{index}]: model "{model}" is not configured for provider "{provider}"` |
+| 各目的地没有共享任何 API 兼容性标志                      | `model_aliases.models.{alias}.dst: destinations do not share any API compatibility: {details}`           |
 
-Every destination in a `dst` array is validated upon save. If an inactive destination violates any condition, Aperture rejects the entire configuration update.
+`dst` 数组中的每个目的地在保存时都会被校验。如果某个未启用的目的地违反任何条件，Aperture 会拒绝整个配置更新。
 
-### Request failures
+### 请求失败
 
-If a request using a model alias fails at runtime, check the following causes:
+如果使用模型别名的请求在运行时失败，请检查以下原因：
 
-| Symptom                            | Diagnostic check                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 现象                               | 诊断检查                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| HTTP 403 Forbidden                 | Verify that the user has an Aperture role grant (`{ "role": "user" }` or `{ "role": "admin" }`).                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| HTTP 404 Not Found                 | Check that the alias name in the request matches the configuration key exactly. If the alias resolved, check whether the user has a grant for the resolved destination model, or whether the destination supports the requested API format. Aperture returns messages such as `no providers match model`, `no route found for model`, `does not have permission to use model`, or `model "..." is available via ..., not ...`. When an alias matches, the error message names the resolved destination rather than the alias. |
-| HTTP 429 Too Many Requests         | Check the response and **Logs** for an assigned quota rejection or an upstream rate limit. Aperture quota errors use `insufficient_quota` for OpenAI requests and `rate_limit_error` for Anthropic requests. For diagnosis, refer to [troubleshooting Aperture][docs-troubleshooting].                                                                                                                                                                                                                                        |
-| Client cannot find or select alias | Model aliases do not appear in `/v1/models` responses or the Aperture chat picker. Use a client that supports entering an explicit model name.                                                                                                                                                                                                                                                                                                                                                                                |
-| Upstream provider error            | Verify that the upstream provider credentials are valid and have permission to call the resolved model, and that the provider endpoint is healthy.                                                                                                                                                                                                                                                                                                                                                                            |
+| HTTP 403 禁止访问                  | 确认用户拥有 Aperture 角色授权（`{ "role": "user" }` 或 `{ "role": "admin" }`）。                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| HTTP 404 未找到                    | 检查请求中的别名是否与配置键完全一致。如果别名已解析，检查用户是否拥有对解析出的目的地模型的授权，以及目的地是否支持所请求的 API 格式。Aperture 会返回 `no providers match model`、`no route found for model`、`does not have permission to use model` 或 `model "..." is available via ..., not ...` 等消息。别名匹配时，错误消息给出的是解析后的目的地而不是别名。                                                                                                                                                  |
+| HTTP 429 请求过多                  | 在响应和 **Logs** 中检查是否有配额拒绝或上游限流。Aperture 配额错误在 OpenAI 请求中使用 `insufficient_quota`，在 Anthropic 请求中使用 `rate_limit_error`。诊断方法请参阅 [Aperture 故障排除][docs-troubleshooting]。                                                                                                                                                                                                                                                                                                        |
+| 客户端找不到或无法选择别名         | 模型别名不会出现在 `/v1/models` 响应或 Aperture 聊天选择器中。请使用支持输入显式模型名称的客户端。                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 上游提供商错误                     | 确认上游提供商凭证有效且有权限调用解析出的模型，并且提供商端点运行正常。                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
-For general gateway routing, authentication, and logging issues, refer to [Troubleshooting Aperture][docs-troubleshooting].
+网关路由、身份验证和日志的一般问题请参阅 [Aperture 故障排除][docs-troubleshooting]。
 
-[ar-give-users-a-task-focused-model-name]: #give-users-a-task-focused-model-name
+[ar-give-users-a-task-focused-model-name]: #为用户提供面向任务的模型名称
 
-[ar-keep-a-model-family-on-the-latest-approved-version]: #keep-a-model-family-on-the-latest-approved-version
+[ar-keep-a-model-family-on-the-latest-approved-version]: #让模型家族保持在最新已批准版本
 
-[ar-supported-requests-and-model-discovery]: #supported-requests-and-model-discovery
+[ar-supported-requests-and-model-discovery]: #支持的请求与模型发现
 
-[ar-switch-providers-without-changing-the-client-model-name]: #switch-providers-without-changing-the-client-model-name
+[ar-switch-providers-without-changing-the-client-model-name]: #不更改客户端模型名称切换提供商
 
 [docs-admin-access]: /docs/aperture/how-to/set-up-admin-access
 

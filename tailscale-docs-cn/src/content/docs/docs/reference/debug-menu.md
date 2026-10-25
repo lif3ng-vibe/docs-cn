@@ -1,41 +1,41 @@
 ---
-title: "Debug menu and options"
-description: "Enable debug mode of the Tailscale client menu to help troubleshoot issues."
+title: "调试菜单与选项"
+description: "启用 Tailscale 客户端菜单的调试模式，帮助排查问题。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-The macOS and Windows versions of the Tailscale client contain a debug mode of the menu that provides advanced settings for monitoring and troubleshooting.
+macOS 和 Windows 版 Tailscale 客户端的菜单包含调试模式，提供用于监控和排查问题的高级设置。
 
 #### macOS
 
-To access the debug options on macOS, hold down Option and select the Tailscale icon in the menu bar. Available options include:
+在 macOS 上，按住 Option 键并点击菜单栏中的 Tailscale 图标即可访问调试选项。可用选项包括：
 
-* Sent and received traffic information.
-* Device key expiry information.
-* The **Debug** menu provides the following options:
-  * **Bug report**: [Generates a bug report ID and a configuration report][docs-bug-report] that you can send to us to help you troubleshoot issues more effectively.
-  * **Reauthenticate**: Logs the user out of the tailnet, requiring them to re-authenticate from the Tailscale [Login](https://login.tailscale.com/login) page.
-  * **Reset All Settings**: Sets the client settings back to default while keeping the user logged in.
-  * **Show Onboarding**: Displays the walk-through onboarding screens that a user typically sees when they first install the client.
-  * **Flush DNS Cache**: Clears the macOS DNS cache. This requires administrative credentials.
-  * **Add Account**: Displays a dialog for adding the client to a custom coordination server.
-  * **System Extension**: Displays the health of the Tailscale system extension. You can also use the [`tailscale configure sysext status`][docs-cli-configure] CLI command.
-  * **Reset**: Deletes and reinstalls the macOS VPN configuration. Using this option may be helpful if Tailscale refuses to start even after rebooting your Mac. This option won't work if your organization is deploying a VPN configuration profile on your Mac using an MDM solution.
-* **Quit (Leave VPN Active)**: Terminates the Tailscale GUI app, but leaves the VPN network extension running in the background. If you use this option, you may then separately toggle the network extension in the macOS System Settings app.
+* 已发送和已接收的流量信息。
+* 设备密钥过期信息。
+* **Debug** 菜单提供以下选项：
+  * **Bug report**：[生成 bug 报告 ID 和配置报告][docs-bug-report]，你可以将其发送给我们，帮助我们更高效地协助你排查问题。
+  * **Reauthenticate**：将用户从 tailnet 注销，要求其从 Tailscale [Login](https://login.tailscale.com/login) 页面重新认证。
+  * **Reset All Settings**：将客户端设置恢复为默认值，同时保持用户登录状态。
+  * **Show Onboarding**：显示用户首次安装客户端时通常会看到的引导界面。
+  * **Flush DNS Cache**：清除 macOS DNS 缓存。这需要管理员凭证。
+  * **Add Account**：显示一个对话框，用于将客户端添加到自定义协调服务器。
+  * **System Extension**：显示 Tailscale 系统扩展的健康状态。你也可以使用 [`tailscale configure sysext status`][docs-cli-configure] CLI 命令。
+  * **Reset**：删除并重新安装 macOS VPN 配置。如果重启 Mac 后 Tailscale 仍然无法启动，使用该选项可能会有帮助。如果你的组织正通过 MDM 方案在 Mac 上部署 VPN 配置描述文件，该选项将不可用。
+* **Quit (Leave VPN Active)**：退出 Tailscale 图形界面应用，但让 VPN 网络扩展在后台继续运行。使用该选项后，你可以随后在 macOS 系统设置应用中单独开关该网络扩展。
 
 #### Windows
 
-To access the debug options on Windows, hold down `CTRL` and select the Tailscale icon in the system tray. Available options include:
+在 Windows 上，按住 `CTRL` 并点击系统托盘中的 Tailscale 图标即可访问调试选项。可用选项包括：
 
-* The URL for the control plane server that the client is connected to for the tailnet.
-* **Debug report**: [Generates a bug report ID][docs-bug-report] that you can send to us to help you troubleshoot issues more effectively.
-* **Use Notepad for URLs**: Controls the client's behavior when the Tailscale [control plane][docs-control-data-planes] sends a URL that the user must visit to complete authentication. By default (when unchecked), the client opens the login URL in the default browser. When checked, the client instead displays the login URL and an ASCII QR code in Notepad rather than opening it in the default browser.
-* **Start Onboarding Test**: Displays the walk-through onboarding screens that a user typically sees when they install the client for the first time.
+* 客户端为该 tailnet 所连接的控制平面服务器的 URL。
+* **Debug report**：[生成 bug 报告 ID][docs-bug-report]，你可以将其发送给我们，帮助我们更高效地协助你排查问题。
+* **Use Notepad for URLs**：控制当 Tailscale [控制平面][docs-control-data-planes]发来一个需要用户访问才能完成认证的 URL 时客户端的行为。默认（未勾选）情况下，客户端会在默认浏览器中打开登录 URL。勾选后，客户端改为在记事本中显示登录 URL 和 ASCII 二维码，而不是在默认浏览器中打开。
+* **Start Onboarding Test**：显示用户首次安装客户端时通常会看到的引导界面。
 
-> **Tip:**
+> **提示：**
 >
-> If you use [Group Policy][xt-microsoft-group-policy] or an [MDM solution][docs-mdm] to manage your fleet of devices, you can [control the visibility of the Debug menu][docs-mdm-keys-debug].
+> 如果你使用 [Group Policy][xt-microsoft-group-policy] 或 [MDM 方案][docs-mdm]管理你的设备群，可以[控制 Debug 菜单的可见性][docs-mdm-keys-debug]。
 
 [docs-bug-report]: /docs/account/bug-report
 

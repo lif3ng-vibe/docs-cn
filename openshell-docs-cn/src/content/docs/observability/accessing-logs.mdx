@@ -1,0 +1,143 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "访问日志"
+description: "如何通过 CLI、TUI、监管器文件与容器日志查看沙箱日志。"
+keywords: "生成式 AI, 网络安全, 日志, CLI, TUI, 可观测性"
+---
+
+近期的监管器日志用 CLI 或 TUI 查看；监管器文件、沙箱运行时事件与主进程输出用计算驱动的工具查看。监管器与沙箱工作负载分开运行，因此这些日志的位置与收集路径各不相同。
+
+## CLI
+
+用 `openshell logs` 流式查看运行中沙箱的日志：
+
+```shell
+openshell logs smoke-l4 --source sandbox
+```
+
+CLI 经 gRPC 从网关接收日志。每行包含时间戳、来源、级别与消息：
+
+```text
+[1775014132.118] [sandbox] [OCSF ] [ocsf] NET:OPEN [INFO] ALLOWED /usr/bin/curl(58) -> api.github.com:443 [policy:github_api engine:opa]
+[1775014132.190] [sandbox] [OCSF ] [ocsf] HTTP:GET [INFO] ALLOWED GET https://api.github.com/zen [policy:github_api]
+[1775014132.690] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/bin/curl(64) -> httpbin.org:443 [policy:- engine:opa]
+[1775014113.058] [sandbox] [INFO ] [openshell_sandbox] Starting sandbox
+```
+
+OCSF 结构化事件显示 `OCSF` 级别。标准追踪事件显示 `INFO`、`WARN` 或 `ERROR`。
+
+网关发起的策略变更也出现在这条流中。网关合并 `openshell policy update` 操作，或批准、移除策略规则草案分块时，会为受影响的沙箱发出 `gateway` `OCSF` `CONFIG:*` 行，让你能看到产生新策略修订的确切逻辑变更。
+
+## TUI
+
+TUI 仪表盘实时显示沙箱日志。日志出现在日志面板中，格式与 CLI 相同。
+
+## 主进程输出
+
+沙箱主进程把它的 stdout 与 stderr 写入沙箱容器的 stdout 与 stderr，与沙箱运行时诊断输出并列。用计算驱动对应的容器工具读取：
+
+```shell
+kubectl -n <namespace> logs <sandbox-pod> -c agent
+docker logs <sandbox-container>
+podman logs <sandbox-container>
+```
+
+沙箱运行时在其诊断日志过滤器允许的情况下，也会向这些容器日志发出 OCSF 简写事件，包括进程启动与 Landlock 文件系统事件。这些来自运行时的事件不会推送到网关日志流，也不会包含在监管器的 JSONL 文件中。请把工作负载容器日志与监管器日志分开收集，以同时保留两个来源。
+
+以 TTY 启动的主进程只写到它的挂接端；用 `openshell sandbox connect` 查看该输出。`sandbox exec` 与 SSH 会话的输出不会进入容器日志，`openshell logs` 也不包含主进程输出。
+
+容器运行时读取日志跟不上时，主进程会在写入上阻塞，与任何容器一样。
+
+## 网关日志存储
+
+监管器通过 gRPC 实时把日志推送给网关。网关在内存中为每个沙箱保存最近 2,000 行日志。该缓冲不持久化到磁盘，网关重启或沙箱缓冲被移除时即丢失。推送通道容量有限，在负载高或断连时可能丢弃事件。
+
+要持久保留，请把监管器输出或文件以及工作负载容器日志收集到外部日志存储中。本地文件会轮转，并在容器驱动上使用临时存储；它们不是持久归档。位置与收集限制参见[直接文件系统访问](#直接文件系统访问)，结构化文件输出参见[OCSF JSON 导出](/observability/ocsf-json-export)。
+
+网关独立的 `ocsf_log` 配置把网关产生的 OCSF 事件写入 JSONL。它不持久化经 gRPC 收到的监管器日志行，也不持久化主进程输出。
+
+## 丢失感知与续传
+
+`openshell logs` 背后的 watch 流具备丢失感知。每个可续传的事件（日志行或平台事件）都携带一个不透明的 `cursor` 令牌。状态快照与警告携带空 cursor。
+
+不要解析 cursor。唯一受支持的操作是比较同一条流上观测到的两个 cursor，并把较大的一个作为续传点。该比较在任何语言中都是普通字符串比较。
+
+网关区分可恢复与不可恢复的丢失：
+
+- **可恢复的滞后**。消费者跟不上、网关在其缓冲中向前跳过时，流会发出一个警告事件并继续运行。该警告就是事件被跳过的信号。
+- **不可恢复的缺口**。客户端重连并请求从网关已从缓冲中裁剪掉的 cursor 之后续传时，流以 `OUT_OF_RANGE` 状态结束。客户端应重新开始观测；如果还需要缺失的行，去查看收集的日志或尚存的监管器文件。这些来源同样可能有缺口。
+
+cursor 绑定到签发它的 cursor 空间。网关重启、沙箱缓冲被拆除，或重连落到另一个网关副本上，都会开启新空间，之前空间的 cursor 不再指向任何东西。网关会以 `OUT_OF_RANGE` 拒绝它们，而不是当作已追上处理；否则会静默吞掉新空间的事件。格式错误的 cursor 以 `INVALID_ARGUMENT` 拒绝。
+
+`OUT_OF_RANGE` 对该 cursor 是终态。用空的续传 cursor 重启 watch；重试同一个 cursor 会以同样方式失败。
+
+重连时，客户端把它已处理的最大 cursor 作为续传点传入。网关只重放该 cursor 之后的事件，日志与平台事件按顺序合并，然后恢复实时投递。从重放到实时投递的交接是精确的：流重开期间缓冲的事件只投递一次，绝不会两次。这并不保证没有丢失；警告事件或 `OUT_OF_RANGE` 状态仍会报告丢失，重连前后都是如此。
+
+网关在发出之前合并日志与平台事件来源，因此事件通常按 cursor 升序到达。这适用于流打开时你收到的缓冲尾部、续传后的重放以及实时投递。网关不会为等待尚未发布的更低 cursor 而延迟事件，因此在并发发布下 cursor 仍可能晚到。请把见过的最大 cursor 作为续传点，而不是最后收到的那个。
+
+## 直接文件系统访问
+
+监管器在自己的文件系统中把简写日志写入 `/var/log/openshell.YYYY-MM-DD.log`，并在启用时把 OCSF JSONL 写入 `/var/log/openshell-ocsf.YYYY-MM-DD.jsonl`。`openshell sandbox exec` 在工作负载中运行，无法访问监管器的文件。
+
+| 计算驱动 | 监管器日志位置 | 本地存储生命周期 |
+|---|---|---|
+| Kubernetes | 独立监管器 Pod 中 `supervisor` 容器内的 `/var/log` | 一个 `emptyDir` 卷，随 Pod 移除。 |
+| Docker / Podman | 独立监管器容器内的 `/var/log` | tmpfs 挂载，容器停止即丢失。 |
+| VM | 运行监管器的宿主机上的 `/var/log`（可写时） | 宿主机管理的存储。驱动还会在沙箱驱动状态目录的 `supervisor.err.log` 中捕获 stderr。 |
+| Windows MXC | 网关本地 JSONL 输出 | 参见 [Windows MXC 网关](/observability/ocsf-json-export#windows-mxc-网关)。 |
+
+使用有权访问监管器资源的平台工具。对 Podman，在容器运行时把当前监管器文件复制到本地目录：
+
+```shell
+mkdir -p ./supervisor-logs
+podman cp <supervisor-container>:/var/log/. ./supervisor-logs/
+```
+
+Docker 的 `docker cp` 无法复制监管器 tmpfs 日志挂载的实时内容。取回这些文件需要操作者在 Docker 守护进程宿主机上直接访问该活动挂载。默认监管器镜像没有 shell 或 `tar`，基于 shell 的 `docker exec` 收集行不通。
+
+要查看实时控制台输出，通过平台日志接口读取监管器的 stderr：
+
+```shell
+kubectl -n <sandbox-namespace> logs <supervisor-pod> -c supervisor --follow
+docker logs --follow <supervisor-container>
+podman logs --follow <supervisor-container>
+```
+
+简写与诊断输出遵循监管器的诊断日志过滤器。`ocsf_json_enabled=true` 时，stderr 还会独立于该过滤器和文件存储，包含紧凑的 `OCSF-JSON` 记录。采集格式与投递限制参见[OCSF JSON 收集](/observability/ocsf-json-export#输出位置)。集群或容器日志采集器可以把该输出运走留存。工作负载容器日志请单独收集，以获得主进程输出与沙箱运行时事件。
+
+默认监管器镜像没有 shell 或 `tar`，基于 shell 的 `kubectl exec` 与 `kubectl cp` 示例对该镜像无效。读取 Kubernetes 监管器文件需要操作者直接访问其日志卷，例如集群调试工具。OpenShell 不会替你配置文件采集器。
+
+在轮转或资源拆除之前运走文件，并配置采集器处理每日轮转。本地文件写入器不阻塞，在压力下同样可能丢弃事件。监管器无法打开 `/var/log` 时，会回退到仅 stderr 的日志方式，不产生这些文件，即使 `ocsf_json_enabled` 为 true 也不例外。本地文件与网关流都不保证完整的审计历史。
+
+## 按事件类型过滤
+
+简写格式为 `grep` 而设计。把监管器文件复制到 `./supervisor-logs` 后，使用以下模式：
+
+```shell
+# All denied connections
+grep "DENIED\|BLOCKED" ./supervisor-logs/openshell.*.log
+
+# All network events
+grep "OCSF NET:" ./supervisor-logs/openshell.*.log
+
+# All L7 enforcement decisions
+grep "OCSF HTTP:" ./supervisor-logs/openshell.*.log
+
+# Security findings only
+grep "OCSF FINDING:" ./supervisor-logs/openshell.*.log
+
+# Policy changes
+grep "OCSF CONFIG:" ./supervisor-logs/openshell.*.log
+
+# All OCSF events, excluding standard tracing
+grep "^.* OCSF " ./supervisor-logs/openshell.*.log
+
+# Events at medium severity or above
+grep "\[MED\]\|\[HIGH\]\|\[CRIT\]\|\[FATAL\]" ./supervisor-logs/openshell.*.log
+```
+
+## 后续步骤
+
+- 了解[日志格式](/observability/logging)的工作原理以及如何阅读简写。
+- [启用 OCSF JSON 导出](/observability/ocsf-json-export)，获得机器可读的结构化输出。

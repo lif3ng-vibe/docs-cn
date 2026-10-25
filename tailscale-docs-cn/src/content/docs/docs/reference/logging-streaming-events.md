@@ -1,32 +1,32 @@
 ---
-title: "Logging, streaming, and events"
-description: "Explore Tailscale's logging features and events for webhooks."
+title: "日志、流式传输与事件"
+description: "探索 Tailscale 面向 webhook 的日志功能与事件。"
 ---
 
-Last validated Feb 5, 2025
+最后验证于 Feb 5, 2025
 
-Manage the logs and events within your Tailscale network, known as a tailnet.
+管理你的 Tailscale 网络（即 tailnet）中的日志与事件。
 
-## Capture logs and events
+## 捕获日志与事件
 
-You can capture configuration changes to your tailnet as well as network traffic flow.
+你可以捕获 tailnet 的配置变更以及网络流量。
 
-[**Configuration audit logging**](/docs/features/logging/audit-logging) — Identify who did what, and when, to your tailnet configuration.
+[**配置审计日志**](/docs/features/logging/audit-logging)——查明谁在何时对 tailnet 配置做了什么。
 
-[**Network flow logs**](/docs/features/logging/network-flow-logs) — View networking telemetry for nodes in your Tailscale network.
+[**网络流量日志**](/docs/features/logging/network-flow-logs)——查看 Tailscale 网络中各节点的网络遥测数据。
 
-## Stream logs and events to a SIEM or storage bucket
+## 把日志与事件流式传输到 SIEM 或存储桶
 
-Stream configuration audit logs and network flow logs to your preferred log streaming integration, such as a security information and event management (SIEM) system and Amazon S3 or S3-compatible storage buckets. You can also stream Tailscale SSH session recordings to another node in your tailnet or storage buckets.
+把配置审计日志和网络流量日志流式传输到你偏好的日志流集成，例如安全信息与事件管理（SIEM）系统、Amazon S3 或兼容 S3 的存储桶。你还可以把 Tailscale SSH 会话录制流式传输到 tailnet 中的另一个节点或存储桶。
 
-[**Log streaming**](/docs/features/logging/log-streaming) — Stream Tailscale logs to a security information and event management (SIEM) system, Amazon S3, and S3-compatible service.
+[**日志流式传输**](/docs/features/logging/log-streaming)——把 Tailscale 日志流式传输到安全信息与事件管理（SIEM）系统、Amazon S3 以及兼容 S3 的服务。
 
-[**Tailscale SSH session recording**](/docs/features/tailscale-ssh/tailscale-ssh-session-recording) — Use Tailscale SSH session recording to collect end-to-end encrypted recordings of Tailscale SSH sessions.
+[**Tailscale SSH 会话录制**](/docs/features/tailscale-ssh/tailscale-ssh-session-recording)——使用 Tailscale SSH 会话录制收集端到端加密的 Tailscale SSH 会话记录。
 
-[**Send Tailscale SSH session recordings to S3**](/docs/features/tailscale-ssh/how-to/session-recording-s3) — Configure an S3 backend for SSH session recording.
+[**将 Tailscale SSH 会话录制发送到 S3**](/docs/features/tailscale-ssh/how-to/session-recording-s3)——为 SSH 会话录制配置 S3 后端。
 
-## Integrate log events with your infrastructure
+## 将日志事件接入你的基础设施
 
-Use webhooks to integrate log events with your infrastructure, such as with apps like Slack.
+使用 webhook 把日志事件接入你的基础设施，例如接入 Slack 这类应用。
 
-[**Webhooks**](/docs/features/webhooks) — Set up a webhook to receive notification of events on your Tailscale network.
+[**Webhook**](/docs/features/webhooks)——设置 webhook，接收 Tailscale 网络上的事件通知。

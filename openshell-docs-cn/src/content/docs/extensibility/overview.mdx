@@ -1,0 +1,128 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "扩展性"
+sidebar-title: "概览"
+slug: "extensibility/overview"
+description: "了解 OpenShell 如何适配特定部署的基础设施、治理与工作负载需求。"
+keywords: "OpenShell 扩展, 中间件, 拦截器, 驱动, 隔离后端, 协议协商"
+---
+
+![OpenShell 扩展点。数据平面：沙箱中的智能体经隔离后端抵达监管器，监管中间件在请求到达模型与 API 之前处理请求。控制平面：你经拦截器访问网关，网关驱动把网关连接到运行时与机密存储。](/images/openshell-extension-points.svg)
+
+扩展性（extensibility）是 OpenShell 的核心。OpenShell 的设计目标是随处运行，并适配每个部署的基础设施、治理与工作负载需求。其扩展点（extension point）在保持同一套 API、策略模型与安全边界的同时，加入部署特定的行为。
+
+OpenShell 的每一层都可以扩展：
+
+- **控制平面**：网关拦截器（gateway interceptor）治理 API 操作。
+- **数据平面**：中间件处理智能体流量，隔离后端（isolation backend）控制沙箱中的工作负载。
+- **基础设施**：驱动（driver）把 OpenShell 连接到计算运行时与机密存储。
+
+## 扩展点
+
+### [中间件](/extensibility/supervisor-middleware)
+
+监管中间件（supervisor middleware）检查、转换或拒绝已放行的 HTTP 与 WebSocket 流量。它在策略评估之后、OpenShell 注入提供商凭据之前运行，因此部署可以在不暴露受管机密的前提下增加内容控制与审计。
+
+### [网关拦截器](/extensibility/gateway-interceptors)
+
+网关拦截器为选定的控制平面操作增加治理。它们可以修改或校验拟议的 API 写入，并观察已成功的变更，同时网关保留认证、持久化与最终校验的职权。
+
+### [驱动](/extensibility/drivers)
+
+计算驱动在部署特定的运行时上放置并管理沙箱。凭据驱动把提供商记录连接到部署的机密存储。两者共同让 OpenShell 适配其运行所在的基础设施。
+
+### [隔离后端](/extensibility/isolation-backends)
+
+隔离后端把监管器（supervisor）连接到沙箱运行时。它们为进程启动、终端流、信号、状态，以及预置工作负载内部的运行时专属隔离提供一致的契约。
+
+## 构建扩展
+
+从拥有你所需行为的最小扩展点入手。控制平面治理放在拦截器里，基础设施集成放在驱动里，应用流量处理放在中间件里，工作负载控制放在隔离后端里。每种扩展都使用类型化契约，因此 OpenShell 始终掌控认证、策略强制、机密与公开 API 行为。
+
+内置实现与外部实现遵循相同的契约与校验规则。各扩展专属页面描述其 API、配置与安全边界。
+
+### gRPC 与传输方式
+
+外部扩展实现由 protobuf 定义的 gRPC 服务。传输方式取决于扩展运行的位置，以及哪些 OpenShell 组件需要访问它：
+
+| 扩展 | 集成方式 | 支持的传输 |
+| --- | --- | --- |
+| 网关拦截器 | 网关调用拦截器服务。 | `http://` 或 `https://` 的 TCP，或使用 `unix://` 的本地 Unix domain socket。 |
+| 监管中间件 | 网关发现该服务，沙箱监管器经它评估流量。 | `http://` 或 `https://` 的 TCP。端点必须能从网关与监管器双方访问，因此不支持 Unix socket。 |
+| 计算驱动或凭据驱动 | 网关调用外部驱动服务。 | 本地 Unix domain socket。 |
+| OpenShell 隔离后端 | 监管器经 OpenShell Sandbox Protocol 连接到沙箱边界。 | 由计算驱动选择并预置的私有 Unix socket、TCP 上的 TLS，或 virtio-vsock。 |
+
+网关与扩展同处一台宿主机时使用 Unix domain socket。服务跨越宿主机或 Pod 边界时使用 `https://`。明文 `http://` 适用于显式启用的开发部署；经过认证的网络扩展使用 TLS 与短期网关签发凭据。服务如何校验这些凭据参见[扩展认证](#扩展认证)。
+
+[治理拦截器示例](https://github.com/NVIDIA/OpenShell/tree/main/examples/governance-interceptor)与[内容守卫中间件示例](https://github.com/NVIDIA/OpenShell/tree/main/examples/supervisor-middleware-content-guard)包含完整的 gRPC 服务、网关配置与冒烟测试。运行时集成请参考官方的 [Docker 计算驱动](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-driver-docker)与 [VM 计算驱动](https://github.com/NVIDIA/OpenShell/tree/main/crates/openshell-driver-vm)。
+
+### 协议协商
+
+OpenShell 在使用计算驱动、凭据驱动、网关拦截器或监管中间件服务之前，双方先交换 `openshell.extension.v1.PeerMetadata`。该元数据标识协议与实现版本、受支持的能力，以及对端必须具备的能力。各协议族专属的功能仍保留在各自的类型化协议中。
+
+当双方的能力要求都得到满足时，OpenShell 接受兼容的次要版本。启动期间，它会拒绝不同主版本、缺失元数据或未满足的必需能力。内置与外部服务扩展遵循相同的兼容性检查。
+
+每个扩展都返回协议 `1.0`，并在 `supported_capabilities` 中列出其协议族的基础能力：
+
+| 协议族 | 基础能力 | 返回位置 |
+|---|---|---|
+| 计算驱动 | `openshell.compute.contract` | `GetCapabilitiesResponse.extension` |
+| 凭据驱动 | `openshell.credentials.contract` | `GetCredentialDriverCapabilitiesResponse.extension` |
+| 网关拦截器 | `openshell.gateway-interceptor.contract` | `InterceptorManifest.extension` |
+| 监管中间件 | `openshell.supervisor-middleware.contract` | `MiddlewareManifest.extension` |
+
+例如，监管中间件的 `Describe` 响应包括：
+
+```json
+{
+  "extension": {
+    "protocol_version": { "major": 1, "minor": 0 },
+    "implementation_name": "example/content-guard",
+    "implementation_version": "0.1.0",
+    "supported_capabilities": ["openshell.supervisor-middleware.contract"]
+  }
+}
+```
+
+用 `openshell gateway info` 检查网关上生效的已协商扩展协议族、实现版本、协议版本与能力。
+
+## 扩展认证
+
+网关配置了 JWT 签名时，OpenShell 在每次调用[网关拦截器](/extensibility/gateway-interceptors)或[监管中间件](/extensibility/supervisor-middleware)服务时都附带一个短期 Bearer 令牌。请校验该令牌，以确认调用来自你的网关或其某个沙箱。
+
+| 声明 | 值 |
+|---|---|
+| `iss` | `openshell-gateway:<gateway_id>` |
+| `aud` | 注册的 `audience`。默认为 `urn:openshell:extension:interceptor:<name>` 或 `urn:openshell:extension:middleware:<name>`。 |
+| `caller_kind` | `gateway`；来自沙箱的中间件调用则为 `supervisor`。 |
+| `sandbox_id` | 调用方沙箱，当 `caller_kind` 为 `supervisor` 时存在。 |
+
+### 校验每个令牌
+
+从网关运维方获取网关 ID 与公钥签名密钥（或 JWKS），并在你的服务中配置。不要信任从未经验证的来源发现的密钥。要获取轮换后的密钥，请经 TLS 从网关获取 `/.well-known/openid-configuration`，并跟随其 `jwks_uri`。
+
+对每个请求，检查：
+
+- `typ` 为 `openshell-ext+jwt`，`alg` 为 `EdDSA`。固定算法，不要从令牌中读取。
+- 签名、过期时间与确切受众均有效。
+- `iss` 为 `openshell-gateway:<gateway_id>`，而不是网关 URL。
+- `caller_kind` 与 `sandbox_id` 符合你的服务所接受的取值。
+
+OpenShell 会复用令牌直至其轮换，因此不要拒绝重复出现的 `jti`。
+
+服务必须使用 `https://` 端点。OpenShell 对照平台信任根校验证书与主机名，私有 CA 则对照 `tls_ca_cert_path`。
+
+### 启动时确认受众
+
+在 `Describe` manifest 的 `expected_audience` 字段中返回你期望的受众。与配置的 `audience` 不一致时网关拒绝启动。留空即跳过该检查。
+
+### 无认证运行
+
+在注册上设置 `allow_insecure_transport = true` 可使用不附带令牌的明文 `http://` 端点。此时你的服务无法把 OpenShell 与任何其他客户端区分开，且网关在每次启动时记录一条警告。仅用于本地开发或已对调用方完成认证的网络。
+
+### 当前限制
+
+- 令牌属于 Bearer 凭据：被截获的令牌在过期前一直可用。
+- 扩展令牌与网关共用签名密钥，因此无法单独轮换或吊销。
+- 不支持 mTLS 客户端认证与重叠的密钥轮换。

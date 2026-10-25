@@ -1,44 +1,44 @@
 ---
-title: "No home relay server"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "没有归属中继服务器"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Aug 1, 2025
+最后验证于 Aug 1, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 No home relay server
 Tailscale could not connect to any relay server.
 
-## Reference ID
+## 参考 ID
 
 `no-derp-home`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-This message indicates that the Tailscale client is unable to connect to any DERP (Designated Encrypted Routing Protocol) relay server, which Tailscale uses as a fallback method for routing traffic when direct peer-to-peer connections are not possible.
+这条消息表示 Tailscale 客户端无法连接到任何 DERP（Designated Encrypted Routing Protocol）中继服务器。当点对点直连不可行时，Tailscale 会把 DERP 作为路由流量的回退方式。
 
-Here are some reasons why this message might display:
+可能显示这条消息的原因有：
 
-* Issue with network or internet connectivity.
-* Issue with firewall configuration.
-* Issues with the Tailscale clients installation or upgrade.
-* DERP server availability issues.
+* 网络或互联网连接存在问题。
+* 防火墙配置存在问题。
+* Tailscale 客户端安装或升级存在问题。
+* DERP 服务器可用性出现问题。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Restart your Tailscale client using the client UI, or run the CLI commands `tailscale down` followed by `tailscale up`.
-* Check your internet connection.
-* If you are using a firewall, verify that the ports and domains used for connecting to Tailscale are not blocked.
+* 通过客户端 UI 重启 Tailscale 客户端，或者在 CLI 中先运行 `tailscale down`、再运行 `tailscale up`。
+* 检查你的互联网连接。
+* 如果你使用了防火墙，请确认连接 Tailscale 所用的端口和域名未被阻止。
 
-## Additional information
+## 更多信息
 
-* For information about the ports and domain names used to communicate with Tailscale, refer to [What firewall ports should I open to use Tailscale?][docs-firewall-ports].
-* For information about the Designated Encrypted Routing Protocol, refer to [DERP servers][docs-derp-server].
+* 有关与 Tailscale 通信所用的端口和域名，请参阅 [使用 Tailscale 应该打开哪些防火墙端口？][docs-firewall-ports]。
+* 有关 Designated Encrypted Routing Protocol 的信息，请参阅 [DERP 服务器][docs-derp-server]。
 
 [docs-derp-server]: /docs/reference/derp-servers
 

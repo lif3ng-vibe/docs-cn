@@ -1,0 +1,321 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "Google"
+sidebar-title: "Google"
+description: "在 OpenShell 沙箱内认证 Google Cloud API 与 Vertex AI。"
+keywords: "生成式 AI, Google Cloud, Vertex AI, GCP, OAuth2, 凭据, 沙箱"
+---
+
+`google-cloud` 提供商为沙箱提供原生 GCP 凭据，任何 Google Cloud SDK 都开箱即用——Cloud Storage、BigQuery、Drive、Maps、Discovery Engine 或任何其他 GCP API。回环地址上的 GCE 元数据服务器模拟器提供凭据占位符，沙箱代理在请求时把占位符解析为真实令牌。沙箱进程永远不会持有真实的 GCP 凭据。
+
+## 快速开始
+
+先导入 `google-cloud` 配置档案；网关只提供你导入的配置档案：
+
+```shell
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/google-cloud.yaml --global
+```
+
+如果你已用应用默认凭据（Application Default Credentials）配置好 `gcloud`，一条命令即可创建带自动凭据刷新的提供商：
+
+```shell
+openshell provider create \
+  --name my-gcp \
+  --type google-cloud \
+  --from-gcloud-adc \
+  --config project_id="$(gcloud config get-value project)" \
+  --config region=global
+```
+
+`--from-gcloud-adc` 读取你的 ADC 文件，在网关上配置 OAuth2 刷新，并在命令返回之前铸造第一个访问令牌。网关自动轮换令牌——无需手动刷新。
+
+## 认证流程
+
+支持两种凭据流程。按你的环境选择。
+
+### 应用默认凭据（gcloud ADC）
+
+使用 `gcloud auth application-default login` 的凭据。网关自动用刷新令牌交换短期访问令牌。
+
+```shell
+openshell provider create \
+  --name my-gcp \
+  --type google-cloud \
+  --config project_id=my-project \
+  --config region=us-central1 \
+  --credential GCP_ADC_ACCESS_TOKEN=placeholder
+```
+
+用 ADC JSON 字段配置凭据刷新：
+
+```shell
+openshell provider refresh configure my-gcp \
+  --credential-key GCP_ADC_ACCESS_TOKEN \
+  --strategy oauth2-refresh-token \
+  --material client_id=YOUR_CLIENT_ID \
+  --material client_secret=YOUR_CLIENT_SECRET \
+  --material refresh_token=YOUR_REFRESH_TOKEN \
+  --secret-material-key client_secret \
+  --secret-material-key refresh_token
+```
+
+这些值在你的 ADC 文件 `~/.config/gcloud/application_default_credentials.json` 中。
+
+触发第一次令牌铸造：
+
+```shell
+openshell provider refresh rotate my-gcp \
+  --credential-key GCP_ADC_ACCESS_TOKEN
+```
+
+### 服务账户密钥
+
+使用 GCP 服务账户 JSON 密钥文件。网关用 `google-service-account-jwt` 策略签名 JWT 并交换为访问令牌。
+
+```shell
+openshell provider create \
+  --name my-gcp \
+  --type google-cloud \
+  --config project_id=my-project \
+  --config region=us-central1 \
+  --credential GCP_SA_ACCESS_TOKEN=placeholder
+```
+
+```shell
+openshell provider refresh configure my-gcp \
+  --credential-key GCP_SA_ACCESS_TOKEN \
+  --strategy google-service-account-jwt \
+  --material client_email=sa@my-project.iam.gserviceaccount.com \
+  --material private_key="$(jq -r .private_key /path/to/sa-key.json)" \
+  --secret-material-key private_key
+```
+
+```shell
+openshell provider refresh rotate my-gcp \
+  --credential-key GCP_SA_ACCESS_TOKEN
+```
+
+## 配置键
+
+创建提供商时用 `--config key=value` 设置：
+
+| 键 | 说明 | 示例 |
+|-----|-------------|---------|
+| `project_id` | GCP 项目 ID | `my-project-123` |
+| `region` | GCP 区域 | `us-central1` |
+| `service_account_email` | 元数据端点可选的服务账户邮箱 | `sa@proj.iam.gserviceaccount.com` |
+
+`service_account_email` 省略或为空时，递归元数据账户发现返回 `default` 标识，使 SDK 可以反复刷新。
+
+## 工作原理
+
+沙箱挂接 `google-cloud` 提供商启动时：
+
+1. 网关铸造一个新的 GCP 访问令牌，并存入沙箱代理的凭据解析器。
+2. 沙箱经其经过认证的监管器连接，把 HTTP 请求中继到保留的 `127.0.0.1:8174` 元数据端点。监管器模拟 GCE 实例元数据 API，向 GCP SDK 提供凭据占位符。真实访问令牌留在监管器内。
+3. SDK 发起 API 调用时，会在 `Authorization` 头部发送占位符。沙箱代理 TLS 终止出站连接，把占位符解析为真实令牌，再把请求转发给 GCP。
+4. 令牌接近过期时，网关刷新它。代理的解析器被原子性更新——后续 API 调用自动使用新令牌。
+
+配置值（`project_id`、`region`、`service_account_email`）在沙箱内**以明文可见**——它们以环境变量形式出现，并由元数据端点提供。它们是非机密标识符，不是凭据。访问令牌绝不暴露；只有占位符到达沙箱进程。
+
+模拟器支持使用 Docker、Podman、Kubernetes 与 VM 运行时的 Linux 沙箱。Windows/MXC 不提供该元数据端点。SDK 必须遵循下文注入的元数据发现变量。请求要求 `Metadata-Flavor: Google` 头部；带 `X-Forwarded-For` 的请求会被拒绝。该端点提供项目 ID、服务账户邮箱、范围与令牌占位符，包括递归服务账户发现。
+
+OpenShell 为该服务保留 `127.0.0.1:8174`。即使工作负载在该地址绑定了自己的监听器，到该地址的连接仍会到达模拟器。到宿主机云元数据服务的请求保持被阻断；模拟器不向 `metadata.google.internal` 或 `169.254.169.254` 转发请求。
+
+### 注入的环境变量
+
+提供商自动把它们注入沙箱。非机密变量在进程生成时解析为真实值；令牌变量保持占位符，留到代理时解析。
+
+| 变量 | 值 | 用途 |
+|----------|-------|---------|
+| `GCE_METADATA_HOST` | `127.0.0.1:8174` | GCP SDK 元数据发现（监管器模拟器） |
+| `GCE_METADATA_IP` | `127.0.0.1:8174` | Python google-auth 的 ping 检测 |
+| `METADATA_SERVER_DETECTION` | `assume-present` | Node.js gcp-metadata 跳过检测 |
+| `GCP_PROJECT_ID` | 来自 `project_id` 配置 | GCP SDK 项目 |
+| `GOOGLE_CLOUD_PROJECT` | 来自 `project_id` 配置 | 备用项目变量 |
+| `CLOUD_ML_REGION` | 来自 `region` 配置 | GCP 区域 |
+| `GCP_LOCATION` | 来自 `region` 配置 | 备用区域变量 |
+
+## 配合 GCP API 使用
+
+元数据模拟器提供的令牌带 `cloud-platform` OAuth2 范围，可访问底层服务账户拥有 IAM 权限的任何 GCP API。把目标 API 主机加入沙箱网络策略：
+
+先把 `my-gcp` 挂接到沙箱。`google-cloud` 配置档案没有端点，因此每个 API 端点都必须绑定到该提供商实例。没有绑定时，OpenShell 会向沙箱扣留其访问令牌。没有可用的绑定访问令牌或令牌已过期时，元数据令牌端点返回 HTTP `503`。测试令牌发现之前，请挂接提供商、添加凭据绑定，并检查 `openshell provider refresh status my-gcp`。
+
+```yaml
+network_policies:
+  gcp_apis:
+    name: gcp-apis
+    endpoints:
+      - host: "*.googleapis.com"
+        port: 443
+        protocol: rest
+        access: read-write
+        enforcement: enforce
+        credential_binding:
+          provider: my-gcp
+    binaries:
+      - { path: /usr/bin/curl }
+      - { path: /usr/bin/node }
+      - { path: "/sandbox/.uv/python/**" }
+      - { path: "/sandbox/.venv/**" }
+```
+
+对运行中的沙箱，导出其基础策略。移除 `---` 行之上的 frontmatter 头部，加上文所示的端点与二进制，然后应用该文件：
+
+```shell
+openshell policy get my-sandbox --base > sandbox-policy.yaml
+# Edit sandbox-policy.yaml to add the gcp_apis rule shown above.
+openshell policy set my-sandbox --policy sandbox-policy.yaml --wait
+```
+
+## 网络策略
+
+`google-cloud` 提供商类型默认不包含任何网络策略端点。沙箱需要访问的每个 GCP API 都必须在沙箱策略中添加端点规则。示例见上文“配合 GCP API 使用”。
+
+## Vertex AI
+
+`google-vertex-ai` 提供商让选定的沙箱访问原生 Google Vertex AI 端点。OpenShell 把刷新引导材料保留在网关，轮换短期访问令牌，并只在提供商配置档案授权的端点解析令牌占位符。
+
+OpenShell 不选择模型，也不变换请求。工作负载对其所选模型使用原生 Vertex 端点与请求格式。
+
+### 前提条件
+
+- 已启用 Vertex AI API 的 GCP 项目。
+- 拥有 Vertex AI User 角色并已下载 JSON 密钥的服务账户（用于生产），或 gcloud 应用默认凭据（用于本地开发）。
+- 在目标 Vertex 区域内对所选模型的访问权限。
+
+### 创建 Vertex AI 提供商
+
+先导入 `google-vertex-ai` 配置档案：
+
+```shell
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/google-vertex-ai.yaml --global
+```
+
+#### 服务账户密钥
+
+用 JSON 密钥作为仅供网关使用的引导材料创建提供商：
+
+```shell
+openshell provider create \
+  --name vertex-prod \
+  --type google-vertex-ai \
+  --credential GOOGLE_SERVICE_ACCOUNT_KEY="$(cat /path/to/key.json)" \
+  --config VERTEX_AI_PROJECT_ID=my-gcp-project \
+  --config VERTEX_AI_REGION=us-central1
+```
+
+配置网关管理的刷新：
+
+```shell
+openshell provider refresh configure vertex-prod \
+  --credential-key GOOGLE_VERTEX_AI_SERVICE_ACCOUNT_TOKEN \
+  --strategy google-service-account-jwt \
+  --material client_email="sa@my-gcp-project.iam.gserviceaccount.com" \
+  --material private_key="$(jq -r .private_key /path/to/key.json)" \
+  --secret-material-key private_key
+```
+
+私钥留在网关凭据存储中。沙箱只收到短期访问令牌的不透明占位符。
+
+#### gcloud 应用默认凭据
+
+本地开发：
+
+```shell
+gcloud auth application-default login
+
+openshell provider create \
+  --name vertex-local \
+  --type google-vertex-ai \
+  --from-gcloud-adc \
+  --config VERTEX_AI_PROJECT_ID=my-gcp-project \
+  --config VERTEX_AI_REGION=us-central1
+```
+
+`--from-gcloud-adc` 读取已授权用户的 ADC，在网关配置 OAuth2 刷新授予，并立即铸造 `GOOGLE_VERTEX_AI_TOKEN`。ADC 文件与刷新令牌不会进入沙箱。
+
+### Vertex AI 配置键
+
+| 键 | 是否必需 | 默认值 | 说明 |
+|---|---|---|---|
+| `VERTEX_AI_PROJECT_ID` | 是 | — | 作为非机密工作负载配置暴露的 GCP 项目 ID。 |
+| `VERTEX_AI_REGION` | 否 | `us-central1` | 作为非机密工作负载配置暴露的 Vertex 位置。 |
+
+提供商挂接时，OpenShell 还会投影标准的项目与位置别名，例如 `GOOGLE_CLOUD_PROJECT`、`ANTHROPIC_VERTEX_PROJECT_ID`、`CLOUD_ML_REGION` 与 `VERTEX_LOCATION`。
+
+### 挂接 Vertex AI 提供商
+
+创建沙箱时挂接：
+
+```shell
+openshell sandbox create \
+  --from registry.example.com/team/agent:1.0 \
+  --name vertex-agent \
+  --provider vertex-local
+```
+
+或挂接到既有沙箱：
+
+```shell
+openshell sandbox provider attach vertex-agent vertex-local
+```
+
+运行时挂接之后请启动新进程，让它接收提供商环境。既有进程不会获得新挂接的环境变量。
+
+### 调用原生 Vertex API
+
+Claude 模型使用 Vertex 的发布者模型端点。从新的沙箱进程运行一次请求：
+
+```shell
+openshell sandbox exec vertex-agent -- sh -lc '
+  token=${GOOGLE_VERTEX_AI_SERVICE_ACCOUNT_TOKEN:-$GOOGLE_VERTEX_AI_TOKEN}
+  curl -X POST \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    -d '\''{
+      "anthropic_version":"vertex-2023-10-16",
+      "max_tokens":1024,
+      "messages":[{"role":"user","content":"Hello"}]
+    }'\'' \
+    "https://${CLOUD_ML_REGION}-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/${CLOUD_ML_REGION}/publishers/anthropic/models/claude-sonnet-4-6:rawPredict"
+'
+```
+
+使用你的 GCP 项目支持的模型 ID 与位置。`global`、`us` 或 `eu` 请使用 Google 文档记载的对应主机名，而不是区域性的 `<location>-aiplatform.googleapis.com` 形式。
+
+Gemini 与第三方模型使用其文档记载的原生或 OpenAI 兼容 Vertex 端点。在客户端中配置模型、URL、流式模式与超时。OpenShell 不改写它们。
+
+### 验证与排查 Vertex AI
+
+检查挂接与生效策略：
+
+```shell
+openshell sandbox provider list vertex-agent
+openshell policy get vertex-agent --full
+openshell provider refresh status vertex-local
+```
+
+常见失败：
+
+- 缺少令牌变量通常意味着进程在提供商挂接之前启动。启动新进程。
+- `connection not allowed by policy` 表示生效策略缺少提供商端点或调用方二进制。网关全局策略覆盖会抑制提供商衍生条目。
+- `credential_endpoint_mismatch` 表示请求目的地在提供商配置档案的端点绑定之外。
+- Vertex 400 或 404 通常意味着模型、位置、发布者路径或请求体与原生 API 不匹配。
+- Vertex 401 或 403 可能表示刷新授予已过期或缺少 GCP IAM 权限。检查 `provider refresh status` 与 Vertex AI User 角色。
+
+提供商创建不验证模型访问。原生请求就是端到端检查。
+
+### 迁移既有 Vertex 路由
+
+早期的托管路由分开存储提供商与模型，并为工作负载改写请求。升级之后，提供商及其刷新状态保留，但路由不再保留。
+
+1. 把保留的 Vertex 提供商挂接到每个目标沙箱。
+2. 启动新的工作负载进程。
+3. 把路由的模型与超时移入客户端配置。
+4. 把客户端改为原生 Vertex 端点与请求格式。
+5. 在生产上线之前，验证一次非流式与一次流式的原生请求。
+
+不要自动把该提供商挂接到每个沙箱。旧路由是工作区全局的；替代方案有意按沙箱授予访问。

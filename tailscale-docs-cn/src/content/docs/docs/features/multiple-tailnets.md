@@ -1,87 +1,87 @@
 ---
-title: "Manage multiple tailnets"
-description: "Manage multiple tailnets under a single organization."
+title: "管理多个 tailnet"
+description: "在单一组织下管理多个 tailnet。"
 ---
 
-Last validated Feb 4, 2026
+最后验证于 Feb 4, 2026
 
-You can create multiple Tailscale networks (known as tailnets) under a single organization, using a common identity provider and domain.
+你可以在单一组织下、使用共同的身份提供方和域名创建多个 Tailscale 网络（即 tailnet）。
 
-> **Note:** Multiple tailnets are currently in alpha.
+> **注意：**多 tailnet 功能目前处于 alpha 阶段。
 
-> **Note:**
+> **注意：**
 >
-> To create multiple tailnets for your organization, contact our [sales][co-contact-sales] team.
+> 要为你的组织创建多个 tailnet，请联系我们的[销售][co-contact-sales]团队。
 
-*（图：A single organization contains a tailnet for its domain, and can contain other tailnets.）*
+*（图：一个组织包含其域名下的一个 tailnet，并且可以包含其他 tailnet。）*
 
-An organization with multiple tailnets.
+包含多个 tailnet 的组织。
 
-> **Note:**
+> **注意：**
 >
-> All additional tailnets must use the same domain and identity provider as your existing tailnet. At a future date, Tailscale will allow arbitrary combinations of identity providers and domains in your organization.
+> 所有新增的 tailnet 都必须使用与你现有 tailnet 相同的域名和身份提供方。将来，Tailscale 会允许你的组织中的身份提供方与域名任意组合。
 
-## Create additional tailnets
+## 创建其他 tailnet
 
-Currently, users are not able to create additional tailnets in a self-serve manner. Contact your Account Executive or Solutions Engineer to create an additional tailnet on your behalf. You will need to provide:
+目前，用户无法以自助方式创建其他 tailnet。请联系你的客户经理或解决方案工程师，由其代你创建其他 tailnet。你需要提供：
 
-* The desired [display name][docs-display-name] for your additional tailnet. You can change this display name later.
-  * Display names can be up to 65 characters and can contain letters, numbers, spaces, apostrophes, and hyphens. You may not use periods or underscores.
-* The email address of the user who should be designated as the Owner of the additional tailnet. This must be an existing user in your current tailnet.
-* Whether the tailnet should be listed for users that have not joined it.
+* 你希望的其他 tailnet 的[显示名称][docs-display-name]。之后你可以更改此显示名称。
+  * 显示名称最多 65 个字符，可以包含字母、数字、空格、单引号和连字符。不能使用句点或下划线。
+* 应被指定为该其他 tailnet 的 Owner 的用户的邮箱地址。该用户必须是你当前 tailnet 中的现有用户。
+* 该 tailnet 是否对尚未加入的用户显示（列出）。
 
-## Access the admin console of additional tailnets
+## 访问其他 tailnet 的管理控制台
 
-> **Danger:**
+> **危险：**
 >
-> **All users in your organization** will be able to join additional tailnets that are created. If you want to restrict who is able to join an additional tailnet, you must turn on [User approval][docs-user-approval] for that tailnet. At a future date, Tailscale will introduce granular access rules to determine which users are allowed to join additional tailnets.
+> **你组织中的所有用户**都将能够加入所创建的其他 tailnet。如果你想限制谁能加入其他 tailnet，必须为该 tailnet 开启[用户审批][docs-user-approval]。将来，Tailscale 会引入细粒度的访问规则来确定允许哪些用户加入其他 tailnet。
 >
 > [docs-user-approval]: /docs/features/access-control/user-approval
 
-### Select an additional tailnet during sign-in
+### 登录时选择其他 tailnet
 
-*（图：An example of Tailscale's authentication flow that lets the user select from multiple tailnets that their user login can access. The tailnets listed are Example tailnet 1 and Example tailnet 2. The 'Join a tailnet' field contains a third tailnet, Example tailnet 3.）*
+*（图：Tailscale 认证流程示例，让用户从其用户登录可访问的多个 tailnet 中选择。所列 tailnet 为 Example tailnet 1 和 Example tailnet 2。"Join a tailnet"输入框中包含第三个 tailnet：Example tailnet 3。）*
 
-In this example, Amelie has access to three tailnets in total, but has only joined Example tailnet 1 and Example tailnet 2.
+在本示例中，Amelie 总共可以访问三个 tailnet，但只加入了 Example tailnet 1 和 Example tailnet 2。
 
-When signing in to Tailscale, if your organization has multiple tailnets, you're directed to a tailnet selector that lets you choose the tailnet you wish to sign in to.
+登录 Tailscale 时，如果你的组织拥有多个 tailnet，你会进入一个 tailnet 选择器，从中选择你想登录的 tailnet。
 
-Additional tailnets that you have not joined display at the bottom of this selector unless marked as unlisted.
+你尚未加入的其他 tailnet 会显示在该选择器底部，除非它们被标记为不列出（unlisted）。
 
-### Switch to an additional tailnet from the admin console
+### 从管理控制台切换到其他 tailnet
 
-*（图：The Tailscale admin console with the user menu underneath the user's profile picture expanded. Listing additional tailnets that the user can switch to. As well as an option to join additional tailnets.）*
+*（图：Tailscale 管理控制台，用户头像下方的用户菜单已展开。列出用户可切换到的其他 tailnet，以及加入其他 tailnet 的选项。）*
 
-To switch between admin consoles for your organization's tailnets, select your profile picture in the top right corner of the admin console, and choose the correct tailnet from the dropdown.
+要在你组织各 tailnet 的管理控制台之间切换，选择管理控制台右上角的头像，然后从下拉框中选择正确的 tailnet。
 
-Only tailnets you have joined display. To join additional tailnets, select **Join additional tailnets**.
+只会显示你已加入的 tailnet。要加入其他 tailnet，选择 **Join additional tailnets**。
 
-## Add devices to your additional tailnet
+## 向你的其他 tailnet 添加设备
 
-### Authenticate devices through your identity provider
+### 通过身份提供方认证设备
 
-When you create an additional tailnet for your organization, it will appear as an option during the authentication flow for devices. Select the tailnet to which you'd like to add the device.
+为你的组织创建其他 tailnet 后，它会在设备认证流程中显示为一个选项。选择你想要添加设备的 tailnet。
 
-### Authenticate devices with auth keys
+### 使用认证密钥认证设备
 
-The steps to add a device to an additional tailnet with an auth key have not changed. Sign into the tailnet's admin console or switch to that tailnet's console, and then follow the [standard steps for creating an auth key][docs-auth-keys].
+使用认证密钥向其他 tailnet 添加设备的步骤没有变化。登录该 tailnet 的管理控制台或切换到该 tailnet 的控制台，然后按照[创建认证密钥的标准步骤][docs-auth-keys]操作。
 
-## User and group provisioning
+## 用户与群组预配
 
-If you enable [group syncing][docs-provisioning] in any tailnet in your organization, you can reference those groups in [access control policies][docs-access-control] in each of your organization's tailnets.
+如果你在组织中的任意 tailnet 中启用了[群组同步][docs-provisioning]，你就可以在该组织每个 tailnet 的[访问控制策略][docs-access-control]中引用这些群组。
 
-If you need to make any changes to your provisioning settings, you can do so only from the original tailnet that enabled provisioning. All other tailnets will have a read-only access for the groups which they can reference in their [access control policies][docs-access-control].
+如果你需要更改预配设置，只能在启用预配的原始 tailnet 上进行。所有其他 tailnet 对可在其[访问控制策略][docs-access-control]中引用的群组只有只读权限。
 
-> **Note:**
+> **注意：**
 >
-> Provisioned users are not yet synced across all your organization's tailnets. Users who are automatically provisioned to the original tailnet must still
-> manually join other tailnets.
+> 预配用户尚未在组织的所有 tailnet 之间同步。自动预配到原始 tailnet 的用户仍需
+> 手动加入其他 tailnet。
 
-### Access control policy example
+### 访问控制策略示例
 
-Control which groups can access which resources in each of [your tailnet's policy files][docs-tailnet-policy-file] tailnet-by-tailnet. Here's an example:
+可以逐个 tailnet 控制[每个 tailnet 的策略文件][docs-tailnet-policy-file]中哪些群组可以访问哪些资源。例如：
 
-* In **tailnet 1** allow `group1@example.com` to access `tag:staging:443` resources, but not `group2@example.com`, with a [test][docs-acl-tests] to enforce this:
+* 在 **tailnet 1** 中，允许 `group1@example.com` 访问 `tag:staging:443` 资源，但不允许 `group2@example.com`，并用一个[测试][docs-acl-tests]来强制执行：
 
   ```json
   {
@@ -103,9 +103,9 @@ Control which groups can access which resources in each of [your tailnet's polic
   }
   ```
 
-  \[Missing snippet: visual\_policy\_editor.mdx]
+  \[缺少代码片段：visual\_policy\_editor.mdx]
 
-* In **tailnet 2** allow `group2@example.com` to access `tag:production:443` resources, but not `group1@example.com`, with a [test][docs-acl-tests] to enforce this:
+* 在 **tailnet 2** 中，允许 `group2@example.com` 访问 `tag:production:443` 资源，但不允许 `group1@example.com`，并用一个[测试][docs-acl-tests]来强制执行：
 
   ```json
   {
@@ -127,32 +127,32 @@ Control which groups can access which resources in each of [your tailnet's polic
   }
   ```
 
-  \[Missing snippet: visual\_policy\_editor.mdx]
+  \[缺少代码片段：visual\_policy\_editor.mdx]
 
-## Unlist tailnets
+## 取消列出 tailnet
 
-If your organization has multiple tailnets, you may want to prevent users from seeing the tailnets that they have not joined. Unlisting a tailnet will hide it from users who have not joined it in the tailnet selector during login, though users can still join the tailnet by referencing it as a query parameter in the tailnet selector URL. To unlist a tailnet, contact your Account Executive or Solutions Engineer.
+如果你的组织有多个 tailnet，你可能希望防止用户看到他们尚未加入的 tailnet。取消列出（unlist）某个 tailnet 会在登录时的 tailnet 选择器中，对该 tailnet 未加入的用户隐藏它，不过用户仍可以通过在 tailnet 选择器 URL 中以查询参数引用该 tailnet 来加入。要取消列出某个 tailnet，请联系你的客户经理或解决方案工程师。
 
-### Give users access to an unlisted tailnet
+### 向用户授予访问未列出 tailnet 的权限
 
-Users may still join an unlisted tailnet by adding the `tailnet` query parameter with the [tailnet ID][docs-tailnet-id] in a link to the tailnet selector. This will cause the unlisted tailnet to display in the tailnet selector UI.
+用户仍可以在指向 tailnet 选择器的链接中，添加带 [tailnet ID][docs-tailnet-id] 的 `tailnet` 查询参数来加入未列出的 tailnet。这会让该未列出的 tailnet 显示在 tailnet 选择器界面中。
 
-For example, if you have an unlisted tailnet with the tailnet ID "T123456789CNTRL", a user can join the tailnet by adding the tailnet query parameter to the tailnet selector URI:
+例如，如果你有一个 tailnet ID 为 "T123456789CNTRL" 的未列出 tailnet，用户可以通过在 tailnet 选择器 URI 中添加 tailnet 查询参数来加入：
 
 ```
 https://login.tailscale.com/switch-tailnet?tailnet=T123456789CNTRL
 ```
 
-## Limitations
+## 限制
 
-* **All users in your organization** will be able to join additional tailnets that are created. If you want to restrict who is able to join an additional tailnet, you must turn on [User approval][docs-user-approval] for that tailnet. At a future date, Tailscale will introduce granular access rules to determine which users are allowed to join additional tailnets.
+* **你组织中的所有用户**都将能够加入所创建的其他 tailnet。如果你想限制谁能加入其他 tailnet，必须为该 tailnet 开启[用户审批][docs-user-approval]。将来，Tailscale 会引入细粒度的访问规则来确定允许哪些用户加入其他 tailnet。
 
   [docs-user-approval]: /docs/features/access-control/user-approval
-* All additional tailnets must use the same domain and identity provider as your existing tailnet. At a future date, Tailscale will allow arbitrary combinations of identity providers and domains in your organization.
-* Allow **Everyone** to [join external tailnets][docs-invite-any-user-join-external-tailnets] to let users join additional tailnets. You can still use [User and group provisioning][ar-user-and-group-provisioning] to control which groups and users can access resources within each tailnet.
-* A GitHub organization account for [identity][docs-provisioning] cannot be used to enable or create multiple tailnets.
+* 所有新增的 tailnet 都必须使用与你现有 tailnet 相同的域名和身份提供方。将来，Tailscale 会允许你的组织中的身份提供方与域名任意组合。
+* 允许 **Everyone** [加入外部 tailnet][docs-invite-any-user-join-external-tailnets]，让用户可以加入其他 tailnet。你仍然可以使用[用户与群组预配][ar-user-and-group-provisioning]来控制哪些群组和用户可以访问每个 tailnet 内的资源。
+* 用于[身份认证][docs-provisioning]的 GitHub 组织账户不能用于启用或创建多个 tailnet。
 
-[ar-user-and-group-provisioning]: #user-and-group-provisioning
+[ar-user-and-group-provisioning]: #用户与群组预配
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

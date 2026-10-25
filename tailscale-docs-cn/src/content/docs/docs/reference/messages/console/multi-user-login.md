@@ -1,31 +1,31 @@
 ---
-title: "Multiple users with login"
-description: "This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and "
+title: "多个用户使用同一登录名"
+description: "本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jul 31, 2025
+最后验证于 Jul 31, 2025
 
-This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the admin console
+## 管理控制台中显示的消息
 
 **HTTP status:** `Error 409`
 
 Multiple users with login `<user@example.com>`, please contact support to login
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-This issue can occur for the following reasons:
+出现此问题的原因可能有：
 
-* The email address belongs to a different tailnet.
-* Changes were made to your identity provider (IdP) that affect the user ID associated with the email address used for authentication.
+* 该邮箱地址属于另一个 tailnet。
+* 你的身份提供方（IdP）发生了变更，影响了与用于身份验证的邮箱地址关联的用户 ID。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决此问题：
 
-* Make sure you're using the email address associated with the tailnet you're trying to log in to. If you have access to multiple tailnets, the wrong email address might have been used.
-* Contact your IT administrator to determine if any changes were made to your account, such as updates to your user account. If this has occurred, you or your IT administrator may be required to contact [Tailscale Support][co-support] for additional steps.
+* 确认你使用的邮箱地址与你要登录的 tailnet 相关联。如果你可以访问多个 tailnet，可能是用错了邮箱地址。
+* 联系你的 IT 管理员，确认你的账户是否有变更，例如用户账户被更新。如果确实发生了变更，你可能需要联系 [Tailscale 支持][co-support]（或由你的 IT 管理员联系），以获取后续处理步骤。
 
 [co-support]: https://tailscale.com/support
 

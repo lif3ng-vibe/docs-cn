@@ -1,264 +1,264 @@
 ---
-title: "Tailnet Lock white paper"
-description: "Review the details about the Tailnet Lock feature."
+title: "Tailnet Lock 白皮书"
+description: "查看 Tailnet Lock 功能的详细说明。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-## Abstract
+## 摘要
 
-Modern VPNs have made a lot of progress, when compared to legacy VPNs, in reducing the attack surface of the network. Adopting principles of zero trust, using modern cryptography for end-to-end encryption, and facilitating direct peer-to-peer connections also mean that VPN providers can no longer intercept unencrypted data plane traffic. While this architecture establishes secure and independent connections outside the VPN's control plane, the control plane is still necessary to exchange keys between users and endpoints — which means that a compromised control plane could read or write traffic by distributing attacker-generated keys.
+与旧式 VPN 相比，现代 VPN 在缩小网络攻击面上已取得长足进展。采用零信任原则、使用现代密码学进行端到端加密、以及促成直接的点对点连接，也意味着 VPN 提供方再也无法截获未加密的数据平面流量。虽然这种架构在 VPN 控制平面之外建立了安全且独立的连接，但控制平面对于在用户与端点之间交换密钥仍然必不可少——这意味着一旦控制平面失陷，攻击者就可以通过分发自己生成的密钥来读写流量。
 
-To address this latent vulnerability, Tailscale has implemented a [Tailnet Lock][docs-tailnet-lock] — a novel mechanism to prevent a compromised control plane from inserting itself into a network. Tailnet Lock adds another layer of security, requiring a user-controlled cryptographic signature for all WireGuard® node keys distributed by Tailscale's coordination server.
+为了解决这一潜在漏洞，Tailscale 实现了 [Tailnet Lock][docs-tailnet-lock]——一种防止失陷的控制平面将自身植入网络的新机制。Tailnet Lock 增加了一层安全保障：对 Tailscale 协调服务器分发的所有 WireGuard® 节点密钥（node key），都要求带有由用户掌控的密码学签名。
 
-Each tailnet has a locally-managed key authority, which keeps track of permitted signing keys and processes validly signed requests to make changes. Signing keys are verified by the locally-managed key authority, and are never seen or stored by the control plane. This means the control plane cannot change or disable the set of permitted signing keys to insert a new node into a network without being detected.
+每个 tailnet 都有一个本地管理的密钥管理机构，负责记录获准使用的签名密钥，并处理经过有效签名的变更请求。签名密钥由本地管理的密钥机构验证，控制平面永远不会看到或存储这些密钥。这意味着控制平面无法在不被察觉的情况下更改或停用获准的签名密钥集合、进而向网络中植入新节点。
 
-## Introduction
+## 引言
 
-To transfer data between two nodes in a Tailscale network (a *[tailnet][docs-tailnet]*), the Tailscale client establishes a [WireGuard®][xt-wireguard] session (tunnel) between the two nodes, over which private network traffic traverses. These sessions are authenticated and subsequently encrypted based on the node's key pair — an X25519 public key which is unique for each node and used to establish these data connections. Connections between nodes are peer-to-peer (the *data plane*), and are distinct from the key distribution and settings for a tailnet, which are managed by Tailscale's coordination server (the *control plane*).
+要在 Tailscale 网络（即 *[tailnet][docs-tailnet]*）中的两个节点之间传输数据，Tailscale 客户端会在两个节点之间建立 [WireGuard®][xt-wireguard] 会话（隧道），私有网络流量经由该隧道传输。这些会话基于节点的密钥对进行身份验证和后续加密——密钥对中的 X25519 公钥对每个节点唯一，用于建立这些数据连接。节点之间的连接是点对点的（即 *数据平面*），与 tailnet 的密钥分发和设置彼此独立，后者由 Tailscale 的协调服务器管理（即 *控制平面*）。
 
-To establish these sessions, the data plane needs information about peer nodes in the tailnet. This includes information like the IP addresses the node can be contacted on, packet filtering rules applied to traffic originating from the node, and the node's public key which is needed to set up an authenticated WireGuard session. Dependence on information from the control plane — and in particular other nodes' public keys — creates a need to trust the control plane. Otherwise, a compromised or malicious control plane could broadcast nodes with attacker-controlled keys, and send or receive network traffic in plaintext.
+要建立这些会话，数据平面需要了解 tailnet 中对等节点的信息，例如可通过哪些 IP 地址联系该节点、对源自该节点的流量应用哪些包过滤规则，以及建立经身份验证的 WireGuard 会话所需的节点公钥。对控制平面信息的依赖——尤其是对其他节点公钥的依赖——使得我们必须信任控制平面。否则，失陷或恶意的控制平面可以广播带有攻击者控制密钥的节点，并以明文收发网络流量。
 
-## Context
+## 背景
 
-This section provides context and additional information about the issue Tailnet Lock is designed to address.
+本节提供背景信息，进一步说明 Tailnet Lock 旨在解决的问题。
 
-### Design goal
+### 设计目标
 
-Tailnet Lock was designed to achieve a singular principle:
+Tailnet Lock 的设计只为达成一条核心原则：
 
-> Tailscale infrastructure cannot add an unauthorized node to a tailnet with Tailnet Lock enabled, and any attempt to do so can be detected and blocked.
+> 启用 Tailnet Lock 的 tailnet 中，Tailscale 基础设施无法添加未经授权的节点，任何此类企图都能被检测并阻止。
 
-Tailscale's control plane is responsible for a lot of different things — ranging from handling logins and interpreting access control policies to computing packet filters, and so on — but its most critical function, related to the security of a tailnet, is the distribution of node keys. By making it impossible for the control plane to unilaterally distribute node keys, Tailnet Lock eliminates the possibility of nodes surreptitiously joining a tailnet to send or receive unencrypted network traffic.
+Tailscale 的控制平面承担许多不同的职责——从处理登录、解析访问控制策略到计算包过滤器等等——但就 tailnet 安全而言，它最关键的功能是分发节点密钥。Tailnet Lock 让控制平面无法单方面分发节点密钥，从而杜绝了节点暗中加入 tailnet、收发未加密网络流量的可能。
 
-### Assigning trust for key distribution
+### 为密钥分发分配信任
 
-With Tailnet Lock enabled, each node verifies and enforces that the other nodes' public keys (as announced by the control plane), are accompanied by a valid cryptographic signature from a trusted source. Node keys that fail signature verification are not accepted, and cannot establish a WireGuard session — effectively preventing the node from accessing the data plane and observing or intercepting tailnet traffic.
+启用 Tailnet Lock 后，每个节点都会验证并强制要求：其他节点的公钥（由控制平面通告）必须附带来自受信任来源的有效密码学签名。未通过签名验证的节点密钥不会被接受，也无法建立 WireGuard 会话——从而有效阻止该节点访问数据平面、窥探或截获 tailnet 流量。
 
-This approach, however, raises a new set of challenges: How do nodes know which keys are authorized to sign node keys, and how can this information be updated in a way that can't be tampered with by the control plane? Addressing these challenges forms the bulk of Tailnet Lock's design.
+不过，这一方法带来了新的挑战：节点如何知道哪些密钥有权签署节点密钥？这些信息如何以控制平面无法篡改的方式更新？解决这些挑战构成了 Tailnet Lock 设计的主体。
 
-## Components of Tailnet Lock
+## Tailnet Lock 的组件
 
-This section covers each component of Tailnet Lock.
+本节介绍 Tailnet Lock 的各个组件。
 
-At a high level, here's how the components of Tailnet Lock all work together: When Tailnet Lock is enabled, a set of existing Tailnet Lock keys is identified as trusted. Disablement secrets are generated, and a cryptographic derivation of these secrets are passed to all nodes. Each node in a tailnet keeps track of these keys and secrets in a local tailnet key authority. New nodes added to the tailnet must be signed by one of these trusted Tailnet Lock keys, and verified locally by each node. Changes to the set of trusted Tailnet Lock keys are sent with an authority update message, which must also be signed by a trusted Tailnet Lock key, and again, verified locally by each node. To disable Tailnet Lock, a disablement secret must be passed to each node, and validated against its local disablement secret derivations.
+从高层次看，Tailnet Lock 各组件的协同方式如下：启用 Tailnet Lock 时，会指定一组现有的 Tailnet Lock 密钥为受信任密钥；生成禁用密钥（disablement secret），并将其密码学派生值传递给所有节点。tailnet 中的每个节点都在本地的 tailnet 密钥管理机构中记录这些密钥与派生值。新加入 tailnet 的节点必须由其中一把受信任的 Tailnet Lock 密钥签名，并由每个节点在本地验证。受信任 Tailnet Lock 密钥集合的变更会以权限更新消息（authority update message）发送，该消息同样必须由受信任的 Tailnet Lock 密钥签名，并再次由每个节点在本地验证。要禁用 Tailnet Lock，必须向每个节点传递禁用密钥，并与该节点本地的禁用密钥派生值比对验证。
 
-### Tailnet Lock keys
+### Tailnet Lock 密钥
 
-Tailnet Lock introduces a new set of keys — *Tailnet Lock keys (TLKs)* — to be used in the operation of Tailnet Lock. These are generated by every node on first startup, but not every node's TLK needs to be trusted. An initial set of trusted TLKs is specified by the administrator when Tailnet Lock is enabled, and trusted TLKs can be added or revoked at any time.
+Tailnet Lock 引入了一组新密钥——*Tailnet Lock 密钥（TLK）*——用于 Tailnet Lock 的运行。每个节点在首次启动时都会生成自己的 TLK，但并非每个节点的 TLK 都需要受信任。初始的受信任 TLK 集合由管理员在启用 Tailnet Lock 时指定，之后可以随时添加或吊销受信任的 TLK。
 
-TLKs are Ed25519 keys, which are used to sign new node keys (used for WireGuard sessions) and changes to Tailnet Lock configuration.
+TLK 是 Ed25519 密钥，用于签署新的节点密钥（用于 WireGuard 会话）以及 Tailnet Lock 配置的变更。
 
-The private key of each TLK is stored on the node that generated it, and a copy of each trusted public TLK is stored in the tailnet key authority (described in the next section [The tailnet key authority][ar-the-tailnet-key-authority]). In addition, each key has a *weight* associated with it, which is used to determine which update to apply when multiple update messages are conflicting (described in [Processing forking updates][ar-processing-forking-updates]).
+每把 TLK 的私钥存储在生成它的节点上，每把受信任 TLK 的公钥副本存储在 tailnet 密钥管理机构中（见下一节 [tailnet 密钥管理机构][ar-the-tailnet-key-authority]）。此外，每把密钥都关联一个*权重*，用于在多条更新消息冲突时决定应用哪条更新（见[处理分叉更新][ar-processing-forking-updates]）。
 
-### The tailnet key authority
+### tailnet 密钥管理机构
 
-To keep track of the current set of trusted TLKs, a *tailnet key authority (TKA)* subsystem runs within each node. By knowing the current set of trusted TLKs, TKA is able to verify signatures in two situations:
+为记录当前受信任的 TLK 集合，每个节点内都运行着一个 *tailnet 密钥管理机构（TKA）*子系统。TKA 得知当前受信任的 TLK 集合后，能够在两种情况下验证签名：
 
-1. Verifying node key signatures before adding node keys to its list of peers, and
-2. Verifying signatures for requests to change the set of trusted TLKs before processing those changes.
+1. 在将节点密钥加入对等节点列表之前验证节点密钥签名；
+2. 在处理变更请求之前，验证更改受信任 TLK 集合的请求签名。
 
-When a node starts up, it checks if it has stored a TKA state from a previous run, that is, if Tailnet Lock has been enabled in the tailnet. If the node does have a TKA state, it computes the current set of trusted TLKs, and requires valid node key signatures on all peers to configure WireGuard sessions with them.
+节点启动时，会检查自己是否存有上次运行的 TKA 状态，即 tailnet 中是否已启用 Tailnet Lock。如果节点存有 TKA 状态，它会计算出当前受信任的 TLK 集合，并要求所有对等节点都具备有效的节点密钥签名，才能与它们建立 WireGuard 会话。
 
-*（图：Depiction of the Control plane flow to each node.）*
+*（图：控制平面将更新传递到各节点的示意图。）*
 
-The control plane relays authority update messages to each node, which verifies and processes updates to its local tailnet key authority.
+控制平面将权限更新消息转发给每个节点，各节点对本地 tailnet 密钥管理机构的更新进行验证和处理。
 
-While a node is running, it processes update messages relayed by the control plane in real-time, such as changes to peers and changes to the TKA. Changes to the set of trusted TLKs are sent in *authority update messages (AUMs)*. AUMs must be signed by a trusted TLK so they cannot be tampered with by a compromised control plane, and must be validated against an intensive set of validation rules before they are applied to the state machine (described in [Validation][ar-validation]).
+节点运行期间，会实时处理由控制平面转发的更新消息，例如对等节点的变更和 TKA 的变更。受信任 TLK 集合的变更以*权限更新消息（AUM）*的形式发送。AUM 必须由受信任的 TLK 签名，以免被失陷的控制平面篡改，并且在应用到状态机之前，必须通过一整套严格的验证规则（见[验证][ar-validation]）。
 
-### Authority update messages (AUMs)
+### 权限更新消息（AUM）
 
-The main driver of information within Tailnet Lock are authority update messages (AUMs): signed messages describing either the initial state of Tailnet Lock (the *genesis update*), or some change to a previous state (a *delta update*).
+Tailnet Lock 内部信息流转的主要载体是权限更新消息（AUM）：这是一种经过签名的消息，要么描述 Tailnet Lock 的初始状态（*初始更新*，genesis update），要么描述对先前状态的某种变更（*增量更新*，delta update）。
 
-AUMs only contain information about changes to Tailnet Lock state, including enabling Tailnet Lock and adding or removing trusted TLKs. While node key signatures are also created with TLKs and distributed by the control plane, they are distinct from AUMs.
+AUM 只包含 Tailnet Lock 状态变更的信息，包括启用 Tailnet Lock、添加或移除受信任的 TLK。节点密钥签名同样由 TLK 创建并由控制平面分发，但它们与 AUM 是不同的东西。
 
-With the exception of the genesis update, all AUMs reference the hash of the previous update. This forms a chain of blocks describing a sequence of strongly ordered changes: in a way that's similar to Git and other distributed ledgers.
+除初始更新外，所有 AUM 都会引用前一条更新的哈希。由此形成一条描述严格有序变更序列的区块链，方式上类似于 Git 和其他分布式账本。
 
-*（图：Depiction of the AUM process.）*
+*（图：AUM 流程示意图。）*
 
-Each authority update message embeds the hash of the preceding authority update message. The first authority update message is the genesis update.
+每条权限更新消息都内嵌了前一条权限更新消息的哈希。第一条权限更新消息就是初始更新。
 
-As each AUM embeds the hash of the preceding AUM, the hash of the latest AUM is sufficient to describe the current state (in the same manner that a commit hash is sufficient to describe the current state of a Git branch). Borrowing Git nomenclature, we say the current state of a TKA is its *HEAD* (AUM hash).
+由于每条 AUM 都内嵌前一条 AUM 的哈希，最新一条 AUM 的哈希就足以描述当前状态（正如一个提交哈希足以描述 Git 分支的当前状态）。借用 Git 的术语，我们把 TKA 的当前状态称为其 *HEAD*（即 AUM 哈希）。
 
-#### Processing incremental updates
+#### 处理增量更新
 
-When the user wishes to make changes to the parameters of Tailnet Lock, such as adding a new trusted TLK, their node generates an AUM describing the change. This AUM is signed by a trusted TLK, and encodes the HEAD of the TKA as the hash of the previous update.
+当用户想要更改 Tailnet Lock 的参数时（例如添加一把新的受信任 TLK），其节点会生成一条描述该变更的 AUM。这条 AUM 由受信任的 TLK 签名，并将 TKA 的 HEAD 编码为前序更新的哈希。
 
-*（图：Depiction of an incremental AUM encoding the HEAD of the TKA as the previous update.）*
+*（图：增量 AUM 将 TKA 的 HEAD 编码为前序更新的示意图。）*
 
-An incremental authority update message encodes the HEAD of the tailnet key authority as the hash of the previous update, to build upon the latest Tailnet Lock state.
+增量权限更新消息将 tailnet 密钥管理机构的 HEAD 编码为前序更新的哈希，从而在最新的 Tailnet Lock 状态之上继续构建。
 
-The control plane then relays this update to all nodes in the tailnet. Each node validates the AUM and applies the update. Nodes that have processed the AUM are now at the same state of trusting the newly added TLK; and being at the same state, have the same HEAD.
+控制平面随后将这条更新转发给 tailnet 中的所有节点。每个节点验证该 AUM 并应用更新。处理过该 AUM 的节点随即处于相同状态——信任新添加的 TLK；状态相同，HEAD 也相同。
 
-#### Validation
+#### 验证
 
-AUMs are validated prior to being processed. Validation includes two steps: verifying that the AUM is signed, and verifying the AUM is well formed.
+AUM 在处理之前会先经过验证。验证包括两个步骤：确认 AUM 已签名，以及确认 AUM 格式正确。
 
-AUMs must be signed by an already trusted TLK, that is, a TLK trusted at the state immediately preceding the current AUM. This signature verification is done as early as possible to preclude any security-relevant bugs in later validation logic and significantly reduce the code paths available to a potential attacker, as they would need to possess a trusted TLK to proceed.
+AUM 必须由已经受信任的 TLK 签名，即在当前 AUM 之前那个状态下受信任的 TLK。签名验证应尽早完成，以排除后续验证逻辑中可能存在的安全相关漏洞，并大幅压缩潜在攻击者可利用的代码路径——因为攻击者必须持有一把受信任的 TLK 才能继续推进。
 
-Next, AUMs are verified to be well formed. A well formed AUM is validated as unambiguously describing a change to Tailnet Lock state. The exact semantics vary depending on the type of update message (for example, enable Tailnet Lock, add key, remove key). Specific message validation rules include:
+接下来，验证 AUM 的格式是否正确。格式正确的 AUM 应能毫无歧义地描述一次对 Tailnet Lock 状态的变更。具体语义因更新消息类型而异（例如启用 Tailnet Lock、添加密钥、移除密钥）。具体的消息验证规则包括：
 
-* All AUMs, except the genesis AUM, must reference the hash of a known parent AUM.
-* Remove key AUMs must reference a key that is present in the key authority, and must not remove all keys from the Tailnet Lock authority.
-* Add key AUMs must completely specify the public parameters of the key being added, and must not add a key which is already trusted.
-* The genesis AUM must specify at least one disablement secret and at least one key, and keys or disablement secrets cannot be duplicative.
+* 除初始 AUM 外，所有 AUM 都必须引用一个已知父 AUM 的哈希。
+* 移除密钥的 AUM 必须引用密钥管理机构中实际存在的密钥，且不得移除 Tailnet Lock 机构中的全部密钥。
+* 添加密钥的 AUM 必须完整给出所添加密钥的公开参数，且不得添加已经受信任的密钥。
+* 初始 AUM 必须至少指定一个禁用密钥和一把密钥，且密钥与禁用密钥均不得重复。
 
-#### Processing forking updates
+#### 处理分叉更新
 
-The previous section [Processing incremental updates][ar-processing-incremental-updates] described a simple scenario in which a new key was added. This change is conveyed by a single AUM representing the new key, being applied to the latest state. While this is the common case, updates which build upon a much earlier update (that is, the AUM hash they reference as the previous AUM is not the head hash of the TKA) are also allowed. This mechanism enables recovery from malicious updates signed by a compromised TLK (refer to [Recovering from a Tailnet Lock key compromise][ar-tailnet-lock-compromise-recover]).
+上一节[处理增量更新][ar-processing-incremental-updates]描述了一个添加新密钥的简单场景：这一变更由一条代表新密钥的 AUM 传达，并被应用到最新状态之上。这是常见情况，但也允许基于更早更新的更新（即其所引用作为前序 AUM 的哈希并非 TKA 的 head 哈希）。这一机制使得从由失陷 TLK 签署的恶意更新中恢复成为可能（参见[从 Tailnet Lock 密钥失陷中恢复][ar-tailnet-lock-compromise-recover]）。
 
-*（图：Depiction of a chain of AUMs being able to fork to multiple branches.）*
+*（图：AUM 链可分叉为多个分支的示意图。）*
 
-A chain of authority update messages can fork to form multiple branches.
+权限更新消息链可以分叉，形成多个分支。
 
-When this happens, the AUMs descending from a common ancestor form multiple branches. AUMs must form a single chain of updates, so when branching occurs, one branch needs to be deterministically chosen and the remaining branches discarded. The remainder of this section describes the algorithm by which this occurs.
+发生这种情况时，源自同一祖先的 AUM 会形成多个分支。AUM 必须构成单一更新链，因此出现分支时，需要确定性地选择其中一个分支，并丢弃其余分支。本节余下部分描述实现这一点的算法。
 
-Each trusted TLK is assigned a weight, which is used as part of this computation.
+每把受信任的 TLK 都会被分配一个权重，作为该计算的一部分。
 
-All nodes follow the same rules to decide which branch to take. For each set of updates that form a fork:
+所有节点都遵循相同的规则来决定采用哪个分支。对于形成分叉的每一组更新：
 
-1. Sum the weights associated with each key signing an AUM. (As mentioned earlier, weights are an integer associated with each key for the purpose of resolving forking updates.) The AUM with the greatest sum is chosen as the next update.
+1. 对签署该 AUM 的各密钥的权重求和。（如前所述，权重是为解决更新分叉而关联到每把密钥的整数。）总和最大的 AUM 被选为下一条更新。
 
-   > For example, if there are two AUMs, AUM A and AUM B, with the same parent AUM hash, both are candidates to be the next AUM processed. If AUM A has two signatures, where the key weight of the key associated with each signature is 1 and 3 respectively, then the sum of key weights for AUM A is 4. If AUM B only has a single signature, and the weight of the key associated with that signature is 1, then the sum of key weights for AUM B is 1. In this case, AUM A would be chosen as the next AUM because it has a higher combined key weight: 4 is greater than 1.
+   > 例如，有两条 AUM——AUM A 和 AUM B——具有相同的父 AUM 哈希，二者都是下一条待处理 AUM 的候选。如果 AUM A 有两个签名，对应密钥的权重分别为 1 和 3，那么 AUM A 的密钥权重之和为 4。如果 AUM B 只有一个签名，且对应密钥的权重为 1，那么 AUM B 的密钥权重之和为 1。此时 AUM A 会被选为下一条 AUM，因为它合计密钥权重更高：4 大于 1。
 
-   If the key weight sums are equal, the algorithm applies the next rule.
+   如果密钥权重之和相等，算法则应用下一条规则。
 
-2. Prefer AUMs that describe the removal of keys.
+2. 优先选择描述移除密钥的 AUM。
 
-   > For example, if two candidate AUMs A and B have message types AddKey and RemoveKey respectively, then AUM B would be chosen as the next AUM because it contains the message type RemoveKey.
+   > 例如，如果两条候选 AUM A 和 B 的消息类型分别为 AddKey 和 RemoveKey，那么 AUM B 会被选为下一条 AUM，因为它包含消息类型 RemoveKey。
 
-   If neither or both AUMs are of type RemoveKey, the algorithm applies the final rule.
+   如果两条 AUM 都不是 RemoveKey 类型、或都是 RemoveKey 类型，算法则应用最后一条规则。
 
-3. Finally, choose the AUM whose hash is lower when expressed as an integer.
+3. 最后，选择以整数表示时哈希值更小的那条 AUM。
 
-   Given the properties of our digest function BLAKE2, comparing the hashes of forking AUMs is a complete and deterministic tiebreaker, which means all nodes choose the same AUM to process.
+   鉴于摘要函数 BLAKE2 的特性，比较分叉 AUM 的哈希是一种完备且确定性的决胜手段，这意味着所有节点都会选择处理同一条 AUM。
 
-Each node iteratively 'walks' the chain of updates, deciding at each update in the chain which branch to take based on the above rules (and ignoring the other branches). This process repeats until there are no known AUMs whose parent AUM hash matches that of the previous AUM applied; this occurs when we've reached the end of the chain and are up to date.
+每个节点都会迭代地“走”这条更新链，在链上的每条更新处依据上述规则决定采用哪个分支（并忽略其他分支）。这一过程不断重复，直到不再存在父 AUM 哈希与上一条已应用 AUM 相匹配的已知 AUM；此时即到达链的末端、已是最新状态。
 
-### Disablement secrets
+### 禁用密钥
 
-Disabling Tailnet Lock must require authorization — if the disablement procedure lacked authorization checks, a compromised control plane could trivially disable Tailnet Lock (and all its protections) to attack a tailnet. To avoid this, the use of a *disablement secret* is required to globally disable Tailnet Lock.
+禁用 Tailnet Lock 必须经过授权——如果禁用流程缺乏授权检查，失陷的控制平面就能轻而易举地禁用 Tailnet Lock（及其全部防护）来攻击 tailnet。为避免这种情况，全局禁用 Tailnet Lock 必须使用*禁用密钥*（disablement secret）。
 
-Disablement secrets are long passwords generated during the process of enabling Tailnet Lock. Multiple disablement secrets can be generated. Argon2 is used as a key derivation function (KDF).
+禁用密钥是启用 Tailnet Lock 过程中生成的长口令，可以生成多个。Argon2 被用作密钥派生函数（KDF）。
 
-The derived value of each disablement secret is stored by each node's TKA, and hence known by every node in a tailnet. By virtue of being stored as a derived value, the secret itself remains confidential until use — so each node can validate and process a disablement secret, without needing to know the secret itself.
+每个禁用密钥的派生值都存储在各节点的 TKA 中，因而 tailnet 中的每个节点都知晓。由于存储的是派生值，禁用密钥本身在使用前始终保持机密——因此每个节点都能验证并处理禁用密钥，而无需知道密钥本身。
 
-When a disablement secret is used, the secret is made public and distributed to all nodes in the tailnet. Each node can then verify the authenticity of the disablement operation by computing the KDF of the secret, and comparing it to the stored KDF values in their TKA. If they match, the node can be sure the disablement is authentic and then disable Tailnet Lock locally.
+使用禁用密钥时，该密钥会被公开并分发给 tailnet 中的所有节点。每个节点随后计算该密钥的 KDF，并与自己 TKA 中存储的 KDF 值比对，以验证禁用操作的真实性。如果匹配，节点即可确信禁用操作真实有效，然后在本地禁用 Tailnet Lock。
 
-### Lock state ID
+### 锁定状态 ID
 
-When Tailnet Lock is first enabled, a randomly-generated nonce is stored in the Tailnet Lock state. This nonce is static for the tailnet and is known to both the coordination server and all nodes within the tailnet, but is not discoverable to shared nodes or any observer.
+首次启用 Tailnet Lock 时，会在 Tailnet Lock 状态中存储一个随机生成的 nonce。该 nonce 对整个 tailnet 保持不变，协调服务器与 tailnet 内所有节点都知晓，但共享节点（shared node）或任何观察者都无法获知。
 
-This state ID is used as the HMAC key when creating and validating application deep link URLs which power the **Sign node** button on the admin console. In addition to requiring confirmation of the action at the link, this mechanism helps ensure that someone outside the tailnet cannot generate a deep link URL or QR code and use it to phish someone within the tailnet.
+这一状态 ID 在创建和校验应用深层链接（deep link）URL 时用作 HMAC 密钥，管理控制台上的 **Sign node** 按钮就由这类 URL 驱动。除了要求在链接处确认操作之外，这一机制还有助于确保 tailnet 之外的人无法生成深层链接 URL 或二维码，用它来钓鱼欺骗 tailnet 内的用户。
 
-## Cryptography
+## 密码学
 
-This section gives an overview of the cryptography used in Tailnet Lock, and why it was chosen.
+本节概述 Tailnet Lock 所使用的密码学，以及选择这些方案的原因。
 
-In designing Tailnet Lock, we wanted to use modern, stable cryptography. To that end, we chose to use the following primitives.
+在设计 Tailnet Lock 时，我们希望使用现代且稳定的密码学方案。为此，我们选择了以下密码学原语。
 
-### BLAKE2 is used for generating digests of AUMs
+### 使用 BLAKE2 生成 AUM 摘要
 
-Tailnet Lock generates digests of Tailnet Lock state changes using [BLAKE2][xt-blake2]. These hashes are used to describe authority update messages (in the same manner that a commit hash in Git describes a specific change in a repository). BLAKE2 was chosen due to its status as a proven replacement for older hash functions (such as SHA1), with reasonable security properties (preimage resistance and indifferentiability) and speed.
+Tailnet Lock 使用 [BLAKE2][xt-blake2] 为 Tailnet Lock 状态变更生成摘要。这些哈希用于标识权限更新消息（如同 Git 中的提交哈希标识仓库中的某次变更）。选择 BLAKE2 是因为它已被证明是旧式哈希函数（如 SHA1）的成熟替代品，具备合理的安全性质（抗原像性和不可区分性）与速度。
 
-### Ed25519 keys are used for signing operations
+### 使用 Ed25519 密钥执行签名操作
 
-[Ed25519][xt-ed25519-sec-sig] is an elliptic curve signature scheme, well known for its small key size, fast signing and signature verification, and resistance to a number of potential attacks or implementation errors. Tailnet Lock keys are Ed25519 key pairs, and are used both to sign node keys and sign AUMs.
+[Ed25519][xt-ed25519-sec-sig] 是一种椭圆曲线签名方案，以密钥体积小、签名与验签速度快、能抵御多种潜在攻击或实现错误而著称。Tailnet Lock 密钥就是 Ed25519 密钥对，既用于签署节点密钥，也用于签署 AUM。
 
-### ZIP215 semantics are used for signature validity
+### 使用 ZIP215 语义判定签名有效性
 
-Existing RFCs and implementations [do not implement identical verification rules][xt-hdevalence-validation-criteria] for Ed25519 signatures, a critical property necessary to avoid divergence in distributed mechanisms such as Tailnet Lock. As such, Tailnet Lock verifies signatures using an implementation of the more tightly specified [ZIP215 rules][xt-zips-215], which is necessary to ensure consensus. Tailnet Lock signatures are not malleable.
+现有的 RFC 与实现[对 Ed25519 签名并未采用完全一致的验证规则][xt-hdevalence-validation-criteria]，而规则一致是在 Tailnet Lock 这类分布式机制中避免分歧的关键。因此，Tailnet Lock 使用规范更严格的 [ZIP215 规则][xt-zips-215]的实现来验证签名，这是达成共识所必需的。Tailnet Lock 的签名不可变形（non-malleable）。
 
-### Argon2 is used as the disablement secret key derivation function
+### 使用 Argon2 作为禁用密钥的密钥派生函数
 
-The KDF-derived value of a disablement secret is known to all nodes, as they must be able to validate a disablement secret. As such, the value needs to be infeasible to reverse the KDF-derivation of a disablement secret, or malevolent actors could compute the value and use it to disable Tailnet Lock.
+禁用密钥的 KDF 派生值对所有节点可见，因为各节点必须能够验证禁用密钥。因此，必须使从该派生值逆推出禁用密钥本身在计算上不可行，否则恶意行为者就能算出密钥并用它来禁用 Tailnet Lock。
 
-Disablement secrets are 32 bytes of data sourced from the system CSPRNG. [Argon2][xt-gh-phc-winner-argon2] is used as the KDF due to its good preimage properties and resistance to tradeoff attacks. Given the use of 32-byte random secrets, Argon2 is likely overkill, as a single cryptographic hash like BLAKE2 would probably be sufficient. Argon2 is still helpful in case a disablement secret with low entropy is used.
+禁用密钥是取自系统 CSPRNG 的 32 字节数据。选择 [Argon2][xt-gh-phc-winner-argon2] 作为 KDF，是因为它具有良好的原像性质并能抵御权衡攻击（tradeoff attacks）。就 32 字节随机密钥而言，Argon2 可能有些大材小用——像 BLAKE2 这样的单一密码学哈希或许就足够了。但万一使用了低熵的禁用密钥，Argon2 仍能派上用场。
 
-### CBOR2 is used to encode signatures and update messages
+### 使用 CBOR2 编码签名与更新消息
 
-While not strictly a cryptographic primitive, the choice of encoding has integral security implications and is therefore discussed here.
+虽然编码方式严格来说不属于密码学原语，但其选择对安全性有决定性影响，因此在此一并讨论。
 
-The main function of node key signatures and authority update messages is to carry signed data. Cryptographic signatures are over digests, so the serialized representation must be deterministic. Issues with other encodings (such as JWS/JWT, SAML, or X509) has demonstrated that even subtle behaviors (such as how you handle invalid, unsupported, or unrecognized fields, as well as invariants in subsequent re-serialization) can easily lead to security-relevant logic bugs.
+节点密钥签名与权限更新消息的主要功能是携带经过签名的数据。密码学签名针对的是摘要，因此序列化表示必须具有确定性。其他编码（如 JWS/JWT、SAML 或 X509）出现过的问题表明，哪怕是细微的行为差异（例如如何处理无效、不支持或无法识别的字段，以及后续重新序列化时保持的不变量），都很容易引发与安全相关的逻辑漏洞。
 
-[CBOR2][xt-pypi-cbor2] is one of the few encoding schemes that are appropriate for use with signatures and has security-conscious parsing and serialization rules baked into the specification. Tailnet Lock uses the CTAP2 mode, which is well understood and widely-implemented, and already proven for use in signing assertions by its use in FIDO2 devices.
+[CBOR2][xt-pypi-cbor2] 是少数适合与签名配合使用的编码方案之一，其规范内置了注重安全的解析与序列化规则。Tailnet Lock 使用 CTAP2 模式——该模式已被充分理解并被广泛实现，且因在 FIDO2 设备中用于签署断言而久经验证。
 
-## User flows within Tailnet Lock
+## Tailnet Lock 中的用户流程
 
-This section walks through the user flows that occur in Tailnet Lock, and explains what happens at each step.
+本节逐一介绍 Tailnet Lock 中发生的用户流程，并说明每一步发生了什么。
 
-### Enabling Tailnet Lock
+### 启用 Tailnet Lock
 
-When an administrator wishes to enable Tailnet Lock, they go through the enablement flow on one of their nodes (with the [`tailscale lock init`][docs-cli-lock] command). As part of this process, the admin enumerates the set of TLKs they wish to trust, as well as the number of disablement secrets they would like to generate.
+管理员想启用 Tailnet Lock 时，会在自己的某个节点上执行启用流程（使用 [`tailscale lock init`][docs-cli-lock] 命令）。作为流程的一部分，管理员需要列出想要信任的 TLK 集合，以及想要生成的禁用密钥数量。
 
-The node then performs a number of steps:
+随后该节点执行以下步骤：
 
-1. The node first generates and displays the specified number of disablement secrets. These are secrets, so they will not be stored or shown again — the administrator must make careful note of the disablement secret values.
-2. The node generates an AUM to describe the new (enabled) state of Tailnet Lock. This message is signed by the node's own TLK, and describes all the initial parameters of Tailnet Lock, including the set of initially trusted TLKs and values needed for disablement.
-3. The node receives a list of all node keys in the tailnet from the control plane, which it then signs using its TLK. This is done so that when Tailnet Lock is enabled, all existing nodes have a valid node key signature and connectivity is not lost.
-4. Lastly, the initial AUM and the initial list of node key signatures are transmitted to the control plane for distribution.
+1. 节点首先生成并显示指定数量的禁用密钥。这些是机密信息，不会被存储或再次显示——管理员必须仔细记录禁用密钥的值。
+2. 节点生成一条 AUM 来描述 Tailnet Lock 的新（已启用）状态。这条消息由节点自己的 TLK 签名，描述 Tailnet Lock 的全部初始参数，包括初始受信任的 TLK 集合以及禁用所需的值。
+3. 节点从控制平面获取 tailnet 中所有节点密钥的列表，然后用自己的 TLK 为它们签名。这样做是为了在启用 Tailnet Lock 时，所有现有节点都持有有效的节点密钥签名，连接不致中断。
+4. 最后，初始 AUM 与初始节点密钥签名列表被发送到控制平面进行分发。
 
-The control plane then distributes the initial AUM and node key signatures to all nodes in the tailnet. Each node receives the AUM, uses it to bootstrap the initial state of its TKA, and then begins to enforce node key signatures for any new nodes added to the tailnet.
+控制平面随后将初始 AUM 与节点密钥签名分发给 tailnet 中的所有节点。每个节点接收 AUM，用它来引导自己 TKA 的初始状态，然后开始对任何新加入 tailnet 的节点强制要求节点密钥签名。
 
-### Signing node keys for new nodes
+### 为新节点签署节点密钥
 
-When a new node is added to a locked tailnet, it will lack a node key signature and hence other nodes in the tailnet will not communicate with it, that is, it is *locked out*. An administrator can sign the new node's node key with a trusted TLK (using the `tailscale lock sign` command) to allow it to make connections within the tailnet. This signature is then transmitted to the control plane and distributed to all nodes in the tailnet.
+新节点加入已启用锁定的 tailnet 时，它没有节点密钥签名，因此 tailnet 中的其他节点不会与它通信，也就是说它被*锁定在外*。管理员可以用一把受信任的 TLK 为新节点的节点密钥签名（使用 `tailscale lock sign` 命令），允许它在 tailnet 内建立连接。该签名随后被发送到控制平面，并分发给 tailnet 中的所有节点。
 
-*（图：Depiction of a new node being added to the tailnet.）*
+*（图：新节点加入 tailnet 的示意图。）*
 
-When a new node is added to the tailnet, it is signed by a trusted Tailnet Lock key, then distributed to peer nodes, which can verify the signature before allowing connections.
+新节点加入 tailnet 时，由一把受信任的 Tailnet Lock 密钥签名，随后分发给对等节点，后者会在允许连接前验证该签名。
 
-### Disabling Tailnet Lock
+### 禁用 Tailnet Lock
 
-When an administrator wishes to disable Tailnet Lock, they provide a valid disablement secret and perform the disablement flow on one of their nodes (with the `tailscale lock disable` command).
+管理员想禁用 Tailnet Lock 时，需提供一个有效的禁用密钥，并在自己的某个节点上执行禁用流程（使用 `tailscale lock disable` 命令）。
 
-The node is able to verify the correctness of the disablement secret by comparing the KDF of the provided secret to stored values in the TKA. If correct, the node transmits the secret for distribution to all nodes.
+节点通过将所提供密钥的 KDF 与 TKA 中存储的值比对，来验证禁用密钥是否正确。如果正确，节点将该密钥发送出去以分发给所有节点。
 
-Upon receiving the disablement secret, all nodes perform the same check, comparing the KDF of the disablement secret to a stored KDF value in their TKA. If a value matches, the node disables its TKA locally and reverts to an unlocked state.
+收到禁用密钥后，所有节点执行同样的检查，将禁用密钥的 KDF 与自己 TKA 中存储的 KDF 值比对。如果有值匹配，节点在本地停用自己的 TKA，恢复到未锁定状态。
 
-### Changing trusted Tailnet Lock keys
+### 更改受信任的 Tailnet Lock 密钥
 
-The set of trusted TLKs (signing keys) can be changed on any node with a current trusted TLK. Any such change (adding, removing, or changing parameters of a trusted TLK) follows the same flow:
+受信任 TLK（签名密钥）的集合可以在任何持有当前受信任 TLK 的节点上更改。任何此类更改（添加、移除受信任 TLK 或更改其参数）都遵循同样的流程：
 
-1. The node generates and signs an AUM, which encodes details about the change. For instance, the process for adding a new trusted TLK would generate an AddKey AUM, which would encode the details of the new trusted TLK.
-2. The generated and signed AUM is transmitted to the control plane for distribution. The control plane transmits the AUM to nodes in the tailnet.
-3. Each node receives the AUM from the control plane, verifies its signature, performs validation of the update, and applies the change to its local tailnet key authority.
+1. 节点生成并签署一条 AUM，其中编码了变更的细节。例如，添加一把新的受信任 TLK 会生成一条 AddKey AUM，编码新受信任 TLK 的细节。
+2. 生成并签署完毕的 AUM 被发送到控制平面进行分发。控制平面将该 AUM 传送给 tailnet 中的节点。
+3. 每个节点从控制平面接收该 AUM，验证其签名，对更新执行验证，然后将变更应用到本地 tailnet 密钥管理机构。
 
-*（图：Depiction of a new node being signed and distributed.）*
+*（图：新的 Tailnet Lock 密钥被签名并分发的示意图。）*
 
-Before a new trusted Tailnet Lock key is added, it must be signed by an existing trusted Tailnet Lock key. The coordination server distributes the new key to all nodes in the tailnet, which can verify the signature before trusting it.
+在添加新的受信任 Tailnet Lock 密钥之前，它必须由一把现有的受信任 Tailnet Lock 密钥签名。协调服务器将新密钥分发给 tailnet 中的所有节点，各节点在信任它之前可以验证签名。
 
-### Recovering from a Tailnet Lock key compromise
+### 从 Tailnet Lock 密钥失陷中恢复
 
-If a node with a trusted TLK is compromised, the compromised key could be used to affect malicious changes to Tailnet Lock — such that an attacker could add new nodes to the tailnet, and receive or send plaintext traffic from those nodes. A competent attacker might go even further and remove all other trusted TLKs from the tailnet authority, in an attempt to gain exclusive control over the tailnet.
+如果持有受信任 TLK 的节点失陷，失陷的密钥就可能被用来对 Tailnet Lock 恶意做手脚——例如攻击者可以向 tailnet 添加新节点，并从这些节点收发明文流量。高明的攻击者可能走得更远：从 tailnet 管理机构中移除所有其他受信任的 TLK，企图独占对 tailnet 的控制。
 
-Recovering from this scenario involves rewriting the changelog of AUMs to erase the attacker-generated updates, and removing trust in the compromised TLKs. This can be done by first generating a draft forking update with the `tailscale lock revoke-keys` command, and signing the update using the `revoke-keys` command on enough nodes with trusted TLKs that the sum of key weights is greater than those of the key or keys compromised by the attacker.
+从这种场景中恢复，需要重写 AUM 更新日志以抹除攻击者制造的更新，并撤销对失陷 TLK 的信任。具体做法是：先用 `tailscale lock revoke-keys` 命令生成一份分叉更新草稿，然后在足够多的持有受信任 TLK 的节点上用 `revoke-keys` 命令签署该更新，使密钥权重之和大于攻击者所控制密钥的权重之和。
 
-The generated update forks the changelog to erase the attacker's changes by retroactively revoking the compromised TLKs, and any node key signatures made with those TLKs (refer to the [processing forking updates][ar-processing-forking-updates] section).
+生成的更新会让更新日志分叉，通过追溯性吊销失陷的 TLK 以及用这些 TLK 制作的节点密钥签名，抹除攻击者的变更（参见[处理分叉更新][ar-processing-forking-updates]一节）。
 
-## Limitations
+## 局限性
 
-### Tailnet Lock protects against unauthorized nodes, not denial of service
+### Tailnet Lock 防御的是未授权节点，而非拒绝服务
 
-Tailnet Lock aims to prevent a compromised control plane from manipulating your tailnet such as to send or receive traffic from malicious nodes. It does not prevent a compromised control plane from breaking connectivity in your network, such as by failing to distribute new node keys, or distributing an access control policy which denies access to all nodes.
+Tailnet Lock 旨在防止失陷的控制平面操纵你的 tailnet、从恶意节点收发流量。它无法防止失陷的控制平面破坏你网络中的连通性，例如不分发新的节点密钥，或分发一条拒绝所有节点访问的访问控制策略。
 
-To mitigate this risk, we could implement a way for nodes to share AUMs directly instead of relying on the control plane for distribution, or have nodes cache last known good netmaps for connectivity.
+为缓解这一风险，我们可以实现让节点直接共享 AUM 而不依赖控制平面分发的机制，或者让节点缓存最后已知的可用 netmap 以维持连通性。
 
-### Enablement is Trust on First Use (ToFU)
+### 启用基于首次使用即信任（ToFU）
 
-When Tailnet Lock is first enabled or a new node is added to the tailnet, each node relies on the initial state of Tailnet Lock sent to it from the control plane. If the control plane is compromised, a malicious initial state could be sent to each node with attacker-controlled TLKs. Similarly, if an already compromised node's TLK is trusted, the initial state sent to each node would include attacker-controlled TLKs.
+首次启用 Tailnet Lock 或有新节点加入 tailnet 时，每个节点都依赖控制平面发给它的 Tailnet Lock 初始状态。如果控制平面失陷，就可能向每个节点发送带有攻击者控制 TLK 的恶意初始状态。类似地，如果一个已失陷节点的 TLK 受到信任，发给各节点的初始状态中也会包含攻击者控制的 TLK。
 
-To mitigate this risk, we could implement a mechanism where administrators can define the expected Tailnet Lock state, and devices will refuse to operate if the control plane attempts to provision them with an unexpected Tailnet Lock state. In the meantime, it is possible to verify the provisioned state of Tailnet Lock on each node by running the [`tailscale lock status`][docs-tailscale-lock-lock-status] command.
+为缓解这一风险，我们可以实现这样一种机制：管理员定义预期的 Tailnet Lock 状态，一旦控制平面试图向设备下发意料之外的 Tailnet Lock 状态，设备就拒绝工作。在此之前，可以在每个节点上运行 [`tailscale lock status`][docs-tailscale-lock-lock-status] 命令来核查实际的 Tailnet Lock 状态。
 
-[ar-processing-forking-updates]: #processing-forking-updates
+[ar-processing-forking-updates]: #处理分叉更新
 
-[ar-processing-incremental-updates]: #processing-incremental-updates
+[ar-processing-incremental-updates]: #处理增量更新
 
-[ar-tailnet-lock-compromise-recover]: #recovering-from-a-tailnet-lock-key-compromise
+[ar-tailnet-lock-compromise-recover]: #从-tailnet-lock-密钥失陷中恢复
 
-[ar-the-tailnet-key-authority]: #the-tailnet-key-authority
+[ar-the-tailnet-key-authority]: #tailnet-密钥管理机构
 
-[ar-validation]: #validation
+[ar-validation]: #验证
 
 [docs-cli-lock]: /docs/reference/tailscale-cli#lock
 

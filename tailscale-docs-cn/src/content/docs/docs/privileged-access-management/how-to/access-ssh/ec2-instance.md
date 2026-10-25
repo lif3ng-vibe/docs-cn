@@ -1,43 +1,43 @@
 ---
-title: "Access an EC2 instance with AWS EC2 Instance Connect using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets you provide SSH access to Amazon Elastic Compute Cloud (EC2) instances using [Tailscale identity][docs-tailscale-identity] instead of distributing and managing long-live"
+title: "使用 Tailscale PAM 通过 AWS EC2 Instance Connect 访问 EC2 实例"
+description: "[Tailscale PAM][docs-pam] 让你使用 [Tailscale 身份][docs-tailscale-identity]为 Amazon Elastic Compute Cloud（EC2）实例提供 SSH 访问，无需分发和管理长期有效的 SSH 密钥。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets you provide SSH access to Amazon Elastic Compute Cloud (EC2) instances using [Tailscale identity][docs-tailscale-identity] instead of distributing and managing long-lived SSH keys.
+[Tailscale PAM][docs-pam] 让你使用 [Tailscale 身份][docs-tailscale-identity]为 Amazon Elastic Compute Cloud（EC2）实例提供 SSH 访问，无需分发和管理长期有效的 SSH 密钥。
 
-The Tailscale PAM [connector][docs-pam-connectors] acts as an SSH proxy. When a user starts an SSH session, Tailscale PAM applies the appropriate access controls, then the connector uses AWS EC2 Instance Connect to authenticate to the upstream EC2 instance on the user's behalf. EC2 Instance Connect works by temporarily adding an SSH public key to the instance metadata. The key remains available for 60 seconds, giving the connector enough time to establish the SSH connection. Users don't need access to the SSH key or AWS credentials used by the connector.
+Tailscale PAM [连接器][docs-pam-connectors]充当 SSH 代理。当用户发起 SSH 会话时，Tailscale PAM 会先应用相应的访问控制，然后连接器代表用户使用 AWS EC2 Instance Connect 向上游 EC2 实例进行身份验证。EC2 Instance Connect 的工作原理是向实例元数据中临时添加一个 SSH 公钥。该密钥在 60 秒内有效，足以让连接器建立 SSH 连接。用户无需接触连接器所用的 SSH 密钥或 AWS 凭证。
 
-You can connect to an EC2 instance either directly over its public or private IP address, or through an EC2 Instance Connect Endpoint when you want to reach an instance over its private IP address.
+你可以直接通过 EC2 实例的公网或私有 IP 地址连接，也可以在需要通过私有 IP 地址访问实例时，经由 EC2 Instance Connect Endpoint 连接。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native SSH client.
-* An EC2 Linux instance with EC2 Instance Connect installed.
-* An AWS identity available to the connector with permission to use EC2 Instance Connect.
-* Network connectivity from the connector to the EC2 instance, or an EC2 Instance Connect Endpoint that can reach the instance.
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果你计划使用原生 SSH 客户端，请在你将用于连接的设备上[安装][docs-install] Tailscale 并登录。
+* 一台已安装 EC2 Instance Connect 的 EC2 Linux 实例。
+* 一个连接器可用的 AWS 身份，并具有使用 EC2 Instance Connect 的权限。
+* 从连接器到 EC2 实例的网络连通性，或者一个能到达该实例的 EC2 Instance Connect Endpoint。
 
-EC2 Instance Connect is already installed on several commonly used Amazon Machine Image (AMI) images, including Amazon Linux 2023, recent Amazon Linux 2 releases, and Ubuntu 20.04 or later. For other supported operating systems, you can install EC2 Instance Connect manually.
+EC2 Instance Connect 已经预装在多个常用的 Amazon Machine Image（AMI）镜像中，包括 Amazon Linux 2023、较新的 Amazon Linux 2 版本以及 Ubuntu 20.04 及以上版本。对于其他受支持的操作系统，你可以手动安装 EC2 Instance Connect。
 
-If you're connecting directly, make sure the EC2 instance's security group and other network controls allow SSH traffic from the network where the Tailscale PAM connector runs.
+如果你采用直连方式，请确保 EC2 实例的安全组和其他网络控制允许来自 Tailscale PAM 连接器所在网络的 SSH 流量。
 
-## Give the connector permission to use EC2 Instance Connect
+## 授予连接器使用 EC2 Instance Connect 的权限
 
-The Tailscale PAM connector needs an AWS identity with permission to push an ephemeral SSH public key to the EC2 instance.
+Tailscale PAM 连接器需要一个 AWS 身份，并具有向 EC2 实例推送临时 SSH 公钥的权限。
 
-When possible, run the connector with an IAM role that provides the required permissions. For example, if the connector runs on an EC2 instance, you can attach an IAM role to that instance.
+只要可能，请让连接器以提供所需权限的 IAM 角色运行。例如，如果连接器运行在 EC2 实例上，你可以为该实例附加一个 IAM 角色。
 
-The connector can also use credentials available through the standard AWS credential provider chain, such as an AWS profile or static AWS credentials.
+连接器也可以使用标准 AWS 凭证提供程序链中可用的凭证，例如 AWS profile 或静态 AWS 凭证。
 
-At minimum, the connector needs the `ec2-instance-connect:SendSSHPublicKey` permission for the EC2 instances it should be able to access.
+连接器至少需要对其应能访问的 EC2 实例拥有 `ec2-instance-connect:SendSSHPublicKey` 权限。
 
-For example:
+例如：
 
 ```json
 {
@@ -59,98 +59,98 @@ For example:
 }
 ```
 
-Replace `<aws-region>`, `<aws-account-id>`, and `<ec2-instance-id>` with the values required for your environment.
+把 `<aws-region>`、`<aws-account-id>` 和 `<ec2-instance-id>` 替换为你的环境所需的值。
 
-The `ec2:osuser` condition lets you restrict which operating system user the connector can use. For example, you can permit connections as `ubuntu` without allowing connections as `root`. If `unbuntu` is not appropriate for your environment, update as needed.
+`ec2:osuser` 条件让你可以限制连接器能使用哪个操作系统用户。例如，你可以允许以 `ubuntu` 身份连接，而不允许以 `root` 身份连接。如果 `unbuntu` 不适合你的环境，请按需更新。
 
-Use least-privilege AWS IAM permissions and limit the connector to the EC2 instances and operating system users it needs to access.
+请使用最小权限的 AWS IAM 权限，把连接器限制在它需要访问的 EC2 实例和操作系统用户范围内。
 
-## Create an SSH PAM service
+## 创建 SSH PAM 服务
 
-To create a PAM service for the EC2 instance:
+要为该 EC2 实例创建 PAM 服务：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择**添加服务**。
 
-3. Select **PAM service**.
+3. 选择 **PAM 服务**。
 
-4. Select **Secure Shell - AWS EC2 via Inst. Connect**.
+4. 选择 **Secure Shell - AWS EC2 via Inst. Connect**。
 
-5. Select **Continue**.
+5. 选择**继续**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-7. (Optional) Enter a description.
+7. （可选）输入描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. From **Connect via**, select one or more Tailscale PAM connectors.
+9. 在**通过以下方式连接**中，选择一个或多个 Tailscale PAM 连接器。
 
-   Select a connector that can reach the EC2 instance, or that can use the EC2 Instance Connect Endpoint you plan to configure.
+   选择一个能到达该 EC2 实例的连接器，或者能使用你计划配置的 EC2 Instance Connect Endpoint 的连接器。
 
-10. Select **Continue**.
+10. 选择**继续**。
 
-11. For **Upstream hostname or IP**, provide the hostname or IP address of the upstream SSH server.
+11. 在 **Upstream hostname or IP** 中，填写上游 SSH 服务器的主机名或 IP 地址。
 
-12. For **Port**, enter the SSH port. The default is `22`.
+12. 在 **Port** 中，输入 SSH 端口。默认为 `22`。
 
-13. For **EC2 instance ID**, enter the instance ID of the EC2 instance.
+13. 在 **EC2 instance ID** 中，输入该 EC2 实例的实例 ID。
 
-14. For **AWS region**, enter the AWS Region where the instance is running.
+14. 在 **AWS region** 中，输入该实例所在的 AWS 区域。
 
-15. (Optional) For **EC2 Instance Connect endpoint ID**, enter the endpoint ID if you're connecting through an EC2 Instance Connect Endpoint.
+15. （可选）在 **EC2 Instance Connect endpoint ID** 中，如果你是通过 EC2 Instance Connect Endpoint 连接的，输入该端点 ID。
 
-16. For **Username**, enter the username the connector should use to connect to the EC2 instance.
+16. 在 **Username** 中，输入连接器连接 EC2 实例时应使用的用户名。
 
-17. For **AWS authentication strategy**, choose how the connector authenticates to AWS.
+17. 在 **AWS authentication strategy** 中，选择连接器向 AWS 进行身份验证的方式。
 
     #### Default credentials provider chain
 
-    Select **Default credentials provider chain** to use AWS credentials already available to the connector through the standard AWS credential provider chain.
+    选择 **Default credentials provider chain**，使用连接器通过标准 AWS 凭证提供程序链已经可用的 AWS 凭证。
 
-    This is a good option when the connector runs on an EC2 instance with an AWS IAM role attached to it.
+    当连接器运行在已附加 AWS IAM 角色的 EC2 实例上时，这是一个不错的选择。
 
     #### AWS profile
 
-    Select **AWS profile** to use a specific AWS profile configured on the device running the connector.
+    选择 **AWS profile**，使用运行连接器的设备上已配置的特定 AWS profile。
 
-    Enter the name of the AWS profile the connector should use.
+    输入连接器应使用的 AWS profile 名称。
 
     #### Static credentials
 
-    Select **Static credentials** to provide AWS credentials directly. Enter values for the following:
+    选择 **Static credentials**，直接提供 AWS 凭证。填写以下值：
 
-    * **AWS access key ID**: The access key ID for the AWS identity.
-    * **AWS secret access key**: The corresponding secret access key.
+    * **AWS access key ID**：该 AWS 身份的访问密钥 ID。
+    * **AWS secret access key**：对应的秘密访问密钥。
 
-    AWS credentials are sensitive.
+    AWS 凭证属于敏感信息。
 
-    > **Warning:**
+    > **警告：**
     >
-    > For production environments, prefer an AWS IAM role or another short-lived credential source when possible.
+    > 在生产环境中，尽量优先使用 AWS IAM 角色或其他短期凭证来源。
 
-18. Select **Save**.
+18. 选择**保存**。
 
-Your SSH PAM service that use EC2 Instance Connect has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+使用 EC2 Instance Connect 的 SSH PAM 服务已创建完成。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Use an EC2 Instance Connect Endpoint
+## 使用 EC2 Instance Connect Endpoint
 
-If the connector doesn't have a direct network path to the EC2 instance's private IP address, you can use an EC2 Instance Connect Endpoint.
+如果连接器到 EC2 实例私有 IP 地址没有直接的网络路径，你可以使用 EC2 Instance Connect Endpoint。
 
-An EC2 Instance Connect Endpoint creates a tunnel to the private address of an EC2 instance without requiring the instance to have a public IP address.
+EC2 Instance Connect Endpoint 会建立一条到 EC2 实例私有地址的隧道，不要求实例拥有公网 IP 地址。
 
-When configuring the Tailscale PAM service:
+配置 Tailscale PAM 服务时：
 
-* Use the instance's private IP address or private DNS name as the upstream hostname.
-* Enter the EC2 instance ID.
-* Enter the AWS Region.
-* Enter the EC2 Instance Connect Endpoint ID.
-* Use port `22`, unless your SSH server listens on another port.
+* 使用实例的私有 IP 地址或私有 DNS 名称作为上游主机名。
+* 输入 EC2 实例 ID。
+* 输入 AWS 区域。
+* 输入 EC2 Instance Connect Endpoint ID。
+* 使用端口 `22`，除非你的 SSH 服务器监听其他端口。
 
-The AWS identity used by the connector needs both permission to push the SSH public key and permission to open the EC2 Instance Connect Endpoint tunnel.
+连接器使用的 AWS 身份既需要推送 SSH 公钥的权限，也需要打开 EC2 Instance Connect Endpoint 隧道的权限。
 
-For example:
+例如：
 
 ```json
 {
@@ -179,19 +179,19 @@ For example:
 }
 ```
 
-Replace `<aws-region>`, `<aws-account-id>`, `<ec2-instance-id>`, and `<instance-connect-endpoint-id>` with the values required for your environment.
+把 `<aws-region>`、`<aws-account-id>`、`<ec2-instance-id>` 和 `<instance-connect-endpoint-id>` 替换为你的环境所需的值。
 
-If `unbuntu` is not appropriate for your environment, update as needed.
+如果 `unbuntu` 不适合你的环境，请按需更新。
 
-AWS also lets you restrict `OpenTunnel` permissions based on properties such as the remote port, destination private IP address, and maximum tunnel duration. Consider using these conditions when you want more restrictive IAM permissions.
+AWS 还允许你根据远程端口、目的地私有 IP 地址和最长隧道时长等属性来收紧 `OpenTunnel` 权限。当你想要更严格的 IAM 权限时，可以考虑使用这些条件。
 
-## Grant access to the SSH service
+## 为 SSH 服务授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the SSH service.
+在用户连接之前，请确保有一条 Tailscale PAM [授权][docs-grants]允许他们访问该 SSH 服务。
 
-SSH permissions can independently control interactive shell access, exec requests, SFTP, usernames, and TCP forwarding. You can also restrict SSH exec requests to specific commands.
+SSH 权限可以分别控制交互式 shell 访问、exec 请求、SFTP、用户名和 TCP 转发。你还可以把 SSH exec 请求限制到特定命令。
 
-For example, the SSH permissions for a broad grant can allow shell, exec, and SFTP access:
+例如，一条宽泛授权的 SSH 权限可以允许 shell、exec 和 SFTP 访问：
 
 ```json
 "permissions": {
@@ -203,108 +203,108 @@ For example, the SSH permissions for a broad grant can allow shell, exec, and SF
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is useful for getting started. In a production environment, restrict the source and destination of the grant so that only the appropriate users, groups, devices, or tags can access the EC2 SSH service.
+> 这适合上手试用。在生产环境中，请收紧授权的来源和目的地，只让合适的用户、用户组、设备或标签能够访问该 EC2 SSH 服务。
 
-If the service is configured to **Prompt Client for Username**, you can also use SSH PAM permissions to restrict the usernames users are allowed to request.
+如果该服务配置为 **Prompt Client for Username**，你还可以使用 SSH PAM 权限来限制用户允许请求的用户名。
 
-For more SSH grant examples and information about fine-grained SSH access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 SSH 授权示例和细粒度 SSH 访问控制的说明，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Connect to the EC2 instance
+## 连接到 EC2 实例
 
-The primary way to connect is through the Tailscale client, which can launch your preferred SSH client. You can also connect entirely from your browser using the Tailscale browser client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你偏好的 SSH 客户端。你也可以完全在浏览器中，使用 Tailscale 浏览器客户端进行连接。
 
-### Connect with your preferred SSH client
+### 使用你偏好的 SSH 客户端连接
 
-Use the Tailscale client to quickly open the SSH service with a compatible SSH client already installed on your device.
+使用 Tailscale 客户端，用你设备上已安装的兼容 SSH 客户端快速打开该 SSH 服务。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your EC2 SSH service.
-4. Choose the SSH client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 EC2 SSH 服务。
+4. 选择你想使用的 SSH 客户端。
 
-The Tailscale client scans your device for well-known SSH clients and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备上常见的 SSH 客户端，并显示它能找到的那些。选中其一即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the SSH clients shown in the Tailscale client. If your preferred client isn't listed, open it directly and use the PAM service name as the hostname.
+你并不局限于 Tailscale 客户端中列出的 SSH 客户端。如果你偏好的客户端不在列表中，可以直接打开它，并使用该 PAM 服务的名称作为主机名。
 
-If the service has a fixed SSH username configured, you can connect with:
+如果该服务配置了固定的 SSH 用户名，你可以这样连接：
 
 ```shell
 ssh your-service-name
 ```
 
-If the service uses **Prompt Client for Username**, specify the upstream username you want to use:
+如果该服务使用 **Prompt Client for Username**，请指定你要使用的上游用户名：
 
 ```shell
 ssh your-username@your-service-name
 ```
 
-Port `22` is the default, so you don't need to specify it unless your PAM service uses a different port.
+端口 `22` 是默认值，因此无需指定，除非你的 PAM 服务使用其他端口。
 
-If you selected **Username and Password** or **SSH Private Key** authentication, any username supplied by the SSH client is ignored. Tailscale PAM uses the username configured for the service. A client supplied username is only used with certificate-based authentication when **Prompt Client for Username** is selected.
+如果你选择的是 **Username and Password** 或 **SSH Private Key** 身份验证，SSH 客户端提供的任何用户名都会被忽略，Tailscale PAM 使用为该服务配置的用户名。客户端提供的用户名只在基于证书的身份验证且选择了 **Prompt Client for Username** 时才会使用。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection. The connector then uses EC2 Instance Connect to provide the temporary SSH key and establish the upstream SSH connection on your behalf.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权。随后连接器使用 EC2 Instance Connect 提供临时 SSH 密钥，并代表你建立上游 SSH 连接。
 
-You don't need access to the upstream SSH key or the connector's AWS credentials.
+你无需接触上游 SSH 密钥或连接器的 AWS 凭证。
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect entirely from your browser using the Tailscale SSH browser client.
+你也可以完全在浏览器中，使用 Tailscale SSH 浏览器客户端进行连接。
 
-1. Open [Services](https://console.tailscale.com/admin/services) of the Tailscale admin console.
-2. Select the EC2 SSH service you want to access.
-3. Select **Connect**, and the Tailscale SSH browser client opens.
-4. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services)。
+2. 选择你要访问的 EC2 SSH 服务。
+3. 选择**连接**，Tailscale SSH 浏览器客户端会随之打开。
+4. 如果出现提示，请使用你的 Tailscale 身份进行身份验证。
 
-If the service uses **Prompt Client for Username**, enter the operating system username you want to use.
+如果该服务使用 **Prompt Client for Username**，请输入你要使用的操作系统用户名。
 
-You can now use an interactive SSH session on the EC2 instance directly from your browser.
+现在你可以直接在浏览器中对 EC2 实例使用交互式 SSH 会话了。
 
-The browser client runs a Tailscale client in the browser using WebAssembly (Wasm) and appears as a new [ephemeral][docs-ephemeral-nodes] device in your tailnet. If [device approval][docs-device-approval] is enabled for the tailnet, an admin must approve the browser device before it can connect.
+浏览器客户端通过 WebAssembly（Wasm）在浏览器中运行一个 Tailscale 客户端，并作为一台新的[临时节点（ephemeral node）][docs-ephemeral-nodes]出现在你的 tailnet 中。如果 tailnet 启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Review SSH sessions
+## 查看 SSH 会话
 
-Tailscale PAM gives you visibility into connections to your EC2 SSH service.
+Tailscale PAM 让你能够查看与你的 EC2 SSH 服务的连接。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your SSH service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 SSH 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The SSH service that was accessed.
-* The requested SSH username.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 所访问的 SSH 服务。
+* 所请求的 SSH 用户名。
 
-When session recording is enabled, you can also review the recorded SSH session.
+启用会话录制后，你还可以查看录制下来的 SSH 会话。
 
-This gives you a direct answer to two useful questions: who accessed the EC2 server, and what did they do while they were connected?
+这让你能直接回答两个很有用的问题：谁访问了该 EC2 服务器，以及连接期间做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to the EC2 instance, first confirm that the Tailscale PAM connector is online.
+如果你无法连接到该 EC2 实例，请先确认 Tailscale PAM 连接器在线。
 
-Next, verify the EC2 Instance Connect configuration.
+接下来，检查 EC2 Instance Connect 的配置。
 
-Make sure EC2 Instance Connect is installed on the instance. If the instance's SSH configuration overrides `AuthorizedKeysCommand` or `AuthorizedKeysCommandUser`, EC2 Instance Connect might not be able to provide the temporary SSH key.
+确保实例上已安装 EC2 Instance Connect。如果实例的 SSH 配置覆盖了 `AuthorizedKeysCommand` 或 `AuthorizedKeysCommandUser`，EC2 Instance Connect 可能无法提供临时 SSH 密钥。
 
-Verify that:
+请核实：
 
-* The instance ID and AWS Region configured for the PAM service are correct.
-* The requested SSH username exists on the EC2 instance.
-* The connector's AWS identity has `ec2-instance-connect:SendSSHPublicKey` permission.
-* The AWS IAM policy permits the requested value of `ec2:osuser`.
-* The connector can reach the upstream SSH server on port `22`.
+* 为 PAM 服务配置的实例 ID 和 AWS 区域是否正确。
+* 所请求的 SSH 用户名在该 EC2 实例上是否存在。
+* 连接器的 AWS 身份是否拥有 `ec2-instance-connect:SendSSHPublicKey` 权限。
+* AWS IAM 策略是否允许所请求的 `ec2:osuser` 值。
+* 连接器能否在端口 `22` 上到达上游 SSH 服务器。
 
-If you're connecting directly, verify that the EC2 security group, network ACLs, routing, and other network controls permit SSH traffic from the connector.
+如果你采用直连方式，请核实 EC2 安全组、网络 ACL、路由和其他网络控制是否允许来自连接器的 SSH 流量。
 
-If you're using an EC2 Instance Connect Endpoint, also verify that:
+如果你使用的是 EC2 Instance Connect Endpoint，还需核实：
 
-* The endpoint ID is correct.
-* The endpoint is available and can reach the EC2 instance.
-* The connector's AWS identity has `ec2-instance-connect:OpenTunnel` permission for the endpoint.
-* The private IP address configured for the PAM service matches the instance you want to reach.
+* 端点 ID 是否正确。
+* 端点是否可用并能到达该 EC2 实例。
+* 连接器的 AWS 身份是否拥有该端点的 `ec2-instance-connect:OpenTunnel` 权限。
+* 为 PAM 服务配置的私有 IP 地址是否与你要访问的实例一致。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the Tailscale PAM [session logs][docs-pam-session-logs]. These can help narrow down whether the problem is AWS IAM permissions, network connectivity, the requested operating system username, EC2 Instance Connect configuration, or the SSH server itself.
+如果上述排查步骤都无法解决问题，请查看连接器日志以及 Tailscale PAM [会话日志][docs-pam-session-logs]中该失败会话的详情。这些信息有助于判断问题出在 AWS IAM 权限、网络连通性、所请求的操作系统用户名、EC2 Instance Connect 配置还是 SSH 服务器本身。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

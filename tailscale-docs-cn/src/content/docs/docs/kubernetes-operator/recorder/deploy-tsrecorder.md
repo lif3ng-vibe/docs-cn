@@ -1,23 +1,23 @@
 ---
-title: "Deploy a session recorder in your Kubernetes cluster"
-description: "This guide explains how to deploy a `tsrecorder` instance in your cluster. The Operator uses the `Recorder` custom resource to configure and manage the lifecycle of the `tsrecorder` instance."
+title: "在 Kubernetes 集群中部署会话录制器"
+description: "本指南介绍如何在你的集群中部署 `tsrecorder` 实例。Operator 使用 `Recorder` 自定义资源来配置并管理该 `tsrecorder` 实例的生命周期。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide explains how to deploy a `tsrecorder` instance in your cluster. The Operator uses the `Recorder` custom resource to configure and manage the lifecycle of the `tsrecorder` instance.
+本指南介绍如何在你的集群中部署一个 `tsrecorder` 实例。Operator 使用 `Recorder` 自定义资源来配置并管理该 `tsrecorder` 实例的生命周期。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你具备以下条件：
 
-* [Install][docs-k8s-install] the Tailscale Kubernetes Operator.
-* The Operator's tag must own the recorder tag in your tailnet policy file. Refer to the following section for an example.
-* (Optional) [Enable HTTPS][docs-enable-https] for your tailnet if you want to use the recorder's web UI.
+* [安装][docs-k8s-install] Tailscale Kubernetes Operator。
+* Operator 的标签必须是你的 tailnet 策略文件中录制器标签的所有者。示例见下一节。
+* （可选）如果你想使用录制器的 web UI，请为你的 tailnet [启用 HTTPS][docs-enable-https]。
 
-## Configure tag ownership
+## 配置标签所有权
 
-The Operator's tag must own the recorder tag in your tailnet policy file. For example, if the Operator is tagged `tag:k8s-operator` and your recorder uses `tag:tsrecorder`, add the following to your tailnet policy file:
+Operator 的标签必须是你的 tailnet 策略文件中录制器标签的所有者。例如，如果 Operator 打有 `tag:k8s-operator` 标签，而你的录制器使用 `tag:tsrecorder`，请在 tailnet 策略文件中添加以下内容：
 
 ```json
 "tagOwners": {
@@ -26,9 +26,9 @@ The Operator's tag must own the recorder tag in your tailnet policy file. For ex
 }
 ```
 
-## Create a recorder
+## 创建录制器
 
-Apply the following manifest to create a `Recorder` resource:
+应用以下清单来创建一个 `Recorder` 资源：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -41,19 +41,19 @@ spec:
     - "tag:tsrecorder"
 ```
 
-The `tags` field sets the Tailscale identity of the recorder device in your tailnet. When you [configure session recording][docs-kubectl-recording], your grants reference these tags to tell the control plane which `tsrecorder` instances should receive recordings.
+`tags` 字段设置录制器设备在你的 tailnet 中的 Tailscale 身份。当你[配置会话录制][docs-kubectl-recording]时，授权会引用这些标签，告诉控制平面哪些 `tsrecorder` 实例应接收录制。
 
-Set `enableUI: true` to enable the recorder's web UI, which lets you browse and view recordings in a browser.
+设置 `enableUI: true` 可启用录制器的 web UI，让你能够在浏览器中浏览和查看录制内容。
 
-## Verify session recording
+## 验证会话录制
 
-Wait for the recorder to become ready:
+等待录制器就绪：
 
 ```shell
 kubectl wait --for condition=RecorderReady=true Recorder my-recorder
 ```
 
-Find the URL for the recorder's web UI:
+查找录制器 web UI 的 URL：
 
 ```shell
 kubectl get Recorder my-recorder
@@ -64,15 +64,15 @@ NAME          STATUS            URL
 my-recorder   RecorderCreated   https://my-recorder.<tailnet>.ts.net
 ```
 
-## Configure storage
+## 配置存储
 
-### Ephemeral filesystem (default)
+### 临时文件系统（默认）
 
-Recordings are stored in an `emptyDir` volume. This is suitable for testing, but logs are lost if the pod is deleted. No additional configuration is needed.
+录制内容存储在 `emptyDir` 卷中。这适合测试，但 pod 被删除后日志会丢失。无需额外配置。
 
-### S3-compatible object storage
+### S3 兼容对象存储
 
-For production, configure S3-compatible storage to ensure durable, long-term retention:
+对于生产环境，请配置 S3 兼容存储以确保持久、长期的保存：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -92,15 +92,15 @@ spec:
           name: s3-credentials-secret
 ```
 
-The referenced `Secret` must contain the credentials required by your S3-compatible provider.
+被引用的 `Secret` 必须包含你的 S3 兼容服务商所需的凭证。
 
-### IAM roles for service accounts (IRSA)
+### 服务账户的 IAM 角色（IRSA）
 
-On EKS, you can use IAM roles for service accounts instead of static credentials. This avoids storing long-lived AWS credentials in a `Secret`.
+在 EKS 上，你可以使用服务账户的 IAM 角色（IRSA）来代替静态凭证，避免把长期有效的 AWS 凭证存进 `Secret`。
 
-1. Follow the [AWS instructions for IRSA][xt-aws-irsa]. When selecting the `ServiceAccount` name and namespace, use the operator's namespace (usually `tailscale`) and the recorder's name.
+1. 按照 [AWS 的 IRSA 说明][xt-aws-irsa]操作。选择 `ServiceAccount` 名称和命名空间时，请使用 Operator 的命名空间（通常是 `tailscale`）和录制器的名称。
 
-2. Use `.spec.statefulSet.pod.serviceAccount` to annotate the recorder's service account with the IAM role:
+2. 使用 `.spec.statefulSet.pod.serviceAccount` 为录制器的服务账户注解 IAM 角色：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -123,10 +123,10 @@ On EKS, you can use IAM roles for service accounts instead of static credentials
              eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/my-s3-role
    ```
 
-## Further exploration
+## 进一步探索
 
-* [Configure][docs-kubectl-recording] kubectl session recording.
-* Understand how session recording works in the [recorder overview][docs-recorder].
+* [配置][docs-kubectl-recording] kubectl 会话录制。
+* 在[录制器概述][docs-recorder]中了解会话录制的工作原理。
 
 [docs-enable-https]: /docs/how-to/set-up-https-certificates
 

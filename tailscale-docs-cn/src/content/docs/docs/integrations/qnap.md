@@ -1,95 +1,95 @@
 ---
-title: "Access QNAP NAS from anywhere"
-description: "Configure the Tailscale client on a QNAP NAS device."
+title: "从任何位置访问 QNAP NAS"
+description: "在 QNAP NAS 设备上配置 Tailscale 客户端。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-With Tailscale, you can securely connect to your QNAP NAS devices over WireGuard®.
+借助 Tailscale，你可以通过 WireGuard® 安全地连接到你的 QNAP NAS 设备。
 
-Tailscale is free for most personal uses, including accessing your NAS.
+对于大多数个人用途（包括访问你的 NAS），Tailscale 免费。
 
-## Supported QNAP hardware
+## 受支持的 QNAP 硬件
 
-* x86-64bit devices
-* arm-64bit devices
+* x86-64 位设备
+* arm-64 位设备
 
-## Installation steps
+## 安装步骤
 
-1. Open the QNAP App Center.
+1. 打开 QNAP App Center。
 
-2. Open the **Communications** section.
+2. 打开 **Communications**（通信）部分。
 
-   *（图：The QNAP App Center interface）*
+   *（图：QNAP App Center 界面）*
 
-3. Locate the Tailscale application and select **Install**.
+3. 找到 Tailscale 应用并选择 **Install**（安装）。
 
-4. After the Tailscale app installation is completed, select the Tailscale app icon, and select **Open**.
+4. Tailscale 应用安装完成后，选择 Tailscale 应用图标，然后选择 **Open**（打开）。
 
-5. Log in to your Tailscale network.
+5. 登录你的 Tailscale 网络。
 
-   *（图：Log in to the Tailscale network）*
+   *（图：登录 Tailscale 网络）*
 
-6. In the **Connect device** page, select **Connect**.
+6. 在 **Connect device**（连接设备）页面，选择 **Connect**（连接）。
 
-The app can also be downloaded from the [QNAP App Center][xt-qnap-app-center] website.
+该应用也可以从 [QNAP App Center][xt-qnap-app-center] 网站下载。
 
-### Manual installation steps
+### 手动安装步骤
 
-An alternative to the recommended approach of installing Tailscale from the QNAP App Center is to install Tailscale using a downloadable QNAP package (QPKG). A reason you might want to install from a QPKG is to access new Tailscale features that are not yet released in the Tailscale version that is available from the QNAP App Center.
+除了推荐的从 QNAP App Center 安装 Tailscale 的方式外，你也可以使用可下载的 QNAP 软件包（QPKG）来安装 Tailscale。你可能希望从 QPKG 安装的一个原因是：访问 QNAP App Center 提供的 Tailscale 版本中尚未发布的新 Tailscale 功能。
 
-To manually install Tailscale:
+要手动安装 Tailscale：
 
-1. Download the QPKG for your QNAP device from the [Tailscale Packages server][pk-server]. QNAP QPKGs are available from both [stable][pk-qnap-stable] and [unstable][pk-qnap-unstable] release tracks.
-2. Open the **App Center** on your QNAP device.
-3. Select **Install Manually** in the upper right-hand corner, select **Browse**, select the QPKG (`.qpkg`) file that you downloaded, and then select **Install**.
-4. Once installation completes, tailscaled should be up and running on your QNAP device, and you should find a new **Tailscale** app in your My Apps section.
+1. 从 [Tailscale 软件包服务器][pk-server]下载适用于你的 QNAP 设备的 QPKG。QNAP QPKG 同时提供 [stable][pk-qnap-stable]（稳定）和 [unstable][pk-qnap-unstable]（不稳定）两个发布通道。
+2. 打开 QNAP 设备上的 **App Center**。
+3. 选择右上角的 **Install Manually**（手动安装），选择 **Browse**（浏览），选择你下载的 QPKG（`.qpkg`）文件，然后选择 **Install**（安装）。
+4. 安装完成后，tailscaled 应已在你的 QNAP 设备上启动并运行，你会在"My Apps"部分看到一个新的 **Tailscale** 应用。
 
-## Features
+## 功能
 
-When used with QNAP, Tailscale supports these features:
+在 QNAP 上使用时，Tailscale 支持以下功能：
 
-* Receive [Taildrop][docs-taildrop] files from other tailnet devices automatically, when you create a shared folder named "Taildrop" on your NAS, like your [QNAP device][docs-qnap-setup].
-* Web-based login to any [supported identity provider][docs-sso-providers].
-* Access your QNAP NAS from anywhere, [without opening firewall ports][bl-how-nat-traversal-works].
-* Share your NAS with designated Tailscale users, using [node sharing][docs-sharing].
-* Restrict access to your NAS using [access control policies][docs-access-control].
-* Use your NAS as a [subnet router][docs-subnets] to provide external access to your LAN. This requires using [`tailscale`][ar-using-the-tailscale-cli] command line steps.
-* Use your NAS as an [exit node][docs-exit-nodes] for secure internet access from anywhere.
+* 当你在 NAS 上创建名为"Taildrop"的共享文件夹（例如在 [QNAP 设备][docs-qnap-setup]上）时，自动接收来自其他 tailnet 设备的 [Taildrop][docs-taildrop] 文件。
+* 通过 Web 登录任何[受支持的身份提供方][docs-sso-providers]。
+* 随时随地访问你的 QNAP NAS，[无需开放防火墙端口][bl-how-nat-traversal-works]。
+* 使用[节点共享][docs-sharing]将你的 NAS 共享给指定的 Tailscale 用户。
+* 使用[访问控制策略][docs-access-control]限制对 NAS 的访问。
+* 将你的 NAS 用作[子网路由器][docs-subnets]，为局域网（LAN）提供外部访问。这需要使用 [`tailscale`][ar-using-the-tailscale-cli] 命令行步骤。
+* 将你的 NAS 用作[出口节点][docs-exit-nodes]，从任何位置安全地访问互联网。
 
-## Using the Tailscale CLI
+## 使用 Tailscale CLI
 
-Some Tailscale functionality, such as configuring QNAP to be a subnet router, requires using the [`tailscale`][docs-cli] CLI. After you install the Tailscale app, the `tailscale` CLI is available as part of the mounted `qpkg` package. You can access the QNAP terminal and run CLI commands [using SSH][xt-qnap-access-using-ssh].
+某些 Tailscale 功能（例如将 QNAP 配置为子网路由器）需要使用 [`tailscale`][docs-cli] CLI。安装 Tailscale 应用后，`tailscale` CLI 会作为挂载的 `qpkg` 软件包的一部分提供。你可以访问 QNAP 终端，并[通过 SSH][xt-qnap-access-using-ssh]运行 CLI 命令。
 
-You can find the mounted package path using this command:
+你可以使用以下命令找到挂载的软件包路径：
 
 ```shell
 echo $(getcfg SHARE_DEF defVolMP -f /etc/config/def_share.info)/.qpkg/Tailscale/
 ```
 
-You can run the `tailscale` CLI using this command:
+你可以使用以下命令运行 `tailscale` CLI：
 
 ```shell
 $(getcfg SHARE_DEF defVolMP -f /etc/config/def_share.info)/.qpkg/Tailscale/tailscale [...]
 ```
 
-For convenience, you can add the package path to your `$PATH` environment variable.
+为方便起见，你可以将该软件包路径添加到 `$PATH` 环境变量。
 
 ```shell
 export PATH=$PATH:$(getcfg SHARE_DEF defVolMP -f /etc/config/def_share.info)/.qpkg/Tailscale/
 ```
 
-This lets you run `tailscale` commands without the full path:
+这样，你就可以在无需完整路径的情况下运行 `tailscale` 命令：
 
 ```shell
 tailscale [...]
 ```
 
-## Special thanks
+## 特别致谢
 
-Special thanks to [ivokub][xt-gh-ivokub], who has contributed a community-maintained [Tailscale QPKG package builder][xt-gh-ivokub-tailscale].
+特别感谢 [ivokub][xt-gh-ivokub]，他贡献了社区维护的 [Tailscale QPKG 软件包构建器][xt-gh-ivokub-tailscale]。
 
-[ar-using-the-tailscale-cli]: #using-the-tailscale-cli
+[ar-using-the-tailscale-cli]: #使用-tailscale-cli
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

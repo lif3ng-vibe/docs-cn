@@ -1,162 +1,162 @@
 ---
-title: "Exit nodes (route all traffic)"
-description: "Route all internet traffic through a specific device on your network."
+title: "出口节点（路由全部流量）"
+description: "将你的网络中某台特定设备设为出口节点，让全部互联网流量经由它路由。"
 ---
 
-Last validated Dec 15, 2025
+最后验证于 Dec 15, 2025
 
-> **Note:** Exit nodes are available for [all plans](https://tailscale.com/pricing).
+> **注意：**出口节点[所有套餐](https://tailscale.com/pricing)均可用。
 
-By default, Tailscale acts as an overlay network: it only routes traffic between devices running Tailscale, but doesn't touch your public internet traffic, such as when you visit Google or Twitter. The overlay network configuration is ideal for most people who need secure communication between sensitive devices (such as company servers or home computers), but don't need extra layers of [encryption][docs-encryption] or latency for their public internet connection.
+默认情况下，Tailscale 充当覆盖网络（overlay network）：它只在运行 Tailscale 的设备之间路由流量，不会触碰你的公共互联网流量，比如你访问 Google 或 Twitter 的时候。这种覆盖网络配置适合大多数只需要在敏感设备（例如公司服务器或家用电脑）之间安全通信、而不希望公共互联网连接增加额外[加密][docs-encryption]层或延迟的人。
 
-*（图：A diagram showing four devices in a Tailscale overlay network. A laptop is making a direct connection to google.com.）*
+*（图：示意图，展示 Tailscale 覆盖网络中的四台设备。笔记本电脑与 google.com 建立直连。）*
 
-However, there might be times when you want Tailscale to route your public internet traffic. For example, you might want to route all your public internet traffic if:
+不过，有时你可能希望 Tailscale 为你路由公共互联网流量。例如，在以下情况下你可能想路由全部公共互联网流量：
 
-* You're in a coffee shop with untrusted Wi-Fi.
-* You're traveling overseas and need access to an online service (such as banking) only available in your home country.
+* 你在咖啡馆里使用不受信任的 Wi-Fi。
+* 你在海外旅行，需要访问仅在所在国家/地区可用的在线服务（例如网上银行）。
 
-*（图：A diagram showing four devices in a Tailscale overlay network where one is highlighted in blue and designated as an exit node. The laptop makes its connection to google.com through the Desktop device designated as an exit node.）*
+*（图：示意图，展示 Tailscale 覆盖网络中的四台设备，其中一台以蓝色高亮并被指定为出口节点。笔记本电脑与 google.com 的连接经由被指定为出口节点的 Desktop 设备转发。）*
 
-You can route all your public internet traffic by setting a device on your network as an exit node, then configuring other devices to send traffic through it. When you route all traffic through an exit node, you're effectively using [default routes][xt-wikipedia-default-route] (`0.0.0.0/0`, `::/0`), similar to how you would if you were using a typical VPN.
+你可以把网络中的一台设备设为出口节点（exit node），再配置其他设备将流量发送给它，从而路由你的全部公共互联网流量。当你把所有流量都经由出口节点路由时，实际上就是在使用[默认路由][xt-wikipedia-default-route]（`0.0.0.0/0`、`::/0`），与你使用普通 VPN 时的效果类似。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景说明与示例。
 
-[Exit Nodes | Tailscale Explained (video)](https://www.youtube.com/watch?v=Ad7D2pkFNdA)
+[Exit Nodes | Tailscale Explained（视频）](https://www.youtube.com/watch?v=Ad7D2pkFNdA)
 
-## Benefits
+## 优势
 
-* **Secure all traffic**: Exit nodes secure all traffic, including traffic to internet sites and applications.
-* **Scale globally**: Deploy exit nodes around the globe to meet your scale and geographical needs.
-* **Increase visibility**: [Destination logging][ar-destination-logging] provides increased visibility of traffic across the tailnet and forensic analysis during security incidents.
+* **保护所有流量**：出口节点保护所有流量，包括发往互联网站点和应用的流量。
+* **全球扩展**：在全球各地部署出口节点，满足你的规模与地域需求。
+* **提升可见性**：[目标日志记录][ar-destination-logging]让你更清楚地掌握整个 tailnet 的流量状况，并在安全事件期间支持取证分析。
 
-## Use cases
+## 使用场景
 
-* **Traveling workforce**: Ensure all internet traffic is secured for your traveling workforce regardless of the physical network they're using.
-* **Testing from different locations**: Test your applications from different locations by deploying and selecting exit nodes around the globe.
-* **Meet compliance needs**: If you have regulatory or compliance needs that require your workforce to use a VPN, exit nodes can help.
+* **差旅团队**：无论出差员工使用什么物理网络，都确保其全部互联网流量受到保护。
+* **多地测试**：通过在全球部署并选择出口节点，从不同地点测试你的应用。
+* **满足合规需求**：如果你的监管或合规要求员工使用 VPN，出口节点可以帮上忙。
 
-## How it works
+## 工作原理
 
-The exit node feature lets you route all traffic through a specific device on your Tailscale network (known as a tailnet). The device routing your traffic is called an **exit node**. There are many ways to use exit nodes in a tailnet. For example, you can:
+出口节点功能让你将全部流量经由 Tailscale 网络（即 tailnet）中的某台特定设备路由。为你路由流量的设备被称为**出口节点**。在 tailnet 中使用出口节点的方式有很多，例如：
 
-* Route all non-Tailscale traffic through an exit node.
-* Use [suggested exit nodes][docs-suggested-exit-nodes] to [automatically use the best exit node][docs-auto-exit-nodes] based on client information, such as location and latency.
-* [Force devices to use an exit node][docs-mandatory-exit-nodes] based on system policies, which you can deploy using mobile device management (MDM) solutions.
+* 将所有非 Tailscale 流量经由出口节点路由。
+* 使用[建议出口节点][docs-suggested-exit-nodes]，基于客户端信息（如位置和延迟）[自动选用最佳出口节点][docs-auto-exit-nodes]。
+* 基于系统策略[强制设备使用出口节点][docs-mandatory-exit-nodes]，你可以通过移动设备管理（MDM）方案下发这些策略。
 
-For security purposes, you must opt in to exit node functionality. For example:
+出于安全考虑，你必须主动选择启用（opt in）出口节点功能。例如：
 
-* Every device must explicitly opt in to using an exit node.
-* A device must advertise itself as an exit node.
-* An [Owner, Admin, or Network admin](/docs/reference/user-roles) must allow a device to be an exit node for the tailnet.
+* 每台设备都必须显式选择使用出口节点。
+* 设备必须将自己宣告为出口节点。
+* [Owner、Admin 或 Network admin](/docs/reference/user-roles) 必须允许该设备作为 tailnet 的出口节点。
 
-> **Tip:**
+> **提示：**
 >
-> By default, exit nodes capture all your network traffic that isn't already directed to a subnet router or app connector. You can also route specific network traffic using [subnet routers][docs-subnets] or [app connectors][docs-app-connectors]. On Android devices, you can also use [app-based split tunneling][docs-android-app-split-tunneling].
+> 默认情况下，出口节点会捕获你的所有网络流量，但已经定向到子网路由器或应用连接器的流量除外。你也可以使用[子网路由器][docs-subnets]或[应用连接器][docs-app-connectors]来路由特定网络流量。在 Android 设备上，你还可以使用[基于应用的分流][docs-android-app-split-tunneling]。
 
-### Local network access
+### 本地网络访问
 
-By default, the device connecting to an exit node won't have access to its local network. If you want to allow the device access to its local network when routing traffic through an exit node, enable exit node local network access.
+默认情况下，连接出口节点的设备将无法访问其本地网络。如果你希望在流量经由出口节点路由时允许该设备访问本地网络，请启用出口节点本地网络访问。
 
-You can enable the **Allow Local Network Access** setting from the **Exit Nodes** section of your Tailscale client. You can also enable this setting by passing `--exit-node-allow-lan-access` to [`tailscale up`][docs-tailscale-up] or [`tailscale set`][docs-tailscale-set].
+你可以在 Tailscale 客户端的 **Exit Nodes** 区域启用 **Allow Local Network Access** 设置。你也可以在运行 [`tailscale up`][docs-tailscale-up] 或 [`tailscale set`][docs-tailscale-set] 时传入 `--exit-node-allow-lan-access` 来启用此设置。
 
-## Get started
+## 开始使用
 
-> **Note:**
+> **注意：**
 >
-> Refer to the [Use exit nodes][docs-quick-start-exit-nodes] quickstart guide for basic instructions on how to configure and use exit nodes.
+> 有关如何配置和使用出口节点的基本步骤，参见[使用出口节点][docs-quick-start-exit-nodes]快速开始指南。
 
-To get started with exit nodes:
+出口节点入门步骤：
 
-1. Understand the [prerequisites][ar-prerequisites].
-2. [Configure a device to act as an exit node][ar-configure-exit-node].
-3. [Allow the exit node from the admin console][ar-allow-exit-node].
-4. [Configure other devices to use the exit node][ar-use-exit-node].
+1. 了解[前提条件][ar-prerequisites]。
+2. [将一台设备配置为出口节点][ar-configure-exit-node]。
+3. [在管理控制台中允许该出口节点][ar-allow-exit-node]。
+4. [配置其他设备使用该出口节点][ar-use-exit-node]。
 
-### Prerequisites
+### 前提条件
 
-Before you can configure an exit node, you must:
+在配置出口节点之前，你必须：
 
-* [Set up a Tailscale network (known as a tailnet)][docs-install].
-* Ensure both the exit node and devices using the exit node run **Tailscale v1.20 or later**.
-* Ensure the exit node is a Linux, macOS, Windows, Android, iOS, or tvOS device.
-* Ensure you allow (intended) users to use the exit node.
+* [搭建 Tailscale 网络（即 tailnet）][docs-install]。
+* 确保出口节点和使用出口节点的设备都运行 **Tailscale v1.20 或更高版本**。
+* 确保出口节点是 Linux、macOS、Windows、Android、iOS 或 tvOS 设备。
+* 确保你已允许（目标）用户使用该出口节点。
 
-### Configure an exit node
+### 配置出口节点
 
-Use the following steps to configure an exit node:
+按以下步骤配置出口节点：
 
-1. [Install the Tailscale client][ar-install-tailscale].
-2. [Advertise the device as an exit node][ar-advertise-exit-node].
-3. [Allow the exit node][ar-allow-exit-node].
-4. [Grant access to use the exit node][ar-grant-access].
-5. [Use the exit node][ar-use-exit-node].
+1. [安装 Tailscale 客户端][ar-install-tailscale]。
+2. [将设备宣告为出口节点][ar-advertise-exit-node]。
+3. [允许该出口节点][ar-allow-exit-node]。
+4. [授予使用出口节点的权限][ar-grant-access]。
+5. [使用出口节点][ar-use-exit-node]。
 
-You can also [get a suggested exit node][docs-get-suggested-exit-node].
+你也可以[获取建议出口节点][docs-get-suggested-exit-node]。
 
-#### Install the Tailscale client
+#### 安装 Tailscale 客户端
 
 #### Android
 
-[Download and install Tailscale][co-download-android] onto the Android device you plan to use as an exit node.
+在计划用作出口节点的 Android 设备上[下载并安装 Tailscale][co-download-android]。
 
 #### iOS
 
-[Download and install Tailscale][co-download-ios] onto the iOS device you plan to use as an exit node.
+在计划用作出口节点的 iOS 设备上[下载并安装 Tailscale][co-download-ios]。
 
 #### Linux
 
-[Download and install Tailscale][co-download-linux] onto the Linux device you plan to use as an exit node.
+在计划用作出口节点的 Linux 设备上[下载并安装 Tailscale][co-download-linux]。
 
 #### macOS
 
-[Download and install Tailscale][co-download-mac] onto the macOS device you plan to use as an exit node. Each of the [three macOS variants][docs-macos-variants] supports running an exit node.
+在计划用作出口节点的 macOS 设备上[下载并安装 Tailscale][co-download-mac]。[三种 macOS 变体][docs-macos-variants]都支持运行出口节点。
 
 #### tvOS
 
-[Download and install Tailscale][docs-appletv-install-tailscale-on-tvos] onto the Apple TV you plan to use as an exit node.
+在计划用作出口节点的 Apple TV 上[下载并安装 Tailscale][docs-appletv-install-tailscale-on-tvos]。
 
 #### Windows
 
-[Download and install Tailscale][co-download-windows] onto the Windows device you plan to use as an exit node.
+在计划用作出口节点的 Windows 设备上[下载并安装 Tailscale][co-download-windows]。
 
-#### Advertise a device as an exit node
+#### 将设备宣告为出口节点
 
 #### Android
 
-Open the Tailscale client on the Android device, go to **Exit Node** and select **Run as exit node**.
+在 Android 设备上打开 Tailscale 客户端，进入 **Exit Node**，选择 **Run as exit node**。
 
 #### iOS
 
-Open the Tailscale client on the iOS device, go to **Exit Node** and select **Run as Exit Node**.
+在 iOS 设备上打开 Tailscale 客户端，进入 **Exit Node**，选择 **Run as Exit Node**。
 
 #### Linux
 
-> **Warning:**
+> **警告：**
 >
-> You must enable IP forwarding to advertise a Linux device as an exit node.
+> 你必须启用 IP 转发才能将 Linux 设备宣告为出口节点。
 >
-> \[Missing snippet: EnableIPForwarding.mdx]
+> \[缺少代码片段：EnableIPForwarding.mdx]
 >
-> If your Linux node uses `firewalld`, you might need to allow masquerading as a workaround due to a [known issue][xt-gh-tailscale-issue-3416]. You can allow masquerading with the following command:
+> 如果你的 Linux 节点使用 `firewalld`，由于一个[已知问题][xt-gh-tailscale-issue-3416]，你可能需要允许伪装（masquerading）作为变通方案。可以使用以下命令允许伪装：
 >
 > ```shell
 > firewall-cmd --permanent --add-masquerade
 > ```
 >
-> Other Linux distributions might require different steps.
+> 其他 Linux 发行版可能需要不同的步骤。
 >
-> When you enable IP forwarding, ensure your firewall denies traffic forwarding by default. Many Linux firewalls (like `ufw` and `firewalld`) use this configuration by default to prevent routing unintended traffic.
+> 启用 IP 转发时，请确保你的防火墙默认拒绝流量转发。许多 Linux 防火墙（如 `ufw` 和 `firewalld`）默认就采用这种配置，以防止路由非预期流量。
 
-From the device you plan to use as an exit node, use the `--advertise-exit-node` flag when you run [`tailscale set`][docs-tailscale-set] or [`tailscale up`][docs-tailscale-up]:
+在计划用作出口节点的设备上，运行 [`tailscale set`][docs-tailscale-set] 或 [`tailscale up`][docs-tailscale-up] 时传入 `--advertise-exit-node` 标志：
 
 ```shell
 sudo tailscale set --advertise-exit-node
 ```
 
-If you pass the `--advertise-exit-node` flag to the `tailscale set` command, you must run `tailscale up` afterward.
+如果你把 `--advertise-exit-node` 标志传给 `tailscale set` 命令，之后必须运行 `tailscale up`。
 
 ```shell
 sudo tailscale set --advertise-exit-node
@@ -165,38 +165,38 @@ sudo tailscale up
 
 #### macOS
 
-> **Note:**
+> **注意：**
 >
-> There are [three ways to run Tailscale on macOS][docs-macos-variants]. This document only applies to the macOS App Store and Standalone (GUI) versions. If you use `tailscaled` on macOS, use the Linux instructions.
+> 在 macOS 上运行 Tailscale 有[三种方式][docs-macos-variants]。本文只适用于 macOS App Store 版和 Standalone（GUI）版。如果你在 macOS 上使用 `tailscaled`，请按照 Linux 的步骤操作。
 
-From the Tailscale client installed on the device you plan to use as an exit node, select **Exit Node** > **Run Exit Node**.
+在计划用作出口节点的设备上打开 Tailscale 客户端，选择 **Exit Node** > **Run Exit Node**。
 
 #### tvOS
 
-To use your Apple TV as an exit node, refer to [Install Tailscale on an Apple TV][docs-appletv-advertise-exit-node].
+要将 Apple TV 用作出口节点，参见[在 Apple TV 上安装 Tailscale][docs-appletv-advertise-exit-node]。
 
 #### Windows
 
-From the Tailscale client installed on the device you plan to use as an exit node, select **Exit node** > **Run exit node**.
+在计划用作出口节点的设备上打开 Tailscale 客户端，选择 **Exit node** > **Run exit node**。
 
-### Allow the exit node from the admin console
+### 在管理控制台中允许出口节点
 
-You must be an [Admin](/docs/reference/user-roles) to allow a device to be an exit node.
+你必须具有 [Admin](/docs/reference/user-roles) 身份，才能允许某台设备作为出口节点。
 
-> **Note:**
+> **注意：**
 >
-> If the device is authenticated by a user who can approve exit nodes in [`autoApprovers`][docs-policy-syntax-autoapprovers], the exit node will automatically be approved.
+> 如果设备由在 [`autoApprovers`][docs-policy-syntax-autoapprovers] 中有权批准出口节点的用户完成认证，该出口节点会自动获得批准。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the exit node.
-2. Locate the **Exit Node** badge in the machines list or use the [`property:exit-node`](https://console.tailscale.com/admin/machines?q=property%3Aexit-node) filter to list all devices advertised as exit nodes.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，找到该出口节点。
+2. 在机器列表中找到 **Exit Node** 徽标，或使用 [`property:exit-node`](https://console.tailscale.com/admin/machines?q=property%3Aexit-node) 筛选器列出所有已宣告为出口节点的设备。
 
-From the  menu of the exit node, select **Edit exit node**, then **Use as exit node**.
+在出口节点的菜单中，选择 **Edit exit node**，然后选择 **Use as exit node**。
 
-### Grant access to use the exit node
+### 授予使用出口节点的权限
 
-By default, any user in your tailnet can use a configured exit node. You don't need to add any grants or ACLs.
+默认情况下，tailnet 中的任何用户都可以使用已配置的出口节点，你无需添加任何授权（grant）或 ACL。
 
-This changes if you customize your tailnet's [access control policy][docs-acls]. For example, suppose you replace the default policy with one that only lets your developers access a few internal servers:
+如果你自定义了 tailnet 的[访问控制策略][docs-acls]，情况就会改变。例如，假设你用一个只允许开发人员访问几台内部服务器的策略替换默认策略：
 
 ```json
 {
@@ -210,47 +210,47 @@ This changes if you customize your tailnet's [access control policy][docs-acls].
 }
 ```
 
-Your developers can still reach the production servers, but they can no longer use an exit node. The policy never grants access to [`autogroup:internet`][docs-grants-allow-exit-nodes], so Tailscale has no permission to route internet traffic through the exit node.
+你的开发人员仍然可以访问生产服务器，但再也无法使用出口节点。该策略从未向 [`autogroup:internet`][docs-grants-allow-exit-nodes] 授予访问权限，因此 Tailscale 无权将互联网流量经由出口节点路由。
 
-A common point of confusion is to add the exit node device itself as the destination. That only permits connections to the exit node, such as SSH. It does not permit using the device as an internet gateway.
+一个常见的困惑是把出口节点设备本身添加为目标（destination）。那只会允许连接到出口节点（例如 SSH），并不允许把这台设备当作互联网网关使用。
 
-To permit exit node use, add a [grant][docs-grants] or ACL whose `dst` is `autogroup:internet`. This grants permission to route internet traffic through any configured exit node rather than to connect to the exit node device itself.
+要允许使用出口节点，请添加一条 `dst` 为 `autogroup:internet` 的[授权][docs-grants]或 ACL。这授予的是把互联网流量经由任意已配置出口节点路由的权限，而不是连接到出口节点设备本身的权限。
 
-### Use the exit node
+### 使用出口节点
 
-Each device must enable the exit node separately. The instructions for enabling an exit node vary depending on the device's operating system.
+每台设备都必须单独启用出口节点。启用出口节点的步骤因设备操作系统而异。
 
 #### Android
 
-1. Open the Tailscale app on the Android device and go to the **Exit Node** section.
-2. Select the exit node that you want to use. If you want to allow direct access to your local network when routing traffic through an exit node, toggle **Allow LAN access** on.
-3. On the app home screen, confirm that the selected device displays in the **Exit Node** section. When an exit node is being used for the device, the section will turn blue.
+1. 在 Android 设备上打开 Tailscale 应用，进入 **Exit Node** 区域。
+2. 选择你想使用的出口节点。如果你希望在流量经由出口节点路由时允许直接访问本地网络，请打开 **Allow LAN access** 开关。
+3. 在应用主屏幕上，确认所选设备显示在 **Exit Node** 区域。当设备正在使用某个出口节点时，该区域会变成蓝色。
 
-To stop a device from using an exit node, go to the **Exit Node** section and select **None**.
+要让设备停止使用出口节点，进入 **Exit Node** 区域并选择 **None**。
 
 #### iOS
 
-You can use an exit node from the top of the screen.
+你可以从屏幕顶部使用出口节点。
 
-Select the exit node that you want to use. To stop using an exit node, disable the one you currently use or select **None** from the **Exit Node** list.
+选择你想使用的出口节点。要停止使用出口节点，禁用当前使用的节点，或在 **Exit Node** 列表中选择 **None**。
 
 #### Linux
 
-Run `tailscale set` with the `--exit-node=` flag, passing the [Tailscale IP address][docs-tailscale-ip-addresses] of the exit node.
+运行带 `--exit-node=` 标志的 `tailscale set`，传入出口节点的 [Tailscale IP 地址][docs-tailscale-ip-addresses]。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip>
 ```
 
-You can find the IP address for the device from the admin console or by running `tailscale status`.
+你可以在管理控制台中找到设备的 IP 地址，也可以运行 `tailscale status` 查看。
 
-Alternatively, set `--exit-node-allow-lan-access` to `true` to allow direct access to your local network when routing traffic through an exit node.
+另外，可将 `--exit-node-allow-lan-access` 设为 `true`，以便在流量经由出口节点路由时允许直接访问本地网络。
 
 ```shell
 sudo tailscale set --exit-node=<exit-node-ip> --exit-node-allow-lan-access=true
 ```
 
-To stop using an exit node, run the `--exit-node` flag without passing in an IP address.
+要停止使用出口节点，运行 `--exit-node` 标志但不传入 IP 地址。
 
 ```shell
 sudo tailscale set --exit-node=
@@ -258,137 +258,137 @@ sudo tailscale set --exit-node=
 
 #### macOS
 
-You can use an exit node from the menu bar. Open the Tailscale menu and select **Exit Nodes**. (If you are running a Tailscale client version earlier than **v1.60.0**, the menu string to select is **Use exit node**.) Then, select the machine name of the exit node to use.
+你可以从菜单栏使用出口节点。打开 Tailscale 菜单并选择 **Exit Nodes**。（如果你运行的 Tailscale 客户端版本低于 **v1.60.0**，要选择的菜单项是 **Use exit node**。）然后选择要使用的出口节点的机器名。
 
-To allow direct access to your local network when routing traffic through an exit node, select **Allow Local Network Access**.
+要在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow Local Network Access**。
 
 #### tvOS
 
-To allow your Apple TV to use another device in your tailnet as an exit node, refer to [Install Tailscale on an Apple TV][docs-appletv-use-exit-node].
+要让 Apple TV 使用 tailnet 中的另一台设备作为出口节点，参见[在 Apple TV 上安装 Tailscale][docs-appletv-use-exit-node]。
 
 #### Windows
 
-You can use an exit node from the system tray menu. Select the Tailscale icon and select **Use exit node**. Then, select the machine name of the exit node to use.
+你可以从系统托盘菜单使用出口节点。选择 Tailscale 图标并选择 **Use exit node**。然后选择要使用的出口节点的机器名。
 
-If you want to allow direct access to your local network when routing traffic through an exit node, select **Allow local network access**.
+如果你希望在流量经由出口节点路由时允许直接访问本地网络，选择 **Allow local network access**。
 
-> **Note:**
+> **注意：**
 >
-> The option to use an exit node only displays if there's an available exit node in your tailnet.
+> 只有当你的 tailnet 中存在可用出口节点时，才会显示使用出口节点的选项。
 
-You can verify that your traffic is routed by another device by checking your public IP address [using online tools][xt-whatismyip]. The exit node's public address displays rather than your local device's IP address.
+你可以[借助在线工具][xt-whatismyip]检查你的公网 IP 地址，验证流量确实经由另一台设备路由。显示的将是出口节点的公网地址，而不是你本地设备的 IP 地址。
 
-You can turn off routing through an exit node by selecting **None** from the **Exit Node** drop-down.
+要关闭经由出口节点路由，在 **Exit Node** 下拉框中选择 **None**。
 
-## Destination logging in network flow logs
+## 网络流日志中的目标日志记录
 
-> **Note:** Destination logging is available for [the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：**目标日志记录[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> Destination logging requires a sales contract to enable. Contact [Tailscale Sales](https://tailscale.com/contact/sales) for details.
+> 目标日志记录需要签订销售合同才能启用。详情请联系 [Tailscale Sales](https://tailscale.com/contact/sales)。
 
-By default, destination logging is disabled for traffic flowing through an exit node across all tailnets, for privacy, abuse, and security purposes. Tailnets on the Enterprise plan can, however, enable destination logging across the tailnet for increased visibility of traffic across the tailnet and forensic analysis during security incidents. Destinations are logged in [Network flow logs][docs-network-flow-logs].
+出于隐私、滥用防护和安全方面的考虑，默认情况下，所有 tailnet 中流经出口节点的流量都禁用目标日志记录。不过，Enterprise 套餐的 tailnet 可以启用整个 tailnet 的目标日志记录，以便更清楚地掌握整个 tailnet 的流量状况，并在安全事件期间支持取证分析。目标记录在[网络流日志][docs-network-flow-logs]中。
 
-> **Note:**
+> **注意：**
 >
-> You must enable [log streaming][docs-log-streaming] before using exit node destination logging.
+> 使用出口节点目标日志记录之前，必须先启用[日志流式传输][docs-log-streaming]。
 
-To enable destination logging for exit nodes:
+为出口节点启用目标日志记录的步骤：
 
-1. Open the [Logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Network flow logs**.
-3. Select the **Logging Actions** menu, then select **Enable exit node destination logging**.
+1. 打开管理控制台的 [Logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Network flow logs**。
+3. 选择 **Logging Actions** 菜单，然后选择 **Enable exit node destination logging**。
 
-To disable destination logging for exit nodes:
+为出口节点停用目标日志记录的步骤：
 
-1. Open the [Logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Network flow logs**.
-3. Select the **Logging Actions** menu, then select **Disable exit node destination logging**.
+1. 打开管理控制台的 [Logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Network flow logs**。
+3. 选择 **Logging Actions** 菜单，然后选择 **Disable exit node destination logging**。
 
-## Caveats
+## 注意事项
 
 #### Android
 
-Tailscale support for running exit nodes on Android is still undergoing optimization. Make sure you plug the device into a power source if you plan to use it as an exit node for an extended time. Android exit nodes are limited to [userspace routing][docs-kernel-vs-userspace-routers].
+Tailscale 对在 Android 上运行出口节点的支持仍在优化中。如果你打算长时间把设备用作出口节点，请确保设备接通电源。Android 出口节点仅限于[用户态路由][docs-kernel-vs-userspace-routers]。
 
-> **Note:**
+> **注意：**
 >
-> Running an exit node on an Android device is not performant—it may be too slow for most cases.
+> 在 Android 设备上运行出口节点性能不佳——多数场景下可能都太慢。
 
-### Userspace
+### 用户态
 
-On Android, the exit node is implemented in userspace, which differs from the default Linux exit node implementation and is not as mature or fully optimized. For details, refer to [Kernel vs. netstack subnet routing and exit nodes][docs-kernel-vs-userspace-routers].
+在 Android 上，出口节点在用户态实现，这与 Linux 出口节点的默认实现不同，也不够成熟和优化。详情参见 [Kernel vs. netstack subnet routing and exit nodes][docs-kernel-vs-userspace-routers]。
 
 #### Linux
 
-There is a known issue related to using Google Cloud Platform with Linux VM exit nodes. For more information including a workaround, refer to [Google Cloud Platform reference architecture][docs-gcp-reference-architecture].
+将 Google Cloud Platform 与 Linux 虚拟机出口节点配合使用存在一个已知问题。包括变通方案在内的更多信息，参见 [Google Cloud Platform 参考架构][docs-gcp-reference-architecture]。
 
-### Port forwarding
+### 端口转发
 
-To use a Linux device as an exit node, you must enable port forwarding.
+要将 Linux 设备用作出口节点，你必须启用端口转发。
 
-\[Missing snippet: EnableIPForwarding.mdx]
+\[缺少代码片段：EnableIPForwarding.mdx]
 
 #### macOS
 
-Tailscale support for running exit nodes on macOS is new and still undergoing optimization. macOS exit nodes are limited to userspace routing and require you to prevent your device from sleeping to maintain a connection.
+Tailscale 对在 macOS 上运行出口节点的支持较新，仍在优化中。macOS 出口节点仅限于用户态路由，并且需要你阻止设备进入睡眠以维持连接。
 
-### Userspace
+### 用户态
 
-On macOS, the exit node is implemented in userspace, which differs from the default Linux exit node implementation and is not as mature or fully optimized. For details, refer to [Kernel vs. netstack subnet routing & exit nodes][docs-kernel-vs-userspace-routers].
+在 macOS 上，出口节点在用户态实现，这与 Linux 出口节点的默认实现不同，也不够成熟和优化。详情参见 [Kernel vs. netstack subnet routing & exit nodes][docs-kernel-vs-userspace-routers]。
 
-### Sleeping
+### 睡眠
 
-When running an exit node, you [currently][xt-gh-tailscale-issue-3574] must prevent the computer from going to sleep if you want the exit node to remain available.
+运行出口节点时，如果你希望出口节点保持可用，[目前][xt-gh-tailscale-issue-3574]必须防止电脑进入睡眠。
 
-In macOS System Preferences, under **Energy Saver**, select **Prevent computer from sleeping automatically when the display is off**.
+在 macOS 系统偏好设置的 **Energy Saver** 中，选择 **Prevent computer from sleeping automatically when the display is off**。
 
 #### tvOS
 
-### Sleeping
+### 睡眠
 
-The most common reason your Apple TV cannot be accessed when asleep is that it's not configured as a home hub. Typically, during the initial setup of an Apple TV, it is automatically set as a home hub. However, this feature can become disabled if you move your Apple TV to a different physical location or make significant configuration changes to your network. For more information, refer to [Install Tailscale on an Apple TV][docs-appletv-troubleshooting].
+Apple TV 休眠后无法访问，最常见的原因是它没有被配置为家庭中枢（home hub）。通常，Apple TV 在初始设置期间会被自动设为家庭中枢。但如果你把 Apple TV 移到别的物理位置，或对网络做了重大配置更改，这一功能可能会被禁用。更多信息参见[在 Apple TV 上安装 Tailscale][docs-appletv-troubleshooting]。
 
 #### Windows
 
-Tailscale support for running exit nodes on Windows is new and still undergoing optimization. Windows exit nodes are limited to userspace routing, require DNS in a system thread, and require you to prevent your device from sleeping to maintain a connection.
+Tailscale 对在 Windows 上运行出口节点的支持较新，仍在优化中。Windows 出口节点仅限于用户态路由，要求 DNS 在系统线程中运行，并且需要你阻止设备进入睡眠以维持连接。
 
-### Userspace
+### 用户态
 
-On Windows, the exit node is implemented in userspace, which differs from the default Linux exit node implementation. For details, refer to [Kernel vs. netstack subnet routing & exit nodes][docs-kernel-vs-userspace-routers].
+在 Windows 上，出口节点在用户态实现，这与 Linux 出口节点的默认实现不同。详情参见 [Kernel vs. netstack subnet routing & exit nodes][docs-kernel-vs-userspace-routers]。
 
 ### DNS
 
-When Tailscale operates as an exit node, it runs a DNS server for peers behind the exit node to use as their DNS server.
+当 Tailscale 作为出口节点运行时，它会运行一个 DNS 服务器，供出口节点后面的对等端作为其 DNS 服务器使用。
 
-Tailscale's DNS server implementation on Windows [currently][xt-gh-tailscale-issue-3588] occupies a system thread (and thus system memory) for each ongoing DNS query. High numbers of concurrent queries might cause problems for heavily used exit nodes.
+Tailscale 在 Windows 上的 DNS 服务器实现[目前][xt-gh-tailscale-issue-3588]会为每个进行中的 DNS 查询占用一个系统线程（因而占用系统内存）。高并发查询量可能给负载较重的出口节点带来问题。
 
-### Sleeping
+### 睡眠
 
-When running an exit node, consider enabling ["Run Unattended"][docs-run-unattended] so Tailscale continues to run even after you log out (or the machine reboots, such as for Windows updates).
+运行出口节点时，考虑启用 ["Run Unattended"][docs-run-unattended]，这样即使你注销（或机器重启，例如安装 Windows 更新）之后 Tailscale 也会继续运行。
 
-You also [currently][xt-gh-tailscale-issue-3574] need to prevent the computer from sleeping if you want the exit node to remain available.
+如果你希望出口节点保持可用，[目前][xt-gh-tailscale-issue-3574]还需要防止电脑进入睡眠。
 
-### Expired device keys
+### 设备密钥过期
 
-\[Missing snippet: expired\_device\_keys\_fail\_close.mdx]
+\[缺少代码片段：expired\_device\_keys\_fail\_close.mdx]
 
-[ar-advertise-exit-node]: #advertise-a-device-as-an-exit-node
+[ar-advertise-exit-node]: #将设备宣告为出口节点
 
-[ar-allow-exit-node]: #allow-the-exit-node-from-the-admin-console
+[ar-allow-exit-node]: #在管理控制台中允许出口节点
 
-[ar-configure-exit-node]: #configure-an-exit-node
+[ar-configure-exit-node]: #配置出口节点
 
-[ar-destination-logging]: #destination-logging-in-network-flow-logs
+[ar-destination-logging]: #网络流日志中的目标日志记录
 
-[ar-grant-access]: #grant-access-to-use-the-exit-node
+[ar-grant-access]: #授予使用出口节点的权限
 
-[ar-install-tailscale]: #install-the-tailscale-client
+[ar-install-tailscale]: #安装-tailscale-客户端
 
-[ar-prerequisites]: #prerequisites
+[ar-prerequisites]: #前提条件
 
-[ar-use-exit-node]: #use-the-exit-node
+[ar-use-exit-node]: #使用出口节点
 
 [co-download-android]: https://tailscale.com/download/android
 

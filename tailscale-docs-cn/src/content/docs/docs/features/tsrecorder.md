@@ -1,55 +1,55 @@
 ---
 title: "tsrecorder"
-description: "Use tsrecorder for session recording with Tailscale SSH and the Tailscale Kubernetes Operator."
+description: "将 tsrecorder 与 Tailscale SSH 和 Tailscale Kubernetes Operator 搭配使用，进行会话录制。"
 ---
 
-Last validated Jun 12, 2026
+最后验证于 Jun 12, 2026
 
-> **Deprecation:**
+> **弃用：**
 >
-> Tailscale no longer offers session recording through `tsrecorder`. Support for existing users is scheduled to end on August 2027. For session recording and privileged access management, use [Tailscale PAM][docs-tailscale-pam] or contact [Tailscale Sales][co-contact-sales].
+> Tailscale 不再通过 `tsrecorder` 提供会话录制。对现有用户的支持计划于 2027 年 8 月结束。如需会话录制和特权访问管理，请使用 [Tailscale PAM][docs-tailscale-pam] 或联系 [Tailscale Sales][co-contact-sales]。
 
-When accessing sensitive infrastructure through your tailnet, you might need a record of what happened during those sessions. Compliance frameworks might require it, security teams want it for incident investigation, and audits go faster when you can replay exactly what a user did. `tsrecorder` provides this record.
+通过 tailnet 访问敏感基础设施时，你可能需要一份这些会话期间所发生情况的记录。合规框架可能有此要求，安全团队需要它来做事件调查，而当你能够精确回放用户的操作时，审计也会更快。`tsrecorder` 提供了这样的记录。
 
-`tsrecorder` is a node that joins your tailnet and receives recordings of terminal sessions from other devices. It works the same way regardless of what kind of session it records. A device hosting a session streams session data to `tsrecorder` over the tailnet, and `tsrecorder` writes it to storage. Because the stream travels over the tailnet, it is end-to-end encrypted like any other tailnet traffic.
+`tsrecorder` 是一个加入你的 tailnet 并接收其他设备终端会话录制的节点。无论录制哪种类型的会话，它的工作方式都相同。承载会话的设备通过 tailnet 把会话数据流式传输给 `tsrecorder`，`tsrecorder` 再将其写入存储。由于数据流经由 tailnet 传输，它与其他 tailnet 流量一样是端到端加密的。
 
-## What you can record
+## 可以录制的内容
 
-`tsrecorder` supports two recording scenarios:
+`tsrecorder` 支持两种录制场景：
 
-* **Tailscale SSH sessions**: Devices running Tailscale SSH stream their sessions to `tsrecorder`. For more information, refer to [Tailscale SSH session recording][docs-ssh-session-recording].
-* **Kubernetes sessions**: Kubernetes API server proxy streams all Kubernetes API calls to `tsrecorder`, including endpoints for interactive sessions such as `kubectl exec` and `kubectl attach`. For more information, refer to [Record kubectl sessions][docs-kubectl-recording].
+* **Tailscale SSH 会话**：运行 Tailscale SSH 的设备将其会话流式传输到 `tsrecorder`。更多信息请参阅 [Tailscale SSH 会话录制][docs-ssh-session-recording]。
+* **Kubernetes 会话**：Kubernetes API 服务器代理将所有 Kubernetes API 调用流式传输到 `tsrecorder`，包括交互式会话的端点，例如 `kubectl exec` 和 `kubectl attach`。更多信息请参阅[录制 kubectl 会话][docs-kubectl-recording]。
 
-In both scenarios, recordings capture terminal output (`stdout` and `stderr`) along with session metadata such as timestamps, the source device, and the user who started the session. Kubernetes session recordings do not capture `stdin`, which prevents sensitive input such as passwords from appearing in recordings. `tsrecorder` stores sessions in `asciinema` format, which lets you replay them later as they appeared in the terminal.
+在这两种场景中，录制内容会捕获终端输出（`stdout` 和 `stderr`）以及会话元数据，例如时间戳、源设备和发起会话的用户。Kubernetes 会话录制不会捕获 `stdin`，这可以防止密码等敏感输入出现在录制内容中。`tsrecorder` 以 `asciinema` 格式存储会话，让你日后可以按终端中的原样回放。
 
-[Tailscale PAM][docs-tailscale-pam] supports recording additional session types, such as SSH, Kubernetes, and database sessions.
+[Tailscale PAM][docs-tailscale-pam] 支持录制更多会话类型，例如 SSH、Kubernetes 和数据库会话。
 
-## How recording is controlled
+## 录制是如何控制的
 
-Recording is policy-driven. You deploy `tsrecorder` with a tag, such as `tag:recorder`, then reference that tag in a `recorder` field on the general access rules that govern the sessions you want to record. When a session matches a rule with a `recorder` field, recording starts automatically. Sessions that do not match a recording rule are not recorded.
+录制由策略驱动。你部署 `tsrecorder` 时带上一个标签（tag），例如 `tag:recorder`，然后在控制你要录制会话的通用访问规则中的 `recorder` 字段里引用该标签。当会话匹配带 `recorder` 字段的规则时，录制自动开始。不匹配录制规则的会话不会被录制。
 
-By default, session recording "fails open". If the recorder node is unreachable, Tailscale still lets the session connect. If your compliance requirements demand that every session is recorded, you can "fail closed" instead by setting `enforceRecorder` to `true`. With enforcement on, Tailscale blocks the session if it cannot reach a recorder.
+默认情况下，会话录制"失败放行"（fail open）。如果录制器节点不可达，Tailscale 仍允许会话连接。如果你的合规要求每一条会话都必须录制，你可以改为"失败阻断"（fail closed），把 `enforceRecorder` 设为 `true`。启用强制后，如果 Tailscale 无法连接到录制器，就会阻止该会话。
 
-## Where recordings are stored
+## 录制内容存储在哪里
 
-`tsrecorder` writes recordings to one of two destinations:
+`tsrecorder` 把录制内容写入以下两种目的地之一：
 
-* A local file path, such as a mounted volume
-* An S3-compatible object storage bucket
+* 本地文件路径，例如挂载的卷
+* 兼容 S3 的对象存储桶
 
-To configure object storage, refer to [Send session recordings to S3][docs-session-recording-s3].
+要配置对象存储，请参阅[将会话录制发送到 S3][docs-session-recording-s3]。
 
-## Set up tsrecorder
+## 设置 tsrecorder
 
-Setup follows the same shape for every scenario. You deploy the `tsrecorder` container, point it at a storage destination, and reference its tag in your tailnet policy file. The scenario-specific topics walk through each configuration:
+无论哪种场景，设置的步骤结构都相同。你部署 `tsrecorder` 容器，将其指向一个存储目的地，并在 tailnet 策略文件中引用它的标签。各场景的专题文档会逐步讲解每种配置：
 
-* To record Tailscale SSH sessions, refer to [Tailscale SSH session recording][docs-ssh-session-recording].
-* To record `kubectl` sessions, refer to [Kubernetes session recording][docs-kubectl-recording].
-* To deploy `tsrecorder` on a Kubernetes cluster, the operator's `Recorder` custom resource handles the deployment for you. For more information, refer to [Deploy a session recorder in your Kubernetes cluster][docs-deploy-tsrecorder].
+* 要录制 Tailscale SSH 会话，请参阅 [Tailscale SSH 会话录制][docs-ssh-session-recording]。
+* 要录制 `kubectl` 会话，请参阅 [Kubernetes 会话录制][docs-kubectl-recording]。
+* 要在 Kubernetes 集群上部署 `tsrecorder`，Operator 的 `Recorder` 自定义资源会代你完成部署。更多信息请参阅[在 Kubernetes 集群中部署会话录制器][docs-deploy-tsrecorder]。
 
-## View recordings
+## 查看录制内容
 
-You can review recordings in the Tailscale admin console or retrieve them directly from your storage backend. `tsrecorder` also includes an optional web UI for browsing and replaying recorded sessions. If you enable the UI, configure your [tailnet policy file][docs-tailnet-policy-file] to restrict access to port `443` on the recorder so that only authorized users can view recordings. For more information about configuring the web UI including tailnet policy file examples, refer to [Deploy a session recorder in your Kubernetes cluster][docs-deploy-tsrecorder].
+你可以在 Tailscale 管理控制台中查看录制内容，也可以直接从存储后端检索。`tsrecorder` 还包含一个可选的 web UI，用于浏览和回放已录制的会话。如果启用该 UI，请配置你的 [tailnet 策略文件][docs-tailnet-policy-file]，把对录制器 `443` 端口的访问限制为仅授权用户可查看录制内容。有关配置 web UI 的更多信息（包括 tailnet 策略文件示例），请参阅[在 Kubernetes 集群中部署会话录制器][docs-deploy-tsrecorder]。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

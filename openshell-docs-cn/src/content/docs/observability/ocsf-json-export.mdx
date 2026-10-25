@@ -1,0 +1,384 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "OCSF JSON 导出"
+sidebar-title: "OCSF JSON 导出"
+description: "如何启用完整 OCSF JSON 日志，用于 SIEM 集成、合规与结构化分析。包括面向 AWS Security Lake、Splunk 与 CrowdStrike 兼容性的 schema 版本降级。"
+keywords: "生成式 AI, 网络安全, OCSF, JSON, SIEM, 合规, 可观测性"
+---
+import { Aside } from '@astrojs/starlight/components';
+
+[简写日志格式](/observability/logging)为人和智能体实时阅读日志做了优化。要让机器消费或对接 SIEM，请启用 OCSF JSON 输出：每条记录一个原生 JSON 对象。收集是尽力而为（best-effort），不保证完整的审计历史。
+
+## 网关输出
+
+在 `gateway.toml` 中配置 `[openshell.gateway.ocsf_log]`，把网关侧产生的 OCSF 事件收集到一个 JSONL 文件。其中包括 TLS 证书重载这类网关级事件，即使没有适用的沙箱日志流也不例外。收集保留原生 OCSF 字段与事件 ID，且不依赖 `RUST_LOG`。
+
+要把网关 OCSF 事件直接发送给 OpenTelemetry Collector，请启用 [OCSF 日志导出](/how-it-works/gateways/configuration#ocsf-日志导出)。
+
+网关把 OCSF 事件写入本地 JSONL 文件。为每个副本指定各自的路径，并配置采集器跟随重命名的轮转分段。队列上限、保留、丢失指标与尽力投递限制参见[OCSF JSONL 配置](/how-it-works/gateways/configuration#ocsf-jsonl-输出)。
+
+该输出与下文描述的监管器 stderr 与文件输出相互独立。启用其一不会启用另一个。网关 JSONL 接收端不归档推送到网关的监管器日志行；那些行携带的是 OCSF 简写文本，不是完整的结构化记录。
+
+网关记录在 `device.uid` 与 `device.name` 中使用配置的网关名称。同一安装的副本共用该身份；`device.hostname` 标识发出事件的副本。事件会被一起收集的安装应使用不同的网关名称。复用名称（包括默认名称）会把那些安装归入同一身份。重命名网关会改变其审计身份。
+
+网关在认证期间拒绝 gRPC 请求时发出 Authentication（`class_uid: 3002`）事件。调用方两种情况下收到相同的错误。处理器拒绝它自行校验的凭据时也会发出一个：`ForwardTcp` SSH 连接的 SSH 会话令牌，或 `IssueSandboxToken` 上与沙箱记录运行时不再匹配的计算驱动身份。这些事件在 `user` 中标识已通过认证的调用方。`auth_protocol` 指出涉及的机制（如适用）：OIDC bearer 令牌为 `OpenID`，或 `mtls`、`sandbox_jwt`、`compute_driver`、`k8s_service_account`、`ssh_session_token`。`status_detail` 存放原因类别：
+
+| 原因 | 严重级别 | 含义 |
+|---|---|---|
+| `missing_credential` | Low | 未携带凭据。 |
+| `expired_credential` | Low | 凭据已过期。 |
+| `conflicting_credentials` | Medium | 操作者证书与 `authorization` 头部同时到达。 |
+| `malformed_credential` | Medium | 凭据无法解析。 |
+| `invalid_credential` | Medium | 凭据未通过签名、密钥或声明校验。 |
+| `audience_or_issuer_mismatch` | Medium | 凭据由另一方签发或为另一方签发。 |
+| `unknown_identity` | Medium | 凭据指名的身份网关不认识。 |
+| `stale_identity` | Medium | 凭据指名的沙箱运行时或网关 Pod 已被替换或停止。 |
+| `identity_provider_unavailable` | Medium | OIDC 密钥端点、Kubernetes API、计算驱动或网关数据库无法校验该凭据。 |
+
+`src_endpoint` 存放连接直接对端的地址；有代理或负载均衡器挡在网关前面时即是它，经 WebSocket 隧道承载的请求则为名称 `edge-tunnel`。`metadata.correlation_uid` 在 `x-request-id` 为 UUID 时存放它。客户端未发送时网关生成一个并在响应中返回。客户端提供的 ID 按发送原样记录，因此它标识的是请求，不是客户端。
+
+网关在副本第一次接受某凭据（例如 bearer 令牌、客户端证书或 SSH 会话令牌）时，还会发出带 `status: Success` 的 Informational 级 Authentication 事件。同一凭据的后续请求不再发出，因此监管器轮询不会重复该事件。刷新的令牌或续期的证书是新凭据，会再次登录；一小时后仍在使用的凭据也一样。每个副本记录自己的登录，跟踪超过 16,384 个凭据的副本会提前遗忘最旧的。`user` 标识主体的方式与 `actor.user` 在授权拒绝中相同，下文描述。`src_endpoint` 与 `metadata.correlation_uid` 来自完成登录的那次请求。`IssueSandboxToken` 或 `RefreshSandboxToken` 上的沙箱凭据，只有在网关检查过沙箱记录的运行时或令牌世系之后才会登录，因此未通过该检查的凭据不记录成功登录。经 `auth.allow_unauthenticated_users` 准入的请求，或未配置认证的网关接受的请求，不发出成功事件，但它们出示的 SSH 会话令牌仍会登录。要只筛选被拒绝的请求，请在 `status_id: 2`（Failure）上过滤 Authentication 事件，而不是只按 `class_uid`。
+
+这些事件绝不包含所出示的凭据、其他请求头部或校验错误文本。
+
+网关在其方法、角色、scope、沙箱、工作区或操作者检查拒绝已认证的调用方时，发出 Medium 严重级别的 API Activity（`class_uid: 6003`）事件。`actor.user` 标识主体：`type` 为 `User`、mTLS 操作者为 `Admin`、`Sandbox` 或 `Gateway Peer`，`uid` 为 subject、沙箱 ID 或网关副本 ID。`api.operation` 指出 gRPC 方法，`resources` 指出被拒绝的沙箱、工作区或扩展服务（如适用），沙箱 ID 用 `uid`，其余用 `name`。`status_detail` 存放原因类别：
+
+| 原因 | 含义 |
+|---|---|
+| `method_not_permitted` | 该主体类型不得调用该方法，或不得以这些参数调用。 |
+| `unknown_method` | 网关不认识该方法，例如较新客户端新增的方法。 |
+| `missing_role` | 调用方缺少该方法要求的 OIDC 角色。 |
+| `missing_scope` | 调用方的令牌缺少该方法要求的 scope。 |
+| `cross_sandbox` | 沙箱主体按 ID 或名称引用了别的沙箱。 |
+| `not_workspace_member` | 调用方不是该工作区的成员。 |
+| `insufficient_workspace_role` | 调用方的工作区角色低于该操作要求的角色。 |
+| `platform_admin_required` | 该操作跨越工作区，或授予工作区管理员角色。 |
+| `operator_required` | 该操作要求经过验证的 mTLS 操作者。 |
+| `extension_service_not_selected` | 沙箱为其策略未选择的扩展服务请求凭据。策略更新可能与请求竞争，因此这不产生发现。 |
+
+沙箱主体被以 `method_not_permitted`、`cross_sandbox` 或 `platform_admin_required` 拒绝时，网关还会发出 High 严重级别的 Detection Finding（`class_uid: 2004`），`finding_info.uid` 为 `sandbox-authorization-boundary`。监管器从不发出这类请求，因此沙箱凭据可能已泄露。两个事件携带相同的 `metadata.correlation_uid`。有些方法对被拒绝的请求回答“未找到”，使调用方无法探测资源；事件仍会记录这次拒绝。
+
+未启用 JSONL 时，网关 OCSF 事件仍以简写形式出现在控制台输出中，受诊断日志过滤器约束。与沙箱关联的事件也出现在其网关日志流中；网关级事件没有沙箱关联。
+
+## 启用沙箱 JSON 导出
+
+用 `ocsf_json_enabled` 设置切换 JSON 导出。该设置可以全局应用于所有沙箱，也可以按沙箱应用。
+
+全局：
+
+```shell
+openshell settings set --global --key ocsf_json_enabled --value true
+```
+
+按沙箱：
+
+```shell
+openshell settings set my-sandbox --key ocsf_json_enabled --value true
+```
+
+设置在下一个轮询周期生效，默认每 10 秒一次。不需要重启沙箱。
+
+要禁用：
+
+```shell
+openshell settings set --global --key ocsf_json_enabled --value false
+```
+
+### Windows MXC 网关
+
+MXC 审计事件起源于 Windows 网关，而不是沙箱内的监管器。在 `gateway.toml` 中启用 MXC ETW 消费者，然后显式让网关选择持久 JSONL 输出：
+
+```toml
+[openshell.drivers.mxc]
+etw_audit = true
+```
+
+```powershell
+$env:OPENSHELL_OCSF_JSON = "1"
+# Optional; defaults to %PROGRAMDATA%\OpenShell\logs.
+$env:OPENSHELL_OCSF_LOG_DIR = "D:\OpenShell\audit"
+openshell-gateway --drivers mxc --config gateway.toml
+```
+
+这个经环境变量配置的接收端在所有平台上可用，与所选计算驱动无关。Unix 宿主机上其默认目录为 `$XDG_STATE_HOME/openshell/logs`（或 `$HOME/.local/state/openshell/logs`）。它每日轮转并保留最近三个文件。诊断用的 `--log-level` 取值不会抑制这个显式启用的审计接收端中的记录。要获得可配置的保留与丢失指标，优先使用上文 `gateway.toml` 输出；两个接收端都启用时各自独立写入。
+
+## 输出位置
+
+`ocsf_json_enabled=true` 时，沙箱监管器在简写输出之外向 stderr 发出完整 OCSF JSON：
+
+```text
+2026-10-07T23:21:19.000Z OCSF NET:OPEN [MED] DENIED ...
+2026-10-07T23:21:19.000Z OCSF-JSON {"class_uid":4001,...}
+```
+
+示例载荷是缩略的。每条实际的 `OCSF-JSON` 行包含一个完整紧凑的 JSON 对象。配置采集器匹配 UTC 时间戳之后的 `OCSF-JSON` 标记，并把其后空格之后的内容全部按 JSON 解码。选中这些行即可避免摄入每个事件的简写副本。JSON 保留原始 `metadata.uid` 并遵循 `ocsf_schema_version`；该设置未设置时使用完整原生 schema。
+
+通过监管器的平台日志接口收集 stderr：
+
+```shell
+docker logs --follow <supervisor-container>
+podman logs --follow <supervisor-container>
+kubectl -n <sandbox-namespace> logs <supervisor-pod> -c supervisor --follow
+```
+
+JSON stderr 输出独立于可写的日志存储与诊断日志过滤器工作。禁用设置会停止新的 JSON 记录。控制台写入器使用由诊断、简写与 JSON 共享的 1,024 行有界队列；队列满时丢弃新行而不阻塞强制执行。投递是尽力而为，保留取决于你的运行时与外部采集器。网关日志 API 与 `openshell logs` 继续返回简写。
+
+文件日志可用时，监管器还向自己文件系统中的 `/var/log/openshell-ocsf.YYYY-MM-DD.jsonl` 写入纯 JSONL，与工作负载分开。`openshell sandbox exec` 无法读取这些文件。文件输出要求可写的 `/var/log`；缺少文件接收端不会禁用 JSON stderr 输出。
+
+该文件包含监管器侧产生的事件，不是发进工作负载容器日志的[沙箱运行时事件](/observability/accessing-logs#主进程输出)。
+
+监管器文件每日轮转，每种格式独立限制为三个文件。Docker 与 Podman 把它们存在 tmpfs 上；Kubernetes 存在监管器 Pod 的 `emptyDir` 中。要持久保留，请在轮转或拆除之前安排外部收集。收集路径与尽力限制参见[监管器文件访问](/observability/accessing-logs#直接文件系统访问)。
+
+Windows MXC 网关记录使用 `%PROGRAMDATA%\OpenShell\logs` 或 `OPENSHELL_OCSF_LOG_DIR`。该接收端同样每日轮转并保留最近三个文件。独立的 `[openshell.gateway.ocsf_log]` 接收端使用其配置的路径与保留。
+
+## JSON 记录结构
+
+网关产生的记录使用 `OpenShell Gateway` 产品身份；监管器记录使用 `OpenShell Sandbox Supervisor`。产生事件的设备与受影响的沙箱是分离的身份，因此网关事件仍能通过其容器字段标识受影响的沙箱。
+
+对网关产生的记录，`device.os.name` 与 `device.os.type_id` 标识运行网关进程的操作系统：Linux（200）、Windows（100）或 macOS（300）。Linux 监管器记录继续报告 Linux，与网关的操作系统无关。因此原生 macOS 网关报告 macOS，而其 Linux 沙箱报告 Linux；运行在 Linux 容器中的网关报告 Linux，即使在 Mac 宿主机上。
+
+`metadata.uid` 唯一标识一个事件，且该记录再次序列化时保持不变。用 `container.uid` 把事件与其沙箱关联，不要用 `metadata.uid`。没有沙箱关联的记录省略 container；未知镜像省略，而不是用空镜像名表示。
+
+未配置降级时，JSONL 文件的每一行（或 stderr 标记之后的载荷）是一个完整的 OCSF v1.8.0 JSON 对象。下面是一个网络连接事件示例：
+
+```json
+{
+  "class_uid": 4001,
+  "class_name": "Network Activity",
+  "category_uid": 4,
+  "category_name": "Network Activity",
+  "activity_id": 1,
+  "activity_name": "Open",
+  "severity_id": 1,
+  "severity": "Informational",
+  "status_id": 1,
+  "status": "Success",
+  "time": 1775014138811,
+  "message": "CONNECT allowed api.github.com:443",
+  "metadata": {
+    "product": {
+      "name": "OpenShell Sandbox Supervisor",
+      "vendor_name": "OpenShell",
+      "version": "0.1.4"
+    },
+    "version": "1.8.0"
+  },
+  "action_id": 1,
+  "action": "Allowed",
+  "disposition_id": 1,
+  "disposition": "Allowed",
+  "dst_endpoint": {
+    "domain": "api.github.com",
+    "port": 443
+  },
+  "src_endpoint": {
+    "ip": "10.42.0.31",
+    "port": 37494
+  },
+  "actor": {
+    "process": {
+      "name": "/usr/bin/curl",
+      "pid": 57
+    }
+  },
+  "firewall_rule": {
+    "name": "github_api",
+    "type": "opa"
+  }
+}
+```
+
+一条被拒绝的连接，产生于沙箱在没有允许 `github.com` 的网络策略时运行 `curl https://github.com`：
+
+```json
+{
+  "class_uid": 4001,
+  "class_name": "Network Activity",
+  "category_uid": 4,
+  "category_name": "Network Activity",
+  "activity_id": 1,
+  "activity_name": "Open",
+  "type_uid": 400101,
+  "type_name": "Network Activity: Open",
+  "time": 1791996125789,
+  "severity_id": 3,
+  "severity": "Medium",
+  "status_id": 2,
+  "status": "Failure",
+  "message": "Transparent TCP denied before relay: network connections not allowed by policy",
+  "status_detail": "transparent_tcp_policy_denied",
+  "metadata": {
+    "version": "1.8.0",
+    "product": {
+      "name": "OpenShell Sandbox Supervisor",
+      "vendor_name": "OpenShell",
+      "version": "0.1.4"
+    },
+    "profiles": [
+      "security_control",
+      "network_proxy",
+      "container",
+      "host"
+    ],
+    "uid": "b885957d-124a-4af7-9eef-75cc410ff070"
+  },
+  "device": {
+    "hostname": "docker-desktop",
+    "type_id": 99,
+    "type": "Sandbox",
+    "os": {
+      "name": "Linux",
+      "type_id": 200,
+      "type": "Linux"
+    }
+  },
+  "container": {
+    "name": "docs-deny",
+    "uid": "3949f6fc-2b84-45b2-a631-46debe41d84f"
+  },
+  "dst_endpoint": {
+    "domain": "github.com",
+    "ip": "198.18.0.2",
+    "port": 443
+  },
+  "proxy_endpoint": {
+    "ip": "127.0.0.1",
+    "port": 3128
+  },
+  "actor": {
+    "process": {
+      "name": "/usr/bin/curl",
+      "pid": 2187,
+      "cmd_line": "curl https://github.com"
+    }
+  },
+  "action_id": 2,
+  "action": "Denied",
+  "disposition_id": 2,
+  "disposition": "Blocked",
+  "is_src_dst_assignment_known": true
+}
+```
+
+<Aside type="note">
+上述 JSON 示例为便于阅读做了格式化。实际的 JSONL 文件每行一个 JSON 对象，没有空白格式化。
+</Aside>
+
+## JSON 中的 OCSF 事件类
+
+`class_uid` 字段标识事件类型：
+
+| `class_uid` | 类 | 简写前缀 |
+|---|---|---|
+| 0 | Base Event | `EVENT` |
+| 4001 | Network Activity | `NET:` |
+| 4002 | HTTP Activity | `HTTP:` |
+| 4007 | SSH Activity | `SSH:` |
+| 1007 | Process Activity | `PROC:` |
+| 2004 | Detection Finding | `FINDING:` |
+| 3002 | Authentication | `AUTH:` |
+| 5019 | Device Config State Change | `CONFIG:` |
+| 6002 | Application Lifecycle | `LIFECYCLE:` |
+| 6003 | API Activity | `API:` |
+
+HTTP Activity 记录包含请求或响应细节。已解析出请求的拒绝，包括早期的凭据绑定失败，包含只含方法的请求安全上下文与生成的响应。
+
+连接错误记录包含已知对端或监听端点。
+
+策略配置警告使用 Device Config State Change。
+
+Unix socket 中继与中继控制通知，以及没有观测到网络端点的代理或中介失败，使用 Base Event（`class_uid: 0`）。筛选监管器运营事件时请包含这些类。以前显示为 `NET:*` 的中继控制记录现在显示为 `EVENT`。
+
+## SIEM schema 版本兼容性
+
+OpenShell 内部发出 OCSF v1.8.0 事件，但很多 SIEM 只支持更旧的 schema 版本。`ocsf_schema_version` 设置告诉 JSONL 层在写入之前降级事件，剥离目标版本中不存在的字段与 profile。
+
+对网关 JSONL，在输出目标上设置 `schema_version`。目标对写入该文件的每条记录统一生效，并要求重启网关：
+
+```toml
+[openshell.gateway.ocsf_log]
+path = "/var/log/openshell/gateway-ocsf.jsonl"
+schema_version = "1.3"
+```
+
+下面的沙箱级设置只控制旧版监管器本地 JSONL 文件。
+
+全局设置目标版本：
+
+```shell
+openshell settings set --global --key ocsf_schema_version --value "1.1"
+```
+
+或按沙箱：
+
+```shell
+openshell settings set my-sandbox --key ocsf_schema_version --value "1.3"
+```
+
+设置在下一个轮询周期生效，默认每 10 秒一次。不需要重启沙箱。
+
+支持的目标版本为 `1.1` 与 `1.3`。设置后，JSONL 层应用以下变换：
+
+- 剥离目标版本之后新增的字段：`ai_model`、`container`、`observation_point_id`
+- 从 `metadata.profiles` 移除未知的 profile 名：`ai_operation`、`container`
+- 把 `metadata.version` 改写为匹配目标版本
+
+简写日志输出不受影响。内部事件模型保持 v1.8.0；只有序列化出的 JSONL 被变换。
+
+未设置或为空时不做降级，事件按当前 schema 版本写入。
+
+| SIEM | 要求的 OCSF 版本 | `ocsf_schema_version` 取值 |
+|---|---|---|
+| AWS Security Lake | v1.1.0 | `1.1` |
+| Splunk CIM Add-On | v1.1-v1.3 | `1.1` 或 `1.3` |
+| CrowdStrike FDR | v1.5.0 | 暂不支持 |
+| Datadog Cloud SIEM | v1.5.0（可选） | 暂不支持 |
+
+<Aside type="caution">
+降级有损。v1.1 与 v1.3 目标会剥离 `ai_model` 字段与 `ai_operation` profile，因此降级后的事件不包含 AI 模型归属。如果审计工作流需要知道是哪个模型处理了请求，请使用完整 schema 版本（不设置 `ocsf_schema_version`）。OpenShell 原生支持 OCSF v1.8.0；如果需要 AI 归属且保持向后兼容的摄入，请升级你的 SIEM 的 OCSF schema。
+</Aside>
+
+降级后的事件在 `unmapped` 对象中带 `downgraded_from` 标记，让审计者能区分“没有模型参与”与“模型归属被剥离”：
+
+```json
+{
+  "unmapped": {
+    "downgraded_from": "1.8.0"
+  }
+}
+```
+
+OCSF 核心事件结构（类 UID、activity ID、网络与 HTTP 字段）在 v1.1 到 v1.8 之间完全一致。被剥离的字段都是 profile 门控的新增项。
+
+## 与外部工具集成
+
+JSONL 文件可以运送到任何接受 OCSF 格式数据的工具：
+
+| 工具 | 集成路径 |
+|---|---|
+| Splunk | 使用 [Splunk OCSF Add-on](https://splunkbase.splunk.com/app/6943) 摄入 OCSF JSONL 文件。要兼容 CIM Add-On，把 `ocsf_schema_version` 设为 `1.3`。 |
+| Amazon Security Lake | OCSF 是 Security Lake 的原生 schema。要兼容 v1.1.0，把 `ocsf_schema_version` 设为 `1.1`。 |
+| CrowdStrike FDR | 把 JSONL 文件运送到 Falcon Data Replicator。v1.5 降级目标暂不支持。 |
+| Elastic | 用 Filebeat 按 OCSF 字段映射运送 JSONL 文件。 |
+| 自定义管道 | 用 `jq`、Python 或任何支持 JSON 的工具解析 JSONL 文件。 |
+
+把监管器文件[复制](/observability/accessing-logs#直接文件系统访问)到 `./supervisor-logs` 后，用 `jq` 提取所有被拒绝的连接：
+
+```shell
+jq -c 'select(.action == "Denied")' ./supervisor-logs/openshell-ocsf.*.jsonl
+```
+
+## 与简写日志的关系
+
+沙箱事件用 `device.type_id: 99`（Other）与 `device.type: "Sandbox"` 标识沙箱环境。操作系统单独在 `device.os.name` 中报告；设备类型不对底层宿主机或计算后端分类。
+
+`openshell.YYYY-MM-DD.log` 中的简写格式与 `openshell-ocsf.YYYY-MM-DD.jsonl` 中的 JSON 格式派生自同一批 OCSF 事件。简写是人类可读的投影；未配置 schema 降级时 JSON 是完整的结构化记录。设置 `ocsf_schema_version` 后，JSON 导出是内部事件模型的有损投影。两种格式由同一事件数据同时生成。
+
+简写 stderr 输出遵循诊断日志过滤器；文件日志成功启动后其本地文件可用。JSON stderr 与文件导出通过 `ocsf_json_enabled` 选择性启用。文件导出要求监管器的 JSONL 接收端成功启动；stderr 导出独立于该接收端。
+
+## 后续步骤
+
+- 比较 JSONL 文件与 OTLP 日志导出，参见[可观测性概述](/observability/overview)。
+- 要实时监控，了解如何[阅读简写格式](/observability/logging)。
+- 完整 schema 参考见 [OCSF specification](https://schema.ocsf.io/)。

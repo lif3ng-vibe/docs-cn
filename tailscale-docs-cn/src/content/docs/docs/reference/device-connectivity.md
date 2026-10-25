@@ -1,193 +1,193 @@
 ---
-title: "Device connectivity"
-description: "Understand connectivity between Tailscale devices."
+title: "设备连接"
+description: "了解 Tailscale 设备之间的连接。"
 ---
 
-Last validated Jan 7, 2026
+最后验证于 Jan 7, 2026
 
-Devices within a Tailscale network (known as a tailnet) can communicate using one of three [types of connections][docs-types-of-connections]:
+Tailscale 网络（即 tailnet）内的设备可以通过三种[连接类型][docs-types-of-connections]之一进行通信：
 
-* Direct connections
-* Relayed connections using [Tailscale Peer Relay servers][docs-peer-relays]
-* Relayed connections using [DERP relay servers][docs-derp-relay-servers]
+* 直连
+* 使用 [Tailscale Peer Relay 服务器][docs-peer-relays]的中继连接
+* 使用 [DERP 中继服务器][docs-derp-relay-servers]的中继连接
 
-Direct connections provide the best performance because devices connect directly to each other without an intermediary, but a direct connection isn't always possible. When a direct connection isn't possible, Tailscale automatically uses a relayed connection to ensure your devices can connect regardless of the network environment. Peer relay servers are used first if available because they usually offer better performance than DERP servers. If a peer relay isn't available, connections fall back to a DERP relay connection.
+直连性能最好，因为设备无需中介即可直接互连，但直连并非总能建立。当直连不可行时，Tailscale 会自动改用中继连接，确保你的设备无论处于何种网络环境都能连接。如果有对等中继服务器可用，会优先使用，因为它通常比 DERP 服务器性能更好。如果没有对等中继，连接会回退到 DERP 中继连接。
 
-The network conditions and network address translation (NAT) types of both sides of a connection determine if Tailscale uses a direct or relayed connection. You can determine the connection type a device is using with the [`tailscale status`][docs-tailscale-status] command.
+连接双方的网络状况与网络地址转换（NAT）类型，决定了 Tailscale 采用直连还是中继连接。你可以用 [`tailscale status`][docs-tailscale-status] 命令判断设备正在使用的连接类型。
 
-## NAT types
+## NAT 类型
 
-NAT is a common method of mapping a private IP address space behind a publicly accessible IP address to deal with the effects of IPv4 address exhaustion. [Tailscale automatically traverses NAT][bl-how-nat-traversal-works] on your behalf to ensure connections between devices aren't hindered by the [complications caused by NAT][xt-rfc-3027-nat-complications].
+NAT 是一种常用方法，把私有 IP 地址空间映射到一个可公开访问的 IP 地址之后，以应对 IPv4 地址枯竭的影响。[Tailscale 会自动替你穿透 NAT][bl-how-nat-traversal-works]，确保设备间的连接不受 [NAT 带来的种种复杂问题][xt-rfc-3027-nat-complications]阻碍。
 
-The NAT configuration of each device in a connection determines whether Tailscale uses a direct or relayed connection. Each device is in one of the following scenarios: [no NAT][ar-no-nat], [easy NAT][ar-easy-nat], or [hard NAT][ar-hard-nat]
+连接中每台设备的 NAT 配置决定了 Tailscale 使用直连还是中继连接。每台设备都处于以下场景之一：[无 NAT][ar-no-nat]、[简单 NAT（easy NAT）][ar-easy-nat]或[硬 NAT][ar-hard-nat]。
 
-> **Note:**
+> **注意：**
 >
-> **IPv6 and NAT**
+> **IPv6 与 NAT**
 >
-> NAT is most commonly employed in environments where outbound IPv4 addresses are limited. IPv6 has many more available addresses, so using NAT to preserve public-facing addresses is optional (however, there are [other reasons][xt-rfc-4380-ipv6-nat] to use NAT with IPv6). As a result, devices using IPv6 addresses are considered [easy NAT][ar-easy-nat] because they create direct connections in almost every situation.
+> NAT 最常用于出站 IPv4 地址受限的环境。IPv6 的可用地址要多得多，因此使用 NAT 来节省对外地址是可选的（不过，在 IPv6 上使用 NAT 也有[其他原因][xt-rfc-4380-ipv6-nat]）。因此，使用 IPv6 地址的设备被视为[简单 NAT][ar-easy-nat]，因为它们在几乎所有情况下都能建立直连。
 
-### No NAT
+### 无 NAT
 
-In a no NAT scenario, the tailnet device isn't behind a NAT device and has a publicly accessible IP address.
+在无 NAT 场景中，tailnet 设备不在 NAT 设备之后，拥有可公开访问的 IP 地址。
 
-### Easy NAT
+### 简单 NAT
 
-Easy NAT describes a less restrictive NAT configuration that makes it easier to access devices behind the NAT device from the internet. Some examples of easy NAT configurations include [full cone NAT][xt-rfc-3489-full-cone-nat], support for port mapping protocols (such as [UPnP][xt-wikipedia-uPNP], [PCP][xt-wikipedia-PCP], or [NAT-PMP][xt-wikipedia-NAT-PMP]), support for [hair pinning][xt-rfc-5128-hairpinning], and consistent port mapping.
+简单 NAT 指限制较少的 NAT 配置，从互联网访问 NAT 设备之后的设备更为容易。简单 NAT 配置的例子包括[完全锥形 NAT（full cone NAT）][xt-rfc-3489-full-cone-nat]、支持端口映射协议（如 [UPnP][xt-wikipedia-uPNP]、[PCP][xt-wikipedia-PCP] 或 [NAT-PMP][xt-wikipedia-NAT-PMP]）、支持[发夹连接（hair pinning）][xt-rfc-5128-hairpinning]，以及一致的端口映射。
 
-### Hard NAT
+### 硬 NAT
 
-Hard NAT refers to a restrictive network address translation configuration that prioritizes security but makes it challenging to access devices behind the NAT from the internet. In a hard NAT scenario:
+硬 NAT 指限制严格的网络地址转换配置，优先考虑安全性，但使从互联网访问 NAT 之后的设备变得困难。在硬 NAT 场景中：
 
-1. The tailnet device has a private address behind a NAT device.
-2. When the tailnet device starts a connection, the NAT device employs various protective techniques, which might include:
+1. tailnet 设备在 NAT 设备之后拥有一个私有地址。
+2. 当 tailnet 设备发起连接时，NAT 设备会采用各种防护技术，可能包括：
 
-   * Using complex port allocation strategies.
-   * Disabling port mapping protocols (such as [UPnP][xt-wikipedia-uPNP]).
-   * Implementing short timeout periods for idle connections.
+   * 使用复杂的端口分配策略。
+   * 禁用端口映射协议（如 [UPnP][xt-wikipedia-uPNP]）。
+   * 对空闲连接设置较短的超时时间。
 
-These measures enhance security but can complicate establishing and maintaining connections, especially for incoming traffic.
+这些措施增强了安全性，但也会让建立和维持连接变得更复杂，对入站流量尤其如此。
 
-This configuration affects how tailnet devices communicate, particularly in complex network environments.
+这种配置会影响 tailnet 设备之间的通信方式，在复杂网络环境中尤其明显。
 
-> **Note:**
+> **注意：**
 >
-> **Firewalls and NAT**
+> **防火墙与 NAT**
 >
-> Stateful firewalls that block inbound UDP connections are not NAT. But, if your device has a public IP address but is behind a firewall that blocks inbound UDP connections on the port [`tailscaled`][docs-tailscaled] listens on, that device operates in the same manner as an easy NAT device.
+> 阻断入站 UDP 连接的有状态防火墙并不属于 NAT。但是，如果你的设备拥有公网 IP 地址，却位于一台阻断了 [`tailscaled`][docs-tailscaled] 所监听端口入站 UDP 连接的防火墙之后，那么该设备的行为方式与简单 NAT 设备相同。
 >
-> For more information on how Tailscale handles firewalls, read [How NAT traversal works][bl-how-nat-traversal-works].
+> 有关 Tailscale 如何处理防火墙的更多信息，请阅读 [NAT 穿透是如何工作的][bl-how-nat-traversal-works]。
 
-## Connectivity matrix
+## 连接矩阵
 
-Both sides of a connection determine if Tailscale uses a direct or relayed connection. The following table shows the possible combinations of NAT types and the expected connection type.
+连接双方共同决定 Tailscale 使用直连还是中继连接。下表列出了各种 NAT 类型组合及预期的连接类型。
 
-Client A NAT type
-Client B NAT type
-Expected connection
+客户端 A 的 NAT 类型
+客户端 B 的 NAT 类型
+预期连接
 
-No NAT
-No NAT
-Direct
+无 NAT
+无 NAT
+直连
 
-No NAT
-Easy NAT
-Direct
+无 NAT
+简单 NAT
+直连
 
-No NAT
-Hard NAT
-Direct
+无 NAT
+硬 NAT
+直连
 
-Easy NAT
-Easy NAT
-Direct
+简单 NAT
+简单 NAT
+直连
 
-Easy NAT
-Hard NAT
-Relayed
+简单 NAT
+硬 NAT
+中继
 
-Hard NAT
-Hard NAT
-Relayed
+硬 NAT
+硬 NAT
+中继
 
-Tailscale uses a relayed connection if one of the following is true:
+满足以下任一条件时，Tailscale 会使用中继连接：
 
-* Both devices have a hard NAT configuration.
-* One device has a hard NAT configuration and the other has an easy NAT configuration.
+* 两台设备都是硬 NAT 配置。
+* 一台设备是硬 NAT 配置，另一台是简单 NAT 配置。
 
-By default, relayed connections use a DERP server. However, if you set up a [Tailscale Peer Relay server][docs-peer-relays] in your tailnet, relayed connections use the peer relay first. Peer relays exist as part of your own infrastructure and often offer better performance than DERP servers.
+默认情况下，中继连接使用 DERP 服务器。不过，如果你在 tailnet 中架设了 [Tailscale Peer Relay 服务器][docs-peer-relays]，中继连接会优先使用对等中继。对等中继是你自己基础设施的一部分，通常比 DERP 服务器性能更好。
 
-## Troubleshooting with `netcheck`
+## 用 `netcheck` 排查问题
 
-If a device uses a relayed connection instead of a direct connection, you can troubleshoot why using the [`tailscale netcheck`][docs-tailscale-netcheck] command. For step-by-step troubleshooting instructions, refer to [troubleshooting device connectivity][docs-troubleshoot-connectivity].
+如果设备使用的是中继连接而非直连，你可以用 [`tailscale netcheck`][docs-tailscale-netcheck] 命令排查原因。分步排查说明请参阅[设备连接问题排查][docs-troubleshoot-connectivity]。
 
-The `tailscale netcheck` command returns information about a device's current network connection. The information comes from [STUN][docs-what-is-stun] and the Tailscale client running on the device and can help you troubleshoot connectivity issues. For example, you can use the `tailscale netcheck` output to troubleshoot why a client might use a DERP relay server instead of a direct connection.
+`tailscale netcheck` 命令返回设备当前网络连接的信息。这些信息来自 [STUN][docs-what-is-stun] 和设备上运行的 Tailscale 客户端，可以帮助你排查连接问题。例如，你可以利用 `tailscale netcheck` 的输出排查客户端为何使用 DERP 中继服务器而不是直连。
 
-The `tailscale netcheck` output includes the following fields:
+`tailscale netcheck` 的输出包含以下字段：
 
 * [UDP][ar-udp]
 * [IPv4][ar-ipv4]
 * [IPv6][ar-ipv6]
-* [Mapping varies by destination IP address][ar-mapping-varies-by-destination-ip-address]
-* [Port mapping][ar-port-mapping]
+* [映射因目标 IP 地址而异][ar-mapping-varies-by-destination-ip-address]
+* [端口映射][ar-port-mapping]
 
 ### UDP
 
-The `UDP` field indicates whether the device can send outbound UDP packets.
+`UDP` 字段表示设备能否发送出站 UDP 数据包。
 
-| **Value** | **Meaning**                                                                  | **Interpretation**                                                                          |
-| --------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| True      | The [STUN][docs-what-is-stun] servers have received outbound UDP packets.    | The device has outbound connectivity, which is critical for getting direct connections.     |
-| False     | The [STUN][docs-what-is-stun] servers haven't received outbound UDP packets. | The device doesn't have outbound UDP connections and likely isn't using direct connections. |
+| **取值** | **含义** | **解读** |
+| -------- | -------- | -------- |
+| True | [STUN][docs-what-is-stun] 服务器已收到出站 UDP 数据包。 | 设备具备出站连接能力，这对建立直连至关重要。 |
+| False | [STUN][docs-what-is-stun] 服务器未收到出站 UDP 数据包。 | 设备没有出站 UDP 连接，很可能没有使用直连。 |
 
 ### IPv4
 
-The `IPv4` field shows the device's public IPv4 address and port number.
+`IPv4` 字段显示设备的公网 IPv4 地址和端口号。
 
-| **Value**             | **Meaning**                                          | **Interpretation**                                                             |
-| --------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Yes, `<IPv4 address>` | The device has a valid IPv4 address and port number. | The device has outbound connectivity, which is crucial for direct connections. |
-| No                    | The device doesn't have an IPv4 address.             | If there's no IPv4 address, the device doesn't have network connectivity.      |
+| **取值** | **含义** | **解读** |
+| -------- | -------- | -------- |
+| Yes, `<IPv4 address>` | 设备拥有有效的 IPv4 地址和端口号。 | 设备具备出站连接能力，这对直连至关重要。 |
+| No | 设备没有 IPv4 地址。 | 如果没有 IPv4 地址，设备就没有网络连接。 |
 
 ### IPv6
 
-The `IPv6` field shows whether the device supports IPv6. It includes the device's public IPv6 address and port number if it does.
+`IPv6` 字段显示设备是否支持 IPv6；如果支持，还会包含设备的公网 IPv6 地址和端口号。
 
-| **Value**              | **Meaning**                                                                             | **Interpretation**                                                                                                                                              |
-| ---------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Yes, `<IPv6 address>`  | The device has an IPv6 address and port number.                                         | The device has outbound connectivity, which is critical for getting direct connections.                                                                         |
-| No                     | The device doesn't have an IPv6 address, and the operating system doesn't support IPv6. | The device doesn't have IPv6 support and might or might not have outbound connectivity using IPv4.                                                              |
-| No, but OS has support | The device doesn't have an IPv6 address, but the operating system supports IPv6.        | The device either doesn't have outbound connectivity or is using IPv4. It can still access other devices using their [tailnet IPv6 address][docs-tailnet-ipv6]. |
+| **取值** | **含义** | **解读** |
+| -------- | -------- | -------- |
+| Yes, `<IPv6 address>` | 设备拥有 IPv6 地址和端口号。 | 设备具备出站连接能力，这对建立直连至关重要。 |
+| No | 设备没有 IPv6 地址，且操作系统不支持 IPv6。 | 设备不支持 IPv6，是否有使用 IPv4 的出站连接则视情况而定。 |
+| No, but OS has support | 设备没有 IPv6 地址，但操作系统支持 IPv6。 | 设备要么没有出站连接能力，要么正在使用 IPv4。它仍可以通过其他设备的 [tailnet IPv6 地址][docs-tailnet-ipv6]访问它们。 |
 
-### Mapping varies by destination IP address
+### 映射因目标 IP 地址而异
 
-The `MappingVariesByDestIP` field states whether the device's IP address differs between [DERP][docs-derp-relay-servers] relay servers. It's the most important field to determine why a device isn't using direct connections.
+`MappingVariesByDestIP` 字段表示设备的 IP 地址在不同的 [DERP][docs-derp-relay-servers] 中继服务器之间是否不同。这是判断设备为何没有使用直连的最重要字段。
 
-| **Value** | **Meaning**                                                                                 | **Interpretation**                                                                                                                                                                                                                                                                                                         |
-| --------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| True      | The device's IP address and port number combination varies between DERP relay servers.      | If two DERP relay servers return different results, it indicates that the device is behind a [**hard NAT**][ar-hard-nat] that randomly selects the port IP address and port number combination. Hard NAT makes it difficult for Tailscale to enable direct connections, so the device is likely using a DERP relay server. |
-| False     | The device's IP address and port number combination are the same across DERP relay servers. | If all DERP relay servers return the same result, it indicates that the device either has no NAT or is behind an [**easy NAT**][ar-easy-nat]. The device is likely to use direct connections.                                                                                                                              |
+| **取值** | **含义** | **解读** |
+| -------- | -------- | -------- |
+| True | 设备的 IP 地址与端口号组合在不同的 DERP 中继服务器之间有所不同。 | 如果两台 DERP 中继服务器返回不同的结果，说明设备位于会随机选择 IP 地址与端口号组合的[**硬 NAT**][ar-hard-nat]之后。硬 NAT 使 Tailscale 难以建立直连，因此设备很可能正在使用 DERP 中继服务器。 |
+| False | 设备的 IP 地址与端口号组合在所有 DERP 中继服务器上都相同。 | 如果所有 DERP 中继服务器返回相同的结果，说明设备要么没有 NAT，要么位于[**简单 NAT**][ar-easy-nat]之后。设备很可能使用直连。 |
 
-When Tailscale starts a connection, it contacts multiple DERP relay servers to obtain the outbound IP address and port combination. Each DERP relay server reports this information back to Tailscale.
+Tailscale 发起连接时，会联系多台 DERP 中继服务器以获取出站 IP 地址与端口组合。每台 DERP 中继服务器都会把该信息报告给 Tailscale。
 
-If the outbound IP address varies between DERP servers, it indicates that the device is behind a NAT that varies the IP addresses between destinations. This is sometimes referred to as [hard NAT][ar-hard-nat].
+如果出站 IP 地址在不同 DERP 服务器之间不同，说明设备位于会因目标不同而改变 IP 地址的 NAT 之后。这有时被称为[硬 NAT][ar-hard-nat]。
 
-If the outbound IP address is the same between DERP servers, it indicates that the device is behind an [easy NAT][ar-easy-nat] or [no NAT][ar-no-nat].
+如果出站 IP 地址在各 DERP 服务器之间相同，说明设备位于[简单 NAT][ar-easy-nat]或[无 NAT][ar-no-nat]之后。
 
-It's difficult to distinguish between an easy NAT and no NAT. In the cases where a device has no NAT, the device itself has the same public IP address that it reported to the STUN servers, as well as predictable ports. In many scenarios, this means the public interface is directly attached to the client on which Tailscale is installed. However, this doesn't always mean the IP address is available locally in the operating system. In some scenarios (such as with AWS EC2), the public IP address is not available directly in the operating system but is attached directly to the host.
+简单 NAT 与无 NAT 很难区分。在设备没有 NAT 的情况下，设备本身拥有的公网 IP 地址与其报告给 STUN 服务器的一致，且端口可预测。在许多场景中，这意味着公共网络接口直接连接在安装了 Tailscale 的客户端上。不过，这并不总是意味着操作系统中能直接看到该 IP 地址。在某些场景（例如 AWS EC2）中，公网 IP 地址并不直接出现在操作系统中，而是直接绑定在主机上。
 
-### Port mapping
+### 端口映射
 
-The `PortMapping` field indicates which port mapping protocols the current device supports. If a device is using any of the following port mapping protocols, it is generally considered to be [**easy NAT**][ar-easy-nat].
+`PortMapping` 字段表示当前设备支持哪些端口映射协议。如果设备使用以下任一端口映射协议，通常被视为[**简单 NAT**][ar-easy-nat]。
 
-| **Value** | **Meaning**                                                                     |
-| --------- | ------------------------------------------------------------------------------- |
-| UPnP      | The current device supports port mapping using [UPnP][xt-wikipedia-uPNP].       |
-| NAT-PMP   | The current device supports port mapping using [NAT-PMP][xt-wikipedia-NAT-PMP]. |
-| PCP       | The current device supports port mapping using [PCP][xt-wikipedia-PCP].         |
-| False     | The current device doesn't support any of the three port mapping services.      |
+| **取值** | **含义** |
+| -------- | -------- |
+| UPnP | 当前设备支持使用 [UPnP][xt-wikipedia-uPNP] 进行端口映射。 |
+| NAT-PMP | 当前设备支持使用 [NAT-PMP][xt-wikipedia-NAT-PMP] 进行端口映射。 |
+| PCP | 当前设备支持使用 [PCP][xt-wikipedia-PCP] 进行端口映射。 |
+| False | 当前设备不支持这三种端口映射服务中的任何一种。 |
 
-The device likely cannot use direct connections if the value is false.
+如果该值为 false，设备很可能无法使用直连。
 
-UPnP, NAT-PMP, and PCP are all different mechanisms that allow a device behind a NAT to open external ports to help with direct connections.
+UPnP、NAT-PMP 和 PCP 都是让 NAT 之后的设备开放外部端口以协助直连的机制，彼此各不相同。
 
-If the `PortMapping` field is false, the device cannot open external ports behind the NAT device, which makes creating direct connections difficult and likely leads to a [hard NAT][ar-hard-nat] circumstance.
+如果 `PortMapping` 字段为 false，设备就无法在 NAT 设备之后开放外部端口，这会使建立直连变得困难，并很可能形成[硬 NAT][ar-hard-nat]的情况。
 
-If the device supports any of the three port mapping protocols, it might be able to use direct connections, even if the IP address varies between DERP relay servers (that is, [`MappingVariesByDestIP`][ar-mapping-varies-by-destination-ip-address] is true).
+如果设备支持这三种端口映射协议中的任何一种，即使 IP 地址在不同 DERP 中继服务器之间不同（即 [`MappingVariesByDestIP`][ar-mapping-varies-by-destination-ip-address] 为 true），它也可能可以使用直连。
 
-[ar-easy-nat]: #easy-nat
+[ar-easy-nat]: #简单-nat
 
-[ar-hard-nat]: #hard-nat
+[ar-hard-nat]: #硬-nat
 
 [ar-ipv4]: #ipv4
 
 [ar-ipv6]: #ipv6
 
-[ar-mapping-varies-by-destination-ip-address]: #mapping-varies-by-destination-ip-address
+[ar-mapping-varies-by-destination-ip-address]: #映射因目标-ip-地址而异
 
-[ar-no-nat]: #no-nat
+[ar-no-nat]: #无-nat
 
-[ar-port-mapping]: #port-mapping
+[ar-port-mapping]: #端口映射
 
 [ar-udp]: #udp
 

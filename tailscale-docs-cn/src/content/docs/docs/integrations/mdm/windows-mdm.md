@@ -1,78 +1,74 @@
 ---
-title: "Deploy Tailscale on Windows using MDM"
-description: "This topic contains technical information which you might find useful if you are a system administrator deploying Tailscale for Windows in a corporate environment using mobile device management (MDM)."
+title: "使用 MDM 在 Windows 上部署 Tailscale"
+description: "本主题包含一些技术信息，供正在企业环境中使用移动设备管理（MDM）为 Windows 部署 Tailscale 的系统管理员参考。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic contains technical information which you might find useful if you are a system administrator deploying Tailscale for Windows in a corporate environment using mobile device management (MDM).
+本主题包含一些技术信息，供正在企业环境中使用移动设备管理（MDM）为 Windows 部署 Tailscale 的系统管理员参考。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale v1.78 enables certain policy settings, such as UI customizations, to target users and devices. Tailscale v1.76 supports device system policies only.
+> Tailscale v1.78 让某些策略设置（例如 UI 自定义）可以面向用户和设备生效。Tailscale v1.76 仅支持设备系统策略。
 
-> **Tip:**
+> **提示：**
 >
-> The most recent Tailscale ADMX and ADML files that can be used with both Group Policy and MDM solutions, such as Microsoft Intune, are available from the [Tailscale repository][xt-gh-tailscale-repo].
+> 可同时用于组策略和 MDM 解决方案（例如 Microsoft Intune）的最新 Tailscale ADMX 和 ADML 文件，可从 [Tailscale 仓库][xt-gh-tailscale-repo]获取。
 
-We are always working on providing more options for system administrators to programmatically manage their Tailscale deployments. If you are deploying Tailscale and feel the need for a specific configuration option that is currently missing in this topic, contact our support team.
+我们一直在为系统管理员提供更多以编程方式管理 Tailscale 部署的选项。如果你正在部署 Tailscale，并且觉得本主题目前缺少某个你需要的特定配置选项，请联系我们的支持团队。
 
-## Registry Values
+## 注册表值
 
-You can set registry values manually or with MDM solutions such as [Microsoft Intune][docs-mdm-microsoft-intune], allowing you to alter the behavior of the Tailscale client.
+你可以手动或使用 [Microsoft Intune][docs-mdm-microsoft-intune] 等 MDM 解决方案设置注册表值，从而改变 Tailscale 客户端的行为。
 
-Store Registry values in the `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` registry key.
+注册表值应存放在 `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` 注册表项下。
 
-> **Note:**
+> **注意：**
 >
-> Earlier versions of Tailscale used the `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` key, and more recent versions now use the `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` key.
+> 更早版本的 Tailscale 使用 `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` 项，而较新的版本现在使用 `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` 项。
 >
-> If you have the `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` key, we recommend keeping this intact and moving all of your custom policy settings into the `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` key to avoid disruption. Do not delete the `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` key.
+> 如果你已有 `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` 项，我们建议保持其原样不动，并将所有自定义策略设置迁移到 `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` 项中，以避免中断。不要删除 `HKEY_LOCAL_MACHINE\Software\Tailscale IPN` 项。
 
-*（图：Windows registry key for Tailscale policies.）*
+*（图：Tailscale 策略的 Windows 注册表项。）*
 
-Within the `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` registry key:
+在 `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale` 注册表项下：
 
-* The `(Default)` value is not used.
+* `(Default)` 值不被使用。
 
-Optionally, several values can be created, all of which are of String type:
+你也可以选择创建以下几个值，它们的类型均为字符串（String）：
 
-* The `LoginURL` value contains the URL of the login server. The default value is `https://controlplane.tailscale.com`.
-* The `LogTarget` value contains the URL of the log server. The default value is `https://log.tailscale.com`.
+* `LoginURL` 值包含登录服务器的 URL。默认值为 `https://controlplane.tailscale.com`。
+* `LogTarget` 值包含日志服务器的 URL。默认值为 `https://log.tailscale.com`。
 
-Preference policies can be set to `always`, `never` and `user-decides`. If set to `always` or `never`, the options are
-set by the administrator and not visible in the system tray menu. If unset or set to `user-decides` then the option is
-visible in the system tray menu.
+偏好策略（preference policy）可以设置为 `always`、`never` 和 `user-decides`。如果设置为 `always` 或 `never`，这些选项由管理员设定，且不会显示在系统托盘菜单中。如果未设置或设置为 `user-decides`，该选项就会显示在系统托盘菜单中。
 
-* `AllowIncomingConnections` controls the **Allow Incoming Connections** menu option
-* `UnattendedMode` controls the **Unattended Mode** menu option
+* `AllowIncomingConnections` 控制 **Allow Incoming Connections**（允许传入连接）菜单选项
+* `UnattendedMode` 控制 **Unattended Mode**（无人值守模式）菜单选项
 
-Visibility policies can be set to "hide" or "show". If set to "hide" then the menu item is not visible. If set to "show"
-or unset, then the menu item is visible.
+可见性策略可以设置为 "hide" 或 "show"。如果设置为 "hide"，该菜单项不可见。如果设置为 "show" 或未设置，该菜单项可见。
 
-* `AdminConsole` controls the **Admin Console** menu item
-* `NetworkDevices` controls the **Network Devices** submenu
-* `TestMenu` controls if the test/debug menu items are visible when opening the tray menu while pressing the `SHIFT` or `CTRL` keys.
-* `UpdateMenu` controls the **Update Tailscale** menu item
+* `AdminConsole` 控制 **Admin Console**（管理控制台）菜单项
+* `NetworkDevices` 控制 **Network Devices**（网络设备）子菜单
+* `TestMenu` 控制在按住 `SHIFT` 或 `CTRL` 键打开托盘菜单时，测试/调试菜单项是否可见。
+* `UpdateMenu` 控制 **Update Tailscale**（更新 Tailscale）菜单项
 
-Duration policies control a duration or timeout. The time can be set using units of hours and minutes. Examples:
+时长策略（duration policy）控制某个时长或超时时间。时间可以使用小时和分钟为单位设置。例如：
 
-* `168h`: 1 week
-* `24h`: 1 day
-* `1h5m`: 1 hour, 5 minutes
-* `30m`: half hour
-* Smaller time units are available but unlikely to be useful. Non-negative values accepted by the
-  [Go time.ParseDuration][xt-go-parse-duration] function are supported.
+* `168h`：1 周
+* `24h`：1 天
+* `1h5m`：1 小时 5 分钟
+* `30m`：半小时
+* 还有更小的时间单位，但不太可能用得上。[Go time.ParseDuration][xt-go-parse-duration] 函数接受的全部非负值都受支持。
 
-Current duration policies:
+当前的时长策略：
 
-* `KeyExpirationNotice` controls how long before key expiry should a notice be displayed. The default is 24 hours.
+* `KeyExpirationNotice` 控制在密钥过期前多久显示通知。默认为 24 小时。
 
-> **Warning:**
+> **警告：**
 >
-> For Windows, use `REG_DWORD` (Integer) values (`0` and `1`) for boolean MDM keys.
+> 在 Windows 上，布尔型 MDM 键应使用 `REG_DWORD`（整数）值（`0` 和 `1`）。
 
-For a full list of the registry values you can configure, check out our [MDM configuration keys list][docs-mdm-keys].
+有关可配置注册表值的完整列表，请查看我们的 [MDM 配置键列表][docs-mdm-keys]。
 
 [docs-mdm-keys]: /docs/features/tailscale-system-policies
 

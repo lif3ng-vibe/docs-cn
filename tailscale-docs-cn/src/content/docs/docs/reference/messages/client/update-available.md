@@ -1,35 +1,35 @@
 ---
-title: "Update available"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "有可用更新"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jul 31, 2025
+最后验证于 Jul 31, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Update available
 An update from version `<current-version>` to `<new-version>` is available.
 
-## Reference ID
+## 引用 ID
 
 `update-available`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-A newer version of the Tailscale client available for installation on your device.
+你的设备上有可安装的较新版本 Tailscale 客户端。
 
-## What to do
+## 处理方法
 
-If you are using macOS, Windows, iOS, Android, or tvOS, you can update your Tailscale client from the UI, the device's app store, or the [Tailscale Packages - stable track][pk-stable] page.
+如果你使用的是 macOS、Windows、iOS、Android 或 tvOS，可以通过 UI、设备的应用商店或 [Tailscale Packages - stable 轨道][pk-stable] 页面更新 Tailscale 客户端。
 
-If your device is running on a platform that can use the [Tailscale CLI][docs-cli] such as Linux, macOS, and Windows, you can run `tailscale update` for a one-time update, or `tailscale set --auto-update` to automatically update the OS as new versions become available.
+如果你的设备运行在可以使用 [Tailscale CLI][docs-cli] 的平台上（如 Linux、macOS 和 Windows），可以运行 `tailscale update` 进行一次性更新，或运行 `tailscale set --auto-update`，在有新版本发布时自动更新系统。
 
-## Additional information
+## 更多信息
 
-* For information about installing the Tailscale client, refer to [Install Tailscale][docs-installation].
-* For information about updating the Tailscale client, refer to [Update Tailscale][docs-update].
+* 有关安装 Tailscale 客户端的信息，请参阅 [安装 Tailscale][docs-installation]。
+* 有关更新 Tailscale 客户端的信息，请参阅 [更新 Tailscale][docs-update]。
 
 [docs-cli]: /docs/reference/tailscale-cli
 

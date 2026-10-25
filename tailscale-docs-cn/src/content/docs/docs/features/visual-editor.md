@@ -1,158 +1,158 @@
 ---
-title: "Visual policy editor"
-description: "Update your tailnet policy file with the visual policy editor."
+title: "可视化策略编辑器"
+description: "使用可视化策略编辑器更新你的 tailnet 策略文件。"
 ---
 
-Last validated Mar 13, 2026
+最后验证于 Mar 13, 2026
 
-The visual policy editor is an alternative way to edit the [human JSON (HuJSON)][xt-gh-hujson] syntax of the tailnet policy file with an interactive graphical user interface. You can switch between the visual editor and the JSON editor anytime. Changes you make using the visual editor sync with the JSON editor when you save them.
+可视化策略编辑器是一种通过交互式图形用户界面编辑 tailnet 策略文件[人类可读 JSON（HuJSON）][xt-gh-hujson]语法的替代方式。你可以随时在可视化编辑器和 JSON 编辑器之间切换。使用可视化编辑器所做的更改会在保存时同步到 JSON 编辑器。
 
-You can use the visual policy editor for the following tailnet policy file features:
+你可以使用可视化策略编辑器编辑以下 tailnet 策略文件功能：
 
-* Access control policies ([grants][docs-grants])
-* [Tailscale SSH][docs-tailscale-ssh] access rules
-* [Tests][docs-policy-syntax-tests] and [SSH Tests][docs-policy-syntax-tests-ssh]
-* [Groups][docs-policy-syntax-groups]
-* [Tags][docs-tags]
-* [IP sets][docs-policy-syntax-ipsets]
-* [Hosts][docs-policy-syntax-hosts]
-* [Node attributes][docs-policy-syntax-nodeattrs]
-* [Device posture][docs-device-posture-postures]
-* [Auto approvers][docs-policy-syntax-autoapprovers]
+* 访问控制策略（[授权（grant）][docs-grants]）
+* [Tailscale SSH][docs-tailscale-ssh] 访问规则
+* [测试][docs-policy-syntax-tests]与 [SSH 测试][docs-policy-syntax-tests-ssh]
+* [群组][docs-policy-syntax-groups]
+* [标签（tag）][docs-tags]
+* [IP 集][docs-policy-syntax-ipsets]
+* [主机][docs-policy-syntax-hosts]
+* [节点属性][docs-policy-syntax-nodeattrs]
+* [设备态势（device posture）][docs-device-posture-postures]
+* [自动审批][docs-policy-syntax-autoapprovers]
 
-> **Note:**
+> **注意：**
 >
-> To make changes to the [network policy options][docs-policy-syntax-network-options] of the tailnet policy (such as `derpMap`, `disableIPv4`, `OneCGNATRoute`, and `randomizeClientPort`) you must use the JSON editor.
+> 要修改 tailnet 策略的[网络策略选项][docs-policy-syntax-network-options]（例如 `derpMap`、`disableIPv4`、`OneCGNATRoute` 和 `randomizeClientPort`），你必须使用 JSON 编辑器。
 
-The visual editor translates your configuration choices into the underlying HuJSON policy file format. You can switch between the visual editor and the JSON editor at any time to work with policies in the format that best suits your needs. The bidirectional synchronization ensures that changes in either editor immediately reflect in the other. For a comprehensive understanding of the underlying policy syntax, refer to [Tailscale's policy syntax documentation][docs-policy-syntax].
+可视化编辑器会把你的配置选择转换为底层的 HuJSON 策略文件格式。你可以随时在可视化编辑器和 JSON 编辑器之间切换，以最适合你需要的方式处理策略。双向同步确保任一编辑器中的更改都会立即反映到另一个编辑器。要全面了解底层策略语法，请参阅 [Tailscale 策略语法文档][docs-policy-syntax]。
 
-Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the Tailscale admin console to access the visual editor. The editor displays with the **Visual editor** tab selected by default.
+前往 Tailscale 管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面即可使用可视化编辑器。编辑器默认选中 **Visual editor** 标签页显示。
 
-## Editor modes
+## 编辑器模式
 
-The visual policy editor supports three distinct operating modes that serve different workflow preferences and requirements. Each mode maintains full compatibility with the underlying [policy file format][docs-policy-syntax] while offering different interaction patterns.
+可视化策略编辑器支持三种不同的操作模式，对应不同的工作流偏好和需求。每种模式都与底层[策略文件格式][docs-policy-syntax]完全兼容，同时提供不同的交互方式。
 
-* **Visual editor** lets you manage policies interactively through a graphical user interface. All changes sync immediately with the underlying JSON representation. This mode works best when you need to make targeted changes to specific rules or when you're learning the policy syntax.
-* **JSON editor** gives you direct access to the HuJSON policy file with syntax highlighting. This mode suits users who prefer working directly with code or need to make bulk changes. The JSON editor provides full control over policy structure and lets you use advanced features that might not yet have visual interfaces. The JSON editor also includes a **Convert to grants** button that automatically converts your `acls` section to equivalent [grants][docs-grants]. Refer to [Migrate from ACLs to grants][docs-migrate-acls-grants] for more information.
-* **GitOps** mode is when you [manage your tailnet policy file through GitOps][docs-gitops]. In this mode, you can search, filter, and preview potential changes but cannot save modifications. Your version control system remains the single source of truth for policy changes. This mode ensures that all policy modifications go through your established review and approval processes.
+* **Visual editor** 让你通过图形用户界面以交互方式管理策略。所有更改都会立即同步到底层的 JSON 表示。当你需要对特定规则做针对性修改，或正在学习策略语法时，此模式最为适用。
+* **JSON editor** 让你直接操作带有语法高亮的 HuJSON 策略文件。此模式适合偏好直接处理代码或需要批量修改的用户。JSON 编辑器提供对策略结构的完全控制，让你可以使用可能还没有可视化界面的高级功能。JSON 编辑器还包含一个 **Convert to grants** 按钮，可自动把你的 `acls` 部分转换为等效的[授权][docs-grants]。更多信息请参阅[从 ACL 迁移到授权][docs-migrate-acls-grants]。
+* **GitOps** 模式指你[通过 GitOps 管理 tailnet 策略文件][docs-gitops]。在此模式下，你可以搜索、筛选和预览潜在更改，但不能保存修改。你的版本控制系统仍是策略更改的唯一可信来源。此模式确保所有策略修改都经过你既定的评审与批准流程。
 
-> **Warning:**
+> **警告：**
 >
-> To prevent users from editing policies on the admin console when using GitOps, you must lock the editor. To do this, go to [Policy file management](https://console.tailscale.com/admin/settings/policy-file-management) > **Lock editor**, then enable **Prevent edits in the admin console**.
+> 要防止用户在使用 GitOps 时在管理控制台中编辑策略，你必须锁定编辑器。为此，前往 [Policy file management](https://console.tailscale.com/admin/settings/policy-file-management) > **Lock editor**，然后启用 **Prevent edits in the admin console**。
 
-## General access rules
+## 通用访问规则
 
-General access rules let you manage access between devices in your tailnet using [grants syntax][docs-grants].
+通用访问规则让你使用[授权语法][docs-grants]管理 tailnet 中设备之间的访问。
 
-[Manage general access rules using the visual editor][docs-visual-editor-reference-general-access-rules].
+[使用可视化编辑器管理通用访问规则][docs-visual-editor-reference-general-access-rules]。
 
 ## Tailscale SSH
 
-[Tailscale SSH rules][docs-tailscale-ssh] let you control SSH access to devices in your tailnet without managing SSH keys.
+[Tailscale SSH 规则][docs-tailscale-ssh]让你无需管理 SSH 密钥即可控制对 tailnet 中设备的 SSH 访问。
 
-[Manage Tailscale SSH rules using the visual editor][docs-visual-editor-reference-tailscale-ssh].
+[使用可视化编辑器管理 Tailscale SSH 规则][docs-visual-editor-reference-tailscale-ssh]。
 
-## Groups
+## 群组
 
-[Groups][docs-targets] let you organize users into logical groups for access control management. There are three types of groups: user-defined groups, synced groups from your identity provider, and built-in autogroups.
+[群组][docs-targets]让你把用户组织成逻辑群组，便于访问控制管理。群组有三种类型：用户自定义群组、从身份提供方同步的群组，以及内置的 autogroup。
 
-[Manage groups using the visual editor][docs-visual-editor-reference-groups].
+[使用可视化编辑器管理群组][docs-visual-editor-reference-groups]。
 
-## Tags
+## 标签
 
-[Tags][docs-tags] provide a way to authenticate and organize non-user devices like servers into functional groups for use in access control policies.
+[标签（tag）][docs-tags]提供一种对服务器等非用户设备进行认证和归类的方法，把它们分入功能组以用于访问控制策略。
 
-[Manage tags using the visual editor][docs-visual-editor-reference-tags].
+[使用可视化编辑器管理标签][docs-visual-editor-reference-tags]。
 
-## IP sets
+## IP 集
 
-[IP sets][docs-policy-syntax-ipsets] let you create collections of IP addresses, hosts, and subnets to use in access control policies.
+[IP 集][docs-policy-syntax-ipsets]让你创建可在访问控制策略中使用的 IP 地址、主机和子网集合。
 
-[Manage IP sets using the visual editor][docs-visual-editor-reference-ip-sets].
+[使用可视化编辑器管理 IP 集][docs-visual-editor-reference-ip-sets]。
 
-## Hosts
+## 主机
 
-[Hosts][docs-policy-syntax-hosts] are a way to create friendly names for IP addresses and CIDR ranges to improve policy readability by replacing numeric addresses with meaningful identifiers.
+[主机][docs-policy-syntax-hosts]是一种为 IP 地址和 CIDR 范围创建友好名称的方式，用有意义的标识符替换数字地址，以提升策略的可读性。
 
-[Manage hosts using the visual editor][docs-visual-editor-reference-hosts].
+[使用可视化编辑器管理主机][docs-visual-editor-reference-hosts]。
 
-## Node attributes
+## 节点属性
 
-[Node attributes][docs-policy-syntax-nodeattrs] let you apply settings and attributes to device to do things like control feature availability and device behavior across your tailnet.
+[节点属性][docs-policy-syntax-nodeattrs]让你把设置和属性应用到设备上，实现诸如控制整个 tailnet 的功能可用性和设备行为等目的。
 
-[Manage node attributes using the visual editor][docs-visual-editor-reference-node-attributes].
+[使用可视化编辑器管理节点属性][docs-visual-editor-reference-node-attributes]。
 
-## Device posture
+## 设备态势
 
-[Device posture][docs-device-posture] rules let you specify the requirements a device must meet before it can access sensitive resources.
+[设备态势（device posture）][docs-device-posture]规则让你指定设备在访问敏感资源之前必须满足的要求。
 
-[Manage device posture rules using the visual editor][docs-visual-editor-reference-device-posture].
+[使用可视化编辑器管理设备态势规则][docs-visual-editor-reference-device-posture]。
 
-## Auto approvers
+## 自动审批
 
-[Auto approvers][docs-policy-syntax-autoapprovers] let you create policies to pre-approve specific operations for devices, such as advertising subnet routes or exit nodes, without manual intervention.
+[自动审批][docs-policy-syntax-autoapprovers]让你创建策略，为设备预先批准特定操作，例如通告子网路由或出口节点（exit node），无需人工干预。
 
-[Manage auto approvers using the visual editor][docs-visual-editor-reference-auto-approvers].
+[使用可视化编辑器管理自动审批][docs-visual-editor-reference-auto-approvers]。
 
-## Tests
+## 测试
 
-[Tests][docs-policy-syntax-tests] validate that access control changes meet expected behavior before saving.
+[测试][docs-policy-syntax-tests]在保存之前验证访问控制更改是否符合预期行为。
 
-[Manage tests using the visual editor][docs-visual-editor-reference-tests].
+[使用可视化编辑器管理测试][docs-visual-editor-reference-tests]。
 
-## Data synchronization
+## 数据同步
 
-Changes in the visual editor immediately sync to the JSON editor after you save them. This bidirectional synchronization ensures consistency regardless of which editor you use.
+可视化编辑器中的更改会在你保存后立即同步到 JSON 编辑器。这种双向同步确保无论使用哪个编辑器都能保持一致。
 
-GitOps mode prevents modifications to maintain version control as the source of truth. In this mode, use the visual editor to preview and validate changes before committing them to your repository. The read-only mode indicates when GitOps manages your configuration. For GitOps implementation examples, refer to the documentation for [GitHub Actions][docs-gitops-acls-github], [GitLab CI][docs-gitops-acls-gitlab], and [Bitbucket][docs-gitops-acls-bitbucket].
+GitOps 模式会阻止修改，以维持版本控制作为唯一可信来源。在此模式下，使用可视化编辑器在把更改提交到仓库之前进行预览和验证。只读模式会指示何时由 GitOps 管理你的配置。GitOps 实施示例请参阅 [GitHub Actions][docs-gitops-acls-github]、[GitLab CI][docs-gitops-acls-gitlab] 和 [Bitbucket][docs-gitops-acls-bitbucket] 的文档。
 
-> **Note:**
+> **注意：**
 >
-> When you use the visual editor, it automatically converts ACL syntax to grants syntax on the backend. Grants syntax supports all the same capabilities as ACL syntax with additional features like [route filtering][docs-via] and [app capabilities][docs-grants-app-capabilities]. Refer to [grants versus ACLs][docs-grants-vs-acls] for more information.
+> 使用可视化编辑器时，它会在后端自动把 ACL 语法转换为授权（grant）语法。授权语法支持与 ACL 语法完全相同的能力，还带有[路由过滤][docs-via]和[应用能力][docs-grants-app-capabilities]等附加功能。更多信息请参阅[授权与 ACL 的对比][docs-grants-vs-acls]。
 
-### Finding and filtering
+### 查找与筛选
 
-All major sections include search fields that filter content in real time. Search works across every visible column in a section. You can find configurations using any identifying information without switching search modes.
+所有主要板块都包含可实时筛选内容的搜索框。搜索会覆盖板块中的每个可见列。你可以使用任何标识信息查找配置，无需切换搜索模式。
 
-The dropdown list arrow in search fields provides additional filtering options:
+搜索框中的下拉列表箭头提供额外的筛选选项：
 
-* Filter by user, group, device, or tag.
-* Search by port or IP address.
-* Apply multiple filters simultaneously.
+* 按用户、群组、设备或标签筛选。
+* 按端口或 IP 地址搜索。
+* 同时应用多个筛选条件。
 
-Real-time filtering helps manage large policy files efficiently. Type any part of a configuration to display only matching items. This approach eliminates manual scrolling through hundreds of entries.
+实时筛选有助于高效管理大型策略文件。输入配置的任意部分即可只显示匹配项。这种方式免去了在数百个条目中手动滚动的麻烦。
 
-### Configuration validation
+### 配置验证
 
-The visual editor validates your input as you work. This approach lets you work through complex configurations without interruption. Required fields appear without optional labels because they represent the baseline requirement.
+可视化编辑器会在你操作时验证输入。这种方式让你可以不间断地完成复杂配置。必填字段不带可选标签，因为它们代表基线要求。
 
-Field-specific validation errors appear near the relevant fields, while validation errors that aren't field-specific appear at the top of the page. Examples of these include failed general tests and failed SSH tests.
+特定字段的验证错误显示在相应字段附近，而非特定字段的验证错误（例如未通过的通用测试和未通过的 SSH 测试）显示在页面顶部。
 
-### JSON output previews
+### JSON 输出预览
 
-Most configurations include JSON preview panels showing the HuJSON syntax your selections generate. These previews update immediately as you modify fields. The preview helps you understand how visual selections translate to policy file syntax.
+大多数配置都包含 JSON 预览面板，显示你的选择所生成的 HuJSON 语法。修改字段时这些预览会立即更新。预览帮助你理解可视化选择如何转换为策略文件语法。
 
-The JSON preview serves several purposes:
+JSON 预览有多种用途：
 
-* Explore policy file syntax without leaving the visual editor.
-* Verify that configurations produce expected output.
-* Copy snippets for documentation or team discussions.
-* Debug complex configurations by examining generated code.
-* Share exact configurations with team members.
+* 无需离开可视化编辑器即可探索策略文件语法。
+* 验证配置是否产生预期输出。
+* 复制代码片段用于文档或团队讨论。
+* 通过检查生成的代码来调试复杂配置。
+* 与团队成员分享确切的配置。
 
-The copy button lets you copy the policy JSON to your clipboard for use in version control, documentation, or team collaboration. This feature connects visual and code-based configuration workflows.
+复制按钮让你把策略 JSON 复制到剪贴板，用于版本控制、文档或团队协作。此功能连接了可视化配置与基于代码的配置两种工作流。
 
-> **Tip:**
+> **提示：**
 >
-> JSON previews are available even when the policy file is locked because it's managed through GitOps. You can still view and copy generated HuJSON snippets for reference.
+> 即使策略文件因由 GitOps 管理而处于锁定状态，JSON 预览仍然可用。你仍可查看并复制生成的 HuJSON 片段作为参考。
 
-## Feedback
+## 反馈
 
-The visual editor continues to evolve with regular feature additions. Your feedback helps prioritize improvements and identify issues.
+可视化编辑器会持续演进，定期增加功能。你的反馈有助于确定改进优先级和发现问题。
 
-Select **Give feedback** from the top of the [Visual editor](https://console.tailscale.com/admin/acls/visual) page to submit suggestions, report bugs, or request features. The product team reviews all submissions and uses them to guide development priorities.
+在 [Visual editor](https://console.tailscale.com/admin/acls/visual) 页面顶部选择 **Give feedback**，提交建议、报告缺陷或请求功能。产品团队会审阅所有提交内容，并以此指导开发优先级。
 
-Include specific use cases and workflows in your feedback. The more context you provide, the better the team can understand and address your needs. Screenshots and detailed descriptions help communicate complex issues or feature requests.
+请在反馈中包含具体的使用场景和工作流。你提供的背景信息越多，团队就越能理解并满足你的需求。截图和详细描述有助于传达复杂问题或功能请求。
 
 [docs-device-posture-postures]: /docs/features/device-posture/postures-and-attributes
 

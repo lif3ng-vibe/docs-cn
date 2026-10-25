@@ -1,0 +1,19 @@
+---
+// 终端演示块：移植自上游 docs/_components/CommandTerminal.tsx，样式对齐 fern main.css
+interface Props {
+  command: string;
+}
+const { command } = Astro.props;
+---
+
+<div class="nc-term">
+  <div class="nc-term-bar">
+    <span class="nc-term-dot nc-term-dot-r"></span>
+    <span class="nc-term-dot nc-term-dot-y"></span>
+    <span class="nc-term-dot nc-term-dot-g"></span>
+  </div>
+  <div class="nc-term-body">
+    <div><span class="nc-ps">$ </span><span>{command}</span></div>
+    <div><span class="nc-ps">$ </span><span>openshell sandbox create</span></div>
+  </div>
+</div>

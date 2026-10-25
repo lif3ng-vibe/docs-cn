@@ -1,48 +1,48 @@
 ---
-title: "Control access to Tailscale PAM services"
-description: "Tailscale PAM uses grants to control who can connect to a PAM service and what they can do after connecting."
+title: "控制对 Tailscale PAM 服务的访问"
+description: "Tailscale PAM 使用授权（grant）来控制谁能连接到 PAM 服务，以及连接后能做什么。"
 ---
 
-Last validated Aug 12, 2026
+最后验证于 Aug 12, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Tailscale PAM uses grants to control who can connect to a PAM service and what they can do after connecting.
+Tailscale PAM 使用授权（grant）来控制谁能连接到 PAM 服务，以及连接后能做什么。
 
-A PAM grant combines:
+一条 PAM 授权由以下部分组合而成：
 
-* A **source**, such as a user, group, device, or tag.
-* A **destination**, such as a database, SSH server, or Kubernetes service.
-* Application-level permissions that are specific to the destination service.
+* 一个**来源**，例如用户、用户组、设备或标签。
+* 一个**目的地**，例如数据库、SSH 服务器或 Kubernetes 服务。
+* 特定于目的地服务的应用级权限。
 
-This lets you grant access according to the operation a user needs to do. For example, you can give a support team read-only database access, allow an operator to run a limited set of SSH commands, or let a developer list Kubernetes resources in a specific namespace.
+这让你可以按照用户需要执行的操作来授予访问权限。例如，你可以给支持团队只读的数据库访问，允许运维人员运行有限的几条 SSH 命令，或者让开发者在特定命名空间中列出 Kubernetes 资源。
 
-Tailscale grants use a deny-by-default model. A connection is permitted only when a matching grant provides the required network access and PAM application permissions.
+Tailscale 授权采用默认拒绝（deny-by-default）模型。只有当一条匹配的授权同时提供所需的网络访问和 PAM 应用权限时，连接才会被允许。
 
-## Prerequisites
+## 前提条件
 
-Before creating a PAM grant to control access, confirm you have done the following:
+在创建用于控制访问的 PAM 授权之前，请确认你已完成以下操作：
 
-1. Install and configure a Tailscale PAM [connector][docs-pam-connectors].
-2. Create the Tailscale PAM [service][docs-pam-services] or services you want users to access.
-3. Decide which users, groups, or devices need access.
-4. Decide what each source should be allowed to do within each service.
+1. 安装并配置 Tailscale PAM [连接器][docs-pam-connectors]。
+2. 创建你想让用户访问的一个或多个 Tailscale PAM [服务][docs-pam-services]。
+3. 确定哪些用户、用户组或设备需要访问权限。
+4. 确定每个来源在每个服务内应被允许做什么。
 
-After you create a PAM service, you can select it as a destination in an [access rule][docs-visual-editor-general-access-rules]. In the [tailnet policy file][docs-tailnet-policy-file], a service destination uses a selector such as `svc:production-database`. Tailscale grants let you use a service as a destination alongside users, devices, groups, tags, and other selectors.
+创建 PAM 服务后，你可以把它选作[访问规则][docs-visual-editor-general-access-rules]中的目的地。在 [tailnet 策略文件][docs-tailnet-policy-file]中，服务目的地使用 `svc:production-database` 这样的选择器。Tailscale 授权允许你把服务与用户、设备、用户组、标签及其他选择器一样作为目的地使用。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to edit the tailnet policy file.
+你需要是 tailnet 的[所有者、管理员或网络管理员](/docs/reference/user-roles)才能编辑 tailnet 策略文件。
 
-## How Tailscale PAM grants work
+## Tailscale PAM 授权的工作原理
 
-A Tailscale PAM grant is a Tailscale [grant][docs-grants] with the `tailscale.com/cap/pam` [application capability][docs-grants-app-capabilities].
+Tailscale PAM 授权是带有 `tailscale.com/cap/pam` [应用能力（application capability）][docs-grants-app-capabilities]的 Tailscale [授权][docs-grants]。
 
-A Tailscale PAM grant primarily defines three things:
+一条 Tailscale PAM 授权主要定义三件事：
 
-* Who can access a service.
-* Which Tailscale PAM service they can access.
-* What they can do within that service.
+* 谁可以访问某个服务。
+* 他们可以访问哪个 Tailscale PAM 服务。
+* 他们可以在该服务内做什么。
 
-The source can be an identity, group, device, or tag. The destination is a Tailscale PAM service. For example, consider the following `grants` definition.
+来源可以是身份、用户组、设备或标签。目的地是一个 Tailscale PAM 服务。例如，考虑下面的 `grants` 定义。
 
 ```json
 {
@@ -73,48 +73,48 @@ The source can be an identity, group, device, or tag. The destination is a Tails
 }
 ```
 
-The fields have the following purposes:
+各字段的作用如下：
 
-* `src` identifies who is requesting access. In this example, the `group:platform` group.
-* `dst` identifies the PAM service, `svc:production-database`.
-* `app` contains the application-level PAM permissions, which is read-only access to all databases.
+* `src` 标识谁在请求访问。本例中是 `group:platform` 用户组。
+* `dst` 标识 PAM 服务，即 `svc:production-database`。
+* `app` 包含应用级的 PAM 权限，此处是对所有数据库的只读访问。
 
-The `app` field contains the PAM permissions that apply when the source accesses the destination service. The available permissions depend on the type of PAM service, such as database, SSH, Kubernetes, or Amazon S3.
+`app` 字段包含当来源访问目的地服务时生效的 PAM 权限。可用权限取决于 PAM 服务的类型，例如数据库、SSH、Kubernetes 或 Amazon S3。
 
-### Grants are additive
+### 授权是累加的
 
-When multiple grants match a connection, Tailscale combines the capabilities provided by all of them. A more specific grant does not override a broader grant.
+当多条授权匹配同一连接时，Tailscale 会合并它们提供的全部能力。更具体的授权不会覆盖更宽泛的授权。
 
-As a result, restricting a capability in one grant does not revoke the same capability if another matching grant provides it. Review all grants that can match a source and destination when applying least-privileged access.
+因此，在某条授权里收紧某个能力，并不能撤销另一条匹配授权提供的同一能力。在实施最小权限访问时，请审查所有可能匹配该来源和目的地的授权。
 
-## Create a grant of the admin console
+## 在管理控制台中创建授权
 
-To create a grant using the [visual policy editor][docs-visual-editor]:
+要使用[可视化策略编辑器][docs-visual-editor]创建授权：
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Select **Add rule** from **General access rules** tab.
-3. For **Source**, select the users, groups, devices, or tags that need access.
-4. For **Destination**, select one or more Tailscale PAM services.
-5. (Optional) Use the **Note** field to document your rationale for the rule.
-6. Expand **Application-level options**. When the destination includes a Tailscale PAM service, the editor automatically selects the `tailscale.com/cap/pam` application.
-7. Configure the permissions for each destination protocol.
-8. Review the generated grant in **JSON preview**.
-9. Select **Save grant**.
+1. 进入管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 在**通用访问规则**标签页中选择**添加规则**。
+3. 在**来源**中，选择需要访问权限的用户、用户组、设备或标签。
+4. 在**目的地**中，选择一个或多个 Tailscale PAM 服务。
+5. （可选）使用**备注**字段记录你制定这条规则的理由。
+6. 展开**应用级选项**。当目的地包含 Tailscale PAM 服务时，编辑器会自动选中 `tailscale.com/cap/pam` 应用。
+7. 为每个目的地协议配置权限。
+8. 在 **JSON 预览**中检查生成的授权。
+9. 选择**保存授权**。
 
-The visual policy editor translates general access rules into grants in the tailnet policy file.
+可视化策略编辑器会把通用访问规则转换成 tailnet 策略文件中的授权。
 
-## Control database access
+## 控制数据库访问
 
-Database permissions let you control which databases a user can access and which kinds of queries they can execute.
+数据库权限让你可以控制用户能访问哪些数据库，以及能执行哪些类型的查询。
 
-Without database-specific rules, the database capability permits access to all databases and query types supported by the service. To limit access, select **Allow only specific database rules** and add one or more rules.
+如果没有数据库专属规则，数据库能力会开放该服务所支持的所有数据库和查询类型。要限制访问，请选择**仅允许特定数据库规则**并添加一条或多条规则。
 
-Each rule contains:
+每条规则包含：
 
-* **Database:** The database name as understood by the upstream database server, or `*` to match all databases. For MySQL, this is a database returned by `SHOW DATABASES` (MySQL also refers to databases as schemas). For PostgreSQL, this is the database you connect to, such as the database specified with `psql -d`; it does not refer to a PostgreSQL schema within that database.
-* **Allowed query types:** The query types the source can execute. You can use broader categories such as `ReadOnly` and `ReadWrite`, or allow individual query types such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, and more. Query-type restrictions are currently supported and enforced for MySQL and PostgreSQL services.
+* **数据库：** 上游数据库服务器所识别的数据库名称，或匹配所有数据库的 `*`。对于 MySQL，这是 `SHOW DATABASES` 返回的数据库（MySQL 也将数据库称为 schema）。对于 PostgreSQL，这是你连接的数据库，例如用 `psql -d` 指定的数据库，它不指该数据库内的 PostgreSQL schema。
+* **允许的查询类型：** 来源可以执行的查询类型。你可以使用 `ReadOnly`、`ReadWrite` 这类较宽的类别，也可以允许 `SELECT`、`INSERT`、`UPDATE`、`DELETE` 等单个查询类型。查询类型限制目前仅对 MySQL 和 PostgreSQL 服务提供支持并强制执行。
 
-For example, the following permission gives users read-only access to every database and additionally lets them run `DELETE` queries against the `books` database:
+例如，下面的权限让用户对所有数据库拥有只读访问，另外还允许他们对 `books` 数据库运行 `DELETE` 查询：
 
 ```json
 "database": {
@@ -131,15 +131,15 @@ For example, the following permission gives users read-only access to every data
 }
 ```
 
-The matching database rules are cumulative. In this example, the `books` database receives both the wildcard read-only permission and its database-specific permissions.
+匹配到的数据库规则是累加的。在这个例子中，`books` 数据库同时获得通配符只读权限和它专属的数据库权限。
 
-To prevent this grant from providing database access, select **Disable all Database access**.
+要阻止这条授权提供数据库访问，请选择**停用所有数据库访问**。
 
-### **Database access examples**
+### **数据库访问示例**
 
-The following shows example permissions for databases.
+下面展示数据库权限的示例。
 
-#### Read-only access to all databases
+#### 对所有数据库的只读访问
 
 ```json
 "database": {
@@ -152,7 +152,7 @@ The following shows example permissions for databases.
 }
 ```
 
-#### Read-only access to one database
+#### 对单个数据库的只读访问
 
 ```json
 "database": {
@@ -165,34 +165,34 @@ The following shows example permissions for databases.
 }
 ```
 
-Use the query types displayed in the visual editor when creating more granular rules.
+创建更细粒度的规则时，请使用可视化编辑器中显示的查询类型。
 
-## Control SSH access
+## 控制 SSH 访问
 
-SSH permissions let you control several parts of an SSH session independently, including interactive shell access, command execution, SFTP, and TCP forwarding.
+SSH 权限让你可以分别控制 SSH 会话的多个部分，包括交互式 shell 访问、命令执行、SFTP 和 TCP 转发。
 
-By default, SSH access includes shell, exec, and SFTP access. You can disable SSH entirely or disable individual capabilities.
+默认情况下，SSH 访问包含 shell、exec 和 SFTP 访问。你可以完全停用 SSH，也可以停用单个能力。
 
-### Disable SSH capabilities
+### 停用 SSH 能力
 
-You can configure the following options:
+你可以配置以下选项：
 
-* **Disable all SSH access:** Prevents this grant from providing SSH access.
-* **Disable shell access:** Prevents interactive shell sessions.
-* **Disable SFTP access:** Prevents file transfers using SFTP.
-* **Disable exec access:** Prevents commands from being run using SSH exec requests.
+* **停用所有 SSH 访问：** 阻止这条授权提供 SSH 访问。
+* **停用 shell 访问：** 阻止交互式 shell 会话。
+* **停用 SFTP 访问：** 阻止使用 SFTP 的文件传输。
+* **停用 exec 访问：** 阻止通过 SSH exec 请求运行命令。
 
-These capabilities are independent. For example, disabling shell access does not disable exec or SFTP access.
+这些能力相互独立。例如，停用 shell 访问并不会停用 exec 或 SFTP 访问。
 
-### Control exec access
+### 控制 exec 访问
 
-SSH exec lets a user run a command without starting an interactive shell. For example, by running `ssh user@server uptime`.
+SSH exec 让用户无需启动交互式 shell 即可运行命令，例如运行 `ssh user@server uptime`。
 
-You can disable exec access entirely or select **Allow only specific exec commands (regex)** to restrict which commands can be run using SSH exec.
+你可以完全停用 exec 访问，或者选择**仅允许特定 exec 命令（正则表达式）**来限制可以通过 SSH exec 运行哪些命令。
 
-Exec command restrictions do not apply to commands entered in an interactive shell. If a user has shell access, they can run commands from that shell independently of the exec command allowlist.
+exec 命令限制不适用于在交互式 shell 中输入的命令。如果用户拥有 shell 访问权限，他们可以在该 shell 中运行命令，不受 exec 命令允许列表的约束。
 
-Commands are evaluated as regular expressions. Anchor an expression when you need to match an exact command. For example, `^ls$` matches only `ls`, while `ls` can also match commands containing that sequence, such as `lsof`.
+命令按正则表达式求值。需要精确匹配某个命令时，请对表达式加锚定。例如，`^ls$` 只匹配 `ls`，而不加锚定的 `ls` 还能匹配包含该序列的命令，比如 `lsof`。
 
 ```json
 "exec": {
@@ -203,13 +203,13 @@ Commands are evaluated as regular expressions. Anchor an expression when you nee
 }
 ```
 
-Keep interactive shell access disabled when users only need to run the allowed commands. Otherwise, an interactive shell can provide access beyond the exec command allowlist.
+当用户只需要运行被允许的命令时，请保持交互式 shell 访问处于停用状态。否则，交互式 shell 可以提供超出 exec 命令允许列表的访问能力。
 
-### Restrict SSH usernames
+### 限制 SSH 用户名
 
-Select **Allow only specific usernames** to control which upstream usernames a user can request.
+选择**仅允许特定用户名**来控制用户可以请求哪些上游用户名。
 
-The following permits a support group to connect as `support` without permitting access as `root`.
+下面的配置允许支持组以 `support` 身份连接，但不允许以 `root` 身份访问。
 
 ```json
 "allowed_usernames": [
@@ -218,11 +218,11 @@ The following permits a support group to connect as `support` without permitting
 ]
 ```
 
-### Control TCP forwarding
+### 控制 TCP 转发
 
-TCP forwarding is disabled by default. Select **Allow TCP Forwarding** to permit users to create SSH TCP forwarding connections.
+TCP 转发默认停用。选择**允许 TCP 转发**来允许用户创建 SSH TCP 转发连接。
 
-To restrict forwarding to specific destinations, select **Allow only specific connections** and specify the permitted destination addresses and ports.
+要把转发限制到特定目的地，请选择**仅允许特定连接**，并指定允许的目的地地址和端口。
 
 ```json
 "tcp_forwarding": {
@@ -235,15 +235,15 @@ To restrict forwarding to specific destinations, select **Allow only specific co
 }
 ```
 
-The destination address must match the address requested by the SSH client. A wildcard can be used to permit any address or port, but use wildcards carefully.
+目的地地址必须与 SSH 客户端请求的地址一致。可以使用通配符来允许任意地址或端口，但请谨慎使用通配符。
 
-> **Warning:**
+> **警告：**
 >
-> Wildcards (`*`) allow access to any IP address or port. Use them only when broad access is intended.
+> 通配符（`*`）会允许访问任何 IP 地址或端口。只有在确实打算开放宽泛访问时才使用它们。
 
-### SSH grant example
+### SSH 授权示例
 
-The following permissions allow SFTP, permit two non-interactive exec commands, and allow TCP forwarding to one destination. Interactive shell access is not granted.
+下面的权限允许 SFTP、允许两条非交互式 exec 命令，并允许向一个目的地进行 TCP 转发。未授予交互式 shell 访问。
 
 ```json
 "ssh": {
@@ -265,21 +265,21 @@ The following permissions allow SFTP, permit two non-interactive exec commands, 
 }
 ```
 
-## Control Kubernetes access
+## 控制 Kubernetes 访问
 
-Kubernetes permissions let you define which operations a user can do against a Kubernetes API service.
+Kubernetes 权限让你可以定义用户能对 Kubernetes API 服务执行哪些操作。
 
-An unrestricted Kubernetes permission grants access to all operations supported by the service. Select **Allow only specific Kubernetes rules** to change the grant to an allowlist. When Kubernetes rules are enabled, only operations matching at least one rule are permitted.
+不加限制的 Kubernetes 权限会开放该服务所支持的所有操作。选择**仅允许特定 Kubernetes 规则**可把授权改为允许列表。启用 Kubernetes 规则后，只有至少匹配一条规则的操作才被允许。
 
-A Kubernetes rule can match:
+一条 Kubernetes 规则可以匹配：
 
-* **Verbs**, such as `get`, `list`, `create`, or `delete`.
-* **Namespaces**.
-* **Resource types**, such as pods, deployments, or services.
-* **Resource names**.
-* **API groups**.
+* **动词（verb）**，例如 `get`、`list`、`create` 或 `delete`。
+* **命名空间**。
+* **资源类型**，例如 pods、deployments 或 services。
+* **资源名称**。
+* **API 组**。
 
-The following example permits listing resources across all namespaces:
+下面的示例允许在所有命名空间中列出资源：
 
 ```json
 "kubernetes": {
@@ -293,25 +293,25 @@ The following example permits listing resources across all namespaces:
 }
 ```
 
-Use multiple rules when different resources require different permissions. For example, one rule could grant listing pods in every namespace, while another grants creating `pods/exec` resources only in a development namespace.
+当不同资源需要不同权限时，请使用多条规则。例如，一条规则可以允许在每个命名空间中列出 pods，而另一条规则只允许在开发命名空间中创建 `pods/exec` 资源。
 
-The connector's Kubernetes identity must also have permission to do the requested operation. Tailscale PAM permissions can restrict the connector's available privileges, but cannot expand the permissions provided by upstream Kubernetes role-based access control (RBAC).
+连接器的 Kubernetes 身份也必须拥有执行所请求操作的权限。Tailscale PAM 权限可以收窄连接器的可用特权，但不能扩大上游 Kubernetes 基于角色的访问控制（RBAC）所提供的权限。
 
-To prevent this grant from providing Kubernetes access, select **Disable all Kubernetes access**.
+要阻止这条授权提供 Kubernetes 访问，请选择**停用所有 Kubernetes 访问**。
 
-## Control Amazon S3 access
+## 控制 Amazon S3 访问
 
-Amazon S3 permissions let you restrict access by S3 action, bucket, and path.
+Amazon S3 权限让你可以按 S3 操作、存储桶和路径来限制访问。
 
-Without S3-specific rules, users receive the S3 access available through the service and its AWS credentials. Select **Allow only specific S3 rules** to create an allowlist of permitted bucket, path, and action combinations.
+如果没有 S3 专属规则，用户将获得通过该服务及其 AWS 凭证可用的 S3 访问。选择**仅允许特定 S3 规则**来创建允许的存储桶、路径和操作组合的允许列表。
 
-When S3 rules are enabled, an operation must match at least one rule. Rules can use `*` wildcards to match multiple buckets or paths.
+启用 S3 规则后，一个操作必须至少匹配一条规则。规则可以使用 `*` 通配符匹配多个存储桶或路径。
 
-For example, the rules below show the following permissions:
+例如，下面的规则展示以下权限：
 
-* Allow `list` and `read` access to all buckets and paths.
-* Allow `list`, `read`, `write`, and `delete` access to buckets whose names start with `api-`.
-* Allow `list`, `read`, `write`, and `delete` access to the `images/` path in the `ui-assets` bucket.
+* 允许对所有存储桶和路径进行 `list` 和 `read` 访问。
+* 允许对名称以 `api-` 开头的存储桶进行 `list`、`read`、`write` 和 `delete` 访问。
+* 允许对 `ui-assets` 存储桶中的 `images/` 路径进行 `list`、`read`、`write` 和 `delete` 访问。
 
 ```json
 {
@@ -337,28 +337,28 @@ For example, the rules below show the following permissions:
 }
 ```
 
-The rules are cumulative. In this example, all buckets receive the wildcard `list` and `read` permissions, while the more specific rules add `write` and `delete` access for matching buckets and paths.
+这些规则是累加的。在这个例子中，所有存储桶都获得通配符的 `list` 和 `read` 权限，而更具体的规则则为匹配的存储桶和路径追加 `write` 和 `delete` 访问。
 
-The effective access is also limited by the AWS IAM permissions assigned to the Tailscale PAM connector. A grant cannot provide access to an S3 operation that the connector's AWS identity does not have permission to execute.
+实际生效的访问还会受到分配给 Tailscale PAM 连接器的 AWS IAM 权限的限制。授权无法提供连接器的 AWS 身份无权执行的 S3 操作。
 
-To prevent this grant from providing S3 access, select **Disable all AWS S3 access**.
+要阻止这条授权提供 S3 访问，请选择**停用所有 AWS S3 访问**。
 
-## Control HTTP, RDP, VNC, and TCP access
+## 控制 HTTP、RDP、VNC 和 TCP 访问
 
-HTTP, RDP, VNC, and TCP services support protocol-level application access.
+HTTP、RDP、VNC 和 TCP 服务支持协议级的应用访问。
 
-For each protocol, you can either leave the default capability enabled or select its disable option:
+对于每种协议，你可以保持默认能力启用，也可以选择它的停用选项：
 
-* **Disable all HTTP access**
-* **Disable all RDP access**
-* **Disable all VNC access**
-* **Disable all TCP access**
+* **停用所有 HTTP 访问**
+* **停用所有 RDP 访问**
+* **停用所有 VNC 访问**
+* **停用所有 TCP 访问**
 
-Tailscale grants use a deny-by-default model. Access is permitted only when a matching grant permits the source to access the destination with the required PAM permissions.
+Tailscale 授权采用默认拒绝模型。只有当一条匹配的授权允许来源以所需的 PAM 权限访问目的地时，访问才会被允许。
 
-## Configure multiple service types in one grant
+## 在一条授权中配置多种服务类型
 
-A single grant can contain permissions for multiple Tailscale PAM service types. The relevant permission is applied according to the destination service. The following shows a grant for multiple service types.
+一条授权可以包含多种 Tailscale PAM 服务类型的权限。相关权限会根据目的地服务生效。下面展示一条针对多种服务类型的授权。
 
 ```json
 {
@@ -410,19 +410,19 @@ A single grant can contain permissions for multiple Tailscale PAM service types.
 }
 ```
 
-Consider using separate grants when different teams own the services, different source groups need access, or each permission set has a separate operational purpose. Smaller grants can be easier to review and audit.
+当不同团队拥有这些服务、不同来源组需要访问，或者每组权限有各自独立的运维目的时，可以考虑拆分成多条授权。更小的授权更容易审查和审计。
 
-## Complete PAM grant example
+## 完整的 PAM 授权示例
 
-As mentioned, a single grant can provide access to multiple service types. The permissions that apply depend on the destination service.
+如前所述，一条授权可以提供对多种服务类型的访问。生效的权限取决于目的地服务。
 
-The following example:
+下面的示例：
 
-* Gives the `group:platform` group read-only access to all databases, with additional `DELETE` access to the `books` database.
-* Permits SSH exec for two commands, SFTP, and TCP forwarding to one destination.
-* Permits users to list Kubernetes resources across all namespaces.
-* Grants `list` and `read` access to all S3 buckets, with additional `write` and `delete` access to `api-*` buckets and the `images/` path in the `ui-assets` bucket.
-* Grants access to HTTP, RDP, VNC, and TCP services.
+* 让 `group:platform` 用户组对所有数据库拥有只读访问，并对 `books` 数据库额外拥有 `DELETE` 访问。
+* 允许两条命令的 SSH exec、SFTP，以及到一个目的地的 TCP 转发。
+* 允许用户在所有命名空间中列出 Kubernetes 资源。
+* 授予对所有 S3 存储桶的 `list` 和 `read` 访问，并对 `api-*` 存储桶以及 `ui-assets` 存储桶中的 `images/` 路径额外授予 `write` 和 `delete` 访问。
+* 授予对 HTTP、RDP、VNC 和 TCP 服务的访问。
 
 ```json
 {
@@ -511,25 +511,25 @@ The following example:
 }
 ```
 
-Tailscale PAM applies the relevant permissions according to the destination service. For example, the database rules apply when accessing `svc:production-database`, while the S3 rules apply when accessing `svc:production-s3`.
+Tailscale PAM 会根据目的地服务应用相关权限。例如，访问 `svc:production-database` 时应用数据库规则，访问 `svc:production-s3` 时应用 S3 规则。
 
-When rules overlap, their permissions are cumulative. For example, the wildcard S3 rule provides `list` and `read` access to all buckets, while the more specific rules add `write` and `delete` access to matching buckets and paths.
+当规则重叠时，其权限是累加的。例如，通配符 S3 规则为所有存储桶提供 `list` 和 `read` 访问，而更具体的规则则为匹配的存储桶和路径追加 `write` 和 `delete` 访问。
 
-Consider using separate grants when different groups need access to different services or when the services have separate administrative purposes. Smaller grants can be easier to review and audit.
+当不同用户组需要访问不同服务，或这些服务有各自独立的管理目的时，可以考虑拆分成多条授权。更小的授权更容易审查和审计。
 
-## Troubleshoot PAM access
+## 排查 PAM 访问问题
 
-When a user cannot access a Tailscale PAM service, check the following:
+当用户无法访问某个 Tailscale PAM 服务时，请检查以下各项：
 
-* Confirm that the service exists and has an available connector.
-* Confirm that the user or device matches the grant's `src`.
-* Confirm that the service matches the grant's `dst`.
-* Confirm that the `tailscale.com/cap/pam` application capability is present.
-* Confirm that the relevant protocol has not been disabled.
-* For database, Kubernetes, or S3 allowlists, confirm that the requested operation matches a rule.
-* Review other matching grants, since their capabilities are combined.
-* Confirm that the upstream service credentials or role permit the operation.
-* Review the generated policy in the [JSON editor](https://console.tailscale.com/admin/acls/file) for unexpected selectors or permissions.
+* 确认该服务存在，并且有可用的连接器。
+* 确认该用户或设备匹配授权的 `src`。
+* 确认该服务匹配授权的 `dst`。
+* 确认存在 `tailscale.com/cap/pam` 应用能力。
+* 确认相关协议未被停用。
+* 对于数据库、Kubernetes 或 S3 允许列表，确认所请求的操作匹配某条规则。
+* 审查其他可能匹配的授权，因为它们的能力会被合并。
+* 确认上游服务的凭证或角色允许该操作。
+* 在 [JSON 编辑器](https://console.tailscale.com/admin/acls/file)中审查生成的策略，检查是否有意外的选择器或权限。
 
 [docs-grants-app-capabilities]: /docs/features/access-control/grants/grants-app-capabilities
 

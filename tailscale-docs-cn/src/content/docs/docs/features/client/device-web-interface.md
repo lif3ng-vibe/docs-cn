@@ -1,60 +1,60 @@
 ---
-title: "Manage devices using the web interface"
-description: "The web interface is a browser-based GUI available on all machines running the desktop platform of the Tailscale client, including Linux, macOS, and Windows. This lets you configure settings without n"
+title: "使用 Web 界面管理设备"
+description: "Web 界面是一种基于浏览器的图形界面（GUI），可用于所有运行 Tailscale 客户端桌面平台的机器，包括 Linux、macOS 和 Windows。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-The web interface is a browser-based GUI available on all machines running the desktop platform of the Tailscale client, including Linux, macOS, and Windows. This lets you configure settings without needing to use the [Tailscale CLI][docs-cli] or to configure settings on a device that does not have a built-in GUI.
+Web 界面（web interface）是一种基于浏览器的图形界面（GUI），可用于所有运行 Tailscale 客户端桌面平台的机器，包括 Linux、macOS 和 Windows。这让你无需使用 [Tailscale CLI][docs-cli] 就能配置设置，也无需在本身没有内置 GUI 的设备上配置设置。
 
-> **Note:**
+> **注意：**
 >
-> A device must have Tailscale v1.56.0 or later installed to access its web interface. As of v1.64.0, the web interface runs on [`100.100.100.100`][docs-what-is-quad100] by default.
+> 设备必须安装 Tailscale v1.56.0 或更高版本才能访问其 Web 界面。从 v1.64.0 起，Web 界面默认运行在 [`100.100.100.100`][docs-what-is-quad100] 上。
 
-The web interface runs locally over `100.100.100.100` by default, and can also be exposed to your tailnet over `<tailscaleIP>:5252`.
+Web 界面默认通过 `100.100.100.100` 在本地运行，也可以通过 `<tailscaleIP>:5252` 暴露给你的整个 tailnet。
 
-## Expose the web interface on a device
+## 在设备上暴露 Web 界面
 
-Before accessing the web interface over `<tailscaleIP>:5252`, you must enable it using the Tailscale CLI in a terminal session.
+在通过 `<tailscaleIP>:5252` 访问 Web 界面之前，你必须先在终端会话中使用 Tailscale CLI 将其启用。
 
-To expose the web interface in foreground mode, open a terminal session on the device and run [`tailscale web`][docs-cli-web]. When you close the terminal session or press `Ctrl` + `C`, the web interface will no longer be exposed to your tailnet.
+要以前台模式暴露 Web 界面，请在设备上打开一个终端会话并运行 [`tailscale web`][docs-cli-web]。当你关闭该终端会话或按下 `Ctrl` + `C` 后，Web 界面将不再暴露给你的 tailnet。
 
-To expose the web interface persistently in the background, open a terminal session on the device and run [`tailscale set --webclient`][docs-cli-set].
+要在后台持久地暴露 Web 界面，请在设备上打开一个终端会话并运行 [`tailscale set --webclient`][docs-cli-set]。
 
-> **Note:**
+> **注意：**
 >
-> Your [tailnet policy file][docs-tailnet-policy-file] manages access to the web interface.
+> 你的 [tailnet 策略文件][docs-tailnet-policy-file]管理着对 Web 界面的访问。
 
-> **Note:**
+> **注意：**
 >
-> `tailscale set --webclient` also turns on the web interface locally over `100.100.100.100` for Tailscale v1.62.0 or earlier. For clients v1.64.0 or newer, the web interface runs locally over `100.100.100.100` by default.
+> `tailscale set --webclient` 也会为 Tailscale v1.62.0 或更早版本在本地通过 `100.100.100.100` 开启 Web 界面。对于 v1.64.0 及更新的客户端，Web 界面默认就在本地通过 `100.100.100.100` 运行。
 
-## Open and authenticate to the web interface
+## 打开 Web 界面并完成身份验证
 
-From your web browser, use one of the following methods to access the web interface for a device in your tailnet:
+在网页浏览器中，使用以下任一方法访问 tailnet 中设备的 Web 界面：
 
-* Go to [`100.100.100.100`][docs-what-is-quad100] to access the web interface on the device you are currently using
-* Go to `<tailscaleIP>:5252` to access the web interface on another device, where `tailscaleIP` is the address for the device. This can only be done if the viewing user has access to port 5252 on the destination as permitted in your [tailnet policy file][docs-tailnet-policy-file].
-* Go to `localhost:8080`, or the address and port provided to `tailscale web` from the device running the web interface.
-* Some platforms, including Synology, expose the web interface over the LAN through their management console.
+* 打开 [`100.100.100.100`][docs-what-is-quad100]，即可访问你当前正在使用的设备的 Web 界面。
+* 打开 `<tailscaleIP>:5252` 访问另一台设备上的 Web 界面，其中 `tailscaleIP` 是该设备的地址。仅当查看者按照 [tailnet 策略文件][docs-tailnet-policy-file]的授权有权访问目标设备的 5252 端口时，才能这样做。
+* 打开 `localhost:8080`，或打开运行 Web 界面的设备上提供给 `tailscale web` 的地址和端口。
+* 某些平台（包括 Synology）会通过其管理控制台将 Web 界面暴露在局域网上。
 
-When you initially visit the web interface from a browser, you are always accessing it in the read-only mode, for security reasons. Anyone with access to the page can access the read-only page of the web interface. From here you can access metadata about the device, including its IP address, by selecting **View device details**.
+出于安全考虑，初次从浏览器访问 Web 界面时，你始终处于只读模式。任何能打开该页面的人都可以访问 Web 界面的只读页面。在这里，你可以选择 **查看设备详情**（View device details）来查看设备的元数据，包括它的 IP 地址。
 
-To change device settings in the web interface, you must complete a check mode authentication step. Select your profile photo in the upper right, select **Sign in**, and then complete the authentication flow.
+要在 Web 界面中更改设备设置，你必须完成一次检查模式（check mode）身份验证步骤。选择右上角的头像，选择 **登录**（Sign in），然后完成身份验证流程。
 
-Refer to [Control remote access][co-control-remote-access] for how to limit who can access the web interface for a device.
+如何限制谁能访问设备的 Web 界面，请参阅[控制远程访问][co-control-remote-access]。
 
-## Disable the web interface on a device
+## 在设备上禁用 Web 界面
 
-There are three ways to disable the web interface on a device.
+有三种方法可以在设备上禁用 Web 界面。
 
-**Option 1**: Disable access for non-local users only, by running the following [Tailscale CLI][docs-cli] command:
+**方式 1**：仅禁用非本地用户的访问，运行以下 [Tailscale CLI][docs-cli] 命令：
 
 ```shell
 tailscale set --webclient=false
 ```
 
-**Option 2**: Disable access for both local and non-local users, by adding the following tailnet policy file entry:
+**方式 2**：同时禁用本地用户和非本地用户的访问，在 tailnet 策略文件中添加以下条目：
 
 ```json
 "nodeAttrs": [
@@ -65,15 +65,15 @@ tailscale set --webclient=false
 ],
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-**Option 3**: Disconnect or remove the device from your tailnet.
+**方式 3**：将设备从你的 tailnet 断开连接或移除。
 
-## Control remote access
+## 控制远程访问
 
-### Grant read-only access
+### 授予只读访问权限
 
-Any user in your tailnet, or any user with whom the device has been shared, with access to the device's port 5252 will be able to access its web interface. To limit read access, limit who has access to the device's port 5252 in the policy. For example:
+tailnet 中的任何用户，或与该设备发生过共享的任何用户，只要有权访问设备的 5252 端口，就能访问其 Web 界面。要限制只读访问，请在策略中限制谁能访问该设备的 5252 端口。例如：
 
 ```json
 {
@@ -88,9 +88,9 @@ Any user in your tailnet, or any user with whom the device has been shared, with
 }
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-or, using the new [grants][docs-grants] syntax:
+或者使用新的[授权][docs-grants]语法：
 
 ```json
 {
@@ -105,21 +105,21 @@ or, using the new [grants][docs-grants] syntax:
 }
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-## Grant management access
+## 授予管理访问权限
 
-If the device is user-owned (not [tagged][docs-tags]), only the owner is able to manage settings on the device using the Tailscale web interface. Additional users cannot be granted management access by changing the [tailnet policy file][docs-tailnet-policy-file].
+如果设备归个人用户所有（未[打标签][docs-tags]），则只有所有者能通过 Tailscale Web 界面管理该设备的设置。无法通过修改 [tailnet 策略文件][docs-tailnet-policy-file]向其他用户授予管理访问权限。
 
-If the device is [tagged][docs-tags], users can be granted access to manage parts of the Tailscale web interface using [grants][docs-grants]. Use the `canEdit` list of the `"tailscale.com/cap/webui"` app to define what users are allowed to manage. The supported `canEdit` values are:
+如果设备已[打标签][docs-tags]，则可以通过[授权][docs-grants]向用户授予管理 Tailscale Web 界面部分功能的权限。使用 `"tailscale.com/cap/webui"` 应用的 `canEdit` 列表来定义允许用户管理的内容。支持的 `canEdit` 值有：
 
-* `*` Grants management access for all current and future web interface features
-* `ssh` Grants management access for Tailscale SSH
-* `subnets` Grants management access for subnet routes
-* `exitNodes` Grants management access for exit nodes including the ability to advertise the device as an exit node and use other exit nodes
-* `account` Grants management access for account settings including the ability to log out of node and turn on auto-updates
+* `*` 授予所有现有和未来 Web 界面功能的管理访问权限
+* `ssh` 授予 Tailscale SSH 的管理访问权限
+* `subnets` 授予子网路由的管理访问权限
+* `exitNodes` 授予出口节点的管理访问权限，包括将设备通告为出口节点以及使用其他出口节点
+* `account` 授予账户设置的管理访问权限，包括让节点登出以及开启自动更新
 
-For example:
+例如：
 
 ```json
 {
@@ -141,35 +141,35 @@ For example:
 }
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-Anyone with management access to a device's web interface, whether tagged or user-owned, will be required to log into the web interface and complete a check mode authentication step to verify their identity before being able to actually change device settings. Check mode also requires that the user be connecting from a Tailscale device of which they are the owner (not from a tagged device).
+任何对设备 Web 界面拥有管理访问权限的人，无论设备已打标签还是归个人所有，都必须先登录 Web 界面并完成一次检查模式身份验证步骤核实身份，然后才能真正更改设备设置。检查模式还要求用户必须从自己拥有的 Tailscale 设备发起连接（不能从打标签的设备连接）。
 
-> **Note:**
+> **注意：**
 >
-> Tagged device grants for the web interface were added for devices using Tailscale v1.62.0 and later. For any tagged devices running a version less than v1.62.0, access control policies alone give users the ability to manage the tagged device from the web interface.
+> 针对打标签设备的 Web 界面授权从 Tailscale v1.62.0 起才可用。对于运行低于 v1.62.0 版本的打标签设备，仅凭访问控制策略就能让用户通过 Web 界面管理该设备。
 
-## Features
+## 功能
 
-The web interface lets you configure the Tailscale settings for a device. Not all features are available on every platform. When a feature is not supported for a platform, it will not appear in that device's web interface.
+通过 Web 界面可以为设备配置 Tailscale 设置。并非所有功能都在每个平台上可用。如果某平台不支持某个功能，该功能就不会出现在此设备的 Web 界面中。
 
-### Enable exit nodes
+### 启用出口节点
 
-To select an [exit node][docs-exit-nodes] to route the device through, go to **This device**, select **Exit node**, then select the exit node you want to use. To stop using the exit node, select **Disable**.
+要选择一个[出口节点][docs-exit-nodes]让设备经由它路由，请前往 **此设备**（This device），选择 **出口节点**（Exit node），然后选择你要使用的出口节点。要停止使用出口节点，请选择 **禁用**（Disable）。
 
-To advertise the device as an exit node, go to **This device**, select **Exit node**, then select **Run as exit node**. To stop advertising the device as an exit node, select **Disable**.
+要将设备通告为出口节点，请前往 **此设备**（This device），选择 **出口节点**（Exit node），然后选择 **作为出口节点运行**（Run as exit node）。要停止将设备通告为出口节点，请选择 **禁用**（Disable）。
 
-### Enable a subnet router
+### 启用子网路由器
 
-Configuring a device as a [subnet router][docs-subnets] lets you remotely access resources on your network that may not have Tailscale installed, such as a printer.
+将设备配置为[子网路由器][docs-subnets]后，你可以远程访问网络上可能没有安装 Tailscale 的资源，例如打印机。
 
-To use the device as a subnet router, go to **Settings** and select **Subnet router** drop-down. In the text field, enter the combined IP address and subnet mask (CIDR) you want to advertise to your tailnet and select **Advertise routes**. You can enter multiple subnets by separating them with commas. To stop advertising routes, select **Stop advertising** next to the route.
+要将设备用作子网路由器，请前往 **设置**（Settings），打开 **子网路由器**（Subnet router）下拉菜单。在文本框中输入要通告给你的 tailnet 的 IP 地址与子网掩码组合（CIDR），然后选择 **通告路由**（Advertise routes）。可以用逗号分隔输入多个子网。要停止通告路由，请选择相应路由旁边的 **停止通告**（Stop advertising）。
 
-If your advertised routes are pending approval, you can [enable subnet routes][docs-subnets-enable-subnet-routes] from the admin console.
+如果通告的路由待审批，你可以在管理控制台中[启用子网路由][docs-subnets-enable-subnet-routes]。
 
-### Enable Tailscale SSH
+### 启用 Tailscale SSH
 
-To enable [Tailscale SSH][docs-tailscale-ssh] on the device, go to **Settings**, select **Tailscale SSH server**, then turn the toggle on. To disable the Tailscale SSH server, turn the toggle off.
+要在设备上启用 [Tailscale SSH][docs-tailscale-ssh]，请前往 **设置**（Settings），选择 **Tailscale SSH 服务器**（Tailscale SSH server），然后打开开关。要停用 Tailscale SSH 服务器，请关闭开关。
 
 [co-control-remote-access]: https://tailscale.com/use-cases/remote-access
 

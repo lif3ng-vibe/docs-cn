@@ -1,44 +1,44 @@
 ---
-title: "Tailscale PAM connectors overview"
-description: "A Tailscale PAM connector lets you establish a session between your network clients and your [services][docs-pam-services], such as SSH, a database, and Kubernetes. To use a connector, you set up and "
+title: "Tailscale PAM 连接器概览"
+description: "Tailscale PAM 连接器让你能在网络客户端与你的[服务][docs-pam-services]（如 SSH、数据库和 Kubernetes）之间建立会话。要使用连接器，你需要在一台设备上设置并运行"
 ---
 
-Last validated Aug 17, 2026
+最后验证于 Aug 17, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-A Tailscale PAM connector lets you establish a session between your network clients and your [services][docs-pam-services], such as SSH, a database, and Kubernetes. To use a connector, you set up and run the Tailscale connector service on a device that will act as the connector. That service includes both the Tailscale connectivity components and the Tailscale PAM connector function. The Tailscale connectivity components use WireGuard for creating identity-aware [encrypted][docs-encryption] communication channels. The Tailscale PAM connector provides application-aware privileged access to your services. For information about setting up a connector, refer to [Install a Tailscale PAM connector][docs-pam-connectors-install].
+Tailscale PAM 连接器让你能在网络客户端与你的[服务][docs-pam-services]（如 SSH、数据库和 Kubernetes）之间建立会话。要使用连接器，你需要在即将充当连接器的设备上设置并运行 Tailscale 连接器服务。该服务既包含 Tailscale 连接组件，也包含 Tailscale PAM 连接器功能。Tailscale 连接组件使用 WireGuard 创建具备身份感知的[加密][docs-encryption]通信通道；Tailscale PAM 连接器则为你的服务提供应用感知的特权访问。关于设置连接器的信息，参见[安装 Tailscale PAM 连接器][docs-pam-connectors-install]。
 
-Where you run a connector depends on how you can and want to connect to the target services you wish to expose over Tailscale. The connector must be able to reach your target resources through the network, or through the use of external tools as is the case with AWS Session Manager targets.
+在哪里运行连接器，取决于你如何能够以及希望连接到想通过 Tailscale 暴露的目标服务。连接器必须能够通过网络访问你的目标资源，或借助外部工具访问，AWS Session Manager 目标就是后一种情况。
 
-How many connectors you run depends on how many disjoint networks you have with resources that you wish to expose over Tailscale. Assuming you have *N* networks, each with resources that can only be accessed by other machines in the same network, you will need *N* connectors - one in each network. If you have a large number of networks but all resources in these networks are accessible through the internet, you might need only one connector.
+运行多少个连接器，取决于你有多少个互不相通、且包含想通过 Tailscale 暴露的资源的网络。假设你有 *N* 个网络，每个网络中的资源只能被同一网络中的其他机器访问，那么你需要 *N* 个连接器——每个网络一个。如果你有大量网络，但这些网络中的所有资源都可以通过互联网访问，那么可能只需要一个连接器。
 
-For high availability services, you can run more than one connector per network pointed at the same target services.
+对于需要高可用的服务，你可以在每个网络中运行多个连接器，指向相同的目标服务。
 
-To minimize the damage of a single connector device being compromised, you can segment your targets across multiple connectors.
+为了把单个连接器设备被攻陷造成的损害降到最低，你可以把目标分散到多个连接器上。
 
-## Connector token
+## 连接器令牌
 
-A connector token is a credential used to authenticate a connector against the Tailscale control plane. Each token is always associated with only one connector.
+连接器令牌是用于向 Tailscale 控制平面认证连接器的凭证。每个令牌始终只与一个连接器关联。
 
-While there can be multiple connector tokens active at the same time, a connector can only have one active connection at a time. Attempting to connect a connector that is already connected will result in the second connection being rejected with an error message mentioning that the connector is already connected.
+虽然可以同时有多个处于活动状态的连接器令牌，但一个连接器一次只能有一条活动连接。尝试连接已经连接的连接器时，第二条连接会被拒绝，并返回一条说明该连接器已连接的错误消息。
 
-Multiple active tokens for the same connector enable safer token rotations, with minimal downtime, for a given connector.
+为同一连接器准备多个活动令牌，可以实现更安全的令牌轮换，且停机时间最短。
 
-## Service
+## 服务
 
-A [service][docs-pam-services] represents a resource in your tailnet that has been associated with a given connector. For example, SSH, a database, Kubernetes, and others.
+[服务][docs-pam-services]代表 tailnet 中已与某个连接器关联的资源，例如 SSH、数据库、Kubernetes 等。
 
-## Connector logs
+## 连接器日志
 
-**Connector logs** are logs for connector events occurring locally. The following are examples of events that will emit a log entry:
+**连接器日志**是本地发生的连接器事件的日志。以下事件会产生日志条目：
 
-* Errors and failures to operate.
-* Service updates received, such as configuration changes and new or removed services.
+* 错误和运行故障。
+* 收到的服务更新，例如配置变更以及新增或移除的服务。
 
-> **Note:**
+> **注意：**
 >
-> In the case of a failure to authenticate a connector against Tailscale, the log will not be found in the Tailscale PAM logs. The reason for this is because a successful authentication is a prerequisite for a connector to upload its logs to Tailscale PAM.
+> 如果连接器向 Tailscale 认证失败，在 Tailscale PAM 日志中将找不到该日志。原因在于，成功认证是连接器把日志上传到 Tailscale PAM 的前提。
 
 [docs-pam-connectors-install]: /docs/privileged-access-management/connectors/install
 

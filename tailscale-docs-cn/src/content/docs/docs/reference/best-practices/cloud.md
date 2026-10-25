@@ -1,8 +1,8 @@
 ---
-title: "Cloud best practices"
-description: "Last validated Sep 1, 2026"
+title: "云上最佳实践"
+description: "最后验证于 Sep 1, 2026"
 ---
 
-Last validated Sep 1, 2026
+最后验证于 Sep 1, 2026
 
-* [CoreWeave best practices](/docs/reference/best-practices/cloud/coreweave) — Deploy Tailscale on CoreWeave with best practices, security, and production readiness in mind.
+* [CoreWeave 最佳实践](/docs/reference/best-practices/cloud/coreweave)——在 CoreWeave 上以最佳实践、安全性与生产就绪为考量部署 Tailscale。

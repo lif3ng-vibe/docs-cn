@@ -1,55 +1,55 @@
 ---
 title: "Tailscale Serve"
-description: "Explore the Tailscale Serve service."
+description: "探索 Tailscale Serve 服务。"
 ---
 
-Last validated Jan 20, 2026
+最后验证于 Jan 20, 2026
 
-> **Note:**
+> **注意：**
 >
-> The CLI commands for both [Tailscale Funnel][docs-tailscale-funnel] and [Tailscale Serve][docs-tailscale-serve] have changed in the 1.52 version of the Tailscale client. If you've used Funnel or Serve in previous versions, we recommend reviewing the CLI documentation.
+> [Tailscale Funnel][docs-tailscale-funnel] 和 [Tailscale Serve][docs-tailscale-serve] 的 CLI 命令在 1.52 版本的 Tailscale 客户端中发生了变化。如果你在之前的版本中使用过 Funnel 或 Serve，建议查阅 CLI 文档。
 
-Tailscale Serve lets you route traffic from other devices on your Tailscale network (known as a tailnet) to a local service running on your device. You can think of this as sharing the service, such as a website, with the rest of your tailnet. This page provides information about how Serve works and how to get started with it in your tailnet. For more specific use cases, refer to [Tailscale Serve examples][docs-serve-examples].
+Tailscale Serve 让你可以将来自 Tailscale 网络（即 tailnet）中其他设备的流量路由到你设备上运行的本地服务。你可以把它理解为将某个服务（例如一个网站）共享给 tailnet 中的其他成员。本页介绍 Serve 的工作方式，以及如何在你的 tailnet 中开始使用它。更多具体用例请参阅 [Tailscale Serve 示例][docs-serve-examples]。
 
-> **Tip:**
+> **提示：**
 >
-> If you'd like to share local services publicly over the internet, use [Tailscale Funnel][docs-funnel] instead.
+> 如果你想通过互联网公开共享本地服务，请改用 [Tailscale Funnel][docs-funnel]。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景信息和示例。
 
 [Serve and Funnel | Tailscale Explained (video)](https://www.youtube.com/watch?v=MpxmfpCl20c)
 
-## Get started with Serve
+## 开始使用 Serve
 
-> **Warning:**
+> **警告：**
 >
-> Tailscale Serve requires you to enable HTTPS certificates in your tailnet.
+> Tailscale Serve 要求你在 tailnet 中启用 HTTPS 证书。
 >
-> Additionally, keep in mind that [access control rules][docs-access-control] apply to Serve just like any other service. If you have access control rules that restrict access to certain devices or users, those rules will also apply to the services you're sharing with Serve.
+> 此外，请注意[访问控制规则][docs-access-control]对 Serve 的适用方式与其他服务相同。如果你有限制某些设备或用户访问的访问控制规则，这些规则同样会作用于你通过 Serve 共享的服务。
 
-If you don't have HTTPS enabled in your tailnet, the Tailscale CLI command [`tailscale serve`][docs-cli] provides an interactive web UI that prompts you to allow Tailscale to enable HTTPS on your behalf.
+如果你的 tailnet 尚未启用 HTTPS，Tailscale CLI 命令 [`tailscale serve`][docs-cli] 会提供一个交互式网页界面，提示你允许 Tailscale 代你启用 HTTPS。
 
-The `serve` command prompts you as needed and sends you to a web consent page to enable any unmet requirements.
+`serve` 命令会按需提示你，并引导你前往一个网页许可页面，以启用尚未满足的要求。
 
-*（图：The 'Start using serve' web consent page）*
+*（图："Start using serve" 网页许可页面）*
 
-**Tailscale Funnel** is enabled by default. If you don't plan to use [Tailscale Funnel][docs-funnel] on the device, you can turn it off.
+**Tailscale Funnel** 默认处于启用状态。如果你不打算在该设备上使用 [Tailscale Funnel][docs-funnel]，可以将其关闭。
 
-## Run Tailscale Serve
+## 运行 Tailscale Serve
 
-If you run the [`tailscale serve`][docs-cli] command and your tailnet isn't properly configured to use Tailscale Serve, it presents a login server URL that you can follow to enable the feature.
+如果你运行 [`tailscale serve`][docs-cli] 命令而你的 tailnet 尚未正确配置为使用 Tailscale Serve，命令会给出一个登录服务器 URL，你可以按照它来启用该功能。
 
-Tailscale Serve lets you serve local directories, files, plain text, or local ports with other devices in your tailnet. For example, you can proxy requests to a web server running at `http://127.0.0.1:3000` using the following command:
+Tailscale Serve 让你可以向 tailnet 中的其他设备提供本地目录、文件、纯文本或本地端口。例如，你可以使用以下命令将请求代理到运行在 `http://127.0.0.1:3000` 的 Web 服务器：
 
 ```shell
 tailscale serve 3000
 ```
 
-Run `tailscale serve --help` for more examples.
+运行 `tailscale serve --help` 查看更多示例。
 
-The CLI opens a foreground session that displays the status of what it's serving and the URL you can use to access your server:
+CLI 会打开一个前台会话，显示正在提供的服务状态以及用于访问服务器的 URL：
 
 ```shell
 tailscale serve 3000
@@ -61,73 +61,73 @@ https://amelie-workstation.pango-lin.ts.net
 Press Ctrl+C to exit.
 ```
 
-## Identity headers
+## 身份标头
 
-> **Note:**
+> **注意：**
 >
-> Serve traffic includes identity headers when serving traffic from your tailnet using Tailscale Serve. Funnel traffic, which is publicly available, does not include identity headers.
+> 通过 Tailscale Serve 提供 tailnet 流量时，流量中会包含身份标头。而公开可用的 Funnel 流量则不包含身份标头。
 
-When you use Serve to proxy traffic to a local service running on your device, it adds a few [Tailscale identity][docs-tailscale-identity] headers to the request sent to your backend. The destination server can use these headers to identify the Tailscale user associated with the request. If Serve finds the following headers on an incoming request, it will remove them for security reasons, to avoid header spoofing.
+当你使用 Serve 将流量代理到你设备上运行的本地服务时，它会在发送到后端的请求中添加几个 [Tailscale 身份][docs-tailscale-identity]标头。目标服务器可以使用这些标头识别与请求关联的 Tailscale 用户。如果 Serve 在传入请求中发现以下标头，会出于安全考虑将其移除，以避免标头伪造。
 
-* `Tailscale-User-Login`: Filled with the requester's login name (for example, `alice@example.com`).
-* `Tailscale-User-Name`: Filled with the requester's display name (for example, `Alice Architect`).
-* `Tailscale-User-Profile-Pic`: Filled with the requester's profile picture URL, if their identity provider provides one (for example, `https://example.com/photo.jpg`).
+* `Tailscale-User-Login`：填入请求者的登录名（例如 `alice@example.com`）。
+* `Tailscale-User-Name`：填入请求者的显示名称（例如 `Alice Architect`）。
+* `Tailscale-User-Profile-Pic`：如果请求者的身份提供方提供了头像，则填入其头像 URL（例如 `https://example.com/photo.jpg`）。
 
-If the values contain non-ASCII values, Tailscale might use [RFC2047][xt-rfc-2047] "Q" encoding (for example, `=?utf-8?q?Ferris_B=C3=BCller?=`).
+如果值中包含非 ASCII 字符，Tailscale 可能会使用 [RFC2047][xt-rfc-2047] "Q" 编码（例如 `=?utf-8?q?Ferris_B=C3=BCller?=`）。
 
-> **Note:**
+> **注意：**
 >
-> These identity headers are not populated for traffic originating from [tagged devices][docs-tags].
+> 对于来自[带标签设备][docs-tags]的流量，不会填充这些身份标头。
 
-You can use the identity headers with a custom backend or third-party services that offer authentication proxy authentication, such as [Grafana][xt-grafana-config-auth-proxy].
+你可以将身份标头与自定义后端或提供认证代理身份验证的第三方服务配合使用，例如 [Grafana][xt-grafana-config-auth-proxy]。
 
-Although identity headers are only populated for tailnet traffic, this includes traffic from external users who have accepted a share of your device. For example, if you share a device with a friend and have it configured with a Serve proxy, Tailscale populates the identity headers when your friend visits the Serve URL.
+虽然身份标头只为 tailnet 流量填充，但这也包括已接受你设备共享的外部用户产生的流量。例如，如果你与朋友共享了一台设备并为其配置了 Serve 代理，那么当你的朋友访问该 Serve URL 时，Tailscale 也会填充身份标头。
 
-> **Tip:**
+> **提示：**
 >
-> When you use the identity headers to authenticate to a backend service, it's best practice to only have the service listen on localhost. Otherwise, any user that can call your service directly (rather than with the Serve URL) could trivially provide their own values for these HTTP headers. By listening only on localhost, this limits tampering to only other services running on the Serve device, and not anyone on your LAN or tailnet.
+> 当你使用身份标头向后端服务进行身份验证时，最佳实践是让该服务只监听 localhost。否则，任何能够直接调用你的服务（而不是通过 Serve URL）的用户都可以轻而易举地伪造这些 HTTP 标头的值。只监听 localhost 可以将篡改范围限制在 Serve 设备上运行的其他服务，而不是局域网或 tailnet 中的任何人。
 
-## App capabilities header
+## 应用能力标头
 
-> **Note:**
+> **注意：**
 >
-> Serve traffic can be configured to forward a header with selected app capabilities of the connected user or tagged device. Similar to identity headers, this isn't available for Funnel traffic, which is publicly available.
+> 可以配置 Serve 流量，使其转发一个标头，其中包含连接用户或带标签设备的选定应用能力。与身份标头类似，此功能不适用于公开可用的 Funnel 流量。
 >
-> This feature is available in Tailscale v1.92 or later.
+> 此功能在 Tailscale v1.92 或更高版本中可用。
 
-When you use Serve to proxy traffic to a local service running on your device, you can use the `--accept-app-caps` command line flag to specify which [app capabilities][docs-app-capabilities] of a user or tagged node Serve should forward.
-If a user or tagged node that makes a request has been granted any of the app capabilities specified, Serve will convert them into serialised JSON and forward them in a header called `Tailscale-App-Capabilities`.
-For an example of what this can look like, refer to the [Tailscale Serve examples][docs-serve-examples-app-caps].
+当你使用 Serve 将流量代理到你设备上运行的本地服务时，可以使用 `--accept-app-caps` 命令行标志指定 Serve 应转发用户或带标签节点的哪些[应用能力][docs-app-capabilities]。
+如果发起请求的用户或带标签节点已被授予所指定的任何应用能力，Serve 会将它们转换为序列化的 JSON，并通过名为 `Tailscale-App-Capabilities` 的标头转发。
+有关实际效果的示例，请参阅 [Tailscale Serve 示例][docs-serve-examples-app-caps]。
 
-Tailscale uses [RFC2047][xt-rfc-2047] "Q" encoding for values that contain non-ASCII characters (for example, `=?utf-8?q?{"example.com/cap/monitoring":[{"role":"=F0=9F=90=BF=EF=B8=8F"}]}?=`).
+对于包含非 ASCII 字符的值，Tailscale 使用 [RFC2047][xt-rfc-2047] "Q" 编码（例如 `=?utf-8?q?{"example.com/cap/monitoring":[{"role":"=F0=9F=90=BF=EF=B8=8F"}]}?=`）。
 
-If Serve finds the `Tailscale-App-Capabilities` header on an incoming request, Serve will remove it for security reasons, just like any Tailscale identity headers, to avoid header spoofing.
+如果 Serve 在传入请求中发现 `Tailscale-App-Capabilities` 标头，会像对待任何 Tailscale 身份标头一样，出于安全考虑将其移除，以避免标头伪造。
 
-> **Tip:**
+> **提示：**
 >
-> When you use the capability headers to authorize users or tagged nodes at a backend service, it's best practice to only have the service listen on localhost. Otherwise, any user that can call your service directly (rather than with the Serve URL) could trivially provide their own values for these HTTP headers. By listening only on localhost, this limits tampering to only other services running on the Serve machine, and not anyone on your LAN or tailnet.
+> 当你使用能力标头在后端服务中为用户或带标签节点授权时，最佳实践是让该服务只监听 localhost。否则，任何能够直接调用你的服务（而不是通过 Serve URL）的用户都可以轻而易举地伪造这些 HTTP 标头的值。只监听 localhost 可以将篡改范围限制在 Serve 机器上运行的其他服务，而不是局域网或 tailnet 中的任何人。
 
-## Resources
+## 资源
 
-* Explore the collection of [Serve use case examples][docs-serve-examples] for inspiration and ideas.
-* [Use the PROXY protocol][docs-tailscale-serve-proxy-protocol].
-* [Use the TCP forwarder][docs-tailscale-serve-tcp-forwarder].
-* [Reset the Serve configuration][docs-tailscale-serve-reset-serve].
-* [Disable Serve][docs-tailscale-serve-disable-serve].
+* 浏览 [Serve 用例示例集][docs-serve-examples]，获取灵感和思路。
+* [使用 PROXY 协议][docs-tailscale-serve-proxy-protocol]。
+* [使用 TCP 转发器][docs-tailscale-serve-tcp-forwarder]。
+* [重置 Serve 配置][docs-tailscale-serve-reset-serve]。
+* [禁用 Serve][docs-tailscale-serve-disable-serve]。
 
-## Limitations
+## 局限性
 
-* DNS names are restricted to your tailnet's domain name (`device-name.tailnet-name.ts.net`).
-* Because of macOS app sandbox limitations, serving files and directories is limited to the [open source variant of the Tailscale client for macOS][docs-macos-variants].
-* The same port number cannot be used for Serve (available only within the tailnet) and Funnel (available within the tailnet and to the public) at the same time.
-  * If the most recent command to configure the port was `serve`, then the port will be completely private.
-  * If the most recent command to configure the port was `funnel`, then the port will be completely public.
+* DNS 名称仅限于你 tailnet 的域名（`device-name.tailnet-name.ts.net`）。
+* 由于 macOS 应用沙箱的限制，共享文件和目录仅限于 [macOS 版 Tailscale 客户端的开源变体][docs-macos-variants]。
+* 同一个端口号不能同时用于 Serve（仅在 tailnet 内可用）和 Funnel（在 tailnet 内和公共互联网均可用）。
+  * 如果最近一次配置该端口的命令是 `serve`，则该端口将完全私有。
+  * 如果最近一次配置该端口的命令是 `funnel`，则该端口将完全公开。
 
-## Troubleshooting
+## 排查问题
 
-Tailscale Serve requires that you [enable HTTPS][docs-enabling-https] in your tailnet to automatically provision TLS certificates for your unique [tailnet DNS name][docs-tailnet-name]. If you use the interactive CLI flow as described in the [Get started with Serve][ar-get-started-with-serve] section, Tailscale automatically enables HTTPS if it is not already enabled.
+Tailscale Serve 要求你在 tailnet 中[启用 HTTPS][docs-enabling-https]，以便为你唯一的 [tailnet DNS 名称][docs-tailnet-name]自动预配 TLS 证书。如果按照[开始使用 Serve][ar-get-started-with-serve] 一节所述使用交互式 CLI 流程，当 HTTPS 尚未启用时，Tailscale 会自动启用它。
 
-[ar-get-started-with-serve]: #get-started-with-serve
+[ar-get-started-with-serve]: #开始使用-serve
 
 [docs-access-control]: /docs/features/access-control
 

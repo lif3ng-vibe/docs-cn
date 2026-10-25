@@ -1,119 +1,118 @@
 ---
-title: "Log streaming"
-description: "Log streaming lets you collect and send [configuration audit logs][docs-audit-logging] or [network flow logs][docs-network-flow-logs] about your Tailscale network (known as a tailnet) into various sys"
+title: "日志流式传输"
+description: "日志流式传输让你可以把有关 Tailscale 网络（即 tailnet）的[配置审计日志][docs-audit-logging]或[网络流日志][docs-network-flow-logs]收集并发送到各种系统进行采集与分析"
 ---
 
-Last validated Feb 2, 2026
+最后验证于 Feb 2, 2026
 
-> **Note:** Log streaming is available for [the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：**日志流式传输[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-Log streaming lets you collect and send [configuration audit logs][docs-audit-logging] or [network flow logs][docs-network-flow-logs] about your Tailscale network (known as a tailnet) into various systems for collection and analysis.
+日志流式传输让你可以把有关 Tailscale 网络（即 tailnet）的[配置审计日志][docs-audit-logging]或[网络流日志][docs-network-flow-logs]收集并发送到各种系统进行采集与分析。
 
-> **Tip:**
+> **提示：**
 >
-> You can use `User-Agent: TailscaleLogStreamPublisher` to identify Tailscale traffic.
+> 你可以使用 `User-Agent: TailscaleLogStreamPublisher` 来识别 Tailscale 流量。
 
-## Supported integrations
+## 支持的集成
 
-Tailscale supports different ways of integrating log streaming.
+Tailscale 支持多种日志流式传输集成方式。
 
-### SIEM integrations
+### SIEM 集成
 
-You can stream logs into a Security information and event management ([SIEM][ln-security-info-event-management]) system to help detect and respond to security threats, set up alerting and monitoring rules, and the like.
+你可以把日志流式传输到 SIEM（安全信息与事件管理，[SIEM][ln-security-info-event-management]）系统，帮助检测和响应安全威胁、设置告警和监控规则等。
 
-We support log streaming integrations for the following SIEM systems:
+我们支持向以下 SIEM 系统进行日志流式传输集成：
 
 * [Axiom][xt-axiom]
 * [Cribl][xt-cribl]
 * [Datadog][xt-datadog]
-* [Elasticsearch Logstash][xt-elastic-log-stash], through a [data stream][xt-elastic-docs-data-streams]
+* [Elasticsearch Logstash][xt-elastic-log-stash]，通过[数据流（data stream）][xt-elastic-docs-data-streams]
 * [Panther][xt-panther]
-* [Splunk][xt-splunk], through an [HTTP Event Collector][xt-splunk-http-event-collector]
-* [Additional SIEM systems][ar-additional-siem-systems]
+* [Splunk][xt-splunk]，通过 [HTTP Event Collector][xt-splunk-http-event-collector]
+* [其他 SIEM 系统][ar-additional-siem-systems]
 
-### Cloud Storage
+### 云存储
 
-We support log streaming integrations for the following cloud storage services.
+我们支持向以下云存储服务进行日志流式传输集成。
 
-#### Amazon S3 and S3-compatible services
+#### Amazon S3 与 S3 兼容服务
 
-You can stream your logs to Amazon S3 and S3-compatible services for various cloud storage providers.
+你可以把日志流式传输到 Amazon S3 以及多家云存储服务商的 S3 兼容服务。
 
-We support log streaming integrations for sending logs to the following S3 bucket types:
+我们支持向以下 S3 存储桶类型发送日志的集成：
 
 * [Amazon S3][xt-s3-logging]
-* S3-compatible services, including:
+* S3 兼容服务，包括：
   * [Storj][xt-storj]
   * [Wasabi][xt-wasabi]
 
-#### Azure services
+#### Azure 服务
 
 * [Azure Blob Storage][xt-azure-blob-storage]
 
-#### Google Cloud services
+#### Google Cloud 服务
 
-* [Google Cloud Storage][xt-google-cloud-storage] (GCS)
+* [Google Cloud Storage][xt-google-cloud-storage]（GCS）
 
-### Other integrations types
+### 其他集成类型
 
-Additional integrations that you can use for log streaming include:
+可用于日志流式传输的其他集成包括：
 
-* [Private endpoints][ar-private-endpoints]
+* [私有端点][ar-private-endpoints]
 * [Vector][xt-vector]
 
-## Prerequisites
+## 前提条件
 
-* You need an endpoint and credentials for either your SIEM integration or S3 cloud storage provider. Consult your vendor's documentation for how to get an endpoint and API credentials.
-* You need to be an [Owner, Admin, Network admin, or IT admin](/docs/reference/user-roles) to add, edit, and delete a streaming destination.
+* 你需要 SIEM 集成或 S3 云存储服务商的端点与凭证。如何获取端点和 API 凭证，请查阅相应厂商的文档。
+* 你需要具有 [Owner、Admin、Network admin 或 IT admin](/docs/reference/user-roles) 身份，才能添加、编辑和删除流式传输目标。
 
-## Configuration log streaming
+## 配置日志流式传输
 
-Configuration log streaming lets you export audit and administrative activity from your tailnet to external monitoring, storage, and security platforms. Use the following procedures to configure, manage, and remove streaming destinations for configuration audit logs.
+配置日志流式传输让你可以把 tailnet 的审计与管理活动导出到外部监控、存储和安全平台。使用以下流程来配置、管理和移除配置审计日志的流式传输目标。
 
-### Add configuration log streaming
+### 添加配置日志流式传输
 
-#### SIEM integrations
+#### SIEM 集成
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Start streaming**.
-3. In the **Start streaming configuration logs** dialog:
-   1. Select a SIEM destination.
-   2. For **URL**, enter your SIEM endpoint. The endpoint URL must use the HTTPS protocol, and there
-      is no restriction on which port is used.
-      Splunk's HTTP Endpoint Connectors require an endpoint ending with `/services/collector/event`.
-      Elasticsearch's data streams require an endpoint ending with `<stream_id>/_bulk?pretty`.
-   3. If your SIEM system requires a value for **Username**, enter the SIEM username.
-   4. For **Token**, enter the SIEM API token.
-4. Select **Start streaming**.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming configuration logs** 对话框中：
+   1. 选择一个 SIEM 目标。
+   2. 在 **URL** 中输入你的 SIEM 端点。端点 URL 必须使用 HTTPS 协议，端口不限。
+      Splunk 的 HTTP Endpoint Connector 要求端点以 `/services/collector/event` 结尾。
+      Elasticsearch 的数据流要求端点以 `<stream_id>/_bulk?pretty` 结尾。
+   3. 如果你的 SIEM 系统要求填写 **Username**，输入 SIEM 用户名。
+   4. 在 **Token** 中输入 SIEM API 令牌。
+4. 选择 **Start streaming**。
 
-*（图：The 'Start streaming configuration logs' dialog. Listing several available destinations.）*
+*（图：Start streaming configuration logs 对话框，列出多个可用目标。）*
 
-Check your SIEM system to verify you are successfully streaming from your tailnet.
+请检查你的 SIEM 系统，确认已成功从 tailnet 进行流式传输。
 
 #### Amazon S3
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Start streaming**.
-3. In the **Start streaming configuration logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **AWS | S3** radio button.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming configuration logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **AWS | S3** 单选按钮。
 
-   2. **Sub-destinations**: Select the **Amazon S3** radio button.
+   2. **Sub-destinations**：选择 **Amazon S3** 单选按钮。
 
-   3. **Region**: Enter AWS region where S3 bucket is located. For a list of available AWS regions, refer to [AWS service endpoints][xt-aws-regions].
+   3. **Region**：输入 S3 存储桶所在的 AWS 区域。可用 AWS 区域列表参见 [AWS service endpoints][xt-aws-regions]。
 
-   4. **Bucket**: Enter the S3 bucket name where you want to upload logs.
+   4. **Bucket**：输入要上传日志的 S3 存储桶名称。
 
-   5. **Compression**: Select `none`, `zstd`, or `gzip`. The default compression method is `zstd`.
+   5. **Compression**：选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
 
-   6. **Upload period**: Enter how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
+   6. **Upload period**：输入上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
 
-   7. (Optional) **Object key prefix** : Enter the S3 object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce S3 object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same S3 bucket, with the ability to separate the data.
+   7. （可选）**Object key prefix**：输入用作文件名前缀的 S3 对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的 S3 对象键。这样你可以把审计日志和网络日志上传到同一个 S3 存储桶，同时能区分数据。
 
-   8. **Role ARN**: Enter the Amazon Resource Name (ARN). This grants your tailnet access to write to your S3 bucket. For more information, refer to [Access to AWS accounts owned by third parties][xt-aws-arn].
+   8. **Role ARN**：输入 Amazon Resource Name（ARN）。这会授予你的 tailnet 向你的 S3 存储桶写入的权限。更多信息参见 [Access to AWS accounts owned by third parties][xt-aws-arn]。
 
-   9. **Required IAM trust policy**: Copy and edit the generated details into an existing [AWS role trust policy][xt-aws-trust-policy] or create a new trust policy from the [AWS IAM console][xt-aws-iam-console]. The provided `Principal` and `Condition` string values are unique to your integration and must be added as displayed.
+   9. **Required IAM trust policy**：复制生成的详细信息并编辑到现有的 [AWS 角色信任策略][xt-aws-trust-policy]中，或在 [AWS IAM 控制台][xt-aws-iam-console]中创建新的信任策略。所提供的 `Principal` 和 `Condition` 字符串值是你的集成独有的，必须按显示原样添加。
 
-      The following is an example of a trust policy showing you where to add these details and the formatting to use.
+      以下信任策略示例展示了把这些详细信息添加到哪里以及应采用的格式。
 
       ```json
       {
@@ -135,9 +134,9 @@ Check your SIEM system to verify you are successfully streaming from your tailne
       }
       ```
 
-   10. Add an [AWS role permission policy][xt-aws-permission-policy] from the [AWS IAM console][xt-aws-iam-console] to allow objects to be sent to your S3 bucket.
+   10. 在 [AWS IAM 控制台][xt-aws-iam-console]中添加一条 [AWS 角色权限策略][xt-aws-permission-policy]，允许向你的 S3 存储桶发送对象。
 
-       The following is an example of a permission policy showing you where to add these details and the formatting to use.
+       以下权限策略示例展示了把这些详细信息添加到哪里以及应采用的格式。
 
        ```json
        {
@@ -152,48 +151,48 @@ Check your SIEM system to verify you are successfully streaming from your tailne
        }
        ```
 
-   11. In the **Start streaming configuration logs** dialog of the admin console, select **Start streaming**.
-4. Check your S3 monitoring tools to verify you are successfully streaming configuration audit logs from your tailnet to your S3 bucket.
+   11. 在管理控制台的 **Start streaming configuration logs** 对话框中，选择 **Start streaming**。
+4. 检查你的 S3 监控工具，确认已成功把配置审计日志从 tailnet 流式传输到你的 S3 存储桶。
 
-It is expected behavior for Amazon S3 integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Amazon S3 集成会生成一个空文件，这是预期行为。
 
-#### S3-compatible
+#### S3 兼容服务
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Start streaming**.
-3. In the **Start streaming configuration logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **AWS | S3** radio button.
-   2. **Sub-destinations**: Select the **S3 compatible service** radio button.
-   3. **URL**: Enter the API endpoint for the S3-compatible service you are using to indicate where to send requests.
-   4. **Bucket**: Enter the bucket where you want to upload logs. You can use the tailnet DNS name for the S3 bucket if it is added to your tailnet.
-   5. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   6. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
-   7. (Optional) **Object key prefix** : Enter the object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same bucket, with the ability to separate the data.
-   8. (Optional) **Region**: Enter the region where the bucket is located if your S3-compatible service requires a region to be specified.
-   9. **Access key ID**: Enter the access key ID provided by the S3-compatible service you are using.
-   10. **Secret access key**: Enter the secret access key provided by the S3-compatible service you are using.
-   11. Select **Start streaming**.
-4. Check your monitoring tools to verify you are successfully streaming configuration audit logs from your tailnet to your S3-compatible bucket.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming configuration logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **AWS | S3** 单选按钮。
+   2. **Sub-destinations**：选择 **S3 compatible service** 单选按钮。
+   3. **URL**：输入你所使用的 S3 兼容服务的 API 端点，指明请求发送到哪里。
+   4. **Bucket**：输入要上传日志的存储桶。如果 tailnet DNS 名称已添加到你的 tailnet，你可以将其用作 S3 存储桶。
+   5. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   6. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
+   7. （可选）**Object key prefix**：输入用作文件名前缀的对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的对象键。这样你可以把审计日志和网络日志上传到同一个存储桶，同时能区分数据。
+   8. （可选）**Region**：如果你的 S3 兼容服务要求指定区域，输入存储桶所在区域。
+   9. **Access key ID**：输入你所使用的 S3 兼容服务提供的访问密钥 ID。
+   10. **Secret access key**：输入你所使用的 S3 兼容服务提供的秘密访问密钥。
+   11. 选择 **Start streaming**。
+4. 检查你的监控工具，确认已成功把配置审计日志从 tailnet 流式传输到你的 S3 兼容存储桶。
 
-It is expected behavior for S3-compatible integrations to generate an empty file when there is no data to send.
+没有数据可发送时，S3 兼容集成会生成一个空文件，这是预期行为。
 
 #### Google Cloud Storage
 
-#### Google Cloud Storage prerequisites for configuration log streaming
+#### 配置日志流式传输的 Google Cloud Storage 前提条件
 
-Before you configure log settings in the Tailscale admin console, you must first [create a Google service account][xt-google-cloud-iam-service-account] and [configure workload identity federation with AWS or Azure VMs][xt-google-cloud-iam-aws-azure] for AWS.
+在 Tailscale 管理控制台配置日志设置之前，你必须先[创建 Google 服务账户][xt-google-cloud-iam-service-account]，并为 AWS [配置与 AWS 或 Azure 虚拟机的工作负载身份联合][xt-google-cloud-iam-aws-azure]。
 
-When following the ["Add a workload identity pool provider" steps][xt-google-cloud-iam-aws-azure-provider], you must set the `account-id` attribute to:
+按照["Add a workload identity pool provider"步骤][xt-google-cloud-iam-aws-azure-provider]操作时，必须把 `account-id` 属性设置为：
 
 ```
 891612552178
 ```
 
-Examples
+示例
 
-1. Create a service account.
+1. 创建服务账户。
 
-   Example:
+   示例：
 
    ```
    <tailnet-uploader>
@@ -203,11 +202,11 @@ Examples
    <tailnet-uploader>@<project>.iam.gserviceaccount.com
    ```
 
-   Assigning the [`storage.objectCreator`][xt-google-cloud-iam-objectcreator-role] role to the service account is recommended.
+   建议为服务账户分配 [`storage.objectCreator`][xt-google-cloud-iam-objectcreator-role] 角色。
 
-2. Create a new workload identity pool.
+2. 创建新的工作负载身份池。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam workload-identity-pools create <tailnet-logstreaming-pool> \
@@ -215,9 +214,9 @@ Examples
      --display-name="Logstreaming Pool"
    ```
 
-3. Add Tailscale's public workload identity pool provider.
+3. 添加 Tailscale 的公共工作负载身份池提供方。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam workload-identity-pools providers create-aws <tailnet-aws-provider> \
@@ -227,9 +226,9 @@ Examples
      --display-name="AWS provider for logstreaming"
    ```
 
-4. Authenticate a workload.
+4. 为工作负载认证。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding \
@@ -238,132 +237,132 @@ Examples
      --member="principalSet://iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<tailnet-logstreaming-pool>/*"
    ```
 
-#### Google Cloud Storage steps for configuration log streaming
+#### 配置日志流式传输的 Google Cloud Storage 步骤
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. Select **Start streaming**.
-3. In the **Start streaming configuration logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **Google Cloud** radio button.
-   2. **Bucket**: Enter the GCS bucket where you want to upload logs. You can use the tailnet DNS name for the GCS bucket if it is added to your tailnet.
-   3. (Optional) **Object key prefix** : Enter the object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same bucket, with the ability to separate the data.
-   4. **Scopes**: Specify comma-separated [authorization scopes][xt-google-cloud-auth-scopes]. For security, only grant the minimal amount of permissions (`https://www.googleapis.com/auth/devstorage.write_only`).
-   5. **Config file content**: Follow the ["Download or create a credential configuration" steps][xt-google-cloud-iam-aws-azure-config] and provide it here.
-   6. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   7. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
-   8. Select **Start streaming**.
-4. Check your monitoring tools to verify you are successfully streaming configuration audit logs from your tailnet to your GCS bucket.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming configuration logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **Google Cloud** 单选按钮。
+   2. **Bucket**：输入要上传日志的 GCS 存储桶。如果 tailnet DNS 名称已添加到你的 tailnet，你可以将其用作 GCS 存储桶。
+   3. （可选）**Object key prefix**：输入用作文件名前缀的对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的对象键。这样你可以把审计日志和网络日志上传到同一个存储桶，同时能区分数据。
+   4. **Scopes**：指定以逗号分隔的[授权范围][xt-google-cloud-auth-scopes]。出于安全考虑，只授予最小权限（`https://www.googleapis.com/auth/devstorage.write_only`）。
+   5. **Config file content**：按照["Download or create a credential configuration"步骤][xt-google-cloud-iam-aws-azure-config]操作，并在此处提供配置文件内容。
+   6. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   7. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
+   8. 选择 **Start streaming**。
+4. 检查你的监控工具，确认已成功把配置审计日志从 tailnet 流式传输到你的 GCS 存储桶。
 
-It is expected behavior for Google Cloud Storage integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Google Cloud Storage 集成会生成一个空文件，这是预期行为。
 
 #### Azure Blob Storage
 
-#### Azure Blob Storage prerequisites for configuration log streaming
+#### 配置日志流式传输的 Azure Blob Storage 前提条件
 
-Before you configure log settings in the Tailscale admin console, you must first [create an Azure storage account][xt-azure-storage-account] and container, [register an application][xt-azure-register-app], add the [federated credentials][xt-azure-federated-identity], and [grant write access][xt-azure-rbac].
+在 Tailscale 管理控制台配置日志设置之前，你必须先[创建 Azure 存储账户][xt-azure-storage-account]和容器、[注册应用程序][xt-azure-register-app]、添加[联合凭证][xt-azure-federated-identity]，并[授予写入访问权限][xt-azure-rbac]。
 
-This can be achieved through the [Azure Portal][xt-azure-portal] (web interface) or the [Azure CLI][xt-azure-cli] (command line interface). Only one prerequisite is required.
+这可以通过 [Azure Portal][xt-azure-portal]（网页界面）或 [Azure CLI][xt-azure-cli]（命令行界面）完成，只需其中一种即可。
 
-##### Azure Blob Storage prerequisites for configuration log streaming (Azure Portal)
+##### 配置日志流式传输的 Azure Blob Storage 前提条件（Azure Portal）
 
-Azure Portal prerequisites
+Azure Portal 前提条件
 
-**Register an application**
+**注册应用程序**
 
-1. Log in to the Microsoft Entra admin center.
-2. Select **App registrations**.
-3. Select **New registration**. You will be directed to a **Register an application** page.
-   1. Create an application **Name**. For example, `tailscale-logstreaming-writer`. This will be used later as a member for your storage account.
-   2. Select **Register**. You will be directed to an **Overview** page for your new application.
-4. Make a note of the **Application (client) ID**. This will be used later as your **Client ID** value.
-5. Make a note of the **Directory (tenant) ID**. This will be used later as your **Tenant ID** value.
+1. 登录 Microsoft Entra 管理中心。
+2. 选择 **App registrations**。
+3. 选择 **New registration**。你会进入 **Register an application** 页面。
+   1. 创建应用程序 **Name**。例如 `tailscale-logstreaming-writer`。之后它会作为成员用于你的存储账户。
+   2. 选择 **Register**。你会进入新应用程序的 **Overview** 页面。
+4. 记下 **Application (client) ID**。之后它将作为你的 **Client ID** 值。
+5. 记下 **Directory (tenant) ID**。之后它将作为你的 **Tenant ID** 值。
 
-**Add the federated credential**
+**添加联合凭证**
 
-While still on the Microsoft Entra admin center and on the application **Overview** page:
+仍在 Microsoft Entra 管理中心的应用程序 **Overview** 页面上：
 
-1. Select **Certificates & secrets**.
-2. Select **Federated credentials**.
-3. Select **Add credential**. You will be directed to a **Add a credential** page.
-   1. Set **Federated credential scenario** to **Other issuer**.
+1. 选择 **Certificates & secrets**。
+2. 选择 **Federated credentials**。
+3. 选择 **Add credential**。你会进入 **Add a credential** 页面。
+   1. 将 **Federated credential scenario** 设为 **Other issuer**。
 
-   2. Set **Issuer** (Issuer URL):
+   2. 设置 **Issuer**（颁发者 URL）：
 
       ```
       https://a1917ce1-d85b-43b8-9ceb-068c49979384.tokens.sts.global.api.aws
       ```
 
-   3. Set **Value** (Subject):
+   3. 设置 **Value**（主题）：
 
       ```
       arn:aws:iam::891612552178:role/LogstreamPublisherS3WriterRole
       ```
 
-   4. Set **Name**. For example: `tailscale-aws-federation`.
+   4. 设置 **Name**。例如：`tailscale-aws-federation`。
 
-   5. Ensure **Audience** uses `api://AzureADTokenExchange`.
+   5. 确保 **Audience** 使用 `api://AzureADTokenExchange`。
 
-   6. Select **Add**.
+   6. 选择 **Add**。
 
-**Create a storage account**
+**创建存储账户**
 
-1. Log in to the Azure Portal.
-2. Use the **Create a resource** navigation and select **Storage accounts**.
-3. Select **Create**. You will be directed to a **Create a storage account** page.
-   1. Select the appropriate **Subscription**.
-   2. Create a new or select an example **Resource group**. For example: `tailscale-logstreaming`.
-   3. Create a new **Storage account name**. For example: `tailscalelogstorage`.
-   4. Set a **Region**. For example: **(US) West US 2**.
-   5. Set **Performance**. The **Standard** option is recommended.
-   6. Set **Primary service**. The **Azure Blob Storage or Azure Data Lake Storage** option is valid.
-   7. Set **Redundancy**. The **Geo-redundant storage (GRS)** and **Make read access to data available in the event of regional unavailability** options are recommended.
-   8. Select **Review + create**.
-4. Select **Create**.
-5. Select **Data storage**
-6. Select **Containers**.
-7. Select **Add container**
-   1. Set a container **Name**. For example: `tailscale-logs`. This will be used later as your **Container name** value.
-   2. Select **Create**.
-8. Select **Settings**.
-9. Select **Endpoints**.
-10. Make a note of the **Blob service**. This will be used later as your **Storage account URL** value.
+1. 登录 Azure Portal。
+2. 使用 **Create a resource** 导航并选择 **Storage accounts**。
+3. 选择 **Create**。你会进入 **Create a storage account** 页面。
+   1. 选择合适的 **Subscription**。
+   2. 新建或选择示例 **Resource group**。例如：`tailscale-logstreaming`。
+   3. 新建 **Storage account name**。例如：`tailscalelogstorage`。
+   4. 设置 **Region**。例如：**(US) West US 2**。
+   5. 设置 **Performance**。推荐 **Standard** 选项。
+   6. 设置 **Primary service**。**Azure Blob Storage or Azure Data Lake Storage** 选项有效。
+   7. 设置 **Redundancy**。推荐 **Geo-redundant storage (GRS)** 和 **Make read access to data available in the event of regional unavailability** 选项。
+   8. 选择 **Review + create**。
+4. 选择 **Create**。
+5. 选择 **Data storage**
+6. 选择 **Containers**。
+7. 选择 **Add container**
+   1. 设置容器 **Name**。例如：`tailscale-logs`。之后它将作为你的 **Container name** 值。
+   2. 选择 **Create**。
+8. 选择 **Settings**。
+9. 选择 **Endpoints**。
+10. 记下 **Blob service**。之后它将作为你的 **Storage account URL** 值。
 
-**Grant write access (RBAC)**
+**授予写入访问权限（RBAC）**
 
-While still on the Azure Portal and on the account **Overview** page:
+仍在 Azure Portal 的账户 **Overview** 页面上：
 
-1. Select **Access Control (IAM)**. This will open the **Access Control** pane.
-2. Select **Add**.
-3. Select **Add role assignment**. You will be redirected to the **Add role assignment** page.
-   1. Under **Job function roles**, filter the roles for **Storage Blob Data Contributor**.
-   2. Select **Storage Blob Data Contributor**.
-   3. Select **Next**. You will be directed to the **Members** pane.
-      1. Set **Assign access to** to **User, group, or service principal**.
-      2. Select **Select members**.
-         1. Filter the members for the application you created earlier. For example: `tailscale-logstreaming-writer`.
-         2. Select your application.
-         3. Select **Select**.
-      3. Select **Review + assign**.
+1. 选择 **Access Control (IAM)**。这会打开 **Access Control** 窗格。
+2. 选择 **Add**。
+3. 选择 **Add role assignment**。你会被重定向到 **Add role assignment** 页面。
+   1. 在 **Job function roles** 下，将角色筛选为 **Storage Blob Data Contributor**。
+   2. 选择 **Storage Blob Data Contributor**。
+   3. 选择 **Next**。你会进入 **Members** 窗格。
+      1. 将 **Assign access to** 设为 **User, group, or service principal**。
+      2. 选择 **Select members**。
+         1. 将成员筛选为你之前创建的应用程序。例如：`tailscale-logstreaming-writer`。
+         2. 选择你的应用程序。
+         3. 选择 **Select**。
+      3. 选择 **Review + assign**。
 
-##### Azure Blob Storage prerequisites for configuration log streaming (Azure CLI)
+##### 配置日志流式传输的 Azure Blob Storage 前提条件（Azure CLI）
 
-Azure CLI prerequisites
+Azure CLI 前提条件
 
-1. Sign in with Azure CLI.
+1. 使用 Azure CLI 登录。
 
    ```shell
    az login
    ```
 
-2. Define custom configuration values.
+2. 定义自定义配置值。
 
-   You must use these values to use Tailscale federated credentials:
+   要使用 Tailscale 联合凭证，必须使用以下值：
 
    ```shell
    TAILSCALE_ISSUER="https://a1917ce1-d85b-43b8-9ceb-068c49979384.tokens.sts.global.api.aws"
    TAILSCALE_SUBJECT="arn:aws:iam::891612552178:role/LogstreamPublisherS3WriterRole"
    ```
 
-   Here are some example values that will be used by the other steps. You can customize these to suit your needs.
+   以下示例值将用于其他步骤。你可以根据需要自定义。
 
    ```shell
    LOCATION="westus2"
@@ -373,7 +372,7 @@ Azure CLI prerequisites
    APP_NAME="tailscale-logstreaming-writer"
    ```
 
-3. Register an application.
+3. 注册应用程序。
 
    ```shell
    APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
@@ -383,7 +382,7 @@ Azure CLI prerequisites
    TENANT_ID=$(az account show --query tenantId -o tsv)
    ```
 
-4. Add the federated credential.
+4. 添加联合凭证。
 
    ```shell
    az ad app federated-credential create \
@@ -396,7 +395,7 @@ Azure CLI prerequisites
      }"
    ```
 
-5. Create a storage account and container.
+5. 创建存储账户和容器。
 
    ```shell
    az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
@@ -409,7 +408,7 @@ Azure CLI prerequisites
      --name "$CONTAINER_NAME" --account-name "$STORAGE_ACCOUNT" --auth-mode login
    ```
 
-6. Grant write access (RBAC).
+6. 授予写入访问权限（RBAC）。
 
    ```shell
    SUB_ID=$(az account show --query id -o tsv)
@@ -423,9 +422,9 @@ Azure CLI prerequisites
      --scope "$SCOPE"
    ```
 
-   To grant access at the whole storage account level instead of a single container, drop the `/blobServices/default/containers/${CONTAINER_NAME}` suffix from `$SCOPE`. Container-level scope is the recommended default, since it grants Tailscale the least privilege necessary.
+   要在整个存储账户级别而非单个容器级别授予权限，从 `$SCOPE` 中去掉 `/blobServices/default/containers/${CONTAINER_NAME}` 后缀即可。推荐默认使用容器级范围，因为它授予 Tailscale 的权限最小。
 
-7. Export values to enter in the Tailscale admin console.
+7. 导出需要填入 Tailscale 管理控制台的值。
 
    ```shell
    echo "ContainerName     = ${CONTAINER_NAME}"
@@ -434,96 +433,95 @@ Azure CLI prerequisites
    echo "StorageAccountURL = https://${STORAGE_ACCOUNT}.blob.core.windows.net"
    ```
 
-#### Azure Blob Storage steps for configuration log streaming
+#### 配置日志流式传输的 Azure Blob Storage 步骤
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the Tailscale admin console.
-2. Select **Start streaming**.
-3. In the **Start streaming configuration logs** screen, enter the following information:
-   1. **Select a destination**: Select the **Azure** radio button.
-   2. **Container name**: This is the name of your Azure container that you created in the prerequisites. It should resemble a string of 3-63 lowercase alphanumeric and hyphen characters.
-   3. (Optional) **Key prefix**: Enter the object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same container, with the ability to separate the data.
-   4. **Tenant ID**: This is the **Directory (tenant) ID** (or `tenantId`) after registering your app in the prerequisites. It should resemble a string of lowercase alphanumeric and hyphen characters.
-   5. **Client ID**: This is the **Application (client) ID** (or `id`) after registering your app in the prerequisites. It should resemble a string of lowercase alphanumeric and hyphen characters.
-   6. **Storage account URL**: This is the account's blob endpoint (based off the account name). It should resemble: `https://<storage-account>.blob.core.windows.net`.
-   7. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   8. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute. You can specify between 1 minute and 24 hours.
-   9. Select **Start streaming**.
-4. Check your monitoring tools to verify you are successfully streaming configuration audit logs from your tailnet to your Azure container.
+1. 打开 Tailscale 管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming configuration logs** 界面中输入以下信息：
+   1. **Select a destination**：选择 **Azure** 单选按钮。
+   2. **Container name**：这是你在前提条件中创建的 Azure 容器名称。应为 3-63 个小写字母、数字和连字符组成的字符串。
+   3. （可选）**Key prefix**：输入用作文件名前缀的对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的对象键。这样你可以把审计日志和网络日志上传到同一个容器，同时能区分数据。
+   4. **Tenant ID**：这是你在前提条件中注册应用后的 **Directory (tenant) ID**（或 `tenantId`）。应为小写字母、数字和连字符组成的字符串。
+   5. **Client ID**：这是你在前提条件中注册应用后的 **Application (client) ID**（或 `id`）。应为小写字母、数字和连字符组成的字符串。
+   6. **Storage account URL**：这是账户的 blob 端点（基于账户名）。应形如：`https://<storage-account>.blob.core.windows.net`。
+   7. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   8. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟。可选范围为 1 分钟到 24 小时。
+   9. 选择 **Start streaming**。
+4. 检查你的监控工具，确认已成功把配置审计日志从 tailnet 流式传输到你的 Azure 容器。
 
-It is expected behavior for Azure Blob Storage integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Azure Blob Storage 集成会生成一个空文件，这是预期行为。
 
-> **Note:**
+> **注意：**
 >
-> Depending on network conditions, there may be a delay before log streaming appears in your third-party tools.
+> 受网络状况影响，日志流式传输的内容可能会延迟出现在你的第三方工具中。
 
-### Edit a configuration log streaming destination
+### 编辑配置日志流式传输目标
 
-You can change the information for passing your logs to your preferred streaming destination.
+你可以更改向首选流式传输目标传递日志的信息。
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. For the system that you want to update, select the **Action** dropdown, then select **Edit**.
-3. Update the values as needed.
-4. Select **Save changes**.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 对于要更新的系统，选择 **Action** 下拉框，然后选择 **Edit**。
+3. 按需更新各项值。
+4. 选择 **Save changes**。
 
-> **Note:**
+> **注意：**
 >
-> If you are editing a log streaming destination for an Amazon S3 bucket, you can update the **Role ARN** field (the Amazon resource name) if the resource name already belongs to the specified AWS account. If the role does not belong to the AWS account, you must delete the log streaming destination in the admin console and create a new one.
+> 如果你在编辑 Amazon S3 存储桶的日志流式传输目标，当资源名称已属于指定的 AWS 账户时，你可以更新 **Role ARN** 字段（Amazon 资源名称）。如果该角色不属于该 AWS 账户，则必须在管理控制台中删除该日志流式传输目标并重新创建。
 
-### Delete a configuration log streaming destination
+### 删除配置日志流式传输目标
 
-1. Open the [Configuration logs](https://console.tailscale.com/admin/logs) page of the admin console.
-2. For the integration that you want to delete, select the **Action** dropdown, then select **Delete**.
-3. In the confirmation dialog, select **Delete**.
+1. 打开管理控制台的 [Configuration logs](https://console.tailscale.com/admin/logs) 页面。
+2. 对于要删除的集成，选择 **Action** 下拉框，然后选择 **Delete**。
+3. 在确认对话框中选择 **Delete**。
 
-## Network log streaming
+## 网络日志流式传输
 
-Network log streaming lets you export network flow logs from your tailnet to external monitoring, storage, and analytics platforms. The following procedures explain how to configure, update, and remove destinations for streamed network flow logs.
+网络日志流式传输让你可以把 tailnet 的网络流日志导出到外部监控、存储和分析平台。以下流程说明如何配置、更新和移除网络流日志的流式传输目标。
 
-### Add a network log streaming destination
+### 添加网络日志流式传输目标
 
-#### SIEM integrations
+#### SIEM 集成
 
-1. If you haven't already, [enable Network flow logs][docs-network-flow-logs-enable] for your tailnet.
-2. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-3. Select **Start streaming**.
-4. In the **Start streaming network logs** dialog:
-   1. Select a SIEM destination.
-   2. For **URL**, enter your SIEM endpoint. The endpoint URL must use the HTTPS protocol, and there
-      is no restriction on which port is used.
-      Splunk's HTTP Endpoint Connectors require an endpoint ending with `/services/collector/event`.
-      Elasticsearch's data stream endpoints end with `<stream_id>/_bulk?pretty`.
-   3. If your SIEM system requires a value for **Username**, enter the SIEM username.
-   4. For **Token**, enter the SIEM API token.
-5. Select **Start streaming**.
+1. 如果尚未启用，先为你的 tailnet [启用网络流日志][docs-network-flow-logs-enable]。
+2. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+3. 选择 **Start streaming**。
+4. 在 **Start streaming network logs** 对话框中：
+   1. 选择一个 SIEM 目标。
+   2. 在 **URL** 中输入你的 SIEM 端点。端点 URL 必须使用 HTTPS 协议，端口不限。
+      Splunk 的 HTTP Endpoint Connector 要求端点以 `/services/collector/event` 结尾。
+      Elasticsearch 的数据流端点以 `<stream_id>/_bulk?pretty` 结尾。
+   3. 如果你的 SIEM 系统要求填写 **Username**，输入 SIEM 用户名。
+   4. 在 **Token** 中输入 SIEM API 令牌。
+5. 选择 **Start streaming**。
 
-*（图：The 'Start streaming network logs' dialog. Listing several available destinations.）*
+*（图：Start streaming network logs 对话框，列出多个可用目标。）*
 
-Check your SIEM system to verify you are successfully streaming from your tailnet.
+请检查你的 SIEM 系统，确认已成功从 tailnet 进行流式传输。
 
 #### Amazon S3
 
-1. Make sure you have [network flow logs enabled][docs-network-flow-logs-enable] for your tailnet.
-2. Select **Start streaming**.
-3. In the **Start streaming network logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **AWS | S3** radio button.
+1. 确保你的 tailnet 已[启用网络流日志][docs-network-flow-logs-enable]。
+2. 选择 **Start streaming**。
+3. 在 **Start streaming network logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **AWS | S3** 单选按钮。
 
-   2. **Sub-destinations**: Select the **Amazon S3** radio button.
+   2. **Sub-destinations**：选择 **Amazon S3** 单选按钮。
 
-   3. **Region**: Enter AWS region where S3 bucket is located. For a list of available AWS regions, refer to [AWS service endpoints][xt-aws-regions].
+   3. **Region**：输入 S3 存储桶所在的 AWS 区域。可用 AWS 区域列表参见 [AWS service endpoints][xt-aws-regions]。
 
-   4. **Bucket**: Enter the S3 bucket name where you want to upload logs.
+   4. **Bucket**：输入要上传日志的 S3 存储桶名称。
 
-   5. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
+   5. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
 
-   6. **Upload period**: Enter how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
+   6. **Upload period**：输入上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
 
-   7. (Optional) **Object key prefix** : Enter the S3 object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce S3 object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same S3 bucket, with the ability to separate the data.
+   7. （可选）**Object key prefix**：输入用作文件名前缀的 S3 对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的 S3 对象键。这样你可以把审计日志和网络日志上传到同一个 S3 存储桶，同时能区分数据。
 
-   8. **Role ARN**: Enter the Amazon Resource Name (ARN). This grants your tailnet access to write to your S3 bucket. For more information, refer to [Access to AWS accounts owned by third parties][xt-aws-arn].
+   8. **Role ARN**：输入 Amazon Resource Name（ARN）。这会授予你的 tailnet 向你的 S3 存储桶写入的权限。更多信息参见 [Access to AWS accounts owned by third parties][xt-aws-arn]。
 
-   9. **Required IAM trust policy**: Copy and edit the generated details into an existing [AWS role trust policy][xt-aws-trust-policy] or create a new trust policy from the [AWS IAM console][xt-aws-iam-console]. The provided `Principal` and `Condition` string values are unique to your integration and must be added as displayed.
+   9. **Required IAM trust policy**：复制生成的详细信息并编辑到现有的 [AWS 角色信任策略][xt-aws-trust-policy]中，或在 [AWS IAM 控制台][xt-aws-iam-console]中创建新的信任策略。所提供的 `Principal` 和 `Condition` 字符串值是你的集成独有的，必须按显示原样添加。
 
-      The following is an example of a trust policy showing you where to add these details and the formatting to use.
+      以下信任策略示例展示了把这些详细信息添加到哪里以及应采用的格式。
 
       ```json
       {
@@ -545,9 +543,9 @@ Check your SIEM system to verify you are successfully streaming from your tailne
       }
       ```
 
-   10. Add an [AWS role permission policy][xt-aws-permission-policy] from the [AWS IAM console][xt-aws-iam-console] to allow objects to be sent to your S3 bucket.
+   10. 在 [AWS IAM 控制台][xt-aws-iam-console]中添加一条 [AWS 角色权限策略][xt-aws-permission-policy]，允许向你的 S3 存储桶发送对象。
 
-       The following is an example of a permission policy showing you where to add these details and the formatting to use.
+       以下权限策略示例展示了把这些详细信息添加到哪里以及应采用的格式。
 
        ```json
        {
@@ -562,48 +560,48 @@ Check your SIEM system to verify you are successfully streaming from your tailne
        }
        ```
 
-   11. In the **Start streaming configuration logs** dialog of the admin console, select **Start streaming**.
-4. Check your S3 monitoring tools to verify you are successfully streaming network flow logs from your tailnet to your S3 bucket.
+   11. 在管理控制台的 **Start streaming configuration logs** 对话框中，选择 **Start streaming**。
+4. 检查你的 S3 监控工具，确认已成功把网络流日志从 tailnet 流式传输到你的 S3 存储桶。
 
-It is expected behavior for Amazon S3 integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Amazon S3 集成会生成一个空文件，这是预期行为。
 
-#### S3-compatible
+#### S3 兼容服务
 
-1. Make sure you have [network flow logs enabled][docs-network-flow-logs-enable] for your tailnet.
-2. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-3. In the **Start streaming network logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **AWS | S3** radio button.
-   2. **Sub-destinations**: Select the **S3 compatible service** radio button.
-   3. **URL**: Enter the API endpoint for the S3-compatible service you are using to indicate where to send requests.
-   4. **Bucket**: Enter the S3 bucket name where you want to upload logs.
-   5. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   6. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
-   7. (Optional) **Object key prefix** : Enter the S3 object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce S3 object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same S3 bucket, with the ability to separate the data.
-   8. (Optional) **Region**: Enter the region where the bucket is located if your S3-compatible service requires a region to be specified.
-   9. **Access key ID**: Enter the access key ID provided by the S3-compatible service you are using.
-   10. **Secret access key**: Enter the secret access key provided by the S3-compatible service you are using.
-   11. Select **Start streaming**.
-4. Check your S3 monitoring tools to verify you are successfully streaming network flow logs from your tailnet to your S3-compatible bucket.
+1. 确保你的 tailnet 已[启用网络流日志][docs-network-flow-logs-enable]。
+2. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+3. 在 **Start streaming network logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **AWS | S3** 单选按钮。
+   2. **Sub-destinations**：选择 **S3 compatible service** 单选按钮。
+   3. **URL**：输入你所使用的 S3 兼容服务的 API 端点，指明请求发送到哪里。
+   4. **Bucket**：输入要上传日志的 S3 存储桶名称。
+   5. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   6. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
+   7. （可选）**Object key prefix**：输入用作文件名前缀的 S3 对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的 S3 对象键。这样你可以把审计日志和网络日志上传到同一个 S3 存储桶，同时能区分数据。
+   8. （可选）**Region**：如果你的 S3 兼容服务要求指定区域，输入存储桶所在区域。
+   9. **Access key ID**：输入你所使用的 S3 兼容服务提供的访问密钥 ID。
+   10. **Secret access key**：输入你所使用的 S3 兼容服务提供的秘密访问密钥。
+   11. 选择 **Start streaming**。
+4. 检查你的 S3 监控工具，确认已成功把网络流日志从 tailnet 流式传输到你的 S3 兼容存储桶。
 
-It is expected behavior for S3-compatible integrations to generate an empty file when there is no data to send.
+没有数据可发送时，S3 兼容集成会生成一个空文件，这是预期行为。
 
 #### Google Cloud Storage
 
-#### Google Cloud Storage prerequisites for network log streaming
+#### 网络日志流式传输的 Google Cloud Storage 前提条件
 
-Before you configure log settings in the Tailscale admin console, you must first [create a Google service account][xt-google-cloud-iam-service-account] and [configure workload identity federation with AWS or Azure VMs][xt-google-cloud-iam-aws-azure] for AWS.
+在 Tailscale 管理控制台配置日志设置之前，你必须先[创建 Google 服务账户][xt-google-cloud-iam-service-account]，并为 AWS [配置与 AWS 或 Azure 虚拟机的工作负载身份联合][xt-google-cloud-iam-aws-azure]。
 
-When following the ["Add a workload identity pool provider" steps][xt-google-cloud-iam-aws-azure-provider], you must set the `account-id` attribute to:
+按照["Add a workload identity pool provider"步骤][xt-google-cloud-iam-aws-azure-provider]操作时，必须把 `account-id` 属性设置为：
 
 ```
 891612552178
 ```
 
-Examples
+示例
 
-1. Create a service account.
+1. 创建服务账户。
 
-   Example:
+   示例：
 
    ```
    <tailnet-uploader>
@@ -613,11 +611,11 @@ Examples
    <tailnet-uploader>@<project>.iam.gserviceaccount.com
    ```
 
-   Assigning the [`storage.objectCreator`][xt-google-cloud-iam-objectcreator-role] role to the service account is recommended.
+   建议为服务账户分配 [`storage.objectCreator`][xt-google-cloud-iam-objectcreator-role] 角色。
 
-2. Create a new workload identity pool.
+2. 创建新的工作负载身份池。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam workload-identity-pools create <tailnet-logstreaming-pool> \
@@ -625,9 +623,9 @@ Examples
      --display-name="Logstreaming Pool"
    ```
 
-3. Add Tailscale's public workload identity pool provider.
+3. 添加 Tailscale 的公共工作负载身份池提供方。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam workload-identity-pools providers create-aws <tailnet-aws-provider> \
@@ -637,9 +635,9 @@ Examples
      --display-name="AWS provider for logstreaming"
    ```
 
-4. Authenticate a workload.
+4. 为工作负载认证。
 
-   Example:
+   示例：
 
    ```shell
    gcloud iam service-accounts add-iam-policy-binding \
@@ -648,133 +646,133 @@ Examples
      --member="principalSet://iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<tailnet-logstreaming-pool>/*"
    ```
 
-#### Google Cloud Storage steps for network log streaming
+#### 网络日志流式传输的 Google Cloud Storage 步骤
 
-1. Make sure you have [network flow logs enabled][docs-network-flow-logs-enable] for your tailnet.
-2. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-3. Select **Start streaming**.
-4. In the **Start streaming network logs** dialog, enter the following information:
-   1. **Select a destination**: Select the **Google Cloud** radio button.
-   2. **Bucket**: Enter the GCS bucket where you want to upload logs. You can use the tailnet DNS name for the GCS bucket if it is added to your tailnet.
-   3. (Optional) **Object key prefix** : Enter the object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same bucket, with the ability to separate the data.
-   4. **Scopes:** Specify comma-separated [authorization scopes][xt-google-cloud-auth-scopes]. For security, only grant the minimal amount of permissions (`https://www.googleapis.com/auth/devstorage.write_only`).
-   5. **Config file content**: Follow the ["Download or create a credential configuration" steps][xt-google-cloud-iam-aws-azure-config] and provide it here.
-   6. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   7. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute and the range you can use is between 1 minute and 24 hours.
-   8. Select **Start streaming**.
-5. Check your monitoring tools to verify you are successfully streaming network flow logs from your tailnet to your GCS bucket.
+1. 确保你的 tailnet 已[启用网络流日志][docs-network-flow-logs-enable]。
+2. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+3. 选择 **Start streaming**。
+4. 在 **Start streaming network logs** 对话框中输入以下信息：
+   1. **Select a destination**：选择 **Google Cloud** 单选按钮。
+   2. **Bucket**：输入要上传日志的 GCS 存储桶。如果 tailnet DNS 名称已添加到你的 tailnet，你可以将其用作 GCS 存储桶。
+   3. （可选）**Object key prefix**：输入用作文件名前缀的对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的对象键。这样你可以把审计日志和网络日志上传到同一个存储桶，同时能区分数据。
+   4. **Scopes:** 指定以逗号分隔的[授权范围][xt-google-cloud-auth-scopes]。出于安全考虑，只授予最小权限（`https://www.googleapis.com/auth/devstorage.write_only`）。
+   5. **Config file content**：按照["Download or create a credential configuration"步骤][xt-google-cloud-iam-aws-azure-config]操作，并在此处提供配置文件内容。
+   6. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   7. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟，可选范围为 1 分钟到 24 小时。
+   8. 选择 **Start streaming**。
+5. 检查你的监控工具，确认已成功把网络流日志从 tailnet 流式传输到你的 GCS 存储桶。
 
-It is expected behavior for Google Cloud Storage integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Google Cloud Storage 集成会生成一个空文件，这是预期行为。
 
 #### Azure Blob Storage
 
-#### Azure Blob Storage prerequisites for network log streaming
+#### 网络日志流式传输的 Azure Blob Storage 前提条件
 
-Before you configure log settings in the Tailscale admin console, you must first [create an Azure storage account][xt-azure-storage-account] and container, [register an application][xt-azure-register-app], add the [federated credentials][xt-azure-federated-identity], and [grant write access][xt-azure-rbac].
+在 Tailscale 管理控制台配置日志设置之前，你必须先[创建 Azure 存储账户][xt-azure-storage-account]和容器、[注册应用程序][xt-azure-register-app]、添加[联合凭证][xt-azure-federated-identity]，并[授予写入访问权限][xt-azure-rbac]。
 
-This can be achieved through the [Azure Portal][xt-azure-portal] (web interface) or the [Azure CLI][xt-azure-cli] (command line interface). Only one prerequisite is required.
+这可以通过 [Azure Portal][xt-azure-portal]（网页界面）或 [Azure CLI][xt-azure-cli]（命令行界面）完成，只需其中一种即可。
 
-##### Azure Blob Storage prerequisites for network log streaming (Azure Portal)
+##### 网络日志流式传输的 Azure Blob Storage 前提条件（Azure Portal）
 
-Azure Portal prerequisites
+Azure Portal 前提条件
 
-**Register an application**
+**注册应用程序**
 
-1. Log in to the Microsoft Entra admin center.
-2. Select **App registrations**.
-3. Select **New registration**. You will be directed to a **Register an application** page.
-   1. Create an application **Name**. For example, `tailscale-logstreaming-writer`. This will be used later as a member for your storage account.
-   2. Select **Register**. You will be directed to an **Overview** page for your new application.
-4. Make a note of the **Application (client) ID**. This will be used later as your **Client ID** value.
-5. Make a note of the **Directory (tenant) ID**. This will be used later as your **Tenant ID** value.
+1. 登录 Microsoft Entra 管理中心。
+2. 选择 **App registrations**。
+3. 选择 **New registration**。你会进入 **Register an application** 页面。
+   1. 创建应用程序 **Name**。例如 `tailscale-logstreaming-writer`。之后它会作为成员用于你的存储账户。
+   2. 选择 **Register**。你会进入新应用程序的 **Overview** 页面。
+4. 记下 **Application (client) ID**。之后它将作为你的 **Client ID** 值。
+5. 记下 **Directory (tenant) ID**。之后它将作为你的 **Tenant ID** 值。
 
-**Add the federated credential**
+**添加联合凭证**
 
-While still on the Microsoft Entra admin center and on the application **Overview** page:
+仍在 Microsoft Entra 管理中心的应用程序 **Overview** 页面上：
 
-1. Select **Certificates & secrets**.
-2. Select **Federated credentials**.
-3. Select **Add credential**. You will be directed to a **Add a credential** page.
-   1. Set **Federated credential scenario** to **Other issuer**.
+1. 选择 **Certificates & secrets**。
+2. 选择 **Federated credentials**。
+3. 选择 **Add credential**。你会进入 **Add a credential** 页面。
+   1. 将 **Federated credential scenario** 设为 **Other issuer**。
 
-   2. Set **Issuer** (Issuer URL):
+   2. 设置 **Issuer**（颁发者 URL）：
 
       ```
       https://a1917ce1-d85b-43b8-9ceb-068c49979384.tokens.sts.global.api.aws
       ```
 
-   3. Set **Value** (Subject):
+   3. 设置 **Value**（主题）：
 
       ```
       arn:aws:iam::891612552178:role/LogstreamPublisherS3WriterRole
       ```
 
-   4. Set **Name**. For example: `tailscale-aws-federation`.
+   4. 设置 **Name**。例如：`tailscale-aws-federation`。
 
-   5. Ensure **Audience** uses `api://AzureADTokenExchange`.
+   5. 确保 **Audience** 使用 `api://AzureADTokenExchange`。
 
-   6. Select **Add**.
+   6. 选择 **Add**。
 
-**Create a storage account**
+**创建存储账户**
 
-1. Log in to the Azure Portal.
-2. Use the **Create a resource** navigation and select **Storage accounts**.
-3. Select **Create**. You will be directed to a **Create a storage account** page.
-   1. Select the appropriate **Subscription**.
-   2. Create a new or select an example **Resource group**. For example: `tailscale-logstreaming`.
-   3. Create a new **Storage account name**. For example: `tailscalelogstorage`.
-   4. Set a **Region**. For example: **(US) West US 2**.
-   5. Set **Performance**. The **Standard** option is recommended.
-   6. Set **Primary service**. The **Azure Blob Storage or Azure Data Lake Storage** option is valid.
-   7. Set **Redundancy**. The **Geo-redundant storage (GRS)** and **Make read access to data available in the event of regional unavailability** options are recommended.
-   8. Select **Review + create**.
-4. Select **Create**.
-5. Select **Data storage**
-6. Select **Containers**.
-7. Select **Add container**
-   1. Set a container **Name**. For example: `tailscale-logs`. This will be used later as your **Container name** value.
-   2. Select **Create**.
-8. Select **Settings**.
-9. Select **Endpoints**.
-10. Make a note of the **Blob service**. This will be used later as your **Storage account URL** value.
+1. 登录 Azure Portal。
+2. 使用 **Create a resource** 导航并选择 **Storage accounts**。
+3. 选择 **Create**。你会进入 **Create a storage account** 页面。
+   1. 选择合适的 **Subscription**。
+   2. 新建或选择示例 **Resource group**。例如：`tailscale-logstreaming`。
+   3. 新建 **Storage account name**。例如：`tailscalelogstorage`。
+   4. 设置 **Region**。例如：**(US) West US 2**。
+   5. 设置 **Performance**。推荐 **Standard** 选项。
+   6. 设置 **Primary service**。**Azure Blob Storage or Azure Data Lake Storage** 选项有效。
+   7. 设置 **Redundancy**。推荐 **Geo-redundant storage (GRS)** 和 **Make read access to data available in the event of regional unavailability** 选项。
+   8. 选择 **Review + create**。
+4. 选择 **Create**。
+5. 选择 **Data storage**
+6. 选择 **Containers**。
+7. 选择 **Add container**
+   1. 设置容器 **Name**。例如：`tailscale-logs`。之后它将作为你的 **Container name** 值。
+   2. 选择 **Create**。
+8. 选择 **Settings**。
+9. 选择 **Endpoints**。
+10. 记下 **Blob service**。之后它将作为你的 **Storage account URL** 值。
 
-**Grant write access (RBAC)**
+**授予写入访问权限（RBAC）**
 
-While still on the Azure Portal and on the account **Overview** page:
+仍在 Azure Portal 的账户 **Overview** 页面上：
 
-1. Select **Access Control (IAM)**. This will open the **Access Control** pane.
-2. Select **Add**.
-3. Select **Add role assignment**. You will be redirected to the **Add role assignment** page.
-   1. Under **Job function roles**, filter the roles for **Storage Blob Data Contributor**.
-   2. Select **Storage Blob Data Contributor**.
-   3. Select **Next**. You will be directed to the **Members** pane.
-      1. Set **Assign access to** to **User, group, or service principal**.
-      2. Select **Select members**.
-         1. Filter the members for the application you created earlier. For example: `tailscale-logstreaming-writer`.
-         2. Select your application.
-         3. Select **Select**.
-      3. Select **Review + assign**.
+1. 选择 **Access Control (IAM)**。这会打开 **Access Control** 窗格。
+2. 选择 **Add**。
+3. 选择 **Add role assignment**。你会被重定向到 **Add role assignment** 页面。
+   1. 在 **Job function roles** 下，将角色筛选为 **Storage Blob Data Contributor**。
+   2. 选择 **Storage Blob Data Contributor**。
+   3. 选择 **Next**。你会进入 **Members** 窗格。
+      1. 将 **Assign access to** 设为 **User, group, or service principal**。
+      2. 选择 **Select members**。
+         1. 将成员筛选为你之前创建的应用程序。例如：`tailscale-logstreaming-writer`。
+         2. 选择你的应用程序。
+         3. 选择 **Select**。
+      3. 选择 **Review + assign**。
 
-##### Azure Blob Storage prerequisites for network log streaming (Azure CLI)
+##### 网络日志流式传输的 Azure Blob Storage 前提条件（Azure CLI）
 
-Azure CLI prerequisites
+Azure CLI 前提条件
 
-1. Sign in with Azure CLI.
+1. 使用 Azure CLI 登录。
 
    ```shell
    az login
    ```
 
-2. Define custom configuration values.
+2. 定义自定义配置值。
 
-   You must use these values to use Tailscale federated credentials:
+   要使用 Tailscale 联合凭证，必须使用以下值：
 
    ```shell
    TAILSCALE_ISSUER="https://a1917ce1-d85b-43b8-9ceb-068c49979384.tokens.sts.global.api.aws"
    TAILSCALE_SUBJECT="arn:aws:iam::891612552178:role/LogstreamPublisherS3WriterRole"
    ```
 
-   Here are some example values that will be used by the other steps. You can customize these to suit your needs.
+   以下示例值将用于其他步骤。你可以根据需要自定义。
 
    ```shell
    LOCATION="westus2"
@@ -784,7 +782,7 @@ Azure CLI prerequisites
    APP_NAME="tailscale-logstreaming-writer"
    ```
 
-3. Register an application.
+3. 注册应用程序。
 
    ```shell
    APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
@@ -794,7 +792,7 @@ Azure CLI prerequisites
    TENANT_ID=$(az account show --query tenantId -o tsv)
    ```
 
-4. Add the federated credential.
+4. 添加联合凭证。
 
    ```shell
    az ad app federated-credential create \
@@ -807,7 +805,7 @@ Azure CLI prerequisites
      }"
    ```
 
-5. Create a storage account and container.
+5. 创建存储账户和容器。
 
    ```shell
    az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
@@ -820,7 +818,7 @@ Azure CLI prerequisites
      --name "$CONTAINER_NAME" --account-name "$STORAGE_ACCOUNT" --auth-mode login
    ```
 
-6. Grant write access (RBAC).
+6. 授予写入访问权限（RBAC）。
 
    ```shell
    SUB_ID=$(az account show --query id -o tsv)
@@ -834,9 +832,9 @@ Azure CLI prerequisites
      --scope "$SCOPE"
    ```
 
-   To grant access at the whole storage account level instead of a single container, drop the `/blobServices/default/containers/${CONTAINER_NAME}` suffix from `$SCOPE`. Container-level scope is the recommended default, since it grants Tailscale the least privilege necessary.
+   要在整个存储账户级别而非单个容器级别授予权限，从 `$SCOPE` 中去掉 `/blobServices/default/containers/${CONTAINER_NAME}` 后缀即可。推荐默认使用容器级范围，因为它授予 Tailscale 的权限最小。
 
-7. Export values to enter in the Tailscale admin console.
+7. 导出需要填入 Tailscale 管理控制台的值。
 
    ```shell
    echo "ContainerName     = ${CONTAINER_NAME}"
@@ -845,92 +843,81 @@ Azure CLI prerequisites
    echo "StorageAccountURL = https://${STORAGE_ACCOUNT}.blob.core.windows.net"
    ```
 
-#### Azure Blob Storage steps for network log streaming
+#### 网络日志流式传输的 Azure Blob Storage 步骤
 
-1. Make sure you have [network flow logs enabled][docs-network-flow-logs-enable] for your tailnet.
-2. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the Tailscale admin console.
-3. Select **Start streaming**.
-4. In the **Start streaming network logs** screen, enter the following information:
-   1. **Select a destination**: Select the **Azure** radio button.
-   2. **Container name**: This is the name of your Azure container that you created in the prerequisites. It should resemble a string of 3-63 lowercase alphanumeric and hyphen characters.
-   3. (Optional) **Key prefix**: Enter the object key to prefix for the file name string. For example, a prefix of `audit-logs/` will produce object keys similar to `audit-logs/2024/04/22/12:34:56.json`. This lets you upload both audit and network logs to the same container, with the ability to separate the data.
-   4. **Tenant ID**: This is the **Directory (tenant) ID** (or `tenantId`) after registering your app in the prerequisites. It should resemble a string of lowercase alphanumeric and hyphen characters.
-   5. **Client ID**: This is the **Application (client) ID** (or `id`) after registering your app in the prerequisites. It should resemble a string of lowercase alphanumeric and hyphen characters.
-   6. **Storage account URL**: This is the account's blob endpoint (based off the account name). It should resemble: `https://<storage-account>.blob.core.windows.net`.
-   7. **Compression**: From the drop-down menu, select `none`, `zstd`, or `gzip`. The default compression is `zstd`.
-   8. **Upload period**: Specify how often to upload new objects, specified in minutes. Take into consideration latency and bandwidth. The default period is 1 minute. You can specify between 1 minute and 24 hours.
-   9. Select **Start streaming**.
-5. Check your monitoring tools to verify you are successfully streaming network flow logs from your tailnet to your Azure container.
+1. 确保你的 tailnet 已[启用网络流日志][docs-network-flow-logs-enable]。
+2. 打开 Tailscale 管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+3. 选择 **Start streaming**。
+4. 在 **Start streaming network logs** 界面中输入以下信息：
+   1. **Select a destination**：选择 **Azure** 单选按钮。
+   2. **Container name**：这是你在前提条件中创建的 Azure 容器名称。应为 3-63 个小写字母、数字和连字符组成的字符串。
+   3. （可选）**Key prefix**：输入用作文件名前缀的对象键。例如，前缀 `audit-logs/` 会生成类似 `audit-logs/2024/04/22/12:34:56.json` 的对象键。这样你可以把审计日志和网络日志上传到同一个容器，同时能区分数据。
+   4. **Tenant ID**：这是你在前提条件中注册应用后的 **Directory (tenant) ID**（或 `tenantId`）。应为小写字母、数字和连字符组成的字符串。
+   5. **Client ID**：这是你在前提条件中注册应用后的 **Application (client) ID**（或 `id`）。应为小写字母、数字和连字符组成的字符串。
+   6. **Storage account URL**：这是账户的 blob 端点（基于账户名）。应形如：`https://<storage-account>.blob.core.windows.net`。
+   7. **Compression**：从下拉菜单中选择 `none`、`zstd` 或 `gzip`。默认压缩方式为 `zstd`。
+   8. **Upload period**：指定上传新对象的频率（以分钟为单位）。需考虑延迟和带宽。默认周期为 1 分钟。可选范围为 1 分钟到 24 小时。
+   9. 选择 **Start streaming**。
+5. 检查你的监控工具，确认已成功把网络流日志从 tailnet 流式传输到你的 Azure 容器。
 
-It is expected behavior for Azure Blob Storage integrations to generate an empty file when there is no data to send.
+没有数据可发送时，Azure Blob Storage 集成会生成一个空文件，这是预期行为。
 
-> **Note:**
+> **注意：**
 >
-> Depending on network conditions, there may be a delay before log streaming appears in your third-party tools.
+> 受网络状况影响，日志流式传输的内容可能会延迟出现在你的第三方工具中。
 
-### Edit a network log streaming destination
+### 编辑网络日志流式传输目标
 
-You can change the information for passing your logs to your preferred streaming destination.
+你可以更改向首选流式传输目标传递日志的信息。
 
-1. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-2. For the system that you want to update, select the **Action** dropdown, then select **Edit**.
-3. Update the values as needed.
-4. Select **Save changes**.
+1. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+2. 对于要更新的系统，选择 **Action** 下拉框，然后选择 **Edit**。
+3. 按需更新各项值。
+4. 选择 **Save changes**。
 
-> **Note:**
+> **注意：**
 >
-> If you are editing a log streaming destination for an Amazon S3 bucket, you can update the **Role ARN** field (the Amazon resource name) if the resource name already belongs to the specified AWS account. If the role does not belong to the AWS account, you must delete the log streaming destination in the admin console and create a new one.
+> 如果你在编辑 Amazon S3 存储桶的日志流式传输目标，当资源名称已属于指定的 AWS 账户时，你可以更新 **Role ARN** 字段（Amazon 资源名称）。如果该角色不属于该 AWS 账户，则必须在管理控制台中删除该日志流式传输目标并重新创建。
 
-### Delete a network log streaming destination
+### 删除网络日志流式传输目标
 
-1. Open the [Network flow logs](https://console.tailscale.com/admin/logs/network) page of the admin console.
-2. For the integration that you want to delete, select the **Action** dropdown, then select **Delete**.
-3. In the confirmation dialog, select **Delete**.
+1. 打开管理控制台的 [Network flow logs](https://console.tailscale.com/admin/logs/network) 页面。
+2. 对于要删除的集成，选择 **Action** 下拉框，然后选择 **Delete**。
+3. 在确认对话框中选择 **Delete**。
 
-## Private endpoints
+## 私有端点
 
-Log streaming can publish logs to a host that is
-directly reachable over the public internet,
-in which case the endpoint must use HTTPS for security.
-Alternatively, log streaming can publish logs to a private host
-that is not directly reachable over the public internet
-by using Tailscale for connectivity.
-Plain HTTP may be used since the underlying transport is
-secured by Tailscale using WireGuard.
+日志流式传输可以把日志发布到公网上可直接访问的主机，这种情况下端点必须使用 HTTPS 以保证安全。
+另外，日志流式传输也可以借助 Tailscale 建立连接，
+把日志发布到公网上无法直接访问的私有主机。
+此时可以使用纯 HTTP，因为底层传输已由 Tailscale 使用 WireGuard 加密保护。
 
-Use of log streaming to a private host is detected automatically
-based on the host specified in the endpoint URL.
+系统会根据端点 URL 中指定的主机自动检测是否为私有主机上的日志流式传输。
 
-*（图：An example of the URL used for private endpoints.）*
+*（图：私有端点所用 URL 的示例。）*
 
-The host must reference a node within your tailnet and
-can be any of the following:
+主机必须指向你 tailnet 内的一个节点，可以是以下任意一种：
 
-* The name of a Tailscale node (for example, `splunk`).
-* The [fully-qualified domain name][docs-magicdns-fqdn-vs-machine-names] of a Tailscale node (for example, `splunk.yak-bebop.ts.net`).
-* The IPv6 address of a Tailscale node (for example, `fd7a:115c:a1e0:ab12:0123:4567:89ab:cdef`).
+* Tailscale 节点的名称（例如 `splunk`）。
+* Tailscale 节点的[完全限定域名][docs-magicdns-fqdn-vs-machine-names]（例如 `splunk.yak-bebop.ts.net`）。
+* Tailscale 节点的 IPv6 地址（例如 `fd7a:115c:a1e0:ab12:0123:4567:89ab:cdef`）。
 
-> **Note:**
+> **注意：**
 >
-> Only IPv6 addresses are supported for log streaming. IPv4 addresses are not supported for log streaming because Tailscale uses CGNAT for IPv4 addresses assigned to nodes within a single tailnet. This can present an issue because IPv4 addresses can be reused across a tailnet. IPv6 addresses are not reused, and hostnames will always route to the correct node.
+> 日志流式传输仅支持 IPv6 地址。IPv4 地址不受支持，因为 Tailscale 对单个 tailnet 内分配给节点的 IPv4 地址使用 CGNAT，这会带来问题：IPv4 地址在 tailnet 内可能被重复使用。IPv6 地址不会被复用，主机名也始终能路由到正确的节点。
 
-Log streaming to a private endpoint operates by [sharing][docs-sharing] your node
-into a Tailscale-managed tailnet, where a Tailscale-managed node will
-publish logs directly to your node. This requires both sharing your node
-out to Tailscale's `logstream` tailnet, and modifying your [tailnet policy file][docs-acls] to support incoming traffic to your node from the `logstream@tailscale` user.
+私有端点的日志流式传输的工作方式是：把你[共享][docs-sharing]到一个由 Tailscale 管理的 tailnet 中，由 Tailscale 管理的节点直接把日志发布到你的节点。这既需要把你的节点共享给 Tailscale 的 `logstream` tailnet，也需要修改你的[策略文件][docs-acls]，以允许来自 `logstream@tailscale` 用户的入站流量访问你的节点。
 
-When adding or updating an endpoint that points to a private host,
-the control plane may need to share your node and/or update the tailnet policy file on your behalf. If additional configuration changes are needed, a follow-up dialog box
-will ask you for permission to perform the necessary actions.
-Audit log events will be generated for these operations and
-the actions will be attributed to you.
+添加或更新指向私有主机的端点时，控制平面可能需要代你共享节点和/或更新策略文件。如果还需要其他配置更改，后续会弹出对话框请求你授权执行这些操作。
+这些操作会生成审计日志事件，
+且操作会归属于你。
 
-*（图：The 'Grant share access to private host' confirmation dialog to share the node or update the tailnet policy file.）*
+*（图：用于共享节点或更新策略文件的"Grant share access to private host"确认对话框。）*
 
-After adding or updating the endpoint, the node will be listed on the
-[Machines](https://console.tailscale.com/admin/machines) page of the admin console
-as having been shared out to the `logstream@tailscale` user.
-Also, the tailnet policy file will be modified with a rule similar to the following:
+添加或更新端点后，该节点会显示在管理控制台的
+[Machines](https://console.tailscale.com/admin/machines) 页面中，
+标记为已共享给 `logstream@tailscale` 用户。
+同时，策略文件中会添加一条类似如下的规则：
 
 ```json
 {
@@ -945,53 +932,49 @@ Also, the tailnet policy file will be modified with a rule similar to the follow
 }
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺少代码片段：visual\_policy\_editor.mdx]
 
-where:
+其中：
 
-* `nodeAddressV6` is the IPv6 address of the Tailscale node.
-* `port` is the service port for the log streaming system.
+* `nodeAddressV6` 是 Tailscale 节点的 IPv6 地址。
+* `port` 是日志流式传输系统的服务端口。
 
-The IPv6 address is specified as the log stream publisher that can communicate with your node over v6 of the Internet Protocol.
+指定 IPv6 地址，是为了让日志流发布方能够通过 IPv6 协议与你的节点通信。
 
-> **Note:**
+> **注意：**
 >
-> Only IPv6 addresses are supported for log streaming. IPv4 addresses are not supported for log streaming because Tailscale uses CGNAT for IPv4 addresses assigned to nodes within a single tailnet. This can present an issue because IPv4 addresses can be reused across a tailnet. IPv6 addresses are not reused, and hostnames will always route to the correct node.
+> 日志流式传输仅支持 IPv6 地址。IPv4 地址不受支持，因为 Tailscale 对单个 tailnet 内分配给节点的 IPv4 地址使用 CGNAT，这会带来问题：IPv4 地址在 tailnet 内可能被重复使用。IPv6 地址不会被复用，主机名也始终能路由到正确的节点。
 
-Since log streaming to a private host may require
-the ability to share nodes and the ability to update the tailnet policy file,
-only the [Admin][docs-user-roles-admin] and [Network admin][docs-user-roles-network-admin] roles
-have sufficient permissions to unilaterally make use of private endpoints.
-The [IT admin][docs-user-roles-it-admin] has the ability to share nodes,
-but lacks the ability to update the tailnet policy file.
-An IT admin can still make use of private endpoints,
-but requires either an Admin or Network admin to manually update
-the tailnet policy file before logs can start streaming.
+由于私有主机的日志流式传输可能需要共享节点和更新策略文件的权限，
+只有 [Admin][docs-user-roles-admin] 和 [Network admin][docs-user-roles-network-admin] 角色
+拥有单方面使用私有端点的足够权限。
+[IT admin][docs-user-roles-it-admin] 可以共享节点，
+但无法更新策略文件。
+IT admin 仍然可以使用私有端点，
+但需要由 Admin 或 Network admin 手动更新
+策略文件之后，日志才能开始流式传输。
 
-If your tailnet is configured to use [GitOps for management of Tailscale][docs-gitops-acls], you will receive
-an error when Tailscale attempts to update your tailnet policy file to support incoming
-traffic from the `logstream@tailscale` user. To avoid this error, first use GitOps to add an
-[access rule][docs-policy-syntax-acls] that lets incoming traffic from the `logstream@tailscale` user reach the node that you use for the private endpoint, and then add your private endpoint as the log
-streaming URL.
+如果你的 tailnet 配置为使用 [GitOps 管理 Tailscale][docs-gitops-acls]，当 Tailscale 尝试更新你的策略文件以允许来自 `logstream@tailscale` 用户的入站流量时，你会收到错误。为避免此错误，请先通过 GitOps 添加一条[访问规则][docs-policy-syntax-acls]，让 `logstream@tailscale` 用户的入站流量能到达你用作私有端点的节点，然后再把你的私有端点添加为日志
+流式传输 URL。
 
-## Additional SIEM systems
+## 其他 SIEM 系统
 
-We strive to support many common SIEM systems used by our customers, but we cannot support all the commercial and open-source SIEM and logging tools available. Some SIEM systems have [Splunk HTTP Event Collector (Splunk HEC)][xt-splunk-http-event-collector] compatible endpoints such as [DataSet by SentinelOne][xt-dataset-sentinelone]. If your SIEM supports Splunk HEC, configure [configuration audit log streaming][ar-configure-audit-log-streaming] and [network flow log streaming][ar-network-flow-log-streaming] per the instructions above to stream logs directly to your SIEM as if it were Splunk.
+我们尽力支持客户使用的多种常见 SIEM 系统，但无法支持市面上所有商业和开源 SIEM 及日志工具。有些 SIEM 系统提供 [Splunk HTTP Event Collector（Splunk HEC）][xt-splunk-http-event-collector]兼容端点，例如 [DataSet by SentinelOne][xt-dataset-sentinelone]。如果你的 SIEM 支持 Splunk HEC，按照上文说明配置[配置审计日志流式传输][ar-configure-audit-log-streaming]和[网络流日志流式传输][ar-network-flow-log-streaming]，即可把日志直接流式传输到你的 SIEM，如同它是 Splunk 一样。
 
-If we do not support your SIEM system, you can use [Vector][xt-vector], an open-source high-performance observability data pipeline, to ingest log data from Tailscale by using Vector's Splunk HEC support and deliver it to Vector's many supported SIEM systems, called "sinks" in Vector's terminology. Vector supports a number of [sinks][xt-vector-sinks] such as object storage systems, messaging queuing systems, Grafana Loki, New Relic, and more.
+如果我们不支持你的 SIEM 系统，你可以使用 [Vector][xt-vector]——一个开源的高性能可观测性数据管道——借助 Vector 的 Splunk HEC 支持来摄取来自 Tailscale 的日志数据，并将其投递到 Vector 支持的众多 SIEM 系统（在 Vector 术语中称为"sink"）。Vector 支持多种 [sink][xt-vector-sinks]，例如对象存储系统、消息队列系统、Grafana Loki、New Relic 等。
 
-### Vector deployment
+### Vector 部署
 
-To use Vector with log streaming from Tailscale:
+要将 Vector 与 Tailscale 的日志流式传输配合使用：
 
-1. Follow Vector's [deployment guide][xt-vector-deployment] to deploy a machine running Vector to your infrastructure.
-2. Configure Vector's [Splunk HTTP Event Collector (HEC) source][xt-vector-splunk-hec] to allow Tailscale to send log data to Vector.
-3. Configure the [Vector sink][xt-vector-sinks] for your SIEM as the destination for the log streaming data.
-4. Configure [configuration audit log streaming][ar-configure-audit-log-streaming] and [network flow log streaming][ar-network-flow-log-streaming] per the instructions above to stream logs to your Vector instance, ideally using [private endpoints][ar-private-endpoints].
+1. 按照 Vector 的[部署指南][xt-vector-deployment]，在你的基础设施中部署一台运行 Vector 的机器。
+2. 配置 Vector 的 [Splunk HTTP Event Collector（HEC）source][xt-vector-splunk-hec]，允许 Tailscale 向 Vector 发送日志数据。
+3. 为你的 SIEM 配置 [Vector sink][xt-vector-sinks]，作为日志流式传输数据的目标。
+4. 按照上文说明配置[配置审计日志流式传输][ar-configure-audit-log-streaming]和[网络流日志流式传输][ar-network-flow-log-streaming]，把日志流式传输到你的 Vector 实例，最好使用[私有端点][ar-private-endpoints]。
 
-### Vector example configuration
+### Vector 配置示例
 
-The Vector configuration below receives data from the `splunk_hec` source and outputs data to the `file` sink:
+下面的 Vector 配置从 `splunk_hec` source 接收数据，并将数据输出到 `file` sink：
 
 ```yaml
 # /etc/vector/vector.yaml
@@ -1013,13 +996,13 @@ sinks:
       codec: "json"
 ```
 
-[ar-additional-siem-systems]: #additional-siem-systems
+[ar-additional-siem-systems]: #其他-siem-系统
 
-[ar-configure-audit-log-streaming]: #configuration-log-streaming
+[ar-configure-audit-log-streaming]: #配置日志流式传输
 
-[ar-network-flow-log-streaming]: #network-log-streaming
+[ar-network-flow-log-streaming]: #网络日志流式传输
 
-[ar-private-endpoints]: #private-endpoints
+[ar-private-endpoints]: #私有端点
 
 [docs-policy-syntax-acls]: /docs/reference/syntax/policy-file#acls
 

@@ -1,16 +1,16 @@
 ---
-title: "Tailscale Kubernetes Operator concepts explained"
-description: "Learn about the architecture and key resources of the Tailscale Kubernetes Operator."
+title: "Tailscale Kubernetes Operator 核心概念"
+description: "了解 Tailscale Kubernetes Operator 的架构和关键资源。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-Learn about the core concepts and architecture behind the Tailscale Kubernetes Operator, including the custom resources it manages and how they work together.
+了解 Tailscale Kubernetes Operator 背后的核心概念与架构，包括它管理的自定义资源以及这些资源如何协同工作。
 
-* [Tailscale Kubernetes Operator architecture](/docs/kubernetes-operator/concepts/architecture) — The architecture and design of the Tailscale Kubernetes Operator.
+* [Tailscale Kubernetes Operator 架构](/docs/kubernetes-operator/concepts/architecture)——Tailscale Kubernetes Operator 的架构与设计。
 
-* [Use DNSConfig for in-cluster MagicDNS resolution](/docs/kubernetes-operator/concepts/dnsconfig) — Understand the DNSConfig custom resource and how it enables in-cluster resolution of Tailscale MagicDNS names.
+* [使用 DNSConfig 实现集群内 MagicDNS 解析](/docs/kubernetes-operator/concepts/dnsconfig)——了解 DNSConfig 自定义资源，以及它如何支持在集群内解析 Tailscale MagicDNS 名称。
 
-* [Use ProxyClass for proxy customization](/docs/kubernetes-operator/concepts/proxyclass) — Understand the ProxyClass custom resource and how it customizes proxy resources.
+* [使用 ProxyClass 自定义代理](/docs/kubernetes-operator/concepts/proxyclass)——了解 ProxyClass 自定义资源，以及它如何自定义代理资源。
 
-* [Use ProxyGroup for high availability proxies](/docs/kubernetes-operator/concepts/proxygroup) — Understand the ProxyGroup custom resource and how it enables high availability proxies.
+* [使用 ProxyGroup 实现高可用代理](/docs/kubernetes-operator/concepts/proxygroup)——了解 ProxyGroup 自定义资源，以及它如何实现高可用代理。

@@ -1,186 +1,186 @@
 ---
-title: "AWS reference architecture"
-description: "This document details best practices and a reference architecture for Tailscale deployments on Amazon Web Services (AWS). The following guidance applies for all Tailscale modes of operation—devices, e"
+title: "AWS 参考架构"
+description: "本文档详细介绍在 Amazon Web Services（AWS）上部署 Tailscale 的最佳实践和参考架构。以下指南适用于 Tailscale 的所有运行模式——设备、"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-This document details best practices and a reference architecture for Tailscale deployments on Amazon Web Services (AWS). The following guidance applies for all Tailscale modes of operation—devices, exit nodes, subnet routers, and the like.
+本文档详细介绍在 Amazon Web Services（AWS）上部署 Tailscale 的最佳实践和参考架构。以下指南适用于 Tailscale 的所有运行模式——设备、出口节点、子网路由器等。
 
-> **Note:**
+> **注意：**
 >
-> For the purposes of this document, **Tailscale device** can refer to a Tailscale node, exit node, subnet router, and the like. Refer to [Terminology and concepts][docs-terminology-and-concepts] for additional terms.
+> 在本文档中，**Tailscale 设备**可以指 Tailscale 节点、出口节点、子网路由器等。其他术语请参阅[术语与概念][docs-terminology-and-concepts]。
 
-## High-level architecture
+## 总体架构
 
-*（图：Potential deployments of Tailscale to access AWS resources）*
+*（图：Tailscale 访问 AWS 资源的潜在部署方式）*
 
-## Ways to deploy Tailscale to connect to and from AWS resources
+## 部署 Tailscale 以连接 AWS 资源的方式
 
-Tailscale provides a few options for connecting to resources within AWS. At a high-level they are:
+Tailscale 提供了多种连接 AWS 内资源的方式。概而言之：
 
-* **[Agent-to-Agent connectivity][ar-agent-to-agent-connectivity]**—connect to "static" resources such as Amazon Elastic Compute Cloud (EC2) instances. This is recommended where you can install and run Tailscale directly on the resource you wish to connect to.
-* **[IP-based connectivity with a Tailscale subnet router][ar-subnet-router-ip-connect]**—connect to managed AWS resources such as Amazon's Relational Database Service (AWS RDS) or Amazon Redshift. This is recommended where you cannot run Tailscale on the resource you are connecting to, or want to expose an existing [subnet][docs-subnets] or services in a VPC to your tailnet.
-* **[DNS-based routing with a Tailscale app connector][ar-dns-routing-with-app-connector]**—connect to software as a service (SaaS) applications or other resources over your tailnet with DNS-based routing.
-* **[Kubernetes services and auth proxy with the Tailscale Kubernetes Operator][ar-services-and-api-proxy]**—expose services in your Amazon Elastic Kubernetes Service (EKS) cluster and your EKS cluster control plane directly to your Tailscale network. This is recommended where you are connecting to resources running in a Kubernetes cluster, or to a Kubernetes cluster's control plane.
-* **[Lambda and other container services][ar-lambda-and-other-container-services]**—access resources in your tailnet from Lambda functions and other container solutions.
+* **[代理到代理的连通性][ar-agent-to-agent-connectivity]**——连接 Amazon Elastic Compute Cloud（EC2）实例等"静态"资源。如果可以在想要连接的资源上直接安装并运行 Tailscale，推荐使用这种方式。
+* **[使用 Tailscale 子网路由器实现基于 IP 的连通性][ar-subnet-router-ip-connect]**——连接 Amazon Relational Database Service（AWS RDS）或 Amazon Redshift 等托管式 AWS 资源。如果无法在所连接的资源上运行 Tailscale，或想把 VPC 中现有的[子网][docs-subnets]或服务暴露给你的 tailnet，推荐使用这种方式。
+* **[使用 Tailscale 应用连接器进行基于 DNS 的路由][ar-dns-routing-with-app-connector]**——通过基于 DNS 的路由，经 tailnet 连接软件即服务（SaaS）应用或其他资源。
+* **[通过 Tailscale Kubernetes Operator 提供 Kubernetes 服务与认证代理][ar-services-and-api-proxy]**——把 Amazon Elastic Kubernetes Service（EKS）集群中的服务和 EKS 集群控制平面直接暴露给你的 Tailscale 网络。如果要连接 Kubernetes 集群中运行的资源或集群的控制平面，推荐使用这种方式。
+* **[Lambda 与其他容器服务][ar-lambda-and-other-container-services]**——从 Lambda 函数和其他容器方案访问 tailnet 中的资源。
 
-### Agent-to-agent connectivity
+### 代理到代理的连通性
 
-We recommend [installing the Tailscale agent][docs-installation] wherever possible—for example, [setting up servers][docs-set-up-servers] on EC2 instances. This generally provides the best and most scalable connectivity while enabling Tailscale agent-based functionality such as Tailscale SSH.
+我们建议尽可能[安装 Tailscale 代理][docs-installation]——例如在 EC2 实例上[设置服务器][docs-set-up-servers]。这通常能提供最佳、最具可扩展性的连接，同时启用基于 Tailscale 代理的功能（如 Tailscale SSH）。
 
-### IP-based connectivity with subnet router
+### 使用子网路由器实现基于 IP 的连通性
 
-For managed resources where you cannot install the Tailscale agent, such as AWS RDS, Amazon Redshift, and similar services, you can run a [subnet router][docs-subnets] within your VPC to access these resources from Tailscale. Subnet routers can also be used to connect to resources by using AWS PrivateLink and VPC endpoints.
+对于无法安装 Tailscale 代理的托管式资源（例如 AWS RDS、Amazon Redshift 等类似服务），可以在 VPC 内运行[子网路由器][docs-subnets]，从 Tailscale 访问这些资源。子网路由器还可用于通过 AWS PrivateLink 和 VPC 端点连接资源。
 
-Refer to [Access AWS RDS privately using Tailscale][docs-aws-rds] for a general guide.
+一般性指南请参阅[使用 Tailscale 私有访问 AWS RDS][docs-aws-rds]。
 
-### DNS-based routing with an app connector
+### 使用应用连接器进行基于 DNS 的路由
 
-[App connectors][docs-app-connectors] proxy DNS queries for configured domains and advertise routes for the returned IP addresses. For applications that use IP allowlists, add the app connectors' egress IP addresses to the allowlist. Client traffic then reaches the applications from an allowed address.
+[应用连接器][docs-app-connectors]为所配置的域代理 DNS 查询，并为返回的 IP 地址通告路由。对于使用 IP 允许列表的应用，把应用连接器的出站 IP 地址加入允许列表即可，客户端流量随后会从被允许的地址到达这些应用。
 
-### Kubernetes services and API server proxy with Tailscale Kubernetes Operator
+### 使用 Tailscale Kubernetes Operator 的 Kubernetes 服务与 API 服务器代理
 
-The [Tailscale Kubernetes Operator][docs-kubernetes-operator] lets you expose services in your Kubernetes cluster to your Tailscale network, and use an API server proxy for secure connectivity to the Kubernetes control plane.
+[Tailscale Kubernetes Operator][docs-kubernetes-operator] 让你可以把 Kubernetes 集群中的服务暴露给你的 Tailscale 网络，并使用 API 服务器代理安全地连接 Kubernetes 控制平面。
 
-### Lambda and other container services
+### Lambda 与其他容器服务
 
-Tailscale supports [userspace networking][docs-userspace-networking] where processes in the container can connect to other resources on your Tailscale network by using a SOCKS5 or HTTP proxy. This lets [AWS Lambda][docs-aws-lambda], [AWS App Runner][docs-aws-app-runner], [AWS Lightsail][docs-aws-lightsail] and other container-based solutions connect to the Tailscale network with minimal configuration needed.
+Tailscale 支持[用户态网络模式][docs-userspace-networking]，容器中的进程可以通过 SOCKS5 或 HTTP 代理连接 Tailscale 网络上的其他资源。这让 [AWS Lambda][docs-aws-lambda]、[AWS App Runner][docs-aws-app-runner]、[AWS Lightsail][docs-aws-lightsail] 等基于容器的方案只需极少的配置即可接入 Tailscale 网络。
 
-## Production best practices
+## 生产环境最佳实践
 
-Below are general recommendations and best practices for running Tailscale in production environments. Much of what is listed below is explained in greater detail throughout this document:
+以下是在生产环境中运行 Tailscale 的一般建议和最佳实践。其中大部分内容会在本文档中更详细地展开：
 
-* When possible deploy [subnet routers][docs-subnets], [exit nodes][docs-exit-nodes], [app connectors][docs-app-connectors], and the like, to public subnets with public IP addresses to ensure [direct connections][docs-connection-types] and optimal performance.
-* Run subnet routers, exit nodes, app connectors, and the like, separately from the systems you are administering with Tailscale—for example, run your subnet routers outside of your Amazon EKS clusters.
-* Deploy dynamically scaled resources (for example, containers or serverless functions) as [ephemeral nodes][docs-ephemeral-nodes] to automatically clean up devices after they shut down.
+* 在可能的情况下，把[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]、[应用连接器][docs-app-connectors]等部署到带有公网 IP 地址的公有子网中，以确保[直连][docs-connection-types]并获得最佳性能。
+* 把子网路由器、出口节点、应用连接器等与你要用 Tailscale 管理的系统分开运行——例如，把子网路由器运行在 Amazon EKS 集群之外。
+* 把动态扩缩的资源（例如容器或无服务器函数）部署为[临时节点][docs-ephemeral-nodes]，以便在设备关闭后自动清理。
 
-### High availability and route selection
+### 高可用性与路由选择
 
-* Run multiple [subnet routers][docs-subnets] and [app connectors][docs-app-connectors] across AWS availability zones for [high availability][docs-high-availability]. For deployments across regions, compare the [route selection options][docs-route-selection].
-* Run multiple Tailscale SSH session recorder nodes across AWS availability zones for [recorder node failover][docs-multiple-recorder-nodes].
+* 在多个 AWS 可用区中运行多个[子网路由器][docs-subnets]和[应用连接器][docs-app-connectors]，以实现[高可用性][docs-high-availability]。对于跨区域部署，请比较各[路由选择选项][docs-route-selection]。
+* 在多个 AWS 可用区中运行多个 Tailscale SSH 会话记录节点，以实现[记录节点故障转移][docs-multiple-recorder-nodes]。
 
-## Performance best practices
+## 性能最佳实践
 
-For general recommendations, refer to [Performance best practices][docs-performance-best-practices].
+一般性建议请参阅[性能最佳实践][docs-performance-best-practices]。
 
-### In-region load balancing
+### 区域内负载均衡
 
-With regional routing, deploy overlapping subnet routers or app connectors in the same [DERP][docs-derp-servers] region for [in-region load balancing][docs-high-availability-region-load-balancing] and redundancy. Tailscale distributes clients on a best-effort basis.
+使用区域路由时，在同一个 [DERP][docs-derp-servers] 区域部署相互重叠的子网路由器或应用连接器，以实现[区域内负载均衡][docs-high-availability-region-load-balancing]和冗余。Tailscale 会以尽力而为的方式分配客户端。
 
-### Recommended instance sizing
+### 推荐的实例规格
 
-When choosing an EC2 instance size, consider whether the device will function as a normal device, or a device running as a subnet router, exit node, or app connector.
+选择 EC2 实例规格时，要考虑该设备是用作普通设备，还是用作子网路由器、出口节点或应用连接器。
 
-#### Normal usage
+#### 普通用途
 
-When installing Tailscale on an EC2 instance as a "normal" Tailscale device (for example, not a subnet router or exit node), you likely have already sized that instance to a suitable instance type for its workload and running Tailscale on it will likely add negligible resource usage.
+在 EC2 实例上安装 Tailscale 作为"普通"Tailscale 设备（例如，不是子网路由器或出口节点）时，该实例的规格很可能已经针对其工作负载选好了合适的实例类型，在上面运行 Tailscale 带来的资源占用可以忽略不计。
 
-#### Subnet routers, exit nodes, and app connectors
+#### 子网路由器、出口节点与应用连接器
 
-There are many variables that affect performance and workloads vary widely so we do not have specific size recommendations, but we do have general guidance for selecting an instance type for an EC2 instance running as a [subnet router][docs-subnets], [exit node][docs-exit-nodes], or [app connector][docs-app-connectors]:
+影响性能的变量很多，工作负载也差异巨大，因此我们没有具体的规格推荐，但对于运行[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]或[应用连接器][docs-app-connectors]的 EC2 实例，我们确实有选择实例类型的一般性指导：
 
-* In general, higher CPU clock speed is more important than more cores.
-* In general, instances with ARM-based AWS Graviton processors are quite cost effective for packet forwarding
-* Use a non-burstable instance type to achieve consistent virtual CPU (vCPU) and network performance.
-  * Per the AWS [Burstable performance instances][xt-aws-ec2-cpu-burst] topic, burstable performance instances (such as `T4g`, `T3a`, `T2`, and the like) use a CPU credit mechanism which can result in poor performance with more than a single concurrent connection. Therefore, they should only be used for testing. The `m8g.medium` instance is a good place to start for production routers.
-* Use an instance type with greater than 16 vCPUs. For example, use at least 24 vCPUs to ensure consistent network performance.
-  * Per the AWS [Amazon EC2 instance network bandwidth][xt-aws-network-bandwidth] topic, instances with 16 vCPUs or less use a network I/O credit mechanism to burst beyond baseline bandwidth. This provides a marginal performance increase except for very high-load resources.
-* In certain workloads that are sensitive to throughput, and that require several concurrent high-speed connections, you may realize better network performance by choosing a subnet router instance with dedicated network capacity, which is limited to those with more than 16 vCPUs. We recommend discussing your requirements with our solutions team if you feel this applies to you.
+* 一般来说，更高的 CPU 主频比更多的核心数更重要。
+* 一般来说，采用基于 ARM 的 AWS Graviton 处理器的实例在数据包转发方面性价比很高
+* 使用非突发（non-burstable）实例类型，以获得稳定的虚拟 CPU（vCPU）和网络性能。
+  * 根据 AWS [Burstable performance instances][xt-aws-ec2-cpu-burst] 主题的说明，突发性能实例（如 `T4g`、`T3a`、`T2` 等）使用 CPU 积分机制，在超过一个并发连接时可能导致性能不佳。因此，这类实例只应用于测试。生产环境的路由器可以从 `m8g.medium` 实例起步。
+* 使用 vCPU 数量超过 16 的实例类型。例如，至少使用 24 个 vCPU 以确保稳定的网络性能。
+  * 根据 AWS [Amazon EC2 instance network bandwidth][xt-aws-network-bandwidth] 主题的说明，vCPU 不超过 16 个的实例使用网络 I/O 积分机制来突发超出基准带宽。除极高负载的资源外，这只能带来边际的性能提升。
+* 在某些对吞吐量敏感、需要多个并发高速连接的工作负载中，选择具备专用网络容量的子网路由器实例可能获得更好的网络性能，而这类实例仅限 vCPU 超过 16 个的机型。如果你觉得适用，我们建议与我们的解决方案团队讨论你的需求。
 
-## Using Tailscale with AWS
+## 在 AWS 中使用 Tailscale
 
-Depending on how you are using AWS and Tailscale, there are considerations for your security groups and subnets.
+根据你使用 AWS 和 Tailscale 的方式，需要考虑安全组和子网的设置。
 
-### Security groups
+### 安全组
 
-Tailscale uses various [NAT traversal techniques][bl-how-nat-traversal-works] to safely connect to other Tailscale nodes without manual intervention. Usually, you do not need to open any [firewall ports][docs-firewalls] for Tailscale. However, if your VPC and security groups are overly restrictive about internet-bound egress traffic, refer to [What firewall ports should I open to use Tailscale?][docs-firewall-ports]
+Tailscale 使用多种 [NAT 穿透技术][bl-how-nat-traversal-works]在无需人工干预的情况下安全地连接其他 Tailscale 节点。通常，你不需要为 Tailscale 开放任何[防火墙端口][docs-firewalls]。不过，如果你的 VPC 和安全组对发往互联网的出站流量限制过严，请参阅[使用 Tailscale 需要开放哪些防火墙端口？][docs-firewall-ports]
 
-### Public vs private subnets
+### 公有子网与私有子网
 
-Tailscale devices deployed to a public subnet with a public IP address will benefit from [direct connections][docs-connection-types] between nodes for the best performance.
+部署到带有公网 IP 地址的公有子网中的 Tailscale 设备可以受益于节点间的[直连][docs-connection-types]，获得最佳性能。
 
-#### AWS NAT Gateway
+#### AWS NAT 网关
 
-Tailscale uses both [direct and relayed connections][docs-connection-types], opting for direct connections where possible. AWS NAT Gateway is a [Hard NAT][docs-device-connectivity-hard-nat] and will prevent direct connections causing connections to use [DERP relay servers][docs-derp-servers]. This can lead to lower throughput and performance than direct connections.
+Tailscale 同时使用[直连和中继连接][docs-connection-types]，并尽可能选择直连。AWS NAT 网关属于[硬 NAT（Hard NAT）][docs-device-connectivity-hard-nat]，会阻止直连，导致连接改用 [DERP 中继服务器][docs-derp-servers]。这会导致吞吐量和性能低于直连。
 
-Tailscale [Peer Relays][docs-peer-relays] let you use devices in your tailnet as high-throughput relay servers when direct connections aren't possible due to network conditions such as being in a private subnet behind an AWS NAT Gateway. To bypass AWS NAT Gateway, follow the steps to deploy and [configure a peer relay][docs-peer-relays-get-started] to a public subnet in your VPC, with a public IP address, and allow incoming UDP traffic to the relay port.
+当由于网络条件（例如处于 AWS NAT 网关后面的私有子网中）而无法直连时，Tailscale [Peer Relay][docs-peer-relays] 让你把 tailnet 中的设备用作高吞吐量的中继服务器。要绕过 AWS NAT 网关，请按照步骤在你的 VPC 中的公有子网里部署并[配置对等中继][docs-peer-relays-get-started]，为其分配公网 IP 地址，并允许入站 UDP 流量到达中继端口。
 
-#### Egress-only internet gateway
+#### 仅出站互联网网关
 
-An egress-only IPv6 gateway attached to a private subnet will allow direct connections to peers that have IPv6 addresses. Nodes which only have IPv4 available will be reachable by [DERP relay][docs-connection-types] which have both IPv4 and IPv6 connections.
+附加到私有子网的仅出站 IPv6 网关允许与拥有 IPv6 地址的对等节点直连。只有 IPv4 的节点则可以通过同时具备 IPv4 和 IPv6 连接的 [DERP 中继][docs-connection-types]访问。
 
-### VPC DNS resolution
+### VPC DNS 解析
 
-Private hosted zones and private addresses for AWS resources can only be resolved using private Route 53 Resolvers. The private Route 53 Resolvers can be accessed through a subnet router. To enable this:
+AWS 资源的私有托管区域和私有地址只能通过私有 Route 53 Resolver 解析。私有 Route 53 Resolver 可以通过子网路由器访问。要启用这一点：
 
-1. [Deploy a subnet router][docs-subnets-set-up-a-subnet-router] to your VPC.
-2. Enable access to the private Route 53 Resolver by configuring [access controls][docs-access-control] to allow TCP and UDP access on port `53` to the VPC+2 IP address of your VPC. For example, if your VPC's CIDR is `10.0.96.0/20`, your VPC+2 IP address is `10.0.96.2`.
-3. Forward queries for internal AWS domains to the [Amazon Route 53 Resolver][xt-aws-r53-resolver] by configuring [split DNS][docs-aws-rds-add-aws-dns] to the VPC+2 IP address that is now reachable by your subnet router. If you have multiple VPCs, [associate additional VPCs with a private hosted zone][xt-aws-r53-vpc-associations] to enable DNS resolution across all of them.
+1. 向你的 VPC [部署一个子网路由器][docs-subnets-set-up-a-subnet-router]。
+2. 配置[访问控制][docs-access-control]，允许通过 TCP 和 UDP 访问 VPC 的 VPC+2 IP 地址上的端口 `53`，以启用对私有 Route 53 Resolver 的访问。例如，如果你的 VPC CIDR 是 `10.0.96.0/20`，那么 VPC+2 IP 地址就是 `10.0.96.2`。
+3. 配置[拆分 DNS][docs-aws-rds-add-aws-dns]，把对内部 AWS 域名的查询转发到子网路由器现在可达的 VPC+2 IP 地址，即 [Amazon Route 53 Resolver][xt-aws-r53-resolver]。如果你有多个 VPC，可以[把其他 VPC 关联到私有托管区域][xt-aws-r53-vpc-associations]，以便在所有 VPC 中进行 DNS 解析。
 
-### VPC peering and transit VPCs
+### VPC 对等连接与中转 VPC
 
-[VPC peering][xt-aws-vpc-peering] and [transit VPCs][xt-aws-vpc-transit] are a common strategy for connecting multiple VPCs together. You can deploy a subnet router (or a set for high availability) within a VPC to allow access to multiple VPCs.
+[VPC 对等连接][xt-aws-vpc-peering]和[中转 VPC（transit VPC）][xt-aws-vpc-transit]是连接多个 VPC 的常用策略。你可以在一个 VPC 中部署子网路由器（或为高可用部署一组），以访问多个 VPC。
 
-If you have VPCs or subnets with overlapping IPv4 addresses, use [4via6 subnet routers][docs-4via6-subnets] to access resources with unique IPv6 addresses for each overlapping subnet.
+如果你的 VPC 或子网存在 IPv4 地址重叠，可以使用 [4via6 子网路由器][docs-4via6-subnets]，为每个重叠子网分配唯一的 IPv6 地址来访问资源。
 
-### Subnet routers
+### 子网路由器
 
-Consider where you run subnet routers relative to the AWS resources they provide access to.
+请考虑子网路由器相对其提供访问能力的 AWS 资源的运行位置。
 
-#### Operating a subnet router within Amazon EKS or Amazon ECS
+#### 在 Amazon EKS 或 Amazon ECS 中运行子网路由器
 
-Oftentimes organizations are using Tailscale to connect to and administer their EKS clusters, Amazon Elastic Container Service (ECS) deployments, and the like. While Tailscale can [run within a container][docs-userspace-networking] and be deployed to EKS or ECS, we recommend running your [subnet routers][docs-subnets] externally to these clusters to ensure connectivity is available in the event your cluster is having issues. In other words, run your subnet router on dedicated EC2 instances or an EKS cluster separate from the cluster you're administering.
+组织常常使用 Tailscale 来连接和管理其 EKS 集群、Amazon Elastic Container Service（ECS）部署等。虽然 Tailscale 可以[在容器内运行][docs-userspace-networking]并部署到 EKS 或 ECS，但我们建议把[子网路由器][docs-subnets]运行在这些集群之外，以确保集群出现问题时仍能保持连接。也就是说，把子网路由器运行在专用 EC2 实例或独立于被管理集群的另一个 EKS 集群上。
 
-### Tailscale SSH session recording
+### Tailscale SSH 会话录制
 
-Deploy [multiple session recorder instances][docs-multiple-recorder-nodes] across multiple availability zones to improve resiliency against zone failures. If your organization operates across multiple regions, consider deploying SSH session recording nodes in each region you operate and [configure SSH access rules][docs-tailscale-ssh-session-turn-on] to send recording information to the local region for your nodes.
+跨多个可用区部署[多个会话记录器实例][docs-multiple-recorder-nodes]，以提高对可用区故障的恢复能力。如果你的组织跨多个区域运营，可以考虑在运营的每个区域都部署 SSH 会话录制节点，并[配置 SSH 访问规则][docs-tailscale-ssh-session-turn-on]，让节点把录制信息发送到所在区域。
 
-#### S3 for recording persistence
+#### 用 S3 持久化录制内容
 
-Configure [Tailscale SSH session recording][docs-tailscale-ssh-session-recording] to persist recordings to an Amazon S3 bucket to reduce operational concerns such as available storage space, durability, [access controls][docs-access-control], and similar services.
+配置 [Tailscale SSH 会话录制][docs-tailscale-ssh-session-recording]把录制内容持久化到 Amazon S3 存储桶，以减少可用存储空间、持久性、[访问控制][docs-access-control]等运维方面的顾虑。
 
-##### Minimum-required IAM policy
+##### 最小必需的 IAM 策略
 
-[Create an IAM policy with the minimum-required permissions][docs-session-recording-s3-create-policy] to store and access (for the recorder web UI) recordings with an S3 bucket.
+[创建具有最小必需权限的 IAM 策略][docs-session-recording-s3-create-policy]，用于在 S3 存储桶中存储录制内容，并（供记录器 Web UI）访问录制内容。
 
-##### Storage bucket locations
+##### 存储桶位置
 
-If your organization operates across multiple AWS regions, consider deploying SSH session recording nodes in each region you operate and [configure SSH access rules][docs-tailscale-ssh-session-turn-on] to send recording information to the local region for your nodes.
+如果你的组织跨多个 AWS 区域运营，可以考虑在运营的每个区域都部署 SSH 会话录制节点，并[配置 SSH 访问规则][docs-tailscale-ssh-session-turn-on]，让节点把录制信息发送到所在区域。
 
-##### Storage bucket policy
+##### 存储桶策略
 
-Given the sensitive nature of SSH session recordings, follow the [AWS security best practices for Amazon S3][xt-aws-s3-security].
+鉴于 SSH 会话录制的敏感性，请遵循[适用于 Amazon S3 的 AWS 安全最佳实践][xt-aws-s3-security]。
 
-##### Storage lifecycle rules
+##### 存储生命周期规则
 
-Configure [S3 lifecycle rules][xt-aws-s3-lifecycle] so that recording files transition to another storage class and/or expire and delete after a time period that meets your organization's requirements.
+配置 [S3 生命周期规则][xt-aws-s3-lifecycle]，让录制文件在满足组织要求的时间段后转换到其他存储类，并且/或者过期删除。
 
-## Limitations
+## 限制
 
-These AWS networking constraints can affect Tailscale connectivity and performance.
+这些 AWS 网络限制会影响 Tailscale 的连接和性能。
 
-### AWS NAT Gateway
+### AWS NAT 网关
 
-AWS NAT Gateway is a [hard NAT][ar-aws-nat-gateway]. All devices and services behind an AWS NAT Gateway will connect using [DERP relay servers][docs-derp-servers]. For best performance, put devices in a [public subnet][ar-public-vs-private-subnets] to facilitate direct connections.
+AWS NAT 网关属于[硬 NAT][ar-aws-nat-gateway]。AWS NAT 网关后面的所有设备和服务都会通过 [DERP 中继服务器][docs-derp-servers]连接。为获得最佳性能，请把设备放入[公有子网][ar-public-vs-private-subnets]，以便建立直连。
 
-### AWS single-flow bandwidth limitation
+### AWS 单流带宽限制
 
 \[Missing snippet: aws\_single\_flow\_bandwidth\_limitation.mdx]
 
-[ar-agent-to-agent-connectivity]: #agent-to-agent-connectivity
+[ar-agent-to-agent-connectivity]: #代理到代理的连通性
 
-[ar-aws-nat-gateway]: #aws-nat-gateway
+[ar-aws-nat-gateway]: #aws-nat-网关
 
-[ar-dns-routing-with-app-connector]: #dns-based-routing-with-an-app-connector
+[ar-dns-routing-with-app-connector]: #使用应用连接器进行基于-dns-的路由
 
-[ar-lambda-and-other-container-services]: #lambda-and-other-container-services
+[ar-lambda-and-other-container-services]: #lambda-与其他容器服务
 
-[ar-public-vs-private-subnets]: #public-vs-private-subnets
+[ar-public-vs-private-subnets]: #公有子网与私有子网
 
-[ar-services-and-api-proxy]: #kubernetes-services-and-api-server-proxy-with-tailscale-kubernetes-operator
+[ar-services-and-api-proxy]: #使用-tailscale-kubernetes-operator-的-kubernetes-服务与-api-服务器代理
 
-[ar-subnet-router-ip-connect]: #ip-based-connectivity-with-subnet-router
+[ar-subnet-router-ip-connect]: #使用子网路由器实现基于-ip-的连通性
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

@@ -1,118 +1,118 @@
 ---
-title: "Kinds of connector"
-description: "Aperture tools come from different sources. Some ship with the gateway, some require configuration, and some forward calls to an upstream service. Two properties distinguish them: who runs the tool an"
+title: "连接器的种类"
+description: "Aperture 的工具来自不同来源。有的随网关内置，有的需要配置，有的会把调用转发给上游服务。区分它们的两个属性是：谁来运行工具、谁能访问工具。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Aperture tools come from different sources. Some ship with the gateway, some require configuration, and some forward calls to an upstream service. Two properties distinguish them: who runs the tool and who can reach it.
+Aperture 的工具来自不同来源。有的随网关内置，有的需要配置，有的会把调用转发给上游服务。区分它们的两个属性是：谁来运行工具，以及谁能访问工具。
 
-For field definitions, refer to the [connectors reference][docs-connectors-reference]. For the connector model, refer to [How connectors work][docs-connectors-how-it-works].
+字段定义参阅[连接器参考][docs-connectors-reference]。连接器模型参阅[连接器的工作原理][docs-connectors-how-it-works]。
 
-## Execution and reachability
+## 执行与可达性
 
-Each tool in Aperture falls on two axes:
+Aperture 中的每个工具都落在两个维度上：
 
-1. **Execution**: Aperture runs the tool itself, or Aperture forwards the call to an upstream service.
-2. **Reachability**: The tool is available to chat only, or to both chat and agents connected to the gateway.
+1. **执行**：由 Aperture 自己运行工具，或由 Aperture 把调用转发给上游服务。
+2. **可达性**：工具仅对 chat 可用，或对 chat 和连接到网关的智能体都可用。
 
-Execution determines dependencies. Built-in tools do not require an upstream MCP server, but node provisioning, Tailscale SSH, and web tools still depend on network access to their respective services. Forwarded tools also depend on the upstream connector service.
+执行决定依赖关系。内置工具不需要上游 MCP 服务器，但节点预配、Tailscale SSH 和网页工具仍然依赖对各自服务的网络访问。转发的工具还依赖上游连接器服务。
 
-Reachability determines whether grants apply. Tools that agents can reach pass through the grant system. Chat-only capabilities do not.
+可达性决定授权是否适用。智能体可达的工具要经过授权体系，仅 chat 可用的能力则不需要。
 
-## Connector types
+## 连接器类型
 
-| Kind                     | Execution | Reachability    | Requires configuration | Governed by grants |
-| ------------------------ | --------- | --------------- | ---------------------- | ------------------ |
-| Chat-only tools          | Aperture  | Chat            | No                     | No                 |
-| The `aperture` connector | Aperture  | Chat and agents | No                     | Yes                |
-| Built-in connectors      | Aperture  | Chat and agents | Yes                    | Yes                |
-| Verified connectors      | Upstream  | Chat and agents | Yes                    | Yes                |
-| Custom connectors        | Upstream  | Chat and agents | Yes                    | Yes                |
+| 类型 | 执行 | 可达性 | 需要配置 | 受授权管辖 |
+| --- | --- | --- | --- | --- |
+| 仅 Chat 可用的工具 | Aperture | Chat | 否 | 否 |
+| `aperture` 连接器 | Aperture | Chat 和智能体 | 否 | 是 |
+| 内置连接器 | Aperture | Chat 和智能体 | 是 | 是 |
+| 经验证连接器 | 上游 | Chat 和智能体 | 是 | 是 |
+| 自定义连接器 | 上游 | Chat 和智能体 | 是 | 是 |
 
-The last three require a configuration entry. The first two ship with the gateway.
+后三种需要配置条目，前两种随网关内置。
 
-### Chat-only tools
+### 仅 Chat 可用的工具
 
-The chat sandbox and location are capabilities of the chat interface rather than connectors. They have no entry in your configuration, no upstream URL, and no connector ID. An agent that connects to `/v1/mcp` never receives them in a tool listing, so no grant pattern reaches them or excludes them.
+chat 沙盒和位置属于 chat 界面的能力，而不是连接器。它们在你的配置中没有条目、没有上游 URL、也没有连接器 ID。连接到 `/v1/mcp` 的智能体在工具列表中永远不会收到它们，因此没有任何授权模式能够触及或排除它们。
 
-Availability depends on whether Tailscale has enabled the capability for your gateway, the user's conversation settings, and any user or project tool policy. Connector grants do not control these capabilities.
+可用性取决于 Tailscale 是否为你的网关启用了该能力、用户的会话设置，以及任何用户或项目工具策略。连接器授权不控制这些能力。
 
-Location goes further than the sandbox: it registers no tool at all. Chat reads the user's coordinates from the request and places them in the system prompt, so the model has the information without any tool call.
+位置比沙盒更进一步：它根本不注册任何工具。Chat 直接从请求中读取用户坐标并放进 system prompt，因此模型无需任何工具调用就能拿到信息。
 
-For what the sandbox does, refer to the [chat sandbox feature guide][docs-chat-sandbox].
+沙盒的功能参阅 [chat 沙盒功能指南][docs-chat-sandbox]。
 
-### The `aperture` connector
+### `aperture` 连接器
 
-The built-in `aperture` connector sits across the usual boundary. Aperture runs its tools, as it does for a chat-only capability, and the connector still appears in the connector listing, agents still receive its tools, and grants still govern it. It has no entry in your configuration because it ships with every gateway.
+内置的 `aperture` 连接器跨在常规分界线上。它的工具由 Aperture 运行，与仅 chat 可用的能力一样；但它仍然出现在连接器列表中，智能体仍然会收到它的工具，授权也仍然管辖它。它在你配置中没有条目，因为它随每个网关内置。
 
-Its tools include `aperture_list_connectors`, which lets a model discover the HTTP connectors it can reach. The web tools `aperture_web_search` and `aperture_web_fetch` appear when web search is available for the gateway. Contact Tailscale if you need help with availability.
+它的工具包括 `aperture_list_connectors`，让模型发现自己可访问的 HTTP 连接器。当网关可以使用网页搜索时，还会出现网页工具 `aperture_web_search` 和 `aperture_web_fetch`。可用性有问题请联系 Tailscale。
 
-This connector carries the `system` label, and the shipped default configuration grants `label:system`. That grant is why the built-in tools work on a new gateway, and it gives you a working example of label-based access. The authorization path contains no exception for it.
+该连接器携带 `system` 标签，出厂默认配置授予 `label:system`。这条授权就是内置工具在新网关上能直接工作的原因，也为你提供了一个可用的基于标签的访问示例。授权路径上没有为它开任何例外。
 
-### Built-in connectors
+### 内置连接器
 
-A built-in connector runs inside Aperture as the `aperture` connector does, but it requires an entry in your configuration before it does anything. The tailnet connector provisions nodes in your tailnet, and the Tailscale SSH connector lists tailnet machines and runs commands on them.
+内置连接器和 `aperture` 连接器一样在 Aperture 内部运行，但必须先在你的配置中有条目才能做任何事。tailnet 连接器在你的 tailnet 中预配节点；Tailscale SSH 连接器列出 tailnet 机器并在其上运行命令。
 
-These connectors run tools in Aperture rather than forwarding calls to an upstream MCP server. Their configuration still requires a `url`. The raw proxy path `/v1/connectors/<id>/<path>` returns a 404 because these connectors do not provide an HTTP proxy.
+这些连接器在 Aperture 中运行工具，而不是把调用转发给上游 MCP 服务器。它们的配置仍然需要 `url`。原始代理路径 `/v1/connectors/<id>/<path>` 会返回 404，因为这些连接器不提供 HTTP 代理。
 
-Because they need configuration, a built-in connector is subject to grants and appears in the connector listing with a status, the same way a connector that points at an outside service does. Access control works the same for both. The source of the tools is what differs.
+由于需要配置，内置连接器同样受授权管辖，并和指向外部服务的连接器一样带着状态出现在连接器列表中。两者的访问控制完全一致，不同的只是工具的来源。
 
-### Verified connectors
+### 经验证连接器
 
-A verified connector points at an outside service, and Aperture forwards each call to it. Its provider appears in Aperture's registry, which supplies a starting configuration: the protocol, the authentication type, the authorization and token endpoints, and the scopes.
+经验证连接器指向外部服务，Aperture 把每次调用转发给它。其提供商出现在 Aperture 的注册表中，注册表提供起始配置：协议、认证类型、授权与 token 端点，以及作用域。
 
-The registry saves you from finding those values yourself, and does nothing at run time. Once an admin saves the connector, Aperture reads only the stored configuration, so a registry value that changes at the provider leaves your gateway alone.
+注册表帮你省去找这些值的功夫，并且不在运行时做任何事。管理员保存连接器后，Aperture 只读取存储的配置，因此提供商侧变化的注册表值不会影响你的网关。
 
-### Custom connectors
+### 自定义连接器
 
-A custom connector is a verified connector without the preset. You supply the URL, the protocol, the authentication scheme, and the credentials. Aperture treats it identically at run time.
+自定义连接器就是没有预设的经验证连接器。URL、协议、认证方案和凭证都由你提供。运行时 Aperture 对二者的处理完全相同。
 
-Custom does not mean an upstream on your own tailnet, despite the common assumption. The distinction is registry presence, and a custom connector can point at any address Aperture can reach. The `send_caller_identity` field does require a tailnet upstream. It forwards the caller's Tailscale identity to the upstream and is rejected unless the URL is a MagicDNS name or a Tailscale IP address.
+尽管常见误解如此，“自定义”并不等于“你自己 tailnet 上的上游”。区别在于是否在注册表中；自定义连接器可以指向 Aperture 能访问的任何地址。`send_caller_identity` 字段确实要求 tailnet 上游：它把调用者的 Tailscale 身份转发给上游，URL 不是 MagicDNS 名称或 Tailscale IP 地址时会被拒绝。
 
-## Behavioral differences by type
+## 各类型的行为差异
 
-**Grants**: A grant of `"**"` covers every tool from every connector, including built-in connectors, but not chat-only capabilities. To control the sandbox, use conversation settings and tool policies described in [Chat-only tools][ar-chat-only-tools].
+**授权**：`"**"` 授权覆盖所有连接器的所有工具，包括内置连接器，但不包括仅 chat 可用的能力。要控制沙盒，请使用[仅 Chat 可用的工具][ar-chat-only-tools]中描述的会话设置和工具策略。
 
-**Credentials**: Authentication depends on the connector. Tailnet node provisioning requires a Tailscale OAuth client secret. Tailscale SSH uses the gateway's Tailscale identity rather than a connector credential. For credential configuration, refer to the [connectors reference][docs-connectors-reference].
+**凭证**：认证方式取决于连接器。Tailnet 节点预配需要 Tailscale OAuth 客户端密钥。Tailscale SSH 使用网关的 Tailscale 身份而非连接器凭证。凭证配置参阅[连接器参考][docs-connectors-reference]。
 
-## Capability updates
+## 能力更新
 
-The capabilities of verified and custom MCP connectors can change when their upstream servers change. Aperture polls connectors that do not use per-user credentials for these changes. For a per-user connector, open its Chat detail page and select **Refresh tools** to request the current tool list with your credentials. Built-in connector tool sets change with Aperture releases.
+经验证和自定义 MCP 连接器的能力会随其上游服务器变化。对不使用按用户凭证的连接器，Aperture 会轮询这些变化。对按用户的连接器，打开其 Chat 详情页并选择 **Refresh tools**，用你的凭证请求当前工具列表。内置连接器的工具集随 Aperture 版本更新而变化。
 
-A connector can remain **Ready** while an upstream request or refresh fails. **Ready** describes access and authorization, not upstream health.
+上游请求或刷新失败时，连接器仍可保持 **Ready**。**Ready** 描述的是访问与授权，不代表上游健康。
 
-## API categories
+## API 类别
 
-The connector listing in the API includes a `category` field with the value `system`, `verified`, or `custom`. These three values do not map one-to-one to the five connector types:
+API 中的连接器列表包含一个 `category` 字段，取值为 `system`、`verified` 或 `custom`。这三个值与五种连接器类型并非一一对应：
 
-* Chat-only capabilities are absent from the listing, so they have no category.
-* Built-in connectors are reported as `system`, together with the always-present `aperture` connector, even though they require configuration.
-* `verified` and `custom` match the kinds described above.
+* 仅 chat 可用的能力不出现在列表中，因此没有类别。
+* 内置连接器被报告为 `system`，与始终存在的 `aperture` 连接器归在一起，尽管它们需要配置。
+* `verified` 和 `custom` 与上文描述的类型对应。
 
-The registry's category metadata classifies providers, while the current admin connector settings page presents a searchable connector list. To predict connector behavior, use the execution and reachability properties described in [Connector types][ar-connector-types]. For the field definition, refer to the [connectors reference][docs-connectors-reference].
+注册表的类别元数据用于分类提供商，而当前的管理员连接器设置页面呈现的是可搜索的连接器列表。要预判连接器行为，请使用[连接器类型][ar-connector-types]中描述的执行与可达性属性。字段定义参阅[连接器参考][docs-connectors-reference]。
 
-## Examples
+## 示例
 
-**A colleague adds a tool to an MCP server in your tailnet. When can an agent call it?** Aperture keeps shared-credential connector capabilities current. For a per-user connector, open its Chat detail page and select **Refresh tools** to request the current tool list. A built-in connector tool, by contrast, arrives only in an Aperture release.
+**同事在你的 tailnet 的 MCP 服务器上新增了一个工具。智能体何时能调用它？** Aperture 会保持共享凭证连接器的能力最新。对按用户的连接器，打开其 Chat 详情页并选择 **Refresh tools** 请求当前工具列表。而内置连接器的新工具只会随 Aperture 版本发布到来。
 
-**A user has a `"**"` grant but the chat sandbox is unavailable. Where do you look?** Check whether **Code Sandbox** is selected and whether a user or project tool policy disables it. If the capability is unavailable for the gateway, contact Tailscale.
+**用户拥有 `"**"` 授权，但 chat 沙盒不可用。该查哪里？** 检查是否选中了 **Code Sandbox**，以及是否有用户或项目工具策略禁用了它。如果该能力对你的网关不可用，请联系 Tailscale。
 
-**An upstream MCP server returns errors. Which tools are affected?** Tools from that server fail independently of tools from other connectors. Built-in tools can still fail if their own dependencies, such as Tailscale APIs or SSH destinations, are unavailable.
+**一个上游 MCP 服务器返回错误。哪些工具受影响？** 该服务器的工具独立失败，不影响其他连接器的工具。内置工具也可能失败，前提是其自身依赖（如 Tailscale API 或 SSH 目标）不可用。
 
-**You want Tailscale SSH available to one team only. What do you change?** Grant that team access to the connector. The tailnet's SSH policy separately controls which machines the gateway can access.
+**你想让 Tailscale SSH 只对一个团队开放。该改什么？** 给该团队授予该连接器的访问权限。网关能访问哪些机器由 tailnet 的 SSH 策略单独控制。
 
-## Related
+## 相关内容
 
-* [How connectors work][docs-connectors-how-it-works] for the connector model, the MCP and HTTP protocols, authentication, and access control.
-* [Connectors reference][docs-connectors-reference] for field definitions, authentication types, and the `category` field.
-* [How grants work][docs-how-grants-work] for the grant syntax that governs four of the five kinds.
-* [Add a verified connector][docs-connectors-add-verified] to configure a connector from the registry.
-* [Chat sandbox][docs-chat-sandbox] for what the chat-only sandbox capability does.
+* [连接器的工作原理][docs-connectors-how-it-works]，了解连接器模型、MCP 与 HTTP 协议、认证和访问控制。
+* [连接器参考][docs-connectors-reference]，字段定义、认证类型和 `category` 字段。
+* [授权的工作方式][docs-how-grants-work]，了解管辖五种类型中四种的授权语法。
+* [添加经验证的连接器][docs-connectors-add-verified]，从注册表配置连接器。
+* [Chat 沙盒][docs-chat-sandbox]，了解仅 chat 可用的沙盒能力能做什么。
 
-[ar-chat-only-tools]: #chat-only-tools
+[ar-chat-only-tools]: #仅-chat-可用的工具
 
-[ar-connector-types]: #connector-types
+[ar-connector-types]: #连接器类型
 
 [docs-chat-sandbox]: /docs/aperture/chat-sandbox
 

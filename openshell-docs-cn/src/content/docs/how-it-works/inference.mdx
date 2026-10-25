@@ -1,0 +1,250 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "推理"
+sidebar-title: "推理"
+description: "通过提供商配置档案、挂接与原生端点，为沙箱授予对模型提供商的访问。"
+keywords: "生成式 AI, 网络安全, 推理, 提供商配置档案, 凭据, LLM"
+position: 8
+---
+
+OpenShell 通过提供商配置档案与沙箱挂接授予对模型提供商的访问。工作负载调用提供商的原生 API。OpenShell 依据从配置档案推导的网络策略评估请求，只在该配置档案授权的端点上替换真实凭据。
+
+这样把完整的访问契约集中在一处：
+
+| 关注点 | 归属 |
+|---|---|
+| 凭据与刷新生命周期 | 提供商实例 |
+| 授权的主机、端口、路径与二进制 | 提供商配置档案 |
+| 哪个工作负载获得访问 | 沙箱提供商挂接 |
+| 基础 URL、模型、请求形态与超时 | 原生客户端或工作负载配置 |
+
+## 定义并挂接托管提供商
+
+从 [NVIDIA 示例配置档案](https://github.com/NVIDIA/OpenShell/blob/main/providers/nvidia.yaml)出发，审查其访问范围，然后以新 ID 导入编辑后的副本。新网关没有可导出的配置档案。下载该示例，以便添加本工作负载使用的 Python 路径：
+
+```shell
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/nvidia.yaml -o nvidia-native.yaml
+```
+
+在 `nvidia-native.yaml` 中，把 `id` 改为 `nvidia-native`，给配置档案一个不同的 `display_name`，并按[二进制匹配](/how-it-works/policies/network-rules#二进制匹配)所述把 `binaries` 设为可能调用该 API 的可执行文件。保留你打算授予的凭据与端点定义。对 Python 工作负载，编辑后的字段类似：
+
+```yaml
+id: nvidia-native
+display_name: NVIDIA Native API
+binaries:
+  - /usr/bin/python3.*
+  - /usr/local/bin/python3.*
+  - /sandbox/.venv/**
+```
+
+对编辑完成的配置档案做 lint 并导入，然后以其新 ID 创建提供商：
+
+```shell
+openshell profile lint -f nvidia-native.yaml
+openshell profile import -f nvidia-native.yaml
+
+openshell provider create \
+  --name nvidia-prod \
+  --type nvidia-native \
+  --from-existing
+
+openshell sandbox create \
+  --name inference-demo \
+  --from registry.example.com/team/python-agent:1.0 \
+  --provider nvidia-prod \
+  -- python app.py
+```
+
+导入的提供商配置档案以不透明占位符的形式提供 `NVIDIA_API_KEY`，并放行该配置档案的原生端点。客户端配置真实模型标识符：
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key=os.environ["NVIDIA_API_KEY"],
+    timeout=300,
+)
+
+response = client.responses.create(
+    model="nvidia/nemotron-3-super-120b-a12b",
+    input="Hello!",
+)
+print(response.output_text)
+```
+
+OpenAI、Anthropic 或其他托管服务使用同样的导出、编辑、导入流程。设置新的配置档案 ID，只保留工作负载需要的端点与凭据，并写明实际的客户端二进制。提供商挂接不会选择或改写模型。
+
+网关依据你导入的配置档案解析提供商，因此缺少配置档案的提供商会在沙箱创建时失败，错误信息会指明该配置档案与导入命令。把 [`providers/`](https://github.com/NVIDIA/OpenShell/tree/main/providers) 中的示例配置档案当作复制后改造的起始模板，而不是默认值。
+
+## 向运行中的沙箱挂接提供商
+
+```shell
+openshell sandbox provider attach inference-demo nvidia-prod --wait
+openshell sandbox provider list inference-demo
+```
+
+运行中的沙箱会轮询提供商与有效策略的变更。`--wait` 确认沙箱已应用该挂接。启动新进程，让它拿到新的凭据占位符：
+
+```shell
+openshell sandbox exec --name inference-demo -- python app.py
+```
+
+已在运行的进程不会获得新的环境变量。沙箱应用提供商变更后，凭据轮换与卸离即生效。依赖该变更之前先用 `--wait` 确认。
+
+卸离提供商会吊销其策略与凭据访问：
+
+```shell
+openshell sandbox provider detach inference-demo nvidia-prod --wait
+```
+
+## 使用自定义或自托管端点
+
+不要把 `openai` 或 `anthropic` 示例配置档案复用到别的主机。这些配置档案把凭据绑定到公共厂商端点，把 `OPENAI_BASE_URL` 指向别处的提供商会被视为无端点，而不是悄悄把凭据带给新主机。请导入一份写明目标端点与可调用它的二进制的配置档案。
+
+网关宿主机上无凭据的 Ollama 服务器，把这份配置档案存为 `ollama-openai.yaml`：
+
+```yaml
+id: ollama-openai
+display_name: Ollama
+description: Host-local Ollama OpenAI-compatible API
+category: inference
+inference_capable: true
+credentials: []
+endpoints:
+  - host: host.openshell.internal
+    port: 11434
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+  - /usr/bin/python3
+  - /usr/local/bin/python
+  - /sandbox/.uv/python/**
+  - /sandbox/.venv/**
+```
+
+导入配置档案、创建实例并挂接：
+
+```shell
+openshell profile lint -f ollama-openai.yaml
+openshell profile import -f ollama-openai.yaml
+openshell provider create --name ollama --type ollama-openai
+
+openshell sandbox create \
+  --name ollama-client \
+  --from registry.example.com/team/python-agent:1.0 \
+  --provider ollama \
+  --env OPENAI_BASE_URL=http://host.openshell.internal:11434/v1 \
+  -- python app.py
+```
+
+如果客户端库要求为不认证请求的服务器提供 API key，用任意非空占位值即可：
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url=os.environ["OPENAI_BASE_URL"],
+    api_key="unused",
+)
+response = client.chat.completions.create(
+    model="qwen3.5:0.8b",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+```
+
+对需要认证的其他端点，在自定义配置档案中声明凭据，把它绑定到该端点，并从原始凭据来源创建提供商。OpenShell 绝不导出已存储的凭据值。
+
+## 验证访问
+
+查看有效策略，包括由提供商推导的条目：
+
+```shell
+openshell policy get inference-demo --full
+```
+
+然后从新的沙箱进程发起原生请求。请求成功即确认了端点策略、二进制归属、凭据替换、DNS 与上游服务行为。
+
+请求被拒绝时：
+
+- 用 `openshell sandbox provider list` 确认提供商已挂接。
+- 确认调用方二进制与原生端点出现在 `openshell policy get <sandbox> --full` 中。
+- 提供商是在进程启动之后挂接的，启动一个新进程。
+- 沙箱使用了网关全局策略覆盖时，把原生端点加进该覆盖，因为全局覆盖会抑制由提供商推导的策略层。
+- 在日志中查找 `credential_endpoint_mismatch`。该错误表示策略放行了请求，但提供商配置档案未授权其凭据用于所请求的端点。
+
+## 从托管推理路由迁移
+
+OpenShell 移除了工作区级托管推理路由与 `openshell inference` 命令。升级会移除已存储的路由记录。提供商记录、提供商刷新配置与既有沙箱挂接会保留。升级后的首次沙箱创建之前，为每个保留的提供商导入其引用的配置档案；新环境则在其自己的 ID 下给出显式配置档案。
+
+旧路由无法自动转换。它把一个提供商与模型套用到工作区中的每个沙箱，而提供商挂接是有意只向选定的沙箱授予访问。OpenShell 无法推断哪些沙箱应当获得该权限。
+
+### 之前
+
+更早的版本配置一条共享路由：
+
+```shell
+openshell provider create --name nvidia-prod --type nvidia --from-existing
+openshell inference set \
+  --provider nvidia-prod \
+  --model nvidia/nemotron-3-super-120b-a12b \
+  --timeout 300
+```
+
+客户端调用一个受管理的虚拟端点，提供占位密钥与模型名，并依赖 OpenShell 改写请求。
+
+### 之后
+
+导出旧提供商类型的配置档案，编辑其 ID 与访问契约，导入后从原始凭据来源创建替代提供商：
+
+```shell
+openshell profile export nvidia -o yaml > nvidia-native.yaml
+# Edit id, display_name, endpoints, and binaries in nvidia-native.yaml.
+openshell profile lint -f nvidia-native.yaml
+openshell profile import -f nvidia-native.yaml
+openshell provider create \
+  --name nvidia-native-prod \
+  --type nvidia-native \
+  --from-existing
+openshell sandbox provider attach inference-demo nvidia-native-prod --wait
+```
+
+OpenShell 不导出已存储的凭据值，也不就地更改提供商的配置档案类型。原始凭据来源不可用时，按其原有 ID 导入原配置档案，让保留的提供商保持可解析，同时安排凭据轮换到替代提供商。
+
+把每个工作负载更新为：
+
+1. 调用提供商的原生端点。
+2. 读取其配置档案声明的凭据变量。
+3. 发送真实的提供商模型标识符。
+4. 在客户端中配置请求超时。
+5. 使用提供商的原生请求格式。
+
+挂接后启动新进程，并在升级生产工作负载之前验证一次原生请求。仍调用已停用托管虚拟端点的代码会 DNS 解析失败，因为 OpenShell 不再解析也不信任该主机。
+
+### 迁移清单
+
+升级之前，用上一版本的 `openshell inference get` 记录旧提供商、模型与超时。找出实际使用方，导出并编辑来源配置档案，以新 ID 导入，并从原始凭据来源创建替代提供商。只把它挂接到那些沙箱，迁移其客户端，并在旧路由仍可用时测试原生路径。在上一版本上删除旧路由，以暴露遗漏的使用方。升级网关之后，删除并重建每个升级前的沙箱，确保不残留旧的监管器、DNS 条目、信任材料或缓存路由。只为每个替代沙箱重新挂接它需要的提供商。
+
+特殊情况需要额外处理：
+
+- 使用了其他 `OPENAI_BASE_URL` 或 `ANTHROPIC_BASE_URL` 的提供商，需要一份为该主机声明端点的自定义配置档案。
+- 宿主机本地服务需要 `host.openshell.internal` 或可达的局域网/服务主机名，而不是 `127.0.0.1` 或 `localhost`。
+- Google Vertex AI 客户端必须使用原生 Vertex 端点与认证行为。参见 [Google](/how-it-works/providers/google#vertex-ai)。
+- 以桥接前置的 AWS Bedrock 部署需要一份声明桥接端点与允许的客户端二进制的自定义配置档案。
+
+## 安全差异
+
+提供商挂接保持凭据不泄露：工作负载拿到的是不透明占位符，代理只有在网络策略与端点绑定都通过之后才替换真实凭据。原生请求不再被模型专用路由器过滤或改写。因此提供商配置档案的 L7 规则定义了允许的 API 面，而头部、模型选择、请求形态、流式与超时行为由工作负载掌控。
+
+## 后续步骤
+
+- [配置档案](/how-it-works/providers/profiles)
+- [提供商](/how-it-works/providers/overview)
+- [沙箱策略](/how-it-works/policies/overview)
+- [Google](/how-it-works/providers/google#vertex-ai)

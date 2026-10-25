@@ -1,101 +1,101 @@
 ---
-title: "Use a connector"
-description: "Use built-in connectors, or connectors that an admin has configured, to let your agents call tools and query APIs. To configure connectors and grant access as an admin, refer to [Get started with conn"
+title: "使用连接器"
+description: "使用内置连接器或管理员配置的连接器，让你的智能体调用工具、查询 API。要以管理员身份配置连接器并授予访问权限，参阅[连接器入门][docs-connectors-get-started]。"
 ---
 
-Last validated Oct 1, 2026
+最后验证于 Oct 1, 2026
 
-Use built-in connectors, or connectors that an admin has configured, to let your agents call tools and query APIs. To configure connectors and grant access as an admin, refer to [Get started with connectors][docs-connectors-get-started].
+使用内置连接器或管理员配置的连接器，让你的智能体调用工具、查询 API。要以管理员身份配置连接器并授予访问权限，参阅[连接器入门][docs-connectors-get-started]。
 
-## Prerequisites
+## 前提条件
 
-An admin has configured the connector and granted you access to the tools or proxy path that you need. Built-in connector tools also require matching grants.
+管理员已配置该连接器，并授予你所需工具或代理路径的访问权限。内置连接器工具同样需要匹配的授权。
 
-Aperture Chat hides configured connectors that your grants deny, even if you are an admin. A denied connector's detail URL shows the same not-found state as a connector that does not exist. If an expected connector or tool is missing, ask your admin to [check your connector and tool grants][docs-grant-mcp-tool-access].
+即使你是管理员，Aperture Chat 也会隐藏你的授权拒绝的已配置连接器。被拒连接器的详情 URL 与不存在的连接器一样显示未找到状态。如果预期的连接器或工具缺失，请管理员[检查你的连接器与工具授权][docs-grant-mcp-tool-access]。
 
-## Check a connector's status
+## 查看连接器状态
 
-Open **Connectors** in the [Aperture Chat portal][docs-aperture-chat-connectors]. Each connector's section, status badge, or action button shows what to do next. The built-in `aperture` system connector appears first in the list.
+打开 [Aperture Chat 门户][docs-aperture-chat-connectors]中的 **Connectors**。每个连接器所在的分区、状态徽章或操作按钮会告诉你下一步做什么。内置的 `aperture` 系统连接器排在列表最前。
 
-The following table describes each section and status:
+下表描述每个分区和状态：
 
-| Section or status                      | Meaning                                                                                                                                                | Action                                         |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
-| **Ready to use** and **Ready**         | You have access and any required authorization. **Ready** does not confirm that the upstream service is reachable.                                     | Select the connector to review its tools.      |
-| **Connect to use** with **Connect**    | You have access but have not authorized this per-user connector. Chat shows no status badge.                                                           | Select **Connect** and complete consent.       |
-| **Needs reconnect** with **Reconnect** | Your authorization needs renewal. The access token expired without a refresh token, or the provider rejected a token refresh and requires new consent. | Select **Reconnect**.                          |
-| **Temporarily unavailable**            | Aperture could not read your credential state.                                                                                                         | Reload the page. You do not need to reconnect. |
+| 分区或状态 | 含义 | 操作 |
+| --- | --- | --- |
+| **Ready to use** 与 **Ready** | 你拥有访问权限和所需授权。**Ready** 不确认上游服务可达。 | 选择连接器查看其工具。 |
+| **Connect to use** 配 **Connect** | 你有访问权限但尚未授权这个按用户连接器。Chat 不显示状态徽章。 | 选择 **Connect** 并完成授权同意。 |
+| **Needs reconnect** 配 **Reconnect** | 你的授权需要更新。访问令牌过期且没有刷新令牌，或提供商拒绝了令牌刷新并要求重新授权。 | 选择 **Reconnect**。 |
+| **Temporarily unavailable** | Aperture 无法读取你的凭证状态。 | 刷新页面，无需重新连接。 |
 
-Chat does not show a **No access** status. It hides connectors that your grants deny.
+Chat 不显示 **No access** 状态，而是直接隐藏你的授权拒绝的连接器。
 
-If the provider does not issue a refresh token, a new authorization stays **Ready** until its access token expires.
+如果提供商不发放刷新令牌，新的授权会保持 **Ready**，直到其访问令牌过期。
 
-## Authorize a per-user connector
+## 授权按用户连接器
 
-Each user must authorize a per-user OAuth connector individually. This includes connectors that use dynamic client registration. Use Aperture Chat to connect, reconnect, or disconnect.
+每个用户都必须单独授权按用户 OAuth 连接器，包括使用动态客户端注册的连接器。连接、重连和断开都通过 Aperture Chat 完成。
 
-To authorize a per-user connector:
+授权按用户连接器：
 
-1. Open **Connectors** in Aperture Chat.
-2. Under **Connect to use**, select **Connect**.
-3. Sign in to the provider and grant consent.
-4. On the connector detail page, confirm that the status is **Ready**.
+1. 打开 Aperture Chat 中的 **Connectors**。
+2. 在 **Connect to use** 下选择 **Connect**。
+3. 登录提供商并授予同意。
+4. 在连接器详情页确认状态为 **Ready**。
 
-Aperture tries to discover your tools before it returns you to the detail page. If the upstream service is slow or unreachable, the tools might not appear immediately.
+Aperture 会尽量在把你带回详情页之前发现你的工具。如果上游服务缓慢或不可达，工具可能不会立即出现。
 
-A pending authorization expires after 15 minutes. If it expires, select **Connect** again.
+未完成的授权会在 15 分钟后过期。过期后请再次选择 **Connect**。
 
-## Review or refresh MCP tools
+## 查看或刷新 MCP 工具
 
-Select a **Ready** MCP connector to review its **Tools**. The detail page groups tools under **Interactive tools**, **Read-only tools**, and **Write/Delete tools** when present. Select **Refresh tools** to request the current tools from the upstream service. If the refresh fails, Chat shows **Couldn't refresh tools.** and the status stays **Ready**. Status describes access and authorization, not upstream health.
+选择一个 **Ready** 的 MCP 连接器查看其 **Tools**。详情页会把工具按 **Interactive tools**、**Read-only tools** 和 **Write/Delete tools** 分组（如存在）。选择 **Refresh tools** 可向上游服务请求当前工具。刷新失败时，Chat 显示 **Couldn't refresh tools.**，状态保持 **Ready**。状态描述的是访问与授权，不代表上游健康。
 
-## Discover and call tools
+## 发现并调用工具
 
-After you have access to a connector and complete any required authorization, your agent reaches its capabilities through Aperture. You can list and call only the tools that your grants permit.
+获得连接器访问权限并完成所需授权后，你的智能体即可通过 Aperture 访问其能力。你只能列出和调用授权允许的工具。
 
-Send these requests from a device in your tailnet. Aperture identifies you from the Tailscale connection, so no API token is required.
+请从 tailnet 内的设备发送这些请求。Aperture 通过 Tailscale 连接识别你的身份，因此不需要 API 令牌。
 
-* **MCP tools in chat or agent clients**: After you authorize, Aperture discovers tools with your credentials. Your agent can call the tools that your grants permit. If tools are missing, [refresh the MCP tools][ar-review-or-refresh-mcp-tools].
+* **chat 或智能体客户端中的 MCP 工具**：授权后，Aperture 会用你的凭证发现工具。你的智能体可以调用授权允许的工具。工具缺失时，[刷新 MCP 工具][ar-review-or-refresh-mcp-tools]。
 
-* **MCP tools in a custom MCP client**: Point your MCP client at the Aperture `/v1/mcp` endpoint. In the following commands, set `APERTURE_HOST` to your Aperture gateway's [MagicDNS name][docs-magicdns-access], such as the hostname in your browser's address bar when you open Aperture Chat.
+* **自定义 MCP 客户端中的 MCP 工具**：把你的 MCP 客户端指向 Aperture 的 `/v1/mcp` 端点。在下面的命令中，把 `APERTURE_HOST` 设为你的 Aperture 网关的 [MagicDNS 名称][docs-magicdns-access]，例如打开 Aperture Chat 时浏览器地址栏中的主机名。
 
   \[Missing snippet: aperture\_mcp\_list\_tools.mdx]
 
-  Aperture adds the connector ID and an underscore to the start of each tool name from a verified or custom connector. For example, Aperture exposes a `search` tool from a connector with ID `github` as `github_search`. Each upstream server defines its own tool arguments, so use the `inputSchema` that `tools/list` returns when you call a tool.
+  Aperture 会在经验证或自定义连接器的每个工具名前加上连接器 ID 和下划线。例如 ID 为 `github` 的连接器提供的 `search` 工具会被暴露为 `github_search`。每个上游服务器定义自己的工具参数，调用工具时请使用 `tools/list` 返回的 `inputSchema`。
 
-* **HTTP APIs**: Send requests to `/v1/connectors/<id>/<path>`. Aperture injects the connector's credentials automatically. To find the HTTP connectors that you can reach, call the built-in `aperture_list_connectors` tool. This tool is available only if at least one HTTP connector exists and your grants permit `aperture/tools/list_connectors`.
+* **HTTP API**：向 `/v1/connectors/<id>/<path>` 发送请求。Aperture 自动注入连接器的凭证。要找出你能访问的 HTTP 连接器，调用内置的 `aperture_list_connectors` 工具。该工具只在存在至少一个 HTTP 连接器且你的授权允许 `aperture/tools/list_connectors` 时可用。
 
-  For example, if your admin configured an HTTP connector with ID `github` and upstream URL `https://api.github.com`, this request gets the authenticated GitHub account from `/user`:
+  例如，管理员配置了 ID 为 `github`、上游 URL 为 `https://api.github.com` 的 HTTP 连接器时，以下请求通过 `/user` 获取已认证的 GitHub 账户：
 
   ```shell
   curl -i http://<aperture-hostname>/v1/connectors/github/user
   ```
 
-  If the credential is valid and you have a `github/proxy` grant, GitHub returns `200 OK` and account JSON with a `login` field. If Aperture returns `403 Forbidden`, refer to [HTTP connector returns 403 Forbidden][docs-troubleshooting-http-403]. For a different API, replace `github` with its connector ID and `user` with the API path.
+  凭证有效且你拥有 `github/proxy` 授权时，GitHub 返回 `200 OK` 和带 `login` 字段的账户 JSON。如果 Aperture 返回 `403 Forbidden`，参阅 [HTTP 连接器返回 403 Forbidden][docs-troubleshooting-http-403]。换用其他 API 时，把 `github` 换成其连接器 ID、把 `user` 换成 API 路径。
 
-## Reconnect when tools stop working
+## 工具失效时重新连接
 
-If a connector shows **Ready** but tool calls fail, read the error before you reconnect. Provider downtime, network timeouts, and rate limits can cause failures while your authorization is still valid. Retry temporary failures later. If the tool list is missing or outdated, [refresh the MCP tools][ar-review-or-refresh-mcp-tools].
+连接器显示 **Ready** 但工具调用失败时，先读懂错误再重连。提供商停机、网络超时和限流都可能在授权仍然有效的情况下造成失败。临时性故障稍后重试即可。工具列表缺失或过期时，[刷新 MCP 工具][ar-review-or-refresh-mcp-tools]。
 
-If the provider revokes or expires your refresh token, the connector changes to **Needs reconnect**. To renew your authorization:
+提供商吊销或使你的刷新令牌过期时，连接器变为 **Needs reconnect**。更新授权：
 
-1. Open **Connectors** in Aperture Chat.
-2. Select the connector.
-3. Select **Reconnect**.
-4. Complete the provider's consent flow.
+1. 打开 Aperture Chat 中的 **Connectors**。
+2. 选择该连接器。
+3. 选择 **Reconnect**。
+4. 完成提供商的同意流程。
 
-If the problem recurs after the access token expires, ask your admin to check the provider's offline-access settings. If your admin changes the connector's scopes or other OAuth settings, your existing authorization keeps its old settings. To authorize with the new settings, select **Disconnect**, then select **Connect**.
+访问令牌过期后问题反复出现时，请管理员检查提供商的离线访问设置。管理员更改了连接器的作用域或其他 OAuth 设置时，你现有的授权仍保留旧设置。要用新设置授权，请选择 **Disconnect**，然后选择 **Connect**。
 
-**Disconnect** clears your stored authorization and cached tool list for this connector. It does not affect other users. To use the connector again, select **Connect** and complete consent. Do not disconnect only because a tool call failed while the connector is **Ready**.
+**Disconnect** 会清除你为该连接器存储的授权和缓存的工具列表，不影响其他用户。要再次使用该连接器，选择 **Connect** 并完成同意。连接器是 **Ready** 时，不要仅因一次工具调用失败就断开。
 
-## Related
+## 相关内容
 
-* [Get started with connectors][docs-connectors-get-started] to configure a connector and grant access.
-* [How connectors work][docs-connectors-how-it-works] to understand the connector model, authentication, and access control.
-* [Connectors reference][docs-connectors-reference] for connector statuses, authentication types, and protocol behavior.
-* [Grant access to MCP tools][docs-grant-mcp-tool-access] to grant users access to connectors and tools.
+* [连接器入门][docs-connectors-get-started]，配置连接器并授予访问权限。
+* [连接器的工作原理][docs-connectors-how-it-works]，理解连接器模型、认证和访问控制。
+* [连接器参考][docs-connectors-reference]，连接器状态、认证类型和协议行为。
+* [授予 MCP 工具访问权限][docs-grant-mcp-tool-access]，向用户授予连接器和工具的访问权限。
 
-[ar-review-or-refresh-mcp-tools]: #review-or-refresh-mcp-tools
+[ar-review-or-refresh-mcp-tools]: #查看或刷新-mcp-工具
 
 [docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
 

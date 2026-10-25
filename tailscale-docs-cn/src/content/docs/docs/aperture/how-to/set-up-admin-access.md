@@ -1,42 +1,42 @@
 ---
-title: "Set up admin access"
-description: "New Aperture gateways grant admin access to everyone by default. Before your team starts using Aperture, restrict admin access to specific users so that only designated administrators can edit setting"
+title: "设置管理员访问权限"
+description: "新建的 Aperture 网关默认授予所有人管理员权限。在团队开始使用 Aperture 之前，请把管理员权限限制给特定用户，让只有指定的管理员可以编辑设"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-New Aperture gateways grant admin access to everyone by default. Before your team starts using Aperture, restrict admin access to specific users so that only designated administrators can edit settings and view data for all users.
+新建的 Aperture 网关默认授予所有人管理员权限。在团队开始使用 Aperture 之前，请把管理员权限限制给特定用户，让只有指定的管理员可以编辑设置并查看所有用户的数据。
 
-Admins can:
+管理员可以：
 
-* Edit the [Aperture configuration][docs-aperture-configuration] from the **Administration** pages of the Aperture admin dashboard.
-* View session logs and organization-wide usage data for all users.
-* Access all quota buckets and refill them through the API.
-* Access the `/metrics` Prometheus endpoint (when `read_metrics` is granted).
+* 通过 Aperture 管理仪表盘的 **Administration** 页面编辑 [Aperture 配置][docs-aperture-configuration]。
+* 查看所有用户的会话日志和组织范围的使用数据。
+* 访问所有配额桶并通过 API 补充额度。
+* 访问 `/metrics` Prometheus 端点（在被授予 `read_metrics` 时）。
 
-Authenticated tailnet users can use the chat portal by default and view their personal sessions, usage, and quotas at `/sessions`, `/usage`, and `/quotas`. They cannot open the admin dashboard or view organization-wide data. A matching grant can opt a non-admin user out of the portal with `enable_portal: false`, while an explicit `enable_portal: true` wins over a broader opt-out. Admins always retain portal access.
+经过认证的 tailnet 用户默认可以使用聊天门户，并在 `/sessions`、`/usage` 和 `/quotas` 查看自己的会话、用量和配额。他们无法打开管理仪表盘或查看组织范围的数据。匹配的授权可以用 `enable_portal: false` 让非管理员用户退出门户，而显式的 `enable_portal: true` 会覆盖更宽泛的退出设置。管理员始终保留门户访问。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-get-started] with at least one configured provider.
-* Access to the Aperture admin dashboard at `/admin/`.
-* Your Tailscale login name (for example, `alice@example.com`).
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-get-started]。
+* `/admin/` 处 Aperture 管理仪表盘的访问权限。
+* 你的 Tailscale 登录名（例如 `alice@example.com`）。
 
-## Restrict admin access
+## 限制管理员权限
 
-The [default configuration][docs-default-config] grants everyone the admin role using `"src": ["*"]`. Replace this with explicit admin grants for specific users.
+[默认配置][docs-default-config]通过 `"src": ["*"]` 把 admin 角色授予所有人。请把它替换为针对特定用户的显式管理员授权。
 
-> **Warning:**
+> **警告：**
 >
-> Do not remove the wildcard admin grant until you have added an explicit admin grant for yourself. Aperture prevents saves through the admin dashboard and configuration APIs that would remove the saving user's admin access.
+> 在为自己添加显式管理员授权之前，不要删除通配符管理员授权。对于会移除保存者本人管理员权限的保存操作，Aperture 会通过管理仪表盘和配置 API 加以阻止。
 
 1. \[Missing snippet: aperture\_admin\_nav.mdx]
-2. Find the grant with `{ "role": "admin" }` and `"src": ["*"]`.
-3. Replace `"*"` with the Tailscale login names of your administrators.
+2. 找到带 `{ "role": "admin" }` 和 `"src": ["*"]` 的授权。
+3. 把 `"*"` 替换为你管理员的 Tailscale 登录名。
 
-The following example grants admin access to two specific users:
+下面的示例把管理员权限授予两个特定用户：
 
 ```json
 {
@@ -61,11 +61,11 @@ The following example grants admin access to two specific users:
 }
 ```
 
-This configuration gives `alice@example.com` and `bob@example.com` admin access, while all other users get standard user access. Admin access takes precedence when a user matches both grants, so Alice and Bob receive admin-level permissions.
+这份配置让 `alice@example.com` 和 `bob@example.com` 拥有管理员权限，其他用户获得标准用户权限。当用户同时匹配两条授权时，管理员权限优先，因此 Alice 和 Bob 获得的是 admin 级权限。
 
-### Use Tailscale groups
+### 使用 Tailscale 组
 
-For organizations that manage access through Tailscale groups, you can assign admin roles using groups in the Aperture configuration. This approach lets you manage admin membership centrally through your Tailscale group definitions. Group matching requires [visible groups][docs-visible-groups] enabled for the Aperture gateway.
+对于通过 Tailscale 组管理访问的组织，可以在 Aperture 配置中用组来分配 admin 角色。这样你就能通过 Tailscale 组定义集中管理管理员成员。组匹配需要为 Aperture 网关启用[可见组][docs-visible-groups]。
 
 ```json
 {
@@ -90,23 +90,23 @@ For organizations that manage access through Tailscale groups, you can assign ad
 }
 ```
 
-If multiple grants match a user, the admin role takes precedence. Refer to the [grants configuration reference][docs-aperture-grants] for the full syntax.
+如果多条授权同时匹配一个用户，admin 角色优先。完整语法请参阅[授权配置参考][docs-aperture-grants]。
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-## Verify admin access
+## 验证管理员权限
 
-After restricting admin access, verify the configuration is correct:
+限制管理员权限后，验证配置是否正确：
 
-1. Open `/admin/settings/config`, the **Administration** > **Configuration** page. If you can view and edit the configuration, your admin access is working.
-2. Sign in as a non-admin user and confirm that opening `/admin/` redirects to `/chat` when portal access is enabled. If a matching grant sets `enable_portal: false` and no matching grant explicitly sets `enable_portal: true`, the request returns an access-denied page instead.
+1. 打开 `/admin/settings/config`（**Administration** > **Configuration** 页面）。如果你能查看并编辑配置，说明你的管理员权限已生效。
+2. 以非管理员身份登录，确认在门户访问启用时打开 `/admin/` 会重定向到 `/chat`。如果有匹配的授权设置了 `enable_portal: false`，且没有匹配的授权显式设置 `enable_portal: true`，请求则会返回拒绝访问页面。
 
-## Next steps
+## 后续步骤
 
-* [Grant access to models][docs-grant-model-access] to define which models each user or group can use.
-* [Set up the chat UI][docs-set-up-chat-ui] to let users talk to models directly from their browser.
-* [Set per-user spending limits][docs-set-per-user-spending-limits] to manage costs.
-* Refer to the [Aperture admin dashboard reference][docs-web-dashboard] for details on each admin-accessible page.
+* [授予模型访问权限][docs-grant-model-access]：定义每个用户或组可以使用哪些模型。
+* [设置聊天界面][docs-set-up-chat-ui]：让用户直接在浏览器中与模型对话。
+* [设置按用户的支出限额][docs-set-per-user-spending-limits]：管理成本。
+* 各个管理员可见页面的细节请参阅 [Aperture 管理仪表盘参考][docs-web-dashboard]。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

@@ -1,16 +1,16 @@
 ---
-title: "Application testing"
-description: "Share local development servers, test webhooks, and simulate geo-specific traffic without deploying to the cloud."
+title: "应用测试"
+description: "共享本地开发服务器、测试 webhook、模拟特定地区的流量，无需部署到云端。"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-Tailscale streamlines application testing workflows by letting developers share local services with teammates, expose servers to the public internet for webhook testing, and route traffic through global exit nodes for localization testing — all without complex cloud deployments or network configuration.
+Tailscale 简化了应用测试工作流：开发者可以把本地服务共享给队友、把服务器发布到公网进行 webhook 测试、让流量经由全球各地的出口节点（exit node）路由以完成本地化测试——这一切都无需复杂的云端部署或网络配置。
 
-## Popular workflows
+## 常用工作流
 
-[**Localization and geo-specific testing by simulating traffic from different global locations**](/docs/use-cases/application-testing/geo-specific-testing) — Use Tailscale exit nodes to route test traffic through different geographic locations and validate localization behavior with Siege.
+[**模拟来自全球不同位置的流量，进行本地化与特定地区测试**](/docs/use-cases/application-testing/geo-specific-testing)——使用 Tailscale 出口节点让测试流量经由不同的地理位置路由，并用 Siege 验证本地化行为。
 
-[**Share a local development server with the internet**](/docs/use-cases/application-testing/share-local-dev-server-with-internet) — Use Tailscale Funnel to expose a local development server to the public internet over HTTPS, without configuring port forwarding or a public IP address.
+[**将本地开发服务器共享给互联网**](/docs/use-cases/application-testing/share-local-dev-server-with-internet)——使用 Tailscale Funnel 通过 HTTPS 将本地开发服务器发布到公网，无需配置端口转发或公网 IP 地址。
 
-[**Share a local development server with your team**](/docs/use-cases/application-testing/share-local-dev-server-with-team) — Use Tailscale Serve to expose a local development server to other members of your tailnet over HTTPS, without opening access to the public internet.
+[**将本地开发服务器共享给你的团队**](/docs/use-cases/application-testing/share-local-dev-server-with-team)——使用 Tailscale Serve 通过 HTTPS 将本地开发服务器展现给 tailnet 中的其他成员，而不对公网开放访问。

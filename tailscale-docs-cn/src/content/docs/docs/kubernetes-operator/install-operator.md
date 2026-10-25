@@ -1,29 +1,29 @@
 ---
-title: "Install the Tailscale Kubernetes Operator"
-description: "Install the Tailscale Kubernetes Operator in your Kubernetes cluster."
+title: "安装 Tailscale Kubernetes Operator"
+description: "在你的 Kubernetes 集群中安装 Tailscale Kubernetes Operator。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide explains setting up the Tailscale Kubernetes Operator in your cluster. You will configure access control tags, create OAuth credentials, and install the operator using Helm or static manifests.
+本指南介绍如何在你的集群中设置 Tailscale Kubernetes Operator。你将配置访问控制标签、创建 OAuth 凭证，然后使用 Helm 或静态清单安装 Operator。
 
-If you prefer not to use OAuth credentials, you can instead [install the operator using workload identity federation][docs-k8s-workload-identity].
+如果你不想使用 OAuth 凭证，可以改为[使用工作负载身份联合（workload identity federation）安装 Operator][docs-k8s-workload-identity]。
 
-## Prerequisites
+## 前提条件
 
-For known compatibility issues, refer to our [compatibility guide][docs-k8s-compatibility].
+已知的兼容性问题请参阅[兼容性指南][docs-k8s-compatibility]。
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* A Kubernetes cluster.
-* Access to the [Access controls](https://console.tailscale.com/admin/acls/file) and [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) pages of the admin console.
-* Familiarity with [tags][docs-tags] and [OAuth client credentials][docs-oauth-clients].
+* 一个 Kubernetes 集群。
+* 能够访问管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 和 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
+* 熟悉[标签][docs-tags]和 [OAuth 客户端凭证][docs-oauth-clients]。
 
-## Configure tags and OAuth credentials
+## 配置标签和 OAuth 凭证
 
-Before installing the operator, you need to create tags and an OAuth client for the operator to use.
+在安装 Operator 之前，你需要创建标签和一个 OAuth 客户端供 Operator 使用。
 
-1. In your [Access controls](https://console.tailscale.com/admin/acls/file), add the following under the `tagOwners` section:
+1. 在你的 [Access controls](https://console.tailscale.com/admin/acls/file) 中，在 `tagOwners` 部分下添加以下内容：
 
    ```json
    "tagOwners": {
@@ -32,64 +32,64 @@ Before installing the operator, you need to create tags and an OAuth client for 
    }
    ```
 
-   This will:
+   这将会：
 
-   * Create the [tags][docs-tags] `tag:k8s-operator` and `tag:k8s`.
-   * Make `tag:k8s-operator` an owner of `tag:k8s` (so the operator can manage devices with `tag:k8s`).
+   * 创建[标签][docs-tags] `tag:k8s-operator` 和 `tag:k8s`。
+   * 让 `tag:k8s-operator` 成为 `tag:k8s` 的所有者（这样 Operator 就能管理带有 `tag:k8s` 的设备）。
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-2. [Create an OAuth client][docs-oauth-clients-setup] in the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console. Create the client with `write` scope for:
+2. 在管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面[创建一个 OAuth 客户端][docs-oauth-clients-setup]。创建客户端时，为以下权限授予 `write` 作用域：
 
-   * `General/Services` (with `tag:k8s-operator`)
-   * `Devices/Core` (with `tag:k8s-operator`)
-   * `Keys/Auth Keys` (with `tag:k8s-operator`)
+   * `General/Services`（附带 `tag:k8s-operator`）
+   * `Devices/Core`（附带 `tag:k8s-operator`）
+   * `Keys/Auth Keys`（附带 `tag:k8s-operator`）
 
-The operator uses these credentials to manage devices via the [Tailscale API][docs-api] and to create [auth keys][docs-auth-keys] for itself and the devices it manages.
+Operator 会使用这些凭证通过 [Tailscale API][docs-api] 管理设备，并为自己及其管理的设备创建[认证密钥（auth key）][docs-auth-keys]。
 
-## Install the operator
+## 安装 Operator
 
-A default operator installation creates:
+默认安装会创建：
 
-* A `"tailscale"` `Namespace`.
-* An `"operator"` `Deployment`.
-* Role-based access control (RBAC) for the operator.
-* A `"tailscale"` `IngressClass`.
-* `ProxyClass`, `Connector`, `ProxyGroup`, `DNSConfig`, `Recorder`, `Tailnet` custom resource definitions (CRDs).
+* 一个 `"tailscale"` `Namespace`。
+* 一个 `"operator"` `Deployment`。
+* Operator 的基于角色的访问控制（RBAC）。
+* 一个 `"tailscale"` `IngressClass`。
+* `ProxyClass`、`Connector`、`ProxyGroup`、`DNSConfig`、`Recorder`、`Tailnet` 自定义资源定义（CRD）。
 
-There are two ways to install the Tailscale Kubernetes Operator:
+安装 Tailscale Kubernetes Operator 有两种方式：
 
-* Using [Helm][ar-helm].
-* Applying [static manifests with `kubectl`][ar-static-manifests].
+* 使用 [Helm][ar-helm] 安装。
+* 应用 [`kubectl` 静态清单][ar-static-manifests]。
 
-### Install using Helm
+### 使用 Helm 安装
 
-The Tailscale Kubernetes Operator's Helm charts are available from two chart repositories:
+Tailscale Kubernetes Operator 的 Helm 图表可从两个图表仓库获取：
 
-* The `https://pkgs.tailscale.com/helmcharts` repository contains well-tested charts for [stable Tailscale versions][docs-versions].
-* The `https://pkgs.tailscale.com/unstable/helmcharts` repository contains charts with the very latest changes, published in between official releases.
+* `https://pkgs.tailscale.com/helmcharts` 仓库包含经过充分测试的图表，对应[稳定的 Tailscale 版本][docs-versions]。
+* `https://pkgs.tailscale.com/unstable/helmcharts` 仓库包含最新改动的图表，在正式版本之间发布。
 
-The charts in both repositories are different versions of the same chart and you can upgrade from one to the other.
+两个仓库中的图表是同一图表的不同版本，你可以从一个升级到另一个。
 
-> **Note:**
+> **注意：**
 >
-> Helm charts and container images for a new stable Tailscale version are released a few days after the official release.
+> 新的 Tailscale 稳定版本正式发布几天后，对应的 Helm 图表和容器镜像才会发布。
 
-To install the latest Kubernetes Tailscale operator from `https://pkgs.tailscale.com/helmcharts` in the `tailscale` namespace:
+在 `tailscale` 命名空间中从 `https://pkgs.tailscale.com/helmcharts` 安装最新的 Kubernetes Tailscale Operator：
 
-1. Add `https://pkgs.tailscale.com/helmcharts` to your local Helm repositories:
+1. 将 `https://pkgs.tailscale.com/helmcharts` 添加到你的本地 Helm 仓库：
 
    ```shell
    helm repo add tailscale https://pkgs.tailscale.com/helmcharts
    ```
 
-2. Update your local Helm cache:
+2. 更新你的本地 Helm 缓存：
 
    ```shell
    helm repo update
    ```
 
-3. Install the operator, passing in the OAuth client credentials that you created earlier:
+3. 安装 Operator，并传入你之前创建的 OAuth 客户端凭证：
 
    ```shell
    helm upgrade \
@@ -103,55 +103,55 @@ To install the latest Kubernetes Tailscale operator from `https://pkgs.tailscale
      --wait
    ```
 
-4. [Validate][ar-validation] that the operator has successfully joined your tailnet.
+4. [验证][ar-validation] Operator 已成功加入你的 tailnet。
 
-### Install using static manifests with kubectl
+### 使用 kubectl 静态清单安装
 
-1. Download the Tailscale Kubernetes Operator [manifest file][xt-gh-tailscale-k8s-operator] from the [`tailscale/tailscale`][xt-gh-tailscale-repo] repository.
+1. 从 [`tailscale/tailscale`][xt-gh-tailscale-repo] 仓库下载 Tailscale Kubernetes Operator 的[清单文件][xt-gh-tailscale-k8s-operator]。
 
-2. Edit your version of the manifest file:
+2. 编辑你下载的清单文件：
 
-   * Find `# SET CLIENT ID HERE` and replace it with your OAuth client ID.
-   * Find `# SET CLIENT SECRET HERE` and replace it with your OAuth client secret. The OAuth client secret is case-sensitive.
+   * 找到 `# SET CLIENT ID HERE` 并替换为你的 OAuth 客户端 ID。
+   * 找到 `# SET CLIENT SECRET HERE` 并替换为你的 OAuth 客户端密钥。OAuth 客户端密钥区分大小写。
 
-   For both the client ID and secret, quote the value to avoid any potential YAML misinterpretation of unquoted strings. For example, use:
+   客户端 ID 和密钥都请给值加上引号，避免未加引号的字符串被 YAML 误解析。例如使用：
 
    ```yaml
    client_id: "k123456CNTRL"
    client_secret: "tskey-client-k123456CNTRL-abcdef"
    ```
 
-3. Apply the edited file to your Kubernetes cluster:
+3. 将编辑后的文件应用到你的 Kubernetes 集群：
 
    ```shell
    kubectl apply -f operator.yaml
    ```
 
-4. [Validate][ar-validation] that the operator has successfully joined your tailnet.
+4. [验证][ar-validation] Operator 已成功加入你的 tailnet。
 
-## Validation
+## 验证
 
-To verify that the Tailscale operator has joined your tailnet, open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and look for a node named `tailscale-operator` (or your customized hostname) tagged with the `tag:k8s-operator` tag.
+要确认 Tailscale Operator 已加入你的 tailnet，请打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，查找名为 `tailscale-operator`（或你自定义的主机名）且带有 `tag:k8s-operator` 标签的节点。
 
-It may take some time for the operator to join your tailnet as the container image downloads and the Pod starts.
+Operator 加入你的 tailnet 可能需要一些时间，因为容器镜像要下载、Pod 要启动。
 
-## Further exploration
+## 进一步探索
 
-* Follow a step-by-step introduction to the operator in the [hands-on walk through][docs-k8s-walkthrough].
-* [Access][docs-k8s-api-access] the Kubernetes API over Tailscale.
-* [Expose][docs-k8s-ingress] a cluster workload to your tailnet.
-* [Access][docs-k8s-egress] a tailnet node or service from Kubernetes.
-* Configure [multi-cluster ingress][docs-k8s-multi-cluster-ingress].
-* Enable [kubectl session recording][docs-k8s-session-recording].
-* [Host][docs-k8s-host-resources] Tailscale resources in Kubernetes.
-* [Configure][docs-operator-customization] advanced operator settings.
-* [Troubleshoot][docs-operator-troubleshooting] deployment and connectivity issues.
+* 在[实操演练][docs-k8s-walkthrough]中按步骤了解 Operator。
+* 经 Tailscale [访问][docs-k8s-api-access] Kubernetes API。
+* 把集群工作负载[公开][docs-k8s-ingress]到你的 tailnet。
+* 在 Kubernetes 中[访问][docs-k8s-egress] tailnet 节点或服务。
+* 配置[多集群入站][docs-k8s-multi-cluster-ingress]。
+* 启用 [kubectl 会话录制][docs-k8s-session-recording]。
+* 在 Kubernetes 中[托管][docs-k8s-host-resources] Tailscale 资源。
+* [配置][docs-operator-customization] Operator 的高级设置。
+* [排查][docs-operator-troubleshooting]部署和连接问题。
 
-[ar-helm]: #install-using-helm
+[ar-helm]: #使用-helm-安装
 
-[ar-static-manifests]: #install-using-static-manifests-with-kubectl
+[ar-static-manifests]: #使用-kubectl-静态清单安装
 
-[ar-validation]: #validation
+[ar-validation]: #验证
 
 [docs-api]: /docs/reference/tailscale-api
 

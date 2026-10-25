@@ -1,81 +1,80 @@
 ---
-title: "User & group provisioning for Google Workspace"
-description: "Sync users and groups from Google Workspace to use in Tailscale access controls."
+title: "Google Workspace 的用户与组开通"
+description: "从 Google Workspace 同步用户与组，以便在 Tailscale 访问控制中使用。"
 ---
 
-Last validated Jul 6, 2026
+最后验证于 Jul 6, 2026
 
-> **Note:** This feature is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此功能适用于 [Standard、Premium 与 Enterprise 套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale's use and transfer of information received from Google APIs to any other app will adhere to [Google API Services User Data Policy][xt-google-api-scopes] including the Limited Use requirements.
+> Tailscale 对从 Google API 收到的信息向任何其他应用的使用与传输，都将遵守 [Google API Services User Data Policy][xt-google-api-scopes]，包括"有限使用"（Limited Use）要求。
 
-Tailscale supports synchronizing Google Workspace users and groups for use in Tailscale [access controls][docs-access-control].
+Tailscale 支持同步 Google Workspace 的用户与组，以便在 Tailscale [访问控制][docs-access-control]中使用。
 
-* With group sync, you can refer to a group from Google in your [tailnet policy file][docs-tailnet-policy-file], with a human-readable name.
-* With user sync, you can onboard and offboard users to Tailscale. For related information, refer to [Offboarding when using user & group provisioning][docs-offboarding-users-offboarding-scim].
+* 通过组同步，你可以在 [tailnet 策略文件][docs-tailnet-policy-file]中以人类可读的名称引用 Google 上的组。
+* 通过用户同步，你可以为用户开通或停用 Tailscale 访问。相关信息请参阅[使用用户与组开通时的离职处理][docs-offboarding-users-offboarding-scim]。
 
-## Prerequisites
+## 前提条件
 
-* You need a Google Workspace account.
-* You need a Tailscale network (known as a tailnet).
-* Your tailnet's identity provider needs to be Google.
+* 你需要一个 Google Workspace 账户。
+* 你需要一个 Tailscale 网络（即 tailnet）。
+* 你 tailnet 的身份提供方（IdP）需要是 Google。
 
-## Set up Google User & Group sync
+## 设置 Google 用户与组同步
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these steps.
+你必须成为 Tailscale 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能完成这些步骤。
 
-1. Open the Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) page.
-2. In the **Google Sync** section, select **Enable**.
-3. In the authorization page that opens, select **Authorize with Google**.
-4. In the **Choose an account** page, select your Google Workspace super user account.
-5. In the **Sign in** page, select **Continue**.
-6. When prompted to allow access to your tailnet, select **Allow**.
+1. 打开 Tailscale 的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
+2. 在 **Google Sync** 部分，选择 **Enable**。
+3. 在打开的授权页面中，选择 **Authorize with Google**。
+4. 在 **Choose an account** 页面，选择你的 Google Workspace 超级用户账户。
+5. 在 **Sign in** 页面，选择 **Continue**。
+6. 当提示允许访问你的 tailnet 时，选择 **Allow**。
 
-When you enable Google Sync for the very first time, no users or groups will be added unless you specify
-groups explicitly or select the **Sync all users** option.
+首次启用 Google Sync 时，除非你显式指定组或选择 **Sync all users** 选项，否则不会添加任何用户或组。
 
-## Sync all users
+## 同步所有用户
 
-By default, Google Sync only adds users from groups you selected. This includes users who are members of nested groups under a selected group. To mirror all of your Google Workspace users, enable the **Sync all users** option, which immediately starts provisioning users to your tailnet.
+默认情况下，Google Sync 只会添加你选定组中的用户，其中包括选定组下嵌套组的成员。要镜像你所有的 Google Workspace 用户，请启用 **Sync all users** 选项，它会立即开始向你的 tailnet 开通用户。
 
-When **Sync all users** is not enabled, users will be suspended if they are removed from all synced groups. If this is not the desired behavior, enable **Sync all users** or create an additional Google group that includes all the users to sync. For example, you may have a synced group named `all-tailscale-users` that contains all users that should have Tailscale access, and then use other groups to manage access control.
+未启用 **Sync all users** 时，如果用户被移出所有已同步的组，该用户将被暂停（suspend）。如果这不是你想要的行为，请启用 **Sync all users**，或创建一个额外的 Google 组，将所有要同步的用户纳入其中。例如，你可以有一个名为 `all-tailscale-users` 的同步组，包含所有应有 Tailscale 访问权限的用户，然后再用其他组来管理访问控制。
 
-## Manage groups
+## 管理组
 
-By default, a group and its members do not sync into your tailnet unless you explicitly select it. If a selected group contains nested Google Groups, Tailscale syncs the users from those nested groups for the selected group.
+默认情况下，组及其成员不会同步到你的 tailnet，除非你显式选择它们。如果所选组包含嵌套的 Google 组，Tailscale 会为该所选组同步那些嵌套组中的用户。
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these steps.
+你必须成为 Tailscale 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能完成这些步骤。
 
-1. Open the Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console.
-2. In the **Google Sync** section, select the  menu and then select **Manage groups**.
+1. 打开管理控制台的 Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
+2. 在 **Google Sync** 部分，选择  菜单，然后选择 **Manage groups**。
 
-> **Note:**
+> **注意：**
 >
-> If a group is renamed in Google Admin Console, the reference does not rename. You will always use the group email to reference the group in your Tailscale access control policies.
+> 如果某个组在 Google Admin Console 中被重命名，引用不会随之改名。你在 Tailscale 访问控制策略中始终使用组的电子邮件地址来引用该组。
 
-## Unsync unassigned users
+## 取消同步未分配的用户
 
-After adding groups and their members to your tailnet, if you want to remove the users whom you previously added using the **Sync all users** option who are not part of the groups you added, you can use the option **Unsync unassigned users**.
+将组及其成员添加到 tailnet 后，如果你想移除先前通过 **Sync all users** 选项添加、但已不属于你所添加组的那些用户，可以使用 **Unsync unassigned users** 选项。
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these steps.
+你必须成为 Tailscale 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能完成这些步骤。
 
-1. Open the Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console.
-2. In the **Google Sync** section, select the  menu and then select **Unsync unassigned users**.
+1. 打开管理控制台的 Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
+2. 在 **Google Sync** 部分，选择  菜单，然后选择 **Unsync unassigned users**。
 
-## Force a sync
+## 强制同步
 
-Changes to group membership and users within the Google Admin Console are synced to Tailscale every 40 minutes. You can also force a sync to Tailscale.
+Google Admin Console 中组内成员与用户的更改每 40 分钟同步到 Tailscale 一次。你也可以强制立即向 Tailscale 同步。
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these steps.
+你必须成为 Tailscale 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能完成这些步骤。
 
-1. Open the Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console.
-2. In the **Google Sync** section, select the  menu and then select **Force sync**.
+1. 打开管理控制台的 Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
+2. 在 **Google Sync** 部分，选择  菜单，然后选择 **Force sync**。
 
-## Use groups in your tailnet policy file
+## 在 tailnet 策略文件中使用组
 
-You can refer to a group from Google Workspace in your [tailnet policy file][docs-tailnet-policy-file] file, with a human-readable name. For example:
+你可以在 [tailnet 策略文件][docs-tailnet-policy-file]中以人类可读的名称引用来自 Google Workspace 的组。例如：
 
 ```json
 {
@@ -101,22 +100,22 @@ You can refer to a group from Google Workspace in your [tailnet policy file][doc
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Groups synced from Google Workspace do not replace [groups][docs-policy-syntax-groups] in Tailscale. You can use Google Workspace group sync and also define groups in the tailnet policy file.
+从 Google Workspace 同步的组不会取代 Tailscale 中的[组][docs-policy-syntax-groups]。你可以同时使用 Google Workspace 组同步，并在 tailnet 策略文件中定义组。
 
-## Disable Google User & Group sync
+## 禁用 Google 用户与组同步
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these steps.
+你必须成为 Tailscale 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能完成这些步骤。
 
-1. Open the Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console.
-2. In the **Google Sync** section, select the  menu and then select **Disable**.
-3. Follow the prompts to confirm and disable Google User & Group sync.
+1. 打开管理控制台的 Tailscale [User management](https://console.tailscale.com/admin/settings/user-management) 页面。
+2. 在 **Google Sync** 部分，选择  菜单，然后选择 **Disable**。
+3. 按照提示确认并禁用 Google 用户与组同步。
 
-## Limitations
+## 限制
 
-* The maximum number of groups that can be synced is 100.
-* After a new group is created in Google Workspace, a Tailscale [Owner, Admin, or IT admin][docs-user-roles] must open the [Google Group Sync](https://console.tailscale.com/admin/settings/user-management) page and select the group to allow syncing of the group.
-* Users that do not share the same domain as the tailnet's domain are skipped.
-* Google-synced groups don't work with [Mullvad exit node][docs-mullvad-exit-nodes] access control policies.
+* 可同步的组数量上限为 100 个。
+* 在 Google Workspace 中新建组后，必须由 Tailscale 的 [Owner、Admin 或 IT admin][docs-user-roles] 打开 [Google Group Sync](https://console.tailscale.com/admin/settings/user-management) 页面并选择该组，才允许同步该组。
+* 与 tailnet 域名不同域的用户会被跳过。
+* Google 同步的组不适用于 [Mullvad 出口节点][docs-mullvad-exit-nodes]访问控制策略。
 
 [docs-access-control]: /docs/features/access-control
 

@@ -1,70 +1,70 @@
 ---
 title: "MagicDNS"
-description: "Find out how to automatically register DNS names for devices in your Tailscale network."
+description: "了解如何为 Tailscale 网络中的设备自动注册 DNS 名称。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-MagicDNS automatically registers DNS names for devices in your network.
+MagicDNS 会为网络中的设备自动注册 DNS 名称。
 
-> **Note:** MagicDNS is available for [all plans](https://tailscale.com/pricing).
+> **注意：**MagicDNS [所有套餐](https://tailscale.com/pricing)均可用。
 
-If you add a new web server called `my-server` to your network, you no longer need to use its Tailscale IP: using the name `my-server` in your browser's address bar or on the command line will work.
+如果你向网络添加了一个名为 `my-server` 的新 Web 服务器，就不再需要使用它的 Tailscale IP：在浏览器地址栏或命令行中使用名称 `my-server` 即可。
 
-*（图：Example of a browser window with 'my-server' and a port number in the address bar.）*
+*（图：浏览器窗口示例，地址栏中为"my-server"和一个端口号。）*
 
-> **Note:**
+> **注意：**
 >
-> MagicDNS does not require a [DNS nameserver][docs-dns-using-settings] if running Tailscale v1.20 or later. Otherwise, your network must have **at least one DNS nameserver set** in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console. These nameservers will receive all DNS queries not handled by MagicDNS.
+> 运行 Tailscale v1.20 或更高版本时，MagicDNS 不需要 [DNS 名称服务器][docs-dns-using-settings]。否则，你的网络必须在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面中设置**至少一个 DNS 名称服务器**。MagicDNS 未处理的 DNS 查询会发送给这些名称服务器。
 
-## Enabling MagicDNS
+## 启用 MagicDNS
 
-Tailnets created on or after October 20, 2022 have MagicDNS enabled by default.
+2022 年 10 月 20 日及之后创建的 tailnet 默认启用 MagicDNS。
 
-If not already enabled, you can enable MagicDNS in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console:
+如果尚未启用，你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面启用 MagicDNS：
 
-*（图：The 'Enable MagicDNS' button on the admin console.）*
+*（图：管理控制台上的"Enable MagicDNS"按钮。）*
 
-## Accessing devices over MagicDNS
+## 通过 MagicDNS 访问设备
 
-Once MagicDNS is enabled, any device signed in to your network can access other devices by using their [machine name][docs-machine-names]. For example, if you have a server named "monitoring":
+启用 MagicDNS 后，登录到你的网络的任何设备都可以使用[机器名][docs-machine-names]访问其他设备。例如，如果你有一台名为 "monitoring" 的服务器：
 
-* To SSH into it, run `ssh username@monitoring`
-* To ping it, run `ping monitoring`
-* To open it in your browser, type `monitoring` in your address bar.
+* 要通过 SSH 连接它，运行 `ssh username@monitoring`
+* 要 ping 它，运行 `ping monitoring`
+* 要在浏览器中打开它，在地址栏输入 `monitoring`。
 
-> **Note:**
+> **注意：**
 >
-> Some CLI tools on macOS such as `host` or `nslookup` circumvent system DNS resolution, and will not work with MagicDNS. For example, `host johns-iphone-6s` will not work on macOS, even if `ping johns-iphone-6s` will.
+> macOS 上的一些 CLI 工具（如 `host` 或 `nslookup`）会绕过系统 DNS 解析，因此无法配合 MagicDNS 使用。例如，`host johns-iphone-6s` 在 macOS 上不会生效，即使 `ping johns-iphone-6s` 可以。
 
-> **Note:**
+> **注意：**
 >
-> Devices that are [shared with you][docs-sharing] are only accessible via MagicDNS on Tailscale v1.4 or later. You must also use the shared device's [full domain name][ar-fqnd-vs-machine-name]. For example, `ping webserver.example2.ts.net`.
+> [与你共享的设备][docs-sharing]只能在 Tailscale v1.4 或更高版本上通过 MagicDNS 访问。你还必须使用共享设备的[完整域名][ar-fqnd-vs-machine-name]。例如 `ping webserver.example2.ts.net`。
 
-## Assigning and editing machine names
+## 分配和编辑机器名
 
-MagicDNS automatically uses a device's [machine name][docs-machine-names] as part of the DNS entry. If you change your device's name, the MagicDNS entry will automatically change.
+MagicDNS 自动使用设备的[机器名][docs-machine-names]作为 DNS 条目的一部分。如果你更改设备的名称，MagicDNS 条目会自动更新。
 
-If you have a specific name you'd like to use to reference your device, then [edit the machine name][docs-machine-names-renaming-a-machine] of the device.
+如果你有特定想要的名称来引用你的设备，可以[编辑该设备的机器名][docs-machine-names-renaming-a-machine]。
 
-## Fully qualified domain names vs. machine names
+## 完全限定域名与机器名
 
-Under the hood, MagicDNS generates a **fully qualified domain name** for every device on your Tailscale network (known as a tailnet). The fully qualified domain name is made up of two parts:
+在底层，MagicDNS 会为 Tailscale 网络（即 tailnet）中的每台设备生成一个**完全限定域名**。完全限定域名由两部分组成：
 
-1. A [**machine name**][docs-machine-names], which you can change.
-2. Your [**tailnet DNS name**][docs-tailnet-name-tailnet-dns]. You can find your tailnet DNS name in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+1. 一个[**机器名**][docs-machine-names]，你可以更改。
+2. 你的 [**tailnet DNS 名称**][docs-tailnet-name-tailnet-dns]。你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面找到你的 tailnet DNS 名称。
 
-*（图：An example of 'monitoring.yak-bebop.ts.net' as a fully qualified domain name. The 'monitoring' segment is identified as the machine name. The 'yak-bebop.ts.net' segment is identified as the tailnet name.）*
+*（图：以"monitoring.yak-bebop.ts.net"作为完全限定域名的示例。"monitoring"部分标识为机器名，"yak-bebop.ts.net"部分标识为 tailnet 名称。）*
 
-> **Note:**
+> **注意：**
 >
-> Previously, you might have used a [tailnet name][docs-tailnet-name] ending in `.beta.tailscale.net`. If so, migrate to the new tailnet name ending in `.ts.net`. Support for the existing `beta.tailscale.net` name ended on **September 13, 2024**.
+> 你之前使用的 [tailnet 名称][docs-tailnet-name]可能以 `.beta.tailscale.net` 结尾。如果是这样，请迁移到以 `.ts.net` 结尾的新 tailnet 名称。对现有 `beta.tailscale.net` 名称的支持已于 **2024 年 9 月 13 日**结束。
 
-The table below shows how some example machine names and domains combine to create the full domain name.
+下表展示了一些示例机器名和域名如何组合成完整域名。
 
-Machine Name
-Tailnet Name
-Fully Qualified Domain Name
+机器名
+tailnet 名称
+完全限定域名
 
 monitoring
 yak-bebop.ts.net
@@ -87,49 +87,49 @@ free-form.example.
 
 ts.net
 
-Full domain names can be cumbersome to type, so when you enable MagicDNS, Tailscale automatically adds [search domains][docs-dns-using-settings] to your network. With these search domains you only need to type the machine name to access a device.
+完整域名输入起来很繁琐，因此当你启用 MagicDNS 时，Tailscale 会自动向你的网络添加[搜索域][docs-dns-using-settings]。有了这些搜索域，你只需输入机器名即可访问设备。
 
-For the *yak-bebop* network, **the following two commands are equivalent**:
+对于 *yak-bebop* 网络，**以下两条命令是等价的**：
 
 ```shell
 ping monitoring
 ping monitoring.yak-bebop.ts.net
 ```
 
-In most situations, you'll want to use the machine name. But for security reasons, accessing [devices shared with you][docs-sharing] requires using the full domain name.
+在大多数情况下，你会想使用机器名。但出于安全原因，访问[与你共享的设备][docs-sharing]需要使用完整域名。
 
-You can find the full domain name of any device in your network by opening its page from the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面打开任意设备的详情页，找到其完整域名。
 
-## Disabling MagicDNS
+## 停用 MagicDNS
 
-MagicDNS can be disabled for your whole network by toggling the same button you used to enable it in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面切换你用来启用它的同一个按钮，即可为整个网络停用 MagicDNS。
 
-If you are experiencing trouble with MagicDNS on a particular device and wish to disable it only there, the current solution is to stop accepting network DNS settings in general.
+如果你在特定设备上遇到 MagicDNS 问题，希望只在那台设备上停用它，目前的解决办法是让该设备停止接受网络 DNS 设置。
 
-**On Linux**, stop accepting DNS with:
+**在 Linux 上**，使用以下命令停止接受 DNS：
 
 ```shell
 tailscale set --accept-dns=false
 ```
 
-**On macOS**, stop accepting DNS by selecting the Tailscale menu bar icon. From here, select **Preferences**, and then you can uncheck **Use Tailscale DNS settings** from the menu.
+**在 macOS 上**，点选 Tailscale 菜单栏图标来停止接受 DNS。在这里选择 **Preferences**，然后可以在菜单中取消勾选 **Use Tailscale DNS settings**。
 
-**On Windows**, stop accepting DNS by holding `SHIFT` while right-clicking on the Tailscale system tray icon, and deselecting **Use Tailscale DNS** from the menu.
+**在 Windows 上**，按住 `SHIFT` 并右键点击 Tailscale 系统托盘图标，然后在菜单中取消选择 **Use Tailscale DNS**。
 
-In the future, we will have robust enough DNS configuration and resolution logic that disabling MagicDNS separately will never be necessary. At this point, the toggle will disappear.
+将来，等我们的 DNS 配置与解析逻辑足够健壮时，就不需要再单独停用 MagicDNS 了。到那时，这个开关会消失。
 
-## Removing the `beta.tailscale.net` nameserver
+## 移除 `beta.tailscale.net` 名称服务器
 
-Support for the legacy `*.beta.tailscale.net` nameserver ended on **September 13, 2024**. If you haven't already, migrate your tailnet to use the [tailnet DNS name][docs-tailnet-name-tailnet-dns] format nameserver. If you are no longer using the `beta.tailscale.net` nameserver, you can delete it. Once deleted, you cannot recover it.
+对旧版 `*.beta.tailscale.net` 名称服务器的支持已于 **2024 年 9 月 13 日**结束。如果你还没有迁移，请把你的 tailnet 迁移到 [tailnet DNS 名称][docs-tailnet-name-tailnet-dns]格式的名称服务器。如果你已不再使用 `beta.tailscale.net` 名称服务器，可以将其删除。删除后将无法恢复。
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to remove the `beta.tailscale.net` nameserver.
+你需要是 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能移除 `beta.tailscale.net` 名称服务器。
 
-1. Open the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-2. Under **Nameservers**, look for the nameserver whose name ends in `.beta.tailscale.net`, for example, `yak-bebop.beta.tailscale.net`. (If you don't find a `.beta.tailscale.net` nameserver, there is nothing to delete.)
-3. Select the  menu and then select **Delete**.
-4. Confirm that you want to delete the `beta.tailscale.net` nameserver and then select **Delete**.
+1. 打开管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。
+2. 在 **Nameservers** 下，找到名称以 `.beta.tailscale.net` 结尾的名称服务器，例如 `yak-bebop.beta.tailscale.net`。（如果没有找到 `.beta.tailscale.net` 名称服务器，就无需删除。）
+3. 选择该菜单，然后选择 **Delete**。
+4. 确认要删除该 `beta.tailscale.net` 名称服务器，然后选择 **Delete**。
 
-[ar-fqnd-vs-machine-name]: #fully-qualified-domain-names-vs-machine-names
+[ar-fqnd-vs-machine-name]: #完全限定域名与机器名
 
 [docs-dns-using-settings]: /docs/reference/dns-in-tailscale#tailscale-dns-settings
 

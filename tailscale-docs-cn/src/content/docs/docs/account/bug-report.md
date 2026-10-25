@@ -1,134 +1,110 @@
 ---
-title: "Generate a bug report"
-description: "Generate a bug report to help troubleshoot issues with your tailnet."
+title: "生成 bug 报告"
+description: "生成 bug 报告，帮助排查你的 tailnet 出现的问题。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-The Tailscale support team can help troubleshoot certain issues based on diagnostic logs. If you are working
-with the support team to troubleshoot an issue, you might be asked to create a bug report. A bug report
-is a random indicator that marks a section of the diagnostic logs to give us better visibility into
-what is occurring at a specific time, which can help make triage easier.
+Tailscale 支持团队可以根据诊断日志帮你排查某些问题。如果你正在与支持团队一起排查某个问题，对方可能会请你创建一个 bug 报告。bug 报告是一个随机标识符，用于标记诊断日志中的某一段，让我们能更清楚地了解特定时间点发生了什么，从而更容易分诊（triage）。
 
-To generate a bug report, you must be directly using the device—a bug report cannot be generated remotely.
+要生成 bug 报告，你必须直接在该设备上操作——无法远程生成 bug 报告。
 
-A bug report looks like this:
+bug 报告看起来像这样：
 
 ```shell
 BUG-1b7641a16971a9cd75822c0ed8043fee70ae88cf05c52981dc220eb96a5c49a8-20210427151443Z-fbcd4fd3a4b7ad94
 ```
 
-The bug report identifier shares no personally-identifiable information, and is
-unused unless you share the bug report with our team.
-You can generate a bug report by using the Tailscale client applications, or the [`bugreport`][docs-cli-bugreport]
-command in the [Tailscale CLI][docs-cli].
+bug 报告标识符不包含任何个人身份信息，而且除非你把 bug 报告分享给我们的团队，否则它不会被使用。你可以使用 Tailscale 客户端应用，或 [Tailscale CLI][docs-cli] 中的 [`bugreport`][docs-cli-bugreport] 命令来生成 bug 报告。
 
-After you generate a bug report, copy and paste the value that you can then share when you [contact support][co-contact-support-form].
+生成 bug 报告后，复制并粘贴得到的值，以便你在[联系支持团队][co-contact-support-form]时提供。
 
-## Generating a bug report by using the client application
+## 使用客户端应用生成 bug 报告
 
 #### macOS
 
-There are two ways of sending us information to help resolve an issue.
+有两种方式可以向我们发送信息以帮助解决问题。
 
-You can copy a bug report identifier string that the Tailscale support team can use for diagnosing general connectivity issues. To generate a bug report identifier:
+你可以复制一个 bug 报告标识符字符串，Tailscale 支持团队可以用它来诊断一般的连接问题。要生成 bug 报告标识符：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select **Settings**, **About**, then **Report an Issue**.
-3. Copy the bug report identifier string and paste it into your correspondence to the Tailscale support team.
+1. 选择菜单栏中的 Tailscale 图标。
+2. 依次选择 **Settings**、**About**，然后选择 **Report an Issue**。
+3. 复制该 bug 报告标识符字符串，并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
-The Tailscale support team might also ask you to generate a configuration report that contains more in-depth information. To generate and export a configuration report:
+Tailscale 支持团队还可能请你生成包含更深入信息的配置报告（configuration report）。要生成并导出配置报告：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select **Settings**, **About**, then **Report an Issue**.
-3. Select the **Export Configuration Report**.
-4. After the report generation is complete, the folder where it has been saved will open in the Finder. Copy and paste it into your correspondence to the Tailscale support team.
+1. 选择菜单栏中的 Tailscale 图标。
+2. 依次选择 **Settings**、**About**，然后选择 **Report an Issue**。
+3. 选择 **Export Configuration Report**。
+4. 报告生成完成后，保存该报告的文件夹会在 Finder 中打开。将其复制并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
-The configuration report is a `tar.gz` file that includes information gathered by various diagnostic tools on your Mac, such as `netstat`, `ifconfig`, `lsappinfo`, and `systemextensionsctl`. Sharing this report with the support team will speed up the troubleshooting process because it gives them a detailed look at what might be causing the issue.
+配置报告是一个 `tar.gz` 文件，包含在你的 Mac 上由各种诊断工具（如 `netstat`、`ifconfig`、`lsappinfo` 和 `systemextensionsctl`）收集的信息。与支持团队分享这份报告可以加快排查速度，因为它能让他们详细看到可能导致问题的原因。
 
-> **Note:**
+> **注意：**
 >
-> Since many Tailscale issues stem from conflicts with other software installed on your Mac, the report also includes a list of installed third-party applications and system/kernel extensions. While the Tailscale support team strives to handle your personal information carefully, it's a good idea to check the configuration report yourself before sending it to ensure you're not accidentally disclosing any sensitive information.
+> 由于许多 Tailscale 问题源于与 Mac 上已安装的其他软件冲突，报告还会包括已安装的第三方应用和系统/内核扩展的列表。虽然 Tailscale 支持团队会尽力谨慎处理你的个人信息，但建议你在发送前自行检查配置报告，确保没有意外泄露任何敏感信息。
 
 #### Windows
 
-1. Hold the `CTRL` key and right-click the Tailscale icon in the menu bar.
-2. Select **Debug** and then select **Bug report**.
-3. Select **Copy report ID** to copy the bug report and paste it into your correspondence to the Tailscale support team.
+1. 按住 `CTRL` 键并右键点击菜单栏中的 Tailscale 图标。
+2. 选择 **Debug**，然后选择 **Bug report**。
+3. 选择 **Copy report ID** 复制该 bug 报告，并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
 #### Android
 
-1. Select **Bug report** from the application menu.
-2. Tap on the clipboard icon to copy the bug report ID and paste it into your correspondence to the Tailscale support team.
+1. 在应用菜单中选择 **Bug report**。
+2. 点击剪贴板图标复制 bug 报告 ID，并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
 #### iOS
 
-1. Tap on **Bug Report** in the Settings menu of the app.
-2. Tap on the clipboard icon to copy the bug report ID and paste it into your correspondence to the Tailscale support team.
+1. 在应用的 Settings 菜单中点击 **Bug Report**。
+2. 点击剪贴板图标复制 bug 报告 ID，并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
 #### tvOS
 
-1. Scroll down the home screen of the app, and select **About Tailscale for tvOS**.
-2. Select **Report an Issue**.
-3. Record the bug report identifier or scan the QR code using your phone and paste it into your correspondence to the Tailscale support team.
+1. 在应用主屏幕向下滚动，选择 **About Tailscale for tvOS**。
+2. 选择 **Report an Issue**。
+3. 记下 bug 报告标识符，或用手机扫描二维码，并粘贴到你与 Tailscale 支持团队的沟通内容中。
 
-## Generating a bug report by using the CLI
+## 使用 CLI 生成 bug 报告
 
-The [Tailscale CLI][docs-cli] is supported only for Linux (including Synology and QNAP), macOS, and Windows.
+[Tailscale CLI][docs-cli] 仅支持 Linux（包括 Synology 和 QNAP）、macOS 和 Windows。
 
-Run the [`bugreport`][docs-cli-bugreport] command:
+运行 [`bugreport`][docs-cli-bugreport] 命令：
 
 ```shell
 tailscale bugreport
 ```
 
-If you are using macOS and you haven't [set your system path][docs-cli-macos-using-the-cli] to include the Tailscale command executable,
-you need to specify the path to `tailscale`. For example:
+如果你使用的是 macOS，且尚未[将系统 path 设置][docs-cli-macos-using-the-cli]为包含 Tailscale 命令可执行文件，则需要指定 `tailscale` 的路径。例如：
 
 ```shell
 /Applications/Tailscale.app/Contents/MacOS/Tailscale bugreport
 ```
 
-You can use the following flags with the `bugreport` command:
+你可以在 `bugreport` 命令中使用以下标志：
 
-* `--diagnose` Prints additional verbose information about the system to the
-  Tailscale logs after generating a bug report identifier, which can then be
-  viewed by our support team. Defaults to false.
-* `--record` Pause and then write another bug report. Use this flag to create an initial bug report identifier. During the pause,
-  perform the action that reproduces your issue. Then, press Enter to create a second bug report identifier. Share
-  both bug identifiers with our team. Defaults to false.
+* `--diagnose` 在生成 bug 报告标识符后，向 Tailscale 日志输出关于系统的额外详细信息，供我们的支持团队查看。默认为 false。
+* `--record` 暂停，然后再写入另一个 bug 报告。使用此标志会先创建一个初始 bug 报告标识符。在暂停期间，执行能复现你问题的操作。然后按 Enter 创建第二个 bug 报告标识符。将两个 bug 标识符都分享给我们的团队。默认为 false。
 
-## What is shared in a bug report
+## bug 报告中共享的内容
 
-The components of the bug report identifier are:
+bug 报告标识符的组成部分：
 
-* `BUG` to signal that this is a bug report
-* The public key for your device's logs, used by Tailscale support to locate
-  the correct logs
-* The time that the bug report was created
-* A random number, used by Tailscale support to locate the correct location
-  within the log
+* `BUG`，表示这是一份 bug 报告
+* 你设备日志的公钥，Tailscale 支持团队用它来定位正确的日志
+* bug 报告的创建时间
+* 一个随机数，Tailscale 支持团队用它来定位日志中的具体位置
 
-When a bug report is generated, the bug report identifier is written to the
-[client logs][docs-log-mesh-traffic-client-logs], along with current health status, the current network
-map supplied by the coordination server, and some additional OS-dependent
-information that we have found useful to collect when responding to support
-requests, such as:
+生成 bug 报告时，bug 报告标识符会连同当前健康状况、由协调服务器（coordination server）提供的当前网络地图，以及我们在处理支持请求时发现有用的一些额外操作系统相关信息一起写入[客户端日志][docs-log-mesh-traffic-client-logs]，例如：
 
-* Windows registry settings relating to the Tailscale application
-* Windows page file settings, DLL versions, a list of installed security
-  applications, and network interface information
-* Some additional details about internal state are also recorded if the bug
-  report is generated using the CLI with the `--diagnose` option.
+* 与 Tailscale 应用相关的 Windows 注册表设置
+* Windows 页面文件设置、DLL 版本、已安装的安全应用列表和网络接口信息
+* 如果使用 CLI 加 `--diagnose` 选项生成 bug 报告，还会记录一些关于内部状态的额外细节
 
-The bug report details are recorded in the [client logs][docs-log-mesh-traffic-client-logs]. You can
-review exactly what was sent by reading those logs. You can also
-[inspect the code][xt-gh-tailscale-opn-localapi] that generates the bug reports in GitHub,
-search for `serveBugReport`.
+bug 报告详情记录在[客户端日志][docs-log-mesh-traffic-client-logs]中。你可以通过阅读这些日志来核查实际发送了什么内容。你也可以在 GitHub 上[检查生成 bug 报告的代码][xt-gh-tailscale-opn-localapi]，搜索 `serveBugReport`。
 
-If [client logging is disabled][docs-log-mesh-traffic-opt-out] then bug reports are not generated
-even when using the `tailscale bugreport` command and nothing is sent to
-Tailscale.
+如果[客户端日志已被禁用][docs-log-mesh-traffic-opt-out]，则即使使用 `tailscale bugreport` 命令也不会生成 bug 报告，任何内容都不会发送给 Tailscale。
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 

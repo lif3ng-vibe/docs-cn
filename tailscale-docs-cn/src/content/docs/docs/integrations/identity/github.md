@@ -1,73 +1,73 @@
 ---
-title: "Setting up GitHub to work with Tailscale"
-description: "You can create a Tailscale network (known as a tailnet) using either a GitHub organization account or a GitHub personal account. For more information about GitHub accounts, refer to [Types of GitHub a"
+title: "设置 GitHub 以与 Tailscale 配合使用"
+description: "你可以使用 GitHub 组织账户或 GitHub 个人账户来创建 Tailscale 网络（即 tailnet）。关于 GitHub 账户的更多信息，参见 Types of GitHub accounts。"
 ---
 
-Last validated Feb 4, 2026
+最后验证于 Feb 4, 2026
 
-You can create a Tailscale network (known as a tailnet) using either a GitHub organization account or a GitHub personal account. For more information about GitHub accounts, refer to [Types of GitHub accounts][xt-gh-accounts].
+你可以使用 GitHub 组织账户或 GitHub 个人账户来创建 Tailscale 网络（即 tailnet）。关于 GitHub 账户的更多信息，参见 [Types of GitHub accounts][xt-gh-accounts]。
 
-## Create a GitHub personal tailnet
+## 创建 GitHub 个人 tailnet
 
-1. Go to the Tailscale [Sign up](https://login.tailscale.com/start) page and select **Sign up with GitHub**. You will be redirected to the GitHub **Authorize Tailscale** page.
+1. 前往 Tailscale 的 [Sign up](https://login.tailscale.com/start) 页面，选择 **Sign up with GitHub**。你将被重定向到 GitHub 的 **Authorize Tailscale** 页面。
 
-2. Select **Authorize tailscale**. You will be redirected to the Tailscale **Select a tailnet** page.
+2. 选择 **Authorize tailscale**。你将被重定向到 Tailscale 的 **Select a tailnet** 页面。
 
-3. Select the GitHub personal account that you want to use for your tailnet. You will be redirected to the Tailscale [admin console](https://console.tailscale.com/admin), where you can manage your tailnet.
+3. 选择你想用于 tailnet 的 GitHub 个人账户。你将被重定向到 Tailscale 的[管理控制台](https://console.tailscale.com/admin)，在那里可以管理你的 tailnet。
 
-After your tailnet is created, you can [invite any user][docs-invite-any-user] to join your GitHub personal tailnet, including other GitHub users. Invited users will not have access to the GitHub repository unless you deliberately share it.
+tailnet 创建完成后，你可以[邀请任意用户][docs-invite-any-user]加入你的 GitHub 个人 tailnet，包括其他 GitHub 用户。除非你主动共享，否则受邀用户将无权访问你的 GitHub 仓库。
 
-## Create a GitHub organization tailnet
+## 创建 GitHub 组织 tailnet
 
-You must be the owner of the GitHub organization that you want to use for creating a tailnet.
+你必须是想用来创建 tailnet 的 GitHub 组织的所有者。
 
-1. Go to the Tailscale [Sign up](https://login.tailscale.com/start) page and select **Sign up with GitHub**. You will be redirected to the GitHub **Authorize Tailscale** page.
+1. 前往 Tailscale 的 [Sign up](https://login.tailscale.com/start) 页面，选择 **Sign up with GitHub**。你将被重定向到 GitHub 的 **Authorize Tailscale** 页面。
 
-2. Select **Authorize tailscale**. You will be redirected to the Tailscale **Select a tailnet** page.
+2. 选择 **Authorize tailscale**。你将被重定向到 Tailscale 的 **Select a tailnet** 页面。
 
-3. Select the GitHub organization that you want to use for your tailnet. You will be redirected to the Tailscale [admin console](https://console.tailscale.com/admin), where you can manage your tailnet.
+3. 选择你想用于 tailnet 的 GitHub 组织。你将被重定向到 Tailscale 的[管理控制台](https://console.tailscale.com/admin)，在那里可以管理你的 tailnet。
 
-After your tailnet is created, any user in your GitHub organization can join your tailnet. You can also [invite any user][docs-invite-any-user] outside of your GitHub organization. Invite links can only be sent to non-members of a GitHub organization and will not work for GitHub organization members. Invited users will not have access to the GitHub repository unless you deliberately share it.
+tailnet 创建完成后，你的 GitHub 组织中的任何用户都可以加入你的 tailnet。你也可以[邀请][docs-invite-any-user] GitHub 组织之外的用户。邀请链接只能发送给 GitHub 组织的非成员，对 GitHub 组织成员无效。除非你主动共享，否则受邀用户将无权访问你的 GitHub 仓库。
 
-## Join a GitHub personal tailnet
+## 加入 GitHub 个人 tailnet
 
-Any user wanting to join a GitHub personal tailnet must use the [invite][docs-invite-any-user] link provided by the tailnet administrator.
+想加入 GitHub 个人 tailnet 的任何用户，都必须使用 tailnet 管理员提供的[邀请][docs-invite-any-user]链接。
 
-1. Go to the URL in the provided invite link.
+1. 打开邀请链接中的 URL。
 
-2. Select **Sign up with GitHub**. You will be redirected to the GitHub **Authorize Tailscale** page.
+2. 选择 **Sign up with GitHub**。你将被重定向到 GitHub 的 **Authorize Tailscale** 页面。
 
-3. Select **Authorize tailscale**. You will be redirected to the Tailscale **Select a tailnet** page.
+3. 选择 **Authorize tailscale**。你将被重定向到 Tailscale 的 **Select a tailnet** 页面。
 
-4. Select the tailnet that you want to join. A confirmation message will display along with a link to download and [install][docs-install] the Tailscale client on your device.
+4. 选择你想加入的 tailnet。页面会显示一条确认消息，并附带在你设备上下载并[安装][docs-install] Tailscale 客户端的链接。
 
-## Join a GitHub organization tailnet
+## 加入 GitHub 组织 tailnet
 
-If you belong to the GitHub organization, you can automatically join the tailnet from the Tailscale [Sign up](https://login.tailscale.com/start) page. If you are not a member of the GitHub organization, a tailnet administrator must send you an [invite][docs-invite-any-user] link to join.
+如果你属于该 GitHub 组织，可以从 Tailscale 的 [Sign up](https://login.tailscale.com/start) 页面自动加入 tailnet。如果你不是该 GitHub 组织的成员，则需要 tailnet 管理员向你发送[邀请][docs-invite-any-user]链接才能加入。
 
-### GitHub organization members
+### GitHub 组织成员
 
-1. Go to the Tailscale [Login](https://login.tailscale.com/login) page.
+1. 前往 Tailscale 的 [Login](https://login.tailscale.com/login) 页面。
 
-2. Select **Sign up with GitHub**. You will be redirected to the GitHub **Authorize Tailscale** page.
+2. 选择 **Sign up with GitHub**。你将被重定向到 GitHub 的 **Authorize Tailscale** 页面。
 
-3. Select **Authorize tailscale**. You will be redirected to the Tailscale **Select a tailnet** page.
+3. 选择 **Authorize tailscale**。你将被重定向到 Tailscale 的 **Select a tailnet** 页面。
 
-4. Select the tailnet that you own or a tailnet that you want to join. A confirmation message will display along with a link to download and [install][docs-install] the Tailscale client on your device.
+4. 选择你拥有的 tailnet 或想加入的 tailnet。页面会显示一条确认消息，并附带在你设备上下载并[安装][docs-install] Tailscale 客户端的链接。
 
-### Non-GitHub organization members
+### 非 GitHub 组织成员
 
-1. Go to the URL in the provided invite link.
+1. 打开邀请链接中的 URL。
 
-2. Select your preferred identity provider to use for authentication. Once you are authenticated, a confirmation message will display along with a link to download and [install][docs-install] the Tailscale client on your device.
+2. 选择你偏好的身份提供方进行认证。认证通过后，页面会显示一条确认消息，并附带在你设备上下载并[安装][docs-install] Tailscale 客户端的链接。
 
-## Migration to and from a GitHub tailnet
+## 迁入与迁出 GitHub tailnet
 
-Currently, we cannot migrate your tailnet from/to GitHub as an identity provider.
+目前，我们无法将你的 tailnet 迁移到 GitHub 作为身份提供方，也无法从 GitHub 迁出。
 
-## Multiple tailnets
+## 多个 tailnet
 
-Currently, we cannot enable or create [multiple tailnets][docs-multiple-tailnets] for GitHub organizations.
+目前，我们无法为 GitHub 组织启用或创建[多个 tailnet][docs-multiple-tailnets]。
 
 [docs-install]: /docs/how-to/quickstart
 

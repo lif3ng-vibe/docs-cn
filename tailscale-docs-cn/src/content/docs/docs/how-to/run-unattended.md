@@ -1,118 +1,118 @@
 ---
-title: "Keep Tailscale running when I'm not logged in to my computer"
-description: "Configure your device to run Tailscale even when no users are logged in."
+title: "在我未登录电脑时保持 Tailscale 运行"
+description: "配置设备在没有任何用户登录时也运行 Tailscale。"
 ---
 
-Last validated Sep 25, 2026
+最后验证于 Sep 25, 2026
 
-Keeping Tailscale running when no user is logged in lets you continue reaching a device remotely after a sign-out or restart. Whether the device stays connected to your tailnet by default depends on the operating system and how the Tailscale client runs.
+在没有用户登录的情况下保持 Tailscale 运行，可以让你在注销或重启之后仍能远程访问设备。设备默认是否保持连接到你的 tailnet，取决于操作系统以及 Tailscale 客户端的运行方式。
 
-> **Note:**
+> **注意：**
 >
-> Unattended mode is only available on Windows.
+> 无人值守模式（unattended mode）仅在 Windows 上可用。
 
-* **Linux**: The Tailscale client runs as the system daemon [`tailscaled`][docs-tailscaled] by default, so it remains available even when no users are logged in.
-* **macOS**: The Tailscale client runs within the user login session. Running it as a standalone system daemon is not currently supported. You can track progress on [GitHub issue #987][xt-gh-tailscale-issue-987].
-* **Windows**: The Tailscale client runs within the user login session by default. When the user signs out or the device restarts, Tailscale disconnects until a user logs in again.
+* **Linux**：Tailscale 客户端默认以系统守护进程 [`tailscaled`][docs-tailscaled] 的方式运行，因此即使没有用户登录也保持可用。
+* **macOS**：Tailscale 客户端在用户登录会话内运行。目前不支持作为独立系统守护进程运行。可以在 [GitHub issue #987][xt-gh-tailscale-issue-987] 跟踪进展。
+* **Windows**：Tailscale 客户端默认在用户登录会话内运行。当用户注销或设备重启后，Tailscale 会断开连接，直到有用户再次登录。
 
-To keep a Windows device accessible when no user is signed in, such as for [Windows Remote Desktop (RDP)][docs-secure-rdp-windows] access after a reboot or on multi-user Windows Server instances, enable unattended mode, also referred to as Server mode.
+要让 Windows 设备在没有用户登录时仍可访问（例如在重启后通过 [Windows 远程桌面（RDP）][docs-secure-rdp-windows] 访问，或用于多用户的 Windows Server 实例），请启用无人值守模式（unattended mode），也称为 Server 模式。
 
-## Prerequisites
+## 前提条件
 
-Before enabling unattended mode on Windows, make sure you have:
+在 Windows 上启用无人值守模式之前，请确保：
 
-* Tailscale installed on Windows 10 or later, or Windows Server 2016 or later.
-* The device authenticated and connected to your tailnet.
+* 已在 Windows 10 或更高版本、或 Windows Server 2016 或更高版本上安装 Tailscale。
+* 设备已完成认证并连接到你的 tailnet。
 
-## Enable unattended mode
+## 启用无人值守模式
 
-You can configure unattended mode using the Tailscale client UI, the CLI, or the [`UnattendedMode`][docs-mdm-keys-unattended] system policy.
+你可以使用 Tailscale 客户端界面、CLI 或 [`UnattendedMode`][docs-mdm-keys-unattended] 系统策略来配置无人值守模式。
 
-#### Tailscale UI
+#### Tailscale 界面
 
-1. Right-click the **Tailscale** icon in the Windows system tray.
-2. Hover over **Preferences**.
-3. Select **Run unattended**.
-4. When prompted by the app, select **Yes** to enable unattended mode.
+1. 右键单击 Windows 系统托盘中的 **Tailscale** 图标。
+2. 悬停在 **偏好设置**（Preferences）上。
+3. 选择 **无人值守运行**（Run unattended）。
+4. 在应用提示时，选择 **是**（Yes）以启用无人值守模式。
 
-A check mark appears next to **Run unattended** in the **Preferences** menu when active.
+启用后，**偏好设置** 菜单中的 **无人值守运行** 旁边会出现勾选标记。
 
 #### Tailscale CLI
 
-Open PowerShell or Command Prompt and run:
+打开 PowerShell 或命令提示符并运行：
 
 ```powershell
 tailscale set --unattended=true
 ```
 
-If you are provisioning a new device headlessly during initial setup with an [auth key][docs-auth-keys]:
+如果你要在初始设置期间使用[认证密钥][docs-auth-keys]以无界面（headless）方式预配新设备：
 
 ```powershell
 tailscale up --unattended=true --authkey=tskey-auth-xxxxx
 ```
 
-#### System policy
+#### 系统策略
 
-For centrally managed enterprise deployments, configure the `UnattendedMode` policy in the Tailscale ADMX template or Registry:
+对于集中管理的企业部署，在 Tailscale ADMX 模板或注册表中配置 `UnattendedMode` 策略：
 
-* **Registry Key**: `HKLM\Software\Policies\Tailscale`
-* **Value Name**: `UnattendedMode`
-* **Value Type**: `REG_SZ` (`always`, `never`, or `user-decides`)
+* **注册表项**：`HKLM\Software\Policies\Tailscale`
+* **值名称**：`UnattendedMode`
+* **值类型**：`REG_SZ`（`always`、`never` 或 `user-decides`）
 
-For more information, refer to [Tailscale system policies][docs-mdm-keys-unattended].
+更多信息参阅 [Tailscale 系统策略][docs-mdm-keys-unattended]。
 
-> **Note:**
+> **注意：**
 >
-> When unattended mode is enabled, the Windows account that activated it owns the Tailscale configuration on that device. The Tailscale client continues to run with the configured profile even after the Windows user logs out or the device restarts.
+> 启用无人值守模式后，启用它的 Windows 账户将拥有该设备上的 Tailscale 配置。即使 Windows 用户注销或设备重启，Tailscale 客户端仍会以所配置的配置文件继续运行。
 
-## Verify unattended mode
+## 验证无人值守模式
 
-To verify that unattended mode is functioning:
+要验证无人值守模式是否正常工作：
 
-1. Sign out of Windows or restart the device without logging back in.
-2. From another device in your tailnet, ping the device's Tailscale IP address or MagicDNS name:
+1. 注销 Windows，或重启设备且不重新登录。
+2. 从 tailnet 中的另一台设备，ping 该设备的 Tailscale IP 地址或 MagicDNS 名称：
 
    ```shell
    tailscale ping <hostname-or-ip>
    ```
 
-If the device is unreachable, open **Services** (`services.msc`) on the Windows device and make sure the **Tailscale** service is set to **Automatic** and is currently **Running**.
+如果设备无法访问，请在 Windows 设备上打开 **服务**（`services.msc`），确保 **Tailscale** 服务的启动类型为 **自动**（Automatic）且当前处于 **正在运行**（Running）状态。
 
-## Disable unattended mode
+## 禁用无人值守模式
 
-To return Tailscale to user-session mode:
+要让 Tailscale 回到用户会话模式：
 
-#### Tailscale UI
+#### Tailscale 界面
 
-1. Right-click the **Tailscale** icon in the Windows system tray.
-2. Hover over **Preferences**.
-3. Select **Run unattended** to deselect the check mark.
+1. 右键单击 Windows 系统托盘中的 **Tailscale** 图标。
+2. 悬停在 **偏好设置** 上。
+3. 选择 **无人值守运行**，取消勾选。
 
 #### Tailscale CLI
 
-Open PowerShell or Command Prompt and run:
+打开 PowerShell 或命令提示符并运行：
 
 ```powershell
 tailscale set --unattended=false
 ```
 
-## Manage key expiry
+## 管理密钥过期
 
-By default, node keys expire after 180 days and require interactive re-authentication. For unattended devices, servers, and remote desktop hosts that need to stay online continuously, disable key expiry to prevent unexpected disconnections.
+默认情况下，节点密钥（node key）在 180 天后过期，需要交互式重新认证。对于需要持续在线的无人值守设备、服务器和远程桌面主机，请禁用密钥过期，以避免意外断连。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Locate the device and select the  icon.
-3. Select **Disable key expiry**.
+1. 打开管理控制台的 [机器](https://console.tailscale.com/admin/machines) 页面。
+2. 找到该设备并选择相应图标。
+3. 选择 **禁用密钥过期**（Disable key expiry）。
 
-> **Warning:**
+> **警告：**
 >
-> Disabling key expiry leaves the device connected indefinitely until manually revoked. Only disable key expiry for trusted devices. For more information, refer to [Key expiry][docs-key-expiry].
+> 禁用密钥过期会让设备无限期保持连接，直到手动撤销。只对受信任的设备禁用密钥过期。更多信息参阅[密钥过期][docs-key-expiry]。
 
-## Troubleshooting
+## 故障排查
 
-If other users cannot switch profiles or change the Tailscale configuration, unattended mode might be enabled by another user. Unattended mode gives the user who enabled it exclusive control of the Tailscale configuration on the device. Other users cannot switch profiles or make configuration changes until unattended mode is disabled.
+如果其他用户无法切换配置文件或更改 Tailscale 配置，可能是有人以另一个用户的身份启用了无人值守模式。无人值守模式让启用它的用户对设备上的 Tailscale 配置拥有独占控制权。在禁用无人值守模式之前，其他用户无法切换配置文件或更改配置。
 
-If unattended mode cannot be disabled because the Windows user who enabled it has been deactivated or can no longer access the device, disable it using the `UnattendedMode` policy or by running the Tailscale CLI as `Local System` with [Sysinternals PsExec][xt-ms-psexec]:
+如果启用无人值守模式的 Windows 用户已被停用或无法再访问该设备，导致无人值守模式无法禁用，可以使用 `UnattendedMode` 策略，或以 `Local System` 身份配合 [Sysinternals PsExec][xt-ms-psexec] 运行 Tailscale CLI 来禁用它：
 
 ```powershell
 psexec -s -i "C:\Program Files\Tailscale\tailscale.exe" set --unattended=false

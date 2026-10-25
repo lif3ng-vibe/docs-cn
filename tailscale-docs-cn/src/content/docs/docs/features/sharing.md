@@ -1,139 +1,139 @@
 ---
-title: "Share your machines with other users"
-description: "Give a Tailscale user on another tailnet access to a private machine within your tailnet, without exposing the machine publicly."
+title: "与他人共享你的机器"
+description: "让另一个 tailnet 上的 Tailscale 用户访问你 tailnet 内的私有机器，而不将机器暴露给公众。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** Link-based sharing is currently in beta.
+> **注意：** 基于链接的共享目前处于 beta 阶段。
 
-> **Note:** Sharing is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 共享功能[对所有套餐](https://tailscale.com/pricing)可用。
 
-You can share access to specific machines with people outside your Tailscale network (known as a tailnet) without exposing them to the public internet. Sharing gives the recipient access to only the shared machine in your tailnet, and nothing else.
+你可以与 Tailscale 网络（即 tailnet）之外的人共享对特定机器的访问，而无需把机器暴露到公共互联网。共享只会让接收方访问你 tailnet 中被共享的那台机器，此外什么都访问不到。
 
-Users in your tailnet can access all machines as governed by [access control policies][docs-access-control]; sharing a machine is only required for allowing external users to access a machine.
+tailnet 中的用户可以按照[访问控制策略][docs-access-control]访问所有机器；只有要让外部用户访问某台机器时，才需要使用共享。
 
-Sharing respects the access control policies and [MagicDNS][ar-sharing-magic-dns] settings of both your tailnet and the recipient's tailnet. Sharing strips [tags][docs-tags], [groups][docs-policy-syntax-groups], and [subnet][ar-sharing-subnets] information from the recipient tailnet. A shared machine is visible only to the individual recipient user—it is not visible to the recipient user's entire tailnet.
+共享会同时遵循你的 tailnet 和接收方 tailnet 的访问控制策略与 [MagicDNS][ar-sharing-magic-dns] 设置。共享会剥除接收方 tailnet 的[标签][docs-tags]、[组][docs-policy-syntax-groups]和[子网][ar-sharing-subnets]信息。被共享的机器只对接收方单个用户可见——对接收方所在的整个 tailnet 不可见。
 
-## Ways to share resources
+## 共享资源的方式
 
-Tailscale supports two ways to share resources outside your tailnet:
+Tailscale 支持两种向 tailnet 之外共享资源的方式：
 
-* **Link-based node sharing** lets you share an individual machine with a specific Tailscale user on another tailnet. The user accepts an invitation to access the shared machine. The rest of this topic describes how to use link-based node sharing.
-* **[Declarative node sharing][docs-declarative-node-sharing]** lets you share resources between trusted tailnets using policy instead of individual share invitations. Declarative node sharing is currently in alpha.
+* **基于链接的节点共享**：把单台机器共享给另一个 tailnet 上的特定 Tailscale 用户，由该用户接受邀请来访问被共享的机器。本主题余下部分介绍如何使用基于链接的节点共享。
+* **[声明式节点共享][docs-declarative-node-sharing]**：通过策略而非逐条共享邀请，在互信的 tailnet 之间共享资源。声明式节点共享目前处于 alpha 阶段。
 
-## Share a machine with another user
+## 与其他用户共享机器
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to share a machine.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)才能共享机器。
 
-To share a machine:
+共享机器的步骤：
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and find the machine you'd like to share.
-2. Send invites [by email][ar-share-by-email] or [manually by using links][ar-share-by-link].
-3. [Wait for the recipient to accept][ar-wait-for-receipt].
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，找到你想共享的机器。
+2. [通过电子邮件][ar-share-by-email]或[手动使用链接][ar-share-by-link]发送邀请。
+3. [等待接收方接受][ar-wait-for-receipt]。
 
-After the recipient accepts the invite, they can access the shared machine from their Tailscale clients and admin console, as if it was on their own tailnet. For example, the macOS app will display it in the menu bar, and Linux apps will find it from `tailscale status`.
+接收方接受邀请后，就能从他们的 Tailscale 客户端和管理控制台访问被共享的机器，就像它在自己的 tailnet 上一样。例如，macOS 应用会把它显示在菜单栏里，Linux 应用可以在 `tailscale status` 中找到它。
 
-Notes about shared machines:
+关于被共享机器的几点说明：
 
-* Tailscale [quarantines][ar-quarantine] shared machines by default. A shared machine can receive incoming connections (from the other user's tailnet) but cannot start connections. This means users can accept shares without exposing their tailnet to risks.
-* As of Tailscale v1.4, shared machines appear in the other tailnet as the sharer, not the owner of the machine. If Ross shares his co-worker Dave's machine to another tailnet, it will appear to be owned by Ross in the new tailnet.
-* The IPv4 address of a shared machine in the recipient's tailnet will typically be the same as its IPv4 address in the sharer's tailnet. However, if that address is unavailable in the recipient's tailnet at the time the share is accepted (because another resource in the recipient's tailnet is using the address), then a different address will be assigned for the shared machine in the recipient's tailnet.
-* Unused invite links expire after 30 days.
+* Tailscale 默认对被共享的机器进行[隔离][ar-quarantine]。被共享的机器可以接收入站连接（来自对方用户的 tailnet），但不能主动发起连接。这意味着用户接受共享时不会让自己的 tailnet 暴露于风险。
+* 自 Tailscale v1.4 起，被共享的机器在另一个 tailnet 中显示为共享者，而不是机器的所有者。如果 Ross 把同事 Dave 的机器共享给另一个 tailnet，那么在新 tailnet 中它会显示为由 Ross 所有。
+* 被共享机器在接收方 tailnet 中的 IPv4 地址通常与它在共享者 tailnet 中的 IPv4 地址相同。但如果接受共享时该地址在接收方 tailnet 中已被占用（因为接收方 tailnet 中的另一个资源正在使用该地址），则会为被共享机器在接收方 tailnet 中分配一个不同的地址。
+* 未使用的邀请链接 30 天后过期。
 
-> **Warning:**
+> **警告：**
 >
-> A machine cannot be shared with a tag or accessed by tagged machines on another tailnet, as only users can accept machine shares.
+> 机器不能与标签共享，也不能被另一个 tailnet 上带标签的机器访问，因为只有用户才能接受机器共享。
 
-### Share using email
+### 通过电子邮件共享
 
-When you send invites by email, each specified recipient receives a single-use invite link to your machine. The recipient does not need to have a Tailscale account with the same email address. They can log in and accept the share from any Tailscale account.
+通过电子邮件发送邀请时，每个指定的接收方都会收到一个访问你机器的一次性邀请链接。接收方不必拥有相同邮箱地址的 Tailscale 账户，他们可以用任意 Tailscale 账户登录并接受共享。
 
-1. Select the  menu, then select **Share** to open the **Share** dialog.
-2. Select the **Share by email** tab.
-3. Add the email address for each user that you want to send invite links.
-4. Select **Share** to send email invitations to each listed email address.
+1. 选择该菜单，然后选择 **Share** 打开 **Share** 对话框。
+2. 选择 **Share by email** 标签页。
+3. 为每个你想发送邀请链接的用户添加其邮箱地址。
+4. 选择 **Share**，向列出的每个邮箱地址发送电子邮件邀请。
 
-### Share using a link
+### 通过链接共享
 
-For invite links you plan to share manually, you can choose to make a single-use or reusable invite link. A single-use invite link is a one-time use link. A reusable invite link can be used up to 1,000 times. Unused links expire in 30 days for both single-use and reusable invite links.
+对于打算手动分享的邀请链接，你可以选择创建一次性链接或可复用链接。一次性邀请链接只能使用一次；可复用邀请链接最多可使用 1,000 次。无论一次性还是可复用邀请链接，未使用的链接都会在 30 天后过期。
 
-1. Select the  menu, then select **Share** to open the **Share** dialog.
-2. Select **Copy invite link** tab.
-3. (Optional): Toggle on **Reusable link** for a link that can be accepted more than once.
-4. Select **Copy share link** to create the link and copy it to your clipboard.
-5. Share the copied invite link to your intended recipient. Treat the invite link the way you would a password. It provides the ability to connect to a machine within your tailnet.
+1. 选择该菜单，然后选择 **Share** 打开 **Share** 对话框。
+2. 选择 **Copy invite link** 标签页。
+3. （可选）：打开 **Reusable link** 开关，生成可被多次接受的链接。
+4. 选择 **Copy share link** 创建链接并复制到剪贴板。
+5. 把复制好的邀请链接分享给目标接收方。请像对待密码一样对待邀请链接——它能连接你 tailnet 内的一台机器。
 
-### Wait for the recipient to accept
+### 等待接收方接受
 
-A recipient needs to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to accept a shared machine invitation.
+接收方需要是某个 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能接受被共享机器的邀请。
 
-The recipient can visit the invite link to review your invitation. After they accept, you can find their profile picture and email address in the **Share** dialog. You'll also find an indicator in the **Machines** list on the admin console showing which machines have been shared to external users.
+接收方可以访问邀请链接查看你的邀请。接受之后，你可以在 **Share** 对话框中看到对方的头像和邮箱地址。管理控制台的 **Machines** 列表中也会出现一个标识，显示哪些机器已被共享给外部用户。
 
-> **Note:**
+> **注意：**
 >
-> Unused invite links expire after 30 days.
+> 未使用的邀请链接 30 天后过期。
 
-## Revoke an invite
+## 撤销邀请
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to revoke a share or share invite.
+你需要是 tailnet 的 [Owner（所有者）、Admin（管理员）或 IT admin（IT 管理员）](/docs/reference/user-roles)，才能撤销共享或共享邀请。
 
-You can revoke a share or share invite from the [Machines](https://console.tailscale.com/admin/machines) page of the admin console. After you revoke an invite, the recipient user can no longer access the shared machine. To restore access, you must create a new invite and the recipient must accept that new invite.
+你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面撤销共享或共享邀请。撤销邀请后，接收方用户将无法再访问被共享的机器。要恢复访问，你必须创建一个新邀请，且接收方必须接受这个新邀请。
 
-To revoke an invite:
+撤销邀请的步骤：
 
-1. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Select the **Share** option for the machine.
-3. Select the  menu > **Revoke invite**.
+1. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择该机器的 **Share** 选项。
+3. 选择该菜单 > **Revoke invite**。
 
-## How sharing works
+## 共享的工作原理
 
-Sharing a machine exposes that machine to a user on another tailnet. Only that user is able to access your machine. It is invisible to other users on that tailnet.
+共享一台机器会把该机器暴露给另一个 tailnet 上的某个用户。只有该用户能访问你的机器，该 tailnet 上的其他用户都看不到它。
 
-*（图：In this example, only the shared machine from tailnet A and the share recipient's machines in tailnet B can talk across tailnet boundaries.）*
+*（图：此示例中，只有 tailnet A 中被共享的机器与 tailnet B 中共享接收方的机器能够跨 tailnet 边界通信。）*
 
-In this example, only the shared machine from tailnet A and the share recipient's machines in tailnet B can talk across tailnet boundaries.
+在此示例中，只有 tailnet A 中被共享的机器与 tailnet B 中共享接收方的机器能够跨 tailnet 边界通信。
 
-When you accept an invite, Tailscale exposes the minimum set of information possible about your tailnet to that machine. Accepting an invite exposes:
+当你接受邀请时，Tailscale 只向那台机器暴露关于你 tailnet 的最少信息。接受邀请会暴露：
 
-* The email and avatar of the recipient (required to help confirm invites)
-* Physical machine IPs of machines from your tailnet (required for connections)
+* 接收方的邮箱和头像（用于帮助确认邀请）
+* 你 tailnet 中机器的物理机器 IP（建立连接所需）
 
-### Quarantine
+### 隔离
 
-Shared machines are quarantined by default. They can respond to incoming connections from the tailnet they're shared to, but cannot start connections on their own. Quarantining helps sharing be "secure by default", since you can accept shares with no risk of exposing your tailnet.
+被共享的机器默认被隔离。它们可以响应来自被共享目标 tailnet 的入站连接，但不能自行发起连接。隔离让共享做到"默认安全"——你可以在不暴露自己 tailnet 的风险下接受共享。
 
-### Sharing and MagicDNS
+### 共享与 MagicDNS
 
-[MagicDNS][docs-magicdns] is a per-tailnet setting. If your tailnet has MagicDNS enabled, you can access machines over MagicDNS regardless of the other tailnet's settings.
+[MagicDNS][docs-magicdns] 是按 tailnet 生效的设置。如果你的 tailnet 启用了 MagicDNS，无论对方 tailnet 的设置如何，你都可以通过 MagicDNS 访问机器。
 
-Shared machines support MagicDNS in Tailscale v1.4 or later. Shared machines can only be reached by using their fully qualified domain name, which looks like `<hostname>.<tailnet-name>.ts.net`.
+被共享的机器自 Tailscale v1.4 起支持 MagicDNS。只能通过完全限定域名访问被共享的机器，其形如 `<hostname>.<tailnet-name>.ts.net`。
 
-* `<hostname>` is the name of a machine.
-* `<tailnet-name>` is the [tailnet name][docs-tailnet-name] of a tailnet.
+* `<hostname>` 是机器的名称。
+* `<tailnet-name>` 是 tailnet 的 [tailnet 名称][docs-tailnet-name]。
 
-For example, if your friend shares a machine named `minecraft-server` on the `yak-bebop` tailnet to your tailnet, you can reach it at `minecraft-server.yak-bebop.ts.net`. However, you can't reach it at `minecraft-server` from your tailnet.
+例如，如果你的朋友把 `yak-bebop` tailnet 上一台名为 `minecraft-server` 的机器共享给你的 tailnet，你可以通过 `minecraft-server.yak-bebop.ts.net` 访问它。但在你的 tailnet 中，你不能只用 `minecraft-server` 访问它。
 
-> **Note:**
+> **注意：**
 >
-> Previously, you might have used a tailnet DNS name ending in `.beta.tailscale.net`. If so, migrate to the new tailnet DNS name that ends in `.ts.net`. Support for the `beta.tailscale.net` name ended on **September 13, 2024**.
+> 以前你可能用过以 `.beta.tailscale.net` 结尾的 tailnet DNS 名称。如果是这样，请迁移到以 `.ts.net` 结尾的新 tailnet DNS 名称。对 `beta.tailscale.net` 名称的支持已于 **2024 年 9 月 13 日**终止。
 
-These restrictions are necessary to prevent MagicDNS names from changing unexpectedly, and to support future features on top of sharing.
+这些限制是必要的，以防止 MagicDNS 名称意外变化，并支撑未来构建在共享之上的功能。
 
-### Sharing and access control policies
+### 共享与访问控制策略
 
-When a user accepts a share, the user can make outbound requests to the shared machine, which will adhere to any [access control policies][docs-access-control] defined in the tailnet that owns the shared machine.
+用户接受共享后，即可向被共享的机器发起出站请求，这些请求会遵循拥有该被共享机器的 tailnet 中定义的[访问控制策略][docs-access-control]。
 
-By default, the shared machine is quarantined and cannot make outbound requests to the user's machines. However, it's possible to "mutually share" machines, allowing the machines to make outbound connections to each other.
+默认情况下，被共享的机器处于隔离状态，不能向该用户的机器发起出站请求。不过，机器之间可以"互相共享"，从而允许彼此发起出站连接。
 
-For example, if you have `workstation-1` (owned by `example-company-tailnet`) and `workstation-2` (owned by `sam@example.com`) and you want `workstation-1` and `workstation-2` to have access to each other, you would:
+例如，如果你有 `workstation-1`（属于 `example-company-tailnet`）和 `workstation-2`（属于 `sam@example.com`），想让二者互相访问，你需要：
 
-1. Share workstation-1 with `alice@example.com`.
-2. Share workstation-2 with `alice@example-company.com`.
+1. 把 workstation-1 共享给 `alice@example.com`。
+2. 把 workstation-2 共享给 `alice@example-company.com`。
 
-If you're [having trouble connecting to a shared machine][ar-troubleshooting], review your tailnet policy file for rules that might be blocking access.
+如果你[连接被共享的机器时遇到问题][ar-troubleshooting]，请检查 tailnet 策略文件中是否有阻止访问的规则。
 
-To write [access rules][docs-policy-syntax-access-rules] that apply to a shared machine, you can use the email address of the recipient. For example, if you invite `alice@example.com` to share a machine at `100.74.78.2`, you can give Alice access to a particular host.
+要编写作用于被共享机器的[访问规则][docs-policy-syntax-access-rules]，可以使用接收方的邮箱地址。例如，如果你邀请 `alice@example.com` 共享位于 `100.74.78.2` 的机器，就可以让 Alice 访问特定主机。
 
 ```json
 "grants": [
@@ -152,13 +152,13 @@ To write [access rules][docs-policy-syntax-access-rules] that apply to a shared 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-> **Warning:**
+> **警告：**
 >
-> Be careful of rules like `"src": ["*"]`, which apply to everyone who has access to your tailnet, including invited users. Consider making a group that includes all your tailnet users instead of `*`.
+> 当心 `"src": ["*"]` 这类规则——它作用于所有能访问你 tailnet 的对象，包括受邀用户。考虑创建一个包含你全部 tailnet 用户的组来代替 `*`。
 
-You can also write access rules by using the special `autogroup:shared` group. This group automatically includes all users invited to your tailnet, and lets you write rules without knowing email addresses in advance.
+你还可以使用特殊的 `autogroup:shared` 组来编写访问规则。该组自动包含受邀进入你 tailnet 的所有用户，让你无需预知邮箱地址就能编写规则。
 
-For example, to restrict invited users to only access web server ports `80` and `443`, you can write a rule like:
+例如，要把受邀用户限制为只能访问 Web 服务器的 `80` 和 `443` 端口，可以编写如下规则：
 
 ```json
 "grants": [
@@ -179,58 +179,58 @@ For example, to restrict invited users to only access web server ports `80` and 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Remember: invited users are only able to access machines you've invited them to share. Access rules further limit what they can access. Although the rule `*:80,443` seems like it lets users access all machines, it only further restricts their access to the ports we've specified.
+记住：受邀用户只能访问你邀请他们共享的机器，访问规则会进一步限制他们的访问范围。尽管 `*:80,443` 这条规则看起来像允许用户访问所有机器，但它只是在进一步把他们的访问限制到我们指定的端口上。
 
-Sharing does not expose [tag][docs-tags] to the other tailnet. All tag information is stripped and cannot be used in the tailnet policy file of the other tailnet.
+共享不会把[标签][docs-tags]暴露给另一个 tailnet。所有标签信息都会被剥除，不能在另一个 tailnet 的 tailnet 策略文件中使用。
 
-### Sharing and Subnets (subnet routers)
+### 共享与子网（子网路由器）
 
-Shared machines do not advertise [subnets][docs-subnets] to the tailnets they're shared into, while [inviting][docs-invite-any-user] external users into your tailnet will give them access to subnet routers.
+被共享的机器不会向被共享进入的 tailnet 通告[子网][docs-subnets]，而[邀请][docs-invite-any-user]外部用户进入你的 tailnet 则会让他们能访问子网路由器。
 
-### Sharing and Exit Nodes
+### 共享与出口节点
 
-Sharing an [exit node][docs-exit-nodes] exposes it to the other tailnet.
+共享[出口节点][docs-exit-nodes]会把它暴露给另一个 tailnet。
 
-To share an exit node, use the following sequence:
+共享出口节点请按以下顺序操作：
 
-1. [Advertise the machine as an exit node][docs-exit-nodes-advertise-exit-node].
+1. [把机器通告为出口节点][docs-exit-nodes-advertise-exit-node]。
 
-2. If you are not using [`autoApprovers`][docs-policy-syntax-autoapprovers], [allow the exit node from the admin console][docs-exit-nodes-allow-exit-node].
+2. 如果你没有使用 [`autoApprovers`][docs-policy-syntax-autoapprovers]，请[在管理控制台中允许该出口节点][docs-exit-nodes-allow-exit-node]。
 
-3. Share the machine per the instructions above, allowing the recipient to use it as an exit node. Ensure the **Allow use as an exit node** option is checked.
+3. 按上文说明共享该机器，让接收方能把它用作出口节点。确保勾选 **Allow use as an exit node** 选项。
 
-If a [user is deleted][docs-remove-team-members], the shared machines they manage will be deleted. If a user is suspended, the shared machines they manage will not be able to connect to other machines.
+如果某个[用户被删除][docs-remove-team-members]，其管理的被共享机器也会被删除。如果某个用户被停用，其管理的被共享机器将无法连接其他机器。
 
-### Sharing and suspended or deleted users
+### 共享与被停用或删除的用户
 
-When you [delete a user][docs-remove-team-members], it also deletes the shared machines they manage. If you suspend a user, Tailscale prevents the shared machines they manage from connecting to other machines.
+当你[删除用户][docs-remove-team-members]时，也会删除其管理的被共享机器。如果你停用某个用户，Tailscale 会阻止其管理的被共享机器连接其他机器。
 
-### Sharing and Tailnet Lock
+### 共享与 Tailnet Lock
 
-A node shared into a tailnet with [Tailnet Lock][docs-tailnet-lock] requires a signature before it is accessible.
+共享进入启用了 [Tailnet Lock][docs-tailnet-lock] 的 tailnet 的节点，需要先签名才能被访问。
 
-To share nodes out of a tailnet with Tailnet Lock, the user who accepts the share invite needs to have their nodes signed in the locked tailnet before they can access the shared node.
+要从启用了 Tailnet Lock 的 tailnet 向外共享节点，接受共享邀请的用户需要先让自己的节点在加锁的 tailnet 中完成签名，之后才能访问被共享的节点。
 
-### Troubleshooting
+### 故障排除
 
-If you can find a machine that was shared with you, but you can't connect to it:
+如果你能找到一台共享给你的机器，但无法连接它：
 
-* If you're trying to access the machine by [machine name][docs-machine-names] (and not [100.x.y.z][docs-100.x-addresses] address), ensure you have [MagicDNS enabled][docs-magicdns]. You can enable MagicDNS from the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-* Review your tailnet's [access control policies][docs-access-control] to check if you have any rules that might disallow access. If you don't, it's possible the tailnet that shared it with you is restricting the traffic. Ask them to review their access control policies too.
+* 如果你在尝试通过[机器名称][docs-machine-names]（而不是 [100.x.y.z][docs-100.x-addresses] 地址）访问该机器，请确保已[启用 MagicDNS][docs-magicdns]。你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面启用 MagicDNS。
+* 检查你 tailnet 的[访问控制策略][docs-access-control]，看是否有规则禁止访问。如果没有，可能是共享方 tailnet 在限制该流量。请对方也检查一下他们的访问控制策略。
 
-[ar-quarantine]: #quarantine
+[ar-quarantine]: #隔离
 
-[ar-share-by-email]: #share-using-email
+[ar-share-by-email]: #通过电子邮件共享
 
-[ar-share-by-link]: #share-using-a-link
+[ar-share-by-link]: #通过链接共享
 
-[ar-sharing-magic-dns]: #sharing-and-magicdns
+[ar-sharing-magic-dns]: #共享与-magicdns
 
-[ar-sharing-subnets]: #sharing-and-subnets-subnet-routers
+[ar-sharing-subnets]: #共享与子网子网路由器
 
-[ar-troubleshooting]: #troubleshooting
+[ar-troubleshooting]: #故障排除
 
-[ar-wait-for-receipt]: #wait-for-the-recipient-to-accept
+[ar-wait-for-receipt]: #等待接收方接受
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

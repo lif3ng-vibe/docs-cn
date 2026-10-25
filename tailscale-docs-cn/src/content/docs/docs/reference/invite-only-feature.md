@@ -1,69 +1,57 @@
 ---
-title: "Invite only features"
-description: "Create and accept invitations for Tailscale features."
+title: "仅限邀请的功能"
+description: "创建和接受 Tailscale 功能邀请。"
 ---
 
-Last validated Sep 26, 2025
+最后验证于 Sep 26, 2025
 
-Invite only features require a user to be invited to use and accept an invitation for access to feature previews.
-Users can create invitation codes to share with other users.
+仅限邀请的功能要求用户被邀请后接受邀请，才能获得功能预览的访问权限。
+用户可以创建邀请码并分享给其他用户。
 
-## How it works
+## 工作原理
 
-Invite only features require an invitation code.
+仅限邀请的功能需要邀请码。
 
-A user with an invite only feature code can decide whether they want to accept the invitation to add
-the feature to their own tailnet.
+持有某项仅限邀请功能邀请码的用户，可以自行决定是否接受邀请，把该功能添加到自己的 tailnet。
 
-An invitation code can be redeemed up to some maximum allowed times and has no time expiration.
+一条邀请码最多可被兑换若干次（有上限），且没有时间上的过期限制。
 
-*（图：Example of acceptance dialog for an invite only feature.）*
+*（图：接受某项仅限邀请功能的对话框示例。）*
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to create or accept an
-invitation code, join a waitlist for an invitation code, or copy an invitation code from the admin
-console.
+你必须是 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles)，才能创建或接受邀请码、加入邀请码候补名单，或从管理控制台复制邀请码。
 
-## Creating a feature invitation
+## 创建功能邀请
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to create a feature
-invitation.
+你必须成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles)，才能创建功能邀请。
 
-1. Open the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console.
+1. 打开管理控制台的 [General](https://console.tailscale.com/admin/settings/general)（常规）设置页面。
 
-2. In the **Feature previews** section, locate the feature that you would like to invite others to
-   access. Invite only features have the **Invite only** badge.
+2. 在 **Feature previews**（功能预览）部分，找到你想邀请他人访问的功能。仅限邀请的功能带有 **Invite only** 徽标。
 
-3. Select the **Invite others** button, for example, **Invite others to use New Feature**.
+3. 选择 **Invite others** 按钮，例如 **Invite others to use New Feature**。
 
-4. Select **Generate & copy invite link**.
+4. 选择 **Generate & copy invite link**。
 
-   *（图：Example of generating an invite dialog.）*
+   *（图：生成邀请的对话框示例。）*
 
-5. Share the copied link with others.
+5. 把复制好的链接分享给他人。
 
-If you need to copy the link again, return to the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin
-console, select the **Invite others** button, and then select **Copy invite link**.
+如果需要再次复制链接，回到管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 设置页面，选择 **Invite others** 按钮，然后选择 **Copy invite link**。
 
-## Accepting a feature invitation
+## 接受功能邀请
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to accept a feature
-invitation.
+你必须成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles)，才能接受功能邀请。
 
-1. Open the invitation URL.
-2. Confirm that you want to accept the feature by selecting the **Join alpha** button.
-3. Depending on the feature, you may need to update your tailnet settings or take other steps to
-   enable the feature. Take action if needed based on guidance provided when you accept the invitation.
+1. 打开邀请 URL。
+2. 选择 **Join alpha** 按钮确认接受该功能。
+3. 视具体功能而定，你可能需要更新 tailnet 设置或执行其他步骤来启用该功能。请根据接受邀请时给出的指引进行相应操作。
 
-## Joining a feature invitation waitlist
+## 加入功能邀请候补名单
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to join an invitation
-waitlist.
+你必须成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles)，才能加入邀请候补名单。
 
-1. Open the [General](https://console.tailscale.com/admin/settings/general) settings page of the admin console.
-2. In the **Feature previews** section, locate the feature for which you would like to have access.
-   Invite only features have the **Invite only** badge.
-3. Select the **Join waitlist** button.
+1. 打开管理控制台的 [General](https://console.tailscale.com/admin/settings/general)（常规）设置页面。
+2. 在 **Feature previews**（功能预览）部分，找到你想获得访问权限的功能。仅限邀请的功能带有 **Invite only** 徽标。
+3. 选择 **Join waitlist** 按钮。
 
-If the feature has an available opening, Tailscale will automatically grant you access to the
-feature. Otherwise, Tailscale adds you to the feature's waitlist—you will receive an email when
-your access is granted.
+如果该功能有空余名额，Tailscale 会自动授予你对该功能的访问权限。否则，Tailscale 会把你加入该功能的候补名单——获得访问权限时你会收到一封电子邮件。

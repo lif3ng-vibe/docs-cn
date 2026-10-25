@@ -1,59 +1,45 @@
 ---
-title: "What is hello.ts.net?"
-description: "[`hello.ts.net`][xt-hello] is a server administered by Tailscale staff to demonstrate how Tailscale works for new users."
+title: "hello.ts.net 是什么？"
+description: "[`hello.ts.net`][xt-hello] 是一台由 Tailscale 员工管理的服务器，用于向新用户演示 Tailscale 的工作方式。"
 ---
 
-Last validated Jul 8, 2026
+最后验证于 Jul 8, 2026
 
-[`hello.ts.net`][xt-hello] is a server administered by Tailscale staff to demonstrate how
-Tailscale works for new users.
+[`hello.ts.net`][xt-hello] 是一台由 Tailscale 员工管理的服务器，用于向新用户演示 Tailscale 的工作方式。
 
-`hello.ts.net` can only be accessed over Tailscale.
-If `hello.ts.net` loads in your browser, you're connected over Tailscale!
+`hello.ts.net` 只能通过 Tailscale 访问。
+如果 `hello.ts.net` 能在你的浏览器中打开，说明你已经通过 Tailscale 连接了！
 
-> **Note:**
+> **注意：**
 >
-> `hello.ts.net` is not available to [ephemeral nodes][docs-ephemeral-nodes].
+> `hello.ts.net` 对[临时节点][docs-ephemeral-nodes]不可用。
 
-`hello.ts.net` is a private, "one-way" server. It is not accessible from the
-public internet, and [access control policies][docs-access-control] restrict it
-from making any outgoing connections. Tailscale does not start connections
-from `hello.ts.net` to your tailnet. It serves no purpose other than to let you
-verify you're connected to Tailscale.
+`hello.ts.net` 是一台私有的"单向"服务器。它无法从公共互联网访问，并且[访问控制策略][docs-access-control]限制它发起任何出站连接。Tailscale 不会从 `hello.ts.net` 向你的 tailnet 发起连接。它除了让你确认自己已连接到 Tailscale 之外，没有任何其他用途。
 
-> **Note:**
+> **注意：**
 >
-> Previously, `hello.ipn.dev` was used rather than `hello.ts.net`. These serve the same purpose.
+> 此前使用的是 `hello.ipn.dev` 而非 `hello.ts.net`。两者用途相同。
 
-## How can I add hello.ts.net?
+## 如何添加 hello.ts.net？
 
-If you would like to add it for testing purposes,
-you can use this special invite URL to accept it into your network:
+如果你想为了测试目的添加它，可以使用这个特殊的邀请 URL 将它接入你的网络：
 
 `console.tailscale.com/admin/invite/hello.ts.net`
 
-## How can I remove it from my network?
+## 如何将它从我的网络中移除？
 
-You can remove `hello.ts.net` at any time from the [Machines](https://console.tailscale.com/admin/machines) page of the admin console. Press the  menu for a link to remove it.
+你可以随时在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面移除 `hello.ts.net`。点开菜单即可看到移除它的链接。
 
-*（图：Menu in the admin console with the 'Remove...' option indicated with a red outline.）*
+*（图：管理控制台中的菜单，用红色轮廓标出了 Remove... 选项。）*
 
-Once removed, it will disappear from the list, and no users on your network will
-be able to connect to it.
+移除后，它会从列表中消失，你网络上的所有用户都将无法连接到它。
 
-## Does hello.ts.net have a reliability guarantee?
+## hello.ts.net 有可靠性保证吗？
 
-Tailscale operates `hello.ts.net` on a best-effort basis. It is not critical
-infrastructure for the Tailscale service, and you should not rely on it as
-critical infrastructure for your tailnet.
+Tailscale 以尽力而为的方式运营 `hello.ts.net`。它不是 Tailscale 服务的关键基础设施，你也不应把它当作 tailnet 的关键基础设施来依赖。
 
-In particular, probing `hello.ts.net` is not an ideal way to determine whether the
-Tailscale service is up. To do that, you can run `tailscale status -json | jq -r
-.BackendState` (or `tailscale status --json | grep BackendState` if you don't
-have `jq`) from the CLI, which will print `Running` when connected, and
-`Stopped` when not. You can also attempt to connect to a resource on your
-tailnet either with standard tools like `curl` or with, for example,
-[`LocalClient.DialTCP`][xt-go-tailscale-dialtcp].
+特别提醒：探测 `hello.ts.net` 并不是判断 Tailscale 服务是否在线的理想方式。要判断这一点，你可以在 CLI 中运行 `tailscale status -json | jq -r
+.BackendState`（如果没有 `jq`，则运行 `tailscale status --json | grep BackendState`），连接时会输出 `Running`，未连接时输出 `Stopped`。你也可以尝试连接 tailnet 上的某个资源，可以用 `curl` 之类的标准工具，或者用例如 [`LocalClient.DialTCP`][xt-go-tailscale-dialtcp]。
 
 [docs-access-control]: /docs/features/access-control
 

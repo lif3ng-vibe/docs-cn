@@ -1,23 +1,23 @@
 ---
-title: "Build a custom webhook"
-description: "Aperture can send real-time event data to external services through webhooks to feed LLM usage data into your own audit logs, cost dashboards, security tools, or policy engines. For each request that "
+title: "构建自定义 webhook"
+description: "Aperture 可以通过 webhook 将实时事件数据发送到外部服务，把 LLM 使用数据接入你自己的审计日志、成本仪表盘、安全工具或策略引擎。对于每条"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Aperture can send real-time event data to external services through webhooks to feed LLM usage data into your own audit logs, cost dashboards, security tools, or policy engines. For each request that matches a [grant][docs-aperture-configuration] (an access rule that controls who can use which models), Aperture POSTs a JSON payload containing the metadata and data types you select.
+Aperture 可以通过 webhook 将实时事件数据发送到外部服务，把 LLM 使用数据接入你自己的审计日志、成本仪表盘、安全工具或策略引擎。对每条匹配[授权][docs-aperture-configuration]（控制谁可以使用哪些模型的访问规则）的请求，Aperture 都会 POST 一个 JSON 载荷，其中包含你选择的元数据和数据类型。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-aperture-get-started] with at least one provider configured.
-* Admin access to the [Aperture configuration][docs-aperture-configuration].
-* An HTTP or HTTPS endpoint that accepts POST requests with JSON payloads.
+* 一个 [Aperture 网关][docs-aperture-get-started]，且至少配置了一个提供商。
+* 对 [Aperture 配置][docs-aperture-configuration]的管理员访问权限。
+* 一个接受带 JSON 载荷的 POST 请求的 HTTP 或 HTTPS 端点。
 
-## Define a hook endpoint
+## 定义钩子端点
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Add a `hooks` section to your configuration. Each hook has a unique key and specifies the endpoint URL:
+\[Missing snippet: aperture\_admin\_nav.mdx] 在配置中添加 `hooks` 部分。每个钩子都有一个唯一的键，并指定端点 URL：
 
 ```json
 "hooks": {
@@ -28,7 +28,7 @@ Before you begin, make sure you have the following:
 }
 ```
 
-If your endpoint uses a non-Bearer authentication scheme, set the `authorization` field:
+如果你的端点使用非 Bearer 认证方案，请设置 `authorization` 字段：
 
 ```json
 "hooks": {
@@ -41,15 +41,15 @@ If your endpoint uses a non-Bearer authentication scheme, set the `authorization
 }
 ```
 
-The `authorization` field supports `bearer` (default), `x-api-key`, `x-goog-api-key`, `hec`, and `cf-aig-authorization`. The `timeout` field accepts Go duration strings such as `5s`, `30s`, or `1m` and defaults to `5s`.
+`authorization` 字段支持 `bearer`（默认）、`x-api-key`、`x-goog-api-key`、`hec` 和 `cf-aig-authorization`。`timeout` 字段接受 Go 时长字符串（例如 `5s`、`30s` 或 `1m`），默认为 `5s`。
 
-> **Warning:**
+> **警告：**
 >
-> A hook defined in the `hooks` section has no effect until a grant references it.
+> `hooks` 部分定义的钩子在授权引用它之前不会生效。
 
-## Trigger the hook from a grant
+## 在授权中触发钩子
 
-Add a `send_hooks` entry to a capability (a set of permissions such as allowed models) in your `grants` section. This controls which requests trigger the hook and what data Aperture includes in the payload:
+在 `grants` 部分的某个能力（一组权限，例如允许的模型）中添加 `send_hooks` 条目。它控制哪些请求触发钩子，以及 Aperture 在载荷中包含哪些数据：
 
 ```json
 "grants": [
@@ -75,38 +75,38 @@ Add a `send_hooks` entry to a capability (a set of permissions such as allowed m
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-### Select hook events
+### 选择钩子事件
 
-The `events` array specifies when Aperture calls the hook:
+`events` 数组指定 Aperture 何时调用钩子：
 
-| Event                      | Description                                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `pre_request`              | Fires before the provider call. Synchronous: Aperture waits for the hook response. The hook can allow, block, or modify the request. |
-| `entire_request`           | Fires for every completed request.                                                                                                   |
-| `tool_call_entire_request` | Fires once after the response completes if any message in the response contained tool calls.                                         |
+| 事件                       | 说明                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `pre_request`              | 在调用提供商之前触发。同步：Aperture 等待钩子响应。钩子可以允许、拦截或修改请求。                     |
+| `entire_request`           | 每条完成的请求都触发。                                                                               |
+| `tool_call_entire_request` | 响应完成后触发一次，前提是响应中存在包含工具调用的消息。                                             |
 
-> **Note:**
+> **注意：**
 >
-> The `pre_request` event is a synchronous guardrail. Unlike `entire_request` and `tool_call_entire_request`, which fire asynchronously after a request completes, `pre_request` blocks until the hook responds and can allow, block, or modify the request. For details, refer to [guardrails][docs-aperture-guardrails].
+> `pre_request` 事件是同步护栏。`entire_request` 和 `tool_call_entire_request` 在请求完成后异步触发，而 `pre_request` 会阻塞到钩子响应为止，并且可以允许、拦截或修改请求。详情参阅[护栏][docs-aperture-guardrails]。
 
-### Select data types
+### 选择数据类型
 
-The `send` array specifies which data to include in the POST payload:
+`send` 数组指定在 POST 载荷中包含哪些数据：
 
-| Type             | Description                                                          |
-| ---------------- | -------------------------------------------------------------------- |
-| `tools`          | Array of tool calls extracted from the response.                     |
-| `request_body`   | The original request body sent to the LLM.                           |
-| `user_message`   | The user's message from the request.                                 |
-| `response_body`  | The reconstructed response body JSON.                                |
-| `raw_responses`  | Array of raw SSE messages (for streaming) or single response object. |
-| `estimated_cost` | Dollar cost estimate, pricing basis, and token usage breakdown.      |
-| `grants`         | Non-Aperture app capabilities from the user's grants.                |
-| `quotas`         | Current state of all quota buckets that applied to this request.     |
+| 类型             | 说明                                                             |
+| ---------------- | ---------------------------------------------------------------- |
+| `tools`          | 从响应中提取的工具调用数组。                                     |
+| `request_body`   | 发送给 LLM 的原始请求体。                                        |
+| `user_message`   | 请求中用户的消息。                                               |
+| `response_body`  | 重建后的响应体 JSON。                                            |
+| `raw_responses`  | 原始 SSE 消息数组（流式场景）或单个响应对象。                    |
+| `estimated_cost` | 美元成本估算、计价依据和 token 用量明细。                        |
+| `grants`         | 用户授权中非 Aperture 应用的能力。                               |
+| `quotas`         | 适用于该请求的所有配额桶的当前状态。                             |
 
-## Review the payload format
+## 查看载荷格式
 
-Every hook call includes a `metadata` object with request context, regardless of what you specify in `send`:
+无论你在 `send` 中指定什么，每次钩子调用都包含一个带请求上下文的 `metadata` 对象：
 
 ```json
 {
@@ -124,7 +124,7 @@ Every hook call includes a `metadata` object with request context, regardless of
 }
 ```
 
-When you include data types in the `send` array, Aperture adds them to the payload alongside `metadata`. For example, with `"send": ["tools", "estimated_cost"]`, the payload includes a pricing lookup key in `cost_basis`. The dollar amount and token counts below illustrate the payload structure, not a price quote:
+当你在 `send` 数组中加入数据类型时，Aperture 会把它们连同 `metadata` 一起放入载荷。例如使用 `"send": ["tools", "estimated_cost"]` 时，载荷会在 `cost_basis` 中包含一个计价查询键。下面的美元金额和 token 数仅用于说明载荷结构，并非报价：
 
 ```json
 {
@@ -146,24 +146,24 @@ When you include data types in the `send` array, Aperture adds them to the paylo
 }
 ```
 
-## Verify the webhook
+## 验证 webhook
 
-After saving the configuration, send a test LLM request through Aperture and check that your endpoint receives the POST payload. If the webhook does not fire:
+保存配置后，通过 Aperture 发送一条测试 LLM 请求，并确认你的端点收到了 POST 载荷。如果 webhook 没有触发：
 
-1. Confirm the hook name in `send_hooks` matches the key in the `hooks` section.
-2. Confirm the grant's `src` and `models` patterns match your test request.
+1. 确认 `send_hooks` 中的钩子名称与 `hooks` 部分中的键一致。
+2. 确认授权的 `src` 和 `models` 模式与你的测试请求匹配。
 
-To temporarily disable a hook without removing it from the configuration, set `"disabled": true` in the hook definition.
+要在不从配置中删除钩子的情况下临时停用它，请在钩子定义中设置 `"disabled": true`。
 
-## Next steps
+## 后续步骤
 
-Explore related integrations and configuration options:
+探索相关的集成与配置选项：
 
-* Browse [Aperture recipes][docs-aperture-recipes] for integration examples, or contribute your own integration guide.
-* [Export usage data to S3][docs-aperture-export-s3] for long-term storage of session logs.
-* [Integrate Cerbos with Aperture][docs-aperture-integrate-cerbos], [Integrate Highflame with Aperture][docs-aperture-integrate-highflame], or [Integrate Oso with Aperture][docs-aperture-integrate-oso] for policy engine integrations that use hooks.
-* Refer to the [hooks configuration reference][docs-aperture-hooks] for the complete field reference and additional examples.
-* [Reduce Aperture token costs with tsheadroom][docs-reduce-token-costs] for an end-to-end example that ships a `pre_request` hook as a tailnet service.
+* 浏览 [Aperture 配方][docs-aperture-recipes]查看集成示例，或贡献你自己的集成指南。
+* [将使用数据导出到 S3][docs-aperture-export-s3]，长期存储会话日志。
+* [将 Cerbos 与 Aperture 集成][docs-aperture-integrate-cerbos]、[将 Highflame 与 Aperture 集成][docs-aperture-integrate-highflame]或[将 Oso 与 Aperture 集成][docs-aperture-integrate-oso]，使用钩子对接策略引擎。
+* 完整字段参考与更多示例请参阅[钩子配置参考][docs-aperture-hooks]。
+* [用 tsheadroom 降低 Aperture token 成本][docs-reduce-token-costs]：一个端到端示例，把 `pre_request` 钩子作为 tailnet 服务部署。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

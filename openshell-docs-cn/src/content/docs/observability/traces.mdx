@@ -1,0 +1,77 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "追踪"
+sidebar-title: "追踪"
+description: "OpenShell 网关、计算驱动与沙箱监管器导出的 OpenTelemetry Span，命名方式，以及标识来源的资源属性。"
+keywords: "生成式 AI, 网络安全, 可观测性, OpenTelemetry, OTLP, 追踪, Span, 资源属性"
+position: 2
+---
+
+追踪（trace）展示网关如何处理每个请求，包括它执行的计算驱动工作，以及每个沙箱监管器如何启动。可用它定位沙箱创建这类操作的耗时所在，或沿着一个请求穿过网关及其计算驱动。
+
+## 启用追踪
+
+在 `gateway.toml` 中设置 OTLP Collector 端点：
+
+```toml
+[openshell.gateway.otlp]
+endpoint = "https://backend:4317"
+```
+
+在 Helm chart 中，把该表放到 `gatewayConfig` 下。网关会把端点传给它启动的计算驱动与沙箱监管器，监管器直接连接 Collector，因此必须能从沙箱访问。独立追踪 Collector、TLS、采样及其他设置参见[OTLP 导出](/how-it-works/gateways/configuration#otlp-导出)。
+
+## 追踪范围
+
+| 组件 | Span |
+|---|---|
+| 网关请求 | 每个入站 gRPC 或 HTTP 请求一个服务端 Span。请求 Span 携带 `method`、`path`，以及同样出现在网关日志中的 `request_id`。 |
+| 网关后台工作 | 调和（reconciliation）、驱动监视与凭据刷新。这些工作没有请求提供父 Span，因此各自开启新的追踪。只有凭据到期或需要清理时，凭据刷新才会创建 Span。 |
+| 计算驱动 | 网关执行的每个计算驱动操作的子 Span，同时覆盖网关侧与驱动侧。 |
+| 沙箱监管器 | 监管器启动，例如加载策略。 |
+
+日常或高容量操作的 Span 使用 DEBUG 级别，默认的 INFO 级别不会导出它们。这类操作包括存储操作、健康检查、监管器按定时器调用的 RPC（`GetSandboxConfig` 与 `ReportProviderReadiness`），以及监管器处理出站连接的方式。把网关或沙箱日志级别设为 `debug` 即可包含它们。
+
+## Span 命名
+
+每个组件以其执行的操作为 Span 命名：
+
+| 组件 | Span 名称 | 示例 |
+|---|---|---|
+| 网关请求 | gRPC 服务与方法，其他请求则为 HTTP 方法 | `openshell.v1.OpenShell/CreateSandbox`、`GET` |
+| 网关后台工作 | 任务名 | `reconcile.sandboxes`、`refresh.provider_credentials` |
+| 计算驱动 | 计算驱动 RPC，子 Span 以驱动名为前缀 | `openshell.compute.v1.ComputeDriver/CreateSandbox`、`docker.provision` |
+| 沙箱监管器 | 以 `supervisor.` 为前缀 | `supervisor.startup`、`supervisor.policy.load` |
+
+一次计算驱动调用中，网关侧的客户端 Span 与驱动侧的服务端 Span 同名，该名称也出现在 `rpc.method` 中。区分它们靠服务名与 Span kind。驱动监视流观测到终止状态时会记录该状态；如果网关先停止消费该流，Span 状态则保持未设置。
+
+## 资源属性
+
+资源属性标识产生 Span 的进程：
+
+| 属性 | 值 | 设置于 |
+|---|---|---|
+| `service.name` | `openshell-gateway`、`openshell-driver-<driver>`（如 `openshell-driver-docker`）或 `openshell-supervisor` | 所有 Span |
+| `service.version` | OpenShell 版本 | 所有 Span |
+| `openshell.gateway.name` | 网关名称 | 所有 Span |
+| `openshell.gateway.compute_driver` | 配置的计算驱动，例如 `kubernetes` | 网关与计算驱动 Span |
+| `openshell.sandbox.id` | 沙箱 ID | 监管器 Span |
+
+要覆盖网关的 `service.name`，在 `[openshell.gateway.otlp]` 下设置 `service_name`。计算驱动与监管器的服务名固定不可改。要添加自定义属性，例如 `deployment.environment`，在网关环境中设置 `OTEL_RESOURCE_ATTRIBUTES`。
+
+### 网关名称
+
+网关名称来自 `[openshell.gateway]` 下的 `name`、`--name` 参数或 `OPENSHELL_GATEWAY_NAME`，默认为 `openshell`。Helm chart 用 `server.name` 设置它，默认取 chart 的全名。
+
+向同一个 Collector 上报的每个安装（包括每个高可用部署）都应有自己的名称，以便区分各安装的 Span。同一安装的副本共用该名称。
+
+## 追踪上下文
+
+网关会延续调用方发来的有效 W3C `traceparent`，因此客户端的追踪可以包含网关处理其请求的 Span。没有 `traceparent` 时，网关开启新追踪。
+
+网关还会把自己的追踪上下文传给计算驱动，因此驱动 Span 会出现在引发它们的网关请求所在的同一条追踪中。内置驱动通过网关进程导出自己的 Span。托管的外部驱动从网关接收追踪端点、网关名称与计算驱动。自行运行的驱动则拥有自己的遥测（telemetry）配置。
+
+## 后续步骤
+
+- 配置 [OTLP 导出](/how-it-works/gateways/configuration#otlp-导出)，包括采样与网关采纳的 `OTEL_*` 变量。
+- 其余 OpenShell 产生的信号参见[可观测性概述](/observability/overview)。

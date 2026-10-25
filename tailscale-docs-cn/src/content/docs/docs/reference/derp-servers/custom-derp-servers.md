@@ -1,122 +1,122 @@
 ---
-title: "Custom DERP servers"
-description: "A custom DERP server is a designated [DERP server][docs-derp-servers] set up and managed by an organization or individual other than Tailscale for specific networking needs. By default, all Tailscale "
+title: "自定义 DERP 服务器"
+description: "自定义 DERP 服务器是由 Tailscale 之外的组织或个人为满足特定组网需求而搭建和管理的指定 [DERP 服务器][docs-derp-servers]。默认情况下，所有 Tailscale 网络（即 tailnet）都使用 Tailscale 运营的 DERP 服务器。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-> **Note:** Custom DERP servers are currently in alpha.
+> **注意：** 自定义 DERP 服务器目前处于 alpha 阶段。
 
-A custom DERP server is a designated [DERP server][docs-derp-servers] set up and managed by an organization or individual other than Tailscale for specific networking needs. By default, all Tailscale networks (known as tailnets) use Tailscale-operated DERP servers. DERP servers primarily play a supporting role in facilitating connectivity between devices in a Tailscale network (known as a [tailnet][docs-tailnet]). But they also function as a fallback mechanism when [direct connections][docs-connection-types] aren't possible and [peer relays][docs-peer-relays] aren't available.
+自定义 DERP 服务器是由 Tailscale 之外的组织或个人为满足特定组网需求而搭建和管理的指定 [DERP 服务器][docs-derp-servers]。默认情况下，所有 Tailscale 网络（即 tailnet）都使用 Tailscale 运营的 DERP 服务器。DERP 服务器主要起辅助作用，促成 Tailscale 网络（即 [tailnet][docs-tailnet]）中设备之间的连接。但在[直连][docs-connection-types]无法建立且[对等中继][docs-peer-relays]不可用时，它们也充当回退机制。
 
-In most cases, there's no need to run a custom DERP server. DERP servers typically only serve as the connective tissue between devices in your tailnet (with no visibility into the data exchanged between devices).
+在大多数情况下，无需运行自定义 DERP 服务器。DERP 服务器通常只充当 tailnet 中设备之间的连接纽带（对设备间交换的数据不可见）。
 
-However, in some restrictive network environments, it's more likely for devices to use a DERP server because they can't establish direct connections to other devices. Because DERP relayed connections are slower than direct connections, you might experience poor performance. If you frequently encounter DERP relayed connections, and want to avoid performance issues, it's usually better to [find out why you can't establish a direct connection][docs-troubleshoot-connectivity] or set up peer relays instead of a custom DERP server.
+不过，在一些受限的网络环境中，设备由于无法与其他设备建立直连，更有可能使用 DERP 服务器。由于 DERP 中继连接比直连慢，你可能遇到较差的性能。如果你经常遇到 DERP 中继连接并希望避免性能问题，通常更好的做法是[查明无法建立直连的原因][docs-troubleshoot-connectivity]，或架设对等中继，而不是部署自定义 DERP 服务器。
 
-[Tailscale Peer Relays][docs-peer-relays]:
+[Tailscale Peer Relay][docs-peer-relays]：
 
-* Offer lower latency and better performance than DERP servers because they run within your own network or infrastructure.
-* Don't incur additional costs associated with egress data transfer through DERP servers (for cloud environments).
-* Avoid the overhead and limitations of maintaining custom DERP servers.
+* 在你自己的网络或基础设施内运行，比 DERP 服务器延迟更低、性能更好。
+* 不产生经 DERP 服务器出站数据传输的额外费用（针对云环境）。
+* 免去维护自定义 DERP 服务器的开销与限制。
 
-That said, there are some rare cases in which it might make sense to run a custom DERP server. For example, you might run a custom DERP server to [restrict where encrypted traffic routes to comply with a corporate policy][ar-policy-compliance].
+尽管如此，在少数情况下运行自定义 DERP 服务器可能仍有意义。例如，为了[按照公司策略限制加密流量的路由去向][ar-policy-compliance]，你可能会运行自定义 DERP 服务器。
 
-## Limitations
+## 限制
 
-In most cases, there's no need to run a custom DERP server. However, there are some rare cases in which it makes sense to run a custom DERP server. To do so, you must build, deploy, and update the `cmd/derper` binary.
+在大多数情况下，无需运行自定义 DERP 服务器。但在少数情况下运行自定义 DERP 服务器是有意义的。为此，你需要构建、部署并更新 `cmd/derper` 二进制文件。
 
-Running custom DERP servers is an advanced operation that requires significant resources on your part to set up and maintain. Additionally, running a custom DERP servers have the following caveats:
+运行自定义 DERP 服务器是一项高级操作，需要你投入大量资源来搭建和维护。此外，运行自定义 DERP 服务器还有以下注意事项：
 
-* Custom DERP servers don't support device sharing or other cross-tailnet features.
-* Custom DERP servers, just like normal DERP servers, have no visibility of the data exchanged between devices because they're encrypted. As a result, DERP servers aren't helpful for network-level debugging.
-* Custom DERP servers won't benefit from some optimizations from the Tailscale control plane.
-* Custom DERP servers won't work [from behind a firewall or a load balancer][ar-direct-internet-access].
-* [Mullvad exit nodes][docs-mullvad-exit-nodes] don't work with custom DERP servers.
-* [Regional routing][docs-regional-routing] doesn't work with custom DERP servers. MagicRoute supports custom DERP servers. Refer to [Route selection][docs-route-selection] for details.
+* 自定义 DERP 服务器不支持设备共享或其他跨 tailnet 功能。
+* 自定义 DERP 服务器与普通 DERP 服务器一样，对设备间交换的数据不可见，因为数据是加密的。因此，DERP 服务器对网络级调试没有帮助。
+* 自定义 DERP 服务器无法受益于 Tailscale 控制平面的某些优化。
+* 自定义 DERP 服务器[无法在防火墙或负载均衡器之后工作][ar-direct-internet-access]。
+* [Mullvad 出口节点][docs-mullvad-exit-nodes]与自定义 DERP 服务器不兼容。
+* [区域路由][docs-regional-routing]与自定义 DERP 服务器不兼容。MagicRoute 支持自定义 DERP 服务器。详情请参阅[路由选择][docs-route-selection]。
 
-## Requirements
+## 要求
 
-Custom DERP servers must have [direct access to the internet][ar-direct-internet-access], [allow ICMP traffic][ar-icmp-traffic], and [open ports for HTTP, HTTPS, and STUN][ar-required-ports].
+自定义 DERP 服务器必须[能直接访问互联网][ar-direct-internet-access]、[允许 ICMP 流量][ar-icmp-traffic]，并[开放 HTTP、HTTPS 和 STUN 端口][ar-required-ports]。
 
-### Direct internet access
+### 直接的互联网访问
 
-DERP servers require direct internet connectivity and must not be behind NAT devices (such as firewalls) or load balancers. This direct connection requirement exists for two critical reasons: [device identification][ar-device-identification] and [protocol compatibility][ar-protocol-compatibility].
+DERP 服务器需要直接的互联网连接，且不得位于 NAT 设备（如防火墙）或负载均衡器之后。这项直连要求出于两个关键原因：[设备识别][ar-device-identification]和[协议兼容性][ar-protocol-compatibility]。
 
-#### Device identification
+#### 设备识别
 
-DERP servers identify tailnet devices by inspecting the source addresses of incoming traffic. This crucial functionality fails when traffic passes through NAT or load balancers, as they modify the original source addresses.
+DERP 服务器通过检查传入流量的源地址来识别 tailnet 设备。当流量经过 NAT 或负载均衡器时，原始源地址会被修改，这一关键功能就会失效。
 
-#### Protocol compatibility
+#### 协议兼容性
 
-Tailscale clients use the HTTP upgrade protocol to establish bidirectional data channels. Most cloud load balancer systems don't support this protocol, making them incompatible with DERP server operations.
+Tailscale 客户端使用 HTTP upgrade 协议建立双向数据通道。大多数云负载均衡系统不支持该协议，因此与 DERP 服务器的运行不兼容。
 
-> **Note:**
+> **注意：**
 >
-> Running your own DERP servers is an advanced operation that requires significant resources on your part to set up and maintain.
+> 运行你自己的 DERP 服务器是一项高级操作，需要你投入大量资源来搭建和维护。
 
-### Required ports
+### 所需端口
 
-DERP servers must have the following ports open to run an HTTP server, an HTTPS server, and a [STUN][xt-wikipedia-stun] server. The ports for those three services need to be open for traffic from the internet so users in your tailnet can access them from places such as their homes or coffee shops.
+DERP 服务器必须开放以下端口，才能运行 HTTP 服务器、HTTPS 服务器和 [STUN][xt-wikipedia-stun] 服务器。这三个服务的端口需要对来自互联网的流量开放，这样 tailnet 中的用户才能从家中或咖啡馆等地访问它们。
 
-| **Server** | **Port** |
+| **服务器** | **端口** |
 | :--------- | :------- |
 | HTTP       | `80`     |
 | HTTPS      | `443`    |
 | STUN       | `3478`   |
 
-To use other port numbers for HTTPS and STUN, set [`DERPNode.DERPPort`][xt-go-tailscale-derpport] or [`DERPNode.STUNPort`][xt-go-tailscale-derpnode-stun], respectively. You cannot use a custom port number for HTTP.
+要为 HTTPS 和 STUN 使用其他端口号，请分别设置 [`DERPNode.DERPPort`][xt-go-tailscale-derpport] 或 [`DERPNode.STUNPort`][xt-go-tailscale-derpnode-stun]。HTTP 不能使用自定义端口号。
 
-### ICMP traffic
+### ICMP 流量
 
-DERP servers must allow inbound and outbound ICMP (Internet Control Message Protocol) traffic.
+DERP 服务器必须允许入站和出站的 ICMP（Internet Control Message Protocol）流量。
 
-Tailscale runs [DERP relay servers][docs-derp-servers] to help connect your nodes. Generally, you don't need to customize Tailscale DERP servers. However, it is possible to do it.
+Tailscale 运行 [DERP 中继服务器][docs-derp-servers]来帮助连接你的节点。通常你无需自定义 Tailscale 的 DERP 服务器，但确实可以这样做。
 
-## Get started with a custom DERP server
+## 开始使用自定义 DERP 服务器
 
-> **Warning:**
+> **警告：**
 >
-> Running your own DERP servers is an advanced operation that requires significant resources on your part to set up and maintain. Consider the [requirements][ar-requirements] and [limitations][ar-limitations] before proceeding.
+> 运行你自己的 DERP 服务器是一项高级操作，需要你投入大量资源来搭建和维护。在继续之前，请先权衡[要求][ar-requirements]与[限制][ar-limitations]。
 
-To set up a custom DERP server, you'll need to:
+要搭建自定义 DERP 服务器，你需要：
 
-1. Run a DERP server from source.
-2. Add the DERP server to your tailnet.
+1. 从源码运行 DERP 服务器。
+2. 将 DERP 服务器添加到你的 tailnet。
 
-The following additional steps are optional:
+以下附加步骤为可选项：
 
-1. Restrict tailnet device access to your custom DERP server.
-2. Remove Tailscale's default DERP servers from your tailnet.
+1. 限制 tailnet 设备对你自定义 DERP 服务器的访问。
+2. 从你的 tailnet 中移除 Tailscale 的默认 DERP 服务器。
 
-### Run a DERP server from source
+### 从源码运行 DERP 服务器
 
-To run your own DERP server, you must build the DERP server from source. Using the [latest version of Go][xt-go-install], run:
+要运行你自己的 DERP 服务器，必须从源码构建。使用[最新版 Go][xt-go-install]，运行：
 
 ```shell
 go install tailscale.com/cmd/derper@latest
 ```
 
-... to install the latest DERP server to `$HOME/go/bin`.
+……将最新的 DERP 服务器安装到 `$HOME/go/bin`。
 
-Before running the binary, you'll need a domain name pointing at your server. With both the domain name and the binary, to start the DERP server on your domain name run:
+在运行二进制文件之前，你需要一个指向你服务器的域名。备好域名和二进制文件后，运行以下命令在你的域名上启动 DERP 服务器：
 
 ```shell
 sudo derper --hostname=example.com
 ```
 
-This will start the DERP server exposed on port 443, reachable at your domain. Then, you can add the DERP server to your tailnet as specified in Step 2.
+这会启动暴露在 443 端口、可通过你的域名访问的 DERP 服务器。然后，你就可以按第 2 步的说明把该 DERP 服务器添加到你的 tailnet。
 
-> **Warning:**
+> **警告：**
 >
-> To stay compatible with Tailscale client updates, you might need to update DERP servers periodically by rebuilding from source with `go install tailscale.com/cmd/derper@latest`.
+> 为保持与 Tailscale 客户端更新的兼容，你可能需要定期通过 `go install tailscale.com/cmd/derper@latest` 重新构建源码来更新 DERP 服务器。
 
-### Add the custom DERP servers to your tailnet
+### 将自定义 DERP 服务器添加到你的 tailnet
 
-If you find that Tailscale does not provide a DERP server within your region, or you are otherwise unable to use the provided DERPs, you can augment or edit the set of DERP servers by specifying them in your tailnet's [policy JSON][docs-policy-syntax] by setting the `derpMap` key to a value of type [`DERPMap`][xt-go-tailscale-derpmap].
+如果你发现 Tailscale 在你所在区域没有提供 DERP 服务器，或因其他原因无法使用提供的 DERP，你可以在 tailnet 的[策略 JSON][docs-policy-syntax] 中指定它们来扩充或修改 DERP 服务器集合，即将 `derpMap` 键设为 [`DERPMap`][xt-go-tailscale-derpmap] 类型的值。
 
-Each region has a unique region ID. The region ID values `900` to `999` are reserved for use as custom, user-specified regions and will not be used by Tailscale.
+每个区域都有唯一的区域 ID。区域 ID 值 `900` 到 `999` 保留用作自定义的用户指定区域，Tailscale 不会使用它们。
 
-For example, the following configuration enables a custom DERP server with the hostname `example.com`. For more options, refer to the definitions of [`DERPRegion`][xt-go-tailscale-derpregion] and [`DERPNode`][xt-go-tailscale-derpnode].
+例如，以下配置启用了主机名为 `example.com` 的自定义 DERP 服务器。更多选项请参阅 [`DERPRegion`][xt-go-tailscale-derpregion] 和 [`DERPNode`][xt-go-tailscale-derpnode] 的定义。
 
 ```json
 {
@@ -145,13 +145,13 @@ For example, the following configuration enables a custom DERP server with the h
 }
 ```
 
-There can be only one DERP server per region. If you want DERP redundancy, use multiple regions with only one DERP server in each region.
+每个区域只能有一台 DERP 服务器。如果想要 DERP 冗余，请使用多个区域，且每个区域只放一台 DERP 服务器。
 
-### (Optional) Remove Tailscale's DERP servers
+### （可选）移除 Tailscale 的 DERP 服务器
 
-For various reasons, such as [compliance][ar-policy-compliance], you might not want to route traffic through a specific DERP region. You can remove DERP regions available to the devices in your tailnet by creating a custom DERP map in the tailnet policy file. To exclude a region, set its value to `null`. When set to `null`, devices in your tailnet cannot connect to DERP servers in that region.
+出于[合规][ar-policy-compliance]等各种原因，你可能不希望流量经过特定的 DERP 区域。你可以在 tailnet 策略文件中创建自定义 DERP 地图，移除 tailnet 中设备可用的 DERP 区域。要排除某个区域，将其值设为 `null` 即可。设为 `null` 后，tailnet 中的设备将无法连接到该区域的 DERP 服务器。
 
-For example, the following DERP map configuration disables routing traffic through the New York Tailscale DERP region, which has the region ID `1`:
+例如，以下 DERP 地图配置禁用了流量经过纽约 Tailscale DERP 区域（区域 ID 为 `1`）：
 
 ```json
 {
@@ -160,19 +160,19 @@ For example, the following DERP map configuration disables routing traffic throu
 }
 ```
 
-You can access Tailscale's default DERP map from `https://controlplane.tailscale.com/derpmap/default`:
+你可以从 `https://controlplane.tailscale.com/derpmap/default` 获取 Tailscale 的默认 DERP 地图：
 
 ```shell
 curl https://controlplane.tailscale.com/derpmap/default
 ```
 
-If you have `jq` installed, use this to list Tailscale's default DERP regions and their IDs:
+如果你安装了 `jq`，可以用以下命令列出 Tailscale 的默认 DERP 区域及其 ID：
 
 ```shell
 curl --silent https://controlplane.tailscale.com/derpmap/default | jq -r '.Regions[] | "\(.RegionID) \(.RegionName)"'
 ```
 
-To guarantee that your traffic only flows through your custom DERP servers, remove all Tailscale's default DERP regions by setting the `OmitDefaultRegions` flag to `true` in the DERP map:
+为确保你的流量只经过你的自定义 DERP 服务器，可在 DERP 地图中将 `OmitDefaultRegions` 标志设为 `true`，从而移除 Tailscale 的所有默认 DERP 区域：
 
 ```json
 {
@@ -202,43 +202,43 @@ To guarantee that your traffic only flows through your custom DERP servers, remo
 }
 ```
 
-You can access the full set of options for DERP maps the source code's [`DERPMap` definition][xt-go-tailscale-derpmap].
+DERP 地图的完整选项集请查看源代码中的 [`DERPMap` 定义][xt-go-tailscale-derpmap]。
 
-### (Optional) Verify client traffic to the custom DERP server
+### （可选）验证发往自定义 DERP 服务器的客户端流量
 
-Anyone that knows the IP address of your DERP server could add it to their DERP map and route their tailnet traffic through your DERP server. To allow only your tailnet traffic through your DERP server, run `tailscaled` on the same device as your DERP server, and start `derper` with the `--verify-clients` flag:
+任何知道你 DERP 服务器 IP 地址的人都可以把它加入自己的 DERP 地图，让其 tailnet 流量经由你的 DERP 服务器中转。要只允许你的 tailnet 流量通过你的 DERP 服务器，请在与 DERP 服务器相同的设备上运行 `tailscaled`，并带 `--verify-clients` 标志启动 `derper`：
 
 ```shell
 sudo derper --hostname=example.com --verify-clients
 ```
 
-## Monitor custom DERP servers
+## 监控自定义 DERP 服务器
 
-Use the [`cmd/derpprobe`][xt-gh-tailscale-cmd-derpprobe] binary to monitor your custom DERP servers and to verify they are working correctly. You'll need to specify a `--derp-map=file://` URL that is a JSON document with your DERP map to monitor.
+使用 [`cmd/derpprobe`][xt-gh-tailscale-cmd-derpprobe] 二进制文件监控你的自定义 DERP 服务器并验证其工作正常。你需要指定一个 `--derp-map=file://` URL，指向一份包含待监控 DERP 地图的 JSON 文档。
 
-## Policy compliance
+## 策略合规
 
-One reason to host a custom DERP server is to ensure policy compliance. For example, you might have a strict policy requirement that prevents traffic from going through public servers, even if the traffic is encrypted.
+托管自定义 DERP 服务器的一个原因是为了确保策略合规。例如，你可能有严格的政策要求，禁止流量经过公共服务器，即使流量是加密的。
 
-DERP servers only forward encrypted traffic, and they have no access to plain text traffic. Additionally, Tailscale's DERP servers are shared resources across all Tailscale customers. You may have a strict routing policy, such as preventing encrypted traffic from traversing servers outside of your control.
+DERP 服务器只转发加密流量，无法接触明文流量。此外，Tailscale 的 DERP 服务器是所有 Tailscale 客户共享的资源。你可能持有严格的路由策略，例如禁止加密流量经过你无法控制的服务器。
 
-To comply with such a policy, you can run one or more custom DERP servers and remove the default Tailscale DERP servers from the list of DERP servers your tailnet can use.
+为遵守这类策略，你可以运行一台或多台自定义 DERP 服务器，并从 tailnet 可用的 DERP 服务器列表中移除 Tailscale 的默认 DERP 服务器。
 
-[ar-device-identification]: #device-identification
+[ar-device-identification]: #设备识别
 
-[ar-direct-internet-access]: #direct-internet-access
+[ar-direct-internet-access]: #直接的互联网访问
 
-[ar-icmp-traffic]: #icmp-traffic
+[ar-icmp-traffic]: #icmp-流量
 
-[ar-limitations]: #limitations
+[ar-limitations]: #限制
 
-[ar-policy-compliance]: #policy-compliance
+[ar-policy-compliance]: #策略合规
 
-[ar-protocol-compatibility]: #protocol-compatibility
+[ar-protocol-compatibility]: #协议兼容性
 
-[ar-required-ports]: #required-ports
+[ar-required-ports]: #所需端口
 
-[ar-requirements]: #requirements
+[ar-requirements]: #要求
 
 [docs-connection-types]: /docs/reference/connection-types
 

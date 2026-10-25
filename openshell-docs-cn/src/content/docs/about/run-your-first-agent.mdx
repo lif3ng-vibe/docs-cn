@@ -1,0 +1,93 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "运行你的第一个智能体"
+sidebar-title: "运行你的第一个智能体"
+description: "配置提供商、镜像与策略，在 OpenShell 沙箱中运行 AI 智能体。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 提供商配置档案, 策略, 自定义镜像"
+position: 4
+---
+
+OpenShell 可以运行沙箱镜像中可用的任何智能体。配置智能体的外部服务，选择其镜像与策略，然后创建以该智能体为主进程的沙箱。
+
+**1. 配置智能体可访问的内容**
+
+[提供商配置档案](/how-it-works/providers/profiles)（provider profile）定义智能体可使用的凭据、服务端点与可执行文件路径。
+
+本示例让 OpenCode 通过 OpenRouter 运行。查看[示例配置档案](https://github.com/NVIDIA/OpenShell/blob/main/providers/openrouter.yaml)，它允许 `/usr/local/bin/opencode` 访问 `openrouter.ai`，然后导入它并[创建提供商](/how-it-works/providers/overview#创建提供商)以存储其凭据。
+
+```shell
+openshell profile import \
+  --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/openrouter.yaml
+
+openshell provider create \
+  --name openrouter \
+  --type openrouter \
+  --from-existing
+```
+
+创建提供商之前先设置 `OPENROUTER_API_KEY`。OpenShell 会把它的值存入凭据存储，且只发送给 `openrouter.ai`。
+
+**2. 选择沙箱镜像**
+
+使用任何包含该智能体及其所需全部工具的[沙箱镜像](/how-it-works/sandboxes/overview#沙箱镜像)。
+
+在本示例中，OpenCode 镜像将 `opencode` 安装在 `/usr/local/bin/opencode`。
+
+当智能体需要更多文件系统访问、软件包仓库、源码托管、工具服务器或其他目的地时，创建自定义[沙箱策略](/how-it-works/policies/overview)。
+
+**3. 创建沙箱**
+
+[创建沙箱](/how-it-works/sandboxes/overview#创建沙箱)，挂接提供商，并在 `--` 之后传入智能体命令：
+
+```shell
+openshell sandbox create \
+  --name my-agent \
+  --from ghcr.io/anomalyco/opencode:latest \
+  --provider openrouter \
+  -- opencode -m openrouter/nvidia/nemotron-3.5-lightning:free
+```
+
+OpenCode 检测到 OpenRouter 凭据后，以传给 `-m` 的模型启动。本示例使用免费模型，因此没有 OpenRouter 额度也能运行。可从 `opencode models openrouter` 列出的模型中任选。
+
+要更精细地控制智能体可访问的内容，参见[策略](/how-it-works/policies/overview)。
+
+**4. 按需授予更多访问**
+
+当智能体试图访问策略不允许的目的地时，OpenShell 会拒绝该请求并为它起草一条规则。[策略顾问](/how-it-works/policies/advisor)（policy advisor）的机制映射器按主机、端口与调用程序对近期的拒绝进行分组，然后向网关提交一个窄范围的提案。在你审查之前，网关会用[策略证明器](/how-it-works/policies/prover)检查每份提案。
+
+从宿主机列出待处理的提案：
+
+```shell
+openshell rule get my-agent --status pending
+```
+
+当提案的规则与你打算授予的访问相符时予以批准，否则附上理由拒绝：
+
+```shell
+openshell rule approve my-agent --chunk-id <chunk-id>
+
+openshell rule reject my-agent \
+  --chunk-id <chunk-id> \
+  --reason "Not needed for this task."
+```
+
+批准一份提案后，系统会依据更新后的策略重新检查其余待处理提案，因此你可以再次列出它们并逐一批准。要一步批准全部待处理提案，运行：
+
+```shell
+openshell rule approve-all my-agent
+```
+
+`rule approve-all` 会跳过带安全标记的提案，除非你加上 `--include-security-flagged`，并且它会报告跳过了多少条。
+
+已批准的规则会热重载进正在运行的沙箱，无需重启，智能体即可重试该请求。要让智能体自行提出更窄的规则，或在证明器未发现新风险时自动批准提案，参见[策略顾问](/how-it-works/policies/advisor)。
+
+## 示例
+
+完整的实操示例请参阅[用 OpenRouter 运行 Pi](/tutorials/run-pi-with-openrouter)。该教程构建 Pi 镜像，配置窄范围的 OpenRouter 访问，上传项目，并在沙箱边界内启动智能体。
+
+## 后续步骤
+
+- 沙箱的生命周期、资源、模板、文件与连接，参见[沙箱](/how-it-works/sandboxes/overview)。
+- 收紧后的回退策略，参见[默认策略](/how-it-works/policies/default-policy)。
+- 操作系统与运行时要求，参见[支持矩阵](/about/support-matrix)。

@@ -1,38 +1,32 @@
 ---
-title: "Access your tailnet from CodeSandbox"
-description: "Privately access CodeSandbox repositories."
+title: "从 CodeSandbox 访问你的 tailnet"
+description: "私密地访问 CodeSandbox 仓库。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[CodeSandbox][xt-codesandbox] is an online code editor and IDE for rapid web development.
+[CodeSandbox][xt-codesandbox] 是一个用于快速 Web 开发的在线代码编辑器与 IDE。
 
-Tailscale can be installed within a CodeSandbox Repository environment to be able to access private resources securely.
-You can develop your application as if it were hosted in the same network as your other services, without
-compromising security.
+Tailscale 可以安装在 CodeSandbox Repository 环境中，从而安全地访问私有资源。
+你可以像应用与其他服务处于同一网络中一样开发你的应用，同时不牺牲安全性。
 
-Tailscale works in CodeSandbox Repository environments by adding a container to a Dockerized application setup (for
-example, using `docker-compose`). The additional container runs the Tailscale client and provides networking for the other
-containers.
+Tailscale 在 CodeSandbox Repository 环境中的工作方式是：向 Docker 化的应用设置（例如使用 `docker-compose`）中添加一个容器。这个额外的容器运行 Tailscale 客户端，并为其他容器提供网络。
 
-## Integration
+## 集成
 
-Follow the [CodeSandbox instructions for getting Tailscale working in a CodeSandbox Repository][xt-codesandbox-tailscale].
+按照 [CodeSandbox 关于在 CodeSandbox Repository 中用起 Tailscale 的说明][xt-codesandbox-tailscale]操作。
 
-You'll need to:
+你需要：
 
-1. Create an [auth key][docs-auth-keys] in the [Keys](https://console.tailscale.com/admin/settings/keys) page of the Tailscale admin console. The [key type][docs-auth-keys-types]
-   should be reusable, ephemeral, and pre-authorized. You may also want to make the key type tagged, so your CodeSandbox
-   environments are automatically labeled and granted access that is controlled by using [Tailscale access control policies][docs-access-control].
+1. 在 Tailscale 管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面创建一个[认证密钥（auth key）][docs-auth-keys]。该[密钥类型][docs-auth-keys-types]应为可重用（reusable）、临时（ephemeral）且预授权（pre-authorized）。你也可以将密钥类型设为带标签（tagged），这样你的 CodeSandbox 环境会被自动打上标签，其访问权限由 [Tailscale 访问控制策略][docs-access-control]控制。
 
-2. Add the auth key as a [CodeSandbox environment variable][xt-codesandbox-secrets], named `TS_AUTHKEY`.
+2. 将该认证密钥添加为 [CodeSandbox 环境变量][xt-codesandbox-secrets]，名为 `TS_AUTHKEY`。
 
-3. Add the [`tailscale/tailscale` Docker image][xt-docker-tailscale] as an additional service beside your application.
+3. 将 [`tailscale/tailscale` Docker 镜像][xt-docker-tailscale]作为额外的服务添加到你的应用旁边。
 
-## Authorization
+## 授权
 
-Authenticate to Tailscale from your workspace by referencing the `TS_AUTHKEY` environment variable in your Docker tasks
-when you start Tailscale. For example:
+在启动 Tailscale 时，在你的 Docker 任务中引用 `TS_AUTHKEY` 环境变量，从你的工作区向 Tailscale 完成身份验证。例如：
 
 ```shell
 docker-compose exec tailscale tailscale up \

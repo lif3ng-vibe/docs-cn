@@ -1,51 +1,51 @@
 ---
-title: "MCP server proxying"
-description: "Aggregate tools and resources from remote MCP servers through Aperture with identity-based access control."
+title: "MCP 服务器代理"
+description: "通过 Aperture 聚合远程 MCP 服务器的工具与资源，并实施基于身份的访问控制。"
 ---
 
-Last validated Aug 14, 2026
+最后验证于 Aug 14, 2026
 
-Aperture can aggregate tools and resources from multiple remote [Model Context Protocol][xt-mcp-spec] (MCP) servers and expose them to AI agents through a single `/v1/mcp` endpoint. This lets you centralize MCP tool management behind your Aperture proxy with the same identity-based access control used for LLM providers. This page covers MCP protocol connectors specifically. For HTTP API connectors, refer to the [connectors feature guide][docs-aperture-connectors].
+Aperture 可以聚合多个远程 [Model Context Protocol][xt-mcp-spec]（MCP）服务器的工具与资源，并通过单一的 `/v1/mcp` 端点将它们提供给 AI agent。这样你就能把 MCP 工具管理集中到 Aperture 代理后面，并使用与 LLM 提供商相同的基于身份的访问控制。本页面专门介绍 MCP 协议连接器。HTTP API 连接器请参阅[连接器功能指南][docs-aperture-connectors]。
 
-Aperture acts as an MCP server when communicating with AI agent clients and as an MCP client when communicating with remote MCP servers. Clients connect to Aperture's `/v1/mcp` endpoint and access an aggregated list of all tools and resources from every configured remote server.
+Aperture 在与 AI agent 客户端通信时充当 MCP 服务器，在与远程 MCP 服务器通信时充当 MCP 客户端。客户端连接到 Aperture 的 `/v1/mcp` 端点，即可访问来自每个已配置远程服务器的所有工具和资源的聚合列表。
 
-## Use cases
+## 使用场景
 
-MCP server proxying addresses the following use cases:
+MCP 服务器代理适用于以下场景：
 
-* **Centralized tool access**: Aggregate tools from multiple MCP servers behind a single endpoint. AI agents connect to one URL instead of managing connections to each server individually.
-* **Identity-based access control**: Control which users can access which MCP tools and resources using the same Tailscale identity and grants system used for LLM providers.
-* **Dynamic tool discovery**: Register and unregister MCP servers at runtime. When a server comes online, its tools become available automatically. When it goes offline, Aperture removes its tools.
-* **Protocol compatibility**: Connect MCP servers that use different protocol versions. Aperture auto-detects whether each server supports Streamable HTTP or legacy SSE and handles the translation.
+* **集中式工具访问**：将多个 MCP 服务器的工具聚合到单一端点后面。AI agent 只需连接一个 URL，无需分别管理与每个服务器的连接。
+* **基于身份的访问控制**：使用与 LLM 提供商相同的 Tailscale 身份和授权（grant）系统，控制哪些用户可以访问哪些 MCP 工具和资源。
+* **动态工具发现**：在运行时注册和注销 MCP 服务器。服务器上线时其工具自动可用，下线时 Aperture 会移除其工具。
+* **协议兼容**：连接使用不同协议版本的 MCP 服务器。Aperture 会自动检测每个服务器支持 Streamable HTTP 还是旧版 SSE，并处理协议转换。
 
-## Key MCP concepts
+## MCP 核心概念
 
-The [Model Context Protocol][xt-mcp-spec] defines a standard way for AI agents to discover and use external capabilities. The following concepts are relevant to configuring MCP in Aperture:
+[Model Context Protocol][xt-mcp-spec] 定义了 AI agent 发现和使用外部能力的标准方式。以下概念与在 Aperture 中配置 MCP 相关：
 
-* **Tools**: Functions that LLMs can discover and call, such as searching a database or running a command.
-* **Resources**: Contextual data identified by URI that LLMs can read, such as file contents or API responses.
-* **Streamable HTTP**: The current MCP transport protocol that uses a single HTTP endpoint for bidirectional communication.
-* **Legacy SSE**: The deprecated MCP transport that uses Server-Sent Events. Aperture supports both transports for backward compatibility.
+* **工具（tools）**：LLM 可以发现并调用的函数，例如搜索数据库或执行命令。
+* **资源（resources）**：由 URI 标识、LLM 可以读取的上下文数据，例如文件内容或 API 响应。
+* **Streamable HTTP**：当前的 MCP 传输协议，使用单一 HTTP 端点进行双向通信。
+* **旧版 SSE**：已弃用的 MCP 传输方式，使用 Server-Sent Events。为保持向后兼容，Aperture 对两种传输方式都提供支持。
 
-## Prerequisites
+## 前提条件
 
-Before you can use MCP server proxying, you need the following:
+使用 MCP 服务器代理之前，你需要具备以下条件：
 
-* Aperture enabled for your [tailnet][docs-tailnet]. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* At least one MCP server accessible from the Aperture host over your tailnet.
-* The URL of each MCP server's endpoint (for example, `http://mcp-server.example.ts.net:8080/v1/mcp`).
+* 你的 [tailnet][docs-tailnet] 已启用 Aperture。如果尚未设置，请参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 至少一个可经你的 tailnet 从 Aperture 主机访问的 MCP 服务器。
+* 每个 MCP 服务器端点的 URL（例如 `http://mcp-server.example.ts.net:8080/v1/mcp`）。
 
-> **Note:**
+> **注意：**
 >
-> The `connectors` configuration section is always available. The `connectors` feature flag is deprecated, so do not add it to a new configuration. The legacy `mcp.servers` syntax also remains available.
+> `connectors` 配置部分始终可用。`connectors` 特性开关已弃用，请勿在新的配置中添加它。旧版 `mcp.servers` 语法仍然可用。
 
-## Get started
+## 开始使用
 
-To configure MCP server proxying in Aperture, add remote servers, grant users access to MCP tools, and connect an MCP client.
+要在 Aperture 中配置 MCP 服务器代理，需要添加远程服务器、授权用户访问 MCP 工具，并连接 MCP 客户端。
 
-### Step 1: Configure MCP servers
+### 第 1 步：配置 MCP 服务器
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Add a `connectors` section to your configuration with one or more remote servers. Each connector can include optional `description` and `context` fields. `description` is a human-readable label shown in the UI. `context` accepts a plain string or JSON. For granted HTTP connectors, Aperture surfaces both fields to models through `aperture_list_connectors`.
+\[缺失片段：aperture\_admin\_nav.mdx] 在你的配置中添加一个 `connectors` 部分，包含一个或多个远程服务器。每个连接器都可以包含可选的 `description` 和 `context` 字段。`description` 是界面中显示的人类可读标签。`context` 接受纯字符串或 JSON。对于已授权的 HTTP 连接器，Aperture 会通过 `aperture_list_connectors` 将这两个字段呈现给模型。
 
 ```json
 {
@@ -62,20 +62,20 @@ To configure MCP server proxying in Aperture, add remote servers, grant users ac
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> For granted HTTP connectors, `description` and `context` are returned by `aperture_list_connectors` to users who can invoke that tool. They are not automatically included in MCP tool discovery. Do not include secrets or sensitive information.
+> 对于已授权的 HTTP 连接器，`aperture_list_connectors` 会把 `description` 和 `context` 返回给能调用该工具的用户。它们不会自动包含在 MCP 工具发现中。请勿包含机密或敏感信息。
 
-Each key in the `servers` map is a server ID that Aperture uses as a name prefix. For a connector named `docs`:
+`servers` 映射中的每个键都是一个服务器 ID，Aperture 会将其用作名称前缀。对于名为 `docs` 的连接器：
 
-* Tools from the `docs` server are prefixed with `docs_` (for example, a tool named `search` becomes `docs_search`).
-* Resources use a hyphen instead of an underscore (for example, `docs-files://readme.md`).
+* 来自 `docs` 服务器的工具会加上 `docs_` 前缀（例如，名为 `search` 的工具会变成 `docs_search`）。
+* 资源则使用连字符而不是下划线（例如 `docs-files://readme.md`）。
 
-Name prefixing prevents collisions when multiple servers expose tools with the same name. Clients receive the prefixed names and Aperture automatically strips the prefix when forwarding calls to the remote server.
+名称加前缀可以避免多个服务器暴露同名工具时发生冲突。客户端收到的是带前缀的名称，而 Aperture 在把调用转发到远程服务器时会自动去掉前缀。
 
-#### Legacy syntax
+#### 旧语法
 
-The `mcp.servers` syntax is deprecated. New configurations should use the `connectors` syntax shown above. Refer to the [connectors feature guide][docs-aperture-connectors] for migration details.
+`mcp.servers` 语法已弃用。新配置应使用上面展示的 `connectors` 语法。迁移细节请参阅[连接器功能指南][docs-aperture-connectors]。
 
 ```json
 {
@@ -92,15 +92,15 @@ The `mcp.servers` syntax is deprecated. New configurations should use the `conne
 }
 ```
 
-> **Tip:**
+> **提示：**
 >
-> The Aperture host uses its tailnet HTTP client for connections to remote MCP servers, so you can use tailnet hostnames (for example, `http://mcp-server.example.ts.net:8080/v1/mcp`) without additional network configuration.
+> Aperture 主机使用其 tailnet HTTP 客户端连接远程 MCP 服务器，因此你可以直接使用 tailnet 主机名（例如 `http://mcp-server.example.ts.net:8080/v1/mcp`），无需额外的网络配置。
 
-### Step 2: Grant access to MCP tools
+### 第 2 步：授权访问 MCP 工具
 
-Aperture is deny-by-default. Without MCP grants, users cannot access any MCP capabilities. Add MCP grants in the `grants` section of your configuration.
+Aperture 默认拒绝。没有 MCP 授权时，用户无法访问任何 MCP 能力。请在配置的 `grants` 部分添加 MCP 授权。
 
-MCP grants use the `connectors` field with `"connectorID/category/resource"` FQN glob patterns, or with `label:<name>` patterns that match connectors by label. The following example grants all users the built-in Aperture tools through the `system` label, which is the grant a new Aperture gateway ships with, plus all tools from the `docs` connector:
+MCP 授权使用 `connectors` 字段，取值为 `"connectorID/category/resource"` 形式的 FQN glob 模式，或按标签匹配连接器的 `label:<name>` 模式。下面的示例通过 `system` 标签向所有用户授予内置 Aperture 工具（这是新的 Aperture 网关自带的授权），并授予 `docs` 连接器的所有工具：
 
 ```json
 {
@@ -118,28 +118,28 @@ MCP grants use the `connectors` field with `"connectorID/category/resource"` FQN
 }
 ```
 
-You can use `*` to match any characters within a single path segment (it does not cross `/`) and `**` to match zero or more segments. For example:
+`*` 可以匹配单个路径段内的任意字符（不会跨越 `/`），`**` 可以匹配零个或多个路径段。例如：
 
-* `"docs/tools/search"` matches the `search` tool from the `docs` connector.
-* `"docs/tools/*"` matches all tools from the `docs` connector.
-* `"docs/**"` matches all capabilities (tools, resources, templates) from the `docs` connector.
-* `"**"` matches all capabilities from all connectors.
+* `"docs/tools/search"` 匹配 `docs` 连接器的 `search` 工具。
+* `"docs/tools/*"` 匹配 `docs` 连接器的所有工具。
+* `"docs/**"` 匹配 `docs` 连接器的所有能力（工具、资源、模板）。
+* `"**"` 匹配所有连接器的所有能力。
 
-A `label:<name>` pattern is matched exactly instead of expanded as a glob, and it grants every category and resource of each connector carrying the label. Use labels for connector-level policy and FQN patterns for tool-level access. Refer to [Grant connector access by label][docs-grant-by-label].
+`label:<name>` 模式按精确匹配，而不会作为 glob 展开，它会授予带有该标签的每个连接器的所有类别和资源。连接器级策略使用标签，工具级访问使用 FQN 模式。请参阅[按标签授予连接器访问权限][docs-grant-by-label]。
 
-Aperture checks grants when clients list available tools and resources, and enforces them at invocation time. Users can only access the items their grants permit.
+Aperture 会在客户端列出可用工具和资源时检查授权，并在调用时强制执行。用户只能访问其授权允许的项目。
 
-> **Note:**
+> **注意：**
 >
-> The deprecated `mcp_tools` and `mcp_resources` grant fields continue to work for backward compatibility with the `"server/item"` pattern syntax. New configurations should use the `connectors` field.
+> 已弃用的 `mcp_tools` 和 `mcp_resources` 授权字段仍可继续使用，以向后兼容 `"server/item"` 模式语法。新配置应使用 `connectors` 字段。
 
-Refer to the [grants configuration reference][docs-aperture-grants] for the full grants syntax, or follow the [grant access to MCP tools][docs-grant-mcp-tool-access] guide for a step-by-step walkthrough.
+完整的授权语法请参阅[授权配置参考][docs-aperture-grants]，或按照[授权访问 MCP 工具][docs-grant-mcp-tool-access]指南一步步操作。
 
-\[Missing snippet: aperture\_grant\_dst\_note.mdx]
+\[缺失片段：aperture\_grant\_dst\_note.mdx]
 
-### Step 3: Connect an MCP client
+### 第 3 步：连接 MCP 客户端
 
-Configure your MCP client (the AI agent host) to use the Aperture URL as the MCP server endpoint. For example, in an MCP client configuration file:
+将你的 MCP 客户端（即 AI agent 宿主）配置为使用 Aperture URL 作为 MCP 服务器端点。例如，在 MCP 客户端配置文件中：
 
 ```json
 {
@@ -151,34 +151,34 @@ Configure your MCP client (the AI agent host) to use the Aperture URL as the MCP
 }
 ```
 
-Replace `<aperture-hostname>` with the [MagicDNS][docs-magicdns] name of your Aperture gateway.
+将 `<aperture-hostname>` 替换为你的 Aperture 网关的 [MagicDNS][docs-magicdns] 名称。
 
-Aperture automatically detects whether the client uses Streamable HTTP (the current MCP protocol) or legacy SSE and responds with the appropriate transport.
+Aperture 会自动检测客户端使用的是 Streamable HTTP（当前 MCP 协议）还是旧版 SSE，并以相应的传输方式响应。
 
-### Step 4: Verify the connection
+### 第 4 步：验证连接
 
-Connect your MCP client to `http://<aperture-hostname>/v1/mcp` and list available tools. The tool list should include prefixed names from all configured servers (for example, `docs_search`, `remote_get_user`).
+将你的 MCP 客户端连接到 `http://<aperture-hostname>/v1/mcp` 并列出可用工具。工具列表应包含来自所有已配置服务器的带前缀名称（例如 `docs_search`、`remote_get_user`）。
 
-## Built-in tools
+## 内置工具
 
-Aperture provides the following built-in tools under the `aperture` connector prefix:
+Aperture 在 `aperture` 连接器前缀下提供以下内置工具：
 
-* The `aperture` system connector is always present, but subject to a matching `connectors` grant like any other connector. Being a system connector confers no default access in the authorization path. It exposes the `aperture_list_connectors` tool, which you can grant with the FQN `aperture/tools/list_connectors`. That tool returns a list of all HTTP API connectors available through Aperture. Agents call it to discover available authenticated API proxies. Aperture registers it only when at least one HTTP connector is configured.
-* `aperture_web_search` and `aperture_web_fetch` are available when the Aperture operator configures EXA with `LLM_PROXY_EXA_API_KEY` or the `-exa-api-key` command-line flag. The deprecated `web_tools` feature flag is not required.
+* `aperture` 系统连接器始终存在，但和其他连接器一样，需要有匹配的 `connectors` 授权。作为系统连接器，它在授权路径中不赋予任何默认访问权限。它暴露 `aperture_list_connectors` 工具，你可以用 FQN `aperture/tools/list_connectors` 授予该工具。该工具返回通过 Aperture 可用的所有 HTTP API 连接器的列表。agent 调用它来发现可用的已认证 API 代理。只有配置了至少一个 HTTP 连接器时，Aperture 才会注册它。
+* 当 Aperture 运维者使用 `LLM_PROXY_EXA_API_KEY` 或 `-exa-api-key` 命令行标志配置 EXA 后，`aperture_web_search` 和 `aperture_web_fetch` 即可用。已弃用的 `web_tools` 特性开关不是必需的。
 
-The built-in `aperture` system connector carries the `system` label automatically. The default configuration on a new Aperture gateway grants `label:system` to all users. The configured [`Tailnet` and `TailnetSSH` connectors][docs-connectors-built-in] never receive this label, so grant them by ID.
+内置的 `aperture` 系统连接器会自动携带 `system` 标签。新的 Aperture 网关的默认配置向所有用户授予 `label:system`。已配置的 [`Tailnet` 和 `TailnetSSH` 连接器][docs-connectors-built-in]永远不会获得该标签，因此请按 ID 授权它们。
 
-The grant makes the `aperture` connector reachable. If you remove it, the connector falls under deny-by-default like any other connector. The web tools carry the same `aperture` prefix and use the same grants. However, Aperture registers them only when EXA is configured, so a grant alone does not make them appear.
+该授权让 `aperture` 连接器变得可访问。如果移除它，该连接器会像其他连接器一样落入默认拒绝范围。Web 工具带有相同的 `aperture` 前缀并使用相同的授权。但只有配置了 EXA 时 Aperture 才会注册它们，因此仅有授权并不会让它们出现。
 
-To grant all `aperture` system tools, use `"connectors": ["label:system"]` or `"connectors": ["aperture/**"]`. To target the tool category, use `"connectors": ["aperture/tools/*"]`. To grant only the web search tool, use `"connectors": ["aperture/tools/web_search"]`.
+要授予所有 `aperture` 系统工具，请使用 `"connectors": ["label:system"]` 或 `"connectors": ["aperture/**"]`。要仅针对工具类别，请使用 `"connectors": ["aperture/tools/*"]`。要只授予 Web 搜索工具，请使用 `"connectors": ["aperture/tools/web_search"]`。
 
-## Common scenarios
+## 常见场景
 
-The following sections describe common tasks related to MCP server proxying.
+以下小节介绍与 MCP 服务器代理相关的常见任务。
 
-### Enable dynamic registration
+### 启用动态注册
 
-Dynamic registration lets MCP servers register themselves with Aperture at runtime instead of being configured statically. Set `accept_registrations` to `true` in the `mcp` section.
+动态注册让 MCP 服务器可以在运行时向 Aperture 自行注册，而不是静态配置。在 `mcp` 部分将 `accept_registrations` 设置为 `true`。
 
 ```json
 {
@@ -189,7 +189,7 @@ Dynamic registration lets MCP servers register themselves with Aperture at runti
 }
 ```
 
-When dynamic registration is enabled, remote servers register by sending a POST request to `/v1/mcp/register` with a JSON body containing their URL:
+启用动态注册后，远程服务器通过向 `/v1/mcp/register` 发送包含自身 URL 的 JSON 体的 POST 请求来注册：
 
 ```shell
 curl -X POST http://<aperture-hostname>/v1/mcp/register \
@@ -197,19 +197,19 @@ curl -X POST http://<aperture-hostname>/v1/mcp/register \
   -d '{"url": "http://my-mcp-server:8080/v1/mcp"}'
 ```
 
-Aperture validates the registering server before it responds with HTTP 200. Each dynamically registered server receives a sequential ID such as `auto1` or `auto2`, and its tools use that prefix, for example `auto1_search`.
+Aperture 会先验证注册的服务器，然后才返回 HTTP 200。每个动态注册的服务器都会获得一个顺序 ID（例如 `auto1` 或 `auto2`），其工具使用该前缀，例如 `auto1_search`。
 
-> **Warning:**
+> **警告：**
 >
-> The registration endpoint requires Tailscale authentication, the same as all other Aperture endpoints. The registering server must be accessible through the tailnet.
+> 注册端点与其他所有 Aperture 端点一样，需要 Tailscale 身份验证。发起注册的服务器必须可以经由 tailnet 访问。
 >
-> The registering server must keep the HTTP connection to `/v1/mcp/register` open. When the server closes the connection, Aperture automatically unregisters all of its tools and resources.
+> 发起注册的服务器必须保持与 `/v1/mcp/register` 的 HTTP 连接不断开。当该服务器关闭连接时，Aperture 会自动注销其所有工具和资源。
 
-You can combine static servers and dynamic registration in the same configuration. Static servers are always available, while dynamically registered servers come and go as they connect and disconnect.
+你可以在同一配置中组合静态服务器和动态注册。静态服务器始终可用，而动态注册的服务器随连接与断开来去。
 
-### Connect with per-user OAuth authorization
+### 使用每用户 OAuth 授权连接
 
-The `oauth2_authorization_code` auth type enables per-user OAuth flows. Each user completes their own authorization and Aperture manages tokens per-user.
+`oauth2_authorization_code` 认证类型支持每用户 OAuth 流程。每个用户完成自己的授权，Aperture 按用户管理令牌。
 
 ```json
 {
@@ -231,17 +231,17 @@ The `oauth2_authorization_code` auth type enables per-user OAuth flows. Each use
 }
 ```
 
-Per-user OAuth uses lazy population: tools do not appear until the user completes the OAuth flow.
+每用户 OAuth 采用惰性填充：在用户完成 OAuth 流程之前，工具不会出现。
 
-The `client_secret` field is optional and not required for PKCE-only flows. Use `auth_params` to pass extra parameters to both the OAuth authorization and token requests, such as `"access_type": "offline"` to get refresh tokens.
+`client_secret` 字段是可选的，仅使用 PKCE 的流程不需要它。使用 `auth_params` 可以向 OAuth 授权请求和令牌请求传递额外参数，例如用 `"access_type": "offline"` 获取刷新令牌。
 
-For MCP servers that support dynamic client registration, use the [`oauth2_dcr`][docs-connectors-reference-dcr] auth type instead. Aperture discovers the authorization server and registers a client at runtime, so you supply only the server `url` with no `client_id`, `auth_url`, or `token_url`.
+对于支持动态客户端注册的 MCP 服务器，请改用 [`oauth2_dcr`][docs-connectors-reference-dcr] 认证类型。Aperture 会在运行时发现授权服务器并注册客户端，因此你只需提供服务器 `url`，无需 `client_id`、`auth_url` 或 `token_url`。
 
-## HTTP API connectors
+## HTTP API 连接器
 
-Aperture can also proxy HTTP API requests through connectors with `protocol: "http"`. These connectors act as authenticated reverse proxies that inject credentials into outgoing requests.
+Aperture 还可以通过 `protocol: "http"` 的连接器代理 HTTP API 请求。这类连接器充当经过身份验证的反向代理，将凭证注入传出请求。
 
-HTTP connectors are accessed through `/v1/connectors/<id>/<path>` rather than `/v1/mcp`. Agents discover available HTTP connectors by calling the `aperture_list_connectors` tool exposed by the `aperture` system connector.
+HTTP 连接器通过 `/v1/connectors/<id>/<path>` 访问，而不是 `/v1/mcp`。agent 通过调用 `aperture` 系统连接器暴露的 `aperture_list_connectors` 工具来发现可用的 HTTP 连接器。
 
 ```json
 {
@@ -261,69 +261,69 @@ HTTP connectors are accessed through `/v1/connectors/<id>/<path>` rather than `/
 }
 ```
 
-Refer to the [connectors feature guide][docs-aperture-connectors] for full documentation on HTTP API connectors, including supported auth types and access control.
+HTTP API 连接器的完整文档（包括支持的认证类型和访问控制）请参阅[连接器功能指南][docs-aperture-connectors]。
 
-## MCP configuration reference
+## MCP 配置参考
 
-Refer to the [Aperture configuration reference][docs-aperture-mcp-config] for the full `mcp` configuration syntax. The following sections describe how Aperture handles transport detection and server availability.
+完整的 `mcp` 配置语法请参阅 [Aperture 配置参考][docs-aperture-mcp-config]。以下小节介绍 Aperture 如何处理传输检测和服务器可用性。
 
-* For connectors configuration, including HTTP API connectors and auth types, refer to the [connectors feature guide][docs-aperture-connectors] and the [connectors configuration reference][docs-aperture-connectors-config].
+* 连接器配置（包括 HTTP API 连接器和认证类型）请参阅[连接器功能指南][docs-aperture-connectors]和[连接器配置参考][docs-aperture-connectors-config]。
 
-### Transport auto-detection
+### 传输自动检测
 
-Aperture automatically detects whether each remote MCP server supports Streamable HTTP (the current protocol) or legacy SSE. When connecting to a remote server, Aperture tries Streamable HTTP first and falls back to SSE if the server does not support it. Remote servers can be upgraded to a later protocol version without restarting Aperture.
+Aperture 会自动检测每个远程 MCP 服务器支持 Streamable HTTP（当前协议）还是旧版 SSE。连接远程服务器时，Aperture 先尝试 Streamable HTTP，如果服务器不支持再回退到 SSE。远程服务器可以升级到更新的协议版本，而无需重启 Aperture。
 
-The same auto-detection applies to clients connecting to Aperture's `/v1/mcp` endpoint. Aperture serves both Streamable HTTP and legacy SSE clients.
+连接到 Aperture `/v1/mcp` 端点的客户端同样适用自动检测。Aperture 同时服务 Streamable HTTP 客户端和旧版 SSE 客户端。
 
-### Capability updates
+### 能力更新
 
-Aperture periodically checks configured remote MCP servers for capability changes. When a server adds or removes tools or resources, Aperture updates the capabilities available to connected clients.
+Aperture 会定期检查已配置的远程 MCP 服务器的能力变化。当服务器添加或移除工具或资源时，Aperture 会更新已连接客户端可用的能力。
 
-If a remote server becomes unavailable, its tools and resources remain unavailable until the server recovers. Aperture makes them available again after recovery.
+如果远程服务器变得不可用，其工具和资源在服务器恢复之前保持不可用。服务器恢复后，Aperture 会重新使它们可用。
 
-Servers using `oauth2_authorization_code` authentication load capabilities for each user when they start a session. Users can request current capabilities with `PUT /api/connectors/<id>/capabilities`. This request contacts the upstream server and can return connection errors.
+使用 `oauth2_authorization_code` 认证的服务器会在每个用户开始会话时加载能力。用户可以通过 `PUT /api/connectors/<id>/capabilities` 请求最新能力。该请求会联系上游服务器，可能返回连接错误。
 
-## Limitations
+## 限制
 
-MCP server proxying has the following limitations:
+MCP 服务器代理存在以下限制：
 
-* **Capability updates are not immediate**: Aperture periodically detects capability changes from remote servers. There can be a short delay before added or removed tools become available to clients. Connectors using `oauth2_authorization_code` load capabilities for each user when they start a session or request a capability refresh.
-* **Grant enforcement**: Aperture enforces grants at both listing and invocation time. Users can access only the tools and resources their grants permit, and Aperture rejects `tools/call` and `resources/read` requests that do not match a grant with an "unknown tool" or "unknown resource" error.
+* **能力更新并非即时**：Aperture 定期检测远程服务器的能力变化。新增或移除的工具在客户端可用之前可能有短暂延迟。使用 `oauth2_authorization_code` 的连接器会在用户开始会话或请求刷新能力时按用户加载能力。
+* **授权执行**：Aperture 在列出和调用时都会强制执行授权。用户只能访问其授权允许的工具和资源；对于不匹配任何授权的 `tools/call` 和 `resources/read` 请求，Aperture 会以 "unknown tool" 或 "unknown resource" 错误拒绝。
 
-## Troubleshooting
+## 故障排除
 
-Use the following sections to diagnose and resolve common issues with MCP server configuration.
+使用以下小节诊断并解决 MCP 服务器配置的常见问题。
 
-### MCP tools do not appear
+### MCP 工具不出现
 
-If tools from a configured MCP server are not visible:
+如果看不到来自已配置 MCP 服务器的工具：
 
-1. Verify the URL in your configuration is correct and the MCP server is running.
-2. Check that the MCP server is reachable from the Aperture host. Test with `curl -v <your-mcp-server-url>` from the Aperture host.
-3. Verify your grants include `connectors` patterns (or the deprecated `mcp_tools` patterns) that match the server and tool names. Without grants, users cannot access any MCP tools.
+1. 检查配置中的 URL 是否正确，以及 MCP 服务器是否正在运行。
+2. 检查能否从 Aperture 主机访问该 MCP 服务器。可在 Aperture 主机上用 `curl -v <your-mcp-server-url>` 测试。
+3. 检查你的授权是否包含与服务器和工具名称匹配的 `connectors` 模式（或已弃用的 `mcp_tools` 模式）。没有授权时，用户无法访问任何 MCP 工具。
 
-### Connection refused or host not found
+### 连接被拒绝或找不到主机
 
-These errors indicate the MCP server URL is unreachable.
+这些错误表明 MCP 服务器 URL 不可达。
 
-* **Connection refused**: The server is not running or is not listening on the configured port.
-* **Host not found**: The hostname cannot be resolved. For tailnet hostnames, verify the MCP server device is connected to the tailnet and check with `tailscale status`.
+* **连接被拒绝**：服务器未运行，或未在配置的端口上监听。
+* **找不到主机**：主机名无法解析。对于 tailnet 主机名，请确认 MCP 服务器设备已连接到 tailnet，并用 `tailscale status` 检查。
 
-### Tools appear and then disappear
+### 工具出现后又消失
 
-If tools are briefly visible and then become unavailable, the remote MCP server is likely crashing or restarting. Aperture automatically unregisters tools when a remote server becomes unreachable and re-registers them when the server recovers.
+如果工具短暂可见后又变得不可用，远程 MCP 服务器可能正在崩溃或重启。当远程服务器变得不可达时，Aperture 会自动注销其工具；服务器恢复后再重新注册。
 
-### Dynamic registration fails
+### 动态注册失败
 
-If remote servers cannot register dynamically:
+如果远程服务器无法动态注册：
 
-1. Verify `accept_registrations` is set to `true` in your `mcp` configuration.
-2. Make sure the remote server sends a valid POST request to `/v1/mcp/register` with a JSON body containing `{"url": "<mcp-server-url>"}`.
-3. The remote server must keep the HTTP connection open after registration. If the connection closes, Aperture unregisters the server's tools immediately.
+1. 检查 `mcp` 配置中的 `accept_registrations` 是否已设置为 `true`。
+2. 确保远程服务器向 `/v1/mcp/register` 发送有效的 POST 请求，JSON 体中包含 `{"url": "<mcp-server-url>"}`。
+3. 远程服务器必须在注册后保持 HTTP 连接不断开。如果连接关闭，Aperture 会立即注销该服务器的工具。
 
-### Tool calls time out
+### 工具调用超时
 
-If tool calls fail with timeout errors, the remote MCP server is taking too long to respond. Aperture retries tool calls once on connection errors. Check the remote server's performance and make sure it can respond within a reasonable time.
+如果工具调用因超时错误而失败，说明远程 MCP 服务器响应时间过长。Aperture 会在连接错误时重试一次工具调用。请检查远程服务器的性能，确保它能在合理时间内响应。
 
 [docs-aperture-connectors-config]: /docs/aperture/configuration#connectors
 

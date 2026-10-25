@@ -1,27 +1,27 @@
 ---
-title: "Secure your AI training cluster"
-description: "When your Kubernetes cluster's API server is publicly reachable, every `kubectl` command traverses the internet. For AI training clusters running expensive GPU workloads, this exposure creates a high-"
+title: "保护你的 AI 训练集群"
+description: "当 Kubernetes 集群的 API 服务器可从公网访问时，每一条 `kubectl` 命令都要穿越互联网。对于运行昂贵 GPU 工作负载的 AI 训练集群，这种暴露会带来高"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Tailscale Kubernetes Operator**](/docs/kubernetes-operator) — The Tailscale Kubernetes Operator provides secure connectivity to and from your Kubernetes cluster.
+> [**Tailscale Kubernetes Operator**](/docs/kubernetes-operator)——Tailscale Kubernetes Operator 为 Kubernetes 集群的出入流量提供安全连接。
 
-> **Note:** Kubernetes API server proxy is currently in beta.
+> **注意：** Kubernetes API 服务器代理目前处于 beta 阶段。
 
-When your Kubernetes cluster's API server is publicly reachable, every `kubectl` command traverses the internet. For AI training clusters running expensive GPU workloads, this exposure creates a high-value target. Attackers who gain API server access can exfiltrate model weights, use GPU resources for cryptomining, or disrupt multi-day training runs.
+当 Kubernetes 集群的 API 服务器可从公网访问时，每一条 `kubectl` 命令都要穿越互联网。对于运行昂贵 GPU 工作负载的 AI 训练集群来说，这种暴露会使其成为高价值攻击目标。获得 API 服务器访问权的攻击者可以窃取模型权重、把 GPU 资源拿去挖矿，或者中断需要连续运行数天的训练任务。
 
-The Tailscale Kubernetes operator's API server proxy removes the kube-apiserver from the public internet and routes all `kubectl` access through your tailnet. You get identity-based access control, a complete audit trail, and device compliance enforcement, without changing how your ML engineers use `kubectl`.
+Tailscale Kubernetes Operator 的 API 服务器代理将 kube-apiserver 从公网上移除，让所有 `kubectl` 访问都经由你的 tailnet 路由。你可以获得基于身份的访问控制、完整的审计追踪和设备合规强制，同时不必改变 ML 工程师使用 `kubectl` 的方式。
 
-This guide covers securing the management plane (`kubectl` and API server access) for a Kubernetes training cluster. It does not cover data-plane security (inter-node GPU traffic).
+本指南介绍如何保护 Kubernetes 训练集群的管理平面（`kubectl` 与 API 服务器访问），不涉及数据平面安全（节点间 GPU 流量）。
 
-## Define tags in your tailnet policy file
+## 在 tailnet 策略文件中定义标签
 
-Tags identify the Kubernetes operator, its proxies, and the session recorder in your access control rules. Define them before installing any components by adding the following `tagOwners` to your [tailnet policy file][docs-tailnet-policy-file]:
+在访问控制规则中，标签用于标识 Kubernetes Operator、其代理以及会话录制器。请在安装任何组件之前先定义它们：在 [tailnet 策略文件][docs-tailnet-policy-file]中添加以下 `tagOwners`：
 
 ```json
 "tagOwners": {
@@ -31,28 +31,28 @@ Tags identify the Kubernetes operator, its proxies, and the session recorder in 
 }
 ```
 
-The `tag:k8s-operator` tag identifies the operator itself. Because `tag:k8s-operator` owns `tag:k8s`, the operator can create and manage proxy devices with that tag. The `tag:tsrecorder` tag identifies session recording instances used in later steps.
+`tag:k8s-operator` 标签标识 Operator 本身。由于 `tag:k8s-operator` 拥有 `tag:k8s`，Operator 可以创建和管理带该标签的代理设备。`tag:tsrecorder` 标签标识后续步骤中要用到的会话录制实例。
 
-> **Note:**
+> **注意：**
 >
-> These tag names are illustrative. Adapt them to your organization's naming conventions (for example, `tag:ml-cluster-operator` or `tag:gpu-cluster`) if you manage multiple Kubernetes environments.
+> 这些标签名称仅作示例。如果你管理多个 Kubernetes 环境，请按你所在组织的命名规范调整（例如 `tag:ml-cluster-operator` 或 `tag:gpu-cluster`）。
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-For the full set of policy file configuration options, refer to the [tailnet policy file reference][docs-tailnet-policy-file].
+策略文件配置选项的完整集合请参阅 [tailnet 策略文件参考][docs-tailnet-policy-file]。
 
-## Install the Kubernetes operator with the API server proxy
+## 安装带 API 服务器代理的 Kubernetes Operator
 
-This step deploys the Tailscale Kubernetes operator with the API server proxy enabled in auth mode. Auth mode [impersonates][xt-kubernetes-impersonation] the Tailscale identity of each request's sender, enabling per-user Kubernetes RBAC.
+本步骤部署启用 auth 模式 API 服务器代理的 Tailscale Kubernetes Operator。auth 模式会[模拟][xt-kubernetes-impersonation]（impersonate）每个请求发送方的 Tailscale 身份，从而实现按用户的 Kubernetes RBAC。
 
-Add the Tailscale Helm repository and update your local cache:
+添加 Tailscale Helm 仓库并更新本地缓存：
 
 ```shell
 helm repo add tailscale https://pkgs.tailscale.com/helmcharts
 helm repo update
 ```
 
-Install the operator with the API server proxy enabled:
+安装启用 API 服务器代理的 Operator：
 
 ```shell
 helm upgrade \
@@ -67,47 +67,47 @@ helm upgrade \
   --wait
 ```
 
-The `apiServerProxyConfig.mode="true"` flag enables the in-process API server proxy in auth mode. Replace the OAuth client ID and secret with values from your prerequisite OAuth client.
+`apiServerProxyConfig.mode="true"` 标志以 auth 模式启用进程内 API 服务器代理。请将 OAuth 客户端 ID 和密钥替换为你前置条件中 OAuth 客户端的对应值。
 
-After the install completes, a device named `tailscale-operator` appears in the [Machines](https://console.tailscale.com/admin/machines). This device is the API server proxy endpoint your team uses to access the cluster.
+安装完成后，[机器](https://console.tailscale.com/admin/machines)页面会出现一台名为 `tailscale-operator` 的设备。该设备就是你的团队访问集群所用的 API 服务器代理端点。
 
-> **Note:**
+> **注意：**
 >
-> The alternative `noauth` mode passes requests to the kube-apiserver without identity impersonation. Use `noauth` mode only when combining the proxy with a separate authenticating proxy from your cloud provider or identity provider.
+> 另一种 `noauth` 模式在不做身份模拟的情况下把请求转发给 kube-apiserver。仅当你将此代理与云提供商或身份提供方（IdP）单独提供的认证代理配合使用时，才使用 `noauth` 模式。
 
-For the full set of operator installation options, refer to the [Kubernetes operator setup guide][docs-operator-setup]. For detailed proxy configuration, refer to the [API server proxy how-to][docs-operator-api-server-proxy].
+Operator 安装选项的完整集合请参阅 [Kubernetes Operator 安装指南][docs-operator-setup]。代理的详细配置请参阅 [API 服务器代理操作指南][docs-operator-api-server-proxy]。
 
-## Configure `kubectl` to use the Tailscale proxy
+## 配置 `kubectl` 使用 Tailscale 代理
 
-With the operator running, point `kubectl` at the Tailscale proxy so all commands route through your tailnet instead of the public kube-apiserver endpoint.
+Operator 运行起来之后，将 `kubectl` 指向 Tailscale 代理，让所有命令经由你的 tailnet 路由，而不是走公网的 kube-apiserver 端点。
 
 ```shell
 tailscale configure kubeconfig tailscale-operator
 ```
 
-This updates `~/.kube/config` to point `kubectl` at the Tailscale proxy device's MagicDNS name (`tailscale-operator` by default).
+该命令会更新 `~/.kube/config`，把 `kubectl` 指向 Tailscale 代理设备的 MagicDNS 名称（默认为 `tailscale-operator`）。
 
-Verify `kubectl` reaches the cluster through the proxy:
+验证 `kubectl` 能否通过代理访问集群：
 
 ```shell
 kubectl get nodes
 ```
 
-If this command returns your cluster's nodes, `kubectl` routes through the Tailscale proxy. You can now remove the public API server endpoint from your cloud provider's configuration to complete the lockdown.
+如果该命令返回了你集群的节点，说明 `kubectl` 已经经由 Tailscale 代理路由。现在可以从云提供商的配置中移除公网 API 服务器端点，完成锁定。
 
-> **Note:**
+> **注意：**
 >
-> If you deploy the optional high-availability ProxyGroup in Step 4, configure `kubectl` with the ProxyGroup's URL instead:
+> 如果你在第 4 步部署了可选的高可用 ProxyGroup，请改用 ProxyGroup 的 URL 配置 `kubectl`：
 >
 > ```shell
 > tailscale configure kubeconfig https://ai-cluster.tailxyz.ts.net
 > ```
 
-## Map Tailscale identities to Kubernetes RBAC
+## 将 Tailscale 身份映射到 Kubernetes RBAC
 
-With the proxy in place, you require grants to control who can access the cluster and what they can do. Grants map Tailscale user identities to Kubernetes RBAC roles through [impersonation][xt-kubernetes-impersonation], replacing shared `kubeconfig` credentials with per-user access. Kubernetes audit logs then show the actual user, not a service account.
+代理就位后，需要用授权来控制谁能访问集群以及能做什么。授权通过[模拟][xt-kubernetes-impersonation]将 Tailscale 用户身份映射到 Kubernetes RBAC 角色，用按用户访问取代共享的 `kubeconfig` 凭证。这样 Kubernetes 审计日志显示的就是真实用户，而不是服务账号。
 
-The following grant gives members of `group:ml-engineers` full cluster admin access by impersonating the `system:masters` Kubernetes group:
+以下授权通过模拟 `system:masters` Kubernetes 分组，赋予 `group:ml-engineers` 成员完整的集群管理员访问权限：
 
 ```json
 "grants": [
@@ -125,9 +125,9 @@ The following grant gives members of `group:ml-engineers` full cluster admin acc
 ]
 ```
 
-`system:masters` has a default ClusterRoleBinding to `cluster-admin` in all Kubernetes clusters, granting full access to all API server resources.
+在所有 Kubernetes 集群中，`system:masters` 默认存在指向 `cluster-admin` 的 ClusterRoleBinding，拥有对所有 API 服务器资源的完全访问权限。
 
-For read-only stakeholders who need to inspect training job status without modifying resources, create a separate grant that impersonates a custom Kubernetes group:
+对于只需查看训练任务状态而无需修改资源的只读相关人员，创建另一个授权，模拟一个自定义 Kubernetes 分组：
 
 ```json
 "grants": [
@@ -145,7 +145,7 @@ For read-only stakeholders who need to inspect training job status without modif
 ]
 ```
 
-The `tailnet-readers` Kubernetes group does not exist by default. Bind it to the built-in `view` ClusterRole to grant read-only access:
+`tailnet-readers` Kubernetes 分组默认不存在。将其绑定到内置的 `view` ClusterRole 即可授予只读访问权限：
 
 ```shell
 kubectl create clusterrolebinding tailnet-readers-view \
@@ -154,7 +154,7 @@ kubectl create clusterrolebinding tailnet-readers-view \
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Grants alone control what users can do once connected, but your access control rules must also allow traffic from these groups to the API server proxy. Add the following to the `acls` section of your tailnet policy file:
+授权本身只控制用户连接后能做什么，但访问控制规则还必须允许这些分组的流量到达 API 服务器代理。请在 tailnet 策略文件的 `acls` 部分添加以下内容：
 
 ```json
 "acls": [
@@ -171,7 +171,7 @@ Grants alone control what users can do once connected, but your access control r
 ]
 ```
 
-For additional grant patterns, refer to the [grants overview][docs-grants], [grants syntax reference][docs-grants-syntax], and [grants examples][docs-grants-examples].
+更多授权模式请参阅[授权概述][docs-grants]、[授权语法参考][docs-grants-syntax]与[授权示例][docs-grants-examples]。
 
 [docs-grants]: /docs/features/access-control/grants
 

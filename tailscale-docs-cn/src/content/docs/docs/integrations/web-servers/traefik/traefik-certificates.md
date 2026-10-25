@@ -1,17 +1,17 @@
 ---
-title: "Traefik certificates on Tailscale"
-description: "[Traefik][xt-traefik] simplifies networking complexity while designing, deploying, and operating applications. Starting with the release of [Traefik Proxy 3.0 Beta 1][xt-gh-traefik-changelog], Traefik"
+title: "Tailscale 上的 Traefik 证书"
+description: "[Traefik][xt-traefik] 在设计、部署和运维应用的过程中简化了网络的复杂性。自 [Traefik Proxy 3.0 Beta 1][xt-gh-traefik-changelog] 发布起，Traefik"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[Traefik][xt-traefik] simplifies networking complexity while designing, deploying, and operating applications. Starting with
-the release of [Traefik Proxy 3.0 Beta 1][xt-gh-traefik-changelog], Traefik Proxy supports Tailscale. When Traefik gets
-an HTTPS request for a `*.ts.net` site, it gets the HTTPS certificate from the machine's local Tailscale daemon.
+[Traefik][xt-traefik] 在设计、部署和运维应用的过程中简化了网络的复杂性。自
+[Traefik Proxy 3.0 Beta 1][xt-gh-traefik-changelog] 发布起，Traefik Proxy 开始支持 Tailscale。当 Traefik 收到
+针对 `*.ts.net` 站点的 HTTPS 请求时，它会从机器本地的 Tailscale 守护进程获取 HTTPS 证书。
 
-No configuration is required for the certificate.
+证书无需任何配置。
 
-For example, you can define a certificate resolver in the [install configuration][xt-traefik-static-config] (formerly known as the static configuration), and it automatically enables HTTPS:
+例如，你可以在[安装配置][xt-traefik-static-config]（旧称静态配置）中定义一个证书解析器（certificate resolver），HTTPS 便会自动启用：
 
 #### YAML
 
@@ -33,8 +33,7 @@ certificatesResolvers:
 --certificatesresolvers.myresolver.tailscale=true
 ```
 
-Then, for each router or entrypoint where you want to use it, explicitly reference the
-resolver in the [routing configuration][xt-traefik-dynamic-config] (formerly known as the dynamic configuration):
+然后，在你想使用它的每个 router 或 entrypoint 上，在[路由配置][xt-traefik-dynamic-config]（旧称动态配置）中显式引用该解析器：
 
 #### YAML
 
@@ -71,9 +70,9 @@ http:
          url = "http://localhost:6060"
 ```
 
-For complete details, refer to the [Traefik Tailscale documentation][xt-traefik-tailscale] at Traefik's web site.
+完整详情请参阅 Traefik 官网上的 [Traefik Tailscale 文档][xt-traefik-tailscale]。
 
-For more information about Traefik, refer to [What is Traefik?][xt-traefik-quick-start].
+有关 Traefik 的更多信息，请参阅[什么是 Traefik？][xt-traefik-quick-start]。
 
 [xt-gh-traefik-changelog]: https://github.com/traefik/traefik/blob/master/CHANGELOG.md#v300-beta1-2022-12-05
 

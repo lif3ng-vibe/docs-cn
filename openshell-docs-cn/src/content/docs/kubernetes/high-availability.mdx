@@ -1,0 +1,333 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "高可用"
+sidebar-title: "高可用"
+description: "在 Kubernetes 上运行多个 OpenShell 网关副本：共享 PostgreSQL、经认证的对等路由、容量指标与可选的自动扩缩。"
+keywords: "生成式 AI, 网络安全, Kubernetes, 高可用, HA, 网关, PostgreSQL, 副本, 故障转移, 自动扩缩, HPA, 指标"
+position: 3
+---
+import { Aside } from '@astrojs/starlight/components';
+
+当 OpenShell 控制平面需要在网关 Pod 故障或滚动更新期间保持可用时，运行两个或更多网关副本。每个副本都能服务 API 请求。副本之间通过 PostgreSQL 共享持久化状态，并把会话绑定的请求中继给与各沙箱监管器保持连接的副本。
+
+<Aside type="caution">
+网关副本不会让 PostgreSQL 变得高可用。请使用托管的 PostgreSQL 服务，或单独运维、具备自身备份与故障转移计划的 PostgreSQL 集群。
+</Aside>
+
+## 前提条件
+
+高可用网关部署需要满足：
+
+- 两个或更多可调度的 Kubernetes 节点或故障域。
+- 每个网关 Pod 都能访问 PostgreSQL。
+- OpenShell 命名空间中的一个 Kubernetes Secret，在名为 `uri` 的键中存放 PostgreSQL 连接 URI。
+- `workload.kind: deployment`。默认的 StatefulSet 与每 Pod 独立 SQLite 数据库只适用于单副本网关。
+- 一个把客户端流量路由到网关 Service 的入站入口或负载均衡器。Gateway API 配置参见 [Ingress](/kubernetes/ingress)。
+- 为每个副本准备 PostgreSQL 连接容量，包括发布期间正在启动或终止的 Pod。参见[规划 PostgreSQL 连接数](#规划-postgresql-连接数)。
+
+未设置 `server.externalDbSecret` 时，Helm chart 拒绝大于 `1` 的 `replicaCount`。它同样拒绝多副本 StatefulSet，除非显式启用 `workload.allowMultiReplicaStatefulSet`。标准高可用配置请使用 Deployment。
+
+## 创建 PostgreSQL Secret
+
+在 OpenShell chart 之外预置 PostgreSQL，然后创建连接 Secret。chart 不安装 PostgreSQL。
+
+```shell
+kubectl create namespace openshell
+
+kubectl -n openshell create secret generic openshell-postgres \
+  --from-literal=uri='postgresql://openshell:<password>@<postgres-host>:5432/openshell'
+```
+
+按 PostgreSQL 提供方的要求，在连接 URI 中使用所需的 TLS 参数。Secret 请与网关 release 放在同一命名空间。
+
+## 配置网关副本
+
+创建 `values-ha.yaml`：
+
+```yaml
+replicaCount: 2
+
+workload:
+  kind: deployment
+
+server:
+  externalDbSecret: openshell-postgres
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: openshell
+            app.kubernetes.io/instance: openshell
+        topologyKey: kubernetes.io/hostname
+```
+
+反亲和规则把两个副本安排到不同节点。`app.kubernetes.io/instance` 的值必须与 Helm release 名称一致。副本需要跨可用区分布时，把 topology key 改为可用区标签。集群中没有足够多匹配的故障域时，required 规则会让副本保持 Pending；调度成功比严格分离更重要时，使用 preferred 反亲和。
+
+安装或升级 OpenShell：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --values values-ha.yaml \
+  --wait
+```
+
+chart 在各网关 Pod 之间共享其保留的沙箱 JWT 签名材料、TLS 材料与默认凭据存储加密密钥。不要为单个副本另行创建这些 Secret 的不同副本。
+
+## 验证部署
+
+等待所有网关副本就绪：
+
+```shell
+kubectl -n openshell rollout status deployment/openshell
+kubectl -n openshell get pods \
+  -l app.kubernetes.io/name=openshell,app.kubernetes.io/instance=openshell \
+  -o wide
+```
+
+确认面向客户端的 Service 与 headless 对等 Service 都有就绪的端点：
+
+```shell
+kubectl -n openshell get service openshell openshell-peer
+kubectl -n openshell get endpointslice \
+  -l app.kubernetes.io/service-name=openshell
+kubectl -n openshell get endpointslice \
+  -l app.kubernetes.io/service-name=openshell-peer
+```
+
+如果通过 `nameOverride` 或 `fullnameOverride` 更改了 chart 生成的名称，请改用渲染出的 Service 名称。
+
+用 CLI 注册网关之后，验证请求可以成功：
+
+```shell
+openshell status
+openshell sandbox list
+```
+
+## 防范自愿中断
+
+添加 PodDisruptionBudget，使节点维护这类自愿中断不会一次性逐出所有就绪的网关 Pod：
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: openshell
+  namespace: openshell
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openshell
+      app.kubernetes.io/instance: openshell
+```
+
+该清单在 OpenShell chart 之外单独应用。命名空间与 release 标签请与你的安装保持一致。PodDisruptionBudget 控制的是自愿驱逐；它无法防护节点或故障域不可用的情况。
+
+## 对等路由的工作原理
+
+沙箱监管器只与一个网关副本保持一条活动控制流。该副本在 PostgreSQL 中记录归属。Kubernetes 把客户端请求发送到其他副本时，接收请求的网关通过 headless 对等 Service 把 exec、转发、文件同步、服务与状态流量中继给归属副本。
+
+对等 RPC 使用投影的、绑定 Pod 的 ServiceAccount 令牌，受众为 `openshell-gateway-peer`。接收方网关用 Kubernetes TokenReview API 校验令牌，核实实际 Pod 身份与 release 标签，并且只授权对等方法。启用网关 TLS 时，对等连接也使用 chart 的 TLS 材料。
+
+入站入口与面向客户端的 Service 不需要会话亲和。
+
+## 故障与发布行为
+
+非归属网关 Pod 停止时，Kubernetes 把它从就绪的 Service 端点中移除，新请求转给其他副本。经由已停止 Pod 的既有请求会断开，必须重试。
+
+归属网关 Pod 优雅停止时，它会重新读取网关成员列表，把已连接的监管器重定向到现在归属它们的副本，包括刚启动不久的副本。崩溃之后，监管器通过网关 Service 重连。无论哪种方式，它们都会发布新的归属信息。其他副本在等待中继请求时会重新读取归属信息。如果在正常期限之前没有出现新的可达归属副本，请求就会失败。
+
+正在停止的归属副本最多等待五秒，让被重定向的监管器发布其新会话，然后才把沙箱标记为未就绪，因此沙箱在优雅交接期间保持 `Ready`。监管器以指数退避重连，且每次接受的会话之后退避重新开始，所以网关反复重启不会拉长后续重连时间。
+
+已建立的流不会在网关副本之间迁移。被中断的 exec、转发或服务流必须重新连接。文件同步用新的 SSH 会话重试，而不是恢复被中断的字节流。滚动更新可能把监管器会话暂时集中到存活的副本上；客户端请求仍可通过对等中继路由。
+
+## 监控容量
+
+每个网关副本在端口 `9090`（`service.metricsPort`）暴露 Prometheus 指标。请抓取每个网关 Pod 而不是 Service，因为这些信号描述的是单个副本。完整的指标目录、抓取配置与访问控制参见[网关指标](/observability/gateway-metrics)。
+
+| 信号 | 指标 | 用途 |
+|---|---|---|
+| 每副本会话数 | `openshell_server_supervisor_sessions` | 反映放置与偏斜。不要用它做扩缩依据。 |
+| 中继利用率 | `openshell_server_relay_pending`, `openshell_server_relay_pending_capacity` | 画图观察即可。它是瞬态值，通常接近 0，告警请改用拒绝数。 |
+| 中继拒绝 | `openshell_server_relay_rejected_total` | 出现任何增长都应告警。 |
+| 中继认领 | `openshell_server_relay_claim_duration_seconds`, `openshell_server_relay_expired_total` | 监管器对 exec、SSH、转发与服务流量的回连耗时，包括通过对等请求的中继。拒绝数平稳而 99 分位数偏高时，问题出在监管器或其节点，而不是中继容量。10 秒内未被认领的中继不计入直方图，计为过期，因此出现任何增长都应告警。 |
+| 路由请求 | `openshell_server_routed_request_attempts_total`, `openshell_server_peer_request_duration_seconds` | 本地/对等中继建立的构成，以及出站对等请求的速率、失败与延迟。统计已完成或已取消的尝试，包括重试。发布期间 `grpc_code="unavailable"` 的尖峰属于预期。不要用作 HPA 目标。 |
+| 锁竞争 | `openshell_server_mutation_lock_wait_seconds`, `openshell_server_mutation_lock_hold_seconds`, `openshell_server_mutation_lock_timeouts_total` | 出现任何超时都应告警。某个 scope 上的长期持锁会让等待者持续等待，持锁超过 10 秒则导致它们超时。 |
+| 锁错误 | `openshell_server_mutation_lock_errors_total` | 出现任何增长都应告警，与超时分开对待。这表示 PostgreSQL 连接槽耗尽、重启或不可达。就绪探针可能仍然健康，因为它使用已建立的数据连接。 |
+| 锁池 | `openshell_server_mutation_lock_connections_in_use`, `openshell_server_mutation_lock_connections_capacity` | 仅 PostgreSQL。按副本画出使用量与容量的比值。数值持续接近 1 说明该副本上受保护的操作占用着锁连接，或在 PostgreSQL 中等待别处（通常是另一个副本）持有的锁，随之而来的是锁等待与超时。 |
+
+以下查询假设 Prometheus 为每条序列打上 `namespace` 与 `pod` 标签：
+
+```promql
+# Relay capacity used on each replica. Usually near 0; graph it and alert
+# on rejections instead.
+max by (namespace, pod) (openshell_server_relay_pending / openshell_server_relay_pending_capacity)
+
+# Relays rejected for capacity. Alert on any increase.
+sum by (namespace, pod, reason) (increase(openshell_server_relay_rejected_total[5m]))
+
+# 99th percentile time for supervisors to claim a relay on each replica.
+histogram_quantile(0.99, sum by (namespace, pod, le) (rate(openshell_server_relay_claim_duration_seconds_bucket[5m])))
+
+# Completed or cancelled relay setup attempts, by replica, relay kind, and route.
+sum by (namespace, pod, relay_kind, route) (rate(openshell_server_routed_request_attempts_total{operation="relay"}[5m]))
+
+# Session skew across replicas. 1 means balanced. Starting and stopping pods
+# raise it during rollouts.
+max(openshell_server_supervisor_sessions)
+  / clamp_min(avg(openshell_server_supervisor_sessions), 1)
+
+# Failed peer requests as a share of attempts, by operation.
+sum by (operation) (rate(openshell_server_routed_request_attempts_total{route="peer",outcome!="success"}[5m]))
+  / sum by (operation) (rate(openshell_server_routed_request_attempts_total{route="peer"}[5m]))
+
+# 99th percentile peer request latency across the fleet.
+histogram_quantile(0.99, sum by (le, operation) (rate(openshell_server_peer_request_duration_seconds_bucket{outcome="success"}[5m])))
+
+# 99th percentile mutation lock wait by scope. Watch scope="sandbox" during rollouts.
+histogram_quantile(0.99, sum by (le, scope) (rate(openshell_server_mutation_lock_wait_seconds_bucket[5m])))
+
+# Mutation lock timeouts by scope. Alert on any increase.
+sum by (scope) (increase(openshell_server_mutation_lock_timeouts_total[10m]))
+
+# 99th percentile time a mutation lock is held, by replica and scope.
+# Conflicting acquisitions time out after 10 seconds.
+histogram_quantile(0.99, sum by (namespace, pod, le, scope) (rate(openshell_server_mutation_lock_hold_seconds_bucket[5m])))
+
+# Mutation lock acquisitions that failed without timing out. Timeouts do not
+# include them, so alert on any increase here as well.
+sum by (namespace, pod, scope) (increase(openshell_server_mutation_lock_errors_total[10m]))
+
+# Lock-pool connections in use on each replica, PostgreSQL only. Values that
+# stay near 1 mean the pool is close to full.
+max by (namespace, pod) (max_over_time(openshell_server_mutation_lock_connections_in_use[5m]) / openshell_server_mutation_lock_connections_capacity)
+```
+
+中继容量消耗在拥有该沙箱监管器会话的副本上，包括其他副本通过对等请求的中继，因此增加副本无法为繁忙的归属副本分流。客户端已放弃的中继最多仍被计数约 40 秒，即 10 秒认领超时加 30 秒清理间隔。路由请求计数包含发布期间的重试。
+
+每个重连的监管器会在接收它的副本上取一两个短暂的 sandbox 作用域锁。发布期间网关 Pod 停止时，其监管器会重连到其他副本，因此请在接收副本上关注 `scope="sandbox"` 的 `openshell_server_mutation_lock_wait_seconds` 与 `openshell_server_mutation_lock_timeouts_total`。等待时间上升或出现任何超时，说明这些副本接收重连的速度快于其消化能力，或者沙箱与提供商变更期间缓慢的计算驱动、凭据后端、中间件或提供商配置档案来源调用把锁持有得更久。受保护的工作自身没有时限，这类调用会持锁直到返回：`openshell_server_mutation_lock_hold_seconds` 显示持锁时长，副本在释放超过 10 秒的锁时会记录 `mutation lock held longer than the lock wait timeout` 日志。
+
+## 扩缩网关
+
+扩缩网关的方式有两种：修改固定的副本数，或者让 HorizontalPodAutoscaler 决定副本数。两种情况下，若可用性必须扛得住单个网关 Pod 故障，请保持至少两个就绪副本，并按最大副本数规划 PostgreSQL 与集群节点容量。
+
+### 手动扩缩
+
+修改 `values-ha.yaml` 中的 `replicaCount`，然后重新应用 release：
+
+```shell
+helm upgrade openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --values values-ha.yaml \
+  --wait
+```
+
+### 使用 HorizontalPodAutoscaler 自动扩缩
+
+设置 `autoscaling.enabled` 会为网关 Deployment（或在启用 `workload.allowMultiReplicaStatefulSet` 时为 StatefulSet）渲染一个 `autoscaling/v2` HorizontalPodAutoscaler。在 `values-ha.yaml` 中加入这些 values：
+
+```yaml
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+```
+
+启用自动扩缩后，chart 不再设置 `spec.replicas` 并忽略 `replicaCount`。Kubernetes 依据容器 request 计算 CPU 与内存利用率，因此这些目标需要有对应的 `resources.requests` 条目。`resources.limits` 条目也可以，因为 Kubernetes 会把未设置 request 的 limit 复制为 request。未设置 `server.externalDbSecret` 时，chart 拒绝大于 `1` 的 `autoscaling.maxReplicas`。每次缩容都要把被移除副本的监管器会话移交给其余副本，因此默认行为是在五分钟的稳定窗口之后每两分钟至多移除一个 Pod。可用 `autoscaling.behavior` 覆盖，或将 `autoscaling.behavior.scaleDown` 设为 `null` 以去掉默认值。新副本不会接管既有会话。
+
+<Aside type="note">
+缩容会一次性移走被移除 Pod 上的所有监管器会话，经由该 Pod 的请求必须重试。想控制这件事发生的时机，可把 `autoscaling.behavior.scaleDown.selectPolicy` 设为 `Disabled`，让自动扩缩器只增不减，再由你自己在空闲时段用 `kubectl scale` 移除副本。
+</Aside>
+
+应用 release 之后检查自动扩缩器：
+
+```shell
+kubectl -n openshell get hpa openshell
+kubectl -n openshell describe hpa openshell
+```
+
+<Aside type="caution">
+在既有 release 上启用自动扩缩，会在该次升级中把 `spec.replicas` 从工作负载上移除。在 HPA 把副本数调回至少 `autoscaling.minReplicas` 之前，Kubernetes 可能把工作负载重置为单副本，这会把监管器会话从其他网关 Pod 集中到剩下的那个副本。请在安装 chart 时启用自动扩缩，或安排在维护窗口进行。对既有 release，使用 `--reset-then-reuse-values` 升级（需要 Helm 3.14 或更高版本）。Helm 较旧时，先用 `helm get values <release> -o yaml > values.yaml` 保存 values，再用 `--reset-values -f values.yaml` 升级。`--reuse-values` 保留上一个 chart 版本的默认值；当该 release 早于自动扩缩值出现时，这些默认值缺少自动扩缩配置，包括缩容 `behavior`。背景知识参见[Migrating Deployments and StatefulSets to horizontal autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#migrating-deployments-and-statefulsets-to-horizontal-autoscaling)。禁用自动扩缩会重新从 `replicaCount` 渲染 `spec.replicas`，其默认值为 1，因此在该次升级中把 `replicaCount` 设为你想要的副本数。
+</Aside>
+
+### 基于自定义指标自动扩缩
+
+HPA 也可以根据指标适配器发布的每 Pod 指标扩缩。chart 把 `autoscaling.metrics` 原样传给 HPA，不安装 Prometheus 或适配器。自定义指标需要以下组件：
+
+- Prometheus 抓取每个网关 Pod，并为每条序列打上 `namespace` 与 `pod` 标签。
+- 指标适配器（如 prometheus-adapter）把这些标签映射到 Kubernetes 资源，并通过 `custom.metrics.k8s.io` API 发布每 Pod 指标。
+- `autoscaling.metrics` 把该指标引用为 `Pods` 类型指标，目标类型为 `AverageValue`。
+
+扩缩依据应选择在增加副本时会下降的信号，例如 CPU 利用率。不要依据监管器会话数、中继利用率、中继认领延迟或对等请求速率扩缩。新副本不接管既有会话，中继负载留在拥有各会话的副本上，而对等流量随副本数增长。这些信号请改用告警。
+
+```yaml
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: <metric-name>
+        target:
+          type: AverageValue
+          averageValue: "100"
+```
+
+把 `<metric-name>` 替换为适配器发布的名称，把 `averageValue` 设为希望再增加一个副本时的每 Pod 数值。确认适配器为网关 Pod 提供该指标：
+
+```shell
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/openshell/pods/*/<metric-name>"
+```
+
+### 规划 PostgreSQL 连接数
+
+默认设置下，每个网关 Pod 按需最多打开 14 个 PostgreSQL 连接：10 个用于数据访问（`database_max_connections`），4 个用于变更锁（`database_lock_max_connections`），两者都在 `gatewayConfig.openshell.gateway` 下设置。在等待锁期间被取消的请求，其锁会话可能继续存在最多 10 秒，因此要预留余量。chart 对每种工作负载使用 Kubernetes 默认的滚动更新策略，发布期间运行的 Pod 数量取决于工作负载类型。
+
+Deployment 发布会增加至多副本数 25%（向上取整）的突发 Pod。终止中的 Pod 不占用这份突发额度，且每个被替换的 Pod 在其终止宽限期内可以一直保持连接。因此一次发布期间最多可能同时运行两倍于副本数的 Pod，发布过程中的驱逐或自动扩缩器缩容还会带来更多终止中的 Pod。把 PostgreSQL `max_connections` 设为至少 `(2 × replicas + surge) × (data + lock connections)`，这为这些 Pod 留出了一轮突发的余量，外加你其他客户端和管理操作的余量。启用自动扩缩时，用 `autoscaling.maxReplicas` 作为副本数。默认配置下即 `(2 × replicas + surge) × 14`：
+
+| 副本数 | 突发数 | 最小 `max_connections` |
+|---|---|---|
+| 2 | 1 | `(4 + 1) × 14 = 70` |
+| 3 | 1 | `(6 + 1) × 14 = 98` |
+| 4 | 1 | `(8 + 1) × 14 = 126` |
+| 6 | 2 | `(12 + 2) × 14 = 196` |
+
+使用 Deployment 且副本数达到三个或更多时，需求会超过 PostgreSQL 默认 100 中留给网关的份额，因为 PostgreSQL 为超级用户保留 3 个连接。请调高 `max_connections` 或改用更大的托管实例。一次发布完成后再开始下一次，因为每次重叠的发布都会带来各自的终止中 Pod。
+
+以 StatefulSet 运行多副本并启用 `workload.allowMultiReplicaStatefulSet` 时，发布不增加突发 Pod。它一次只替换一个 Pod，且在旧 Pod 退出后才创建替换 Pod。把 `max_connections` 设为至少 `replicas × (data + lock connections)`（默认配置下每副本 14 个），启用自动扩缩时用 `autoscaling.maxReplicas`，再加上你其他客户端与管理操作的余量。
+
+只有当副本上的变更锁超时源于锁池占满时才调高 `database_lock_max_connections`：此时网关记录的超时带有 `waiting for a mutation lock connection` 详情，且 `openshell_server_mutation_lock_connections_in_use` 持续等于 `openshell_server_mutation_lock_connections_capacity`。同时确认该副本自身的加锁请求并非大多在等待别的持锁者：其超时中很少出现 `waiting for a PostgreSQL advisory lock` 或 `canceling statement due to lock timeout` 详情，且 `pg_locks` 显示该 Pod 的锁会话处于已授予而非等待状态。否则请先找到持锁缓慢的一方，因为更大的池只会让更多等待者排在它后面。每个额外的锁连接会让 Deployment 的最小 `max_connections` 增加 `2 × replicas + surge`。
+
+网关与 PostgreSQL 之间若存在连接池化器，请使用会话级池化。网关持有会话级咨询锁，事务级池化会破坏它们。
+
+变更只锁住它要修改的对象。沙箱操作锁自己的沙箱，提供商与工作区配置档案变更锁其工作区，网关全局的策略、设置与平台配置档案变更锁整个编队。沙箱的启动、停止与删除只在执行它们的副本上加锁，且只有该副本上的网关全局变更会直接阻塞它们。提供商、工作区配置档案及其他副本的网关全局变更，只有在同一沙箱上有另一个操作排在该变更之后时才会延迟它们。沙箱的创建、启动、重启与删除在预置或移除沙箱 SSH 宿主机身份时还会取一个编队范围的锁，使这一步在所有副本上同一时间只处理一个沙箱。对于其他变更，锁等待超过 10 秒会返回 `UNAVAILABLE`，原因为 `MUTATION_LOCK_TIMEOUT`，客户端可以重试该请求。携带 `request_id` 的请求与其他错误一样，其准入结果保持未定，因此用相同 ID 重试会返回 `REQUEST_OUTCOME_UNCERTAIN`。请观察资源状态并核对实际效果，然后用新的 `request_id` 发送新请求。参见[Durable Request Admission](/sdk/api-errors#持久请求准入)。
+
+### 从早期版本升级
+
+默认设置下，现在每个网关 Pod 最多打开 14 个 PostgreSQL 连接，而不是 10 个。升级发布期间新 Pod 已经按该数量运行，所以请在升级前把 `max_connections` 调高到[规划 PostgreSQL 连接数](#规划-postgresql-连接数)给出的最小值。
+
+升级期间早期版本与新版网关并存时，旧副本会把整个编队的所有变更串行化。在发布完成之前，变更可能变慢，并在负载下短暂失败。
+
+## 后续步骤
+
+- 要通过高可用数据路径暴露网关，参见 [Ingress](/kubernetes/ingress)。
+- 要配置证书自动续期，参见[管理证书](/kubernetes/managing-certificates)。
+- 要配置用户认证与授权，参见[访问控制](/kubernetes/access-control)。
+- 要抓取网关指标并配置告警，参见[网关指标](/observability/gateway-metrics)。

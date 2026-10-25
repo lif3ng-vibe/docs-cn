@@ -1,82 +1,82 @@
 ---
-title: "Tailscale in LXC containers"
-description: "Unprivileged LXC containers do not have access to the networking resource needed for Tailscale to work. This topic explains how to give it access."
+title: "LXC 容器中的 Tailscale"
+description: "非特权 LXC 容器无权访问 Tailscale 正常运行所需的网络资源。本主题介绍如何为其授予访问权限。"
 ---
 
-Last validated Jan 9, 2026
+最后验证于 Jan 9, 2026
 
-Unprivileged LXC containers do not have access to the networking resource needed for Tailscale to work. This topic explains how to give it access.
+非特权 LXC 容器无权访问 Tailscale 正常运行所需的网络资源。本主题介绍如何为其授予访问权限。
 
-Among many other uses, LXC containers are often found in Proxmox virtualization environments.
+除许多其他用途外，LXC 容器也常见于 Proxmox 虚拟化环境中。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下面的相关视频提供了更多背景信息和示例。
 
-[How to install Tailscale in an LXC on Proxmox. (video)](https://www.youtube.com/watch?v=JC63OGSzTQI)
+[如何在 Proxmox 的 LXC 中安装 Tailscale。（视频）](https://www.youtube.com/watch?v=JC63OGSzTQI)
 
-## Instructions
+## 操作说明
 
-An LXC is a lightweight way to run a virtualized Linux system. An unprivileged LXC is one where the root user (`uid 0`) within the container is mapped to an unprivileged user in the host system, making it possible to run an LXC more securely.
+LXC 是一种运行虚拟化 Linux 系统的轻量级方式。非特权 LXC 是指容器内的 root 用户（`uid 0`）被映射到宿主系统中的非特权用户，从而能以更安全的方式运行 LXC。
 
-Tailscale encapsulates its frames in UDP packets and therefore doesn't require kernel modules or other privileged operations to form tunnel connections. However, it does need access to a `/dev/net/tun` (TUN) device which unprivileged containers usually do not provide.
+Tailscale 把数据帧封装在 UDP 数据包中，因此建立隧道连接不需要内核模块或其他特权操作。不过，它确实需要访问 `/dev/net/tun`（TUN）设备，而非特权容器通常不提供该设备。
 
-To bring up Tailscale in an unprivileged container, you can enable access to the `/dev/net/tun` device through the user interface:
+要在非特权容器中启动 Tailscale，你可以通过用户界面启用对 `/dev/net/tun` 设备的访问：
 
-1. Create your LXC container.
+1. 创建你的 LXC 容器。
 
-2. Go to the **Resources** tab of the container.
+2. 进入容器的 **资源**（Resources）标签页。
 
-3. Select **Add**. Then select **Device Passthrough**.
+3. 选择 **添加**（Add），然后选择 **设备直通**（Device Passthrough）。
 
-   *（图：User interface for enabling Device Passthrough.）*
+   *（图：用于启用设备直通的用户界面。）*
 
-4. On the **Add Device** prompt, enter `/dev/net/tun` in the **Device Path** field and select **Add**.
+4. 在 **添加设备**（Add Device）提示框中，在 **设备路径**（Device Path）字段输入 `/dev/net/tun`，然后选择 **添加**（Add）。
 
-   *（图：User interface for adding a device.）*
+   *（图：用于添加设备的用户界面。）*
 
-5. If the container is running, shut it down and start it up again.
+5. 如果容器正在运行，请将其关闭后重新启动。
 
-6. Once `/dev/net/tun` is available, the Tailscale Linux package can be installed in the system running within the LXC.
+6. `/dev/net/tun` 可用后，就可以在 LXC 中运行的系统里安装 Tailscale Linux 软件包了。
 
-Alternatively, if you don't want to grant `/dev/net/tun` access, you can use [userspace networking mode][docs-userspace-networking] which avoids the need for any administrative access at all.
+或者，如果你不想授予 `/dev/net/tun` 访问权限，可以使用[用户态网络模式][docs-userspace-networking]，完全不需要任何管理员权限。
 
-## FAQ
+## 常见问题
 
-### Proxmox Container Tools
+### Proxmox 容器工具
 
-An alternative method for adding the TUN device and additional permissions to the LXC container is with the [`pct set`][xt-proxmox-pct] command.
+为 LXC 容器添加 TUN 设备和额外权限的另一种方法是使用 [`pct set`][xt-proxmox-pct] 命令。
 
 ```shell
 pct set CTID --dev0 /dev/net/tun
 pct set CTID --features keyctl=1,nesting=1
 ```
 
-### Providing access for Proxmox 7
+### 为 Proxmox 7 提供访问权限
 
-In versions without user interface support, you can enable access to the `/dev/net/tun` device in the configuration for the LXC. For example, using Proxmox 7.0 to host as unprivileged LXC with ID 112, the following lines would be added to `/etc/pve/lxc/112.conf`:
+在没有用户界面支持的版本中，你可以在 LXC 的配置中启用对 `/dev/net/tun` 设备的访问。例如，使用 Proxmox 7.0 承载 ID 为 112 的非特权 LXC 时，需要将以下几行添加到 `/etc/pve/lxc/112.conf`：
 
 ```shell
 lxc.cgroup2.devices.allow: c 10:200 rwm
 lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
 ```
 
-If the LXC is already running it will need to be shut down and started again for this change to take effect.
+如果 LXC 正在运行，需要将其关闭再重新启动，此更改才能生效。
 
-### Providing access for Proxmox 6 and earlier
+### 为 Proxmox 6 及更早版本提供访问权限
 
-Use the `cgroup` environment (instead of the Proxmox 7 `cgroup2` environment):
+使用 `cgroup` 环境（而不是 Proxmox 7 的 `cgroup2` 环境）：
 
 ```shell
 lxc.cgroup.devices.allow: c 10:200 rwm
 lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
 ```
 
-If you don't want to enable `/dev/net/tun` access, remove the `lxc.mount.entry:` line.
+如果不想启用 `/dev/net/tun` 访问，请删除 `lxc.mount.entry:` 这一行。
 
-### CentOS 7 and Ubuntu 16.x still have no /dev/net/tun in Proxmox 7.0
+### CentOS 7 和 Ubuntu 16.x 在 Proxmox 7.0 中仍然没有 /dev/net/tun
 
-Proxmox has a [guide for containers with a systemd too old to understand cgroup2][xt-proxmox-cgroup2-upgrade].
+对于 systemd 过旧、无法识别 cgroup2 的容器，Proxmox 有一份[专门的指南][xt-proxmox-cgroup2-upgrade]。
 
 [docs-userspace-networking]: /docs/concepts/userspace-networking
 

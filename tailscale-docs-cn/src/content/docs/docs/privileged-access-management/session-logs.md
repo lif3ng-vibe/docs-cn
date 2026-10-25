@@ -1,132 +1,132 @@
 ---
-title: "Tailscale PAM session logs"
-description: "Get insight into the privileged access sessions in your Tailscale network."
+title: "Tailscale PAM 会话日志"
+description: "深入了解 Tailscale 网络中的特权访问会话。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Tailscale PAM session logs give administrators visibility into access to PAM services across their tailnet. A PAM session records an attempt by a [Tailscale identity][docs-tailscale-identity] to connect to a PAM service, including successful and denied connections.
+Tailscale PAM 会话日志让管理员能够掌握整个 tailnet 内对 PAM 服务的访问情况。PAM 会话记录了一次由 [Tailscale 身份][docs-tailscale-identity]发起的、对 PAM 服务的连接尝试，包括连接成功和被拒绝的连接。
 
-Session logs help you answer questions such as:
+会话日志可以帮你回答以下问题：
 
-* Who connected to a PAM service?
-* Which service did they connect to?
-* Which device did they connect from?
-* When did the connection occur?
-* Was access allowed or denied?
-* What happened during the session?
+* 谁连接了某个 PAM 服务？
+* 他们连接的是哪个服务？
+* 他们从哪台设备发起连接？
+* 连接发生在什么时候？
+* 访问是被允许还是被拒绝？
+* 会话期间发生了什么？
 
-Depending on the type of service and its recording configuration, Tailscale PAM can also capture activity within the session, such as SSH activity, database queries, Kubernetes API requests, or Amazon S3 API requests.
+根据服务类型及其录制配置，Tailscale PAM 还可以捕获会话内的活动，例如 SSH 活动、数据库查询、Kubernetes API 请求或 Amazon S3 API 请求。
 
-## Review PAM sessions
+## 查看 PAM 会话
 
-To review PAM sessions:
+要查看 PAM 会话：
 
-1. Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the Tailscale admin console.
-2. (Optional) Use the **Sessions** page filters to find a session, such as for a specific service or user.
-3. Select a session.
+1. 打开 Tailscale 管理控制台的[会话](https://console.tailscale.com/admin/logs/pam_sessions)页面。
+2. （可选）使用**会话**页面的筛选器查找某个会话，例如特定服务或用户的会话。
+3. 选择一个会话。
 
-The **PAM sessions** page lists sessions across your tailnet. For each session, you can review information including:
+**PAM 会话**页面列出整个 tailnet 的会话。对于每个会话，你可以查看以下信息：
 
-* The actor who initiated the session.
-* The PAM service they attempted to access.
-* The date and time of the session.
-* The source device.
-* Whether the session was successful or denied.
+* 发起会话的操作者。
+* 其尝试访问的 PAM 服务。
+* 会话的日期和时间。
+* 来源设备。
+* 会话是成功还是被拒绝。
 
-You can filter the session list by:
+你可以按以下条件筛选会话列表：
 
-* Timeframe
-* Service
-* Actor
-* Status
+* 时间范围
+* 服务
+* 操作者
+* 状态
 
-For example, you can filter for denied sessions to investigate attempts where a user wasn't authorized to access a PAM service.
+例如，你可以筛选被拒绝的会话，以排查用户未被授权访问 PAM 服务的尝试。
 
-## Review session details
+## 查看会话详情
 
-Select a session to review more information about it.
+选择一个会话即可查看更多相关信息。
 
-Session details include:
+会话详情包括：
 
-* The Tailscale identity that initiated the session.
-* The date and time of the session.
-* The source device.
-* The source IP address.
-* The session duration.
-* The session status.
+* 发起会话的 Tailscale 身份。
+* 会话的日期和时间。
+* 来源设备。
+* 来源 IP 地址。
+* 会话时长。
+* 会话状态。
 
-For successful or denied connections, you can also review authorization details to understand why access was allowed or denied, including the Tailscale grants that were evaluated for the connection.
+对于连接成功或被拒绝的情况，你还可以查看授权详情，了解访问为何被允许或拒绝，包括为该连接评估过的 Tailscale 授权（grant）。
 
-This can be useful when troubleshooting access and determining which grants allowed a connection or why a connection was denied.
+这在排查访问问题、确定哪些授权允许了连接或连接为何被拒绝时非常有用。
 
-## Review activity within a session
+## 查看会话内的活动
 
-The information available for a session depends on the type of PAM service.
+会话可提供的信息取决于 PAM 服务的类型。
 
-### Database sessions
+### 数据库会话
 
-For database services, Tailscale PAM records database activity in the **Query log**.
+对于数据库服务，Tailscale PAM 会在**查询日志**中记录数据库活动。
 
-For each query, you can review information including:
+对于每条查询，你可以查看以下信息：
 
-* The date and time.
-* The database.
-* The query that was executed.
-* The query duration.
-* The number of rows returned.
-* The number of rows affected.
-* Query errors, when applicable.
+* 日期和时间。
+* 数据库。
+* 执行的查询。
+* 查询时长。
+* 返回的行数。
+* 受影响的行数。
+* 查询错误（如适用）。
 
-This gives administrators a record of database activity performed through Tailscale PAM.
+这为管理员提供了通过 Tailscale PAM 执行的数据库活动记录。
 
-### HTTP sessions
+### HTTP 会话
 
-When recording is enabled for supported HTTP sessions, you can review a replay of the browser activity that occurred during the session.
+对于受支持的 HTTP 会话，启用录制后，你可以回放会话期间发生的浏览器活动。
 
-### Kubernetes sessions
+### Kubernetes 会话
 
-For Kubernetes services, session activity can include requests made to the Kubernetes API.
+对于 Kubernetes 服务，会话活动可以包括对 Kubernetes API 发出的请求。
 
-When applicable, activity from interactive `exec` sessions can also be recorded and replayed.
+如适用，交互式 `exec` 会话中的活动也可以被录制并回放。
 
-### S3 sessions
+### S3 会话
 
-For S3 services, session activity can include the S3 API requests made during the session. This provides a record of the operations performed against the S3 service.
+对于 S3 服务，会话活动可以包括会话期间发出的 S3 API 请求。这提供了针对 S3 服务执行的操作记录。
 
-### SSH sessions
+### SSH 会话
 
-When session recording is enabled for an SSH service, you can review what happened during the session.
+为 SSH 服务启用会话录制后，你可以查看会话期间发生的情况。
 
-Depending on the session, you can use:
+根据会话情况，你可以使用：
 
-* **Video replay** to replay the terminal session.
-* **Full text** to review a text representation of the session.
-* **Events** to inspect additional session and protocol metadata.
+* **视频回放**回放终端会话。
+* **全文**查看会话的文本表示。
+* **事件**检查额外的会话与协议元数据。
 
-For example, SSH events can identify activity such as opening a shell or creating a TCP/IP forwarding channel.
+例如，SSH 事件可以识别打开 shell 或创建 TCP/IP 转发通道等活动。
 
-## Review session events
+## 查看会话事件
 
-Sessions also include an **Events** tab with additional information about activity during the connection.
+会话还包含一个**事件**标签页，其中提供连接期间活动的更多信息。
 
-The information available depends on the service and protocol. Events can include details such as:
+可用信息取决于服务和协议。事件可以包括以下细节：
 
-* Authorization events.
-* Client information and version.
-* Protocol-specific events.
-* Connection and session metadata.
+* 授权事件。
+* 客户端信息与版本。
+* 协议特定事件。
+* 连接与会话元数据。
 
-The Events tab can be especially useful when troubleshooting a denied connection or investigating specific activity within a session.
+在排查被拒绝的连接或调查会话内的特定活动时，事件标签页尤其有用。
 
-## Session recordings
+## 会话录制
 
-Session recordings provide additional visibility into what occurred after a user connected to a PAM service.
+会话录制让你进一步了解用户连接到 PAM 服务之后发生了什么。
 
-The type of recording depends on the service. For example, an SSH session can provide a replay and text transcript, while a database session provides a structured log of the queries that were executed.
+录制类型取决于服务。例如，SSH 会话可以提供回放和文本记录，而数据库会话提供所执行查询的结构化日志。
 
-Recording availability also depends on the service type and whether session recording is enabled for that service.
+录制的可用性还取决于服务类型，以及是否为该服务启用了会话录制。
 
 [docs-tailscale-identity]: /docs/concepts/tailscale-identity

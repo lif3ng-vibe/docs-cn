@@ -1,54 +1,54 @@
 ---
-title: "Using app-based split tunneling on Android"
-description: "App-based split tunneling is a feature in the Android Tailscale client that lets you decide which apps on the Android device will bypass or be forced to use a Tailscale network (known as a tailnet). I"
+title: "在 Android 上使用基于应用的拆分隧道"
+description: "基于应用的拆分隧道是 Android 版 Tailscale 客户端中的一项功能，可让你自行决定 Android 设备上的哪些应用绕开、或强制使用 Tailscale 网络（即 tailnet）。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-App-based split tunneling is a feature in the Android Tailscale client that lets you decide which apps on the Android device will bypass or be forced to use a Tailscale network (known as a tailnet). It provides flexibility and control over your network traffic on an app-specific basis. When an app is included or excluded using app-based split tunneling, traffic routing and DNS forwarding will be configured according to your rules.
+基于应用的拆分隧道（app-based split tunneling）是 Android 版 Tailscale 客户端中的一项功能，可让你自行决定 Android 设备上的哪些应用绕开、或强制经由 Tailscale 网络（即 tailnet）。它让你能按应用为单位灵活掌控网络流量。使用基于应用的拆分隧道纳入或排除某个应用后，流量路由和 DNS 转发都会按你设定的规则进行配置。
 
-> **Note:**
+> **注意：**
 >
-> App-based split tunneling for Android requires Tailscale v1.70 or later.
+> Android 上的基于应用的拆分隧道要求 Tailscale v1.70 或更高版本。
 
-Here are some scenarios when you might want to exclude apps from using Tailscale:
+以下是一些你可能希望让某些应用绕开 Tailscale 的场景：
 
-* When using streaming apps such as Netflix or Prime Video to avoid potential geo-blocking restrictions caused by using an [exit node][docs-exit-nodes].
-* When your banking app requires you to disable VPN connectivity before the app can be used.
+* 使用 Netflix、Prime Video 等流媒体应用时，避免因使用[出口节点][docs-exit-nodes]而可能触发的地区屏蔽限制。
+* 银行类应用要求先禁用 VPN 连接，然后才能使用该应用。
 
-## Types of app-based split tunneling
+## 基于应用的拆分隧道的类型
 
-There are two types of app-based split tunneling behaviors available:
+可用的基于应用的拆分隧道行为有两种：
 
-* Route all apps automatically and manually specify the applications that you want to exclude from using Tailscale. This is the default behavior.
-* Route no apps automatically and specify the set of apps that will be forced to use Tailscale. This option requires a [mobile device management][docs-mdm] (MDM) solution for Android devices.
+* 自动路由所有应用，并手动指定要排除、不使用 Tailscale 的应用。这是默认行为。
+* 不自动路由任何应用，而是指定一组强制使用 Tailscale 的应用。此选项需要面向 Android 设备的[移动设备管理][docs-mdm]（MDM）方案。
 
-## Exclude apps from the client
+## 在客户端中排除应用
 
-You can configure app-based split tunneling exclusions directly from the app settings. Any excluded app selected in the Tailscale app settings will access the internet directly without routing through Tailscale. This is useful for any apps that require direct internet access for performance or functionality reasons. When Tailscale is disabled for an app using split tunneling, its traffic and DNS queries won't be handled by Tailscale.
+你可以直接在应用设置中配置基于应用的拆分隧道排除项。在 Tailscale 应用设置中被选为排除的应用将直接访问互联网，不经过 Tailscale 路由。这对因性能或功能原因需要直接访问互联网的应用很有用。当某个应用通过拆分隧道被停用 Tailscale 后，它的流量和 DNS 查询都不会再由 Tailscale 处理。
 
-1. Open the Tailscale app on the Android device and make sure it's connected to your tailnet.
-2. Tap on your avatar at the top of the screen and select **App-based split tunneling**.
-3. In the list displaying the applications installed on your Android device, check the box next to each app you want to exclude from the tailnet. These apps will access the internet directly. Apps not selected will continue to use Tailscale.
-4. Leave the **Settings** page to save your configuration.
+1. 在 Android 设备上打开 Tailscale 应用，并确认它已连接到你的 tailnet。
+2. 点按屏幕顶部的头像，选择 **基于应用的拆分隧道**（App-based split tunneling）。
+3. 在显示 Android 设备上已安装应用的列表中，勾选要排除在 tailnet 之外的每个应用旁边的复选框。这些应用将直接访问互联网；未勾选的应用将继续使用 Tailscale。
+4. 离开 **Settings**（设置）页面即可保存你的配置。
 
-## Force and exclude apps using MDM
+## 使用 MDM 强制或排除应用
 
-If you're a system administrator deploying Tailscale for Android, you can specify which apps are allowed and prohibited from communicating over your tailnet.
+如果你是为 Android 部署 Tailscale 的系统管理员，可以指定哪些应用允许、哪些应用禁止通过你的 tailnet 通信。
 
-To allow specific apps to communicate in your tailnet, use the [`IncludedPackageNames` system policy][docs-mdm-keys-included-package-names]. When a list of application package names is specified using the policy, Tailscale will exclude all apps. Only the specified apps will use Tailscale. As of Tailscale v1.70, this behavior must be configured using system policies, which requires management using MDM. Refer to the [list of Tailscale system policies][docs-mdm-keys] for more information.
+要允许特定应用在你的 tailnet 中通信，请使用 [`IncludedPackageNames` 系统策略][docs-mdm-keys-included-package-names]。使用该策略指定应用包名列表后，Tailscale 会排除所有应用，只有指定的应用才使用 Tailscale。从 Tailscale v1.70 起，此行为必须通过系统策略配置，也就是需要用 MDM 来管理。更多信息请参阅 [Tailscale 系统策略列表][docs-mdm-keys]。
 
-To exclude specific apps from communicating in your tailnet, use the [`ExcludedPackageNames` system policy][docs-mdm-keys-excluded-package-names], using your [MDM solution][docs-mdm].
+要排除特定应用、不让其在你的 tailnet 中通信，请通过你的 [MDM 方案][docs-mdm]使用 [`ExcludedPackageNames` 系统策略][docs-mdm-keys-excluded-package-names]。
 
-## Default app exclusions
+## 默认排除的应用
 
-To improve the user experience out of the box, a small set of apps and system services is always excluded from routing and DNS through Tailscale. These apps do not work properly when a VPN is enabled, and are therefore excluded by default:
+为了带来良好的开箱即用体验，有一小部分应用和系统服务始终不经过 Tailscale 的路由和 DNS。这些应用在启用 VPN 时无法正常工作，因此默认被排除：
 
-* Android Auto (`com.google.android.projection.gearhead`)
-* Google Chromecast (`com.google.android.apps.chromecast.app`)
-* GoPro (`com.gopro.smarty`)
-* RCS/Jibe messaging services (`com.google.android.apps.messaging`)
-* Sonos (`com.sonos.acr` and `com.sonos.acr2`)
+* Android Auto（`com.google.android.projection.gearhead`）
+* Google Chromecast（`com.google.android.apps.chromecast.app`）
+* GoPro（`com.gopro.smarty`）
+* RCS/Jibe 消息服务（`com.google.android.apps.messaging`）
+* Sonos（`com.sonos.acr` 和 `com.sonos.acr2`）
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 

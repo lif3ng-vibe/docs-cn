@@ -1,42 +1,42 @@
 ---
-title: "Get started with Aperture"
-description: "Sign up for Aperture, configure a provider, and send your first request."
+title: "Aperture 入门"
+description: "注册 Aperture、配置提供商，并发送你的第一个请求。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-[Start using Aperture](https://aperture.tailscale.com/)
+[开始使用 Aperture](https://aperture.tailscale.com/)
 
-> **Note:**
+> **注意：**
 >
-> You can purchase tokens directly within Aperture. To use your own API keys with Aperture on a plan other than the personal Tailscale plan, [contact sales][co-contact-sales].
+> 你可以直接在 Aperture 内购买 token。如果你在个人版 Tailscale 套餐以外的套餐上想用你自己的 API 密钥搭配 Aperture，请[联系销售][co-contact-sales]。
 
-Sign up for Aperture, configure an LLM provider, and send a test request. To learn what Aperture does, refer to [What is Aperture?][docs-what-is-aperture].
+注册 Aperture、配置一个 LLM 提供商，并发送一个测试请求。想了解 Aperture 是做什么的，参阅 [Aperture 是什么？][docs-what-is-aperture]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，请确认已具备以下条件：
 
-* **An API key from an LLM provider's developer platform.** Aperture supports OpenAI, Anthropic, Google Gemini, OpenRouter, Amazon Bedrock, the Gemini Enterprise Agent Platform, and [OpenAI-compatible providers][docs-use-openai-compatible-provider]. Refer to [Supported providers and clients][docs-provider-compatibility] for API formats and setup requirements. Get an API key from the provider's developer portal (for example, the [Anthropic Console][xt-anthropic-console], [OpenAI Platform][xt-openai-platform], or [Google AI Studio][xt-google-ai-studio]).
+* **来自 LLM 提供商开发者平台的 API 密钥。** Aperture 支持 OpenAI、Anthropic、Google Gemini、OpenRouter、Amazon Bedrock、Gemini Enterprise Agent Platform 和 [OpenAI 兼容提供商][docs-use-openai-compatible-provider]。API 格式和设置要求参阅[受支持的提供商与客户端][docs-provider-compatibility]。从提供商的开发者门户获取 API 密钥（例如 [Anthropic Console][xt-anthropic-console]、[OpenAI Platform][xt-openai-platform] 或 [Google AI Studio][xt-google-ai-studio]）。
 
-  > **Note:**
+  > **注意：**
   >
-  > You can also use a subscription plan through [passthrough mode][docs-use-passthrough-mode]. Plans such as Claude Pro, ChatGPT Plus, or Gemini Advanced provide OAuth tokens rather than developer API keys. Aperture forwards the client's `Authorization` or `x-api-key` header. If the client sends neither header, Aperture uses the configured provider key.
+  > 也可以通过 [passthrough 模式][docs-use-passthrough-mode]使用订阅套餐。Claude Pro、ChatGPT Plus 或 Gemini Advanced 等套餐发放的是 OAuth token 而非开发者 API 密钥。Aperture 会转发客户端的 `Authorization` 或 `x-api-key` 头；客户端两个头都没发时，Aperture 使用配置的提供商密钥。
 
-* **A device connected to your tailnet.** Aperture listens at `http://<aperture-hostname>` in your [tailnet][docs-tailnet]. Your device must be running Tailscale and connected to the same tailnet as your Aperture gateway. If you need to connect a device that is not in the tailnet, refer to [connect devices outside your tailnet][docs-connect-outside-tailnet].
+* **一台已连接到你 tailnet 的设备。** Aperture 在你的 [tailnet][docs-tailnet] 中监听 `http://<aperture-hostname>`。你的设备必须运行 Tailscale，并与 Aperture 网关连接同一个 tailnet。如果需要连接不在 tailnet 内的设备，参阅[连接 tailnet 之外的设备][docs-connect-outside-tailnet]。
 
-## Step 1: Sign up for Aperture
+## 第 1 步：注册 Aperture
 
-1. Visit [`aperture.tailscale.com`][xt-aperture-signup] and complete the sign-up form. If you don't have a Tailscale account, the sign-up process creates a free one for you.
-2. Open `http://<aperture-hostname>/` and confirm that the Aperture web portal loads. If you are an Aperture admin, you can open the admin dashboard at `http://<aperture-hostname>/admin/`.
+1. 访问 [`aperture.tailscale.com`][xt-aperture-signup] 并填写注册表单。没有 Tailscale 账户时，注册过程会为你免费创建一个。
+2. 打开 `http://<aperture-hostname>/`，确认 Aperture web 门户可以加载。如果你是 Aperture 管理员，还可以在 `http://<aperture-hostname>/admin/` 打开管理仪表板。
 
-## Step 2: Configure an LLM provider
+## 第 2 步：配置 LLM 提供商
 
-Adding a provider is an admin task. You can use either the visual **Providers** page or the JSON **Configuration** editor.
+添加提供商是管理员任务。可以使用可视化的 **Providers** 页面或 JSON **Configuration** 编辑器。
 
-**Visual editor**: \[Missing snippet: aperture\_admin\_nav.mdx] Fill in the provider name, base URL, API key, and model list through the form interface.
+**可视化编辑器**：\[Missing snippet: aperture\_admin\_nav.mdx] 通过表单界面填写提供商名称、base URL、API 密钥和模型列表。
 
-**JSON editor**: \[Missing snippet: aperture\_admin\_nav.mdx] Paste or write the configuration directly. The following example configures Anthropic with two Claude models:
+**JSON 编辑器**：\[Missing snippet: aperture\_admin\_nav.mdx] 直接粘贴或编写配置。以下示例配置 Anthropic 和两个 Claude 模型：
 
 ```json
 {
@@ -57,19 +57,19 @@ Adding a provider is an admin task. You can use either the visual **Providers** 
 }
 ```
 
-For provider-specific instructions, refer to [Set up LLM providers][docs-set-up-providers]. For all available settings, refer to the [configuration reference][docs-aperture-configuration].
+各提供商的具体说明参阅[设置 LLM 提供商][docs-set-up-providers]。全部可用设置参阅[配置参考][docs-aperture-configuration]。
 
-> **Note:**
+> **注意：**
 >
-> The [default configuration][docs-aperture-default-configuration] includes subscription passthrough providers rather than shared API keys. To use your own API key, configure a provider as shown above.
+> [默认配置][docs-aperture-default-configuration]包含订阅 passthrough 提供商，而不是共享 API 密钥。要使用你自己的 API 密钥，请按上文方式配置一个提供商。
 
-## Step 3: Send a test request
+## 第 3 步：发送测试请求
 
-The examples below use a shared provider key configured in the gateway. The Anthropic example matches step 2. To use an OpenAI example, configure a provider that supports its API format and model.
+以下示例使用网关中配置的共享提供商密钥。Anthropic 示例与第 2 步对应。要使用 OpenAI 示例，请配置一个支持其 API 格式和模型的提供商。
 
-For a passthrough provider without a fallback key, you must also send provider credentials. Follow the [passthrough setup instructions][docs-use-passthrough-mode] for the required `Authorization` or `x-api-key` header.
+对没有回退密钥的 passthrough 提供商，你还必须随请求发送提供商凭证。所需 `Authorization` 或 `x-api-key` 头请按 [passthrough 设置说明][docs-use-passthrough-mode]操作。
 
-**Anthropic API format**:
+**Anthropic API 格式**：
 
 ```shell
 curl -s http://<aperture-hostname>/v1/messages \
@@ -81,7 +81,7 @@ curl -s http://<aperture-hostname>/v1/messages \
   }'
 ```
 
-**OpenAI Chat Completions API format**:
+**OpenAI Chat Completions API 格式**：
 
 ```shell
 curl -s http://<aperture-hostname>/v1/chat/completions \
@@ -92,7 +92,7 @@ curl -s http://<aperture-hostname>/v1/chat/completions \
   }'
 ```
 
-**OpenAI Responses API format**:
+**OpenAI Responses API 格式**：
 
 ```shell
 curl -s http://<aperture-hostname>/v1/responses \
@@ -103,22 +103,22 @@ curl -s http://<aperture-hostname>/v1/responses \
   }'
 ```
 
-If the request succeeds, Aperture is routing to your provider. Open **Sessions** at `http://<aperture-hostname>/sessions` to find the request in your personal history. Aperture admins can also inspect it on the [**Logs** page of the admin dashboard][docs-admin-logs].
+请求成功即说明 Aperture 正在路由到你的提供商。打开 `http://<aperture-hostname>/sessions` 的 **Sessions**，可在你的个人历史中找到该请求。Aperture 管理员也可以在[管理仪表板的 **Logs** 页面][docs-admin-logs]上查看。
 
-> **Note:**
+> **注意：**
 >
-> If your device is not in the tailnet, [connect through an Aperture CLI bridge or `ts-unplug`][docs-connect-outside-tailnet] and replace `http://<aperture-hostname>` with `http://localhost:<port-number>` in the examples above.
+> 如果你的设备不在 tailnet 内，请[通过 Aperture CLI 桥接或 `ts-unplug` 连接][docs-connect-outside-tailnet]，并把上面示例中的 `http://<aperture-hostname>` 替换为 `http://localhost:<port-number>`。
 
-## Next steps
+## 后续步骤
 
-After the test request succeeds:
+测试请求成功后：
 
-* [Grant users access to models][docs-grant-model-access] so team members can send requests through Aperture.
-* [Set up LLM clients][docs-use-your-tools] to route traffic from tools such as Claude Code or Codex through Aperture.
-* [Use Aperture Chat][docs-chat] to let users talk to models directly from their browser.
-* [Set spending limits][docs-manage-spending] to control costs across your organization.
-* [Connect devices outside your tailnet][docs-connect-outside-tailnet] if team members need access from devices that aren't in the tailnet.
-* [Proxy MCP servers and HTTP APIs][docs-aperture-connectors] to give AI agents authenticated access to external tools through Aperture.
+* [授予用户模型访问权限][docs-grant-model-access]，让团队成员能通过 Aperture 发送请求。
+* [设置 LLM 客户端][docs-use-your-tools]，把 Claude Code 或 Codex 等工具的流量路由到 Aperture。
+* [使用 Aperture Chat][docs-chat]，让用户直接在浏览器里和模型对话。
+* [设置支出限额][docs-manage-spending]，控制整个组织的成本。
+* 团队成员需要从 tailnet 外的设备访问时，[连接 tailnet 之外的设备][docs-connect-outside-tailnet]。
+* [代理 MCP 服务器和 HTTP API][docs-aperture-connectors]，让 AI 智能体通过 Aperture 获得对外部工具的认证访问。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

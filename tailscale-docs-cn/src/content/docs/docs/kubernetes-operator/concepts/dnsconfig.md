@@ -1,22 +1,22 @@
 ---
-title: "Use DNSConfig for in-cluster MagicDNS resolution"
-description: "A `DNSConfig` is a cluster-scoped custom resource that enables in-cluster resolution of Tailscale MagicDNS names."
+title: "使用 DNSConfig 实现集群内 MagicDNS 解析"
+description: "`DNSConfig` 是一个集群级自定义资源，用于支持在集群内解析 Tailscale MagicDNS 名称。"
 ---
 
-Last validated Oct 8, 2026
+最后验证于 Oct 8, 2026
 
-A `DNSConfig` is a cluster-scoped custom resource that enables in-cluster resolution of Tailscale MagicDNS names.
+`DNSConfig` 是一个集群级（cluster-scoped）自定义资源，用于支持在集群内解析 Tailscale MagicDNS 名称。
 
-When you use a cluster egress proxy or a Tailscale `Ingress`, your services become accessible through their MagicDNS names. For example, `my-service.example.ts.net`.
+当你使用集群出站代理或 Tailscale `Ingress` 时，你的服务就可以通过各自的 MagicDNS 名称访问，例如 `my-service.example.ts.net`。
 
-By default, pods within your Kubernetes cluster cannot resolve these `.ts.net` domain names. The `DNSConfig` resource fixes this by:
+默认情况下，Kubernetes 集群内的 pod 无法解析这些 `.ts.net` 域名。`DNSConfig` 资源可以解决这个问题：
 
-* **Deploying a nameserver**: It creates a dedicated nameserver inside the cluster.
-* **Simplifying connectivity**: It lets cluster workloads reach tailnet devices using familiar DNS names rather than static IP addresses.
+* **部署名称服务器**：它在集群内创建一个专用的名称服务器。
+* **简化连接**：让集群内的工作负载使用熟悉的 DNS 名称（而非静态 IP 地址）访问 tailnet 设备。
 
-## Example
+## 示例
 
-The following manifest sets up the Tailscale nameserver:
+以下清单会设置 Tailscale 名称服务器：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -30,11 +30,11 @@ spec:
       tag: unstable
 ```
 
-## Pull the nameserver image from a private registry
+## 从私有镜像仓库拉取名称服务器镜像
 
-If you host the nameserver image in a private registry, reference an image pull Secret in `spec.nameserver.pod.imagePullSecrets`. The operator deploys the nameserver in its own namespace, which is `tailscale` by default, so create the Secret in that namespace. For details about how to create an image pull Secret, refer to the [Kubernetes documentation][xt-k8s-private-registry]. This field requires the Tailscale Kubernetes Operator version 1.104 or later.
+如果你将名称服务器镜像托管在私有镜像仓库中，可以在 `spec.nameserver.pod.imagePullSecrets` 中引用一个镜像拉取 Secret。Operator 会将名称服务器部署在自己的命名空间中（默认为 `tailscale`），因此请在该命名空间中创建 Secret。有关如何创建镜像拉取 Secret 的详细信息，请参阅 [Kubernetes 文档][xt-k8s-private-registry]。该字段要求 Tailscale Kubernetes Operator 版本 1.104 或更高。
 
-The following manifest pulls the nameserver image with a Secret named `regcred`:
+以下清单通过名为 `regcred` 的 Secret 拉取名称服务器镜像：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -51,30 +51,30 @@ spec:
         - name: regcred
 ```
 
-## How it works
+## 工作原理
 
-When a `DNSConfig` resource is created, the Tailscale Kubernetes Operator deploys a nameserver that is dynamically updated with records for:
+创建 `DNSConfig` 资源后，Tailscale Kubernetes Operator 会部署一个名称服务器，并动态更新以下记录：
 
-* **Cluster egress**: Maps MagicDNS names of tailnet devices to the IPs of in-cluster egress proxy pods.
-* **Tailscale Ingress**: Maps MagicDNS names of `Ingress` resources to the IPs of in-cluster ingress proxy pods.
+* **集群出站**：将 tailnet 设备的 MagicDNS 名称映射到集群内出站代理 pod 的 IP。
+* **Tailscale Ingress**：将 `Ingress` 资源的 MagicDNS 名称映射到集群内入站代理 pod 的 IP。
 
-> **Note:**
+> **注意：**
 >
-> For Tailscale Ingress MagicDNS resolution to work from within the cluster, the `Ingress` resource must also be annotated with `tailscale.com/experimental-forward-cluster-traffic-via-ingress` to ensure the proxy listens on its pod IP address.
+> 要让 Tailscale Ingress 的 MagicDNS 解析在集群内生效，`Ingress` 资源还必须添加注解 `tailscale.com/experimental-forward-cluster-traffic-via-ingress`，以确保代理监听其 pod IP 地址。
 
-## Integrate with CoreDNS
+## 与 CoreDNS 集成
 
-To make this work, configure your cluster's primary DNS resolver (CoreDNS) to forward requests for the `.ts.net` domain to the new nameserver. Add a stub domain configuration to your CoreDNS `ConfigMap`. Refer to the [Kubernetes documentation][xt-k8s-coredns-stub] for details.
+为此，需要将集群的主 DNS 解析器（CoreDNS）配置为把 `.ts.net` 域的请求转发给新的名称服务器。在 CoreDNS 的 `ConfigMap` 中添加一个 stub domain 配置。详情请参阅 [Kubernetes 文档][xt-k8s-coredns-stub]。
 
-The nameserver's Service IP is written to `dnsconfig.status.nameserver.ip` after deployment.
+部署完成后，名称服务器的 Service IP 会写入 `dnsconfig.status.nameserver.ip`。
 
-> **Note:**
+> **注意：**
 >
-> `DNSConfig` is a singleton: only one can exist in a cluster.
+> `DNSConfig` 是单例资源：一个集群中只能存在一个。
 
-## Further exploration
+## 进一步探索
 
-* [Access a Tailscale Service][docs-access-service] to reach a tailnet service from your cluster through an egress proxy by its MagicDNS name.
+* [访问 Tailscale Service][docs-access-service]，从集群中通过 MagicDNS 名称、经由出站代理访问 tailnet 服务。
 
 [docs-access-service]: /docs/kubernetes-operator/egress/access-tailnet-service
 

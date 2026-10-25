@@ -1,37 +1,37 @@
 ---
-title: "Install Tailscale on Amazon Fire devices"
-description: "Install Tailscale on your Amazon Fire devices, including Amazon Fire TV and Amazon Fire Tablets."
+title: "在 Amazon Fire 设备上安装 Tailscale"
+description: "在 Amazon Fire 设备上安装 Tailscale，包括 Amazon Fire TV 和 Amazon Fire 平板电脑。"
 ---
 
-Last validated Oct 6, 2026
+最后验证于 Oct 6, 2026
 
-Tailscale works with Amazon Fire TV devices that run certain versions of Fire OS. However, Tailscale is not available in the Amazon Appstore. Instead, you can download and install Tailscale directly from the package server.
+Tailscale 可以在运行特定版本 Fire OS 的 Amazon Fire TV 设备上使用。不过，Tailscale 并未上架 Amazon Appstore，你可以直接从软件包服务器下载并安装 Tailscale。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale is not available on devices that run Fire OS versions 5 or 6, or on devices that run Vega OS.
+> 运行 Fire OS 5 或 6 版本的设备，以及运行 Vega OS 的设备，均不支持 Tailscale。
 
-If you previously downloaded Tailscale from the Amazon Appstore, you can continue to use it on your Fire TV device but you won't be able to apply updates. To be able to apply updates, uninstall Tailscale from your device and then use the following steps to reinstall it.
+如果你之前是从 Amazon Appstore 下载的 Tailscale，可以继续在 Fire TV 设备上使用，但无法应用更新。若要应用更新，请先从设备上卸载 Tailscale，然后按照以下步骤重新安装。
 
-1. [Download][pk-stable-android] Tailscale from the package server and install it on your Amazon Fire device. Make sure you download the Universal Android application package (APK).
+1. 从软件包服务器[下载][pk-stable-android] Tailscale 并安装到你的 Amazon Fire 设备上。请确保下载的是 Universal Android 应用包（APK）。
 
-   > **Note:**
+   > **注意：**
    >
-   > This APK does not install updates automatically. You will need to manually install new updates when they become available.
+   > 此 APK 不会自动安装更新。有新版本可用时，你需要手动安装更新。
 
-2. Launch the Tailscale app and select **OK** in the **Connection request** window. Then select **Get Started**, and accept the prompts to install a VPN configuration.
+2. 启动 Tailscale 应用，在**连接请求**（Connection request）窗口中选择**确定**（OK）。然后选择**开始使用**（Get Started），并按照提示接受安装 VPN 配置。
 
-3. Select **Log in** and sign in using your [SSO identity provider][docs-sso-providers]. If you are using a Fire TV device, a QR code will display. Use your phone to scan QR code for authorizing the Amazon Fire device to your tailnet.
+3. 选择**登录**（Log in），并使用你的 [SSO 身份提供方][docs-sso-providers]登录。如果你使用的是 Fire TV 设备，屏幕上会显示二维码。用手机扫描该二维码，即可授权将这台 Amazon Fire 设备加入你的 tailnet。
 
-> **Note:**
+> **注意：**
 >
-> If [device approval][docs-device-approval] is enabled, the Amazon Fire device will not be accessible in the tailnet until an administrator approves the device.
+> 如果启用了[设备审批][docs-device-approval]，在管理员批准该设备之前，Amazon Fire 设备将无法在 tailnet 中访问。
 
-## Supported hardware
+## 支持的硬件
 
-Tailscale can be installed on Amazon Fire TV devices that run Fire OS, except for Fire OS versions 5 or 6. It is not supported on Vega OS in any way, including on devices such as the Fire TV Stick 4k Select.
+Tailscale 可安装在运行 Fire OS 的 Amazon Fire TV 设备上，Fire OS 5 或 6 版本除外。Vega OS 一律不受支持，包括 Fire TV Stick 4k Select 等设备。
 
-For a complete list of devices that run Fire OS, refer to [Fire OS versions][xt-amazon-fire-os].
+完整的 Fire OS 设备列表，请参阅 [Fire OS 版本][xt-amazon-fire-os]。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

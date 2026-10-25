@@ -1,111 +1,111 @@
 ---
-title: "Logging overview"
-description: "Understand Tailscale's logging infrastructure."
+title: "日志概览"
+description: "了解 Tailscale 的日志基础设施。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Each Tailscale agent in your distributed network streams its logs to a central log server (at `log.tailscale.com`). This includes real-time events for open and close events for every inter-machine connection (TCP or UDP) on your network.
+分布式网络中的每个 Tailscale 代理都会把日志流式传输到中央日志服务器（`log.tailscale.com`）。其中包括网络上每台机器之间连接（TCP 或 UDP）的建立与关闭事件的实时记录。
 
-Because every connection requires two endpoints, and both endpoints log every connection, it's possible to detect lost or tampered logs by comparing the double entries of each endpoint. You could also use IDS (intrusion detection system) rules to automatically detect suspicious activity on your network.
+由于每个连接都有两个端点，而且两个端点都会记录该连接，因此可以通过比对每个端点的双重记录来发现日志丢失或被篡改的情况。你还可以使用 IDS（入侵检测系统）规则来自动检测网络上的可疑活动。
 
-## Client logs
+## 客户端日志
 
-Each client logs information about its own operation and its attempts to contact other nodes. The data collected and how it is used are described in our [privacy policy][co-privacy-policy].
+每个客户端都会记录其自身运行情况以及尝试联系其他节点的信息。所收集的数据及其用途见我们的[隐私政策][co-privacy-policy]。
 
-You can access logs locally for nodes on some desktop platforms.
+在某些桌面平台上，你可以在本地访问节点的日志。
 
 #### Windows
 
-Logs are stored in `C:\ProgramData\Tailscale` (or, more generally `$env:ALLUSERSPROFILE\Tailscale`).
+日志存储在 `C:\ProgramData\Tailscale`（更一般地，`$env:ALLUSERSPROFILE\Tailscale`）。
 
 #### macOS
 
-To stream log entries as they are logged, open the Console application, start streaming, and search for `IPN`.
+要实时查看正在写入的日志条目，打开 Console（控制台）应用，开始流式传输，然后搜索 `IPN`。
 
-To collect Tailscale logs retroactively from the system log, you can also extract a macOS sysdiagnose by running `sudo sysdiagnose` in the Terminal. Look for entries matching `IPN` in the `system_logs.logarchive` file within the sysdiagnose.
+要追溯性地从系统日志中收集 Tailscale 日志，你还可以在终端中运行 `sudo sysdiagnose` 来生成 macOS sysdiagnose，然后在其中的 `system_logs.logarchive` 文件里查找匹配 `IPN` 的条目。
 
 #### iOS / tvOS
 
-To stream log entries as they are logged, connect your iOS or tvOS device to your Mac. Then open the Console application, select your iOS or tvOS device in the sidebar, start streaming, and search for `IPN`.
+要实时查看正在写入的日志条目，把你的 iOS 或 tvOS 设备连接到 Mac，然后打开 Console（控制台）应用，在侧边栏中选择你的 iOS 或 tvOS 设备，开始流式传输，再搜索 `IPN`。
 
-To collect Tailscale logs retroactively from the system log, you can also extract a [sysdiagnose][xt-apple-training-sysdiagnose] and look for entries matching `IPN` in the `system_logs.logarchive` file within the sysdiagnose.
+要追溯性地从系统日志中收集 Tailscale 日志，你还可以生成 [sysdiagnose][xt-apple-training-sysdiagnose]，然后在其中的 `system_logs.logarchive` 文件里查找匹配 `IPN` 的条目。
 
 #### Android
 
-Use the `logcat` utility to search for log entries issued by the `com.tailscale.ipn` package.
+使用 `logcat` 工具搜索 `com.tailscale.ipn` 软件包发出的日志条目。
 
 #### Linux
 
-Logs are available in the shell:
+日志可在 shell 中查看：
 
 ```shell
 journalctl -u tailscaled
 ```
 
-### Centralized log management
+### 集中式日志管理
 
-Some logs are centrally collected by Tailscale for debugging. This is done with a [custom-built, high-capacity, high-reliability, distributed logging system][xt-apenwarr-20190216].
+部分日志由 Tailscale 集中收集用于调试。这依托一个[自研的大容量、高可靠分布式日志系统][xt-apenwarr-20190216]。
 
-Client operational logs are only accessible locally on each node, but you could stream your system- and container-level logs to the same centralized data store for further analysis. [Network flow logs][ar-network-flow-logs] are available from the admin console when enabled.
+客户端运行日志只能在各个节点上本地访问，但你可以把系统级和容器级日志流式传输到同一个集中式数据存储做进一步分析。启用后，你可以从管理控制台查看[网络流日志][ar-network-flow-logs]。
 
-### Opt out of client logging
+### 退出客户端日志记录
 
-You opt out of client logging on each device individually, using the `--no-logs-no-support` flag for the [`tailscaled`][docs-tailscaled] daemon or the equivalent `TS_NO_LOGS_NO_SUPPORT` environment variable. This disables telemetry and opts the device out of any support that would require that telemetry for debugging.
+你可以在每台设备上单独退出客户端日志记录：为 [`tailscaled`][docs-tailscaled] 守护进程传入 `--no-logs-no-support` 标志，或使用等效的 `TS_NO_LOGS_NO_SUPPORT` 环境变量。这会禁用遥测，并让该设备退出任何需要这些遥测数据才能调试的支持服务。
 
-The flag and the environment variable have the same effect, but flag availability varies by platform. On Windows, only the environment variable is available. On macOS, the flag works only with the command-line [open source `tailscaled` variant][docs-macos-variants], not the Standalone app or the Mac App Store app. Use the method that matches your platform.
+标志和环境变量效果相同，但标志的可用性因平台而异。在 Windows 上只有环境变量可用。在 macOS 上，该标志只对命令行的[开源 `tailscaled` 变体][docs-macos-variants]有效，不适用于 Standalone 应用或 Mac App Store 应用。请使用与你平台相匹配的方式。
 
-> **Note:**
+> **注意：**
 >
-> If you block client logging, Tailscale may not be able to provide technical support.
+> 如果你屏蔽客户端日志，Tailscale 可能无法提供技术支持。
 
 #### Windows
 
-This is possible if you set the `TS_NO_LOGS_NO_SUPPORT` environment variable in `%ProgramData%\Tailscale\tailscaled-env.txt`:
+你可以在 `%ProgramData%\Tailscale\tailscaled-env.txt` 中设置 `TS_NO_LOGS_NO_SUPPORT` 环境变量：
 
 ```powershell
 TS_NO_LOGS_NO_SUPPORT=true
 ```
 
-To track when you can instead use the `--no-logs-no-support` flag, follow our [GitHub issue][xt-gh-tailscale-issue-5114] for making it easier to use environment variables.
+想了解何时可以改用 `--no-logs-no-support` 标志，请关注我们关于让环境变量更易使用的 [GitHub issue][xt-gh-tailscale-issue-5114]。
 
 #### macOS
 
-If you are running the open source `tailscaled` [macOS variant][docs-macos-variants], pass the `--no-logs-no-support` flag to `tailscaled`:
+如果你运行的是开源 `tailscaled` 的 [macOS 变体][docs-macos-variants]，为 `tailscaled` 传入 `--no-logs-no-support` 标志：
 
 ```shell
 tailscaled --no-logs-no-support
 ```
 
-To track when you can use the `--no-logs-no-support` flag for other macOS variants, follow our [GitHub issue][xt-gh-tailscale-issue-5114] for making it easier to use environment variables.
+想了解其他 macOS 变体何时可以使用 `--no-logs-no-support` 标志，请关注我们关于让环境变量更易使用的 [GitHub issue][xt-gh-tailscale-issue-5114]。
 
 #### Linux
 
-Either use the `--no-logs-no-support` flag, or set the `TS_NO_LOGS_NO_SUPPORT` environment variable.
+你可以使用 `--no-logs-no-support` 标志，也可以设置 `TS_NO_LOGS_NO_SUPPORT` 环境变量。
 
-To use the `--no-logs-no-support` flag, pass it to `tailscaled`:
+要使用 `--no-logs-no-support` 标志，为 `tailscaled` 传入它：
 
 ```shell
 tailscaled --no-logs-no-support
 ```
 
-To set the `TS_NO_LOGS_NO_SUPPORT` environment variable, edit `/etc/default/tailscaled` and add the following line:
+要设置 `TS_NO_LOGS_NO_SUPPORT` 环境变量，编辑 `/etc/default/tailscaled` 并添加以下行：
 
 ```shell
 TS_NO_LOGS_NO_SUPPORT=true
 ```
 
-## Kubernetes Operator logs
+## Kubernetes Operator 日志
 
-The Kubernetes Operator's reconciliation logs are centrally collected for debugging. These logs describe steps the Kubernetes Operator has taken to bring the deployed state in-line with the desired state regarding Kubernetes resources.
+Kubernetes Operator 的调谐（reconciliation）日志会被集中收集用于调试。这些日志描述了 Kubernetes Operator 为让部署状态与 Kubernetes 资源的期望状态保持一致所采取的步骤。
 
-Refer to our [privacy policy][co-privacy-policy] to understand the data collected and how we use it.
+要了解所收集的数据及我们的使用方式，参见我们的[隐私政策][co-privacy-policy]。
 
-You can access logs locally using the `kubectl logs` command.
+你可以使用 `kubectl logs` 命令在本地访问日志。
 
-### Opt out of Kubernetes logging
+### 退出 Kubernetes 日志记录
 
-If you deployed the Kubernetes Operator with Helm, add the `TS_NO_LOGS_NO_SUPPORT` environment variable to the `operatorConfig.extraEnv` section:
+如果你使用 Helm 部署了 Kubernetes Operator，请把 `TS_NO_LOGS_NO_SUPPORT` 环境变量添加到 `operatorConfig.extraEnv` 部分：
 
 ```yaml
 operatorConfig:
@@ -114,7 +114,7 @@ operatorConfig:
     value: "true"
 ```
 
-If you deployed the Kubernetes Operator with static manifests, add the `TS_NO_LOGS_NO_SUPPORT` environment variable to the Kubernetes Operator's Deployment:
+如果你使用静态清单部署了 Kubernetes Operator，请把 `TS_NO_LOGS_NO_SUPPORT` 环境变量添加到 Kubernetes Operator 的 Deployment 中：
 
 ```yaml
 env:
@@ -122,39 +122,39 @@ env:
   value: "true"
 ```
 
-## Network flow logs
+## 网络流日志
 
-> **Note:** Network flow logs are available for [the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：**网络流日志[面向 Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-[Network flow logs][docs-network-flow-logs] are available to help you understand which devices are connecting to one another over time, that is, the *flow* of traffic across your tailnet.
+[网络流日志][docs-network-flow-logs]可以帮助你了解哪些设备随时间推移相互连接，也就是流量在整个 tailnet 中的*流动*情况。
 
-These logs strictly do not contain any information about client operations or contents of network traffic.
+这些日志严格不包含任何关于客户端操作或网络流量内容的信息。
 
-Network flow logs must be [enabled][docs-network-flow-logs-enable].
+网络流日志必须先[启用][docs-network-flow-logs-enable]。
 
-> **Note:**
+> **注意：**
 >
-> Flow logs can be configured to [stream][docs-log-streaming] to a security information and event management (SIEM) system.
+> 流日志可以配置为[流式传输][docs-log-streaming]到 SIEM（安全信息与事件管理）系统。
 
-## Server logs
+## 服务器日志
 
-[Configuration audit logs][docs-audit-logging] record actions that modify a tailnet's configuration, including the type of action, the actor, the target resource, and the time.
+[配置审计日志][docs-audit-logging]记录修改 tailnet 配置的操作，包括操作类型、操作者、目标资源和时间。
 
-All [users who have access to the admin console][docs-user-roles] can inspect configuration audit logs in the [Logs](https://console.tailscale.com/admin/logs) page of the admin console, and can filter these logs to find specific events.
+所有[有权访问管理控制台的用户][docs-user-roles]都可以在管理控制台的 [Logs](https://console.tailscale.com/admin/logs) 页面查看配置审计日志，并且可以筛选这些日志以查找特定事件。
 
-Configuration audit logs are enabled by default for all tailnets, and are available for the most recent 90 days.
+配置审计日志对所有 tailnet 默认启用，可查看最近 90 天的记录。
 
-> **Note:**
+> **注意：**
 >
-> Audit logs can be configured to [stream][docs-log-streaming] to a security information and event management (SIEM) system.
+> 审计日志可以配置为[流式传输][docs-log-streaming]到 SIEM（安全信息与事件管理）系统。
 
-## Local SSH session logs
+## 本地 SSH 会话日志
 
-Local SSH session logs are not supported as of version 1.48.0.
+自 1.48.0 版起，本地 SSH 会话日志已不再受支持。
 
-You can use [Tailscale SSH session recording][docs-tailscale-ssh-session-recording] to streaming recordings from the server device.
+你可以使用 [Tailscale SSH 会话录制][docs-tailscale-ssh-session-recording]从服务器设备流式传输录制内容。
 
-[ar-network-flow-logs]: #network-flow-logs
+[ar-network-flow-logs]: #网络流日志
 
 [co-privacy-policy]: https://tailscale.com/privacy-policy
 

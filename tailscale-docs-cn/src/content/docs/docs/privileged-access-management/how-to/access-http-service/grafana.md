@@ -1,15 +1,15 @@
 ---
-title: "Use Tailscale identity in your Grafana HTTP service"
-description: "Grafana is one example of an application that can use [Tailscale PAM][docs-pam] [identity headers][docs-pam-identity-headers]. Its built-in `auth.proxy` identity provider lets Grafana trust identity i"
+title: "在 Grafana HTTP 服务中使用 Tailscale 身份"
+description: "Grafana 是能够使用 [Tailscale PAM][docs-pam] [身份头][docs-pam-identity-headers]的应用示例之一。它内置的 `auth.proxy` 身份提供方可让 Grafana 信任身份信息"
 ---
 
-Last validated Aug 18, 2026
+最后验证于 Aug 18, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-Grafana is one example of an application that can use [Tailscale PAM][docs-pam] [identity headers][docs-pam-identity-headers]. Its built-in `auth.proxy` identity provider lets Grafana trust identity information supplied by an authenticating reverse proxy.
+Grafana 是能够使用 [Tailscale PAM][docs-pam] [身份头][docs-pam-identity-headers]的应用示例之一。它内置的 `auth.proxy` 身份提供方可让 Grafana 信任由认证反向代理提供的身份信息。
 
-For example, you can configure Grafana to use `X-Auth-Email` as the user's identity:
+例如，你可以配置 Grafana 使用 `X-Auth-Email` 作为用户身份：
 
 ```ini
 [session]
@@ -38,17 +38,17 @@ auto_sign_up = true
 headers = Email:X-Auth-Email
 ```
 
-This configuration tells Grafana to accept the authenticated email address passed by Tailscale PAM and automatically sign the user in.
+此配置告诉 Grafana 接受 Tailscale PAM 传递过来的已认证电子邮件地址，并自动让用户登录。
 
-The example assigns newly created users the `Viewer` role. Adjust the Grafana role and authorization settings to match the access users should have in your environment.
+该示例为新创建的用户分配 `Viewer` 角色。请根据你的环境中用户应拥有的访问权限，调整 Grafana 的角色和授权设置。
 
-For information about cryptographically verifying Tailscale PAM identity headers, refer to [Verify identity headers][docs-pam-verify-identity-headers].
+关于以密码学方式验证 Tailscale PAM 身份头的信息，参见[验证身份头][docs-pam-verify-identity-headers]。
 
-## Try it with Docker
+## 用 Docker 试一试
 
-If you want to try this yourself, save the configuration above as `grafana.ini` in your current directory.
+如果你想亲自尝试，把上面的配置保存为当前目录下的 `grafana.ini`。
 
-Then start Grafana with Docker:
+然后用 Docker 启动 Grafana：
 
 ```shell
 docker run -i \
@@ -57,17 +57,17 @@ docker run -i \
   grafana/grafana
 ```
 
-Grafana will now be available on port `3000`.
+现在 Grafana 将在端口 `3000` 上可用。
 
-Next, create an [HTTP PAM service][docs-pam-access-http-service] and point it at the Grafana instance. If Grafana is running on the same machine as your PAM connector, use:
+接下来，创建一个 [HTTP PAM 服务][docs-pam-access-http-service]，并把它指向该 Grafana 实例。如果 Grafana 与你的 PAM 连接器运行在同一台机器上，使用：
 
 ```shell
 http://localhost:3000
 ```
 
-If Grafana is running somewhere else, use the hostname or IP address that the PAM connector can reach.
+如果 Grafana 运行在其他地方，请使用 PAM 连接器能访问到的主机名或 IP 地址。
 
-When a user opens the PAM service, they authenticate with their [Tailscale identity information][docs-tailscale-identity]. Tailscale PAM passes the authenticated identity to Grafana in the `X-Auth-*` headers, and Grafana uses `X-Auth-Email` to sign the user in automatically.
+用户打开该 PAM 服务时，会使用其 [Tailscale 身份信息][docs-tailscale-identity]认证。Tailscale PAM 通过 `X-Auth-*` 头把已认证的身份传给 Grafana，Grafana 使用 `X-Auth-Email` 自动让用户登录。
 
 [docs-pam-access-http-service]: /docs/privileged-access-management/how-to/access-http-service
 

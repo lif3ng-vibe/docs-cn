@@ -1,66 +1,66 @@
 ---
-title: "Use device posture for just-in-time access"
-description: "Use device posture for just-in-time access to resources in your tailnet."
+title: "使用设备态势实现即时访问"
+description: "使用设备态势实现对 tailnet 中资源的即时访问。"
 ---
 
-Last validated Jan 19, 2026
+最后验证于 Jan 19, 2026
 
-> **Note:** Just-in-time access is available for [the Premium and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 即时访问适用于 [Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-As noted in [Just-in-time access][docs-just-in-time-access], Tailscale provides several ways for you to provide just-in-time (JIT) access to resources in your Tailscale network (known as a tailnet).
+如[即时访问][docs-just-in-time-access]中所述，Tailscale 提供了多种方式，可用于授予对 Tailscale 网络（即 tailnet）中资源的即时访问（JIT）。
 
-This topic describes usage of custom device posture attributes with expiry for JIT, and provides an example Slack workflow where users can request temporary access by using Slack.
+本主题介绍如何在 JIT 中使用带过期时间的自定义设备态势属性，并提供一个 Slack 工作流示例，让用户可以通过 Slack 请求临时访问。
 
-Device attributes have an [optional `expiry` property][ar-expiry-property] that lets you set a time in the future to expire the attribute. When set, the device attribute automatically expires at the specified time. You can use this to provide just-in-time access to resources by assigning attributes like `custom:prodAccess` to a device for a given time.
+设备属性有一个[可选的 `expiry` 属性][ar-expiry-property]，让你可以设置一个未来时间使属性过期。设置后，设备属性会在指定时间自动过期。你可以利用这一点，通过在给定时间段内为设备分配 `custom:prodAccess` 之类的属性，提供对资源的即时访问。
 
 ## Tailscale Slack Accessbot
 
-[Tailscale Access][xt-accessbot] is an open-source example [Slack Workflow App][xt-slack-automation] developed by Tailscale that lets users use Slack to request instantaneous, time-bound access, to Tailscale resources from other people in their organization.
+[Tailscale Access][xt-accessbot] 是 Tailscale 开发的一个开源示例 [Slack Workflow App][xt-slack-automation]，让用户可以在 Slack 中向组织内的其他人请求即时、限时的 Tailscale 资源访问权限。
 
-Inside Slack, a user can use the Request Tailscale Access shortcut to Tailscale Access. This will prompt them for:
+在 Slack 中，用户可以使用 Request Tailscale Access 快捷方式连接到 Tailscale Access。该快捷方式会提示用户填写：
 
-* what they want to access
-* which device they want to access it from
-* how long they need access for
-* who should approve their access
-* why they need the access
+* 想访问什么
+* 想从哪台设备访问
+* 需要访问多长时间
+* 由谁来批准这次访问
+* 为什么需要这次访问
 
-*（图：Tailscale Access request access form in Slack）*
+*（图：Slack 中的 Tailscale Access 请求访问表单）*
 
-If there are Tailscale devices owned by a user with an email address matching the Slack user who requested access, a list of those devices will be displayed. The user will also get prompted with a list of all devices in a tailnet.
+如果存在归属于某个用户的 Tailscale 设备、且该用户的电子邮件地址与发起请求的 Slack 用户相匹配，就会显示这些设备的列表。同时还会向该用户展示 tailnet 中所有设备的列表。
 
-When the request has been submitted, the selected approver will be notified and they can choose to approve or deny the request. Upon approval, the workflow will add the required attribute to the selected device with an expiry set to the selected time.
+请求提交后，所选的审批人会收到通知，可以选择批准或拒绝该请求。批准后，工作流会将所需的属性添加到所选设备上，并将过期时间设置为所选时长。
 
-For detailed instructions to configure, deploy, or develop with Accessbot, refer to the [`tailscale/accessbot` repository][xt-accessbot] on GitHub.
+有关配置、部署 Accessbot 或基于它开发的详细说明，请参阅 GitHub 上的 [`tailscale/accessbot` 仓库][xt-accessbot]。
 
-## Posture attributes API with Expiry
+## 带过期时间的态势属性 API
 
-If Tailscale Slack Accessbot does not suit your needs, you can use custom device posture attributes with expiry to build a similar tool for your organization. This section is an extended version of the [Posture attributes API][co-api-device-posture-attr] from the [device posture][docs-device-posture] topic that contains additional information about attribute expiry.
+如果 Tailscale Slack Accessbot 不能满足你的需求，你可以使用带过期时间的自定义设备态势属性，为你的组织构建类似的工具。本节是[设备态势][docs-device-posture]主题中[态势属性 API][co-api-device-posture-attr]的扩展版本，包含有关属性过期的更多信息。
 
-### Get posture attributes by using the API
+### 使用 API 获取态势属性
 
 ```
 GET /api/v2/device/{deviceID}/attributes
 ```
 
-Retrieve all posture attributes for the specified device. This returns a JSON object of all the key-value pairs of posture attributes for the device.
+检索指定设备的所有态势属性。返回一个 JSON 对象，包含该设备所有态势属性的键值对。
 
-#### Parameters
+#### 参数
 
-##### `deviceID` (required in URL path)
+##### `deviceID`（URL 路径中必填）
 
-The ID of the device to fetch posture attributes for.
+要获取其态势属性的设备 ID。
 
-#### Request example
+#### 请求示例
 
 ```shell
 curl "https://api.tailscale.com/api/v2/device/11055/attributes" \
 -u "tskey-api-xxxxx:"
 ```
 
-#### Response
+#### 响应
 
-The response is `200` on success. The response body is a JSON object containing all the posture attributes assigned to the node. Attribute values can be strings, numbers, or booleans.
+成功时响应为 `200`。响应体是一个 JSON 对象，包含分配给该节点的所有态势属性。属性值可以是字符串、数字或布尔值。
 
 ```json
 {
@@ -80,35 +80,35 @@ The response is `200` on success. The response body is a JSON object containing 
 }
 ```
 
-* `attributes`: a key-value map of all attributes associated with a given node. The values can be either a number, string, or boolean.
+* `attributes`：与给定节点关联的所有属性的键值映射。值可以是数字、字符串或布尔值。
 
-* `expiries`: a key-value map of attributes that has an expiry time, and when they will expire. Any attribute without an expiry is omitted. If there are no attributes with expiries, the entire `expiries` field is omitted.
+* `expiries`：具有过期时间的属性及其到期时间的键值映射。没有过期时间的属性会被省略。如果没有任何带过期时间的属性，整个 `expiries` 字段会被省略。
 
-### Set custom posture attributes by using the API
+### 使用 API 设置自定义态势属性
 
 ```
 POST /api/v2/device/{deviceID}/attributes/{attributeKey}
 ```
 
-Create or update a custom posture attribute on the specified device. User-managed attributes must be in the `custom` namespace, which is indicated by prefixing the attribute key with `custom:`.
+在指定设备上创建或更新自定义态势属性。用户管理的属性必须位于 `custom` 命名空间中，即在属性键前加上 `custom:` 前缀。
 
-#### Parameters
+#### 参数
 
-##### `deviceID` (required in URL path)
+##### `deviceID`（URL 路径中必填）
 
-The ID of the device on which to set the custom posture attribute.
+要在其上设置自定义态势属性的设备 ID。
 
-##### `attributeKey` (required in URL path)
+##### `attributeKey`（URL 路径中必填）
 
-The name of the posture attribute to set. This must be prefixed with `custom:`.
+要设置的态势属性的名称。必须以 `custom:` 为前缀。
 
-Keys have a maximum length of 128 characters including the namespace, and can only contain letters, numbers, underscores, and colon.
+键（包括命名空间）的最大长度为 128 个字符，且只能包含字母、数字、下划线和冒号。
 
-Keys are case-sensitive. Keys must be unique, but are checked for uniqueness in a case-insensitive manner. For example, `custom:MyAttribute` and `custom:myattribute` cannot both be set within a single tailnet.
+键区分大小写。键必须唯一，但唯一性检查不区分大小写。例如，`custom:MyAttribute` 和 `custom:myattribute` 不能在同一个 tailnet 中同时设置。
 
-All values for a given key need to be of the same type, which is determined when the first value is written for a given key. For example, `custom:myattribute` cannot have a numeric value (`87`) for one node and a string value (`"78"`) for another node within the same tailnet.
+同一个键的所有值必须类型相同，类型在为该键写入第一个值时确定。例如，在同一个 tailnet 中，`custom:myattribute` 不能在一个节点上是数字值（`87`），而在另一个节点上是字符串值（`"78"`）。
 
-##### Posture attribute `value` (required in POST body)
+##### 态势属性 `value`（POST 请求体中必填）
 
 ```json
 {
@@ -116,13 +116,13 @@ All values for a given key need to be of the same type, which is determined when
 }
 ```
 
-A value can be either a string, number, or boolean.
+值可以是字符串、数字或布尔值。
 
-A string value can have a maximum length of 255 characters, and can only contain letters, numbers, underscores, and periods.
+字符串值的最大长度为 255 个字符，且只能包含字母、数字、下划线和句点。
 
-A number value is an integer and must be a JSON safe number (up to 2^53 - 1).
+数字值必须是整数，并且是 JSON 安全数字（最大到 2^53 - 1）。
 
-##### Posture attribute `expiry` (optional in POST body)
+##### 态势属性 `expiry`（POST 请求体中可选）
 
 ```json
 {
@@ -131,9 +131,9 @@ A number value is an integer and must be a JSON safe number (up to 2^53 - 1).
 }
 ```
 
-An expiry can be any time in the future, formatted as an [RFC3339][xt-rfc-3339] string. When set, the device attribute will automatically be removed at the time specified.
+过期时间可以是未来的任意时间，格式为 [RFC3339][xt-rfc-3339] 字符串。设置后，设备属性会在指定时间被自动移除。
 
-##### Posture attribute `comment` (optional in POST body)
+##### 态势属性 `comment`（POST 请求体中可选）
 
 ```json
 {
@@ -143,9 +143,9 @@ An expiry can be any time in the future, formatted as an [RFC3339][xt-rfc-3339] 
 }
 ```
 
-A comment can be added to give a reason why an attribute was added.
+可以添加备注，说明添加该属性的原因。
 
-#### Request example
+#### 请求示例
 
 ```shell
 curl "https://api.tailscale.com/api/v2/device/11055/attributes/custom:my_attribute" \
@@ -153,11 +153,11 @@ curl "https://api.tailscale.com/api/v2/device/11055/attributes/custom:my_attribu
 --data-binary '{"value": "my_value", "expiry": "2024-04-23T18:25:43.511Z"}'
 ```
 
-#### Response
+#### 响应
 
-The response is `2xx` on success. The response body is currently an empty JSON object.
+成功时响应为 `2xx`。响应体目前是一个空的 JSON 对象。
 
-[ar-expiry-property]: #posture-attribute-expiry-optional-in-post-body
+[ar-expiry-property]: #态势属性-expirypost-请求体中可选
 
 [co-api-device-posture-attr]: https://tailscale.com/api#tag/devices/GET/device/%7BdeviceId%7D/attributes
 

@@ -1,60 +1,60 @@
 ---
-title: "Group visibility on Tailscale clients"
-description: "Get group membership information for applications running in your Tailscale network."
+title: "Tailscale 客户端上的群组可见性"
+description: "为运行在 Tailscale 网络中的应用程序获取群组成员身份信息。"
 ---
 
-Last validated Jun 10, 2026
+最后验证于 Jun 10, 2026
 
-You can configure devices on your Tailscale network (known as a tailnet) to receive group membership information from the Tailscale [control plane][docs-control-data-planes-control-plane]. The group information includes both [groups][docs-policy-file-groups] defined in the tailnet policy file and [groups synchronized][docs-user-group-provisioning] from identity providers by using System for Cross-domain Identity Management (SCIM). Once a Tailscale client has been configured to receive group information, that information is available by using the [Tailscale CLI][docs-tailscale-cli], the [`tsnet`][docs-tsnet] library, and [LocalAPI][xt-go-tailscale-ipn-localapi].
+你可以将 Tailscale 网络（即 tailnet）中的设备配置为从 Tailscale [控制平面][docs-control-data-planes-control-plane]接收群组成员身份信息。群组信息既包括策略文件中定义的[群组][docs-policy-file-groups]，也包括通过 SCIM（跨域身份管理系统）从身份提供方（IdP）[同步的群组][docs-user-group-provisioning]。一旦 Tailscale 客户端配置为接收群组信息，你就可以通过 [Tailscale CLI][docs-tailscale-cli]、[`tsnet`][docs-tsnet] 库和 [LocalAPI][xt-go-tailscale-ipn-localapi] 获取这些信息。
 
-> **Note:** This feature is currently in alpha.
+> **注意：**此功能目前处于 alpha 阶段。
 
-## Requirements
+## 要求
 
-Before you can receive group information in clients, ensure you meet these requirements.
+在客户端接收群组信息之前，请确保满足以下要求。
 
-* You can edit your tailnet policy file. You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a tailnet policy file.
-* The devices that you want to receive group membership information are running Tailscale v1.97.8 or later.
-* (Optional) You can assign a [tag][docs-tags] to devices that need to receive group membership information.
+* 你可以编辑策略文件。你需要具有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 身份才能编辑策略文件。
+* 你希望接收群组成员身份信息的设备运行 Tailscale v1.97.8 或更高版本。
+* （可选）你可以为需要接收群组成员身份信息的设备分配[标签][docs-tags]。
 
-## Use cases
+## 使用场景
 
-* **Group-specific functionality**
+* **群组专属功能**
 
-  Applications can use group membership information to enable or disable features without requiring additional user authorization. For example, you can turn on additional features if a user is in a group for beta testers or in a group for a paid plan.
+  应用程序可以利用群组成员身份信息来启用或禁用功能，而无需额外的用户授权。例如，当用户属于 beta 测试员群组或付费套餐群组时，你可以为其开启额外功能。
 
-* **Visibility into group usage**
+* **掌握群组使用情况**
 
-  Applications can log group membership as part of their logs and audit trails. This might be useful for adoption analysis, cost tracking, and incident investigation.
+  应用程序可以把群组成员身份记录到日志和审计追踪中。这对使用情况分析、成本核算和事件排查可能很有用。
 
-## How it works
+## 工作原理
 
-Some applications need information based on [Tailscale identity][docs-tailscale-identity] for the connecting user so the application can communicate that information to a user interface (UI) or its own clients. To support this, the Tailscale control plane sends each device the following information if the user has access to the device:
+有些应用程序需要基于连接用户的 [Tailscale 身份][docs-tailscale-identity]信息，以便把这些信息传递给用户界面（UI）或自己的客户端。为支持这一点，当用户有权访问某台设备时，Tailscale 控制平面会向该设备发送以下信息：
 
-* user name
-* user login
-* user profile picture URL
+* 用户名
+* 用户登录名
+* 用户头像 URL
 
-By default, the Tailscale control plane does not send group membership information to devices. To enable this, use the node-attr-visible-groups [node attribute][docs-policy-file-node-attributes] as an application capability, apply it to a set of devices, and specify which groups those devices have access to.
+默认情况下，Tailscale 控制平面不会向设备发送群组成员身份信息。要启用该功能，请使用 node-attr-visible-groups [节点属性][docs-policy-file-node-attributes]作为应用能力（application capability），将其应用到一组设备，并指定这些设备可以访问哪些群组。
 
-An application running on a device that contains the `node-attr-visible-groups` attribute can then retrieve the group membership information from the device by using the [`tsnet`][docs-tsnet] library or [LocalAPI][xt-go-tailscale-ipn-localapi].
+之后，运行在含有 `node-attr-visible-groups` 属性的设备上的应用程序，就可以通过 [`tsnet`][docs-tsnet] 库或 [LocalAPI][xt-go-tailscale-ipn-localapi] 从设备获取群组成员身份信息。
 
-## Update your tailnet policy file
+## 更新策略文件
 
-Configure your [tailnet policy file][docs-tailnet-policy-file] to update the Tailscale control plane with which devices can receive group information. You need to make the following updates to your tailnet policy file:
+配置你的[策略文件][docs-tailnet-policy-file]，告知 Tailscale 控制平面哪些设备可以接收群组信息。你需要在策略文件中做以下更新：
 
-* (Optional) Create a tag to identify which devices will have the capability to receive group membership information.
-* Create a node attribute to identify which groups will be visible to the devices.
+* （可选）创建一个标签，用于标识哪些设备将拥有接收群组成员身份信息的能力。
+* 创建一个节点属性，标识哪些群组对这些设备可见。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a tailnet policy file.
+你需要具有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 身份才能编辑策略文件。
 
-### (Optional) Create a tag
+### （可选）创建标签
 
-Create a tag so that you can apply the tag to the devices for which you want to receive group information. For purposes of this example, name the tag `prod`.
+创建一个标签，以便将其应用到你希望接收群组信息的设备。在本示例中，把标签命名为 `prod`。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console.
+1. 进入管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
 
-2. If you don't already have a `tagOwners` field in your tailnet policy file, create it.
+2. 如果你的策略文件中还没有 `tagOwners` 字段，请创建它。
 
    ```json {2-4}
    {
@@ -64,7 +64,7 @@ Create a tag so that you can apply the tag to the devices for which you want to 
    }
    ```
 
-3. Within the `tagOwners` field, create a `tag` named `prod` and assign `autogroup:admin` as the tag owner.
+3. 在 `tagOwners` 字段中，创建一个名为 `prod` 的 `tag`，并将 `autogroup:admin` 指定为标签所有者。
 
    ```json {3}
    {
@@ -74,23 +74,23 @@ Create a tag so that you can apply the tag to the devices for which you want to 
    }
    ```
 
-   This lets any admin of your tailnet assign the `prod` tag to devices.
+   这样，你 tailnet 中的任何管理员都可以把 `prod` 标签分配给设备。
 
-### Create the node attribute
+### 创建节点属性
 
-Add a [node attribute][docs-policy-file-node-attributes] (`nodeAttrs`) that grants application layer access of the `tailscale.com/visible-groups` capability for devices that you target.
+添加一个[节点属性][docs-policy-file-node-attributes]（`nodeAttrs`），为你指定的设备授予 `tailscale.com/visible-groups` 能力的应用层访问权限。
 
-1. Create a `nodeAttr` field.
-2. Within the `nodeAttr` field, create a `target` field, and assign its array value. If you created a tag, assign that as the value. Otherwise, assign a set of users, hosts, or IP addresses.
-3. Also within the `nodeAttr` field, create an `app` field.
-4. Within the `app` field, create a `tailscale.com/visible-groups` field, which is the app capability you are going to assign to your devices.
-5. Within the `tailscale.com/visible-groups` field, create a `groups` array and assign it the set of groups that you want to make visible to your devices. The set of groups can be a single wildcard entry \[`"*"`] to make all groups visible, or can be a list of groups.
+1. 创建一个 `nodeAttr` 字段。
+2. 在 `nodeAttr` 字段中创建 `target` 字段，并赋予其数组值。如果你创建了标签，就把它作为值。否则，指定一组用户、主机或 IP 地址。
+3. 同样在 `nodeAttr` 字段中，创建一个 `app` 字段。
+4. 在 `app` 字段中，创建一个 `tailscale.com/visible-groups` 字段，这就是你要分配给设备的应用能力。
+5. 在 `tailscale.com/visible-groups` 字段中，创建一个 `groups` 数组，并赋值为你希望对设备可见的群组集合。该集合可以是单个通配符条目 \[`"*"`] 以使所有群组可见，也可以是群组列表。
 
-   > **Note:**
+   > **注意：**
    >
-   > The tailnet policy file validation does not check whether any of the groups exist in your tailnet.
+   > 策略文件校验不会检查这些群组是否真的存在于你的 tailnet 中。
 
-Your entry for the node attribute should be similar to:
+你的节点属性条目应类似于：
 
 ```json
 "nodeAttrs": [
@@ -114,15 +114,15 @@ Your entry for the node attribute should be similar to:
 ]
 ```
 
-## Verify group visibility using the Tailscale CLI
+## 使用 Tailscale CLI 验证群组可见性
 
-On a device that has the `node-attr-visible-groups` node attribute, you can verify group visibility by running the [`tailscale status`][docs-tailscale-cli-status] command:
+在具有 `node-attr-visible-groups` 节点属性的设备上，你可以运行 [`tailscale status`][docs-tailscale-cli-status] 命令来验证群组可见性：
 
 ```shell
 tailscale status -json
 ```
 
-The output contains a `Groups` field that lists a user's group membership:
+输出包含一个 `Groups` 字段，列出用户的群组成员身份：
 
 ```json {10-13}
 {
@@ -147,9 +147,9 @@ The output contains a `Groups` field that lists a user's group membership:
 }
 ```
 
-## Verify group visibility using tsnet
+## 使用 tsnet 验证群组可见性
 
-[`tsnet`][docs-tsnet] is a library that lets you embed Tailscale inside a Go program. You can modify the [Hello tsnet][docs-create-basic-tsnet-app] example to also report group membership.
+[`tsnet`][docs-tsnet] 是一个让你把 Tailscale 嵌入 Go 程序的库。你可以修改 [Hello tsnet][docs-create-basic-tsnet-app] 示例，让它同时报告群组成员身份。
 
 ```go {15}
 [...]

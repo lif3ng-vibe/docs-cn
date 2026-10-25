@@ -1,78 +1,77 @@
 ---
-title: "Install Tailscale with cloud-init"
-description: "Install Tailscale automatically on the first boot of a machine with cloud-init."
+title: "使用 cloud-init 安装 Tailscale"
+description: "使用 cloud-init 在机器首次启动时自动安装 Tailscale。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Cloud-init is a standard mechanism for initializing new server images, typically with a cloud provider. The project was started by Canonical, and is now supported by [multiple operating systems and most major Linux distributions][xt-cloudinit-distros] and is available on [nearly all public cloud providers][xt-cloudinit-datasources-supported].
+Cloud-init 是一种用于初始化新服务器镜像的标准机制，通常与云服务商配合使用。该项目由 Canonical 发起，如今已获得[多种操作系统和大多数主流 Linux 发行版][xt-cloudinit-distros]的支持，并可在[几乎所有公共云服务商][xt-cloudinit-datasources-supported]上使用。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景信息和示例。
 
-[How to use cloud-init and Tailscale part 1 | Automate your cloud infrastructure as code! (video)](https://www.youtube.com/watch?v=e-X5FJwrkaA)
+[如何使用 cloud-init 与 Tailscale（第 1 部分）| 用基础设施即代码自动化你的云！(视频)](https://www.youtube.com/watch?v=e-X5FJwrkaA)
 
-This document only touches on a subset of cloud-init's capabilities. In particular, it provides a template to direct a new machine to automatically join a tailnet on first boot with a "cloud-config" file. This kind of file is used in the user data portion of the cloud-init process. The specifics of how to provide this file vary between cloud providers; we've provided some links in the [vendor-specific documentation][ar-vendor-specific-cloud-init-documentation] section.
+本文只涉及 cloud-init 功能的一部分。具体来说，它提供了一个模板，让新机器在首次启动时通过"cloud-config"文件自动加入 tailnet。这类文件用于 cloud-init 流程的 user data（用户数据）部分。如何提供该文件的具体方式因云服务商而异；我们在[厂商专属文档][ar-vendor-specific-cloud-init-documentation]一节提供了一些链接。
 
-Because of cloud-init's connection to providers of major cloud infrastructure, it's typically associated with use cases involving the automated instantiation of many machines. Indeed, this document may be of assistance to users who are spinning up many nodes and want them each to join a tailnet without manual configuration.
+由于 cloud-init 与主要云基础设施提供商关系密切，它通常与需要自动化创建大量机器的使用场景联系在一起。事实上，对于要批量创建许多节点、并希望它们无需手动配置即可各自加入 tailnet 的用户，本文正好能帮上忙。
 
-This cloud-init configuration may also be helpful for users who are only creating a small number of nodes, and want to be able to interact with those machines over Tailscale as soon as they are available. For example, a user may be creating a machine on a public VPS to provide an exit node or a service available over the tailnet. Using cloud-init can make the machine accessible over Tailscale immediately, without having to first set up SSH and log in to do initial configuration.
+对于只创建少量节点、并希望机器一可用就能通过 Tailscale 与其交互的用户，这套 cloud-init 配置同样有帮助。例如，用户可能在公共 VPS 上创建一台机器，用作出口节点或通过 tailnet 提供的服务。使用 cloud-init 可以让机器立即通过 Tailscale 可达，而不必先设置 SSH 并登录进行初始配置。
 
-> **Note:**
+> **注意：**
 >
-> We've developed a [utility called Tailgraft][xt-gh-tailscale-tailgraft] to automate the use of cloud configuration files on Raspberry Pi machines. Read more in the
-> [blog post announcing the tool][xt-tailgraft].
+> 我们开发了一个名为 [Tailgraft][xt-gh-tailscale-tailgraft] 的工具，用于在树莓派机器上自动化使用云配置文件。更多信息请参阅[发布该工具的博客文章][xt-tailgraft]。
 
-All the Tailscale installation and configuration occurs in a block called `runcmd` that specifies commands to run toward the end of the first boot process. If you've already got a cloud-config file, you can add this block to the end of it, or it can serve as the entire file.
+Tailscale 的所有安装与配置都放在名为 `runcmd` 的块中，该块指定在首次启动过程接近尾声时运行的命令。如果你已有 cloud-config 文件，可以把这个块追加到文件末尾；它也可以直接作为整个文件使用。
 
-As indicated in the template, this usage requires an [auth key][docs-auth-keys]. You can generate an auth key from the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console, or through an authenticated instance of the [get-authkey utility][docs-oauth-clients-get-authkey-utility].
+如模板所示，这种用法需要[认证密钥][docs-auth-keys]（auth key）。你可以在管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面生成认证密钥，或通过已认证的 [get-authkey 工具][docs-oauth-clients-get-authkey-utility]实例生成。
 
-## A cloud-config sample template
+## cloud-config 示例模板
 
 ```
 #cloud-config
-# The above header must generally appear on the first line of a cloud config
-# file, but all other lines that begin with a # are optional comments.
+# 上面这行头部通常必须出现在 cloud-config 文件的第一行，
+# 但其他以 # 开头的行都是可选注释。
 
 runcmd:
-  # One-command install, from https://tailscale.com/download/
+  # 一条命令完成安装，来自 https://tailscale.com/download/
   - ['sh', '-c', 'curl -fsSL https://tailscale.com/install.sh | sh']
-  # Set sysctl settings for IP forwarding (useful when configuring an exit node)
+  # 设置 IP 转发的 sysctl 配置（配置出口节点时有用）
   - ['sh', '-c', "echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && sudo sysctl -p /etc/sysctl.d/99-tailscale.conf" ]
-  # Generate an auth key from your Admin console
+  # 在管理控制台生成认证密钥
   # https://console.tailscale.com/admin/settings/keys
-  # and replace the placeholder below
+  # 并替换下面的占位符
   - ['tailscale', 'up', '--auth-key=tskey-abcdef1432341818']
-  # (Optional) Include this line to make this node available over Tailscale SSH
+  # （可选）加入这一行，让该节点可通过 Tailscale SSH 访问
   - ['tailscale', 'set', '--ssh']
-  # (Optional) Include this line to configure this machine as an exit node
+  # （可选）加入这一行，把该机器配置为出口节点
   - ['tailscale', 'set', '--advertise-exit-node']
 ```
 
-## Vendor-specific cloud-init documentation
+## 厂商专属 cloud-init 文档
 
-This list of vendors is not exhaustive; if you don't find your preferred cloud provider here, try searching its documentation for "cloud-init" to find how to enter your cloud-config data. The summaries here are provided as a starting point, but more information is available at each of the links below.
+以下厂商列表并不详尽；如果这里没有你偏好的云服务商，请在它的文档中搜索"cloud-init"，了解如何录入你的 cloud-config 数据。这里的摘要只是起点，更多信息请查看下面的各个链接。
 
 * [Amazon EC2][xt-aws-ec2-pass-user-data]\
-  Add the cloud-config info in the **User data** field under **Advanced details** when launching a new instance from the web dashboard, or provide a file path with the `--user-data` flag of the `aws` command line tool.
+  在 Web 控制台启动新实例时，在 **Advanced details**（高级详情）下方的 **User data** 字段中填入 cloud-config 信息；或者通过 `aws` 命令行工具的 `--user-data` 标志提供文件路径。
 * [Google Cloud][xt-google-create-instance]\
-  Specify a cloud-config file path with the `--metadata-from-file` flag and the `user-data` field of the `gcloud` command line tool.
+  使用 `gcloud` 命令行工具的 `--metadata-from-file` 标志和 `user-data` 字段指定 cloud-config 文件路径。
 * [Microsoft Azure][xt-entra-cloud-init]\
-  Specify a cloud-config file path as a parameter to the `--custom-data` flag of the `az` command line tool.
+  将 cloud-config 文件路径作为 `az` 命令行工具 `--custom-data` 标志的参数指定。
 * [Digital Ocean][xt-digital-ocean-provide-user-data]\
-  Open **Advanced Options** from the Droplet creation web dashboard and provide cloud-config info after selecting **Add Initialization scripts**, or specify a path to the `--user-data` or `--user-data-file` flags of the `doctl` command line tool.
+  在 Droplet 创建页面的 Web 控制台中打开 **Advanced Options**，选择 **Add Initialization scripts** 后填入 cloud-config 信息；或者为 `doctl` 命令行工具的 `--user-data` 或 `--user-data-file` 标志指定路径。
 * [Vultr][xt-vultr-deploy-cloudinit-userdata]\
-  Add cloud-config data by checking the **Enable Cloud-Init User-Data** box in the **Additional Features** section of the deployment page, or provide the data itself as an argument to the `--userdata` field of the `vultr-cli` command line tool.
+  在部署页面的 **Additional Features** 部分勾选 **Enable Cloud-Init User-Data** 复选框来添加 cloud-config 数据；或者将数据本身作为 `vultr-cli` 命令行工具 `--userdata` 字段的参数提供。
 * [Linode][xt-linode-add-user-data]\
-  Provide cloud-config data in the **Add User Data** section of the **Create Linode** tool, or provide the base64-encoded cloud-config data as an argument to the `--metadata.user_data` flag of the `linode-cli` command line tool.
+  在 **Create Linode** 工具的 **Add User Data** 部分提供 cloud-config 数据；或者将 base64 编码后的 cloud-config 数据作为 `linode-cli` 命令行工具 `--metadata.user_data` 标志的参数提供。
 * [Oracle Cloud][xt-oracle-custom-scripts]\
-  Provide cloud-config data or a cloud-config file from the web console by selecting **Initialization Script** in the **Advanced Options** section of the **Custom Create** workflow, or provide the base64-encoded cloud-config data as a value with the `user-data` key to the `--node-metadata` flag of the `oci` command line tool
+  在 Web 控制台的 **Custom Create** 流程中，于 **Advanced Options** 部分选择 **Initialization Script** 来提供 cloud-config 数据或文件；或者将 base64 编码后的 cloud-config 数据以 `user-data` 键的取值形式提供给 `oci` 命令行工具的 `--node-metadata` 标志
 
 - [Hetzner][xt-hetzner-cloud-config]\
-  Provide cloud-config data in the **Cloud config** text box in the **Cloud Console** creation flow.
+  在 **Cloud Console** 创建流程的 **Cloud config** 文本框中提供 cloud-config 数据。
 
-[ar-vendor-specific-cloud-init-documentation]: #vendor-specific-cloud-init-documentation
+[ar-vendor-specific-cloud-init-documentation]: #厂商专属-cloud-init-文档
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 
@@ -82,7 +81,7 @@ This list of vendors is not exhaustive; if you don't find your preferred cloud p
 
 [xt-cloudinit-datasources-supported]: https://docs.cloud-init.io/en/latest/reference/datasources.html#datasources-supported
 
-[xt-cloudinit-distros]: https://docs.cloud-init.io/en/latest/reference/availability.html
+[xt-cloudinit-distros]: https://docs.cloudinit.io/en/latest/reference/availability.html
 
 [xt-digital-ocean-provide-user-data]: https://docs.digitalocean.com/products/droplets/how-to/provide-user-data/#providing-user-data
 

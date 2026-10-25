@@ -1,298 +1,279 @@
 ---
-title: "Fast user switching"
-description: "Fast user switching lets you quickly switch between two or more logged-in accounts on the same device, without requiring you to re-authenticate."
+title: "快速用户切换"
+description: "快速用户切换让你在同一台设备上已登录的两个或更多账户之间快速切换，无需重新进行身份验证。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-Fast user switching lets you quickly switch between two or more logged-in accounts on the same device, without
-requiring you to re-authenticate.
+快速用户切换（fast user switching）让你可以在同一台设备上已登录的两个或更多账户之间快速切换，而无需重新进行身份验证。
 
-> **Note:** Fast user switching is available for [all plans](https://tailscale.com/pricing).
+> **注意：** 快速用户切换适用于[所有套餐](https://tailscale.com/pricing)。
 
-## How it works
+## 工作原理
 
-A Tailscale client device lets only one active account log in at a time.
-With fast user switching, a user on the client device can quickly switch to an account on
-another [tailnet][docs-tailnet].
+Tailscale 客户端设备同一时间只允许一个活跃账户登录。
+借助快速用户切换，客户端设备上的用户可以快速切换到另一个 [tailnet][docs-tailnet] 上的账户。
 
-This will not require re-authentication unless one of the following is true:
+除非出现以下情况之一，否则无需重新进行身份验证：
 
-* The account being switched to has never been used on the device.
-* The device's [node key][bl-tailscale-key-management-node-keys] for the tailnet being switched to has expired.
+* 要切换到的账户从未在该设备上使用过。
+* 该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期。
 
-A device is not able to transmit packets on multiple tailnets simultaneously.
-When using fast user switching between tailnets, one tailnet doesn't have knowledge of the other tailnet's existence, nor
-whether the client device is also in another tailnet.
+一台设备无法同时在多个 tailnet 上传输数据包。
+在 tailnet 之间使用快速用户切换时，一个 tailnet 不知道另一个 tailnet 的存在，也不知道客户端设备是否同时在另一个 tailnet 中。
 
-Note that the active Tailscale client account is independent of which account is used to log into the
-Tailscale [admin console](https://console.tailscale.com/admin). You can have only one active account logged into the Tailscale
-client on a device, but if you have multiple browsers open, you can simultaneously use different accounts
-to log in to the admin console.
+请注意，Tailscale 客户端的活跃账户与用于登录 Tailscale [管理控制台](https://console.tailscale.com/admin)的账户相互独立。一台设备上只能有一个活跃账户登录 Tailscale 客户端，但如果你打开了多个浏览器，就可以同时用不同账户登录管理控制台。
 
-### Adding an account to a device
+### 向设备添加账户
 
-You can add an account in either the client application (for macOS, iOS, and Windows) or using the
-[Tailscale CLI][docs-cli] (for Linux, macOS, and Windows).
+你可以通过客户端应用（适用于 macOS、iOS 和 Windows）或 [Tailscale CLI][docs-cli]（适用于 Linux、macOS 和 Windows）添加账户。
 
-#### Adding an account using the client application
+#### 使用客户端应用添加账户
 
 #### macOS
 
-If you are running Tailscale v1.60.0 or later:
+如果你运行的是 Tailscale v1.60.0 或更高版本：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select **Settings**.
-3. Select **Accounts**.
-4. Select **Add Account**.
-5. In the browser window that opens, log in with the desired account to complete the authentication process.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择 **设置**（Settings）。
+3. 选择 **账户**（Accounts）。
+4. 选择 **添加账户**（Add Account）。
+5. 在打开的浏览器窗口中用目标账户登录，以完成身份验证流程。
 
-If you are running a Tailscale version earlier than v1.60.0:
+如果你运行的是 v1.60.0 之前的 Tailscale 版本：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select the account that is currently logged on.
-3. Select **Add another account**.
-4. In the browser window that opens, log in with the desired account to complete the authentication
-   process.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择当前已登录的账户。
+3. 选择 **添加其他账户**（Add another account）。
+4. 在打开的浏览器窗口中用目标账户登录，以完成身份验证流程。
 
 #### iOS
 
-1. Tap on the profile picture at the top right of the screen to open the **Settings** section.
-2. Tap on the account details at the top of the screen to reveal the user switcher.
-3. Tap on **Add another account**.
-4. In the browser window that opens, log in with the desired account to complete the authentication
-   process.
+1. 点按屏幕右上角的个人头像，打开 **设置**（Settings）板块。
+2. 点按屏幕顶部的账户信息，展开用户切换器。
+3. 点按 **添加其他账户**（Add another account）。
+4. 在打开的浏览器窗口中用目标账户登录，以完成身份验证流程。
 
 #### Windows
 
-1. Right-click the Tailscale icon in the Windows system tray.
-2. Hover over or select the account that is currently signed in. Or the **Accounts** menu if no account is currently active.
-3. Select **Add another account**.
-4. In the browser window that opens, log in with the desired account to complete the authentication process.
+1. 右键单击 Windows 系统托盘中的 Tailscale 图标。
+2. 悬停或选择当前登录的账户；如果没有活跃账户，则选择 **账户**（Accounts）菜单。
+3. 选择 **添加其他账户**（Add another account）。
+4. 在打开的浏览器窗口中用目标账户登录，以完成身份验证流程。
 
 #### Android
 
-1. Tap the upper right-hand icon.
-2. Tap the account that is currently logged on.
-3. Tap **Add another account**.
-4. In the browser window that opens, log in with the desired account to complete the authentication process.
+1. 点按右上角的图标。
+2. 点按当前已登录的账户。
+3. 点按 **添加其他账户**（Add another account）。
+4. 在打开的浏览器窗口中用目标账户登录，以完成身份验证流程。
 
-#### Adding an account using the CLI
+#### 使用 CLI 添加账户
 
-1. Run the [`tailscale login`][docs-cli-login] command:
+1. 运行 [`tailscale login`][docs-cli-login] 命令：
 
    ```shell
    tailscale login
    ```
 
-2. Use the URL that is opened to specify the account that you want to use and complete the authentication process.
+2. 使用打开的 URL 指定你要使用的账户，并完成身份验证流程。
 
-### Switching between accounts
+### 在账户之间切换
 
-You can switch between accounts in either the client application (for macOS, iOS, and Windows) or using
-the [Tailscale CLI][docs-cli] (for Linux, macOS, and Windows).
+你可以通过客户端应用（适用于 macOS、iOS 和 Windows）或 [Tailscale CLI][docs-cli]（适用于 Linux、macOS 和 Windows）在账户之间切换。
 
-This step assumes you have already [added an additional account][ar-add-account-to-device] to the client device.
+此步骤假设你已经向客户端设备[添加了其他账户][ar-add-account-to-device]。
 
-#### Switching between accounts using the client application
+#### 使用客户端应用在账户之间切换
 
 #### macOS
 
-1. Select the Tailscale icon in the menu bar.
-2. Select the account that is currently logged on.
-3. Select the account that you want to switch to.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择当前已登录的账户。
+3. 选择你要切换到的账户。
 
-You won't be asked to re-authenticate unless the device's [node key][bl-tailscale-key-management-node-keys]
-for the tailnet being switched to has expired.
+除非该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期，否则不会要求你重新进行身份验证。
 
 #### iOS
 
-1. Tap on the profile picture at the top right of the screen to open the **Settings** section.
-2. Tap on the account details at the top of the screen to reveal the user switcher.
-3. Tap on the account that you want to switch to.
+1. 点按屏幕右上角的个人头像，打开 **设置**（Settings）板块。
+2. 点按屏幕顶部的账户信息，展开用户切换器。
+3. 点按你要切换到的账户。
 
-You won't be asked to re-authenticate unless the device's [node key][bl-tailscale-key-management-node-keys]
-for the tailnet being switched to has expired.
+除非该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期，否则不会要求你重新进行身份验证。
 
 #### Windows
 
-1. Right-click the Tailscale icon in the Windows system tray.
-2. Select the account that is currently logged on.
-3. Select the account that you want to switch to.
+1. 右键单击 Windows 系统托盘中的 Tailscale 图标。
+2. 选择当前已登录的账户。
+3. 选择你要切换到的账户。
 
-You won't be asked to re-authenticate unless the device's [node key][bl-tailscale-key-management-node-keys]
-for the tailnet being switched to has expired.
+除非该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期，否则不会要求你重新进行身份验证。
 
 #### Android
 
-1. Tap the upper right-hand icon.
-2. Tap the account that is currently logged on.
-3. Tap the account that you want to switch to.
+1. 点按右上角的图标。
+2. 点按当前已登录的账户。
+3. 点按你要切换到的账户。
 
-You won't be asked to re-authenticate unless the device's [node key][bl-tailscale-key-management-node-keys]
-for the tailnet being switched to has expired.
+除非该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期，否则不会要求你重新进行身份验证。
 
-#### Switching between accounts using the CLI
+#### 使用 CLI 在账户之间切换
 
-Use the [`tailscale switch`][docs-cli-switch] command to switch between accounts.
+使用 [`tailscale switch`][docs-cli-switch] 命令在账户之间切换。
 
 ```shell
 tailscale switch alice@example.com
 ```
 
-You won't be asked to re-authenticate unless the device's [node key][bl-tailscale-key-management-node-keys] for the tailnet being switched to has
-expired.
+除非该设备在要切换到的 tailnet 中的[节点密钥][bl-tailscale-key-management-node-keys]已过期，否则不会要求你重新进行身份验证。
 
-If you previously [set a nickname][ar-setting-a-nickname] for an account, use the nickname when you switch between accounts.
+如果你之前为账户[设置过昵称][ar-setting-a-nickname]，切换账户时请使用该昵称。
 
 ```shell
 tailscale switch work
 ```
 
-### Viewing all accounts
+### 查看所有账户
 
-You can access accounts that have authenticated with the device, using either the client application
-or the [Tailscale CLI][docs-cli].
+你可以通过客户端应用或 [Tailscale CLI][docs-cli] 查看已在该设备上完成身份验证的账户。
 
-#### Viewing account using the client application
+#### 使用客户端应用查看账户
 
 #### macOS
 
-1. Select the Tailscale icon in the menu bar.
-2. Select the account that is currently logged on.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择当前已登录的账户。
 
-The list of accounts will be displayed, with a check mark indicating which account is currently logged in.
+随后会显示账户列表，带勾选标记的即为当前登录的账户。
 
 #### iOS
 
-1. Tap on the profile picture at the top right of the screen to open the **Settings** section.
-2. Tap on the account details at the top of the screen to reveal the user switcher.
+1. 点按屏幕右上角的个人头像，打开 **设置**（Settings）板块。
+2. 点按屏幕顶部的账户信息，展开用户切换器。
 
-The list of accounts will be displayed, with a check mark indicating which account is currently logged in.
+随后会显示账户列表，带勾选标记的即为当前登录的账户。
 
 #### Windows
 
-1. Right-click the Tailscale icon in the Windows system tray.
-2. Select the account that is currently logged on.
+1. 右键单击 Windows 系统托盘中的 Tailscale 图标。
+2. 选择当前已登录的账户。
 
-The list of accounts will be displayed, with the text **(current)** indicating which account is currently logged in.
+随后会显示账户列表，带 **(current)**（当前）字样的即为当前登录的账户。
 
 #### Android
 
-1. Tap the upper right-hand icon.
-2. Tap the account that is currently logged on.
+1. 点按右上角的图标。
+2. 点按当前已登录的账户。
 
-The list of accounts will be displayed, with check mark indicating which account is currently logged in.
+随后会显示账户列表，带勾选标记的即为当前登录的账户。
 
-#### Viewing accounts using the CLI
+#### 使用 CLI 查看账户
 
-Run the [`tailscale switch`][docs-cli-switch] command with the `--list` flag:
+运行带 `--list` 标志的 [`tailscale switch`][docs-cli-switch] 命令：
 
 ```shell
 tailscale switch --list
 ```
 
-The list of accounts will be displayed, with an asterisk indicating which account is currently logged in.
+随后会显示账户列表，带星号的即为当前登录的账户。
 
 ```shell
 alice@example.com
 alice@gmail.com *
 ```
 
-If you [set a nickname][ar-setting-a-nickname] for an account, the `tailscale switch --list` command displays the
-nickname:
+如果你为账户[设置过昵称][ar-setting-a-nickname]，`tailscale switch --list` 命令会显示昵称：
 
 ```shell
 alice@example.com
 work *
 ```
 
-### Setting a nickname
+### 设置昵称
 
-Use the [`tailscale set`][docs-cli-set] command to set a nickname for the currently active account.
+使用 [`tailscale set`][docs-cli-set] 命令为当前活跃账户设置昵称。
 
-Before setting the nickname in this example, let's assume that `tailscale switch --list` shows the
-active account is `alice@example.com`.
+在本例中，假设设置昵称之前 `tailscale switch --list` 显示活跃账户为 `alice@example.com`。
 
 ```shell
 tailscale switch --list
 ```
 
-The output is:
+输出为：
 
 ```shell
 alice@example.com *
 alice@gmail.com
 ```
 
-Set the nickname of the active account to `work`:
+将活跃账户的昵称设置为 `work`：
 
 ```shell
 tailscale set --nickname=work
 ```
 
-Run `tailscale switch --list` again, and read the nickname `work` appear in the output (instead of `alice@example.com`):
+再次运行 `tailscale switch --list`，可以看到输出中出现了昵称 `work`（取代了 `alice@example.com`）：
 
 ```shell
 alice@gmail.com
 work *
 ```
 
-### Logging out of an account
+### 登出账户
 
-You can log out of an account using either the client application or the [Tailscale CLI][docs-cli].
+你可以通过客户端应用或 [Tailscale CLI][docs-cli] 登出账户。
 
-#### Logging out using the client application
+#### 使用客户端应用登出
 
 #### macOS
 
-If you are running Tailscale v1.60.0 or later:
+如果你运行的是 Tailscale v1.60.0 或更高版本：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select **Settings**.
-3. Select **Accounts**.
-4. Select **Log Out**.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择 **设置**（Settings）。
+3. 选择 **账户**（Accounts）。
+4. 选择 **登出**（Log Out）。
 
-If you are running a Tailscale version earlier than v1.60.0:
+如果你运行的是 v1.60.0 之前的 Tailscale 版本：
 
-1. Select the Tailscale icon in the menu bar.
-2. Select the account that is currently logged on.
-3. Select **Log out**.
+1. 在菜单栏中选择 Tailscale 图标。
+2. 选择当前已登录的账户。
+3. 选择 **登出**（Log out）。
 
 #### iOS
 
-1. Tap on the profile picture at the top right of the screen to open the **Settings** section.
-2. Tap on the account details at the top of the screen to reveal the user switcher.
-3. Tap **Log out**.
+1. 点按屏幕右上角的个人头像，打开 **设置**（Settings）板块。
+2. 点按屏幕顶部的账户信息，展开用户切换器。
+3. 点按 **登出**（Log out）。
 
 #### Windows
 
-1. Right-click the Tailscale icon in the Windows system tray.
-2. Select the account that is currently logged on.
-3. Select **Log out**.
+1. 右键单击 Windows 系统托盘中的 Tailscale 图标。
+2. 选择当前已登录的账户。
+3. 选择 **登出**（Log out）。
 
 #### Android
 
-1. Tap the upper right-hand icon.
-2. Tap the account that is currently logged on.
-3. Tap **Log out**.
+1. 点按右上角的图标。
+2. 点按当前已登录的账户。
+3. 点按 **登出**（Log out）。
 
-#### Logging out using the CLI
+#### 使用 CLI 登出
 
-Run the [`tailscale logout`][docs-cli-logout] command to log out the currently active account:
+运行 [`tailscale logout`][docs-cli-logout] 命令登出当前活跃账户：
 
 ```shell
 tailscale logout
 ```
 
-### Limitations
+### 局限性
 
-* You aren't prevented from switching between accounts in the same tailnet. If you don't want to switch
-  between accounts in the same tailnet, re-authenticate the device instead of switching between accounts.
+* 你仍可以在同一 tailnet 内的账户之间切换（系统不会阻止）。如果你不想在同一 tailnet 内切换账户，请对设备重新进行身份验证，而不是在账户之间切换。
 
-[ar-add-account-to-device]: #adding-an-account-to-a-device
+[ar-add-account-to-device]: #向设备添加账户
 
-[ar-setting-a-nickname]: #setting-a-nickname
+[ar-setting-a-nickname]: #设置昵称
 
 [bl-tailscale-key-management-node-keys]: https://tailscale.com/blog/tailscale-key-management#node-keys
 

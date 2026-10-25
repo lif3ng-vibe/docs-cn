@@ -1,57 +1,57 @@
 ---
-title: "Use custom domains with Kubernetes Gateway API and Tailscale"
-description: "Configure custom domains for services exposed through Tailscale using Kubernetes Gateway API, ExternalDNS, and automated TLS certificate management."
+title: "在 Kubernetes Gateway API 中搭配 Tailscale 使用自定义域名"
+description: "使用 Kubernetes Gateway API、ExternalDNS 和自动化 TLS 证书管理，为通过 Tailscale 暴露的服务配置自定义域名。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-## Introduction
+## 简介
 
-While Tailscale provides automatic DNS through MagicDNS with `*.ts.net` domains, you might need to use your own custom domains (such as `app.example.com`) for services exposed through your Tailscale network (known as a tailnet). For example, a custom domain is useful when migrating existing services to Tailscale, complying with organizational requirements for domain naming conventions, or terminating TLS with your own certificates rather than relying on Tailscale's built-in HTTPS.
+虽然 Tailscale 通过 MagicDNS 提供了 `*.ts.net` 域名的自动 DNS，但你可能需要为你通过 Tailscale 网络（称为 tailnet）暴露的服务使用自己的自定义域名（例如 `app.example.com`）。例如，在把现有服务迁移到 Tailscale、满足组织对域名命名规范的要求，或用你自己的证书终结 TLS 而不依赖 Tailscale 内置 HTTPS 时，自定义域名就很有用。
 
-This guide shows you how to integrate the [Kubernetes Gateway API][xt-k8s-gateway-api] with Tailscale to enable custom domains for your services with full [TLS termination][xt-tls-termination] at the Gateway level. You'll configure [Envoy Gateway][xt-envoy-gateway] as your Gateway API implementation to terminate TLS connections, use [ExternalDNS][xt-external-dns] to automatically manage DNS records in your internal DNS resolver, and [cert-manager][xt-cert-manager] to provision and renew TLS certificates. The Gateway terminates TLS using certificates for your custom domain, providing full control over the TLS configuration and certificate management.
+本指南介绍如何将 [Kubernetes Gateway API][xt-k8s-gateway-api] 与 Tailscale 集成，为你的服务启用自定义域名，并在 Gateway 层完成完整的 [TLS 终结][xt-tls-termination]。你将配置 [Envoy Gateway][xt-envoy-gateway] 作为你的 Gateway API 实现来终结 TLS 连接，使用 [ExternalDNS][xt-external-dns] 在你的内部 DNS 解析器中自动管理 DNS 记录，并用 [cert-manager][xt-cert-manager] 来供应和续期 TLS 证书。Gateway 使用你的自定义域名证书来终结 TLS，让你完全掌控 TLS 配置和证书管理。
 
-The solution uses a DNS resolver with local authoritative records for your custom domain, letting you define domain records that exist only within your tailnet. This approach maintains [Tailscale's security model][co-security] while giving you complete control over domain names and TLS termination.
+本方案使用一个为你的自定义域名保存本地权威记录的 DNS 解析器，让你可以定义只存在于 tailnet 中的域名记录。这种方式在保持 [Tailscale 安全模型][co-security]的同时，让你完全掌控域名和 TLS 终结。
 
-By the end of this guide, you'll have a fully automated system where creating a Gateway resource automatically provisions authoritative DNS records for your domain in your internal DNS resolver and obtains TLS certificates, enabling secure access to your services through custom domains across your tailnet.
+读完本指南，你将拥有一套完全自动化的系统：创建 Gateway 资源就会自动在你的内部 DNS 解析器中为你的域名供应权威 DNS 记录并获取 TLS 证书，从而让你能通过自定义域名在整个 tailnet 中安全地访问你的服务。
 
-*（图：Architecture diagram showing traffic flow from Tailscale clients through MagicDNS to an internal DNS resolver with local authoritative records, then to Envoy Gateway terminating TLS and exposed via Tailscale LoadBalancer, routing to backend services in Kubernetes.）*
+*（图：架构图，展示流量从 Tailscale 客户端经 MagicDNS 到保存本地权威记录的内部 DNS 解析器，再到终结 TLS 并通过 Tailscale LoadBalancer 暴露的 Envoy Gateway，最后路由到 Kubernetes 中的后端服务。）*
 
-## Prerequisites
+## 前提条件
 
-Before completing this guide, make sure you have the following:
+完成本指南之前，请确保你具备以下条件：
 
-* A Kubernetes cluster with administrative access
-* [A Tailscale account](https://login.tailscale.com/start) with [Admin](/docs/reference/user-roles) access
-* The [Tailscale Kubernetes Operator installed][docs-operator-install] in your cluster
-* [OAuth credentials configured][docs-operator-oauth] for the Tailscale Kubernetes Operator
-* [Envoy Gateway][xt-envoy-gateway] installed as your Gateway API implementation
-* [ExternalDNS][xt-external-dns] deployed and configured with your DNS provider
-* [cert-manager][xt-cert-manager] installed with a configured ClusterIssuer
-* An internal DNS resolver with local authoritative capabilities (such as [CoreDNS][xt-coredns], [BIND][xt-bind], [Pi-hole][xt-pihole], or cloud provider private DNS zones) that:
-  * Is accessible from your Tailscale devices (using a [subnet router][docs-subnets] if needed)
-  * Can be managed by [ExternalDNS][xt-external-dns] to create authoritative records for your custom domain
+* 一个拥有管理权限的 Kubernetes 集群
+* 一个拥有 [Admin](/docs/reference/user-roles) 权限的 [Tailscale 账户](https://login.tailscale.com/start)
+* 集群中已安装 [Tailscale Kubernetes Operator][docs-operator-install]
+* 已为 Tailscale Kubernetes Operator [配置 OAuth 凭证][docs-operator-oauth]
+* 已安装 [Envoy Gateway][xt-envoy-gateway] 作为你的 Gateway API 实现
+* 已部署 [ExternalDNS][xt-external-dns] 并针对你的 DNS 提供方完成配置
+* 已安装 [cert-manager][xt-cert-manager] 并配置好 ClusterIssuer
+* 一个具备本地权威解析能力的内部 DNS 解析器（例如 [CoreDNS][xt-coredns]、[BIND][xt-bind]、[Pi-hole][xt-pihole] 或云提供商的私有 DNS 区域），并且它：
+  * 可以从你的 Tailscale 设备访问（如有需要，可通过[子网路由器][docs-subnets]）
+  * 可由 [ExternalDNS][xt-external-dns] 管理，为你的自定义域名创建权威记录
 
-## Step 1: Configure Tailscale split DNS
+## 第 1 步：配置 Tailscale 拆分 DNS
 
-To resolve custom domains like `app.example.com` within your tailnet, you need to configure Tailscale's MagicDNS to forward queries for your domain to your internal DNS resolver. This [split DNS][docs-split-dns] configuration ensures that Tailscale devices can resolve your custom domains using local authoritative records while maintaining normal DNS resolution for other domains.
+要在 tailnet 中解析 `app.example.com` 这类自定义域名，你需要配置 Tailscale 的 MagicDNS，把你域名的查询转发到你的内部 DNS 解析器。这一[拆分 DNS][docs-split-dns]配置确保 Tailscale 设备能够使用本地权威记录解析你的自定义域名，同时保持其他域名的正常 DNS 解析。
 
-To configure split DNS:
+配置拆分 DNS：
 
-1. Go to the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-2. Select **Add nameserver** > **Custom**.
-3. Enter the IP address of your internal DNS resolver that will hold authoritative records for your domain.
-4. Enable **Restrict to search domain**.
-5. Enter your custom domain (for example, `example.com`).
-6. Save your changes.
+1. 前往管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。
+2. 选择 **Add nameserver**（添加名称服务器）> **Custom**（自定义）。
+3. 输入将保存你域名权威记录的内部 DNS 解析器的 IP 地址。
+4. 启用 **Restrict to search domain**（限制到搜索域）。
+5. 输入你的自定义域名（例如 `example.com`）。
+6. 保存更改。
 
-With this configuration, when a Tailscale device queries `app.example.com`, MagicDNS forwards the request to your internal DNS resolver. ExternalDNS maintains authoritative DNS records in this resolver, pointing to the Tailscale hostname of your Envoy Gateway.
+采用这一配置后，当 Tailscale 设备查询 `app.example.com` 时，MagicDNS 会把请求转发到你的内部 DNS 解析器。ExternalDNS 在这个解析器中维护权威 DNS 记录，指向你的 Envoy Gateway 的 Tailscale 主机名。
 
-## Step 2: Configure EnvoyProxy with Tailscale integration
+## 第 2 步：配置 EnvoyProxy 与 Tailscale 集成
 
-The EnvoyProxy resource configures how Envoy Gateway exposes its service. By specifying Tailscale as the LoadBalancer provider, you enable Envoy to be accessible through your tailnet.
+EnvoyProxy 资源配置 Envoy Gateway 如何暴露其服务。通过指定 Tailscale 作为 LoadBalancer 提供方，你可以让 Envoy 通过你的 tailnet 被访问。
 
-Create an `EnvoyProxy` resource that configures Envoy to use Tailscale as its LoadBalancer provider:
+创建一个 `EnvoyProxy` 资源，配置 Envoy 使用 Tailscale 作为其 LoadBalancer 提供方：
 
 ```yaml
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -70,13 +70,13 @@ spec:
           tailscale.com/hostname: gateway-envoy
 ```
 
-The `tailscale.com/hostname` annotation assigns a specific Tailscale hostname to the Envoy service (for example, `gateway-envoy.example.com.ts.net`). The `loadBalancerClass: tailscale` tells Kubernetes to use the Tailscale Kubernetes Operator for provisioning the LoadBalancer.
+`tailscale.com/hostname` 注解为 Envoy 服务分配一个特定的 Tailscale 主机名（例如 `gateway-envoy.example.com.ts.net`）。`loadBalancerClass: tailscale` 告诉 Kubernetes 使用 Tailscale Kubernetes Operator 来供应 LoadBalancer。
 
-## Step 3: Create a GatewayClass
+## 第 3 步：创建 GatewayClass
 
-A GatewayClass defines the controller that manages Gateway resources and links them to configuration parameters. This resource connects your Gateway to the EnvoyProxy configuration you created.
+GatewayClass 定义管理 Gateway 资源的控制器，并把资源链接到配置参数。该资源把你的 Gateway 连接到你创建的 EnvoyProxy 配置。
 
-Define a `GatewayClass` that links to your EnvoyProxy configuration:
+定义一个链接到你的 EnvoyProxy 配置的 `GatewayClass`：
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -92,11 +92,11 @@ spec:
     namespace: tailscale
 ```
 
-## Step 4: Deploy the Gateway
+## 第 4 步：部署 Gateway
 
-The Gateway resource defines the network entry point for your custom domain. It specifies which domains to listen for, handles TLS termination, and integrates with cert-manager for automatic certificate provisioning.
+Gateway 资源定义你的自定义域名的网络入口。它指定监听哪些域名、处理 TLS 终结，并与 cert-manager 集成以自动供应证书。
 
-Create a `Gateway` resource that listens for HTTPS traffic on your custom domain:
+创建一个在你的自定义域名上监听 HTTPS 流量的 `Gateway` 资源：
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -126,16 +126,16 @@ spec:
           name: app-example-com-tls
 ```
 
-Key configuration elements:
+关键配置元素：
 
-* The `external-dns: enabled` label enables ExternalDNS to discover and process this Gateway.
-* The `cert-manager.io/cluster-issuer` annotation specifies which ClusterIssuer to use for TLS certificates.
-* The `hostname` field defines which domain this listener handles.
-* The `certificateRefs` points to the Secret where cert-manager stores the TLS certificate.
+* `external-dns: enabled` 标签让 ExternalDNS 能够发现并处理这个 Gateway。
+* `cert-manager.io/cluster-issuer` 注解指定使用哪个 ClusterIssuer 来签发 TLS 证书。
+* `hostname` 字段定义这个监听器处理哪个域名。
+* `certificateRefs` 指向 cert-manager 存储 TLS 证书的 Secret。
 
-## Step 5: Route traffic to your services
+## 第 5 步：把流量路由到你的服务
 
-With the Gateway infrastructure in place, create an `HTTPRoute` to direct traffic to your backend services:
+Gateway 基础设施就绪后，创建一个 `HTTPRoute` 把流量引导到你的后端服务：
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -163,17 +163,17 @@ spec:
           port: 80
 ```
 
-This route configuration:
+这条路由配置：
 
-* Links to your Gateway through `parentRefs`.
-* Specifies which hostname to match.
-* Routes all traffic (path `/`) to your backend service.
+* 通过 `parentRefs` 链接到你的 Gateway。
+* 指定要匹配的主机名。
+* 把所有流量（路径 `/`）路由到你的后端服务。
 
-## Step 6: Configure ExternalDNS for automatic DNS management
+## 第 6 步：配置 ExternalDNS 实现自动 DNS 管理
 
-ExternalDNS automates DNS record creation based on your Gateway resources. Configure it to watch for Gateways with specific labels and create authoritative records in your DNS resolver. This example demonstrates using [Pi-hole][xt-pihole] as your internal DNS resolver with local authoritative capabilities, providing both ad blocking and custom domain resolution within your tailnet.
+ExternalDNS 根据 Gateway 资源自动创建 DNS 记录。将它配置为监视带有特定标签的 Gateway，并在你的 DNS 解析器中创建权威记录。本例演示使用 [Pi-hole][xt-pihole] 作为具备本地权威解析能力的内部 DNS 解析器，在 tailnet 中同时提供广告拦截和自定义域名解析。
 
-Pi-hole needs to be accessible through your tailnet so that Tailscale devices can query it for DNS resolution and so ExternalDNS can manage its records. First, create a secret for the Pi-hole admin password:
+Pi-hole 需要能通过你的 tailnet 访问，这样 Tailscale 设备才能查询它进行 DNS 解析，ExternalDNS 也能管理它的记录。首先，为 Pi-hole 管理密码创建一个 Secret：
 
 ```shell
 kubectl create secret generic pihole-admin \
@@ -181,7 +181,7 @@ kubectl create secret generic pihole-admin \
   -n tailscale
 ```
 
-Install Pi-hole using Helm and expose it through Tailscale:
+使用 Helm 安装 Pi-hole 并通过 Tailscale 暴露它：
 
 ```shell
 helm repo add pihole https://mojo2600.github.io/pihole-kubernetes/
@@ -198,7 +198,7 @@ helm install pihole pihole/pihole \
   --set extraEnvVars.FTLCONF_dns_listeningMode=all
 ```
 
-This configuration exposes Pi-hole's DNS service through Tailscale at `pihole-dns.example.com.ts.net`. With Pi-hole running and accessible through your tailnet, deploy ExternalDNS to manage its records. ExternalDNS watches your Gateway resources and automatically creates DNS records in Pi-hole that point your custom domains to the Gateway's Tailscale address:
+这一配置通过 Tailscale 在 `pihole-dns.example.com.ts.net` 上暴露 Pi-hole 的 DNS 服务。Pi-hole 运行并可通过 tailnet 访问后，部署 ExternalDNS 来管理它的记录。ExternalDNS 监视你的 Gateway 资源，并在 Pi-hole 中自动创建 DNS 记录，把你的自定义域名指向 Gateway 的 Tailscale 地址：
 
 ```shell
 helm repo add external-dns https://kubernetes-sigs.github.io/external-dns
@@ -218,37 +218,37 @@ helm install external-dns external-dns/external-dns \
   --set env[0].valueFrom.secretKeyRef.key=password
 ```
 
-This configuration watches for Gateways labeled with `external-dns: enabled`, creates DNS records for hostnames in `HTTPRoutes`, and manages only records for the `example.com` domain.
+这一配置会监视带有 `external-dns: enabled` 标签的 Gateway，为 `HTTPRoute` 中的主机名创建 DNS 记录，并且只管理 `example.com` 域名的记录。
 
-## Step 7: Verify your configuration
+## 第 7 步：验证你的配置
 
-After deploying all components, verify that your custom domain setup is working correctly. First, check that the Gateway resource has been successfully created and is ready to accept traffic:
+部署全部组件后，验证你的自定义域名设置工作正常。首先，检查 Gateway 资源是否已成功创建并准备好接受流量：
 
 ```shell
 kubectl get gateway custom-domain-gateway -n tailscale
 ```
 
-The Gateway should show as `Programmed` with an address assigned. Once the Gateway is ready, confirm that your custom domain resolves correctly through the split DNS configuration you set up. From a device in your tailnet, run:
+Gateway 应显示为 `Programmed` 并分配了地址。Gateway 就绪后，确认你的自定义域名能通过你设置的拆分 DNS 配置正确解析。在 tailnet 中的一台设备上运行：
 
 ```shell
 nslookup app.example.com
 ```
 
-This should resolve to the IP address of your Envoy Gateway's Tailscale interface. Finally, test end-to-end connectivity to confirm that HTTPS traffic reaches your backend service through the Gateway:
+它应解析为你 Envoy Gateway 的 Tailscale 接口 IP 地址。最后，测试端到端连通性，确认 HTTPS 流量能通过 Gateway 到达你的后端服务：
 
 ```shell
 curl https://app.example.com
 ```
 
-You should receive a response from your backend service with a valid TLS certificate.
+你应该会收到来自后端服务、带有有效 TLS 证书的响应。
 
-## Troubleshooting
+## 故障排除
 
-If you encounter issues with your custom domain setup, refer to [Troubleshoot custom domains with Kubernetes Gateway API and Tailscale][docs-operator-byod-gateway-api-troubleshooting] for detailed troubleshooting guidance.
+如果你在自定义域名设置中遇到问题，请参阅 [Troubleshoot custom domains with Kubernetes Gateway API and Tailscale][docs-operator-byod-gateway-api-troubleshooting] 获取详细的故障排除指南。
 
-## Advanced configurations
+## 高级配置
 
-The following configurations demonstrate advanced use cases for Gateway API with Tailscale. You can improve security by automatically redirecting HTTP requests to HTTPS. Create an `HTTPRoute` that redirects all HTTP traffic:
+以下配置演示 Gateway API 搭配 Tailscale 的高级用例。你可以通过自动把 HTTP 请求重定向到 HTTPS 来提升安全性。创建一个重定向所有 HTTP 流量的 `HTTPRoute`：
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -268,7 +268,7 @@ spec:
             statusCode: 301
 ```
 
-To enable this redirect, add an HTTP listener to your Gateway alongside the existing HTTPS listener:
+要启用这一重定向，在你的 Gateway 中已有的 HTTPS 监听器旁边添加一个 HTTP 监听器：
 
 ```yaml
 listeners:
@@ -281,7 +281,7 @@ listeners:
     # ... rest of HTTPS configuration
 ```
 
-You can also expose DNS services (like Pi-hole) through the same Gateway that handles your HTTPS traffic, providing a unified entry point. Create a Gateway with both HTTPS and DNS listeners:
+你还可以在处理 HTTPS 流量的同一个 Gateway 上暴露 DNS 服务（例如 Pi-hole），提供统一入口。创建一个同时拥有 HTTPS 和 DNS 监听器的 Gateway：
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -311,7 +311,7 @@ spec:
         - kind: TCPRoute
 ```
 
-After adding these listeners, create `TCPRoute` and `UDPRoute` resources to route DNS traffic to your Pi-hole service:
+添加这些监听器后，创建 `TCPRoute` 和 `UDPRoute` 资源，把 DNS 流量路由到你的 Pi-hole 服务：
 
 ```yaml
 ---
@@ -342,7 +342,7 @@ spec:
           port: 53
 ```
 
-This configuration enables clients to use the Gateway's Tailscale IP address for both HTTPS services and DNS resolution. To expose multiple services on different custom domains, configure separate listeners for each domain with its own TLS certificate:
+这一配置让客户端可以同时使用 Gateway 的 Tailscale IP 地址访问 HTTPS 服务和进行 DNS 解析。要在不同的自定义域名上暴露多个服务，请为每个域名配置单独的监听器，并使用各自的 TLS 证书：
 
 ```yaml
 listeners:
@@ -364,7 +364,7 @@ listeners:
       - name: api-example-com-tls
 ```
 
-Instead of managing individual certificates for each subdomain, you can use a single wildcard certificate:
+与其为每个子域名单独管理证书，你也可以使用一张通配符证书：
 
 ```yaml
 hostname: "*.example.com"
@@ -373,7 +373,7 @@ tls:
   - name: wildcard-example-com-tls
 ```
 
-By default, `HTTPRoutes` can only reference backend services in the same namespace. Enable cross-namespace routing by configuring the Gateway's `allowedRoutes`:
+默认情况下，`HTTPRoute` 只能引用同一命名空间中的后端服务。通过配置 Gateway 的 `allowedRoutes` 启用跨命名空间路由：
 
 ```yaml
 allowedRoutes:
@@ -384,18 +384,18 @@ allowedRoutes:
         gateway-access: allowed
 ```
 
-## Conclusion
+## 结语
 
-You've successfully configured custom domains for services exposed through Tailscale using the Kubernetes Gateway API. This setup provides:
+你已成功使用 Kubernetes Gateway API 为通过 Tailscale 暴露的服务配置了自定义域名。这一设置提供了：
 
-* **Automated DNS management**: ExternalDNS automatically creates and updates DNS records based on your Gateway configurations
-* **Automatic TLS certificates**: cert-manager provisions and renews certificates without manual intervention
-* **Flexible routing**: Gateway API enables sophisticated traffic routing rules
-* **Secure access**: All traffic remains within your tailnet, maintaining Tailscale's security model
+* **自动化 DNS 管理**：ExternalDNS 根据你的 Gateway 配置自动创建和更新 DNS 记录
+* **自动 TLS 证书**：cert-manager 无需人工干预即可供应和续期证书
+* **灵活路由**：Gateway API 支持精细的流量路由规则
+* **安全访问**：所有流量都留在你的 tailnet 内，维持 Tailscale 的安全模型
 
-This architecture scales well as you add more services, requiring only new `HTTPRoute` resources to expose additional applications. The combination of Tailscale's secure networking with Kubernetes Gateway API's routing capabilities provides a robust platform for internal service exposure.
+这种架构在你添加更多服务时扩展性良好，只需新增 `HTTPRoute` 资源即可暴露更多应用。Tailscale 的安全网络与 Kubernetes Gateway API 的路由能力相结合，为内部服务暴露提供了一个稳健的平台。
 
-For more advanced configurations, explore [Gateway API traffic policies][xt-gateway-api-policies] or [customize the Tailscale Kubernetes Operator][docs-operator-customization] for your specific requirements.
+要了解更高级的配置，请探索 [Gateway API 流量策略][xt-gateway-api-policies]，或根据你的具体需求[自定义 Tailscale Kubernetes Operator][docs-operator-customization]。
 
 [xt-k8s-gateway-api]: https://kubernetes.io/docs/concepts/services-networking/gateway/
 

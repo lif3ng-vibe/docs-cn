@@ -1,17 +1,10 @@
 ---
-title: "Transparently interconnect microservices between data centers and pods"
-description: "Use Tailscale to transparently interconnect microservices between data centers and pods."
+title: "在数据中心与 Pod 之间透明地互连微服务"
+description: "使用 Tailscale 在数据中心与 Pod 之间透明地互连微服务。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-One of the toughest problems with containers is connecting them to each other
-when they're spread between different data centers and sometimes even
-different cloud providers. You end up having to configure complex,
-error-prone IPsec tunnels, or sometimes send all the traffic to a central
-point and back, creating a single point of failure and congestion.
+容器最棘手的问题之一，是当它们分散在不同数据中心、有时甚至在不同云服务商之间时，如何相互连接。你最终不得不配置复杂且容易出错的 IPsec 隧道，或者有时把所有流量都送到中心点再折返，从而制造出单点故障和拥塞。
 
-Tailscale makes service location transparent, so every node can reach the
-other nodes it needs to reach, safely and securely, no matter where they are
-located. And every connection is subject to your corporate security policy
-and audit trail.
+Tailscale 让服务的位置变得透明：无论其他节点位于何处，每个节点都能安全、可靠地访问它需要访问的节点。而且每条连接都受你的企业安全策略和审计追踪的约束。

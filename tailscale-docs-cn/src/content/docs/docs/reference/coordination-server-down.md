@@ -1,21 +1,21 @@
 ---
-title: "What happens if the coordination server is down?"
-description: "Review how Tailscale handles coordination server downtime."
+title: "协调服务器宕机会发生什么？"
+description: "了解 Tailscale 如何应对协调服务器停机。"
 ---
 
-Last validated May 2, 2025
+最后验证于 May 2, 2025
 
-As described in [our blog post about how Tailscale works][bl-how-tailscale-works], the coordination server is the single, centralized component of Tailscale's architecture. It is responsible for distributing public keys and firewall rules to all Tailscale devices on your network. However, if the coordination server goes down your Tailscale network will mostly continue to function:
+正如[我们关于 Tailscale 工作原理的博客文章][bl-how-tailscale-works]所述，协调服务器（coordination server）是 Tailscale 架构中唯一的集中式组件，负责向你网络中的所有 Tailscale 设备分发公钥和防火墙规则。不过，即使协调服务器宕机，你的 Tailscale 网络大体上仍能继续工作：
 
-* Tailscale does not route any traffic through the coordination server. Instead, Tailscale makes a best effort to create a direct connection between each pair of devices communicating with each other. In cases where a direct connection cannot be established, devices will bounce traffic off of one or more DERP servers, located in different regions all over the world.
-* Devices' keys are stored locally. Devices can continue to communicate with each other until one of the device's keys expires. Note that the expiry time is device-dependent (based on the last time an authentication took place), which might be different between devices in a given network.
-* Firewall rules are cached and enforced on each device, meaning that your existing rules and access control policies will continue to function.
+* Tailscale 不会经由协调服务器路由任何流量。相反，Tailscale 会尽力在每对相互通信的设备之间建立直连。在无法建立直连的情况下，设备会经由部署在全球不同地区的一台或多台 DERP 服务器转发流量。
+* 设备的密钥存储在本地。设备之间可以继续通信，直到其中某台设备的密钥过期。注意，过期时间因设备而异（取决于最后一次认证的时间），同一网络中不同设备的过期时间可能不同。
+* 防火墙规则会缓存在每台设备上并在本地执行，这意味着你现有的规则和访问控制策略将继续生效。
 
-On the other hand, without the coordination server in place:
+另一方面，没有协调服务器时：
 
-* New users and devices cannot be added to the network.
-* Keys cannot be refreshed and exchanged, meaning that existing devices will gradually lose access to each other.
-* Firewall rules cannot be updated.
-* Existing users cannot have their keys revoked.
+* 无法向网络添加新用户和新设备。
+* 密钥无法刷新和交换，这意味着现有设备会逐渐失去彼此的访问能力。
+* 防火墙规则无法更新。
+* 无法撤销现有用户的密钥。
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works

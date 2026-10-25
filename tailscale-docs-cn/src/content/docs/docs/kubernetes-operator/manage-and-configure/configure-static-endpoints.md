@@ -1,33 +1,33 @@
 ---
-title: "Add static endpoints to a cluster"
-description: "Tailscale uses various [NAT traversal techniques][bl-how-nat-traversal-works] to securely connect to other Tailscale nodes without manual intervention. Most of the time, you do not need to open any [f"
+title: "向集群添加静态端点"
+description: "Tailscale 使用多种 [NAT 穿透技术][bl-how-nat-traversal-works]，无需人工干预即可安全连接到其他 Tailscale 节点。大多数情况下，你不需要为 Tailscale 打开任何[防"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-> **Note:**
+> **注意：**
 >
-> This feature is available in Tailscale v1.86 and later, and is only available to proxies within [`ProxyGroups`][docs-proxy-group].
+> 此功能在 Tailscale v1.86 及更高版本中可用，且仅适用于 [`ProxyGroups`][docs-proxy-group] 中的代理。
 
-Tailscale uses various [NAT traversal techniques][bl-how-nat-traversal-works] to securely connect to other Tailscale nodes without manual intervention. Most of the time, you do not need to open any [firewall ports][docs-firewalls] for Tailscale. However, in some scenarios where NAT traversal is unsuccessful, Tailscale proxies deployed by the operator rely on a [relayed connection][docs-derp-region], resulting in lower throughput and performance compared to direct connections. For example, when using AWS NAT Gateways, which are [hard NATs][docs-device-connectivity-hard-nat].
+Tailscale 使用多种 [NAT 穿透技术][bl-how-nat-traversal-works]，无需人工干预即可安全连接到其他 Tailscale 节点。大多数情况下，你不需要为 Tailscale 打开任何[防火墙端口][docs-firewalls]。然而，在某些 NAT 穿透不成功的场景中，Operator 部署的 Tailscale 代理会依赖[中继连接（relayed connection）][docs-derp-region]，与直连相比吞吐量和性能更低。例如使用 AWS NAT 网关这类[硬 NAT（hard NAT）][docs-device-connectivity-hard-nat]时。
 
-In these scenarios, `ProxyClass` provides configuration to use [Kubernetes NodePort services][xt-kubernetes-node-port-service] as extra endpoints to enable direct connections to `ProxyGroups`. After configuring, these endpoints work only for tailnet devices on the same network as that Kubernetes `Node`. If the Kubernetes `Node` has a public IP address, the configured static endpoint is reachable by all Tailscale devices.
+在这些场景中，`ProxyClass` 提供了相应配置，可以使用 [Kubernetes NodePort 服务][xt-kubernetes-node-port-service]作为额外端点，从而启用到 `ProxyGroups` 的直连。配置后，这些端点只对该 Kubernetes `Node` 所在网络中的 tailnet 设备生效。如果该 Kubernetes `Node` 拥有公网 IP 地址，那么配置的静态端点就能被所有 Tailscale 设备访问。
 
-## Configure firewall rules
+## 配置防火墙规则
 
-> **Note:**
+> **注意：**
 >
-> A maximum of two static endpoints are allowed per `ProxyGroup`. To specify which nodes the operator uses for NodePort `Services`, configure the `spec.staticEndpoints.selector` field in the [`ProxyClass` resource][docs-operator-configuring-static-endpoints].
+> 每个 `ProxyGroup` 最多允许两个静态端点。要指定 Operator 将哪些节点用于 NodePort `Services`，请在 [`ProxyClass` 资源][docs-operator-configuring-static-endpoints]中配置 `spec.staticEndpoints.selector` 字段。
 
-To use static endpoints, configure inbound firewall rules for each relevant `Node`'s IP address. Tailscale recommends configuring a sufficient number of ports on the firewall to avoid running out of ports as `ProxyGroup` replicas scale.
+要使用静态端点，请为每个相关 `Node` 的 IP 地址配置入站防火墙规则。Tailscale 建议在防火墙上配置足够数量的端口，以免 `ProxyGroup` 副本扩容时端口耗尽。
 
-## Configure static endpoints
+## 配置静态端点
 
-To configure static endpoints, complete the following steps.
+要配置静态端点，请完成以下步骤。
 
-1. Create a `ProxyClass`.
+1. 创建一个 `ProxyClass`。
 
-   The configuration for static endpoints is exposed as part of the [`ProxyClass`][xt-gh-tailscale-k8s-proxyclass] custom resource, under `spec.staticEndpoints`:
+   静态端点的配置通过 [`ProxyClass`][xt-gh-tailscale-k8s-proxyclass] 自定义资源提供，位于 `spec.staticEndpoints` 下：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -43,11 +43,11 @@ To configure static endpoints, complete the following steps.
            kubernetes.io/os: linux
    ```
 
-   The example above configures `ProxyClass` to use [Kubernetes NodePort services][xt-kubernetes-node-port-service] for the static endpoints. In the `nodePort` configuration, configure a list of `ports`. Ensure the specified ranges have the necessary firewall rules so the endpoints are reachable from other tailnet devices. Use the `selector` field to specify which Kubernetes node's `ExternalIP`s to use for the static endpoints.
+   上面的示例将 `ProxyClass` 配置为使用 [Kubernetes NodePort 服务][xt-kubernetes-node-port-service]作为静态端点。在 `nodePort` 配置中，配置 `ports` 列表。请确保指定的端口范围具有必要的防火墙规则，以便其他 tailnet 设备能够访问这些端点。使用 `selector` 字段指定将哪个 Kubernetes 节点的 `ExternalIP` 用于静态端点。
 
-After creating this `ProxyClass`, reference it on a `ProxyGroup` to configure static endpoints for all its replicas:
+创建此 `ProxyClass` 后，在 `ProxyGroup` 上引用它，为其所有副本配置静态端点：
 
-1. Create a `ProxyGroup`.
+1. 创建一个 `ProxyGroup`。
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -60,7 +60,7 @@ After creating this `ProxyClass`, reference it on a `ProxyGroup` to configure st
      replicas: 3
    ```
 
-   After applying this configuration, the example creates three proxy replicas and three Kubernetes NodePort services to enable connections to the `ProxyGroup` from other tailnet devices:
+   应用此配置后，该示例会创建三个代理副本和三个 Kubernetes NodePort 服务，让其他 tailnet 设备能够连接到这个 `ProxyGroup`：
 
    ```
    NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)           AGE
@@ -69,9 +69,9 @@ After creating this `ProxyClass`, reference it on a `ProxyGroup` to configure st
    prod-2-nodeport        NodePort    172.20.84.83     <none>        22918:31667/UDP   84m
    ```
 
-2. Test the connection.
+2. 测试连接。
 
-   After creating the `ProxyGroup`, create a test `Pod` and expose it using an [HA cluster ingress][docs-operator-cluster-ingress-service-ha] to test the static endpoint:
+   创建 `ProxyGroup` 后，创建一个测试 `Pod`，并使用[高可用集群入站][docs-operator-cluster-ingress-service-ha]将其公开，以测试静态端点：
 
    ```yaml
    apiVersion: v1
@@ -106,38 +106,38 @@ After creating this `ProxyClass`, reference it on a `ProxyGroup` to configure st
          protocol: TCP
    ```
 
-   Run `kubectl get service -n default` to find the Tailscale `Service` IP address used to expose the `Pod` to the tailnet.
+   运行 `kubectl get service -n default` 查找用于把 `Pod` 公开到 tailnet 的 Tailscale `Service` IP 地址。
 
    ```
    NAME         TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)           AGE
    test         LoadBalancer   172.20.50.164    100.64.1.2    80:31109/TCP      2m17s
    ```
 
-   Test for a direct connection to the `Pod` in your tailnet by using the Tailscale `Service` IP address:
+   使用该 Tailscale `Service` IP 地址测试从你的 tailnet 到 `Pod` 的直连：
 
    ```shell
    tailscale ping <external-ip>
    ```
 
-   If a direct connection is successful, observe a log output similar to:
+   如果直连成功，会看到类似如下的日志输出：
 
    ```
    pong from prod-0 (100.64.1.1) via 203.0.113.1:31670 in 91ms
    ```
 
-   If unsuccessful, observe a log output similar to:
+   如果不成功，会看到类似如下的日志输出：
 
    ```
    pong from prod-0 (100.64.1.1) via DERP(nyc) in 90ms
    ```
 
-   If this log output is observed, ensure that:
+   如果看到的是这种日志输出，请确认：
 
-   * Inbound firewall rules are configured appropriately for traffic to flow to the correct Kubernetes nodes and port ranges, as configured in the `ProxyClass`.
+   * 已为流量正确配置入站防火墙规则，使其能够流向 `ProxyClass` 中配置的正确 Kubernetes 节点和端口范围。
 
-   * Selected nodes using `spec.staticEndpoints.nodePort.selector` have `ExternalIP`s in `status.addresses`.
+   * 通过 `spec.staticEndpoints.nodePort.selector` 选中的节点，其 `status.addresses` 中含有 `ExternalIP`。
 
-   * The `staticEndpoints` field on the `ProxyGroup`'s `status.devices` is populated with the correct address using a valid `ExternalIP` and the correct `NodePort` for that replica's `Service`.
+   * `ProxyGroup` 的 `status.devices` 上的 `staticEndpoints` 字段已使用有效的 `ExternalIP` 和该副本 `Service` 的正确 `NodePort` 填充了正确的地址。
 
 [bl-how-nat-traversal-works]: https://tailscale.com/blog/how-nat-traversal-works
 

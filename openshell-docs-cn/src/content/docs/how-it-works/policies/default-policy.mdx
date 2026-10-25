@@ -1,0 +1,78 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "默认策略与基线路径"
+sidebar-title: "默认策略"
+description: "沙箱没有显式或内嵌策略时使用的受限回退策略，以及 OpenShell 添加到沙箱策略的基线路径。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 安全, 策略, Landlock, 文件系统"
+position: 6
+---
+
+本参考描述沙箱没有其他策略时 OpenShell 使用的受限策略，以及 OpenShell 在运行时向沙箱策略添加的文件系统路径。
+
+## 默认策略何时生效
+
+只有在没有全局策略活动、沙箱没有已保存策略、且镜像不含策略时，OpenShell 才使用受限默认策略。不带 `--policy` 创建沙箱本身并不意味着默认策略已生效，因为镜像或 `OPENSHELL_SANDBOX_POLICY` 仍可提供策略。镜像策略无效时，工作负载将无法启动，直到你修复它；此时不会改选默认策略。完整的选择顺序参见[生效策略来自哪里](/how-it-works/policies/overview#生效策略来自哪里)。
+
+## 默认文件系统访问
+
+默认策略把沙箱工作目录纳入读写范围，并对以下路径授予只读访问：
+
+- `/bin`
+- `/usr`
+- `/lib`
+- `/proc`
+- `/dev/urandom`
+- `/etc`
+- `/var/log`
+
+它对 `/tmp` 与 `/dev/null` 授予读写访问。Landlock 用户策略兼容模式为 `best_effort`。
+
+## 默认网络访问
+
+默认策略不定义任何网络规则或中间件，因此所有出站网络访问都被拒绝。挂接的提供商仍可向生效策略添加网络规则。要查看它们，请按[检查所选策略](#检查所选策略)所述比较基础策略与生效策略。
+
+## 默认进程身份
+
+默认策略把进程身份交给计算驱动决定。镜像的 `USER` 指名非 root 用户时，Docker 与 Podman 以该用户运行工作负载；镜像未声明用户时，以 UID 与 GID 1000 运行。镜像用户是 root 时它们会拒绝该镜像，除非你在创建沙箱时传入的策略设置了非 root 的 `run_as_user`。Kubernetes 与 VM 沙箱以其驱动所配置的身份运行。
+
+## 基线文件系统路径
+
+使用网络的沙箱进程需要共享库、DNS 解析与 CA 证书所在的系统路径。生效策略包含至少一条网络规则（包括提供商贡献的规则）时，OpenShell 会在启动时把以下基线路径（baseline paths）加入沙箱的文件系统策略：
+
+| 访问 | 路径 |
+|---|---|
+| 只读 | `/usr`、`/lib`、`/etc`、`/app`、`/var/log`、`/proc`、`/dev/urandom` |
+| 读写 | `/tmp`、`/dev/null` |
+
+只有当基线路径存在且你的策略尚未列出它时，OpenShell 才会添加该路径，因此请在策略中列出工作负载需要的路径，例如 `/app`。OpenShell 绝不改变你列出的路径的访问级别，因此你列为只读的基线读写路径保持只读。策略没有 `filesystem_policy` 小节时，OpenShell 会以 `include_workdir: true` 创建一个。
+
+沙箱会把扩充后的文件系统策略保存为新修订，因此添加的路径会出现在 `openshell policy get --base` 中。全局策略活动期间，沙箱添加这些路径但不保存修订，因此它们不出现在策略视图中。OpenShell 可以拒绝移除文件系统路径的替换策略，因此在整体替换策略时请保留已添加的路径。
+
+运行时还会向工作负载授予对 `/run/openshell-supervisor-ca` 下沙箱 TLS CA 证书的只读访问。该授予不会保存在沙箱策略中。
+
+### GPU 沙箱
+
+在 Docker 与 VM 计算驱动上，请求 GPU 的沙箱在对应 GPU 设备存在时会获得额外路径：
+
+| 访问 | 路径 |
+|---|---|
+| 只读 | `/run/nvidia-persistenced`、`/usr/lib/wsl` |
+| 读写 | `/dev/nvidiactl`、`/dev/nvidia-uvm`、`/dev/nvidia-uvm-tools`、`/dev/nvidia-modeset`、`/dev/dxg`、编号的 `/dev/nvidia<N>` 设备节点，以及 `/proc` |
+
+CUDA 初始化期间会向 `/proc` 下写入线程名，因此 GPU 增补把 `/proc` 从只读改为读写。OpenShell 只在某个路径存在于工作负载中时才添加它。这些路径在运行时生效，不会保存在沙箱策略中。
+
+### 受保护路径
+
+在 Docker、Podman、Kubernetes 与 VM 沙箱上，一条强制的 Landlock 基线保护私有的 `/.openshell` 目录，并要求 Landlock ABI v3。你的文件系统策略叠加在该基线之上，可以收窄访问，但不能暴露 `/.openshell`。`best_effort` 兼容设置不会禁用该保护，也不会允许没有 ABI v3 的内核。
+
+## 检查所选策略
+
+要查看沙箱使用哪个策略，打印它的基础策略与生效策略。全局策略活动时，两条命令都显示全局策略：
+
+```shell
+openshell policy get <sandbox> --base
+openshell policy get <sandbox> --full
+```
+
+两种视图都不包含 OpenShell 仅在运行时授予的路径，例如 CA 证书路径与 GPU 路径。要确认运行中的沙箱实际强制执行的内容，请用 `openshell policy list <sandbox>` 检查修订状态并做测试请求。

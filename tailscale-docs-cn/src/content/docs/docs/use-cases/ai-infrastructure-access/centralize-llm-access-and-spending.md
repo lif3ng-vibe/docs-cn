@@ -1,31 +1,31 @@
 ---
-title: "Centralize LLM access and spending"
-description: "When developers and AI coding agents each use their own LLM API keys, organizations lose visibility into who is using which models, how much they are spending, and what data they are sending to provid"
+title: "集中管理 LLM 访问与支出"
+description: "当开发者和 AI 编码 agent 各自使用自己的 LLM API 密钥时，组织就失去了对以下情况的可见性：谁在使用哪些模型、花费了多少、以及向提供商发送了哪些数据"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Aperture**](/docs/aperture) — Monitor and secure LLM usage with Aperture by Tailscale.
+> [**Aperture**](/docs/aperture)——使用 Tailscale 出品的 Aperture 监控并保护 LLM 用量。
 
-When developers and AI coding agents each use their own LLM API keys, organizations lose visibility into who is using which models, how much they are spending, and what data they are sending to providers. Keys get shared across teams, embedded in CI/CD pipelines, and stored on developer laptops where they are difficult to rotate or revoke.
+当开发者和 AI 编码 agent 各自使用自己的 LLM API 密钥时，组织就失去了对以下情况的可见性：谁在使用哪些模型、花费了多少、以及向提供商发送了哪些数据。密钥在团队之间共享、嵌入 CI/CD 流水线、存放在开发者的笔记本电脑上，难以轮换或吊销。
 
-[Aperture by Tailscale][docs-aperture] acts as a centralized gateway between your LLM clients and upstream providers. You store API keys in one place, grant model access per user or team, and get per-user usage tracking and full request and response logging without changing how developers use their tools.
+[Tailscale 出品的 Aperture][docs-aperture] 充当 LLM 客户端与上游提供商之间的集中式网关。你只需在一处存放 API 密钥、按用户或团队授予模型访问权限，即可获得每用户用量跟踪以及完整的请求与响应日志，而无需改变开发者使用工具的方式。
 
-## Create your Aperture gateway
+## 创建你的 Aperture 网关
 
-1. Sign up at [`aperture.tailscale.com`][xt-aperture-signup] and follow the guided setup. After setup completes, Aperture appears as a device named `ai` in your tailnet.
+1. 在 [`aperture.tailscale.com`][xt-aperture-signup] 注册并按照引导完成设置。设置完成后，Aperture 会作为名为 `ai` 的设备出现在你的 tailnet 中。
 
-   For detailed setup instructions, refer to [get started with Aperture][docs-aperture-get-started].
+   详细的设置说明请参阅[Aperture 入门][docs-aperture-get-started]。
 
-2. Open the Aperture admin dashboard at `http://ai/admin/settings/providers`.
+2. 在 `http://ai/admin/settings/providers` 打开 Aperture 管理仪表板。
 
-3. Add your LLM provider API keys so Aperture can forward requests on behalf of your users.
+3. 添加你的 LLM 提供商 API 密钥，让 Aperture 能够代表你的用户转发请求。
 
-   The following example configures Aperture with both OpenAI and Anthropic providers:
+   以下示例为 Aperture 同时配置 OpenAI 和 Anthropic 两个提供商：
 
    ```json
    {
@@ -47,23 +47,23 @@ When developers and AI coding agents each use their own LLM API keys, organizati
    }
    ```
 
-   Developers never access or handle provider credentials. When a client sends a request specifying a model name, Aperture routes it to the correct provider and injects authentication automatically.
+   开发者无需访问或处理提供商凭证。当客户端发送指定模型名称的请求时，Aperture 会将其路由到正确的提供商，并自动注入认证信息。
 
-   To have each client forward its own credential instead of a shared key, for example to use subscription plans such as Claude Pro or ChatGPT Plus, configure the provider in [passthrough mode][docs-use-passthrough-mode]. Aperture does not hold or manage the subscription itself.
+   如果想让每个客户端转发自己的凭证而非共享密钥（例如使用 Claude Pro 或 ChatGPT Plus 等订阅套餐），可在[直通模式][docs-use-passthrough-mode]下配置该提供商。Aperture 本身不持有也不管理订阅。
 
-   For the full list of supported providers and configuration options, refer to the [Aperture configuration reference][docs-aperture-configuration] and [Supported providers and clients][docs-aperture-provider-compatibility].
+   受支持的提供商与配置选项的完整列表，请参阅 [Aperture 配置参考][docs-aperture-configuration]与[受支持的提供商和客户端][docs-aperture-provider-compatibility]。
 
-## Grant users access to models
+## 授予用户模型访问权限
 
-Aperture is deny-by-default: no user can access any model until you explicitly grant access. Use the `grants` section to control which users or groups can access which models.
+Aperture 默认一律拒绝（deny-by-default）：在你明确授予访问权限之前，任何用户都无法访问任何模型。使用 `grants` 部分控制哪些用户或分组可以访问哪些模型。
 
-Configure grants in the Aperture admin dashboard or in your [tailnet policy file][docs-tailnet-policy-file].
+可以在 Aperture 管理仪表板或你的 [tailnet 策略文件][docs-tailnet-policy-file]中配置授权（grant）。
 
-> **Note:**
+> **注意：**
 >
-> To use groups (for example, `group:ml-engineers`) in Aperture grants, configure [visible groups][docs-visible-groups] in your tailnet policy file so the Aperture gateway can resolve group memberships.
+> 要在 Aperture 授权中使用分组（例如 `group:ml-engineers`），请在你的 tailnet 策略文件中配置[可见分组][docs-visible-groups]，以便 Aperture 网关能够解析分组成员关系。
 
-The following example uses the tailnet policy file to grant your ML engineering team access to all models and give admins full control:
+以下示例通过 tailnet 策略文件授予你的 ML 工程团队访问所有模型的权限，并赋予管理员完全控制权：
 
 ```json
 "grants": [
@@ -90,19 +90,19 @@ The following example uses the tailnet policy file to grant your ML engineering 
 ]
 ```
 
-You can restrict access to specific models by replacing `"**"` with a model name pattern in `provider/model` format. For example, `"models": "anthropic/claude-*"` grants access to all Anthropic Claude models but no others.
+你可以将 `"**"` 替换为 `provider/model` 格式的模型名称模式，从而将访问限制到特定模型。例如，`"models": "anthropic/claude-*"` 表示仅允许访问所有 Anthropic Claude 模型，其他模型一律不行。
 
-For step-by-step instructions on granting access, refer to [grant model access][docs-aperture-grant-model-access].
+授予访问权限的分步操作请参阅[授予模型访问权限][docs-aperture-grant-model-access]。
 
-## Configure AI tools and CI/CD pipelines
+## 配置 AI 工具与 CI/CD 流水线
 
-Point each LLM client at Aperture instead of the provider directly. Aperture identifies requests by [Tailscale device identity][docs-tailscale-identity], not by API key, so clients use a placeholder key value.
+将每个 LLM 客户端指向 Aperture，而不是直接指向提供商。Aperture 依据 [Tailscale 设备身份][docs-tailscale-identity]（而非 API 密钥）识别请求，因此客户端只需使用占位密钥值。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
 ### Claude Code
 
-Create or edit `~/.claude/settings.json`:
+创建或编辑 `~/.claude/settings.json`：
 
 ```json
 {
@@ -113,11 +113,11 @@ Create or edit `~/.claude/settings.json`:
 }
 ```
 
-The `apiKeyHelper` returns a placeholder because Aperture injects credentials automatically. For additional configuration options (Bedrock, Gemini Enterprise Agent Platform), refer to [use Claude Code with Aperture][docs-aperture-use-claude-code].
+`apiKeyHelper` 返回的是占位符，因为 Aperture 会自动注入凭证。其他配置选项（Bedrock、Gemini Enterprise Agent Platform）请参阅[将 Claude Code 与 Aperture 配合使用][docs-aperture-use-claude-code]。
 
-### CI/CD pipelines
+### CI/CD 流水线
 
-For CI/CD environments such as GitHub Actions, set environment variables in your workflow:
+对于 GitHub Actions 等 CI/CD 环境，在工作流中设置环境变量：
 
 ```yaml
 env:
@@ -125,23 +125,23 @@ env:
   ANTHROPIC_API_KEY: "-"
 ```
 
-The CI runner must be in the tailnet for this to work. Use the [Tailscale GitHub Action][docs-tailscale-github-action] to connect runners as ephemeral nodes, or [connect from outside the tailnet][docs-aperture-without-tailnet] for environments where installing Tailscale is not possible. For non-interactive CI jobs, `ts-unplug` gives you a fixed local port that scripts can use as a base URL.
+CI 运行器必须位于 tailnet 中，此方案才能生效。使用 [Tailscale GitHub Action][docs-tailscale-github-action] 将运行器作为临时节点（ephemeral node）接入，或者在无法安装 Tailscale 的环境中[从 tailnet 外部连接][docs-aperture-without-tailnet]。对于非交互式 CI 任务，`ts-unplug` 提供一个固定的本地端口，脚本可以将其用作 base URL。
 
-### Other LLM clients
+### 其他 LLM 客户端
 
-Any LLM client that supports a custom base URL can use Aperture. Set the base URL to `http://ai` and use a placeholder API key. For configuration guides for other tools, refer to [set up LLM clients][docs-aperture-use-your-tools].
+任何支持自定义 base URL 的 LLM 客户端都可以使用 Aperture。将 base URL 设置为 `http://ai`，并使用占位 API 密钥。其他工具的配置指南请参阅[设置 LLM 客户端][docs-aperture-use-your-tools]。
 
-## Monitor usage and review logs
+## 监控用量并审查日志
 
-After traffic flows through Aperture, open the admin dashboard at `http://ai/admin/` to:
+流量经由 Aperture 流转后，打开 `http://ai/admin/` 的管理仪表板即可：
 
-* Track per-user token usage and cost across all models and providers.
-* Review session logs with request and response details.
-* Review tool calls made by AI agents to understand what actions agents take on behalf of users.
+* 跟踪每用户在所有模型和提供商上的 token 用量与费用。
+* 查看包含请求与响应详细信息的会话日志。
+* 审查 AI agent 发起的工具调用，了解 agent 代表用户执行了哪些操作。
 
-Aperture attributes each request to the Tailscale identity of the user or device that sent it, giving you real-time visibility into how your organization uses LLMs.
+Aperture 会将每个请求归因于发送它的用户或设备的 Tailscale 身份，让你实时掌握整个组织的 LLM 使用情况。
 
-For details on the dashboard and available metrics, refer to the [Aperture admin dashboard reference][docs-aperture-dashboard-admin].
+有关仪表板和可用指标的详细信息，请参阅 [Aperture 管理仪表板参考][docs-aperture-dashboard-admin]。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

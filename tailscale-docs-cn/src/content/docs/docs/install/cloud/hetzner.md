@@ -1,52 +1,42 @@
 ---
-title: "Access Hetzner Servers privately using Tailscale"
-description: "Hetzner provides Linux virtual machines from several data centers in Europe. We can use Tailscale to securely access these servers."
+title: "使用 Tailscale 私有访问 Hetzner 服务器"
+description: "Hetzner 在欧洲多个数据中心提供 Linux 虚拟机。我们可以使用 Tailscale 安全地访问这些服务器。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Hetzner provides Linux virtual machines from several data centers in Europe.
-We can use Tailscale to securely access these servers.
+Hetzner 在欧洲多个数据中心提供 Linux 虚拟机。我们可以使用 Tailscale 安全地访问这些服务器。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need a Tailscale network set up and configured with at
-least one existing device. Read our [getting started guide][docs-install]
-if you need help with this.
+在开始本指南之前，你需要先搭建并配置好一个 Tailscale 网络，且其中至少有一台现有设备。如果需要帮助，请阅读我们的[入门指南][docs-install]。
 
-## Step 1: Set up the Tailscale client for the VM
+## 第 1 步：为虚拟机设置 Tailscale 客户端
 
-First, [create a Virtual Machine in the Hetzner Cloud Console][xt-hetzner-run].
+首先，[在 Hetzner Cloud 控制台中创建一台虚拟机][xt-hetzner-run]。
 
-SSH to the system and install the Tailscale client:
+通过 SSH 连入该系统并安装 Tailscale 客户端：
 
 ```shell
 # curl -fsSL https://tailscale.com/install.sh | sh
 # tailscale up
 ```
 
-In the next step we'll remove SSH access from the public IP address, so:
+下一步我们将移除公有 IP 地址上的 SSH 访问，所以现在需要：
 
-1. Find the Tailscale IP address using [`tailscale ip`][docs-cli-ip].
-2. Exit from the SSH session to the public IP address.
-3. Make a new SSH session to the Tailscale IP address.
+1. 使用 [`tailscale ip`][docs-cli-ip] 找到 Tailscale IP 地址。
+2. 退出到公有 IP 地址的 SSH 会话。
+3. 新建一个连接到 Tailscale IP 地址的 SSH 会话。
 
-## Step 2: Allow UDP port 41641
+## 第 2 步：放行 UDP 端口 41641
 
-If at least one side of a tunnel has "easy NAT," where Tailscale can determine the UDP port
-number on the far side of the NAT device, then it will make
-[direct connections to minimize latency.][bl-how-tailscale-works]
-We ensure that Hetzner nodes can make direct connections by allowing UDP port 41641 to ingress
-through the firewall.
+只要隧道至少有一端是"简单 NAT"（easy NAT），即 Tailscale 能够确定 NAT 设备另一侧的 UDP 端口号，它就会建立[直连以降低延迟][bl-how-tailscale-works]。为了让 Hetzner 节点能够建立直连，我们通过防火墙放行 UDP 端口 41641 的入站流量。
 
-In the [Firewall tab of the Hetzner Cloud Console][xt-hetzner-run] select
-the **Create Firewall** button. Delete the SSH and ICMP rules and add a rule allowing UDP
-port 41641.
+在 [Hetzner Cloud 控制台的 Firewall 标签页][xt-hetzner-run]中，点击 **Create Firewall**（创建防火墙）按钮。删除 SSH 和 ICMP 规则，添加一条放行 UDP 端口 41641 的规则。
 
-*（图：Firewall rule for UDP port 41641）*
+*（图：UDP 端口 41641 的防火墙规则）*
 
-If you want to allow direct connection *between* Hetzner VMs, also add an outbound firewall rule
-allowing UDP port 3478.
+如果你想允许 Hetzner 虚拟机*之间*建立直连，还需要添加一条出站防火墙规则，放行 UDP 端口 3478。
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

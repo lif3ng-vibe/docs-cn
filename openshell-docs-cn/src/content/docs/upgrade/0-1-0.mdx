@@ -1,0 +1,130 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "升级到 NVIDIA OpenShell 0.1.0"
+sidebar-title: "0.1.0"
+description: "帮助 OpenShell 运维者与用户为 0.1.0 版本中的破坏性变更做好准备。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 升级, 迁移"
+---
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution">
+本地 OpenShell 0.0.x 安装无法就地升级。请先清理旧运行时并[卸载现有包](/about/installation#卸载-openshell)，再安装 OpenShell 0.1.0。
+</Aside>
+
+OpenShell 0.1.0 对部署、沙箱（sandbox）、策略（policy）、API 与 SDK 引入了破坏性变更。升级前，请先审阅适用于你角色的变更：
+
+- [运维人员](#运维人员)：规划发布节奏，迁移配置与凭据（credential），并更新自定义扩展（extension）。
+- [最终用户](#最终用户)：更新沙箱工作流、策略、API 客户端与 SDK 集成。
+
+## 运维人员
+
+如果你为团队运维 OpenShell，从这里开始。
+
+- **协调升级**。停止所有网关（gateway）副本，备份数据库，然后将网关、计算与凭据驱动、监管器（supervisor）、中间件（middleware）、CLI 客户端与 SDK 客户端升级到同一版本。协议、字段名与时间类型的变更不支持 0.0.x 与 0.1.0 混合对端（[PR #3113](https://github.com/NVIDIA/OpenShell/pull/3113)、[PR #3272](https://github.com/NVIDIA/OpenShell/pull/3272)、[PR #3352](https://github.com/NVIDIA/OpenShell/pull/3352)）。
+
+- **重建所有沙箱**。升级前删除 0.0.x 沙箱，升级后重新创建。持久化的沙箱边界与运行时（runtime）描述符与 0.1.0 不兼容（[PR #2942](https://github.com/NVIDIA/OpenShell/pull/2942)、[PR #3366](https://github.com/NVIDIA/OpenShell/pull/3366)）。
+
+- **升级前导出提供商配置档案（provider profile）**。网关不再包含内置配置档案。升级后，在相同的全局或工作区（workspace）作用域导入已保存的配置档案。将 `claude`、`gh` 等配置档案别名替换为规范 ID `claude-code` 与 `github`（[PR #2962](https://github.com/NVIDIA/OpenShell/pull/2962)、[PR #3383](https://github.com/NVIDIA/OpenShell/pull/3383)）。
+
+  ```shell
+  openshell provider profile export <id> -o yaml --global > <id>.yaml
+  openshell profile import --from ./profiles --global
+  ```
+
+- **将 `gateway.toml` 迁移到 schema 版本 2**。添加 version 字段，把复数形式的计算驱动选择器换成单数形式，将驱动设置移到 `[openshell.drivers.<name>]` 之下，并应用更名后的 Docker、Podman 与 VM 字段。重启前先校验文件。完整字段映射参见[网关配置](/how-it-works/gateways/configuration#迁移到-schema-版本-2)，实现见 [PR #2814](https://github.com/NVIDIA/OpenShell/pull/2814)。
+
+  ```toml
+  [openshell]
+  version = 2
+
+  [openshell.gateway]
+  compute_driver = "kubernetes"
+
+  [openshell.drivers.kubernetes]
+  namespace = "openshell"
+  ```
+
+  ```shell
+  openshell-gateway config preflight --path /etc/openshell/gateway.toml
+  ```
+
+- **把 Helm 应用设置移到 `gatewayConfig`**。用 schema-v2 的 TOML 层级表达网关设置。TLS 密钥、密码、客户端机密（secret）、RBAC、Service、镜像设置与卷保留在 chart 自有的 values 与 Secret 接口中（[PR #3384](https://github.com/NVIDIA/OpenShell/pull/3384)）。
+
+- **检查默认工作负载（workload）镜像（image）**。回退镜像变为最小化的 `nvcr.io/nvidia/base/ubuntu:24.04`，其中不含任何智能体 CLI，也没有烘焙进镜像的策略。裸镜像别名已移除，请指定一个完全限定的镜像引用，并自行构建所需的智能体、工具与启动行为。运行时回退策略拒绝网络访问且不再授予 `/app`；没有 OCI `USER` 的镜像以 UID 与 GID `1000` 运行（[PR #3386](https://github.com/NVIDIA/OpenShell/pull/3386)）。
+
+- **保留凭据加密材料**。新的提供商凭据使用活动网关的凭据驱动，默认采用加密的数据库存储。请保留生成的密钥加密密钥（key-encryption-key）Secret，重新配置刷新授予，并在切换凭据驱动前重建凭据。不要配置空的 `credential_drivers` 列表，也不要让混合版本的网关访问同一批刷新记录（[PR #2437](https://github.com/NVIDIA/OpenShell/pull/2437)）。
+
+- **更新 Kubernetes 用户命名空间配置**。移除 `platform_config.host_users`，改用类型化的沙箱模板（template）`user_namespaces` 字段或 Kubernetes 驱动默认值（[PR #3248](https://github.com/NVIDIA/OpenShell/pull/3248)）。
+
+- **审批调用方指定的计算资源**。计算驱动现在默认禁用调用方提供的 `driver_config`。如果启用该功能，请为每个允许的 PVC、RuntimeClass、PriorityClass、Docker 卷或 Podman 卷打上 `openshell.ai/sandbox-attachable=true` 与 `openshell.ai/sandbox-attachable-workspace=<workspace>` 标签。重建缺乏可验证准入来源证明（provenance）的旧沙箱，向独立驱动传递匹配的准入设置，并在每个拆分的 Helm 工作区 release 上设置 `gateway.allowDriverConfig=true`（[PR #3538](https://github.com/NVIDIA/OpenShell/pull/3538)、[PR #3571](https://github.com/NVIDIA/OpenShell/pull/3571)）。
+
+- **检查 Helm PKI 与 ingress 设置**。PKI 初始化现在默认在超时后使安装或升级失败。必要时增大 `pkiInitJob.timeoutSeconds`；启用 `grpcRoute.backendTLSPolicy` 时设置 `server.tls.enableMtls=false`（[PR #2728](https://github.com/NVIDIA/OpenShell/pull/2728)）。
+
+- **清理孤立的 Helm RBAC 对象**。确认新的带命名空间限定的 `ClusterRole` 与 `ClusterRoleBinding` 之后，若不再有 release 持有旧的固定名称 `openshell-gateway-node-reader` 对象，将其删除（[PR #2939](https://github.com/NVIDIA/OpenShell/pull/2939)）。
+
+- **重建 Kubernetes Secrets 提供商凭据**。无论工作区处于哪种模式，Kubernetes Secrets 凭据驱动都会把每个提供商凭据存储在其配置的 `namespace` 中。移除 `workspace_mode`、`gateway_id` 与 `allow_reference_namespace` 驱动设置；设置了这些项的 `gateway.toml` 会在启动时被拒绝。驱动已存储的凭据不会迁移。请部署一个全新的网关，然后重新创建提供商与刷新授予（[PR #3616](https://github.com/NVIDIA/OpenShell/pull/3616)）。
+
+- **在运维者管理的命名空间中安装 workspace chart**。在 operator 工作区模式下，网关只从 `openshell-workspace` chart 获得 Secret 权限。请在每个运维者管理的命名空间中安装匹配的 chart release，否则沙箱引导会失败（[PR #3616](https://github.com/NVIDIA/OpenShell/pull/3616)）。
+
+- **实现扩展协议协商**。自定义计算驱动、凭据驱动、网关拦截器（interceptor）与中间件必须交换 `PeerMetadata`、使用协议 `1.0` 并声明其所属家族的基础能力。两个对端需要一起升级。参见[扩展协议协商](/extensibility/overview#协议协商)与 [PR #3352](https://github.com/NVIDIA/OpenShell/pull/3352)。
+
+- **移除计算驱动的回调监听器协商**。重新生成自定义计算驱动绑定，并把监管器连接到运维者配置的主网关端点（[PR #3365](https://github.com/NVIDIA/OpenShell/pull/3365)）。
+
+- **更新监管中间件事件**。接受 `MiddlewareDescribeRequest`，把 WebSocket 专属的终止事件类型替换为共享中间件类型，并处理更名与拆分后的结束原因（[PR #3073](https://github.com/NVIDIA/OpenShell/pull/3073)）。
+
+- **重新生成扩展绑定**。更新规范化的请求字段名以及 Protobuf 的 `Timestamp` 与 `Duration` 字段。不要把生成的 0.0.x 绑定与 0.1.0 对端混用（[PR #3113](https://github.com/NVIDIA/OpenShell/pull/3113)、[PR #3272](https://github.com/NVIDIA/OpenShell/pull/3272)）。
+
+- **把经过认证的驱动绑定到运行时身份**。声明 `supports_sandbox_authentication` 的自定义计算驱动必须在 create、start 与 authentication 时返回非空的 `runtime_identity`，并在重启期间遵循 `expected_runtime_identity`，让网关能把引导凭据绑定到当前计算资源（[PR #3531](https://github.com/NVIDIA/OpenShell/pull/3531)）。
+
+## 最终用户
+
+如果你通过 CLI、策略、API 或 SDK 使用 OpenShell，请审阅以下变更。
+
+- **Git 过滤失败会中止上传**。当 Git 过滤失败或未选中任何文件时，`sandbox upload` 与 `sandbox create --upload` 现在会报错退出，而不是不加过滤地上传来源。Git 不可用、仓库损坏或不可访问同样如此。确认位于 Git 工作树之外的来源仍会不加过滤地上传，并警告未应用 `.gitignore` 规则。请更新脚本与 CI，安装 Git 并修复过滤错误；有意不加过滤地传输时传入 `--no-git-ignore`。创建时被拒绝的上传不会影响已运行的沙箱，可用 `sandbox upload` 重试，或用 `sandbox delete` 删除沙箱（[PR #3957](https://github.com/NVIDIA/OpenShell/pull/3957)）。
+
+- **创建沙箱前先构建本地镜像**。`openshell sandbox create --from` 不再构建 Dockerfile 或目录。请用网关的容器引擎构建并打标签，然后传入镜像引用。远程网关需要能从镜像仓库（registry）拉取的镜像（[PR #3214](https://github.com/NVIDIA/OpenShell/pull/3214)）。
+
+  ```shell
+  docker build -t registry.example.com/team/agent:0.1.0 .
+  docker push registry.example.com/team/agent:0.1.0
+  openshell sandbox create --from registry.example.com/team/agent:0.1.0
+  ```
+
+- **显式命名提供商**。尾随沙箱命令不再推断或自动挂接（attach）提供商。请传入 `--provider <name>`；所引用的配置档案缺失时，请让运维者导入（[PR #3383](https://github.com/NVIDIA/OpenShell/pull/3383)）。
+
+- **替换托管推理（inference）路由**。`openshell inference` 命令、路由 API 与 `inference.local` 端点已移除。请为每个沙箱挂接提供商，并使用其原生的模型与请求格式调用其原生端点。参见[从托管推理路由迁移](/how-it-works/inference#从托管推理路由迁移)与 [PR #3195](https://github.com/NVIDIA/OpenShell/pull/3195)。
+
+- **移除 `NetworkBinary.harness`**。在手写策略中，每个二进制保持为只含 `path` 的对象，如 `- path: /usr/bin/curl`；在提供商配置档案中，二进制写成标量路径，如 `- /usr/bin/curl`（[PR #3222](https://github.com/NVIDIA/OpenShell/pull/3222)）。
+
+- **修正未知的策略字段**。手写策略 schema 现在会拒绝拼写错误、已废弃及其他未知字段，而不是忽略它们（[PR #3334](https://github.com/NVIDIA/OpenShell/pull/3334)）。
+
+- **更新端点模式**。针对类型化的 `tls`、`enforcement` 与 `access` 枚举重新生成客户端。移除 `tls: terminate` 与 `tls: passthrough`；需要自动检查时省略 `tls`。不要用 `skip` 替代，因为它会禁用检查（[PR #3187](https://github.com/NVIDIA/OpenShell/pull/3187)、[PR #3414](https://github.com/NVIDIA/OpenShell/pull/3414)）。
+
+- **显式指定 L7 策略编辑的目标**。追加 allow 或 deny 规则的策略更新命令必须包含 `--rule-name` 以及每个 `--binary` 或 `--any-binary`。直接调用 API 时必须发送完整的 `L7RuleTarget`（[PR #3380](https://github.com/NVIDIA/OpenShell/pull/3380)）。
+
+- **发送协商好的 MCP 版本**。MCP 客户端必须在每个初始化之后的请求中携带一个 `MCP-Protocol-Version` 头部（header），端点策略也必须允许该修订版本（[PR #3241](https://github.com/NVIDIA/OpenShell/pull/3241)）。
+
+- **显式选择工作区**。针对 `WorkspaceSelector` 重新生成客户端，并在需要时显式选择字面量 `default` 工作区。省略不再等价于选择它。参见[管理工作区](/how-it-works/workspaces)与 [PR #3245](https://github.com/NVIDIA/OpenShell/pull/3245)。
+
+- **使用规范化的资源名称**。公开的沙箱 RPC 接受沙箱名称加上其所属工作区，而不是内部沙箱 ID。请更新更名后的请求与 JSON 字段，如 `sandbox`、`provider` 与 `name`（[PR #3272](https://github.com/NVIDIA/OpenShell/pull/3272)）。
+
+- **使用 Protobuf 时间类型**。把标量的毫秒、秒与字符串字段替换为 `google.protobuf.Timestamp` 与 `google.protobuf.Duration`。保留字段缺失与零值之间的区别。参见 [Protobuf 时间类型](/sdk/protobuf-time-types)与 [PR #3113](https://github.com/NVIDIA/OpenShell/pull/3113)。
+
+- **替换偏移分页**。发送 `page_size` 与不透明的 `page_token`，只要 `next_page_token` 非空就继续翻页。部分 SDK 的 list 方法可能返回惰性的单遍分页器；只有在确实需要完整集合时才使用 `list_all` 或 `ListAll`（[PR #3249](https://github.com/NVIDIA/OpenShell/pull/3249)、[PR #3256](https://github.com/NVIDIA/OpenShell/pull/3256)、[PR #3279](https://github.com/NVIDIA/OpenShell/pull/3279)）。
+
+- **处理类型化的删除结果**。把 `deleted`、`removed` 与 `revoked` 布尔值替换为 `DeletionOutcome`。将 `ACCEPTED` 视为异步，等待时使用返回的沙箱 ID，只在允许缺失时设置 `allow_missing`。参见 [SDK 删除迁移](/sdk/api-errors#删除的-sdk-迁移)与 [PR #3317](https://github.com/NVIDIA/OpenShell/pull/3317)。
+
+- **更新 SDK 错误处理**。Python 客户端抛出 `GatewayError`，它是 `grpc.RpcError` 但不是 `grpc.Call`。Rust 错误变体包含额外的状态字段。SDK 会暴露重试细节，但不会自动重试变更操作（[PR #3313](https://github.com/NVIDIA/OpenShell/pull/3313)）。
+
+- **用稳定的请求 ID 重试**。变更操作带有 `request_id` 时，用相同的身份、作用域、方法与载荷（payload）重试。取消不会撤销已受理的工作。收到 `REQUEST_OUTCOME_UNCERTAIN` 后先核对结果，而不是提交新 ID。已受理的 exec 重试无法回放输出、退出码或流（stream），因此要单独处理 `REQUEST_STREAM_UNAVAILABLE`（[PR #3321](https://github.com/NVIDIA/OpenShell/pull/3321)、[PR #3323](https://github.com/NVIDIA/OpenShell/pull/3323)、[PR #3324](https://github.com/NVIDIA/OpenShell/pull/3324)）。
+
+- **关闭输入后排空交互式 exec 输出**。关闭请求流会关闭 stdin，但不会结束输出。请并发排空输出，并同时等待退出事件与最终 RPC 状态。Go 客户端使用 `CloseInteractiveInput` 或 `CancelInteractive`；TypeScript 客户端使用 `closeInput()` 或 `cancel()`（[PR #3359](https://github.com/NVIDIA/OpenShell/pull/3359)）。
+
+- **用游标恢复 watch 流**。把流警告视为可恢复的缺口，持久化已处理的最大不透明游标，重连时发送它。如果网关返回 `OUT_OF_RANGE`，丢弃游标并不带恢复地重新开始（[PR #3209](https://github.com/NVIDIA/OpenShell/pull/3209)）。
+
+- **停止导入持久化消息**。`StoredProviderProfile`、刷新状态、存储的策略修订版与 draft-chunk 消息移入了私有存储包，没有公开 API 替代（[PR #3169](https://github.com/NVIDIA/OpenShell/pull/3169)）。
+
+- **替换脚本中的 `gateway info` 调用**。该命令现在返回实时的、需要管理员权限的运行时状态。本地注册元数据请用 `openshell gateway list -o json`（[PR #2202](https://github.com/NVIDIA/OpenShell/pull/2202)）。
+
+- **停止解析配置档案列表表格**。人类可读的列会有变化。脚本中请使用 JSON 或 YAML 输出；结构化的配置档案 schema 不变（[PR #3258](https://github.com/NVIDIA/OpenShell/pull/3258)）。

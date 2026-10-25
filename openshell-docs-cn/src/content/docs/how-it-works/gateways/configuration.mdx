@@ -1,0 +1,1323 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "网关配置文件"
+sidebar-title: "配置"
+description: "OpenShell 网关 TOML 配置文件参考（RFC 0003）。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 网关, 配置, TOML, 参考"
+position: 5
+---
+
+设置了 `--config` 或 `OPENSHELL_GATEWAY_CONFIG` 时，OpenShell 网关从 TOML 文件读取配置。两者都未设置时，若 `$XDG_CONFIG_HOME/openshell/gateway.toml` 存在则读取该文件。不存在配置文件时，网关以内置默认值启动。网关进程参数与网关的 `OPENSHELL_*` 环境变量优先于文件。计算驱动设置放在各驱动的 TOML 表中。完整 schema 参见 [RFC 0003](https://github.com/NVIDIA/OpenShell/blob/main/rfc/0003-gateway-configuration/README.md)。
+
+## 来源优先级
+
+```text
+Gateway CLI flag  >  gateway OPENSHELL_* env var  >  TOML file  >  built-in default
+```
+
+Helm 部署设置 `gatewayConfig` 与由 chart 管理的 Kubernetes 资源，参见[配置 Chart 值](/kubernetes/setup#配置-chart-values)。
+
+`database_url` 只能通过环境变量设置，加载器发现它出现在文件中时会拒绝。`OPENSHELL_DB_URL` 未设置时，网关把 SQLite 数据库存放在 `$XDG_STATE_HOME/openshell/gateway/openshell.db`。
+
+落盘 SQLite 数据库以 WAL 模式加 `synchronous=FULL` 运行：网关把 `openshell.db-wal` 与 `openshell.db-shm` 保存在数据库文件旁边，数据库文件必须位于本地文件系统上，备份必须使用 `sqlite3 openshell.db ".backup <copy>"` 而不是只复制 `openshell.db`。每一次已确认的写入（包括 SSH 会话吊销）都能在断电后幸存。唯一的例外是 SSH 会话签发，它跳过逐次提交同步；断电可能丢失刚签发的会话令牌，客户端必须重新请求。
+
+### 受信任运行时镜像覆盖
+
+Docker、Podman 与 Kubernetes 会使用两个由网关掌控的受信任运行时镜像。需要限定确切的制品或使用镜像仓库镜像时，为网关进程设置完整的带标签或按摘要固定的 OCI 引用：
+
+```shell
+OPENSHELL_SANDBOX_RUNTIME_IMAGE=registry.example.com/openshell/sandbox@sha256:<digest>
+OPENSHELL_SUPERVISOR_IMAGE=registry.example.com/openshell/supervisor:1.2.3
+```
+
+这些设置遵循网关常规的“环境变量优先于文件”次序：
+
+```text
+process environment > [openshell.drivers.<selected>] TOML > compiled release default
+```
+
+`openshell-gateway config preflight` 与网关启动使用相同的有效引用。环境变量值的处理方式与对应的 TOML 字段完全一致，并传递给所选容器运行时；该功能不增加单独的 OCI 引用校验。镜像仓库凭据请在 Docker、Podman 或 Kubernetes image-pull secret 中配置，不要内嵌在引用里。
+
+这些变量只影响内置的 Docker、Podman 与 Kubernetes 驱动，不影响 VM、MXC 或扩展驱动。它们属于受信任的网关运维输入，绝不会从沙箱创建请求中被接受。对 Debian 与 RPM 用户服务，把它们放入 `~/.config/openshell/gateway.env`；该服务会把此文件同时提供给预检和网关启动。
+
+`name` 为网关安装分配一个面向运维的身份标识。通过 `[openshell.gateway].name`、`--name` 或 `OPENSHELL_GATEWAY_NAME` 设置。默认值为 `openshell`；Helm chart 默认将其设为 chart fullname，使同一安装的所有副本共用一个名称。Chart fullname 只在其 Kubernetes 命名空间内唯一，因此当同一个 collector 需要接收来自多个命名空间或集群的遥测数据时，请显式设置 `server.name`。该身份与客户端侧网关别名、TLS 名称以及 `gateway_jwt.gateway_id` 相互独立。
+
+## 软件包管理的配置位置
+
+软件包管理的网关使用内置默认值或由软件包预置的 TOML 文件。如需使用其他文件，在启动环境中设置 `OPENSHELL_GATEWAY_CONFIG`。
+
+| 软件包 | 网关 TOML 位置 |
+|---|---|
+| Homebrew | 存在时使用 `$XDG_CONFIG_HOME/openshell/gateway.toml`，否则使用 Homebrew 前缀配置，如 `/opt/homebrew/var/openshell/gateway.toml`。 |
+| Debian/Ubuntu | `$XDG_CONFIG_HOME/openshell/gateway.toml`，systemd 用户服务通常为 `~/.config/openshell/gateway.toml`。 |
+| Fedora/RHEL RPM | `$XDG_CONFIG_HOME/openshell/gateway.toml`，通常为 `~/.config/openshell/gateway.toml`；systemd 用户服务在首次启动时从软件包内置模板生成该文件。 |
+| snap | 新安装使用 `$SNAP_USER_COMMON/.config/openshell/gateway.toml`，通常为 `~/snap/openshell/common/.config/openshell/gateway.toml`。升级的旧安装保留 `$SNAP_COMMON/gateway.toml`，通常为 `/var/snap/openshell/common/gateway.toml`。 |
+
+Fedora/RHEL RPM 模板不设置 `[openshell.gateway].bind_address`。因此网关使用内置的 `127.0.0.1:17670` 主监听器。使用宿主机网络的 Podman 监管器同样使用该回环端点，主监听器不需要通配地址。只有当客户端必须经其他接口访问主复用 API 时才显式设置 `bind_address`。
+
+Homebrew formula 创建前缀配置时不设置 `bind_address`，因此网关使用内置的 `127.0.0.1:17670` 主监听器。桌面运行时暴露宿主机回环时，使用宿主机网络的 Docker 与 Podman 监管器会复用该监听器。用户配置优先。
+
+Homebrew 与 RPM 升级只迁移与软件包生成的 schema-v1 默认值完全一致的文件。Homebrew 同时识别其空的 v1 前缀配置与受影响的 IPv6 回环变体。RPM 识别其 systemd 用户服务预置的 v1 文件。软件包升级绝不改写被编辑过的文件；被编辑过的 v1 文件请按以下步骤手动迁移。
+
+## 文件结构
+
+文件以 `[openshell]` 为根。网关级设置位于 `[openshell.gateway]` 下。每个计算驱动拥有自己的 `[openshell.drivers.<name>]` 表，凭据驱动拥有 `[openshell.credential_drivers.<name>]` 表。驱动专属的值绝不会从网关作用域继承。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+# ... gateway-wide settings ...
+
+[openshell.gateway.tls]
+# ... gateway listener TLS ...
+
+[openshell.gateway.oidc]
+# ... JWT bearer auth ...
+
+[openshell.drivers.kubernetes]
+# ... driver-specific settings ...
+
+[openshell.credential_drivers.kubernetes-secrets]
+# ... credential-driver-specific settings ...
+```
+
+网关选择器是 `compute_driver = "<driver>"`，接受单个标量驱动名。省略它可保留自动检测。
+
+## 迁移到 schema 版本 2
+
+Schema version 2 是一次有意的破坏性切换。网关拒绝省略 `[openshell] version`、声明 version 1 或声明不受支持的未来版本的文件。迁移现有文件的步骤：
+
+1. 设置 `[openshell] version = 2`。
+2. 将 `compute_drivers = ["<name>"]` 替换为标量的 `compute_driver = "<name>"`。将 `--drivers` 与 `OPENSHELL_DRIVERS` 替换为 `--compute-driver` 与 `OPENSHELL_COMPUTE_DRIVER`。软件包升级会临时接受一个非空 `OPENSHELL_DRIVERS` 值作为已弃用的仅环境变量别名，前提是它与任何规范选择一致。逗号分隔、无效或冲突的旧值会导致启动失败。已移除的 `--driver` 与 `--drivers` 参数仍然不受支持。
+3. 把每个计算驱动选项移入 `[openshell.drivers.<name>]`。Schema version 2 不从 `[openshell.gateway]` 继承驱动默认值。`guest_tls_ca` 保留在网关作用域，移除 `guest_tls_cert` 与 `guest_tls_key`。启用 TLS 的 Docker、Podman 或 VM 网关需要网关 CA，除非软件包管理的本地 TLS 会提供它。TLS 禁用时省略它。Kubernetes 改为通过 `client_tls_secret_name` 把网关 CA 投影到监管器 Pod。
+4. 将 Docker 的 `sandbox_namespace` 改名为 `sandbox_label`，Podman 的 `sandbox_ssh_socket_path` 改名为 `ssh_socket_path`，VM 的 `openshell_endpoint` 改名为 `grpc_endpoint`。
+5. 使用规范的镜像拉取策略：`always`、`if_not_present`、`never`，或 Podman 专属的 `newer`。Kubernetes 风格的大写拼写与 Podman 的 `missing` 写法都会被拒绝。
+6. 移除零值哨兵。省略 `gateway_jwt.ttl_secs` 以使用不过期的本地沙箱会话凭据和 900 秒的类型化扩展令牌默认值；省略 Docker 或 Podman 的 `sandbox_pids_limit` 以使用 OpenShell 默认的 2048 上限；省略 Podman 的 `health_check_interval_secs` 以禁用健康检查。显式零值无效。
+7. 驱动推导的回调地址正确时，移除本地 Docker、Podman 或 VM 的 `grpc_endpoint`，或将其保留为显式覆盖。Kubernetes 裸 TOML 必须提供显式端点；Helm 从 release 的网关 Service 推导。新建 VM 根文件系统优先使用镜像提供的 `sandbox` 账户，不存在时使用 UID/GID 1000。已持久化的 VM 状态保留其记录的或可恢复的身份（包括旧值 10001）；驱动不会把 10001 分配给没有支撑状态的 overlay。
+
+每个 `[openshell.drivers.<name>]` 条目必须是 TOML 表。网关在选择并构造某个驱动时校验该驱动的专属字段；不会反序列化未被选中的驱动表。所选表中出现未知或放错位置的字段会导致启动失败，而不是被静默忽略。
+
+## 完整示例
+
+覆盖所有小节的完整网关配置。按需裁剪字段。
+
+```toml
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+[openshell]
+version = 2
+
+[openshell.gateway]
+name                  = "production-us-west"
+bind_address          = "0.0.0.0:8080"
+health_bind_address   = "0.0.0.0:8081"
+metrics_bind_address  = "0.0.0.0:9090"
+
+log_level             = "info"
+
+# Connection ceiling for the gateway's database pool. Omit to use the backend
+# default: 10 for Postgres, 5 for on-disk SQLite.
+database_max_connections = 10
+
+# Connection ceiling for the Postgres mutation lock pool. Omit to use 4.
+database_lock_max_connections = 4
+
+# When omitted, the gateway auto-detects Kubernetes, then Podman, then Docker.
+# VM is never auto-detected and requires an explicit entry here.
+compute_driver        = "kubernetes"
+
+# Optional external provider credential storage backend. Omit this key to use
+# the gateway's default encrypted database credential storage.
+credential_drivers        = ["kubernetes-secrets"]
+
+ssh_session_ttl_secs  = 3600
+
+# Absolute image preparation and initial supervisor startup budget.
+# Applies to new attempts only; allowed values are 1 through 86400 seconds.
+image_preparation_timeout_seconds = 1800
+
+# Reject invalid policy generations securely by default. Set
+# "retain_last_valid" only when availability takes priority.
+policy_validation_failure_mode = "fail_closed"
+
+# How supervisors receive configuration. "poll" keeps periodic polling.
+# "push" sends configuration over the supervisor session to supervisors that
+# apply it; supervisors that do not support streamed configuration keep polling.
+config_delivery_mode = "poll"
+
+# Subject Alternative Names baked into the gateway server certificate.
+# Wildcard DNS SANs (e.g. "*.dev.openshell.localhost") also enable sandbox
+# service URLs under that domain.
+server_sans                  = ["openshell", "*.dev.openshell.localhost"]
+# Allow plaintext HTTP routing for loopback sandbox service URLs.
+enable_loopback_service_http = true
+# Serve the WebSocket tunnel for CLI clients behind an authenticating edge proxy.
+enable_websocket_tunnel = false
+
+# Set true only for local plaintext gateways or trusted TLS termination.
+disable_tls = false
+
+# The supervisor gateway CA remains a gateway setting. TLS-enabled Docker,
+# Podman, and VM gateways require it unless package-managed local TLS supplies
+# it automatically. Omit it when TLS is disabled. Kubernetes projects the CA
+# from client_tls_secret_name instead. Driver tables must not repeat this field.
+guest_tls_ca            = "/etc/openshell/certs/ca.pem"
+
+# Optional gRPC rate limit. Both values must be positive to enable the limit.
+# Reflection queries use a separate counter with the same count and window.
+# Set either value to 0, or omit both, to disable rate limiting.
+grpc_rate_limit_requests       = 120
+grpc_rate_limit_window_seconds = 60
+
+# Optional exact provider-profile source composition. When omitted, the
+# gateway uses imported profiles only.
+provider_profile_sources = [
+  { type = "user" },
+]
+
+# Operator-run supervisor middleware. The gRPC endpoint must be reachable from
+# both the gateway and sandbox supervisors.
+[[openshell.supervisor.middleware]]
+name = "local-content-guard"
+grpc_endpoint = "https://host.openshell.internal:50051"
+tls_ca_cert_path = "/etc/openshell/certs/content-guard-ca.pem"
+audience = "urn:openshell:middleware:local-content-guard"
+max_payload_bytes = 262144
+timeout = "500ms"
+
+# Gateway listener TLS (distinct from the supervisor gateway CA).
+# client_ca_path is optional; omit it for HTTPS-only listeners that do not
+# verify client certificates.
+[openshell.gateway.tls]
+cert_path             = "/etc/openshell/certs/gateway.pem"
+key_path              = "/etc/openshell/certs/gateway-key.pem"
+client_ca_path        = "/etc/openshell/certs/client-ca.pem"
+# Optional: SNI-based dual certificate for external (e.g. ACME) TLS.
+# external_cert_path    = "/etc/openshell/certs/external.pem"
+# external_key_path     = "/etc/openshell/certs/external-key.pem"
+# external_server_names = ["gateway.example.com"]
+
+[openshell.gateway.gateway_jwt]
+signing_key_path = "/etc/openshell/jwt/signing.pem"
+public_key_path  = "/etc/openshell/jwt/public.pem"
+kid_path         = "/etc/openshell/jwt/kid"
+gateway_id       = "openshell"
+# Optional; defaults to 900 seconds.
+ttl_secs         = 3600
+
+[openshell.gateway.auth]
+allow_unauthenticated_users = false
+
+[openshell.gateway.mtls_auth]
+enabled = false
+operator_enabled = false # Opt-in: trusted OU=operator grants gateway-wide administration.
+
+# OTLP export. Omit this table entirely to disable it.
+[openshell.gateway.otlp]
+endpoint     = "http://otel-collector.observability.svc:4317"
+service_name = "openshell-gateway"
+
+[openshell.gateway.oidc]
+issuer                           = "https://idp.example.com/realms/openshell"
+audience                         = "openshell-cli"
+jwks_ttl_secs                    = 3600 # Must be greater than zero.
+jwks_allowed_origins             = ["https://keys.example.com"] # Default: issuer origin only.
+dangerously_allow_insecure_http = false # Development-only numeric-loopback escape hatch.
+roles_claim                      = "realm_access.roles"
+admin_role                       = "openshell-admin"
+user_role                        = "openshell-user"
+scopes_claim                     = ""
+
+[[openshell.gateway.interceptors]]
+name               = "quota"
+grpc_endpoint      = "unix:///run/openshell/interceptors/quota.sock"
+audience           = "urn:openshell:interceptor:quota"
+order              = 10
+failure_policy     = "fail_closed"
+binding_policy     = "allowlist"
+timeout            = "500ms"
+max_response_bytes = 1048576
+max_patches        = 32
+
+[[openshell.gateway.interceptors.bindings]]
+rpc            = "openshell.v1.OpenShell/CreateSandbox"
+phases         = ["modify_operation", "validate"]
+failure_policy = "fail_closed"
+
+[[openshell.gateway.interceptors.bindings]]
+rpc    = "openshell.v1.OpenShell/UpdateConfig"
+phases = ["validate"]
+
+[openshell.drivers.kubernetes]
+namespace              = "openshell"
+# Required in raw TOML; Helm derives this from the gateway Service.
+grpc_endpoint          = "https://openshell-gateway.openshell.svc:8080"
+default_image          = "nvcr.io/nvidia/base/ubuntu:24.04"
+# Defaults to the gateway version; override to pin a specific build.
+# supervisor_image     = "ghcr.io/nvidia/openshell/supervisor:<version>"
+client_tls_secret_name = "openshell-client-tls"
+service_account_name   = "openshell-sandbox"
+host_gateway_ip        = "10.0.0.1"
+enable_user_namespaces = false
+sa_token_ttl_secs      = 3600
+
+[openshell.credential_drivers.kubernetes-secrets]
+namespace = "openshell"
+```
+
+设置 `[openshell.gateway.mtls_auth] enabled = true` 可把验证过的客户端证书映射为 CLI 用户身份。该网关策略与计算驱动无关，在配置了客户端 CA 且未使用 OIDC 时默认开启。监听器允许只携带 Bearer 令牌的客户端，并依据配置的 CA 校验出示的任何客户端证书。监管器使用 `guest_tls_ca` 认证网关，并使用沙箱 Bearer 令牌认证其 RPC。
+
+设置 `[openshell.gateway.mtls_auth] operator_enabled = true`、`--enable-operator-auth true` 或 `OPENSHELL_ENABLE_OPERATOR_AUTH=true` 可启用直接 mTLS operator。默认值为 false。需要 TLS 与客户端 CA。该设置与 `enabled` 及 OIDC 相互独立。带确切 `OU=operator` 的验证证书在所有工作区获得用户/平台管理员能力，并可访问 `GetProviderCredentials`。不要将 operator 证书与 `Authorization` 头部同时使用。证书信任边界参见[认证](/how-it-works/gateways/authentication#mtls-operator)。
+
+客户端证书握手策略没有 `require_client_auth` TOML 字段。传输层上客户端证书是可选的；由网关 RPC 授权强制既定的用户或沙箱身份。
+
+`[openshell.gateway.tls]` 支持可选的基于 SNI 的双证书模式，适用于内部与外部服务器证书分离的部署。设置 `external_cert_path` 与 `external_key_path` 指向外部（例如 ACME/公共受信）证书和密钥。在 `external_server_names` 中列出应使用外部证书提供服务的主机名。TLS SNI 主机名匹配其中之一时连接收到外部证书；其余连接（包括没有 SNI 的连接）收到来自 `cert_path`/`key_path` 的主内部证书。两个字段必须同时设置——只提供一个属于配置错误。Kubernetes 上使用 Helm chart 时，设置了 `certManager.serverIssuerRef.name` 即自动管理外部证书；chart 会用 cert-manager 签发的外部服务器证书填充这些字段。
+
+`[openshell.gateway] policy_validation_failure_mode` 控制完整候选策略未通过运行时校验时沙箱监管器的行为。默认值 `fail_closed` 会停用之前的网络策略，关闭固定在该策略上的中继，并拒绝新的出站流量，直到有效代次加载完成。`retain_last_valid` 让上一个有效代次保持生效。两种模式都原子性地拒绝候选策略；启动时，工作负载保持未启动状态，直到有效策略与匹配的提供商配置通过准入。两种模式下，被拒绝的启动都会暴露 `ConfigurationInvalid`，并保持可用于策略/提供商修复。能够预检已知有效作用域的网关变更路径会在持久化之前拒绝无效候选，并且无论该设置如何，活动策略保持不变。修改该值需要重启网关，使其重新加载 `gateway.toml` 并把新姿态分发给沙箱监管器。
+
+`[openshell.gateway.gateway_jwt] ttl_secs` 控制为沙箱会话签发的、与代次绑定的面向网关及沙箱协议（Sandbox Protocol）的凭据，以及类型化扩展 JWT。省略它即使用不过期的本地沙箱会话凭据：两个会话令牌都带 `exp = 0`，监管器跳过周期性的会话令牌续期，刷新响应也省略其过期时间戳。省略该字段时，类型化扩展 JWT 保持 900 秒默认值。只在本地单人使用的 Docker、Podman 或 VM 网关上省略。显式 `0` 无效。Kubernetes 与其他共享部署应设置正 TTL；Helm 默认渲染 `3600` 秒，Kubernetes 网关省略该字段时网关会记录警告。
+
+监听器 TLS 与沙箱启动签名使用不同的密钥。可工作的 HTTPS 监听器或 mTLS 客户端证书并不能提供启动 VM 沙箱所需的签名密钥。按上例在 `[openshell.gateway.gateway_jwt]` 中配置 `signing_key_path`、`public_key_path`、`kid_path` 与 `gateway_id`。本地安装时，`openshell-gateway generate-certs --output-dir <tls-dir>` 会在 TLS 证书包旁边写入签名包。没有显式 `gateway_jwt` 配置时，网关在 `OPENSHELL_LOCAL_TLS_DIR` 下发现 `jwt/signing.pem`、`jwt/public.pem` 与 `jwt/kid`；该变量未设置时则在 OpenShell 状态目录的 `tls/` 目录下发现。显式签名配置优先于本地发现。
+
+网关在启动时拒绝残缺或无效的签名包，包括私钥与公钥不匹配的情况。所选驱动要求启动签名而没有配置签名包时，沙箱创建在驱动校验或准备沙箱之前失败。错误信息会指明签名配置与发现位置；不会打印密钥或令牌。VM 驱动也会在解析镜像或创建沙箱状态之前校验启动材料。
+
+外部计算驱动通过在扩展元数据的 `required_capabilities` 中加入 `openshell.compute.launch-authentication` 来声明这一要求。这要求网关理解启动签名预检并在创建时提供 `SandboxLaunchAuthentication`。使用其他启动机制的驱动可以省略该要求。另一个独立的 `supports_sandbox_authentication` 能力描述的是 `AuthenticateSandbox` RPC，不要求启动签名。
+
+`[openshell.gateway.auth] allow_unauthenticated_users = true` 是一个不安全的本地开发和受信任代理逃生开关。它接受没有 OIDC 或 mTLS 凭据的用户侧 CLI/API 调用，而沙箱监管器仍使用网关签发的沙箱 JWT 认证。共享与生产网关请保持 false。
+
+## 数据库连接池
+
+`[openshell.gateway] database_max_connections` 设置网关数据库连接池的连接上限。所有基于数据库的 RPC 共用一个池，因此该值也是网关并发数据库工作的上限。池被占满时，调用方在获取连接处排队，sqlx 会记录获取连接耗时超过其慢阈值。后台就绪监控器也从同一个池取连接，因此持续占满可能使其数据库 ping 超过检查超时，把 `/readyz` 翻转为 not-ready，而网关其他方面仍在正常服务。
+
+省略该键即使用后端默认值，与早期版本一致：
+
+| 后端 | 默认上限 |
+|---|---|
+| Postgres | 10 |
+| SQLite（落盘） | 5 |
+| SQLite（内存） | 1，始终如此。数据库存在于其唯一连接内部，因此配置的值会被忽略，网关会记录这一点。 |
+
+等价参数与环境变量为 `--db-max-connections` 与 `OPENSHELL_DB_MAX_CONNECTIONS`；Helm 部署在 `gatewayConfig.openshell.gateway` 下设置该键。小于 `1` 的值在启动时被拒绝：零尺寸的池会阻塞每一次获取而不是优雅降级。Postgres 至少需要 `2`，因为 SSH 身份锁在查询池期间会占用一个数据连接，所以网关在此处也拒绝 `1`。
+
+在 Postgres 上，网关在独立的锁池上持有变更（mutation）咨询锁，每个受保护变更在其运行或等待期间占用一个连接。`[openshell.gateway] database_lock_max_connections` 设置该池的上限，默认 `4`，从而限定一个副本在 Postgres 上同时运行或等待的受保护变更数量。所有锁连接都被占用时，后续受保护变更排队等待；只有在其 10 秒锁等待耗尽前没有任何连接释放时才以 `MUTATION_LOCK_TIMEOUT` 失败。等价参数与环境变量为 `--db-lock-max-connections` 与 `OPENSHELL_DB_LOCK_MAX_CONNECTIONS`；Helm 部署在 `gatewayConfig.openshell.gateway` 下设置该键。小于 `1` 的值在启动时被拒绝。SQLite 没有锁池，网关在该后端上忽略此键并记录这一事实。
+
+在 Postgres 上，每个副本都会打开两个池，因此按 `(database_max_connections + database_lock_max_connections) × replicaCount` 规划连接数，默认配置下每个副本 14 个，并保持总量低于服务器自身的 `max_connections`（以及其前方任何连接池化器的上限）。发布过程会运行额外的 Pod；参见[规划 PostgreSQL 连接](/kubernetes/high-availability#规划-postgresql-连接数)。把任一上限提高到服务器允许的范围之外，会把故障从缓慢获取变成直接拒连。
+
+在 SQLite 上，无论池大小如何，写入者都是串行的，因此更大的上限只能换来读并发。需要更高写入吞吐的网关应使用外部 Postgres 数据库（`server.externalDbSecret`），而不是更大的 SQLite 池。
+
+## OCSF JSONL 输出
+
+`[openshell.gateway.ocsf_log]` 启用一个网关本地文件，保存网关发出的原生 OCSF 事件，包括未关联沙箱的事件。省略该表即禁用。修改该配置后需重启网关。
+
+网关记录使用 `[openshell.gateway] name` 作为 `device.uid` 与 `device.name`，在副本间共享；`device.hostname` 标识副本。为一起采集的每个安装分配不同的名称。默认名称不保证唯一，重命名安装会改变其审计身份。
+
+```toml
+[openshell.gateway.ocsf_log]
+path = "/var/log/openshell/gateway-ocsf.jsonl"
+schema_version = "1.3"
+rotation = "daily"
+max_files = 7
+queue_capacity = 10000
+queue_max_bytes = 16777216
+```
+
+| 字段 | 默认值 | 行为 |
+|---|---|---|
+| `path` | 必填 | 非空文件路径；相对路径以网关工作目录为基准。 |
+| `schema_version` | 原生 OCSF 1.8.0 | 可选降级目标。接受 `1.1` 与 `1.3`。配置的版本作用于文件中的每条记录。 |
+| `rotation` | `daily` | 在新 UTC 日的首次写入时轮转。`never` 允许文件无限增长。 |
+| `max_files` | `7` | 除活动文件外保留的轮转段数（正整数）。与 `rotation = "never"` 显式同用时被拒绝。 |
+| `queue_capacity` | `10000` | 队列记录上限（正整数）。溢出时丢弃新到的记录。 |
+| `queue_max_bytes` | `16777216` | 队列编码字节数上限（正整数）。超过该限制的记录被丢弃。 |
+
+未知字段会被拒绝。这是一个文件接收目标，不是导出器注册表。要把相同事件发送到 collector，请使用 [OCSF 日志导出](#ocsf-日志导出)。现有的 `ocsf_json_enabled` 沙箱设置保持独立。
+
+Helm 安装时，设置 `server.ocsfLog.enabled` 渲染该表，并可选设置 `server.ocsfLog.schemaVersion`。默认的 `server.ocsfLog.path`（`/tmp/gateway-ocsf.jsonl`）在网关容器内无论 StatefulSet 还是 Deployment 工作负载都可写，但不会跨 Pod 重启持久化。要保留记录，请用 `server.extraVolumes` 与 `server.extraVolumeMounts` 挂载卷并把路径设在其上。副本共享卷时，在挂载上添加 `subPathExpr: $(OPENSHELL_POD_NAME)`，让每个副本写自己的文件。
+
+让每个网关副本有自己的可写文件，并让外部采集器（shipper）对所在目录有读权限。新文件在 Unix 上使用仅所有者权限；请特意安排采集器的访问方式。轮转会把活动文件改名为带日期与 UUID 后缀的兄弟文件。采集器必须跟随轮转文件并对进度做检查点。不要在该路径上使用多写入者或外部 copy-truncate 轮转。
+
+网关独立于 `RUST_LOG` 为 OCSF 排队，排除普通诊断，并保留原生事件 ID。每批最多写入 100 条记录，批处理间隔 500 ms。还可以有一个额外的有界批次在途。文件错误不会停止沙箱执行：失败的写入不会重放，重开退避期间后续记录被丢弃。重启后的写入器会在追加前移除不完整的末尾行。
+
+指标包括 `openshell_ocsf_log_queued_total`、`openshell_ocsf_log_written_total`、`openshell_ocsf_log_queue_records`、`openshell_ocsf_log_queue_bytes`、`openshell_ocsf_log_dropped_total`（带一个取值有界的 `reason` 标签）与 `openshell_ocsf_log_writer_errors_total`。恢复过程通过 `openshell_ocsf_log_recovery_discarded_bytes_total` 报告被丢弃的字节数，而不虚构丢失记录数。警告独立于该文件报告写入器故障。
+
+为采集器停机预留足够的保留期与磁盘空间。优雅关闭留出 5 秒排空时间；超出该预算仍未完成的操作系统写入结果不确定。Flush 不等于 fsync。该文件是尽力而为的采集边界，不是持久化接收承诺、重放协议，也不是完整审计历史的证明。沙箱本地的独立输出参见 [OCSF JSON 导出](/observability/ocsf-json-export)。
+
+## OTLP 导出
+
+`[openshell.gateway.otlp]` 启用经 OTLP/gRPC 的 OpenTelemetry 导出。省略该表即禁用导出。其 `endpoint` 是网关导出的所有信号的 collector，仅设置它即可启用追踪（trace）导出。`[openshell.gateway.otlp.traces]` 把 Span 发送到另一个 collector。[OCSF 日志导出](#ocsf-日志导出)在 `[openshell.gateway.otlp.ocsf]` 设置 `enabled = true` 之前保持关闭，且可以使用自己的 collector。
+
+网关已经使用 Rust `tracing` 框架生成发送到 stdout 与沙箱日志流的结构化日志。启用本节会在同一个 tracing subscriber 上加一层 OpenTelemetry。它把 Span 树导出到 OTLP collector，不会把现有诊断日志事件导出、替换或重定向。
+
+```toml
+[openshell.gateway.otlp]
+endpoint     = "http://otel-collector.observability.svc:4317"
+service_name = "openshell-gateway"
+
+# Optional: send spans to a different collector.
+[openshell.gateway.otlp.traces]
+endpoint = "http://traces.observability.svc:4317"
+```
+
+每个启用的信号都需要一个端点，可以在自己的表中，也可以来自 `endpoint`。端点必须是有效 URI。某个端点格式错误时，网关记录配置错误并继续运行，所有 OTLP 导出保持禁用。它在启动时不会连接：不可达的 collector 只会产生导出失败，绝不会导致服务失败。
+
+传输方式**仅支持基于 gRPC 的 OTLP**。不支持 HTTP/protobuf 与 HTTP/JSON，`OTEL_EXPORTER_OTLP_PROTOCOL` 也不起作用。每个端点请指向 collector 的 gRPC 接收器（惯例端口 `4317`），而不是 `4318` 上的 HTTP 接收器。仅凭 URI 无法区分两者，因此 HTTP 端点在启动时被接受、导出时失败。
+
+TLS 使用 `https://` 端点。网关对照系统信任根校验 collector 证书。
+
+OpenTelemetry SDK 在启动后记录导出失败。失败批次中的 Span 被丢弃而不是重试。
+
+`service_name` 设置网关的 `service.name` 资源属性，默认为 `openshell-gateway`。
+
+网关把追踪端点传给计算驱动与沙箱监管器，它们把自己的 Span 导出到该端点，因此追踪 collector 还必须能从沙箱访问。常规或高频操作的 Span 使用 DEBUG 级别，仅在网关或沙箱日志级别为 `debug` 时导出。追踪内容、Span 名称与资源属性参见[追踪](/observability/traces)。
+
+Helm 部署时，设置 `server.otlp.endpoint` 渲染该表。可选的 `server.otlp.serviceName` 覆盖网关服务名；驱动服务名固定不变。`traces` 与 `ocsf` 表通过 `gatewayConfig` 设置，后者把每个键渲染为 TOML 表：
+
+```yaml
+gatewayConfig:
+  openshell.gateway.otlp.traces:
+    endpoint: https://traces-backend:4317
+  openshell.gateway.otlp.ocsf:
+    enabled: true
+```
+
+本地 `mise run helm:k3s:create` 工作流会安装追踪 collector 与 UI，在受支持的版本上启用 Agent Sandbox controller 追踪，并配置 controller 与既有 Skaffold 部署自动向其导出追踪。
+本地 `gateway`、`gateway:docker`、`gateway:podman` 与 `gateway:vm` 任务还会在生成的配置中设置网关安装名。默认值因驱动而异（`kubernetes-dev`、`docker-dev`、`podman-dev`、`vm-dev`），其文档记载的 `OPENSHELL_*_GATEWAY_NAME` 覆盖项会同时更新 CLI 注册与导出遥测身份。
+运行 `mise run helm:k3s:forward` 可把 OTLP/gRPC 转发到本地端口 `4317`、把追踪 UI 转发到本地端口 `18888`。Skaffold 已部署 Kubernetes 网关时，该任务还会把它转发到本地端口 `8090`；否则只继续转发 collector 端口。Skaffold run 任务会在 worktree 专属的 k3d 集群名下注册转发的网关；用 `openshell gateway select <name>` 选择它。本地 Podman、Docker 与 VM 网关任务会自动把 Span 与 OCSF 日志记录导出到转发的接收器。
+
+进程内计算驱动从 `[openshell.drivers.<name>]` 读取其后端专属设置。外部驱动的网关表只提供 `socket_path`；外部驱动进程本身通过该二进制的参数或环境变量配置。声明了 `supports_sandbox_authentication` 的驱动可以经计算驱动协议认证不透明的引导凭据。它必须从沙箱创建与凭据认证返回相同的非空运行时身份。启动请求包含先前记录的不透明身份，使驱动能在轮换代次专属计算资源时保留稳定资源。对 `IssueSandboxToken`，网关在返回与代次绑定的会话 JWT 之前，先验证沙箱存在且驱动/运行时身份与持久化预置记录匹配。进程内 Kubernetes 驱动从 `[openshell.drivers.kubernetes]` 读取 `service_account_name`、`workspace_mode` 与命名空间发现配置；外部 Kubernetes 驱动通过自己的 CLI 或环境变量契约接收等价值。
+
+### OCSF 日志导出
+
+在 `[openshell.gateway.otlp.ocsf]` 中设置 `enabled = true` 可把网关 OCSF 事件导出为 OTLP 日志记录。默认为 `false`，因此仅启用追踪导出绝不会发送 OCSF 事件。记录发往该表的 `endpoint`；省略时发往 `[openshell.gateway.otlp]` 的 `endpoint`，资源属性与 Span 相同，位于 `openshell.ocsf` instrumentation scope 下。用单独的端点把 OCSF 事件发给供 SIEM 使用的 collector，而 Span 发往别处。沙箱监管器收到相同的端点与 schema 版本，并直接把自身 OCSF 事件导出到那里，因此该端点也必须能从沙箱访问。监管器记录携带监管器的资源属性，包括 `openshell.sandbox.id` 与 `openshell.gateway.name`。监管器还会发送网关用于 OCSF 导出的 collector 头部（来自 `OTEL_EXPORTER_OTLP_LOGS_HEADERS`，否则 `OTEL_EXPORTER_OTLP_HEADERS`），因此要求认证的 collector 也会接受它们的记录。网关把头部随每个沙箱的启动凭据一起交付，绝不通过沙箱环境传递。其他 `OTEL_*` 变量不会到达监管器。
+
+```toml
+[openshell.gateway.otlp.ocsf]
+enabled        = true
+endpoint       = "http://siem-collector.security.svc:4317" # optional
+schema_version = "1.3"                                     # optional
+```
+
+每个 OCSF 事件成为一条日志记录：
+
+| 字段 | 值 |
+|---|---|
+| 正文 | 以 JSON 字符串表示的 OCSF 事件。`schema_version` 设为 `1.1` 或 `1.3` 时，记录按 [OCSF JSONL 输出](#ocsf-jsonl-输出)所述方式降级。 |
+| 时间戳 | OCSF 的 `time`。观测时间戳是网关收到事件的时刻。 |
+| 严重级别 | Unknown、Informational 与 Other 映射为 INFO，Low 为 WARN，Medium 为 WARN2，High 为 ERROR，Critical 为 ERROR2，Fatal 为 FATAL。严重级别文本为 OCSF 严重级别名称。 |
+| 属性 | `ocsf.class_uid`、`ocsf.activity_id`、`ocsf.severity_id`、`ocsf.metadata.uid`，以及关联沙箱的事件的 `openshell.sandbox.id`。这些取自降级前的事件，因此降级从正文移除这些字段时它们依然保留。 |
+
+日志导出独立于 `RUST_LOG` 与 `[openshell.gateway.ocsf_log]`；两者可以同时启用。网关最多排队 10,000 条记录、含导出中批次在内最多 16 MiB，不会阻塞事件生产者。队列达到 100 条或 1 MiB 即导出一个批次，或在批次首条记录到达 500 ms 后导出。大于 1 MiB 的记录（例如请求路径极长的事件）被丢弃而不是导出。
+
+失败的批次会以退避方式重试，最多四次，因此投递是至少一次语义。以 `ocsf.metadata.uid` 去重。每次尝试最多持续导出器超时时间（默认 10 秒），因此无响应的 collector 可能让一个批次滞留约 40 秒，同时新记录填满队列。仍然失败的批次中的记录、因队列已满被拒的记录与超大记录都会被丢弃并计数。下一个导出的批次会包含一条事件名为 `openshell.ocsf.gap` 的 WARN 记录，其中 `openshell.ocsf.gap.dropped` 是丢弃的记录数，`openshell.ocsf.gap.since_unix_ms` 是首次丢失的时间。关闭期间，网关在 5 秒预算内对每个剩余批次尝试一次，然后放弃仍在进行的导出。关闭期间丢失的记录不产生 gap 记录。
+
+collector 可以接受一个批次同时拒绝其中部分记录，即 OTLP 部分成功。网关把这样的批次计为已导出，导出器把被拒记录数作为警告记录。Gap 记录与 `openshell_ocsf_otlp_dropped_total` 只覆盖网关丢弃的记录，collector 拒绝的记录请查看 collector 自身的指标。
+
+指标包括 `openshell_ocsf_otlp_queued_total`、`openshell_ocsf_otlp_exported_total`、`openshell_ocsf_otlp_dropped_total`（`reason` 标签取值为 `queue_capacity`、`queue_bytes`、`oversized`、`export_failed`、`serialization` 或 `closed`）、`openshell_ocsf_otlp_export_errors_total` 与 `openshell_ocsf_otlp_retries_total`。
+
+### 调优
+
+`[openshell.gateway.otlp]` 决定是否导出与导出到哪里。SDK 如何导出由标准 OpenTelemetry 环境变量控制；网关通过 SDK 读取它们，而不是镜像为 TOML 键。它们作用于网关及其进程内计算驱动。网关不把它们传给沙箱监管器，后者只接收端点、OCSF schema 版本与 [OCSF collector 头部](#ocsf-日志导出)。
+
+网关遵循这些变量：
+
+| 变量 | 效果 |
+|---|---|
+| `OTEL_SERVICE_NAME` | `service_name` 未在 `[openshell.gateway.otlp]` 中设置时作为网关的 `service.name`。计算驱动与监管器的服务名固定。 |
+| `OTEL_RESOURCE_ATTRIBUTES` | 额外的资源属性，如 `deployment.environment=prod`。 |
+| `OTEL_TRACES_SAMPLER`、`OTEL_TRACES_SAMPLER_ARG` | 采样策略与比例。默认 `parentbased_always_on`。 |
+| `OTEL_BSP_SCHEDULE_DELAY`、`OTEL_BSP_MAX_QUEUE_SIZE`、`OTEL_BSP_MAX_EXPORT_BATCH_SIZE`、`OTEL_BSP_EXPORT_TIMEOUT` | 批量 Span 处理器调优。 |
+| `OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT`、`OTEL_SPAN_EVENT_COUNT_LIMIT`、`OTEL_SPAN_LINK_COUNT_LIMIT` | 每个 Span 的限制。 |
+| `OTEL_EXPORTER_OTLP_HEADERS`、`OTEL_EXPORTER_OTLP_TIMEOUT` | 所有信号的导出器传输调优。 |
+| `OTEL_EXPORTER_OTLP_COMPRESSION` | 设为 `gzip` 可压缩所有信号的导出。不支持 `zstd`。 |
+| `OTEL_EXPORTER_OTLP_TRACES_HEADERS`、`OTEL_EXPORTER_OTLP_TRACES_COMPRESSION`、`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` | 仅针对 Span 的导出器传输调优。这些会覆盖通用变量。 |
+| `OTEL_EXPORTER_OTLP_LOGS_HEADERS`、`OTEL_EXPORTER_OTLP_LOGS_COMPRESSION`、`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` | 仅针对 OCSF 日志记录的导出器传输调优。这些会覆盖通用变量。 |
+| `SSL_CERT_FILE`、`SSL_CERT_DIR` | `https://` 端点的额外信任根，例如私有 CA。 |
+
+Helm 部署时，用 `server.extraEnv` 设置这些变量。凭据请从 Secret 读取，避免进入 values 文件：
+
+```yaml
+server:
+  extraEnv:
+    - name: OTEL_EXPORTER_OTLP_HEADERS
+      valueFrom:
+        secretKeyRef:
+          name: otel-collector-auth
+          key: headers
+```
+
+以下变量不起作用。只有 `[openshell.gateway.otlp]` 决定导出哪些信号、发往何处，原因有二：
+
+- OCSF 事件是安全记录，因此去向必须是刻意的选择。平台工具可以向进程添加 `OTEL_*` 变量，正如 OpenTelemetry Operator 对 Kubernetes 上带注解的 Pod 所做的那样。这样的变量绝不能开始向 collector 发送安全记录、重定向它们或关闭它们。
+- 网关把导出设置传给计算驱动与沙箱监管器。监管器在每个沙箱内运行，不继承网关的环境，因此它们无法遵循只存在于网关环境中的设置。
+
+| 变量 | 原因 |
+|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT`、`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`、`OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | 启用来源只有一个，即 `[openshell.gateway.otlp]`，环境变量不能悄悄打开或重定向导出。 |
+| `OTEL_SDK_DISABLED`、`OTEL_TRACES_EXPORTER`、`OTEL_LOGS_EXPORTER`、`OTEL_METRICS_EXPORTER` | 由 `[openshell.gateway.otlp]` 决定导出哪些信号。要禁用导出，省略该表。 |
+| `OTEL_EXPORTER_OTLP_PROTOCOL`、`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`、`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` | 网关构建时只包含 gRPC 导出器。 |
+| `OTEL_EXPORTER_OTLP_INSECURE`、`OTEL_EXPORTER_OTLP_CERTIFICATE`、`OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE`、`OTEL_EXPORTER_OTLP_CLIENT_KEY` 及其按信号的变体 | 端点 scheme 决定是否使用 TLS，collector 证书对照系统信任根校验。不支持客户端证书。 |
+| `OTEL_PROPAGATORS` | 网关始终传播 W3C Trace Context。 |
+| `OTEL_BLRP_SCHEDULE_DELAY`、`OTEL_BLRP_MAX_QUEUE_SIZE`、`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE`、`OTEL_BLRP_EXPORT_TIMEOUT` | OCSF 日志导出使用自己的队列与批处理，见 [OCSF 日志导出](#ocsf-日志导出)。 |
+| `OTEL_EXPORTER_OTLP_METRICS_*`、`OTEL_METRIC_EXPORT_INTERVAL` | 网关的指标供 Prometheus 抓取，不经 OTLP 导出。 |
+
+要采样 10% 的追踪：
+
+```shell
+OTEL_TRACES_SAMPLER=parentbased_traceidratio OTEL_TRACES_SAMPLER_ARG=0.1
+```
+
+网关在关闭期间冲刷缓冲的 Span，因此在途请求的 Span 能在 `SIGTERM` 后幸存。
+
+## 监管中间件服务
+
+用一个或多个 `[[openshell.supervisor.middleware]]` 条目注册运维运行的监管中间件服务。注册是静态的且归运维所有；修改它需要重启网关。
+
+```toml
+[[openshell.supervisor.middleware]]
+name = "local-content-guard"
+grpc_endpoint = "https://host.openshell.internal:50051"
+tls_ca_cert_path = "/etc/openshell/certs/content-guard-ca.pem"
+audience = "urn:openshell:middleware:local-content-guard"
+max_payload_bytes = 262144
+timeout = "500ms"
+```
+
+每个服务实现监管中间件 gRPC 契约，并通过 `Describe` 公开绑定。策略引用运维所有的注册 `name`，会附加完整的中间件及其全部绑定。绑定按操作与阶段标识。一个 manifest 对每个“操作+阶段”组合最多公开一个绑定。V1 支持 `HttpRequest/pre_credentials`、`HttpResponse/pre_return` 与 `WebSocketMessage/pre_credentials`。注册名必须唯一，运维运行的注册不能占用保留的 `openshell/` 命名空间。服务上报的 manifest 名称是诊断元数据，不必与注册名一致。
+
+网关在启动前连接每个已注册服务并校验 `Describe`。因此服务必须在网关之前运行。策略创建与完整策略更新会调用 `ValidateConfig`；服务不可用或中间件配置无效时，策略在持久化之前被拒绝。
+
+启动还要求兼容的[扩展协议元数据](/extensibility/overview#协议协商)。旧版网关与运维运行的服务请在协调停机期间一起升级；新旧混搭的配对不受支持。服务会拒绝省略对端元数据的网关；网关会拒绝省略元数据、使用其他协议主版本或要求不受支持网关能力的服务。受保护的 `GetGatewayInfo` 与 `openshell gateway info` 会报告由此得到的非机密快照。
+
+`max_payload_bytes` 是运维设定的共享上限，作用于该服务公开的每个绑定上可检查的逻辑载荷。它限制 HTTP 请求与响应单元、替换正文，以及完整的 WebSocket 文本消息与替换。整响应检查把它用作该阶段的总正文上限；流式响应检查把它用于每个单元。该值必须大于零，不超过每个绑定公示的 `max_payload_bytes` 能力，也不超过 4 MiB 的平台最大值。OpenShell 拒绝超限值而不是静默截断。二进制 WebSocket 消息不暴露给 V1 中间件，因此该字段不限制二进制透传。中间件 gRPC 服务器应允许至少 4 MiB 加 293 KiB 的消息，使最大尺寸载荷及其 protobuf 信封能在传输层放下。
+
+`timeout` 是运维配置的服务级 RPC 超时。它接受与网关拦截器相同的紧凑时长语法：整数后跟 `ms` 或 `s`，如 `500ms` 或 `2s`。取值必须在 `10ms` 到 `30s` 之间（含边界）。省略该字段即使用 500 ms 平台默认值。绑定可以在 `Describe` manifest 中公示更短的 `timeout`，但不能延长运维配置的期限；OpenShell 采用较小值。OpenShell 在接受服务之前校验两个层级。运维配置的服务超时适用于 `Describe` 与 `ValidateConfig`。有效绑定超时适用于 HTTP 请求求值、HTTP 响应预检与单元交换、WebSocket 预检以及每条 WebSocket 消息。被接受的流式协议没有连接级 RPC 期限。
+
+服务的 `grpc_endpoint` 支持明文 `http://` 与 TLS `https://`。`tls_ca_cert_path` 未指定仅含证书的 PEM 包时，HTTPS 使用平台信任库。OpenShell 拒绝含私钥的包，在网关启动时加载证书，只向沙箱监管器分发公钥证书；正常的 TLS 主机名校验仍然生效。`audience` 为网关签发的服务令牌设定确切的受众，默认 `urn:openshell:extension:middleware:<name>`。认证的 `Describe` 成功后，OpenShell 把非空的 manifest `expected_audience` 视为一致性断言，与配置受众不一致时拒绝启动。严格的校验方也可能在返回 manifest 之前就拒绝错误的受众。
+
+配置了 `gateway_jwt` 时，OpenShell 会为网关与监管器调用附加短时 Bearer 凭据，并要求 `https://`。中间件端点必须能从沙箱监管器访问，因此 Unix socket 在此不可用。在注册上设置 `allow_insecure_transport = true` 可保留明文 `http://` 端点：此时 OpenShell 不附加凭据，监管器也不请求凭据，网关在每次启动时记录一条指名该注册的警告。目前不支持 mTLS 客户端认证、健康检查与运行时注册。端点必须能从网关与沙箱监管器双方访问；使用 `host.openshell.internal` 或其他可在两处解析的共享地址。
+
+挂接、失败与运维指引参见[监管中间件配置](/extensibility/supervisor-middleware/configure)。
+
+## 网关拦截器
+
+`[[openshell.gateway.interceptors]]` 配置网关侧拦截器服务。网关在启动时调用每个服务的 `Describe` RPC，对照编译好的服务描述符校验其声明的 OpenShell RPC 绑定，并从中央 gRPC 中间件路径应用匹配的阶段。拦截器只能针对网关内置的一元变更 RPC 允许列表中的方法。新 RPC 在被刻意加入该允许列表之前不可被拦截；加入它不需要编写特定于 handler 的拦截器代码。请求体以 protobuf JSON 对象暴露。protobuf schema 中标记为 secret 的字段会从请求与提交后响应中递归省略。拦截器无法修补被省略的字段或其所属对象。
+
+每个拦截器还必须在 `Describe` 期间完成[扩展协议协商](/extensibility/overview#协议协商)。旧版网关与拦截器请在协调停机期间一起升级；新旧混搭的配对不受支持。拦截器拒绝缺失或不兼容的网关元数据；网关在服务请求之前拒绝缺失元数据、不兼容的协议主版本与未满足的要求。
+
+HTTPS 拦截器端点默认使用平台信任库。为私有 CA 设置 `tls_ca_cert_path` 指向 PEM 证书包；正常的 TLS 主机名校验仍然生效。`audience` 为网关签发的服务令牌设定确切的受众，默认 `urn:openshell:extension:interceptor:<name>`。认证的 `Describe` 成功后，网关把非空的 manifest `expected_audience` 视为一致性断言，与配置受众不一致时拒绝启动。严格的校验方也可能在返回 manifest 之前就拒绝错误的受众。配置了 `gateway_jwt` 时，网络拦截器必须使用 HTTPS 并接收短时的网关调用方 Bearer 凭据；本地 Unix socket 也受支持。设置 `allow_insecure_transport = true` 可保留明文 `http://` 拦截器端点，不附加凭据并在启动时记录警告。
+
+### 扩展令牌验证端点
+
+配置了 `gateway_jwt` 时，网关发布两个无需认证的文档，供扩展服务验证 OpenShell 调用方：
+
+| 路径 | 内容 |
+| --- | --- |
+| `/.well-known/jwks.json` | 单密钥 JWKS，包含 Ed25519 公钥及其 `kid`。 |
+| `/.well-known/openid-configuration` | OIDC 形态的发现元数据：确切的预期 `iss`、绝对 `jwks_uri`，以及作为唯一受支持签名算法的 `EdDSA`。 |
+
+发现文档是 OIDC 形态而非符合 OIDC 标准：`issuer` 是网关身份（`openshell-gateway:<gateway_id>`），不是文档的服务地址。校验方应把 `iss` 与该值比较，不得从文档位置推断信任；认证网关的是提供文档的 TLS 连接。未配置 `gateway_jwt` 时两个端点都返回 `404`。
+
+`binding_policy` 控制 manifest 与运维绑定配置如何组合：
+
+- `dynamic` 启用有效的 manifest 绑定，并把配置条目视为可选的收窄覆盖。这是兼容性默认值。由于拦截器自行掌控其非机密 RPC 权限，网关会记录一条启动警告。
+- `allowlist` 只启用配置的 RPC 选择器与阶段。网关忽略并记录多余的 manifest 声明，但 manifest 缺少配置的 RPC 或阶段时启动失败。
+- `exact` 要求配置与 manifest 的 RPC 选择器和阶段完全一致。
+
+`allowlist` 与 `exact` 下的绑定需要 `rpc` 或 `service` 加 `method`，以及非空 `phases` 列表。它们按 RPC 匹配而不是按 manifest 绑定 ID。这些模式下重复的选择器、`id` 与 `disabled` 均无效；省略某个绑定即禁用它。绑定失败策略依次来自绑定、配置的服务，最后默认 `fail_closed`。manifest 的失败策略不会覆盖严格模式下的运维配置。
+
+包含 `post_commit` 的绑定必须解析为 `failure_policy = "fail_open"`；网关在启动时拒绝 fail-closed 的 post-commit 配置。post-commit 求值是观测性的。handler 成功后响应观测或拦截器求值失败时，网关记录并计数该失败，但原样返回已提交的响应。
+
+`provider_profile_sources` 选择确切的有序配置档案（provider profile）来源集合。省略它即只用导入的配置档案。用 `{ type = "user" }` 与 `{ type = "interceptor", name = "<configured-interceptor-name>" }` 条目组合出一个目录。拦截器条目必须引用一个已配置且其 manifest 公示 `provider_profiles = true` 的服务。只选拦截器会使该目录成为权威来源；要把它与导入的配置档案组合，请显式包含 `{ type = "user" }`。空或重复的来源列表、未知拦截器名与重复的规范化配置档案 ID 都按 fail closed 处理。来源顺序控制采集与诊断，不控制覆盖优先级。
+
+网关二进制内不内置任何配置档案。没有导入任何内容的网关可以就绪并服务一个空目录；用 `openshell provider profile import` 导入所需的配置档案。`builtin` 来源类型已被移除，仍引用它的配置在启动时被拒绝。
+
+要以拦截器目录为权威来源，只选择该拦截器：
+
+```toml
+[openshell.gateway]
+provider_profile_sources = [
+  { type = "interceptor", name = "provider-governance" },
+]
+```
+
+网关校验快照结构与配置档案语义。它把配置的拦截器视为来源信任边界，不验证配置档案载荷中的签名、哈希或密钥注解。
+
+`failure_policy` 接受 `fail_closed` 或 `fail_open`。`timeout` 接受 `ms` 与 `s` 后缀。`dynamic` 模式下，绑定覆盖可按 `id`、`rpc` 或 `service` 加 `method` 选择 manifest 绑定；它们可以禁用绑定、收窄其阶段或覆盖其失败策略。
+
+`image_pull_policy` 是共享驱动设置，规范取值为 `always`、`if_not_present`、`never` 与 `newer`。在相关驱动表内设置。驱动把这些值转换为其运行时 API；`newer` 只有 Podman 支持，Docker 与 Kubernetes 启动时拒绝。
+
+## 凭据驱动
+
+只有当网关应把提供商机密存入外部凭据后端时才设置 `credential_drivers`。提供商机密包括可注入的凭据与仅网关使用的刷新材料，例如 OAuth 刷新令牌、客户端机密与服务账户私钥。OpenShell 同一时间最多支持一个启用的凭据驱动。省略 `credential_drivers` 时，网关使用默认的加密数据库凭据存储。`credential_drivers = []` 在 TOML 文件中无效；要使用默认加密存储就省略该字段，或选择 `kubernetes-secrets`、`vault` 之类的后端。
+
+凭据驱动表归后端所有，位于 `[openshell.credential_drivers.<name>]` 下。内置驱动默认使用树内（in-tree）传输，因此不需要 `transport` 字段。仅对经 Unix domain socket 的远程 gRPC 驱动使用 `transport = "uds"` 加绝对 `socket_path`。
+
+```toml
+[openshell.gateway.credential_storage]
+key_encryption_key_path = "/var/lib/openshell/credentials/key-encryption-key.bin"
+```
+
+对 Kubernetes Secrets：
+
+```toml
+[openshell.gateway]
+credential_drivers = ["kubernetes-secrets"]
+
+[openshell.credential_drivers.kubernetes-secrets]
+namespace = "openshell"
+```
+
+若使用 Vault：
+
+```toml
+[openshell.gateway]
+credential_drivers = ["vault"]
+
+[openshell.credential_drivers.vault]
+address = "https://vault.vault.svc.cluster.local:8200"
+ca_bundle = "/etc/openshell-tls/vault-ca/ca.crt"
+mount = "secret"
+kv_version = "2"
+auth_method = "kubernetes"
+role = "openshell-gateway"
+service_account_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+```
+
+默认加密数据库存储下，OpenShell 把提供商凭据作为经 AES-256-GCM 加密的 JSON 信封存入网关数据库。每个凭据获得一个随机数据加密密钥；网关再用本地密钥加密密钥（key-encryption key）包裹该密钥。默认情况下，密钥加密密钥创建于 `$XDG_STATE_HOME/openshell/gateway/credentials/key-encryption-key.bin`，权限为仅所有者。改用 `[openshell.gateway.credential_storage] key_encryption_key_env` 替代 `key_encryption_key_path`，可从环境变量加载 base64 编码的 32 字节密钥加密密钥。数据库与密钥加密密钥必须一起备份；丢失任何一个都会使已存凭据无法恢复。Kubernetes 上，未启用外部凭据驱动时，Helm chart 会创建一个保留的 Secret 保存共享密钥加密密钥，以 `OPENSHELL_GATEWAY_CREDENTIAL_KEY_ENCRYPTION_KEY` 注入，并为网关渲染 `key_encryption_key_env`。多副本部署要求每个副本使用相同的数据库与密钥加密密钥；chart 默认值处理了密钥加密密钥一侧。
+
+在 `lookup` 返回空的 GitOps 与 `helm template` 工作流中，chart 生成的 KEK Secret 每次渲染都会得到随机值，使凭据无法恢复。把 `server.credentialStorage.existingSecret` 设为一个预置 Secret 的名称，其中在 `key-encryption-key` 数据键下保存密钥加密密钥。设置后，chart 跳过 KEK Secret 生成，直接引用提供的 Secret。
+
+```yaml
+server:
+  credentialStorage:
+    existingSecret: my-preprovisioned-kek-secret
+```
+
+对 `kubernetes-secrets`，`namespace` 决定所有工作区模式下 OpenShell 管理的提供商 Secret 对象存放在哪里。省略时，驱动在可用时使用集群内 ServiceAccount 命名空间，否则使用 `default`。驱动拒绝引用其他命名空间的凭据句柄。Helm chart 会创建一个 Role，授予网关访问凭据命名空间中所有 Secret 的权限，因为 OpenShell 管理的 Secret 名是动态 SHA-256 哈希，无法用 `resourceNames` 限制；网关 ClusterRole 不授予任何凭据 Secret 权限。把凭据 Secret 部署在专用命名空间（`server.credentialDrivers.kubernetesSecrets.namespace`）以限制 RBAC 影响范围。凭据命名空间就是 release 命名空间时，该 Role 也覆盖网关自身的 TLS 与数据库 Secret。设置 `server.credentialDrivers.kubernetesSecrets.createNamespace=true` 让 chart 创建该专用命名空间。chart 在卸载时保留它，使已存凭据得以幸存；对不属于它的既有命名空间不做改动。
+
+对 `vault`，`address` 指向 Vault 服务。非回环端点必须使用 HTTPS；本地开发期间仅 `localhost` 或 IP 回环地址接受明文 HTTP。Vault 请求不跟随重定向，防止凭据被重放到降级或被替换的端点。HTTPS 默认使用平台信任根。为私有 Vault CA 设置 `ca_bundle` 指向仅含证书的 PEM 包；该包在平台根之上增补，正常主机名校验保持启用。`mount` 与 `kv_version` 描述存放 OpenShell 管理的提供商机密的 KV 引擎，`auth_method = "kubernetes"` 用网关 Pod 的 ServiceAccount 令牌登录。本地或开发验证可用 `auth_method = "token_file"` 加 `token_path = "/path/to/token"`。不要把字面 Vault 令牌写进 TOML。
+
+Helm 部署时，把 `credentialDrivers.vault.caConfigMapName` 设为在 `ca.crt` 键下包含私有 CA 包的 ConfigMap。chart 挂载该键并自动推导 `ca_bundle`。
+
+已含内联数据库凭据的提供商记录保持可读以兼容升级。新的提供商创建/更新请求仍通过正常 API 提交凭据值，但网关经当前凭据存储路径保存这些值，只持久化句柄。在 OpenShell 0.1.0 之前，OpenShell 不会在驱动之间自动迁移内联刷新材料或凭据句柄。升级后请重新配置刷新授权。更换凭据驱动之前，先在原驱动仍可用时移除受影响的凭据，再选择新驱动重新创建。不要用混合版本的网关操作同一批刷新记录。
+
+远程凭据驱动设置 `transport = "uds"` 加 `socket_path`。由其他服务管理器预先启动驱动 socket 时，省略 `command`、`args` 与 `startup_timeout_secs`。后端令牌不要放进 TOML；让驱动指向挂载的令牌文件或原生身份机制。
+
+内置的 `kubernetes-secrets` 与 `vault` 驱动也可以经 UDS 在进程外运行。把 `command` 设为独立驱动二进制，通过 `args` 传入驱动专属设置；网关启动进程时会追加 `--bind-socket <socket_path>`。
+
+```toml
+[openshell.gateway]
+credential_drivers = ["kubernetes-secrets"]
+
+[openshell.credential_drivers.kubernetes-secrets]
+transport = "uds"
+socket_path = "/run/openshell/credential-drivers/kubernetes-secrets.sock"
+command = "/usr/libexec/openshell/openshell-driver-kubernetes-secrets"
+args = ["--namespace", "openshell"]
+```
+
+```toml
+[openshell.gateway]
+credential_drivers = ["vault"]
+
+[openshell.credential_drivers.vault]
+transport = "uds"
+socket_path = "/run/openshell/credential-drivers/vault.sock"
+command = "/usr/libexec/openshell/openshell-driver-vault"
+args = [
+  "--address", "https://vault.vault.svc.cluster.local:8200",
+  "--ca-bundle", "/etc/openshell/vault/ca.pem",
+  "--auth-method", "kubernetes",
+  "--role", "openshell-gateway",
+]
+```
+
+## 网关对等路由
+
+多副本网关把会话绑定的流量中继给拥有该沙箱监管器的副本。Helm chart 会设置这些变量；只在 chart 之外手动设置。
+
+| 变量 | 用途 |
+|---|---|
+| `OPENSHELL_PEER_ENDPOINT` | 其他副本访问本副本的地址。未设置时由 Pod DNS 名推导。 |
+| `OPENSHELL_PEER_SERVICE_NAME` | 用于推导端点的对等 Service。 |
+| `OPENSHELL_POD_NAME` / `OPENSHELL_POD_NAMESPACE` | 用于端点推导与对等验证的 Pod 身份。 |
+| `OPENSHELL_SERVICE_ACCOUNT_NAME` | 对等令牌必须出示的 ServiceAccount。 |
+| `OPENSHELL_PEER_SERVICE_ACCOUNT_TOKEN_FILE` | 投影的对等令牌路径。默认 `/var/run/secrets/openshell-peer/token`。 |
+| `OPENSHELL_PEER_TOKEN_AUDIENCE` | 要求的令牌受众。默认 `openshell-gateway-peer`。 |
+| `OPENSHELL_PEER_POD_LABELS` | 调用 Pod 必须携带的逗号分隔标签。 |
+| `OPENSHELL_PEER_TOKEN_CACHE_TTL_SECS` | 已验证对等身份的缓存时长。默认 `60`。 |
+| `OPENSHELL_PEER_TLS_CA_FILE` | 对等连接的 CA 包。回退到平台信任库。 |
+| `OPENSHELL_PEER_TLS_CERT_FILE` / `OPENSHELL_PEER_TLS_KEY_FILE` | 对等 mTLS 的客户端证书与密钥。要么都设，要么都不设。 |
+| `OPENSHELL_PEER_TLS_SERVER_NAME` | 在对等证书上校验的名称。 |
+
+多副本后端配置了对等端点而对等认证不可用时，网关拒绝启动，因为该副本无法为其对等方提供中继服务。这种情况发生在：Pod 身份变量缺失、无法构建集群内 Kubernetes 客户端，或网关未在集群中运行。网关提供 TLS 时同样拒绝明文 `http://` 对等端点；仅当网关本身提供明文服务时才使用它。
+
+## 驱动参考
+
+### 外部资源准入
+
+所有计算驱动默认禁用调用方提供的 `template.driver_config`。运维可以在不关闭资源审批的情况下启用它：
+
+```toml
+[openshell.drivers.kubernetes]
+allow_driver_config = true
+
+[openshell.drivers.kubernetes.resource_admission]
+enabled = true
+
+[openshell.drivers.kubernetes.resource_admission.required_labels]
+"openshell.ai/sandbox-attachable" = "true"
+"openshell.ai/sandbox-attachable-workspace" = "${workspace}"
+```
+
+在所选 Docker、Podman、VM、MXC 或外部驱动表下使用相同字段。省略准入设置时使用上述标签。提供映射即替换默认值，且每个条目都必须匹配。强制启用时，显式空映射无效。`${workspace}` 是整个标签值，解析为已授权的 OpenShell 工作区名称，不是 Kubernetes 命名空间或调用方标签。不支持其他替换与表达式。至少需要一个固定标签，使刻意共享的资源仍需运维显式批准。
+
+以下标签键保留给驱动自有元数据，不能用于 `required_labels`：`openshell.ai/managed-by`、`openshell.ai/gateway-id` 与 `openshell.ai/sandbox-workspace`。默认准入键 `openshell.ai/sandbox-attachable-workspace` 与保留的沙箱元数据键不同。
+
+运维必须在使用前为被引用资源打标签。沙箱上的标签不批准其挂接。例如，工作区 `team-a` 使用的 PVC 需要这些元数据：
+
+```yaml
+metadata:
+  labels:
+    openshell.ai/sandbox-attachable: "true"
+    openshell.ai/sandbox-attachable-workspace: "team-a"
+```
+
+Kubernetes 通过 OpenShell 自有的 Pod 模板检查调用方选择的 PVC、RuntimeClass 与 PriorityClass。Docker 与 Podman 检查引擎卷标签。只读挂载仍需批准。命名空间不授予批准。新预置的私有存储与引导材料改用驱动所有权检查。
+
+Kubernetes PVC 挂载目标不得与驱动管理的 `/.openshell` 树或 `/run` 重叠，包括使用 `sub_path` 的挂载。批准标签不能覆盖这些限制。应用数据请挂载在 `/data` 或 `/sandbox` 之下的目录等路径。
+
+RuntimeClass 与 PriorityClass 是共享的运维基础设施。它们必须匹配每一个固定的必需标签，但 `${workspace}` 条目不适用于它们。Kubernetes API 服务器与准入 webhook 对运行中 Pod 的修改属于受信任的集群运维行为，不用作工作区用户授权的输入。
+
+镜像拉取 Secret 由网关配置选择，而非沙箱调用方，不参与资源准入。托管模式下，OpenShell 为每个沙箱运行时代次创建每个已配置 Secret 的不可变副本，并随该代次删除。同代次名称的 Secret 已存在时沙箱创建失败。共享与 operator 模式下，配置的 Secret 必须已存在于沙箱命名空间。类型化的 Kubernetes 驱动配置不支持调用方选择的 Secret 或 ConfigMap 卷及环境引用。自动服务账户令牌与投影令牌卷被禁止。
+
+GPU 设备挂接暂时豁免于标签准入。既有 GPU 校验仍然适用。驱动 JSON 内的显式 GPU 设备设置仍要求 `allow_driver_config = true`；公开的 GPU 数量请求不需要。该豁免不批准无关的宿主机挂载或非 GPU 设备。
+
+原始宿主机绑定挂载与补充镜像挂载没有受信任的标签解析器，准入启用时被拒绝。发布者镜像标签不能授予运维批准。Docker 既有的不支持镜像挂载的限制保持不变。MXC 宿主机文件系统授权在解析器出现之前同样需要禁用准入。以驱动 JSON 编码的 MXC 命令配置与 VM 上传工作流需要显式启用 driver-config。
+
+`allow_driver_config` 作用于非空调用方配置，包括保存的模板与非存储覆盖。配置缺失或 `{}` 不需要启用。驱动在启动前与重启时复查已准入的 OpenShell 输入挂接；运行中的 Docker、Podman 与 Kubernetes 工作负载会周期性复检。
+确认吊销后工作负载被停止或挂起。元数据查询中断会阻塞新启动，但仅此不会停止既有工作负载。复检使用 Docker 观察循环（通常两秒）或 30 秒的 Podman / Kubernetes 间隔，外加查询与重试时间。这些不是即时的吊销保证。
+
+要显式退出标签授权：
+
+```toml
+[openshell.drivers.kubernetes.resource_admission]
+enabled = false
+```
+
+这不会启用驱动 JSON，也不会绕过既有的路径、所有权、命名空间或隔离校验。它只是放弃该驱动的外部资源标签保护。策略变更后请重启网关与驱动。只有受信任的运维才应控制批准标签、运行时 API 与资源替换；应用准入不是原子性的挂载授权。
+
+升级之前，盘点并批准合法的外部资源。没有可验证准入来源证明的旧沙箱状态需要重建；OpenShell 不会自动批准旧挂接。复用已删除的工作区名之前先移除过期标签。自定义的仅审批映射允许跨工作区共享，应当是运维的刻意决定。
+
+独立版 Kubernetes、Podman 与 VM 驱动接受通用策略作为 `--admission-config-json` 或 `OPENSHELL_DRIVER_ADMISSION_CONFIG_JSON`；`{}` 使用安全默认值。Docker 也在其驱动 TOML 文件中接受这些字段。网关管理的 VM 进程自动接收所选网关策略。
+运维管理的外部进程必须单独配置。它们的带版本 `GetCapabilities.resource_admission_policy` 确认必须与网关策略匹配；旧驱动需要显式退出准入。
+确认值变更会阻塞后续的远程校验/创建/启动调用，直到网关与驱动配置重新一致。
+
+Helm 暴露 `server.drivers.kubernetes.allowDriverConfig`、`resourceAdmission.enabled` 与 `resourceAdmission.requiredLabels`。标签映射默认为 `null`，即使用代码默认值而不把这些键合并进自定义映射。只有启用 `allowDriverConfig` 时 Helm chart 才授予 PVC 元数据读取权限。拆分的工作区 release 必须在工作区 chart 上设置对应的 `gateway.allowDriverConfig=true`。绝不要把网关数据库存储标记为可挂接。
+
+每个示例都是针对一个计算驱动的完整 TOML 文件。示例重复 `[openshell]` 与 `[openshell.gateway]` 以保持可直接复制，驱动表列出接受的驱动专属键。驱动只收到自己的表，网关拒绝未知的网关与驱动字段。
+
+Kubernetes 配置在 `[openshell.drivers.kubernetes]` 中设置 `namespace`、`service_account_name` 与 `enable_user_namespaces`。Docker 配置使用 `sandbox_label`；旧的 `sandbox_namespace` 键被拒绝。
+
+### Kubernetes
+
+网关以 Pod 运行，并在另一个命名空间创建成对的工作负载与监管器 Pod。网关 CA 从 Kubernetes Secret 投影到监管器 Pod；该 Secret 中的用户客户端证书与密钥条目对两个 Pod 都不暴露。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address          = "0.0.0.0:8080"
+health_bind_address   = "0.0.0.0:8081"
+metrics_bind_address  = "0.0.0.0:9090"
+log_level             = "info"
+compute_driver        = "kubernetes"
+
+[openshell.gateway.tls]
+cert_path      = "/etc/openshell-tls/server/tls.crt"
+key_path       = "/etc/openshell-tls/server/tls.key"
+# client_ca_path is only rendered when server.tls.enableMtls is true (the
+# default). When enableMtls is false — required for BackendTLSPolicy — the
+# gateway runs HTTPS-only and this line is omitted by Helm.
+client_ca_path = "/etc/openshell-tls/client-ca/ca.crt"
+# When cert-manager serverIssuerRef is configured, these are populated by Helm:
+# external_cert_path    = "/etc/openshell-tls/server-external/tls.crt"
+# external_key_path     = "/etc/openshell-tls/server-external/tls.key"
+# external_server_names = ["gateway.example.com"]
+
+[openshell.drivers.kubernetes]
+# Workspace isolation mode. "shared" renders all sandboxes into a single
+# namespace. "managed" auto-creates a K8s namespace per workspace
+# (openshell-{gateway_id}-{workspace}). "operator" maps each workspace to a
+# pre-provisioned namespace discovered via label selector or drop-in file.
+workspace_mode                 = "shared"
+# Gateway identity used in managed-mode namespace naming. Defaults to the
+# gateway JWT gateway_id. Must be a DNS-1123 label.
+# gateway_id                   = "openshell"
+namespace                      = "agents"
+service_account_name           = "openshell-sandbox"
+default_image                  = "nvcr.io/nvidia/base/ubuntu:24.04"
+image_pull_policy              = "if_not_present"
+image_pull_secrets             = ["regcred"]
+# Defaults to the gateway version; override to pin a specific build.
+# sandbox_runtime_image        = "ghcr.io/nvidia/openshell/sandbox:<version>"
+sandbox_runtime_image_pull_policy = "if_not_present"
+# Defaults to the gateway version; override to pin a specific build.
+# supervisor_image             = "ghcr.io/nvidia/openshell/supervisor:<version>"
+supervisor_image_pull_policy   = "if_not_present"
+
+# Optional corporate forward proxy for policy-approved TLS egress. The sandbox
+# workload cannot select or override these settings. http:// and https:// proxy
+# endpoints are supported, for TLS CONNECT traffic only; plain HTTP egress
+# remains direct. `no_proxy` bypasses only the corporate proxy, never OpenShell
+# policy.
+# https_proxy                  = "http://proxy.corp.example:8080"
+# no_proxy                     = ".svc,.svc.cluster.local,10.96.0.0/12,10.244.0.0/16"
+# Proxy credentials must be an existing Secret in the sandbox namespace. The
+# key contains a `user:pass` value and is mounted only in the network
+# supervisor container, never in workload environment or command arguments.
+# proxy_auth_secret_name       = "corporate-proxy-auth"
+# proxy_auth_secret_key        = "credentials"
+# The gateway validates the Secret name/key syntax and their configuration
+# relationship at startup; it does not read the Secret from the Kubernetes API.
+# Kubernetes resolves the Secret when the Sandbox Pod starts. A missing key or
+# Secret prevents that Pod from starting; unreadable or malformed `user:pass`
+# content is validated fail-closed by the supervisor at startup and never
+# falls back to direct egress.
+# Proxy credentials mount only in the separately scheduled supervisor Pod.
+# Required with a credential Secret when the proxy URL is http://, because
+# Basic authentication is then cleartext on the connection to that proxy. An
+# https:// proxy carries the credential inside the verified TLS session and
+# needs no acknowledgement.
+# proxy_auth_allow_insecure    = true
+# Last resort for hostname-filtering proxy ACLs. The proxy resolves the target,
+# so its ACL becomes part of the egress boundary for proxied connections.
+# proxy_connect_by_hostname    = true
+# CA bundle trusted for the corporate proxy, as a path on the gateway Pod's
+# filesystem. Needed for an https:// proxy whose certificate is not publicly
+# trusted, and for a TLS-intercepting proxy that re-signs upstream
+# certificates. The gateway reads the file and stages it into each sandbox's
+# immutable supervisor bootstrap Secret, so the anchor stays in the gateway's
+# trust domain and cannot change underneath a running sandbox. Helm mounts it
+# from `upstreamProxy.caBundle.configMapName` and renders this path. Supply
+# only the proxy's own CA: public roots already come from the supervisor image
+# and its TLS stack, so a full merged trust bundle wastes the sandbox
+# boundary's control-frame budget on duplicated roots.
+# proxy_ca_bundle              = "/etc/openshell-tls/proxy-ca/ca.crt"
+# Required in raw gateway TOML because `namespace` identifies sandbox
+# placement, not the gateway Service. Helm renders this from the release's
+# gateway Service name and namespace.
+grpc_endpoint                  = "https://openshell-gateway.openshell.svc:8080"
+ssh_socket_path                = "/run/openshell/ssh.sock"
+client_tls_secret_name         = "openshell-client-tls"
+host_gateway_ip                = "10.0.0.1"
+enable_user_namespaces         = false
+workspace_default_storage_size = "10Gi"
+# Kubernetes StorageClass for the workspace PVC. Empty (default) omits the
+# field, using the cluster's default StorageClass. Set this on clusters with no
+# default StorageClass, otherwise the workspace PVC stays Pending.
+# workspace_storage_class      = "fast-ssd"
+# Kubernetes RuntimeClass applied to sandbox pods when the API request does
+# not specify one. Empty (default) = omit the field, using the cluster default.
+# default_runtime_class_name   = "kata-containers"
+# Pod annotation keys that sandbox templates may set. Each entry is an exact
+# key or a `<domain>/*` wildcard. Empty (default) rejects every template
+# annotation. Keys under openshell.ai (OpenShell sandbox identity) and
+# agents.x-k8s.io (owned by the Agent Sandbox controller), including
+# subdomains, are reserved: templates cannot set them and the allowlist
+# cannot include them.
+# allowed_pod_annotations      = ["example.com/*", "team.example.org/owner"]
+# Pod label keys that sandbox templates may set, in the same format and with
+# the same reserved domains. Empty (default) rejects every template label.
+# Labels select pods for NetworkPolicy rules and Services, so only allow keys
+# that no other rule in the sandbox namespace selects on.
+# allowed_pod_labels           = ["app", "team.example.org/*"]
+# Kubelet clamps projected tokens below 600 seconds. The driver caps values at 86400.
+sa_token_ttl_secs              = 3600
+# Optional SPIFFE Workload API socket mounted into sandbox pods for dynamic
+# provider token grants. Use an absolute path under a dedicated directory;
+# shared roots such as /run, /var, /tmp, and /etc are rejected.
+# Supervisor-to-gateway auth still uses gateway JWTs.
+provider_spiffe_workload_api_socket_path = "/spiffe-workload-api/spire-agent.sock"
+# Explicit sandbox UID/GID for the supervisor container securityContext and
+# PVC init container. When unset, the driver auto-detects from OpenShift SCC
+# namespace annotations (openshift.io/sa.scc.uid-range) if present, falling
+# back to 1000 on non-OpenShift clusters. Any non-root Linux UID/GID is valid.
+# Helm sets these with server.sandboxUid and server.sandboxGid.
+# sandbox_uid = 1500
+# sandbox_gid = 1500
+# Operator-mode namespace discovery. At least one must be set when
+# workspace_mode = "operator". Both can be combined.
+# operator_namespace_label discovers namespaces matching a K8s label selector.
+# operator_namespace_label     = "openshell.ai/workspace=true"
+# operator_namespace_file reads allowed namespaces from a JSON/YAML file
+# (hot-reloaded on change, e.g. via ConfigMap volume mount).
+# operator_namespace_file      = "/etc/openshell/workspace-namespaces.json"
+
+[openshell.drivers.kubernetes.managed_ssh_ingress]
+enabled = true
+gateway_namespace = "openshell"
+gateway_pod_selector = { "app.kubernetes.io/name" = "openshell", "app.kubernetes.io/instance" = "openshell" }
+
+[openshell.drivers.kubernetes.sandbox_runtime]
+# TLS-protected boundary listener reached only by the paired control pod.
+boundary_port = 5500
+```
+
+Kubernetes 驱动总是在放行沙箱 Pod 之前创建工作负载 `NetworkPolicy`。你的集群 CNI 必须在每个沙箱命名空间中强制执行入站与出站 `NetworkPolicy`；Kubernetes API 不验证执行情况。
+
+托管工作区模式下，Kubernetes 驱动在创建沙箱时把每个显式指定的 `image_pull_secrets` Secret 从 `namespace` 复制到托管工作区命名空间。共享与 operator 模式要求该 Secret 已存在于沙箱命名空间。
+
+对令牌交换提供商配置档案，网关还需要访问自己的 SPIFFE Workload API socket。Helm 部署时，设置 `server.providerTokenGrants.spiffe.enabled=true`；chart 把该 socket 挂载进网关 Pod 并设置 `OPENSHELL_GATEWAY_SPIFFE_WORKLOAD_API_SOCKET`。网关用从 SPIFFE Workload API 获取的 JWT 包校验监管器 JWT-SVID，因此该校验路径不需要网关访问 SPIRE OIDC 发现端点或其 TLS CA。
+
+### MXC
+
+MXC 驱动通过 `wxc-exec` 运行 Windows 工作负载。启用 ETW 审计可把 Windows Sandboxing 提供商事件映射进网关的 OCSF 流。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address    = "127.0.0.1:17670"
+log_level       = "info"
+compute_driver = "mxc"
+
+[openshell.drivers.mxc]
+wxc_exec_path           = "C:\\mxc-kit\\bin\\wxc-exec.exe"
+backend                 = "process_container"
+default_configuration_id = "composable"
+pc_least_privilege      = false
+pc_capabilities         = []
+debug                   = false
+etw_audit               = true
+```
+
+`etw_audit` 默认为 `false`。启用时，网关账户必须是管理员或属于 Windows Performance Log Users 组。工作负载命令与工作目录仍限于沙箱范围，创建沙箱时必须在 `mxc` 驱动配置中提供。
+
+`OPENSHELL_OCSF_JSON=1` 可独立于所选计算驱动启用网关的 JSONL 审计接收端。设置 `OPENSHELL_OCSF_LOG_DIR` 可覆盖默认目录：Windows 上为 `%PROGRAMDATA%\OpenShell\logs`，Unix 上为 `$XDG_STATE_HOME/openshell/logs`。需要保留控制与丢失指标时，优先使用网关配置的 `ocsf_log` 输出。
+
+驱动在进程审计事件中记录可执行文件身份，并省略原始命令参数，因为其中可能含凭据或个人数据。持久的 Windows 审计输出参见 [OCSF JSON 导出](/observability/ocsf-json-export)。
+
+### Docker
+
+每个 Docker 沙箱使用一个禁用网络的工作负载容器和一个宿主机网络的监管器容器。监管器网关 CA 只需在 `[openshell.gateway]` 下配置一次；网关校验后注入所选本地驱动。监管器使用沙箱 Bearer 令牌认证其 RPC。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address    = "127.0.0.1:17670"
+log_level       = "info"
+compute_driver = "docker"
+# Gateway-owned CA injected into the selected local driver.
+guest_tls_ca  = "/etc/openshell/certs/ca.pem"
+
+[openshell.drivers.docker]
+socket_path        = "/var/run/docker.sock"
+default_image      = "nvcr.io/nvidia/base/ubuntu:24.04"
+# Canonical values: always | if_not_present | never. `newer` is Podman-only.
+image_pull_policy  = "if_not_present"
+# Value assigned to the openshell.sandbox_namespace label on sandbox containers.
+sandbox_label      = "docker-dev"
+# host (default) or bridge networking for the supervisor.
+# Operator-owned; sandbox driver config cannot override this choice.
+supervisor_network_mode = "host"
+# Optional override; Docker's host address is discovered automatically.
+# host_gateway_ip = "172.29.0.254"
+# Optional override. Omit for automatic host or bridge callback selection.
+# grpc_endpoint = "https://gateway.example.com:17670"
+# Workload-side runtime. Defaults to the gateway version.
+# sandbox_runtime_image = "ghcr.io/nvidia/openshell/sandbox:<version>"
+# Supervisor runtime. Defaults to the gateway version.
+# supervisor_image = "ghcr.io/nvidia/openshell/supervisor:<version>"
+# Unsafe operator override. Host bind mounts, including Docker local-driver
+# bind-backed volumes, expose gateway-host paths inside sandboxes and can
+# negate OpenShell isolation and filesystem controls.
+enable_bind_mounts = false
+# Omit to use OpenShell's 2048-process default. Explicit 0 is invalid.
+sandbox_pids_limit = 2048
+# Explicit supervisor-compatible default. RuntimeDefault requires Docker to
+# report AppArmor support; Localhost/<name> requires an operator-loaded profile.
+app_armor_profile = "Unconfined"
+# Corporate TLS egress proxy. These are supervisor argv settings, not workload
+# environment variables. Do not embed credentials in the URL.
+https_proxy = "https://proxy.corp.example:8443"
+no_proxy = ".svc.cluster.local,10.0.0.0/8"
+# Optional root-owned host file containing user:pass. An http:// proxy also
+# requires proxy_auth_allow_insecure = true as an explicit acknowledgement.
+proxy_auth_file = "/etc/openshell/secrets/proxy-auth"
+proxy_auth_allow_insecure = false
+# Last resort for proxy ACLs that require hostname CONNECT targets. The proxy
+# then performs DNS resolution and becomes part of the effective egress boundary.
+proxy_connect_by_hostname = false
+# Operator-owned gateway-host PEM bundle trusted for an HTTPS proxy and for
+# destination certificates re-signed by a TLS-intercepting proxy.
+proxy_ca_bundle = "/etc/openshell/tls/proxy-ca.pem"
+# Project a host Unix Workload API socket into the supervisor for provider
+# token exchange. The socket parent must be a dedicated absolute directory.
+provider_spiffe_workload_api_socket = "/run/spire/agent.sock"
+```
+
+Docker 配置使用 `sandbox_label`。
+
+`supervisor_network_mode` 接受 `host`（默认）、`bridge` 或 `auto`。`auto` 同样选择 host；驱动不会从工作负载运行时推断模式。工作负载始终使用 `network=none`。
+
+省略 `grpc_endpoint` 即自动选择：host 模式使用回环；bridge 模式在 Desktop 上或使用通配监听器时用 `host.docker.internal`，否则用 Linux 监听器的非回环地址。
+
+bridge 模式与使用 `host.docker.internal` 的网关端点会自动发现 Docker 宿主机地址。仅当需要覆盖时才设置 `host_gateway_ip`。bridge 模式下，宿主机服务与配置的 OTLP collector 端点必须能从容器访问；原生 Linux 仅回环监听器不可达。Docker Desktop 上的 host 模式要求启用宿主机网络。
+
+Docker 接受显式 `scheme://host:port` 形式的 `http://` 与 `https://` 代理 URL。`no_proxy` 只旁路企业代理；OpenShell 策略仍然生效。代理 URL 不能内嵌凭据。用 `proxy_auth_file` 提供 `user:pass` 文件；只有确认知悉 Basic 凭据以明文发往 `http://` 代理时才设置 `proxy_auth_allow_insecure = true`。
+
+`proxy_ca_bundle` 要求 `https_proxy`，但配置的代理 URL 可以是任一 scheme，因为纯 HTTP 代理仍可拦截目标 TLS。文件必须是可读且有界的 PEM 包，包含可用的证书颁发机构。Docker 在网关启动时校验它，并在每次监管器启动前再次校验。缺失、不可读、空、超大、畸形与无证书的包都会 fail closed，而不是回退到默认信任或直连出站。
+
+网关宿主机路径归运维所有，不能通过沙箱环境、镜像内容或 `template.driver_config.docker` 选择。驱动把校验过的内容复制进仅监管器可见的命名卷，并把固定路径 `/.openshell/supervisor/upstream-proxy-ca-bundle.pem` 传给配套监管器。该包扩展以下信任：与 `https://` 代理的 TLS 连接、监管器对重签上游证书的连接，以及暴露给工作负载进程的组合信任包。网关宿主机路径绝不挂载或暴露给工作负载容器。
+
+### Podman
+
+每个 Podman 沙箱使用两个容器。工作负载容器以 `network=none` 运行 `openshell-sandbox`；监管器容器运行在宿主机网络上，发起策略批准的上游连接。一个私有卷承载它们之间经认证的 Unix domain socket。监管器网关 CA 只需在 `[openshell.gateway]` 下配置一次；网关校验后注入所选本地驱动。监管器使用沙箱 Bearer 令牌认证其 RPC。
+
+调用方 `cdi_devices` 条目必须是有效的 CDI 限定名（`<vendor>/<class>=<name>`）。主机设备路径被拒绝。参见 [GPU 选择](/how-it-works/sandboxes/overview#gpu-资源)。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address    = "127.0.0.1:17670"
+log_level       = "info"
+compute_driver = "podman"
+# Gateway-owned CA injected into the selected local driver.
+guest_tls_ca  = "/etc/openshell/certs/ca.pem"
+
+[openshell.drivers.podman]
+network_name            = "openshell"
+# Rootless socket path. For root Podman use /run/podman/podman.sock.
+# Omit to auto-detect: the driver probes for a responsive Podman socket, then
+# asks the podman CLI where its socket is, and fails to start if neither finds
+# one. Set this to pin a specific Podman machine instead.
+socket_path             = "/run/user/1000/podman/podman.sock"
+default_image           = "nvcr.io/nvidia/base/ubuntu:24.04"
+image_pull_policy       = "if_not_present" # always | if_not_present | never | newer
+# Optional override. When omitted, Linux uses gateway loopback and Podman
+# Machine uses host.containers.internal.
+grpc_endpoint           = "https://127.0.0.1:17670"
+# The gateway overwrites gateway_port from bind_address at runtime.
+gateway_port            = 17670
+# Trusted supervisor-side destination returned for host.openshell.internal.
+# Omit for the platform default: 127.0.0.1 on native Linux and
+# 192.168.127.254 on macOS Podman Machine.
+# host_gateway_ip       = "192.168.127.254"
+ssh_socket_path         = "/run/openshell/ssh.sock"
+stop_timeout_secs       = 45
+# Statically linked workload-side runtime. Defaults to the gateway version.
+# sandbox_runtime_image = "ghcr.io/nvidia/openshell/sandbox:<version>"
+# Dynamically linked supervisor runtime. Defaults to the gateway version.
+# supervisor_image      = "ghcr.io/nvidia/openshell/supervisor:<version>"
+# Unsafe operator override. Host bind mounts, including Podman local-driver
+# bind-backed volumes, expose gateway-host paths inside sandboxes and can
+# negate OpenShell isolation and filesystem controls.
+enable_bind_mounts      = false
+# Omit to use OpenShell's 2048-process default. Explicit 0 is invalid.
+sandbox_pids_limit      = 2048
+# Health check interval in seconds. Omit to disable health checks; explicit 0
+# is invalid. Lower values detect readiness faster but increase process churn
+# (each check spawns a conmon subprocess).
+health_check_interval_secs = 10
+# User namespace mode for sandbox containers. Omit to use the default.
+# Supported modes: auto, host, keep-id, no-map, private.
+# userns                  = "auto"
+# Explicit UID/GID mappings for userns = "private". Each entry is
+# "container_id:host_id:size". Required when mode is "private"; rejected
+# for other modes. Rootless Podman uses intermediate IDs (0:0:1, 1:1:65535);
+# rootful Podman uses absolute host IDs (0:1000:1, 1:100000:65536).
+# uidmap                  = ["0:0:1", "1:1:65535"]
+# gidmap                  = ["0:0:1", "1:1:65535"]
+# Corporate forward proxy for sandbox egress. When set, the in-container
+# supervisor chains policy-approved TLS tunnels through this proxy with HTTP
+# CONNECT instead of dialing destinations directly. Plain-HTTP requests are
+# not proxied and always dial the destination directly. http:// and https://
+# proxy URLs in explicit scheme://host:port form are supported: the scheme and
+# port are both required, and a URL carrying a path, query, or fragment is
+# rejected rather than silently truncated. For an https:// proxy the supervisor
+# wraps the connection to the proxy in TLS before the CONNECT handshake,
+# verifying the proxy certificate against the built-in and system roots plus
+# the optional proxy_ca_bundle below.
+# NO_PROXY entries (hostnames, domain suffixes, IPs, CIDRs, each with an
+# optional :port qualifier) are dialed directly. A port-qualified entry only
+# bypasses that destination port. IP and CIDR entries also match hostnames
+# through their validated DNS resolution; such a match dials directly only
+# the resolved addresses inside the entry. This is an operator-owned egress
+# boundary:
+# sandbox and template environment cannot override it, and the conventional
+# HTTPS_PROXY/HTTP_PROXY/NO_PROXY variables a sandbox sets do not affect it.
+#
+# The CONNECT request sent to the proxy targets a validated resolved IP,
+# not the hostname, so the proxy performs no DNS resolution of its own and
+# the tunnel stays bound to the address that passed the sandbox's SSRF and
+# allowed_ips validation. The hostname still travels inside the tunnel (TLS
+# SNI, application Host), so destination servers behave normally. In
+# split-horizon networks, point the gateway host at the corporate resolver
+# so internal names validate to their internal addresses. If the proxy's
+# ACLs filter on hostnames and reject IP CONNECT targets, set
+# proxy_connect_by_hostname = true as a last resort: the proxy then
+# resolves the name itself, so a name that resolves differently at the
+# proxy (split-horizon DNS, rebinding) can reach destinations the sandbox
+# policy never approved, and the proxy's own ACLs become the effective
+# egress control for proxied TLS.
+#
+# Configuration is fail-closed: an invalid proxy URL is rejected at gateway
+# startup, setting no_proxy, proxy_auth_file, or proxy_connect_by_hostname
+# without a proxy URL is rejected as well, and a set-but-invalid value
+# reaching a sandbox (for example an unreadable or malformed auth file) is
+# fatal to that sandbox's supervisor instead of silently falling back to
+# direct or unauthenticated egress.
+#
+# Credentials must NOT be embedded in the URL (an inline user:pass@ is
+# rejected at startup, since it would be stored here and exposed in container
+# metadata). Instead point proxy_auth_file at a file containing "user:pass";
+# the gateway delivers it to the supervisor through a root-only secret mount.
+# The credential must use the user:pass form (non-empty user, no control
+# characters); the same validation runs at sandbox-create time and in the
+# supervisor, so a credential accepted here is never rejected in-container.
+# Keep gateway.toml and the auth file owner-readable only (mode 0600).
+#
+# WARNING: with an http:// proxy the supervisor sends the credential as a
+# Proxy-Authorization: Basic header over the plain-TCP connection. Basic
+# auth is base64, not encryption: anyone on the network path between the
+# sandbox host and the proxy can recover the credential. Because of that,
+# proxy_auth_file with an http:// proxy requires the explicit
+# acknowledgement proxy_auth_allow_insecure = true; without it the
+# configuration is rejected at gateway startup. Only opt in when the path
+# to the proxy is a trusted network segment. For an https:// proxy the
+# credential is sent inside the verified TLS session, so the
+# acknowledgement is not required (but tolerated if set).
+#
+# proxy_ca_bundle points at a PEM CA bundle (on the gateway host) trusted for
+# the corporate proxy. A CA certificate is not secret, so the gateway
+# bind-mounts it read-only into the sandbox. It is trusted in two places: the
+# TLS handshake with an https:// proxy, and — because a TLS-intercepting proxy
+# (mitmproxy, squid ssl-bump) re-signs tunneled server certificates with the
+# same CA — the sandbox trust bundle and the supervisor's upstream
+# re-encryption, so intercepted upstream TLS keeps working and sandbox
+# workloads trust the re-signed certificates. It is valid with either an
+# http:// or https:// proxy and requires a proxy URL; the file must exist and
+# contain at least one certificate, or the sandbox fails closed at startup.
+# https_proxy               = "http://proxy.corp.com:8080"
+# no_proxy                  = "*.svc.cluster.local,10.0.0.0/8"
+# proxy_auth_file           = "/etc/openshell/secrets/proxy-auth"
+# proxy_auth_allow_insecure = true
+# Last resort for hostname-filtering proxy ACLs; see the warning above.
+# proxy_connect_by_hostname = true
+# Corporate CA trusted for an https:// proxy and TLS-intercepting proxies.
+# proxy_ca_bundle           = "/etc/openshell/tls/proxy-ca.pem"
+# additional_ca_bundle points at a PEM CA bundle (on the gateway host) trusted
+# for direct, policy-inspected HTTPS egress to a destination signed by a
+# private CA — independent of proxy_ca_bundle above, this applies whether or
+# not https_proxy is set. The Podman supervisor runs as its own container,
+# separate from the workload image, so it cannot inherit a private CA baked
+# into the workload's own trust store; this setting restores that trust
+# without rebuilding the supervisor image. The gateway bind-mounts the file
+# read-only into the supervisor container and folds it into the upstream
+# trust store alongside (not instead of) the system CA bundle. The CA is also
+# added to the trust bundle inside each sandbox, so workloads trust it directly.
+# It is trusted for every destination, not only the one that needs it, so use a
+# CA you control or one with name constraints. The file must
+# exist and contain at least one certificate; the gateway validates this on
+# the gateway host when the Podman driver starts, so a bad path or a
+# certificate-free bundle fails gateway startup rather than a later sandbox.
+# additional_ca_bundle      = "/etc/openshell/tls/additional-ca.pem"
+# Project a host Workload API Unix socket into the supervisor, or use an
+# explicit container-reachable TCP endpoint, for provider token exchange.
+# provider_spiffe_workload_api_socket = "/run/spire/agent.sock"
+# provider_spiffe_workload_api_socket = "tcp:169.254.1.2:8081"
+# Omit app_armor_profile to preserve Podman's runtime-selected workload profile.
+# Explicit RuntimeDefault and Localhost/<name> require Podman to report
+# AppArmor support.
+# app_armor_profile = "RuntimeDefault"
+```
+
+Podman 配置使用 `ssh_socket_path`。旧的 `sandbox_ssh_socket_path` 键被拒绝。省略 `app_armor_profile` 时，OpenShell 不发送覆盖值，Podman 应用其运行时选择的 profile。该设置作用于工作负载容器；监管器保留 Podman 运行时选择的 profile。
+
+### MicroVM
+
+每个沙箱运行在由独立 `openshell-driver-vm` 子进程管理的专属 libkrun microVM 内。想要比单纯容器命名空间更强的隔离时使用该驱动。
+
+示例使用显式启动签名路径。把它们指向现有的签名包，或省略 `gateway_jwt` 表以使用本地发现。监听器与 guest TLS 证书不能提供这些签名凭据。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address    = "127.0.0.1:17670"
+log_level       = "info"
+# VM is never auto-detected; an explicit entry here is required.
+compute_driver = "vm"
+# Gateway-owned CA injected into the selected local driver.
+guest_tls_ca  = "/var/lib/openshell/guest-tls/ca.pem"
+
+# Sandbox launch signing is separate from listener and guest TLS.
+[openshell.gateway.gateway_jwt]
+signing_key_path = "/etc/openshell/jwt/signing.pem"
+public_key_path  = "/etc/openshell/jwt/public.pem"
+kid_path         = "/etc/openshell/jwt/kid"
+gateway_id       = "openshell"
+
+[openshell.drivers.vm]
+state_dir        = "/var/lib/openshell/vm"
+# Where the gateway looks for the openshell-driver-vm subprocess binary.
+driver_dir       = "/usr/local/libexec/openshell"
+default_image    = "nvcr.io/nvidia/base/ubuntu:24.04"
+# Optional override. When omitted, the gateway derives
+# https://host.openshell.internal:<gateway-port> for the VM driver.
+grpc_endpoint    = "https://host.openshell.internal:17670"
+# Empty falls back only to default_image. The gateway rejects the VM
+# configuration when both fields are empty; sandbox-requested images are never
+# bootstrap images.
+bootstrap_image  = "nvcr.io/nvidia/base/ubuntu:24.04"
+krun_log_level   = 1
+vcpus            = 2
+mem_mib          = 2048
+overlay_disk_mib = 4096
+# Resolved sandbox UID/GID for new rootfs /etc/passwd entries.
+# Defaults to the image's sandbox account, or 1000 when the account is absent;
+# matching GID is used if sandbox_gid is empty. Persisted overlays recover their
+# recorded identity, including 10001, rather than receiving a legacy fallback.
+# Values must fall within OpenShell's allowed non-root sandbox identity range.
+# sandbox_uid = 20001
+# sandbox_gid = 20001
+# Corporate forward proxy for sandbox egress. The keys, their semantics, and
+# the fail-closed contract are identical to the Podman driver above: only TLS
+# (CONNECT) egress is chained, plain-HTTP destination requests always dial
+# directly, credentials must come from proxy_auth_file rather than the URL,
+# an http:// proxy with credentials requires proxy_auth_allow_insecure, and
+# any present-but-invalid value is rejected at gateway startup rather than
+# degrading to a direct dial. proxy_auth_file is a path on the gateway host.
+#
+# The sandbox cannot select or override these settings. The driver passes them
+# only to the host supervisor.
+#
+# Reachability: a proxy on the corporate network needs no special address and
+# works on every VM sandbox.
+#
+# A proxy on the gateway host is addressed as
+# http://host.openshell.internal:<port>. The host supervisor normalizes that
+# name to host loopback for both libkrun and QEMU sandboxes.
+#
+# Credentials and private CA material remain host-side with the supervisor.
+# https_proxy               = "http://host.openshell.internal:8080"
+# no_proxy                  = "10.0.0.0/8,.internal.example"
+# proxy_auth_file           = "/etc/openshell/secrets/proxy-auth"
+# An http:// proxy with proxy_auth_file requires this explicit acknowledgement:
+# proxy_auth_allow_insecure = true
+# Last resort for hostname-filtering proxy ACLs; see the Podman section above.
+# proxy_connect_by_hostname = true
+# Gateway-host PEM bundle trusted for an https:// proxy and for server
+# certificates re-signed by a TLS-intercepting proxy. Requires https_proxy.
+# proxy_ca_bundle           = "/etc/openshell/tls/proxy-ca.pem"
+# VM guests cannot mount a host Workload API Unix socket. Configure only a
+# separately operated guest-reachable TCP listener and explicitly acknowledge
+# the exposure; host-only sockets are never exposed automatically.
+# provider_spiffe_workload_api_tcp_endpoint = "tcp:192.0.2.10:8081"
+# provider_spiffe_allow_guest_tcp = true
+# Unsafe operator override. Host bind mounts expose gateway-host paths inside
+# VM sandboxes and can negate OpenShell isolation and filesystem controls.
+# Requires allow_driver_config = true and
+# [openshell.drivers.vm.resource_admission] enabled = false; libkrun only.
+# enable_bind_mounts = false
+# Where the gateway stages rootfs tar archives for `--from ./rootfs.tar`.
+# Defaults to <state_dir>/rootfs-tar-staging. The gateway creates one
+# request-scoped subdirectory per staging slot and removes it after use.
+# rootfs_tar_staging_dir = "/var/lib/openshell/vm/rootfs-tar-staging"
+# Largest rootfs tar archive the driver accepts, in bytes. Defaults to 10 GiB.
+# Gzip archives are decompressed while staging, and the limit also bounds the
+# expanded tar.
+# rootfs_tar_max_bytes = 10737418240
+```
+
+要生成本地发现用的证书包，请在 fish 中运行以下命令，并在启动网关时保持相同环境：
+
+```shell
+set -gx OPENSHELL_LOCAL_TLS_DIR ~/.local/state/openshell/tls
+openshell-gateway generate-certs --output-dir "$OPENSHELL_LOCAL_TLS_DIR"
+```
+
+该命令还会安装本地 CLI mTLS 凭据。要显式配置签名，把示例中的签名路径设为该目录下的 `jwt/signing.pem`、`jwt/public.pem` 与 `jwt/kid`。网关优先加载这些路径而不是本地发现。
+
+rootfs tar 暂存要求网关与 VM 驱动共享文件系统并以同一用户运行。网关以子进程方式启动的托管 VM 驱动满足这一点。若把 `compute_driver_endpoints` 指向其他用户所有的外部托管 `vm` socket，驱动无法读取网关的暂存目录，rootfs tar 来源将以 `FAILED_PRECONDITION` 错误失败；请改用镜像仓库引用。
+
+### 扩展驱动
+
+扩展驱动运行在网关之外，在 Unix socket 上暴露 `compute_driver.proto` gRPC 服务。使用非保留驱动名；`vm`、`docker`、`podman`、`kubernetes` 等内置名不能通过非托管 socket 端点选择。所选驱动名是驱动自有沙箱配置（如 `template.driver_config.<name>`）使用的键。
+
+```toml
+[openshell]
+version = 2
+
+[openshell.gateway]
+bind_address    = "127.0.0.1:17670"
+log_level       = "info"
+compute_driver = "kyma"
+
+[openshell.drivers.kyma]
+socket_path = "/run/openshell/kyma-compute-driver.sock"
+```
+
+## 预检软件包配置
+
+启动软件包管理的网关之前，在不改动文件的前提下校验所选文件：
+
+```shell
+openshell-gateway config preflight --path ~/.config/openshell/gateway.toml
+```
+
+没有 `--path` 时，命令校验非空的 `OPENSHELL_GATEWAY_CONFIG`。否则，发现 XDG 网关配置存在时校验它。两个来源都没有选定配置时，预检校验有效的守护进程参数。显式缺失路径、旧 schema-v1 文件、无效 TOML、符号链接或任何非普通文件都会失败。预检把所选文件与当前 `OPENSHELL_*` 环境合并，并执行守护进程的只读启动检查。这些检查包括选择器与 socket 规范化、已注册驱动的选择与配置、速率限制配对、TLS 与 mTLS 关系、拦截器注册以及监管中间件注册。所选文件省略 `compute_driver` 时，预检为每个可自动检测的驱动校验其配置表，但不运行运行时探测（探测可能连接本地 socket 或启动发现命令）。它校验已配置驱动的 TLS 要求（包括网关 CA），而不要求软件包生成的证书文件在生成证书之前存在。它不构造计算驱动，也不连接传输层。预检失败始终保留原文件；它绝不迁移、替换或改写配置。
+
+配置预检在不加载启动签名密钥的情况下校验配置，因此预检成功并不确认密钥文件存在或构成可用密钥对。网关启动时校验已配置或发现的签名包。沙箱创建在镜像准备之前检查所选驱动的启动签名要求。
+
+要校验包装器将传递的确切守护进程参数，把它们放在 `--` 之后而不是使用 `--path`：
+
+```shell
+openshell-gateway config preflight -- --config /etc/openshell/gateway.toml --grpc-rate-limit-requests 100 --grpc-rate-limit-window-seconds 60
+```
+
+Debian 与 Ubuntu 在本地证书生成之前由 systemd user unit 运行预检。该 unit 仍加载 `gateway.env` 环境文件，并不带配置参数启动网关。snap 通过预检重放确切有效的守护进程参数。非空 `OPENSHELL_GATEWAY_CONFIG` 优先；否则只有当其规范的服务专属路径在文件系统中存在时才校验并传递该路径。旧系统服务使用 `$SNAP_COMMON/gateway.toml`；用户服务使用 `$SNAP_USER_COMMON/.config/openshell/gateway.toml`。因此损坏的符号链接会被拒绝而不是被当作不存在。
+
+软件包启动不会修改运维所有的 v1 文件。先备份，按[迁移到 schema 版本 2](#迁移到-schema-版本-2)操作，然后在重启服务之前显式校验结果：
+
+```shell
+cp ~/.config/openshell/gateway.toml ~/.config/openshell/gateway.toml.v1.bak
+$EDITOR ~/.config/openshell/gateway.toml
+openshell-gateway config preflight --path ~/.config/openshell/gateway.toml
+systemctl --user restart openshell-gateway
+```
+
+### 检查本地 VM 宿主机工具
+
+显式选择本地 `vm` 驱动时，预检还会检查格式化工具（`mke2fs` 或 `mkfs.ext4`）、`debugfs` 与 `e2fsck`。用操作系统的软件包管理器安装 e2fsprogs 1.43 或更新版本。OpenShell 不安装也不管理这些宿主机依赖。
+
+例如在 macOS 上：
+
+```shell
+brew install e2fsprogs
+openshell-gateway config preflight -- --config ~/.config/openshell/gateway.toml --compute-driver vm
+```
+
+运行预检时请使用网关将要使用的账户、配置、工作目录与环境。交互 shell 中成功的检查不代表用不同 `PATH` 的服务也能通过。环境使用私有安装的服务，请显式重现其配置的路径：
+
+```shell
+env PATH=/opt/company/e2fsprogs/sbin:/opt/company/e2fsprogs/bin:/usr/bin:/bin /usr/local/bin/openshell-gateway config preflight -- --config ~/.config/openshell/gateway.toml --compute-driver vm
+```
+
+把可执行文件与配置路径替换为你安装的路径，并以服务账户运行该命令。预检与 VM 镜像操作先搜索继承的 `PATH` 条目，再搜索 `/opt/homebrew/opt/e2fsprogs` 与 `/usr/local/opt/e2fsprogs` 下已存在的 e2fsprogs `sbin` 与 `bin` 目录。它们优先使用 `mke2fs`，仅在 `mke2fs` 缺失时尝试 `mkfs.ext4`。所选文件无法运行属于错误；先修复该安装或服务的 `PATH` 再重跑命令。
+
+命令会报告每个所选可执行文件的路径与版本。每个工具只收到 `-V`，限时五秒，每路输出限 8 KiB。缺失、不可执行、过旧或运行失败的工具会返回非零退出状态，附纠正指引与所选工具的错误。这些检查不创建网关状态或镜像，不启动驱动或 VM。版本检查只确认安装；不测试镜像创建或文件系统恢复。
+
+其他驱动不需要这些 VM 工具。仅有 VM 配置表不会选中 VM 驱动。配置了远程驱动 socket 时，预检会报告未执行宿主机工具检查；请在宿主机上、以驱动服务的环境加本地 VM 配置运行检查。

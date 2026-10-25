@@ -1,55 +1,55 @@
 ---
-title: "Remove a device"
-description: "If you no longer want a device in your Tailscale network (tailnet), you can remove it from either the [Machines](https://console.tailscale.com/admin/machines) page of the admin console or by using the"
+title: "移除设备"
+description: "如果不想让某台设备继续留在 Tailscale 网络（tailnet）中，你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面将其移除，或通过"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-If you no longer want a device in your Tailscale network (tailnet), you can remove it from either the [Machines](https://console.tailscale.com/admin/machines) page of the admin console or by using the [Tailscale API][docs-api].
+如果不想让某台设备继续留在 Tailscale 网络（tailnet）中，你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面将其移除，或使用 [Tailscale API][docs-api] 移除。
 
-When removing a device from your tailnet, note the following:
+从 tailnet 中移除设备时，请注意以下几点：
 
-* The device will immediately lose connection to all resources in the tailnet
+* 该设备会立即失去与 tailnet 中所有资源的连接
 
-* If [device approval][docs-device-approval] is not enabled in your tailnet, the device can be added back to the tailnet without needing re-authorization by a tailnet admin
+* 如果你的 tailnet 未启用[设备审批][docs-device-approval]，该设备无需 tailnet 管理员重新授权即可被重新加入 tailnet
 
-* If the Tailscale client is [uninstalled][docs-uninstall] on a device without any removal action, the device will not be removed from the tailnet
+* 如果只是在一台设备上[卸载][docs-uninstall]了 Tailscale 客户端而没有执行任何移除操作，该设备不会从 tailnet 中移除
 
-## Remove devices from the admin console
+## 从管理控制台移除设备
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to remove devices from the admin console.
+你需要成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能从管理控制台移除设备。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+1. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
 
-2. Locate the device by either typing the name of the device in the search bar or using the **Filters** option.
+2. 在搜索栏输入设备名称，或使用 **Filters** 选项，定位到该设备。
 
-3. Select the  menu next to the device, then select **Remove**.
+3. 选择设备旁边的菜单，然后选择 **Remove**。
 
-4. In the confirmation dialog, select **Remove machine**.
+4. 在确认对话框中，选择 **Remove machine**。
 
-## Use API scripts to remove devices
+## 使用 API 脚本移除设备
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet to remove devices using the [Tailscale API][docs-api].
+你需要成为 tailnet 的 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 才能使用 [Tailscale API][docs-api] 移除设备。
 
-You can use the Tailscale API to remove devices, as shown in the following script examples.
+你可以使用 Tailscale API 移除设备，参见下面的脚本示例。
 
-### Remove devices using a CSV file
+### 使用 CSV 文件移除设备
 
-To remove devices using a CSV file, modify and use the following script:
+要使用 CSV 文件移除设备，请修改并使用以下脚本：
 
 ```shell
   for id in $(cat nodes.csv); do echo $id; curl -X DELETE "https://api.tailscale.com/api/v2/device/${id}" -u "$(cat ~/keys/tskey):"; sleep 0.1; done
 ```
 
-### Remove devices by tag
+### 按标签移除设备
 
-To remove devices by a specified tag, modify and use the following script. Make sure to update the `apikey=$` line with the path to your Tailscale API key.
+要按指定标签移除设备，请修改并使用以下脚本。注意将 `apikey=$` 一行更新为你的 Tailscale API 密钥路径。
 
 ```shell
 #!/bin/bash
 
 tailnet="example.com"
-# Replace with a path to your Tailscale API key.
+# 替换为你的 Tailscale API 密钥路径。
 apikey=$(<"/home/user/path/to/api.key">)
 targetname="substring"
 
@@ -65,15 +65,15 @@ curl -s "https://api.tailscale.com/api/v2/tailnet/$tailnet/devices" -u "$apikey:
   done
 ```
 
-### Remove devices by last seen date
+### 按最后出现日期移除设备
 
-To remove devices older than a specified last seen date, modify and use the following script. Make sure to update the `apikey=$` line with the path to your Tailscale API key.
+要移除最后出现日期早于指定时间的设备，请修改并使用以下脚本。注意将 `apikey=$` 一行更新为你的 Tailscale API 密钥路径。
 
 ```shell
   #!/bin/bash
 
 tailnet="example.com"
-# Replace with a path to your Tailscale API key.
+# 替换为你的 Tailscale API 密钥路径。
 apikey=$(<"/home/user/path/to/api.key">)
 oldenough=$(date -I --date="1 month ago")
 

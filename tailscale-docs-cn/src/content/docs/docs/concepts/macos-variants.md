@@ -1,203 +1,188 @@
 ---
-title: "Three ways to run Tailscale on macOS"
-description: "Explore three ways to run Tailscale on macOS so you can choose the right approach for your situation."
+title: "在 macOS 上运行 Tailscale 的三种方式"
+description: "探索在 macOS 上运行 Tailscale 的三种方式，选择最适合你情况的方案。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:**
+> **注意：**
 >
-> The current version of the Tailscale client requires macOS Monterey 12.0 or later.
+> 当前版本的 Tailscale 客户端要求 macOS Monterey 12.0 或更高版本。
 
-The best way to install Tailscale on macOS is to download and install our application from our package server.
+在 macOS 上安装 Tailscale 的最佳方式，是从我们的包服务器下载并安装我们的应用。
 
-[Download Tailscale](https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg)
+[下载 Tailscale](https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg)
 
-However, there are three ways (variants) to run Tailscale on macOS. You can choose the method that best fits your needs.
+不过，在 macOS 上运行 Tailscale 共有三种方式（变体）。你可以选择最符合自己需求的方式。
 
-* Download and install our Standalone variant of the application directly [from Tailscale's package server][pk-stable-macos] (recommended).
-* Install Tailscale from [the Mac App Store][xt-app-store-link].
-* Download and install the open source `tailscale` + `tailscaled` CLI-only distribution from our [GitHub repository][xt-gh-tailscale-tailscaled-macos].
+* 直接从 [Tailscale 的包服务器][pk-stable-macos]下载并安装 Standalone 变体的应用（推荐）。
+* 从 [Mac App Store][xt-app-store-link] 安装 Tailscale。
+* 从我们的 [GitHub 仓库][xt-gh-tailscale-tailscaled-macos]下载并安装开源的纯 CLI 发行版 `tailscale` + `tailscaled`。
 
-All three variants share the same core functionality for connecting your macOS device to Tailscale. However, there are subtle differences in the way that the variants are packaged and how they interact with macOS. You should choose the variant that best fits your use case.
+这三种变体在将 macOS 设备接入 Tailscale 这一核心功能上完全一致，但在打包方式以及与 macOS 的交互方式上存在细微差异。你应选择最符合自己使用场景的变体。
 
-We recommend downloading and installing the Standalone variant Tailscale app directly from our package server, as this variant offers more features, is not subject to limitations imposed on apps distributed through the App Store, and provides more control over the deployment of updates.
+我们推荐直接从我们的包服务器下载并安装 Standalone 变体的 Tailscale 应用：这个变体功能更多，不受 App Store 对上架应用的种种限制，并且对更新部署有更强的掌控力。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 下面的相关视频提供了更多背景和示例。
 
-[Tailscale macOS Quickstart (video)](https://www.youtube.com/watch?v=vkZwu7I4tcY)
+[Tailscale macOS 快速开始（视频）](https://www.youtube.com/watch?v=vkZwu7I4tcY)
 
-## What are the differences?
+## 有哪些区别？
 
-### Standalone variant
+### Standalone 变体
 
-We always recommend installing the [Standalone variant][pk-stable-macos] of the Tailscale application on macOS.
+在 macOS 上，我们始终推荐安装 [Standalone 变体][pk-stable-macos]的 Tailscale 应用。
 
-In macOS Catalina 10.15, Apple added support for the [system extensions][xt-apple-system-extensions]
-approach to implement VPNs. System extensions offer a more secure alternative to the legacy Kernel Extensions technology
-previously used by many security and networking tools on older macOS versions. These extensions run with root privileges
-but remain within a sandbox, ensuring that Tailscale operates isolated from the macOS kernel. A key advantage of system extensions
-is their ability to be distributed outside of the Mac App Store. This lets us offer a version of Tailscale that doesn't require
-an Apple ID for installation — you can open our `.pkg` installer to begin using Tailscale.
+在 macOS Catalina 10.15 中，Apple 为实现 VPN 增加了对[系统扩展][xt-apple-system-extensions]（System Extensions）方式的支持。系统扩展是旧式内核扩展（Kernel Extensions）技术的更安全替代品，后者曾被较旧 macOS 版本上的许多安全与网络工具使用。这些扩展以 root 权限运行，但始终处于沙箱之内，确保 Tailscale 与 macOS 内核隔离运行。系统扩展的一大优势是可以在 Mac App Store 之外分发，这让我们能够提供安装时无需 Apple ID 的 Tailscale 版本——打开我们的 `.pkg` 安装器即可开始使用 Tailscale。
 
-With the Standalone variant of our app, security updates are promptly distributed since they don't need to undergo Apple's App Store review process.
-Additionally, Tailscale can detect third-party tools interfering with the VPN tunnel and notify you when conflicts are detected.
+使用 Standalone 变体，安全更新可以及时发布，无需经过 Apple 的 App Store 审核流程。此外，Tailscale 能够检测干扰 VPN 隧道的第三方工具，并在发现冲突时通知你。
 
-### Mac App Store variant
+### Mac App Store 变体
 
-To be in the Mac App Store, applications are required by Apple to run in the [macOS App Sandbox][xt-apple-macos-sandbox],
-isolating the app from the rest of the system. When running in a sandbox, VPN applications need to be a [Network Extension][xt-apple-network-extensions]
-to implement VPNs or VPN-like functionality. The Network Extension system does not work for applications distributed outside of the Mac App
-Store.
+要在 Mac App Store 上架，Apple 要求应用运行在 [macOS App Sandbox][xt-apple-macos-sandbox]中，与应用所在系统的其余部分隔离。在沙箱中运行时，VPN 应用必须实现为[网络扩展][xt-apple-network-extensions]（Network Extension）才能提供 VPN 或类似 VPN 的功能。而网络扩展系统对在 Mac App Store 之外分发的应用不起作用。
 
-The main advantage of installing Tailscale through the Mac App Store is that it is very easy to get started. However, because both the Tailscale app and its Network Extension are sandboxed and running as the local user, there are a number of limitations.
-For instance, a very common issue is that the Screen Time web filter can conflict with the Tailscale version distributed on the App Store.
+通过 Mac App Store 安装 Tailscale 的主要优势是上手非常简单。然而，由于 Tailscale 应用及其网络扩展都被沙箱化并以本地用户身份运行，存在诸多限制。例如，一个很常见的问题是屏幕使用时间的网页过滤器可能与 App Store 分发的 Tailscale 版本冲突。
 
-### Open source `tailscaled` variant
+### 开源 `tailscaled` 变体
 
-It is possible to run the [open source Tailscale code (tailscaled)][xt-gh-tailscale-tailscaled-macos] on macOS.
-This uses the kernel [`utun` interface][xt-wikipedia-tuntap],
-rather than the Network Extension or System Extension frameworks. However, this variant does not include a graphical user interface (GUI); all functionality must be managed from the command line. Additionally when using the open source `tailscaled` variant, you won't be able to manage Tailscale from the VPN settings on macOS.
+可以在 macOS 上运行[开源的 Tailscale 代码（tailscaled）][xt-gh-tailscale-tailscaled-macos]。它使用内核的 [`utun` 接口][xt-wikipedia-tuntap]，而非网络扩展或系统扩展框架。但这个变体不带图形用户界面（GUI），所有功能都必须通过命令行管理。此外，使用开源 `tailscaled` 变体时，你将无法从 macOS 的 VPN 设置中管理 Tailscale。
 
-`tailscaled` on macOS is only recommended for unattended installs managed by
-experienced macOS system administrators.
+macOS 上的 `tailscaled` 仅推荐由经验丰富的 macOS 系统管理员管理的无人值守安装使用。
 
-## Which should I choose?
+## 我该选哪个？
 
-Always start by downloading and installing our [Standalone variant macOS app][pk-stable-macos]. Install Tailscale from the Mac App Store only if you are unable to install the Standalone variant, or
-if you're deploying Tailscale in an environment where relying on the Mac App Store for install and updates is essential.
+请始终从下载并安装我们的 [Standalone 变体 macOS 应用][pk-stable-macos]开始。只有在无法安装 Standalone 变体，或者你的部署环境必须依赖 Mac App Store 进行安装和更新时，才从 Mac App Store 安装 Tailscale。
 
-> **Note:**
+> **注意：**
 >
-> Do not install the Mac App Store variant and the Standalone variant on the same machine. Having both variants running simultaneously can prevent the Tailscale extension from launching. To safely switch between macOS variants, delete the `Tailscale.app` currently installed, empty the Trash, and reboot your Mac before attempting to install a different variant.
+> 不要在同一台机器上同时安装 Mac App Store 变体和 Standalone 变体。两个变体同时运行可能导致 Tailscale 扩展无法启动。要在 macOS 变体之间安全切换，请先删除当前安装的 `Tailscale.app`、清空废纸篓并重启 Mac，然后再尝试安装另一种变体。
 
-### Comparison table
+### 对比表
 
-This table presents the major differences in functionality between the three variants:
+下表列出了三种变体在功能上的主要差异：
 
 App StoreNetwork Extension
 StandaloneSystem Extension
 tailscaledutun interface
 
-Available
-yes
-yes
-yes
+可用性
+是
+是
+是
 
 GUI
-yes
-yes
-no
+是
+是
+否
 
 CLI
-yes
-yes
-yes
+是
+是
+是
 
-Minimum macOS
+最低 macOS 版本
 macOS Monterey 12.0
 macOS Monterey 12.0
 macOS Monterey 12.0
 
-Requires Apple ID
-yes
-no
-no
+需要 Apple ID
+是
+否
+否
 
-Run before login
-no; sandboxed
-no
-yes
+登录前运行
+否；受沙箱限制
+否
+是
 
-Keychain used
-user
-none; files on disk
-none; files on disk
+使用的钥匙串
+用户
+无；磁盘上的文件
+无；磁盘上的文件
 
-Sandboxed
-yes
-system ext only
-no
+沙箱化
+是
+仅系统扩展
+否
 
-Auto-updates
-yes; managed by the App Store
-yes; managed in-app (Sparkle)
-no
+自动更新
+是；由 App Store 管理
+是；应用内管理（Sparkle）
+否
 
-Open Source
-no
-no
-yes
+开源
+否
+否
+是
 
 MagicDNS
-yes
-yes
-yes
+是
+是
+是
 
 Taildrop
-yes
-yes
-incomplete
+是
+是
+不完整
 
 Funnel
-no
-no
-yes
+否
+否
+是
 
-Exit nodes
-yes
-yes
-partial; can advertise as exit node but cannot use them
+出口节点
+是
+是
+部分；可通告为出口节点但无法使用它们
 
-MDM support
-yes
-yes
-no
+MDM 支持
+是
+是
+否
 
-Can be a Tailscale SSH server
-no
-no
-yes
+可充当 Tailscale SSH 服务器
+否
+否
+是
 
-Can be a Tailscale SSH client
-yes
-yes
-yes
+可充当 Tailscale SSH 客户端
+是
+是
+是
 
-Supports `tailscale ssh` CLI command
-no, must use the regular `ssh` command
-yes
-yes
+支持 `tailscale ssh` CLI 命令
+否，必须使用常规 `ssh` 命令
+是
+是
 
-Supports services collection
-no
-yes
-yes
+支持 services collection
+否
+是
+是
 
-Compatible with Screen Time web filter
-no
-yes
-yes
+与屏幕使用时间网页过滤器兼容
+否
+是
+是
 
-Can generate configuration reports for support
-limited
-yes
-no
+可生成供支持团队使用的配置报告
+有限
+是
+否
 
-## Automating App Store installs
+## 自动化 App Store 安装
 
-To automate installs of the Mac App Store version of Tailscale, the
-[`mas-cli` tool][xt-gh-mas-cli] lets you run:
+要自动化安装 Mac App Store 版 Tailscale，可以使用 [`mas-cli` 工具][xt-gh-mas-cli]运行：
 
 ```shell
 mas install 1475387142
 ```
 
-## Troubleshooting
+## 故障排除
 
-To review common macOS issues and suggestions to help resolve them, refer to the [Troubleshooting guide][docs-troubleshooting-apple].
+要查看常见的 macOS 问题及解决建议，请参阅[故障排除指南][docs-troubleshooting-apple]。
 
 [docs-troubleshooting-apple]: /docs/reference/troubleshooting/apple
 

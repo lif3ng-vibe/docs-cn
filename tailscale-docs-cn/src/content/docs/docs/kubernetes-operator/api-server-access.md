@@ -1,42 +1,42 @@
 ---
-title: "Access the Kubernetes API server over Tailscale"
-description: "Securely access the Kubernetes API server over Tailscale."
+title: "通过 Tailscale 访问 Kubernetes API 服务器"
+description: "通过 Tailscale 安全访问 Kubernetes API 服务器。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The API server proxy lets you securely access your Kubernetes API server over your tailnet without exposing it to the public internet. It sits between tailnet clients and the Kubernetes API server, forwarding authenticated requests.
+API 服务器代理让你可以通过 tailnet 安全地访问 Kubernetes API 服务器，而无需将其暴露到公共互联网。它位于 tailnet 客户端与 Kubernetes API 服务器之间，转发经过身份验证的请求。
 
-The API server proxy supports two authentication modes and can run either [in-process][ar-in-process] within the operator or as a [dedicated ProxyGroup][ar-dedicated].
+API 服务器代理支持两种身份验证模式，既可以作为[进程内代理][ar-in-process]在 Operator 内运行，也可以作为[专用 ProxyGroup][ar-dedicated] 运行。
 
-> **Tip:**
+> **提示：**
 >
-> **Session recording**: You can record `kubectl exec`, `attach`, and `debug` sessions executed through the API server proxy for audit and compliance. Refer to [Record kubectl sessions][docs-session-recording].
+> **会话录制**：你可以录制通过 API 服务器代理执行的 `kubectl exec`、`attach` 和 `debug` 会话，以供审计与合规使用。请参阅[记录 kubectl 会话][docs-session-recording]。
 
-> **Tip:**
+> **提示：**
 >
-> **Looking to connect?** If the API server proxy is already configured, use `tailscale configure kubeconfig <proxy-hostname>` to set up `kubectl` access. You can find the proxy's MagicDNS name in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console or ask your cluster administrator. Refer to the [setup topic][docs-access-api] for details.
+> **想直接连接？**如果 API 服务器代理已配置好，可使用 `tailscale configure kubeconfig <proxy-hostname>` 设置 `kubectl` 访问。你可以在管理控制台的[机器](https://console.tailscale.com/admin/machines)页面找到代理的 MagicDNS 名称，也可以询问你的集群管理员。详情请参阅[设置主题][docs-access-api]。
 
-For information about the set up steps, refer to [Set up the Kubernetes API server over Tailscale][docs-access-api].
+有关设置步骤，请参阅[通过 Tailscale 设置 Kubernetes API 服务器][docs-access-api]。
 
-## Auth mode (default)
+## 身份验证模式（默认）
 
-In auth mode, the proxy authenticates incoming requests based on the source Tailscale identity and [impersonates][xt-k8s-impersonation] that identity when forwarding the request to the Kubernetes API server. This lets you use standard Kubernetes RBAC.
+在身份验证（auth）模式下，代理会根据来源的 Tailscale 身份对传入请求进行身份验证，并在将请求转发给 Kubernetes API 服务器时[模拟（impersonate）][xt-k8s-impersonation]该身份。这样你就可以使用标准的 Kubernetes RBAC。
 
-How the proxy determines the Kubernetes identity:
+代理如何确定 Kubernetes 身份：
 
-* **User devices**: The request is impersonated as the Tailscale user (for example, `alice@example.com`). If [grants][docs-grants] define additional Kubernetes groups, those are added as impersonation groups.
-* **Tagged devices**: The request is impersonated as a user with the node's FQDN, with the node's [tags][docs-tags] as Kubernetes groups. If grants define additional groups, those take precedence over the tag-based groups.
+* **用户设备**：请求会被模拟为该 Tailscale 用户（例如 `alice@example.com`）。如果[授权][docs-grants]定义了额外的 Kubernetes 组，这些组会被添加为模拟组。
+* **带标签的设备**：请求会被模拟为一个以节点 FQDN 为名的用户，并以节点的[标签][docs-tags]作为 Kubernetes 组。如果授权定义了额外的组，这些组将优先于基于标签的组。
 
-## noauth mode
+## noauth 模式
 
-In noauth mode, the proxy forwards requests to the API server without adding authentication information. This is useful if you use Tailscale only for connectivity and handle authentication through another mechanism.
+在 noauth 模式下，代理将请求转发给 API 服务器时不添加任何身份验证信息。如果你只使用 Tailscale 提供连接性，而通过其他机制处理身份验证，这种模式会很有用。
 
-[**Use the API server proxy without Tailscale authentication**](/docs/kubernetes-operator/api-server-access/noauth-mode) — Use the API server proxy for connectivity only, with external authentication.
+[**在不使用 Tailscale 身份验证的情况下使用 API 服务器代理**](/docs/kubernetes-operator/api-server-access/noauth-mode)——仅将 API 服务器代理用于连接，身份验证由外部机制完成。
 
-## In-process proxy
+## 进程内代理
 
-To get started, run the API server proxy in-process within the operator pod. Enable it by setting `apiServerProxyConfig.mode` when installing the operator with Helm:
+要开始使用，可以在 Operator pod 内以进程内方式运行 API 服务器代理。在使用 Helm 安装 Operator 时设置 `apiServerProxyConfig.mode` 即可启用：
 
 ```shell
 helm upgrade --install tailscale-operator tailscale/tailscale-operator \
@@ -46,41 +46,41 @@ helm upgrade --install tailscale-operator tailscale/tailscale-operator \
   --wait
 ```
 
-The client connects to the operator's tailnet address, and the operator proxies the request to the kube-apiserver.
+客户端连接到 Operator 的 tailnet 地址，Operator 再将请求代理到 kube-apiserver。
 
-*（图：A diagram showing the in-process API server proxy architecture. A client connects to the operator over the tailnet, and the operator proxies the request to the kube-apiserver inside the Kubernetes cluster.）*
+*（图：进程内 API 服务器代理架构图。客户端通过 tailnet 连接到 Operator，Operator 将请求代理到 Kubernetes 集群内的 kube-apiserver。）*
 
-This configuration means the proxy shares a lifecycle with the operator pod and is limited to a single replica.
+这种配置意味着代理与 Operator pod 共享生命周期，并且仅限单个副本。
 
-## Dedicated proxy (ProxyGroup)
+## 专用代理（ProxyGroup）
 
-For production environments, you can deploy the API server proxy as a dedicated [`ProxyGroup`][docs-proxygroup] with `spec.type: kube-apiserver`. This separates the proxy lifecycle from the operator and provides high availability through multiple replicas.
+对于生产环境，你可以将 API 服务器代理部署为具有 `spec.type: kube-apiserver` 的专用 [`ProxyGroup`][docs-proxygroup]。这样可以将代理的生命周期与 Operator 分离，并通过多副本提供高可用性。
 
-*（图：A diagram showing the dedicated API server proxy architecture. A ProxyGroup StatefulSet with multiple replicas proxies requests from tailnet clients to the kube-apiserver, separate from the operator pod.）*
+*（图：专用 API 服务器代理架构图。具有多个副本的 ProxyGroup StatefulSet 将来自 tailnet 客户端的请求代理到 kube-apiserver，与 Operator pod 相互独立。）*
 
-The dedicated proxy requires:
+专用代理需要：
 
-* **Impersonation RBAC**: The Helm value `apiServerProxyConfig.allowImpersonation` must be set to provision the Kubernetes RBAC needed for the `ProxyGroup` pods to impersonate users.
-* **Auto-approvers**: Your ACL policy must permit the `ProxyGroup`'s tag to advertise [Tailscale Services][docs-tailscale-services].
+* **模拟 RBAC**：必须设置 Helm 值 `apiServerProxyConfig.allowImpersonation`，以便为 `ProxyGroup` pod 预置模拟用户所需的 Kubernetes RBAC。
+* **自动审批**：你的 ACL 策略必须允许 `ProxyGroup` 的标签通告 [Tailscale Services][docs-tailscale-services]。
 
-Refer to the [Set up the Kubernetes API server over Tailscale][docs-access-api] for full setup instructions, and [High availability for the Tailscale Kubernetes Operator][docs-ha] for general `ProxyGroup` configuration.
+完整的设置说明请参阅[通过 Tailscale 设置 Kubernetes API 服务器][docs-access-api]，`ProxyGroup` 的一般配置请参阅 [Tailscale Kubernetes Operator 高可用][docs-ha]。
 
-## Limitations
+## 限制
 
-The API server proxy has the following limitations:
+API 服务器代理存在以下限制：
 
-* **In-cluster dependency**: The proxy runs inside the cluster. If the cluster cannot schedule pods, you may lose access to the API.
-* **TLS latency**: In-process proxies provision certificates on the first request, which may cause an initial timeout. `ProxyGroup` deployments avoid this by provisioning certificates before becoming ready.
+* **集群内依赖**：代理运行在集群内部。如果集群无法调度 pod，你可能失去对 API 的访问。
+* **TLS 延迟**：进程内代理在首次请求时签发证书，可能导致初次超时。`ProxyGroup` 部署会在就绪前预置证书，从而避免这一问题。
 
-## Further exploration
+## 进一步探索
 
-* Configure [Kubernetes RBAC][docs-auth-rbac] for the API server proxy.
-* Configure [high availability][docs-ha] for the Tailscale Kubernetes Operator.
-* Configure [session recording][docs-session-recording] for the API server proxy.
+* 为 API 服务器代理配置 [Kubernetes RBAC][docs-auth-rbac]。
+* 为 Tailscale Kubernetes Operator 配置[高可用][docs-ha]。
+* 为 API 服务器代理配置[会话录制][docs-session-recording]。
 
-[ar-dedicated]: #dedicated-proxy-proxygroup
+[ar-dedicated]: #专用代理proxygroup
 
-[ar-in-process]: #in-process-proxy
+[ar-in-process]: #进程内代理
 
 [docs-access-api]: /docs/kubernetes-operator/api-server-access/setup-api-over-tailscale
 

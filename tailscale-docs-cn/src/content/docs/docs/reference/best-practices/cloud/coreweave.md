@@ -1,28 +1,28 @@
 ---
-title: "CoreWeave best practices"
-description: "This document details best practices for using Tailscale with CoreWeave, particularly for connecting to [CoreWeave Kubernetes Service (CKS)][xt-coreweave-cks] clusters using the Tailscale Kubernetes O"
+title: "CoreWeave 最佳实践"
+description: "本文详细介绍将 Tailscale 与 CoreWeave 结合使用的最佳实践，尤其是使用 Tailscale Kubernetes Operator 连接 [CoreWeave Kubernetes Service (CKS)][xt-coreweave-cks] 集群的场景。"
 ---
 
-Last validated Aug 21, 2026
+最后验证于 Aug 21, 2026
 
-This document details best practices for using Tailscale with CoreWeave, particularly for connecting to [CoreWeave Kubernetes Service (CKS)][xt-coreweave-cks] clusters using the Tailscale Kubernetes Operator.
+本文详细介绍将 Tailscale 与 CoreWeave 结合使用的最佳实践，尤其是使用 Tailscale Kubernetes Operator 连接 [CoreWeave Kubernetes Service (CKS)][xt-coreweave-cks] 集群的相关实践。
 
-## Use the CoreWeave fork of the Tailscale Kubernetes Operator
+## 使用 Tailscale Kubernetes Operator 的 CoreWeave 分支版本
 
-CoreWeave maintains its own build of the [Tailscale Kubernetes Operator][docs-kubernetes-operator] so that it integrates cleanly with CKS: a purpose-built version of the `tailscale-operator` Helm chart, paired with a CoreWeave-specific container image. Deploy CoreWeave's fork rather than the upstream Helm chart when running on CKS.
+CoreWeave 维护着自己的 [Tailscale Kubernetes Operator][docs-kubernetes-operator] 构建版本，以便与 CKS 干净地集成：一个专门定制的 `tailscale-operator` Helm chart，搭配 CoreWeave 专用的容器镜像。在 CKS 上运行时，请部署 CoreWeave 的分支版本，而不要使用上游 Helm chart。
 
-> **Note:**
+> **注意：**
 >
-> For setup instructions, refer to CoreWeave's [`tailscale-operator`documentation][xt-coreweave-tailscale-operator].
+> 设置说明请参阅 CoreWeave 的 [`tailscale-operator`文档][xt-coreweave-tailscale-operator]。
 
-For details on the chart's customizations, refer to [Deploy the `tailscale-operator` chart][xt-coreweave-deploy-chart].
+chart 定制内容的详情请参阅[部署 `tailscale-operator` chart][xt-coreweave-deploy-chart]。
 
-## Networking and connectivity
+## 网络与连接
 
-CoreWeave nodes do not receive public IP addresses and are behind a [hard NAT][docs-device-connectivity-hard-nat], which can prevent [direct connections][docs-connection-types] between peers and reduce bandwidth and connection stability. To optimize connectivity:
+CoreWeave 节点没有公网 IP 地址，且位于[硬 NAT][docs-device-connectivity-hard-nat] 之后，这会阻碍节点间的[直连][docs-connection-types]，并降低带宽与连接稳定性。要优化连接：
 
-* Add [CoreWeave's DERP servers][xt-coreweave-derpmap] to your tailnet's `derpMap` configuration alongside, or instead of, Tailscale's default relays for optimal connectivity into CoreWeave's networks.
-* Deploy and configure [peer relays][docs-peer-relays] in your network, with a public IP address, and allow incoming UDP traffic to the relay port to support connections through CoreWeave's NAT gateway.
+* 在 tailnet 的 `derpMap` 配置中，与 Tailscale 默认中继一起（或作为其替代）加入 [CoreWeave 的 DERP 服务器][xt-coreweave-derpmap]，以获得进入 CoreWeave 网络的最佳连接。
+* 在网络中部署并配置带公网 IP 地址的[对等中继（peer relay）][docs-peer-relays]，并放行发往中继端口的入站 UDP 流量，以支持经由 CoreWeave NAT 网关的连接。
 
 [docs-connection-types]: /docs/reference/connection-types
 

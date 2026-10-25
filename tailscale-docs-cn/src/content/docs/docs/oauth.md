@@ -1,22 +1,22 @@
 ---
-title: "OAuth on Tailscale"
-description: "Authorize tools and integrations to act upon your tailnet through OAuth."
+title: "Tailscale 上的 OAuth"
+description: "通过 OAuth 授权工具与集成代你操作 tailnet。"
 ---
 
-Last validated Jun 30, 2026
+最后验证于 Jun 30, 2026
 
-Tailscale supports OAuth for tools and integrations that act upon your tailnet. Two mechanisms are available, and they differ in the identity that resulting actions carry:
+Tailscale 支持 OAuth，供对 tailnet 执行操作的工具和集成使用。有两种机制可用，区别在于最终操作所携带的身份：
 
-* [OAuth clients][docs-oauth-clients] use the client credentials flow. They create tag-owned resources tied to a service identity, and are suited to automation that runs without a person present.
-* [OAuth apps][docs-oauth-apps] use the authorization code flow. A user completes a consent screen, and the resulting authorization carries that individual user's identity.
+* [OAuth 客户端][docs-oauth-clients]使用客户端凭证流程。它们会创建绑定到服务身份的、由标签归属的资源，适合在无人参与下运行的自动化任务。
+* [OAuth 应用][docs-oauth-apps]使用授权码流程。由用户完成同意屏幕，产生的授权会携带该用户的身份。
 
-Explore the following topics to work with OAuth on Tailscale:
+探索以下主题，在 Tailscale 上使用 OAuth：
 
-[**OAuth clients**](/docs/features/oauth-clients) — Use OAuth clients to provide ongoing access to the Tailscale API.
+[**OAuth 客户端**](/docs/features/oauth-clients)——使用 OAuth 客户端为 Tailscale API 提供持续访问。
 
-[**OAuth apps**](/docs/features/oauth-apps) — Build internal tools that act on behalf of individual users through a standard OAuth 2.0 authorization code flow, so each action carries the consenting user's identity.
+[**OAuth 应用**](/docs/features/oauth-apps)——通过标准 OAuth 2.0 授权码流程构建代表单个用户执行操作的内网工具，让每个操作都携带同意授权用户的身份。
 
-[**Device provisioning with OAuth apps**](/docs/features/oauth-apps/device-provisioning) — Build internal tools that provision tailnet devices on behalf of individual users with a standard OAuth authorization code flow, so each device carries the consenting user's identity.
+[**使用 OAuth 应用进行设备开通**](/docs/features/oauth-apps/device-provisioning)——通过标准 OAuth 授权码流程构建代表单个用户开通 tailnet 设备的内网工具，让每台设备都携带同意授权用户的身份。
 
 [docs-oauth-apps]: /docs/features/oauth-apps
 

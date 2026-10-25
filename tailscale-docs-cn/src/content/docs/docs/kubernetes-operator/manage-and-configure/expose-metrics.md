@@ -1,11 +1,11 @@
 ---
-title: "Expose Operator metrics"
-description: "When specified for a resource, the following `ProxyClass` definition enables [client metrics][docs-client-metrics] at the path `/metrics` on a container port named \"metrics\":"
+title: "公开 Operator 指标"
+description: "为资源配置以下 `ProxyClass` 定义后，会在名为 \"metrics\" 的容器端口上的 `/metrics` 路径启用[客户端指标（client metrics）][docs-client-metrics]："
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-When specified for a resource, the following `ProxyClass` definition enables [client metrics][docs-client-metrics] at the path `/metrics` on a container port named "metrics":
+为资源配置以下 `ProxyClass` 定义后，会在名为 "metrics" 的容器端口上的 `/metrics` 路径启用[客户端指标（client metrics）][docs-client-metrics]：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -17,16 +17,16 @@ spec:
     enable: true
 ```
 
-The operator also creates a metrics `Service` for the proxy in the operator's namespace that also exposes metrics at `/metrics` on a port named "metrics".
+Operator 还会在 Operator 所在的命名空间中为该代理创建一个指标 `Service`，同样在名为 "metrics" 的端口上的 `/metrics` 路径公开指标。
 
 ## Prometheus `ServiceMonitor`
 
-The Kubernetes operator can also create a [Prometheus `ServiceMonitor`][xt-prometheus-service-monitor] for proxy resources.
+Kubernetes Operator 还可以为代理资源创建 [Prometheus `ServiceMonitor`][xt-prometheus-service-monitor]。
 
-To enable it:
+要启用它：
 
-1. Ensure that [Prometheus operator][xt-gh-prometheus-operator] including its custom resource definitions is installed.
-2. Apply `ProxyClass` that enables metrics and `ServiceMonitor` creation:
+1. 确保已安装 [Prometheus Operator][xt-gh-prometheus-operator] 及其自定义资源定义。
+2. 应用启用指标和 `ServiceMonitor` 创建的 `ProxyClass`：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -40,11 +40,11 @@ To enable it:
          enable: true
    ```
 
-The ingested metrics have [labels][xt-prometheus-labels] that identify the proxy to which the `ProxyClass` was applied:
+采集到的指标带有 [labels][xt-prometheus-labels]，用于标识 `ProxyClass` 应用到了哪个代理：
 
-* `ts_proxy_type`: Type of the proxy. Values can be `ingress_service`, `ingress_resource`, `connector` or `proxygroup`.
-* `ts_proxy_parent_name`: Name of the proxy's parent resource. That is, name of the `Ingress` resource, Tailscale `Service`, `Connector` or `ProxyGroup`.
-* `ts_proxy_parent_namespace`: Namespace of the proxy's parent resource. This only applies to namespaced resources.
+* `ts_proxy_type`：代理的类型。取值可以是 `ingress_service`、`ingress_resource`、`connector` 或 `proxygroup`。
+* `ts_proxy_parent_name`：代理的父资源名称。即 `Ingress` 资源、Tailscale `Service`、`Connector` 或 `ProxyGroup` 的名称。
+* `ts_proxy_parent_namespace`：代理的父资源所在的命名空间。仅适用于有命名空间的资源。
 
 [docs-client-metrics]: /docs/reference/tailscale-client-metrics
 

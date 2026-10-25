@@ -1,26 +1,22 @@
 ---
-title: "Access your tailnet GitHub Codespaces"
-description: "[GitHub Codespaces][xt-gh-codespaces] is a way to run Visual Studio Code—with its editor, terminal, debugger, version control, settings sync, and the entire ecosystem of extensions—hosted in the cloud"
+title: "从 GitHub Codespaces 访问你的 tailnet"
+description: "[GitHub Codespaces][xt-gh-codespaces] 是一种在云端运行 Visual Studio Code 的方式——包括其编辑器、终端、调试器、版本控制、设置同步以及整个扩展生态。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[GitHub Codespaces][xt-gh-codespaces] is a way to run Visual Studio
-Code—with its editor, terminal, debugger, version control, settings sync,
-and the entire ecosystem of extensions—hosted in the cloud.
+[GitHub Codespaces][xt-gh-codespaces] 是一种在云端运行 Visual Studio
+Code 的方式——包括其编辑器、终端、调试器、版本控制、设置同步以及整个扩展生态。
 
-Tailscale can be installed within a Codespace to be able to access private resources
-such as package registries or license servers securely, regardless of whether they're in
-the cloud or on premises. You can also use Tailscale to share your development or staging
-environment with a colleague.
+Tailscale 可以安装在 Codespace 内，从而安全地访问私有资源，例如软件包仓库或许可证服务器，无论它们位于云端还是本地部署。你还可以使用 Tailscale 与同事共享你的开发或预发布（staging）环境。
 
-## Integration
+## 集成
 
-When using [GitHub Codespaces][xt-gh-codespaces], you can include Tailscale as a [feature][xt-gh-features] in your [dev container][xt-gh-dev-containers].
+使用 [GitHub Codespaces][xt-gh-codespaces] 时，你可以将 Tailscale 作为 [feature][xt-gh-features] 包含在你的 [dev container][xt-gh-dev-containers] 中。
 
-This feature is available from the [`tailscale/codespace` repository][xt-gh-tailscale-codespace].
+该 feature 可从 [`tailscale/codespace` 仓库][xt-gh-tailscale-codespace]获取。
 
-To use the Tailscale feature, in your `devcontainer.json` include:
+要使用 Tailscale feature，请在你的 `devcontainer.json` 中加入：
 
 ```json
 "runArgs": ["--device=/dev/net/tun"],
@@ -33,16 +29,16 @@ To use the Tailscale feature, in your `devcontainer.json` include:
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-Then launch your codespace.
+然后启动你的 codespace。
 
-## Authorization
+## 授权
 
-The first time the codespace starts it is necessary to authenticate it to join the tailnet.
-In the terminal window run: `tailscale set --accept-routes`
+codespace 首次启动时，需要进行身份验证才能加入 tailnet。
+在终端窗口中运行：`tailscale set --accept-routes`
 
-This will print a URL to visit in a browser where you can log into the desired account.
+它会输出一个 URL，请在浏览器中访问该 URL，登录你想要的账户。
 
-*（图：GitHub Codespace writing this topic）*
+*（图：正在编写本主题的 GitHub Codespace）*
 
 [xt-gh-codespaces]: https://github.com/features/codespaces
 

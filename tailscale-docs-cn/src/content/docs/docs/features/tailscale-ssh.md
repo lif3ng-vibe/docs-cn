@@ -1,137 +1,137 @@
 ---
 title: "Tailscale SSH"
-description: "Use Tailscale SSH to manage the authentication and authorization of SSH connections in your tailnet."
+description: "使用 Tailscale SSH 管理 tailnet 中 SSH 连接的身份验证和授权。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale SSH lets Tailscale manage the authentication and authorization of SSH connections in your tailnet.
+Tailscale SSH 让 Tailscale 能够管理你 tailnet 中 SSH 连接的身份验证和授权。
 
-> **Note:** Tailscale SSH is available for [all plans](https://tailscale.com/pricing).
+> **注意：** Tailscale SSH 适用于[所有套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景信息和示例。
 
 [What is Tailscale SSH? (video)](https://www.youtube.com/watch?v=08clF9srJ2k)
 
-## Why it matters
+## 为什么重要
 
-With Tailscale SSH, you can:
+使用 Tailscale SSH，你可以：
 
-* **SSH as normal**, using Tailscale for authentication. With Tailscale SSH, Tailscale takes over port `22` for SSH connections incoming from the Tailscale network. Tailscale will authenticate and encrypt the connection over WireGuard, using Tailscale node keys. The SSH client and server will still create an encrypted SSH connection, but it will not be further authenticated.
-* **Verify high-risk connections with check mode**. Optionally require certain connections, or connections as certain users (for example, `root`), to re-authenticate before connecting. This lets the user access these high-risk applications for the next 12 hours or for a specified check period before re-authenticating again.
+* **像平常一样使用 SSH**，由 Tailscale 负责身份验证。启用 Tailscale SSH 后，Tailscale 会接管 `22` 端口，处理来自 Tailscale 网络的 SSH 连接。Tailscale 会使用 Tailscale 节点密钥通过 WireGuard 对连接进行身份验证和加密。SSH 客户端与服务器仍会建立加密的 SSH 连接，但不会再进行额外的身份验证。
+* **使用检查模式验证高风险连接**。可以选择要求某些连接，或以特定用户（例如 `root`）身份发起的连接，在连接之前重新进行身份验证。这样，用户在接下来的 12 小时内或指定的检查周期内可以访问这些高风险应用，之后需要重新验证。
 
-Your SSH configuration (`/etc/ssh/sshd_config`) and keys (`~/.ssh/authorized_keys`) files will not be modified, which means that other SSH connections to the same host, not made over Tailscale, will still work.
+你的 SSH 配置（`/etc/ssh/sshd_config`）和密钥（`~/.ssh/authorized_keys`）文件不会被修改，这意味着不经过 Tailscale 的其他 SSH 连接仍然可以连接同一台主机。
 
-## Benefits
+## 优势
 
-* **Reduce management of SSH keys**—Tailscale SSH uses WireGuard keys that are automatically generated and expire after a session ends.
-* **Enforce access by leveraging Tailscale access controls**—give access only to users and groups that need SSH and enforce it with check mode.
-* **Record SSH sessions with SSH recording**—enforce [SSH recording][docs-ssh-recording] for audit, troubleshooting, and compliance requirements.
+* **减少 SSH 密钥的管理工作**——Tailscale SSH 使用自动生成的 WireGuard 密钥，会话结束后即过期。
+* **借助 Tailscale 访问控制实施访问管理**——只向需要 SSH 的用户和组授予访问权限，并通过检查模式加以强制。
+* **使用 SSH 录制记录会话**——强制启用 [SSH 录制][docs-ssh-recording]，满足审计、故障排查和合规要求。
 
-## Use cases
+## 用例
 
-* **SSH access to infrastructure**—ensure all SSH traffic is routed over the tailnet.
-* **Reduce usage of other tools**—consolidate tooling for managing SSH access.
-* **Meet compliance needs**—meet workforce regulatory and compliance requirements for SSH.
+* **基础设施的 SSH 访问**——确保所有 SSH 流量都经由 tailnet 路由。
+* **减少对其他工具的依赖**——整合用于管理 SSH 访问的工具。
+* **满足合规需求**——满足针对 SSH 的员工监管与合规要求。
 
-## How is Tailscale SSH different?
+## Tailscale SSH 有何不同？
 
-Historically, to secure an SSH connection, you generate a key pair on the machine you are connecting from (known as the client), with the private key stored on the client, and the public key distributed to the device you want to connect to (known as the server). This lets the server authenticate communication from the client.
+过去，要保护 SSH 连接，你需要在发起连接的机器（即客户端）上生成密钥对，私钥保存在客户端，公钥分发到你要连接的设备（即服务器）。这使服务器能够对来自客户端的通信进行身份验证。
 
-With Tailscale, you can already connect machines in your network, and encrypt communications end-to-end from one point to another—and this includes, for example, SSH-ing from your work laptop to your work desktop. Tailscale also knows your identity, since that's how you connected to your tailnet. When you enable Tailscale SSH, Tailscale claims port `22` for the Tailscale IP address (that is, only for traffic coming from your tailnet) on the devices for which you have enabled Tailscale SSH. This routes SSH traffic for the device from the Tailscale network to an SSH server run by Tailscale, instead of your standard SSH server. With Tailscale SSH, based on the access control policies in your tailnet, you can allow devices to connect over SSH and rely on Tailscale instead of public keys for authentication.
+使用 Tailscale，你本来就可以连接网络中的机器，并对点到点通信进行端到端加密——例如从工作笔记本 SSH 到工作台式机。Tailscale 也知道你的身份，因为你正是通过它加入 tailnet 的。启用 Tailscale SSH 后，Tailscale 会在你启用了 Tailscale SSH 的设备上，为 Tailscale IP 地址占用 `22` 端口（即只针对来自你 tailnet 的流量）。这会把该设备的 SSH 流量从 Tailscale 网络路由到由 Tailscale 运行的 SSH 服务器，而不是你标准的 SSH 服务器。借助 Tailscale SSH，你可以根据 tailnet 中的访问控制策略允许设备通过 SSH 连接，并依靠 Tailscale（而非公钥）进行身份验证。
 
 |                           | SSH                                         | Tailscale SSH                                                                                  |
 | ------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| IP addresses              | Works with IP addresses.                    | Works with IP addresses.                                                                       |
-| [MagicDNS][docs-magicdns] | Works with MagicDNS names.                  | Works with MagicDNS names.                                                                     |
-| DNS Limitations           | Does not require DNS if using IP addresses. | Uses a custom `known_hosts` file with hostnames. If DNS cannot resolve, this can cause errors. |
-| Access Controls           | Works with Access Controls.                 | Uses centralized policy management based on Tailscale identities.                              |
-| SSH recording             |                                             | Works with SSH recording.                                                                      |
-| macOS                     | Available.                                  | Requires use of [open source `tailscaled` variant][docs-macos-variants-open-source].           |
+| IP 地址                   | 支持 IP 地址。                              | 支持 IP 地址。                                                                                 |
+| [MagicDNS][docs-magicdns] | 支持 MagicDNS 名称。                        | 支持 MagicDNS 名称。                                                                           |
+| DNS 限制                  | 使用 IP 地址时不需要 DNS。                  | 使用带主机名的自定义 `known_hosts` 文件。如果 DNS 无法解析，可能会导致错误。                   |
+| 访问控制                  | 支持访问控制。                              | 使用基于 Tailscale 身份的集中式策略管理。                                                      |
+| SSH 录制                  |                                             | 支持 SSH 录制。                                                                                |
+| macOS                     | 可用。                                      | 需要使用[开源 `tailscaled` 变体][docs-macos-variants-open-source]。                            |
 
-For additional information, refer to [Limitations][ar-limitations].
+更多信息请参阅[局限性][ar-limitations]。
 
-## How does it work?
+## 工作原理
 
-Compared to using SSH keys, using Tailscale SSH changes how authentication of your connections, key generation and distribution, and user revocation work.
+与使用 SSH 密钥相比，Tailscale SSH 改变了连接身份验证、密钥生成与分发以及用户撤销的工作方式。
 
-### Authentication and authorization
+### 身份验证与授权
 
-Normally, to establish an SSH connection, the local SSH client you use will connect to the SSH server on the machine you're trying to reach.
+通常，建立 SSH 连接时，你使用的本地 SSH 客户端会连接到目标机器上的 SSH 服务器。
 
-With Tailscale SSH, Tailscale will authenticate and encrypt the connection over WireGuard, using Tailscale node keys. The SSH client and server will still create an SSH connection, but during the SSH protocol's authentication phase, the Tailscale SSH server already knows who the remote party is and takes over, not requiring the SSH client to provide further proof (using the SSH authentication type `none`).
+使用 Tailscale SSH 时，Tailscale 会使用 Tailscale 节点密钥通过 WireGuard 对连接进行身份验证和加密。SSH 客户端与服务器仍会建立 SSH 连接，但在 SSH 协议的身份验证阶段，Tailscale SSH 服务器已经知道远端是谁并直接接管，无需 SSH 客户端提供进一步的证明（使用 SSH 身份验证类型 `none`）。
 
-Tailscale will only authorize the two devices to connect if the access control policies in the tailnet permit it. Tailscale uses `netstack` port interception and just-in-time automatic configuration of the client `known_hosts` file to make `ssh myhost` work without any new binary or configuration file. Tailscale implements the SSH File Transfer Protocol (SFTP) which lets SCP and SFTP work for newer SSH clients.
+只有当 tailnet 中的访问控制策略允许时，Tailscale 才会授权这两台设备连接。Tailscale 使用 `netstack` 端口拦截和对客户端 `known_hosts` 文件的即时自动配置，让 `ssh myhost` 无需任何新的二进制文件或配置文件即可工作。Tailscale 还实现了 SSH 文件传输协议（SFTP），让较新的 SSH 客户端可以使用 SCP 和 SFTP。
 
-### Encryption
+### 加密
 
-With Tailscale SSH, in addition to encryption provided by the SSH protocol, Tailscale encrypts the connection end-to-end using WireGuard, which also includes integrity.
+使用 Tailscale SSH 时，除 SSH 协议提供的加密外，Tailscale 还会使用 WireGuard 对连接进行端到端加密，其中包括完整性保护。
 
-### Key management and distribution
+### 密钥管理与分发
 
-Tailscale already manages and distributes [node keys and machine keys][bl-tailscale-key-management] for devices in your tailnet. Tailscale uses the node key for authentication, authorization, and encryption of the SSH connection.
+Tailscale 本来就会为 tailnet 中的设备管理和分发[节点密钥和机器密钥][bl-tailscale-key-management]。Tailscale 使用节点密钥对 SSH 连接进行身份验证、授权和加密。
 
-With Tailscale SSH, Tailscale also distributes public SSH host keys. The private key is stored locally, and the public key is shared with the Tailscale control plane for distribution. This host key means that the SSH client recognizes the host it is connecting to. Once the host is recognized, Tailscale stores the host key to avoid presenting the user with an "unknown host" error message.
+使用 Tailscale SSH 时，Tailscale 还会分发公开的 SSH 主机密钥。私钥存储在本地，公钥则与 Tailscale 控制平面共享以便分发。有了这个主机密钥，SSH 客户端就能识别它所连接的主机。主机被识别后，Tailscale 会存储该主机密钥，以避免向用户显示"未知主机"错误消息。
 
-Based on an [access control policy][docs-access-control], if two devices are permitted to connect, then Tailscale's control plane will share their public node keys for discovery, which lets these devices generate an end-to-end encrypted WireGuard connection. If also permitted by the access control policy, Tailscale will share their public SSH host keys, which lets these devices be recognized as part of an SSH connection. If a key is compromised, the user can [remove the keys on the device, re-install Tailscale][docs-uninstall], and re-authenticate to generate and distribute new node and SSH host keys.
+根据[访问控制策略][docs-access-control]，如果允许两台设备连接，Tailscale 的控制平面会共享它们的公开节点密钥以便相互发现，使这些设备能够建立端到端加密的 WireGuard 连接。如果访问控制策略同样允许，Tailscale 还会共享它们的公开 SSH 主机密钥，使这些设备能在 SSH 连接中被识别。如果某个密钥被泄露，用户可以[移除设备上的密钥并重新安装 Tailscale][docs-uninstall]，然后重新进行身份验证，以生成并分发新的节点密钥和 SSH 主机密钥。
 
-### User revocation
+### 用户撤销
 
-[Access control policies][docs-access-control] determine which devices, and which users, are authorized for an SSH connection. Unlike with SSH keys which need to be purged, to remove a user's ability to SSH to a device, the access control policy can be updated to restrict a user's access. Once the access control policy is saved, clients respond to the new rules within seconds. This **will** stop existing SSH connections the user has established.
+[访问控制策略][docs-access-control]决定哪些设备和哪些用户有权进行 SSH 连接。与需要清除的 SSH 密钥不同，要撤销用户 SSH 到某台设备的权限，只需更新访问控制策略来限制该用户的访问。访问控制策略保存后，客户端会在几秒内响应新规则。这**会**终止该用户已建立的现有 SSH 连接。
 
-### Check mode
+### 检查模式
 
-Optionally, connections over Tailscale SSH can require a user to re-authenticate before establishing an SSH connection. This requires the user to sign in again with their identity provider. A user will not need to re-authenticate for other connections in check mode for the next 12 hours, or a specified check period.
+可选地，通过 Tailscale SSH 发起的连接可以要求用户在建立 SSH 连接之前重新进行身份验证。这需要用户使用其身份提供方重新登录。在接下来的 12 小时内或指定的检查周期内，用户进行其他检查模式连接时无需再次验证。
 
-## Configure Tailscale SSH
+## 配置 Tailscale SSH
 
-### Prerequisites
+### 前提条件
 
-Tailscale SSH's server component is only available on:
+Tailscale SSH 的服务器组件仅在以下平台可用：
 
 * Linux
-* macOS open source [`tailscale` + `tailscaled` CLI devices][xt-gh-tailscale-tailscaled-macos]
+* macOS 开源 [`tailscale` + `tailscaled` CLI 设备][xt-gh-tailscale-tailscaled-macos]
 
-You can connect from any device running Tailscale, regardless of platform. Tailscale SSH's server component requires Tailscale v1.24 or later.
+你可以从任何运行 Tailscale 的设备发起连接，不受平台限制。Tailscale SSH 的服务器组件要求 Tailscale v1.24 或更高版本。
 
-To enable Tailscale SSH, you must:
+要启用 Tailscale SSH，你必须：
 
-* Advertise Tailscale SSH from the destination to which you want to connect.
-* Ensure an access control policy exists that grants the source with access to the destination on port `22`.
-  * This is not necessary if you haven't modified the [access control policies][docs-access-control] in your account, as the [default access control policy][docs-acl-samples-all-default] grants access to all devices in the tailnet.
-  * This may require modifying the tailnet policy file to include SSH. You need to be an [Admin or Network admin](/docs/reference/user-roles) to modify the tailnet policy file.
-* Ensure an access control policy exists that lets the source use SSH to connect to the destination machine using Tailscale SSH.
-  * This is not necessary if you haven't modified the [access control policies][docs-access-control] in your account, as the [SSH access rules in the default access control policy][ar-ssh-acls-default] grant SSH access to all devices.
-  * This will require modifying the tailnet policy file to include SSH policies. You need to be an [Admin or Network admin](/docs/reference/user-roles) to modify the tailnet policy file.
+* 在你要连接的目标设备上通告 Tailscale SSH。
+* 确保存在一条访问控制策略，授予源设备在 `22` 端口访问目标设备的权限。
+  * 如果你没有修改过账户中的[访问控制策略][docs-access-control]，则无需此步骤，因为[默认访问控制策略][docs-acl-samples-all-default]允许访问 tailnet 中的所有设备。
+  * 这可能需要修改 tailnet 策略文件以加入 SSH。你必须具有 [Admin 或 Network admin](/docs/reference/user-roles) 身份才能修改 tailnet 策略文件。
+* 确保存在一条访问控制策略，允许源设备通过 Tailscale SSH 使用 SSH 连接到目标机器。
+  * 如果你没有修改过账户中的[访问控制策略][docs-access-control]，则无需此步骤，因为[默认访问控制策略中的 SSH 访问规则][ar-ssh-acls-default]允许对所有设备进行 SSH 访问。
+  * 这需要修改 tailnet 策略文件以加入 SSH 策略。你必须具有 [Admin 或 Network admin](/docs/reference/user-roles) 身份才能修改 tailnet 策略文件。
 
-### Advertise SSH on the host
+### 在主机上通告 SSH
 
-On the host being connected to, you need to advertise that Tailscale is managing SSH connections which originate from the Tailscale network to this host. To do so, run:
+在被连接的主机上，你需要通告：由 Tailscale 管理来自 Tailscale 网络、发往该主机的 SSH 连接。为此，请运行：
 
 ```shell
 tailscale set --ssh
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Running `tailscale set --ssh` will cause any existing SSH connections you have to the host's Tailscale IP to hang.
+> 运行 `tailscale set --ssh` 会导致你已有的、指向该主机 Tailscale IP 的 SSH 连接挂起。
 
-This generates a host key pair, shares its public half with the Tailscale control plane for distribution to clients, and configures `tailscaled` to intercept all traffic from your tailnet that is routed to port `22` on the Tailscale IP address. This SSH initialization only needs to be done once per host.
+此命令会生成一个主机密钥对，将其公钥部分与 Tailscale 控制平面共享以便分发到客户端，并配置 `tailscaled` 拦截所有来自你 tailnet、路由到 Tailscale IP 地址 `22` 端口的流量。每个主机只需执行一次此 SSH 初始化。
 
-### Ensure Tailscale SSH is permitted in access control policies
+### 确保访问控制策略允许 Tailscale SSH
 
-Before you can use Tailscale SSH, you have to tell Tailscale which users are allowed to SSH to which devices. Since Tailscale automatically manages the authorization and authentication for you, you need to explicitly define these connections.
+在使用 Tailscale SSH 之前，你需要告诉 Tailscale 哪些用户可以 SSH 到哪些设备。由于 Tailscale 会自动为你管理授权和身份验证，因此你需要显式定义这些连接。
 
-SSH access rules are defined in the tailnet policy file, which you can edit through the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, or through the Tailscale [API][docs-api].
+SSH 访问规则定义在 tailnet 策略文件中，你可以通过管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面或 Tailscale [API][docs-api] 进行编辑。
 
-For a connection to be permitted, the tailnet policy file must contain rules permitting both network access and SSH access:
+要允许一个连接，tailnet 策略文件必须同时包含允许网络访问和 SSH 访问的规则：
 
-1. An allowed connection from the source to the destination. This is used to allow any connections in Tailscale (including SSH connections), to distribute keys for WireGuard.
-2. An allowed SSH connection from the source to the destination and the given SSH users. This is used for Tailscale SSH, to distribute keys for authenticating SSH connections.
+1. 一条允许从源到目标的连接规则。它用于允许 Tailscale 中的任何连接（包括 SSH 连接），以便分发 WireGuard 密钥。
+2. 一条允许从源到目标、针对指定 SSH 用户的 SSH 连接规则。它用于 Tailscale SSH，以便分发用于验证 SSH 连接的密钥。
 
-Each SSH access rule looks like this:
+每条 SSH 访问规则的形式如下：
 
 ```json
 {
@@ -148,79 +148,79 @@ Each SSH access rule looks like this:
 
 #### `action`
 
-Specifies whether to accept the connection or to perform additional checks on it.
+指定是接受连接还是对其进行额外检查。
 
-* `accept` accepts connections from users already authenticated in the tailnet.
-* `check` requires users to periodically reauthenticate according to the `checkPeriod`.
+* `accept` 接受已在 tailnet 中完成身份验证的用户的连接。
+* `check` 要求用户按照 `checkPeriod` 定期重新验证。
 
 #### `src`
 
-The source where a connection originates from. This can be a user, group, tag, `user:*@<domain>`, or [`autogroup`][docs-policy-syntax-autogroups].
+连接的来源。可以是用户、组、标签、`user:*@<domain>` 或 [`autogroup`][docs-policy-syntax-autogroups]。
 
-This cannot be a bare wildcard `*`.
+不能是单独的通配符 `*`。
 
-> **Warning:**
+> **警告：**
 >
-> Granting access to `autogroup:member` also grants access to [external invited users][docs-invite-any-user] if the destination node is [shared][docs-sharing] with them, even if they have no nodes in your tailnet.
+> 授予 `autogroup:member` 访问权限，也会向[外部受邀用户][docs-invite-any-user]授予访问权限——如果目标节点已与他们[共享][docs-sharing]，即使他们在你的 tailnet 中没有任何节点。
 
 #### `dst`
 
-The destination where the connection goes. This can be a user, tag, or autogroup.
+连接的目标。可以是用户、标签或 autogroup。
 
-Unlike ACLs, a port cannot be specified. Only port `22` is allowed, and does not need to be specified as it is used by default.
+与 ACL 不同，这里不能指定端口。只允许 `22` 端口，且无需指定，因为默认使用该端口。
 
-This cannot be a bare wildcard `*`.
+不能是单独的通配符 `*`。
 
 #### `users`
 
-The set of allowed usernames on the host. Like other SSH clients, Tailscale will only use user accounts that already exist on the host, not create new accounts.
+主机上允许使用的用户名集合。与其他 SSH 客户端一样，Tailscale 只会使用主机上已有的用户账户，不会创建新账户。
 
-* Specify `autogroup:nonroot` to allow any user that is not `root`.
-* Specify `localpart:*@<domain>` to allow the user on the host whose name matches the [local-part][xt-rfc-2822-3.4.1] of the user's login, if and only if the user's login email is in `<domain>`. Tailscale does not do any special processing on the local-part. For example, if the login is `dave+sshuser@example.com`, Tailscale will map this to the SSH user `dave+sshuser`.
+* 指定 `autogroup:nonroot` 可允许除 `root` 以外的任何用户。
+* 指定 `localpart:*@<domain>` 可允许主机上用户名与用户登录名的 [local-part][xt-rfc-2822-3.4.1] 匹配的用户——前提是用户的登录邮箱属于 `<domain>`。Tailscale 不会对 local-part 做任何特殊处理。例如，如果登录名是 `dave+sshuser@example.com`，Tailscale 会将其映射为 SSH 用户 `dave+sshuser`。
 
 #### `checkPeriod`
 
-When `action` is `check`, `checkPeriod` specifies the time period for which to allow a connection before requiring a check. This can be specified in minutes or hours, with a minimum of one minute and a maximum of 168 hours (one week).
+当 `action` 为 `check` 时，`checkPeriod` 指定在要求检查之前允许连接持续的时长。可以以分钟或小时为单位指定，最短 1 分钟，最长 168 小时（一周）。
 
-* If not specified, the default is 12 hours.
-* You may also specify `always` to require check mode on every connection. Choosing to always require check mode may cause unexpected behavior with automation tools that open many SSH connections in a short time span, like [Ansible][xt-ansible].
+* 如果未指定，默认为 12 小时。
+* 也可以指定 `always`，要求每次连接都进行检查。始终要求检查模式可能会导致在短时间内打开大量 SSH 连接的自动化工具（例如 [Ansible][xt-ansible]）出现意外行为。
 
 #### `acceptEnv`
 
-> **Note:**
+> **注意：**
 >
-> The host must be running Tailscale v1.76.0 or later to use `acceptEnv`.
+> 主机必须运行 Tailscale v1.76.0 或更高版本才能使用 `acceptEnv`。
 
-Specifies the set of allowlisted environment variable names that clients can send to the host using [`SendEnv`][xt-ssh-send-env] or [`SetEnv`][xt-ssh-set-env].
+指定允许客户端通过 [`SendEnv`][xt-ssh-send-env] 或 [`SetEnv`][xt-ssh-set-env] 发送到主机的环境变量名称白名单集合。
 
-Values can contain `*` and `?` wildcard characters. `*` matches zero or more characters and `?` matches a single character.
+值可以包含 `*` 和 `?` 通配符。`*` 匹配零个或多个字符，`?` 匹配单个字符。
 
-##### `acceptEnv` examples
+##### `acceptEnv` 示例
 
-| `acceptEnv` | Permitted                         | Rejected                  |
+| `acceptEnv` | 允许                              | 拒绝                      |
 | ----------- | --------------------------------- | ------------------------- |
 | `*`         | `FOO_A` `FOO_B` `FOO_OTHER` `BAZ` |                           |
 | `FOO_*`     | `FOO_A` `FOO_B` `FOO_OTHER`       | `BAZ`                     |
 | `FOO_?`     | `FOO_A` `FOO_B`                   | `FOO_OTHER` `BAZ`         |
 | `FOO_A`     | `FOO_A`                           | `FOO_B` `FOO_OTHER` `BAZ` |
 
-#### Order of evaluation
+#### 求值顺序
 
-SSH access rules are evaluated considering the most restrictive policies first:
+SSH 访问规则按最严格的策略优先的顺序求值：
 
-* Check policies
-* Accept policies
+* 检查策略
+* 接受策略
 
-For example, if you have an access rule allowing the user `alice@example.com` to access a resource with an `accept` rule, and a rule allowing `group:devops` which `alice@example.com` belongs to, to access a resource with a `check` rule, then the `check` rule applies.
+例如，如果有一条 `accept` 规则允许用户 `alice@example.com` 访问某个资源，还有一条 `check` 规则允许 `alice@example.com` 所属的 `group:devops` 访问该资源，那么将适用 `check` 规则。
 
-The only kinds of connections that are allowed are:
+仅允许以下类型的连接：
 
-* From a user to their own devices, as any user including `root`.
-* From a user to a tagged device, as any user including `root`.
-* From a user to a [shared][docs-sharing] tagged device, as any user including `root`.
-* From a tagged device to another tagged device, for any tags. An SSH access rule from a tagged device cannot be in [check mode][ar-tailscale-ssh-check-mode-config].
+* 从用户到自己的设备，可以是包括 `root` 在内的任何用户。
+* 从用户到带标签的设备，可以是包括 `root` 在内的任何用户。
+* 从用户到[共享][docs-sharing]给你的带标签设备，可以是包括 `root` 在内的任何用户。
+* 从带标签设备到另一台带标签设备，适用于任何标签。来自带标签设备的 SSH 访问规则不能处于[检查模式][ar-tailscale-ssh-check-mode-config]。
 
-That is, the broadest policy allowed would be:
+也就是说，允许的最宽松策略如下：
 
 ```json
 {
@@ -256,9 +256,9 @@ That is, the broadest policy allowed would be:
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-#### SSH access rules in default access control policy
+#### 默认访问控制策略中的 SSH 访问规则
 
-By default, new tailnets or existing tailnets that have not modified their access control policies have a usable but conservative Tailscale SSH access rule. To facilitate connectivity, Tailscale SSH is configured with a [default policy][docs-acl-samples-all-default] that lets the user access their own devices using check mode, as either `root` or non-`root`:
+默认情况下，新建的 tailnet 或未修改过访问控制策略的现有 tailnet，都有一条可用但保守的 Tailscale SSH 访问规则。为了便于建立连接，Tailscale SSH 配置了一条[默认策略][docs-acl-samples-all-default]，允许用户以检查模式访问自己的设备，身份可以是 `root` 或非 `root`：
 
 ```json
 "ssh": [
@@ -275,17 +275,17 @@ By default, new tailnets or existing tailnets that have not modified their acces
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You still need to opt in a destination device.
+你仍需在目标设备上选择加入。
 
-Modifying the access control policy for SSH overrides this default configuration, and removing it disables Tailscale SSH in your tailnet.
+修改 SSH 的访问控制策略会覆盖此默认配置，而将其删除则会在你的 tailnet 中禁用 Tailscale SSH。
 
-**Important note about `autogroup:nonroot`**
+**关于 `autogroup:nonroot` 的重要说明**
 
-In the default ACL, the `ssh` rule uses `autogroup:self` for the `dst` field and `autogroup:nonroot` in the `users` field. If you change the `dst` field from `autogroup:self` to some other destination, such as an [ACL tag](/docs/features/tags), also consider replacing `autogroup:nonroot` in the `users` field. If you don't remove `autogroup:nonroot` from the `users` field, then anyone permitted by the `src` setting will be able to SSH in as any nonroot user on the `dst` device.
+在默认 ACL 中，`ssh` 规则在 `dst` 字段使用 `autogroup:self`，在 `users` 字段使用 `autogroup:nonroot`。如果你把 `dst` 字段从 `autogroup:self` 改为其他目标（例如某个 [ACL 标签](/docs/features/tags)），请同时考虑替换 `users` 字段中的 `autogroup:nonroot`。如果不从 `users` 字段中移除 `autogroup:nonroot`，那么 `src` 设置允许的任何人都将能以 `dst` 设备上任意非 root 用户身份 SSH 登录。
 
-#### SSH access rule examples
+#### SSH 访问规则示例
 
-To allow a user to only SSH to their own devices, as non-`root`:
+允许用户仅以非 `root` 身份 SSH 到自己的设备：
 
 ```json
 {
@@ -309,7 +309,7 @@ To allow a user to only SSH to their own devices, as non-`root`:
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-To allow `group:sre` to access devices in the production environment tagged `tag:prod`:
+允许 `group:sre` 访问带有 `tag:prod` 标签的生产环境设备：
 
 ```json
 {
@@ -339,7 +339,7 @@ To allow `group:sre` to access devices in the production environment tagged `tag
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-It may be useful to match host users with login emails. For example, you can allow `dave@example.com` to authenticate as the host user `dave`. To allow any tailnet member in the login domain `example.com` to access devices in the production environment tagged `tag:prod`, as a user that matches their login email local-part:
+将主机用户与登录邮箱匹配可能很有用。例如，你可以允许 `dave@example.com` 以主机用户 `dave` 的身份进行身份验证。要允许登录域为 `example.com` 的任何 tailnet 成员，以其登录邮箱 local-part 匹配的用户身份访问带有 `tag:prod` 标签的生产环境设备：
 
 ```json
 {
@@ -363,130 +363,130 @@ It may be useful to match host users with login emails. For example, you can all
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### Connect over SSH
+### 通过 SSH 连接
 
-Now that your access control policy permits SSH, and the destination host has Tailscale configured with SSH, you should be able to use Tailscale SSH.
+现在你的访问控制策略已允许 SSH，目标主机也已配置了 Tailscale SSH，你应该可以使用 Tailscale SSH 了。
 
-To connect to a host named `device` in your tailnet:
+要连接到 tailnet 中名为 `device` 的主机：
 
 ```shell
 ssh device
 ```
 
-This example uses the [MagicDNS][docs-magicdns] hostname.
+此示例使用 [MagicDNS][docs-magicdns] 主机名。
 
-> **Note:**
+> **注意：**
 >
-> The MagicDNS hostname is automatically generated from the machine's name. You can [edit the machine name][docs-machine-names-renaming-a-machine] if you want to use a different name.
+> MagicDNS 主机名是根据机器名称自动生成的。如果你想使用其他名称，可以[编辑机器名称][docs-machine-names-renaming-a-machine]。
 
-To use a user different from the local user, specify the user, for example, `ubuntu`:
+要使用与本地用户不同的用户，请指定该用户，例如 `ubuntu`：
 
 ```shell
 ssh ubuntu@device
 ```
 
-> **Note:**
+> **注意：**
 >
-> Some SSH clients may fail to connect to an SSH server using no authentication. In this case, you can simulate password authentication by adding `+password` to the username you are connecting to in the client:
+> 有些 SSH 客户端可能无法连接到使用无身份验证的 SSH 服务器。在这种情况下，你可以在客户端中给要连接的用户名加上 `+password` 来模拟密码身份验证：
 >
 > ```
 > username: ubuntu+password
 > password: [any]
 > ```
 >
-> In this case you can enter any password, it does not need to match the user's actual password. Note that the string to add to the username is the literal string `+password` and not the user's password.
+> 此时你可以输入任意密码，无需与该用户的实际密码一致。注意，要添加到用户名中的字符串是字面量 `+password`，而不是用户的密码。
 
-You can also connect over SSH to a node that is tagged and has been [shared][docs-sharing] with you, as long as the destination host has Tailscale configured with SSH and the destination's access control policy lets you connect over SSH.
+你也可以通过 SSH 连接到一台带标签且已与你[共享][docs-sharing]的节点，前提是目标主机已配置 Tailscale SSH，且目标的访问控制策略允许你通过 SSH 连接。
 
-In addition to hostnames, it is also possible to use [Tailscale IP addresses][docs-100-x-addresses] as SSH destinations. Tailscale IP addresses remain constant regardless of the device's physical location. Even if a device switches network connections, such as from Wi-Fi to a cellular network, its Tailscale IP address remains the same.
+除主机名外，也可以使用 [Tailscale IP 地址][docs-100-x-addresses]作为 SSH 目标。无论设备的物理位置如何，Tailscale IP 地址保持不变。即使设备切换网络连接（例如从 Wi-Fi 切换到蜂窝网络），其 Tailscale IP 地址也不会改变。
 
-For example, connecting to a Tailscale IP address (like `100.64.0.1`) would resemble:
+例如，连接到 Tailscale IP 地址（如 `100.64.0.1`）的方式如下：
 
 ```shell
 ssh user@100.64.0.1
 ```
 
-You cannot connect to a Tailscale SSH server using a non-Tailscale IP address.
+你不能使用非 Tailscale IP 地址连接 Tailscale SSH 服务器。
 
-### Transition from your existing SSH client to Tailscale SSH
+### 从现有 SSH 客户端迁移到 Tailscale SSH
 
-When you enable Tailscale SSH, Tailscale claims port `22` for the Tailscale IP address (that is, only for traffic coming from your tailnet) on the devices for which you have enabled SSH, and routes SSH traffic for the device to an SSH server run by Tailscale, instead of your standard SSH server. Your SSH configuration (`/etc/ssh/sshd_config`) and keys (`~/.ssh/authorized_keys`) file will not be modified, which means that other SSH connections to the same host, not made over Tailscale, will still work.
+启用 Tailscale SSH 后，Tailscale 会在你启用了 SSH 的设备上，为 Tailscale IP 地址占用 `22` 端口（即只针对来自你 tailnet 的流量），并将该设备的 SSH 流量路由到由 Tailscale 运行的 SSH 服务器，而不是你标准的 SSH 服务器。你的 SSH 配置（`/etc/ssh/sshd_config`）和密钥（`~/.ssh/authorized_keys`）文件不会被修改，这意味着不经过 Tailscale 的其他 SSH 连接仍然可以连接同一台主机。
 
-### Rotate keys
+### 轮换密钥
 
-Re-authenticating on the device will generate a new node key pair, store the private key locally, and share the public key with Tailscale for distribution.
+在设备上重新进行身份验证会生成新的节点密钥对，在本地存储私钥，并与 Tailscale 共享公钥以便分发。
 
-To generate new node and SSH host keys:
+要生成新的节点密钥和 SSH 主机密钥：
 
 ```shell
 tailscale up --ssh --force-reauth
 ```
 
-## Disable Tailscale SSH
+## 禁用 Tailscale SSH
 
-### Disable Tailscale SSH from a device
+### 从设备禁用 Tailscale SSH
 
-Prior to disabling Tailscale SSH, ensure you have another way to SSH to the device, or else you may lose access to it.
+禁用 Tailscale SSH 之前，请确保你还有其他方式可以 SSH 到该设备，否则可能会失去对它的访问。
 
-Run `tailscale set` on the device with `--ssh=false` to disable Tailscale SSH:
-
-```shell
-tailscale set --ssh=false
-```
-
-### Block other devices from connecting to your device over SSH
-
-To disable Tailscale SSH on your device, reconfigure the device with `--ssh=false`:
+在该设备上运行带有 `--ssh=false` 的 `tailscale set` 以禁用 Tailscale SSH：
 
 ```shell
 tailscale set --ssh=false
 ```
 
-To [block incoming connections][docs-client-preferences-allow-incoming-connections] from the tailnet to your device, including Tailscale SSH connections:
+### 阻止其他设备通过 SSH 连接到你的设备
+
+要在你的设备上禁用 Tailscale SSH，请使用 `--ssh=false` 重新配置设备：
+
+```shell
+tailscale set --ssh=false
+```
+
+要[阻止][docs-client-preferences-allow-incoming-connections]来自 tailnet 的传入连接（包括 Tailscale SSH 连接）：
 
 ```shell
 tailscale set --shields-up
 ```
 
-### Revoke a user's ability to SSH
+### 撤销用户的 SSH 权限
 
-To remove a user's ability to SSH to a device, modify the [access rule][docs-policy-syntax-acls] specifying the user's ability to SSH to the device. An update to access control policies will be pushed to the device, and remove the user's access, almost instantaneously. You can still allow the user to connect to the device, but not use Tailscale SSH, if that is desired.
+要撤销用户 SSH 到某台设备的权限，请修改指定该用户 SSH 权限的[访问规则][docs-policy-syntax-acls]。访问控制策略的更新会推送到设备，并几乎立即移除该用户的访问权限。如有需要，你仍可以允许该用户连接到设备，但不使用 Tailscale SSH。
 
-This **will** stop existing SSH connections the user has established. The user will receive a message, "Access revoked".
+这**会**终止该用户已建立的现有 SSH 连接。用户会收到"Access revoked"（访问已被撤销）的消息。
 
-If a user has another way of accessing the device outside of Tailscale, such as their SSH key, this also needs to be removed or revoked.
+如果该用户有 Tailscale 之外的其他方式访问该设备（例如其 SSH 密钥），也需要将其移除或撤销。
 
-### Disable Tailscale SSH from your tailnet
+### 从 tailnet 中禁用 Tailscale SSH
 
-To completely remove Tailscale SSH functionality from your tailnet:
+要从你的 tailnet 中完全移除 Tailscale SSH 功能：
 
-* Opt out every host from Tailscale SSH (`tailscale set --ssh=false`)
-* Remove SSH access rules for Tailscale SSH from the access control policies
+* 让每台主机退出 Tailscale SSH（`tailscale set --ssh=false`）
+* 从访问控制策略中移除 Tailscale SSH 的 SSH 访问规则
 
-You do not need to remove or modify other [access rules][docs-policy-syntax-acls] if you still want users to be able to access the specified devices, but not using Tailscale SSH.
+如果你仍希望用户能够访问指定设备（只是不使用 Tailscale SSH），则无需移除或修改其他[访问规则][docs-policy-syntax-acls]。
 
-### Misconfigurations
+### 配置错误
 
-Tailscale SSH requires access control policies in the tailnet policy file that allow and specify both the SSH source and destination. Additionally, Tailscale SSH must be enabled on the destination device.
+Tailscale SSH 要求 tailnet 策略文件中的访问控制策略允许并指定 SSH 的源和目标。此外，目标设备上必须启用 Tailscale SSH。
 
-If the access control policy is missing, this can be changed in the tailnet policy file in the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console. You need to be an [Admin or Network admin](/docs/reference/user-roles) to modify the tailnet policy file.
+如果缺少访问控制策略，可以在管理控制台 [Access controls](https://console.tailscale.com/admin/acls) 页面的 tailnet 策略文件中修改。你必须具有 [Admin 或 Network admin](/docs/reference/user-roles) 身份才能修改 tailnet 策略文件。
 
-If SSH is not advertised on the device, connect to the device over Tailscale, then run `tailscale set --ssh`.
+如果设备上未通告 SSH，请通过 Tailscale 连接到该设备，然后运行 `tailscale set --ssh`。
 
-## Configure Tailscale SSH with check mode
+## 使用检查模式配置 Tailscale SSH
 
-SSH check mode lets you require SSH connections to be further verified before establishing the connection. Check mode requires re-authentication on the device initiating the connection. The SSH initialization provides a URL for signing in. The sign-in attempt may also trigger any identity provider [multifactor authentication][docs-multifactor-auth] (MFA) or other risk-based challenges.
+SSH 检查模式让你可以要求 SSH 连接在建立之前进行进一步验证。检查模式要求发起连接的设备重新进行身份验证。SSH 初始化会提供一个登录 URL。登录尝试还可能触发身份提供方的[多因素身份验证][docs-multifactor-auth]（MFA）或其他基于风险的质询。
 
-*（图：Use check mode to require a user to re-authenticate before being able to establish a Tailscale SSH connection.）*
+*（图：使用检查模式要求用户在建立 Tailscale SSH 连接之前重新进行身份验证。）*
 
-Example of check mode requiring a user to re-authenticate their session in a browser.
+检查模式要求用户在浏览器中重新验证会话的示例。
 
-Once re-authenticated to a destination, the user can access the device and any other device in the tailnet without re-verification for the next 12 hours. If a different check period is specified for the connection, then the user can access *specifically* this device without re-verification for the duration of the check period. For example, if a check period of 10 minutes is specified, if the user has not re-authenticated within the last 10 minutes, they will be asked to re-authenticate even if they have re-authenticated within the last 12 hours.
+对目标重新验证后，用户可以在接下来的 12 小时内访问该设备以及 tailnet 中的任何其他设备，而无需再次验证。如果为该连接指定了不同的检查周期，则用户可以在检查周期内访问*该特定*设备而无需再次验证。例如，如果指定的检查周期为 10 分钟，那么当用户在过去 10 分钟内未重新验证时，即使他们在过去 12 小时内验证过，也会被要求重新验证。
 
-* Check mode is optional and not enabled by default.
-* Check mode is only available for Tailscale SSH connections.
+* 检查模式是可选的，默认不启用。
+* 检查模式仅适用于 Tailscale SSH 连接。
 
-Check mode is controlled through SSH policy settings. The `ssh` rule must contain the `action` field, set to `check`:
+检查模式通过 SSH 策略设置控制。`ssh` 规则必须包含设置为 `check` 的 `action` 字段：
 
 ```json
 "ssh": [
@@ -502,13 +502,13 @@ Check mode is controlled through SSH policy settings. The `ssh` rule must contai
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-You can specify a custom check period in minutes or hours. The default check period is 12 hours. You may also specify `"always"` to require check mode on every connection.
+你可以以分钟或小时为单位指定自定义检查周期。默认检查周期为 12 小时。也可以指定 `"always"`，要求每次连接都进行检查。
 
-> **Note:**
+> **注意：**
 >
-> Choosing to always require check mode may cause unexpected behavior with automation tools that open many SSH connections in a short time span, such as [Ansible][xt-ansible].
+> 始终要求检查模式可能会导致在短时间内打开大量 SSH 连接的自动化工具（例如 [Ansible][xt-ansible]）出现意外行为。
 
-For example, to require check mode for Alice to SSH to devices tagged `tag:prod` as `root` and re-authenticate after `1h`, but not require check mode for her to SSH to her own devices as non-`root`:
+例如，要求 Alice 以 `root` 身份 SSH 到带有 `tag:prod` 标签的设备时启用检查模式并在 `1h` 后重新验证，但她以非 `root` 身份 SSH 到自己的设备时不要求检查模式：
 
 ```json
 {
@@ -539,70 +539,70 @@ For example, to require check mode for Alice to SSH to devices tagged `tag:prod`
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-## Limitations
+## 局限性
 
-### Devices
+### 设备
 
-* You can currently use Tailscale SSH to connect to only devices on your Tailscale network. Devices available behind subnet routers, but not running Tailscale, cannot use Tailscale SSH.
-* You can currently use Tailscale SSH to connect to only Linux devices and macOS open source [`tailscale` + `tailscaled` CLI version devices][xt-gh-tailscale-tailscaled-macos]. You can connect from any device running Tailscale, regardless of platform.
-* You cannot run Tailscale SSH on Synology or QNAP devices.
-* Restarting the Tailscale daemon (`tailscaled`), for example, by performing an upgrade, will stop any existing Tailscale SSH session.
+* 目前 Tailscale SSH 只能连接你 Tailscale 网络中的设备。子网路由器后方未运行 Tailscale 的设备无法使用 Tailscale SSH。
+* 目前 Tailscale SSH 只能连接 Linux 设备和 macOS 开源 [`tailscale` + `tailscaled` CLI 版本设备][xt-gh-tailscale-tailscaled-macos]。你可以从任何运行 Tailscale 的设备发起连接，不受平台限制。
+* 不能在群晖（Synology）或 QNAP 设备上运行 Tailscale SSH。
+* 重启 Tailscale 守护进程（`tailscaled`）（例如执行升级）会终止所有现有的 Tailscale SSH 会话。
 
-### Ports
+### 端口
 
-Tailscale SSH assumes you use port `22` for SSH.
+Tailscale SSH 假定你使用 `22` 端口进行 SSH。
 
-> **Note:**
+> **注意：**
 >
-> At this time, there is no way to configure Tailscale SSH to use a different port.
+> 目前无法将 Tailscale SSH 配置为使用其他端口。
 
-### SSH users
+### SSH 用户
 
-SSH access rules are evaluated based on their restrictiveness, so if both a check and an accept rule exist for a given connection, the check rule applies. This means that the user will be restricted by the SSH `users` in the check rule only, not also considering those allowed in the accept rule.
+SSH 访问规则按严格程度求值，因此如果某个连接同时存在 check 规则和 accept 规则，将适用 check 规则。这意味着用户只会受 check 规则中 SSH `users` 的限制，而不会同时考虑 accept 规则中允许的用户。
 
-### SSH tests
+### SSH 测试
 
-You can write [SSH tests][docs-policy-syntax-sshtests] to assert that your SSH access rules are working as expected.
+你可以编写 [SSH 测试][docs-policy-syntax-sshtests]，断言你的 SSH 访问规则按预期工作。
 
-### Check mode
+### 检查模式
 
-You can use check mode only on Tailscale SSH connections, not for plain SSH or other TCP connections running over Tailscale.
+检查模式只能用于 Tailscale SSH 连接，不能用于普通 SSH 或其他通过 Tailscale 运行的 TCP 连接。
 
-### OS user authentication on the client
+### 客户端上的 OS 用户身份验证
 
-Traditional SSH requires a local OS user on the client machine to be able to read their SSH key pair from files on disk. This effectively restricts which client-side OS users can SSH to remote machines.
+传统 SSH 要求客户端机器上的本地 OS 用户能够从磁盘文件中读取其 SSH 密钥对。这实际上限制了哪些客户端侧 OS 用户可以 SSH 到远程机器。
 
-Because Tailscale doesn't use a local SSH key pair for authentication, any OS user on the client machine can connect to SSH servers over Tailscale. The scope of this access is still restricted by [Tailscale access control policies][docs-access-control], which are enforced on the server side.
+由于 Tailscale 不使用本地 SSH 密钥对进行身份验证，客户端机器上的任何 OS 用户都可以通过 Tailscale 连接到 SSH 服务器。此访问的范围仍受 [Tailscale 访问控制策略][docs-access-control]限制，这些策略在服务器端强制执行。
 
-Tailscale SSH is an [improvement][ar-how-does-it-work] over traditional SSH for:
+对于以下场景，Tailscale SSH 相比传统 SSH 是一种[改进][ar-how-does-it-work]：
 
-* servers and containers that use a single system user to run workloads
-* single-user machines, like employees' laptops
-* any machines that don't allow outbound SSH connections in Tailscale access control policies
+* 使用单一系统用户运行工作负载的服务器和容器
+* 单用户机器，例如员工的笔记本电脑
+* 在 Tailscale 访问控制策略中不允许出站 SSH 连接的任何机器
 
-Tailscale SSH may not be a good fit for:
+Tailscale SSH 可能不适合：
 
-* multi-user machines, where OS users on those machines have different SSH access permissions in Tailscale access control policies
-* machines that have outbound Tailscale SSH access, where you do not trust the code running on those machines
-* machines where you use `authorized_keys` to limit what commands remote users can run
+* 多用户机器，且这些机器上的 OS 用户在 Tailscale 访问控制策略中拥有不同的 SSH 访问权限
+* 具有出站 Tailscale SSH 访问权限、而你又不信任其上运行代码的机器
+* 你使用 `authorized_keys` 限制远程用户可运行命令的机器
 
-You can mitigate this concern by using [check mode][ar-tailscale-ssh-check-mode-config] with `checkPeriod` set to `always`, which will prompt for SSO-based approval on every new connection.
+你可以通过使用[检查模式][ar-tailscale-ssh-check-mode-config]并将 `checkPeriod` 设置为 `always` 来缓解这一顾虑，这会在每个新连接上提示进行基于 SSO 的批准。
 
-If Tailscale SSH is not a good fit for your needs, you can still run traditional SSH servers and clients on top of Tailscale as the network layer. This provides you the standard SSH experience without exposing your servers to the internet.
+如果 Tailscale SSH 不适合你的需求，你仍然可以在 Tailscale 作为网络层的基础上运行传统的 SSH 服务器和客户端。这样既能获得标准的 SSH 体验，又不会将服务器暴露给互联网。
 
-## Additional information
+## 更多信息
 
-* Tailscale CLI command: [`tailscale set --ssh`][docs-cli-set]
-* Tailscale CLI command: [`tailscale up --ssh`][docs-tailscale-up]
-* tailnet policy file section: [`ssh`][docs-policy-syntax-ssh]
+* Tailscale CLI 命令：[`tailscale set --ssh`][docs-cli-set]
+* Tailscale CLI 命令：[`tailscale up --ssh`][docs-tailscale-up]
+* tailnet 策略文件分区：[`ssh`][docs-policy-syntax-ssh]
 
-[ar-how-does-it-work]: #how-does-it-work
+[ar-how-does-it-work]: #工作原理
 
-[ar-limitations]: #limitations
+[ar-limitations]: #局限性
 
-[ar-ssh-acls-default]: #ssh-access-rules-in-default-acl
+[ar-ssh-acls-default]: #默认访问控制策略中的-ssh-访问规则
 
-[ar-tailscale-ssh-check-mode-config]: #configure-tailscale-ssh-with-check-mode
+[ar-tailscale-ssh-check-mode-config]: #使用检查模式配置-tailscale-ssh
 
 [bl-tailscale-key-management]: https://tailscale.com/blog/tailscale-key-management
 

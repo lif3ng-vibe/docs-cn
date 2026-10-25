@@ -1,58 +1,58 @@
 ---
-title: "Session recording with the Tailscale Kubernetes Operator"
-description: "Deploy and configure session recording using the Tailscale Kubernetes Operator."
+title: "使用 Tailscale Kubernetes Operator 进行会话录制"
+description: "使用 Tailscale Kubernetes Operator 部署并配置会话录制。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-> **Deprecation:**
+> **弃用提示：**
 >
-> Tailscale no longer offers session recording with the Tailscale Kubernetes Operator through `tsrecorder`. Support for existing users is scheduled to end on August 2027. For session recording and privileged access management, use [Tailscale PAM][docs-tailscale-pam] or contact [Tailscale Sales][co-contact-sales].
+> Tailscale 不再通过 `tsrecorder` 提供 Tailscale Kubernetes Operator 的会话录制功能。对现有用户的支持计划于 2027 年 8 月结束。对于会话录制和特权访问管理，请使用 [Tailscale PAM][docs-tailscale-pam] 或联系 [Tailscale 销售团队][co-contact-sales]。
 
-The [API server proxy][docs-api-server-access] can record kubectl sessions and Kubernetes API request events, giving you an audit trail of cluster interactions for security and compliance.
+[API 服务器代理][docs-api-server-access] 可以录制 kubectl 会话和 Kubernetes API 请求事件，为集群交互提供安全与合规所需的审计记录。
 
-## kubectl session recording
+## kubectl 会话录制
 
-The following kubectl commands can be recorded:
+以下 kubectl 命令可以被录制：
 
 * `kubectl exec`
 * `kubectl debug`
 * `kubectl attach`
 * `kubectl run`
 
-A session recording includes the command sent, `stdout` and `stderr` output, pod and container context, and the Tailscale identity of the user. `stdin` is not recorded to protect sensitive data like passwords.
+会话录制包含发送的命令、`stdout` 和 `stderr` 输出、pod 和容器上下文，以及用户的 Tailscale 身份。为保护密码等敏感数据，`stdin` 不会被录制。
 
-## API request event recordings
+## API 请求事件录制
 
-When enabled, all Kubernetes API requests passing through the proxy are recorded. Each event includes the API verb, targeted resource, HTTP details, client user agent, and the Tailscale identity of the requesting device or user.
+启用后，所有经过代理的 Kubernetes API 请求都会被录制。每个事件包含 API 动词、目标资源、HTTP 详情、客户端 user agent，以及发起请求的设备或用户的 Tailscale 身份。
 
-## How recordings are routed
+## 录制的路由方式
 
-When a user connects to the API server proxy, the control plane determines which `tsrecorder` instances should receive recordings based on the user's [grants][docs-grants]. The proxy then streams session data to a `tsrecorder` instance over your tailnet, end-to-end encrypted using WireGuard.
+当用户连接到 API 服务器代理时，控制平面会根据用户的[授权（grant）][docs-grants]决定哪些 `tsrecorder` 实例应接收录制。随后，代理会经你的 tailnet 把会话数据流式传输到某个 `tsrecorder` 实例，全程使用 WireGuard 端到端加密。
 
-The `tsrecorder` does not need to run in the same cluster as the API server proxy. It can be deployed anywhere in your tailnet. Any `tsrecorder` instance that matches the tags specified in the grant receives recordings.
+`tsrecorder` 不需要与 API 服务器代理运行在同一集群中，它可以部署在 tailnet 的任何位置。任何匹配授权中所指定标签的 `tsrecorder` 实例都会接收录制。
 
-## Failure policy
+## 失败策略
 
-If the `tsrecorder` is unreachable, the proxy can either:
+如果 `tsrecorder` 不可达，代理可以选择：
 
-* **Fail open (default)**: Sessions proceed even if they cannot be recorded.
-* **Fail closed**: Sessions are blocked if recording is not possible.
+* **失败放行（默认）**：即使无法录制，会话也继续进行。
+* **失败阻断**：无法录制时会话被阻止。
 
-## The Recorder custom resource
+## Recorder 自定义资源
 
-The operator provides a `Recorder` custom resource as a convenience for deploying `tsrecorder` in-cluster. It manages the pod lifecycle and supports configurable storage backends:
+为方便在集群内部署 `tsrecorder`，Operator 提供了一个 `Recorder` 自定义资源。它管理 pod 生命周期，并支持可配置的存储后端：
 
-* **Ephemeral filesystem (default)**: Recordings stored in an `emptyDir` volume. Suitable for testing, but lost if the pod is deleted.
-* **S3-compatible object storage**: Recommended for production to ensure durable, long-term retention.
+* **临时文件系统（默认）**：录制内容存储在 `emptyDir` 卷中。适合测试，但 pod 被删除后就会丢失。
+* **S3 兼容对象存储**：生产环境推荐使用，以确保持久、长期的保存。
 
-For more information, refer to [Deploy a recorder][docs-deploy-tsrecorder] for setup instructions.
+设置说明请参阅[部署录制器][docs-deploy-tsrecorder]。
 
-## Further exploration
+## 进一步探索
 
-[Deploy][docs-deploy-tsrecorder] the session recorder.
-[Record][docs-session-recording] kubectl sessions.
-[Access][docs-api-server-access] the Kubernetes API over Tailscale.
+[部署][docs-deploy-tsrecorder]会话录制器。
+[录制][docs-session-recording] kubectl 会话。
+经 Tailscale [访问][docs-api-server-access] Kubernetes API。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 

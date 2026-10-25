@@ -1,107 +1,107 @@
 ---
-title: "Restrict device access with CrowdStrike ZTA scores"
-description: "Use Zero Trust Assessment (ZTA) scores reported by CrowdStrike Falcon as a device posture attribute for use in access rules."
+title: "使用 CrowdStrike ZTA 分数限制设备访问"
+description: "将 CrowdStrike Falcon 报告的零信任评估（ZTA）分数用作设备态势属性，以便在访问规则中使用。"
 ---
 
-Last validated Jan 28, 2026
+最后验证于 Jan 28, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此集成适用于 [Standard、Premium 与 Enterprise 套餐](https://tailscale.com/pricing)。
 
-CrowdStrike Falcon [Zero Trust Assessment][xt-crowdstrike-zero-trust] calculates a numeric trust score (from 0 to 100) for each device that runs a Falcon agent. Using that score as part of access rules in Tailscale can allow organizations to grant access to sensitive resources only to devices that have a high enough level of trust.
+CrowdStrike Falcon [Zero Trust Assessment][xt-crowdstrike-zero-trust]（零信任评估）会为每台运行 Falcon 代理的设备计算一个数字信任分数（0 到 100）。将该分数用作 Tailscale 访问规则的一部分，组织可以只向信任度足够高的设备授予对敏感资源的访问权限。
 
-You can achieve this with Tailscale's [device posture][docs-device-posture] features:
+你可以借助 Tailscale 的[设备态势（device posture）][docs-device-posture]功能实现这一点：
 
-* CrowdStrike Falcon posture integration, which synchronizes Zero Trust Assessment scores from CrowdStrike to device posture attributes in Tailscale.
-* [Device Identity Collection][docs-device-identity-collection], which collects identifiers such as serial numbers and MAC addresses, used to match devices in Tailscale to devices in CrowdStrike.
-* [Posture conditions in access rules][docs-device-posture-postures-and-conditions], which lets you configure access restrictions based on device attributes.
+* CrowdStrike Falcon 态势集成：将零信任评估分数从 CrowdStrike 同步到 Tailscale 中的设备态势属性。
+* [设备身份收集（Device Identity Collection）][docs-device-identity-collection]：收集序列号与 MAC 地址等标识符，用于将 Tailscale 中的设备与 CrowdStrike 中的设备相匹配。
+* [访问规则中的态势条件][docs-device-posture-postures-and-conditions]：让你能够基于设备属性配置访问限制。
 
-This guide explains how to enable Device Identity collection for your Tailscale network (tailnet) and configure CrowdStrike Falcon posture integration.
+本指南介绍如何为你的 Tailscale 网络（tailnet）启用设备身份收集，以及如何配置 CrowdStrike Falcon 态势集成。
 
-## What is CrowdStrike Falcon posture integration?
+## 什么是 CrowdStrike Falcon 态势集成？
 
-The CrowdStrike Falcon integration syncs data between Falcon and Tailscale on a recurring schedule.
-During each sync, Tailscale performs the following actions:
+CrowdStrike Falcon 集成会按周期性计划在 Falcon 与 Tailscale 之间同步数据。
+在每次同步期间，Tailscale 会执行以下操作：
 
-1. Fetches a list of hosts and their ZTA score from your Falcon account.
-2. Matches Falcon hosts to devices in your tailnet based on serial numbers.
-3. Writes the Falcon data to a device posture attribute on each matched device.
+1. 从你的 Falcon 账户获取主机列表及其 ZTA 分数。
+2. 根据序列号将 Falcon 主机与 tailnet 中的设备相匹配。
+3. 将 Falcon 数据写入每台匹配设备的设备态势属性。
 
-The integration writes the following device posture attribute to matched devices:
+该集成会向匹配的设备写入以下设备态势属性：
 
 \[Missing snippet: attributes-falcon.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you can set up the CrowdStrike Falcon integration, make sure you have:
+在设置 CrowdStrike Falcon 集成之前，请确保：
 
-* [Device Identity Collection][docs-device-identity-collection] enabled, and devices in your tailnet are reporting identifiers.
-* A CrowdStrike Falcon account for which you have permission to create an API client.
+* 已启用[设备身份收集][docs-device-identity-collection]，并且 tailnet 中的设备正在上报标识符。
+* 你拥有一个 CrowdStrike Falcon 账户，并且有创建 API 客户端的权限。
 
-## Create CrowdStrike Falcon API credentials
+## 创建 CrowdStrike Falcon API 凭证
 
-To authenticate your CrowdStrike Falcon account with Tailscale, you'll need to create a CrowdStrike Falcon API client.
-The Falcon integration uses these to fetch a list of hosts and their ZTA score from Falcon.
+要将你的 CrowdStrike Falcon 账户向 Tailscale 完成身份验证，你需要创建一个 CrowdStrike Falcon API 客户端。
+Falcon 集成使用它从 Falcon 获取主机列表及其 ZTA 分数。
 
-To create a CrowdStrike Falcon API client:
+要创建 CrowdStrike Falcon API 客户端：
 
-1. In Falcon, open **Support and resources** and then **API clients and keys**.
+1. 在 Falcon 中，打开 **Support and resources**，然后打开 **API clients and keys**。
 
-2. Select **Create API client**.
+2. 选择 **Create API client**。
 
-3. Add a name. For the **Hosts** scope add **Read**, and for the **Zero Trust** scope add **Read**.
+3. 添加一个名称。为 **Hosts** 作用域添加 **Read**，为 **Zero Trust** 作用域添加 **Read**。
 
-   *（图：Create API client: Client name: Tailscale integration. Scope 'Zero Trust Assessment - Read' is enabled.）*
+   *（图：Create API client：Client name 为 Tailscale integration，已启用 'Zero Trust Assessment - Read' 作用域。）*
 
-4. Select **Create**, then make sure to copy the displayed **Client ID** and **Client Secret**. These will be only displayed once.
+4. 选择 **Create**，然后务必复制显示的 **Client ID** 与 **Client Secret**。它们只会显示一次。
 
-Also make a note of the **Base URL** (for example, `https://api.us-2.crowdstrike.com`).
+另请记下 **Base URL**（例如 `https://api.us-2.crowdstrike.com`）。
 
-## Configure CrowdStrike Falcon posture integration
+## 配置 CrowdStrike Falcon 态势集成
 
-To configure Tailscale to fetch the ZTA score for hosts from CrowdStrike Falcon:
+要让 Tailscale 从 CrowdStrike Falcon 获取主机的 ZTA 分数：
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
 
-2. Under the **Device Posture Integrations** section, locate the CrowdStrike Falcon integration, then select **Connect**.
+2. 在 **Device Posture Integrations** 部分下找到 CrowdStrike Falcon 集成，然后选择 **Connect**。
 
-3. Select your **CrowdStrike Cloud Region** (the **Base URL** from the API client).
+3. 选择你的 **CrowdStrike Cloud Region**（即 API 客户端的 **Base URL**）。
 
-4. Enter your **Client ID** and **Client Secret**.
+4. 输入你的 **Client ID** 与 **Client Secret**。
 
-   *（图：1. Configure a CrowdStrike OAuth client: CrowdStrike Cloud Region: US-2. Client ID and Client Secret are entered. 3. Enable device identity collection: Tailscale uses device identifiers such as serial number to link Falcon Hosts to Tailscale Machines. You already have Device Identity Collection enabled. Button: Connect to CrowdStrike Falcon.）*
+   *（图：1. Configure a CrowdStrike OAuth client：CrowdStrike Cloud Region 为 US-2，已填入 Client ID 与 Client Secret。3. Enable device identity collection：Tailscale 使用序列号等设备标识符将 Falcon 主机与 Tailscale 机器关联。你已启用设备身份收集。按钮：Connect to CrowdStrike Falcon。）*
 
-5. Select **Connect to CrowdStrike Falcon**.
+5. 选择 **Connect to CrowdStrike Falcon**。
 
-## Review the integration status
+## 检查集成状态
 
-Next, check to ensure the CrowdStrike Falcon integration has run successfully.
+接下来，确认 CrowdStrike Falcon 集成是否已成功运行。
 
-1. Go to the **Device Posture Integrations** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page.
-2. Locate the CrowdStrike Falcon integration under the **Integrations** section.
+1. 前往 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Device Posture Integrations** 部分。
+2. 在 **Integrations** 部分下找到 CrowdStrike Falcon 集成。
 
-After the CrowdStrike Falcon integration runs successfully, it shows the time of the most recent sync, the number of synced devices, and any errors that occurred while synchronizing.
+CrowdStrike Falcon 集成成功运行后，会显示最近一次同步的时间、已同步的设备数量，以及同步期间发生的任何错误。
 
-*（图：Integrations: CrowdStrike Falcon: Last sync 4 minutes ago, 1 match between 2 Tailscale devices with identifies and 3 CrowdStrike Falcon hosts.）*
+*（图：Integrations: CrowdStrike Falcon：Last sync 为 4 分钟前，2 台带有标识符的 Tailscale 设备与 3 台 CrowdStrike Falcon 主机之间匹配到 1 台。）*
 
-## Check device attributes
+## 检查设备属性
 
-After you set up the CrowdStrike Falcon integration, you can confirm that Tailscale is writing the new device attribute for your CrowdStrike Falcon devices from the Tailscale admin console.
+设置好 CrowdStrike Falcon 集成后，你可以在 Tailscale 管理控制台中确认 Tailscale 正在为你的 CrowdStrike Falcon 设备写入新的设备属性。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-2. Select a device to inspect.
-3. The device attributes for the device are in the **Machine Details** section. This should include the `falcon:ztaScore` attribute.
+1. 打开 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择一台要检查的设备。
+3. 该设备的设备属性位于 **Machine Details** 部分。其中应包含 `falcon:ztaScore` 属性。
 
 *（图：Attributes. falcon:ztaScore: 64. node:os: linux. node:osVersion: 5.19.0-46-generic. node:tsReleaseTrack: stable. node:tsVersion: 1.53.20.）*
 
-> **Tip:**
+> **提示：**
 >
-> You can also check device attributes using the [Tailscale API][co-device-posture-get-via-api].
+> 你也可以使用 [Tailscale API][co-device-posture-get-via-api] 检查设备属性。
 
-## Adjust Tailscale access rules
+## 调整 Tailscale 访问规则
 
-After you set up the CrowdStrike Falcon posture integration, and your devices have device posture attributes that reflect their signals as reported by CrowdStrike Falcon, you can use those device posture attributes as part of your posture rules.
+设置好 CrowdStrike Falcon 态势集成，并且你的设备拥有了反映 CrowdStrike Falcon 所上报信号的设备态势属性之后，你就可以将这些设备态势属性用作态势规则的一部分。
 
-For example, to only permit access to `tag:production` from devices that have a CrowdStrike ZTA score of 70 or higher, you can create a new posture and use it as part of a corresponding access rule:
+例如，要只允许 ZTA 分数不低于 70 的设备访问 `tag:production`，你可以创建一个新的态势（posture），并将其用作相应访问规则的一部分：
 
 ```json
 "postures": {

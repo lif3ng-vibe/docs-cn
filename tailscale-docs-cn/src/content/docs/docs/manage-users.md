@@ -1,34 +1,34 @@
 ---
-title: "Manage users"
-description: "Invite users, assign or change user roles, remove users, and quickly switch between accounts."
+title: "管理用户"
+description: "邀请用户、分配或更改用户角色、移除用户，并在多个账户之间快速切换。"
 ---
 
-Last validated Sep 30, 2025
+最后验证于 Sep 30, 2025
 
-Managing users and user access is an essential part of maintaining your Tailscale network (known as a tailnet).
+管理用户与用户访问是维护 Tailscale 网络（即 tailnet）的重要一环。
 
-## Invite users to your tailnet
+## 邀请用户加入你的 tailnet
 
-There are different ways that you can invite users to join your tailnet.
+邀请用户加入你的 tailnet 有多种方式。
 
-[**Inviting users**](/docs/features/sharing/how-to/invite-users) — Explore the different ways to invite users to your Tailscale network.
+[**邀请用户**](/docs/features/sharing/how-to/invite-users)——了解邀请用户加入 Tailscale 网络的不同方式。
 
-[**Invite any user to your tailnet**](/docs/features/sharing/how-to/invite-any-user) — Send and manage invitations for your Tailscale network.
+[**邀请任意用户加入你的 tailnet**](/docs/features/sharing/how-to/invite-any-user)——发送和管理 Tailscale 网络的邀请。
 
-## Manage user access
+## 管理用户访问
 
-Control how users are approved to join your tailnet, what access they have to the Tailscale [admin console](https://console.tailscale.com/admin), and when they are removed from your tailnet.
+控制用户加入 tailnet 的审批方式、他们对 Tailscale [管理控制台](https://console.tailscale.com/admin)的访问权限，以及何时将其从 tailnet 中移除。
 
-[**User approval**](/docs/features/access-control/user-approval) — Review and approve new users before they can join your Tailscale network.
+[**用户审批**](/docs/features/access-control/user-approval)——在新用户加入 Tailscale 网络之前对其进行审核与批准。
 
-[**User roles**](/docs/reference/user-roles) — Use roles for restricting access to the admin console.
+[**用户角色**](/docs/reference/user-roles)——使用角色限制对管理控制台的访问。
 
-[**Deleting and suspending users**](/docs/features/sharing/how-to/remove-team-members) — Delete and suspend users.
+[**删除与停用用户**](/docs/features/sharing/how-to/remove-team-members)——删除和停用用户。
 
-[**Admin console session timeout**](/docs/account/admin-console-session-timeout) — Explore idle session timeout in the Tailscale admin console.
+[**管理控制台会话超时**](/docs/account/admin-console-session-timeout)——了解 Tailscale 管理控制台的空闲会话超时。
 
-## Switch the active user in the Tailscale client
+## 在 Tailscale 客户端中切换当前用户
 
-Use fast user switching to quickly switch between two or more logged-in accounts on the same device, without requiring you to re-authenticate.
+使用快速用户切换功能，在同一台设备上已登录的两个或更多账户之间快速切换，无需重新认证。
 
-[**Fast user switching**](/docs/features/client/fast-user-switching) — Quickly switch between two or more logged in accounts on the same device, without requiring re-authentication.
+[**快速用户切换**](/docs/features/client/fast-user-switching)——在同一台设备上已登录的两个或更多账户之间快速切换，无需重新认证。

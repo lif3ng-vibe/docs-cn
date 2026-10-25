@@ -1,44 +1,44 @@
 ---
-title: "Could not apply configuration"
-description: "This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client,"
+title: "无法应用配置"
+description: "本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Jul 31, 2025
+最后验证于 Jul 31, 2025
 
-This topic explains a message that may appear in the Tailscale client and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 客户端中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the client
+## 客户端中显示的消息
 
 Could not apply configuration
 An error occurred applying the Tailscale envknob configuration stored on disk: `<error>`
 
-## Reference ID
+## 参考 ID
 
 `apply-disk-config`
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-A Tailscale envknob is another name for a Tailscale-specific environment variable or parameter used to adjust how the Tailscale client works within the tailnet. These settings start with prefixes, including `TS_`, `PORT`, and `HTTP_PROXY`, and used by the part of Tailscale that runs in the background, called `tailscaled`, also known as the Tailscale daemon.
+Tailscale envknob 是 Tailscale 专有环境变量或参数的别称，用于调整 Tailscale 客户端在 tailnet 中的工作方式。这些设置以 `TS_`、`PORT`、`HTTP_PROXY` 等前缀开头，由 Tailscale 在后台运行的部分使用，该部分名为 `tailscaled`，也称为 Tailscale 守护进程。
 
-Here are some reasons why this message might display:
+可能显示这条消息的原因有：
 
-* An envknob is not properly configured.
-* The envknob conflicts with other client settings.
-* You do not have permission to run the `tailscaled` process on the node or device.
-* A configuration file on the disk containing envknobs might be corrupted or unreadable.
+* envknob 配置不当。
+* envknob 与其他客户端设置冲突。
+* 你没有在该节点或设备上运行 `tailscaled` 进程的权限。
+* 磁盘上包含 envknob 的配置文件可能已损坏或无法读取。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决这个问题：
 
-* Restart your Tailscale client using the client UI, or run the CLI commands `tailscale down` followed by `tailscale up`.
-* Verify that your envknobs are properly configured and spelled correctly.
-* Verify that your envknobs do not conflict with other Tailscale settings such as exit nodes, subnets, or your tailnet policy file.
+* 通过客户端 UI 重启 Tailscale 客户端，或者在 CLI 中先运行 `tailscale down`、再运行 `tailscale up`。
+* 确认你的 envknob 配置正确、拼写无误。
+* 确认你的 envknob 与其他 Tailscale 设置（如出口节点、子网、tailnet 策略文件）没有冲突。
 
-## Additional information
+## 更多信息
 
-* For information about the tailnet policy file, refer to [the tailnet policy file documentation][docs-tailnet-policy-file].
-* For information about `tailscaled`, refer to [tailscaled daemon][docs-tailscaled].
+* 有关 tailnet 策略文件的信息，请参阅 [tailnet 策略文件文档][docs-tailnet-policy-file]。
+* 有关 `tailscaled` 的信息，请参阅 [tailscaled 守护进程][docs-tailscaled]。
 
 [docs-messages]: /docs/reference/messages
 

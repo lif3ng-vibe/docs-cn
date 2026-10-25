@@ -1,0 +1,10 @@
+Funnel command flags | Funnel 命令标志 | funnel-命令标志
+Use HTTPS and HTTP servers | 使用 HTTPS 和 HTTP 服务器 | 使用-https-和-http-服务器
+Use the PROXY protocol | 使用 PROXY protocol | 使用-proxy-protocol
+Use a TCP forwarder | 使用 TCP 转发器 | 使用-tcp-转发器
+Use valid certificates | 使用有效证书 | 使用有效证书
+Ignore invalid and self-signed certificate checks | 忽略无效和自签名证书检查 | 忽略无效和自签名证书检查
+Get the status | 获取状态 | 获取状态
+Reset Tailscale Funnel | 重置 Tailscale Funnel | 重置-tailscale-funnel
+Turn Tailscale Funnel off | 关闭 Tailscale Funnel | 关闭-tailscale-funnel
+Effects of rebooting and restarting | 重启与重新启动的影响 | 重启与重新启动的影响

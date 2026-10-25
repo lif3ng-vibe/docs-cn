@@ -1,30 +1,30 @@
 ---
-title: "Shared responsibility model"
-description: "Understand the responsibilities for protecting your network."
+title: "共同责任模型"
+description: "了解保护你的网络需要承担哪些责任。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Securing a virtual private network requires both the provider and the user to share in the burden of responsibility. This non-exhaustive list covers responsibilities for both Tailscale and the user.
+保障虚拟专用网络的安全需要提供方与用户共同承担责任。以下清单并不详尽，涵盖 Tailscale 与用户双方的责任。
 
-## Tailscale's responsibilities
+## Tailscale 的责任
 
-* **Use secure software development practices** for development of the Tailscale client, the coordination server, and relay servers. This includes conducting peer reviews of source code changes, conducting regular audits of source code, reviewing potential vulnerabilities and developing patches, regularly patching dependencies, and building, signing, and releasing software following a sanctioned process.
-* **Harden and protect the coordination server**, including hardening the hosting provider and database configurations, and hardening and patching the operating system. This includes encrypting and backing up data by default, restricting access to the production environment based on business need, and monitoring the production environment for unusual activity.
-* **Harden and protect the DERP relay servers**, including hardening the hosting provider configurations, and hardening and patching the operating system. This includes restricting access based on business need.
-* **Provide features for securing your tailnet**, such as [integrations with identity providers][docs-sso-providers] and [access control policies][docs-access-control].
+* **采用安全的软件开发实践**，适用于 Tailscale 客户端、协调服务器（coordination server）与中继服务器的开发。包括对源代码变更进行同行评审、定期审计源代码、排查潜在漏洞并开发补丁、定期更新依赖，以及按照核准流程构建、签名和发布软件。
+* **加固并保护协调服务器**，包括加固托管服务商与数据库配置，以及加固操作系统并及时打补丁。还包括默认对数据进行加密和备份、基于业务需要限制对生产环境的访问，以及监控生产环境中的异常活动。
+* **加固并保护 DERP 中继服务器**，包括加固托管服务商配置，以及加固操作系统并及时打补丁。还包括基于业务需要限制访问。
+* **提供保护 tailnet 安全的功能**，例如[与身份提供方（IdP）集成][docs-sso-providers]以及[访问控制策略][docs-access-control]。
 
-To understand how Tailscale protects your network, refer to the [Security][co-security] page.
+要了解 Tailscale 如何保护你的网络，请参阅[安全][co-security]页面。
 
-## User's responsibilities
+## 用户的责任
 
-* **Maintain the devices you run Tailscale on**, including patching the firmware and operating system of those devices, and providing network connectivity to those devices.
-* **Configure and maintain your identity provider**, so that only authorized users are able to join your network.
-* **Update Tailscale clients regularly to supported versions**. On some operating systems (macOS and iOS), clients are automatically updated. Tailscale is responsible for [responding to security issues][co-security-bulletins] and providing patches in a timely manner, but it's your responsibility to upgrade to apply these patches.
-* **Provide Tailscale with bug reports or logs** when requested for troubleshooting purposes as part of a support request.
-* **Configure security features in Tailscale** to restrict access as appropriate for your environment. For example, use access control policies to restrict access to resources in your network, and use groups and tags to make management of users and devices more simple.
+* **维护运行 Tailscale 的设备**，包括为这些设备的固件和操作系统打补丁，并为这些设备提供网络连接。
+* **配置并维护你的身份提供方（IdP）**，确保只有经授权的用户才能加入你的网络。
+* **定期将 Tailscale 客户端更新到受支持的版本**。在某些操作系统（macOS 和 iOS）上，客户端会自动更新。Tailscale 负责[响应安全问题][co-security-bulletins]并及时提供补丁，但升级以应用这些补丁是你的责任。
+* **在支持请求的排查过程中按要求向 Tailscale 提供 bug 报告或日志**。
+* **配置 Tailscale 中的安全功能**，按你的环境需要限制访问。例如，使用访问控制策略限制对网络内资源的访问，并使用组和标签（tag）让用户与设备的管理更简单。
 
-To best protect your network, we recommend following the [hardening guide][docs-security-hardening].
+为了最大程度保护你的网络，我们建议遵循[加固指南][docs-security-hardening]。
 
 [co-security-bulletins]: https://tailscale.com/security-bulletins
 

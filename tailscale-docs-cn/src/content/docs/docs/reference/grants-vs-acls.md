@@ -1,78 +1,78 @@
 ---
-title: "Grants vs. ACLs"
-description: "A comparison of grants and ACLs as access control mechanisms"
+title: "授权与 ACL 的对比"
+description: "授权与 ACL 作为访问控制机制的对比"
 ---
 
-Last validated Aug 1, 2025
+最后验证于 Aug 1, 2025
 
-Tailscale offers two methods for defining access controls in your tailnet: Access control lists ([ACLs][docs-acls]) and [grants][docs-grants]. Both methods follow a deny-by-default principle and exist in the [tailnet policy file][docs-tailnet-policy-file] using a declarative [huJSON syntax][xt-wiki-json]. This document compares these two methods, exploring their capabilities, limitations, and appropriate use cases.
+Tailscale 提供两种在 tailnet 中定义访问控制的方式：访问控制列表（[ACL][docs-acls]）和[授权][docs-grants]（grants）。两种方式都遵循默认拒绝的原则，并以声明式的 [huJSON 语法][xt-wiki-json]存在于 [tailnet 策略文件][docs-tailnet-policy-file]中。本文对这两种方式进行比较，探讨它们的能力、局限以及适用的场景。
 
-The following table provides a concise overview of the key differences between these two access control methods, highlighting how grants offer a more modern, flexible approach to security management. This comparison serves as a framework for the more detailed explanations that follow in subsequent sections.
+下表简要概述了这两种访问控制方式的关键差异，凸显授权如何为安全管理提供更现代、更灵活的途径。这一对比可作为后续各节更详细说明的框架。
 
-| Feature                    | ACLs                                               | Grants                                           |
-| :------------------------- | :------------------------------------------------- | :----------------------------------------------- |
-| Access control methodology | Network layer only                                 | Network and application layers                   |
-| Default action             | Always requires explicit "accept" `action`         | Implied accept                                   |
-| Format                     | Separate fields for network destinations and ports | Cleaner separation of destinations and protocols |
-| Application capabilities   | No                                                 | Yes                                              |
-| Routing awareness          | No                                                 | Yes (with the `via` field)                       |
-| Device posture support     | Yes                                                | Yes                                              |
+| 特性                        | ACL                                                | 授权（grants）                                   |
+| :-------------------------- | :------------------------------------------------- | :----------------------------------------------- |
+| 访问控制方法                 | 仅网络层                                            | 网络层与应用层                                    |
+| 默认动作                     | 总是需要显式的 "accept" `action`                    | 隐含接受                                          |
+| 格式                         | 网络目标与端口分属不同字段                          | 目标与协议分离更清晰                              |
+| 应用能力                     | 否                                                  | 是                                                |
+| 路由感知                     | 否                                                  | 是（使用 `via` 字段）                             |
+| 设备态势支持                 | 是                                                  | 是                                                |
 
-> **Note:**
+> **注意：**
 >
-> Grants are *feature complete* with ACLs, which means they have all the capabilities of ACLs. The primary difference is that grants will continue to receive new features and improvements, while ACLs will not.
+> 授权与 ACL 相比已*功能完备*，也就是说它具备 ACL 的全部能力。主要区别在于：授权会继续获得新功能和改进，而 ACL 不会。
 
-## Comparison
+## 对比
 
-The evolution from ACLs to grants represents a shift in how Tailscale approaches [access control][docs-access-control]. This section explores the philosophical and architectural differences between these two methods, tracing how Tailscale's access control model has matured from a traditional network-centric approach to a more sophisticated system that bridges network and application security. Understanding these conceptual differences provides important context for appreciating why grants have become the recommended approach for modern tailnet deployments.
+从 ACL 到授权的演变，体现了 Tailscale 在[访问控制][docs-access-control]思路上的转变。本节探讨这两种方式在理念与架构上的差异，追溯 Tailscale 的访问控制模型如何从传统的以网络为中心的方法，逐步成熟为一种衔接网络安全与应用安全的更精密体系。理解这些概念差异，有助于你领会为什么授权已成为现代 tailnet 部署的推荐方式。
 
-### ACLs
+### ACL
 
-ACLs have been a foundation of Tailscale's access control methodology since the platform's inception. ACLs operate exclusively at the network layer, controlling which devices can communicate with each other and over which ports and protocols. The ACL system follows an explicit deny-by-default principle, requiring administrators to specifically allow each connection type.
+自平台诞生以来，ACL 一直是 Tailscale 访问控制方法的基石。ACL 只在网络层运作，控制哪些设备可以互相通信，以及通过哪些端口和协议。ACL 系统遵循显式的默认拒绝原则，要求管理员逐项明确允许每种连接类型。
 
-As organizations increasingly need more nuanced access policies that extend beyond network connectivity, ACLs alone can become insufficient for modern access control requirements.
+随着组织越来越需要超出网络连接范畴的更细致的访问策略，仅靠 ACL 可能无法满足现代访问控制需求。
 
-For more information, refer to the [ACL syntax reference][docs-policy-syntax].
+更多信息参阅 [ACL 语法参考][docs-policy-syntax]。
 
-### Grants
+### 授权（grants）
 
-Grants represent an important evolution in Tailscale's access control capabilities, combining both network and application layer security into a unified, flexible [syntax][docs-grants-syntax]. Grants expand the security model from only controlling which devices can talk to each other to controlling what specific [capabilities][docs-grants-app-capabilities] devices and users can exercise when interacting with applications and services.
+授权代表了 Tailscale 访问控制能力的一次重要演进，它把网络层与应用层安全整合进统一、灵活的[语法][docs-grants-syntax]中。授权把安全模型从"只控制哪些设备可以互相通信"扩展为"控制设备和用户在与应用和服务交互时可以行使哪些具体[能力][docs-grants-app-capabilities]"。
 
-This evolution stems from recognizing a common pattern: both network permissions and application permissions essentially boil down to the same conceptual model: *a source has capabilities when communicating with a destination*. Grants formalize this concept, creating a concise, powerful way to define permissions. The grants system maintains the deny-by-default security model but removes redundant elements like the mandatory action field, as each grant inherently implies an `accept` action.
+这一演进源于对一个共性规律的洞察：网络权限与应用权限本质上归结为同一个概念模型——*源在与目的地通信时拥有某些能力*。授权把这个概念形式化，提供了一种简洁而强大的权限定义方式。授权系统保留了默认拒绝的安全模型，但去掉了强制 `action` 字段这类冗余元素，因为每条授权本身即隐含 `accept` 动作。
 
-Grants also introduce more advanced access control parameters, including managing access to application features and controlling how a source accesses a destination (using [`via`][docs-via]).
+授权还引入了更高级的访问控制参数，包括管理对应用功能的访问，以及控制源如何访问目的地（使用 [`via`][docs-via]）。
 
-For more information, refer to the [grants syntax reference][docs-grants-syntax].
+更多信息参阅[授权语法参考][docs-grants-syntax]。
 
-## When to use each method
+## 何时使用哪种方式
 
-This section provides guidance on which access control method is most appropriate for different scenarios, explaining why grants are typically the preferred choice for new deployments while acknowledging the specific circumstances where ACLs might still be relevant. Understanding these considerations will help you make informed decisions about your tailnet configuration while planning for future security needs.
+本节就不同场景下哪种访问控制方式最合适提供指导：解释为什么授权通常是新部署的首选，同时也说明 ACL 仍然适用的一些特定情况。理解这些考量有助于你在为未来安全需求做规划时，就 tailnet 配置做出明智决策。
 
-### Using grants (recommended)
+### 使用授权（推荐）
 
-Grants are the recommended approach for all new tailnets and for updating existing deployments. You should use grants when:
+对于所有新 tailnet 以及对现有部署的更新，授权都是推荐方式。以下情况应使用授权：
 
-* Building new tailnet policies from scratch.
-* Controlling application level permissions.
-* Needing cleaner, more maintainable policy files.
-* Using [route filtering][docs-via] with the `via` field.
-* Implementing [device posture][docs-device-posture]-based access controls.
-* Creating [Kubernetes][docs-kubernetes] impersonation rules.
-* Building custom applications that integrate with Tailscale for authentication and authorization.
+* 从零开始构建新的 tailnet 策略。
+* 控制应用层权限。
+* 需要更整洁、更易维护的策略文件。
+* 使用 `via` 字段进行[路由过滤][docs-via]。
+* 实现基于[设备态势][docs-device-posture]的访问控制。
+* 创建 [Kubernetes][docs-kubernetes] 模拟（impersonation）规则。
+* 构建与 Tailscale 集成进行身份验证和授权的自定义应用。
 
-The grants system is actively developed and will continue to receive new features and improvements. Tailscale's internal tools and many open-source projects such as [TailSQL][xt-gh-tailsql], the [Kubernetes Operator][docs-kubernetes-operator], and [`golink`][xt-gh-golink] already leverage grants for fine-grained access control.
+授权系统在持续开发中，将不断获得新功能和改进。Tailscale 的内部工具以及许多开源项目——例如 [TailSQL][xt-gh-tailsql]、[Kubernetes Operator][docs-kubernetes-operator] 和 [`golink`][xt-gh-golink]——已经在利用授权实现细粒度访问控制。
 
-### Using ACLs
+### 使用 ACL
 
-Tailscale will always support ACLs as the first iteration of access control policies. You may continue to use ACLs indefinitely.
+Tailscale 将始终支持 ACL——它是访问控制策略的第一个迭代版本。你可以无限期地继续使用 ACL。
 
-You should only use ACLs when:
+只有以下情况才应使用 ACL：
 
-* Maintaining existing deployments that heavily rely on the ACL syntax.
-* Working with tools or scripts that specifically expect the ACL format.
-* Needing compatibility with older integrations.
+* 维护大量依赖 ACL 语法的现有部署。
+* 使用明确要求 ACL 格式的工具或脚本。
+* 需要与较旧的集成保持兼容。
 
-Even in these cases, Tailscale recommends gradually [migrating toward grants][docs-grants-migration], as they offer superior capabilities and a cleaner syntax. Grants and ACLs can coexist in the same policy file during transition periods, allowing for a phased migration approach.
+即便在这些情况下，Tailscale 也建议逐步[迁移到授权][docs-grants-migration]，因为授权能力更强、语法更整洁。在过渡期，授权与 ACL 可以共存于同一个策略文件中，从而支持分阶段迁移。
 
 [docs-access-control]: /docs/features/access-control
 

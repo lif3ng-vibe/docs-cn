@@ -1,31 +1,31 @@
 ---
-title: "Sync Kubernetes secrets across clusters with External Secrets Operator"
-description: "Distribute secrets between Kubernetes clusters using External Secrets Operator and Tailscale's private network, eliminating the need to store credentials in Git or expose API servers to the internet."
+title: "使用 External Secrets Operator 跨集群同步 Kubernetes 密钥"
+description: "借助 External Secrets Operator 和 Tailscale 的私有网络在 Kubernetes 集群之间分发密钥，无需把凭证存入 Git，也无需把 API 服务器暴露到互联网。"
 ---
 
-Last validated Mar 9, 2026
+最后验证于 Mar 9, 2026
 
-Managing secrets across multiple Kubernetes clusters is one of the harder problems in multi-cluster operations. Teams commonly resort to copying secrets between clusters manually, committing encrypted secrets to Git, or running a centralized vault that requires additional infrastructure. Each approach introduces operational burden or security risk.
+跨多个 Kubernetes 集群管理密钥，是多集群运维中较棘手的问题之一。团队通常只能手动在集群之间复制密钥、把加密后的密钥提交到 Git，或运行一台需要额外基础设施的集中式保管库（vault）。每种做法都会带来运维负担或安全风险。
 
-[External Secrets Operator][xt-external-secrets] (ESO) solves this by synchronizing secrets from external providers into Kubernetes. Its [Kubernetes provider][xt-eso-kubernetes-provider] can read secrets directly from a remote cluster's API server, making it possible to treat one cluster as a secret source for others. The challenge is connecting ESO to those remote API servers securely.
+[External Secrets Operator][xt-external-secrets]（ESO）通过从外部提供方同步密钥到 Kubernetes 解决了这个问题。它的 [Kubernetes 提供方][xt-eso-kubernetes-provider]可以直接从远程集群的 API 服务器读取密钥，从而可以把一个集群当作其他集群的密钥来源。难点在于如何把 ESO 安全地连接到那些远程 API 服务器。
 
-This guide combines External Secrets Operator with the Tailscale Kubernetes Operator to sync secrets from a source cluster (the cluster that holds the canonical secrets) to one or more workload clusters over a private network. You'll configure Tailscale egress services to route traffic from ESO to the source cluster's API server, authenticated through Tailscale's [Kubernetes impersonation][docs-app-capabilities]. No secrets are stored in Git, no API servers are exposed to the internet, and adding a new workload cluster requires only a new egress service and a `ClusterSecretStore`.
+本指南将 External Secrets Operator 与 Tailscale Kubernetes Operator 结合，通过私有网络把密钥从源集群（保存权威密钥的集群）同步到一个或多个工作负载集群。你将配置 Tailscale 出站服务，把 ESO 的流量路由到源集群的 API 服务器，并通过 Tailscale 的 [Kubernetes 模拟（impersonation）][docs-app-capabilities]完成认证。Git 中不存任何密钥，API 服务器不暴露到互联网，而新增一个工作负载集群只需要一个新的出站服务和一个 `ClusterSecretStore`。
 
-*（图：External Secrets Operator logo and Tailscale logo side by side, representing the integration between the two tools for cross-cluster secret synchronization.）*
+*（图：External Secrets Operator 标志与 Tailscale 标志并排，代表两个工具在跨集群密钥同步上的集成。）*
 
-## Prerequisites
+## 前提条件
 
-Before following this guide, make sure you have:
+跟着本指南操作之前，请确保你具备：
 
-* Two or more Kubernetes clusters (a source cluster that holds secrets and one or more workload clusters that consume them)
-* A [Tailscale account](https://login.tailscale.com/start) with [Admin](/docs/reference/user-roles) access
-* The Tailscale Kubernetes Operator [installed in each cluster][docs-operator-install] with [OAuth credentials configured][docs-operator-oauth]
-* The API server proxy enabled on the source cluster's operator installation
-* [External Secrets Operator][xt-external-secrets] installed in each workload cluster
+* 两个或更多 Kubernetes 集群（一个保存密钥的源集群，以及一个或多个消费密钥的工作负载集群）
+* 一个拥有 [Admin](/docs/reference/user-roles) 权限的 [Tailscale 账户](https://login.tailscale.com/start)
+* 每个集群中都已[安装][docs-operator-install] Tailscale Kubernetes Operator，并[配置好 OAuth 凭证][docs-operator-oauth]
+* 源集群的 Operator 安装已启用 API 服务器代理
+* 每个工作负载集群中都已安装 [External Secrets Operator][xt-external-secrets]
 
-## Install the Tailscale Kubernetes Operator with API server proxy
+## 安装带 API 服务器代理的 Tailscale Kubernetes Operator
 
-Install the Tailscale Kubernetes Operator in your source cluster with the API server proxy enabled. This exposes the cluster's API server in your tailnet so that ESO in other clusters can read secrets from it.
+在源集群中安装启用 API 服务器代理的 Tailscale Kubernetes Operator。这会把该集群的 API 服务器暴露在你的 tailnet 中，让其他集群里的 ESO 能够从中读取密钥。
 
 ```shell
 helm upgrade --install tailscale-operator tailscale/tailscale-operator \
@@ -39,12 +39,12 @@ helm upgrade --install tailscale-operator tailscale/tailscale-operator \
   --wait
 ```
 
-The key configuration options are:
+关键配置选项是：
 
-* `apiServerProxyConfig.mode=true`: Enables the Kubernetes API server proxy, exposing the API server in your tailnet.
-* `apiServerProxyConfig.allowImpersonation=true`: Lets Tailscale impersonate Kubernetes users and groups on behalf of connecting clients. This is how ESO authenticates — the bearer token is not used directly.
+* `apiServerProxyConfig.mode=true`：启用 Kubernetes API 服务器代理，把 API 服务器暴露在你的 tailnet 中。
+* `apiServerProxyConfig.allowImpersonation=true`：允许 Tailscale 代表连接的客户端模拟（impersonate）Kubernetes 用户和群组。这正是 ESO 的认证方式——bearer 令牌不会被直接使用。
 
-The workload clusters also need the Tailscale Kubernetes Operator installed, but they don't require the API server proxy:
+工作负载集群也需要安装 Tailscale Kubernetes Operator，但不需要 API 服务器代理：
 
 ```shell
 helm upgrade --install tailscale-operator tailscale/tailscale-operator \
@@ -56,15 +56,15 @@ helm upgrade --install tailscale-operator tailscale/tailscale-operator \
   --wait
 ```
 
-## Configure access control policies
+## 配置访问控制策略
 
-External Secrets Operator authenticates to the source cluster's API server through Tailscale [Kubernetes impersonation][docs-app-capabilities]. You need to configure [access control policies][docs-access-control] that grant the workload clusters permission to read secrets from the source cluster.
+External Secrets Operator 通过 Tailscale [Kubernetes 模拟][docs-app-capabilities]向源集群的 API 服务器认证。你需要配置[访问控制策略][docs-access-control]，授予工作负载集群从源集群读取密钥的权限。
 
-Add the following [grants][docs-grants] to your tailnet policy file. You can update the tailnet policy file from the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console:
+将以下[授权][docs-grants]添加到你的 tailnet 策略文件。你可以在管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面更新 tailnet 策略文件：
 
-> **Note:**
+> **注意：**
 >
-> This grants policy uses [application capabilities][docs-app-capabilities] to provide fine-grained access to the source cluster's Kubernetes API. The `impersonate` field controls which Kubernetes groups the workload cluster's operator can act as.
+> 这条授权策略使用[应用能力][docs-app-capabilities]为源集群的 Kubernetes API 提供细粒度访问。`impersonate` 字段控制工作负载集群的 Operator 可以扮演哪些 Kubernetes 群组。
 
 ```json
 {
@@ -88,19 +88,19 @@ Add the following [grants][docs-grants] to your tailnet policy file. You can upd
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This policy lets any device tagged `k8s-operator` to impersonate the `tailscale:external-secrets` group when accessing another `k8s-operator` device's Kubernetes API.
+这条策略允许任何打有 `k8s-operator` 标签的设备在访问另一台 `k8s-operator` 设备的 Kubernetes API 时，扮演 `tailscale:external-secrets` 群组。
 
-The `impersonate.groups` field is the key connection between Tailscale access control and Kubernetes RBAC. When ESO's request reaches the source cluster's API server proxy, Tailscale identifies the calling device, checks that it has a matching grant, and forwards the request with the [Kubernetes impersonation header][xt-k8s-impersonation] `Impersonate-Group: tailscale:external-secrets`. The Kubernetes API server then evaluates the request as if it came from a member of that group. This means you control what ESO can do by creating a Kubernetes `ClusterRoleBinding` that binds the impersonated group to a `ClusterRole`.
+`impersonate.groups` 字段是 Tailscale 访问控制与 Kubernetes RBAC 之间的关键衔接。当 ESO 的请求到达源集群的 API 服务器代理时，Tailscale 会识别发起调用的设备，检查它是否有匹配的授权，然后带着 [Kubernetes 模拟头][xt-k8s-impersonation] `Impersonate-Group: tailscale:external-secrets` 转发该请求。Kubernetes API 服务器随后会像对待该群组成员的请求一样评估它。这意味着你可以通过创建 Kubernetes `ClusterRoleBinding`、把被模拟的群组绑定到某个 `ClusterRole`，来控制 ESO 能做什么。
 
-> **Note:**
+> **注意：**
 >
-> Use a dedicated impersonation group like `tailscale:external-secrets` rather than `system:masters`. This follows the principle of least privilege, granting only the permissions ESO needs rather than full cluster admin access.
+> 请使用 `tailscale:external-secrets` 这样的专用模拟群组，而不要用 `system:masters`。这符合最小权限原则——只授予 ESO 所需的权限，而不是完整的集群管理员权限。
 
-## Create RBAC for the impersonated group on the source cluster
+## 在源集群上为被模拟群组创建 RBAC
 
-The grant above causes requests from workload clusters to arrive at the source cluster's API server as the `tailscale:external-secrets` group. You now need to bind that group to a Kubernetes `ClusterRole` that grants the permissions ESO requires.
+上面这条授权会让来自工作负载集群的请求以 `tailscale:external-secrets` 群组的身份到达源集群的 API 服务器。现在你需要把这个群组绑定到一个 Kubernetes `ClusterRole`，授予 ESO 所需的权限。
 
-Create a `ClusterRole` and `ClusterRoleBinding` on the source cluster:
+在源集群上创建一个 `ClusterRole` 和 `ClusterRoleBinding`：
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -129,17 +129,17 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-The `ClusterRoleBinding` subject group (`tailscale:external-secrets`) must match the `impersonate.groups` value in the grant exactly. The `selfsubjectrulesreviews` permission is required because ESO performs a self-check to verify it has the necessary permissions before attempting to read secrets.
+`ClusterRoleBinding` 的主体群组（`tailscale:external-secrets`）必须与授权中的 `impersonate.groups` 值完全一致。`selfsubjectrulesreviews` 权限是必需的，因为 ESO 在尝试读取密钥之前会先自检，确认自己拥有必要的权限。
 
-Apply this to the source cluster:
+将其应用到源集群：
 
 ```shell
 kubectl apply -f rbac.yaml --context source-k8s-operator.<YOUR_TAILNET_NAME>.ts.net
 ```
 
-> **Note:**
+> **注意：**
 >
-> For tighter security, use a namespaced `Role` and `RoleBinding` instead of `ClusterRole` to restrict access to specific namespaces. For example, to restrict ESO to only read secrets from the `default` namespace:
+> 要更严格的安全控制，可以改用带命名空间的 `Role` 和 `RoleBinding`（而非 `ClusterRole`），把访问限制到特定命名空间。例如，把 ESO 限制为只能读取 `default` 命名空间中的密钥：
 >
 > ```yaml
 > apiVersion: rbac.authorization.k8s.io/v1
@@ -170,9 +170,9 @@ kubectl apply -f rbac.yaml --context source-k8s-operator.<YOUR_TAILNET_NAME>.ts.
 >   apiGroup: rbac.authorization.k8s.io
 > ```
 
-## Create a Tailscale egress service in the workload cluster
+## 在工作负载集群中创建 Tailscale 出站服务
 
-In each workload cluster, create a Kubernetes `Service` that routes traffic to the source cluster's API server through Tailscale. This egress service gives ESO a stable in-cluster hostname to reach the remote API server.
+在每个工作负载集群中，创建一个经由 Tailscale 把流量路由到源集群 API 服务器的 Kubernetes `Service`。这个出站服务给 ESO 提供了一个稳定的集群内主机名来访问远程 API 服务器。
 
 ```yaml
 apiVersion: v1
@@ -191,21 +191,21 @@ spec:
     protocol: TCP
 ```
 
-Replace `<YOUR_TAILNET_NAME>` with your tailnet's [MagicDNS][docs-magicdns] domain and `<YOUR_PROXY_GROUP>` with the name of your [proxy group][docs-proxy-group]. The Tailscale Kubernetes Operator automatically provisions this service and routes traffic to the source cluster through the tailnet.
+把 `<YOUR_TAILNET_NAME>` 替换为你 tailnet 的 [MagicDNS][docs-magicdns] 域，把 `<YOUR_PROXY_GROUP>` 替换为你的[代理组][docs-proxy-group]名称。Tailscale Kubernetes Operator 会自动预配这个服务，并把流量经由 tailnet 路由到源集群。
 
-Apply this to your workload cluster in the namespace where the Tailscale operator manages egress services (typically `tailscale`):
+将其应用到你的工作负载集群中 Tailscale operator 管理出站服务的命名空间（通常是 `tailscale`）：
 
 ```shell
 kubectl apply -f egress-service.yaml -n tailscale
 ```
 
-The operator creates a backing `ClusterIP` service that pods in the workload cluster can use to reach the source cluster's API server. Pods anywhere in the cluster can resolve the MagicDNS hostname `source-k8s-operator.<YOUR_TAILNET_NAME>.ts.net` to this `ClusterIP` address.
+Operator 会创建一个后端 `ClusterIP` 服务，工作负载集群中的 pod 可以用它访问源集群的 API 服务器。集群中任何位置的 pod 都能把 MagicDNS 主机名 `source-k8s-operator.<YOUR_TAILNET_NAME>.ts.net` 解析到这个 `ClusterIP` 地址。
 
-## Set up DNS resolution for MagicDNS
+## 为 MagicDNS 设置 DNS 解析
 
-The `ClusterSecretStore` uses a [MagicDNS][docs-magicdns] hostname (for example, `source-k8s-operator.<YOUR_TAILNET_NAME>.ts.net`) as the server URL. For ESO pods to resolve this hostname to the egress service's `ClusterIP`, you need to configure DNS resolution for `.ts.net` domains inside the cluster.
+`ClusterSecretStore` 使用 [MagicDNS][docs-magicdns] 主机名（例如 `source-k8s-operator.<YOUR_TAILNET_NAME>.ts.net`）作为服务器 URL。要让 ESO pod 把这个主机名解析到出站服务的 `ClusterIP`，你需要在集群内部配置针对 `.ts.net` 域的 DNS 解析。
 
-Create a `DNSConfig` resource in each workload cluster. This deploys a [Tailscale nameserver][docs-dns-nameserver] that resolves `.ts.net` hostnames:
+在每个工作负载集群中创建一个 `DNSConfig` 资源。它会部署一个能解析 `.ts.net` 主机名的 [Tailscale 名称服务器][docs-dns-nameserver]：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -218,25 +218,25 @@ spec:
       tag: unstable
 ```
 
-Apply this to your workload cluster:
+将其应用到你的工作负载集群：
 
 ```shell
 kubectl apply -f dns-config.yaml
 ```
 
-Get the IP address of the Tailscale nameserver:
+获取 Tailscale 名称服务器的 IP 地址：
 
 ```shell
 kubectl get dnsconfig ts-dns -o jsonpath='{.status.nameserverStatus.ip}'
 ```
 
-Make a note of the IP address returned (for example, `100.64.0.4` or `10.100.124.196`). Update your CoreDNS configuration to forward `.ts.net` queries to the Tailscale nameserver:
+记下返回的 IP 地址（例如 `100.64.0.4` 或 `10.100.124.196`）。更新你的 CoreDNS 配置，把 `.ts.net` 查询转发到 Tailscale 名称服务器：
 
 ```shell
 kubectl edit configmap coredns -n kube-system
 ```
 
-Add the following block to the `Corefile` section, replacing `<TAILSCALE_NAMESERVER_IP>` with the IP address you noted:
+在 `Corefile` 部分添加以下块，并把 `<TAILSCALE_NAMESERVER_IP>` 替换为你记下的 IP 地址：
 
 ```text
 ts.net:53 {
@@ -246,15 +246,15 @@ ts.net:53 {
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This step is required. Without it, ESO cannot resolve the `.ts.net` MagicDNS hostname in the `ClusterSecretStore` server URL, and the store will fail to connect.
+> 这一步是必需的。没有它，ESO 无法解析 `ClusterSecretStore` 服务器 URL 中的 `.ts.net` MagicDNS 主机名，该存储将无法连接。
 
-## Configure a ClusterSecretStore
+## 配置 ClusterSecretStore
 
-Create a `ClusterSecretStore` in each workload cluster that points to the source cluster through the Tailscale egress service. This tells ESO how to connect to the remote cluster and authenticate.
+在每个工作负载集群中创建一个 `ClusterSecretStore`，经由 Tailscale 出站服务指向源集群。它会告诉 ESO 如何连接远程集群并进行认证。
 
-First, create a placeholder token secret. The Tailscale API server proxy handles authentication through impersonation (configured in the access control policies above), so the bearer token is not used directly. However, ESO's Kubernetes provider requires a token reference in the `ClusterSecretStore` spec:
+首先，创建一个占位令牌 Secret。Tailscale API 服务器代理通过模拟处理认证（见上面配置的访问控制策略），因此 bearer 令牌不会被直接使用。但 ESO 的 Kubernetes 提供方要求在 `ClusterSecretStore` 规范中包含一个令牌引用：
 
 ```yaml
 apiVersion: v1
@@ -267,11 +267,11 @@ stringData:
   token: "unused"
 ```
 
-> **Note:**
+> **注意：**
 >
-> The bearer token value is `"unused"` because authentication is handled entirely by Tailscale impersonation.
+> bearer 令牌的值是 `"unused"`，因为认证完全由 Tailscale 模拟处理。
 
-Then create the `ClusterSecretStore`:
+然后创建 `ClusterSecretStore`：
 
 ```yaml
 apiVersion: external-secrets.io/v1
@@ -292,27 +292,27 @@ spec:
             key: token
 ```
 
-The `server.url` uses the MagicDNS hostname, which resolves to the egress service's `ClusterIP` inside the workload cluster. The TLS certificate served by the Tailscale API server proxy is valid for this hostname, so no `caBundle` is needed. ESO falls back to system certificate authority (CA) roots when no CA is explicitly configured, and Let's Encrypt certificates (used by Tailscale) are included in the system trust store.
+`server.url` 使用 MagicDNS 主机名，它会在工作负载集群内部解析到出站服务的 `ClusterIP`。Tailscale API 服务器代理提供的 TLS 证书对该主机名有效，因此不需要 `caBundle`。当没有显式配置 CA 时，ESO 会回退到系统证书颁发机构（CA）根证书，而 Tailscale 使用的 Let's Encrypt 证书已包含在系统信任库中。
 
-When a request arrives at the API server proxy, Tailscale identifies the source device, maps it to the impersonation groups defined in your access control policy, and forwards the request with those credentials. The ESO Kubernetes provider requires a `bearerToken` field, so a placeholder secret satisfies the schema.
+请求到达 API 服务器代理时，Tailscale 会识别来源设备，把它映射到你的访问控制策略中定义的模拟群组，并带着这些凭据转发请求。ESO 的 Kubernetes 提供方要求有 `bearerToken` 字段，因此一个占位 Secret 就能满足模式校验。
 
-Apply the `ClusterSecretStore`:
+应用 `ClusterSecretStore`：
 
 ```shell
 kubectl apply -f cluster-secret-store.yaml
 ```
 
-Verify the store is healthy:
+验证该存储是否健康：
 
 ```shell
 kubectl get clustersecretstore kubernetes-source
 ```
 
-The `STATUS` column should show `Valid`, meaning ESO can successfully connect to the source cluster.
+`STATUS` 列应显示 `Valid`，表示 ESO 已成功连接源集群。
 
-## Create an ExternalSecret
+## 创建 ExternalSecret
 
-With the `ClusterSecretStore` configured, you can now create `ExternalSecret` resources that pull specific secrets from the source cluster into the workload cluster. For example, to sync a TLS certificate:
+`ClusterSecretStore` 配置好后，你就可以创建 `ExternalSecret` 资源，把特定密钥从源集群拉取到工作负载集群。例如，同步一张 TLS 证书：
 
 ```yaml
 apiVersion: external-secrets.io/v1
@@ -343,33 +343,33 @@ spec:
         property: tls.key
 ```
 
-Apply the `ExternalSecret`:
+应用 `ExternalSecret`：
 
 ```shell
 kubectl apply -f external-secret.yaml
 ```
 
-Verify the secret was synced:
+验证密钥已同步：
 
 ```shell
 kubectl get externalsecret <YOUR_SECRET_NAME> -n <YOUR_NAMESPACE>
 ```
 
-The `STATUS` column should show `SecretSynced`. ESO will re-fetch the secret from the source cluster at the `refreshInterval` you specified, keeping the workload cluster's copy up to date automatically.
+`STATUS` 列应显示 `SecretSynced`。ESO 会按你指定的 `refreshInterval` 从源集群重新获取密钥，自动保持工作负载集群中的副本最新。
 
-## Conclusion
+## 结语
 
-You've configured External Secrets Operator to sync secrets between Kubernetes clusters over Tailscale's private network. Secrets are fetched directly from the source cluster's API server through an encrypted mesh connection, with no intermediate storage or internet exposure.
+你已配置 External Secrets Operator，经由 Tailscale 的私有网络在 Kubernetes 集群之间同步密钥。密钥通过加密的网状连接直接从源集群的 API 服务器获取，没有中间存储，也不暴露到互联网。
 
-This configuration provides several key benefits:
+这一配置带来几项关键优势：
 
-* **No secrets in Git**: Credentials are synced at runtime from the source of truth, not committed to repositories.
-* **Automatic rotation**: ESO re-fetches secrets on a configurable interval, picking up rotations without manual intervention.
-* **Private connectivity**: The source cluster's API server is never exposed to the internet. All traffic flows through Tailscale's encrypted network.
-* **Fine-grained access**: Tailscale impersonation and Kubernetes RBAC work together to grant ESO exactly the permissions it needs and nothing more.
-* **Scalable**: Adding a new workload cluster requires only a new egress service and `ClusterSecretStore`. No changes are needed on the source cluster.
+* **Git 中没有密钥**：凭证在运行时从权威来源同步，而不是提交进仓库。
+* **自动轮换**：ESO 按可配置的时间间隔重新获取密钥，无需人工干预即可应用轮换。
+* **私有连接**：源集群的 API 服务器永远不会暴露到互联网。所有流量都流经 Tailscale 的加密网络。
+* **细粒度访问**：Tailscale 模拟与 Kubernetes RBAC 协同工作，精确授予 ESO 所需的权限，不多一分。
+* **可扩展**：新增一个工作负载集群只需要一个新的出站服务和一个 `ClusterSecretStore`。源集群无需任何改动。
 
-For advanced configurations, explore [customizing the Tailscale Kubernetes Operator][docs-operator-customization] or refer to the [External Secrets Operator documentation][xt-external-secrets] for additional providers and secret store types.
+要了解高级配置，可以探索[自定义 Tailscale Kubernetes Operator][docs-operator-customization]，或参阅 [External Secrets Operator 文档][xt-external-secrets]了解其他提供方和密钥存储类型。
 
 [docs-access-control]: /docs/features/access-control/acls
 

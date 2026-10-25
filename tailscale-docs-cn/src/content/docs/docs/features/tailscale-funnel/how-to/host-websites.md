@@ -1,32 +1,32 @@
 ---
-title: "Host a website using a tailnet device"
-description: "This topic provides details about serving a website from a Tailscale device that is only accessible to other users in a Tailscale network (known as a tailnet) using [Tailscale Serve][docs-serve]. Alte"
+title: "使用 tailnet 设备托管网站"
+description: "本主题详细介绍如何使用 [Tailscale Serve][docs-serve]，从一台 Tailscale 设备提供只有 Tailscale 网络（即 tailnet）中其他用户才能访问的网站。你也可以按照下面的说明，使用 [Tailscale Funnel][docs-funnel] 托管一个对公共互联网开放的网站。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic provides details about serving a website from a Tailscale device that is only accessible to other users in a Tailscale network (known as a tailnet) using [Tailscale Serve][docs-serve]. Alternatively, you can use the instructions below to host a website that is accessible to the public internet, using [Tailscale Funnel][docs-funnel].
+本主题详细介绍如何使用 [Tailscale Serve][docs-serve]，从一台 Tailscale 设备提供只有 Tailscale 网络（即 tailnet）中其他用户才能访问的网站。你也可以按照下面的说明，使用 [Tailscale Funnel][docs-funnel] 托管一个对公共互联网开放的网站。
 
-## Prerequisites
+## 前提条件
 
-* You need a [Tailscale account][docs-install].
-* You need to [install Tailscale on your local machine][co-download].
+* 你需要一个 [Tailscale 账户][docs-install]。
+* 你需要[在本地计算机上安装 Tailscale][co-download]。
 
-> **Note:**
+> **注意：**
 >
-> We recommend serving your files and website using a Linux VM. You can attempt this on macOS. However, due to the sandboxed nature of the operating system, you may encounter errors.
+> 我们建议使用 Linux 虚拟机（VM）来提供你的文件和网站。你也可以在 macOS 上尝试，但由于该操作系统的沙箱特性，可能会遇到错误。
 
-Here are instructions for creating various cloud-based Linux VMs and setting up Tailscale on your VM:
+以下是创建各类云端 Linux 虚拟机并在其上设置 Tailscale 的指南：
 
-* [Create a Linux VM on Azure][xt-entra-vm]
-* [Create a Linux VM on AWS][xt-aws-ec2-get-started]
-* [Create a Linux VM on GCP][xt-google-linux-vm-create]
+* [在 Azure 上创建 Linux 虚拟机][xt-entra-vm]
+* [在 AWS 上创建 Linux 虚拟机][xt-aws-ec2-get-started]
+* [在 GCP 上创建 Linux 虚拟机][xt-google-linux-vm-create]
 
-After your Linux VM is created, you must also [install Tailscale on your Linux VM][docs-install-linux].
+创建 Linux 虚拟机后，你还需要[在该虚拟机上安装 Tailscale][docs-install-linux]。
 
-## Serve your files and website
+## 提供你的文件和网站
 
-1. Start by creating a file named `index.html` on your local machine for testing. Here is an example of HTML code that you can use in your file:
+1. 首先在你的本地计算机上创建一个名为 `index.html` 的文件用于测试。以下是可以在该文件中使用的 HTML 代码示例：
 
    ```html
    <!DOCTYPE html>
@@ -41,36 +41,36 @@ After your Linux VM is created, you must also [install Tailscale on your Linux V
    </html>
    ```
 
-2. Create a `/tmp` directory and a subdirectory on your local machine below the root directory:
+2. 在本地计算机上创建一个 `/tmp` 目录及其下的一个子目录：
 
    ```shell
    mkdir /tmp
    mkdir /tmp/test-funnel
    ```
 
-3. Move the `index.html` file you created into the `/tmp/test-funnel` subdirectory that you created in the previous step. In this example, the current location of the file is `/home/amelie`:
+3. 将你创建的 `index.html` 文件移动到上一步创建的 `/tmp/test-funnel` 子目录中。在本示例中，该文件当前位于 `/home/amelie`：
 
    ```shell
    mv /home/amelie/index.html /tmp/test-funnel
    ```
 
-4. Run the following command on your machine to serve the `index.html` file to your tailnet:
+4. 在你的计算机上运行以下命令，将 `index.html` 文件提供给你的 tailnet：
 
    ```shell
    tailscale serve /tmp/test-funnel/index.html
    ```
 
-   Or, if you want to make the same files and website visible on the public internet, use the following command:
+   或者，如果你想让同样的文件和网站在公共互联网上可见，请使用以下命令：
 
    ```shell
    tailscale funnel /tmp/test-funnel/index.html
    ```
 
-## Share your website
+## 共享你的网站
 
-You can now share the website URL by combining your tailnet machine name and the name of your tailnet. The machine name can be found in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, and the tailnet DNS name can be found in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+现在你可以将 tailnet 机器名与 tailnet 名称组合起来，分享网站 URL。机器名可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面找到，tailnet DNS 名称可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面找到。
 
-If your tailnet machine name is `amelie-vm`, and your tailnet DNS name is `pango-lin.ts.net`, share the URL:
+如果你的 tailnet 机器名是 `amelie-vm`，tailnet DNS 名称是 `pango-lin.ts.net`，那么分享的 URL 为：
 
 `https://amelie-vm.pango-lin.ts.net`
 

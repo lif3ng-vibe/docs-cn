@@ -1,92 +1,92 @@
 ---
-title: "Connect devices outside your tailnet"
-description: "Connect devices that are not in your tailnet to your Aperture gateway using an Aperture CLI bridge or ts-unplug."
+title: "连接 tailnet 之外的设备"
+description: "使用 Aperture CLI 桥接或 ts-unplug，把不在你 tailnet 内的设备连接到你的 Aperture 网关。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-An Aperture gateway resides in a [tailnet][docs-tailnet], and devices in that tailnet can reach it directly. But not every device that needs LLM access can join the tailnet. CI/CD runners, contractor machines, personal devices, and devices in a different tailnet can all connect to Aperture through an embedded Tailscale device that joins your tailnet and proxies local traffic to Aperture. The device does not need Tailscale installed.
+Aperture 网关位于一个 [tailnet][docs-tailnet] 中，tailnet 内的设备可以直接访问它。但并非每台需要 LLM 访问的设备都能加入该 tailnet。CI/CD 运行器、承包商机器、个人设备以及其他 tailnet 中的设备，都可以通过一个内嵌的 Tailscale 设备连接 Aperture——该设备加入你的 tailnet，并把本地流量代理到 Aperture。这些设备无需安装 Tailscale。
 
-There are two ways to do this:
+有两种方式：
 
-* **[An Aperture CLI bridge][ar-connect-bridge]** (recommended). The Aperture CLI creates the embedded node for you and launches your coding agent already pointed at it. Use this for interactive coding sessions.
-* **[`ts-unplug`][ar-connect-ts-unplug]**. A standalone proxy from the [ts-plug repository][xt-gh-ts-plug] that listens on a local port you choose. Use this when you need a fixed local endpoint for tools the Aperture CLI does not launch, such as scripts, CI jobs, or custom API clients.
+* **[Aperture CLI 桥接][ar-connect-bridge]**（推荐）。Aperture CLI 会替你创建内嵌节点，并让启动的编码智能体直接指向它。交互式编码会话请用这种方式。
+* **[`ts-unplug`][ar-connect-ts-unplug]**。[ts-plug 仓库][xt-gh-ts-plug]中的独立代理，监听你选择的本地端口。当 Aperture CLI 不会启动的工具（例如脚本、CI 作业或自定义 API 客户端）需要固定的本地端点时，请用这种方式。
 
-Both methods authenticate requests using the embedded node's Tailscale identity, not a shared API key. If each person runs their own instance, Aperture attributes activity to individual users.
+两种方式都使用内嵌节点的 Tailscale 身份来认证请求，而不是共享 API 密钥。如果每个人运行自己的实例，Aperture 可以把活动归到具体用户。
 
-> **Note:**
+> **注意：**
 >
-> `ts-unplug` is also referred to as bridge mode or standalone mode. Despite the name, bridge mode is the `ts-unplug` workflow, not the Aperture CLI bridge feature.
+> `ts-unplug` 也被称为 bridge mode（桥接模式）或 standalone mode（独立模式）。尽管名字如此，bridge mode 指的是 `ts-unplug` 工作流，而不是 Aperture CLI 的桥接功能。
 
-## Use cases
+## 使用场景
 
-Connect from outside the tailnet when devices cannot or should not join your tailnet directly.
+当设备无法或不便直接加入你的 tailnet 时，可以从 tailnet 之外连接。
 
-* **CI/CD runners**: Ephemeral environments like GitHub Actions runners that need LLM access during builds. Use an [auth key][docs-auth-keys] to skip interactive approval.
-* **Contractor or vendor machines**: External collaborators who need Aperture access without joining your organization's tailnet.
-* **Personal devices**: Team members who prefer not to install Tailscale on personal hardware.
-* **Cross-tailnet access**: Devices in a different tailnet that need to reach your Aperture gateway.
+* **CI/CD 运行器**：GitHub Actions 运行器等在构建期间需要 LLM 访问的临时环境。使用[认证密钥][docs-auth-keys]（auth key）可跳过交互式批准。
+* **承包商或供应商机器**：需要访问 Aperture 但不加入你所在组织 tailnet 的外部协作者。
+* **个人设备**：不想在个人硬件上安装 Tailscale 的团队成员。
+* **跨 tailnet 访问**：其他 tailnet 中需要访问你的 Aperture 网关的设备。
 
-For devices that are already in your tailnet, connecting directly requires fewer steps and provides the same per-user identity. Refer to [set up LLM clients][docs-use-your-tools] for connection instructions.
+已在 tailnet 内的设备直接连接步骤更少，同样能获得按用户区分的身份。连接说明参阅[设置 LLM 客户端][docs-use-your-tools]。
 
-## Connect using an Aperture CLI bridge
+## 通过 Aperture CLI 桥接连接
 
-A bridge is an embedded Tailscale node that runs inside the Aperture CLI. When you activate a bridge endpoint, the Aperture CLI joins your tailnet, opens a local proxy, and configures the coding agent it launches to use that proxy.
+桥接是运行在 Aperture CLI 内部的内嵌 Tailscale 节点。激活桥接端点后，Aperture CLI 会加入你的 tailnet、打开一个本地代理，并把它启动的编码智能体配置为使用该代理。
 
-### Prerequisites
+### 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，请确认已具备以下条件：
 
-* **The Aperture CLI.** Refer to [install the Aperture CLI][docs-aperture-cli-install].
-* **The URL of your Aperture gateway.** By default, this is `http://<aperture-hostname>.<tailnet-name>.ts.net`. Find your tailnet DNS name in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-* **Permission to approve devices.** You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to approve the bridge node in the admin console, unless you use an [auth key][docs-auth-keys] to authenticate automatically.
+* **Aperture CLI。** 参阅[安装 Aperture CLI][docs-aperture-cli-install]。
+* **Aperture 网关的 URL。** 默认为 `http://<aperture-hostname>.<tailnet-name>.ts.net`。tailnet DNS 名称可在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面查找。
+* **批准设备的权限。** 你必须是[所有者、管理员或网络管理员](/docs/reference/user-roles)才能在管理控制台中批准桥接节点，除非你使用[认证密钥][docs-auth-keys]自动完成认证。
 
-### Step 1: Create a bridge
+### 第 1 步：创建桥接
 
-1. Run `aperture`, then press `s` to open settings.
+1. 运行 `aperture`，然后按 `s` 打开设置。
 
-2. Select **Bridges**, press `a`, and enter a name for the bridge, such as `ci-runner`.
+2. 选择 **Bridges**，按 `a`，输入桥接名称，例如 `ci-runner`。
 
-### Step 2: Assign the bridge to an endpoint
+### 第 2 步：将桥接分配给端点
 
-1. Return to the settings menu and select **Aperture Endpoints**.
+1. 返回设置菜单并选择 **Aperture Endpoints**。
 
-2. Press `a`, select **Bridge**, and choose the bridge you created. The Aperture CLI starts connecting through it to `http://ai`.
+2. 按 `a`，选择 **Bridge**，再选择你创建的桥接。Aperture CLI 开始通过它连接 `http://ai`。
 
-   If your gateway uses a different URL, type it on the connection screen and press `Enter`. If the default URL has already connected, return to **Aperture Endpoints**, select the connection, and select **Change URL**.
+   如果你的网关使用其他 URL，在连接界面输入后按 `Enter`。如果默认 URL 已经连接成功，返回 **Aperture Endpoints**，选择该连接并选择 **Change URL**。
 
-### Step 3: Activate the endpoint
+### 第 3 步：激活端点
 
-1. Complete the connection started when you selected the bridge.
+1. 完成选择桥接时开始的连接。
 
-   The first activation opens a Tailscale authentication URL in your browser and displays it at the bottom of the connection screen. If the browser does not open, press `Ctrl+Y` to copy the URL and open it yourself. Authenticate the node, then approve the device in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console for the tailnet hosting Aperture if your tailnet requires device approval.
+   首次激活会在浏览器中打开一个 Tailscale 认证 URL，并将其显示在连接界面底部。如果浏览器没有打开，按 `Ctrl+Y` 复制该 URL 并自行打开。认证节点后，如果你的 tailnet 启用了设备批准，请在承载 Aperture 的 tailnet 对应的管理控制台 [Machines](https://console.tailscale.com/admin/machines) 页面中批准该设备。
 
-2. After the connection check passes, select a coding agent from the main menu.
+2. 连接检查通过后，从主菜单选择一个编码智能体。
 
-   The Aperture CLI starts the agent with the bridge proxy as its base URL.
+   Aperture CLI 会以桥接代理作为 base URL 启动该智能体。
 
-For more detail on how bridges work, refer to [bridges][docs-aperture-cli-bridges].
+桥接工作原理的更多细节参阅[桥接][docs-aperture-cli-bridges]。
 
-## Connect using ts-unplug
+## 使用 ts-unplug 连接
 
-`ts-unplug` creates a lightweight tailnet node and opens a local port that forwards traffic to Aperture. Unlike an Aperture CLI bridge, the port is one you choose and stays fixed, so any tool on the device can use it as a base URL.
+`ts-unplug` 会创建一个轻量级 tailnet 节点，并打开一个把流量转发到 Aperture 的本地端口。与 Aperture CLI 桥接不同，这个端口由你选择且保持固定，因此设备上的任何工具都可以把它用作 base URL。
 
-> **Note:**
+> **注意：**
 >
-> The `ts-plug` and `ts-unplug` tools are under active development. Refer to the [ts-plug repository][xt-gh-ts-plug] for the latest status and release information.
+> `ts-plug` 和 `ts-unplug` 工具仍在积极开发中。最新状态和发布信息参阅 [ts-plug 仓库][xt-gh-ts-plug]。
 
-### Prerequisites
+### 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，请确认已具备以下条件：
 
-* **Go toolchain.** `ts-unplug` is built from source. Install [Go][xt-go-install] 1.21 or later.
-* **Git.** Required to clone the [ts-plug repository][xt-gh-ts-plug].
-* **The FQDN of your Aperture gateway.** By default, this is `<aperture-hostname>.<tailnet-name>.ts.net`. Find your tailnet DNS name in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-* **Permission to approve devices.** You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to approve the `ts-unplug` node in the admin console, unless you use an [auth key][docs-auth-keys] to authenticate automatically.
+* **Go 工具链。** `ts-unplug` 需要从源码构建。安装 [Go][xt-go-install] 1.21 或更高版本。
+* **Git。** 克隆 [ts-plug 仓库][xt-gh-ts-plug]时需要。
+* **Aperture 网关的 FQDN。** 默认为 `<aperture-hostname>.<tailnet-name>.ts.net`。tailnet DNS 名称可在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面查找。
+* **批准设备的权限。** 你必须是[所有者、管理员或网络管理员](/docs/reference/user-roles)才能在管理控制台中批准 `ts-unplug` 节点，除非你使用[认证密钥][docs-auth-keys]自动完成认证。
 
-### Step 1: Build ts-unplug
+### 第 1 步：构建 ts-unplug
 
-Clone the [ts-plug repository][xt-gh-ts-plug] and build `ts-unplug`:
+克隆 [ts-plug 仓库][xt-gh-ts-plug]并构建 `ts-unplug`：
 
 ```shell
 git clone https://github.com/tailscale/ts-plug.git
@@ -94,27 +94,27 @@ cd ts-plug
 make ts-unplug
 ```
 
-This creates the binary at `./build/ts-unplug`.
+二进制文件生成在 `./build/ts-unplug`。
 
-### Step 2: Start ts-unplug
+### 第 2 步：启动 ts-unplug
 
-Run `ts-unplug` and point it at your Aperture gateway. Replace `<tailnet-name>` with your tailnet DNS name and choose a local port:
+运行 `ts-unplug` 并指向你的 Aperture 网关。把 `<tailnet-name>` 替换为你的 tailnet DNS 名称，并选择一个本地端口：
 
 ```shell
 ./build/ts-unplug -dir ./state -port 8080 <aperture-hostname>.<tailnet-name>.ts.net
 ```
 
-On the first run, `ts-unplug` prints a URL to authenticate the new node. Open the URL in a browser to complete authentication.
+首次运行时，`ts-unplug` 会打印一个用于认证新节点的 URL。在浏览器中打开该 URL 完成认证。
 
-### Step 3: Approve the device
+### 第 3 步：批准设备
 
-Approve the new device in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console for the tailnet hosting Aperture.
+在承载 Aperture 的 tailnet 对应的管理控制台 [Machines](https://console.tailscale.com/admin/machines) 页面中批准新设备。
 
-After approval, `ts-unplug` displays `HTTP proxy listening` and you can access Aperture at `http://localhost:8080`.
+批准后，`ts-unplug` 会显示 `HTTP proxy listening`，你即可通过 `http://localhost:8080` 访问 Aperture。
 
-### Step 4: Verify the connection
+### 第 4 步：验证连接
 
-After `ts-unplug` is running, confirm the connection works by sending a test request:
+`ts-unplug` 运行后，发送一个测试请求确认连接正常：
 
 ```shell
 curl -s http://localhost:8080/v1/messages \
@@ -126,30 +126,30 @@ curl -s http://localhost:8080/v1/messages \
   }'
 ```
 
-If the request succeeds, open **Sessions** at `http://localhost:8080/sessions` to find the request in your personal history.
+请求成功后，打开 `http://localhost:8080/sessions` 的 **Sessions**，可在你的个人历史中找到该请求。
 
-## Next steps
+## 后续步骤
 
-* **Configure tools to use the `ts-unplug` proxy**
+* **配置工具使用 `ts-unplug` 代理**
 
-  After you confirm the connection works, configure your tools to use `http://localhost:<port>` as the base URL for API requests. For tool-specific configuration, refer to [set up LLM clients][docs-use-your-tools] and replace `http://<aperture-hostname>` with `http://localhost:<port>` in any configuration example. Agents launched by the Aperture CLI are configured automatically and need no changes.
+  确认连接正常后，把工具的 API 请求 base URL 配置为 `http://localhost:<port>`。各工具的具体配置参阅[设置 LLM 客户端][docs-use-your-tools]，并把任一配置示例中的 `http://<aperture-hostname>` 替换为 `http://localhost:<port>`。由 Aperture CLI 启动的智能体会自动完成配置，无需更改。
 
-* **Manage your instances**
+* **管理你的实例**
 
-  Stop the proxy when it's not in use, remove devices from your tailnet when they're no longer needed, and run multiple `ts-unplug` instances with separate state directories if multiple users need access. To remove a bridge, refer to [delete a bridge][docs-aperture-cli-bridge-delete].
+  代理不用时停止它；设备不再需要时从 tailnet 中移除；如果多个用户需要访问，可使用独立的状态目录运行多个 `ts-unplug` 实例。移除桥接参阅[删除桥接][docs-aperture-cli-bridge-delete]。
 
-## Limitations
+## 限制
 
-The following limitations apply to these connection methods:
+这些连接方式有以下限制：
 
-* The Aperture CLI bridge proxy listens on a random local port and configures the agents the Aperture CLI launches. Use `ts-unplug` when you need a fixed port for other tools.
-* `ts-unplug` must be built from source. Pre-built binaries are not available.
-* `ts-unplug` listens on `localhost` only. Other devices on the same network cannot access the proxy.
-* Each bridge or `ts-unplug` instance creates a separate tailnet node. If you need many instances, consider using [auth keys][docs-auth-keys] with appropriate tags and access control policies.
+* Aperture CLI 桥接代理监听随机的本地端口，且只配置由 Aperture CLI 启动的智能体。需要为其他工具提供固定端口时请用 `ts-unplug`。
+* `ts-unplug` 必须从源码构建，没有预编译二进制。
+* `ts-unplug` 只监听 `localhost`，同一网络中的其他设备无法访问该代理。
+* 每个桥接或 `ts-unplug` 实例都会创建一个独立的 tailnet 节点。如果需要大量实例，请考虑使用带适当标签和访问控制策略的[认证密钥][docs-auth-keys]。
 
-[ar-connect-bridge]: #connect-using-an-aperture-cli-bridge
+[ar-connect-bridge]: #通过-aperture-cli-桥接
 
-[ar-connect-ts-unplug]: #connect-using-ts-unplug
+[ar-connect-ts-unplug]: #使用-ts-unplug-连接
 
 [docs-aperture-cli-bridge-delete]: /docs/aperture/cli#delete-a-bridge
 

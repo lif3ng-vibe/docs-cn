@@ -1,0 +1,211 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "编写你的第一个沙箱网络策略"
+sidebar-title: "第一个网络策略"
+description: "通过创建沙箱、观察默认拒绝的实际效果、应用细粒度的 L7 只读规则，学习 OpenShell 网络策略的工作方式。"
+keywords: "生成式 AI, 网络安全, 教程, 策略, 网络策略, 沙箱, 安全"
+---
+import { Aside } from '@astrojs/starlight/components';
+import Steps from '@components/Steps.astro';
+
+本教程用不到五分钟展示 OpenShell 网络策略系统的工作方式。你将创建一个沙箱（sandbox），观察请求被默认拒绝（default-deny）策略阻断，应用一条细粒度的 L7 规则，并验证读操作放行、写操作被阻断，全程无需重启任何东西。
+
+完成本教程后，你将了解：
+
+- 默认拒绝网络如何阻断沙箱的所有出站流量。
+- 如何应用网络策略，向特定 API 授予只读访问权。
+- L7 强制如何在同一端点上区分 GET 与 POST 等 HTTP 方法。
+- 如何检查拒绝日志，获得完整的审计线索。
+
+## 前提条件
+
+- 可用的 OpenShell 安装，且有一个活动网关（gateway）。继续之前请先阅读[安装](/about/installation)。
+- 你的机器上运行着 Docker Desktop。
+- 一个你自己的工作负载镜像，其中安装了 `curl`。
+
+<Aside type="tip">
+你也可以使用 NVIDIA OpenShell 仓库中 [examples/sandbox-policy-quickstart](https://github.com/NVIDIA/OpenShell/blob/main/examples/sandbox-policy-quickstart) 目录的自动化演示脚本，跑完本教程的每一步。它能在不到一分钟内完成整个演练，但没有任何用户交互。
+
+```shell
+bash examples/sandbox-policy-quickstart/demo.sh
+```
+
+</Aside>
+
+<Steps>
+
+## 创建沙箱
+
+首先创建一个没有任何网络策略的沙箱，得到一个干净的环境来观察默认拒绝行为。
+
+```shell
+openshell sandbox create \
+  --name demo \
+  --from registry.example.com/team/agent-tools:1.0 \
+  --no-auto-providers
+```
+
+`--no-auto-providers` 会跳过提供商（provider）设置提示，因为本教程使用 `curl` 而不是 AI 智能体。
+
+随后你会进入沙箱内的交互式 shell：
+
+```text
+sandbox@demo:~$
+```
+
+## 尝试访问 GitHub API
+
+在没有网络策略的情况下，所有出站连接都被阻断。在沙箱内发起一个简单的 API 调用来验证这一点：
+
+```shell
+curl -s https://api.github.com/zen
+```
+
+`https://api.github.com/zen` 是一个轻量的、无需认证的 GitHub REST 端点，每次调用返回一句随机格言。它不需要令牌（token）或参数，是验证出站 HTTPS 连通性的便捷冒烟测试目标。
+
+请求失败了。默认情况下，所有出站网络流量都被拒绝。沙箱代理拦截了发往 `api.github.com:443` 的 HTTPS CONNECT 请求并予以拒绝，因为没有网络策略授权 `curl` 访问该主机。
+
+```text
+curl: (56) Received HTTP code 403 from proxy after CONNECT
+```
+
+保持这个沙箱 shell 打开，切换到宿主机（host）上的第二个终端执行后续步骤。其余 `openshell` 命令（查看日志和应用策略）都在宿主机上运行，而不是在沙箱内。
+
+<Aside type="note">
+在本教程剩下的部分中，请保持交互式沙箱 shell 处于打开状态。退出它会停止沙箱的主进程，而在默认重启策略下，沙箱此后无法重新挂接。如果希望退出时自动删除沙箱，可在创建时加上 `--no-keep`。
+
+</Aside>
+
+## 查看拒绝日志
+
+每一次被拒绝的连接都会产生一条结构化日志。在第二个（宿主机）终端中查询沙箱日志，确认拒绝并查看原因。
+
+```shell
+openshell logs demo --since 5m --source sandbox
+```
+
+你会看到类似这样的一行：
+
+```text
+[1775014132.690] [sandbox] [OCSF ] [ocsf] NET:OPEN [MED] DENIED /usr/bin/curl(64) -> api.github.com:443 [policy:- engine:opa] [reason:network connections not allowed by policy]
+```
+
+每条被拒绝的连接都会记录目标地址、发起连接的二进制程序以及原因。任何流量都不会悄无声息地出去。
+
+## 应用只读 GitHub API 策略
+
+为了让沙箱能访问 GitHub API，添加一条网络规则（network rule），授予 `curl` 只读访问权。在宿主机终端运行以下命令：
+
+```shell
+openshell policy update demo \
+  --rule-name github_api \
+  --binary /usr/bin/curl \
+  --add-endpoint api.github.com:443:read-only:rest:enforce \
+  --wait
+```
+
+端点规格依次列出主机、端口、访问预设、协议与强制（enforce）模式。`rest` 让代理终止 TLS 并检查每个 HTTP 请求，`read-only` 允许 `GET`、`HEAD` 与 `OPTIONS`，`enforce` 则阻断其余所有请求。`policy update` 只修改网络规则，保留沙箱策略的其余部分。
+
+该命令会在策略的 `network_policies` 一节中添加与下面 YAML 等价的规则：
+
+```yaml
+network_policies:
+  github_api:
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+    binaries:
+      - path: /usr/bin/curl
+```
+
+要查看完整策略，运行 `openshell policy get demo --base`。
+
+`--wait` 会等待沙箱针对新策略修订版上报结果。无需重启，因为网络规则会在沙箱运行期间重新加载。
+
+<Aside type="tip">
+本教程使用 `curl` 和 `read-only` 访问以保持简单。为真实工作负载（workload）构建策略时：
+
+- 要把规则限定到某个智能体，用该智能体的二进制路径（例如 `/usr/local/bin/claude`）替代 `curl`。
+- 要授予写访问权，使用 `read-write` 预设，或为特定路径添加显式规则。参见[策略 Schema](/how-it-works/policies/schema)。
+- 要放行其他服务（如 PyPI、npm 或内部 API），参考[网络规则](/how-it-works/policies/network-rules)中的示例进行调整。
+
+</Aside>
+
+## 验证 GET 请求是否放行
+
+策略现在已生效。回到第一个终端的沙箱 shell（它仍在运行），重试同一请求，确认读访问已可用：
+
+```shell
+curl -s https://api.github.com/zen
+```
+
+```text
+Anything added dilutes everything else.
+```
+
+成功了。`read-only` 预设放行了 GET 请求。
+
+## 尝试写请求
+
+只读预设允许 GET，但会阻断 POST、PUT、DELETE 等修改型方法。仍在沙箱内，向 GitHub API 发送一个 POST 请求来验证：
+
+```shell
+curl -s -X POST https://api.github.com/repos/octocat/hello-world/issues \
+    -H "Content-Type: application/json" \
+    -d '{"title":"oops"}'
+```
+
+代理返回 `403` 响应，其 JSON 响应体包含类似下面的字段，以及被拒请求的详细信息：
+
+```text
+{...,"error":"policy_denied",...,"policy":"github_api",...,"rule":"POST /repos/octocat/hello-world/issues",...}
+```
+
+连接成功了，因为 `api.github.com` 在允许之列，但代理检查了 HTTP 方法并返回 `403`。`POST` 不在 `read-only` 预设内。带上这条策略的智能体可以从 GitHub 读取代码，却无法创建 issue、推送提交或修改任何东西。
+
+## 查看 L7 拒绝日志
+
+请求级（L7）拒绝与连接级拒绝分开记录。日志条目包含代理拒绝的确切 HTTP 方法与路径。在第二个（宿主机）终端运行以下命令，保持沙箱 shell 打开：
+
+```shell
+openshell logs demo --since 5m --source sandbox
+```
+
+```text
+[1775014140.412] [sandbox] [OCSF ] [ocsf] HTTP:POST [MED] DENIED POST https://api.github.com/repos/octocat/hello-world/issues [policy:github_api engine:l7] [reason:L7_REQUEST deny POST api.github.com:443/repos/octocat/hello-world/issues reason=POST /repos/octocat/hello-world/issues not permitted by policy]
+```
+
+无论严重级别如何，策略事件都是 INFO 级日志记录，因此不要用 `--level warn` 把它们过滤掉。生产环境中，把这些事件导出到你的 SIEM，即可获得智能体所发每个请求的完整审计线索。事件格式参见[日志](/observability/logging)。
+
+<Aside type="tip">
+要只记录违规而不阻断请求，在策略中把 `enforcement: enforce` 改为 `enforcement: audit`。这对迭代构建策略很有用：先以 audit 模式部署，审阅日志，规则无误后再切换到 enforce。
+
+</Aside>
+
+## 清理
+
+删除沙箱以释放资源。这会停止所有进程并清除注入的凭据（credential）。
+
+```shell
+openshell sandbox delete demo
+```
+
+<Aside type="tip">
+要以非交互方式跑完整个演练，使用自动化演示脚本：
+
+```shell
+bash examples/sandbox-policy-quickstart/demo.sh
+```
+
+</Aside>
+
+</Steps>
+
+## 后续步骤
+
+- 要了解 OpenShell 如何评估网络规则，参见[沙箱策略](/how-it-works/policies/overview)。
+- 要用 Claude Code 完整走一遍策略迭代，包括诊断拒绝和在沙箱外应用修复，参见 [GitHub 沙箱](/tutorials/github-push-access)。

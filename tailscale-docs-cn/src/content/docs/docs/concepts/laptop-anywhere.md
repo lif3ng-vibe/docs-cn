@@ -1,14 +1,10 @@
 ---
-title: "Connect to your corporate laptop no matter where you left it"
-description: "Connect to your corporate laptop no matter where it is."
+title: "无论把公司笔记本落在哪，都能连上它"
+description: "无论公司笔记本在哪里，都能连接它。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale is a true point-to-point encrypted network. You can configure your security
-policy to let you connect any two computers together no matter where
-they are: even if you left your laptop at home and you want to reach it from
-your phone while sitting in an internet cafe.
+Tailscale 是真正的点对点加密网络。你可以配置安全策略，让任意两台计算机无论身处何地都能互相连接：哪怕你把笔记本落在家里，想坐在网吧里用手机访问它，也照样可行。
 
-Traffic always goes directly point-to-point, so latency is as low as it
-gets.
+流量始终直接点对点传输，因此延迟可以降到最低。

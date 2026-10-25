@@ -1,31 +1,31 @@
 ---
-title: "Use Claude Code with Aperture"
-description: "Configure [Claude Code][xt-claude-code] to send requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, and session logging."
+title: "在 Aperture 中使用 Claude Code"
+description: "配置 [Claude Code][xt-claude-code]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure [Claude Code][xt-claude-code] to send requests through [Aperture by Tailscale][docs-aperture] so your organization gets centralized API key management, usage tracking, and session logging.
+配置 [Claude Code][xt-claude-code]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，为你的组织带来集中的 API key 管理、用量跟踪和会话日志。
 
-> **Note:**
+> **注意：**
 >
-> The [Aperture CLI][docs-aperture-cli] can set up this connection for you automatically. It sets the environment variables Claude Code requires and launches it, so you can skip the manual steps below.
+> [Aperture CLI][docs-aperture-cli] 可以自动为你建立这一连接。它会设置 Claude Code 所需的环境变量并启动 Claude Code，因此你可以跳过下面的手动步骤。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway with at least one configured AI provider (such as Anthropic), accessible from your device. Refer to [get started with Aperture][docs-get-started] if you have not set this up.
-* The Aperture gateway URL accessible from your device. Use `http://`, not `https://`.
-* [Claude Code][xt-claude-code] installed on your device.
+* 一台 Aperture 网关，至少配置了一个 AI 提供商（如 Anthropic），并且你的设备可以访问。尚未设置时参阅[开始使用 Aperture][docs-get-started]。
+* 你的设备可以访问的 Aperture 网关 URL。使用 `http://`，不要用 `https://`。
+* 设备上已安装 [Claude Code][xt-claude-code]。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Configure Claude Code
+## 配置 Claude Code
 
-To configure Claude Code to use Aperture, create or edit the global Claude Code settings file (`~/.claude/settings.json`) and set `ANTHROPIC_BASE_URL` to your Aperture URL:
+要配置 Claude Code 使用 Aperture，请创建或编辑全局 Claude Code 设置文件（`~/.claude/settings.json`），并把 `ANTHROPIC_BASE_URL` 设为你的 Aperture URL：
 
 ```json
 {
@@ -36,23 +36,23 @@ To configure Claude Code to use Aperture, create or edit the global Claude Code 
 }
 ```
 
-The `apiKeyHelper` setting returns a placeholder value because Aperture injects credentials automatically. You do not need to configure an API key on the client.
+`apiKeyHelper` 设置返回一个占位值，因为 Aperture 会自动注入凭证。你无需在客户端配置 API key。
 
-> **Note:**
+> **注意：**
 >
-> To route a Claude subscription account such as Claude Pro or Max through Aperture, the upstream Anthropic provider must use passthrough mode so Aperture forwards Claude Code's own OAuth token to Anthropic. In this case, set only `ANTHROPIC_BASE_URL` and do not set `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN`. Setting either makes Claude Code send that value instead of its OAuth token, which suppresses the credential you want to pass through. For more information, refer to [Set up passthrough mode][docs-use-passthrough-mode].
+> 要把 Claude Pro 或 Max 这类 Claude 订阅账户的流量经由 Aperture 转发，上游 Anthropic 提供商必须使用 passthrough 模式，这样 Aperture 才会把 Claude Code 自己的 OAuth 令牌转发给 Anthropic。此时只设置 `ANTHROPIC_BASE_URL`，不要设置 `ANTHROPIC_API_KEY` 或 `ANTHROPIC_AUTH_TOKEN`。设置了其中任何一个，Claude Code 都会发送该值而不是自己的 OAuth 令牌，从而压制了你想透传的凭证。更多信息参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
-> **Tip:**
+> **提示：**
 >
-> You can also configure Claude Code using an environment variable instead of a settings file. Set the following environment variable:
+> 也可以不用设置文件，而是用环境变量配置 Claude Code。设置如下环境变量：
 >
 > ```shell
 > export ANTHROPIC_BASE_URL="http://<aperture-hostname>"
 > ```
 
-> **Warning:**
+> **警告：**
 >
-> Claude Code v1.x requires additional configuration because the `apiKeyHelper` setting does not exist in earlier versions. You must provide a placeholder authentication token and explicitly specify the model.
+> Claude Code v1.x 需要额外的配置，因为早期版本没有 `apiKeyHelper` 设置。你必须提供一个占位认证令牌，并显式指定模型。
 >
 > ```json
 > {
@@ -64,9 +64,9 @@ The `apiKeyHelper` setting returns a placeholder value because Aperture injects 
 > }
 > ```
 
-### Claude Code with Amazon Bedrock
+### Claude Code 搭配 Amazon Bedrock
 
-If your Aperture gateway routes through Amazon Bedrock, use the following `settings.json` configuration instead of the default Anthropic configuration shown above:
+如果你的 Aperture 网关经由 Amazon Bedrock 路由，请使用下面的 `settings.json` 配置，而不是上文展示的默认 Anthropic 配置：
 
 ```json
 {
@@ -79,11 +79,11 @@ If your Aperture gateway routes through Amazon Bedrock, use the following `setti
 }
 ```
 
-If you use Claude Code in VS Code with Bedrock, also add `"claudeCode.disableLoginPrompt": true` to your VS Code user settings JSON (open the **Command Palette** and select **Preferences: Open User Settings (JSON)**).
+如果你在 VS Code 中搭配 Bedrock 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings (JSON)**）。
 
-### Claude Code with the Gemini Enterprise Agent Platform
+### Claude Code 搭配 Gemini Enterprise Agent Platform
 
-If your Aperture gateway routes through the Gemini Enterprise Agent Platform, use the following `settings.json` configuration instead of the default Anthropic configuration. Replace `<project-id>` with your Google Cloud project ID. Claude Code still names these environment variables after the platform's earlier name, Vertex AI.
+如果你的 Aperture 网关经由 Gemini Enterprise Agent Platform 路由，请使用下面的 `settings.json` 配置，而不是默认的 Anthropic 配置。把 `<project-id>` 替换为你的 Google Cloud 项目 ID。Claude Code 仍按该平台早先的名称 Vertex AI 来命名这些环境变量。
 
 ```json
 {
@@ -98,16 +98,16 @@ If your Aperture gateway routes through the Gemini Enterprise Agent Platform, us
 }
 ```
 
-If you use Claude Code in VS Code with the Gemini Enterprise Agent Platform, also add `"claudeCode.disableLoginPrompt": true` to your VS Code user settings JSON (open the **Command Palette** and select **Preferences: Open User Settings (JSON)**).
+如果你在 VS Code 中搭配 Gemini Enterprise Agent Platform 使用 Claude Code，还要在 VS Code 用户设置 JSON 中添加 `"claudeCode.disableLoginPrompt": true`（打开 **Command Palette** 并选择 **Preferences: Open User Settings (JSON)**）。
 
-## Verify the connection
+## 验证连接
 
-To verify that Claude Code routes requests through Aperture:
+要验证 Claude Code 是否经由 Aperture 路由请求：
 
-1. Send a test message in Claude Code.
-2. Open Chat on your Aperture gateway and select **Sessions** in the sidebar. Confirm that your test request appears. If your account has no portal access, ask an administrator to check **Security** > **Logs**.
+1. 在 Claude Code 中发送一条测试消息。
+2. 在你的 Aperture 网关上打开 Chat，在侧边栏选择 **Sessions**。确认测试请求已出现。如果你的账户没有门户访问权，请让管理员检查 **Security** > **Logs**。
 
-If the request does not appear, refer to the [Aperture troubleshooting topic][docs-aperture-troubleshooting].
+如果请求没有出现，参阅 [Aperture 故障排查主题][docs-aperture-troubleshooting]。
 
 \[Missing snippet: aperture\_connect\_next\_steps.mdx]
 

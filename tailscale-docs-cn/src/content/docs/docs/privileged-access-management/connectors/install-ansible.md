@@ -1,64 +1,64 @@
 ---
-title: "Install a Tailscale PAM connector with Ansible"
-description: "You can use [Ansible][xt-ansible] to create and install [Tailscale PAM][docs-pam] [connectors][docs-pam-connectors] on Linux hosts. The playbook creates the connector resource and its credentials thro"
+title: "使用 Ansible 安装 Tailscale PAM 连接器"
+description: "你可以使用 [Ansible][xt-ansible] 在 Linux 主机上创建并安装 [Tailscale PAM][docs-pam] [连接器][docs-pam-connectors]。Playbook 会通过 Tailscale PAM API 创建连接器资源及其凭证"
 ---
 
-Last validated Sep 25, 2026
+最后验证于 Sep 25, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-You can use [Ansible][xt-ansible] to create and install [Tailscale PAM][docs-pam] [connectors][docs-pam-connectors] on Linux hosts. The playbook creates the connector resource and its credentials through the Tailscale PAM API, installs the binary, and starts it as a `systemd` service.
+你可以使用 [Ansible][xt-ansible] 在 Linux 主机上创建并安装 [Tailscale PAM][docs-pam] [连接器][docs-pam-connectors]。该 playbook 会通过 Tailscale PAM API 创建连接器资源及其凭证、安装二进制文件，并将其作为 `systemd` 服务启动。
 
-You provide a Tailscale PAM service account token. The playbook automatically creates and reuses a connector token for each connector, so you don't need to get a connector token yourself.
+你只需提供 Tailscale PAM 服务账户令牌。Playbook 会为每个连接器自动创建并复用连接器令牌，因此你无需自己获取连接器令牌。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need the following:
+开始之前，你需要具备以下条件：
 
-* Access to Tailscale PAM.
-* Ansible on your control node, with HTTPS access to `api.border0.com`.
-* SSH access to Linux hosts with the following available:
+* 可以访问 Tailscale PAM。
+* 控制节点上安装了 Ansible，且能通过 HTTPS 访问 `api.border0.com`。
+* 可以通过 SSH 访问 Linux 主机，且主机上具备以下条件：
   * Python 3
   * `systemd`
-  * Outbound internet access
-  * Privilege escalation (`become: true`)
+  * 出站互联网访问
+  * 特权提升（`become: true`）
 
-As part of this guide, you will create a Tailscale PAM service account with the [**Member**][docs-pam-service-accounts-roles] role or higher, and create a token for that service account.
+在本指南中，你将创建一个拥有 [**Member**][docs-pam-service-accounts-roles] 或更高角色的 Tailscale PAM 服务账户，并为该服务账户创建令牌。
 
-## Create a service account
+## 创建服务账户
 
-Ansible authenticates to the API using a Tailscale PAM [service account][docs-pam-service-accounts].
+Ansible 使用 Tailscale PAM [服务账户][docs-pam-service-accounts]向 API 认证。
 
-To create a service account:
+要创建服务账户：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) page of the Tailscale admin console.
-2. In the **Service accounts** section, select **Add service account**.
-3. Enter a **Name** for the service account, such as `ansible`.
-4. (Optional) Enter a description.
-5. Select the **Member** role. This gives the service account the permissions needed to manage connectors and services.
-6. Select **Add service account**.
+1. 打开 Tailscale 管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 页面。
+2. 在 **Service accounts** 部分，选择 **Add service account**。
+3. 输入服务账户的 **Name**（名称），例如 `ansible`。
+4. （可选）输入描述。
+5. 选择 **Member** 角色。这会赋予服务账户管理连接器和服务所需的权限。
+6. 选择 **Add service account**。
 
-For more information, refer to Tailscale PAM [service accounts][docs-pam-service-accounts].
+更多信息参见 Tailscale PAM [服务账户][docs-pam-service-accounts]。
 
-## Create a service account token
+## 创建服务账户令牌
 
-After creating the service account, create a token for `ansible`:
+创建服务账户后，为 `ansible` 创建令牌：
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) page.
-2. In the **Service accounts** section, find the service account, select the   menu, and then select **Edit**.
-3. Select **Create token**.
-4. Enter a name for the token, such as `ansible-token`.
-5. Select the token lifetime. When possible, use an expiring token and choose the shortest lifetime that works for your automation.
-6. Select **Save**.
-7. Copy the token and store it securely. You won't be able to get the token value again after you leave the page.
+1. 打开 [PAM](https://console.tailscale.com/admin/settings/pam) 页面。
+2. 在 **Service accounts** 部分找到该服务账户，选择其菜单，然后选择 **Edit**。
+3. 选择 **Create token**。
+4. 输入令牌名称，例如 `ansible-token`。
+5. 选择令牌有效期。尽可能使用会过期的令牌，并选择能满足你的自动化的最短有效期。
+6. 选择 **Save**。
+7. 复制该令牌并妥善保存。离开该页面后将无法再次获取令牌值。
 
-> **Note:**
+> **注意：**
 >
-> Treat service account tokens as secrets. Each token inherits the permissions of its service account.
+> 把服务账户令牌当作机密对待。每个令牌都继承其服务账户的权限。
 
-## Create the inventory
+## 创建 inventory
 
-Save the hosts in a file named `inventory`:
+把主机保存到名为 `inventory` 的文件中：
 
 ```ini
 [pam_connectors]
@@ -66,7 +66,7 @@ Save the hosts in a file named `inventory`:
 <your-connector-2> ansible_host=<your-connector-2-address>
 ```
 
-Replace the placeholders with the inventory aliases and addresses for your hosts. Each inventory alias becomes the connector name, so use lowercase letters, numbers, and dashes. For example:
+把占位符替换为你主机的 inventory 别名和地址。每个 inventory 别名会成为连接器名称，因此请使用小写字母、数字和连字符。例如：
 
 ```ini
 [pam_connectors]
@@ -74,13 +74,13 @@ connector-1 ansible_host=10.0.1.10
 connector-2 ansible_host=10.0.1.11
 ```
 
-Configure the SSH user and privilege escalation credentials for your environment.
+根据你的环境配置 SSH 用户和特权提升凭证。
 
-## Run the playbook
+## 运行 playbook
 
-Save the [complete playbook][ar-complete-playbook] as `playbook-api.yaml` next to the inventory.
+把[完整 playbook][ar-complete-playbook] 保存为 `playbook-api.yaml`，与 inventory 放在一起。
 
-In Bash, read the service account token without displaying it or saving it in shell history, then run the playbook:
+在 Bash 中读取服务账户令牌（不回显、不写入 shell 历史），然后运行 playbook：
 
 ```shell
 read -rsp "Service account token: " BORDER0_AUTH_TOKEN; printf '\n'
@@ -88,23 +88,23 @@ export BORDER0_AUTH_TOKEN
 ansible-playbook -i inventory playbook-api.yaml --limit pam_connectors
 ```
 
-Requests to the Tailscale PAM API run on the control node. Each target host receives only its connector credential, which is stored in `/etc/border0/tailzero.env` with mode `0600`. The service account token is not written to the target host.
+对 Tailscale PAM API 的请求在控制节点上执行。每个目标主机只会收到它自己的连接器凭证，凭证保存在 `/etc/border0/tailzero.env` 中，权限为 `0600`。服务账户令牌不会写入目标主机。
 
-## Verify a connector is running
+## 验证连接器正在运行
 
-On a target host, confirm that the `tailzero` service is active:
+在目标主机上，确认 `tailzero` 服务处于活动状态：
 
 ```shell
 systemctl is-active tailzero
 ```
 
-The connector should also appear online on the [Connectors](https://console.tailscale.com/admin/connectors) page of the Tailscale admin console.
+该连接器也应显示为在线，位于 Tailscale 管理控制台的 [Connectors](https://console.tailscale.com/admin/connectors) 页面。
 
-## Rerun the playbook
+## 重新运行 playbook
 
-Rerunning the playbook reuses the existing connector and the credential already on the host. It also checks for the latest stable binary. An unchanged, running installation does not restart. A new binary or changed configuration can trigger a restart.
+重新运行 playbook 会复用现有连接器和主机上已有的凭证。它还会检查最新的稳定版二进制文件。未发生变化的运行中安装不会重启。新的二进制文件或配置变更可能触发重启。
 
-## Complete playbook
+## 完整 playbook
 
 ```yaml
 ---
@@ -273,11 +273,11 @@ Rerunning the playbook reuses the existing connector and the credential already 
         daemon_reload: true
 ```
 
-## Next steps
+## 后续步骤
 
-Create the [PAM services][docs-pam-services] and configure [who can access them][docs-pam-manage-access] in the Tailscale admin console, or use [Terraform][docs-pam-manage-resources-terraform]. This playbook provisions connectors, not services or access policies.
+在 Tailscale 管理控制台中创建 [PAM 服务][docs-pam-services]并配置[谁可以访问它们][docs-pam-manage-access]，或使用 [Terraform][docs-pam-manage-resources-terraform]。此 playbook 只负责供应连接器，不负责服务或访问策略。
 
-[ar-complete-playbook]: #complete-playbook
+[ar-complete-playbook]: #完整-playbook
 
 [docs-pam-connectors]: /docs/privileged-access-management/connectors
 

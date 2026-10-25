@@ -1,86 +1,86 @@
 ---
-title: "Route injection"
-description: "Understand how Tailscale injects subnet routes into client routing tables, including the relationship between routes and access controls."
+title: "路由注入"
+description: "了解 Tailscale 如何把子网路由注入客户端路由表，包括路由与访问控制之间的关系。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-When you set up [subnet routers][docs-subnets], [exit nodes][docs-exit-nodes], or [app connectors][docs-app-connectors], Tailscale injects routes into client routing tables so traffic reaches the correct destination. This topic explains the complete route injection process, including when routes appear in client routing tables, how access controls interact with routing, and how router selection works.
+设置[子网路由器][docs-subnets]、[出口节点][docs-exit-nodes]或[应用连接器][docs-app-connectors]时，Tailscale 会把路由注入客户端路由表，让流量抵达正确的目的地。本主题完整讲解路由注入过程，包括路由何时出现在客户端路由表中、访问控制如何与路由交互，以及路由器选择的工作机制。
 
-## Route injection and access controls
+## 路由注入与访问控制
 
-Routes and access controls operate at different layers and serve different purposes:
+路由和访问控制工作在不同的层级，用途也不同：
 
-* **Routes** (Layer 3): Determine which IP ranges are reachable through the Tailscale tunnel
-* **Access controls (ACLs/grants)**: Determine which connections are permitted over the Tailscale network
+* **路由**（第 3 层）：决定哪些 IP 地址段可以通过 Tailscale 隧道到达
+* **访问控制（ACL/授权）**：决定哪些连接可以通过 Tailscale 网络进行
 
-A common misconception is that [grants][docs-grants] or [ACLs][docs-acls] control route injection. They do not. Grants control packet filtering, while routes are injected based on what subnet routers advertise and what the control plane approves.
+一个常见的误解是认为[授权][docs-grants]或 [ACL][docs-acls]控制路由注入。其实并非如此。授权控制的是数据包过滤，而路由是根据子网路由器通告的内容以及控制平面批准的结果注入的。
 
-For traffic to flow successfully, you need both:
+要让流量成功通行，两者缺一不可：
 
-1. A route to direct packets into the tunnel
-2. An access control rule to permit the packets
+1. 一条路由，把数据包引入隧道
+2. 一条访问控制规则，放行这些数据包
 
-You can have a route without ACL access (packets enter the tunnel but are dropped by the filter), or ACL access without a route (packets never enter the tunnel). Both conditions must be satisfied for end-to-end connectivity.
+你可以只有路由而没有 ACL 放行（数据包进入隧道后被过滤器丢弃），也可以只有 ACL 放行而没有路由（数据包根本进不了隧道）。要实现端到端连接，两个条件都必须满足。
 
-## When routes are injected
+## 路由何时被注入
 
-Routes are injected into a client's routing table when all following conditions are met:
+当以下所有条件都满足时，路由才会被注入客户端的路由表：
 
-1. **A subnet router advertises the route**. The subnet router uses `--advertise-routes` to announce which subnets it can reach.
+1. **子网路由器通告了该路由**。子网路由器使用 `--advertise-routes` 宣布它能到达哪些子网。
 
-2. **An admin approves the route**. Routes must be approved in the [admin console][docs-admin-console-subnets] or through [`autoApprovers`][docs-policy-syntax-autoapprovers] in the tailnet policy file.
+2. **管理员批准了该路由**。路由必须在[管理控制台][docs-admin-console-subnets]中批准，或通过 tailnet 策略文件中的 [`autoApprovers`][docs-policy-syntax-autoapprovers] 批准。
 
-3. **The control plane distributes the route**. After approval, the control plane includes the route in the network map sent to clients.
+3. **控制平面下发了该路由**。批准后，控制平面会把该路由加入发送给客户端的网络地图。
 
-4. **The client accepts subnet routes**. The client must have route acceptance enabled:
-   * Windows, macOS, Android, iOS, and tvOS accept routes by default
-   * Linux requires [`tailscale set --accept-routes`][docs-cli-set]
+4. **客户端接受了子网路由**。客户端必须启用路由接受：
+   * Windows、macOS、Android、iOS 和 tvOS 默认接受路由
+   * Linux 需要使用 [`tailscale set --accept-routes`][docs-cli-set]
 
-> **Note:**
+> **注意：**
 >
-> Clients receive advertised and approved routes in the network map. They don't ping a subnet router before installing its routes.
+> 客户端会在网络地图中收到已通告且已批准的路由。安装路由之前，客户端不会去 ping 子网路由器。
 >
-> If a router is offline or access controls don't permit traffic to flow, the route may still be present but traffic won't successfully traverse it.
+> 如果路由器离线，或访问控制不允许流量通过，路由可能仍然存在，但流量无法成功通过它。
 
-## How routes and ACLs interact with CIDR ranges
+## 路由和 ACL 如何与 CIDR 地址段交互
 
-A common question is whether a grant allowing a CIDR range (like `0.0.0.0/0`) causes all advertised routes within that range to be injected. The answer is no. Grants and routes are evaluated independently:
+一个常见的问题是：一条允许某个 CIDR 地址段（如 `0.0.0.0/0`）的授权，是否会导致该范围内所有已通告的路由都被注入。答案是不会。授权和路由是独立评估的：
 
-* **Route injection**: The client receives exactly the routes that subnet routers advertise and admins approve. If a router advertises `10.1.0.0/24`, clients get a route to `10.1.0.0/24`. A grant allowing `10.0.0.0/8` does not cause additional routes to be injected.
+* **路由注入**：客户端收到的恰恰是子网路由器通告且管理员批准的路由。如果路由器通告了 `10.1.0.0/24`，客户端就会得到指向 `10.1.0.0/24` 的路由。一条允许 `10.0.0.0/8` 的授权不会导致额外注入任何路由。
 
-* **ACL evaluation**: When traffic flows through an injected route, the packet filter checks if a grant permits that specific traffic. A grant allowing `10.0.0.0/8` permits traffic to any IP within that range, regardless of how many or how few routes exist within it.
+* **ACL 评估**：当流量经过已注入的路由时，包过滤器会检查是否有授权放行该特定流量。一条允许 `10.0.0.0/8` 的授权会放行该范围内任意 IP 的流量，与该范围内存在多少条路由无关。
 
-### Route prefix matching for failover
+### 用于故障转移的路由前缀匹配
 
-When multiple subnet routers advertise routes, only *exact* prefix matches are grouped for [high availability][docs-high-availability]. For example:
+当多台子网路由器通告路由时，只有前缀*完全一致*的路由才会被归为一组，用于[高可用][docs-high-availability]故障转移。例如：
 
-* Two routers advertising `10.0.0.0/24` are failover candidates for each other
-* One router advertising `10.0.0.0/24` and another advertising `10.0.0.0/16` are *not* failover candidates, even though the `/16` contains the `/24`
+* 两台通告 `10.0.0.0/24` 的路由器互为故障转移候选
+* 一台通告 `10.0.0.0/24`、另一台通告 `10.0.0.0/16` 的路由器*不是*故障转移候选，即使 `/16` 包含了 `/24`
 
-The operating system's routing table handles longest-prefix matching as usual. If routes exist to both `10.0.0.0/8` and `10.1.0.0/16`, traffic to `10.1.0.5` uses the more specific `/16` route.
+操作系统的路由表会照常处理最长前缀匹配。如果同时存在指向 `10.0.0.0/8` 和 `10.1.0.0/16` 的路由，发往 `10.1.0.5` 的流量会使用更具体的 `/16` 路由。
 
-## Choosing a router (when multiple routers advertise the same route)
+## 选择路由器（当多台路由器通告同一路由时）
 
-When multiple subnet routers advertise the same route, Tailscale chooses among eligible subnet routers using the tailnet's [route selection option][docs-route-selection]. The control plane sends the selection to clients in the network map. Clients must accept subnet routes to install them.
+当多台子网路由器通告同一路由时，Tailscale 会按照 tailnet 的[路由选择选项][docs-route-selection]在这些符合条件的子网路由器中做出选择。控制平面会把选择结果通过网络地图下发给客户端。客户端必须接受子网路由才能安装它们。
 
-Eligible subnet routers must connect to the control plane with a valid, unexpired key. The selection option does not change the exact-prefix requirement for failover or longest-prefix matching.
+符合条件的子网路由器必须使用有效的、未过期的密钥连接到控制平面。路由选择选项不会改变故障转移的完全一致前缀要求，也不会改变最长前缀匹配。
 
-### Accessible routers for `via` routing
+### `via` 路由的可访问路由器
 
-When using the [`via` field][docs-via] in grants to specify which routers can handle traffic, only "accessible" routers are candidates. A router is accessible when:
+在授权中使用 [`via` 字段][docs-via]指定由哪些路由器处理流量时，只有"可访问"的路由器才是候选。一台路由器可访问的条件是：
 
-* The router is connected to the control plane
-* The router's key has not expired
-* Access control rules permit the user to reach the router
+* 路由器已连接到控制平面
+* 路由器的密钥未过期
+* 访问控制规则允许该用户访问这台路由器
 
-`via` routing is policy-aware: a router must be eligible for the user and traffic in question, and tailnet policy can limit which routers may be used.
+`via` 路由是策略感知的：路由器必须对相关的用户和流量符合条件，tailnet 策略也可以限制可使用的路由器。
 
-If policy prevents a user from using a router, that router won't be a usable `via` candidate for that user.
+如果策略阻止某用户使用某台路由器，该路由器就不会成为这个用户可用的 `via` 候选。
 
-## Interaction between routes and grants
+## 路由与授权的交互
 
-Consider this example grant:
+考虑下面这条授权：
 
 ```json
 {
@@ -94,42 +94,42 @@ Consider this example grant:
 }
 ```
 
-This grant permits `group:engineering` to send traffic to `192.168.0.0/16`. However, the grant does not inject any routes. For traffic to actually reach `192.168.0.0/16`:
+这条授权允许 `group:engineering` 向 `192.168.0.0/16` 发送流量。但该授权不会注入任何路由。要让流量真正到达 `192.168.0.0/16`，还需要：
 
-1. A subnet router must advertise a route covering that range
-2. The route must be approved
-3. Each client must accept routes
+1. 某台子网路由器通告一条覆盖该范围的路由
+2. 该路由获得批准
+3. 每台客户端都接受路由
 
-If a subnet router advertises `192.168.1.0/24`, clients receive that specific route. Traffic to `192.168.1.50` works (route exists, ACL permits). Traffic to `192.168.2.50` fails because no route covers it, even though the grant would permit the traffic.
+如果某台子网路由器通告了 `192.168.1.0/24`，客户端就会收到这条具体路由。发往 `192.168.1.50` 的流量可以通行（路由存在，ACL 放行）。发往 `192.168.2.50` 的流量会失败，因为没有路由覆盖它，即使授权本来会放行这些流量。
 
-Conversely, if a subnet router advertises `10.0.0.0/8` but no grant covers it, clients receive the route but traffic is dropped by the packet filter.
+反过来，如果子网路由器通告了 `10.0.0.0/8` 但没有任何授权覆盖它，客户端会收到该路由，但流量会被包过滤器丢弃。
 
-## Troubleshooting
+## 故障排除
 
-### Routes not appearing on client
+### 客户端上未出现路由
 
-If expected routes don't appear on a client:
+如果预期的路由没有出现在客户端上：
 
-1. Verify the subnet router is advertising the routes in the admin console or with `tailscale status --json` on the router.
-2. Confirm the routes are approved in the admin console.
-3. On Linux, verify route acceptance is enabled. Run `tailscale debug prefs` and check if `RouteAll` is `true`. If `false`, run `tailscale set --accept-routes`.
-4. Check if a more specific local route takes precedence using your OS routing table commands (`ip route` on Linux, `netstat -rn` on macOS).
+1. 确认子网路由器正在通告这些路由：可在管理控制台查看，或在路由器上运行 `tailscale status --json`。
+2. 确认这些路由已在管理控制台中获得批准。
+3. 在 Linux 上，确认已启用路由接受。运行 `tailscale debug prefs` 并检查 `RouteAll` 是否为 `true`。如果是 `false`，运行 `tailscale set --accept-routes`。
+4. 使用操作系统的路由表命令（Linux 上是 `ip route`，macOS 上是 `netstat -rn`）检查是否有更具体的本地路由优先。
 
-### Traffic blocked despite route existing
+### 路由存在但流量被阻断
 
-If routes exist but traffic is blocked:
+如果路由存在但流量被阻断：
 
-1. Verify an ACL or grant permits the traffic. Run `tailscale debug netmap` and examine the `PacketFilter` section to check effective rules.
-2. Confirm the destination is reachable from the subnet router itself.
-3. Check if firewalls on the subnet router or destination are blocking traffic.
+1. 确认有 ACL 或授权放行该流量。运行 `tailscale debug netmap`，查看 `PacketFilter` 部分以检查生效的规则。
+2. 确认子网路由器本身能够访问目标地址。
+3. 检查子网路由器或目标上的防火墙是否在阻断流量。
 
-### Failover not working
+### 故障转移不生效
 
-If failover between subnet routers isn't working:
+如果子网路由器之间的故障转移没有生效：
 
-1. Verify both routers advertise exactly the same routes (same CIDR prefixes).
-2. Confirm both routes are approved in the admin console.
-3. Check that both routers are connected and have valid keys.
+1. 确认两台路由器通告的路由完全一致（相同的 CIDR 前缀）。
+2. 确认两条路由都已在管理控制台中获得批准。
+3. 检查两台路由器都已连接且密钥有效。
 
 [docs-acls]: /docs/features/access-control/acls
 

@@ -1,24 +1,24 @@
 ---
-title: "Set up OpenRouter"
-description: "Configure an OpenRouter provider in Aperture so your team can access models from multiple LLM providers through a single API. OpenRouter aggregates models from providers like Google, Meta, and others,"
+title: "设置 OpenRouter"
+description: "在 Aperture 中配置 OpenRouter 提供商，让你的团队通过单一 API 访问多个 LLM 提供商的模型。OpenRouter 聚合了 Google、Meta 等提供商的模型，包括开源模型。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure an OpenRouter provider in Aperture so your team can access models from multiple LLM providers through a single API. OpenRouter aggregates models from providers like Google, Meta, and others, including open-source models.
+在 Aperture 中配置 OpenRouter 提供商，让你的团队通过单一 API 访问多个 LLM 提供商的模型。OpenRouter 聚合了 Google、Meta 等提供商的模型，包括开源模型。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* An [OpenRouter API key][xt-openrouter-keys].
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个 [OpenRouter API key][xt-openrouter-keys]。
 
-## Configure the provider
+## 配置提供商
 
-Add OpenRouter as a provider in your [Aperture configuration][docs-aperture-configuration]:
+在 [Aperture 配置][docs-aperture-configuration]中把 OpenRouter 添加为提供商：
 
 ```json
 {
@@ -41,11 +41,11 @@ Add OpenRouter as a provider in your [Aperture configuration][docs-aperture-conf
 }
 ```
 
-OpenRouter uses `bearer` authorization. The configuration enables OpenAI Chat Completions, OpenAI Responses, and Anthropic Messages, matching the Aperture OpenRouter preset. Select a client back end and an OpenRouter model that support the API you intend to use. Enabling a flag does not make every model available through every API.
+OpenRouter 使用 `bearer` 授权。上面的配置启用了 OpenAI Chat Completions、OpenAI Responses 和 Anthropic Messages，与 Aperture 的 OpenRouter 预设一致。请选择支持你打算使用的 API 的客户端后端和 OpenRouter 模型。启用某个开关并不意味着每个模型都能通过每种 API 使用。
 
-Model names on OpenRouter use a `provider/model` prefix format. Browse the [OpenRouter model directory][xt-openrouter-models] to find available model names. Refer to the [compatibility flags reference][docs-provider-compatibility] for the full list of flags.
+OpenRouter 上的模型名称使用 `provider/model` 前缀格式。可用的模型名称可在 [OpenRouter 模型目录][xt-openrouter-models]中浏览查找。开关的完整列表参阅[兼容性开关参考][docs-provider-compatibility]。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 

@@ -1,14 +1,14 @@
 ---
-title: "Manage billing"
-description: "Change billing information related to your Tailscale account."
+title: "管理账单"
+description: "更改与你的 Tailscale 账户相关的账单信息。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Use these resources to understand how to manage billing for your Tailscale account.
+使用这些资源了解如何管理你的 Tailscale 账户的账单。
 
-[**Modify your billing information**](/docs/account/billing/modify-billing) — Manage and update your billing details to keep your payment information, invoices, and tax settings accurate.
+[**修改你的账单信息**](/docs/account/billing/modify-billing) —— 管理并更新你的账单明细，确保付款信息、发票和税务设置准确无误。
 
-[**Manage your invoices**](/docs/account/billing/manage-invoices) — Access and download your Tailscale invoices, understand invoice availability, and get help with billing questions.
+[**管理你的发票**](/docs/account/billing/manage-invoices) —— 访问并下载你的 Tailscale 发票，了解发票的可用性，并获得账单问题方面的帮助。
 
-[**Tailscale on Azure Marketplace**](/docs/account/billing/azure-marketplace-for-billing) — Manage Tailscale billing in the Microsoft Azure Marketplace.
+[**Azure Marketplace 上的 Tailscale**](/docs/account/billing/azure-marketplace-for-billing) —— 在 Microsoft Azure Marketplace 中管理 Tailscale 账单。

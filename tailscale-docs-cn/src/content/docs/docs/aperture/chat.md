@@ -1,45 +1,45 @@
 ---
 title: "Chat"
-description: "Chat with models, use connected tools, and review your own Aperture usage in one web interface."
+description: "在一个网页界面中与模型对话、使用已连接的工具，并查看你自己的 Aperture 用量。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Aperture Chat is the web interface for everyone who has access to your Aperture gateway. Use it to talk to models, work with connected tools, and review your own sessions, usage, and spending limits. You do not need to install a separate chat client.
+Aperture Chat 是一个网页界面，所有能访问你的 Aperture 网关的人都可以使用。你可以用它和模型对话、使用已连接的工具，并查看自己的会话、用量和支出限额。无需安装单独的 chat 客户端。
 
-Administrators use a separate [admin dashboard][docs-admin-dashboard] to configure the gateway and review organization-wide activity.
+管理员使用单独的[管理仪表板][docs-admin-dashboard]来配置网关并查看组织范围的活动。
 
-## Access Chat
+## 访问 Chat
 
-Open your Aperture hostname in a browser, or go directly to `/chat`. Connect to your tailnet or use an access method your administrator provides.
+在浏览器中打开你的 Aperture 主机名，或直接访问 `/chat`。连接到你的 tailnet，或使用管理员提供的访问方式。
 
-Chat is available to authenticated users by default. Administrators can disable portal access for API-only users. Access to the interface does not grant access to models or connectors. Your grants determine which models and tools you can use.
+Chat 默认对所有已认证用户开放。管理员可以为仅使用 API 的用户禁用门户访问。访问该界面并不等于有权使用模型或连接器。你能使用哪些模型和工具由你的授权（grant）决定。
 
-If you are an administrator, select **Admin console** in the sidebar footer to open the admin dashboard. Select **Chat** in the admin dashboard to return to Chat.
+如果你是管理员，可在侧边栏底部选择 **Admin console** 打开管理仪表板。在管理仪表板中选择 **Chat** 可返回 Chat。
 
-## Work with models and tools
+## 使用模型与工具
 
-Work with the models and connected services your administrator makes available. Give a conversation context with attachments, or use tools to retrieve information and take actions in connected services.
+使用管理员开放给你的模型和已连接的服务。通过附件为对话提供上下文，或使用工具在已连接的服务中检索信息、执行操作。
 
-Organize related conversations into **Projects** with shared instructions and tool restrictions. When available for your account, use **Skills** to reuse instructions and supporting files across conversations.
+把相关对话整理进 **Projects**，共享指令与工具限制。当你的账户可用时，还可以使用 **Skills** 在不同对话间复用指令和配套文件。
 
-For exact controls and workflows, refer to the [Chat interface reference][docs-chat-reference].
+确切的控件与工作流参阅 [Chat 界面参考][docs-chat-reference]。
 
-## Review your activity
+## 查看你的活动
 
-Use **Sessions** to investigate your requests, including traffic from coding agents. Review token usage and estimated costs in **Usage**, and check applicable spending limits in **Quotas**.
+使用 **Sessions** 调查你的请求，包括来自编码智能体的流量。在 **Usage** 中查看 token 用量和预估成本，在 **Quotas** 中查看适用的支出限额。
 
-To use Aperture with another client, find model identifiers in **Models** and client setup instructions in **Agents**. Authorize services that require your account in **Connectors**.
+要在其他客户端中使用 Aperture，可在 **Models** 中查找模型标识符，在 **Agents** 中查看客户端设置说明。在 **Connectors** 中授权需要你账户的服务。
 
-These are personal views. Organization-wide analytics, configuration, and security logs require access to the admin dashboard.
+这些均为个人视图。组织范围的分析、配置与安全日志需要访问管理仪表板。
 
-## Learn more
+## 了解更多
 
-[**Aperture Chat interface reference**](/docs/aperture/reference/chat) — Reference for the Aperture Chat composer, projects, connectors, skills, personal sessions, usage, and quotas.
+[**Aperture Chat 界面参考**](/docs/aperture/reference/chat) —— Aperture Chat 输入区、项目、连接器、技能、个人会话、用量和配额的参考。
 
-[**Chat projects**](/docs/aperture/chat/projects) — Group conversations, set reusable instructions, and control tool access with chat projects.
+[**Chat 项目**](/docs/aperture/chat/projects) —— 用 chat 项目分组对话、设置可复用指令并控制工具访问。
 
-[**Set up the chat UI**](/docs/aperture/how-to/set-up-chat-ui) — Configure models, curate the model picker, and manage access to the Aperture Chat interface.
+[**设置 chat 界面**](/docs/aperture/how-to/set-up-chat-ui) —— 配置模型、精选模型选择器，并管理对 Aperture Chat 界面的访问。
 
 [docs-admin-dashboard]: /docs/aperture/admin-dashboard
 

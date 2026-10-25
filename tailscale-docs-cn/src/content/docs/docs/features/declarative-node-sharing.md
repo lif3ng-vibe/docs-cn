@@ -1,62 +1,62 @@
 ---
-title: "Declarative node sharing"
-description: "Define sharing relationships and grant access to resources across trusted tailnets using policy."
+title: "声明式节点共享"
+description: "使用策略定义共享关系，跨可信 tailnet 授予资源访问权限。"
 ---
 
-Last validated Aug 26, 2026
+最后验证于 Aug 26, 2026
 
-> **Note:** Declarative node sharing is currently in alpha.
+> **注意：** 声明式节点共享目前处于 alpha 阶段。
 
-Declarative node sharing lets you give users and devices across multiple trusted tailnets access to resources in your tailnet, including monitoring systems, build servers, or development environments. You can do this by defining sharing relationships in the [tailnet policy file][docs-tailnet-policy-file].
+声明式节点共享（declarative node sharing）让你可以把 tailnet 中的资源（包括监控系统、构建服务器或开发环境）开放给多个可信 tailnet 中的用户和设备。做法是在 [tailnet 策略文件][docs-tailnet-policy-file]中定义共享关系。
 
-You can use declarative node sharing when your organization operates multiple trusted tailnets and needs to provide access between them. For example:
+当你的组织运营多个可信 tailnet 并需要在它们之间提供访问时，可以使用声明式节点共享。例如：
 
-* **Share centralized infrastructure**: Give users in separate tailnets access to shared infrastructure or applications, such as monitoring or development resources.
-* **Connect business units or acquired organizations**: Share selected resources between tailnets operated by different teams, subsidiaries, or acquired companies while keeping each tailnet independently administered.
-* **Support machine-to-machine access**: Let tagged devices in one tailnet access resources in another tailnet through policy.
+* **共享集中式基础设施**：让不同 tailnet 中的用户访问共享的基础设施或应用，例如监控或开发资源。
+* **连接业务部门或被收购的组织**：在不同团队、子公司或被收购公司运营的 tailnet 之间共享选定的资源，同时保持各 tailnet 独立管理。
+* **支持机器对机器访问**：通过策略让一个 tailnet 中的打标签设备访问另一个 tailnet 中的资源。
 
-Unlike [link-based node sharing][docs-sharing], which shares individual nodes with individual users, declarative node sharing works at the policy level. Administrators use policy to control which resources they share across tailnet boundaries, without managing each node share individually.
+[基于链接的节点共享][docs-sharing]是把单个节点共享给单个用户，而声明式节点共享工作在策略层面。管理员用策略控制在 tailnet 边界之间共享哪些资源，无需逐一管理每个节点共享。
 
-> **Warning:**
+> **警告：**
 >
-> Declarative node sharing assumes, but does not establish, a trust relationship between the administrators of both tailnets. Do not use it to share resources with unknown or untrusted tailnets.
+> 声明式节点共享假定双方 tailnet 的管理员之间存在信任关系，但并不会建立这种关系。不要用它向未知或不受信任的 tailnet 共享资源。
 >
-> If you only need to share an individual machine with a specific user outside your tailnet, use [link-based node sharing][docs-sharing] instead.
+> 如果你只需要把单台机器共享给你 tailnet 之外的特定用户，请改用[基于链接的节点共享][docs-sharing]。
 
-## How it works
+## 工作原理
 
-Declarative node sharing uses a double opt-in model: an administrator configures each tailnet's policy file, and access takes effect only once both sides are in place.
+声明式节点共享采用双方确认（double opt-in）模式：由管理员分别配置各 tailnet 的策略文件，只有双方都配置到位，访问才会生效。
 
-Each tailnet has a distinct role:
+两个 tailnet 各有明确的角色：
 
-* The receiving tailnet controls which of its local groups and [tags][docs-tags] an external tailnet is allowed to reference.
-* The sharing tailnet writes [grants][docs-grants] that give those external groups or tags access to specific local resources.
+* 接收方 tailnet 控制外部 tailnet 可以引用它本地的哪些组和[标签][docs-tags]。
+* 共享方 tailnet 编写[授权][docs-grants]，让这些外部组或标签可以访问特定的本地资源。
 
-## Before you begin
+## 开始之前
 
-Complete the following before you configure declarative node sharing:
+配置声明式节点共享之前，请先完成以下事项：
 
-* Exchange tailnet IDs with the administrator of the other tailnet. You can retrieve a tailnet ID from the [General](https://console.tailscale.com/admin/settings/general) page of the admin console, in the **Unique IDs** section.
-* Agree on which groups and tags in the receiving tailnet will receive access, and confirm they are defined in that tailnet's policy file. Declarative sharing can reference only groups and tags defined in the policy file. Note that synced groups such as SCIM or Google groups are not supported.
+* 与对方 tailnet 的管理员交换 tailnet ID。tailnet ID 可以在管理控制台的 [General](https://console.tailscale.com/admin/settings/general)（常规）页面的 **Unique IDs**（唯一 ID）部分找到。
+* 商定接收方 tailnet 中哪些组和标签将获得访问权限，并确认它们已在该 tailnet 的策略文件中定义。声明式共享只能引用策略文件中定义的组和标签。注意，不支持 SCIM 或 Google 组等同步组。
 
-## Access declarative node sharing
+## 访问声明式节点共享
 
-To use declarative node sharing, update the tailnet policy file in the admin console.
+要使用声明式节点共享，请在管理控制台中更新 tailnet 策略文件。
 
-1. Open the [General](https://console.tailscale.com/admin/settings/general) page of the admin console.
-2. Go to **Feature previews**.
-3. Next to **Declarative Node Sharing**, select **Manage in policy**.
-4. Continue with the guidance below to update the tailnet policy file.
+1. 打开管理控制台的 [General](https://console.tailscale.com/admin/settings/general)（常规）页面。
+2. 进入 **Feature previews**（功能预览）。
+3. 在 **Declarative Node Sharing** 旁边，选择 **Manage in policy**（在策略中管理）。
+4. 按照下面的指引继续更新 tailnet 策略文件。
 
-## Configure declarative node sharing
+## 配置声明式节点共享
 
-Both tailnets must update their tailnet policy files.
+两个 tailnet 都必须更新各自的 tailnet 策略文件。
 
-### Configure the receiving tailnet
+### 配置接收方 tailnet
 
-In the receiving tailnet, first define the sharing tailnet in the `externalTailnets` section of its policy, then explicitly allow that tailnet to reference selected local groups or tags.
+在接收方 tailnet 中，先在其策略的 `externalTailnets` 部分定义共享方 tailnet，再明确允许该 tailnet 引用选定的本地组或标签。
 
-For example:
+例如：
 
 ```json
 {
@@ -79,11 +79,11 @@ For example:
 }
 ```
 
-`allowExternalReferencesTo` controls the list of local groups or tags the external tailnet can reference in its policy.
+`allowExternalReferencesTo` 控制外部 tailnet 可以在其策略中引用的本地组或标签列表。
 
-### Configure the sharing tailnet
+### 配置共享方 tailnet
 
-In the sharing tailnet, define the receiving tailnet in its own `externalTailnets` section:
+在共享方 tailnet 中，在其自身的 `externalTailnets` 部分定义接收方 tailnet：
 
 ```json
 {
@@ -96,10 +96,10 @@ In the sharing tailnet, define the receiving tailnet in its own `externalTailnet
 }
 ```
 
-`allowIncomingConnections` must be set to `true`, indicating that the sharing tailnet accepts incoming traffic from this tailnet.
-The sharing tailnet can then create a grant that specifies which groups/tags in the external tailnet can access a local resource.
+`allowIncomingConnections` 必须设为 `true`，表示共享方 tailnet 接受来自该 tailnet 的入站流量。
+随后，共享方 tailnet 就可以创建授权，指定外部 tailnet 中的哪些组/标签可以访问某个本地资源。
 
-For example:
+例如：
 
 ```json
 {
@@ -119,53 +119,53 @@ For example:
 }
 ```
 
-External groups use the following syntax:
+外部组使用以下语法：
 
 ```
 group://<tailnet-alias>/<group-name>
 ```
 
-External tagged devices use:
+外部打标签设备使用：
 
 ```
 tag://<tailnet-alias>/<tag-name>
 ```
 
-Use the external group or tag as the `src` of the grant. The `dst` specifies the resource in the sharing tailnet that it can access.
-If a group or tag is referenced that the receiving tailnet has not included in its `allowExternalReferencesTo` list, the grant rule will be ignored.
+将外部组或标签用作授权的 `src`。`dst` 指定它在共享方 tailnet 中可以访问的资源。
+如果引用了接收方 tailnet 未列入其 `allowExternalReferencesTo` 列表的组或标签，该授权规则将被忽略。
 
-## Connect to a shared resource
+## 连接到共享资源
 
-After both tailnets have updated their tailnet policy files, permitted users and devices can connect directly to the shared resource. Use either:
+双方 tailnet 都更新 tailnet 策略文件后，获得许可的用户和设备就可以直接连接到共享资源。可以使用：
 
-* The resource's Tailscale IP address.
-* Its fully qualified [MagicDNS][docs-magicdns] name, such as `machine.example.ts.net`.
+* 资源的 Tailscale IP 地址。
+* 其完全限定的 [MagicDNS][docs-magicdns] 名称，例如 `machine.example.ts.net`。
 
-You must use the fully qualified MagicDNS name when you connect across tailnets. A short MagicDNS name such as `machine` is not sufficient.
+跨 tailnet 连接时必须使用完全限定的 MagicDNS 名称。像 `machine` 这样的短 MagicDNS 名称是不够的。
 
-There is no individual invitation or share-acceptance step.
+不需要单独的邀请或接受共享步骤。
 
-## Declarative sharing versus link-based node sharing
+## 声明式共享与基于链接的节点共享的对比
 
-Declarative node sharing is designed for ongoing sharing relationships between trusted tailnets. Administrators define access through policy, and both tailnets explicitly opt in to the relationship.
+声明式节点共享专为可信 tailnet 之间持续的共享关系而设计。管理员通过策略定义访问权限，且双方 tailnet 都明确选择建立这种关系。
 
-Link-based node sharing is designed for sharing an individual machine with an individual Tailscale user outside your tailnet. The administrator creates a share and the recipient accepts it.
+基于链接的节点共享则用于把单台机器共享给你 tailnet 之外的某位 Tailscale 用户。由管理员创建共享，接收者接受共享。
 
-You can continue to use both methods. Declarative sharing does not change or replace existing link-based shares.
+两种方法可以继续同时使用。声明式共享不会更改或取代现有的基于链接的共享。
 
-## Limitations
+## 局限性
 
-* [Tailnet services][docs-tailnet-services] and [exit nodes][docs-exit-nodes] are not currently supported to be shared.
-* Nodes shared using declarative node sharing do not advertise subnets from [subnet routers][docs-subnet-routers] to the other tailnet.
+* 目前不支持共享 [Tailnet services][docs-tailnet-services] 和[出口节点][docs-exit-nodes]。
+* 通过声明式节点共享的节点不会向对方 tailnet 通告来自[子网路由器][docs-subnet-routers]的子网。
 
-### Usage limitations
+### 使用限制
 
-The following usage limits apply while declarative node sharing is in alpha:
+在声明式节点共享处于 alpha 阶段期间，适用以下使用限制：
 
-* You can share with up to three other tailnets. Your policy's `externalTailnets` section can include up to three tailnet definitions.
-* Each tailnet can have up to 500 nodes. Sharing grants between tailnets where at least one tailnet exceeds 500 nodes will be dropped.
+* 你最多可以与 3 个其他 tailnet 共享。策略的 `externalTailnets` 部分最多可包含 3 个 tailnet 定义。
+* 每个 tailnet 最多可有 500 个节点。只要有一个 tailnet 超过 500 个节点，这些 tailnet 之间的共享授权就会被丢弃。
 
-[ar-sharing-limitations]: #limitations
+[ar-sharing-limitations]: #局限性
 
 [docs-grants]: /docs/reference/syntax/grants
 

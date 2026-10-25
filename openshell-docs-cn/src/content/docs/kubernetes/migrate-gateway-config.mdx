@@ -1,0 +1,97 @@
+---
+title: "将 Helm 网关配置迁移到 gatewayConfig"
+description: "Chart schema v2 用一张不含机密的 gatewayConfig 映射取代应用专属的 Helm values。"
+---
+
+# 将 Helm 网关配置迁移到 `gatewayConfig`
+
+Chart schema v2 用一张不含机密的 `gatewayConfig` 映射取代应用专属的 Helm values。其顶层键是 TOML 表；嵌套映射是 TOML 内联表。顶层的 YAML 列表是有序的 TOML 表数组，每个 `[[table]]` 条目对应一个映射。Kubernetes 资源引用（Secret、证书、Service 与挂载）仍由 chart values 负责。
+
+## 升级兼容性
+
+向 `gatewayConfig` 迁移期间，chart 接受 0.1.x 应用 values 作为已弃用的别名。两种形式设置同一运行时字段时，以 `gatewayConfig` 为准。因此运行时镜像与代理设置可以分批迁移。`Always` 等 Kubernetes 拉取策略拼写是受接受的别名，会被规范化为 `always`、`if_not_present` 或 `never`。`gatewayConfig` 严格来说是一份不含机密的配置契约：不要把密码、令牌、私钥、`database_url` 或其他机密材料放进去；请改用基于 Secret 的环境变量、文件或卷配置。Helm 对未知字段做通用序列化，无法判断 `api_token` 这样的任意字符串是否属于机密。它会拒绝 `database_url`、内联 URL 凭据与 PEM 私钥，但并不是通用的机密扫描器。
+
+`server.disableTls`、TLS Secret 名称、`server.hostGatewayIP`、`server.externalDbSecret`、`server.sandboxNamespace`、`server.oidc.caConfigMapName` 以及证书与 Service 设置保持不变：这些值拥有对应的 Kubernetes 资源，chart 会从它们推导运行时对应项。
+
+## 映射
+
+| 已弃用别名 | Schema-v2 位置 |
+| --- | --- |
+| `server.name`, `server.logLevel`, `server.enableLoopbackServiceHttp`, `server.policyValidationFailureMode` | `openshell.gateway.{name,log_level,enable_loopback_service_http,policy_validation_failure_mode}` |
+| `server.grpcRateLimit.{requests,windowSeconds}` | `openshell.gateway.{grpc_rate_limit_requests,grpc_rate_limit_window_seconds}` |
+| `server.otlp.{endpoint,serviceName}` | `openshell.gateway.otlp.{endpoint,service_name}` |
+| `server.auth.allowUnauthenticatedUsers` | `openshell.gateway.auth.allow_unauthenticated_users` |
+| `server.oidc.*` | 使用 snake_case 键的 `openshell.gateway.oidc` |
+| `server.sandboxImage*`、工作区存储/运行时与用户命名空间设置 | `openshell.drivers.kubernetes`。Kubernetes AppArmor 配置已被 RFC 0012 移除。 |
+| `server.drivers.kubernetes.*` | `openshell.drivers.kubernetes` |
+| `server.sandboxJwt.{gatewayId,ttlSecs,k8sSaTokenTtlSecs}` | `openshell.gateway.gateway_jwt` 或 `openshell.drivers.kubernetes.sa_token_ttl_secs` |
+| `supervisor.image.*`, `supervisor.sandboxRuntime.*` | `openshell.drivers.kubernetes.{supervisor_image,supervisor_image_pull_policy,sandbox_runtime}`。`supervisor.topology` 与 `supervisor.sidecar.*` 已被 RFC 0012 移除，无替代项。 |
+| `upstreamProxy.*` | `openshell.drivers.kubernetes.{https_proxy,no_proxy,proxy_auth_*,proxy_connect_by_hostname}`。 |
+| `server.credentialDrivers.{kubernetesSecrets,vault}.*` | `openshell.gateway.credential_drivers` 与 `openshell.credential_drivers.*` |
+| `server.providerTokenGrants.spiffe.{enabled,workloadApiSocketPath}` | `openshell.drivers.kubernetes.provider_spiffe_workload_api_socket_path`；省略该项即禁用 SPIFFE 提供商令牌授予。 |
+| `server.hostGatewayIP` | 保留为 chart 拥有的 host-alias 输入；chart 从它推导 `openshell.drivers.kubernetes.host_gateway_ip`。 |
+
+## 示例
+
+迁移前的以下 values 配置了 OIDC、遥测、沙箱镜像、托管工作区、速率限制与 Kubernetes Secrets 凭据驱动：
+
+```yaml
+server:
+  oidc:
+    issuer: https://idp.example/realms/openshell
+    audience: openshell-cli
+    jwksTtl: 3600
+  otlp:
+    endpoint: http://otel-collector:4317
+    serviceName: production-gateway
+  drivers:
+    kubernetes:
+      workspaceMode: managed
+  grpcRateLimit:
+    requests: 120
+    windowSeconds: 60
+  credentialDrivers:
+    kubernetesSecrets:
+      enabled: true
+      namespace: provider-secrets
+sandbox:
+  image:
+    repository: registry.example/sandbox
+    tag: latest
+    pullPolicy: IfNotPresent
+supervisor:
+  image:
+    registry: registry.example
+    repository: openshell-supervisor
+    tag: latest
+  sandboxRuntime:
+    boundaryPort: 5500
+```
+
+迁移后，同样的设置改用 `gatewayConfig`：
+
+```yaml
+gatewayConfig:
+  openshell.gateway.oidc:
+    issuer: https://idp.example/realms/openshell
+    audience: openshell-cli
+    jwks_ttl_secs: 3600
+  openshell.gateway.otlp:
+    endpoint: http://otel-collector:4317
+    service_name: production-gateway
+  openshell.drivers.kubernetes:
+    default_image: registry.example/sandbox:latest
+    image_pull_policy: if_not_present
+    supervisor_image: registry.example/openshell-supervisor:latest
+    sandbox_runtime:
+      boundary_port: 5500
+    workspace_mode: managed
+  openshell.gateway:
+    grpc_rate_limit_requests: 120
+    grpc_rate_limit_window_seconds: 60
+    credential_drivers: [kubernetes-secrets]
+  openshell.credential_drivers.kubernetes-secrets:
+    namespace: provider-secrets
+```
+
+Vault 场景下，设置 `openshell.gateway.credential_drivers: [vault]` 并配置 `openshell.credential_drivers.vault`；私有 Vault CA 使用 `credentialDrivers.vault.caConfigMapName`。代理场景使用 `gatewayConfig` 中的 Kubernetes 驱动字段。TLS 仍基于 Secret；只有受信任的外部 TLS 终止才设置 `server.disableTls: true`。映射字段为 null 表示省略该字段；数组中的 null 元素无效。字符串按字面序列化，其中的 Helm 模板表达式不会被求值。

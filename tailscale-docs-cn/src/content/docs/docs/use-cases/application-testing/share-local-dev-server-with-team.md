@@ -1,27 +1,27 @@
 ---
-title: "Share a local development server with your team"
-description: "When building a feature or fixing a bug, you often want a teammate to preview your work before it's deployed, without pushing to a staging environment. Tailscale [Serve][docs-serve] lets you expose a "
+title: "将本地开发服务器共享给你的团队"
+description: "在开发功能或修复 bug 时，你常常想让队友在部署之前预览你的工作成果，而不必推送到预发环境。Tailscale Serve 让你能够"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-When building a feature or fixing a bug, you often want a teammate to preview your work before it's deployed, without pushing to a staging environment. Tailscale [Serve][docs-serve] lets you expose a local development server to other members of your Tailscale network (known as a tailnet) over a secure HTTPS URL. No port forwarding, no tunneling service, and no public internet access required.
+在开发功能或修复 bug 时，你常常想让队友在部署之前预览你的工作成果，而不必推送到预发环境。Tailscale [Serve][docs-serve] 让你通过安全的 HTTPS URL，把本地开发服务器展现给你的 Tailscale 网络（即 tailnet）中的其他成员。无需端口转发，无需隧道服务，也无需公网访问。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale Serve is only accessible to members of your tailnet. It does not expose your development server to the public internet. To share with someone outside your tailnet, refer to [Tailscale Funnel][docs-funnel].
+> Tailscale Serve 仅对你 tailnet 的成员可见，不会把你的开发服务器暴露到公网。要与 tailnet 之外的人共享，请参阅 [Tailscale Funnel][docs-funnel]。
 
-1. Ensure you have [MagicDNS][docs-magicdns] and [HTTPS certificates][docs-certs] enabled for your tailnet. Both are required for Serve and are enabled by default for new tailnets.
+1. 确保你的 tailnet 已启用 [MagicDNS][docs-magicdns] 和 [HTTPS 证书][docs-certs]。Serve 两者都需要，新 tailnet 默认已启用。
 
-2. Ensure your local development server is running and listening for requests.
+2. 确保你的本地开发服务器正在运行并监听请求。
 
-3. Run the [`tailscale serve`][docs-tailscale-serve] command, replacing `3000` with the port your development server is listening on:
+3. 运行 [`tailscale serve`][docs-tailscale-serve] 命令，把 `3000` 替换为你的开发服务器正在监听的端口：
 
    ```bash
    tailscale serve 3000
    ```
 
-   Tailscale Serve proxies requests from your `*.ts.net` hostname to your local port and automatically provisions a TLS certificate. The output shows the URL your teammates can use to access your development server:
+   Tailscale Serve 把发往你 `*.ts.net` 主机名的请求代理到本地端口，并自动签发 TLS 证书。输出中会显示队友用来访问你开发服务器的 URL：
 
    ```
    Available within your tailnet:
@@ -30,23 +30,23 @@ When building a feature or fixing a bug, you often want a teammate to preview yo
    |-- proxy http://127.0.0.1:3000
    ```
 
-   Your development server is now accessible to other tailnet members at that URL over HTTPS.
+   现在，tailnet 中的其他成员已经可以通过该 URL 以 HTTPS 方式访问你的开发服务器。
 
-4. Copy the `https://*.ts.net` URL from the `tailscale serve` output and share it with your teammate. As long as they are connected to your tailnet, they can open the URL in their browser and access your local development server.
+4. 从 `tailscale serve` 的输出中复制 `https://*.ts.net` URL 并分享给你的队友。只要对方已连接到你的 tailnet，就能在浏览器中打开该 URL，访问你的本地开发服务器。
 
-> **Tip:**
+> **提示：**
 >
-> Your teammate's Tailscale client must be running and connected for them to reach your `*.ts.net` hostname.
+> 队友的 Tailscale 客户端必须处于运行并已连接的状态，才能访问你的 `*.ts.net` 主机名。
 
-1. When you no longer want to share your development server, stop the Serve configuration:
+1. 当你不再想共享开发服务器时，停止 Serve 配置：
 
    ```bash
    tailscale serve --terminate-on 3000
    ```
 
-   This removes the proxy and stops advertising your development server on the `*.ts.net` hostname.
+   这会移除代理，并停止在 `*.ts.net` 主机名上宣告你的开发服务器。
 
-   Alternatively, you can stop serving all ports at once:
+   你也可以一次性停止所有端口的共享：
 
    ```bash
    tailscale serve reset

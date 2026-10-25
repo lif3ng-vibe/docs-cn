@@ -1,34 +1,34 @@
 ---
-title: "Setting up OneLogin to work with Tailscale"
-description: "To enable your domain for OneLogin authentication, follow the steps below."
+title: "设置 OneLogin 以与 Tailscale 配合使用"
+description: "要为你的域名启用 OneLogin 认证，请按照以下步骤操作。"
 ---
 
-Last validated Jul 8, 2024
+最后验证于 Jul 8, 2024
 
-To enable your domain for OneLogin authentication, follow the steps below.
+要为你的域名启用 OneLogin 认证，请按照以下步骤操作。
 
-1. In the OneLogin dashboard, go to *Applications*.
+1. 在 OneLogin 控制面板中，前往 *Applications*。
 
-   * Select **Add App**
+   * 选择 **Add App**
 
-2. Search for "OIDC" and select **OpenID Connect (OIDC).**
+2. 搜索"OIDC"，然后选择 **OpenID Connect (OIDC)**。
 
-3. Set the *Display Name* to "Tailscale."
+3. 将 *Display Name* 设置为"Tailscale"。
 
-   * Select **Save.**
+   * 选择 **Save**
 
-4. Under *Configuration*:
+4. 在 *Configuration* 下：
 
-   * Add to *Redirect URIs*: `https://login.tailscale.com/a/oauth_response`
-   * Select **Save**
+   * 在 *Redirect URIs* 中添加：`https://login.tailscale.com/a/oauth_response`
+   * 选择 **Save**
 
-5. Under *SSO*:
+5. 在 *SSO* 下：
 
-   * Set *Refresh Token Minutes* to **40320** (4 weeks)
-   * Select **Save**
+   * 将 *Refresh Token Minutes* 设置为 **40320**（4 周）
+   * 选择 **Save**
 
-6. Switch your Tailscale identity provider to OneLogin. For information on how to do that, refer to [Switch identity provider][docs-switch-idp].
+6. 将你的 Tailscale 身份提供方切换为 OneLogin。具体做法参见[更换身份提供方][docs-switch-idp]。
 
-7. Make sure all users you want to be able to log in are enabled for the Tailscale application in OneLogin.
+7. 确保所有你希望能够登录的用户都已在 OneLogin 中启用 Tailscale 应用。
 
 [docs-switch-idp]: /docs/integrations/identity/switch-identity-provider

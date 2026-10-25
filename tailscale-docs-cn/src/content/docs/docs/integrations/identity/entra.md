@@ -1,16 +1,16 @@
 ---
-title: "Setting up Microsoft Entra ID to work with Tailscale"
-description: "**You should be able to use your Microsoft Entra ID identity to log into Tailscale without additional configuration.**"
+title: "设置 Microsoft Entra ID 以与 Tailscale 配合使用"
+description: "**你应该可以直接使用 Microsoft Entra ID 身份登录 Tailscale，无需额外配置。**"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-**You should be able to use your Microsoft Entra ID identity to log into Tailscale without additional configuration.**
+**你应该可以直接使用 Microsoft Entra ID 身份登录 Tailscale，无需额外配置。**
 
-To use Microsoft Entra ID (previously known as Azure AD) as your identity provider with Tailscale, select **Sign up with Microsoft** when [signing up for your Tailscale account](https://login.tailscale.com/start).
+要在 Tailscale 中使用 Microsoft Entra ID（前称 Azure AD）作为你的身份提供方，请在[注册 Tailscale 账户](https://login.tailscale.com/start)时选择 **Sign up with Microsoft**。
 
-*（图：Select Microsoft when signing up to Tailscale）*
+*（图：注册 Tailscale 时选择 Microsoft）*
 
-If you cannot authenticate to Tailscale using a Microsoft Entra ID, it is likely because your administrator has disabled Microsoft Entra user consent for applications. To change to this setting, contact your administrator. For details about this setting, refer to [Configure how users consent to applications][xt-entra-configure-consent].
+如果你无法使用 Microsoft Entra ID 向 Tailscale 认证，很可能是因为你的管理员禁用了用户对 Microsoft Entra 应用程序的同意授权。要更改此设置，请联系你的管理员。关于此设置的详细信息，参见 [Configure how users consent to applications][xt-entra-configure-consent]。
 
 [xt-entra-configure-consent]: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent

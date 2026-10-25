@@ -1,84 +1,80 @@
 ---
-title: "Firewall mode in tailscaled"
-description: "Understand the different firewall modes supported by Tailscale on Linux devices."
+title: "tailscaled 的防火墙模式"
+description: "了解 Tailscale 在 Linux 设备上支持的不同防火墙模式。"
 ---
 
-Last validated Dec 29, 2025
+最后验证于 Dec 29, 2025
 
-Firewall mode for [tailscaled][docs-tailscaled] refers to a router's selection among two firewall utilities,
-`iptables` and `nftables`, to manipulate firewalls (using [netfilter][docs-netfilter-mode]). This applies to Linux devices only. Up until Tailscale v1.48.0, Tailscale relied only on `iptables` to set firewall rules. As `nftables` is increasingly popular for its performance benefits, we added support to use `nftables` to manage Tailscale's firewall rules from the `nftables` Netlink API.
+[tailscaled][docs-tailscaled] 的防火墙模式（firewall mode）是指路由器在两种防火墙工具 `iptables` 和 `nftables` 之间做出选择，用于操作防火墙（借助 [netfilter][docs-netfilter-mode]）。这仅适用于 Linux 设备。在 Tailscale v1.48.0 之前，Tailscale 只依赖 `iptables` 来设置防火墙规则。由于 `nftables` 因性能优势日益流行，我们增加了通过 `nftables` Netlink API 管理 Tailscale 防火墙规则的支持。
 
-Our way of manipulating firewall rules through `iptables` is by using the `iptables` binary. When Tailscale is running in `iptables` firewall mode, there must be a compatible `iptables` binary in the system `PATH`. On the other hand, we manipulate `nftables` through the `nftables` Netlink API, so it doesn't depend on the `nft` binary.
+我们通过 `iptables` 操作防火墙规则的方式是使用 `iptables` 可执行文件。当 Tailscale 以 `iptables` 防火墙模式运行时，系统 `PATH` 中必须存在兼容的 `iptables` 可执行文件。另一方面，我们通过 `nftables` Netlink API 操作 `nftables`，因此它不依赖 `nft` 可执行文件。
 
-The use of `nftables` doesn't work in Tailscale when the Netlink API is disabled for [userspace networking mode][docs-userspace-networking], which is not a common scenario.
+当 [用户态网络模式][docs-userspace-networking] 下 Netlink API 被禁用时，Tailscale 无法使用 `nftables`，不过这种场景并不常见。
 
-## How to set the firewall mode
+## 如何设置防火墙模式
 
-> **Note:**
+> **注意：**
 >
-> Using the `TS_DEBUG_FIREWALL_MODE` environment variable to set the firewall mode is a temporary measure. Its use is subject to change and should not be considered as permanently supported.
+> 使用 `TS_DEBUG_FIREWALL_MODE` 环境变量设置防火墙模式是一种临时手段。其用法可能变化，不应视为长期受支持的功能。
 
-Tailscale has a work-in-progress feature to detect whether the host system is currently using `iptables` or `nftables`
-so that it will also use the same firewall interface. It is possible to opt-in to this detection by setting the `TS_DEBUG_FIREWALL_MODE`
-environment variable to `auto`. It is also possible to explicitly test the specific firewall modes by setting `TS_DEBUG_FIREWALL_MODE`
-to one of the values below.
+Tailscale 有一项开发中的功能，用于检测宿主系统当前正在使用 `iptables` 还是 `nftables`，
+从而使用相同的防火墙接口。你可以将 `TS_DEBUG_FIREWALL_MODE`
+环境变量设置为 `auto` 来启用这项检测。也可以将 `TS_DEBUG_FIREWALL_MODE` 设置为下述某个值，
+显式测试特定的防火墙模式。
 
-| Value        | Description                                                                      |
+| 取值         | 说明                                                                             |
 | ------------ | -------------------------------------------------------------------------------- |
-| `auto`       | A [heuristic][ar-heuristic] is used to decide between `iptables` and `nftables`. |
-| `iptables`   | `iptables` is used.                                                              |
-| `nftables`   | `nftables` is used.                                                              |
-| No value set | The default of `iptables` is used.                                               |
+| `auto`       | 使用[探测逻辑][ar-heuristic]在 `iptables` 和 `nftables` 之间做出选择。             |
+| `iptables`   | 使用 `iptables`。                                                                |
+| `nftables`   | 使用 `nftables`。                                                                |
+| 未设置       | 使用默认值 `iptables`。                                                          |
 
-When using the `TS_DEBUG_FIREWALL_MODE` environment variable, set it in `/etc/default/tailscaled`.
+使用 `TS_DEBUG_FIREWALL_MODE` 环境变量时，请在 `/etc/default/tailscaled` 中设置。
 
-## Firewall mode heuristic
+## 防火墙模式探测
 
-When `TS_DEBUG_FIREWALL_MODE` is set to `auto`, Tailscale will detect the firewall mode that other software on the system
-is already using. Tailscale will prefer `nftables` over `iptables` in the event that both are in use at the same time.
-When neither the `iptables` binary nor the `nftables` Netlink API are available, Tailscale will fall back to a degraded
-operation that may result in reduced performance or increased CPU usage. Packet filtering for traffic in and out of
-Tailscale is always performed by packet filtering internal to Tailscale itself, so this configuration does not affect the
-security of a Tailscale node or tailnet.
+当 `TS_DEBUG_FIREWALL_MODE` 设为 `auto` 时，Tailscale 会检测系统上其他软件
+已在使用的防火墙模式。如果两者同时在使用，Tailscale 会优先选择 `nftables` 而非 `iptables`。
+当 `iptables` 可执行文件和 `nftables` Netlink API 都不可用时，Tailscale 会退化为降级
+运行模式，可能导致性能下降或 CPU 占用升高。进出 Tailscale
+流量的包过滤始终由 Tailscale 内部的包过滤机制执行，因此这种配置不影响
+Tailscale 节点或 tailnet 的安全性。
 
-## Examples
+## 示例
 
-To set `iptables` as the firewall mode (this is the default if you don't set `TS_DEBUG_FIREWALL_MODE`):
+将 `iptables` 设为防火墙模式（不设置 `TS_DEBUG_FIREWALL_MODE` 时这就是默认值）：
 
 ```shell
 TS_DEBUG_FIREWALL_MODE=iptables
 ```
 
-To set `nftables` as the firewall mode:
+将 `nftables` 设为防火墙模式：
 
 ```shell
 TS_DEBUG_FIREWALL_MODE=nftables
 ```
 
-To let Tailscale use the [heuristic][ar-heuristic] to set the firewall mode:
+让 Tailscale 使用[探测逻辑][ar-heuristic]设置防火墙模式：
 
 ```shell
 TS_DEBUG_FIREWALL_MODE=auto
 ```
 
-## How to verify it's working
+## 如何验证是否生效
 
-If you are running Tailscale outside of a container, you can verify the firewall mode by viewing the
-`tailscaled` log output via `journalctl`:
+如果你在容器外运行 Tailscale，可以通过 `journalctl` 查看 `tailscaled` 日志输出来验证防火墙模式：
 
 ```shell
 journalctl -ru tailscaled
 ```
 
-If you are running Tailscale inside a container, the way to view logs depends on the containerization
-technology being used.
+如果你在容器内运行 Tailscale，查看日志的方式取决于所使用的容器化技术。
 
-The log should have three lines that start with `router:`, with the first line showing the rule count.
-The second line shows the reason a firewall mode was chosen, and the third line shows the firewall
-mode currently in effect.
+日志中应有三行以 `router:` 开头的内容：第一行显示规则计数；
+第二行显示选择该防火墙模式的原因；第三行显示当前
+生效的防火墙模式。
 
-The log looks like the following when the `TS_DEBUG_FIREWALL_MODE` environment variable specifies
-`nftables`:
+当 `TS_DEBUG_FIREWALL_MODE` 环境变量指定 `nftables` 时，日志如下：
 
 ```shell
 router: router: nftables rule count: 0, iptables rule count: 0
@@ -86,9 +82,9 @@ router: router: envknob TS_DEBUG_FIREWALL_MODE=nftables set
 router: router: using nftables
 ```
 
-Similar output is shown when the `TS_DEBUG_FIREWALL_MODE` environment variable specifies `iptables`.
+当 `TS_DEBUG_FIREWALL_MODE` 环境变量指定 `iptables` 时，会显示类似输出。
 
-When the firewall mode selection heuristic is used, the output looks like:
+使用防火墙模式选择探测逻辑时，输出如下：
 
 ```shell
 router: router: nftables rule count: 0, iptables rule count: 0
@@ -96,19 +92,18 @@ router: router: nftables is available
 router: router: using nftables
 ```
 
-The possible reasons (shown in line 2 of the example output) are:
+可能的原因（显示在示例输出的第 2 行）有：
 
 * `iptables is available`
 * `iptables is currently in use`
 * `nftables is available`
 * `nftables is currently in use`
 
-When neither `iptables` or `nftables` is supported, `tailscaled` silently chooses `iptables`, and
-creates a runner that doesn't do anything. This is a scenario that usually only advanced users
-experience, when they don't need Tailscale to configure the firewall rules and they prefer to do it
-themselves.
+当 `iptables` 和 `nftables` 都不受支持时，`tailscaled` 会静默选择 `iptables`，
+并创建一个什么都不做的运行器。这种场景通常只有高级用户才会遇到——他们不需要 Tailscale 配置防火墙规则，
+更愿意自己动手。
 
-[ar-heuristic]: #heuristic
+[ar-heuristic]: #防火墙模式探测
 
 [docs-netfilter-mode]: /docs/reference/netfilter-modes
 

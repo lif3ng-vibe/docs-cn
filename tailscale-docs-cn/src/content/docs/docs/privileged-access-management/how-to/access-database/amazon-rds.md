@@ -1,78 +1,78 @@
 ---
-title: "Access an Amazon RDS database using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets users connect to Amazon Relational Database Service (RDS) using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials."
+title: "使用 Tailscale PAM 访问 Amazon RDS 数据库"
+description: "[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 Amazon Relational Database Service（RDS），而无需共享数据库凭证。"
 ---
 
-Last validated Sep 2, 2026
+最后验证于 Sep 2, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets users connect to Amazon Relational Database Service (RDS) using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials.
+[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 Amazon Relational Database Service（RDS），而无需共享数据库凭证。
 
-You can control who has access to the database, apply fine-grained permissions, and keep an audit trail of database sessions. Users can continue using their preferred database clients or connect directly from their browser.
+你可以控制谁有权访问数据库、应用细粒度权限，并保留数据库会话的审计跟踪。用户可以继续使用自己惯用的数据库客户端，或直接从浏览器连接。
 
-This guide focuses on Amazon RDS for MySQL and PostgreSQL and walks you through creating an RDS PAM service, connecting to it, and reviewing the resulting session activity.
+本指南聚焦于 Amazon RDS for MySQL 和 PostgreSQL，带你创建 RDS PAM 服务、连接该服务并查看产生的会话活动。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，确保你具备以下条件：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed, online, and able to reach the RDS instance.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native database client.
-* An Amazon RDS instance running MySQL or PostgreSQL.
-* The endpoint and port for your RDS instance.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
+* 一个已安装、在线且能访问 RDS 实例的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果打算使用原生数据库客户端，你用来连接的设备上需已[安装][docs-install] Tailscale 并登录。
+* 一个运行 MySQL 或 PostgreSQL 的 Amazon RDS 实例。
+* 你的 RDS 实例的端点和端口。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
 
-The PAM connector must have network access to the RDS instance. For a private RDS instance, you can run the connector on an Elastic Compute Cloud (EC2) instance or another device with access to the Amazon Virtual Private Cloud (VPC). If your RDS instance is publicly accessible, the connector can run outside the VPC as long as the RDS security groups allow the connection.
+PAM 连接器必须能通过网络访问 RDS 实例。对于私有 RDS 实例，你可以在 Elastic Compute Cloud（EC2）实例或其他能访问 Amazon Virtual Private Cloud（VPC）的设备上运行连接器。如果你的 RDS 实例可公开访问，连接器可以在 VPC 之外运行，只要 RDS 安全组允许该连接。
 
-## Choose an authentication method
+## 选择认证方式
 
-Tailscale PAM supports two ways to authenticate to the upstream RDS database:
+Tailscale PAM 支持两种向上游 RDS 数据库认证的方式：
 
-* **Password authentication**: The connector uses a database username and password.
-* **IAM database authentication**: The connector uses an Amazon Web Services (AWS) identity to authenticate to RDS without storing a database password.
+* **密码认证**：连接器使用数据库用户名和密码。
+* **IAM 数据库认证**：连接器使用 Amazon Web Services（AWS）身份向 RDS 认证，无需保存数据库密码。
 
-### Use password authentication
+### 使用密码认证
 
-Password authentication works the same way as it does for a regular MySQL or PostgreSQL PAM service.
+密码认证的工作方式与普通 MySQL 或 PostgreSQL PAM 服务相同。
 
-You'll need:
+你需要：
 
-* The RDS endpoint.
-* The database port. For MySQL, the default port is `3306`. For PostgreSQL, the default port is `5432`.
-* A database username.
-* The password for that database user.
+* RDS 端点。
+* 数据库端口。MySQL 的默认端口是 `3306`；PostgreSQL 的默认端口是 `5432`。
+* 一个数据库用户名。
+* 该数据库用户的密码。
 
-If you're using password authentication, you can skip to [Create an Amazon RDS PAM service][ar-create-service].
+如果你使用密码认证，可以直接跳到[创建 Amazon RDS PAM 服务][ar-create-service]。
 
-### Use IAM database authentication
+### 使用 IAM 数据库认证
 
-Amazon RDS IAM database authentication lets the PAM connector authenticate using an AWS identity instead of a static database password.
+Amazon RDS IAM 数据库认证让 PAM 连接器使用 AWS 身份认证，而不是静态数据库密码。
 
-If you are using IAM database authentication, take the following action in your AWS environment:
+如果你使用 IAM 数据库认证，请在你的 AWS 环境中执行以下操作：
 
-1. Enable **IAM database authentication** for your RDS instance.
+1. 为你的 RDS 实例启用 **IAM database authentication**。
 
-2. Create a database user that can authenticate with IAM.
+2. 创建一个可以用 IAM 认证的数据库用户。
 
-   For RDS for MySQL, connect as a user that can create database users and run:
+   对于 RDS for MySQL，用一个能创建数据库用户的用户连接，并运行：
 
    ```sql
    CREATE USER 'tailscale_pam' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
    ```
 
-   Then grant the user the database privileges it needs.
+   然后为该用户授予所需的数据库权限。
 
-   For RDS for PostgreSQL, create the user and grant it the `rds_iam` role:
+   对于 RDS for PostgreSQL，创建用户并授予 `rds_iam` 角色：
 
    ```sql
    CREATE USER tailscale_pam;
    GRANT rds_iam TO tailscale_pam;
    ```
 
-3. Grant the database user any additional database permissions it needs.
+3. 为该数据库用户授予所需的其他数据库权限。
 
-   The AWS identity used by the Tailscale PAM connector must also have permission to connect as that database user. For example:
+   Tailscale PAM 连接器使用的 AWS 身份还必须有权以该数据库用户的身份连接。例如：
 
    ```json
    {
@@ -87,64 +87,64 @@ If you are using IAM database authentication, take the following action in your 
    }
    ```
 
-   Replace `<region>`, `<account-id>`, and `<db-resource-id>` with the values for your RDS instance.
+   把 `<region>`、`<account-id>` 和 `<db-resource-id>` 替换为你 RDS 实例的实际值。
 
-The PAM connector uses AWS credentials available in its environment. If the connector runs on EC2, the simplest option is to use an IAM role attached to the instance. You can also provide AWS credentials using standard AWS configuration or environment variables.
+PAM 连接器使用其环境中可用的 AWS 凭证。如果连接器运行在 EC2 上，最简单的方式是使用挂接到实例的 IAM 角色。你也可以通过标准 AWS 配置或环境变量提供 AWS 凭证。
 
-## Create an Amazon RDS PAM service
+## 创建 Amazon RDS PAM 服务
 
-Now that your RDS instance is ready, create a PAM service for it.
+RDS 实例就绪后，为它创建一个 PAM 服务。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择 **Add service**。
 
-3. Select **PAM service**.
+3. 选择 **PAM service**。
 
-4. Select either **MySQL - AWS RDS** or **PostgreSQL - AWS RDS**.
+4. 选择 **MySQL - AWS RDS** 或 **PostgreSQL - AWS RDS**。
 
-5. Select **Continue**.
+5. 选择 **Continue**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-   Use a name that will make the database suitable for users to recognize when they browse the services they can access.
+   起一个便于用户在浏览可访问服务时辨认该数据库的名字。
 
-7. (Optional) Provide a description for the service.
+7. （可选）为服务提供描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. Select the Tailscale PAM connector that can reach your RDS instance.
+9. 选择能够访问你的 RDS 实例的 Tailscale PAM 连接器。
 
-10. Select **Continue**.
+10. 选择 **Continue**。
 
-11. For **Upstream hostname or IP**, enter the RDS endpoint.
+11. 在 **Upstream hostname or IP** 中输入 RDS 端点。
 
-12. For **Port**, enter `3306` for MySQL or `5432` for PostgreSQL.
+12. 在 **Port** 中输入 MySQL 的 `3306` 或 PostgreSQL 的 `5432`。
 
-13. Configure how the PAM connector should connect and authenticate to your RDS instance.
+13. 配置 PAM 连接器应如何连接并向你的 RDS 实例认证。
 
-    #### Username and Password
+    #### 用户名和密码
 
-    1. For **Authentication type**, select **Username and Password**.
-    2. For **Username**, enter the database username Tailscale PAM should use.
-    3. For **Password**, enter password for that database user.
-    4. (Optional) For **Server CA certificate**, enter the PEM-encoded certificate authority (CA) certificate used to verify the upstream service's TLS certificate. You must provide a CA certificate to verify the upstream's certificate, or you can leave it blank and skip the verification process.
+    1. 在 **Authentication type** 中选择 **Username and Password**。
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的数据库用户名。
+    3. 在 **Password** 中输入该数据库用户的密码。
+    4. （可选）在 **Server CA certificate** 中输入用于验证上游服务 TLS 证书的 PEM 编码证书颁发机构（CA）证书。你必须提供 CA 证书来验证上游的证书，也可以留空并跳过验证过程。
 
     #### IAM
 
-    1. For **Authentication type**, select **IAM**.
-    2. For **Username**, enter the database username Tailscale PAM should use.
-    3. (Optional) For **Server CA certificate**, enter the PEM-encoded certificate authority (CA) certificate used to verify the upstream service's TLS certificate. You must provide a CA certificate to verify the upstream's certificate, or you can leave it blank and skip the verification process.
-    4. For **RDS instance region**, select the region for your RDS instance.
-    5. For **AWS authentication strategy**, select how the connector authenticates against AWS.
+    1. 在 **Authentication type** 中选择 **IAM**。
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的数据库用户名。
+    3. （可选）在 **Server CA certificate** 中输入用于验证上游服务 TLS 证书的 PEM 编码证书颁发机构（CA）证书。你必须提供 CA 证书来验证上游的证书，也可以留空并跳过验证过程。
+    4. 在 **RDS instance region** 中选择你的 RDS 实例所在区域。
+    5. 在 **AWS authentication strategy** 中选择连接器向 AWS 认证的方式。
 
-14. Select **Save**.
+14. 选择 **Save**。
 
-Your Amazon RDS PAM service has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+你的 Amazon RDS PAM 服务已创建。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the Amazon RDS database
+## 为 Amazon RDS 数据库授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the service. For example, the following grant permits any source to connect to PAM database services:
+在用户连接之前，确保有 Tailscale PAM [授权（grant）][docs-grants]让他们能访问该服务。例如，以下授权允许任何来源连接到 PAM 数据库服务：
 
 ```json
 "grants": [
@@ -168,107 +168,107 @@ Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives t
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, you can restrict the `src` and `dst` fields to control which users, groups, devices, or tags can access specific services.
+> 这是一条范围很宽的授权，适合入门使用。在生产环境中，你可以限制 `src` 和 `dst` 字段，以控制哪些用户、组、设备或标签可以访问特定服务。
 
-You can also define more advanced database permissions, such as read-only access.
+你还可以定义更高级的数据库权限，例如只读访问。
 
-For more PAM grant examples and information about fine-grained access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 PAM 授权示例以及细粒度访问控制的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-## Connect to the Amazon RDS database
+## 连接到 Amazon RDS 数据库
 
-The primary way to connect is through the Tailscale client, which can launch your preferred database client. You can also connect entirely from your browser using the Tailscale browser client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你惯用的数据库客户端。你也可以使用 Tailscale 浏览器客户端完全从浏览器连接。
 
-### Connect with your preferred Amazon RDS client
+### 使用你惯用的 Amazon RDS 客户端连接
 
-Use the Tailscale client to quickly open the database with a compatible database client already installed on your device.
+使用 Tailscale 客户端，可快速用设备上已安装的兼容数据库客户端打开数据库。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your Amazon RDS service.
-4. Choose the database client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 Amazon RDS 服务。
+4. 选择你想使用的数据库客户端。
 
-The Tailscale client scans your device for well-known clients compatible with the database engine and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备，寻找与该数据库引擎兼容的知名客户端，并列出它找到的客户端。选择其中一个即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the clients shown in the Tailscale client. If your preferred database client isn't listed, open it directly and use the name of the Tailscale PAM service as the hostname.
+你并不局限于 Tailscale 客户端中列出的客户端。如果你惯用的数据库客户端不在列表中，可以直接打开它，并使用 Tailscale PAM 服务的名称作为主机名。
 
-For an RDS for MySQL service, you can connect with the standard MySQL command-line client:
+对于 RDS for MySQL 服务，你可以使用标准的 MySQL 命令行客户端连接：
 
 ```shell
 mysql -h <service-name> -P 3306 --protocol TCP
 ```
 
-For an RDS for PostgreSQL service, you can use `psql`:
+对于 RDS for PostgreSQL 服务，你可以使用 `psql`：
 
 ```shell
 psql -h <service-name> -p 5432 -d <database-name>
 ```
 
-Replace `<service-name>` with the name of your Amazon RDS PAM service and `<database-name>` with the name of your database.
+把 `<service-name>` 替换为你的 Amazon RDS PAM 服务名称，把 `<database-name>` 替换为你的数据库名称。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection and manages the upstream RDS connection on your behalf. You don't need to know or manage the upstream database credentials.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权，并代表你管理上游 RDS 连接。你无需了解或管理上游数据库凭证。
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect with the web-based database client. The browser client runs a Tailscale client directly in your browser using WebAssembly (Wasm), so there's nothing else to install.
+你也可以使用基于 Web 的数据库客户端连接。浏览器客户端使用 WebAssembly（Wasm）直接在浏览器中运行 Tailscale 客户端，因此无需安装其他东西。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
-2. Select the Amazon RDS service you want to access.
-3. Select **Connect** in the upper-right corner, and the Tailscale database browser client opens.
-4. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择你想访问的 Amazon RDS 服务。
+3. 选择右上角的 **Connect**，Tailscale 数据库浏览器客户端就会打开。
+4. 如有提示，使用你的 Tailscale 身份进行认证。
 
-You can now run queries against your Amazon RDS database directly from your browser.
+现在你可以直接从浏览器对 Amazon RDS 数据库执行查询了。
 
-The browser client appears as a Tailscale device in your tailnet. If [device approval][docs-device-approval] is enabled, an admin must approve the browser device before it can connect.
+浏览器客户端在你的 tailnet 中显示为一台 Tailscale 设备。如果启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Secure the upstream credentials
+## 保护上游凭证
 
-If your RDS service uses password authentication, the upstream database username and password can be stored as part of the PAM service configuration. Tailscale stores these credentials in encrypted form, but for production environments we recommend keeping upstream credentials local to the connector whenever possible.
+如果你的 RDS 服务使用密码认证，上游数据库用户名和密码可以作为 PAM 服务配置的一部分保存。Tailscale 以加密形式存储这些凭证，但对于生产环境，我们建议尽量把上游凭证保留在连接器本地。
 
-You can configure the connector to load credentials dynamically from a supported secret source instead of storing the credentials directly in the service configuration. For example, you can load credentials from an environment variable, AWS Systems Manager Parameter Store, AWS Secrets Manager, a local file, or another supported secrets management system.
+你可以把连接器配置为从受支持的密钥源动态加载凭证，而不是把凭证直接存储在服务配置中。例如，可以从环境变量、AWS Systems Manager Parameter Store、AWS Secrets Manager、本地文件或其他受支持的密钥管理系统加载凭证。
 
-For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+更多信息参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
-If you're using IAM database authentication, you don't need to store a static database password. Tailscale PAM uses the AWS identity available to the connector to authenticate to RDS.
+如果你使用 IAM 数据库认证，则无需存储静态数据库密码。Tailscale PAM 使用连接器可用的 AWS 身份向 RDS 认证。
 
-RDS IAM database authentication uses TLS for the connection to the upstream database.
+RDS IAM 数据库认证对上游数据库的连接使用 TLS。
 
-## Review session details and recordings
+## 查看会话详情与录制
 
-Tailscale PAM gives you visibility into connections to your Amazon RDS service.
+Tailscale PAM 让你清楚了解与 Amazon RDS 服务的连接情况。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your RDS service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 RDS 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The service that was accessed.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 被访问的服务。
 
-When session recording is enabled, you can also review the SQL queries for the session.
+启用会话录制后，你还可以查看该会话的 SQL 查询。
 
-This gives you a direct answer to two useful questions: who accessed the database, and what did they do while they were there?
+这能直接回答两个很有用的问题：谁访问了数据库？他们在里面做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to your Amazon RDS service, first confirm that the PAM connector can reach the RDS endpoint and database port.
+如果你无法连接 Amazon RDS 服务，首先确认 PAM 连接器能访问 RDS 端点和数据库端口。
 
-For a private RDS instance, verify that the connector has network access to the VPC and that the RDS security group permits connections from the connector.
+对于私有 RDS 实例，验证连接器能通过网络访问该 VPC，且 RDS 安全组允许来自连接器的连接。
 
-For password authentication, verify that the database username and password in the PAM service configuration are valid.
+对于密码认证，验证 PAM 服务配置中的数据库用户名和密码有效。
 
-For IAM database authentication, verify that:
+对于 IAM 数据库认证，验证：
 
-* IAM database authentication is enabled on the RDS instance.
-* The database user is configured for IAM authentication.
-* The AWS identity used by the connector has the `rds-db:connect` permission for that database user.
-* The connector has valid AWS credentials and the correct AWS Region configured.
+* RDS 实例已启用 IAM 数据库认证。
+* 数据库用户已配置为 IAM 认证。
+* 连接器使用的 AWS 身份对该数据库用户具有 `rds-db:connect` 权限。
+* 连接器拥有有效的 AWS 凭证，且配置了正确的 AWS 区域。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the PAM [session logs][docs-pam-session-logs]. Failed sessions often include information about why the connection couldn't be established, which can help narrow down whether the problem is network connectivity, AWS IAM permissions, database authentication, or the RDS instance itself.
+如果以上排查步骤都无法解决问题，请查看连接器日志以及 PAM [会话日志][docs-pam-session-logs]中失败会话的详情。失败的会话通常包含连接无法建立的原因，这有助于判断问题出在网络连通性、AWS IAM 权限、数据库认证还是 RDS 实例本身。
 
-[ar-create-service]: #create-an-amazon-rds-pam-service
+[ar-create-service]: #创建-amazon-rds-pam-服务
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

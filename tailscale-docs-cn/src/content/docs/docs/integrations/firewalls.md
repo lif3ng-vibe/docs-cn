@@ -1,200 +1,200 @@
 ---
-title: "Using Tailscale with your firewall"
-description: "Use Tailscale with an existing firewall configuration."
+title: "将 Tailscale 与你的防火墙配合使用"
+description: "将 Tailscale 与现有防火墙配置配合使用。"
 ---
 
-Last validated Jan 28, 2026
+最后验证于 Jan 28, 2026
 
-Most of the time, Tailscale works with existing firewalls without additional configuration. Thanks to [NAT traversal][bl-how-nat-traversal-works], devices in a Tailscale network (known as a tailnet) can connect directly peer to peer, even through firewalls. When this isn't the case, you can usually resolve it by [opening a firewall port to establish a direct connection][docs-firewall-ports].
+大多数情况下，Tailscale 无需额外配置即可与现有防火墙协同工作。得益于 [NAT 穿透][bl-how-nat-traversal-works]，Tailscale 网络（即 tailnet）中的设备即使在防火墙之后也能直接点对点连接。当无法直连时，通常可以通过[打开防火墙端口来建立直连][docs-firewall-ports]解决。
 
-For some firewalls, though, it is particularly difficult to establish a direct connection, so your traffic relies on [DERP relay servers][docs-derp-servers] as a fallback, which might lead to slower connections. Refer to the list below for known issues and workarounds when using Tailscale with your firewall provider.
+不过，对于某些防火墙，建立直连特别困难，此时你的流量会退而依赖 [DERP 中继服务器][docs-derp-servers]，这可能导致连接变慢。请在下方列表中查看在 Tailscale 下使用你的防火墙提供商时的已知问题与解决方法。
 
-> **Tip:**
+> **提示：**
 >
-> You can set up a Tailscale Peer Relay server to help devices connect when direct connections aren't possible. These are relay servers that you host on your own infrastructure. For more information, refer to the [Tailscale Peer Relay documentation][docs-peer-relays].
+> 你可以搭建 Tailscale 对等中继（peer relay）服务器，在无法直连时帮助设备建立连接。这类中继服务器由你在自己的基础设施上托管。更多信息请参阅 [Tailscale Peer Relay 文档][docs-peer-relays]。
 
-Refer to [connection types in Tailscale][docs-connection-types] to understand how to determine the connection type between two devices in your tailnet.
+有关如何确定 tailnet 中两台设备之间的连接类型，请参阅 [Tailscale 中的连接类型][docs-connection-types]。
 
-## Latency vs security
+## 延迟与安全的权衡
 
-Your organization might have configured a firewall to protect their network from unsolicited, unnecessary, or malicious traffic. Although the workarounds below might help Tailscale to establish direct connectivity between devices, these might also make it easier for other traffic to reach your network. Before implementing any of these changes, consider the pros and cons of making this trade-off between security and latency.
+你的组织可能已配置防火墙，保护网络免受未经请求的、不必要的或恶意流量的影响。虽然下面的解决方法可能帮助 Tailscale 在设备之间建立直连，但也可能让其他流量更容易到达你的网络。在实施任何这些更改之前，请权衡安全与延迟之间这种取舍的利弊。
 
-Specifically:
+具体而言：
 
-* By enabling NAT-PMP and UPnP, your network can allow in and forward all traffic.
-* By opening a firewall port, your network will allow traffic on a certain port and meeting certain rules to leave your network. Restrict this traffic only to what is needed. [Subscribe to this GitHub issue][xt-gh-tailscale-issue-1872] for updates on a Tailscale ruleset.
+* 启用 NAT-PMP 与 UPnP 后，你的网络可能会允许并转发所有流量。
+* 打开防火墙端口后，你的网络会允许某一端口上符合特定规则的流量离开你的网络。请将此类流量限制到仅限所需范围。[订阅此 GitHub issue][xt-gh-tailscale-issue-1872] 以获取 Tailscale 规则集的更新动态。
 
-## Firewall compatibility and workarounds
+## 防火墙兼容性与解决方法
 
-The following table summarizes the expected behavior of Tailscale with various firewall platforms, along with any known workarounds.
+下表总结了 Tailscale 在各种防火墙平台上的预期行为，以及已知的解决方法。
 
-Tailnet devices only connect using a peer relay if you've configured at least one [Tailscale Peer Relay server][docs-peer-relays] in your tailnet and created the appropriate [access control rules][docs-grants] to use them. Tailscale devices try to connect in the following order: directly peer to peer, using a [Tailscale Peer Relay server][docs-peer-relays] if configured, then using a [DERP relay server][docs-derp-servers].
+只有在你的 tailnet 中配置了至少一个 [Tailscale Peer Relay 服务器][docs-peer-relays]，并创建了使用它们的相应[访问控制规则][docs-grants]时，tailnet 设备才会通过对等中继连接。Tailscale 设备按以下顺序尝试连接：直接点对点；若已配置则使用 [Tailscale Peer Relay 服务器][docs-peer-relays]；最后使用 [DERP 中继服务器][docs-derp-servers]。
 
-Firewall
-Expected behavior
-Workaround
+防火墙
+预期行为
+解决方法
 
 Barracuda
-Connects using DERP or a peer relay
-Increase Max UDP sessions, and open a firewall port
+通过 DERP 或对等中继连接
+增大 Max UDP sessions，并打开防火墙端口
 
 Check Point
-Connects directly
+直接连接
 n/a
 
 Cisco
-Connects using DERP or a peer relay
-Open a firewall port
+通过 DERP 或对等中继连接
+打开防火墙端口
 
-Cisco with Cisco Umbrella Endpoint Security
-Connects using DERP or a peer relay
-None
+Cisco（带 Cisco Umbrella Endpoint Security）
+通过 DERP 或对等中继连接
+无
 
 Fortinet
-Connects using DERP or a peer relay
-Randomize port
+通过 DERP 或对等中继连接
+随机化端口
 
-Fortinet with FortiGate deep packet inspection
-Unable to connect to control plane
-None
+Fortinet（带 FortiGate 深度包检测）
+无法连接控制平面
+无
 
 OPNsense
-Connects using DERP or a peer relay
-Enable NAT-PMP, or static NAT port mappings
+通过 DERP 或对等中继连接
+启用 NAT-PMP，或静态 NAT 端口映射
 
 pfSense
-Connects using DERP or a peer relay
-Enable NAT-PMP, or static NAT port mappings
+通过 DERP 或对等中继连接
+启用 NAT-PMP，或静态 NAT 端口映射
 
 Palo Alto Networks
-Connects using DERP or a peer relay
-Use Persistent Dynamic IP and Port
+通过 DERP 或对等中继连接
+使用 Persistent Dynamic IP and Port
 
 Sophos
-Connects directly
+直接连接
 n/a
 
 UniFi Gateways
-Connects using DERP or a peer relay
-Allow peer-to-peer traffic
+通过 DERP 或对等中继连接
+允许点对点流量
 
-For other firewalls, if your connections are using DERP relays by default, try [opening a port to establish a direct connection][docs-firewall-ports]. You can also set up a [peer relay server][docs-peer-relays] in your tailnet to help devices connect when direct connections aren't possible.
+对于其他防火墙，如果你的连接默认使用 DERP 中继，请尝试[打开端口以建立直连][docs-firewall-ports]。你也可以在 tailnet 中搭建[对等中继服务器][docs-peer-relays]，在无法直连时帮助设备连接。
 
-If you experience an issue with a firewall not listed here, or need help configuring a particular firewall with Tailscale, [contact support][co-contact-support].
+如果你遇到此处未列出的防火墙问题，或需要帮助配置特定防火墙与 Tailscale 的配合，请[联系支持团队][co-contact-support]。
 
 ### Barracuda
 
-In networks with Barracuda firewalls, Tailscale devices will have difficulties making direct connections, and often resort to DERP relays.
+在使用 Barracuda 防火墙的网络中，Tailscale 设备难以建立直连，经常退回使用 DERP 中继。
 
-To help Tailscale make direct connections, modify the maximum number of UDP sessions that a Barracuda firewall permits, making it easier for multiple Tailscale clients to connect, without competing with each other for UDP ports. To modify this, increase the ["Max UDP" parameter][xt-barracuda-cloudgen] in your firewall configuration.
+为帮助 Tailscale 建立直连，请修改 Barracuda 防火墙允许的最大 UDP 会话数，让多个 Tailscale 客户端更容易连接，而不必互相竞争 UDP 端口。要修改此项，请调高防火墙配置中的 ["Max UDP" 参数][xt-barracuda-cloudgen]。
 
-You can also consider [opening a firewall port][docs-firewall-ports] or setting up a [Tailscale Peer Relay server][docs-peer-relays] in your tailnet.
+你还可以考虑[打开防火墙端口][docs-firewall-ports]，或在 tailnet 中搭建 [Tailscale Peer Relay 服务器][docs-peer-relays]。
 
 ### Check Point
 
-In networks with Check Point firewalls, Tailscale devices should be able to establish direct connections by default.
+在使用 Check Point 防火墙的网络中，Tailscale 设备默认应能建立直连。
 
 ### Cisco
 
-In networks with Cisco firewalls, Tailscale devices will have difficulties making direct connections, and often resort to DERP relays.
+在使用 Cisco 防火墙的网络中，Tailscale 设备难以建立直连，经常退回使用 DERP 中继。
 
-To help Tailscale make direct connections, consider [opening a firewall port][docs-firewall-ports].
+为帮助 Tailscale 建立直连，请考虑[打开防火墙端口][docs-firewall-ports]。
 
 #### Cisco Umbrella Endpoint Security
 
-If you are using Cisco Umbrella Endpoint Security, then [the above][ar-cisco] will not work to establish direct connections, and your traffic will always resort to DERP relays.
+如果你使用 Cisco Umbrella Endpoint Security，那么[上述方法][ar-cisco]将无法建立直连，你的流量将始终退回使用 DERP 中继。
 
 #### Cisco Umbrella DNS Filtering
 
-For DNS filtering using Cisco Umbrella (formerly OpenDNS), Umbrella/OpenDNS will override DNS settings set by Tailscale without additional configuration. To configure the two together:
+对于使用 Cisco Umbrella（前身为 OpenDNS）的 DNS 过滤，Umbrella/OpenDNS 会在没有额外配置的情况下覆盖 Tailscale 设置的 DNS。要将两者一起配置：
 
-1. Configure Umbrella/OpenDNS to send `*.<your-tailnet-name>.ts.net` queries to `100.100.100.100`. [`100.100.100.100` or Quad100][docs-quad100] is a special Tailscale IP address in your Tailscale network (known as a tailnet) that provides essential local services including a DNS resolver.
-2. [Disable MagicDNS][docs-disable-magicdns] in the Tailscale admin console.
-3. Disable [Override DNS servers][docs-override-dns-servers] in the Tailscale admin console and on end-user clients with [an MDM system policy][docs-system-policy-dns-settings].
+1. 配置 Umbrella/OpenDNS，将 `*.<your-tailnet-name>.ts.net` 查询发送到 `100.100.100.100`。[ `100.100.100.100`（即 Quad100）][docs-quad100]是你的 Tailscale 网络（即 tailnet）中的一个特殊 Tailscale IP 地址，提供包括 DNS 解析器在内的基本本地服务。
+2. 在 Tailscale 管理控制台中[禁用 MagicDNS][docs-disable-magicdns]。
+3. 在 Tailscale 管理控制台，以及通过 [MDM 系统策略][docs-system-policy-dns-settings]配置的最终用户客户端上，禁用 [Override DNS servers][docs-override-dns-servers]。
 
-This configures clients to continue to use Umbrella for all DNS queries, while configuring Umbrella to use Tailscale's Quad100 DNS resolver for tailnet-specific queries.
+这样配置后，客户端会继续使用 Umbrella 处理所有 DNS 查询，同时 Umbrella 会将 tailnet 专属查询交给 Tailscale 的 Quad100 DNS 解析器处理。
 
 ### Fortinet
 
-In networks with Fortinet firewalls, Tailscale devices will have difficulties making direct connections, and often resort to DERP relays. This issue might not be present at a smaller scale, with issues occurring once more than 5 individuals are using Tailscale behind the same firewall.
+在使用 Fortinet 防火墙的网络中，Tailscale 设备难以建立直连，经常退回使用 DERP 中继。在较小规模下可能不会出现此问题，通常在同一防火墙后有超过 5 人使用 Tailscale 时才会出现问题。
 
-To allow direct connections, in the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, include an option in your [tailnet policy file][docs-access-control] to [randomizeClientPort][docs-policy-syntax-network-policy-options]. This makes devices use a random port for WireGuard rather than the default static port `41641`.
+要允许直连，请在管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面中，在你的 [tailnet 策略文件][docs-access-control]里加入 [randomizeClientPort][docs-policy-syntax-network-policy-options] 选项。这会让设备为 WireGuard 使用随机端口，而不是默认的静态端口 `41641`。
 
 ```json
 {
-  // Tailnet policy file settings and other configurations
+  // tailnet 策略文件设置与其他配置
   "randomizeClientPort": true
 }
 ```
 
-If you are using FortiGate application control rules with certain configurations, your firewall will intercept HTTPS connections to the Tailscale control plane, and nodes in your network will be unable to connect to Tailscale. If this happens, a certificate verification error similar to the one below will display in the Tailscale client UI and in the output of the Tailscale CLI [`tailscale status`][docs-cli-status] command:
+如果你在特定配置下使用 FortiGate 应用控制规则，防火墙会拦截发往 Tailscale 控制平面的 HTTPS 连接，网络中的节点将无法连接到 Tailscale。发生这种情况时，Tailscale 客户端 UI 以及 Tailscale CLI 的 [`tailscale status`][docs-cli-status] 命令输出中会显示类似如下的证书验证错误：
 
 ```shell
 fetch control key: Get "https://controlplane.tailscale.com/key?v=123": x509: "controlplane.tailscale.com" certificate is not trusted
 ```
 
-To address the issue, go to the FortiOS admin console from a browser, select **Security Profiles**, then **Application Control**. Disable or reduce the scope of any security profiles that perform SSL inspection. In particular, verify that you are not using any default rules that block traffic belonging to the **Proxy** category or match against the [Tailscale application defined in FortiGuard][xt-fortiguard-tailscale]. This is currently the only known workaround.
+要解决此问题，请从浏览器进入 FortiOS 管理控制台，选择 **Security Profiles**，然后选择 **Application Control**。禁用或缩小任何执行 SSL 检查的安全配置文件的范围。尤其要确认你没有使用任何会阻止属于 **Proxy** 类别或匹配 [FortiGuard 中定义的 Tailscale 应用][xt-fortiguard-tailscale]的流量的默认规则。这是目前唯一已知的解决方法。
 
 ### Netskope
 
-In networks with Netskope, Tailscale devices will have difficulties making direct connections and often resort to using [relayed connections][docs-relayed-connections].
+在使用 Netskope 的网络中，Tailscale 设备难以建立直连，经常退回使用[中继连接][docs-relayed-connections]。
 
-You can configure Netskope to ignore Tailscale and allow its traffic to bypass Netskope's filtering and cloud proxy. To do so:
+你可以配置 Netskope 忽略 Tailscale，让它的流量绕过 Netskope 的过滤与云代理。为此：
 
-1. [Create a Custom Certificate Pinned Application][xt-netskope-create-certificate-pinned-application] for your platforms in use with the following process names:
+1. 使用以下进程名称，为你使用的平台[创建自定义证书锁定应用（Custom Certificate Pinned Application）][xt-netskope-create-certificate-pinned-application]：
 
-   | **Platform**                                            | **Type** | **Process Names**                                                      |
+   | **平台**                                                 | **类型** | **进程名称**                                                           |
    | ------------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
    | Android/ChromeOS                                        | Exact    | `com.tailscale.ipn`                                                    |
    | iOS                                                     | Exact    | `io.tailscale.ipn.ios`, `io.tailscale.ipn.ios.network-extension`       |
    | Linux                                                   | Exact    | `tailscaled`                                                           |
-   | [macOS (from Mac App Store)][docs-mac-variant-appstore] | Exact    | `io.tailscale.ipn.macos`, `io.tailscale.ipn.macos.network-extension`   |
-   | [macOS (standalone)][docs-mac-variant-standalone]       | Exact    | `io.tailscale.ipn.macsys`, `io.tailscale.ipn.macsys.network-extension` |
+   | [macOS（Mac App Store 版）][docs-mac-variant-appstore]   | Exact    | `io.tailscale.ipn.macos`, `io.tailscale.ipn.macos.network-extension`   |
+   | [macOS（独立版）][docs-mac-variant-standalone]           | Exact    | `io.tailscale.ipn.macsys`, `io.tailscale.ipn.macsys.network-extension` |
    | Windows                                                 | Exact    | `tailscale-ipn.exe`, `tailscale.exe`, `tailscaled.exe`                 |
 
-2. [Add steering bypass exceptions][xt-netskope-add-steering-bypass] for the following criteria:
+2. 为以下条件[添加 steering 绕过例外][xt-netskope-add-steering-bypass]：
 
-   | **Criteria** | **Values**                    |
+   | **条件**     | **值**                        |
    | ------------ | ----------------------------- |
-   | Domains      | `*.tailscale.com`, `*.ts.net` |
+   | 域名（Domains） | `*.tailscale.com`, `*.ts.net` |
 
-### OPNsense and pfSense
+### OPNsense 与 pfSense
 
-In networks with OPNsense and pfSense firewalls, Tailscale devices will have difficulties making direct connections and often resort to using [relayed connections][docs-relayed-connections].
+在使用 OPNsense 与 pfSense 防火墙的网络中，Tailscale 设备难以建立直连，经常退回使用[中继连接][docs-relayed-connections]。
 
-However, there are options to allow direct connections, such as NAT Port Mapping Protocol (NAT-PMP), static NAT port mapping, and Universal Plug and Play (UPnP). For more information, refer to the instructions for [pfSense][docs-pfsense-direct-connections] and [OPNsense][docs-install-opnsense-direct-connections].
+不过，有一些可以允许直连的选项，例如 NAT 端口映射协议（NAT-PMP）、静态 NAT 端口映射以及通用即插即用（UPnP）。更多信息请参阅 [pfSense][docs-pfsense-direct-connections] 与 [OPNsense][docs-install-opnsense-direct-connections] 的说明。
 
-You can also run Tailscale directly on these routers using a plugin for pfSense and the [FreeBSD Tailscale package for OPNsense][docs-install-opnsense].
+你还可以使用适用于 pfSense 的插件与 [OPNsense 的 FreeBSD Tailscale 软件包][docs-install-opnsense]，直接在这些路由器上运行 Tailscale。
 
 ### Palo Alto Networks
 
-Using [Persistent Dynamic IP and Port][xt-paloalto-pdipp] in the NAT Policy translation type lets Tailscale to establish direct WireGuard connections through the firewall.
+在 NAT Policy 转换类型中使用 [Persistent Dynamic IP and Port][xt-paloalto-pdipp]，可让 Tailscale 穿透防火墙建立直接的 WireGuard 连接。
 
-*（图：Palo Alto Networks interface for 'NAT Policy Rule'. The 'Translated Packet' tab is displayed. 'Translation Type' is set to 'Persistent Dynamic IP and Port'.）*
+*（图：Palo Alto Networks 的 'NAT Policy Rule' 界面。显示 'Translated Packet' 标签页。'Translation Type' 设为 'Persistent Dynamic IP and Port'。）*
 
-Persistent Dynamic IP support is available in PAN-OS 11.1.1 and later. There is a separate topic for [Palo Alto Networks firewalls][docs-firewall-palo-alto-networks] covering more detail and several additional options.
+Persistent Dynamic IP 支持自 PAN-OS 11.1.1 起可用。[Palo Alto Networks 防火墙][docs-firewall-palo-alto-networks]另有单独主题，涵盖更多细节与若干附加选项。
 
 ### Sophos
 
-In networks with Sophos security gateways, the default firewall settings work well for Tailscale connectivity. It chooses a random port for the very first mapping, then uses that same port for all subsequent flows using the same source port. This lets Tailscale at the other end to know what port it should use for sending traffic.
+在使用 Sophos 安全网关的网络中，默认防火墙设置即可很好地支持 Tailscale 连接。它为第一个映射选择一个随机端口，随后对所有使用相同源端口的后续流使用同一端口。这让另一端的 Tailscale 知道应使用哪个端口发送流量。
 
-To confirm this, use the [Tailscale CLI][docs-cli] command [`tailscale netcheck`][docs-cli-netcheck] to ensure that `MappingVariesByDestIP: false` is the relevant point.
+要确认这一点，可使用 [Tailscale CLI][docs-cli] 的 [`tailscale netcheck`][docs-cli-netcheck] 命令，确保 `MappingVariesByDestIP: false` 这一关键项成立。
 
-*（图：Sophos interface for 'Rules and policies'. The 'NAT rules' panel is displayed. A 'NAT Default Network' is listed.）*
+*（图：Sophos 的 'Rules and policies' 界面。显示 'NAT rules' 面板。列出了一个 'NAT Default Network'。）*
 
 ### UniFi Gateways
 
-If you have a UniFi security gateway with threat detection enabled, make sure to allow peer-to-peer traffic for the nodes in your tailnet.
+如果你的 UniFi 安全网关启用了威胁检测，请确保为 tailnet 中的节点允许点对点流量。
 
-In UniFi Network version 9.0.107 and earlier, select to **Settings, Firewall & Security, Edit threat categories**, and uncheck **P2P**.
+在 UniFi Network 9.0.107 及更早版本中，依次进入 **Settings, Firewall & Security, Edit threat categories**，取消勾选 **P2P**。
 
-In UniFi Network version 9.0.108 and later, select to **Network, Security, Protection, Peer to Peer and Dark Web**, and uncheck **P2P**.
+在 UniFi Network 9.0.108 及更高版本中，依次进入 **Network, Security, Protection, Peer to Peer and Dark Web**，取消勾选 **P2P**。
 
-*（图：UniFi Network interface showing the Peer to Peer and Dark Web settings page with the P2P box unchecked.）*
+*（图：UniFi Network 界面，显示 Peer to Peer and Dark Web 设置页面，P2P 复选框未勾选。）*
 
-## Only allow traffic over Tailscale
+## 只允许经 Tailscale 的流量
 
-You can also use a firewall to restrict traffic in your network to require the use of Tailscale. For example, refer to instructions on [using ufw to lock down an Ubuntu server][docs-secure-server-ubuntu].
+你还可以使用防火墙限制网络中的流量，要求必须使用 Tailscale。例如，请参阅[使用 ufw 锁定 Ubuntu 服务器][docs-secure-server-ubuntu]的说明。
 
 [ar-cisco]: #cisco
 

@@ -1,127 +1,127 @@
 ---
-title: "Restrict device access with Fleet"
-description: "Use signals reported by Fleet as a device posture attribute for use in access rules."
+title: "使用 Fleet 限制设备访问"
+description: "将 Fleet 报告的信号用作设备态势属性，以便在访问规则中使用。"
 ---
 
-Last validated Jan 29, 2026
+最后验证于 Jan 29, 2026
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此集成适用于 [Standard、Premium 与 Enterprise 套餐](https://tailscale.com/pricing)。
 
-[Fleet Device Management][xt-fleet] collects a series of signals from its agent installed on each device that can be used to determine the security posture of a device.
+[Fleet Device Management][xt-fleet] 会从安装在每台设备上的代理收集一系列信号，可用于判断设备的安全态势。
 
-Tailscale can fetch these signals from Fleet and use them as device posture attributes in access rules, which can then be used by organizations to grant access to sensitive resources only to devices that have a high level of trust.
+Tailscale 可以从 Fleet 获取这些信号，并将它们用作访问规则中的设备态势属性，组织随后可以借此只向信任度高的设备授予对敏感资源的访问权限。
 
-You can achieve this with Tailscale's [device posture management][docs-device-posture] features:
+你可以借助 Tailscale 的[设备态势管理][docs-device-posture]功能实现这一点：
 
-* [Device Identity Collection][docs-device-identity-collection], which collects identifiers (for example, serial numbers), used to match devices in Tailscale to devices in Fleet.
-* Fleet posture integration, which synchronizes signals from Fleet to device posture attributes in Tailscale.
-* [Posture conditions in access rules][docs-device-posture-postures-and-conditions], which lets you configure access restrictions based on device attributes.
+* [设备身份收集（Device Identity Collection）][docs-device-identity-collection]：收集标识符（例如序列号），用于将 Tailscale 中的设备与 Fleet 中的设备相匹配。
+* Fleet 态势集成：将来自 Fleet 的信号同步到 Tailscale 中的设备态势属性。
+* [访问规则中的态势条件][docs-device-posture-postures-and-conditions]：让你能够基于设备属性配置访问限制。
 
-This guide explains how to enable Device Identity collection for your Tailscale network (tailnet) and configure Fleet posture integration.
+本指南介绍如何为你的 Tailscale 网络（tailnet）启用设备身份收集，以及如何配置 Fleet 态势集成。
 
-## What is Fleet posture integration?
+## 什么是 Fleet 态势集成？
 
-The Fleet integration syncs data between Fleet and Tailscale on a recurring schedule.
-During each sync, Tailscale performs the following actions:
+Fleet 集成会按周期性计划在 Fleet 与 Tailscale 之间同步数据。
+在每次同步期间，Tailscale 会执行以下操作：
 
-1. Fetches a list of hosts and their reported data from your Fleet account.
-2. Matches Fleet devices to devices in your tailnet based on serial numbers.
-3. Writes the Fleet data to device posture attributes on each matched device.
+1. 从你的 Fleet 账户获取主机列表及其上报的数据。
+2. 根据序列号将 Fleet 设备与 tailnet 中的设备相匹配。
+3. 将 Fleet 数据写入每台匹配设备的设备态势属性。
 
-The integration writes the following device posture attributes to matched devices:
+该集成会向匹配的设备写入以下设备态势属性：
 
 \[Missing snippet: attributes-fleet.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you set up the Fleet integration, make sure you have:
+在设置 Fleet 集成之前，请确保：
 
-* [Device Identity Collection][docs-device-identity-collection] enabled, with devices in your tailnet reporting identifiers.
-* A Fleet user account with the [Admin role][xt-fleet-roles] to create an API-only user for the integration.
-* A Tailscale user account with the [Admin role][docs-user-roles-admin] in the tailnet where you want to configure the integration.
+* 已启用[设备身份收集][docs-device-identity-collection]，并且 tailnet 中的设备正在上报标识符。
+* 你拥有一个具有 [Admin 角色][xt-fleet-roles]的 Fleet 用户账户，用于为该集成创建仅限 API 的用户。
+* 在你要配置集成的 tailnet 中，你拥有具有 [Admin 角色][docs-user-roles-admin]的 Tailscale 用户账户。
 
-## Configure the Fleet integration
+## 配置 Fleet 集成
 
-Tailscale uses a Fleet API token to authenticate with Fleet and fetch a list of devices and their data.
+Tailscale 使用 Fleet API 令牌向 Fleet 完成身份验证，并获取设备列表及其数据。
 
-To connect Fleet to Tailscale, first create an API-only user and generate its API token in Fleet. Then enter the token and your Fleet URL in the Tailscale admin console. Tailscale uses these details to fetch device data from Fleet.
+要将 Fleet 连接到 Tailscale，请先在 Fleet 中创建一个仅限 API 的用户并生成其 API 令牌。然后在 Tailscale 管理控制台中输入该令牌与你的 Fleet URL。Tailscale 会使用这些信息从 Fleet 获取设备数据。
 
-In Fleet:
+在 Fleet 中：
 
-1. Create an API-only user for the Tailscale integration.
-2. Assign the Admin role to that API-only user in Fleet.
-3. Generate an API token for that API-only user in Fleet.
+1. 为 Tailscale 集成创建一个仅限 API 的用户。
+2. 在 Fleet 中为该仅限 API 的用户分配 Admin 角色。
+3. 在 Fleet 中为该仅限 API 的用户生成一个 API 令牌。
 
-In Tailscale:
+在 Tailscale 中：
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the admin console.
-2. Under **Device Posture Integrations**, locate the Fleet integration and select **Connect**.
-3. Enter your **Fleet URL** and the **API Token** generated in Fleet.
-4. Select **Connect to Fleet**.
+1. 打开管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
+2. 在 **Device Posture Integrations** 下找到 Fleet 集成，选择 **Connect**。
+3. 输入你的 **Fleet URL** 与在 Fleet 中生成的 **API Token**。
+4. 选择 **Connect to Fleet**。
 
-Refer to the [Fleet documentation][xt-fleet-api-only-user] for instructions on creating an API-only user and generating an API token.
+有关创建仅限 API 用户与生成 API 令牌的说明，请参阅 [Fleet 文档][xt-fleet-api-only-user]。
 
-## Create Fleet policies
+## 创建 Fleet 策略
 
-[Fleet policies][xt-fleet-policies] let you monitor whether your devices meet specific security and compliance criteria.
-These policies are specific to your Fleet account.
+[Fleet 策略][xt-fleet-policies]让你能够监控设备是否满足特定的安全与合规标准。
+这些策略专属于你的 Fleet 账户。
 
-The Fleet integration can add [device attributes][docs-node-attributes] to devices that are passing Fleet policies.
+Fleet 集成可以为通过了 Fleet 策略的设备添加[设备属性][docs-node-attributes]。
 
-To enable adding these device attributes, add the string `Tailscale: fleetPolicy:{attributeName}` to your Fleet policy description.
+要启用添加这些设备属性，请在你的 Fleet 策略描述中加入字符串 `Tailscale: fleetPolicy:{attributeName}`。
 
-* For each Fleet policy a device passes, the Fleet integration will add a `fleetPolicy:{attributeName} = true` device attribute to that device.
-* For each Fleet policy a device fails, the Fleet integration will add a `fleetPolicy:{attributeName} = false` device attribute to that device.
-* If multiple Fleet policies have the same `Tailscale: fleetPolicy:{attributeName}` string in their policy description, the device attribute will be `true` if any of the matching policies are passing, otherwise false.
+* 对于设备通过的每条 Fleet 策略，Fleet 集成都会为该设备添加一个 `fleetPolicy:{attributeName} = true` 设备属性。
+* 对于设备未通过的每条 Fleet 策略，Fleet 集成都会为该设备添加一个 `fleetPolicy:{attributeName} = false` 设备属性。
+* 如果多条 Fleet 策略的策略描述中含有相同的 `Tailscale: fleetPolicy:{attributeName}` 字符串，那么只要任一匹配的策略通过，设备属性就为 `true`，否则为 false。
 
-You can check for the presence of a given Fleet policy in a device's attributes in access rules, then adjust its access accordingly.
+你可以在访问规则中检查设备的属性里是否存在某个特定的 Fleet 策略，然后据此调整其访问权限。
 
-*（图：The Fleet configuration panel showing a policy which includes \`Tailscale: fleetPolicy:builtinAntivirus\` to set a \`fleetPolicy:builtinAntivirus\` device attribute on passing devices.）*
+*（图：Fleet 配置面板，显示一条策略，其中包含 \`Tailscale: fleetPolicy:builtinAntivirus\`，用于在通过的设备上设置 \`fleetPolicy:builtinAntivirus\` 设备属性。）*
 
-## Configure Fleet posture integration
+## 配置 Fleet 态势集成
 
-To configure Tailscale to fetch data about devices from Fleet:
+要让 Tailscale 从 Fleet 获取设备数据：
 
-1. Open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面。
 
-2. Under the **Device Posture Integrations** section, locate the Fleet integration, then select **Connect**.
+2. 在 **Device Posture Integrations** 部分下找到 Fleet 集成，然后选择 **Connect**。
 
-3. Enter your **Fleet URL** and **API Token**.
+3. 输入你的 **Fleet URL** 与 **API Token**。
 
-   *（图：The configuration screen for connecting to Fleet from the Tailscale admin console.）*
+   *（图：在 Tailscale 管理控制台中连接 Fleet 的配置界面。）*
 
-4. Select **Connect to Fleet**.
+4. 选择 **Connect to Fleet**。
 
-## Review the integration status
+## 检查集成状态
 
-Next, check to make sure the Fleet integration has run successfully.
+接下来，确认 Fleet 集成是否已成功运行。
 
-1. Go to the **Device Posture Integrations** section of the [Device management](https://console.tailscale.com/admin/settings/device-management) page.
-2. Locate the Fleet integration under the **Integrations** section.
+1. 前往 [Device management](https://console.tailscale.com/admin/settings/device-management) 页面的 **Device Posture Integrations** 部分。
+2. 在 **Integrations** 部分下找到 Fleet 集成。
 
-After the Fleet integration runs successfully, it shows the time of the most recent sync, the number of synced devices, and any errors that occurred while synchronizing.
+Fleet 集成成功运行后，会显示最近一次同步的时间、已同步的设备数量，以及同步期间发生的任何错误。
 
-*（图：Integrations: Fleet: Last sync 4 minutes ago, 1 match between 2 Tailscale devices with identifies and 4 Fleet hosts）*
+*（图：Integrations: Fleet：Last sync 为 4 分钟前，2 台带有标识符的 Tailscale 设备与 4 台 Fleet 主机之间匹配到 1 台。）*
 
-## Check device attributes
+## 检查设备属性
 
-After you set up the Fleet integration, you can confirm that Tailscale is writing the new device attributes for your Fleet devices from the Tailscale admin console.
+设置好 Fleet 集成后，你可以在 Tailscale 管理控制台中确认 Tailscale 正在为你的 Fleet 设备写入新的设备属性。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-2. Select a device to inspect.
-3. Check the device attributes for the device in the **Machine Details** section. This section should include the set of `fleet:` and `fleetPolicy:` attributes listed previously.
+1. 打开 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 选择一台要检查的设备。
+3. 在 **Machine Details** 部分查看该设备的设备属性。此部分应包含前文列出的 `fleet:` 与 `fleetPolicy:` 属性集合。
 
-*（图：View of the machine attributes in the Machines page.）*
+*（图：Machines 页面中机器属性的视图。）*
 
-> **Tip:**
+> **提示：**
 >
-> You can also check device attributes using the [Tailscale API][co-device-posture-get-via-api].
+> 你也可以使用 [Tailscale API][co-device-posture-get-via-api] 检查设备属性。
 
-## Adjust Tailscale access rules
+## 调整 Tailscale 访问规则
 
-After you set up the Fleet posture integration, and your devices have device posture attributes that reflect their signals as reported by Fleet, you can use those device posture attributes as part of your posture rules.
+设置好 Fleet 态势集成，并且你的设备拥有了反映 Fleet 所上报信号的设备态势属性之后，你就可以将这些设备态势属性用作态势规则的一部分。
 
-For example, to only permit access to `tag:production` from devices that are managed by Fleet, you can create a new posture and use it as part of a corresponding access rule:
+例如，要只允许由 Fleet 管理的设备访问 `tag:production`，你可以创建一个新的态势（posture），并将其用作相应访问规则的一部分：
 
 ```json
 "postures": {

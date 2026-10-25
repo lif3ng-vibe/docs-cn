@@ -1,37 +1,37 @@
 ---
-title: "SSH into a Linux VM"
-description: "Use Tailscale SSH to connect securely to a Linux VM."
+title: "SSH 连接 Linux 虚拟机"
+description: "使用 Tailscale SSH 安全连接到 Linux 虚拟机。"
 ---
 
-Last validated Dec 8, 2025
+最后验证于 Dec 8, 2025
 
-This topic provides details about making an SSH session to a Linux VM on your Tailscale network (known as a tailnet).
+本主题详细介绍如何通过 SSH 会话连接到 Tailscale 网络（即 tailnet）中的 Linux 虚拟机。
 
-## Prerequisites
+## 前提条件
 
-* You need a [Tailscale account][docs-install]
-* You need a Linux VM. The following topics provide details for setting up a Linux VM using common cloud providers:
-  * [Create a Linux VM on Azure][xt-entra-vm]
-  * [Create a Linux VM on AWS][xt-aws-ec2-get-started]
-  * [Create a Linux VM on GCP][xt-google-linux-vm-create]
-* You need [Tailscale installed on your Linux VM][docs-install-linux]
-* You need [Tailscale installed on your local machine][co-download]
+* 你需要一个 [Tailscale 账户][docs-install]
+* 你需要一台 Linux 虚拟机。以下主题介绍了如何使用常见云服务商搭建 Linux 虚拟机：
+  * [在 Azure 上创建 Linux 虚拟机][xt-entra-vm]
+  * [在 AWS 上创建 Linux 虚拟机][xt-aws-ec2-get-started]
+  * [在 GCP 上创建 Linux 虚拟机][xt-google-linux-vm-create]
+* 你需要在该 Linux 虚拟机上[安装 Tailscale][docs-install-linux]
+* 你需要在本地机器上[安装 Tailscale][co-download]
 
-## Configure Tailscale SSH
+## 配置 Tailscale SSH
 
-1. Start by accessing your VM to install Tailscale.
+1. 首先连接到虚拟机，安装 Tailscale。
 
-   > **Note:**
+   > **注意：**
    >
-   > This will most likely be the cloud-provided SSH mechanism and may require you to **temporarily** open up port `22` on that VM to your corporate network or the internet.
+   > 这一步通常使用云服务商自带的 SSH 方式，可能需要**临时**在该虚拟机上向公司网络或互联网开放端口 `22`。
 
-2. In a terminal window on the VM, run the [`tailscale set`][docs-tailscale-up] command to advertise SSH for that VM:
+2. 在虚拟机的终端窗口中，运行 [`tailscale set`][docs-tailscale-up] 命令，为该虚拟机启用 SSH：
 
    ```shell
    tailscale set --ssh
    ```
 
-3. Open the [Access controls](https://console.tailscale.com/admin/acls) page of the Tailscale admin console and add the following lines to your tailnet policy file to allow network connectivity to the VM:
+3. 打开 Tailscale 管理控制台的 [访问控制](https://console.tailscale.com/admin/acls) 页面，在 tailnet 策略文件中添加以下行，以允许到该虚拟机的网络连接：
 
    ```json
    "grants": [
@@ -45,7 +45,7 @@ This topic provides details about making an SSH session to a Linux VM on your Ta
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-   You can find your VM's Tailscale IP address on the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, and you can find your Tailscale username on the [Users](https://console.tailscale.com/admin/users) page. You don't need to replace existing access control policies if you have any, just add this new rule. Here's an example:
+   你可以在管理控制台的 [机器](https://console.tailscale.com/admin/machines) 页面找到虚拟机的 Tailscale IP 地址，在 [用户](https://console.tailscale.com/admin/users) 页面找到你的 Tailscale 用户名。如果已有访问控制策略，无需替换，只需添加这条新规则。示例如下：
 
    ```json
    "grants": [
@@ -59,7 +59,7 @@ This topic provides details about making an SSH session to a Linux VM on your Ta
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-4. In the same tab, add the following rules to the SSH section of your tailnet policy file to allow SSH access to the VM:
+4. 在同一标签页中，在 tailnet 策略文件的 `ssh` 部分添加以下规则，以允许通过 SSH 访问该虚拟机：
 
    ```json
    "ssh": [
@@ -73,7 +73,7 @@ This topic provides details about making an SSH session to a Linux VM on your Ta
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-5. If you have a local username (such as `local-user`) defined on the VM, you should add it to the `users` array in the `ssh` section. You don't need to replace existing SSH policies if you have any, just add this new rule. Here's an example:
+5. 如果虚拟机上定义了本地用户名（例如 `local-user`），应将其添加到 `ssh` 部分的 `users` 数组中。如果已有 SSH 策略，无需替换，只需添加这条新规则。示例如下：
 
    ```json
    "ssh": [
@@ -87,25 +87,25 @@ This topic provides details about making an SSH session to a Linux VM on your Ta
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-## Use Tailscale SSH
+## 使用 Tailscale SSH
 
-1. In a terminal window on your local machine, SSH to your VM:
+1. 在本地机器的终端窗口中，通过 SSH 连接到你的虚拟机：
 
    ```shell
    ssh <your-vm-ip-address>
    ```
 
-2. If you need to use your local account just reference it before the IP address (`user@IP`) when running the SSH command. You can also use the [MagicDNS][docs-magicdns] hostname of the machine. For example:
+2. 如果需要使用本地账户，只需在运行 SSH 命令时把账户名写在 IP 地址前面（`user@IP`）。也可以使用机器的 [MagicDNS][docs-magicdns] 主机名。例如：
 
    ```shell
    ssh local-user@100.64.65.66
    ```
 
-3. If you haven't already, you can close the SSH port on your cloud VM and re-run the Tailscale SSH command to verify it is working.
+3. 如果还没关闭，可以关闭云虚拟机上的 SSH 端口，然后重新运行 Tailscale SSH 命令，验证其是否正常工作。
 
-> **Note:**
+> **注意：**
 >
-> We strongly recommend that you do not keep the SSH port exposed for prolonged periods of time especially to the internet. If you need to open this port for this test, after you are done testing, make sure you close the port or delete your test VM.
+> 强烈建议不要长时间开放 SSH 端口，尤其不要长时间面向互联网开放。如果你为本次测试开放了该端口，测试完成后请务必关闭端口或删除测试虚拟机。
 
 [co-download]: https://tailscale.com/download
 

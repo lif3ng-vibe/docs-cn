@@ -1,47 +1,47 @@
 ---
-title: "Access a PostgreSQL database using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets users connect to PostgreSQL using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials."
+title: "使用 Tailscale PAM 访问 PostgreSQL 数据库"
+description: "[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 PostgreSQL，而无需共享数据库凭证。"
 ---
 
-Last validated Aug 18, 2026
+最后验证于 Aug 18, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets users connect to PostgreSQL using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials.
+[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 PostgreSQL，而无需共享数据库凭证。
 
-You can control who has access to the database, apply fine-grained permissions, and keep an audit trail of database sessions. Users can connect from the browser or continue using their preferred PostgreSQL client.
+你可以控制谁有权访问数据库、应用细粒度权限，并保留数据库会话的审计跟踪。用户可以从浏览器连接，也可以继续使用自己惯用的 PostgreSQL 客户端。
 
-This guide walks you through creating a PostgreSQL PAM service, connecting to it, and reviewing the resulting session activity.
+本指南带你创建 PostgreSQL PAM 服务、连接该服务并查看产生的会话活动。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，确认你具备以下条件：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed, online, and able to reach the PostgreSQL server.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native database client.
-* A PostgreSQL server that the connector can reach.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
+* 一个已安装、在线且能访问 PostgreSQL 服务器的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果打算使用原生数据库客户端，你用来连接的设备上需已[安装][docs-install] Tailscale 并登录。
+* 连接器能够访问的一台 PostgreSQL 服务器。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
 
-You can use your own PostgreSQL server, the Tailscale PAM sandbox server, or a local Docker container.
+你可以使用自己的 PostgreSQL 服务器、Tailscale PAM 沙箱服务器，或本地 Docker 容器。
 
-If you're using your own PostgreSQL server, you'll need its hostname or IP address, port, username, and password.
+如果使用自己的 PostgreSQL 服务器，你需要它的主机名或 IP 地址、端口、用户名和密码。
 
-If you just want to try Tailscale PAM, you can use the public PostgreSQL sandbox:
+如果你只是想试用 Tailscale PAM，可以使用公共 PostgreSQL 沙箱：
 
-| Setting  | Value                        |
-| -------- | ---------------------------- |
-| Hostname | `psql.playground.border0.io` |
-| Port     | `5432`                       |
-| Username | `border0`                    |
-| Password | `Border0<3Psql`              |
+| 设置 | 值 |
+| --- | --- |
+| 主机名 | `psql.playground.border0.io` |
+| 端口 | `5432` |
+| 用户名 | `border0` |
+| 密码 | `Border0<3Psql` |
 
-For information about the other sandbox servers available for testing, refer to [Tailscale PAM FAQ][docs-pam-faq-sandbox].
+关于其他可用于测试的沙箱服务器的信息，参见 [Tailscale PAM 常见问题][docs-pam-faq-sandbox]。
 
-## Run a local PostgreSQL server with Docker
+## 用 Docker 运行本地 PostgreSQL 服务器
 
-If you're using your own PostgreSQL server or the Tailscale PAM sandbox, skip to the next step.
+如果你使用自己的 PostgreSQL 服务器或 Tailscale PAM 沙箱，请跳到下一步。
 
-For a quick local test, start a PostgreSQL server with Docker:
+如需快速本地测试，用 Docker 启动一个 PostgreSQL 服务器：
 
 ```shell
 docker run --name tailscale-pam-postgres --rm \
@@ -49,73 +49,73 @@ docker run --name tailscale-pam-postgres --rm \
   -d -p 5432:5432 postgres
 ```
 
-Replace `<your-database-password>` with a password of your choice. This starts a PostgreSQL server on port `5432` with the `postgres` user and the password that you specified.
+把 `<your-database-password>` 替换为你自选的密码。这会在端口 `5432` 上启动一个 PostgreSQL 服务器，用户为 `postgres`，密码为你指定的值。
 
-Before continuing, verify that you can connect to it:
+继续之前，先验证你能连接到它：
 
 ```shell
 psql -h 127.0.0.1 -U postgres -d postgres
 ```
 
-When prompted, enter the password that you specified.
+收到提示时，输入你指定的密码。
 
-After you connect, run a basic query:
+连接后，运行一条基本查询：
 
 ```sql
 SELECT VERSION();
 ```
 
-If the query succeeds, your PostgreSQL server is ready.
+如果查询成功，说明你的 PostgreSQL 服务器已就绪。
 
-If the Tailscale PAM connector runs on the same device as Docker, you can use `localhost` and port `5432` when you configure the PAM service. If the connector runs somewhere else, use an IP address or hostname that the connector can reach.
+如果 Tailscale PAM 连接器与 Docker 运行在同一台设备上，你在配置 PAM 服务时可以使用 `localhost` 和端口 `5432`。如果连接器运行在其他地方，请使用连接器能访问到的 IP 地址或主机名。
 
-## Create a PostgreSQL PAM service
+## 创建 PostgreSQL PAM 服务
 
-Create a database [service][docs-pam-services] and link it to your connector.
+创建一个数据库[服务][docs-pam-services]，并将其关联到你的连接器。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择 **Add service**。
 
-3. Select **PAM service**.
+3. 选择 **PAM service**。
 
-4. Select **PostgreSQL**.
+4. 选择 **PostgreSQL**。
 
-5. Select **Continue**.
+5. 选择 **Continue**。
 
-6. Provide a name for your service.
+6. 为服务起一个名称。
 
-   Use a name that will make the database suitable for users to recognize when they browse the services they can access.
+   起一个便于用户在浏览可访问服务时辨认该数据库的名字。
 
-7. (Optional) Provide a description for the service.
+7. （可选）为服务提供描述。
 
-8. Choose whether the **Session Recording** option is enabled or disabled.
+8. 选择 **Session Recording** 选项是启用还是禁用。
 
-9. Select the Tailscale PAM connector that can reach your PostgreSQL server.
+9. 选择能够访问你的 PostgreSQL 服务器的 Tailscale PAM 连接器。
 
-10. Select **Continue**.
+10. 选择 **Continue**。
 
-11. For **Upstream hostname**, enter hostname or IP address of the PostgreSQL server.
+11. 在 **Upstream hostname** 中输入 PostgreSQL 服务器的主机名或 IP 地址。
 
-12. For **Port**, enter the PostgreSQL port. The default is `5432`.
+12. 在 **Port** 中输入 PostgreSQL 端口。默认是 `5432`。
 
-13. For **Authentication Type**, select **Username and Password**.
+13. 在 **Authentication Type** 中选择 **Username and Password**。
 
-14. For **Username**, enter the username Tailscale PAM should use to connect to PostgreSQL.
+14. 在 **Username** 中输入 Tailscale PAM 连接 PostgreSQL 应使用的用户名。
 
-15. For **Password**, enter the password for that user.
+15. 在 **Password** 中输入该用户的密码。
 
-    If you used the local Docker example and the connector runs on the same device, use `localhost`, port `5432`, username `postgres`, and the password that you used for the `<your-database-password>` placeholder.
+    如果你使用的是本地 Docker 示例且连接器在同一设备上运行，则使用 `localhost`、端口 `5432`、用户名 `postgres`，以及你为 `<your-database-password>` 占位符设置的密码。
 
-    If you're using the Tailscale PAM sandbox, use the sandbox connection details from the prerequisites above. If you're using your own PostgreSQL server, enter the connection details for that server.
+    如果你使用的是 Tailscale PAM 沙箱，请使用上文前提条件中的沙箱连接信息。如果你使用自己的 PostgreSQL 服务器，请输入该服务器的连接信息。
 
-16. Select **Save**.
+16. 选择 **Save**。
 
-Your database service should be created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+数据库服务创建完成后，你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the PostgreSQL service
+## 为 PostgreSQL 服务授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the service. For example, the following grant permits any source to connect to PAM database services:
+在用户连接之前，确保有 Tailscale PAM [授权（grant）][docs-grants]让他们能访问该服务。例如，以下授权允许任何来源连接到 PAM 数据库服务：
 
 ```json
 "grants": [
@@ -139,94 +139,94 @@ Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives t
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, you can restrict the `src` and `dst` fields to control which users, groups, devices, or tags can access specific services.
+> 这是一条范围很宽的授权，适合入门使用。在生产环境中，你可以限制 `src` 和 `dst` 字段，以控制哪些用户、组、设备或标签可以访问特定服务。
 >
-> You can also define more advanced database permissions, such as read-only access.
+> 你还可以定义更高级的数据库权限，例如只读访问。
 >
-> For more PAM grant examples and information about fine-grained access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+> 更多 PAM 授权示例以及细粒度访问控制的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-## Connect to the PostgreSQL database
+## 连接到 PostgreSQL 数据库
 
-The primary way to connect is through the Tailscale client, which can launch your preferred PostgreSQL client. You can also connect entirely from your browser using the Tailscale [Border0 web client](https://my.tailscale.com).
+主要的连接方式是通过 Tailscale 客户端，它可以启动你惯用的 PostgreSQL 客户端。你也可以使用 Tailscale 的 [Border0 web 客户端](https://my.tailscale.com)完全从浏览器连接。
 
-### Connect with your preferred PostgreSQL client
+### 使用你惯用的 PostgreSQL 客户端连接
 
-Use the Tailscale client to quickly open the database with a PostgreSQL client already installed on your device.
+使用 Tailscale 客户端，可快速用设备上已安装的 PostgreSQL 客户端打开数据库。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your PostgreSQL service.
-4. Choose the database client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 PostgreSQL 服务。
+4. 选择你想使用的数据库客户端。
 
-The Tailscale client scans your device for well-known PostgreSQL-compatible database clients and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备，寻找知名的兼容 PostgreSQL 的数据库客户端，并列出它找到的客户端。选择其中一个即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the clients shown in the Tailscale client. If your preferred database client isn't listed, open it directly and use the name of the Tailscale PAM service as the hostname and `5432` as the port. You don't need to know or manage the upstream PostgreSQL credentials.
+你并不局限于 Tailscale 客户端中列出的客户端。如果你惯用的数据库客户端不在列表中，可以直接打开它，使用 Tailscale PAM 服务的名称作为主机名、`5432` 作为端口。你无需了解或管理上游 PostgreSQL 凭证。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection and manages the upstream database connection on your behalf. This means you can continue using your familiar database tools without needing the PostgreSQL credentials.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权，并代表你管理上游数据库连接。这意味着你可以继续使用熟悉的数据库工具，而无需 PostgreSQL 凭证。
 
-For example, you can connect with the standard `psql` command-line client:
+例如，你可以使用标准的 `psql` 命令行客户端连接：
 
 ```shell
 psql -h <service-name> -p 5432 -d <database-name>
 ```
 
-Replace `<service-name>` with the name of your PostgreSQL PAM service and `<database-name>` with the database you want to access. If you're using the local Docker example, the default database is `postgres`:
+把 `<service-name>` 替换为你的 PostgreSQL PAM 服务名称，把 `<database-name>` 替换为你要访问的数据库。如果你使用的是本地 Docker 示例，默认数据库是 `postgres`：
 
 ```shell
 psql -h <service-name> -p 5432 -d postgres
 ```
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect with the web-based PostgreSQL client. The browser client runs a Tailscale client directly in your browser using WebAssembly (Wasm), so there's nothing else to install.
+你也可以使用基于 Web 的 PostgreSQL 客户端连接。浏览器客户端使用 WebAssembly（Wasm）直接在浏览器中运行 Tailscale 客户端，因此无需安装其他东西。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
-2. Select the PostgreSQL service you want to access.
-3. Select **Connect** in the upper-right corner, and the Tailscale PostgreSQL browser client opens.
-4. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择你想访问的 PostgreSQL 服务。
+3. 选择右上角的 **Connect**，Tailscale PostgreSQL 浏览器客户端就会打开。
+4. 如有提示，使用你的 Tailscale 身份进行认证。
 
-You can now run queries against the PostgreSQL database directly from your browser.
+现在你可以直接从浏览器对 PostgreSQL 数据库执行查询了。
 
-The browser client appears as an [ephemeral][docs-ephemeral-nodes] device in your tailnet. If [device approval][docs-device-approval] is enabled for the tailnet, an admin must approve the browser device before it can connect.
+浏览器客户端在你的 tailnet 中显示为一台[临时（ephemeral）][docs-ephemeral-nodes]设备。如果 tailnet 启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Secure the upstream credentials
+## 保护上游凭证
 
-In the example above, the upstream PostgreSQL username and password are stored as part of the PAM service configuration. Tailscale stores these credentials in encrypted form, but for production environments we recommend keeping upstream credentials local to the connector whenever possible.
+在上面的示例中，上游 PostgreSQL 的用户名和密码作为 PAM 服务配置的一部分保存。Tailscale 以加密形式存储这些凭证，但对于生产环境，我们建议尽量把上游凭证保留在连接器本地。
 
-You can configure the connector to load credentials dynamically from a supported secret source instead of storing the credentials directly in the service configuration. For example, you can load credentials from an environment variable, a local file, or a secrets management system.
+你可以把连接器配置为从受支持的密钥源动态加载凭证，而不是把凭证直接存储在服务配置中。例如，可以从环境变量、本地文件或密钥管理系统加载凭证。
 
-For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+更多信息参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
-By default, Tailscale PAM attempts to establish the connection between the connector and the upstream PostgreSQL server using TLS. If the PostgreSQL server doesn't support TLS, the connection falls back to a non-TLS connection.
+默认情况下，Tailscale PAM 会尝试使用 TLS 建立连接器与上游 PostgreSQL 服务器之间的连接。如果 PostgreSQL 服务器不支持 TLS，连接会回退为非 TLS 连接。
 
-## Review session details and recordings
+## 查看会话详情与录制
 
-Tailscale PAM gives you visibility into connections to your PostgreSQL service.
+Tailscale PAM 让你清楚了解与 PostgreSQL 服务的连接情况。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your PostgreSQL service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 PostgreSQL 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The service that was accessed.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 被访问的服务。
 
-When session recording is enabled, you can also review the SQL queries for the session.
+启用会话录制后，你还可以查看该会话的 SQL 查询。
 
-This gives you a direct answer to two useful questions: who accessed the database, and what did they do while they were there?
+这能直接回答两个很有用的问题：谁访问了数据库？他们在里面做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to your PostgreSQL service, the most common issue is that the connector can't connect to the upstream database.
+如果你无法连接 PostgreSQL 服务，最常见的问题是连接器无法连接上游数据库。
 
-First, confirm that the connector is online and can reach the PostgreSQL hostname and port. Also verify that the username and password in the service configuration are valid.
+首先，确认连接器在线且能访问 PostgreSQL 的主机名和端口。同时验证服务配置中的用户名和密码有效。
 
-If you're using the Docker example, remember that `localhost` refers to the device running the connector. If your connector runs on a different device, use a hostname or IP address that is reachable from that device.
+如果你使用的是 Docker 示例，请记住 `localhost` 指的是运行连接器的设备。如果连接器运行在其他设备上，请使用从该设备可达的主机名或 IP 地址。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the PAM [session logs][docs-pam-session-logs]. Failed sessions often include information about why the connection couldn't be established, which can help narrow down whether the problem is network connectivity, authentication, or the upstream database itself.
+如果以上排查步骤都无法解决问题，请查看连接器日志以及 PAM [会话日志][docs-pam-session-logs]中失败会话的详情。失败的会话通常包含连接无法建立的原因，这有助于判断问题出在网络连通性、认证还是上游数据库本身。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

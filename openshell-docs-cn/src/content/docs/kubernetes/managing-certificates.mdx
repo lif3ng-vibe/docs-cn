@@ -1,0 +1,92 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "管理证书"
+sidebar-title: "管理证书"
+description: "配置 OpenShell Helm chart 使用 cert-manager 完成 mTLS 证书签发与自动续期。"
+keywords: "生成式 AI, 网络安全, Kubernetes, cert-manager, PKI, TLS, mTLS, 证书"
+position: 4
+---
+import { Aside } from '@astrojs/starlight/components';
+
+OpenShell 网关使用 TLS 与沙箱监管器通信。监管器 Pod 只接收网关 CA，不接收客户端证书或私钥，并用沙箱 JWT 认证其 RPC。启用网关 mTLS 用户认证时，生成的客户端证书可以认证用户客户端；共享部署也可以改为配置 OIDC 或受信任的访问代理。Helm chart 提供两种预置和管理证书包的方式：
+
+| 模式 | 适用场景 |
+|---|---|
+| 内置 `pkiInitJob`（默认） | 默认路径。安装期间由预安装 Kubernetes Job 生成自签名 CA 与证书。无额外依赖。 |
+| cert-manager | 需要由常驻 controller 管理证书自动轮换的生产部署。 |
+
+本页其余部分介绍如何切换到 cert-manager。内置模式无需任何配置。
+
+<Aside type="note">
+设置 `certManager.enabled=true` 后，TLS 证书生成由 cert-manager 负责。chart 仍会运行仅限 JWT 的初始化钩子，因为 cert-manager 不会创建网关所需的沙箱 JWT 签名 Secret。即使 `pkiInitJob.enabled` 保持 true，cert-manager 的优先级也照常生效。
+</Aside>
+
+## 安装 cert-manager
+
+从 OCI registry 安装 cert-manager，并启用 CRD 支持：
+
+```shell
+helm upgrade --install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+  --version v1.20.3 \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=true \
+  --wait
+```
+
+确认 cert-manager Pod 正在运行：
+
+```shell
+kubectl -n cert-manager get pods
+```
+
+## 使用 cert-manager PKI 安装 OpenShell
+
+安装或升级 chart 时传入 cert-manager 的 values 覆盖：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set certManager.enabled=true
+```
+
+chart 创建一个自签名 CA，从中签发服务器与客户端证书，证书到期前的续期由 cert-manager 处理。chart 还会以仅限 JWT 模式运行预安装钩子，创建网关的沙箱 JWT 签名 Secret。该 Secret 独立于 cert-manager 的 TLS 证书 Secret，挂载在 `/etc/openshell-jwt`。
+
+## 为服务器证书使用真实 Issuer
+
+默认情况下，cert-manager 用 chart 创建的自签名 CA 同时签发服务器与客户端证书；证书会自动轮换，但服务器证书仍不受公共信任。`certManager.serverIssuerRef` 可以覆盖服务器 `Certificate` 资源上的 `issuerRef`，改为指向真实的 `Issuer` 或 `ClusterIssuer`，例如 LetsEncrypt/ACME issuer：
+
+```shell
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version <version> \
+  --namespace openshell \
+  --set certManager.enabled=true \
+  --set certManager.serverIssuerRef.name=letsencrypt-prod \
+  --set certManager.serverIssuerRef.kind=ClusterIssuer \
+  --set certManager.serverDnsNames[0]=openshell.example.com
+```
+
+### 双证书架构
+
+设置 `serverIssuerRef` 后，chart 会创建**两个**服务器证书：
+
+1. **内部证书**（`openshell-server-tls`）：由 chart CA 签名，带内部 SAN（`*.svc.cluster.local`、`localhost` 等）。
+2. **外部证书**（`openshell-server-external-tls`）：由配置的 issuer（如 ACME）签名，SAN 只包含 `certManager.serverDnsNames` 中的主机名。
+
+网关用 **SNI** 选择要出示的证书：监管器通过内部服务名连接，收到内部证书（对照它们已信任的 chart CA 校验）；通过 Route 或 ingress 连接的 CLI 用户使用外部主机名，收到 ACME 证书。这样监管器的信任始终只固定在运维的 chart CA 上——无需信任 WebPKI 根。
+
+<Aside type="note">
+按照 CA/Browser Forum 基线要求，Let's Encrypt 等公共 CA 会拒绝包含纯内部名称的证书请求。chart 在安装时校验这一点：设置了 `serverIssuerRef` 而 `certManager.serverDnsNames` 中含有纯内部条目时，安装会失败并给出可操作的错误信息。
+
+你**不需要**把 `gatewayConfig.openshell.drivers.kubernetes.grpc_endpoint` 设为外部主机名。监管器会自动通过内部服务名连接。把 `grpc_endpoint` 设为外部主机名会让监管器（经 SNI）收到 ACME 证书，而它们无法对照 chart CA 校验该证书。
+</Aside>
+
+即使设置了 `serverIssuerRef`，默认的 `clientCaFromServerTlsSecret=true` 也是正确的：内部服务器证书始终由 chart CA 签名（与签发客户端证书的是同一个 CA），因此其 `ca.crt` 就是 mTLS 校验所需的正确信任锚。
+
+## 后续步骤
+
+返回[安装](/kubernetes/setup)完成安装。要在 OpenShift 上用真实证书对外暴露网关，参见 [OpenShift](/kubernetes/openshift)。

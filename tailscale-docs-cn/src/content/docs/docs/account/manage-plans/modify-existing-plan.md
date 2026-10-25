@@ -1,53 +1,53 @@
 ---
-title: "Modify an existing plan"
-description: "You can update your Tailscale plan at any time to adjust the number of seats or add features like Mullvad exit nodes. Changes take effect immediately and are prorated based on your billing cycle."
+title: "修改现有套餐"
+description: "你可以随时更新 Tailscale 套餐，调整席位数或添加 Mullvad 出口节点等功能。更改立即生效，并根据你的账单周期按比例计费。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-You can update your Tailscale plan at any time to adjust the number of seats or add features like Mullvad exit nodes. Changes take effect immediately and are prorated based on your billing cycle.
+你可以随时更新 Tailscale 套餐，调整席位数或添加 Mullvad 出口节点等功能。更改立即生效，并根据你的账单周期按比例计费。
 
-> **Note:**
+> **注意：**
 >
-> You cannot add seats to the Personal plan. If you want more than the six free users in your tailnet, you must upgrade your plan.
+> 你无法为 Personal 套餐添加席位。如果你想在 tailnet 中拥有超过 6 个免费用户，必须升级套餐。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) for your tailnet to modify your existing plan.
+> 你需要是你 tailnet 的[所有者、管理员或账单管理员](/docs/reference/user-roles)才能修改现有套餐。
 
-## Considerations
+## 注意事项
 
-When updating your Tailscale plan consider the following:
+在更新 Tailscale 套餐时，请注意以下几点：
 
-* Feature availability may change depending on the plan you select.
-* Monthly user counts are calculated at the end of the billing cycle.
-* Charges are prorated based on time spent on each plan during the billing period.
+* 功能可用性可能会因你选择的套餐而变化。
+* 月度用户数在账单周期结束时计算。
+* 费用按你在账单周期内各套餐上使用的时间按比例计算。
 
-For in-depth details about available plans and features, refer to our [Pricing][co-pricing] page.
+有关可用套餐和功能的详细信息，请参阅我们的[定价][co-pricing]页面。
 
-## Add or remove seats
+## 添加或移除席位
 
-If you are on a paid plan and want to add more seats for your tailnet:
+如果你正在使用付费套餐，并想为 tailnet 添加更多席位：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select **Edit amount**.
-3. In **New total seats**, enter the total amount of seats that you want for your tailnet.
-4. Select **Continue to payment details**.
-5. Verify your email address, billing address, and payment method, then select **Confirm changes**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Edit amount**。
+3. 在 **New total seats** 中，输入你想要的 tailnet 总席位数。
+4. 选择 **Continue to payment details**。
+5. 核对你的邮箱地址、账单地址和付款方式，然后选择 **Confirm changes**。
 
-These changes are instant and you can begin adding more users immediately.
+这些更改会立即生效，你可以立即开始添加更多用户。
 
-## Add Mullvad exit nodes
+## 添加 Mullvad 出口节点
 
-You can purchase licenses for Mullvad VPN in your tailnet to let devices use [Mullvad exit nodes][docs-mullvad-exit-nodes]. Mullvad licensing is based on devices and not users. This means you can purchase as many licenses as you need for the devices in your tailnet.
+你可以在 tailnet 中购买 Mullvad VPN 许可证，让设备使用 [Mullvad 出口节点][docs-mullvad-exit-nodes]。Mullvad 许可证按设备而非用户计算。这意味着你可以根据 tailnet 中设备的需求购买任意数量的许可证。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select **Purchase Mullvad VPN**.
-3. In the **Mullvad VPN** section, select the number of licenses that you want to purchase. You must choose increments of five licenses at a time.
-4. In **Billing details**, add your email and billing address if it's not already added in the admin console, then select **Continue to payment details**.
-5. In **Payment information**, add your credit card or banking information if it's not already added in the admin console, then select **Confirm add-on purchase**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Purchase Mullvad VPN**。
+3. 在 **Mullvad VPN** 区域，选择你想购买的许可证数量。每次必须以 5 个许可证为增量进行选择。
+4. 在 **Billing details** 中，如果管理控制台中尚未添加你的邮箱和账单地址，请先添加，然后选择 **Continue to payment details**。
+5. 在 **Payment information** 中，如果管理控制台中尚未添加你的信用卡或银行信息，请先添加，然后选择 **Confirm add-on purchase**。
 
-After your purchase is confirmed, you can go to the [Configure Mullvad VPN](https://console.tailscale.com/admin/settings/general/mullvad) page of the admin console and assign the devices that can use Mullvad exit nodes.
+购买确认后，你可以前往管理控制台的 [Configure Mullvad VPN](https://console.tailscale.com/admin/settings/general/mullvad) 页面，指派可以使用 Mullvad 出口节点的设备。
 
 [co-pricing]: https://tailscale.com/pricing
 

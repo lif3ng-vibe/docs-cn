@@ -1,103 +1,103 @@
 ---
-title: "Deploy Tailscale with Iru"
-description: "You can use the Iru mobile device management (MDM) solution to deploy Tailscale in your organization. You can use Iru to remotely install the Tailscale client, configure a number of [system policies]["
+title: "使用 Iru 部署 Tailscale"
+description: "你可以使用 Iru 移动设备管理（MDM）解决方案在你的组织中部署 Tailscale。你可以使用 Iru 远程安装 Tailscale 客户端、配置多个[系统策略][docs-mdm-keys]，并将这些策略部署到组织中的各台设备。"
 ---
 
-Last validated Dec 2, 2025
+最后验证于 Dec 2, 2025
 
-> **Note:** This integration is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 本集成适用于 [Standard、Premium 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-> **Note:**
+> **注意：**
 >
-> Iru is formerly known as Kandji. Several references to Kandji may still be found in instructions, code examples, and user interfaces.
+> Iru 的前身是 Kandji。在说明、代码示例和用户界面中，你可能仍会看到多处 Kandji 的字样。
 
-You can use the Iru mobile device management (MDM) solution to deploy Tailscale in your organization. You can use Iru to remotely install the Tailscale client, configure a number of [system policies][docs-mdm-keys], and deploy these policies across devices in your organization. Tailscale system policies with Iru are supported on macOS and iOS.
+你可以使用 Iru 移动设备管理（MDM）解决方案在你的组织中部署 Tailscale。你可以使用 Iru 远程安装 Tailscale 客户端、配置多个[系统策略][docs-mdm-keys]，并将这些策略部署到组织中的各台设备。Iru 下的 Tailscale 系统策略支持 macOS 和 iOS。
 
-If you need help deploying Tailscale using Iru, or would like to suggest any feature enhancements, contact our [support][co-contact-support-form] or [sales][co-contact-sales] teams.
+如果你在使用 Iru 部署 Tailscale 时需要帮助，或者想提出功能改进建议，请联系我们的[支持][co-contact-support-form]或[销售][co-contact-sales]团队。
 
-## Deploying Tailscale using Kandji Auto Apps
+## 使用 Kandji Auto Apps 部署 Tailscale
 
-> **Note:**
+> **注意：**
 >
-> Refer to [Deploy Tailscale on macOS using MDM][docs-macos-mdm] for general best practices and [Approve the Tailscale system extension automatically][docs-macos-mdm-approve-the-extension] to ensure the best end-user experience.
+> 一般最佳实践请参阅[使用 MDM 在 macOS 上部署 Tailscale][docs-macos-mdm]，并参阅[自动批准 Tailscale 系统扩展][docs-macos-mdm-approve-the-extension]以确保最终用户体验最佳。
 
-The [Auto Apps][xt-iru-endpoint-management-auto-apps] feature in Kandji lets you automatically install Tailscale on any Mac in your fleet. Optionally, Kandji can also keep track of new Tailscale versions and automatically install them based on rules you define. To get started, follow these steps:
+Kandji 的 [Auto Apps][xt-iru-endpoint-management-auto-apps] 功能让你可以在整个设备群（fleet）中的任何 Mac 上自动安装 Tailscale。此外，Kandji 还可以跟踪新的 Tailscale 版本，并按你定义的规则自动安装。要开始使用，请按以下步骤操作：
 
-1. Login to your Kandji admin console at `<companyName>.kandji.io`.
+1. 登录你的 Kandji 管理控制台，地址为 `<companyName>.kandji.io`。
 
-2. Select the Library tab, and then add a new item by selecting the **Add Item** button.
+2. 选择 **Library**（资料库）标签页，然后选择 **Add Item**（添加项目）按钮来添加新项目。
 
-3. Scroll down the page to the **Auto Apps** section. Choose **Tailscale**, then **Add and Configure**, which will add Tailscale to your Kandji library.
+3. 向下滚动页面到 **Auto Apps** 部分。选择 **Tailscale**，然后选择 **Add and Configure**（添加并配置），这会将 Tailscale 添加到你的 Kandji 资料库中。
 
-   *（图：Choose Tailscale to add to your Kandji library.）*
+   *（图：选择要添加到 Kandji 资料库的 Tailscale。）*
 
-4. Choose one or more blueprints you want Tailscale to be added to. Blueprints are a set of library items and other configurations that can be deployed to a group of devices. For instance, to deploy Tailscale to all devices in your fleet, select the **All Blueprints** option. You can also add additional optional rules to restrict the assignment within the blueprint.
+4. 选择一个或多个要将 Tailscale 加入的蓝图（blueprint）。蓝图是一组可部署到一组设备的资料库项目和其他配置。例如，若要将 Tailscale 部署到你设备群中的所有设备，请选择 **All Blueprints**（所有蓝图）选项。你也可以添加其他可选规则来限制蓝图内的分配范围。
 
-   *（图：Choose the blueprints you want Tailscale to be added to.）*
+   *（图：选择要将 Tailscale 加入的蓝图。）*
 
-5. Select an installation method. You can choose to install and continuously enforce the Tailscale installation on devices, or allow your users to install Tailscale on-demand from your Kandji Self Service app.
+5. 选择一种安装方式。你可以选择安装并持续强制设备上的 Tailscale 安装，也可以允许用户按需从 Kandji Self Service 应用安装 Tailscale。
 
-6. In the **Enforcement** section, choose whether Kandji should automatically update the Tailscale client for you or not. Refer to [Managing Tailscale updates with Kandji][ar-managing-tailscale-updates-with-kandji] later in this topic for more information.
+6. 在 **Enforcement**（强制执行）部分，选择 Kandji 是否应自动为你更新 Tailscale 客户端。更多信息请参阅本主题后面的[使用 Kandji 管理 Tailscale 更新][ar-managing-tailscale-updates-with-kandji]。
 
-   *（图：Specify whether Kandji should automatically update the Tailscale client.）*
+   *（图：指定 Kandji 是否应自动更新 Tailscale 客户端。）*
 
-7. Turn on the **Notifications** switch to enable notification permissions for the client automatically. This will allow Tailscale to notify your users when their device key is about to expire, if their internet connection is down, or if other actions are required.
+7. 打开 **Notifications**（通知）开关，自动为客户端启用通知权限。这样，当设备密钥即将过期、互联网连接中断或需要执行其他操作时，Tailscale 就能通知你的用户。
 
-8. Tailscale runs as a menu bar app with no Dock icon, so you can safely uncheck the **Add to Dock during install** option.
+8. Tailscale 以菜单栏应用的形式运行，没有 Dock 图标，因此你可以放心取消勾选 **Add to Dock during install**（安装时添加到 Dock）选项。
 
-9. Choose **Save** to continue.
+9. 选择 **Save**（保存）继续。
 
-10. The deployment of the Tailscale client will begin according to the options you selected. You can use the **Status** tab to track its status.
+10. Tailscale 客户端的部署将按照你选择的选项开始。你可以使用 **Status**（状态）标签页跟踪其状态。
 
-    *（图：View the status of the Tailscale deployment.）*
+    *（图：查看 Tailscale 部署的状态。）*
 
-### Managing Tailscale updates with Kandji
+### 使用 Kandji 管理 Tailscale 更新
 
-By default, Tailscale will automatically update on its own by using the Sparkle framework built into the app. We provide several [system policies][docs-mdm-keys] to configure the auto-updater settings, including whether or not these settings are visible to end-users. If you prefer to use the built-in auto-updater in Tailscale, you should choose **Do not manage updates** when setting up Tailscale in the Kandji library.
+默认情况下，Tailscale 会使用应用内置的 Sparkle 框架自行自动更新。我们提供了多个[系统策略][docs-mdm-keys]来配置自动更新设置，包括这些设置是否对最终用户可见。如果你更愿意使用 Tailscale 内置的自动更新器，在 Kandji 资料库中设置 Tailscale 时应选择 **Do not manage updates**（不管理更新）。
 
-If you prefer to centralize management of your app updates, you might want to have Kandji install updates for you. To enable this, choose either one of the **Automatically enforce new updates** or **Manually enforce a new version** options. Then, set up the following system policy values to ensure the Tailscale auto-updater won't run and won't be visible to users:
+如果你更希望集中管理应用更新，可以让 Kandji 替你安装更新。为此，请选择 **Automatically enforce new updates**（自动强制安装新更新）或 **Manually enforce a new version**（手动强制安装新版本）之一。然后，设置以下系统策略值，确保 Tailscale 自动更新器不会运行、也不会对用户可见：
 
 * `SUAutomaticallyUpdate` = `false`
 * `SUEnableAutomaticChecks` = `false`
 * `ApplyUpdates` = `hide`
 
-## Deploying Tailscale system policies using Kandji
+## 使用 Kandji 部署 Tailscale 系统策略
 
-Tailscale [system policies][docs-mdm-keys] let you customize the behavior of the Tailscale client on the devices in your fleet. You can force Tailscale to always be enabled, enforce the use of a given exit node, hide specific parts of the user interface, and so on. For more information about the available options, refer to the [system policies topic][docs-mdm-keys].
+Tailscale [系统策略][docs-mdm-keys]让你可以自定义设备群中各设备上 Tailscale 客户端的行为。你可以强制 Tailscale 始终启用、强制使用指定的出口节点、隐藏用户界面的特定部分，等等。有关可用选项的更多信息，请参阅[系统策略主题][docs-mdm-keys]。
 
-To get started deploying Tailscale system policies with Kandji, you'll first need to determine which policies you wish to impose on your devices. Once you know which system policies to impose and the value for each, you'll then need to create an Apple configuration profile (`.mobileconfig` file) to define them, and upload the profile to the Kandji admin console.
+要开始使用 Kandji 部署 Tailscale 系统策略，你首先需要确定要对设备施加哪些策略。确定要施加的系统策略及其各自的值后，你需要创建一个 Apple 配置描述文件（`.mobileconfig` 文件）来定义它们，并将该描述文件上传到 Kandji 管理控制台。
 
-1. Paste the contents of our [configuration profile template][docs-macos-mdm-deploy-policies-profile], which provides preset values for the **ManagedByOrganizationName** and **IPAddressCopiedAlertSuppressed** policies into a new XML file called `Tailscale.mobileconfig`. This XML file with the `.mobileconfig` extension will become your configuration profile.
+1. 将我们[配置描述文件模板][docs-macos-mdm-deploy-policies-profile]的内容粘贴到一个名为 `Tailscale.mobileconfig` 的新 XML 文件中，该模板为 **ManagedByOrganizationName** 和 **IPAddressCopiedAlertSuppressed** 策略提供了预设值。这个带有 `.mobileconfig` 扩展名的 XML 文件将成为你的配置描述文件。
 
-2. Login to your Kandji admin console at `<companyName>.kandji.io`.
+2. 登录你的 Kandji 管理控制台，地址为 `<companyName>.kandji.io`。
 
-3. Select the Library tab, and then add a new item by selecting the **Add Item** button.
+3. 选择 **Library**（资料库）标签页，然后选择 **Add Item**（添加项目）按钮来添加新项目。
 
-4. Select the **Custom Profile** and then **Add and Configure**.
+4. 选择 **Custom Profile**（自定义描述文件），然后选择 **Add and Configure**（添加并配置）。
 
-   *（图：Add and configure a custom profile.）*
+   *（图：添加并配置自定义描述文件。）*
 
-5. Assign a descriptive name to the profile. For instance, `Tailscale System Policies for macOS`.
+5. 为描述文件指定一个描述性名称，例如 `Tailscale System Policies for macOS`。
 
-   *（图：Assign a name for the profile.）*
+   *（图：为描述文件指定名称。）*
 
-6. Upload the `.mobileconfig` file you previously created to the admin console.
+6. 将你之前创建的 `.mobileconfig` 文件上传到管理控制台。
 
-   *（图：Upload the .mobileconfig file.）*
+   *（图：上传 .mobileconfig 文件。）*
 
-7. Choose **Save**.
+7. 选择 **Save**（保存）。
 
-8. The deployment of the system policies will begin according to the options you selected. You can use the **Status** tab to track its status.
+8. 系统策略的部署将按照你选择的选项开始。你可以使用 **Status**（状态）标签页跟踪其状态。
 
-   *（图：View the status of the system policies deployment.）*
+   *（图：查看系统策略部署的状态。）*
 
-9. Restart the Tailscale client on your devices to ensure the policies are fully applied. If you deployed the **ManagedByOrganizationName** policy, you can quickly verify the success of the deployment by checking a **Managed by CompanyName** menu item in the Tailscale client.
+9. 重启设备上的 Tailscale 客户端，确保策略完全生效。如果你部署了 **ManagedByOrganizationName** 策略，可以通过检查 Tailscale 客户端中的 **Managed by CompanyName**（由 CompanyName 管理）菜单项来快速验证部署是否成功。
 
 [co-contact-sales]: https://tailscale.com/contact/sales
 
 [co-contact-support-form]: https://tailscale.com/contact/support#support-form
 
-[ar-managing-tailscale-updates-with-kandji]: #managing-tailscale-updates-with-kandji
+[ar-managing-tailscale-updates-with-kandji]: #使用-kandji-管理-tailscale-更新
 
 [docs-macos-mdm-approve-the-extension]: /docs/integrations/mdm/mac#approve-the-tailscale-system-extension-automatically
 

@@ -1,26 +1,26 @@
 ---
-title: "Expose Amazon RDS to your tailnet"
-description: "You can use the Tailscale Kubernetes Operator to expose any cloud service, such as an RDS database on a cluster network, to your tailnet. If you have a cloud service that is not publicly accessible bu"
+title: "向你的 tailnet 暴露 Amazon RDS"
+description: "你可以使用 Tailscale Kubernetes Operator 将任何云服务（例如集群网络上的 RDS 数据库）暴露给你的 tailnet。如果你有一个不对外公开、但可从该云上的 Kubernetes 集群访问的云服务"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-You can use the Tailscale Kubernetes Operator to expose any cloud service, such as an RDS database on a cluster network, to your tailnet. If you have a cloud service that is not publicly accessible but is reachable from a Kubernetes cluster on that cloud, you can make it available to your tailnet using an operator deployed in the cluster.
+你可以使用 Tailscale Kubernetes Operator 将任何云服务（例如集群网络上的 RDS 数据库）暴露给你的 tailnet。如果你有一个不对外公开、但可从该云上的 Kubernetes 集群访问的云服务，就可以使用部署在该集群中的 operator 将其开放给你的 tailnet。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备以下条件：
 
-* [Install][docs-operator] the Tailscale Kubernetes Operator in your cluster.
-* An Amazon RDS instance or other cloud service that is reachable from within the cluster, for example in the same VPC.
-* The [view-secret kubectl plugin][xt-view-secret], used to retrieve the proxy's MagicDNS name.
-* A database client such as `psql` or `mysql` to connect to the service from a tailnet device.
+* 已在集群中[安装][docs-operator] Tailscale Kubernetes Operator。
+* 一个可从集群内部访问的 Amazon RDS 实例或其他云服务，例如位于同一 VPC 中。
+* 用于获取代理 MagicDNS 名称的 [view-secret kubectl 插件][xt-view-secret]。
+* 一个数据库客户端（如 `psql` 或 `mysql`），用于从 tailnet 设备连接服务。
 
-## Expose a cloud service using a Kubernetes ExternalName Service
+## 使用 Kubernetes ExternalName Service 暴露云服务
 
-If the cloud service you want to expose has a DNS name that can be resolved from within the cluster, you can expose it using an [`ExternalName` `Service`][xt-externalname].
+如果你想暴露的云服务具有可在集群内解析的 DNS 名称，可以使用 [`ExternalName` `Service`][xt-externalname] 来暴露它。
 
-For example, to expose an RDS database and connect to it from a tailnet client, create an `ExternalName` `Service` with the `tailscale.com/expose` annotation set to `"true"` and the `spec.externalName` field set to the DNS name of the RDS instance:
+例如，要暴露一个 RDS 数据库并从 tailnet 客户端连接它，可以创建一个 `ExternalName` `Service`，将 `tailscale.com/expose` 注解设为 `"true"`，并将 `spec.externalName` 字段设为 RDS 实例的 DNS 名称：
 
 ```yaml
 apiVersion: v1
@@ -34,7 +34,7 @@ spec:
   externalName: my-rds.eu-central-1.rds.amazonaws.com
 ```
 
-Next, retrieve the Tailscale MagicDNS name of the cluster proxy that the operator creates for the `Service` using the [view-secret kubectl plugin][xt-view-secret]:
+接下来，使用 [view-secret kubectl 插件][xt-view-secret] 获取 operator 为该 `Service` 创建的集群代理的 Tailscale MagicDNS 名称：
 
 ```shell
 rds_magic_dns_name=$(kubectl view-secret \
@@ -45,21 +45,21 @@ rds_magic_dns_name=$(kubectl view-secret \
   device_fqdn)
 ```
 
-You can connect to the RDS instance from a tailnet client using the MagicDNS name of the proxy as the database hostname. For example, for a PostgreSQL database:
+你可以使用代理的 MagicDNS 名称作为数据库主机名，从 tailnet 客户端连接 RDS 实例。例如，对于 PostgreSQL 数据库：
 
 ```shell
 psql -h ${rds_magic_dns_name} -U postgres
 ```
 
-The cluster proxies created for `ExternalName` `Service` resources forward TCP traffic, so you can use them with any TCP-based protocol such as PostgreSQL, MySQL, or Redis. The Tailscale Kubernetes Operator attempts to resolve the IP addresses of the backend cloud service every 10 minutes and reconfigures the proxy rules if needed.
+为 `ExternalName` `Service` 资源创建的集群代理会转发 TCP 流量，因此可以将它们与任何基于 TCP 的协议一起使用，例如 PostgreSQL、MySQL 或 Redis。Tailscale Kubernetes Operator 每隔 10 分钟尝试解析后端云服务的 IP 地址，并在需要时重新配置代理规则。
 
-> **Note:**
+> **注意：**
 >
-> For proxies deployed with [firewall in nftables mode][docs-firewall-mode], traffic is only proxied to the first IP address that the DNS name resolves to.
+> 对于以 [nftables 模式部署防火墙][docs-firewall-mode]的代理，流量只会被代理到 DNS 名称解析出的第一个 IP 地址。
 
-## Expose a CIDR range using a Connector
+## 使用 Connector 暴露 CIDR 网段
 
-If the cloud service does not have a DNS name resolvable within the cluster, or you want to expose multiple services in a CIDR range, use a [`Connector`][docs-k8s-connector] resource:
+如果云服务没有可在集群内解析的 DNS 名称，或者你想暴露一个 CIDR 网段内的多个服务，请使用 [`Connector`][docs-k8s-connector] 资源：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -72,12 +72,12 @@ spec:
       - "<rds-cidr-range>"
 ```
 
-This `Connector` configures the operator to deploy an in-cluster [subnet router][docs-subnets] that exposes the configured CIDR range to your tailnet.
+这个 `Connector` 会配置 operator 部署一个集群内[子网路由器][docs-subnets]，将配置的 CIDR 网段暴露给你的 tailnet。
 
-## Further exploration
+## 进一步探索
 
-* [Customize][docs-k8s-customize] the Operator and the resources it manages.
-* [Troubleshoot][docs-k8s-troubleshoot] common issues with the Operator and the resources it manages.
+* [自定义][docs-k8s-customize] Operator 及其管理的资源。
+* [排查][docs-k8s-troubleshoot] Operator 及其管理资源的常见问题。
 
 [docs-firewall-mode]: /docs/features/firewall-mode
 

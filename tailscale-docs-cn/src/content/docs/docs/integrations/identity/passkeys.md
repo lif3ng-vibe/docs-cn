@@ -1,33 +1,33 @@
 ---
-title: "Using passkeys for Tailscale authentication"
-description: "Passkeys are a method for authenticating users to a Tailscale network (tailnet) using passwordless authentication."
+title: "使用 passkey 进行 Tailscale 认证"
+description: "Passkey 是一种使用无密码认证将用户认证到 Tailscale 网络（tailnet）的方法。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Passkeys are a method for authenticating users to a Tailscale network (tailnet) using passwordless authentication.
+Passkey 是一种使用无密码认证将用户认证到 Tailscale 网络（tailnet）的方法。
 
-> **Note:** This feature is currently in beta.
+> **注意：** 此功能目前处于 beta 阶段。
 
-> **Note:** Passkeys are available for [all plans](https://tailscale.com/pricing).
+> **注意：** Passkey 适用于[所有套餐](https://tailscale.com/pricing)。
 
-## How it works
+## 工作原理
 
-Passkeys are based on the [FIDO Alliance standard][xt-fidoalliance-passkeys]. This standard uses public key cryptography by generating a private key on the user's device that is never exposed to the outside world. You can store passkeys on a device or in a keychain. For example, when you create a passkey using an Apple ID, you can use the same passkey on other Apple devices with the same Apple ID.
+Passkey 基于 [FIDO Alliance 标准][xt-fidoalliance-passkeys]。该标准使用公钥加密技术，在用户设备上生成一把永不暴露给外界的私钥。你可以将 passkey 存储在设备或钥匙串中。例如，当你使用 Apple ID 创建 passkey 后，可以在登录同一 Apple ID 的其他 Apple 设备上使用同一个 passkey。
 
-Biometrics, a PIN, or a pattern are examples of processes that let you authenticate with a passkey, the same way you can unlock a device that supports the FIDO standard.
+生物识别、PIN 码或图案等都是让你用 passkey 完成认证的方式，与解锁支持 FIDO 标准的设备一样。
 
-When a user initially accepts an invite to join a tailnet by using a passkey, a tailnet matching the invitee's passkey username is created. This tailnet's name is in the form `<user_name>@passkey`. For example, `bobbuilder@passkey`.
+当用户初次通过 passkey 接受加入 tailnet 的邀请时，系统会创建一个与受邀者 passkey 用户名相匹配的 tailnet。该 tailnet 的名称形如 `<user_name>@passkey`。例如 `bobbuilder@passkey`。
 
-The invited user's [Tailscale identity][docs-tailscale-identity] is dependent on the existence of the tailnet created for their passkey username. Other tailnet admins can also invite the same user to join a tailnet, so the user associated with `bobbuilder@passkey` could join more than one tailnet.
+受邀用户的 [Tailscale 身份][docs-tailscale-identity]依赖于为其 passkey 用户名创建的 tailnet 的存在。其他 tailnet 管理员也可以邀请同一个用户加入 tailnet，因此与 `bobbuilder@passkey` 关联的用户可以加入多个 tailnet。
 
-A given passkey username is allowed to be created only once. For example, there will always be only one user associated with `bobbuilder@passkey`, even if the `bobbuilder@passkey` tailnet is deleted. If the tailnet for a given passkey username is deleted, the tailnet cannot be recovered, and the passkey username cannot be reused, even by the user that initially created the passkey username.
+给定的 passkey 用户名只允许创建一次。例如，与 `bobbuilder@passkey` 关联的用户永远只有一个，即使 `bobbuilder@passkey` tailnet 被删除也是如此。如果某个 passkey 用户名对应的 tailnet 被删除，该 tailnet 无法恢复，且该 passkey 用户名无法被再次使用，即使是最初创建该 passkey 用户名的用户也不行。
 
-Deleting a tailnet of the form `<user_name>@passkey` deletes the associated user's membership to all other tailnets.
+删除形如 `<user_name>@passkey` 的 tailnet，会同时删除该关联用户在所有其他 tailnet 中的成员身份。
 
-## Supported passkey managers
+## 支持的 passkey 管理器
 
-Tailscale supports passkey management from the following:
+Tailscale 支持以下 passkey 管理器：
 
 * 1Password
 * Apple
@@ -36,70 +36,70 @@ Tailscale supports passkey management from the following:
 * Microsoft
 * Yubikey
 
-Because Tailscale cannot determine the source of a passkey, Fido Alliance standard passkeys provided by any other company should also work with Tailscale.
+由于 Tailscale 无法判断 passkey 的来源，其他任何公司提供的符合 FIDO Alliance 标准的 passkey 也应当可以与 Tailscale 配合使用。
 
-## Passkey username rules
+## passkey 用户名规则
 
-A passkey username:
+passkey 用户名：
 
-* Can contain a combination of lowercase alphanumeric characters (`a-z` and `0-9`) and hyphens (`-`).
-* Cannot begin with a number.
-* Must be between 3 and 63 characters in length.
-* Must be unique across all of Tailscale.
+* 可以包含小写字母数字字符（`a-z` 和 `0-9`）与连字符（`-`）的组合。
+* 不能以数字开头。
+* 长度必须在 3 到 63 个字符之间。
+* 必须在整个 Tailscale 范围内唯一。
 
-## Invite a passkey user
+## 邀请 passkey 用户
 
-A user invite is for one-time use, so a given invite should be sent to only a single user. If you want to invite multiple users, send each of them their own invite.
+用户邀请是一次性的，因此每份邀请只能发送给单个用户。如果你想邀请多个用户，请分别为他们各发一份邀请。
 
-Your Tailscale billing includes invited users who join and transfer data in your tailnet. This includes invited users who are paid users in other tailnets. Tailscale bills for every active user on every tailnet.
+你的 Tailscale 账单包含加入你的 tailnet 并在其中传输数据的受邀用户，其中包括在其他 tailnet 中属于付费用户的受邀用户。Tailscale 会为每个 tailnet 上的每个活跃用户计费。
 
-For information about inviting a user to your tailnet, refer to:
+关于邀请用户加入你的 tailnet 的信息，参见：
 
-* [Send an invite email][docs-invite-email]
-* [Send an invite link][docs-invite-link]
+* [发送邀请电子邮件][docs-invite-email]
+* [发送邀请链接][docs-invite-link]
 
-Refer to [Invite any user to your tailnet][docs-invite] for additional information about inviting users, including viewing or removing open invites.
+关于邀请用户的更多信息（包括查看或移除未完成的邀请），参见[邀请任意用户加入你的 tailnet][docs-invite]。
 
-## Create a passkey user from an invite
+## 通过邀请创建 passkey 用户
 
-1. From a web browser, open the URL provided in your invite. If you are logged into a tailnet already, make sure you log out.
+1. 在网页浏览器中打开邀请中提供的 URL。如果你已登录某个 tailnet，请先登出。
 
-2. In the Tailscale login page, select **Sign in with a passkey**.
+2. 在 Tailscale 登录页面，选择 **Sign in with a passkey**。
 
-   *（图：Sign in page for Tailscale.）*
+   *（图：Tailscale 登录页面。）*
 
-3. Enter a unique username to register with your passkey, subject to the [passkey username rules][ar-passkey-username-rules]. The `@passkey` value is automatically appended. The username you select must be a universally unique name across all of Tailscale. For example, if `bobbuilder@passkey` is used by someone in another tailnet, it cannot be registered in your tailnet.
+3. 输入一个唯一的用户名，用于注册你的 passkey，并遵守 [passkey 用户名规则][ar-passkey-username-rules]。`@passkey` 值会自动追加。你选择的用户名必须在整个 Tailscale 范围内全局唯一。例如，如果 `bobbuilder@passkey` 已被另一个 tailnet 中的某人使用，就无法在你的 tailnet 中注册。
 
-   *（图：Create a new passkey.）*
+   *（图：创建新的 passkey。）*
 
-4. Select **Create passkey and join**.
+4. 选择 **Create passkey and join**。
 
-5. Choose how you want to create and store the passkey. Follow the instructions on the device you are using for passkey authentication.
+5. 选择你希望如何创建和存储 passkey。按照你用于 passkey 认证的设备上的说明操作。
 
-6. Authenticate with the tailnet using your chosen method for authentication. When a passkey user authenticates, the user displays on the [Users](https://console.tailscale.com/admin/users) page of the admin console.
+6. 使用你选择的认证方式向 tailnet 进行认证。passkey 用户完成认证后，会显示在管理控制台的 [Users](https://console.tailscale.com/admin/users) 页面上。
 
-*（图：Passkey user in the Users page.）*
+*（图：Users 页面中的 passkey 用户。）*
 
-## Sign in with an existing passkey
+## 使用现有 passkey 登录
 
-1. From a web browser, open the URL provided in your invite. If you are logged into a tailnet already, make sure you log out.
+1. 在网页浏览器中打开邀请中提供的 URL。如果你已登录某个 tailnet，请先登出。
 
-2. In the Tailscale login page, select **Sign in with a passkey**.
+2. 在 Tailscale 登录页面，选择 **Sign in with a passkey**。
 
-   *（图：Sign in page for Tailscale.）*
+   *（图：Tailscale 登录页面。）*
 
-3. Select **Sign in with a passkey**.
+3. 选择 **Sign in with a passkey**。
 
-   *（图：Sign in using an existing passkey.）*
+   *（图：使用现有 passkey 登录。）*
 
-4. Log in to the tailnet using your passkey authentication method.
+4. 使用你的 passkey 认证方式登录 tailnet。
 
-## Limitations
+## 限制
 
-* Users cannot create a new tailnet using passkey authentication. You must create the tailnet before sending user invites for passkey authentication.
-* You cannot reuse a previously used passkey username once it has been deleted.
+* 用户无法使用 passkey 认证创建新 tailnet。你必须先创建 tailnet，再发送用于 passkey 认证的用户邀请。
+* 已删除的 passkey 用户名不能被重复使用。
 
-[ar-passkey-username-rules]: #passkey-username-rules
+[ar-passkey-username-rules]: #passkey-用户名规则
 
 [docs-invite-email]: /docs/features/sharing/how-to/invite-any-user#send-an-invite-email
 

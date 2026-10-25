@@ -1,30 +1,23 @@
 ---
-title: "Access your tailnet from code-server"
-description: "Write code remotely by installing Tailscale on code-server."
+title: "从 code-server 访问你的 tailnet"
+description: "在 code-server 上安装 Tailscale，实现远程写代码。"
 ---
 
-Last validated Sep 18, 2025
+最后验证于 Sep 18, 2025
 
-[code-server][xt-gh-code-server] is a way to run Visual Studio Code anywhere and access it in through a browser.
+[code-server][xt-gh-code-server] 是一种在任何地方运行 Visual Studio Code 并通过浏览器访问它的方式。
 
-Tailscale can be installed within a code-server VM to be able to access private resources securely,
-such as databases or continuous integration nodes or servers in the dev/test environment.
+Tailscale 可以安装在 code-server 虚拟机（VM）内，从而安全地访问私有资源，例如开发/测试环境中的数据库、持续集成节点或服务器。
 
-## Integration
+## 集成
 
-code-server is installed within a VM with [instructions for a number of hosting providers][xt-gh-code-server-install].
+code-server 安装在虚拟机中，多种托管提供商都提供了[安装说明][xt-gh-code-server-install]。
 
-Tailscale can be [installed in VMs][docs-install-linux]
-for many common hosting providers like
-[AWS][docs-install-aws],
-[Azure][docs-cloud-azure-linux],
-[Google Cloud][docs-cloud-gce], and
-[Hetzner][docs-cloud-hetzner].
+Tailscale 可以[安装在虚拟机中][docs-install-linux]，支持许多常见托管提供商，如 [AWS][docs-install-aws]、[Azure][docs-cloud-azure-linux]、[Google Cloud][docs-cloud-gce] 与 [Hetzner][docs-cloud-hetzner]。
 
-## Authorization
+## 授权
 
-The VM will need to be authorized to join the tailnet using either a browser to log in,
-or a [one-time auth key][docs-auth-keys].
+虚拟机需要获得授权才能加入 tailnet，可以使用浏览器登录，也可以使用[一次性认证密钥（auth key）][docs-auth-keys]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

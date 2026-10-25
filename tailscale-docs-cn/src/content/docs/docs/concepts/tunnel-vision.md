@@ -1,45 +1,45 @@
 ---
-title: "TunnelVision vulnerability and Tailscale"
-description: "Understand the TunnelVision network vulnerability warning pop-up on macOS, and how to manage it."
+title: "TunnelVision 漏洞与 Tailscale"
+description: "了解 macOS 上的 TunnelVision 网络漏洞警告弹窗及其处理方式。"
 ---
 
-Last validated Oct 29, 2025
+最后验证于 Oct 29, 2025
 
-TunnelVision is an attack that abuses legitimate network configuration tools that can potentially be exploited by malicious actors.
+TunnelVision 是一种滥用合法网络配置工具的攻击，可能被恶意行为者利用。
 
-If the TunnelVision vulnerability is detected on a macOS device running the Tailscale client, the following pop-up notification will display:
+如果在运行 Tailscale 客户端的 macOS 设备上检测到 TunnelVision 漏洞，将会显示如下弹窗通知：
 
-*（图：Tailscale client warning that the TunnelVision vulnerability was detected）*
+*（图：Tailscale 客户端提示检测到 TunnelVision 漏洞的警告）*
 
-If you receive this notification on macOS, a setting called DHCP option 121 was detected and is used on the network you connected to. Although the network might be using DHCP option 121 for non-malicious purposes, there's a possibility that someone might have tried to exploit it to perform this attack.
+如果你在 macOS 上收到此通知，说明在你所连接的网络上检测到并正在使用名为 DHCP option 121 的设置。虽然该网络使用 DHCP option 121 可能并无恶意，但也存在有人试图利用它发动这种攻击的可能。
 
-> **Note:**
+> **注意：**
 >
-> On macOS and iOS devices, Tailscale cannot override DHCP option 121. This issue is not known to impact tvOS.
+> 在 macOS 和 iOS 设备上，Tailscale 无法覆盖 DHCP option 121。目前没有已知情况表明该问题会影响 tvOS。
 
-## How the attack works
+## 攻击的原理
 
-Most computer networks use a service called Dynamic Host Configuration Protocol (DHCP). DHCP acts as a helpful guide on your local network by assigning addresses to devices as they join and ensuring they know where to send and receive information. Typically, DHCP is used solely to assign addresses, DNS name servers, and a single default route. However, it can also provide instructions (known as DHCP options) to devices when they join the network. These instructions may indicate to your device what services are available on the network, and how to use them automatically.
+大多数计算机网络都使用一种叫做动态主机配置协议（DHCP）的服务。DHCP 就像本地网络里一位乐于助人的向导：在设备加入时为其分配地址，并确保它们知道往哪里发送和接收信息。通常，DHCP 只用于分配地址、DNS 名称服务器和一条默认路由。不过，它也可以在设备加入网络时向其提供指令（称为 DHCP 选项）。这些指令可以告诉你的设备网络上有哪些可用服务，以及如何自动使用它们。
 
-A TunnelVision attack occurs when someone maliciously uses a network setting known as DHCP option 121 on your local network to instruct devices to send data to the attacker when it should have gone to your tailnet or a site on the internet instead.
+TunnelVision 攻击是指有人在你的本地网络上恶意使用 DHCP option 121 这一网络设置，指示设备把本应发往你的 tailnet 或互联网站点的数据发送给攻击者。
 
-## How to take action
+## 如何应对
 
-### Home networks
+### 家庭网络
 
-If you're using a home network, check your network configuration and ensure DHCP option 121 is not being used. Your internet provider might also have enabled DHCP option 121 for you. If that's the case, you can safely select **Keep Tailscale Running** and check **Don't warn me again** to hide these warning messages.
+如果你使用的是家庭网络，请检查网络配置，确保没有使用 DHCP option 121。你的互联网服务提供商也可能为你启用了 DHCP option 121。如果是这种情况，你可以放心地选择 **Keep Tailscale Running**，并勾选 **Don't warn me again** 来隐藏这些警告消息。
 
-### Work networks
+### 工作网络
 
-If you're using a work network and receive the pop-up notification, contact your network administrator and notify them that Tailscale has detected DHCP option 121 in use. Your administrator can determine whether the warning was a false positive. Your administrator may also disable the warnings using a [Tailscale system policy][docs-mdm-keys].
+如果你使用的是工作网络并收到弹窗通知，请联系你的网络管理员，告知 Tailscale 检测到 DHCP option 121 正在使用。管理员可以判断该警告是否为误报，也可以使用 [Tailscale 系统策略][docs-mdm-keys]禁用这些警告。
 
-### Public networks
+### 公共网络
 
-If you're using a public network such as one in a coffee shop or co-working space, and you receive the pop-up notification, we recommend that you select **Disconnect** and connect to a different network.
+如果你使用的是公共网络（例如咖啡馆或共享办公空间里的网络）并收到弹窗通知，我们建议你选择 **Disconnect**，然后改连其他网络。
 
-## Additional information
+## 更多信息
 
-For more in-depth information, refer to our blog post [Tailscale and TunnelVision: our analysis][bl-tunnelvision-analysis].
+欲深入了解，请参阅我们的博客文章 [Tailscale and TunnelVision: our analysis][bl-tunnelvision-analysis]。
 
 [bl-tunnelvision-analysis]: https://tailscale.com/blog/tunnelvision-analysis
 

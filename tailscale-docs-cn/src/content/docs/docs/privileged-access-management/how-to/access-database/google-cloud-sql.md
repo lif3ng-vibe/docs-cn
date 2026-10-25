@@ -1,167 +1,167 @@
 ---
-title: "Access a Google Cloud SQL database using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets users connect to Google Cloud SQL using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials."
+title: "使用 Tailscale PAM 访问 Google Cloud SQL 数据库"
+description: "[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 Google Cloud SQL，而无需共享数据库凭证。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets users connect to Google Cloud SQL using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials.
+[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 Google Cloud SQL，而无需共享数据库凭证。
 
-You can control who has access to the database, apply fine-grained permissions, and keep an audit trail of database sessions. Users can continue using their preferred database clients or connect directly from their browser.
+你可以控制谁有权访问数据库、应用细粒度权限，并保留数据库会话的审计跟踪。用户可以继续使用自己惯用的数据库客户端，或直接从浏览器连接。
 
-Tailscale PAM supports Cloud SQL instances running MySQL or PostgreSQL. This guide uses MySQL in the examples, but the same flow applies to PostgreSQL. Where the configuration differs, we'll call it out.
+Tailscale PAM 支持运行 MySQL 或 PostgreSQL 的 Cloud SQL 实例。本指南的示例使用 MySQL，但同样的流程也适用于 PostgreSQL。配置有差异的地方我们会特别指出。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，确保你具备以下条件：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed, online, and able to reach the Cloud SQL server.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native database client.
-* A Google Cloud SQL instance running MySQL or PostgreSQL.
-* Access to configure the Cloud SQL instance and its Google Cloud IAM permissions.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
+* 一个已安装、在线且能访问 Cloud SQL 服务器的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果打算使用原生数据库客户端，你用来连接的设备上需已[安装][docs-install] Tailscale 并登录。
+* 一个运行 MySQL 或 PostgreSQL 的 Google Cloud SQL 实例。
+* 拥有配置该 Cloud SQL 实例及其 Google Cloud IAM 权限的权限。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
 
-Tailscale PAM can connect to Cloud SQL directly using the instance's private or public IP address, or by using the built-in Cloud SQL connector.
+Tailscale PAM 可以使用实例的私有或公网 IP 地址直接连接 Cloud SQL，也可以使用内置的 Cloud SQL 连接器。
 
-If your Cloud SQL instance uses a private IP address, the Tailscale PAM connector must run somewhere with network access to that private IP. A Cloud SQL connector handles authentication and encryption, but it doesn't create a network path to a private IP instance.
+如果你的 Cloud SQL 实例使用私有 IP 地址，Tailscale PAM 连接器必须运行在能通过网络访问该私有 IP 的位置。Cloud SQL 连接器负责认证和加密，但它不会为私有 IP 实例创建网络路径。
 
-## Choose how to connect to Cloud SQL
+## 选择 Cloud SQL 的连接方式
 
-There are two ways for the Tailscale PAM connector to connect to your Cloud SQL instance.
+Tailscale PAM 连接器连接你的 Cloud SQL 实例有两种方式。
 
-### Use the Cloud SQL connector
+### 使用 Cloud SQL 连接器
 
-The built-in Cloud SQL connector lets Tailscale PAM connect using your Cloud SQL instance connection name instead of connecting directly to its public IP address.
+内置的 Cloud SQL 连接器让 Tailscale PAM 使用你的 Cloud SQL 实例连接名进行连接，而不是直接连接其公网 IP 地址。
 
-For public IP instances, this means you don't need to add the PAM connector's IP address to **Authorized networks** or manage SSL certificates yourself. Cloud SQL connectors handle encryption and use Google Cloud IAM to authorize the connection.
+对于公网 IP 实例，这意味着你无需把 PAM 连接器的 IP 地址添加到 **Authorized networks**，也无需自行管理 SSL 证书。Cloud SQL 连接器负责加密，并使用 Google Cloud IAM 为连接授权。
 
-The Google Cloud identity used by the PAM connector must have permission to connect to the Cloud SQL instance. At minimum, grant it the **Cloud SQL Client** (`roles/cloudsql.client`) role. Make sure the Cloud SQL Admin API is also enabled for the project.
+PAM 连接器使用的 Google Cloud 身份必须有权连接该 Cloud SQL 实例。至少要授予它 **Cloud SQL Client**（`roles/cloudsql.client`）角色。同时确保项目已启用 Cloud SQL Admin API。
 
-You'll also need the Cloud SQL instance connection name, which has the following format:
+你还需要 Cloud SQL 实例连接名，其格式如下：
 
 ```shell
 project-id:region:instance-id
 ```
 
-For example:
+例如：
 
 ```shell
 my-project:us-central1:production-db
 ```
 
-### Connect directly to the Cloud SQL instance
+### 直接连接到 Cloud SQL 实例
 
-You can also connect directly to the instance using its private or public IP address.
+你也可以使用实例的私有或公网 IP 地址直接连接。
 
-For a private IP instance, make sure the PAM connector can reach the Cloud SQL instance over the private network.
+对于私有 IP 实例，确保 PAM 连接器能通过私有网络访问该 Cloud SQL 实例。
 
-For a public IP instance, enable a public IP on the Cloud SQL instance and add the public IP address of the machine running the PAM connector to the instance's **Authorized networks**.
+对于公网 IP 实例，在 Cloud SQL 实例上启用公网 IP，并把运行 PAM 连接器的机器的公网 IP 地址添加到实例的 **Authorized networks** 中。
 
-You can authenticate with a database username and password, or configure TLS authentication using a client certificate and key.
+你可以使用数据库用户名和密码认证，也可以使用客户端证书和密钥配置 TLS 认证。
 
-## Create a Google Cloud SQL PAM service
+## 创建 Google Cloud SQL PAM 服务
 
-Now that your Cloud SQL instance is ready, create a PAM service for it.
+Cloud SQL 实例就绪后，为它创建一个 PAM 服务。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择 **Add service**。
 
-3. Select **PAM service**.
+3. 选择 **PAM service**。
 
-4. Select either **MySQL - Google Cloud SQL** or **PostgreSQL - Google Cloud SQL**.
+4. 选择 **MySQL - Google Cloud SQL** 或 **PostgreSQL - Google Cloud SQL**。
 
-5. Select **Continue**.
+5. 选择 **Continue**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-   Use a name that will make the database suitable for users to recognize when they browse the services they can access.
+   起一个便于用户在浏览可访问服务时辨认该数据库的名字。
 
-7. (Optional) Provide a description for the service.
+7. （可选）为服务提供描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. Select the Tailscale PAM connector that can reach your Cloud SQL server.
+9. 选择能够访问你的 Cloud SQL 服务器的 Tailscale PAM 连接器。
 
-10. Select **Continue**.
+10. 选择 **Continue**。
 
-11. For **Upstream hostname or IP**, enter hostname or IP address of the Cloud SQL server.
+11. 在 **Upstream hostname or IP** 中输入 Cloud SQL 服务器的主机名或 IP 地址。
 
-12. For **Port**, enter the port.
+12. 在 **Port** 中输入端口。
 
-13. Configure how the PAM connector should connect and authenticate to your Cloud SQL instance.
+13. 配置 PAM 连接器应如何连接并向你的 Cloud SQL 实例认证。
 
-    The Cloud SQL connector uses Google Cloud credentials available to the PAM connector to establish the connection.
+    Cloud SQL 连接器使用 PAM 连接器可用的 Google Cloud 凭证建立连接。
 
-    If the PAM connector runs on a Google Compute Engine VM, it can use the Google Cloud Platform (GCP) service account associated with that VM, provided the service account has the required Cloud SQL permissions.
+    如果 PAM 连接器运行在 Google Compute Engine 虚拟机上，它可以使用的虚拟机关联的 Google Cloud Platform（GCP）服务账户，前提是该服务账户具有所需的 Cloud SQL 权限。
 
-    #### Username and Password
+    #### 用户名和密码
 
-    1. For **Authentication type**, select **Username and Password**.
-    2. For **Username**, enter the database username that Tailscale PAM should use.
-    3. For **Password**, enter the password for that username.
+    1. 在 **Authentication type** 中选择 **Username and Password**。
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的数据库用户名。
+    3. 在 **Password** 中输入该用户名的密码。
 
-    #### Cloud SQL Connector
+    #### Cloud SQL 连接器
 
-    To use the built-in Cloud SQL connector with your existing database username and password:
+    要通过内置的 Cloud SQL 连接器使用你现有的数据库用户名和密码：
 
-    1. For **Authentication type**, select **Cloud SQL Connector**.
-    2. For **Username**, enter the database username that Tailscale PAM should use.
-    3. For **Password**, enter the password for that username.
-    4. For **Cloud SQL instance**, enter your Cloud SQL instance connection name.
-    5. (Optional) For **GCP credentials JSON**, enter your GCP [service account key][xt-gcp-service-account-key] in JSON format.
+    1. 在 **Authentication type** 中选择 **Cloud SQL Connector**。
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的数据库用户名。
+    3. 在 **Password** 中输入该用户名的密码。
+    4. 在 **Cloud SQL instance** 中输入你的 Cloud SQL 实例连接名。
+    5. （可选）在 **GCP credentials JSON** 中以 JSON 格式输入你的 GCP [服务账户密钥][xt-gcp-service-account-key]。
 
-    #### Cloud SQL Connector with IAM
+    #### 使用 IAM 的 Cloud SQL 连接器
 
-    You can use Google Cloud IAM database authentication instead of storing a database password in the PAM service:
+    你可以使用 Google Cloud IAM 数据库认证，而无需在 PAM 服务中保存数据库密码：
 
-    Before configuring the Tailscale PAM service, make the following changes in the Google Cloud console:
+    在配置 Tailscale PAM 服务之前，先在 Google Cloud 控制台中进行以下更改：
 
-    1. Enable IAM database authentication on the Cloud SQL instance.
-    2. Add the Google Cloud IAM user or service account as a database user.
-    3. Grant the IAM principal the **Cloud SQL Instance User** (`roles/cloudsql.instanceUser`) role.
-    4. Grant the IAM principal the **Cloud SQL Client** (`roles/cloudsql.client`) role.
-    5. Grant the database user the database privileges it needs.
+    1. 在 Cloud SQL 实例上启用 IAM 数据库认证。
+    2. 把 Google Cloud IAM 用户或服务账户添加为数据库用户。
+    3. 为该 IAM 主体授予 **Cloud SQL Instance User**（`roles/cloudsql.instanceUser`）角色。
+    4. 为该 IAM 主体授予 **Cloud SQL Client**（`roles/cloudsql.client`）角色。
+    5. 为该数据库用户授予所需的数据库权限。
 
-    Cloud SQL doesn't grant database privileges automatically when you add an IAM database user, so make sure you grant the appropriate permissions within MySQL or PostgreSQL.
+    添加 IAM 数据库用户时，Cloud SQL 不会自动授予数据库权限，因此请确保在 MySQL 或 PostgreSQL 中授予相应权限。
 
-    Then, continuing with the Tailscale PAM setup:
+    然后继续 Tailscale PAM 的设置：
 
-    1. For **Authentication type**, select **Cloud SQL Connector with IAM**.
+    1. 在 **Authentication type** 中选择 **Cloud SQL Connector with IAM**。
 
-    2. For **Username**, enter the IAM database username that Tailscale PAM should use.
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的 IAM 数据库用户名。
 
-       The IAM database username format depends on the database engine:
+       IAM 数据库用户名的格式取决于数据库引擎：
 
-       * **MySQL:** Use the IAM username without the `@` and domain. For a service account, remove the `@project-id.iam.gserviceaccount.com` suffix.
-       * **PostgreSQL:** Use the IAM user's full email address. For a service account, remove only the `.gserviceaccount.com` suffix.
+       * **MySQL：**使用去掉 `@` 和域名的 IAM 用户名。对于服务账户，去掉 `@project-id.iam.gserviceaccount.com` 后缀。
+       * **PostgreSQL：**使用 IAM 用户的完整电子邮件地址。对于服务账户，只去掉 `.gserviceaccount.com` 后缀。
 
-       For example, a PostgreSQL service account named `pam-connector@my-project.iam.gserviceaccount.com` uses `pam-connector@my-project.iam` as the database username.
+       例如，名为 `pam-connector@my-project.iam.gserviceaccount.com` 的 PostgreSQL 服务账户，其数据库用户名为 `pam-connector@my-project.iam`。
 
-    3. For **Cloud SQL instance**, enter your Cloud SQL instance connection name.
+    3. 在 **Cloud SQL instance** 中输入你的 Cloud SQL 实例连接名。
 
-    4. (Optional) For **GCP credentials JSON**, enter your GCP [service account key][xt-gcp-service-account-key] in JSON format.
+    4. （可选）在 **GCP credentials JSON** 中以 JSON 格式输入你的 GCP [服务账户密钥][xt-gcp-service-account-key]。
 
     #### TLS
 
-    If you use TLS authentication, provide the client certificate and private key issued for the Cloud SQL instance. You can also provide the certificate authority (CA) to verify the server certificate.
+    如果使用 TLS 认证，请提供为该 Cloud SQL 实例签发的客户端证书和私钥。你还可以提供用于验证服务器证书的证书颁发机构（CA）。
 
-    1. For **Authentication type**, select **TLS**.
-    2. For **Username**, enter the database username that Tailscale PAM should use.
-    3. For **Password**, enter the password for that username.
-    4. For **Client TLS certificate**, enter the PEM-encoded client certificate the PAM connector presents to the upstream service for mutual TLS. If specified, also provide a value for **client TLS private key**.
-    5. For **Client TLS private key**, enter the PEM-encoded private key for the client TLS certificate above. Required if you provided a value for **Client TLS certificate**.
-    6. (Optional) For **Server CA certificate**, enter the PEM-encoded CA certificate used to verify the upstream service's TLS certificate. Use this field only if you want to verify the server certificate without client TLS. You can leave it blank and skip the verification process.
+    1. 在 **Authentication type** 中选择 **TLS**。
+    2. 在 **Username** 中输入 Tailscale PAM 应使用的数据库用户名。
+    3. 在 **Password** 中输入该用户名的密码。
+    4. 在 **Client TLS certificate** 中输入 PAM 连接器向上游服务出示、用于双向 TLS 的 PEM 编码客户端证书。如果填写此项，还必须为 **client TLS private key** 提供值。
+    5. 在 **Client TLS private key** 中输入上述客户端 TLS 证书的 PEM 编码私钥。如果填写了 **Client TLS certificate**，此项为必填。
+    6. （可选）在 **Server CA certificate** 中输入用于验证上游服务 TLS 证书的 PEM 编码 CA 证书。仅当你想在不用客户端 TLS 的情况下验证服务器证书时才使用此字段。你可以留空并跳过验证过程。
 
-14. Select **Save**.
+14. 选择 **Save**。
 
-Your Cloud SQL PAM service has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+你的 Cloud SQL PAM 服务已创建。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the Cloud SQL database
+## 为 Cloud SQL 数据库授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the service. For example, the following grant permits any source to connect to PAM database services:
+在用户连接之前，确保有 Tailscale PAM [授权（grant）][docs-grants]让他们能访问该服务。例如，以下授权允许任何来源连接到 PAM 数据库服务：
 
 ```json
 "grants": [
@@ -185,106 +185,106 @@ Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives t
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, you can restrict the `src` and `dst` fields to control which users, groups, devices, or tags can access specific services.
+> 这是一条范围很宽的授权，适合入门使用。在生产环境中，你可以限制 `src` 和 `dst` 字段，以控制哪些用户、组、设备或标签可以访问特定服务。
 >
-> You can also define more advanced database permissions, such as read-only access.
+> 你还可以定义更高级的数据库权限，例如只读访问。
 >
-> For more PAM grant examples and information about fine-grained access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+> 更多 PAM 授权示例以及细粒度访问控制的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-## Connect to the Cloud SQL database
+## 连接到 Cloud SQL 数据库
 
-The primary way to connect is through the Tailscale client, which can launch your preferred Cloud SQL client. You can also connect entirely from your browser using the Tailscale browser client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你惯用的 Cloud SQL 客户端。你也可以使用 Tailscale 浏览器客户端完全从浏览器连接。
 
-### Connect with your preferred Cloud SQL client
+### 使用你惯用的 Cloud SQL 客户端连接
 
-Use the Tailscale client to quickly open the database with a Cloud SQL client already installed on your device.
+使用 Tailscale 客户端，可快速用设备上已安装的 Cloud SQL 客户端打开数据库。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your Cloud SQL service.
-4. Choose the database client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 Cloud SQL 服务。
+4. 选择你想使用的数据库客户端。
 
-The Tailscale client scans your device for well-known clients compatible with the database engine and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备，寻找与该数据库引擎兼容的知名客户端，并列出它找到的客户端。选择其中一个即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the clients shown in the Tailscale client. If your preferred database client isn't listed, open it directly and use the name of the Tailscale PAM service as the hostname.
+你并不局限于 Tailscale 客户端中列出的客户端。如果你惯用的数据库客户端不在列表中，可以直接打开它，并使用 Tailscale PAM 服务的名称作为主机名。
 
-For a MySQL Cloud SQL service, use port `3306` and leave the username and password empty:
+对于 MySQL Cloud SQL 服务，使用端口 `3306`，并把用户名和密码留空：
 
 ```shell
 mysql -h <service-name> -P 3306 --protocol TCP
 ```
 
-For a PostgreSQL Cloud SQL service, use port `5432`:
+对于 PostgreSQL Cloud SQL 服务，使用端口 `5432`：
 
 ```shell
 psql -h <service-name> -p 5432 -d <database-name>
 ```
 
-Replace `<service-name>` with the name of your Cloud SQL PAM service and `<database-name>` with the name of your database.
+把 `<service-name>` 替换为你的 Cloud SQL PAM 服务名称，把 `<database-name>` 替换为你的数据库名称。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection and manages the upstream Cloud SQL connection on your behalf. You don't need to know or manage the upstream database credentials.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权，并代表你管理上游 Cloud SQL 连接。你无需了解或管理上游数据库凭证。
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect with the web-based database client. The browser client runs a Tailscale client directly in your browser using WebAssembly (Wasm), so there's nothing else to install.
+你也可以使用基于 Web 的数据库客户端连接。浏览器客户端使用 WebAssembly（Wasm）直接在浏览器中运行 Tailscale 客户端，因此无需安装其他东西。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
-2. Select the Cloud SQL service you want to access.
-3. Select **Connect** in the upper-right corner.
-4. The Tailscale database browser client opens.
-5. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择你想访问的 Cloud SQL 服务。
+3. 选择右上角的 **Connect**。
+4. Tailscale 数据库浏览器客户端会打开。
+5. 如有提示，使用你的 Tailscale 身份进行认证。
 
-You can now run queries against your Cloud SQL database directly from your browser.
+现在你可以直接从浏览器对 Cloud SQL 数据库执行查询了。
 
-The browser client appears as a Tailscale device in your tailnet. If [device approval][docs-device-approval] is enabled, an admin must approve the browser device before it can connect.
+浏览器客户端在你的 tailnet 中显示为一台 Tailscale 设备。如果启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Secure the upstream credentials
+## 保护上游凭证
 
-If your Cloud SQL service uses a database username and password, those credentials can be stored as part of the PAM service configuration. Tailscale stores these credentials in encrypted form, but for production environments we recommend keeping upstream credentials local to the connector whenever possible.
+如果你的 Cloud SQL 服务使用数据库用户名和密码，这些凭证可以作为 PAM 服务配置的一部分保存。Tailscale 以加密形式存储这些凭证，但对于生产环境，我们建议尽量把上游凭证保留在连接器本地。
 
-You can configure the connector to load credentials dynamically from a supported secret source instead of storing the credentials directly in the service configuration. For example, you can load credentials from an environment variable, a local file, or a secrets management system.
+你可以把连接器配置为从受支持的密钥源动态加载凭证，而不是把凭证直接存储在服务配置中。例如，可以从环境变量、本地文件或密钥管理系统加载凭证。
 
-For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+更多信息参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
-If you're using the Cloud SQL connector with IAM database authentication, you don't need to store a static database password. The Cloud SQL connector handles IAM database authentication using the Google Cloud identity available to the PAM connector.
+如果你使用带 IAM 数据库认证的 Cloud SQL 连接器，则无需存储静态数据库密码。Cloud SQL 连接器会使用 PAM 连接器可用的 Google Cloud 身份处理 IAM 数据库认证。
 
-## Review session details and recordings
+## 查看会话详情与录制
 
-Tailscale PAM gives you visibility into connections to your Cloud SQL service.
+Tailscale PAM 让你清楚了解与 Cloud SQL 服务的连接情况。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your Cloud SQL service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 Cloud SQL 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The service that was accessed.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 被访问的服务。
 
-When session recording is enabled, you can also review the SQL queries for the session.
+启用会话录制后，你还可以查看该会话的 SQL 查询。
 
-This gives you a direct answer to two useful questions: who accessed the database, and what did they do while they were there?
+这能直接回答两个很有用的问题：谁访问了数据库？他们在里面做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to your Cloud SQL service, start by reviewing the connector logs and the failed session in the PAM session log.
+如果你无法连接 Cloud SQL 服务，请先查看连接器日志以及 PAM 会话日志中的失败会话。
 
-If you're connecting directly to a private IP address, confirm that the PAM connector has network access to the Cloud SQL instance.
+如果你是直连私有 IP 地址，确认 PAM 连接器能通过网络访问该 Cloud SQL 实例。
 
-If you're connecting directly to a public IP address, verify that the PAM connector's public IP is included in the Cloud SQL instance's **Authorized networks**.
+如果你是直连公网 IP 地址，验证 PAM 连接器的公网 IP 已包含在该 Cloud SQL 实例的 **Authorized networks** 中。
 
-If you're using the Cloud SQL connector, confirm that:
+如果你使用 Cloud SQL 连接器，确认：
 
-* The Cloud SQL Admin API is enabled.
-* The instance connection name is correct.
-* The Google Cloud identity used by the PAM connector has the **Cloud SQL Client** role.
-* The PAM connector can make outbound connections on TCP ports `443` and `3307`. Cloud SQL connectors use port `443` to reach Google APIs and port `3307` to connect to Cloud SQL instances.
+* 已启用 Cloud SQL Admin API。
+* 实例连接名正确。
+* PAM 连接器使用的 Google Cloud 身份拥有 **Cloud SQL Client** 角色。
+* PAM 连接器能通过 TCP 端口 `443` 和 `3307` 发起出站连接。Cloud SQL 连接器使用端口 `443` 访问 Google API，使用端口 `3307` 连接 Cloud SQL 实例。
 
-If you're using IAM database authentication, also confirm that IAM database authentication is enabled on the instance, the IAM principal has the **Cloud SQL Instance User** role, the corresponding database user exists, and that user has the required database privileges.
+如果你使用 IAM 数据库认证，还要确认实例已启用 IAM 数据库认证、该 IAM 主体拥有 **Cloud SQL Instance User** 角色、对应的数据库用户存在，且该用户拥有所需的数据库权限。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the PAM [session logs][docs-pam-session-logs]. Failed PAM sessions often include information about why the connection couldn't be established, which can help narrow down whether the problem is network connectivity, Google Cloud IAM permissions, database authentication, or the upstream Cloud SQL instance itself.
+如果以上排查步骤都无法解决问题，请查看连接器日志以及 PAM [会话日志][docs-pam-session-logs]中失败会话的详情。失败的 PAM 会话通常包含连接无法建立的原因，这有助于判断问题出在网络连通性、Google Cloud IAM 权限、数据库认证还是上游 Cloud SQL 实例本身。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

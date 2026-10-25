@@ -1,50 +1,50 @@
 ---
-title: "Built-in connectors"
-description: "Aperture includes two connectors whose tools ship with the product instead of coming from an upstream MCP server: **Tailnet** and **Tailscale SSH**. Both act upon your tailnet through Tailscale itself"
+title: "内置连接器"
+description: "Aperture 自带两个工具随产品内置而非来自上游 MCP 服务器的连接器：**Tailnet** 和 **Tailscale SSH**。两者都通过 Tailscale 本身对你的 tailnet 执行操作。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-> **Note:** Built-in Tailnet connectors are currently in alpha.
+> **注意：** 内置 Tailnet 连接器目前处于 alpha 阶段。
 
-Aperture includes two connectors whose tools ship with the product instead of coming from an upstream MCP server: **Tailnet** and **Tailscale SSH**. Both act upon your tailnet through Tailscale itself, so they need no external MCP server or third-party credential.
+Aperture 自带两个工具随产品内置而非来自上游 MCP 服务器的连接器：**Tailnet** 和 **Tailscale SSH**。两者都通过 Tailscale 本身对你的 tailnet 执行操作，因此不需要外部 MCP 服务器或第三方凭证。
 
-This topic is for Aperture admins setting up these connectors and granting access to users.
+本主题面向设置这些连接器并向用户授权的 Aperture 管理员。
 
-Use these connectors for the following jobs:
+以下工作可以使用这些连接器完成：
 
-* Join a new application, service, or machine to the user's tailnet.
-* Discover the tailnet machines that have [Tailscale SSH][docs-tailscale-ssh] enabled.
-* Run a shell command on one of those machines.
+* 把新的应用、服务或机器加入用户的 tailnet。
+* 发现启用了 [Tailscale SSH][docs-tailscale-ssh] 的 tailnet 机器。
+* 在其中某台机器上运行 shell 命令。
 
-An admin must set up each connector before users can use it. Unconfigured built-in connectors appear under **Available to add** in Chat **Connectors**. Only admins can access **Configure**. Guided setup creates the connector and grants the admin who performs setup access. Access for every other user or group remains deny-by-default.
+管理员必须先设置每个连接器，用户才能使用。未配置的内置连接器会出现在 Chat **Connectors** 的 **Available to add** 下。只有管理员能访问 **Configure**。引导式设置会创建连接器，并把访问权限授予执行设置的管理员。其他所有用户或组的访问权限保持默认拒绝。
 
-Tailscale SSH setup takes about a minute. Tailnet setup takes about ten minutes because you create a Tailscale OAuth app first.
+Tailscale SSH 的设置大约需要一分钟。Tailnet 的设置大约需要十分钟，因为你需要先创建一个 Tailscale OAuth 应用。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need the following:
+开始之前，你需要：
 
-* The [admin role][docs-set-up-admin-access] in Aperture, to set up a connector and edit grants.
-* For the tailnet connector, permission to create a Tailscale OAuth app in your tailnet, which requires the [Owner](/docs/reference/user-roles) or [Admin](/docs/reference/user-roles) role in that tailnet, plus a Tailscale API access token.
-* For the Tailscale SSH connector, target machines with Tailscale SSH enabled. Your tailnet policy must let the Aperture node connect to them.
+* Aperture 中的[管理员角色][docs-set-up-admin-access]，用于设置连接器和编辑授权。
+* 对于 tailnet 连接器，需要有在你的 tailnet 中创建 Tailscale OAuth 应用的权限——这要求你在该 tailnet 中拥有 [Owner](/docs/reference/user-roles) 或 [Admin](/docs/reference/user-roles) 角色——以及一个 Tailscale API 访问令牌。
+* 对于 Tailscale SSH 连接器，目标机器需启用 Tailscale SSH，并且你的 tailnet 策略必须允许 Aperture 节点连接它们。
 
-## How built-in connectors differ from other connectors
+## 内置连接器与其他连接器的区别
 
-Before configuration, Tailnet and Tailscale SSH appear under **Available to add**. After configuration, a granted user sees them under **Ready to use** and can review their tools. Aperture supplies these tools. Their tool sets can change with Aperture releases.
+配置之前，Tailnet 和 Tailscale SSH 显示在 **Available to add** 下。配置后，被授权的用户会在 **Ready to use** 下看到它们，并可以查看其工具。这些工具由 Aperture 提供，其工具集可能随 Aperture 版本更新而变化。
 
-Both connectors differ from system connectors:
+这两个连接器与系统连接器（system connector）的区别：
 
-* The `system` label and built-in connectors are separate concepts. Both guided setups assign `restricted`, which grants nothing on its own. The shipped default configuration grants `label:system`, which reaches only the built-in `aperture` connector. Tailnet and Tailscale SSH do not receive that label, and you cannot give it to them: Aperture strips the reserved `system` label from every `connectors.servers` entry and reports a warning that blocks the save. Grant these connectors by ID instead. Refer to [the reserved `system` label][docs-connectors-reference-labels].
+* `system` 标签和内置连接器是两个不同的概念。两个引导式设置的标签都是 `restricted`，该标签本身不授予任何权限。出厂默认配置授予 `label:system`，它只覆盖内置的 `aperture` 连接器。Tailnet 和 Tailscale SSH 不会获得该标签，你也不能给它们打上：Aperture 会从每个 `connectors.servers` 条目中剥除保留的 `system` 标签，并报告一个阻止保存的警告。请改为按 ID 授权这些连接器。参阅[保留的 `system` 标签][docs-connectors-reference-labels]。
 
-## Where to define grants
+## 在哪里定义授权
 
-The grant examples in this topic show a single `connectors` capability entry. Add each one to a grant whose `src` names the users or groups that need the connector, in one of the following two places:
+本主题中的授权示例展示的是单个 `connectors` 能力条目。把每个条目添加到 `src` 指明需要该连接器的用户或组的授权中，位置在以下两处之一：
 
-* Add the grant in the Aperture gateway configuration. \[Missing snippet: aperture\_admin\_nav.mdx] Use the visual grant editor, or edit the same `grants` array as JSON on **Administration** > **Configuration**.
-* Add the grant in the tailnet policy file. Add it to the `grants` array of the tailnet the Aperture gateway belongs to.
+* 在 Aperture 网关配置中添加授权。\[Missing snippet: aperture\_admin\_nav.mdx] 可使用可视化授权编辑器，或在 **Administration** > **Configuration** 上以 JSON 编辑同一个 `grants` 数组。
+* 在 tailnet 策略文件中添加授权。把它加入 Aperture 网关所属 tailnet 的 `grants` 数组。
 
-The following example shows a complete Aperture configuration grant that gives the `ai-users` group every tool from the tailnet connector:
+以下示例展示一条完整的 Aperture 配置授权，把 tailnet 连接器的所有工具授予 `ai-users` 组：
 
 ```json
 {
@@ -64,42 +64,42 @@ The following example shows a complete Aperture configuration grant that gives t
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-Guided setup adds a `<connector-id>/**` grant for the admin who performs setup. Add grants manually for every other user or group. Chat omits configured connectors denied by grants.
+引导式设置会为执行设置的管理员添加 `<connector-id>/**` 授权。其他所有用户或组的授权需手动添加。Chat 会省略被授权拒绝的已配置连接器。
 
-The first segment of a `connectors` pattern is the connector ID, the key under `connectors.servers`, not the `provider` value. Guided setup uses `Tailnet` and `TailnetSSH` as the IDs. If you choose a different ID, use it in your grants. IDs must start with a letter and contain only letters and digits.
+`connectors` 模式的第一段是连接器 ID，即 `connectors.servers` 下的键，而不是 `provider` 值。引导式设置使用 `Tailnet` 和 `TailnetSSH` 作为 ID。如果你选择了其他 ID，授权中也要使用它。ID 必须以字母开头，且只能包含字母和数字。
 
-The `provider` value is fixed and case-sensitive: exactly `Tailnet` or `TailnetSSH`. Aperture rejects any other value as an unknown provider.
+`provider` 值是固定的且区分大小写：必须是 `Tailnet` 或 `TailnetSSH`。Aperture 会把其他值当作未知提供商拒绝。
 
-## Tailnet connector
+## Tailnet 连接器
 
-The tailnet connector returns a single-use auth key that an agent can use to join one new node to the user's tailnet on their behalf.
+tailnet 连接器返回一个单次使用的认证密钥（auth key），智能体可以用它代表用户把一个新节点加入其 tailnet。
 
-The connector provides one tool:
+该连接器提供一个工具：
 
-| Tool             | Client-facing name       | What it does                                                                                                   |
-| ---------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `provision_node` | `Tailnet_provision_node` | Starts a one-time browser authorization, then returns a single-use Tailscale auth key after the user approves. |
+| 工具 | 客户端可见名称 | 功能 |
+| --- | --- | --- |
+| `provision_node` | `Tailnet_provision_node` | 启动一次性的浏览器授权，用户批准后返回单次使用的 Tailscale 认证密钥。 |
 
-Use this connector for workflows where an agent brings a new application or service into the tailnet. The agent holds no long-lived shared credential. Instead, it presents an authorization link for a person to approve, and only after that approval does Aperture return a single-use auth key.
+当智能体需要把新的应用或服务带入 tailnet 时，使用该连接器。智能体不持有任何长期共享凭证；它会出示一个授权链接由人来批准，只有批准之后 Aperture 才返回单次使用的认证密钥。
 
-### Step 1: Set up the connector
+### 第 1 步：设置连接器
 
-Use guided setup to create the Tailscale OAuth app with the scope and node attributes that `provision_node` requires, then save the connector configuration.
+使用引导式设置创建具备 `provision_node` 所需作用域和节点属性的 Tailscale OAuth 应用，然后保存连接器配置。
 
-To set up the connector:
+设置连接器：
 
-1. Open Chat **Connectors**.
-2. Expand **Available to add**.
+1. 打开 Chat **Connectors**。
+2. 展开 **Available to add**。
 
-1) Select **Configure** next to **Tailnet**. The **Configure Tailnet** section opens on the connector details page.
+1) 选择 **Tailnet** 旁边的 **Configure**。连接器详情页会打开 **Configure Tailnet** 区域。
 
-1. Generate a Tailscale API access token with admin scope from the **Keys** page of the [Tailscale admin console][docs-api-access-tokens].
-2. In your terminal, export the token as `TS_API_TOKEN`.
-3. Copy the command from the panel's **Terminal** block and run it in the same terminal session to create the OAuth app.
-4. Paste the `clientSecret` from the response into **Client secret**.
-5. Select **Configure**.
+1. 在 [Tailscale 管理控制台][docs-api-access-tokens]的 **Keys** 页面生成一个带 admin 作用域的 Tailscale API 访问令牌。
+2. 在终端中把该令牌导出为 `TS_API_TOKEN`。
+3. 复制面板 **Terminal** 区块中的命令，并在同一终端会话中运行，以创建 OAuth 应用。
+4. 把响应中的 `clientSecret` 粘贴到 **Client secret**。
+5. 选择 **Configure**。
 
-For example, in Bash or Zsh, the following command prompts for the API access token without displaying it and exports it for the command you copy from the panel:
+例如，在 Bash 或 Zsh 中，以下命令会提示输入 API 访问令牌（不回显）并将其导出，供你从面板复制的命令使用：
 
 ```shell
 printf "Paste your Tailscale API access token: " \
@@ -108,53 +108,53 @@ printf "Paste your Tailscale API access token: " \
   && echo
 ```
 
-The panel's command includes the callback URL for your Aperture gateway. Use that command rather than substituting a different hostname or connector ID.
+面板命令中包含你的 Aperture 网关的回调 URL。请直接使用该命令，不要替换成其他主机名或连接器 ID。
 
-By default, provisioned devices carry the `custom:createdByAperture` and `custom:createdByAI` node attributes, which identify them as Aperture-created and AI-created. Reference these attributes in [device posture][docs-device-posture] conditions and [grants][docs-node-attributes] to gate access based on how a device joined. Refer to [Device provisioning with OAuth apps][docs-device-provisioning] for the full OAuth app reference.
+默认情况下，被预配的设备带有 `custom:createdByAperture` 和 `custom:createdByAI` 节点属性，用于标识它们由 Aperture 创建且由 AI 创建。可以在[设备态势][docs-device-posture]条件和[授权][docs-node-attributes]中引用这些属性，按设备的加入方式控制访问。OAuth 应用完整参考参阅[使用 OAuth 应用预配设备][docs-device-provisioning]。
 
-> **Note:**
+> **注意：**
 >
-> The client secret is required. Aperture reads the client ID out of it, so Aperture rejects a secret in any form other than `tskey-app-<id>-<secret>`.
+> 客户端密钥是必需的。Aperture 会从中读出客户端 ID，因此任何不是 `tskey-app-<id>-<secret>` 形式的密钥都会被 Aperture 拒绝。
 
-### Step 2: Grant access
+### 第 2 步：授予访问权限
 
-Guided setup grants access to the admin who performs setup. Add a `connectors` grant for other users who need the tool, in one of the locations described in [Where to define grants][ar-where-to-define-grants]. To grant the provisioning tool by itself:
+引导式设置会把访问权限授予执行设置的管理员。为其他需要该工具的用户添加 `connectors` 授权，位置见[在哪里定义授权][ar-where-to-define-grants]。只授予预配工具本身：
 
 ```json
 { "connectors": ["Tailnet/tools/provision_node"] }
 ```
 
-To grant every tool from the connector:
+授予连接器的所有工具：
 
 ```json
 { "connectors": ["Tailnet/**"] }
 ```
 
-Refer to [Grant access to MCP tools][docs-grant-mcp-tool-access] for the full pattern syntax.
+完整的模式语法参阅[授予 MCP 工具访问权限][docs-grant-mcp-tool-access]。
 
-### Authorization flow
+### 授权流程
 
-This connector does not use the **Connect** button. Authorization starts from the tool and runs one time per provisioned node:
+该连接器不使用 **Connect** 按钮。授权从工具发起，每个被预配的节点运行一次：
 
-1. The agent calls `Tailnet_provision_node` with no arguments.
-2. Aperture returns an authorization link. The agent presents it in chat as a clickable link labeled "Authorize deploying the application to my tailnet", and never pastes the raw URL.
-3. The user opens the link and approves the request.
-4. The agent calls the tool again.
-5. Aperture returns the single-use auth key.
+1. 智能体不带参数调用 `Tailnet_provision_node`。
+2. Aperture 返回一个授权链接。智能体在 chat 中把它呈现为可点击链接，标注为“Authorize deploying the application to my tailnet”，而不会粘贴原始 URL。
+3. 用户打开链接并批准请求。
+4. 智能体再次调用该工具。
+5. Aperture 返回单次使用的认证密钥。
 
-The link opens Tailscale's OAuth consent screen. By approving, the user lets the agent collect a single-use, short-lived auth key and use it to connect one device to the tailnet on their behalf. After approving, the user sees a confirmation page and can close the tab.
+链接会打开 Tailscale 的 OAuth 同意页面。批准即表示用户允许智能体收集一个单次使用、短期的认证密钥，并用它代表用户把一台设备连接到 tailnet。批准后用户会看到确认页面，可以关闭标签页。
 
-Tailscale binds the auth key to the identity of the user who authorizes its creation. The agent uses that key to connect a device with the user's identity, not to create a new Tailscale identity.
+Tailscale 会把认证密钥绑定到批准创建它的用户身份。智能体用该密钥以用户的身份连接设备，而不是创建新的 Tailscale 身份。
 
-The provisioned device does not appear in the Aperture admin dashboard. It joins the tailnet and appears on the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console. By default, it carries the `custom:createdByAperture` and `custom:createdByAI` node attributes.
+被预配的设备不会出现在 Aperture 管理仪表板中。它会加入 tailnet，并显示在 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面上。默认情况下，它带有 `custom:createdByAperture` 和 `custom:createdByAI` 节点属性。
 
-The user must approve the authorization link within 15 minutes, and the agent must collect the key within 10 minutes after approval. Aperture discards the pending flow or the uncollected key after those windows, and the agent starts over with a new call. If authorization fails or times out, refer to [OAuth 2.0 authorization fails][docs-troubleshooting-oauth].
+用户必须在 15 分钟内批准授权链接，智能体必须在批准后 10 分钟内收取密钥。超过这些时限后，Aperture 会丢弃未完成的流程或未被收取的密钥，智能体需要重新调用。如果授权失败或超时，参阅 [OAuth 2.0 授权失败][docs-troubleshooting-oauth]。
 
-Aperture authorizes each call rather than each user, so the connector reports **Ready** in Chat **Connectors** once it is configured and granted. **Ready** means the connector is usable, not that any node is authorized: every provisioned node still needs its own approval. Aperture stores no credential to connect or disconnect.
+Aperture 按调用而非按用户授权，因此连接器一旦配置并授权，就会在 Chat **Connectors** 中显示 **Ready**。**Ready** 表示连接器可用，不代表任何节点已获授权：每个被预配的节点仍需单独批准。Aperture 不存储任何用于连接或断开的凭证。
 
-### Tailnet configuration reference
+### Tailnet 配置参考
 
-Guided setup writes the following configuration to `connectors.servers`, which you can review on **Administration** > **Configuration**. Use it to audit an existing entry. The `Tailnet` key is the connector ID your grants must reference.
+引导式设置会把以下配置写入 `connectors.servers`，你可以在 **Administration** > **Configuration** 中查看，用于审计已有条目。`Tailnet` 键是你的授权必须引用的连接器 ID。
 
 ```json
 {
@@ -182,92 +182,92 @@ Guided setup writes the following configuration to `connectors.servers`, which y
 }
 ```
 
-`auth.type` must be `oauth2_authorization_code`. Any other auth type produces the load-time error `connectors.servers.<id>: built-in provider "Tailnet" requires auth type "oauth2_authorization_code"`.
+`auth.type` 必须是 `oauth2_authorization_code`。其他认证类型会产生加载时错误 `connectors.servers.<id>: built-in provider "Tailnet" requires auth type "oauth2_authorization_code"`。
 
-The `custom:createdByAperture` and `custom:createdByAI` node attributes are defaults, not fixed requirements. To use different custom attributes, edit `auth.auth_params.node_attributes` in the connector's HuJSON configuration. Update the OAuth app's `allowedNodeAttributes` allowlist to permit the attributes you configure.
+`custom:createdByAperture` 和 `custom:createdByAI` 节点属性是默认值，不是硬性要求。要使用其他自定义属性，请编辑连接器 HuJSON 配置中的 `auth.auth_params.node_attributes`，并更新 OAuth 应用的 `allowedNodeAttributes` 允许列表以放行你所配置的属性。
 
-The `node_attributes` value must stay within the OAuth app's `allowedNodeAttributes` allowlist. Aperture sends it on the token exchange, so an attribute the app does not allow fails the exchange rather than the save.
+`node_attributes` 的值必须落在 OAuth 应用的 `allowedNodeAttributes` 允许列表内。Aperture 会在 token 交换时发送它，因此应用不允许的属性会让交换失败（而不是保存失败）。
 
-Guided setup labels both connectors `restricted`. The label records intent and [enforces nothing on its own][docs-connectors-labels]. Restriction comes from narrow grants.
+引导式设置给两个连接器都打上 `restricted` 标签。该标签只记录意图，[本身不强制任何限制][docs-connectors-labels]。真正的限制来自狭窄的授权。
 
-## Tailscale SSH connector
+## Tailscale SSH 连接器
 
-The Tailscale SSH connector discovers SSH-enabled machines in the tailnet and runs one shell command on a chosen machine.
+Tailscale SSH 连接器发现 tailnet 中启用了 SSH 的机器，并在选定的机器上运行一条 shell 命令。
 
-The connector provides two tools:
+该连接器提供两个工具：
 
-| Tool            | Client-facing name         | What it does                                                                           |
-| --------------- | -------------------------- | -------------------------------------------------------------------------------------- |
-| `list_machines` | `TailnetSSH_list_machines` | Lists the tailnet machines that have Tailscale SSH enabled, with status, OS, and tags. |
-| `run_command`   | `TailnetSSH_run_command`   | Runs one shell command on one listed machine over Tailscale SSH.                       |
+| 工具 | 客户端可见名称 | 功能 |
+| --- | --- | --- |
+| `list_machines` | `TailnetSSH_list_machines` | 列出启用了 Tailscale SSH 的 tailnet 机器，包括状态、操作系统和标签。 |
+| `run_command` | `TailnetSSH_run_command` | 通过 Tailscale SSH 在列出的某台机器上运行一条 shell 命令。 |
 
-This connector holds no credential of its own. It connects as the Aperture node, so your tailnet's Tailscale SSH policy determines what it reaches.
+该连接器不持有任何自有凭证。它以 Aperture 节点的身份连接，因此你的 tailnet 的 Tailscale SSH 策略决定它能访问什么。
 
-### Step 1: Set up the connector
+### 第 1 步：设置连接器
 
-To set up the connector:
+设置连接器：
 
-1. Open Chat **Connectors**.
-2. Expand **Available to add**.
-3. Select **Configure** for **Tailscale SSH**.
+1. 打开 Chat **Connectors**。
+2. 展开 **Available to add**。
+3. 为 **Tailscale SSH** 选择 **Configure**。
 
-This connector has no configuration fields. Setup writes the connector configuration, then adds a `TailnetSSH/**` grant for the admin who performs it. Aperture appends that grant to the configuration grant policy whose only `src` entry is that admin account's login name, or adds a policy for them if none exists.
+该连接器没有配置字段。设置会写入连接器配置，然后为执行设置的管理员添加一条 `TailnetSSH/**` 授权。Aperture 会把该授权追加到唯一 `src` 条目为该管理员登录名的配置授权策略中；如果不存在这样的策略，则为其新增一条。
 
-### Step 2: Grant access
+### 第 2 步：授予访问权限
 
-Setup grants the connector only to the admin who ran it. Add a `connectors` grant for every other user who needs the tools, in one of the locations described in [Where to define grants][ar-where-to-define-grants]. Use one of the following patterns:
+设置只把连接器授予运行设置的管理员。为其他需要这些工具的用户添加 `connectors` 授权，位置见[在哪里定义授权][ar-where-to-define-grants]。可使用以下模式之一：
 
-| Pattern                            | Grants                  |
-| ---------------------------------- | ----------------------- |
-| `"TailnetSSH/tools/list_machines"` | Machine discovery alone |
-| `"TailnetSSH/tools/run_command"`   | Command execution alone |
-| `"TailnetSSH/**"`                  | The whole connector     |
+| 模式 | 授予内容 |
+| --- | --- |
+| `"TailnetSSH/tools/list_machines"` | 仅机器发现 |
+| `"TailnetSSH/tools/run_command"` | 仅命令执行 |
+| `"TailnetSSH/**"` | 整个连接器 |
 
-For example:
+例如：
 
 ```json
 { "connectors": ["TailnetSSH/tools/list_machines"] }
 ```
 
-This connector runs commands on reachable tailnet machines, so grant it narrowly. A user with a broad `"**"` grant reaches it regardless of the connector's label.
+该连接器会在可达的 tailnet 机器上运行命令，因此请从窄授权。拥有宽泛 `"**"` 授权的用户无论如何都能访问它，与连接器的标签无关。
 
-### Call the connector tools
+### 调用连接器工具
 
-To test the connector after setup, call its tools in the following order:
+设置完成后，按以下顺序调用工具来测试连接器：
 
-1. Call `TailnetSSH_list_machines` to discover eligible targets.
-2. Take a machine name from the **Machine** column of the result.
-3. Call `TailnetSSH_run_command` with `machine` and `command`.
+1. 调用 `TailnetSSH_list_machines` 发现合格目标。
+2. 从结果的 **Machine** 列中取一个机器名。
+3. 带 `machine` 和 `command` 调用 `TailnetSSH_run_command`。
 
-`run_command` also accepts two optional fields:
+`run_command` 还接受两个可选字段：
 
-| Field     | Default | Description                                                                                                                                               |
-| --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user`    | `root`  | The remote user to connect as. Your Tailscale SSH policy determines whether this user has permission.                                                     |
-| `timeout` | `300`   | Command timeout in seconds. The maximum is 600. Aperture clamps longer values. On timeout, Aperture stops the command and returns the output it produced. |
+| 字段 | 默认值 | 描述 |
+| --- | --- | --- |
+| `user` | `root` | 连接时使用的远程用户。该用户是否有权限由你的 Tailscale SSH 策略决定。 |
+| `timeout` | `300` | 命令超时时间（秒）。最大 600。更长的值会被 Aperture 收敛。超时时，Aperture 会停止命令并返回已产生的输出。 |
 
-Aperture resolves the `machine` value against the network map. A full MagicDNS name or an exact hostname wins over a short name. If a short name matches more than one machine, the tool asks for the full name instead. Matching ignores case.
+Aperture 会对照网络映射解析 `machine` 值。完整的 MagicDNS 名称或精确主机名优先于短名称。如果短名称匹配多台机器，工具会改为要求提供全名。匹配不区分大小写。
 
-A machine on the list has Tailscale SSH enabled. That does not mean the Aperture node can run commands on it. Your tailnet's Tailscale SSH policy decides access when `run_command` connects, so a listed machine can still refuse.
+列表中的机器启用了 Tailscale SSH，但这不代表 Aperture 节点能在其上运行命令。`run_command` 连接时的访问由你的 tailnet 的 Tailscale SSH 策略决定，因此列表中的机器仍可能拒绝。
 
-### Behavior and limits
+### 行为与限制
 
-The following behaviors apply to every `run_command` call:
+以下行为适用于每次 `run_command` 调用：
 
-* Each call opens a fresh SSH session. Working directory, environment variables, and shell state do not carry over, so combine steps into one command, such as `cd /srv && ./deploy.sh`.
-* A job that runs in the background ends when the call returns, unless the command detaches it, such as `nohup cmd >/tmp/out 2>&1 &`.
-* Aperture gives the connection 30 seconds to establish, separate from the command timeout.
-* Aperture returns `stdout` and `stderr` together with the exit code.
-* The tool result reports a non-zero exit code instead of failing the call.
-* Aperture truncates output at about 1 MiB. Filter large output on the remote machine.
-* Aperture verifies the machine's SSH host key against the tailnet network map on every call, so there is no trust-on-first-use window and no host-key approval prompt.
-* The machine list reflects the tailnet at the moment of the call. Aperture does not cache it.
-* Machine names, OS values, and tags come from other tailnet members. Aperture marks them as data rather than instructions when it hands them to the model.
-* Each call writes one audit log line with the connector ID, calling user, machine, remote user, full command, and exit code. Aperture does not log command output.
+* 每次调用都会建立全新的 SSH 会话。工作目录、环境变量和 shell 状态不会延续，因此请把多个步骤合并成一条命令，例如 `cd /srv && ./deploy.sh`。
+* 后台运行的作业会在调用返回时结束，除非命令将其脱离会话，例如 `nohup cmd >/tmp/out 2>&1 &`。
+* Aperture 给连接建立留出 30 秒，独立于命令超时。
+* Aperture 把 `stdout` 和 `stderr` 连同退出码一起返回。
+* 工具结果会报告非零退出码，而不是让调用失败。
+* Aperture 在约 1 MiB 处截断输出。请在远程机器上过滤大输出。
+* Aperture 每次调用都会对照 tailnet 网络映射校验机器的 SSH 主机密钥，因此不存在“首次使用即信任”窗口，也没有主机密钥批准提示。
+* 机器列表反映调用时刻的 tailnet 状态，Aperture 不缓存它。
+* 机器名称、操作系统值和标签来自其他 tailnet 成员。Aperture 把它们交给模型时会标记为数据而非指令。
+* 每次调用写一条审计日志，包含连接器 ID、调用用户、机器、远程用户、完整命令和退出码。Aperture 不记录命令输出。
 
-### Tailscale SSH configuration reference
+### Tailscale SSH 配置参考
 
-Setup writes the following configuration. This connector has no `auth` block, because it connects as the Aperture node.
+设置会写入以下配置。该连接器没有 `auth` 块，因为它以 Aperture 节点的身份连接。
 
 ```json
 {
@@ -284,21 +284,21 @@ Setup writes the following configuration. This connector has no `auth` block, be
 }
 ```
 
-The `url` value is a placeholder for this built-in connector, not an upstream MCP endpoint.
+对这个内置连接器而言，`url` 值只是占位符，不是上游 MCP 端点。
 
-## Verify a built-in connector
+## 验证内置连接器
 
-To confirm a built-in connector works:
+确认内置连接器正常工作：
 
-1. Open Chat **Connectors**.
-2. Under **Ready to use**, confirm the connector shows **Ready**.
-3. Select the connector to review the detail tool list.
-4. Confirm the users who need it have a matching `connectors` grant.
-5. Call a tool from a client through Aperture's [MCP endpoint][docs-aperture-mcp-server], then compare the result with the following.
+1. 打开 Chat **Connectors**。
+2. 在 **Ready to use** 下确认连接器显示 **Ready**。
+3. 选择连接器查看详细工具列表。
+4. 确认需要它的用户拥有匹配的 `connectors` 授权。
+5. 从客户端通过 Aperture 的 [MCP 端点][docs-aperture-mcp-server]调用一个工具，然后与以下结果对照。
 
-**Ready** describes access and authorization. It does not prove that a node is authorized or that an upstream service is healthy.
+**Ready** 描述的是访问与授权状态。它不证明某个节点已获授权，也不证明上游服务健康。
 
-A successful `TailnetSSH_list_machines` call returns a count summary, notes about authorization and data handling, and a table:
+成功的 `TailnetSSH_list_machines` 调用会返回数量摘要、关于授权和数据处理的说明，以及一张表：
 
 ```text
 Tailnet machines with Tailscale SSH enabled: 2 total, 1 online, 1 offline.
@@ -309,9 +309,9 @@ Tailnet machines with Tailscale SSH enabled: 2 total, 1 online, 1 offline.
 | web-1.tail0abc.ts.net | online | linux | - |
 ```
 
-A tailnet with no SSH-enabled machines returns `No tailnet machines have Tailscale SSH enabled.` instead.
+没有启用 SSH 机器的 tailnet 会返回 `No tailnet machines have Tailscale SSH enabled.`。
 
-A successful `TailnetSSH_run_command` call returns a header line followed by the combined output, or `(no output)` when the command produced none:
+成功的 `TailnetSSH_run_command` 调用会返回一行头信息加合并输出；命令没有输出时返回 `(no output)`：
 
 ```text
 Ran on web-1.tail0abc.ts.net (user root), exit code 0:
@@ -319,18 +319,18 @@ Ran on web-1.tail0abc.ts.net (user root), exit code 0:
 Linux web-1 6.8.0-40-generic x86_64
 ```
 
-## Related
+## 相关内容
 
-* [Get started with connectors][docs-connectors-get-started] - Add and grant your first connector.
-* [How connectors work][docs-connectors-how-it-works] - The connector model, grants, and capability behavior.
-* [Aperture connectors reference][docs-connectors-reference] - Connector field definitions and API behavior.
-* [Grant access to MCP tools][docs-grant-mcp-tool-access] - Connector grant patterns.
-* [Aperture grants vs. tailnet policy file grants][docs-aperture-vs-tailnet-grants] - Choose where to define grants and convert between the two forms.
-* [Tailscale SSH][docs-tailscale-ssh] - Enable Tailscale SSH and write access rules for it.
-* [Device provisioning with OAuth apps][docs-device-provisioning] - The OAuth app and authorization code flow the tailnet connector uses.
-* [Aperture Chat reference][docs-aperture-chat-connectors] - Where to find connectors in Aperture and provisioned devices in the Tailscale admin console.
+* [连接器入门][docs-connectors-get-started] —— 添加并授权你的第一个连接器。
+* [连接器的工作原理][docs-connectors-how-it-works] —— 连接器模型、授权和能力行为。
+* [Aperture 连接器参考][docs-connectors-reference] —— 连接器字段定义和 API 行为。
+* [授予 MCP 工具访问权限][docs-grant-mcp-tool-access] —— 连接器授权模式。
+* [Aperture 授权与 tailnet 策略文件授权对比][docs-aperture-vs-tailnet-grants] —— 选择授权定义位置，并在两种形式之间转换。
+* [Tailscale SSH][docs-tailscale-ssh] —— 启用 Tailscale SSH 并为它编写访问规则。
+* [使用 OAuth 应用预配设备][docs-device-provisioning] —— tailnet 连接器使用的 OAuth 应用与授权码流程。
+* [Aperture Chat 参考][docs-aperture-chat-connectors] —— 在 Aperture 中哪里找连接器，以及在 Tailscale 管理控制台中哪里找被预配的设备。
 
-[ar-where-to-define-grants]: #where-to-define-grants
+[ar-where-to-define-grants]: #在哪里定义授权
 
 [docs-aperture-chat-connectors]: /docs/aperture/reference/chat#connectors
 

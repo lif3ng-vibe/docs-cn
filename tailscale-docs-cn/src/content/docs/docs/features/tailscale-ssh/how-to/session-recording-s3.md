@@ -1,41 +1,41 @@
 ---
-title: "Send Tailscale SSH session recordings to S3"
-description: "By default, Tailscale SSH session recording will save recordings to the Docker host's filesystem. While this is a fast and straightforward way to deploy session recorders, you may want to use a more s"
+title: "将 Tailscale SSH 会话录制发送到 S3"
+description: "默认情况下，Tailscale SSH 会话录制会将录制内容保存到 Docker 主机的文件系统。这种方式部署会话录制器快速直接，但你可能想使用像 Amazon S3 这样更具可扩展性和弹性的存储方案。"
 ---
 
-Last validated Jan 9, 2026
+最后验证于 Jan 9, 2026
 
-By default, Tailscale SSH session recording will save recordings to the Docker host's filesystem. While this is a fast and straightforward way to deploy session recorders, you may want to use a more scalable and resilient storage solution like Amazon S3.
+默认情况下，Tailscale SSH 会话录制会将录制内容保存到 Docker 主机的文件系统。这种方式部署会话录制器快速直接，但你可能想使用像 Amazon S3 这样更具可扩展性和弹性的存储方案。
 
-> **Note:** Tailscale SSH session recording is currently in beta.
+> **注意：** Tailscale SSH 会话录制目前处于 beta 阶段。
 
-> **Note:** Tailscale SSH session recording is available for [the Personal and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** Tailscale SSH 会话录制适用于 [Personal 和 Enterprise 套餐](https://tailscale.com/pricing)。
 
-You can configure session recorder nodes to send recordings to Amazon S3 or another S3-compatible object storage service such as MinIO, Wasabi, Google Cloud Storage, or [Cloudflare R2][ar-cloudflare-r2-compatibility].
+你可以配置会话录制节点，将录制内容发送到 Amazon S3 或其他兼容 S3 的对象存储服务，例如 MinIO、Wasabi、Google Cloud Storage 或 [Cloudflare R2][ar-cloudflare-r2-compatibility]。
 
-If you deploy recorder nodes with the built-in web UI enabled, users can access recordings stored in S3 in the web UI.
+如果你部署录制节点时启用了内置 Web UI，用户就可以在 Web UI 中访问存储在 S3 中的录制内容。
 
-## Configure S3 as storage for session recording nodes
+## 将 S3 配置为会话录制节点的存储
 
-### Prerequisites
+### 前提条件
 
-To configure S3 as the backend storage for session recording, you must have access to an AWS account with permission to create:
+要将 S3 配置为会话录制的后端存储，你必须能访问一个有权创建以下内容的 AWS 账户：
 
-* S3 buckets
-* IAM policies
+* S3 存储桶
+* IAM 策略
 
-and *either*
+以及以下*二者之一*
 
-* IAM users
-* IAM user access keys
+* IAM 用户
+* IAM 用户访问密钥
 
-or
+或者
 
-* an IAM role
+* 一个 IAM 角色
 
-### Create an IAM policy and user/role
+### 创建 IAM 策略和用户/角色
 
-[Create the following IAM policy][xt-aws-iam-create] in your AWS account. Replace `<bucket-name>` with the name of your S3 bucket on both lines of the `Resource` section.
+在你的 AWS 账户中[创建以下 IAM 策略][xt-aws-iam-create]。将 `Resource` 部分两行中的 `<bucket-name>` 替换为你的 S3 存储桶名称。
 
 ```json
 {
@@ -58,17 +58,17 @@ or
 }
 ```
 
-If you are running the recorder nodes without the built-in web UI, you can omit `s3:GetObject` and `s3:ListBucket` from this policy. `s3:PutObject` and `s3:GetBucketLocation` are always required.
+如果运行录制节点时未启用内置 Web UI，可以在此策略中省略 `s3:GetObject` 和 `s3:ListBucket`。`s3:PutObject` 和 `s3:GetBucketLocation` 始终是必需的。
 
-If you plan to use IAM access keys for permission to write to the bucket, assign this policy a new IAM user, and [create an access key][xt-aws-iam-create-key] for this user. If you plan to use an IAM role, [create an IAM role][xt-aws-iam-create-role] and attach the previously defined policy to the role.
+如果你打算使用 IAM 访问密钥来获得写入存储桶的权限，请将此策略分配给一个新的 IAM 用户，并为该用户[创建访问密钥][xt-aws-iam-create-key]。如果你打算使用 IAM 角色，请[创建一个 IAM 角色][xt-aws-iam-create-role]，并将前面定义的策略附加到该角色。
 
-### Deploy the recorder node
+### 部署录制节点
 
-Deploying a recorder node with S3 as the storage backend is similar to the standard filesystem deployment. You'll need to add your IAM credentials or role, and the S3 bucket information.
+以 S3 作为存储后端部署录制节点，与标准的文件系统部署类似。你需要添加 IAM 凭证或角色，以及 S3 存储桶信息。
 
-#### Deploy with AWS access keys
+#### 使用 AWS 访问密钥部署
 
-For AWS access keys, specify the AWS access key and secret key:
+对于 AWS 访问密钥，请指定 AWS 访问密钥和秘密密钥：
 
 ```shell
 docker run --name tsrecorder --rm -it \
@@ -81,9 +81,9 @@ docker run --name tsrecorder --rm -it \
   --bucket=$S3_BUCKET_NAME --ui \
 ```
 
-#### Deploy with attached IAM roles
+#### 使用附加的 IAM 角色部署
 
-For IAM roles, the credentials are retrieved from the AWS metadata service. You'll need to assign an IAM role (and if using an EC2 instance, an [IAM instance profile][xt-aws-iam-instance-profile]) to the container.
+对于 IAM 角色，凭证从 AWS 元数据服务获取。你需要为容器分配一个 IAM 角色（如果使用 EC2 实例，还需要一个 [IAM 实例配置文件][xt-aws-iam-instance-profile]）。
 
 ```shell
 docker run --name tsrecorder --rm -it \
@@ -94,43 +94,43 @@ docker run --name tsrecorder --rm -it \
   --bucket=$S3_BUCKET_NAME --ui \
 ```
 
-> **Note:**
+> **注意：**
 >
-> If the instance you're provisioning the Docker container is using [Instance Metadata v2][xt-aws-configuring-instance-metadata-service], the default `PUT` response hop limit is 1 (that is, from the EC2 instance to the metadata service). For IAM instance profiles to work with Docker, you must first configure the limit to account for the extra hop through the EC2 instance, [so 2 at minimum][xt-aws-instance-metadata-hop-limit].
+> 如果你预配 Docker 容器所用的实例使用的是[实例元数据 v2][xt-aws-configuring-instance-metadata-service]，默认的 `PUT` 响应跳数限制为 1（即从 EC2 实例到元数据服务）。要让 IAM 实例配置文件与 Docker 配合工作，必须先将该限制调整为计入经过 EC2 实例的额外一跳，[即至少为 2][xt-aws-instance-metadata-hop-limit]。
 
-Required flags:
+必需标志：
 
-* `--dst` Specifies where recordings will be saved. Accepts a local file path or an S3 region URL. The value must begin with `s3://` if you intend to use S3 storage for storing the recordings. You can alternatively define the value as an environment variable, `TSRECORDER_DST`.
-* `--statedir` Specifies where the recorder should store its internal state. Accepts a local file path.
+* `--dst` 指定录制内容的保存位置。接受本地文件路径或 S3 区域 URL。如果打算使用 S3 存储录制内容，该值必须以 `s3://` 开头。也可以将该值定义为环境变量 `TSRECORDER_DST`。
+* `--statedir` 指定录制器存储其内部状态的位置。接受本地文件路径。
 
-Optional flags:
+可选标志：
 
-* `--hostname` Specifies a hostname to use for the recorder node. Defaults to `recorder`. You can alternatively define the value as an environment variable, `TSRECORDER_HOSTNAME`.
-* `--access-key` The AWS access key for an IAM user that can upload recordings to an S3 bucket. Required when using S3 as a storage backend if no IAM role is passed to the instance. You can alternatively define the secret access key as an environment variable, `AWS_ACCESS_KEY_ID`.
-* `--secret-key` The AWS secret access key for an IAM user that can upload recordings to an S3 bucket. Required when using S3 as a storage backend if no IAM role is passed to the instance. You can alternatively define the secret access key as an environment variable, `AWS_SECRET_ACCESS_KEY`.
-* `--bucket` The name of the S3 bucket where the recorder should upload recordings. Required when using S3 as a storage backend. You can alternatively define the secret access key as an environment variable, `TSRECORDER_BUCKET`.
-* `--state` Path to Tailscale state file, used to persist recorder state across container restarts. This can be a persistent volume or a Kubernetes [`Secret`][xt-kubernetes-secret]. You can alternatively define this value as an environment variable, `TS_STATE`.
-  * To use a `Secret`, specify `kube:<secret-name>`. If set to use a `Secret` for state storage, the recorder must have permissions to read, update, and patch the `Secret`. If the `Secret` does not exist, the recorder will create it, and must have permissions to do so.
-  * If `--state` is unset, the state will be stored in the directory set using `--statedir`.
-* `--ui` Enables the recorder container web UI for viewing recorded SSH sessions. Defaults to `false` if this flag is not present. You can alternatively define this value as an environment variable, `TSRECORDER_UI`.
-  * If you deploy the recorder with the UI, you must have HTTPS enabled in your tailnet.
-  * If you enable the recorder container web UI, you should restrict access to port `443` on the recorder in your access control policies to prevent unauthorized members of your tailnet from viewing sensitive recordings.
+* `--hostname` 指定录制节点使用的主机名。默认为 `recorder`。也可以将该值定义为环境变量 `TSRECORDER_HOSTNAME`。
+* `--access-key` 可将录制内容上传到 S3 存储桶的 IAM 用户的 AWS 访问密钥。当使用 S3 作为存储后端且未向实例传递 IAM 角色时为必需项。也可以将该值定义为环境变量 `AWS_ACCESS_KEY_ID`。
+* `--secret-key` 可将录制内容上传到 S3 存储桶的 IAM 用户的 AWS 秘密访问密钥。当使用 S3 作为存储后端且未向实例传递 IAM 角色时为必需项。也可以将该秘密访问密钥定义为环境变量 `AWS_SECRET_ACCESS_KEY`。
+* `--bucket` 录制器上传录制内容的 S3 存储桶名称。使用 S3 作为存储后端时为必需项。也可以将该值定义为环境变量 `TSRECORDER_BUCKET`。
+* `--state` Tailscale 状态文件的路径，用于在容器重启之间持久化录制器状态。可以是持久卷或 Kubernetes [`Secret`][xt-kubernetes-secret]。也可以将该值定义为环境变量 `TS_STATE`。
+  * 要使用 `Secret`，请指定 `kube:<secret-name>`。如果设置为使用 `Secret` 存储状态，录制器必须拥有读取、更新和修补该 `Secret` 的权限。如果该 `Secret` 不存在，录制器会创建它，因此也必须拥有相应权限。
+  * 如果未设置 `--state`，状态将存储在使用 `--statedir` 设置的目录中。
+* `--ui` 启用录制器容器的 Web UI 以查看已录制的 SSH 会话。如果未提供此标志，默认为 `false`。也可以将该值定义为环境变量 `TSRECORDER_UI`。
+  * 如果部署录制器时启用了 UI，你的 tailnet 必须已启用 HTTPS。
+  * 如果启用录制器容器的 Web UI，你应在访问控制策略中限制对录制器 `443` 端口的访问，以防止 tailnet 中未经授权的成员查看敏感的录制内容。
 
-There are multiple ways to define the AWS IAM credentials needed to connect to an S3 bucket. In order of precedence, they are:
+定义连接 S3 存储桶所需的 AWS IAM 凭证有多种方式。按优先级从高到低依次为：
 
-1. Specify `--access-key` and `--secret-key`
-2. Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-3. Specify none of the above, and be on an EC2 instance with the right permissions.
+1. 指定 `--access-key` 和 `--secret-key`
+2. 设置 `AWS_ACCESS_KEY_ID` 和 `AWS_SECRET_ACCESS_KEY`
+3. 以上都不指定，运行在具有相应权限的 EC2 实例上。
 
-#### Cloudflare R2 Compatibility
+#### Cloudflare R2 兼容性
 
-Cloudflare R2 Storage provides an [S3-compatible API][xt-cloudflare-S3-API-compatibility]; however, an additional setting is needed due to differences in their implementation. To use Cloudflare R2 as the storage service for session recordings set the environment variable `S3_SEND_CONTENT_MD5` to `true` in addition to any environment variables you are already passing.
+Cloudflare R2 Storage 提供 [S3 兼容 API][xt-cloudflare-S3-API-compatibility]；但由于其实现存在差异，需要额外设置。要使用 Cloudflare R2 作为会话录制的存储服务，除已传递的环境变量外，还需将环境变量 `S3_SEND_CONTENT_MD5` 设置为 `true`。
 
 ```shell
 S3_SEND_CONTENT_MD5=true
 ```
 
-[ar-cloudflare-r2-compatibility]: #cloudflare-r2-compatibility
+[ar-cloudflare-r2-compatibility]: #cloudflare-r2-兼容性
 
 [xt-aws-iam-create-role]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create.html
 

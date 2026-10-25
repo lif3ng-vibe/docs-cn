@@ -1,61 +1,51 @@
 ---
-title: "Tailscale with GitLab CI/CD"
-description: "The [Tailscale GitLab configuration][xt-gitlab-tailscale-gitlab-cicd] enables connecting your Tailscale network (known as a tailnet) to a [GitLab Runner][xt-gitlab-runner]."
+title: "将 Tailscale 与 GitLab CI/CD 配合使用"
+description: "借助 [Tailscale GitLab 配置][xt-gitlab-tailscale-gitlab-cicd]，可以把你的 Tailscale 网络（即 tailnet）连接到 [GitLab Runner][xt-gitlab-runner]。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-The [Tailscale GitLab configuration][xt-gitlab-tailscale-gitlab-cicd] enables connecting your Tailscale network
-(known as a tailnet) to a [GitLab Runner][xt-gitlab-runner].
+借助 [Tailscale GitLab 配置][xt-gitlab-tailscale-gitlab-cicd]，可以把你的 Tailscale 网络
+（即 tailnet）连接到 [GitLab Runner][xt-gitlab-runner]。
 
-With this configuration, you can access nodes in your tailnet directly from your GitLab Runner. Some example uses are:
+通过这一配置，你可以直接从 GitLab Runner 访问 tailnet 中的节点。一些示例用途：
 
-* Securely deploy your application to an internal server
-* Securely reach your private test runners for specific platforms
-* Reach your database of test data without leaving it exposed on the internet
-* Access an internal deployment monitoring tool
+* 将应用安全地部署到内部服务器
+* 安全地访问面向特定平台的私有测试 runner
+* 访问你的测试数据数据库，而不必将其暴露在互联网上
+* 访问内部部署监控工具
 
-## How it works
+## 工作原理
 
-When you add the Tailscale GitLab configuration to your runner, subsequent steps in your runner
-can then access nodes in your tailnet. For example, the runner could access a node that has a
-database of test data.
+当你把 Tailscale GitLab 配置添加到你的 runner 后，runner 中后续的步骤就可以访问 tailnet 中的节点。例如，runner 可以访问一个存有测试数据数据库的节点。
 
-The Tailscale GitLab configuration requires an [auth key][docs-auth-keys], which is tagged, reusable, ephemeral, and (if applicable) pre-approved. You store the auth key as an
-[external GitLab secret][xt-gitlab-secrets]. The tag grants the access permission
-to any node created by your runner.
+Tailscale GitLab 配置需要一个[认证密钥（auth key）][docs-auth-keys]，它必须带标签、可重用、临时，以及（如适用）预批准的。你将认证密钥存储为
+[GitLab 外部机密][xt-gitlab-secrets]。该标签会把访问权限授予你的 runner 创建的任何节点。
 
-When your runner executes, it uses the auth key to create an
-[ephemeral node][docs-ephemeral-nodes]. The node can then access nodes in your tailnet, subject to the
-access applied to the tags.
+runner 执行时，会使用认证密钥创建一个
+[临时节点（ephemeral node）][docs-ephemeral-nodes]。随后，该节点可以访问 tailnet 中的节点，但受应用于这些标签的访问规则约束。
 
-Because the node is ephemeral, shortly after the action completes, the node is automatically removed
-from your tailnet. The next time the action runs, it creates a new ephemeral node, available only
-for the new runner.
+由于该节点是临时的，操作完成后不久，它就会被自动从你的 tailnet 中移除。下次运行该操作时，会创建一个新的临时节点，仅供新的 runner 使用。
 
-Any node that the Tailscale GitLab configuration creates is [pre-approved][docs-auth-keys-types] on
-tailnets that use [device approval][docs-device-approval].
+在启用了[设备审批（device approval）][docs-device-approval]的 tailnet 中，Tailscale GitLab 配置创建的任何节点都是[预批准][docs-auth-keys-types]的。
 
-## Add Tailscale to a GitLab Runner
+## 将 Tailscale 添加到 GitLab Runner
 
-1. Create at least one [tag][docs-tags] for the nodes that the GitLab configuration will create.
-   For example, `tag:ci`, which is used for this example. The access permissions that you grant to
-   the tags are applied to the nodes that will be created by the runner.
-2. Create an [auth key][docs-auth-keys]. We recommend that the [key type][docs-auth-keys-types] is tagged,
-   reusable, and ephemeral. If the tailnet uses [device approval][docs-device-approval], ensure that the
-   key type is also pre-approved.
-3. Create a [GitLab secret][xt-gitlab-secrets] with the name `TAILSCALE_AUTHKEY` and the value set to your auth key.
-   Then use the `authkey` field to reference the secret in your runner. For example:
+1. 为 GitLab 配置将创建的节点创建至少一个[标签（tag）][docs-tags]。
+   例如本例使用的 `tag:ci`。你授予这些标签的访问权限会应用到 runner 将创建的节点上。
+2. 创建一个[认证密钥][docs-auth-keys]。我们建议[密钥类型][docs-auth-keys-types]为带标签、
+   可重用且临时。如果 tailnet 启用了[设备审批][docs-device-approval]，还应确保
+   密钥类型是预批准的。
+3. 创建一个名为 `TAILSCALE_AUTHKEY` 的 [GitLab 机密][xt-gitlab-secrets]，并将其值设置为你的认证密钥。
+   然后在你的 runner 中使用 `authkey` 字段引用该机密。例如：
 
    ```shell
    tailscale up --auth-key=${TAILSCALE_AUTHKEY} --hostname="gitlab-$(cat /etc/hostname)" --accept-routes
    ```
 
-When the action runs, it creates an ephemeral node. The node can access nodes in your tailnet,
-subject to the access rules applied to the specified tag or tags. In the rest of your runner,
-access other nodes in your tailnet as needed.
+操作运行时会创建一个临时节点。该节点可以访问 tailnet 中的节点，但受应用于指定标签的访问规则约束。在 runner 的其余部分，按需访问 tailnet 中的其他节点。
 
-The ephemeral node is automatically cleaned up shortly after the action finishes.
+操作结束后不久，临时节点会被自动清理。
 
 [docs-tags]: /docs/features/tags
 

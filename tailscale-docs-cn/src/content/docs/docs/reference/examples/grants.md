@@ -1,41 +1,41 @@
 ---
-title: "Grant examples"
-description: "[Grants][docs-grants] are the modern way to define access control rules in the [tailnet policy file][docs-tailnet-policy-file]. They replace the [legacy ACL format][docs-acls] with a more flexible and"
+title: "授权示例"
+description: "[授权][docs-grants]（grants）是在 [tailnet 策略文件][docs-tailnet-policy-file]中定义访问控制规则的现代方式。它们以更灵活、功能更丰富的语法取代了[旧版 ACL 格式][docs-acls]"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[Grants][docs-grants] are the modern way to define access control rules in the [tailnet policy file][docs-tailnet-policy-file]. They replace the [legacy ACL format][docs-acls] with a more flexible and feature-rich syntax.
+[授权][docs-grants]（grants）是在 [tailnet 策略文件][docs-tailnet-policy-file]中定义访问控制规则的现代方式。它们以更灵活、功能更丰富的语法取代了[旧版 ACL（访问控制列表）格式][docs-acls]。
 
-This topic provides a comprehensive collection of grant examples for Tailscale tailnet policies, organized from simplest to most complex scenarios. Each example includes context, the complete configuration (as notes or a complete tailnet policy file), and implementation notes to help you understand how to apply similar patterns in your environment.
+本主题全面收录了 Tailscale tailnet 策略的授权示例，按从最简单到最复杂的场景组织。每个示例都包含背景说明、完整配置（以代码片段或完整 tailnet 策略文件的形式呈现）以及实现要点，帮助你理解如何在自己的环境中套用类似模式。
 
-| Example                                                                                                                       | Description                                                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Allow all][ar-allow-all]                                                                                                     | Provides the default policy that lets all connections between devices in your tailnet. Devices shared from another network can only respond to incoming connections.          |
-| [Allow users access to their own devices][ar-allow-users-access-to-their-own-devices]                                         | Enables members of your tailnet to access their own devices. This is a basic access control setup focusing on self-device management.                                         |
-| [Allow using exit nodes][ar-allow-using-exit-nodes]                                                                           | Permits all members of your tailnet to route internet traffic through any available exit nodes.                                                                               |
-| [Allow based on purpose using tags][ar-allow-based-on-purpose-using-tags]                                                     | Enforces communication boundaries between application components, allowing traffic only between adjacent tiers for secure multi-tier applications.                            |
-| [Allow access to different environments by group][ar-allow-access-to-different-environments-by-group]                         | Implements group-based access control with port restrictions for shared resources, giving different teams varying privilege levels.                                           |
-| [Route traffic through exit nodes based on location][ar-route-traffic-through-exit-nodes-based-on-location]                   | Segments exit node usage based on user geographical location, directing users to use exit nodes closest to them for optimal performance.                                      |
-| [Allow access to resources based on device posture][ar-allow-access-to-resources-based-on-device-posture]                     | Controls access to resources through different subnet routers based on device compliance, ensuring only compliant devices can access sensitive resources.                     |
-| [Route group traffic through app connectors][ar-route-group-traffic-through-app-connectors]                                   | Segments application access through specific app connectors for different user groups, providing secure access to applications without direct exposure.                       |
-| [Customize `autogroup:internet`][ar-customize-autogroup-internet]                                                             | Creates custom internet access rules using IP sets and routes traffic through specific subnet routers, allowing more granular control over external resource access.          |
-| [Allow access to different environments using device posture][ar-allow-access-to-different-environments-using-device-posture] | Controls access to different infrastructure environments based on device security posture, enforcing stricter security for more sensitive environments.                       |
-| [Allow access to Kubernetes Operator with privileges][ar-allow-access-to-kubernetes-operator-with-privileges]                 | Manages Kubernetes Operator access with different privilege levels, granting administrative or read-only access to different users through Tailscale's Kubernetes capability. |
-| [Application peering][ar-application-peering]                                                                                 | Enables connections between applications across cloud providers and SaaS applications, allowing secure service-to-service communication across environments.                  |
-| [CI/CD development pipeline][ar-ci-cd-development-pipeline]                                                                   | Restricts access to deployment pipeline components based on team roles, securing the deployment pipeline while enabling automated deployments.                                |
-| [Monitor application access][ar-monitor-application-access]                                                                   | Enables monitoring server access to services on specific ports across the tailnet, balancing observability needs with security.                                               |
-| [Network microsegmentation][ar-network-microsegmentation]                                                                     | Implements logical tailnet segmentation with support team access across segments, limiting the blast radius of potential security incidents.                                  |
-| [VPC access][ar-vpc-access]                                                                                                   | Enables developer access to VPC resources with subnet peering capabilities, providing secure access to cloud resources without public exposure.                               |
-| [Use Tailscale Peer Relays][ar-use-tailscale-peer-relays]                                                                     | Enables devices in your tailnet to act as high-throughput relay servers.                                                                                                      |
+| 示例 | 说明 |
+| --- | --- |
+| [全部允许][ar-allow-all] | 提供默认策略，允许 tailnet 内设备之间的所有连接。从其他网络共享来的设备只能响应入站连接。 |
+| [允许用户访问自己的设备][ar-allow-users-access-to-their-own-devices] | 让 tailnet 成员能够访问自己的设备。这是一套专注于自助设备管理的基础访问控制配置。 |
+| [允许使用出口节点][ar-allow-using-exit-nodes] | 允许 tailnet 的所有成员通过任意可用的出口节点路由互联网流量。 |
+| [使用标签按用途授权][ar-allow-based-on-purpose-using-tags] | 在应用组件之间强制实施通信边界，只允许相邻层级之间的流量，适用于安全的多层应用。 |
+| [按组访问不同环境][ar-allow-access-to-different-environments-by-group] | 实现基于组的访问控制，并对共享资源施加端口限制，让不同团队拥有不同的权限级别。 |
+| [按位置经出口节点路由流量][ar-route-traffic-through-exit-nodes-based-on-location] | 按用户地理位置划分出口节点的使用，引导用户使用距离最近的出口节点以获得最佳性能。 |
+| [基于设备态势控制资源访问][ar-allow-access-to-resources-based-on-device-posture] | 基于设备合规状态控制经由不同子网路由器的资源访问，确保只有合规设备才能访问敏感资源。 |
+| [经应用连接器路由组流量][ar-route-group-traffic-through-app-connectors] | 为不同用户组经指定的应用连接器划分应用访问，在不直接暴露应用的前提下提供安全访问。 |
+| [自定义 `autogroup:internet`][ar-customize-autogroup-internet] | 使用 IP 集合创建自定义互联网访问规则，并让流量经特定的子网路由器转发，实现对外部资源访问更细粒度的控制。 |
+| [使用设备态势访问不同环境][ar-allow-access-to-different-environments-using-device-posture] | 基于设备安全态势控制对不同基础设施环境的访问，对更敏感的环境实施更严格的安全要求。 |
+| [以特定权限访问 Kubernetes Operator][ar-allow-access-to-kubernetes-operator-with-privileges] | 管理 Kubernetes Operator 的不同权限级别，通过 Tailscale 的 Kubernetes 能力为不同用户授予管理或只读访问权限。 |
+| [应用对等连接][ar-application-peering] | 支持跨云服务商和 SaaS 应用的应用间连接，实现跨环境的安全服务间通信。 |
+| [CI/CD 开发流水线][ar-ci-cd-development-pipeline] | 按团队角色限制对部署流水线组件的访问，在保障部署流水线安全的同时支持自动化部署。 |
+| [监控应用访问][ar-monitor-application-access] | 允许监控服务器访问 tailnet 内特定端口上的服务，在可观测性需求与安全之间取得平衡。 |
+| [网络微分段][ar-network-microsegmentation] | 实现 tailnet 的逻辑分段，并支持支持团队跨段访问，限制潜在安全事件的影响范围。 |
+| [VPC 访问][ar-vpc-access] | 让开发者借助子网对等能力访问 VPC 资源，在不公开暴露的前提下安全访问云资源。 |
+| [使用 Tailscale Peer Relay][ar-use-tailscale-peer-relays] | 让 tailnet 中的设备充当高吞吐量中继服务器。 |
 
-## Allow all
+## 全部允许
 
-| Availability            | Related concepts      |
-| ----------------------- | --------------------- |
-| [All plans][co-pricing] | [grants][docs-grants] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [授权][docs-grants] |
 
-This example represents the most permissive default policy for a Tailscale tailnet (known as a [tailnet][docs-tailnet]). Use this when you want minimal restrictions for a trusted environment, such as for small teams or personal tailnets where all devices should freely communicate with each other. This example is often used as a starting point before implementing more restrictive policies.
+本示例是 Tailscale tailnet（即 [tailnet][docs-tailnet]）中权限最宽松的默认策略。当你希望在一个受信任的环境里尽量少加限制时可以使用它，例如小型团队或个人 tailnet——其中所有设备都应能自由互相通信。此示例常作为实施更严格策略之前的起点。
 
 ```json
 {
@@ -51,19 +51,19 @@ This example represents the most permissive default policy for a Tailscale tailn
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example uses wildcards for all three key parameters. The source (`src`) wildcard lets any device or user start connections. The destination (`dst`) wildcard permits connections to any device in the tailnet. The IP protocol (`ip`) wildcard lets all types of traffic, including TCP, UDP, and ICMP on any port.
+本示例对三个关键参数都使用了通配符。源（`src`）通配符允许任何设备或用户发起连接；目标（`dst`）通配符允许连接到 tailnet 中的任何设备；IP 协议（`ip`）通配符允许任意端口上的所有流量类型，包括 TCP、UDP 和 ICMP。
 
-> **Note:**
+> **注意：**
 >
-> Even with this permissive policy, devices [shared][docs-sharing] with you from another tailnet cannot access devices in your tailnet. Shared devices can only respond to incoming connections from your tailnet, not start them.
+> 即使采用这种宽松的策略，从其他 tailnet [共享][docs-sharing]给你的设备也无法访问你 tailnet 中的设备。共享设备只能响应来自你 tailnet 的入站连接，而不能主动发起连接。
 
-## Allow users access to their own devices
+## 允许用户访问自己的设备
 
-| Availability            | Related concepts                                             |
-| ----------------------- | ------------------------------------------------------------ |
-| [All plans][co-pricing] | [autogroups][docs-targets-autogroups], [grants][docs-grants] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [autogroup][docs-targets-autogroups]、[授权][docs-grants] |
 
-This example implements a basic form of user isolation while maintaining self-access using [autogroups][docs-targets-autogroups]. It's an excellent starting point for implementing the [principle of least privilege][ln-principle-of-least-privilege] while ensuring users can still access their remote workstations, servers, or other personal resources. This approach is suitable for organizations where data separation between users is important.
+本示例使用 [autogroup][docs-targets-autogroups] 实现一种基本的用户隔离，同时保留对自己设备的访问。它是在落实[最小权限原则][ln-principle-of-least-privilege]的同时，仍确保用户能访问自己的远程工作站、服务器或其他个人资源的绝佳起点。这种方式适合用户之间数据隔离较为重要的组织。
 
 ```json
 {
@@ -79,17 +79,17 @@ This example implements a basic form of user isolation while maintaining self-ac
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The `autogroup:member` source represents all authenticated users in your tailnet, while `autogroup:self` dynamically refers to devices owned by the connecting user. This creates natural isolation between users while maintaining full self-access. You don't need to create [custom groups][docs-targets-groups] because these autogroups are built into Tailscale.
+源 `autogroup:member` 代表 tailnet 中所有已通过身份验证的用户，而 `autogroup:self` 会动态指向当前连接用户所拥有的设备。这在用户之间形成天然隔离，同时保留完全的自助访问。你无需创建[自定义组][docs-targets-groups]，因为这些 autogroup 是 Tailscale 内置的。
 
-This example prevents lateral movement between user devices but does not establish rules for shared resources. To allow access to common resources like file servers, you would need to add additional grants with appropriate [tags][docs-tags] or [groups][docs-targets-groups]. This example also doesn't prevent a user from accessing another user's device if they are explicitly invited through Tailscale [sharing][docs-sharing].
+本示例阻止在用户设备之间横向移动，但并未为共享资源设立规则。要允许访问文件服务器之类的公共资源，你需要添加额外的授权，并配合相应的[标签][docs-tags]或[组][docs-targets-groups]。此外，如果设备通过 Tailscale [共享][docs-sharing]被明确邀请，本示例也不会阻止用户访问另一位用户的设备。
 
-## Allow using exit nodes
+## 允许使用出口节点
 
-| Availability            | Related concepts                                             |
-| ----------------------- | ------------------------------------------------------------ |
-| [All plans][co-pricing] | [autogroups][docs-targets-autogroups], [grants][docs-grants] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [autogroup][docs-targets-autogroups]、[授权][docs-grants] |
 
-This example uses [autogroups][docs-targets-autogroups] to enable users to route their internet traffic through [exit nodes][docs-exit-nodes] in your tailnet. This is particularly useful for accessing region-restricted content, protecting traffic on untrusted tailnets, or maintaining a consistent outbound IP address. You can configure exit nodes on dedicated servers, cloud instances, or even personal devices (such as Apple TVs) with sufficient bandwidth.
+本示例使用 [autogroup][docs-targets-autogroups]，让用户能够将互联网流量经你 tailnet 中的[出口节点][docs-exit-nodes]路由。这对于访问受地区限制的内容、在不可信网络上保护流量，或保持一致的出站 IP 地址尤其有用。你可以在专用服务器、云实例，甚至带宽充足的个人设备（例如 Apple TV）上配置出口节点。
 
 ```json
 {
@@ -105,19 +105,19 @@ This example uses [autogroups][docs-targets-autogroups] to enable users to route
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The `autogroup:member` source lets all authenticated users in your tailnet use exit nodes. The `autogroup:internet` destination represents all possible internet destinations outside your tailnet. The wildcard IP protocol lets all types of traffic route through the exit nodes.
+源 `autogroup:member` 允许 tailnet 中所有已验证的用户使用出口节点；目标 `autogroup:internet` 代表 tailnet 之外的所有可能的互联网目的地；通配的 IP 协议则允许所有类型的流量经出口节点路由。
 
-> **Warning:**
+> **警告：**
 >
-> For this example to be effective, you must have at least one device in your tailnet configured as an [exit node][docs-exit-nodes]. This grant only permits the routing relationship; you still need to configure and approve exit nodes separately in the Tailscale admin console or through device configuration. Users will also need to select the exit node in their Tailscale client settings to use the exit node.
+> 要让本示例生效，你的 tailnet 中必须至少有一台设备已配置为[出口节点][docs-exit-nodes]。这条授权只允许这种路由关系；你仍需在 Tailscale 管理控制台中或通过设备配置单独配置并批准出口节点。用户还需要在 Tailscale 客户端设置中选择出口节点才能使用它。
 
-## Allow based on purpose using tags
+## 使用标签按用途授权
 
-| Availability            | Related concepts                          |
-| ----------------------- | ----------------------------------------- |
-| [All plans][co-pricing] | [grants][docs-grants],  [tags][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [授权][docs-grants]、[标签][docs-tags] |
 
-This example enforces communication boundaries between application components, ensuring each tier can only communicate with adjacent tiers. It's ideal for implementing [zero-trust architectures][docs-zero-trust] where you want strict control over the flow of traffic between application layers. This approach is commonly used in multi-tier applications like web services with frontend, backend, and database components.
+本示例在应用组件之间强制实施通信边界，确保每一层只能与相邻层通信。它非常适合实现[零信任架构][docs-zero-trust]——当你需要严格控制应用层之间的流量流向时。这种方式常见于包含前端、后端和数据库组件的多层应用（如 Web 服务）。
 
 ```json
 {
@@ -138,17 +138,17 @@ This example enforces communication boundaries between application components, e
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The first grant lets devices tagged as `frontend` communicate with devices tagged as `backend`. The second grant lets `backend` devices communicate with `logging` services. This creates a directed flow of traffic that matches the intended application architecture, preventing devices from bypassing intermediate layers.
+第一条授权允许打上 `frontend` 标签的设备与打上 `backend` 标签的设备通信；第二条授权允许 `backend` 设备与 `logging` 服务通信。这就形成了一个与预期应用架构相符的定向流量流向，防止设备绕过中间层。
 
-To implement this example, you need to define the [tags][docs-tags] using the `tagOwners` section in your tailnet policy file to control who can assign these tags to devices. You also need to explicitly tag each device with its appropriate role.
+要实现本示例，你需要在 tailnet 策略文件的 `tagOwners` 部分定义[标签][docs-tags]，以控制谁可以把这些标签分配给设备。你还需要为每台设备明确打上与其角色相符的标签。
 
-## Allow access to different environments by group
+## 按组访问不同环境
 
-| Availability            | Related concepts                                                        |
-| ----------------------- | ----------------------------------------------------------------------- |
-| [All plans][co-pricing] | [grants][docs-grants], [groups][docs-targets-groups], [tags][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [授权][docs-grants]、[组][docs-targets-groups]、[标签][docs-tags] |
 
-This example implements [group][docs-targets-groups]-based access control with port restrictions. It's commonly used when you have shared resources (like internal tools) that different teams need to access, but with varying privilege levels. This approach enables precise control over which protocols and ports each group can use, balancing accessibility with security.
+本示例实现了基于[组][docs-targets-groups]的访问控制，并附带端口限制。当你有不同团队都需要访问、但权限级别各不相同的共享资源（例如内部工具）时，这种配置很常见。这种方式可以精确控制每个组能使用哪些协议和端口，在可用性与安全性之间取得平衡。
 
 ```json
 {
@@ -174,17 +174,17 @@ This example implements [group][docs-targets-groups]-based access control with p
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The first grant gives the engineering team (`group:eng`) unrestricted access to internal tools, allowing all protocols and ports. The second grant provides limited access to the sales team (`group:sales`), restricting them to only HTTPS (port `443`) and SSH (port `22`). The third grant ensures everyone in the tailnet can access DNS services (UDP port `53`).
+第一条授权让工程团队（`group:eng`）不受限制地访问内部工具，允许所有协议和端口；第二条授权为销售团队（`group:sales`）提供受限访问，只允许 HTTPS（端口 `443`）和 SSH（端口 `22`）；第三条授权确保 tailnet 中的每个人都能访问 DNS 服务（UDP 端口 `53`）。
 
-To implement this example, you need to define the [groups][docs-targets-groups] and [tags][docs-tags] referenced in your tailnet policy file. The groups would list the email addresses of team members, while the tags would be applied to the relevant devices. This approach requires ongoing maintenance as team memberships change. Consider implementing automation for group management if your organization has frequent personnel changes or a large number of users.
+要实现本示例，你需要在 tailnet 策略文件中定义所引用的[组][docs-targets-groups]和[标签][docs-tags]。组中列出团队成员的电子邮件地址，标签则应用到相关设备上。随着团队成员变动，这种方式需要持续维护。如果你的组织人员变动频繁或用户数量庞大，建议为组管理实现自动化。
 
-## Route traffic through exit nodes based on location
+## 按位置经出口节点路由流量
 
-| Availability            | Related concepts                                                                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`autogroups`][docs-targets-autogroups], [`grants`][docs-grants], [`groups`][docs-targets-groups], [`tags`][docs-tags], [`via`][docs-via] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`autogroups`][docs-targets-autogroups]、[`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags]、[`via`][docs-via] |
 
-This example segments exit node usage based on user geographical location. When you have exit nodes in different locations, you might want to direct users to use the exit node closest to them for optimal performance. This approach helps ensure users connect through exit nodes in appropriate jurisdictions for compliance purposes or to optimize tailnet latency.
+本示例按用户的地理位置划分出口节点的使用。当你在不同位置都有出口节点时，可能希望引导用户使用距离最近的出口节点以获得最佳性能。这种方式还有助于确保用户经由适当司法辖区的出口节点连接，以满足合规要求或优化 tailnet 延迟。
 
 ```json
 {
@@ -212,21 +212,21 @@ This example segments exit node usage based on user geographical location. When 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example uses the `via` field to force traffic through specific devices (this is known as [route filtering][docs-via]). Users in the Toronto office (`group:tor`) and Seattle office (`group:sea`) must use exit nodes in their respective locations, while the engineering team (`group:eng`) can use any exit node or connect directly. This example enforces the routing path without requiring users to manually select the appropriate exit node.
+本示例使用 `via` 字段强制流量经过特定设备（这称为[路由过滤][docs-via]）。多伦多办公室（`group:tor`）和西雅图办公室（`group:sea`）的用户必须使用各自所在位置的出口节点，而工程团队（`group:eng`）可以使用任意出口节点或直接连接。本示例在不要求用户手动选择合适出口节点的情况下强制了路由路径。
 
-For this example to work, you need to define the referenced groups in your policy and tag the appropriate exit nodes. Each exit node must also be properly configured in the Tailscale admin console. Without the `via` field, users could choose any available exit node, potentially leading to suboptimal routing or compliance issues.
+要让本示例生效，你需要在策略中定义所引用的组，并为相应的出口节点打标签。每台出口节点还必须在 Tailscale 管理控制台中正确配置。如果没有 `via` 字段，用户可以选择任何可用的出口节点，可能导致次优路由或合规问题。
 
-> **Warning:**
+> **警告：**
 >
-> If a specified exit node becomes unavailable, users in that group will not be able to access the internet through Tailscale until the exit node becomes available, or you update the policy.
+> 如果指定的出口节点变得不可用，该组用户将无法通过 Tailscale 访问互联网，直到该出口节点恢复可用，或你更新策略。
 
-## Allow access to resources based on device posture
+## 基于设备态势控制资源访问
 
-| Availability            | Related concepts                                                                                                                                                                                                  |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`autogroups`][docs-targets-autogroups], [`grants`][docs-grants], [`groups`][docs-targets-groups], [`postures`][docs-device-posture], [`srcPosture`][docs-device-posture], [`tags`][docs-tags], [`via`][docs-via] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`autogroups`][docs-targets-autogroups]、[`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`postures`][docs-device-posture]、[`srcPosture`][docs-device-posture]、[`tags`][docs-tags]、[`via`][docs-via] |
 
-This example controls access to resources through different [subnet routers][docs-subnets] based on device compliance. [Device posture][docs-device-posture] checks ensure that only compliant devices can access sensitive resources. This approach demonstrates controlling subnet access based on device security status, allowing direct access for compliant devices while routing others through controlled gateways.
+本示例基于设备合规状态，控制经由不同[子网路由器][docs-subnets]的资源访问。[设备态势][docs-device-posture]检查确保只有合规设备才能访问敏感资源。此方式展示了如何依据设备安全状态控制子网访问：合规设备直接访问，其他设备则经由受控网关路由。
 
 ```json
 {
@@ -256,21 +256,21 @@ This example controls access to resources through different [subnet routers][doc
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-The example defines a posture check called `posture:latestMac` that verifies the device is running macOS Ventura 13.4.0 with a stable [Tailscale client version][docs-versions]. The first grant lets engineering team members with compliant devices access the subnet directly. The second grant routes all other users through the office router, adding an additional security layer for non-compliant devices.
+本示例定义了一个名为 `posture:latestMac` 的态势检查，验证设备正在运行 macOS Ventura 13.4.0 且使用稳定版 [Tailscale 客户端版本][docs-versions]。第一条授权允许拥有合规设备的工程团队成员直接访问该子网；第二条授权将所有其他用户经办公室路由器路由，为不合规设备增加了一层安全保障。
 
-To implement this example, you need to define the posture check parameters, create the referenced [group][docs-targets-groups], and [tag][docs-tags] at least one device as the office subnet router. The posture checks evaluate in real-time, allowing automatic privilege adjustment as device status changes.
+要实现本示例，你需要定义态势检查参数、创建所引用的[组][docs-targets-groups]，并给至少一台设备[打上][docs-tags]标签作为办公室子网路由器。态势检查会实时评估，设备状态变化时权限可自动调整。
 
-> **Warning:**
+> **警告：**
 >
-> This example requires careful maintenance of the posture requirements as OS and Tailscale versions evolve. Setting version requirements too restrictively could accidentally block legitimate users who haven't yet updated their systems.
+> 随着操作系统和 Tailscale 版本演进，本示例需要仔细维护态势要求。版本要求设置得过于严格，可能会意外阻断尚未更新系统的合法用户。
 
-## Route group traffic through app connectors
+## 经应用连接器路由组流量
 
-| Availability            | Related concepts                                                                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`autogroups`][docs-targets-autogroups], [`grants`][docs-grants], [`groups`][docs-targets-groups], [`tags`][docs-tags], [`via`][docs-via] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`autogroups`][docs-targets-autogroups]、[`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags]、[`via`][docs-via] |
 
-This example segments application access through specific [app connectors][docs-app-connectors] for different user groups. App connectors provide secure access to specific applications without exposing them directly to users. This approach ensures that users can only access certain applications through designated secure channels, adding authentication and monitoring points in the connection path.
+本示例为不同用户组经特定的[应用连接器][docs-app-connectors]划分应用访问。应用连接器在不向用户直接暴露应用的情况下提供对特定应用的安全访问。此方式确保用户只能通过指定的安全通道访问某些应用，并在连接路径上增加了身份验证与监控节点。
 
 ```json
 {
@@ -293,21 +293,21 @@ This example segments application access through specific [app connectors][docs-
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example directs different user groups through different app connectors based on their service needs. Users in the `github-users` group must go through the GitHub app connector, while `salesforce-users` must go through the Salesforce app connector. The `via` field enforces these routing paths, ensuring traffic uses the secure connection method.
+本示例根据服务需求将不同用户组引导至不同的应用连接器。`github-users` 组的用户必须经过 GitHub 应用连接器，而 `salesforce-users` 必须经过 Salesforce 应用连接器。`via` 字段强制了这些路由路径，确保流量使用安全的连接方式。
 
-For this example to work, you need to define the user groups and set up the app connectors with appropriate tags. You must also configure each app connector for its specific application.
+要让本示例生效，你需要定义用户组，并用相应的标签设置应用连接器。你还必须为每个应用连接器配置其对应的应用。
 
-> **Warning:**
+> **警告：**
 >
-> This example requires maintaining separate connectors for each application, which can increase operational overhead but provides strong security isolation. If an app connector fails, users will lose access to that application until the connector becomes available, or you update the policy.
+> 本示例需要为每个应用维护单独的连接器，这会增加运维开销，但能提供很强的安全隔离。如果某个应用连接器发生故障，用户将无法访问该应用，直到连接器恢复可用，或你更新策略。
 
-## Customize autogroup internet
+## 自定义 autogroup:internet
 
-| Availability            | Related concepts                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups], [`ipsets`][docs-ipsets], [`tags`][docs-tags], [`via`][docs-via] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`ipsets`][docs-ipsets]、[`tags`][docs-tags]、[`via`][docs-via] |
 
-This example creates custom internet access rules using [IP sets][docs-ipsets] and routes traffic through specific [subnet routers][docs-subnets]. Sometimes you need more granular control over which external resources users can access. This approach lets you define custom subsets of internet addresses and apply different routing rules to each subset, useful for excluding specific services from general internet access rules.
+本示例使用 [IP 集合][docs-ipsets]创建自定义互联网访问规则，并让流量经特定的[子网路由器][docs-subnets]转发。有时你需要对用户可以访问哪些外部资源进行更细粒度的控制。此方式让你定义互联网地址的自定义子集，并对每个子集应用不同的路由规则，适用于把特定服务排除在一般互联网访问规则之外。
 
 ```json
 {
@@ -339,17 +339,17 @@ This example creates custom internet access rules using [IP sets][docs-ipsets] a
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example creates a custom `ipset:internet` that includes all internet addresses except specific CDN edge nodes and partner networks. The IP set definitions use `add` and `remove` operations to compose the final set. Users in Seattle (`group:sea`) and London (`group:lon`) are routed through their respective office routers to access this customized internet definition.
+本示例创建了一个自定义的 `ipset:internet`，包含除特定 CDN 边缘节点和合作伙伴网络之外的所有互联网地址。IP 集合定义使用 `add` 和 `remove` 操作组合出最终集合。西雅图（`group:sea`）和伦敦（`group:lon`）的用户经各自的办公室路由器路由，以访问这个自定义的互联网定义。
 
-To implement this example, you need to define the IP sets with the appropriate network addresses, create user groups for different locations, and tag the office routers accordingly. This example requires careful management of IP address lists, especially if the excluded networks change frequently. Consider using automation to keep these IP sets updated if they reference dynamic cloud resources or frequently changing partner networks.
+要实现本示例，你需要用合适的网络地址定义 IP 集合、为不同位置创建用户组，并相应地给办公室路由器打标签。本示例需要仔细管理 IP 地址列表，尤其是在被排除的网络频繁变动的情况下。如果这些 IP 集合引用了动态云资源或频繁变化的合作伙伴网络，建议使用自动化保持其更新。
 
-## Allow access to different environments using device posture
+## 使用设备态势访问不同环境
 
-| Availability            | Related concepts                                                                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups], [`ipsets`][docs-ipsets], [`postures`][docs-device-posture], [`srcPosture`][docs-device-posture], [`tags`][docs-tags], [`via`][docs-via] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`ipsets`][docs-ipsets]、[`postures`][docs-device-posture]、[`srcPosture`][docs-device-posture]、[`tags`][docs-tags]、[`via`][docs-via] |
 
-This example controls access to different infrastructure environments based on device security posture. In environments with multiple stages (development, staging, production), you often want stricter security requirements for accessing more sensitive environments. This approach enforces progressive security postures based on environment sensitivity.
+本示例基于设备安全态势控制对不同基础设施环境的访问。在包含多个阶段（开发、预发布、生产）的环境中，你通常希望访问越敏感的环境，安全要求越严格。此方式根据环境敏感度实施递进式的安全态势。
 
 ```json
 {
@@ -381,17 +381,17 @@ This example controls access to different infrastructure environments based on d
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example routes developer traffic through different app connectors based on the destination environment and the device's security [posture][docs-device-posture]. Production infrastructure requires the strictest device security policy, staging has moderate requirements, and development has minimal requirements. Users access each environment through a dedicated connector that can implement additional security controls.
+本示例根据目标环境和设备的安全[态势][docs-device-posture]，将开发者流量经不同的应用连接器路由。生产基础设施要求最严格的设备安全策略，预发布要求适中，开发要求最低。用户通过专用的连接器访问每个环境，这些连接器可以实施额外的安全控制。
 
-To implement this example, you need to define the posture checks, IP sets for each environment, and tag the appropriate connector devices. The referenced postures, IP sets, groups, and tags that you need to define elsewhere in your tailnet policy file. This example provides defense in depth by combining device security validation with network path control. Maintaining separate security posture definitions requires careful coordination when updating requirements to avoid accidentally blocking access to critical environments.
+要实现本示例，你需要定义态势检查、每个环境的 IP 集合，并给相应的连接器设备打标签。所引用的态势、IP 集合、组和标签都需要你在 tailnet 策略文件的其他位置定义。本示例将设备安全校验与网络路径控制相结合，提供纵深防御。维护多套安全态势定义时，更新要求需要谨慎协调，以免意外阻断对关键环境的访问。
 
-## Allow access to the Kubernetes Operator with privileges
+## 以特定权限访问 Kubernetes Operator
 
-| Availability            | Related concepts                                                                   |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | app, [`grants`][docs-grants], [`groups`][docs-targets-groups], [`tags`][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | app、[`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags] |
 
-This example manages [Kubernetes Operator][docs-kubernetes-operator] access with different privilege levels. When running Kubernetes clusters in your tailnet, you might want to grant different users different levels of access. This example shows how to grant administrative privileges to the production team and read-only access to other users through Tailscale's Kubernetes capability.
+本示例以不同的权限级别管理 [Kubernetes Operator][docs-kubernetes-operator] 的访问。当你在 tailnet 中运行 Kubernetes 集群时，可能希望给不同用户授予不同级别的访问权限。本示例展示如何通过 Tailscale 的 Kubernetes 能力，给生产团队授予管理权限、给其他用户授予只读访问权限。
 
 ```json
 {
@@ -440,21 +440,21 @@ This example manages [Kubernetes Operator][docs-kubernetes-operator] access with
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example uses the `app` field to grant specific Kubernetes capabilities. The production team (`group:prod`) can impersonate the `system:masters` group with admin privileges, while the readers group (`group:k8s-readers`) can only impersonate the `tailnet-readers` group with read-only access. You must tag the Kubernetes Operator device with `tag:k8s-operator`.
+本示例使用 `app` 字段授予特定的 Kubernetes 能力。生产团队（`group:prod`）可以模拟拥有管理员权限的 `system:masters` 组，而读者组（`group:k8s-readers`）只能模拟拥有只读访问权限的 `tailnet-readers` 组。你必须给 Kubernetes Operator 设备打上 `tag:k8s-operator` 标签。
 
-To implement this example, you need to define the user [groups][docs-targets-groups] and [tag][docs-tags] the Kubernetes Operator device. You also need to configure the Kubernetes cluster to recognize the impersonated groups and grant them appropriate permissions. This example lets you manage Kubernetes access through Tailscale without modifying the underlying Kubernetes configuration. The `tailnet-readers` group must exist in your Kubernetes configuration with appropriate read-only permissions for this to work properly.
+要实现本示例，你需要定义用户[组][docs-targets-groups]，并给 Kubernetes Operator 设备[打标签][docs-tags]。你还需要配置 Kubernetes 集群以识别被模拟的组，并授予它们相应的权限。本示例让你通过 Tailscale 管理 Kubernetes 访问，而无需修改底层的 Kubernetes 配置。为使其正常工作，`tailnet-readers` 组必须存在于你的 Kubernetes 配置中，并具备相应的只读权限。
 
-## Application peering
+## 应用对等连接
 
-| Availability            | Related concepts                                                               |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups],  [`tags`][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags] |
 
-> **Tip:**
+> **提示：**
 >
-> Application peering refers to establishing a bidirectional peer-to-peer connection between two applications or application environments.
+> 应用对等连接（application peering）指在两个应用或应用环境之间建立双向的点对点连接。
 
-This example enables connections between applications across cloud providers and SaaS applications. This approach is useful for connecting applications or services across multiple cloud environments. For example, you might want to stream data between databases in different cloud providers or enable secure service-to-service communication across environments without exposing services publicly.
+本示例支持跨云服务商和 SaaS 应用的应用间连接。此方式适用于跨多个云环境连接应用或服务。例如，你可能想在不同云服务商的数据库之间流式传输数据，或者在不公开暴露服务的情况下实现跨环境的安全服务间通信。
 
 ```json
 {
@@ -478,21 +478,21 @@ This example enables connections between applications across cloud providers and
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example enables bidirectional communication between databases and lets devices tagged with cloud provider tags access the databases. The infrastructure team (`group:infra`) can manage which devices get which [tags][docs-tags], giving them control over which services can communicate. This example uses a combination of tags to identify both the function of a device (`database`) and its environment (`gcp`, `aws`).
+本示例让数据库之间可以双向通信，并允许打有云服务商标签的设备访问这些数据库。基础设施团队（`group:infra`）可以管理哪台设备获得哪个[标签][docs-tags]，从而控制哪些服务可以互相通信。本示例组合使用标签来同时标识设备的功能（`database`）及其所在环境（`gcp`、`aws`）。
 
-To implement this example, you need to define the infrastructure team group and apply appropriate tags to your cloud resources. Each cloud resource needs a running Tailscale client to join the tailnet. This example creates a secure overlay tailnet across cloud providers without requiring complex VPN configurations or public IP exposure.
+要实现本示例，你需要定义基础设施团队组，并为云资源应用相应的标签。每个云资源都需要运行 Tailscale 客户端才能加入 tailnet。本示例无需复杂的 VPN 配置或公网 IP 暴露，即可创建跨云服务商的安全覆盖 tailnet。
 
-> **Warning:**
+> **警告：**
 >
-> Be aware that this example lets any device with the `database` tag to communicate with any other database, which might be too permissive for environments with strict data isolation requirements.
+> 请注意，本示例允许任何打有 `database` 标签的设备与任何其他数据库通信，对于有严格数据隔离要求的环境而言，这可能过于宽松。
 
-## CI/CD development pipeline
+## CI/CD 开发流水线
 
-| Availability            | Related concepts                                                               |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups],  [`tags`][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags] |
 
-This example restricts access to deployment pipeline components based on team roles. DevOps and SRE (site reliability engineering) teams often need to secure deployment pipelines, ensuring that developers can access development tools while restricting production access to the DevOps team. This setup creates appropriate boundaries in your software delivery process while enabling automated deployments.
+本示例按团队角色限制对部署流水线组件的访问。DevOps 和 SRE（站点可靠性工程）团队通常需要保护部署流水线：既确保开发者能访问开发工具，又将生产环境访问限定给 DevOps 团队。这种配置在支持自动化部署的同时，为软件交付过程建立了恰当的边界。
 
 ```json
 {
@@ -522,17 +522,17 @@ This example restricts access to deployment pipeline components based on team ro
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example separates access to development, CI/CD, and production environments. Developers can access development resources, while the DevOps team can access build tools and production. The interesting part is that devices [tagged][docs-tags] with `tag:ci` can also manage device tags, enabling automated deployment processes to tag resources appropriately as they progress through environments.
+本示例将开发、CI/CD 和生产环境的访问分离开。开发者可以访问开发资源，DevOps 团队则可以访问构建工具和生产环境。有意思的是，[打上][docs-tags] `tag:ci` 标签的设备还能管理设备标签，使自动化部署流程能够在资源流转于各环境时为其打上恰当的标签。
 
-To implement this example, you need to define the developer and DevOps groups and tag the appropriate resources in each environment. This example provides a balance between security separation and automation capabilities. The CI/CD system can manage tags, allowing it to handle the entire deployment pipeline without direct human intervention. This approach does require careful security around the CI/CD system itself, as it has elevated privileges in the tailnet.
+要实现本示例，你需要定义开发者和 DevOps 组，并为每个环境中的相应资源打标签。本示例在安全隔离与自动化能力之间取得了平衡。CI/CD 系统可以管理标签，因而不需人工直接干预即可处理整个部署流水线。不过这种方式确实要求对 CI/CD 系统本身做好安全防护，因为它在 tailnet 中拥有提权。
 
-## Monitor application access
+## 监控应用访问
 
-| Availability            | Related concepts                                                              |
-| ----------------------- | ----------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups], [`tags`][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags] |
 
-This example enables monitoring server access to services on specific ports across the tailnet. DevOps or SRE teams often need monitoring tools to query logs and metrics from services in the tailnet. This approach lets monitoring servers to access specific application ports without granting full tailnet access, balancing observability needs with security.
+本示例允许监控服务器访问 tailnet 内特定端口上的服务。DevOps 或 SRE 团队通常需要监控工具来查询 tailnet 中服务的日志和指标。此方式让监控服务器只访问特定的应用端口，而不授予完整的 tailnet 访问权限，在可观测性需求与安全之间取得平衡。
 
 ```json
 {
@@ -560,23 +560,23 @@ This example enables monitoring server access to services on specific ports acro
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example lets monitoring servers access specific ports (HTTP, HTTPS, and Prometheus node exporter) on logging devices. The DevOps team has full access to both monitoring and logging infrastructure and can manage which devices have [tags][docs-tags] for these roles. This creates a clean separation between the monitoring infrastructure and the monitored services.
+本示例让监控服务器可以访问日志设备上的特定端口（HTTP、HTTPS 和 Prometheus node exporter）。DevOps 团队对监控和日志基础设施都拥有完全访问权限，并能管理哪些设备拥有承担这些角色的[标签][docs-tags]。这在监控基础设施与被监控服务之间建立了清晰的分离。
 
-To implement this example, you need to define the DevOps group and tag the appropriate devices for monitoring and logging roles. This example restricts monitoring access to only the necessary ports, reducing the attack surface while maintaining observability. You should tailor the port restrictions to your specific monitoring tools and protocols.
+要实现本示例，你需要定义 DevOps 组，并给承担监控和日志角色的相应设备打标签。本示例将监控访问限制在必要的端口上，在保持可观测性的同时缩小了攻击面。你应根据自己使用的监控工具和协议调整端口限制。
 
-**Note:** This approach might require updates as monitoring requirements change or new monitoring ports are introduced.
+**注意：**随着监控需求变化或引入新的监控端口，这种方法可能需要相应更新。
 
-## Network microsegmentation
+## 网络微分段
 
-| Availability            | Related concepts                                                                                                      |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups],  [`tags`][docs-tags], [autogroups][docs-targets-autogroups] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags]、[autogroup][docs-targets-autogroups] |
 
-> **Tip:**
+> **提示：**
 >
-> [Network microsegmentation][ln-network-microsegmentation] involves dividing a tailnet into small, isolated segments to enhance security and limit the spread of potential attacks.
+> [网络微分段][ln-network-microsegmentation]指将 tailnet 划分为小型、隔离的分段，以增强安全性并限制潜在攻击的扩散。
 
-This example implements logical tailnet segmentation with support team access across segments. Network microsegmentation divides your tailnet into logical units for security purposes, limiting the blast radius of potential security incidents. Each segment exists in isolation, but support teams might need controlled access across segments.
+本示例实现了 tailnet 的逻辑分段，并允许支持团队跨段访问。网络微分段出于安全目的将你的 tailnet 划分为多个逻辑单元，限制潜在安全事件的影响范围。每个分段相互隔离，但支持团队可能需要受控的跨段访问。
 
 ```json
 {
@@ -603,17 +603,17 @@ This example implements logical tailnet segmentation with support team access ac
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example creates isolated tailnet segments with controlled cross-segment access. Support team members and devices tagged for support can access both segments, but only on port `443` (HTTPS). This lets the support team access web interfaces and APIs in each segment without granting broader access to all protocols.
+本示例创建了相互隔离的 tailnet 分段，并提供受控的跨段访问。支持团队成员和打有支持标签的设备可以访问两个分段，但仅限端口 `443`（HTTPS）。这让支持团队可以访问每个分段中的 Web 界面和 API，而不会授予所有协议的更广泛访问权限。
 
-To implement this example, you need to define the support team [group][docs-targets-groups], [tag][docs-tags] devices in each segment, and tag support tools. [Admin](/docs/reference/user-roles)s can assign the support tag to devices as needed. This example does not define communication within each segment; you would need additional grants to let devices within a segment to communicate with each other. This approach provides strong isolation with controlled exceptions for support access, reducing the risk of lateral movement during security incidents.
+要实现本示例，你需要定义支持团队[组][docs-targets-groups]，给每个分段中的设备[打标签][docs-tags]，并给支持工具打标签。[管理员](/docs/reference/user-roles)可以按需把支持标签分配给设备。本示例没有定义每个分段内部的通信；要让分段内的设备互相通信，你需要添加额外的授权。此方式提供了强隔离，并对支持访问保留受控例外，降低了安全事件发生时横向移动的风险。
 
-## VPC access
+## VPC 访问
 
-| Availability            | Related concepts                                                                                                                                                            |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [All plans][co-pricing] | [`grants`][docs-grants], [`groups`][docs-targets-groups], [`tags`][docs-tags], [`autogroups`][docs-targets-autogroups], [`autoApprovers`][docs-policy-syntax-autoapprovers] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [`grants`][docs-grants]、[`groups`][docs-targets-groups]、[`tags`][docs-tags]、[`autogroups`][docs-targets-autogroups]、[`autoApprovers`][docs-policy-syntax-autoapprovers] |
 
-This example enables developer access to VPC resources with [subnet][docs-subnets] peering capabilities. When your organization uses VPCs in cloud providers, you might want to let developers access these resources while maintaining proper subnet isolation and routing. This approach is particularly useful for secure access to cloud resources without public exposure.
+本示例借助[子网][docs-subnets]对等能力，让开发者可以访问 VPC 资源。当你的组织使用云服务商的 VPC 时，可能希望在保持恰当的子网隔离与路由的同时，让开发者访问这些资源。此方式对于在不公开暴露的前提下安全访问云资源尤其有用。
 
 ```json
 {
@@ -646,19 +646,19 @@ This example enables developer access to VPC resources with [subnet][docs-subnet
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-This example enables bidirectional communication between two VPC subnets and grants developers access to both. [Admin](/docs/reference/user-roles)s can access and manage the VPC peering devices. The `autoApprovers` section automatically approves subnet routes for the VPCs, eliminating the need for manual approval in the Tailscale admin console.
+本示例让两个 VPC 子网之间可以双向通信，并授予开发者对两者的访问权限。[管理员](/docs/reference/user-roles)可以访问并管理 VPC 对等设备。`autoApprovers` 部分会自动批准这些 VPC 的子网路由，无需再在 Tailscale 管理控制台中手动批准。
 
-To implement this example, you need to define the developer [group][docs-targets-groups], [tag][docs-tags] the VPC peering devices, and configure [subnet routing][docs-subnets]. For this to work properly with subnet routing, you might need to disable subnet route masquerading to allow direct communication between subnets. This example lets both human users and devices within the subnets communicate with each other, enabling complex hybrid cloud architectures. This example requires careful management of subnet addressing to avoid conflicts and proper configuration of cloud tailnet settings.
+要实现本示例，你需要定义开发者[组][docs-targets-groups]、给 VPC 对等设备[打标签][docs-tags]，并配置[子网路由][docs-subnets]。为了让子网路由正常工作，你可能需要禁用子网路由伪装（masquerading），以允许子网之间直接通信。本示例让人类用户和子网内的设备都能互相通信，从而支持复杂的混合云架构。本示例需要仔细管理子网编址以避免冲突，并正确配置云 tailnet 设置。
 
-You can also use [auto approvers][docs-policy-syntax-autoapprovers] to automatically approve routes.
+你还可以使用 [auto approver][docs-policy-syntax-autoapprovers]来自动批准路由。
 
-## Use Tailscale Peer Relays
+## 使用 Tailscale Peer Relay
 
-| Availability            | Related concepts                                   |
-| ----------------------- | -------------------------------------------------- |
-| [All plans][co-pricing] | [peer relays][docs-peer-relays], [tags][docs-tags] |
+| 可用性 | 相关概念 |
+| --- | --- |
+| [所有套餐][co-pricing] | [对等中继][docs-peer-relays]、[标签][docs-tags] |
 
-The following example lets all devices with the tag `tag:us-east-vpc` use [Tailscale Peer Relays][docs-peer-relays] tagged with `tag:us-east-relays` as underlay network relays when communicating with other devices in the tailnet. That means that other devices in the tailnet can use a device tagged with `tag:us-east-relays` as an underlay network relay when communicating with devices tagged with `tag:us-east-vpc`. It uses the `tailscale.com/cap/relay` [application capability][docs-grant-app-capabilities] to enable peer relay functionality.
+下面的示例让所有打有 `tag:us-east-vpc` 标签的设备在与 tailnet 中其他设备通信时，使用打有 `tag:us-east-relays` 标签的 [Tailscale Peer Relay][docs-peer-relays] 作为底层网络中继。也就是说，tailnet 中的其他设备在与打有 `tag:us-east-vpc` 标签的设备通信时，可以使用打有 `tag:us-east-relays` 标签的设备作为底层网络中继。它使用 `tailscale.com/cap/relay` [应用能力][docs-grant-app-capabilities]来启用对等中继（peer relay）功能。
 
 ```json
 {
@@ -674,7 +674,7 @@ The following example lets all devices with the tag `tag:us-east-vpc` use [Tails
 }
 ```
 
-For this to work, you must also [configure the peer relay devices][docs-peer-relays-configure] using the `tailscale set` command and create a basic grant policy that permits overlay network access to devices with the `tag:us-east-vpc` tag. For example, this grant policy lets all members of the tailnet access devices with the `tag:us-east-vpc` tag on TCP ports 80 and 443.
+为使其生效，你还必须使用 `tailscale set` 命令[配置对等中继设备][docs-peer-relays-configure]，并创建一条基础授权策略，允许对打有 `tag:us-east-vpc` 标签的设备进行覆盖网络访问。例如，下面这条授权策略允许 tailnet 的所有成员通过 TCP 端口 80 和 443 访问打有 `tag:us-east-vpc` 标签的设备。
 
 ```json
 {
@@ -688,43 +688,43 @@ For this to work, you must also [configure the peer relay devices][docs-peer-rel
 }
 ```
 
-## Conclusion
+## 结语
 
-Remember that grants operate on a default-deny basis, so you must explicitly allow any connections you want to permit (unless you keep the default allow all policy). The flexibility of the grant system lets you implement granular access controls that follow security best practices while still enabling the connectivity your organization needs.
+请记住，授权遵循默认拒绝的原则，因此你必须显式允许任何想要放行的连接（除非你保留默认的全部允许策略）。授权系统的灵活性让你既能实现遵循安全最佳实践的细粒度访问控制，又能满足组织所需的连接能力。
 
-[ar-allow-access-to-different-environments-by-group]: #allow-access-to-different-environments-by-group
+[ar-allow-access-to-different-environments-by-group]: #按组访问不同环境
 
-[ar-allow-access-to-different-environments-using-device-posture]: #allow-access-to-different-environments-using-device-posture
+[ar-allow-access-to-different-environments-using-device-posture]: #使用设备态势访问不同环境
 
-[ar-allow-access-to-kubernetes-operator-with-privileges]: #allow-access-to-the-kubernetes-operator-with-privileges
+[ar-allow-access-to-kubernetes-operator-with-privileges]: #以特定权限访问-kubernetes-operator
 
-[ar-allow-access-to-resources-based-on-device-posture]: #allow-access-to-resources-based-on-device-posture
+[ar-allow-access-to-resources-based-on-device-posture]: #基于设备态势控制资源访问
 
-[ar-allow-all]: #allow-all
+[ar-allow-all]: #全部允许
 
-[ar-allow-based-on-purpose-using-tags]: #allow-based-on-purpose-using-tags
+[ar-allow-based-on-purpose-using-tags]: #使用标签按用途授权
 
-[ar-allow-users-access-to-their-own-devices]: #allow-users-access-to-their-own-devices
+[ar-allow-users-access-to-their-own-devices]: #允许用户访问自己的设备
 
-[ar-allow-using-exit-nodes]: #allow-using-exit-nodes
+[ar-allow-using-exit-nodes]: #允许使用出口节点
 
-[ar-application-peering]: #application-peering
+[ar-application-peering]: #应用对等连接
 
-[ar-ci-cd-development-pipeline]: #cicd-development-pipeline
+[ar-ci-cd-development-pipeline]: #cicd-开发流水线
 
-[ar-customize-autogroup-internet]: #customize-autogroup-internet
+[ar-customize-autogroup-internet]: #自定义-autogroupinternet
 
-[ar-monitor-application-access]: #monitor-application-access
+[ar-monitor-application-access]: #监控应用访问
 
-[ar-network-microsegmentation]: #network-microsegmentation
+[ar-network-microsegmentation]: #网络微分段
 
-[ar-route-group-traffic-through-app-connectors]: #route-group-traffic-through-app-connectors
+[ar-route-group-traffic-through-app-connectors]: #经应用连接器路由组流量
 
-[ar-route-traffic-through-exit-nodes-based-on-location]: #route-traffic-through-exit-nodes-based-on-location
+[ar-route-traffic-through-exit-nodes-based-on-location]: #按位置经出口节点路由流量
 
-[ar-vpc-access]: #vpc-access
+[ar-vpc-access]: #vpc-访问
 
-[ar-use-tailscale-peer-relays]: #use-tailscale-peer-relays
+[ar-use-tailscale-peer-relays]: #使用-tailscale-peer-relay
 
 [co-pricing]: https://tailscale.com/pricing
 

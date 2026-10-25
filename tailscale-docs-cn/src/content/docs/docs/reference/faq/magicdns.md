@@ -1,19 +1,19 @@
 ---
-title: "Why is MagicDNS fetching records on port 443?"
-description: "When you use popular DNS providers, Tailscale will transparently upgrade you to [DNS over HTTPS][xt-wikipedia-doh] (DoH) to make your DNS lookups end-to-end encrypted with the DNS server."
+title: "为什么 MagicDNS 在端口 443 上获取记录？"
+description: "当你使用流行的 DNS 提供商时，Tailscale 会透明地将你升级到 [DNS over HTTPS][xt-wikipedia-doh]（DoH），让你的 DNS 查询与 DNS 服务器之间端到端加密。"
 ---
 
-Last validated Sep 18, 2025
+最后验证于 Sep 18, 2025
 
-When you use popular DNS providers, Tailscale will transparently upgrade you to [DNS over HTTPS][xt-wikipedia-doh] (DoH) to make your DNS lookups end-to-end encrypted with the DNS server.
+当你使用流行的 DNS 提供商时，Tailscale 会透明地将你升级到 [DNS over HTTPS][xt-wikipedia-doh]（DoH），让你的 DNS 查询与 DNS 服务器之间端到端加密。
 
-DNS is traditionally done in clear text over UDP port 53. This lets unsophisticated attackers in the same coffee shop or network to be able to sniff your DNS traffic to discover what websites you are connecting to. DNS over HTTPS changes this by making all DNS requests over HTTPS, which uses TLS for [encryption][docs-encryption].
+传统上，DNS 以明文形式通过 UDP 端口 53 进行。这让同一家咖啡店或同一网络里技术门槛很低的攻击者也能嗅探你的 DNS 流量，从而发现你正在连接哪些网站。DNS over HTTPS 改变了这一点：所有 DNS 请求都经由 HTTPS 发出，并使用 TLS 进行[加密][docs-encryption]。
 
-With this feature, applications will make DNS lookups to the local MagicDNS server at the virtual IP address `100.100.100.100`, instead of your OS level DNS servers. MagicDNS will then upgrade any DNS queries to DoH transparently. This provides legacy environments and applications with end-to-end encrypted DNS lookups for free.
+有了这一功能，应用程序将向虚拟 IP 地址 `100.100.100.100` 上的本地 MagicDNS 服务器发起 DNS 查询，而不是向操作系统层面的 DNS 服务器查询。随后 MagicDNS 会透明地把所有 DNS 查询升级为 DoH。这让旧式环境和应用免费获得端到端加密的 DNS 查询。
 
-If you use any of the default nameservers listed in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console, Tailscale will automatically use DoH when possible. When you use [NextDNS][docs-nextdns], it only lets connections over DoH, meaning all lookups will be end-to-end encrypted with your DNS server.
+如果你使用管理控制台 [DNS](https://console.tailscale.com/admin/dns) 页面中列出的任何默认名称服务器，Tailscale 会在可能时自动使用 DoH。使用 [NextDNS][docs-nextdns] 时，它只接受 DoH 连接，这意味着所有查询都会与你的 DNS 服务器端到端加密。
 
-Your outbound connection monitoring software will need to be adjusted to account for this behavior. This may manifest as an unexpected TCP connection to port 443 (the standard HTTPS port).
+你的出站连接监控软件需要相应调整以适应这一行为。它可能表现为一条连向端口 443（标准 HTTPS 端口）的意外 TCP 连接。
 
 [docs-encryption]: /docs/concepts/tailscale-encryption
 

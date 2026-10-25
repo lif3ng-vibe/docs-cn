@@ -1,111 +1,111 @@
 ---
 title: "Tailscale Funnel"
-description: "Securely route internet traffic to local services using Tailscale Funnel."
+description: "使用 Tailscale Funnel 将互联网流量安全地路由到本地服务。"
 ---
 
-Last validated Jan 20, 2026
+最后验证于 Jan 20, 2026
 
-> **Note:** Tailscale Funnel is currently in beta.
+> **注意：** Tailscale Funnel 目前处于 beta 阶段。
 
-> **Note:** Tailscale Funnel is available for [all plans](https://tailscale.com/pricing).
+> **注意：** Tailscale Funnel 适用于[所有套餐](https://tailscale.com/pricing)。
 
-Tailscale Funnel lets you route traffic from the broader internet to a local service running on a device in your Tailscale network (known as a tailnet). You can use it to share a local service, like a web app, for anyone to access—even if they don't use Tailscale.
+Tailscale Funnel 让你可以将来自更广阔互联网的流量路由到你 Tailscale 网络（即 tailnet）中某台设备上运行的本地服务。你可以用它共享本地服务（例如一个 Web 应用），供任何人访问——即使对方并不使用 Tailscale。
 
-> **Tip:**
+> **提示：**
 >
-> If you'd like to share local services only with other devices in your tailnet, use [Tailscale Serve][docs-serve] instead. Also check out [Funnel vs. sharing][docs-funnel-vs-sharing].
+> 如果你只想与 tailnet 中的其他设备共享本地服务，请改用 [Tailscale Serve][docs-serve]。另请参阅 [Funnel 与共享的对比][docs-funnel-vs-sharing]。
 
-> **Note:**
+> **注意：**
 >
-> The following related video provides additional context and examples.
+> 以下相关视频提供了更多背景信息和示例。
 
 [Serve and Funnel | Tailscale Explained (video)](https://www.youtube.com/watch?v=MpxmfpCl20c)
 
-Explore the following topics to find more information about Tailscale Funnel:
+浏览以下主题，了解更多关于 Tailscale Funnel 的信息：
 
-* [Get started with Funnel][ar-get-started]
-* [How Funnel works][ar-how-funnel-works]
-* [The `tailscale funnel` command][docs-tailscale-funnel]
-* [Troubleshoot Funnel][ar-troubleshoot-funnel]
-* [Funnel examples][docs-funnel-examples]
+* [开始使用 Funnel][ar-get-started]
+* [Funnel 的工作原理][ar-how-funnel-works]
+* [`tailscale funnel` 命令][docs-tailscale-funnel]
+* [排查 Funnel 问题][ar-troubleshoot-funnel]
+* [Funnel 示例][docs-funnel-examples]
 
-## How Funnel works
+## Funnel 的工作原理
 
-Funnel exposes a local resource to the internet through a unique Funnel URL. Using Funnel to share a local resource creates an encrypted tunnel from the internet to a specific resource on your device. Tailscale does this using a TCP proxy and Funnel relay servers.
+Funnel 通过一个唯一的 Funnel URL 将本地资源暴露给互联网。使用 Funnel 共享本地资源时，会创建一条从互联网到你设备上特定资源的加密隧道。Tailscale 使用 TCP 代理和 Funnel 中继服务器来实现这一点。
 
-*（图：Diagram showing how Tailscale Funnel works）*
+*（图：Tailscale Funnel 工作原理示意图）*
 
-When you share a local resource with Funnel, it creates a unique Funnel URL that you can share. When someone uses your Funnel URL, their device sends a request to the Funnel relay server. After receiving the request, the Funnel relay server will establish a TCP proxy to your device using Tailscale. This proxy is an encrypted tunnel between the local resource and the device accessing the Funnel URL that points to it. Using a TCP proxy protects the shared data and lets Tailscale hide the IP address of your local device. The Funnel relay server cannot decrypt data sent over this proxy.
+使用 Funnel 共享本地资源时，它会创建一个可供分享的唯一 Funnel URL。当有人使用你的 Funnel URL 时，他们的设备会向 Funnel 中继服务器发送请求。Funnel 中继服务器收到请求后，会通过 Tailscale 与你的设备建立 TCP 代理。该代理是本地资源与访问指向它的 Funnel URL 的设备之间的一条加密隧道。使用 TCP 代理既保护了共享数据，也让 Tailscale 能够隐藏你本地设备的 IP 地址。Funnel 中继服务器无法解密通过该代理发送的数据。
 
-Where to go next
+后续步骤
 
-The process, from creating a Funnel to accessing a resource shared through it, involves:
+从创建 Funnel 到访问通过它共享的资源，整个过程包括：
 
-* [Creating and sharing the Funnel URL][ar-creating-funnel].
-* [Resolving the Funnel URL to an IP address][ar-resolving-funnel-url].
-* [Establishing an encrypted proxy][ar-establishing-encrypted-proxy].
-* [Serving the shared resource through the proxy][ar-serving-shared-resource].
+* [创建并共享 Funnel URL][ar-creating-funnel]。
+* [将 Funnel URL 解析为 IP 地址][ar-resolving-funnel-url]。
+* [建立加密代理][ar-establishing-encrypted-proxy]。
+* [通过代理提供共享资源][ar-serving-shared-resource]。
 
-### Creating and sharing the Funnel URL
+### 创建并共享 Funnel URL
 
-When you share a local resource with Funnel, it creates a unique Funnel URL that you can share. The generated URL points only to the specific resource you used Funnel to share. So, if you share a local web server, the Funnel only shares that specific web server. Likewise, if you share a file or directory, the Funnel only shares the specific file or directory.
+使用 Funnel 共享本地资源时，它会创建一个可供分享的唯一 Funnel URL。生成的 URL 只指向你用 Funnel 共享的那个特定资源。因此，如果你共享一个本地 Web 服务器，Funnel 只共享该特定 Web 服务器；同样，如果你共享一个文件或目录，Funnel 也只共享该特定文件或目录。
 
-### Resolving the Funnel URL to an IP address
+### 将 Funnel URL 解析为 IP 地址
 
-When a device tries to access a Funnel URL, it first contacts public DNS servers to resolve the URL to an IP address. These DNS servers respond with the IP address of a Funnel relay server, not your device's IP address. This step hides your device's location from the public internet. After resolving the URL to an IP address, the device sends a request to the Funnel relay server.
+当设备尝试访问 Funnel URL 时，它首先联系公共 DNS 服务器，将 URL 解析为 IP 地址。这些 DNS 服务器返回的是 Funnel 中继服务器的 IP 地址，而不是你设备的 IP 地址。这一步向公共互联网隐藏了你设备的位置。将 URL 解析为 IP 地址后，设备会向 Funnel 中继服务器发送请求。
 
-### Establishing an encrypted proxy
+### 建立加密代理
 
-After receiving the request, the Funnel relay server creates a TCP proxy to your device over Tailscale. This proxy acts as an encrypted relay between the Funnel relay server and your device. It ensures that your device's IP address is never exposed to the internet.
+收到请求后，Funnel 中继服务器会通过 Tailscale 创建一条到你设备的 TCP 代理。该代理充当 Funnel 中继服务器与你的设备之间的加密中继，确保你的设备 IP 地址永远不会暴露给互联网。
 
-Funnel relay servers do not decrypt the traffic between public devices and your device. This ensures that Tailscale cannot access or read any content. It maintains end-to-end [encryption][docs-encryption] and privacy.
+Funnel 中继服务器不会解密公共设备与你设备之间的流量。这确保了 Tailscale 无法访问或读取任何内容，从而保持端到端的[加密][docs-encryption]与隐私。
 
-The Tailscale server running on your device receives the encrypted request from the TCP proxy. It then terminates the [TLS][xt-wiki-tls] connection and passes the decrypted request to the local service you exposed through Funnel. The local service processes the request and generates a response.
+你设备上运行的 Tailscale 服务器接收来自 TCP 代理的加密请求，然后终结 [TLS][xt-wiki-tls] 连接，并将解密后的请求传递给你通过 Funnel 暴露的本地服务。本地服务处理请求并生成响应。
 
-### Serving the shared resource through the proxy
+### 通过代理提供共享资源
 
-After the local server on your device processes the request, it sends the response to the Tailscale server on your device. The Tailscale server then encrypts the response and sends it back to the Funnel relay server over the established TCP proxy.
+你设备上的本地服务器处理请求后，会将响应发送给你设备上的 Tailscale 服务器。Tailscale 服务器随后加密该响应，并通过已建立的 TCP 代理将其传回 Funnel 中继服务器。
 
-Upon receiving the encrypted response, the Funnel relay server forwards it to the user's device. It does not decrypt its contents; it maintains the end-to-end encryption of the data. Finally, the user's device ends the TLS connection. It then decrypts the response and shows the requested information to the user accessing the Funnel URL.
+收到加密响应后，Funnel 中继服务器将其转发给用户的设备，而不会解密其内容，从而保持数据的端到端加密。最后，用户的设备结束 TLS 连接，解密响应，并将所请求的信息展示给访问该 Funnel URL 的用户。
 
-## Get started with Funnel
+## 开始使用 Funnel
 
-Tailscale Funnel is disabled by default, but you can use the [Tailscale CLI][docs-cli] to enable the Funnel service and create Funnels.
+Tailscale Funnel 默认处于禁用状态，但你可以使用 [Tailscale CLI][docs-cli] 启用 Funnel 服务并创建 Funnel。
 
-### Requirements and limitations
+### 要求与限制
 
-Funnel requires the following to work:
+Funnel 需要满足以下条件才能工作：
 
-* Tailscale v1.38.3 or later.
-* [MagicDNS][docs-magicdns] enabled for your tailnet.
-* [HTTPS][docs-enabling-https] enabled and valid HTTPS certificates for your tailnet.
-* A funnel [node attribute][docs-node-attribute] in your tailnet policy file. This attribute tells Tailscale which tailnet users can use Funnel.
+* Tailscale v1.38.3 或更高版本。
+* 为你的 tailnet 启用 [MagicDNS][docs-magicdns]。
+* 为你的 tailnet 启用 [HTTPS][docs-enabling-https] 并持有有效的 HTTPS 证书。
+* tailnet 策略文件中的 funnel [节点属性][docs-node-attribute]。该属性告诉 Tailscale 哪些 tailnet 用户可以使用 Funnel。
 
-Additionally, Funnel has the following limitations:
+此外，Funnel 还有以下限制：
 
-* Funnel can only use DNS names in your [tailnet's domain][docs-tailnet-name] (`tailnet-name.ts.net`).
-* Funnel can only listen on ports `443`, `8443`, and `10000`.
-* Funnel only works over [TLS][xt-wiki-tls]-encrypted connections.
-* Traffic sent over a Funnel is subject to non-configurable bandwidth limits.
-* Funnel only works on platforms that can run the Tailscale CLI.
-* To use Funnel on macOS, you must use one of the [open source variants of the Tailscale application for macOS][docs-macos-variants].
-* The same port number cannot be used for Serve (available only within the tailnet) and Funnel (available within the tailnet and to the public) at the same time.
-  * If the most recent command to configure the port was `serve`, then the port will be completely private.
-  * If the most recent command to configure the port was `funnel`, then the port will be completely public.
+* Funnel 只能使用你 [tailnet 域][docs-tailnet-name]（`tailnet-name.ts.net`）中的 DNS 名称。
+* Funnel 只能监听 `443`、`8443` 和 `10000` 端口。
+* Funnel 只能通过 [TLS][xt-wiki-tls] 加密连接工作。
+* 通过 Funnel 发送的流量受不可配置的带宽限制。
+* Funnel 只能在能运行 Tailscale CLI 的平台上工作。
+* 要在 macOS 上使用 Funnel，必须使用 [macOS 版 Tailscale 应用的开源变体][docs-macos-variants]之一。
+* 同一个端口号不能同时用于 Serve（仅在 tailnet 内可用）和 Funnel（在 tailnet 内和公共互联网均可用）。
+  * 如果最近一次配置该端口的命令是 `serve`，则该端口将完全私有。
+  * 如果最近一次配置该端口的命令是 `funnel`，则该端口将完全公开。
 
-When you enable Funnel using the Tailscale CLI, Tailscale automatically creates valid HTTPS certificates and updates your tailnet policy file. By default, it lets any users in the `autogroup:member` [autogroup][docs-policy-syntax-autogroups] to use Funnel. You can adjust this by manually updating your tailnet policy file.
+使用 Tailscale CLI 启用 Funnel 时，Tailscale 会自动创建有效的 HTTPS 证书并更新你的 tailnet 策略文件。默认情况下，它允许 `autogroup:member` [autogroup][docs-policy-syntax-autogroups] 中的所有用户使用 Funnel。你可以手动更新 tailnet 策略文件来调整这一点。
 
-> **Warning:**
+> **警告：**
 >
-> It is possible to frequently request a new certificate and exceed Let's Encrypt's rate limits. As a result, you may find yourself waiting 34 hours until you can try again. For more information, refer to Let's Encrypt's [rate limits documentation][xt-letsencrypt-rate-limits].
+> 如果频繁请求新证书，可能会超出 Let's Encrypt 的速率限制，导致你需要等待 34 个小时才能重试。更多信息请参阅 Let's Encrypt 的[速率限制文档][xt-letsencrypt-rate-limits]。
 
-### Enable Funnel
+### 启用 Funnel
 
-Use the [`tailscale funnel`][docs-tailscale-funnel] command to enable Funnel. The command triggers a web interface that prompts you to approve enabling Funnel. After you approve it, Tailscale will create valid HTTPS certificates for your tailnet and add a funnel node attribute to your tailnet policy file.
+使用 [`tailscale funnel`][docs-tailscale-funnel] 命令启用 Funnel。该命令会触发一个网页界面，提示你批准启用 Funnel。批准后，Tailscale 会为你的 tailnet 创建有效的 HTTPS 证书，并向你的 tailnet 策略文件添加 funnel 节点属性。
 
-### Create a Funnel
+### 创建 Funnel
 
-To create a Funnel, use the `tailscale funnel` command and pass the target you want to share. You can share a service, a file, or a directory. You can also optionally pass any of the [available flags][docs-tailscale-funnel-flags].
+要创建 Funnel，请使用 `tailscale funnel` 命令并传入你想共享的目标。你可以共享服务、文件或目录，还可以选择传入任何[可用标志][docs-tailscale-funnel-flags]。
 
 ```shell
 tailscale funnel 3000
@@ -117,39 +117,39 @@ https://amelie-workstation.pango-lin.ts.net
 Press Ctrl+C to exit.
 ```
 
-When you use Tailscale Funnel, the Funnel relay servers show up in your device's list of Tailscale peers. All peers using the command [`tailscale status --json`][docs-cli-status] display.
+使用 Tailscale Funnel 时，Funnel 中继服务器会出现在你设备的 Tailscale 对等节点列表中。使用 [`tailscale status --json`][docs-cli-status] 命令即可显示所有对等节点。
 
-> **Warning:**
+> **警告：**
 >
-> Sharing files and directories with Funnel only works with the [open source variants][docs-macos-variants] of the Tailscale client for macOS. Other variants have sandbox limitations.
+> 使用 Funnel 共享文件和目录仅适用于 macOS 版 Tailscale 客户端的[开源变体][docs-macos-variants]。其他变体存在沙箱限制。
 >
-> You can only use Funnel to share ports if you installed Tailscale for macOS from the App Store or as a Standalone variant system extension.
+> 只有当你从 App Store 安装 macOS 版 Tailscale，或以 Standalone 变体系统扩展的方式安装时，才能使用 Funnel 共享端口。
 
-## Resources
+## 资源
 
-* Explore the collection of [Funnel use case examples][docs-funnel-examples] for inspiration and ideas.
-* [Use the PROXY protocol][docs-tailscale-funnel-proxy-protocol].
-* [Use the TCP forwarder][docs-tailscale-funnel-tcp-forwarder].
-* [Reset the Funnel configuration][docs-tailscale-funnel-reset-funnel].
-* [Disable Funnel][docs-tailscale-funnel-disable-funnel].
+* 浏览 [Funnel 用例示例集][docs-funnel-examples]，获取灵感和思路。
+* [使用 PROXY 协议][docs-tailscale-funnel-proxy-protocol]。
+* [使用 TCP 转发器][docs-tailscale-funnel-tcp-forwarder]。
+* [重置 Funnel 配置][docs-tailscale-funnel-reset-funnel]。
+* [禁用 Funnel][docs-tailscale-funnel-disable-funnel]。
 
-## Troubleshooting
+## 排查问题
 
-Trouble with Funnels is usually related to one of the following issues:
+Funnel 出现问题通常与以下原因之一有关：
 
-* [Funnel node attribute][ar-funnel-node-attribute]
-* [HTTPS certificates][ar-https]
-* [Access controls][ar-access-controls]
-* [DNS propagation][ar-dns]
+* [Funnel 节点属性][ar-funnel-node-attribute]
+* [HTTPS 证书][ar-https]
+* [访问控制][ar-access-controls]
+* [DNS 传播][ar-dns]
 
-### Funnel node attribute
+### Funnel 节点属性
 
-Tailscale Funnel requires a [node attribute][docs-node-attribute] (`nodeAttrs`) of `funnel` in your tailnet policy file to tell Tailscale who can use Funnel. If you use the Tailscale CLI to enable Funnel, Tailscale ensures this requirement is met. Alternatively, you can manually add the node attribute for Funnel. You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) of a tailnet to modify a tailnet policy file.
+Tailscale Funnel 需要在你的 tailnet 策略文件中有一个值为 `funnel` 的[节点属性][docs-node-attribute]（`nodeAttrs`），以告诉 Tailscale 谁可以使用 Funnel。如果你使用 Tailscale CLI 启用 Funnel，Tailscale 会确保满足此要求。你也可以手动添加 Funnel 的节点属性。你必须具有 tailnet 的 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 身份才能修改 tailnet 策略文件。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Expand the Funnel section and select **Add Funnel to policy**.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 展开 Funnel 区域并选择 **Add Funnel to policy**（将 Funnel 添加到策略）。
 
-This adds the default `nodeAttrs` section and saves the tailnet policy file automatically.
+这会添加默认的 `nodeAttrs` 分区，并自动保存 tailnet 策略文件。
 
 ```json
 "nodeAttrs": [
@@ -162,39 +162,39 @@ This adds the default `nodeAttrs` section and saves the tailnet policy file auto
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-### HTTPS certificates
+### HTTPS 证书
 
-Tailscale Funnel requires valid [HTTPS certificates][docs-enabling-https] for your tailnet to automatically provision TLS certificates for your unique tailnet DNS name. If you use the Tailscale CLI to enable Funnel, Tailscale ensures this requirement is met.
+Tailscale Funnel 需要你的 tailnet 拥有有效的 [HTTPS 证书][docs-enabling-https]，以便为你唯一的 tailnet DNS 名称自动预配 TLS 证书。如果你使用 Tailscale CLI 启用 Funnel，Tailscale 会确保满足此要求。
 
-### Access controls
+### 访问控制
 
-If the funnel node attribute in your tailnet policy file doesn't permit you to use Funnel, you won't be able to. The default node attribute to enable Funnel includes all tailnet members by default, but [Owners, Admins, and Network admins](/docs/reference/user-roles) can modify this to further restrict access.
+如果你 tailnet 策略文件中的 funnel 节点属性不允许你使用 Funnel，你就无法使用。用于启用 Funnel 的默认节点属性默认包含所有 tailnet 成员，但 [Owner、Admin 和 Network admin](/docs/reference/user-roles) 可以修改它以进一步限制访问。
 
-### DNS propagation
+### DNS 传播
 
-Public DNS records can take up to 10 minutes to show up for your tailnet domain. This delay might prevent someone from using a Funnel URL until the public DNS records are updated.
+公共 DNS 记录最长可能需要 10 分钟才能在你的 tailnet 域名上生效。在公共 DNS 记录更新之前，这段延迟可能导致他人无法使用 Funnel URL。
 
-[ar-access-controls]: #access-controls
+[ar-access-controls]: #访问控制
 
-[ar-creating-funnel]: #creating-and-sharing-the-funnel-url
+[ar-creating-funnel]: #创建并共享-funnel-url
 
-[ar-dns]: #dns-propagation
+[ar-dns]: #dns-传播
 
-[ar-establishing-encrypted-proxy]: #establishing-an-encrypted-proxy
+[ar-establishing-encrypted-proxy]: #建立加密代理
 
-[ar-funnel-node-attribute]: #funnel-node-attribute
+[ar-funnel-node-attribute]: #funnel-节点属性
 
-[ar-get-started]: #get-started-with-funnel
+[ar-get-started]: #开始使用-funnel
 
-[ar-how-funnel-works]: #how-funnel-works
+[ar-how-funnel-works]: #funnel-的工作原理
 
-[ar-https]: #https-certificates
+[ar-https]: #https-证书
 
-[ar-resolving-funnel-url]: #resolving-the-funnel-url-to-an-ip-address
+[ar-resolving-funnel-url]: #将-funnel-url-解析为-ip-地址
 
-[ar-serving-shared-resource]: #serving-the-shared-resource-through-the-proxy
+[ar-serving-shared-resource]: #通过代理提供共享资源
 
-[ar-troubleshoot-funnel]: #troubleshooting
+[ar-troubleshoot-funnel]: #排查问题
 
 [docs-cli-status]: /docs/reference/tailscale-cli#status
 

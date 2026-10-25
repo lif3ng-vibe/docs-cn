@@ -1,37 +1,37 @@
 ---
-title: "Control AI access"
-description: "Manage who can access Aperture and which models they can use."
+title: "控制 AI 访问"
+description: "管理谁可以访问 Aperture，以及他们可以使用哪些模型。"
 ---
 
-Last validated Jul 30, 2026
+最后验证于 Jul 30, 2026
 
-Aperture uses [Tailscale's identity layer][docs-tailscale-identity] to automatically authenticate users. Control which users can reach the Aperture gateway through tailnet access control rules, then use [Aperture grants][docs-aperture-grants] to define which models each user or group can access. To reference Tailscale groups in grants, enable [visible groups][docs-visible-groups]. Aperture is deny-by-default: without grants, users can connect but cannot access any models.
+Aperture 使用 [Tailscale 的身份层][docs-tailscale-identity]自动认证用户。先通过 tailnet 访问控制规则控制哪些用户能到达 Aperture 网关，再用 [Aperture 授权][docs-aperture-grants]定义每个用户或组可以访问哪些模型。要在授权中引用 Tailscale 组，请启用[可见组][docs-visible-groups]。Aperture 默认拒绝：没有授权时，用户可以连接但无法访问任何模型。
 
-Grants also govern access to MCP tools, resources, and connectors. Aperture uses a three-layer authorization model -- configuration defines what is available, grants control who can access it, and credentials handle upstream authentication -- that applies uniformly to models and connectors. For details on granting MCP and connector access, refer to [grant access to MCP tools][docs-grant-mcp-tool-access] and [connectors][docs-aperture-connectors].
+授权还管辖对 MCP 工具、资源和连接器的访问。Aperture 采用三层授权模型——配置定义有哪些可用，授权控制谁能访问，凭证负责上游认证——对模型和连接器统一适用。授予 MCP 和连接器访问权限的细节，参阅[授予 MCP 工具访问权限][docs-grant-mcp-tool-access]和[连接器][docs-aperture-connectors]。
 
-Connector grants can name a connector by ID or match a group of connectors by label. Deny-by-default extends to Aperture's own built-in tools, which reach users through a `label:system` grant in the default configuration rather than through an exception. To group your own connectors the same way, refer to [grant connector access by label][docs-grant-by-label].
+连接器授权可以按 ID 点名连接器，也可以按标签匹配一组连接器。默认拒绝同样延伸到 Aperture 自身的内置工具——它们通过默认配置中的一条 `label:system` 授权到达用户，而不是代码里的例外。要同样地为你自己的连接器分组，参阅[按标签授予连接器访问权限][docs-grant-by-label]。
 
-For background on how identity works, refer to [how Aperture works][docs-how-aperture-works]. To understand the grants model itself, including deny-by-default access and precedence, refer to [how Aperture grants work][docs-how-grants-work].
+身份机制背景参阅 [Aperture 的工作方式][docs-how-aperture-works]。理解授权模型本身（包括默认拒绝访问和优先级），参阅 [Aperture 授权的工作方式][docs-how-grants-work]。
 
-[**How Aperture grants work**](/docs/aperture/how-grants-work) — Understand the Aperture grants model, including deny-by-default access, additive allow-only rules, capability matching, and how Aperture resolves precedence when multiple grants apply.
+[**Aperture 授权的工作方式**](/docs/aperture/how-grants-work) —— 理解 Aperture 授权模型，包括默认拒绝访问、叠加式只允许规则、能力匹配，以及多条授权同时适用时 Aperture 如何决定优先级。
 
-[**Grant access to models**](/docs/aperture/how-to/grant-model-access) — Configure Aperture grants to control which models each user or group can access.
+[**授予模型访问权限**](/docs/aperture/how-to/grant-model-access) —— 配置 Aperture 授权，控制每个用户或组可以访问哪些模型。
 
-[**Grant access to MCP tools**](/docs/aperture/how-to/grant-mcp-tool-access) — Configure Aperture grants to control which connector capabilities users can access, including MCP tools, resources, templates, and HTTP proxy access.
+[**授予 MCP 工具访问权限**](/docs/aperture/how-to/grant-mcp-tool-access) —— 配置 Aperture 授权，控制用户可以访问哪些连接器能力，包括 MCP 工具、资源、模板和 HTTP 代理访问。
 
-[**Grant connector access by label**](/docs/aperture/how-to/grant-connector-access-by-label) — Label Aperture connectors and grant access by label so a single grant covers every connector in a group instead of naming each connector ID.
+[**按标签授予连接器访问权限**](/docs/aperture/how-to/grant-connector-access-by-label) —— 为 Aperture 连接器打标签并按标签授权，让一条授权覆盖一组连接器，而不必逐一列出连接器 ID。
 
-[**MCP server proxying**](/docs/aperture/mcp-server) — Aggregate tools and resources from remote MCP servers through Aperture with identity-based access control.
+[**MCP 服务器代理**](/docs/aperture/mcp-server) —— 通过 Aperture 聚合远程 MCP 服务器的工具和资源，并使用基于身份的访问控制。
 
-[**Set up admin access**](/docs/aperture/how-to/set-up-admin-access) — Configure administrator roles for managing Aperture settings and accessing all user data.
+[**设置管理员访问权限**](/docs/aperture/how-to/set-up-admin-access) —— 配置管理员角色，用于管理 Aperture 设置和访问所有用户数据。
 
-[**Visible groups for Aperture**](/docs/aperture/visible-groups) — Use Tailscale groups and SCIM groups to control access to Aperture models and admin roles.
+[**Aperture 的可见组**](/docs/aperture/visible-groups) —— 使用 Tailscale 组和 SCIM 组控制对 Aperture 模型和管理员角色的访问。
 
-Use guardrails to enforce policies on individual requests, such as scrubbing PII or blocking requests that violate your policies.
+使用防护栏（guardrail）对单个请求强制执行策略，例如清理 PII 或阻止违反策略的请求。
 
-[**Guardrails**](/docs/aperture/guardrails) — Inspect, modify, or block LLM requests before they reach the provider.
+[**防护栏**](/docs/aperture/guardrails) —— 在 LLM 请求到达提供商之前检查、修改或阻止它。
 
-[**Set up a guardrail**](/docs/aperture/how-to/set-up-guardrails) — Configure a pre-request hook to inspect, modify, or block LLM requests before they reach the provider.
+[**设置防护栏**](/docs/aperture/how-to/set-up-guardrails) —— 配置 pre_request hook，在 LLM 请求到达提供商之前检查、修改或阻止它。
 
 [docs-aperture-connectors]: /docs/aperture/connectors
 

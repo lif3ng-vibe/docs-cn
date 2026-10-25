@@ -1,97 +1,97 @@
 ---
-title: "Key and secret management"
-description: "Manage the various types of keys and secrets for your tailnet."
+title: "密钥与机密管理"
+description: "管理 tailnet 的各类密钥与机密。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-You can set up various types of keys and secrets for securely connecting to resources in your Tailscale network (known as a tailnet). This topic explains the fundamentals of managing each kind of key and secret that we provide.
+你可以设置多种类型的密钥和机密，以安全地连接 Tailscale 网络（即 tailnet）中的资源。本主题介绍管理我们提供的各类密钥与机密的基础知识。
 
-For more in-depth information on tailnet security, refer to [Best practices to secure your tailnet][docs-security-hardening].
+想深入了解 tailnet 安全，参阅[保护 tailnet 安全的最佳实践][docs-security-hardening]。
 
-## Keys and secrets best practices
+## 密钥与机密的最佳实践
 
-Ensure you keep your keys and secrets secure. Make sure to copy your keys and secrets into a password manager as soon as they are generated and displayed. The secrets will only be displayed once in their entirety. If you don't copy it down, you will need to generate a new key or secret.
+务必妥善保管你的密钥和机密。密钥和机密生成并显示后，请立即复制到密码管理器中。机密只会在生成时完整显示一次。如果没有记下来，你就需要重新生成新的密钥或机密。
 
-Make sure you are aware of the key expiry for each key type, and manage them accordingly. [System for Cross-domain Identity Management (SCIM)][ln-what-is-scim] API keys and webhook endpoint secrets do not expire.
+请了解每种密钥类型的过期时间，并据此加以管理。[跨域身份管理系统（SCIM）][ln-what-is-scim] API 密钥和 webhook 端点机密不会过期。
 
-We strongly recommend that you use a secrets manager or consult with your cloud provider for directions for securely storing your keys and secrets. **Do not store sensitive information such as an OAuth client or API access token in source control.**
+我们强烈建议你使用机密管理工具，或咨询云服务商以获取安全存储密钥和机密的指引。**不要把 OAuth 客户端或 API 访问令牌等敏感信息存入版本控制**。
 
-## Key prefixes
+## 密钥前缀
 
-Each type of Tailscale-generated key contains a [key prefix][docs-key-prefixes] to help you distinguish the prefix type, such as `tskey-api` for API access tokens (sometimes called API keys) and `tskey-auth` for auth keys.
+Tailscale 生成的每种密钥都带有一个[密钥前缀][docs-key-prefixes]，帮助你区分前缀类型：例如 API 访问令牌（有时称为 API 密钥）使用 `tskey-api`，认证密钥（auth key）使用 `tskey-auth`。
 
-## Key and secret types
+## 密钥与机密的类型
 
-All Tailscale-generated keys and secrets are case-sensitive.
+所有 Tailscale 生成的密钥和机密都区分大小写。
 
-### API access tokens
+### API 访问令牌
 
-[API access tokens][docs-api] let you grant access to applications in your tailnet using the Tailscale API. You can generate and revoke your API access tokens (keys) in the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
+[API 访问令牌][docs-api]让你可以使用 Tailscale API 向 tailnet 中的应用授予访问权限。你可以在管理控制台的[密钥（Keys）](https://console.tailscale.com/admin/settings/keys)页面生成和吊销 API 访问令牌（密钥）。
 
-To create an API access token, open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console, go to the **API access tokens** section, then select **Generate access token**.
+要创建 API 访问令牌，打开管理控制台的[密钥（Keys）](https://console.tailscale.com/admin/settings/keys)页面，进入 **API access tokens**（API 访问令牌）部分，然后选择 **Generate access token**（生成访问令牌）。
 
-To revoke an API access token, open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console, go to the **API access tokens** section, then select **Revoke** next to the token that you want to delete.
+要吊销某个 API 访问令牌，打开管理控制台的[密钥（Keys）](https://console.tailscale.com/admin/settings/keys)页面，进入 **API access tokens** 部分，然后在该令牌旁选择 **Revoke**（吊销）。
 
-### Auth keys
+### 认证密钥
 
-[Auth keys][docs-auth-keys] let you authenticate a tagged device in your tailnet as an alternative to an interactive [single sign-on (SSO)][docs-sso-providers] session. You can generate and revoke auth keys in the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
+[认证密钥][docs-auth-keys]（auth key）让你可以认证 tailnet 中的带标签设备，作为交互式[单点登录（SSO）][docs-sso-providers]会话的替代方案。你可以在管理控制台的[密钥（Keys）](https://console.tailscale.com/admin/settings/keys)页面生成和吊销认证密钥。
 
-To create an auth key, refer to [Generating a key][docs-auth-keys-generating-a-key].
+要创建认证密钥，参阅[生成密钥][docs-auth-keys-generating-a-key]。
 
-To revoke an auth key, refer to [Revoking a key][docs-auth-keys-revoke].
+要吊销认证密钥，参阅[吊销密钥][docs-auth-keys-revoke]。
 
-### OAuth clients
+### OAuth 客户端
 
-[OAuth clients][docs-oauth-clients] let you delegate and scope access for your Tailscale APIs. You can generate and revoke OAuth clients in the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
+[OAuth 客户端][docs-oauth-clients]让你可以委派并限定 Tailscale API 的访问范围。你可以在管理控制台的[信任凭证（Trust credentials）](https://console.tailscale.com/admin/settings/trust-credentials)页面生成和吊销 OAuth 客户端。
 
-To create an OAuth key, refer to [Setting up an OAuth client][docs-oauth-clients-setup].
+要创建 OAuth 密钥，参阅[设置 OAuth 客户端][docs-oauth-clients-setup]。
 
-To revoke an OAuth key, refer to [Revoke a trust credential][docs-trust-credentials-revoke].
+要吊销 OAuth 密钥，参阅[吊销信任凭证][docs-trust-credentials-revoke]。
 
-### SCIM API keys
+### SCIM API 密钥
 
-A SCIM API key lets you authenticate an identity provider, such as [Microsoft Entra ID][docs-sso-entra-ai-scim-enable] and [Okta][docs-sso-okta-scim-enable-provisioning], and your tailnet for [user & group provisioning][docs-user-group-provisioning]. A single SCIM API key is used for an entire tailnet and is administered in the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console. User & group provisioning must be enabled to generate the SCIM API key. If you do not have user & group provisioning enabled in your tailnet, the **User & Group Provisioning** section will not display in the admin console.
+SCIM API 密钥让你可以对身份提供方（例如 [Microsoft Entra ID][docs-sso-entra-ai-scim-enable] 和 [Okta][docs-sso-okta-scim-enable-provisioning]）与你的 tailnet 之间的[用户与组预配][docs-user-group-provisioning]（provisioning）进行身份验证。整个 tailnet 使用一个 SCIM API 密钥，在管理控制台的[用户管理（User management）](https://console.tailscale.com/admin/settings/user-management)页面管理。必须启用用户与组预配才能生成 SCIM API 密钥。如果你的 tailnet 未启用用户与组预配，管理控制台中就不会显示 **User & Group Provisioning** 部分。
 
-To create a SCIM API key, open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console and select **Enable Provisioning**. Copy the generated key to the clipboard, then add the key in your Microsoft Entra ID or Okta provisioning settings.
+要创建 SCIM API 密钥，打开管理控制台的[用户管理（User management）](https://console.tailscale.com/admin/settings/user-management)页面，选择 **Enable Provisioning**（启用预配）。把生成的密钥复制到剪贴板，然后在你 Microsoft Entra ID 或 Okta 的预配设置中添加该密钥。
 
-A SCIM API key should be revoked or regenerated when it is lost, the Microsoft Entra ID or Okta environment is compromised, or you've stopped using Microsoft Entra ID or Okta.
+如果 SCIM API 密钥丢失、Microsoft Entra ID 或 Okta 环境遭到入侵，或者你已不再使用 Microsoft Entra ID 或 Okta，就应吊销或重新生成该密钥。
 
-To revoke a SCIM API key, open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, and select **Manage keys**. In the **Provisioning keys** dialog, select **Revoke**.
+要吊销 SCIM API 密钥，打开管理控制台的[用户管理（User management）](https://console.tailscale.com/admin/settings/user-management)页面，选择 **Manage keys**（管理密钥）。在 **Provisioning keys**（预配密钥）对话框中选择 **Revoke**（吊销）。
 
-To generate a new SCIM API key, open the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, and select **Manage keys**. In the **Provisioning keys** dialog, select **Generate new key**.
+要生成新的 SCIM API 密钥，打开管理控制台的[用户管理（User management）](https://console.tailscale.com/admin/settings/user-management)页面，选择 **Manage keys**（管理密钥）。在 **Provisioning keys**（预配密钥）对话框中选择 **Generate new key**（生成新密钥）。
 
-### Webhook secrets
+### webhook 机密
 
-[Webhooks][docs-webhooks] let you subscribe to tailnet [events][docs-webhooks-events] that can automatically be sent to services such as Slack, Discord, and Mattermost. A webhook secret ensures webhook requests are coming from authorized users in the tailnet. You can generate, rotate, or delete webhook secrets for your endpoints in the [Webhooks](https://console.tailscale.com/admin/settings/webhooks) page of the admin console.
+[webhook][docs-webhooks] 让你订阅 tailnet 的[事件][docs-webhooks-events]，并自动发送到 Slack、Discord 和 Mattermost 等服务。webhook 机密用于确保 webhook 请求确实来自 tailnet 中经过授权的用户。你可以在管理控制台的 [Webhooks](https://console.tailscale.com/admin/settings/webhooks) 页面为你的端点生成、轮换或删除 webhook 机密。
 
-To create a webhook endpoint and secret, refer to [Setting up a webhook endpoint][docs-webhooks-webhook-secret].
+要创建 webhook 端点和机密，参阅[设置 webhook 端点][docs-webhooks-webhook-secret]。
 
-To delete a webhook endpoint, refer to [Deleting an endpoint][docs-webhooks-deleting-an-endpoint]. When an endpoint is deleted, the secret is also deleted.
+要删除 webhook 端点，参阅[删除端点][docs-webhooks-deleting-an-endpoint]。端点被删除时，其机密也会一并删除。
 
-To generate a new secret for an existing webhook, refer to [Rotating a webhook secret][docs-webhooks-rotating-a-webhook-secret].
+要为现有 webhook 生成新机密，参阅[轮换 webhook 机密][docs-webhooks-rotating-a-webhook-secret]。
 
-## Using logs and events
+## 使用日志与事件
 
-You can monitor your key and secret activity in the [Logs](https://console.tailscale.com/admin/logs) page of the admin consoles. For example, the "Create API key" event is generated when a new API access token or auth key is generated. You can also use [webhooks][docs-webhooks] for automatic notifications when a key status changes.
+你可以在管理控制台的[日志（Logs）](https://console.tailscale.com/admin/logs)页面监控密钥和机密的相关活动。例如，生成新的 API 访问令牌或认证密钥时会产生 "Create API key"（创建 API 密钥）事件。你也可以使用 [webhook][docs-webhooks] 在密钥状态变化时自动获得通知。
 
-For more about logged events in general, refer to [Configuration audit logging][docs-audit-logging].
+有关日志记录事件的总体介绍，参阅[配置审计日志][docs-audit-logging]。
 
-For more about the types of events related to keys that are logged, refer to [Audit logging events][docs-audit-logging-events].
+有关与密钥相关、会被记录的事件类型，参阅[审计日志事件][docs-audit-logging-events]。
 
-For more about the types of available webhook events for key activity notifications, refer to [Webhook events][docs-webhooks-events].
+有关可用于密钥活动通知的 webhook 事件类型，参阅 [Webhook 事件][docs-webhooks-events]。
 
-## Key expiry
+## 密钥过期
 
-API access tokens, auth keys, and OAuth keys are generated with an expiry that you can adjust at the time they are generated. SCIM API keys and webhook endpoint secrets do not expire. As key expiry can vary across your different keys and types, make sure you are aware of the expiry day and provision accordingly for each key. For more information, refer to [Key expiry][docs-key-expiry].
+API 访问令牌、认证密钥和 OAuth 密钥在生成时都带有过期时间，你可以在生成时调整。SCIM API 密钥和 webhook 端点机密不会过期。由于不同密钥和类型的过期时间可能不同，请务必了解每把密钥的过期日期，并据此做好规划。更多信息参阅[密钥过期][docs-key-expiry]。
 
-## Secret scanning
+## 机密扫描
 
-To help mitigate accidental disclosure and prevent fraudulent use, Tailscale partners with several companies to provide secret scanning of source code repositories and other data sources to find leaked Tailscale keys. For more information, refer to [Secret scanning][docs-secret-scanning].
+为帮助降低意外泄露的风险并防止恶意利用，Tailscale 与多家公司合作，对源代码仓库和其他数据源提供机密扫描，以发现泄露的 Tailscale 密钥。更多信息参阅[机密扫描][docs-secret-scanning]。
 
-## Offboarding users
+## 用户下线（offboarding）
 
-While key and secret management are an important aspect of security, there are other things that you should take into account when removing users and devices from your tailnet. For more information, refer to [Offboarding users][docs-offboarding-users].
+密钥与机密管理固然是安全的重要一环，但在从 tailnet 移除用户和设备时，还有其他事项需要考虑。更多信息参阅[用户下线（offboarding）][docs-offboarding-users]。
 
 [docs-api]: /docs/reference/tailscale-api
 

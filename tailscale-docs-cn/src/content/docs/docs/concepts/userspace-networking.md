@@ -1,62 +1,62 @@
 ---
-title: "Userspace networking mode (for containers)"
-description: "Find out about userspace networking mode and when it is useful."
+title: "用户态网络模式（容器场景）"
+description: "了解用户态网络模式及其适用场景。"
 ---
 
-Last validated Nov 12, 2025
+最后验证于 Nov 12, 2025
 
-Userspace networking mode lets you run Tailscale where you don't have access to create a VPN tunnel device. This often happens in container environments.
+用户态网络模式让你在没有权限创建 VPN 隧道设备的环境中运行 Tailscale。这种情况常见于容器环境。
 
-Tailscale works on Linux systems using a device driver called `/dev/net/tun`, which lets you start the VPN tunnel as though it were any other network interface like Ethernet or Wi-Fi. This lets any Linux application—from a web browser to the `ping` CLI command—send its traffic through the Tailscale interface.
+在 Linux 系统上，Tailscale 依靠一个名为 `/dev/net/tun` 的设备驱动工作，它让你能像启动以太网或 Wi-Fi 等普通网络接口一样启动 VPN 隧道。这样，任何 Linux 应用——从网页浏览器到 `ping` 命令行工具——都可以让自己的流量经过 Tailscale 接口。
 
-However, not all Linux systems support `/dev/net/tun`. For example, some container-based app platforms like [Heroku][docs-serverless-heroku] and [Google Cloud Run][docs-serverless-cloudrun] do not. For those environments, userspace networking mode offers a different way of running, where `tailscaled` functions as a SOCKS5 or HTTP proxy which other processes in the container can connect through.
+不过，并非所有 Linux 系统都支持 `/dev/net/tun`。例如，[Heroku][docs-serverless-heroku] 和 [Google Cloud Run][docs-serverless-cloudrun] 等基于容器的应用平台就不支持。对于这类环境，用户态网络模式提供了另一种运行方式：`tailscaled` 充当 SOCKS5 或 HTTP 代理，容器内的其他进程可以通过它连接。
 
-*（图：A diagram of userspace networking in Tailscale.）*
+*（图：Tailscale 用户态网络示意图。）*
 
-> **Note:**
+> **注意：**
 >
-> Userspace networking mode with SOCKS5 is available in Tailscale v1.8 or later. The HTTP proxy is available in Tailscale v1.16 or later. [Update Tailscale][docs-update] to use these features.
+> 带 SOCKS5 的用户态网络模式在 Tailscale v1.8 及以上版本可用。HTTP 代理在 Tailscale v1.16 及以上版本可用。请[更新 Tailscale][docs-update] 以使用这些功能。
 
-## SOCKS5 vs. HTTP
+## SOCKS5 与 HTTP 的区别
 
-The functionality and purpose of the SOCKS5 and HTTP proxies varies. The SOCKS5 proxy is a more general and flexible proxy that can work with any traffic. The HTTP proxy is only for that protocol, so it only proxies HTTP and HTTPS traffic, for example, to web pages.
+SOCKS5 代理与 HTTP 代理的功能和用途有所不同。SOCKS5 代理更通用、更灵活，可以处理任意流量。HTTP 代理只服务于该协议本身，因此仅代理 HTTP 和 HTTPS 流量，例如访问网页。
 
-## Start Tailscale in userspace networking mode
+## 以用户态网络模式启动 Tailscale
 
-You can enable userspace networking from the [Tailscale CLI][docs-cli] by passing the `--tun=userspace-networking` flag to `tailscaled` before running `tailscale up`. You can also use a SOCKS5 proxy and an HTTP proxy on the same port (as shown in the following code block),
+你可以通过 [Tailscale CLI][docs-cli] 启用用户态网络：在运行 `tailscale up` 之前，给 `tailscaled` 传入 `--tun=userspace-networking` 标志。还可以让 SOCKS5 代理和 HTTP 代理共用同一端口（如下面的代码块所示），
 
 ```shell
 tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055 &
 tailscale up --auth-key=<your-auth-key>
 ```
 
-Userspace networking mode is primarily for [serverless environments][docs-serverless]. We recommend using it with [ephemeral nodes and auth keys][docs-ephemeral-nodes] (as shown above).
+用户态网络模式主要面向[无服务器（serverless）环境][docs-serverless]。我们建议将其与[临时节点和认证密钥][docs-ephemeral-nodes]配合使用（如上所示）。
 
-> **Note:**
+> **注意：**
 >
-> You can enable userspace networking mode on Ubuntu, RHEL, or any derivative by adding the flag `--tun=userspace-networking` to the `FLAGS` variable in `/etc/default/tailscaled`:
+> 在 Ubuntu、RHEL 或其衍生发行版上，可以通过在 `/etc/default/tailscaled` 的 `FLAGS` 变量中添加 `--tun=userspace-networking` 标志来启用用户态网络模式：
 >
 > ```
 > FLAGS="--tun=userspace-networking"
 > ```
 
-> **Note:**
+> **注意：**
 >
-> The Tailscale Docker image supports a [`TS_USERSPACE`][docs-docker-ts-userspace] parameter that is equivalent to `tailscaled --tun=userspace-networking`.
+> Tailscale Docker 镜像支持 [`TS_USERSPACE`][docs-docker-ts-userspace] 参数，等同于 `tailscaled --tun=userspace-networking`。
 
-## Configure your application to use SOCKS5 or HTTP
+## 配置应用使用 SOCKS5 或 HTTP
 
-After Tailscale is authenticated, your application can connect using a SOCKS5 or HTTP proxy or both. Many widely used networking packages support these proxies already, generally by setting the `ALL_PROXY` and `HTTP_PROXY`environment variables. For many applications, you'll need a command like this:
+Tailscale 完成身份验证后，你的应用就可以通过 SOCKS5 代理、HTTP 代理或两者兼用来连接。许多常用的网络库已经支持这些代理，通常通过设置 `ALL_PROXY` 和 `HTTP_PROXY` 环境变量即可。对很多应用来说，你需要类似这样的命令：
 
 ```shell
 ALL_PROXY=socks5://localhost:1055/ HTTP_PROXY=http://localhost:1055/ http_proxy=http://localhost:1055/ ./my-app
 ```
 
-Some libraries use `http_proxy` instead of `HTTP_PROXY`. You might need to experiment to find the right setting for your application. For instructions on how to use Tailscale on specific serverless platforms, refer to the topics below:
+有些库使用的是小写的 `http_proxy` 而不是 `HTTP_PROXY`。你可能需要试一试才能找到适合自己应用的设置。关于在特定无服务器平台上使用 Tailscale 的说明，请参阅以下主题：
 
-* [Tailscale on Heroku][docs-serverless-heroku]
-* [Tailscale on Google Cloud Run][docs-serverless-cloudrun]
-* [Tailscale on GitHub Actions][bl-gh-actions-and-tailscale]
+* [在 Heroku 上使用 Tailscale][docs-serverless-heroku]
+* [在 Google Cloud Run 上使用 Tailscale][docs-serverless-cloudrun]
+* [在 GitHub Actions 上使用 Tailscale][bl-gh-actions-and-tailscale]
 
 [bl-gh-actions-and-tailscale]: https://tailscale.com/blog/2021-05-github-actions-and-tailscale
 

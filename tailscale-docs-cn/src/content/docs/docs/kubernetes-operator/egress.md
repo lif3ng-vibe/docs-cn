@@ -1,74 +1,74 @@
 ---
-title: "Access tailnet resources from your cluster with Egress"
-description: "Access tailnet resources from your Kubernetes cluster using the Tailscale Kubernetes Operator."
+title: "使用 Egress 从集群访问 tailnet 资源"
+description: "使用 Tailscale Kubernetes Operator 从 Kubernetes 集群访问 tailnet 资源。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-Cluster egress lets workloads running in your Kubernetes cluster access devices and services in your tailnet, without those workloads needing to run Tailscale themselves.
+集群出站（egress）让运行在 Kubernetes 集群中的工作负载能够访问 tailnet 中的设备和服务，而这些工作负载自身无需运行 Tailscale。
 
-This topic explains egress architecture and available proxy modes.
+本主题介绍出站架构和可用的代理模式。
 
-## Overview
+## 概述
 
-Egress works by creating a Kubernetes `ExternalName` `Service` that acts as an in-cluster proxy to a tailnet target. Your workloads connect to this `Service` like any other Kubernetes `Service`, and the egress proxy forwards the traffic over the tailnet to the target device.
+出站的工作方式是创建一个 Kubernetes `ExternalName` `Service`，充当指向 tailnet 目标的集群内代理。你的工作负载像连接其他 Kubernetes `Service` 一样连接这个 `Service`，出站代理再将流量经由 tailnet 转发到目标设备。
 
-You can target a tailnet device by either:
+你可以通过以下两种方式指定 tailnet 目标：
 
-* **MagicDNS name**: Use the `tailscale.com/tailnet-fqdn` annotation (for example, `db.example.ts.net`). The proxy resolves the FQDN using the tailnet netmap and updates automatically if the target's IP address changes.
-* **Tailnet IP address**: Use the `tailscale.com/tailnet-target-ip` annotation. The proxy forwards directly to the specified IP address.
+* **MagicDNS 名称**：使用 `tailscale.com/tailnet-fqdn` 注解（例如 `db.example.ts.net`）。代理使用 tailnet netmap 解析该 FQDN，并在目标的 IP 地址变化时自动更新。
+* **Tailnet IP 地址**：使用 `tailscale.com/tailnet-target-ip` 注解。代理直接转发到指定的 IP 地址。
 
-Both standalone and [high-availability][ar-ha-egress] configurations are supported. Standalone mode runs a single egress proxy pod, while high-availability mode uses a [ProxyGroup][docs-proxygroup] with multiple replicas. High-availability mode is recommended for production use cases.
+独立部署和[高可用][ar-ha-egress]配置均受支持。独立模式运行单个出站代理 pod，而高可用模式使用具有多个副本的 [ProxyGroup][docs-proxygroup]。生产环境建议使用高可用模式。
 
-## Standalone egress
+## 独立出站
 
-In standalone mode, you annotate an `ExternalName` `Service` with the tailnet target. On creation of the `Service`, the operator:
+在独立模式下，你在一个 `ExternalName` `Service` 上添加指向 tailnet 目标的注解。`Service` 创建时，operator 会：
 
-* Creates a headless `Service` pointing at the egress proxy pod.
-* Creates a combined configuration and state `Secret`.
-* Creates an egress proxy `Pod` (single replica `StatefulSet`) that forwards traffic to the tailnet target.
-* Updates the `ExternalName` `Service` to point at the headless `Service`.
+* 创建一个指向出站代理 pod 的 headless `Service`。
+* 创建一个合并的配置与状态 `Secret`。
+* 创建一个将流量转发到 tailnet 目标的出站代理 `Pod`（单副本 `StatefulSet`）。
+* 更新 `ExternalName` `Service`，使其指向 headless `Service`。
 
-Your workloads' DNS queries for the `ExternalName` `Service` resolve to the headless `Service`, which routes to the egress proxy pod. The proxy pod uses `iptables` or `nftables` DNAT rules to forward traffic over the tailnet to the target device.
+你的工作负载对 `ExternalName` `Service` 的 DNS 查询会解析到 headless `Service`，再路由到出站代理 pod。代理 pod 使用 `iptables` 或 `nftables` DNAT 规则，将流量经由 tailnet 转发到目标设备。
 
-*（图：A diagram showing L3 standalone egress architecture. The operator creates an egress proxy pod, a headless Service, and a configuration Secret. The ExternalName Service resolves to the headless Service, which routes traffic through the egress proxy to a tailnet device.）*
+*（图：L3 独立出站架构图。Operator 创建一个出站代理 pod、一个 headless Service 和一个配置 Secret。ExternalName Service 解析到 headless Service，后者通过出站代理将流量路由到 tailnet 设备。）*
 
-To get started with egress, refer to the guides in [Further exploration][ar-further].
+要开始使用出站，请参阅[进一步探索][ar-further]中的指南。
 
-## High-availability (HA) egress
+## 高可用（HA）出站
 
-A high-availability egress is similar to the standalone variant, but uses a [ProxyGroup][docs-proxygroup] with `spec.type: egress` to deploy multiple replicas. This lets you:
+高可用出站与独立版本类似，但使用 `spec.type: egress` 的 [ProxyGroup][docs-proxygroup] 部署多个副本。这让你可以：
 
-* Forward traffic to tailnet targets through multiple active egress proxies, preventing downtime during proxy pod restarts.
-* Serve multiple `ExternalName` services from a shared set of proxy pods.
+* 通过多个活跃的出站代理转发流量，避免代理 pod 重启期间服务中断。
+* 由一组共享的代理 pod 承载多个 `ExternalName` 服务。
 
-You configure HA egress by adding a `tailscale.com/proxy-group` annotation to the `ExternalName` `Service`.
+你通过在 `ExternalName` `Service` 上添加 `tailscale.com/proxy-group` 注解来配置 HA 出站。
 
-On creation of a correctly annotated `ExternalName` `Service`, the operator:
+创建带有正确注解的 `ExternalName` `Service` 时，operator 会：
 
-* Creates a `ClusterIP` `Service` and `EndpointSlice` per egress target in the operator's namespace. Each port defined on the `ExternalName` `Service` is mapped to a randomly allocated port on the `ClusterIP` `Service`.
-* Updates the egress `ConfigMap` (created with the `ProxyGroup`) with the port mappings for this target. This `ConfigMap` is mounted to all `ProxyGroup` pods and tells each proxy which incoming ports map to which tailnet targets.
-* Updates the `ExternalName` `Service` to point at the `ClusterIP` `Service`.
+* 在 operator 的命名空间中为每个出站目标创建一个 `ClusterIP` `Service` 和 `EndpointSlice`。`ExternalName` `Service` 上定义的每个端口都会映射到 `ClusterIP` `Service` 上随机分配的端口。
+* 使用该目标的端口映射更新出站 `ConfigMap`（随 `ProxyGroup` 一同创建）。这个 `ConfigMap` 会挂载到所有 `ProxyGroup` pod 上，告知每个代理哪个入站端口对应哪个 tailnet 目标。
+* 更新 `ExternalName` `Service`，使其指向 `ClusterIP` `Service`。
 
-Traffic flows from your workload to the `ExternalName` `Service`, which resolves to the `ClusterIP` `Service`. `kube-proxy` routes traffic to the `ProxyGroup` pod IPs through the `EndpointSlice`. The proxy pod uses `iptables` or `nftables` DNAT rules to forward traffic over the tailnet.
+流量从你的工作负载流向 `ExternalName` `Service`，并解析到 `ClusterIP` `Service`。`kube-proxy` 通过 `EndpointSlice` 将流量路由到 `ProxyGroup` pod IP。代理 pod 使用 `iptables` 或 `nftables` DNAT 规则，将流量经由 tailnet 转发。
 
-*（图：A diagram showing ProxyGroup egress architecture. Multiple proxy pod replicas in a StatefulSet forward traffic from ExternalName Services to tailnet devices through ClusterIP Services and EndpointSlices.）*
+*（图：ProxyGroup 出站架构图。StatefulSet 中的多个代理 pod 副本通过 ClusterIP Service 和 EndpointSlice，将来自 ExternalName Service 的流量转发到 tailnet 设备。）*
 
-HA egress supports graceful failover: when a proxy pod is terminated, in-flight connections are drained to other replicas automatically.
+HA 出站支持优雅故障转移：当某个代理 pod 被终止时，进行中的连接会自动排空到其他副本。
 
-To get started with HA egress, refer to [High availability with ProxyGroup][docs-ha].
+要开始使用 HA 出站，请参阅[使用 ProxyGroup 实现高可用][docs-ha]。
 
-## Further exploration
+## 进一步探索
 
-* [Access a tailnet device][docs-access-device] from your cluster by its MagicDNS name or tailnet IP address.
-* [Access an IP address behind a subnet router][docs-access-subnet-ip] from your cluster workloads.
-* [Expose Amazon RDS to your tailnet][docs-expose-rds] through an egress proxy.
-* [Enable MagicDNS resolution][docs-magicdns-resolution] so workloads can resolve tailnet names in your cluster.
-* [Configure high availability][docs-ha] to run multiple egress proxy replicas for production.
+* 从集群中按 MagicDNS 名称或 tailnet IP 地址[访问 tailnet 设备][docs-access-device]。
+* 从集群工作负载[访问子网路由器背后的 IP 地址][docs-access-subnet-ip]。
+* 通过出站代理[向你的 tailnet 暴露 Amazon RDS][docs-expose-rds]。
+* [启用 MagicDNS 解析][docs-magicdns-resolution]，让工作负载能在集群中解析 tailnet 名称。
+* [配置高可用][docs-ha]，为生产环境运行多个出站代理副本。
 
-[ar-ha-egress]: #high-availability-ha-egress
+[ar-ha-egress]: #高可用ha出站
 
-[ar-further]: #further-exploration
+[ar-further]: #进一步探索
 
 [docs-access-device]: /docs/kubernetes-operator/egress/access-tailnet-service
 

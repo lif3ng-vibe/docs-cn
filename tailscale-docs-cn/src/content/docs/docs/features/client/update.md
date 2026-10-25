@@ -1,213 +1,207 @@
 ---
-title: "Update Tailscale"
-description: "Our team regularly releases updates for the Tailscale client, and we recommend always being on the latest version of the Tailscale client. To explore all the latest features, changes, and fixes, inclu"
+title: "更新 Tailscale"
+description: "我们的团队会定期发布 Tailscale 客户端更新，建议你始终使用最新版本的 Tailscale 客户端。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-Our team regularly releases updates for the Tailscale client, and we recommend always being on the latest version of the Tailscale client. To explore all the latest features, changes, and fixes, including release versions of the Tailscale client, refer to our [Changelog][co-changelog-client] page.
+我们的团队会定期发布 Tailscale 客户端更新，建议你始终使用最新版本的 Tailscale 客户端。要了解全部最新功能、变更和修复（包括 Tailscale 客户端的发布版本），请参阅我们的 [Changelog][co-changelog-client]（更新日志）页面。
 
-There are 3 ways to keep your Tailscale client up-to-date:
+让 Tailscale 客户端保持最新有 3 种方式：
 
-* Auto-updates (recommended)
-* Manual updates
-* MDM-managed updates
+* 自动更新（推荐）
+* 手动更新
+* MDM 管理的更新
 
-## Check for updates
+## 检查更新
 
-To find the version of the Tailscale client installed on every device in your Tailscale network (known as a tailnet), open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and refer to the **Version** column. A gray arrow indicates that a standard update is available, a red arrow indicates that a security update is available, and no arrow indicates that the device is up-to-date.
+要查看 Tailscale 网络（即 tailnet）中每台设备上安装的 Tailscale 客户端版本，请打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines)（机器）页面，查看 **版本**（Version）列。灰色箭头表示有常规更新可用，红色箭头表示有安全更新可用，没有箭头表示设备已是最新。
 
-*（图：Devices showing the Tailscale client version.）*
+*（图：显示 Tailscale 客户端版本的设备列表。）*
 
-To display only the devices where an update is available, select the **Version** filter and select [Update available](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available).
+要只显示有更新可用的设备，请选择 **版本**（Version）筛选器，然后选择 [Update available](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available)（有更新可用）。
 
-*（图：Devices showing the Tailscale client and filtered by available updates.）*
+*（图：按可用更新筛选后的设备列表，显示 Tailscale 客户端版本。）*
 
-## Auto-updates
+## 自动更新
 
-Tailscale can automatically apply client updates as they are released. To apply the update, the same mechanism is used during the initial client installation. For example, if the client was installed using a Linux package manager, that package manager will be used to upgrade the installed package.
+Tailscale 可以在客户端更新发布时自动应用。应用更新所用的机制与客户端初次安装时相同。例如，如果客户端是通过某个 Linux 包管理器安装的，就会用该包管理器来升级已安装的软件包。
 
-Auto-updates are optional, and individual devices can be opted in or out of them anytime.
+自动更新是可选的，单台设备随时可以加入或退出。
 
-> **Note:**
+> **注意：**
 >
-> Devices using the iOS, macOS (App Store version), and Android (Google Play Store version) operating systems might not have automatic updates configured by default. We recommend verifying that this setting is enabled in the App Store and Google Play Store to ensure these devices are updated per with your tailnet settings.
+> 使用 iOS、macOS（App Store 版）和 Android（Google Play 商店版）的设备默认可能未配置自动更新。建议你在 App Store 和 Google Play 商店中确认此设置已启用，以确保这些设备按照你的 tailnet 设置进行更新。
 
-If you use [system policies][docs-mdm-keys-configure-auto-update] to enforce your tailnet updates, auto-updates will occur based on the system policies that you set.
+如果你使用[系统策略][docs-mdm-keys-configure-auto-update]来强制 tailnet 更新，自动更新将按照你设置的系统策略执行。
 
-Auto-updates apply even if the client is disconnected from Tailscale.
+即使客户端未连接 Tailscale，自动更新也会生效。
 
-### Configure auto-updates in your tailnet
+### 在 tailnet 中配置自动更新
 
-You must be the [Owner, Admin, or IT admin](/docs/reference/user-roles) to enable or disable auto-updates for a tailnet.
+你必须具有 [Owner、Admin 或 IT admin](/docs/reference/user-roles)（所有者、管理员或 IT 管理员）角色，才能为 tailnet 启用或禁用自动更新。
 
-To enable auto-updates for your entire tailnet, open the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the admin console. Under **Auto-update Tailscale**, enable the **Auto-update new devices** toggle.
+要为整个 tailnet 启用自动更新，请打开管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management)（设备管理）页面。在 **Auto-update Tailscale** 下，打开 **Auto-update new devices**（自动更新新设备）开关。
 
-*（图：Auto-update enabled in the admin console.）*
+*（图：管理控制台中已启用自动更新。）*
 
-Changing the auto-update setting in the admin console will not change the Tailscale client settings for existing devices. The setting only affects new devices. Existing device owners must manually enable or disable auto-updates.
+在管理控制台中更改自动更新设置不会改变现有设备的 Tailscale 客户端设置。该设置只影响新设备。现有设备的所有者必须手动启用或禁用自动更新。
 
-### Auto-updates for new tailnets
+### 新 tailnet 的自动更新
 
-All newly created tailnets have auto-updates enabled by default in the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the admin console. When a new device is added to the tailnet, the Tailscale client will be configured to automatically update by default.
+所有新建的 tailnet 在管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management)（设备管理）页面中默认启用自动更新。当新设备添加到 tailnet 时，Tailscale 客户端默认会被配置为自动更新。
 
-### Auto-updates for existing tailnets
+### 现有 tailnet 的自动更新
 
-If your tailnet was created prior to February 2024, you must manually enable auto-updates in the [Device management](https://console.tailscale.com/admin/settings/device-management) page of the admin console, and for each of the existing devices. When auto-updates are enabled in the admin console, new devices added to your tailnet will be configured to automatically update by default.
+如果你的 tailnet 创建于 2024 年 2 月之前，你必须在管理控制台的 [Device management](https://console.tailscale.com/admin/settings/device-management)（设备管理）页面中手动启用自动更新，并为每台现有设备分别启用。在管理控制台启用自动更新后，添加到你 tailnet 的新设备默认会被配置为自动更新。
 
-### Auto-updates for Docker containers
+### Docker 容器的自动更新
 
-[Docker][docs-docker] containers are designed to be immutable, meaning they are not meant to change over time. Therefore, we recommend using the `stable` tag (`image: tailscale/tailscale:stable`) in your Docker [configuration][xt-gh-tailscale-docker-examples] to ensure containers are updated to the latest stable version of the Tailscale client every time they are deployed.
+[Docker][docs-docker] 容器被设计为不可变的，也就是说它们不应随时间变化。因此，我们建议在 Docker [配置][xt-gh-tailscale-docker-examples]中使用 `stable` 标签（`image: tailscale/tailscale:stable`），以确保容器每次部署时都更新到最新稳定版的 Tailscale 客户端。
 
-> **Note:**
+> **注意：**
 >
-> It is common for Docker to also use the `latest` tag. In the context of Tailscale, the `latest` and `stable` tags accomplish the same thing, however, we recommend that you use the `stable` tag.
+> Docker 也常使用 `latest` 标签。就 Tailscale 而言，`latest` 和 `stable` 标签效果相同，不过我们建议使用 `stable` 标签。
 
-Although you can enable auto-updates within the Tailscale container by setting the Tailscale CLI command [`tailscale set --auto-update`][docs-cli-set], be aware of the following limitations:
+虽然你可以通过 Tailscale CLI 命令 [`tailscale set --auto-update`][docs-cli-set] 在 Tailscale 容器内启用自动更新，但请注意以下限制：
 
-* Auto-updates inside a container do not persist between restarts. Therefore, you must reissue the command whenever a container is re-deployed or restarted.
-* We recommend setting the version to `stable` and not setting the `auto-update` flag to on. This ensures that each time you deploy or restart the container, it will run with our latest stable version of Tailscale.
-* If you have both the `auto-update` flag set for the container and your configuration specifies a version such as `tailscale/tailscale:v1.76.0`, the version of the Tailscale client will revert to this version upon re-deploy or restart and then eventually update to the latest stable version.
-* Auto-updates inside a container will ignore the tailnet-wide settings for auto-updates.
+* 容器内的自动更新在重启后不会保留。因此，每当容器重新部署或重启时，你都必须重新执行该命令。
+* 我们建议把版本设置为 `stable`，而不要把 `auto-update` 标志设为开启。这样可以确保每次部署或重启容器时，它都会运行我们最新稳定版的 Tailscale。
+* 如果既为容器设置了 `auto-update` 标志，配置中又指定了 `tailscale/tailscale:v1.76.0` 这样的版本，那么重新部署或重启时，Tailscale 客户端会先回退到该指定版本，然后最终更新到最新稳定版。
+* 容器内的自动更新会忽略 tailnet 范围的自动更新设置。
 
-### Enable auto-updates on devices
+### 在设备上启用自动更新
 
-You may need to configure auto-update settings for the Tailscale clients on a device if auto-updates were not previously configured or if you need to disable auto-updates for the device.
+如果之前没有配置过自动更新，或者你需要为某台设备禁用自动更新，可能需要为该设备上的 Tailscale 客户端配置自动更新设置。
 
-Here's how to change auto-update device settings on different platforms:
+以下是在不同平台上更改设备自动更新设置的方法：
 
 #### Windows
 
-Select the Tailscale tray icon and toggle **Automatically install updates** under the **Preferences** menu.
+选择 Tailscale 托盘图标，在 **偏好设置**（Preferences）菜单下切换 **自动安装更新**（Automatically install updates）。
 
 #### macOS
 
-If you installed Tailscale from the Mac App Store, open the App Store application, select **App Store** in your macOS menu bar, select **Settings**, and check the **Automatic Updates** box. Note that enabling this setting will automatically update all of your installed apps.
+如果你是从 Mac App Store 安装的 Tailscale，请打开 App Store 应用，在 macOS 菜单栏中选择 **App Store**，选择 **设置**（Settings），然后勾选 **自动更新**（Automatic Updates）复选框。注意，启用此设置会自动更新你所有已安装的应用。
 
-*（图：Devices showing the Tailscale client version.）*
+*（图：显示 Tailscale 客户端版本的设备列表。）*
 
-If you installed Tailscale by downloading the `.zip` archive from `pkgs.tailscale.com`, select the Tailscale tray icon and toggle **Automatically install updates** under the **Settings** menu.
+如果你是通过从 `pkgs.tailscale.com` 下载 `.zip` 压缩包安装的 Tailscale，请选择 Tailscale 托盘图标，在 **设置**（Settings）菜单下切换 **自动安装更新**（Automatically install updates）。
 
 #### iOS
 
-Auto-updates for iOS apps are managed through the App Store settings.
+iOS 应用的自动更新通过 App Store 设置管理。
 
 #### Android
 
-Auto-updates for Android apps are managed through the Google Play Store settings.
+Android 应用的自动更新通过 Google Play 商店设置管理。
 
 #### Linux
 
-From the CLI, run `tailscale set --auto-update` to enable auto-updates, or `tailscale set --auto-update=false` to disable them.
+在 CLI 中运行 `tailscale set --auto-update` 启用自动更新，或运行 `tailscale set --auto-update=false` 禁用自动更新。
 
 #### Synology
 
-Refer to [Access Synology NAS from anywhere][docs-synology-schedule-updates] for instructions on scheduling automatic updates in DiskStation Manager (DSM).
+关于在 DiskStation Manager（DSM）中安排自动更新的说明，请参阅[从任意位置访问 Synology NAS][docs-synology-schedule-updates]。
 
-### Auto-updates for devices on multiple tailnets
+### 位于多个 tailnet 的设备的自动更新
 
-If a device has automatic updates enabled and belongs to multiple tailnets where the **Auto-update new devices** setting in the admin console varies, the client will be updated when connected to a tailnet with auto-updates enabled.
+如果设备启用了自动更新、并且同时属于多个在管理控制台中 **Auto-update new devices** 设置不一致的 tailnet，那么当它连接到启用了自动更新的 tailnet 时，客户端就会更新。
 
-### Auto-update limitations
+### 自动更新的局限
 
-Auto-updates are currently not supported on Synology and Linux distributions based on Arch Linux.
+Synology 以及基于 Arch Linux 的 Linux 发行版目前不支持自动更新。
 
-Auto-updates do not happen immediately when a new version of Tailscale is released. We monitor stability and issue reports for several days before enabling a release for auto-updates. It typically takes around a week after a release before your machines start to update, and it can take longer. Important security updates may be applied faster.
+新版本 Tailscale 发布时，自动更新不会立即进行。我们会先监测稳定性和问题报告几天，然后把该版本开放给自动更新。通常发布后约一周设备才会开始更新，有时会更久。重要的安全更新可能会更快应用。
 
-If machines with auto-updates enabled are not updated several weeks after a release, [contact support][co-contact-support].
+如果启用了自动更新的设备在发布数周后仍未更新，请[联系支持团队][co-contact-support]。
 
-Scheduling of auto-updates is not currently supported. Auto-updates are automatically scheduled around each node's activity to minimize disruption.
+目前不支持为自动更新指定时间。自动更新会围绕每个节点的活动情况自动安排，以尽量减少干扰。
 
-## Manual updates
+## 手动更新
 
-Here's how to manually upgrade on different platforms:
+以下是在不同平台上手动升级的方法：
 
 #### Windows
 
-Upgrade Tailscale by downloading our [Windows installer][pk-windows-installer] and running it. This will update your existing installation to the latest version.
+下载我们的 [Windows 安装程序][pk-windows-installer]并运行即可升级 Tailscale。这会将你现有的安装更新到最新版本。
 
-Alternatively, you can update Windows clients by running the [Tailscale CLI][docs-cli] command [`tailscale update`][docs-cli-update].
+你也可以运行 [Tailscale CLI][docs-cli] 命令 [`tailscale update`][docs-cli-update] 来更新 Windows 客户端。
 
 #### macOS
 
-Tailscale for macOS is available in [multiple variants][docs-macos-variants].
+macOS 版 Tailscale 有[多种变体][docs-macos-variants]。
 
-We recommend using the [Standalone application][docs-macos-variants-standalone]
-for a new macOS installation. You can enable auto-updates from the Preferences
-page of the installed app.
+在 macOS 上全新安装时，我们推荐使用[独立版应用][docs-macos-variants-standalone]。你可以在已安装应用的偏好设置（Preferences）页面启用自动更新。
 
-The [Mac App Store][xt-apple-macos-store-tailscale] application will
-auto-update by default. If you need to manually update, you can do so from the
-App Store updates page.
+[Mac App Store][xt-apple-macos-store-tailscale] 版应用默认会自动更新。如需手动更新，可以在 App Store 的更新页面进行。
 
 #### iOS
 
-Tailscale for iOS is only available [through the App Store][xt-apple-ios-store-tailscale]
-and will auto-update by default. If you need to manually update, you can do so from
-the App Store updates page.
+iOS 版 Tailscale 只能[通过 App Store][xt-apple-ios-store-tailscale]获取，默认会自动更新。如需手动更新，可以在 App Store 的更新页面进行。
 
 #### Android
 
-Tailscale for Android is only available [through the Play Store][xt-google-play-tailscale] and will auto-update by default. If you need to manually update, you can do so from the Play Store updates page.
+Android 版 Tailscale 只能[通过 Play 商店][xt-google-play-tailscale]获取，默认会自动更新。如需手动更新，可以在 Play 商店的更新页面进行。
 
 #### Linux
 
-If you are using Tailscale v1.36 or later, you can update some distros of Linux clients by running the [Tailscale CLI][docs-cli] [`update`][docs-cli-update] command.
+如果你使用 Tailscale v1.36 或更高版本，可以通过运行 [Tailscale CLI][docs-cli] 的 [`update`][docs-cli-update] 命令来更新部分 Linux 发行版的客户端。
 
 ```shell
 tailscale update
 ```
 
-Alternatively, you can upgrade the Tailscale client on [supported Linux distros][docs-install-linux] by using the upgrade command from the package manager used to install Tailscale. Here's a reference for common distros.
+另外，对于[受支持的 Linux 发行版][docs-install-linux]，你也可以使用安装 Tailscale 时所用包管理器的升级命令来升级 Tailscale 客户端。以下是常见发行版的参考。
 
-For **all Ubuntu and Debian versions**, upgrade using `apt-get`:
+对于**所有 Ubuntu 和 Debian 版本**，使用 `apt-get` 升级：
 
 ```shell
 sudo apt-get update
 sudo apt-get install tailscale
 ```
 
-For **CentOS 7** and **Amazon Linux 2**, upgrade using `yum`:
+对于 **CentOS 7** 和 **Amazon Linux 2**，使用 `yum` 升级：
 
 ```shell
 sudo yum update tailscale
 ```
 
-For **openSUSE Leap and openSUSE Tumbleweed**, upgrade using `zypper`:
+对于 **openSUSE Leap 和 openSUSE Tumbleweed**，使用 `zypper` 升级：
 
 ```shell
 sudo zypper update tailscale
 ```
 
-For **CentOS 8**, **CentOS Stream 9**, **RHEL 8**, and **Fedora**, upgrade using `dnf`:
+对于 **CentOS 8**、**CentOS Stream 9**、**RHEL 8** 和 **Fedora**，使用 `dnf` 升级：
 
 ```shell
 sudo dnf update tailscale
 ```
 
-Consult your distro's package manager documentation on how to enable auto-updates.
+如何启用自动更新，请查阅你所处发行版的包管理器文档。
 
-#### Tailscale admin console
+#### Tailscale 管理控制台
 
-Devices can be updated by using the [`Last seen`](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available+auto-update%3Aenabled+lastseen%3Aconnected) filter in the **Machines** page of the admin console when:
+满足以下条件时，可以在管理控制台的 **Machines**（机器）页面使用 [`Last seen`](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available+auto-update%3Aenabled+lastseen%3Aconnected)（最近可见）筛选器来更新设备：
 
-* [Auto-updates][ar-auto-updates] are enabled on devices
-* Devices are online
-* You are logged in to the admin console as an [Owner, Admin, or IT admin](/docs/reference/user-roles)
+* 设备上已启用[自动更新][ar-auto-updates]
+* 设备在线
+* 你以 [Owner、Admin 或 IT admin](/docs/reference/user-roles) 身份登录管理控制台
 
-Hover over  for a device and select **Start update** to start the update. You can also set the [`Last seen`](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available+auto-update%3Aenabled+lastseen%3Aconnected) filter options `Last seen: Currently connected`, `Version: Update available`, and `Auto-update: Enabled` to display only the devices that can be updated using this method. If you can't find the **Start update** button, then one of the conditions above is not met.
+将鼠标悬停在设备上，选择 **开始更新**（Start update）即可开始更新。你也可以将 [`Last seen`](https://console.tailscale.com/admin/machines?q=version%3Aupdate-available+auto-update%3Aenabled+lastseen%3Aconnected) 筛选器设置为 `Last seen: Currently connected`、`Version: Update available` 和 `Auto-update: Enabled`，只显示可以用这种方式更新的设备。如果找不到 **开始更新**（Start update）按钮，说明上述条件中有未满足的。
 
-*（图：The Machine page displaying the Start update option.）*
+*（图：Machines 页面显示 Start update 选项。）*
 
 #### Synology
 
-The best way to install and update Tailscale on Synology devices is to download and manually install the Tailscale package for DiskStation Manager (DSM). For more information, refer to [Install Tailscale on DSM manually][docs-synology-manual].
+在 Synology 设备上安装和更新 Tailscale 的最佳方式是下载并手动安装适用于 DiskStation Manager（DSM）的 Tailscale 套件。更多信息请参阅[在 DSM 上手动安装 Tailscale][docs-synology-manual]。
 
-## MDM-managed updates
+## MDM 管理的更新
 
-To manage the installed version of Tailscale using MDM, refer to your MDM software documentation. You can also configure the installed Tailscale client using [MDM policies][docs-mdm-keys-configure-auto-update].
+要使用 MDM 管理已安装的 Tailscale 版本，请参阅你的 MDM 软件文档。你也可以使用 [MDM 策略][docs-mdm-keys-configure-auto-update]配置已安装的 Tailscale 客户端。
 
-[ar-auto-updates]: #auto-updates
+[ar-auto-updates]: #自动更新
 
 [co-changelog-client]: https://tailscale.com/changelog#client
 

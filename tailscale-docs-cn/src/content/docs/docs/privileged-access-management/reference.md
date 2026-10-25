@@ -1,21 +1,21 @@
 ---
-title: "Tailscale PAM reference"
-description: "Explore reference guides for Tailscale PAM."
+title: "Tailscale PAM 参考"
+description: "浏览 Tailscale PAM 的参考指南。"
 ---
 
-Last validated Jul 6, 2026
+最后验证于 Jul 6, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-The following topics contain reference documentation for [Tailscale PAM][docs-pam]. For step-by-step instructions, refer to the [Tailscale PAM how-to guides][docs-pam-how-to].
+以下主题包含 [Tailscale PAM][docs-pam] 的参考文档。分步操作说明，参见 [Tailscale PAM 操作指南][docs-pam-how-to]。
 
-* [Tailscale PAM FAQ](/docs/privileged-access-management/reference/faq) — Answers to common questions about Tailscale PAM.
+* [Tailscale PAM FAQ](/docs/privileged-access-management/reference/faq) — 关于 Tailscale PAM 的常见问题解答。
 
-* [Tailscale PAM sandbox servers](/docs/privileged-access-management/reference/sandbox-servers) — Experiment with Tailscale PAM without using your own servers.
+* [Tailscale PAM 沙箱服务器](/docs/privileged-access-management/reference/sandbox-servers) — 无需使用自己的服务器即可试用 Tailscale PAM。
 
-* [tailzero](/docs/privileged-access-management/reference/tailzero) — Install, configure, and run Tailscale PAM connectors with the tailzero command-line interface.
+* [tailzero](/docs/privileged-access-management/reference/tailzero) — 使用 tailzero 命令行界面安装、配置和运行 Tailscale PAM 连接器。
 
-* [Troubleshooting Tailscale PAM](/docs/privileged-access-management/reference/troubleshooting) — Common Tailscale PAM connector error conditions, their causes, and resolution steps.
+* [Tailscale PAM 故障排查](/docs/privileged-access-management/reference/troubleshooting) — 常见的 Tailscale PAM 连接器错误情形、成因及解决步骤。
 
 [docs-pam-how-to]: /docs/privileged-access-management/how-to
 

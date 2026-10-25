@@ -1,22 +1,22 @@
 ---
-title: "Client"
-description: "Last validated Jan 29, 2026"
+title: "客户端"
+description: "最后验证于 Jan 29, 2026"
 ---
 
-Last validated Jan 29, 2026
+最后验证于 Jan 29, 2026
 
-* [Fast user switching](/docs/features/client/fast-user-switching) — Quickly switch between two or more logged in accounts on the same device, without requiring re-authentication.
+* [快速切换用户](/docs/features/client/fast-user-switching) — 在同一台设备上快速切换两个或更多已登录账号，无需重新认证。
 
-* [Linux systray application](/docs/features/client/linux-systray) — Use the Linux systray app for quick access to features like user switching and exit nodes.
+* [Linux 系统托盘应用](/docs/features/client/linux-systray) — 使用 Linux 系统托盘应用，快速访问用户切换和出口节点等功能。
 
-* [Manage client preferences](/docs/features/client/manage-preferences) — Block incoming connections from Tailscale, or ignore Tailscale's DNS settings and advertised routes.
+* [管理客户端偏好设置](/docs/features/client/manage-preferences) — 阻止来自 Tailscale 的入站连接，或忽略 Tailscale 的 DNS 设置与通告路由。
 
-* [Manage devices using the web interface](/docs/features/client/device-web-interface) — Manage your individual device using the web interface.
+* [使用网页界面管理设备](/docs/features/client/device-web-interface) — 通过网页界面管理你的单台设备。
 
-* [Uninstall Tailscale](/docs/features/client/uninstall) — Uninstall the Tailscale client.
+* [卸载 Tailscale](/docs/features/client/uninstall) — 卸载 Tailscale 客户端。
 
-* [Update Tailscale](/docs/features/client/update) — Update the Tailscale client on various platforms.
+* [更新 Tailscale](/docs/features/client/update) — 在各类平台上更新 Tailscale 客户端。
 
-* [Using app-based split tunneling on Android](/docs/features/client/android-app-split-tunneling) — Configure specific apps to use or be excluded from Tailscale tunneling on Android devices.
+* [在 Android 上使用基于应用的分流](/docs/features/client/android-app-split-tunneling) — 在 Android 设备上配置特定应用使用或排除在 Tailscale 隧道之外。
 
-* [Using VPN On Demand for iOS and macOS](/docs/features/client/ios-vpn-on-demand) — Automatically connect and disconnect Tailscale on your iOS and macOS devices.
+* [在 iOS 和 macOS 上使用 VPN On Demand](/docs/features/client/ios-vpn-on-demand) — 在 iOS 和 macOS 设备上自动连接与断开 Tailscale。

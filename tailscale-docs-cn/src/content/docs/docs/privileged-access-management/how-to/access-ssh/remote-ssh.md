@@ -1,182 +1,182 @@
 ---
-title: "Access a remote SSH server using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets you provide secure access to remote SSH servers using Tailscale identity instead of distributing SSH keys or sharing static passwords."
+title: "使用 Tailscale PAM 访问远程 SSH 服务器"
+description: "[Tailscale PAM][docs-pam] 让你使用 Tailscale 身份对远程 SSH 服务器提供安全访问，无需分发 SSH 密钥或共享静态密码。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets you provide secure access to remote SSH servers using Tailscale identity instead of distributing SSH keys or sharing static passwords.
+[Tailscale PAM][docs-pam] 让你使用 Tailscale 身份对远程 SSH 服务器提供安全访问，无需分发 SSH 密钥或共享静态密码。
 
-The Tailscale PAM [connector][docs-pam-connectors] acts as an SSH proxy. When a user starts an SSH session, the connector handles the incoming connection, applies the appropriate access controls, and, when allowed, connects to the upstream SSH server on the user's behalf.
+Tailscale PAM [连接器][docs-pam-connectors]充当 SSH 代理。当用户发起 SSH 会话时，连接器会处理传入连接、应用相应的访问控制，并在允许时代表用户连接到上游 SSH 服务器。
 
-Users authenticate with their [Tailscale identity][docs-tailscale-identity]. The connector handles authentication to the upstream SSH server, so users don't need access to its password, private key, or other credentials.
+用户使用自己的 [Tailscale 身份][docs-tailscale-identity]进行身份验证。连接器负责向上游 SSH 服务器进行身份验证，因此用户无需接触它的密码、私钥或其他凭证。
 
-Tailscale PAM supports the following authentication methods for connecting from the connector to the upstream SSH server:
+对于从连接器到上游 SSH 服务器的连接，Tailscale PAM 支持以下身份验证方式：
 
-* Username and password.
-* SSH private key.
-* Certificate-based authentication.
+* 用户名和密码。
+* SSH 私钥。
+* 基于证书的身份验证。
 
-This guide walks you through creating a remote SSH PAM service, configuring each authentication method, connecting to the service, and reviewing the resulting SSH sessions.
+本指南将带你完成：创建远程 SSH PAM 服务、配置各种身份验证方式、连接到服务，以及查看产生的 SSH 会话。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* An SSH server that the connector can reach.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native SSH client.
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 一台连接器可达的 SSH 服务器。
+* 如果你计划使用原生 SSH 客户端，请在你将用于连接的设备上[安装][docs-install] Tailscale 并登录。
 
-If you're using your own SSH server, you'll need its hostname or IP address, port, and the upstream authentication information required by the authentication method you choose.
+如果你使用的是自己的 SSH 服务器，你需要它的主机名或 IP 地址、端口，以及你所选身份验证方式所需的上游认证信息。
 
-If you just want to try Tailscale PAM, use the public SSH sandbox. Its settings are in the following table.
+如果你只是想试用 Tailscale PAM，可以使用公共 SSH 沙箱。其设置见下表。
 
-| Setting  | Value                       |
+| 设置     | 值                          |
 | -------- | --------------------------- |
-| Hostname | `ssh.playground.border0.io` |
-| Port     | `22`                        |
-| Username | `border0`                   |
-| Password | `Border0<3Ssh`              |
+| 主机名   | `ssh.playground.border0.io` |
+| 端口     | `22`                        |
+| 用户名   | `border0`                   |
+| 密码     | `Border0<3Ssh`              |
 
-The sandbox is intended for testing only and is periodically reset. For information about other sandbox services available for testing, refer to [Tailscale PAM FAQ][docs-pam-faq-sandbox].
+该沙箱仅用于测试，并且会定期重置。关于其他可用于测试的沙箱服务，参见 [Tailscale PAM FAQ][docs-pam-faq-sandbox]。
 
-## Create an SSH PAM service
+## 创建 SSH PAM 服务
 
-To create a PAM service for the remote SSH server:
+要为该远程 SSH 服务器创建 PAM 服务：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择**添加服务**。
 
-3. Select **PAM service**.
+3. 选择 **PAM 服务**。
 
-4. Select **Secure Shell - Standard SSH**.
+4. 选择 **Secure Shell - Standard SSH**。
 
-5. Select **Continue**.
+5. 选择**继续**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-7. (Optional) Enter a description.
+7. （可选）输入描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. From **Connect via**, select one or more Tailscale PAM connectors.
+9. 在**通过以下方式连接**中，选择一个或多个 Tailscale PAM 连接器。
 
-   Every connector you select must have network connectivity to the upstream SSH server.
+   你选择的每个连接器都必须与上游 SSH 服务器有网络连通。
 
-   A service can use multiple connectors. This can improve availability when you have connectors in multiple locations that can independently reach the same SSH server.
+   一个服务可以使用多个连接器。当你在多个位置都有能独立到达同一台 SSH 服务器的连接器时，这可以提高可用性。
 
-10. Select **Continue**.
+10. 选择**继续**。
 
-11. For **Upstream hostname or IP**, provide the hostname or IP address of the upstream SSH server.
+11. 在 **Upstream hostname or IP** 中，填写上游 SSH 服务器的主机名或 IP 地址。
 
-12. For **Port**, enter the SSH port. The default is `22`.
+12. 在 **Port** 中，输入 SSH 端口。默认为 `22`。
 
-13. For **Authentication type**, select the method the connector should use to authenticate to the upstream server.
+13. 在 **Authentication type** 中，选择连接器向上游服务器进行身份验证应使用的方式。
 
-    The authentication type controls how the Tailscale PAM connector authenticates to the remote SSH server. It does not change how users authenticate to Tailscale PAM. Users always connect using their Tailscale identity.
+    身份验证类型控制的是 Tailscale PAM 连接器如何向远程 SSH 服务器进行身份验证，并不会改变用户向 Tailscale PAM 进行身份验证的方式。用户始终使用自己的 Tailscale 身份连接。
 
     #### Username and password
 
-    Select **Username and Password** when the upstream SSH server accepts password authentication. Enter values for the following:
+    当上游 SSH 服务器接受密码身份验证时，选择 **Username and Password**。填写以下值：
 
-    * **Username:** The username the connector should use on the upstream SSH server.
-    * **Password:** The password for that user.
+    * **Username：** 连接器在上游 SSH 服务器上应使用的用户名。
+    * **Password：** 该用户的密码。
 
-    The connector uses these credentials when establishing the upstream SSH connection. Users connecting to the PAM service don't need to know the username or password.
+    连接器在建立上游 SSH 连接时使用这些凭证。连接该 PAM 服务的用户无需知道这个用户名或密码。
 
     #### SSH private key
 
-    Select **SSH Private Key** when the upstream SSH server uses key-based authentication. Enter values for the following:
+    当上游 SSH 服务器使用基于密钥的身份验证时，选择 **SSH Private Key**。填写以下值：
 
-    * **Username:** The username the connector should use on the upstream SSH server.
-    * **SSH private key:** The private key corresponding to a public key authorized for that user.
+    * **Username：** 连接器在上游 SSH 服务器上应使用的用户名。
+    * **SSH private key：** 与该用户已授权公钥相对应的私钥。
 
-    The connector uses the private key to authenticate to the upstream server. You don't need to distribute the key to users connecting through Tailscale PAM.
+    连接器使用该私钥向上游服务器进行身份验证。你无需把密钥分发给通过 Tailscale PAM 连接的用户。
 
-    Private keys are sensitive credentials.
+    私钥属于敏感凭证。
 
-    > **Warning:**
+    > **警告：**
     >
-    > For production environments, use a supported secret source instead of storing long-lived credentials directly in the service configuration whenever possible. For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+    > 在生产环境中，尽量不要把长期有效的凭证直接存储在服务配置里，而是改用受支持的密钥来源。更多信息，参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
     #### Tailscale PAM certificate
 
-    Select **Border0 Certificate** to use the Tailscale PAM built-in SSH certificate authentication.
+    选择 **Border0 Certificate**，使用 Tailscale PAM 内置的 SSH 证书身份验证。
 
-    With certificate-based authentication, you don't need to store an upstream SSH password or private key. Tailscale PAM issues an SSH certificate to the connector, and the upstream SSH server trusts certificates signed by the Tailscale PAM SSH certificate authority (CA).
+    采用基于证书的身份验证后，你无需存储上游 SSH 密码或私钥。Tailscale PAM 会向连接器签发 SSH 证书，而上游 SSH 服务器信任由 Tailscale PAM SSH 证书颁发机构（CA）签名的证书。
 
-    Choose how the upstream username is determined:
+    选择上游用户名的确定方式：
 
-    * **Manual username**: Enter a username that the connector should always use when connecting to the upstream SSH server.
-    * **Prompt Client for Username**: Let the user specify the upstream username when starting the SSH connection.
+    * **Manual username**：输入连接器连接上游 SSH 服务器时应始终使用的用户名。
+    * **Prompt Client for Username**：让用户在发起 SSH 连接时指定上游用户名。
 
-    Before you can use certificate-based authentication, you must configure the upstream SSH server to trust the Tailscale PAM SSH CA. Refer to the next section.
+    在使用基于证书的身份验证之前，你必须先配置上游 SSH 服务器信任 Tailscale PAM SSH CA。参见下一节。
 
-14. Select **Save**.
+14. 选择**保存**。
 
-Your remote SSH service has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+你的远程 SSH 服务已创建完成。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## (Optional) Configure the server for certificate-based authentication
+## （可选）为基于证书的身份验证配置服务器
 
-Skip this step if you're using username and password or SSH private key authentication.
+如果你使用的是用户名和密码或 SSH 私钥身份验证，请跳过这一步。
 
-For certificate-based authentication, the upstream OpenSSH server must trust the Tailscale PAM SSH CA.
+对于基于证书的身份验证，上游 OpenSSH 服务器必须信任 Tailscale PAM SSH CA。
 
-### Copy the SSH CA certificate
+### 复制 SSH CA 证书
 
-1. Open the [PAM](https://console.tailscale.com/admin/settings/pam) page of the Tailscale admin console.
-2. Find the **SSH certificate authority**.
-3. Copy the public CA key.
+1. 打开 Tailscale 管理控制台的 [PAM](https://console.tailscale.com/admin/settings/pam) 页面。
+2. 找到 **SSH certificate authority**。
+3. 复制 CA 公钥。
 
-You'll install this public key on each upstream SSH server that should accept Tailscale PAM certificates.
+你需要把这个公钥安装到每台应接受 Tailscale PAM 证书的上游 SSH 服务器上。
 
-### Configure OpenSSH to trust the CA certificate
+### 配置 OpenSSH 信任 CA 证书
 
-1. On the upstream SSH server, create a file for the CA public key:
+1. 在上游 SSH 服务器上，为 CA 公钥创建一个文件：
 
    ```shell
    sudo tee /etc/ssh-ca.pub >/dev/null
    ```
 
-2. Paste the Tailscale PAM SSH CA public key into the file, then save it.
+2. 把 Tailscale PAM SSH CA 公钥粘贴进该文件，然后保存。
 
-3. To configure OpenSSH to trust certificates signed by that CA, add the following lines to `/etc/ssh/sshd_config`.
+3. 要让 OpenSSH 信任由该 CA 签名的证书，请把以下几行添加到 `/etc/ssh/sshd_config`。
 
    ```shell
    TrustedUserCAKeys /etc/ssh-ca.pub
    AuthorizedPrincipalsFile /etc/ssh/authorized_principals
    ```
 
-4. Create the principals file expected by Tailscale PAM:
+4. 创建 Tailscale PAM 所期望的 principals 文件：
 
    ```shell
    echo "border0_ssh_signed" | sudo tee /etc/ssh/authorized_principals
    ```
 
-5. Reload the SSH server:
+5. 重新加载 SSH 服务器：
 
    ```shell
    sudo service ssh reload
    ```
 
-The upstream server can now accept SSH certificates issued by the Tailscale PAM SSH CA. The current PAM certificate flow uses the `border0_ssh_signed` certificate principal.
+上游服务器现在可以接受由 Tailscale PAM SSH CA 签发的 SSH 证书了。当前的 PAM 证书流程使用 `border0_ssh_signed` 证书 principal。
 
-If you want certificate authentication to be available only for specific system users, use a per-user `AuthorizedPrincipalsFile` instead. For example:
+如果你希望证书身份验证只对特定系统用户可用，请改用按用户配置的 `AuthorizedPrincipalsFile`。例如：
 
 ```shell
 AuthorizedPrincipalsFile %h/.ssh/authorized_principals
 ```
 
-Then add the PAM certificate principal only for the users who should be allowed to authenticate using PAM certificates.
+然后只为允许使用 PAM 证书进行身份验证的用户添加 PAM 证书 principal。
 
-## Grant access to the SSH service
+## 为 SSH 服务授予访问权限
 
-Before users connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the SSH service.
+在用户连接之前，请确保有一条 Tailscale PAM [授权][docs-grants]允许他们访问该 SSH 服务。
 
-For example, the following broad grant permits interactive shell sessions, SSH exec requests, and SFTP:
+例如，下面这条宽泛授权允许交互式 shell 会话、SSH exec 请求和 SFTP：
 
 ```json
 "grants": [
@@ -202,11 +202,11 @@ For example, the following broad grant permits interactive shell sessions, SSH e
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, restrict the `src` and `dst` fields to control who can access specific SSH services.
+> 这是一条范围很宽的授权，适合上手试用。在生产环境中，请收紧 `src` 和 `dst` 字段，以控制谁能访问特定的 SSH 服务。
 
-You can also restrict which upstream usernames users are allowed to request. Note that controlling usernames only works when using the built-in SSH server or certificate-based authentication, because with the password or SSH key option you always statically define a username:
+你还可以限制用户允许请求的上游用户名。注意，控制用户名只在内置 SSH 服务器或基于证书的身份验证下有效，因为使用密码或 SSH 密钥选项时，你总是静态地定义一个用户名：
 
 ```json
 "ssh": {
@@ -220,71 +220,71 @@ You can also restrict which upstream usernames users are allowed to request. Not
 }
 ```
 
-SSH permissions can separately control interactive shell access, exec requests, SFTP, requested usernames, and TCP forwarding. You can also restrict exec requests to specific commands using regular expressions. TCP forwarding is disabled by default.
+SSH 权限可以分别控制交互式 shell 访问、exec 请求、SFTP、所请求的用户名和 TCP 转发。你还可以使用正则表达式把 exec 请求限制到特定命令。TCP 转发默认停用。
 
-For more SSH grant examples and information about fine-grained SSH access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 SSH 授权示例和细粒度 SSH 访问控制的说明，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Connect to the SSH server
+## 连接到 SSH 服务器
 
-The primary way to connect is through the Tailscale client, which can launch your preferred SSH client. You can also connect entirely from your browser using the Tailscale browser client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你偏好的 SSH 客户端。你也可以完全在浏览器中，使用 Tailscale 浏览器客户端进行连接。
 
-### Connect with your preferred SSH client
+### 使用你偏好的 SSH 客户端连接
 
-Use the Tailscale client to quickly open the SSH service with a compatible SSH client already installed on your device.
+使用 Tailscale 客户端，用你设备上已安装的兼容 SSH 客户端快速打开该 SSH 服务。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your SSH service.
-4. Choose the SSH client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 SSH 服务。
+4. 选择你想使用的 SSH 客户端。
 
-The Tailscale client scans your device for well-known SSH clients and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备上常见的 SSH 客户端，并显示它能找到的那些。选中其一即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the SSH clients shown in the Tailscale client. If your preferred client isn't listed, open it directly and use the PAM service name as the hostname.
+你并不局限于 Tailscale 客户端中列出的 SSH 客户端。如果你偏好的客户端不在列表中，可以直接打开它，并使用该 PAM 服务的名称作为主机名。
 
-For example:
+例如：
 
 ```shell
 ssh your-service-name
 ```
 
-If the service uses **Prompt Client for Username**, specify the upstream username you want to use:
+如果该服务使用 **Prompt Client for Username**，请指定你要使用的上游用户名：
 
 ```shell
 ssh your-username@your-service-name
 ```
 
-Port `22` is the default, so you don't need to specify it unless your PAM service uses a different port.
+端口 `22` 是默认值，因此无需指定，除非你的 PAM 服务使用其他端口。
 
-If you selected **Username and Password** or **SSH Private Key** authentication, any username supplied by the SSH client is ignored. Tailscale PAM uses the username configured for the service. A client supplied username is only used with certificate-based authentication when **Prompt Client for Username** is selected.
+如果你选择的是 **Username and Password** 或 **SSH Private Key** 身份验证，SSH 客户端提供的任何用户名都会被忽略，Tailscale PAM 使用为该服务配置的用户名。客户端提供的用户名只在基于证书的身份验证且选择了 **Prompt Client for Username** 时才会使用。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection. The connector then authenticates to the upstream SSH server using the username and password, private key, or PAM certificate configured for the service.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权。随后连接器使用为该服务配置的用户名和密码、私钥或 PAM 证书向上游 SSH 服务器进行身份验证。
 
-Users don't need access to the upstream authentication credentials.
+用户无需接触上游认证凭证。
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect entirely from your browser using the Tailscale SSH browser client.
+你也可以完全在浏览器中，使用 Tailscale SSH 浏览器客户端进行连接。
 
-1. Open [Services](https://console.tailscale.com/admin/services) of the Tailscale admin console.
-2. Select the SSH service you want to access.
-3. Select **Connect**, and the Tailscale SSH browser client opens.
-4. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services)。
+2. 选择你要访问的 SSH 服务。
+3. 选择**连接**，Tailscale SSH 浏览器客户端会随之打开。
+4. 如果出现提示，请使用你的 Tailscale 身份进行身份验证。
 
-If the service is configured to prompt for an upstream username, enter the username you want to use.
+如果该服务配置为提示输入上游用户名，请输入你要使用的用户名。
 
-You can now use an interactive SSH session directly from your browser.
+现在你可以直接在浏览器中使用交互式 SSH 会话了。
 
-The browser client runs a Tailscale client in the browser using WebAssembly (Wasm) and appears as a new [ephemeral][docs-ephemeral-nodes] device in your tailnet. If [device approval][docs-device-approval] is enabled for the tailnet, an admin must approve the browser device before it can connect.
+浏览器客户端通过 WebAssembly（Wasm）在浏览器中运行一个 Tailscale 客户端，并作为一台新的[临时节点（ephemeral node）][docs-ephemeral-nodes]出现在你的 tailnet 中。如果 tailnet 启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Secure upstream credentials
+## 保护上游凭证
 
-For username and password or private key authentication, the connector needs access to credentials for the upstream SSH server.
+对于用户名和密码或私钥身份验证，连接器需要能访问上游 SSH 服务器的凭证。
 
-> **Warning:**
+> **警告：**
 >
-> For production environments, we recommend keeping upstream credentials local to the connector using a supported secret source instead of storing them directly in the PAM service configuration.
+> 在生产环境中，我们建议使用受支持的密钥来源把上游凭证保留在连接器本地，而不是直接存储在 PAM 服务配置中。
 
-Tailscale PAM supports secret references that the connector resolves locally. For example, an SSH username can come from a local file and a password can come from AWS Secrets Manager:
+Tailscale PAM 支持由连接器在本地解析的密钥引用。例如，SSH 用户名可以来自本地文件，密码可以来自 AWS Secrets Manager：
 
 ```shell
 Username:
@@ -294,39 +294,39 @@ Password:
 from:aws:secretsmanager:/staging/sshpassword
 ```
 
-Supported secret sources include environment variables, local files, AWS Systems Manager Parameter Store, AWS Secrets Manager, and Keeper Secrets Manager.
+受支持的密钥来源包括环境变量、本地文件、AWS Systems Manager Parameter Store、AWS Secrets Manager 和 Keeper Secrets Manager。
 
-For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+更多信息，参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
-Certificate-based authentication avoids storing a static upstream SSH password or private key. Instead, the upstream server trusts the Tailscale PAM SSH CA.
+基于证书的身份验证则避免了存储静态的上游 SSH 密码或私钥，改为由上游服务器信任 Tailscale PAM SSH CA。
 
-## Review SSH sessions
+## 查看 SSH 会话
 
-Tailscale PAM gives you visibility into connections to your remote SSH service.
+Tailscale PAM 让你能够查看与你的远程 SSH 服务的连接。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your SSH service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 SSH 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The SSH service that was accessed.
-* The requested SSH username.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 所访问的 SSH 服务。
+* 所请求的 SSH 用户名。
 
-When session recording is enabled, you can also review the recorded SSH session.
+启用会话录制后，你还可以查看录制下来的 SSH 会话。
 
-This gives you a direct answer to two useful questions: who accessed the server, and what did they do while they were connected?
+这让你能直接回答两个很有用的问题：谁访问了该服务器，以及连接期间做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to your SSH service, start by confirming that the connector is online and can reach the upstream SSH hostname and port.
+如果你无法连接到你的 SSH 服务，请先确认连接器在线，并能到达上游 SSH 主机名和端口。
 
-Because the connector establishes the upstream SSH connection, test connectivity from the device running the connector whenever possible.
+由于上游 SSH 连接是由连接器建立的，请尽量在运行连接器的设备上测试连通性。
 
-### Username and password authentication
+### 用户名和密码身份验证
 
-Verify that the username and password are valid and that password authentication is enabled on the upstream SSH server.
+核实用户名和密码是否有效，以及上游 SSH 服务器是否启用了密码身份验证。
 
-You can test the credentials directly from the connector:
+你可以直接在连接器上测试这些凭证：
 
 ```shell
 ssh -o PreferredAuthentications=password \
@@ -334,19 +334,19 @@ ssh -o PreferredAuthentications=password \
   your-username@your-upstream-host
 ```
 
-If password authentication is disabled, check the upstream server's `sshd_config` for:
+如果密码身份验证被停用，请在上游服务器的 `sshd_config` 中检查：
 
 ```
 PasswordAuthentication yes
 ```
 
-Reload the SSH service after changing its configuration.
+修改配置后请重新加载 SSH 服务。
 
-### SSH private key authentication
+### SSH 私钥身份验证
 
-Verify that the username and private key configured for the PAM service match a public key authorized by the upstream SSH server.
+核实为 PAM 服务配置的用户名和私钥与上游 SSH 服务器已授权的公钥相匹配。
 
-You can test the key directly from the connector:
+你可以直接在连接器上测试该密钥：
 
 ```shell
 ssh -i ~/.ssh/id_rsa \
@@ -355,18 +355,18 @@ ssh -i ~/.ssh/id_rsa \
   your-username@your-upstream-host
 ```
 
-### Certificate-based authentication
+### 基于证书的身份验证
 
-If certificate authentication fails, verify that:
+如果证书身份验证失败，请核实：
 
-* The upstream server has the correct Tailscale PAM SSH CA in `/etc/ssh-ca.pub`.
-* `TrustedUserCAKeys` points to the correct CA file.
-* `AuthorizedPrincipalsFile` is configured correctly.
-* The expected certificate principal is present in the principals file.
-* The username requested by the client exists on the upstream system.
-* The SSH daemon was reloaded after the configuration changed.
+* 上游服务器在 `/etc/ssh-ca.pub` 中是否保存了正确的 Tailscale PAM SSH CA。
+* `TrustedUserCAKeys` 是否指向正确的 CA 文件。
+* `AuthorizedPrincipalsFile` 是否配置正确。
+* principals 文件中是否存在预期的证书 principal。
+* 客户端请求的用户名在上游系统上是否存在。
+* 配置更改后 SSH 守护进程是否重新加载过。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the Tailscale PAM [session logs][docs-pam-session-logs]. Failed sessions can help narrow down whether the problem is connector reachability, upstream authentication, Tailscale PAM access controls, or the SSH server configuration.
+如果上述排查步骤都无法解决问题，请查看连接器日志以及 Tailscale PAM [会话日志][docs-pam-session-logs]中失败会话的详情。这些失败会话有助于判断问题出在连接器可达性、上游身份验证、Tailscale PAM 访问控制还是 SSH 服务器配置。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

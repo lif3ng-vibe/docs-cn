@@ -1,16 +1,16 @@
 ---
-title: "AI infrastructure access"
-description: "Secure access to AI infrastructure, GPU clusters, and private LLM deployments across your network."
+title: "AI 基础设施访问"
+description: "安全访问网络中的 AI 基础设施、GPU 集群与私有 LLM 部署。"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-Tailscale helps teams secure their AI infrastructure by providing private, encrypted connectivity between GPU clusters, model servers, and development environments. Whether you're running AI workloads across multiple clouds or self-hosting LLMs, Tailscale ensures only authorized users and services can access your AI resources.
+Tailscale 在 GPU 集群、模型服务器与开发环境之间提供私有的加密连接，帮助团队保护 AI 基础设施的安全。无论你是在多个云端运行 AI 工作负载，还是自托管 LLM，Tailscale 都能确保只有经过授权的用户和服务才能访问你的 AI 资源。
 
-## Popular workflows
+## 常用工作流
 
-[**Connect inference and training servers**](/docs/use-cases/ai-infrastructure-access/connect-inference-servers) — Give GPU and inference servers identity-based access in your tailnet using tags and auth keys, with multi-tenant isolation and containerized workload support.
+[**连接推理与训练服务器**](/docs/use-cases/ai-infrastructure-access/connect-inference-servers)——使用标签（tag）和认证密钥（auth key），让 GPU 与推理服务器以基于身份的方式接入你的 tailnet，支持多租户隔离与容器化工作负载。
 
-[**Centralize LLM access and spending**](/docs/use-cases/ai-infrastructure-access/centralize-llm-access-and-spending) — Route all LLM requests through a single gateway to eliminate API key sprawl, track per-user spending, and enforce access controls across developers, agents, and CI/CD pipelines.
+[**集中管理 LLM 访问与支出**](/docs/use-cases/ai-infrastructure-access/centralize-llm-access-and-spending)——将所有 LLM 请求统一经由单个网关，消除 API 密钥泛滥问题，跟踪每用户的支出，并对开发者、agent 与 CI/CD 流水线统一实施访问控制。
 
-[**Secure your AI training cluster**](/docs/use-cases/ai-infrastructure-access/secure-ai-training-cluster) — Remove the Kubernetes API server from the public internet and enforce identity-based access, session recording, and device posture for AI training cluster operations.
+[**保护你的 AI 训练集群**](/docs/use-cases/ai-infrastructure-access/secure-ai-training-cluster)——将 Kubernetes API 服务器从公网移除，并对 AI 训练集群操作强制实施基于身份的访问、会话录制与设备态势（device posture）检查。

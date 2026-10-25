@@ -1,45 +1,45 @@
 ---
-title: "Domain ownership"
-description: "Explore how your tailnet is tied to your domain."
+title: "域名所有权"
+description: "了解你的 tailnet 如何与你的域名绑定。"
 ---
 
-Last validated May 11, 2026
+最后验证于 May 11, 2026
 
-When you create your Tailscale network (known as a tailnet), your user domain becomes part of your [Tailscale identity][docs-tailscale-identity].
+当你创建 Tailscale 网络（即 tailnet）时，你的用户域名会成为 [Tailscale 身份][docs-tailscale-identity]的一部分。
 
-**The guidance in this topic also applies for Tailscale accounts based on GitHub organizations, GitHub personal accounts, and for single-user tailnets based on email/user identity.**
+**本主题中的指南同样适用于基于 GitHub 组织和 GitHub 个人账户的 Tailscale 账户，以及基于电子邮件/用户身份的单用户 tailnet。**
 
-> **Note:**
+> **注意：**
 >
-> Ensure that you maintain control of your domain, to prevent malicious takeover of your tailnet.
+> 请确保你始终保有对域名的控制权，以防 tailnet 被恶意接管。
 
-## How your domain is used
+## 你的域名如何被使用
 
-Tailscale requires you to show ownership and control of a user's domain when signing up with a [custom OIDC identity provider][docs-sso-custom-oidc], enabling a [domain alias][docs-domain-aliases], or when requesting help from our support team for certain issues. Depending on your request, we will ask you to do one of the following actions:
+在使用[自定义 OIDC 身份提供方][docs-sso-custom-oidc]注册、启用[域名别名][docs-domain-aliases]，或就某些问题向我们的支持团队寻求帮助时，Tailscale 要求你证明对该用户域名的所有权和控制权。根据你的请求，我们会要求你执行以下操作之一：
 
-* [Verify ownership of your domain][docs-domain-verification] by setting DNS TXT records.
-* Respond to a confirmation email sent to a `*@example.com` email address. For example, an email sent from Tailscale support to the owner admin of a tailnet when another user of the tailnet is requesting some action in the tailnet.
-* Set up a WebFinger endpoint.
+* 通过设置 DNS TXT 记录[验证你对域名的所有权][docs-domain-verification]。
+* 回复发送到 `*@example.com` 邮箱地址的确认邮件。例如，当 tailnet 的另一位用户请求在 tailnet 中执行某项操作时，Tailscale 支持团队发送给该 tailnet 所有者管理员的邮件。
+* 配置 WebFinger 端点。
 
-For verification of [GitHub organization][xt-gh-account-types], the owner of the tailnet must also be an admin of the GitHub organization.
+验证 [GitHub 组织][xt-gh-account-types]时，tailnet 的所有者还必须是该 GitHub 组织的管理员。
 
-Once your tailnet is created, your domain is always associated with the tailnet, and you need to maintain control over and use of your domain for the lifetime of your tailnet.
+tailnet 创建后，你的域名会一直与该 tailnet 关联，在 tailnet 存续期间，你需要持续保有对该域名的控制和使用。
 
-## Mitigating tailnet risk from a malicious takeover
+## 降低 tailnet 被恶意接管的风险
 
-To help mitigate the impact of a malicious actor gaining control of your domain, there are several settings you can use with your tailnet:
+为减轻恶意行为者夺取你域名控制权带来的影响，你可以为 tailnet 启用以下几项设置：
 
-* Enable [device approval][docs-device-approval] so that an admin can review and approve new devices before they can join the tailnet.
-* Enable [user approval][docs-user-approval] so that an admin can review and approve new users before they can join the tailnet.
-* Use [Tailnet Lock][docs-tailnet-lock] to verify that no device is added to your tailnet without being signed by a trusted device already in your tailnet.
+* 启用[设备审批][docs-device-approval]，让管理员在新设备加入 tailnet 前进行审核和批准。
+* 启用[用户审批][docs-user-approval]，让管理员在新用户加入 tailnet 前进行审核和批准。
+* 使用 [Tailnet Lock][docs-tailnet-lock]，确保任何设备都必须由 tailnet 中已有的受信任设备签名，才能加入你的 tailnet。
 
-For general guidance on securing your tailnet, refer to [Best practices to secure your tailnet][docs-security-hardening].
+有关保护 tailnet 安全的一般指南，请参阅[保护 tailnet 安全的最佳实践][docs-security-hardening]。
 
-## If you no longer use your domain
+## 如果你不再使用该域名
 
-If you need to change domain names or relinquish an old name and move to a new name, [contact support][co-contact-support-domainchange] so we can rename the tailnet for you.
+如果你需要更改域名，或放弃旧域名并启用新域名，请[联系支持团队][co-contact-support-domainchange]，我们会为你重命名 tailnet。
 
-If you delete your domain, your tailnet is not automatically deleted. If you want to delete your tailnet, you need to explicitly [delete your tailnet][docs-delete-tailnet].
+如果你删除了域名，tailnet 不会被自动删除。若想删除 tailnet，你需要显式[删除 tailnet][docs-delete-tailnet]。
 
 [co-contact-support-domainchange]: https://tailscale.com/contact/support/?type=domainchange
 

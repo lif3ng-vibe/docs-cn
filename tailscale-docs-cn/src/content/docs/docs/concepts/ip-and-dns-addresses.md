@@ -1,35 +1,35 @@
 ---
-title: "How Tailscale assigns IP addresses"
-description: "Understand how Tailscale assigns stable IP addresses based on the device and authorization credentials."
+title: "Tailscale 如何分配 IP 地址"
+description: "了解 Tailscale 如何基于设备和授权凭证分配稳定的 IP 地址。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-Tailscale makes it easy to connect to your Tailscale network (known as a tailnet) by providing you with a **stable IP address** for each node such as a device or a server. These addresses stay the same, no matter where nodes move to in the physical world, which means you can share them without worrying about them changing.
+Tailscale 为每个节点（如设备或服务器）提供**稳定的 IP 地址**，让你轻松连接到自己的 Tailscale 网络（即 tailnet）。无论节点在物理世界中移动到哪里，这些地址都保持不变，因此你可以放心共享它们，不必担心地址变化。
 
-By default, every device receives an IP address in the [`100.x.y.z` range][docs-100.x-addresses]. This IP address is auto-assigned based on the device and authorization credentials. [Admins](/docs/reference/user-roles) can change the [IP address][docs-ip-pool] later.
+默认情况下，每台设备都会获得一个 [`100.x.y.z` 范围][docs-100.x-addresses]内的 IP 地址。该 IP 地址根据设备和授权凭证自动分配。[管理员](/docs/reference/user-roles)之后可以[更改 IP 地址][docs-ip-pool]。
 
-## Finding your Tailscale IP address
+## 查找你的 Tailscale IP 地址
 
-#### Tailscale admin console
+#### Tailscale 管理控制台
 
-View the IP address for a device with the Tailscale admin console.
+使用 Tailscale 管理控制台查看设备的 IP 地址。
 
-You must be an [Owner, Admin, Network admin, IT admin, Billing admin, or Auditor](/docs/reference/user-roles) of a tailnet to access the admin console.
+你必须是 tailnet 的 [Owner、Admin、Network admin、IT admin、Billing admin 或 Auditor](/docs/reference/user-roles) 才能访问管理控制台。
 
-1. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Find the row corresponding to the device you are interested in. You can use the [search bar][docs-filter-devices-search-bar] or [filters][docs-filter-devices] to find a device.
-3. Under the **Addresses** column, select the dropdown icon and then select either the device's IPv6 address or IPv4 address to copy it to your clipboard.
+1. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+2. 找到目标设备对应的行。你可以使用[搜索栏][docs-filter-devices-search-bar]或[筛选器][docs-filter-devices]来查找设备。
+3. 在 **Addresses**（地址）列中，选择下拉图标，然后选择设备的 IPv6 地址或 IPv4 地址，将其复制到剪贴板。
 
 #### Linux
 
-On Tailscale v1.8 or later you can use the [`tailscale ip`][docs-cli] command. Use the `--4` flag to only return an IPv4 address.
+在 Tailscale v1.8 及更高版本上，你可以使用 [`tailscale ip`][docs-cli] 命令。使用 `--4` 标志可只返回 IPv4 地址。
 
 ```shell
 tailscale ip --4
 ```
 
-On any version of Tailscale, you can also find the IP address by using the system `ip` utility:
+在任何版本的 Tailscale 上，你还可以使用系统自带的 `ip` 工具查找 IP 地址：
 
 ```shell
 ip addr show tailscale0
@@ -37,48 +37,48 @@ ip addr show tailscale0
 
 #### Windows
 
-Open the app menu from the system task bar and look for the IP address listed in the dropdown.
+从系统任务栏打开应用菜单，在下拉菜单中查看列出的 IP 地址。
 
-*（图：The Tailscale application menu opened from the Windows system tray with 'My address' and an IP address indicated with a red outline.）*
+*（图：从 Windows 系统托盘打开 Tailscale 应用菜单，其中 "My address" 和 IP 地址用红色轮廓标出。）*
 
 #### macOS
 
-Select the Tailscale icon in the menu bar to view the IP address. You can also locate your IP address by running `ifconfig` and searching for a `utun` address with a listed `100.x.y.z` IP address.
+选择菜单栏中的 Tailscale 图标即可查看 IP 地址。你也可以运行 `ifconfig`，在带有 `100.x.y.z` IP 地址的 `utun` 地址中找到你的 IP 地址。
 
-*（图：The Tailscale application menu opened from the macOS menu bar with 'This Device' and an IP address indicated with a red outline.）*
+*（图：从 macOS 菜单栏打开 Tailscale 应用菜单，其中 "This Device" 和 IP 地址用红色轮廓标出。）*
 
 #### iOS
 
-Log in to your network and look at the IP address for the first device in the list. Your iOS device will always display at the top.
+登录到你的网络，查看列表中第一台设备的 IP 地址。你的 iOS 设备总是显示在最上方。
 
-*（图：The device list with the current iOS device's IP address indicated with a red outline.）*
+*（图：设备列表，当前 iOS 设备的 IP 地址用红色轮廓标出。）*
 
 #### Android
 
-Log in to your network and look for the IP address listed at the top of the app.
+登录到你的网络，在应用顶部查看列出的 IP 地址。
 
-*（图：The device list with the current Android device's IP address indicated with a red outline.）*
+*（图：设备列表，当前 Android 设备的 IP 地址用红色轮廓标出。）*
 
-## Mapping machine names to IP addresses using DNS
+## 使用 DNS 将机器名映射到 IP 地址
 
-For information on this topic, refer to [How DNS works in Tailscale][docs-dns].
+有关此主题的信息，请参阅 [DNS 在 Tailscale 中的工作原理][docs-dns]。
 
-## Forcing an IP address to change
+## 强制更改 IP 地址
 
-A node's IP address will not change for as long as the node remains registered unless an [Admin](/docs/reference/user-roles) changes it.
+只要节点保持注册状态，其 IP 地址就不会改变，除非[管理员](/docs/reference/user-roles)进行更改。
 
-A node gets a new IP address when it rejoins a tailnet if:
+以下情况下，节点重新加入 tailnet 时会获得新的 IP 地址：
 
-* It is removed from the tailnet, by selecting **Remove** in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console
-* The IP range is specified, or an individual IP address is manually changed using [IP pool][docs-ip-pool]
-* Tailscale is [reset and reinstalled][docs-uninstall] on the node
-* The disk is wiped, and the node key is lost
+* 它被从 tailnet 中移除，即在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中选择 **Remove**（移除）
+* IP 范围被重新指定，或使用 [IP pool][docs-ip-pool] 手动更改了单个 IP 地址
+* 节点上的 Tailscale 被[重置并重新安装][docs-uninstall]
+* 磁盘被清空，节点密钥（node key）丢失
 
-## Tailscale IPv6 local address prefix
+## Tailscale IPv6 本地地址前缀
 
-Tailscale IPv6 addresses are assigned from the [unique local address][xt-wikipedia-unique-local-address] prefix of `fd7a:115c:a1e0::/48`. For a complete list of IPv4 and IPv6 addresses that Tailscale reserves, refer to [reserved IP addresses][docs-reserved-ip-addresses].
+Tailscale 的 IPv6 地址从 [unique local address][xt-wikipedia-unique-local-address]（唯一本地地址）前缀 `fd7a:115c:a1e0::/48` 中分配。有关 Tailscale 保留的 IPv4 和 IPv6 地址的完整列表，请参阅[保留 IP 地址][docs-reserved-ip-addresses]。
 
-Previously IPv6 addresses were assigned from `fd7a:115c:a1e0:ab12::/64`.
+以前，IPv6 地址从 `fd7a:115c:a1e0:ab12::/64` 中分配。
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

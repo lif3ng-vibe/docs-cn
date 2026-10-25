@@ -1,71 +1,71 @@
 ---
-title: "Compatibility for the Tailscale Kubernetes Operator"
-description: "This topic covers version support, infrastructure requirements, and other compatibility information for the Tailscale Kubernetes Operator."
+title: "Tailscale Kubernetes Operator 的兼容性"
+description: "本主题介绍 Tailscale Kubernetes Operator 的版本支持、基础设施要求及其他兼容性信息。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This topic covers version support, infrastructure requirements, and other compatibility information for the Tailscale Kubernetes Operator.
+本主题介绍 Tailscale Kubernetes Operator 的版本支持、基础设施要求及其他兼容性信息。
 
-## Version support
+## 版本支持
 
-The following sections describe version compatibility for the Operator and Kubernetes.
+以下各节介绍 Operator 与 Kubernetes 的版本兼容性。
 
-### Operator and proxies
+### Operator 与代理
 
-Tailscale recommends using the same version for both the operator and the proxies to ensure consistency with Tailscale's testing environment.
+Tailscale 建议为 operator 与代理使用相同版本，以与 Tailscale 的测试环境保持一致。
 
-* **Backward compatibility**: The operator supports proxies running a Tailscale version up to four minor versions earlier than the operator's version.
-* **Forward compatibility**: The operator does not support proxies running a Tailscale version later than the operator's version.
+* **向后兼容**：operator 支持代理所运行的 Tailscale 版本最多比 operator 版本早四个次版本。
+* **向前兼容**：operator 不支持代理所运行的 Tailscale 版本比 operator 版本更新。
 
-### Kubernetes versions
+### Kubernetes 版本
 
-The earliest supported Kubernetes version is v1.23.0.
+支持的最早 Kubernetes 版本为 v1.23.0。
 
-## Infrastructure and networking
+## 基础设施与网络
 
-### CNI compatibility
+### CNI 兼容性
 
-The operator creates proxies that configure custom routing and forwarding rules in each proxy `Pod`'s network namespace only. Because the proxying is implemented in the proxy `Pod`'s namespace, the routing and firewall configuration on the `Node` (for example, using iptables, eBPF, or any other mechanism) doesn't affect the proxies. Therefore, the operator works with most container network interfaces (CNI) configurations out of the box. However, there are some known issues with specific ones.
+operator 创建的代理只会在每个代理 `Pod` 的网络命名空间内配置自定义路由与转发规则。由于代理功能是在代理 `Pod` 的命名空间内实现的，`Node` 上的路由与防火墙配置（例如使用 iptables、eBPF 或任何其他机制）不会影响这些代理。因此，operator 开箱即用即可配合大多数容器网络接口（CNI）配置工作。不过，某些特定配置存在一些已知问题。
 
-#### Cilium (kube-proxy replacement mode)
+#### Cilium（kube-proxy replacement 模式）
 
-If running Cilium in kube-proxy replacement mode with socket load balancing enabled, connections from `Pod`s to `ClusterIP`s bypass Tailscale firewall rules attached to netfilter hooks.
+如果在启用套接字负载均衡的情况下以 kube-proxy replacement 模式运行 Cilium，从 `Pod` 到 `ClusterIP` 的连接会绕过附加在 netfilter 钩子上的 Tailscale 防火墙规则。
 
-You must enable **bypassing socket load balancer in Pods' namespaces** if you intend to:
+如果你打算执行以下操作，必须启用 **绕过 Pod 命名空间中的套接字负载均衡器**：
 
-* Expose a Kubernetes `Service` as a Tailscale LoadBalancer `Service`.
-* Expose a Kubernetes `Service` using the `tailscale.com/expose` annotation.
-* Expose a `Service` CIDR range using `Connector`.
+* 将 Kubernetes `Service` 暴露为 Tailscale LoadBalancer `Service`。
+* 使用 `tailscale.com/expose` 注解暴露 Kubernetes `Service`。
+* 使用 `Connector` 暴露 `Service` CIDR 范围。
 
-> **Note:**
+> **注意：**
 >
-> If you encounter bandwidth issues, use the `--devices` flag to explicitly specify which network interfaces Cilium should monitor for the MTU. This prevents Cilium from defaulting to the `tailscale0` interface MTU.
+> 如果遇到带宽问题，请使用 `--devices` 标志显式指定 Cilium 应针对哪些网络接口监控 MTU，以免 Cilium 默认采用 `tailscale0` 接口的 MTU。
 
-## Cloud provider specifics
+## 云服务商专属事项
 
 ### EKS Fargate
 
-Support on EKS Fargate is limited due to restrictions on privileged containers and `CAP_NET_ADMIN`.
+由于特权容器与 `CAP_NET_ADMIN` 受限，EKS Fargate 上的支持有限。
 
-EKS Fargate supports the following features:
+EKS Fargate 支持以下功能：
 
 * Tailscale `Ingress`
-* Tailscale API server proxy
+* Tailscale API server 代理
 
-EKS Fargate does not support the following features:
+EKS Fargate 不支持以下功能：
 
-* Tailscale ingress `Service`s
-* Tailscale egress `Service`s
-* `Connector` configurations
+* Tailscale 入站 `Service`
+* Tailscale 出站 `Service`
+* `Connector` 配置
 
-## Certificates and maintenance
+## 证书与维护
 
-### TLS certificates and renewal
+### TLS 证书与续期
 
-The operator automatically provisions TLS certificates for Tailscale Ingress and API server proxy services.
+operator 会为 Tailscale Ingress 与 API server 代理服务自动置备 TLS 证书。
 
-* **Validity**: 90 days.
-* **Renewal window**: Typically occurs two-thirds through the validity period.
-* **Condition**: Certificates only renew if there is active traffic to the service.
-* **Expiry handling**: If a certificate expires, the next request to the service automatically triggers a renewal.
+* **有效期**：90 天。
+* **续期窗口**：通常出现在有效期的三分之二处。
+* **条件**：只有服务存在活跃流量时才会续期。
+* **过期处理**：如果证书过期，对服务的下一个请求会自动触发续期。

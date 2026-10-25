@@ -1,0 +1,204 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "工作区"
+sidebar-title: "工作区"
+description: "创建 OpenShell 工作区、分配成员，并了解平台与工作区角色。"
+keywords: "生成式 AI, 网络安全, 工作区, 访问控制, RBAC, OIDC, 成员资格, CLI"
+position: 3
+---
+import { Aside } from '@astrojs/starlight/components';
+
+OpenShell 工作区（workspace）是访问与资源隔离边界。沙箱、沙箱工作负载模板、提供商、提供商配置档案、服务、策略与设置都归属于某个工作区，对其他工作区的成员不可见。
+
+除非设置 `--workspace` 或 `OPENSHELL_WORKSPACE`，CLI 默认以 `default` 工作区为目标。本文描述的逻辑工作区与沙箱内部的 `/sandbox` 文件系统目录是两回事。
+
+Kubernetes 命名空间映射与受管理的每工作区命名空间参见[Kubernetes 上的工作区](/kubernetes/workspaces)。
+
+## 理解角色模型
+
+OpenShell 把身份提供商角色与每个工作区的成员资格记录结合使用。
+
+| 角色 | 授予方式 | 访问范围 |
+|---|---|---|
+| 平台管理员 | 配置为 `admin_role` 的 OIDC 角色。 | 管理平台级配置与所有工作区。平台管理员绕过工作区成员资格检查。 |
+| 工作区管理员 | 网关为某个工作区存储的 `admin` 成员资格。 | 管理该工作区中的提供商、提供商配置档案、策略、设置与成员。 |
+| 工作区用户 | 网关为某个工作区存储的 `user` 成员资格。 | 在该工作区中创建并使用沙箱与服务、读取提供商、使用提供商挂接。 |
+
+OIDC 用户执行普通工作区操作还需要配置为 `user_role` 的角色。平台管理员角色满足这一要求。成员资格不会授予对其他工作区的访问，工作区管理员也无法执行平台级或跨工作区操作。
+
+网关通过 `scopes_claim` 启用 scope 强制时，令牌还必须包含操作所需的 scope。常见 scope 包括 `workspace:read`、`workspace:write`、`sandbox:read`、`sandbox:write`、`provider:read`、`provider:write`、`config:read` 与 `config:write`。`openshell:all` 满足所有 scope 要求。OIDC 与 scope 配置参见[网关认证](/how-it-works/gateways/authentication)。
+
+下表汇总了常见操作：
+
+| 操作 | 平台管理员 | 工作区管理员 | 工作区用户 |
+|---|---|---|---|
+| 创建或删除工作区 | 任意工作区 | 否 | 否 |
+| 查看工作区或列出工作区 | 所有工作区 | 被分配的工作区 | 被分配的工作区 |
+| 列出工作区成员 | 任意工作区 | 被分配的工作区 | 被分配的工作区 |
+| 添加工作区用户或移除成员 | 任意工作区 | 被分配的工作区 | 否 |
+| 授予工作区管理员角色 | 任意工作区 | 否 | 否 |
+| 创建、使用或删除沙箱与服务 | 任意工作区 | 被分配的工作区 | 被分配的工作区 |
+| 创建或删除沙箱工作负载模板 | 任意工作区 | 被分配的工作区 | 否 |
+| 读取或列出沙箱工作负载模板 | 任意工作区 | 被分配的工作区 | 被分配的工作区 |
+| 创建、更新或删除提供商 | 任意工作区 | 被分配的工作区 | 否 |
+| 更改工作区策略或设置 | 任意工作区 | 被分配的工作区 | 否 |
+| 管理平台配置档案或全局配置 | 是 | 否 | 否 |
+| 跨工作区列出资源 | 是 | 否 | 否 |
+
+<Aside type="note">
+未配置 OIDC 角色的本地网关把已认证用户视为平台管理员。共享网关请配置 OIDC 角色与工作区成员资格。
+</Aside>
+
+## 查看你的身份
+
+管理员需要你的成员资格主体（subject）时，使用网关校验过的身份：
+
+```shell
+openshell whoami
+openshell whoami --output json
+```
+
+`subject` 字段是工作区成员资格记录中使用的稳定身份。即使用户不属于任何工作区，也可以运行该命令。
+
+## 创建工作区并添加成员
+
+工作区由平台管理员创建并指定首位工作区管理员。网关会自动创建 `default` 工作区，但不会自动把 OIDC 用户加入该工作区。
+
+创建工作区：
+
+```shell
+openshell workspace create --name team-ml
+```
+
+让未来的工作区管理员运行 `openshell whoami`，然后添加其报告的 subject：
+
+```shell
+openshell workspace member add \
+  --workspace team-ml \
+  --subject 'oidc-subject-for-admin' \
+  --role admin
+```
+
+工作区管理员可以添加工作区用户：
+
+```shell
+openshell workspace member add \
+  --workspace team-ml \
+  --subject 'oidc-subject-for-user' \
+  --role user
+```
+
+只有平台管理员能授予 `admin` 成员资格角色。工作区管理员可以在其被分配的工作区中添加 `user` 成员并移除成员。
+
+## 列出并移除成员
+
+所有成员都可以查看所在工作区的成员资格。工作区管理员与平台管理员可以移除成员。
+
+```shell
+openshell workspace member list --workspace team-ml
+
+openshell workspace member remove \
+  --workspace team-ml \
+  --subject 'oidc-subject-for-user'
+```
+
+为自动化列出成员资格记录时，加 `--output json` 或 `--output yaml`。每条记录包含 `subject` 与规范化后的 `role`（`admin`、`user` 或 `unknown`）。结构化输出是一个含 `members` 与 `next_page_token` 字段的信封；把返回的令牌传给 `--page-token` 即可继续翻页。空结果的 `members` 集合为空。
+
+要更改成员角色，先移除既有成员资格，再用新角色重新添加。任何对 `admin` 的变更都必须由平台管理员执行。
+
+## 打标签并列出工作区
+
+创建工作区时附加标签，用于跟踪环境或团队归属。每个键值对重复一次 `--label`。
+
+```shell
+openshell workspace create --name team-research --label env=dev --label team=ml
+```
+
+用逗号分隔的选择器列出匹配所有键值对的工作区。过滤只返回你有权查看的工作区。
+
+```shell
+openshell workspace list --label-selector env=dev,team=ml
+```
+
+查看某个工作区可看到其标签；自动化场景可使用结构化列表输出。
+
+```shell
+openshell workspace get team-research
+openshell workspace list --label-selector env=dev --output json
+```
+
+API 客户端设置 `CreateWorkspaceRequest.labels`，并用 `ListWorkspacesRequest.label_selector` 过滤。返回的工作区标签存储在 `metadata.labels` 中。OpenShell 不提供创建后修改标签的工作区更新操作。
+
+## 指定目标工作区
+
+传 `--workspace` 限定资源操作的作用域。该参数是全局参数，可以出现在子命令之前或之后。
+
+```shell
+openshell sandbox list --workspace team-ml
+openshell provider list --workspace team-ml
+openshell sandbox create \
+  --workspace team-ml \
+  --name research \
+  --from registry.example.com/team/agent-tools:1.0 \
+  -- bash
+```
+
+用 `OPENSHELL_WORKSPACE` 为当前 shell 设置默认值：
+
+```shell
+export OPENSHELL_WORKSPACE=team-ml
+openshell sandbox list
+```
+
+省略 `--workspace` 时，CLI 有意选择 `default` 工作区。空工作区名无效，绝不表示 `default` 或全部工作区。
+
+平台管理员可以显式选择跨工作区列表操作：
+
+```shell
+openshell sandbox list --all-workspaces
+openshell provider list --all-workspaces
+openshell service list --all-workspaces
+```
+
+工作区级公共请求使用带 `WorkspaceSelector` 的 `workspace_scope` 字段。单工作区请求选择非空规范名，包括字面量 `default`。只有沙箱、沙箱模板、提供商与服务集合列表请求还接受 `all_workspaces`。全工作区选择要求平台管理员权限。对服务而言，要么选择沙箱名，要么选择 `--all-workspaces`；两者互斥。
+
+每个沙箱级 RPC 都用人类可读的名称标识沙箱，并把工作区选择放在单独的字段中：
+
+```json
+{
+  "workspaceScope": { "workspace": "team-ml" },
+  "name": "agent"
+}
+```
+
+公共请求不接受规范沙箱 ID 作为引用。这是一次破坏性 API 变更：调用公共 API 之前，请重新生成 protobuf 客户端，并把存储的 ID 引用替换为沙箱名称。四个集合列表 RPC 使用请求级 `workspace_scope` 选择器。
+
+Rust 与 Python SDK 暴露独立的全部工作区列表方法。Go SDK 在 `ListOptions` 中传 `AllWorkspaces: true` 给 `ListAll`；TypeScript SDK 使用可辨识联合的选项类型，调用方无法在同一次类型化调用中既选命名工作区又选全部工作区。
+TUI 以 `default` 工作区启动并显式发送该名称；其全部工作区集合视图改为发送选择器标记。
+
+提供商配置档案与策略也有显式的 `--global` 操作。这些操作面向平台作用域，要求平台管理员权限。工作区管理员处理工作区级配置档案与配置时应使用 `--workspace`。
+
+## 诊断访问拒绝
+
+`openshell workspace list` 不返回任何行时，说明已认证主体没有任何工作区成员资格。运行 `openshell whoami`，把 `subject` 值发给平台管理员。
+
+工作区授权错误包含一条可复制的成员资格命令。非成员被拒时建议 `--role user`。操作要求工作区管理员权限时，拒绝信息会建议 `--role admin`；只有平台管理员能成功执行该授予。
+
+成员资格正确但请求仍被拒绝时，用 `openshell whoami --output json` 检查 `roles` 与 `scopes`。确认令牌带有配置的 OIDC 用户角色，且在启用 scope 强制时带有操作所需的 scope。
+
+## 删除工作区
+
+只有平台管理员能删除工作区。`default` 工作区不可删除。
+
+```shell
+openshell workspace delete team-ml
+```
+
+自定义工作区不得包含沙箱、沙箱工作负载模板、提供商、提供商配置档案、服务、SSH 会话、设置、策略、策略草稿分块或凭据刷新状态。重试删除之前先移除这些资源。工作区删除成功时，OpenShell 会一并移除成员资格记录。
+
+## 后续步骤
+
+- 配置 OIDC 角色与 scope，参见[网关认证](/how-it-works/gateways/authentication)。
+- 在工作区中创建资源，参见[管理沙箱](/how-it-works/sandboxes/overview)。
+- 管理工作区凭据，参见[提供商](/how-it-works/providers/overview)。

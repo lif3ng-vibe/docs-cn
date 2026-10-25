@@ -1,22 +1,22 @@
 ---
-title: "Expose a cluster workload to your tailnet (layer 3)"
-description: "This guide covers exposing a service running in your Kubernetes cluster to your tailnet using the Layer 3 (L3) Ingress feature of the Tailscale Kubernetes Operator. You can use this to expose non-HTTP"
+title: "将集群工作负载暴露给你的 tailnet（第 3 层）"
+description: "本指南介绍如何使用 Tailscale Kubernetes Operator 的第 3 层（L3）Ingress 功能，将运行在 Kubernetes 集群中的服务暴露给你的 tailnet。你可以用它向 tailnet 暴露非 HTTP 工作负载"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-This guide covers exposing a service running in your Kubernetes cluster to your tailnet using the Layer 3 (L3) Ingress feature of the Tailscale Kubernetes Operator. You can use this to expose non-HTTP workloads to the tailnet, and this does not require [enabling HTTPS for your tailnet][docs-https-setup]. You use a `ProxyGroup` and a Kubernetes `Ingress` resource to create multiple ingress proxies, ensuring your service remains available even if one of the proxies fails.
+本指南介绍如何使用 Tailscale Kubernetes Operator 的第 3 层（L3）Ingress 功能，将运行在 Kubernetes 集群中的服务暴露给你的 tailnet。你可以用它向 tailnet 暴露非 HTTP 工作负载，且无需[为 tailnet 启用 HTTPS][docs-https-setup]。你将使用一个 `ProxyGroup` 和一个 Kubernetes `Ingress` 资源来创建多个入站代理，即使其中一个代理发生故障，你的服务仍能保持可用。
 
-## Prerequisites
+## 前提条件
 
-* [Install][docs-k8s-install] the Tailscale Kubernetes Operator.
-* Configure the [necessary permissions for L3 Ingress][docs-k8s-permissions].
+* 已[安装][docs-k8s-install] Tailscale Kubernetes Operator。
+* 已配置 [L3 Ingress 所需的权限][docs-k8s-permissions]。
 
-## Create a ProxyGroup
+## 创建 ProxyGroup
 
-Create a `ProxyGroup`. This custom resource manages a set of Tailscale proxies for ingress.
+创建一个 `ProxyGroup`。这个自定义资源管理一组用于入站的 Tailscale 代理。
 
-Create a file named `ingress-proxygroup.yaml` with the following content:
+创建一个名为 `ingress-proxygroup.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -28,19 +28,19 @@ spec:
   replicas: 2
 ```
 
-Apply this manifest to your cluster:
+将此清单应用到集群：
 
 ```shell
 kubectl apply -f ingress-proxygroup.yaml
 ```
 
-This creates a `ProxyGroup` named `ingress-proxies` with two replicas. The operator creates a `StatefulSet` with 2 replicas in the `tailscale` namespace.
+这会创建一个名为 `ingress-proxies`、含两个副本的 `ProxyGroup`。operator 会在 `tailscale` 命名空间中创建一个具有 2 个副本的 `StatefulSet`。
 
-## Deploy a sample application
+## 部署示例应用
 
-Deploy an nginx application. This is the application to expose.
+部署一个 nginx 应用。这就是要暴露的应用程序。
 
-Create a file named `nginx-deployment.yaml` with the following content:
+创建一个名为 `nginx-deployment.yaml` 的文件，内容如下：
 
 ```yaml
 apiVersion: apps/v1
@@ -64,21 +64,21 @@ spec:
             - containerPort: 80
 ```
 
-Apply this manifest to your cluster:
+将此清单应用到集群：
 
 ```shell
 kubectl apply -f nginx-deployment.yaml
 ```
 
-## Expose the service with L3 Ingress
+## 使用 L3 Ingress 暴露服务
 
-Create a Kubernetes `Service` to act as an L3 Ingress point. By applying specific annotations and setting the `loadBalancerClass`, the Tailscale Kubernetes Operator automatically exposes it to the tailnet.
+创建一个 Kubernetes `Service` 作为 L3 入站入口。通过添加特定注解并设置 `loadBalancerClass`，Tailscale Kubernetes Operator 会自动将其暴露给 tailnet。
 
-*（图：A diagram showing ProxyGroup ingress architecture. Multiple proxy pod replicas in a StatefulSet expose a Kubernetes Service to the tailnet through a shared Tailscale Service.）*
+*（图：ProxyGroup 入站架构图。StatefulSet 中的多个代理 pod 副本通过共享的 Tailscale Service 将 Kubernetes Service 暴露给 tailnet。）*
 
-### Create the Kubernetes service
+### 创建 Kubernetes service
 
-Create a file named `nginx-service.yaml` with the following configuration:
+创建一个名为 `nginx-service.yaml` 的文件，内容为以下配置：
 
 ```yaml
 apiVersion: v1
@@ -86,9 +86,9 @@ kind: Service
 metadata:
   name: nginx-service
   annotations:
-    # Links the Service to the ProxyGroup
+    # 将 Service 关联到 ProxyGroup
     tailscale.com/proxy-group: ingress-proxies
-    # Sets the MagicDNS hostname for the Tailscale Service
+    # 为 Tailscale Service 设置 MagicDNS 主机名
     tailscale.com/hostname: nginx
 spec:
   selector:
@@ -101,52 +101,52 @@ spec:
   loadBalancerClass: tailscale
 ```
 
-### Configuration details
+### 配置说明
 
-The following annotations and fields configure L3 Ingress behavior:
+以下注解和字段用于配置 L3 Ingress 行为：
 
-* `tailscale.com/proxy-group`: This annotation tells the operator to route traffic through the `ingress-proxies` `ProxyGroup`.
-* `tailscale.com/hostname`: Defines the hostname for the Tailscale Service's MagicDNS name. For example, `nginx.foobar.ts.net`.
-* `loadBalancerClass: tailscale`: Instructs the operator to expose this Kubernetes `Service` to the tailnet.
+* `tailscale.com/proxy-group`：这个注解告诉 operator 让流量经由 `ingress-proxies` `ProxyGroup` 路由。
+* `tailscale.com/hostname`：定义 Tailscale Service 的 MagicDNS 名称中的主机名。例如 `nginx.foobar.ts.net`。
+* `loadBalancerClass: tailscale`：指示 operator 将这个 Kubernetes `Service` 暴露给 tailnet。
 
-Apply this manifest to your cluster:
+将此清单应用到集群：
 
 ```shell
 kubectl apply -f nginx-service.yaml
 ```
 
-## Access your service
+## 访问你的服务
 
-The operator creates a Tailscale Service matching the configured hostname and configures the `ProxyGroup` to advertise it. The `ProxyGroup` also routes requests to the `nginx-service` Kubernetes `Service`.
+operator 会创建一个与所配置主机名匹配的 Tailscale Service，并配置 `ProxyGroup` 通告它。`ProxyGroup` 还会将请求路由到 `nginx-service` Kubernetes `Service`。
 
-You can find the Tailscale IP address bound to the `nginx-service` Kubernetes `Service` in the `ADDRESS` field of the `Service` resource:
+你可以在 `Service` 资源的 `ADDRESS` 字段中找到绑定到 `nginx-service` Kubernetes `Service` 的 Tailscale IP 地址：
 
 ```shell
 kubectl get service nginx-service
 ```
 
-The output displays with an IP address in the `EXTERNAL-IP` column:
+输出会显示在 `EXTERNAL-IP` 列中并带有一个 IP 地址：
 
 ```
 NAME            TYPE           CLUSTER-IP       EXTERNAL-IP       PORT(S)        AGE
 nginx-service   LoadBalancer   34.118.238.206   100.102.116.165   80:30162/TCP   3m26s
 ```
 
-After the `EXTERNAL-IP` field is populated with a Tailscale IP address, you can access your nginx `Service` from any device in your tailnet by connecting to the Tailscale IP address and the service on port `80`. Traffic is load-balanced across the two proxy pods.
+`EXTERNAL-IP` 字段填充 Tailscale IP 地址后，你就可以从 tailnet 中的任何设备访问你的 nginx `Service`——连接该 Tailscale IP 地址的 `80` 端口即可。流量会在两个代理 pod 之间负载均衡。
 
-For example, you can access the `Service` using `curl` from a Tailscale device:
+例如，你可以从一台 Tailscale 设备使用 `curl` 访问该 `Service`：
 
 ```shell
 curl http://100.x.x.x:80
 ```
 
-Alternatively, you can access the `Service` using the configured MagicDNS name:
+你也可以使用配置好的 MagicDNS 名称访问该 `Service`：
 
 ```shell
 curl http://nginx.<tailnet>.ts.net:80
 ```
 
-For more information, refer to [Expose a cluster workload to your tailnet (layer 7)][docs-k8s-expose-l7].
+更多信息请参阅[将集群工作负载暴露给你的 tailnet（第 7 层）][docs-k8s-expose-l7]。
 
 [docs-k8s-expose-l7]: /docs/kubernetes-operator/ingress/expose-workload-to-tailnet-l7
 

@@ -1,31 +1,31 @@
 ---
-title: "Just-in-time access"
-description: "Tailscale provides several ways for you to provide just-in-time (JIT) access to resources in your Tailscale network (known as a tailnet). For example, you can provide an appropriate level of access to"
+title: "即时访问"
+description: "Tailscale 提供多种方式，让你对 Tailscale 网络（即 tailnet）中的资源提供即时访问（JIT）。例如，你可以为一位工程师提供限期适当的访问权限"
 ---
 
-Last validated May 2, 2025
+最后验证于 May 2, 2025
 
-Tailscale provides several ways for you to provide just-in-time (JIT) access to resources in your Tailscale network (known as a tailnet). For example, you can provide an appropriate level of access to an engineer for a limited amount of time so they can perform maintenance on a server.
+Tailscale 提供多种方式，让你对 Tailscale 网络（即 tailnet）中的资源提供即时访问（JIT）。例如，你可以为一位工程师提供限期适当的访问权限，让他在一段时间内对服务器进行维护。
 
-JIT access works in conjunction with access control policies to determine access for users and devices in your tailnet. You manage access control policies in the [tailnet policy file][docs-tailnet-policy-file]. For JIT access, you use automation to provide access to someone for a limited time, allowing them to perform a task. There are a few ways to achieve this.
+即时访问与访问控制策略配合，共同决定 tailnet 中用户和设备的访问权限。访问控制策略在 [tailnet 策略文件][docs-tailnet-policy-file]中管理。对于即时访问，你使用自动化手段在限定时间内授予某人访问权限，让其完成某项任务。实现方式有以下几种。
 
-## Provide just-in-time access
+## 提供即时访问
 
-Tailscale lets you manage JIT access to network resources based on device posture attributes, which are key-value pairs of data attached to devices that can be used as part of the tailnet policy file.
+Tailscale 让你可以基于设备态势属性来管理对网络资源的即时访问。设备态势属性是附加在设备上的键值对数据，可在 tailnet 策略文件中使用。
 
-[**Use device posture for just-in-time access**](/docs/features/tailscale-accessbot-jit) — Use device posture for just-in-time access to resources in your tailnet.
+[**使用设备态势实现即时访问**](/docs/features/tailscale-accessbot-jit) — 使用设备态势对 tailnet 中的资源进行即时访问。
 
-Tailscale partners with other companies for JIT access workflow integrations.
+Tailscale 与其他公司合作，提供即时访问工作流集成。
 
-[**Third-party integrations for JIT access**](/docs/integrations/jit-access) — Use third-party integrations for just-in-time access, also known as on-demand access, to your Tailscale network.
+[**第三方即时访问集成**](/docs/integrations/jit-access) — 使用第三方集成对 Tailscale 网络进行即时访问（也称按需访问）。
 
-The Tailscale API lets you manage tailnet policy files, including for JIT access. For details, refer to the [Policy File][co-api-policy-file] section in the Tailscale API documentation.
+Tailscale API 让你可以管理 tailnet 策略文件，包括用于即时访问的文件。详情参见 Tailscale API 文档中的 [Policy File][co-api-policy-file] 部分。
 
-[**Tailscale API**](/docs/reference/tailscale-api) — Explore the Tailscale application programming interface (API).
+[**Tailscale API**](/docs/reference/tailscale-api) — 探索 Tailscale 应用程序编程接口（API）。
 
-Tailscale lets you manage access to network resources based on [group membership][docs-user-group-provisioning-sync] by syncing groups from SCIM-integrated identity providers to Tailscale.
+通过将 SCIM 集成的身份提供方（IdP）中的组同步到 Tailscale，Tailscale 让你可以基于[组成员关系][docs-user-group-provisioning-sync]管理对网络资源的访问。
 
-[**Supported SSO identity providers**](/docs/integrations/identity) — Tailscale works on top of the IdP or SSO provider you already use. Leverage the capabilities of these providers for secure access, including passkeys, 2FA, and MFA.
+[**支持的 SSO 身份提供方**](/docs/integrations/identity) — Tailscale 构建在你已在使用的 IdP 或 SSO 提供方之上。你可以利用这些提供方的安全访问能力，包括 passkey、2FA 和 MFA。
 
 [co-api-policy-file]: https://tailscale.com/api#tag/policyfile
 

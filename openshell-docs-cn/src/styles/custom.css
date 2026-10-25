@@ -1,0 +1,201 @@
+/* NVIDIA 品牌色 + CJK 字体回退 + 自定义组件样式 */
+
+/* CJK 字体回退：插在拉丁字体之后，中文不缺字、西文视觉不变 */
+:root {
+  --sl-font-system: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+    sans-serif;
+  --sl-font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas,
+    'PingFang SC', 'Microsoft YaHei', monospace;
+}
+
+/* NVIDIA 绿品牌色（浅色/深色两套） */
+:root {
+  --nv-color-green: #76b900;
+  --sl-color-accent-600: #5f9500;
+  --sl-color-accent-700: #4c7800;
+}
+:root[data-theme='dark'] {
+  --sl-color-accent-600: #76b900;
+  --sl-color-accent-700: #8fd41a;
+}
+
+/* 徽标链接组（首页 BadgeLinks） */
+.badge-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  line-height: 0;
+  margin: 0.25rem 0 0.75rem;
+}
+.badge-links a {
+  display: inline-flex;
+  align-items: center;
+}
+.badge-links img {
+  display: block;
+  margin: 0 !important;
+}
+.badge-links + p {
+  margin-top: 0 !important;
+}
+
+/* Badge 圆角标签（Fern <Badge> 等价） */
+.os-badge {
+  display: inline-block;
+  padding: 0.05rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+.os-badge-info {
+  background: var(--sl-color-bg-accent, #eee);
+  color: var(--sl-color-text-accent, #333);
+}
+.os-badge-tip {
+  border: 1px solid var(--nv-color-green);
+  color: var(--nv-color-green);
+}
+.os-badge-caution {
+  border: 1px solid #e0a300;
+  color: #b07d00;
+}
+.os-badge-danger {
+  border: 1px solid #d25c5c;
+  color: #d25c5c;
+}
+:root[data-theme='dark'] .os-badge-caution {
+  color: #f0b429;
+}
+
+/* ParamField 参数字段（Fern <ParamField> 等价） */
+.os-param {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 8px;
+  background: var(--sl-color-bg-surface, var(--sl-color-gray-6, transparent));
+}
+.os-param-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+}
+.os-param-path {
+  font-weight: 700;
+  color: var(--sl-color-text-accent);
+}
+.os-param-type {
+  font-family: var(--sl-font-mono);
+  font-size: 0.8125rem;
+  color: var(--sl-color-gray-3);
+}
+.os-param-req {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #d25c5c;
+}
+.os-param-default {
+  font-size: 0.8125rem;
+  color: var(--sl-color-gray-3);
+}
+.os-param-default code {
+  font-size: 0.8125rem;
+}
+.os-param-desc {
+  font-size: 0.9375rem;
+}
+.os-param-desc > :first-child {
+  margin-top: 0;
+}
+.os-param-desc > :last-child {
+  margin-bottom: 0;
+}
+
+/* Accordion 折叠面板（Fern <Accordion> 等价） */
+.os-accordion {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+.os-accordion summary {
+  cursor: pointer;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  list-style: revert;
+}
+.os-accordion summary:hover {
+  color: var(--sl-color-text-accent);
+}
+.os-accordion[open] summary {
+  border-bottom: 1px solid var(--sl-color-gray-5);
+}
+.os-accordion-body {
+  padding: 0.25rem 1rem 0.75rem;
+}
+.os-accordion-body > :first-child {
+  margin-top: 0.5rem;
+}
+.os-accordion-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* 终端演示块（首页 CommandTerminal，样式对齐上游 fern main.css） */
+.nc-term {
+  background: #1a1a2e;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.5em 0;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+  font-family: var(--sl-font-mono);
+  font-size: 0.875em;
+  line-height: 1.8;
+}
+.nc-term-bar {
+  background: #252545;
+  padding: 10px 14px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.nc-term-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.nc-term-dot-r {
+  background: #ff5f56;
+}
+.nc-term-dot-y {
+  background: #ffbd2e;
+}
+.nc-term-dot-g {
+  background: #27c93f;
+}
+.nc-term-body {
+  display: grid;
+  grid-template-rows: repeat(2, 1.8em);
+  padding: 16px 20px;
+  color: #d4d4d8;
+  overflow-x: auto;
+}
+.nc-term-body > div {
+  min-width: max-content;
+  white-space: nowrap;
+}
+.nc-term-body .nc-ps {
+  color: #76b900;
+  user-select: none;
+}
+
+/* 步骤容器（Fern <Steps> 等价：## 小节序列） */
+.os-steps {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--nv-color-green);
+}

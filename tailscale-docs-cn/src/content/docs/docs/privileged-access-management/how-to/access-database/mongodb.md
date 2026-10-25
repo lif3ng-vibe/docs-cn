@@ -1,38 +1,38 @@
 ---
-title: "Access a MongoDB database using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets users connect to MongoDB using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials."
+title: "使用 Tailscale PAM 访问 MongoDB 数据库"
+description: "[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 MongoDB，而无需共享数据库凭证。"
 ---
 
-Last validated Aug 18, 2026
+最后验证于 Aug 18, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets users connect to MongoDB using their [Tailscale identity][docs-tailscale-identity] instead of sharing database credentials.
+[Tailscale PAM][docs-pam] 让用户使用其 [Tailscale 身份][docs-tailscale-identity]连接 MongoDB，而无需共享数据库凭证。
 
-You can control who has access to the database, apply fine-grained permissions, and keep an audit trail of database sessions and queries. Users can continue using their preferred MongoDB clients, including MongoDB Compass, `mongosh`, DBeaver, DataGrip, and TablePlus.
+你可以控制谁有权访问数据库、应用细粒度权限，并保留数据库会话和查询的审计跟踪。用户可以继续使用自己惯用的 MongoDB 客户端，包括 MongoDB Compass、`mongosh`、DBeaver、DataGrip 和 TablePlus。
 
-This guide walks you through creating a MongoDB PAM service, connecting to it, and reviewing the resulting session activity.
+本指南带你创建 MongoDB PAM 服务、连接该服务并查看产生的会话活动。
 
-Tailscale PAM also supports MongoDB Atlas and Amazon DocumentDB. Those configurations are covered later in this guide.
+Tailscale PAM 还支持 MongoDB Atlas 和 Amazon DocumentDB。相关配置会在本指南后面的部分介绍。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm you have the following:
+开始之前，确认你具备以下条件：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed, online, and able to reach the MongoDB server.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native database client.
-* A MongoDB server that the connector can reach.
-* Permission to update your [tailnet policy file][docs-tailnet-policy-file].
+* 一个已安装、在线且能访问 MongoDB 服务器的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果打算使用原生数据库客户端，你用来连接的设备上需已[安装][docs-install] Tailscale 并登录。
+* 连接器能够访问的一台 MongoDB 服务器。
+* 更新 [tailnet 策略文件][docs-tailnet-policy-file]的权限。
 
-You can use your own MongoDB server or run a local MongoDB server with Docker.
+你可以使用自己的 MongoDB 服务器，也可以用 Docker 运行一个本地 MongoDB 服务器。
 
-If you're using your own MongoDB server, you'll need its hostname or IP address, port, and the credentials the connector should use to authenticate.
+如果使用自己的 MongoDB 服务器，你需要它的主机名或 IP 地址、端口，以及连接器认证时应使用的凭证。
 
-## Run a local MongoDB server with Docker
+## 用 Docker 运行本地 MongoDB 服务器
 
-If you're using your own MongoDB server, skip to the next step.
+如果你使用自己的 MongoDB 服务器，请跳到下一步。
 
-For a quick local test, start a MongoDB server with Docker:
+如需快速本地测试，用 Docker 启动一个 MongoDB 服务器：
 
 ```shell
 docker run --name tailscale-pam-mongodb --rm \
@@ -42,71 +42,71 @@ docker run --name tailscale-pam-mongodb --rm \
   mongo:latest
 ```
 
-Replace `<your-database-password>` with a password of your choice.
+把 `<your-database-password>` 替换为你自选的密码。
 
-This starts a MongoDB server on port `27017` with the `admin` user and the password that you specified.
+这会在端口 `27017` 上启动一个 MongoDB 服务器，用户为 `admin`，密码为你指定的值。
 
-Before continuing, verify that you can connect to it:
+继续之前，先验证你能连接到它：
 
 ```shell
 mongosh "mongodb://admin:your-database-password@127.0.0.1:27017/admin"
 ```
 
-After you connect, run a basic command:
+连接后，运行一条基本命令：
 
 ```mongodb
 db.runCommand({ ping: 1 })
 ```
 
-If MongoDB returns `ok: 1`, your server is ready.
+如果 MongoDB 返回 `ok: 1`，说明服务器已就绪。
 
-If the Tailscale PAM connector runs on the same device as Docker, you can use `localhost` and port `27017` when you configure the PAM service. If the connector runs somewhere else, use an IP address or hostname that the connector can reach.
+如果 Tailscale PAM 连接器与 Docker 运行在同一台设备上，你在配置 PAM 服务时可以使用 `localhost` 和端口 `27017`。如果连接器运行在其他地方，请使用连接器能访问到的 IP 地址或主机名。
 
-## Create a MongoDB PAM service
+## 创建 MongoDB PAM 服务
 
-Create a database service and link it to your connector.
+创建一个数据库服务，并将其关联到你的连接器。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择 **Add service**。
 
-3. Select **PAM service**.
+3. 选择 **PAM service**。
 
-4. Select **MongoDB**.
+4. 选择 **MongoDB**。
 
-5. Select **Continue**.
+5. 选择 **Continue**。
 
-6. Provide a name for your service.
+6. 为服务起一个名称。
 
-   Use a name that will make the database suitable for users to recognize when they browse the services they can access.
+   起一个便于用户在浏览可访问服务时辨认该数据库的名字。
 
-7. (Optional) Provide a description for the service.
+7. （可选）为服务提供描述。
 
-8. Choose whether the **Session Recording** option is enabled or disabled.
+8. 选择 **Session Recording** 选项是启用还是禁用。
 
-9. Select the Tailscale PAM connector that can reach your MongoDB server.
+9. 选择能够访问你的 MongoDB 服务器的 Tailscale PAM 连接器。
 
-10. Select **Continue**.
+10. 选择 **Continue**。
 
-11. For **Upstream hostname**, enter hostname or IP address of the MongoDB server.
+11. 在 **Upstream hostname** 中输入 MongoDB 服务器的主机名或 IP 地址。
 
-12. For **Port**, enter the MongoDB port. The default is `27017`.
+12. 在 **Port** 中输入 MongoDB 端口。默认是 `27017`。
 
-13. For **Authentication Type**, select the authentication method used by the upstream MongoDB server. For this example, select username and password authentication. (Tailscale PAM also supports other MongoDB authentication configurations, including TLS, no authentication, and AWS IAM authentication where applicable.)
+13. 在 **Authentication Type** 中选择上游 MongoDB 服务器使用的认证方式。本例选择用户名和密码认证。（Tailscale PAM 还支持其他 MongoDB 认证配置，包括 TLS、无认证，以及适用情况下的 AWS IAM 认证。）
 
-14. For **Username**, enter the username Tailscale PAM should use to connect to MongoDB.
+14. 在 **Username** 中输入 Tailscale PAM 连接 MongoDB 应使用的用户名。
 
-15. For **Password**, enter the password for that user.
+15. 在 **Password** 中输入该用户的密码。
 
-    If you used the local Docker example and the connector runs on the same device, use `localhost`, port `27017`, username `admin`, and the value you used for `<your-database-password>`.
+    如果你使用的是本地 Docker 示例且连接器在同一设备上运行，则使用 `localhost`、端口 `27017`、用户名 `admin`，以及你为 `<your-database-password>` 设置的值。
 
-16. Select **Save**.
+16. 选择 **Save**。
 
-Your MongoDB PAM service has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+你的 MongoDB PAM 服务已创建。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the MongoDB database
+## 为 MongoDB 数据库授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the service. For example, the following grant permits any source to connect to PAM database services:
+在用户连接之前，确保有 Tailscale PAM [授权（grant）][docs-grants]让他们能访问该服务。例如，以下授权允许任何来源连接到 PAM 数据库服务：
 
 ```json
 "grants": [
@@ -130,88 +130,88 @@ Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives t
 ]
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is a broad grant that's useful for getting started. In a production environment, you can restrict the `src` and `dst` fields to control which users, groups, devices, or tags can access specific services.
+> 这是一条范围很宽的授权，适合入门使用。在生产环境中，你可以限制 `src` 和 `dst` 字段，以控制哪些用户、组、设备或标签可以访问特定服务。
 
-For MongoDB, you can also create more restrictive database permissions. Supported operation types include read-only, read-write, insert, update, and delete access. Collection-level and document-level restrictions aren't currently supported.
+对于 MongoDB，你还可以创建限制更严的数据库权限。支持的操作类型包括只读、读写、插入、更新和删除。集合级和文档级的限制目前不支持。
 
-For more PAM grant examples and information about fine-grained access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 PAM 授权示例以及细粒度访问控制的信息，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-For information about editing grants, refer to [Edit access control policies in your tailnet policy file][docs-manage-tailnet-policies].
+关于编辑授权的信息，参见[在 tailnet 策略文件中编辑访问控制策略][docs-manage-tailnet-policies]。
 
-## Connect to the MongoDB database
+## 连接到 MongoDB 数据库
 
-The primary way to connect is through the Tailscale client, which can launch your preferred MongoDB client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你惯用的 MongoDB 客户端。
 
-### Connect with your preferred MongoDB client
+### 使用你惯用的 MongoDB 客户端连接
 
-Use the Tailscale client to quickly open the database with a MongoDB client already installed on your device.
+使用 Tailscale 客户端，可快速用设备上已安装的 MongoDB 客户端打开数据库。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your MongoDB service.
-4. Choose the database client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 MongoDB 服务。
+4. 选择你想使用的数据库客户端。
 
-The Tailscale client scans your device for well-known MongoDB-compatible clients and shows the ones it can find. These can include clients such as `mongosh`, MongoDB Compass, DBeaver, DataGrip, and TablePlus.
+Tailscale 客户端会扫描你的设备，寻找知名的兼容 MongoDB 的客户端，并列出它找到的客户端。可能包括 `mongosh`、MongoDB Compass、DBeaver、DataGrip 和 TablePlus 等客户端。
 
-Selecting a client establishes the PAM session and launches that client for you.
+选择一个客户端即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the clients shown in the Tailscale client. If your preferred MongoDB client isn't listed, open it directly and connect using:
+你并不局限于 Tailscale 客户端中列出的客户端。如果你惯用的 MongoDB 客户端不在列表中，可以直接打开它，并使用以下设置连接：
 
-* **Hostname**: The name of the Tailscale PAM service.
-* **Port**: `27017`.
-* **Username**: Leave empty.
-* **Password**: Leave empty.
+* **主机名**：Tailscale PAM 服务的名称。
+* **端口**：`27017`。
+* **用户名**：留空。
+* **密码**：留空。
 
-Tailscale PAM uses your Tailscale identity to authorize the connection and manages the upstream MongoDB connection on your behalf. This means you can continue using the MongoDB tools you're already familiar with without needing to know or manage the upstream credentials.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权，并代表你管理上游 MongoDB 连接。这意味着你可以继续使用已经熟悉的 MongoDB 工具，而无需了解或管理上游凭证。
 
-For example, you can connect with `mongosh`:
+例如，你可以使用 `mongosh` 连接：
 
 ```shell
 mongosh "mongodb://<service-name>:27017/admin"
 ```
 
-Replace `<service-name>` with the name of your MongoDB PAM service. MongoDB uses port `27017` by default, and `mongosh` accepts a standard `mongodb://` connection URI.
+把 `<service-name>` 替换为你的 MongoDB PAM 服务名称。MongoDB 默认使用端口 `27017`，且 `mongosh` 接受标准的 `mongodb://` 连接 URI。
 
-## Secure the upstream credentials
+## 保护上游凭证
 
-In the example above, the upstream MongoDB username and password are stored as part of the PAM service configuration. Tailscale stores these credentials in encrypted form, but for production environments we recommend keeping upstream credentials local to the connector whenever possible.
+在上面的示例中，上游 MongoDB 的用户名和密码作为 PAM 服务配置的一部分保存。Tailscale 以加密形式存储这些凭证，但对于生产环境，我们建议尽量把上游凭证保留在连接器本地。
 
-You can configure the connector to load credentials dynamically from a supported secret source instead of storing the credentials directly in the service configuration. For example, you can load credentials from an environment variable, a local file, or a secrets management system.
+你可以把连接器配置为从受支持的密钥源动态加载凭证，而不是把凭证直接存储在服务配置中。例如，可以从环境变量、本地文件或密钥管理系统加载凭证。
 
-For more information, refer to [Manage secrets and credentials][docs-pam-manage-secrets].
+更多信息参见[管理密钥与凭证][docs-pam-manage-secrets]。
 
-## Review session details and recordings
+## 查看会话详情与录制
 
-Tailscale PAM gives you visibility into connections to your MongoDB service.
+Tailscale PAM 让你清楚了解与 MongoDB 服务的连接情况。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your MongoDB service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的 MongoDB 服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The service that was accessed.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 被访问的服务。
 
-When session recording is enabled, you can also review the MongoDB queries for the session.
+启用会话录制后，你还可以查看该会话的 MongoDB 查询。
 
-This gives you a direct answer to two useful questions: who accessed the database, and what did they do while they were there?
+这能直接回答两个很有用的问题：谁访问了数据库？他们在里面做了什么？
 
-## Use Amazon DocumentDB with IAM authentication
+## 使用带 IAM 认证的 Amazon DocumentDB
 
-Tailscale PAM also supports Amazon DocumentDB as a MongoDB-compatible upstream service.
+Tailscale PAM 还支持把 Amazon DocumentDB 作为兼容 MongoDB 的上游服务。
 
-Amazon DocumentDB can use AWS IAM identities for database authentication, letting the PAM connector authenticate using an IAM role or user instead of a static database password. IAM authentication uses the `MONGODB-AWS` authentication mechanism and stores IAM-authenticated database users in the `$external` database.
+Amazon DocumentDB 可以使用 AWS IAM 身份进行数据库认证，让 PAM 连接器使用 IAM 角色或用户认证，而无需静态数据库密码。IAM 认证使用 `MONGODB-AWS` 认证机制，并把经 IAM 认证的数据库用户存储在 `$external` 数据库中。
 
-If your PAM connector runs on an Elastic Compute Cloud (EC2) instance, you can use the IAM role attached to that instance.
+如果你的 PAM 连接器运行在 Elastic Compute Cloud（EC2）实例上，可以使用挂接到该实例的 IAM 角色。
 
-First, connect to DocumentDB as an administrator and switch to the `$external` database:
+首先，以管理员身份连接 DocumentDB 并切换到 `$external` 数据库：
 
 ```mongodb
 use $external
 ```
 
-Create a database user whose name matches the IAM role ARN used by the connector:
+创建一个名称与连接器所用 IAM 角色 ARN 一致的数据库用户：
 
 ```mongodb
 db.createUser({
@@ -223,49 +223,49 @@ db.createUser({
 })
 ```
 
-Replace `<account-id>` and `<role-name>` with the IAM identity used by your connector.
+把 `<account-id>` 和 `<role-name>` 替换为你的连接器所用的 IAM 身份。
 
-Amazon DocumentDB IAM authentication requires the database user to match the IAM identity ARN. The connector can retrieve temporary credentials automatically when it runs with an attached IAM role.
+Amazon DocumentDB 的 IAM 认证要求数据库用户与 IAM 身份 ARN 一致。连接器在带有挂接 IAM 角色运行时，可以自动获取临时凭证。
 
-When you configure the PAM service:
+配置 PAM 服务时：
 
-* Use the DocumentDB cluster endpoint as the upstream hostname.
-* Use port `27017`.
-* Select AWS IAM authentication.
-* Configure TLS for the upstream connection.
-* Select the PAM connector that has access to the DocumentDB cluster.
+* 使用 DocumentDB 集群端点作为上游主机名。
+* 使用端口 `27017`。
+* 选择 AWS IAM 认证。
+* 为上游连接配置 TLS。
+* 选择能访问该 DocumentDB 集群的 PAM 连接器。
 
-You don't need to store a static database password when the connector authenticates using its AWS IAM identity.
+当连接器使用其 AWS IAM 身份认证时，你无需存储静态数据库密码。
 
-## Use MongoDB Atlas
+## 使用 MongoDB Atlas
 
-Tailscale PAM can also provide access to MongoDB Atlas.
+Tailscale PAM 也可以提供对 MongoDB Atlas 的访问。
 
-Before configuring the PAM service, make sure:
+配置 PAM 服务之前，确保：
 
-* You have an existing MongoDB Atlas cluster.
-* You have a MongoDB database user with access to the databases you want to make available.
-* The Atlas cluster is reachable from the network where the PAM connector runs.
+* 你已有一个 MongoDB Atlas 集群。
+* 你有一个 MongoDB 数据库用户，能访问你想开放的那些数据库。
+* PAM 连接器运行所在的网络能够访问该 Atlas 集群。
 
-For standard public Atlas connections, add the connector's public IP address to the Atlas project's IP access list. You can also connect through Amazon Virtual Private Cloud (VPC) or Azure Virtual Network (VNet) peering or a private endpoint when the connector has access to that private network. MongoDB Atlas requires both network access and a MongoDB database user before a client can connect.
+对于标准的公网 Atlas 连接，请把连接器的公网 IP 地址加入 Atlas 项目的 IP 访问列表。当连接器能访问相应私有网络时，你也可以通过 Amazon Virtual Private Cloud（VPC）或 Azure Virtual Network（VNet）对等连接或私有端点连接。MongoDB Atlas 要求同时具备网络访问和 MongoDB 数据库用户，客户端才能连接。
 
-When creating the PAM service, select **MongoDB Atlas** and provide the Atlas cluster connection information and database credentials.
+创建 PAM 服务时，选择 **MongoDB Atlas**，并提供 Atlas 集群的连接信息和数据库凭证。
 
-Once configured, users connect to the PAM service using their Tailscale identity just as they would with a standard MongoDB service. They don't need access to the upstream Atlas credentials.
+配置完成后，用户使用其 Tailscale 身份连接 PAM 服务，与使用标准 MongoDB 服务时一样。他们不需要访问上游 Atlas 凭证。
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to your MongoDB service, the most common issue is that the connector can't connect to the upstream database.
+如果你无法连接 MongoDB 服务，最常见的问题是连接器无法连接上游数据库。
 
-First, confirm that the connector is online and can reach the MongoDB hostname and port. Also verify that the credentials in the service configuration are valid.
+首先，确认连接器在线且能访问 MongoDB 的主机名和端口。同时验证服务配置中的凭证有效。
 
-If you're using the Docker example, remember that `localhost` refers to the device running the connector. If your connector runs on a different device, use a hostname or IP address that is reachable from that device.
+如果你使用的是 Docker 示例，请记住 `localhost` 指的是运行连接器的设备。如果连接器运行在其他设备上，请使用从该设备可达的主机名或 IP 地址。
 
-For MongoDB Atlas, confirm that the connector has network access to the cluster and, for public connections, that its public IP address is included in the Atlas IP access list.
+对于 MongoDB Atlas，确认连接器能通过网络访问集群；对于公网连接，还要确认其公网 IP 地址已包含在 Atlas IP 访问列表中。
 
-For Amazon DocumentDB with IAM authentication, verify that the IAM-authenticated database user exists in the `$external` database, that its username matches the IAM identity ARN used by the connector, and that the connector can get valid AWS credentials.
+对于带 IAM 认证的 Amazon DocumentDB，验证经 IAM 认证的数据库用户存在于 `$external` 数据库中、其用户名与连接器所用 IAM 身份 ARN 一致，并且连接器能获取有效的 AWS 凭证。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the PAM [session logs][docs-pam-session-logs]. Failed sessions often include information about why the connection couldn't be established, which can help narrow down whether the problem is network connectivity, authentication, or the upstream MongoDB service itself.
+如果以上排查步骤都无法解决问题，请查看连接器日志以及 PAM [会话日志][docs-pam-session-logs]中失败会话的详情。失败的会话通常包含连接无法建立的原因，这有助于判断问题出在网络连通性、认证还是上游 MongoDB 服务本身。
 
 [docs-grants]: /docs/features/access-control/grants
 

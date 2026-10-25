@@ -1,105 +1,105 @@
 ---
-title: "Configure a subnet router"
-description: "To use a tailnet device as a subnet router, select your platform and complete the steps."
+title: "配置子网路由器"
+description: "要把 tailnet 设备用作子网路由器，请选择你的平台并完成相应步骤。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:**
+> **注意：**
 >
-> This topic is a quick guide for configuring subnet routers in a tailnet. For more detailed information, refer to [Subnet routers][docs-subnets].
+> 本主题是在 tailnet 中配置子网路由器的快速指南。更多详细信息请参阅[子网路由器][docs-subnets]。
 
-To use a tailnet device as a subnet router, select your platform and complete the steps.
+要把 tailnet 设备用作子网路由器，请选择你的平台并完成相应步骤。
 
 #### Linux
 
-1. [Download and install][docs-install-linux] the Tailscale client.
+1. [下载并安装][docs-install-linux] Tailscale 客户端。
 
-2. Open a terminal session on the device and enable IP forwarding.
+2. 在设备上打开一个终端会话，并启用 IP 地址转发。
 
    \[Missing snippet: EnableIPForwarding.mdx]
 
-3. In the terminal session, advertise subnet routes for the device. Replace the subnets in the example below with the subnets for your network.
+3. 在终端会话中为该设备通告子网路由。请把下例中的子网替换为你网络的子网。
 
    ```shell
    sudo tailscale set --advertise-routes=192.0.2.0/24,198.51.100.0/24
    ```
 
-4. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Subnets** badge.
+4. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Subnets** 徽章。
 
-5. Select the  menu, then select **Edit subnet routes**.
+5. 选择该菜单，然后选择 **Edit subnet routes**。
 
-6. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+6. 勾选与你要通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
 #### macOS
 
-1. [Download and install][docs-install-macos] the Tailscale client.
+1. [下载并安装][docs-install-macos] Tailscale 客户端。
 
-2. Open a terminal session and advertise subnet routes for the device. Replace the subnets in the example below with the subnets for your network.
+2. 打开一个终端会话，为该设备通告子网路由。请把下例中的子网替换为你网络的子网。
 
    ```shell
    sudo tailscale set --advertise-routes=192.0.2.0/24,198.51.100.0/24
    ```
 
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Subnets** badge.
+3. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Subnets** 徽章。
 
-4. Select the  menu, then select **Edit subnet routes**.
+4. 选择该菜单，然后选择 **Edit subnet routes**。
 
-5. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+5. 勾选与你要通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
 #### Windows
 
-1. [Download and install][docs-install-windows] the Tailscale client.
+1. [下载并安装][docs-install-windows] Tailscale 客户端。
 
-2. In a PowerShell session, advertise subnet routes for the device. Replace the subnets in the example below with the subnets for your network.
+2. 在 PowerShell 会话中为该设备通告子网路由。请把下例中的子网替换为你网络的子网。
 
    ```powershell
    tailscale set --advertise-routes=192.0.2.0/24,198.51.100.0/24
    ```
 
-3. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Subnets** badge.
+3. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Subnets** 徽章。
 
-4. Select the  menu, then select **Edit subnet routes**.
+4. 选择该菜单，然后选择 **Edit subnet routes**。
 
-5. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+5. 勾选与你要通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
 #### tvOS
 
-1. [Download and install][docs-install-appletv] the Tailscale client.
-2. Open the Tailscale app on your Apple TV, and select **Subnet Router**.
-3. Select **Advertise New Route**. A placeholder combined IP address and subnet mask (CIDR) of `198.51.100.0/24` will display. Edit this entry to reflect your own IP address and subnet mask.
-4. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Subnets** badge.
-5. Select the  menu, then select **Edit subnet routes**.
-6. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+1. [下载并安装][docs-install-appletv] Tailscale 客户端。
+2. 在 Apple TV 上打开 Tailscale 应用，选择 **Subnet Router**。
+3. 选择 **Advertise New Route**。会显示一个 `198.51.100.0/24` 的占位 IP 地址与子网掩码组合（CIDR）。编辑这一条目，改成你自己的 IP 地址与子网掩码。
+4. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Subnets** 徽章。
+5. 选择该菜单，然后选择 **Edit subnet routes**。
+6. 勾选与你要通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
 #### Android
 
-> **Warning:**
+> **警告：**
 >
-> Running a subnet router on a mobile phone will significantly impact battery life. This feature is primarily intended for Android TV devices or any Android device that is expected to remain connected to AC power.
+> 在手机上运行子网路由器会显著影响电池续航。该功能主要面向 Android TV 设备，或预期持续接通交流电源的 Android 设备。
 
-1. [Download and install][docs-install-android] the Tailscale client.
+1. [下载并安装][docs-install-android] Tailscale 客户端。
 
-2. Open the Tailscale app and select the avatar menu.
+2. 打开 Tailscale 应用并选择头像菜单。
 
-3. In **Settings**, select **Subnet routing**, then **Add route**.
+3. 在 **Settings** 中选择 **Subnet routing**，然后选择 **Add route**。
 
-4. Enter the combined IP address and subnet mask (CIDR) for your network. For example `192.168.1.0/24`.
+4. 输入你网络的 IP 地址与子网掩码组合（CIDR），例如 `192.168.1.0/24`。
 
-5. Select **OK**.
+5. 选择 **OK**。
 
-6. In the **Exit Node** section of the app, set the **Allow LAN access** toggle according to your preference.
+6. 在应用的 **Exit Node** 部分，按需设置 **Allow LAN access** 开关。
 
-   * Android as a subnet router but not an exit node, set the toggle to off.
-   * Android as a subnet router and an exit node, set the toggle to on.
+   * Android 仅作为子网路由器、不作为出口节点时，把开关设为关闭。
+   * Android 同时作为子网路由器和出口节点时，把开关设为开启。
 
-7. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the device in the list. It should display the **Subnets** badge.
+7. 前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到该设备。它应显示 **Subnets** 徽章。
 
-8. Select the  menu, then select **Edit subnet routes**.
+8. 选择该菜单，然后选择 **Edit subnet routes**。
 
-9. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+9. 勾选与你要通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
-For more information about subnet router configuration with Tailscale, review [Subnet routers][docs-subnets].
+有关使用 Tailscale 配置子网路由器的更多信息，请参阅[子网路由器][docs-subnets]。
 
 [docs-install-android]: /docs/install/android
 

@@ -1,35 +1,35 @@
 ---
-title: "Direct provider access"
-description: "Direct provider access adds a `/direct` endpoint that forwards a request to a configured provider's own API and returns the provider's response largely as sent. Aperture authenticates the caller throu"
+title: "直接提供商访问"
+description: "直接提供商访问新增一个 `/direct` 端点，把请求转发给已配置提供商自己的 API，并基本原样返回提供商的响应。Aperture 通过 [Tailscale 身份][docs-tailscale-identity]认证调用者。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Direct provider access adds a `/direct` endpoint that forwards a request to a configured provider's own API and returns the provider's response largely as sent. Aperture authenticates the caller through [Tailscale identity][docs-tailscale-identity] and injects the provider credential from your configuration, so clients reach provider endpoints without holding a provider API key.
+直接提供商访问（direct provider access）新增一个 `/direct` 端点，把请求转发给已配置提供商自己的 API，并基本原样返回提供商的响应。Aperture 通过 [Tailscale 身份][docs-tailscale-identity]认证调用者，并从你的配置注入提供商凭证，因此客户端无需持有提供商 API 密钥即可访问提供商端点。
 
-Aperture's standard endpoints normalize every request into the chat completions and messages APIs. That covers text generation, but it means Aperture can only route models that speak those APIs. Models in other modalities, such as embedding, image, audio, and video models, do not fit the chat request shape and cannot be routed through the standard endpoints at all.
+Aperture 的标准端点会把每个请求规范化为 chat completions 和 messages API。这覆盖了文本生成，但也意味着 Aperture 只能路由支持这些 API 的模型。其他模态的模型，例如嵌入、图像、音频和视频模型，不符合 chat 请求形态，根本无法通过标准端点路由。
 
-Direct provider access is how you reach them. Because `/direct` passes the request through to the provider's own API, any model the provider exposes becomes reachable, regardless of modality. The same endpoint also covers the non-inference parts of a provider's surface, such as model listings, file uploads, and batch jobs.
+直接提供商访问就是为它们准备的。由于 `/direct` 把请求原样透传给提供商自己的 API，提供商暴露的任何模型都变得可达，与模态无关。同一个端点还覆盖提供商表面的非推理部分，例如模型列表、文件上传和批处理作业。
 
-A request sent to `/direct` also skips model routing, quotas, hooks, and usage accounting. Review the [limitations][ar-limitations] before you route production traffic through it.
+发送到 `/direct` 的请求还会跳过模型路由、配额、hook 和用量统计。把生产流量路由到它之前，请先阅读[限制][ar-limitations]。
 
-The endpoint, the grant syntax, and this page can change while the feature is in private alpha. Refer to this page after an Aperture upgrade instead of relying on a cached copy of these steps.
+在功能处于私有 alpha 期间，端点、授权语法和本页内容都可能变化。Aperture 升级后请重新查看本页，不要依赖缓存的旧步骤。
 
-## Prerequisites
+## 前提条件
 
-Before you set up direct provider access, you need the following:
+设置直接提供商访问之前，你需要：
 
-* The [admin role][docs-set-up-admin-access] in Aperture, which is required to change feature flags, edit grants, and review the direct access logs.
-* At least one [configured provider][docs-set-up-providers] with working credentials.
-* Network access to the Aperture gateway from the client that sends requests.
+* Aperture 中的[管理员角色][docs-set-up-admin-access]，用于更改功能标志、编辑授权和查看直接访问日志。
+* 至少一个[已配置且凭证可用的提供商][docs-set-up-providers]。
+* 发送请求的客户端能够访问 Aperture 网关。
 
-## Get started
+## 开始使用
 
-Setting up direct provider access takes four steps: enable the feature flag, grant direct path access to an identity, send a request, and confirm the request in the logs.
+设置直接提供商访问分四步：启用功能标志、把直连路径访问授予某个身份、发送请求、在日志中确认请求。
 
-### Step 1: Enable the direct access API flag
+### 第 1 步：启用 direct access API 标志
 
-Until you enable the `direct_access_api` flag, `/direct` returns `501 Not Implemented`. To enable it, add it to the [`flags`][docs-aperture-flags] section of your Aperture configuration:
+启用 `direct_access_api` 标志之前，`/direct` 返回 `501 Not Implemented`。要启用，把它加入 Aperture 配置的 [`flags`][docs-aperture-flags] 段：
 
 ```json
 {
@@ -41,11 +41,11 @@ Until you enable the `direct_access_api` flag, `/direct` returns `501 Not Implem
 }
 ```
 
-### Step 2: Grant direct path access
+### 第 2 步：授予直连路径访问
 
-Aperture is deny-by-default, and the `direct_paths` capability is separate from `models`. A user with full model access still receives `403 Forbidden` from `/direct` until a grant lists a matching direct path.
+Aperture 默认拒绝，`direct_paths` 能力独立于 `models`。拥有完整模型访问权限的用户，在授权列出匹配的直连路径之前，从 `/direct` 收到的仍是 `403 Forbidden`。
 
-Add a `direct_paths` entry to a grant in the [`grants`][docs-aperture-grants] section. Each entry pairs an HTTP method selector with a `provider/path` glob:
+在 [`grants`][docs-aperture-grants] 段的某条授权中添加 `direct_paths` 条目。每个条目由一个 HTTP 方法选择器和一个 `provider/path` glob 组成：
 
 ```json
 {
@@ -62,11 +62,11 @@ Add a `direct_paths` entry to a grant in the [`grants`][docs-aperture-grants] se
 }
 ```
 
-This grant lets `alice@example.com` call the embeddings endpoint on the provider configured under the `openai` key, and nothing else. That account cannot reach image generation, file uploads, or any other path on that provider without a further entry. Start narrow. For the full pattern syntax, refer to [direct path grant syntax][ar-direct-path-grant-syntax].
+这条授权让 `alice@example.com` 能调用 `openai` 键下配置的提供商的 embeddings 端点，仅此而已。没有更多条目时，该账户无法访问图像生成、文件上传或该提供商的任何其他路径。请从窄授权开始。完整的模式语法参阅[直连路径授权语法][ar-direct-path-grant-syntax]。
 
-### Step 3: Send a request
+### 第 3 步：发送请求
 
-Send the request to `/direct/{provider}/{path}`, where `{provider}` is the key of a provider in your `providers` configuration and `{path}` is the path on that provider's API. The client sends no provider credential because Aperture attaches the configured one:
+把请求发送到 `/direct/{provider}/{path}`，其中 `{provider}` 是 `providers` 配置中某个提供商的键，`{path}` 是该提供商 API 上的路径。客户端不发送提供商凭证，因为 Aperture 会附上配置的凭证：
 
 ```shell
 curl http://<aperture-hostname>/direct/openai/v1/embeddings \
@@ -74,97 +74,97 @@ curl http://<aperture-hostname>/direct/openai/v1/embeddings \
   -d '{"model": "text-embedding-3-small", "input": "the quick brown fox"}'
 ```
 
-The response is the provider's own embeddings payload, which no standard Aperture endpoint can produce because embedding models do not use the chat completions API. The model does not need to appear in the provider's `models` list.
+响应是提供商自己的 embeddings 载荷——任何标准 Aperture 端点都无法产生它，因为嵌入模型不使用 chat completions API。该模型不需要出现在提供商的 `models` 列表中。
 
-Aperture identifies the caller from the Tailscale connection, matches the method and path against the caller's `direct_paths` grants, then forwards the request to the provider's base URL. The provider's response body and status code return to the client as sent, apart from the header adjustments described in [request routing and responses][ar-request-routing-and-responses].
+Aperture 从 Tailscale 连接识别调用者，把方法和路径与调用者的 `direct_paths` 授权匹配，然后把请求转发给提供商的 base URL。提供商的响应体和状态码按原样返回给客户端，仅有[请求路由与响应][ar-request-routing-and-responses]中描述的头调整。
 
-### Step 4: Review the direct access logs
+### 第 4 步：查看直接访问日志
 
-Requests that match a grant are logged, including those the provider rejects. Requests that Aperture itself refuses are not. A `501` from a disabled flag and a `403` from the absence of a matching grant do not appear in the log. To review the log:
+匹配授权的请求会被记录，包括提供商拒绝的请求。Aperture 自身拒绝的请求不会记录。禁用标志产生的 `501` 和缺少匹配授权产生的 `403` 不会出现在日志中。查看日志：
 
 \[Missing snippet: aperture\_admin\_nav.mdx]
 
-The log explorer shows one row per request with the time, level, calling identity and tags, provider, status code, method, path, duration, and bytes transferred. Select a time window, then filter with a Go regular expression to narrow results. The default time window covers the last three hours. You can search requests from up to seven days ago.
+日志浏览器为每个请求显示一行，包括时间、级别、调用身份和标签、提供商、状态码、方法、路径、耗时和传输字节数。选择时间窗口后，可用 Go 正则表达式过滤以缩小结果。默认时间窗口覆盖最近三小时，最多可搜索七天前的请求。
 
-This page is admin-only, and it appears in the sidebar only while the `direct_access_api` flag is enabled.
+该页面仅管理员可见，且只在 `direct_access_api` 标志启用时出现在侧边栏。
 
-## Direct path grant syntax
+## 直连路径授权语法
 
-Each entry in `direct_paths` is a method selector and a path glob, separated by whitespace:
+`direct_paths` 中的每个条目是一个方法选择器加一个路径 glob，以空白分隔：
 
 ```text
 METHOD[,METHOD...] PROVIDER/PATH
 ```
 
-The method selector is either `*`, which matches every method, or a comma-separated list of uppercase HTTP methods drawn from `CONNECT`, `DELETE`, `GET`, `HEAD`, `OPTIONS`, `PATCH`, `POST`, `PUT`, and `TRACE`. The selector is required, so a pattern with no method does not validate.
+方法选择器要么是 `*`（匹配所有方法），要么是取自 `CONNECT`、`DELETE`、`GET`、`HEAD`、`OPTIONS`、`PATCH`、`POST`、`PUT`、`TRACE` 的逗号分隔大写 HTTP 方法列表。选择器必填，没有方法的模式无法通过校验。
 
-The path glob is matched against `provider/path`, relative to `/direct`. It uses the same matching as `models` patterns:
+路径 glob 针对 `/direct` 之下的 `provider/path` 匹配，使用与 `models` 模式相同的匹配规则：
 
-| Wildcard             | Matches                                        |
-| -------------------- | ---------------------------------------------- |
-| `*`                  | Exactly one path segment                       |
-| `**`                 | Zero or more path segments                     |
-| `*` within a segment | Any sequence of characters inside that segment |
+| 通配符 | 匹配 |
+| --- | --- |
+| `*` | 恰好一个路径段 |
+| `**` | 零个或多个路径段 |
+| 段内的 `*` | 该段内的任意字符序列 |
 
-The following table shows representative patterns:
+下表展示代表性模式：
 
-| Pattern                             | Effect                                                                     |
-| ----------------------------------- | -------------------------------------------------------------------------- |
-| `POST openai/v1/embeddings`         | Embedding models on one provider                                           |
-| `POST openai/v1/images/generations` | Image models on one provider                                               |
-| `POST */v1/embeddings`              | Embedding models on every configured provider                              |
-| `GET openai/v1/models`              | A single read-only endpoint on one provider                                |
-| `GET,POST anthropic/v1/**`          | Read and write access to every path under `v1` on one provider             |
-| `* */**`                            | Every method, provider, and path. Equivalent to unrestricted direct access |
+| 模式 | 效果 |
+| --- | --- |
+| `POST openai/v1/embeddings` | 单个提供商上的嵌入模型 |
+| `POST openai/v1/images/generations` | 单个提供商上的图像模型 |
+| `POST */v1/embeddings` | 所有已配置提供商上的嵌入模型 |
+| `GET openai/v1/models` | 单个提供商上的一个只读端点 |
+| `GET,POST anthropic/v1/**` | 单个提供商 `v1` 下所有路径的读写访问 |
+| `* */**` | 所有方法、提供商和路径。等同无限制的直接访问 |
 
-A pattern must include a provider segment and at least one path segment. It cannot contain a query string, a fragment, a leading or trailing slash, or an empty segment. Aperture reports invalid patterns as configuration warnings and blocks saves through the admin dashboard or API.
+模式必须包含提供商段和至少一个路径段，不能包含查询字符串、片段、开头或结尾斜杠，也不能有空段。无效模式会被 Aperture 报告为配置警告，并阻止通过管理仪表板或 API 保存。
 
-Grants are additive. A caller's effective direct access is the union of every `direct_paths` entry across every grant whose `src` matches their identity, which follows the model described in [how Aperture grants work][docs-how-grants-work].
+授权是叠加的。调用者的实际直接访问权限，是其身份匹配的所有授权中所有 `direct_paths` 条目的并集，遵循 [Aperture 授权的工作方式][docs-how-grants-work]中描述的模型。
 
-## Request routing and responses
+## 请求路由与响应
 
-Aperture strips the `/direct/{provider}` prefix and joins the remaining path to the provider's configured base URL. Percent-encoded characters are preserved, so a path segment containing `%2F` reaches the provider unchanged. Query strings pass through untouched.
+Aperture 剥掉 `/direct/{provider}` 前缀，把剩余路径拼接到提供商配置的 base URL。百分号编码的字符会保留，因此包含 `%2F` 的路径段原样到达提供商。查询字符串原样透传。
 
-Authentication follows the provider's configured `authorization` and `apikey` settings, identical to a request sent to Aperture's standard endpoints. A provider set to `passthrough` auth mode still accepts a client-supplied credential.
+认证遵循提供商配置的 `authorization` 和 `apikey` 设置，与发送到 Aperture 标准端点的请求完全一致。设为 `passthrough` 认证模式的提供商仍然接受客户端提供的凭证。
 
-Forwarding is a byte-for-byte passthrough with one exception. Aperture removes `Access-Control-*` headers from the provider's response, so a browser client does not receive the provider's CORS headers.
+转发是逐字节的透传，只有一个例外：Aperture 会从提供商的响应中移除 `Access-Control-*` 头，因此浏览器客户端不会收到提供商的 CORS 头。
 
-The endpoint returns the following Aperture-generated responses:
+该端点返回以下 Aperture 生成的响应：
 
-| Status                | Condition                                                                  |
-| --------------------- | -------------------------------------------------------------------------- |
-| `501 Not Implemented` | The `direct_access_api` flag is disabled                                   |
-| `403 Forbidden`       | No `direct_paths` entry in the caller's grants matches the method and path |
-| `404 Not Found`       | The provider ID is not present in the `providers` configuration            |
-| `502 Bad Gateway`     | Aperture could not reach the provider                                      |
+| 状态 | 条件 |
+| --- | --- |
+| `501 Not Implemented` | `direct_access_api` 标志已禁用 |
+| `403 Forbidden` | 调用者的授权中没有匹配方法和路径的 `direct_paths` 条目 |
+| `404 Not Found` | `providers` 配置中不存在该提供商 ID |
+| `502 Bad Gateway` | Aperture 无法连接提供商 |
 
-Any other status comes from the provider.
+其他任何状态都来自提供商。
 
-## Limitations
+## 限制
 
-Direct provider access has the following limitations:
+直接提供商访问有以下限制：
 
-* **No inference processing.** Requests skip model routing, guardrails, hooks, and request and response capture. Model-scoped grants and grant-level `add_headers` entries do not apply. Provider-level `add_headers` still apply.
-* **No usage or cost accounting.** Direct requests do not consume quotas, do not appear in spending reports, and produce no token or cost records. The provider still bills for the work, so spend on embedding and image models reached through `/direct` is invisible to Aperture. A caller with a `direct_paths` grant can also reach a provider's chat endpoints without any budget enforcement.
-* **Observability is limited to metadata.** The direct access log records the identity, provider, method, path, status, duration, byte count, and user agent. It does not record request or response bodies, and it does not emit metrics. Requests that Aperture denies are not recorded at all, so the log is not a source for auditing rejected access attempts.
-* **Grant patterns match paths only.** A `direct_paths` pattern cannot constrain query parameters, headers, or request bodies. Narrow access by method and path, and treat write methods accordingly.
-* **The flag is gateway-wide.** Enabling `direct_access_api` activates `/direct` for every identity whose grants carry `direct_paths`. Scope access through grants, not through the flag.
-* **Logs require the admin role.** Non-admin callers receive `403 Forbidden` from the log API, and the sidebar entry is hidden for them.
+* **无推理处理。** 请求跳过模型路由、防护栏、hook 以及请求与响应抓包。模型范围的授权和授权级 `add_headers` 条目不适用。提供商级 `add_headers` 仍然适用。
+* **无用量或成本统计。** 直接请求不消耗配额、不出现在支出报告中，也不产生 token 或成本记录。提供商仍会对工作量计费，因此通过 `/direct` 访问嵌入和图像模型的支出对 Aperture 不可见。拥有 `direct_paths` 授权的调用者还能在没有任何预算约束的情况下访问提供商的 chat 端点。
+* **可观测性仅限元数据。** 直接访问日志记录身份、提供商、方法、路径、状态、耗时、字节数和 user agent。它不记录请求或响应体，也不发出指标。被 Aperture 拒绝的请求完全不记录，因此该日志不能用于审计被拒的访问尝试。
+* **授权模式只匹配路径。** `direct_paths` 模式无法约束查询参数、请求头或请求体。请按方法和路径从窄控制，并对写方法相应谨慎。
+* **标志作用于整个网关。** 启用 `direct_access_api` 会为授权带有 `direct_paths` 的每个身份激活 `/direct`。请通过授权控制访问范围，而不是靠标志。
+* **日志要求管理员角色。** 非管理员调用者从日志 API 收到 `403 Forbidden`，侧边栏入口对其隐藏。
 
-## Related
+## 相关内容
 
-The following topics cover the configuration sections and concepts that direct provider access depends on:
+以下主题涵盖直接提供商访问依赖的配置段和概念：
 
-* [Aperture configuration][docs-aperture-configuration]: The full configuration reference, including the `grants` and `flags` sections.
-* [How Aperture grants work][docs-how-grants-work]: The grants model, including deny-by-default access and precedence.
-* [Set up providers][docs-set-up-providers]: Configure the providers that `/direct` forwards to.
-* [Observe and export][docs-aperture-observe]: Aperture's logging, reporting, and export options for routed requests.
+* [Aperture 配置][docs-aperture-configuration]：完整配置参考，包括 `grants` 和 `flags` 段。
+* [Aperture 授权的工作方式][docs-how-grants-work]：授权模型，包括默认拒绝访问和优先级。
+* [设置提供商][docs-set-up-providers]：配置 `/direct` 转发到的提供商。
+* [观测与导出][docs-aperture-observe]：Aperture 针对被路由请求的日志、报告和导出选项。
 
-[ar-direct-path-grant-syntax]: #direct-path-grant-syntax
+[ar-direct-path-grant-syntax]: #直连路径授权语法
 
-[ar-limitations]: #limitations
+[ar-limitations]: #限制
 
-[ar-request-routing-and-responses]: #request-routing-and-responses
+[ar-request-routing-and-responses]: #请求路由与响应
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

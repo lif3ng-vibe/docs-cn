@@ -1,64 +1,50 @@
 ---
-title: "Smaller binaries for embedded devices"
-description: "Build an extra-small Tailscale binary for deployment in disk space constrained environments."
+title: "面向嵌入式设备的更小二进制文件"
+description: "构建超小体积的 Tailscale 二进制文件，用于磁盘空间受限的环境。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Tailscale provides downloads for a variety of operating systems and
-architectures on our [downloads page][co-download]. However, there are cases
-where you may want to build an "extra-small" Tailscale binary—one that
-takes up a minimal amount of disk space. One common use case is building for an
-embedded device like an OpenWrt router.
+Tailscale 在[下载页面][co-download]上提供多种操作系统和架构的下载。不过，有些情况下你可能希望构建一个"超小"的 Tailscale 二进制文件——占用磁盘空间极小的版本。一个常见用例是为 OpenWrt 路由器这类嵌入式设备构建。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need to have a Go development environment
-already set up and working.
+开始本指南之前，你需要已经搭建好并可正常使用的 Go 开发环境。
 
-## Step 1: Building Tailscale
+## 第 1 步：构建 Tailscale
 
-First, you can build a version of Tailscale that embeds both the client (the
-`tailscale` binary) and the daemon (the `tailscaled` binary) into a single
-binary. This is similar to how tools like `busybox` work, where the behavior
-of the binary depends on how it's called (specifically, the value of
-`argv[0]`). Essentially: if the file on-disk is named `tailscale`, then the
-binary will behave like the `tailscale` binary, and if it's named `tailscaled`,
-then it'll behave like `tailscaled`.
+首先，你可以构建一个把客户端（`tailscale` 二进制文件）和守护进程（`tailscaled` 二进制文件）都嵌入到同一个二进制文件中的 Tailscale 版本。这类似于 `busybox` 这类工具的工作方式：二进制文件的行为取决于它被调用的方式（具体来说，就是 `argv[0]` 的值）。本质上：如果磁盘上的文件名为 `tailscale`，该二进制文件就会表现为 `tailscale`；如果名为 `tailscaled`，就会表现为 `tailscaled`。
 
-In the [Tailscale repository][xt-gh-tailscale-repo]:
+在 [Tailscale 仓库][xt-gh-tailscale-repo]中：
 
 ```shell
 go build -o tailscale.combined -tags ts_include_cli ./cmd/tailscaled
 ```
 
-Use the `du` (disk usage) command to check the compiled binary size:
+使用 `du`（disk usage）命令查看编译出的二进制文件大小：
 
 ```shell
 du -hs tailscale.combined
 ```
 
-> **Note:**
+> **注意：**
 >
-> The actual size of the output binary will depend on the version of Tailscale
-> and the operating system and architecture it's being built for. Exact sizes are
-> only for illustrative purposes.
+> 输出二进制文件的实际大小取决于 Tailscale 版本以及编译所针对的操作系统和架构。确切数值仅作示例。
 
-By creating symlinks to the combined binary, you can run it as both
-the daemon and the CLI:
+通过创建指向合并二进制文件的符号链接，它可以同时作为守护进程和 CLI 运行：
 
 ```shell
 ln -s tailscale.combined tailscale
 ln -s tailscale.combined tailscaled
 ```
 
-Test your `tailscale` symlink with the `--help` flag:
+用 `--help` 标志测试你的 `tailscale` 符号链接：
 
 ```shell
 ./tailscale --help
 ```
 
-This command should return the help information:
+这条命令应返回帮助信息：
 
 ```shell
 USAGE
@@ -68,13 +54,13 @@ For help on subcommands, add --help after: "tailscale status --help".
  # ... omitted ...
 ```
 
-Test your `tailscaled` symlink with the `--help` flag:
+用 `--help` 标志测试你的 `tailscaled` 符号链接：
 
 ```shell
 ./tailscaled --help
 ```
 
-This command should return the help information:
+这条命令应返回帮助信息：
 
 ```shell
 Usage of ./tailscaled:
@@ -85,75 +71,61 @@ Usage of ./tailscaled:
  # ... omitted ...
 ```
 
-## Step 2: Building a smaller Tailscale binary
+## 第 2 步：构建更小的 Tailscale 二进制文件
 
-In addition to combining both the Tailscale client and daemon into the same
-binary, you can also use the `--extra-small` flag to omit things like debug information and lesser
-used features from the built binary.
+除了把 Tailscale 客户端和守护进程合并到同一个二进制文件之外，你还可以使用 `--extra-small` 标志，在构建出的二进制文件中省略调试信息和较少使用的功能。
 
 ```shell
 build_dist.sh --extra-small
 ```
 
-## Step 3: Compressing Tailscale
+## 第 3 步：压缩 Tailscale
 
-In cases where disk space is a premium, one of the more effective options is to
-use compression. There's a class of tools called "packers", which compress a
-binary on-disk and restore the original uncompressed version of the binary
-when it is run.
+在磁盘空间极其宝贵的情况下，更有效的办法之一是使用压缩。有一类名为"加壳器"（packer）的工具，它们压缩磁盘上的二进制文件，并在运行时还原出未压缩的原始版本。
 
-**Using a packer can be dangerous!** These tools fundamentally change how a
-binary interacts with the operating system in ways that can reduce that
-binary's security. It's beyond the scope of this guide to go into the full
-details, but as a specific example, most packers require that [W^X protection][xt-wikipedia-write-or-execute] be turned off or an executable temporary directory to
-function.
+**使用加壳器可能有危险**！这些工具会从根本上改变二进制文件与操作系统的交互方式，可能降低该二进制文件的安全性。本指南不打算展开全部细节，但举一个具体的例子：大多数加壳器需要关闭 [W^X 保护][xt-wikipedia-write-or-execute]或需要一个可执行的临时目录才能工作。
 
-> **Note:**
+> **注意：**
 >
-> Also, some antivirus software will treat packed binaries as malicious, since this
-> technique is often used by malware to obfuscate what it's doing.
+> 此外，一些杀毒软件会把加壳的二进制文件视为恶意软件，因为恶意软件常用这种技术来混淆自己的行为。
 
-In the case where it's necessary, though, the resulting space savings can be
-impressive. Perhaps the most well-known packer is [UPX][xt-upx], and it can be
-used to compress the Tailscale combined binary that we built above.
+不过在确有需要时，节省的空间可能相当可观。最著名的加壳器之一是 [UPX][xt-upx]，可以用它来压缩上面构建的 Tailscale 合并二进制文件。
 
 ```shell
 go build -o tailscale.combined -tags ts_include_cli -ldflags="-s -w" ./cmd/tailscaled
 ```
 
-Use the `du` command to check the compiled binary size:
+使用 `du` 命令查看编译出的二进制文件大小：
 
 ```shell
 du -hs tailscale.combined
 ```
 
-For example, this returned the following size:
+例如，返回的大小如下：
 
 ```shell
  18M    tailscale.combined
 ```
 
-Next use the `upx` command:
+接下来使用 `upx` 命令：
 
 ```shell
 upx --lzma --best ./tailscale.combined
 ```
 
-Use the `du` command to check the compiled binary size:
+使用 `du` 命令查看编译出的二进制文件大小：
 
 ```shell
 du -hs tailscale.combined
 ```
 
-For example, this returned the following compressed size:
+例如，返回的压缩后大小如下：
 
 ```shell
  4.5M   tailscale.combined
 ```
 
-After UPX compression, we've reduced the size of the (combined) Tailscale
-binary from the original size of 23MiB down to only 4.5MiB, about 20% of the
-original size!
+经过 UPX 压缩，我们把（合并的）Tailscale 二进制文件从原始的 23MiB 缩减到只有 4.5MiB，约为原始大小的 20%！
 
 [co-download]: https://tailscale.com/download
 

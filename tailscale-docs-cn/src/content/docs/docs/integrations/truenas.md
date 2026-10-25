@@ -1,105 +1,105 @@
 ---
-title: "Access TrueNAS SCALE from anywhere"
-description: "Configure the Tailscale client on a TrueNAS SCALE server and securely connect multiple TrueNAS SCALE servers for ZFS replication."
+title: "随时随地访问 TrueNAS SCALE"
+description: "在 TrueNAS SCALE 服务器上配置 Tailscale 客户端，并安全地连接多台 TrueNAS SCALE 服务器以进行 ZFS 复制。"
 ---
 
-Last validated Sep 19, 2025
+最后验证于 Sep 19, 2025
 
-[TrueNAS SCALE][xt-truenas-scale] is a Linux-based network-attached storage (NAS) operating system maintained by [iX Systems][xt-ix-systems]. It provides OpenZFS storage technology and lets users run self-hosted applications, remote offsite backups, and virtual machine management capabilities. You can connect your TrueNAS SCALE server to a Tailscale network (known as a tailnet) and securely configure multiple TrueNAS SCALE servers for ZFS replication.
+[TrueNAS SCALE][xt-truenas-scale] 是由 [iX Systems][xt-ix-systems] 维护的基于 Linux 的网络附加存储（NAS）操作系统。它提供 OpenZFS 存储技术，支持用户运行自托管应用、执行异地远程备份以及管理虚拟机。你可以把 TrueNAS SCALE 服务器接入 Tailscale 网络（即 tailnet），并安全地配置多台 TrueNAS SCALE 服务器进行 ZFS 复制。
 
-> **Note:**
+> **注意：**
 >
-> There are two kinds of TrueNAS offerings. TrueNAS SCALE is the Linux version and is what we recommend for use with Tailscale. TrueNAS SCALE uses our officially supported and maintained [Tailscale Docker image][xt-docker-tailscale].
+> TrueNAS 有两种产品形态。TrueNAS SCALE 是 Linux 版本，也是我们推荐与 Tailscale 搭配使用的版本。TrueNAS SCALE 使用我们官方支持并维护的 [Tailscale Docker 镜像][xt-docker-tailscale]。
 >
-> TrueNAS Core is the BSD version and is not officially supported. The FreeBSD versions of Tailscale for TrueNAS Core is community-maintained, and the client is available in [FreshPorts][xt-freshports-tailscale].
+> TrueNAS Core 是 BSD 版本，不受官方支持。TrueNAS Core 所用的 FreeBSD 版 Tailscale 由社区维护，客户端可在 [FreshPorts][xt-freshports-tailscale] 获取。
 
-## Requirements
+## 环境要求
 
-* At least one TrueNAS SCALE server with administrative access.
-* An existing tailnet with admin access. For instructions, refer to [Tailscale quickstart][docs-install].
-* You must be an [Owner, Admin, or IT admin](/docs/reference/user-roles) of a tailnet for some actions needed in the admin console.
+* 至少一台拥有管理权限的 TrueNAS SCALE 服务器。
+* 一个已有且拥有管理员权限的 tailnet。操作说明请参阅 [Tailscale 快速开始][docs-install]。
+* 若要在管理控制台执行某些操作，你必须是一个 tailnet 的[所有者、管理员或 IT 管理员](/docs/reference/user-roles)。
 
-## Generate authentication keys
+## 生成认证密钥
 
-There are multiple ways of [adding new devices][docs-device-add] to a tailnet. For servers, such as TrueNAS SCALE, we recommend generating and using [authentication (auth) keys][docs-auth-keys]. Specifying an auth key during Tailscale setup will automatically join the device to your tailnet.
+向 tailnet [添加新设备][docs-device-add]有多种方式。对于 TrueNAS SCALE 这类服务器，我们建议生成并使用[认证密钥（auth key）][docs-auth-keys]。在 Tailscale 设置过程中指定认证密钥，设备就会自动加入你的 tailnet。
 
-To generate an auth key:
+生成认证密钥的步骤如下：
 
-1. Go to the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console and select **Generate auth key**.
-2. In the **Description** field, enter a name for the TrueNAS SCALE server.
-3. (Optional) Toggle **Reusable** to on if you want to assign the same auth key to multiple TrueNAS SCALE servers if you plan on adding multiple TrueNAS SCALE server to your tailnet.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面，选择 **Generate auth key**。
+2. 在 **Description** 字段中输入 TrueNAS SCALE 服务器的名称。
+3. （可选）如果你计划向 tailnet 添加多台 TrueNAS SCALE 服务器，并希望多台服务器共用同一个认证密钥，请打开 **Reusable** 开关。
 
-## Install and configure Tailscale
+## 安装并配置 Tailscale
 
-1. Open TrueNAS SCALE and select the **Apps** tab.
-2. Select **Check for available apps**, then find and install the Tailscale app.
+1. 打开 TrueNAS SCALE，选择 **Apps** 选项卡。
+2. 选择 **Check for available apps**，然后找到并安装 Tailscale 应用。
 
-> **Note:**
+> **注意：**
 >
-> If this is not a new set up, the **Check for available apps** button may not appear.
+> 如果这不是全新环境，**Check for available apps** 按钮可能不会出现。
 
-1. Select **Edit** for the Tailscale app.
-2. In the **Auth Key** field, add the authentication key you generated in the previous section.
-3. In the **Hostname** field, enter the hostname for the server in the tailnet.
-4. Check the **Userspace** box.
-5. Select **Save**.
+1. 在 Tailscale 应用上选择 **Edit**。
+2. 在 **Auth Key** 字段中填入你在上一节生成的认证密钥。
+3. 在 **Hostname** 字段中输入该服务器在 tailnet 中的主机名。
+4. 勾选 **Userspace** 复选框。
+5. 选择 **Save**。
 
-You can now verify that your TrueNAS SCALE server is connected to the tailnet in the Tailscale by going to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and verifying that you can find the TrueNAS SCALE server in your tailnet.
+现在你可以在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面确认 TrueNAS SCALE 服务器已连接到 tailnet，即能在 tailnet 中找到这台 TrueNAS SCALE 服务器。
 
-## Route tailnet traffic through TrueNAS
+## 让 tailnet 流量经由 TrueNAS 路由
 
-You can configure TrueNAS SCALE as an [exit node][docs-exit-nodes] to route traffic for other devices in the tailnet through your TrueNAS SCALE server. This is useful when accessing untrusted Wi-Fi in a cafe or using an online service (such as banking) only available in your home country from overseas.
+你可以将 TrueNAS SCALE 配置为[出口节点][docs-exit-nodes]，让 tailnet 中其他设备的流量经由你的 TrueNAS SCALE 服务器路由。当你在咖啡馆使用不可信的 Wi-Fi，或在海外访问仅在祖国可用的在线服务（例如网上银行）时，这会非常有用。
 
-1. Open TrueNAS SCALE.
-   1. Select the **Apps** tab and open the Tailscale app settings.
-   2. Check the **Exit node** box.
-2. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-   1. Locate the TrueNAS SCALE server in the list. It should display the **Exit Node** badge.
-   2. Select the  menu, then select **Edit exit node**.
-   3. Check the **Use as exit node** box, then select **Save**.
+1. 打开 TrueNAS SCALE。
+   1. 选择 **Apps** 选项卡，打开 Tailscale 应用设置。
+   2. 勾选 **Exit node** 复选框。
+2. 打开 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+   1. 在列表中找到 TrueNAS SCALE 服务器，此时应显示 **Exit Node** 徽标。
+   2. 选择  菜单，然后选择 **Edit exit node**。
+   3. 勾选 **Use as exit node** 复选框，然后选择 **Save**。
 
-To allow other devices to use the TrueNAS SCALE server as an exit node, refer to [Use exit nodes][docs-quick-exit-nodes-use].
+要让其他设备使用 TrueNAS SCALE 服务器作为出口节点，请参阅[使用出口节点][docs-quick-exit-nodes-use]。
 
-## Route non-tailnet traffic through TrueNAS
+## 让非 tailnet 流量经由 TrueNAS 路由
 
-You can configure TrueNAS as a [subnet router][docs-subnets] for your tailnet, in cases where you can't install Tailscale on every device on your physical network.
+如果无法在物理网络中的每台设备上都安装 Tailscale，你可以将 TrueNAS 配置为 tailnet 的[子网路由器][docs-subnets]。
 
-1. Open TrueNAS SCALE.
-   1. Select the **Apps** tab and open the Tailscale app settings.
-   2. In the **Route** field, add a CIDR IP range to indicate which subnet will have access to the tailnet such as `192.168.0.0/24`. You can add multiple routes for multiple subnets.
-2. Go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console and locate the TrueNAS server in the list. It should display the **Subnets** badge.
-   1. Select the  menu, then select **Edit subnet routes**.
-   2. Check the IP range boxes that correspond to the subnet routes you want to advertise, then select **Save**.
+1. 打开 TrueNAS SCALE。
+   1. 选择 **Apps** 选项卡，打开 Tailscale 应用设置。
+   2. 在 **Route** 字段中添加一个 CIDR IP 范围，指明哪个子网可以访问 tailnet，例如 `192.168.0.0/24`。你可以为多个子网添加多条路由。
+2. 打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，在列表中找到 TrueNAS 服务器，此时应显示 **Subnets** 徽标。
+   1. 选择  菜单，然后选择 **Edit subnet routes**。
+   2. 勾选与你想通告的子网路由对应的 IP 范围复选框，然后选择 **Save**。
 
-## Configure TrueNAS ZFS replication
+## 配置 TrueNAS ZFS 复制
 
-Configure TrueNAS SCALE settings to allow ZFS replication for backing up files across multiple TrueNAS SCALE servers over your tailnet. This lets you replicate to remote systems without opening ports or routing traffic through bastion servers or proxies using Tailscale's direct device-to-device connections.
+配置 TrueNAS SCALE 设置以启用 ZFS 复制，从而通过 tailnet 在多台 TrueNAS SCALE 服务器之间备份文件。借助 Tailscale 的设备间直连，你无需开放端口，也无需让流量经由堡垒机或代理，即可复制到远程系统。
 
-1. Open TrueNAS SCALE, go to the **Apps** tab, locate the installed Tailscale app, and select **Edit**.
-   1. Uncheck the **Userspace** box and check the **Host Network** box.
-   2. Select **Save**.
-2. Go to the **Network** tab and in the **Interfaces** section, locate `tailscale0` to confirm that rebinding occurred and there is a two-way Tailscale connection between the two TrueNAS SCALE servers.
-3. Go to the **System Settings** tab, and select **General**.
-   1. In the **GUI** section, select **Settings**.
-   2. In the **Web Interface IPv4 Address** field make sure the IP address is `0.0.0.0`.
-   3. Select **Save**.
-4. Go to the **System Settings** tab and select **Services**.
-   1. Locate **SSH**, select the **Edit** icon, and select **Advanced Settings**.
-   2. In the **Bind Interfaces** drop-down, select `tailscale0`.
-   3. Select **Save**.
-5. Go to the **Credentials** tab, then **Backup Credentials**.
-   1. In the **SSH Connections** section, select **Add**.
-   2. In the **Name** field, enter a name to identify the SSH connection.
-   3. In the **Host** field, enter the `100.x.y.z` tailnet address for the TrueNAS SCALE server. This IP address can be found in the [Machines](https://console.tailscale.com/admin/machines) page of the Tailscale admin console.
-   4. Select **Save**.
-6. Go to the **Data Protection** tab. In the **Replication Tasks** section, select **Add**.
-   1. In the **SSH Connections** drop-down box, select the SSH name added in the previous step.
-   2. In the **SSH Transfer Security** section, make sure **Encryption** is selected.
-   3. In the same window, select **Advanced Replication Creation**.
-   4. In the **Transport** drop-down box, select `SSH+NETCAT` to optimize file transfer speed between two TrueNAS SCALE servers.
-   5. Select **Save**.
+1. 打开 TrueNAS SCALE，前往 **Apps** 选项卡，找到已安装的 Tailscale 应用并选择 **Edit**。
+   1. 取消勾选 **Userspace** 复选框，并勾选 **Host Network** 复选框。
+   2. 选择 **Save**。
+2. 前往 **Network** 选项卡，在 **Interfaces** 部分找到 `tailscale0`，确认重新绑定已完成，且两台 TrueNAS SCALE 服务器之间存在双向的 Tailscale 连接。
+3. 前往 **System Settings** 选项卡，选择 **General**。
+   1. 在 **GUI** 部分选择 **Settings**。
+   2. 在 **Web Interface IPv4 Address** 字段中，确保 IP 地址为 `0.0.0.0`。
+   3. 选择 **Save**。
+4. 前往 **System Settings** 选项卡，选择 **Services**。
+   1. 找到 **SSH**，选择 **Edit** 图标，然后选择 **Advanced Settings**。
+   2. 在 **Bind Interfaces** 下拉框中选择 `tailscale0`。
+   3. 选择 **Save**。
+5. 前往 **Credentials** 选项卡，再进入 **Backup Credentials**。
+   1. 在 **SSH Connections** 部分选择 **Add**。
+   2. 在 **Name** 字段中输入一个名称，用于标识这条 SSH 连接。
+   3. 在 **Host** 字段中输入 TrueNAS SCALE 服务器的 `100.x.y.z` tailnet 地址。该 IP 地址可以在 Tailscale 管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中找到。
+   4. 选择 **Save**。
+6. 前往 **Data Protection** 选项卡，在 **Replication Tasks** 部分选择 **Add**。
+   1. 在 **SSH Connections** 下拉框中，选择上一步添加的 SSH 名称。
+   2. 在 **SSH Transfer Security** 部分，确保选中了 **Encryption**。
+   3. 在同一窗口中，选择 **Advanced Replication Creation**。
+   4. 在 **Transport** 下拉框中选择 `SSH+NETCAT`，以优化两台 TrueNAS SCALE 服务器之间的文件传输速度。
+   5. 选择 **Save**。
 
-Special thanks to [Tom Lawrence][xt-tom-x] at [Lawrence Systems][xt-tom-web] for the guidance on this topic.
+特别感谢 [Lawrence Systems][xt-tom-web] 的 [Tom Lawrence][xt-tom-x] 为本主题提供的指导。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

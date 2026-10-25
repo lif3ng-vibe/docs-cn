@@ -1,43 +1,43 @@
 ---
-title: "Change your legacy plan"
-description: "If you are using a legacy plan (Personal Plus, Personal Pro, Starter, Team, Business, Solo, Connectivity, or Security), we encourage you to update to a [current plan][co-pricing]."
+title: "更改你的旧版套餐"
+description: "如果你正在使用旧版套餐（Personal Plus、Personal Pro、Starter、Team、Business、Solo、Connectivity 或 Security），我们建议你更新到[当前套餐][co-pricing]。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-If you are using a legacy plan (Personal Plus, Personal Pro, Starter, Team, Business, Solo, Connectivity, or Security), we encourage you to update to a [current plan][co-pricing].
+如果你正在使用旧版套餐（Personal Plus、Personal Pro、Starter、Team、Business、Solo、Connectivity 或 Security），我们建议你更新到[当前套餐][co-pricing]。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) to update your plan.
+> 你需要是[所有者、管理员或账单管理员](/docs/reference/user-roles)才能更新你的套餐。
 
-## Considerations
+## 注意事项
 
-When migrating your legacy plan, consider the following:
+在迁移旧版套餐时，请注意以下几点：
 
-* Feature availability may change depending on the plan you select.
-* Monthly user counts are calculated at the end of the billing cycle.
-* Charges are prorated based on time spent on each plan during the billing period.
+* 功能可用性可能会因你选择的套餐而变化。
+* 月度用户数在账单周期结束时计算。
+* 费用按你在账单周期内各套餐上使用的时间按比例计算。
 
-For in-depth details about available plans and features, refer to our [Pricing][co-pricing] page.
+有关可用套餐和功能的详细信息，请参阅我们的[定价][co-pricing]页面。
 
-## Migrate your legacy plan
+## 迁移你的旧版套餐
 
-When you migrate from a legacy plan:
+从旧版套餐迁移时：
 
-* You may lose access to features, depending on the plan you are changing.
-* The legacy plan will immediately be canceled, and any credit added to your account.
-* You will start the new plan. At the end of the month, you will pay a prorated amount for the current month.
-* You will be charged as normal the following month.
+* 你可能会失去某些功能的访问权限，具体取决于你切换到的套餐。
+* 旧版套餐会立即取消，任何余额会记入你的账户。
+* 你将开始使用新套餐。月底时，你将按比例支付当月费用。
+* 下个月起将按正常方式收费。
 
-To update your plan:
+要更新你的套餐：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select **Edit current plan**.
-3. Select **Select plan**. Note that not all plans are available for all accounts.
-4. Edit the number of users in your plan, and add any desired add-ons.
-5. Select **Update plan**.
-6. Verify your **Billing email**, **Billing address**, and **Payment method**. Edit these if necessary.
-7. Select **Confirm upgrade**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Edit current plan**。
+3. 选择 **Select plan**。请注意，并非所有套餐对所有账户都可用。
+4. 修改套餐中的用户数量，并添加所需的附加项。
+5. 选择 **Update plan**。
+6. 核对 **Billing email**、**Billing address** 和 **Payment method**，必要时进行修改。
+7. 选择 **Confirm upgrade**。
 
 [co-pricing]: https://tailscale.com/pricing

@@ -1,69 +1,69 @@
 ---
-title: "Taildrop with NAS devices"
-description: "Taildrop lets you send files between your personal devices on a Tailscale network (known as a tailnet)."
+title: "Taildrop 与 NAS 设备"
+description: "Taildrop 让你能在 Tailscale 网络（即 tailnet）上的个人设备之间互传文件。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:** Taildrop is currently in alpha.
+> **注意：** Taildrop 目前处于 alpha 阶段。
 
-> **Note:** Taildrop is available for [all plans](https://tailscale.com/pricing).
+> **注意：** Taildrop 适用于[所有套餐](https://tailscale.com/pricing)。
 
-Taildrop lets you send files between your personal devices on a Tailscale network (known as a tailnet).
+Taildrop 让你能在 Tailscale 网络（即 tailnet）上的个人设备之间互传文件。
 
-Except for network access storage (NAS) devices, Taildrop does not require client setup other than [installing Tailscale][docs-installation]. For NAS devices, additional setup is required, as documented in this topic.
+除网络附加存储（NAS）设备外，Taildrop 无需任何客户端设置，只需[安装 Tailscale][docs-installation] 即可。NAS 设备则需要额外的设置，详见本主题。
 
-## Set up Taildrop on Synology
+## 在 Synology 上设置 Taildrop
 
-If you haven't already, [install Tailscale on your Synology device][docs-synology-manual-installation-steps].
+如果尚未安装，请先[在你的 Synology 设备上安装 Tailscale][docs-synology-manual-installation-steps]。
 
-To set up your Synology device to receive Taildrop files:
+要将你的 Synology 设备设置为接收 Taildrop 文件：
 
-1. In the Synology DSM web UI, go to **Main Menu** > **File Station**.
+1. 在 Synology DSM 网页界面中，前往**主菜单**（Main Menu）> **File Station**。
 
-2. Select **Create** and then select **Create New Shared Folder**.
+2. 选择**新建**（Create），然后选择**新建共享文件夹**（Create New Shared Folder）。
 
-3. In the **Shared Folder Creation Wizard**, use `Taildrop` for the name of the folder.
+3. 在**共享文件夹创建向导**（Shared Folder Creation Wizard）中，将文件夹命名为 `Taildrop`。
 
-4. Set other values per your choice and continue through the wizard until you have created the `Taildrop` Shared Folder.
+4. 按你的需要设置其他选项，继续完成向导，直到创建好 `Taildrop` 共享文件夹。
 
-5. In **File Station**, right-click the `Taildrop` folder and select **Properties**.
+5. 在 **File Station** 中，右键点击 `Taildrop` 文件夹并选择**属性**（Properties）。
 
-6. Select **Permission**.
+6. 选择**权限**（Permission）。
 
-7. Select the **tailscale** system user and select **Edit**. Note that the **tailscale** system user is shown with the name **tailscale**; it is not the name of a user in your tailnet.
+7. 选择 **tailscale** 系统用户，然后选择**编辑**（Edit）。注意，**tailscale** 系统用户显示的名称就是 **tailscale**，它不是你 tailnet 中某个用户的名称。
 
-8. Grant read/write access to **tailscale**.
+8. 授予 **tailscale** 读写权限。
 
-   *（图：Provide read/write access）*
+   *（图：授予读写权限）*
 
-9. Select **Done** and then select **Save**.
+9. 选择**完成**（Done），然后选择**保存**（Save）。
 
-10. After you have completed the above steps, restart Tailscale on your Synology device.
+10. 完成上述步骤后，在你的 Synology 设备上重启 Tailscale。
 
-You should now be able to receive Taildrop files on your Synology device.
+现在，你的 Synology 设备应该可以接收 Taildrop 文件了。
 
-## Set up Taildrop on QNAP
+## 在 QNAP 上设置 Taildrop
 
-If you haven't already, [install Tailscale on your QNAP device][docs-qnap-installation-steps].
+如果尚未安装，请先[在你的 QNAP 设备上安装 Tailscale][docs-qnap-installation-steps]。
 
-To set up your QNAP device to receive Taildrop files:
+要将你的 QNAP 设备设置为接收 Taildrop 文件：
 
-1. Open QNAP File Station.
+1. 打开 QNAP File Station。
 
-2. Select the **New Folder** icon, then select **Shared Folder**.
+2. 选择**新建文件夹**（New Folder）图标，然后选择**共享文件夹**（Shared Folder）。
 
-3. In the **Folder Name** field, enter the folder name `Taildrop`.
+3. 在**文件夹名称**（Folder Name）字段中输入文件夹名称 `Taildrop`。
 
-   *（图：Create a shared Taildrop folder）*
+   *（图：创建共享的 Taildrop 文件夹）*
 
-4. Save your changes.
+4. 保存更改。
 
-You should now be able to receive Taildrop files on your QNAP device.
+现在，你的 QNAP 设备应该可以接收 Taildrop 文件了。
 
-## Receive files with a NAS device
+## 用 NAS 设备接收文件
 
-When devices in your tailnet send files to your NAS device, they will automatically be added to the `Taildrop` folder.
+当 tailnet 中的设备向你的 NAS 设备发送文件时，这些文件会自动添加到 `Taildrop` 文件夹中。
 
 [docs-installation]: /docs/install
 

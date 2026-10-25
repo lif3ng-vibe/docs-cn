@@ -1,41 +1,41 @@
 ---
-title: "Aperture admin dashboard"
-description: "Use the Aperture admin dashboard to monitor organization-wide activity, manage access and spending, and configure your Aperture gateway."
+title: "Aperture 管理仪表板"
+description: "使用 Aperture 管理仪表板监控组织范围的 AI 活动、调查请求、管理访问与支出，并配置你的 Aperture 网关。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Use the Aperture admin dashboard to monitor organization-wide AI activity, investigate requests, manage access and spending, and configure your gateway.
+使用 Aperture 管理仪表板监控组织范围的 AI 活动、调查请求、管理访问与支出，并配置你的网关。
 
 \[Missing snippet: aperture\_open\_dashboard.mdx]
 
-## Access the admin dashboard
+## 访问管理仪表板
 
-You need the Aperture admin role to use the admin dashboard. Other users use [Chat][docs-chat] for conversations and their own activity.
+使用管理仪表板需要 Aperture 管理员角色。其他用户可通过 [Chat][docs-chat] 进行对话并查看自己的活动。
 
-New Aperture gateways initially grant admin access to everyone. Restrict the role before your team starts using Aperture. For instructions, refer to [Set up admin access][docs-set-up-admin-access].
+新建的 Aperture 网关起初会向所有人授予管理员访问权限。请在团队开始使用 Aperture 之前限制该角色。具体说明参阅[设置管理员访问权限][docs-set-up-admin-access]。
 
-## Explore admin capabilities
+## 探索管理能力
 
-Use the admin dashboard to:
+可以使用管理仪表板：
 
-* **Monitor adoption and spending.** Compare usage by user, model, or agent, and review quota balances.
-* **Investigate requests.** Inspect retained captures and tool activity, and review administrative events in audit logs.
-* **Manage access and budgets.** Configure grants, providers, connectors, and spending limits.
-* **Configure the gateway.** Use visual editors for common settings or edit the complete [Aperture configuration][docs-aperture-configuration] as HuJSON.
+* **监控采用情况与支出。** 按用户、模型或智能体比较用量，并查看配额余额。
+* **调查请求。** 检查保留的抓包记录与工具活动，并在审计日志中查看管理事件。
+* **管理访问与预算。** 配置授权（grant）、提供商、连接器与支出限额。
+* **配置网关。** 常用设置使用可视化编辑器，或以 HuJSON 格式编辑完整的 [Aperture 配置][docs-aperture-configuration]。
 
-For page controls and configuration save behavior, refer to the [admin dashboard reference][docs-aperture-admin-dashboard-reference].
+页面控件与配置保存行为的详细信息，参阅[管理仪表板参考][docs-aperture-admin-dashboard-reference]。
 
-## Next steps
+## 后续步骤
 
-* [Grant access to models][docs-grant-model-access].
-* [Set per-user spending limits][docs-set-per-user-spending-limits].
-* [Set a team budget][docs-set-team-budget].
-* [Grant connector access by label][docs-grant-connector-access].
-* [Grant access to MCP tools][docs-grant-mcp-tool-access].
-* [Filter logs by request or response header][docs-filter-logs-by-header].
-* [Export usage data to S3][docs-export-usage-data].
-* [Configure zero-retention mode][docs-configure-zero-retention].
+* [授予模型访问权限][docs-grant-model-access]。
+* [设置每用户支出限额][docs-set-per-user-spending-limits]。
+* [设置团队预算][docs-set-team-budget]。
+* [按标签授予连接器访问权限][docs-grant-connector-access]。
+* [授予 MCP 工具访问权限][docs-grant-mcp-tool-access]。
+* [按请求或响应头筛选日志][docs-filter-logs-by-header]。
+* [将用量数据导出到 S3][docs-export-usage-data]。
+* [配置零保留模式][docs-configure-zero-retention]。
 
 [docs-aperture-admin-dashboard-reference]: /docs/aperture/reference/dashboard-admin
 

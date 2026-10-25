@@ -1,0 +1,39 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "校验已发布 OpenShell 镜像的内容"
+sidebar-title: "校验镜像内容"
+slug: "security/verify-image-contents"
+description: "读取已发布网关与监管器镜像附带的 SBOM 证明，审计每个镜像包含的内容。"
+keywords: "生成式 AI, 网络安全, 供应链, SBOM, 容器镜像"
+position: 2
+---
+import { Aside } from '@astrojs/starlight/components';
+
+已发布的网关与监管器镜像以 OCI 证明（attestation）的形式，为每个平台携带一份 SPDX SBOM。
+
+稳定版发布会在 `0.4.3` 这样的版本标签下发布重新构建的镜像。预发布版晋升时保留其 commit-SHA 镜像标签，这些标签继续标识用于发布验证的镜像。
+
+## 检查镜像
+
+不拉取镜像即可读取某个平台的文档：
+
+```shell
+docker buildx imagetools inspect ghcr.io/nvidia/openshell/gateway:latest --format '{{ json (index .SBOM "linux/amd64").SPDX }}'
+```
+
+列出软件包而非完整文档：
+
+```shell
+docker buildx imagetools inspect ghcr.io/nvidia/openshell/gateway:latest --format '{{ range (index .SBOM "linux/amd64").SPDX.packages }}{{ .name }}@{{ .versionInfo }}{{ println }}{{ end }}'
+```
+
+同样的命令也适用于 `ghcr.io/nvidia/openshell/supervisor`。
+
+## 覆盖范围
+
+每份 SBOM 都列出基础镜像的软件包。Release Dev、Release 与 Pre-release 镜像还会列出编译进其 OpenShell 二进制文件的 Rust crate。
+
+<Aside type="note">
+OpenShell 还发布最小化的 SLSA 来源证明（provenance）。它记录 BuildKit 如何产出该镜像，包括源码修订、构建平台与基础镜像材料，但不含完整来源证明所包含的额外构建参数。
+</Aside>

@@ -1,0 +1,53 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "遥测"
+sidebar-title: "遥测"
+description: "OpenShell 收集哪些匿名遥测数据，以及如何在运行时禁用或在编译期去除。"
+keywords: "生成式 AI, 网络安全, 遥测, 隐私, 退出, Cargo Features, 可观测性"
+---
+
+OpenShell 收集匿名遥测（telemetry）数据以帮助改进项目。数据展示沙箱、提供商与策略工作流的聚合使用情况，不用于追踪个人用户。聚合使用趋势每两周在[社区遥测报告](https://github.com/NVIDIA/OpenShell/tree/main/telemetry)中发布。
+
+## 收集哪些内容
+
+遥测事件仅限于匿名的运营类别与计数，例如沙箱生命周期结果、提供商配置档案分桶、策略判定计数，以及聚合的网络活动拒绝类别。
+
+OpenShell 遥测不收集沙箱名称或 ID、主机名、文件路径、二进制路径、提示词、凭据、提供商名称、模型名称或用户内容。
+
+退出（opt out）只作用于 OpenShell 发出的遥测。你配置并与 OpenShell 一起使用的第三方服务、模型提供商、推理端点、智能体或工具可能有自己的条款与隐私做法。
+
+## 运行时禁用遥测
+
+在网关部署上设置 `OPENSHELL_TELEMETRY_ENABLED=false`。Helm 安装则设置 `server.telemetryEnabled=false`。OpenShell 会把该设置传播到沙箱监管器环境，因此沙箱侧的遥测收集一并禁用。
+
+## 编译期去除遥测
+
+遥测支持是默认开启的 `telemetry` Cargo feature。携带它的每个 crate 还定义了 `defaults-without-telemetry` 别名，涵盖除 `telemetry` 之外的每个默认 feature。用 `--no-default-features --features defaults-without-telemetry` 构建不含遥测的产物：
+
+```shell
+cargo build --release -p openshell-gateway --no-default-features --features defaults-without-telemetry
+cargo build --release -p openshell-sandbox --no-default-features --features defaults-without-telemetry
+cargo build --release -p openshell-driver-vm --no-default-features --features defaults-without-telemetry
+```
+
+得到的二进制不包含遥测端点、遥测 HTTP 客户端与发送代码。遥测被编译去除后，网关不发任何数据，并向它启动的沙箱报告遥测已禁用。
+
+Cargo 无法从默认 feature 集中减去单个 feature，因此 `defaults-without-telemetry` 必须与 `--no-default-features` 搭配。单独传它时默认集保持不变，构建会失败，而不是产出一个仍在发送遥测的二进制。
+
+### 选择计算驱动
+
+网关为其内置计算驱动暴露了独立的 Cargo feature：`compute-driver-kubernetes`、`compute-driver-docker`、`compute-driver-podman`、`compute-driver-vm` 与 `compute-driver-mxc`。先禁用默认 feature 集，然后只启用目标二进制需要的驱动与遥测模式：
+
+```shell
+# Docker only, with telemetry support.
+cargo build --release -p openshell-gateway --no-default-features --features telemetry,compute-driver-docker
+
+# Docker and VM only, with telemetry compiled out.
+cargo build --release -p openshell-gateway --no-default-features --features compute-driver-docker,compute-driver-vm
+
+# Windows MXC only, with telemetry support and prebuilt Z3.
+cargo build --release -p openshell-gateway --no-default-features --features telemetry,compute-driver-mxc,openshell-server/prebuilt-z3
+```
+
+常规构建通过默认的 `in-tree-compute-drivers` 兼容 feature 保留其平台驱动集。在 Windows 上，`compute-driver-mxc` 选择 MXC，其余四个 feature 安装不受支持驱动的桩（stub）。在其他平台上，MXC 被排除。

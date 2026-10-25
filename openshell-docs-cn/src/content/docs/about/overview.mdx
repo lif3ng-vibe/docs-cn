@@ -1,0 +1,65 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "NVIDIA OpenShell 概览"
+sidebar-title: "概览"
+description: "OpenShell 是自主 AI 智能体编队的安全私有运行时。在保护你的数据、凭据与基础设施的沙箱环境中运行智能体。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 安全, 隐私, 提供商凭据"
+position: 1
+---
+import { Aside } from '@astrojs/starlight/components';
+
+NVIDIA OpenShell 是一个开源运行时，用于在具备内核级隔离（kernel-level isolation）的沙箱环境中执行自主 AI 智能体编队。它将沙箱运行时控制与声明式 YAML 策略相结合，让团队无需授予智能体对本地文件、凭据与外部网络的无限访问权，即可运行智能体。
+
+<Aside type="note">
+OpenShell 0.1.x 的新变化：[稳定的发布节奏](/about/support-matrix#发布)、新的[隔离原语](/about/architecture)，以及大幅扩展的[扩展面](/extensibility/overview)等。
+
+所有变更详见[升级指南](/upgrade/0-1-0)。
+</Aside>
+
+## 为什么需要 OpenShell
+
+AI 智能体只有在能读取文件、安装软件包、调用 API 并使用凭据时才能发挥最大价值，而这些访问能力同样会带来实质风险。OpenShell 正是为这一权衡而设计：保留智能体的能力，同时对其可访问的内容实施显式控制。
+
+## 常见风险与控制措施
+
+下表总结了常见故障模式及 OpenShell 的缓解方式。
+
+| 威胁 | 无控制时 | 使用 OpenShell 后 |
+|---|---|---|
+| 数据外泄（data exfiltration） | 智能体将源代码或内部文件上传到未经授权的端点。 | 网络策略仅允许访问批准的目标，其余出站流量一律拒绝。 |
+| 凭据窃取 | 智能体读取 SSH 密钥或云端凭据等本地机密。 | 文件系统限制（Landlock）将访问范围限定在已声明的路径内。 |
+| 未经授权的 API 使用 | 智能体向未经批准的模型提供商发送提示词或数据。 | 提供商配置档案与网络策略将模型流量限制在批准的端点与二进制文件上。 |
+| 权限提升 | 智能体尝试 `sudo`、setuid 路径或危险的系统调用行为。 | 非特权进程身份与 seccomp 限制阻断提升路径。 |
+
+## 防护层一览
+
+OpenShell 在以下策略域上实施纵深防御。
+
+| 层 | 防护内容 | 生效时机 |
+|---|---|---|
+| 文件系统 | 阻止在允许路径之外的读写。 | 沙箱创建时锁定。 |
+| 网络 | 阻止未经授权的出站连接。 | 运行时可热重载。 |
+| 进程 | 阻止权限提升与危险的系统调用。 | 沙箱创建时锁定。 |
+| 提供商凭据 | 仅在配置档案授权的端点解析不透明凭据占位符。 | 挂接、轮换与撤销在运行时更新；新增环境变量需要新进程。 |
+
+详细信息参见[沙箱策略](/how-it-works/policies/overview)与[默认策略](/how-it-works/policies/default-policy)。
+
+## 常见使用场景
+
+OpenShell 支持多种智能体部署模式。
+
+| 使用场景 | 说明 |
+|---|---|
+| 安全编码智能体 | 以受限的文件与网络访问运行 Claude Code、OpenCode、Codex 或 GitHub Copilot CLI。 |
+| 私有企业开发 | 让选定的沙箱访问自托管或私有模型端点，同时保持敏感上下文处于你的掌控之下。 |
+| 合规与审计 | 将策略 YAML 视为可版本化管理的安全控制，供审查与审计。 |
+| 可复用环境 | 使用默认 Ubuntu 工作负载，或自带容器化运行时。 |
+
+## 后续步骤
+
+深入阅读以下主题：
+
+- 了解运行时架构，参见[架构](/about/architecture)。
+- 准备镜像并启动智能体，参见[运行你的第一个智能体](/about/run-your-first-agent)。
+- 了解 OpenShell 如何在各防护层上强制执行策略控制，参见[沙箱策略](/how-it-works/policies/overview)。

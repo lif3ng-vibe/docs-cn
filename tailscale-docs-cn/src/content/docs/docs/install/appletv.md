@@ -1,161 +1,161 @@
 ---
-title: "Install Tailscale on an Apple TV"
-description: "Install the Tailscale client on an Apple TV."
+title: "在 Apple TV 上安装 Tailscale"
+description: "在 Apple TV 上安装 Tailscale 客户端。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-You can add your [Apple TV][xt-apple-appletv] to your Tailscale network (known as a tailnet) to access your media server content remotely, route your Apple TV traffic through an [exit node][docs-exit-nodes], or advertise your Apple TV as an exit node.
+你可以将 [Apple TV][xt-apple-appletv] 添加到 Tailscale 网络（即 tailnet），以便远程访问媒体服务器内容、让 Apple TV 的流量经由[出口节点][docs-exit-nodes]转发，或将 Apple TV 宣告为出口节点。
 
-## Prerequisites
+## 前提条件
 
-* Apple TV with tvOS version 17.0 or later. Version 18.0 or later is recommended.
-* Verify that [Apple TV is configured as a home hub][xt-apple-docs-homehub].
-* An [existing tailnet][docs-install] for connecting your Apple TV with your other devices.
+* 运行 tvOS 17.0 或更高版本的 Apple TV，建议使用 18.0 或更高版本。
+* 确认 [Apple TV 已配置为家庭中枢][xt-apple-docs-homehub]（home hub）。
+* 已有一个[现成的 tailnet][docs-install]，用于将 Apple TV 与你的其他设备相连。
 
-## Install Tailscale on tvOS
+## 在 tvOS 上安装 Tailscale
 
-1. Open tvOS on your Apple TV and select the App Store icon.
+1. 在 Apple TV 上打开 tvOS，选择 App Store 图标。
 
-2. Search for the Tailscale app and select **Get**. You may be prompted to enter your Apple ID password to confirm.
+2. 搜索 Tailscale 应用并选择**获取**（Get）。系统可能提示你输入 Apple ID 密码进行确认。
 
-3. Open the Tailscale app on tvOS. In the **Welcome to Tailscale for tvOS** page, select **Install VPN Configuration**, then select **Allow**.
+3. 在 tvOS 上打开 Tailscale 应用。在 **Welcome to Tailscale for tvOS** 页面中，选择**安装 VPN 配置**（Install VPN Configuration），然后选择**允许**（Allow）。
 
-4. In the Tailscale app interface, select **Connect**.
+4. 在 Tailscale 应用界面中，选择**连接**（Connect）。
 
-5. Use one of the following methods to authenticate the Apple TV to your tailnet:
+5. 使用以下任一方法对 Apple TV 进行认证，将其加入你的 tailnet：
 
-   1. (Recommended) Scan the QR code for authorizing the Apple TV to your tailnet. Alternatively, you can type the URL into your device browser, such as a phone or a computer. You may be prompted to log in if your device needs to be authenticated to the tailnet.
+   1. （推荐）扫描二维码以授权 Apple TV 加入你的 tailnet。你也可以将该 URL 输入手机或电脑等设备的浏览器。如果你的设备尚未通过 tailnet 认证，系统可能会提示你先登录。
 
-   2. Using an iPhone or an iPad, go to the Tailscale admin console and [generate an auth key][docs-auth-keys-generate], then copy the auth key to your device. Using the [Apple TV Remote][xt-appletv-remote] app, select **Use an auth key**, paste the key, then select **Log in**.
+   2. 用 iPhone 或 iPad 打开 Tailscale 管理控制台并[生成认证密钥（auth key）][docs-auth-keys-generate]，然后将该认证密钥复制到设备上。在 [Apple TV Remote][xt-appletv-remote] 应用中，选择**使用认证密钥**（Use an auth key），粘贴密钥，然后选择**登录**（Log in）。
 
-> **Note:**
+> **注意：**
 >
-> If [device approval][docs-device-approval] is enabled, the Apple TV will not be accessible in the tailnet until an administrator approves the device.
+> 如果启用了[设备审批][docs-device-approval]，在管理员批准该设备之前，Apple TV 将无法在 tailnet 中访问。
 
-Once connected to the tailnet, the Tailscale app on the Apple TV will display the app interface, available options, and device information. Also, note that your Apple TV will display in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+连接到 tailnet 后，Apple TV 上的 Tailscale 应用会显示应用界面、可用选项和设备信息。另外请注意，你的 Apple TV 会显示在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中。
 
-## Access remote media servers
+## 访问远程媒体服务器
 
-If you have a media server such as [Plex][xt-apple-plex], [Channels][xt-getchannels], or [JellyFin][xt-jellyfin-docs] on an existing tailnet, you can access the content from your Apple TV. The following instructions assume that the Tailscale app is already installed and configured.
+如果你现有的 tailnet 中有 [Plex][xt-apple-plex]、[Channels][xt-getchannels] 或 [JellyFin][xt-jellyfin-docs] 等媒体服务器，就可以从 Apple TV 访问其中的内容。以下步骤假设 Tailscale 应用已安装并配置完成。
 
-1. Open the Tailscale app on your Apple TV, and select **My Other Devices**.
-2. Locate the media server name of the tailnet (for example, `jellyfin`).
-3. Locate the tailnet DNS name. This can be found on the main page of the Tailscale app and in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console (for example, `pangolin.ts.net`).
-4. Open the media server app on tvOS. When prompted for the media server address, enter the combined media server and tailnet DNS name (for example, `jellyfin.pangolin.ts.net`).
+1. 在 Apple TV 上打开 Tailscale 应用，选择**我的其他设备**（My Other Devices）。
+2. 找到 tailnet 中媒体服务器的名称（例如 `jellyfin`）。
+3. 找到 tailnet 的 DNS 名称。它显示在 Tailscale 应用主页以及管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面中（例如 `pangolin.ts.net`）。
+4. 在 tvOS 上打开媒体服务器应用。当提示输入媒体服务器地址时，输入媒体服务器名称与 tailnet DNS 名称的组合（例如 `jellyfin.pangolin.ts.net`）。
 
-Additional configuration for the media server may be required. For more information about configuring media server apps on Apple TV, consult the documentation for the specific app you are using.
+媒体服务器可能还需要额外配置。有关在 Apple TV 上配置媒体服务器应用的更多信息，请查阅你所使用应用的相应文档。
 
-## Use a device exit node
+## 使用设备出口节点
 
-You can route your Apple TV through a device exit node in your tailnet. This is useful if you would like your Apple TV to appear as if it is connected to the internet, from where the exit node is geographically located.
+你可以让 Apple TV 通过 tailnet 中的设备出口节点转发流量。如果你希望 Apple TV 看起来像是从出口节点所在的地理位置接入互联网，这一功能会很有用。
 
-1. Open the Tailscale app on your Apple TV.
-2. In the **Exit Node** section, select an exit node that you want to route traffic through.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 在**出口节点**（Exit Node）部分，选择想要用来转发流量的出口节点。
 
-When your Apple TV is using another device as an exit node, the active exit node connection will display in blue.
+当 Apple TV 使用其他设备作为出口节点时，生效的出口节点连接会显示为蓝色。
 
-## Use a Mullvad exit node
+## 使用 Mullvad 出口节点
 
-> **Note:**
+> **注意：**
 >
-> This option is only available in the Tailscale app on tvOS if you've already purchased [Mullvad Exit Nodes][docs-mullvad-exit-nodes-use] for your tailnet.
+> 只有当你的 tailnet 已购买 [Mullvad 出口节点][docs-mullvad-exit-nodes-use]时，此选项才会在 tvOS 版 Tailscale 应用中可用。
 
-You can route your Apple TV traffic through a Mullvad exit node in your tailnet. This lets you specify an exit node based on geographical location instead of choosing a tailnet device that is designated as an exit node.
+你可以让 Apple TV 的流量经由 tailnet 中的 Mullvad 出口节点转发。这样你可以按地理位置指定出口节点，而不必选择 tailnet 中被指定为出口节点的设备。
 
-1. Open the Tailscale app on your Apple TV.
-2. Open the **Exit Node** section, then select **Location Based Exit Nodes** > **Location Based**.
-3. Select the Mullvad exit node you want to use.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 打开**出口节点**（Exit Node）部分，然后选择 **Location Based Exit Nodes** > **Location Based**。
+3. 选择你想使用的 Mullvad 出口节点。
 
-When your Apple TV is using a Mullvad exit node, the active exit node connection in the Tailscale app will display in blue.
+当 Apple TV 使用 Mullvad 出口节点时，Tailscale 应用中生效的出口节点连接会显示为蓝色。
 
-## Advertise Apple TV as an exit node
+## 将 Apple TV 宣告为出口节点
 
-You can use your Apple TV as an exit node, and configure other devices in your tailnet to route their traffic through Apple TV. This is useful if you would like to route traffic through your home internet connection when you're away.
+你可以将 Apple TV 用作出口节点，并配置 tailnet 中的其他设备让其流量经由 Apple TV 转发。如果你外出时想让流量经由家中的互联网连接转发，这一功能会很有用。
 
-1. Open the Tailscale app on your Apple TV.
-2. Open the **Exit Node** section, and select **None**.
-3. Select **Run as Exit Node** and confirm.
-4. In your web browser, open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-5. Locate the Apple TV in the list, select the  button, and select **Set up exit node**. Select the **Use as exit node** toggle to enable.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 打开**出口节点**（Exit Node）部分，选择**无**（None）。
+3. 选择**作为出口节点运行**（Run as Exit Node）并确认。
+4. 在网页浏览器中打开管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
+5. 在列表中找到 Apple TV，选择其中的按钮，然后选择**设置出口节点**（Set up exit node）。打开**用作出口节点**（Use as exit node）开关以启用。
 
-When your Apple TV is being used as an exit node:
+当 Apple TV 被用作出口节点时：
 
-* The active exit node connection will display in orange.
-* The Apple TV device will display in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console with the **Exit Node** badge.
+* 生效的出口节点连接会显示为橙色。
+* Apple TV 设备会显示在管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面中，并带有**出口节点**（Exit Node）徽标。
 
-## Advertise Apple TV as a subnet router
+## 将 Apple TV 宣告为子网路由器
 
-Use these instructions if you want Apple TV to act as a [subnet router][docs-subnets] in your tailnet. This lets you remotely access resources on your home network that may not have Tailscale installed, such as a printer.
+如果你想让 Apple TV 在 tailnet 中充当[子网路由器][docs-subnets]，请按照以下步骤操作。这样你可以远程访问家庭网络中可能未安装 Tailscale 的资源，例如打印机。
 
-1. Open the Tailscale app on your Apple TV, and select **Subnet Router**.
-2. Select **Advertise New Route**. A placeholder combined IP address and subnet mask (CIDR) of `192.168.1.0/24` will display. You can accept this default route, edit the route, and add multiple routes to advertise.
+1. 在 Apple TV 上打开 Tailscale 应用，选择**子网路由器**（Subnet Router）。
+2. 选择**宣告新路由**（Advertise New Route）。界面上会显示一个占位的 IP 地址与子网掩码（CIDR）组合 `192.168.1.0/24`。你可以接受这个默认路由、编辑该路由，也可以添加多条要宣告的路由。
 
-When adding or editing an advertised route, you must use the correct CIDR format, such as `192.168.1.0/24`.
+添加或编辑宣告的路由时，必须使用正确的 CIDR 格式，例如 `192.168.1.0/24`。
 
-## Disconnect Apple TV from a tailnet
+## 将 Apple TV 与 tailnet 断开连接
 
-1. Open the Tailscale app on your Apple TV.
-2. At the top of the screen, next to tailnet name, select **Disconnect**.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 在屏幕顶部 tailnet 名称旁边，选择**断开连接**（Disconnect）。
 
-## Stop using another device as an exit node
+## 停止使用其他设备作为出口节点
 
-Use these instruction to stop your Apple TV from using either a tailnet device exit node or a Mullvad location-based exit node.
+按照以下步骤，可以让 Apple TV 停止使用 tailnet 设备出口节点或 Mullvad 基于位置的出口节点。
 
-1. Open the Tailscale app on your Apple TV.
-2. In the **Exit Node** section, select **Disable** next to the exit node currently in use.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 在**出口节点**（Exit Node）部分，选择当前所用出口节点旁边的**停用**（Disable）。
 
-The exit node that you stopped using will continue to display at the top of the screen as **Disabled**. If you no longer want it to be displayed there, select **None**, and the exit node will move back down to the **Exit Nodes In My Tailnet** section.
+停用的出口节点仍会以**已停用**（Disabled）的形式显示在屏幕顶部。如果你不想让它继续显示在那里，请选择**无**（None），该出口节点就会移回**我 tailnet 中的出口节点**（Exit Nodes In My Tailnet）部分。
 
-## Stop using Apple TV as an exit node
+## 停止将 Apple TV 用作出口节点
 
-Use these instructions if you want to stop using Apple TV as an exit node in your tailnet.
+如果你想让 Apple TV 停止在 tailnet 中充当出口节点，请按照以下步骤操作。
 
-1. Open the Tailscale app on your Apple TV.
-2. In the **Exit Node** section, select your Apple TV in the list to turn off exit node usage for the device entirely, or select another exit node to use instead.
-   * If you select the Apple TV and no longer want to use an exit node for the device, select **Disable**.
-   * If you select another exit node to use instead of the Apple TV, select **Stop using as exit node**.
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 在**出口节点**（Exit Node）部分，在列表中选择你的 Apple TV 即可完全关闭该设备的出口节点功能，也可以选择另一个出口节点来代替。
+   * 如果你选择的是 Apple TV 且不再想让该设备使用出口节点，请选择**停用**（Disable）。
+   * 如果你选择其他出口节点来代替 Apple TV，请选择**停止用作出口节点**（Stop using as exit node）。
 
-## Test device latency
+## 测试设备延迟
 
-You can use the ping feature in the Tailscale app to test the latency (connectivity response time) between your Apple TV and other devices in your tailnet.
+你可以使用 Tailscale 应用中的 ping 功能，测试 Apple TV 与 tailnet 中其他设备之间的延迟（连接响应时间）。
 
-1. Open the Tailscale app on your Apple TV.
-2. Select **My Other Devices**.
-3. Select a device currently connected to your tailnet, and select it. This will automatically display a graph with the following information:
+1. 在 Apple TV 上打开 Tailscale 应用。
+2. 选择**我的其他设备**（My Other Devices）。
+3. 选择一台当前已连接到 tailnet 的设备并选中它。界面会自动显示一张图表，其中包含以下信息：
 
-   * The name of the device you are pinging.
-   * The device ping response time in milliseconds.
-   * The device connection type. Typically, you'll first observe a connection that is relayed by way of a [DERP server][docs-derp-servers], then a switch to a direct connection to the device over the tailnet, which is the ideal [connection type][docs-connection-type].
+   * 你正在 ping 的设备的名称。
+   * 该设备的 ping 响应时间（毫秒）。
+   * 该设备的连接类型。通常你会先看到连接经由 [DERP 服务器][docs-derp-servers]中继，随后切换为通过 tailnet 与该设备的直连，这才是理想的[连接类型][docs-connection-type]。
 
-## Troubleshooting
+## 故障排除
 
-The most common reason an Apple TV cannot be accessed is because it has gone to sleep and is not configured as a home hub, which lets it remain connected to the network while in sleep mode. Typically, an Apple TV is automatically configured as a home hub during its initial setup. However, this feature can be disabled if:
+无法访问 Apple TV 最常见的原因是它已进入睡眠状态，且未被配置为家庭中枢（home hub）——家庭中枢能让 Apple TV 在睡眠期间保持网络连接。通常情况下，Apple TV 在初始设置时会自动配置为家庭中枢。但在以下情况下，该功能可能被停用：
 
-* The Apple TV is moved to a different physical location.
-* Significant configuration changes are made to the network.
-* The version of tvOS is version 17. If you're still running tvOS 17, your home devices automatically choose a home hub depending on performance and device availability. This means that your Apple TV might not be automatically configured as a home hub. To check the version of tvOS is installed on an Apple TV, open the Settings app, select **System > Software Updates** and the version will display.
+* Apple TV 被移动到了其他物理位置。
+* 网络发生了重大配置变更。
+* tvOS 版本为 17。如果你仍在运行 tvOS 17，家中的设备会根据性能和设备可用性自动选择家庭中枢，这意味着你的 Apple TV 可能不会被自动配置为家庭中枢。要查看 Apple TV 上安装的 tvOS 版本，请打开设置应用，选择 **System > Software Updates**，即可看到版本信息。
 
-For more information, refer to the Apple topic [Set up your HomePod, HomePod mini, Apple TV, or iPad as a home hub][xt-apple-docs-homehub].
+更多信息请参阅 Apple 的主题文档：[将 HomePod、HomePod mini、Apple TV 或 iPad 设置为家庭中枢][xt-apple-docs-homehub]。
 
-### Configure Apple TV as a home hub
+### 将 Apple TV 配置为家庭中枢
 
-To manually configure Apple TV as a home hub using tvOS version 18 and later:
+在 tvOS 18 及更高版本上手动将 Apple TV 配置为家庭中枢：
 
-1. Open tvOS on your Apple TV and go to **Settings**.
-2. Verify that tvOS is authenticated to an iCloud account by selecting **Users and Accounts**, then select **Default User**, and verify the **iCloud** field contains account information.
-3. From the **Settings** main menu, go to **AirPlay and HomeKit**, select the **HomeKit** field, and designate a room name for the Apple TV. This will automatically designate it as the home hub.
+1. 在 Apple TV 上打开 tvOS，进入**设置**（Settings）。
+2. 依次选择**用户与账户**（Users and Accounts）和**默认用户**（Default User），确认 tvOS 已登录 iCloud 账户，并检查 **iCloud** 字段中是否包含账户信息。
+3. 在**设置**主菜单中进入 **AirPlay 和 HomeKit**，选择 **HomeKit** 字段，为 Apple TV 指定一个房间名称。这样它会自动被指定为家庭中枢。
 
-### Verify Apple TV as a home hub
+### 验证 Apple TV 家庭中枢状态
 
-There are multiple ways of verifying that an Apple TV is configured as a home hub.
+有多种方法可以验证 Apple TV 是否已配置为家庭中枢。
 
-* Put the Apple TV to sleep, then do one of the following:
-  * In a tailnet device using iOS or Android, open the Tailscale app, tap the Apple TV in the device list, and then select the **Ping** option. A screen will display showing ping response information.
-  * If the Apple TV is configured as an exit node use another device in your tailnet to verify that you can still connect to the Apple TV exit node.
-* Open the Home app on an iOS device, go to **Settings**, select **Home Hubs & Bridges**, and look for the Apple TV.
+* 让 Apple TV 进入睡眠状态，然后执行以下任一操作：
+  * 在一台 iOS 或 Android 的 tailnet 设备上打开 Tailscale 应用，在设备列表中点按该 Apple TV，然后选择 **Ping** 选项。屏幕会显示 ping 响应信息。
+  * 如果该 Apple TV 已配置为出口节点，可以用 tailnet 中的另一台设备验证是否仍能连接到这台 Apple TV 出口节点。
+* 在 iOS 设备上打开家庭（Home）应用，进入**设置**，选择**家庭中枢与网桥**（Home Hubs & Bridges），查看其中是否有该 Apple TV。
 
-If none of these options work, try restarting tvOS and verify again.
+如果以上方法都不奏效，请尝试重启 tvOS 后再次验证。
 
 [docs-auth-keys-generate]: /docs/features/access-control/auth-keys#generate-an-auth-key
 

@@ -1,0 +1,864 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "管理沙箱"
+sidebar-title: "概览"
+description: "创建沙箱、理解沙箱隔离，并管理完整的沙箱生命周期。"
+keywords: "生成式 AI, 网络安全, 网关, 沙箱, AI 智能体, 沙箱管理, CLI"
+position: 1
+---
+import { Aside } from '@astrojs/starlight/components';
+
+沙箱（sandbox）是 OpenShell 的数据平面：一个安全、私密的执行环境，AI 智能体在其中运行。每个沙箱将运行时隔离与 OpenShell 策略（policy）控制相结合，防止未经授权的数据访问、凭据（credential）暴露和网络外泄。
+
+<Aside type="note">创建沙箱之前，你需要一个可用的网关（gateway）。</Aside>
+
+## 创建沙箱
+
+一条命令即可创建沙箱。例如，要创建一个运行 Claude 的沙箱，执行：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest -- claude
+```
+
+尾随命令是沙箱的规范主进程（canonical main process）。OpenShell 流式转发其输出并返回其退出状态。默认情况下，退出码 0 会把保留的沙箱留在 `Completed` 状态；非零退出则进入 `Error` 状态并带 `MainProcessFailed` 条件。没有尾随命令时，OpenShell 在保留的伪终端中启动登录 shell：镜像（image）提供 bash 时用 `/bin/bash -l`，否则使用镜像中检测到的 shell，例如 Alpine 等极简基础镜像上的 `/bin/sh`。添加 `--detach` 可在创建沙箱时不挂接（attach）：
+
+```shell
+openshell sandbox create --name worker --detach -- ./worker
+```
+
+不支持前台挂接的驱动会在预置（provision）之前拒绝请求。这类驱动请使用 `--detach`。
+
+使用 `--restart-policy on-failure` 可在主进程非零退出后替换运行时（runtime），使用 `--restart-policy always` 则在每次退出后都替换：
+
+```shell
+openshell sandbox create --name worker --detach --restart-policy on-failure -- ./worker
+```
+
+默认策略为 `never`。终端输出送达后，网关会立即启动第一次替换。反复快速退出会先等待 1 秒，然后将延迟逐次加倍，最长 3 分钟。持续运行 10 秒会重置延迟。替换会启动新的监管器（supervisor）与主进程，并保留沙箱的身份与配置；文件系统持久性遵循计算驱动的停止与启动行为。它不会恢复进程内存或终端历史。
+
+分离（detached）命令没有挂接宽限期。命令退出时，OpenShell 立即记录其终止阶段。对前台命令，创建请求会声明一个预期的 SSH 挂接。OpenShell 保留终端传输通道，直到该连接自然排空并关闭，然后完成临时资源的清理。
+
+使用 `--no-keep` 运行一次性命令。OpenShell 排空 stdout 与 stderr，捕获命令结果，并在命令退出后删除沙箱：
+
+```shell
+openshell sandbox create --no-keep -- sh -c 'echo done; exit 0'
+```
+
+组合 `--detach` 与 `--no-keep` 可运行生命周期完全归网关管理的后台工作负载（workload）：
+
+```shell
+openshell sandbox create --detach --no-keep -- ./worker
+```
+
+创建命令在工作负载就绪后返回。网关让规范进程在没有宿主机侧挂接的情况下持续运行，并在该进程退出后删除沙箱。
+
+`--upload` 暂时不能与尾随主命令组合，因为上传会在规范进程启动之后才完成。可以先创建一个临时沙箱并上传文件，再用 `sandbox exec` 启动工作负载，或者把文件构建进沙箱镜像。
+
+尾随命令最多接受 256 个参数。每个参数上限 32 KiB，所有参数合计上限 256 KiB。更大的输入（例如长系统提示）请用 `sandbox upload` 发送，再在沙箱内读取。
+
+自动化场景下，使用 `--output json` 或 `--output yaml` 可在创建后获得机器可读的沙箱元数据：
+
+```shell
+openshell sandbox create --output json
+```
+
+每个沙箱都需要一个网关。运行沙箱命令之前请先注册或选择网关：
+
+```shell
+openshell gateway add http://127.0.0.1:18080 --local --name local
+openshell gateway select local
+```
+
+### CPU 与内存
+
+使用 `--cpu` 与 `--memory` 设置每个沙箱的 CPU 与内存：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --cpu 2 --memory 4Gi -- claude
+```
+
+CPU 取值使用 Kubernetes 风格的数量表示，如 `500m`、`1` 或 `2.5`。内存取值使用字节量表示，如 `512Mi`、`4Gi` 或 `8G`。
+
+Docker 与 Podman 将这些值作为运行时限制应用。Kubernetes 将每个值同时设为 request 与 limit，使调度器预留的量与沙箱可用的量一致。VM 驱动目前接受这些参数，但不会改变 VM 分配。
+
+### 驱动专属配置
+
+使用 `--driver-config-json` 传入实验性的驱动专属设置。该值必须是以驱动名为键的 JSON 对象。网关只转发其配置的计算驱动对应的块：
+
+每个驱动块内的嵌套键使用 snake_case。顶层信封键是驱动名，例如 `kubernetes`，不属于嵌套 schema。
+
+```shell
+openshell sandbox create \
+  --driver-config-json '{"kubernetes":{"pod":{"runtime_class_name":"kata-containers","node_selector":{"pool":"gpu"}}}}' \
+  -- claude
+```
+
+只对没有稳定 CLI 参数的驱动专属字段使用该方式。`--cpu`、`--memory`、`--gpu` 等稳定参数能覆盖相同行为时，优先使用它们。
+
+### GPU 资源
+
+要请求 GPU 资源，添加 `--gpu`：
+
+```shell
+openshell sandbox create --gpu --from registry.example.com/your-org/gpu-agent:latest -- claude
+```
+
+向 `--gpu` 传入数量即可请求特定数量的 GPU：
+
+```shell
+openshell sandbox create --gpu 2 --from registry.example.com/your-org/gpu-agent:latest -- claude
+```
+
+省略数量时，OpenShell 将请求视为 `--gpu 1`。Kubernetes 通过设置 `nvidia.com/gpu` limit 来满足带数量的 `--gpu` 请求。Docker 与 Podman 按轮询顺序选出所需数量的默认 NVIDIA CDI 设备。VM 网关只接受一个 GPU，`--gpu` 与 `--gpu 1` 皆可；单个 `gpu_device_ids` 条目对两种形式都有效。
+
+对 Docker 沙箱，GPU 注入使用 Docker CDI。如果网关启动之后才启用 Docker CDI，请重启网关，让 OpenShell 能检测到更新后的 Docker 守护进程能力。
+
+Docker 与 Podman 在校验或创建默认 GPU 请求之前会刷新 CDI 清单，因此驱动启动后新增或移除的 CDI 设备可以反映在后续的沙箱创建中。在仅提供 all 设备的 WSL2 运行时上，默认值可以回退到 `nvidia.com/gpu=all`；该回退算作一个可选设备。
+
+精确选择 GPU 设备因驱动而异，且仍需要 `--gpu`。对 Docker 或 Podman，通过 `cdi_devices` 传入 CDI ID。顶层键必须与活动驱动匹配；使用 Podman 时把 `docker` 换成 `podman`。CDI ID 必须是有效的 CDI 限定名（`<vendor>/<class>=<name>`）；宿主机设备路径会被拒绝。显式选择器不限于 NVIDIA 名称。列表不得包含重复 ID，且长度必须与生效的 GPU 数量一致：
+
+```shell
+openshell sandbox create \
+  --gpu \
+  --driver-config-json '{"docker":{"cdi_devices":["nvidia.com/gpu=0"]}}' \
+  -- claude
+```
+
+### 沙箱镜像
+
+不带 `--from` 时，网关使用其配置的默认工作负载镜像。内置默认值为 `nvcr.io/nvidia/base/ubuntu:24.04`。
+
+`--from` 接受显式 OCI 镜像引用或 rootfs tar 归档：
+
+```shell
+openshell sandbox create --from nvcr.io/nvidia/base/ubuntu:24.04
+openshell sandbox create --from my-registry.example.com/my-image:latest
+openshell sandbox create --from ./rootfs.tar
+```
+
+`--from` 不会展开目录别名，也不会构建本地 Dockerfile 或目录。请用本地网关所用的容器引擎构建并标记镜像，然后传入得到的镜像引用：
+
+```shell
+# Docker gateway
+docker build -t my-image:latest .
+openshell sandbox create --from my-image:latest
+
+# Podman gateway
+podman build -t localhost/my-image:latest .
+openshell sandbox create --from localhost/my-image:latest
+```
+
+对远程网关，请把镜像推送到网关可以拉取的镜像仓库（registry），并使用该仓库中的镜像引用。
+
+<Aside type="caution">
+**0.1.0 之前的破坏性变更**：`openshell sandbox create --from ./Dockerfile` 与目录来源不再构建镜像，裸目录名也不再展开。请构建或选择一个镜像，并传入其显式引用。
+</Aside>
+
+#### Rootfs Tar 归档
+
+rootfs tar 归档（`.tar`、`.tar.gz`、`.tgz`）是由 `docker export`、`podman export` 或 `buildah mount` 加 `tar` 生成的扁平文件系统。它让你无需镜像仓库或运行中的镜像守护进程即可创建沙箱：
+
+```shell
+docker create --name export-me my-image:latest
+docker export -o rootfs.tar export-me
+docker rm export-me
+
+openshell sandbox create --from ./rootfs.tar
+```
+
+rootfs tar 来源要求本地网关运行 VM 计算驱动。CLI 向网关申请暂存槽位，把归档写入网关分配的位置，并回传一个一次性令牌；网关将该令牌解析为驱动可用的路径。由于 CLI 直接把归档写入网关宿主机的文件系统，两者必须共享文件系统并以同一用户运行。使用 Docker、Podman 或 Kubernetes 驱动的网关会拒绝 rootfs tar 来源。
+
+Gzip 压缩的归档（`.tar.gz`、`.tgz`）会在网关暂存时解压，因此无论哪种方式，沙箱看到的文件系统都相同。压缩格式从归档内容检测，而不是文件名。
+
+网关限制归档大小（默认 10 GiB，可通过 VM 驱动的 `rootfs_tar_max_bytes` 配置），并在 30 分钟后回收未使用的暂存槽位。上限同样适用于解压后的归档：解压后超出限制的压缩来源会被拒绝。
+
+要在多个沙箱间复用镜像与资源配置，参见[模板](/how-it-works/sandboxes/templates)。
+
+## 默认工作负载镜像
+
+除非网关运维者配置了其他镜像，OpenShell 默认使用 `nvcr.io/nvidia/base/ubuntu:24.04`。该镜像提供最小化的 Ubuntu Noble 用户态，不包含智能体 CLI，也没有烘焙进镜像的 OpenShell 策略。未显式提供策略时，OpenShell 应用其内置的限制性策略。
+
+用默认镜像创建沙箱：
+
+```shell
+openshell sandbox create
+```
+
+用活动计算驱动可见的任意镜像覆盖它：
+
+```shell
+openshell sandbox create --from registry.example.com/agents/my-agent:1.0
+```
+
+参见[默认策略](/how-it-works/policies/default-policy)、[运行你的第一个智能体](/about/run-your-first-agent)与 [bring-your-own-container 示例](https://github.com/NVIDIA/OpenShell/tree/main/examples/bring-your-own-container)。
+
+## 连接到沙箱
+
+挂接到运行中沙箱的规范主进程：
+
+```shell
+openshell sandbox connect my-sandbox
+```
+
+依次按下 `Ctrl-D` 或 `Ctrl-P`，再按 `Ctrl-Q` 即可断开。主进程继续运行，stdin 保持打开。之后执行 `connect` 会挂接到同一进程实例，并回放最近最多 1 MiB 的输出。同一时刻只有一个挂接拥有 stdin。想要一个新的独立 shell 时，请改用 `sandbox exec --tty -- /bin/bash -l`。
+
+已建立的连接中断时（例如笔记本休眠后唤醒），CLI 会获取新的 SSH 会话并重新挂接到同一主进程。瞬态传输故障会重试最多 60 秒。初始认证失败、沙箱生命周期变化与正常 SSH 退出不会重试。
+
+空闲 15 秒无入站流量后，监管器会发送 SSH keepalive 探测；60 秒未收到对端字节（包括中继写入停滞时）则关闭连接。健康的空闲客户端会应答这些探测并保持挂接。超时从监管器最后一次读到对端字节起算；物理网络丢失后，中继缓冲与调度可能延迟检测。挂接失效关闭后，规范进程仍继续运行。
+
+如果恢复先于旧连接释放 stdin 到达沙箱，替换连接会报告 `attached read-only`。旧连接超时后再次输入：若 stdin 可用，替换连接会获取 stdin、报告 `input enabled` 并转发新输入。其他挂接持有 stdin 期间发送的按键会被丢弃。显式只读的挂接保持只读，恢复绝不会取代健康的输入持有者。
+
+`Ctrl-C` 保持常规终端行为，会中断前台进程。对只读挂接，`Ctrl-C` 或 `Ctrl-D` 只退出当前查看者。OpenSSH 的 `~.` 逃逸上报的状态与传输断开相同，因此它会触发自动恢复而不是直接退出。`~.` 之后，等 OpenShell 重新挂接时再用 `Ctrl-D` 或 `Ctrl-P` 加 `Ctrl-Q`；或在 CLI 两次重试之间按 `Ctrl-C` 取消恢复。
+
+直接启动 VS Code 或 Cursor 并进入沙箱工作区：
+
+```shell
+openshell sandbox create --editor vscode --name my-sandbox
+openshell sandbox connect my-sandbox --editor cursor
+```
+
+使用 `--editor` 时，OpenShell 保持沙箱存活，并安装一个 OpenShell 托管的 SSH include 文件，而不是让生成的主机块塞满你的主 `~/.ssh/config`。
+
+## 在沙箱中执行命令
+
+对直接使用 `ExecSandboxInteractive` 的客户端，结束请求流会关闭 stdin 与终端尺寸调整输入。请继续读取响应以排空 stdout/stderr，并接收退出事件和最终 gRPC 状态。输入 EOF 不会立即关闭 SSH 输出通道，也与取消 RPC 不同。使用 PTY 时，关闭输入不等价于发送终端 Ctrl-D 按键。
+
+监管器将每个 exec 通道的待处理 stdin 限制为 4 MiB。当输入到达速度快于命令消费速度且缓冲填满时，后续输入会导致 exec 以退出码 74 失败，监管器会记录 `process stdin buffer is full`。使用 exec 通道的 SSH 文件传输同样受此限制。该限制统计的是等待写入的输入，因此支持更大传输的客户端可以随命令消费数据而继续发送。输入 EOF 会排空已接受的字节；取消 exec 会丢弃待处理输入。
+
+在运行中的沙箱内执行一次性命令，无需打开交互式 shell：
+
+```shell
+openshell sandbox exec -n my-sandbox -- ls -la /workspace
+```
+
+把 stdin 管道接入命令：
+
+```shell
+echo "hello" | openshell sandbox exec -n my-sandbox -- cat
+```
+
+为兼容旧网关，CLI 将较小的管道输入放在单个请求中发送。更大的输入以有界帧流式发送，包括没有 TTY 的命令，因此输入不受网关单条消息请求大小的限制。管道输入上限 4 MiB；更大的文件请使用 `sandbox upload`。CLI 最多等待 200 ms 让管道 stdin 到达 EOF。此后管道仍未关闭时（例如在从不关闭 stdin 的 CI runner 或测试框架下），命令照样启动，剩余输入随到达流式传入。管道到达 EOF 后，CLI 关闭远程 stdin，并继续读取命令输出直到命令结束。命令不需要输入时，请从 `/dev/null` 重定向 stdin。
+
+流式 stdin 超出 4 MiB 限制时，CLI 会报错并警告命令可能已经处理了部分输入。取消不会撤销已做的工作。
+
+命令的退出码会传播给 CLI，因此 `exec` 可用于检查返回码的脚本。大块 stdout 与 stderr 流会在成功退出之前送达。读取慢会对命令形成背压。输出送达失败时，`exec` 返回失败，而不是带着不完整的输出报告成功。命令退出后，若后台进程让 stdout 或 stderr 保持打开超过 30 秒，`exec` 会报告输出送达失败。
+
+最终 gRPC 状态失败也会让 CLI 报告失败，即使远程命令报告的退出码为零。CLI 不会自动重试执行。
+
+带 TTY 运行交互式 shell：
+
+```shell
+openshell sandbox exec -n my-sandbox --tty -- /bin/bash
+```
+
+输入 `exit` 或按 `Ctrl-D` 关闭这个独立 shell。
+
+stdin 与 stdout 都是终端时，OpenShell 自动分配 TTY。用 `--tty` 强制开启，用 `--no-tty` 禁用。
+
+| 参数              | 用途                                                       |
+| ----------------- | ---------------------------------------------------------- |
+| `-n`, `--name`    | 目标沙箱。                                                 |
+| `--workdir`       | 命令在沙箱内的工作目录。                                   |
+| `--timeout`       | 命令超时秒数。`0` 表示禁用超时。                           |
+| `--tty`           | 强制分配 TTY。                                             |
+| `--no-tty`        | 即使连接着终端也禁用 TTY 分配。                            |
+| `--no-login-shell`| 运行命令前不加载 shell 登录启动文件。                      |
+| `--env`           | 为命令设置环境变量（`KEY=VALUE`，可重复）。                |
+
+### 跳过 shell 启动文件
+
+默认情况下 `sandbox exec` 通过登录 shell（`bash -lc`）运行命令，因此沙箱用户的第一个可用的 `.bash_profile`、`.bash_login` 或 `.profile` 会先被加载（`.bashrc` 只有在该登录文件加载它时才会生效）。工具专属的环境配置由此自动可用，适合交互式与工具发现场景。
+
+对需要可预测输出与副作用的自动化和托管检查，传入 `--no-login-shell`，让这些启动文件不在命令运行前加载：
+
+```shell
+openshell sandbox exec -n my-sandbox --no-login-shell -- /usr/local/bin/managed-probe
+```
+
+该模式下，沙箱用户的登录启动文件无法写入命令输出、创建文件或在命令启动前以其他方式影响它。命令仍在 `bash -c` 下运行，若命令环境中设置了 `BASH_ENV` 则会读取它。省略该参数时，默认（登录 shell）行为不变。
+
+## 设置环境变量
+
+创建时向沙箱注入环境变量：
+
+```shell
+openshell sandbox create --env API_KEY=sk-test --env DEBUG=1 -- my-agent
+```
+
+用 `--env` 设置的变量对沙箱内所有进程可见，包括初始命令、交互式 shell 与 exec 命令。
+
+当值应来自 CLI 进程环境而不是出现在 CLI 进程参数中时，使用 `--env-from KEY[=ENVVAR]`。省略 `ENVVAR` 时，OpenShell 读取 `KEY`：
+
+```shell
+export SESSION_TOKEN="..."
+openshell sandbox create --env-from SESSION_TOKEN -- my-agent
+openshell sandbox create --env-from AGENT_TOKEN=SESSION_TOKEN -- my-agent
+```
+
+`--env-from` 只改变 CLI 接收值的方式。结果变量仍然对沙箱内进程可见，与 `--env` 一样。
+
+当 `--env` 的键看起来像凭据（已知提供商（provider）变量，或名字按下划线分段后包含 `TOKEN`、`SECRET`、`PASSWORD`、`CREDENTIAL`、`API_KEY`、`ACCESS_KEY`、`SECRET_KEY` 等凭据词，例如 `DB_TOKEN` 或 `MY_ACCESS_KEY`）时，`sandbox create` 会打印一条非阻塞警告。匹配按完整分段进行，因此 `TOKENIZERS_PARALLELISM`、`PASSWORDLESS_LOGIN` 等无关名字不会触发警告。沙箱内的智能体可以直接读取明文环境值，因此要对智能体隐藏机密（secret），请改用 `--provider`，通过[配置档案（profile）支持的提供商](/how-it-works/providers/profiles)挂接。用 `--no-credential-warnings` 抑制警告。检测只依据键名，绝不检查或打印值。
+
+也可以用 `sandbox exec` 设置每条命令的环境变量：
+
+```shell
+openshell sandbox exec -n my-sandbox --env MY_VAR=hello -- printenv MY_VAR
+```
+
+每命令变量只对该命令覆盖沙箱级环境。
+
+以 `OPENSHELL_` 开头的环境变量名是保留名。键必须匹配 `[A-Za-z_][A-Za-z0-9_]*`。
+
+`sandbox create` 最多接受 128 个变量。每个值上限 8 KiB 且不能包含换行符，所有名字与值合计上限 256 KiB。更大或多行的值请用 `sandbox upload` 发送。
+
+## 为沙箱打标签
+
+创建沙箱时附加标签，用于跟踪归属、环境或工作流分组：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --label env=dev --label team=platform -- claude
+```
+
+只列出匹配标签选择器的沙箱：
+
+```shell
+openshell sandbox list --selector env=dev
+openshell sandbox list --selector env=dev,team=platform
+```
+
+用 `--annotation KEY=VALUE` 存放超出标签限制的非机密元数据，例如文件路径。注解值可以包含 `/`、空格与 `=`，并出现在 `sandbox get -o json` 与 `sandbox list -o json` 的 `annotations` 字段中。
+
+```shell
+openshell sandbox create --annotation "policy-source-file=/home/you/policies/research policy.yaml" -- claude
+```
+
+Python SDK 接受相同的网关标签与选择器。传给 `create` 的标签存储在网关沙箱对象上，并通过 `SandboxRef.labels` 返回，因此基于选择器的列表能找到 Python 创建的沙箱：
+
+```python
+from openshell import SandboxClient
+
+with SandboxClient.from_active_cluster() as client:
+    sandbox = client.create(workspace="default", name="deep-research-1", labels={"env": "dev", "team": "platform"})
+    assert sandbox.labels["team"] == "platform"
+
+    matches = client.list_all(workspace="default", label_selector="env=dev,team=platform")
+    assert sandbox.id in {s.id for s in matches}
+```
+
+Python SDK 的 `list` 方法返回惰性的 `Pager`，每次迭代对网关发出一个请求并产出一个 `Page`。只有想穷举集合时才用 `list_all`；传入 `page_token` 可从先前页面保存的令牌处恢复。
+
+当多次运行需要共享同一工作负载形态时，可通过 Python SDK 创建可复用的沙箱模板（template）：
+
+```python
+from openshell import SandboxClient
+
+with SandboxClient.from_active_cluster() as client:
+    templates = client.sandbox_templates()
+
+    templates.create(
+        workspace="default",
+        name="python",
+        image="registry.example.com/agents/python:latest",
+    )
+
+    sandbox = client.create_from_template(workspace="default", workload_template="python")
+```
+
+非交互式自动化请传入可续期的客户端凭据（client credentials）提供方。省略的 issuer、客户端 ID、受众与 scopes 从活动网关的元数据读取。非回环网关要求 TLS：
+
+```python
+from openshell import ClientCredentialsAuth, SandboxClient
+
+auth = ClientCredentialsAuth(client_secret=lambda: load_secret())
+with SandboxClient.from_active_cluster(client_credentials=auth) as client:
+    sandboxes = client.list_all(workspace="default")
+```
+
+## 暴露长时间运行的服务
+
+服务转发让沙箱内长时间运行的进程可以通过网关管理的 URL 访问。适用于开发服务器、notebook、仪表盘或其他在沙箱启动后持续监听的服务。在沙箱内的回环地址上运行服务，暴露其端口，然后打开 OpenShell 打印的 URL。
+
+沙箱主进程启动服务器时，可在创建沙箱的同时暴露未命名服务：
+
+```shell
+openshell sandbox create \
+  --name my-sandbox \
+  --expose 8080 \
+  --detach \
+  -- python -m http.server 8080 --bind 127.0.0.1
+```
+
+CLI 把未命名端点包含在沙箱创建请求中，并在沙箱达到 `Ready` 后打印其 URL。`--expose` 会让沙箱在创建命令返回后保留，且不能与 `--no-keep` 组合。之后添加或更新端点请使用 `openshell service expose`。
+
+SDK 的 create 方法接受命名或未命名的服务暴露。空服务名选择未命名端点。返回的沙箱包含以这些名字为键的服务 URL 映射；未命名端点用空键：
+
+```python
+from openshell import SandboxClient, ServiceAuthorizationMode, ServiceExposure
+
+with SandboxClient.from_active_cluster() as client:
+    sandbox = client.create(
+        workspace="default",
+        name="app-server",
+        service_exposures=[ServiceExposure(
+            target_port=4500,
+            authorization_mode=ServiceAuthorizationMode.BEARER_PASSTHROUGH,
+        )],
+    )
+    print(sandbox.service_urls[""])
+```
+
+```ts
+const sandbox = await client.sandbox.create({
+  name: 'app-server',
+  image: 'base',
+  serviceExposures: [{
+    targetPort: 4500,
+    authorizationMode: ServiceAuthorizationMode.BearerPassthrough,
+  }],
+})
+console.log(sandbox.serviceUrls[''])
+```
+
+```go
+sandbox, err := client.Sandboxes().Create(
+    ctx, "default", "app-server", spec,
+    v1.WithServiceExposures(v1.ServiceExposure{
+        TargetPort:        4500,
+        AuthorizationMode: v1.ServiceAuthorizationModeBearerPassthrough,
+    }),
+)
+fmt.Println(sandbox.ServiceURLs[""])
+```
+
+```rust
+let sandbox = client.create_sandbox(openshell_sdk::SandboxSpec {
+    name: Some("app-server".into()),
+    service_exposures: vec![openshell_sdk::ServiceExposure {
+        service: String::new(),
+        target_port: 4500,
+        authorization_mode: openshell_sdk::ServiceAuthorizationMode::BearerPassthrough,
+    }],
+    ..Default::default()
+}).await?;
+println!("{}", sandbox.service_urls[""]);
+```
+
+暴露在沙箱内监听回环地址的服务：
+
+```shell
+openshell service expose my-sandbox 8080
+```
+
+传入可选的服务名可创建命名服务 URL：
+
+```shell
+openshell service expose my-sandbox 8080 web
+```
+
+OpenShell 默认会剥离入站的 `Authorization` 头部。若应用自行执行认证，可让服务原样转发一个有效的 Bearer 凭据：
+
+```shell
+openshell service expose my-sandbox 4500 \
+  --authorization-mode bearer-passthrough
+```
+
+创建时暴露则两个参数一起使用：
+
+```shell
+openshell sandbox create \
+  --expose 4500 \
+  --expose-authorization-mode bearer-passthrough \
+  --detach \
+  -- ./authenticated-server
+```
+
+`bearer-passthrough` 模式下，OpenShell 接受零个或一个应用层 `Authorization` 头部。存在时必须包含非空 Bearer 凭据。缺失凭据会到达应用，由它返回自己的认证响应。重复、Basic 与畸形凭据以 `400 Bad Request` 失败。网关与边缘身份头部、代理授权、边缘认证 Cookie 仍然会被剥离。
+
+<Aside type="caution">
+Bearer 透传会把调用方的凭据交给沙箱服务。只有确信该服务可信任接收凭据时才启用。本版本中，暴露的服务仍使用网关监听器及其 TLS 配置。
+</Aside>
+
+例如，Codex App Server 可以把原始能力留在沙箱之外，只接收其 SHA-256 校验值：
+
+```shell
+APP_SERVER_TOKEN="$(openssl rand -hex 32)"
+APP_SERVER_TOKEN_SHA256="$(printf %s "$APP_SERVER_TOKEN" | openssl dgst -sha256 -hex | awk '{print $2}')"
+
+openshell sandbox create \
+  --name codex-server \
+  --env "APP_SERVER_TOKEN_SHA256=$APP_SERVER_TOKEN_SHA256" \
+  --expose 4500 \
+  --expose-authorization-mode bearer-passthrough \
+  --detach \
+  -- codex app-server \
+    --listen ws://127.0.0.1:4500 \
+    --ws-auth capability-token \
+    --ws-token-sha256 "$APP_SERVER_TOKEN_SHA256"
+```
+
+客户端在 WebSocket 握手中发送 `Authorization: Bearer $APP_SERVER_TOKEN`。Codex 的 WebSocket 传输是实验性的，不支持生产工作负载。它在 app-server 的 `initialize` 请求之前完成握手认证。
+
+列出已暴露的端点：
+
+```shell
+openshell service list
+```
+
+列出单个沙箱的端点：
+
+```shell
+openshell service list my-sandbox
+```
+
+自动化请使用结构化输出：
+
+```shell
+openshell service list --output json
+openshell service list my-sandbox --output yaml
+```
+
+结构化列表输出包含 `services` 与 `next_page_token` 字段。每条记录包含 `workspace`、`sandbox`、`service`、`target_port`、`authorization_mode` 与 `url`。未命名服务使用空的 `service` 字符串。把返回的令牌传给 `--page-token` 可继续翻页。空结果的 `services` 集合为空。
+
+查看或删除单个端点：
+
+```shell
+openshell service get my-sandbox web
+openshell service delete my-sandbox web
+```
+
+省略服务名即可管理未命名端点：
+
+```shell
+openshell service get my-sandbox
+openshell service delete my-sandbox
+```
+
+<Aside type="note">
+回环网关返回本地 `openshell.localhost` URL。远程网关在网关监听器上返回 HTTPS URL。服务路由绕过控制平面 RPC 授权，不使用 OIDC 或 CLI 登录。由于本版本中它们共享监听器，监听器的 TLS 配置（包括任何必需的客户端证书）仍然生效。端点上启用的认证由应用自己负责，上游边缘代理也可能应用自己的访问策略。网关服务域配置参见[管理网关](/how-it-works/gateways/overview#配置服务转发)。
+</Aside>
+
+## 监控与调试
+
+列出所有沙箱：
+
+```shell
+openshell sandbox list
+```
+
+需要更窄的视图时，按标签过滤列表：
+
+```shell
+openshell sandbox list --selector team=platform
+```
+
+机器可读输出请用 `-o json` 或 `-o yaml`：
+
+```shell
+openshell sandbox list -o json
+openshell sandbox list -o yaml
+```
+
+结构化列表输出包含 `sandboxes` 与 `next_page_token` 字段。把返回的令牌传给 `--page-token` 可继续翻页。
+
+查看特定沙箱的详细信息。输出会列出**策略来源**（`sandbox` 或 `global`）、**修订版本**（该来源当前生效策略的行版本）以及格式化后的生效策略 YAML：
+
+```shell
+openshell sandbox get my-sandbox
+```
+
+自动化场景请用 `--output json` 或 `--output yaml` 获取机器可读的沙箱详情：
+
+```shell
+openshell sandbox get my-sandbox --output json
+```
+
+脚本场景可只打印策略 YAML（同一生效策略，不含元数据）：
+
+```shell
+openshell sandbox get my-sandbox --policy-only
+```
+
+### 诊断对工具服务器的调用失败
+
+沙箱可以处于 `Ready` 状态，而智能体对外部工具服务器的调用却以 `fetch failed` 失败。运行 `openshell sandbox get my-sandbox`，在 `Tool server connections` 下查看服务器地址、`Last result` 与 `Reported at`。这适用于已配置的 MCP-over-HTTP 端点，且不影响沙箱就绪状态。
+
+JSON 与 YAML 输出包含带 `last_reported_at` 的 `endpoint_statuses` 列表。protobuf API 以 `Sandbox.status.endpoint_statuses[].last_reported_time` 暴露同一时间戳，SDK 会用它自己的时间类型呈现。按地址选择端点；`endpoint_id` 是不透明的。
+
+例如，用 `jq` 选出位于 `tools.example.com`、路径 `/mcp`、端口 `443` 的工具服务器：
+
+```shell
+openshell sandbox get my-sandbox --output json | jq -e \
+  --arg host tools.example.com --arg path /mcp --argjson ports '[443]' '
+  .endpoint_statuses[]
+  | select(.host == $host and .path == $path and .ports == $ports)
+  '
+```
+
+读取 `last_result` 决定下一步检查：
+
+- `NoObservedExchange`：当前配置与监管器会话尚无任何上报。先执行该操作，若没有结果出现再查日志。
+- `HttpResponseReceived`：服务器返回了低于 400 的最终 HTTP 状态，包括协议升级。检查客户端响应中的协议或工具错误，因为 HTTP 200 也可能携带错误。
+- `PolicyDenied`：OpenShell 拒绝了请求，包括 MCP 协议版本、请求头部、请求体与 HTTP 方法的检查。检查沙箱策略与拒绝日志。
+- `CredentialUnavailable`：所需凭据不可用。检查挂接的提供商，并[诊断令牌授予失败](#读取令牌授予失败)。
+- `TlsFailed`：TLS 设置或握手失败。检查证书与 TLS 配置。
+- `TransportFailed`：网络交互失败。检查名称解析、连通性与服务器进程。
+- `UpstreamRejected`：服务器返回 HTTP 400 或更高。检查服务器响应与日志。
+- `Unspecified`：结果无法识别或缺失。不要推断为成功。
+
+例如，停止的服务器可能产生 `TransportFailed`，而沙箱仍保持 `Ready`。恢复后，低于 400 的 HTTP 响应会把结果更新为 `HttpResponseReceived`。
+
+结果来自实际流量且不会过期，因此在观察到新的交互或配置、会话重置之前，一条结果可以比服务器存续更久。上报队列满时会丢弃观测，因此这不是请求历史。重置为 `NoObservedExchange` 后地址仍然保留。要验证当前可用性，请实际执行操作。
+
+`last_reported_at` 是 `last_reported_time` 的 RFC 3339 形式，即网关接受该结果的时刻。结果上报之前为空。每条新接受的观测都会推进它，包括重复的结果；相同上报的重试则不会。
+
+地址使用小写主机名、规范路径与排序去重后的生效端口。等价地址在所有调用方与端口间共享一条记录，因此它并不能证明每一项都正常。在 HTTP 路径已知之前发生的失败（例如 CONNECT 阶段的 TLS 失败）只有在主机与端口能唯一确定一个端点时才会更新状态，否则请检查日志。
+
+### 读取令牌授予失败
+
+OpenShell 无法获得所需令牌时，工作负载会收到带 `x-openshell-request-id` 头部的 HTTP 502。响应不透露原因。如果你能读取该沙箱，检查其最新失败：
+
+```shell
+openshell sandbox get my-sandbox --output json | jq '.last_token_grant_failure'
+```
+
+将 `failure.request_id` 与响应头部对照；更新的失败可能已替换该记录。它标识目标主机与端口、失败码、阶段与恢复动作。提供商与凭据名在已知时会出现；凭据值绝不会出现。
+
+| 恢复动作 | 下一步 |
+|---|---|
+| `reauthorize` | 重新授权该提供商。 |
+| `fix_configuration` | 修复提供商、授予或工作负载身份配置。 |
+| `retry` | 稍后重试。 |
+| `investigate` | 用请求 ID 检查监管器与网关日志。 |
+
+对 MCP-over-HTTP 端点，`Tool server connections` 还会在 `CredentialUnavailable` 下以 `last_failure` 显示原因。凭据失败并不代表远程服务器不健康。
+
+沙箱只保留一条最新失败，不是请求历史。同一目标、提供商与凭据的授予成功会清除它；凭据选择之前的失败会在下一次对该目标的成功授予时清除。策略、提供商与监管器会话的重置同样会清除它。没有失败残留时，JSON/YAML 显示 `null`。
+
+失败码定义与令牌服务行为参见[令牌授予失败](/how-it-works/providers/profiles#令牌授予失败)。
+
+### 查看日志与活动
+
+流式查看沙箱日志，监控智能体活动并诊断策略决策：
+
+```shell
+openshell logs my-sandbox
+```
+
+| 参数       | 用途                     | 示例                               |
+| ---------- | ------------------------ | ---------------------------------- |
+| `--tail`   | 实时流式输出日志         | `openshell logs my-sandbox --tail` |
+| `--source` | 按日志来源过滤           | `--source sandbox`                 |
+| `--level`  | 按严重级别过滤           | `--level warn`                     |
+| `--since`  | 显示时间窗口内的日志     | `--since 5m`                       |
+
+OpenShell Terminal 将沙箱状态与实时日志合并到单个实时仪表盘：
+
+```shell
+openshell term
+```
+
+用该终端发现标记为 `action=deny` 的被阻断连接以及提供商相关的代理活动。连接被意外阻断时，把主机加入网络策略或更新挂接的提供商配置档案。工作流参见[管理沙箱策略](/how-it-works/policies/manage-policies)。
+
+仪表盘有三个纵向堆叠的面板：Gateways、Providers（或 Global Settings）与 Sandboxes。在面板内用 `Up`/`Down` 或 `j`/`k` 移动。到达列表边界时光标会溢出到相邻面板，跳过空面板。用 `Tab`/`Shift+Tab` 直接在面板间循环。在中间面板按 `h`/`l` 或 `Left`/`Right` 可在 Providers 与 Global Settings 标签页之间切换。
+
+沙箱表的 NOTES 列在策略或提供商配置阻塞预置时显示 `Invalid config`。打开沙箱详情视图可查看完整拒绝原因，或运行 `openshell sandbox get <name> -o json`。配置修复后该提示清除；活动的端口转发仍会列出。
+
+在 Sandboxes 面板按 `c` 创建沙箱。可选的 Command 字段中，用引号或反斜杠给包含空格的参数分组。例如 `/bin/sh -c "echo GOOD; read x"` 会打印 `GOOD` 并等待回车。引号无效时表单保持打开，不创建沙箱。该字段不展开变量、不求值 shell 操作符；需要此类行为时请用 `sh -c` 显式调用 shell。
+
+## 端口转发
+
+把本地端口转发到运行中的沙箱，以访问其中的服务，例如 Web 服务器或数据库：
+
+```shell
+openshell forward start 8000 my-sandbox
+openshell forward start 8000 my-sandbox -d    # run in background
+```
+
+只有在转发监听器可达之后，OpenShell 才打印本地 URL。后台转发必须在本地跟踪，`openshell forward list` 与 `openshell forward stop` 才能管理它们。
+
+要把本地侧绑定到 IPv6 回环地址，请以 `[bind_address:]port` 的形式按位置传入。IPv6 地址在 SSH 转发参数与打印的访问 URL 中都带方括号：
+
+```shell
+openshell forward start ::1:8000 my-sandbox
+# Local URL: http://[::1]:8000/
+```
+
+CLI 转发独立于 SSH config 中的 SSH 多路复用设置运行。前台转发随命令退出而结束；只有后台转发会出现在 `forward list` 中。
+
+列出并停止活动的转发：
+
+```shell
+openshell forward list
+openshell forward stop 8000 my-sandbox
+```
+
+从自动化检查被跟踪的转发时，使用 JSON 或 YAML 输出：
+
+```shell
+openshell forward list --output json
+openshell forward list --output yaml
+```
+
+结构化输出包含 `workspace`、`sandbox`、`bind_address`、`port`、`pid` 与 `alive`。`alive` 布尔值报告被跟踪的 PID 是否仍匹配预期的工作区（workspace）作用域 OpenShell SSH 转发与不可变沙箱身份；它不探测被转发的 socket。没有跟踪任何转发时，结构化输出返回空集合。
+
+默认表格只在标准输出与标准错误都是支持 ANSI 的终端时才给 `STATUS` 列着色；对任一流做管道或重定向，或在 `TERM=dumb` 下运行，都会得到纯文本表格。其他带样式的输出（包括 `-v` 日志行、进度指示器、提示与错误消息）按流各自决定，因此重定向其中一个流不影响另一个的样式。自动化场景优先用 `--output json`，不要去匹配表格。把 `NO_COLOR` 设为任意非空值或传 `--color never` 可关闭 ANSI 格式；通过管道送入分页器时用 `--color always` 强制开启。`--color` 适用于所有 `openshell` 命令。
+
+<Aside type="tip">
+也可以在创建时用 `--forward` 转发端口：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --forward 8000 -- claude
+```
+
+</Aside>
+
+## SSH 配置
+
+每个沙箱有自己的 SSH 主机密钥。监管器或容器重启、Pod 重新调度、沙箱停止再启动时，密钥保持不变。删除沙箱会移除其密钥。用同名再创建另一个沙箱会生成不同的密钥。
+
+网关在沙箱创建、查询与列表中通过 `Sandbox.host_key_fingerprint` 返回公钥指纹，在 `CreateSshSessionResponse.host_key_fingerprint` 中亦然。该值使用 OpenSSH 的 `SHA256:<base64>` 格式。请通过经过认证的网关连接读取它，把它固定到沙箱 ID，并拒绝出示不同指纹的 SSH 连接。直接连接监管器 SSH socket 的客户端同样适用。
+
+网关把私钥保存在其凭据存储中，只下发给监管器。沙箱工作负载无法读取该密钥。驱动、网关与监管器必须使用匹配的 OpenShell 版本。较旧的运行时可能返回空指纹；空值无法校验 SSH 服务器的身份。
+
+CLI 与 TUI 继续沿用其现有的 SSH 连接设置。暴露指纹不会在这些客户端中启用自动主机密钥校验。
+
+为沙箱生成 SSH config 条目，让 VS Code Remote-SSH 等工具可以直接连接：
+
+```shell
+openshell sandbox ssh-config my-sandbox
+```
+
+把输出追加到 `~/.ssh/config`，或在 `sandbox create`/`sandbox connect` 上使用 `--editor` 自动完成设置。
+
+## 传输文件
+
+把文件从宿主机上传进沙箱：
+
+```shell
+openshell sandbox upload my-sandbox ./src
+```
+
+上传以有界缓冲流式进行，并等待沙箱消费数据，因此 4 MiB 的进程输入预算不限制上传总大小。要获得此行为，请同时升级 CLI 与你的沙箱所用的监管器运行时。向旧监管器发送文件数据之前，CLI 会报告不支持的上传协议。
+
+上传直接解压到目标位置。取消或失败时，已解压的文件会保留且可能不完整。检查目标后对现有沙箱重试，或删除残留的部分文件。
+
+省略目标时，OpenShell 会探测沙箱的工作目录并把文件上传到那里。对有名称的本地目录，OpenShell 保留其末级目录名，行为与 `scp -r` 和 `cp -r` 一致。该目录已存在时，上传合并进去并覆盖匹配条目，不删除无关条目。
+
+上传过程中 OpenShell 保留符号链接。符号链接在沙箱中仍以符号链接形式到达并保持相同的目标路径，而不是目标文件或目录的展开副本。悬空符号链接同样保留。
+
+对不经 Git 过滤上传的单个文件，已存在的目标目录会收到 `<directory>/<source-basename>`，无论末尾是否带 `/`。指向目标目录的符号链接会被保留，文件写入其目标内部。末尾不带 `/` 且不存在的嵌套目标则用作上传文件的名字。例如 `openshell sandbox upload my-sandbox ./config.json /sandbox/settings.json --no-git-ignore` 会写入 `settings.json`；上传到已存在的 `/sandbox/settings` 目录则写入 `settings/config.json`。成功且未过滤的上传会打印结果路径。经 Git 过滤的上传仍把目标视为目录。
+
+把文件从沙箱下载到宿主机：
+
+```shell
+openshell sandbox download my-sandbox output ./local
+```
+
+沙箱侧来源是单个文件时，目标遵循 `cp` 式的放置规则：目标已是目录或以 `/` 结尾时，文件落入其中成为 `<dest>/<basename>`；否则文件按原样的目标路径写入。
+
+CLI 会探测沙箱的规范工作目录，只允许解析后位于其中的沙箱侧来源。字面逃逸的路径（如 `/etc/passwd` 或 `/sandbox/../etc/passwd`）与经符号链接逃逸的路径会在任何数据传输之前被拒绝。相对来源从工作目录解析；同一规范目录内的绝对来源同样接受。
+
+<Aside type="note">
+也可以在 `openshell sandbox create` 上用 `--upload` 参数在创建时上传文件。多次传 `--upload` 可在单条命令中上传多个路径。此时不能添加尾随命令，因此请在打开的 shell 中运行工作负载，或用 `sandbox exec`：
+
+```shell
+openshell sandbox create --from registry.example.com/your-org/claude-agent:latest --upload ./src:/workspace/src --upload ./config:/workspace/config
+```
+
+</Aside>
+
+默认情况下，Git 仓库内的上传遵循 `.gitignore` 规则，构建产物、依赖缓存与其他被忽略的文件不会被传输。Git 过滤失败或未选中任何文件时，CLI 会停止受影响的上传。CLI 确认来源位于 Git 工作树之外时，会不过滤直接上传，并警告未应用 `.gitignore` 规则。判断过滤是否适用需要安装 Git。损坏或不可访问的仓库会停止上传。有意不过滤上传请传 `--no-git-ignore`。这些规则同时适用于 `sandbox upload` 与 `sandbox create --upload`。
+
+`sandbox create --upload` 在预置沙箱之前先在本地检查每个上传。任何一个上传被拒绝（包括路径缺失或 Git 过滤失败）时，命令以错误退出且不创建沙箱。预置之后传输失败时，沙箱保持运行，先前的上传可能已完成。用 `openshell sandbox upload` 对现有沙箱重试，或用 `openshell sandbox delete` 删除它。只有有意不过滤上传时，才在重试时加 `--no-git-ignore`。
+
+上传保留符号链接（包括悬空链接），而不解引用其目标。符号链接来源绕过 Git 过滤，因此被归档的是链接本身。
+
+## 停止与启动沙箱
+
+想保留沙箱及其持久工作区、又不让容器、Pod 或 VM 继续运行时，停止计算：
+
+```shell
+openshell sandbox stop my-sandbox
+openshell sandbox start my-sandbox
+```
+
+名称可选，默认为最近使用的沙箱。stop 会停止本地后台转发并等待 `Stopped` 阶段。start 会等到同一沙箱回到 `Ready`。停止期间无法连接、执行命令、传输文件、转发端口或访问已暴露的服务。策略、提供商挂接、设置、服务定义与持久工作区数据仍与沙箱关联。
+
+stop 与 start 是幂等的。也可以启动保留的 `Completed` 或 `Error/MainProcessFailed` 沙箱，重新运行其规范命令的新实例。启动新实例会使为先前运行时代次签发的 SSH 会话失效。不再需要保留状态时，正常删除该非活动沙箱即可。
+
+基础设施故障导致沙箱处于 `Error` 时，修复报告的原因，然后依次运行 `sandbox stop` 与 `sandbox start`。启动前先等 stop 成功。在支持重启已停止沙箱的后端上，此操作会保留沙箱及其持久工作区；它无法恢复已删除的资源或存储。
+
+预置超时的情形，等清理完成后直接运行 `sandbox start`。
+
+## 删除沙箱
+
+删除沙箱会停止所有进程、释放资源并清除注入的凭据。
+
+命令可能在清理尚未完成时返回。`deletion accepted` 表示网关已启动删除；如果后续步骤要求删除完成，请持续观察沙箱直到它消失。沙箱已不存在属于成功的无操作，但工作区缺失与授权失败仍是错误。SDK 调用方可以检查[类型化的删除结果](/sdk/api-errors#删除结果)。
+
+```shell
+openshell sandbox delete my-sandbox
+```
+
+在一条命令中列出多个名字即可批量删除沙箱：
+
+```shell
+openshell sandbox delete sandbox-a sandbox-b
+```
+
+多沙箱删除中某个条目失败时，CLI 会报告该沙箱的失败并继续处理其余名字。只要任一条目失败，命令在尝试完所有请求的删除后以错误退出。
+
+## 沙箱生命周期
+
+每个沙箱都经历一组确定的阶段：
+
+工作负载激活之前，OpenShell 校验生效策略与匹配的提供商配置。被拒绝会让工作负载保持未启动，并在 `Provisioning` 阶段暴露 `ConfigurationInvalid` 条件。用 `openshell sandbox get` 查看诊断，然后[修复策略或提供商配置](/how-it-works/policies/manage-policies#新沙箱停留在-provisioning)。启动被阻塞期间管理操作仍然可用。修复之后，监管器无需重建沙箱即可完成启动。启动已停止的沙箱会在运行工作负载前重复配置准入。
+
+镜像准备与监管器初始启动默认有 1800 秒的绝对截止时间，独立于 CLI 等待超时。运维可以在 `[openshell.gateway]` 中把 `image_preparation_timeout_seconds` 设为 1 到 86400 之间的任意值。每次新建或显式启动都会存储自己的截止时间。进度事件、配置编辑与网关或驱动重启都不能延长它。更改网关设置只影响新的尝试。
+
+当前监管器的第一份经过认证的配置报告会结束准备阶段，并开启一个独立的 300 秒准入修复窗口。因此缓慢的镜像下载不会消耗为修复策略保留的时间。准入期间，生效策略、设置、提供商、配置档案或挂接的变更会从其存储的变更时间起重置窗口。该变更首次配置加载失败会再授予一个完整窗口。重复失败、重复报告与重连不会延长它；达到 `Ready` 即清除。
+
+准备超时会把沙箱置为 `Error`，原因为 `ImagePreparationTimedOut`；准入修复超时则用 `ProvisioningTimedOut`。网关停止其工作负载与监管器计算，保留沙箱记录、诊断与可重启的存储。后端不可用时清理可能保持待处理；网关会重试。JSON 输出中的 `provisioning` 可查看当前的 `phase`、`deadline`、原始 `preparation_deadline`、`admission_start_time` 与清理时间戳。TUI 的 NOTES 会标明准备超时，并区分待处理清理与已回收的计算。
+
+调用方断开、截止时间到期或监控失败之后，网关仍会继续运行每个已提交的创建或启动操作。这包括恢复以及自动重启的停止/启动序列。`driver_operation_pending` 为 true 时，显式的启动、停止与删除被阻塞；自动重启保持其时间表并等待。超时清理可以尝试停止部分计算，但在原始驱动调用返回且随后的 stop 成功之前无法宣告完成。这样可以避免观察到计算缺失的 stop 在原始 create 即将完成时放行重试。上传的 rootfs 归档对该归属操作保持可用。
+
+真实的驱动响应会清除 pending 标志，包括普通的拒绝错误。网关保留 `driver_operation_id`，使迟到的响应处理程序无法改变同一预置尝试上更新的恢复工作。两个字段都出现在 `provisioning` JSON 对象中。传输错误之后，后端行为仍遵循驱动现有契约。如果归属网关在记录响应之前崩溃，该标志与任何受保护的上传可能无限期存留；仅凭重启与时间推移无法确认操作已经完成。目前没有 API 能解决这种归属丢失，因此该记录的自动清理完成、重试与删除会一直被阻塞。
+
+`ImagePreparationTimedOut` 时，检查镜像准备与监管器启动诊断，并确认配置的准备预算是否充足。`ProvisioningTimedOut` 时，修复被拒绝的配置。两种情形都要等清理完成，然后显式重启：
+
+```shell
+openshell sandbox get my-sandbox --output json
+openshell sandbox start my-sandbox
+```
+
+超时后编辑配置不会重启计算。显式重试会获得新的准备截止时间与独立的准入修复窗口，而先前激活留下的静态策略限制仍然生效。网关升级时已在进行中的尝试保留其已存储的截止时间。即使是一次性创建，超时记录也会保留；不再需要诊断或已存储状态时，请使用 `sandbox delete`。
+
+| 阶段         | 说明                                                                                                                                                    |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Provisioning | 运行时正在搭建沙箱环境，或网关正在等待沙箱监管器建立其经过认证的控制会话。                                                                               |
+| Ready        | 沙箱正在运行且监管器控制会话已连接。可以连接、执行命令、同步文件并查看日志。                                                                             |
+| Stopping     | 网关已接受停止请求，正在停止计算并保留持久状态。                                                                                                         |
+| Stopped      | 计算已被显式停止，访问不可用。                                                                                                                           |
+| Starting     | 计算正在启动，或选定的主进程重启正在等待退避或新的监管器会话。新会话连接后恢复访问。                                                                     |
+| Completed    | 规范主进程以退出码 0 退出。其规范化结果可在 `status.exit_code` 中查看。                                                                                  |
+| Error        | 规范主进程失败，或沙箱基础设施故障。检查条件原因与 `status.exit_code`。                                                                                  |
+| Deleting     | 沙箱正在被拆除。系统释放资源并清除凭据。                                                                                                                 |
+
+计算后端可能先于沙箱监管器连接网关而就绪。此期间沙箱保持在 `Provisioning`，并报告原因为 `SupervisorNotConnected` 的 `Ready=False` 条件。网关重启后，既有沙箱可能在监管器重连期间暂时回到 `Provisioning`。连接沙箱或执行命令之前，请等待阶段回到 `Ready`。
+
+网关把规范主进程的成功退出记录为原因为 `MainProcessCompleted` 的 `Ready=False` 条件。非零与信号归一化的结果使用 `MainProcessFailed` 与 `Error` 阶段。它还设置 `status.exit_code`；信号退出使用标准的 `128 + signal` 约定。重启策略选择替换时，`status.restart_count` 与 `status.next_restart_time` 显示尝试序号与下一次截止时间。用 `openshell sandbox get <name>` 查看它们。`sandbox stop` 会取消待处理的替换；之后的显式启动会重置重启计数。计算运行时不应用自己的重启策略。
+
+## 沙箱运行时
+
+网关配置的计算驱动决定 OpenShell 如何创建每个沙箱。CLI 工作流在各驱动间保持一致：你通过网关 API 创建、连接、检查与删除沙箱。
+
+Docker、Podman、MicroVM 与 Kubernetes 的行为参见[沙箱运行时](/how-it-works/sandboxes/runtimes)。
+
+## 后续步骤
+
+- 要跟随完整的端到端示例，参见 [GitHub 沙箱](/tutorials/github-push-access)教程。
+- 要选择工作区或了解访问角色，参见[工作区](/how-it-works/workspaces)。
+- 要提供 API 密钥或令牌，参见[管理提供商](/how-it-works/providers/overview)。
+- 要控制智能体可访问的内容，参见[策略](/how-it-works/policies/overview)。
+- 要使用默认运行时镜像，参见[默认工作负载镜像](#默认工作负载镜像)。

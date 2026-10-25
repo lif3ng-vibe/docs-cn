@@ -1,0 +1,191 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "管理网关"
+sidebar-title: "概览"
+description: "注册 OpenShell 网关，在不同环境之间切换，检查网关状态，并排查网关访问问题。"
+keywords: "生成式 AI, 网络安全, 网关, Docker, Podman, Kubernetes, MicroVM, CLI"
+position: 2
+---
+import { Aside } from '@astrojs/starlight/components';
+
+网关（gateway）是 OpenShell 的控制平面。CLI 与运行中的沙箱之间的所有控制平面流量都经由网关流转。
+
+网关负责：
+
+- 预置与管理沙箱，包括创建、删除与状态监控。
+- 存储提供商凭据，并在沙箱启动时交付给沙箱。
+- 向沙箱下发网络与文件系统策略。策略强制执行本身在每个沙箱内部由代理（proxy）、OPA、Landlock 与 seccomp 完成。
+- 为挂接到每个沙箱的提供商解析绑定端点的提供商环境。
+- 提供 SSH 隧道端点，让你无需直接暴露沙箱即可连接到沙箱。
+
+OpenShell 将网关访问与运行沙箱的计算驱动（compute driver）分离开来。通过[安装](/about/installation)安装 OpenShell、选择计算驱动并启动网关。本页介绍网关创建之后如何管理网关条目。
+
+## 网关运行时
+
+网关通过为该网关配置的计算驱动预置沙箱。
+
+| 运行时 | 沙箱运行位置 | 适用场景 |
+|---|---|---|
+| Docker | Docker 守护进程宿主机上的容器。 | 单人开发、快速迭代与单机网关。 |
+| Podman | 网关宿主机上的无根容器。 | 希望避免有根 Docker 守护进程的工作站。 |
+| Kubernetes | operator 管理的集群中的 Pod。 | 共享集群与云环境。 |
+| MicroVM | 由虚拟机支撑的沙箱。 | 需要虚拟机级隔离的工作流。 |
+
+所有计算驱动暴露的网关 API 面完全一致。CLI 注册网关端点之后，沙箱、策略与提供商的使用方式完全相同。差异仅在于网关如何创建沙箱工作负载，以及运维人员如何向用户暴露网关。
+
+<Aside type="tip">
+Docker、Podman、MicroVM 与 Kubernetes 各条路径的驱动安装配置参见[安装](/about/installation)。
+
+</Aside>
+
+## 配置服务转发
+
+网关默认启用沙箱服务路由。用户使用 `openshell service expose` 暴露长期运行的沙箱服务，网关将来自所打印服务 URL 的浏览器流量路由到沙箱内部的回环端口。
+
+回环网关使用 `openshell.localhost` 服务 URL。OpenShell 会打印形如 `http://<sandbox>.openshell.localhost:<port>/` 的 URL；提供服务名时则打印形如 `http://<sandbox>--<service>.openshell.localhost:<port>/` 的 URL。
+
+浏览器流量与受 mTLS 保护的 gRPC 进入同一个网关监听器，但明文 HTTP 仅接受来自回环客户端的请求，且仅限沙箱服务主机名。网关 API、认证路由、健康检查端点以及非服务主机名在明文 HTTP 上始终不可用。跨源请求与同级子域浏览器请求会在到达沙箱服务之前被拒绝。
+
+使用 `--enable-loopback-service-http=false` 或 `OPENSHELL_ENABLE_LOOPBACK_SERVICE_HTTP=false` 可以禁用本地浏览器路径。
+
+自定义 HTTPS 服务域名使用网关服务器的 SAN 配置。在网关证书中加入 `*.apps.example.com` 之类的通配符 DNS SAN，并通过 `--server-san` 或 `OPENSHELL_SERVER_SAN` 将同一 SAN 传给网关。
+
+对于远程或非回环网关，浏览器服务 URL 仍为 HTTPS，并需要正常的网关认证。
+
+## 注册现有网关
+
+使用 `openshell gateway add` 注册任何可达的网关端点，以便 CLI 将其作为操作目标。
+
+注册明文本地端点，例如受信任的端口转发：
+
+```shell
+openshell gateway add http://127.0.0.1:8080 --local --name local
+```
+
+注册位于带认证的反向代理之后的网关：
+
+```shell
+openshell gateway add https://gateway.example.com --name production
+```
+
+网关使用边缘认证时，该命令会打开浏览器进入代理的登录流程。令牌此后过期时，用以下命令重新认证：
+
+```shell
+openshell gateway login production
+```
+
+对于直接 mTLS 端点，将 CLI 客户端证书包放入[网关认证](/how-it-works/gateways/authentication)中介绍的网关凭据目录，然后注册或选择该网关名称。
+
+## 管理多个网关
+
+始终有一个网关是活动网关，所有 CLI 命令默认以它为目标。`gateway add` 会将新网关设为活动网关。
+
+活动网关是持久化保存的默认值。命令解析网关时，`-g` 参数与 `OPENSHELL_GATEWAY` 环境变量可以覆盖它。如果 `OPENSHELL_GATEWAY` 指向另一个网关，`openshell gateway select <name>` 仍会保存新的默认值，并警告当前 shell 会继续使用环境变量的值，直到你 unset 或更新该变量。
+
+安装程序可以为软件包管理的本地服务预置只读网关条目。默认情况下，CLI 从 `/etc/openshell` 读取这些条目，其布局与每用户配置一致：`active_gateway` 加 `gateways/<name>/metadata.json`。软件包在需要时可以用非空绝对路径的 `OPENSHELL_SYSTEM_GATEWAY_DIR` 覆盖该系统配置根目录；空值或相对路径会回退到 `/etc/openshell` 并记录一条警告。这些条目会出现在 `openshell gateway list` 中，并且可以像用户注册一样被选择。`openshell gateway list` 与 `openshell term` 会将每个网关标记为 `user` 或 `system`，让你看清它属于哪一层配置。`openshell gateway remove` 只移除每用户注册。需要遮蔽安装程序提供的默认值时，注册一个同名的每用户网关即可。
+
+列出所有已注册的网关。表格会显示每个网关的端点、类型、配置来源、认证模式，以及远程注册（如有）的远程目标：
+
+```shell
+openshell gateway list
+```
+
+需要完整的本地注册元数据（包括远程注册的 `remote_host` 与 `resolved_host`）时，使用结构化输出：
+
+```shell
+openshell gateway list -o json
+```
+
+切换活动网关：
+
+```shell
+openshell gateway select production
+```
+
+用 `-g` 为单条命令覆盖活动网关：
+
+```shell
+openshell status -g staging
+```
+
+## 检查网关状态
+
+使用 `openshell status` 对网关做实时检查。它独立报告网关可达性、认证状态与网关版本：
+
+```shell
+openshell status
+```
+
+`Status: Connected` 表示公共健康检查端点有响应。`Authentication: Authenticated` 确认所配置的凭据也通过了网关认证层。如果状态保持连接但认证失败，运行 `openshell gateway login <name>` 刷新存储的凭据。
+
+用于自动化或脚本场景时，使用 `--output json` 或 `--output yaml` 获取机器可读输出：
+
+```shell
+openshell status --output json
+```
+
+需要更高权限的运行时详情（例如已初始化的计算驱动与驱动上报的能力版本）时，使用 `openshell gateway info`：
+
+```shell
+openshell gateway info
+```
+
+针对实时运行时信息编写脚本时，使用结构化输出：
+
+```shell
+openshell gateway info -o json
+```
+
+移除本地 CLI 注册但不停止网关服务：
+
+```shell
+openshell gateway remove production
+```
+
+## 排查问题
+
+检查网关健康状况：
+
+```shell
+openshell status
+openshell gateway info
+```
+
+对于基于 Docker 的本地网关，检查 Docker 以及本地工作流启动的网关进程或容器：
+
+```shell
+openshell doctor check
+openshell gateway list
+```
+
+对于 Kubernetes 网关，检查网关工作负载与集群事件：
+
+```shell
+kubectl -n openshell get deployment,statefulset,pods
+kubectl -n openshell logs deployment/openshell -c openshell-gateway --tail=100
+kubectl -n openshell logs statefulset/openshell -c openshell-gateway --tail=100
+kubectl -n openshell get events --sort-by=.lastTimestamp
+```
+
+对于由 systemd 管理的 Podman 或 MicroVM 网关，检查用户服务与日志：
+
+```shell
+systemctl --user status openshell-gateway
+journalctl --user -u openshell-gateway --no-pager -n 50
+```
+
+沙箱启动失败时，检查所选的计算驱动：
+
+| 计算驱动 | 检查内容 |
+|---|---|
+| Docker | Docker 守护进程健康状况、镜像可用性、网关日志与沙箱容器状态。 |
+| Podman | Podman socket 可用性、无根网络、镜像可用性与沙箱容器状态。 |
+| Kubernetes | `server.sandboxNamespace` 所配置命名空间中的事件与沙箱 Pod。 |
+| MicroVM | 虚拟机驱动日志、rootfs 可用性与网关日志。 |
+
+## 后续步骤
+
+- 安装 OpenShell 并选择计算驱动，参见[安装](/about/installation)。
+- 配置工作区成员与角色，参见[工作区](/how-it-works/workspaces)。
+- 通过网关创建沙箱，参见[管理沙箱](/how-it-works/sandboxes/overview)。

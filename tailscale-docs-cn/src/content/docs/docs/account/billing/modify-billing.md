@@ -1,82 +1,82 @@
 ---
-title: "Modify your billing information"
-description: "Billing information is only required for paid plans such as Standard, Premium, and Enterprise. If you're using the Personal plan, no billing details are needed."
+title: "修改你的账单信息"
+description: "账单信息仅 Standard、Premium 和 Enterprise 等付费套餐需要。如果你使用的是 Personal 套餐，则无需账单明细。"
 ---
 
-Last validated Apr 8, 2026
+最后验证于 Apr 8, 2026
 
-Billing information is only required for paid plans such as Standard, Premium, and Enterprise. If you're using the Personal plan, no billing details are needed.
+账单信息仅 Standard、Premium 和 Enterprise 等付费套餐需要。如果你使用的是 Personal 套餐，则无需账单明细。
 
-> **Note:**
+> **注意：**
 >
-> You need to be an [Owner, Admin, or Billing admin](/docs/reference/user-roles) to modify billing information.
+> 你需要是[所有者、管理员或账单管理员](/docs/reference/user-roles)才能修改账单信息。
 >
-> If you purchased Tailscale through a partner program such as AWS Marketplace or Azure Marketplace, update your billing details through the AWS or Azure portal. This billing information is managed in their respective partner portal, not the Tailscale admin console.
+> 如果你通过 AWS Marketplace 或 Azure Marketplace 等合作伙伴计划购买了 Tailscale，请通过 AWS 或 Azure 门户更新账单明细。这些账单信息在其各自的合作伙伴门户中管理，而不是在 Tailscale 管理控制台中。
 
-## Change a payment method
+## 更改付款方式
 
-Update the payment method used for your subscription.
+更新订阅所用的付款方式。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select the **Billing details** tab.
-3. In the **Payment method** section, select **Edit**.
-4. Update your information, and select **Save**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Billing details** 标签页。
+3. 在 **Payment method** 区域，选择 **Edit**。
+4. 更新你的信息，然后选择 **Save**。
 
-## Change the billing email address
+## 更改账单邮箱地址
 
-The billing email determines who receives billing-related communications.
+账单邮箱决定谁来接收与账单相关的邮件。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select the **Billing details** tab.
-3. In the **Payment email** section, select **Edit**.
-4. Update your information, and select **Save**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Billing details** 标签页。
+3. 在 **Payment email** 区域，选择 **Edit**。
+4. 更新你的信息，然后选择 **Save**。
 
-Also note the following:
+另请注意以下几点：
 
-* You can add or modify only one email. To use more than one billing email, contact [Tailscale Support][co-contact-support-billing].
-* You can use an email for an individual that isn't a member of your tailnet. For example, you can add `ap@example.com` for an accounts payable.
-* The billing email address doesn't change who can modify billing information. Only [Admins](/docs/reference/user-roles) or whoever set up billing can modify billing information.
-* If you are paying by credit card subscription and want to change the billing email, update the email for the credit card in the payment method section.
+* 你只能添加或修改一个邮箱。如需使用多个账单邮箱，请联系 [Tailscale 支持团队][co-contact-support-billing]。
+* 你可以使用不属于你的 tailnet 成员的个人邮箱。例如，你可以为应付账款添加 `ap@example.com`。
+* 账单邮箱地址不会改变谁有权修改账单信息。只有[管理员](/docs/reference/user-roles)或最初设置账单的人才能修改账单信息。
+* 如果你使用信用卡订阅付款并想更改账单邮箱，请在付款方式区域更新该信用卡对应的邮箱。
 
-## Change the billing name and address
+## 更改账单姓名和地址
 
-Update the name and address shown on invoices.
+更新发票上显示的姓名和地址。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select the **Billing details** tab.
-3. In the **Name and address** section, select **Edit**.
-4. Update your information, and select **Save**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Billing details** 标签页。
+3. 在 **Name and address** 区域，选择 **Edit**。
+4. 更新你的信息，然后选择 **Save**。
 
-Changes apply only to future invoices and do not affect existing invoices.
+更改仅对之后的发票生效，不影响已有发票。
 
-## Manage tax IDs
+## 管理税务 ID
 
-Tailscale collects applicable US and Canadian taxes on each invoice if your billing address is in a jurisdiction that requires Tailscale to collect sales tax. This specifically applies to our [paid plans][co-pricing] and paid add-ons, such as [Mullvad exit nodes][docs-mullvad-exit-nodes], and is calculated based on tax ID and billing address.
+如果你的账单地址所在的司法管辖区要求 Tailscale 代收销售税，Tailscale 会在每张发票上代收适用的美国和加拿大税款。此规则特别适用于我们的[付费套餐][co-pricing]和付费附加项（例如 [Mullvad 出口节点][docs-mullvad-exit-nodes]），并根据税务 ID 和账单地址计算。
 
-Sales tax does not apply to organizations that have recorded their tax-exempt status with Tailscale. If your organization is tax-exempt or qualifies for an exemption, contact [Tailscale Support][co-contact-support-billing] to send your information and a copy of your valid tax exemption certificate.
+已向 Tailscale 登记免税身份的组织不适用销售税。如果你的组织免税或符合豁免条件，请联系 [Tailscale 支持团队][co-contact-support-billing]，提交你的信息和有效的免税证明副本。
 
-US sales tax applies only to users whose billing address is in a US jurisdiction where taxes are applicable.
+美国销售税仅适用于账单地址位于适用税收的美国司法管辖区的用户。
 
-Canadian sales tax applies only to users whose billing address is in a Canadian jurisdiction where GST/HST is applicable.
+加拿大销售税仅适用于账单地址位于适用 GST/HST 的加拿大司法管辖区的用户。
 
-### Add a tax ID number
+### 添加税务 ID 号码
 
-You can add a maximum of five tax IDs. Once you add a tax ID, it will display on future invoices. Newly added tax IDs cannot be applied to previous invoices.
+你最多可以添加五个税务 ID。添加税务 ID 后，它会显示在之后的发票上。新添加的税务 ID 无法应用于之前的发票。
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select the **Billing details** tab.
-3. In the **Tax IDs** section, select **Add**.
-4. In the **ID Type** drop-down, select your country and tax type, then select **Save**.
-5. In the **ID Type** box, enter the tax ID number, then select **Save**.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Billing details** 标签页。
+3. 在 **Tax IDs** 区域，选择 **Add**。
+4. 在 **ID Type** 下拉框中选择你的国家和税务类型，然后选择 **Save**。
+5. 在 **ID Type** 输入框中输入税务 ID 号码，然后选择 **Save**。
 
-### Delete a tax ID number
+### 删除税务 ID 号码
 
-To delete an existing tax ID number:
+要删除已有的税务 ID 号码：
 
-1. Go to the [Billing](https://console.tailscale.com/admin/settings/billing) page of the admin console.
-2. Select the **Billing details** tab.
-3. In the **Tax IDs** section, locate the tax ID you want to delete, then select **Delete**.
-4. Select **Delete** to confirm.
+1. 前往管理控制台的 [Billing](https://console.tailscale.com/admin/settings/billing) 页面。
+2. 选择 **Billing details** 标签页。
+3. 在 **Tax IDs** 区域找到你想删除的税务 ID，然后选择 **Delete**。
+4. 选择 **Delete** 确认。
 
 [co-contact-support-billing]: https://tailscale.com/contact/support/?type=billing
 

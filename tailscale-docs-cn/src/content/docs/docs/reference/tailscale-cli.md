@@ -1,21 +1,21 @@
 ---
 title: "Tailscale CLI"
-description: "Manage and troubleshoot your tailnet with the Tailscale command-line interface (Tailscale CLI)."
+description: "使用 Tailscale 命令行界面（Tailscale CLI）管理和排查 tailnet 中的设备问题。"
 ---
 
-Last validated Jul 30, 2026
+最后验证于 Jul 30, 2026
 
-The Tailscale client includes a built-in command-line interface (CLI) you can use to manage and troubleshoot your device within your Tailscale network (known as a tailnet).
+Tailscale 客户端内置了命令行界面（CLI），可用于管理和排查你的设备在 Tailscale 网络（即 tailnet）中的问题。
 
-> **Note:** The Tailscale CLI is available for [all plans](https://tailscale.com/pricing).
+> **注意：**Tailscale CLI 适用于[所有套餐](https://tailscale.com/pricing)。
 
-## Using the Tailscale CLI
+## 使用 Tailscale CLI
 
-The location of the CLI varies depending on your platform:
+CLI 的位置因平台而异：
 
 #### Linux
 
-On Linux, the CLI is your primary interface to Tailscale. The `tailscale` binary is likely already in your `$PATH`, so you can run commands with:
+在 Linux 上，CLI 是你使用 Tailscale 的主要界面。`tailscale` 二进制文件通常已在你的 `$PATH` 中，因此你可以这样运行命令：
 
 ```shell
 tailscale <command>
@@ -23,69 +23,69 @@ tailscale <command>
 
 #### macOS
 
-If you use the Standalone variant of the macOS client, you can install the CLI integration from the client settings. This feature requires macOS Ventura 13.0 or later.
+如果你使用 macOS 客户端的 Standalone 变体，可以在客户端设置中安装 CLI 集成。此功能要求 macOS Ventura 13.0 或更高版本。
 
-1. From the Tailscale client, select **Settings**.
-2. Locate CLI integration section, then select **Show me how**.
-3. Select **Install Now** and provide the macOS administrator password.
+1. 在 Tailscale 客户端中，选择 **Settings**。
+2. 找到 CLI 集成（CLI integration）部分，然后选择 **Show me how**。
+3. 选择 **Install Now** 并输入 macOS 管理员密码。
 
-This installs a `tailscale` CLI launcher to `/usr/local/bin/tailscale`, letting you type `tailscale` in the Terminal, without specifying the full path.
+这会把一个 `tailscale` CLI 启动器安装到 `/usr/local/bin/tailscale`，让你可以在终端中直接输入 `tailscale`，无需指定完整路径。
 
-> **Note:**
+> **注意：**
 >
-> If you installed the macOS client through the App Store, the CLI is bundled inside the Tailscale app. Run commands with:
+> 如果你通过 App Store 安装了 macOS 客户端，CLI 打包在 Tailscale 应用内部。请这样运行命令：
 >
 > ```shell
 > /Applications/Tailscale.app/Contents/MacOS/Tailscale <command>
 > ```
 >
-> If you frequently access the Tailscale CLI, you might find it convenient to add an alias to your `.bashrc`, `.zshrc`, or shell config to make it easier.
+> 如果你经常使用 Tailscale CLI，可以在 `.bashrc`、`.zshrc` 或 shell 配置中添加一个别名来简化操作。
 >
 > ```shell
 > alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 > ```
 
-> **Note:**
+> **注意：**
 >
-> Tailscale for macOS includes its CLI within the application executable. When you launch the Tailscale executable, it checks for specific environment variables (like `SHLVL`, `TERM`, `TERM_PROGRAM`, and `PS1`) to decide whether to launch as a macOS app with a windowed interface or as a CLI tool.
+> 适用于 macOS 的 Tailscale 把 CLI 包含在应用可执行文件中。启动 Tailscale 可执行文件时，它会检查特定的环境变量（如 `SHLVL`、`TERM`、`TERM_PROGRAM` 和 `PS1`）来决定是以带窗口界面的 macOS 应用方式启动，还是作为 CLI 工具启动。
 >
-> If you're using the Tailscale CLI in a script (for instance, to parse the output of `tailscale status`), ensure you set the correct environment variables. If your script accidentally opens the macOS app version of Tailscale, you can force your script to run Tailscale as a CLI (instead of the macOS app) by setting the environment variable `TAILSCALE_BE_CLI=1`.
+> 如果你在脚本中使用 Tailscale CLI（例如解析 `tailscale status` 的输出），请确保设置了正确的环境变量。如果你的脚本意外打开了 macOS 应用版的 Tailscale，可以通过设置环境变量 `TAILSCALE_BE_CLI=1`，强制脚本以 CLI 方式（而非 macOS 应用方式）运行 Tailscale。
 
 #### Windows
 
-On Windows, you can access the CLI by executing the `.exe` from the Command Prompt.
+在 Windows 上，你可以在命令提示符中执行 `.exe` 来使用 CLI。
 
 ```powershell
 tailscale <command>
 ```
 
-There is no CLI support for iOS and Android.
+iOS 和 Android 不支持 CLI。
 
-### Tab completion
+### Tab 补全
 
-The Tailscale CLI supports tab-completion for commands, flags, and arguments. You can configure tab-completion with the [`completion` command][ar-completion].
+Tailscale CLI 支持为命令、标志（flag）和参数提供 Tab 补全。你可以用 [`completion` 命令][ar-completion]配置 Tab 补全。
 
 ```shell
 tailscale completion <shell> [--flags] [--descs]
 ```
 
-Select your shell, then follow the instructions to load Tailscale CLI completions.
+选择你的 shell，然后按照说明加载 Tailscale CLI 补全。
 
 #### Bash
 
-To load tab-completions for Bash, run the following command.
+要加载 Bash 的 Tab 补全，请运行以下命令。
 
 ```shell
 source <(tailscale completion bash)
 ```
 
-Run the following command to load completions for every new session on Linux, then reload your shell.
+在 Linux 上运行以下命令为每个新会话加载补全，然后重新加载你的 shell。
 
 ```shell
 tailscale completion bash > /etc/bash_completion.d/tailscale
 ```
 
-Run the following command to load completions for every new session on macOS, then reload your shell.
+在 macOS 上运行以下命令为每个新会话加载补全，然后重新加载你的 shell。
 
 ```shell
 tailscale completion bash > $(brew --prefix)/etc/bash_completion.d/tailscale
@@ -93,15 +93,15 @@ tailscale completion bash > $(brew --prefix)/etc/bash_completion.d/tailscale
 
 #### Zsh
 
-> **Note:**
+> **注意：**
 >
-> You must have shell completion enabled for your Zsh environment.
+> 你的 Zsh 环境必须已启用 shell 补全。
 >
 > ```shell
 > echo "autoload -U compinit; compinit" >> ~/.zshrc
 > ```
 
-Run the following command to load completions for Zsh, then reload your shell.
+运行以下命令加载 Zsh 补全，然后重新加载你的 shell。
 
 ```shell
 tailscale completion zsh > "${fpath[1]}/_tailscale"
@@ -109,7 +109,7 @@ tailscale completion zsh > "${fpath[1]}/_tailscale"
 
 #### Fish
 
-Run the following command to load completions for Fish, then reload your shell.
+运行以下命令加载 Fish 补全，然后重新加载你的 shell。
 
 ```shell
 tailscale completion fish > ~/.config/fish/completions/tailscale.fish
@@ -117,148 +117,148 @@ tailscale completion fish > ~/.config/fish/completions/tailscale.fish
 
 #### PowerShell
 
-Run the following command to load completions for PowerShell.
+运行以下命令加载 PowerShell 补全。
 
 ```powershell
 tailscale completion powershell | Out-String | Invoke-Expression
 ```
 
-Run the following command, then source `tailscale.ps1` from your PowerShell profile to load completions for every new session.
+运行以下命令，然后在 PowerShell 配置文件中 source `tailscale.ps1`，即可为每个新会话加载补全。
 
 ```powershell
 tailscale completion powershell > tailscale.ps1
 ```
 
-## Command Reference
+## 命令参考
 
-Common flags for all commands:
+所有命令的通用标志：
 
-* `--socket=<path>` Path to the tailscaled socket.
+* `--socket=<path>` tailscaled 套接字（socket）的路径。
 
 ### up
 
-Connect your device to Tailscale and authenticate if needed.
+将设备连接到 Tailscale，并在需要时进行认证。
 
 ```shell
 tailscale up [flags]
 ```
 
-Running `tailscale up` without any flags connects to Tailscale.
+不带任何标志运行 `tailscale up` 会连接到 Tailscale。
 
-Common flags:
+常用标志：
 
-* `--accept-routes` Accept [subnet routes][docs-subnets] that other nodes advertise. The default depends on the host operating system. For certain platforms - Windows, iOS, Android, the macOS App Store variant, and the macOS standalone variant - the default is to accept routes. All other platforms default to not accepting routes.
-* `--advertise-exit-node` Offer to be an [exit node][docs-exit-nodes] for outbound internet traffic from the Tailscale network. Defaults to not offering to be an exit node.
-* `--advertise-routes=<ip>` Expose physical [subnet routes][docs-subnets] to your entire Tailscale network.
-* `--exit-node=<ip|name>` Provide a [Tailscale IP][docs-ip-and-dns-addresses] or [machine name][docs-machine-names] to use as an exit node. To disable the use of an exit node, pass the flag with an empty argument: `--exit-node=`.
-* `--exit-node-allow-lan-access` Allow the client node access to its own LAN while connected to an exit node. Defaults to not allowing access while connected to an exit node.
-* `--force-reauth` Force re-authentication.
-* `--snat-subnet-routes` (Linux only) Disable source NAT. In normal operations, a subnet device sees the traffic originating from the subnet router. This simplifies routing, but does not allow traversing multiple networks. By disabling source NAT, the end machine sees the LAN IP address of the originating machine as the source.
-* `--stateful-filtering` Enable stateful filtering for [subnet routers][docs-subnets] and [exit nodes][docs-exit-nodes]. When enabled, inbound packets with another node's destination IP are dropped, unless they are a part of a tracked outbound connection from that node. Defaults to disabled.
-* `--shields-up` [Block incoming connections][docs-client-preferences] from other devices on your Tailscale network. Useful for personal devices that only make outgoing connections.
-* `--ssh` Run a [Tailscale SSH][docs-tailscale-ssh] server, permitting access per the tailnet administrator's declared [access policy][docs-acls], or the [default policy][docs-acl-samples-all-default] if none is defined. Defaults to false.
+* `--accept-routes` 接受其他节点通告的[子网路由][docs-subnets]。默认行为取决于宿主操作系统。对于某些平台——Windows、iOS、Android、macOS App Store 变体和 macOS standalone 变体——默认接受路由。其他所有平台默认不接受路由。
+* `--advertise-exit-node` 主动提出作为 Tailscale 网络出站互联网流量的[出口节点][docs-exit-nodes]。默认不主动提出。
+* `--advertise-routes=<ip>` 把物理[子网路由][docs-subnets]暴露给你的整个 Tailscale 网络。
+* `--exit-node=<ip|name>` 提供一个 [Tailscale IP][docs-ip-and-dns-addresses]或[机器名][docs-machine-names]作为出口节点。要停用出口节点，请传入空参数：`--exit-node=`。
+* `--exit-node-allow-lan-access` 允许客户端节点在连接出口节点的同时访问自己的 LAN。默认在连接出口节点期间不允许访问。
+* `--force-reauth` 强制重新认证。
+* `--snat-subnet-routes`（仅限 Linux）禁用源 NAT。正常运行时，子网中的设备看到的流量来自子网路由器。这简化了路由，但不允许跨越多个网络。禁用源 NAT 后，末端机器看到的源地址是发起机器的 LAN IP 地址。
+* `--stateful-filtering` 为[子网路由器][docs-subnets]和[出口节点][docs-exit-nodes]启用有状态过滤。启用后，目标 IP 是其他节点的入站数据包会被丢弃，除非它们属于该节点某条已跟踪出站连接的一部分。默认禁用。
+* `--shields-up` [阻断][docs-client-preferences]来自 Tailscale 网络中其他设备的入站连接。适用于只发出连接的个人设备。
+* `--ssh` 运行 [Tailscale SSH][docs-tailscale-ssh] 服务器，按照 tailnet 管理员声明的[访问策略][docs-acls]（若未定义则按[默认策略][docs-acl-samples-all-default]）允许访问。默认为 false。
 
-For a complete list of available flags, refer to the [`tailscale up`][docs-tailscale-up] topic.
+完整的可用标志列表请参阅 [`tailscale up`][docs-tailscale-up] 主题。
 
 ### down
 
-Disconnect from Tailscale. Running this command is the same as choosing to disconnect from or quit a Tailscale client.
+断开与 Tailscale 的连接。运行此命令等同于在 Tailscale 客户端中选择断开连接或退出。
 
 ```shell
 tailscale down
 ```
 
-When disconnected, you cannot reach devices over Tailscale. To reconnect, re-run `tailscale up` without any flags.
+断开后，你无法通过 Tailscale 访问设备。要重新连接，请不带任何标志重新运行 `tailscale up`。
 
-Available flags:
+可用标志：
 
-* `--accept-risk=<risk>` Accept risk and skip confirmation for risk type. This can be either `lose-ssh` or `all`, or an empty string to not accept risk.
-* `--reason="<description>"` Specify the reason (inside quotes) for disconnecting Tailscale when the [system policies][docs-mdm-keys] `AlwaysOn.Enabled` and `AlwaysOn.OverrideWithReason` are enabled. For example, `tailscale down --reason="DNS issues"`.
+* `--accept-risk=<risk>` 接受风险并跳过该风险类型的确认。取值可以是 `lose-ssh` 或 `all`，或用空字符串表示不接受风险。
+* `--reason="<description>"` 当[系统策略][docs-mdm-keys] `AlwaysOn.Enabled` 和 `AlwaysOn.OverrideWithReason` 启用时，指定断开 Tailscale 的原因（放在引号内）。例如 `tailscale down --reason="DNS issues"`。
 
 ### bugreport
 
-> **Note:**
+> **注意：**
 >
-> The `bugreport` command is available in Tailscale v1.8 or later. If this command is not available to you, consider [updating][docs-update] your Tailscale client.
+> `bugreport` 命令在 Tailscale v1.8 或更高版本中可用。如果你没有这个命令，请考虑[更新][docs-update]你的 Tailscale 客户端。
 
-Generate a bug report with diagnostic information.
+生成包含诊断信息的错误报告。
 
-The `bugreport` command makes it easier to report bugs to the Tailscale team by marking diagnostic logs with indicators to make triage easier.
+`bugreport` 命令会在诊断日志中打上标记以便分诊，让你更方便地向 Tailscale 团队报告错误。
 
-If you encounter a connectivity issue, run `tailscale bugreport` on the device experiencing the issue at the time you encounter it.
+如果你遇到连接问题，请在出现问题的设备上、在问题发生时运行 `tailscale bugreport`。
 
 ```shell
 tailscale bugreport
 ```
 
-This command prints a random identifier into diagnostic logs, which you can share with our team.
+此命令会向诊断日志中写入一个随机标识符，你可以把它分享给我们的团队。
 
-Identifiers look like this:
+标识符类似这样：
 
 ```shell
 BUG-1b7641a16971a9cd75822c0ed8043fee70ae88cf05c52981dc220eb96a5c49a8-20210427151443Z-fbcd4fd3a4b7ad94
 ```
 
-This command shares no personally identifiable information and is unused unless you share the bug identifier with our team.
+此命令不共享任何个人可识别信息；除非你把错误标识符分享给我们的团队，否则这些信息不会被使用。
 
-Available flags:
+可用标志：
 
-* `--diagnose` Prints additional verbose information about the system to the Tailscale logs after generating a `bugreport` identifier, which can then be viewed by our support team. Defaults to `false`.
-* `--record` Pause and then write another `bugreport`. Use this flag to create an initial `bugreport` identifier. During the pause, perform the action that reproduces your issue. Then, press Enter to create a second `bugreport` identifier. Share both bug identifiers with our team. Defaults to `false`.
+* `--diagnose` 在生成 `bugreport` 标识符后，向 Tailscale 日志输出关于系统的额外详细信息，我们的支持团队随后可以查看。默认为 `false`。
+* `--record` 先暂停，然后写入另一个 `bugreport`。使用此标志先创建一个初始 `bugreport` 标识符。在暂停期间，执行能复现问题的操作。然后按 Enter 创建第二个 `bugreport` 标识符。把两个错误标识符都分享给我们的团队。默认为 `false`。
 
 ### cert
 
-Generate Let's Encrypt certificate and key files on the host for [HTTPS certificates][docs-enabling-https] in your tailnet.
+在主机上生成 Let's Encrypt 证书和密钥文件，用于你 tailnet 的 [HTTPS 证书][docs-enabling-https]。
 
-> **Note:**
+> **注意：**
 >
-> If you are trying to serve a folder of files or reverse proxy to an HTTP service, use the [`tailscale serve`][ar-serve] command instead.
+> 如果你想托管一个文件目录，或反向代理到某个 HTTP 服务，请改用 [`tailscale serve`][ar-serve] 命令。
 
 ```shell
 tailscale cert hostname.tails-scales.ts.net
 ```
 
-Alternatively, if you want to save the certificate and private key to files, you can use the `--cert-file` and `--key-file` arguments:
+如果你想把证书和私钥保存到文件，可以使用 `--cert-file` 和 `--key-file` 参数：
 
 ```shell
 tailscale cert --cert-file=cert.pem --key-file=key.pem hostname.tails-scales.ts.net
 ```
 
-The certificates provided by Let's Encrypt have a 90-day expiry and require periodic renewal. When a certificate is delivered as files on disk which you then move to an install location, such as when using `tailscale cert`, the [`tailscaled` daemon][docs-tailscaled] doesn't know where to place a renewed certificate or how to install it. As a result, you are responsible for renewing any certificates that you create using `tailscale cert`.
+Let's Encrypt 签发的证书有效期为 90 天，需要定期续期。当证书以磁盘文件的形式交付、再由你移动到安装位置时（例如使用 `tailscale cert` 时），[`tailscaled` 守护进程][docs-tailscaled]并不知道该把续期的证书放在哪里、如何安装。因此，你必须自行负责续期用 `tailscale cert` 创建的证书。
 
-If a certificate is handled without the user initiating any file-based certificate installation (such as when using the [Caddy integration of Tailscale][xt-gh-tailscale-caddy-tailscale]) then the certificate will automatically renew without the user doing anything.
+如果证书的处理过程不涉及用户发起的基于文件的安装（例如使用 [Tailscale 的 Caddy 集成][xt-gh-tailscale-caddy-tailscale]时），证书会自动续期，用户无需做任何事。
 
-Available flags:
+可用标志：
 
-* `--cert-file=<cert>` Specify the certificate output path.
-* `--key-file=<key>` Specify the private key output path.
-* `--min-validity=<duration>` Request a specified minimum remaining validity on the returned certificate. `duration` can be any value parseable by [`time.ParseDuration()`][xt-go-time-parseduration]. For example, use `120h` to set the duration to five days.
-* `--serve-demo` Serve on port `:443` using the cert as a demo, instead of writing out the files to disk.
+* `--cert-file=<cert>` 指定证书输出路径。
+* `--key-file=<key>` 指定私钥输出路径。
+* `--min-validity=<duration>` 请求返回的证书至少保留指定的剩余有效期。`duration` 可以是任何能被 [`time.ParseDuration()`][xt-go-time-parseduration] 解析的值。例如用 `120h` 把时长设为五天。
+* `--serve-demo` 使用该证书在 `:443` 端口上做演示性服务，而不是把文件写入磁盘。
 
-> **Note:**
+> **注意：**
 >
-> The `--min-validity` flag lets you ensure that the returned certificate is valid for at least the specified duration. If you specify a duration longer than the [certification lifetime set by Let's Encrypt][xt-lets-encrypt-cert-lifetime], it uses the maximum lifetime set by Let's Encrypt.
+> `--min-validity` 标志让你确保返回的证书至少在指定时长内有效。如果你指定的时长超过 [Let's Encrypt 设置的证书有效期][xt-lets-encrypt-cert-lifetime]，将使用 Let's Encrypt 允许的最长有效期。
 
 ### dns
 
-The `dns` command lets you access [Tailscale DNS settings][docs-dns]. It's available in Tailscale v1.74.0 and later.
+`dns` 命令让你访问 [Tailscale DNS 设置][docs-dns]。它在 Tailscale v1.74.0 及更高版本中可用。
 
-Subcommands:
+子命令：
 
-* `status` Print the configuration of the local DNS forwarder and the tailnet-wide [MagicDNS][docs-magicdns] configuration.
-* `query` Perform a DNS query using the local DNS forwarder. It's available in Tailscale v1.76.0 and later.
+* `status` 输出本地 DNS 转发器的配置以及 tailnet 级 [MagicDNS][docs-magicdns] 配置。
+* `query` 使用本地 DNS 转发器执行一次 DNS 查询。它在 Tailscale v1.76.0 及更高版本中可用。
 
-Available flags for `status`:
+`status` 的可用标志：
 
-* `--all` Outputs advanced debugging information.
+* `--all` 输出高级调试信息。
 
-Available flags for `status` and `query`:
+`status` 和 `query` 的可用标志：
 
-* `--json` Output in JSON format.
+* `--json` 以 JSON 格式输出。
 
 ### drive
 
-Share a directory with your tailnet using [Taildrive][docs-taildrive].
+使用 [Taildrive][docs-taildrive] 与你的 tailnet 共享目录。
 
 ```shell
 tailscale drive share <name> <path>
@@ -267,77 +267,77 @@ tailscale drive unshare <name>
 tailscale drive list
 ```
 
-Subcommands:
+子命令：
 
-* `share` Create or modify a share.
-* `rename` Rename a share.
-* `unshare` Remove a share.
-* `list` List current shares.
+* `share` 创建或修改共享。
+* `rename` 重命名共享。
+* `unshare` 移除共享。
+* `list` 列出当前共享。
 
 ### completion
 
-Configure tab-completion for the Tailscale CLI.
+为 Tailscale CLI 配置 Tab 补全。
 
 ```shell
 tailscale completion <subcommand> [flags]
 ```
 
-Subcommands:
+子命令：
 
-* `bash` Configure tab-completion for the `bash` shell.
-* `zsh` Configure tab-completion for the `zsh` shell.
-* `fish` Configure tab-completion for the `fish` shell.
-* `powershell` Configure tab-completion for PowerShell.
+* `bash` 为 `bash` shell 配置 Tab 补全。
+* `zsh` 为 `zsh` shell 配置 Tab 补全。
+* `fish` 为 `fish` shell 配置 Tab 补全。
+* `powershell` 为 PowerShell 配置 Tab 补全。
 
-Available flags:
+可用标志：
 
-* `--flags=<true|false>` Configure whether to suggest flags (in addition to subcommands). Set to `true` by default.
-* `--descs=<true|false>` Configure whether to include descriptions of subcommands in the suggestions. Set to `true` by default.
+* `--flags=<true|false>` 配置是否（在子命令之外）建议标志。默认为 `true`。
+* `--descs=<true|false>` 配置建议中是否包含子命令的描述。默认为 `true`。
 
 ### configure
 
-Configure resources that you want to include in your tailnet.
+配置你想纳入 tailnet 的资源。
 
 ```shell
 tailscale configure <subcommands>
 ```
 
-Subcommands:
+子命令：
 
-* `kubeconfig` (alpha) Configure `kubectl` to connect to a Kubernetes cluster using Tailscale.
-* `mac-vpn` Install or uninstall the VPN configuration on [App Store][docs-macos-mac-app-store] and [Standalone variant][docs-macos-standalone] of macOS.
-* `synology` Configure Synology to enable outbound connections needed for Tailscale.
-* `sysext` Activate, deactivate, or manage the state of the Tailscale [system extension][docs-apple-sysext] on the [Standalone variant][docs-macos-standalone] of macOS.
-* `systray` Manage the `systray` client for Linux.
+* `kubeconfig`（alpha）配置 `kubectl` 通过 Tailscale 连接 Kubernetes 集群。
+* `mac-vpn` 在 macOS 的 [App Store 变体][docs-macos-mac-app-store]和 [Standalone 变体][docs-macos-standalone]上安装或卸载 VPN 配置。
+* `synology` 配置 Synology，启用 Tailscale 所需的出站连接。
+* `sysext` 在 macOS 的 [Standalone 变体][docs-macos-standalone]上激活、停用或管理 Tailscale [系统扩展][docs-apple-sysext]的状态。
+* `systray` 管理 Linux 的 `systray` 客户端。
 
-Available flags for `kubeconfig`:
+`kubeconfig` 的可用标志：
 
-* `--http` Use HTTP instead of HTTPS to connect to the auth proxy. Ignored if you include a scheme in the hostname argument.
+* `--http` 使用 HTTP 而不是 HTTPS 连接认证代理。如果主机名参数中包含协议（scheme）则忽略此项。
 
-Available subcommands for `mac-vpn`:
+`mac-vpn` 的可用子命令：
 
-* `install` Write the Tailscale VPN configuration to the macOS settings.
-* `uninstall` Delete the Tailscale VPN configuration from the macOS settings.
+* `install` 把 Tailscale VPN 配置写入 macOS 设置。
+* `uninstall` 从 macOS 设置中删除 Tailscale VPN 配置。
 
-Available subcommands for `sysext`:
+`sysext` 的可用子命令：
 
-* `activate` Register the Tailscale system extension with macOS.
-* `deactivate` Deactivate the Tailscale system extension on macOS.
-* `status` Print the enablement status of the Tailscale system extension.
+* `activate` 向 macOS 注册 Tailscale 系统扩展。
+* `deactivate` 在 macOS 上停用 Tailscale 系统扩展。
+* `status` 输出 Tailscale 系统扩展的启用状态。
 
-Available flags for `systray`:
+`systray` 的可用标志：
 
-* `--enable-startup=<init-system>` Install the startup script for the init system. The only currently supported value is `systemd`.
+* `--enable-startup=<init-system>` 为 init 系统安装启动脚本。当前唯一支持的值是 `systemd`。
 
-Examples:
+示例：
 
-* To configure your local `kubeconfig` file for authentication with a Kubernetes auth proxy:
+* 为本地 `kubeconfig` 文件配置与 Kubernetes 认证代理的认证：
 
 ```shell
 tailscale configure kubeconfig <hostname-or-fqdn>
 ```
 
-* To configure Synology to enable outbound connections:
+* 配置 Synology 以启用出站连接：
 
 ```shell
 tailscale configure synology
@@ -345,134 +345,134 @@ tailscale configure synology
 
 ### exit-node
 
-Get information about [exit-nodes][docs-exit-nodes] in your tailnet.
+获取你 tailnet 中[出口节点][docs-exit-nodes]的信息。
 
 ```shell
 tailscale exit-node <subcommands>
 ```
 
-Available subcommands:
+可用子命令：
 
-* `list` Lists the exit nodes in your tailnet.
-* `suggest` Suggests a [recommended exit node][docs-auto-exit-nodes].
+* `list` 列出你 tailnet 中的出口节点。
+* `suggest` 给出[建议的出口节点][docs-auto-exit-nodes]。
 
-Available flags for `list`:
+`list` 的可用标志：
 
-* `--filter=<country>` Filter exit nodes by country.
+* `--filter=<country>` 按国家/地区筛选出口节点。
 
 ### file
 
-Access and make files available to [Taildrop][docs-taildrop].
+访问文件并让文件可供 [Taildrop][docs-taildrop] 使用。
 
 ```shell
 tailscale file cp <files...> <target>:
 tailscale file get <target-directory>
 ```
 
-Available commands:
+可用命令：
 
-* `cp` Copy files to a host.
-* `get` Move files out of the Tailscale file inbox.
+* `cp` 把文件复制到主机。
+* `get` 把文件移出 Tailscale 文件收件箱。
 
-Available flags for `cp`:
+`cp` 的可用标志：
 
-* `--name=<name>` Alternate filename to use, especially useful when `<file>` is `-` (`stdin`).
-* `--targets` List possible file `cp` targets.
-* `--update-interval=<time>` How often to repaint the progress line; zero or negative disables progress display entirely. Defaults to `250ms`.
-* `--verbose` Verbose output.
+* `--name=<name>` 使用备用文件名，在 `<file>` 为 `-`（`stdin`）时尤其有用。
+* `--targets` 列出可能的文件 `cp` 目标。
+* `--update-interval=<time>` 进度行的刷新频率；为零或负值则完全不显示进度。默认为 `250ms`。
+* `--verbose` 详细输出。
 
-Available flags for `get`:
+`get` 的可用标志：
 
-* `--conflict=<behavior>` `behavior` when a conflicting (same-named) file already exists in the target directory.
-  * `skip` Skip conflicting files: leave them in the Taildrop inbox and print an error. Get any non-conflicting files.
-  * `overwrite` Overwrite existing file.
-  * `rename` Write to a new number-suffixed filename.
-* `--loop` Run get in a loop, receiving files as they come in.
-* `--verbose` Verbose output.
-* `--wait` Wait for a file to arrive if inbox is empty.
+* `--conflict=<behavior>` 目标目录中已存在同名冲突文件时的 `behavior`（处理方式）。
+  * `skip` 跳过冲突文件：把它们留在 Taildrop 收件箱中并输出错误，同时取出所有不冲突的文件。
+  * `overwrite` 覆盖现有文件。
+  * `rename` 写入一个带数字后缀的新文件名。
+* `--loop` 以循环方式运行 get，随到随收文件。
+* `--verbose` 详细输出。
+* `--wait` 如果收件箱为空则等待文件到达。
 
 ### funnel
 
-Serve content and local servers from your Tailscale node to the internet.
+把内容和本地服务器从你的 Tailscale 节点发布到互联网。
 
-To limit local service access to your tailnet, use the [`serve`][ar-serve] command.
+要把本地服务的访问限制在 tailnet 内，请使用 [`serve`][ar-serve] 命令。
 
 ```shell
 tailscale funnel <target>
 tailscale funnel <subcommand> [flags] <args>
 ```
 
-Subcommands:
+子命令：
 
-* [`status`][docs-tailscale-funnel-get-the-status] Gets the status.
-* [`reset`][docs-tailscale-funnel-reset-tailscale-funnel] Resets the configuration.
+* [`status`][docs-tailscale-funnel-get-the-status] 获取状态。
+* [`reset`][docs-tailscale-funnel-reset-tailscale-funnel] 重置配置。
 
-For more information, refer to the [`tailscale funnel`][docs-tailscale-funnel] topic.
+更多信息请参阅 [`tailscale funnel`][docs-tailscale-funnel] 主题。
 
 ### get
 
-Get the current preferences for the machine.
+获取机器的当前偏好设置。
 
-This command shows the preferences that were configured by the [`set`][ar-set] or [`up`][ar-up] commands.
+此命令显示由 [`set`][ar-set]或[`up`][ar-up]命令配置的偏好设置。
 
-With no argument or `all`, all preferences are shown. With a specific setting name, only that value is shown.
+不带参数或带 `all` 时，显示全部偏好设置。指定具体设置名时，只显示该值。
 
-The setting names are the same flag names accepted by [`tailscale set`][ar-set].
+设置名与 [`tailscale set`][ar-set] 接受的标志名相同。
 
-Note that when using [Fast User Switching][docs-fast-user-switching], only the preferences for the currently connected tailnet are shown.
+注意，使用[快速用户切换][docs-fast-user-switching]时，只显示当前连接的 tailnet 的偏好设置。
 
 ```shell
 tailscale get [flags] [setting-name | all]
 ```
 
-Available flags:
+可用标志：
 
-* `--json` Output in JSON format.
-* `--set-flags` Output in the form of command-line flags for the [`set`][ar-set] command. For example, this command sets every preference to its current value: `tailscale set $(tailscale get --set-flags)`.
+* `--json` 以 JSON 格式输出。
+* `--set-flags` 以 [`set`][ar-set] 命令的命令行标志形式输出。例如，以下命令把每项偏好都设置为当前值：`tailscale set $(tailscale get --set-flags)`。
 
 ### ip
 
-Get a device's Tailscale IP address.
+获取设备的 Tailscale IP 地址。
 
 ```shell
 tailscale ip [flags] [<hostname>]
 ```
 
-By default, this command returns both an [`100.x.y.z` IPv4 address][docs-ip-and-dns-addresses] and an IPv6 address for the current device. You can return only an IPv4 or IPv6 address by passing either the `-4` or `-6` flags.
+默认情况下，此命令返回当前设备的一个 [`100.x.y.z` IPv4 地址][docs-ip-and-dns-addresses]和一个 IPv6 地址。你可以通过传入 `-4` 或 `-6` 标志只返回 IPv4 或 IPv6 地址。
 
 ```shell
 tailscale ip -4
 ```
 
-For example, this command will return information similar to the following:
+例如，此命令会返回类似如下的信息：
 
 ```shell
 100.121.112.23
 ```
 
-You can also find the Tailscale IP for other devices on your network by adding the device hostname after the command. For example:
+你还可以在命令后面加上设备主机名，查询网络中其他设备的 Tailscale IP。例如：
 
 ```shell
 tailscale ip raspberrypi
 ```
 
-This command will return information similar to the following:
+此命令会返回类似如下的信息：
 
 ```shell
 100.126.153.111
 fd7a:115c:a1e0:ab12:4843:cd96:627e:9975
 ```
 
-Available flags:
+可用标志：
 
-* `--4` Only return an IPv4 address.
-* `--6` Only return an IPv6 address.
-* `--1` Only return one address, preferring IPv4.
-* `--assert=<specific-ip-address>` Assert that the node's IP (or one of the node's IPs) matches this IP address.
+* `--4` 只返回 IPv4 地址。
+* `--6` 只返回 IPv6 地址。
+* `--1` 只返回一个地址，优先 IPv4。
+* `--assert=<specific-ip-address>` 断言节点的 IP（或节点的某个 IP）与该 IP 地址匹配。
 
 ### licenses
 
-Get open source license information.
+获取开源许可信息。
 
 ```shell
 tailscale licenses
@@ -480,103 +480,98 @@ tailscale licenses
 
 ### lock
 
-Manage [Tailnet Lock][docs-tailnet-lock] for your tailnet.
+管理你 tailnet 的 [Tailnet Lock][docs-tailnet-lock]。
 
 ```shell
 tailscale lock <subcommand> [flags] <args>
 ```
 
-Common subcommands:
+常用子命令：
 
-* [`init`][docs-tailscale-lock-lock-init] Initializes Tailnet Lock.
-* [`status`][docs-tailscale-lock-lock-status] Outputs the state of Tailnet Lock.
-* [`add`][docs-tailscale-lock-lock-add] Adds one or more trusted signing keys to Tailnet Lock.
-* [`remove`][docs-tailscale-lock-lock-remove] Removes one or more trusted signing keys from Tailnet Lock.
-* [`sign`][docs-tailscale-lock-lock-sign] Signs a node key and transmits the signature to the coordination server.
+* [`init`][docs-tailscale-lock-lock-init] 初始化 Tailnet Lock。
+* [`status`][docs-tailscale-lock-lock-status] 输出 Tailnet Lock 的状态。
+* [`add`][docs-tailscale-lock-lock-add] 向 Tailnet Lock 添加一个或多个受信任签名密钥。
+* [`remove`][docs-tailscale-lock-lock-remove] 从 Tailnet Lock 移除一个或多个受信任签名密钥。
+* [`sign`][docs-tailscale-lock-lock-sign] 为节点密钥签名，并把签名传送给协调服务器。
 
-Running `tailscale lock` with no subcommand and no arguments is equivalent to running [`tailscale lock status`][docs-tailscale-lock-lock-status].
+不带子命令和参数运行 `tailscale lock` 等同于运行 [`tailscale lock status`][docs-tailscale-lock-lock-status]。
 
-For a complete list of subcommands and flags, refer to the [`tailscale lock`][docs-tailscale-lock] topic.
+完整的子命令和标志列表请参阅 [`tailscale lock`][docs-tailscale-lock] 主题。
 
 ### login
 
-Log into Tailscale (and add this device to your Tailscale network). For more information about logging in, refer to [fast-user-switching][docs-fast-user-switching].
+登录 Tailscale（并把这台设备加入你的 Tailscale 网络）。关于登录的更多信息，请参阅[快速用户切换][docs-fast-user-switching]。
 
 ```shell
 tailscale login [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--accept-dns` Accept [DNS configuration][docs-dns] from the admin console. Defaults to accepting DNS settings.
-* `--accept-routes` Accept [subnet routes][docs-subnets] that other nodes advertise. The default depends on the host operating system. For certain platforms - Windows, iOS, Android, the macOS App Store variant, and the macOS standalone variant - the default is to accept routes. All other platforms default to not accepting routes.
-* `--advertise-connector` Offer to be an [app connector][docs-app-connector] for domain-specific internet traffic for the tailnet.
-* `--advertise-exit-node` Offer to be an [exit node][docs-exit-nodes] for outbound internet traffic from the Tailscale network. Defaults to not offering to be an exit node.
-* `--advertise-routes=<ip>` Expose physical [subnet routes][docs-subnets] to your entire Tailscale network.
-* `--advertise-tags=<tags>` Give tagged permissions to this device. You must be [listed in `"TagOwners"`][docs-policy-syntax-tag-owners] to be able to apply tags.
-* `--auth-key=<key>` Provide an [auth key][docs-auth-keys] to automatically authenticate the node as your user account. For a best practice when handling the `--auth-key` value, refer to [Securely handle an auth key][docs-secure-auth-key-cli].
-* `--client-id` Client ID used to generate [auth keys][docs-auth-keys] by using
-  [workload identity federation][docs-workload-identity].
-* `--client-secret` [OAuth Client][docs-oauth-clients] secret used to generate
-  [auth keys][docs-auth-keys]; if it begins with `file:`, then it's a path to a
-  file containing the secret.
-* `--exit-node=<ip|name>` Provide a [Tailscale IP][docs-ip-and-dns-addresses] or [machine name][docs-machine-names] to use as an exit node. To disable the use of an exit node, pass the flag with an empty argument: `--exit-node=`.
-* `--exit-node-allow-lan-access` Allow the client node access to its own LAN while connected to an exit node. Defaults to not allowing access while connected to an exit node.
-* `--hostname=<name>` Provide a hostname to use for the device instead of the one provided by the OS. Note that this will change the machine name used in [MagicDNS][docs-magicdns].
-* `--id-token` ID token from the identity provider to exchange with the control
-  server for [workload identity federation][docs-workload-identity]; if it begins
-  with `file:`, then it's a path to a file containing the token.
-* `--audience` Audience used when requesting an ID token from an identity provider for auth keys generated by [workload identity federation][docs-workload-identity].
-* `--login-server=<url>` Provide the base URL of a control server instead of `https://controlplane.tailscale.com`. If you are using [Headscale][bl-opensource-coordination-server] for your control server, use your Headscale instance's URL.
-* `--netfilter-mode=<mode>` Netfilter mode (one of `on`, `nodivert`, `off`). Refer to [Tailscale netfilter modes][docs-netfilter-modes] for more information.
-* `--nickname=<name>` [Nickname][docs-fast-user-switching-set-nickname] for the current account.
-* `--operator=<user>` Provide a Unix username other than `root` to operate `tailscaled`.
-* `--qr` Generate a QR code for the web login URL. Defaults to not showing a QR code.
-* `--qr-format=<format>` QR code formatting: `small` or `large`. Defaults to `small`.
-* `--report-posture` Allow management plane to gather [device posture][docs-device-posture] information. Defaults to `false`.
-* `--stateful-filtering` Enable stateful filtering for [subnet routers][docs-subnets] and [exit nodes][docs-exit-nodes]. When enabled, inbound packets with another node's destination IP are dropped, unless they are a part of a tracked outbound connection from that node. Defaults to disabled.
-* `--shields-up` [Block incoming connections][docs-client-preferences] from other devices on your Tailscale network. Useful for personal devices that only make outgoing connections.
-* `--snat-subnet-routes` Source NAT traffic to local routes advertised with `--advertise-routes`.
-* `--ssh` Run a [Tailscale SSH][docs-tailscale-ssh] server, permitting access per the tailnet administrator's declared [access policy][docs-acls], or the [default policy][docs-acl-samples-all-default] if none is defined. Defaults to false.
-* `--timeout=<duration>` Maximum amount of time to wait for the Tailscale service to initialize. `duration` can be any value parseable by [`time.ParseDuration()`][xt-go-time-parseduration]. Defaults to `0s`, which blocks forever.
-* `--unattended`(Windows only) Run in [unattended mode][docs-run-unattended] where Tailscale keeps running even after the current user logs out.
+* `--accept-dns` 接受来自管理控制台的 [DNS 配置][docs-dns]。默认接受 DNS 设置。
+* `--accept-routes` 接受其他节点通告的[子网路由][docs-subnets]。默认行为取决于宿主操作系统。对于某些平台——Windows、iOS、Android、macOS App Store 变体和 macOS standalone 变体——默认接受路由。其他所有平台默认不接受路由。
+* `--advertise-connector` 主动提出作为 tailnet 特定域互联网流量的[应用连接器][docs-app-connector]。
+* `--advertise-exit-node` 主动提出作为 Tailscale 网络出站互联网流量的[出口节点][docs-exit-nodes]。默认不主动提出。
+* `--advertise-routes=<ip>` 把物理[子网路由][docs-subnets]暴露给你的整个 Tailscale 网络。
+* `--advertise-tags=<tags>` 给予此设备带标签设备的权限。你必须[被列在 `"TagOwners"` 中][docs-policy-syntax-tag-owners]才能应用标签。
+* `--auth-key=<key>` 提供[认证密钥][docs-auth-keys]，自动把该节点认证为你的用户账户。处理 `--auth-key` 值的最佳实践请参阅[安全地保管认证密钥][docs-secure-auth-key-cli]。
+* `--client-id` 用于通过[工作负载身份联合][docs-workload-identity]生成[认证密钥][docs-auth-keys]的客户端 ID。
+* `--client-secret` 用于生成[认证密钥][docs-auth-keys]的 [OAuth 客户端][docs-oauth-clients]密钥；如果以 `file:` 开头，则为包含该密钥的文件路径。
+* `--exit-node=<ip|name>` 提供一个 [Tailscale IP][docs-ip-and-dns-addresses]或[机器名][docs-machine-names]作为出口节点。要停用出口节点，请传入空参数：`--exit-node=`。
+* `--exit-node-allow-lan-access` 允许客户端节点在连接出口节点的同时访问自己的 LAN。默认在连接出口节点期间不允许访问。
+* `--hostname=<name>` 为设备提供主机名，替代操作系统提供的主机名。注意这会改变 [MagicDNS][docs-magicdns] 中使用的机器名。
+* `--id-token` 来自身份提供方、用于与控制服务器交换以实现[工作负载身份联合][docs-workload-identity]的 ID 令牌；如果以 `file:` 开头，则为包含该令牌的文件路径。
+* `--audience` 由[工作负载身份联合][docs-workload-identity]生成的认证密钥在向身份提供方请求 ID 令牌时使用的受众（audience）。
+* `--login-server=<url>` 提供控制服务器的基础 URL，代替 `https://controlplane.tailscale.com`。如果你使用 [Headscale][bl-opensource-coordination-server] 作为控制服务器，请使用你的 Headscale 实例的 URL。
+* `--netfilter-mode=<mode>` Netfilter 模式（`on`、`nodivert`、`off` 之一）。更多信息请参阅 [Tailscale netfilter 模式][docs-netfilter-modes]。
+* `--nickname=<name>` 当前账户的[昵称][docs-fast-user-switching-set-nickname]。
+* `--operator=<user>` 提供一个非 `root` 的 Unix 用户名来运行 `tailscaled`。
+* `--qr` 为网页登录 URL 生成二维码。默认不显示二维码。
+* `--qr-format=<format>` 二维码格式：`small` 或 `large`。默认为 `small`。
+* `--report-posture` 允许管理平面收集[设备态势][docs-device-posture]信息。默认为 `false`。
+* `--stateful-filtering` 为[子网路由器][docs-subnets]和[出口节点][docs-exit-nodes]启用有状态过滤。启用后，目标 IP 是其他节点的入站数据包会被丢弃，除非它们属于该节点某条已跟踪出站连接的一部分。默认禁用。
+* `--shields-up` [阻断][docs-client-preferences]来自 Tailscale 网络中其他设备的入站连接。适用于只发出连接的个人设备。
+* `--snat-subnet-routes` 对以 `--advertise-routes` 通告的本地路由进行源 NAT。
+* `--ssh` 运行 [Tailscale SSH][docs-tailscale-ssh] 服务器，按照 tailnet 管理员声明的[访问策略][docs-acls]（若未定义则按[默认策略][docs-acl-samples-all-default]）允许访问。默认为 false。
+* `--timeout=<duration>` 等待 Tailscale 服务初始化的最长时间。`duration` 可以是任何能被 [`time.ParseDuration()`][xt-go-time-parseduration] 解析的值。默认为 `0s`，即无限等待。
+* `--unattended`（仅限 Windows）以[无人值守模式][docs-run-unattended]运行，即使当前用户注销后 Tailscale 也会继续运行。
 
 ### logout
 
-Disconnect from Tailscale and expire the current log in. The next time you run `tailscale up`, you'll need to reauthenticate your device.
+断开与 Tailscale 的连接并使当前登录失效。下次运行 `tailscale up` 时，你需要重新认证设备。
 
 ```shell
 tailscale logout
 ```
 
-If you run `tailscale logout` on an [ephemeral node][docs-ephemeral-nodes], the node will be removed from your tailnet immediately.
+如果在[临时节点][docs-ephemeral-nodes]上运行 `tailscale logout`，该节点会立即从你的 tailnet 中移除。
 
-Available flags:
+可用标志：
 
-* `--reason` Reason for the logout, if required by a [system policy][docs-mdm-keys].
+* `--reason` 注销原因，如果[系统策略][docs-mdm-keys]有要求。
 
 ### metrics
 
-Expose and collect [Tailscale client metrics][docs-client-metrics] for use with third-party monitoring systems.
+暴露并收集 [Tailscale 客户端指标][docs-client-metrics]，供第三方监控系统使用。
 
 ```shell
 tailscale metrics
 ```
 
-Subcommands:
+子命令：
 
-* `print` Shows client metrics in the current terminal session.
-* `write` Writes metric values to a text file.
+* `print` 在当前终端会话中显示客户端指标。
+* `write` 把指标值写入文本文件。
 
 ### netcheck
 
-Get a report on your current physical network conditions. This command is provided to help debug connection troubles.
+获取当前物理网络状况的报告。提供此命令是为了帮助排查连接问题。
 
 ```shell
 tailscale netcheck
 ```
 
-`netcheck` will output a report like this:
+`netcheck` 会输出类似这样的报告：
 
 ```shell
 Report:
@@ -596,30 +591,30 @@ Report:
 		- ord: 73.3ms  (Chicago)
 ```
 
-(In the example output, the list of [DERP servers][docs-derp-servers] is truncated for brevity.)
+（示例输出中，[DERP 服务器][docs-derp-servers]列表为简洁起见被截断。）
 
-* `UDP` shows whether UDP traffic is enabled on the current network. If this is false, it's unlikely Tailscale will be able to make point-to-point connections, and will instead rely on our [encrypted TCP relays (DERP)][docs-derp-servers]
-* `IPv4` and **IPv6** show your network public IP addresses and support for both protocols.
-* `MappingVariesByDestIP` describes whether your device is behind a difficult NAT that varies the device's IP address depending on the destination.
-* `HairPinning` describes whether your router can route connections from endpoints on your LAN back to your LAN using those endpoints' globally-mapped IPv4 addresses/ports.
-* `PortMapping` describes a list of which three port-mapping services exist on your router. Possible values are "UPnP", "NAT-PMP", and "PCP".
-* `DERP latency` and `Nearest DERP` describe latency from our [encrypted TCP relays (DERP)][docs-derp-servers]. The lowest latency ("nearest") server is used for traffic.
+* `UDP` 显示当前网络是否启用了 UDP 流量。如果为 false，Tailscale 很可能无法建立点对点连接，将转而依赖我们的[加密 TCP 中继（DERP）][docs-derp-servers]。
+* `IPv4` 和 **IPv6** 显示你网络的公网 IP 地址以及对两种协议的支持情况。
+* `MappingVariesByDestIP` 描述你的设备是否位于一种"困难的"NAT 之后——它会根据目的地改变设备的 IP 地址。
+* `HairPinning` 描述你的路由器能否把来自 LAN 端点的连接，用这些端点的全局映射 IPv4 地址/端口路由回 LAN。
+* `PortMapping` 描述路由器上存在哪几种端口映射服务。可能的值是 "UPnP"、"NAT-PMP" 和 "PCP"。
+* `DERP latency` 和 `Nearest DERP` 描述与我们的[加密 TCP 中继（DERP）][docs-derp-servers]之间的延迟。延迟最低（"最近"）的服务器会被用于传输流量。
 
-If any fields are blank, it means Tailscale wasn't able to measure that network property.
+如果有字段为空，表示 Tailscale 无法测量该项网络属性。
 
-All the information from `tailscale netcheck` is also available in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, by selecting a particular machine.
+`tailscale netcheck` 的所有信息也可以在管理控制台的[机器（Machines）](https://console.tailscale.com/admin/machines)页面中查看，选中特定机器即可。
 
-Available flags:
+可用标志：
 
-* `--every=<duration>` If non-zero, do an incremental report with the given frequency.
-* `--format=<format>` Output format; empty (for human-readable), `json` or `json-line`.
-* `--verbose` Verbose logs.
-* `--bind-address` Send and receive connectivity probes using this locally bound IP address.
-* `--bind-port` Send and receive connectivity probes using this UDP port.
+* `--every=<duration>` 如果非零，则以给定频率进行增量报告。
+* `--format=<format>` 输出格式；留空（人类可读）、`json` 或 `json-line`。
+* `--verbose` 详细日志。
+* `--bind-address` 使用此本地绑定的 IP 地址发送和接收连通性探测。
+* `--bind-port` 使用此 UDP 端口发送和接收连通性探测。
 
 ### nc
 
-Connect to a port on a host, connected to stdin/stdout.
+连接到主机上的某个端口，连接到 stdin/stdout。
 
 ```shell
 tailscale nc <hostname-or-IP> <port>
@@ -627,72 +622,72 @@ tailscale nc <hostname-or-IP> <port>
 
 ### ping
 
-Attempt to ping another device exclusively over Tailscale.
+尝试完全通过 Tailscale 对另一台设备执行 ping。
 
-The regular `ping` command often works fine over Tailscale, but `tailscale ping` provides more details about the connection over Tailscale that can be helpful when troubleshooting connectivity.
+普通的 `ping` 命令在 Tailscale 上通常也能正常工作，但 `tailscale ping` 会提供更多关于 Tailscale 连接的细节，在排查连接问题时很有帮助。
 
 ```shell
 tailscale ping <hostname-or-ip>
 ```
 
-You can call `tailscale ping` using either a [100.x.y.z address][docs-ip-and-dns-addresses] or a [machine name][docs-machine-names].
+你可以使用 [100.x.y.z 地址][docs-ip-and-dns-addresses]或[机器名][docs-machine-names]调用 `tailscale ping`。
 
-Available flags:
+可用标志：
 
-* `--c` Maximum number of pings to send. Defaults to 10.
-* `--icmp`, `--icmp=false` Perform an ICMP-level ping (through WireGuard, but not the local host OS stack). Defaults to false.
-* `--peerapi`, `--peerapi=false` Try hitting the peer's PeerAPI HTTP server. Defaults to false.
-* `--size=<size>` Size of the ping message (default pings only). 0 for minimum size.
-* `--tsmp`, `--tsmp=false` Perform a TSMP-level ping (through WireGuard, but not either host's OS stack). Defaults to false.
-* `--timeout=<duration>` Maximum amount of time to wait before giving up on a ping. `duration` can be any value parseable by [`time.ParseDuration()`][xt-go-time-parseduration]. Defaults to `5s`.
-* `--until-direct`, `--until-direct=false` Stop once a direct path is established. Defaults to true.
-* `--verbose`, `--verbose=false` Show verbose output. Defaults to false.
+* `--c` 发送 ping 的最大次数。默认为 10。
+* `--icmp`, `--icmp=false` 执行 ICMP 层面的 ping（经过 WireGuard，但不经过本地主机 OS 网络栈）。默认为 false。
+* `--peerapi`, `--peerapi=false` 尝试访问对端的 PeerAPI HTTP 服务器。默认为 false。
+* `--size=<size>` ping 消息的大小（仅默认 ping）。0 表示最小尺寸。
+* `--tsmp`, `--tsmp=false` 执行 TSMP 层面的 ping（经过 WireGuard，但不经过任一主机的 OS 网络栈）。默认为 false。
+* `--timeout=<duration>` 放弃 ping 前的最长等待时间。`duration` 可以是任何能被 [`time.ParseDuration()`][xt-go-time-parseduration] 解析的值。默认为 `5s`。
+* `--until-direct`, `--until-direct=false` 一旦建立直连路径就停止。默认为 true。
+* `--verbose`, `--verbose=false` 显示详细输出。默认为 false。
 
-> **Tip:**
+> **提示：**
 >
-> There are [four types of ping messages][docs-ping-types] supported by the `tailscale ping` command.
+> `tailscale ping` 命令支持[四种类型的 ping 消息][docs-ping-types]。
 
 ### serve
 
-Serve content and local servers from your Tailscale node to your tailnet.
+把内容和本地服务器从你的 Tailscale 节点发布到你的 tailnet。
 
-To publicly share the local service to the internet, use the [`funnel`][ar-funnel] command.
+要把本地服务公开分享到互联网，请使用 [`funnel`][ar-funnel] 命令。
 
 ```shell
 tailscale serve <target>
 tailscale serve <subcommand> [flags] <args>
 ```
 
-Subcommands:
+子命令：
 
-* [`status`][docs-tailscale-serve-get-the-status] Gets the status.
-* [`reset`][docs-tailscale-serve-reset-tailscale-serve] Resets the configuration.
+* [`status`][docs-tailscale-serve-get-the-status] 获取状态。
+* [`reset`][docs-tailscale-serve-reset-tailscale-serve] 重置配置。
 
-For more information, refer to the [`tailscale serve`][docs-tailscale-serve] topic.
+更多信息请参阅 [`tailscale serve`][docs-tailscale-serve] 主题。
 
 ### service
 
-Interact with [Tailscale Services][docs-tailscale-services] from this node's perspective as a client.
+从本节点作为客户端的视角使用 [Tailscale Services][docs-tailscale-services]。
 
-A Tailscale Service is a virtual service with its own IP addresses. This command lists only the services that this node can access according to your tailnet's [access policy][docs-acls].
+Tailscale Service 是拥有自己 IP 地址的虚拟服务。此命令只列出根据你 tailnet 的[访问策略][docs-acls]、此节点可以访问的服务。
 
 ```shell
 tailscale service <subcommand>
 ```
 
-Available subcommands:
+可用子命令：
 
-* `list` Lists the Tailscale Services this node can access.
+* `list` 列出此节点可以访问的 Tailscale Services。
 
-The `list` subcommand prints a table with the following columns:
+`list` 子命令输出的表格包含以下列：
 
-* `IP` The Tailscale Service's Tailscale IP address.
-* `HOSTNAME` The Tailscale Service's [MagicDNS][docs-magicdns] hostname.
-* `DISPLAY NAME` The human-readable name of the Tailscale Service, if set.
-* `ENDPOINTS` The ports the service listens on.
-* `TYPE` The service's action types, such as `http` or `ssh`. If a service has no explicit action types, they are inferred from well-known ports.
+* `IP` 该 Tailscale Service 的 Tailscale IP 地址。
+* `HOSTNAME` 该 Tailscale Service 的 [MagicDNS][docs-magicdns] 主机名。
+* `DISPLAY NAME` 该 Tailscale Service 的人类可读名称（如果已设置）。
+* `ENDPOINTS` 服务监听的端口。
+* `TYPE` 服务的动作类型，例如 `http` 或 `ssh`。如果服务没有显式的动作类型，则会根据知名端口推断。
 
-The `list` subcommand outputs a table similar to the following:
+`list` 子命令输出类似下表的表格：
 
 ```shell
  IP                 HOSTNAME                           DISPLAY NAME     ENDPOINTS     TYPE
@@ -706,80 +701,80 @@ The `list` subcommand outputs a table similar to the following:
  100.94.254.78      my-vnc.<tailnet>.ts.net            -                tcp:5900      vnc
 ```
 
-Available flags for `list`:
+`list` 的可用标志：
 
-* `--json` Output the list of Services in JSON format.
+* `--json` 以 JSON 格式输出服务列表。
 
 ### set
 
-Change specified preferences.
+修改指定的偏好设置。
 
-Unlike [`tailscale up`][ar-up], this command does not require the complete set of desired settings. It only updates the settings you explicitly set. There are no default values. Note that when using [Fast User Switching][docs-fast-user-switching], changes made are only for the currently connected tailnet.
+与 [`tailscale up`][ar-up] 不同，此命令不要求提供完整的期望设置集合。它只更新你显式设置的项，没有默认值。注意，使用[快速用户切换][docs-fast-user-switching]时，所做的更改只针对当前连接的 tailnet。
 
-To show the current preference values, use the [`get`][ar-get] command.
+要显示当前偏好值，请使用 [`get`][ar-get] 命令。
 
 ```shell
 tailscale set [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--accept-dns` Accept [DNS configuration][docs-dns] from the admin console.
-* `--accept-risk=<risk>` Accept risk and skip confirmation for risk type. This can be either `lose-ssh` or `all`, or an empty string to not accept risk.
-* `--accept-routes`, `--accept-routes=false` Accept [subnet routes][docs-subnets] that other nodes advertise. The default depends on the host operating system. For certain platforms - Windows, iOS, Android, the macOS App Store variant, and the macOS standalone variant - the default is to accept routes. All other platforms default to not accepting routes.
-* `--advertise-connector` Offer to be an [app connector][docs-app-connector] for domain-specific internet traffic for the tailnet.
-* `--advertise-exit-node`, `--advertise-exit-node=false` Offer to be an exit node for internet traffic for the tailnet.
-* `--advertise-routes=<ip>` Expose physical [subnet routes][docs-subnets] to your entire Tailscale network. This is a comma-separated string, such as "10.0.0.0/8,192.168.0.0/24", or an empty string to not advertise routes.
-* `--auto-update`, `--auto-update=false` Enable or disable [auto-updates][docs-update-auto-updates] for the client.
-* `--exit-node=<ip|name>` Provide a [Tailscale IP][docs-ip-and-dns-addresses] or [machine name][docs-machine-names] to use as an exit node. You can also use `--exit-node=auto:any` to track the suggested exit node and automatically switch to it when available exit nodes or network conditions change. To disable the use of an exit node, pass the flag with an empty argument using `--exit-node=`.
-* `--exit-node-allow-lan-access`, `--exit-node-allow-lan-access=false` Allow the client node access to its own LAN while connected to an exit node.
-* `--hostname=<name>`   Hostname to use for the device instead of the one provided by the OS. Note that this will change the machine name used in [MagicDNS][docs-magicdns].
-* `--netfilter-mode=<mode>` Netfilter mode (one of `on`, `nodivert`, `off`). Refer to [Tailscale netfilter modes][docs-netfilter-modes] for more information.
-* `--nickname=<name>`   [Nickname][docs-fast-user-switching-set-nickname] for the current account.
-* `--operator=<user>`   A Unix username other than `root` to operate `tailscaled`.
-* `--relay-server-port=<port>` Specify a UDP port to accept peer relay connections on. UDP port number (`0` will pick a random unused port) for the relay server to bind to, on all interfaces, or empty string to disable relay server functionality. Refer to [Tailscale Peer Relays][docs-peer-relays] for more information.
-* `--relay-server-static-endpoints` Use static endpoints for [Tailscale Peer Relays][docs-peer-relays].
-* `--report-posture` Allow management plane to gather [device posture][docs-device-posture] information.
-* `--shields-up`, `--shields-up=false` [Block incoming connections][docs-client-preferences] from other devices on your Tailscale network.
-  Useful for personal devices that only make outgoing connections.
-* `--snat-subnet-routes` Source NAT traffic to local routes advertised with `--advertise-routes`.
-* `--ssh`, `--ssh=false` Run a [Tailscale SSH][docs-tailscale-ssh] server, permitting access per the tailnet administrator's declared [access policy][docs-acls], or the [default policy][docs-acl-samples-all-default] if none is defined.
-* `--stateful-filtering` Apply stateful filtering to forwarded packets (subnet routers, exit nodes, and so on).
-* `--update-check` Notify about available Tailscale updates.
-* `--webclient`, `--webclient=false` Expose the [web interface][docs-device-web-interface] to your tailnet persistently in the background on port `:5252.`
+* `--accept-dns` 接受来自管理控制台的 [DNS 配置][docs-dns]。
+* `--accept-risk=<risk>` 接受风险并跳过该风险类型的确认。取值可以是 `lose-ssh` 或 `all`，或用空字符串表示不接受风险。
+* `--accept-routes`, `--accept-routes=false` 接受其他节点通告的[子网路由][docs-subnets]。默认行为取决于宿主操作系统。对于某些平台——Windows、iOS、Android、macOS App Store 变体和 macOS standalone 变体——默认接受路由。其他所有平台默认不接受路由。
+* `--advertise-connector` 主动提出作为 tailnet 特定域互联网流量的[应用连接器][docs-app-connector]。
+* `--advertise-exit-node`, `--advertise-exit-node=false` 主动提出作为 tailnet 互联网流量的出口节点。
+* `--advertise-routes=<ip>` 把物理[子网路由][docs-subnets]暴露给你的整个 Tailscale 网络。这是一个逗号分隔的字符串，例如 "10.0.0.0/8,192.168.0.0/24"，或用空字符串表示不通告路由。
+* `--auto-update`, `--auto-update=false` 启用或禁用客户端的[自动更新][docs-update-auto-updates]。
+* `--exit-node=<ip|name>` 提供一个 [Tailscale IP][docs-ip-and-dns-addresses]或[机器名][docs-machine-names]作为出口节点。你也可以使用 `--exit-node=auto:any` 跟踪建议的出口节点，并在可用出口节点或网络状况变化时自动切换。要停用出口节点，请用 `--exit-node=` 传入空参数。
+* `--exit-node-allow-lan-access`, `--exit-node-allow-lan-access=false` 允许客户端节点在连接出口节点的同时访问自己的 LAN。
+* `--hostname=<name>`   用于设备的主机名，替代操作系统提供的主机名。注意这会改变 [MagicDNS][docs-magicdns] 中使用的机器名。
+* `--netfilter-mode=<mode>` Netfilter 模式（`on`、`nodivert`、`off` 之一）。更多信息请参阅 [Tailscale netfilter 模式][docs-netfilter-modes]。
+* `--nickname=<name>`   当前账户的[昵称][docs-fast-user-switching-set-nickname]。
+* `--operator=<user>`   一个非 `root` 的 Unix 用户名，用于运行 `tailscaled`。
+* `--relay-server-port=<port>` 指定接受对等中继连接的 UDP 端口。中继服务器在所有接口上绑定的 UDP 端口号（`0` 表示随机选择未用端口），或用空字符串禁用中继服务器功能。更多信息请参阅 [Tailscale 对等中继][docs-peer-relays]。
+* `--relay-server-static-endpoints` 为 [Tailscale 对等中继][docs-peer-relays]使用静态端点。
+* `--report-posture` 允许管理平面收集[设备态势][docs-device-posture]信息。
+* `--shields-up`, `--shields-up=false` [阻断][docs-client-preferences]来自 Tailscale 网络中其他设备的入站连接。
+  适用于只发出连接的个人设备。
+* `--snat-subnet-routes` 对以 `--advertise-routes` 通告的本地路由进行源 NAT。
+* `--ssh`, `--ssh=false` 运行 [Tailscale SSH][docs-tailscale-ssh] 服务器，按照 tailnet 管理员声明的[访问策略][docs-acls]（若未定义则按[默认策略][docs-acl-samples-all-default]）允许访问。
+* `--stateful-filtering` 对转发的数据包（子网路由器、出口节点等）应用有状态过滤。
+* `--update-check` 通知可用的 Tailscale 更新。
+* `--webclient`, `--webclient=false` 在 `:5252.` 端口上于后台持续向你的 tailnet 暴露[网页界面][docs-device-web-interface]。
 
 ### ssh
 
-Establish a [Tailscale SSH][docs-tailscale-ssh] session to a Tailscale machine.
+建立到 Tailscale 机器的 [Tailscale SSH][docs-tailscale-ssh] 会话。
 
-You can often use the regular `ssh` command or another SSH client to make an SSH session to a Tailscale machine. However, when your local node is in [userspace-networking][docs-kernel-vs-userspace-routers-netstack] mode and can't make a direct connection, use `tailscale ssh`. This sets up an SSH `ProxyCommand` to connect through the local `tailscaled` daemon. You can also use `tailscale ssh` when your local node is in [kernel][docs-kernel-vs-userspace-routers-kernel] mode.
+你通常可以直接使用普通 `ssh` 命令或其他 SSH 客户端建立到 Tailscale 机器的 SSH 会话。但是，当你的本地节点处于[用户态网络（userspace-networking）][docs-kernel-vs-userspace-routers-netstack]模式且无法建立直连时，请使用 `tailscale ssh`。它会设置一个 SSH `ProxyCommand`，通过本地 `tailscaled` 守护进程连接。本地节点处于[内核][docs-kernel-vs-userspace-routers-kernel]模式时也可以使用 `tailscale ssh`。
 
-The `tailscale ssh` command automatically checks the destination server's SSH host key against the node's SSH host key as advertised by using the Tailscale coordination server.
+`tailscale ssh` 命令会自动把目标服务器的 SSH 主机密钥，与通过 Tailscale 协调服务器通告的 SSH 主机密钥进行核对。
 
 ```shell
 tailscale ssh <args>
 ```
 
-`<args>` is one of the following forms:
+`<args>` 是以下形式之一：
 
-* `host` The destination server. An interactive session will prompt you for the user name to use for the session.
-* `user@host` The user name for the session and the destination server.
+* `host` 目标服务器。交互式会话会提示你输入会话使用的用户名。
+* `user@host` 会话使用的用户名和目标服务器。
 
-For both forms, `host` can be the destination server's [MagicDNS][docs-magicdns] name (even if `--accept-dns=false` was set on the local node) or the destination server's [Tailscale IP address][docs-ip-and-dns-addresses].
+对于这两种形式，`host` 可以是目标服务器的 [MagicDNS][docs-magicdns] 名称（即使本地节点设置了 `--accept-dns=false`），也可以是目标服务器的 [Tailscale IP 地址][docs-ip-and-dns-addresses]。
 
-> **Note:**
+> **注意：**
 >
-> `tailscale ssh` is not available on sandboxed macOS builds—use the regular `ssh` client instead.
+> 沙盒化的 macOS 构建中无法使用 `tailscale ssh`——请改用普通 `ssh` 客户端。
 
 ### status
 
-Get the status of your connections to other Tailscale devices.
+获取你与其他 Tailscale 设备连接的状态。
 
 ```shell
 tailscale status
 ```
 
-This command returns a condensed table of information in human-readable format:
+此命令以人类可读格式返回一个精简的信息表：
 
 ```
 1           2         3           4         5
@@ -789,167 +784,167 @@ This command returns a condensed table of information in human-readable format:
 100.0.1.2   device-d  ross@       iOS       -
 ```
 
-From left-to-right, these columns represent:
+从左到右，各列分别代表：
 
-* Column 1 is a [**Tailscale IP**][docs-100.x-addresses], which you can use to connect to the device.
-* Column 2 is the [**machine name**][docs-machine-names] of the device. If you use [MagicDNS][docs-magicdns], you can also use this name to connect.
-* Column 3 is the **email address** for the owner of the device.
-* Column 4 is the **device OS**.
-* Column 5 shows the current **connection status**.
+* 第 1 列是 [**Tailscale IP**][docs-100.x-addresses]，你可以用它连接设备。
+* 第 2 列是设备的[**机器名**][docs-machine-names]。如果你启用了 [MagicDNS][docs-magicdns]，也可以用这个名称连接。
+* 第 3 列是设备所有者的**电子邮件地址**。
+* 第 4 列是**设备操作系统**。
+* 第 5 列显示当前的**连接状态**。
 
-Connection status (column 5) is shown using three terms:
+连接状态（第 5 列）用三种词表示：
 
-* `active` means traffic is currently being sent/received from this device. It also includes the connection type, which can be `direct`, `relay`, or `peer-relay`.
-  * If the connection is `direct`, it includes peer device's IP address.
-  * If the connection is `relay`, it includes the [DERP server][docs-derp-servers]'s city code (`nyc`, `fra`, `tok`, `syd`) for the respective location.
-  * If the connection is [`peer-relay`][docs-peer-relays], it includes the Tailscale IP address of the peer relay and the VNI (virtual network interface) used.
-* `idle` means traffic is not currently being sent/received from this device.
-* `-` means no traffic has ever been sent/received from this device.
+* `active` 表示当前正与该设备收发流量。其中还包含连接类型，可以是 `direct`、`relay` 或 `peer-relay`。
+  * 如果连接是 `direct`，其中会包含对端设备的 IP 地址。
+  * 如果连接是 `relay`，其中会包含相应位置 [DERP 服务器][docs-derp-servers]的城市代码（`nyc`、`fra`、`tok`、`syd`）。
+  * 如果连接是 [`peer-relay`][docs-peer-relays]，其中会包含对等中继的 Tailscale IP 地址和所使用的 VNI（虚拟网络接口）。
+* `idle` 表示当前没有与该设备收发流量。
+* `-` 表示从未与该设备收发过流量。
 
-`active` and `idle` connection statuses will also include `tx`/`rx` values indicating the number of bytes sent (`tx`) and received (`rx`) from this device.
+`active` 和 `idle` 状态还会附带 `tx`/`rx` 值，表示与该设备发送（`tx`）和接收（`rx`）的字节数。
 
-Running `tailscale status` with the `--json` flag returns a machine-readable JSON response.
+带 `--json` 标志运行 `tailscale status` 会返回机器可读的 JSON 响应。
 
 ```shell
 tailscale status --json
 ```
 
-Unlike `tailscale status`, using this flag gives a detailed list of peers and users in your tailnet that makes it well-suited for automation tasks. It also includes additional metadata associated with your device.
+与 `tailscale status` 不同，使用该标志会给出 tailnet 中对端和用户的详细列表，因此非常适合自动化任务。它还包含与你的设备关联的其他元数据。
 
-Combine this with [`jq`][xt-githubio-stedolan-jq] to automate data collection about your network. For example, the following command counts and sorts the relay servers your Tailscale peers are connected to.
+配合 [`jq`][xt-githubio-stedolan-jq] 可以自动化收集网络数据。例如，以下命令统计并排序你的 Tailscale 对端所连接的中继服务器。
 
 ```shell
 tailscale status --json | jq -r '.Peer[].Relay | select(.!="")' | sort | uniq -c | sort -nr
 ```
 
-Available flags:
+可用标志：
 
-* `--active` Filter output to only peers with active sessions (not applicable to web mode).
-* `--browser` Open a browser in web mode (default `true`).
-* `--header` Show column headers in table format (default `false`).
-* `--json` Output in JSON format (WARNING: format subject to change).
-* `--listen=<address>` Listen address for web mode; use port 0 for automatic (default `127.0.0.1:8384`).
-* `--peers` Show status of peers (default `true`).
-* `--self` Show status of local machine (default `true`).
-* `--web` Run webserver with HTML showing status.
+* `--active` 把输出筛选为仅有活跃会话的对端（不适用于 web 模式）。
+* `--browser` 以 web 模式打开浏览器（默认 `true`）。
+* `--header` 以表格形式显示列标题（默认 `false`）。
+* `--json` 以 JSON 格式输出（警告：格式可能变化）。
+* `--listen=<address>` web 模式的监听地址；端口用 0 表示自动（默认 `127.0.0.1:8384`）。
+* `--peers` 显示对端状态（默认 `true`）。
+* `--self` 显示本机状态（默认 `true`）。
+* `--web` 运行以 HTML 展示状态的 web 服务器。
 
 ### switch
 
-Switch to a different Tailscale account. For more information about switching accounts, refer to [fast-user-switching][docs-fast-user-switching].
+切换到另一个 Tailscale 账户。关于切换账户的更多信息，请参阅[快速用户切换][docs-fast-user-switching]。
 
 ```shell
 tailscale switch <account> [flags]
 ```
 
-Examples:
+示例：
 
-* To switch to the `alice@example.com` account:
+* 切换到 `alice@example.com` 账户：
 
   ```shell
   tailscale switch alice@example.com
   ```
 
-* To switch to the account that has the [nickname][docs-fast-user-switching-set-nickname] "work":
+* 切换到[昵称][docs-fast-user-switching-set-nickname]为 "work" 的账户：
 
   ```shell
   tailscale switch work
   ```
 
-Available flags:
+可用标志：
 
-* `--list` Lists available accounts.
+* `--list` 列出可用账户。
 
-  * `--json` List available accounts in JSON format.
+  * `--json` 以 JSON 格式列出可用账户。
 
   ```shell
   tailscale switch --list --json
   ```
 
-Subcommands:
+子命令：
 
-* `remove <id>` removes a Tailscale account from the local machine. This does not delete the account itself, but it will no longer be available for switching to. You can add it back by logging in again. This command is currently in alpha and may change in the future.
+* `remove <id>` 从本地机器上移除一个 Tailscale 账户。这不会删除账户本身，只是无法再切换到它。重新登录即可把它加回来。此命令目前处于 alpha 阶段，未来可能变化。
 
 ### syspolicy
 
-List system policies, reload system policies, or inspect errors related to the [system policies][docs-mdm-keys] configured in your tailnet.
+列出系统策略、重新加载系统策略，或检查与 tailnet 中配置的[系统策略][docs-mdm-keys]相关的错误。
 
 ```shell
 tailscale syspolicy
 ```
 
-Subcommands:
+子命令：
 
-* `list` Shows system policies, reload system policies, or explore errors related to the [system policies][docs-mdm-keys] configured on the device.
-* `reload` Forces the Tailscale client to reload and reapply system policy settings on the device.
+* `list` 显示系统策略、重新加载系统策略，或查看与设备上配置的[系统策略][docs-mdm-keys]相关的错误。
+* `reload` 强制 Tailscale 客户端重新加载并重新应用设备上的系统策略设置。
 
-Available flags:
+可用标志：
 
-* `--json` Return a machine-readable JSON response.
+* `--json` 返回机器可读的 JSON 响应。
 
 ### systray
 
-> **Note:**
+> **注意：**
 >
-> The `systray` command is available on the Linux client, is currently in [beta][docs-release-stages-beta], and is available in Tailscale v1.88 or later.
+> `systray` 命令在 Linux 客户端上可用，目前处于 [beta][docs-release-stages-beta] 阶段，且需要 Tailscale v1.88 或更高版本。
 
-Run the [system tray (`systray`) application][docs-linux-systray] for Linux desktop clients to access some common actions like fast user switching and exit node selection.
+为 Linux 桌面客户端运行[系统托盘（`systray`）应用][docs-linux-systray]，以使用快速用户切换、出口节点选择等常用操作。
 
 ```shell
 tailscale systray
 ```
 
-> **Warning:**
+> **警告：**
 >
-> Do not run `tailscale systray` as superuser (`sudo tailscale systray`), because systray is not designed to run as superuser and the command will fail.
+> 不要以超级用户身份运行 `tailscale systray`（即 `sudo tailscale systray`），因为 systray 并非为超级用户运行而设计，命令会失败。
 
-Available flags:
+可用标志：
 
-* `--theme=<color-option>` Color theme for Tailscale icon: `dark`, `dark:nobg`, `light`, `light:nobg`.
+* `--theme=<color-option>` Tailscale 图标的配色主题：`dark`、`dark:nobg`、`light`、`light:nobg`。
 
 ### update
 
-> **Note:**
+> **注意：**
 >
-> The `update` command is available in Tailscale v1.36 or later for Windows and Ubuntu/Debian Linux, in v1.48.0 or later for the Mac Apple Store version and Synology, and in v1.54.0 or later for QNAP and the [Standalone variant of the macOS application][docs-macos-standalone]. If the command isn't available and you are running one of these operating systems, consider [updating your Tailscale client][docs-update].
+> `update` 命令在 Windows 和 Ubuntu/Debian Linux 上自 Tailscale v1.36 起可用，在 Mac Apple Store 版本和 Synology 上自 v1.48.0 起可用，在 QNAP 和 [macOS 应用的 Standalone 变体][docs-macos-standalone]上自 v1.54.0 起可用。如果你使用的是上述操作系统但没有此命令，请考虑[更新你的 Tailscale 客户端][docs-update]。
 
-Update the Tailscale client version to the latest version, or to a different version.
+把 Tailscale 客户端版本更新到最新版本，或更新/降级到其他版本。
 
 ```shell
 tailscale update [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--dry-run` Show what update would do, without performing the update and without prompting to start the update.
-* `--track` The track to check for updates, either "stable", "release-candidate", or unstable. If not specified, the update uses the track currently in effect for the client. For more information, refer to [Tailscale client versions and release tracks][docs-release-tracks].
-* `--version` An explicit version to use for the update or downgrade. You cannot specify both `--track` and `--version`. This flag is not available on the macOS client.
-* `--yes` Perform the update without interactive prompts. Defaults to false.
+* `--dry-run` 显示 update 会执行的操作，但不实际执行更新，也不提示开始更新。
+* `--track` 检查更新所用的通道（track），可以是 "stable"、"release-candidate" 或 unstable。未指定时，update 使用客户端当前生效的通道。更多信息请参阅 [Tailscale 客户端版本与发布通道][docs-release-tracks]。
+* `--version` 用于更新或降级的明确版本号。`--track` 与 `--version` 不能同时指定。此标志在 macOS 客户端上不可用。
+* `--yes` 执行更新时不进行交互式提示。默认为 false。
 
-If you downgrade to a version that does not have the `tailscale update` functionality, you won't be able to run `tailscale update` to return to the prior version. You would need to [perform an update][docs-update] without using the Tailscale CLI.
+如果你降级到没有 `tailscale update` 功能的版本，将无法再运行 `tailscale update` 回到之前的版本，你需要[不通过 Tailscale CLI][docs-update]执行更新。
 
-To determine the current version on a client, run [`tailscale version`][ar-version].
+要确定客户端的当前版本，请运行 [`tailscale version`][ar-version]。
 
-Examples:
+示例：
 
-Update to the latest version within your current track (stable or unstable, depending on what you're running):
+更新到当前通道（stable 或 unstable，取决于你正在运行的通道）内的最新版本：
 
 ```shell
 tailscale update
 ```
 
-Update to the latest version within your current track without using interactive prompts:
+更新到当前通道内的最新版本，且不使用交互式提示：
 
 ```shell
 tailscale update --yes
 ```
 
-Update to Tailscale v1.34:
+更新到 Tailscale v1.34：
 
 ```shell
 tailscale update --version=1.34.0
 ```
 
-Update to the latest unstable version:
+更新到最新的 unstable 版本：
 
 ```shell
 tailscale update --track=unstable
@@ -957,22 +952,22 @@ tailscale update --track=unstable
 
 ### version
 
-Print the version of Tailscale.
+输出 Tailscale 的版本。
 
 ```shell
 tailscale version [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--daemon` Also print local node's daemon version. Defaults to false.
-* `--json` Return a machine-readable JSON response.
-* `--upstream` Print the latest upstream release version from `pkgs.tailscale.com`. Defaults to false.
-* `--track`, `--track=[stable|unstable|release-candidate]` Check a specified track for updates. Empty value is the current track. For more information, refer to [Tailscale client versions and release tracks][docs-release-tracks].
+* `--daemon` 同时输出本地节点守护进程的版本。默认为 false。
+* `--json` 返回机器可读的 JSON 响应。
+* `--upstream` 输出 `pkgs.tailscale.com` 上的最新上游发布版本。默认为 false。
+* `--track`, `--track=[stable|unstable|release-candidate]` 检查指定通道的更新。留空表示当前通道。更多信息请参阅 [Tailscale 客户端版本与发布通道][docs-release-tracks]。
 
-> **Tip:**
+> **提示：**
 >
-> Running `tailscale version` also prints other information, including the Go version. Here's an example of the output:
+> 运行 `tailscale version` 还会输出其他信息，包括 Go 版本。输出示例如下：
 >
 > ```shell
 > tailscale version
@@ -984,35 +979,35 @@ Available flags:
 
 ### wait
 
-Wait for Tailscale resources to become available for binding within a specified timeout or indefinitely.
+等待 Tailscale 资源在指定超时时间内（或无限期地）变为可用并可绑定。
 
-The command returns exit code `0` on success. It returns a non-zero exit code on failure or timeout.
+命令成功时返回退出码 `0`。失败或超时时返回非零退出码。
 
-> **Note:**
+> **注意：**
 >
-> As of Tailscale version 1.96, the only resource available to wait for is the Tailscale interface and its IPs. A future version of this command may support waiting for other types of resources.
+> 自 Tailscale 1.96 起，唯一可等待的资源是 Tailscale 接口及其 IP。未来版本可能会支持等待其他类型的资源。
 >
-> If running in userspace-networking mode, this command only waits for `tailscaled` and the `Running` state, as no physical network interface exists.
+> 在用户态网络模式下运行时，此命令只等待 `tailscaled` 和 `Running` 状态，因为不存在物理网络接口。
 
 ```shell
 tailscale wait [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--timeout=<duration>` Set a timeout duration in seconds. Setting the duration to `0` will set the timeout to indefinite.
+* `--timeout=<duration>` 以秒为单位设置超时时长。设为 `0` 表示无限期超时。
 
-Examples:
+示例：
 
-To wait on a specific type of IP address, use `tailscale ip` in combination with the `tailscale wait` command. For example, to wait for an IPv4 address:
+要等待特定类型的 IP 地址，可以将 `tailscale ip` 与 `tailscale wait` 命令结合使用。例如，等待一个 IPv4 地址：
 
 ```shell
 tailscale wait && tailscale ip --assert=<specific-ip-address>
 ```
 
-Linux `systemd` users can wait for the `tailscale-online.target` target, which runs this command.
+Linux 的 `systemd` 用户可以等待 `tailscale-online.target` 目标，它会运行此命令。
 
-A service that wants to bind to (listen on) a Tailscale interface or IP address, can use the following pattern to ensure Tailscale is ready before the program starts:
+想要绑定（监听）Tailscale 接口或 IP 地址的服务，可以使用以下模式来确保程序启动前 Tailscale 已就绪：
 
 ```shell
 tailscale wait && /path/to/service [...]
@@ -1020,43 +1015,43 @@ tailscale wait && /path/to/service [...]
 
 ### web
 
-Start a web server for controlling the `tailscaled` daemon. Starting a web server is useful when the CLI or a native app is impractical (such as on NAS devices).
+启动一个用于控制 `tailscaled` 守护进程的 web 服务器。当 CLI 或原生应用不便使用时（例如在 NAS 设备上），启动 web 服务器很有用。
 
 ```shell
 tailscale web [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--cgi=<true|false>` Run the web server as a CGI script. Defaults to false.
-* `--listen=<ip|name>` Set the listen address. Use port `0` for automatic. Defaults to `localhost:8088`.
-* `--origin=<hostname>` Origin at which the web UI is served (if behind a reverse proxy or used with CGI).
-* `--prefix=<string>` Set the URL prefix added to requests (for CGI or reverse proxies).
-* `--readonly` Run the web server in read-only mode.
+* `--cgi=<true|false>` 以 CGI 脚本方式运行 web 服务器。默认为 false。
+* `--listen=<ip|name>` 设置监听地址。端口用 `0` 表示自动。默认为 `localhost:8088`。
+* `--origin=<hostname>` 提供 web UI 的源（origin）（当处于反向代理之后或与 CGI 一起使用时）。
+* `--prefix=<string>` 设置添加到请求的 URL 前缀（用于 CGI 或反向代理）。
+* `--readonly` 以只读模式运行 web 服务器。
 
 ### whoami
 
-Get the machine and user identity of the current machine.
+获取当前机器的机器与用户身份。
 
-This is equivalent to running `tailscale whois` on one of the current machine's own Tailscale IP addresses.
+这等同于对当前机器自己的某个 Tailscale IP 地址运行 `tailscale whois`。
 
 ```shell
 tailscale whoami [--json]
 ```
 
-Available flags:
+可用标志：
 
-* `--json` Output in JSON format.
+* `--json` 以 JSON 格式输出。
 
 ### whois
 
-Get the machine and user associated with a Tailscale IP.
+获取与某个 Tailscale IP 关联的机器和用户。
 
 ```shell
 tailscale whois ip[:port]
 ```
 
-For user devices, this command returns:
+对于用户设备，此命令返回：
 
 ```
 Machine:
@@ -1070,7 +1065,7 @@ User:
 Capabilities:
 ```
 
-For devices that are tagged, this command returns:
+对于带标签的设备，此命令返回：
 
 ```
 Machine:
@@ -1082,44 +1077,43 @@ Machine:
 Capabilities:
 ```
 
-For each of these fields:
+各字段含义：
 
-* `Machine`, `Name` is the [machine name][docs-machine-names] of the device. If you use [MagicDNS][docs-magicdns], you can also use this name to connect.
-* `Machine`, `ID` is the [node id][docs-terminology-and-concepts-node] of the device.
-* `Machine`, `Addresses` are the [Tailscale IP][docs-100.x-addresses], which you can use to connect to the device.
-* `Machine`, `AllowedIPs` are the subnet routes available to the device.
-* `Machine`, `Tags` are the tags to which the device belongs.
-* `User`, `Name` is the email address for the owner of the device.
-* `User`, `ID` is the unique ID of the user
-* `Capabilities` show the grants for the device.
+* `Machine`、`Name` 是设备的[机器名][docs-machine-names]。如果你启用了 [MagicDNS][docs-magicdns]，也可以用这个名称连接。
+* `Machine`、`ID` 是设备的[节点 ID][docs-terminology-and-concepts-node]。
+* `Machine`、`Addresses` 是 [Tailscale IP][docs-100.x-addresses]，你可以用它连接设备。
+* `Machine`、`AllowedIPs` 是该设备可用的子网路由。
+* `Machine`、`Tags` 是设备所属的标签。
+* `User`、`Name` 是设备所有者的电子邮件地址。
+* `User`、`ID` 是该用户的唯一 ID。
+* `Capabilities` 显示该设备的授权（grants）。
 
-Running `tailscale whois` with the `--json` flag will return a machine-readable JSON response. (Note that the `--json` option must come before the `ip[:port]` argument.)
+带 `--json` 标志运行 `tailscale whois` 会返回机器可读的 JSON 响应。（注意 `--json` 选项必须位于 `ip[:port]` 参数之前。）
 
 ```shell
 tailscale whois --json ip[:port]
 ```
 
-Available flags:
+可用标志：
 
-* `--json` Output in JSON format.
-* `--proto=<proto>` Protocol for the WhoIs request; one of `tcp` or `udp`; empty means both.
+* `--json` 以 JSON 格式输出。
+* `--proto=<proto>` WhoIs 请求使用的协议；`tcp` 或 `udp` 之一；留空表示两者。
 
 ### appc-routes
 
-Print the current [app connector][docs-app-connector] route status.
+输出当前[应用连接器][docs-app-connector]的路由状态。
 
-By default this command prints the domains configured in the app connector
-configuration and how many routes have been learned for each domain.
+默认情况下，此命令输出应用连接器配置中配置的域名，以及为每个域名学习到的路由数量。
 
 ```shell
 tailscale appc-routes [flags]
 ```
 
-Available flags:
+可用标志：
 
-* `--all` Print learned domains and routes and extra policy configured routes.
-* `--map` Print the map of learned domains.
-* `--n` Print the total number of routes this node advertises.
+* `--all` 输出学习到的域名和路由，以及额外策略配置的路由。
+* `--map` 输出已学习域名的映射。
+* `--n` 输出此节点通告的路由总数。
 
 [ar-completion]: #completion
 

@@ -1,127 +1,124 @@
 ---
-title: "Manage client preferences"
-description: "[Admins][docs-user-roles] can manage devices on a network, and restrict which devices can connect using access control policies."
+title: "管理客户端偏好设置"
+description: "管理员可以管理网络上的设备，并通过访问控制策略限制哪些设备可以连接。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-[Admins][docs-user-roles] can manage devices on a network, and restrict which devices can connect using access control policies.
+[管理员][docs-user-roles]可以管理网络上的设备，并通过访问控制策略限制哪些设备可以连接。
 
-Individual users still have control over their own devices, to block incoming connections from Tailscale or to ignore Tailscale's DNS settings and advertised routes.
+个人用户仍然可以控制自己的设备：阻止来自 Tailscale 的入站连接，或忽略 Tailscale 的 DNS 设置和通告的路由。
 
-## Default configuration
+## 默认配置
 
-By default, a Tailscale client will:
+默认情况下，Tailscale 客户端会：
 
-* Allow incoming connections
-* Use Tailscale DNS settings
+* 允许入站连接
+* 使用 Tailscale DNS 设置
 
-macOS, Windows, and other non-Linux devices use Tailscale subnets by default. Linux devices do not use Tailscale by default.
+macOS、Windows 和其他非 Linux 设备默认使用 Tailscale 子网。Linux 设备默认不使用。
 
-## Allow incoming connections
+## 允许入站连接
 
-If other devices in your tailnet are allowed to connect to your device based on access control policies, then the connection will be created. Access control policies are directional, so that an access rule allowing your laptop to connect to a web server does not allow the web server to establish connections to your laptop.
+如果访问控制策略允许 tailnet 中的其他设备连接到你的设备，连接就会被建立。访问控制策略是有方向性的：允许你的笔记本电脑连接到某台 Web 服务器的规则，并不会允许该 Web 服务器反过来连接你的笔记本电脑。
 
-If you want to block all incoming connections, you can do so. This is also known as "shields up". In the menu bar of your device,
-uncheck **Allow incoming connections**. When unchecked, your device will still
-be visible and allowed to *send* traffic, but won't *accept* any connections
-over Tailscale, including pings.
+如果你想阻止所有入站连接，可以这样做。这也称为 "shields up"（竖起盾牌）。在设备的菜单栏中，取消勾选 **允许入站连接**（Allow incoming connections）。取消勾选后，你的设备仍然可见，也仍然可以*发送*流量，但不会*接受*任何通过 Tailscale 的连接，包括 ping。
 
-### Toggling incoming connections
+### 切换入站连接设置
 
-This can be configured in the client menu bar or the CLI.
+可以在客户端菜单栏或 CLI 中进行配置。
 
-### In the client menu bar
+### 在客户端菜单栏中
 
 #### macOS
 
-If you are running Tailscale v1.60.0 or later, from the menu bar, select Tailscale, select **Settings**, and then check/uncheck **Allow incoming connections**.
+如果你运行的是 Tailscale v1.60.0 或更高版本：从菜单栏选择 Tailscale，选择 **设置**（Settings），然后勾选/取消勾选 **允许入站连接**（Allow incoming connections）。
 
-*（图：Tailscale Settings window with the 'Settings' tab selected. The 'Allow incoming connections' checkbox is checked.）*
+*（图：Tailscale 设置窗口，选中 "Settings" 标签页，"Allow incoming connections" 复选框已勾选。）*
 
-If you are running a version of Tailscale earlier than v1.60.0, from the menu bar, select Tailscale and check/uncheck **Allow incoming connections**.
+如果你运行的是 v1.60.0 之前的 Tailscale 版本：从菜单栏选择 Tailscale，然后勾选/取消勾选 **允许入站连接**（Allow incoming connections）。
 
-*（图：The Tailscale application menu opened from the macOS menu bar with the 'Allow incoming connections' option checked.）*
+*（图：从 macOS 菜单栏打开的 Tailscale 应用菜单，"Allow incoming connections" 选项已勾选。）*
 
 #### iOS
 
-iOS does not support blocking incoming connections.
+iOS 不支持阻止入站连接。
 
 #### Android
 
-Android does not support blocking incoming connections.
+Android 不支持阻止入站连接。
 
 #### Windows
 
-From the system tray, right-click on the Tailscale icon and check/uncheck **Allow incoming connections**.
+在系统托盘中右键单击 Tailscale 图标，然后勾选/取消勾选 **允许入站连接**（Allow incoming connections）。
 
-*（图：The Tailscale application menu opened from the Windows system tray with 'Allow Incoming Connections' checked.）*
+*（图：从 Windows 系统托盘打开的 Tailscale 应用菜单，"Allow Incoming Connections" 已勾选。）*
 
 #### Linux
 
-Linux can only be configured via the CLI.
+Linux 只能通过 CLI 配置。
 
-### In the CLI
+### 在 CLI 中
 
-To block incoming connections:
+要阻止入站连接：
 
 ```shell
 tailscale set --shields-up
 ```
 
-To allow incoming connections (default):
+要允许入站连接（默认）：
 
 ```shell
 tailscale set --shields-up=false
 ```
 
-## Use Tailscale DNS settings
+## 使用 Tailscale DNS 设置
 
-If an Admin has configured [DNS settings for your tailnet, including MagicDNS or split DNS][docs-dns], then DNS queries for devices in your Tailscale network will respect those settings.
+如果管理员已为你的 tailnet 配置了 [DNS 设置（包括 MagicDNS 或 split DNS）][docs-dns]，那么对 Tailscale 网络中设备的 DNS 查询将遵循这些设置。
 
-> **Note:**
+> **注意：**
 >
-> If you are using an [exit node][docs-exit-nodes], your local DNS is the DNS for the exit node, not your device.
+> 如果你正在使用[出口节点][docs-exit-nodes]，你的本地 DNS 就是该出口节点的 DNS，而不是你设备的 DNS。
 
-This can be configured in the client menu bar or the CLI.
+可以在客户端菜单栏或 CLI 中进行配置。
 
-### In the client menu bar
+### 在客户端菜单栏中
 
-If you want to only use local DNS, in the menu bar of your device, uncheck **Use Tailscale DNS settings**.
+如果只想使用本地 DNS，请在设备的菜单栏中取消勾选 **使用 Tailscale DNS 设置**（Use Tailscale DNS settings）。
 
-### In the CLI
+### 在 CLI 中
 
-To use Tailscale DNS settings (default):
+要使用 Tailscale DNS 设置（默认）：
 
 ```shell
 tailscale set --accept-dns=true
 ```
 
-To not use Tailscale DNS settings:
+要不使用 Tailscale DNS 设置：
 
 ```shell
 tailscale set --accept-dns=false
 ```
 
-## Use Tailscale subnets
+## 使用 Tailscale 子网
 
-If an Admin has created [subnet routes][docs-subnets] for your tailnet, then Tailscale will route your device's traffic for the advertised subnets to the appropriate subnet router.
+如果管理员已为你的 tailnet 创建了[子网路由][docs-subnets]，Tailscale 会把你的设备发往已通告子网的流量路由到相应的子网路由器。
 
-This can be configured in the client menu bar or the CLI.
+可以在客户端菜单栏或 CLI 中进行配置。
 
-### In the client menu bar
+### 在客户端菜单栏中
 
-If you want to ignore the advertised routes, in the menu bar of your device, uncheck **Use Tailscale subnets**.
+如果想忽略已通告的路由，请在设备的菜单栏中取消勾选 **使用 Tailscale 子网**（Use Tailscale subnets）。
 
-### In the CLI
+### 在 CLI 中
 
-To use Tailscale subnets (default, except for Linux):
+要使用 Tailscale 子网（默认，Linux 除外）：
 
 ```shell
 tailscale set --accept-routes=true
 ```
 
-To not use Tailscale subnets (default on Linux):
+要不使用 Tailscale 子网（Linux 上的默认值）：
 
 ```shell
 tailscale set --accept-routes=false

@@ -1,32 +1,32 @@
 ---
-title: "You don't have access to the admin console"
-description: "This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and "
+title: "你没有管理控制台的访问权限"
+description: "本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，"
 ---
 
-Last validated Aug 20, 2025
+最后验证于 Aug 20, 2025
 
-This topic explains a message that may appear in the Tailscale admin console and the actions you can take to address it. For a list of currently documented messages in the Tailscale admin console and client, refer to the main [Messages][docs-messages] topic.
+本主题解释可能出现在 Tailscale 管理控制台中的消息，以及你可以采取的应对措施。有关 Tailscale 管理控制台和客户端中当前已收录的消息列表，请参阅主 [消息][docs-messages] 主题。
 
-## Message displayed in the admin console
+## 管理控制台中显示的消息
 
 You don't have access to the admin console.
 Your account is not an administrator for the `<example.com>` network. You can access this network using the Tailscale app, but you're not allowed to manage network settings.
 
-## Why you're seeing this message
+## 为什么会看到这条消息
 
-This error message displays when a user has a Tailscale user role of Member. This role has no access to the admin console.
+当用户的 Tailscale 用户角色为 Member（成员）时，就会显示这条错误消息。该角色无权访问管理控制台。
 
-## What to do
+## 处理方法
 
-Here are some things you can try to resolve this issue:
+你可以尝试以下方法来解决此问题：
 
-* Change the user role from Member to the necessary role they need for the tailnet. A user with the Owner, Admin, or IT admin role has the necessary permissions to change user roles.
-* If you require admin console access and are unable to contact a member who does have access, contact [Tailscale Support][co-support]. You will be required to provide the text record (TXT record) for your domain as proof of domain ownership and administrative authority for the tailnet.
+* 将该用户的角色从 Member 改为其在 tailnet 中所需的角色。拥有 Owner、Admin 或 IT admin 角色的用户具有更改用户角色所需的权限。
+* 如果你需要访问管理控制台，却无法联系到拥有访问权限的成员，请联系 [Tailscale 支持][co-support]。你需要提供域名的文本记录（TXT record），以证明你对该域名的所有权以及对 tailnet 的管理权限。
 
-## Additional information
+## 更多信息
 
-* For information about user types and access, refer to [User roles][docs-user-roles].
-* For information about changing a user's role, refer to [Changing user roles][docs-changing-user-roles].
+* 有关用户类型和访问权限的信息，请参阅 [用户角色][docs-user-roles]。
+* 有关更改用户角色的信息，请参阅 [更改用户角色][docs-changing-user-roles]。
 
 [co-support]: https://tailscale.com/support
 

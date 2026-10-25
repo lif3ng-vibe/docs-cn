@@ -1,0 +1,9 @@
+---
+// 徽标：Fern <Badge intent="..."> 的等价组件（彩色圆角标签）
+interface Props {
+  intent?: 'info' | 'tip' | 'caution' | 'danger';
+}
+const { intent = 'info' } = Astro.props;
+---
+
+<span class={`os-badge os-badge-${intent}`}><slot /></span>

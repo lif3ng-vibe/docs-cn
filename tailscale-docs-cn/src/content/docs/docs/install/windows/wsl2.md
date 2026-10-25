@@ -1,48 +1,45 @@
 ---
-title: "Install Tailscale on Windows with WSL 2"
-description: "This topic shows how to install Tailscale within the Windows Subsystem for Linux (WSL 2) package. If you want to use the Tailscale `.exe` installer, refer to [Install Tailscale on Windows][docs-instal"
+title: "在 Windows 上通过 WSL 2 安装 Tailscale"
+description: "本主题介绍如何在适用于 Linux 的 Windows 子系统（WSL 2）中安装 Tailscale。如果你想使用 Tailscale `.exe` 安装程序，请参阅[在 Windows 上安装 Tailscale][docs-instal"
 ---
 
-Last validated Nov 3, 2025
+最后验证于 Nov 3, 2025
 
-> **Note:**
+> **注意：**
 >
-> The current version of the Tailscale client available for [download][co-download-windows] requires Windows 10 or later or Windows Server 2016 or later.
+> 当前可供[下载][co-download-windows]的 Tailscale 客户端要求 Windows 10 或更高版本，或 Windows Server 2016 或更高版本。
 >
-> Installing Tailscale on WSL 2 is an advanced concept. You can find more information about WSL in [Microsoft's documentation][xt-ms-windows-wsl].
+> 在 WSL 2 上安装 Tailscale 属于进阶用法。有关 WSL 的更多信息，请参阅 [Microsoft 文档][xt-ms-windows-wsl]。
 >
-> There is a specific issue with packet size and Tailscale. You can follow this [GitHub issue][xt-gh-tailscale-issue-4833] for details. Report any performance issues on this thread if it is related.
+> 数据包大小与 Tailscale 之间存在一个已知问题，详情可关注这个 [GitHub issue][xt-gh-tailscale-issue-4833]。如果相关，请在该讨论串中报告性能问题。
 
-This topic shows how to install Tailscale within the Windows Subsystem for Linux (WSL 2) package. If you want to use the Tailscale
-`.exe` installer, refer to [Install Tailscale on Windows][docs-install-windows]. If you want to use the
-Tailscale `.msi` installer, refer to [Install Tailscale on Windows with MSI][docs-install-windows-msi].
+本主题介绍如何在适用于 Linux 的 Windows 子系统（WSL 2）中安装 Tailscale。如果你想使用 Tailscale `.exe` 安装程序，请参阅[在 Windows 上安装 Tailscale][docs-install-windows]；如果你想使用 Tailscale `.msi` 安装程序，请参阅[用 MSI 在 Windows 上安装 Tailscale][docs-install-windows-msi]。
 
-## To install
+## 安装步骤
 
-1. Verify that you are on WSL 2. From PowerShell, run the following command: `wsl -l -v`. In the `VERSION` column `2` will display. This means you are using WSL 2.
-2. Start your WSL 2 instance from PowerShell by running `wsl.exe` or opening up a Linux terminal tab (if you have it already configured).
-3. Run the automatic installation script:
+1. 确认你使用的是 WSL 2。在 PowerShell 中运行以下命令：`wsl -l -v`。`VERSION` 列会显示 `2`，这说明你正在使用 WSL 2。
+2. 在 PowerShell 中运行 `wsl.exe`，或打开已配置好的 Linux 终端选项卡，启动你的 WSL 2 实例。
+3. 运行自动安装脚本：
 
 ```shell
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
 
-You can find more detailed instructions in [Install Tailscale on Linux][docs-install-linux] page, including a manual installation process.
+更详细的说明（包括手动安装流程）请参阅[在 Linux 上安装 Tailscale][docs-install-linux]页面。
 
-1. After the installation completes, Tailscale will not yet be running, so you will need to follow the text prompt after the installation and run `sudo tailscale up`. This will post a Tailscale URL that you can select or copy and paste into your browser.
-2. When your browser window launches you will need to authenticate
-   using [your SSO identity provider][docs-sso-providers].
-3. Follow the prompts to add this node to your tailnet and your new WSL 2 node will display in the [Machines](https://console.tailscale.com/admin/machines) shortly.
+1. 安装完成后，Tailscale 尚未运行，因此你需要按照安装后的文字提示运行 `sudo tailscale up`。它会输出一个 Tailscale URL，你可以直接选中它，或复制粘贴到浏览器中打开。
+2. 浏览器窗口打开后，你需要使用[你的 SSO 身份提供方][docs-sso-providers]进行认证。
+3. 按照提示把这个节点加入你的 tailnet，新的 WSL 2 节点很快就会显示在 [Machines](https://console.tailscale.com/admin/machines) 页面中。
 
-## To uninstall
+## 卸载步骤
 
-Users can uninstall Tailscale by running the following command: `sudo apt-get remove tailscale`.
+用户可以运行以下命令卸载 Tailscale：`sudo apt-get remove tailscale`。
 
-## Considerations
+## 注意事项
 
-* Your new WSL 2 node will most likely have the same name as your Windows node and it might show up in the Tailscale admin page as a duplicate name or with an appended number. You can rename your node in the Tailscale [Machines](https://console.tailscale.com/admin/machines) page to reflect that it is your WSL 2 node.
-* If you run Tailscale on both the Windows host and inside WSL 2 at the same time, Tailscale encrypted traffic that flows from WSL 2 over Tailscale on the Windows host will not work due to Tailscale packets not being able to fit in Tailscale packets. For this reason it is recommended that users run Tailscale on the Windows host only, and not inside WSL 2.
-* If you run Tailscale inside WSL 2, the current versions of WSL 2 have a default `MTU` of `1280` on their default interface, which is not large enough for Tailscale to function. There is a workaround inside `tailscaled` that will raise the `MTU` of the default interface to `1340` if it detects that you're on WSL and it is using what appears to be this default `MTU`.
+* 你新的 WSL 2 节点很可能与你的 Windows 节点同名，在 Tailscale 管理页面中可能显示为重复名称，或名称末尾带有附加数字。你可以在 Tailscale 的 [Machines](https://console.tailscale.com/admin/machines) 页面中重命名该节点，以表明它是你的 WSL 2 节点。
+* 如果同时在 Windows 主机和 WSL 2 内运行 Tailscale，从 WSL 2 发出、经由 Windows 主机上的 Tailscale 转发的加密流量将无法工作，原因是数据包无法再装进 Tailscale 数据包（MTU 问题）。因此建议用户只在 Windows 主机上运行 Tailscale，而不要在 WSL 2 内运行。
+* 如果你在 WSL 2 内运行 Tailscale：当前版本的 WSL 2 在默认接口上的默认 `MTU` 为 `1280`，对 Tailscale 来说太小，无法正常工作。`tailscaled` 内置了一种应对措施：如果它检测到你正在 WSL 上运行、且默认接口使用的似乎正是这个默认 `MTU`，就会把默认接口的 `MTU` 提升到 `1340`。
 
 [co-download-windows]: https://tailscale.com/download/windows
 

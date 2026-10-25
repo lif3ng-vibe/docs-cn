@@ -1,24 +1,24 @@
 ---
-title: "Set up OpenAI"
-description: "Configure an OpenAI provider in Aperture so your team can access GPT models through your tailnet. OpenAI is the default provider type in Aperture. When no compatibility block is specified, Aperture en"
+title: "设置 OpenAI"
+description: "在 Aperture 中配置 OpenAI 提供商，让你的团队通过 tailnet 访问 GPT 模型。OpenAI 是 Aperture 中的默认提供商类型。未指定 compatibility 块时，Aperture 会自动启用 `openai_chat`，但除非你显式设置，否则不会启用 `openai_responses`。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure an OpenAI provider in Aperture so your team can access GPT models through your tailnet. OpenAI is the default provider type in Aperture. When no compatibility block is specified, Aperture enables `openai_chat` automatically, but does not enable `openai_responses` unless you set it explicitly.
+在 Aperture 中配置 OpenAI 提供商，让你的团队通过 tailnet 访问 GPT 模型。OpenAI 是 Aperture 中的默认提供商类型。未指定 compatibility 块时，Aperture 会自动启用 `openai_chat`，但除非你显式设置，否则不会启用 `openai_responses`。
 
 \[Missing snippet: aperture\_any\_provider.mdx]
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* An Aperture gateway accessible from your device. Refer to [get started with Aperture][docs-aperture-get-started] if you have not set this up.
-* An [OpenAI API key][xt-openai-api-keys].
+* 一台你的设备可以访问的 Aperture 网关。尚未设置时参阅[开始使用 Aperture][docs-aperture-get-started]。
+* 一个 [OpenAI API key][xt-openai-api-keys]。
 
-## Configure the provider
+## 配置提供商
 
-Add OpenAI as a provider in your [Aperture configuration][docs-aperture-configuration]:
+在 [Aperture 配置][docs-aperture-configuration]中把 OpenAI 添加为提供商：
 
 ```json
 {
@@ -37,11 +37,11 @@ Add OpenAI as a provider in your [Aperture configuration][docs-aperture-configur
 }
 ```
 
-The `openai_responses` flag enables the Responses API, which tools like OpenAI Codex use. When you include a `compatibility` block, set both flags explicitly. Without a compatibility block, Aperture enables only `openai_chat` by default. Refer to the [compatibility flags reference][docs-provider-compatibility] for the full list of flags.
+`openai_responses` 开关启用 Responses API，OpenAI Codex 等工具会用到它。包含 `compatibility` 块时，请显式设置两个开关。没有 compatibility 块时，Aperture 默认只启用 `openai_chat`。开关的完整列表参阅[兼容性开关参考][docs-provider-compatibility]。
 
-By default, Aperture injects the configured `apikey` on every request to OpenAI. To instead forward each client's own credential to OpenAI, set `auth_mode: "passthrough"` on the provider. The client then supplies its own API key, which Aperture forwards to OpenAI unchanged. Refer to [Set up passthrough mode][docs-use-passthrough-mode] for the full configuration.
+默认情况下，Aperture 在每个发往 OpenAI 的请求中注入配置的 `apikey`。若要把每个客户端自己的凭证转发给 OpenAI，请在该提供商上设置 `auth_mode: "passthrough"`。此时由客户端提供自己的 API key，Aperture 会原样转发给 OpenAI。完整配置参阅[设置 passthrough 模式][docs-use-passthrough-mode]。
 
-## Verify the provider
+## 验证提供商
 
 \[Missing snippet: aperture\_verify\_provider.mdx]
 

@@ -1,106 +1,73 @@
 ---
-title: "Access AWS RDS privately using Tailscale"
-description: "Amazon's Relational Database Service (AWS RDS) provides a managed relational database accessible using SQL and other methods. RDS is an Amazon-managed service reached by using hostname, public IP addr"
+title: "使用 Tailscale 私有访问 AWS RDS"
+description: "Amazon 关系型数据库服务（AWS RDS）提供可通过 SQL 等方式访问的托管关系型数据库。RDS 是一项 Amazon 托管服务，可以通过主机名、公有 IP 地址或私有 IP 地址访问。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Amazon's Relational Database Service (AWS RDS) provides a managed relational
-database accessible using SQL and other methods. RDS is an Amazon-managed service
-reached by using hostname, public IP address, or private IP address. To make RDS accessible to a
-tailnet, we use a [subnet router][docs-subnets].
+Amazon 关系型数据库服务（AWS RDS）提供托管关系型数据库，可通过 SQL 等方式访问。RDS 是一项 Amazon 托管服务，可以通过主机名、公有 IP 地址或私有 IP 地址访问。为了让 tailnet 能够访问 RDS，我们使用[子网路由器][docs-subnets]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need a Tailscale network set up and
-configured with at least one existing device. Read our [getting started guide][docs-install]
-if you need help with this.
+在开始本指南之前，你需要先搭建并配置好一个 Tailscale 网络，且其中至少有一台现有设备。如果需要帮助，请阅读我们的[入门指南][docs-install]。
 
-Setting up the RDS instance itself won't be covered here, we'll assume that RDS is
-already in use. There are a number of different database engines available with RDS,
-from Amazon's own Aurora, MySQL, PostgreSQL, and more. The connectivity techniques
-described here works with all of them.
+本指南不介绍 RDS 实例本身的创建，我们假设你已经在使用 RDS。RDS 提供多种不同的数据库引擎，包括 Amazon 自家的 Aurora、MySQL、PostgreSQL 等等。本文介绍的连接技术适用于所有这些引擎。
 
-For purposes of this topic, let's assume the RDS is set up in the `us-west-2` region.
+为便于说明，我们假设 RDS 部署在 `us-west-2` 区域。
 
-## Step 1: Set up a subnet router
+## 第 1 步：设置子网路由器
 
-First, [create an EC2 instance][xt-aws-ec2-create]
-running Amazon Linux on either x86 or ARM. Tailscale produces Linux packages containing binaries
-for both architectures, and the AWS ARM instances are very cost effective.
+首先，[创建一台 EC2 实例][xt-aws-ec2-create]，运行 Amazon Linux，x86 或 ARM 架构均可。Tailscale 提供的 Linux 软件包同时包含这两种架构的二进制文件，而且 AWS 的 ARM 实例性价比非常高。
 
-Some AWS Regions have multiple data centers, each with an associated Availability Zone and
-a subnet of IP addresses. RDS instances in a Region are reachable from all of these subnets,
-so the EC2 instance can be created on any of them. Other AWS managed services may require
-connecting to a specific subnet.
+部分 AWS 区域拥有多个数据中心，每个数据中心对应一个可用区（Availability Zone）和一段 IP 子网。同一区域内的 RDS 实例可以从所有这些子网访问，因此 EC2 实例可以创建在其中任意一个子网中。其他 AWS 托管服务可能要求连接到特定子网。
 
-If at least one side of a tunnel has "easy NAT," where Tailscale can determine the UDP port
-number on the far side of the NAT device, then it will make
-[direct connections to minimize latency][bl-how-tailscale-works].
-When setting the security policy, allow UDP port 41641 to ingress from any source. This will enable
-[direct connections][docs-firewall-ports], to minimize latency.
+只要隧道至少有一端是"简单 NAT"（easy NAT），即 Tailscale 能够确定 NAT 设备另一侧的 UDP 端口号，它就会建立[直连以降低延迟][bl-how-tailscale-works]。设置安全策略时，允许从任意源入站 UDP 端口 41641，即可启用[直连][docs-firewall-ports]，将延迟降到最低。
 
-*（图：Security Policy allow port 41641）*
+*（图：安全策略放行 41641 端口）*
 
-Then SSH to the system and follow the steps to
-[install Tailscale on Amazon Linux 2][pk-install-amazon-linux-2]
-and [configure subnet routing][docs-subnets].
-When running `tailscale up` or `tailscale set`, pass your VPC subnet to `--advertise-routes`.
-For example, if the subnet address range is `172.31.0.0/16`, the command would be:
+然后通过 SSH 连入该系统，按照步骤在 Amazon Linux 2 上[安装 Tailscale][pk-install-amazon-linux-2]并[配置子网路由][docs-subnets]。运行 `tailscale up` 或 `tailscale set` 时，将你的 VPC 子网传给 `--advertise-routes`。例如，如果子网地址范围为 `172.31.0.0/16`，命令就是：
 
 ```shell
 tailscale set --advertise-routes=172.31.0.0/16 --accept-dns=false
 ```
 
-> **Note:**
+> **注意：**
 >
-> For EC2 instances it is generally best to let Amazon handle the DNS configuration,
-> not have Tailscale override it, so we added `--accept-dns=false`.
+> 对 EC2 实例来说，通常最好让 Amazon 处理 DNS 配置，而不要让 Tailscale 覆盖它，所以我们加上了 `--accept-dns=false`。
 
-> **Note:**
+> **注意：**
 >
-> The Windows, macOS, Android, iOS, and other clients all accept advertised routes by default, but
-> Linux clients need to use `tailscale set --accept-routes=true` to use the routes being advertised
-> by the subnet router in AWS.
+> Windows、macOS、Android、iOS 等客户端默认都接受宣告的路由，但 Linux 客户端需要使用 `tailscale set --accept-routes=true`，才能使用 AWS 中子网路由器宣告的路由。
 
-## Step 2: Configure RDS security policy
+## 第 2 步：配置 RDS 安全策略
 
-We need the RDS security policy to allow connection from the subnet router.
-The RDS security policy can be found in the instance details of the RDS instance.
-We add the security policy created for the EC2 subnet router instance.
+我们需要让 RDS 安全策略允许来自子网路由器的连接。RDS 安全策略可以在 RDS 实例的实例详情中找到。我们将为 EC2 子网路由器实例创建的安全策略添加进去。
 
-*（图：Add subnet relay to RDS security policy）*
+*（图：向 RDS 安全策略添加子网中继）*
 
-## Step 3: Add AWS DNS for your tailnet
+## 第 3 步：为你的 tailnet 添加 AWS DNS
 
-For the benefit of the *other* nodes in the tailnet we'll set up
-[split DNS][docs-dns-using-settings] to allow
-use of the same DNS names as are used inside of AWS.
+为了方便 tailnet 中*其他*节点，我们将设置[拆分 DNS][docs-dns-using-settings]（split DNS），使其能够使用与 AWS 内部相同的 DNS 名称。
 
-The AWS DNS server address is always [the base of the VPC's primary IPv4 CIDR range + 2][xt-aws-vpc-dhcp], regardless of which subnet the subnet router is in.
-For example, if the VPC's primary CIDR range is `172.31.0.0/16`, the DNS server will be `172.31.0.2`. In the
-[DNS](https://console.tailscale.com/admin/dns) page of the admin console, add the AWS DNS server and restrict
-it to the region-specific `rds.amazonaws.com` domain, for example, `us-west-2.rds.amazonaws.com`.
+无论子网路由器位于哪个子网，AWS DNS 服务器地址始终是 [VPC 主 IPv4 CIDR 范围的基址 + 2][xt-aws-vpc-dhcp]。例如，如果 VPC 的主 CIDR 范围是 `172.31.0.0/16`，那么 DNS 服务器就是 `172.31.0.2`。在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面中，添加该 AWS DNS 服务器，并将其限制在区域专属的 `rds.amazonaws.com` 域，例如 `us-west-2.rds.amazonaws.com`。
 
-*（图：Adding a split DNS resolver for us-west-2.rds.amazonaws.com）*
+*（图：为 us-west-2.rds.amazonaws.com 添加拆分 DNS 解析器）*
 
-> **Note:**
+> **注意：**
 >
-> We recommend [hiding your DB instance from the internet][xt-aws-hide-db] to prevent access over the internet.
+> 我们建议[将你的数据库实例对互联网隐藏][xt-aws-hide-db]，以防止通过互联网访问。
 
-## Step 4: Remove public SSH access
+## 第 4 步：移除公开的 SSH 访问
 
-As we can now SSH to the system over the private Tailscale network, there is no reason to leave
-the SSH port open on a public IP address. In the security group for the EC2 instance, delete the
-SSH rule allowing inbound connections.
+既然现在已经可以通过私有 Tailscale 网络 SSH 到该系统，就没有理由继续在公有 IP 地址上开放 SSH 端口了。在该 EC2 实例的安全组中，删除允许入站连接的 SSH 规则。
 
-*（图：Removing public SSH access）*
+*（图：移除公开的 SSH 访问）*
 
-## Step 5: Connect to RDS
+## 第 5 步：连接到 RDS
 
-We can now connect to RDS from any node in the tailnet, using the same DNS name as is used inside AWS.
+现在可以从 tailnet 中的任意节点连接到 RDS，使用的 DNS 名称与 AWS 内部完全相同。
 
-For example, to access your RDS server from your personal computer, while logged into your tailnet:
+例如，在登录你的 tailnet 的情况下，从个人计算机访问你的 RDS 服务器：
 
 ```shell
 mysqlsh --uri=admin@database-2.0123456789ab.us-west-2.rds.amazonaws.com:3306
@@ -119,7 +86,7 @@ MySQL  database-2.0123456789ab.us-west-2.rds.amazonaws.com:3306 ssl  SQL > show 
 5 rows in set (0.0297 sec)
 ```
 
-Using a subnet router lets you connect to many services within AWS, not just RDS, using their internal AWS IP address.
+使用子网路由器，你还可以借助内部 AWS IP 地址连接到 AWS 中的许多其他服务，而不仅仅是 RDS。
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

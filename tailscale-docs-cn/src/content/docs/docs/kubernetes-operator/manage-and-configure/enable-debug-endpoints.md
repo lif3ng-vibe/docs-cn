@@ -1,21 +1,21 @@
 ---
-title: "Enable Operator debug endpoints"
-description: "If enabled, the debug endpoints are available on a container port named \"debug\". The endpoints include `/debug/metrics` and `/debug/pprof/` paths from Go's [`net/http/pprof`][xt-go-pprof] library."
+title: "启用 Operator 调试端点"
+description: "如果启用，调试端点将通过名为 \"debug\" 的容器端口提供。这些端点包括来自 Go [`net/http/pprof`][xt-go-pprof] 库的 `/debug/metrics` 和 `/debug/pprof/` 路径。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-> **Warning:**
+> **警告：**
 >
-> Debug endpoints are unstable, may change without notice, and Tailscale does not recommend debug endpoints for production use.
+> 调试端点不稳定，可能在不另行通知的情况下变更，Tailscale 不建议在生产环境中使用调试端点。
 >
-> If you rely on the debug metrics (at `/debug/metrics`), you must explicitly enable the following debug option before upgrading to v1.82, which always defaults debug to disabled.
+> 如果你依赖调试指标（位于 `/debug/metrics`），在升级到 v1.82（该版本起调试始终默认禁用）之前，必须显式启用以下调试选项。
 
-If enabled, the debug endpoints are available on a container port named "debug". The endpoints include `/debug/metrics` and `/debug/pprof/` paths from Go's [`net/http/pprof`][xt-go-pprof] library.
+如果启用，调试端点将通过名为 "debug" 的容器端口提供。这些端点包括来自 Go [`net/http/pprof`][xt-go-pprof] 库的 `/debug/metrics` 和 `/debug/pprof/` 路径。
 
-To maintain backward compatibility, debug endpoints default to enabled if `.spec.metrics.enable` is set to `true`. If `.spec.metrics.enable` is set to `false`, the debug endpoints default to disabled.
+为了保持向后兼容，如果 `.spec.metrics.enable` 设为 `true`，调试端点默认启用。如果 `.spec.metrics.enable` 设为 `false`，调试端点默认禁用。
 
-In Tailscale v1.82 and later, the debug endpoints always default to disabled. You can override the default for debug endpoints using `ProxyClass`:
+在 Tailscale v1.82 及更高版本中，调试端点始终默认禁用。你可以使用 `ProxyClass` 覆盖调试端点的默认值：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1

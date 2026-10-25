@@ -1,146 +1,146 @@
 ---
-title: "Create a secure connection to MongoDB Atlas"
-description: "Securely connect to a MongoDB Atlas database and permit access only to your Tailscale network."
+title: "创建到 MongoDB Atlas 的安全连接"
+description: "安全地连接 MongoDB Atlas 数据库，并只允许你的 Tailscale 网络访问。"
 ---
 
-Last validated Dec 4, 2025
+最后验证于 Dec 4, 2025
 
-## Introduction
+## 简介
 
-Many Software as a Service (SaaS) applications require a list of allowed IP address ranges to restrict connectivity to only intended devices and users. If you connect to public Wi-Fi in places like hotels, airports, or cafés, you likely won't have application access due to the allowed IP address list not containing your IP address. For some organizations, when a new user joins the organization, an admin needs to add their IP address to the set of allowed IP addresses, which slows down onboarding of the user.
+许多软件即服务（SaaS）应用要求提供一份允许的 IP 地址段列表，以便只允许预期的设备和用户连接。如果你在酒店、机场或咖啡馆等场所连接公共 Wi-Fi，由于允许的 IP 地址列表里没有你的 IP 地址，你很可能无法访问该应用。对于某些组织来说，每当有新用户加入，管理员都需要把该用户的 IP 地址添加到允许的 IP 地址集合中，这拖慢了新用户的入职速度。
 
-Tailscale [app connectors][docs-app-connectors] let you route SaaS applications through dedicated devices in your Tailscale network (known as a tailnet). Instead of maintaining an allowlist of all IP addresses in your tailnet, you maintain an allowlist of only the app connector IP addresses. Your users still have access if they work from a café, and new users in your tailnet have access as soon as they join your tailnet. You can use an app connector to securely connect to SaaS applications like a [MongoDB Atlas][xt-mongodb-atlas] database, and deny access to anyone that is not in your tailnet.
+Tailscale [应用连接器（app connector）][docs-app-connectors]让你可以把 SaaS 应用的流量经由 Tailscale 网络（称为 tailnet）中的专用设备路由。你无需维护一份包含 tailnet 中所有 IP 地址的允许列表，只需维护应用连接器 IP 地址的允许列表。你的用户在咖啡馆办公时依然拥有访问权限，tailnet 中的新用户一加入就能获得访问权限。你可以使用应用连接器安全地连接 [MongoDB Atlas][xt-mongodb-atlas] 数据库这类 SaaS 应用，并拒绝任何不在你 tailnet 中的人访问。
 
-In this guide, you will update your [tailnet policy file][docs-tailnet-policy-file] to restrict access to a MongoDB Atlas database, configure and run an app connector to route requests to the database, and update the Atlas IP address list to allow access only through the app connector. When you finish this guide, you'll have set access restrictions to let only your tailnet users access the database.
+在本指南中，你将更新 [tailnet 策略文件][docs-tailnet-policy-file]来限制对 MongoDB Atlas 数据库的访问，配置并运行一个应用连接器来路由发往数据库的请求，并更新 Atlas 的 IP 地址列表，使访问只能经由应用连接器进行。完成本指南后，你将设置好访问限制，只允许你的 tailnet 用户访问该数据库。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide you'll need the following:
+开始本指南之前，你需要具备以下条件：
 
-* A MongoDB Atlas database. For information about MongoDB Atlas, refer to MongoDB's [What is MongoDB Atlas?][xt-mongodb-atlas-docs] topic.
-* A user name and password for your Atlas database.
-* A MongoDB Atlas role of Project Owner, so that you can edit the Atlas IP access list.
-* Your Atlas connection string. This is in the form `<cluster-name>.<hash>.mongodb.net`. For example, `cluster0.abcdef.mongodb.net`. For information about retrieving your connection string, refer to [Find your MongoDB Atlas connection string][xt-mongodb-connection-string].
-* A Tailscale account.  [Create an account](https://login.tailscale.com/start) if you don't have one already.
-* A Linux device to use as an app connector for your tailnet. This solution will show you how to start this device as an app connector for Atlas. For now, ensure the device meets the app connector [requirements][docs-app-connectors-setup-requirements] and is already in your tailnet.
-* A different device in your tailnet that has [MongoDB Shell][xt-mongodb-shell] installed. You will use this device to connect to your MongoDB Atlas database.
-* A Tailscale role of either [Owner, Admin, or Network admin](/docs/reference/user-roles) so that you can edit your [tailnet policy file][docs-tailnet-policy-file].
+* 一个 MongoDB Atlas 数据库。关于 MongoDB Atlas 的信息，请参阅 MongoDB 的 [What is MongoDB Atlas?][xt-mongodb-atlas-docs] 主题。
+* 你的 Atlas 数据库的用户名和密码。
+* 一个 MongoDB Atlas 的 Project Owner 角色，以便你能够编辑 Atlas IP 访问列表。
+* 你的 Atlas 连接字符串。其形式为 `<cluster-name>.<hash>.mongodb.net`，例如 `cluster0.abcdef.mongodb.net`。关于如何获取连接字符串，请参阅 [Find your MongoDB Atlas connection string][xt-mongodb-connection-string]。
+* 一个 Tailscale 账户。如果还没有，请[创建账户](https://login.tailscale.com/start)。
+* 一台用作 tailnet 应用连接器的 Linux 设备。本方案会向你展示如何将该设备启动为 Atlas 的应用连接器。目前，请确保该设备满足应用连接器的[要求][docs-app-connectors-setup-requirements]，并且已加入你的 tailnet。
+* tailnet 中另一台安装了 [MongoDB Shell][xt-mongodb-shell] 的设备。你将用这台设备连接你的 MongoDB Atlas 数据库。
+* 一个 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 的 Tailscale 角色，以便你能够编辑 [tailnet 策略文件][docs-tailnet-policy-file]。
 
-## Step 1: Update your tailnet policy file
+## 第 1 步：更新你的 tailnet 策略文件
 
-Configure your [tailnet policy file][docs-tailnet-policy-file] to securely route tailnet traffic to your Atlas database. You need to make the following updates to your tailnet policy file:
+配置你的 [tailnet 策略文件][docs-tailnet-policy-file]，把 tailnet 流量安全地路由到你的 Atlas 数据库。你需要对 tailnet 策略文件做以下更新：
 
-* Create a Tailscale group for your Atlas admins.
-* Create a tag to use for your app connector devices, which will connect your tailnet users to your Atlas database.
-* Configure auto approval of your app connector devices, so that when they join your tailnet, their routes to the Atlas database are automatically approved. This lets you set up an app connector device by running a single [`tailscale up`][docs-tailscale-up] command on the device.
-* Create a grant that lets your tailnet users access the Atlas database.
-* Define the set of domains for your specific MongoDB Atlas project. Your Atlas app connector uses these domains to route tailnet traffic to the Atlas database.
+* 为你的 Atlas 管理员创建一个 Tailscale 群组。
+* 创建一个供你的应用连接器设备使用的标签，这些设备会把你的 tailnet 用户连接到你的 Atlas 数据库。
+* 配置应用连接器设备的自动审批，这样它们加入你的 tailnet 时，通往 Atlas 数据库的路由会自动获得批准。这样你只需在该设备上运行一条 [`tailscale up`][docs-tailscale-up] 命令就能完成应用连接器设备的搭建。
+* 创建一条授权，让你的 tailnet 用户能够访问 Atlas 数据库。
+* 为你的特定 MongoDB Atlas 项目定义域名集合。你的 Atlas 应用连接器会使用这些域名把 tailnet 流量路由到 Atlas 数据库。
 
-You need to be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to edit a tailnet policy file.
+你需要是 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 才能编辑 tailnet 策略文件。
 
-### Create an Atlas admins group
+### 创建 Atlas 管理员群组
 
-Tailscale [groups][docs-syntax-groups] let you create groups of users, which you can use in access rules (instead of listing users out explicitly). Create a group named `atlas-admins` so that you can add all of your Atlas admins into a single group.
+Tailscale [群组][docs-syntax-groups]让你可以创建用户群组，并在访问规则中使用它们（而不必逐一列出用户）。创建一个名为 `atlas-admins` 的群组，把所有 Atlas 管理员集中到同一个群组中。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的 [Visual editor](https://console.tailscale.com/admin/acls/visual) 标签页。
 
-2. Select **Groups**, and then select **Create tag**.
+2. 选择 **Groups**（群组），然后选择 **Create tag**（创建标签）。
 
-3. For **Group name**, enter `atlas-admins`.
+3. 在 **Group name**（群组名称）中输入 `atlas-admins`。
 
-4. For **Members**, select yourself from the dropdown list. If you have others in your tailnet that you want to administer your Atlas app connector, add them to this group also.
+4. 在 **Members**（成员）中，从下拉列表选择你自己。如果你的 tailnet 中还有其他人需要管理你的 Atlas 应用连接器，也把他们加入这个群组。
 
-5. (Optional) For **Note**, enter any note you'd like to keep for this group.
+5. （可选）在 **Note**（备注）中输入你想为这个群组保留的任何备注。
 
-6. Select **Save group**.
+6. 选择 **Save group**（保存群组）。
 
-Now that you have the `atlas-admins` group, you can use it in a tag.
+有了 `atlas-admins` 群组之后，你就可以在标签中使用它了。
 
-### Create a tag for your app connector devices
+### 为你的应用连接器设备创建标签
 
-Tailscale [tags][docs-tags] let you authenticate and identify non-user devices. A tag consists of an identifier and the users and groups that can apply the tag. Create a `tag:atlas-app-connector` tag so that you and any other members of the `atlas-admin` group can apply the tag to the devices you want to use for your Atlas app connectors.
+Tailscale [标签][docs-tags]让你可以对非用户设备进行认证和标识。一个标签由一个标识符以及可以应用该标签的用户和群组组成。创建一个 `tag:atlas-app-connector` 标签，让你和 `atlas-admins` 群组的其他成员都能把它应用到你想用作 Atlas 应用连接器的设备上。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的 [Visual editor](https://console.tailscale.com/admin/acls/visual) 标签页。
 
-2. Select **Tags**, and then select **Create tag**.
+2. 选择 **Tags**（标签），然后选择 **Create tag**（创建标签）。
 
-3. For **Tag name**, enter `atlas-app-connector`.
+3. 在 **Tag name**（标签名称）中输入 `atlas-app-connector`。
 
-4. For **Tag owner**, select `group:atlas-admins`.
+4. 在 **Tag owner**（标签所有者）中选择 `group:atlas-admins`。
 
-5. (Optional) For **Note**, enter any note you'd like to keep for this tag.
+5. （可选）在 **Note**（备注）中输入你想为这个标签保留的任何备注。
 
-6. Select **Save tag**.
+6. 选择 **Save tag**（保存标签）。
 
-Now that you have the tag named `atlas-app-connector`, you can use it to auto approve routes to your Atlas database.
+有了名为 `atlas-app-connector` 的标签之后，你就可以用它来自动审批通往你的 Atlas 数据库的路由了。
 
-### Create an auto approver for your app connector routes
+### 为你的应用连接器路由创建自动审批器
 
-Add an [`autoApprovers`][docs-policy-syntax-autoapprovers] rule to automatically approve specific routes for devices that have the `atlas-app-connector` tag. After you configure app traffic to route through an app connector, any DNS request to the configured app domains triggers route discovery.
+添加一条 [`autoApprovers`][docs-policy-syntax-autoapprovers] 规则，为拥有 `atlas-app-connector` 标签的设备自动审批特定路由。在你把应用流量配置为经由应用连接器路由之后，任何发往所配置应用域名的 DNS 请求都会触发路由发现。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的 [Visual editor](https://console.tailscale.com/admin/acls/visual) 标签页。
 
-2. Select **Auto approvers**, and then select **Add route**.
+2. 选择 **Auto approvers**（自动审批器），然后选择 **Add route**（添加路由）。
 
-3. For **Route**, enter `0.0.0.0/0`.
+3. 在 **Route**（路由）中输入 `0.0.0.0/0`。
 
-4. For **Route is approved for**, select `tag:atlas-app-connector`.
+4. 在 **Route is approved for**（路由批准对象）中选择 `tag:atlas-app-connector`。
 
-5. (Optional) For **Note**, enter any note you'd like to keep for this auto approver route.
+5. （可选）在 **Note**（备注）中输入你想为这条自动审批路由保留的任何备注。
 
-6. Select **Add route** again.
+6. 再次选择 **Add route**。
 
-7. For **Route**, enter `::/0`.
+7. 在 **Route**（路由）中输入 `::/0`。
 
-8. For **Route is approved for**, select `tag:atlas-app-connector`.
+8. 在 **Route is approved for**（路由批准对象）中选择 `tag:atlas-app-connector`。
 
-9. (Optional) For **Note**, enter any note you'd like to keep for this auto approver route.
+9. （可选）在 **Note**（备注）中输入你想为这条自动审批路由保留的任何备注。
 
-10. Select **Save route auto approver**.
+10. 选择 **Save route auto approver**（保存路由自动审批器）。
 
-### Provide MongoDB Atlas access to your tailnet users
+### 向你的 tailnet 用户提供 MongoDB Atlas 访问权限
 
-Add a [`grants`][docs-policy-syntax-grants] rule to route Atlas traffic through the app connectors.
+添加一条 [`grants`][docs-policy-syntax-grants] 规则，让 Atlas 流量经由应用连接器路由。
 
-You must allow tailnet devices to access the routes an app connector advertises. One way to do this is to add an access control policy to your tailnet policy file that grants access to `autogroup:internet` (any port number) for members of the tailnet, which will also grant users access to any [exit nodes][docs-exit-nodes] in the tailnet.
+你必须允许 tailnet 设备访问应用连接器宣告的路由。一种做法是向 tailnet 策略文件中添加一条访问控制策略，为 tailnet 成员授予对 `autogroup:internet`（任意端口）的访问权，这同时也会授予用户对 tailnet 中任何[出口节点][docs-exit-nodes]的访问权。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的 [Visual editor](https://console.tailscale.com/admin/acls/visual) 标签页。
 
-2. Select **General access rules**, and then select **Add rule**.
+2. 选择 **General access rules**（通用访问规则），然后选择 **Add rule**（添加规则）。
 
-3. For **Source**, select `autogroup:member`.
+3. 在 **Source**（来源）中选择 `autogroup:member`。
 
-4. For **Destination**, select `autogroup:internet`.
+4. 在 **Destination**（目标）中选择 `autogroup:internet`。
 
-5. For **Destination and protocol**, select `All ports and protocols`.
+5. 在 **Destination and protocol**（目标与协议）中选择 `All ports and protocols`（所有端口和协议）。
 
-6. (Optional) For **Note**, enter any note you'd like to keep for this grant.
+6. （可选）在 **Note**（备注）中输入你想为这条授权保留的任何备注。
 
-7. Select **Save grant**.
+7. 选择 **Save grant**（保存授权）。
 
-### Set the Atlas domains
+### 设置 Atlas 域名
 
-Add your Atlas project domains to your connector, by adding a [node attribute][docs-policy-syntax-node-attributes] for the `tag:atlas-app-connector` tag that you created. Any device that you run for this app connector will use these domains to map client requests to your Atlas database.
+为你创建的 `tag:atlas-app-connector` 标签添加一个[节点属性][docs-policy-syntax-node-attributes]，把你的 Atlas 项目域名加入连接器。你为这个应用连接器运行的任何设备都会使用这些域名把客户端请求映射到你的 Atlas 数据库。
 
-Your Atlas connection string contains the MongoDB Atlas domain for your Atlas project, in the form of `<cluster-name>.<hash>.mongodb.net`. For example, `cluster0.abcdef.mongodb.net`. For that example, use `*.abcdef.mongodb.net` for your domain string in the following step. If you want to restrict access to only specific a specific cluster, you can use a domain string like `cluster0.abcdef.mongodb.net`.
+你的 Atlas 连接字符串包含你的 Atlas 项目对应的 MongoDB Atlas 域名，形式为 `<cluster-name>.<hash>.mongodb.net`，例如 `cluster0.abcdef.mongodb.net`。对于这个例子，应在下一步的域名串中使用 `*.abcdef.mongodb.net`。如果你想把访问限制到特定集群，也可以使用 `cluster0.abcdef.mongodb.net` 这样的域名串。
 
-Now that you have your Atlas domain, add it to your app connector's node attributes.
+有了 Atlas 域名之后，把它添加到应用连接器。
 
-Add your Atlas domain to the app connector
+将你的 Atlas 域名添加到应用连接器
 
-Configure your app connector to handle the routing of database requests based on your Atlas domain.
+配置你的应用连接器，让它根据你的 Atlas 域名处理数据库请求的路由。
 
-1. Go to the [Visual editor](https://console.tailscale.com/admin/acls/visual) tab of the admin console.
+1. 前往管理控制台的 [Visual editor](https://console.tailscale.com/admin/acls/visual) 标签页。
 
-2. Select **Node attributes**, and then select **Add node attribute**.
+2. 选择 **Node attributes**（节点属性），然后选择 **Add node attribute**（添加节点属性）。
 
-3. For **Targets**, select `All users and devices`.
+3. 在 **Targets**（目标）中选择 `All users and devices`（所有用户和设备）。
 
-4. (Optional) For **Note**, enter any note you'd like to keep for this node attribute.
+4. （可选）在 **Note**（备注）中输入你想为这个节点属性保留的任何备注。
 
-5. For **App**, enter `tailscale.com/app-connectors`.
+5. 在 **App** 中输入 `tailscale.com/app-connectors`。
 
-6. For **Capability**, enter the following (replacing `<hash>` with your connection string's hash):
+6. 在 **Capability**（能力）中输入以下内容（把 `<hash>` 替换为你连接字符串中的哈希值）：
 
    ```json
    {
@@ -154,82 +154,82 @@ Configure your app connector to handle the routing of database requests based on
    }
    ```
 
-   If you want to specify a specific cluster instead of `*` for the `domains` entry, use `"<cluster-name>.<hash>.mongodb.net"`instead of `"*.<hash>.mongodb.net"`.
+   如果你希望在 `domains` 条目中指定特定集群而不是 `*`，请使用 `"<cluster-name>.<hash>.mongodb.net"` 而不是 `"*.<hash>.mongodb.net"`。
 
-7. Select **Save node attribute**.
+7. 选择 **Save node attribute**（保存节点属性）。
 
-Now that you configured your app connector for Atlas access, start your app connector device.
+你已经为 Atlas 访问配置好了应用连接器，现在启动你的应用连接器设备。
 
-## Step 2: Start an app connector for Atlas
+## 第 2 步：为 Atlas 启动一个应用连接器
 
-Run a device in your tailnet to securely route your user traffic to your MongoDB Atlas database.
+在 tailnet 中运行一台设备，把你的用户流量安全地路由到你的 MongoDB Atlas 数据库。
 
-> **Warning:**
+> **警告：**
 >
-> The app connector device must be running Linux, already added to your tailnet, have a public IP address, and IP port forwarding enabled, as described in the app connector [Requirements][docs-app-connectors-setup-requirements].
+> 应用连接器设备必须运行 Linux、已加入你的 tailnet、拥有公网 IP 地址并启用了 IP 端口转发，如应用连接器的[要求][docs-app-connectors-setup-requirements]所述。
 
-On your Linux device that you want to use as an app connect, run the following [`tailscale up`][docs-tailscale-up] command:
+在你想用作应用连接器的 Linux 设备上，运行以下 [`tailscale up`][docs-tailscale-up] 命令：
 
 ```shell
 tailscale up --advertise-connector --advertise-tags=tag:atlas-app-connector
 ```
 
-The `--advertise-connector` flag enables the device to route traffic for specific domains according to the configuration in the tailnet policy file. The `--advertise-tags` flag tells the Tailscale client to authenticate the device with the `tag:atlas-app-connector` tag.
+`--advertise-connector` 标志让设备能够根据 tailnet 策略文件中的配置为特定域名路由流量。`--advertise-tags` 标志告诉 Tailscale 客户端用 `tag:atlas-app-connector` 标签对设备进行认证。
 
-By default, devices in a tailnet are occasionally required to re-authenticate to keep your network secure. To avoid DNS interruptions if the app connector device needs to re-authenticate, go to the [Machines](https://console.tailscale.com/admin/machines) page of the admin console, select the  button next to the app connector device, then select **Disable key expiry**.
+默认情况下，tailnet 中的设备会不时被要求重新认证，以保证网络安全。为避免应用连接器设备需要重新认证时造成 DNS 中断，请前往管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面，选择应用连接器设备旁边的按钮，然后选择 **Disable key expiry**（禁用密钥过期）。
 
-Now that your app connector is running and serving as an Atlas app connector, you can allowlist its IP address in Atlas to let your tailnet users access the database.
+你的应用连接器现在正在运行并充当 Atlas 应用连接器，你可以在 Atlas 中把它的 IP 地址加入允许列表，让 tailnet 用户访问数据库。
 
-## Step 3: Allowlist the app connector in Atlas
+## 第 3 步：在 Atlas 中将应用连接器加入允许列表
 
-Atlas permits client connections only from entries in the [Atlas access list][xt-mongodb-atlas-configure-ips]. Update the Atlas access list to use the egress IP addresses from your app connector.
+Atlas 只允许来自 [Atlas 访问列表][xt-mongodb-atlas-configure-ips]中条目的客户端连接。更新 Atlas 访问列表，加入你应用连接器的出站 IP 地址。
 
-First, get the IP address of your app connector from the Tailscale admin console.
+首先，从 Tailscale 管理控制台获取你的应用连接器的 IP 地址。
 
-1. Open the [Apps](https://console.tailscale.com/admin/apps) page of the admin console.
-2. Select **MongoDB Atlas**.
-3. In the **Egress IPs** section, copy the IP address.
+1. 打开管理控制台的 [Apps](https://console.tailscale.com/admin/apps) 页面。
+2. 选择 **MongoDB Atlas**。
+3. 在 **Egress IPs**（出站 IP）部分复制该 IP 地址。
 
-   > **Note:**
+   > **注意：**
    >
-   > You can enter only one IP address at a time into the Atlas access list. If you have more than one **Egress IP** address, you need to individually copy and paste them to the Atlas IP access list.
+   > 每次只能向 Atlas 访问列表输入一个 IP 地址。如果你有多个**出站 IP** 地址，需要逐个复制并粘贴到 Atlas IP 访问列表中。
 
-Next, add the IP address to the Atlas list of allowed IP addresses.
+接下来，把该 IP 地址添加到 Atlas 的允许 IP 地址列表。
 
-1. In the [Atlas dashboard][xt-mongodb-dashboard], go to **Project** and make your Atlas project the active project, if it is not already.
-2. In the sidebar, under **Security**, select **Network Access**, and then select **IP Access List**.
-3. Select **Add IP Address**.
-4. For **Access List Entry**, enter the app connector egress IP address that you copied from the Tailscale admin console.
-5. (Optional) For **Comment**, enter any comment you'd like to keep for this IP address.
-6. (Optional) Set a time limit for the duration of access allowed for this IP address.
-7. Select **Confirm**.
+1. 在 [Atlas 控制台][xt-mongodb-dashboard]中，前往 **Project**（项目），如果你的 Atlas 项目尚未激活，将其设为当前项目。
+2. 在侧边栏的 **Security**（安全）下，选择 **Network Access**（网络访问），然后选择 **IP Access List**（IP 访问列表）。
+3. 选择 **Add IP Address**（添加 IP 地址）。
+4. 在 **Access List Entry**（访问列表条目）中，输入你从 Tailscale 管理控制台复制的应用连接器出站 IP 地址。
+5. （可选）在 **Comment**（注释）中输入你想为这个 IP 地址保留的任何注释。
+6. （可选）为该 IP 地址的允许访问时长设置时间限制。
+7. 选择 **Confirm**（确认）。
 
-If you have more IP addresses in your app connector's **Egress IPs** list, repeat this step to add them to the Atlas access list.
+如果你应用连接器的**出站 IP** 列表中还有其他 IP 地址，重复此步骤把它们加入 Atlas 访问列表。
 
-### Remove unneeded IP addresses from the Atlas access list
+### 从 Atlas 访问列表中移除不需要的 IP 地址
 
-If your Atlas access list contains IP addresses that are not specific to your app connector, remove them. Otherwise, someone outside of your tailnet could access the database.
+如果你的 Atlas 访问列表中包含并非专属于你的应用连接器的 IP 地址，请将其移除。否则，tailnet 之外的人可能访问数据库。
 
-1. In the **Network Access** page, for any IP address that your want to delete, select **Delete**.
-2. Select **Delete** again to confirm you want to delete it.
+1. 在 **Network Access**（网络访问）页面，对你想删除的任何 IP 地址选择 **Delete**（删除）。
+2. 再次选择 **Delete** 确认删除。
 
-For more information about MongoDB Atlas IP access lists, refer to MongoDB's [Configure IP Access List Entries][xt-mongodb-atlas-configure-ips] topic.
+关于 MongoDB Atlas IP 访问列表的更多信息，请参阅 MongoDB 的 [Configure IP Access List Entries][xt-mongodb-atlas-configure-ips] 主题。
 
-Now that you configured your Atlas project to accept requests from only the specified IP address range, you can make a connection from a device in your tailnet.
+你的 Atlas 项目现在已配置为只接受来自指定 IP 地址段的请求，你可以从 tailnet 中的一台设备发起连接了。
 
-## Step 4: Connect to your database
+## 第 4 步：连接到你的数据库
 
-Use the device in your tailnet with `mongosh` installed to connect to your database. Use a device separate from the app connector device.
+使用 tailnet 中装有 `mongosh` 的设备连接数据库。请使用一台与应用连接器设备不同的设备。
 
-1. If the device is a Linux device, run the following [`tailscale set`][docs-tailscale-set] command so the client accepts the routes provided by the app connector:
+1. 如果该设备是 Linux 设备，请运行以下 [`tailscale set`][docs-tailscale-set] 命令，让客户端接受应用连接器提供的路由：
 
    ```shell
    tailscale set --accept-routes
    ```
 
-   Tailscale clients on other operating systems accept the routes by default.
+   其他操作系统上的 Tailscale 客户端默认接受这些路由。
 
-2. Run the following (replace the placeholders with the values for your Atlas database):
+2. 运行以下命令（将占位符替换为你的 Atlas 数据库的值）：
 
    ```shell
    mongosh "mongodb+srv://<cluster-name>.<hash>.mongodb.net/" \
@@ -237,13 +237,13 @@ Use the device in your tailnet with `mongosh` installed to connect to your datab
      --username <database-user-name>
    ```
 
-   If the `mongosh` command succeeds, the `mongosh` prompt opens. To confirm you can connect to your database, run:
+   如果 `mongosh` 命令成功，`mongosh` 提示符会打开。要确认你能连接到数据库，运行：
 
    ```shell
     show dbs;
    ```
 
-   The command should provide a list the databases in your Atlas project, similar to:
+   该命令应列出你的 Atlas 项目中的数据库，类似如下：
 
    ```shell
    myDatabase     72.00 KiB
@@ -251,17 +251,17 @@ Use the device in your tailnet with `mongosh` installed to connect to your datab
    local         997.79 MiB
    ```
 
-When you finish using the `mongosh` prompt, enter `exit` to close the `mongosh` prompt.
+使用完 `mongosh` 提示符后，输入 `exit` 关闭 `mongosh` 提示符。
 
-Now that you've tested a connection from a separate device, try the same `mongosh` steps but first ensure that the separate device is running in a different LAN. If both the app connector and the separate device are using the same LAN, their IP addresses are in the same IP address that you allowlisted. If the separate device runs on a different local area network, it uses an IP address different than the app connector IP address. If the device is on a different LAN and still successfully connects to your Atlas database, that means you have successfully allowed access from the Atlas side.
+你已经在另一台设备上测试了连接。现在尝试同样的 `mongosh` 步骤，但要先确保那台设备运行在不同的局域网（LAN）中。如果应用连接器和那台设备使用同一个局域网，它们的 IP 地址就都在你加入允许列表的同一个 IP 地址内。如果那台设备运行在不同的局域网，它使用的 IP 地址就会与应用连接器的 IP 地址不同。如果那台设备处于不同局域网仍能成功连接你的 Atlas 数据库，说明你已经成功地从 Atlas 一侧限制了访问。
 
-Now you're ready to confirm that the connection requires Tailscale.
+现在可以确认这条连接是否依赖 Tailscale。
 
-### Confirm your connection requires Tailscale
+### 确认你的连接依赖 Tailscale
 
-1. On a device separate from your app connector, and on a different local area network than used by the app connector, disable the Tailscale client. You can disable the Tailscale client through the Tailscale client UI, or through the [`tailscale down`][docs-tailscale-down] command.
+1. 在一台不同于应用连接器、且与应用连接器处于不同局域网的设备上，禁用 Tailscale 客户端。你可以通过 Tailscale 客户端界面禁用，也可以通过 [`tailscale down`][docs-tailscale-down] 命令禁用。
 
-2. Run the following command (replace the placeholders with the values for your Atlas database):
+2. 运行以下命令（将占位符替换为你的 Atlas 数据库的值）：
 
    ```shell
    mongosh "mongodb+srv://<cluster-name>.<hash>.mongodb.net/" \
@@ -269,25 +269,25 @@ Now you're ready to confirm that the connection requires Tailscale.
      --username <database-user-name>
    ```
 
-   This command should fail to connect to your database, because the device will not be able to use the app connector due to Tailscale not running. If the device is not running Tailscale and it does successfully connect to your database, and you confirmed that the device has a different IP address than the app connector, that means your Atlas allowed IP addresses is too permissive. Check whether there are any IP addresses that should not have access and remove them.
+   该命令应该无法连接到你的数据库，因为 Tailscale 未运行，设备无法使用应用连接器。如果设备没有运行 Tailscale 却成功连接了你的数据库，并且你已确认该设备的 IP 地址与应用连接器不同，说明你的 Atlas 允许 IP 地址列表过于宽松。检查是否有不应拥有访问权限的 IP 地址并移除它们。
 
-   > **Warning:**
+   > **警告：**
    >
-   > If you can connect to your Atlas database on a device that is not running Tailscale and the device IP address is different from the app connector IP address, check your Atlas and tailnet policy file settings, and correct as needed. Otherwise, your database access is not secure.
+   > 如果你能在未运行 Tailscale 且 IP 地址不同于应用连接器的设备上连接你的 Atlas 数据库，请检查你的 Atlas 与 tailnet 策略文件设置并按需修正。否则，你的数据库访问就是不安全的。
 
-After you confirm that the connection required Tailscale, remember to enable Tailscale on the client. You can enable the Tailscale client through the Tailscale client UI, or through the [`tailscale up`][docs-tailscale-up] command.
+确认连接依赖 Tailscale 之后，记得在客户端上重新启用 Tailscale。你可以通过 Tailscale 客户端界面启用，也可以通过 [`tailscale up`][docs-tailscale-up] 命令启用。
 
-## Conclusion
+## 结语
 
-In this guide you configured an app connector so that your tailnet clients can access a MongoDB Atlas database and anyone outside of your tailnet cannot access the database. You also ensured that a device needs Tailscale enabled to allow access.
+在本指南中，你配置了一个应用连接器，让你的 tailnet 客户端能够访问 MongoDB Atlas 数据库，而 tailnet 之外的人无法访问该数据库。你还确保了设备必须启用 Tailscale 才能获得访问权限。
 
-To ensure that your tailnet users have high availability to your database, consider [adding another app connector][ar-start-app-connector] device so that a single point of app connector failure won't lock out Atlas access. If you add another app connector, remember to [add its egress IP address][ar-allowlist-app-connector] to the Atlas access list.
+为确保你的 tailnet 用户对数据库的高可用访问，可以考虑[再添加一台应用连接器][ar-start-app-connector]设备，避免单一应用连接器故障导致无法访问 Atlas。如果你添加了另一台应用连接器，记得[把它的出站 IP 地址][ar-allowlist-app-connector]加入 Atlas 访问列表。
 
-For more information about app connectors, refer to [App connectors][docs-app-connectors].
+关于应用连接器的更多信息，请参阅[应用连接器（App connectors）][docs-app-connectors]。
 
-[ar-allowlist-app-connector]: #allowlist-app-connector
+[ar-allowlist-app-connector]: #第-3-步在-atlas-中将应用连接器加入允许列表
 
-[ar-start-app-connector]: #start-app-connector
+[ar-start-app-connector]: #第-2-步为-atlas-启动一个应用连接器
 
 [docs-app-connectors-setup-requirements]: /docs/features/app-connectors/how-to/setup#requirements
 

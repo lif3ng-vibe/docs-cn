@@ -1,27 +1,27 @@
 ---
-title: "Use Claude Code Action with Aperture"
-description: "Configure the [Claude Code GitHub Action][xt-claude-code-action] to send requests through [Aperture by Tailscale][docs-aperture] so that CI runners use their Tailscale identity for authentication inst"
+title: "在 Aperture 中使用 Claude Code Action"
+description: "配置 [Claude Code GitHub Action][xt-claude-code-action]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，使 CI 运行器使用自己的 Tailscale 身份进行认证，而不是为每个仓库单独配置 API key。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Configure the [Claude Code GitHub Action][xt-claude-code-action] to send requests through [Aperture by Tailscale][docs-aperture] so that CI runners use their Tailscale identity for authentication instead of per-repository API keys.
+配置 [Claude Code GitHub Action][xt-claude-code-action]，让请求经由 [Aperture by Tailscale][docs-aperture] 发送，使 CI 运行器（runner）使用自己的 Tailscale 身份进行认证，而不是为每个仓库单独配置 API key。
 
-## Prerequisites
+## 前提条件
 
-* An [Aperture gateway][docs-get-started] with an Anthropic provider configured and at least one Anthropic model enabled.
-* A Tailscale account with [Owner, Admin, or Network admin](/docs/reference/user-roles) permissions.
-* A GitHub repository with GitHub Actions enabled and admin access to create repository secrets.
+* 一台 [Aperture 网关][docs-get-started]，已配置 Anthropic 提供商并至少启用一个 Anthropic 模型。
+* 一个拥有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 权限的 Tailscale 账户。
+* 一个启用了 GitHub Actions 的 GitHub 仓库，并有管理员权限来创建仓库 secrets。
 
 \[Missing snippet: aperture\_tls\_warning.mdx]
 
-## Create a CI tag and grant access to Aperture
+## 创建 CI 标签并授予 Aperture 访问权
 
-CI runners need a Tailscale tag, network access to the Aperture gateway, and a grant that authorizes model usage.
+CI 运行器需要一个 Tailscale 标签、到 Aperture 网关的网络访问，以及一条授权模型使用的授权。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls/file) page in the admin console.
+1. 在管理控制台中打开 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
 
-2. In the `tagOwners` section, add `tag:ci` if it does not already exist:
+2. 在 `tagOwners` 段中添加 `tag:ci`（如果尚不存在）：
 
    ```json
    "tagOwners": {
@@ -29,9 +29,9 @@ CI runners need a Tailscale tag, network access to the Aperture gateway, and a g
    }
    ```
 
-   An empty owner list means [Owners, Admins, and Network admins](/docs/reference/user-roles) can apply the tag.
+   所有者列表为空表示 [Owners、Admins 和 Network admins](/docs/reference/user-roles) 可以应用该标签。
 
-3. Add a grant that gives `tag:ci` devices network access to the Aperture gateway and permission to use Anthropic models:
+3. 添加一条授权，让 `tag:ci` 设备获得到 Aperture 网关的网络访问权以及使用 Anthropic 模型的权限：
 
    ```json
    {
@@ -51,47 +51,47 @@ CI runners need a Tailscale tag, network access to the Aperture gateway, and a g
    }
    ```
 
-   Replace `"<aperture-hostname>"` with the hostname or Tailscale IP address of your Aperture gateway if it differs from the default. Adjust the `models` pattern to restrict CI runners to specific models, such as `anthropic/claude-sonnet-5-5`.
+   如果与默认值不同，把 `"<aperture-hostname>"` 替换为你的 Aperture 网关的主机名或 Tailscale IP 地址。调整 `models` 模式可以把 CI 运行器限制在特定模型上，例如 `anthropic/claude-sonnet-5-5`。
 
-4. Save the tailnet policy file. The rules take effect immediately.
+4. 保存 tailnet 策略文件。规则立即生效。
 
-> **Warning:**
+> **警告：**
 >
-> The grant must include both a `role` entry and a `models` entry. Without `role`, Aperture returns HTTP 403 even if the `models` pattern matches.
+> 授权必须同时包含 `role` 条目和 `models` 条目。没有 `role` 时，即使 `models` 模式匹配，Aperture 也会返回 HTTP 403。
 
-For more information on grant syntax and model patterns, refer to [grant access to models][docs-grant-model-access]. Because this grant lives in the tailnet policy file, it includes an explicit `dst` field. For how grant requirements differ between the tailnet policy file and the Aperture configuration, refer to [Aperture grants versus tailnet policy file grants][docs-aperture-vs-tailnet-grants].
+授权语法与模型模式的更多信息参阅[授予模型访问权][docs-grant-model-access]。由于这条授权位于 tailnet 策略文件中，它需要包含显式的 `dst` 字段。tailnet 策略文件与 Aperture 配置中授权要求的差异参阅 [Aperture 授权与 tailnet 策略文件授权的对比][docs-aperture-vs-tailnet-grants]。
 
-## Set up Tailscale authentication for GitHub Actions
+## 为 GitHub Actions 设置 Tailscale 认证
 
-The [Tailscale GitHub Action][docs-tailscale-github-action] needs credentials to join your tailnet as an ephemeral node.
+[Tailscale GitHub Action][docs-tailscale-github-action] 需要凭证才能以临时节点（ephemeral node）身份加入你的 tailnet。
 
-### Workload identity federation (recommended)
+### 工作负载身份联合（推荐）
 
-Workload identity federation uses GitHub's OIDC tokens to authenticate, eliminating secrets that can expire or leak.
+工作负载身份联合（workload identity federation）使用 GitHub 的 OIDC 令牌进行认证，避免了可能过期或泄露的密钥。
 
-1. Create a [federated identity][docs-workload-identity-federation] in the Tailscale admin console. Set the issuer to GitHub Actions and configure the subject claim to match your repository. Assign the `auth_keys` scope and the `tag:ci` tag.
-2. Copy the **Client ID** and **Audience** values.
-3. In your GitHub repository, create two [repository secrets][xt-gh-secrets]:
-   * `TS_OAUTH_CLIENT_ID`: your federated identity Client ID.
-   * `TS_AUDIENCE`: your federated identity Audience.
+1. 在 Tailscale 管理控制台中创建[联合身份][docs-workload-identity-federation]。把 issuer 设为 GitHub Actions，并把 subject claim 配置为与你的仓库匹配。分配 `auth_keys` scope 和 `tag:ci` 标签。
+2. 复制 **Client ID** 和 **Audience** 值。
+3. 在你的 GitHub 仓库中创建两个 [repository secrets][xt-gh-secrets]：
+   * `TS_OAUTH_CLIENT_ID`：你的联合身份 Client ID。
+   * `TS_AUDIENCE`：你的联合身份 Audience。
 
-Workload identity federation requires the `id-token: write` permission in your GitHub Actions workflow, which you add when you configure the workflow file.
+工作负载身份联合要求 GitHub Actions 工作流具备 `id-token: write` 权限，你在配置工作流文件时加上即可。
 
-### OAuth client
+### OAuth 客户端
 
-If your organization does not use workload identity federation, create an [OAuth client][docs-oauth-clients] instead.
+如果你的组织不使用工作负载身份联合，可以改为创建 [OAuth 客户端][docs-oauth-clients]。
 
-1. Create an [OAuth client][docs-oauth-clients] in the admin console with the `auth_keys` scope and the `tag:ci` tag.
-2. Copy the **Client ID** and **Client secret**.
-3. In your GitHub repository, create two repository secrets:
-   * `TS_OAUTH_CLIENT_ID`: your OAuth Client ID.
-   * `TS_OAUTH_SECRET`: your OAuth Client secret.
+1. 在管理控制台中创建一个 [OAuth 客户端][docs-oauth-clients]，分配 `auth_keys` scope 和 `tag:ci` 标签。
+2. 复制 **Client ID** 和 **Client secret**。
+3. 在你的 GitHub 仓库中创建两个 repository secrets：
+   * `TS_OAUTH_CLIENT_ID`：你的 OAuth Client ID。
+   * `TS_OAUTH_SECRET`：你的 OAuth Client secret。
 
-For detailed instructions on either option, refer to the [Tailscale GitHub Action documentation][docs-tailscale-github-action].
+两种方式的详细说明参阅 [Tailscale GitHub Action 文档][docs-tailscale-github-action]。
 
-## Add Claude Code Action to the workflow
+## 在工作流中添加 Claude Code Action
 
-Create or update a workflow file (for example, `.github/workflows/claude.yml`) with the following content. This example uses workload identity federation. If you use an OAuth client, replace `audience` with `oauth-secret` and reference `secrets.TS_OAUTH_SECRET`.
+创建或更新工作流文件（例如 `.github/workflows/claude.yml`），内容如下。本示例使用工作负载身份联合。如果你使用 OAuth 客户端，请把 `audience` 替换为 `oauth-secret`，并引用 `secrets.TS_OAUTH_SECRET`。
 
 ```yaml
 name: Claude Code
@@ -127,54 +127,54 @@ jobs:
           CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
 ```
 
-### Key settings
+### 关键设置
 
-| Setting                                            | Purpose                                                                                                                                               |
-| :------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tags: tag:ci`                                     | Assigns the tag that Aperture uses to identify and authorize the caller.                                                                              |
-| `ping: <aperture-hostname>`                        | Waits for connectivity to the Aperture gateway before proceeding. Prevents the Claude Code step from starting before the tailnet connection is ready. |
-| `anthropic_api_key: "-"`                           | Placeholder that satisfies the action's non-empty check. Aperture manages the real API key.                                                           |
-| `ANTHROPIC_BASE_URL: "http://<aperture-hostname>"` | Redirects all API calls to the Aperture gateway. MagicDNS resolves `<aperture-hostname>` to the Aperture gateway's Tailscale IP address.              |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"`    | Prevents Claude Code from sending telemetry or update checks that would bypass Aperture.                                                              |
+| 设置 | 用途 |
+| :--- | :--- |
+| `tags: tag:ci` | 分配 Aperture 用来识别并授权调用者的标签。 |
+| `ping: <aperture-hostname>` | 先等待到 Aperture 网关的连通性再继续。防止 tailnet 连接尚未就绪就开始 Claude Code 步骤。 |
+| `anthropic_api_key: "-"` | 满足该 action 非空校验的占位值。真正的 API key 由 Aperture 管理。 |
+| `ANTHROPIC_BASE_URL: "http://<aperture-hostname>"` | 把所有 API 调用重定向到 Aperture 网关。MagicDNS 会把 `<aperture-hostname>` 解析为 Aperture 网关的 Tailscale IP 地址。 |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"` | 阻止 Claude Code 发送绕过 Aperture 的遥测或更新检查。 |
 
-> **Note:**
+> **注意：**
 >
-> `anthropic_api_key` is a `with:` input (action parameter), while `ANTHROPIC_BASE_URL` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` are `env:` variables. The action performs a truthy check on `anthropic_api_key` and refuses to start without it.
+> `anthropic_api_key` 是 `with:` 输入（action 参数），而 `ANTHROPIC_BASE_URL` 和 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 是 `env:` 变量。该 action 会对 `anthropic_api_key` 做真值检查，缺少它就拒绝启动。
 
-### Permissions
+### 权限
 
-The `permissions` block sets the minimum GitHub token permissions the workflow needs:
+`permissions` 块设置工作流所需的最低 GitHub 令牌权限：
 
-| Permission             | Purpose                                                                     |
-| :--------------------- | :-------------------------------------------------------------------------- |
-| `id-token: write`      | Required for workload identity federation. Omit if you use an OAuth client. |
-| `pull-requests: write` | Lets the Claude Code Action post review comments on the pull request.       |
-| `contents: read`       | Lets the Claude Code Action read repository files.                          |
+| 权限 | 用途 |
+| :--- | :--- |
+| `id-token: write` | 工作负载身份联合必需。使用 OAuth 客户端时可省略。 |
+| `pull-requests: write` | 允许 Claude Code Action 在 pull request 上发表评审评论。 |
+| `contents: read` | 允许 Claude Code Action 读取仓库文件。 |
 
-## Verify the connection
+## 验证连接
 
-1. Open a pull request with a small code change to trigger the workflow.
-2. In the workflow run's **Actions** tab, confirm:
-   * The **Connect to tailnet** step connected and the `ping: <aperture-hostname>` check succeeded.
-   * The **Run Claude Code** step completed and shows API calls to `http://<aperture-hostname>`.
-3. Open the Aperture admin dashboard, select **Security** > **Logs**, and confirm the request appears with `tag:ci` as the caller identity. Admin access is required.
+1. 提交一个包含小幅代码改动的 pull request 以触发工作流。
+2. 在工作流运行页面的 **Actions** 标签页中确认：
+   * **Connect to tailnet** 步骤已连接，且 `ping: <aperture-hostname>` 检查成功。
+   * **Run Claude Code** 步骤已完成，并显示发往 `http://<aperture-hostname>` 的 API 调用。
+3. 打开 Aperture 管理仪表板，选择 **Security** > **Logs**，确认该请求以 `tag:ci` 作为调用者身份出现。需要管理员权限。
 
-### Troubleshoot common issues
+### 排查常见问题
 
-| Symptom                                  | Cause                                                                                            | Fix                                                                                             |
-| :--------------------------------------- | :----------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------- |
-| Connection timeout in the Tailscale step | `tag:ci` does not exist in `tagOwners`, or the runner cannot reach the coordination server.      | Verify the tag exists in your tailnet policy file and your GitHub secrets are correct.          |
-| HTTP 403 from Aperture                   | The grant is missing a `role` entry, or the `models` pattern does not match the requested model. | Verify the grant includes both `{ "role": "user" }` and a matching `{ "models": "..." }` entry. |
-| Claude Code reports an API key error     | `anthropic_api_key` is empty or missing.                                                         | Set `anthropic_api_key: "-"` in the `with:` block. The value must be non-empty.                 |
-| `ping: <aperture-hostname>` times out    | The network grant does not allow `tag:ci` to reach the Aperture gateway on port 80.              | Check the `dst` and `ip` fields in your network access grant.                                   |
+| 现象 | 原因 | 解决方法 |
+| :--- | :--- | :--- |
+| Tailscale 步骤连接超时 | `tag:ci` 不在 `tagOwners` 中，或运行器无法连接协调服务器（coordination server）。 | 确认标签存在于 tailnet 策略文件中，且 GitHub secrets 配置正确。 |
+| Aperture 返回 HTTP 403 | 授权缺少 `role` 条目，或 `models` 模式与请求的模型不匹配。 | 确认授权同时包含 `{ "role": "user" }` 和匹配的 `{ "models": "..." }` 条目。 |
+| Claude Code 报 API key 错误 | `anthropic_api_key` 为空或缺失。 | 在 `with:` 块中设置 `anthropic_api_key: "-"`。该值必须非空。 |
+| `ping: <aperture-hostname>` 超时 | 网络授权不允许 `tag:ci` 通过 80 端口访问 Aperture 网关。 | 检查网络访问授权中的 `dst` 和 `ip` 字段。 |
 
-## Next steps
+## 后续步骤
 
-* [Set per-user spending limits][docs-set-per-user-spending-limits] to cap how much CI pipelines spend on AI requests.
-* Restrict CI runners to specific models by narrowing the `models` pattern in the grant, for example `anthropic/claude-sonnet-5-5` instead of `anthropic/**`.
-* [Export usage data to S3][docs-export-usage-data-to-s3] for long-term retention and record-keeping.
-* [Build a custom webhook][docs-build-webhook] to receive real-time notifications when CI runners make AI requests.
-* For a complete guide that sets up AI-powered code reviews with cost control and usage visibility, refer to [route AI code reviews through Aperture][docs-route-ai-code-reviews].
+* [设置按用户支出限额][docs-set-per-user-spending-limits]，限制 CI 流水线在 AI 请求上的花费。
+* 通过收窄授权中的 `models` 模式把 CI 运行器限制在特定模型上，例如用 `anthropic/claude-sonnet-5-5` 代替 `anthropic/**`。
+* [把用量数据导出到 S3][docs-export-usage-data-to-s3]，用于长期保存与记录。
+* [构建自定义 webhook][docs-build-webhook]，在 CI 运行器发起 AI 请求时接收实时通知。
+* 包含成本控制与用量可见性的 AI 代码评审完整搭建指南参阅[通过 Aperture 路由 AI 代码评审][docs-route-ai-code-reviews]。
 
 [docs-aperture-vs-tailnet-grants]: /docs/aperture/reference/aperture-vs-tailnet-grants
 

@@ -1,89 +1,89 @@
 ---
-title: "Tailnet names and types"
-description: "A tailnet uses several name types to identify devices and manage access, including Tailnet DNS, machine, Tailnet ID, and Legacy ID, each serving unique purposes."
+title: "Tailnet 名称与类型"
+description: "tailnet 使用多种名称类型来标识设备并管理访问，包括 Tailnet DNS 名称、机器名称、Tailnet ID 和 Legacy ID，各自承担不同用途。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-A Tailscale network (known as a [tailnet][docs-tailnet]) contains different types of names used to identify and connect everything within it. There are three primary types of names:
+Tailscale 网络（称为 [tailnet][docs-tailnet]）包含多种类型的名称，用于标识和连接其中的所有内容。主要有三种名称类型：
 
-* **Tailnet DNS name**: The fully qualified domain (FQDN) that is used for name resolution throughout your tailnet.
-* **Machine name**: The name of a device or node in your tailnet.
-* **Tailnet ID**: The string used with the [Tailscale API][docs-api].
+* **Tailnet DNS 名称**：在整个 tailnet 内用于名称解析的完全限定域名（FQDN）。
+* **机器名称**：tailnet 中设备或节点的名称。
+* **Tailnet ID**：与 [Tailscale API][docs-api] 一起使用的字符串。
 
-## Tailnet DNS name
+## Tailnet DNS 名称
 
-When you create a new tailnet, Tailscale assigns it a DNS name with the format `tail<ID>.ts.net`, where `<ID>` is a randomly generated hexadecimal string such as `tailnet-fe8c.ts.net`.
+创建新 tailnet 时，Tailscale 会为其分配一个格式为 `tail<ID>.ts.net` 的 DNS 名称，其中 `<ID>` 是随机生成的十六进制字符串，例如 `tailnet-fe8c.ts.net`。
 
-This serves several important purposes, including enabling [MagicDNS][docs-magicdns] to register DNS names for tailnet devices and serving as the fully qualified domain name for [HTTPS][docs-enabling-https] certificates. It's also used by the [sharing][docs-sharing] feature to uniquely identify shared tailnet devices. You can find your tailnet DNS name in the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+这一名称有多个重要用途，包括让 [MagicDNS][docs-magicdns] 为 tailnet 设备注册 DNS 名称，以及作为 [HTTPS][docs-enabling-https] 证书的完全限定域名。共享（sharing）功能也用它来唯一标识被共享的 tailnet 设备。你可以在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面找到你的 tailnet DNS 名称。
 
-### Generate a new tailnet DNS name
+### 生成新的 tailnet DNS 名称
 
-You must be an [Owner, Admin, or Network admin](/docs/reference/user-roles) to generate and select a new tailnet DNS name.
+你必须具有[所有者（Owner）、管理员（Admin）或网络管理员（Network admin）](/docs/reference/user-roles)身份，才能生成并选择新的 tailnet DNS 名称。
 
-If you want to use a tailnet DNS name that's more memorable than the generated hexadecimal string (`tail<ID>.ts.net`), you can generate and choose from a selection randomized name options. This can make it easier to remember or type your tailnet DNS name when using features like [MagicDNS][docs-magicdns]. For example, `cat-crocodile.ts.net`. These options are randomly generated, and you can always revert this name back to the originally assigned hexadecimal string name.
+如果你想要一个比生成的十六进制字符串（`tail<ID>.ts.net`）更好记的 tailnet DNS 名称，可以生成并从一组随机名称选项中挑选。这样在使用 [MagicDNS][docs-magicdns] 等功能时，更容易记住或输入你的 tailnet DNS 名称。例如 `cat-crocodile.ts.net`。这些选项是随机生成的，你随时可以把名称改回最初分配的十六进制字符串名称。
 
-> **Warning:**
+> **警告：**
 >
-> After you use a randomized name for HTTPS certificates, you cannot re-generate it. However, you will be able to switch between the randomized name and the default name.
+> 对 HTTPS 证书使用随机名称后，就无法再重新生成它。不过，你仍可以在随机名称与默认名称之间切换。
 
-To generate a new name:
+要生成新名称：
 
-1. Open the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-2. Select **Rename tailnet**.
-3. Confirm that you want to use the randomized name.
-4. Select one of the randomly generated tailnet names. If you don't want any of the proposed names, you can select **Re-roll options** to generate more options.
-5. Select **Rename tailnet**.
+1. 打开管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。
+2. 选择 **Rename tailnet**。
+3. 确认你要使用随机名称。
+4. 从随机生成的 tailnet 名称中选择一个。如果对给出的名称都不满意，可以选择 **Re-roll options** 生成更多选项。
+5. 选择 **Rename tailnet**。
 
-When you select a random tailnet DNS name, it becomes your active tailnet name. If you previously used your default tailnet DNS name for [MagicDNS][docs-magicdns], [HTTPS certificates][docs-enabling-https], or [sharing][docs-sharing], existing links to devices in your tailnet might break. This also applies when you revert back to the originally assigned tailnet DNS name.
+选择随机 tailnet DNS 名称后，它就会成为你当前生效的 tailnet 名称。如果你此前在 [MagicDNS][docs-magicdns]、[HTTPS 证书][docs-enabling-https]或[共享][docs-sharing]中使用的是默认 tailnet DNS 名称，tailnet 中设备的既有链接可能会失效。改回最初分配的 tailnet DNS 名称时同样如此。
 
-### Revert to the original tailnet DNS name
+### 恢复原 tailnet DNS 名称
 
-To revert back to the default tailnet DNS name:
+要改回默认的 tailnet DNS 名称：
 
-1. Open the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
-2. Select **Rename tailnet**.
-3. Confirm that you want to switch your tailnet name.
-4. Select the name that you want to use.
-5. Select **Rename tailnet**.
+1. 打开管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面。
+2. 选择 **Rename tailnet**。
+3. 确认你要切换 tailnet 名称。
+4. 选择你要使用的名称。
+5. 选择 **Rename tailnet**。
 
-Because [MagicDNS][docs-magicdns], [HTTPS certificates][docs-enabling-https], and [sharing][docs-sharing] rely upon the tailnet DNS name, switching your tailnet DNS name may break existing links to devices in your tailnet.
+由于 [MagicDNS][docs-magicdns]、[HTTPS 证书][docs-enabling-https]和[共享][docs-sharing]都依赖 tailnet DNS 名称，切换 tailnet DNS 名称可能导致 tailnet 中设备的既有链接失效。
 
-## Machine names
+## 机器名称
 
-[Machine names][docs-machine-names] are unique to each device in your tailnet. They're generated from the device's hostname (from the operating system) when the device joins the tailnet, and you can change a device's machine name from the admin console or the Tailscale CLI. The list of machines in your tailnet is located in the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
+[机器名称][docs-machine-names]在 tailnet 内对每台设备唯一。设备加入 tailnet 时，会根据设备的主机名（来自操作系统）生成机器名称，你可以在管理控制台或 Tailscale CLI 中更改设备的机器名称。tailnet 中的机器列表位于管理控制台的 [Machines](https://console.tailscale.com/admin/machines) 页面。
 
 ## Tailnet ID
 
-**Tailnet ID** is a string assigned to a tailnet and used by the [Tailscale API][docs-api]. It's located in the [General](https://console.tailscale.com/admin/settings/general) page of the admin console.
+**Tailnet ID** 是分配给 tailnet 的字符串，供 [Tailscale API][docs-api] 使用。它位于管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 页面。
 
-## Display name
+## 显示名称
 
-When you create a tailnet, it displays the private domain or public email address in the Tailscale authentication page, admin console page header, client UI, and the client CLI. For example, `example.com`, `example@gmail.com`, or `user.github`. Setting a custom display name gives your tailnet a recognizable name, making it easier for team members to identify which environment they are authenticating to, joining, or are currently using.
+创建 tailnet 时，Tailscale 会在身份验证页面、管理控制台页头、客户端 UI 和客户端 CLI 中显示私有域名或公共电子邮件地址，例如 `example.com`、`example@gmail.com` 或 `user.github`。设置自定义显示名称可以让你的 tailnet 有一个易于辨认的名字，便于团队成员分辨自己正在向哪个环境进行身份验证、加入或使用。
 
-> **Note:**
+> **注意：**
 >
-> The display name can always be set and viewed in the admin console, and viewing it in the Tailscale client requires version 1.88 or later.
+> 显示名称始终可以在管理控制台中设置和查看；要在 Tailscale 客户端中查看，需要 1.88 或更高版本。
 
-You must be an [Owner or Admin](/docs/reference/user-roles) to set or edit the tailnet display name.
+你必须具有[所有者（Owner）或管理员（Admin）](/docs/reference/user-roles)身份，才能设置或编辑 tailnet 显示名称。
 
-1. Open the [General](https://console.tailscale.com/admin/settings/general) page of the admin console.
-2. Enter the display name. Use letters, numbers, spaces, apostrophes, and hyphens.
-3. Select **Save**.
+1. 打开管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 页面。
+2. 输入显示名称。只能使用字母、数字、空格、撇号和连字符。
+3. 选择 **Save**。
 
-The display name will appear anywhere your tailnet domain or email address typically displays. Display names can be up to 65 characters and can contain letters, numbers, spaces, apostrophes, and hyphens. You may not use periods or underscores.
+凡是通常显示 tailnet 域名或电子邮件地址的地方，都会改而显示显示名称。显示名称最长 65 个字符，可包含字母、数字、空格、撇号和连字符，不能使用句点或下划线。
 
 ## Legacy ID
 
-> **Note:**
+> **注意：**
 >
-> In October 2025, this field was changed from **Organization** to **Legacy ID** and is only visible to existing tailnets prior to this field name change. Tailnets created after October 2025 will not display the **Legacy ID** field of the admin console.
+> 2025 年 10 月，此字段由 **Organization** 更名为 **Legacy ID**，且仅对此前已存在的 tailnet 可见。2025 年 10 月之后创建的 tailnet 不会在管理控制台中显示 **Legacy ID** 字段。
 
-> **Note:**
+> **注意：**
 >
-> If you previously used the **Organization** field for the [Tailscale API][docs-api], update your settings to use the **Tailnet ID** field instead.
+> 如果你此前在 [Tailscale API][docs-api] 中使用的是 **Organization** 字段，请更新设置，改用 **Tailnet ID** 字段。
 
-The **Legacy ID** field is automatically assigned when creating a new tailnet and displays in the [General](https://console.tailscale.com/admin/settings/general) page of the admin console. If you used a custom domain, it displays as the domain name such as `example.com`. If it's an email using a public/shared domain, the email address displays such as `user@gmail.com`. This name displays in the admin console header, the tailnet login page, and in the Tailscale client and provides an indicator of the tailnet you are using. Once created, you cannot change this name.
+**Legacy ID** 字段在创建新 tailnet 时自动分配，显示在管理控制台的 [General](https://console.tailscale.com/admin/settings/general) 页面。如果你使用自定义域名，它会显示为域名，例如 `example.com`；如果使用公共/共享域名的邮箱，则显示电子邮件地址，例如 `user@gmail.com`。该名称显示在管理控制台页头、tailnet 登录页以及 Tailscale 客户端中，用于指示你正在使用的 tailnet。一经创建，便无法更改。
 
 [docs-api]: /docs/reference/tailscale-api
 

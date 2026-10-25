@@ -1,45 +1,45 @@
 ---
-title: "Connect to external services with IP block lists"
-description: "Control access to SaaS applications hosted on servers that aren't running Tailscale."
+title: "使用 IP 封锁列表连接外部服务"
+description: "控制对托管在未运行 Tailscale 的服务器上的 SaaS 应用的访问。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-If you're migrating from a traditional office network or a centralized VPN concentrator, you might have external servers that don't run Tailscale but still need their connections secured.
+如果你正从传统办公网络或集中式 VPN 集中器迁移，可能会有一些未运行 Tailscale 但仍需保障连接安全的外部服务器。
 
-Third-party or internal services running on [serverless][docs-serverless] cloud providers such as Heroku might use an IP block list (sometimes called an IP allowlist). When a service uses an IP block list, the service expects all user traffic to originate from a single IP address or a few IP addresses. Because Tailscale doesn't need to send all traffic through a central concentrator, your user traffic will suddenly start arriving from all over the internet, running into the IP block list protections operated by your service provider.
+运行在 Heroku 等[无服务器][docs-serverless]（serverless）云服务商上的第三方或内部服务可能使用 IP 封锁列表（有时也称 IP 允许列表）。当服务使用 IP 封锁列表时，它预期所有用户流量都来自单个 IP 地址或少数几个 IP 地址。由于 Tailscale 无需将所有流量都经由中央集中器转发，你的用户流量会突然开始从互联网各处涌来，撞上服务提供商设置的 IP 封锁列表防护。
 
-## What is an IP block list?
+## 什么是 IP 封锁列表？
 
-Setting up secure links between devices in different locations often proves challenging. As a result, it's common to operate "internal use" services that still use internet-facing ports and IP addresses between devices in different locations and connect to those servers from their office locations. This is common with SSH, RDP (remote desktop protocol), and various web services.
+在不同地点的设备之间建立安全链路往往颇具挑战。因此，常见的做法是运营仍使用面向互联网的端口和 IP 地址的"内部使用"服务，并让不同地点的设备从各自办公室位置连接这些服务器。SSH、RDP（远程桌面协议）和各种 Web 服务中都很常见这种做法。
 
-The exposed port enables attacks from anywhere on the internet, including attacks such as port scanning, password guessing, infrastructure zero-days, and so on. Even if the service itself requires [encryption][docs-encryption] and multifactor authentication, a bug anywhere in the stack could result in a complete bypass of security protections.
+暴露的端口使互联网上任何地方都能发起攻击，包括端口扫描、密码猜测、基础设施零日漏洞利用等等。即使服务本身要求[加密][docs-encryption]和多因素认证，技术栈中任何一处的漏洞都可能导致安全防护被完全绕过。
 
-To make these kinds of attacks more difficult, the best practice is to restrict which IP addresses are allowed to create connections to your service, usually at the firewall level. This makes your server invisible to most of the internet, so potential malicious actors don't know where to attack.
+为了增加这类攻击的难度，最佳实践是限制哪些 IP 地址被允许与你的服务建立连接，通常在防火墙层面实施。这能让你的服务器对互联网上的绝大多数人不可见，潜在恶意行为者就无从知道该攻击哪里。
 
-Unfortunately, IP block lists have a few flaws:
+遗憾的是，IP 封锁列表存在几个缺陷：
 
-* IP block lists are, essentially, [*security by obscurity*][xt-wiki-security-obscurity]. If an attacker can discover which IP addresses are allowed to create connections—and this is not always too hard to guess—then a sufficiently dedicated attacker can forge packets from that address or take control of a device located at that address (for example, using a botnet), to talk to the server.
+* IP 封锁列表本质上属于[*隐蔽式安全*][xt-wiki-security-obscurity]（security by obscurity）。如果攻击者能够发现哪些 IP 地址被允许建立连接——而这往往并不难猜到——那么足够执着的攻击者就可以伪造来自该地址的数据包，或者控制位于该地址的一台设备（例如借助僵尸网络），与服务器通信。
 
-* Users are not all at a single location. Remote workers, multiple offices, or servers in various data centers generate traffic from different IP addresses. IP block lists need to become longer and longer to ensure that all those locations can access the service. And the longer the block list, the more ways an attacker can get in.
+* 用户并不都在同一个地点。远程办公人员、多个办公室或分布在不同数据中心的服务器会从不同的 IP 地址产生流量。为确保所有这些地点都能访问服务，IP 封锁列表必须越写越长。而列表越长，攻击者能钻的空子就越多。
 
-* Cloud VPCs make IP address propagation even worse. If you have internal services running in a cloud provider that accesses the internet using NAT gateways and elastic IP addresses, then your traffic might come from a variety of IP addresses, possibly entire subnets. This can require an extensive IP block list to cover, for example, whole AWS address blocks, just in case your services get allocated one of those blocks. This makes an attacker's job much easier because all they need to do is run their attack from one of those cloud providers and wait until they get allocated an IP address in one of your permitted subnets.
+* 云 VPC 让 IP 地址的扩散问题更加严重。如果你的内部服务运行在云服务商上，并通过 NAT 网关和弹性 IP 地址访问互联网，那么你的流量可能来自各种各样的 IP 地址，甚至可能是整个子网。这可能需要一个庞大的 IP 封锁列表来覆盖，例如涵盖整个 AWS 地址块，以防你的服务恰好被分配到其中某个地址块。这让攻击者的活儿轻松了许多：他们只需从其中某个云服务商发起攻击，然后等待自己被分配到你允许的某个子网中的 IP 地址即可。
 
-* To avoid this problem, some companies route all their internal traffic through a single VPN concentrator or central internet gateway, making all traffic appear to come from a single IP address. However, this approach adds a lot of latency for devices not near the central gateway (geographically). It also adds a single point of failure and a choke point for internet bandwidth.
+* 为了避免这个问题，一些公司把所有内部流量都经由单个 VPN 集中器或中央互联网网关转发，让所有流量看起来都来自同一个 IP 地址。然而，这种做法会给地理位置远离中央网关的设备带来大量额外延迟，还会引入单点故障和互联网带宽瓶颈。
 
-Nevertheless, IP block-listed services are a fact of life. If you can't make a secure VPN tunnel to your service provider, for example, because you don't have the rights to install any software at the hosting provider or because a third-party operates the software, IP block lists are still considered the best practice (in addition to other [security measures][docs-security-hardening]).
+尽管如此，采用 IP 封锁列表的服务仍是现实中的常态。如果你无法与自己的服务提供商建立安全的 VPN 隧道——例如因为你无权在托管服务商处安装任何软件，或者软件由第三方运营——IP 封锁列表仍被视为最佳实践（此外还应采取其他[安全措施][docs-security-hardening]）。
 
-## Use Tailscale app connectors to improve IP block lists
+## 使用 Tailscale 应用连接器改进 IP 封锁列表
 
-In a pure [Tailscale network][docs-tailnet], you don't need IP block lists because you have something better: [Tailscale's secure IP addresses][docs-tailscale-ip-addresses], which aren't allowed over the physical network. You also have [Tailscale role-based access control policies][docs-access-control], which let you configure which groups of users are allowed to access a particular server. This lets you build something like a central IP block list, using encryption keys instead of IP addresses for protection.
+在纯 [Tailscale 网络][docs-tailnet]中，你不需要 IP 封锁列表，因为你有更好的东西：[Tailscale 的安全 IP 地址][docs-tailscale-ip-addresses]，这些地址不允许在物理网络上通行。你还有 [Tailscale 基于角色的访问控制策略][docs-access-control]，可以配置哪些用户群组被允许访问特定服务器。这让你能构建类似中央 IP 封锁列表的东西，只不过用加密密钥而非 IP 地址来做保护。
 
-However, most networks are not pure Tailscale, and you eventually need to integrate with a third-party service. Luckily, Tailscale can help you significantly reduce the size of your IP block list (and consequently the surface area for attack) without centralizing your network access. This approach also lets your users access the service from anywhere.
+然而，大多数网络并非纯 Tailscale，你最终难免要与第三方服务集成。所幸，Tailscale 可以帮你大幅缩小 IP 封锁列表的规模（从而缩小攻击面），同时又不必将网络访问集中化。这种方式还能让你的用户从任何地方访问该服务。
 
-To use Tailscale to improve IP block lists, set up an [app connector][docs-app-connectors] to route traffic for a specific application through a single IP address. This IP address is the only one that needs to be on the IP block list. The app connector acts as a subnet router, providing access to the external service from your Tailscale network.
+要借助 Tailscale 改进 IP 封锁列表，可以设置一个[应用连接器][docs-app-connectors]（app connector），让特定应用的流量经由单个 IP 地址转发。这个 IP 地址就是唯一需要列入 IP 封锁列表的地址。应用连接器充当子网路由器，让你的 Tailscale 网络能够访问该外部服务。
 
-> **Tip:**
+> **提示：**
 >
-> You can also use a small collection of IP addresses and manage them in your tailnet policy file with an [IP set][docs-ipsets].
+> 你也可以使用一小组 IP 地址，并通过 [IP set][docs-ipsets] 在 tailnet 策略文件中管理它们。
 
 [docs-access-control]: /docs/features/access-control
 

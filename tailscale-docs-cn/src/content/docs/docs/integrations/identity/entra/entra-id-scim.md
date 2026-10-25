@@ -1,155 +1,145 @@
 ---
-title: "User & group provisioning for Microsoft Entra ID"
-description: "Tailscale supports System for Cross-domain Identity Management (SCIM) to integrate with Microsoft Entra ID (previously known as Azure AD)."
+title: "Microsoft Entra ID 的用户与群组预配置"
+description: "Tailscale 支持跨域身份管理系统（SCIM），可与 Microsoft Entra ID（前称 Azure AD）集成。"
 ---
 
-Last validated Jul 6, 2026
+最后验证于 Jul 6, 2026
 
-> **Note:** This feature is available for [the Standard, Premium, and Enterprise plans](https://tailscale.com/pricing).
+> **注意：** 此功能适用于[标准版、高级版和企业版套餐](https://tailscale.com/pricing)。
 
-Tailscale supports System for Cross-domain Identity Management (SCIM) to integrate with Microsoft Entra ID (previously known as Azure AD).
+Tailscale 支持跨域身份管理系统（SCIM），可与 Microsoft Entra ID（前称 Azure AD）集成。
 
-* With group sync, you can refer to a group from Microsoft Entra ID in your tailnet policy file, with a human-readable name.
-  * You can also refer to a group from Microsoft Entra ID in your tailnet policy file using the `externalGroupId`.
+* 通过群组同步，你可以在 tailnet 策略文件中使用易读名称引用来自 Microsoft Entra ID 的群组。
+  * 也可以在 tailnet 策略文件中使用 `externalGroupId` 引用来自 Microsoft Entra ID 的群组。
 
-* With user sync, you can quickly onboard and offboard users to Tailscale. For related information, refer to [Offboarding when using user & group provisioning][docs-offboarding-users-offboarding-scim].
-  * When a user is deleted in Microsoft Entra ID, [they are first 'soft' deleted][xt-entra-incremental-cycles], which [suspends][docs-remove-team-members-suspending-users] the user in Tailscale. The user is then 'hard' deleted approximately 30 days later in Microsoft Entra ID, which causes them to be [deleted][docs-remove-team-members-deleting-users] in Tailscale.
-  * When a user is disabled in Microsoft Entra ID, they are suspended in Tailscale.
+* 通过用户同步，你可以快速将用户接入或移出 Tailscale。相关信息参见[使用用户与群组预配置时的用户移除][docs-offboarding-users-offboarding-scim]。
+  * 当用户在 Microsoft Entra ID 中被删除时，会先被"软删除"（soft delete）[xt-entra-incremental-cycles]，该用户随之在 Tailscale 中被[暂停][docs-remove-team-members-suspending-users]。约 30 天后，该用户会在 Microsoft Entra ID 中被"硬删除"（hard delete），从而在 Tailscale 中也被[删除][docs-remove-team-members-deleting-users]。
+  * 当用户在 Microsoft Entra ID 中被禁用时，该用户在 Tailscale 中会被暂停。
 
-This topic shows you how to set up Microsoft Entra ID as a SCIM-integrated identity provider for Tailscale. You can also refer to the
-Microsoft tutorial [Configure Tailscale for automatic user provisioning][xt-entra-tailscale-provisioning].
+本主题介绍如何将 Microsoft Entra ID 设置为与 Tailscale 进行 SCIM 集成的身份提供方。你也可以参考 Microsoft 教程[配置 Tailscale 以自动进行用户预配置][xt-entra-tailscale-provisioning]。
 
-## Features
+## 功能
 
-The following provisioning features are supported:
+支持以下预配置功能：
 
-* **Create users** in Tailscale from Microsoft Entra ID
-* **Update user attributes** in Tailscale from Microsoft Entra ID
-* **Delete users** in Microsoft Entra ID to first suspend them in Tailscale; after approximately 30 days they are automatically deleted in Tailscale
-* **Disable users** in Microsoft Entra ID to suspend them in Tailscale
-* **Group push** from Microsoft Entra ID to Tailscale
+* **创建用户**：从 Microsoft Entra ID 在 Tailscale 中创建
+* **更新用户属性**：从 Microsoft Entra ID 更新 Tailscale 中的用户属性
+* **删除用户**：在 Microsoft Entra ID 中删除用户会先将其在 Tailscale 中暂停；约 30 天后自动从 Tailscale 中删除
+* **禁用用户**：在 Microsoft Entra ID 中禁用用户会将其在 Tailscale 中暂停
+* **群组推送**：从 Microsoft Entra ID 推送到 Tailscale
 
-## Requirements
+## 要求
 
-* You need a Microsoft Entra ID subscription.
-* You need a tailnet.
-* Your tailnet's identity provider needs to be Microsoft Entra ID. If your tailnet is not
-  using Microsoft Entra ID and you want to use it, [contact support][co-contact-support-sso] to
-  migrate from your current identity provider to Microsoft Entra ID.
+* 你需要 Microsoft Entra ID 订阅。
+* 你需要一个 tailnet。
+* 你的 tailnet 的身份提供方必须是 Microsoft Entra ID。如果你的 tailnet 目前未使用 Microsoft Entra ID 且想改用它，请[联系支持团队][co-contact-support-sso]，将你当前的身份提供方迁移到 Microsoft Entra ID。
 
-## Step-by-Step Configuration Instructions
+## 分步配置说明
 
-### Enable Provisioning
+### 启用预配置
 
-#### In Tailscale
+#### 在 Tailscale 中
 
-You need to be an [Owner, Admin, or IT admin](/docs/reference/user-roles) in Tailscale to complete these
-steps.
+完成这些步骤需要你是 Tailscale 中的[所有者（Owner）、管理员（Admin）或 IT 管理员（IT admin）](/docs/reference/user-roles)。
 
-**Generate a SCIM API key**
+**生成 SCIM API 密钥**
 
-1. In the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, under **SCIM Provisioning**, select **Enable Provisioning**.
+1. 在管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面中，在 **SCIM Provisioning** 下选择 **Enable Provisioning**。
 
-2. Copy the generated key to the clipboard.
+2. 将生成的密钥复制到剪贴板。
 
-   *（图：Generate SCIM API key）*
+   *（图：生成 SCIM API 密钥）*
 
-3. Save the key information in a secure spot. You will need to use it when you configure Microsoft Entra ID. Note that Tailscale-generated SCIM API keys are case-sensitive.
+3. 将密钥信息保存在安全的地方。配置 Microsoft Entra ID 时需要用到。注意，Tailscale 生成的 SCIM API 密钥区分大小写。
 
-#### In Microsoft Entra ID
+#### 在 Microsoft Entra ID 中
 
-You need to have an admin role for the Microsoft Azure portal to complete these steps.
+完成这些步骤需要你拥有 Microsoft Azure 门户的管理员角色。
 
-1. Log in to the [Microsoft Azure portal][xt-azure-login].
+1. 登录 [Microsoft Azure 门户][xt-azure-login]。
 
-2. Select **Microsoft Entra ID**.
+2. 选择 **Microsoft Entra ID**。
 
-3. Under **Manage** in the left-hand navigation, select **Enterprise applications**.
+3. 在左侧导航的 **Manage** 下选择 **Enterprise applications**。
 
-4. Select **New application**.
+4. 选择 **New application**。
 
-5. In the **Browse Microsoft Entra Gallery** page, search for **Tailscale** and then select **Tailscale**.
+5. 在 **Browse Microsoft Entra Gallery** 页面中搜索 **Tailscale**，然后选择 **Tailscale**。
 
-6. Select **Sign up for Tailscale**.
+6. 选择 **Sign up for Tailscale**。
 
-   You will be redirected to sign up for Tailscale. If you already have a Tailscale account, proceed
-   to the next step. Otherwise, follow the prompts to sign up for Tailscale.
+   你将被重定向到 Tailscale 注册页面。如果你已有 Tailscale 账户，直接进行下一步；否则按照提示完成 Tailscale 注册。
 
-7. In the application **Overview** page, under **Manage** in the left-hand navigation, select **Provisioning**.
+7. 在应用程序的 **Overview** 页面中，在左侧导航的 **Manage** 下选择 **Provisioning**。
 
-8. Select **Get started**.
+8. 选择 **Get started**。
 
-9. Set **Provisioning Mode** to **Automatic**.
+9. 将 **Provisioning Mode** 设置为 **Automatic**。
 
-10. Under **Admin Credentials**, for **Tenant URL**, enter
-    `https://controlplane.tailscale.com/scim/v2/?aadOptscim062020`.
+10. 在 **Admin Credentials** 下，**Tenant URL** 输入
+    `https://controlplane.tailscale.com/scim/v2/?aadOptscim062020`。
 
-    Note that the trailing parameter, `?aadOptscim062020`, is required. For
-    information about this parameter, refer to the Microsoft Entra ID topic
-    [Flags to alter the SCIM behavior][xt-entra-add-scim-flags].
+    注意，末尾的参数 `?aadOptscim062020` 是必需的。关于此参数的信息，参见 Microsoft Entra ID 文档中的 [Flags to alter the SCIM behavior][xt-entra-add-scim-flags] 一文。
 
-11. For **Secret Token**, enter the SCIM API key that you generated in the Tailscale admin console.
+11. **Secret Token** 输入你在 Tailscale 管理控制台中生成的 SCIM API 密钥。
 
-    *（图：Provide credentials to Microsoft Entra ID）*
+    *（图：向 Microsoft Entra ID 提供凭证）*
 
-12. Select **Test Connection**.
+12. 选择 **Test Connection**。
 
-    A popup will display a message about whether the supplied credentials
-    are authorized to enable provisioning.
+    弹窗会显示一条消息，说明你提供的凭证是否有权启用预配置。
 
-13. In the **Settings** section, ensure **Send an email notification when
-    an error occurs** is checked, and provide an email to use for the
-    notification.
+13. 在 **Settings** 区域，确保已勾选 **Send an email notification when
+    an error occurs**，并提供用于接收通知的电子邮件地址。
 
-14. In the **Settings** section, under **Scope**, choose to sync all users and groups, or only users and groups that are assigned the application. If you choose to only sync users and groups that are assigned the application, you will need to [assign these][xt-entra-assign-access] under the **Users and groups** section in the left-hand navigation.
+14. 在 **Settings** 区域的 **Scope** 下，选择同步所有用户和群组，还是仅同步已分配该应用程序的用户和群组。如果选择仅同步已分配该应用程序的用户和群组，你需要在左侧导航的 **Users and groups** 区域[进行分配][xt-entra-assign-access]。
 
-15. Ensure that **Provisioning Status** is set to **On**.
+15. 确保 **Provisioning Status** 设置为 **On**。
 
-    *（图：Provision Microsoft Entra ID）*
+    *（图：预配置 Microsoft Entra ID）*
 
-16. Select **Save**.
+16. 选择 **Save**。
 
-17. Return to the application's **Provisioning** page. In the top menu, select **Start Provisioning**.
+17. 返回应用程序的 **Provisioning** 页面。在顶部菜单中选择 **Start Provisioning**。
 
-If you encounter issues after provisioning, open the application's **Overview** page and then select
-**Restart Provisioning**.
+如果预配置完成后遇到问题，请打开应用程序的 **Overview** 页面，然后选择
+**Restart Provisioning**。
 
-#### Restricting access to the Tailscale application
+#### 限制对 Tailscale 应用程序的访问
 
-By default all users in the Entra directory service will be allowed to access the Tailscale app.
-To control which users are allowed to access Tailscale, go to **Enterprise Applications** >
-**Tailscale** > **Properties** and set **Assignment Required?** to Yes.
+默认情况下，Entra 目录服务中的所有用户都可以访问 Tailscale 应用。
+要控制哪些用户可以访问 Tailscale，请前往 **Enterprise Applications** >
+**Tailscale** > **Properties**，并将 **Assignment Required?** 设置为 Yes。
 
 *（图：Assignment Required?）*
 
-When this setting is enabled, only users who are assigned to the Tailscale application will be
-able to access it.
+启用此设置后，只有被分配到 Tailscale 应用程序的用户才能访问它。
 
-#### Supported attribute mappings
+#### 支持的属性映射
 
-Tailscale supports SCIM attributes from the core ["User"][xt-rfc-7643-4.1] and ["Group" SCIM resources][xt-rfc-7643-4.2]. Tailscale only uses the following attributes for Tailscale's functionality; other attributes are stored without being used:
+Tailscale 支持核心 ["User"][xt-rfc-7643-4.1] 和 ["Group" SCIM 资源][xt-rfc-7643-4.2]中的 SCIM 属性。Tailscale 只将以下属性用于自身功能；其他属性仅存储、不使用：
 
-| Attribute           | SCIM attribute type | Use in Tailscale |
+| 属性                | SCIM 属性类型        | 在 Tailscale 中的用途 |
 | ------------------- | ------------------- | ---------------- |
-| `externalId`        | Common              | Required         |
-| `userName`          | Core user           | Required         |
-| `emails`            | Core user           | Optional         |
-| `name.givenName`    | Core user           | Optional         |
-| `name.familyName`   | Core user           | Optional         |
-| `name.formatted`    | Core user           | Optional         |
-| `displayName`       | Core user           | Optional         |
-| `active`            | Core user           | Optional         |
-| `preferredLanguage` | Core user           | Optional         |
+| `externalId`        | 通用                 | 必需             |
+| `userName`          | 核心用户             | 必需             |
+| `emails`            | 核心用户             | 可选             |
+| `name.givenName`    | 核心用户             | 可选             |
+| `name.familyName`   | 核心用户             | 可选             |
+| `name.formatted`    | 核心用户             | 可选             |
+| `displayName`       | 核心用户             | 可选             |
+| `active`            | 核心用户             | 可选             |
+| `preferredLanguage` | 核心用户             | 可选             |
 
-`userName` must map to the email used by the user to sign in to the tailnet.
+`userName` 必须映射到用户登录 tailnet 所用的电子邮件地址。
 
-`photos` are not an attribute that can be synced, but are populated for users on login.
+`photos` 不是可同步的属性，而是在用户登录时为其填充。
 
-Tailscale does not support the SCIM [Enterprise User Schema Extension][xt-rfc-7643-4.3]. If any additional user attribute from these extensions is specified, the request will fail.
+Tailscale 不支持 SCIM [Enterprise User Schema Extension][xt-rfc-7643-4.3]。如果指定了这些扩展中的任何额外用户属性，请求将失败。
 
-### Referring to Microsoft Entra ID groups in your tailnet policy file
+### 在 tailnet 策略文件中引用 Microsoft Entra ID 群组
 
-You can refer to a group from Microsoft Entra ID in your tailnet policy file using either the human-readable name or the Microsoft Entra ID group ID. For example:
+你可以在 tailnet 策略文件中使用易读名称或 Microsoft Entra ID 群组 ID 来引用来自 Microsoft Entra ID 的群组。例如：
 
 ```json
 {
@@ -175,51 +165,48 @@ You can refer to a group from Microsoft Entra ID in your tailnet policy file usi
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-When a Microsoft Entra ID group contains [nested groups][xt-entra-nested-groups], Tailscale includes members from those nested groups up to 5 subgroup levels deep when the group is used in access controls. Members beyond 5 levels of nesting are not included.
+当 Microsoft Entra ID 群组包含[嵌套群组][xt-entra-nested-groups]时，在访问控制中使用该群组时，Tailscale 会纳入这些嵌套群组中最深 5 层子群组的成员。超过 5 层嵌套的成员不会被纳入。
 
-#### Updating Microsoft Entra ID Group Names
+#### 更新 Microsoft Entra ID 群组名称
 
-If you are using the group name (not the group ID) in your tailnet policy file, and you change the name of your group in Microsoft Entra ID, the Tailscale access rules for that group will no longer apply. Tailscale will fail closed, and you will receive an error message in the
-admin console.
+如果你在 tailnet 策略文件中使用的是群组名称（而非群组 ID），并且在 Microsoft Entra ID 中更改了群组名称，该群组的 Tailscale 访问规则将不再生效。Tailscale 会进入失败关闭（fail closed）状态，你会在管理控制台中收到错误消息。
 
-If you modified the name of the group, update the group in the tailnet policy file to the new group name. You can also revert the
-name change in Microsoft Entra ID if this was unintentional.
+如果你修改了群组名称，请将 tailnet 策略文件中的该群组更新为新的群组名称。如果这是误操作，你也可以在 Microsoft Entra ID 中撤销名称更改。
 
-If you are using the group ID in your tailnet policy file, renaming the group will not affect the Tailscale access rules for that group.
+如果你在 tailnet 策略文件中使用的是群组 ID，重命名群组不会影响该群组的 Tailscale 访问规则。
 
-### Disable Provisioning
+### 停用预配置
 
-You need to have an admin role for the Microsoft Azure portal to complete these steps.
+完成这些步骤需要你拥有 Microsoft Azure 门户的管理员角色。
 
-#### In Microsoft Entra ID
+#### 在 Microsoft Entra ID 中
 
-1. Log in to the [Microsoft Azure portal][xt-azure-login].
-2. Select **Microsoft Entra ID**.
-3. Under **Manage** in the left-hand navigation, select **Enterprise applications**.
-4. Search for the **Tailscale** application and select it.
-5. Under **Manage**, select **Properties**.
-6. Select **Delete** and then select **Yes**.
+1. 登录 [Microsoft Azure 门户][xt-azure-login]。
+2. 选择 **Microsoft Entra ID**。
+3. 在左侧导航的 **Manage** 下选择 **Enterprise applications**。
+4. 搜索 **Tailscale** 应用程序并选中它。
+5. 在 **Manage** 下选择 **Properties**。
+6. 选择 **Delete**，然后选择 **Yes**。
 
-#### In Tailscale
+#### 在 Tailscale 中
 
-1. In the [User management](https://console.tailscale.com/admin/settings/user-management) page of the admin console, under **SCIM Provisioning**, select **Disable provisioning**, and then select **Disable provisioning** to confirm.
+1. 在管理控制台的 [User management](https://console.tailscale.com/admin/settings/user-management) 页面中，在 **SCIM Provisioning** 下选择 **Disable provisioning**，然后再次选择 **Disable provisioning** 以确认。
 
-2. In the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console, update your rules to no
-   longer reference any group which is no longer pushed.
+2. 在管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面中，更新你的规则，移除对不再推送的群组的引用。
 
-3. If you no longer want to keep the SCIM API key that you used for Microsoft Entra ID, [revoke the key][docs-auth-keys-revoke].
+3. 如果你不再想保留用于 Microsoft Entra ID 的 SCIM API 密钥，请[吊销该密钥][docs-auth-keys-revoke]。
 
-### Known Limitations
+### 已知限制
 
-* Microsoft Entra ID syncs with Tailscale every 40 minutes. This is a [limitation from Microsoft Entra ID][xt-entra-sync-time] and you cannot change this interval. To force the sync of a user, for example, as part of offboarding, use Microsoft Entra ID [on-demand provisioning][xt-entra-on-demand]. This should sync the user in less than 30 seconds.
-* Microsoft Entra ID takes approximately 30 days from 'soft' deletion to 'hard' deletion of a user. You cannot change this interval.
-* Microsoft Entra ID [doesn't automatically restore the dynamic membership group][xt-entra-deprovisioning] entries when a user goes from 'soft' deleted to active. If this causes issues, you can **Restart provisioning** from Entra ID's app provisioning page to force a refresh.
-* Tailscale does not support the SCIM [Enterprise User Schema Extension][xt-rfc-7643-4.3]. If any additional user attribute from these extensions is specified, the request will fail.
-* Tailscale groups are parsed lowercased in the tailnet policy file, so any casing in Microsoft Entra ID is ignored.
-* Groups from Microsoft Entra ID cannot contain the `@` symbol.
-* If you are referring to the group name in your tailnet policy file, and the name of your group changes, the access control policy for that group will no longer apply and Tailscale will fail closed. If instead, you use the group ID in your tailnet policy file, renaming the group will not affect the Tailscale access rules for that group.
-* Groups unlinked in Microsoft Entra ID that are retained in Tailscale are not synced to Tailscale.
-* You cannot use group sync to assign Tailscale admins or other [user roles][docs-user-roles].
+* Microsoft Entra ID 每 40 分钟与 Tailscale 同步一次。这是 [Microsoft Entra ID 的限制][xt-entra-sync-time]，你无法更改此间隔。要强制同步某个用户（例如作为用户移除流程的一部分），请使用 Microsoft Entra ID 的[按需预配置（on-demand provisioning）][xt-entra-on-demand]。这样应在 30 秒内完成该用户的同步。
+* Microsoft Entra ID 将用户从"软删除"到"硬删除"大约需要 30 天。你无法更改此间隔。
+* 当用户从"软删除"恢复为活跃状态时，Microsoft Entra ID [不会自动恢复动态成员身份群组][xt-entra-deprovisioning]条目。如果这造成了问题，你可以在 Entra ID 的应用预配置页面选择 **Restart provisioning** 强制刷新。
+* Tailscale 不支持 SCIM [Enterprise User Schema Extension][xt-rfc-7643-4.3]。如果指定了这些扩展中的任何额外用户属性，请求将失败。
+* Tailscale 在 tailnet 策略文件中将群组解析为小写，因此 Microsoft Entra ID 中的任何大小写形式都会被忽略。
+* 来自 Microsoft Entra ID 的群组不能包含 `@` 符号。
+* 如果你在 tailnet 策略文件中引用的是群组名称，那么群组名称更改后，该群组的访问控制策略将不再生效，Tailscale 会进入失败关闭状态。如果你在 tailnet 策略文件中使用的是群组 ID，重命名群组不会影响该群组的 Tailscale 访问规则。
+* 在 Microsoft Entra ID 中被取消关联、但保留在 Tailscale 中的群组，不会被同步到 Tailscale。
+* 你不能使用群组同步来指派 Tailscale 管理员或其他[用户角色][docs-user-roles]。
 
 [co-contact-support-sso]: https://tailscale.com/contact/support/?type=sso
 

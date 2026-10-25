@@ -1,75 +1,75 @@
 ---
-title: "Workload identity federation"
-description: "Use federated OIDC workload identities from third-party providers to authenticate requests to the Tailscale API."
+title: "工作负载身份联合"
+description: "使用来自第三方提供商的联合 OIDC 工作负载身份，对发往 Tailscale API 的请求进行认证。"
 ---
 
-Last validated Jan 30, 2026
+最后验证于 Jan 30, 2026
 
-Workload identity federation lets cloud-hosted infrastructure in providers like Microsoft Azure, Google Cloud Platform, Amazon Web Services, or GitHub Actions authenticate to a tailnet or the Tailscale API using provider-native identity tokens instead of Tailscale auth keys or OAuth clients. By leveraging the provider's federated OpenID Connect (OIDC) identities, tailnet administrators can streamline credential management and infrastructure automation.
+工作负载身份联合（workload identity federation）让托管在 Microsoft Azure、Google Cloud Platform、Amazon Web Services 或 GitHub Actions 等提供商上的云基础设施，能够使用提供商原生的身份令牌（而非 Tailscale 认证密钥或 OAuth client）向 tailnet 或 Tailscale API 进行认证。借助提供商的联合 OpenID Connect（OIDC）身份，tailnet 管理员可以简化凭证管理和基础设施自动化。
 
-## How it works
+## 工作原理
 
-*（图：A process flow diagram for a standard workload identity federation flow, showing how a cloud workload can exchange a signed JWT from its provider with Tailscale to authenticate itself to the Tailscale API.）*
+*（图：标准工作负载身份联合流程图，展示云工作负载如何用提供商签发的 JWT 与 Tailscale 交换，从而向 Tailscale API 认证自己。）*
 
-When a cloud workload (such as a CI job, serverless function, or virtual machine) wants to join your tailnet or call the Tailscale API, it first asks its own platform for an OIDC token.
+当一个云工作负载（例如 CI 作业、无服务器函数或虚拟机）想要加入你的 tailnet 或调用 Tailscale API 时，它首先向自己的平台请求一个 OIDC 令牌。
 
-The OIDC token is a signed JSON Web Token (JWT) that conveys three assurances from the cloud platform:
+OIDC 令牌是一个经过签名的 JSON Web Token（JWT），它传达来自云平台的三重保证：
 
-* It vouches for the workload's identity.
-* It specifies exactly which workload the JWT represents.
-* It declares who is permitted to consume the token.
+* 它为工作负载的身份作担保。
+* 它准确指明该 JWT 代表哪个工作负载。
+* 它声明谁有权消费该令牌。
 
-Because the platform signs the token with its publicly advertised keys, anyone can verify the signature and trust that the claims are genuine.
+由于平台使用其公开发布的密钥对令牌签名，任何人都可以验证签名并相信这些 claims 是真实的。
 
-Before any exchange can take place, a tailnet admin establishes trust by specifying the OIDC issuer to trust and defining claim-matching rules that map specific workloads, such as a particular GitHub repository, Google Cloud service account, or Azure workload, onto the tags and API scopes they should receive. Tokens that fail to match these rules are rejected automatically.
+在任何交换发生之前，tailnet 管理员需要先建立信任：指定要信任的 OIDC issuer，并定义 claim 匹配规则，把特定的工作负载（例如某个 GitHub 仓库、Google Cloud 服务账号或 Azure 工作负载）映射到它们应获得的标签和 API 作用域。不匹配这些规则的令牌会被自动拒绝。
 
-The workload then sends that OIDC token to Tailscale's token exchange endpoint. Behind the scenes, Tailscale fetches the issuer's public keys, validates the signature, standard claims (issuer, audience, expiry), and claim-matching rules and then returns a short-lived API token with the scopes you configured when configuring identity federation in the Tailscale admin console.
+然后，工作负载把该 OIDC 令牌发送到 Tailscale 的令牌交换端点。在幕后，Tailscale 会获取 issuer 的公钥，验证签名、标准 claims（issuer、audience、过期时间）和 claim 匹配规则，然后返回一个短期 API 令牌，其作用域为你在 Tailscale 管理控制台中配置身份联合时所设置的 scopes。
 
-With this API token, the workload can join or manage the tailnet with the Tailscale API.
+有了这个 API 令牌，工作负载就可以使用 Tailscale API 加入或管理 tailnet。
 
-## Set up a federated identity
+## 设置联合身份
 
-Before a cloud workload can use its signed OIDC token to authenticate to Tailscale, you must set up a federated identity in Tailscale and assign all necessary [scopes][docs-trust-credentials-scopes].
+在云工作负载能够使用其签名 OIDC 令牌向 Tailscale 认证之前，你必须先在 Tailscale 中设置联合身份，并分配所有必要的[作用域（scope）][docs-trust-credentials-scopes]。
 
-Federated identities can be configured using:
+联合身份可以通过以下方式配置：
 
-* The [admin console][ar-configure-admin-console]
-* The [Tailscale Terraform provider][ar-configure-terraform-provider]
+* [管理控制台][ar-configure-admin-console]
+* [Tailscale Terraform provider][ar-configure-terraform-provider]
 * [`tailscale-client-go-v2`][ar-configure-tailscale-client-go-v2]
-* The [Tailscale API][ar-configure-api]
+* [Tailscale API][ar-configure-api]
 
-### Configure federated identities in the admin console
+### 在管理控制台中配置联合身份
 
-To configure federated identities in the Tailscale admin console:
+要在 Tailscale 管理控制台中配置联合身份：
 
-1. Open the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
-2. Select the **Credential** button.
-3. Select **OpenID Connect**.
-4. Select an **Issuer** from the dropdown. Common cloud providers are included in the dropdown, but any infrastructure provider that supports OIDC for workload identity federation can be used if **Custom issuer** is selected.
-   1. Enter the **Issuer URL** for the cloud provider's OIDC issuer if using a **Custom issuer**.
-5. Enter the **Subject**. This value determines the attributes of the workload that must match to successfully receive a Tailscale API token. Find the syntax of the subject (`sub`) claims for common cloud providers in the [common cloud provider token formats][ar-common-cloud-provider-token-formats] section.
-6. (Optional) Add additional **Custom claims** to further narrow access. Explore token claims for common cloud providers in the [common cloud provider token formats][ar-common-cloud-provider-token-formats] section.
-7. Select the relevant read and write scopes from the list and select **Generate credential**.
-8. Copy the **Client ID** and **Audience (aud claim)**. These are not secrets and will be visible in the admin console.
+1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
+2. 选择 **Credential** 按钮。
+3. 选择 **OpenID Connect**。
+4. 从下拉框中选择一个 **Issuer**。下拉框中包含常见的云服务商；如果选择 **Custom issuer**，也可以使用任何支持 OIDC 工作负载身份联合的基础设施提供商。
+   1. 如果使用 **Custom issuer**，请输入云服务商 OIDC issuer 的 **Issuer URL**。
+5. 输入 **Subject**。该值决定工作负载必须匹配哪些属性才能成功获得 Tailscale API 令牌。常见云服务商的 subject（`sub`）claim 语法请参阅[常见云服务商的令牌格式][ar-common-cloud-provider-token-formats]一节。
+6. （可选）添加额外的 **Custom claims** 来进一步收紧访问。常见云服务商的令牌 claims 请在[常见云服务商的令牌格式][ar-common-cloud-provider-token-formats]一节中查看。
+7. 从列表中选择相关的读写作用域，然后选择 **Generate credential**。
+8. 复制 **Client ID** 和 **Audience (aud claim)**。这些不是机密信息，在管理控制台中始终可见。
 
-#### Retrieve the Client ID in the admin console
+#### 在管理控制台中检索 Client ID
 
-If you need to copy the **Client ID** at a later point in time, you can visit the admin console.
+如果之后需要复制 **Client ID**，可以访问管理控制台。
 
-1. Open the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
+1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
 
-2. Use the **Search** and optionally the **Filters** functionality to find the federated identity you are interested in.
+2. 使用 **Search** 和（可选的）**Filters** 功能找到你关注的联合身份。
 
-   * Searching by `tag` may be useful.
-   * Setting the **Filters** value to **Client type** and selecting **OIDC** may also be useful.
+   * 按 `tag` 搜索可能有用。
+   * 把 **Filters** 值设为 **Client type** 并选择 **OIDC** 也可能有帮助。
 
-3. Either select the arrow toggle to expand the row or select the  menu and select **View** or **Edit**.
+3. 选择箭头开关展开该行，或选择  菜单并选择 **View** 或 **Edit**。
 
-4. Select the clipboard icon to copy the **Client ID**.
+4. 选择剪贴板图标复制 **Client ID**。
 
-### Configure federated identities using the Tailscale Terraform provider
+### 使用 Tailscale Terraform provider 配置联合身份
 
-To configure federated identities using the Tailscale Terraform provider with the `tailscale_federated_identity` resource:
+要使用 Tailscale Terraform provider 和 `tailscale_federated_identity` 资源配置联合身份：
 
 ```hcl
 resource "tailscale_federated_identity" "example_federated_identity" {
@@ -84,11 +84,11 @@ resource "tailscale_federated_identity" "example_federated_identity" {
 }
 ```
 
-For more information, refer to the [Tailscale Terraform provider documentation][xt-terraform-tailscale-federated-identity-resource].
+更多信息请参阅 [Tailscale Terraform provider 文档][xt-terraform-tailscale-federated-identity-resource]。
 
-### Configure federated identities using tailscale-client-go-v2
+### 使用 tailscale-client-go-v2 配置联合身份
 
-To configure federated identities using `tailscale-client-go-v2`:
+要使用 `tailscale-client-go-v2` 配置联合身份：
 
 ```go
 package main
@@ -119,11 +119,11 @@ func main() {
 }
 ```
 
-For more information, refer to [`tailscale-client-go-v2`][xt-tailscale-client-go-v2].
+更多信息请参阅 [`tailscale-client-go-v2`][xt-tailscale-client-go-v2]。
 
-### Configure federated identities using the Tailscale API
+### 使用 Tailscale API 配置联合身份
 
-To configure federated identities using the Tailscale API with the `https://api.tailscale.com/api/v2/tailnet/-/keys` endpoint:
+要使用 Tailscale API 和 `https://api.tailscale.com/api/v2/tailnet/-/keys` 端点配置联合身份：
 
 ```shell
 curl -X POST https://api.tailscale.com/api/v2/tailnet/-/keys \
@@ -145,24 +145,24 @@ curl -X POST https://api.tailscale.com/api/v2/tailnet/-/keys \
   }'
 ```
 
-For more information, refer to [endpoint API][co-api-post-keys].
+更多信息请参阅[端点 API][co-api-post-keys]。
 
-## Exchange workload identity tokens with Tailscale
+## 与 Tailscale 交换工作负载身份令牌
 
-Workload identity tokens must be exchanged with Tailscale to authenticate and provide a Tailscale access token.
+工作负载身份令牌必须与 Tailscale 交换，才能完成认证并获得 Tailscale 访问令牌。
 
-Using workload identity token exchange for authentication is supported natively in:
+以下客户端原生支持使用工作负载身份令牌交换进行认证：
 
-* The [Tailscale GitHub Action][ar-exchange-github-action]
-* The [Tailscale Terraform provider][ar-exchange-terraform-provider]
+* [Tailscale GitHub Action][ar-exchange-github-action]
+* [Tailscale Terraform provider][ar-exchange-terraform-provider]
 * [`tailscale-client-go-v2`][ar-exchange-tailscale-client-go-v2]
-* The [Tailscale API][ar-exchange-api]
+* [Tailscale API][ar-exchange-api]
 
-Workload identity can also be used for [registering new nodes][ar-register-new-nodes-using-workload-identity] in your tailnet.
+工作负载身份还可用于在 tailnet 中[注册新节点][ar-register-new-nodes-using-workload-identity]。
 
 ### Tailscale GitHub Action
 
-Workload identity can be used to authenticate the Tailscale GitHub action by using the `oauth-client-id`, `audience`, and `tags` arguments:
+工作负载身份可用于认证 Tailscale GitHub action，方法是使用 `oauth-client-id`、`audience` 和 `tags` 参数：
 
 ```yaml
 - name: Tailscale
@@ -173,19 +173,19 @@ Workload identity can be used to authenticate the Tailscale GitHub action by usi
     tags: tag:ci
 ```
 
-Workload identity federation requires the `id-token: write` [permission setting][xt-gh-permission-setting] for the workflow:
+工作负载身份联合要求工作流具有 `id-token: write` [权限设置][xt-gh-permission-setting]：
 
 ```yaml
 permissions:
-  id-token: write # This is required for the tailscale action to request a JWT from GitHub
-  # Additional required permissions for your workflow
+  id-token: write # tailscale action 需要此项才能向 GitHub 请求 JWT
+  # 你的工作流所需的其他权限
 ```
 
-For more information, refer to [GitHub action][xt-github-action].
+更多信息请参阅 [GitHub action][xt-github-action]。
 
 ### Tailscale Terraform provider
 
-Workload identity can be used to authenticate the Tailscale Terraform provider by using the `oauth_client_id` and `id_token` provider arguments:
+工作负载身份可用于认证 Tailscale Terraform provider，方法是使用 `oauth_client_id` 和 `id_token` provider 参数：
 
 ```hcl
 provider "tailscale" {
@@ -195,11 +195,11 @@ provider "tailscale" {
 }
 ```
 
-For more information, refer to [Tailscale Terraform provider][xt-terraform-tailscale].
+更多信息请参阅 [Tailscale Terraform provider][xt-terraform-tailscale]。
 
 ### tailscale-client-go-v2
 
-Workload identity can be used to authenticate `tailscale-client-go-v2` by supplying a `ClientID` and `IDTokenFunc` to `tailscale.Client`:
+工作负载身份可用于认证 `tailscale-client-go-v2`，方法是向 `tailscale.Client` 提供 `ClientID` 和 `IDTokenFunc`：
 
 ```go
 package main
@@ -227,13 +227,13 @@ func main() {
 }
 ```
 
-For more information, refer to [`tailscale-client-go-v2`][xt-tailscale-client-go-v2].
+更多信息请参阅 [`tailscale-client-go-v2`][xt-tailscale-client-go-v2]。
 
-### Token exchange API
+### 令牌交换 API
 
-The Tailscale token exchange endpoint is `https://api.tailscale.com/api/v2/oauth/token-exchange`.
+Tailscale 令牌交换端点是 `https://api.tailscale.com/api/v2/oauth/token-exchange`。
 
-Make requests to the Tailscale token exchange endpoint when you need a short-lived Tailscale access token:
+当你需要一个短期的 Tailscale 访问令牌时，向 Tailscale 令牌交换端点发起请求：
 
 ```shell
 curl -X POST https://api.tailscale.com/api/v2/oauth/token-exchange \
@@ -242,110 +242,110 @@ curl -X POST https://api.tailscale.com/api/v2/oauth/token-exchange \
   -d "jwt=<JWT>"
 ```
 
-* `<CLIENT_ID>`: The client ID generated when you configured a federated identity in the Tailscale admin console.
-* `<JWT>`: The signed OIDC JWT provided to the workload by the cloud provider.
+* `<CLIENT_ID>`：你在 Tailscale 管理控制台中配置联合身份时生成的 client ID。
+* `<JWT>`：云提供商提供给工作负载的签名 OIDC JWT。
 
-If the client ID and JWT are valid and match the configured audience, subject, and custom claim rules, Tailscale will return a short-lived API token to use for authenticating the workload to the Tailscale API.
+如果 client ID 和 JWT 有效，并且与配置的 audience、subject 和自定义 claim 规则匹配，Tailscale 会返回一个短期 API 令牌，用于向 Tailscale API 认证该工作负载。
 
-If the short-lived API token expires, you can repeat this step to receive a fresh token.
+如果短期 API 令牌过期，你可以重复此步骤以获取新令牌。
 
-### Debugging token exchange errors
+### 调试令牌交换错误
 
-The latest token exchange error details for a federated identity can be found in the admin console.
+联合身份的最新令牌交换错误详情可以在管理控制台中查看。
 
-1. Open the [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) page of the admin console.
+1. 打开管理控制台的 [Trust credentials](https://console.tailscale.com/admin/settings/trust-credentials) 页面。
 
-2. Use the **Search** and optionally the **Filters** functionality to find the federated identity you are interested in.
+2. 使用 **Search** 和（可选的）**Filters** 功能找到你关注的联合身份。
 
-   * Searching by `tag` may be useful.
-   * Setting the **Filters** value to **Client type** and selecting **OIDC** may also be useful.
+   * 按 `tag` 搜索可能有用。
+   * 把 **Filters** 值设为 **Client type** 并选择 **OIDC** 也可能有帮助。
 
-3. Select the  menu and select **View** or **Edit**.
+3. 选择  菜单并选择 **View** 或 **Edit**。
 
-Information about the error will be present on this page, with specific guidance varying depending on the type of error.
+错误信息会显示在此页面上，具体指引视错误类型而定。
 
-Errors will only be cleared once a token exchange has succeeded for the federated identity.
+只有当该联合身份的令牌交换成功后，错误才会被清除。
 
-#### API error responses
+#### API 错误响应
 
-Errors returned from the token exchange API endpoint will not have specific debugging information directly in the error message.
+从令牌交换 API 端点返回的错误不会在错误消息中直接包含具体的调试信息。
 
-This is done to prevent leaking information to potential bad actors as they could otherwise attempt to reverse engineer your federated identity's configuration from error messages if they know its client ID.
+这是为了防止信息泄露给潜在的恶意行为者——否则，如果他们知道你联合身份的 client ID，就可能尝试从错误消息中逆向推导出你的联合身份配置。
 
-Error messages will instead contain a direct link to the federated identity within the admin console in a message of the form:
+错误消息会改为包含一个直达管理控制台中该联合身份的链接，消息格式如下：
 
 ```json
 { "message": "Unauthorized. Visit [link to admin console] for details" }
 ```
 
-Information about the error will be present on this page, with specific guidance varying depending on the type of error.
+错误信息会显示在此页面上，具体指引视错误类型而定。
 
-Errors will only be cleared once a token exchange has succeeded for the federated identity.
+只有当该联合身份的令牌交换成功后，错误才会被清除。
 
-## Register new nodes using workload identity
+## 使用工作负载身份注册新节点
 
-> **Note:**
+> **注意：**
 >
-> A device must run Tailscale v1.90.1 or later to have the `--client-id` and `--id-token` flags.
+> 设备必须运行 Tailscale v1.90.1 或更高版本才支持 `--client-id` 和 `--id-token` 标志。
 
-You can use a client ID and OIDC token directly in [`tailscale up`][docs-tailscale-up] to register a new node:
+你可以在 [`tailscale up`][docs-tailscale-up] 中直接使用 client ID 和 OIDC 令牌来注册新节点：
 
 ```shell
 tailscale up --client-id=${CLIENT_ID} --id-token=${IDENTITY_TOKEN} --advertise-tags=tag:ci
 ```
 
-The `tailscale up` command expects the `client-id` to be the Client ID used to generate auth keys with workload identity federation. Access the admin console to [retrieve the **Client ID**][ar-retrieve-the-client-id-in-the-admin-console].
+`tailscale up` 命令要求 `client-id` 是用于工作负载身份联合生成认证密钥的 Client ID。访问管理控制台以[检索 **Client ID**][ar-retrieve-the-client-id-in-the-admin-console]。
 
-The command also expects the `id-token` to be the ID token from the identity provider to exchange with the control server for workload federation. This value is the signed OIDC JWT and not a short-lived API token.
+该命令还要求 `id-token` 是来自身份提供方、用于与控制服务器（control server）交换工作负载联合的 ID 令牌。这个值是签名后的 OIDC JWT，而不是短期 API 令牌。
 
-The workload identity credential must have the `auth_keys` scope and the [tags][docs-tags] passed to `--advertise-tags` must match the tags you selected when you [configured the federated identity][ar-set-up].
+工作负载身份凭证必须具有 `auth_keys` 作用域，并且传给 `--advertise-tags` 的[标签（tag）][docs-tags]必须与你在[配置联合身份][ar-set-up]时选择的标签一致。
 
-The `--client-id` flag can accept additional URL-style parameters:
+`--client-id` 标志还可以接受额外的 URL 风格参数：
 
 ```shell
 tailscale up --client-id='${CLIENT_ID}?ephemeral=false&preauthorized=true' --id-token=${IDENTITY_TOKEN} --advertise-tags=tag:ci
 ```
 
-The available parameters are:
+可用参数有：
 
-* `ephemeral`: register as an [ephemeral node][docs-ephemeral-nodes] (defaults to `true`)
-* `preauthorized`: skip manual [device approval][docs-device-approval] (defaults to `false`)
+* `ephemeral`：注册为[临时节点（ephemeral node）][docs-ephemeral-nodes]（默认为 `true`）
+* `preauthorized`：跳过手动[设备审批][docs-device-approval]（默认为 `false`）
 
-### Automatic cloud token discovery and exchange
+### 自动发现并交换云端令牌
 
-> **Note:**
+> **注意：**
 >
-> A device must run Tailscale v1.94.0 or later to have the `--audience` flag.
+> 设备必须运行 Tailscale v1.94.0 或更高版本才支持 `--audience` 标志。
 
-Tailscale can automatically detect certain cloud and CI environments and retrieve a native identity token from the platform it is running on. When enabled, the client uses this token to authenticate the node to your tailnet using **workload identity federation** without requiring you to manually provision or manage credentials.
+Tailscale 能够自动检测某些云环境和 CI 环境，并从其运行的平台获取原生身份令牌。启用后，客户端会使用该令牌，通过**工作负载身份联合**把节点认证到你的 tailnet，无需你手动预配或管理凭证。
 
-This functionality is intended for **non-interactive workloads**, such as cloud VMs, containerized services, and CI/CD pipelines, where identity should be derived from the execution environment itself.
+此功能面向**非交互式工作负载**，例如云虚拟机、容器化服务和 CI/CD 流水线——在这些场景中，身份应从执行环境本身派生。
 
-No long-lived credentials, access keys, or secrets are stored on disk or injected at runtime.
+不会在磁盘上存储任何长期凭证、访问密钥或机密，也不会在运行时注入。
 
-This behavior is enabled by passing a client ID and audience to [`tailscale up`][docs-tailscale-up]:
+要启用此行为，向 [`tailscale up`][docs-tailscale-up] 传入 client ID 和 audience：
 
 ```shell
 tailscale up --client-id=${CLIENT_ID} --audience=${AUDIENCE} --advertise-tags=tag:ci
 ```
 
-The command expects `audience` to be the audience specified in the trust configuration for the federated identity referred to by `client-id`.
+该命令要求 `audience` 是 `client-id` 所指联合身份的信任配置中指定的 audience。
 
-#### Supported environments
+#### 支持的环境
 
-Automatic token discovery requires both a native workload identity on the platform and a matching [trust configuration][ar-set-up] in Tailscale. Once configured, the Tailscale client will obtain a provider token on your behalf on the platforms described below.
+自动令牌发现要求平台上存在原生工作负载身份，并且 Tailscale 中存在匹配的[信任配置][ar-set-up]。配置完成后，Tailscale 客户端将在下述平台上代你获取提供商令牌。
 
 **AWS**
 
-**Workload environment**
+**工作负载环境**
 
-* The workload runs on an AWS service that supports IAM roles. For example, Elastic Cloud Compute (EC2), Elastic Container Service (ECS), or Elastic Kubernetes Service (EKS).
-* An IAM role is attached to the instance, task, or pod.
+* 工作负载运行在支持 IAM 角色的 AWS 服务上，例如 Elastic Cloud Compute（EC2）、Elastic Container Service（ECS）或 Elastic Kubernetes Service（EKS）。
+* 实例、任务或 Pod 上附加了一个 IAM 角色。
 
-**IAM configuration**
+**IAM 配置**
 
-* The IAM role must allow issuance of web identity tokens from AWS Security Token Service (STS).
-* The role's trust policy must permit the configured web identity provider.
+* IAM 角色必须允许从 AWS Security Token Service（STS）签发 web 身份令牌。
+* 角色的信任策略必须允许所配置的 web 身份提供商。
 
 ```json
 {
@@ -369,121 +369,120 @@ Automatic token discovery requires both a native workload identity on the platfo
 }
 ```
 
-**Tailscale configuration**
+**Tailscale 配置**
 
-* A workload identity federation configuration exists in Tailscale that:
-  * Trusts the AWS token issuer.
-  * Expects the correct audience (`aud`).
-  * Matches any required role or environment-specific claims.
+* Tailscale 中存在一个工作负载身份联合配置，它：
+  * 信任 AWS 令牌 issuer。
+  * 期望正确的 audience（`aud`）。
+  * 匹配任何所需的角色或环境特定的 claims。
 
 **Google Cloud**
 
-**Workload environment**
+**工作负载环境**
 
-* The workload runs on a Google Cloud Platform (GCP) service that exposes the metadata server. For example, Google Compute Engine (GCE) or Google Kubernetes Engine (GKE).
-* A **service account** is attached to the VM or workload.
+* 工作负载运行在暴露元数据服务器的 Google Cloud Platform（GCP）服务上，例如 Google Compute Engine（GCE）或 Google Kubernetes Engine（GKE）。
+* 虚拟机或工作负载附加了一个**服务账号**。
 
-**IAM configuration**
+**IAM 配置**
 
-* The service account must be allowed to mint identity tokens.
-* The workload must be permitted to request identity tokens for the configured audience.
+* 必须允许服务账号签发身份令牌。
+* 必须允许工作负载为所配置的 audience 请求身份令牌。
 
-**Tailscale configuration**
+**Tailscale 配置**
 
-* A workload identity federation configuration exists in Tailscale that:
-  * Trusts the GCP token issuer.
-  * Expects the configured audience.
-  * Optionally matches service account–specific claims.
+* Tailscale 中存在一个工作负载身份联合配置，它：
+  * 信任 GCP 令牌 issuer。
+  * 期望所配置的 audience。
+  * 可选地匹配服务账号特定的 claims。
 
 **GitHub Actions**
 
-**Workflow configuration**
+**工作流配置**
 
-* The workflow runs on a GitHub-hosted or self-hosted runner that supports OIDC.
-* The workflow explicitly enables OIDC token issuance:
+* 工作流运行在支持 OIDC 的 GitHub 托管或自托管 runner 上。
+* 工作流显式启用了 OIDC 令牌签发：
 
 ```yaml
 permissions:
   id-token: write
 ```
 
-**Repository or organization configuration**
+**仓库或组织配置**
 
-* OIDC token issuance is enabled for the repository or organization.
-* Any branch, environment, or repository restrictions align with the expected token claims.
+* 仓库或组织已启用 OIDC 令牌签发。
+* 任何分支、环境或仓库限制都与预期的令牌 claims 一致。
 
-**Tailscale configuration**
+**Tailscale 配置**
 
-* A workload identity federation configuration exists in Tailscale that:
-  * Trusts the GitHub Actions OIDC issuer.
-  * Matches the expected audience, repository, and workflow claims.
+* Tailscale 中存在一个工作负载身份联合配置，它：
+  * 信任 GitHub Actions OIDC issuer。
+  * 匹配预期的 audience、仓库和工作流 claims。
 
-**Unsupported environments**
+**不支持的环境**
 
-If the client does not detect a supported platform, automatic token discovery is skipped and the client falls back to manual workload identity federation configuration.
+如果客户端未检测到受支持的平台，将跳过自动令牌发现，并回退到手动工作负载身份联合配置。
 
-## Reference
+## 参考
 
-The following sections provide technical details about claims.
+以下小节提供有关 claims 的技术细节。
 
-### Common cloud provider token formats
+### 常见云服务商的令牌格式
 
-Cloud providers have unique formats for the `sub` claim, and the custom claims, for OIDC tokens that they issue.
-Below are some common cloud providers and the formats of their OIDC tokens.
+各云服务商签发的 OIDC 令牌在 `sub` claim 和自定义 claims 上有各自独特的格式。以下列出一些常见云服务商及其 OIDC 令牌的格式。
 
 #### AWS
 
-##### Subject format
+##### 主题格式
 
-The ARN of the IAM principal that requested the token. Refer to [AWS token claims][xt-aws-token-claims].
+请求该令牌的 IAM 主体的 ARN。请参阅 [AWS token claims][xt-aws-token-claims]。
 
-##### Token Claims
+##### 令牌 claims
 
-Refer to [AWS token claims][xt-aws-token-claims].
+请参阅 [AWS token claims][xt-aws-token-claims]。
 
 #### GitHub Actions
 
-##### Subject format
+##### 主题格式
 
-Refer to [GitHub subject format][xt-gh-subject-format].
+请参阅 [GitHub subject format][xt-gh-subject-format]。
 
-##### Token Claims
+##### 令牌 claims
 
-Refer to [GitHub token claims][xt-gh-token-claims].
+请参阅 [GitHub token claims][xt-gh-token-claims]。
 
 #### Google Cloud
 
-##### Subject format
+##### 主题格式
 
-The unique ID for the service account that you associated with your instance. Refer to [Google Cloud token claims][xt-gcp-token-claims].
+与你实例关联的服务账号的唯一 ID。请参阅 [Google Cloud token claims][xt-gcp-token-claims]。
 
-##### Token Claims
+##### 令牌 claims
 
-Refer to [Google Cloud token claims][xt-gcp-token-claims].
+请参阅 [Google Cloud token claims][xt-gcp-token-claims]。
 
 #### Microsoft Azure
 
-##### Subject format
+##### 主题格式
 
-Refer to [Microsoft Azure token claims][xt-azure-token-claims].
+请参阅 [Microsoft Azure token claims][xt-azure-token-claims]。
 
-##### Token Claims
+##### 令牌 claims
 
-Refer to [Microsoft Azure token claims][xt-azure-token-claims].
+请参阅 [Microsoft Azure token claims][xt-azure-token-claims]。
 
-### Claim value format
+### claim 值的格式
 
-Values specified for the **subject** and **custom claims** are matched against claims values in the OIDC JWT.
+为 **subject** 和**自定义 claims** 指定的值会与 OIDC JWT 中的 claim 值进行匹配。
 
-Values can contain an `*` to match against any character. Other characters specified must directly match the value of the claim.
+值中可以包含 `*` 来匹配任意字符。指定的其他字符必须与 claim 值直接匹配。
 
-For example, specifying `my-example-sub/*` for the subject will successfully match `sub` claims that start with `my-example-sub/`.
+例如，为 subject 指定 `my-example-sub/*` 将成功匹配以 `my-example-sub/` 开头的 `sub` claim。
 
-### Custom claim key format
+### 自定义 claim 键的格式
 
-Keys for **custom claims** specify the claim in the OIDC JWT to match against.
+**自定义 claims** 的键指定 OIDC JWT 中要匹配的 claim。
 
-For example, given a token of the form:
+例如，给定如下形式的令牌：
 
 ```json
 {
@@ -494,13 +493,13 @@ For example, given a token of the form:
 }
 ```
 
-the `user` claim can be referenced by specifying `user` for the key.
+可以通过把键指定为 `user` 来引用 `user` claim。
 
-#### Nested claims
+#### 嵌套 claim
 
-Keys can refer to nested claims within a JWT by separating the nested key names with a period.
+键可以通过用句点分隔嵌套键名来引用 JWT 中的嵌套 claim。
 
-For example, given token of the form:
+例如，给定如下形式的令牌：
 
 ```json
 {
@@ -514,13 +513,13 @@ For example, given token of the form:
 }
 ```
 
-the nested `name` claim can be referenced by specifying `user.name` for the key.
+可以通过把键指定为 `user.name` 来引用嵌套的 `name` claim。
 
-#### Escaping claim names
+#### 转义 claim 名称
 
-Keys that contain a period in their name can be escaped by surrounding them in double quotes.
+名称中含句点的键可以用双引号包裹来转义。
 
-For example, given a token of the form:
+例如，给定如下形式的令牌：
 
 ```json
 {
@@ -534,29 +533,29 @@ For example, given a token of the form:
 }
 ```
 
-the `open.id` key can be referenced as `"open.id"` and the nested `username` key as `"open.id".username`.
+`open.id` 键可以写成 `"open.id"`，嵌套的 `username` 键可以写成 `"open.id".username`。
 
-### Generated audience format
+### 生成的 audience 格式
 
-Audience values generated by Tailscale are of the form: `api.tailscale.com/<client ID>`.
+Tailscale 生成的 audience 值格式为：`api.tailscale.com/<client ID>`。
 
-For example, a federated identity with the client ID `Tz8TefihCR11EXAMPLE-kZDRvszg8621EXAMPLE` will have a generated audience of `api.tailscale.com/Tz8TefihCR11EXAMPLE-kZDRvszg8621EXAMPLE`
+例如，client ID 为 `Tz8TefihCR11EXAMPLE-kZDRvszg8621EXAMPLE` 的联合身份，其生成的 audience 为 `api.tailscale.com/Tz8TefihCR11EXAMPLE-kZDRvszg8621EXAMPLE`
 
-## Limitations
+## 限制
 
-* The issuer that provides signed JSON Web Tokens (JWTs) to your workloads must be publicly accessible.
+* 为你的工作负载提供签名 JWT 的 issuer 必须可公开访问。
 
-[ar-common-cloud-provider-token-formats]: #common-cloud-provider-token-formats
+[ar-common-cloud-provider-token-formats]: #常见云服务商的令牌格式
 
-[ar-configure-admin-console]: #configure-federated-identities-in-the-admin-console
+[ar-configure-admin-console]: #在管理控制台中配置联合身份
 
-[ar-configure-api]: #configure-federated-identities-using-the-tailscale-api
+[ar-configure-api]: #使用-tailscale-api-配置联合身份
 
-[ar-configure-terraform-provider]: #configure-federated-identities-using-the-tailscale-terraform-provider
+[ar-configure-terraform-provider]: #使用-tailscale-terraform-provider-配置联合身份
 
-[ar-configure-tailscale-client-go-v2]: #configure-federated-identities-using-tailscale-client-go-v2
+[ar-configure-tailscale-client-go-v2]: #使用-tailscale-client-go-v2-配置联合身份
 
-[ar-exchange-api]: #token-exchange-api
+[ar-exchange-api]: #令牌交换-api
 
 [ar-exchange-github-action]: #tailscale-github-action
 
@@ -564,11 +563,11 @@ For example, a federated identity with the client ID `Tz8TefihCR11EXAMPLE-kZDRvs
 
 [ar-exchange-terraform-provider]: #tailscale-terraform-provider
 
-[ar-retrieve-the-client-id-in-the-admin-console]: #retrieve-the-client-id-in-the-admin-console
+[ar-retrieve-the-client-id-in-the-admin-console]: #在管理控制台中检索-client-id
 
-[ar-register-new-nodes-using-workload-identity]: #register-new-nodes-using-workload-identity
+[ar-register-new-nodes-using-workload-identity]: #使用工作负载身份注册新节点
 
-[ar-set-up]: #set-up-a-federated-identity
+[ar-set-up]: #设置联合身份
 
 [co-api-post-keys]: https://tailscale.com/api#tag/keys/POST/tailnet/{tailnet}/keys
 

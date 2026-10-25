@@ -1,23 +1,23 @@
 ---
-title: "Connect inference and training servers"
-description: "GPU servers, inference endpoints, and training nodes require secure network access without exposing them to the public internet. When these machines authenticate with user accounts, access breaks when"
+title: "连接推理与训练服务器"
+description: "GPU 服务器、推理端点和训练节点需要安全的网络访问，同时又不能暴露在公网上。当这些机器用用户账号来认证时，员工离职"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Aperture**](/docs/aperture) — Monitor and secure LLM usage with Aperture by Tailscale.
+> [**Aperture**](/docs/aperture)——使用 Tailscale 出品的 Aperture 监控并保护 LLM 用量。
 
-GPU servers, inference endpoints, and training nodes require secure network access without exposing them to the public internet. When these machines authenticate with user accounts, access breaks when employees leave, keys rotate on schedules that disrupt long-running jobs, and there is no clean way to scope access per team or customer.
+GPU 服务器、推理端点和训练节点需要安全的网络访问，同时又不能暴露在公网上。如果这些机器用用户账号来认证，员工离职时访问就会中断，密钥按固定周期轮换会打断长时间运行的任务，而且也没有干净的办法按团队或客户划分访问范围。
 
-Tailscale [tags][docs-tags] and [auth keys][docs-auth-keys] give each server a machine identity in your tailnet. Tags define what a server is, auth keys automate how it joins, and [grants][docs-grants] control who can reach it. This topic covers single-tenant and multi-tenant setups, including containerized inference workloads.
+Tailscale [标签][docs-tags]与[认证密钥][docs-auth-keys]为每台服务器在 tailnet 中赋予机器身份。标签定义服务器是什么，认证密钥自动化其加入方式，而[授权][docs-grants]控制谁能访问它。本主题介绍单租户与多租户两种部署方式，包括容器化推理工作负载。
 
-## Define tags for your server infrastructure
+## 为服务器基础设施定义标签
 
-Tags give non-user devices their own identity in your tailnet. Define tags for your server roles by adding a `tagOwners` block to your [tailnet policy file][docs-tailnet-policy-file]:
+标签让非用户设备在你的 tailnet 中拥有自己的身份。在 [tailnet 策略文件][docs-tailnet-policy-file]中添加一个 `tagOwners` 块，为你的服务器角色定义标签：
 
 ```json
 "tagOwners": {
@@ -26,42 +26,42 @@ Tags give non-user devices their own identity in your tailnet. Define tags for y
 }
 ```
 
-The `tag:inference-server` tag identifies machines that serve model inference requests. The `tag:training-cluster` tag identifies machines used for model training. Assigning `autogroup:admin` as the owner means only tailnet admins can create auth keys for these tags.
+`tag:inference-server` 标签标识承载模型推理请求的机器，`tag:training-cluster` 标签标识用于模型训练的机器。将 `autogroup:admin` 指定为所有者意味着只有 tailnet 管理员才能为这些标签创建认证密钥。
 
-> **Note:**
+> **注意：**
 >
-> These tag names are illustrative. Adapt them to match your infrastructure naming conventions (for example, `tag:gpu-a100` or `tag:ml-serving`) if you manage multiple server classes.
+> 这些标签名称仅作示例。如果你管理多类服务器，请根据你的基础设施命名规范调整（例如 `tag:gpu-a100` 或 `tag:ml-serving`）。
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-For the full set of policy file configuration options, refer to the [tailnet policy file reference][docs-tailnet-policy-file].
+策略文件配置选项的完整集合请参阅 [tailnet 策略文件参考][docs-tailnet-policy-file]。
 
-## Authenticate servers with tagged auth keys
+## 用带标签的认证密钥认证服务器
 
-Auth keys let servers join your tailnet without interactive login. Generate a tagged auth key in the [Keys](https://console.tailscale.com/admin/settings/keys) with the following settings:
+认证密钥让服务器无需交互式登录即可加入你的 tailnet。在[密钥](https://console.tailscale.com/admin/settings/keys)页面生成带标签的认证密钥，设置如下：
 
-* **Reusable**: Yes, if you are adding multiple servers with the same tag.
-* **Pre-authorized**: Yes, if you have [device approval][docs-device-approval] enabled.
-* **Tags**: Select the tag you defined above (for example, `tag:inference-server`).
+* **可重用**（Reusable）：若要用同一标签添加多台服务器，则选择是。
+* **预授权**（Pre-authorized）：如果你已启用[设备审批][docs-device-approval]，则选择是。
+* **标签**（Tags）：选择你之前定义的标签（例如 `tag:inference-server`）。
 
-Install Tailscale on each server and authenticate with the auth key:
+在每台服务器上安装 Tailscale 并使用认证密钥完成认证：
 
 ```shell
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --authkey=tskey-auth-<your-key> --advertise-tags=tag:inference-server
 ```
 
-The server joins your tailnet immediately with the correct tag and no interactive login.
+服务器会立即以正确的标签加入你的 tailnet，全程无需交互式登录。
 
-> **Note:**
+> **注意：**
 >
-> Tagged devices have [automatic key expiry disabled][docs-key-expiry], so servers authenticated with a tagged auth key do not require periodic reauthentication. Treat auth keys like passwords and store them in a secrets manager.
+> 带标签的设备已[禁用密钥自动过期][docs-key-expiry]，因此用带标签认证密钥认证的服务器无需定期重新认证。请像对待密码一样对待认证密钥，并将其存放在密钥管理器（secrets manager）中。
 
-For details on auth key options, refer to the [auth keys reference][docs-auth-keys].
+认证密钥选项的详细信息请参阅[认证密钥参考][docs-auth-keys]。
 
-## Control access with grants
+## 使用授权控制访问
 
-Use [grants][docs-grants] to define which users and groups can reach your tagged servers and on which ports. The following example gives your ML engineering team access to inference servers on all ports and limits training cluster access to SSH and a monitoring port:
+使用[授权][docs-grants]定义哪些用户和分组可以访问你的带标签服务器以及通过哪些端口。以下示例为你的 ML 工程团队开放推理服务器的所有端口，并将训练集群的访问限制为 SSH 和一个监控端口：
 
 ```json
 "grants": [
@@ -78,15 +78,15 @@ Use [grants][docs-grants] to define which users and groups can reach your tagged
 ]
 ```
 
-Grants are deny-by-default: if no grant explicitly permits a source-destination pair, Tailscale blocks the traffic.
+授权默认一律拒绝：如果没有任何授权明确允许某个源-目标组合，Tailscale 就会拦截该流量。
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-For additional grant patterns, refer to the [grants overview][docs-grants] and [grants examples][docs-grants-examples].
+更多授权模式请参阅[授权概述][docs-grants]与[授权示例][docs-grants-examples]。
 
-## Isolate access for multi-tenant environments
+## 为多租户环境隔离访问
 
-When multiple teams or customers share GPU infrastructure, assign per-tenant tags to prevent one tenant from reaching another tenant's servers. Define separate tags and grants for each tenant:
+当多个团队或客户共享 GPU 基础设施时，为每个租户分配各自的标签，防止一个租户访问另一个租户的服务器。为每个租户定义单独的标签和授权：
 
 ```json
 "tagOwners": {
@@ -107,17 +107,17 @@ When multiple teams or customers share GPU infrastructure, assign per-tenant tag
 ]
 ```
 
-With this configuration, members of `group:tenant-a-users` can reach servers tagged `tag:tenant-a-gpu` but have no access to `tag:tenant-b-gpu`, and vice versa.
+在此配置下，`group:tenant-a-users` 的成员可以访问打上 `tag:tenant-a-gpu` 标签的服务器，但无法访问 `tag:tenant-b-gpu`，反之亦然。
 
-> **Note:**
+> **注意：**
 >
-> This pattern applies to any scenario that requires workload isolation, not only multi-tenant GPU infrastructure. You can use the same approach to separate development and production environments, internal teams, or customer-specific deployments.
+> 这一模式适用于任何需要工作负载隔离的场景，并不限于多租户 GPU 基础设施。你可以用同样的方法分隔开发与生产环境、内部团队，或面向特定客户的部署。
 
-## Connect containerized inference workloads
+## 连接容器化推理工作负载
 
-For inference workloads running in Docker containers, use an ephemeral tagged auth key passed as an environment variable. Ephemeral keys automatically clean up the device from your tailnet when the container stops.
+对于运行在 Docker 容器中的推理工作负载，请使用通过环境变量传入的临时（ephemeral）带标签认证密钥。容器停止时，临时密钥会自动把该设备从你的 tailnet 中清理掉。
 
-The following Docker Compose example connects a container to your tailnet as a tagged inference server:
+以下 Docker Compose 示例将一个容器作为带标签的推理服务器接入你的 tailnet：
 
 ```yaml
 services:
@@ -132,13 +132,13 @@ volumes:
   tailscale-state:
 ```
 
-Generate the auth key with the **Ephemeral** option enabled and the `tag:inference-server` tag selected. Each container instance joins the tailnet with its own identity, and Tailscale automatically removes it when it shuts down.
+生成认证密钥时启用**临时**（Ephemeral）选项并勾选 `tag:inference-server` 标签。每个容器实例都以自己的身份加入 tailnet，关闭时 Tailscale 会自动将其移除。
 
-> **Note:**
+> **注意：**
 >
-> Use ephemeral keys for short-lived containers and reusable non-ephemeral keys for long-running servers. Refer to the [auth keys reference][docs-auth-keys] for details on key types.
+> 短生命周期容器使用临时密钥，长期运行的服务器使用可重用的非临时密钥。密钥类型的详细信息请参阅[认证密钥参考][docs-auth-keys]。
 
-For the full set of Docker and container configuration options, refer to the [Docker topic][docs-docker].
+Docker 与容器配置选项的完整集合请参阅 [Docker 主题][docs-docker]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

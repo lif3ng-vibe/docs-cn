@@ -4,3 +4,4 @@ dist/
 .astro/
 orca-docs-cn-content/
 orca-main/
+litellm-docs-cn/

@@ -1,27 +1,27 @@
 ---
-title: "Deploy exit nodes and subnet routers on Kubernetes"
-description: "The Tailscale Kubernetes Operator installation includes a Connector [Custom Resource Definition][xt-k8s-custom-resources]. You can use the Connector to configure the operator to deploy a device that a"
+title: "在 Kubernetes 上部署出口节点和子网路由器"
+description: "Tailscale Kubernetes Operator 安装包含 Connector [自定义资源定义][xt-k8s-custom-resources]。你可以使用 Connector 配置 operator，让它部署一台充当[出口节点][docs-exit-nodes]、子网路由器或两者兼是的设备"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-The Tailscale Kubernetes Operator installation includes a Connector [Custom Resource Definition][xt-k8s-custom-resources]. You can use the Connector to configure the operator to deploy a device that acts as an [exit node][docs-exit-nodes], a subnet router, or both.
+Tailscale Kubernetes Operator 安装包含 Connector [自定义资源定义][xt-k8s-custom-resources]。你可以使用 Connector 配置 operator，让它部署一台充当[出口节点][docs-exit-nodes]、子网路由器或两者兼是的设备。
 
-For example, you can deploy a Connector that acts as a subnet router and exposes cluster Service CIDRs or cloud service CIDRs that are available from the cluster but not publicly accessible.
+例如，你可以部署一个充当子网路由器的 Connector，向外界暴露集群 Service CIDR，或从集群内可达但不对外公开的云服务 CIDR。
 
-## Prerequisites
+## 前提条件
 
-Complete the following before deploying a Connector:
+部署 Connector 之前，请完成以下操作：
 
-* [Install][docs-operator-setup] the Tailscale Kubernetes Operator.
+* [安装][docs-operator-setup] Tailscale Kubernetes Operator。
 
-## Deploy an exit node or subnet router
+## 部署出口节点或子网路由器
 
-To create a Connector that exposes the `10.40.0.0/14` CIDR to your tailnet:
+要创建一个向 tailnet 暴露 `10.40.0.0/14` CIDR 的 Connector：
 
-1. (Optional) Set the [tag][docs-tags] of the Connector node to be [automatically approved][docs-acls-autoapprovers]. By default, the device is tagged with `tag:k8s`. You can set custom tags using `.connector.spec.tags`. If you set a custom tag, ensure the operator is an [owner][docs-acls-tag-owners] of this tag.
+1. （可选）将 Connector 节点的[标签][docs-tags]设为[自动审批][docs-acls-autoapprovers]。默认情况下，设备会被打上 `tag:k8s` 标签。你可以通过 `.connector.spec.tags` 设置自定义标签。如果设置了自定义标签，请确保 operator 是该标签的[所有者][docs-acls-tag-owners]之一。
 
-2. Create a Connector custom resource:
+2. 创建 Connector 自定义资源：
 
    ```yaml
    apiVersion: tailscale.com/v1alpha1
@@ -36,7 +36,7 @@ To create a Connector that exposes the `10.40.0.0/14` CIDR to your tailnet:
          - "10.40.0.0/14"
    ```
 
-3. Verify resource creation:
+3. 验证资源创建：
 
    ```shell
    kubectl get connector ts-pod-cidrs
@@ -44,20 +44,20 @@ To create a Connector that exposes the `10.40.0.0/14` CIDR to your tailnet:
    ts-pod-cidrs   10.40.0.0/14          false        ConnectorCreated
    ```
 
-4. (Optional) If you did not configure automatic approval, open [Machines](https://console.tailscale.com/admin/machines) and manually approve the newly created `ts-pod-cidrs` device to advertise the `10.40.0.0/14` route.
+4. （可选）如果你没有配置自动审批，请打开[机器](https://console.tailscale.com/admin/machines)页面，手动批准新建的 `ts-pod-cidrs` 设备通告 `10.40.0.0/14` 路由。
 
-5. (Optional) Linux clients needing to access resources in the subnet must [accept the advertised route][docs-subnets-use-routes].
+5. （可选）需要访问子网内资源的 Linux 客户端必须[接受通告的路由][docs-subnets-use-routes]。
 
-## Advertise a 4via6 route
+## 通告 4via6 路由
 
-If your network has overlapping IPv4 subnets, you can use a Connector to advertise [4via6 subnet routes][docs-4via6]. Generate the IPv6 route using the Tailscale CLI:
+如果你的网络中存在重叠的 IPv4 子网，可以使用 Connector 通告 [4via6 子网路由][docs-4via6]。使用 Tailscale CLI 生成 IPv6 路由：
 
 ```shell
 tailscale debug via 7 10.1.1.0/24
-# Output: fd7a:115c:a1e0:b1a:0:7:a01:100/120
+# 输出：fd7a:115c:a1e0:b1a:0:7:a01:100/120
 ```
 
-Then use the generated route in the Connector manifest:
+然后在 Connector 清单中使用生成的路由：
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -71,13 +71,13 @@ spec:
       - "fd7a:115c:a1e0:b1a:0:7:a01:100/120"
 ```
 
-## Customization
+## 自定义
 
-For details on customizing the operator and the resources it manages, refer to [Kubernetes Operator customization][docs-operator-customization]. You can find all available Connector configuration options [on GitHub][xt-gh-tailscale-k8s-connector].
+有关自定义 operator 及其管理的资源的详细信息，请参阅 [Kubernetes Operator 自定义][docs-operator-customization]。你可以在 [GitHub 上][xt-gh-tailscale-k8s-connector]找到所有可用的 Connector 配置选项。
 
-## Troubleshooting
+## 故障排查
 
-For troubleshooting information, refer to [Troubleshooting the Tailscale Kubernetes Operator][docs-operator-troubleshooting].
+有关故障排查信息，请参阅 [Tailscale Kubernetes Operator 故障排查][docs-operator-troubleshooting]。
 
 [docs-4via6]: /docs/features/subnet-routers/4via6-subnets
 

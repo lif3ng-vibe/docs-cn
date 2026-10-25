@@ -1,68 +1,68 @@
 ---
-title: "Split DNS policies"
-description: "Split DNS policies let you override your Tailscale network's (known as a [tailnet][docs-tailnet]) global split DNS configuration for specific [devices or groups][docs-targets]. You define these overri"
+title: "拆分 DNS 策略"
+description: "拆分 DNS（split DNS）策略让你可以针对特定[设备或组][docs-targets]，覆盖 Tailscale 网络（即 [tailnet][docs-tailnet]）的全局拆分 DNS 配置。你在 tailnet 策略文件的 `nodeAttrs` 部分定义这些覆盖项。"
 ---
 
-Last validated Dec 10, 2025
+最后验证于 Dec 10, 2025
 
-> **Note:** Split DNS policies are currently in alpha.
+> **注意：** 拆分 DNS 策略目前处于 alpha 阶段。
 
-Split DNS policies let you override your Tailscale network's (known as a [tailnet][docs-tailnet]) global split DNS configuration for specific [devices or groups][docs-targets]. You define these overrides in the `nodeAttrs` section of your tailnet policy file using the `tailscale.com/split-dns` application type. Tailscale applies your policies to matching devices, customizing their [DNS configuration][docs-dns] without requiring client changes.
+拆分 DNS 策略让你可以针对特定[设备或组][docs-targets]，覆盖 Tailscale 网络（即 [tailnet][docs-tailnet]）的全局拆分 DNS 配置。你在 tailnet 策略文件的 `nodeAttrs` 部分、使用 `tailscale.com/split-dns` 应用类型来定义这些覆盖项。Tailscale 会把策略应用到匹配的设备，定制其 [DNS 配置][docs-dns]，而无需更改客户端。
 
-This feature addresses situations where different parts of your organization require different DNS resolvers for the same domains. For example, you can prevent users from resolving internal domain names when they lack access to the underlying resources or configure different DNS servers based on device [tags][docs-tags] such as cloud environment or department.
+该功能解决的是组织中不同部门对同一域名需要不同 DNS 解析器的场景。例如，你可以在用户无权访问底层资源时阻止其解析内部域名，或者按设备[标签][docs-tags]（如云环境或部门）配置不同的 DNS 服务器。
 
-> **Warning:**
+> **警告：**
 >
-> Split DNS policies are in alpha and require authorization from your Tailscale account manager to access.
+> 拆分 DNS 策略处于 alpha 阶段，需要你的 Tailscale 客户经理授权才能访问。
 
-## Use cases
+## 使用场景
 
-Split DNS policies address the following use cases:
+拆分 DNS 策略适用于以下场景：
 
-* Test proposed split DNS changes with your IT team or volunteer testers before applying them to your entire tailnet.
-* Apply split DNS policies to [subsets of users][docs-targets], such as employees but not contractors, particularly when [app connectors][docs-app-connectors] serve SaaS applications that only certain users should access through the connector.
-* Configure different DNS servers depending on a device's tag, allowing DNS resolution to vary based on cloud environment or other device characteristics.
-* Remove visibility of internal domain names from users who lack access to the underlying resources behind access control ([grant][docs-grants])-restricted [subnet routers][docs-subnets] or DNS servers.
-* Prevent users without app connector access from being directed to those connectors, allowing them to access SaaS applications over the internet instead.
+* 在把拆分 DNS 变更应用到整个 tailnet 之前，先与 IT 团队或志愿测试者一起测试。
+* 把拆分 DNS 策略应用于[部分用户][docs-targets]，例如只覆盖正式员工而不覆盖承包商，尤其当[应用连接器][docs-app-connectors]承载的 SaaS 应用只允许部分用户经由连接器访问时。
+* 根据设备的标签配置不同的 DNS 服务器，让 DNS 解析随云环境或其他设备特性而变化。
+* 对无权访问底层资源的用户，隐藏受访问控制（[授权][docs-grants]）限制的[子网路由器][docs-subnets]或 DNS 服务器背后的内部域名。
+* 防止没有应用连接器访问权的用户被导向这些连接器，让他们改为通过互联网访问 SaaS 应用。
 
-## Prerequisites
+## 前提条件
 
-Before you use split DNS policies, you need the following:
+使用拆分 DNS 策略之前，你需要具备：
 
-* An existing tailnet.
-* A user account with the [Owner, Admin, or Network admin](/docs/reference/user-roles) role to edit the [tailnet policy file][docs-policy-syntax] in the admin console.
-* Authorization from your Tailscale account manager to access this alpha feature.
-* Understanding of your tailnet's current split DNS configuration and which domains require targeted overrides.
-* Familiarity with the tailnet policy file structure and [node attribute][docs-policy-syntax-node-attributes] targeting syntax.
+* 一个现有的 tailnet。
+* 一个拥有 [Owner（所有者）、Admin（管理员）或 Network admin（网络管理员）](/docs/reference/user-roles)角色的用户账户，用于在管理控制台中编辑 [tailnet 策略文件][docs-policy-syntax]。
+* 你的 Tailscale 客户经理授权你访问此 alpha 功能。
+* 了解 tailnet 当前的拆分 DNS 配置，以及哪些域名需要定向覆盖。
+* 熟悉 tailnet 策略文件结构与[节点属性][docs-policy-syntax-node-attributes]（node attribute）的定向语法。
 
-## Get started
+## 开始使用
 
-This section provides instructions for creating your first split DNS policy. You add a policy to your tailnet policy file that overrides DNS resolution for a specific domain on all devices in your tailnet.
+本节提供创建第一个拆分 DNS 策略的说明。你将向 tailnet 策略文件添加一条策略，为 tailnet 中所有设备覆盖特定域名的 DNS 解析。
 
-### Identify the domains and resolvers
+### 确定域名与解析器
 
-Before you configure split DNS policies, identify which domains require custom DNS resolution and which DNS servers should resolve those domains. Determine which devices should receive the custom configuration using tags, groups, or the wildcard `*` for all devices.
+配置拆分 DNS 策略之前，先确定哪些域名需要自定义 DNS 解析，以及应由哪些 DNS 服务器解析这些域名。用标签、组或通配符 `*`（表示所有设备）来确定哪些设备应接收自定义配置。
 
-Document the DNS server addresses you use. These can be IPv4 or IPv6 addresses, addresses with ports, or [DNS over HTTPS (DoH)][docs-dns-over-https] URLs. If you use DoH URLs, identify whether you need bootstrap resolution to avoid circular DNS dependencies.
+把你使用的 DNS 服务器地址记录下来。它们可以是 IPv4 或 IPv6 地址、带端口的地址，或 [DNS over HTTPS（DoH）][docs-dns-over-https] URL。如果使用 DoH URL，确定是否需要引导解析（bootstrap resolution）以避免循环 DNS 依赖。
 
-Consider whether your policy requires a specific priority. Negative priorities apply before your tailnet's global split DNS configuration and app connectors. Zero or positive priorities apply after global configuration and app connectors.
+考虑你的策略是否需要特定优先级。负优先级在 tailnet 的全局拆分 DNS 配置和应用连接器之前生效；零或正优先级在全局配置和应用连接器之后生效。
 
-* Negative priorities like `-1` are useful for blocking access to internal domains before global configuration applies.
-* Zero or positive priorities like `0` or `2` are useful for providing alternative DNS servers after global configuration applies.
+* 像 `-1` 这样的负优先级适合在全局配置生效之前阻止对内部域名的访问。
+* 像 `0` 或 `2` 这样的零或正优先级适合在全局配置生效之后提供备用 DNS 服务器。
 
-> **Warning:**
+> **警告：**
 >
-> Do not use duplicate priority values because it can lead to unpredictable behavior.
+> 不要使用重复的优先级取值，否则可能导致不可预测的行为。
 
-### Add the split DNS policy to your tailnet policy file
+### 将拆分 DNS 策略添加到 tailnet 策略文件
 
-The following steps show you how to add a split DNS policy to your tailnet policy file.
+以下步骤演示如何向 tailnet 策略文件添加拆分 DNS 策略。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls/file) page of the admin console.
-2. Locate the `nodeAttrs` section in your tailnet policy file. If the `nodeAttrs` section does not exist, create it after the `grants` section.
-3. Add a new node attribute entry with your target selector and the `tailscale.com/split-dns` application type.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls/file) 页面。
+2. 在 tailnet 策略文件中找到 `nodeAttrs` 部分。如果不存在该部分，请在 `grants` 部分之后创建它。
+3. 添加一个新的节点属性条目，包含你的目标选择器和 `tailscale.com/split-dns` 应用类型。
 
-The following example creates a policy that applies to all devices in your tailnet:
+下面的示例创建一条适用于 tailnet 中所有设备的策略：
 
 ```json
 "nodeAttrs": [
@@ -92,23 +92,23 @@ The following example creates a policy that applies to all devices in your tailn
 ]
 ```
 
-This policy configures two nameservers (`198.51.100.1` and `198.51.100.2`) for `example.com` and its subdomains. The priority of `0` means this policy applies after global split DNS configuration and app connectors.
+该策略为 `example.com` 及其子域名配置两个名称服务器（`198.51.100.1` 和 `198.51.100.2`）。优先级 `0` 表示此策略在全局拆分 DNS 配置和应用连接器之后生效。
 
-Save your tailnet policy file changes. Tailscale processes your policies and includes the customized DNS configuration it sends to matching devices.
+保存 tailnet 策略文件的更改。Tailscale 会处理你的策略，并把定制后的 DNS 配置下发给匹配的设备。
 
-### Verify the configuration
+### 验证配置
 
-After you save your tailnet policy file, verify that devices receive the correct DNS configuration. You can do this by connecting to a device that matches your target selector and checking its DNS settings. You can also query a domain from your domains list to confirm resolution uses your specified nameservers.
+保存 tailnet 策略文件后，请核实设备收到了正确的 DNS 配置。你可以连接到一台匹配目标选择器的设备并检查其 DNS 设置；也可以从域名列表中查询一个域名，确认解析确实使用了你指定的名称服务器。
 
-If the DNS resolution does not behave as expected, review your target selector and priority settings. Check that your nameserver addresses are correct and reachable from the devices.
+如果 DNS 解析行为不符合预期，请检查目标选择器和优先级设置，确认名称服务器地址正确且可从这些设备访问。
 
-## Common scenarios
+## 常见场景
 
-The following sections provide instructions for common split DNS policy configurations.
+以下各节提供常见拆分 DNS 策略配置的说明。
 
-### Create a policy for a specific tag
+### 为特定标签创建策略
 
-To apply a split DNS policy only to devices with a specific [tag][docs-tags], use that tag in the target selector. The following example creates a policy that applies only to devices tagged with `tag:production`:
+要把拆分 DNS 策略只应用于带特定[标签][docs-tags]的设备，请在目标选择器中使用该标签。下面的示例创建一条只适用于带 `tag:production` 标签设备的策略：
 
 ```json
 "nodeAttrs": [
@@ -133,13 +133,13 @@ To apply a split DNS policy only to devices with a specific [tag][docs-tags], us
 ]
 ```
 
-Devices without the `tag:production` tag continue using the global split DNS configuration for `internal.example.com`.
+不带 `tag:production` 标签的设备会继续使用全局拆分 DNS 配置来解析 `internal.example.com`。
 
-### Reference app connector domains
+### 引用应用连接器域名
 
-You can reference [app connector][docs-app-connectors] domains in your split DNS policies instead of listing all domains explicitly. This approach keeps your DNS configuration synchronized with your app connector definitions.
+你可以在拆分 DNS 策略中引用[应用连接器][docs-app-connectors]的域名，而不必逐一列出所有域名。这样能让你的 DNS 配置与应用连接器定义保持同步。
 
-The following example references an app connector named `saas-apps`:
+下面的示例引用一个名为 `saas-apps` 的应用连接器：
 
 ```json
 "nodeAttrs": [
@@ -164,11 +164,11 @@ The following example references an app connector named `saas-apps`:
 ]
 ```
 
-When Tailscale processes this policy, it expands to include all domains from the `saas-apps` app connector definition. If the app connector's domain list changes, your split DNS policy automatically reflects those changes.
+Tailscale 处理此策略时，会把它展开为 `saas-apps` 应用连接器定义中的所有域名。如果应用连接器的域名列表发生变化，你的拆分 DNS 策略会自动反映这些变化。
 
-### Remove split DNS for specific devices
+### 为特定设备移除拆分 DNS
 
-You can remove split DNS configuration for specific domains by providing an empty nameservers list. The following example removes split DNS configuration for `internal.example.com` on devices tagged with `tag:external`:
+你可以通过提供空的名称服务器列表，为特定域名移除拆分 DNS 配置。下面的示例为带 `tag:external` 标签的设备移除 `internal.example.com` 的拆分 DNS 配置：
 
 ```json
 "nodeAttrs": [
@@ -189,11 +189,11 @@ You can remove split DNS configuration for specific domains by providing an empt
 ]
 ```
 
-Devices matching this policy receive no split DNS configuration for `internal.example.com`, even if the global split DNS configuration or lower-priority policies specify nameservers for that domain.
+匹配此策略的设备不会收到 `internal.example.com` 的任何拆分 DNS 配置，即使全局拆分 DNS 配置或低优先级策略为该域名指定了名称服务器。
 
-### Use DNS over HTTPS
+### 使用 DNS over HTTPS
 
-You can configure nameservers using [DNS over HTTPS (DoH)][docs-dns-over-https] URLs. The following example uses a DoH resolver for all devices:
+你可以使用 [DNS over HTTPS（DoH）][docs-dns-over-https] URL 配置名称服务器。下面的示例为所有设备使用 DoH 解析器：
 
 ```json
 "nodeAttrs": [
@@ -218,7 +218,7 @@ You can configure nameservers using [DNS over HTTPS (DoH)][docs-dns-over-https] 
 ]
 ```
 
-For DoH URLs that require bootstrap resolution (`bootstrapResolution`) to avoid circular DNS dependencies, specify pre-resolved IP addresses:
+对于需要引导解析（`bootstrapResolution`）以避免循环 DNS 依赖的 DoH URL，请指定预先解析好的 IP 地址：
 
 ```json
 "nameservers": [
@@ -229,13 +229,13 @@ For DoH URLs that require bootstrap resolution (`bootstrapResolution`) to avoid 
 ]
 ```
 
-Tailscale uses the provided IP addresses to connect to the DoH server without resolving its hostname through DNS.
+Tailscale 会使用这些 IP 地址连接 DoH 服务器，而无需通过 DNS 解析其主机名。
 
-### Configure DNS for exit node usage
+### 为出口节点使用配置 DNS
 
-You can control whether a device uses a nameserver when the device's traffic routes through an [exit node][docs-exit-nodes]. The `useWithExitNode` field specifies whether the nameserver should resolve queries when exit node routing is active.
+你可以控制设备流量经由[出口节点][docs-exit-nodes]路由时是否使用某个名称服务器。`useWithExitNode` 字段指定在出口节点路由生效时，该名称服务器是否仍应解析查询。
 
-The following example configures two nameservers with different exit node behavior:
+下面的示例配置两个具有不同出口节点行为的名称服务器：
 
 ```json
 "nameservers": [
@@ -249,17 +249,17 @@ The following example configures two nameservers with different exit node behavi
 ]
 ```
 
-When the device uses an exit node, Tailscale performs DNS resolution using only `198.51.100.2` for the specified domains, then routes the resulting traffic through the exit node. When the device does not use an exit node, both nameservers are available. The `useWithExitNode` field defaults to `false` if not specified.
+当设备使用出口节点时，Tailscale 只用 `198.51.100.2` 为指定域名做 DNS 解析，然后把得到的流量经出口节点路由出去。当设备不使用出口节点时，两个名称服务器都可用。未指定时，`useWithExitNode` 字段默认为 `false`。
 
-## Reference
+## 参考
 
-This section provides detailed information about the split DNS policies configuration structure and available options.
+本节提供拆分 DNS 策略配置结构与可用选项的详细信息。
 
-### Tailnet policy file structure
+### tailnet 策略文件结构
 
-You define split DNS policies in the `nodeAttrs` section of your tailnet policy file. Each entry consists of a target selector that determines which devices receive the policy and one or more split DNS policies under the `tailscale.com/split-dns` application type.
+你在 tailnet 策略文件的 `nodeAttrs` 部分定义拆分 DNS 策略。每个条目由一个决定哪些设备接收策略的目标选择器，以及 `tailscale.com/split-dns` 应用类型下的一个或多个拆分 DNS 策略组成。
 
-The complete structure is:
+完整的结构为：
 
 ```json
 "nodeAttrs": [
@@ -287,72 +287,72 @@ The complete structure is:
 ]
 ```
 
-You can define multiple `nodeAttrs` entries with different target selectors. Each entry can contain multiple split DNS policies in the `tailscale.com/split-dns` array.
+你可以用不同的目标选择器定义多个 `nodeAttrs` 条目。每个条目的 `tailscale.com/split-dns` 数组中可以包含多个拆分 DNS 策略。
 
-### Field definitions
+### 字段定义
 
-**`comment`** (Optional): A free-form text field for documentation purposes. This field does not affect the policy's behavior. Using descriptive comments makes your tailnet policy file easier to maintain.
+**`comment`**（可选）：用于文档说明的自由文本字段，不影响策略行为。使用描述性注释能让你的 tailnet 策略文件更易维护。
 
-**`priority`** (Optional): An integer that determines the order to process policies. The default value is `0` if not specified. Tailscale processes policies in increasing order of priority. Do not use duplicate priority values because it can lead to unpredictable behavior.
+**`priority`**（可选）：决定策略处理顺序的整数。未指定时默认为 `0`。Tailscale 按优先级升序处理策略。不要使用重复的优先级取值，否则可能导致不可预测的行为。
 
-**`nameservers`** (Required): A list of nameserver entries that define which DNS servers resolve the specified domains. You can specify an empty list to remove existing policies for the listed domains. Each nameserver entry requires an `addr` field and supports optional `bootstrapResolution` and `useWithExitNode` fields.
+**`nameservers`**（必需）：名称服务器条目列表，定义由哪些 DNS 服务器解析指定域名。你可以提供空列表来移除所列域名的既有策略。每个名称服务器条目都必须有 `addr` 字段，并支持可选的 `bootstrapResolution` 与 `useWithExitNode` 字段。
 
-**`domains`** (Required): A list of domains to which the nameservers apply. You can specify domains directly using standard DNS notation such as `example.com` or `*.example.com` for wildcards. You can reference app connector configurations using the format `appc:name`, where name matches an app connector definition in your tailnet policy file. When you reference an app connector, Tailscale expands it to include all domains from that connector's domain list. You must specify at least one domain for the policy to be valid.
+**`domains`**（必需）：名称服务器适用的域名列表。你可以用标准 DNS 记法直接指定域名，例如 `example.com` 或用 `*.example.com` 表示通配符。你也可以用 `appc:name` 格式引用应用连接器配置，其中 name 对应 tailnet 策略文件中的某个应用连接器定义。引用应用连接器时，Tailscale 会把它展开为该连接器域名列表中的所有域名。策略必须至少指定一个域名才有效。
 
-### Nameserver configuration
+### 名称服务器配置
 
-Each nameserver entry in the `nameservers` list supports the following fields:
+`nameservers` 列表中的每个条目支持以下字段：
 
-**`addr`** (Required): The address of the DNS resolver. This can be a plain IPv4 or IPv6 address for a standard User Datagram Protocol (UDP) and Transmission Control Protocol (TCP) DNS resolver, an IP address with a port in the format `address:port` (for IPv6 addresses with ports, use `[IPv6-address]:port`), or an HTTPS URL for DNS over HTTPS (DoH).
+**`addr`**（必需）：DNS 解析器的地址。可以是标准用户数据报协议（UDP）和传输控制协议（TCP）DNS 解析器的纯 IPv4 或 IPv6 地址、格式为 `address:port` 的带端口 IP 地址（带端口的 IPv6 地址用 `[IPv6-address]:port`），或 DNS over HTTPS（DoH）的 HTTPS URL。
 
-**`bootstrapResolution`** (Optional): A list of pre-resolved IP addresses for the hostname in a DoH URL. This field applies only when `addr` specifies a DoH URL. Bootstrap resolution lets Tailscale to connect to the DoH server without resolving its hostname through DNS, avoiding circular dependencies. For example, if your DoH URL is `https://resolver.example.com/dns-query`, you can specify `["192.0.2.1", "192.0.2.2"]` to provide static IP addresses for `resolver.example.com`. For well-known public DNS resolvers, Tailscale may already know the IP addresses and does not require bootstrap resolution.
+**`bootstrapResolution`**（可选）：DoH URL 中主机名的预解析 IP 地址列表。此字段仅在 `addr` 指定 DoH URL 时适用。引导解析让 Tailscale 无需通过 DNS 解析 DoH 服务器的主机名即可连接它，从而避免循环依赖。例如，如果你的 DoH URL 是 `https://resolver.example.com/dns-query`，可以指定 `["192.0.2.1", "192.0.2.2"]` 为 `resolver.example.com` 提供静态 IP 地址。对于知名的公共 DNS 解析器，Tailscale 可能已经知道其 IP 地址，无需引导解析。
 
-**`useWithExitNode`** (Optional): A Boolean that indicates whether to use the nameserver when routing the device's traffic through an exit node. This field defaults to false if not specified. When set to true, Tailscale performs DNS resolution using your specified resolver, then routes the resulting traffic through the exit node.
+**`useWithExitNode`**（可选）：一个布尔值，指示设备的流量经出口节点路由时是否使用该名称服务器。未指定时默认为 false。设为 true 时，Tailscale 会用你指定的解析器完成 DNS 解析，再把得到的流量经出口节点路由出去。
 
-### Priority system
+### 优先级系统
 
-The priority system determines the order in which Tailscale applies split DNS policies. When multiple policies affect the same domains, understanding priority is essential for predictable behavior.
+优先级系统决定 Tailscale 应用拆分 DNS 策略的顺序。当多条策略影响相同域名时，理解优先级对获得可预测的行为至关重要。
 
-Tailscale applies policies in the following order:
+Tailscale 按以下顺序应用策略：
 
-1. Policies with negative priority values (such as `-2`, `-1`) are processed first.
-2. Your tailnet's global split DNS configuration is applied.
-3. App connector DNS configurations are applied.
-4. Policies with zero or positive priority values (such as `0`, `1`, `2`) are processed last.
+1. 先处理负优先级取值的策略（例如 `-2`、`-1`）。
+2. 应用你 tailnet 的全局拆分 DNS 配置。
+3. 应用应用连接器的 DNS 配置。
+4. 最后处理零或正优先级取值的策略（例如 `0`、`1`、`2`）。
 
-When multiple policies define nameservers for the same domain, the policy with the highest priority takes precedence. An empty `nameservers` list explicitly removes any existing split DNS configuration for the specified domains, including configuration from lower-priority policies.
+当多条策略为同一域名定义名称服务器时，优先级最高的策略优先生效。空的 `nameservers` 列表会显式移除指定域名的所有既有拆分 DNS 配置，包括来自低优先级策略的配置。
 
-### Target selectors
+### 目标选择器
 
-The `target` field in each `nodeAttrs` entry determines which devices receive the split DNS policy. You can use any selection criteria supported by node attributes:
+每个 `nodeAttrs` 条目中的 `target` 字段决定哪些设备接收拆分 DNS 策略。你可以使用节点属性支持的任何选择条件：
 
-* **Wildcard**: `*` targets all devices in the tailnet.
-* **Tags**: `tag:production` targets devices with the production tag.
-* **Groups**: `group:employees` targets devices in the employees group.
-* **Multiple targets**: `["tag:production", "tag:staging"]` targets devices matching any listed criteria.
+* **通配符**：`*` 匹配 tailnet 中的所有设备。
+* **标签**：`tag:production` 匹配带 production 标签的设备。
+* **组**：`group:employees` 匹配 employees 组中的设备。
+* **多个目标**：`["tag:production", "tag:staging"]` 匹配满足任一所列条件的设备。
 
-A single device can match multiple `nodeAttrs` entries. When this occurs, the control plane collects all matching policies and sorts them by priority before applying them. This targeting capability lets you create DNS configurations that adapt to your organization's structure.
+单台设备可以匹配多个 `nodeAttrs` 条目。发生这种情况时，控制平面会收集所有匹配的策略，按优先级排序后再应用。这种定向能力让你可以创建随组织结构而变的 DNS 配置。
 
-For more information, refer to the [targets and selectors][docs-targets] documentation.
+更多信息请参阅[目标与选择器][docs-targets]文档。
 
-## Limitations
+## 限制
 
-Split DNS policies have the following limitations:
+拆分 DNS 策略有以下限制：
 
-* **Alpha release**: This feature is in alpha. Contact your Tailscale account manager to request access.
-* **No visual editor support**: You must edit the tailnet policy file directly in the admin console to configure split DNS policies. The visual editor does not support this feature.
-* **Tailnet policy file configuration only**: Configuration is available only through the tailnet policy file. There is no application programming interface (API) or command-line interface (CLI) support for managing these policies.
-* **Interim solution**: This feature represents an interim solution while more comprehensive DNS configuration functionality is under development. The implementation and configuration method may change when the long-term solution is complete.
-* **Cannot control MagicDNS per device**: You cannot use split DNS policies to enable or disable MagicDNS for specific devices, override local DNS settings, vary global DNS servers between devices, or customize search domains per device.
-* **Control plane processes policies**: The [control plane][docs-control-data-planes] processes policies and sends pre-configured DNS settings to clients. Clients cannot override these settings locally.
+* **Alpha 版本**：该功能处于 alpha 阶段。请联系你的 Tailscale 客户经理申请访问。
+* **不支持可视化编辑器**：你必须直接在管理控制台中编辑 tailnet 策略文件来配置拆分 DNS 策略，可视化编辑器不支持此功能。
+* **只能通过 tailnet 策略文件配置**：配置只能通过 tailnet 策略文件完成。没有用于管理这些策略的应用程序接口（API）或命令行界面（CLI）支持。
+* **过渡方案**：在更全面的 DNS 配置功能开发完成之前，该功能只是权宜之计。长期方案完成后，其实现与配置方式可能会改变。
+* **无法按设备控制 MagicDNS**：你不能用拆分 DNS 策略为特定设备启用或禁用 MagicDNS、覆盖本地 DNS 设置、在不同设备间使用不同的全局 DNS 服务器，或按设备自定义搜索域。
+* **由控制平面处理策略**：[控制平面][docs-control-data-planes]处理策略并把预配置的 DNS 设置下发给客户端。客户端无法在本地覆盖这些设置。
 
-## Future direction and feedback
+## 未来方向与反馈
 
-Split DNS policies are intentionally constrained to meet immediate customer needs without requiring significant development resources. This feature is not the long-term direction for DNS configuration in Tailscale. A more comprehensive solution is under development that moves all split DNS configuration into the tailnet policy file and provides more flexible DNS management.
+拆分 DNS 策略有意保持克制，只为满足当前客户需求，无需投入大量开发资源。该功能不是 Tailscale DNS 配置的长期方向。一个更全面的方案正在开发中，它将把所有拆分 DNS 配置迁移到 tailnet 策略文件中，并提供更灵活的 DNS 管理。
 
-When the comprehensive DNS solution is complete, Tailscale evaluates whether to promote split DNS policies to beta, maintain them as specialized tools for specific situations, or deprecate them in favor of the new system. This approach serves current customer needs while maintaining flexibility for future improvements.
+待全面的 DNS 方案完成后，Tailscale 会评估是把拆分 DNS 策略升级为 beta、将其保留为面向特定情况的专用工具，还是以新系统取代并弃用它。这一做法既满足当前客户需求，又为未来的改进保留灵活性。
 
-As an alpha feature, split DNS policies benefits from your feedback. If you encounter issues, have suggestions for improvements, or need additional functionality, contact your Tailscale account manager or support team. Your input helps shape both this feature and the longer-term DNS configuration solution.
+作为一项 alpha 功能，拆分 DNS 策略非常依赖你的反馈。如果你遇到问题、有改进建议或需要更多功能，请联系你的 Tailscale 客户经理或支持团队。你的意见将帮助塑造这项功能以及更长期的 DNS 配置方案。
 
 [docs-app-connectors]: /docs/features/app-connectors
 

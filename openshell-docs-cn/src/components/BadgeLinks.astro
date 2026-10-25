@@ -1,0 +1,24 @@
+---
+// 徽标链接组：移植自上游 docs/_components/BadgeLinks.tsx（shields.io 徽标横排）
+interface BadgeItem {
+  href: string;
+  src: string;
+  alt: string;
+}
+interface Props {
+  badges?: BadgeItem[];
+}
+const { badges = [] } = Astro.props;
+---
+
+{
+  badges.length > 0 && (
+    <div class="badge-links">
+      {badges.map((b) => (
+        <a href={b.href} target="_blank" rel="noreferrer">
+          <img src={b.src} alt={b.alt} width="128" height="20" />
+        </a>
+      ))}
+    </div>
+  )
+}

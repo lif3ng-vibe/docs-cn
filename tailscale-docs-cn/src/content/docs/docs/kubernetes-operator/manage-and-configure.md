@@ -1,26 +1,26 @@
 ---
-title: "Manage and configure the Tailscale Kubernetes Operator"
-description: "Manage and configure your Tailscale Kubernetes Operator cluster."
+title: "管理和配置 Tailscale Kubernetes Operator"
+description: "管理并配置你的 Tailscale Kubernetes Operator 集群。"
 ---
 
-Last validated Jun 5, 2026
+最后验证于 Jun 5, 2026
 
-* [Add static endpoints to a cluster](/docs/kubernetes-operator/manage-and-configure/configure-static-endpoints) — Configure static endpoints for ProxyGroup proxies to enable direct connections.
+* [为集群添加静态端点](/docs/kubernetes-operator/manage-and-configure/configure-static-endpoints) — 为 ProxyGroup 代理配置静态端点以启用直连。
 
-* [Configure workload identity federation for the Tailscale Kubernetes Operator](/docs/kubernetes-operator/manage-and-configure/workload-identity-federation) — Use workload identity federation to allow the Tailscale Kubernetes Operator securely access cloud resources without storing long-lived credentials or secrets.
+* [为 Tailscale Kubernetes Operator 配置工作负载身份联合](/docs/kubernetes-operator/manage-and-configure/workload-identity-federation) — 使用工作负载身份联合，让 Tailscale Kubernetes Operator 无需存储长期凭证或密钥即可安全访问云资源。
 
-* [Control access to ProxyGroup resources](/docs/kubernetes-operator/manage-and-configure/proxy-group-policy) — Create per-namespace policies that limit access to ProxyGroup resources
+* [控制对 ProxyGroup 资源的访问](/docs/kubernetes-operator/manage-and-configure/proxy-group-policy) — 创建按命名空间限制 ProxyGroup 资源访问的策略
 
-* [Enable Operator debug endpoints](/docs/kubernetes-operator/manage-and-configure/enable-debug-endpoints) — Enable debug endpoints for Tailscale Kubernetes Operator proxies.
+* [启用 Operator 调试端点](/docs/kubernetes-operator/manage-and-configure/enable-debug-endpoints) — 为 Tailscale Kubernetes Operator 代理启用调试端点。
 
-* [Expose Operator metrics](/docs/kubernetes-operator/manage-and-configure/expose-metrics) — Expose client metrics from Tailscale Kubernetes Operator proxies.
+* [公开 Operator 指标](/docs/kubernetes-operator/manage-and-configure/expose-metrics) — 从 Tailscale Kubernetes Operator 代理公开客户端指标。
 
-* [High availability for the Tailscale Kubernetes Operator](/docs/kubernetes-operator/manage-and-configure/high-availability) — Configure ProxyGroup and ProxyClass for highly available ingress, egress, and API server proxies.
+* [Tailscale Kubernetes Operator 的高可用](/docs/kubernetes-operator/manage-and-configure/high-availability) — 为高可用的入站、出站和 API 服务器代理配置 ProxyGroup 和 ProxyClass。
 
-* [Let's Encrypt rate limits with the Kubernetes Operator](/docs/kubernetes-operator/manage-and-configure/lets-encrypt-rate-limits) — Understand how Let's Encrypt rate limits affect the Tailscale Kubernetes Operator as your usage grows, and how to keep certificate issuance and renewals within them.
+* [Kubernetes Operator 的 Let's Encrypt 速率限制](/docs/kubernetes-operator/manage-and-configure/lets-encrypt-rate-limits) — 了解随着使用量增长，Let's Encrypt 速率限制如何影响 Tailscale Kubernetes Operator，以及如何让证书签发和续期保持在限额之内。
 
-* [Use custom machine names for ingress and egress proxies](/docs/kubernetes-operator/manage-and-configure/custom-machine-names) — Use custom machine names for Tailscale Kubernetes Operator ingress and egress proxies.
+* [为入站和出站代理使用自定义机器名](/docs/kubernetes-operator/manage-and-configure/custom-machine-names) — 为 Tailscale Kubernetes Operator 的入站和出站代理使用自定义机器名。
 
-* [Use multiple tailnets for devices running on Kubernetes](/docs/kubernetes-operator/manage-and-configure/multi-tailnet) — Deploy devices across multiple tailnets using the Tailscale Kubernetes Operator
+* [为运行在 Kubernetes 上的设备使用多个 tailnet](/docs/kubernetes-operator/manage-and-configure/multi-tailnet) — 使用 Tailscale Kubernetes Operator 把设备部署到多个 tailnet
 
-[**Manage multi-cluster Kubernetes deployments with ArgoCD**](/docs/solutions/manage-multi-cluster-kubernetes-deployments-argocd) — Set up secure multi-cluster Kubernetes management with ArgoCD using Tailscale's private network to connect clusters across regions without complex networking.
+[**使用 ArgoCD 管理多集群 Kubernetes 部署**](/docs/solutions/manage-multi-cluster-kubernetes-deployments-argocd) — 使用 Tailscale 私有网络连接跨区域的集群，用 ArgoCD 搭建安全的多集群 Kubernetes 管理，无需复杂的网络配置。

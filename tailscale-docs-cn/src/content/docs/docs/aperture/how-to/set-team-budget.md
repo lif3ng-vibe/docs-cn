@@ -1,24 +1,24 @@
 ---
-title: "Set a team-wide budget"
-description: "Per-user spending limits prevent individual overuse, but they do not cap total organizational spend. A team-wide budget creates a single shared quota bucket that all users draw from, so your organizat"
+title: "设置团队预算"
+description: "按用户的支出限额防止个人过度使用，但不能限制组织的总支出。团队预算会创建一个所有用户共用的共享配额桶，让你的组织"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-Per-user spending limits prevent individual overuse, but they do not cap total organizational spend. A team-wide budget creates a single shared quota bucket that all users draw from, so your organization's aggregate AI costs stay within a defined ceiling.
+按用户的支出限额防止个人过度使用，但不能限制组织的总支出。团队预算创建一个所有用户共用的共享配额桶，让你组织的 AI 总成本保持在设定的上限之内。
 
-You can use a team-wide budget on its own or combine it with [per-user spending limits][docs-set-per-user-limits] for layered cost control. When a grant references multiple quota buckets, all buckets must have a positive balance for a request to proceed.
+团队预算可以单独使用，也可以与[按用户的支出限额][docs-set-per-user-limits]组合实现分层成本控制。当一条授权引用多个配额桶时，所有桶都必须有正余额，请求才能继续。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, ensure you have the following:
+开始之前，请确保你具备以下条件：
 
-* An [Aperture gateway][docs-get-started] with at least one provider configured.
-* Admin access to the [Aperture configuration][docs-aperture-configuration].
+* 一个至少配置了一个提供商的 [Aperture 网关][docs-get-started]。
+* 对 [Aperture 配置][docs-aperture-configuration]的管理员访问权限。
 
-## Define a shared quota bucket
+## 定义共享配额桶
 
-\[Missing snippet: aperture\_admin\_nav.mdx] Add a shared bucket to the `quotas` section of your configuration. A shared bucket uses a fixed name without template variables, so all requests draw from the same balance:
+\[Missing snippet: aperture\_admin\_nav.mdx] 在配置的 `quotas` 部分添加一个共享桶。共享桶使用不带模板变量的固定名称，因此所有请求都从同一个余额中扣款：
 
 ```json
 "quotas": {
@@ -30,15 +30,15 @@ Before you begin, ensure you have the following:
 }
 ```
 
-This creates a single bucket called `team-monthly` with a $500 capacity that refills at $500 per month (30 days). Every request that references this bucket deducts from the same balance regardless of which user sent the request.
+这会创建一个名为 `team-monthly` 的单一桶，容量 $500，每月（30 天）补充 $500。每条引用该桶的请求都从同一余额中扣减，无论请求由哪个用户发出。
 
-The `capacity` field sets the maximum balance the bucket can hold. This is also the starting balance. The `rate` field controls the refill speed. Supported time units are `min`, `hour`, `day`, `week`, and `month` (30 days). When `on_exceed` is `"reject"`, Aperture blocks requests that would bring the bucket below zero and returns HTTP 429 with a `Retry-After` header.
+`capacity` 字段设置桶可持有的最大余额，也是初始余额。`rate` 字段控制补充速度。支持的时间单位为 `min`、`hour`、`day`、`week` 和 `month`（30 天）。当 `on_exceed` 为 `"reject"` 时，Aperture 会拦截会把桶扣到零以下的请求，并返回带 `Retry-After` 头部的 HTTP 429。
 
-`"reject"` is the only supported value for `on_exceed`.
+`"reject"` 是 `on_exceed` 唯一支持的值。
 
-## Attach the budget to a grant
+## 把预算挂到授权上
 
-Add the shared bucket to the `quotas` array in your grant. The following example applies the team budget to all users and all models:
+把共享桶添加到授权的 `quotas` 数组中。下面的示例把团队预算应用到所有用户的所有模型：
 
 ```json
 "grants": [
@@ -61,9 +61,9 @@ Add the shared bucket to the `quotas` array in your grant. The following example
 
 \[Missing snippet: aperture\_grant\_dst\_note.mdx]
 
-## Combine with per-user limits
+## 与按用户限额组合
 
-To enforce both a per-user daily limit and a team-wide monthly cap, define both buckets and reference them in the same grant:
+要同时执行按用户的每日限额和团队范围的每月上限，定义两个桶并在同一条授权中引用它们：
 
 ```json
 "quotas": {
@@ -97,20 +97,20 @@ To enforce both a per-user daily limit and a team-wide monthly cap, define both 
 ]
 ```
 
-When a grant references multiple quota buckets, Aperture checks all of them before forwarding the request. If any single bucket is exhausted, Aperture rejects the request even if the other buckets have remaining balance. After the response completes, Aperture deducts the estimated cost from every referenced bucket.
+当授权引用多个配额桶时，Aperture 会在转发请求前检查所有桶。只要任何一个桶已耗尽，即使其他桶还有余额，Aperture 也会拒绝请求。响应完成后，Aperture 从每个被引用的桶中扣除估算成本。
 
-## Verify the configuration
+## 验证配置
 
-After saving the configuration, confirm the budget is active:
+保存配置后，确认预算已生效：
 
-1. Send a test request through Aperture.
-2. Check the [quota status][docs-monitor-quotas] using the API (`GET /api/quotas`) or the personal **Quotas** page at `/quotas` in the chat portal. The `team-monthly` bucket should appear with the correct capacity and a balance reduced by the cost of your test request.
+1. 通过 Aperture 发送一条测试请求。
+2. 通过 API（`GET /api/quotas`）或聊天门户中 `/quotas` 的个人 **Quotas** 页面查看[配额状态][docs-monitor-quotas]。`team-monthly` 桶应该已出现，容量正确，且余额因测试请求的成本而减少。
 
-## Next steps
+## 后续步骤
 
-* [Set per-user spending limits][docs-set-per-user-limits] to prevent individual users from consuming a disproportionate share of the team budget.
-* [Check and refill budgets][docs-monitor-quotas] to monitor the team bucket balance and manually add funds if needed.
-* Refer to the [quotas configuration reference][docs-aperture-quotas] for the complete field reference and additional examples.
+* [设置按用户的支出限额][docs-set-per-user-limits]，防止单个用户消耗掉团队预算中不成比例的份额。
+* [检查并补充预算][docs-monitor-quotas]，监控团队桶余额，并在需要时手动添加额度。
+* 完整字段参考与更多示例请参阅[配额配置参考][docs-aperture-quotas]。
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

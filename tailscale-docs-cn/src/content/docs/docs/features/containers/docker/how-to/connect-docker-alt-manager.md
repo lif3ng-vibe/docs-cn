@@ -1,52 +1,52 @@
 ---
-title: "Connect a Docker container to your tailnet with an alternative Docker manager"
-description: "You can run the `tailscale/tailscale` image with container management tools other than the Docker CLI or Docker Compose. The image and configuration remain the same. Only the method used to start and "
+title: "使用其他 Docker 管理器将 Docker 容器连接到你的 tailnet"
+description: "你可以使用 Docker CLI 或 Docker Compose 以外的容器管理工具运行 `tailscale/tailscale` 镜像。镜像和配置保持不变，只有启动和管理容器的方式不同。"
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-You can run the `tailscale/tailscale` image with container management tools other than the Docker CLI or Docker Compose. The image and configuration remain the same. Only the method used to start and manage the container changes.
+你可以使用 Docker CLI 或 Docker Compose 以外的容器管理工具运行 `tailscale/tailscale` 镜像。镜像和配置保持不变，改变的只是启动和管理容器的方式。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need:
+开始之前，你需要：
 
-* A Tailscale account with permission to generate [auth keys][docs-auth-keys] from the admin console.
-* Basic familiarity with using a terminal or command line interface.
+* 一个 Tailscale 账户，且有权在管理控制台中生成[认证密钥][docs-auth-keys]。
+* 对使用终端或命令行界面有基本了解。
 
-Once you have these ready, you can start connecting Docker containers to your tailnet.
+准备好这些后，你就可以开始把 Docker 容器连接到你的 tailnet 了。
 
-## Common management tools
+## 常用管理工具
 
-Common Docker management tools include:
+常见的 Docker 管理工具包括：
 
-* [Colima][xt-colima]: Lightweight container runtime often used on macOS as an alternative to Docker Desktop.
-* [Dockhand][xt-dockhand]: A more advanced web-based interface for managing Docker containers.
-* [Portainer][xt-portainer]: Web-based interface for managing Docker containers.
-* [Podman][xt-podman]: Docker compatible container engine that does not require a background service.
+* [Colima][xt-colima]：轻量级容器运行时，常在 macOS 上用作 Docker Desktop 的替代。
+* [Dockhand][xt-dockhand]：功能更丰富的基于 Web 的 Docker 容器管理界面。
+* [Portainer][xt-portainer]：基于 Web 的 Docker 容器管理界面。
+* [Podman][xt-podman]：与 Docker 兼容、无需后台服务的容器引擎。
 
-Make sure to consult the product specific documentation for set up and management guidance.
+设置和管理方面的指引请查阅相应产品的专属文档。
 
-> **Note:**
+> **注意：**
 >
-> Docker Desktop is another application available for macOS and Windows that includes Docker Engine, Docker Compose, a graphical interface, and supporting services for running containers locally. Tailscale recommends installing Docker Engine and the Docker Compose plugin directly when possible to reduce additional system overhead and more closely match production Linux environments.
+> Docker Desktop 是另一款适用于 macOS 和 Windows 的应用，包含 Docker Engine、Docker Compose、图形界面以及本地运行容器所需的支持服务。Tailscale 建议在可行时直接安装 Docker Engine 和 Docker Compose 插件，以减少额外的系统开销，并更贴近生产环境的 Linux 环境。
 
-## Generate an auth key
+## 生成认证密钥
 
-You can automatically connect Docker containers to your tailnet by generating an authentication key and adding it to your Docker configuration, eliminating the need to log in manually.
+生成认证密钥并将其添加到 Docker 配置中，即可自动把 Docker 容器连接到你的 tailnet，无需手动登录。
 
-1. Go to the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. In the **Auth keys** section, select **Generate auth key**.
-   1. Add a description to identify the key. The description does not affect configuration.
-   2. Leave all other options as-is.
-   3. Select **Generate key**.
-3. Copy the key now. After you close the dialog, you cannot view it again.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys)（密钥）页面。
+2. 在 **Auth keys**（认证密钥）部分，选择 **Generate auth key**（生成认证密钥）。
+   1. 添加一段描述以便识别该密钥。描述不影响配置。
+   2. 其他选项保持默认。
+   3. 选择 **Generate key**（生成密钥）。
+3. 立即复制该密钥。关闭对话框后将无法再次查看。
 
-For more information about Tailscale authentication keys, refer to [Auth keys][docs-auth-keys].
+关于 Tailscale 认证密钥的更多信息，请参阅[认证密钥][docs-auth-keys]。
 
-## Further exploration
+## 进一步探索
 
-Refer to [Connect a Docker container to your tailnet with Docker Compose][docs-docker-container], for an example YAML file as well as field and flag descriptions that you can use for installing Docker in a container from either the command line or in the GUI, using your preferred container management tool.
+关于示例 YAML 文件以及字段和标志说明（可用于在命令行或图形界面中、用你偏好的容器管理工具在容器内安装 Docker），请参阅[使用 Docker Compose 将 Docker 容器连接到你的 tailnet][docs-docker-container]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

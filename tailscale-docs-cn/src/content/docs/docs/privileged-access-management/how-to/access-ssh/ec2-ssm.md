@@ -1,54 +1,54 @@
 ---
-title: "Access an EC2 instance with AWS Systems Manager Session Manager using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets you to provide secure access to Amazon EC2 instances through AWS Systems Manager Session Manager using [Tailscale identity][docs-tailscale-identity]."
+title: "使用 Tailscale PAM 通过 AWS Systems Manager Session Manager 访问 EC2 实例"
+description: "[Tailscale PAM][docs-pam] 让你通过 AWS Systems Manager Session Manager，使用 [Tailscale 身份][docs-tailscale-identity]对 Amazon EC2 实例提供安全访问。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets you to provide secure access to Amazon EC2 instances through AWS Systems Manager Session Manager using [Tailscale identity][docs-tailscale-identity].
+[Tailscale PAM][docs-pam] 让你通过 AWS Systems Manager Session Manager，使用 [Tailscale 身份][docs-tailscale-identity]对 Amazon EC2 实例提供安全访问。
 
-Users can connect to an EC2 instance without managing SSH keys, static passwords, or AWS credentials. Tailscale PAM authorizes the connection with the user's Tailscale identity, while the connector uses AWS Systems Manager to establish the upstream session.
+用户无需管理 SSH 密钥、静态密码或 AWS 凭证即可连接到 EC2 实例。Tailscale PAM 使用用户的 Tailscale 身份为连接授权，而连接器使用 AWS Systems Manager 建立上游会话。
 
-Because the connection goes through Systems Manager, you don't need to expose port 22 or provide a direct network path from the connector to the EC2 instance.
+由于连接经由 Systems Manager，你无需暴露端口 22，也无需提供从连接器到 EC2 实例的直接网络路径。
 
-This guide walks you through preparing an EC2 instance for Session Manager, configuring AWS permissions for the connector, creating the PAM service, and connecting to the instance.
+本指南将带你完成：为 Session Manager 准备 EC2 实例、为连接器配置 AWS 权限、创建 PAM 服务，以及连接到实例。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, make sure you have the following:
+开始之前，请确保你已具备：
 
-* A Tailscale PAM [connector][docs-pam-connectors] that is installed and online.
-* Tailscale [installed][docs-install] and signed in on the device you'll use to connect, if you plan to use a native SSH client.
-* An Amazon EC2 instance configured as an AWS Systems Manager managed node.
-* SSM Agent installed and running on the EC2 instance.
-* An AWS identity available to the PAM connector with permission to start Systems Manager sessions.
-* The EC2 instance ID and AWS Region.
+* 一个已安装且在线的 Tailscale PAM [连接器][docs-pam-connectors]。
+* 如果你计划使用原生 SSH 客户端，请在你将用于连接的设备上[安装][docs-install] Tailscale 并登录。
+* 一台已配置为 AWS Systems Manager 托管节点的 Amazon EC2 实例。
+* EC2 实例上已安装并正在运行 SSM Agent。
+* 一个 PAM 连接器可用的 AWS 身份，并具有启动 Systems Manager 会话的权限。
+* EC2 实例 ID 和 AWS 区域。
 
-The PAM connector doesn't need direct network connectivity to the EC2 instance. The managed instance communicates with AWS Systems Manager using outbound HTTPS connections. AWS requires the managed node to be able to reach the Systems Manager service endpoints.
+PAM 连接器不需要与 EC2 实例直接网络连通。托管实例使用出站 HTTPS 连接与 AWS Systems Manager 通信。AWS 要求托管节点能够访问 Systems Manager 服务端点。
 
-The PAM connector doesn't need direct network connectivity to the EC2 instance. The managed instance communicates with AWS Systems Manager using outbound HTTPS connections. AWS requires the managed node to be able to reach the Systems Manager service endpoints.
+PAM 连接器不需要与 EC2 实例直接网络连通。托管实例使用出站 HTTPS 连接与 AWS Systems Manager 通信。AWS 要求托管节点能够访问 Systems Manager 服务端点。
 
-## Prepare the EC2 instance for Session Manager
+## 为 Session Manager 准备 EC2 实例
 
-Before Tailscale PAM can connect, make sure you can access the EC2 instance using AWS Systems Manager Session Manager.
+在 Tailscale PAM 能够连接之前，请确保你能通过 AWS Systems Manager Session Manager 访问该 EC2 实例。
 
-The instance must have SSM Agent installed and running and the permissions required to register as a Systems Manager managed node.
+实例必须已安装并正在运行 SSM Agent，并具备注册为 Systems Manager 托管节点所需的权限。
 
-For EC2 instances, you can provide these permissions using an IAM instance profile with the AWS-managed `AmazonSSMManagedInstanceCore` policy.
+对于 EC2 实例，你可以使用附带 AWS 托管策略 `AmazonSSMManagedInstanceCore` 的 IAM 实例配置文件来提供这些权限。
 
-AWS also supports Default Host Management Configuration, which can provide the necessary Systems Manager permissions at the account level.
+AWS 还支持 Default Host Management Configuration，可以在账户级别提供所需的 Systems Manager 权限。
 
-You can verify the instance from the AWS Systems Manager console. If the instance appears as a managed node and you can start a Session Manager session to it, it's ready to use with Tailscale PAM.
+你可以在 AWS Systems Manager 控制台中验证该实例。如果该实例显示为托管节点，并且你能对它启动 Session Manager 会话，那么它已经可以配合 Tailscale PAM 使用了。
 
-## Give the connector permission to use Session Manager
+## 授予连接器使用 Session Manager 的权限
 
-The Tailscale PAM connector needs an AWS identity that can start and manage Systems Manager sessions for the EC2 instance.
+Tailscale PAM 连接器需要一个能够为该 EC2 实例启动和管理 Systems Manager 会话的 AWS 身份。
 
-When possible, use an IAM role instead of long-lived AWS access keys. For example, if the PAM connector runs on an EC2 instance, you can attach an IAM role to the connector instance and use the Default credentials provider chain authentication strategy.
+只要可能，请使用 IAM 角色而不是长期有效的 AWS 访问密钥。例如，如果 PAM 连接器运行在 EC2 实例上，你可以为连接器实例附加一个 IAM 角色，并使用 Default credentials provider chain 身份验证策略。
 
-The following policy is a good starting point for giving the connector access to a specific EC2 instance:
+下面的策略是让连接器访问特定 EC2 实例的一个良好起点：
 
 ```json
 {
@@ -104,80 +104,80 @@ The following policy is a good starting point for giving the connector access to
 }
 ```
 
-Replace `${AWS_REGION}`, `${AWS_ACCOUNT_ID}`, and `${EC2_INSTANCE_ID}` with the AWS Region, AWS account ID, and EC2 instance ID for your environment.
+把 `${AWS_REGION}`、`${AWS_ACCOUNT_ID}` 和 `${EC2_INSTANCE_ID}` 替换为你环境的 AWS 区域、AWS 账户 ID 和 EC2 实例 ID。
 
-This example limits access to the configured AWS account, Region, and EC2 instance where the underlying AWS actions support that level of resource scoping. If the connector needs to access multiple EC2 instances, add the required resources rather than replacing them with broad wildcards whenever possible.
+此示例在底层 AWS 操作支持该资源限定粒度的情况下，把访问限制在所配置的 AWS 账户、区域和 EC2 实例内。如果连接器需要访问多个 EC2 实例，请添加所需的资源，而不是尽可能用宽泛的通配符替换。
 
-## Create an EC2 PAM service
+## 创建 EC2 PAM 服务
 
-To create a PAM service for the EC2 instance:
+要为该 EC2 实例创建 PAM 服务：
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select **Add service**.
+2. 选择**添加服务**。
 
-3. Select **PAM service**.
+3. 选择 **PAM 服务**。
 
-4. Select **Secure Shell - AWS EC2 via AWS SSM**.
+4. 选择 **Secure Shell - AWS EC2 via AWS SSM**。
 
-5. Select **Continue**.
+5. 选择**继续**。
 
-6. Enter a name for the service.
+6. 输入服务名称。
 
-7. (Optional) Enter a description.
+7. （可选）输入描述。
 
-8. Choose whether to enable session recording.
+8. 选择是否启用会话录制。
 
-9. From **Connect via**, select one or more Tailscale PAM connectors.
+9. 在**通过以下方式连接**中，选择一个或多个 Tailscale PAM 连接器。
 
-   The connector doesn't need SSH network connectivity to the EC2 instance, but it does need access to the AWS APIs required to establish the Systems Manager session.
+   连接器不需要与 EC2 实例有 SSH 网络连通，但需要能够访问建立 Systems Manager 会话所需的 AWS API。
 
-10. Select **Continue**.
+10. 选择**继续**。
 
-11. For **EC2 instance ID**, enter the instance ID of the EC2 instance.
+11. 在 **EC2 instance ID** 中，输入该 EC2 实例的实例 ID。
 
-12. For **AWS region**, enter the AWS Region where the instance is running.
+12. 在 **AWS region** 中，输入该实例所在的 AWS 区域。
 
-13. For **AWS authentication strategy**, choose how the connector authenticates to AWS.
+13. 在 **AWS authentication strategy** 中，选择连接器向 AWS 进行身份验证的方式。
 
     #### Default credentials provider chain
 
-    Select **Default credentials provider chain** to use AWS credentials already available to the connector through the standard AWS credential provider chain.
+    选择 **Default credentials provider chain**，使用连接器通过标准 AWS 凭证提供程序链已经可用的 AWS 凭证。
 
-    This is a good option when the connector runs on an EC2 instance with an AWS IAM role attached to it.
+    当连接器运行在已附加 AWS IAM 角色的 EC2 实例上时，这是一个不错的选择。
 
     #### AWS profile
 
-    Select **AWS profile** to use a specific AWS profile configured on the device running the connector.
+    选择 **AWS profile**，使用运行连接器的设备上已配置的特定 AWS profile。
 
-    Enter the name of the AWS profile the connector should use.
+    输入连接器应使用的 AWS profile 名称。
 
     #### Static credentials
 
-    Select **Static credentials** to provide AWS credentials directly. Enter values for the following:
+    选择 **Static credentials**，直接提供 AWS 凭证。填写以下值：
 
-    * **AWS access key ID**: The access key ID for the AWS identity.
-    * **AWS secret access key**: The corresponding secret access key.
+    * **AWS access key ID**：该 AWS 身份的访问密钥 ID。
+    * **AWS secret access key**：对应的秘密访问密钥。
 
-    AWS credentials are sensitive.
+    AWS 凭证属于敏感信息。
 
-    > **Warning:**
+    > **警告：**
     >
-    > For production environments, prefer an AWS IAM role or another short-lived credential source when possible.
+    > 在生产环境中，尽量优先使用 AWS IAM 角色或其他短期凭证来源。
 
-14. Select **Save**.
+14. 选择**保存**。
 
-Your SSH PAM service that uses AWS Systems Manager Session Manager has been created. You can access it in the [Services](https://console.tailscale.com/admin/services) page.
+使用 AWS Systems Manager Session Manager 的 SSH PAM 服务已创建完成。你可以在 [Services](https://console.tailscale.com/admin/services) 页面中访问它。
 
-## Grant access to the SSH service
+## 为 SSH 服务授予访问权限
 
-Before users can connect, make sure a Tailscale PAM [grant][docs-grants] gives them access to the SSH service.
+在用户连接之前，请确保有一条 Tailscale PAM [授权][docs-grants]允许他们访问该 SSH 服务。
 
-Tailscale PAM grants can control interactive shell access, command execution, SFTP, and other SSH capabilities. For example, you can allow full SSH access for one group or restrict another group to specific non-interactive commands.
+Tailscale PAM 授权可以控制交互式 shell 访问、命令执行、SFTP 和其他 SSH 能力。例如，你可以让一个用户组拥有完整的 SSH 访问权限，而把另一个用户组限制到特定的非交互式命令。
 
-Because the upstream connection uses AWS Systems Manager rather than a traditional SSH login, there is no upstream SSH username, password, or private key for users to manage.
+由于上游连接使用的是 AWS Systems Manager 而非传统的 SSH 登录，用户无需管理任何上游 SSH 用户名、密码或私钥。
 
-For example, the SSH permissions for a broad grant can allow shell, exec, and SFTP access:
+例如，一条宽泛授权的 SSH 权限可以允许 shell、exec 和 SFTP 访问：
 
 ```json
 "permissions": {
@@ -189,95 +189,95 @@ For example, the SSH permissions for a broad grant can allow shell, exec, and SF
 }
 ```
 
-> **Warning:**
+> **警告：**
 >
-> This is useful for getting started. In a production environment, restrict the source and destination of the grant so that only the appropriate users, groups, devices, or tags can access the EC2 SSH service that uses AWS Systems Manager Session Manager
+> 这适合上手试用。在生产环境中，请收紧授权的来源和目的地，只让合适的用户、用户组、设备或标签能够访问这个使用 AWS Systems Manager Session Manager 的 EC2 SSH 服务。
 
-For more SSH grant examples and information about fine-grained SSH access controls, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多 SSH 授权示例和细粒度 SSH 访问控制的说明，参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Connect to the EC2 instance
+## 连接到 EC2 实例
 
-The primary way to connect is through the Tailscale client, which can launch your preferred SSH client. You can also connect entirely from your browser using the Tailscale browser client.
+主要的连接方式是通过 Tailscale 客户端，它可以启动你偏好的 SSH 客户端。你也可以完全在浏览器中，使用 Tailscale 浏览器客户端进行连接。
 
-### Connect with your preferred SSH client
+### 使用你偏好的 SSH 客户端连接
 
-Use the Tailscale client to quickly open the SSH service with a compatible SSH client already installed on your device.
+使用 Tailscale 客户端，用你设备上已安装的兼容 SSH 客户端快速打开该 SSH 服务。
 
-1. Open the Tailscale client.
-2. Open **Services**.
-3. Select your EC2 SSM service.
-4. Choose the SSH client you want to use.
+1. 打开 Tailscale 客户端。
+2. 打开 **Services**。
+3. 选择你的 EC2 SSM 服务。
+4. 选择你想使用的 SSH 客户端。
 
-The Tailscale client scans your device for well-known SSH clients and shows the ones it can find. Selecting one establishes the PAM session and launches that client for you.
+Tailscale 客户端会扫描你的设备上常见的 SSH 客户端，并显示它能找到的那些。选中其一即可建立 PAM 会话并为你启动该客户端。
 
-You aren't limited to the SSH clients shown in the Tailscale client. If your preferred client isn't listed, open it directly and use the PAM service name as the hostname.
+你并不局限于 Tailscale 客户端中列出的 SSH 客户端。如果你偏好的客户端不在列表中，可以直接打开它，并使用该 PAM 服务的名称作为主机名。
 
-If the service has a fixed SSH username configured, you can connect with:
+如果该服务配置了固定的 SSH 用户名，你可以这样连接：
 
 ```shell
 ssh your-service-name
 ```
 
-Tailscale PAM uses your Tailscale identity to authorize the connection. The connector then starts the upstream Systems Manager session using its AWS identity.
+Tailscale PAM 使用你的 Tailscale 身份为连接授权。随后连接器使用自己的 AWS 身份启动上游 Systems Manager 会话。
 
-You don't need an SSH key, password, or AWS credentials for the EC2 instance.
+你不需要该 EC2 实例的 SSH 密钥、密码或 AWS 凭证。
 
-### Connect from the browser
+### 从浏览器连接
 
-Alternatively, you can connect entirely from your browser using the Tailscale SSH browser client.
+你也可以完全在浏览器中，使用 Tailscale SSH 浏览器客户端进行连接。
 
-1. Open [Services](https://console.tailscale.com/admin/services) of the Tailscale admin console.
-2. Select the EC2 SSM service you want to access.
-3. Select **Connect**, and the Tailscale SSH browser client opens.
-4. If prompted, authenticate with your Tailscale identity.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services)。
+2. 选择你要访问的 EC2 SSM 服务。
+3. 选择**连接**，Tailscale SSH 浏览器客户端会随之打开。
+4. 如果出现提示，请使用你的 Tailscale 身份进行身份验证。
 
-You can now use an interactive SSH session on the EC2 instance directly from your browser.
+现在你可以直接在浏览器中对 EC2 实例使用交互式 SSH 会话了。
 
-The browser client runs a Tailscale client in the browser using WebAssembly (Wasm) and appears as a new [ephemeral][docs-ephemeral-nodes] device in your tailnet. If [device approval][docs-device-approval] is enabled for the tailnet, an admin must approve the browser device before it can connect.
+浏览器客户端通过 WebAssembly（Wasm）在浏览器中运行一个 Tailscale 客户端，并作为一台新的[临时节点（ephemeral node）][docs-ephemeral-nodes]出现在你的 tailnet 中。如果 tailnet 启用了[设备审批][docs-device-approval]，管理员必须先批准该浏览器设备，它才能连接。
 
-## Review SSH sessions
+## 查看 SSH 会话
 
-Tailscale PAM gives you visibility into connections to your EC2 SSM service.
+Tailscale PAM 让你能够查看与你的 EC2 SSM 服务的连接。
 
-Open the [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) page of the admin console, then select a session for your service. You can review information such as:
+打开管理控制台的 [Sessions](https://console.tailscale.com/admin/logs/pam_sessions) 页面，然后选择你的服务的一个会话。你可以查看如下信息：
 
-* The Tailscale identity that connected.
-* The originating device.
-* The connection time.
-* The service that was accessed.
+* 连接所用的 Tailscale 身份。
+* 来源设备。
+* 连接时间。
+* 所访问的服务。
 
-When session recording is enabled, you can also review the recorded SSH session.
+启用会话录制后，你还可以查看录制下来的 SSH 会话。
 
-This gives you a direct answer to two useful questions: who accessed the EC2 instance, and what did they do while they were connected?
+这让你能直接回答两个很有用的问题：谁访问了该 EC2 实例，以及连接期间做了什么？
 
-## Troubleshooting
+## 故障排查
 
-If you can't connect to the EC2 instance, first verify that the PAM connector is online.
+如果你无法连接到该 EC2 实例，请先核实 PAM 连接器是否在线。
 
-Next, make sure the EC2 instance is available through AWS Systems Manager. The instance must have SSM Agent installed and running and must have the required Systems Manager permissions.
+接下来，确保该 EC2 实例可以通过 AWS Systems Manager 访问。实例必须已安装并正在运行 SSM Agent，并且具备所需的 Systems Manager 权限。
 
-Verify that:
+请核实：
 
-* The EC2 instance ID is correct.
-* The configured AWS Region matches the instance.
-* The AWS identity used by the connector has permission to start a Session Manager session for the instance.
-* The instance appears as a Systems Manager managed node.
-* SSM Agent is running on the instance.
-* The instance can make outbound HTTPS connections to the required Systems Manager endpoints.
-* If you're using an AWS profile or static credentials, verify that the credentials are valid and have the required permissions.
-* A useful troubleshooting step is to use the same AWS identity as the connector and confirm that you can start a Session Manager session to the instance directly through AWS.
+* EC2 实例 ID 是否正确。
+* 所配置的 AWS 区域是否与该实例一致。
+* 连接器使用的 AWS 身份是否具有为该实例启动 Session Manager 会话的权限。
+* 该实例是否显示为 Systems Manager 托管节点。
+* 实例上 SSM Agent 是否正在运行。
+* 实例能否向所需的 Systems Manager 端点发起出站 HTTPS 连接。
+* 如果你使用的是 AWS profile 或静态凭证，请核实凭证有效且具备所需权限。
+* 一个有用的排查步骤是：使用与连接器相同的 AWS 身份，确认你能直接通过 AWS 对该实例启动 Session Manager 会话。
 
-If none of the troubleshooting steps mentioned above resolve your issue, review the connector logs and the details for the failed session in the Tailscale PAM [session logs][docs-pam-session-logs]. These can help narrow down whether the problem is the AWS credentials, IAM permissions, Systems Manager configuration, or the EC2 instance itself.
+如果上述排查步骤都无法解决问题，请查看连接器日志以及 Tailscale PAM [会话日志][docs-pam-session-logs]中该失败会话的详情。这些信息有助于判断问题出在 AWS 凭证、IAM 权限、Systems Manager 配置还是 EC2 实例本身。
 
-## Access an ECS task through AWS SSM
+## 通过 AWS SSM 访问 ECS 任务
 
-Tailscale PAM also supports access to Amazon ECS tasks through AWS Systems Manager.
+Tailscale PAM 还支持通过 AWS Systems Manager 访问 Amazon ECS 任务。
 
-To configure an ECS target, create a separate Tailscale PAM service and select **Secure Shell - AWS ECS via AWS SSM**.
+要配置 ECS 目标，请创建一个单独的 Tailscale PAM 服务并选择 **Secure Shell - AWS ECS via AWS SSM**。
 
-Amazon ECS uses Systems Manager to establish ECS Exec sessions. ECS Exec must be enabled for the task, and the task needs an AWS IAM role with the required `ssmmessages` permissions.
+Amazon ECS 使用 Systems Manager 建立 ECS Exec 会话。任务必须启用 ECS Exec，并且任务需要有一个具备所需 `ssmmessages` 权限的 AWS IAM 角色。
 
-For the complete setup, refer to [Access an Amazon ECS task with AWS Systems Manager][docs-pam-ssh-ecs-ssm].
+完整的配置步骤，参见[使用 AWS Systems Manager 访问 Amazon ECS 任务][docs-pam-ssh-ecs-ssm]。
 
 [docs-device-approval]: /docs/features/access-control/device-management/device-approval
 

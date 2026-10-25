@@ -1,89 +1,70 @@
 ---
-title: "Access Oracle Cloud VMs privately using Tailscale"
-description: "Oracle Cloud provides Linux virtual machines, notably featuring the ARM CPU architecture. We can use Tailscale to securely access Oracle virtual machines."
+title: "使用 Tailscale 私有访问 Oracle Cloud 虚拟机"
+description: "Oracle Cloud 提供 Linux 虚拟机，尤其以 ARM CPU 架构见长。我们可以使用 Tailscale 安全地访问 Oracle 虚拟机。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-Oracle Cloud provides Linux virtual machines, notably featuring the ARM CPU architecture.
-We can use Tailscale to securely access Oracle virtual machines.
+Oracle Cloud 提供 Linux 虚拟机，尤其以 ARM CPU 架构见长。
+我们可以使用 Tailscale 安全地访问 Oracle 虚拟机。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide, you'll need a Tailscale network set up and configured with at
-least one existing device. Read our [getting started guide][docs-install]
-if you need help with this.
+开始本指南之前，你需要先搭建并配置好一个 Tailscale 网络（即 tailnet），其中至少已有一台设备。如果需要帮助，请阅读我们的[快速开始指南][docs-install]。
 
-## Step 1: Set up the Tailscale client for the VM
+## 步骤 1：为虚拟机设置 Tailscale 客户端
 
-First, [create a Virtual Machine in the OCN Console][xt-oracle-instances-create].
+首先，[在 OCN 控制台中创建一台虚拟机][xt-oracle-instances-create]。
 
-SSH to the system and follow the steps to
-[install Tailscale on Oracle Linux][docs-install-linux].
+然后通过 SSH 连入系统，按照步骤[在 Oracle Linux 上安装 Tailscale][docs-install-linux]。
 
-## Step 2: Allow UDP port 41641
+## 步骤 2：放行 UDP 端口 41641
 
-If at least one side of a tunnel has "easy NAT," where Tailscale can determine the UDP port
-number on the far side of the NAT device, then it will make
-[direct connections to minimize latency.][bl-how-tailscale-works]
-We ensure that OCN nodes can make direct connections by allowing UDP port 41641 to ingress
-through the firewall.
+只要隧道的任意一端具有"简单 NAT"（easy NAT）——即 Tailscale 能确定 NAT 设备远端的 UDP 端口号——它就会建立[直连以最小化延迟][bl-how-tailscale-works]。我们在防火墙上放行 UDP 端口 41641 的入站流量，以确保 OCN 节点能够建立直连。
 
-In the [Networking tab][xt-oracle-vcns] select **Virtual Cloud Networks**
-select the specific VCN the VM has been created on.
+在 [Networking（网络）选项卡][xt-oracle-vcns]中选择**虚拟云网络**（Virtual Cloud Networks），再选择创建该虚拟机时所在的 VCN。
 
-*（图：Virtual Cloud Networks list）*
+*（图：Virtual Cloud Networks 列表）*
 
-Select **Security Lists** in the left hand column, and the security list in use (probably
-a Default).
+在左侧栏中选择**安全列表**（Security Lists），然后选择正在使用的安全列表（通常是 Default，即默认列表）。
 
-*（图：Security lists）*
+*（图：安全列表）*
 
-Add a Stateless ingress rule for 0.0.0.0/0 UDP port 41641.
+为 0.0.0.0/0 的 UDP 端口 41641 添加一条无状态（Stateless）入站规则。
 
-*（图：Adding an Ingress Rule）*
+*（图：添加入站规则）*
 
-## Step 3: Advertise routes from the VM
+## 步骤 3：从虚拟机宣告路由
 
-For the benefit of the *other* nodes in the tailnet we'll set up
-[split DNS][docs-dns-using-settings] to allow
-use of the same DNS names as are used inside of Oracle Cloud. The DNS server provided by Oracle
-is 169.254.169.254, and supports hostnames of the form `instance.subnet01234567.vcn01234567.oraclevcn.com`.
+为了让 tailnet 中*其他*节点受益，我们将设置[拆分 DNS][docs-dns-using-settings]（split DNS），让这些节点能使用与 Oracle Cloud 内部相同的 DNS 名称。Oracle 提供的 DNS 服务器是 169.254.169.254，支持形如 `instance.subnet01234567.vcn01234567.oraclevcn.com` 的主机名。
 
-We'll have our VM advertise routes for both the subnet it sits on as well as the Oracle DNS
-server. For example, if the subnet address range is 10.0.0.0/24, the command would be:
+我们让这台虚拟机同时宣告它所在子网以及 Oracle DNS 服务器的路由。例如，若子网地址段为 10.0.0.0/24，则命令为：
 
 ```shell
 tailscale set --advertise-routes=10.0.0.0/24,169.254.169.254/32 --accept-dns=false
 ```
 
-> **Note:**
+> **注意：**
 >
-> For Oracle Cloud VMs it is generally best to let Oracle handle the DNS configuration,
-> not have Tailscale override it, so we added `--accept-dns=false`.
+> 对 Oracle Cloud 虚拟机而言，通常最好让 Oracle 自己处理 DNS 配置，而不要让 Tailscale 覆盖它，因此我们加上了 `--accept-dns=false`。
 
-## Step 4: Add Oracle DNS for your tailnet
+## 步骤 4：为你的 tailnet 添加 Oracle DNS
 
-In the [DNS](https://console.tailscale.com/admin/dns) page of the admin console we add a nameserver
-restricted to the `oraclevcn.com` domain, pointing to the Oracle DNS server which we
-made available through our VM.
+在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面中，我们添加一个仅作用于 `oraclevcn.com` 域的 nameserver（名称服务器），指向我们通过虚拟机开放出来的 Oracle DNS 服务器。
 
-*（图：Adding a Split DNS resolver for oraclevcn.com）*
+*（图：为 oraclevcn.com 添加拆分 DNS 解析器）*
 
-Now the same hostnames which work between nodes running within Oracle Cloud will also be available
-to all nodes on our tailnet.
+现在，这些在 Oracle Cloud 内部节点之间可用的主机名，对我们 tailnet 上的所有节点也可用了。
 
-## Step 5: Remove public SSH access
+## 步骤 5：移除公开的 SSH 访问
 
-As we can now SSH to the system over the private Tailscale network, there is no reason to leave
-the SSH port open on a public IP address. In the Network > Security List the SSH rule can be
-removed.
+既然现在已经能通过 Tailscale 私有网络 SSH 连入系统，就没有理由继续在公网 IP 上开放 SSH 端口了。可以在 Network > Security List 中删除该 SSH 规则。
 
-*（图：Disable public SSH port.）*
+*（图：禁用公开 SSH 端口）*
 
-## Troubleshooting
+## 故障排除
 
-For troubleshooting information, refer to [Troubleshoot Linux cloud devices][docs-troubleshooting-oracle-cloud].
+有关故障排除的信息，请参阅[排查 Linux 云设备问题][docs-troubleshooting-oracle-cloud]。
 
 [bl-how-tailscale-works]: https://tailscale.com/blog/how-tailscale-works
 

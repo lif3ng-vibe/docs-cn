@@ -1,43 +1,43 @@
 ---
-title: "Automate employee onboarding and offboarding"
-description: "When employees join or leave your organization, their access to network resources needs to reflect their current role and status. System for Cross-domain Identity Management (SCIM) lets you automate t"
+title: "自动化员工入职与离职流程"
+description: "当员工加入或离开你的组织时，他们对网络资源的访问权限需要反映其当前的角色与状态。跨域身份管理系统（SCIM）让你可以通过将 Tailscale 连接到身份提供方来自动实现这"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**User & group provisioning**](/docs/features/user-group-provisioning) — Learn about the System for Cross-domain Identity Management (SCIM) identity providers that Tailscale supports.
+> [**用户与群组预配（User & group provisioning）**](/docs/features/user-group-provisioning) — 了解 Tailscale 支持的跨域身份管理系统（SCIM）身份提供方。
 
-When employees join or leave your organization, their access to network resources needs to reflect their current role and status. System for Cross-domain Identity Management (SCIM) lets you automate this by connecting Tailscale to your identity provider. If your identity provider doesn't support SCIM, you can manage access manually through the admin console.
+当员工加入或离开你的组织时，他们对网络资源的访问权限需要反映其当前的角色与状态。跨域身份管理系统（SCIM）让你可以通过将 Tailscale 连接到身份提供方来自动实现这一点。如果你的身份提供方不支持 SCIM，也可以通过管理控制台手动管理访问权限。
 
-## Automate with SCIM
+## 使用 SCIM 实现自动化
 
-[SCIM integrations][docs-user-group-provisioning] let Tailscale sync user accounts and group memberships directly from your identity provider. When you add or remove someone in your identity provider, Tailscale reflects that change automatically.
+[SCIM 集成][docs-user-group-provisioning] 让 Tailscale 直接从你的身份提供方同步用户账户和群组成员关系。当你在身份提供方中添加或移除某位成员时，Tailscale 会自动同步这一变更。
 
-To get started, open the [User management](https://console.tailscale.com/admin/settings/user-management) page in the admin console to enable user and group provisioning. Refer to the guide for your identity provider:
+要开始使用，请在管理控制台中打开 [User management](https://console.tailscale.com/admin/settings/user-management) 页面，启用用户与群组预配。请参阅你的身份提供方对应的指南：
 
 * [Okta][docs-okta-scim]
 * [Microsoft Entra ID][docs-entra-scim]
 * [Google][docs-google-sso]
 
-**Onboarding:** Add the employee to the appropriate groups in your identity provider. SCIM syncs the membership to Tailscale, provisioning the user and granting access.
+**入职：** 在身份提供方中将员工添加到相应的群组。SCIM 会将成员关系同步到 Tailscale，完成用户预配并授予访问权限。
 
-**Offboarding:** Deactivate or delete the user in your identity provider, not through the Tailscale admin console. SCIM syncs the change, revoking access immediately.
+**离职：** 在身份提供方中停用或删除该用户，而不是通过 Tailscale 管理控制台操作。SCIM 会同步这一变更，立即撤销其访问权限。
 
-## Manage access manually
+## 手动管理访问权限
 
-If your identity provider doesn't support SCIM, open the [Users](https://console.tailscale.com/admin/users) page in the admin console to invite and remove users.
+如果你的身份提供方不支持 SCIM，请在管理控制台中打开 [Users](https://console.tailscale.com/admin/users) 页面来邀请和移除用户。
 
-**Onboarding:** [Invite the team member to your tailnet][docs-how-to-invite-team-members] and assign them to the appropriate groups in your tailnet policy file so they have access to the right resources on day one.
+**入职：** [邀请团队成员加入你的 tailnet][docs-how-to-invite-team-members]，并在 tailnet 策略文件中将其分配到相应的群组，让他们从第一天起就能访问正确的资源。
 
-**Offboarding:** [Suspend or delete the user][docs-how-to-remove-team-members] from the admin console. Suspending preserves their device history; deleting removes them permanently.
+**离职：** 在管理控制台中[停用或删除该用户][docs-how-to-remove-team-members]。停用会保留其设备历史记录；删除则会将其永久移除。
 
-> **Tip:**
+> **提示：**
 >
-> Suspending a user before deleting gives you time to review their device access and transfer ownership of any shared resources.
+> 删除前先停用用户，可以为你留出时间审查其设备访问权限，并转移共享资源的所有权。
 
 [docs-entra-scim]: /docs/integrations/identity/entra/entra-id-scim
 

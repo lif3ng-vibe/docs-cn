@@ -1,0 +1,208 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "策略顾问"
+sidebar-title: "策略顾问"
+description: "让沙箱中的智能体在 OpenShell 阻断请求时提议所需的网络规则，并控制哪些提案生效。"
+keywords: "生成式 AI, 网络安全, 策略顾问, 策略, 沙箱, policy.local, 智能体策略"
+position: 5
+---
+
+策略顾问（policy advisor）让沙箱中的智能体在其网络请求被 OpenShell 阻断时提议新的网络规则，由你决定哪些提案生效。它只处理网络访问。提案可以添加网络规则，但不能移除规则，也不能更改文件系统、Landlock 或进程设置。
+
+没有策略顾问时，请求被阻断的智能体通常要等到有人手动修改策略才能完成任务。有了它，智能体可以自行请求所需访问。由于网络规则可以在沙箱运行期间变更，获批的规则无需重启即可生效。
+
+策略顾问默认关闭。启用后，OpenShell 向智能体提供说明与一个用于提交提案的本地 HTTP API。提案本身绝不会改变策略。默认情况下，每个提案都等待你审阅。可以选择启用自动批准：OpenShell 的风险检查没有发现任何可标记项时自动批准提案。
+
+## 策略顾问如何工作
+
+提案经过以下步骤：
+
+1. 沙箱中的进程发出策略拒绝的网络请求。OpenShell 拒绝一条被检查的 HTTP 请求时，其响应会解释阻断了什么，并告诉智能体如何请求访问。智能体也可以自行查询最近的拒绝记录。
+2. 智能体阅读沙箱中的策略顾问指南，检查当前策略，并提交提案。提案是一条限定范围的网络规则，只覆盖需要访问的主机、端口与二进制，对 HTTP API 还包括方法与路径。
+3. OpenShell 校验提案，并从两个方面检查其新增风险。策略证明器运行提案风险检查，比较有与无该规则时沙箱可访问的范围。OpenShell 还会标记常有风险的目的地，例如私网地址与通配符主机。随后 OpenShell 把提案与两项检查的结果加入沙箱的待审提案。参见[提案风险检查](#提案风险检查)。
+4. 你批准或拒绝提案。开启自动批准时，OpenShell 会直接批准通过风险检查的提案，无需等你。
+5. 智能体等待决定。批准后，沙箱加载新规则，智能体重试请求。被拒绝后，智能体收到你的理由，可以提交更窄的提案。
+
+无论策略顾问是否启用，OpenShell 都会在每个沙箱中根据被阻断的连接自行起草提案，包括指向任何规则都未提及的主机名的连接。每份草案只允许一个二进制访问一个主机与端口。草案与智能体提案经过相同的检查与审阅，自动批准同样适用。被阻断的请求保持拒绝状态，请在 OpenShell 批准草案并加载新规则后重试。
+
+策略顾问启用后，OpenShell 向沙箱添加以下内容，供智能体查找与使用：
+
+- 位于 `/etc/openshell/skills/policy_advisor.md` 的指南，说明如何编写与提交提案。OpenShell 还在智能体工具查找说明的位置添加指向该指南的简短入口：`/etc/openshell/skills/policy-advisor/SKILL.md` 的智能体技能，以及（镜像尚无时）`/AGENTS.md`。
+- `policy.local` API，智能体用它读取当前策略与最近拒绝、提交提案并等待决定。OpenShell 在 `http://policy.local` 提供该 API，只能从沙箱内部访问，不需要网络规则或代理设置。参见[智能体 API](#智能体-api)。
+- 被检查端点上每条被拒 HTTP 请求的响应中附带说明，把智能体指向该指南与 API。
+
+## 启用策略顾问
+
+`agent_policy_proposals_enabled` 设置开启或关闭策略顾问。可以为网关上的每个沙箱设置，也可以只为单个沙箱设置。可行时请在创建沙箱之前启用。运行中的沙箱无需重启即可应用变更，但许多智能体只在启动时读取 `/AGENTS.md` 等说明文件，而且在启用策略顾问之前被拒绝的请求，智能体可能已经放弃。
+
+为网关上的每个沙箱启用策略顾问：
+
+```shell
+openshell settings set --global \
+  --key agent_policy_proposals_enabled \
+  --value true \
+  --yes
+```
+
+只为单个沙箱启用时，在该沙箱上设置该键。仅当该键没有网关级取值时有效：
+
+```shell
+openshell settings set <sandbox-name> \
+  --key agent_policy_proposals_enabled \
+  --value true
+```
+
+查看某个沙箱的设置请运行 `openshell settings get <sandbox-name>`。输出显示取值来自网关、沙箱还是两者皆无。要让单个沙箱重新自行控制该设置，删除网关级取值：
+
+```shell
+openshell settings delete --global \
+  --key agent_policy_proposals_enabled \
+  --yes
+```
+
+## 审阅提案
+
+未自动批准的提案等待你批准或拒绝。列出某个沙箱的待审提案，包括各自将添加的规则、智能体的理由以及风险检查结果：
+
+```shell
+openshell rule get <sandbox-name> --status pending
+```
+
+提案的规则只授予你预期的访问时批准它。使用提案 `Chunk` 行中的 ID：
+
+```shell
+openshell rule approve <sandbox-name> --chunk-id <proposal-id>
+```
+
+否则，附带理由拒绝它。OpenShell 把理由与风险检查发现发送给智能体，智能体可以提交更窄的提案：
+
+```shell
+openshell rule reject <sandbox-name> \
+  --chunk-id <proposal-id> \
+  --reason "Scope this to docs/ paths only."
+```
+
+批准、移除或撤销规则时，OpenShell 会在响应之前针对更新后的策略重新检查其余待审提案，因此 `rule get` 显示的正是你下一次批准将使用的风险检查结果，你可以逐个连续批准提案。其他策略更新会在后台重新检查待审提案。每次变更最多重新检查最新的 32 条待审提案。
+
+如果列出一个提案之后其输入发生了变化（例如沙箱的提供商变了），`rule approve` 会重新检查并停止。用 `openshell rule get <sandbox-name> --status pending` 审阅更新后的提案，然后再次批准。全局策略活动时，OpenShell 无法批准提案，包括自动批准。也可以用 `openshell term` 在终端 UI 中审阅提案，但在其中拒绝提案必须附带理由。
+
+## 自动批准提案
+
+默认情况下，每个提案都等待你审阅。自动模式下，以下两个条件同时满足时，OpenShell 无需审阅即批准提案：
+
+- 提案风险检查未发现[提案风险检查](#提案风险检查)中描述的任何风险。
+- OpenShell 未标记提案的目的地。OpenShell 标记以私网 IP 地址书写的主机、通配符主机、包含私网范围或未设主机的 `allowed_ips` 条目、高于 49152 的端口，以及众所周知的数据库与缓存端口（例如 5432 与 6379）。每项标记显示在提案的 `Security` 行上。
+
+其余提案仍等待你审阅。没有提供商凭据适用于新公共主机时，这些检查不把对其访问视为风险。自动模式会批准这类提案，包括 OpenShell 从被阻断连接自行起草的草案，因此只有当你接受沙箱中的二进制可以不经你审阅获得公共主机访问时才开启。
+
+为网关上的每个沙箱开启自动模式：
+
+```shell
+openshell settings set --global \
+  --key proposal_approval_mode \
+  --value auto \
+  --yes
+```
+
+只为单个沙箱开启时，在该沙箱上设置该键，或在创建时传 `--approval-mode auto`：
+
+```shell
+openshell sandbox create --name <name> --approval-mode auto
+```
+
+接受的取值为默认的 `manual` 与 `auto`。网关级取值覆盖沙箱取值，因此管理员可以通过在网关上设置 `manual` 要求每个沙箱都人工审阅。
+
+### 提案风险检查
+
+策略顾问用[策略证明器](/how-it-works/policies/prover)对每个提案运行提案风险检查。与 `openshell-prover` CLI 运行的边界检查不同，它不把策略与你编写的边界比较，而是比较有与无拟议规则时沙箱可访问的范围。该检查会考虑挂接提供商的凭据，以及 OpenShell 无法检查流量的二进制。规则会让某个二进制获得以下任一类型的新访问时，检查报告一条发现：
+
+| 发现 | 拟议规则会让某个二进制 |
+|---|---|
+| `link_local_reach` | 访问链路本地地址（`169.254.0.0/16` 或 `fe80::/10`）或云元数据主机名。 |
+| `l7_bypass_credentialed` | 像 `git`、`ssh` 或 `nc` 那样，向有提供商凭据可用的主机发送 OpenShell 无法检查的流量。 |
+| `credential_reach_expansion` | 在它此前无法访问的主机与端口上使用提供商凭据。 |
+| `capability_expansion` | 在它已在使用提供商凭据的主机与端口上使用新的 HTTP 方法。 |
+
+带有任何证明器发现或被标记目的地的提案都需要你审阅，自动模式下也不例外。拒绝提案时，智能体会收到这些发现与你的理由，从而收窄下一次尝试。
+
+任一策略无法分析时，提案显示 `validation unavailable`，在校验成功之前无法批准。
+
+## 智能体可以提议什么
+
+智能体提议端点与二进制。端点可以包含访问预设、方法与路径允许规则、拒绝规则、`allowed_ips` 与 `allow_encoded_slash`。好的提案只在任务所需的最窄路径上允许一种方法：
+
+```json
+{
+  "intent_summary": "Allow gh to update documentation in NVIDIA/OpenShell.",
+  "operations": [
+    {
+      "addRule": {
+        "ruleName": "github_contents_docs_write",
+        "rule": {
+          "name": "github_contents_docs_write",
+          "endpoints": [
+            {
+              "host": "api.github.com",
+              "port": 443,
+              "protocol": "rest",
+              "enforcement": "enforce",
+              "rules": [
+                {
+                  "allow": {
+                    "method": "PUT",
+                    "path": "/repos/NVIDIA/OpenShell/contents/docs/**"
+                  }
+                }
+              ]
+            }
+          ],
+          "binaries": [
+            {
+              "path": "/usr/bin/gh"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+智能体不能提议 `protocol: tcp` 或 `tls: skip`，因为 OpenShell 无法检查这类流量。API 也没有 GraphQL 操作规则、MCP 工具规则、查询匹配器、凭据设置或端点路径选择器的字段，智能体发送这些内容时会被忽略。审阅 `openshell rule get` 显示的规则，而不是智能体对它的描述。需要这些字段的规则请自行添加，参见[管理沙箱策略](/how-it-works/policies/manage-policies)。
+
+拟议主机名解析到私网地址时，即使提案已批准，OpenShell 仍会阻断连接，直到你添加 `allowed_ips` 条目或自己在策略中声明该端点。提供商规则已为另一个二进制列出该主机名时同样适用。回环、链路本地与云元数据地址始终被阻断，你无法批准以它们为目标的提案。
+
+OpenShell 把获批提案作为独立规则加入沙箱自己的策略，绝不更改提供商贡献的规则。另一条规则覆盖相同主机与端口时，任一规则允许即放行请求，且两条规则中的拒绝规则仍然生效。提案与重叠端点在必须取单一值的设置（例如 `tls` 或 `allowed_ips`）上不一致时，OpenShell 拒绝该提案。
+
+## 智能体 API
+
+智能体使用 `http://policy.local` 上的以下端点：
+
+| 端点 | 用途 |
+|---|---|
+| `GET /v1/policy/current` | 以 YAML 返回沙箱的生效策略。 |
+| `GET /v1/denials?last=10` | 以日志行返回最近的拒绝记录，最新的在前，查询字符串已脱敏。`last` 默认为 10，最大 100。 |
+| `POST /v1/proposals` | 提交提案。响应列出已接受提案的 ID 与被拒提案的原因。 |
+| `GET /v1/proposals/{chunk_id}` | 返回提案状态：`pending`、`approved` 或 `rejected`。 |
+| `GET /v1/proposals/{chunk_id}/wait?timeout=300` | 等待提案被批准或拒绝，或等待超时到期。 |
+
+批准之后，沙箱加载新规则时 `/wait` 响应报告 `policy_reloaded: true`。OpenShell 关闭在先前规则下建立的连接，因此智能体的重试会使用新规则。
+
+策略顾问禁用时，每个路由都返回 `404 feature_disabled`，新沙箱不接收指南，拒绝响应也不提及 `policy.local`。OpenShell 仍会从被阻断连接起草提案。
+
+## 日志
+
+要在沙箱日志中跟踪提案，运行：
+
+```shell
+openshell logs <sandbox-name> --since 10m
+```
+
+先找被拒请求（`HTTP:<method> ... DENIED`）或被阻断连接（`NET:OPEN ... DENIED`），然后是 `CONFIG:PROPOSED`、`CONFIG:APPROVED` 或 `CONFIG:REJECTED`、`CONFIG:LOADED`，以及重试的请求。`CONFIG:PROPOSED` 只对来自智能体的提案出现。只有智能体正在等待决定时，沙箱日志才显示 `CONFIG:REJECTED`；网关日志（`--source gateway`）总会记录它，附带 `chunk_id`、`rejection_reason` 与 `actor`。自动批准的 `CONFIG:APPROVED` 条目包含 `auto:true`、提案的 `source`（`agent_authored`，OpenShell 自己的草案为 `mechanistic`），以及显示批准模式设置来源的 `resolved_from`。
+
+## 后续步骤
+
+- 自己修改策略请用[管理沙箱策略](/how-it-works/policies/manage-policies)。
+- 智能体不能提议的规则请用[网络规则](/how-it-works/policies/network-rules)与[策略 Schema 参考](/how-it-works/policies/schema)。
+- 用[策略证明器](/how-it-works/policies/prover)对照你定义的边界检查完整策略。

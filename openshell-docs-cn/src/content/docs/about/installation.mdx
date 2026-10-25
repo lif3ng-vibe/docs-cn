@@ -1,0 +1,308 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "安装"
+sidebar-title: "安装"
+description: "在本地工作站或 Kubernetes 上安装 OpenShell。"
+keywords: "生成式 AI, 网络安全, AI 智能体, 沙箱, 安装, 部署, 网关, Docker, Podman, MicroVM, Kubernetes"
+position: 3
+---
+
+在本地工作站或 Kubernetes 上安装 OpenShell。
+
+## 安装 OpenShell
+
+一条命令安装 CLI、策略证明器与本地网关：
+
+```shell
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
+```
+
+脚本会为你的平台挑选合适的包并启动网关。确认 CLI 可以连通它：
+
+```shell
+openshell status
+```
+
+要安装特定版本，将 `OPENSHELL_VERSION` 设置为对应的发布标签。发布产物也发布在 [GitHub Releases](https://github.com/NVIDIA/OpenShell/releases) 页面。
+
+## 预发布与开发构建
+
+使用预发布候选版评估即将发布的版本，或使用滚动开发构建测试 `main` 分支上的最新提交。这些构建在下一个稳定版发布前可能发生变更。配套文档发布在[开发频道](https://docs.nvidia.com/openshell/dev/index.html)。
+
+预发布包以 GitHub Actions 产物的形式保留 90 天，且需要已认证的 [GitHub CLI](https://cli.github.com/) 会话。`pre` 别名安装最新的预发布版本：
+
+```shell
+gh auth login
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | \
+  OPENSHELL_VERSION=pre sh
+```
+
+安装器按从新到旧的顺序检查预发布标签，为当前平台选择一个未过期的已发布包，且只下载该产物。选中的候选版本可能仍在资格验证中，也可能未通过资格验证。安装的包保留候选版本的精确版本号，如 `0.1.0-pre.3`。预发布标签不会在 GitHub Releases 页面生成条目。在 Linux 上，显式发布标签使用 Debian 或 RPM 包，预发布默认同样如此。将 `OPENSHELL_INSTALL_METHOD=snap` 与 `OPENSHELL_VERSION=pre` 搭配使用，可跟踪 `latest/beta` 通道中最新的已发布预发布 snap。beta 发布与资格验证并行进行，因此该通道中的候选版本可能在之后未通过资格验证。
+
+滚动 [`dev` 发布](https://github.com/NVIDIA/OpenShell/releases/tag/dev)不需要 GitHub 认证：
+
+```shell
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | \
+  OPENSHELL_VERSION=dev sh
+```
+
+对于 Kubernetes，选择对应的 Helm chart 版本。Helm chart 版本号去掉发布标签开头的 `v`：
+
+```shell
+# 固定到确切的候选版本
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version 0.1.0-pre.3
+
+# 滚动开发构建
+helm upgrade --install openshell \
+  oci://ghcr.io/nvidia/openshell/helm-chart \
+  --version 0.0.0-dev
+```
+
+预发布 chart 使用精确的 `<version>-pre.N` 版本号。当需要固定到某个特定提交时，开发 chart 还会以不可变的 `0.0.0-dev.<commit-sha>` 版本号发布。
+
+## 支持的运行时
+
+本地网关会自动检测可用的运行时。要固定某一种，在网关 TOML 文件中设置 `compute_driver`。参见[沙箱运行时](/how-it-works/sandboxes/runtimes)。
+
+| 运行时 | 要求 |
+|---|---|
+| Docker | Docker Desktop 或 Docker Engine 28.0 及以上。 |
+| Podman | Linux 且满足 Podman 5.x、cgroups v2，以及已激活的 Podman 用户套接字。 |
+| MicroVM | 宿主机虚拟化：macOS 上的 Hypervisor.framework 或 Linux 上的 KVM。 |
+
+## macOS
+
+脚本通过 Homebrew 安装 OpenShell，并将网关作为 Homebrew 服务运行在 `https://localhost:17670`。
+
+```shell
+brew services list
+brew services restart openshell
+```
+
+网关优先读取 `~/.config/openshell/gateway.toml`（若存在），否则读取 Homebrew 配置 `$(brew --prefix)/var/openshell/gateway.toml`。
+
+## Linux
+
+脚本在 Debian 和 Ubuntu 上安装 Debian 包，在 Fedora 和 RHEL 上安装 RPM 包。设置 `OPENSHELL_INSTALL_METHOD=snap` 可改为安装 [snap](#snap) 包；已装有 OpenShell snap 的主机会继续刷新它。Linux 包要求 glibc 2.28 或更新版本。
+
+网关作为 systemd 用户服务运行在 `https://127.0.0.1:17670`，读取 `~/.config/openshell/gateway.toml`。
+
+Debian 和 RPM 都会加载 `~/.config/openshell/gateway.env`，用于配置预检与网关启动。可以用它指定精确的可信运行时镜像产物，而不必创建驱动专属的 TOML：
+
+```shell
+OPENSHELL_SANDBOX_RUNTIME_IMAGE=registry.example.com/openshell/sandbox@sha256:<digest>
+OPENSHELL_SUPERVISOR_IMAGE=registry.example.com/openshell/supervisor@sha256:<digest>
+```
+
+这些环境变量的优先级高于所选 Docker、Podman 或 Kubernetes TOML 表中的镜像字段。编辑文件后重启用户服务。请把这些变量视为受信任的运维配置：沙箱请求无法设置它们，且镜像仓库凭据必须保存在容器运行时的凭据存储或 Kubernetes image-pull secret 中。
+
+```shell
+systemctl --user status openshell-gateway
+systemctl --user restart openshell-gateway
+journalctl --user -u openshell-gateway -f
+```
+
+要让网关在你登出后继续运行，启用 linger：
+
+```shell
+sudo loginctl enable-linger $USER
+```
+
+## Snap
+
+snap 需要来自发行版仓库或 Docker 软件包仓库安装的 Docker Engine。Docker snap 版不兼容。
+
+snap 不会迁移已有的 Debian、RPM 或 Homebrew 安装。先移除已有安装，然后用 `OPENSHELL_INSTALL_METHOD=snap OPENSHELL_ACK_BREAKING_UPGRADE=1` 重新运行 `install.sh` 脚本，或直接安装 snap：
+
+```shell
+sudo snap install openshell
+systemctl --user enable --now snap.openshell.user-gateway.service
+```
+
+要安装预发布构建，选择对应的 Store 通道：
+
+```shell
+sudo snap install openshell --channel=latest/beta
+# 或已安装时
+sudo snap refresh openshell --channel=latest/beta
+```
+
+`latest/beta` 包含 CI 发布的最新预发布版本，可能尚未通过资格验证。稳定版发布时，会以最终稳定版本号重新构建选定的已通过验证的提交，再发布到 `latest/stable`。
+
+用户网关默认在全局范围禁用。安装脚本只为运行脚本的用户启用它。直接安装 snap 后，选一个用户账户运行网关并用上面的命令启用。不要为多个可能同时登录的用户启用网关：每个用户网关都绑定 `127.0.0.1:17670`，系统中同一时间只能运行一个。
+
+较旧的 OpenShell snap 修订版可能在全局启用用户网关，导致它为每个用户启动。先移除该全局启用，再从将要运行网关的账户启用：
+
+```shell
+sudo systemctl disable --global snap.openshell.user-gateway.service
+systemctl --user enable --now snap.openshell.user-gateway.service
+```
+
+全局命令只是阻止其他用户自动激活，不会停止其用户会话中已在运行的网关。在每个受影响用户的会话中运行以下命令：
+
+```shell
+systemctl --user disable --now snap.openshell.user-gateway.service
+```
+
+snap 会安装独立的策略证明器 `openshell.prover`，并建立到 `openshell-prover` 的别名。本地构建的 snap 安装后没有该别名。证明器通过 `home` 接口读取本地策略文件，不连接网关。
+
+网关运行在 `https://127.0.0.1:17670`。若存在 `~/snap/openshell/common/.config/openshell/gateway.toml` 则读取它。数据库默认位于 `~/snap/openshell/common/.local/state/openshell/gateway/openshell.db`，TLS 材料位于 `~/snap/openshell/common/.local/state/openshell/tls`。从同一用户账户注册它：
+
+```shell
+snap services openshell.user-gateway
+openshell gateway add https://127.0.0.1:17670 --local --name openshell
+openshell status
+```
+
+从原 `openshell.gateway` 服务升级而来的已有安装，其状态保留在 `/var/snap/openshell/common`，由 `openshell.system-gateway` 继续管理。由于端点与 TLS 身份不变，已有的 HTTPS 注册继续有效。
+
+如果该用户仍有旧的 HTTP 注册，或此前从未注册过，先等系统网关进入活跃状态，把它的客户端凭据复制进用户的 snap 状态，然后注册其 HTTPS 端点：
+
+```shell
+snap services openshell.system-gateway
+d=~/snap/openshell/common/.local/state/openshell/tls
+mkdir -p -m 700 "$d" "$d/client"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/ca.crt "$d/"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/client/tls.crt "$d/client/"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/client/tls.key "$d/client/"
+openshell gateway list
+old_registration="NAME_FROM_GATEWAY_LIST"
+openshell gateway remove "$old_registration"
+openshell gateway add https://127.0.0.1:17670 --local --name openshell
+openshell status
+```
+
+将 `old_registration` 设置为 `openshell gateway list` 显示的名称；若尚无注册，则省略变量赋值与 `openshell gateway remove`。较旧的直接 snap 安装说明可能使用 `openshell-gateway`，而安装脚本使用 `openshell`。
+
+### 更改 snap 网关模式
+
+用户网关与系统网关拥有各自独立的配置、数据库与加密身份。切换模式不会迁移网关或沙箱状态，并会中断正在进行的沙箱会话。切换前备份所需状态并删除活跃的沙箱。
+
+先禁用两个服务，并把当前用户 TLS 目录移动到带时间戳的备份。该目录可能包含 CA、服务器、客户端与沙箱 JWT 私钥，因此每个 `tls-backup-*` 目录都要保持私有：
+
+```shell
+sudo snap set openshell gateway-mode=disable
+state="$HOME/snap/openshell/common/.local/state/openshell"
+tls="$state/tls"
+if test -e "$tls" || test -L "$tls"; then
+  backup="$state/tls-backup-$(date +%s%N)"
+  while test -e "$backup" || test -L "$backup"; do
+    backup="$state/tls-backup-$(date +%s%N)"
+  done
+  mv -- "$tls" "$backup"
+  printf 'Previous gateway TLS state saved to: %s\n' "$backup"
+fi
+```
+
+要使用用户网关，启动它并在其生成新凭据后替换原有的 CLI 注册：
+
+```shell
+sudo snap set openshell gateway-mode=user
+systemctl --user enable --now snap.openshell.user-gateway.service
+systemctl --user is-active snap.openshell.user-gateway.service
+openshell gateway list
+old_registration="NAME_FROM_GATEWAY_LIST"
+openshell gateway remove "$old_registration"
+openshell gateway add https://127.0.0.1:17670 --local --name openshell
+openshell status
+```
+
+设置 `gateway-mode=user` 会禁用系统网关，但不会启用或禁用任何用户的网关服务。只给一个选定用户启用该服务。要把网关交给另一个用户，先在当前网关用户的会话中运行 `systemctl --user disable --now snap.openshell.user-gateway.service`，再在新用户的会话中运行启用命令。否则两个服务会争抢 `127.0.0.1:17670`。
+
+要使用系统网关，启动它，等待它生成 root 属主的凭据，然后复制其客户端凭据包并替换原有的 CLI 注册：
+
+```shell
+sudo snap set openshell gateway-mode=system
+sudo snap services openshell.system-gateway
+tls="$HOME/snap/openshell/common/.local/state/openshell/tls"
+mkdir -p -m 700 "$tls" "$tls/client"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/ca.crt "$tls/"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/client/tls.crt "$tls/client/"
+sudo install -o "$USER" -g "$(id -gn)" -m 600 \
+  /var/snap/openshell/common/tls/client/tls.key "$tls/client/"
+openshell gateway list
+old_registration="NAME_FROM_GATEWAY_LIST"
+openshell gateway remove "$old_registration"
+openshell gateway add https://127.0.0.1:17670 --local --name openshell
+openshell status
+```
+
+将 `old_registration` 设置为 `openshell gateway list` 显示的名称；若尚无注册，则省略变量赋值与移除命令。如果切换在两个服务都被禁用时中断，选择 `gateway-mode=user` 或 `gateway-mode=system` 即可恢复。在所选网关能正常工作并能创建沙箱之前，保留 TLS 备份。
+
+要安装本地构建的 snap，需手动连接其接口。用户网关可能在 Docker 接口连接之前触及 systemd 的启动次数上限，因此在连接接口后，从受影响用户的会话重置失败的 unit 并重启：
+
+```shell
+sudo snap install ./openshell_*.snap --dangerous
+sudo snap connect openshell:log-observe
+sudo snap connect openshell:system-observe
+sudo snap connect openshell:docker :docker
+systemctl --user reset-failed snap.openshell.user-gateway.service
+systemctl --user enable --now snap.openshell.user-gateway.service
+```
+
+对于从旧式系统网关升级而来的安装，改用 `sudo systemctl reset-failed snap.openshell.system-gateway.service` 与 `sudo snap restart openshell.system-gateway`。
+
+## Kubernetes
+
+使用 OpenShell Helm chart 将网关部署到集群。参见 [Kubernetes 部署](/kubernetes/setup)。
+
+## 校验网关配置
+
+重启服务前检查网关配置文件：
+
+```shell
+openshell-gateway config preflight --path ~/.config/openshell/gateway.toml
+```
+
+preflight 绝不修改文件。如果网关报告旧版 schema，按照 [schema 版本 2 迁移步骤](/how-it-works/gateways/configuration#迁移到-schema-版本-2)操作。
+
+## 卸载 OpenShell
+
+Homebrew：
+
+```shell
+brew services stop nvidia/openshell/openshell
+brew uninstall nvidia/openshell/openshell
+rm -rf "$(brew --prefix)/var/openshell"
+```
+
+Snap：
+
+```shell
+systemctl --user disable --now snap.openshell.user-gateway.service
+sudo snap remove --purge openshell
+```
+
+Debian 和 Ubuntu：
+
+```shell
+systemctl --user disable --now openshell-gateway
+sudo apt remove openshell
+rm -rf "${XDG_STATE_HOME:-$HOME/.local/state}/openshell"
+```
+
+Fedora 和 RHEL：
+
+```shell
+systemctl --user disable --now openshell-gateway
+sudo dnf remove openshell-gateway openshell-prover openshell
+rm -rf "${XDG_STATE_HOME:-$HOME/.local/state}/openshell"
+```
+
+通过 `OPENSHELL_GATEWAY_CONFIG` 或 `OPENSHELL_DB_URL` 设置的自定义配置或数据库，请另行移除。
+
+## 后续步骤
+
+- [运行你的第一个智能体](/about/run-your-first-agent)，准备镜像并启动智能体。
+- [以容器方式运行网关](/how-it-works/gateways/container-deployment)，跳过安装器。
+- [网关](/how-it-works/gateways/overview)，注册、选择与查看网关。
+- [提供商](/how-it-works/providers/overview)，提供 API 密钥与令牌。
+- [策略](/how-it-works/policies/overview)，控制智能体可访问的内容。

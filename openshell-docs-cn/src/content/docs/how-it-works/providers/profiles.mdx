@@ -1,0 +1,1048 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "配置档案"
+sidebar-title: "配置档案"
+description: "使用提供商配置档案向 OpenShell 沙箱挂接凭据、网络策略与刷新元数据。"
+keywords: "生成式 AI, 网络安全, 提供商, 提供商配置档案, 凭据, 策略, 沙箱"
+position: 1
+---
+import { Aside } from '@astrojs/starlight/components';
+
+提供商配置档案（profile）把提供商从单纯的凭据记录变成由配置档案支撑的访问包。提供商配置档案描述一个提供商类型的凭据、端点、二进制、策略规则与刷新行为。提供商实例则存储某个网关的具体凭据与配置值。
+
+想让提供商自有的策略规则随提供商凭据一起生效时，请使用提供商配置档案。例如，GitHub 提供商可以同时描述 `GITHUB_TOKEN` 和沙箱所需的 GitHub API 端点，用户因此不必把同一份网络策略复制进每个沙箱。
+
+## 为什么存在提供商配置档案
+
+提供商凭据与网络策略过去要通过分离的工作流配置。用户可以创建存储 `GITHUB_TOKEN` 的 GitHub 提供商，但沙箱仍需要一个单独的策略来允许 `api.github.com`、选中正确的二进制并配置 REST 强制。
+
+提供商配置档案把这些部分放在一起：
+
+| 需求 | 配置档案支撑的行为 |
+|---|---|
+| 可复现的提供商搭建 | 导入的提供商配置档案定义可复用的提供商类型。 |
+| 感知提供商的策略 | 挂接的提供商向生效的沙箱策略贡献 `_provider_*` 网络策略条目。 |
+| 自定义提供商定义 | 可以导出、编辑、lint、导入、列出与删除自定义配置档案。 |
+| 运行时提供商生命周期 | 可以在既有沙箱上列出、挂接与分离提供商。 |
+| 凭据轮换 | 提供商刷新元数据让网关刷新短期访问令牌并更新提供商记录。 |
+| 凭据传输 | 凭据交付使用环境占位符与代理改写。静态占位符只在配置档案端点解析；无端点配置档案则只在显式绑定的沙箱策略端点解析。 |
+
+## 可用特性
+
+提供商配置档案包含以下面向用户的功能：
+
+- 仅导入的目录：网关只提供你导入的配置档案，别的什么都不提供。未导入任何配置档案的网关提供空目录。
+- 网关配置可以组合用户管理与拦截器供给的配置档案来源。只选择拦截器即默认其目录为权威来源。
+- 平台作用域与工作区作用域的配置档案。在工作区内，同 ID 的工作区配置档案优先于平台配置档案；工作区之外适用平台配置档案。拦截器供给的配置档案不能与导入的配置档案共用 ID；该冲突按 fail closed 处理。
+- `openshell profile list` 与 `openshell profile describe`，支持表格、YAML 与 JSON 输出。
+- 针对自定义配置档案的 `openshell profile export`、`import`、`update`、`lint` 与 `delete`。
+- 用 `openshell provider create --type <id>` 从已导入配置档案 ID 创建提供商实例。
+- 提交的凭据可由所配置网关凭据驱动存储的提供商实例。
+- 为显式的 `openshell provider create --from-existing` 与 `openshell provider update --from-existing` 流程提供基于配置档案的凭据发现。`google-vertex-ai` 配置档案还会用 Vertex 配置环境变量（如 `VERTEX_AI_PROJECT_ID` 与 `VERTEX_AI_REGION`）补充发现。
+- 由沙箱策略加挂接的提供商配置档案即时组合出的生效策略。
+- `openshell sandbox provider list|attach|detach|status` 下的运行时沙箱提供商命令，可选项支持等待沙箱应用变更。
+- 用 `openshell provider refresh status|configure|rotate|delete` 配置凭据刷新。
+- 用 `openshell provider update --credential-expires-at` 设置凭据过期元数据；取值接受 Unix 纪元毫秒或 ISO/RFC3339 时间戳。
+- 动态令牌授予：用沙箱的 SPIFFE JWT-SVID 作为 OAuth2 客户端断言，为匹配的配置档案端点向受支持头部注入短期令牌。
+- 绑定端点的静态凭据占位符。沙箱代理只为请求的主机、端口与路径解析静态凭据；这些路径须由其提供商配置档案声明，无端点配置档案则须在沙箱策略中显式绑定。
+
+## 理解静态凭据端点绑定
+
+静态凭据端点绑定防止一个服务的占位符在另一个被策略允许的服务上解析。OpenShell 把每个静态凭据环境键与一个端点边界关联。配置档案端点默认提供该边界；无端点配置档案则可由沙箱策略端点显式指名挂接的提供商实例。代理解析真实值之前会检查该关联。
+
+示例 `openai` 与 `anthropic` 配置档案把凭据绑定到其公开的厂商端点。要在其他主机上使用代理或兼容 API，请导入一个声明该主机的单独配置档案，并挂接由该配置档案创建的提供商。OpenShell 绝不会仅凭 base URL 环境变量扩大配置档案的凭据边界：提供商的 `*_BASE_URL` 指向其配置档案声明的主机之外时，该配置档案被视为无端点，其凭据只能通过显式沙箱策略绑定。
+
+只有以下检查全部通过，请求才能使用静态凭据：
+
+| 检查 | 配置来源 |
+|---|---|
+| 占位符属于当前挂接的提供商状态。 | 沙箱提供商挂接与当前提供商记录。 |
+| 调用方二进制与目的地被允许。 | 生效的沙箱网络策略。 |
+| 主机、端口与规范请求路径匹配凭据绑定。 | 提供商配置档案端点；无端点配置档案则为显式沙箱策略绑定。 |
+| 配置了 L7 检查时，HTTP 方法、路径或协议操作被允许。 | 生效的沙箱网络策略。 |
+| 凭据未过期。 | 提供商凭据过期元数据。 |
+
+网络策略与凭据绑定的用途不同。网络策略授权流量。凭据绑定授权在一个被准入的端点上使用某个提供商实例的凭据。凭据绑定不能放宽沙箱网络策略。
+
+例如，这条配置档案端点把配置档案中的所有静态凭据环境键绑定到 `/v1` 之下的 `api.example.com:443`：
+
+```yaml showLineNumbers={false}
+endpoints:
+  - host: api.example.com
+    port: 443
+    path: /v1/**
+```
+
+路径 `/v1/**` 匹配 `/v1` 及其后代。空路径、`**` 或 `/**` 匹配所选主机与端口上的所有路径。其他路径值使用 glob 匹配。OpenShell 在该检查中移除查询字符串并使用规范的、已脱敏机密的路径，因此嵌入请求路径的凭据无需在授权之前暴露。
+
+配置档案有意只定义凭据而不定义服务端点时，请使用显式的沙箱策略绑定。策略指名具体的提供商实例，而不是配置档案类型：
+
+```yaml showLineNumbers={false}
+network_policies:
+  gcp_storage:
+    endpoints:
+      - host: storage.googleapis.com
+        port: 443
+        protocol: rest
+        access: full
+        credential_binding:
+          provider: work-gcp
+```
+
+该提供商必须挂接到沙箱且必须选择无端点配置档案。提供商未挂接、没有配置档案或选择的配置档案已定义端点时，OpenShell 会拒绝完整的策略更新。这保证每个提供商只有一个凭据绑定权威来源。`credential_binding` 是沙箱作用域的，网关全局策略不接受它。
+
+对 AWS 端点，绑定与签名字段职责不同。`credential_binding.provider` 选择提供凭据的提供商实例。`credential_signing`、`signing_service` 与 `signing_region` 控制代理如何应用这些凭据：
+
+```yaml showLineNumbers={false}
+network_policies:
+  aws_s3:
+    endpoints:
+      - host: s3.us-west-2.amazonaws.com
+        port: 443
+        protocol: rest
+        access: full
+        credential_binding:
+          provider: work-aws
+        credential_signing: sigv4
+        signing_service: s3
+        signing_region: us-west-2
+```
+
+该绑定适用于 CONNECT 与正向代理 HTTP 请求，包括头部、Basic 与 Bearer 授权、URL 路径、查询参数、选择加入的请求体、AWS SigV4 签名与选择加入的 WebSocket 文本消息。原始 `tls: skip` 与非 HTTP 隧道不执行静态凭据替换。
+
+激活沙箱策略之前，OpenShell 会验证每个带 `credential_signing` 的端点都有一个声明了 `AWS_ACCESS_KEY_ID` 与 `AWS_SECRET_ACCESS_KEY` 的已挂接配置档案。带端点的配置档案必须覆盖被签名的主机、端口与路径。无端点配置档案必须由该端点上的 `credential_binding.provider` 选中。来源缺失或不匹配时，整个策略更新以 `FAILED_PRECONDITION` 被拒绝。
+
+HTTP 请求在其绑定之外的目的地包含已知占位符时，OpenShell 返回 HTTP 403 与如下响应：
+
+```json
+{"error":"credential_endpoint_mismatch","message":"Credential is not authorized for this request endpoint"}
+```
+
+沙箱日志包含目的地与 `credential_endpoint_mismatch`。OCSF 输出同时包含被拒绝的活动与一条检测发现。这些事件省略凭据值、占位符、环境键与查询字符串。
+
+对选择加入的 WebSocket 文本消息改写，不匹配可能发生在 HTTP 101 升级完成之后。OpenShell 以策略违规码 1008 关闭该 WebSocket，而不是返回 HTTP 响应。
+
+绑定更新同时作用于当前与保留的占位符代次。对网关管理的刷新凭据，自动与手动令牌轮换保持一个不透明的工作负载占位符，只替换其当前解析值。这让长时间运行的进程无需重启即可使用每个新铸造的访问令牌。OpenShell 不会在该稳定占位符之后保留旧值。
+
+显式重新配置刷新会开启新的授权纪元，即使提供商与凭据键不变。重新配置、提供商替换或分离、刷新删除与端点边界变更都会吊销旧占位符。更新提供商配置档案会在下一次沙箱提供商环境同步时改变绑定。
+
+<Aside type="caution">
+静态凭据要求至少一个可用绑定。没有沙箱策略端点显式绑定该提供商时，OpenShell 只扣留来自所选无端点配置档案的静态凭据键及相关的过期与绑定元数据。它保留该提供商生成的非机密配置，以及来自其他已挂接提供商的有效端点绑定静态凭据。
+</Aside>
+
+把网关与监管器升级到支持端点绑定的版本之后，重启或重建较旧的运行中沙箱。新网关会向未声明绑定支持的监管器扣留静态凭据材料。旧沙箱可能已收到真实值时，升级后请轮换已挂接的静态凭据。
+
+从版本限定的刷新占位符升级到稳定刷新句柄时，每个既有工作负载重启一次以接收新占位符。之后的访问令牌轮换不需要重启工作负载。
+
+## 路线图
+
+以下提供商配置档案设计项不属于当前行为：
+
+| 路线图项 | 当前行为 |
+|---|---|
+| 通用的配置档案驱动凭据放置 | 静态 `auth_style`、`header_name`、`query_param` 与 `path_template` 放置元数据会被存储与校验，但静态凭据注入仍依赖从提供商凭据生成的环境占位符。动态 `token_grant` 凭据对匹配的 HTTP 端点支持 `bearer` 与 `header` 放置。 |
+| 按二进制限定的凭据注入 | 静态占位符解析以端点为作用域。单路由 REST 与多路由检查中的动态授予还要求其所属端点策略的准入，包括其二进制限制。仅 L4 的凭据转发保留端点选择器匹配。 |
+| 创建时验证凭据 | `openshell provider create` 尚不探测提供商验证端点，也未暴露 `--no-verify`。 |
+| 自动提取凭据范围 | OpenShell 尚不检查上游提供商响应来发现凭据范围。 |
+| 策略证明器集成 | OpenShell 尚不在沙箱启动时自动运行策略证明器，也不依据证明器结论阻止启动。 |
+| 以 OCSF 事件呈现刷新遥测 | 凭据刷新日志是对机密安全的网关日志。OCSF 刷新事件与指标是后续工作。 |
+
+用[推理](/how-it-works/inference)挂接推理提供商并调用其原生端点。
+
+## 提供商配置档案
+
+提供商配置档案定义一个提供商类型。它包含元数据、凭据声明、端点策略、二进制策略、一个信息性的提供商类别，以及可选的凭据刷新元数据。
+
+用 `openshell profile` 发现、检查与管理可复用的配置档案定义。用 `openshell provider` 管理提供商实例及其凭据值。提供商配置档案是受支持的配置档案类型。
+
+既有命令名继续受支持。`openshell provider list-profiles` 等价于 `openshell profile list --type provider`，`openshell provider profile export/import/update/lint/delete` 调用与对应 `openshell profile` 命令相同的处理程序。嵌套命令保留其既有参数、输出选项与工作区/全局参数。新示例使用顶层形式。
+
+列出可用配置档案：
+
+```shell
+openshell profile list
+openshell profile list --type provider -o json
+```
+
+默认表格显示 `NAME`、`TYPE`、`CATEGORY`、`SOURCE` 与 `SCOPE`。`NAME` 是其他配置档案命令和 `provider create --type` 使用的配置档案 ID。可选的 `--type provider` 过滤器选择提供商配置档案。结构化输出请用 `-o json` 或 `-o yaml`。
+
+创建提供商之前先查看某个配置档案：
+
+```shell
+openshell profile describe github
+openshell profile describe github -o yaml
+```
+
+描述信息展示元数据、凭据名与认证设置、端点及其协议与策略规则数、允许的二进制、来源与作用域。端点详情包括 TLS 处理、未检查凭据流量的许可，以及 MCP 方法与工具名设置。`tls: skip` 端点显示为没有 L7 检查与凭据改写的原始隧道，即使它声明了 L7 协议与规则。查看完整规则定义请用 JSON 或 YAML 输出。描述读取的是可复用定义，不会读取提供商实例中的凭据值。配置档案 ID 不存在时返回错误。
+
+对 MCP 端点，文本输出把 `allow_all_known_mcp_methods` 标注为 `Allow core MCP methods for the selected revision`，并显示该配置档案声明的修订版本。这些是配置值；`describe` 不会观察连接或其协商能力。请求时，OpenShell 从 `MCP-Protocol-Version` 选择修订版本，头部缺失时使用 `2025-03-26`。旧版独立 `initialize` 请求在正文中协商其版本，参见 [MCP 版本选择](/how-it-works/policies/schema#mcp-版本选择)。该选项允许[该修订版本的核心方法](/how-it-works/policies/schema#核心-mcp-方法)，受工具限制与拒绝规则约束。没有工具专属允许规则时，它允许每个工具名，仍受拒绝规则与工具名校验约束。扩展方法仍需要精确的允许规则。JSON 与 YAML 输出保留 `allow_all_known_mcp_methods` 字段名。
+
+list 与 describe 使用所选工作区的生效目录。传继承的 `--workspace` 参数选择其他工作区，或传 `--global` 指向平台作用域。平台操作要求平台管理员权限。
+
+```shell
+openshell profile list --workspace team-ml
+openshell profile describe github --workspace team-ml
+openshell profile list --global
+openshell profile describe github --global
+```
+
+网关只提供你导入的配置档案。OpenShell 不在网关二进制内内置任何配置档案，因此新网关在你导入之前列出空目录。当所配置的网关拦截器供给权威的提供商配置档案目录时，该目录成为可见的权威来源：list、describe、export、提供商创建、策略组合与沙箱提供商环境解析都使用拦截器供给的配置档案。
+
+### 导入示例配置档案
+
+OpenShell 仓库在 [`providers/`](https://github.com/NVIDIA/OpenShell/tree/main/providers) 中附带 GitHub、PyPI 与主要推理及智能体提供商的示例配置档案。它们是可审阅的起点，不是平台默认值。
+
+导入之前先读文件头部。每个文件都写明它期望的客户端二进制、这些路径假定的参考镜像布局、凭据范围、它授予的端点访问，以及一个冒烟测试。若干文件指名了布局专属路径，如 `/sandbox/.venv` 或 `/usr/lib/node_modules/@openai`。配置档案的 `binaries` 与 `endpoints` 与你的镜像和工作负载匹配时，直接从仓库导入：
+
+```shell
+openshell profile lint --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/github.yaml
+openshell profile import --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/github.yaml --global
+```
+
+`--url` 接受单个 HTTP 或 HTTPS 的 `.yaml`、`.yml` 或 `.json` 配置档案。它不能导入目录，也不能与 `-f` 或 `--from` 组合。下载有 15 秒超时与 1 MiB 限制；允许 URL 查询参数。导入之前请审阅来源及其授予；lint 检查配置档案，但不建立你对它的信任。
+
+路径或端点授予需要调整时，复制配置档案，编辑 `binaries` 与 `endpoints`，然后 lint 并导入你的本地副本。导入的配置档案其二进制与镜像不匹配时仍会出现在目录中，但其凭据不会被注入，其流量会被拒绝。
+
+导入之前 lint 本地配置档案：
+
+```shell
+openshell profile lint -f providers/github.yaml
+```
+
+以平台作用域导入单个配置档案文件：
+
+```shell
+openshell profile import -f providers/github.yaml --global
+```
+
+从目录导入所有非递归的 `*.yaml`、`*.yml` 与 `*.json` 文件：
+
+```shell
+openshell profile import --from ./providers --global
+```
+
+省略 `--global` 则导入到当前工作区。
+
+把配置档案导出为 YAML，用于编辑或在升级前留存：
+
+```shell
+openshell profile export github -o yaml --global > github-profile.yaml
+```
+
+导入是只创建语义。同 ID 的自定义配置档案已存在时会失败。
+
+更新既有自定义配置档案：导出当前配置档案，编辑文件，再把编辑后的文件提交回去：
+
+```shell
+openshell profile export github-profile -o yaml > github-profile.yaml
+openshell profile update github-profile -f github-profile.yaml
+```
+
+导出的自定义配置档案包含 `resource_version`。更新时 OpenShell 要求该版本，使过期文件不能静默覆盖较新的配置档案定义。命令中的目标 ID 必须与文件中的配置档案 ID 一致。更新一次只接受一个文件。更新会让某个已挂接沙箱的动态令牌授予变得含糊时，OpenShell 会在更改配置档案之前拒绝它。
+
+按 ID 删除自定义配置档案：
+
+```shell
+openshell profile delete custom-api custom-alt
+```
+
+`export` 命令接受 `-o yaml` 或 `-o json`，默认 YAML。lint 还接受 `--from <directory>`，让网关校验所提供的定义而不存储它们。`export`、`import`、`update`、`lint` 与 `delete` 使用所选工作区，除非你传 `--global`。
+
+配置档案 ID 必须使用小写 kebab-case，字符为 `a-z`、`0-9` 与 `-`。没有保留 ID：`github`、`openai` 与其他每个示例配置档案都以自己的 ID 导入，且导入的配置档案是该 ID 唯一的定义。拦截器管理的配置档案通过配置档案 API 是只读的。沙箱挂接的提供商正在使用某个配置档案时，OpenShell 拒绝删除它。
+
+### 类别枚举
+
+`category` 字段提供 `openshell profile list` 中的 `CATEGORY` 列。使用以下规范 YAML 值之一：
+
+| 取值 | 用途 |
+|---|---|
+| `other` | 不属于更具体类别的配置档案。省略时的默认值。 |
+| `inference` | 模型与推理 API 提供商。 |
+| `agent` | 智能体 CLI 与编码工具。 |
+| `source_control` | Git 托管、仓库与源码控制提供商。 |
+| `messaging` | 聊天、邮件、通知与消息 API。 |
+| `data` | 数据存储、文件、数据库与文档 API。 |
+| `knowledge` | 搜索、检索与知识库提供商。 |
+
+### 配置档案 Schema
+
+提供商配置档案的 YAML 与 JSON 使用如下形态。把它当作字段地图，不要原样导入。端点与规则字段镜像 `network_policies` 下使用的网络策略 schema。字段语义参见[策略 Schema 参考](/how-it-works/policies/schema)。`annotations` 只用于非机密元数据，例如来源、签名或治理标记。OpenShell 在配置档案导入、导出与拦截器管理的配置档案快照中保留注解。
+
+```yaml wordWrap showLineNumbers={false}
+id: custom-api
+# Present on exported custom profiles; preserve it when updating.
+resource_version: 1
+annotations:
+  example.com/source: platform
+display_name: Custom API
+description: Custom API access for sandbox agents
+category: data
+inference_capable: false
+
+credentials:
+  - name: user_oidc_token
+    description: User OIDC token stored for gateway-side token exchange only
+    required: true
+
+  - name: api_token
+    description: API access token
+    env_vars: [CUSTOM_API_TOKEN]
+    required: true
+    # Optional mode for external credential updaters that need one opaque
+    # placeholder to survive value-only provider revisions.
+    stable_placeholder: false
+
+    # Accepted values: basic, bearer, header, query, path.
+    # These fields describe static credential placement.
+    # Static runtime injection still uses env placeholder resolution.
+    auth_style: bearer
+    header_name: authorization
+    query_param: api_key
+    path_template: /v1/{credential}/resources
+
+    refresh:
+      # Accepted values:
+      # static, external, oauth2_refresh_token,
+      # oauth2_client_credentials, google_service_account_jwt.
+      strategy: oauth2_client_credentials
+      token_url: https://login.example.com/oauth2/token
+      scopes: [api.read, api.write]
+      refresh_before: "300s"
+      max_lifetime: "3600s"
+      material:
+        - name: client_id
+          description: OAuth client ID
+          required: true
+          secret: false
+        - name: client_secret
+          description: OAuth client secret
+          required: true
+          secret: true
+
+    # Optional dynamic credential. The sandbox supervisor resolves this on
+    # demand for matching endpoint traffic, caches the returned access token,
+    # and injects it according to auth_style/header_name.
+    token_grant:
+      # Accepted values: client_credentials, token_exchange.
+      grant_type: token_exchange
+      token_endpoint: https://login.example.com/realms/custom/protocol/openid-connect/token
+      audience: api://custom-api
+      jwt_svid_audience: https://login.example.com/realms/custom
+      client_assertion_type: urn:ietf:params:oauth:client-assertion-type:jwt-spiffe
+      scopes: [api.read, api.write]
+      cache_ttl: "300s"
+      requested_token_type: urn:ietf:params:oauth:token-type:access_token
+      subject_token:
+        source: provider_credential
+        credential: user_oidc_token
+        subject_token_type: urn:ietf:params:oauth:token-type:access_token
+      audience_overrides:
+        - host: api.example.com
+          port: 443
+          path: /v1/projects/**
+          audience: api://custom-projects
+          scopes: [projects.read]
+
+discovery:
+  credentials: [api_token]
+
+endpoints:
+  - host: api.example.com
+    port: 443
+    path: /v1/**
+    protocol: rest
+    tls: ""
+    enforcement: enforce
+    allowed_ips: []
+    ports: []
+    allow_encoded_slash: false
+    websocket_credential_rewrite: false
+    request_body_credential_rewrite: false
+    allow_uninspected_credentials: false
+    persisted_queries: deny
+    graphql_max_body_bytes: 65536
+    rules:
+      - allow:
+          method: GET
+          path: /v1/projects/**
+          command: ""
+          query:
+            tag:
+              any: ["prod-*", "staging-*"]
+          operation_type: ""
+          operation_name: ""
+          fields: []
+    deny_rules:
+      - method: DELETE
+        path: /v1/projects/**
+        command: ""
+        query: {}
+        operation_type: ""
+        operation_name: ""
+        fields: []
+    graphql_persisted_queries:
+      # Key must match the request's persisted query hash or saved-query ID.
+      9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08:
+        operation_type: query
+        operation_name: GetProject
+        fields: [project]
+
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/custom-cli
+```
+
+时长字段使用 protobuf duration 字符串并保留小数秒。`refresh_before` 缺省时使用网关默认值，`"0s"` 则在到期时刷新。`max_lifetime` 缺省时使用策略默认值；显式的零最大寿命无效。既有的 `*_seconds` 字段为兼容起见在导入时仍被接受。
+
+### 配置档案区块
+
+`id`、`display_name` 与 `description` 标识配置档案。`id` 是传给 `openshell provider create --type` 的值。
+
+`category` 提供 `openshell profile list` 中的 `CATEGORY` 列。使用类别枚举中的值之一。
+
+`credentials` 声明该提供商类型的凭据名、环境变量、认证元数据、可选刷新元数据与可选动态令牌授予元数据。`auth_style` 字段接受 `basic`、`bearer`、`header`、`query` 或 `path`。`auth_style` 为 `path` 时，把 `path_template` 设为恰好包含一次 `{credential}` 占位符的 URL 路径（例如 `/v1/{credential}/resources`）。静态凭据以占位符环境变量形式暴露，只在出站 HTTP 请求中于其绑定端点解析。配置档案定义端点时，每个静态凭据环境键获得完整的配置档案端点集合。无端点配置档案要求为每个挂接的提供商实例提供显式沙箱策略绑定。动态令牌授予由沙箱代理按需为匹配的配置档案端点解析，支持 `bearer` 或 `header` 放置。凭据环境变量名不得使用保留的 `v<digits>_` 前缀（如 `v10_GITHUB_TOKEN`），因为 OpenShell 用该命名空间存放版本限定占位符。
+
+凭据名不得包含制表符或换行符等控制字符。动态令牌授予的端点与受众覆盖选择器有同样的限制。
+
+`discovery` 控制 `--from-existing` 扫描什么。`discovery.credentials` 中的每个条目必须指名 `credentials` 下声明的一个凭据。OpenShell 按顺序扫描所引用凭据的 `env_vars`，并把第一个非空的本地环境值存储在实际环境变量键之下。
+
+`endpoints` 包含与沙箱网络策略相同的端点对象形态。配置档案可以使用访问预设、协议专属允许规则、拒绝规则、WebSocket 凭据改写、请求体凭据改写、GraphQL 字段与 SSRF IP 允许列表。配置档案凭据不映射到单个端点，因此 OpenShell 保守地把声明凭据的配置档案中的每个端点都视为带凭据端点。这类端点要求 L7 检查，不能使用 `tls: skip`，除非配置档案显式设置 `allow_uninspected_credentials: true`。
+
+配置档案校验会拒绝未知的 `tls`、`enforcement` 与 `access` 值，然后配置档案才能向沙箱贡献策略。
+
+`binaries` 包含配置档案向沙箱贡献策略时允许访问配置档案端点的可执行文件路径。每个二进制写成标量路径。OpenShell 也接受过渡的对象形式 `- path: /usr/bin/example`，并导出为标量。已移除的 `harness` 属性会被拒绝；请从 0.1.0 之前创建的配置档案中删除它。
+
+`inference_capable` 是信息性元数据，标记面向模型与推理 API 的配置档案。它不授予访问、不选择模型、不配置客户端、也不改变路由。沙箱必须挂接一个提供商实例，由工作负载调用配置档案授权的原生端点。
+
+### 刷新元数据
+
+凭据刷新元数据属于单个凭据声明。配置档案定义允许的默认值，例如令牌 URL、范围、刷新提前时间、最大寿命与所需的材料键。提供商实例存储实际的刷新材料。
+
+配置档案 YAML 可以声明以下刷新策略：
+
+| 策略 | 行为 |
+|---|---|
+| `static` | 当前凭据通过 `openshell provider update` 更新。网关不铸造令牌。 |
+| `external` | 外部进程通过 `openshell provider update` 更新当前凭据。网关不铸造令牌。 |
+| `oauth2_refresh_token` | 网关用刷新令牌交换短期访问令牌。 |
+| `oauth2_client_credentials` | 网关用 OAuth2 客户端凭据铸造短期访问令牌。 |
+| `google_service_account_jwt` | 网关签名 Google 服务账户 JWT 并交换为访问令牌。 |
+| `aws_sts_assume_role` | 网关调用 `sts:AssumeRole`，一次操作铸造 `AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY` 与 `AWS_SESSION_TOKEN`。 |
+
+`openshell provider refresh configure` 只接受网关可铸造的策略：`oauth2-refresh-token`、`oauth2-client-credentials`、`google-service-account-jwt` 与 `aws-sts-assume-role`。`static` 与 `external` 刷新模式请使用 `openshell provider update`。
+
+网关管理的刷新策略使用以下材料键：
+
+| 策略 | 材料键 |
+|---|---|
+| `oauth2_refresh_token` | `client_id`、`refresh_token`，可选 `client_secret`。 |
+| `oauth2_client_credentials` | `client_id`、`client_secret`，Microsoft Entra 令牌 URL 可选 `tenant_id`。 |
+| `google_service_account_jwt` | `client_email`、`private_key`，可选 `subject` 或 `sub`。 |
+| `aws_sts_assume_role` | `role_arn`，可选 `session_name`、`external_id`、`aws_region`；没有环境 AWS 凭据的网关可选长期 `aws_access_key_id` / `aws_secret_access_key`。 |
+
+OpenShell 保持令牌端点归配置档案所有。刷新材料不能在刷新配置期间覆盖 `token_url` 或 `token_uri`。
+
+### 额外输出
+
+多数刷新策略只铸造一个凭据。`aws_sts_assume_role` 铸造三个。刷新用 `additional_outputs` 声明它额外铸造的凭据，把每个策略定义的输出 id 映射到一个同辈凭据，由其 `env_vars` 接收值：
+
+```yaml
+credentials:
+  - name: access_key_id
+    env_vars: [AWS_ACCESS_KEY_ID]
+    required: true
+    refresh:
+      strategy: aws_sts_assume_role
+      additional_outputs:
+        - output: secret_access_key
+          credential: secret_access_key
+        - output: session_token
+          credential: session_token
+  - name: secret_access_key
+    env_vars: [AWS_SECRET_ACCESS_KEY]
+    required: true
+  - name: session_token
+    env_vars: [AWS_SESSION_TOKEN]
+    required: true
+```
+
+刷新挂在主凭据（`access_key_id`）上。每个被引用的同辈凭据必须存在、恰好声明一个环境变量、且不携带自己的刷新。刷新的输出可以在运行时解析，因此只有 STS 铸造凭据的配置档案可以用 `--runtime-credentials` 创建。解析出的输出到环境键的映射在配置刷新时固定，因此之后的配置档案编辑不会静默改写铸造值的去处。
+
+### 动态令牌授予
+
+`token_grant` 属于单个凭据声明。挂接了该提供商的沙箱向匹配的配置档案端点发送 HTTP 流量时，监管器解析动态凭据，分别缓存每个返回的访问令牌，并在向上游转发请求之前注入它们。用 `auth_style: bearer` 注入 `Authorization: Bearer <token>`，或用 `auth_style: header` 加 `header_name` 把原始访问令牌注入自定义头部。令牌授予不支持 `query` 或 `path` 放置。
+
+一个请求需要独立签发的令牌时，声明多个带不同目标头部的凭据。每个凭据保持自己的令牌端点、受众、范围与缓存寿命。例如，这条配置档案在同一条受检查请求上发送服务 Bearer 令牌与单独的工作负载令牌：
+
+```yaml
+id: protected-api
+display_name: Protected API
+category: data
+credentials:
+  - name: service_access
+    required: true
+    auth_style: bearer
+    header_name: Authorization
+    token_grant:
+      token_endpoint: https://service-issuer.example.com/token
+      audience: https://api.example.com
+      scopes: [resource.read]
+      cache_ttl: 60s
+  - name: workload_identity
+    required: true
+    auth_style: header
+    header_name: x-workload-jwt
+    token_grant:
+      token_endpoint: https://identity-issuer.example.com/token
+      jwt_svid_audience: identity-proxy
+      cache_ttl: 45s
+endpoints:
+  - host: api.example.com
+    port: 443
+    path: /v1/**
+    protocol: rest
+    access: full
+```
+
+自定义头部携带身份签发方返回的访问令牌。要在这里携带 JWT-SVID，该签发方必须把 JWT-SVID 作为其访问令牌返回。两个被授予的值都不会放进沙箱环境。
+
+监管器为每个目标头部独立选择最具体的匹配绑定。面向同一头部的绑定互为备选；来自不同凭据的同特异性匹配会被拒绝。头部名不区分大小写。同时省略 `auth_style` 与 `header_name` 选择 `Authorization`；显式的 `bearer` 或 `header` 样式要求 `header_name`。某个凭据有更具体的受众覆盖时，不会抑制其他头部的授予。
+
+所有被选中的授予都必须成功并返回有效的头部值，请求才会被改写。授予失败返回 HTTP 502，不转发请求。较早成功的授予可能留在自己的缓存里供以后尝试使用。注入会替换每个所选头部的全部智能体提供的实例，包括该头部中的任何静态凭据占位符，并保留无关头部。签发方错误描述不会进入授予失败日志与客户端错误，因为它们可能包含凭据。
+
+REST、GraphQL、MCP 与 JSON-RPC 检查在转发每条请求之前使用相同的凭据准备步骤，包括明文 HTTP 正向代理请求与 CONNECT 隧道。端点共享主机与端口、或客户端复用连接时同样适用。监管器只从其策略准入当前请求与调用方二进制的端点中选择授予。它在选择凭据之前会在中间件变换之后再次检查请求体。重叠端点的允许规则不能授权另一个端点的授予。仅因 enforcement 为 `audit` 而被转发的请求，不会从拒绝它们的端点获得授予。网关全局策略替换提供商策略时提供生效的授权规则；配置档案的主机、端口与路径选择器仍然限制每个凭据的目的地。仅 L4 的 HTTP 转发保留主机、端口与路径的凭据选择，但没有 L7 属主准入。
+
+`token_grant_owner` 是内部元数据，标识被授权授予某凭据的策略端点。网关从提供商记录与配置档案策略、或从活动全局策略推导它。监管器在获取令牌之前要求该权威准入请求。用户手写的属主值会被忽略。
+
+先升级网关再升级监管器：带匹配令牌授予但缺少网关属主元数据的受检查请求会以 HTTP 502 失败，而不是在未认证的情况下被发送。
+
+后续请求使用最新安装的提供商凭据。获取授予期间提供商状态或策略发生变化时，监管器会在向上游发送之前拒绝该请求。新配置就绪后重连并重试。令牌服务故障同样会关闭请求而不转发；之后的连接可以重试授予。
+
+OpenShell 支持两种动态授予类型：
+
+| 授予类型 | 行为 |
+|---|---|
+| `client_credentials` | 监管器向本地 Workload API 请求 SPIFFE JWT-SVID，并把它作为 OAuth2 客户端断言直接发送给 `token_endpoint`。省略 `grant_type` 时这是默认值。 |
+| `token_exchange` | 监管器先向网关请求中间令牌。请求包含监管器 JWT-SVID；网关校验它，把 SVID 主体用作中间令牌受众，并在同一 `token_endpoint` 用网关自己的 JWT-SVID 作为客户端断言交换存储的主题凭据。监管器随后用它自己的 JWT-SVID 作为客户端断言，把该中间令牌交换为最终上游令牌。 |
+
+对只有令牌授予的配置档案，用 `--runtime-credentials` 创建提供商实例。这会记录一个空提供商实例，并明确凭据来源是运行时解析：
+
+```shell
+openshell provider create \
+  --name spiffe-token-demo \
+  --type spiffe-token-demo \
+  --runtime-credentials
+```
+
+对 `token_exchange` 配置档案，提供商还存储 `token_grant.subject_token.credential` 引用的用户主题令牌。该凭据只在网关可用：沙箱不会把它作为环境材料、静态凭据绑定元数据或工作负载占位符属主接收。用 `--from-oidc-token` 从当前网关 OIDC 登录创建或更新该提供商凭据。这要求存在一个为 OIDC 注册的活动命名网关。CLI 把当前 OIDC 访问令牌及其过期时间复制进提供商。存储的网关访问令牌已过期且刷新令牌可用时，CLI 会先刷新它。OpenShell 不会把 OIDC 刷新令牌存入提供商。存储的主题令牌凭据过期后，网关会拒绝中间令牌交换，直到提供商更新了新令牌。
+
+```shell
+openshell provider create \
+  --name custom-api \
+  --type custom-api \
+  --from-oidc-token
+
+openshell provider update custom-api \
+  --from-oidc-token
+```
+
+提供商配置档案恰好只有一个 `token_grant.subject_token.credential` 时，OpenShell 推断目标凭据。配置档案声明多个令牌交换主题凭据时，传 `--credential <key>` 选择一个。
+
+令牌授予字段：
+
+| 字段 | 是否必需 | 行为 |
+|---|---|---|
+| `grant_type` | 否 | `client_credentials` 或 `token_exchange`。为向后兼容默认 `client_credentials`。 |
+| `token_endpoint` | 是 | 接受 SPIFFE JWT-SVID 客户端断言的 OAuth2 令牌端点。除非端点是回环或 Kubernetes Service DNS 名（如 `token-issuer.default.svc.cluster.local`），否则使用 `https://`。 |
+| `audience` | 否 | 向令牌服务请求的资源受众。对 `token_exchange`，这是最终交换受众；网关中间交换始终以经过校验的监管器 SVID 主体作为其受众。 |
+| `jwt_svid_audience` | 否 | 请求 JWT-SVID 时使用的受众。省略时，OpenShell 从 Keycloak 令牌端点路径推导签发方风格受众，或回退到完整令牌端点 URL。 |
+| `client_assertion_type` | 否 | OAuth2 `client_assertion_type` 表单值。默认 RFC 7523 的 `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`。令牌签发方期望 SPIFFE 断言类型时设为 `urn:ietf:params:oauth:client-assertion-type:jwt-spiffe`。 |
+| `scopes` | 否 | 以空格分隔的 `scope` 参数发送的 OAuth2 范围。 |
+| `cache_ttl` | 否 | protobuf duration 的缓存覆盖，如 `300s` 或 `0.500s`。省略时使用令牌响应的过期时间；`0s` 禁用缓存。旧式 `cache_ttl_seconds` 输入仍被接受。 |
+| `requested_token_type` | 否 | 令牌交换期间发送的 RFC 8693 `requested_token_type`。默认 `urn:ietf:params:oauth:token-type:access_token`。 |
+| `subject_token` | `token_exchange` 必需 | 网关居间中间交换使用的主题令牌来源。第一阶段支持 `source: provider_credential`，`credential` 指名同一配置档案中声明的另一个凭据。该被引用凭据仅供居间使用，不能声明工作负载注入元数据（如环境变量、静态放置、刷新或令牌授予元数据）。 |
+| `subject_token.subject_token_type` | 否 | 存储主题令牌的 RFC 8693 `subject_token_type`。默认 `urn:ietf:params:oauth:token-type:access_token`。 |
+| `audience_overrides` | 否 | 按主机、端口与路径选择的端点专属最终交换 `audience` 与 `scopes` 覆盖。这些覆盖不影响网关中间交换。 |
+
+令牌授予要求沙箱监管器能访问 SPIFFE Workload API socket。`token_exchange` 还要求网关有自己的 Workload API socket，以便在中间交换期间出示网关 JWT-SVID。它们适用于代理可以检查的 HTTP 流量。令牌授予配置档案拒绝 `protocol: sql` 或 `tls: skip` 的端点，即使启用了 `allow_uninspected_credentials` 也是如此，因为这些模式无法注入所需的 HTTP 凭据。令牌服务必须返回可安全放入 HTTP 头部的令牌值；畸形值会在缓存或头部注入之前被拒绝。
+
+网关只为沙箱主体居间中间令牌，且只在所请求提供商挂接到该沙箱时。它对照网关自己的 JWT-SVID 校验监管器 JWT-SVID 的签发方、受众、签名与 SPIFFE 信任域，然后把经过校验的监管器 SVID 主体用作中间令牌受众。
+
+### 令牌授予失败
+
+授予失败返回 HTTP 502，不转发受保护请求。连接建立（包括上游 TLS 握手）可能已经完成。工作负载响应隐藏原因；被授权的沙箱读取者可以[诊断失败](/how-it-works/sandboxes/overview#读取令牌授予失败)。请求 ID 关联响应、沙箱状态与监管器/网关日志。OpenShell 绝不记录令牌服务的 `error` 或 `error_description`，它们可能回显凭据。
+
+每个失败都有一个失败码、一个标识失败步骤的阶段，以及一个恢复动作：
+
+| 失败码 | 含义 | 恢复动作 |
+|---|---|---|
+| `provider_authorization_required` | 需要提供商授权，包括存储的主题凭据缺失或过期。 | `reauthorize` |
+| `workload_identity_rejected` | 工作负载身份被拒绝。 | `fix_configuration` |
+| `configuration_error` | 提供商、授予或令牌服务配置无效。 | `fix_configuration` |
+| `timeout` | 某个授予步骤超时。 | `retry` |
+| `unavailable` | 某个服务或连接不可用。 | `retry` |
+| `unclassified` | 未确定更具体的原因。 | `investigate` |
+
+没有可识别错误扩展时，HTTP 429、5xx 与连接失败（包括 TLS 校验失败）归为 `unavailable`；超时归为 `timeout`。其他失败归为 `unclassified`，包括超过 64 KiB 的响应体和没有有效 `access_token` 的成功响应。普通的 401 绝不代表需要重新授权。
+
+令牌服务可以用 `openshell.token-grant.v1` 扩展报告具体原因。例如返回 HTTP 409 与：
+
+```json
+{
+  "error": "provider_authorization_required",
+  "openshell_error_contract": "openshell.token-grant.v1"
+}
+```
+
+OpenShell 要求精确的契约标记以及以下配对之一：
+
+| HTTP 状态 | 错误码 |
+|---|---|
+| 409 | `provider_authorization_required` |
+| 401 或 403 | `workload_identity_rejected` |
+| 400 | `configuration_error` |
+
+该扩展要求配置的端点经经验证的 HTTPS 访问；不跟随重定向。经明文 HTTP 或状态不匹配出现的可识别码归为 `unclassified`。未知版本或未知码回退到 HTTP 状态分类。`invalid_client`、`invalid_grant` 等通用 OAuth 错误不构成身份拒绝。
+
+## 提供商实例
+
+提供商实例存储某个配置档案类型的具体凭据与配置。`--type` 接受任何已导入配置档案的 ID，精确匹配。为网关不提供的配置档案创建提供商会失败，并提示导入命令。
+
+从已导入的 `github` 配置档案创建 GitHub 提供商：
+
+```shell
+openshell provider create \
+  --name work-github \
+  --type github \
+  --credential GITHUB_TOKEN
+```
+
+通过提供商配置档案发现的本地凭据创建提供商：
+
+```shell
+openshell provider create \
+  --name work-claude \
+  --type claude-code \
+  --from-existing
+```
+
+`--from-existing` 使用提供商配置档案的 `discovery` 节。所请求类型没有配置档案时，命令直接失败，不会回退到已废弃的提供商注册表。示例 `openai` 配置档案发现 `OPENAI_API_KEY`；示例 `anthropic` 配置档案发现 `ANTHROPIC_API_KEY`。
+
+从另一个已导入配置档案创建提供商：
+
+```shell
+openshell provider create \
+  --name custom-api \
+  --type custom-api \
+  --credential CUSTOM_API_TOKEN
+```
+
+创建凭据由所配置网关凭据驱动存储的提供商：
+
+```shell
+openshell provider create \
+  --name openai-stored \
+  --type openai \
+  --credential OPENAI_API_KEY
+```
+
+create/update API 通过网关当前活动的凭据存储路径存储提交的提供商凭据与机密刷新材料，只持久化内部凭据句柄。机密刷新材料包括 OAuth 刷新令牌、客户端机密、服务账户私钥与临时 AWS 来源机密。默认情况下，网关把 AES-256-GCM 加密的凭据信封存放在网关数据库中、提供商与刷新状态记录之外。未启用外部凭据驱动时，Helm chart 会为默认存储密钥加密密钥创建一个保留的 Kubernetes Secret，并注入每个网关 Pod。`credential_drivers = []` 无效。多副本 Kubernetes 网关可以使用共享数据库加默认加密存储，也可以选择 `kubernetes-secrets` 或 `vault` 等共享后端。
+
+每个 `secret_material_keys` 条目必须指名同一次配置请求中 `material` 提供的键。客户端提交机密值，而不是内部凭据句柄。
+
+已含内联数据库凭据的提供商记录保持可读以兼容升级。新的提供商创建/更新请求通过当前活动的凭据驱动存储凭据值，只持久化句柄。
+
+所需凭据完全可通过 `token_grant` 或网关管理刷新在运行时解析的配置档案，其提供商可以不带 `--credential` 创建。
+
+查看提供商：
+
+```shell
+openshell provider get custom-api
+```
+
+更新提供商凭据：
+
+```shell
+openshell provider update custom-api --credential CUSTOM_API_TOKEN
+```
+
+设置或清除凭据过期元数据：
+
+```shell
+openshell provider update custom-api \
+  --credential CUSTOM_API_TOKEN="$CUSTOM_API_TOKEN" \
+  --credential-expires-at CUSTOM_API_TOKEN=2026-01-01T00:00:00Z
+```
+
+使用 ISO/RFC3339 时间戳或 Unix 纪元毫秒。时间戳用 `0` 即可清除某个凭据键的过期时间。
+
+OpenShell 构建沙箱提供商环境时会跳过已过期的提供商凭据。运行中的沙箱也会在占位符解析期间拒绝已过期的保留凭据代次，因此过期占位符按 fail closed 处理，而不会转发未解析或过期的凭据材料。
+
+网关为每个发出的静态凭据键发送完整的主机、端口与路径绑定。绑定从配置档案端点推导；无端点配置档案则从显式沙箱策略端点推导。没有显式策略绑定的无端点所选配置档案，其静态凭据键会被扣留。监管器拒绝其他不完整的绑定元数据，并在刷新未通过校验时清除先前活动的提供商材料。匹配、拒绝、生命周期与迁移行为参见[静态凭据端点绑定](#理解静态凭据端点绑定)。
+
+### 保持外部更新的占位符稳定
+
+MCP 客户端可以在启动时用 OpenShell 提供的引用一次性配置其调用方断言头部。宿主服务在旧断言过期之前轮换断言并更新提供商。客户端需要下一次请求使用新断言，而无需重启或重新加载其环境引用。网关管理的令牌刷新已经提供这种连续性；`stable_placeholder` 把它扩展到外部提供的静态凭据。
+
+只有当外部更新器要求工作负载在仅改值的 `provider update` 修订之间保持同一个不透明占位符时，才在凭据上设置 `stable_placeholder: true`。为该凭据声明至少一个 `env_vars` 别名。OpenShell 仍把该值归类为机密，并且只为凭据生效端点绑定中的主机、端口与路径解析它。因此，无端点配置档案需要显式的沙箱策略 `credential_binding`，网关才会发出该元数据。
+
+该设置默认为 `false`，保留既有的版本限定行为。普通凭据继续与旧网关协作。要启用稳定占位符，请使用支持的网关、监管器与配置档案客户端。CLI 与 Go SDK 在导入或更新选择加入的配置档案之前会检查网关支持；支持检查失败则配置档案保持不变。原生 API 客户端在启用该设置之前必须检查 `LintProviderProfilesResponse.supports_stable_placeholder`。
+
+网关会向未声明支持的监管器扣留选择加入的凭据。监管器激活某个外部稳定凭据之后，网关响应缺少支持确认时会吊销静态凭据，而不是切换到版本限定交付。该要求在刷新失败后仍然存在，当一次经过确认的快照移除最后一个外部稳定凭据时解除。启动与监管器重建期间请保留受支持的网关：较旧的二进制可能丢弃未知的配置档案字段，因此首次接触时的空稳定键列表不能证明支持。降级网关之前，先移除选择加入并激活该变更。
+
+使用监管器签发的环境值。不要自己构造解析器字符串或规范环境名别名。监管器安装值更新之后，持有原始占位符的进程的下一次请求就会解析到当前值。只保存提供商更新并不代表监管器已激活。过期或已激活的分离会阻止占位符解析凭据。
+
+监管器在工作负载之外解析占位符。沙箱通过其经过认证的边界接收准备好的环境；凭据值留在监管器侧。
+
+不透明占位符与沙箱、提供商实例、凭据键及生效端点绑定绑定在一起。只更新凭据值会保留占位符。替换提供商或更改其端点绑定会产生新占位符，因此运行中的进程无法用旧占位符解析替换后的凭据。不需要仅改值连续性时使用默认 `false`。配置档案不能把 `stable_placeholder: true` 与网关管理刷新、作为另一凭据刷新输出产生的凭据或 `token_grant` 组合，因为那些凭据有不同的生命周期属主。
+
+## 配置凭据刷新
+
+刷新配置与当前可注入凭据值分开存储。非机密刷新配置保存在刷新状态记录中。机密材料只在网关铸造新的短期令牌时从当前活动的凭据驱动解析。网关通过凭据存储把令牌写回，并更新凭据过期元数据。OAuth 签发方轮换其刷新令牌时，网关在提交刷新代次之前经凭据存储暂存替换值，之后移除先前的句柄。
+
+对 OAuth 令牌端点失败，网关解析有界的标准 OAuth 错误响应，并通过 `provider refresh status` 报告结构化的恢复动作。它不保留提供商错误描述或原始响应体。恢复动作有：
+
+- `retry`：网络、速率限制或临时性签发方故障；工作器自动重试。
+- `reauthorize`：用户刷新授予不再可用（如 `invalid_grant`）；获取新授予并运行 `provider refresh configure`。
+- `fix_configuration`：需要修正 OAuth 客户端、范围、授予类型或管理员策略。
+- `investigate`：无法识别的签发方响应或被中断的铸造需要调查。工作器会重试无法识别的签发方响应，但不会重试结果不确定的中断铸造。
+
+网关会搁置 `reauthorize` 与 `fix_configuration` 失败，而不是每个工作器时钟周期都重试。手动 `provider refresh rotate` 仍会尝试交换。当前访问令牌只保留到其记录的过期时间为止，之后凭据解析按 fail closed 处理。
+
+`refresh_in_progress` 与 `refresh_committing` 状态可能表示有活动进行。请再次检查网关健康与状态；并发的刷新请求会等待进行中的铸造。网关中断留下任一标记且轮换报告上一次铸造结果不确定时，调查签发方状态并用有效授予运行 `provider refresh configure`。先前的刷新令牌可能已被消费时，先获取新的 OAuth 授予。反复轮换或直接编辑标记无法恢复它。重新配置会吊销先前的工作负载句柄，请重启持有它们的进程。
+
+OpenShell 0.1.0 之前不支持刷新状态与凭据驱动迁移。从内联存储刷新材料的构建升级需要重新配置刷新授予。更换凭据驱动时，在原驱动仍可用时删除或重新配置受影响的提供商，然后选择新驱动并重新创建凭据。不要用混合版本的网关操作同一批刷新记录。
+
+每次显式 `refresh configure` 调用也会开启一个新的、归网关所有的授权纪元。自动刷新与 `refresh rotate` 保留该纪元，因此运行中的工作负载在短期令牌变化时保留同一个不透明凭据句柄。再次配置刷新是一个吊销边界，会使仍持有先前句柄的运行中工作负载按 fail closed 失败。
+
+配置了网关管理刷新时，`provider update --credential` 不能替换或删除其主凭据及任何共同铸造的输出。用 `provider refresh rotate` 铸造新的短期值。重新运行 `provider refresh configure` 开启新的授权，或用 `provider refresh delete` 把这些凭据键交回手动管理。你仍可以更新无关的凭据、配置与凭据过期元数据。
+
+完整的 Microsoft Graph OAuth2 刷新令牌实操演练参见[用提供商配置档案刷新 Microsoft Graph 凭据](/tutorials/microsoft-graph-provider-refresh)。
+
+配置档案 YAML 的策略值使用下划线，CLI 的 `--strategy` 值使用 kebab-case：
+
+| 配置档案 YAML | CLI |
+|---|---|
+| `oauth2_refresh_token` | `oauth2-refresh-token` |
+| `oauth2_client_credentials` | `oauth2-client-credentials` |
+| `google_service_account_jwt` | `google-service-account-jwt` |
+
+先创建提供商实例：
+
+```shell
+openshell provider create \
+  --name my-graph \
+  --type microsoft-graph-mail \
+  --credential MS_GRAPH_ACCESS_TOKEN
+```
+
+本例假设你导入了 `id: microsoft-graph-mail` 的自定义配置档案。只有配置档案声明了兼容凭据刷新元数据的提供商类型才能配置提供商刷新。
+
+配置 OAuth2 client credentials 刷新：
+
+```shell
+openshell provider refresh configure my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN \
+  --strategy oauth2-client-credentials \
+  --material tenant_id="$MS_TENANT_ID" \
+  --material client_id="$MS_CLIENT_ID" \
+  --material client_secret="$MS_CLIENT_SECRET" \
+  --secret-material-key client_secret \
+  --credential-expires-at 2026-01-01T00:00:00Z
+```
+
+配置 OAuth2 refresh-token 刷新：
+
+```shell
+openshell provider refresh configure my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN \
+  --strategy oauth2-refresh-token \
+  --material client_id="$MS_CLIENT_ID" \
+  --material refresh_token="$MS_REFRESH_TOKEN" \
+  --material client_secret="$MS_CLIENT_SECRET" \
+  --secret-material-key refresh_token \
+  --secret-material-key client_secret
+```
+
+配置 Google 服务账户 JWT 刷新：
+
+```shell
+openshell provider create \
+  --name drive-work \
+  --type google-drive \
+  --credential GOOGLE_DRIVE_ACCESS_TOKEN
+
+openshell provider refresh configure drive-work \
+  --credential-key GOOGLE_DRIVE_ACCESS_TOKEN \
+  --strategy google-service-account-jwt \
+  --material client_email="$GOOGLE_CLIENT_EMAIL" \
+  --material private_key="$GOOGLE_PRIVATE_KEY" \
+  --secret-material-key private_key
+```
+
+本例假设你导入了 `id: google-drive` 的自定义配置档案。
+
+<Aside type="note">
+`--secret-material-key` 接受 `--material` 键的名字，不是机密值。例如 `--material client_secret="$MS_CLIENT_SECRET"` 搭配 `--secret-material-key client_secret`。优先使用 `--secret-material-env`，让值不出现在 shell 历史中。网关把调用方标记与权威配置档案元数据及策略定义的机密字段组合，然后经当前活动的凭据驱动存储这些值。只有 `--credential-key` 的值（如 `MS_GRAPH_ACCESS_TOKEN`）会成为可注入项。OAuth 响应轮换刷新令牌时，OpenShell 会自动经凭据驱动存储替换值。
+</Aside>
+
+当前提供商凭据已有已知过期时间戳时，使用 `--credential-expires-at`。对刷新管理的键，取值可以是 Unix 纪元毫秒或 ISO/RFC3339 时间戳，如 `2026-01-01T00:00:00Z` 或 `2026-01-01T01:00:00+01:00`。OpenShell 在刷新状态与提供商凭据元数据中都把该值存为纪元毫秒。显式的 Unix 纪元值与省略过期时间不同且已视为过期。之后的网关管理刷新会用铸造令牌的过期时间替换它。
+
+立即强制刷新：
+
+```shell
+openshell provider refresh rotate my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+查看刷新状态：
+
+```shell
+openshell provider refresh status my-graph
+```
+
+状态表包含 `RECOVERY` 与 `FAILURE_CODE`。客户端应使用结构化恢复动作，而不是解析 `LAST_ERROR`。例如，恢复动作为 `reauthorize` 的 `oauth_invalid_grant` 表示用户必须重新完成 OAuth 授权；带 `fix_configuration` 的 `oauth_invalid_client` 表示只更换用户登录无法修复授予。OpenShell 搁置 `reauthorize` 失败，直到显式轮换或重新配置。它每小时重试 `fix_configuration` 失败，让外部修复的时钟、策略或凭据存储值可以恢复，同时不制造密集的令牌端点流量。瞬态与无法识别的失败使用既有的有界 60 秒重试间隔。
+
+状态表报告运行状态，不打印令牌值或刷新材料：
+
+```text
+PROVIDER                  CREDENTIAL_KEY                STRATEGY                      STATUS                    RECOVERY            EXPIRES_AT            NEXT_REFRESH          LAST_REFRESH          FAILURE_CODE                                  LAST_ERROR
+my-graph                  MS_GRAPH_ACCESS_TOKEN         oauth2_refresh_token          reauthorization_required  reauthorize         2026-06-01 00:00:00   -                     2026-05-31 23:00:00   oauth_invalid_grant                           OAuth refresh grant is no longer usable
+```
+
+不存在刷新配置时，CLI 区分整个提供商的检查与针对凭据的检查：
+
+```text
+No refresh configurations found for provider 'my-graph'.
+No refresh configuration found for provider 'my-graph' credential 'MS_GRAPH_ACCESS_TOKEN'.
+```
+
+删除某个凭据的刷新状态：
+
+```shell
+openshell provider refresh delete my-graph \
+  --credential-key MS_GRAPH_ACCESS_TOKEN
+```
+
+只有当提供商凭据过期时间来自被删除的刷新状态（包括显式 Unix 纪元过期）时，删除刷新状态才会清除它。之后用 `openshell provider update --credential-expires-at` 手动设置了不同的过期时间时，OpenShell 保留手动值。
+
+### 刷新日志
+
+网关在每次工作器清扫期间发出对机密安全的刷新日志。用这些日志检查网关正在监视哪些凭据、下一次刷新何时到期、以及某凭据是否已刷新。
+
+```text
+2026-05-16T19:42:34.705768Z  INFO openshell_server::provider_refresh: provider credential refresh worker sweep watched_count=1 due_count=0 rotation_requested_count=0
+2026-05-16T19:42:34.705905Z  INFO openshell_server::provider_refresh: provider credential refresh watch provider=outlook-email credential_key=MS_GRAPH_ACCESS_TOKEN strategy=oauth2_refresh_token status=refreshed expires_at_ms=1778961995456 seconds_until_expiry=1440 next_refresh_at_ms=1778961395456 last_refresh_at_ms=1778958395456 seconds_until_refresh=840 due=false rotation_requested=false
+```
+
+清扫行汇总工作器检查了多少条凭据刷新记录。监视行显示提供商、凭据键、策略、刷新状态、过期时间、下一次刷新时间，以及刷新是否到期或被手动请求。它不包含访问令牌值或刷新材料。
+
+<Aside type="note">
+刷新会更新提供商记录。沙箱通过与其他提供商凭据相同的占位符环境与代理改写路径接收更新后的凭据。
+</Aside>
+
+## 用提供商启动沙箱
+
+创建沙箱时用重复的 `--provider` 参数挂接提供商：
+
+```shell
+openshell sandbox create \
+  --name provider-demo \
+  --provider work-claude \
+  --provider work-github \
+  -- claude
+```
+
+每个挂接且有匹配配置档案的提供商都向沙箱生效策略贡献一个提供商策略层。基础策略是你可以编辑和应用的用户手写沙箱策略。生效策略是沙箱实际执行的组合策略：基础策略加提供商策略层。网关全局策略会抑制提供商衍生的策略层。
+
+更新自定义提供商配置档案会影响 `type` 匹配该配置档案 ID 的每个提供商实例。提供商实例不会被改写，沙箱手写的策略也不会被修改。运行中的沙箱在下次配置同步时观察到更新后的提供商衍生策略。网关全局策略处于活动状态时，提供商衍生策略层保持被抑制。
+
+创建沙箱时用 `--provider` 指名提供商。该名字的提供商不存在且名字匹配某个已导入配置档案 ID 时，CLI 可以从本地配置档案发现创建该提供商。尾随沙箱命令不选择提供商。创建之后用 `openshell sandbox provider attach` 添加既有提供商。
+
+列出挂接到沙箱的提供商：
+
+```shell
+openshell sandbox provider list provider-demo
+```
+
+列表输出包含提供商名、提供商类型、凭据键数与配置键数。加 `--output json` 或 `--output yaml` 可返回提供商名与类型，以及排序后的 `credential_keys` 与 `config_keys` 数组。结构化输出绝不包含凭据值、不透明凭据句柄或配置值。
+
+## 策略组合
+
+OpenShell 分开存储基础策略与提供商挂接。沙箱请求其生效策略时，网关即时把当前基础策略与提供商策略层组合。
+
+例如，GitHub 示例配置档案包含以下端点与二进制：
+
+```yaml wordWrap showLineNumbers={false}
+id: github
+display_name: GitHub
+category: source_control
+credentials:
+  - name: api_token
+    env_vars: [GITHUB_TOKEN, GH_TOKEN]
+    required: true
+    auth_style: bearer
+    header_name: authorization
+endpoints:
+  - host: api.github.com
+    port: 443
+    protocol: rest
+    access: read-only
+    enforcement: enforce
+  - host: api.github.com
+    port: 443
+    path: /graphql
+    protocol: graphql
+    access: read-only
+    enforcement: enforce
+  - host: github.com
+    port: 443
+    protocol: rest
+    enforcement: enforce
+    rules:
+      - allow: { method: GET, path: "**" }
+      - allow: { method: HEAD, path: "**" }
+      - allow: { method: OPTIONS, path: "**" }
+      - allow: { method: POST, path: "/**/git-upload-pack" }
+binaries: [/usr/bin/gh, /usr/local/bin/gh, /usr/bin/git, /usr/local/bin/git]
+```
+
+`github.com` git 传输端点使用显式规则而不是 `read-only` 预设，因此 HTTPS clone 与 fetch 开箱即用。Git smart HTTP 先对 `*/info/refs` 执行 `GET`，再对 `*/git-upload-pack` 执行 `POST`；只读预设（`GET`/`HEAD`/`OPTIONS`）会阻断该 `POST`。这些规则只允许只读方法加 `POST */git-upload-pack`，因此 clone 与 fetch 成功，而 push（`git-receive-pack`）与其他 API 变更保持被拒绝。启用 push 需要显式的策略提案。
+
+沙箱挂接名为 `work-github` 的提供商时，生效策略包含一条生成的提供商规则：
+
+```yaml wordWrap showLineNumbers={false}
+network_policies:
+  custom_pypi:
+    name: custom_pypi
+    endpoints:
+      - host: pypi.org
+        port: 443
+        protocol: rest
+        access: read-only
+        enforcement: enforce
+    binaries:
+      - path: /usr/bin/python
+
+  _provider_work_github:
+    name: _provider_work_github
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        access: read-only
+        enforcement: enforce
+      - host: api.github.com
+        port: 443
+        path: /graphql
+        protocol: graphql
+        access: read-only
+        enforcement: enforce
+      - host: github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "**" }
+          - allow: { method: HEAD, path: "**" }
+          - allow: { method: OPTIONS, path: "**" }
+          - allow: { method: POST, path: "/**/git-upload-pack" }
+    binaries:
+      - path: /usr/bin/gh
+      - path: /usr/local/bin/gh
+      - path: /usr/bin/git
+      - path: /usr/local/bin/git
+```
+
+查看生效策略：
+
+```shell
+openshell policy get provider-demo --full
+```
+
+拉取可往返的基础策略，不含提供商条目：
+
+```shell
+openshell policy get provider-demo --base
+```
+
+组合遵循以下规则：
+
+- 提供商策略条目使用从提供商实例名衍生的保留 `_provider_*` 键。
+- 提供商策略条目是衍生数据。OpenShell 不会把它们持久化回基础策略。
+- 用户手写的策略不能定义 `_provider_*` 网络策略键。网关在沙箱创建与完整策略替换时拒绝这些键，沙箱发起的策略同步在持久化之前剥离它们。
+- 提供商规则与用户规则直接拼接。重叠端点保持为独立规则。
+- 网关全局策略覆盖会抑制提供商衍生的策略层。
+
+## 挂接与分离提供商
+
+挂接既有提供商并等到沙箱可以使用它：
+
+```shell
+openshell sandbox provider attach provider-demo work-github --wait --timeout 30
+```
+
+分离提供商并等到沙箱停止解析其凭据：
+
+```shell
+openshell sandbox provider detach provider-demo work-github --wait --timeout 30
+```
+
+挂接与分离是幂等的。挂接在更改沙箱之前验证提供商存在；提供商仍挂接在任意沙箱上时，删除提供商会失败。
+
+### 检查提供商就绪状态
+
+不带 `--wait` 时，attach、detach 与 update 只确认网关保存了变更。下一步依赖该变更生效时，加 `--wait`。命令在沙箱应用匹配的凭据与策略、并更新新进程使用的环境之后成功。
+
+每个结果都包含一个 API 中称为 `receipt` 的变更记录。其 ID 让你之后（包括超时后）可以查询同一变更：
+
+```shell
+openshell sandbox provider status provider-demo work-github --output json
+openshell sandbox provider status provider-demo work-github --receipt RECEIPT_ID --wait --timeout 30
+```
+
+把 `RECEIPT_ID` 替换为 attach、detach 或 update 返回的 `receipt_id`。该 ID 始终指原始变更。后面的变更替换它时，状态为 `superseded`，等待结束且不报告成功。
+
+attach、detach 或 update 报告 `CONFIG_OPERATION_STORAGE_UNCERTAIN` 时，变更可能已经保存，尽管网关未能记录其就绪回执。不要盲目重试该变更：先检查提供商与沙箱状态，核对已保存的变更。回执可能不可用，因此错误不代表变更已回滚，也不代表沙箱已就绪。
+
+就绪状态的含义如下：
+
+- `persisted`：网关已保存变更；命令尚未检查沙箱。
+- `pending`：沙箱尚未确认变更的所有部分。
+- `ready`：沙箱已为新进程应用所请求的提供商凭据、策略与环境。
+- `revoked`：被分离提供商的凭据不再解析，新进程不再接收其凭据引用。
+- `withheld`：某个凭据或监管器配置阻止沙箱应用变更。
+- `failed`：沙箱无法安装凭据、策略或进程环境。
+- `superseded`：后来的变更替换了原始请求。
+
+默认等待 30 秒，最大 3600 秒。超时从网关保存变更之后起算，包含请求状态花费的时间。时间用尽时，命令以错误退出，报告 `wait_outcome: timed_out` 与最后已知状态。变更保持已保存，可能稍后完成应用。再次查询其 ID 以了解结果。
+
+监管器不可用、报告过期、安装失败或缺少进程环境确认，都不能产生 `ready` 或 `revoked`。重连或重启之后，当前经过认证的监管器必须重新报告其已安装状态。
+
+JSON 与 YAML 输出包含变更 ID、请求与已安装修订、时间戳、原因类别以及每个沙箱的结果。修订字符串标识配置；请比较相等性而不是数值顺序。状态输出排除凭据值、凭据引用、授权头部与原始安装错误。
+
+`persisted_time`、`observed_time` 与 `evaluated_time` 字段使用 RFC 3339 时间戳字符串。`observed_time` 缺失表示当前监管器会话尚未提供被接受的证据。API 操作时间戳使用 protobuf `Timestamp`，报告间隔与观测寿命使用 protobuf `Duration`，遵循 [protobuf 时间表示](/sdk/protobuf-time-types)。
+
+API 的 `operation` 字段记录公共操作的历史结果；其 `operation_id` 等于回执 ID。当前就绪状态请以提供商 `state` 与等待结果为准。监管器断开可能让实时状态保持 pending，即使操作先前已应用；更新的变更也可能取代实时结果。历史完成不会覆盖这些检查。
+
+### 运行时限制
+
+运行中的沙箱会周期性检查提供商与策略变更。用 `--wait` 或 `sandbox provider status` 确认已保存的变更何时生效。
+
+策略效果作用于沙箱观察到更新之后的生效策略读取。凭据环境效果只作用于观察到更新之后的新进程启动，例如后续的 SSH、exec 或 SFTP 会话。
+
+已在运行的进程保留其启动时的占位符环境。对普通静态凭据，既有引用在值更新后保留其选定的修订；就绪状态不会把该引用重定向到替换值。更新等待成功后，启动新进程以接收更新后的凭据引用。网关管理刷新遵循自己的引用生命周期。过期、端点授权与已确认的分离在代理解析保留引用时继续适用。
+
+对静态提供商，顺序是挂接、等待、然后启动客户端 A；更新、等待、然后启动客户端 B。B 的第一个请求使用新安装的凭据。就绪状态不能证明 A 已停止使用其保留修订，也不能证明旧的上游密钥可以退役。
+
+已确认的分离会把其提供商策略层从活动生效策略中移除，吊销其既有占位符的未来解析，并从未来进程环境中移除其凭据占位符。它不会从已在运行的进程环境中移除字符串，也不会撤销已转发上游的请求。
+
+提供商更新与刷新配置会让挂接到同一沙箱的两个提供商暴露相同的活动凭据环境键时，OpenShell 拒绝它们。动态令牌授予以相同主机/路径特异性面向同一头部的挂接提供商集合同样被拒绝。不同头部的授予可以共享端点。绑定有意作为备选时，请使用提供商专属的凭据名，并把其中一个同头部选择器变得更具体。
+
+## 后续步骤
+
+- 当前提供商命令参考参见[提供商](/how-it-works/providers/overview)。
+- 应用用户手写的策略规则参见[管理沙箱策略](/how-it-works/policies/manage-policies)。
+- 端点与 L7 规则字段细节参见[策略 Schema 参考](/how-it-works/policies/schema)。
+

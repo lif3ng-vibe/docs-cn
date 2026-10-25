@@ -1,47 +1,47 @@
 ---
-title: "Reserved IP addresses"
-description: "Review the reserved IP addresses and ranges that Tailscale uses for device addressing and internal services."
+title: "保留的 IP 地址"
+description: "了解 Tailscale 用于设备编址和内部服务的保留 IP 地址与地址段。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-Tailscale assigns each device in your [tailnet][docs-tailnet] a unique [Tailscale IP address][docs-100.x-addresses] from the Carrier-Grade NAT (CGNAT) range defined in [RFC 6598][xt-rfc-6598-cgnat]. This range doesn't conflict with common private network ranges like `10.0.0.0/8` or `192.168.0.0/16`.
+Tailscale 会从 [RFC 6598][xt-rfc-6598-cgnat] 定义的运营商级 NAT（CGNAT）地址段中，为你的 [tailnet][docs-tailnet] 里的每台设备分配一个唯一的 [Tailscale IP 地址][docs-100.x-addresses]。该地址段不会与 `10.0.0.0/8` 或 `192.168.0.0/16` 等常见私有网络地址段冲突。
 
-Tailscale reserves specific addresses within this range for internal services and device management. This topic helps you understand these reservations when configuring [IP pools][docs-ip-pool], writing [access control policies][docs-policy-syntax], or troubleshooting connectivity.
+Tailscale 在该地址段内为内部服务和设备管理保留了一些特定地址。在配置 [IP 池][docs-ip-pool]、编写[访问控制策略][docs-policy-syntax]或排查连接问题时，本主题可以帮助你理解这些保留地址。
 
-The following table lists the reserved IP addresses and ranges used by Tailscale:
+下表列出了 Tailscale 使用的保留 IP 地址与地址段：
 
-| Address or range      | Purpose                                                                                                                                                                                             |
+| 地址或地址段          | 用途                                                                                                                                                                                             |
 | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `100.64.0.0/10`       | The [CGNAT range][xt-rfc-6598-cgnat] Tailscale uses for [device IP addresses][docs-100.x-addresses] (`100.64.0.0` through `100.127.255.255`).                                                       |
-| `100.100.0.0/24`      | Tailscale internal use. Unavailable for [IP pools][docs-ip-pool].                                                                                                                                   |
-| `100.100.100.0/24`    | Tailscale internal use. Unavailable for [IP pools][docs-ip-pool].                                                                                                                                   |
-| `100.100.100.100`     | [Quad100][docs-what-is-quad100], a device-local service address. Provides a [DNS resolver][docs-magicdns] on port `53` and a [device management interface][docs-device-web-interface] on port `80`. |
-| `100.115.92.0/23`     | Tailscale internal use. Unavailable for [IP pools][docs-ip-pool].                                                                                                                                   |
-| `fd7a:115c:a1e0::/48` | The [IPv6 unique local address][xt-wiki-unique-local-address] prefix Tailscale uses for [device IPv6 addresses][docs-ipv6].                                                                         |
-| `fd7a:115c:a1e0::53`  | IPv6 equivalent of [Quad100][docs-what-is-quad100]. Provides the same DNS resolver and device management services.                                                                                  |
-| `100.101.102.103`     | Reserved for the [`tshello`][docs-hello-tsnet] example service.                                                                                                                                     |
+| `100.64.0.0/10`       | [CGNAT 地址段][xt-rfc-6598-cgnat]，Tailscale 用作[设备 IP 地址][docs-100.x-addresses]（`100.64.0.0` 至 `100.127.255.255`）。                                                       |
+| `100.100.0.0/24`      | Tailscale 内部使用。[IP 池][docs-ip-pool]不可使用。                                                                                                                                   |
+| `100.100.100.0/24`    | Tailscale 内部使用。[IP 池][docs-ip-pool]不可使用。                                                                                                                                   |
+| `100.100.100.100`     | [Quad100][docs-what-is-quad100]，设备本地服务地址。在端口 `53` 提供 [DNS 解析器][docs-magicdns]，在端口 `80` 提供[设备管理界面][docs-device-web-interface]。 |
+| `100.115.92.0/23`     | Tailscale 内部使用。[IP 池][docs-ip-pool]不可使用。                                                                                                                                   |
+| `fd7a:115c:a1e0::/48` | Tailscale 用作[设备 IPv6 地址][docs-ipv6]的 [IPv6 唯一本地地址][xt-wiki-unique-local-address]前缀。                                                                         |
+| `fd7a:115c:a1e0::53`  | [Quad100][docs-what-is-quad100] 的 IPv6 等价地址，提供相同的 DNS 解析器和设备管理服务。                                                                                  |
+| `100.101.102.103`     | 为 [`tshello`][docs-hello-tsnet] 示例服务保留。                                                                                                                                     |
 
-## What this means for you
+## 这对你意味着什么
 
-You can use Tailscale IP addresses directly in access control list (ACL) rules and grants. For example, specify a device by its `100.x.y.z` address in the `src` or `dst` fields. Keep in mind:
+你可以在访问控制列表（ACL）规则和授权中直接使用 Tailscale IP 地址。例如，在 `src` 或 `dst` 字段中用设备的 `100.x.y.z` 地址来指定它。请注意：
 
-* Reserved ranges aren't assignable. Tailscale never assigns addresses from the reserved ranges (`100.100.0.0/24`, `100.100.100.0/24`, or `100.115.92.0/23`) to devices, so you don't need to account for them in your policies.
+* 保留地址段不可分配。Tailscale 绝不会把保留地址段（`100.100.0.0/24`、`100.100.100.0/24` 或 `100.115.92.0/23`）中的地址分配给设备，因此你在编写策略时无需考虑它们。
 
-* Quad100 is device-local. Traffic to `100.100.100.100` stays on the local device and doesn't traverse your tailnet. You can't target Quad100 in access control policies.
+* Quad100 仅在设备本地有效。发往 `100.100.100.100` 的流量只留在本地设备上，不会经过你的 tailnet。访问控制策略无法以 Quad100 为目标。
 
-* IP pools can't overlap reserved ranges. When configuring [IP pools][docs-ip-pool], ensure your ranges don't overlap with reserved addresses.
+* IP 池不得与保留地址段重叠。配置 [IP 池][docs-ip-pool]时，请确保你的地址段不与保留地址重叠。
 
-If you integrate Tailscale with third-party services, verify that your network infrastructure doesn't use the CGNAT range (`100.64.0.0/10`) for other purposes. Some internet service providers (ISPs) use this range, which can cause [CGNAT conflicts][docs-troubleshooting-cgnat].
+如果你把 Tailscale 与第三方服务集成，请确认你的网络基础设施没有把 CGNAT 地址段（`100.64.0.0/10`）挪作他用。一些互联网服务提供商（ISP）会使用该地址段，这会引发 [CGNAT 冲突][docs-troubleshooting-cgnat]。
 
-## Troubleshooting
+## 故障排除
 
-If you experience connectivity issues related to IP addresses, the following resources can help:
+如果你遇到与 IP 地址相关的连接问题，以下资源可以提供帮助：
 
-* CGNAT conflicts: If your ISP or another virtual private network (VPN) uses the `100.64.0.0/10` range, you might experience routing conflicts. Refer to [CGNAT conflicts][docs-troubleshooting-cgnat] for solutions, including how to disable IPv4 selectively or tailnet-wide.
-* Multiple devices with the same IP: Two devices can have the same Tailscale IP address if you restore one from a backup or clone a file system. Refer to [multiple devices have the same 100.x IP address][docs-troubleshooting-duplicate-ip] to resolve this.
-* DNS resolution issues: If [MagicDNS][docs-magicdns] isn't resolving device names, verify that your device can reach the Quad100 DNS resolver at `100.100.100.100:53`. For Linux-specific issues, refer to [configuring Linux DNS][docs-linux-dns].
-* Device connectivity: For general connectivity troubleshooting, refer to [troubleshoot device connectivity][docs-troubleshoot-connectivity].
+* CGNAT 冲突：如果你的 ISP 或其他虚拟专用网络（VPN）使用了 `100.64.0.0/10` 地址段，你可能会遇到路由冲突。解决方法（包括如何选择性地禁用 IPv4 或在整个 tailnet 范围禁用）请参阅 [CGNAT 冲突][docs-troubleshooting-cgnat]。
+* 多台设备使用相同 IP：如果你从备份恢复了一台设备或克隆了文件系统，两台设备可能会拥有相同的 Tailscale IP 地址。解决方法请参阅[多台设备拥有相同的 100.x IP 地址][docs-troubleshooting-duplicate-ip]。
+* DNS 解析问题：如果 [MagicDNS][docs-magicdns] 无法解析设备名称，请确认你的设备可以访问 `100.100.100.100:53` 上的 Quad100 DNS 解析器。Linux 特有的问题请参阅[配置 Linux DNS][docs-linux-dns]。
+* 设备连接：一般性连接问题排查请参阅[排查设备连接问题][docs-troubleshoot-connectivity]。
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

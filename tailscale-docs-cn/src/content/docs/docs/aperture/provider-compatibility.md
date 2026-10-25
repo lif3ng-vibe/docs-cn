@@ -1,77 +1,77 @@
 ---
-title: "Provider configuration"
-description: "Reference for Aperture provider compatibility flags, authorization, credential sources, custom headers, and cost estimates."
+title: "提供商配置"
+description: "Aperture 提供商兼容性标志、认证方式、凭证来源、自定义 header 和成本估算的参考。"
 ---
 
-Last validated Sep 29, 2026
+最后验证于 Sep 29, 2026
 
-Use this reference for provider compatibility flags, authorization, and cost estimates in Aperture.
+本参考涵盖 Aperture 中的提供商兼容性标志、认证方式和成本估算。
 
-For provider API formats, setup links, and requirements, refer to the [provider matrix][docs-provider-matrix] in Supported providers and clients.
+提供商 API 格式、设置链接和要求，请参阅"受支持的提供商和客户端"中的[提供商矩阵][docs-provider-matrix]。
 
-For client API formats and setup requirements, refer to [clients and agent harnesses][docs-client-matrix].
+客户端 API 格式和设置要求，请参阅[客户端与 agent 框架][docs-client-matrix]。
 
-For compatibility restrictions and generic integrations, refer to [limitations][docs-compatibility-limitations] and [other providers and clients][docs-other-integrations].
+兼容性限制和通用集成方式，请参阅[限制][docs-compatibility-limitations]和[其他提供商与客户端][docs-other-integrations]。
 
-## Compatibility flags
+## 兼容性标志
 
-The `compatibility` object in a provider configuration specifies which API formats the provider supports. These flags determine which endpoints Aperture exposes for the provider's models.
+提供商配置中的 `compatibility` 对象指定该提供商支持哪些 API 格式。这些标志决定 Aperture 为该提供商的模型开放哪些端点。
 
-| Flag                      | Type    | Default                               | Description                                                                                    |
+| 标志                      | 类型    | 默认值                       | 描述                                                                                           |
 | ------------------------- | ------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `openai_chat`             | boolean | `true` unless another flag is enabled | Supports `/v1/chat/completions`. Set explicitly to retain or disable it alongside other flags. |
-| `openai_responses`        | boolean | `false`                               | Supports `/v1/responses`                                                                       |
-| `anthropic_messages`      | boolean | `false`                               | Supports `/v1/messages`                                                                        |
-| `gemini_generate_content` | boolean | `false`                               | Supports the direct Gemini API (`generativelanguage.googleapis.com`)                           |
-| `bedrock_model_invoke`    | boolean | `false`                               | Supports Amazon Bedrock InvokeModel. Request format depends on the model family.               |
-| `google_generate_content` | boolean | `false`                               | Supports Gemini Enterprise Agent Platform Gemini format (`aiplatform.googleapis.com`)          |
-| `google_raw_predict`      | boolean | `false`                               | Supports Gemini Enterprise Agent Platform raw predict for Anthropic models                     |
-| `bedrock_converse`        | boolean | `false`                               | Supports Amazon Bedrock Converse API format                                                    |
+| `openai_chat`             | boolean | 未启用其他标志时为 `true`             | 支持 `/v1/chat/completions`。与其他标志同时使用时需显式设置以保留或禁用。                       |
+| `openai_responses`        | boolean | `false`                               | 支持 `/v1/responses`                                                                           |
+| `anthropic_messages`      | boolean | `false`                               | 支持 `/v1/messages`                                                                            |
+| `gemini_generate_content` | boolean | `false`                               | 支持直连 Gemini API（`generativelanguage.googleapis.com`）                                     |
+| `bedrock_model_invoke`    | boolean | `false`                               | 支持 Amazon Bedrock InvokeModel。请求格式取决于模型家族。                                       |
+| `google_generate_content` | boolean | `false`                               | 支持 Gemini Enterprise Agent Platform 的 Gemini 格式（`aiplatform.googleapis.com`）            |
+| `google_raw_predict`      | boolean | `false`                               | 支持 Gemini Enterprise Agent Platform 对 Anthropic 模型的 raw predict                          |
+| `bedrock_converse`        | boolean | `false`                               | 支持 Amazon Bedrock Converse API 格式                                                          |
 
-Enable a flag for each API format your provider supports. For example, a Gemini Enterprise Agent Platform provider can use separate flags for Gemini and Anthropic models.
+为提供商支持的每种 API 格式启用相应标志。例如，Gemini Enterprise Agent Platform 提供商可以为 Gemini 模型和 Anthropic 模型分别使用不同的标志。
 
-If you enable another flag and omit `openai_chat`, Aperture disables Chat Completions. Set `"openai_chat": true` to keep it enabled, or `"openai_chat": false` to disable it explicitly.
+如果你启用了其他标志而省略 `openai_chat`，Aperture 会禁用 Chat Completions。设置 `"openai_chat": true` 可保持启用，设置 `"openai_chat": false` 可显式禁用。
 
-## Additional provider fields
+## 其他提供商字段
 
-Providers also support the optional fields below. Refer to the [Aperture configuration reference][docs-aperture-configuration] for all provider fields.
+提供商还支持以下可选字段。全部提供商字段请参阅 [Aperture 配置参考][docs-aperture-configuration]。
 
-| Field         | Type    | Default | Description                                                                                                                                            |
+| 字段          | 类型    | 默认值  | 描述                                                                                                                                                   |
 | ------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `description` | string  | `""`    | Human-readable description of the provider.                                                                                                            |
-| `preference`  | integer | `0`     | Routing priority. Higher values are preferred when multiple providers serve the same model.                                                            |
-| `disabled`    | boolean | `false` | Excludes the provider from routing and the `/v1/models` endpoint. Use this field to temporarily disable a provider without removing its configuration. |
+| `description` | string  | `""`    | 提供商的人类可读描述。                                                                                                                                 |
+| `preference`  | integer | `0`     | 路由优先级。多个提供商提供同一模型时，值越高越优先。                                                                                                    |
+| `disabled`    | boolean | `false` | 将提供商从路由和 `/v1/models` 端点中排除。使用此字段可临时禁用提供商而无需删除其配置。                                                                  |
 
-## Authorization types
+## 认证类型
 
-The `authorization` field selects the upstream header format. Anthropic uses `x-api-key`, and direct Google Gemini uses `x-goog-api-key`. The other named providers in the [provider matrix][docs-provider-matrix] use `bearer`, which is also the default for generic and self-hosted providers.
+`authorization` 字段选择上游 header 格式。Anthropic 使用 `x-api-key`，直连 Google Gemini 使用 `x-goog-api-key`。[提供商矩阵][docs-provider-matrix]中的其他具名提供商使用 `bearer`，这也是通用和自托管提供商的默认值。
 
-| Value                  | Header format                        | Used by                     |
+| 取值                   | header 格式                          | 使用方                      |
 | ---------------------- | ------------------------------------ | --------------------------- |
-| `bearer`               | `Authorization: Bearer <key>`        | OpenAI and most providers   |
+| `bearer`               | `Authorization: Bearer <key>`        | OpenAI 及大多数提供商       |
 | `x-api-key`            | `x-api-key: <key>`                   | Anthropic                   |
 | `x-goog-api-key`       | `x-goog-api-key: <key>`              | Google Gemini               |
 | `hec`                  | `Authorization: Splunk <key>`        | Splunk HTTP Event Collector |
 | `cf-aig-authorization` | `cf-aig-authorization: Bearer <key>` | Cloudflare AI Gateway       |
 
-\[Missing snippet: aperture\_provider\_auth\_note.mdx]
+\[缺失片段：aperture\_provider\_auth\_note.mdx]
 
-### Credential source
+### 凭证来源
 
-The `auth_mode` field selects whether Aperture uses the configured `apikey` or the client's credential. It is independent of `authorization`, which sets the header format.
+`auth_mode` 字段选择 Aperture 是使用已配置的 `apikey` 还是客户端自己的凭证。它与设置 header 格式的 `authorization` 相互独立。
 
-| Value          | Behavior                                                                                                                                                                 |
+| 取值           | 行为                                                                                                                                                                     |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `""` (default) | Inject the configured `apikey` on every request.                                                                                                                         |
-| `override`     | Explicit form of the default. Inject the configured `apikey`. Requires a non-empty `apikey`, or the configuration fails to save.                                         |
-| `passthrough`  | Forward the client's own `Authorization` or `x-api-key` header to the upstream unchanged. Fall back to the configured `apikey` only when the client sends no credential. |
-| `none`         | Strip all upstream credentials, for providers that need none.                                                                                                            |
+| `""`（默认）   | 在每个请求中注入已配置的 `apikey`。                                                                                                                                      |
+| `override`     | 默认值的显式形式。注入已配置的 `apikey`。要求 `apikey` 非空，否则配置保存失败。                                                                                          |
+| `passthrough`  | 把客户端自己的 `Authorization` 或 `x-api-key` header 原样转发给上游。仅在客户端未发送凭证时才回退到已配置的 `apikey`。                                                    |
+| `none`         | 剥离所有上游凭证，适用于不需要凭证的提供商。                                                                                                                             |
 
-A `passthrough` provider without an `apikey` is passthrough-only. Its models appear in `/v1/models`, but not in built-in chat. Chat requests have no client credential to forward. For setup instructions, including subscription-plan OAuth tokens, refer to [set up passthrough mode][docs-use-passthrough-mode].
+没有 `apikey` 的 `passthrough` 提供商是纯透传（passthrough-only）提供商。其模型会出现在 `/v1/models` 中，但不会出现在内置聊天中，因为聊天请求没有可供转发的客户端凭证。设置说明（包括订阅套餐的 OAuth token）请参阅[设置透传模式][docs-use-passthrough-mode]。
 
-### Custom headers
+### 自定义 header
 
-Some providers require additional headers beyond the standard `authorization` field. Use `add_headers` on the provider to include custom headers in every request Aperture sends to that provider. Each entry is a string in `"Header-Name: value"` format:
+某些提供商需要在标准 `authorization` 字段之外的额外 header。在提供商上使用 `add_headers`，让 Aperture 发送给该提供商的每个请求都带上自定义 header。每个条目都是 `"Header-Name: value"` 格式的字符串：
 
 ```json
 {
@@ -89,32 +89,32 @@ Some providers require additional headers beyond the standard `authorization` fi
 }
 ```
 
-## Cost basis
+## 成本基准
 
-Aperture estimates the dollar cost of each LLM request. It uses these estimates for quota deductions, hook metadata, and per-model pricing on the [**Models** page][docs-chat-models] in Chat.
+Aperture 会估算每个 LLM 请求的美元成本。这些估算用于配额扣减、hook 元数据，以及 Chat 中 [**Models** 页面][docs-chat-models]上的按模型定价。
 
-Aperture auto-infers pricing in two steps. It first checks the `baseurl` host against known gateway hosts. `openrouter.ai` maps to `openrouter`, and `ai-gateway.vercel.sh` maps to `vercel`. If the host does not match, Aperture falls back to the provider's `compatibility` flags. For example, `anthropic_messages` maps to Anthropic pricing.
+Aperture 分两步自动推断定价。它先把 `baseurl` 主机与已知网关主机比对。`openrouter.ai` 映射到 `openrouter`，`ai-gateway.vercel.sh` 映射到 `vercel`。如果主机不匹配，Aperture 会回退到提供商的 `compatibility` 标志。例如 `anthropic_messages` 映射到 Anthropic 定价。
 
-Set `cost_basis` explicitly for a regional price source, such as `bedrock-eu` or `azure-eu`, or for a custom gateway host.
+对于区域价格来源（如 `bedrock-eu` 或 `azure-eu`）或自定义网关主机，请显式设置 `cost_basis`。
 
-Use `vertex` for Gemini Enterprise Agent Platform and `azure` for both Microsoft Foundry provider types. Generic and self-hosted providers have no dedicated pricing source. With default Chat Completions compatibility, they fall back to `openai`. Use a [model cost map][ar-model-cost-map] when their model names are absent from that pricing source.
+Gemini Enterprise Agent Platform 使用 `vertex`，两种 Microsoft Foundry 提供商类型都使用 `azure`。通用和自托管提供商没有专属定价来源。在默认 Chat Completions 兼容性下，它们回退到 `openai`。当其模型名称不在该定价来源中时，请使用[模型成本映射][ar-model-cost-map]。
 
-| `cost_basis` value | Pricing source                                |
+| `cost_basis` 取值  | 定价来源                                      |
 | ------------------ | --------------------------------------------- |
-| `anthropic`        | Anthropic API list prices                     |
-| `openai`           | OpenAI API list prices                        |
-| `google`           | Google Gemini API list prices                 |
-| `bedrock`          | AWS Bedrock pricing (US rates, default)       |
-| `bedrock-us`       | AWS Bedrock US-region pricing                 |
-| `bedrock-eu`       | AWS Bedrock EU-region pricing                 |
-| `bedrock-ap`       | AWS Bedrock AP-region pricing (uses US rates) |
-| `vertex`           | Gemini Enterprise Agent Platform pricing      |
-| `azure`            | Azure OpenAI standard pricing                 |
-| `azure-eu`         | Azure OpenAI EU-region pricing                |
-| `openrouter`       | OpenRouter pricing                            |
-| `vercel`           | Vercel AI Gateway pricing                     |
+| `anthropic`        | Anthropic API 官方定价                        |
+| `openai`           | OpenAI API 官方定价                           |
+| `google`           | Google Gemini API 官方定价                    |
+| `bedrock`          | AWS Bedrock 定价（美国费率，默认）            |
+| `bedrock-us`       | AWS Bedrock 美国区域定价                      |
+| `bedrock-eu`       | AWS Bedrock 欧盟区域定价                      |
+| `bedrock-ap`       | AWS Bedrock 亚太区域定价（使用美国费率）      |
+| `vertex`           | Gemini Enterprise Agent Platform 定价         |
+| `azure`            | Azure OpenAI 标准定价                         |
+| `azure-eu`         | Azure OpenAI 欧盟区域定价                     |
+| `openrouter`       | OpenRouter 定价                               |
+| `vercel`           | Vercel AI Gateway 定价                        |
 
-To disable auto-inference globally, set `auto_cost_basis` to `false` at the top level of the configuration.
+要在全局禁用自动推断，请在配置顶层把 `auto_cost_basis` 设置为 `false`。
 
 ```json
 {
@@ -127,11 +127,11 @@ To disable auto-inference globally, set `auto_cost_basis` to `false` at the top 
 }
 ```
 
-When `auto_cost_basis` is `false`, Aperture estimates token costs only for providers with an explicit `cost_basis`. Costs reported directly by the upstream gateway remain available.
+`auto_cost_basis` 为 `false` 时，Aperture 只为显式设置了 `cost_basis` 的提供商估算 token 成本。上游网关直接上报的成本仍然可用。
 
-### Model cost map
+### 模型成本映射
 
-If a model is missing from the pricing database, use `model_cost_map` to map its name to a known model:
+如果某个模型不在定价数据库中，请使用 `model_cost_map` 把它的名称映射到一个已知模型：
 
 ```json
 {
@@ -147,27 +147,27 @@ If a model is missing from the pricing database, use `model_cost_map` to map its
 }
 ```
 
-This example prices hypothetical `custom-opus-*` models with the `claude-opus-4-8` pricing entry. It prices preview models with the `claude-sonnet-4-6` pricing entry and a 10% markup. These are illustrative estimates, not a claim that the models have equivalent prices. Choose a pricing target and adjustment appropriate for your upstream model.
+此示例用 `claude-opus-4-8` 定价条目为假想的 `custom-opus-*` 模型计价，用 `claude-sonnet-4-6` 定价条目加 10% 的上浮为预览版模型计价。这些只是示意性估算，并不表示这些模型的价格真的等值。请根据你的上游模型选择合适的定价目标和调整系数。
 
-Each entry accepts the following fields:
+每个条目接受以下字段：
 
-| Field        | Type   | Default    | Description                                                                                                                                                        |
+| 字段         | 类型   | 默认值     | 描述                                                                                                                                                               |
 | ------------ | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `match`      | string | (required) | Glob pattern against the model name. Uses Go's `path.Match` syntax, where `*` matches any sequence of non-separator characters and `?` matches a single character. |
-| `as`         | string | (required) | Replacement model name for the pricing lookup.                                                                                                                     |
-| `adjustment` | float  | `1.0`      | Price multiplier. A value of `1.5` marks up 50%.                                                                                                                   |
+| `match`      | string | （必填）   | 针对模型名称的 glob 模式。使用 Go 的 `path.Match` 语法，`*` 匹配任意序列的非分隔符字符，`?` 匹配单个字符。                                                          |
+| `as`         | string | （必填）   | 用于定价查询的替换模型名称。                                                                                                                                       |
+| `adjustment` | float  | `1.0`      | 价格乘数。值为 `1.5` 表示上浮 50%。                                                                                                                                |
 
-Aperture uses the first matching entry.
+Aperture 使用第一个匹配的条目。
 
-## Related
+## 相关内容
 
-* For the complete configuration schema, refer to the [Aperture configuration reference][docs-aperture-configuration].
-* For step-by-step provider setup instructions, refer to the [set up LLM providers][docs-set-up-providers] guides.
-* For instructions on configuring coding agents to connect through Aperture, refer to the [set up LLM clients][docs-use-your-tools] guides.
-* For automated client configuration, refer to the [Aperture CLI][docs-cli].
-* For connection and request failures, refer to [Troubleshooting Aperture][docs-troubleshooting].
+* 完整的配置架构请参阅 [Aperture 配置参考][docs-aperture-configuration]。
+* 分步的提供商设置说明请参阅[设置 LLM 提供商][docs-set-up-providers]指南。
+* 配置编码 agent 通过 Aperture 连接的说明请参阅[设置 LLM 客户端][docs-use-your-tools]指南。
+* 自动化客户端配置请参阅 [Aperture CLI][docs-cli]。
+* 连接和请求失败问题请参阅 [Aperture 故障排除][docs-troubleshooting]。
 
-[ar-model-cost-map]: #model-cost-map
+[ar-model-cost-map]: #模型成本映射
 
 [docs-aperture-configuration]: /docs/aperture/configuration
 

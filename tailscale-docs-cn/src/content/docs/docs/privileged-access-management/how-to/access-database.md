@@ -1,55 +1,55 @@
 ---
-title: "Access a database using Tailscale PAM"
-description: "[Tailscale PAM][docs-pam] lets you give users secure, identity-based access to databases without distributing database credentials."
+title: "使用 Tailscale PAM 访问数据库"
+description: "[Tailscale PAM][docs-pam] 让你为用户提供对数据库的、基于身份的安全访问，而无需分发数据库凭证。"
 ---
 
-Last validated Aug 20, 2026
+最后验证于 Aug 20, 2026
 
-> **Note:** Tailscale PAM is currently in beta.
+> **注意：** Tailscale PAM 目前处于 beta 阶段。
 
-[Tailscale PAM][docs-pam] lets you give users secure, identity-based access to databases without distributing database credentials.
+[Tailscale PAM][docs-pam] 让你为用户提供对数据库的、基于身份的安全访问，而无需分发数据库凭证。
 
-Users authenticate with their [Tailscale identity][docs-tailscale-identity], and you control who can connect to each database and what they're allowed to do. Tailscale PAM also gives you a centralized audit trail, so you can review who accessed a database, which device they connected from, when they connected, and, when session recording is enabled, the queries they ran.
+用户使用他们的 [Tailscale 身份][docs-tailscale-identity]进行认证，由你控制谁能连接到每个数据库以及他们能做什么。Tailscale PAM 还提供集中式审计跟踪，你可以审查谁访问了数据库、从哪台设备连接、何时连接，以及在启用会话录制的情况下，他们执行了哪些查询。
 
-In practice, this gives database access an SSO-like experience. Users sign in with Tailscale and connect to the databases they're allowed to use without needing the upstream database username or password.
+在实际使用中，这为数据库访问带来了类似单点登录（SSO）的体验。用户使用 Tailscale 登录，即可连接到他们被允许使用的数据库，而无需知道上游数据库的用户名或密码。
 
-## How database access works
+## 数据库访问的工作方式
 
-Database access is provided through a Tailscale PAM [connector][docs-pam-connectors]. The connector runs in your environment, where it has network access to the databases you want to make available.
+数据库访问通过 Tailscale PAM [连接器][docs-pam-connectors]提供。连接器在你的环境中运行，对你想开放的数据库具有网络访问能力。
 
-The connector establishes outbound connectivity to Tailscale PAM. When an authorized user starts a database session, Tailscale PAM authenticates the user with their Tailscale identity, applies the appropriate access controls, and proxies the connection through the connector to the target database.
+连接器会建立到 Tailscale PAM 的出站连接。当获得授权的用户发起数据库会话时，Tailscale PAM 会用其 Tailscale 身份认证该用户、应用相应的访问控制，并通过连接器把连接代理到目标数据库。
 
-Because the connector establishes the connection from your environment, you don't need to expose the database directly to the public internet.
+由于连接是从你的环境内部发起的，你无需把数据库直接暴露到公网。
 
-Users can connect using the database clients they already use, or use the browser-based database client when one is available. This lets your organization centralize database access while still letting users work with familiar tools.
+用户可以使用他们已经在用的数据库客户端连接，也可以在可用时使用基于浏览器的数据库客户端。这让你的组织既能集中管理数据库访问，又能让用户继续使用熟悉的工具。
 
-## Control database access
+## 控制数据库访问
 
-Tailscale PAM grants let you control who can connect to a database and what they're allowed to do after they connect.
+Tailscale PAM 授权（grant）让你可以控制谁能连接到数据库，以及连接之后能做什么。
 
-For example, you can provide one group with read-only database access while allowing another group to do a broader set of operations. The database remains protected by its existing authentication, while users access it through their Tailscale identity.
+例如，你可以为一个组提供只读的数据库访问权限，同时允许另一个组执行更广泛的操作。数据库仍受其既有认证的保护，而用户通过其 Tailscale 身份访问它。
 
-For more information, refer to [Control access to Tailscale PAM services][docs-pam-control-access].
+更多信息参见[控制对 Tailscale PAM 服务的访问][docs-pam-control-access]。
 
-## Database guides
+## 数据库指南
 
-The following guides show you how to make different types of databases available through Tailscale PAM:
+以下指南介绍如何通过 Tailscale PAM 开放不同类型的数据库：
 
-* [Access a Google Cloud SQL database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/google-cloud-sql) — Access a Google Cloud SQL database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Google Cloud SQL 数据库](/docs/privileged-access-management/how-to/access-database/google-cloud-sql)——使用 Tailscale PAM 访问 Google Cloud SQL 数据库。
 
-* [Access a Microsoft SQL Server database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/microsoft-sql-server) — Provide privileged access to a Microsoft SQL Server database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Microsoft SQL Server 数据库](/docs/privileged-access-management/how-to/access-database/microsoft-sql-server)——使用 Tailscale PAM 为 Microsoft SQL Server 数据库提供特权访问。
 
-* [Access a MongoDB database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/mongodb) — Access a MongoDB database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 MongoDB 数据库](/docs/privileged-access-management/how-to/access-database/mongodb)——使用 Tailscale PAM 访问 MongoDB 数据库。
 
-* [Access a MySQL database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/mysql) — Access a MySQL database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 MySQL 数据库](/docs/privileged-access-management/how-to/access-database/mysql)——使用 Tailscale PAM 访问 MySQL 数据库。
 
-* [Access a PostgreSQL database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/postgresql) — Access a PostgreSQL database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 PostgreSQL 数据库](/docs/privileged-access-management/how-to/access-database/postgresql)——使用 Tailscale PAM 访问 PostgreSQL 数据库。
 
-* [Access an Amazon RDS database using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/amazon-rds) — Access an Amazon RDS database using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Amazon RDS 数据库](/docs/privileged-access-management/how-to/access-database/amazon-rds)——使用 Tailscale PAM 访问 Amazon RDS 数据库。
 
-* [Access an Elasticsearch server using Tailscale PAM](/docs/privileged-access-management/how-to/access-database/elasticsearch) — Access an Elasticsearch server using Tailscale PAM.
+* [使用 Tailscale PAM 访问 Elasticsearch 服务器](/docs/privileged-access-management/how-to/access-database/elasticsearch)——使用 Tailscale PAM 访问 Elasticsearch 服务器。
 
-If you don't have a database available for testing, you can also use one of the public Tailscale PAM sandbox servers. For information about the available sandbox services and credentials, refer to [Tailscale PAM sandbox servers][docs-pam-faq-sandbox].
+如果你没有可用于测试的数据库，也可以使用 Tailscale 的公共 PAM 沙箱服务器之一。关于可用沙箱服务和凭证的信息，参见 [Tailscale PAM 沙箱服务器][docs-pam-faq-sandbox]。
 
 [docs-pam-connectors]: /docs/privileged-access-management/connectors
 

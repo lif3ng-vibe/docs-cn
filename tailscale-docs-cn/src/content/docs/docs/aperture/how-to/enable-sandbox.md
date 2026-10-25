@@ -1,40 +1,40 @@
 ---
-title: "Enable the chat sandbox"
-description: "The chat sandbox gives the Aperture assistant access to an isolated Linux environment where it can execute commands, read and edit files, and share downloadable output with users during a conversation"
+title: "启用聊天沙箱"
+description: "聊天沙箱让 Aperture 助手可以访问一个隔离的 Linux 环境，在对话过程中执行命令、读取和编辑文件，并与用户分享可下载的输出。"
 ---
 
-Last validated Sep 28, 2026
+最后验证于 Sep 28, 2026
 
-> **Note:** Aperture chat sandbox is currently in alpha.
+> **注意：** Aperture 聊天沙箱目前处于 alpha 阶段。
 
 \[Missing snippet: contact\_account\_manager.mdx]
 
-The chat sandbox gives the Aperture assistant access to an isolated Linux environment where it can execute commands, read and edit files, and share downloadable output with users during a conversation.
+聊天沙箱让 Aperture 助手可以访问一个隔离的 Linux 环境，在对话过程中执行命令、读取和编辑文件，并与用户分享可下载的输出。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, confirm the following:
+开始之前，请确认以下事项：
 
-* You have admin access to edit the Aperture configuration. Refer to [set up admin access][docs-set-up-admin-access].
-* Users who need sandbox access can reach the chat interface, which is available by default. Refer to [control model access][docs-grant-model-access].
+* 你拥有编辑 Aperture 配置的管理员权限。参阅[设置管理员访问权限][docs-set-up-admin-access]。
+* 需要使用沙箱的用户能够访问聊天界面，该界面默认可用。参阅[控制模型访问][docs-grant-model-access]。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale manages sandbox availability for your Aperture gateway. You do not configure or operate sandbox infrastructure. For more about the feature, refer to [Aperture chat sandbox][docs-chat-sandbox].
+> 沙箱的可用性由 Tailscale 为你的 Aperture 网关管理。你无需配置或运维沙箱基础设施。关于该功能的更多信息，参阅 [Aperture 聊天沙箱][docs-chat-sandbox]。
 
-## Request the chat sandbox for your Aperture gateway
+## 为你的 Aperture 网关申请聊天沙箱
 
-Tailscale enables the chat sandbox for your gateway. There is nothing to add to your Aperture configuration.
+聊天沙箱由 Tailscale 为你的网关启用，你不需要在 Aperture 配置中添加任何内容。
 
-To request the sandbox, [complete the request form][xt-sandbox-request]. You can also contact your Tailscale account manager or email `aperture@tailscale.com`.
+要申请沙箱，请[填写申请表单][xt-sandbox-request]。你也可以联系你的 Tailscale 客户经理，或发送电子邮件至 `aperture@tailscale.com`。
 
-> **Note:**
+> **注意：**
 >
-> The chat sandbox gives the chat assistant its sandbox tools. It is unrelated to the `sandboxes` configuration block, which controls the separate workstation provisioning feature.
+> 聊天沙箱为聊天助手提供沙箱工具。它与 `sandboxes` 配置块无关，后者控制的是独立的工作站开通功能。
 
-## Restrict portal access (optional)
+## 限制门户访问（可选）
 
-The user portal is available by default, so authorized users can reach chat and its sandbox tools without an extra portal grant. To make matching non-admin users API-only, set `enable_portal` to `false`:
+用户门户默认可用，因此获得授权的用户无需额外的门户授权即可使用聊天及其沙箱工具。要让匹配的非管理员用户只能使用 API，请将 `enable_portal` 设为 `false`：
 
 ```json
 {
@@ -51,33 +51,33 @@ The user portal is available by default, so authorized users can reach chat and 
 }
 ```
 
-This disables the entire user portal for matching non-admin users, including chat and sandbox access. It is not a sandbox-only grant. Admins always retain portal access. An explicit `enable_portal: true` in any matching grant overrides a matching `false`.
+这会为匹配的非管理员用户禁用整个用户门户，包括聊天和沙箱访问。它不是仅针对沙箱的授权。管理员始终保留门户访问。任何匹配授权中的显式 `enable_portal: true` 会覆盖匹配的 `false`。
 
-## Verify the sandbox is working
+## 验证沙箱是否正常工作
 
-After Tailscale enables the sandbox for your gateway:
+在 Tailscale 为你的网关启用沙箱之后：
 
-1. Open `/` or `/chat` on the Aperture gateway.
-2. Start a new conversation.
-3. Open **Tools** and confirm **Code Sandbox** is available and selected.
-4. Ask the assistant to run a command, such as "What is the output of `echo hello`?"
-5. Confirm the assistant runs the command and returns the result.
+1. 打开 Aperture 网关上的 `/` 或 `/chat`。
+2. 开始一个新对话。
+3. 打开 **Tools**，确认 **Code Sandbox** 可用且已选中。
+4. 让助手运行一个命令，例如 "`echo hello` 的输出是什么？"
+5. 确认助手运行了命令并返回结果。
 
-If **Code Sandbox** shows **Contact support**, contact your Tailscale account manager or email `aperture@tailscale.com`.
+如果 **Code Sandbox** 显示 **Contact support**，请联系你的 Tailscale 客户经理，或发送电子邮件至 `aperture@tailscale.com`。
 
-## What changes when sandbox is enabled
+## 启用沙箱后有哪些变化
 
-The assistant can run commands, read and search files, create and edit files, and present output files for viewing or download. Users can select **Code Sandbox** for a conversation unless a user or project tool policy disables it.
+助手可以运行命令、读取和搜索文件、创建和编辑文件，并展示输出文件供查看或下载。用户可以为对话选择 **Code Sandbox**，除非用户或项目的工具策略将其禁用。
 
-## Next steps
+## 后续步骤
 
-* [Manage sandbox operations][docs-manage-sandbox] for monitoring and other operational tasks.
-* [Sandbox reference][docs-sandbox-reference] for tool parameters, size limits, timeouts, and error messages.
-* [Troubleshoot sandbox issues][docs-troubleshoot-sandbox] for diagnosing common problems.
-* Refer to [Aperture configuration][docs-configuration] for the full configuration reference, including feature flags and grant capabilities.
-* [Control model access][docs-grant-model-access] to configure which models are available in the chat interface.
-* [Set up admin access][docs-set-up-admin-access] to manage who can change gateway settings.
-* [Chat reference][docs-chat-reference] for user portal tools and settings.
+* [管理沙箱运维][docs-manage-sandbox]：监控与其他运维任务。
+* [沙箱参考][docs-sandbox-reference]：工具参数、大小限制、超时和错误消息。
+* [排查沙箱问题][docs-troubleshoot-sandbox]：诊断常见问题。
+* 完整配置参考（包括功能开关和授权能力）请参阅 [Aperture 配置][docs-configuration]。
+* [控制模型访问][docs-grant-model-access]：配置聊天界面中可用的模型。
+* [设置管理员访问权限][docs-set-up-admin-access]：管理谁可以更改网关设置。
+* [Chat 参考][docs-chat-reference]：用户门户的工具与设置。
 
 [docs-chat-sandbox]: /docs/aperture/chat-sandbox
 

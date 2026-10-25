@@ -1,70 +1,70 @@
 ---
-title: "Recommended exit nodes"
-description: "A recommended exit node (also called a suggested exit node) is an [exit node][docs-exit-node] or [Mullvad exit node][docs-mullvad-exit-node] that Tailscale recommends based on client information such "
+title: "推荐出口节点"
+description: "推荐出口节点（也称建议出口节点）是 Tailscale 基于位置和延迟等客户端信息推荐给你的[出口节点][docs-exit-node]或 [Mullvad 出口节点][docs-mullvad-exit-node]"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-> **Note:**
+> **注意：**
 >
-> Recommended exit nodes are available for [Standard, Premium, and Enterprise plans][co-pricing], or customers who have purchased the [Mullvad][docs-mullvad-exit-node] add-on.
+> 推荐出口节点面向 [Standard、Premium 和 Enterprise 套餐][co-pricing]，以及已购买 [Mullvad][docs-mullvad-exit-node] 附加服务的客户。
 
-A recommended exit node (also called a suggested exit node) is an [exit node][docs-exit-node] or [Mullvad exit node][docs-mullvad-exit-node] that Tailscale recommends based on client information such as location and latency. A recommendation does not change a manually selected exit node. You can select a recommendation once or configure your client to automatically track recommendations. A [system policy][docs-mandatory-exit-nodes] can require automatic selection, but is not required for you to enable it.
+推荐出口节点（recommended exit node，也称建议出口节点/suggested exit node）是 Tailscale 基于位置和延迟等客户端信息推荐给你的[出口节点][docs-exit-node]或 [Mullvad 出口节点][docs-mullvad-exit-node]。推荐不会改变你手动选择的出口节点。你可以一次性采纳某个推荐，也可以将客户端配置为自动跟踪推荐。[系统策略][docs-mandatory-exit-nodes]可以强制要求自动选择，但启用该功能本身并不需要系统策略。
 
-## How it works
+## 工作原理
 
-Tailscale prefers non-Mullvad exit nodes when selecting a recommended exit node. If the tailnet has any standard exit nodes available, Tailscale recommends them first. If no standard exit nodes are available, Tailscale recommends an available Mullvad exit node if one exists.
+在选择推荐出口节点时，Tailscale 优先考虑非 Mullvad 出口节点。如果 tailnet 中有任何标准出口节点可用，Tailscale 会优先推荐它们。如果没有标准出口节点可用，Tailscale 会在存在可用的 Mullvad 出口节点时推荐其中一个。
 
-The selection logic varies between standard and Mullvad exit nodes. Tailscale uses latency and performance information to select a recommended standard exit node. Because Tailscale doesn't have performance information for Mullvad exit nodes, it selects one to recommend based on location.
+标准出口节点与 Mullvad 出口节点的选择逻辑不同。Tailscale 使用延迟和性能信息来选择推荐的标准出口节点。由于 Tailscale 没有 Mullvad 出口节点的性能信息，它会基于位置来选择推荐。
 
-### MagicRoute for exit nodes
+### 面向出口节点的 MagicRoute
 
-When your tailnet opts in to the MagicRoute beta, clients running Tailscale v1.86.0 or later can use its priority scoring for exit node recommendations. Older clients keep their existing recommendation behavior. Refer to [MagicRoute][docs-magicroute] for details and limitations.
+当你的 tailnet 选择加入 MagicRoute beta 后，运行 Tailscale v1.86.0 或更高版本的客户端可以使用其优先级评分来生成出口节点推荐。较旧的客户端保持现有的推荐行为。详情与限制参见 [MagicRoute][docs-magicroute]。
 
-MagicRoute requires a Premium or Enterprise tailnet eligible for route selection. You can use recommended exit nodes without MagicRoute.
+MagicRoute 要求 tailnet 为符合路由选择（route selection）条件的 Premium 或 Enterprise 套餐。不使用 MagicRoute 你也可以使用推荐出口节点。
 
-## Use a suggested exit node
+## 使用建议出口节点
 
-You can use a recommended exit node from the [Tailscale CLI][docs-tailscale-cli] or the Tailscale client.
+你可以通过 [Tailscale CLI][docs-tailscale-cli] 或 Tailscale 客户端使用推荐出口节点。
 
 #### Tailscale CLI
 
-To select a suggested exit node once using the Tailscale CLI:
+使用 Tailscale CLI 一次性选择建议出口节点的步骤：
 
-1. Use the following command to view the recommended exit node:
+1. 使用以下命令查看推荐出口节点：
 
    ```shell
    tailscale exit-node suggest
    ```
 
-   The command returns the ID of the suggested exit node.
+   该命令会返回建议出口节点的 ID。
 
    ```
    Suggested exit node: <ID>.
    To accept this suggestion, use `tailscale set --exit-node=<ID>`.
    ```
 
-2. Run `tailscale set` with the `--exit-node=<ID>` flag to use the suggested exit node.
+2. 运行带 `--exit-node=<ID>` 标志的 `tailscale set` 来使用建议出口节点。
 
    ```shell
    tailscale set --exit-node=<ID>
    ```
 
-To automatically track recommendations instead, run:
+如果要改为自动跟踪推荐，运行：
 
 ```shell
 tailscale set --exit-node=auto:any
 ```
 
-Your client automatically switches to the suggested exit node when available exit nodes or network conditions change. For details, refer to [`tailscale set`][docs-tailscale-cli-set].
+当可用出口节点或网络状况发生变化时，你的客户端会自动切换到建议出口节点。详情参见 [`tailscale set`][docs-tailscale-cli-set]。
 
-#### Tailscale client
+#### Tailscale 客户端
 
-To use the suggested exit node using the Tailscale client, select **Recommended** from the **Exit Nodes** menu.
+要使用 Tailscale 客户端选择建议出口节点，在 **Exit Nodes** 菜单中选择 **Recommended**。
 
-## Force use of an exit node
+## 强制使用出口节点
 
-You can force devices to use an exit node based on system policies, which you can deploy using mobile device management (MDM) solutions. For details, refer to [Mandatory exit nodes][docs-mandatory-exit-nodes].
+你可以基于系统策略强制设备使用出口节点，这些策略可以通过移动设备管理（MDM）方案下发。详情参见[强制出口节点][docs-mandatory-exit-nodes]。
 
 [co-pricing]: https://tailscale.com/pricing
 

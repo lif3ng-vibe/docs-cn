@@ -1,0 +1,154 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+title: "策略证明器"
+sidebar-title: "策略证明器"
+description: "了解 OpenShell 如何使用策略证明器，并检查策略授予的访问不超过你定义的边界策略。"
+keywords: "生成式 AI, 网络安全, 策略, 证明器, 边界, 子智能体"
+position: 4
+---
+
+策略证明器（policy prover）是 OpenShell 的策略验证引擎。它用 SMT 求解器检查策略是否满足指定性质，例如是否保持在允许的访问边界之内。它的保证只覆盖其模型所表示的策略特性与行为。OpenShell 正在持续扩展模型以覆盖更多策略特性。
+
+OpenShell 用证明器执行两类检查：
+
+- 边界检查验证策略的授权不超过边界策略（boundary policy），后者定义一个环境中允许的最大访问。
+- 提案风险检查验证拟议的网络规则相对沙箱当前策略没有新增风险访问，例如访问云元数据地址，或为提供商凭据新增目的地。
+
+边界检查通过 `openshell-prover` CLI 运行，主要面向智能体。例如，父智能体可以检查它为子智能体编写的策略是否保持在父智能体自身最大允许策略之内。智能体每次通过[策略顾问](/how-it-works/policies/advisor)提议网络规则时，提案风险检查都会自动运行。
+
+两类检查回答不同的问题，通过其一不代表通过另一。通过提案风险检查的拟议规则仍可能超出你的边界；通过边界检查的策略也可能包含提案风险检查会标记的访问。
+
+本页介绍边界检查。提案风险检查参见[策略顾问](/how-it-works/policies/advisor)。
+
+证明器在运行时独立于网关。如果只需要独立二进制，请使用[支持矩阵](/about/support-matrix#独立策略证明器)中列出的构件。这些构件与 `openshell-prover-checksums-sha256.txt` 附于 [OpenShell 发布页](https://github.com/NVIDIA/OpenShell/releases)。
+
+## 运行边界检查
+
+边界检查把被测策略（称为候选策略，candidate）与你编写的边界策略进行比较。边界通常是一个环境允许的最大访问，例如企业对其智能体的最大策略。候选策略允许了边界不允许的内容时，证明器会给出一个示例。
+
+检查覆盖文件系统访问、进程身份、Landlock 设置、网络连接与 REST 请求。策略使用了其他内容（例如 GraphQL 或 MCP 规则）时，证明器会报告无法检查该策略，而不是忽略那些规则。[What the Boundary Check Covers](#边界检查覆盖什么) 描述每个部分及其限制。
+
+Homebrew、Debian、RPM 与 snap 包都随附证明器。CLI 读取本机上的策略文件，不需要网关，也不会应用或批准策略。
+
+创建 `boundary.yaml`，一个允许读取 `/usr` 与 `/etc` 的边界：
+
+```yaml
+version: 1
+filesystem_policy:
+  read_only:
+    - /usr
+    - /etc
+```
+
+创建 `candidate.yaml`，一个只允许读取 `/usr` 的候选策略：
+
+```yaml
+version: 1
+filesystem_policy:
+  read_only:
+    - /usr
+```
+
+用边界检查候选策略：
+
+```shell
+openshell-prover check candidate.yaml --boundary boundary.yaml
+```
+
+候选策略的授权小于边界，检查通过：
+
+```text
+result: within_boundary
+coverage: domains=filesystem,network_l4,network_rest,process,landlock
+```
+
+`coverage` 行列出证明器可以检查的策略部分。现在修改候选策略，让它还允许写入 `/tmp`，而边界不允许：
+
+```yaml
+version: 1
+filesystem_policy:
+  read_only:
+    - /usr
+  read_write:
+    - /tmp
+```
+
+再次运行同一条命令。检查失败，`counterexample` 行显示候选策略允许而边界不允许的访问：
+
+```text
+result: exceeds_boundary
+coverage: domains=filesystem,network_l4,network_rest,process,landlock
+counterexample: filesystem write /tmp
+```
+
+### 检查沙箱的策略
+
+要检查沙箱强制执行的策略，保存其生效策略并作为候选策略使用：
+
+```shell
+openshell sandbox get my-sandbox --policy-only > candidate.yaml
+openshell-prover check candidate.yaml --boundary boundary.yaml
+```
+
+生效策略包含挂接提供商的规则，因此检查会覆盖提供商添加的网络访问。证明器不会自行添加提供商规则。要在应用变更之前检查变更，把变更之后的完整生效策略交给证明器。
+
+## 读取结果
+
+证明器报告以下结果之一：
+
+| 结果 | 退出码 | 含义 |
+|---|---|---|
+| `within_boundary` | `0` | 在证明器检查的策略部分内，候选策略没有超出边界的授权。 |
+| `exceeds_boundary` | `1` | 候选策略允许了边界不允许的访问。反例（counterexample）给出一个示例。 |
+| `error` | `2` | 证明器无法运行检查，例如文件缺失或策略无效。 |
+| `unsupported` | `3` | 某个策略使用了证明器无法检查的内容。原因说明是什么。 |
+| `inconclusive` | `3` | 证明器未能完成检查，例如超时或策略过大。 |
+
+只有 `within_boundary` 表示检查通过，其他任何结果都按失败处理。例如，含 GraphQL 规则的候选策略返回：
+
+```text
+result: unsupported
+coverage: domains=filesystem,network_l4,network_rest,process,landlock
+reason: candidate policy rule 'g' uses protocol 'graphql'; only L4 TCP and REST are modeled
+```
+
+对智能体与脚本，加 `--output json`，读取 `result` 与 `reason_code` 字段而不是解析文本输出。`reason_code` 是稳定标识符，例如 `unsupported_policy_shape` 或 `solver_timeout`。同时确认 `coverage.domains` 覆盖你依赖的每个策略部分。运行 `openshell-prover check --help` 查看全部选项，包括改变默认 10 秒时限的 `--timeout`。
+
+## 边界检查覆盖什么
+
+通过表示在证明器检查的策略部分内，候选策略没有超出边界的授权。它不代表策略已经收得尽可能窄、对特定任务安全，或运行中的沙箱正在执行它。
+
+检查目前覆盖策略的五个部分。在每个部分内，有些比较依赖证明器不具备的信息，例如沙箱镜像中的文件。对这类比较，证明器返回 `unsupported` 而不是猜测。非常大的策略（例如两个文件合计超过 1,024 条网络规则或 4,096 个端点）返回 `inconclusive`，`reason_code` 为 `resource_limit`。
+
+### 文件系统访问
+
+证明器逐路径比较读与写访问，因此两个策略必须列出相同的路径。候选策略可以移除边界列出的路径，或把读写改为只读；边界中针对 `/` 的条目覆盖所有路径。边界完全不授予某类访问（例如完全没有写访问）时，候选策略中任何带该类访问的路径都超出边界。
+
+比较不同路径返回 `unsupported`，即使一个路径包含在另一个之内。例如，边界允许写入 `/tmp` 而候选策略允许写入 `/tmp/cache` 时返回 `unsupported`，因为沙箱镜像中的符号链接可能让 `/tmp/cache` 指向 `/tmp` 之外。结果依赖沙箱工作目录的策略同样返回 `unsupported`。
+
+### 进程身份
+
+证明器比较 `run_as_user` 与 `run_as_group`。取值相同则通过；从非 root 身份改为 root 超出边界。任何其他变更（例如 UID 从 `1500` 改为 `1600`）返回 `unsupported`，因为证明器无法查询沙箱镜像中的账户。
+
+### Landlock
+
+证明器比较 `compatibility` 设置。保持不变或改为 `hard_requirement` 通过；把 `hard_requirement` 改为 `best_effort` 超出边界。证明器比较的是设置本身，不是内核实际强制执行的内容。
+
+### 网络连接
+
+证明器比较哪些二进制可以访问哪些主机、端口与目的地地址，包括 `allowed_ips` 范围。它对每个策略分别在启用与关闭二进制身份强制两种情况下检查，因为沙箱运行时可能关闭强制。它不解析主机名。
+
+以下情况证明器返回 `unsupported`：
+
+- 候选策略列出了精确二进制路径而边界只用 glob 覆盖它，例如 `/usr/bin/*` 之下的 `/usr/bin/curl`。沙箱镜像中的符号链接可能让精确路径指向 glob 之外的可执行文件。可行时请在两个策略中使用相同的精确路径。
+- 同一端口上的端点设置了不同的 `allowed_ips`，且它们的主机相同或其中之一是通配符。证明器把通配符主机视为与其端口上的每个主机重叠。
+- 精确主机与通配符主机共享端口且都未设置 `allowed_ips`，例如端口 443 上的 `github.com` 与 `*.githubusercontent.com`。
+- 端点省略 `host`、同时设置 `port` 与 `ports`，或以 IPv6 地址作为主机。
+- 主机、路径、方法或二进制包含非 ASCII 字符。
+
+### REST 请求
+
+证明器比较 `protocol: rest` 端点上的方法与路径允许及拒绝规则。这些端点必须使用 `enforcement: enforce`。审计模式的端点返回 `unsupported`，因为它不阻断请求。同一主机与端口上既有 REST 端点又有没有请求规则的端点时同样返回 `unsupported`；匹配查询参数或在路径中使用 `?` 或方括号表达式的 REST 规则也是。其他请求协议（如 WebSocket、GraphQL、MCP 与 JSON-RPC）返回 `unsupported`。
+
+检查还按[端点匹配器语义](/how-it-works/policies/schema#匹配器语义)把每个端点的 `path` 选择器应用于其允许与拒绝规则。端点选择器与 REST 规则路径的通配符行为不同。

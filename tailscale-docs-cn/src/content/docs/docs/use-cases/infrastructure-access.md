@@ -1,16 +1,16 @@
 ---
-title: "Infrastructure access"
-description: "Manage secure, audited access to production servers, Kubernetes clusters, and cloud environments."
+title: "基础设施访问"
+description: "管理对生产服务器、Kubernetes 集群和云环境的安全、可审计的访问。"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-Tailscale provides secure, least-privilege access to your production infrastructure without exposing services to the public internet. Replace SSH bastion hosts with direct, encrypted connections, record sessions for compliance, and manage fine-grained access controls across multi-cloud environments.
+Tailscale 为你的生产基础设施提供安全的最小权限访问，同时不把服务暴露到公网。用加密直连取代 SSH 堡垒机，为合规记录会话，并在多云环境中管理细粒度的访问控制。
 
-## Popular workflows
+## 常用工作流
 
-[**Record SSH sessions for compliance and audit**](/docs/use-cases/infrastructure-access/record-ssh-sessions-compliance) — Record SSH sessions for compliance and auditing purposes.
+[**为合规与审计录制 SSH 会话**](/docs/use-cases/infrastructure-access/record-ssh-sessions-compliance)——出于合规与审计目的录制 SSH 会话。
 
-[**Manage least-privilege access and just-in-time access to production environments**](/docs/use-cases/infrastructure-access/manage-least-privileged-and-jit-access) — Enforce least-privilege and just-in-time access policies for production infrastructure using Tailscale tags, grants, and ephemeral nodes.
+[**管理生产环境的最小权限访问与即时访问**](/docs/use-cases/infrastructure-access/manage-least-privileged-and-jit-access)——使用 Tailscale 标签、授权与临时节点（ephemeral node），对生产基础设施强制实施最小权限与即时访问（JIT）策略。
 
-[**Manage access across multi-cloud or multi-region cloud environments**](/docs/use-cases/infrastructure-access/access-multi-cloud-or-multi-region-cloud-envs) — Connect cloud VPCs, Kubernetes clusters, and remote teams across AWS, GCP, Azure, and on-premises networks using Tailscale.
+[**管理多云或多地区云环境的访问**](/docs/use-cases/infrastructure-access/access-multi-cloud-or-multi-region-cloud-envs)——使用 Tailscale 连接 AWS、GCP、Azure 以及本地部署网络中的云 VPC、Kubernetes 集群与远程团队。

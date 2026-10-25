@@ -1,54 +1,54 @@
 ---
-title: "Manage domains"
-description: "Manage the domains associated with your tailnet."
+title: "管理域名"
+description: "管理与你 tailnet 关联的域名。"
 ---
 
-Last validated May 11, 2026
+最后验证于 May 11, 2026
 
-> **Note:** Domain verification is currently in beta.
+> **注意：** 域名验证目前处于 beta 阶段。
 
-Some administrative actions in your Tailscale network (known as a tailnet) require you to connect and verify your domain name. Your primary domain will be listed automatically, and does not require you to verify it.
+在你的 Tailscale 网络（即 tailnet）中，某些管理操作要求你连接并验证自己的域名。你的主域名（primary domain）会自动列出，无需验证。
 
-> **Note:**
+> **注意：**
 >
-> The [Domains](https://console.tailscale.com/admin/settings/domains) page is not available for shared domain tailnets, such as those with an `@gmail.com` address or those that use GitHub as an identity provider.
+> [Domains](https://console.tailscale.com/admin/settings/domains) 页面不适用于共享域名 tailnet，例如使用 `@gmail.com` 地址的 tailnet，或使用 GitHub 作为身份提供方（IdP）的 tailnet。
 
-## Domain types
+## 域名类型
 
-* **Primary**: The default domain name that is attached to users in the tailnet. Other organizations will not be allowed to use this domain name. You do not need to verify this domain unless instructed by our support team. If you need to change your primary domain, contact [Tailscale Support][co-contact-support-domainchange].
-* **Legacy**: A domain name that has been previously established as a domain alias with our support team, but is not actively verified. The domain alias is still active.
-* **Alias**: A domain name that has been verified and is actively used as a [domain alias][docs-domain-aliases]. Other organizations will not be allowed to use this domain name.
-* **Claimed**: A domain name that has been verified, but is not used as an alias. Other organizations will not be allowed to use this domain name.
+* **Primary**（主域名）：附加到 tailnet 中用户的默认域名。其他组织将不得使用该域名。除非我们的支持团队指示，否则你无需验证此域名。如需更改主域名，请联系 [Tailscale 支持团队][co-contact-support-domainchange]。
+* **Legacy**（旧版）：此前通过我们的支持团队设置为域别名、但未主动验证的域名。该域别名仍然生效。
+* **Alias**（别名）：已验证并被主动用作[域别名][docs-domain-aliases]的域名。其他组织将不得使用该域名。
+* **Claimed**（认领）：已验证但未用作别名的域名。其他组织将不得使用该域名。
 
-## Verify a domain name
+## 验证域名
 
-You need to be an [Owner or Admin](/docs/reference/user-roles) of a tailnet to verify a domain name.
+你需要是 tailnet 的[所有者或管理员](/docs/reference/user-roles)才能验证域名。
 
-1. Visit the [Domains](https://console.tailscale.com/admin/settings/domains) page in the admin console.
-2. Select the **Add domain** button and enter the address of the domain name you want to verify.
-3. Copy the TXT record's **Name** and **Value**. These are not secret values, and you can fetch them again later.
-4. Sign into your domain provider and create a new TXT record using the **Name** and **Value** shown in the console, and set the TTL to 3600. The Name is a `_tailscale-challenge` subdomain of your domain (for example, `_tailscale-challenge.example.com`), not the domain itself. Some DNS providers automatically append your domain to the record name; for those, enter only `_tailscale-challenge`. If the domain is registered with a common domain provider, we'll provide a link to the relevant documentation on the domain provider's website.
-5. Once you've successfully added the TXT record to your domain provider, return to the Tailscale admin console and select **Close**.
+1. 访问管理控制台的 [Domains](https://console.tailscale.com/admin/settings/domains) 页面。
+2. 选择 **Add domain** 按钮，输入你想验证的域名地址。
+3. 复制 TXT 记录的 **Name** 和 **Value**。这些不是机密值，你之后可以再次获取。
+4. 登录你的域名服务商，使用控制台中显示的 **Name** 和 **Value** 创建一条新的 TXT 记录，并将 TTL 设为 3600。该 Name 是你域名下的一个 `_tailscale-challenge` 子域名（例如 `_tailscale-challenge.example.com`），而不是域名本身。某些 DNS 服务商会自动将你的域名附加到记录名后；对于这些服务商，只需输入 `_tailscale-challenge`。如果该域名注册自常见的域名服务商，我们会提供指向该服务商网站上相关文档的链接。
+5. 成功将 TXT 记录添加到域名服务商后，返回 Tailscale 管理控制台并选择 **Close**。
 
-Your domain will be marked as **Pending verification** until Tailscale successfully identifies the TXT record on your domain's records. Tailscale will continually check the domain, but you can also manually recheck for the TXT record. It may take up to a few hours for your domain provider to propagate the changes.
+在 Tailscale 成功识别你域名记录中的 TXT 记录之前，你的域名会被标记为 **Pending verification**。Tailscale 会持续检查该域名，但你也可以手动重新检查 TXT 记录。域名服务商传播这些更改可能需要最长几个小时。
 
-When a domain is successfully verified, an email confirmation will be sent to the tailnet's [security contact][docs-contact-preferences-security].
+域名验证成功后，一封确认邮件会发送给 tailnet 的[安全联系人][docs-contact-preferences-security]。
 
-You should leave the TXT record on your domain even after it has been successfully verified. Tailscale will periodically check for the TXT record.
+即使域名已成功验证，也应将 TXT 记录保留在你的域名上。Tailscale 会定期检查该 TXT 记录。
 
-Once your domain is verified, you can set it as a [domain alias][docs-domain-aliases] for your tailnet.
+域名验证通过后，你可以将其设置为 tailnet 的[域别名][docs-domain-aliases]。
 
-## Remove a domain name
+## 移除域名
 
-> **Danger:**
+> **危险：**
 >
-> Removing a verified domain will allow a user whose email address uses that domain to create a new tailnet using that address as the primary domain.
+> 移除一个已验证的域名后，邮箱地址使用该域名的用户将能够以该地址为主域名创建新的 tailnet。
 
-You need to be an [Owner or Admin](/docs/reference/user-roles) of a tailnet to remove a domain name.
+你需要是 tailnet 的[所有者或管理员](/docs/reference/user-roles)才能移除域名。
 
-1. Visit the [Domains](https://console.tailscale.com/admin/settings/domains) page in the admin console.
-2. Find the domain name you wish to remove, select the  menu, then select **Remove**.
-3. Enter the domain name to confirm, then select **Remove domain**.
+1. 访问管理控制台的 [Domains](https://console.tailscale.com/admin/settings/domains) 页面。
+2. 找到你想移除的域名，选择  菜单，然后选择 **Remove**。
+3. 输入域名以确认，然后选择 **Remove domain**。
 
 [co-contact-support-domainchange]: https://tailscale.com/contact/support/?type=domainchange
 

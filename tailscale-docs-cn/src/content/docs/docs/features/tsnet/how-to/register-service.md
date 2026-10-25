@@ -1,127 +1,127 @@
 ---
 title: "Register a tsnet application as a Tailscale Service"
-description: "In this guide you will use the [`tsnet`][docs-tsnet] package to register an application as a [Tailscale Service][docs-tailscale-services] host. This pattern can be applied to other `tsnet` application"
+description: "在本指南中，你将使用 [`tsnet`][docs-tsnet] 包把一个应用注册为 [Tailscale Service][docs-tailscale-services] 主机。此模式可应用于其他 `tsnet` 应用。"
 ---
 
-Last validated Jan 27, 2026
+最后验证于 Jan 27, 2026
 
-## Introduction
+## 简介
 
-In this guide you will use the [`tsnet`][docs-tsnet] package to register an application as a [Tailscale Service][docs-tailscale-services] host. This pattern can be applied to other `tsnet` applications.
+在本指南中，你将使用 [`tsnet`][docs-tsnet] 包把一个应用注册为 [Tailscale Service][docs-tailscale-services] 主机。此模式可应用于其他 `tsnet` 应用。
 
-The example code for this demo is available in the [`tailscale/tailscale` repository][xt-github-tailscale-tsnet-services-example].
+本演示的示例代码位于 [`tailscale/tailscale` 仓库][xt-github-tailscale-tsnet-services-example]。
 
-## Prerequisites
+## 前提条件
 
-Before you begin this guide you'll need the following:
+开始本指南之前，你需要具备以下条件：
 
-* The [Go compiler toolchain][xt-go-download].
-* A terminal window (command prompt).
-* An active tailnet.
-* One or more devices running Tailscale v1.86.0 or later.
-* [Owner, Admin, or Network admin](/docs/reference/user-roles) account permissions.
+* [Go 编译器工具链][xt-go-download]。
+* 一个终端窗口（命令提示符）。
+* 一个可用的 tailnet。
+* 一台或多台运行 Tailscale v1.86.0 或更高版本的设备。
+* [Owner、Admin 或 Network admin](/docs/reference/user-roles) 账户权限。
 
-## Step 1: Update your tailnet policy file
+## 步骤 1：更新 tailnet 策略文件
 
-Add `tagOwners`, `autoApprovers`, and `grants` to your tailnet policy file.
+向你的 tailnet 策略文件添加 `tagOwners`、`autoApprovers` 和 `grants`。
 
-### Create a tag
+### 创建标签
 
-Use the Tailscale admin console to create a [Tailscale tag][docs-tags].
+使用 Tailscale 管理控制台创建一个[标签（tag）][docs-tags]。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
 
-2. Select the **Tags** pane.
+2. 选择 **Tags** 面板。
 
-3. Select **Create tag**.
+3. 选择 **Create tag**。
 
-4. Add the **Tag name**.
+4. 填写 **Tag name**。
 
    ```json
    tsnet-demo-host
    ```
 
-5. Add the **Tag owner**.
+5. 填写 **Tag owner**。
 
    ```json
    autogroup:member
    ```
 
-6. Select **Save**.
+6. 选择 **Save**。
 
-### Define a service
+### 定义 Service
 
-Use the Tailscale admin console to add a Tailscale Service.
+使用 Tailscale 管理控制台添加一个 Tailscale Service。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the admin console.
+1. 打开管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-2. Select the **Advertised** pane.
+2. 选择 **Advertised** 面板。
 
-3. Select **Define Service**.
+3. 选择 **Define Service**。
 
-4. Add the **Service name**.
+4. 填写 **Service name**。
 
    ```json
    tsnet-demo
    ```
 
-5. Add the **Ports**.
+5. 填写 **Ports**。
 
    ```json
    443
    ```
 
-6. Select **Define Service**.
+6. 选择 **Define Service**。
 
-For the purposes of this example, the Service definition itself does not restrict which tags may host it, but the host node needs to be tagged.
+就本示例而言，Service 定义本身并不限制哪些标签可以托管它，但主机节点需要打上标签。
 
-### Define auto approval
+### 定义自动审批
 
-Use the Tailscale admin console to add auto approval.
+使用 Tailscale 管理控制台添加自动审批。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
 
-2. Select the **Auto approvers** pane.
+2. 选择 **Auto approvers** 面板。
 
-3. Select the **Select service** dropdown and choose the example service.
+3. 在 **Select service** 下拉框中选择示例 Service。
 
    ```json
    svc:tsnet-demo
    ```
 
-4. Select the **Service can automatically accept devices** dropdown and choose the example tag.
+4. 在 **Service can automatically accept devices** 下拉框中选择示例标签。
 
    ```json
    tag:tsnet-demo-host
    ```
 
-5. Select **Save service auto approver**.
+5. 选择 **Save service auto approver**。
 
-### Define grants
+### 定义授权
 
-Use the Tailscale admin console to add grants.
+使用 Tailscale 管理控制台添加授权（grant）。
 
-1. Open the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
+1. 打开管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
 
-2. Select the **General access rule** pane.
+2. 选择 **General access rule** 面板。
 
-3. Select **Add rule**.
+3. 选择 **Add rule**。
 
-4. Add **All users and devices** for **Source**.
+4. 为 **Source** 添加 **All users and devices**。
 
-5. Add the example service for **Destination**.
+5. 为 **Destination** 添加示例 Service。
 
    ```json
    svc:tsnet-demo
    ```
 
-6. Add **All ports and protocols** for **Port and protocol**.
+6. 为 **Port and protocol** 添加 **All ports and protocols**。
 
-7. Select **Save grant**.
+7. 选择 **Save grant**。
 
-### Example tailnet policy file
+### tailnet 策略文件示例
 
-At this point, your policy file should include the following keys (merge them into your existing file):
+此时，你的策略文件应包含以下键（把它们合并进你现有的文件）：
 
 ```json
 "tagOwners": {
@@ -141,28 +141,28 @@ At this point, your policy file should include the following keys (merge them in
 ],
 ```
 
-## Step 2: Generate an auth key
+## 步骤 2：生成认证密钥
 
-Use the Tailscale admin console to [generate an auth key][docs-auth-key-generate-an-auth-key].
+使用 Tailscale 管理控制台[生成认证密钥][docs-auth-key-generate-an-auth-key]。
 
-1. Open the [Keys](https://console.tailscale.com/admin/settings/keys) page of the admin console.
-2. Select **Generate auth key**.
-3. Enable **Tags**.
-4. Select **Add tags** and choose the example tag.
-5. Select **Generate key**.
-6. Copy the auth key to your clipboard for use later.
-7. Select **Done**.
+1. 打开管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
+2. 选择 **Generate auth key**。
+3. 启用 **Tags**。
+4. 选择 **Add tags** 并选择示例标签。
+5. 选择 **Generate key**。
+6. 把认证密钥复制到剪贴板，稍后使用。
+7. 选择 **Done**。
 
-Open a command terminal and save the auth key as an environment variable.
+打开一个命令终端，把认证密钥保存为环境变量。
 
 ```shell
 export TS_AUTHKEY=<your-authkey>
 ```
 
-## Step 3: Use the `tsnet` package
+## 步骤 3：使用 `tsnet` 包
 
-1. Open your text editor.
-2. Create a `tsnet-services.go` file:
+1. 打开你的文本编辑器。
+2. 创建一个 `tsnet-services.go` 文件：
 
 ```go
 package main
@@ -209,29 +209,29 @@ func main() {
 }
 ```
 
-In this example program, you will create a `tsnet.Server` instance with the hostname `tsnet-services-demo`. This server acts as a virtual node in your tailnet. The program instructs the node to listen for HTTPS connections to a Service on port `443`. The listener uses the `tsnet` package's [`ListenService`][docs-tailscale-services-listenservice] and `ServiceModeHTTP`. The program also uses the Go standard library's `net/http` package to run an HTTP server on top of the listener. When other nodes in the tailnet connect to the Service, those connections will be routed to the virtual node defined by this program.
+在这个示例程序中，你将创建一个主机名为 `tsnet-services-demo` 的 `tsnet.Server` 实例。该服务器充当 tailnet 中的一个虚拟节点。程序指示该节点在端口 `443` 上监听发往某个 Service 的 HTTPS 连接。该监听器使用 `tsnet` 包的 [`ListenService`][docs-tailscale-services-listenservice] 与 `ServiceModeHTTP`。程序还使用 Go 标准库的 `net/http` 包在该监听器之上运行一个 HTTP 服务器。当 tailnet 中的其他节点连接到该 Service 时，这些连接会被路由到本程序定义的虚拟节点。
 
-## Step 4: Run the program
+## 步骤 4：运行程序
 
-1. Run the command:
+1. 运行命令：
 
    ```shell
    go run tsnet-services.go --service=svc:tsnet-demo
    ```
 
-## Step 5: Connect to the application
+## 步骤 5：连接到应用
 
-1. Visit the example server:
+1. 访问示例服务器：
 
    ```
    open https://tsnet-demo.<your-tailnet-DNS-name>
    ```
 
-For more information about tailnet DNS names, refer to [tailnet name][docs-tailnet-name-dns-name].
+有关 tailnet DNS 名称的更多信息，请参阅 [tailnet name][docs-tailnet-name-dns-name]。
 
-## Conclusion
+## 结语
 
-This pattern can be applied to other `tsnet` applications as Tailscale Services hosts.
+此模式可应用于其他 `tsnet` 应用，把它们作为 Tailscale Services 主机。
 
 [docs-auth-key-generate-an-auth-key]: /docs/features/access-control/auth-keys#generate-an-auth-key
 

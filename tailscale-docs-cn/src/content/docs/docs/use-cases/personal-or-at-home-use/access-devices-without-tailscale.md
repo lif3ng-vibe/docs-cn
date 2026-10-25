@@ -1,31 +1,31 @@
 ---
-title: "Remotely access devices that can't run Tailscale"
-description: "Many home network devices, including IP cameras, smart home hubs, printers, and network switches, can't run Tailscale directly. Subnet routing lets any device with Tailscale installed act as a gateway"
+title: "远程访问无法运行 Tailscale 的设备"
+description: "许多家庭网络设备——包括 IP 摄像头、智能家居中枢、打印机和网络交换机——无法直接运行 Tailscale。子网路由让任何装有 Tailscale 的设备充当网关"
 ---
 
-Last validated May 18, 2026
+最后验证于 May 18, 2026
 
-> **Note:**
+> **注意：**
 >
-> Featured reference:
+> 精选参考：
 >
-> [**Subnet routers**](/docs/features/subnet-routers) — Use subnet routers to give devices outside your local network access to services within specific subnets. Extend your private network with Tailscale.
+> [**子网路由器**](/docs/features/subnet-routers)——使用子网路由器让本地网络之外的设备访问特定子网内的服务，用 Tailscale 扩展你的私有网络。
 
-Many home network devices, including IP cameras, smart home hubs, printers, and network switches, can't run Tailscale directly. Subnet routing lets any device with Tailscale installed act as a gateway for its local network, giving you remote access to everything on that subnet without installing anything on each individual device.
+许多家庭网络设备——包括 IP 摄像头、智能家居中枢、打印机和网络交换机——无法直接运行 Tailscale。子网路由让任何装有 Tailscale 的设备充当其本地网络的网关，让你远程访问该子网上的一切，而无需在每台设备上单独安装任何东西。
 
-## Set up a subnet router
+## 设置子网路由器
 
-A subnet router is any device on your local network that runs Tailscale and advertises the local subnet to your Tailscale network (known as a tailnet). Installing the Tailscale client on the device connects it to your tailnet. Once it's in place, any device in your tailnet can reach every IP address on that subnet. If you don't already have a tailnet, one will be created automatically when you authenticate.
+子网路由器是本地网络中任何一台运行 Tailscale 并向你的 Tailscale 网络（即 tailnet）宣告本地子网的设备。在该设备上安装 Tailscale 客户端即可将其接入你的 tailnet。就位之后，tailnet 中的任何设备都能访问该子网上的每一个 IP 地址。如果你还没有 tailnet，认证时会自动创建一个。
 
 #### Linux
 
-1. Install the Tailscale client:
+1. 安装 Tailscale 客户端：
 
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    ```
 
-2. Enable IP forwarding:
+2. 启用 IP 转发：
 
    ```bash
    echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -33,7 +33,7 @@ A subnet router is any device on your local network that runs Tailscale and adve
    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
    ```
 
-3. Authenticate and advertise your local subnet. Replace `192.168.1.0/24` with your actual subnet:
+3. 完成认证并宣告你的本地子网。把 `192.168.1.0/24` 替换为你的实际子网：
 
    ```bash
    sudo tailscale up --advertise-routes=192.168.1.0/24
@@ -41,9 +41,9 @@ A subnet router is any device on your local network that runs Tailscale and adve
 
 #### Windows
 
-1. [Download and install the Tailscale client][docs-install-windows], then sign in with your identity provider.
+1. [下载并安装 Tailscale 客户端][docs-install-windows]，然后用你的身份提供方（IdP）登录。
 
-2. Open a PowerShell prompt as Administrator and advertise your local subnet. Replace `192.168.1.0/24` with your actual subnet:
+2. 以管理员身份打开 PowerShell 提示符，宣告你的本地子网。把 `192.168.1.0/24` 替换为你的实际子网：
 
    ```powershell
    tailscale up --advertise-routes=192.168.1.0/24
@@ -51,15 +51,15 @@ A subnet router is any device on your local network that runs Tailscale and adve
 
 #### macOS
 
-1. [Download and install the Tailscale client][docs-install-macos], then sign in.
+1. [下载并安装 Tailscale 客户端][docs-install-macos]，然后登录。
 
-2. Enable IP forwarding:
+2. 启用 IP 转发：
 
    ```bash
    sudo sysctl -w net.inet.ip.forwarding=1
    ```
 
-3. Advertise your local subnet. Replace `192.168.1.0/24` with your actual subnet:
+3. 宣告你的本地子网。把 `192.168.1.0/24` 替换为你的实际子网：
 
    ```bash
    sudo tailscale up --advertise-routes=192.168.1.0/24
@@ -67,33 +67,33 @@ A subnet router is any device on your local network that runs Tailscale and adve
 
 #### Apple TV
 
-1. Install [Tailscale from the App Store][docs-install-appletv] on your Apple TV and sign in.
+1. 在 Apple TV 上从 App Store 安装 [Tailscale][docs-install-appletv] 并登录。
 
-2. Open the Tailscale app, go to **Settings**, and enable **Subnet router**.
+2. 打开 Tailscale 应用，前往**设置**（Settings），启用**子网路由器**（Subnet router）。
 
-3. Enter your local subnet, for example `192.168.1.0/24`, and save.
+3. 输入你的本地子网（例如 `192.168.1.0/24`）并保存。
 
-## Approve the subnet routes
+## 批准子网路由
 
-Advertised routes must be approved in the admin console before other tailnet devices can use them.
+在其他 tailnet 设备能够使用宣告的路由之前，必须先在管理控制台批准这些路由。
 
-1. Open the [Machines](https://console.tailscale.com/admin/machines) page of the admin console.
-2. Find the subnet router machine, select the  button, then select **Set up subnet router**.
-3. Enable the routes you want to approve and select **Save**.
+1. 打开管理控制台的[机器](https://console.tailscale.com/admin/machines)页面。
+2. 找到子网路由器机器，选择相应按钮，然后选择**设置子网路由器**。
+3. 启用你想批准的路由，然后选择**保存**。
 
-## Access your devices
+## 访问你的设备
 
-The device you're connecting from needs [the Tailscale client installed][docs-install] and signed in to the same tailnet as your subnet router. From there, you can reach any device on the advertised subnet by its local IP address, with no Tailscale installation required on the target device. For example, use `http://192.168.1.50` for a camera or `192.168.1.100` for a printer.
+你用来连接的设备需要[安装 Tailscale 客户端][docs-install]，并登录到与子网路由器相同的 tailnet。此后，你就可以通过本地 IP 地址访问宣告子网上的任何设备，目标设备无需安装 Tailscale。例如，用 `http://192.168.1.50` 访问摄像头，用 `192.168.1.100` 访问打印机。
 
-On Linux, run `sudo tailscale up --accept-routes` when connecting. On Windows, macOS, and Apple TV, subnet routes are accepted automatically once approved.
+在 Linux 上，连接时需运行 `sudo tailscale up --accept-routes`。在 Windows、macOS 和 Apple TV 上，路由一旦获得批准就会被自动接受。
 
-## Further exploration
+## 延伸探索
 
-* Read the [subnet routers][docs-subnet-routers] documentation for the full reference on advertised routes, route approval, and advanced configuration.
-* Enable [MagicDNS][docs-magicdns] to use friendly hostnames for tailnet devices. You can also add [DNS records][docs-dns] for specific subnet devices to give them names reachable from your tailnet.
-* Use the [tailnet policy file][docs-policy-file] to restrict which tailnet devices can reach the advertised subnet.
-* Use an [exit node][docs-exit-node] to route all internet traffic from a device through your home network.
-* Try [Taildrop][docs-taildrop] to send files peer-to-peer between any tailnet devices.
+* 阅读[子网路由器][docs-subnet-routers]文档，获取关于宣告路由、路由批准和高级配置的完整参考。
+* 启用 [MagicDNS][docs-magicdns]，为 tailnet 设备使用友好主机名。你还可以为特定子网设备添加 [DNS 记录][docs-dns]，让它们拥有可从你的 tailnet 访问的名称。
+* 使用 [tailnet 策略文件][docs-policy-file]限制哪些 tailnet 设备可以访问宣告的子网。
+* 使用[出口节点][docs-exit-node]，把设备的所有互联网流量经由你的家庭网络路由。
+* 试试 [Taildrop][docs-taildrop]，在任意 tailnet 设备之间以点对点方式发送文件。
 
 [docs-dns]: /docs/features/tailnet-policy-file/extra-dns-records
 

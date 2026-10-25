@@ -1,84 +1,84 @@
 ---
-title: "Using VPN On Demand for iOS and macOS"
-description: "VPN On Demand is a feature that VPN providers on iOS and macOS can adopt to automate the establishment of a VPN connection. When VPN On Demand is used, your device can automatically start or stop the "
+title: "在 iOS 和 macOS 上使用 VPN On Demand"
+description: "VPN On Demand 是 iOS 和 macOS 上的 VPN 提供商可以采用的一项功能，用来自动建立 VPN 连接。使用 VPN On Demand 后，你的设备可以按照多种条件自动启动或停止 Tailscale VPN 隧道。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-> **Note:**
+> **注意：**
 >
-> VPN On Demand is currently only available in the iOS and macOS versions of the Tailscale client.
+> VPN On Demand 目前仅在 iOS 和 macOS 版 Tailscale 客户端中可用。
 >
-> Tailscale 1.48 for iOS was the first version of the Tailscale client to support this feature. Support for macOS was added in Tailscale 1.60.
+> iOS 版 Tailscale 1.48 是首个支持此功能的 Tailscale 客户端版本。macOS 支持自 Tailscale 1.60 起加入。
 
-VPN On Demand is a feature that VPN providers on iOS and macOS can adopt to automate the establishment of a VPN connection. When VPN On Demand is used, your device can automatically start or stop the Tailscale VPN tunnel based on a number of criteria.
+VPN On Demand 是一项可供 iOS 和 macOS 上的 VPN 提供商采用的功能，用于自动建立 VPN 连接。使用 VPN On Demand 后，你的设备可以基于多种条件自动启动或停止 Tailscale VPN 隧道。
 
-For instance, you can create a VPN On Demand configuration that will connect Tailscale when your iPhone leaves your Wi-Fi network, and disconnect once you're back under Wi-Fi coverage.
+例如，你可以创建一个 VPN On Demand 配置：当 iPhone 离开你的 Wi-Fi 网络时自动连接 Tailscale，回到 Wi-Fi 覆盖范围内后自动断开。
 
-*（图：The VPN On Demand settings in iOS. 'Connect automatically on' for 'Wi-Fi' selecting 'Only On'.）*
+*（图：iOS 中的 VPN On Demand 设置。针对 "Wi-Fi" 的 "Connect automatically on" 选择了 "Only On"。）*
 
-> **Note:**
+> **注意：**
 >
-> The Tailscale client automatically configures a broad VPN On Demand policy while Tailscale is enabled to ensure that the VPN remains active in the event of a system restart, auto-update, crash or other event that might disable the VPN. This automatically generated configuration is removed when the user disables Tailscale. Creating customized VPN On Demand rules disables this behavior in favor of the user's preferred configuration.
+> 在 Tailscale 处于启用状态期间，Tailscale 客户端会自动配置一条宽泛的 VPN On Demand 策略，以确保在系统重启、自动更新、崩溃或其他可能禁用 VPN 的事件发生后 VPN 仍然保持活跃。当用户停用 Tailscale 时，这条自动生成的配置会被移除。创建自定义的 VPN On Demand 规则会停用此行为，改为遵循用户偏好的配置。
 
-## Setting up VPN On Demand
+## 设置 VPN On Demand
 
-To set up VPN On Demand:
+要设置 VPN On Demand：
 
 #### iOS
 
-1. Open the Tailscale app on your iOS device.
-2. After logging in, open the settings by tapping on your profile picture on the top right.
-3. Tap on **VPN On Demand**. If this item is not visible, your system administrator might have hidden the VPN On Demand settings, or you might be running an older version of the Tailscale client. You should update to a newer version from the App Store.
-4. You can now enable VPN On Demand and set up your rule set based on the instructions below.
+1. 在 iOS 设备上打开 Tailscale 应用。
+2. 登录后，点按右上角的个人头像打开设置。
+3. 点按 **VPN On Demand**。如果看不到这一项，可能是你的系统管理员隐藏了 VPN On Demand 设置，也可能你运行的是较旧版本的 Tailscale 客户端。你应该从 App Store 更新到较新版本。
+4. 现在你可以启用 VPN On Demand，并按照下面的说明设置你的规则集。
 
 #### macOS
 
-1. Select the Tailscale menu bar icon on your Mac, and then choose **Settings…**.
-2. **VPN On Demand** will appear as one of the items. Select **Manage…** to bring up the On Demand settings sheet. If this item is not visible, your system administrator might have hidden the VPN On Demand settings, or you might be running an older version of the Tailscale client. You should update to a newer version from the App Store.
-3. You can now enable VPN On Demand and set up your rule set based on the instructions below.
+1. 在 Mac 上选择菜单栏中的 Tailscale 图标，然后选择 **设置…**（Settings…）。
+2. **VPN On Demand** 会作为其中一项出现。选择 **管理…**（Manage…）打开 On Demand 设置面板。如果看不到这一项，可能是你的系统管理员隐藏了 VPN On Demand 设置，也可能你运行的是较旧版本的 Tailscale 客户端。你应该从 App Store 更新到较新版本。
+3. 现在你可以启用 VPN On Demand，并按照下面的说明设置你的规则集。
 
-### Choosing your connection rules
+### 选择连接规则
 
-Connection rules are available for the Wi-Fi, Cellular, and Ethernet interfaces on your device.
+可以为设备上的 Wi-Fi、蜂窝网络（Cellular）和以太网接口设置连接规则。
 
-For Wi-Fi interfaces, you can choose from one of the following options:
+对于 Wi-Fi 接口，可以从以下选项中选择：
 
-* **Always**: Tailscale will always connect when a Wi-Fi connection is active.
-* **Only On**: Tailscale will always connect when a Wi-Fi connection is active, provided that the current Wi-Fi network is included in the configuration. If the current Wi-Fi network is not in the list of included networks, Tailscale will disconnect.
-* **Except On**: Tailscale will always connect when a Wi-Fi connection is active, however it will disconnect if the current Wi-Fi network is included in the list of excepted networks.
-* **Never**: Tailscale will always disconnect when a Wi-Fi connection is active.
-* **Do Nothing**: Tailscale won't automatically connect or disconnect, allowing you to manually manage the state of the VPN.
+* **Always**（始终）：只要有活动的 Wi-Fi 连接，Tailscale 就始终连接。
+* **Only On**（仅限指定网络）：只要有活动的 Wi-Fi 连接，Tailscale 就始终连接，前提是当前 Wi-Fi 网络已包含在配置中。如果当前 Wi-Fi 网络不在已包含网络列表中，Tailscale 会断开。
+* **Except On**（指定网络除外）：只要有活动的 Wi-Fi 连接，Tailscale 就始终连接；但如果当前 Wi-Fi 网络在除外网络列表中，则会断开。
+* **Never**（从不）：只要有活动的 Wi-Fi 连接，Tailscale 就始终断开。
+* **Do Nothing**（不执行任何操作）：Tailscale 不会自动连接或断开，由你手动管理 VPN 状态。
 
-For Cellular and Ethernet interfaces, you can choose from one of the following options:
+对于蜂窝网络和以太网接口，可以从以下选项中选择：
 
-* **Always**: Tailscale will always connect when a cellular data or Ethernet connection is established.
-* **Never**: Tailscale will always disconnect when a cellular data or Ethernet connection is established.
-* **Do Nothing**: Tailscale won't automatically connect or disconnect, allowing you to manually manage the state of the VPN.
+* **Always**（始终）：建立蜂窝数据或以太网连接时，Tailscale 始终连接。
+* **Never**（从不）：建立蜂窝数据或以太网连接时，Tailscale 始终断开。
+* **Do Nothing**（不执行任何操作）：Tailscale 不会自动连接或断开，由你手动管理 VPN 状态。
 
-### Using MagicDNS hostname matching
+### 使用 MagicDNS 主机名匹配
 
-You can also use VPN On Demand to automatically connect Tailscale when iOS or macOS detect a connection to a hostname that ends in `*.ts.net`. This feature is available only when you have set the connection rule for an interface to **Do Nothing**. When any other rule is active, MagicDNS matching will not be available.
+你还可以使用 VPN On Demand，在 iOS 或 macOS 检测到正在连接以 `*.ts.net` 结尾的主机名时自动连接 Tailscale。此功能仅在某个接口的连接规则设置为 **Do Nothing**（不执行任何操作）时可用。当任何其他规则生效时，MagicDNS 匹配将不可用。
 
-## Limitations
+## 局限性
 
-VPN On Demand rules can determine whether the Tailscale app is allowed to establish a VPN on your device, and if your rules are not set up correctly, they can prevent Tailscale from connecting.
+VPN On Demand 规则可以决定是否允许 Tailscale 应用在你的设备上建立 VPN；如果规则设置不正确，可能会阻止 Tailscale 连接。
 
-For instance, if your rules are set to **Never** for an interface, iOS/macOS will disconnect Tailscale. If you attempt to reconnect manually, iOS/macOS will immediately disconnect the VPN again. To get out of this state, you must adjust your connection rules to allow the connection, or disable VPN On Demand entirely.
+例如，如果某个接口的规则设置为 **Never**（从不），iOS/macOS 会断开 Tailscale。如果你尝试手动重新连接，iOS/macOS 会立即再次断开 VPN。要摆脱这种状态，你必须调整连接规则以允许连接，或完全禁用 VPN On Demand。
 
-If you are experiencing any problem or have an enhancement request, [file a GitHub issue][xt-gh-tailscale-issues].
+如果你遇到任何问题或有功能改进建议，请[提交 GitHub issue][xt-gh-tailscale-issues]。
 
-### Using other VPNs
+### 与其他 VPN 共用
 
-On both iOS and macOS, you can only have one VPN app with On Demand enabled at any given time. If you connect to any other VPN while On Demand is enabled for Tailscale, iOS/macOS will disable it for Tailscale until you manually connect Tailscale again. For more information about using other VPNs together with Tailscale, refer to [this entry][docs-other-vpns].
+在 iOS 和 macOS 上，任一时刻只能有一个 VPN 应用启用 On Demand。如果在 Tailscale 启用了 On Demand 的情况下连接任何其他 VPN，iOS/macOS 会解除 Tailscale 的 On Demand，直到你手动重新连接 Tailscale。关于将其他 VPN 与 Tailscale 共用的更多信息，请参阅[此条目][docs-other-vpns]。
 
-### Enterprise MDM deployments
+### 企业 MDM 部署
 
-VPN On Demand can be applied with a managed VPN profile, but doing so has some consequences. When a managed VPN profile is installed, neither the user nor the Tailscale client are able to change the VPN On Demand settings, which may be undesirable in a situation where the user wishes to disable Tailscale. For example, if an exit node is also forced by policy, and the user is on a network that is blocking the exit node IP, or to action a captive portal page.
+可以将 VPN On Demand 与受管理的 VPN 描述文件（managed VPN profile）一起应用，但这样做有一些副作用。安装受管理的 VPN 描述文件后，用户和 Tailscale 客户端都无法更改 VPN On Demand 设置；当用户想停用 Tailscale 时，这可能带来问题。例如，策略同时强制使用出口节点，而用户所在网络封锁了出口节点 IP，或用户需要完成强制门户（captive portal）认证页面的情况。
 
-For [managed deployments][docs-mdm-mac-vpn], we recommend that the `AlwaysOn.Enabled`, `AlwaysOn.OverrideWithReason`, and `ReconnectAfter` MDM polices be used instead of a managed VPN Profile. This will allow the Tailscale client to set temporary VPN On Demand polices that accomplish the task of ensuring the VPN remains active, while allowing the user to temporarily disable it if needed.
+对于[受管理的部署][docs-mdm-mac-vpn]，我们建议使用 `AlwaysOn.Enabled`、`AlwaysOn.OverrideWithReason` 和 `ReconnectAfter` 这些 MDM 策略，而不是受管理的 VPN 描述文件。这样 Tailscale 客户端可以设置临时的 VPN On Demand 策略来确保 VPN 保持活跃，同时允许用户在需要时临时将其停用。
 
-You cannot combine these Tailscale policies with a managed VPN profile.
+这些 Tailscale 策略不能与受管理的 VPN 描述文件同时使用。
 
 [docs-mdm-mac-vpn]: /docs/integrations/mdm/mac#deploy-a-vpn-on-demand-configuration-using-mdm
 

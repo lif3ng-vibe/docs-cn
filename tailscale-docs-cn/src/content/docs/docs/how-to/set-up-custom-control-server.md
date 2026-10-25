@@ -1,29 +1,29 @@
 ---
-title: "Configure Tailscale clients to use a custom control server"
-description: "Configure Tailscale clients to use a custom control server such as Headscale."
+title: "配置 Tailscale 客户端使用自定义控制服务器"
+description: "配置 Tailscale 客户端使用自定义控制服务器，例如 Headscale。"
 ---
 
-Last validated Sep 21, 2026
+最后验证于 Sep 21, 2026
 
-The Tailscale clients let you specify a custom control server URL instead of the default `https://controlplane.tailscale.com` server. If you are using a self-managed deployment of [Headscale][bl-headscale] as your control plane, use your Headscale instance's URL.
+Tailscale 客户端允许你指定自定义控制服务器（control server）URL，替代默认的 `https://controlplane.tailscale.com` 服务器。如果你使用自主管理的 [Headscale][bl-headscale] 部署作为控制平面，请使用你的 Headscale 实例的 URL。
 
-## Add a custom control server
+## 添加自定义控制服务器
 
 #### macOS
 
-If you're using the [App Store or Standalone variants][docs-macos-variants] of the Tailscale client, you can add a custom control server URL in the Tailscale user interface:
+如果你使用 Tailscale 客户端的 [App Store 或 Standalone 版本][docs-macos-variants]，可以在 Tailscale 用户界面中添加自定义控制服务器 URL：
 
-> **Note:**
+> **注意：**
 >
-> The following instructions only work when at least one other tailnet has been authenticated in the client. If no other tailnets have been added to the device, use the Tailscale CLI instructions instead.
+> 以下步骤仅在客户端已认证过至少一个其他 tailnet 时有效。如果设备上尚未添加其他 tailnet，请改用 Tailscale CLI 的说明。
 
-1. Select the Tailscale icon in the macOS menu bar.
-2. Choose **Settings** from the menu.
-3. Select the **Accounts** tab.
-4. Select the down arrow in the lower-left corner of the window.
-5. Enter your custom control server URL and select **Add account**.
+1. 在 macOS 菜单栏中选择 Tailscale 图标。
+2. 从菜单中选择 **设置**（Settings）。
+3. 选择 **账户**（Accounts）标签页。
+4. 选择窗口左下角的向下箭头。
+5. 输入你的自定义控制服务器 URL，选择 **添加账户**（Add account）。
 
-Alternatively, to sign in with a custom control server URL from the Tailscale CLI, run the following command. Replace `<URL>` with your custom control server URL.
+或者，要通过 Tailscale CLI 使用自定义控制服务器 URL 登录，运行以下命令。将 `<URL>` 替换为你的自定义控制服务器 URL。
 
 ```shell
 tailscale login --login-server=<URL>
@@ -31,19 +31,19 @@ tailscale login --login-server=<URL>
 
 #### Windows
 
-The Tailscale user interface for Windows doesn't support adding a custom control server URL. You can use the Tailscale CLI or edit registry settings instead.
+Windows 版 Tailscale 用户界面不支持添加自定义控制服务器 URL。你可以改用 Tailscale CLI 或编辑注册表设置。
 
-To sign in with a custom control server URL from the Tailscale CLI, run the following command. Replace `<URL>` with your custom control server URL.
+要通过 Tailscale CLI 使用自定义控制服务器 URL 登录，运行以下命令。将 `<URL>` 替换为你的自定义控制服务器 URL。
 
 ```powershell
 tailscale login --login-server=<URL>
 ```
 
-For more information, refer to [Deploy Tailscale on Windows using MDM][docs-deploy-tailscale-windows-mdm-registry] to use a custom control server URL by editing the `LoginURL` registry value. An MDM solution is not required. You can also edit the registry value directly.
+更多信息参阅[使用 MDM 在 Windows 上部署 Tailscale][docs-deploy-tailscale-windows-mdm-registry]，通过编辑 `LoginURL` 注册表值来使用自定义控制服务器 URL。无需 MDM 解决方案，你也可以直接编辑注册表值。
 
 #### Linux
 
-Run the following command to authenticate to a custom control server. Replace `<URL>` with your custom control server URL.
+运行以下命令向自定义控制服务器完成认证。将 `<URL>` 替换为你的自定义控制服务器 URL。
 
 ```shell
 tailscale login --login-server=<URL>
@@ -51,40 +51,40 @@ tailscale login --login-server=<URL>
 
 #### iOS
 
-1. Tap the user profile icon in the top-right corner of the Tailscale app to open **Settings**.
-2. If you are not signed in to any other tailnets, tap **Log in**. Otherwise, tap the signed-in user.
-3. Tap the  menu in the top-right corner, then select **Use a custom coordination server**.
-4. Enter the custom control server URL and tap **Log in**.
+1. 点按 Tailscale 应用右上角的用户资料图标，打开 **设置**。
+2. 如果你尚未登录任何其他 tailnet，点按 **登录**（Log in）。否则，点按已登录的用户。
+3. 点按右上角的  菜单，然后选择 **使用自定义协调服务器**（Use a custom coordination server）。
+4. 输入自定义控制服务器 URL，点按 **登录**。
 
 #### Android
 
-1. Tap the user profile icon in the top-right corner of the Tailscale app to open **Settings**.
-2. If you are not signed in to any other tailnets, tap **Log in**. Otherwise, tap the signed-in user.
-3. Tap the  menu in the top-right corner, then select **Use an alternate server**.
-4. Enter the custom control server URL and tap **Log in**.
+1. 点按 Tailscale 应用右上角的用户资料图标，打开 **设置**。
+2. 如果你尚未登录任何其他 tailnet，点按 **登录**（Log in）。否则，点按已登录的用户。
+3. 点按右上角的  菜单，然后选择 **使用备用服务器**（Use an alternate server）。
+4. 输入自定义控制服务器 URL，点按 **登录**。
 
 #### tvOS
 
-1. Open the tvOS **Settings** app.
-2. Select **Apps**.
-3. Select **Tailscale**.
-4. Select **URL** under **Alternate coordination server URL**.
-5. Enter the custom control server URL and select **Done**.
-6. Return to the Tailscale app and sign in.
+1. 打开 tvOS 的 **设置**（Settings）应用。
+2. 选择 **应用**（Apps）。
+3. 选择 **Tailscale**。
+4. 在 **备用协调服务器 URL**（Alternate coordination server URL）下选择 **URL**。
+5. 输入自定义控制服务器 URL，选择 **完成**（Done）。
+6. 返回 Tailscale 应用并登录。
 
-## Remove a custom control server
+## 移除自定义控制服务器
 
 #### macOS
 
-To remove a custom control server account using the Tailscale user interface:
+要使用 Tailscale 用户界面移除自定义控制服务器账户：
 
-1. Select the Tailscale icon in the macOS menu bar.
-2. Choose **Settings** from the menu.
-3. Select the **Accounts** tab.
-4. Select the custom control server account.
-5. Log out of the account.
+1. 在 macOS 菜单栏中选择 Tailscale 图标。
+2. 从菜单中选择 **设置**（Settings）。
+3. 选择 **账户**（Accounts）标签页。
+4. 选择自定义控制服务器账户。
+5. 退出该账户的登录。
 
-Alternatively, use the Tailscale CLI:
+或者，使用 Tailscale CLI：
 
 ```shell
 tailscale logout
@@ -92,89 +92,89 @@ tailscale logout
 
 #### Windows
 
-If you authenticated to the custom control server using the Tailscale CLI, run:
+如果你是使用 Tailscale CLI 向自定义控制服务器完成认证的，运行：
 
 ```powershell
 tailscale logout
 ```
 
-If you configured the custom control server using the `LoginURL` registry value, remove the value from the applicable registry path:
+如果你是通过 `LoginURL` 注册表值配置的自定义控制服务器，请从相应的注册表路径中删除该值：
 
 ```text
 HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Tailscale
 ```
 
-or:
+或者：
 
 ```text
 HKEY_CURRENT_USER\SOFTWARE\Policies\Tailscale
 ```
 
-If an MDM solution manages the `LoginURL` value, remove or update the policy using that solution instead. Otherwise, the policy might be applied again.
+如果 `LoginURL` 值由 MDM 解决方案管理，请改用该解决方案删除或更新策略。否则，策略可能会被重新应用。
 
 #### Linux
 
-To log out of the custom control server, run:
+要退出自定义控制服务器，运行：
 
 ```shell
 tailscale logout
 ```
 
-If you need to completely reset the locally stored Tailscale state:
+如果你需要彻底重置本地存储的 Tailscale 状态：
 
-1. Stop `tailscaled`.
+1. 停止 `tailscaled`。
 
    ```shell
    sudo systemctl stop tailscaled
    ```
 
-2. Remove the state file.
+2. 删除状态文件。
 
    ```shell
    sudo rm /var/lib/tailscale/tailscaled.state
    ```
 
-3. Start `tailscaled`.
+3. 启动 `tailscaled`。
 
    ```shell
    sudo systemctl start tailscaled
    ```
 
-> **Warning:**
+> **警告：**
 >
-> Removing the `tailscaled` state file deletes the locally stored Tailscale state for the device. Use this procedure only when logging out doesn't reset the client as needed.
+> 删除 `tailscaled` 状态文件会清除该设备本地存储的 Tailscale 状态。仅在退出登录无法按需重置客户端时才使用此方法。
 
 #### iOS
 
-1. Tap the user profile icon in the top-right corner of the Tailscale app to open **Settings**.
-2. Tap the active account details to open the account switcher.
-3. Press and hold the custom control server account you want to remove.
-4. Confirm that you want to remove the account.
+1. 点按 Tailscale 应用右上角的用户资料图标，打开 **设置**。
+2. 点按当前活跃账户的详细信息，打开账户切换器。
+3. 长按要移除的自定义控制服务器账户。
+4. 确认要移除该账户。
 
-> **Note:**
+> **注意：**
 >
-> Pressing and holding the account lets you remove the profile even if the custom control server is offline or unreachable and the normal logout process fails.
+> 长按账户后，即使自定义控制服务器离线或不可达、正常退出流程失败，你也可以移除该配置文件。
 
 #### Android
 
-1. Tap the user profile icon in the top-right corner of the Tailscale app to open **Settings**.
-2. Tap the active account name.
-3. Tap **Log out**.
+1. 点按 Tailscale 应用右上角的用户资料图标，打开 **设置**。
+2. 点按当前活跃账户的名称。
+3. 点按 **退出登录**（Log out）。
 
-If the custom control server is offline or unreachable and you cannot log out, clear the Tailscale app's stored data from the Android system settings. The exact menu names can vary by Android version and device, but you can typically find this option under **Settings** > **Apps** > **Tailscale** > **Storage**.
+如果自定义控制服务器离线或不可达，导致无法退出登录，请在 Android 系统设置中清除 Tailscale 应用的存储数据。具体菜单名称因 Android 版本和设备而异，但通常可以在 **设置** > **应用** > **Tailscale** > **存储** 下找到该选项。
 
-> **Warning:**
+> **警告：**
 >
-> Clearing the Tailscale app's stored data resets its local client state.
+> 清除 Tailscale 应用的存储数据会重置其本地客户端状态。
 
 #### tvOS
 
-1. Open the tvOS **Settings** app.
-2. Select **Apps**.
-3. Select **Tailscale**.
-4. Select **URL** under **Alternate coordination server URL**.
-5. Clear the text field and select **Done**.
-6. Return to the Tailscale app and sign in using the standard coordination server.
+1. 打开 tvOS 的 **设置**（Settings）应用。
+2. 选择 **应用**（Apps）。
+3. 选择 **Tailscale**。
+4. 在 **备用协调服务器 URL**（Alternate coordination server URL）下选择 **URL**。
+5. 清空文本框，选择 **完成**（Done）。
+6. 返回 Tailscale 应用，使用标准协调服务器登录。
 
 [bl-headscale]: https://tailscale.com/blog/opensource#the-open-source-coordination-server
 

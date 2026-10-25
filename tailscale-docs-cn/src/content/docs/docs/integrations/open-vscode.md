@@ -1,31 +1,23 @@
 ---
-title: "Access your tailnet from OpenVSCode"
-description: "Write code remotely by installing Tailscale on OpenVSCode."
+title: "从 OpenVSCode 访问你的 tailnet"
+description: "通过在 OpenVSCode 上安装 Tailscale 来远程编写代码。"
 ---
 
-Last validated Sep 18, 2025
+最后验证于 Sep 18, 2025
 
-[OpenVSCode][xt-gitpod-openvscode] is a way to run Visual Studio
-Code on a remote machine accessed through a modern web browser.
+[OpenVSCode][xt-gitpod-openvscode] 是一种在现代 Web 浏览器中访问远程机器上运行的 Visual Studio Code 的方式。
 
-Tailscale can be installed within an OpenVSCode VM to be able to access private resources securely,
-such as databases or continuous integration nodes or servers in the dev/test environment.
+可以在 OpenVSCode 虚拟机（VM）内安装 Tailscale，从而安全地访问私有资源，例如开发/测试环境中的数据库、持续集成节点或服务器。
 
-## Integration
+## 集成
 
-OpenVSCode is installed within a VM with [instructions for a number of hosting providers][xt-gh-open-vs-code].
+OpenVSCode 安装在一台虚拟机内，[多家托管提供商都有相应的安装说明][xt-gh-open-vs-code]。
 
-Tailscale can be [installed in VMs][docs-install-linux]
-for many common hosting providers like
-[AWS][docs-install-aws],
-[Azure][docs-cloud-azure-linux],
-[Google Cloud][docs-cloud-gce], and
-[Hetzner][docs-cloud-hetzner].
+Tailscale 可以[安装在虚拟机中][docs-install-linux]，支持许多常见的托管提供商，例如 [AWS][docs-install-aws]、[Azure][docs-cloud-azure-linux]、[Google Cloud][docs-cloud-gce] 和 [Hetzner][docs-cloud-hetzner]。
 
-## Authorization
+## 授权
 
-The VM will need to be authorized to join the tailnet using either a browser to log in,
-or a [one-time auth key][docs-auth-keys].
+需要授权该虚拟机加入 tailnet，方式可以是使用浏览器登录，或使用[一次性认证密钥（auth key）][docs-auth-keys]。
 
 [docs-auth-keys]: /docs/features/access-control/auth-keys
 

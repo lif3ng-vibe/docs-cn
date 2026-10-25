@@ -1,33 +1,25 @@
 ---
-title: "Tailscale on NixOS: A New Minecraft Server in Ten Minutes"
-description: "Set up a Minecraft server on NixOS."
+title: "Tailscale on NixOS：十分钟搭好一台全新 Minecraft 服务器"
+description: "在 NixOS 上搭建 Minecraft 服务器。"
 ---
 
-Last validated Feb 2, 2026
+最后验证于 Feb 2, 2026
 
-NixOS is a Linux distribution built from the ground up to deploy
-services. Tailscale is a peer-to-peer VPN built to securely connect
-devices. This topic describes how to set up a brand new
-Minecraft server (exposed only over Tailscale) in ten minutes on DigitalOcean.
+NixOS 是一个从零开始为部署服务而构建的 Linux 发行版。Tailscale 是一个为安全连接设备而构建的点对点 VPN。本文介绍如何在十分钟内，在 DigitalOcean 上搭建一台全新的 Minecraft 服务器（仅通过 Tailscale 暴露）。
 
-## Prerequisites
+## 前提条件
 
-Before you begin, you need the following:
+开始之前，你需要：
 
-* A [Tailscale account](https://login.tailscale.com/start). You don't need to pay for Tailscale, as the scenario in this topic is possible on the [Personal plan][co-pricing].
-* A [DigitalOcean][xt-digitalocean] account.
-* A [Minecraft][xt-minecraft] Java Edition account.
+* 一个 [Tailscale 账户](https://login.tailscale.com/start)。你不必为 Tailscale 付费，本文的场景在 [Personal 套餐][co-pricing]上就能实现。
+* 一个 [DigitalOcean][xt-digitalocean] 账户。
+* 一个 [Minecraft][xt-minecraft] Java 版账户。
 
-## Step 1: Write the NixOS Configuration File
+## 第 1 步：编写 NixOS 配置文件
 
-In NixOS one of the core principles is that the entire system is configurable
-with a modular language called Nix. This lets you configure everything
-using a common syntax so you don't need to remember every configuration file
-format for every service you use. As such, you can configure an entire system
-from a single file.
+NixOS 的核心原则之一是：整个系统都可以用一种名为 Nix 的模块化语言来配置。这让你用统一的语法配置一切，无需记住每个服务各自的配置文件格式。因此，你可以用一个文件配置整个系统。
 
-Let's make a new configuration file called `host.nix` and set up a system that
-has Tailscale start up on boot:
+我们来创建一个名为 `host.nix` 的新配置文件，搭建一个让 Tailscale 随系统启动的环境：
 
 ```nix
 { config, pkgs, ... }:
@@ -41,21 +33,17 @@ has Tailscale start up on boot:
 }
 ```
 
-This will have Tailscale start up, however to authenticate to Tailscale we need to take a few more steps. First, visit the [Keys](https://console.tailscale.com/admin/settings/keys) page in the admin console.
+这样 Tailscale 就会启动了，但要完成 Tailscale 认证还需要几步。首先，访问管理控制台的 [Keys](https://console.tailscale.com/admin/settings/keys) 页面。
 
-Create a new one-time use auth key and then copy it to your notes. We will use it
-below.
+创建一个新的一次性认证密钥，然后把它复制到你的笔记里。稍后会用到。
 
-With this key we can write a [systemd oneshot unit][xt-digitalocean-systemd] that will log in to Tailscale using this key.
+有了这个密钥，我们就能编写一个 [systemd oneshot 单元][xt-digitalocean-systemd]，用它登录 Tailscale。
 
-> **Note:**
+> **注意：**
 >
-> A systemd oneshot job is something that systemd expects to be run once as
-> opposed to being a persistent service. The above DigitalOcean tutorial explains
-> this in more detail.
+> systemd oneshot 作业是 systemd 预期只运行一次的作业，而不是常驻服务。前面提到的 DigitalOcean 教程对此有更详细的解释。
 
-Copy this configuration below the `services.tailscale.enable` line in your
-`host.nix` file:
+把下面的配置复制到 `host.nix` 文件中 `services.tailscale.enable` 那一行之后：
 
 ```nix
 # ...
@@ -89,26 +77,20 @@ systemd.services.tailscale-autoconnect = {
 };
 ```
 
-Make sure to replace `<your-auth-key>` with the auth key you got from the Tailscale admin console. Without this auth key your VPS cannot connect to Tailscale.
+请务必把 `<your-auth-key>` 替换为你从 Tailscale 管理控制台获取的认证密钥。没有这个认证密钥，你的 VPS 就无法连接到 Tailscale。
 
-> **Warning:**
+> **警告：**
 >
-> The auth key is hard-coded in this configuration file. This offers no protection of the auth key if anyone else has access to the configuration file. For options on protecting secrets in NixOS, refer to the NixOS [Comparison of secret managing schemes][xt-nixos-secret-manage] topic. For general information about protecting Tailscale auth keys, refer to [Securely handle an auth key][docs-secure-auth-key-cli].
+> 认证密钥在这个配置文件中是硬编码的。如果其他人能访问该配置文件，认证密钥就得不到保护。关于在 NixOS 中保护密钥的方案选择，请参阅 NixOS 的 [Comparison of secret managing schemes][xt-nixos-secret-manage] 主题。关于保护 Tailscale 认证密钥的通用信息，请参阅[安全地保管认证密钥][docs-secure-auth-key-cli]。
 
-Now that we have Tailscale configured to authenticate and connect to your
-network, let's enable the lightweight NixOS firewall so that we can only allow
-Minecraft traffic over Tailscale. The [NixOS manual][xt-nixos-sec-firewall] has more details, but at a high level we need to:
+现在 Tailscale 已配置为认证并连接你的网络，接下来启用 NixOS 的轻量防火墙，只允许 Minecraft 流量经由 Tailscale。[NixOS 手册][xt-nixos-sec-firewall]有更多细节，但概括来说我们需要：
 
-* Enable the firewall.
-* Mark tailscale0 as a trusted interface.
-* Allow anyone on the internet to connect to Tailscale's UDP port (don't worry,
-  they will be rejected if they are not a part of your network).
-* Allow anyone on the internet to connect to your server's SSH port (this will
-  also work over Tailscale, but having it exposed over the public internet can
-  help when you need to administer the server by using SSH).
+* 启用防火墙。
+* 把 tailscale0 标记为受信任接口。
+* 允许互联网上的任何人连接 Tailscale 的 UDP 端口（别担心，不属于你网络的连接会被拒绝）。
+* 允许互联网上的任何人连接你服务器的 SSH 端口（这在 Tailscale 上也能用，但把它暴露在公共互联网上，当你需要通过 SSH 管理服务器时会方便一些）。
 
-We can do that with the following configuration added to the end of your
-`host.nix` file:
+把以下配置添加到 `host.nix` 文件末尾即可实现：
 
 ```nix
 # ...
@@ -127,7 +109,7 @@ networking.firewall = {
 };
 ```
 
-Now we can configure the Minecraft server. The [Minecraft options][xt-nixos-minecraft] expose a number of settings you can use to configure your server however you want. Note that you *must* set the EULA agreement to `true` yourself. The Minecraft server is a closed-source program, so you must give NixOS permission to use closed source packages.
+现在可以配置 Minecraft 服务器了。[Minecraft 选项][xt-nixos-minecraft]暴露了许多设置，你可以随心所欲地配置服务器。注意，你*必须*自己把 EULA 协议设置为 `true`。Minecraft 服务器是闭源程序，因此你必须授权 NixOS 使用闭源软件包。
 
 ```nix
 # ...
@@ -155,15 +137,11 @@ services.minecraft-server = {
 nixpkgs.config.allowUnfree = true;
 ```
 
-Now we have everything we need. We set up Tailscale, we configured an automatic
-login to Tailscale, we set up the firewall so that it rejects all incoming
-traffic (except for traffic from your Tailscale network), and we
-configured the Minecraft server so that you can play in survival mode.
+现在万事俱备。我们搭好了 Tailscale，配置了到 Tailscale 的自动登录，设置了拒绝所有入站流量的防火墙（来自你 Tailscale 网络的流量除外），并配置好了可以以生存模式游玩的 Minecraft 服务器。
 
-## Step 2: DigitalOcean Setup
+## 第 2 步：DigitalOcean 设置
 
-Now let's get this put into a new DigitalOcean server. Open a new text editor
-window and create a file called `user-data.yaml`. Copy this template into it:
+现在把它部署到一台新的 DigitalOcean 服务器上。打开一个新的文本编辑器窗口，创建一个名为 `user-data.yaml` 的文件。把以下模板复制进去：
 
 ```yaml
 #cloud-config
@@ -181,78 +159,55 @@ runcmd:
   - curl https://raw.githubusercontent.com/elitak/nixos-infect/master/nixos-infect | PROVIDER=digitalocean NIXOS_IMPORT=./host.nix NIX_CHANNEL=nixos-20.09 bash 2>&1 | tee /tmp/infect.log
 ```
 
-At the time of this topic being written, DigitalOcean doesn't have a NixOS
-image by default. So we will use
-[nixos-infect][xt-gh-nixos-infect] in order
-to automatically replace our Ubuntu installation with a NixOS one. We are also
-going to use it to automatically configure the server with the `host.nix` file
-we just made.
+撰写本文时，DigitalOcean 默认没有 NixOS 镜像。因此我们将使用 [nixos-infect][xt-gh-nixos-infect] 自动把 Ubuntu 安装替换为 NixOS。我们还会用它来用刚做好的 `host.nix` 文件自动配置服务器。
 
-Copy the contents of `host.nix` into the `content` value of the `write_files`
-block. Be sure to indent the file by four spaces so that it will work as YAML
-user data. When you are done you should have a file that looks something like
-[this reference file][xt-gh-gist-gloud].
+把 `host.nix` 的内容复制到 `write_files` 块的 `content` 值中。注意要给文件整体多缩进四个空格，使其符合 YAML user data 的格式。完成后，你的文件应该类似[这个参考文件][xt-gh-gist-gloud]。
 
-Now that you have the cloud configuration, let's launch the server in the cloud.
+有了云配置，接下来在云端启动服务器。
 
-Open the DigitalOcean control panel and select **Create** and then select **Droplets**.
-Choose an Ubuntu 20.04 image and a plan with at least 4 GB of ram (the Minecraft
-server needs a lot of resources, unfortunately).
+打开 DigitalOcean 控制面板，选择 **Create**（创建），然后选择 **Droplets**。选择 Ubuntu 20.04 镜像和至少 4 GB 内存的套餐（可惜 Minecraft 服务器很吃资源）。
 
-*（图：The droplet config using Ubuntu 20.04 and a droplet with 4 GB of RAM）*
+*（图：使用 Ubuntu 20.04 和 4 GB 内存 Droplet 的配置）*
 
-Then choose a data center near you and enable the IPv6 and User Data options.
-Paste the contents of your `user-data.yaml` file into the text box that shows
-up. Choose your SSH key in the list of SSH keys that shows up and then give the
-droplet a hostname, such as `minecraft`. If you want you can enable backups.
+然后选择一个离你近的数据中心，并启用 IPv6 和 User Data 选项。把你的 `user-data.yaml` 文件内容粘贴到出现的文本框中。在显示的 SSH 密钥列表中选择你的 SSH 密钥，然后给 droplet 起个主机名，例如 `minecraft`。愿意的话还可以启用备份。
 
-*（图：The droplet user data pasted into the user data field）*
+*（图：粘贴到 user data 字段中的 droplet 用户数据）*
 
-Once you have everything set up, select the large green button labeled **Create
-Droplet**. It may take up to ten minutes to install and configure NixOS. Once everything is
-done setting up, you should be able to verify that your server is in your Tailscale network.
+一切就绪后，选择那个绿色大按钮 **Create Droplet**（创建 Droplet）。安装和配置 NixOS 可能需要多达十分钟。全部完成后，你应该能验证你的服务器已经出现在你的 Tailscale 网络中。
 
-## Step 3: Play Minecraft
+## 第 3 步：畅玩 Minecraft
 
-Once it shows up in your network list, you can fire up your Minecraft
-client and connect to your new server. You may need to select a slightly older
-version of Minecraft if the in-game UI tells you to use an older version of
-Minecraft. You can adjust the Minecraft version you are running using
-[the launcher UI][xt-minecraft-change-versions].
+它出现在你的网络列表后，就可以打开 Minecraft 客户端连接你的新服务器了。如果游戏内 UI 提示要使用较旧版本的 Minecraft，你可能需要选择稍旧一点的版本。你可以用[启动器界面][xt-minecraft-change-versions]调整所运行的 Minecraft 版本。
 
-*（图：The host information in the Tailscale control panel）*
+*（图：Tailscale 控制面板中的主机信息）*
 
-*（图：The minecraft server connection UI）*
+*（图：Minecraft 服务器连接界面）*
 
-*（图：An in-game screenshot of the author's Minecraft avatar in a forest biome）*
+*（图：作者的 Minecraft 角色身处森林生物群系的游戏内截图）*
 
-## Next Steps
+## 后续步骤
 
-If you want to administer your Minecraft server, you can add the `mcrcon` package to your system configuration next to the `tailscale` package:
+如果你想管理你的 Minecraft 服务器，可以在系统配置中把 `mcrcon` 软件包添加到 `tailscale` 软件包旁边：
 
 ```
 environment.systemPackages = with pkgs; [ tailscale mcrcon ];
 ```
 
-Then you can connect to the Minecraft server command line with this command:
+然后你可以用这条命令连接 Minecraft 服务器的命令行：
 
 ```shell
 mcrcon -p hunter2
 ```
 
-If you adjusted the `rcon` password above, you will need to adjust this command to
-include that new password. From there you can change game modes, adjust the time
-of day and anything else you want.
+如果你修改了上面的 `rcon` 密码，需要把这条命令中的密码换成新密码。之后你就可以切换游戏模式、调整一天中的时间，以及做任何你想做的事。
 
-You can use [node sharing][docs-sharing] to invite people you trust to your server, so they can join your adventure.
+你可以使用[节点共享][docs-sharing]邀请你信任的人来到你的服务器，加入你的冒险。
 
-If you want to make configuration changes to your server after you provision it,
-edit the `/etc/nixos/host.nix` file in your favorite text editor (such as `nano`).
-The [NixOS manual][xt-nixos-sec-firewall] should help guide you if you want to install more services (such as backups using [BorgBackup][xt-nixos-borgbackup] or anything else listed in the [options][xt-nixos-search]). The cloud's the limit!
+如果你想在服务器开通后修改配置，用你喜欢的文本编辑器（例如 `nano`）编辑 `/etc/nixos/host.nix` 文件即可。如果你想安装更多服务（例如用 [BorgBackup][xt-nixos-borgbackup] 做备份，或[选项列表][xt-nixos-search]中的任何其他内容），[NixOS 手册][xt-nixos-sec-firewall]可以为你指路。云端就是你的边界——一切皆有可能！
 
-> **Note:**
+> **注意：**
 >
-> Refer to this [BorgBackup guide][xt-xe-borgbackup].
+> 可参阅这份 [BorgBackup 指南][xt-xe-borgbackup]。
 
 [co-pricing]: https://tailscale.com/pricing
 

@@ -1,12 +1,12 @@
 ---
-title: "Share a web server"
-description: "Share resources, including websites, from tailnet devices."
+title: "共享 Web 服务器"
+description: "共享 tailnet 设备上的资源，包括网站。"
 ---
 
-Last validated Dec 20, 2024
+最后验证于 Dec 20, 2024
 
-Tailscale lets you share a local service running on a device in your Tailscale network (known as a tailnet). For example, you can provide access to a web server. You decide whether traffic is allowed from the wider internet or only from your tailnet.
+Tailscale 让你共享 Tailscale 网络（即 tailnet）中设备上运行的本地服务。例如，你可以提供对 Web 服务器的访问。由你决定是允许来自更广互联网的流量，还是只允许来自你 tailnet 的流量。
 
-[**Tailscale Funnel**](/docs/features/tailscale-funnel) — Securely route internet traffic to local services using Tailscale Funnel.
+[**Tailscale Funnel**](/docs/features/tailscale-funnel)——使用 Tailscale Funnel 将互联网流量安全路由到本地服务。
 
-[**Tailscale Serve**](/docs/features/tailscale-serve) — Explore the Tailscale Serve service.
+[**Tailscale Serve**](/docs/features/tailscale-serve)——探索 Tailscale Serve 服务。

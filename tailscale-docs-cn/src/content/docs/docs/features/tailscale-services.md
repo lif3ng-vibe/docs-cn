@@ -1,68 +1,68 @@
 ---
 title: "Tailscale Services"
-description: "Securely connect to and manage access to your internal resources using Tailscale Services."
+description: "使用 Tailscale Services 安全地连接到内部资源并管理其访问权限。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-Tailscale Services lets you publish internal resources (like databases or web servers) as named services in your Tailscale network, known as a tailnet.
+Tailscale Services 让你可以将内部资源（例如数据库或 Web 服务器）作为命名服务发布到你的 Tailscale 网络（即 tailnet）中。
 
-Instead of connecting to specific devices, users connect to Tailscale Services using stable [MagicDNS][docs-magicdns] names while Tailscale automatically routes traffic to available hosts across your infrastructure.
+用户无需连接到特定设备，而是使用稳定的 [MagicDNS][docs-magicdns] 名称连接到 Tailscale Services，同时 Tailscale 会自动将流量路由到你基础设施中可用的主机。
 
-A Service keeps the same address when you move it to another host, add redundant hosts, or deploy it across regions. You can also configure access controls, approval workflows, and endpoint types for different network layers.
+当你把服务迁移到另一台主机、添加冗余主机或跨区域部署时，服务的地址保持不变。你还可以为不同的网络层配置访问控制、审批工作流和端点类型。
 
-Tailscale Services increases reliability, leverages Tailscale's access-controlled routing, and provides a centralized way to manage all internal resources available in your Tailscale network. You can focus on maintaining your applications while Tailscale handles the networking complexity.
+Tailscale Services 提高了可靠性，利用了 Tailscale 带访问控制的路由，并提供了一种集中管理 Tailscale 网络中所有内部资源的方式。你可以专注于维护应用程序，而把网络复杂性交给 Tailscale 处理。
 
-## Use cases
+## 用例
 
-You can use Tailscale Services in a variety of scenarios to securely expose internal resources within your tailnet in a way that decouples them from the devices hosting them. For example:
+你可以在多种场景下使用 Tailscale Services，以安全的方式在 tailnet 内暴露内部资源，并将其与承载它们的设备解耦。例如：
 
-* **Developer workflows and internal tooling**: Make any internal application or developer resource highly available, horizontally scalable, and secure without complex load balancer configurations.
-* **Database connectivity**: Connect securely to database clusters (PostgreSQL, MySQL, RDS) with simplified connection scaling and identity-based access controls.
-* **Cluster meshes**: Enable cross-cluster or hybrid-cloud connectivity between any compute resources like EC2 instances, Kubernetes services, or containers.
-* **Version-controlled applications**: Generate stable hostnames for frequently updated, version-controlled, or ephemeral resources that persist across deployments.
-* **IoT integrations**: Stream device logs and telemetry securely to SIEM or logging services without exposing IoT devices to the public internet.
-* **Internal APIs and webhooks**: Expose internal APIs securely without public domains or complex mTLS configurations while maintaining granular access control.
+* **开发工作流与内部工具**：让任何内部应用或开发资源实现高可用、可横向扩展且安全，而无需复杂的负载均衡器配置。
+* **数据库连接**：安全地连接到数据库集群（PostgreSQL、MySQL、RDS），简化连接扩展并获得基于身份的访问控制。
+* **集群互联**：在 EC2 实例、Kubernetes 服务或容器等任意计算资源之间实现跨集群或混合云连接。
+* **版本控制的应用**：为频繁更新、纳入版本控制或临时的资源生成稳定的主机名，并在多次部署之间保持不变。
+* **物联网集成**：将设备日志和遥测数据安全地流式传输到 SIEM 或日志服务，而无需将物联网设备暴露给公共互联网。
+* **内部 API 与 webhook**：在无需公共域名或复杂 mTLS 配置的情况下安全地暴露内部 API，同时保持细粒度的访问控制。
 
-## Prerequisites
+## 前提条件
 
-To get started with Tailscale Services, you must have:
+要开始使用 Tailscale Services，你必须具备：
 
-* An active tailnet.
-* One or more devices running Tailscale v1.86.0 or later, or an [unstable][docs-install-unstable] v1.87.x release.
-* [Owner, Admin, or Network admin](/docs/reference/user-roles) account permissions.
-* An internal resource running on a device in a tailnet that you want to expose as a Tailscale Service. The device hosting the resource must use a [tag-based][docs-tags] identity.
+* 一个处于活动状态的 tailnet。
+* 一台或多台运行 Tailscale v1.86.0 或更高版本的设备，或者是 [unstable][docs-install-unstable] 渠道的 v1.87.x 版本。
+* 具有 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 账户权限。
+* 一个运行在 tailnet 中某台设备上、你想暴露为 Tailscale Service 的内部资源。承载该资源的设备必须使用[基于标签][docs-tags]的身份。
 
-## Get started
+## 开始使用
 
-To get started with Tailscale Services, you need to define a Service through the admin console, configure an endpoint on a device (the host) in a tailnet, then advertise the endpoint.
+要开始使用 Tailscale Services，你需要通过管理控制台定义一个 Service，在 tailnet 中的一台设备（主机）上配置一个端点，然后通告该端点。
 
-### Step 1: Define a Tailscale Service
+### 第 1 步：定义 Tailscale Service
 
-You define a Tailscale Service using the admin console. Each Tailscale Service consists of a MagicDNS name, a TailVIP (Tailscale Virtual IP address), a resource definition, and one or more back-end hosts.
+你通过管理控制台定义 Tailscale Service。每个 Tailscale Service 由一个 MagicDNS 名称、一个 TailVIP（Tailscale 虚拟 IP 地址）、一个资源定义以及一台或多台后端主机构成。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the admin console.
-2. Select **Advertise**, and then select **Define a Service**.
-3. Within the **Define a Service** dialog, provide a name and description for your Service.
-4. Choose a port or set of endpoints your Service will advertise, including the `tcp:` transport protocol prefix (for example, `tcp:443`). Currently, TCP is the only supported transport protocol. Alternatively, enter `do-not-validate` to skip endpoint validation.
-5. (Optional) Provide the Service with an identity by adding one or more [tags][docs-tags].
-6. Select **Add service**.
+1. 打开管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择 **Advertise**（通告），然后选择 **Define a Service**（定义 Service）。
+3. 在 **Define a Service**（定义 Service）对话框中，为你的 Service 提供名称和描述。
+4. 选择你的 Service 将要通告的端口或端点集合，并带上 `tcp:` 传输协议前缀（例如 `tcp:443`）。目前 TCP 是唯一受支持的传输协议。你也可以输入 `do-not-validate` 来跳过端点验证。
+5. （可选）通过添加一个或多个[标签][docs-tags]为 Service 提供身份。
+6. 选择 **Add service**（添加服务）。
 
-You have now defined the Service interface. Next, you need to configure a tailnet device as a Service host.
+至此，Service 接口已定义完成。接下来，你需要将一台 tailnet 设备配置为 Service 主机。
 
-### Step 2: Configure a Service host
+### 第 2 步：配置 Service 主机
 
-A Service host is a Tailscale device that runs the Tailscale client and advertises one or more endpoints for a specific Tailscale Service. The host handles incoming connections to the Service and routes them to the appropriate resource. Hosts can advertise both local and remote resources.
+Service 主机是运行 Tailscale 客户端并为特定 Tailscale Service 通告一个或多个端点的 Tailscale 设备。主机处理指向该 Service 的传入连接，并将其路由到相应的资源。主机既可以通告本地资源，也可以通告远程资源。
 
-> **Warning:**
+> **警告：**
 >
-> Any device you want to use as a Service host must use a [tag-based identity][docs-tags]. You cannot use a device authenticated with a user account as a Service host.
+> 任何想用作 Service 主机的设备都必须使用[基于标签的身份][docs-tags]。你不能将使用用户账户认证的设备用作 Service 主机。
 
-> **Tip:**
+> **提示：**
 >
-> Make sure to start the resource on a device in a tailnet that you want to expose as a Tailscale Service. This resource can be a web server, database, or any other service that you want to make available through Tailscale.
+> 请确保先在 tailnet 中的一台设备上启动你想暴露为 Tailscale Service 的资源。该资源可以是 Web 服务器、数据库，或任何你想通过 Tailscale 提供的服务。
 >
-> For example, you might start a basic web server using Node.js and the [`http-server` package][xt-http-server] that listens on port `8080`:
+> 例如，你可以使用 Node.js 和 [`http-server` 软件包][xt-http-server]启动一个监听 `8080` 端口的基础 Web 服务器：
 >
 > ```shell
 > # Install globally
@@ -72,21 +72,21 @@ A Service host is a Tailscale device that runs the Tailscale client and advertis
 > http-server -p 8080
 > ```
 >
-> This example starts a basic web server that serves static files from the current directory on port `8080`.
+> 此示例启动一个基础 Web 服务器，在 `8080` 端口上提供当前目录中的静态文件。
 >
-> After you have your resource running and listening for connections, you can configure it as a Service host.
+> 资源启动并开始监听连接后，你就可以将其配置为 Service 主机。
 
-You can configure a Service host using either the `tailscale serve` CLI command or using a [Service configuration file][docs-tailscale-services-configuration-file].
+你可以使用 `tailscale serve` CLI 命令或 [Service 配置文件][docs-tailscale-services-configuration-file]来配置 Service 主机。
 
-Tailscale recommends using the CLI method because it automatically handles both configuration and advertisement, while the configuration file method gives you control over these as separate steps.
+Tailscale 推荐使用 CLI 方式，因为它会自动完成配置和通告；而配置文件方式则让你可以分步控制这两个环节。
 
-1. Run the `tailscale serve` command with the `--service` flag followed by the service name, the protocol, the port number, and the destination:
+1. 运行带有 `--service` 标志的 `tailscale serve` 命令，后跟服务名称、协议、端口号和目标地址：
 
    ```shell
    tailscale serve --service=svc:web-server --https=443 127.0.0.1:8080
    ```
 
-   The command returns output similar to the following:
+   该命令返回类似于以下的输出：
 
    ```shell
    This machine is configured as a service host for `svc:web-server`, but approval from an admin is required. Once approved, it will be available in your Tailnet as:
@@ -95,108 +95,108 @@ Tailscale recommends using the CLI method because it automatically handles both 
    |-- proxy http://127.0.0.1:8080
    ```
 
-   > **Note:**
+   > **注意：**
    >
-   > When you configure and advertise an endpoint using the `tailscale serve` CLI command, it automatically uses background mode (which you would normally need to use the `--bg` flag for when using the `tailscale serve` command).
+   > 使用 `tailscale serve` CLI 命令配置并通告端点时，会自动使用后台模式（如果使用 `tailscale serve` 命令，通常需要使用 `--bg` 标志来启用该模式）。
 
-   This command configures and automatically advertises an endpoint for the resource. When you use the `tailscale serve` command with the HTTPS protocol, Tailscale automatically provisions a TLS certificate for your unique tailnet DNS name.
+   此命令会为资源配置并自动通告一个端点。当你将 `tailscale serve` 命令与 HTTPS 协议配合使用时，Tailscale 会自动为你唯一的 tailnet DNS 名称预配 TLS 证书。
 
-2. Run the `tailscale serve status` command to verify your configuration:
+2. 运行 `tailscale serve status` 命令验证你的配置：
 
    ```shell
    tailscale serve status --json
    ```
 
-> **Note:**
+> **注意：**
 >
-> Enable [regional routing][docs-route-selection] to use in-region load balancing for Tailscale Services.
+> 启用[区域路由][docs-route-selection]，即可为 Tailscale Services 使用区域内负载均衡。
 >
-> If you switch your tailnet to [MagicRoute][docs-magicroute], Tailscale selects among existing Service hosts using priority scoring instead of DERP-region grouping or active-passive failover. You do not need to recreate the Services or reconfigure their hosts.
+> 如果你将 tailnet 切换到 [MagicRoute][docs-magicroute]，Tailscale 会使用优先级评分在现有 Service 主机之间进行选择，而不是按 DERP 区域分组或主备故障切换。你无需重新创建 Service 或重新配置其主机。
 
-### Step 3: Approve a Service host
+### 第 3 步：批准 Service 主机
 
-If your tailnet has [auto-approval][docs-policy-syntax-auto-approvers] policies set up for the Service, the host is automatically approved. If not, an [Admin, Network admin, or Owner](/docs/reference/user-roles) must approve the host before it becomes active.
+如果你的 tailnet 已为该 Service 设置了[自动审批][docs-policy-syntax-auto-approvers]策略，主机会自动获得批准。如果没有，则需要由 [Admin、Network admin 或 Owner](/docs/reference/user-roles) 批准主机，主机才会生效。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the admin console.
-2. Select the name of the Service you created earlier.
-3. Locate the pending advertisements in the **Service hosts** section.
-4. Select **Approve**.
+1. 打开管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 选择你之前创建的 Service 的名称。
+3. 在 **Service hosts**（Service 主机）区域中找到待处理的通告。
+4. 选择 **Approve**（批准）。
 
-After approval, the host becomes active and starts handling traffic for the Tailscale Service. Users in the tailnet can now connect to the Service using its MagicDNS name or IP addresses (provided they have the necessary access permissions).
+批准后，主机随即生效，并开始处理该 Tailscale Service 的流量。tailnet 中的用户现在可以使用其 MagicDNS 名称或 IP 地址连接到该 Service（前提是他们拥有必要的访问权限）。
 
-### Step 4: Access Tailscale Services from other devices
+### 第 4 步：从其他设备访问 Tailscale Services
 
-After you configure and approve a Tailscale Service, you need to ensure that other devices in your tailnet can discover and use the routes to the advertised resources.
+配置并批准 Tailscale Service 之后，你需要确保 tailnet 中的其他设备能够发现并使用通往所通告资源的路由。
 
-Tailscale clients version 1.94 and later no longer require enabling `accept-routes` to use Tailscale Services. This lets all clients leverage Tailscale Services by default while simultaneously not enabling `accept-routes` which can lead to route clashes.
+Tailscale 1.94 及更高版本的客户端不再需要启用 `accept-routes` 即可使用 Tailscale Services。这让所有客户端默认就能使用 Tailscale Services，同时不必启用可能导致路由冲突的 `accept-routes`。
 
-> **Note:**
+> **注意：**
 >
-> Linux devices running Tailscale version 1.93 or earlier don't discover new routes to Tailscale Services by default. You must explicitly enable accepting routes using the `--accept-routes` flag with the [`tailscale set`][docs-tailscale-set] command:
+> 运行 Tailscale 1.93 或更早版本的 Linux 设备默认不会发现通往 Tailscale Services 的新路由。你必须使用 [`tailscale set`][docs-tailscale-set] 命令并加上 `--accept-routes` 标志，显式启用路由接受：
 >
 > ```shell
 > sudo tailscale set --accept-routes
 > ```
 
-## Common scenarios
+## 常见场景
 
-This section covers common scenarios for managing Tailscale Service hosts, including draining a host, removing a host configuration, and updating a Service host configuration.
+本节介绍管理 Tailscale Service 主机的常见场景，包括排空主机、移除主机配置以及更新 Service 主机配置。
 
-### Drain a host
+### 排空主机
 
-When you need to take a Service host offline, you should first drain the host. Draining a host stops it from accepting new incoming connections while letting existing connections to close gracefully.
+当你需要将 Service 主机下线时，应首先排空该主机。排空主机会让它停止接受新的传入连接，同时让现有连接正常关闭。
 
-Use the `tailscale serve drain` command to stop the host from advertising itself for a service (`svc:<service-name>`):
+使用 `tailscale serve drain` 命令让主机停止针对某个服务（`svc:<service-name>`）通告自身：
 
 ```shell
 tailscale serve drain svc:<service-name>
 ```
 
-After you run the `tailscale serve drain` command, all associated endpoints on the host stop accepting new incoming connections. However, any ongoing connections remain alive until they close normally.
+运行 `tailscale serve drain` 命令后，主机上所有相关端点都会停止接受新的传入连接，但正在进行的连接会保持存活，直到正常关闭。
 
-After all connections close gracefully, you can safely remove all relevant endpoint configurations.
+所有连接正常关闭后，你就可以安全地移除所有相关端点配置。
 
-### Remove a host configuration
+### 移除主机配置
 
-> **Danger:**
+> **危险：**
 >
-> Do not remove an endpoint configuration before draining it. Doing so abruptly ends all connections to the advertised resource.
+> 不要在排空之前移除端点配置。否则会突然中断与所通告资源的所有连接。
 
-After draining the endpoint for a resource, you can remove its configuration using one of three ways: remove a specific endpoint (for a single `protocol:port` endpoint mapping), remove the entire host configuration, or reset the configuration file. The best method depends on how much of the configuration file you want to preserve.
+排空资源的端点后，你可以通过以下三种方式之一移除其配置：移除特定端点（针对单个 `protocol:port` 端点映射）、移除整个主机配置，或重置配置文件。最佳方式取决于你想保留配置文件中的多少内容。
 
-> **Tip:**
+> **提示：**
 >
-> You can check your Service configuration file at any point using the `tailscale serve status` command.
+> 你可以随时使用 `tailscale serve status` 命令查看你的 Service 配置文件。
 >
 > ```shell
 > tailscale serve status -json
 > ```
 
-#### Remove an endpoint
+#### 移除端点
 
-If you configured multiple endpoints for a single resource using different port numbers or protocols, you can use the `off` argument to remove only a specific endpoint mapping. To remove a specific endpoint mapping for a resource for a specific port number, re-run the original `tailscale serve` command (that you used to configure the endpoint) with the `off` argument. You must run the command with the same values and flags as you did to set up the endpoint.
+如果你使用不同的端口号或协议为单个资源配置了多个端点，可以使用 `off` 参数只移除特定的端点映射。要移除资源在特定端口号上的端点映射，请使用 `off` 参数重新运行最初用于配置该端点的 `tailscale serve` 命令。你必须使用与设置端点时相同的值和标志来运行该命令。
 
 ```shell
 tailscale serve --service:"svc:<service-name>" --https:<port> <additional-flags> off
 ```
 
-Adding the `off` argument at the end of the command you used to advertise the endpoint with the same flag removes the endpoint configured for a port. For example, have an endpoint for `web-server` on HTTPS port `443` and an endpoint for `web-server` on HTTP ports `80` and `3000` and you need to remove the endpoint for HTTPS port `443`:
+在你用来通告端点的命令末尾加上 `off` 参数（保持相同的标志），即可移除为某个端口配置的端点。例如，假设你有一个 `web-server` 在 HTTPS 端口 `443` 上的端点，以及 `web-server` 在 HTTP 端口 `80` 和 `3000` 上的端点，而你需要移除 HTTPS 端口 `443` 上的端点：
 
-1. Run this command to disable its configuration for only HTTPS port `443`:
+1. 运行以下命令，仅禁用 HTTPS 端口 `443` 上的配置：
 
    ```shell
    tailscale serve --service="svc:web-server" --https=443 off
    ```
 
-2. Then, re-advertise with only HTTP port `80`:
+2. 然后，仅使用 HTTP 端口 `80` 重新通告：
 
    ```shell
    tailscale serve advertise svc:web-server
    ```
 
-> **Note:**
+> **注意：**
 >
-> Here's a more complete example of removing an endpoint:
+> 以下是移除端点的更完整示例：
 >
 > ```shell
 > # Run tailscale up <...>
@@ -230,19 +230,19 @@ Adding the `off` argument at the end of the command you used to advertise the en
 > tailscale serve advertise svc:web-server
 > ```
 
-#### Remove all endpoint mappings for a Service
+#### 移除 Service 的所有端点映射
 
-To remove the configuration for a specific Service (which can have one or more endpoints), use the `tailscale serve clear` command.
+要移除特定 Service（可以有一个或多个端点）的配置，请使用 `tailscale serve clear` 命令。
 
 ```shell
 tailscale serve clear svc:<service-name>
 ```
 
-This removes all endpoint configurations for the Service from service configuration file.
+这会从服务配置文件中移除该 Service 的所有端点配置。
 
-> **Note:**
+> **注意：**
 >
-> Here's a more complete example of removing all endpoint configurations for a resource:
+> 以下是移除资源配置的所有端点的更完整示例：
 >
 > ```shell
 > # Run tailscale up <...>
@@ -263,29 +263,29 @@ This removes all endpoint configurations for the Service from service configurat
 > tailscale serve clear svc:web-server
 > ```
 
-#### Remove all Service configurations
+#### 移除所有 Service 配置
 
-To reset the entire configuration file (removing all configured Service configurations), use the `tailscale serve reset` command.
+要重置整个配置文件（移除所有已配置的 Service 配置），请使用 `tailscale serve reset` 命令。
 
 ```shell
 tailscale serve reset
 ```
 
-This removes all configured endpoints from the Services configuration file.
+这会从 Services 配置文件中移除所有已配置的端点。
 
-### Update a Service host configuration
+### 更新 Service 主机配置
 
-You can update or modify a host's Service configuration using the `tailscale serve` command or by editing the Service configuration file directly. You should drain the host before modification.
+你可以使用 `tailscale serve` 命令或直接编辑 Service 配置文件来更新或修改主机的 Service 配置。修改之前应当先排空主机。
 
-To update an endpoint configuration for a given protocol, port, and path, run `tailscale serve` with the same flags. For example, to start an endpoint configured with HTTPS on port `443`:
+要更新特定协议、端口和路径的端点配置，请使用相同的标志运行 `tailscale serve`。例如，要启动一个在端口 `443` 上以 HTTPS 配置的端点：
 
-1. Run the following command to start an endpoint configured with HTTPS on port `443`:
+1. 运行以下命令，启动在端口 `443` 上以 HTTPS 配置的端点：
 
    ```shell
    tailscale serve --service="svc:web-server" --https=443 https://localhost:443
    ```
 
-2. Then, check the configuration with `tailscale serve get-config --all`:
+2. 然后使用 `tailscale serve get-config --all` 检查配置：
 
    ```json
    {
@@ -300,15 +300,15 @@ To update an endpoint configuration for a given protocol, port, and path, run `t
    }
    ```
 
-   To update the endpoint default path point to local port `8081`:
+   要将端点的默认路径改为指向本地端口 `8081`：
 
-3. Run the following command:
+3. 运行以下命令：
 
    ```shell
    tailscale serve --service="svc:web-server" --https=443 https://localhost:8081
    ```
 
-4. Then, check the configuration with `tailscale serve get-config --all`:
+4. 然后使用 `tailscale serve get-config --all` 检查配置：
 
    ```json
    {
@@ -323,21 +323,21 @@ To update an endpoint configuration for a given protocol, port, and path, run `t
    }
    ```
 
-To run a different protocol on a port for a local resource, you need to remove the existing endpoint configuration on the port, then add the configuration again. For example, let's say you have an endpoint configured for `my-web-app` with HTTPS on port `443` pointed to a text example, but you need to update it to use HTTP instead of HTTPS:
+要在某个端口上为本地资源运行不同的协议，你需要先移除该端口上现有的端点配置，然后重新添加配置。例如，假设你为 `my-web-app` 配置了一个 HTTPS 端口 `443` 的端点、指向一个文本示例，但需要将其改为使用 HTTP 而不是 HTTPS：
 
-1. Remove the endpoint configuration for port `443` by running the following command:
+1. 运行以下命令移除端口 `443` 的端点配置：
 
    ```shell
    tailscale serve --service="svc:my-web-app" --https=443 off
    ```
 
-2. Then, re-run the `tailscale serve` command to set up the endpoint with HTTP:
+2. 然后重新运行 `tailscale serve` 命令，以 HTTP 设置该端点：
 
    ```shell
    tailscale serve --service="svc:my-web-app" --http=443 http://localhost:8081
    ```
 
-   The command returns output similar to the following:
+   该命令返回类似于以下的输出：
 
    ```shell
    Available within your tailnet:
@@ -346,11 +346,11 @@ To run a different protocol on a port for a local resource, you need to remove t
    |-- text  "example"
    ```
 
-### Configure a Service host using a configuration file
+### 使用配置文件配置 Service 主机
 
-To configure a Service host using the [Service configuration syntax][docs-tailscale-services-configuration-file], you need to create a configuration file (such as `serveconfig.json`) that contains the configuration for the Service host. Note that when you use the configuration file method, you must configure each endpoint mapping, then advertise it as two separate steps.
+要使用 [Service 配置语法][docs-tailscale-services-configuration-file]配置 Service 主机，你需要创建一个包含 Service 主机配置的配置文件（例如 `serveconfig.json`）。注意，使用配置文件方式时，你必须先配置每个端点映射，然后将其通告，这是两个独立的步骤。
 
-1. Create a file named `serveconfig.json` that contains a [`tailscale serve`][docs-tailscale-serve] configuration. This example configures an endpoint for a local web server exposed on port `443` over HTTPS:
+1. 创建一个名为 `serveconfig.json` 的文件，其中包含 [`tailscale serve`][docs-tailscale-serve] 配置。此示例为通过 HTTPS 在端口 `443` 上暴露的本地 Web 服务器配置一个端点：
 
    ```json
    {
@@ -365,32 +365,32 @@ To configure a Service host using the [Service configuration syntax][docs-tailsc
    }
    ```
 
-2. Use the `tailscale serve set-config` command to apply the configuration file:
+2. 使用 `tailscale serve set-config` 命令应用配置文件：
 
    ```shell
    tailscale serve set-config --all serveconfig.json
    ```
 
-3. Run the `tailscale serve status` command to verify your configuration:
+3. 运行 `tailscale serve status` 命令验证你的配置：
 
    ```shell
    tailscale serve get-config --all
    ```
 
-4. Advertise the endpoint:
+4. 通告该端点：
 
    ```shell
    tailscale serve advertise svc:<service-name>
    ```
 
-Your service host is now handling traffic for your Tailscale Service. You can validate this by running `tailscale status --json | jq '.Self.CapMap."service-host"'` to check the service-host status.
+你的服务主机现在正在为你的 Tailscale Service 处理流量。你可以运行 `tailscale status --json | jq '.Self.CapMap."service-host"'` 检查 service-host 状态来验证这一点。
 
-### Set up automatic approval
+### 设置自动审批
 
-Tailscale clients can advertise new Service hosts, but administrators must approve or deny new advertisements (similar to [subnet route approval][docs-subnets-approve]). You can set auto-approval policies to enable certain clients, users, or tags to automatically advertise and approve new hosts for a specific Service or group of Services.
+Tailscale 客户端可以通告新的 Service 主机，但管理员必须批准或拒绝新的通告（类似于[子网路由审批][docs-subnets-approve]）。你可以设置自动审批策略，让特定客户端、用户或标签能够为特定 Service 或一组 Service 自动通告并批准新主机。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Create an auto-approval policy to approve new hosts for an individual Tailscale Service or groups of Tailscale Services (defined by a [tag][docs-tags]). The following shows an example:
+1. 前往管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 创建自动审批策略，为单个 Tailscale Service 或 Tailscale Service 组（由[标签][docs-tags]定义）批准新主机。示例如下：
 
    ```json
    "autoApprovers": {
@@ -403,24 +403,24 @@ Tailscale clients can advertise new Service hosts, but administrators must appro
 
    \[Missing snippet: visual\_policy\_editor.mdx]
 
-The example creates an auto-approval rule for Tailscale clients tagged with the `tag:server` to advertise new Service Proxies, for the Tailscale Service `svc:<service-name>`. Additionally, it specifies that Tailscale clients with the tag `tag:prod-infra` can advertise new Service Proxies, and automatically receive approval, for Tailscale Services with the tag `tag:prod-service`.
+该示例为带有 `tag:server` 标签的 Tailscale 客户端创建了一条自动审批规则，允许它们为 Tailscale Service `svc:<service-name>` 通告新的 Service 代理。此外，它还规定带有 `tag:prod-infra` 标签的 Tailscale 客户端可以为带有 `tag:prod-service` 标签的 Tailscale Services 通告新的 Service 代理，并自动获得批准。
 
-### Validate your Service
+### 验证你的 Service
 
-You can validate that your Service successfully advertised locally, and that it passed validation. To do this, run the following [`tailscale status`][docs-tailscale-status] command and pass its output to the [`jq`][xt-jq] command-line JSON processor:
+你可以验证你的 Service 是否已在本地成功通告并通过了验证。为此，请运行以下 [`tailscale status`][docs-tailscale-status] 命令，并将其输出传递给 [`jq`][xt-jq] 命令行 JSON 处理器：
 
 ```shell
 tailscale status --json | jq '.Self.CapMap."service-host"'
 ```
 
-The `jq` output should show the `service-host` status.
+`jq` 的输出应显示 `service-host` 状态。
 
-#### Configure Service access
+#### 配置 Service 访问
 
-You can use a Tailscale Service as a destination in [grant][docs-grants] access control policies.
+你可以在[授权][docs-grants]访问控制策略中将 Tailscale Service 用作目标。
 
-1. Go to the [Access controls](https://console.tailscale.com/admin/acls) page of the admin console.
-2. Create a grant rule that grants access to your Service. For example, this grant uses `svc:web-server` a destination, on port `443`, with access granted to `"autogroup:member`.
+1. 前往管理控制台的 [Access controls](https://console.tailscale.com/admin/acls) 页面。
+2. 创建一条授予你的 Service 访问权限的授权规则。例如，以下授权以 `svc:web-server` 为目标、端口为 `443`，并将访问权限授予 `autogroup:member`。
 
 ```json
 {
@@ -432,9 +432,9 @@ You can use a Tailscale Service as a destination in [grant][docs-grants] access 
 
 \[Missing snippet: visual\_policy\_editor.mdx]
 
-> **Tip:**
+> **提示：**
 >
-> You can also reference groups of Tailscale Services using a tag you've assigned to each Service. This example grants access to a group of production Services with access to the Service `svc:database`.
+> 你还可以使用分配给每个 Service 的标签来引用 Tailscale Services 组。此示例授权一组生产 Services（`tag:prod-service`）访问 `svc:database` Service。
 >
 > ```json
 > {
@@ -444,98 +444,98 @@ You can use a Tailscale Service as a destination in [grant][docs-grants] access 
 > },
 > ```
 
-### Use access control tests
+### 使用访问控制测试
 
-Tailscale Services resources are valid `accept` or `deny` destinations in [access control tests][docs-policy-syntax-tests].
+Tailscale Services 资源是[访问控制测试][docs-policy-syntax-tests]中有效的 `accept` 或 `deny` 目标。
 
-### Check availability
+### 检查可用性
 
-To check the availability of your Service, you can use the [Services](https://console.tailscale.com/admin/services) page of the admin console.
+要检查你的 Service 的可用性，可以使用管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
 
-1. Open the [Services](https://console.tailscale.com/admin/services) page of the Tailscale admin console.
-2. Within the **Advertised** section, you should find your Tailscale Service listed with configured endpoints.
+1. 打开 Tailscale 管理控制台的 [Services](https://console.tailscale.com/admin/services) 页面。
+2. 在 **Advertised**（已通告）区域中，你应该能看到你的 Tailscale Service 及其已配置的端点。
 
-## Reference
+## 参考
 
-This section provides reference information about Tailscale Services, including endpoint types and service states.
+本节提供有关 Tailscale Services 的参考信息，包括端点类型和服务状态。
 
-### Endpoint types
+### 端点类型
 
-Tailscale supports three types of endpoints, each operating at different layers of the networking stack. While the OSI model isn't a perfect representation of modern networking, it provides a useful framework for understanding these distinctions. There are three different types of endpoints: layer 7 (application), layer 4 (transport), and layer 3 (network). This section explains each type, when to use them, and notes about their specific capabilities
+Tailscale 支持三种类型的端点，各自工作在网络栈的不同层。虽然 OSI 模型并不能完美呈现现代网络，但它为理解这些区别提供了一个实用的框架。三种端点类型分别是：第 7 层（应用层）、第 4 层（传输层）和第 3 层（网络层）。本节说明每种类型的用途、适用场景以及各自能力的注意事项
 
-#### Layer 7 endpoints (application layer)
+#### 第 7 层端点（应用层）
 
-Layer 7 (application) endpoints provide the most sophisticated forwarding mechanism by understanding and manipulating application layer protocols. It can inspect, modify, and route traffic based on application-specific content. These types of endpoints work well when you need Tailscale to inject authentication headers in the packets or path-based routing. For example, `/api/*` requests might go to one server while `/static/*` goes to another.
+第 7 层（应用层）端点通过理解和操作应用层协议，提供最精细的转发机制。它可以根据应用特定的内容检查、修改和路由流量。当你需要 Tailscale 在数据包中注入认证标头，或需要基于路径的路由时，这类端点非常合适。例如，`/api/*` 请求可以转发到一台服务器，而 `/static/*` 转发到另一台。
 
-You can create a layer 7 endpoint by setting the protocol value to `http` or `https` when using `tailscale serve`.
+使用 `tailscale serve` 时，将协议值设为 `http` 或 `https` 即可创建第 7 层端点。
 
-* The port number is the port to expose the endpoint on.
-* You can use the optional `--set-path` flag to use a custom file path. By default, it uses `/`.
-* The destination can be text, a file path, or a local address. Refer to [Tailscale Serve examples][docs-serve-examples] for more examples.
+* 端口号是暴露该端点所用的端口。
+* 可以使用可选的 `--set-path` 标志指定自定义文件路径。默认使用 `/`。
+* 目标可以是文本、文件路径或本地地址。更多示例请参阅 [Tailscale Serve 示例][docs-serve-examples]。
 
-#### Layer 4 endpoints (transport layer)
+#### 第 4 层端点（传输层）
 
-Layer 4 (transport) endpoints operate at the transport (TCP) layer of the [OSI model][docs-osi-model]. They act as TCP forwarders that don't modify packet data, but might not preserve packet boundaries and metadata. These types of endpoints work well for standard TCP services like web servers and databases. They have less overhead than layer 7 endpoints because they don't parse application layer protocols.
+第 4 层（传输层）端点工作在 [OSI 模型][docs-osi-model]的传输（TCP）层。它们充当 TCP 转发器，不修改数据包数据，但可能不保留数据包边界和元数据。这类端点非常适合 Web 服务器和数据库等标准 TCP 服务。由于不解析应用层协议，它们的开销比第 7 层端点更小。
 
-You can create a layer 4 endpoint by setting the protocol value to `tcp` or `tls-terminated-tcp` when using `tailscale serve`.
+使用 `tailscale serve` 时，将协议值设为 `tcp` 或 `tls-terminated-tcp` 即可创建第 4 层端点。
 
-* The port number is the port to expose a TCP forwarder on. The TCP forwarder forwards raw TLS-terminated packets.
-* You cannot use the `--set-path` flag to use a custom file path. It must be empty or unset.
-* The destination is the local address where the raw TCP packets will be forwarded to (for example, `tcp://localhost:5432`).
+* 端口号是暴露 TCP 转发器所用的端口。TCP 转发器转发已终结 TLS 的原始数据包。
+* 不能使用 `--set-path` 标志指定自定义文件路径。该值必须为空或未设置。
+* 目标是原始 TCP 数据包将被转发到的本地地址（例如 `tcp://localhost:5432`）。
 
-#### Layer 3 endpoints (network layer)
+#### 第 3 层端点（网络层）
 
-Layer 3 (network) endpoints are a special type of endpoint that operates at the IP packet level and forwards all traffic, unmodified, to the operating system networking stack.
+第 3 层（网络层）端点是一种特殊类型的端点，工作在 IP 数据包层面，将所有流量不加修改地转发给操作系统的网络栈。
 
-You might consider using a layer 3 endpoint if the application or resource you're serving requires UDP support or you need to preserve exact packet boundaries and sizes. However, keep in mind that they have the following limitations:
+如果你要提供的应用或资源需要 UDP 支持，或者你需要精确保留数据包边界和大小，可以考虑使用第 3 层端点。但请注意它们有以下限制：
 
-* Require additional operating system configuration to handle the unmodified packets.
-* Don't have any built-in application layer features like authentication headers.
-* Only work on Linux.
+* 需要额外的操作系统配置来处理未经修改的数据包。
+* 没有任何内置的应用层功能，例如认证标头。
+* 只能在 Linux 上工作。
 
-You can create a layer 3 endpoint on a Linux device by running the `tailscale serve` command (with the service information) with the `--tun` flag.
+在 Linux 设备上，运行带有 `--tun` 标志的 `tailscale serve` 命令（附带服务信息）即可创建第 3 层端点。
 
 ```shell
 tailscale serve --service=svc:<service-name> --tun
 ```
 
-Using the `--tun` flag creates a layer 3 protocol-agnostic endpoint, which offers more control over the way packets flow to the resource. This type of endpoint forwards all traffic heading to the Tailscale Service to your local device without modifying it. In this mode, you would likely be doing some of your own `iptables` configuration or something like that to take full control of the packet and make it go to your desired destination.
+使用 `--tun` 标志会创建一个第 3 层的协议无关端点，让你能更精细地控制数据包流向资源的方式。这种端点会将所有前往该 Tailscale Service 的流量不加修改地转发到你的本地设备。在这种模式下，你可能需要自行进行一些 `iptables` 配置或类似操作，以完全掌控数据包并将其送往预期的目的地。
 
-### Service states
+### Service 状态
 
-This section covers the states of Services in the admin console. In the Services page of the admin console, a Service can be in the following states:
+本节介绍管理控制台中 Service 的各种状态。在管理控制台的 Services 页面中，Service 可以处于以下状态：
 
-* **Pending approval**: The Service has one or more hosts that have been advertised but are awaiting approval from an [Admin, Network admin, or Owner](/docs/reference/user-roles).
-* **Needs configuration**: The host has been defined but has an invalid or missing configuration.
-* **Connected**: At least one host is actively advertising the Service.
-* **Offline**: No hosts are currently advertising the Service.
-* **Pre-approved**: A device has been automatically approved based on an auto-approval policy but is not yet advertising the Service.
-* **Draining**: The host is in the process of draining, meaning it is no longer accepting new connections but is still handling existing ones.
+* **待批准**：Service 有一台或多台已通告但仍在等待 [Admin、Network admin 或 Owner](/docs/reference/user-roles) 批准的主机。
+* **需要配置**：主机已定义，但配置无效或缺失。
+* **已连接**：至少有一台主机正在通告该 Service。
+* **离线**：当前没有任何主机通告该 Service。
+* **已预先批准**：设备已根据自动审批策略自动获得批准，但尚未通告该 Service。
+* **排空中**：主机正在排空，即不再接受新连接，但仍在处理现有连接。
 
-## Limitations
+## 局限性
 
-Tailscale Services has the following limitations:
+Tailscale Services 有以下限制：
 
-* **TCP-only protocol support**: Services currently only support TCP transport protocol, with UDP unavailable except through layer 3 endpoints on Linux that require additional operating system (OS) level configuration.
-* **No outgoing connections**: Virtual IP addresses (TailVIPs) assigned to Services can only accept incoming connections, preventing any outgoing connections from being initiated.
-* **Linux-only layer 3 endpoints**: Layer 3 endpoints that preserve packet boundaries only work on Linux and require additional tool configuration, such as `iptables`.
-* **Text and file endpoints**: The Service configuration file method does not support `text:` or `file:` destinations. These are only available when using the `tailscale serve` CLI command.
-* **Limitations with multiple network interfaces**: Service Hosts that have multiple network interfaces and define remote resource destinations might experience issues in specific circumstances. For example, a connection to a remote destination might fail if:
-  * The Service Host (1) is a Linux device, (2) is running `tailscaled` without `SO_MARK`, (3) has multiple network interfaces, and (4) does not have the remote destination in its default route table. You can bypass this limitation by running `tailscaled` in [userspace-networking mode][docs-userspace-networking].
-  * The Service Host (1) is a macOS device using the [Mac App Store or Standalone variant][docs-macos-variants], (2) has multiple network interfaces, and (3) does not have the remote endpoint in its default route table. In this case, you can bypass the issue by running the [open source macOS variant][docs-macos-variants-tailscaled] (which uses `tailscaled` in userspace-networking mode by default).
+* **仅支持 TCP 协议**：Services 目前只支持 TCP 传输协议；除 Linux 上需要额外操作系统（OS）级配置的第 3 层端点外，无法使用 UDP。
+* **无出站连接**：分配给 Service 的虚拟 IP 地址（TailVIP）只能接受传入连接，不能发起任何出站连接。
+* **第 3 层端点仅限 Linux**：保留数据包边界的第 3 层端点只能在 Linux 上工作，并且需要额外的工具配置，例如 `iptables`。
+* **文本和文件端点**：Service 配置文件方式不支持 `text:` 或 `file:` 目标。这些目标只能在使用 `tailscale serve` CLI 命令时使用。
+* **多网络接口的限制**：拥有多个网络接口并定义了远程资源目标的 Service 主机在特定情况下可能遇到问题。例如，在以下情况中，与远程目标的连接可能失败：
+  * Service 主机（1）是 Linux 设备，（2）运行未启用 `SO_MARK` 的 `tailscaled`，（3）拥有多个网络接口，并且（4）默认路由表中没有该远程目标。你可以通过以[用户态网络模式][docs-userspace-networking]运行 `tailscaled` 来绕过此限制。
+  * Service 主机（1）是使用 [Mac App Store 或 Standalone 变体][docs-macos-variants]的 macOS 设备，（2）拥有多个网络接口，并且（3）默认路由表中没有该远程端点。在这种情况下，你可以通过运行[开源 macOS 变体][docs-macos-variants-tailscaled]（默认以用户态网络模式运行 `tailscaled`）来绕过此问题。
 
-## Additional information
+## 更多信息
 
-* Use the [Services endpoint][co-api-tailscale-services] in the [Tailscale API][docs-api] to manage Services for your tailnet.
-  * [List all services][co-api-tailscale-services-get-services]
-  * [Get a service][co-api-tailscale-services-get-servicename]
-  * [Update a service][co-api-tailscale-services-put-servicename]
-  * [Delete a service][co-api-tailscale-services-delete-servicename]
-  * [List devices hosting a service][co-api-tailscale-services-get-servicename-devices]
-  * [Get approval status of service on a device][co-api-tailscale-services-get-servicename-deviceid-approved]
-  * [Update approval status of service on a device][co-api-tailscale-services-post-servicename-deviceid-approved]
-* For more information about using the [`tsnet`][docs-tsnet] package and `Server.ListenService` with Go programs, refer to [`tsnet` server][docs-tsnet-server].
-* For a complete example that uses `Server.ListenService` and `ServiceModeHTTP` with Tailscale Services, refer to [`tsnet` and Tailscale Services][docs-tsnet-services].
+* 使用 [Tailscale API][docs-api] 中的 [Services 端点][co-api-tailscale-services]管理你 tailnet 的 Service。
+  * [列出所有服务][co-api-tailscale-services-get-services]
+  * [获取服务][co-api-tailscale-services-get-servicename]
+  * [更新服务][co-api-tailscale-services-put-servicename]
+  * [删除服务][co-api-tailscale-services-delete-servicename]
+  * [列出托管某服务的设备][co-api-tailscale-services-get-servicename-devices]
+  * [获取设备上服务的审批状态][co-api-tailscale-services-get-servicename-deviceid-approved]
+  * [更新设备上服务的审批状态][co-api-tailscale-services-post-servicename-deviceid-approved]
+* 有关在 Go 程序中使用 [`tsnet`][docs-tsnet] 软件包和 `Server.ListenService` 的更多信息，请参阅 [`tsnet` 服务器][docs-tsnet-server]。
+* 有关结合 Tailscale Services 使用 `Server.ListenService` 和 `ServiceModeHTTP` 的完整示例，请参阅 [`tsnet` 与 Tailscale Services][docs-tsnet-services]。
 
 [co-api-tailscale-services-delete-servicename]: https://tailscale.com/api#tag/services/DELETE/tailnet/{tailnet}/services/{serviceName}
 
