@@ -1,12 +1,12 @@
 ---
-title: "Troubleshoot containers"
-description: "The following topics provide suggestions and tips to help troubleshoot common container issues in your Tailscale network."
+title: "容器排障"
+description: "以下主题提供帮助你排查 Tailscale 网络中常见容器问题的建议与技巧。"
 ---
 
-Last validated Mar 18, 2026
+最后验证于 Mar 18, 2026
 
-The following topics provide suggestions and tips to help troubleshoot common container issues in your Tailscale network.
+以下主题提供帮助你排查 Tailscale 网络中常见容器问题的建议与技巧。
 
-* [Troubleshooting Kubernetes operator issues](/docs/reference/troubleshooting/containers/kubernetes-operator) — Troubleshoot Kubernetes operator issues in your Tailscale network.
+* [Kubernetes Operator 问题排障](/docs/reference/troubleshooting/containers/kubernetes-operator) — 排查 Tailscale 网络中的 Kubernetes Operator 问题。
 
-* [Troubleshooting Proxmox issues](/docs/reference/troubleshooting/containers/proxmox) — Troubleshoot Proxmox issues in your Tailscale network.
+* [Proxmox 问题排障](/docs/reference/troubleshooting/containers/proxmox) — 排查 Tailscale 网络中的 Proxmox 问题。

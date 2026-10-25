@@ -98,3 +98,15 @@
 | egress / ingress traffic | 出站流量 / 入站流量 |
 | on-premises | 本地部署 |
 | deprecate | 弃用 |
+
+## 终检补充批次（2026-10-25 终检定稿）
+
+| 英文 | 中文 |
+|---|---|
+| coding agent | 编码智能体（禁用「编码 agent」混写） |
+| provider | 提供商 |
+| connector（Aperture） | 连接器 |
+| passthrough mode | passthrough 模式（不译） |
+| SIEM | 不译 |
+| Chat（Aperture 功能名） | Chat（不译） |
+| 图片占位图注 | `*（图：<中文描述>）*`——描述必须译成中文，技术标识符（tag:xxx、IP、邮箱、UI 原词）保留 |

@@ -1,10 +1,10 @@
 ---
-title: "Troubleshoot Apple TV"
-description: "The most common reason an Apple TV cannot be accessed is because it has gone to sleep and is not configured as a home hub, which lets it remain connected to the network while in sleep mode. For inform"
+title: "排查 Apple TV 问题"
+description: "Apple TV 无法被访问最常见的原因，是它已进入睡眠状态且未配置为家庭中枢（home hub）——配置为家庭中枢后，它可以在睡眠模式下仍保持与网络的连接。"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-The most common reason an Apple TV cannot be accessed is because it has gone to sleep and is not configured as a home hub, which lets it remain connected to the network while in sleep mode. For information about configuring and verifying Apple TV as a home hub, refer to [Install Tailscale on an Apple TV][docs-appletv-troubleshoot].
+Apple TV 无法被访问最常见的原因，是它已进入睡眠状态且未配置为家庭中枢（home hub）——配置为家庭中枢后，它可以在睡眠模式下仍保持与网络的连接。有关配置和验证 Apple TV 家庭中枢的信息，请参阅[在 Apple TV 上安装 Tailscale][docs-appletv-troubleshoot]。
 
 [docs-appletv-troubleshoot]: /docs/install/appletv#troubleshooting

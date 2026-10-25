@@ -1,148 +1,148 @@
 ---
-title: "Troubleshoot custom domains with Kubernetes Gateway API and Tailscale"
-description: "If your custom domain doesn't resolve correctly, check the following:"
+title: "使用 Kubernetes Gateway API 和 Tailscale 的自定义域名排障"
+description: "如果你的自定义域名无法正确解析，请检查以下各项："
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-## DNS resolution fails
+## DNS 解析失败
 
-If your custom domain doesn't resolve correctly, check the following:
+如果你的自定义域名无法正确解析，请检查以下各项：
 
-* **Verify split DNS configuration**: Go to the [DNS](https://console.tailscale.com/admin/dns) page of the admin console and confirm that your custom domain is configured correctly with the internal DNS resolver IP address and that **Restrict to search domain** is enabled.
-* **Check DNS resolver accessibility**: From a Tailscale device, verify that your internal DNS resolver is accessible. If your DNS resolver is on a different subnet, ensure you have a [subnet router][docs-subnets] configured and advertised.
-* **Confirm DNS records exist**: Check that ExternalDNS has created the authoritative DNS record in your DNS resolver. The exact method depends on your DNS provider (for Pi-hole, check the web interface under Local DNS > CNAME Records).
-* **Review ExternalDNS logs**: Check for errors that might indicate why DNS records aren't being created:
+* **验证 split DNS 配置**：前往管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面，确认你的自定义域名的配置正确，即指向内部 DNS 解析器的 IP 地址，并且已启用 **Restrict to search domain**。
+* **检查 DNS 解析器的可访问性**：从一台 Tailscale 设备验证你的内部 DNS 解析器可以访问。如果你的 DNS 解析器位于另一个子网，请确保已配置并通告了[子网路由器][docs-subnets]。
+* **确认 DNS 记录存在**：检查 ExternalDNS 是否已在你的 DNS 解析器中创建了权威 DNS 记录。具体方法取决于你的 DNS 提供商（对于 Pi-hole，请在 Web 界面的 Local DNS > CNAME Records 下检查）。
+* **查看 ExternalDNS 日志**：检查是否有错误能表明 DNS 记录未被创建的原因：
 
 ```shell
 kubectl logs -n tailscale deployment/external-dns
 ```
 
-Common issues include incorrect credentials, connectivity problems to the DNS server, or misconfigured domain filters.
+常见问题包括凭证错误、与 DNS 服务器的连接问题或域名过滤器配置错误。
 
-## TLS certificate issues
+## TLS 证书问题
 
-If you encounter certificate-related errors, try these steps:
+如果你遇到与证书相关的错误，请尝试以下步骤：
 
-* **Check cert-manager logs**: Review logs for certificate provisioning errors:
+* **检查 cert-manager 日志**：查看日志中是否有证书签发错误：
 
 ```shell
 kubectl logs -n cert-manager deployment/cert-manager
 ```
 
-* **Verify ClusterIssuer configuration**: Ensure your ClusterIssuer is properly configured and ready:
+* **验证 ClusterIssuer 配置**：确保你的 ClusterIssuer 配置正确并已就绪：
 
 ```shell
 kubectl get clusterissuer
 ```
 
-The status should show `Ready: True`.
+状态应显示 `Ready: True`。
 
-* **Check certificate status**: Verify that the certificate has been issued successfully:
+* **检查证书状态**：验证证书是否已成功签发：
 
 ```shell
 kubectl get certificate -A
 ```
 
-Look for the certificate referenced in your Gateway's `certificateRefs`. It should show `Ready: True`.
+查找你的 Gateway 的 `certificateRefs` 中引用的证书。它应显示 `Ready: True`。
 
-* **Check certificate Secret**: Ensure the certificate Secret exists in the expected namespace:
+* **检查证书 Secret**：确保证书 Secret 存在于预期的命名空间中：
 
 ```shell
 kubectl get secret app-example-com-tls -n tailscale
 ```
 
-If the Secret is missing, check the Certificate resource's events for errors:
+如果 Secret 缺失，请检查 Certificate 资源的事件以找出错误：
 
 ```shell
 kubectl describe certificate app-example-com-tls -n tailscale
 ```
 
-## Gateway not receiving traffic
+## Gateway 未接收到流量
 
-If the Gateway is not receiving requests from your tailnet, verify the following:
+如果 Gateway 未接收到来自你 tailnet 的请求，请验证以下各项：
 
-* **Check Tailscale IP assignment**: Confirm the Envoy service has a Tailscale IP address assigned:
+* **检查 Tailscale IP 分配**：确认 Envoy 服务已被分配了 Tailscale IP 地址：
 
 ```shell
 kubectl get svc -n tailscale -l gateway.envoyproxy.io/owning-gateway-name
 ```
 
-The `EXTERNAL-IP` field should show a Tailscale IP address (typically in the `100.x.x.x` range).
+`EXTERNAL-IP` 字段应显示一个 Tailscale IP 地址（通常在 `100.x.x.x` 网段）。
 
-* **Verify LoadBalancer status**: Check that the LoadBalancer service shows as ready:
+* **验证 LoadBalancer 状态**：检查 LoadBalancer 服务是否显示为就绪：
 
 ```shell
 kubectl get svc -n tailscale
 ```
 
-Look for the Envoy Gateway service and ensure it has an external IP assigned.
+查找 Envoy Gateway 服务，并确保它已被分配外部 IP。
 
-* **Review ACL policies**: Verify that your Tailscale ACL policies allow traffic between your devices and the Gateway. Check the [Access controls](https://console.tailscale.com/admin/acls) in the admin console and ensure there are rules permitting traffic on ports 443 (and 80 if using HTTP redirect).
+* **检查 ACL 策略**：验证你的 Tailscale ACL 策略是否允许设备与 Gateway 之间的流量。检查管理控制台中的 [Access controls](https://console.tailscale.com/admin/acls)，确保存在允许端口 443（如果使用 HTTP 重定向还包括 80）上流量的规则。
 
-* **Check Gateway status**: Verify the Gateway is programmed correctly:
+* **检查 Gateway 状态**：验证 Gateway 是否已正确编程：
 
 ```shell
 kubectl describe gateway custom-domain-gateway -n tailscale
 ```
 
-Look for any error conditions in the status section.
+在 status 部分查找任何错误状态。
 
-* **Test connectivity from tailnet**: From a device in your tailnet, try connecting directly to the Gateway's Tailscale IP:
+* **从 tailnet 测试连通性**：从 tailnet 中的一台设备尝试直接连接 Gateway 的 Tailscale IP：
 
 ```shell
 curl https://<gateway-tailscale-ip>
 ```
 
-If this works but the custom domain doesn't, the issue is likely with DNS resolution rather than Gateway connectivity.
+如果这样能成功，但自定义域名不行，那么问题很可能出在 DNS 解析，而不是 Gateway 连接。
 
-## `HTTPRoute` not working
+## `HTTPRoute` 不工作
 
-If your `HTTPRoute` isn't routing traffic correctly:
+如果你的 `HTTPRoute` 没有正确路由流量：
 
-* **Verify `HTTPRoute` is accepted**: Check the status of your `HTTPRoute`:
+* **验证 `HTTPRoute` 已被接受**：检查你的 `HTTPRoute` 的状态：
 
 ```shell
 kubectl get httproute -n default app-route -o yaml
 ```
 
-Look for conditions indicating whether the route was accepted by the Gateway.
+查找表明该路由是否被 Gateway 接受的条件。
 
-* **Check namespace permissions**: If using cross-namespace routing, ensure the `HTTPRoute`'s namespace has the correct labels matching the Gateway's `allowedRoutes` selector.
+* **检查命名空间权限**：如果使用跨命名空间路由，请确保 `HTTPRoute` 所在的命名空间带有与 Gateway 的 `allowedRoutes` 选择器匹配的标签。
 
-* **Verify backend service**: Ensure your backend service exists and is ready:
+* **验证后端服务**：确保你的后端服务存在并已就绪：
 
 ```shell
 kubectl get svc app-service -n default
 ```
 
-Check that pods backing the service are running:
+检查支撑该服务的 Pod 是否正在运行：
 
 ```shell
 kubectl get pods -n default -l <service-selector>
 ```
 
-## ExternalDNS not creating records
+## ExternalDNS 未创建记录
 
-If ExternalDNS isn't creating DNS records:
+如果 ExternalDNS 没有创建 DNS 记录：
 
-* **Verify Gateway labels**: Ensure your Gateway has the label that ExternalDNS is filtering for:
+* **验证 Gateway 标签**：确保你的 Gateway 带有 ExternalDNS 所过滤的标签：
 
 ```shell
 kubectl get gateway custom-domain-gateway -n tailscale -o yaml | grep "external-dns"
 ```
 
-The label should be `external-dns: enabled` (or match whatever filter you configured).
+该标签应为 `external-dns: enabled`（或与你配置的过滤器相匹配）。
 
-* **Check ExternalDNS configuration**: Verify ExternalDNS is watching the correct sources and domain:
+* **检查 ExternalDNS 配置**：验证 ExternalDNS 正在监视正确的源和域名：
 
 ```shell
 kubectl get deployment external-dns -n tailscale -o yaml
 ```
 
-Look for the `--source`, `--domain-filter`, and `--gateway-label-filter` arguments.
+查找 `--source`、`--domain-filter` 和 `--gateway-label-filter` 参数。
 
-* **Review ExternalDNS permissions**: If using RBAC, ensure ExternalDNS has permission to read Gateway and `HTTPRoute` resources:
+* **检查 ExternalDNS 权限**：如果使用 RBAC，请确保 ExternalDNS 有权读取 Gateway 和 `HTTPRoute` 资源：
 
 ```shell
 kubectl auth can-i list gateways.gateway.networking.k8s.io \

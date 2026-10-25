@@ -1,11 +1,11 @@
 ---
-title: "Mobile device batteries drain quickly"
-description: "Draining of mobile device batteries is a known issue ([#3363][xt-gh-tailscale-issue-3363]). However, we are continuously making improvements. Battery drain is most commonly attributed to a device usin"
+title: "移动设备电池耗电过快"
+description: "移动设备电池耗电是一个已知问题（[#3363][xt-gh-tailscale-issue-3363]）。不过，我们正在持续改进。电池耗电最常见的原因是设备将所有流量都经由[出口节点][docs-exit-nodes]转发。"
 ---
 
-Last validated Mar 20, 2026
+最后验证于 Mar 20, 2026
 
-Draining of mobile device batteries is a known issue ([#3363][xt-gh-tailscale-issue-3363]). However, we are continuously making improvements. Battery drain is most commonly attributed to a device using an [exit node][docs-exit-nodes] for all traffic.
+移动设备电池耗电是一个已知问题（[#3363][xt-gh-tailscale-issue-3363]）。不过，我们正在持续改进。电池耗电最常见的原因是设备将所有流量都经由[出口节点][docs-exit-nodes]转发。
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 

@@ -1,15 +1,15 @@
 ---
-title: "Troubleshoot macOS access from iPhone"
-description: "1. Open the Files app on your iPhone. 2. Go to the **Browse** tab. 3. Select the in the top right. 4. Select **Connect to Server** and enter your Mac's Tailscale IP address."
+title: "排查 iPhone 访问 macOS 的问题"
+description: "1. 在 iPhone 上打开"文件"App。2. 进入"浏览"标签页。3. 选择右上角的（图标）。4. 选择"连接服务器"并输入你的 Mac 的 Tailscale IP 地址。"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-To access files on a Mac from your iPhone:
+要从 iPhone 访问 Mac 上的文件：
 
-1. Open the Files app on your iPhone.
-2. Go to the **Browse** tab.
-3. Select the  in the top right.
-4. Select **Connect to Server** and enter your Mac's Tailscale IP address.
+1. 在 iPhone 上打开"文件"（Files）App。
+2. 进入**浏览**标签页。
+3. 选择右上角的（图标）。
+4. 选择**连接服务器**，并输入你的 Mac 的 Tailscale IP 地址。
 
-You can now browse any folders shared by your Mac using the Server Message Block (SMB) protocol.
+现在，你可以浏览 Mac 通过服务器消息块（SMB）协议共享的所有文件夹。

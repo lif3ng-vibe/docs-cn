@@ -1,10 +1,10 @@
 ---
-title: "Troubleshoot Linux DNS issues"
-description: "Tailscale attempts to interoperate with any Linux DNS configuration it finds already present. Unfortunately, some are not entirely amenable to cooperatively managing the host's DNS configuration. For "
+title: "排查 Linux DNS 问题"
+description: "Tailscale 会尝试与系统中已有的任何 Linux DNS 配置协作互通。遗憾的是，有些配置并不完全适合协同管理主机的 DNS 配置。有关"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-Tailscale attempts to interoperate with any Linux DNS configuration it finds already present. Unfortunately, some are not entirely amenable to cooperatively managing the host's DNS configuration. For information about troubleshooting, refer to [Configuring Linux DNS][docs-linux-dns].
+Tailscale 会尝试与系统中已有的任何 Linux DNS 配置协作互通。遗憾的是，有些配置并不完全适合协同管理主机的 DNS 配置。排障信息请参阅[配置 Linux DNS][docs-linux-dns]。
 
 [docs-linux-dns]: /docs/reference/linux-dns

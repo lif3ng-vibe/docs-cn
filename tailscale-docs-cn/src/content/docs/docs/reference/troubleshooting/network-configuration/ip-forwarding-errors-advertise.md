@@ -1,13 +1,13 @@
 ---
-title: "Troubleshoot IP forwarding issues when advertising subnet routes or exit nodes"
-description: "Tailscale's routing features ([subnet routers][docs-subnets] and [exit nodes][docs-exit-nodes]) require IP forwarding to be enabled. If it is not enabled, you may encounter an error when using `--adve"
+title: "排查通告子网路由或出口节点时的 IP 转发问题"
+description: "Tailscale 的路由功能（[子网路由器][docs-subnets]和[出口节点][docs-exit-nodes]）要求启用 IP 转发。如果未启用，你在使用 `--advertise-routes` 或 `--advertise-exit-node` 时可能会遇到错误。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-Tailscale's routing features ([subnet routers][docs-subnets] and [exit nodes][docs-exit-nodes]) require IP forwarding to be enabled. If it is not enabled, you may encounter an error when using `--advertise-routes` or `--advertise-exit-node`.
+Tailscale 的路由功能（[子网路由器][docs-subnets]和[出口节点][docs-exit-nodes]）要求启用 IP 转发。如果未启用，你在使用 `--advertise-routes` 或 `--advertise-exit-node` 时可能会遇到错误。
 
-For information about how to do this for your Linux device, refer to [Enable IP forwarding][docs-subnets-linux-ip-forwarding].
+有关如何在你的 Linux 设备上进行设置的说明，请参阅[启用 IP 转发][docs-subnets-linux-ip-forwarding]。
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 

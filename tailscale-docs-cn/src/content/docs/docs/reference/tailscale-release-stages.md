@@ -1,64 +1,64 @@
 ---
-title: "Release stages"
-description: "Understand the Tailscale release stages."
+title: "发布阶段"
+description: "了解 Tailscale 的发布阶段。"
 ---
 
-Last validated Mar 25, 2025
+最后验证于 Mar 25, 2025
 
-Tailscale's features can go through multiple release stages: Alpha, Beta, and General Availability (GA). Use of these features is subject to our [Terms of Service][co-terms].
+Tailscale 的功能会经历多个发布阶段：Alpha、Beta 和正式发布（General Availability，GA）。使用这些功能须遵守我们的[服务条款][co-terms]。
 
-## Release stages
+## 发布阶段
 
 ### Alpha
 
-The feature is available for testing. Alpha releases may be public or private. The feature may have changing requirements and scope, and needs feedback. Alpha releases are not necessarily feature-complete, may not work on all platforms, may not have full functionality in the UI, CLI, or API, and may not be documented. Alpha releases have no technical support obligations.
+该功能可供测试。Alpha 版发布可能是公开的，也可能是私有的。该功能的需求和范围可能发生变化，并需要收集反馈。Alpha 版发布不一定功能完备，可能无法在所有平台上运行，在 UI、CLI 或 API 中可能不具备完整功能，也可能没有文档。Alpha 版发布不承担技术支持义务。
 
 ### Beta
 
-The feature is publicly available for testing environments. The feature needs refinement and broader testing to know it meets users' needs. Beta releases are documented, including any known gaps in functionality or platform support. Beta releases have no technical support obligations.
+该功能公开可用于测试环境。该功能需要打磨和更广泛的测试，以确认它满足用户需求。Beta 版发布配有文档，其中会说明功能或平台支持方面的已知缺口。Beta 版发布不承担技术支持义务。
 
-### General availability (GA)
+### 正式发布（GA）
 
-The feature is publicly available, and ready for production use. Technical support obligations apply to GA features.
+该功能已公开可用，可投入生产使用。GA 功能适用技术支持义务。
 
-## Comparison matrix
+## 对比矩阵
 
 |                    | **Alpha**                                           | **Beta**                                                                                                                               | **GA**                               |
 | ------------------ | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Availability       | May be public or private                            | Public                                                                                                                                 | Public                               |
-| Breaking changes   | Yes                                                 | Yes, but with some warning                                                                                                             | No                                   |
-| Known issues       | Major                                               | Minor                                                                                                                                  | Bugs                                 |
-| Platform support   | May only work on one platform                       | Works on all supported platforms by default. Any limitations are documented with the intent they will be addressed in a future update. | Works on all intended platforms      |
-| UI/CLI/API support | May have limited UX                                 | May have limited UX                                                                                                                    | Works in all intended UX             |
-| Documentation      | Not publicly, or very limited                       | Yes, but may be incomplete                                                                                                             | Yes                                  |
-| Service Warranties | Covered under [existing Terms of Service][co-terms] | Not applicable                                                                                                                         | Not applicable                       |
-| On by default      | No                                                  | May be for new tailnets                                                                                                                | May be for new and existing tailnets |
+| 可用性             | 可能公开或私有                                      | 公开                                                                                                                                   | 公开                                 |
+| 破坏性变更         | 是                                                  | 是，但会提前告知                                                                                                                       | 否                                   |
+| 已知问题           | 重大                                                | 轻微                                                                                                                                   | 一般缺陷                             |
+| 平台支持           | 可能仅支持一个平台                                  | 默认在所有受支持的平台上可用。任何限制都会写入文档，以便在未来更新中解决。                                                              | 可在所有目标平台上运行               |
+| UI/CLI/API 支持    | 用户体验可能受限                                    | 用户体验可能受限                                                                                                                       | 在所有目标交互界面中均可用           |
+| 文档               | 不公开，或非常有限                                  | 有，但可能不完整                                                                                                                       | 有                                   |
+| 服务保证           | 受[现有服务条款][co-terms]约束                      | 不适用                                                                                                                                 | 不适用                               |
+| 默认开启           | 否                                                  | 对新 tailnet 可能默认开启                                                                                                              | 对新旧 tailnet 都可能默认开启        |
 
-## Alpha and beta release stage indicators
+## Alpha 和 Beta 发布阶段标识
 
-### Tailscale admin console
+### Tailscale 管理控制台
 
-Within the Tailscale [admin console][docs-terminology-admin-console], for a feature that is in alpha or beta, the UI displays a release stage indicator.
+在 Tailscale [管理控制台][docs-terminology-admin-console]中，对于处于 Alpha 或 Beta 阶段的功能，UI 会显示一个发布阶段标识。
 
-*（图：Release stage indicator for a feature.）*
+*（图：某功能的发布阶段标识。）*
 
 ### Tailscale CLI
 
-Within the [Tailscale CLI][docs-cli], for a command or subcommand that is in alpha or beta, the `--help` text displays the release stage.
+在 [Tailscale CLI][docs-cli] 中，对于处于 Alpha 或 Beta 阶段的命令或子命令，`--help` 文本会显示其发布阶段。
 
-### Tailscale documentation
+### Tailscale 文档
 
-Within the [Tailscale Documentation][docs-docs] for a feature that is in alpha or beta, the topic displays text that shows the release stage.
+在 [Tailscale 文档][docs-docs]中，对于处于 Alpha 或 Beta 阶段的功能，其主题页面会显示表明发布阶段的文字。
 
-*（图：Release stage indicator within documentation for a feature.）*
+*（图：文档中某功能的发布阶段标识。）*
 
-Documentation for a Tailscale CLI command or subcommand that is in alpha or beta also shows the release stage.
+对于处于 Alpha 或 Beta 阶段的 Tailscale CLI 命令或子命令，其文档同样会显示发布阶段。
 
 ## Tailscale Community Projects
 
-[Tailscale Community Projects][docs-community-projects] is a curated collection of community-supported open source projects built on Tailscale's platform. These projects showcase the breadth of how you can use Tailscale's networking and identity primitives to build secure, private tools for organizations and communities.
+[Tailscale Community Projects][docs-community-projects] 是一个经过精选的集合，收录基于 Tailscale 平台构建、由社区支持的开源项目。这些项目展示了如何利用 Tailscale 的网络与身份原语，为组织和社区构建安全、私密的工具。
 
-For information about supportability of projects in the Tailscale Community Projects [catalog][co-community-projects], refer to the [Tailscale Community Projects][co-special-terms-community-projects] section in our Special Terms.
+有关 Tailscale Community Projects [目录][co-community-projects]中各项目的支持情况，请参阅我们特别条款中的 [Tailscale Community Projects][co-special-terms-community-projects] 部分。
 
 [co-community-projects]: https://tailscale.com/community/community-projects
 

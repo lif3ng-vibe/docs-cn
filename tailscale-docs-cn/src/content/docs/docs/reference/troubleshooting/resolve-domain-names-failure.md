@@ -1,29 +1,29 @@
 ---
-title: "Can't resolve domain names"
-description: "An inability to resolve domain names indicates a problem with the DNS. However, this could be an issue related to the local, network, or Tailscale DNS configurations. Use the following instructions to"
+title: "无法解析域名"
+description: "无法解析域名说明 DNS 存在问题。不过，这可能与本地、网络或 Tailscale 的 DNS 配置有关。请按照以下说明排查设备无法解析域名的原因。"
 ---
 
-Last validated Jan 23, 2026
+最后验证于 Jan 23, 2026
 
-An inability to resolve domain names indicates a problem with the DNS. However, this could be an issue related to the local, network, or Tailscale DNS configurations. Use the following instructions to isolate why a device can't resolve domain names.
+无法解析域名说明 DNS 存在问题。不过，这可能与本地、网络或 Tailscale 的 DNS 配置有关。请按照以下说明排查设备无法解析域名的原因。
 
-1. **[Test the device's local DNS configuration][docs-test-dns] to ensure you can resolve domain names**. You should also check the device's DNS configuration settings for invalid options. The location of these settings varies by operating system.
+1. **[测试设备的本地 DNS 配置][docs-test-dns]，确保你能解析域名**。还应检查设备的 DNS 配置设置中是否存在无效选项。这些设置的位置因操作系统而异。
 
-   After testing your DNS configuration, disconnect Tailscale, then repeat your connection attempt to check if the problem is related to Tailscale.
+   测试完 DNS 配置后，断开 Tailscale，然后重试连接，以检查问题是否与 Tailscale 有关。
 
-   If the device uses corporate or internet service provider (ISP) DNS servers, it might encounter problems with a feature called [DNS rebinding protection][docs-dns-rebinding] when attempting to resolve private IP addresses. You can [work around][docs-dns-rebinding-workarounds] these problems using Tailscale DNS settings and [MagicDNS][docs-magicdns].
+   如果设备使用企业或互联网服务提供商（ISP）的 DNS 服务器，那么在解析私有 IP 地址时，可能会遇到名为 [DNS 重绑定保护][docs-dns-rebinding] 的功能导致的问题。你可以借助 Tailscale DNS 设置和 [MagicDNS][docs-magicdns] 来[绕过][docs-dns-rebinding-workarounds]这些问题。
 
-2. **Check the network DNS settings**.
+2. **检查网络的 DNS 设置**。
 
-   Make sure the upstream or network DNS configuration settings are valid. For example, ensure no incorrect IP addresses, typos, or syntax errors exist.
+   确保上游或网络的 DNS 配置设置有效。例如，确保其中没有错误的 IP 地址、拼写错误或语法错误。
 
-   If the device is on premises, you can find these settings on the default gateway (router) or the firewall. If the device is a cloud or virtual machine (VM), you can access the settings from the cloud provider (such as Amazon Web Services, Google Cloud, or Microsoft Azure).
+   如果设备位于本地部署环境，你可以在默认网关（路由器）或防火墙上找到这些设置。如果设备是云主机或虚拟机（VM），你可以从云服务提供商（例如 Amazon Web Services、Google Cloud 或 Microsoft Azure）处访问这些设置。
 
-3. **Check Tailscale's DNS settings**.
+3. **检查 Tailscale 的 DNS 设置**。
 
-   You can check if the device uses [Tailscale's DNS settings][docs-dns] from the Tailscale client.
+   你可以在 Tailscale 客户端中查看设备是否使用 [Tailscale 的 DNS 设置][docs-dns]。
 
-   If the client is set to use Tailscale's DNS settings, verify the settings from the [DNS](https://console.tailscale.com/admin/dns) page of the admin console. Make sure the device has permission to access the configured [nameservers][docs-nameservers]. For example, an access control policy could block its access or require the device to access the nameserver through a subnet router.
+   如果客户端已设置为使用 Tailscale 的 DNS 设置，请在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面核对这些设置。确保设备有权访问所配置的[名称服务器][docs-nameservers]。例如，访问控制策略可能阻止了它的访问，或者要求设备经由子网路由器访问名称服务器。
 
 [docs-dns-rebinding-workarounds]: /docs/reference/faq/dns-rebinding#workarounds-to-consider-when-using-tailscale
 

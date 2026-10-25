@@ -1,24 +1,24 @@
 ---
-title: "Unencrypted packet examination"
-description: "It is sometimes useful to be able to inspect the unencrypted packets inside the WireGuard tunnel using tools like Wireshark. This can only be done from one of the devices at the endpoints of the tunne"
+title: "检查未加密数据包"
+description: "有时，使用 Wireshark 之类的工具检查 WireGuard 隧道内的未加密数据包会很有用。这只能在隧道端点的设备之一上进行。"
 ---
 
-Last validated Mar 26, 2026
+最后验证于 Mar 26, 2026
 
-It is sometimes useful to be able to inspect the unencrypted packets inside the WireGuard tunnel using tools like Wireshark. This can only be done from one of the devices at the endpoints of the tunnel. Packets captured while in transit cannot be decrypted.
+有时，使用 Wireshark 之类的工具检查 WireGuard 隧道内的未加密数据包会很有用。这只能在隧道端点的设备之一上进行。传输途中被抓取的数据包是无法解密的。
 
-From the devices at the endpoints of the tunnel, there are several ways to accomplish this:
+在隧道端点的设备上，有以下几种方式可以实现：
 
 1. `tailscale debug capture -o /path/to/capture.pcap`
-2. Run Wireshark on the TUN device (this does not work in userspace mode).
+2. 在 TUN 设备上运行 Wireshark（用户态模式下不可用）。
 
-With `tailscale debug capture`, the `-o /path/to/capture.pcap` argument specifies the name of a file to write packets to. If omitted, Tailscale will attempt to start Wireshark locally for a live capture. These `pcap` files are captured with a header of metadata about the tailnet. To inspect them in Wireshark, you must install a [Lua dissector][xt-githubusercontent-tailscale-ts-dissector].
+使用 `tailscale debug capture` 时，`-o /path/to/capture.pcap` 参数指定要写入数据包的文件名。如果省略该参数，Tailscale 会尝试在本地启动 Wireshark 进行实时抓包。这些 `pcap` 文件在抓取时带有包含 tailnet 元数据的文件头。要在 Wireshark 中查看它们，你必须安装一个 [Lua 解析器][xt-githubusercontent-tailscale-ts-dissector]。
 
-To capture from a TUN device, you need to start Wireshark and have it capture from:
+要从 TUN 设备抓包，你需要启动 Wireshark 并让它从以下接口抓取：
 
-1. `tailscale0` for Linux and Windows systems.
-2. `utun#` on macOS, where the number can vary. Wireshark will show a list of interfaces, and one of the `utun` interfaces should show some traffic.
+1. Linux 和 Windows 系统上的 `tailscale0`。
+2. macOS 上的 `utun#`，其中数字可能不同。Wireshark 会显示接口列表，其中某个 `utun` 接口应该会有流量。
 
-Wireshark 3.65 or later support capturing Wireshark frames from TUN devices.
+Wireshark 3.65 及更高版本支持从 TUN 设备抓取 Wireshark 帧。
 
 [xt-githubusercontent-tailscale-ts-dissector]: https://raw.githubusercontent.com/tailscale/tailscale/refs/heads/main/feature/capture/dissector/ts-dissector.lua

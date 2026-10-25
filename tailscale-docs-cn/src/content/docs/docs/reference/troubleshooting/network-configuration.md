@@ -1,42 +1,42 @@
 ---
-title: "Troubleshoot network configuration"
-description: "The following topics provide suggestions and tips to help troubleshoot common network configuration issues."
+title: "网络配置排障"
+description: "以下主题提供帮助你排查常见网络配置问题的建议与技巧。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-The following topics provide suggestions and tips to help troubleshoot common network configuration issues.
+以下主题提供帮助你排查常见网络配置问题的建议与技巧。
 
-* [Disable subnet route masquerading](/docs/reference/troubleshooting/network-configuration/disable-subnet-route-masquerading) — Disable Source Network Address Translation (SNAT) for a device in your Tailscale network.
+* [禁用子网路由的地址伪装](/docs/reference/troubleshooting/network-configuration/disable-subnet-route-masquerading) — 为 Tailscale 网络中的设备禁用源网络地址转换（SNAT）。
 
-* [IP routes installed by Tailscale](/docs/reference/troubleshooting/network-configuration/tailscale-ip-routes) — Determine which routes that Tailscale installs.
+* [Tailscale 安装的 IP 路由](/docs/reference/troubleshooting/network-configuration/tailscale-ip-routes) — 确定 Tailscale 会安装哪些路由。
 
-* [Troubleshoot CGNAT conflicts](/docs/reference/troubleshooting/network-configuration/cgnat-conflicts) — Troubleshoot CGNAT conflicts in your Tailscale network.
+* [排查 CGNAT 冲突](/docs/reference/troubleshooting/network-configuration/cgnat-conflicts) — 排查 Tailscale 网络中的 CGNAT 冲突。
 
-* [Troubleshoot DERP traffic routing issues](/docs/reference/troubleshooting/network-configuration/derp-routing) — Troubleshoot DERP traffic routing issues in your Tailscale network.
+* [排查 DERP 流量路由问题](/docs/reference/troubleshooting/network-configuration/derp-routing) — 排查 Tailscale 网络中的 DERP 流量路由问题。
 
-* [Troubleshoot DNS errors for internal services](/docs/reference/troubleshooting/network-configuration/dns-errors-internal-service) — Troubleshoot DNS errors for internal services connectivity in your Tailscale network.
+* [排查内部服务的 DNS 错误](/docs/reference/troubleshooting/network-configuration/dns-errors-internal-service) — 排查 Tailscale 网络中内部服务连接的 DNS 错误。
 
-* [Troubleshoot hard NAT issues](/docs/reference/troubleshooting/network-configuration/hard-nat-issues) — Troubleshoot hard NAT issues with slow or timed out connections in your Tailscale network.
+* [排查硬 NAT 问题](/docs/reference/troubleshooting/network-configuration/hard-nat-issues) — 排查 Tailscale 网络中由硬 NAT 导致的连接缓慢或超时问题。
 
-* [Troubleshoot IP forwarding issues when advertising subnet routes or exit nodes](/docs/reference/troubleshooting/network-configuration/ip-forwarding-errors-advertise) — Troubleshoot IP forwarding issues when advertising subnet routes or exit nodes in your Tailscale network.
+* [通告子网路由或出口节点时排查 IP 转发问题](/docs/reference/troubleshooting/network-configuration/ip-forwarding-errors-advertise) — 排查在 Tailscale 网络中通告子网路由或出口节点时的 IP 转发问题。
 
-* [Troubleshoot LAN traffic prioritization issues with overlapping subnet routes](/docs/reference/troubleshooting/network-configuration/lan-traffic-overlapping-subnets) — Troubleshoot LAN traffic prioritization issues with overlapping subnet routes in your Tailscale network.
+* [排查子网路由重叠时的局域网流量优先级问题](/docs/reference/troubleshooting/network-configuration/lan-traffic-overlapping-subnets) — 排查 Tailscale 网络中子网路由重叠导致的局域网流量优先级问题。
 
-* [Troubleshoot multiple devices with the same 100.x IP address](/docs/reference/troubleshooting/network-configuration/multiple-devices-same-100-x-ip-address) — Troubleshoot multiple devices with the same 100.x IP address in your Tailscale network.
+* [排查多台设备使用相同 100.x IP 地址的问题](/docs/reference/troubleshooting/network-configuration/multiple-devices-same-100-x-ip-address) — 排查 Tailscale 网络中多台设备使用相同 100.x IP 地址的问题。
 
-* [Troubleshoot overlapping subnet route failover](/docs/reference/troubleshooting/network-configuration/overlapping-subnet-route-failover) — Troubleshoot overlapping subnet route failover issues in your Tailscale network.
+* [排查子网路由重叠时的故障转移问题](/docs/reference/troubleshooting/network-configuration/overlapping-subnet-route-failover) — 排查 Tailscale 网络中子网路由重叠导致的故障转移问题。
 
-* [Troubleshoot routing all traffic through a default route](/docs/reference/troubleshooting/network-configuration/route-traffic-default-node) — Troubleshoot routing all traffic through a default route in your Tailscale network.
+* [排查将全部流量经默认路由转发的配置](/docs/reference/troubleshooting/network-configuration/route-traffic-default-node) — 排查 Tailscale 网络中将所有流量经由默认路由转发的问题。
 
-* [Troubleshoot SoraCOM issues](/docs/reference/troubleshooting/network-configuration/soracom-issues) — Troubleshoot SoraCOM issues in your Tailscale network.
+* [排查 SoraCOM 问题](/docs/reference/troubleshooting/network-configuration/soracom-issues) — 排查 Tailscale 网络中的 SoraCOM 问题。
 
-* [Troubleshoot Sunrise Communications issues](/docs/reference/troubleshooting/network-configuration/sunrise-communications-issues) — Troubleshoot Sunrise Communications issues in your Tailscale network.
+* [排查 Sunrise Communications 问题](/docs/reference/troubleshooting/network-configuration/sunrise-communications-issues) — 排查 Tailscale 网络中的 Sunrise Communications 问题。
 
-* [Troubleshoot Tailscale domains and sites unreachable](/docs/reference/troubleshooting/network-configuration/tailscale-domains-sites-unreachable) — Troubleshoot Tailscale domains and sites unreachable issues in your Tailscale network.
+* [排查 Tailscale 域名与站点无法访问的问题](/docs/reference/troubleshooting/network-configuration/tailscale-domains-sites-unreachable) — 排查 Tailscale 网络中 Tailscale 域名与站点无法访问的问题。
 
-* [Troubleshoot Tally ERP issues](/docs/reference/troubleshooting/network-configuration/tally-erp-issues) — Troubleshoot Tally ERP issues in your Tailscale network.
+* [排查 Tally ERP 问题](/docs/reference/troubleshooting/network-configuration/tally-erp-issues) — 排查 Tailscale 网络中的 Tally ERP 问题。
 
-* [Troubleshoot TCP connection issues between two devices](/docs/reference/troubleshooting/network-configuration/tcp-connection-two-devices) — Troubleshoot TCP connection issues between two devices in your Tailscale network.
+* [排查两台设备之间的 TCP 连接问题](/docs/reference/troubleshooting/network-configuration/tcp-connection-two-devices) — 排查 Tailscale 网络中两台设备之间的 TCP 连接问题。
 
-* [Unencrypted packet examination](/docs/reference/troubleshooting/network-configuration/inspect-unencrypted-packets) — Inspect unencrypted packets as part of troubleshooting.
+* [未加密数据包检查](/docs/reference/troubleshooting/network-configuration/inspect-unencrypted-packets) — 作为排障手段检查未加密数据包。

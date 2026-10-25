@@ -1,39 +1,39 @@
 ---
-title: "Troubleshoot overlapping subnet route failover"
-description: "When multiple subnet routers advertise overlapping routes with different prefix lengths (for example, `10.0.0.0/16` and `10.0.0.0/24`), Tailscale uses [longest prefix matching][docs-subnets-overlappin"
+title: "排查子网路由重叠时的故障转移问题"
+description: "当多台子网路由器通告前缀长度不同的重叠路由（例如 `10.0.0.0/16` 和 `10.0.0.0/24`）时，Tailscale 会使用[最长前缀匹配][docs-subnets-overlapping-routes]来选择最具体的路由。"
 ---
 
-Last validated Oct 7, 2026
+最后验证于 Oct 7, 2026
 
-When multiple subnet routers advertise overlapping routes with different prefix lengths (for example, `10.0.0.0/16` and `10.0.0.0/24`), Tailscale uses [longest prefix matching][docs-subnets-overlapping-routes] to select the most specific route. However, if the subnet router advertising the more-specific route goes offline, Tailscale does not automatically fall back to the less-specific route. Tailscale drops traffic to the more-specific prefix instead.
+当多台子网路由器通告前缀长度不同的重叠路由（例如 `10.0.0.0/16` 和 `10.0.0.0/24`）时，Tailscale 会使用[最长前缀匹配][docs-subnets-overlapping-routes]来选择最具体的路由。然而，如果通告更具体路由的那台子网路由器离线，Tailscale 不会自动回退到不那么具体的路由，而是丢弃发往更具体前缀的流量。
 
-This behavior differs from dynamic routing protocols like OSPF or BGP, where a router going offline causes route withdrawal and automatic fallback. Tailscale evaluates each advertised prefix independently. When multiple routers advertise the same prefix, Tailscale removes offline routers from consideration and fails over to a healthy one. However, this failover does not cross prefix boundaries. If all routers for a more-specific prefix go offline, Tailscale does not promote a less-specific prefix as a substitute. Refer to [avoid black holes with overlapping routes][ar-avoid-blackholes] for how to ensure a prefix has multiple candidate routers.
+这一行为不同于 OSPF 或 BGP 等动态路由协议——在那些协议中，路由器离线会导致路由撤销和自动回退。Tailscale 会独立评估每个通告的前缀。当多台路由器通告同一前缀时，Tailscale 会将离线路由器排除在外，并故障转移到健康的路由器。但这种故障转移不会跨越前缀边界。如果某个更具体前缀的所有路由器都离线了，Tailscale 不会将不那么具体的前缀提升为替代。关于如何确保某个前缀拥有多台候选路由器，请参阅[避免重叠路由造成黑洞][ar-avoid-blackholes]。
 
-Tailscale enforces access control policies through routing, so automatically redirecting traffic to a different subnet router advertising a broader prefix could send traffic to an unintended or unauthorized destination. For example, if an exit node advertises `0.0.0.0/0` and a subnet router advertises a specific LAN prefix, you would not want LAN traffic to egress through the exit node if the subnet router goes down.
+Tailscale 通过路由来实施访问控制策略，因此把流量自动重定向到另一台通告更宽前缀的子网路由器，可能会把流量发往意料之外或未经授权的目的地。例如，如果出口节点通告 `0.0.0.0/0`，而子网路由器通告一个具体的 LAN 前缀，那么在子网路由器宕机时，你不会希望 LAN 流量从出口节点出去。
 
-## Avoid black holes with overlapping routes
+## 避免重叠路由造成黑洞
 
-To prevent black holes when using overlapping routes, configure all subnet routers that advertise a broader prefix to also advertise the more-specific prefix. This ensures the more-specific prefix has multiple candidate routers.
+为防止重叠路由造成黑洞，请配置所有通告更宽前缀的子网路由器，使其同时通告更具体的前缀。这样能确保更具体的前缀拥有多台候选路由器。
 
-For example, instead of:
+例如，不要这样：
 
-* Subnet router A advertising `10.0.0.0/16`.
-* Subnet router B advertising `10.0.0.0/24`.
+* 子网路由器 A 通告 `10.0.0.0/16`。
+* 子网路由器 B 通告 `10.0.0.0/24`。
 
-Configure:
+而应配置为：
 
-* Subnet router A advertising `10.0.0.0/16` and `10.0.0.0/24`.
-* Subnet router B advertising `10.0.0.0/24`.
+* 子网路由器 A 通告 `10.0.0.0/16` 和 `10.0.0.0/24`。
+* 子网路由器 B 通告 `10.0.0.0/24`。
 
-With this configuration, both subnet routers are candidates for the `/24` prefix, and Tailscale can fail over between them if one goes offline. Subnet router A continues to serve the `/16` route for addresses outside the `/24` range.
+采用此配置后，两台子网路由器都是 `/24` 前缀的候选，若其中一台离线，Tailscale 可以在它们之间故障转移。子网路由器 A 会继续为 `/24` 范围之外的地址提供 `/16` 路由。
 
-The tailnet's [route selection option][docs-route-selection] determines which eligible subnet router handles each client's traffic. It does not change the exact-prefix requirement for failover.
+tailnet 的[路由选择][docs-route-selection]选项决定由哪台符合条件的子网路由器处理每个客户端的流量，但它不会改变故障转移所要求的精确前缀匹配。
 
-You cannot designate a preferred subnet router for a route. The [`via` field in grants][docs-via] limits which subnet routers are eligible for traffic, but does not set a preference order. A router excluded by `via` is unavailable as a fallback for that traffic.
+你无法为某条路由指定首选子网路由器。[授权中的 `via` 字段][docs-via]限定哪些子网路由器有资格承接流量，但不设置优先顺序。被 `via` 排除的路由器无法作为该流量的后备。
 
-For setup instructions, refer to [Set up high availability][docs-high-availability].
+设置说明请参阅[设置高可用][docs-high-availability]。
 
-[ar-avoid-blackholes]: #avoid-black-holes-with-overlapping-routes
+[ar-avoid-blackholes]: #避免重叠路由造成黑洞
 
 [docs-high-availability]: /docs/how-to/set-up-high-availability
 

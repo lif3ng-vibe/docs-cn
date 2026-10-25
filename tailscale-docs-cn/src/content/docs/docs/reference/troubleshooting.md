@@ -1,43 +1,43 @@
 ---
-title: "Troubleshooting guide"
-description: "Troubleshoot common tailnet scenarios."
+title: "故障排除指南"
+description: "排查常见的 tailnet 问题。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-This topic contains various suggestions and tips to help troubleshoot common issues. If you have additional issues, [contact Tailscale Support][co-contact-support].
+本主题包含各种建议和技巧，帮助你排查常见问题。如果遇到其他问题，请[联系 Tailscale 支持][co-contact-support]。
 
-## Connectivity and network issues
+## 连接与网络问题
 
-* For basic device connectivity issues, refer to [Troubleshoot device connectivity][docs-troubleshoot-connectivity].
-* For network configuration issues, refer to [Troubleshoot network configuration][docs-troubleshoot-network-configuration].
-* For general network troubleshooting (that is, not specific to Tailscale), refer to [Basic network troubleshooting][docs-basic-network-troubleshooting].
+* 有关基本的设备连接问题，请参阅[排查设备连接问题][docs-troubleshoot-connectivity]。
+* 有关网络配置问题，请参阅[排查网络配置问题][docs-troubleshoot-network-configuration]。
+* 有关一般性网络故障排除（即不特定于 Tailscale 的内容），请参阅[基础网络故障排除][docs-basic-network-troubleshooting]。
 
-## Issues related to a specific operating system
+## 与特定操作系统相关的问题
 
-For OS-specific Tailscale troubleshooting, refer to the following:
+有关特定操作系统的 Tailscale 故障排除，请参阅以下内容：
 
-* [Troubleshooting guide for Apple][docs-troubleshooting-apple]
-* [Troubleshooting guide for Linux][docs-troubleshooting-linux]
-* [Troubleshooting guide for Windows][docs-troubleshooting-windows]
+* [Apple 故障排除指南][docs-troubleshooting-apple]
+* [Linux 故障排除指南][docs-troubleshooting-linux]
+* [Windows 故障排除指南][docs-troubleshooting-windows]
 
-## Mobile device issues
+## 移动设备问题
 
-For mobile device issues, refer to [Troubleshooting mobile devices][docs-troubleshooting-mobile].
+有关移动设备问题，请参阅[移动设备故障排除][docs-troubleshooting-mobile]。
 
-## Container issues
+## 容器问题
 
-For container issues, refer to [Troubleshooting containers][docs-troubleshooting-containers].
+有关容器问题，请参阅[容器故障排除][docs-troubleshooting-containers]。
 
-## Cloud environment issues
+## 云环境问题
 
-For cloud environment issues, refer to [Troubleshooting cloud environments][docs-troubleshooting-cloud].
+有关云环境问题，请参阅[云环境故障排除][docs-troubleshooting-cloud]。
 
-## Additional resources
+## 其他资源
 
-If you need to generate a bug report to help Tailscale Support debug an issue, follow the instructions at [Generate a bug report][docs-bug-report].
+如果你需要生成 bug 报告以帮助 Tailscale 支持团队调试问题，请按照[生成 bug 报告][docs-bug-report]中的说明操作。
 
-If you want to enable debug mode for the Tailscale client menu to assist in troubleshooting, follow the instructions at [Debug menu and options][docs-debug-menu].
+如果你想启用 Tailscale 客户端菜单的调试模式来辅助排查问题，请按照[调试菜单与选项][docs-debug-menu]中的说明操作。
 
 [co-contact-support]: https://tailscale.com/contact/support
 

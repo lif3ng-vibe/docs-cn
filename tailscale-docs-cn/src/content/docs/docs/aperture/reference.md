@@ -23,7 +23,7 @@ description: "Aperture 接口、配置、提供商兼容性、CLI 和集成配�
 
 [**Aperture 连接器参考**](/docs/aperture/connectors/reference)——Aperture 连接器的完整参考，包括字段定义、认证类型、MCP 和 HTTP 协议行为、授权、经由旧版 MCP 部分的动态注册，以及从已弃用的 MCP servers 语法的迁移。
 
-[**Aperture CLI**](/docs/aperture/cli)——使用 Aperture CLI 发现、配置并运行经由你的 Aperture 网关连接的编码 agent。
+[**Aperture CLI**](/docs/aperture/cli)——使用 Aperture CLI 发现、配置并运行经由你的 Aperture 网关连接的编码智能体。
 
 [**Aperture 配方（recipes）**](/docs/aperture/reference/recipes)——在开源 aperture-recipes 仓库中查找、使用并贡献集成指南与示例。
 

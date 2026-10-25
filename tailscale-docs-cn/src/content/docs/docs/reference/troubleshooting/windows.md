@@ -1,26 +1,26 @@
 ---
-title: "Troubleshooting guide for Windows"
-description: "The following topics provide suggestions and tips to help troubleshoot common Windows issues. If you have additional issues, [contact Tailscale Support][co-contact-support]."
+title: "Windows 故障排查指南"
+description: "以下主题提供了有助于排查常见 Windows 问题的建议与技巧。如果遇到其他问题，请[联系 Tailscale 支持团队][co-contact-support]。"
 ---
 
-Last validated Feb 10, 2026
+最后验证于 Feb 10, 2026
 
-The following topics provide suggestions and tips to help troubleshoot common Windows issues. If you have additional issues, [contact Tailscale Support][co-contact-support].
+以下主题提供了有助于排查常见 Windows 问题的建议与技巧。如果遇到其他问题，请[联系 Tailscale 支持团队][co-contact-support]。
 
-* [Supported Windows versions](/docs/reference/troubleshooting/windows/supported-windows-versions) — Find out which versions of Windows that Tailscale supports.
+* [支持的 Windows 版本](/docs/reference/troubleshooting/windows/supported-windows-versions) —— 了解 Tailscale 支持哪些 Windows 版本。
 
-* [Troubleshoot system tray shows no internet access](/docs/reference/troubleshooting/windows/windows-systray-no-internet-access) — Troubleshoot the system tray showing there is no internet access for your Windows device.
+* [排查系统托盘显示无互联网访问](/docs/reference/troubleshooting/windows/windows-systray-no-internet-access) —— 排查系统托盘显示 Windows 设备没有互联网访问的问题。
 
-* [Troubleshoot Windows failure to unseal state file](/docs/reference/troubleshooting/windows/windows-unseal-state-file-error) — Troubleshoot failure to unseal state file on Windows.
+* [排查 Windows 无法解封状态文件](/docs/reference/troubleshooting/windows/windows-unseal-state-file-error) —— 排查 Windows 上状态文件解封失败的问题。
 
-* [Troubleshoot Windows installation error](/docs/reference/troubleshooting/windows/windows-install-error) — Troubleshoot a Tailscale error during client installation on Windows.
+* [排查 Windows 安装错误](/docs/reference/troubleshooting/windows/windows-install-error) —— 排查在 Windows 上安装客户端时的 Tailscale 错误。
 
-* [Troubleshoot Windows ping issues](/docs/reference/troubleshooting/windows/windows-ping-issues) — Troubleshoot your Windows device when it has ping issues.
+* [排查 Windows ping 问题](/docs/reference/troubleshooting/windows/windows-ping-issues) —— 排查 Windows 设备出现 ping 问题的情况。
 
-* [Troubleshoot Windows RDP login issue](/docs/reference/troubleshooting/windows/windows-rdp-login-issue) — Troubleshoot the inability to log in to Windows RDP.
+* [排查 Windows RDP 登录问题](/docs/reference/troubleshooting/windows/windows-rdp-login-issue) —— 排查无法登录 Windows RDP 的问题。
 
-* [Troubleshoot Windows RDP user account restriction](/docs/reference/troubleshooting/windows/windows-rdp-user-account-restriction) — Troubleshoot a user account restriction when logging in to Windows RDP.
+* [排查 Windows RDP 用户账户受限](/docs/reference/troubleshooting/windows/windows-rdp-user-account-restriction) —— 排查登录 Windows RDP 时用户账户受限的问题。
 
-* [Troubleshoot Windows upgrade error](/docs/reference/troubleshooting/windows/windows-upgrade-error) — Troubleshoot a Tailscale error during client upgrade on Windows.
+* [排查 Windows 升级错误](/docs/reference/troubleshooting/windows/windows-upgrade-error) —— 排查在 Windows 上升级客户端时的 Tailscale 错误。
 
 [co-contact-support]: https://tailscale.com/contact/support

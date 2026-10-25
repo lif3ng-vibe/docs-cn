@@ -1,10 +1,10 @@
 ---
-title: "Troubleshoot macOS ping issues"
-description: "macOS \"stealth mode\" will prevent macOS from responding to pings. For information about stealth mode, refer to Apple's [stealth mode][xt-apple-stealth-mode] topic."
+title: "排查 macOS ping 问题"
+description: "macOS 的"隐匿模式"（stealth mode）会阻止 macOS 响应 ping。有关隐匿模式的信息，请参阅 Apple 的[隐匿模式][xt-apple-stealth-mode]主题。"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-macOS "stealth mode" will prevent macOS from responding to pings. For information about stealth mode, refer to Apple's [stealth mode][xt-apple-stealth-mode] topic.
+macOS 的"隐匿模式"（stealth mode）会阻止 macOS 响应 ping。有关隐匿模式的信息，请参阅 Apple 的[隐匿模式][xt-apple-stealth-mode]主题。
 
 [xt-apple-stealth-mode]: https://support.apple.com/guide/mac-help/use-stealth-mode-to-keep-your-mac-more-secure-mh17133/26/mac/26

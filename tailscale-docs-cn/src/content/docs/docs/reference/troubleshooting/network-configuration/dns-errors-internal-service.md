@@ -1,17 +1,17 @@
 ---
-title: "Troubleshoot DNS errors for internal services"
-description: "Some DNS servers have a feature called DNS rebinding protection. This can prevent a [particular type of security issue][xt-wikipedia-dns-rebinding] but can impact the ability to access your internal s"
+title: "排查内部服务的 DNS 错误"
+description: "一些 DNS 服务器具有名为 DNS 重绑定保护的功能。它可以防范[某一类安全问题][xt-wikipedia-dns-rebinding]，但可能会影响你访问内部服务的能力。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-Some DNS servers have a feature called DNS rebinding protection. This can prevent a [particular type of security issue][xt-wikipedia-dns-rebinding] but can impact the ability to access your internal services, particularly those hosted behind a subnet router using [private IP addresses][xt-rfc-1918]. Some DNS servers might also apply this policy to the [Tailscale IP address][docs-tailscale-ip-addresses] range (addresses defined in [RFC6598][xt-rfc-6598]).
+一些 DNS 服务器具有名为 DNS 重绑定保护（DNS rebinding protection）的功能。它可以防范[某一类安全问题][xt-wikipedia-dns-rebinding]，但可能会影响你访问内部服务的能力，尤其是那些托管在使用[私有 IP 地址][xt-rfc-1918]的子网路由器后面的服务。一些 DNS 服务器可能还会将此策略应用于 [Tailscale IP 地址][docs-tailscale-ip-addresses]范围（即 [RFC6598][xt-rfc-6598] 中定义的地址）。
 
-> **Note:**
+> **注意：**
 >
-> This issue can affect home routers (for example, [Google Wi-Fi][xt-google-support-9144137]), corporate DNS servers, and internet service provider (ISP) DNS servers.
+> 此问题可能影响家用路由器（例如 [Google Wi-Fi][xt-google-support-9144137]）、企业 DNS 服务器以及互联网服务提供商（ISP）的 DNS 服务器。
 
-For troubleshooting guidance, refer to [DNS problems with internal services and DNS rebinding protection][docs-dns-rebinding].
+排查指引请参阅[内部服务的 DNS 问题与 DNS 重绑定保护][docs-dns-rebinding]。
 
 [docs-dns-rebinding]: /docs/reference/faq/dns-rebinding
 

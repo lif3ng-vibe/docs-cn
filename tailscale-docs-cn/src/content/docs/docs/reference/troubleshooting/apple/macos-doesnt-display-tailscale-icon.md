@@ -1,8 +1,8 @@
 ---
-title: "Troubleshoot Tailscale icon not appearing"
-description: "When the Tailscale client is running on macOS, an icon should display in the menu bar. If there are many icons in the menu bar, the Tailscale icon can become hidden by other icons. To fix this, hold d"
+title: "排查 Tailscale 图标不显示的问题"
+description: "当 Tailscale 客户端在 macOS 上运行时，菜单栏中应显示一个图标。如果菜单栏中图标较多，Tailscale 图标可能会被其他图标遮住。"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-When the Tailscale client is running on macOS, an icon should display in the menu bar. If there are many icons in the menu bar, the Tailscale icon can become hidden by other icons. To fix this, hold down the Command key and drag the menu bar icons around to reveal the Tailscale icon and place it in a visible location.
+当 Tailscale 客户端在 macOS 上运行时，菜单栏中应显示一个图标。如果菜单栏中图标较多，Tailscale 图标可能会被其他图标遮住。要解决此问题，请按住 Command 键并拖动菜单栏图标，让 Tailscale 图标显现出来，并把它放到一个可见的位置。

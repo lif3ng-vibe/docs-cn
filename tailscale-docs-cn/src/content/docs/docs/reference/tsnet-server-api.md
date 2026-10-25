@@ -1,15 +1,15 @@
 ---
 title: "tsnet.Server"
-description: "Use tsnet.Server in a Go program to access tailnet services."
+description: "在 Go 程序中使用 tsnet.Server 访问 tailnet 服务。"
 ---
 
-Last validated Jul 7, 2026
+最后验证于 Jul 7, 2026
 
-The [`tsnet` package][xt-go-tailscale-tsnet] provides the ability for Go programs to programmatically access a Tailscale network (known as a tailnet). A Go program using `tsnet` can connect to your tailnet as though it were a separate computer. You can also use `tsnet` to run multiple services with different confidentiality levels on the same machine. For example, you can create a support tool separate from a data analytics tool, without having to run them on multiple servers or virtual machines. The only way that the tools could be accessed is over Tailscale, so there's no way to get into them from outside your tailnet.
+[`tsnet` 包][xt-go-tailscale-tsnet]让 Go 程序能够以编程方式访问 Tailscale 网络（即 tailnet）。使用 `tsnet` 的 Go 程序可以像一台独立的计算机一样接入你的 tailnet。你还可以用 `tsnet` 在同一台机器上运行多个保密级别不同的服务。例如，你可以把一个支持工具与一个数据分析工具分开运行，而不必把它们部署在多台服务器或多台虚拟机上。这些工具只能通过 Tailscale 访问，因此从 tailnet 外部无法进入。
 
-[`tsnet.Server`][xt-go-tailscale-tsnet-server] provides the primary means of interacting with a tailnet, and contains all the state for your program's connection to Tailscale. Use `tsnet.Server` to provide your Go program with its own IP address, DNS name, and the ability to grab its own HTTPS certificate. This lets you listen on privileged ports like the HTTP and HTTPS ports without having to run your service as `root`. `tsnet.Server` builds on the Go standard library HTTP functionality to give you the ability to make HTTP requests and an HTTP server to handle HTTP requests, in the context of your tailnet.
+[`tsnet.Server`][xt-go-tailscale-tsnet-server] 是与 tailnet 交互的主要途径，包含你的程序与 Tailscale 连接的全部状态。通过 `tsnet.Server`，你的 Go 程序可以拥有自己的 IP 地址、DNS 名称，并能自动获取自己的 HTTPS 证书。这样你就可以监听 HTTP、HTTPS 等特权端口，而不必以 `root` 身份运行服务。`tsnet.Server` 构建在 Go 标准库的 HTTP 功能之上，让你能够在 tailnet 环境中发起 HTTP 请求，并运行处理 HTTP 请求的 HTTP 服务器。
 
-If you use `tsnet.Server` without any arguments, it uses default settings until you modify a setting in a subsequent `Server` call.
+如果在使用 `tsnet.Server` 时未传入任何参数，它会沿用默认设置，直到你在后续的 `Server` 调用中修改某项设置。
 
 ```go
 srv := new(tsnet.Server)
@@ -19,11 +19,11 @@ if err := srv.Start(); err != nil {
 defer s.Close()
 ```
 
-You can change settings for a `tsnet.Server` instance up until you run any methods on it. The following sections show which settings you can change.
+在调用该 `tsnet.Server` 实例的任何方法之前，你都可以修改它的设置。以下各节介绍可以修改哪些设置。
 
 ## `Server.Hostname`
 
-This setting lets you control the host name of your program in your tailnet. By default, this will be the name of your program, such as `foo` for a program stored at `/usr/local/bin/foo`. You can also override this by setting the `Hostname` field:
+此设置用于控制你的程序在 tailnet 中的主机名。默认情况下，它是你的程序名，例如存储在 `/usr/local/bin/foo` 的程序对应 `foo`。你也可以通过设置 `Hostname` 字段来覆盖它：
 
 ```go
 srv := new(tsnet.Server)
@@ -32,9 +32,9 @@ srv.Hostname = "kirito"
 
 ## `Server.Dir`
 
-This setting lets you control the directory that the `tsnet.Server` stores data in persistently. By default,`tsnet` will store data in your [user configuration directory][xt-go-user-config-dir] based on the name of the binary. Note that this folder must already exist or `tsnet` calls will fail.
+此设置用于控制 `tsnet.Server` 持久化存储数据的目录。默认情况下，`tsnet` 会以二进制文件名为依据，把数据存储在你的[用户配置目录][xt-go-user-config-dir]中。注意：该目录必须已经存在，否则 `tsnet` 调用会失败。
 
-Here is how to override this to store data in `/data/tsnet`:
+下面演示如何覆盖此设置，把数据存储到 `/data/tsnet`：
 
 ```go
 dir := filepath.Join("/data", "tsnet")
@@ -47,7 +47,7 @@ srv := new(tsnet.Server)
 srv.Dir = dir
 ```
 
-You can have as many `tsnet.Server` instances as you want per OS process, but you will need to change the state directory if this is the case:
+每个 OS 进程中你可以按需创建任意多个 `tsnet.Server` 实例，但此时需要为它们更换状态目录：
 
 ```go
 baseDir := "/data"
@@ -69,7 +69,7 @@ for _, hostname := range []string{"ichika", "nino", "miku", "yotsuba", "itsuki"}
 
 ## `Server.Ephemeral`
 
-This setting lets you control whether the node should be registered as an [ephemeral node][docs-ephemeral-nodes]. Ephemeral nodes are automatically cleaned up after they disconnect from the control plane. This is useful when using `tsnet` in serverless environments or when facts and circumstances forbid you from using persistent state.
+此设置用于控制该节点是否注册为[临时节点][docs-ephemeral-nodes]（ephemeral node）。临时节点在断开与控制平面的连接后会被自动清理。在无服务器（serverless）环境中使用 `tsnet`，或由于实际情况无法使用持久化状态时，这一设置很有用。
 
 ```go
 srv := new(tsnet.Server)
@@ -78,7 +78,7 @@ srv.Ephemeral = true
 
 ## `Server.AuthKey`
 
-This setting lets you set an [auth key][docs-auth-keys] so that your program will automatically authenticate with the Tailscale control plane. By default it pulls from the environment variable `TS_AUTHKEY`, but you can set your own logic like this:
+此设置用于指定[认证密钥（auth key）][docs-auth-keys]，让你的程序自动向 Tailscale 控制平面完成认证。默认情况下，它从环境变量 `TS_AUTHKEY` 读取，但你也可以像这样编写自己的逻辑：
 
 ```go
 tsAuthKey := flag.String("ts-authkey", "", "Tailscale authkey")
@@ -89,13 +89,13 @@ srv := new(tsnet.Server)
 srv.AuthKey = *tsAuthKey
 ```
 
-This will set the auth key to the value of the flag `--ts-authkey`.
+这会把认证密钥设置为标志 `--ts-authkey` 的值。
 
 ## `Server.ClientSecret`
 
-If you pass an [OAuth client][docs-oauth-client] secret in `ClientSecret`, tsnet will use it to obtain an auth key from the control plane. You can also pass the client secret in the `TS_CLIENT_SECRET` environment variable. The OAuth client needs to have `auth_keys` write scope in order for this to work.
+如果你在 `ClientSecret` 中传入 [OAuth 客户端][docs-oauth-client]密钥（client secret），tsnet 会用它从控制平面获取一个认证密钥。你也可以通过 `TS_CLIENT_SECRET` 环境变量传入客户端密钥。为此，OAuth 客户端需要具备 `auth_keys` 写权限的 scope。
 
-To use OAuth client authentication, you must pass at least one tag for the tsnet server in `AdvertiseTags`.
+要使用 OAuth 客户端认证，你必须在 `AdvertiseTags` 中为该 tsnet 服务器传入至少一个标签。
 
 ```go
 tsClientSecret := flag.String("ts-client-secret", "", "Tailscale OAuth client secret")
@@ -110,21 +110,21 @@ srv.AdvertiseTags = strings.Split(*tsAdvertiseTags, ",")
 
 ## `Server.ClientID` and `Server.IDToken`
 
-With [workload identity federation][docs-workload-identity-federation], tsnet can use an OpenID Connect (OIDC) token from a cloud-hosted infrastructure provider like Microsoft Azure, Google Cloud Platform, or GitHub Actions to authenticate with the control plane and request an auth key for the server.
+借助[工作负载身份联合][docs-workload-identity-federation]（workload identity federation），tsnet 可以使用来自 Microsoft Azure、Google Cloud Platform、GitHub Actions 等云端基础设施提供方的 OpenID Connect（OIDC）令牌向控制平面完成认证，并为该服务器请求认证密钥。
 
-You need to set up a [federated identity][docs-workload-identity-federation-get-started] to establish the trust relationship between the OIDC issuer and Tailscale and grant it the `auth_keys` write scope. You can then start your tsnet server with the client ID of the federated identity in `ClientID` and an OIDC token from the cloud provider in `IDToken`. Alternatively, you can set them with the environment variables `TS_CLIENT_ID` and `TS_ID_TOKEN`. This will prompt tsnet to exchange them for an auth key.
+你需要设置一个[联合身份][docs-workload-identity-federation-get-started]，在 OIDC 签发方与 Tailscale 之间建立信任关系，并授予它 `auth_keys` 写权限的 scope。随后启动 tsnet 服务器时，在 `ClientID` 中传入联合身份的客户端 ID，在 `IDToken` 中传入来自云提供方的 OIDC 令牌即可。你也可以改用环境变量 `TS_CLIENT_ID` 和 `TS_ID_TOKEN` 来设置。这样 tsnet 就会用它们换取认证密钥。
 
-Instead of supplying `IDToken` yourself, you can set `Audience` (or the `TS_AUDIENCE` environment variable). tsnet then requests the ID token from the cloud provider on your behalf before exchanging it for an auth key. For details, refer to [automatic cloud token discovery and exchange][docs-workload-identity-federation-auto].
+你也可以不自己提供 `IDToken`，而是设置 `Audience`（或 `TS_AUDIENCE` 环境变量）。此时 tsnet 会代你向云提供方请求 ID 令牌，然后再用它换取认证密钥。详情参阅[自动发现并交换云端令牌][docs-workload-identity-federation-auto]。
 
-Workload identity federation is not linked into tsnet by default, to keep cloud-provider dependencies out of programs that don't use it. To enable it, add a blank import of the `tailscale.com/feature/identityfederation` package to your program:
+默认情况下，工作负载身份联合不会链接进 tsnet，以免不使用它的程序引入云提供方依赖。要启用它，请在你的程序中添加对 `tailscale.com/feature/identityfederation` 包的空白导入：
 
 ```go
 import _ "tailscale.com/feature/identityfederation"
 ```
 
-Without this import, tsnet ignores `ClientID`, `IDToken`, and `Audience`, and continues to the next authentication method.
+没有这个导入时，tsnet 会忽略 `ClientID`、`IDToken` 和 `Audience`，转而尝试下一种认证方式。
 
-To use workload identity authentication, you must pass at least one tag for the tsnet server in `AdvertiseTags`.
+要使用工作负载身份认证，你必须在 `AdvertiseTags` 中为该 tsnet 服务器传入至少一个标签。
 
 ```go
 tsClientID := flag.String("ts-client-id", "", "Tailscale federated identity client ID")
@@ -141,7 +141,7 @@ srv.AdvertiseTags = strings.Split(*tsAdvertiseTags, ",")
 
 ## `Server.AdvertiseTags`
 
-`AdvertiseTags` specifies tags from the tailnet's ACL policy that should be applied to this node.
+`AdvertiseTags` 指定应应用到该节点的 tailnet ACL 策略中的标签。
 
 ```go
 tsAdvertiseTags := flag.String("ts-advertise-tags", "", "Comma-separated list of tags to advertise")
@@ -154,7 +154,7 @@ srv.AdvertiseTags = strings.Split(*tsAdvertiseTags, ",")
 
 ## `Server.ControlURL`
 
-By default, tsnet connects to Tailscale's coordination server. Set `ControlURL` to point at a different coordination server, such as a self-hosted one. If `ControlURL` is empty, tsnet uses the `TS_CONTROL_URL` environment variable, and falls back to the Tailscale default if that is also empty.
+默认情况下，tsnet 连接 Tailscale 的协调服务器（coordination server）。将 `ControlURL` 设置为指向另一个协调服务器，例如自托管的协调服务器。如果 `ControlURL` 为空，tsnet 会使用 `TS_CONTROL_URL` 环境变量；若该变量也为空，则回退到 Tailscale 默认值。
 
 ```go
 srv := new(tsnet.Server)
@@ -163,7 +163,7 @@ srv.ControlURL = "https://control.example.com"
 
 ## `Server.Logf`
 
-This setting lets you override the logging logic for each `tsnet` instance. By default this will output everything to the [`log.Printf`][xt-go-log-printf] function, which can get spammy. To disable all `tsnet` logs, you can use a value like this:
+此设置用于覆盖每个 `tsnet` 实例的日志逻辑。默认情况下，所有输出都会进入 [`log.Printf`][xt-go-log-printf] 函数，日志可能非常冗杂。要禁用全部 `tsnet` 日志，可以使用如下取值：
 
 ```go
 srv := &tsnet.Server{
@@ -171,7 +171,7 @@ srv := &tsnet.Server{
 }
 ```
 
-When you need the logs, for example when debugging, use a [command line flag][xt-go-flag-bool] to enable logging:
+当你需要日志时（例如调试时），通过一个[命令行标志][xt-go-flag-bool]来启用日志：
 
 ```go
 tsnetVerbose := flag.Bool("tsnet-verbose", false, "if set, verbosely log tsnet information")
@@ -187,11 +187,11 @@ if *tsnetVerbose {
 }
 ```
 
-This will prefix all `tsnet` log lines with the prefix `[tsnet:<hostname>]`, which can be useful when trying to debug issues.
+这会给所有 `tsnet` 日志行加上 `[tsnet:<hostname>]` 前缀，在排查问题时很有用。
 
 ## `Server.Start`
 
-Once you are done changing your settings, you start the connection to your tailnet using the `Start` method:
+设置修改完毕后，使用 `Start` 方法启动与 tailnet 的连接：
 
 ```go
 srv := new(tsnet.Server)
@@ -202,11 +202,11 @@ if err := srv.Start(); err != nil {
 defer srv.Close()
 ```
 
-> **Note:**
+> **注意：**
 >
-> Most of the other `tsnet` calls implicitly call `Start` if it has not been called already.
+> 其他大多数 `tsnet` 调用在 `Start` 尚未被调用时会隐式调用它。
 
-Be sure to close the server instance at some point. It will stay open until either the OS process ends or the server is explicitly closed:
+请务必在某个时机关闭服务器实例。它会一直保持打开，直到 OS 进程结束或服务器被显式关闭：
 
 ```go
 defer srv.Close()
@@ -214,7 +214,7 @@ defer srv.Close()
 
 ## `Server.Up`
 
-`Up` starts the server, like `Start`, but also blocks until the node is connected and running in your tailnet. On success it returns the node's [status][xt-go-ipnstate-status], including a Tailscale IP address. Use it when your program needs the node to be reachable before it continues.
+`Up` 与 `Start` 一样会启动服务器，但还会阻塞，直到节点接入 tailnet 并开始运行。成功时它会返回节点的[状态][xt-go-ipnstate-status]，其中包括 Tailscale IP 地址。当你的程序需要节点先变为可达再继续执行时，可以使用它。
 
 ```go
 srv := new(tsnet.Server)
@@ -229,9 +229,9 @@ log.Printf("running at %v", status.TailscaleIPs)
 
 ## `Server.Close`
 
-This call releases all resources associated with the `tsnet` server. Any calls to the server after this call will fail. All socket connections will be closed. All listeners will be closed. The node will not respond to ping messages. It is the same as turning off Tailscale on a machine in your tailnet.
+此调用会释放与该 `tsnet` 服务器关联的所有资源。此后对该服务器的任何调用都会失败。所有套接字连接会被关闭，所有监听器会被关闭，节点也不再响应 ping 消息。效果等同于在 tailnet 中的一台机器上关闭 Tailscale。
 
-Create your `tsnet` instances in your `main` function and then use `defer` to clean them up:
+在 `main` 函数中创建 `tsnet` 实例，然后用 `defer` 清理：
 
 ```go
 srv := new(tsnet.Server)
@@ -244,7 +244,7 @@ defer srv.Close()
 
 ## `Server.Listen`
 
-This call creates a network listener in your tailnet. It returns a [`net.Listener`][xt-go-net-listener] that returns connections from your tailnet.
+此调用在你的 tailnet 中创建网络监听器，返回一个会接收来自 tailnet 连接的 [`net.Listener`][xt-go-net-listener]。
 
 ```go
 srv := new(tsnet.Server)
@@ -260,13 +260,13 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 })))
 ```
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.ListenTLS`
 
-This call creates a TLS-wrapped network listener in your tailnet. It returns a [`net.Listener`][xt-go-net-listener] that wraps every incoming connection with TLS using the [Let's Encrypt][docs-enabling-https] support Tailscale offers. You can use this to create HTTPS services:
+此调用在你的 tailnet 中创建一个 TLS 包装的网络监听器。它返回一个 [`net.Listener`][xt-go-net-listener]，会利用 Tailscale 提供的 [Let's Encrypt][docs-enabling-https] 支持为每个传入连接套上 TLS。你可以用它创建 HTTPS 服务：
 
 ```go
 srv := new(tsnet.Server)
@@ -282,13 +282,13 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 })))
 ```
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.ListenFunnel`
 
-This call creates a TLS-wrapped network listener that accepts connections from both your tailnet and the public internet using [Funnel][docs-funnel]. You can use this to expose your services to the public internet.
+此调用创建一个 TLS 包装的网络监听器，通过 [Funnel][docs-funnel] 同时接受来自 tailnet 和公共互联网的连接。你可以用它把服务对外发布到公共互联网。
 
 ```go
 srv := new(tsnet.Server)
@@ -304,7 +304,7 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 })))
 ```
 
-You can create a Funnel-only listener using `tsnet.FunnelOnly()`:
+你可以使用 `tsnet.FunnelOnly()` 创建仅限 Funnel 的监听器：
 
 ```go
 publicLn, err := srv.ListenFunnel("tcp", ":443", tsnet.FunnelOnly())
@@ -318,21 +318,21 @@ if err != nil {
 }
 ```
 
-This lets you have different logic or endpoints exposed within your tailnet and to the general public.
+这样你就可以在 tailnet 内部和面向公众分别暴露不同的逻辑或端点。
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.ListenService`
 
-`ListenService` creates a network listener for a [Tailscale Services][docs-tailscale-services] host. This will advertise this node as hosting the Service.
+`ListenService` 为 [Tailscale Services][docs-tailscale-services] 主机创建网络监听器。这会通告该节点为承载此 Service 的节点。
 
-The following [prerequisites][docs-tailscale-services-prerequisites] must be met:
+必须满足以下[前提条件][docs-tailscale-services-prerequisites]：
 
-* Approval must be granted by [auto-approval rules][docs-policy-syntax-auto-approvers] or by an [Owner, Admin, or Network admin](/docs/reference/user-roles).
-* Service hosts must be [tagged nodes][docs-tags].
-* A valid Service host must advertise all ports defined for the Service.
+* 必须由[自动审批规则][docs-policy-syntax-auto-approvers]或 [Owner、Admin 或 Network admin](/docs/reference/user-roles) 批准。
+* Service 主机必须是[打标签的节点][docs-tags]。
+* 有效的 Service 主机必须通告该 Service 定义的全部端口。
 
 ```go
 srv := new(tsnet.Server)
@@ -352,9 +352,9 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
 })))
 ```
 
-To advertise a Service with multiple ports, run `ListenService` multiple times.
+要通告一个多端口的 Service，请多次运行 `ListenService`。
 
-It is also possible to advertise a Service targeting a reverse proxy. This is useful when the backing server is external to the `tsnet` application.
+也可以通告一个指向反向代理的 Service。当后端服务器位于 `tsnet` 应用之外时，这很有用。
 
 ```go
 import (
@@ -383,21 +383,21 @@ log.Fatal(http.Serve(ln, httputil.NewSingleHostReverseProxy(&url.URL{
 })))
 ```
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.ListenSSH`
 
-`ListenSSH` creates a listener that accepts [Tailscale SSH][docs-tailscale-ssh] connections from your tailnet on the given address. The returned [`net.Listener`][xt-go-net-listener] yields connections that carry the connecting peer's Tailscale identity.
+`ListenSSH` 创建一个监听器，在指定地址上接受来自 tailnet 的 [Tailscale SSH][docs-tailscale-ssh] 连接。返回的 [`net.Listener`][xt-go-net-listener] 产生的连接会携带连接对端的 Tailscale 身份。
 
-SSH support is not linked into tsnet by default. To enable it, add a blank import of the `tailscale.com/feature/ssh` package to your program. Without this import, `ListenSSH` returns an error.
+默认情况下，SSH 支持不会链接进 tsnet。要启用它，请在你的程序中添加对 `tailscale.com/feature/ssh` 包的空白导入。没有这个导入时，`ListenSSH` 会返回错误。
 
 ```go
 import _ "tailscale.com/feature/ssh"
 ```
 
-Basic applications can use the returned connections as a plain [`net.Conn`][xt-go-net-conn]. Applications that need richer SSH semantics, such as PTY information or signals, can type-assert each connection to `*tailssh.Session`.
+简单的应用可以把返回的连接当作普通的 [`net.Conn`][xt-go-net-conn] 使用。需要更丰富 SSH 语义（例如 PTY 信息或信号）的应用，可以将每个连接类型断言为 `*tailssh.Session`。
 
 ```go
 srv := new(tsnet.Server)
@@ -410,7 +410,7 @@ if err != nil {
 defer ln.Close()
 ```
 
-Connections returned by the listener are [`net.Conn`][xt-go-net-conn] values. Applications that need SSH-specific information can type-assert each accepted connection to `*tailssh.Session` (from `tailscale.com/ssh/tailssh`), which exposes methods such as `User()` and `Pty()`:
+监听器返回的连接是 [`net.Conn`][xt-go-net-conn] 类型的值。需要 SSH 专属信息的应用，可以将每个接受的连接类型断言为 `*tailssh.Session`（来自 `tailscale.com/ssh/tailssh`），它暴露了 `User()` 和 `Pty()` 等方法：
 
 ```go
 import "tailscale.com/ssh/tailssh"
@@ -427,13 +427,13 @@ for {
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.ListenPacket`
 
-`ListenPacket` creates a UDP listener in your tailnet. It returns a [`net.PacketConn`][xt-go-net-packetconn]. The network must be `udp`, `udp4`, or `udp6`, and the address must be of the form `ip:port` with the IP specified. To listen on the node's own address, get it from `TailscaleIPs` after the server starts.
+`ListenPacket` 在你的 tailnet 中创建 UDP 监听器，返回一个 [`net.PacketConn`][xt-go-net-packetconn]。网络参数必须是 `udp`、`udp4` 或 `udp6`，地址必须是显式指定 IP 的 `ip:port` 形式。要监听节点自身的地址，请在服务器启动后从 `TailscaleIPs` 获取。
 
 ```go
 import "net"
@@ -454,7 +454,7 @@ defer pc.Close()
 
 ## `Server.Dial`
 
-This call lets you create outgoing connections to nodes in your tailnet. You can treat the resulting connections like any other [network connection][xt-go-net-conn] in Go.
+此调用让你可以创建到 tailnet 中其他节点的出站连接。你可以像对待 Go 中任何其他[网络连接][xt-go-net-conn]一样处理这些连接。
 
 ```go
 srv := new(tsnet.Server)
@@ -466,15 +466,15 @@ if err != nil {
 }
 ```
 
-If [MagicDNS][docs-magicdns] is enabled, you can use MagicDNS names instead of full DNS names. For example, `yourmachine.tail-scale.ts.net`.
+如果启用了 [MagicDNS][docs-magicdns]，你可以使用 MagicDNS 名称代替完整的 DNS 名称，例如 `yourmachine.tail-scale.ts.net`。
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.HTTPClient`
 
-This is a convenience wrapper that lets you create a [HTTP client][xt-go-client] preconfigured to make outgoing connections in your tailnet.
+这是一个便捷封装，让你可以创建一个预先配置好、能在 tailnet 内发起出站连接的 [HTTP 客户端][xt-go-client]。
 
 ```go
 srv := new(tsnet.Server)
@@ -488,15 +488,15 @@ if err != nil {
 }
 ```
 
-> **Note:**
+> **注意：**
 >
-> This method does not implicitly call the `Start` method if it has not been called already, but when you make any HTTP requests with that client, it will be called at time of use. In the above example, the `Start` method will be called when `cli.Get("http://yourmachine/hello")` is called.
+> 此方法不会隐式调用尚未被调用的 `Start` 方法，但当你用该客户端发起任何 HTTP 请求时，`Start` 会在使用时被调用。在上面的示例中，`Start` 方法会在调用 `cli.Get("http://yourmachine/hello")` 时被调用。
 
 ## `Server.LocalClient`
 
-When you install Tailscale on a computer normally, you can make changes to its configuration using the `tailscale` command line tool. `tsnet` doesn't offer the ability to use the `tailscale` command line tool to change its configuration, but you can use the [`local.Client`][xt-go-tailscale-local-client] to make all the same changes. The `tailscale` command line tool is built on the back of the `local.Client` type.
+正常情况下在计算机上安装 Tailscale 后，你可以使用 `tailscale` 命令行工具修改其配置。`tsnet` 不支持用 `tailscale` 命令行工具修改配置，但你可以使用 [`local.Client`][xt-go-tailscale-local-client] 进行完全相同的修改。`tailscale` 命令行工具正是构建在 `local.Client` 类型之上的。
 
-One common way to use this is to look up identity information for incoming connections in an HTTP server:
+一个常见用法是在 HTTP 服务器中查询传入连接的身份信息：
 
 ```go
 s := new(tsnet.Server)
@@ -528,15 +528,15 @@ log.Fatal(http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, r *http.Re
         })))
 ```
 
-The `who` value is of type [`apitype.WhoIsResponse`][xt-go-tailscale-whois]. Depending on your jurisdiction's definition of personally-identifying information, this may contain personally-identifying information.
+`who` 值的类型是 [`apitype.WhoIsResponse`][xt-go-tailscale-whois]。根据你所在司法辖区对个人身份信息的定义，其中可能包含个人身份信息。
 
-> **Note:**
+> **注意：**
 >
-> This method implicitly calls the `Start` method if it has not been called already.
+> 此方法在 `Start` 尚未被调用时会隐式调用它。
 
 ## `Server.TailscaleIPs`
 
-`TailscaleIPs` returns the node's IPv4 and IPv6 Tailscale IP addresses. If the node has not yet joined a tailnet, the returned addresses are not valid, which you can check with [`netip.Addr.IsValid`][xt-go-netip-isvalid].
+`TailscaleIPs` 返回节点的 IPv4 和 IPv6 Tailscale IP 地址。如果节点尚未加入 tailnet，返回的地址无效，你可以用 [`netip.Addr.IsValid`][xt-go-netip-isvalid] 检查。
 
 ```go
 ip4, ip6 := srv.TailscaleIPs()

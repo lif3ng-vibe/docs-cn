@@ -100,7 +100,7 @@ tailscale up
 2. 选择要查看的机器。
 3. 在 **Machine Details** 区域查看设备身份与收集状态。
 
-*（图：Machine details：Serial number：IB2HQE3XWO）*
+*（图：Machine details：Serial number（序列号）：IB2HQE3XWO）*
 
 设备身份也可以通过[设备 API][co-api-get-device] 获取。
 

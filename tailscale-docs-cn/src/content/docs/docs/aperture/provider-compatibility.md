@@ -163,7 +163,7 @@ Aperture 使用第一个匹配的条目。
 
 * 完整的配置架构请参阅 [Aperture 配置参考][docs-aperture-configuration]。
 * 分步的提供商设置说明请参阅[设置 LLM 提供商][docs-set-up-providers]指南。
-* 配置编码 agent 通过 Aperture 连接的说明请参阅[设置 LLM 客户端][docs-use-your-tools]指南。
+* 配置编码智能体 通过 Aperture 连接的说明请参阅[设置 LLM 客户端][docs-use-your-tools]指南。
 * 自动化客户端配置请参阅 [Aperture CLI][docs-cli]。
 * 连接和请求失败问题请参阅 [Aperture 故障排除][docs-troubleshooting]。
 

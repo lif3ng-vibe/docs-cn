@@ -1,90 +1,90 @@
 ---
-title: "Troubleshooting grants"
-description: "[Grants][docs-grants] are Tailscale's unified approach to defining access controls for both [network and application layers][docs-grants-app-capabilities] in your Tailscale network (known as a [tailne"
+title: "授权问题排障"
+description: "[授权][docs-grants]是 Tailscale 的统一机制，用于在你的 Tailscale 网络（即 [tailnet][docs-tailnet]）中同时定义[网络层与应用层][docs-grants-app-capabilities]的访问控制。"
 ---
 
-Last validated Jan 12, 2026
+最后验证于 Jan 12, 2026
 
-[Grants][docs-grants] are Tailscale's unified approach to defining access controls for both [network and application layers][docs-grants-app-capabilities] in your Tailscale network (known as a [tailnet][docs-tailnet]). This guide walks you through diagnosing and solving common grant-related problems, progressing from basic verification techniques to resolving complex authorization scenarios.
+[授权（grant）][docs-grants]是 Tailscale 的统一机制，用于在你的 Tailscale 网络（即 [tailnet][docs-tailnet]）中同时定义[网络层与应用层][docs-grants-app-capabilities]的访问控制。本指南将带你诊断并解决常见的授权相关问题，从基础的验证技巧逐步深入到复杂授权场景的处理。
 
-## Diagnosing grant issues
+## 排查授权（grant）问题
 
-This section covers the tools and methods available for inspecting your grant policies, verifying policy compilation, and examining how the Tailscale policy engine applies permissions to specific devices or users. Using these diagnostic techniques will help you identify the root cause of most grant-related problems.
+本节介绍可用于检查你的授权策略、验证策略编译以及研究 Tailscale 策略引擎如何将权限应用到特定设备或用户的工具与方法。运用这些诊断技巧能帮你找出大多数授权相关问题的根本原因。
 
-Keep in mind that Tailscale validates the syntax of the [tailnet policy file][docs-tailnet-policy-file], including the grants section, when you save it. You won't be able to save it if it has a syntax error. This is true for our admin console editor, [GitOps][docs-gitops-acls], [Terraform][docs-terraform-provider], and our API. You also won't be able to save the tailnet policy file if it refers to a target (such as a group) that is not defined.
+请记住，Tailscale 会在你保存 [tailnet 策略文件][docs-tailnet-policy-file]时验证其语法，包括授权部分。如果存在语法错误，你将无法保存。无论是管理控制台编辑器、[GitOps][docs-gitops-acls]、[Terraform][docs-terraform-provider] 还是我们的 API，都是如此。此外，如果 tailnet 策略文件引用了未定义的目标（例如某个组），你也将无法保存。
 
-### Verify your grants configuration
+### 验证你的授权配置
 
-The first step in troubleshooting is to verify that your grants are correctly defined in your [tailnet policy file][docs-tailnet-policy-file]. You can use the [**Preview rules**][docs-policy-edit] tab from the [Access controls][docs-access-control] page of the admin console to check how the rules apply to specific users or tags. This can help you ensure the policy configuration will work as you intend it to.
+排障的第一步是验证你的授权是否在 [tailnet 策略文件][docs-tailnet-policy-file]中正确定义。你可以使用管理控制台 [Access controls][docs-access-control] 页面中的 [**Preview rules**][docs-policy-edit] 标签页来检查规则如何应用到特定用户或标签。这能帮你确认策略配置会按你的预期生效。
 
-### Inspect capabilities with `whois`
+### 使用 `whois` 检查能力
 
-For diagnosing issues with [application layer capabilities][docs-grants-app-capabilities] granted to specific devices or users, the [`tailscale whois`][docs-tailscale-cli-whois] command is invaluable. This command provides detailed information about a node, including all capabilities granted to it through your tailnet policy.
+要诊断授予特定设备或用户的[应用层能力][docs-grants-app-capabilities]相关的问题，[`tailscale whois`][docs-tailscale-cli-whois] 命令非常有用。该命令提供有关节点的详细信息，包括通过你的 tailnet 策略授予它的所有能力。
 
-To inspect the capabilities of a user or device, use its [Tailscale IP address][docs-100.x-addresses]:
+要检查某个用户或设备的能力，请使用其 [Tailscale IP 地址][docs-100.x-addresses]：
 
 ```shell
 tailscale whois 100.100.123.123
 ```
 
-The output includes:
+输出内容包括：
 
-* Basic device or user information.
-* Network addresses associated with the device.
-* A list of all capabilities granted to the device.
+* 设备或用户的基本信息。
+* 与该设备关联的网络地址。
+* 授予该设备的所有能力的列表。
 
-Pay special attention to the Capabilities section of the output, which details all application capabilities granted to the device. Each capability listing includes its full name and parameters, letting you verify that it is applying the correct permissions.
+请特别关注输出中的 Capabilities 部分，其中详细列出了授予该设备的所有应用能力。每个能力条目都包含其完整名称和参数，让你可以验证它是否在应用正确的权限。
 
-## Resolve common issues
+## 解决常见问题
 
-Many grant-related issues stem from basic configuration problems or misunderstandings about [how grants work][docs-grants-syntax]. This section addresses some common issues you might encounter when working with grants.
+许多授权相关问题源于基础配置错误，或是对[授权工作机制][docs-grants-syntax]的误解。本节讨论你在使用授权时可能遇到的一些常见问题。
 
-### Selector matching issues
+### 选择器匹配问题
 
-[Selectors][docs-targets] might fail to match the intended targets. This happens when the selectors in your grants don't correctly identify the devices or users you're trying to permit.
+[选择器（selector）][docs-targets]可能无法匹配预期的目标。当你的授权中的选择器未能正确识别你想要允许的设备或用户时，就会出现这种情况。
 
-Common selector matching problems include:
+常见的选择器匹配问题包括：
 
-* Misspelling email addresses or domain names.
-* Using [tag][docs-tags] that have been created but not applied to any devices.
-* Using group names that have been created but not populated with users.
-* Forgetting to prefix group names with `group:` or tag names with `tag:`. This type of syntax error will be caught automatically unless there's also a host with the same name as the group or tag.
+* 电子邮件地址或域名拼写错误。
+* 使用了已创建但尚未应用到任何设备的[标签（tag）][docs-tags]。
+* 使用了已创建但尚未添加用户的组名。
+* 忘记在组名前加 `group:` 前缀或在标签名前加 `tag:` 前缀。这类语法错误会被自动捕获，除非恰好存在与该组或标签同名的 host。
 
-To troubleshoot selector matching issues:
+排查选择器匹配问题的方法：
 
-1. Confirm that tags referenced in your grants have been applied to the appropriate devices.
-2. Check for typos in email addresses, especially if you're granting access to specific users.
-3. Use [`tailscale status`][docs-tailscale-cli-status] to verify the tags applied to your devices. You must run this command on each device you're checking.
+1. 确认你的授权中引用的标签已应用到相应的设备。
+2. 检查电子邮件地址是否有拼写错误，尤其是在你向特定用户授予访问权限时。
+3. 使用 [`tailscale status`][docs-tailscale-cli-status] 验证应用到设备的标签。你必须在每台要检查的设备上运行该命令。
 
-If you're using [autogroups][docs-targets-autogroups] (such as `autogroup:member`), make sure you understand the devices within each autogroup. For example, `autogroup:member` includes all users who are members of your tailnet, but not devices shared from other tailnets.
+如果你正在使用 [autogroup][docs-targets-autogroups]（例如 `autogroup:member`），请确保你了解每个 autogroup 中包含哪些设备。例如，`autogroup:member` 包含你的 tailnet 中的所有成员用户，但不包含从其他 tailnet 共享来的设备。
 
-## Less common and complex issues
+## 较少见与复杂的问题
 
-Beyond basic configuration problems, you might encounter more complex issues with grants, especially when implementing sophisticated [access control policies][docs-access-control] (such as posture checks, route filtering, or custom [application capabilities][docs-grants-app-capabilities]). These issues often require a deeper understanding of how the Tailscale policy engine processes and applies grants.
+除了基础配置问题之外，你还可能遇到更复杂的授权问题，尤其是在实现复杂的[访问控制策略][docs-access-control]（例如态势检查、路由过滤或自定义[应用能力][docs-grants-app-capabilities]）时。这些问题通常需要对 Tailscale 策略引擎如何处理和应用授权有更深入的理解。
 
-### Problems with `via` field routing
+### `via` 字段路由问题
 
-The [`via` field in grants][docs-via] lets you segment resource access through different routers based on specific criteria. However, misconfiguration can lead to routing failures or unexpected traffic paths.
+[授权中的 `via` 字段][docs-via]让你能够依据特定条件，经由不同的路由器对资源访问进行分段。然而，配置不当可能导致路由失败或出现意料之外的流量路径。
 
-Common `via` routing issues include:
+常见的 `via` 路由问题包括：
 
-* Specifying a `via` target that isn't reachable from the source.
-* Using a `via` target with subnet routers that don't have the appropriate [subnet routes][docs-subnets] advertised.
-* Using a `via` target with [app connectors][docs-app-connectors] that have not been appropriately configured.
-* Using a `via` target with exit nodes that have not been approved.
-* Missing `via` field when intending to route traffic to subnet routes, app connectors, or [exit nodes][docs-exit-nodes].
+* 指定的 `via` 目标从源无法到达。
+* 将 `via` 目标用于未通告相应[子网路由][docs-subnets]的子网路由器。
+* 将 `via` 目标用于尚未正确配置的[应用连接器][docs-app-connectors]。
+* 将 `via` 目标用于尚未获批准的出口节点。
+* 打算将流量路由到子网路由、应用连接器或[出口节点][docs-exit-nodes]，却遗漏了 `via` 字段。
 
-To troubleshoot `via` routing issues:
+排查 `via` 路由问题的方法：
 
-1. Verify that the device specified in the `via` field exists and is online using [`tailscale status`][docs-tailscale-cli-status].
-2. Confirm that the `via` device has the appropriate configuration.
-3. For [subnet routers][docs-subnets], check that subnet routes are advertised using `tailscale status --routes`.
-4. For [app connectors][docs-app-connectors], check that the app connector is properly configured.
-5. For [exit nodes][docs-exit-nodes], check that the exit node has been approved in the admin console.
-6. Check that the `via` device is reachable from the source device using [`tailscale ping`][docs-tailscale-cli-ping].
-7. Verify that the destination is reachable through the `via` device by examining logs on the `via` device.
+1. 使用 [`tailscale status`][docs-tailscale-cli-status] 验证 `via` 字段中指定的设备存在且在线。
+2. 确认 `via` 设备具有适当的配置。
+3. 对于[子网路由器][docs-subnets]，使用 `tailscale status --routes` 检查子网路由是否已通告。
+4. 对于[应用连接器][docs-app-connectors]，检查应用连接器是否已正确配置。
+5. 对于[出口节点][docs-exit-nodes]，检查出口节点是否已在管理控制台中获得批准。
+6. 使用 [`tailscale ping`][docs-tailscale-cli-ping] 检查从源设备能否到达 `via` 设备。
+7. 通过查看 `via` 设备上的日志，验证目的地能否经由 `via` 设备到达。
 
-Example of a correct `via` configuration:
+正确的 `via` 配置示例：
 
 ```json
 "grants": [
@@ -97,29 +97,29 @@ Example of a correct `via` configuration:
 ]
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺失片段：visual\_policy\_editor.mdx]
 
-In this example, make sure that a device with the `tag:subnet-router` tag exists, is online, and has the `192.0.2.0/24` subnet route advertised.
+在此示例中，请确保带有 `tag:subnet-router` 标签的设备存在、在线，并且已通告 `192.0.2.0/24` 子网路由。
 
-### Device posture verification failures
+### 设备态势验证失败
 
-The `srcPosture` field lets you restrict access based on [device posture][docs-device-posture] conditions.
+`srcPosture` 字段让你能够基于[设备态势][docs-device-posture]条件来限制访问。
 
-Common device posture issues include:
+常见的设备态势问题包括：
 
-* Devices running outdated [Tailscale versions][docs-versions] that don't support posture checking.
-* Posture conditions that are too restrictive or impossible to meet.
-* Misconfigured posture conditions with syntax errors.
-* Devices missing required attributes for posture checking.
+* 设备运行的 [Tailscale 版本][docs-versions]过旧，不支持态势检查。
+* 态势条件过于严格，或者根本无法满足。
+* 态势条件配置错误，存在语法问题。
+* 设备缺少态势检查所需的属性。
 
-To troubleshoot device posture issues:
+排查设备态势问题的方法：
 
-1. Verify that all devices are running an up-to-date version of the Tailscale client. Versions prior to 1.52.0 don't support posture checking.
-2. Review the posture conditions in your tailnet policy file for correctness.
-3. Use [`tailscale status --self`][docs-tailscale-cli-status] to get the device attributes that are checked for posture verification.
-4. Test with more permissive posture conditions first, then gradually tighten restrictions.
+1. 验证所有设备都运行最新版本的 Tailscale 客户端。1.52.0 之前的版本不支持态势检查。
+2. 检查 tailnet 策略文件中的态势条件是否正确。
+3. 使用 [`tailscale status --self`][docs-tailscale-cli-status] 获取用于态势验证的设备属性。
+4. 先用更宽松的态势条件进行测试，然后逐步收紧限制。
 
-Example of device posture verification:
+设备态势验证示例：
 
 ```json
 "postures": {
@@ -138,28 +138,28 @@ Example of device posture verification:
 ]
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺失片段：visual\_policy\_editor.mdx]
 
-If devices are failing posture checks, temporarily remove the `srcPosture` field to verify that the grant works without posture conditions, then add them back one by one to identify the problematic condition.
+如果设备未能通过态势检查，可以暂时移除 `srcPosture` 字段，验证授权在没有态势条件的情况下是否正常工作，然后逐个加回这些条件，以定位有问题的那条条件。
 
-### Application capability integration issues
+### 应用能力集成问题
 
-Integrating [application capabilities][docs-grants-app-capabilities] with grants can introduce issues when applications don't correctly interpret the capabilities provided by the [Tailscale client][docs-installation].
+将[应用能力][docs-grants-app-capabilities]与授权集成时，如果应用程序未能正确解析 [Tailscale 客户端][docs-installation]提供的能力，就可能出问题。
 
-Common application capability issues include:
+常见的应用能力问题包括：
 
-* Applications not querying the local Tailscale client for capabilities.
-* Incorrect capability names or parameter structures.
-* Applications misinterpreting the capabilities returned by the Tailscale client.
+* 应用程序没有向本地 Tailscale 客户端查询能力。
+* 能力名称或参数结构不正确。
+* 应用程序错误解读了 Tailscale 客户端返回的能力。
 
-To troubleshoot application capability issues:
+排查应用能力问题的方法：
 
-1. Verify that your application is correctly querying the Tailscale client for capabilities using the [LocalAPI][xt-tailscale-localapi]. This is only required if the application doesn't use the [`tsnet` library][docs-tsnet].
-2. Check that the capability name matches exactly what your application expects.
-3. Confirm that the parameters in your grant match the schema expected by your application.
-4. Test with simplified capability parameters first, then add complexity.
+1. 验证你的应用程序是否使用 [LocalAPI][xt-tailscale-localapi] 正确地向 Tailscale 客户端查询能力。只有当应用程序不使用 [`tsnet` 库][docs-tsnet]时才需要这样做。
+2. 检查能力名称是否与应用程序期望的名称完全一致。
+3. 确认授权中的参数符合应用程序期望的模式。
+4. 先用简化的能力参数进行测试，再逐步增加复杂度。
 
-Example of a correct application capability grant:
+正确的应用能力授权示例：
 
 ```json
 "grants": [
@@ -178,33 +178,33 @@ Example of a correct application capability grant:
 ]
 ```
 
-\[Missing snippet: visual\_policy\_editor.mdx]
+\[缺失片段：visual\_policy\_editor.mdx]
 
-In this example, make sure that the application running on devices with the `tag:tailsql` tag is correctly checking for the `tailscale.com/cap/tailsql` capability and properly interpreting the `dataSrc` parameter.
+在此示例中，请确保运行在带有 `tag:tailsql` 标签的设备上的应用程序正确地检查 `tailscale.com/cap/tailsql` 能力，并正确解析 `dataSrc` 参数。
 
-## Prevention strategies
+## 预防策略
 
-This section outlines best practices for designing, implementing, and maintaining grants in your tailnet policy. By following these recommendations, you can minimize issues and streamline troubleshooting when problems do arise.
+本节概述在你的 tailnet 策略中设计、实现和维护授权的最佳实践。遵循这些建议，你可以尽量减少问题的发生，并在问题出现时更顺畅地排障。
 
-### Design principles for effective grants
+### 高效授权的设计原则
 
-* [**Least privilege**][ln-principle-of-least-privilege]: Grant only the minimum permissions needed for each source-destination pair. Be specific about ports and protocols in the `ip` field when appropriate.
-* **Logical grouping**: Organize related grants together and use comments to explain their purpose. This makes the policy file more readable and easier to maintain.
-* **Standardized naming**: Use consistent naming conventions for groups, tags, and IP sets referenced in your grants. This reduces the risk of typos and makes troubleshooting easier.
-* **Progressive refinement**: Start with broad grants and refine them over time as you better understand your access control requirements. This approach is less likely to cause unexpected denials.
-* **Documentation**: Document your grants with comments in the policy file, explaining why each grant exists and what it's intended to permit.
+* [**最小权限**][ln-principle-of-least-privilege]：对每个源-目的地组合只授予所需的最小权限。在适当的情况下，在 `ip` 字段中明确指定端口和协议。
+* **逻辑分组**：将相关的授权放在一起组织，并使用注释说明其用途。这让策略文件更易读、更易维护。
+* **命名规范化**：对授权中引用的组、标签和 IP 集合使用一致的命名约定。这能降低拼写错误的风险，让排障更容易。
+* **渐进式细化**：先从宽泛的授权开始，随着你对访问控制需求理解的加深逐步细化。这种方式不太可能导致意外的拒绝。
+* **文档化**：在策略文件中用注释记录你的授权，说明每条授权存在的原因以及它意图允许的内容。
 
-Following these principles will result in a more maintainable policy file that's less prone to issues and easier to troubleshoot when problems occur.
+遵循这些原则将带来一个更易维护的策略文件，更不容易出问题，出现问题后也更容易排查。
 
-### Testing strategies
+### 测试策略
 
-Consider using testing strategies before deploying changes to your grants:
+在将变更部署到你的授权之前，请考虑采用以下测试策略：
 
-* **Document test cases**: Create a set of [tests][docs-tests] in your tailnet policy file that cover all the permissions you need to verify.
-* [**Use the access control rules preview**][docs-policy-edit]: The admin console's policy file editor includes a preview feature that shows what changes your edits will make to the effective policy. Review this carefully before applying changes.
-* **Staged rollout**: For significant changes, consider a staged rollout to a subset of devices or users before applying the changes to your entire tailnet.
+* **记录测试用例**：在 tailnet 策略文件中创建一组[测试][docs-tests]，覆盖你需要验证的所有权限。
+* [**使用访问控制规则预览**][docs-policy-edit]：管理控制台的策略文件编辑器包含一个预览功能，可显示你的编辑将对生效策略产生的变更。在应用变更之前请仔细查看。
+* **分阶段推出**：对于重大变更，考虑先向一部分设备或用户分阶段推出，然后再应用到整个 tailnet。
 
-By thoroughly testing changes before deployment and monitoring for issues afterward, you can identify and resolve problems before they affect your users.
+通过在部署前充分测试变更并在部署后持续监控问题，你可以在问题影响用户之前发现并解决它们。
 
 [docs-100.x-addresses]: /docs/concepts/tailscale-ip-addresses
 

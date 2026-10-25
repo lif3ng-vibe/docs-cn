@@ -1,21 +1,21 @@
 ---
-title: "Troubleshoot hard NAT issues"
-description: "In a scenario with three contingent conditions, you may experience network performance issues. This affects latency-sensitive traffic through connectors (exit nodes, subnet routers, and app connectors"
+title: "排查 Hard NAT 问题"
+description: "在三个条件同时成立的场景下，你可能遇到网络性能问题。这会影响经过连接器（出口节点、子网路由器和应用连接器）的延迟敏感流量。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-In a scenario with three contingent conditions, you may experience network performance issues. This affects latency-sensitive traffic through connectors (exit nodes, subnet routers, and app connectors). One possible visible symptom is DNS resolution timing out. Perform network tests to diagnose your configuration and traffic and ascertain if the following are applicable.
+在三个条件同时成立的场景下，你可能遇到网络性能问题。这会影响经过连接器（出口节点、子网路由器和应用连接器）的延迟敏感流量。一个可能出现的表象是 DNS 解析超时。请进行网络测试来诊断你的配置与流量，确认以下情形是否适用。
 
-1. [Hard NAT][docs-connection-types-hard-nat] makes establishing direct connections difficult (if not impossible). Tailscale will fall back to DERP relay servers based around the world.
+1. [Hard NAT][docs-connection-types-hard-nat] 使得直连难以建立（甚至无法建立）。Tailscale 将回退到分布在世界各地的 DERP 中继服务器。
 
-2. If heavy packets per second or bits per second of traffic are relaying over these DERP TCP connections, there is a higher potential for [head-of-line blocking][xt-wikipedia-head-of-line-blocking]—and in the extreme case: a [TCP meltdown][xt-wikipedia-tcp-meltdown].
+2. 如果有大量以每秒数据包数或每秒比特数计的流量经由这些 DERP TCP 连接中继，出现[队头阻塞（head-of-line blocking）][xt-wikipedia-head-of-line-blocking]的可能性会更高——极端情况下还会引发 [TCP meltdown][xt-wikipedia-tcp-meltdown]。
 
-3. This packet blocking can occur with greater likelihood and impact on a network that consists of nodes with traffic aggregation and forwarding like subnet routers and exit nodes.
+3. 在由具备流量聚合与转发能力的节点（如子网路由器和出口节点）组成的网络中，这种数据包阻塞发生的概率和影响都会更大。
 
-The preferred and recommended approach is to use direct peer-to peer connections rather than DERP relay connections for these key nodes. Removing the Hard NAT will address the underlying and contributing factors. Change it to a no NAT (directly accessible) or [easy NAT][docs-device-connectivity-easy-nat] configuration.
+首选且推荐的做法是让这些关键节点使用对等直连，而不是 DERP 中继连接。消除 Hard NAT 即可解决根本原因和相关因素：将其改为无 NAT（可直接访问）或 [easy NAT][docs-device-connectivity-easy-nat] 配置。
 
-However, if removing the Hard NAT on the connector is not an option, you can attempt to minimize the contributing factor of packets blocked by shared traffic. One approach is to isolate latency-sensitive services behind separate subnet routers. Another approach would be to host latency-sensitive services on their own nodes without a subnet router in front of them.
+不过，如果无法消除连接器上的 Hard NAT，你可以尝试将共享流量导致的数据包阻塞这一因素降到最低。一种做法是把延迟敏感的服务隔离到独立的子网路由器后面；另一种做法是将延迟敏感的服务托管在专属节点上，不在其前面部署子网路由器。
 
 [docs-connection-types-hard-nat]: /docs/reference/connection-types#hard-nat
 

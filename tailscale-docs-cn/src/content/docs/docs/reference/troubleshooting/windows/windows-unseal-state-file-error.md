@@ -1,11 +1,11 @@
 ---
-title: "Troubleshoot Windows failure to unseal state file"
-description: "If you find an error in the [logs][docs-client-logs] that mentions `failed to unseal state file`, refer to [Recovering from TPM failures][docs-recover-from-tpm-failures]."
+title: "排查 Windows 无法解封状态文件的问题"
+description: "如果在[日志][docs-client-logs]中发现提及 `failed to unseal state file` 的错误，请参阅[从 TPM 故障中恢复][docs-recover-from-tpm-failures]。"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-If you find an error in the [logs][docs-client-logs] that mentions `failed to unseal state file`, refer to [Recovering from TPM failures][docs-recover-from-tpm-failures].
+如果在[日志][docs-client-logs]中发现提及 `failed to unseal state file` 的错误，请参阅[从 TPM 故障中恢复][docs-recover-from-tpm-failures]。
 
 [docs-client-logs]: /docs/features/logging#client-logs
 

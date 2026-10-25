@@ -1,43 +1,43 @@
 ---
-title: "Troubleshoot Oracle cloud devices"
-description: "If you find that your Tailscale network (known as a tailnet) nodes cannot access your [Oracle Cloud Linux VM][docs-oracle-cloud], you may need to update the VM's `iptables` configuration."
+title: "排查 Oracle 云设备"
+description: "如果你发现你的 Tailscale 网络（即 tailnet）节点无法访问你的 [Oracle Cloud Linux VM][docs-oracle-cloud]，可能需要更新该 VM 的 `iptables` 配置。"
 ---
 
-Last validated Mar 20, 2026
+最后验证于 Mar 20, 2026
 
-If you find that your Tailscale network (known as a tailnet) nodes cannot access your [Oracle Cloud Linux VM][docs-oracle-cloud], you may need to update the VM's `iptables` configuration.
+如果你发现你的 Tailscale 网络（即 tailnet）节点无法访问你的 [Oracle Cloud Linux VM][docs-oracle-cloud]，可能需要更新该 VM 的 `iptables` 配置。
 
-Before you modify `iptables`, make a backup of the current configuration:
+在修改 `iptables` 之前，请备份当前配置：
 
 ```shell
 sudo iptables-save > ~/iptables.old
 ```
 
-Check your current `iptables` configuration by running:
+运行以下命令查看当前的 `iptables` 配置：
 
 ```shell
 sudo iptables --list --line-numbers
 ```
 
-If you want to provide HTTP access from your tailnet to the VM, run:
+如果你想允许从 tailnet 对该 VM 的 HTTP 访问，请运行：
 
 ```shell
 sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
 sudo netfilter-persistent save
 ```
 
-Alternatively, if you find a specific rule that is rejecting your ingress access, you can delete it by line number:
+或者，如果发现某条具体规则在拒绝你的入站访问，可以按行号将其删除：
 
 ```shell
 sudo iptables -D INPUT <line-number>
 ```
 
-Check the `iptables` list again to make sure your change is in effect.
+再次查看 `iptables` 列表，确认更改已生效。
 
 ```shell
 sudo iptables --list --line-numbers
 ```
 
-Then, try accessing the Oracle Cloud Linux VM from your tailnet node again.
+然后，再次尝试从你的 tailnet 节点访问 Oracle Cloud Linux VM。
 
 [docs-oracle-cloud]: /docs/install/cloud/oracle-cloud

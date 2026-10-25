@@ -1,13 +1,13 @@
 ---
-title: "Troubleshoot routing all traffic through a default route"
-description: "On Tailscale, you can define an [exit node][docs-exit-nodes], which automatically configures default routes on your behalf."
+title: "排查通过默认路由转发全部流量的问题"
+description: "在 Tailscale 上，你可以定义[出口节点][docs-exit-nodes]，它会代你自动配置默认路由。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-On Tailscale, you can define an [exit node][docs-exit-nodes], which automatically configures default routes on your behalf.
+在 Tailscale 上，你可以定义[出口节点][docs-exit-nodes]，它会代你自动配置默认路由。
 
-If you want to force your traffic through a particular IP (to handle an IP blocklist or IP allowlist) you can also route only a subset of your traffic using subnets. For more information, refer to [Connecting to external services with IP blocklists using Tailscale][docs-ip-blocklist-relays].
+如果你想让流量经由某个特定 IP（以应对 IP 黑名单或 IP 白名单），也可以使用子网只路由一部分流量。更多信息请参阅[使用 Tailscale 结合 IP 黑名单连接外部服务][docs-ip-blocklist-relays]。
 
 [docs-exit-nodes]: /docs/features/exit-nodes
 

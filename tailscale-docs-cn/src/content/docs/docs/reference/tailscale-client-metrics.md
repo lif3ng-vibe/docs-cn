@@ -1,199 +1,198 @@
 ---
-title: "Tailscale client metrics"
-description: "Collect metrics from Tailscale clients."
+title: "Tailscale 客户端指标"
+description: "从 Tailscale 客户端收集指标。"
 ---
 
-Last validated Jul 28, 2026
+最后验证于 Jul 28, 2026
 
-You can expose and collect Tailscale client metrics for use with monitoring systems such as [Prometheus][xt-prometheus] or [Grafana][docs-grafana] for your Tailscale network (known as a tailnet). These metrics provide insights into client behavior, health, and performance. For example, you can monitor information about client connectivity to [subnet routers][docs-tailscale-subnet-router] configured in your tailnet.
+你可以暴露并收集 Tailscale 客户端指标，供 [Prometheus][xt-prometheus] 或 [Grafana][docs-grafana] 等监控系统使用，监控你的 Tailscale 网络（即 tailnet）。这些指标可以反映客户端的行为、健康状况和性能。例如，你可以监控客户端到 tailnet 中所配置[子网路由器][docs-tailscale-subnet-router]的连接信息。
 
-> **Note:**
+> **注意：**
 >
-> Tailscale client metrics are supported in Tailscale v1.78.0 and later.
+> Tailscale 客户端指标在 Tailscale v1.78.0 及更高版本中受支持。
 
-## Available metrics
+## 可用指标
 
-You can collect the following metrics from the Tailscale clients in your tailnet:
+你可以从 tailnet 中的 Tailscale 客户端收集以下指标：
 
-### Subnet router
+### 子网路由器
 
-Use the metrics in this section to collect Tailscale client information related to subnet routes.
+使用本节中的指标收集与子网路由相关的 Tailscale 客户端信息。
 
 `tailscaled_advertised_routes`
 
-* The metric type is `gauge`.
-* Displays the number of routes advertised by the client.
-* Includes routes that are not approved.
-* Does not include exit nodes.
+* 指标类型为 `gauge`。
+* 显示客户端通告的路由数量。
+* 包括未获批准的路由。
+* 不包括出口节点。
 
 `tailscaled_approved_routes`
 
-* The metric type is `gauge`.
-* Displays number of advertised routes that have been [approved][docs-subnet-route-approval] by an administrator.
+* 指标类型为 `gauge`。
+* 显示已获管理员[批准][docs-subnet-route-approval]的已通告路由数量。
 
-### Peer relay servers
+### 对等中继服务器
 
-Use the metrics in this section to collect information about the local [peer relay][docs-peer-relays] instance.
+使用本节中的指标收集本地[对等中继][docs-peer-relays]实例的相关信息。
 
 `tailscaled_peer_relay_forwarded_packets_total`
 
-* The metric type is `counter`.
-* Displays the number of packets forwarded by the local peer relay instance.
-* Labels:
-  * `transport_in`: The transport protocol used for incoming packets. Possible values are `udp4` for UDP over IPv4 and `udp6` for UDP over IPv6.
-  * `transport_out`: The transport protocol used for outgoing packets. Possible values are `udp4` for UDP over IPv4 and `udp6` for UDP over IPv6.
+* 指标类型为 `counter`。
+* 显示本地对等中继实例转发的数据包数量。
+* 标签：
+  * `transport_in`：入站数据包使用的传输协议。可能值为 `udp4`（IPv4 上的 UDP）和 `udp6`（IPv6 上的 UDP）。
+  * `transport_out`：出站数据包使用的传输协议。可能值为 `udp4`（IPv4 上的 UDP）和 `udp6`（IPv6 上的 UDP）。
 
 `tailscaled_peer_relay_forwarded_bytes_total`
 
-* The metric type is `counter`.
-* Displays number of bytes forwarded by the local peer relay instance.
-* Labels:
-  * `transport_in`: The transport protocol used for incoming packets. Possible values are `udp4` for UDP over IPv4 and `udp6` for UDP over IPv6.
-  * `transport_out`: The transport protocol used for outgoing packets. Possible values are `udp4` for UDP over IPv4 and `udp6` for UDP over IPv6.
+* 指标类型为 `counter`。
+* 显示本地对等中继实例转发的字节数。
+* 标签：
+  * `transport_in`：入站数据包使用的传输协议。可能值为 `udp4`（IPv4 上的 UDP）和 `udp6`（IPv6 上的 UDP）。
+  * `transport_out`：出站数据包使用的传输协议。可能值为 `udp4`（IPv4 上的 UDP）和 `udp6`（IPv6 上的 UDP）。
 
 `tailscaled_peer_relay_endpoints`
 
-* The metric type is `gauge`.
-* Displays number of endpoints (tunnels) currently served by the local peer relay instance.
-* Labels:
-  * `state`: The endpoint state. Possible values are `connecting` when one or both peers are negotiating a connection, and `open` for endpoints able to forward traffic.
+* 指标类型为 `gauge`。
+* 显示本地对等中继实例当前服务的端点（隧道）数量。
+* 标签：
+  * `state`：端点状态。可能值为 `connecting`（一个或两个对端正在协商连接）和 `open`（端点可以转发流量）。
 
-### Health
+### 健康
 
-Use the metrics in this section to collect Tailscale client information related to health.
+使用本节中的指标收集与健康状况相关的 Tailscale 客户端信息。
 
 `tailscaled_health_messages`
 
-* The metric type is `gauge`.
-* Displays the number of health messages currently reported by the Tailscale client.
-* This metric has a `type` label, reporting health message type. For example, `warning`.
+* 指标类型为 `gauge`。
+* 显示 Tailscale 客户端当前报告的健康消息数量。
+* 该指标带有 `type` 标签，报告健康消息的类型。例如 `warning`。
 
-You can collect details about the health messages by running [`tailscale status`][docs-cli-status].
+运行 [`tailscale status`][docs-cli-status] 可以收集健康消息的详细信息。
 
 ### DERP
 
-Use the metrics in this section to collect Tailscale client information related to [DERP relay servers][docs-derp-servers].
+使用本节中的指标收集与 [DERP 中继服务器][docs-derp-servers]相关的 Tailscale 客户端信息。
 
 `tailscaled_home_derp_region_id`
 
-* The metric type is `gauge`.
-* Displays the [DERP region][docs-derp-servers] ID of this node's home relay server.
+* 指标类型为 `gauge`。
+* 显示此节点主中继服务器的 [DERP 区域][docs-derp-servers] ID。
 
 ### Tailscale Services
 
-Use the metrics in this section to collect per-Service throughput for connections handled by Tailscale Serve on a [Tailscale Service][docs-tailscale-services] host. These metrics are available in Tailscale v1.102.0 and later.
+使用本节中的指标收集 [Tailscale Service][docs-tailscale-services] 主机上由 Tailscale Serve 处理的连接的每服务吞吐量。这些指标在 Tailscale v1.102.0 及更高版本中可用。
 
 `tailscaled_serve_inbound_bytes_total`
 
-* The metric type is `counter`.
-* Displays the number of bytes received from peers on Serve connections for Tailscale Services.
+* 指标类型为 `counter`。
+* 显示 Tailscale Services 的 Serve 连接上从对端接收的字节数。
 
 `tailscaled_serve_outbound_bytes_total`
 
-* The metric type is `counter`.
-* Displays the number of bytes sent to peers on Serve connections for Tailscale Services.
+* 指标类型为 `counter`。
+* 显示 Tailscale Services 的 Serve 连接上发送到对端的字节数。
 
-Both metrics contain a `service` label with the full Tailscale Service name, including the `svc:` prefix. For example, `svc:my-app`. These metrics don't include traffic from device-based Serve, Funnel, or layer 3 (TUN-mode) Tailscale Services.
+两个指标都带有 `service` 标签，值为完整的 Tailscale Service 名称（含 `svc:` 前缀），例如 `svc:my-app`。这些指标不包含基于设备的 Serve、Funnel 或第 3 层（TUN 模式）Tailscale Services 的流量。
 
-### Throughput
+### 吞吐量
 
-Use the metrics in this section to collect Tailscale client information related to throughput.
+使用本节中的指标收集与吞吐量相关的 Tailscale 客户端信息。
 
 `tailscaled_inbound_packets_total`
 
-* The metric type is `counter`.
-* Displays the number of packets received by the node from other peers.
+* 指标类型为 `counter`。
+* 显示节点从其他对端接收的数据包数量。
 
 `tailscaled_inbound_bytes_total`
 
-* The metric type is `counter`.
-* Displays the number of bytes received by the node from other peers.
+* 指标类型为 `counter`。
+* 显示节点从其他对端接收的字节数。
 
 `tailscaled_outbound_packets_total`
 
-* The metric type is `counter`.
-* Displays the number of packets sent by the device to other peers.
+* 指标类型为 `counter`。
+* 显示设备发送给其他对端的数据包数量。
 
 `tailscaled_outbound_bytes_total`
 
-* The metric type is `counter`.
-* Displays the number of bytes sent by the node to other peers.
+* 指标类型为 `counter`。
+* 显示节点发送给其他对端的字节数。
 
-All throughput metrics contain a `path` label, indicating [the type of connection][docs-connection-types] that
-a packet took. The `path` label can contain one of the following values:
+所有吞吐量指标都带有 `path` 标签，表示数据包所走的[连接类型][docs-connection-types]。`path` 标签可以是以下值之一：
 
-* `direct_ipv4`: Packets sent or received directly over IPv4.
-* `direct_ipv6`: Packets sent or received directly over IPv6.
-* `derp`: Packets sent or received through a [DERP relay][docs-derp-servers].
-* `peer_relay_ipv4`: Packets sent or received through a [Tailscale Peer Relay][docs-peer-relays] over IPv4.
-* `peer_relay_ipv6`: Packets sent or received through a [Tailscale Peer Relay][docs-peer-relays] over IPv6.
+* `direct_ipv4`：直接通过 IPv4 发送或接收的数据包。
+* `direct_ipv6`：直接通过 IPv6 发送或接收的数据包。
+* `derp`：通过 [DERP 中继][docs-derp-servers]发送或接收的数据包。
+* `peer_relay_ipv4`：通过 IPv4 上的 [Tailscale 对等中继][docs-peer-relays]发送或接收的数据包。
+* `peer_relay_ipv6`：通过 IPv6 上的 [Tailscale 对等中继][docs-peer-relays]发送或接收的数据包。
 
-### Dropped packets
+### 丢包
 
-Use the metrics in this section to collect Tailscale client information related to dropped packets.
+使用本节中的指标收集与丢包相关的 Tailscale 客户端信息。
 
 `tailscaled_inbound_dropped_packets_total`
 
-* The metric type is `counter`.
-* Displays the number of packets dropped after being received from other peers.
+* 指标类型为 `counter`。
+* 显示从其他对端接收后被丢弃的数据包数量。
 
 `tailscaled_outbound_dropped_packets_total`
 
-* The metric type is `counter`.
-* Displays the number of packets dropped while being sent to other peers.
+* 指标类型为 `counter`。
+* 显示发送给其他对端时被丢弃的数据包数量。
 
-Both the `tailscaled_inbound_dropped_packets_total` and `tailscaled_outbound_dropped_packets_total` metrics contain a `reason` label with one of the following values:
+`tailscaled_inbound_dropped_packets_total` 和 `tailscaled_outbound_dropped_packets_total` 两个指标都带有 `reason` 标签，取以下值之一：
 
-* `acl`: The reported packets dropped by [Tailscale access control][docs-access-control].
-* `multicast`: The reported packets dropped because they were multicast.
-* `link_local_unicast`: The reported packets dropped because they were link-local unicast.
-* `too_short`: The reported packets dropped because they were too short.
-* `fragment`: The reported packets dropped because they were IP fragments.
-* `unknown_protocol`: The reported packets dropped because they had an unknown protocol.
-* `error`: The reported packets dropped because of an error.
+* `acl`：被 [Tailscale 访问控制][docs-access-control]丢弃的数据包。
+* `multicast`：因为是组播而被丢弃的数据包。
+* `link_local_unicast`：因为是链路本地单播而被丢弃的数据包。
+* `too_short`：因为过短而被丢弃的数据包。
+* `fragment`：因为是 IP 分片而被丢弃的数据包。
+* `unknown_protocol`：因为协议未知而被丢弃的数据包。
+* `error`：因错误而被丢弃的数据包。
 
-## Collect metrics
+## 收集指标
 
-You can collect Tailscale metrics either from the Tailscale [web interface][docs-device-web-interface] or the [Tailscale CLI][docs-cli-metrics].
+你可以通过 Tailscale [网页界面][docs-device-web-interface]或 [Tailscale CLI][docs-cli-metrics]收集 Tailscale 指标。
 
-### Web interface
+### 网页界面
 
-The Tailscale [web interface][docs-device-web-interface] exposes client metrics on the conventional `/metrics` path.
+Tailscale [网页界面][docs-device-web-interface]在常规的 `/metrics` 路径上暴露客户端指标。
 
-#### Access metrics locally
+#### 本地访问指标
 
-Each client exposes metrics locally through the [`http://100.100.100.100/metrics`][docs-what-is-quad100] URL. You can use this URL when the monitoring server (or agent) is running on the same host as the Tailscale client.
+每个客户端都通过 [`http://100.100.100.100/metrics`][docs-what-is-quad100] URL 在本地暴露指标。当监控服务器（或代理）与 Tailscale 客户端运行在同一主机上时，可以使用该 URL。
 
-#### Collect metrics over Tailscale
+#### 通过 Tailscale 收集指标
 
-To collect metrics over your tailnet, you must:
+要通过 tailnet 收集指标，你必须：
 
-* Enable the Tailscale [web interface][docs-device-web-interface] on each device that you plan to expose metrics by running using the [`tailscale set --webclient`][docs-cli-set] command.
-* Grant your monitoring server access to port `5252` of each device in your [tailnet policy file][docs-tailnet-policy-file].
+* 在每台计划暴露指标的设备上，使用 [`tailscale set --webclient`][docs-cli-set] 命令启用 Tailscale [网页界面][docs-device-web-interface]。
+* 在 [tailnet 策略文件][docs-tailnet-policy-file]中，授予你的监控服务器访问每台设备 `5252` 端口的权限。
 
-We recommend using this method when your monitoring server is running on another device in your tailnet.
+当监控服务器运行在 tailnet 中的另一台设备上时，我们建议使用此方法。
 
-#### Expose metrics to other networks
+#### 向其他网络暴露指标
 
-You can make the web interface available through another network interface on your machine by running the [`tailscale web`][docs-cli-web] command. For example, if you have a local interface with an IP address `203.0.113.5`, running `tailscale web --readonly --listen 203.0.113.5:8080`  makes metrics accessible at `http://203.0.113.5:8080/metrics`.
+你可以通过运行 [`tailscale web`][docs-cli-web] 命令，让网页界面通过机器上的另一个网络接口可用。例如，如果你有一个 IP 地址为 `203.0.113.5` 的本地接口，运行 `tailscale web --readonly --listen 203.0.113.5:8080` 即可让指标通过 `http://203.0.113.5:8080/metrics` 访问。
 
-> **Note:**
+> **注意：**
 >
-> The `tailscale web --readonly` command starts a separate server that listens only on the provided IP address and port number. It does not expose metrics over a Tailscale IP address.
+> `tailscale web --readonly` 命令会启动一个单独的服务器，只监听所提供的 IP 地址和端口。它不会通过 Tailscale IP 地址暴露指标。
 
-### Command line
+### 命令行
 
-To use metrics in a script or to inspect them in the [Tailscale CLI][docs-cli] command:
+要在脚本中使用指标，或在 [Tailscale CLI][docs-cli] 中查看指标：
 
 ```shell
 tailscale metrics print
 ```
 
-#### Write metrics to a file
+#### 把指标写入文件
 
-You can use the `tailscale metrics write` command to write metric values to a text file provided as its only argument. You can use this alongside [Prometheus node exporter][xt-node-exporter] to let the [textfile collector][xt-node-exporter-textfile] consume and export Tailscale client metrics.
+你可以使用 `tailscale metrics write` 命令把指标值写入一个文本文件（作为其唯一参数）。你可以配合 [Prometheus node exporter][xt-node-exporter] 使用，让 [textfile collector][xt-node-exporter-textfile] 消费并导出 Tailscale 客户端指标。
 
-For example:
+例如：
 
 ```shell
 tailscale metrics write /var/lib/prometheus/node-exporter/tailscaled.prom

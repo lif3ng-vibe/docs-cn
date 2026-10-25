@@ -1,133 +1,97 @@
 ---
-title: "tailscaled daemon"
-description: "Explore the tailscaled daemon."
+title: "tailscaled 守护进程"
+description: "了解 tailscaled 守护进程。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-The Tailscale software that runs on your devices is split across
-several binaries and processes.
+在你的设备上运行的 Tailscale 软件被拆分到多个二进制文件和进程中。
 
-## Platform differences
+## 平台差异
 
-On most platforms, the [CLI][docs-cli] is a binary named
-`tailscale` (or `tailscale.exe`) and the more privileged daemon that
-does all the network handling is called `tailscaled` (or
-`tailscaled.exe`). Note the final `d` for "daemon". Most of the
-CLI commands accessible by using the `tailscale` command require that the daemon
-be running on the machine.
+在大多数平台上，[CLI][docs-cli] 是一个名为 `tailscale`（或 `tailscale.exe`）的二进制文件，而拥有更高权限、负责处理所有网络事务的守护进程（daemon）则叫 `tailscaled`（或 `tailscaled.exe`）。注意末尾的 `d` 代表"daemon"。通过 `tailscale` 命令使用的大多数 CLI 命令，都要求该守护进程正在机器上运行。
 
-There are [three ways to run Tailscale on macOS][docs-macos-variants].
-Only the third non-GUI way contains the typical `tailscale` vs
-`tailscaled` split. The two GUI variants bundle all components into
-one binary that macOS loads in different contexts: the GUI, the daemon
-(named either `IPNExtension` for the App Store variant or
-`io.tailscale.ipn.macsys.network-extension` for the zip file
-download), and the CLI (which is the same binary as the GUI, but goes
-into CLI mode when run from a terminal). The daemons for the two macOS
-GUI variants, despite having different names, are virtually
-identical. But they're not technically `tailscaled`, the subject of this topic, despite sharing most of the same code. Notably,
-any `tailscaled` behavior that involves changing flags to `tailscaled`
-is not always available on the macOS GUI variants.
+在 macOS 上运行 Tailscale 有[三种方式][docs-macos-variants]。只有第三种非 GUI 方式才有典型的 `tailscale` 与 `tailscaled` 之分。两种 GUI 变体把所有组件打包进同一个二进制文件，由 macOS 在不同上下文中加载：GUI、守护进程（App Store 版名为 `IPNExtension`，zip 下载版名为 `io.tailscale.ipn.macsys.network-extension`），以及 CLI（与 GUI 是同一个二进制文件，但从终端运行时会进入 CLI 模式）。macOS 两种 GUI 变体的守护进程虽然名称不同，实际上几乎完全一样。不过从技术上讲，它们并不是本主题的主角 `tailscaled`，尽管共享大部分相同代码。值得注意的是，凡涉及给 `tailscaled` 传标志（flag）的 `tailscaled` 行为，在 macOS GUI 变体上并不总是可用。
 
-## Where does tailscaled run?
+## tailscaled 在哪里运行？
 
-On Linux and other Unix-like platforms, `tailscaled` typically runs as a
-systemd service, or whatever your distro or OS's init system is.
+在 Linux 及其他类 Unix 平台上，`tailscaled` 通常作为 systemd 服务运行，或者按你的发行版或操作系统所用的 init 系统方式运行。
 
-On macOS, `tailscaled` (when not using a GUI build, as mentioned
-above) runs as a `launchd` service.
+在 macOS 上，`tailscaled`（如上所述，指不使用 GUI 构建版时）作为 `launchd` 服务运行。
 
-On Windows, `tailscaled` runs as a Windows service named "Tailscale".
+在 Windows 上，`tailscaled` 作为名为"Tailscale"的 Windows 服务运行。
 
-## Stopping and starting tailscaled
+## 停止和启动 tailscaled
 
-You should not normally need to manually stop and start the
-`tailscaled` process. It should go into an idle state when you use the
-CLI command `tailscale down`. If you're debugging something or
-changing flags, though, the instructions vary by platform.
+通常情况下，你不需要手动停止和启动 `tailscaled` 进程。当你使用 CLI 命令 `tailscale down` 时，它应会进入空闲状态。不过，如果你在调试某些问题或修改标志（flag），具体操作因平台而异。
 
-On systemd, you can run `sudo systemctl $VERB tailscaled`, where the verb is one of `stop`, `start`, `restart`, or the like.
+在 systemd 上，你可以运行 `sudo systemctl $VERB tailscaled`，其中的动词可以是 `stop`、`start`、`restart` 等。
 
-On Windows, you can run `net stop Tailscale` or `net start Tailscale`,
-or use the Windows Service Manager.
+在 Windows 上，你可以运行 `net stop Tailscale` 或 `net start Tailscale`，也可以使用 Windows 服务管理器。
 
-## Getting logs from tailscaled
+## 从 tailscaled 获取日志
 
-A portable way to attach to the daemon and stream its logs is to use
-the CLI and run `tailscale debug daemon-logs`. That does not currently support
-getting any retroactive logs, however.
+一种可移植的连接守护进程并流式查看其日志的方式，是使用 CLI 运行 `tailscale debug daemon-logs`。不过，它目前不支持获取任何历史日志。
 
-On systemd, you can use `journalctl -u tailscaled --since="1 hour ago"`.
+在 systemd 上，你可以使用 `journalctl -u tailscaled --since="1 hour ago"`。
 
-On Windows, refer to `C:\ProgramData\Tailscale\Logs`.
+在 Windows 上，请参阅 `C:\ProgramData\Tailscale\Logs`。
 
-On macOS, for the GUI builds, use `Console.app` and search for
-`Tailscale` or `IPNExtension`.
+在 macOS 上，对于 GUI 构建版，请使用 `Console.app` 并搜索 `Tailscale` 或 `IPNExtension`。
 
-## Flags to tailscaled
+## tailscaled 的标志
 
-`tailscaled` has numerous flags (command-line arguments) that do
-various things. Some are not stable interfaces and meant primarily for
-debugging. Some of the more frequently used and stable ones are:
+`tailscaled` 有许多用于不同用途的标志（flag，即命令行参数）。其中一些并非稳定接口，主要供调试使用。较常用且稳定的几个包括：
 
-* `--tun=NAME` to specify the TUN device name, or `userspace-networking` as a magic value to not use kernel support and do everything in-process.
-* `--port=N` to set the UDP port to listen on for peer-to-peer traffic; 0 means to auto-select.
-* `--verbose=N`, where N defaults to 0. Values 1 or higher are increasingly verbose.
-* `--debug=localhost:8080`, to run a debug HTTP server serving paths such as `/debug/pprof`, `/debug/metrics`, `/debug/ipn`, or `/debug/magicsock`. The exact details of what's accessible over the debug server is subject to change over time.
-* `--no-logs-no-support` disables telemetry and opts you out of getting any support that would then require such telemetry for debugging
+* `--tun=NAME` 用于指定 TUN 设备名；或使用特殊值 `userspace-networking`，表示不使用内核支持、全部在进程内完成。
+* `--port=N` 用于设置监听点对点流量的 UDP 端口；0 表示自动选择。
+* `--verbose=N`，N 默认为 0。取 1 或更大的值时，输出会越来越详细。
+* `--debug=localhost:8080`，运行一个调试 HTTP 服务器，提供 `/debug/pprof`、`/debug/metrics`、`/debug/ipn`、`/debug/magicsock` 等路径。调试服务器上可访问内容的具体细节可能随时间变化。
+* `--no-logs-no-support` 禁用遥测（telemetry），并使你放弃任何需要此类遥测数据来进行调试的支持服务
 
-To control where and how state (including preferences and keys) is stored, use:
+要控制状态（包括偏好设置和密钥）存储在哪里、如何存储，可使用：
 
-* `--statedir=` for a directory on disk where to store configuration files, keys,
-  Taildrop files, and other state.
+* `--statedir=` 指定磁盘上的一个目录，用于存放配置文件、密钥、Taildrop 文件和其他状态。
 
-* `--state=` to either a `/path/to/file`, `kube:<secret-name>` to use
-  Kubernetes secrets, `arn:aws:ssm:...` to store state in AWS Systems Manager (SSM), or  `mem:` to not store state and register as an ephemeral node. By default, if not provided, the state is stored in `<statedir>/tailscaled.state`.
+* `--state=` 可设为 `/path/to/file`、`kube:<secret-name>`（使用 Kubernetes secret）、`arn:aws:ssm:...`（把状态存入 AWS Systems Manager（SSM）），或 `mem:`（不存储状态并注册为临时节点（ephemeral node））。默认情况下，如果未提供，状态存储在 `<statedir>/tailscaled.state`。
 
-  When using AWS SSM, you can optionally append `?kmsKey=<key>` to encrypt the state using an AWS Key Management Service (KMS) key. The KMS key can be a key ID, alias, or full Amazon Resource Name (ARN). If you don't specify a KMS key, the state stored in AWS SSM is not encrypted.
+  使用 AWS SSM 时，你可以选择追加 `?kmsKey=<key>`，使用 AWS Key Management Service（KMS）密钥来加密状态。KMS 密钥可以是密钥 ID、别名或完整的 Amazon Resource Name（ARN）。如果不指定 KMS 密钥，存储在 AWS SSM 中的状态不会被加密。
 
-* `--encrypt-state` to optionally encrypt the state file using the local TPM
-  device on Linux.
+* `--encrypt-state` 在 Linux 上可选择使用本地 TPM 设备加密状态文件。
 
-There are also two flags to run proxies:
+还有两个用于运行代理的标志：
 
-* `--socks5-server=[host]:port`, to run a SOCK5 server, making your tailnet accessible by using SOCKS5
-* `--outbound-http-proxy-listen=[host]:port`, to run an HTTP proxy server, making your tailnet accessible by using HTTP.
+* `--socks5-server=[host]:port`，运行一个 SOCK5 服务器，让你可以通过 SOCKS5 访问你的 tailnet
+* `--outbound-http-proxy-listen=[host]:port`，运行一个 HTTP 代理服务器，让你可以通过 HTTP 访问你的 tailnet。
 
-The SOCK5 and HTTP proxy may have the same value in which case only
-one port is opened but will automatically vary which protocol it
-speaks based on what the client says first.
+SOCK5 与 HTTP 代理可以设置为相同的值，此时只会打开一个端口，但会根据客户端先发送的内容自动切换使用哪种协议。
 
-To apply [system policies][docs-system-policies]:
+要应用[系统策略][docs-system-policies]：
 
-* `--syspolicy-file` path to a JSON syspolicy file applied as a device-scope policy source; empty disables
+* `--syspolicy-file` 指向一个 JSON syspolicy 文件的路径，作为设备级策略来源应用；留空则禁用
 
-The following flags take an action and exit:
+以下标志会执行某个操作后退出：
 
-* `--version` prints version info and exits
-* `--cleanup` cleans up system state from a previous run
+* `--version` 打印版本信息并退出
+* `--cleanup` 清理上次运行残留的系统状态
 
-## Setting flags
+## 设置标志
 
-Setting `tailscaled` flags varies by platform.
+设置 `tailscaled` 标志的方式因平台而异。
 
-On Linux, you can modify the `FLAGS` in `/etc/default/tailscaled`,
-which the systemd unit definition will include.
+在 Linux 上，你可以修改 `/etc/default/tailscaled` 中的 `FLAGS`，systemd 单元定义会将其包含进来。
 
-On NixOS, `/etc/default/tailscaled` is managed as part of the declarative
-configuration. Set flags through your NixOS configuration rather than editing
-the file directly.
+在 NixOS 上，`/etc/default/tailscaled` 作为声明式配置的一部分来管理。请通过你的 NixOS 配置来设置标志，而不要直接编辑该文件。
 
-## Environment variables
+## 环境变量
 
 ### Windows
 
-You can set some environment variables on Windows by doing the following:
+在 Windows 上，你可以通过以下步骤设置一些环境变量：
 
-* Create a `tailscaled-env.txt` file in `C:\ProgramData\Tailscale`.
-* In the `tailscaled-env.txt` file you can set `PORT=N` (for example, to change the default UDP listen port).
-* Save the file and run `net stop Tailscale`, `net start Tailscale` to apply the changes.
+* 在 `C:\ProgramData\Tailscale` 中创建一个 `tailscaled-env.txt` 文件。
+* 在 `tailscaled-env.txt` 文件中，你可以设置 `PORT=N`（例如用于更改默认的 UDP 监听端口）。
+* 保存文件，然后运行 `net stop Tailscale`、`net start Tailscale` 使更改生效。
 
 [docs-cli]: /docs/reference/tailscale-cli
 

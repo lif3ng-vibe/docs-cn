@@ -1,22 +1,22 @@
 ---
-title: "Troubleshooting guide for Apple"
-description: "The following topics provide suggestions and tips to help troubleshoot common Apple issues. If you have additional issues, [contact Tailscale Support][co-contact-support]."
+title: "Apple 故障排除指南"
+description: "以下主题提供帮助排查常见 Apple 问题的建议和技巧。如果遇到其他问题，请[联系 Tailscale 支持][co-contact-support]。"
 ---
 
-Last validated Feb 10, 2026
+最后验证于 Feb 10, 2026
 
-The following topics provide suggestions and tips to help troubleshoot common Apple issues. If you have additional issues, [contact Tailscale Support][co-contact-support].
+以下主题提供帮助排查常见 Apple 问题的建议和技巧。如果遇到其他问题，请[联系 Tailscale 支持][co-contact-support]。
 
-* [Troubleshoot Apple TV](/docs/reference/troubleshooting/apple/cant-access-appletv) — Troubleshoot Apple TV issues.
+* [排查 Apple TV 问题](/docs/reference/troubleshooting/apple/cant-access-appletv)——排查 Apple TV 的相关问题。
 
-* [Troubleshoot macOS access from iPhone](/docs/reference/troubleshooting/apple/cant-access-macos-from-iphone) — Troubleshoot your iPhone access to a Mac.
+* [排查 iPhone 访问 macOS 的问题](/docs/reference/troubleshooting/apple/cant-access-macos-from-iphone)——排查 iPhone 无法访问 Mac 的问题。
 
-* [Troubleshoot macOS ping issues](/docs/reference/troubleshooting/apple/macos-ping-issues) — Troubleshoot your mac when it has ping issues.
+* [排查 macOS ping 问题](/docs/reference/troubleshooting/apple/macos-ping-issues)——排查 Mac 出现 ping 异常的问题。
 
-* [Troubleshoot macOS stuck at Loading backend](/docs/reference/troubleshooting/apple/macos-stuck-loading-backend) — Troubleshoot your macOS if it is stuck at Loading backend.
+* [排查 macOS 卡在 Loading backend 的问题](/docs/reference/troubleshooting/apple/macos-stuck-loading-backend)——排查 macOS 卡在 Loading backend 的问题。
 
-* [Troubleshoot macOS system extension errors](/docs/reference/troubleshooting/apple/macos-system-extension-errors) — Troubleshoot system extension errors on your Mac.
+* [排查 macOS 系统扩展错误](/docs/reference/troubleshooting/apple/macos-system-extension-errors)——排查 Mac 上的系统扩展错误。
 
-* [Troubleshoot Tailscale icon not appearing](/docs/reference/troubleshooting/apple/macos-doesnt-display-tailscale-icon) — Troubleshoot the Tailscale icon not appearing on your Mac.
+* [排查 Tailscale 图标不显示的问题](/docs/reference/troubleshooting/apple/macos-doesnt-display-tailscale-icon)——排查 Mac 上 Tailscale 图标不显示的问题。
 
 [co-contact-support]: https://tailscale.com/contact/support

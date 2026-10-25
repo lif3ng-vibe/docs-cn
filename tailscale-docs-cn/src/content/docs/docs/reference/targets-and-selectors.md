@@ -1,396 +1,396 @@
 ---
-title: "Targets and selectors"
-description: "Understand Tailscale targets, the identifiers you use to identify users, devices, or subnets in the tailnet policy file."
+title: "目标与选择器"
+description: "了解 Tailscale 目标（target），即你在 tailnet 策略文件中用来标识用户、设备或子网的标识符。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-A target (or selector) is an identifier you use to identify users, devices, or subnets in the [tailnet policy file][docs-tailnet-policy-file]. In most cases, you'll use targets to select the source or destination of an [access control][docs-access-control] policy. Targets can select one or many devices, users, or [network segments][docs-subnets]. For example, `tag:sql-server` is a target you can use to select all devices [tagged][docs-tags] with `sql-server`, and `192.0.2.23` is a target that only selects the device using the IP address `192.0.2.23`.
+目标（target，或称选择器）是你在 [tailnet 策略文件][docs-tailnet-policy-file]中用来标识用户、设备或子网的标识符。在大多数情况下，你会用目标来指定[访问控制][docs-access-control]策略的源或目标。目标可以选择一台或多台设备、一个或多个用户，以及[网段][docs-subnets]。例如，`tag:sql-server` 是一个目标，可用于选择所有打了 `sql-server` [标签][docs-tags]的设备；而 `192.0.2.23` 则是一个只选择使用 IP 地址 `192.0.2.23` 的那台设备的目标。
 
-Use the page as a reference for the various [types of targets][ar-types], when you can use them, and their [restrictions][ar-restrictions].
+请将本页作为各类[目标类型][ar-types]、其适用场景及其[限制][ar-restrictions]的参考。
 
-## Types
+## 类型
 
-There are three primary types of targets: [autogroups][ar-autogroups], [explicit selectors][ar-explicit-selectors], and [custom selectors][ar-custom-targets].
+目标主要有三类：[autogroup][ar-autogroups]、[显式选择器][ar-explicit-selectors]和[自定义目标][ar-custom-targets]。
 
-### Autogroups
+### autogroup
 
-An [autogroup][docs-autogroups] is a type of built-in target that automatically groups devices, users, or IP addresses based on specific criteria. They let you select dynamic sets of users, devices, or routes that might be challenging or even impossible to select by other means. For example, `autogroup:member` is an autogroup that includes all members of your tailnet.
+[autogroup][docs-autogroups] 是一种内置目标，它会根据特定条件自动对设备、用户或 IP 地址分组。借助 autogroup，你可以选中那些用其他方式很难甚至无法选中的动态用户、设备或路由集合。例如，`autogroup:member` 是一个包含你 tailnet 中所有成员的 autogroup。
 
-| **Autogroup**                                    | **Description**                                                                                                                                            |
+| **Autogroup**                                    | **说明**                                                                                                                                                   |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`autogroup:danger-all`][ar-autogroupdanger-all] | Includes all devices, even those outside your tailnet. Use this target with caution—it could expose your tailnet to security risks or unexpected behavior. |
-| [`autogroup:internet`][ar-autogroupinternet]     | Includes all public IP addresses.                                                                                                                          |
-| [`autogroup:self`][ar-autogroupself]             | Includes all devices owned by the same user. This is a special autogroup that you can use to allow devices owned by the same user to access one another.   |
-| [`autogroup:shared`][ar-autogroupshared]         | Includes all devices that belong to users who have accepted a [sharing][docs-sharing] invitation to your tailnet.                                          |
-| [`autogroup:tagged`][ar-autogrouptagged]         | Includes all devices that have at least one tag.                                                                                                           |
-| [`autogroup:member`][ar-autogrouprole]           | Includes all members of the tailnet.                                                                                                                       |
-| [`autogroup:owner`][ar-autogrouprole]            | Includes all members in the tailnet with the Owner role.                                                                                                   |
-| [`autogroup:admin`][ar-autogrouprole]            | Includes all members in the tailnet with the Admin role.                                                                                                   |
-| [`autogroup:it-admin`][ar-autogrouprole]         | Includes all members in the tailnet with the IT admin role.                                                                                                |
-| [`autogroup:billing-admin`][ar-autogrouprole]    | Includes all members in the tailnet with the Billing admin role.                                                                                           |
-| [`autogroup:network-admin`][ar-autogrouprole]    | Includes all members in the tailnet with the Network admin role.                                                                                           |
-| [`autogroup:auditor`][ar-autogrouprole]          | Includes all members in the tailnet with the Auditor role.                                                                                                 |
+| [`autogroup:danger-all`][ar-autogroupdanger-all] | 包括所有设备，甚至包括你 tailnet 之外的设备。使用此目标务必谨慎——它可能使你的 tailnet 面临安全风险或出现意外行为。                                           |
+| [`autogroup:internet`][ar-autogroupinternet]     | 包括所有公共 IP 地址。                                                                                                                                      |
+| [`autogroup:self`][ar-autogroupself]             | 包括同一用户拥有的所有设备。这是一个特殊的 autogroup，可用于允许同一用户拥有的设备互相访问。                                                                |
+| [`autogroup:shared`][ar-autogroupshared]         | 包括所有属于已接受你 tailnet [共享][docs-sharing]邀请的用户的设备。                                                                                          |
+| [`autogroup:tagged`][ar-autogrouptagged]         | 包括所有至少拥有一个标签（tag）的设备。                                                                                                                      |
+| [`autogroup:member`][ar-autogrouprole]           | 包括 tailnet 的所有成员。                                                                                                                                    |
+| [`autogroup:owner`][ar-autogrouprole]            | 包括 tailnet 中具有 Owner 角色的所有成员。                                                                                                                  |
+| [`autogroup:admin`][ar-autogrouprole]            | 包括 tailnet 中具有 Admin 角色的所有成员。                                                                                                                  |
+| [`autogroup:it-admin`][ar-autogrouprole]         | 包括 tailnet 中具有 IT admin 角色的所有成员。                                                                                                                |
+| [`autogroup:billing-admin`][ar-autogrouprole]    | 包括 tailnet 中具有 Billing admin 角色的所有成员。                                                                                                          |
+| [`autogroup:network-admin`][ar-autogrouprole]    | 包括 tailnet 中具有 Network admin 角色的所有成员。                                                                                                          |
+| [`autogroup:auditor`][ar-autogrouprole]          | 包括 tailnet 中具有 Auditor 角色的所有成员。                                                                                                                |
 
-Review the following tables to understand where and how you can use each autogroup.
+请查阅下表，了解每个 autogroup 可以在哪些位置、以何种方式使用。
 
 #### `autogroup:danger-all`
 
-`autogroup:danger-all` is a special (and dangerous) autogroup that includes all devices, even those outside your tailnet.
+`autogroup:danger-all` 是一个特殊（且危险）的 autogroup，它包括所有设备，甚至包括你 tailnet 之外的设备。
 
-> **Danger:**
+> **危险：**
 >
-> Tailscale does not recommend using this autogroup because it exposes your tailnet to unnecessary security risks. It's only available for backward compatibility reasons.
+> Tailscale 不建议使用此 autogroup，因为它会使你的 tailnet 暴露在不必要的安全风险之下。它仅出于向后兼容的原因而保留。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes         |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | No          |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No          |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 否          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
 #### `autogroup:internet`
 
-`autogroup:internet` is an autogroup that includes all public IP addresses.
+`autogroup:internet` 是一个包括所有公共 IP 地址的 autogroup。
 
-> **Note:**
+> **注意：**
 >
-> **Technical definition**: `autogroup:internet` is defined as `0.0.0.0/0` and `2000::/3`, excluding the following address ranges:
+> **技术定义**：`autogroup:internet` 定义为 `0.0.0.0/0` 和 `2000::/3`，但排除以下地址范围：
 >
-> **Private**:
+> **私有（Private）**：
 >
 > * `10.0.0.0/8`
 > * `172.16.0.0/12`
 > * `192.168.0.0/16`
 >
-> **Tailscale (CGNAT)**:
+> **Tailscale（CGNAT）**：
 >
 > * `100.64.0.0/10`
 >
-> **Link-local**:
+> **链路本地（link-local）**：
 >
 > * `169.254.0.0/16`
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | No          |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 否          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
 #### `autogroup:self`
 
-`autogroup:self` is an autogroup that includes all devices owned by the same user. You can use this autogroup to allow devices owned by the same user to access one another.
+`autogroup:self` 是一个包括同一用户拥有的所有设备的 autogroup。你可以使用此 autogroup 来允许同一用户拥有的设备互相访问。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed**                   |
+| **位置**                                                                                              | **是否允许**                  |
 | ----------------------------------------------------------------------------------------------------- | ----------------------------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No                            |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | [Restricted][ar-restrictions] |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | No                            |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | [Restricted][ar-restrictions] |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No                            |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No                            |
-| Group ([`group`][docs-acl-groups])                                                                    | No                            |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No                            |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No                            |
-| Via (`via`)Route filtering in grants                                                                  | No                            |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否                            |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | [受限][ar-restrictions]       |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 否                            |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | [受限][ar-restrictions]       |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否                            |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否                            |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否                            |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否                            |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否                            |
+| Via（`via`），授权中的路由过滤                                                                        | 否                            |
 
 #### `autogroup:shared`
 
-`autogroup:shared` is an autogroup that includes all devices that belong to users who have accepted a [sharing][docs-sharing] invitation to your tailnet.
+`autogroup:shared` 是一个包括所有属于已接受你 tailnet [共享][docs-sharing]邀请的用户的设备的 autogroup。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes         |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | No          |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No          |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 否          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
 #### `autogroup:tagged`
 
-`autogroup:tagged` is an autogroup that includes all devices that have at least one tag.
+`autogroup:tagged` 是一个包括所有至少拥有一个标签的设备的 autogroup。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed**                   |
+| **位置**                                                                                              | **是否允许**                  |
 | ----------------------------------------------------------------------------------------------------- | ----------------------------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | [Restricted][ar-restrictions] |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | Yes                           |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes                           |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes                           |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | Yes                           |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | Yes                           |
-| Group ([`group`][docs-acl-groups])                                                                    | No                            |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No                            |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | Yes                           |
-| Via (`via`)Route filtering in grants                                                                  | No                            |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | [受限][ar-restrictions]       |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 是                            |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是                            |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是                            |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 是                            |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 是                            |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否                            |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否                            |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 是                            |
+| Via（`via`），授权中的路由过滤                                                                        | 否                            |
 
 #### `autogroup:<role>`
 
-`autogroup:<role>` is an autogroup that includes all members in the tailnet with a specific [role](/docs/reference/user-roles).
+`autogroup:<role>` 是一个包括 tailnet 中具有特定[角色](/docs/reference/user-roles)的所有成员的 autogroup。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed**                                          |
+| **位置**                                                                                              | **是否允许**                                         |
 | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | [Restricted][ar-restrictions] for `autogroup:member` |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No                                                   |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes                                                  |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes                                                  |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | Yes                                                  |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | Yes                                                  |
-| Group ([`group`][docs-acl-groups])                                                                    | No                                                   |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No                                                   |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | Yes                                                  |
-| Via (`via`)Route filtering in grants                                                                  | No                                                   |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | `autogroup:member` 为[受限][ar-restrictions]         |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否                                                   |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是                                                   |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是                                                   |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 是                                                   |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 是                                                   |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否                                                   |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否                                                   |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 是                                                   |
+| Via（`via`），授权中的路由过滤                                                                        | 否                                                   |
 
-### Synced groups
+### 同步组
 
-Synced groups are collections of users and devices [provisioned][docs-user-group-provisioning] from an identity provider such as [Google Workspace][docs-sso-google-sync], [Okta][docs-sso-okta-sync], or [Microsoft Active Directory][docs-sso-entra-sync].
+同步组（synced group）是从[Google Workspace][docs-sso-google-sync]、[Okta][docs-sso-okta-sync]或 [Microsoft Active Directory][docs-sso-entra-sync]等身份提供方（IdP）[预置][docs-user-group-provisioning]而来的用户和设备集合。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                | **Allowed** |
+| **位置**                                                    | **是否允许** |
 | ----------------------------------------------------------- | ----------- |
-| Access control source (`src`)Includes grants and ACLs.      | Yes         |
-| Access control destination (`dst`)Includes grants and ACLs. | Yes         |
-| Tag owner (`tagOwners`)                                     | Yes         |
-| Node attribute target (`nodeAttr`)                          | Yes         |
-| Auto approver (`autoApprover`)                              | Yes         |
-| IP sets (`ipsets`)                                          | No          |
-| Via (`via`)Route filtering in grants                        | No          |
+| 访问控制源（`src`），包括授权（grant）与 ACL。              | 是          |
+| 访问控制目标（`dst`），包括授权（grant）与 ACL。            | 是          |
+| 标签所有者（`tagOwners`）                                   | 是          |
+| 节点属性目标（`nodeAttr`）                                  | 是          |
+| 自动批准者（`autoApprover`）                                | 是          |
+| IP 集合（`ipsets`）                                         | 否          |
+| Via（`via`），授权中的路由过滤                              | 否          |
 
-### Other built-in targets
+### 其他内置目标
 
-The following table documents unusual [autogroups][ar-autogroups] and other built-in targets.
+下表记录了不常见的 [autogroup][ar-autogroups] 及其他内置目标。
 
-| **Target**             | **Description**                                                                                                                                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `localpart:*@<domain>` | Includes all members with email addresses in the specified `<domain>`. It's only valid as an [SSH source][docs-acl-ssh].                                                                                                          |
-| `autogroup:nonroot`    | This is a special [autogroup][ar-autogroups] that applies to SSH users. You can only use it to specify that a user can log in as any user except root. It's not allowed in the source (`src`) or destination (`dst`) definitions. |
+| **目标**               | **说明**                                                                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `localpart:*@<domain>` | 包括所有电子邮件地址位于指定 `<domain>` 的成员。它只能用作 [SSH 源][docs-acl-ssh]。                                                                                                                                              |
+| `autogroup:nonroot`    | 这是一个适用于 SSH 用户的特殊 [autogroup][ar-autogroups]。你只能用它来指定某用户可以以除 root 之外的任何用户身份登录。它不允许出现在源（`src`）或目标（`dst`）定义中。                                                            |
 
-### Explicit selector
+### 显式选择器
 
-An explicit selector is a target not created by a [group][ar-groups], [tag][ar-tags], or [IP set][ar-ipsets].
+显式选择器（explicit selector）是并非由[组][ar-groups]、[标签][ar-tags]或 [IP 集合][ar-ipsets]创建的目标。
 
-| **Target**                              | **Description**                                                             | **Example**                                           |
+| **目标**                                | **说明**                                                                    | **示例**                                              |
 | --------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- |
-| [IP address][ar-ip-address]             | Select a device by its IP address.                                          | `192.0.2.2`                                           |
-| [Host alias][ar-host-alias]             | Select a device by user-defined [host alias][docs-acl-hosts].               | `host:sql-server-1`                                   |
-| [IP address range][ar-ip-address-range] | Select an explicit range of IP addresses.                                   | `198.51.100.5-198.51.100.10`                          |
-| CIDR                                    | Select a range of IP addresses by the CIDR address.                         | `203.0.113.0/24`                                      |
-| [User][ar-user]                         | Select a specific user by their email address, Passkey, or GitHub username. | `user@company.com`, `user@passkey`, `username@github` |
-| [Tailscale Service][ar-service]         | Select a specific Tailscale Service by its name.                            | `svc:web-server`                                      |
+| [IP 地址][ar-ip-address]                | 按 IP 地址选择设备。                                                        | `192.0.2.2`                                           |
+| [主机别名][ar-host-alias]               | 按用户定义的[主机别名][docs-acl-hosts]选择设备。                            | `host:sql-server-1`                                   |
+| [IP 地址范围][ar-ip-address-range]      | 选择一个显式的 IP 地址范围。                                                | `198.51.100.5-198.51.100.10`                          |
+| CIDR                                    | 按 CIDR 地址选择一段 IP 地址范围。                                          | `203.0.113.0/24`                                      |
+| [用户][ar-user]                         | 按电子邮件地址、Passkey 或 GitHub 用户名选择特定用户。                      | `user@company.com`、`user@passkey`、`username@github` |
+| [Tailscale Service][ar-service]         | 按名称选择特定的 Tailscale Service。                                        | `svc:web-server`                                      |
 
-Review the following sections to understand where and how you can use explicit selectors.
+请查阅以下小节，了解显式选择器可以在哪些位置、以何种方式使用。
 
-#### IP address
+#### IP 地址
 
-You can use an IP address to select a specific device in your tailnet. For example, `192.0.2.2`.
+你可以使用 IP 地址来选择 tailnet 中的特定设备，例如 `192.0.2.2`。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes         |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | Yes         |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 是          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
-#### Host alias
+#### 主机别名
 
-You can use a host alias to select a device by its user-defined alias. For example, `host:sql-server-1`.
+你可以使用主机别名，按用户定义的别名来选择设备，例如 `host:sql-server-1`。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes         |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | Yes         |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 是          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
-#### IP address range
+#### IP 地址范围
 
-You can use an IP address range to select a range of IP addresses. For example, `192.0.2.4-192.0.2.12`.
+你可以使用 IP 地址范围来选择一段 IP 地址，例如 `192.0.2.4-192.0.2.12`。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | No          |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | No          |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 否          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 否          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
-#### User
+#### 用户
 
-You can reference a specific a user by their email address, Passkey, or GitHub username (depending on how they authenticated their Tailscale account). For example, `alice@example.com`, `alice@github` or `alice@passkey`.
+你可以通过电子邮件地址、Passkey 或 GitHub 用户名来引用特定用户（取决于其 Tailscale 账户的认证方式），例如 `alice@example.com`、`alice@github` 或 `alice@passkey`。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | Yes         |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | Yes         |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | Yes         |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | No          |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 是          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 是          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 是          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 否          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
 #### Service
 
-You can reference a specific [Tailscale Service][docs-tailscale-services] by its name. For example, `svc:web-server` or `svc:printer`.
+你可以按名称引用特定的 [Tailscale Service][docs-tailscale-services]，例如 `svc:web-server` 或 `svc:printer`。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                                                                          | **Allowed** |
+| **位置**                                                                                              | **是否允许** |
 | ----------------------------------------------------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                                                                    | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                                                               | No          |
-| Access control source (`src`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls].      | No          |
-| Access control destination (`dst`)Includes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs])                                              | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])                                                         | No          |
-| Group ([`group`][docs-acl-groups])                                                                    | No          |
-| IP set ([`ipset`][docs-ipsets])                                                                       | No          |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers])                                              | Yes         |
-| Via (`via`)Route filtering in grants                                                                  | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                                                                       | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                                                                     | 否          |
+| 访问控制源（`src`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。               | 否          |
+| 访问控制目标（`dst`），包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。             | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）                                                      | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）                                                       | 否          |
+| 组（[`group`][docs-acl-groups]）                                                                      | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                                                                     | 否          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）                                                | 是          |
+| Via（`via`），授权中的路由过滤                                                                        | 否          |
 
-### Custom targets
+### 自定义目标
 
-A custom target is a selection of one or more users, devices, or IP addresses that you create using an explicit selector, [group][ar-groups], [tag][ar-tags], or [IP set][ar-ipsets].
+自定义目标（custom target）是你使用显式选择器、[组][ar-groups]、[标签][ar-tags]或 [IP 集合][ar-ipsets]创建的、由一个或多个用户、设备或 IP 地址组成的选择。
 
-#### Groups
+#### 组
 
-[Groups][docs-grants] are selections of users or devices. You can use groups to create custom collections of users or devices to target in policies. For example, you might have a `prod` group that includes all devices in your production environment. Review the following table to understand where and how you can use groups.
+[组][docs-grants]是用户或设备的选择集合。你可以使用组来创建自定义的用户或设备集合，以便在策略中作为目标。例如，你可以建一个 `prod` 组，包含生产环境中的所有设备。请查阅下表，了解组可以在哪些位置、以何种方式使用。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                             | **Allowed**                   |
+| **位置**                                                 | **是否允许**                  |
 | -------------------------------------------------------- | ----------------------------- |
-| SSH source ([`src`][docs-acl-ssh])                       | [Restricted][ar-restrictions] |
-| SSH destination ([`dst`][docs-acl-ssh])                  | No                            |
-| Access control source (`src`)                            | Yes                           |
-| Access control destination (`dst`)                       | Yes                           |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs]) | Yes                           |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])            | Yes                           |
-| Group ([`group`][docs-acl-groups])                       | No                            |
-| IP set ([`ipset`][docs-ipsets])                          | No                            |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers]) | Yes                           |
-| Via (`via`)Route filtering in grants                     | No                            |
+| SSH 源（[`src`][docs-acl-ssh]）                          | [受限][ar-restrictions]       |
+| SSH 目标（[`dst`][docs-acl-ssh]）                        | 否                            |
+| 访问控制源（`src`）                                      | 是                            |
+| 访问控制目标（`dst`）                                    | 是                            |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）         | 是                            |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）          | 是                            |
+| 组（[`group`][docs-acl-groups]）                         | 否                            |
+| IP 集合（[`ipset`][docs-ipsets]）                        | 否                            |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）   | 是                            |
+| Via（`via`），授权中的路由过滤                           | 否                            |
 
-#### Tags
+#### 标签
 
-[Tags][docs-tags] are named annotations for non-user devices. You can use tags to create identities for non-user devices, such as those hosting a service or application. For example, you might have a `sql` tag that you apply to all devices running a SQL server.
+[标签][docs-tags]是给非用户设备起的命名注记。你可以用标签为非用户设备创建身份，例如托管服务或应用的设备。例如，你可以建一个 `sql` 标签，应用到所有运行 SQL 服务器的设备上。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                             | **Allowed**                   |
+| **位置**                                                 | **是否允许**                  |
 | -------------------------------------------------------- | ----------------------------- |
-| SSH source ([`src`][docs-acl-ssh])                       | [Restricted][ar-restrictions] |
-| SSH destination ([`dst`][docs-acl-ssh])                  | Yes                           |
-| Access control source (`src`)                            | Yes                           |
-| Access control destination (`dst`)                       | Yes                           |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs]) | Yes                           |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])            | Yes                           |
-| Group ([`group`][docs-acl-groups])                       | No                            |
-| IP set ([`ipset`][docs-ipsets])                          | No                            |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers]) | Yes                           |
-| Via (`via`)Route filtering in grants                     | Yes                           |
+| SSH 源（[`src`][docs-acl-ssh]）                          | [受限][ar-restrictions]       |
+| SSH 目标（[`dst`][docs-acl-ssh]）                        | 是                            |
+| 访问控制源（`src`）                                      | 是                            |
+| 访问控制目标（`dst`）                                    | 是                            |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）         | 是                            |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）          | 是                            |
+| 组（[`group`][docs-acl-groups]）                         | 否                            |
+| IP 集合（[`ipset`][docs-ipsets]）                        | 否                            |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）   | 是                            |
+| Via（`via`），授权中的路由过滤                           | 是                            |
 
-#### IP sets
+#### IP 集合
 
-[IP sets][docs-ipsets] are collections of IP addresses. You can use IP sets to create custom selections of IP addresses.
+[IP 集合][docs-ipsets]是 IP 地址的集合。你可以使用 IP 集合来创建自定义的 IP 地址选择。
 
-Review the following table to understand where and how you can this selector. The **Location** column indicates the location in tailnet policy file and the **Allowed** column indicates whether you can use the target in that location.
+请查阅下表，了解此选择器可以在哪些位置、以何种方式使用。**位置**列表示 tailnet 策略文件中的位置，**是否允许**列表示你能否在该位置使用此目标。
 
-| **Location**                                             | **Allowed** |
+| **位置**                                                 | **是否允许** |
 | -------------------------------------------------------- | ----------- |
-| SSH source ([`src`][docs-acl-ssh])                       | No          |
-| SSH destination ([`dst`][docs-acl-ssh])                  | No          |
-| Access control source (`src`)                            | Yes         |
-| Access control destination (`dst`)                       | Yes         |
-| Node attribute target ([`nodeAttr`][docs-acl-nodeattrs]) | No          |
-| Tag owner ([`tagOwner`][docs-acl-tag-owners])            | No          |
-| Group ([`group`][docs-acl-groups])                       | No          |
-| IP set ([`ipset`][docs-ipsets])                          | Yes         |
-| Auto approver ([`autoApprover`][docs-acl-autoapprovers]) | No          |
-| Via (`via`)Route filtering in grants                     | No          |
+| SSH 源（[`src`][docs-acl-ssh]）                          | 否          |
+| SSH 目标（[`dst`][docs-acl-ssh]）                        | 否          |
+| 访问控制源（`src`）                                      | 是          |
+| 访问控制目标（`dst`）                                    | 是          |
+| 节点属性目标（[`nodeAttr`][docs-acl-nodeattrs]）         | 否          |
+| 标签所有者（[`tagOwner`][docs-acl-tag-owners]）          | 否          |
+| 组（[`group`][docs-acl-groups]）                         | 否          |
+| IP 集合（[`ipset`][docs-ipsets]）                        | 是          |
+| 自动批准者（[`autoApprover`][docs-acl-autoapprovers]）   | 否          |
+| Via（`via`），授权中的路由过滤                           | 否          |
 
-## Wildcard selectors
+## 通配符选择器
 
-The wildcard selector (`*`) lets you match multiple targets using a single pattern. In the tailnet policy file, the exact behavior of wildcard selectors depends on the context in which you use them. For example, when you use a wildcard selector in the `src` or `dst` fields, it matches all Tailscale IP addresses and all approved subnet routes in the tailnet. However, when you use a wildcard selector in the `ip` field of a grant, it matches all ports and protocols for the targets in the `dst` field.
+通配符选择器（`*`）让你能用单个模式匹配多个目标。在 tailnet 策略文件中，通配符选择器的确切行为取决于你使用它的上下文。例如，在 `src` 或 `dst` 字段中使用通配符选择器时，它会匹配 tailnet 中的所有 Tailscale IP 地址以及所有已批准的子网路由；而在授权（grant）的 `ip` 字段中使用时，它会匹配 `dst` 字段中目标的所有端口和协议。
 
-Review the following table to understand how wildcard selectors work in different scenarios.
+请查阅下表，了解通配符选择器在不同场景中的工作方式。
 
-| Feature                                                                                    | Context                               | Wildcard behavior                                                                                                                                                                                                                                                                                                                                                                  |
+| 功能                                                                                       | 上下文                                | 通配符行为                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Access control policiesIncludes [grants][docs-grants] and [ACLs][docs-policy-syntax-acls]. | The `src` or `dst` fields             | The `*` wildcard selector expands to all Tailscale IP addresses and all IP addresses from approved subnet routes. Approved subnet routes include all the IP addresses that subnet routers advertise and approve. The devices at these IP addresses typically don't have Tailscale IP addresses because they don't connect to the tailnet directly (a subnet router connects them). |
-| Access control policiesIncludes [grants][docs-grants].                                     | The `ip` field                        | Matches all protocols (TCP, UDP, and ICMP) and ports on the destination.                                                                                                                                                                                                                                                                                                           |
-| Synced autogroups                                                                          | Selecting users in a synced autogroup | Wildcard selectors have special considerations. Although the expressions use the wildcard `*` selector (for example, `user:*@example.com`), it does not support arbitrary wildcards. For example, `user:b*b@example.com` will not match `bob@example.com`.                                                                                                                         |
-| Tailscale SSH                                                                              | The `acceptEnv` field                 | Can contain the `*` and `?` wildcard selectors. `*` matches zero or more characters. `?` matches a single character.                                                                                                                                                                                                                                                               |
-| General tests                                                                              | The `src`, `accept`, or `deny` fields | Wildcard selectors are not allowed. They must refer to specific entities. For example, you can't use `tags:*` as the destination in an `accept` rule.                                                                                                                                                                                                                              |
+| 访问控制策略，包括[授权（grant）][docs-grants]与 [ACL][docs-policy-syntax-acls]。          | `src` 或 `dst` 字段                   | `*` 通配符选择器会展开为所有 Tailscale IP 地址以及来自已批准子网路由的所有 IP 地址。已批准的子网路由包括子网路由器通告并获批准的所有 IP 地址。这些 IP 地址上的设备通常没有 Tailscale IP 地址，因为它们不直接连接 tailnet（而是由子网路由器代为连接）。                                                                  |
+| 访问控制策略，包括[授权（grant）][docs-grants]。                                           | `ip` 字段                             | 匹配目标上的所有协议（TCP、UDP 和 ICMP）及端口。                                                                                                                                                                                                                                                                     |
+| 同步 autogroup                                                                             | 在同步 autogroup 中选择用户           | 通配符选择器有特殊限制。虽然表达式使用通配符 `*` 选择器（例如 `user:*@example.com`），但它不支持任意通配符。例如，`user:b*b@example.com` 不会匹配 `bob@example.com`。                                                                                                                                                  |
+| Tailscale SSH                                                                              | `acceptEnv` 字段                      | 可以包含 `*` 和 `?` 通配符选择器。`*` 匹配零个或多个字符，`?` 匹配单个字符。                                                                                                                                                                                                                                          |
+| 常规测试                                                                                   | `src`、`accept` 或 `deny` 字段        | 不允许使用通配符选择器，必须引用具体实体。例如，在 `accept` 规则中不能把 `tags:*` 用作目标。                                                                                                                                                                                                                          |
 
-> **Note:**
+> **注意：**
 >
-> **App connectors and wildcards** You can use wildcard selectors in app connector domain configurations (such as `*.example.com`), but the behavior is non-inclusive of the parent domain.
+> **应用连接器与通配符**：你可以在应用连接器（app connector）的域名配置中使用通配符选择器（例如 `*.example.com`），但其行为不包含父域本身。
 
-## Restrictions
+## 限制
 
-Some targets have specific restrictions for security purposes. Review the following restrictions to understand where and how you can use each target.
+出于安全考虑，某些目标有特定的限制。请查阅以下限制说明，了解每个目标可以在哪些位置、以何种方式使用。
 
-* User-authenticated devices can only SSH to other devices they own or devices authenticated with a tag.
-* Devices with a tag-based identity can only SSH into other tagged devices; they cannot SSH into devices with a user-based identity.
-* The [`autogroup:self`][ar-autogroupself] selector as a destination requires specific source types: individual users, groups, or role-based autogroups (such as `autogroup:member`, `autogroup:admin`, `autogroup:owner`, and so on).
+* 经用户认证的设备只能 SSH 到它们自己拥有的设备，或通过标签认证的设备。
+* 以标签为身份的设备只能 SSH 到其他打了标签的设备，不能 SSH 到以用户为身份的设备。
+* [`autogroup:self`][ar-autogroupself] 选择器作为目标（destination）时要求特定的源类型：个人用户、组，或基于角色的 autogroup（例如 `autogroup:member`、`autogroup:admin`、`autogroup:owner` 等）。
 
 [ar-autogroupdanger-all]: #autogroupdanger-all
 
@@ -398,7 +398,7 @@ Some targets have specific restrictions for security purposes. Review the follow
 
 [ar-autogrouprole]: #autogrouprole
 
-[ar-autogroups]: #autogroups
+[ar-autogroups]: #autogroup
 
 [ar-autogroupself]: #autogroupself
 
@@ -406,29 +406,29 @@ Some targets have specific restrictions for security purposes. Review the follow
 
 [ar-autogrouptagged]: #autogrouptagged
 
-[ar-custom-targets]: #custom-targets
+[ar-custom-targets]: #自定义目标
 
-[ar-explicit-selectors]: #explicit-selector
+[ar-explicit-selectors]: #显式选择器
 
-[ar-groups]: #groups
+[ar-groups]: #组
 
-[ar-host-alias]: #host-alias
+[ar-host-alias]: #主机别名
 
-[ar-ip-address-range]: #ip-address-range
+[ar-ip-address-range]: #ip-地址范围
 
-[ar-ip-address]: #ip-address
+[ar-ip-address]: #ip-地址
 
-[ar-ipsets]: #ip-sets
+[ar-ipsets]: #ip-集合
 
-[ar-restrictions]: #restrictions
+[ar-restrictions]: #限制
 
 [ar-service]: #service
 
-[ar-tags]: #tags
+[ar-tags]: #标签
 
-[ar-types]: #types
+[ar-types]: #类型
 
-[ar-user]: #user
+[ar-user]: #用户
 
 [docs-access-control]: /docs/features/access-control
 

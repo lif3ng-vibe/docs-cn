@@ -1,14 +1,14 @@
 ---
-title: "Troubleshoot system tray shows no internet access"
-description: "When hovering over the internet icon in the Windows system tray, the `Tailscale No internet access` status will display if the Windows client is not connected to an [exit node][docs-exit-nodes]. This "
+title: "排查系统托盘显示无互联网连接"
+description: "将鼠标悬停在 Windows 系统托盘的互联网图标上时，如果 Windows 客户端未连接到[出口节点][docs-exit-nodes]，就会显示 `Tailscale No internet access` 状态。该"
 ---
 
-Last validated Feb 18, 2026
+最后验证于 Feb 18, 2026
 
-When hovering over the internet icon in the Windows system tray, the `Tailscale No internet access` status will display if the Windows client is not connected to an [exit node][docs-exit-nodes]. This can be ignored and will have no negative impact on your connectivity to your tailnet.
+将鼠标悬停在 Windows 系统托盘的互联网图标上时，如果 Windows 客户端未连接到[出口节点][docs-exit-nodes]，就会显示 `Tailscale No internet access` 状态。这一提示可以忽略，不会对你连接 tailnet 产生任何负面影响。
 
-The reason this happens is Windows sends active probes in the form of HTTP requests through all the available interfaces. Since no response is received over the Tailscale client unless an exit node is used, it reports no internet.
+出现这种情况的原因是：Windows 会通过所有可用接口发送 HTTP 形式的主动探测请求。除非使用了出口节点，否则 Tailscale 客户端不会收到响应，于是 Windows 便报告无互联网连接。
 
-The `Tailscale Internet access` status will display when the Windows client is connected to an exit node.
+当 Windows 客户端连接到出口节点时，则会显示 `Tailscale Internet access` 状态。
 
 [docs-exit-nodes]: /docs/features/exit-nodes

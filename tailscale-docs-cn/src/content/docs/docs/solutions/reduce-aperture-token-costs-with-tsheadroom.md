@@ -5,7 +5,7 @@ description: "为 Aperture 添加 tsheadroom，在请求到达提供商之前压
 
 最后验证于 Sep 28, 2026
 
-编码 agent 和检索增强生成（RAG）流水线每一轮都会向大语言模型（LLM）提供商发送巨大的载荷。工具输出、构建日志和文件列表填满了请求体，而提供商会按请求体中的每一个 token 计费——尽管这些 token 很少改变响应内容。
+编码智能体 和检索增强生成（RAG）流水线每一轮都会向大语言模型（LLM）提供商发送巨大的载荷。工具输出、构建日志和文件列表填满了请求体，而提供商会按请求体中的每一个 token 计费——尽管这些 token 很少改变响应内容。
 
 本指南将 tsheadroom 添加到你的 [Aperture][docs-aperture] 网关。tsheadroom 是一个运行在你 tailnet 中的小型服务，会在臃肿请求经过 Aperture 时将其压缩。它基于开源的 `headroom-ai` 库 [Headroom][xt-headroom] 构建，能在保留提示词内容的同时缩减过大的请求体。配置完成后，Aperture 会透明地压缩符合条件的请求，应用无需任何改动。本指南使用的工具密集型请求从约 47 KB 压缩到 25 KB，约等于该轮次一半的计费 token，热身后的 worker 只增加个位数毫秒的延迟。模型加载后的第一个请求延迟会更高。
 
@@ -191,7 +191,7 @@ tsheadroom 不需要 `apikey` 或 `authorization`。Aperture 经由你的 tailne
 现在观察 tsheadroom 压缩一个流经 Aperture 的真实请求。部署时设置的 `-v` 标志会为每个请求记录一行摘要，节省效果就体现在那里。
 
 1. 用 `docker compose logs -f` 跟踪日志。
-2. 通过你的 Aperture 端点发起一次真实的 LLM 调用，使用 Anthropic 模型以匹配你在第 5 步限定的 `anthropic/**` 授权，调用中要包含一个较大的工具结果；或者运行一次会这样的编码 agent 会话。
+2. 通过你的 Aperture 端点发起一次真实的 LLM 调用，使用 Anthropic 模型以匹配你在第 5 步限定的 `anthropic/**` 授权，调用中要包含一个较大的工具结果；或者运行一次会这样的编码智能体 会话。
 3. 找到以 `-> modify` 结尾且 `out_bytes` 小于 `in_bytes` 的日志行。这行日志证明压缩正在运行。
 
 worker 处理的第一个请求（`cold=true`）和之后的一个请求（`cold=false`）如下所示。`cold=true` 标志表示该 worker 处理的第一个请求，而不是慢请求。
@@ -205,7 +205,7 @@ request in_msgs=4 in_bytes=47227 out_bytes=24885 wire_bytes=47227 dur_ms=12 read
 
 要持续度量而不是逐请求看日志行，tsheadroom 在 `http://tsheadroom.<tailnet-name>.ts.net/metrics` 暴露 Prometheus 指标，其中包括 `headroom_tokens_saved_total`。
 
-在你把 `models` 放宽到 `"**"` 之前，先让一个有代表性的编码 agent 或 RAG 任务经由限定范围的授权运行，并确认响应不受影响。
+在你把 `models` 放宽到 `"**"` 之前，先让一个有代表性的编码智能体 或 RAG 任务经由限定范围的授权运行，并确认响应不受影响。
 
 当日志显示工具密集型请求的 `-> modify` 且 `out_bytes` 降低时，这一步——乃至整个搭建——就完成了。如果每个请求都记录 `allow`，请按[故障排除][ar-troubleshooting]排查。要关闭压缩，请参阅[回滚或禁用压缩][ar-rollback]。
 

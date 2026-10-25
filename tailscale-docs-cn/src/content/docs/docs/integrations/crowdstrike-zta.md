@@ -91,7 +91,7 @@ CrowdStrike Falcon 集成成功运行后，会显示最近一次同步的时间�
 2. 选择一台要检查的设备。
 3. 该设备的设备属性位于 **Machine Details** 部分。其中应包含 `falcon:ztaScore` 属性。
 
-*（图：Attributes. falcon:ztaScore: 64. node:os: linux. node:osVersion: 5.19.0-46-generic. node:tsReleaseTrack: stable. node:tsVersion: 1.53.20.）*
+*（图：Attributes（属性）。falcon:ztaScore: 64. node:os: linux. node:osVersion: 5.19.0-46-generic. node:tsReleaseTrack: stable. node:tsVersion: 1.53.20.）*
 
 > **提示：**
 >

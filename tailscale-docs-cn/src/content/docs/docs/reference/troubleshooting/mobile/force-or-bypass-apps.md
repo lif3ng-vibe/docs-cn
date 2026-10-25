@@ -1,10 +1,10 @@
 ---
-title: "Troubleshoot apps forced to use Tailscale"
-description: "On Android devices, you can use [app-based split tunneling][docs-android-app-split-tunneling] to choose which apps will bypass and which apps must use Tailscale to be part of your Tailscale network."
+title: "排查被强制使用 Tailscale 的应用"
+description: "在 Android 设备上，你可以使用[基于应用的分流][docs-android-app-split-tunneling]来选择哪些应用绕过 Tailscale、哪些应用必须使用 Tailscale 才能加入你的 Tailscale 网络。"
 ---
 
-Last validated Mar 20, 2026
+最后验证于 Mar 20, 2026
 
-On Android devices, you can use [app-based split tunneling][docs-android-app-split-tunneling] to choose which apps will bypass and which apps must use Tailscale to be part of your Tailscale network.
+在 Android 设备上，你可以使用[基于应用的分流][docs-android-app-split-tunneling]来选择哪些应用绕过 Tailscale、哪些应用必须使用 Tailscale 才能加入你的 Tailscale 网络。
 
 [docs-android-app-split-tunneling]: /docs/features/client/android-app-split-tunneling

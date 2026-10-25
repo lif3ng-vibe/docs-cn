@@ -1,13 +1,13 @@
 ---
-title: "Troubleshoot AWS access to Google with advertised routes"
-description: "Only part of the `172.0.0.0/8` range is private. The rest is public address space and Google has IP addresses in that range for some of its data centers."
+title: "借助通告路由排查 AWS 访问 Google 的问题"
+description: "`172.0.0.0/8` 范围中只有一部分是私有地址。其余部分是公共地址空间，Google 的部分数据中心在该范围内拥有 IP 地址。"
 ---
 
-Last validated Mar 20, 2026
+最后验证于 Mar 20, 2026
 
-Only part of the `172.0.0.0/8` range is private. The rest is public address space and Google has IP addresses in that range for some of its data centers.
+`172.0.0.0/8` 范围中只有一部分是私有地址。其余部分是公共地址空间，Google 的部分数据中心在该范围内拥有 IP 地址。
 
-You can safely advertise the `172.16.0.0/12` range instead:
+你可以改为安全地通告 `172.16.0.0/12` 范围：
 
 ```shell
 tailscale set --advertise-routes=172.16.0.0/12

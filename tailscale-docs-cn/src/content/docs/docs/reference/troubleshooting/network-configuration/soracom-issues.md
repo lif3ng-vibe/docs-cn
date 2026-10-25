@@ -1,8 +1,8 @@
 ---
-title: "Troubleshoot SoraCOM issues"
-description: "Tailscale can work on SoraCOM but not with the identity service provider's DNS servers. We recommend enabling the **Override DNS servers** toggle on the [DNS](https://console.tailscale.com/admin/dns) "
+title: "排查 SoraCOM 问题"
+description: "Tailscale 可以在 SoraCOM 上工作，但无法使用身份服务提供商的 DNS 服务器。我们建议在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面开启 **Override DNS servers**（覆盖 DNS 服务器）开关。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-Tailscale can work on SoraCOM but not with the identity service provider's DNS servers. We recommend enabling the **Override DNS servers** toggle on the [DNS](https://console.tailscale.com/admin/dns) page of the admin console.
+Tailscale 可以在 SoraCOM 上工作，但无法使用身份服务提供商的 DNS 服务器。我们建议在管理控制台的 [DNS](https://console.tailscale.com/admin/dns) 页面开启 **Override DNS servers**（覆盖 DNS 服务器）开关。

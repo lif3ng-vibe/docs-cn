@@ -1,20 +1,20 @@
 ---
-title: "Troubleshoot DERP traffic routing issues"
-description: "To get in-depth information to troubleshoot [direct and relayed connections][docs-connection-types], use the [Tailscale CLI][docs-cli] to run the [`tailscale status`][docs-cli-status] command. If you "
+title: "排查 DERP 流量路由问题"
+description: "要获取用于排查[直连与中继连接][docs-connection-types]的深入信息，请使用 [Tailscale CLI][docs-cli] 运行 [`tailscale status`][docs-cli-status] 命令。如果你"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-To get in-depth information to troubleshoot [direct and relayed connections][docs-connection-types], use the [Tailscale CLI][docs-cli] to run the [`tailscale status`][docs-cli-status] command. If you observe output in the form of `relay "code"`, then your traffic is being routed through a [DERP server][docs-derp-servers] that has "code" as its location. For example, the second line in this `tailscale status` output indicates traffic is being routed through the "sea" (Seattle) relay server:
+要获取用于排查[直连与中继连接][docs-connection-types]的深入信息，请使用 [Tailscale CLI][docs-cli] 运行 [`tailscale status`][docs-cli-status] 命令。如果你看到形如 `relay "code"` 的输出，说明你的流量正经过一个以 "code" 为位置代码的 [DERP 服务器][docs-derp-servers]路由。例如，下面 `tailscale status` 输出中的第二行表明流量正经过 "sea"（西雅图）中继服务器转发：
 
 ```shell
 100.99.98.97 device1 linux active; direct 1.2.3.4:1234; tx 1000 rx 1000
 100.99.98.96 device2 linux active; relay "sea", tx 1000 rx 1000
 ```
 
-If there is no `relay "code"` line in the `tailscale status` output, then your traffic is not being routed through DERP.
+如果 `tailscale status` 输出中没有 `relay "code"` 这样的行，说明你的流量没有经过 DERP 路由。
 
-Also, the [`tailscale ping`][docs-cli-ping] command will indicate whether a successful ping was by direct path or using DERP. `tailscale ping` will keep trying until it either sends 10 pings (the default if not using the `--c` flag) through the relays, or finds a direct path. For example, if the first five pings were relayed and the sixth ping was a direct path, `tailscale ping` will stop. This `tailscale ping device2` example indicates the device was reached using the "sea" relay on the first ping, and by direct path on the second ping, at which time `tailscale ping` stopped.
+另外，[`tailscale ping`][docs-cli-ping] 命令会表明一次成功的 ping 是经由直连路径还是使用了 DERP。`tailscale ping` 会不断尝试，直到通过中继发送完 10 个 ping 数据包（不使用 `--c` 标志时的默认值），或者找到直连路径为止。例如，如果前五个 ping 经过中继，而第六个 ping 走的是直连路径，`tailscale ping` 就会停止。下面这个 `tailscale ping device2` 示例表明：第一个 ping 通过 "sea" 中继到达设备，第二个 ping 走了直连路径，此时 `tailscale ping` 便停止了。
 
 ```shell
 tailscale ping device2

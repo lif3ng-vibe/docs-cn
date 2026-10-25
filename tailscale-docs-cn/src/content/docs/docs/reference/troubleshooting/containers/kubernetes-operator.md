@@ -1,23 +1,23 @@
 ---
-title: "Troubleshooting Kubernetes operator issues"
-description: "The following sections provide suggestions and tips to help troubleshoot common Kubernetes operator issues."
+title: "Kubernetes Operator 问题排障"
+description: "以下章节提供帮助你排查常见 Kubernetes Operator 问题的建议与技巧。"
 ---
 
-Last validated Jan 5, 2026
+最后验证于 Jan 5, 2026
 
-The following sections provide suggestions and tips to help troubleshoot common Kubernetes operator issues.
+以下章节提供帮助你排查常见 Kubernetes Operator 问题的建议与技巧。
 
-## Using logs
+## 使用日志
 
-If you are experiencing issues with your installation, it might be useful to take a look at the operator logs.
+如果你的安装出现了问题，查看 Operator 日志可能会很有用。
 
-For [ingress][docs-operator-cluster-ingress] and [egress][docs-operator-cluster-egress] proxies and the `Connector`, the operator creates a single replica `StatefulSet` in the `tailscale` namespace that is responsible for proxying the traffic to and from the tailnet. If the `StatefulSet` has been successfully created, you should also look at the logs of its `Pod`.
+对于[入站][docs-operator-cluster-ingress]和[出站][docs-operator-cluster-egress]代理以及 `Connector`，Operator 会在 `tailscale` 命名空间中创建一个单副本的 `StatefulSet`，负责在 tailnet 之间转发流量。如果该 `StatefulSet` 已成功创建，你还应该查看其 `Pod` 的日志。
 
-### Operator logs
+### Operator 日志
 
-You can increase operator's log level to get debug logs.
+你可以提高 Operator 的日志级别以获取调试日志。
 
-To set the log level to `debug` for an operator deployed using Helm, run:
+要将使用 Helm 部署的 Operator 的日志级别设为 `debug`，请运行：
 
 ```shell
 helm upgrade --install \
@@ -25,17 +25,17 @@ helm upgrade --install \
   --set operatorConfig.logging=debug
 ```
 
-If you deployed the operator using [static manifests][docs-operator-static-manifests-with-kubectl], you can set `OPERATOR_LOGGING` environment variable for the operator's `Deployment` to `debug`.
+如果你是使用[静态清单][docs-operator-static-manifests-with-kubectl]部署的 Operator，可以将 Operator `Deployment` 的 `OPERATOR_LOGGING` 环境变量设为 `debug`。
 
-To review the logs, run:
+要查看日志，请运行：
 
 ```shell
 kubectl logs deployment/operator --namespace tailscale
 ```
 
-### Proxy logs and events
+### 代理日志与事件
 
-To get logs and events for the proxy created for an [`Ingress`][docs-operator-cluster-ingress] resource, run:
+要获取为 [`Ingress`][docs-operator-cluster-ingress] 资源创建的代理的日志和事件，请运行：
 
 ```shell
 pod_name=$(kubectl get pod --selector=tailscale.com/parent-resource-type=ingress,tailscale.com/parent-resource=<ingress-name>,tailscale.com/parent-resource-ns=<ingress-namespace> \
@@ -44,7 +44,7 @@ kubectl logs ${pod_name} --namespace tailscale
 kubectl describe pod ${pod_name} --namespace tailscale
 ```
 
-To get logs and events for a proxy created for an [ingress][docs-operator-cluster-ingress] or [egress][docs-operator-cluster-egress] `Service`, run:
+要获取为[入站][docs-operator-cluster-ingress]或[出站][docs-operator-cluster-egress] `Service` 创建的代理的日志和事件，请运行：
 
 ```shell
 pod_name=$(kubectl get pod --selector=tailscale.com/parent-resource-type=svc,tailscale.com/parent-resource=<service-name>,tailscale.com/parent-resource-ns=<service-namespace> \
@@ -53,7 +53,7 @@ kubectl logs ${pod_name} --namespace tailscale
 kubectl describe pod ${pod_name} --namespace tailscale
 ```
 
-To get logs and events for a proxy created for a `Connector`, run:
+要获取为 `Connector` 创建的代理的日志和事件，请运行：
 
 ```shell
 pod_name=$(kubectl get pod --selector=tailscale.com/parent-resource-type=connector,tailscale.com/parent-resource=<connector-name> \
@@ -62,7 +62,7 @@ kubectl logs ${pod_name} --namespace tailscale
 kubectl describe pod ${pod_name} --namespace tailscale
 ```
 
-To get logs and events for a proxy created for a `ProxyGroup`, run:
+要获取为 `ProxyGroup` 创建的代理的日志和事件，请运行：
 
 ```shell
 pod_name=$(kubectl get pod --selector=tailscale.com/parent-resource-type=proxygroup,tailscale.com/parent-resource=<proxy-group-name> \
@@ -71,58 +71,58 @@ kubectl logs ${pod_name} --namespace tailscale
 kubectl describe pod ${pod_name} --namespace tailscale
 ```
 
-## Cluster egress/cluster ingress proxies
+## 集群出站/集群入站代理
 
-The proxy pod is deployed in the `tailscale` namespace, and will have a name of the form `ts-<annotated-service-name>-<random-string>`.
+代理 Pod 部署在 `tailscale` 命名空间中，名称形如 `ts-<annotated-service-name>-<random-string>`。
 
-If there are issues reaching the external service, verify the proxy pod is properly deployed:
+如果无法访问外部服务，请验证代理 Pod 是否已正确部署：
 
-* Review the logs and events of the proxy pods.
-* Review the logs of the operator. You can do this by running `kubectl logs deploy/operator --namespace tailscale`. The log level can be configured using the `OPERATOR_LOGGING` environment variable in the operator's [manifest file][xt-gh-tailscale-k8s-operator].
-* Verify that the cluster workload can send traffic to the proxy pod in the `tailscale` namespace.
+* 查看代理 Pod 的日志和事件。
+* 查看 Operator 的日志。可以运行 `kubectl logs deploy/operator --namespace tailscale` 来完成。日志级别可以通过 Operator [清单文件][xt-gh-tailscale-k8s-operator]中的 `OPERATOR_LOGGING` 环境变量进行配置。
+* 验证集群工作负载能否向 `tailscale` 命名空间中的代理 Pod 发送流量。
 
-## TLS connection errors
+## TLS 连接错误
 
-If you are connecting to a workload exposed to the tailnet over `Ingress` or to the `kube` API server over the operator's API server proxy, you can sometimes run into TLS connection errors.
+如果你在连接通过 `Ingress` 暴露到 tailnet 的工作负载，或通过 Operator 的 API 服务器代理连接 `kube` API 服务器，有时会遇到 TLS 连接错误。
 
-Check the following, in sequence:
+请按顺序检查以下各项：
 
-1. HTTPS is not enabled for the tailnet.
+1. tailnet 未启用 HTTPS。
 
-   To use Tailscale `Ingress` or API server proxy, you must ensure that [HTTPS is enabled for your tailnet][docs-enabling-https].
+   要使用 Tailscale `Ingress` 或 API 服务器代理，你必须确保[tailnet 已启用 HTTPS][docs-enabling-https]。
 
-2. Let's Encrypt certificate has not yet been provisioned.
+2. Let's Encrypt 证书尚未完成签发。
 
-   If HTTPS is enabled, the errors are most likely related to Let's Encrypt certificate provisioning flow.
+   如果已启用 HTTPS，这些错误很可能与 Let's Encrypt 证书的签发流程有关。
 
-   For each Tailscale `Ingress` resource, the operator deploys a Tailscale node that runs a TLS server. This server is provisioned with a Let's Encrypt certificate for the MagicDNS name of the node. For the API server proxy, the operator also runs an in-process TLS server that proxies tailnet traffic to the Kubernetes API server. This server gets provisioned with a Let's Encrypt certificate for the MagicDNS name of the operator.
+   对于每个 Tailscale `Ingress` 资源，Operator 都会部署一个运行 TLS 服务器的 Tailscale 节点。该服务器会获得一张针对该节点 MagicDNS 名称的 Let's Encrypt 证书。对于 API 服务器代理，Operator 还会运行一个进程内 TLS 服务器，将 tailnet 流量代理到 Kubernetes API 服务器。该服务器会获得一张针对 Operator MagicDNS 名称的 Let's Encrypt 证书。
 
-   In both cases, the certificates are provisioned lazily the first time a client connects to the server. Provisioning takes some time, so you might receive some TLS timeout errors.
+   在这两种情况下，证书都是在客户端首次连接服务器时才惰性签发的。签发需要一些时间，因此你可能会收到一些 TLS 超时错误。
 
-   You can examine the logs to follow the certificate provisioning process:
+   你可以查看日志来跟踪证书签发过程：
 
-   For API server proxy, review the operator's logs:
+   对于 API 服务器代理，请查看 Operator 的日志：
 
-* For API server proxy, review the [operator logs][ar-operator-logs].
-* For `Ingress`, review the [proxy logs][ar-operator-proxy-logs].
+* 对于 API 服务器代理，请查看 [Operator 日志][ar-operator-logs]。
+* 对于 `Ingress`，请查看[代理日志][ar-operator-proxy-logs]。
 
-  There is nothing you can currently do to prevent the first client connection sometimes raising an error. Do [reach out][xt-gh-tailscale-issue-types] if this is causing issues for your workflow.
+  目前你无法避免首次客户端连接有时会报错。如果这影响了你的工作流程，欢迎[向我们反馈][xt-gh-tailscale-issue-types]。
 
-1. You have hit Let's Encrypt rate limits.
+1. 你触及了 Let's Encrypt 的速率限制。
 
-   If the connection does not succeed even after first attempt to connect, you should verify that you have not hit [Let's Encrypt rate limits][xt-letsencrypt-rate-limit]. If a limit has been hit, you will be able to find the error returned from Let's Encrypt in the logs.
+   如果首次连接尝试之后连接仍然不成功，你应该确认自己没有触及 [Let's Encrypt 速率限制][xt-letsencrypt-rate-limit]。如果触及了限制，你可以在日志中找到 Let's Encrypt 返回的错误。
 
-   We are currently working on making it less likely for users to hit Let's Encrypt rate limits. Refer to related discussion in [`tailscale/tailscale#11119`][xt-gh-tailscale-issue-11119].
+   我们目前正在努力降低用户触及 Let's Encrypt 速率限制的可能性。相关讨论请参阅 [`tailscale/tailscale#11119`][xt-gh-tailscale-issue-11119]。
 
-## OAuth client and tagging issues
+## OAuth 客户端与标签问题
 
-If you're experiencing issues with the operator not being properly tagged or having permission issues, check the following:
+如果你遇到 Operator 标签设置不当或权限问题，请检查以下各项：
 
-1. **OAuth client scopes**: Ensure your OAuth client has both the `devices:core` and `auth_keys` scopes with write permissions.
+1. **OAuth 客户端作用域**：确保你的 OAuth 客户端同时具有 `devices:core` 和 `auth_keys` 两个作用域的写入权限。
 
-2. **OAuth client tag permissions**: The OAuth client must have permission to use all tags you want to apply to the operator. For example, if your `operatorConfig.defaultTags` specifies multiple tags like `tag:k8s-operator,tag:k8s-test`, your OAuth client must have permission to use`tag:k8s-operator`.
+2. **OAuth 客户端标签权限**：OAuth 客户端必须有权使用你想应用到 Operator 的所有标签。例如，如果你的 `operatorConfig.defaultTags` 指定了 `tag:k8s-operator,tag:k8s-test` 这样多个标签，那么你的 OAuth 客户端必须有权使用 `tag:k8s-operator`。
 
-3. **Tag ownership in ACL**: Check that your tag ownership is properly configured in your tailnet policy file.
+3. **ACL 中的标签所有权**：检查 tailnet 策略文件中的标签所有权配置是否正确。
 
    ```json
    "tagOwners": {
@@ -131,23 +131,23 @@ If you're experiencing issues with the operator not being properly tagged or hav
    }
    ```
 
-4. **Refresh operator state**:
+4. **刷新 Operator 状态**：
 
-   * If you've updated your ACL policy, the changes will be applied automatically and don't require any restart.
+   * 如果你更新了 ACL 策略，变更会自动应用，无需任何重启。
 
-   * If you've created a new OAuth client to replace the previous one, you must reinstall the operator completely to ensure a new key is created. Follow the [installation instructions][docs-kubernetes-operator-setup] again with the new OAuth client credentials.
+   * 如果你创建了新的 OAuth 客户端来替换原来的客户端，必须完全重新安装 Operator，以确保生成新密钥。使用新的 OAuth 客户端凭证重新执行[安装说明][docs-kubernetes-operator-setup]。
 
-5. **Check OAuth client in console**: Verify in the Tailscale admin console that your OAuth client has the exact tags you want to apply to the operator. Remember that each tag's permissions are evaluated independently.
+5. **在控制台检查 OAuth 客户端**：在 Tailscale 管理控制台中验证你的 OAuth 客户端具有的标签与你想要应用到 Operator 的标签完全一致。请注意，每个标签的权限都是独立评估的。
 
-6. **Inspect operator logs**: Look for authorization errors or tag-related messages in the [operator logs][ar-operator-logs].
+6. **检查 Operator 日志**：在 [Operator 日志][ar-operator-logs]中查找授权错误或与标签相关的消息。
 
-## Tailscale Ingress troubleshooting
+## Tailscale Ingress 排障
 
-This section contains additional information for troubleshooting Tailscale `Ingress`.
+本节包含排查 Tailscale `Ingress` 问题的补充信息。
 
-* Check that the operator has configured the ingress proxy correctly:
+* 检查 Operator 是否正确配置了入站代理：
 
-For example, if you have a Tailscale `Ingress` with a backend `Service` similar to these:
+例如，如果你有一个 Tailscale `Ingress`，其后端 `Service` 与下面类似：
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -180,7 +180,7 @@ ports:
 - port: 80
 ```
 
-* Validate that the ingress proxy's configuration matches:
+* 验证入站代理的配置是否匹配：
 
 ```shell
 INGRESS_NAME=<ingress-resource-name> \
@@ -191,11 +191,11 @@ kubectl get secret ${secret_name} -n tailscale -ojsonpath={.data.serve-config} |
 '{"TCP":{"443":{"HTTPS":true}},"Web":{"${TS_CERT_DOMAIN}:443":{"Handlers":{"/login":{"Proxy":"http://192.0.2.9:80/"}}}}}'
 ```
 
-If the configuration appears to be incorrect, check the operator logs for any errors relating to configuring the `Ingress`.
+如果配置看起来不正确，请在 Operator 日志中检查与配置 `Ingress` 相关的错误。
 
-* Check that the ingress proxy has loaded the configuration.
+* 检查入站代理是否已加载配置。
 
-Run the following command to review the current proxy's configuration:
+运行以下命令查看当前代理的配置：
 
 ```shell
 INGRESS_NAME=<ingress-resource-name> \
@@ -207,9 +207,9 @@ https://my-app.<tailnetxyz>.ts.net (tailnet only)
 |-- / proxy http://192.0.2.9:80/
 ```
 
-If the configuration appears to be incorrect, check the proxy `Pod`'s logs.
+如果配置看起来不正确，请检查代理 `Pod` 的日志。
 
-* Verify that the `Service` backend is reachable from the ingress proxy `Pod`:
+* 验证 `Service` 后端能否从入站代理 `Pod` 访问：
 
 ```shell
 INGRESS_NAME=<ingress-resource-name> \
@@ -221,12 +221,12 @@ apk add curl \
 curl http://192.0.2.9:80/
 ```
 
-If the backend cannot be reached, the issue is likely related to cluster connectivity from `tailscale` namespace.
-Verify that you don't have a `NetworkPolicy` in place that prevents `Pod`s in `tailscale` namespace to talk to the `Ingress` backend.
+如果无法访问后端，问题很可能与来自 `tailscale` 命名空间的集群连接有关。
+请确认你没有配置阻止 `tailscale` 命名空间中的 `Pod` 与 `Ingress` 后端通信的 `NetworkPolicy`。
 
-[ar-operator-logs]: #operator-logs
+[ar-operator-logs]: #operator-日志
 
-[ar-operator-proxy-logs]: #proxy-logs
+[ar-operator-proxy-logs]: #代理日志与事件
 
 [docs-enabling-https]: /docs/how-to/set-up-https-certificates
 

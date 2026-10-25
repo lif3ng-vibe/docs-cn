@@ -1,8 +1,8 @@
 ---
-title: "Troubleshoot Tally ERP issues"
-description: "Tally appears to bind to interfaces in a way which conflicts with VPN software like Tailscale. If the license server is running on the local device, fix this by changing the Tally configuration throug"
+title: "排查 Tally ERP 问题"
+description: "Tally 绑定网络接口的方式似乎会与 Tailscale 等 VPN 软件冲突。如果许可证服务器运行在本地设备上，可以通过 UI 修改 Tally 配置或编辑 `Tally.ini` 来解决。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-Tally appears to bind to interfaces in a way which conflicts with VPN software like Tailscale. If the license server is running on the local device, fix this by changing the Tally configuration through the UI or by editing `Tally.ini` to use `127.0.0.1:9999` as the license server instead of using the PC hostname.
+Tally 绑定网络接口的方式似乎会与 Tailscale 等 VPN 软件冲突。如果许可证服务器（license server）运行在本地设备上，可以通过 UI 修改 Tally 配置，或者编辑 `Tally.ini`，把许可证服务器改为 `127.0.0.1:9999` 而不是使用 PC 主机名，即可解决此问题。

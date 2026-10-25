@@ -1,45 +1,45 @@
 ---
-title: "Can't connect to internet"
-description: "Use the following steps to help you troubleshoot why a device can't connect to the public internet."
+title: "无法连接到互联网"
+description: "按照以下步骤排查设备无法连接到公共互联网的原因。"
 ---
 
-Last validated Dec 10, 2025
+最后验证于 Dec 10, 2025
 
-Use the following steps to help you troubleshoot why a device can't connect to the public internet.
+按照以下步骤排查设备无法连接到公共互联网的原因。
 
-> **Tip:**
+> **提示：**
 >
-> Before checking anything else, ensure neither device is experiencing any [fundamental network connectivity problems][docs-basic-network-troubleshooting].
+> 在检查其他任何事项之前，先确保两台设备都没有出现[基础网络连通性问题][docs-basic-network-troubleshooting]。
 
-1. **Make sure the device has internet access**.
+1. **确保设备可以访问互联网**。
 
-   You can do this by trying to open a website such as [`https://tailscale.com`][co-tailscale] in a browser or using a terminal application to ping a well-known IP address, such as one of Google's DNS servers (`8.8.8.8`).
+   你可以尝试在浏览器中打开 [`https://tailscale.com`][co-tailscale] 之类的网站，或者使用终端应用 ping 一个知名 IP 地址（例如 Google 的 DNS 服务器之一 `8.8.8.8`）来验证。
 
-   If you can ping an IP address but can't open a URL in a browser, the device is likely [unable to resolve domain names][docs-resolve-domain-names-failure].
+   如果你能 ping 通某个 IP 地址，却无法在浏览器中打开 URL，那么设备很可能是[无法解析域名][docs-resolve-domain-names-failure]。
 
-2. **Check for a captive portal**.
+2. **检查是否存在强制门户**。
 
-   Tailscale has the ability to [detect captive portals][docs-captive-portal]. However, if you haven't received a captive portal alert and you still suspect the device might encounter a captive portal, open [`http://neverssl.com`][xt-neverssl] in a browser. This should reveal a captive portal if one exists.
+   Tailscale 能够[检测强制门户][docs-captive-portal]。不过，如果你没有收到强制门户提醒，但仍然怀疑设备可能遇到了强制门户，可以在浏览器中打开 [`http://neverssl.com`][xt-neverssl]。如果存在强制门户，这应该会将其显示出来。
 
-   If you encounter a captive portal (and you trust the network): Disconnect from Tailscale, login to the captive portal, then reconnect to Tailscale.
+   如果你遇到了强制门户（并且你信任该网络）：先断开 Tailscale 连接，登录强制门户，然后重新连接 Tailscale。
 
-3. **Ensure you aren't using a service that uses the same CGNAT IP address range as Tailscale**.
+3. **确保你没有使用与 Tailscale 占用相同 CGNAT IP 地址段的服务**。
 
-   Because Tailscale uses the [CGNAT][xt-wiki-cgnat] IP address range for [Tailscale IP addresses][docs-tailscale-ip-addresses], you might encounter problems accessing other non-Tailscale IP addresses in this range.
+   由于 Tailscale 使用 [CGNAT][xt-wiki-cgnat] IP 地址段作为 [Tailscale IP 地址][docs-tailscale-ip-addresses]，你在访问该地址段内其他非 Tailscale 的 IP 地址时可能会遇到问题。
 
-   You can resolve an issue like this, you can [update your tailnet policy file to disable IPv4][docs-disable-ipv4] or use a custom [IP pool][docs-ip-pool].
+   要解决此类问题，你可以[更新 tailnet 策略文件以禁用 IPv4][docs-disable-ipv4]，或者使用自定义的 [IP 池][docs-ip-pool]。
 
-4. **Check for other Tailscale configurations that might prevent a connection**.
+4. **检查是否存在其他可能阻止连接的 Tailscale 配置**。
 
-   For example, if the device uses an exit node, make sure the exit node is online and has access to the resources you're trying to access. For example, ensure no access control policies prevent the exit node from reaching the destination.
+   例如，如果设备使用了出口节点，请确保该出口节点在线，并且有权访问你要访问的资源。又比如，确保没有访问控制策略阻止出口节点到达目的地。
 
-5. **Disconnect from any other virtual private network (VPN) software**.
+5. **断开其他虚拟专用网络（VPN）软件**。
 
-   While Tailscale doesn't deliberately conflict with other VPNs, it's difficult to avoid conflicts in all environments. Many VPN programs also try to prevent other software, such as Tailscale, from making network configuration changes.
+   虽然 Tailscale 不会刻意与其他 VPN 冲突，但在所有环境中都避免冲突是很困难的。许多 VPN 程序还会试图阻止其他软件（例如 Tailscale）更改网络配置。
 
-6. **Disconnect from Tailscale**.
+6. **断开 Tailscale 连接**。
 
-   If the problem persists, continue troubleshooting [basic network connectivity (beyond Tailscale)][docs-basic-network-troubleshooting].
+   如果问题仍然存在，请继续排查[基础网络连通性问题（Tailscale 之外）][docs-basic-network-troubleshooting]。
 
 [co-tailscale]: https://tailscale.com
 

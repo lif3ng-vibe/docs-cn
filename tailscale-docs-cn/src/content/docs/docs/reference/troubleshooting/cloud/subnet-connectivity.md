@@ -1,8 +1,8 @@
 ---
-title: "Troubleshoot subnet connectivity in the cloud"
-description: "The most common issue in Amazon Web Services, Microsoft Azure, and Google Cloud Platform that we've seen is a security group being too restrictive, and blocking connections. For troubleshooting purpos"
+title: "排查云中的子网连接性"
+description: "据我们观察，在 Amazon Web Services、Microsoft Azure 和 Google Cloud Platform 中，最常见的问题是安全组（security group）限制过严，从而阻断了连接。"
 ---
 
-Last validated Mar 20, 2026
+最后验证于 Mar 20, 2026
 
-The most common issue in Amazon Web Services, Microsoft Azure, and Google Cloud Platform that we've seen is a security group being too restrictive, and blocking connections. For troubleshooting purposes, try setting the internal security group to allow all traffic on the subnet, and the security group on the subnet router itself to allow all traffic to test if that unblocks connections.
+据我们观察，在 Amazon Web Services、Microsoft Azure 和 Google Cloud Platform 中，最常见的问题是安全组（security group）限制过严，从而阻断了连接。为排查问题，可以尝试将内部安全组设置为允许子网上的所有流量，并将子网路由器本身所在的安全组也设置为允许所有流量，看看这样能否恢复连接。

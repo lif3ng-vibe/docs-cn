@@ -1,38 +1,38 @@
 ---
-title: "Can't connect to local area network"
-description: "Use the following instructions to help you determine why you can't establish connection to another device on your local area network (LAN)."
+title: "无法连接到局域网"
+description: "按照以下说明排查无法连接到局域网（LAN）中另一设备的原因。"
 ---
 
-Last validated Nov 14, 2025
+最后验证于 Nov 14, 2025
 
-Use the following instructions to help you determine why you can't establish connection to another device on your local area network (LAN).
+按照以下说明排查无法连接到局域网（LAN）中另一设备的原因。
 
-1. **Ensure there aren't any traditional problems interfering with a local connection**.
+1. **确保没有传统网络问题干扰本地连接**。
 
-   There are many reasons why devices on the same local area network might be unable to connect. For example, firewall rules, IP address conflicts, network misconfiguration, and DHCP errors can prevent connections between LAN devices.
+   同一局域网内的设备无法互连的原因有很多。例如，防火墙规则、IP 地址冲突、网络配置错误以及 DHCP 错误都可能阻止局域网设备之间的连接。
 
-   To test the local connection in isolation, disconnect from Tailscale, then try to connect to the LAN device again.
+   要单独测试本地连接，请先断开 Tailscale 连接，然后再次尝试连接局域网设备。
 
-2. **Check if you can connect using the device's [Tailscale IP address][docs-tailscale-ip-addresses] (instead of its private IP address)**.
+2. **检查能否使用设备的 [Tailscale IP 地址][docs-tailscale-ip-addresses]进行连接（而非其私有 IP 地址）**。
 
-   If the device runs Tailscale and you have a [subnet router][docs-subnets] that advertises your LAN, then your device and other LAN devices have two ways to reach each other. Tailscale typically configures the routing table to prefer the subnet router (if accepting subnet routes is enabled).
+   如果设备运行了 Tailscale，并且你有一个通告局域网网段的[子网路由器（subnet router）][docs-subnets]，那么你的设备与其他局域网设备之间就有两条路径可以互通。Tailscale 通常会配置路由表以优先使用子网路由器（如果启用了接受子网路由）。
 
-   The Tailscale client drops packets with unexpected source IP addresses (in this example, the device's LAN IP address instead of the device's [Tailscale IP address][docs-tailscale-ip-addresses]). If the subnet router runs Linux and has SNAT disabled (it can not be disabled on other operating systems), this can lead to a situation where your device's connection attempts successfully reach the LAN device, but it will be unable to respond.
+   Tailscale 客户端会丢弃源 IP 地址出乎意料的数据包（在本例中，即设备的局域网 IP 地址，而非设备的 [Tailscale IP 地址][docs-tailscale-ip-addresses]）。如果子网路由器运行 Linux 且禁用了 SNAT（其他操作系统上无法禁用），就可能导致这种情况：你的设备发起的连接尝试成功到达了局域网设备，但对方无法作出响应。
 
-   If you do not need a device to use subnet routes, you can disable them by passing `--accept-routes=false` to the [`tailscale up`][docs-cli-up] or [`tailscale set`][docs-cli-set] commands or by disabling the subnets option in the Tailscale client (if applicable).
+   如果你不希望某台设备使用子网路由，可以在 [`tailscale up`][docs-cli-up] 或 [`tailscale set`][docs-cli-set] 命令中传入 `--accept-routes=false` 来禁用，或者在 Tailscale 客户端中关闭 subnets 选项（如果适用）。
 
-   For more information, refer to [LAN traffic prioritization with overlapping subnet routes][docs-troubleshooting-lan-priority].
+   更多信息请参阅[子网路由重叠时的局域网流量优先级][docs-troubleshooting-lan-priority]。
 
-3. **Ensure the device isn't using an exit node with a configuration that prevents it from connecting to a local device**.
+3. **确保设备没有使用会阻止其连接本地设备的出口节点配置**。
 
-   If the device uses an [exit node][docs-exit-nodes], it might not be able to access the private IP of the LAN device because the LAN is untrusted by default when using an exit node. You can resolve this with either of the following methods:
+   如果设备使用了[出口节点（exit node）][docs-exit-nodes]，它可能无法访问局域网设备的私有 IP，因为在使用出口节点时局域网默认被视为不受信任。你可以通过以下任一方法解决：
 
-   1. Pass `--exit-node-allow-lan-access=true` to the [`tailscale up`][docs-cli-up] or [`tailscale set`][docs-cli-set] commands.
-   2. Enable the **Exit Node LAN access** option in the Tailscale client (if applicable). This lets the device send LAN connections directly.
+   1. 在 [`tailscale up`][docs-cli-up] 或 [`tailscale set`][docs-cli-set] 命令中传入 `--exit-node-allow-lan-access=true`。
+   2. 在 Tailscale 客户端中启用 **Exit Node LAN access** 选项（如果适用）。这样设备就可以直接发送局域网连接。
 
-   > **Warning:**
+   > **警告：**
    >
-   > Only enable LAN access if you trust the local network. For example, you might trust your home network, but not a public access Wi-Fi at a coffee shop.
+   > 只有在你信任本地网络时才启用局域网访问。例如，你可能信任家庭网络，但不会信任咖啡店的公共 Wi-Fi。
 
 [docs-cli-set]: /docs/reference/tailscale-cli#set
 

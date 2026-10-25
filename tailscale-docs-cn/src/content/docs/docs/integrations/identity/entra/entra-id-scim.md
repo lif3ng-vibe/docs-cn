@@ -111,7 +111,7 @@ Tailscale 支持跨域身份管理系统（SCIM），可与 Microsoft Entra ID�
 要控制哪些用户可以访问 Tailscale，请前往 **Enterprise Applications** >
 **Tailscale** > **Properties**，并将 **Assignment Required?** 设置为 Yes。
 
-*（图：Assignment Required?）*
+*（图：Assignment Required?（需要分配）开关）*
 
 启用此设置后，只有被分配到 Tailscale 应用程序的用户才能访问它。
 

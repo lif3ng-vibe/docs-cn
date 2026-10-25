@@ -1,16 +1,16 @@
 ---
-title: "Can't download Tailscale client"
-description: "If you are experiencing issues downloading the Tailscale client to your device, it may be due to one of the following reasons:"
+title: "无法下载 Tailscale 客户端"
+description: "如果你在设备上下载 Tailscale 客户端时遇到问题，可能是以下原因之一："
 ---
 
-Last validated Mar 23, 2026
+最后验证于 Mar 23, 2026
 
-If you are experiencing issues downloading the Tailscale client to your device, it may be due to one of the following reasons:
+如果你在设备上下载 Tailscale 客户端时遇到问题，可能是以下原因之一：
 
-* **Device OS version needs updating**. Update your device to the latest OS version if possible. While we support some older OS versions, we recommend using the latest.
-* **Download occurred without notification**. Check your default download folder.
-* **Network or internet connection failed during download**. Check your connection and retry the download.
-* **Network policies prevent downloading**. Contact the IT administration in your organization for guidance, if you suspect that this is the issue.
-* **Storage capacity on the device is exceeded**. Clear space on your device to allow the download.
-* **Virus scanner is preventing the download**. Configure the virus scanner to allow downloads from `tailscale.com`.
-* **Web browser pop-up blocker is preventing downloads**. Disable the pop-up blocker or configure it to allow downloads from `tailscale.com`.
+* **设备操作系统版本需要更新**。请尽可能将设备更新到最新的操作系统版本。虽然我们支持部分较旧的操作系统版本，但我们建议使用最新版本。
+* **下载已完成但未收到通知**。请检查你的默认下载文件夹。
+* **下载过程中网络或互联网连接中断**。请检查你的连接并重试下载。
+* **网络策略阻止下载**。如果你怀疑是这个问题，请联系所在组织的 IT 管理员寻求指导。
+* **设备存储空间不足**。请清理设备空间以便完成下载。
+* **病毒扫描程序阻止了下载**。请将病毒扫描程序配置为允许从 `tailscale.com` 下载。
+* **浏览器弹窗拦截器阻止了下载**。请禁用弹窗拦截器，或将其配置为允许从 `tailscale.com` 下载。

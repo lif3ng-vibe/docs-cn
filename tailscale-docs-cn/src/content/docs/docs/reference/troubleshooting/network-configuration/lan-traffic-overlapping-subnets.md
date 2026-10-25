@@ -1,34 +1,34 @@
 ---
-title: "Troubleshoot LAN traffic prioritization issues with overlapping subnet routes"
-description: "You may have a LAN subnet that contains a mix of both Tailscale devices, and non-Tailscale devices that all must accept routes to communicate with a second subnet. In this condition routing can become"
+title: "排查子网路由重叠时的 LAN 流量优先级问题"
+description: "你的 LAN 子网中可能同时包含 Tailscale 设备和必须接受路由才能与第二个子网通信的非 Tailscale 设备。在这种情况下，路由可能出现不对称，带来新的配置难题。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-You may have a LAN subnet that contains a mix of both Tailscale devices, and non-Tailscale devices that all must accept routes to communicate with a second subnet. In this condition routing can become asymmetric leading to new configuration challenges. To work around this challenge, there are different solutions depending on the operating system of the affected device.
+你的 LAN 子网中可能同时包含 Tailscale 设备和必须接受路由才能与第二个子网通信的非 Tailscale 设备。在这种情况下，路由可能出现不对称，带来新的配置难题。要绕过这一难题，需要根据受影响设备的操作系统采用不同的解决方案。
 
-> **Note:**
+> **注意：**
 >
-> Using the solutions described below on non-fixed network interfaces, such as Wi-Fi, on a laptop could lead to a situation where the device sends traffic to a public LAN network that was intended for the Tailscale network. We recommend that these solutions only be used where the network configurations of the subnets and devices that access them are well known and fixed.
+> 在笔记本电脑上将下述解决方案用于非固定网络接口（如 Wi-Fi）时，可能导致设备把本应发往 Tailscale 网络的流量发送到公共 LAN 网络。我们建议仅在子网及访问这些子网的设备的网络配置都已知且固定的情况下使用这些方案。
 
-On both Windows and macOS, routes are accepted by default. The operating system will prioritize routes with the longest prefix match, or in other words the most specific of all configured routes. A solution for overlapping subnet routers is therefore to adjust the Tailscale advertised route to be less specific than the LAN subnets that you wish to avoid routing conflicts with. If for example, you have a LAN subnet of `192.168.2.0/24` and you wish to avoid routing traffic to that subnet through Tailscale when devices are on this LAN segment, you can configure the subnet router to advertise a route of `192.168.2.0/23`.
+在 Windows 和 macOS 上，路由默认会被接受。操作系统会优先选择前缀最长（即所有已配置路由中最具体）的路由。因此，针对子网路由器重叠问题的一种解决方案是，把 Tailscale 通告的路由调整为比你想避免冲突的 LAN 子网更不具体。例如，如果你有一个 `192.168.2.0/24` 的 LAN 子网，希望设备处于该 LAN 网段时流量不经过 Tailscale 路由到该子网，可以将子网路由器配置为通告 `192.168.2.0/23` 路由。
 
-On Linux, you must explicitly pass the `--accept-routes` flag to `tailscale up` to accept subnet routes from other devices in the tailnet. Tailscale on Linux uses a routing feature known as policy routing that introduces an additional layer of prioritization to routing.
+在 Linux 上，你必须向 `tailscale up` 显式传入 `--accept-routes` 标志，才能接受 tailnet 中其他设备的子网路由。Linux 上的 Tailscale 使用一种名为策略路由（policy routing）的路由特性，它在路由之上引入了额外一层优先级机制。
 
-Tailscale uses IP rules in the priority range of `5200` to `5500` to prioritize routes, at this time `5210`, `5230`, `5250`, and `5270`.
+Tailscale 使用 `5200` 到 `5500` 优先级范围内的 IP 规则来排定路由优先级，目前是 `5210`、`5230`、`5250` 和 `5270`。
 
-> **Note:**
+> **注意：**
 >
-> On OpenWRT systems detected as running mwan3, Tailscale rules are installed at a lower priority for compatibility reasons. On such systems, IP rules are installed with priorities ranging between `1300`—`1400` instead of `5200`—`5300`.
+> 在检测到正在运行 mwan3 的 OpenWRT 系统上，出于兼容性考虑，Tailscale 规则会以更低的优先级安装。在这类系统上，IP 规则以 `1300`—`1400` 而非 `5200`—`5300` 的优先级安装。
 
-Install a rule ahead of the Tailscale rules that uses `lookup` to jump over them:
+在 Tailscale 规则之前安装一条使用 `lookup` 跳过它们的规则：
 
 ```shell
 ip rule add to 192.168.2.0/24 priority 2500 lookup main
 ```
 
-The above command installs a rule that matches traffic destined for `192.168.2.0/24` in a rule with priority `2500` (a higher priority than the Tailscale rules). When matched, the rule jumps to the `main` routing table, which is the default routing table. This rule will therefore take precedence over the Tailscale rules, and use the regular LAN routes in the main routing table.
+上面的命令安装了一条规则，以优先级 `2500`（高于 Tailscale 规则）匹配发往 `192.168.2.0/24` 的流量。命中后，该规则会跳转到 `main` 路由表（即默认路由表）。因此这条规则会优先于 Tailscale 规则生效，并使用 main 路由表中的常规 LAN 路由。
 
-> **Note:**
+> **注意：**
 >
-> Note that this change is not persistent, and will need to be applied on boot. `systemd-networkd` users may look to the `RoutingPolicyRule` configuration option in `systemd.network(5)`. The configuration can also be applied in a "oneshot" service as described in `systemd.service(5)`.
+> 请注意此更改不会持久化，需要在系统启动时重新应用。`systemd-networkd` 用户可以参考 `systemd.network(5)` 中的 `RoutingPolicyRule` 配置项。该配置也可以按 `systemd.service(5)` 所述在一个 "oneshot" 服务中应用。

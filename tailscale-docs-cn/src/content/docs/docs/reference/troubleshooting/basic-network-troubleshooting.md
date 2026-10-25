@@ -1,54 +1,54 @@
 ---
-title: "Basic network troubleshooting"
-description: "This topic provides information about general network troubleshooting, that is, not specific to Tailscale. For troubleshooting Tailscale-specific issues, refer to [Troubleshoot device connectivity][do"
+title: "基础网络故障排除"
+description: "本主题提供一般性网络故障排除的相关信息，即不特定于 Tailscale 的内容。"
 ---
 
-Last validated Nov 14, 2025
+最后验证于 Nov 14, 2025
 
-This topic provides information about general network troubleshooting, that is, not specific to Tailscale. For troubleshooting Tailscale-specific issues, refer to [Troubleshoot device connectivity][docs-troubleshoot-connectivity] and [Troubleshoot network configuration][docs-troubleshoot-network-configuration].
+本主题提供一般性网络故障排除的相关信息，即不特定于 Tailscale 的内容。要排查 Tailscale 特有的问题，请参阅[排查设备连接问题][docs-troubleshoot-connectivity]和[排查网络配置问题][docs-troubleshoot-network-configuration]。
 
-Troubleshooting basic network connectivity varies by operating system, environment, and other variables. However, you might consider trying the following:
+基础网络连接的故障排除方法因操作系统、环境和其他变量而异。不过，你可以考虑尝试以下步骤：
 
-1. Gather basic information about the device's network configuration and connection to the website or device.
+1. 收集设备网络配置及其与网站或目标设备之间连接的基本信息。
 
-   The tools available to gather this information vary depending on the operating system.
+   用于收集这些信息的工具因操作系统而异。
 
    #### macOS
 
-   On macOS devices, you can:
+   在 macOS 设备上，你可以：
 
-   * Use a CLI tool like [`ping`][xt-ping], [`ifconfig`][xt-ifconfig], or [`traceroute`][xt-traceroute].
-   * Record a [packet trace][xt-packet-trace].
-   * Use a [third-party tool][xt-macos-third-party-tools] like [MTR][xt-mtr] or [Wireshark][xt-wireshark].
+   * 使用 [`ping`][xt-ping]、[`ifconfig`][xt-ifconfig] 或 [`traceroute`][xt-traceroute] 等 CLI 工具。
+   * 录制[数据包跟踪][xt-packet-trace]（packet trace）。
+   * 使用 [MTR][xt-mtr] 或 [Wireshark][xt-wireshark] 等[第三方工具][xt-macos-third-party-tools]。
 
    #### Windows
 
-   On Windows devices, you can:
+   在 Windows 设备上，你可以：
 
-   * Use [Windows built-in troubleshooting tools][xt-windows-troubleshooting].
-   * Use a CLI tool like [`ping`][xt-windows-ping], [`ipconfig`][xt-ipconfig], or [`tracert`][xt-tracert].
-   * Use a third-party tool like [WinMTR][xt-winmtr] or [Wireshark][xt-wireshark].
+   * 使用 [Windows 内置的故障排除工具][xt-windows-troubleshooting]。
+   * 使用 [`ping`][xt-windows-ping]、[`ipconfig`][xt-ipconfig] 或 [`tracert`][xt-tracert] 等 CLI 工具。
+   * 使用 [WinMTR][xt-winmtr] 或 [Wireshark][xt-wireshark] 等第三方工具。
 
    #### Linux
 
-   On Linux devices, you can:
+   在 Linux 设备上，你可以：
 
-   * Use a CLI tool like [`ping`][xt-ping], [`ifconfig`][xt-ifconfig], or [`traceroute`][xt-traceroute].
-   * Use a third-party tool like [MTR][xt-mtr] or [Wireshark][xt-wireshark].
+   * 使用 [`ping`][xt-ping]、[`ifconfig`][xt-ifconfig] 或 [`traceroute`][xt-traceroute] 等 CLI 工具。
+   * 使用 [MTR][xt-mtr] 或 [Wireshark][xt-wireshark] 等第三方工具。
 
-   Tool availability for other platforms and embedded systems might vary.
+   其他平台和嵌入式系统上的工具可用性可能有所不同。
 
-2. Check the device's network configuration, such as the network interface card (NIC), subnet masks, default gateway, and DNS servers.
+2. 检查设备的网络配置，例如网卡（NIC）、子网掩码、默认网关和 DNS 服务器。
 
-3. Check the device's CPU and RAM usage.
+3. 检查设备的 CPU 和内存（RAM）占用情况。
 
-4. Ensure there aren't any physical problems with the device, such as worn cables or a low battery.
+4. 确认设备没有物理层面的问题，例如线缆磨损或电量过低。
 
-5. Check for updates to the device's operating system or firmware.
+5. 检查设备操作系统或固件是否有可用更新。
 
-6. Contact your internet service provider (ISP).
+6. 联系你的互联网服务提供商（ISP）。
 
-7. Restart the device.
+7. 重启设备。
 
 [docs-troubleshoot-connectivity]: /docs/reference/troubleshooting/connectivity
 

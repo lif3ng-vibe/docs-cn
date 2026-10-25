@@ -1,18 +1,18 @@
 ---
-title: "Troubleshoot Tailscale domains and sites unreachable"
-description: "If your network and internet connectivity are working as expected, but you cannot reach any of the Tailscale sites, including our corporate site, documentation, and admin console, this may be because "
+title: "排查 Tailscale 域名与站点无法访问的问题"
+description: "如果你的网络和互联网连接一切正常，却无法访问任何 Tailscale 站点（包括公司官网、文档和管理控制台），原因可能是我们被错误地加入了某个互联网黑名单。"
 ---
 
-Last validated Mar 16, 2026
+最后验证于 Mar 16, 2026
 
-If your network and internet connectivity are working as expected, but you cannot reach any of the Tailscale sites, including our corporate site, documentation, and admin console, this may be because we were erroneously added to an internet blocklist. To prevent temporary DNS blocking to our sites, we recommend adding the following entries to your DNS service allowlists.
+如果你的网络和互联网连接一切正常，却无法访问任何 Tailscale 站点（包括公司官网、文档和管理控制台），原因可能是我们被错误地加入了某个互联网黑名单。为防止我们的站点被 DNS 临时封锁，我们建议在你的 DNS 服务白名单中加入以下条目。
 
 ```shell
 *.tailscale.com
 *.tailscale.io
 ```
 
-We support a wide variety of DNS services, including [Control D][docs-controld], [Linux DNS][docs-linux-dns], [NextDNS][docs-nextdns], and [Unbound DNS in OPNsense][docs-unbound-dns].
+我们支持多种多样的 DNS 服务，包括 [Control D][docs-controld]、[Linux DNS][docs-linux-dns]、[NextDNS][docs-nextdns] 以及 [OPNsense 中的 Unbound DNS][docs-unbound-dns]。
 
 [docs-controld]: /docs/integrations/control-d
 
