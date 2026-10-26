@@ -1,1 +1,7 @@
-{}
+{
+  "scripts": {
+    "build": "node scripts/build.cjs all",
+    "build:index": "node scripts/build.cjs index",
+    "build:site": "node scripts/build.cjs"
+  }
+}

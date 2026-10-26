@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>docs-cn · 21 站全在玻璃管里 — challenger / cathode</title>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#0b0f1a}
+body{
+  width:1440px;height:900px;overflow:hidden;
+  display:flex;flex-direction:column;
+  color:#e8e3d5;
+  font-family:'Noto Sans SC',sans-serif;
+  background:radial-gradient(1100px 360px at 50% -120px,rgba(255,122,26,.07),transparent 62%),#0b0f1a;
+}
+::selection{background:rgba(255,122,26,.4);color:#0b0f1a}
+/* 网纱肌理只覆盖框架层：页眉带 / 筛选带 / 底带 */
+.mesh{
+  background-color:#101625;
+  background-image:
+    repeating-linear-gradient(0deg,rgba(138,109,59,.22) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(90deg,rgba(138,109,59,.22) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(0deg,rgba(138,109,59,.12) 0 1px,transparent 1px 28px);
+}
+header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:36px 56px 24px;border-bottom:1px solid rgba(138,109,59,.5);
+}
+h1{font-family:'Young Serif',serif;font-size:36px;font-weight:400;letter-spacing:-.01em;line-height:1}
+h1 em{font-style:normal;color:#ff7a1a;text-shadow:0 2px 16px rgba(255,122,26,.55)}
+.sub{margin-top:12px;font-size:14px;font-weight:300;letter-spacing:.04em;color:rgba(232,227,213,.75)}
+.meter{font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:13px;letter-spacing:.04em;color:rgba(232,227,213,.8)}
+/* 筛选拱带：未选 = 幽灵字，选中 = 击亮橙字 + 微光晕 */
+nav{padding:17px 56px 19px;border-bottom:1px solid rgba(138,109,59,.5);border-radius:0 0 26px 26px}
+.chips{display:flex;align-items:center;gap:10px;list-style:none}
+.chip{
+  font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:13px;letter-spacing:.03em;
+  padding:8px 16px;border:1px solid rgba(138,109,59,.42);border-radius:999px;
+  color:rgba(232,227,213,.62);background:rgba(11,15,26,.55);
+}
+.chip.lit{
+  color:#ff7a1a;border-color:rgba(255,122,26,.6);background:rgba(255,122,26,.08);
+  text-shadow:0 2px 10px rgba(255,122,26,.55);
+}
+.count{margin-left:auto;font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:12px;letter-spacing:.02em;color:rgba(232,227,213,.62)}
+/* 阅读列表层：素底，清出网纱 */
+main{flex:1;padding:6px 56px 0}
+.rack{list-style:none}
+.tube{
+  display:grid;grid-template-columns:270px 1fr 56px;column-gap:28px;align-items:baseline;
+  padding:25px 0;border-top:1px solid rgba(232,227,213,.08);
+}
+.tube:first-child{border-top:0;padding-top:16px}
+.tube h2{font-family:'Young Serif',serif;font-size:27px;font-weight:400;letter-spacing:-.01em;line-height:1.1}
+.meta{font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:13px;letter-spacing:.02em}
+.idx{font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:rgba(232,227,213,.55)}
+.lit h2{color:#ff7a1a;text-shadow:0 2px 18px rgba(255,122,26,.5)}
+.lit .meta{color:rgba(232,227,213,.92)}
+.lit .meta b{color:#ffa04f;font-weight:500;text-shadow:0 2px 12px rgba(255,122,26,.45)}
+.lit .idx{color:rgba(255,122,26,.85);text-shadow:0 2px 10px rgba(255,122,26,.4)}
+/* 幽灵管：低透明骨白 + 微失焦；warm = 刚熄灭的一管，留一帧余晖 */
+.ghost{filter:blur(.4px)}
+.warm{color:#ecc9a4}
+footer{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 56px;border-top:1px solid rgba(138,109,59,.5);
+  font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:12px;letter-spacing:.04em;
+  color:rgba(232,227,213,.75);
+}
+</style>
+</head>
+<body>
+<header class="mesh">
+  <div>
+    <h1>docs<em>-cn</em></h1>
+    <p class="sub">21 站全在玻璃管里 —— 未击亮的压成暗丝，击亮的亮起橙辉。</p>
+  </div>
+  <p class="meter">21 管 · 击亮 02</p>
+</header>
+
+<nav class="mesh" aria-label="标签筛选">
+  <ul class="chips">
+    <li class="chip lit">sdk-api</li>
+    <li class="chip">networking</li>
+    <li class="chip">ai-sdks</li>
+    <li class="chip">agents</li>
+    <li class="chip">tooling</li>
+    <li class="chip">testing</li>
+    <li class="chip">docs-engine</li>
+    <li class="count">命中 02 / 21</li>
+  </ul>
+</nav>
+
+<main>
+  <ul class="rack">
+    <li class="tube lit">
+      <h2>LiteLLM</h2>
+      <p class="meta">715+ 文件 · Docusaurus · 2026-10-26 · <b>sdk-api</b></p>
+      <p class="idx">01</p>
+    </li>
+    <li class="tube ghost warm" style="opacity:.36">
+      <h2>AI SDK</h2>
+      <p class="meta">540 页 · ai-sdks</p>
+      <p class="idx">02</p>
+    </li>
+    <li class="tube lit">
+      <h2>Tailscale</h2>
+      <p class="meta">700 页 · Starlight · 2026-10-25 · networking</p>
+      <p class="idx">03</p>
+    </li>
+    <li class="tube ghost" style="opacity:.28;margin-left:14px">
+      <h2>Agency Agents</h2>
+      <p class="meta">326 篇 · agents</p>
+      <p class="idx">04</p>
+    </li>
+    <li class="tube ghost" style="opacity:.24;margin-left:22px">
+      <h2>OpenRig</h2>
+      <p class="meta">90 篇 · tooling</p>
+      <p class="idx">05</p>
+    </li>
+    <li class="tube ghost" style="opacity:.20;margin-left:28px">
+      <h2>Codegraph</h2>
+      <p class="meta">18 页 · tooling</p>
+      <p class="idx">06</p>
+    </li>
+    <li class="tube ghost" style="opacity:.18;margin-left:34px">
+      <h2>e2e</h2>
+      <p class="meta">52 篇 · testing</p>
+      <p class="idx">07</p>
+    </li>
+  </ul>
+</main>
+
+<footer class="mesh">
+  <p>sdk-api 击亮 · 余管压回暗丝 · 旧辉光一拍衰减（静帧）</p>
+  <p>cathode rack · 1440×900</p>
+</footer>
+</body>
+</html>

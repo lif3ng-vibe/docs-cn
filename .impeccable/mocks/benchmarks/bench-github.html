@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>docs-cn · 收录站点（GitHub Primer 基准）</title>
+<style>
+  :root{--canvas:#f6f8fa;--card:#fff;--fg:#1f2328;--muted:#57606a;--faint:#8c959f;--border:#d0d7de;--border-strong:#8c959f;--link:#0969da;--tint:#ddf4ff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1440px;height:900px;overflow:hidden;background:var(--canvas);color:var(--fg);font:14px/1.5 -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:rgba(9,105,218,.18)}
+  a{color:var(--link);text-decoration:none}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-offset:2px;border-radius:6px}
+  .ic{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .ic-s{width:14px;height:14px}
+  .ic-xs{width:12px;height:12px}
+  .wrap{width:1376px;margin:0 auto;padding:24px 0}
+  /* 浏览器位置条 */
+  .chrome{display:flex;align-items:center;gap:12px;background:#eaeef2;border-radius:8px;padding:7px 12px}
+  .urlbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted)}
+  .urlbox code{font:12.5px/1.2 ui-monospace,'Cascadia Mono',Consolas,monospace}
+  .urlbox .ext{margin-left:auto;color:var(--faint)}
+  .chrome .hint{flex:none;font-size:12px;color:var(--muted)}
+  /* 页头：面包屑式标题行 + Counter */
+  .head{display:flex;align-items:baseline;gap:8px;margin-top:24px}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .head .right{margin-left:auto;font-size:13px;color:var(--muted)}
+  .count{display:inline-block;min-width:20px;padding:1px 7px;border-radius:999px;text-align:center;background:rgba(175,184,193,.4);color:var(--fg);font-size:12px;font-weight:600}
+  /* 筛选行：Primer Select 按钮 + 搜索框 + 主按钮 */
+  button{font:inherit;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--canvas);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:14px;font-weight:500;color:var(--fg);transition:border-color .12s ease-out,background-color .12s ease-out}
+  .btn:hover{background:#f3f4f6;border-color:var(--border-strong)}
+  .btn .caret{color:var(--muted)}
+  .search{display:flex;align-items:center;gap:8px;width:340px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:#6e7781;transition:border-color .12s ease-out}
+  .search:hover,.search:focus-within{border-color:var(--border-strong)}
+  .search input{flex:1;border:0;outline:0;background:transparent;font:inherit;color:var(--fg)}
+  .search input::placeholder{color:#6e7781}
+  .btn-primary{margin-left:auto;background:var(--link);border:1px solid rgba(31,35,40,.15);color:#fff}
+  .btn-primary:hover{background:#0860ca;border-color:rgba(31,35,40,.15)}
+  /* 已选筛选摘要条（按 Primer 语法发明的组合件） */
+  .sum{display:flex;align-items:center;gap:8px;margin-top:16px;background:rgba(175,184,193,.2);border-radius:6px;padding:7px 12px;font-size:13px;color:var(--muted)}
+  .pill{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:500;color:var(--fg)}
+  .pill .ic-xs{color:var(--faint)}
+  .sum .hits{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .clear{display:inline-flex;align-items:center;gap:4px;font-size:13px}
+  .clear:hover{text-decoration:underline}
+  /* 站点列表卡 */
+  .list{margin-top:24px;display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px;transition:border-color .12s ease-out,box-shadow .12s ease-out}
+  .row:hover,.row.pin{border-color:var(--border-strong);box-shadow:0 3px 6px rgba(140,149,159,.2)}
+  .rowmain{flex:1;min-width:0}
+  .titlerow{display:flex;align-items:center;gap:8px}
+  .titlerow>.ic{color:var(--muted)}
+  .site{font-size:15px;font-weight:600}
+  .site:hover{text-decoration:underline}
+  .tag{background:var(--tint);color:var(--link);font-size:12px;font-weight:500;line-height:1;padding:4px 8px;border-radius:999px}
+  .tag-en{display:inline-flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border);color:var(--muted)}
+  .desc{margin-top:6px;color:var(--muted)}
+  .meta{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .item{display:inline-flex;align-items:center;gap:5px}
+  .dot{color:var(--faint)}
+  .go{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:500;opacity:0;transform:translateX(-4px);transition:opacity .15s ease-out,transform .15s ease-out}
+  .row:hover .go,.row.pin .go{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-repo" viewBox="0 0 16 16"><path d="M2.5 14V3.5A1.5 1.5 0 0 1 4 2h9.5v10.5H4A1.5 1.5 0 0 0 2.5 14Z"/><path d="M9.8 2v4.3l1.4-1.1 1.4 1.1V2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 16 16"><path d="M8 3.6C6.8 2.7 4.7 2.6 2.5 3.7v9c2.2-1.1 4.3-1 5.5-.1 1.2-.9 3.3-1 5.5.1v-9C11.3 2.6 9.2 2.7 8 3.6Z"/><path d="M8 3.6v9"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.6V8l2.3 1.5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.4"/><path d="M8 1.5v2.1M8 12.4v2.1M1.5 8h2.1M12.4 8h2.1M3.4 3.4l1.5 1.5M11.1 11.1l1.5 1.5M12.6 3.4l-1.5 1.5M4.9 11.1l-1.5 1.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7.2" cy="7.2" r="4.6"/><path d="M10.6 10.6 13.8 13.8"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 16 16"><path d="M7 3.5H3.5v9h9V9"/><path d="M9.5 2.5h4v4M13.2 2.8 8.3 7.7"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.2"/><path d="M5.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4 4 12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></symbol>
+  <symbol id="i-caret" viewBox="0 0 16 16"><path fill="currentColor" stroke="none" d="M4.7 6h6.6L8 10.2Z"/></symbol>
+</defs></svg>
+<div class="wrap">
+  <div class="chrome">
+    <span class="urlbox"><svg class="ic ic-s"><use href="#i-lock"/></svg><code>…/docs-cn/?tags=sdk-api&amp;q=litellm</code><svg class="ic ic-s ext"><use href="#i-ext"/></svg></span>
+    <span class="hint">链接含筛选与搜索词，可分享</span>
+  </div>
+  <header class="head">
+    <a href="#">docs-cn</a><span style="color:var(--faint)">/</span>
+    <h1>收录站点</h1>
+    <span class="right">共 <span class="count">21</span> 个站点</span>
+  </header>
+  <div class="filters">
+    <button class="btn">主题<svg class="ic ic-s caret"><use href="#i-caret"/></svg></button>
+    <button class="btn">排序<svg class="ic ic-s caret"><use href="#i-caret"/></svg></button>
+    <span class="search"><svg class="ic ic-s"><use href="#i-search"/></svg><input value="litellm" placeholder="搜索站名、描述或 topic" aria-label="搜索站点"></span>
+    <button class="btn btn-primary">收录新站</button>
+  </div>
+  <div class="sum">
+    <span>已选筛选</span>
+    <span class="pill">主题：sdk-api<svg class="ic ic-xs"><use href="#i-x"/></svg></span>
+    <span class="pill">搜索：litellm<svg class="ic ic-xs"><use href="#i-x"/></svg></span>
+    <span class="hits">命中<span class="count">5 / 21</span><a class="clear" href="#"><svg class="ic ic-xs"><use href="#i-x"/></svg>清除筛选</a></span>
+  </div>
+  <main class="list">
+    <article class="row pin">
+      <div class="rowmain">
+        <div class="titlerow"><svg class="ic"><use href="#i-repo"/></svg><a class="site" href="#">LiteLLM</a><span class="tag">sdk-api</span><span class="tag">ai-app-dev</span></div>
+        <p class="desc">统一 100+ LLM 供应商 API 的网关 SDK · 官方文档中文镜像</p>
+        <div class="meta"><span class="item"><svg class="ic ic-s"><use href="#i-book"/></svg>715+ 文件</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-gear"/></svg>Docusaurus</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-clock"/></svg>快照 2026-10-26</span></div>
+      </div>
+      <a class="go" href="#">阅读中文文档<svg class="ic ic-s"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="row">
+      <div class="rowmain">
+        <div class="titlerow"><svg class="ic"><use href="#i-repo"/></svg><a class="site" href="#">Tailscale</a><span class="tag">networking</span><span class="tag">deployment</span></div>
+        <p class="desc">零配置组网官方文档中文镜像</p>
+        <div class="meta"><span class="item"><svg class="ic ic-s"><use href="#i-book"/></svg>700 页</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-gear"/></svg>Starlight</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-clock"/></svg>快照 2026-10-25</span></div>
+      </div>
+      <a class="go" href="#">阅读中文文档<svg class="ic ic-s"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="row">
+      <div class="rowmain">
+        <div class="titlerow"><svg class="ic"><use href="#i-repo"/></svg><a class="site" href="#">AI SDK</a><span class="tag">sdk-api</span><span class="tag">ai-app-dev</span></div>
+        <p class="desc">Vercel AI SDK v7 全集中文</p>
+        <div class="meta"><span class="item"><svg class="ic ic-s"><use href="#i-book"/></svg>540 页</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-gear"/></svg>geistdocs</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-clock"/></svg>快照 2026-10-09</span></div>
+      </div>
+      <a class="go" href="#">阅读中文文档<svg class="ic ic-s"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="row">
+      <div class="rowmain">
+        <div class="titlerow"><svg class="ic"><use href="#i-repo"/></svg><a class="site" href="#">Agency Agents</a><span class="tag">ai-agent</span><span class="tag">multi-agent</span><span class="tag">skills</span></div>
+        <p class="desc">300+ 专业智能体名册与 NEXUS 手册</p>
+        <div class="meta"><span class="item"><svg class="ic ic-s"><use href="#i-book"/></svg>326 篇</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-gear"/></svg>Starlight</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-clock"/></svg>快照 2026-10-08</span></div>
+      </div>
+      <a class="go" href="#">阅读中文文档<svg class="ic ic-s"><use href="#i-arrow"/></svg></a>
+    </article>
+    <article class="row">
+      <div class="rowmain">
+        <div class="titlerow"><svg class="ic"><use href="#i-repo"/></svg><a class="site" href="#">OpenRig</a><span class="tag">ai-agent</span><span class="tag">multi-agent</span><span class="tag tag-en"><svg class="ic ic-xs"><use href="#i-ext"/></svg>附 EN</span></div>
+        <p class="desc">Claude Code、Codex 与 Pi 多智能体协作框架</p>
+        <div class="meta"><span class="item"><svg class="ic ic-s"><use href="#i-book"/></svg>90 篇</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-gear"/></svg>Starlight</span><span class="dot">·</span><span class="item"><svg class="ic ic-s"><use href="#i-clock"/></svg>快照 2026-09-30</span></div>
+      </div>
+      <a class="go" href="#">阅读中文文档<svg class="ic ic-s"><use href="#i-arrow"/></svg></a>
+    </article>
+  </main>
+</div>
+</body>
+</html>

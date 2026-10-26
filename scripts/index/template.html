@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>docs-cn — 开源文档中文翻译</title>
+		<meta name="description" content="开源项目文档的中文翻译集合。" />
+		<script>
+			// 预读 localStorage 偏好，CSS 渲染前落到 data-* 属性，防皮肤/样式闪烁。
+			// 主脚本在 body 末尾，负责校验与交互；非法值由其回落默认。
+			(function () {
+				try {
+					var p = JSON.parse(localStorage.getItem('docs-cn-prefs') || '{}');
+					var r = document.documentElement;
+					if (p.skin) r.dataset.skin = p.skin;
+					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
+					if (p.tagLang) r.dataset.tagLang = p.tagLang;
+					['desc', 'tags', 'meta', 'btns'].forEach(function (k) {
+						if (k in p) {
+							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
+						}
+					});
+				} catch (e) {}
+			})();
+		</script>
+		<style>
+{{CSS}}
+		</style>
+	</head>
+	<body>
+		<header class="site-head">
+			<div class="wrap">
+				<div class="brand-row">
+					<div class="brand">
+						<h1>docs-cn</h1>
+						<p class="sub">开源项目文档的中文翻译集合 · 收录 {{SITE_COUNT}} 站 · 非官方翻译。</p>
+					</div>
+					<div class="head-controls">
+						<div class="search-wrap">
+							<svg class="search-ico" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.2"/><path d="m13.5 13.5-3.8-3.8"/></svg>
+							<input type="search" id="search" placeholder="搜索 {{SITE_COUNT}} 个文档站…" autocomplete="off" aria-label="搜索站点名称或描述" />
+							<kbd class="kbd-hint" aria-hidden="true"></kbd>
+						</div>
+						<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">
+							<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h12M2 11.5h12"/><circle cx="6" cy="4.5" r="1.9" fill="#fff"/><circle cx="10.5" cy="11.5" r="1.9" fill="#fff"/></svg>
+							设置
+						</button>
+					</div>
+				</div>
+			</div>
+		</header>
+		<nav class="filterbar" aria-label="标签筛选">
+			<div class="wrap">
+				<div class="chips">
+{{FILTER_CHIPS}}
+				</div>
+				<div class="summary" id="summary" hidden>
+					<span class="sum-parts" id="sum-parts"></span>
+					<button class="sum-clear" id="clear-all" type="button">清除全部</button>
+					<span class="count" id="count" role="status"></span>
+				</div>
+			</div>
+		</nav>
+		<main class="wrap">
+			<div class="list" id="list">
+{{CARDS}}
+			</div>
+			<div class="empty" id="empty" hidden>
+				<p id="empty-msg"></p>
+				<div class="empty-actions">
+					<button id="empty-clear-search" type="button">清除搜索</button>
+					<span aria-hidden="true">×</span>
+					<button id="empty-clear-filters" type="button">清除全部筛选</button>
+				</div>
+			</div>
+			<footer>
+				<span>收录 {{SITE_COUNT}} 站 · {{LAST_SNAP}} 更新</span>
+				<span><a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 翻译遵循各上游许可</span>
+			</footer>
+		</main>
+		<button id="to-top" type="button" hidden aria-label="返回顶部">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>
+		</button>
+		<dialog id="settings" class="settings" aria-label="显示设置">
+			<div class="settings-head">
+				<strong>显示设置</strong>
+				<button class="settings-close" id="settings-close" type="button" aria-label="关闭">
+					<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg>
+				</button>
+			</div>
+			<fieldset>
+				<legend>界面风格</legend>
+				<div class="seg">{{SKIN_RADIOS}}</div>
+			</fieldset>
+			<fieldset>
+				<legend>卡片风格</legend>
+				<div class="seg">{{CARD_STYLE_RADIOS}}</div>
+			</fieldset>
+			<fieldset>
+				<legend>标签语言</legend>
+				<div class="seg">{{TAG_LANG_RADIOS}}</div>
+			</fieldset>
+			<fieldset>
+				<legend>关键词搜索</legend>
+				<div class="seg">{{SEARCH_MODE_RADIOS}}</div>
+			</fieldset>
+			<fieldset>
+				<legend>卡片显示</legend>
+				<div class="checks">{{SHOW_CHECKS}}</div>
+			</fieldset>
+		</dialog>
+		<script>
+			{{AA_GLOBAL}}
+		</script>
+		<script>
+{{APP_JS}}
+		</script>
+	</body>
+</html>

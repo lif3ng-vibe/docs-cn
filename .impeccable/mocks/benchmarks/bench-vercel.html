@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>bench-vercel · docs-cn 首屏 — Geist 基准</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#fafafa;color:#111;font:14px/1.5 'Geist',-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+a{color:#0070f3;text-decoration:none;text-underline-offset:3px}
+svg{flex:none;display:block}
+::selection{background:#0070f3;color:#fff}
+:focus-visible{outline:2px solid #0070f3;outline-offset:2px;border-radius:6px}
+.mono{font-family:'Geist Mono',ui-monospace,'Cascadia Mono',Consolas,monospace}
+/* 浏览器位置条：装饰性 chrome，示意筛选状态写入 URL、可分享 */
+.chrome{display:flex;align-items:center;gap:16px;height:42px;padding:0 16px;background:#fff;border-bottom:1px solid #eaeaea}
+.dots{display:flex;gap:8px;width:58px}
+.dots i{width:11px;height:11px;border-radius:50%;background:#fafafa;border:1px solid #e0e0e0}
+.url{flex:1;max-width:620px;margin:0 auto;display:flex;align-items:center;justify-content:center;padding:5px 12px;border:1px solid #eaeaea;border-radius:6px;background:#fafafa;color:#666;font-size:12px}
+.top{display:flex;align-items:center;justify-content:space-between;height:64px;padding:0 32px;background:#fff;border-bottom:1px solid #eaeaea}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;letter-spacing:-.02em;color:#111}
+.search{display:flex;align-items:center;justify-content:space-between;gap:12px;width:260px;height:36px;padding:0 6px 0 12px;border:1px solid #eaeaea;border-radius:8px;color:#888;font-size:13px;transition:border-color .15s}
+.search:hover{border-color:#999}
+.search .q{display:flex;align-items:center;gap:8px}
+.search kbd{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:#666;background:#fafafa;border:1px solid #eaeaea;border-radius:5px;padding:2px 6px}
+main{width:1200px;margin:0 auto;padding:28px 0 0}
+h1{font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-.03em}
+.sub{margin-top:6px;color:#666;font-size:14px}
+.chips{display:flex;gap:24px;margin-top:20px}
+.chip{padding:2px 0 4px;border-bottom:2px solid transparent;color:#666;font-size:14px;transition:color .15s}
+.chip:hover{color:#111}
+.chip.on{border-color:#111;color:#111;font-weight:500}
+.summary{display:flex;align-items:center;gap:10px;margin-top:16px;padding:9px 16px;border:1px solid #eaeaea;border-radius:8px;background:#fff}
+.token{display:flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid #eaeaea;border-radius:6px;background:#fafafa;color:#111;font-size:12px}
+.token svg{color:#666}
+.count{margin-left:auto;color:#666;font-size:13px;letter-spacing:.1em}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.card{display:flex;align-items:center;gap:24px;padding:20px;background:#fff;border:1px solid #eaeaea;border-radius:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.card:hover,.card.pin{border-color:#0070f3;box-shadow:0 2px 4px rgba(0,0,0,.06)}
+.info{flex:1;min-width:0}
+.info h2{font-size:16px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.desc{margin-top:3px;color:#666;font-size:14px}
+.meta{margin-top:6px;color:#888;font-size:13px;line-height:1.4}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.tagsrow{display:flex;align-items:center;gap:8px}
+.tags{color:#888;font-size:13px}
+.en{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border:1px solid #eaeaea;border-radius:5px;color:#666;font-size:11px}
+.go{display:flex;align-items:center;gap:6px;color:#0070f3;font-size:13px;font-weight:500;opacity:0;transition:opacity .15s}
+.card:hover .go,.card.pin .go,.card:focus-visible .go{opacity:1}
+</style>
+</head>
+<body>
+<div class="chrome">
+  <div class="dots"><i></i><i></i><i></i></div>
+  <div class="url mono">…/docs-cn/?tags=sdk-api&amp;q=litellm</div>
+  <div class="dots"></div>
+</div>
+<header class="top">
+  <a class="brand" href="#">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 21.4 19.8H2.6Z" fill="#111"/></svg>
+    docs-cn
+  </a>
+  <button class="search" type="button">
+    <span class="q">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+      搜索站点…
+    </span>
+    <kbd>⌘K</kbd>
+  </button>
+</header>
+<main>
+  <h1>全部站点</h1>
+  <p class="sub">21 个官方文档站的中文镜像 · 筛选与检索状态写入 URL，可直接分享。</p>
+  <nav class="chips" aria-label="标签筛选">
+    <button class="chip" type="button">全部</button>
+    <button class="chip on" type="button">sdk-api</button>
+    <button class="chip" type="button">ai-app-dev</button>
+    <button class="chip" type="button">ai-agent</button>
+    <button class="chip" type="button">multi-agent</button>
+    <button class="chip" type="button">networking</button>
+    <button class="chip" type="button">deployment</button>
+    <button class="chip" type="button">skills</button>
+  </nav>
+  <div class="summary">
+    <span class="token mono">sdk-api
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg>
+    </span>
+    <span class="token mono">litellm
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></svg>
+    </span>
+    <span class="count mono">2 / 21 SITES</span>
+  </div>
+  <div class="list">
+    <article class="card pin" tabindex="0">
+      <div class="info">
+        <h2>LiteLLM</h2>
+        <p class="desc">统一 100+ LLM 供应商 API 的网关 SDK · 官方文档中文镜像</p>
+        <p class="meta mono">715+ 文件 · Docusaurus · 快照 2026-10-26</p>
+      </div>
+      <div class="side">
+        <div class="tagsrow"><span class="tags mono">sdk-api / ai-app-dev</span></div>
+        <a class="go" href="#">阅读中文文档
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </article>
+    <article class="card" tabindex="0">
+      <div class="info">
+        <h2>Tailscale</h2>
+        <p class="desc">零配置组网官方文档中文镜像</p>
+        <p class="meta mono">700 页 · Starlight · 快照 2026-10-25</p>
+      </div>
+      <div class="side">
+        <div class="tagsrow"><span class="tags mono">networking / deployment</span></div>
+        <a class="go" href="#">阅读中文文档
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </article>
+    <article class="card" tabindex="0">
+      <div class="info">
+        <h2>AI SDK</h2>
+        <p class="desc">Vercel AI SDK v7 全集中文</p>
+        <p class="meta mono">540 页 · geistdocs · 快照 2026-10-09</p>
+      </div>
+      <div class="side">
+        <div class="tagsrow"><span class="tags mono">sdk-api / ai-app-dev</span></div>
+        <a class="go" href="#">阅读中文文档
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </article>
+    <article class="card" tabindex="0">
+      <div class="info">
+        <h2>Agency Agents</h2>
+        <p class="desc">300+ 专业智能体名册与 NEXUS 手册</p>
+        <p class="meta mono">326 篇 · Starlight · 快照 2026-10-08</p>
+      </div>
+      <div class="side">
+        <div class="tagsrow"><span class="tags mono">ai-agent / multi-agent / skills</span></div>
+        <a class="go" href="#">阅读中文文档
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </article>
+    <article class="card" tabindex="0">
+      <div class="info">
+        <h2>OpenRig</h2>
+        <p class="desc">Claude Code、Codex 与 Pi 多智能体协作框架</p>
+        <p class="meta mono">90 篇 · Starlight · 快照 2026-09-30</p>
+      </div>
+      <div class="side">
+        <div class="tagsrow"><span class="tags mono">ai-agent / multi-agent</span>
+          <span class="en mono"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 13v6H4V5h6"/></svg>EN</span>
+        </div>
+        <a class="go" href="#">阅读中文文档
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </article>
+  </div>
+</main>
+</body>
+</html>

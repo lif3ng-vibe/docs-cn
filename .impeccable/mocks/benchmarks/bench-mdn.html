@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>docs-cn — 文档站导航 · 首屏（MDN 基准）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1440px;height:900px;overflow:hidden;background:#fff;color:#1b1b1b;
+  font-family:'Inter',-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
+  -webkit-font-smoothing:antialiased}
+::selection{background:rgba(0,105,194,.16)}
+svg{display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+.mono{font-family:ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace}
+.wrap{padding:0 48px}
+:focus-visible{outline:2px solid #0069c2;outline-offset:2px}
+
+/* 浏览器位置条示意 */
+.locbar{height:32px;background:#f7f7f7;border-bottom:1px solid #e4e4e4;display:flex;align-items:center;gap:8px;padding:0 48px;font-size:12px;color:#4e4e4e}
+
+/* 页首 logo 行 */
+.masthead{padding-top:24px;display:flex;justify-content:space-between;align-items:baseline}
+.wordmark{font-size:27px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.origin{font-size:13px;color:#4e4e4e;display:flex;align-items:center;gap:8px}
+.origin a{color:#0069c2;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.origin a:hover{text-decoration:underline}
+
+/* 居中大搜索 */
+.search{margin-top:20px;height:56px;border:1.5px solid #1b1b1b;border-radius:6px;background:#fff;display:flex;align-items:center;gap:14px;padding:0 16px}
+.search:focus-within{box-shadow:0 0 0 3px rgba(0,105,194,.16)}
+.search>svg{color:#4e4e4e;flex:none}
+.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:16px;color:#1b1b1b;caret-color:#0069c2}
+.search input::placeholder{color:#6f6f6f}
+.search kbd{flex:none;width:24px;height:24px;display:grid;place-items:center;border:1px solid #c2c2c2;border-bottom-width:2px;border-radius:4px;font-size:13px;color:#4e4e4e}
+
+/* 矩形过滤组 */
+.filters{margin-top:22px;display:flex;align-items:center;gap:44px}
+.fgroup{display:flex;align-items:center;gap:8px}
+.glabel{font-size:13px;font-weight:600;color:#4e4e4e;margin-right:4px}
+.fbtn{background:#fff;border:1.5px solid #1b1b1b;border-radius:4px;padding:7px 14px;font-size:14px;font-weight:500;color:#1b1b1b}
+.fbtn:hover{background:#f2f2f2}
+.fbtn.on{background:#1b1b1b;color:#fff}
+
+/* 当前过滤器横条 */
+.chips{margin-top:20px;background:#f2f2f2;border-radius:6px;padding:9px 16px;display:flex;align-items:center;gap:12px}
+.clabel{font-size:13px;font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #1b1b1b;border-radius:999px;padding:4px 9px 4px 12px;font-size:13px;font-weight:500}
+.chip button{display:grid;place-items:center;background:none;border:0;padding:2px;color:#4e4e4e;border-radius:50%}
+.chip button:hover{color:#1b1b1b;background:#e2e2e2}
+.clear{background:none;border:0;color:#0069c2;font-size:13px;font-weight:600}
+.clear:hover{text-decoration:underline}
+.hit{margin-left:auto;font-size:13px;color:#4e4e4e}
+
+/* 开放行列表：1px hairline 分隔，无卡片边框 */
+.rows{list-style:none;margin-top:24px}
+.row{display:grid;grid-template-columns:1fr auto auto;column-gap:36px;align-items:center;border-top:1px solid #d7d7d7;height:97px;padding:12px 20px;margin:0 -20px;transition:background .12s ease}
+.row:hover,.row.pinned{background:#f2f2f2}
+.name{display:block;font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:24px}
+.row:hover .name,.row.pinned .name{color:#0069c2}
+.desc{display:block;font-size:14px;color:#4e4e4e;line-height:20px;margin-top:4px}
+.meta{display:block;font-size:13px;color:#5d5d5d;line-height:18px;margin-top:7px}
+.tags{font-size:13px;font-weight:500;color:#0069c2;white-space:nowrap}
+.tags i{font-style:normal;font-weight:400;color:#6f6f6f;padding:0 4px}
+.go{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:#0069c2;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .15s ease,transform .15s ease}
+.row:hover .go,.row.pinned .go{opacity:1;transform:none}
+.row:focus-visible{outline-offset:-2px}
+
+/* 列表尾 */
+.more{border-top:1px solid #d7d7d7;height:58px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:600;color:#0069c2}
+.more:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="locbar mono"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>…/docs-cn/?tags=sdk-api&amp;q=litellm</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1 class="wordmark">docs-cn</h1>
+    <p class="origin"><a href="#"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 10.5 13.5"/><path d="M19 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5.5"/></svg>GitHub</a><span>· 非官方翻译</span></p>
+  </header>
+
+  <div class="search" role="search">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/></svg>
+    <input type="text" placeholder="搜索 21 个文档站…" aria-label="搜索文档站">
+    <kbd>/</kbd>
+  </div>
+
+  <div class="filters">
+    <div class="fgroup" role="group" aria-label="按主题筛选">
+      <span class="glabel">主题</span>
+      <button class="fbtn on">sdk-api</button><button class="fbtn">ai-app-dev</button><button class="fbtn">ai-agent</button><button class="fbtn">networking</button><button class="fbtn">deployment</button>
+    </div>
+    <div class="fgroup" role="group" aria-label="按类型筛选">
+      <span class="glabel">类型</span>
+      <button class="fbtn">源站镜像</button><button class="fbtn">源码重建</button><button class="fbtn">附 EN 原文</button>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="clabel">当前过滤器</span>
+    <span class="chip">sdk-api<button aria-label="移除过滤器 sdk-api"><svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button></span>
+    <span class="chip">litellm<button aria-label="移除搜索词 litellm"><svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button></span>
+    <button class="clear">清除全部</button>
+    <span class="hit mono">命中 3 / 21</span>
+  </div>
+
+  <ul class="rows">
+    <li><a class="row pinned" href="#">
+      <div><span class="name">LiteLLM</span><span class="desc">统一 100+ LLM 供应商 API 的网关 SDK · 官方文档中文镜像</span><span class="meta mono">715+ 文件 · Docusaurus · 快照 2026-10-26</span></div>
+      <span class="tags">sdk-api<i>/</i>ai-app-dev</span>
+      <span class="go">阅读中文文档<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a></li>
+    <li><a class="row" href="#">
+      <div><span class="name">Tailscale</span><span class="desc">零配置组网官方文档中文镜像</span><span class="meta mono">700 页 · Starlight · 快照 2026-10-25</span></div>
+      <span class="tags">networking<i>/</i>deployment</span>
+      <span class="go">阅读中文文档<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a></li>
+    <li><a class="row" href="#">
+      <div><span class="name">AI SDK</span><span class="desc">Vercel AI SDK v7 全集中文</span><span class="meta mono">540 页 · geistdocs · 快照 2026-10-09</span></div>
+      <span class="tags">sdk-api<i>/</i>ai-app-dev</span>
+      <span class="go">阅读中文文档<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a></li>
+    <li><a class="row" href="#">
+      <div><span class="name">Agency Agents</span><span class="desc">300+ 专业智能体名册与 NEXUS 手册</span><span class="meta mono">326 篇 · Starlight · 快照 2026-10-08</span></div>
+      <span class="tags">ai-agent<i>/</i>multi-agent<i>/</i>skills</span>
+      <span class="go">阅读中文文档<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a></li>
+    <li><a class="row" href="#">
+      <div><span class="name">OpenRig</span><span class="desc">Claude Code、Codex 与 Pi 多智能体协作框架</span><span class="meta mono">90 篇 · Starlight · 快照 2026-09-30</span></div>
+      <span class="tags">ai-agent<i>/</i>multi-agent<i>·</i>附 EN</span>
+      <span class="go">阅读中文文档<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a></li>
+  </ul>
+
+  <a class="more" href="#">浏览全部 21 个文档站<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></a>
+</div>
+
+</body>
+</html>

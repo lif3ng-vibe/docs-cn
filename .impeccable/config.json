@@ -1,0 +1,161 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "icon-tile-stack",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-wayfinding.html"
+        ],
+        "createdAt": "2026-10-26T10:17:39.291Z",
+        "reason": "设计方向自带语法：Signik 黑底白图标方与标题同行并排（flex row 兄弟节点，非堆叠瓦片），规则建议的 side-by-side 正是文件现状——概念草图的世界规定语法，豁免限于该草图文件"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-cathode.html"
+        ],
+        "createdAt": "2026-10-26T10:20:20.628Z",
+        "reason": "辉光管世界语法：未击亮条目以低透明幽灵层常驻（opacity .18-.36）是该方向论题本身，属禁用态视觉；可读层（chips/idx/击亮行/页眉）经核算均 ≥4.5:1，豁免限该草图文件"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-26T10:20:21.438Z",
+        "reason": "任务brief（who：指定方向）：收录规范世界钉死纸灰白底 #f6f4ef（红头公文纸色），非反射性默认米色；豁免限本草图文件"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-cathode.html"
+        ],
+        "createdAt": "2026-10-26T10:21:47.308Z",
+        "reason": "阴极辉光是世界命名材料（seed 卡语法原文 struck forward, crisp and haloed），glow 仅出现在击亮态承载状态语义，非装饰铺陈；豁免限该草图文件"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-26T10:21:50.112Z",
+        "reason": "引用锚点 hover 显现是方向卡的签名交互（证据成对纪律），静止态刻意隐匿为设计态，hover 态对比达标；豁免限该草图文件"
+      },
+      {
+        "rule": "repeating-stripes-gradient",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-cathode.html"
+        ],
+        "createdAt": "2026-10-26T10:21:52.184Z",
+        "reason": "细青铜网纹（repeating-gradient）是辉光管语法指定的 anode gauze 框架肌理，仅覆盖框架层，读栏已清出；豁免限该草图文件"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          ".impeccable/mocks/benchmarks/bench-mdn.html"
+        ],
+        "createdAt": "2026-10-26T11:28:57.402Z",
+        "reason": "MDN 基准忠实直演：Inter 是 MDN 2023 重设计的实际品牌字体，作为对标样张属于 domain-appropriate；豁免限该基准样张文件"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "files": [
+          ".impeccable/mocks/benchmarks/bench-vercel.html"
+        ],
+        "createdAt": "2026-10-26T11:29:08.658Z",
+        "reason": "Vercel 基准忠实直演：Geist/Geist Mono 是 Vercel/Next.js 的实际品牌字体族，作为对标样张属于 domain-appropriate；豁免限该基准样张文件"
+      },
+      {
+        "rule": "em-dash-overuse",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-26T13:07:39.069Z",
+        "reason": "中文破折号（——）是规范中文标点，非英文 AI 槛调习惯；em-dash 计数来自 sites.json 真实收录文案，属数据特征而非文案劣化"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-wayfinding.html"
+        ],
+        "createdAt": "2026-10-26T13:44:02.219Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-cathode.html"
+        ],
+        "createdAt": "2026-10-26T13:44:02.505Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-26T13:44:02.800Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-26T13:44:03.119Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-26T13:44:03.433Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-archive.html"
+        ],
+        "createdAt": "2026-10-26T13:44:03.741Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/benchmarks/bench-mdn.html"
+        ],
+        "createdAt": "2026-10-26T13:44:04.053Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/benchmarks/bench-vercel.html"
+        ],
+        "createdAt": "2026-10-26T13:44:04.361Z",
+        "reason": "已归档的决策页草图/对标样张：字体是其世界语汇的一部分（MDN=Inter、Vercel=Geist、各方向草图=各自展示字面），有意立于产品字体系统之外；生产 index.html 用已声明系统栈，不涉此豁免"
+      }
+    ]
+  }
+}

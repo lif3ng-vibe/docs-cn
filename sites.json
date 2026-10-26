@@ -8,7 +8,12 @@
       "cli-tool"
     ],
     "orig": "https://colbymchenry.github.io/codegraph/",
-    "repo": "https://github.com/colbymchenry/codegraph"
+    "repo": "https://github.com/colbymchenry/codegraph",
+    "meta": {
+      "pages": "18 页",
+      "stack": "Starlight",
+      "snap": "2026-08-18"
+    }
   },
   {
     "name": "Orca",
@@ -19,7 +24,11 @@
       "multi-agent"
     ],
     "orig": "https://www.onorca.dev/docs",
-    "repo": "https://github.com/stablyai/orca"
+    "repo": "https://github.com/stablyai/orca",
+    "meta": {
+      "stack": "Starlight",
+      "snap": "2026-08-19"
+    }
   },
   {
     "name": "Matt Pocock Skills",
@@ -30,7 +39,12 @@
       "learning"
     ],
     "orig": "https://www.aihero.dev/skills",
-    "repo": "https://github.com/mattpocock/skills"
+    "repo": "https://github.com/mattpocock/skills",
+    "meta": {
+      "pages": "25 篇",
+      "stack": "Starlight",
+      "snap": "2026-08-20"
+    }
   },
   {
     "name": "Agency Agents",
@@ -43,15 +57,25 @@
     ],
     "orig": "https://github.com/msitarzewski/agency-agents",
     "repo": "https://github.com/msitarzewski/agency-agents",
-    "en": "agency-agents-en"
+    "en": "agency-agents-en",
+    "meta": {
+      "pages": "326 篇",
+      "stack": "Starlight",
+      "snap": "2026-10-08"
+    }
   },
   {
     "name": "Agency Agents (EN)",
     "slug": "agency-agents-en",
-    "desc": "Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).",
+    "desc": "Unofficial English mirror of the Agency Agents roster docs (326 pages).",
     "orig": "https://github.com/msitarzewski/agency-agents",
     "repo": "https://github.com/msitarzewski/agency-agents",
-    "lang": "en"
+    "lang": "en",
+    "meta": {
+      "pages": "326 页",
+      "stack": "Starlight",
+      "snap": "2026-10-08"
+    }
   },
   {
     "name": "AI 编码词典",
@@ -61,7 +85,12 @@
       "learning"
     ],
     "orig": "https://www.aihero.dev/ai-coding-dictionary",
-    "repo": "https://github.com/mattpocock/dictionary-of-ai-coding"
+    "repo": "https://github.com/mattpocock/dictionary-of-ai-coding",
+    "meta": {
+      "pages": "69 词条",
+      "stack": "Starlight",
+      "snap": "2026-08-20"
+    }
   },
   {
     "name": "ai-memory",
@@ -73,7 +102,12 @@
     ],
     "orig": "https://github.com/akitaonrails/ai-memory",
     "repo": "https://github.com/akitaonrails/ai-memory",
-    "en": "ai-memory-en"
+    "en": "ai-memory-en",
+    "meta": {
+      "pages": "36 篇",
+      "stack": "Starlight",
+      "snap": "2026-08-21"
+    }
   },
   {
     "name": "Nimbus",
@@ -83,7 +117,12 @@
       "docs-engineering"
     ],
     "orig": "https://nimbus-docs.com",
-    "repo": "https://github.com/cloudflare/nimbus"
+    "repo": "https://github.com/cloudflare/nimbus",
+    "meta": {
+      "pages": "66 篇",
+      "stack": "pnpm monorepo",
+      "snap": "2026-09-28"
+    }
   },
   {
     "name": "OpenRig",
@@ -95,7 +134,12 @@
     ],
     "orig": "https://openrig.dev/",
     "repo": "https://github.com/mvschwarz/openrig",
-    "en": "openrig-en"
+    "en": "openrig-en",
+    "meta": {
+      "pages": "90 篇",
+      "stack": "Starlight",
+      "snap": "2026-09-30"
+    }
   },
   {
     "name": "OpenRig (EN)",
@@ -103,7 +147,12 @@
     "desc": "Unofficial English mirror of the OpenRig repository docs (90 pages).",
     "orig": "https://github.com/mvschwarz/openrig",
     "repo": "https://github.com/mvschwarz/openrig",
-    "lang": "en"
+    "lang": "en",
+    "meta": {
+      "pages": "90 页",
+      "stack": "Starlight",
+      "snap": "2026-09-30"
+    }
   },
   {
     "name": "OpenShip",
@@ -114,7 +163,12 @@
       "sdk-api"
     ],
     "orig": "https://openship.io/docs",
-    "repo": "https://github.com/oblien/openship"
+    "repo": "https://github.com/oblien/openship",
+    "meta": {
+      "pages": "164 篇",
+      "stack": "fumadocs + Next.js 16",
+      "snap": "2026-09-30"
+    }
   },
   {
     "name": "Agent Skills",
@@ -125,7 +179,12 @@
       "ai-agent"
     ],
     "orig": "https://skills.addy.ie/",
-    "repo": "https://github.com/addyosmani/agent-skills"
+    "repo": "https://github.com/addyosmani/agent-skills",
+    "meta": {
+      "pages": "36 页",
+      "stack": "Astro 5",
+      "snap": "2026-10-08"
+    }
   },
   {
     "name": "e2e",
@@ -136,7 +195,12 @@
       "ai-agent"
     ],
     "orig": "https://e2e.tester.army/docs",
-    "repo": "https://github.com/tester-army/e2e"
+    "repo": "https://github.com/tester-army/e2e",
+    "meta": {
+      "pages": "52 篇",
+      "stack": "Mintlify 导出",
+      "snap": "2026-10-08"
+    }
   },
   {
     "name": "Claude-Mem",
@@ -147,7 +211,12 @@
       "ai-agent"
     ],
     "orig": "https://docs.claude-mem.ai/",
-    "repo": "https://github.com/thedotmack/claude-mem"
+    "repo": "https://github.com/thedotmack/claude-mem",
+    "meta": {
+      "pages": "49 篇",
+      "stack": "Mintlify",
+      "snap": "2026-10-08"
+    }
   },
   {
     "name": "AI SDK",
@@ -158,7 +227,12 @@
       "sdk-api"
     ],
     "orig": "https://ai-sdk.dev",
-    "repo": "https://github.com/vercel/ai"
+    "repo": "https://github.com/vercel/ai",
+    "meta": {
+      "pages": "540 页",
+      "stack": "geistdocs + Next.js 16",
+      "snap": "2026-10-09"
+    }
   },
   {
     "name": "Pi",
@@ -170,7 +244,12 @@
       "sdk-api"
     ],
     "orig": "https://pi.dev/docs/latest",
-    "repo": "https://github.com/earendil-works/pi"
+    "repo": "https://github.com/earendil-works/pi",
+    "meta": {
+      "pages": "40 篇",
+      "stack": "Mintlify",
+      "snap": "2026-10-09"
+    }
   },
   {
     "name": "NVIDIA OpenShell",
@@ -181,7 +260,12 @@
       "sdk-api"
     ],
     "orig": "https://docs.nvidia.com/openshell/latest/",
-    "repo": "https://github.com/NVIDIA/OpenShell"
+    "repo": "https://github.com/NVIDIA/OpenShell",
+    "meta": {
+      "pages": "65 篇",
+      "stack": "Starlight",
+      "snap": "2026-10-25"
+    }
   },
   {
     "name": "Tailscale",
@@ -193,7 +277,12 @@
       "sdk-api"
     ],
     "orig": "https://tailscale.com/docs",
-    "repo": "https://github.com/tailscale/tailscale"
+    "repo": "https://github.com/tailscale/tailscale",
+    "meta": {
+      "pages": "700 页",
+      "stack": "Starlight",
+      "snap": "2026-10-25"
+    }
   },
   {
     "name": "Impeccable",
@@ -204,18 +293,28 @@
       "frontend-design"
     ],
     "orig": "https://impeccable.style",
-    "repo": "https://github.com/pbakaus/impeccable"
+    "repo": "https://github.com/pbakaus/impeccable",
+    "meta": {
+      "pages": "53 页",
+      "stack": "Astro 7",
+      "snap": "2026-10-25"
+    }
   },
   {
     "name": "Impeccable（线上镜像）",
     "slug": "impeccable-mirror",
-    "desc": "impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照；文档页/更新日志/命令台全译，检测器覆盖层提示保持英文）。",
+    "desc": "impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照，文档页/更新日志/命令台全译）。",
     "tags": [
       "skills",
       "frontend-design"
     ],
     "orig": "https://impeccable.style",
-    "repo": "https://github.com/pbakaus/impeccable"
+    "repo": "https://github.com/pbakaus/impeccable",
+    "meta": {
+      "pages": "49 页",
+      "stack": "构建产物镜像",
+      "snap": "2026-10-25"
+    }
   },
   {
     "name": "LiteLLM",
@@ -227,6 +326,11 @@
       "ai-app-dev"
     ],
     "orig": "https://docs.litellm.ai/docs/",
-    "repo": "https://github.com/BerriAI/litellm-docs"
+    "repo": "https://github.com/BerriAI/litellm-docs",
+    "meta": {
+      "pages": "715+ 文件",
+      "stack": "Docusaurus 3.8",
+      "snap": "2026-10-26"
+    }
   }
 ]

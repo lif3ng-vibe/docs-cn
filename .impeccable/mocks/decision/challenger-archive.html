@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>档案盒墙 · docs-cn 收录决策（挑战者）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#c2410c;--ink:#17130f;--paper:#f5ede2;--green:#2f6f4f;--wall:#eadfc9;
+--tag-sdk:#1d63b8;--tag-app:#0f7f8b;--tag-net:#64756c;--tag-dep:#2f6f4f;--tag-agent:#c2410c;--tag-multi:#2f6f4f;--tag-skill:#a07d24;--tag-code:#3d4f9e;--tag-cli:#56504a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1440px;height:900px;overflow:hidden;display:flex;flex-direction:column;background:var(--wall);color:var(--ink);font-family:"Noto Sans SC","Microsoft YaHei",sans-serif}
+::selection{background:var(--orange);color:#fff}
+button{font:inherit}
+header{flex:0 0 120px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;justify-content:center;gap:13px;padding:0 40px}
+.title-row{display:flex;align-items:baseline;justify-content:space-between}
+h1{font-size:29px;font-weight:900;letter-spacing:.01em;display:flex;align-items:center;gap:14px}
+h1 .en{font-family:"Archivo Black",sans-serif;font-weight:400;font-size:25px;transform:translateY(1px)}
+h1 .count{font-size:16px;font-weight:700;letter-spacing:.06em;background:var(--orange);color:#fff;padding:3px 14px 4px;border-radius:5px}
+.shelfnote{font:400 12px/1 "IBM Plex Mono",monospace;letter-spacing:.12em;color:rgba(245,237,226,.72)}
+.chips{display:flex;gap:9px}
+.chip{cursor:pointer;font-size:13px;font-weight:500;color:var(--paper);background:transparent;border:1px solid rgba(245,237,226,.30);border-radius:999px;padding:5px 15px}
+.chip:hover{border-color:rgba(245,237,226,.7)}
+.chip:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:700}
+.wall{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:18px;padding:32px 40px 36px;min-height:0}
+.cell{display:flex;flex-direction:column;text-decoration:none;color:inherit;border:1px solid rgba(23,19,15,.14);border-radius:6px;overflow:hidden;transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s cubic-bezier(.22,1,.36,1)}
+.cell:hover,.cell:focus-visible{transform:translateY(-8px) scale(1.015);box-shadow:0 24px 36px -14px rgba(23,19,15,.5)}
+.cell:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+.cell:active{transform:translateY(-4px) scale(1.008)}
+.face{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+.face::after{content:"";position:absolute;left:18px;right:18px;top:34px;height:1px;background:currentColor;opacity:.14}
+.face .no{position:absolute;top:13px;left:16px;font:600 11px "IBM Plex Mono",monospace;letter-spacing:.16em}
+.o{background:var(--orange);color:var(--ink)}
+.o .no{color:#fff8ef}
+.p{background:var(--paper);color:var(--ink)}
+.k{background:var(--ink);color:var(--paper)}
+.k .no{color:rgba(245,237,226,.72)}
+.mark{width:128px;height:96px}
+.strip{flex:0 0 76px;background:var(--ink);color:var(--paper);border-top:1px solid rgba(245,237,226,.16);display:flex;flex-direction:column;justify-content:center;gap:8px;padding:14px 18px;transition:background .18s cubic-bezier(.22,1,.36,1)}
+.cell:hover .strip,.cell:focus-visible .strip{background:var(--green)}
+.station{font-family:"Archivo Black",sans-serif;font-size:20px;line-height:1;letter-spacing:.01em;color:#fff;display:flex;align-items:center;gap:9px}
+.badge{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.06em;background:var(--green);color:#fff;padding:3px 7px 2px;border-radius:3px}
+.meta{display:flex;align-items:center;justify-content:space-between}
+.swatches{display:flex;gap:5px}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(245,237,226,.25)}
+.spec{font:400 12px "IBM Plex Mono",monospace;letter-spacing:.02em;color:rgba(245,237,226,.78)}
+.cell:hover .spec,.cell:focus-visible .spec{color:#fff}
+@media (prefers-reduced-motion:reduce){.cell,.strip{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row">
+    <h1 aria-label="docs-cn 收录档案 · 21 盒在架"><span class="en">docs-cn</span>收录档案<span class="count">21 盒在架</span></h1>
+    <p class="shelfnote">SHELF A-01 · 快照窗 2026-08-18 → 2026-10-26</p>
+  </div>
+  <nav class="chips" aria-label="按标签筛选档案盒">
+    <button class="chip" aria-pressed="true">全部</button>
+    <button class="chip" aria-pressed="false">智能体</button>
+    <button class="chip" aria-pressed="false">SDK 与 API</button>
+    <button class="chip" aria-pressed="false">网络</button>
+    <button class="chip" aria-pressed="false">部署</button>
+    <button class="chip" aria-pressed="false">代码智能</button>
+  </nav>
+</header>
+<main class="wall">
+  <a class="cell" href="#">
+    <span class="face o"><span class="no">01</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 10v34a14 14 0 0 0 14 14h22"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">LiteLLM</span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-sdk)" title="sdk-api"></i><i class="sw" style="background:var(--tag-app)" title="ai-app-dev"></i></span><span class="spec">715+ 文件 · 2026-10-26</span></span>
+    </span>
+  </a>
+  <a class="cell" href="#">
+    <span class="face p"><span class="no">02</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="30" cy="22" r="5"/><circle cx="66" cy="22" r="5"/><circle cx="30" cy="50" r="5"/><circle cx="66" cy="50" r="5"/><path d="M35 22h26M35 50h26M30 27v18M66 27v18"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">Tailscale</span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-net)" title="networking"></i><i class="sw" style="background:var(--tag-dep)" title="deployment"></i></span><span class="spec">700 页 · 2026-10-25</span></span>
+    </span>
+  </a>
+  <a class="cell" href="#">
+    <span class="face o"><span class="no">03</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M48 12 80 60H16Z"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">AI SDK</span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-sdk)" title="sdk-api"></i><i class="sw" style="background:var(--tag-app)" title="ai-app-dev"></i></span><span class="spec">540 页 · 2026-10-09</span></span>
+    </span>
+  </a>
+  <a class="cell" href="#">
+    <span class="face p"><span class="no">04</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M28 14l22 22-22 22M54 14l22 22-22 22"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">Agency Agents</span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-agent)" title="ai-agent"></i><i class="sw" style="background:var(--tag-multi)" title="multi-agent"></i><i class="sw" style="background:var(--tag-skill)" title="skills"></i></span><span class="spec">326 篇 · 2026-10-08</span></span>
+    </span>
+  </a>
+  <a class="cell" href="#">
+    <span class="face o"><span class="no">05</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M30 62 48 12l18 50M40 42h16M48 12v30"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">OpenRig<span class="badge">CN|EN</span></span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-agent)" title="ai-agent"></i><i class="sw" style="background:var(--tag-multi)" title="multi-agent"></i></span><span class="spec">90 篇 · 2026-09-30</span></span>
+    </span>
+  </a>
+  <a class="cell" href="#">
+    <span class="face k"><span class="no">06</span>
+      <svg class="mark" viewBox="0 0 96 72" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 14 14 36l18 22M64 14l18 22-18 22"/><circle cx="48" cy="36" r="4" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <span class="strip">
+      <span class="station">Codegraph</span>
+      <span class="meta"><span class="swatches"><i class="sw" style="background:var(--tag-code)" title="code-intelligence"></i><i class="sw" style="background:var(--tag-cli)" title="cli-tool"></i></span><span class="spec">18 页 · 2026-08-18</span></span>
+    </span>
+  </a>
+</main>
+</body>
+</html>

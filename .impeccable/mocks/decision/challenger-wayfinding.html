@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>找哪个项目？ · 挑战者导视黄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --yellow:#f6b700;
+  --ink:#141414;
+  --gray:#5b6770;
+  --hairline:#e6e8eb;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1440px;height:900px;overflow:hidden;background:#fff;color:var(--ink);font-family:var(--sans)}
+::selection{background:var(--yellow);color:var(--ink)}
+
+/* 吊挂指路牌：黄只出现在决策带上 */
+.band{display:flex;align-items:center;background:var(--yellow);color:var(--ink);position:relative;z-index:2}
+.band--decision{height:152px;padding:26px 56px;gap:28px;box-shadow:0 14px 30px rgba(20,20,20,.18)}
+.band--trail{padding:14px 24px 16px;gap:14px;margin-top:6px;box-shadow:0 8px 18px rgba(20,20,20,.12)}
+.chip{display:flex;align-items:center;justify-content:center;background:var(--ink);flex:none}
+.chip--lg{width:64px;height:64px}
+.chip--sm{width:32px;height:32px}
+.question{font-size:42px;font-weight:900;letter-spacing:-.01em}
+.forks{display:flex;align-items:center;gap:36px;margin-left:auto}
+.fork{display:flex;align-items:center;gap:10px;font-size:25px;font-weight:700}
+.vrule{width:2px;height:52px;background:var(--ink)}
+.meta{margin-left:auto;font-size:17px;font-weight:700;white-space:nowrap}
+.trail-text{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+
+/* 白色走廊：monumental 站名索引 */
+.corridor{padding-top:12px}
+.corridor ul{list-style:none}
+.row{position:relative;display:flex;align-items:center;justify-content:space-between;padding:26px 72px 28px 64px;border-bottom:1px solid var(--hairline)}
+.row:last-child{border-bottom:none}
+.row:hover{background:#f7f8f9}
+.station{font-size:58px;font-weight:900;line-height:1;letter-spacing:-.015em;transition:transform .18s ease-out}
+.row:hover .station{transform:translateX(12px)}
+.note{font-family:var(--mono);font-size:15px;color:var(--gray);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 行首黄色小箭头块：走廊内唯一的黄，纯 CSS */
+.row::before{content:"";position:absolute;left:0;top:50%;width:18px;height:56px;margin-top:-28px;background:var(--yellow);opacity:0;transform:translateX(-10px);transition:opacity .18s ease-out,transform .18s ease-out}
+.row::after{content:"";position:absolute;left:5px;top:50%;margin-top:-8px;border-left:10px solid var(--ink);border-top:8px solid transparent;border-bottom:8px solid transparent;opacity:0;transform:translateX(-10px);transition:opacity .18s ease-out,transform .18s ease-out}
+.row:hover::before,.row:hover::after{opacity:1;transform:translateX(0)}
+</style>
+</head>
+<body>
+
+<header class="band band--decision">
+  <span class="chip chip--lg">
+    <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="14" cy="14" r="9" fill="none" stroke="#fff" stroke-width="3"/>
+      <line x1="21" y1="21" x2="28" y2="28" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </span>
+  <h1 class="question">找哪个项目？</h1>
+  <div class="forks">
+    <span class="fork">按主题
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="#141414" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="vrule"></span>
+    <span class="fork">按名称
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="#141414" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </div>
+  <p class="meta">收录 21 站 · 全部中文</p>
+</header>
+
+<div class="band band--trail">
+  <span class="chip chip--sm">
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 6l-6 6 6 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </span>
+  <p class="trail-text">你在：按主题
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="#141414" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    SDK 与 API</p>
+</div>
+
+<main class="corridor">
+  <ul>
+    <li class="row"><span class="station">LITELLM</span><span class="note">715+ 文件 · 2026-10-26</span></li>
+    <li class="row"><span class="station">TAILSCALE</span><span class="note">700 页 · 2026-10-25</span></li>
+    <li class="row"><span class="station">AI SDK</span><span class="note">540 页 · 2026-10-09</span></li>
+    <li class="row"><span class="station">AGENCY AGENTS</span><span class="note">326 篇 · 2026-10-08</span></li>
+    <li class="row"><span class="station">OPENRIG</span><span class="note">90 篇 · 2026-09-30</span></li>
+    <li class="row"><span class="station">CODEGRAPH</span><span class="note">18 页 · 2026-08-18</span></li>
+  </ul>
+</main>
+
+</body>
+</html>

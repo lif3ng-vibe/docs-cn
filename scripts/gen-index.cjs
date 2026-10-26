@@ -1,23 +1,28 @@
 #!/usr/bin/env node
 /**
- * gen-index.cjs — 读 sites.json 生成入口页 index.html。
+ * gen-index.cjs — 读 sites.json + scripts/index/ 模板三件套，生成入口页 index.html。
  * CI 和本地都用它：加新站点只需改 sites.json，重跑此脚本。
- * 卡片：整卡点击进中文站（相对路径 slug/，CI 下从 /docs-cn/ 解析）；右侧按钮组：
- *   en   → 「英文文档」（本仓库构建的英文镜像，仅中英双建的站有）
- *   orig → 「官方文档」（上游原站；orig 与 repo 相同即上游无站点，不显示）
- *   repo → 「仓库」（上游 GitHub 仓库）
- * 标签：sites.json 条目可带 tags（slug 见下方 TAGS），入口页顶部可按标签筛选：
- *   多选取交集；当前筛选下命中不了任何卡片的标签置灰禁用；列表动画用
- *   formkit/auto-animate（vendor ESM 产物构建时转全局变量内联，页面零外部请求）。
+ * 模板三件套（scripts/index/）：template.html（HTML 骨架，{{TOKEN}} 占位）、
+ * styles.css（全部样式，三皮肤 data-skin=mdn/github/vercel 分层）、app.js（交互脚本）。
+ * 改样式/交互直接编辑这三个文件，本脚本只负责数据与装配：动态片段（卡片/
+ * 筛选chips/设置单选组等）以 {{TOKEN}} 注入，CSS/JS 内联进单文件产物（零外部请求）。
+ * 皮肤：MDN（默认）/ GitHub / Vercel，settings 弹窗切换，localStorage 持久化；
+ *   原 6 色主题已由皮肤系统取代（各皮肤自带主色）。
+ * 卡片：整卡点击进中文站（相对路径 slug/，CI 下从 /docs-cn/ 解析）；行尾次级链接：
+ *   en   → 「EN」（本仓库构建的英文镜像，仅中英双建的站有）
+ *   orig → 官方文档（外链图标；orig 与 repo 相同即上游无站点，不显示）
+ *   repo → 仓库（GitHub 图标）
+ *   主行动=整卡点击，hover 浮现「阅读中文文档 →」（app.js/CSS 交互层）。
+ * 元数据行：sites.json 可选 meta {pages,stack,snap} → 「页数 · 工具链 · 快照 日」；
+ *   缺失项跳过，整行缺省则不渲染——不虚构数据。
+ * 标签：sites.json 条目可带 tags（slug 见下方 TAGS），多选取交集；命中不了的标签
+ *   置灰禁用；列表动画用 formkit/auto-animate（vendor ESM 构建时转全局变量内联）。
  *   lang:"en" 镜像条目自动继承中文站标签并附加 unofficial-en。
- * 搜索：标题行搜索框（设置按钮左侧）按名称/描述匹配关键词（大小写不敏感），
- *   命中片段始终 mark 高亮；设置可选「过滤」（隐藏不命中卡片[默认]）或
- *   「仅高亮」（保留全部卡片）；与标签筛选叠加生效。
- * 设置：右上角「⚙ 设置」弹窗——主题色小方块（页面背景/卡片底色随主题联动）、
- *   卡片风格、卡片各部分显隐、标签语言（中文[默认]/English）；偏好存 localStorage
- *   （key: docs-cn-prefs），head 内联脚本预读应用防主题闪烁，刷新后仍生效。
+ * 搜索：按名称/描述匹配（大小写不敏感），命中片段 mark 高亮；过滤/仅高亮两种模式；
+ *   筛选与搜索词同步 URL（?tags=&q=，replaceState），刷新/分享不丢。
  */
 'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
@@ -29,7 +34,7 @@ const TAGS = {
 	'ai-agent':          { en: 'AI Agent',          zh: '智能体' },
 	'multi-agent':       { en: 'Multi-Agent',       zh: '多智能体协作' },
 	'skills':            { en: 'Skills & Prompts',  zh: '技能与提示词' },
-	'frontend-design':   { en: 'Frontend Design',  zh: '前端设计' },
+	'frontend-design':   { en: 'Frontend Design',   zh: '前端设计' },
 	'memory':            { en: 'Memory',            zh: '记忆系统' },
 	'testing':           { en: 'Testing',           zh: '测试' },
 	'deployment':        { en: 'Deployment',        zh: '部署运维' },
@@ -43,17 +48,11 @@ const TAGS = {
 	'unofficial-en':     { en: 'Unofficial EN',     zh: '非官方英文文档' },
 };
 
-// 主题色注册表：入口页设置弹窗的小方块与 CSS 变量同源于此。
-// 首个为主题认默认色（:root），其余生成 [data-theme] 覆盖块。accent 取 GitHub 系
-// 深色保证其上白字对比度；bg/surface 是随主题联动的页面背景与卡片底色（同色相
-// 极浅着色，surface 比 bg 更接近白，保持卡片浮起感）。
-const THEMES = {
-	blue:   { zh: '蓝', color: '#0969da', bg: '#edf3fa', surface: '#fbfcfe' },
-	green:  { zh: '绿', color: '#1a7f37', bg: '#eef6ef', surface: '#fbfdfb' },
-	purple: { zh: '紫', color: '#8250df', bg: '#f3f0fa', surface: '#fcfbfe' },
-	orange: { zh: '橙', color: '#bc4c00', bg: '#faf2ec', surface: '#fefbf9' },
-	red:    { zh: '红', color: '#cf222e', bg: '#faf0f0', surface: '#fefbfb' },
-	teal:   { zh: '青', color: '#1b7c83', bg: '#edf5f5', surface: '#fafcfc' },
+// 皮肤注册表（设置弹窗单选；CSS 按 data-skin 分支）。
+const SKINS = {
+	mdn:    'MDN',
+	github: 'GitHub',
+	vercel: 'Vercel',
 };
 
 // 卡片渲染风格（设置弹窗单选；CSS 按 data-card-style 分支）。
@@ -70,7 +69,6 @@ const TAG_LANGS = {
 };
 
 // 关键词搜索行为（设置弹窗单选）：过滤=隐藏不命中卡片；仅高亮=保留全部卡片。
-// 两种模式下命中片段都用 mark 标出。默认过滤。
 const SEARCH_MODES = {
 	filter:    '过滤',
 	highlight: '仅高亮',
@@ -80,7 +78,8 @@ const SEARCH_MODES = {
 const SHOW_PARTS = {
 	desc: '描述',
 	tags: '标签',
-	btns: '操作按钮',
+	meta: '元数据行',
+	btns: '次级链接',
 };
 
 // 英文镜像条目：继承中文站标签并附加 unofficial-en（镜像只在「上游无站点、
@@ -117,13 +116,21 @@ if (aaGlobal.includes('</script') || aaGlobal.includes('<!--')) {
 	throw new Error('vendor/auto-animate.min.js 含 </script 或 <!--，不能安全内联');
 }
 
+// 次级链接图标（14px 手绘内联 SVG，统一 1.5 线宽）
+const ICON_EXT =
+	'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg>';
+const ICON_REPO =
+	'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg>';
+const ICON_ARROW =
+	'<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg>';
+
 function cardButtons(s) {
-	const btn = (href, label) =>
-		`<a class="btn" href="${href}" target="_blank" rel="noopener">${label}</a>`;
+	const link = (href, label, icon, cls) =>
+		`<a class="mini ${cls || ''}" href="${href}" ${/^https?:/.test(href) ? 'target="_blank" rel="noopener"' : ''} title="${label}" aria-label="${label}">${icon}</a>`;
 	const out = [];
-	if (s.en) out.push(btn(`${s.en}/`, '英文文档'));
-	if (s.orig && s.orig !== s.repo) out.push(btn(s.orig, '官方文档'));
-	if (s.repo) out.push(btn(s.repo, '仓库'));
+	if (s.en) out.push(`<a class="mini mini-text" href="${s.en}/" title="英文文档（本站镜像）" aria-label="英文文档">EN</a>`);
+	if (s.orig && s.orig !== s.repo) out.push(link(s.orig, '官方文档（上游原站）', ICON_EXT, ''));
+	if (s.repo) out.push(link(s.repo, '上游仓库', ICON_REPO, ''));
 	return out.join('');
 }
 
@@ -136,18 +143,29 @@ function cardTags(s) {
 		.join('');
 }
 
+// 元数据行：meta 三段各取所需，全空则返回空串（模板侧不渲染）。
+function metaLine(s) {
+	const m = s.meta || {};
+	return [m.pages, m.stack, m.snap ? `快照 ${m.snap}` : ''].filter(Boolean).join(' · ');
+}
+
 const cards = sites
-	.map(
-		(s) => `
-				<div class="item" data-tags="${(s.tags || []).join(',')}">
+	.map((s) => {
+		const meta = metaLine(s);
+		return `
+				<article class="item" id="s-${s.slug}" data-tags="${(s.tags || []).join(',')}">
 					<a class="row" href="${s.slug}/" target="_blank" rel="noopener">
-						<p class="name">${s.name}</p>
-						<p class="desc">${s.desc}</p>
-						<div class="tags">${cardTags(s)}</div>
+						<div class="row-main">
+							<h2 class="name">${s.name}</h2>
+							<p class="desc">${s.desc}</p>
+							${meta ? `<p class="meta">${meta}</p>` : ''}
+							<div class="tags">${cardTags(s)}</div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 ${ICON_ARROW}</span>
 					</a>
 					<div class="btns">${cardButtons(s)}</div>
-				</div>`
-	)
+				</article>`;
+	})
 	.join('');
 
 const filterChips = [
@@ -158,10 +176,10 @@ const filterChips = [
 	),
 ].join('');
 
-const swatches = Object.entries(THEMES)
+const skinRadios = Object.entries(SKINS)
 	.map(
-		([id, t]) =>
-			`<button type="button" class="swatch" data-theme="${id}" style="background:${t.color}" title="${t.zh}" aria-label="${t.zh}色主题"></button>`
+		([id, zh]) =>
+			`<label class="seg-item"><input type="radio" name="skin" value="${id}">${zh}</label>`
 	)
 	.join('');
 
@@ -193,707 +211,85 @@ const showChecks = Object.entries(SHOW_PARTS)
 	)
 	.join('');
 
-// 主题 CSS：:root 为默认蓝，其余主题生成 data-theme 覆盖块（与 THEMES 同源）。
-const themeCss = Object.entries(THEMES)
-	.map(
-		([id, t]) =>
-			`\t\t\t\t[data-theme="${id}"] { --accent: ${t.color}; --bg: ${t.bg}; --surface: ${t.surface}; }`
-	)
-	.join('\n');
+// —— 模板装配：读 scripts/index/ 三份源文件，{{TOKEN}} 全量替换后内联为单文件 ——
+const assetDir = path.join(__dirname, 'index');
+const loadAsset = (name) => fs.readFileSync(path.join(assetDir, name), 'utf8');
 
-const html = `<!doctype html>
-<html lang="zh-CN">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>docs-cn — 开源文档中文翻译</title>
-		<meta name="description" content="开源项目文档的中文翻译集合。" />
-		<script>
-			// 预读 localStorage 偏好，CSS 渲染前落到 data-* 属性，防主题闪烁。
-			// 主脚本在 body 末尾，负责交互与保存。
-			(function () {
-				try {
-					var p = JSON.parse(localStorage.getItem('docs-cn-prefs') || '{}');
-					var r = document.documentElement;
-					if (p.theme) r.dataset.theme = p.theme;
-					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
-					if (p.tagLang) r.dataset.tagLang = p.tagLang;
-					['desc', 'tags', 'btns'].forEach(function (k) {
-						if (k in p) {
-							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
-						}
-					});
-				} catch (e) {}
-			})();
-		</script>
-		<style>
-			:root {
-				--accent: ${THEMES.blue.color};
-				--bg: ${THEMES.blue.bg};
-				--surface: ${THEMES.blue.surface};
-			}
-${themeCss}
-			body {
-				margin: 0;
-				background: var(--bg);
-				color: #1f2328;
-				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-					'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-				line-height: 1.6;
-				-webkit-font-smoothing: antialiased;
-			}
-			.wrap {
-				max-width: 680px;
-				margin: 0 auto;
-				padding: 4rem 1.5rem 3rem;
-			}
-			.header {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				gap: 1rem;
-				flex-wrap: wrap;
-			}
-			.header-controls {
-				display: flex;
-				align-items: center;
-				gap: 0.5rem;
-			}
-			h1 {
-				font-size: 1.6rem;
-				font-weight: 700;
-				margin: 0 0 0.4rem;
-				letter-spacing: -0.01em;
-			}
-			.settings-btn {
-				font-size: 0.85rem;
-				color: #636c76;
-				border: 1px solid #d0d7de;
-				border-radius: 6px;
-				padding: 0.32rem 0.7rem;
-				background: var(--surface);
-				cursor: pointer;
-				white-space: nowrap;
-				transition: color 0.15s ease, border-color 0.15s ease;
-			}
-			.settings-btn:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-			}
-			.sub {
-				color: #636c76;
-				font-size: 0.95rem;
-				margin: 0 0 2rem;
-			}
-			.search {
-				box-sizing: border-box;
-				width: 190px;
-				font: inherit;
-				font-size: 0.85rem;
-				color: #1f2328;
-				background: var(--surface);
-				border: 1px solid #d0d7de;
-				border-radius: 8px;
-				padding: 0.35rem 0.75rem;
-				outline: none;
-				transition: border-color 0.15s ease;
-			}
-			.search:focus {
-				border-color: var(--accent);
-			}
-			.search::placeholder {
-				color: #636c76;
-			}
-			mark {
-				background: color-mix(in srgb, var(--accent) 22%, transparent);
-				color: inherit;
-				border-radius: 2px;
-				padding: 0 1px;
-			}
-			.empty {
-				color: #636c76;
-				font-size: 0.9rem;
-				text-align: center;
-				padding: 1.5rem 0;
-			}
-			.filterbar {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.4rem;
-				margin: 0 0 1.5rem;
-			}
-			.chip {
-				font-size: 0.8rem;
-				color: #636c76;
-				border: 1px solid #d0d7de;
-				border-radius: 999px;
-				padding: 0.25rem 0.75rem;
-				background: var(--surface);
-				cursor: pointer;
-				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-			}
-			.chip:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-			}
-			.chip.active {
-				color: #fff;
-				border-color: var(--accent);
-				background: var(--accent);
-			}
-			.chip:disabled {
-				opacity: 0.35;
-				cursor: not-allowed;
-			}
-			.chip:disabled:hover {
-				color: #636c76;
-				border-color: #d0d7de;
-			}
-			.list {
-				display: flex;
-				flex-direction: column;
-				gap: 0.75rem;
-			}
-			.item {
-				display: flex;
-				align-items: center;
-				gap: 0.5rem;
-				position: relative;
-				background: var(--surface);
-				border: 1px solid #d0d7de;
-				border-radius: 10px;
-				overflow: hidden;
-				transition: border-color 0.15s ease, box-shadow 0.15s ease;
-			}
-			.item:hover {
-				border-color: var(--accent);
-				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-			}
-			.row {
-				flex: 1;
-				min-width: 0;
-				display: block;
-				text-decoration: none;
-				color: inherit;
-				padding: 1.1rem 0 1.1rem 1.25rem;
-				transition: background 0.15s ease;
-			}
-			.row:hover {
-				background: color-mix(in srgb, var(--accent) 5%, var(--surface));
-			}
-			.name {
-				font-size: 1.1rem;
-				font-weight: 600;
-				margin: 0 0 0.2rem;
-			}
-			.desc {
-				color: #636c76;
-				font-size: 0.9rem;
-				margin: 0;
-			}
-			.tags {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.3rem;
-				margin: 0.5rem 0 0;
-			}
-			.tag {
-				font-size: 0.72rem;
-				color: #57606a;
-				border: 1px solid #d8dee4;
-				border-radius: 999px;
-				padding: 0.1rem 0.55rem;
-				background: color-mix(in srgb, var(--accent) 6%, var(--surface));
-				white-space: nowrap;
-			}
-			/* 标签语言切换：默认中文，[data-tag-lang='en'] 时显示英文 */
-			.chip-en,
-			.tag-en {
-				display: none;
-			}
-			[data-tag-lang='en'] .chip-zh,
-			[data-tag-lang='en'] .tag-zh {
-				display: none;
-			}
-			[data-tag-lang='en'] .chip-en,
-			[data-tag-lang='en'] .tag-en {
-				display: inline;
-			}
-			/* 操作按钮改常规流内布局（flex 行右端），彻底避免遮挡文字 */
-			.btns {
-				display: flex;
-				gap: 0.4rem;
-				flex-shrink: 0;
-				padding-right: 1.25rem;
-			}
-			.btn {
-				font-size: 0.85rem;
-				color: #636c76;
-				text-decoration: none;
-				border: 1px solid #d0d7de;
-				border-radius: 6px;
-				padding: 0.32rem 0.7rem;
-				background: var(--surface);
-				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-				white-space: nowrap;
-			}
-			.btn:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-				background: var(--surface);
-			}
-			footer {
-				margin-top: 2.5rem;
-				font-size: 0.85rem;
-				color: #636c76;
-			}
-			footer a {
-				color: var(--accent);
-				text-decoration: none;
-			}
-			footer a:hover {
-				text-decoration: underline;
-			}
-			/* —— 卡片风格：紧凑 —— */
-			[data-card-style='compact'] .list {
-				gap: 0.4rem;
-			}
-			[data-card-style='compact'] .row {
-				padding: 0.6rem 0 0.6rem 1rem;
-			}
-			[data-card-style='compact'] .btns {
-				padding-right: 1rem;
-			}
-			[data-card-style='compact'] .name {
-				font-size: 1rem;
-				margin: 0;
-			}
-			[data-card-style='compact'] .desc {
-				font-size: 0.8rem;
-				margin: 0;
-			}
-			[data-card-style='compact'] .tags {
-				margin: 0.35rem 0 0;
-			}
-			[data-card-style='compact'] .item {
-				border-radius: 8px;
-			}
-			/* —— 卡片风格：网格（保持按钮堆叠在文字下方） —— */
-			[data-card-style='grid'] .list {
-				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-			}
-			[data-card-style='grid'] .item {
-				display: block;
-			}
-			[data-card-style='grid'] .row {
-				padding: 1.1rem 1.25rem 0.6rem;
-			}
-			[data-card-style='grid'] .btns {
-				padding: 0 1.25rem 1rem;
-			}
-			/* —— 卡片各部分显隐 —— */
-			[data-show-desc='0'] .desc {
-				display: none;
-			}
-			[data-show-tags='0'] .tags {
-				display: none;
-			}
-			[data-show-btns='0'] .btns {
-				display: none;
-			}
-			/* —— 设置弹窗 —— */
-			.settings {
-				background: var(--surface);
-				user-select: none;
-				border: 1px solid #d0d7de;
-				border-radius: 12px;
-				padding: 1.25rem 1.5rem;
-				min-width: 300px;
-				max-width: 92vw;
-				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-			}
-			.settings::backdrop {
-				background: rgba(31, 35, 40, 0.4);
-			}
-			.settings-head {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				margin: 0 0 0.75rem;
-			}
-			.settings-close {
-				border: none;
-				background: none;
-				font-size: 1rem;
-				color: #636c76;
-				cursor: pointer;
-				padding: 0.2rem 0.4rem;
-				border-radius: 6px;
-			}
-			.settings-close:hover {
-				color: #1f2328;
-				background: #f0f4f8;
-			}
-			.settings fieldset {
-				border: none;
-				margin: 0 0 1rem;
-				padding: 0;
-			}
-			.settings fieldset:last-child {
-				margin-bottom: 0;
-			}
-			.settings legend {
-				font-size: 0.85rem;
-				font-weight: 600;
-				color: #57606a;
-				padding: 0;
-				margin-bottom: 0.5rem;
-			}
-			.swatches {
-				display: flex;
-				gap: 0.5rem;
-			}
-			.swatch {
-				width: 1.5rem;
-				height: 1.5rem;
-				border-radius: 6px;
-				border: 1px solid rgba(0, 0, 0, 0.15);
-				cursor: pointer;
-				padding: 0;
-				transition: transform 0.15s ease, box-shadow 0.15s ease;
-			}
-			.swatch:hover {
-				transform: scale(1.1);
-			}
-			.swatch.active {
-				box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1f2328;
-			}
-			.seg {
-				display: flex;
-				gap: 0.4rem;
-				flex-wrap: wrap;
-			}
-			.seg-item,
-			.check-item {
-				display: inline-flex;
-				align-items: center;
-				gap: 0.35rem;
-				font-size: 0.9rem;
-				border: 1px solid #d0d7de;
-				border-radius: 8px;
-				padding: 0.3rem 0.75rem;
-				cursor: pointer;
-				background: var(--surface);
-			}
-			.seg-item:has(input:checked) {
-				border-color: var(--accent);
-				color: var(--accent);
-			}
-			.settings input {
-				accent-color: var(--accent);
-				margin: 0;
-			}
-			.checks {
-				display: flex;
-				gap: 0.75rem;
-				flex-wrap: wrap;
-			}
-			@media (max-width: 560px) {
-				.item {
-					display: block;
-				}
-				.row {
-					padding: 1.1rem 1.25rem;
-				}
-				.btns {
-					padding: 0 1.25rem 1.1rem;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<div class="wrap">
-			<div class="header">
-				<h1>docs-cn</h1>
-				<div class="header-controls">
-					<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
-					<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
-				</div>
-			</div>
-			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<div class="filterbar">${filterChips}</div>
-			<div class="list">${cards}
-			</div>
-			<div class="empty" id="empty" hidden></div>
-			<footer>
-				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
-			</footer>
-		</div>
-		<dialog id="settings" class="settings" aria-label="显示设置">
-			<div class="settings-head">
-				<strong>显示设置</strong>
-				<button class="settings-close" id="settings-close" type="button" aria-label="关闭">✕</button>
-			</div>
-			<fieldset>
-				<legend>主题色</legend>
-				<div class="swatches">${swatches}</div>
-			</fieldset>
-			<fieldset>
-				<legend>卡片风格</legend>
-				<div class="seg">${cardStyleRadios}</div>
-			</fieldset>
-			<fieldset>
-				<legend>标签语言</legend>
-				<div class="seg">${tagLangRadios}</div>
-			</fieldset>
-			<fieldset>
-				<legend>关键词搜索</legend>
-				<div class="seg">${searchModeRadios}</div>
-			</fieldset>
-			<fieldset>
-				<legend>卡片显示</legend>
-				<div class="checks">${showChecks}</div>
-			</fieldset>
-		</dialog>
-		<script>
-			${aaGlobal}
-		</script>
-		<script>
-			(function () {
-				var STORAGE_KEY = 'docs-cn-prefs';
-				var DEFAULTS = {
-					theme: 'blue',
-					cardStyle: 'standard',
-					tagLang: 'zh',
-					searchMode: 'filter',
-					showDesc: true,
-					showTags: true,
-					showBtns: true,
-				};
-				var root = document.documentElement;
+function isTokenKey(key) {
+	return key.length > 0 && [...key].every((c) => (c >= 'A' && c <= 'Z') || c === '_');
+}
 
-				function loadPrefs() {
-					try {
-						var p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-						var out = {};
-						Object.keys(DEFAULTS).forEach(function (k) {
-							out[k] = k in p ? p[k] : DEFAULTS[k];
-						});
-						// 注册表之外的主题/风格/语言回落默认（防手改 localStorage 出脏值）
-						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
-						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
-						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
-						if (SEARCH_MODE_IDS.indexOf(out.searchMode) === -1) out.searchMode = DEFAULTS.searchMode;
-						return out;
-					} catch (e) {
-						return Object.assign({}, DEFAULTS);
-					}
-				}
-				var THEME_IDS = ${JSON.stringify(Object.keys(THEMES))};
-				var CARD_STYLE_IDS = ${JSON.stringify(Object.keys(CARD_STYLES))};
-				var TAG_LANG_IDS = ${JSON.stringify(Object.keys(TAG_LANGS))};
-				var SEARCH_MODE_IDS = ${JSON.stringify(Object.keys(SEARCH_MODES))};
-				var prefs = loadPrefs();
+function findToken(text, from) {
+	const a = text.indexOf('{{', from);
+	if (a === -1) return null;
+	const b = text.indexOf('}}', a + 2);
+	if (b === -1) throw new Error('占位符未闭合：{{ 后无 }}');
+	return { key: text.slice(a + 2, b), start: a, end: b + 2 };
+}
 
-				function savePrefs() {
-					try {
-						localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-					} catch (e) {}
-				}
-				function applyPrefs() {
-					if (prefs.theme === 'blue') delete root.dataset.theme;
-					else root.dataset.theme = prefs.theme;
-					root.dataset.cardStyle = prefs.cardStyle;
-					if (prefs.tagLang === 'zh') delete root.dataset.tagLang;
-					else root.dataset.tagLang = prefs.tagLang;
-					root.dataset.showDesc = prefs.showDesc ? '1' : '0';
-					root.dataset.showTags = prefs.showTags ? '1' : '0';
-					root.dataset.showBtns = prefs.showBtns ? '1' : '0';
-				}
+// 用函数式逐段拼接而非 replace，避免替换文本里的 $ 序列被特殊解释
+function fill(text, vars, file) {
+	let out = '';
+	let pos = 0;
+	for (;;) {
+		const t = findToken(text, pos);
+		if (!t) return out + text.slice(pos);
+		if (!isTokenKey(t.key)) {
+			// 非 token 的 {{…}}（如注释里的花括号）：原样保留，继续扫描
+			out += text.slice(pos, t.start + 2);
+			pos = t.start + 2;
+			continue;
+		}
+		if (!(t.key in vars)) throw new Error(file + ' 含未知占位符 {{' + t.key + '}}');
+		out += text.slice(pos, t.start) + vars[t.key];
+		pos = t.end;
+	}
+}
 
-				// —— 设置弹窗 ——
-				var dialog = document.getElementById('settings');
-				var btn = document.getElementById('settings-btn');
-				var closeBtn = document.getElementById('settings-close');
+// 页脚：收录数 + 最新快照年月（各站 meta.snap 取最大，YYYY-MM）
+const lastSnap = sites
+	.map((s) => (s.meta && s.meta.snap) || '')
+	.sort()
+	.pop();
 
-				function syncSettingsUi() {
-					root.querySelectorAll('.swatch').forEach(function (sw) {
-						sw.classList.toggle('active', sw.dataset.theme === prefs.theme);
-					});
-					var radio = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
-					if (radio) radio.checked = true;
-					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
-					if (langRadio) langRadio.checked = true;
-					var modeRadio = root.querySelector('input[name="search-mode"][value="' + prefs.searchMode + '"]');
-					if (modeRadio) modeRadio.checked = true;
-					root.querySelectorAll('input[data-show]').forEach(function (cb) {
-						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
-					});
-				}
-				btn.addEventListener('click', function () {
-					syncSettingsUi();
-					dialog.showModal();
-				});
-				closeBtn.addEventListener('click', function () {
-					dialog.close();
-				});
-				// 点遮罩关闭
-				dialog.addEventListener('click', function (e) {
-					if (e.target === dialog) dialog.close();
-				});
-
-				root.querySelectorAll('.swatch').forEach(function (sw) {
-					sw.addEventListener('click', function () {
-						prefs.theme = sw.dataset.theme;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="card-style"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.cardStyle = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="tag-lang"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.tagLang = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="search-mode"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.searchMode = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-						apply(); // 模式切换立即生效（过滤↔高亮）
-					});
-				});
-				root.querySelectorAll('input[data-show]').forEach(function (cb) {
-					cb.addEventListener('change', function () {
-						var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
-						prefs[key] = cb.checked;
-						applyPrefs();
-						savePrefs();
-					});
-				});
-
-				// —— 标签筛选 + 关键词搜索（交集 + 不可用置灰 + auto-animate 动画）——
-				var list = document.querySelector('.list');
-				autoAnimate(list);
-				var searchInput = document.getElementById('search');
-				var emptyEl = document.getElementById('empty');
-				var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
-					var nameEl = el.querySelector('.name');
-					var descEl = el.querySelector('.desc');
-					var nameText = nameEl.textContent;
-					var descText = descEl.textContent;
-					return {
-						el: el,
-						tags: el.dataset.tags ? el.dataset.tags.split(',') : [],
-						nameEl: nameEl,
-						descEl: descEl,
-						nameText: nameText,
-						descText: descText,
-						hay: (nameText + ' ' + descText).toLowerCase(),
-					};
-				});
-				var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
-				var active = new Set();
-
-				// 高亮：清空重建文本节点，命中片段包 mark（textContent 先还原避免嵌套）
-				function setHighlighted(el, original, kw) {
-					el.textContent = original;
-					var needle = kw.toLowerCase();
-					var idx = original.toLowerCase().indexOf(needle);
-					if (idx === -1) return;
-					var frag = document.createDocumentFragment();
-					var pos = 0;
-					while (idx !== -1) {
-						if (idx > pos) frag.appendChild(document.createTextNode(original.slice(pos, idx)));
-						var mark = document.createElement('mark');
-						mark.textContent = original.slice(idx, idx + needle.length);
-						frag.appendChild(mark);
-						pos = idx + needle.length;
-						idx = original.toLowerCase().indexOf(needle, pos);
-					}
-					if (pos < original.length) frag.appendChild(document.createTextNode(original.slice(pos)));
-					el.textContent = '';
-					el.appendChild(frag);
-				}
-
-				function apply() {
-					var sel = Array.from(active);
-					var kw = searchInput.value.trim();
-					var searching = kw.length > 0;
-					var lowKw = kw.toLowerCase();
-					// 交集：卡片须命中全部选中标签；过滤模式下还须命中关键词
-					var desired = items.filter(function (it) {
-						var tagOk = sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
-						var kwOk = !searching || prefs.searchMode !== 'filter' || it.hay.indexOf(lowKw) !== -1;
-						return tagOk && kwOk;
-					});
-					// 先移出不再命中的卡片，再按原顺序补回命中的（auto-animate 负责动画）
-					items.forEach(function (it) {
-						if (desired.indexOf(it) === -1 && it.el.parentNode) it.el.remove();
-					});
-					desired.forEach(function (it, i) {
-						if (list.children[i] !== it.el) list.appendChild(it.el);
-					});
-					// 关键词高亮：两种模式下都标记命中片段；无关键词时还原纯文本
-					items.forEach(function (it) {
-						if (searching) {
-							setHighlighted(it.nameEl, it.nameText, kw);
-							setHighlighted(it.descEl, it.descText, kw);
-						} else {
-							it.nameEl.textContent = it.nameText;
-							it.descEl.textContent = it.descText;
-						}
-					});
-					// 空态提示
-					emptyEl.hidden = desired.length !== 0;
-					if (desired.length === 0) emptyEl.textContent = '没有匹配「' + kw + '」的站点';
-					// 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
-					chips.forEach(function (c) {
-						var f = c.dataset.filter;
-						if (f === 'all') {
-							c.classList.toggle('active', active.size === 0);
-							c.disabled = false;
-							return;
-						}
-						c.classList.toggle('active', active.has(f));
-						c.disabled =
-							!active.has(f) &&
-							!desired.some(function (it) { return it.tags.indexOf(f) !== -1; });
-					});
-				}
-				chips.forEach(function (c) {
-					c.addEventListener('click', function () {
-						if (c.disabled) return;
-						var f = c.dataset.filter;
-						if (f === 'all') active.clear();
-						else if (active.has(f)) active.delete(f);
-						else active.add(f);
-						apply();
-					});
-				});
-				searchInput.addEventListener('input', apply);
-
-				applyPrefs();
-				apply();
-			})();
-		</script>
-	</body>
-</html>
-`;
+const html = fill(
+	loadAsset('template.html'),
+	{
+		APP_JS: fill(
+			loadAsset('app.js'),
+			{
+				SKIN_IDS: JSON.stringify(Object.keys(SKINS)),
+				CARD_STYLE_IDS: JSON.stringify(Object.keys(CARD_STYLES)),
+				TAG_LANG_IDS: JSON.stringify(Object.keys(TAG_LANGS)),
+				SEARCH_MODE_IDS: JSON.stringify(Object.keys(SEARCH_MODES)),
+			},
+			'app.js'
+		),
+		CSS: loadAsset('styles.css'),
+		AA_GLOBAL: aaGlobal,
+		FILTER_CHIPS: filterChips,
+		CARDS: cards,
+		SKIN_RADIOS: skinRadios,
+		CARD_STYLE_RADIOS: cardStyleRadios,
+		TAG_LANG_RADIOS: tagLangRadios,
+		SEARCH_MODE_RADIOS: searchModeRadios,
+		SHOW_CHECKS: showChecks,
+		SITE_COUNT: String(sites.length),
+		LAST_SNAP: lastSnap ? lastSnap.slice(0, 7) : '',
+	},
+	'template.html'
+);
+{
+	// 终检：不得残留任何未替换的 {{TOKEN}}
+	let pos = 0;
+	for (;;) {
+		const t = findToken(html, pos);
+		if (!t) break;
+		if (isTokenKey(t.key)) throw new Error('template.html 占位符未替换：{{' + t.key + '}}');
+		pos = t.end;
+	}
+}
 
 const out = path.join(__dirname, '..', 'index.html');
 fs.writeFileSync(out, html, 'utf8');
-console.log(`generated ${out} with ${sites.length} site(s)`);
+console.log('generated ' + out + ' with ' + sites.length + ' site(s)');

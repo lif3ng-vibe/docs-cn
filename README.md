@@ -46,6 +46,22 @@ npm run build        # 产出 dist/
 npm run preview      # 预览构建产物
 ```
 
+## 本地构建（scripts/build.cjs）
+
+不想逐个进子目录时，用仓库根的构建入口：
+
+```bash
+node scripts/build.cjs list           # 全部 slug / 构建类型 / 产物位置
+node scripts/build.cjs index          # 只生成入口页
+node scripts/build.cjs codegraph      # 构建指定子站（可接多个 slug）
+node scripts/build.cjs all            # 全部子站 + 入口页
+# 等价 npm scripts：npm run build:index；npm run build:site -- <slug>；npm run build
+```
+
+- 本地产物为**根相对路径**（不带 `/docs-cn/` 前缀），直接预览即可；部署前缀、正文 sed 与 `_site` 组装由 CI（deploy-pages.yml）负责。
+- `tester-army-e2e` 需要 CI 凭据（MINT_CONFIG），本地不可构建；`impeccable-mirror` 无构建系统，`site/` 即产物。
+- 入口页的视觉与交互改 `scripts/index/` 模板三件套（template.html / styles.css / app.js），改完跑 `node scripts/gen-index.cjs`（或 `build.cjs index`）重新生成单文件产物。
+
 ## 翻译说明
 
 - **复用原站工程**：拿到上游站点源码时，沿用原工具链（配置/主题/组件），仅中文化内容（codegraph）。
@@ -76,7 +92,9 @@ npm run preview      # 预览构建产物
 ```
 docs-cn/
 ├── sites.json             # 子站点清单（入口页数据源）
-├── scripts/gen-index.cjs  # 由 sites.json 生成入口页 index.html
+├── scripts/gen-index.cjs  # 由 sites.json + scripts/index/ 模板生成入口页 index.html
+├── scripts/index/         # 入口页模板三件套（template.html / styles.css / app.js，改样式与交互编辑这里）
+├── scripts/build.cjs      # 本地构建入口：index / <slug>... / all / list
 ├── index.html             # 入口页（由脚本生成，勿手改）
 ├── .github/workflows/     # Pages 部署 CI
 ├── codegraph-docs-cn/     # codegraph 中文文档（Starlight）
@@ -108,7 +126,7 @@ docs-cn/
 ## 新增一个翻译站点
 
 1. 新建子目录（如 `foo-docs-cn/`），完成翻译站点。
-2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL", "repo": "https://上游仓库" }`；若同仓库还构建了英文镜像，再加 `"en": "<英文站 slug>"`（入口页整卡点击进中文站，按钮显示「官方文档」「仓库」「英文文档」；上游无站点即 orig 与 repo 相同时不显示「官方文档」）。打标签：从 `scripts/gen-index.cjs` 的 `TAGS` 选 2-4 个现有标签写入 `tags`；现有标签覆盖不了新站主题时，先确认新增标签（补进 `TAGS` 并更新上表）再动手。
+2. 在 `sites.json` 加一条：`{ "name": "Foo", "slug": "foo", "desc": "一句话介绍。", "orig": "https://原站 URL", "repo": "https://上游仓库", "meta": { "pages": "42 页", "stack": "Starlight", "snap": "2026-10-26" } }`；`meta` 可选（驱动入口页卡片的元数据行，缺失项不显示）；若同仓库还构建了英文镜像，再加 `"en": "<英文站 slug>"`（入口页整卡点击进中文站；行尾弱化图标为「官方文档」「仓库」，双语站另有「EN」；上游无站点即 orig 与 repo 相同时不显示官方文档图标）。打标签：从 `scripts/gen-index.cjs` 的 `TAGS` 选 2-4 个现有标签写入 `tags`；现有标签覆盖不了新站主题时，先确认新增标签（补进 `TAGS` 并更新上表）再动手。
 3. 在 `.github/workflows/deploy-pages.yml` 加一段构建步骤（以 `DOCS_BASE=/docs-cn/foo/` 构建，构建前 `sed` 给正文内链加前缀），并在 Assemble 步骤里 `mv foo-docs-cn/dist _site/foo`。
 4. 本地跑 `node scripts/gen-index.cjs` 刷新 `index.html`，提交。
 

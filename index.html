@@ -6,16 +6,16 @@
 		<title>docs-cn — 开源文档中文翻译</title>
 		<meta name="description" content="开源项目文档的中文翻译集合。" />
 		<script>
-			// 预读 localStorage 偏好，CSS 渲染前落到 data-* 属性，防主题闪烁。
-			// 主脚本在 body 末尾，负责交互与保存。
+			// 预读 localStorage 偏好，CSS 渲染前落到 data-* 属性，防皮肤/样式闪烁。
+			// 主脚本在 body 末尾，负责校验与交互；非法值由其回落默认。
 			(function () {
 				try {
 					var p = JSON.parse(localStorage.getItem('docs-cn-prefs') || '{}');
 					var r = document.documentElement;
-					if (p.theme) r.dataset.theme = p.theme;
+					if (p.skin) r.dataset.skin = p.skin;
 					if (p.cardStyle) r.dataset.cardStyle = p.cardStyle;
 					if (p.tagLang) r.dataset.tagLang = p.tagLang;
-					['desc', 'tags', 'btns'].forEach(function (k) {
+					['desc', 'tags', 'meta', 'btns'].forEach(function (k) {
 						if (k in p) {
 							r.dataset['show' + k.charAt(0).toUpperCase() + k.slice(1)] = p[k] ? '1' : '0';
 						}
@@ -24,590 +24,1147 @@
 			})();
 		</script>
 		<style>
-			:root {
-				--accent: #0969da;
-				--bg: #edf3fa;
-				--surface: #fbfcfe;
-			}
-				[data-theme="blue"] { --accent: #0969da; --bg: #edf3fa; --surface: #fbfcfe; }
-				[data-theme="green"] { --accent: #1a7f37; --bg: #eef6ef; --surface: #fbfdfb; }
-				[data-theme="purple"] { --accent: #8250df; --bg: #f3f0fa; --surface: #fcfbfe; }
-				[data-theme="orange"] { --accent: #bc4c00; --bg: #faf2ec; --surface: #fefbf9; }
-				[data-theme="red"] { --accent: #cf222e; --bg: #faf0f0; --surface: #fefbfb; }
-				[data-theme="teal"] { --accent: #1b7c83; --bg: #edf5f5; --surface: #fafcfc; }
-			body {
-				margin: 0;
-				background: var(--bg);
-				color: #1f2328;
-				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-					'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-				line-height: 1.6;
-				-webkit-font-smoothing: antialiased;
-			}
-			.wrap {
-				max-width: 680px;
-				margin: 0 auto;
-				padding: 4rem 1.5rem 3rem;
-			}
-			.header {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				gap: 1rem;
-				flex-wrap: wrap;
-			}
-			.header-controls {
-				display: flex;
-				align-items: center;
-				gap: 0.5rem;
-			}
-			h1 {
-				font-size: 1.6rem;
-				font-weight: 700;
-				margin: 0 0 0.4rem;
-				letter-spacing: -0.01em;
-			}
-			.settings-btn {
-				font-size: 0.85rem;
-				color: #636c76;
-				border: 1px solid #d0d7de;
-				border-radius: 6px;
-				padding: 0.32rem 0.7rem;
-				background: var(--surface);
-				cursor: pointer;
-				white-space: nowrap;
-				transition: color 0.15s ease, border-color 0.15s ease;
-			}
-			.settings-btn:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-			}
-			.sub {
-				color: #636c76;
-				font-size: 0.95rem;
-				margin: 0 0 2rem;
-			}
-			.search {
-				box-sizing: border-box;
-				width: 190px;
-				font: inherit;
-				font-size: 0.85rem;
-				color: #1f2328;
-				background: var(--surface);
-				border: 1px solid #d0d7de;
-				border-radius: 8px;
-				padding: 0.35rem 0.75rem;
-				outline: none;
-				transition: border-color 0.15s ease;
-			}
-			.search:focus {
-				border-color: var(--accent);
-			}
-			.search::placeholder {
-				color: #636c76;
-			}
-			mark {
-				background: color-mix(in srgb, var(--accent) 22%, transparent);
-				color: inherit;
-				border-radius: 2px;
-				padding: 0 1px;
-			}
-			.empty {
-				color: #636c76;
-				font-size: 0.9rem;
-				text-align: center;
-				padding: 1.5rem 0;
-			}
-			.filterbar {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.4rem;
-				margin: 0 0 1.5rem;
-			}
-			.chip {
-				font-size: 0.8rem;
-				color: #636c76;
-				border: 1px solid #d0d7de;
-				border-radius: 999px;
-				padding: 0.25rem 0.75rem;
-				background: var(--surface);
-				cursor: pointer;
-				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-			}
-			.chip:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-			}
-			.chip.active {
-				color: #fff;
-				border-color: var(--accent);
-				background: var(--accent);
-			}
-			.chip:disabled {
-				opacity: 0.35;
-				cursor: not-allowed;
-			}
-			.chip:disabled:hover {
-				color: #636c76;
-				border-color: #d0d7de;
-			}
-			.list {
-				display: flex;
-				flex-direction: column;
-				gap: 0.75rem;
-			}
-			.item {
-				display: flex;
-				align-items: center;
-				gap: 0.5rem;
-				position: relative;
-				background: var(--surface);
-				border: 1px solid #d0d7de;
-				border-radius: 10px;
-				overflow: hidden;
-				transition: border-color 0.15s ease, box-shadow 0.15s ease;
-			}
-			.item:hover {
-				border-color: var(--accent);
-				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-			}
-			.row {
-				flex: 1;
-				min-width: 0;
-				display: block;
-				text-decoration: none;
-				color: inherit;
-				padding: 1.1rem 0 1.1rem 1.25rem;
-				transition: background 0.15s ease;
-			}
-			.row:hover {
-				background: color-mix(in srgb, var(--accent) 5%, var(--surface));
-			}
-			.name {
-				font-size: 1.1rem;
-				font-weight: 600;
-				margin: 0 0 0.2rem;
-			}
-			.desc {
-				color: #636c76;
-				font-size: 0.9rem;
-				margin: 0;
-			}
-			.tags {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.3rem;
-				margin: 0.5rem 0 0;
-			}
-			.tag {
-				font-size: 0.72rem;
-				color: #57606a;
-				border: 1px solid #d8dee4;
-				border-radius: 999px;
-				padding: 0.1rem 0.55rem;
-				background: color-mix(in srgb, var(--accent) 6%, var(--surface));
-				white-space: nowrap;
-			}
-			/* 标签语言切换：默认中文，[data-tag-lang='en'] 时显示英文 */
-			.chip-en,
-			.tag-en {
-				display: none;
-			}
-			[data-tag-lang='en'] .chip-zh,
-			[data-tag-lang='en'] .tag-zh {
-				display: none;
-			}
-			[data-tag-lang='en'] .chip-en,
-			[data-tag-lang='en'] .tag-en {
-				display: inline;
-			}
-			/* 操作按钮改常规流内布局（flex 行右端），彻底避免遮挡文字 */
-			.btns {
-				display: flex;
-				gap: 0.4rem;
-				flex-shrink: 0;
-				padding-right: 1.25rem;
-			}
-			.btn {
-				font-size: 0.85rem;
-				color: #636c76;
-				text-decoration: none;
-				border: 1px solid #d0d7de;
-				border-radius: 6px;
-				padding: 0.32rem 0.7rem;
-				background: var(--surface);
-				transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-				white-space: nowrap;
-			}
-			.btn:hover {
-				color: var(--accent);
-				border-color: var(--accent);
-				background: var(--surface);
-			}
-			footer {
-				margin-top: 2.5rem;
-				font-size: 0.85rem;
-				color: #636c76;
-			}
-			footer a {
-				color: var(--accent);
-				text-decoration: none;
-			}
-			footer a:hover {
-				text-decoration: underline;
-			}
-			/* —— 卡片风格：紧凑 —— */
-			[data-card-style='compact'] .list {
-				gap: 0.4rem;
-			}
-			[data-card-style='compact'] .row {
-				padding: 0.6rem 0 0.6rem 1rem;
-			}
-			[data-card-style='compact'] .btns {
-				padding-right: 1rem;
-			}
-			[data-card-style='compact'] .name {
-				font-size: 1rem;
-				margin: 0;
-			}
-			[data-card-style='compact'] .desc {
-				font-size: 0.8rem;
-				margin: 0;
-			}
-			[data-card-style='compact'] .tags {
-				margin: 0.35rem 0 0;
-			}
-			[data-card-style='compact'] .item {
-				border-radius: 8px;
-			}
-			/* —— 卡片风格：网格（保持按钮堆叠在文字下方） —— */
-			[data-card-style='grid'] .list {
-				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-			}
-			[data-card-style='grid'] .item {
-				display: block;
-			}
-			[data-card-style='grid'] .row {
-				padding: 1.1rem 1.25rem 0.6rem;
-			}
-			[data-card-style='grid'] .btns {
-				padding: 0 1.25rem 1rem;
-			}
-			/* —— 卡片各部分显隐 —— */
-			[data-show-desc='0'] .desc {
-				display: none;
-			}
-			[data-show-tags='0'] .tags {
-				display: none;
-			}
-			[data-show-btns='0'] .btns {
-				display: none;
-			}
-			/* —— 设置弹窗 —— */
-			.settings {
-				background: var(--surface);
-				user-select: none;
-				border: 1px solid #d0d7de;
-				border-radius: 12px;
-				padding: 1.25rem 1.5rem;
-				min-width: 300px;
-				max-width: 92vw;
-				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-			}
-			.settings::backdrop {
-				background: rgba(31, 35, 40, 0.4);
-			}
-			.settings-head {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				margin: 0 0 0.75rem;
-			}
-			.settings-close {
-				border: none;
-				background: none;
-				font-size: 1rem;
-				color: #636c76;
-				cursor: pointer;
-				padding: 0.2rem 0.4rem;
-				border-radius: 6px;
-			}
-			.settings-close:hover {
-				color: #1f2328;
-				background: #f0f4f8;
-			}
-			.settings fieldset {
-				border: none;
-				margin: 0 0 1rem;
-				padding: 0;
-			}
-			.settings fieldset:last-child {
-				margin-bottom: 0;
-			}
-			.settings legend {
-				font-size: 0.85rem;
-				font-weight: 600;
-				color: #57606a;
-				padding: 0;
-				margin-bottom: 0.5rem;
-			}
-			.swatches {
-				display: flex;
-				gap: 0.5rem;
-			}
-			.swatch {
-				width: 1.5rem;
-				height: 1.5rem;
-				border-radius: 6px;
-				border: 1px solid rgba(0, 0, 0, 0.15);
-				cursor: pointer;
-				padding: 0;
-				transition: transform 0.15s ease, box-shadow 0.15s ease;
-			}
-			.swatch:hover {
-				transform: scale(1.1);
-			}
-			.swatch.active {
-				box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1f2328;
-			}
-			.seg {
-				display: flex;
-				gap: 0.4rem;
-				flex-wrap: wrap;
-			}
-			.seg-item,
-			.check-item {
-				display: inline-flex;
-				align-items: center;
-				gap: 0.35rem;
-				font-size: 0.9rem;
-				border: 1px solid #d0d7de;
-				border-radius: 8px;
-				padding: 0.3rem 0.75rem;
-				cursor: pointer;
-				background: var(--surface);
-			}
-			.seg-item:has(input:checked) {
-				border-color: var(--accent);
-				color: var(--accent);
-			}
-			.settings input {
-				accent-color: var(--accent);
-				margin: 0;
-			}
-			.checks {
-				display: flex;
-				gap: 0.75rem;
-				flex-wrap: wrap;
-			}
-			@media (max-width: 560px) {
-				.item {
-					display: block;
-				}
-				.row {
-					padding: 1.1rem 1.25rem;
-				}
-				.btns {
-					padding: 0 1.25rem 1.1rem;
-				}
-			}
+/* docs-cn 入口页样式 — 基础层（MDN，默认皮肤）
+   皮肤层：[data-skin="github"] / [data-skin="vercel"]
+   零外部请求：全部系统字体栈 */
+:root {
+	--bg: #fff;
+	--surface: #fff;
+	--ink: #1b1b1b;
+	--note: #4e4e4e;
+	--accent: #0069c2;
+	--accent-ink: #fff;
+	--border: #d7d7d7;
+	--hairline: #e3e3e3;
+	--surface2: #f2f2f2;
+	--wrap: 1080px;
+	--list-gap: 0;
+	--row-border: 0;
+	--row-radius: 0;
+	--row-pad: 18px 4px;
+	--row-hover: #f5f5f5;
+	--row-hover-border: transparent;
+	--search-h: 52px;
+	--search-w: 100%;
+	--search-border: 1.5px solid #1b1b1b;
+	--search-radius: 6px;
+	--search-order: 3;
+	--chip-h: 32px;
+	--chip-pad: 0 14px;
+	--chip-radius: 4px;
+	--chip-border: 1.5px solid #1b1b1b;
+	--chip-bg: transparent;
+	--chip-ink: #1b1b1b;
+	--chip-active-bg: #1b1b1b;
+	--chip-active-ink: #fff;
+	--chip-active-border: #1b1b1b;
+	--chip-hover-bg: #f5f5f5;
+	--kbd-hint: '/';
+}
+
+/* —— GitHub 皮肤 —— */
+[data-skin='github'] {
+	--bg: #f6f8fa;
+	--surface: #fff;
+	--ink: #1f2328;
+	--note: #57606a;
+	--accent: #0969da;
+	--border: #d0d7de;
+	--hairline: #d8dee4;
+	--surface2: #f6f8fa;
+	--wrap: 1012px;
+	--list-gap: 16px;
+	--row-border: 1px solid #d0d7de;
+	--row-radius: 6px;
+	--row-pad: 14px 16px;
+	--row-hover: #fff;
+	--row-hover-border: #8c959f;
+	--search-h: 32px;
+	--search-w: 190px;
+	--search-border: 1px solid #d0d7de;
+	--search-radius: 6px;
+	--search-order: 0;
+	--chip-h: 28px;
+	--chip-pad: 0 13px;
+	--chip-radius: 999px;
+	--chip-border: 1px solid #d0d7de;
+	--chip-bg: #f6f8fa;
+	--chip-ink: #1f2328;
+	--chip-active-bg: #0969da;
+	--chip-active-ink: #fff;
+	--chip-active-border: #0969da;
+	--chip-hover-bg: #eaeef2;
+	--kbd-hint: '';
+}
+
+/* —— Vercel 皮肤 —— */
+[data-skin='vercel'] {
+	--bg: #fafafa;
+	--surface: #fff;
+	--ink: #111;
+	--note: #666;
+	--accent: #0070f3;
+	--border: #eaeaea;
+	--hairline: #eaeaea;
+	--surface2: #f5f5f5;
+	--wrap: 1024px;
+	--list-gap: 8px;
+	--row-border: 1px solid #eaeaea;
+	--row-radius: 8px;
+	--row-pad: 16px 20px;
+	--row-hover: #fff;
+	--row-hover-border: #0070f3;
+	--search-h: 40px;
+	--search-w: 260px;
+	--search-border: 1px solid #eaeaea;
+	--search-radius: 8px;
+	--search-order: 0;
+	--chip-h: 34px;
+	--chip-pad: 0 2px;
+	--chip-radius: 0;
+	--chip-border: 0;
+	--chip-bg: transparent;
+	--chip-ink: #666;
+	--chip-active-bg: transparent;
+	--chip-active-ink: #111;
+	--chip-active-border: 0;
+	--chip-hover-bg: transparent;
+	--kbd-hint: '⌘K';
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+}
+/* hidden 属性守卫：防止组件的 display:flex/grid 覆盖 UA 的 display:none */
+[hidden] {
+	display: none !important;
+}
+html {
+	background: var(--bg);
+}
+body {
+	min-height: 100vh;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+		'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+	font-size: 14px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+}
+::selection {
+	background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+input {
+	caret-color: var(--accent);
+}
+mark {
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+	color: inherit;
+	border-radius: 2px;
+	padding: 0 1px;
+}
+.wrap {
+	max-width: var(--wrap);
+	margin: 0 auto;
+	padding: 0 var(--pad, 24px);
+}
+
+/* —— 页头 —— */
+.site-head {
+	padding: 2.2rem 0 1rem;
+	border-bottom: 1px solid var(--hairline);
+}
+.brand-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 16px;
+}
+h1 {
+	font-size: 1.45rem;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	margin: 0;
+}
+.sub {
+	color: var(--note);
+	font-size: 0.92rem;
+	margin: 2px 0 0;
+}
+.head-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+}
+/* MDN 皮肤：搜索掉到第二行占满全宽（设置钮留在其右） */
+[data-skin='mdn'] .head-controls,
+html:not([data-skin]) .head-controls {
+	flex: 1 1 100%;
+}
+[data-skin='mdn'] .search-wrap,
+html:not([data-skin]) .search-wrap {
+	flex: 1 1 auto;
+}
+[data-skin='mdn'] .settings-btn,
+html:not([data-skin]) .settings-btn {
+	order: 2;
+}
+.search-wrap {
+	order: var(--search-order);
+	flex: 0 1 var(--search-w);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+	height: var(--search-h);
+	padding: 0 14px;
+	background: var(--surface);
+	border: var(--search-border);
+	border-radius: var(--search-radius);
+	transition: border-color 0.15s ease-out;
+}
+.search-wrap:focus-within {
+	border-color: var(--accent);
+}
+.search-ico {
+	flex: none;
+	color: var(--note);
+}
+.search-wrap input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	font: inherit;
+	font-size: 0.92rem;
+	color: var(--ink);
+}
+.search-wrap input::placeholder {
+	color: var(--note);
+}
+.search-wrap input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+}
+.kbd-hint {
+	flex: none;
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	font-size: 0.78rem;
+	color: var(--note);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 1px 6px;
+}
+.kbd-hint::after {
+	content: var(--kbd-hint);
+}
+[data-skin='github'] .kbd-hint {
+	display: none;
+}
+.settings-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 34px;
+	padding: 0 12px;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--note);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.settings-btn:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* —— 筛选 chips —— */
+.filterbar {
+	margin-top: 14px;
+}
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.chip {
+	font: inherit;
+	font-size: 0.82rem;
+	height: var(--chip-h);
+	padding: var(--chip-pad);
+	color: var(--chip-ink);
+	background: var(--chip-bg);
+	border: var(--chip-border);
+	border-radius: var(--chip-radius);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 0.15s ease-out, background 0.15s ease-out, border-color 0.15s ease-out;
+}
+[data-skin='vercel'] .chip {
+	border-bottom: 2px solid transparent;
+	border-bottom-width: 2px;
+}
+.chip:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--chip-hover-bg);
+}
+.chip.active {
+	color: var(--chip-active-ink);
+	background: var(--chip-active-bg);
+	border-color: var(--chip-active-border);
+}
+[data-skin='vercel'] .chip.active {
+	border-bottom-color: #111;
+}
+.chip:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+.chip:disabled:hover {
+	color: var(--chip-ink);
+	border-color: var(--chip-border);
+	background: var(--chip-bg);
+}
+
+/* —— 已选摘要条 —— */
+.summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 12px;
+	padding: 7px 12px;
+	background: var(--surface2);
+	border: 1px solid var(--hairline);
+	border-radius: 6px;
+	font-size: 0.85rem;
+}
+.sum-parts {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	min-width: 0;
+	color: var(--note);
+}
+.sum-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	height: 22px;
+	padding: 0 9px;
+	background: var(--surface);
+	border: 1px solid var(--hairline);
+	border-radius: 999px;
+	color: var(--ink);
+}
+.sum-clear {
+	font: inherit;
+	font-size: 0.8rem;
+	border: 0;
+	background: none;
+	color: var(--accent);
+	cursor: pointer;
+	padding: 2px 4px;
+}
+.sum-clear:hover {
+	text-decoration: underline;
+}
+.vline {
+	width: 1px;
+	height: 16px;
+	background: var(--hairline);
+}
+.count {
+	margin-left: auto;
+	color: var(--note);
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	font-size: 0.8rem;
+	white-space: nowrap;
+}
+.count b {
+	color: var(--ink);
+}
+
+/* —— 列表与卡片行 —— */
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--list-gap);
+	margin-top: 18px;
+}
+.item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	background: var(--surface);
+	border: var(--row-border);
+	border-radius: var(--row-radius);
+	border-bottom: 1px solid var(--hairline);
+	transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+}
+.item:hover {
+	border-color: var(--row-hover-border);
+	background: var(--row-hover);
+}
+[data-skin='github'] .item:hover {
+	box-shadow: 0 1px 4px rgba(31, 35, 40, 0.09);
+}
+[data-skin='vercel'] .item:hover {
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.row {
+	flex: 1;
+	min-width: 0;
+	display: block;
+	padding: var(--row-pad);
+	color: inherit;
+	text-decoration: none;
+	outline-offset: -2px;
+}
+.row-main {
+	display: block;
+}
+.name {
+	font-size: 1.08rem;
+	font-weight: 700;
+	letter-spacing: -0.005em;
+}
+.row:hover .name {
+	color: var(--accent);
+}
+.desc {
+	color: var(--note);
+	font-size: 0.9rem;
+	margin-top: 2px;
+}
+.meta {
+	color: var(--note);
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	font-size: 0.78rem;
+	margin-top: 7px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 9px;
+}
+.tag {
+	font-size: 0.75rem;
+	color: var(--note);
+	border: 1px solid var(--hairline);
+	border-radius: 999px;
+	padding: 0.22rem 0.62rem;
+	background: var(--surface);
+	white-space: nowrap;
+}
+/* 标签语言切换：默认中文，[data-tag-lang='en'] 时显示英文 */
+.tag-en,
+.chip-en {
+	display: none;
+}
+[data-tag-lang='en'] .tag-zh,
+[data-tag-lang='en'] .chip-zh {
+	display: none;
+}
+[data-tag-lang='en'] .tag-en,
+[data-tag-lang='en'] .chip-en {
+	display: inline;
+}
+/* 主行动：hover/键盘聚焦浮现 */
+.cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	flex: none;
+	align-self: center;
+	margin: 0 16px;
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: var(--accent);
+	white-space: nowrap;
+	opacity: 0;
+	transform: translateX(-4px);
+	transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+.item:hover .cta,
+.item:focus-within .cta {
+	opacity: 1;
+	transform: none;
+}
+/* 次级链接（EN/官方/仓库）：弱化图标 */
+.btns {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	flex: none;
+	padding-right: 14px;
+}
+.mini {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 6px;
+	color: var(--note);
+	transition: color 0.15s ease-out, background 0.15s ease-out;
+}
+.mini:hover,
+.mini:focus-visible {
+	color: var(--accent);
+	background: var(--surface2);
+}
+.mini-text {
+	width: auto;
+	min-width: 30px;
+	padding: 0 8px;
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	border: 1px solid var(--hairline);
+}
+
+/* —— 空态 —— */
+.empty {
+	padding: 3rem 0;
+	text-align: center;
+	color: var(--note);
+}
+.empty p {
+	margin: 0 0 0.9rem;
+	font-size: 0.92rem;
+}
+.empty-actions {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+}
+.empty-actions button {
+	font: inherit;
+	font-size: 0.85rem;
+	padding: 7px 14px;
+	color: var(--accent);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: border-color 0.15s ease-out;
+}
+.empty-actions button:hover {
+	border-color: var(--accent);
+}
+
+/* —— 页脚 —— */
+footer {
+	margin-top: 2.2rem;
+	padding: 1rem 0 2.4rem;
+	border-top: 1px solid var(--hairline);
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	font-size: 0.82rem;
+	color: var(--note);
+}
+footer a {
+	color: var(--accent);
+	text-decoration: none;
+}
+footer a:hover {
+	text-decoration: underline;
+}
+
+/* —— 返回顶部 —— */
+#to-top {
+	position: fixed;
+	right: 22px;
+	bottom: 22px;
+	width: 44px;
+	height: 44px;
+	display: grid;
+	place-items: center;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	transition: border-color 0.15s ease-out;
+}
+#to-top:hover {
+	border-color: var(--accent);
+}
+
+/* —— 设置弹窗 —— */
+.settings {
+	margin: auto; /* 万象重置吃掉了 <dialog> 的 UA margin:auto 居中，补回 */
+	background: var(--surface);
+	color: var(--ink);
+	user-select: none;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	padding: 1.25rem 1.5rem;
+	min-width: 300px;
+	max-width: 92vw;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+.settings::backdrop {
+	background: rgba(20, 20, 20, 0.4);
+}
+.settings-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 0 0 0.75rem;
+}
+.settings-close {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border: none;
+	background: none;
+	color: var(--note);
+	cursor: pointer;
+	border-radius: 6px;
+}
+.settings-close:hover {
+	color: var(--ink);
+	background: var(--surface2);
+}
+.settings fieldset {
+	border: none;
+	margin: 0 0 1rem;
+	padding: 0;
+}
+.settings fieldset:last-child {
+	margin-bottom: 0;
+}
+.settings legend {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--note);
+	padding: 0;
+	margin-bottom: 0.5rem;
+}
+.seg {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.seg-item,
+.check-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.88rem;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 6px 12px;
+	cursor: pointer;
+	background: var(--surface);
+	transition: border-color 0.15s ease-out, color 0.15s ease-out;
+}
+.seg-item:has(input:checked) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+.settings input {
+	accent-color: var(--accent);
+	margin: 0;
+}
+.checks {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+/* —— 卡片风格密度 —— */
+[data-card-style='compact'] .list {
+	gap: 6px;
+}
+[data-card-style='compact'] .row {
+	--row-pad: 10px 14px;
+	padding: 10px 14px;
+}
+[data-card-style='compact'] .name {
+	font-size: 0.98rem;
+}
+[data-card-style='compact'] .desc {
+	font-size: 0.82rem;
+}
+[data-card-style='compact'] .meta {
+	margin-top: 4px;
+}
+[data-card-style='grid'] .list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 12px;
+}
+[data-card-style='grid'] .item {
+	display: block;
+}
+[data-card-style='grid'] .row {
+	display: block;
+}
+[data-card-style='grid'] .cta {
+	margin: 10px 0 0;
+	align-self: flex-start;
+}
+[data-card-style='grid'] .btns {
+	padding: 0 14px 12px;
+}
+
+/* —— 卡片显隐 —— */
+[data-show-desc='0'] .desc {
+	display: none;
+}
+[data-show-tags='0'] .tags {
+	display: none;
+}
+[data-show-meta='0'] .meta {
+	display: none;
+}
+[data-show-btns='0'] .btns {
+	display: none;
+}
+
+/* —— 移动端 ≤560px —— */
+@media (max-width: 560px) {
+	:root {
+		--pad: 16px;
+		--row-pad: 14px;
+	}
+	.site-head {
+		padding-top: 1.4rem;
+	}
+	.brand-row {
+		gap: 10px;
+	}
+	.head-controls {
+		flex: 1 1 100%;
+		margin-left: 0;
+	}
+	.search-wrap {
+		flex: 1 1 auto;
+		order: 0;
+		height: 44px;
+	}
+	.settings-btn {
+		height: 44px;
+	}
+	.filterbar {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		margin-top: 10px;
+		background: var(--bg);
+	}
+	.filterbar .wrap {
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+	.chips {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+		padding-bottom: 2px;
+	}
+	.chips::-webkit-scrollbar {
+		display: none;
+	}
+	.chip {
+		flex: none;
+		height: 44px;
+		padding: 0 16px;
+	}
+	.item {
+		flex-wrap: wrap;
+	}
+	.row {
+		flex: 1 1 100%;
+	}
+	.btns {
+		width: 100%;
+		padding: 0 var(--row-pad) 10px;
+	}
+	.mini {
+		width: 44px;
+		height: 44px;
+	}
+	/* 吸顶摘要条移动端紧凑化：只留计数 + 清除（pills 隐藏防双高条占屏） */
+	.summary {
+		margin-top: 8px;
+		padding: 6px 10px;
+	}
+	.summary .sum-parts,
+	.summary .vline {
+		display: none;
+	}
+	.cta {
+		display: none;
+	}
+	.row:hover .name {
+		color: inherit;
+	}
+	footer {
+		flex-direction: column;
+	}
+}
+/* 触屏设备：主行动常显（无 hover） */
+@media (hover: none) {
+	.cta {
+		opacity: 1;
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+	}
+	#to-top {
+		scroll-behavior: auto;
+	}
+}
+
 		</style>
 	</head>
 	<body>
-		<div class="wrap">
-			<div class="header">
-				<h1>docs-cn</h1>
-				<div class="header-controls">
-					<input type="search" id="search" class="search" placeholder="搜索名称/描述…" autocomplete="off" />
-					<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">⚙ 设置</button>
+		<header class="site-head">
+			<div class="wrap">
+				<div class="brand-row">
+					<div class="brand">
+						<h1>docs-cn</h1>
+						<p class="sub">开源项目文档的中文翻译集合 · 收录 21 站 · 非官方翻译。</p>
+					</div>
+					<div class="head-controls">
+						<div class="search-wrap">
+							<svg class="search-ico" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.2"/><path d="m13.5 13.5-3.8-3.8"/></svg>
+							<input type="search" id="search" placeholder="搜索 21 个文档站…" autocomplete="off" aria-label="搜索站点名称或描述" />
+							<kbd class="kbd-hint" aria-hidden="true"></kbd>
+						</div>
+						<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">
+							<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h12M2 11.5h12"/><circle cx="6" cy="4.5" r="1.9" fill="#fff"/><circle cx="10.5" cy="11.5" r="1.9" fill="#fff"/></svg>
+							设置
+						</button>
+					</div>
 				</div>
 			</div>
-			<p class="sub">开源项目文档的中文翻译集合。</p>
-			<div class="filterbar"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent"><span class="chip-zh">智能体</span><span class="chip-en">AI Agent</span></button><button class="chip" data-filter="multi-agent"><span class="chip-zh">多智能体协作</span><span class="chip-en">Multi-Agent</span></button><button class="chip" data-filter="skills"><span class="chip-zh">技能与提示词</span><span class="chip-en">Skills & Prompts</span></button><button class="chip" data-filter="frontend-design"><span class="chip-zh">前端设计</span><span class="chip-en">Frontend Design</span></button><button class="chip" data-filter="memory"><span class="chip-zh">记忆系统</span><span class="chip-en">Memory</span></button><button class="chip" data-filter="testing"><span class="chip-zh">测试</span><span class="chip-en">Testing</span></button><button class="chip" data-filter="deployment"><span class="chip-zh">部署运维</span><span class="chip-en">Deployment</span></button><button class="chip" data-filter="docs-engineering"><span class="chip-zh">文档工程</span><span class="chip-en">Docs Engineering</span></button><button class="chip" data-filter="ai-app-dev"><span class="chip-zh">AI 应用开发</span><span class="chip-en">AI App Dev</span></button><button class="chip" data-filter="code-intelligence"><span class="chip-zh">代码智能</span><span class="chip-en">Code Intelligence</span></button><button class="chip" data-filter="learning"><span class="chip-zh">概念与入门</span><span class="chip-en">Learning</span></button><button class="chip" data-filter="cli-tool"><span class="chip-zh">命令行工具</span><span class="chip-en">CLI Tool</span></button><button class="chip" data-filter="sdk-api"><span class="chip-zh">SDK 与 API</span><span class="chip-en">SDK & API</span></button><button class="chip" data-filter="networking"><span class="chip-zh">网络与安全</span><span class="chip-en">Networking</span></button><button class="chip" data-filter="unofficial-en"><span class="chip-zh">非官方英文文档</span><span class="chip-en">Unofficial EN</span></button></div>
-			<div class="list">
-				<div class="item" data-tags="code-intelligence,cli-tool">
+		</header>
+		<nav class="filterbar" aria-label="标签筛选">
+			<div class="wrap">
+				<div class="chips">
+<button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="ai-agent"><span class="chip-zh">智能体</span><span class="chip-en">AI Agent</span></button><button class="chip" data-filter="multi-agent"><span class="chip-zh">多智能体协作</span><span class="chip-en">Multi-Agent</span></button><button class="chip" data-filter="skills"><span class="chip-zh">技能与提示词</span><span class="chip-en">Skills & Prompts</span></button><button class="chip" data-filter="frontend-design"><span class="chip-zh">前端设计</span><span class="chip-en">Frontend Design</span></button><button class="chip" data-filter="memory"><span class="chip-zh">记忆系统</span><span class="chip-en">Memory</span></button><button class="chip" data-filter="testing"><span class="chip-zh">测试</span><span class="chip-en">Testing</span></button><button class="chip" data-filter="deployment"><span class="chip-zh">部署运维</span><span class="chip-en">Deployment</span></button><button class="chip" data-filter="docs-engineering"><span class="chip-zh">文档工程</span><span class="chip-en">Docs Engineering</span></button><button class="chip" data-filter="ai-app-dev"><span class="chip-zh">AI 应用开发</span><span class="chip-en">AI App Dev</span></button><button class="chip" data-filter="code-intelligence"><span class="chip-zh">代码智能</span><span class="chip-en">Code Intelligence</span></button><button class="chip" data-filter="learning"><span class="chip-zh">概念与入门</span><span class="chip-en">Learning</span></button><button class="chip" data-filter="cli-tool"><span class="chip-zh">命令行工具</span><span class="chip-en">CLI Tool</span></button><button class="chip" data-filter="sdk-api"><span class="chip-zh">SDK 与 API</span><span class="chip-en">SDK & API</span></button><button class="chip" data-filter="networking"><span class="chip-zh">网络与安全</span><span class="chip-en">Networking</span></button><button class="chip" data-filter="unofficial-en"><span class="chip-zh">非官方英文文档</span><span class="chip-en">Unofficial EN</span></button>
+				</div>
+				<div class="summary" id="summary" hidden>
+					<span class="sum-parts" id="sum-parts"></span>
+					<button class="sum-clear" id="clear-all" type="button">清除全部</button>
+					<span class="count" id="count" role="status"></span>
+				</div>
+			</div>
+		</nav>
+		<main class="wrap">
+			<div class="list" id="list">
+
+				<article class="item" id="s-codegraph" data-tags="code-intelligence,cli-tool">
 					<a class="row" href="codegraph/" target="_blank" rel="noopener">
-						<p class="name">codegraph</p>
-						<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">代码智能</span><span class="tag-en">Code Intelligence</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
+						<div class="row-main">
+							<h2 class="name">codegraph</h2>
+							<p class="desc">把代码库解析成可供 AI 智能体查询的知识图谱。</p>
+							<p class="meta">18 页 · Starlight · 快照 2026-08-18</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">代码智能</span><span class="tag-en">Code Intelligence</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,multi-agent">
+					<div class="btns"><a class="mini " href="https://colbymchenry.github.io/codegraph/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/colbymchenry/codegraph" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-orca" data-tags="ai-agent,multi-agent">
 					<a class="row" href="orca/" target="_blank" rel="noopener">
-						<p class="name">Orca</p>
-						<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Orca</h2>
+							<p class="desc">跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。</p>
+							<p class="meta">Starlight · 快照 2026-08-19</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://www.onorca.dev/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/stablyai/orca" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="skills,learning">
+					<div class="btns"><a class="mini " href="https://www.onorca.dev/docs" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/stablyai/orca" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-mattpocock-skills" data-tags="skills,learning">
 					<a class="row" href="mattpocock-skills/" target="_blank" rel="noopener">
-						<p class="name">Matt Pocock Skills</p>
-						<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Matt Pocock Skills</h2>
+							<p class="desc">Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。</p>
+							<p class="meta">25 篇 · Starlight · 快照 2026-08-20</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://www.aihero.dev/skills" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/skills" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,multi-agent,skills">
+					<div class="btns"><a class="mini " href="https://www.aihero.dev/skills" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/mattpocock/skills" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-agency-agents" data-tags="ai-agent,multi-agent,skills">
 					<a class="row" href="agency-agents/" target="_blank" rel="noopener">
-						<p class="name">Agency Agents</p>
-						<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Agency Agents</h2>
+							<p class="desc">300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。</p>
+							<p class="meta">326 篇 · Starlight · 快照 2026-10-08</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="agency-agents-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,multi-agent,skills,unofficial-en">
+					<div class="btns"><a class="mini mini-text" href="agency-agents-en/" title="英文文档（本站镜像）" aria-label="英文文档">EN</a><a class="mini " href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-agency-agents-en" data-tags="ai-agent,multi-agent,skills,unofficial-en">
 					<a class="row" href="agency-agents-en/" target="_blank" rel="noopener">
-						<p class="name">Agency Agents (EN)</p>
-						<p class="desc">Unofficial English mirror of the msitarzewski/agency-agents roster docs (326 pages; origin side for the CN compare pair).</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Agency Agents (EN)</h2>
+							<p class="desc">Unofficial English mirror of the Agency Agents roster docs (326 pages).</p>
+							<p class="meta">326 页 · Starlight · 快照 2026-10-08</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="learning">
+					<div class="btns"><a class="mini " href="https://github.com/msitarzewski/agency-agents" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-ai-coding-dictionary" data-tags="learning">
 					<a class="row" href="ai-coding-dictionary/" target="_blank" rel="noopener">
-						<p class="name">AI 编码词典</p>
-						<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
+						<div class="row-main">
+							<h2 class="name">AI 编码词典</h2>
+							<p class="desc">AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。</p>
+							<p class="meta">69 词条 · Starlight · 快照 2026-08-20</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="memory,cli-tool">
+					<div class="btns"><a class="mini " href="https://www.aihero.dev/ai-coding-dictionary" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/mattpocock/dictionary-of-ai-coding" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-ai-memory" data-tags="memory,cli-tool">
 					<a class="row" href="ai-memory/" target="_blank" rel="noopener">
-						<p class="name">ai-memory</p>
-						<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
+						<div class="row-main">
+							<h2 class="name">ai-memory</h2>
+							<p class="desc">给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。</p>
+							<p class="meta">36 篇 · Starlight · 快照 2026-08-21</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="ai-memory-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="docs-engineering">
+					<div class="btns"><a class="mini mini-text" href="ai-memory-en/" title="英文文档（本站镜像）" aria-label="英文文档">EN</a><a class="mini " href="https://github.com/akitaonrails/ai-memory" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-nimbus" data-tags="docs-engineering">
 					<a class="row" href="nimbus/" target="_blank" rel="noopener">
-						<p class="name">Nimbus</p>
-						<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">文档工程</span><span class="tag-en">Docs Engineering</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Nimbus</h2>
+							<p class="desc">Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。</p>
+							<p class="meta">66 篇 · pnpm monorepo · 快照 2026-09-28</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">文档工程</span><span class="tag-en">Docs Engineering</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://nimbus-docs.com" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,multi-agent">
+					<div class="btns"><a class="mini " href="https://nimbus-docs.com" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/cloudflare/nimbus" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-openrig" data-tags="ai-agent,multi-agent">
 					<a class="row" href="openrig/" target="_blank" rel="noopener">
-						<p class="name">OpenRig</p>
-						<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
+						<div class="row-main">
+							<h2 class="name">OpenRig</h2>
+							<p class="desc">多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。</p>
+							<p class="meta">90 篇 · Starlight · 快照 2026-09-30</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="openrig-en/" target="_blank" rel="noopener">英文文档</a><a class="btn" href="https://openrig.dev/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,multi-agent,unofficial-en">
+					<div class="btns"><a class="mini mini-text" href="openrig-en/" title="英文文档（本站镜像）" aria-label="英文文档">EN</a><a class="mini " href="https://openrig.dev/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-openrig-en" data-tags="ai-agent,multi-agent,unofficial-en">
 					<a class="row" href="openrig-en/" target="_blank" rel="noopener">
-						<p class="name">OpenRig (EN)</p>
-						<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
+						<div class="row-main">
+							<h2 class="name">OpenRig (EN)</h2>
+							<p class="desc">Unofficial English mirror of the OpenRig repository docs (90 pages).</p>
+							<p class="meta">90 页 · Starlight · 快照 2026-09-30</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">多智能体协作</span><span class="tag-en">Multi-Agent</span></span><span class="tag"><span class="tag-zh">非官方英文文档</span><span class="tag-en">Unofficial EN</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="deployment,sdk-api">
+					<div class="btns"><a class="mini " href="https://github.com/mvschwarz/openrig" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-openship" data-tags="deployment,sdk-api">
 					<a class="row" href="openship/" target="_blank" rel="noopener">
-						<p class="name">OpenShip</p>
-						<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">部署运维</span><span class="tag-en">Deployment</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						<div class="row-main">
+							<h2 class="name">OpenShip</h2>
+							<p class="desc">开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。</p>
+							<p class="meta">164 篇 · fumadocs + Next.js 16 · 快照 2026-09-30</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">部署运维</span><span class="tag-en">Deployment</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://openship.io/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/oblien/openship" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="skills,ai-agent">
+					<div class="btns"><a class="mini " href="https://openship.io/docs" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/oblien/openship" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-agent-skills" data-tags="skills,ai-agent">
 					<a class="row" href="agent-skills/" target="_blank" rel="noopener">
-						<p class="name">Agent Skills</p>
-						<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Agent Skills</h2>
+							<p class="desc">Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。</p>
+							<p class="meta">36 页 · Astro 5 · 快照 2026-10-08</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://skills.addy.ie/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="testing,ai-agent">
+					<div class="btns"><a class="mini " href="https://skills.addy.ie/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/addyosmani/agent-skills" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-tester-army-e2e" data-tags="testing,ai-agent">
 					<a class="row" href="tester-army-e2e/" target="_blank" rel="noopener">
-						<p class="name">e2e</p>
-						<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">测试</span><span class="tag-en">Testing</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						<div class="row-main">
+							<h2 class="name">e2e</h2>
+							<p class="desc">tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。</p>
+							<p class="meta">52 篇 · Mintlify 导出 · 快照 2026-10-08</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">测试</span><span class="tag-en">Testing</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://e2e.tester.army/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tester-army/e2e" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="memory,ai-agent">
+					<div class="btns"><a class="mini " href="https://e2e.tester.army/docs" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/tester-army/e2e" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-claude-mem" data-tags="memory,ai-agent">
 					<a class="row" href="claude-mem/" target="_blank" rel="noopener">
-						<p class="name">Claude-Mem</p>
-						<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Claude-Mem</h2>
+							<p class="desc">Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。</p>
+							<p class="meta">49 篇 · Mintlify · 快照 2026-10-08</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">记忆系统</span><span class="tag-en">Memory</span></span><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://docs.claude-mem.ai/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-app-dev,sdk-api">
+					<div class="btns"><a class="mini " href="https://docs.claude-mem.ai/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/thedotmack/claude-mem" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-ai-sdk" data-tags="ai-app-dev,sdk-api">
 					<a class="row" href="ai-sdk/" target="_blank" rel="noopener">
-						<p class="name">AI SDK</p>
-						<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">AI 应用开发</span><span class="tag-en">AI App Dev</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						<div class="row-main">
+							<h2 class="name">AI SDK</h2>
+							<p class="desc">Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。</p>
+							<p class="meta">540 页 · geistdocs + Next.js 16 · 快照 2026-10-09</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">AI 应用开发</span><span class="tag-en">AI App Dev</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://ai-sdk.dev" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/vercel/ai" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,cli-tool,sdk-api">
+					<div class="btns"><a class="mini " href="https://ai-sdk.dev" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/vercel/ai" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-pi" data-tags="ai-agent,cli-tool,sdk-api">
 					<a class="row" href="pi/" target="_blank" rel="noopener">
-						<p class="name">Pi</p>
-						<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Pi</h2>
+							<p class="desc">Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。</p>
+							<p class="meta">40 篇 · Mintlify · 快照 2026-10-09</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">命令行工具</span><span class="tag-en">CLI Tool</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://pi.dev/docs/latest" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/earendil-works/pi" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="ai-agent,sdk-api">
+					<div class="btns"><a class="mini " href="https://pi.dev/docs/latest" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/earendil-works/pi" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-openshell" data-tags="ai-agent,sdk-api">
 					<a class="row" href="openshell/" target="_blank" rel="noopener">
-						<p class="name">NVIDIA OpenShell</p>
-						<p class="desc">自主 AI 智能体的安全私有运行时——沙箱、网关、声明式策略与可观测性中文文档（65 篇全集）。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						<div class="row-main">
+							<h2 class="name">NVIDIA OpenShell</h2>
+							<p class="desc">自主 AI 智能体的安全私有运行时——沙箱、网关、声明式策略与可观测性中文文档（65 篇全集）。</p>
+							<p class="meta">65 篇 · Starlight · 快照 2026-10-25</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">智能体</span><span class="tag-en">AI Agent</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://docs.nvidia.com/openshell/latest/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/NVIDIA/OpenShell" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="networking,learning,sdk-api">
+					<div class="btns"><a class="mini " href="https://docs.nvidia.com/openshell/latest/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/NVIDIA/OpenShell" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-tailscale" data-tags="networking,learning,sdk-api">
 					<a class="row" href="tailscale/" target="_blank" rel="noopener">
-						<p class="name">Tailscale</p>
-						<p class="desc">Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">网络与安全</span><span class="tag-en">Networking</span></span><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Tailscale</h2>
+							<p class="desc">Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。</p>
+							<p class="meta">700 页 · Starlight · 快照 2026-10-25</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">网络与安全</span><span class="tag-en">Networking</span></span><span class="tag"><span class="tag-zh">概念与入门</span><span class="tag-en">Learning</span></span><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://tailscale.com/docs" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/tailscale/tailscale" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="skills,frontend-design">
+					<div class="btns"><a class="mini " href="https://tailscale.com/docs" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/tailscale/tailscale" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-impeccable" data-tags="skills,frontend-design">
 					<a class="row" href="impeccable/" target="_blank" rel="noopener">
-						<p class="name">Impeccable</p>
-						<p class="desc">给 AI 宿主补上设计词汇——1 个技能 24 个命令的完整中文文档：把 AI slop 打磨成可上线的界面（基于上游公开快照重建，内容为 2026-07 版）。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">前端设计</span><span class="tag-en">Frontend Design</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Impeccable</h2>
+							<p class="desc">给 AI 宿主补上设计词汇——1 个技能 24 个命令的完整中文文档：把 AI slop 打磨成可上线的界面（基于上游公开快照重建，内容为 2026-07 版）。</p>
+							<p class="meta">53 页 · Astro 7 · 快照 2026-10-25</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">前端设计</span><span class="tag-en">Frontend Design</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://impeccable.style" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/pbakaus/impeccable" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="skills,frontend-design">
+					<div class="btns"><a class="mini " href="https://impeccable.style" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/pbakaus/impeccable" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-impeccable-mirror" data-tags="skills,frontend-design">
 					<a class="row" href="impeccable-mirror/" target="_blank" rel="noopener">
-						<p class="name">Impeccable（线上镜像）</p>
-						<p class="desc">impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照；文档页/更新日志/命令台全译，检测器覆盖层提示保持英文）。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">前端设计</span><span class="tag-en">Frontend Design</span></span></div>
+						<div class="row-main">
+							<h2 class="name">Impeccable（线上镜像）</h2>
+							<p class="desc">impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照，文档页/更新日志/命令台全译）。</p>
+							<p class="meta">49 页 · 构建产物镜像 · 快照 2026-10-25</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">技能与提示词</span><span class="tag-en">Skills & Prompts</span></span><span class="tag"><span class="tag-zh">前端设计</span><span class="tag-en">Frontend Design</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://impeccable.style" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/pbakaus/impeccable" target="_blank" rel="noopener">仓库</a></div>
-				</div>
-				<div class="item" data-tags="sdk-api,deployment,ai-app-dev">
+					<div class="btns"><a class="mini " href="https://impeccable.style" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/pbakaus/impeccable" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+				<article class="item" id="s-litellm" data-tags="sdk-api,deployment,ai-app-dev">
 					<a class="row" href="litellm/" target="_blank" rel="noopener">
-						<p class="name">LiteLLM</p>
-						<p class="desc">LiteLLM 开源 AI 网关官方文档全站中文镜像——916 页：Python SDK、代理部署、路由与负载均衡、虚拟密钥与预算、防护栏、MCP 网关与 100+ 提供商接入。</p>
-						<div class="tags"><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span><span class="tag"><span class="tag-zh">部署运维</span><span class="tag-en">Deployment</span></span><span class="tag"><span class="tag-zh">AI 应用开发</span><span class="tag-en">AI App Dev</span></span></div>
+						<div class="row-main">
+							<h2 class="name">LiteLLM</h2>
+							<p class="desc">LiteLLM 开源 AI 网关官方文档全站中文镜像——916 页：Python SDK、代理部署、路由与负载均衡、虚拟密钥与预算、防护栏、MCP 网关与 100+ 提供商接入。</p>
+							<p class="meta">715+ 文件 · Docusaurus 3.8 · 快照 2026-10-26</p>
+							<div class="tags"><span class="tag"><span class="tag-zh">SDK 与 API</span><span class="tag-en">SDK & API</span></span><span class="tag"><span class="tag-zh">部署运维</span><span class="tag-en">Deployment</span></span><span class="tag"><span class="tag-zh">AI 应用开发</span><span class="tag-en">AI App Dev</span></span></div>
+						</div>
+						<span class="cta" aria-hidden="true">阅读中文文档 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8H13"/><path d="M8.5 3.5 13 8l-4.5 4.5"/></svg></span>
 					</a>
-					<div class="btns"><a class="btn" href="https://docs.litellm.ai/docs/" target="_blank" rel="noopener">官方文档</a><a class="btn" href="https://github.com/BerriAI/litellm-docs" target="_blank" rel="noopener">仓库</a></div>
+					<div class="btns"><a class="mini " href="https://docs.litellm.ai/docs/" target="_blank" rel="noopener" title="官方文档（上游原站）" aria-label="官方文档（上游原站）"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 2.5h4v4"/><path d="M13 3 8 8"/></svg></a><a class="mini " href="https://github.com/BerriAI/litellm-docs" target="_blank" rel="noopener" title="上游仓库" aria-label="上游仓库"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="4" r="1.7"/><circle cx="4.5" cy="12" r="1.7"/><circle cx="11.5" cy="5" r="1.7"/><path d="M4.5 5.7v4.6"/><path d="M11.5 6.7c0 2.6-4 2.2-7 3.4"/></svg></a></div>
+				</article>
+			</div>
+			<div class="empty" id="empty" hidden>
+				<p id="empty-msg"></p>
+				<div class="empty-actions">
+					<button id="empty-clear-search" type="button">清除搜索</button>
+					<span aria-hidden="true">×</span>
+					<button id="empty-clear-filters" type="button">清除全部筛选</button>
 				</div>
 			</div>
-			<div class="empty" id="empty" hidden></div>
 			<footer>
-				<a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 非官方翻译
+				<span>收录 21 站 · 2026-10 更新</span>
+				<span><a href="https://github.com/lif3ng-vibe/docs-cn" target="_blank" rel="noopener">GitHub</a> · 翻译遵循各上游许可</span>
 			</footer>
-		</div>
+		</main>
+		<button id="to-top" type="button" hidden aria-label="返回顶部">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>
+		</button>
 		<dialog id="settings" class="settings" aria-label="显示设置">
 			<div class="settings-head">
 				<strong>显示设置</strong>
-				<button class="settings-close" id="settings-close" type="button" aria-label="关闭">✕</button>
+				<button class="settings-close" id="settings-close" type="button" aria-label="关闭">
+					<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg>
+				</button>
 			</div>
 			<fieldset>
-				<legend>主题色</legend>
-				<div class="swatches"><button type="button" class="swatch" data-theme="blue" style="background:#0969da" title="蓝" aria-label="蓝色主题"></button><button type="button" class="swatch" data-theme="green" style="background:#1a7f37" title="绿" aria-label="绿色主题"></button><button type="button" class="swatch" data-theme="purple" style="background:#8250df" title="紫" aria-label="紫色主题"></button><button type="button" class="swatch" data-theme="orange" style="background:#bc4c00" title="橙" aria-label="橙色主题"></button><button type="button" class="swatch" data-theme="red" style="background:#cf222e" title="红" aria-label="红色主题"></button><button type="button" class="swatch" data-theme="teal" style="background:#1b7c83" title="青" aria-label="青色主题"></button></div>
+				<legend>界面风格</legend>
+				<div class="seg"><label class="seg-item"><input type="radio" name="skin" value="mdn">MDN</label><label class="seg-item"><input type="radio" name="skin" value="github">GitHub</label><label class="seg-item"><input type="radio" name="skin" value="vercel">Vercel</label></div>
 			</fieldset>
 			<fieldset>
 				<legend>卡片风格</legend>
@@ -623,242 +1180,372 @@
 			</fieldset>
 			<fieldset>
 				<legend>卡片显示</legend>
-				<div class="checks"><label class="check-item"><input type="checkbox" data-show="desc">描述</label><label class="check-item"><input type="checkbox" data-show="tags">标签</label><label class="check-item"><input type="checkbox" data-show="btns">操作按钮</label></div>
+				<div class="checks"><label class="check-item"><input type="checkbox" data-show="desc">描述</label><label class="check-item"><input type="checkbox" data-show="tags">标签</label><label class="check-item"><input type="checkbox" data-show="meta">元数据行</label><label class="check-item"><input type="checkbox" data-show="btns">次级链接</label></div>
 			</fieldset>
 		</dialog>
 		<script>
 			const e=new Set,t=new WeakMap,n=new WeakMap,o=new WeakMap,i=new WeakMap,r=new WeakMap,l=new WeakMap,a=new WeakMap,s=new WeakMap,c=new WeakSet;let d,u=0,f=0;const h="__aa_tgt",p="__aa_del",g="__aa_new",m=e=>{const i=function(e){const t=e.reduce((e,t)=>[...e,...Array.from(t.addedNodes),...Array.from(t.removedNodes)],[]);return!t.every(e=>"#comment"===e.nodeName)&&e.reduce((e,t)=>{if(!1===e)return!1;if(t.target instanceof Element){if(_(t.target),!e.has(t.target)){e.add(t.target);for(let n=0;n<t.target.children.length;n++){const o=t.target.children.item(n);if(o){if(p in o)return!1;_(t.target,o),e.add(o)}}}if(t.removedNodes.length)for(let o=0;o<t.removedNodes.length;o++){const i=t.removedNodes[o];if(p in i)return!1;i instanceof Element&&(e.add(i),_(t.target,i),n.set(i,[t.previousSibling,t.nextSibling]))}}return e},new Set)}(e);i&&i.forEach(e=>function(e){var i,r;const l=e.isConnected,a=t.has(e);l&&n.has(e)&&n.delete(e);"finished"!==(null===(i=o.get(e))||void 0===i?void 0:i.playState)&&(null===(r=o.get(e))||void 0===r||r.cancel());g in e?$(e):a&&l?function(e){const n=t.get(e),i=O(e);if(!N(e))return t.set(e,i);if(v(e))return t.set(e,i),void y(e);let r;if(!n)return;const l=C(e);if("function"!=typeof l){let t=n.left-i.left,o=n.top-i.top;const a=n.left+n.width-(i.left+i.width);0==n.top+n.height-(i.top+i.height)&&(o=0),0==a&&(t=0);const[s,c,d,u]=S(e,n,i),f={transform:`translate(${t}px, ${o}px)`},h={transform:"translate(0, 0)"};s!==c&&(f.width=`${s}px`,h.width=`${c}px`),d!==u&&(f.height=`${d}px`,h.height=`${u}px`),r=e.animate([f,h],{duration:l.duration,easing:l.easing})}else{const[t]=j(l(e,"remain",n,i));r=new Animation(t),r.play()}o.set(e,r),t.set(e,i),r.addEventListener("finish",b.bind(null,e,!1),{once:!0})}(e):a&&!l?function(e){var i;if(!n.has(e)||!t.has(e))return;const[r,l]=n.get(e);Object.defineProperty(e,p,{value:!0,configurable:!0});const a=window.scrollX,s=window.scrollY;l&&l.parentNode&&l.parentNode instanceof Element?l.parentNode.insertBefore(e,l):r&&r.parentNode?r.parentNode.appendChild(e):null===(i=L(e))||void 0===i||i.appendChild(e);if(!N(e))return A(e);const[c,h,g,m]=function(e){var n;const i=t.get(e),[r,,l]=S(e,i,O(e));let a=e.parentElement;for(;a&&("static"===getComputedStyle(a).position||a instanceof HTMLBodyElement);)a=a.parentElement;a||(a=document.body);const s=getComputedStyle(a),c=o.has(e)&&"finished"!==(null===(n=o.get(e))||void 0===n?void 0:n.playState)?t.get(a):O(a),d=Math.round(i.top-c.top)-T(s.borderTopWidth),u=Math.round(i.left-c.left)-T(s.borderLeftWidth);return[d,u,r,l]}(e),w=C(e),v=t.get(e);a===u&&s===f||function(e,t,n,o){const i=u-t,r=f-n,l=document.documentElement.style.scrollBehavior;"smooth"===getComputedStyle(d).scrollBehavior&&(document.documentElement.style.scrollBehavior="auto");if(window.scrollTo(window.scrollX+i,window.scrollY+r),!e.parentElement)return;const a=e.parentElement;let s=a.clientHeight,c=a.clientWidth;const h=performance.now();function p(){requestAnimationFrame(()=>{if(!B(o)){const e=s-a.clientHeight,t=c-a.clientWidth;h+o.duration>performance.now()?(window.scrollTo({left:window.scrollX-t,top:window.scrollY-e}),s=a.clientHeight,c=a.clientWidth,p()):document.documentElement.style.scrollBehavior=l}})}p()}(e,a,s,w);let y,b={position:"absolute",top:`${c}px`,left:`${h}px`,width:`${g}px`,height:`${m}px`,margin:"0",pointerEvents:"none",transformOrigin:"center",zIndex:"100"};if(B(w)){const[t,n]=j(w(e,"remove",v));!1!==(null==n?void 0:n.styleReset)&&(b=(null==n?void 0:n.styleReset)||b,Object.assign(e.style,b)),y=new Animation(t),y.play()}else Object.assign(e.style,b),y=e.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.98)",opacity:0}],{duration:w.duration,easing:"ease-out"});o.set(e,y),y.addEventListener("finish",()=>A(e,b),{once:!0})}(e):$(e)}(e))},w=n=>{n.forEach(n=>{n.target===d&&(clearTimeout(s.get(d)),s.set(d,setTimeout(()=>{e.forEach(e=>k(e,e=>M(()=>b(e))))},100))),t.has(n.target)&&b(n.target)})};function v(e){const t=e.getBoundingClientRect(),n=(null==d?void 0:d.clientWidth)||0,o=(null==d?void 0:d.clientHeight)||0;return t.bottom<0||t.top>o||t.right<0||t.left>n}function y(e){const n=i.get(e);null==n||n.disconnect();let o=t.get(e),r=0;o||(o=O(e),t.set(e,o));const{offsetWidth:l,offsetHeight:a}=d,s=[o.top-5,l-(o.left+5+o.width),a-(o.top+5+o.height),o.left-5].map(e=>-1*Math.floor(e)+"px").join(" "),c=new IntersectionObserver(()=>{++r>1&&b(e)},{root:d,threshold:1,rootMargin:s});c.observe(e),i.set(e,c)}function b(e,n=!0){clearTimeout(s.get(e));const i=C(e),r=n?B(i)?500:i.duration:0;s.set(e,setTimeout(async()=>{const n=o.get(e);try{await(null==n?void 0:n.finished),t.set(e,O(e)),y(e)}catch{}},r))}function E(e){setTimeout(()=>{l.set(e,setInterval(()=>M(b.bind(null,e)),2e3))},Math.round(2e3*Math.random()))}function M(e){"function"==typeof requestIdleCallback?requestIdleCallback(()=>e()):requestAnimationFrame(()=>e())}let W;const x="undefined"!=typeof window&&"ResizeObserver"in window;function _(e,t){t||h in e?t&&!(h in t)&&Object.defineProperty(t,h,{value:e}):Object.defineProperty(e,h,{value:e})}function T(e){return Number(e.replace(/[^0-9.\-]/g,""))}function O(e){const t=e.getBoundingClientRect(),{x:n,y:o}=function(e){let t=e.parentElement;for(;t;){if(t.scrollLeft||t.scrollTop)return{x:t.scrollLeft,y:t.scrollTop};t=t.parentElement}return{x:0,y:0}}(e);return{top:t.top+o,left:t.left+n,width:t.width,height:t.height}}function S(e,t,n){let o=t.width,i=t.height,r=n.width,l=n.height;const a=getComputedStyle(e);if("content-box"===a.getPropertyValue("box-sizing")){const e=T(a.paddingTop)+T(a.paddingBottom)+T(a.borderTopWidth)+T(a.borderBottomWidth),t=T(a.paddingLeft)+T(a.paddingRight)+T(a.borderRightWidth)+T(a.borderLeftWidth);o-=t,r-=t,i-=e,l-=e}return[o,r,i,l].map(Math.round)}function C(e){return h in e&&a.has(e[h])?a.get(e[h]):{duration:250,easing:"ease-in-out"}}function L(e){if(h in e)return e[h]}function N(e){const t=L(e);return!!t&&c.has(t)}function k(e,...t){t.forEach(t=>t(e,a.has(e)));for(let n=0;n<e.children.length;n++){const o=e.children.item(n);o&&t.forEach(e=>e(o,a.has(o)))}}function j(e){return Array.isArray(e)?e:[e]}function B(e){return"function"==typeof e}function $(e){g in e&&delete e[g];const n=O(e);t.set(e,n);const i=C(e);if(!N(e))return;if(v(e))return void y(e);let r;if("function"!=typeof i)r=e.animate([{transform:"scale(.98)",opacity:0},{transform:"scale(0.98)",opacity:0,offset:.5},{transform:"scale(1)",opacity:1}],{duration:1.5*i.duration,easing:"ease-in"});else{const[t]=j(i(e,"add",n));r=new Animation(t),r.play()}o.set(e,r),r.addEventListener("finish",b.bind(null,e,!1),{once:!0})}function A(e,r){var l;e.remove(),t.delete(e),n.delete(e),o.delete(e),null===(l=i.get(e))||void 0===l||l.disconnect(),setTimeout(()=>{if(p in e&&delete e[p],Object.defineProperty(e,g,{value:!0,configurable:!0}),r&&e instanceof HTMLElement)for(const t in r)e.style[t]=""},0)}function R(d,u={}){if(x&&W){if(!(window.matchMedia("(prefers-reduced-motion: reduce)").matches&&!B(u)&&!u.disrespectUserMotionPreference)){c.add(d),"static"===getComputedStyle(d).position&&Object.assign(d.style,{position:"relative"}),k(d,b,E,e=>null==W?void 0:W.observe(e)),B(u)?a.set(d,u):a.set(d,{duration:250,easing:"ease-in-out",...u});const t=new MutationObserver(m);t.observe(d,{childList:!0}),r.set(d,t),e.add(d)}}return Object.freeze({parent:d,enable:()=>{c.add(d)},disable:()=>{c.delete(d),k(d,e=>{const t=o.get(e);try{null==t||t.cancel()}catch{}o.delete(e);const n=s.get(e);n&&clearTimeout(n),s.delete(e);const i=l.get(e);i&&clearInterval(i),l.delete(e)})},isEnabled:()=>c.has(d),destroy:()=>{c.delete(d),e.delete(d),a.delete(d);const u=r.get(d);null==u||u.disconnect(),r.delete(d),k(d,e=>{null==W||W.unobserve(e);const r=o.get(e);try{null==r||r.cancel()}catch{}o.delete(e);const a=i.get(e);null==a||a.disconnect(),i.delete(e);const c=l.get(e);c&&clearInterval(c),l.delete(e);const d=s.get(e);d&&clearTimeout(d),s.delete(e),t.delete(e),n.delete(e)})}})}x&&(d=document.documentElement,new MutationObserver(m),W=new ResizeObserver(w),window.addEventListener("scroll",()=>{f=window.scrollY,u=window.scrollX}),W.observe(d));const P={mounted:(e,t)=>{const n=R(e,t.value||{});Object.defineProperty(e,"__aa_ctl",{value:n,configurable:!0})},unmounted:e=>{var t;const n=e.__aa_ctl;null===(t=null==n?void 0:n.destroy)||void 0===t||t.call(n);try{delete e.__aa_ctl}catch{}},getSSRProps:()=>({})};globalThis.autoAnimate=R;
 		</script>
 		<script>
-			(function () {
-				var STORAGE_KEY = 'docs-cn-prefs';
-				var DEFAULTS = {
-					theme: 'blue',
-					cardStyle: 'standard',
-					tagLang: 'zh',
-					searchMode: 'filter',
-					showDesc: true,
-					showTags: true,
-					showBtns: true,
-				};
-				var root = document.documentElement;
+/* docs-cn 入口页交互层 — 单文件内联，零外部依赖。
+   注册表 ID（{{…}} 占位）由 gen-index 装配时注入。 */
+(function () {
+	'use strict';
+	var STORAGE_KEY = 'docs-cn-prefs';
+	var SKIN_IDS = ["mdn","github","vercel"];
+	var CARD_STYLE_IDS = ["standard","compact","grid"];
+	var TAG_LANG_IDS = ["zh","en"];
+	var SEARCH_MODE_IDS = ["filter","highlight"];
+	var SHOW_KEYS = ['desc', 'tags', 'meta', 'btns'];
+	var DEFAULTS = {
+		skin: 'mdn',
+		cardStyle: 'standard',
+		tagLang: 'zh',
+		searchMode: 'filter',
+		showDesc: true,
+		showTags: true,
+		showMeta: true,
+		showBtns: true
+	};
+	var root = document.documentElement;
 
-				function loadPrefs() {
-					try {
-						var p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-						var out = {};
-						Object.keys(DEFAULTS).forEach(function (k) {
-							out[k] = k in p ? p[k] : DEFAULTS[k];
-						});
-						// 注册表之外的主题/风格/语言回落默认（防手改 localStorage 出脏值）
-						if (THEME_IDS.indexOf(out.theme) === -1) out.theme = DEFAULTS.theme;
-						if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
-						if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
-						if (SEARCH_MODE_IDS.indexOf(out.searchMode) === -1) out.searchMode = DEFAULTS.searchMode;
-						return out;
-					} catch (e) {
-						return Object.assign({}, DEFAULTS);
-					}
-				}
-				var THEME_IDS = ["blue","green","purple","orange","red","teal"];
-				var CARD_STYLE_IDS = ["standard","compact","grid"];
-				var TAG_LANG_IDS = ["zh","en"];
-				var SEARCH_MODE_IDS = ["filter","highlight"];
-				var prefs = loadPrefs();
+	// 注册表白名单回落：防手改 localStorage 出脏值（旧 theme 键不在 DEFAULTS，自动丢弃）。
+	function loadPrefs() {
+		var out = {};
+		var p = {};
+		try {
+			p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+		} catch (e) {}
+		Object.keys(DEFAULTS).forEach(function (k) {
+			out[k] = k in p ? p[k] : DEFAULTS[k];
+		});
+		if (SKIN_IDS.indexOf(out.skin) === -1) out.skin = DEFAULTS.skin;
+		if (CARD_STYLE_IDS.indexOf(out.cardStyle) === -1) out.cardStyle = DEFAULTS.cardStyle;
+		if (TAG_LANG_IDS.indexOf(out.tagLang) === -1) out.tagLang = DEFAULTS.tagLang;
+		if (SEARCH_MODE_IDS.indexOf(out.searchMode) === -1) out.searchMode = DEFAULTS.searchMode;
+		SHOW_KEYS.forEach(function (k) {
+			var key = 'show' + k.charAt(0).toUpperCase() + k.slice(1);
+			out[key] = k in p ? p[key] === true : DEFAULTS[key];
+		});
+		return out;
+	}
 
-				function savePrefs() {
-					try {
-						localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-					} catch (e) {}
-				}
-				function applyPrefs() {
-					if (prefs.theme === 'blue') delete root.dataset.theme;
-					else root.dataset.theme = prefs.theme;
-					root.dataset.cardStyle = prefs.cardStyle;
-					if (prefs.tagLang === 'zh') delete root.dataset.tagLang;
-					else root.dataset.tagLang = prefs.tagLang;
-					root.dataset.showDesc = prefs.showDesc ? '1' : '0';
-					root.dataset.showTags = prefs.showTags ? '1' : '0';
-					root.dataset.showBtns = prefs.showBtns ? '1' : '0';
-				}
+	var prefs = loadPrefs();
 
-				// —— 设置弹窗 ——
-				var dialog = document.getElementById('settings');
-				var btn = document.getElementById('settings-btn');
-				var closeBtn = document.getElementById('settings-close');
+	function savePrefs() {
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+		} catch (e) {}
+	}
 
-				function syncSettingsUi() {
-					root.querySelectorAll('.swatch').forEach(function (sw) {
-						sw.classList.toggle('active', sw.dataset.theme === prefs.theme);
-					});
-					var radio = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
-					if (radio) radio.checked = true;
-					var langRadio = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
-					if (langRadio) langRadio.checked = true;
-					var modeRadio = root.querySelector('input[name="search-mode"][value="' + prefs.searchMode + '"]');
-					if (modeRadio) modeRadio.checked = true;
-					root.querySelectorAll('input[data-show]').forEach(function (cb) {
-						cb.checked = !!prefs['show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1)];
-					});
-				}
-				btn.addEventListener('click', function () {
-					syncSettingsUi();
-					dialog.showModal();
-				});
-				closeBtn.addEventListener('click', function () {
-					dialog.close();
-				});
-				// 点遮罩关闭
-				dialog.addEventListener('click', function (e) {
-					if (e.target === dialog) dialog.close();
-				});
+	function applyPrefs() {
+		root.dataset.skin = prefs.skin;
+		root.dataset.cardStyle = prefs.cardStyle;
+		if (prefs.tagLang === 'zh') delete root.dataset.tagLang;
+		else root.dataset.tagLang = prefs.tagLang;
+		SHOW_KEYS.forEach(function (k) {
+			var key = 'show' + k.charAt(0).toUpperCase() + k.slice(1);
+			root.dataset[key] = prefs[key] ? '1' : '0';
+		});
+	}
 
-				root.querySelectorAll('.swatch').forEach(function (sw) {
-					sw.addEventListener('click', function () {
-						prefs.theme = sw.dataset.theme;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="card-style"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.cardStyle = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="tag-lang"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.tagLang = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-					});
-				});
-				root.querySelectorAll('input[name="search-mode"]').forEach(function (r) {
-					r.addEventListener('change', function () {
-						prefs.searchMode = r.value;
-						applyPrefs();
-						savePrefs();
-						syncSettingsUi();
-						apply(); // 模式切换立即生效（过滤↔高亮）
-					});
-				});
-				root.querySelectorAll('input[data-show]').forEach(function (cb) {
-					cb.addEventListener('change', function () {
-						var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
-						prefs[key] = cb.checked;
-						applyPrefs();
-						savePrefs();
-					});
-				});
+	// —— 设置弹窗 ——
+	var dialog = document.getElementById('settings');
+	var settingsBtn = document.getElementById('settings-btn');
+	var closeBtn = document.getElementById('settings-close');
 
-				// —— 标签筛选 + 关键词搜索（交集 + 不可用置灰 + auto-animate 动画）——
-				var list = document.querySelector('.list');
-				autoAnimate(list);
-				var searchInput = document.getElementById('search');
-				var emptyEl = document.getElementById('empty');
-				var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
-					var nameEl = el.querySelector('.name');
-					var descEl = el.querySelector('.desc');
-					var nameText = nameEl.textContent;
-					var descText = descEl.textContent;
-					return {
-						el: el,
-						tags: el.dataset.tags ? el.dataset.tags.split(',') : [],
-						nameEl: nameEl,
-						descEl: descEl,
-						nameText: nameText,
-						descText: descText,
-						hay: (nameText + ' ' + descText).toLowerCase(),
-					};
-				});
-				var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
-				var active = new Set();
+	function syncSettingsUi() {
+		var r;
+		r = root.querySelector('input[name="skin"][value="' + prefs.skin + '"]');
+		if (r) r.checked = true;
+		r = root.querySelector('input[name="card-style"][value="' + prefs.cardStyle + '"]');
+		if (r) r.checked = true;
+		r = root.querySelector('input[name="tag-lang"][value="' + prefs.tagLang + '"]');
+		if (r) r.checked = true;
+		r = root.querySelector('input[name="search-mode"][value="' + prefs.searchMode + '"]');
+		if (r) r.checked = true;
+		root.querySelectorAll('input[data-show]').forEach(function (cb) {
+			var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
+			cb.checked = !!prefs[key];
+		});
+	}
+	settingsBtn.addEventListener('click', function () {
+		syncSettingsUi();
+		dialog.showModal();
+	});
+	closeBtn.addEventListener('click', function () {
+		dialog.close();
+	});
+	// 点遮罩关闭
+	dialog.addEventListener('click', function (e) {
+		if (e.target === dialog) dialog.close();
+	});
 
-				// 高亮：清空重建文本节点，命中片段包 mark（textContent 先还原避免嵌套）
-				function setHighlighted(el, original, kw) {
-					el.textContent = original;
-					var needle = kw.toLowerCase();
-					var idx = original.toLowerCase().indexOf(needle);
-					if (idx === -1) return;
-					var frag = document.createDocumentFragment();
-					var pos = 0;
-					while (idx !== -1) {
-						if (idx > pos) frag.appendChild(document.createTextNode(original.slice(pos, idx)));
-						var mark = document.createElement('mark');
-						mark.textContent = original.slice(idx, idx + needle.length);
-						frag.appendChild(mark);
-						pos = idx + needle.length;
-						idx = original.toLowerCase().indexOf(needle, pos);
-					}
-					if (pos < original.length) frag.appendChild(document.createTextNode(original.slice(pos)));
-					el.textContent = '';
-					el.appendChild(frag);
-				}
-
-				function apply() {
-					var sel = Array.from(active);
-					var kw = searchInput.value.trim();
-					var searching = kw.length > 0;
-					var lowKw = kw.toLowerCase();
-					// 交集：卡片须命中全部选中标签；过滤模式下还须命中关键词
-					var desired = items.filter(function (it) {
-						var tagOk = sel.every(function (t) { return it.tags.indexOf(t) !== -1; });
-						var kwOk = !searching || prefs.searchMode !== 'filter' || it.hay.indexOf(lowKw) !== -1;
-						return tagOk && kwOk;
-					});
-					// 先移出不再命中的卡片，再按原顺序补回命中的（auto-animate 负责动画）
-					items.forEach(function (it) {
-						if (desired.indexOf(it) === -1 && it.el.parentNode) it.el.remove();
-					});
-					desired.forEach(function (it, i) {
-						if (list.children[i] !== it.el) list.appendChild(it.el);
-					});
-					// 关键词高亮：两种模式下都标记命中片段；无关键词时还原纯文本
-					items.forEach(function (it) {
-						if (searching) {
-							setHighlighted(it.nameEl, it.nameText, kw);
-							setHighlighted(it.descEl, it.descText, kw);
-						} else {
-							it.nameEl.textContent = it.nameText;
-							it.descEl.textContent = it.descText;
-						}
-					});
-					// 空态提示
-					emptyEl.hidden = desired.length !== 0;
-					if (desired.length === 0) emptyEl.textContent = '没有匹配「' + kw + '」的站点';
-					// 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
-					chips.forEach(function (c) {
-						var f = c.dataset.filter;
-						if (f === 'all') {
-							c.classList.toggle('active', active.size === 0);
-							c.disabled = false;
-							return;
-						}
-						c.classList.toggle('active', active.has(f));
-						c.disabled =
-							!active.has(f) &&
-							!desired.some(function (it) { return it.tags.indexOf(f) !== -1; });
-					});
-				}
-				chips.forEach(function (c) {
-					c.addEventListener('click', function () {
-						if (c.disabled) return;
-						var f = c.dataset.filter;
-						if (f === 'all') active.clear();
-						else if (active.has(f)) active.delete(f);
-						else active.add(f);
-						apply();
-					});
-				});
-				searchInput.addEventListener('input', apply);
-
+	function bindRadios(name, onPick) {
+		root.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+			r.addEventListener('change', function () {
+				onPick(r.value);
 				applyPrefs();
-				apply();
-			})();
+				savePrefs();
+				syncSettingsUi();
+			});
+		});
+	}
+	bindRadios('skin', function (v) {
+		prefs.skin = v;
+	});
+	bindRadios('card-style', function (v) {
+		prefs.cardStyle = v;
+	});
+	bindRadios('tag-lang', function (v) {
+		prefs.tagLang = v;
+	});
+	bindRadios('search-mode', function (v) {
+		prefs.searchMode = v;
+		apply(); // 模式切换立即生效（过滤↔高亮）
+	});
+	root.querySelectorAll('input[data-show]').forEach(function (cb) {
+		cb.addEventListener('change', function () {
+			var key = 'show' + cb.dataset.show.charAt(0).toUpperCase() + cb.dataset.show.slice(1);
+			prefs[key] = cb.checked;
+			applyPrefs();
+			savePrefs();
+		});
+	});
+
+	// —— 列表数据与筛选状态 ——
+	var list = document.getElementById('list');
+	var searchInput = document.getElementById('search');
+	var emptyEl = document.getElementById('empty');
+	var emptyMsg = document.getElementById('empty-msg');
+	var summaryEl = document.getElementById('summary');
+	var sumParts = document.getElementById('sum-parts');
+	var countEl = document.getElementById('count');
+	var toTop = document.getElementById('to-top');
+	autoAnimate(list);
+
+	var items = Array.prototype.map.call(list.querySelectorAll('.item'), function (el) {
+		var nameEl = el.querySelector('.name');
+		var descEl = el.querySelector('.desc');
+		var nameText = nameEl.textContent;
+		var descText = descEl ? descEl.textContent : '';
+		var tagText = Array.prototype.map
+			.call(el.querySelectorAll('.tag'), function (t) {
+				return t.textContent;
+			})
+			.join(' ');
+		return {
+			el: el,
+			nameEl: nameEl,
+			descEl: descEl,
+			nameText: nameText,
+			descText: descText,
+			tags: el.dataset.tags ? el.dataset.tags.split(',').filter(Boolean) : [],
+			hay: (nameText + ' ' + descText + ' ' + tagText).toLowerCase()
+		};
+	});
+	var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+	var active = new Set();
+
+	// —— URL 状态：?tags=a,b&q=词（刷新/分享不丢；replaceState 不推历史栈）——
+	(function initFromUrl() {
+		var sp, q, tags;
+		try {
+			sp = new URLSearchParams(location.search);
+		} catch (e) {
+			return;
+		}
+		q = (sp.get('q') || '').trim();
+		tags = (sp.get('tags') || '')
+			.split(',')
+			.filter(function (t) {
+				return t && t !== 'all' && !!document.querySelector('.chip[data-filter="' + t + '"]');
+			});
+		if (q) searchInput.value = q;
+		tags.forEach(function (t) {
+			active.add(t);
+		});
+	})();
+
+	function chipName(slug) {
+		var c = document.querySelector('.chip[data-filter="' + slug + '"]');
+		if (!c) return slug;
+		var n = c.querySelector(prefs.tagLang === 'en' ? '.chip-en' : '.chip-zh');
+		return n ? n.textContent : slug;
+	}
+
+	function condText() {
+		var parts = [];
+		active.forEach(function (t) {
+			parts.push(chipName(t));
+		});
+		var kw = searchInput.value.trim();
+		if (kw) parts.push('搜索：「' + kw + '」');
+		return parts.join(' × ');
+	}
+
+	// 高亮：清空重建文本节点，命中片段包 mark（textContent 先还原避免嵌套）
+	function setHighlighted(el, original, kw) {
+		el.textContent = original;
+		var needle = kw.toLowerCase();
+		var idx = original.toLowerCase().indexOf(needle);
+		if (idx === -1) return;
+		var frag = document.createDocumentFragment();
+		var pos = 0;
+		while (idx !== -1) {
+			if (idx > pos) frag.appendChild(document.createTextNode(original.slice(pos, idx)));
+			var mark = document.createElement('mark');
+			mark.textContent = original.slice(idx, idx + needle.length);
+			frag.appendChild(mark);
+			pos = idx + needle.length;
+			idx = original.toLowerCase().indexOf(needle, pos);
+		}
+		if (pos < original.length) frag.appendChild(document.createTextNode(original.slice(pos)));
+		el.textContent = '';
+		el.appendChild(frag);
+	}
+
+	function syncUrl(kw) {
+		try {
+			var p = new URLSearchParams();
+			if (active.size) p.set('tags', Array.from(active).join(','));
+			if (kw) p.set('q', kw);
+			var qs = p.toString();
+			history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+		} catch (e) {}
+	}
+
+	function apply() {
+		var sel = Array.from(active);
+		var kw = searchInput.value.trim();
+		var searching = kw.length > 0;
+		var lowKw = kw.toLowerCase();
+		var highlightOnly = searching && prefs.searchMode === 'highlight';
+		var matched = 0;
+		// 交集：卡片须命中全部选中标签；过滤模式下还须命中关键词
+		var desired = items.filter(function (it) {
+			var tagOk = sel.every(function (t) {
+				return it.tags.indexOf(t) !== -1;
+			});
+			var kwOk = !searching || it.hay.indexOf(lowKw) !== -1;
+			if (tagOk && kwOk) matched++;
+			return tagOk && (highlightOnly || kwOk);
+		});
+		// 先移出不再命中的卡片，再按原顺序补回（auto-animate 负责过渡）
+		items.forEach(function (it) {
+			if (desired.indexOf(it) === -1 && it.el.parentNode) it.el.remove();
+		});
+		desired.forEach(function (it, i) {
+			if (list.children[i] !== it.el) list.appendChild(it.el);
+		});
+		// 关键词高亮：命中片段标 mark；无关键词还原纯文本
+		items.forEach(function (it) {
+			if (searching) {
+				setHighlighted(it.nameEl, it.nameText, kw);
+				if (it.descEl) setHighlighted(it.descEl, it.descText, kw);
+			} else {
+				it.nameEl.textContent = it.nameText;
+				if (it.descEl) it.descEl.textContent = it.descText;
+			}
+		});
+		// 空态（仅过滤模式零命中）：回显当前条件 + 恢复动作
+		var dead = !highlightOnly && desired.length === 0;
+		emptyEl.hidden = !dead;
+		if (dead) emptyMsg.textContent = '没有匹配（' + condText() + '）的站点';
+		// chips 置灰：未选中标签在当前命中卡片中一个都没有 → disabled
+		chips.forEach(function (c) {
+			var f = c.dataset.filter;
+			if (f === 'all') {
+				c.classList.toggle('active', active.size === 0);
+				c.disabled = false;
+				return;
+			}
+			c.classList.toggle('active', active.has(f));
+			c.disabled =
+				!active.has(f) &&
+				!desired.some(function (it) {
+					return it.tags.indexOf(f) !== -1;
+				});
+		});
+		// 摘要条 + 命中计数（两种模式都按「站」计）
+		var filtering = active.size > 0 || searching;
+		summaryEl.hidden = !filtering;
+		if (filtering) {
+			sumParts.innerHTML = '';
+			active.forEach(function (t) {
+				var pill = document.createElement('span');
+				pill.className = 'sum-tag';
+				pill.textContent = chipName(t);
+				sumParts.appendChild(pill);
+			});
+			if (searching) {
+				var sp2 = document.createElement('span');
+				sp2.className = 'sum-tag';
+				sp2.textContent = '搜索：' + kw;
+				sumParts.appendChild(sp2);
+			}
+			countEl.innerHTML = '';
+			var b = document.createElement('b');
+			countEl.appendChild(document.createTextNode('命中 '));
+			b.textContent = highlightOnly ? matched : desired.length;
+			countEl.appendChild(b);
+			countEl.appendChild(
+				document.createTextNode(highlightOnly ? ' 站' : ' / ' + items.length + ' 站')
+			);
+		}
+		syncUrl(kw);
+	}
+
+	// —— 事件 ——
+	chips.forEach(function (c) {
+		c.addEventListener('click', function () {
+			if (c.disabled) return;
+			var f = c.dataset.filter;
+			if (f === 'all') active.clear();
+			else if (active.has(f)) active.delete(f);
+			else active.add(f);
+			apply();
+		});
+	});
+	searchInput.addEventListener('input', apply);
+	document.getElementById('empty-clear-search').addEventListener('click', function () {
+		searchInput.value = '';
+		apply();
+	});
+	document.getElementById('empty-clear-filters').addEventListener('click', function () {
+		active.clear();
+		apply();
+	});
+	document.getElementById('clear-all').addEventListener('click', function () {
+		active.clear();
+		searchInput.value = '';
+		apply();
+	});
+	// `/` 聚焦搜索（输入框内不拦截）
+	document.addEventListener('keydown', function (e) {
+		if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+		var t = e.target;
+		if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+		e.preventDefault();
+		searchInput.focus();
+	});
+	// 返回顶部
+	window.addEventListener(
+		'scroll',
+		function () {
+			toTop.hidden = window.scrollY < 600;
+		},
+		{ passive: true }
+	);
+	toTop.addEventListener('click', function () {
+		var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+	});
+
+	applyPrefs();
+	apply();
+})();
+
 		</script>
 	</body>
 </html>

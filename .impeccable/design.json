@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26",
+  "title": "Design System: docs-cn 入口页",
+  "extensions": {
+    "colorMeta": {
+      "surface": { "role": "neutral", "displayName": "卡面白", "canonical": "#ffffff", "tonalRamp": ["#c9c9c9", "#d7d7d7", "#e3e3e3", "#ededed", "#f4f4f4", "#f9f9f9", "#fdfdfd", "#ffffff"] },
+      "mdn-bg": { "role": "neutral", "displayName": "MDN 纯白底", "canonical": "#ffffff", "tonalRamp": ["#c9c9c9", "#d7d7d7", "#e3e3e3", "#ededed", "#f4f4f4", "#f9f9f9", "#fdfdfd", "#ffffff"] },
+      "mdn-ink": { "role": "neutral", "displayName": "MDN 近黑正文", "canonical": "#1b1b1b", "tonalRamp": ["#000000", "#0d0d0d", "#1b1b1b", "#3d3d3d", "#6b6b6b", "#9c9c9c", "#cfcfcf", "#f7f7f7"] },
+      "mdn-note": { "role": "neutral", "displayName": "MDN 次级灰", "canonical": "#4e4e4e", "tonalRamp": ["#1f1f1f", "#333333", "#4e4e4e", "#6d6d6d", "#8f8f8f", "#b3b3b3", "#d9d9d9", "#f5f5f5"] },
+      "mdn-accent": { "role": "primary", "displayName": "MDN 链接蓝", "canonical": "#0069c2", "tonalRamp": ["#002c50", "#004a85", "#0069c2", "#2883d1", "#5b9fdc", "#8fbbe8", "#bdd6f2", "#e2eef9"] },
+      "mdn-border": { "role": "neutral", "displayName": "MDN 控件描边灰", "canonical": "#d7d7d7", "tonalRamp": ["#8f8f8f", "#a3a3a3", "#b5b5b5", "#c4c4c4", "#d0d0d0", "#d7d7d7", "#e4e4e4", "#f2f2f2"] },
+      "mdn-hairline": { "role": "neutral", "displayName": "MDN 分隔发丝线", "canonical": "#e3e3e3", "tonalRamp": ["#9e9e9e", "#b0b0b0", "#c0c0c0", "#cccccc", "#d7d7d7", "#e3e3e3", "#eeeeee", "#f7f7f7"] },
+      "mdn-surface2": { "role": "neutral", "displayName": "MDN 浅面（摘要条底）", "canonical": "#f2f2f2", "tonalRamp": ["#a8a8a8", "#b8b8b8", "#c7c7c7", "#d4d4d4", "#dedede", "#e6e6e6", "#ececec", "#f2f2f2"] },
+      "mdn-row-hover": { "role": "neutral", "displayName": "MDN 行 hover 灰带", "canonical": "#f5f5f5", "tonalRamp": ["#adadad", "#bcbcbc", "#cacaca", "#d6d6d6", "#dfdfdf", "#e7e7e7", "#eeeeee", "#f5f5f5"] },
+      "github-bg": { "role": "neutral", "displayName": "GitHub 灰底（Primer canvas-subtle）", "canonical": "#f6f8fa", "tonalRamp": ["#c6d0d9", "#d3dbe2", "#dde3e9", "#e5eaf0", "#eceff4", "#f0f3f6", "#f4f6f8", "#f6f8fa"] },
+      "github-ink": { "role": "neutral", "displayName": "GitHub 近黑正文（Primer fg-default）", "canonical": "#1f2328", "tonalRamp": ["#0a0d10", "#14181c", "#1f2328", "#3f454d", "#6a7280", "#9ea7b1", "#ccd1d9", "#f0f2f5"] },
+      "github-note": { "role": "neutral", "displayName": "GitHub 次级灰（Primer fg-muted）", "canonical": "#57606a", "tonalRamp": ["#24292f", "#3a424b", "#57606a", "#78838e", "#a3adb7", "#cdd3da", "#e7ebef", "#f6f8fa"] },
+      "github-accent": { "role": "primary", "displayName": "GitHub 蓝（Primer accent-emphasis）", "canonical": "#0969da", "tonalRamp": ["#04294f", "#065aa8", "#0969da", "#2f7fdc", "#66a1e6", "#9dc1ef", "#c8ddf7", "#e4eefb"] },
+      "github-border": { "role": "neutral", "displayName": "GitHub 边框（Primer border-default）", "canonical": "#d0d7de", "tonalRamp": ["#808f9c", "#95a3af", "#a8b4bf", "#b8c2cb", "#c5cdd4", "#d0d7de", "#dde3e9", "#e9edf2"] },
+      "github-hairline": { "role": "neutral", "displayName": "GitHub 分隔线（Primer border-muted）", "canonical": "#d8dee4", "tonalRamp": ["#8b98a5", "#9fabb6", "#b1bcc6", "#c0c9d1", "#cbd2d9", "#d8dee4", "#e3e8ed", "#edf0f3"] },
+      "github-chip-hover": { "role": "neutral", "displayName": "GitHub chip hover 底（Primer neutral-muted）", "canonical": "#eaeef2", "tonalRamp": ["#9aa7b3", "#abb6c1", "#bac4cd", "#c7d0d8", "#d2dae0", "#dae1e7", "#e2e8ed", "#eaeef2"] },
+      "github-row-hover-border": { "role": "neutral", "displayName": "GitHub 卡 hover 描边", "canonical": "#8c959f", "tonalRamp": ["#3c444d", "#555f69", "#6e7883", "#8c959f", "#a5adb6", "#bdc4cc", "#d5dade", "#eaeef1"] },
+      "vercel-bg": { "role": "neutral", "displayName": "Vercel 灰底（Geist background）", "canonical": "#fafafa", "tonalRamp": ["#c8c8c8", "#d6d6d6", "#e2e2e2", "#ebebeb", "#f1f1f1", "#f5f5f5", "#f8f8f8", "#fafafa"] },
+      "vercel-ink": { "role": "neutral", "displayName": "Vercel 近黑正文（Geist gray-1000）", "canonical": "#111111", "tonalRamp": ["#000000", "#0a0a0a", "#111111", "#333333", "#666666", "#999999", "#cccccc", "#f5f5f5"] },
+      "vercel-note": { "role": "neutral", "displayName": "Vercel 次级灰（Geist gray-700）", "canonical": "#666666", "tonalRamp": ["#1a1a1a", "#333333", "#666666", "#8c8c8c", "#adadad", "#cccccc", "#e5e5e5", "#f5f5f5"] },
+      "vercel-accent": { "role": "primary", "displayName": "Vercel 蓝（Geist blue-600）", "canonical": "#0070f3", "tonalRamp": ["#032e61", "#0454b4", "#0070f3", "#2e88f6", "#6aa9f8", "#a3caf9", "#cfe2fb", "#e7f0fd"] },
+      "vercel-border": { "role": "neutral", "displayName": "Vercel 细线（Geist gray-300，描边与分隔同线）", "canonical": "#eaeaea", "tonalRamp": ["#8c8c8c", "#a0a0a0", "#b4b4b4", "#c4c4c4", "#d1d1d1", "#dbdbdb", "#e3e3e3", "#eaeaea"] },
+      "vercel-surface2": { "role": "neutral", "displayName": "Vercel 浅面", "canonical": "#f5f5f5", "tonalRamp": ["#ababab", "#bcbcbc", "#cacaca", "#d7d7d7", "#e1e1e1", "#e8e8e8", "#efefef", "#f5f5f5"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Wordmark", "purpose": "仅页首「docs-cn」一处，全页唯一重字重（800）。" },
+      "headline": { "displayName": "Headline / 站名", "purpose": "列表行站名，hover 变主色；紧凑密度降至 0.98rem。" },
+      "body": { "displayName": "Body / 描述", "purpose": "行描述与全局正文基准（14px/1.55）。" },
+      "label": { "displayName": "Label / 控件文字", "purpose": "chips、按钮、CTA、副标题等界面文字（0.75–0.92rem）。" },
+      "mono": { "displayName": "Mono / 机器事实", "purpose": "快捷键提示、元数据行、命中计数、EN 徽标——只排机器产生的字符串。" }
+    },
+    "shadows": [
+      { "name": "row-hover-github", "value": "0 1px 4px rgba(31, 35, 40, 0.09)", "purpose": "仅 GitHub 皮肤：白卡 hover 时浮起一毫米。" },
+      { "name": "row-hover-vercel", "value": "0 2px 4px rgba(0, 0, 0, 0.06)", "purpose": "仅 Vercel 皮肤：白卡 hover，伴随描边变主色。" },
+      { "name": "to-top", "value": "0 2px 8px rgba(0, 0, 0, 0.12)", "purpose": "固定返回顶部钮与内容分离。" },
+      { "name": "dialog", "value": "0 8px 32px rgba(0, 0, 0, 0.18)", "purpose": "设置弹窗（模态层）唯一的重阴影，遮罩 rgba(20,20,20,0.4)。" }
+    ],
+    "motion": [
+      { "name": "micro-transition", "value": "0.15s ease-out", "purpose": "所有状态过渡的统一时长与缓动，只动颜色/背景/边框/透明度/位移；prefers-reduced-motion 下全部关闭。" },
+      { "name": "list-auto-animate", "value": "@formkit/auto-animate@0.10.0（vendor 内联，构建时转全局变量）", "purpose": "筛选增删行时的进出场与重排过渡，保持零外部请求。" },
+      { "name": "smooth-scroll-top", "value": "window.scrollTo({behavior: 'smooth'}); reduced-motion 时 'auto'", "purpose": "返回顶部钮的滚动行为。" }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "max-width: 560px" },
+      { "name": "touch", "value": "(hover: none)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "大搜索（MDN 全宽）",
+      "kind": "input",
+      "refersTo": "search-mdn",
+      "description": "放大镜 + 无框输入 + kbd 提示；focus-within 描边变主色，全局 / 键聚焦。MDN 形态为 52px 高全宽 1.5px 近黑描边。",
+      "html": "<div class=\"ds-search\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#4e4e4e\" stroke-width=\"1.5\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"4.2\"/><path d=\"m13.5 13.5-3.8-3.8\"/></svg><input type=\"search\" placeholder=\"搜索 21 个文档站…\" aria-label=\"搜索站点名称或描述\"><kbd class=\"ds-kbd\" aria-hidden=\"true\"></kbd></div>",
+      "css": ".ds-search{display:flex;align-items:center;gap:10px;height:52px;padding:0 14px;background:#fff;border:1.5px solid #1b1b1b;border-radius:6px;transition:border-color .15s ease-out;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-search:focus-within{border-color:#0069c2}.ds-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:.92rem;color:#1b1b1b;caret-color:#0069c2}.ds-search input::placeholder{color:#4e4e4e}.ds-kbd{flex:none;font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:11px;color:#4e4e4e;border:1px solid #d7d7d7;border-radius:4px;padding:1px 6px}.ds-kbd::after{content:'/'}"
+    },
+    {
+      "name": "过滤 chips（MDN 矩形）",
+      "kind": "chip",
+      "refersTo": "chip-mdn",
+      "description": "标签多选过滤组；选中黑底白字，交集下无可命中的 chip 置灰禁用（opacity .35）。「全部」常驻行首。",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip is-active\" type=\"button\">全部</button><button class=\"ds-chip\" type=\"button\">智能体</button><button class=\"ds-chip\" type=\"button\">文档工程</button><button class=\"ds-chip\" type=\"button\" disabled>部署运维</button></div>",
+      "css": ".ds-chips{display:flex;flex-wrap:wrap;gap:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-chip{font:inherit;font-size:.82rem;height:32px;padding:0 14px;color:#1b1b1b;background:transparent;border:1.5px solid #1b1b1b;border-radius:4px;cursor:pointer;white-space:nowrap;transition:color .15s ease-out,background .15s ease-out,border-color .15s ease-out}.ds-chip:hover{color:#0069c2;border-color:#0069c2;background:#f5f5f5}.ds-chip:focus-visible{outline:2px solid #0069c2;outline-offset:2px}.ds-chip.is-active{color:#fff;background:#1b1b1b}.ds-chip:disabled{opacity:.35;cursor:not-allowed}.ds-chip:disabled:hover{color:#1b1b1b;border-color:#1b1b1b;background:transparent}"
+    },
+    {
+      "name": "站点行（MDN 开放行 + hover 主行动）",
+      "kind": "card",
+      "refersTo": "row-mdn",
+      "description": "签名组件：hairline 开放行，站名 700 + 描述 + 等宽元数据行 + 标签胶囊；hover 灰带 + 站名变蓝 + 「阅读中文文档 →」浮现（触屏常显，≤560px 隐藏）。",
+      "html": "<article class=\"ds-row\"><h3 class=\"ds-row-name\">LiteLLM</h3><p class=\"ds-row-desc\">统一 100+ 家模型提供商的 API 网关与代理服务器中文文档。</p><p class=\"ds-row-meta\">700 页 · Starlight · 快照 2026-10-25</p><div class=\"ds-row-tags\"><span class=\"ds-tag\">SDK 与 API</span><span class=\"ds-tag\">部署运维</span></div><span class=\"ds-cta\">阅读中文文档 <svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.5 8H13\"/><path d=\"M8.5 3.5 13 8l-4.5 4.5\"/></svg></span></article>",
+      "css": ".ds-row{display:block;padding:18px 4px;background:#fff;border-bottom:1px solid #e3e3e3;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;transition:background .15s ease-out}.ds-row:hover{background:#f5f5f5}.ds-row-name{margin:0;font-size:1.08rem;font-weight:700;letter-spacing:-.005em;color:#1b1b1b;transition:color .15s ease-out}.ds-row:hover .ds-row-name{color:#0069c2}.ds-row-desc{margin:2px 0 0;color:#4e4e4e;font-size:.9rem;line-height:1.55}.ds-row-meta{margin:7px 0 0;color:#4e4e4e;font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-row-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.ds-tag{font-size:.75rem;color:#4e4e4e;border:1px solid #e3e3e3;border-radius:999px;padding:.22rem .62rem;background:#fff;white-space:nowrap}.ds-cta{display:inline-flex;align-items:center;gap:5px;margin:0 16px;font-size:.85rem;font-weight:500;color:#0069c2;white-space:nowrap;opacity:0;transform:translateX(-4px);transition:opacity .15s ease-out,transform .15s ease-out}.ds-row:hover .ds-cta,.ds-row:focus-within .ds-cta{opacity:1;transform:none}"
+    },
+    {
+      "name": "已选摘要条",
+      "kind": "custom",
+      "refersTo": "summary-pill",
+      "description": "筛选/搜索状态的常驻回显：条件 pill + 清除全部 + 等宽计数「命中 N / 21 站」；无条件时整条消失。",
+      "html": "<div class=\"ds-summary\"><span class=\"ds-sum-parts\"><span class=\"ds-sum-pill\">智能体</span><span class=\"ds-sum-pill\">搜索：agent</span></span><button class=\"ds-sum-clear\" type=\"button\">清除全部</button><span class=\"ds-count\">命中 <b>6</b> / 21 站</span></div>",
+      "css": ".ds-summary{display:flex;align-items:center;gap:10px;padding:7px 12px;background:#f2f2f2;border:1px solid #e3e3e3;border-radius:6px;font-size:.85rem;color:#4e4e4e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-sum-parts{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0}.ds-sum-pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;background:#fff;border:1px solid #e3e3e3;border-radius:999px;color:#1b1b1b}.ds-sum-clear{font:inherit;font-size:.8rem;border:0;background:none;color:#0069c2;cursor:pointer;padding:2px 4px}.ds-sum-clear:hover{text-decoration:underline}.ds-count{margin-left:auto;font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.8rem;color:#4e4e4e;white-space:nowrap}.ds-count b{color:#1b1b1b}"
+    },
+    {
+      "name": "空态（可恢复）",
+      "kind": "custom",
+      "description": "零命中时居中复述当前条件并给出两个恢复动作；状态不蒸发原则的兜底面。",
+      "html": "<div class=\"ds-empty\"><p>没有匹配（智能体 × 搜索：「xyz」）的站点</p><div class=\"ds-empty-actions\"><button type=\"button\">清除搜索</button><span aria-hidden=\"true\">×</span><button type=\"button\">清除全部筛选</button></div></div>",
+      "css": ".ds-empty{padding:3rem 0;text-align:center;color:#4e4e4e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-empty p{margin:0 0 .9rem;font-size:.92rem}.ds-empty-actions{display:flex;justify-content:center;align-items:center;gap:10px}.ds-empty-actions button{font:inherit;font-size:.85rem;padding:7px 14px;color:#0069c2;background:#fff;border:1px solid #d7d7d7;border-radius:6px;cursor:pointer;transition:border-color .15s ease-out}.ds-empty-actions button:hover{border-color:#0069c2}"
+    },
+    {
+      "name": "设置弹窗",
+      "kind": "custom",
+      "refersTo": "settings-dialog",
+      "description": "原生 dialog：五组 fieldset（皮肤/密度/标签语言/搜索模式/卡片显隐）；seg 项选中描边+文字变主色，偏好写 localStorage 且渲染前预读防闪烁。",
+      "html": "<div class=\"ds-settings\"><div class=\"ds-settings-head\"><strong>显示设置</strong><button class=\"ds-settings-close\" type=\"button\" aria-label=\"关闭\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m4 4 8 8M12 4l-8 8\"/></svg></button></div><fieldset><legend>界面风格</legend><div class=\"ds-seg\"><label class=\"ds-seg-item is-checked\"><input type=\"radio\" name=\"ds-skin\" checked>MDN</label><label class=\"ds-seg-item\"><input type=\"radio\" name=\"ds-skin\">GitHub</label><label class=\"ds-seg-item\"><input type=\"radio\" name=\"ds-skin\">Vercel</label></div></fieldset><fieldset><legend>卡片风格</legend><div class=\"ds-seg\"><label class=\"ds-seg-item is-checked\"><input type=\"radio\" name=\"ds-card\" checked>标准</label><label class=\"ds-seg-item\"><input type=\"radio\" name=\"ds-card\">紧凑</label><label class=\"ds-seg-item\"><input type=\"radio\" name=\"ds-card\">网格</label></div></fieldset></div>",
+      "css": ".ds-settings{background:#fff;color:#1b1b1b;border:1px solid #d7d7d7;border-radius:12px;padding:1.25rem 1.5rem;min-width:300px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.18);user-select:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-settings-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 .75rem}.ds-settings-close{display:grid;place-items:center;width:30px;height:30px;border:none;background:none;color:#4e4e4e;cursor:pointer;border-radius:6px}.ds-settings-close:hover{color:#1b1b1b;background:#f2f2f2}.ds-settings fieldset{border:none;margin:0 0 1rem;padding:0}.ds-settings fieldset:last-child{margin-bottom:0}.ds-settings legend{font-size:.85rem;font-weight:600;color:#4e4e4e;padding:0;margin-bottom:.5rem}.ds-seg{display:flex;gap:8px;flex-wrap:wrap}.ds-seg-item{display:inline-flex;align-items:center;gap:6px;font-size:.88rem;border:1px solid #d7d7d7;border-radius:8px;padding:6px 12px;cursor:pointer;background:#fff;transition:border-color .15s ease-out,color .15s ease-out}.ds-seg-item.is-checked{border-color:#0069c2;color:#0069c2}.ds-seg-item input{accent-color:#0069c2;margin:0}"
+    },
+    {
+      "name": "次级链接迷你钮组",
+      "kind": "button",
+      "refersTo": "mini-button",
+      "description": "行尾弱化图标钮：EN 等宽文字徽标 + 官方文档 + 上游仓库；30px 见方（移动端 44px），hover 主色+浅面底。",
+      "html": "<div class=\"ds-btns\"><a class=\"ds-mini ds-mini-text\" href=\"#\" title=\"英文文档（本站镜像）\" aria-label=\"英文文档\">EN</a><a class=\"ds-mini\" href=\"#\" title=\"官方文档（上游原站）\" aria-label=\"官方文档\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 3.5H4.5A1.5 1.5 0 0 0 3 5v6.5A1.5 1.5 0 0 0 4.5 13H11a1.5 1.5 0 0 0 1.5-1.5V9\"/><path d=\"M9.5 2.5h4v4\"/><path d=\"M13 3 8 8\"/></svg></a><a class=\"ds-mini\" href=\"#\" title=\"上游仓库\" aria-label=\"上游仓库\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"4.5\" cy=\"4\" r=\"1.7\"/><circle cx=\"4.5\" cy=\"12\" r=\"1.7\"/><circle cx=\"11.5\" cy=\"5\" r=\"1.7\"/><path d=\"M4.5 5.7v4.6\"/><path d=\"M11.5 6.7c0 2.6-4 2.2-7 3.4\"/></svg></a></div>",
+      "css": ".ds-btns{display:flex;align-items:center;gap:2px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-mini{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;color:#4e4e4e;text-decoration:none;transition:color .15s ease-out,background .15s ease-out}.ds-mini:hover,.ds-mini:focus-visible{color:#0069c2;background:#f2f2f2}.ds-mini-text{width:auto;min-width:30px;padding:0 8px;font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.72rem;font-weight:600;letter-spacing:.04em;border:1px solid #e3e3e3}"
+    },
+    {
+      "name": "返回顶部钮",
+      "kind": "button",
+      "refersTo": "to-top",
+      "description": "滚动 ≥600px 出现的 44px 固定浮钮；hover 描边变主色；点击平滑滚顶（reduced-motion 瞬时）。",
+      "html": "<button class=\"ds-to-top\" type=\"button\" aria-label=\"返回顶部\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 13V3M3.5 7.5 8 3l4.5 4.5\"/></svg></button>",
+      "css": ".ds-to-top{width:44px;height:44px;display:grid;place-items:center;color:#1b1b1b;background:#fff;border:1px solid #d7d7d7;border-radius:8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:border-color .15s ease-out;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif}.ds-to-top:hover{border-color:#0069c2}"
+    }
+  ],
+  "narrative": {
+    "northStar": "「品类标准，MDN 工艺」",
+    "overview": "这是一个把「几秒定位一个开源项目的中文文档」当作唯一器官来打磨的检索页：搜索、筛选、摘要、空态全部为定位服务，没有装饰性的主行动、没有会蒸发的状态。视觉走品类标准精修路线——以 MDN 2023 设计语言为默认皮肤（纯白底、近黑文字、链接蓝、全宽大搜索、矩形过滤组、hairline 开放行），叠加 GitHub（Primer 灰底白卡）与 Vercel（Geist 细边框）两套皮肤。皮肤的实现机制是本系统的骨架：三套皮肤各自是一组 CSS 自定义属性（底色、文字、主色、边框、chip 形态、搜索形态），通过 <html data-skin> 一次切换，结构规则零分叉。系统字体栈渲染、全部图标内联 SVG、列表动画 vendor 内联——零外部请求、单文件自包含是硬约束。信息密度中高：一行一站点，主行动在 hover 时浮现，触屏常显；整页近乎单色，蓝色只出现在交互语义上。",
+    "keyCharacteristics": [
+      "三皮肤 = 三组 CSS 变量（data-skin=mdn/github/vercel），MDN 为默认，切换不改结构",
+      "系统字体栈 + 内联 SVG + vendor 内联 JS：零外部请求，断网可用",
+      "蓝色只承载交互语义（hover、焦点、CTA、链接、高亮），不做装饰",
+      "开放行为 MDN 默认形态，卡片化是 GitHub/Vercel 皮肤的表达",
+      "等宽字体只用于「机器事实」：快捷键提示、元数据行、命中计数、EN 徽标",
+      "每一个筛选/搜索状态都有回显：摘要条 pill、命中计数、URL 参数、空态条件复述"
+    ],
+    "rules": [
+      { "name": "单一主声部 Rule", "body": "蓝色（无论哪个皮肤的主色）只出现在可交互或可聚焦的元素上，且单屏占比远低于 10%；页面的「品牌色」是近黑与白，蓝是动词不是形容词。", "section": "colors" },
+      { "name": "不虚构 Rule", "body": "元数据行（页数 · 工具链 · 快照日）只来自 sites.json 的 meta 字段，缺项跳过、整行缺省即不渲染；颜色与字体可以有皮肤差异，数据永远只有一份事实。", "section": "colors" },
+      { "name": "等宽即机器事实 Rule", "body": "等宽字体专用于机器产生的字符串——快捷键、页数、工具链名、快照日期、命中数、EN 徽标；任何「人写的话」不进等宽。", "section": "typography" },
+      { "name": "开放行默认 Rule", "body": "MDN 皮肤的列表是「hairline 分隔的开放行」（gap 0、无框、浅灰 hover 带）——卡片（边框+圆角+间隙）是 GitHub/Vercel 皮肤的表达方式，不是本系统的默认形态。", "section": "layout" },
+      { "name": "44px Rule", "body": "≤560px 下所有可触目标——搜索框、设置钮、chips、迷你图标钮——不小于 44px 见方；桌面态迷你钮可为 30px，因为那是指针的领地。", "section": "layout" },
+      { "name": "扁平默认，阴影即反馈 Rule", "body": "静止的列表内容不投影；阴影要么是浮层（弹窗、返回顶部）的身份，要么是皮肤对 hover 的应答（GitHub/Vercel），MDN 基础态的 hover 只有底色与边框。", "section": "elevation" },
+      { "name": "皮肤即变量组 Rule", "body": "形态差异（描边粗细、圆角、chip 是否胶囊）全部收敛进 --chip-* / --search-* / --row-* 变量组；新增皮肤只允许写变量覆盖，不允许为皮肤添加结构性 CSS 规则。", "section": "shapes" }
+    ],
+    "dos": [
+      "Do 新增皮肤时只写一组 data-skin 变量覆盖（底色/文字/主色/边框/搜索/chip/行），结构 CSS 零分叉。",
+      "Do 图标全部内联 SVG、stroke 1.5 线宽、12–16px、圆头端点；颜色跟随 currentColor。",
+      "Do 移动端所有触控目标 ≥44px；触屏下 CTA 常显、hover 态全部有非 hover 兜底。",
+      "Do 元数据行严格来自 sites.json 的 meta，缺哪段跳哪段，整行缺省不渲染。",
+      "Do 交互改动后重跑 node scripts/gen-index.cjs 刷新 index.html（产物禁手改）。"
+    ],
+    "donts": [
+      "Don't 引入任何外部请求——网络字体、CDN 脚本、外链图片、图标字体一律禁止；新依赖必须 vendor 内联。",
+      "Don't 在 MDN 基础态给列表内容加阴影或卡片边框；阴影只属于浮层与 GitHub/Vercel 的 hover 应答。",
+      "Don't 让蓝色出现在非交互元素上，或用主色做大面积铺底。",
+      "Don't 出现无回显的状态：筛选/搜索必须同时体现在摘要条、计数与 URL；空态必须复述条件并给出恢复动作。",
+      "Don't 把人读文案排进等宽字体，或给机器事实用非等宽排印。"
+    ]
+  }
+}
