@@ -60,10 +60,11 @@ function extractRefs(kind, base, text) {
       const candidates = re === SRCSET_RE ? m[1].split(',') : [m[1]];
       for (const cand of candidates) {
         let ref = cand.trim().split(/\s+/)[0];
-        if (!ref || !ref.startsWith('/')) continue;
+        if (!ref) continue;
         if (ref.startsWith('./') || ref.startsWith('../')) {
           ref = new URL(ref, 'https://x.test' + base).pathname;
         }
+        if (!ref.startsWith('/')) continue;
         refs.push(ref);
       }
     }
