@@ -461,6 +461,40 @@ jobs:
           # 正文树保留 /docs 段与上游 URL 1:1（对照配对），站点根放一个跳转页
           printf '<!DOCTYPE html><meta charset="utf-8"><title>Tailscale 中文文档</title><script>location.replace("./docs/")</script><a href="./docs/">进入文档</a>' > ../_site/tailscale/index.html
 
+      # impeccable-docs-cn 是 Astro 源码重建站（上游快照 main@b5ec969c）：
+      # authored 链接已由 tools/add-base.mjs 源码级前缀化，astro.config.mjs 带
+      # base=/docs-cn/impeccable；npm build 会自动先跑 prebuild（counts/detector/API JSON）。
+      - name: Restore impeccable-docs-cn dist
+        id: dist-impeccable
+        uses: actions/cache@v4
+        with:
+          path: _site/impeccable
+          key: dist-impeccable-${{ hashFiles('impeccable-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build impeccable-docs-cn
+        if: steps.dist-impeccable.outputs.cache-hit != 'true'
+        working-directory: impeccable-docs-cn
+        run: |
+          npm ci
+          npm run build
+          mv build ../_site/impeccable
+
+      # impeccable-mirror-cn 是线上构建产物镜像（无构建系统）：
+      # 站内根相对链接已由 tools/rewrite-base.mjs 改写为 /docs-cn/impeccable-mirror/ 前缀，
+      # 直接搬 site/ 即可。
+      - name: Restore impeccable-mirror-cn dist
+        id: dist-impeccable-mirror
+        uses: actions/cache@v4
+        with:
+          path: _site/impeccable-mirror
+          key: dist-impeccable-mirror-${{ hashFiles('impeccable-mirror-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Collect impeccable-mirror-cn
+        if: steps.dist-impeccable-mirror.outputs.cache-hit != 'true'
+        working-directory: impeccable-mirror-cn
+        run: |
+          mv site ../_site/impeccable-mirror
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -495,6 +529,8 @@ jobs:
             echo '| nimbus | ${{ steps.dist-nimbus.outputs.cache-hit == 'true' }} |'
             echo '| openship | ${{ steps.dist-openship.outputs.cache-hit == 'true' }} |'
             echo '| agent-skills | ${{ steps.dist-agent-skills.outputs.cache-hit == 'true' }} |'
+            echo '| impeccable | ${{ steps.dist-impeccable.outputs.cache-hit == 'true' }} |'
+            echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
             echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
             echo '| tailscale | ${{ steps.dist-tailscale.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
