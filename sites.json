@@ -187,7 +187,11 @@
     "name": "Tailscale",
     "slug": "tailscale",
     "desc": "Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。",
-    "tags": ["networking", "learning", "sdk-api"],
+    "tags": [
+      "networking",
+      "learning",
+      "sdk-api"
+    ],
     "orig": "https://tailscale.com/docs",
     "repo": "https://github.com/tailscale/tailscale"
   },
@@ -212,5 +216,17 @@
     ],
     "orig": "https://impeccable.style",
     "repo": "https://github.com/pbakaus/impeccable"
+  },
+  {
+    "name": "LiteLLM",
+    "slug": "litellm",
+    "desc": "LiteLLM 开源 AI 网关官方文档全站中文镜像——916 页：Python SDK、代理部署、路由与负载均衡、虚拟密钥与预算、防护栏、MCP 网关与 100+ 提供商接入。",
+    "tags": [
+      "sdk-api",
+      "deployment",
+      "ai-app-dev"
+    ],
+    "orig": "https://docs.litellm.ai/docs/",
+    "repo": "https://github.com/BerriAI/litellm-docs"
   }
 ]

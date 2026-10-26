@@ -1,0 +1,358 @@
+[
+ {
+  "path": "docs/anthropic_unified/structured_output.md",
+  "lines": 295
+ },
+ {
+  "path": "docs/auto_router/evaluate.md",
+  "lines": 76
+ },
+ {
+  "path": "docs/auto_router/index.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/auto_router/recommended_configurations.md",
+  "lines": 355
+ },
+ {
+  "path": "docs/completion/anthropic_advisor_tool.md",
+  "lines": 490
+ },
+ {
+  "path": "docs/completion/batching.md",
+  "lines": 281
+ },
+ {
+  "path": "docs/completion/computer_use.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/completion/document_understanding.md",
+  "lines": 417
+ },
+ {
+  "path": "docs/completion/drop_params.md",
+  "lines": 240
+ },
+ {
+  "path": "docs/completion/function_call.md",
+  "lines": 554
+ },
+ {
+  "path": "docs/completion/usage.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/contribute_integration/custom_webhook_api.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/decisions.md",
+  "lines": 392
+ },
+ {
+  "path": "docs/image_edits.md",
+  "lines": 649
+ },
+ {
+  "path": "docs/image_variations.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/interactions.md",
+  "lines": 268
+ },
+ {
+  "path": "docs/load_test_rpm.md",
+  "lines": 349
+ },
+ {
+  "path": "docs/mcp_client_allowlist.md",
+  "lines": 180
+ },
+ {
+  "path": "docs/mcp_servers/slack.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/memory_management.md",
+  "lines": 401
+ },
+ {
+  "path": "docs/provider_registration/index.md",
+  "lines": 325
+ },
+ {
+  "path": "docs/providers/ai21.md",
+  "lines": 215
+ },
+ {
+  "path": "docs/providers/anyscale.md",
+  "lines": 55
+ },
+ {
+  "path": "docs/providers/bedrock_mantle.md",
+  "lines": 514
+ },
+ {
+  "path": "docs/providers/bedrock_vector_store.md",
+  "lines": 337
+ },
+ {
+  "path": "docs/providers/bedrock.md",
+  "lines": 2909
+ },
+ {
+  "path": "docs/providers/docker_model_runner.md",
+  "lines": 278
+ },
+ {
+  "path": "docs/providers/empower.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/providers/friendliai.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/providers/groq.md",
+  "lines": 372
+ },
+ {
+  "path": "docs/providers/inception.md",
+  "lines": 190
+ },
+ {
+  "path": "docs/providers/jina_ai.md",
+  "lines": 172
+ },
+ {
+  "path": "docs/providers/microsoft_365_copilot.md",
+  "lines": 206
+ },
+ {
+  "path": "docs/providers/mistral_batches.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/providers/nebius.md",
+  "lines": 196
+ },
+ {
+  "path": "docs/providers/openai_compatible.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/providers/prism.md",
+  "lines": 320
+ },
+ {
+  "path": "docs/providers/recraft.md",
+  "lines": 304
+ },
+ {
+  "path": "docs/providers/scx_ai.md",
+  "lines": 236
+ },
+ {
+  "path": "docs/providers/text_completion_openai.md",
+  "lines": 163
+ },
+ {
+  "path": "docs/providers/topaz.md",
+  "lines": 28
+ },
+ {
+  "path": "docs/providers/vertex_ai/videos.md",
+  "lines": 307
+ },
+ {
+  "path": "docs/providers/xai_realtime.md",
+  "lines": 191
+ },
+ {
+  "path": "docs/providers/xiaomi_mimo.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/alerting.md",
+  "lines": 604
+ },
+ {
+  "path": "docs/proxy/caching_object_storage.md",
+  "lines": 80
+ },
+ {
+  "path": "docs/proxy/caching_semantic.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/proxy/client_setup/codex_cli.md",
+  "lines": 198
+ },
+ {
+  "path": "docs/proxy/debugging.md",
+  "lines": 205
+ },
+ {
+  "path": "docs/proxy/guardrails/conduct.md",
+  "lines": 125
+ },
+ {
+  "path": "docs/proxy/guardrails/litellm_content_filter.md",
+  "lines": 895
+ },
+ {
+  "path": "docs/proxy/guardrails/llm_as_a_judge.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/proxy/guardrails/policy_tags.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/proxy/guardrails/promptguard.md",
+  "lines": 259
+ },
+ {
+  "path": "docs/proxy/guardrails/qualifire.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/proxy/guardrails/repelloai.md",
+  "lines": 294
+ },
+ {
+  "path": "docs/proxy/guardrails/zscaler_ai_guard.md",
+  "lines": 166
+ },
+ {
+  "path": "docs/proxy/health_check_routing.md",
+  "lines": 363
+ },
+ {
+  "path": "docs/proxy/lens/coding-agents.md",
+  "lines": 104
+ },
+ {
+  "path": "docs/proxy/lens/deployment/litellm.md",
+  "lines": 137
+ },
+ {
+  "path": "docs/proxy/lens/deployment/upgrades.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/proxy/lens/framework-examples.md",
+  "lines": 701
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/langchain.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/opentelemetry.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/proxy/load_balancing.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/proxy/manifests_to_microservices.md",
+  "lines": 218
+ },
+ {
+  "path": "docs/proxy/multi_region.md",
+  "lines": 184
+ },
+ {
+  "path": "docs/proxy/multiple_admins.md",
+  "lines": 227
+ },
+ {
+  "path": "docs/proxy/pass_through_guardrails.md",
+  "lines": 251
+ },
+ {
+  "path": "docs/proxy/pass_through.md",
+  "lines": 475
+ },
+ {
+  "path": "docs/proxy/plugins.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/proxy/provider_discounts.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/proxy/realtime_webrtc.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/reliability.md",
+  "lines": 1170
+ },
+ {
+  "path": "docs/proxy/rules.md",
+  "lines": 61
+ },
+ {
+  "path": "docs/proxy/self_serve.md",
+  "lines": 439
+ },
+ {
+  "path": "docs/proxy/sync_anthropic_beta_headers.md",
+  "lines": 129
+ },
+ {
+  "path": "docs/proxy/tag_routing.md",
+  "lines": 811
+ },
+ {
+  "path": "docs/proxy/tool_policies.md",
+  "lines": 231
+ },
+ {
+  "path": "docs/proxy/ui_search_tools.md",
+  "lines": 50
+ },
+ {
+  "path": "docs/proxy/ui_spend_log_settings.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/user_management_heirarchy.md",
+  "lines": 19
+ },
+ {
+  "path": "docs/secret_managers/google_secret_manager.md",
+  "lines": 40
+ },
+ {
+  "path": "docs/secret_managers/overview.md",
+  "lines": 69
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai/architecture.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/troubleshoot/pip_venv_upgrade.md",
+  "lines": 122
+ },
+ {
+  "path": "src/pages/completion/supported.md",
+  "lines": 98
+ },
+ {
+  "path": "src/pages/contributing.md",
+  "lines": 42
+ },
+ {
+  "path": "src/pages/embedding/supported_embedding.md",
+  "lines": 5
+ }
+]

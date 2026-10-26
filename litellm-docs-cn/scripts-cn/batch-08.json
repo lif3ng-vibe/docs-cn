@@ -1,0 +1,358 @@
+[
+ {
+  "path": "docs/a2a_agent_headers.md",
+  "lines": 255
+ },
+ {
+  "path": "docs/adding_provider/simple_guardrail_tutorial.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/agent_resources.md",
+  "lines": 101
+ },
+ {
+  "path": "docs/auth_overview.md",
+  "lines": 166
+ },
+ {
+  "path": "docs/auto_router/feature_history.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/auto_router/optimize_classifier.md",
+  "lines": 708
+ },
+ {
+  "path": "docs/caching/all_caches.md",
+  "lines": 761
+ },
+ {
+  "path": "docs/claude_code_context_management.md",
+  "lines": 432
+ },
+ {
+  "path": "docs/completion/prefix.md",
+  "lines": 120
+ },
+ {
+  "path": "docs/default_code_snippet.md",
+  "lines": 22
+ },
+ {
+  "path": "docs/extras/contributing.md",
+  "lines": 42
+ },
+ {
+  "path": "docs/image_generation.md",
+  "lines": 327
+ },
+ {
+  "path": "docs/integrations/letta.md",
+  "lines": 928
+ },
+ {
+  "path": "docs/managed_agents.md",
+  "lines": 318
+ },
+ {
+  "path": "docs/mcp_servers/index.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/mcp_tool_search.md",
+  "lines": 146
+ },
+ {
+  "path": "docs/mcp_toolsets.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/mcp_troubleshoot.md",
+  "lines": 335
+ },
+ {
+  "path": "docs/mcp_usage.md",
+  "lines": 212
+ },
+ {
+  "path": "docs/ocr.md",
+  "lines": 357
+ },
+ {
+  "path": "docs/oidc.md",
+  "lines": 296
+ },
+ {
+  "path": "docs/providers/aleph_alpha.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/providers/amazon_nova.md",
+  "lines": 291
+ },
+ {
+  "path": "docs/providers/aws_sagemaker.md",
+  "lines": 673
+ },
+ {
+  "path": "docs/providers/azure/azure_anthropic.md",
+  "lines": 380
+ },
+ {
+  "path": "docs/providers/bedrock_embedding.md",
+  "lines": 513
+ },
+ {
+  "path": "docs/providers/bedrock_imported.md",
+  "lines": 610
+ },
+ {
+  "path": "docs/providers/black_forest_labs_img_edit.md",
+  "lines": 302
+ },
+ {
+  "path": "docs/providers/cerebras.md",
+  "lines": 150
+ },
+ {
+  "path": "docs/providers/chutes.md",
+  "lines": 173
+ },
+ {
+  "path": "docs/providers/dashscope.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/providers/deepinfra.md",
+  "lines": 196
+ },
+ {
+  "path": "docs/providers/deepseek.md",
+  "lines": 189
+ },
+ {
+  "path": "docs/providers/gigachat.md",
+  "lines": 284
+ },
+ {
+  "path": "docs/providers/github.md",
+  "lines": 262
+ },
+ {
+  "path": "docs/providers/gmi.md",
+  "lines": 141
+ },
+ {
+  "path": "docs/providers/langgraph.md",
+  "lines": 359
+ },
+ {
+  "path": "docs/providers/mongodb_vector_stores.md",
+  "lines": 440
+ },
+ {
+  "path": "docs/providers/perplexity.md",
+  "lines": 491
+ },
+ {
+  "path": "docs/providers/publicai.md",
+  "lines": 210
+ },
+ {
+  "path": "docs/providers/qwencloud.md",
+  "lines": 269
+ },
+ {
+  "path": "docs/providers/ragflow_vector_store.md",
+  "lines": 350
+ },
+ {
+  "path": "docs/providers/ragflow.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/providers/runwayml/images.md",
+  "lines": 199
+ },
+ {
+  "path": "docs/providers/vertex_self_deployed.md",
+  "lines": 230
+ },
+ {
+  "path": "docs/providers/vertex_transcription.md",
+  "lines": 275
+ },
+ {
+  "path": "docs/providers/vllm_batches.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/proxy/access_groups.md",
+  "lines": 123
+ },
+ {
+  "path": "docs/proxy/custom_prompt_management.md",
+  "lines": 224
+ },
+ {
+  "path": "docs/proxy/customer_routing.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/customer_usage.md",
+  "lines": 156
+ },
+ {
+  "path": "docs/proxy/db_sizing.md",
+  "lines": 72
+ },
+ {
+  "path": "docs/proxy/deploy.md",
+  "lines": 553
+ },
+ {
+  "path": "docs/proxy/forward_client_headers.md",
+  "lines": 419
+ },
+ {
+  "path": "docs/proxy/gcp_memorystore_iam.md",
+  "lines": 81
+ },
+ {
+  "path": "docs/proxy/guardrails/akto.md",
+  "lines": 164
+ },
+ {
+  "path": "docs/proxy/guardrails/guardrail_policies.md",
+  "lines": 452
+ },
+ {
+  "path": "docs/proxy/guardrails/microsoft_agent_365.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/proxy/high_throughput.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/proxy/identity_provisioning.md",
+  "lines": 192
+ },
+ {
+  "path": "docs/proxy/lens/deployment/local.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/proxy/lens/imported/coding-agents/codex.md",
+  "lines": 34
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/crewai.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/llamaindex.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/openai-agents.md",
+  "lines": 91
+ },
+ {
+  "path": "docs/proxy/lens/index.md",
+  "lines": 51
+ },
+ {
+  "path": "docs/proxy/management_cli.md",
+  "lines": 375
+ },
+ {
+  "path": "docs/proxy/master_key_rotations.md",
+  "lines": 181
+ },
+ {
+  "path": "docs/proxy/memory.md",
+  "lines": 184
+ },
+ {
+  "path": "docs/proxy/model_access_guide.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/native_litellm_prompt.md",
+  "lines": 310
+ },
+ {
+  "path": "docs/proxy/provider_budget_routing.md",
+  "lines": 413
+ },
+ {
+  "path": "docs/proxy/quick_start.md",
+  "lines": 470
+ },
+ {
+  "path": "docs/proxy/release_cycle.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/proxy/token_auth.md",
+  "lines": 1420
+ },
+ {
+  "path": "docs/proxy/ui/chat_ui.md",
+  "lines": 221
+ },
+ {
+  "path": "docs/proxy/ui/ui_edit_logo.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/user_keys.md",
+  "lines": 1149
+ },
+ {
+  "path": "docs/proxy/users.md",
+  "lines": 1491
+ },
+ {
+  "path": "docs/python_sdk.md",
+  "lines": 110
+ },
+ {
+  "path": "docs/rerank.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/response_api_compact.md",
+  "lines": 105
+ },
+ {
+  "path": "docs/sdk_custom_pricing.md",
+  "lines": 73
+ },
+ {
+  "path": "docs/secret_managers/azure_key_vault.md",
+  "lines": 40
+ },
+ {
+  "path": "docs/secret_managers/custom_secret_manager.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/troubleshoot/prisma_migrations.md",
+  "lines": 202
+ },
+ {
+  "path": "docs/troubleshoot/rollback.md",
+  "lines": 116
+ },
+ {
+  "path": "docs/vector_stores/index.md",
+  "lines": 51
+ },
+ {
+  "path": "src/pages/completion/input.md",
+  "lines": 58
+ }
+]

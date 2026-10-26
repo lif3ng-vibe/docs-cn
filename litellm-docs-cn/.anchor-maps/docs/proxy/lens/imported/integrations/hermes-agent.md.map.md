@@ -1,0 +1,9 @@
+Hermes Agent | Hermes Agent | hermes-agent
+Prerequisites | 前置条件 | 前置条件
+Configuration | 配置 | 配置
+Run an example | 运行示例 | 运行示例
+Simple agent | 简单智能体 | 简单智能体
+Agent swarm | 智能体集群（swarm） | 智能体集群swarm
+Verify the trace | 验证追踪记录 | 验证追踪记录
+How tracing works | 追踪的工作原理 | 追踪的工作原理
+Troubleshooting | 故障排查 | 故障排查

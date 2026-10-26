@@ -1,0 +1,354 @@
+[
+ {
+  "path": "docs/a2a_agent_permissions.md",
+  "lines": 297
+ },
+ {
+  "path": "docs/auto_router/prompt_caching.md",
+  "lines": 65
+ },
+ {
+  "path": "docs/completion/model_alias.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/containers.md",
+  "lines": 532
+ },
+ {
+  "path": "docs/contributing/adding_openai_compatible_providers.md",
+  "lines": 169
+ },
+ {
+  "path": "docs/enterprise/support.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/enterprise/version_support.md",
+  "lines": 37
+ },
+ {
+  "path": "docs/gateway_overview.md",
+  "lines": 155
+ },
+ {
+  "path": "docs/guides/index.md",
+  "lines": 79
+ },
+ {
+  "path": "docs/load_test_sdk.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/load_test.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/mcp_config_reference.md",
+  "lines": 236
+ },
+ {
+  "path": "docs/mcp_public_internet.md",
+  "lines": 285
+ },
+ {
+  "path": "docs/providers/anthropic_programmatic_tool_calling.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/providers/anthropic.md",
+  "lines": 2387
+ },
+ {
+  "path": "docs/providers/apertis.md",
+  "lines": 130
+ },
+ {
+  "path": "docs/providers/azure_ai.md",
+  "lines": 478
+ },
+ {
+  "path": "docs/providers/azure/azure.md",
+  "lines": 1335
+ },
+ {
+  "path": "docs/providers/baseten.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/providers/bedrock_rerank.md",
+  "lines": 95
+ },
+ {
+  "path": "docs/providers/clarifai.md",
+  "lines": 264
+ },
+ {
+  "path": "docs/providers/coralbricks.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/databricks.md",
+  "lines": 500
+ },
+ {
+  "path": "docs/providers/edenai.md",
+  "lines": 456
+ },
+ {
+  "path": "docs/providers/gemini_file_search.md",
+  "lines": 413
+ },
+ {
+  "path": "docs/providers/gradient_ai.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/providers/huggingface.md",
+  "lines": 393
+ },
+ {
+  "path": "docs/providers/hyperbolic.md",
+  "lines": 331
+ },
+ {
+  "path": "docs/providers/llamafile.md",
+  "lines": 158
+ },
+ {
+  "path": "docs/providers/lm_studio.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/providers/meta_llama.md",
+  "lines": 304
+ },
+ {
+  "path": "docs/providers/moonshot.md",
+  "lines": 270
+ },
+ {
+  "path": "docs/providers/novita.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/providers/nscale.md",
+  "lines": 181
+ },
+ {
+  "path": "docs/providers/nvidia_nim.md",
+  "lines": 206
+ },
+ {
+  "path": "docs/providers/perplexity_embedding.md",
+  "lines": 135
+ },
+ {
+  "path": "docs/providers/petals.md",
+  "lines": 50
+ },
+ {
+  "path": "docs/providers/replicate.md",
+  "lines": 294
+ },
+ {
+  "path": "docs/providers/runwayml/text-to-speech.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/providers/tensormesh.md",
+  "lines": 280
+ },
+ {
+  "path": "docs/providers/vertex_batch.md",
+  "lines": 365
+ },
+ {
+  "path": "docs/providers/vertex_embedding.md",
+  "lines": 686
+ },
+ {
+  "path": "docs/proxy_api.md",
+  "lines": 20
+ },
+ {
+  "path": "docs/proxy/auto_routing_semantic.md",
+  "lines": 229
+ },
+ {
+  "path": "docs/proxy/configs.md",
+  "lines": 823
+ },
+ {
+  "path": "docs/proxy/custom_model_cost_map.md",
+  "lines": 77
+ },
+ {
+  "path": "docs/proxy/custom_pricing.md",
+  "lines": 249
+ },
+ {
+  "path": "docs/proxy/custom_root_ui.md",
+  "lines": 44
+ },
+ {
+  "path": "docs/proxy/deleted_keys_teams.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/proxy/elasticache_iam.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/proxy/global_control_plane.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/guardrails/alice.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/guardrails/custom_code_guardrail.md",
+  "lines": 421
+ },
+ {
+  "path": "docs/proxy/guardrails/custom_guardrail.md",
+  "lines": 730
+ },
+ {
+  "path": "docs/proxy/guardrails/dynamoai.md",
+  "lines": 217
+ },
+ {
+  "path": "docs/proxy/guardrails/grayswan.md",
+  "lines": 223
+ },
+ {
+  "path": "docs/proxy/guardrails/guardrail_load_balancing.md",
+  "lines": 352
+ },
+ {
+  "path": "docs/proxy/guardrails/llm_shield_proxy.md",
+  "lines": 169
+ },
+ {
+  "path": "docs/proxy/guardrails/pangea.md",
+  "lines": 211
+ },
+ {
+  "path": "docs/proxy/guardrails/panw_prisma_airs.md",
+  "lines": 314
+ },
+ {
+  "path": "docs/proxy/guardrails/quick_start.md",
+  "lines": 961
+ },
+ {
+  "path": "docs/proxy/guardrails/realtime_guardrails.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/guardrails/straiker.md",
+  "lines": 163
+ },
+ {
+  "path": "docs/proxy/guardrails/team_based_guardrails.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/lens/deployment/storage.md",
+  "lines": 62
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/google-adk.md",
+  "lines": 101
+ },
+ {
+  "path": "docs/proxy/liteadmin_mcp_enterprise.md",
+  "lines": 198
+ },
+ {
+  "path": "docs/proxy/liteadmin_slack.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/proxy/logging_spec.md",
+  "lines": 346
+ },
+ {
+  "path": "docs/proxy/managed_batches.md",
+  "lines": 358
+ },
+ {
+  "path": "docs/proxy/model_access.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/proxy/pass_through_cost_tracking.md",
+  "lines": 92
+ },
+ {
+  "path": "docs/proxy/prod.md",
+  "lines": 637
+ },
+ {
+  "path": "docs/proxy/project_management.md",
+  "lines": 321
+ },
+ {
+  "path": "docs/proxy/ptu_flat_cost.md",
+  "lines": 143
+ },
+ {
+  "path": "docs/proxy/redis_requirements.md",
+  "lines": 67
+ },
+ {
+  "path": "docs/proxy/reject_clientside_metadata_tags.md",
+  "lines": 121
+ },
+ {
+  "path": "docs/proxy/security_owasp_llm_top10.md",
+  "lines": 125
+ },
+ {
+  "path": "docs/proxy/team_logging.md",
+  "lines": 575
+ },
+ {
+  "path": "docs/proxy/ui_project_management.md",
+  "lines": 145
+ },
+ {
+  "path": "docs/proxy/unmanaged_vertex_batches.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/proxy/user_onboarding.md",
+  "lines": 83
+ },
+ {
+  "path": "docs/secret_managers/aws_kms.md",
+  "lines": 27
+ },
+ {
+  "path": "docs/secret_managers/cyberark.md",
+  "lines": 191
+ },
+ {
+  "path": "docs/text_completion.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/troubleshoot.md",
+  "lines": 118
+ },
+ {
+  "path": "docs/troubleshoot/cpu_issues.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/vector_stores/search.md",
+  "lines": 379
+ }
+]

@@ -1,0 +1,2862 @@
+[
+ {
+  "path": "docs/a2a.md",
+  "lines": 514
+ },
+ {
+  "path": "docs/a2a_agent_card.md",
+  "lines": 235
+ },
+ {
+  "path": "docs/a2a_agent_headers.md",
+  "lines": 255
+ },
+ {
+  "path": "docs/a2a_agent_permissions.md",
+  "lines": 297
+ },
+ {
+  "path": "docs/a2a_cost_tracking.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/a2a_invoking_agents.md",
+  "lines": 347
+ },
+ {
+  "path": "docs/a2a_iteration_budgets.md",
+  "lines": 189
+ },
+ {
+  "path": "docs/a2a_kill_switch.md",
+  "lines": 135
+ },
+ {
+  "path": "docs/adaptive_router.md",
+  "lines": 156
+ },
+ {
+  "path": "docs/adding_provider/adding_guardrail_support.md",
+  "lines": 450
+ },
+ {
+  "path": "docs/adding_provider/directory_structure.md",
+  "lines": 25
+ },
+ {
+  "path": "docs/adding_provider/generic_guardrail_api.md",
+  "lines": 475
+ },
+ {
+  "path": "docs/adding_provider/generic_prompt_management_api.md",
+  "lines": 577
+ },
+ {
+  "path": "docs/adding_provider/new_rerank_provider.md",
+  "lines": 153
+ },
+ {
+  "path": "docs/adding_provider/simple_guardrail_tutorial.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/agent_resources.md",
+  "lines": 101
+ },
+ {
+  "path": "docs/aiohttp_benchmarks.md",
+  "lines": 39
+ },
+ {
+  "path": "docs/anthropic_count_tokens.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/anthropic_unified/index.md",
+  "lines": 621
+ },
+ {
+  "path": "docs/anthropic_unified/messages_to_responses_mapping.md",
+  "lines": 124
+ },
+ {
+  "path": "docs/anthropic_unified/native_passthrough.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/anthropic_unified/structured_output.md",
+  "lines": 295
+ },
+ {
+  "path": "docs/api_stability_policy.md",
+  "lines": 31
+ },
+ {
+  "path": "docs/apply_guardrail.md",
+  "lines": 182
+ },
+ {
+  "path": "docs/assistants.md",
+  "lines": 353
+ },
+ {
+  "path": "docs/audio_transcription.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/auth_overview.md",
+  "lines": 166
+ },
+ {
+  "path": "docs/auto_router/benchmarks.md",
+  "lines": 165
+ },
+ {
+  "path": "docs/auto_router/decision_classifiers.md",
+  "lines": 248
+ },
+ {
+  "path": "docs/auto_router/evaluate.md",
+  "lines": 76
+ },
+ {
+  "path": "docs/auto_router/feature_history.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/auto_router/index.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/auto_router/optimize_classifier.md",
+  "lines": 708
+ },
+ {
+  "path": "docs/auto_router/prompt_caching.md",
+  "lines": 65
+ },
+ {
+  "path": "docs/auto_router/recommended_configurations.md",
+  "lines": 355
+ },
+ {
+  "path": "docs/auto_router/setup.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/auto_router/telemetry.md",
+  "lines": 209
+ },
+ {
+  "path": "docs/auto_router/user_setup.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/batches.md",
+  "lines": 704
+ },
+ {
+  "path": "docs/bedrock_converse.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/bedrock_invoke.md",
+  "lines": 146
+ },
+ {
+  "path": "docs/benchmarks.md",
+  "lines": 100
+ },
+ {
+  "path": "docs/caching/all_caches.md",
+  "lines": 761
+ },
+ {
+  "path": "docs/caching/caching_api.md",
+  "lines": 81
+ },
+ {
+  "path": "docs/caching/local_caching.md",
+  "lines": 92
+ },
+ {
+  "path": "docs/claude_code_compatibility.md",
+  "lines": 34
+ },
+ {
+  "path": "docs/claude_code_context_management.md",
+  "lines": 432
+ },
+ {
+  "path": "docs/completion/anthropic_advisor_tool.md",
+  "lines": 490
+ },
+ {
+  "path": "docs/completion/audio.md",
+  "lines": 319
+ },
+ {
+  "path": "docs/completion/batching.md",
+  "lines": 281
+ },
+ {
+  "path": "docs/completion/computer_use.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/completion/document_understanding.md",
+  "lines": 417
+ },
+ {
+  "path": "docs/completion/drop_params.md",
+  "lines": 240
+ },
+ {
+  "path": "docs/completion/function_call.md",
+  "lines": 554
+ },
+ {
+  "path": "docs/completion/http_handler_config.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/completion/image_generation_chat.md",
+  "lines": 255
+ },
+ {
+  "path": "docs/completion/input.md",
+  "lines": 379
+ },
+ {
+  "path": "docs/completion/json_mode.md",
+  "lines": 430
+ },
+ {
+  "path": "docs/completion/knowledgebase.md",
+  "lines": 696
+ },
+ {
+  "path": "docs/completion/message_sanitization.md",
+  "lines": 457
+ },
+ {
+  "path": "docs/completion/message_trimming.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/completion/mock_requests.md",
+  "lines": 72
+ },
+ {
+  "path": "docs/completion/model_alias.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/completion/multiple_deployments.md",
+  "lines": 53
+ },
+ {
+  "path": "docs/completion/output.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/completion/predict_outputs.md",
+  "lines": 110
+ },
+ {
+  "path": "docs/completion/prefix.md",
+  "lines": 120
+ },
+ {
+  "path": "docs/completion/prompt_caching.md",
+  "lines": 1103
+ },
+ {
+  "path": "docs/completion/prompt_compression.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/completion/prompt_formatting.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/completion/provider_specific_params.md",
+  "lines": 444
+ },
+ {
+  "path": "docs/completion/reliable_completions.md",
+  "lines": 124
+ },
+ {
+  "path": "docs/completion/shared_session.md",
+  "lines": 214
+ },
+ {
+  "path": "docs/completion/stream.md",
+  "lines": 150
+ },
+ {
+  "path": "docs/completion/token_usage.md",
+  "lines": 193
+ },
+ {
+  "path": "docs/completion/usage.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/completion/vision.md",
+  "lines": 326
+ },
+ {
+  "path": "docs/completion/web_fetch.md",
+  "lines": 300
+ },
+ {
+  "path": "docs/completion/web_search.md",
+  "lines": 697
+ },
+ {
+  "path": "docs/contact.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/container_files.md",
+  "lines": 388
+ },
+ {
+  "path": "docs/containers.md",
+  "lines": 532
+ },
+ {
+  "path": "docs/contribute_integration/custom_webhook_api.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/contributing.md",
+  "lines": 121
+ },
+ {
+  "path": "docs/contributing/adding_openai_compatible_providers.md",
+  "lines": 169
+ },
+ {
+  "path": "docs/count_tokens.md",
+  "lines": 200
+ },
+ {
+  "path": "docs/data_security.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/debugging/hosted_debugging.md",
+  "lines": 1
+ },
+ {
+  "path": "docs/debugging/local_debugging.md",
+  "lines": 73
+ },
+ {
+  "path": "docs/decisions.md",
+  "lines": 392
+ },
+ {
+  "path": "docs/default_code_snippet.md",
+  "lines": 22
+ },
+ {
+  "path": "docs/embedding/async_embedding.md",
+  "lines": 15
+ },
+ {
+  "path": "docs/embedding/moderation.md",
+  "lines": 11
+ },
+ {
+  "path": "docs/embedding/supported_embedding.md",
+  "lines": 831
+ },
+ {
+  "path": "docs/enterprise.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/enterprise/activate.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/enterprise/compliance.md",
+  "lines": 41
+ },
+ {
+  "path": "docs/enterprise/moving_from_oss.md",
+  "lines": 56
+ },
+ {
+  "path": "docs/enterprise/support.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/enterprise/version_support.md",
+  "lines": 37
+ },
+ {
+  "path": "docs/evals_api.md",
+  "lines": 442
+ },
+ {
+  "path": "docs/exception_mapping.md",
+  "lines": 246
+ },
+ {
+  "path": "docs/extras/code_quality.md",
+  "lines": 14
+ },
+ {
+  "path": "docs/extras/contributing.md",
+  "lines": 42
+ },
+ {
+  "path": "docs/extras/contributing_code.md",
+  "lines": 268
+ },
+ {
+  "path": "docs/extras/creating_adapters.md",
+  "lines": 207
+ },
+ {
+  "path": "docs/extras/gemini_img_migration.md",
+  "lines": 225
+ },
+ {
+  "path": "docs/files_endpoints.md",
+  "lines": 336
+ },
+ {
+  "path": "docs/fine_tuning.md",
+  "lines": 261
+ },
+ {
+  "path": "docs/fusion.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/gateway_overview.md",
+  "lines": 155
+ },
+ {
+  "path": "docs/generateContent.md",
+  "lines": 296
+ },
+ {
+  "path": "docs/guides/code_interpreter.md",
+  "lines": 175
+ },
+ {
+  "path": "docs/guides/finetuned_models.md",
+  "lines": 75
+ },
+ {
+  "path": "docs/guides/index.md",
+  "lines": 79
+ },
+ {
+  "path": "docs/guides/security_settings.md",
+  "lines": 233
+ },
+ {
+  "path": "docs/image_edits.md",
+  "lines": 649
+ },
+ {
+  "path": "docs/image_generation.md",
+  "lines": 327
+ },
+ {
+  "path": "docs/image_variations.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/index.md",
+  "lines": 476
+ },
+ {
+  "path": "docs/integrations/community.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/integrations/index.md",
+  "lines": 347
+ },
+ {
+  "path": "docs/integrations/letta.md",
+  "lines": 928
+ },
+ {
+  "path": "docs/integrations/observability_index.md",
+  "lines": 37
+ },
+ {
+  "path": "docs/integrations/websearch_interception.md",
+  "lines": 476
+ },
+ {
+  "path": "docs/interactions.md",
+  "lines": 268
+ },
+ {
+  "path": "docs/langchain/langchain.md",
+  "lines": 490
+ },
+ {
+  "path": "docs/learn/autorouter_cli.md",
+  "lines": 60
+ },
+ {
+  "path": "docs/learn/enterprise_quickstart.md",
+  "lines": 680
+ },
+ {
+  "path": "docs/learn/gateway_quickstart.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/learn/index.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/learn/sdk_quickstart.md",
+  "lines": 175
+ },
+ {
+  "path": "docs/litellm_core.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/load_test.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/load_test_advanced.md",
+  "lines": 225
+ },
+ {
+  "path": "docs/load_test_rpm.md",
+  "lines": 349
+ },
+ {
+  "path": "docs/load_test_sdk.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/managed_agents.md",
+  "lines": 318
+ },
+ {
+  "path": "docs/mcp.md",
+  "lines": 1382
+ },
+ {
+  "path": "docs/mcp_authentication.md",
+  "lines": 237
+ },
+ {
+  "path": "docs/mcp_aws_sigv4.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/mcp_client_allowlist.md",
+  "lines": 180
+ },
+ {
+  "path": "docs/mcp_config_reference.md",
+  "lines": 236
+ },
+ {
+  "path": "docs/mcp_control.md",
+  "lines": 1050
+ },
+ {
+  "path": "docs/mcp_cost.md",
+  "lines": 123
+ },
+ {
+  "path": "docs/mcp_deployment.md",
+  "lines": 172
+ },
+ {
+  "path": "docs/mcp_grant_access.md",
+  "lines": 273
+ },
+ {
+  "path": "docs/mcp_guardrail.md",
+  "lines": 160
+ },
+ {
+  "path": "docs/mcp_id_jag.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/mcp_oauth.md",
+  "lines": 621
+ },
+ {
+  "path": "docs/mcp_oauth_passthrough.md",
+  "lines": 456
+ },
+ {
+  "path": "docs/mcp_obo_auth.md",
+  "lines": 265
+ },
+ {
+  "path": "docs/mcp_openapi.md",
+  "lines": 250
+ },
+ {
+  "path": "docs/mcp_per_user_auth.md",
+  "lines": 131
+ },
+ {
+  "path": "docs/mcp_public_internet.md",
+  "lines": 285
+ },
+ {
+  "path": "docs/mcp_rest_api.md",
+  "lines": 280
+ },
+ {
+  "path": "docs/mcp_semantic_filter.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/mcp_server_submissions.md",
+  "lines": 221
+ },
+ {
+  "path": "docs/mcp_servers/atlassian.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/mcp_servers/index.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/mcp_servers/linear.md",
+  "lines": 192
+ },
+ {
+  "path": "docs/mcp_servers/microsoft_365.md",
+  "lines": 257
+ },
+ {
+  "path": "docs/mcp_servers/slack.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/mcp_tool_search.md",
+  "lines": 146
+ },
+ {
+  "path": "docs/mcp_toolsets.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/mcp_troubleshoot.md",
+  "lines": 335
+ },
+ {
+  "path": "docs/mcp_usage.md",
+  "lines": 212
+ },
+ {
+  "path": "docs/mcp_zero_trust.md",
+  "lines": 295
+ },
+ {
+  "path": "docs/memory_management.md",
+  "lines": 401
+ },
+ {
+  "path": "docs/migration.md",
+  "lines": 35
+ },
+ {
+  "path": "docs/migration_policy.md",
+  "lines": 20
+ },
+ {
+  "path": "docs/moderation.md",
+  "lines": 147
+ },
+ {
+  "path": "docs/ocr.md",
+  "lines": 357
+ },
+ {
+  "path": "docs/oidc.md",
+  "lines": 296
+ },
+ {
+  "path": "docs/old_guardrails.md",
+  "lines": 356
+ },
+ {
+  "path": "docs/prompt_management.md",
+  "lines": 49
+ },
+ {
+  "path": "docs/provider_registration/add_model_pricing.md",
+  "lines": 167
+ },
+ {
+  "path": "docs/provider_registration/index.md",
+  "lines": 325
+ },
+ {
+  "path": "docs/providers/abliteration.md",
+  "lines": 110
+ },
+ {
+  "path": "docs/providers/ai21.md",
+  "lines": 215
+ },
+ {
+  "path": "docs/providers/aiml.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/providers/aleph_alpha.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/providers/amazon_nova.md",
+  "lines": 291
+ },
+ {
+  "path": "docs/providers/anthropic.md",
+  "lines": 2387
+ },
+ {
+  "path": "docs/providers/anthropic_effort.md",
+  "lines": 335
+ },
+ {
+  "path": "docs/providers/anthropic_preserved_thinking.md",
+  "lines": 65
+ },
+ {
+  "path": "docs/providers/anthropic_programmatic_tool_calling.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/providers/anthropic_tool_input_examples.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/providers/anthropic_tool_search.md",
+  "lines": 543
+ },
+ {
+  "path": "docs/providers/anyscale.md",
+  "lines": 55
+ },
+ {
+  "path": "docs/providers/apertis.md",
+  "lines": 130
+ },
+ {
+  "path": "docs/providers/aws_polly.md",
+  "lines": 365
+ },
+ {
+  "path": "docs/providers/aws_sagemaker.md",
+  "lines": 673
+ },
+ {
+  "path": "docs/providers/azure/azure.md",
+  "lines": 1335
+ },
+ {
+  "path": "docs/providers/azure/azure_anthropic.md",
+  "lines": 380
+ },
+ {
+  "path": "docs/providers/azure/azure_embedding.md",
+  "lines": 94
+ },
+ {
+  "path": "docs/providers/azure/azure_responses.md",
+  "lines": 295
+ },
+ {
+  "path": "docs/providers/azure/azure_speech.md",
+  "lines": 75
+ },
+ {
+  "path": "docs/providers/azure/videos.md",
+  "lines": 283
+ },
+ {
+  "path": "docs/providers/azure_ai.md",
+  "lines": 478
+ },
+ {
+  "path": "docs/providers/azure_ai/azure_ai_vector_stores_passthrough.md",
+  "lines": 391
+ },
+ {
+  "path": "docs/providers/azure_ai/azure_model_router.md",
+  "lines": 340
+ },
+ {
+  "path": "docs/providers/azure_ai_agents.md",
+  "lines": 485
+ },
+ {
+  "path": "docs/providers/azure_ai_img.md",
+  "lines": 455
+ },
+ {
+  "path": "docs/providers/azure_ai_img_edit.md",
+  "lines": 305
+ },
+ {
+  "path": "docs/providers/azure_ai_speech.md",
+  "lines": 458
+ },
+ {
+  "path": "docs/providers/azure_ai_vector_stores.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/providers/azure_document_intelligence.md",
+  "lines": 409
+ },
+ {
+  "path": "docs/providers/azure_ocr.md",
+  "lines": 214
+ },
+ {
+  "path": "docs/providers/baseten.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/providers/bedrock.md",
+  "lines": 2909
+ },
+ {
+  "path": "docs/providers/bedrock_agentcore.md",
+  "lines": 438
+ },
+ {
+  "path": "docs/providers/bedrock_agents.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/providers/bedrock_batches.md",
+  "lines": 365
+ },
+ {
+  "path": "docs/providers/bedrock_embedding.md",
+  "lines": 513
+ },
+ {
+  "path": "docs/providers/bedrock_image_gen.md",
+  "lines": 173
+ },
+ {
+  "path": "docs/providers/bedrock_imported.md",
+  "lines": 610
+ },
+ {
+  "path": "docs/providers/bedrock_mantle.md",
+  "lines": 514
+ },
+ {
+  "path": "docs/providers/bedrock_realtime_with_audio.md",
+  "lines": 363
+ },
+ {
+  "path": "docs/providers/bedrock_rerank.md",
+  "lines": 95
+ },
+ {
+  "path": "docs/providers/bedrock_vector_store.md",
+  "lines": 337
+ },
+ {
+  "path": "docs/providers/bedrock_writer.md",
+  "lines": 317
+ },
+ {
+  "path": "docs/providers/black_forest_labs.md",
+  "lines": 292
+ },
+ {
+  "path": "docs/providers/black_forest_labs_img_edit.md",
+  "lines": 302
+ },
+ {
+  "path": "docs/providers/bytez.md",
+  "lines": 187
+ },
+ {
+  "path": "docs/providers/cerebras.md",
+  "lines": 150
+ },
+ {
+  "path": "docs/providers/chatgpt.md",
+  "lines": 179
+ },
+ {
+  "path": "docs/providers/chutes.md",
+  "lines": 173
+ },
+ {
+  "path": "docs/providers/clarifai.md",
+  "lines": 264
+ },
+ {
+  "path": "docs/providers/clf_ai_gateway.md",
+  "lines": 181
+ },
+ {
+  "path": "docs/providers/cloudflare_workers.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/providers/codestral.md",
+  "lines": 255
+ },
+ {
+  "path": "docs/providers/cognition.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/cohere.md",
+  "lines": 429
+ },
+ {
+  "path": "docs/providers/cometapi.md",
+  "lines": 149
+ },
+ {
+  "path": "docs/providers/compactifai.md",
+  "lines": 223
+ },
+ {
+  "path": "docs/providers/coralbricks.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/crusoe.md",
+  "lines": 197
+ },
+ {
+  "path": "docs/providers/custom_llm_server.md",
+  "lines": 633
+ },
+ {
+  "path": "docs/providers/dashscope.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/providers/databricks.md",
+  "lines": 500
+ },
+ {
+  "path": "docs/providers/datarobot.md",
+  "lines": 45
+ },
+ {
+  "path": "docs/providers/deepgram.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/providers/deepinfra.md",
+  "lines": 196
+ },
+ {
+  "path": "docs/providers/deepseek.md",
+  "lines": 189
+ },
+ {
+  "path": "docs/providers/docker_model_runner.md",
+  "lines": 278
+ },
+ {
+  "path": "docs/providers/edenai.md",
+  "lines": 456
+ },
+ {
+  "path": "docs/providers/elevenlabs.md",
+  "lines": 496
+ },
+ {
+  "path": "docs/providers/empiriolabs.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/providers/empower.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/providers/fal_ai.md",
+  "lines": 316
+ },
+ {
+  "path": "docs/providers/featherless_ai.md",
+  "lines": 57
+ },
+ {
+  "path": "docs/providers/fireworks_ai.md",
+  "lines": 747
+ },
+ {
+  "path": "docs/providers/friendliai.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/providers/galadriel.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/providers/gemini.md",
+  "lines": 2704
+ },
+ {
+  "path": "docs/providers/gemini/music.md",
+  "lines": 29
+ },
+ {
+  "path": "docs/providers/gemini/videos.md",
+  "lines": 437
+ },
+ {
+  "path": "docs/providers/gemini_file_search.md",
+  "lines": 413
+ },
+ {
+  "path": "docs/providers/gigachat.md",
+  "lines": 284
+ },
+ {
+  "path": "docs/providers/github.md",
+  "lines": 262
+ },
+ {
+  "path": "docs/providers/github_copilot.md",
+  "lines": 271
+ },
+ {
+  "path": "docs/providers/gmi.md",
+  "lines": 141
+ },
+ {
+  "path": "docs/providers/google_ai_studio/files.md",
+  "lines": 312
+ },
+ {
+  "path": "docs/providers/google_ai_studio/image_gen.md",
+  "lines": 294
+ },
+ {
+  "path": "docs/providers/google_ai_studio/realtime.md",
+  "lines": 236
+ },
+ {
+  "path": "docs/providers/gradient_ai.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/providers/groq.md",
+  "lines": 372
+ },
+ {
+  "path": "docs/providers/helicone.md",
+  "lines": 269
+ },
+ {
+  "path": "docs/providers/heroku.md",
+  "lines": 77
+ },
+ {
+  "path": "docs/providers/huggingface.md",
+  "lines": 393
+ },
+ {
+  "path": "docs/providers/huggingface_rerank.md",
+  "lines": 264
+ },
+ {
+  "path": "docs/providers/hyperbolic.md",
+  "lines": 331
+ },
+ {
+  "path": "docs/providers/inception.md",
+  "lines": 190
+ },
+ {
+  "path": "docs/providers/infinity.md",
+  "lines": 301
+ },
+ {
+  "path": "docs/providers/jina_ai.md",
+  "lines": 172
+ },
+ {
+  "path": "docs/providers/lambda_ai.md",
+  "lines": 280
+ },
+ {
+  "path": "docs/providers/langgraph.md",
+  "lines": 359
+ },
+ {
+  "path": "docs/providers/lemonade.md",
+  "lines": 192
+ },
+ {
+  "path": "docs/providers/litellm_proxy.md",
+  "lines": 286
+ },
+ {
+  "path": "docs/providers/llamafile.md",
+  "lines": 158
+ },
+ {
+  "path": "docs/providers/llamagate.md",
+  "lines": 206
+ },
+ {
+  "path": "docs/providers/lm_studio.md",
+  "lines": 178
+ },
+ {
+  "path": "docs/providers/manus.md",
+  "lines": 370
+ },
+ {
+  "path": "docs/providers/meta.md",
+  "lines": 429
+ },
+ {
+  "path": "docs/providers/meta_llama.md",
+  "lines": 304
+ },
+ {
+  "path": "docs/providers/microsoft_365_copilot.md",
+  "lines": 206
+ },
+ {
+  "path": "docs/providers/milvus_vector_stores.md",
+  "lines": 782
+ },
+ {
+  "path": "docs/providers/minimax.md",
+  "lines": 640
+ },
+ {
+  "path": "docs/providers/mistral.md",
+  "lines": 413
+ },
+ {
+  "path": "docs/providers/mistral_batches.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/providers/mongodb_vector_stores.md",
+  "lines": 440
+ },
+ {
+  "path": "docs/providers/moonshot.md",
+  "lines": 270
+ },
+ {
+  "path": "docs/providers/morph.md",
+  "lines": 123
+ },
+ {
+  "path": "docs/providers/nadir.md",
+  "lines": 136
+ },
+ {
+  "path": "docs/providers/nano-gpt.md",
+  "lines": 170
+ },
+ {
+  "path": "docs/providers/nebius.md",
+  "lines": 196
+ },
+ {
+  "path": "docs/providers/nlp_cloud.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/providers/novita.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/providers/nscale.md",
+  "lines": 181
+ },
+ {
+  "path": "docs/providers/nvidia_nim.md",
+  "lines": 206
+ },
+ {
+  "path": "docs/providers/nvidia_nim_rerank.md",
+  "lines": 357
+ },
+ {
+  "path": "docs/providers/nvidia_riva.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/oci.md",
+  "lines": 882
+ },
+ {
+  "path": "docs/providers/ollama.md",
+  "lines": 493
+ },
+ {
+  "path": "docs/providers/openai.md",
+  "lines": 1347
+ },
+ {
+  "path": "docs/providers/openai/responses_api.md",
+  "lines": 1198
+ },
+ {
+  "path": "docs/providers/openai/text_to_speech.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/providers/openai/ultrafast.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/providers/openai/videos.md",
+  "lines": 325
+ },
+ {
+  "path": "docs/providers/openai_compatible.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/providers/openrouter.md",
+  "lines": 300
+ },
+ {
+  "path": "docs/providers/ovhcloud.md",
+  "lines": 396
+ },
+ {
+  "path": "docs/providers/perplexity.md",
+  "lines": 491
+ },
+ {
+  "path": "docs/providers/perplexity_embedding.md",
+  "lines": 135
+ },
+ {
+  "path": "docs/providers/petals.md",
+  "lines": 50
+ },
+ {
+  "path": "docs/providers/poe.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/providers/predibase.md",
+  "lines": 248
+ },
+ {
+  "path": "docs/providers/prism.md",
+  "lines": 320
+ },
+ {
+  "path": "docs/providers/publicai.md",
+  "lines": 210
+ },
+ {
+  "path": "docs/providers/pydantic_ai_agent.md",
+  "lines": 122
+ },
+ {
+  "path": "docs/providers/qwencloud.md",
+  "lines": 269
+ },
+ {
+  "path": "docs/providers/ragflow.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/providers/ragflow_vector_store.md",
+  "lines": 350
+ },
+ {
+  "path": "docs/providers/recraft.md",
+  "lines": 304
+ },
+ {
+  "path": "docs/providers/replicate.md",
+  "lines": 294
+ },
+ {
+  "path": "docs/providers/runwayml/images.md",
+  "lines": 199
+ },
+ {
+  "path": "docs/providers/runwayml/text-to-speech.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/providers/runwayml/videos.md",
+  "lines": 267
+ },
+ {
+  "path": "docs/providers/s3_vectors.md",
+  "lines": 199
+ },
+ {
+  "path": "docs/providers/sambanova.md",
+  "lines": 322
+ },
+ {
+  "path": "docs/providers/sap.md",
+  "lines": 815
+ },
+ {
+  "path": "docs/providers/sarvam.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/providers/scaleway.md",
+  "lines": 104
+ },
+ {
+  "path": "docs/providers/scx_ai.md",
+  "lines": 236
+ },
+ {
+  "path": "docs/providers/snowflake.md",
+  "lines": 357
+ },
+ {
+  "path": "docs/providers/stability.md",
+  "lines": 492
+ },
+ {
+  "path": "docs/providers/synthetic.md",
+  "lines": 120
+ },
+ {
+  "path": "docs/providers/tencent.md",
+  "lines": 205
+ },
+ {
+  "path": "docs/providers/tensormesh.md",
+  "lines": 280
+ },
+ {
+  "path": "docs/providers/text_completion_openai.md",
+  "lines": 163
+ },
+ {
+  "path": "docs/providers/togetherai.md",
+  "lines": 363
+ },
+ {
+  "path": "docs/providers/topaz.md",
+  "lines": 28
+ },
+ {
+  "path": "docs/providers/triton-inference-server.md",
+  "lines": 272
+ },
+ {
+  "path": "docs/providers/v0.md",
+  "lines": 340
+ },
+ {
+  "path": "docs/providers/valkey_vector_stores.md",
+  "lines": 240
+ },
+ {
+  "path": "docs/providers/vercel_ai_gateway.md",
+  "lines": 252
+ },
+ {
+  "path": "docs/providers/vertex.md",
+  "lines": 3299
+ },
+ {
+  "path": "docs/providers/vertex_ai/videos.md",
+  "lines": 307
+ },
+ {
+  "path": "docs/providers/vertex_ai_agent_engine.md",
+  "lines": 217
+ },
+ {
+  "path": "docs/providers/vertex_batch.md",
+  "lines": 365
+ },
+ {
+  "path": "docs/providers/vertex_embedding.md",
+  "lines": 686
+ },
+ {
+  "path": "docs/providers/vertex_image.md",
+  "lines": 252
+ },
+ {
+  "path": "docs/providers/vertex_ocr.md",
+  "lines": 241
+ },
+ {
+  "path": "docs/providers/vertex_partner.md",
+  "lines": 952
+ },
+ {
+  "path": "docs/providers/vertex_realtime.md",
+  "lines": 349
+ },
+ {
+  "path": "docs/providers/vertex_self_deployed.md",
+  "lines": 230
+ },
+ {
+  "path": "docs/providers/vertex_speech.md",
+  "lines": 429
+ },
+ {
+  "path": "docs/providers/vertex_transcription.md",
+  "lines": 275
+ },
+ {
+  "path": "docs/providers/vllm.md",
+  "lines": 727
+ },
+ {
+  "path": "docs/providers/vllm_batches.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/providers/volcano.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/providers/voyage.md",
+  "lines": 348
+ },
+ {
+  "path": "docs/providers/wandb_inference.md",
+  "lines": 198
+ },
+ {
+  "path": "docs/providers/watsonx/audio_transcription.md",
+  "lines": 58
+ },
+ {
+  "path": "docs/providers/watsonx/index.md",
+  "lines": 231
+ },
+ {
+  "path": "docs/providers/watsonx/rerank.md",
+  "lines": 53
+ },
+ {
+  "path": "docs/providers/xai.md",
+  "lines": 284
+ },
+ {
+  "path": "docs/providers/xai_batches.md",
+  "lines": 130
+ },
+ {
+  "path": "docs/providers/xai_realtime.md",
+  "lines": 191
+ },
+ {
+  "path": "docs/providers/xiaomi_mimo.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/providers/xinference.md",
+  "lines": 165
+ },
+ {
+  "path": "docs/providers/zai.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/access_control.md",
+  "lines": 570
+ },
+ {
+  "path": "docs/proxy/access_groups.md",
+  "lines": 123
+ },
+ {
+  "path": "docs/proxy/admin_ui_sso.md",
+  "lines": 652
+ },
+ {
+  "path": "docs/proxy/agentic_loop_hook.md",
+  "lines": 106
+ },
+ {
+  "path": "docs/proxy/ai_hub.md",
+  "lines": 387
+ },
+ {
+  "path": "docs/proxy/alerting.md",
+  "lines": 604
+ },
+ {
+  "path": "docs/proxy/architecture.md",
+  "lines": 61
+ },
+ {
+  "path": "docs/proxy/arize_phoenix_prompts.md",
+  "lines": 135
+ },
+ {
+  "path": "docs/proxy/auto_routing.md",
+  "lines": 813
+ },
+ {
+  "path": "docs/proxy/auto_routing_benchmark.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/auto_routing_semantic.md",
+  "lines": 229
+ },
+ {
+  "path": "docs/proxy/azure_redis_ad.md",
+  "lines": 145
+ },
+ {
+  "path": "docs/proxy/billing.md",
+  "lines": 321
+ },
+ {
+  "path": "docs/proxy/billing_metrics.md",
+  "lines": 141
+ },
+ {
+  "path": "docs/proxy/budget_fallbacks.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/proxy/budget_reset_and_tz.md",
+  "lines": 66
+ },
+ {
+  "path": "docs/proxy/caching.md",
+  "lines": 233
+ },
+ {
+  "path": "docs/proxy/caching_controls.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/proxy/caching_object_storage.md",
+  "lines": 80
+ },
+ {
+  "path": "docs/proxy/caching_redis.md",
+  "lines": 379
+ },
+ {
+  "path": "docs/proxy/caching_semantic.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/proxy/caching_settings.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/call_hooks.md",
+  "lines": 529
+ },
+ {
+  "path": "docs/proxy/cli.md",
+  "lines": 539
+ },
+ {
+  "path": "docs/proxy/cli_sso.md",
+  "lines": 414
+ },
+ {
+  "path": "docs/proxy/client_setup/claude_code.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/client_setup/claude_desktop.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/client_setup/codex_chatgpt_desktop.md",
+  "lines": 106
+ },
+ {
+  "path": "docs/proxy/client_setup/codex_cli.md",
+  "lines": 198
+ },
+ {
+  "path": "docs/proxy/client_setup/overview.md",
+  "lines": 79
+ },
+ {
+  "path": "docs/proxy/clientside_auth.md",
+  "lines": 291
+ },
+ {
+  "path": "docs/proxy/config_management.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/proxy/config_settings.md",
+  "lines": 1611
+ },
+ {
+  "path": "docs/proxy/configs.md",
+  "lines": 823
+ },
+ {
+  "path": "docs/proxy/cost_tracking.md",
+  "lines": 1252
+ },
+ {
+  "path": "docs/proxy/credential_routing.md",
+  "lines": 275
+ },
+ {
+  "path": "docs/proxy/credential_usage_tracking.md",
+  "lines": 20
+ },
+ {
+  "path": "docs/proxy/custom_auth.md",
+  "lines": 366
+ },
+ {
+  "path": "docs/proxy/custom_model_cost_map.md",
+  "lines": 77
+ },
+ {
+  "path": "docs/proxy/custom_pricing.md",
+  "lines": 249
+ },
+ {
+  "path": "docs/proxy/custom_prompt_management.md",
+  "lines": 224
+ },
+ {
+  "path": "docs/proxy/custom_root_ui.md",
+  "lines": 44
+ },
+ {
+  "path": "docs/proxy/custom_sso.md",
+  "lines": 199
+ },
+ {
+  "path": "docs/proxy/customer_routing.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/customer_usage.md",
+  "lines": 156
+ },
+ {
+  "path": "docs/proxy/customers.md",
+  "lines": 644
+ },
+ {
+  "path": "docs/proxy/db_info.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/proxy/db_read_replica.md",
+  "lines": 207
+ },
+ {
+  "path": "docs/proxy/db_sizing.md",
+  "lines": 72
+ },
+ {
+  "path": "docs/proxy/debugging.md",
+  "lines": 205
+ },
+ {
+  "path": "docs/proxy/deleted_keys_teams.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/proxy/deploy.md",
+  "lines": 553
+ },
+ {
+  "path": "docs/proxy/docker_image_security.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/docker_quick_start.md",
+  "lines": 214
+ },
+ {
+  "path": "docs/proxy/dynamic_logging.md",
+  "lines": 269
+ },
+ {
+  "path": "docs/proxy/dynamic_rate_limit.md",
+  "lines": 346
+ },
+ {
+  "path": "docs/proxy/elasticache_iam.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/proxy/email.md",
+  "lines": 405
+ },
+ {
+  "path": "docs/proxy/embedding.md",
+  "lines": 81
+ },
+ {
+  "path": "docs/proxy/endpoint_activity.md",
+  "lines": 163
+ },
+ {
+  "path": "docs/proxy/error_diagnosis.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/error_reference.md",
+  "lines": 362
+ },
+ {
+  "path": "docs/proxy/fallback_management.md",
+  "lines": 277
+ },
+ {
+  "path": "docs/proxy/forward_client_headers.md",
+  "lines": 419
+ },
+ {
+  "path": "docs/proxy/gcp_memorystore_iam.md",
+  "lines": 81
+ },
+ {
+  "path": "docs/proxy/global_control_plane.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/guardrails/aim_security.md",
+  "lines": 162
+ },
+ {
+  "path": "docs/proxy/guardrails/akto.md",
+  "lines": 164
+ },
+ {
+  "path": "docs/proxy/guardrails/alice.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/guardrails/aporia_api.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/guardrails/azure_content_guardrail.md",
+  "lines": 142
+ },
+ {
+  "path": "docs/proxy/guardrails/batch_guardrails.md",
+  "lines": 115
+ },
+ {
+  "path": "docs/proxy/guardrails/bedrock.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/proxy/guardrails/cato_networks.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/guardrails/compresr.md",
+  "lines": 316
+ },
+ {
+  "path": "docs/proxy/guardrails/conduct.md",
+  "lines": 125
+ },
+ {
+  "path": "docs/proxy/guardrails/crowdstrike_aidr.md",
+  "lines": 257
+ },
+ {
+  "path": "docs/proxy/guardrails/custom_code_guardrail.md",
+  "lines": 421
+ },
+ {
+  "path": "docs/proxy/guardrails/custom_guardrail.md",
+  "lines": 730
+ },
+ {
+  "path": "docs/proxy/guardrails/dynamoai.md",
+  "lines": 217
+ },
+ {
+  "path": "docs/proxy/guardrails/enkryptai.md",
+  "lines": 204
+ },
+ {
+  "path": "docs/proxy/guardrails/grayswan.md",
+  "lines": 223
+ },
+ {
+  "path": "docs/proxy/guardrails/guardrail_load_balancing.md",
+  "lines": 352
+ },
+ {
+  "path": "docs/proxy/guardrails/guardrail_policies.md",
+  "lines": 452
+ },
+ {
+  "path": "docs/proxy/guardrails/guardrails_ai.md",
+  "lines": 116
+ },
+ {
+  "path": "docs/proxy/guardrails/hiddenlayer.md",
+  "lines": 191
+ },
+ {
+  "path": "docs/proxy/guardrails/ibm_guardrails.md",
+  "lines": 235
+ },
+ {
+  "path": "docs/proxy/guardrails/javelin.md",
+  "lines": 367
+ },
+ {
+  "path": "docs/proxy/guardrails/lakera_ai.md",
+  "lines": 213
+ },
+ {
+  "path": "docs/proxy/guardrails/lasso_security.md",
+  "lines": 420
+ },
+ {
+  "path": "docs/proxy/guardrails/litellm_content_filter.md",
+  "lines": 895
+ },
+ {
+  "path": "docs/proxy/guardrails/llm_as_a_judge.md",
+  "lines": 148
+ },
+ {
+  "path": "docs/proxy/guardrails/llm_shield_proxy.md",
+  "lines": 169
+ },
+ {
+  "path": "docs/proxy/guardrails/microsoft_agent_365.md",
+  "lines": 245
+ },
+ {
+  "path": "docs/proxy/guardrails/microsoft_purview.md",
+  "lines": 187
+ },
+ {
+  "path": "docs/proxy/guardrails/model_armor.md",
+  "lines": 167
+ },
+ {
+  "path": "docs/proxy/guardrails/noma_security.md",
+  "lines": 421
+ },
+ {
+  "path": "docs/proxy/guardrails/onyx_security.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/guardrails/openai_moderation.md",
+  "lines": 312
+ },
+ {
+  "path": "docs/proxy/guardrails/pangea.md",
+  "lines": 211
+ },
+ {
+  "path": "docs/proxy/guardrails/panw_prisma_airs.md",
+  "lines": 314
+ },
+ {
+  "path": "docs/proxy/guardrails/pii_masking_v2.md",
+  "lines": 727
+ },
+ {
+  "path": "docs/proxy/guardrails/pillar_security.md",
+  "lines": 519
+ },
+ {
+  "path": "docs/proxy/guardrails/policy_flow_builder.md",
+  "lines": 359
+ },
+ {
+  "path": "docs/proxy/guardrails/policy_tags.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/proxy/guardrails/policy_templates.md",
+  "lines": 297
+ },
+ {
+  "path": "docs/proxy/guardrails/prompt_injection.md",
+  "lines": 118
+ },
+ {
+  "path": "docs/proxy/guardrails/prompt_security.md",
+  "lines": 604
+ },
+ {
+  "path": "docs/proxy/guardrails/promptguard.md",
+  "lines": 259
+ },
+ {
+  "path": "docs/proxy/guardrails/qohash_qostodian_nexus.md",
+  "lines": 241
+ },
+ {
+  "path": "docs/proxy/guardrails/qualifire.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/proxy/guardrails/quick_start.md",
+  "lines": 961
+ },
+ {
+  "path": "docs/proxy/guardrails/realtime_guardrails.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/guardrails/repelloai.md",
+  "lines": 294
+ },
+ {
+  "path": "docs/proxy/guardrails/rubrik.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/guardrails/secret_detection.md",
+  "lines": 557
+ },
+ {
+  "path": "docs/proxy/guardrails/sensitive_data_routing.md",
+  "lines": 127
+ },
+ {
+  "path": "docs/proxy/guardrails/straiker.md",
+  "lines": 163
+ },
+ {
+  "path": "docs/proxy/guardrails/team_based_guardrails.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/guardrails/test_playground.md",
+  "lines": 47
+ },
+ {
+  "path": "docs/proxy/guardrails/tool_permission.md",
+  "lines": 250
+ },
+ {
+  "path": "docs/proxy/guardrails/typesafe.md",
+  "lines": 127
+ },
+ {
+  "path": "docs/proxy/guardrails/vigil_guard.md",
+  "lines": 283
+ },
+ {
+  "path": "docs/proxy/guardrails/xecguard.md",
+  "lines": 315
+ },
+ {
+  "path": "docs/proxy/guardrails/zscaler_ai_guard.md",
+  "lines": 166
+ },
+ {
+  "path": "docs/proxy/headroom.md",
+  "lines": 251
+ },
+ {
+  "path": "docs/proxy/health.md",
+  "lines": 160
+ },
+ {
+  "path": "docs/proxy/health_check_routing.md",
+  "lines": 363
+ },
+ {
+  "path": "docs/proxy/high_throughput.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/proxy/identity_provisioning.md",
+  "lines": 192
+ },
+ {
+  "path": "docs/proxy/io_token_rate_limits.md",
+  "lines": 220
+ },
+ {
+  "path": "docs/proxy/ip_address.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/proxy/jwt_auth_arch.md",
+  "lines": 108
+ },
+ {
+  "path": "docs/proxy/jwt_key_mapping.md",
+  "lines": 293
+ },
+ {
+  "path": "docs/proxy/key_auth_arch.md",
+  "lines": 49
+ },
+ {
+  "path": "docs/proxy/keys_teams_router_settings.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/proxy/lens/api.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/lens/coding-agents.md",
+  "lines": 104
+ },
+ {
+  "path": "docs/proxy/lens/deployment.md",
+  "lines": 43
+ },
+ {
+  "path": "docs/proxy/lens/deployment/configuration.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/lens/deployment/development.md",
+  "lines": 53
+ },
+ {
+  "path": "docs/proxy/lens/deployment/docker-compose.md",
+  "lines": 77
+ },
+ {
+  "path": "docs/proxy/lens/deployment/docker.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/proxy/lens/deployment/kubernetes.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/proxy/lens/deployment/litellm.md",
+  "lines": 137
+ },
+ {
+  "path": "docs/proxy/lens/deployment/local.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/proxy/lens/deployment/releases.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/proxy/lens/deployment/server.md",
+  "lines": 69
+ },
+ {
+  "path": "docs/proxy/lens/deployment/storage.md",
+  "lines": 62
+ },
+ {
+  "path": "docs/proxy/lens/deployment/upgrades.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/proxy/lens/first-trace.md",
+  "lines": 195
+ },
+ {
+  "path": "docs/proxy/lens/framework-examples.md",
+  "lines": 701
+ },
+ {
+  "path": "docs/proxy/lens/imported/coding-agents/claude-code.md",
+  "lines": 34
+ },
+ {
+  "path": "docs/proxy/lens/imported/coding-agents/codex.md",
+  "lines": 34
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/claude-agent-sdk.md",
+  "lines": 116
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/crewai.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/deepagents.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/google-adk.md",
+  "lines": 101
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/hermes-agent.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/langchain.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/langgraph.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/llamaindex.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/mastra.md",
+  "lines": 92
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/openai-agents.md",
+  "lines": 91
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/opentelemetry.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/pydantic-ai.md",
+  "lines": 103
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/strands.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/vercel-ai-sdk-js.md",
+  "lines": 104
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/vercel-ai-sdk-py.md",
+  "lines": 86
+ },
+ {
+  "path": "docs/proxy/lens/index.md",
+  "lines": 51
+ },
+ {
+  "path": "docs/proxy/lens/integrations/hermes.md",
+  "lines": 27
+ },
+ {
+  "path": "docs/proxy/lens/integrations/openclaw.md",
+  "lines": 45
+ },
+ {
+  "path": "docs/proxy/lens/investigations.md",
+  "lines": 78
+ },
+ {
+  "path": "docs/proxy/lens/scalability.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/proxy/liteadmin_mcp.md",
+  "lines": 242
+ },
+ {
+  "path": "docs/proxy/liteadmin_mcp_enterprise.md",
+  "lines": 198
+ },
+ {
+  "path": "docs/proxy/liteadmin_slack.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/proxy/litellm_managed_files.md",
+  "lines": 441
+ },
+ {
+  "path": "docs/proxy/litellm_prompt_management.md",
+  "lines": 454
+ },
+ {
+  "path": "docs/proxy/load_balancing.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/proxy/logging.md",
+  "lines": 2676
+ },
+ {
+  "path": "docs/proxy/logging_spec.md",
+  "lines": 346
+ },
+ {
+  "path": "docs/proxy/managed_batches.md",
+  "lines": 358
+ },
+ {
+  "path": "docs/proxy/managed_finetuning.md",
+  "lines": 190
+ },
+ {
+  "path": "docs/proxy/management_cli.md",
+  "lines": 375
+ },
+ {
+  "path": "docs/proxy/manifests_to_microservices.md",
+  "lines": 218
+ },
+ {
+  "path": "docs/proxy/master_key_rotations.md",
+  "lines": 181
+ },
+ {
+  "path": "docs/proxy/memory.md",
+  "lines": 184
+ },
+ {
+  "path": "docs/proxy/metrics.md",
+  "lines": 48
+ },
+ {
+  "path": "docs/proxy/model_access.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/proxy/model_access_group_budgets.md",
+  "lines": 169
+ },
+ {
+  "path": "docs/proxy/model_access_groups.md",
+  "lines": 501
+ },
+ {
+  "path": "docs/proxy/model_access_guide.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/model_compare_ui.md",
+  "lines": 195
+ },
+ {
+  "path": "docs/proxy/model_discovery.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/proxy/model_management.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/multi_region.md",
+  "lines": 184
+ },
+ {
+  "path": "docs/proxy/multi_tenant_architecture.md",
+  "lines": 72
+ },
+ {
+  "path": "docs/proxy/multiple_admins.md",
+  "lines": 227
+ },
+ {
+  "path": "docs/proxy/native_litellm_prompt.md",
+  "lines": 310
+ },
+ {
+  "path": "docs/proxy/oauth2.md",
+  "lines": 86
+ },
+ {
+  "path": "docs/proxy/off_peak_pricing.md",
+  "lines": 57
+ },
+ {
+  "path": "docs/proxy/pagerduty.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/proxy/pass_through.md",
+  "lines": 475
+ },
+ {
+  "path": "docs/proxy/pass_through_cost_tracking.md",
+  "lines": 92
+ },
+ {
+  "path": "docs/proxy/pass_through_guardrails.md",
+  "lines": 251
+ },
+ {
+  "path": "docs/proxy/passthrough_managed_ids.md",
+  "lines": 212
+ },
+ {
+  "path": "docs/proxy/perf.md",
+  "lines": 13
+ },
+ {
+  "path": "docs/proxy/plugins.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/proxy/pricing_calculator.md",
+  "lines": 143
+ },
+ {
+  "path": "docs/proxy/prod.md",
+  "lines": 637
+ },
+ {
+  "path": "docs/proxy/project_management.md",
+  "lines": 321
+ },
+ {
+  "path": "docs/proxy/prometheus.md",
+  "lines": 1006
+ },
+ {
+  "path": "docs/proxy/prompt_management.md",
+  "lines": 555
+ },
+ {
+  "path": "docs/proxy/provider_budget_routing.md",
+  "lines": 413
+ },
+ {
+  "path": "docs/proxy/provider_discounts.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/proxy/provider_margins.md",
+  "lines": 220
+ },
+ {
+  "path": "docs/proxy/ptu_flat_cost.md",
+  "lines": 143
+ },
+ {
+  "path": "docs/proxy/public_routes.md",
+  "lines": 224
+ },
+ {
+  "path": "docs/proxy/public_teams.md",
+  "lines": 41
+ },
+ {
+  "path": "docs/proxy/pyroscope_profiling.md",
+  "lines": 58
+ },
+ {
+  "path": "docs/proxy/quick_start.md",
+  "lines": 470
+ },
+ {
+  "path": "docs/proxy/rate_limit_tiers.md",
+  "lines": 63
+ },
+ {
+  "path": "docs/proxy/realtime_webrtc.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/redis_requirements.md",
+  "lines": 67
+ },
+ {
+  "path": "docs/proxy/redis_sizing.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/proxy/reject_clientside_metadata_tags.md",
+  "lines": 121
+ },
+ {
+  "path": "docs/proxy/release_cycle.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/proxy/reliability.md",
+  "lines": 1170
+ },
+ {
+  "path": "docs/proxy/request_headers.md",
+  "lines": 80
+ },
+ {
+  "path": "docs/proxy/request_tags.md",
+  "lines": 183
+ },
+ {
+  "path": "docs/proxy/response_headers.md",
+  "lines": 130
+ },
+ {
+  "path": "docs/proxy/roi_calculator.md",
+  "lines": 137
+ },
+ {
+  "path": "docs/proxy/rules.md",
+  "lines": 61
+ },
+ {
+  "path": "docs/proxy/rust_gateway.md",
+  "lines": 92
+ },
+ {
+  "path": "docs/proxy/saml_sso.md",
+  "lines": 260
+ },
+ {
+  "path": "docs/proxy/security_best_practices.md",
+  "lines": 145
+ },
+ {
+  "path": "docs/proxy/security_encryption_faq.md",
+  "lines": 355
+ },
+ {
+  "path": "docs/proxy/security_owasp_llm_top10.md",
+  "lines": 125
+ },
+ {
+  "path": "docs/proxy/self_serve.md",
+  "lines": 439
+ },
+ {
+  "path": "docs/proxy/server_tuning.md",
+  "lines": 232
+ },
+ {
+  "path": "docs/proxy/service_accounts.md",
+  "lines": 179
+ },
+ {
+  "path": "docs/proxy/shared_health_check.md",
+  "lines": 307
+ },
+ {
+  "path": "docs/proxy/spend_capture_rate.md",
+  "lines": 204
+ },
+ {
+  "path": "docs/proxy/spend_logs_deletion.md",
+  "lines": 229
+ },
+ {
+  "path": "docs/proxy/sync_anthropic_beta_headers.md",
+  "lines": 129
+ },
+ {
+  "path": "docs/proxy/sync_models_github.md",
+  "lines": 107
+ },
+ {
+  "path": "docs/proxy/tag_budgets.md",
+  "lines": 359
+ },
+ {
+  "path": "docs/proxy/tag_routing.md",
+  "lines": 811
+ },
+ {
+  "path": "docs/proxy/team_based_routing.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/team_budgets.md",
+  "lines": 186
+ },
+ {
+  "path": "docs/proxy/team_logging.md",
+  "lines": 575
+ },
+ {
+  "path": "docs/proxy/team_model_add.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/temporary_budget_increase.md",
+  "lines": 66
+ },
+ {
+  "path": "docs/proxy/timeout.md",
+  "lines": 299
+ },
+ {
+  "path": "docs/proxy/token_auth.md",
+  "lines": 1420
+ },
+ {
+  "path": "docs/proxy/tool_policies.md",
+  "lines": 231
+ },
+ {
+  "path": "docs/proxy/ui.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/proxy/ui/bulk_edit_users.md",
+  "lines": 30
+ },
+ {
+  "path": "docs/proxy/ui/chat_ui.md",
+  "lines": 221
+ },
+ {
+  "path": "docs/proxy/ui/page_visibility.md",
+  "lines": 122
+ },
+ {
+  "path": "docs/proxy/ui/routing_groups.md",
+  "lines": 122
+ },
+ {
+  "path": "docs/proxy/ui/ui_edit_logo.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/ui_logs.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/proxy/ui_logs_sessions.md",
+  "lines": 310
+ },
+ {
+  "path": "docs/proxy/ui_project_management.md",
+  "lines": 145
+ },
+ {
+  "path": "docs/proxy/ui_search_tools.md",
+  "lines": 50
+ },
+ {
+  "path": "docs/proxy/ui_spend_log_settings.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/ui_team_soft_budget_alerts.md",
+  "lines": 133
+ },
+ {
+  "path": "docs/proxy/unmanaged_vertex_batches.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/proxy/user_keys.md",
+  "lines": 1149
+ },
+ {
+  "path": "docs/proxy/user_management_heirarchy.md",
+  "lines": 19
+ },
+ {
+  "path": "docs/proxy/user_onboarding.md",
+  "lines": 83
+ },
+ {
+  "path": "docs/proxy/users.md",
+  "lines": 1491
+ },
+ {
+  "path": "docs/proxy/veo_video_generation.md",
+  "lines": 164
+ },
+ {
+  "path": "docs/proxy/virtual_keys.md",
+  "lines": 935
+ },
+ {
+  "path": "docs/proxy/worker_startup_hooks.md",
+  "lines": 156
+ },
+ {
+  "path": "docs/proxy_api.md",
+  "lines": 20
+ },
+ {
+  "path": "docs/proxy_auth.md",
+  "lines": 334
+ },
+ {
+  "path": "docs/proxy_server.md",
+  "lines": 742
+ },
+ {
+  "path": "docs/python_sdk.md",
+  "lines": 110
+ },
+ {
+  "path": "docs/rag_ingest.md",
+  "lines": 417
+ },
+ {
+  "path": "docs/rag_query.md",
+  "lines": 301
+ },
+ {
+  "path": "docs/realtime.md",
+  "lines": 259
+ },
+ {
+  "path": "docs/reasoning_content.md",
+  "lines": 843
+ },
+ {
+  "path": "docs/rerank.md",
+  "lines": 140
+ },
+ {
+  "path": "docs/response_api.md",
+  "lines": 2005
+ },
+ {
+  "path": "docs/response_api_compact.md",
+  "lines": 105
+ },
+ {
+  "path": "docs/routing.md",
+  "lines": 2233
+ },
+ {
+  "path": "docs/routing_plugins.md",
+  "lines": 324
+ },
+ {
+  "path": "docs/rules.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/sandbox.md",
+  "lines": 421
+ },
+ {
+  "path": "docs/scheduler.md",
+  "lines": 183
+ },
+ {
+  "path": "docs/sdk_custom_pricing.md",
+  "lines": 73
+ },
+ {
+  "path": "docs/secret.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/secret_managers/aws_kms.md",
+  "lines": 27
+ },
+ {
+  "path": "docs/secret_managers/aws_secret_manager.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/secret_managers/azure_key_vault.md",
+  "lines": 40
+ },
+ {
+  "path": "docs/secret_managers/custom_secret_manager.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/secret_managers/cyberark.md",
+  "lines": 191
+ },
+ {
+  "path": "docs/secret_managers/google_kms.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/secret_managers/google_secret_manager.md",
+  "lines": 40
+ },
+ {
+  "path": "docs/secret_managers/hashicorp_vault.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/secret_managers/overview.md",
+  "lines": 69
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai/architecture.md",
+  "lines": 154
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai/setup.md",
+  "lines": 202
+ },
+ {
+  "path": "docs/set_keys.md",
+  "lines": 221
+ },
+ {
+  "path": "docs/shared_responsibility.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/skills.md",
+  "lines": 508
+ },
+ {
+  "path": "docs/skills_gateway.md",
+  "lines": 175
+ },
+ {
+  "path": "docs/text_completion.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/text_to_speech.md",
+  "lines": 286
+ },
+ {
+  "path": "docs/traffic_mirroring.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/troubleshoot.md",
+  "lines": 118
+ },
+ {
+  "path": "docs/troubleshoot/cost_discrepancy.md",
+  "lines": 210
+ },
+ {
+  "path": "docs/troubleshoot/cpu_issues.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/troubleshoot/latency_overhead.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/troubleshoot/max_callbacks.md",
+  "lines": 69
+ },
+ {
+  "path": "docs/troubleshoot/memory_issues.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/troubleshoot/missing_model.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/troubleshoot/pip_venv_upgrade.md",
+  "lines": 122
+ },
+ {
+  "path": "docs/troubleshoot/prisma_migrations.md",
+  "lines": 202
+ },
+ {
+  "path": "docs/troubleshoot/rollback.md",
+  "lines": 116
+ },
+ {
+  "path": "docs/troubleshoot/spend_queue_warnings.md",
+  "lines": 53
+ },
+ {
+  "path": "docs/troubleshoot/ui_issues.md",
+  "lines": 50
+ },
+ {
+  "path": "docs/vector_store_files.md",
+  "lines": 121
+ },
+ {
+  "path": "docs/vector_stores/create.md",
+  "lines": 394
+ },
+ {
+  "path": "docs/vector_stores/index.md",
+  "lines": 51
+ },
+ {
+  "path": "docs/vector_stores/managed_vector_stores.md",
+  "lines": 190
+ },
+ {
+  "path": "docs/vector_stores/search.md",
+  "lines": 379
+ },
+ {
+  "path": "docs/vertex_batch_passthrough.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/videos.md",
+  "lines": 685
+ },
+ {
+  "path": "docs/wildcard_routing.md",
+  "lines": 144
+ },
+ {
+  "path": "src/pages/contact.md",
+  "lines": 38
+ },
+ {
+  "path": "src/pages/contributing.md",
+  "lines": 42
+ },
+ {
+  "path": "src/pages/stream.md",
+  "lines": 77
+ },
+ {
+  "path": "src/pages/token_usage.md",
+  "lines": 46
+ },
+ {
+  "path": "src/pages/completion/input.md",
+  "lines": 58
+ },
+ {
+  "path": "src/pages/completion/output.md",
+  "lines": 12
+ },
+ {
+  "path": "src/pages/completion/supported.md",
+  "lines": 98
+ },
+ {
+  "path": "src/pages/embedding/supported_embedding.md",
+  "lines": 5
+ }
+]

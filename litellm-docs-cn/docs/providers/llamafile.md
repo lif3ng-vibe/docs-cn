@@ -1,0 +1,158 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Llamafile
+
+LiteLLM 支持 Llamafile 上的所有模型。
+
+| 属性                      | 详情                                                                                                                              |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| 描述               | llamafile 让你用一个文件就能分发和运行 LLM。[文档](https://github.com/Mozilla-Ocho/llamafile/blob/main/README.md) |
+| LiteLLM 中的提供商路由 | `llamafile/`（用于 OpenAI 兼容服务器）                                                                                          |
+| 提供商文档             | [llamafile ↗](https://github.com/Mozilla-Ocho/llamafile/blob/main/llama.cpp/server/README.md#api-endpoints)                          |
+| 支持的端点                | `/chat/completions`, `/embeddings`, `/completions`                                                                                   |
+
+
+## 快速上手
+
+## 用法 - litellm.completion（调用 OpenAI 兼容端点）
+llamafile 提供了用于对话补全（chat completion）的 OpenAI 兼容端点，下面演示如何用 LiteLLM 调用它。
+
+要用 litellm 调用 llamafile，请在你的补全调用中加入以下两个参数
+
+* `model="llamafile/<your-llamafile-model-name>"` 
+* `api_base = "your-hosted-llamafile"`
+
+```python
+import litellm 
+
+response = litellm.completion(
+            model="llamafile/mistralai/mistral-7b-instruct-v0.2", # pass the llamafile model name for completeness
+            messages=messages,
+            api_base="http://localhost:8080/v1",
+            temperature=0.2,
+            max_tokens=80)
+
+print(response)
+```
+
+
+## 用法 - LiteLLM 代理服务器（调用 OpenAI 兼容端点）
+
+下面演示如何通过 LiteLLM 代理服务器调用 OpenAI 兼容端点。
+
+1. 修改 config.yaml
+
+  ```yaml
+  model_list:
+    - model_name: my-model
+      litellm_params:
+        model: llamafile/mistralai/mistral-7b-instruct-v0.2 # add llamafile/ prefix to route as OpenAI provider
+        api_base: http://localhost:8080/v1 # add api base for OpenAI compatible provider
+  ```
+
+1. 启动代理
+
+  ```bash
+  $ litellm --config /path/to/config.yaml
+  ```
+
+1. 向 LiteLLM 代理服务器发送请求
+
+  <Tabs>
+
+  <TabItem value="openai" label="OpenAI Python v1.0.0+">
+
+  ```python
+  import openai
+  client = openai.OpenAI(
+      api_key="sk-<your-litellm-api-key>", # pass litellm proxy key, if you're using virtual keys
+      base_url="http://0.0.0.0:4000" # litellm-proxy-base url
+  )
+
+  response = client.chat.completions.create(
+      model="my-model",
+      messages = [
+          {
+              "role": "user",
+              "content": "what llm are you"
+          }
+      ],
+  )
+
+  print(response)
+  ```
+  </TabItem>
+
+  <TabItem value="curl" label="curl">
+
+  ```shell
+  curl --location 'http://0.0.0.0:4000/chat/completions' \
+      --header "Authorization: Bearer $LITELLM_API_KEY" \
+      --header 'Content-Type: application/json' \
+      --data '{
+      "model": "my-model",
+      "messages": [
+          {
+          "role": "user",
+          "content": "what llm are you"
+          }
+      ],
+  }'
+  ```
+  </TabItem>
+
+  </Tabs>
+
+
+## 嵌入
+
+<Tabs>
+<TabItem value="sdk" label="SDK">
+
+```python
+from litellm import embedding   
+import os
+
+os.environ["LLAMAFILE_API_BASE"] = "http://localhost:8080/v1"
+
+
+embedding = embedding(model="llamafile/sentence-transformers/all-MiniLM-L6-v2", input=["Hello world"])
+
+print(embedding)
+```
+
+</TabItem>
+<TabItem value="proxy" label="PROXY">
+
+1. 配置 config.yaml
+
+```yaml
+model_list:
+    - model_name: my-model
+      litellm_params:
+        model: llamafile/sentence-transformers/all-MiniLM-L6-v2 # add llamafile/ prefix to route as OpenAI provider
+        api_base: http://localhost:8080/v1 # add api base for OpenAI compatible provider
+```
+
+1. 启动代理
+
+```bash
+$ litellm --config /path/to/config.yaml
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+1. 测试一下！
+
+```bash
+curl -L -X POST 'http://0.0.0.0:4000/embeddings' \
+-H "Authorization: Bearer $LITELLM_API_KEY" \
+-H 'Content-Type: application/json' \
+-d '{"input": ["hello world"], "model": "my-model"}'
+```
+
+[查看 OpenAI SDK/LangChain 等示例](../proxy/user_keys.md#embeddings)
+
+</TabItem>
+</Tabs>

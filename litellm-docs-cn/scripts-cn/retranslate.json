@@ -1,0 +1,38 @@
+[
+ {
+  "path": "docs/adding_provider/adding_guardrail_support.md",
+  "lines": 450
+ },
+ {
+  "path": "docs/fine_tuning.md",
+  "lines": 261
+ },
+ {
+  "path": "docs/image_edits.md",
+  "lines": 649
+ },
+ {
+  "path": "docs/proxy/guardrails/quick_start.md",
+  "lines": 961
+ },
+ {
+  "path": "docs/proxy/prometheus.md",
+  "lines": 1006
+ },
+ {
+  "path": "docs/routing.md",
+  "lines": 2233
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/proxy/user_keys.md",
+  "lines": 1149
+ },
+ {
+  "path": "docs/response_api.md",
+  "lines": 2005
+ }
+]

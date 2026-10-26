@@ -1,0 +1,34 @@
+{
+  "title": {
+    "message": "文档",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "LiteLLM",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.产品": {
+    "message": "产品",
+    "description": "Navbar item with label 产品"
+  },
+  "item.label.文档": {
+    "message": "文档",
+    "description": "Navbar item with label 文档"
+  },
+  "item.label.集成": {
+    "message": "集成",
+    "description": "Navbar item with label 集成"
+  },
+  "item.label.企业版": {
+    "message": "企业版",
+    "description": "Navbar item with label 企业版"
+  },
+  "item.label.学习": {
+    "message": "学习",
+    "description": "Navbar item with label 学习"
+  },
+  "item.label.信任中心": {
+    "message": "信任中心",
+    "description": "Navbar item with label 信任中心"
+  }
+}

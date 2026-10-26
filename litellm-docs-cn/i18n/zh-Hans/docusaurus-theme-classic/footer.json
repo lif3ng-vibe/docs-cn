@@ -1,0 +1,98 @@
+{
+  "link.title.产品": {
+    "message": "产品",
+    "description": "The title of the footer links column with title=产品 in the footer"
+  },
+  "link.title.资源": {
+    "message": "资源",
+    "description": "The title of the footer links column with title=资源 in the footer"
+  },
+  "link.title.社区": {
+    "message": "社区",
+    "description": "The title of the footer links column with title=社区 in the footer"
+  },
+  "link.title.公司": {
+    "message": "公司",
+    "description": "The title of the footer links column with title=公司 in the footer"
+  },
+  "link.item.label.网关快速上手": {
+    "message": "网关快速上手",
+    "description": "The label of footer link with label=网关快速上手 linking to /docs/proxy/docker_quick_start"
+  },
+  "link.item.label.Python SDK": {
+    "message": "Python SDK",
+    "description": "The label of footer link with label=Python SDK linking to /docs/python_sdk"
+  },
+  "link.item.label.生产环境部署": {
+    "message": "生产环境部署",
+    "description": "The label of footer link with label=生产环境部署 linking to /docs/proxy/deploy"
+  },
+  "link.item.label.MCP 网关": {
+    "message": "MCP 网关",
+    "description": "The label of footer link with label=MCP 网关 linking to /docs/mcp"
+  },
+  "link.item.label.Agent 网关": {
+    "message": "Agent 网关",
+    "description": "The label of footer link with label=Agent 网关 linking to /docs/a2a"
+  },
+  "link.item.label.Rust AI 网关（beta）": {
+    "message": "Rust AI 网关（beta）",
+    "description": "The label of footer link with label=Rust AI 网关（beta） linking to /docs/proxy/rust_gateway"
+  },
+  "link.item.label.企业版": {
+    "message": "企业版",
+    "description": "The label of footer link with label=企业版 linking to /docs/enterprise"
+  },
+  "link.item.label.Agent 资源": {
+    "message": "Agent 资源",
+    "description": "The label of footer link with label=Agent 资源 linking to /docs/agent_resources"
+  },
+  "link.item.label.llms.txt": {
+    "message": "llms.txt",
+    "description": "The label of footer link with label=llms.txt linking to /llms.txt"
+  },
+  "link.item.label.信任中心": {
+    "message": "信任中心",
+    "description": "The label of footer link with label=信任中心 linking to https://trust.litellm.ai/"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/BerriAI/litellm/"
+  },
+  "link.item.label.Discord": {
+    "message": "Discord",
+    "description": "The label of footer link with label=Discord linking to https://discord.com/invite/wuPM9dRgDw"
+  },
+  "link.item.label.Slack": {
+    "message": "Slack",
+    "description": "The label of footer link with label=Slack linking to https://litellmossslack.slack.com/"
+  },
+  "link.item.label.YouTube": {
+    "message": "YouTube",
+    "description": "The label of footer link with label=YouTube linking to https://www.youtube.com/@LiteLLMAIGateway"
+  },
+  "link.item.label.X": {
+    "message": "X",
+    "description": "The label of footer link with label=X linking to https://twitter.com/LiteLLM"
+  },
+  "link.item.label.LinkedIn": {
+    "message": "LinkedIn",
+    "description": "The label of footer link with label=LinkedIn linking to https://www.linkedin.com/company/berri-ai/"
+  },
+  "link.item.label.litellm.ai": {
+    "message": "litellm.ai",
+    "description": "The label of footer link with label=litellm.ai linking to https://www.litellm.ai/"
+  },
+  "link.item.label.联系销售": {
+    "message": "联系销售",
+    "description": "The label of footer link with label=联系销售 linking to https://www.litellm.ai/enterprise#talk-to-sales"
+  },
+  "link.item.label.招贤纳士": {
+    "message": "招贤纳士",
+    "description": "The label of footer link with label=招贤纳士 linking to https://jobs.ashbyhq.com/litellm"
+  },
+  "copyright": {
+    "message": "© 2026 LiteLLM · 非官方中文镜像，仅供学习参考，版权归原作者所有",
+    "description": "The footer copyright"
+  }
+}

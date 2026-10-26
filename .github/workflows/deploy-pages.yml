@@ -461,6 +461,28 @@ jobs:
           # 正文树保留 /docs 段与上游 URL 1:1（对照配对），站点根放一个跳转页
           printf '<!DOCTYPE html><meta charset="utf-8"><title>Tailscale 中文文档</title><script>location.replace("./docs/")</script><a href="./docs/">进入文档</a>' > ../_site/tailscale/index.html
 
+      # litellm 是标准 Docusaurus 3.8（一期 715 文件 + 截图库按引用裁剪）：baseUrl/url
+      # 走 DOCS_BASE（Docusaurus 要求尾斜杠）/DOCS_SITE env，内链由 Docusaurus 自带
+      # base 前缀处理，无 CI sed；大构建需显式堆上限（上游同款 6G）。
+      - name: Restore litellm-docs-cn dist
+        id: dist-litellm
+        uses: actions/cache@v4
+        with:
+          path: _site/litellm
+          key: dist-litellm-${{ hashFiles('litellm-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build litellm-docs-cn
+        if: steps.dist-litellm.outputs.cache-hit != 'true'
+        working-directory: litellm-docs-cn
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/litellm/
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          npm ci
+          npm run build
+          mv build ../_site/litellm
+
       # impeccable-docs-cn 是 Astro 源码重建站（上游快照 main@b5ec969c）：
       # authored 链接已由 tools/add-base.mjs 源码级前缀化，astro.config.mjs 带
       # base=/docs-cn/impeccable；npm build 会自动先跑 prebuild（counts/detector/API JSON）。
@@ -533,6 +555,7 @@ jobs:
             echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
             echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
             echo '| tailscale | ${{ steps.dist-tailscale.outputs.cache-hit == 'true' }} |'
+            echo '| litellm | ${{ steps.dist-litellm.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

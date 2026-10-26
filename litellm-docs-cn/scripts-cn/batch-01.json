@@ -1,0 +1,358 @@
+[
+ {
+  "path": "docs/adding_provider/generic_prompt_management_api.md",
+  "lines": 577
+ },
+ {
+  "path": "docs/anthropic_count_tokens.md",
+  "lines": 234
+ },
+ {
+  "path": "docs/auto_router/setup.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/completion/input.md",
+  "lines": 379
+ },
+ {
+  "path": "docs/completion/message_sanitization.md",
+  "lines": 457
+ },
+ {
+  "path": "docs/completion/output.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/completion/prompt_compression.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/completion/token_usage.md",
+  "lines": 193
+ },
+ {
+  "path": "docs/completion/web_search.md",
+  "lines": 697
+ },
+ {
+  "path": "docs/contact.md",
+  "lines": 32
+ },
+ {
+  "path": "docs/embedding/async_embedding.md",
+  "lines": 15
+ },
+ {
+  "path": "docs/enterprise/moving_from_oss.md",
+  "lines": 56
+ },
+ {
+  "path": "docs/guides/security_settings.md",
+  "lines": 233
+ },
+ {
+  "path": "docs/langchain/langchain.md",
+  "lines": 490
+ },
+ {
+  "path": "docs/litellm_core.md",
+  "lines": 89
+ },
+ {
+  "path": "docs/mcp_control.md",
+  "lines": 1050
+ },
+ {
+  "path": "docs/mcp_deployment.md",
+  "lines": 172
+ },
+ {
+  "path": "docs/mcp_id_jag.md",
+  "lines": 253
+ },
+ {
+  "path": "docs/provider_registration/add_model_pricing.md",
+  "lines": 167
+ },
+ {
+  "path": "docs/providers/anthropic_effort.md",
+  "lines": 335
+ },
+ {
+  "path": "docs/providers/anthropic_tool_input_examples.md",
+  "lines": 448
+ },
+ {
+  "path": "docs/providers/anthropic_tool_search.md",
+  "lines": 543
+ },
+ {
+  "path": "docs/providers/aws_polly.md",
+  "lines": 365
+ },
+ {
+  "path": "docs/providers/azure_ai_img_edit.md",
+  "lines": 305
+ },
+ {
+  "path": "docs/providers/azure/azure_responses.md",
+  "lines": 295
+ },
+ {
+  "path": "docs/providers/bedrock_agentcore.md",
+  "lines": 438
+ },
+ {
+  "path": "docs/providers/bedrock_agents.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/providers/bytez.md",
+  "lines": 187
+ },
+ {
+  "path": "docs/providers/cognition.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/empiriolabs.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/providers/gemini/music.md",
+  "lines": 29
+ },
+ {
+  "path": "docs/providers/github_copilot.md",
+  "lines": 271
+ },
+ {
+  "path": "docs/providers/lambda_ai.md",
+  "lines": 280
+ },
+ {
+  "path": "docs/providers/meta.md",
+  "lines": 429
+ },
+ {
+  "path": "docs/providers/morph.md",
+  "lines": 123
+ },
+ {
+  "path": "docs/providers/nvidia_riva.md",
+  "lines": 201
+ },
+ {
+  "path": "docs/providers/openai/text_to_speech.md",
+  "lines": 134
+ },
+ {
+  "path": "docs/providers/openai/ultrafast.md",
+  "lines": 258
+ },
+ {
+  "path": "docs/providers/openrouter.md",
+  "lines": 300
+ },
+ {
+  "path": "docs/providers/ovhcloud.md",
+  "lines": 396
+ },
+ {
+  "path": "docs/providers/runwayml/videos.md",
+  "lines": 267
+ },
+ {
+  "path": "docs/providers/vercel_ai_gateway.md",
+  "lines": 252
+ },
+ {
+  "path": "docs/providers/vertex.md",
+  "lines": 3299
+ },
+ {
+  "path": "docs/providers/volcano.md",
+  "lines": 151
+ },
+ {
+  "path": "docs/proxy_server.md",
+  "lines": 742
+ },
+ {
+  "path": "docs/proxy/architecture.md",
+  "lines": 61
+ },
+ {
+  "path": "docs/proxy/azure_redis_ad.md",
+  "lines": 145
+ },
+ {
+  "path": "docs/proxy/billing.md",
+  "lines": 321
+ },
+ {
+  "path": "docs/proxy/budget_reset_and_tz.md",
+  "lines": 66
+ },
+ {
+  "path": "docs/proxy/client_setup/overview.md",
+  "lines": 79
+ },
+ {
+  "path": "docs/proxy/customers.md",
+  "lines": 644
+ },
+ {
+  "path": "docs/proxy/db_info.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/proxy/dynamic_rate_limit.md",
+  "lines": 346
+ },
+ {
+  "path": "docs/proxy/guardrails/aporia_api.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/guardrails/batch_guardrails.md",
+  "lines": 115
+ },
+ {
+  "path": "docs/proxy/guardrails/compresr.md",
+  "lines": 316
+ },
+ {
+  "path": "docs/proxy/guardrails/policy_flow_builder.md",
+  "lines": 359
+ },
+ {
+  "path": "docs/proxy/guardrails/qohash_qostodian_nexus.md",
+  "lines": 241
+ },
+ {
+  "path": "docs/proxy/guardrails/test_playground.md",
+  "lines": 47
+ },
+ {
+  "path": "docs/proxy/lens/deployment/configuration.md",
+  "lines": 96
+ },
+ {
+  "path": "docs/proxy/lens/deployment/docker-compose.md",
+  "lines": 77
+ },
+ {
+  "path": "docs/proxy/lens/deployment/releases.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/vercel-ai-sdk-js.md",
+  "lines": 104
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/vercel-ai-sdk-py.md",
+  "lines": 86
+ },
+ {
+  "path": "docs/proxy/model_management.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/proxy/passthrough_managed_ids.md",
+  "lines": 212
+ },
+ {
+  "path": "docs/proxy/public_routes.md",
+  "lines": 224
+ },
+ {
+  "path": "docs/proxy/redis_sizing.md",
+  "lines": 54
+ },
+ {
+  "path": "docs/proxy/security_encryption_faq.md",
+  "lines": 355
+ },
+ {
+  "path": "docs/proxy/service_accounts.md",
+  "lines": 179
+ },
+ {
+  "path": "docs/proxy/team_based_routing.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/proxy/temporary_budget_increase.md",
+  "lines": 66
+ },
+ {
+  "path": "docs/proxy/ui_team_soft_budget_alerts.md",
+  "lines": 133
+ },
+ {
+  "path": "docs/proxy/veo_video_generation.md",
+  "lines": 164
+ },
+ {
+  "path": "docs/proxy/worker_startup_hooks.md",
+  "lines": 156
+ },
+ {
+  "path": "docs/rag_ingest.md",
+  "lines": 417
+ },
+ {
+  "path": "docs/reasoning_content.md",
+  "lines": 843
+ },
+ {
+  "path": "docs/secret_managers/aws_secret_manager.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai.md",
+  "lines": 114
+ },
+ {
+  "path": "docs/set_keys.md",
+  "lines": 221
+ },
+ {
+  "path": "docs/skills.md",
+  "lines": 508
+ },
+ {
+  "path": "docs/text_to_speech.md",
+  "lines": 286
+ },
+ {
+  "path": "docs/troubleshoot/cost_discrepancy.md",
+  "lines": 210
+ },
+ {
+  "path": "docs/troubleshoot/latency_overhead.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/troubleshoot/memory_issues.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/vector_store_files.md",
+  "lines": 121
+ },
+ {
+  "path": "docs/wildcard_routing.md",
+  "lines": 144
+ },
+ {
+  "path": "src/pages/completion/output.md",
+  "lines": 12
+ },
+ {
+  "path": "src/pages/token_usage.md",
+  "lines": 46
+ }
+]

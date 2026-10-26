@@ -1,0 +1,358 @@
+[
+ {
+  "path": "docs/a2a.md",
+  "lines": 514
+ },
+ {
+  "path": "docs/anthropic_unified/native_passthrough.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/auto_router/telemetry.md",
+  "lines": 209
+ },
+ {
+  "path": "docs/batches.md",
+  "lines": 704
+ },
+ {
+  "path": "docs/bedrock_invoke.md",
+  "lines": 146
+ },
+ {
+  "path": "docs/completion/message_trimming.md",
+  "lines": 36
+ },
+ {
+  "path": "docs/completion/mock_requests.md",
+  "lines": 72
+ },
+ {
+  "path": "docs/completion/prompt_caching.md",
+  "lines": 1103
+ },
+ {
+  "path": "docs/completion/prompt_formatting.md",
+  "lines": 82
+ },
+ {
+  "path": "docs/completion/provider_specific_params.md",
+  "lines": 444
+ },
+ {
+  "path": "docs/completion/reliable_completions.md",
+  "lines": 124
+ },
+ {
+  "path": "docs/completion/stream.md",
+  "lines": 150
+ },
+ {
+  "path": "docs/completion/web_fetch.md",
+  "lines": 300
+ },
+ {
+  "path": "docs/count_tokens.md",
+  "lines": 200
+ },
+ {
+  "path": "docs/debugging/local_debugging.md",
+  "lines": 73
+ },
+ {
+  "path": "docs/extras/contributing_code.md",
+  "lines": 268
+ },
+ {
+  "path": "docs/fusion.md",
+  "lines": 159
+ },
+ {
+  "path": "docs/generateContent.md",
+  "lines": 296
+ },
+ {
+  "path": "docs/integrations/community.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/learn/gateway_quickstart.md",
+  "lines": 176
+ },
+ {
+  "path": "docs/mcp_guardrail.md",
+  "lines": 160
+ },
+ {
+  "path": "docs/mcp_oauth.md",
+  "lines": 621
+ },
+ {
+  "path": "docs/mcp_servers/microsoft_365.md",
+  "lines": 257
+ },
+ {
+  "path": "docs/mcp.md",
+  "lines": 1382
+ },
+ {
+  "path": "docs/old_guardrails.md",
+  "lines": 356
+ },
+ {
+  "path": "docs/providers/abliteration.md",
+  "lines": 110
+ },
+ {
+  "path": "docs/providers/azure_ai_img.md",
+  "lines": 455
+ },
+ {
+  "path": "docs/providers/azure_ai_speech.md",
+  "lines": 458
+ },
+ {
+  "path": "docs/providers/azure_ai_vector_stores.md",
+  "lines": 247
+ },
+ {
+  "path": "docs/providers/azure_ai/azure_ai_vector_stores_passthrough.md",
+  "lines": 391
+ },
+ {
+  "path": "docs/providers/azure/videos.md",
+  "lines": 283
+ },
+ {
+  "path": "docs/providers/bedrock_image_gen.md",
+  "lines": 173
+ },
+ {
+  "path": "docs/providers/bedrock_writer.md",
+  "lines": 317
+ },
+ {
+  "path": "docs/providers/black_forest_labs.md",
+  "lines": 292
+ },
+ {
+  "path": "docs/providers/chatgpt.md",
+  "lines": 179
+ },
+ {
+  "path": "docs/providers/datarobot.md",
+  "lines": 45
+ },
+ {
+  "path": "docs/providers/manus.md",
+  "lines": 370
+ },
+ {
+  "path": "docs/providers/milvus_vector_stores.md",
+  "lines": 782
+ },
+ {
+  "path": "docs/providers/nadir.md",
+  "lines": 136
+ },
+ {
+  "path": "docs/providers/nlp_cloud.md",
+  "lines": 64
+ },
+ {
+  "path": "docs/providers/oci.md",
+  "lines": 882
+ },
+ {
+  "path": "docs/providers/stability.md",
+  "lines": 492
+ },
+ {
+  "path": "docs/providers/v0.md",
+  "lines": 340
+ },
+ {
+  "path": "docs/providers/vertex_ai_agent_engine.md",
+  "lines": 217
+ },
+ {
+  "path": "docs/providers/vertex_ocr.md",
+  "lines": 241
+ },
+ {
+  "path": "docs/providers/voyage.md",
+  "lines": 348
+ },
+ {
+  "path": "docs/providers/watsonx/index.md",
+  "lines": 231
+ },
+ {
+  "path": "docs/proxy/admin_ui_sso.md",
+  "lines": 652
+ },
+ {
+  "path": "docs/proxy/auto_routing_benchmark.md",
+  "lines": 138
+ },
+ {
+  "path": "docs/proxy/client_setup/codex_chatgpt_desktop.md",
+  "lines": 106
+ },
+ {
+  "path": "docs/proxy/config_management.md",
+  "lines": 59
+ },
+ {
+  "path": "docs/proxy/config_settings.md",
+  "lines": 1611
+ },
+ {
+  "path": "docs/proxy/docker_image_security.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/email.md",
+  "lines": 405
+ },
+ {
+  "path": "docs/proxy/embedding.md",
+  "lines": 81
+ },
+ {
+  "path": "docs/proxy/error_reference.md",
+  "lines": 362
+ },
+ {
+  "path": "docs/proxy/fallback_management.md",
+  "lines": 277
+ },
+ {
+  "path": "docs/proxy/guardrails/azure_content_guardrail.md",
+  "lines": 142
+ },
+ {
+  "path": "docs/proxy/guardrails/bedrock.md",
+  "lines": 436
+ },
+ {
+  "path": "docs/proxy/guardrails/ibm_guardrails.md",
+  "lines": 235
+ },
+ {
+  "path": "docs/proxy/guardrails/lakera_ai.md",
+  "lines": 213
+ },
+ {
+  "path": "docs/proxy/guardrails/lasso_security.md",
+  "lines": 420
+ },
+ {
+  "path": "docs/proxy/guardrails/model_armor.md",
+  "lines": 167
+ },
+ {
+  "path": "docs/proxy/guardrails/onyx_security.md",
+  "lines": 152
+ },
+ {
+  "path": "docs/proxy/guardrails/openai_moderation.md",
+  "lines": 312
+ },
+ {
+  "path": "docs/proxy/guardrails/rubrik.md",
+  "lines": 194
+ },
+ {
+  "path": "docs/proxy/headroom.md",
+  "lines": 251
+ },
+ {
+  "path": "docs/proxy/ip_address.md",
+  "lines": 24
+ },
+ {
+  "path": "docs/proxy/lens/imported/coding-agents/claude-code.md",
+  "lines": 34
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/claude-agent-sdk.md",
+  "lines": 116
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/deepagents.md",
+  "lines": 84
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/hermes-agent.md",
+  "lines": 90
+ },
+ {
+  "path": "docs/proxy/lens/imported/integrations/strands.md",
+  "lines": 88
+ },
+ {
+  "path": "docs/proxy/lens/scalability.md",
+  "lines": 157
+ },
+ {
+  "path": "docs/proxy/metrics.md",
+  "lines": 48
+ },
+ {
+  "path": "docs/proxy/model_discovery.md",
+  "lines": 188
+ },
+ {
+  "path": "docs/proxy/pagerduty.md",
+  "lines": 99
+ },
+ {
+  "path": "docs/proxy/prompt_management.md",
+  "lines": 555
+ },
+ {
+  "path": "docs/proxy/pyroscope_profiling.md",
+  "lines": 58
+ },
+ {
+  "path": "docs/proxy/response_headers.md",
+  "lines": 130
+ },
+ {
+  "path": "docs/proxy/saml_sso.md",
+  "lines": 260
+ },
+ {
+  "path": "docs/proxy/spend_logs_deletion.md",
+  "lines": 229
+ },
+ {
+  "path": "docs/proxy/team_budgets.md",
+  "lines": 186
+ },
+ {
+  "path": "docs/proxy/ui/routing_groups.md",
+  "lines": 122
+ },
+ {
+  "path": "docs/routing_plugins.md",
+  "lines": 324
+ },
+ {
+  "path": "docs/secret.md",
+  "lines": 38
+ },
+ {
+  "path": "docs/self_hosted_coding_agents/moyai/setup.md",
+  "lines": 202
+ },
+ {
+  "path": "docs/troubleshoot/missing_model.md",
+  "lines": 93
+ },
+ {
+  "path": "docs/troubleshoot/spend_queue_warnings.md",
+  "lines": 53
+ }
+]

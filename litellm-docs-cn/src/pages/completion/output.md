@@ -1,0 +1,12 @@
+# 补全函数 completion()
+以下是 litellm `completion` 调用实际返回的 JSON 输出：
+
+```python 
+{'choices': [{'finish_reason': 'stop',
+   'index': 0,
+   'message': {'role': 'assistant',
+    'content': " I'm doing well, thank you for asking. I am Claude, an AI assistant created by Anthropic."}}],
+ 'created': 1691429984.3852863,
+ 'model': 'claude-instant-1',
+ 'usage': {'prompt_tokens': 18, 'completion_tokens': 23, 'total_tokens': 41}}
+```

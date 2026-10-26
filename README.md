@@ -22,6 +22,7 @@
 | Impeccable | `impeccable-docs-cn/` | https://impeccable.style | https://github.com/pbakaus/impeccable（站点源码快照 `main@b5ec969c`，2026-07-21 后站点转入上游私有仓库） | 2026-10-25 |
 | Impeccable（线上镜像） | `impeccable-mirror-cn/` | https://impeccable.style | https://github.com/pbakaus/impeccable（线上构建产物 2026-10-25 快照，源码在上游私有仓库） | 2026-10-25 |
 | Tailscale | `tailscale-docs-cn/` | https://tailscale.com/docs | 闭源站（官方 .md 导出快照 2026-10-24，704 路径闭包 700 页） | 2026-10-25 |
+| LiteLLM | `litellm-docs-cn/` | https://docs.litellm.ai/docs | https://github.com/BerriAI/litellm-docs（独立官方文档仓库 MIT，快照 `main@f8aa00d0` 2026-10-09；一期 715 文件） | 2026-10-26 |
 | Agent Skills | `agent-skills-docs-cn/` | https://skills.addy.ie/ | https://github.com/addyosmani/agent-skills（站点工程：[skills.addy.ie](https://github.com/addyosmani/skills.addy.ie)） | 2026-10-08 |
 | e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
 | Claude-Mem | `claude-mem-docs-cn/` | https://docs.claude-mem.ai/ | https://github.com/thedotmack/claude-mem（快照 `71ddd11`，Mintlify 源在其 docs/public/） | 2026-10-08 |
@@ -94,6 +95,7 @@ docs-cn/
 ├── impeccable-docs-cn/                 # Impeccable 中文文档（Astro 7 源码快照重建，53 页 + 线上回填）
 ├── impeccable-mirror-cn/               # Impeccable 线上镜像中文版（构建产物原位翻译，49 页）
 ├── tailscale-docs-cn/                  # Tailscale 官方文档中文镜像（Starlight 重建，700 页，官方 .md 导出源）
+├── litellm-docs-cn/                    # LiteLLM 官方文档中文镜像（Docusaurus 3.8 原班工具链，一期 715 文件）
 ├── agent-skills-docs-cn/               # Agent Skills 官方站中文版（原版 Astro 5 营销/教程站，36 页）
 ├── tester-army-e2e-docs-cn/            # e2e 中文文档（Mintlify 原班 + export 导出，52 篇 MDX）
 ├── claude-mem-docs-cn/                 # Claude-Mem 中文文档（Mintlify 原班构建，49 篇 + export+prefix 部署链）
@@ -163,6 +165,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Impeccable：https://lif3ng-vibe.github.io/docs-cn/impeccable/
 - Impeccable（线上镜像）：https://lif3ng-vibe.github.io/docs-cn/impeccable-mirror/
 - Tailscale：https://lif3ng-vibe.github.io/docs-cn/tailscale/
+- LiteLLM：https://lif3ng-vibe.github.io/docs-cn/litellm/
 - Agent Skills：https://lif3ng-vibe.github.io/docs-cn/agent-skills/
 - Agency Agents：https://lif3ng-vibe.github.io/docs-cn/agency-agents/
 - Agency Agents（英文镜像）：https://lif3ng-vibe.github.io/docs-cn/agency-agents-en/
