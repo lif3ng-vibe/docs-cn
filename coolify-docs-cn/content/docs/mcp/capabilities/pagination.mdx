@@ -1,0 +1,31 @@
+---
+title: 分页
+description: 处理 Coolify MCP 列表响应的分页，并在大型结果集中续读。
+---
+
+# 分页
+
+列表类工具接受 `page` 与 `per_page` 参数。
+
+| 参数 | 默认值 | 最大值 |
+| :--- | :---: | :---: |
+| `page` | `1` | — |
+| `per_page` | `50` | `100` |
+
+当还有下一页时，响应会包含 `_pagination` 字段，其中带有总数信息和 `next` 对象：
+
+```json
+{
+  "_pagination": {
+    "page": 1,
+    "per_page": 50,
+    "total": 120,
+    "total_pages": 3,
+    "next": {
+      "args": { "page": 2, "per_page": 50 }
+    }
+  }
+}
+```
+
+请使用响应中返回的 `next.args` 值，不要自行假设每页大小或总页数。部分工具在特定筛选条件下会使用更小的输入上限。

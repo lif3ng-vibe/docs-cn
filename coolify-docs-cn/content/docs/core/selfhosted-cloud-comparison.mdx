@@ -1,0 +1,157 @@
+---
+title: 自托管与 Coolify Cloud 对比
+description: 从所有权、责任和成本三方面比较自托管 Coolify 与 Coolify Cloud。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Cloud,
+  Layers,
+  Server,
+  ServerCloud,
+  ShieldSecurity2,
+} from 'reicon-react';
+
+# 自托管与 Coolify Cloud 对比
+
+你有两种使用 Coolify 的方式:自己运行 Coolify 实例,或使用由 Coolify 团队托管维护的实例。
+
+Coolify 实例是提供仪表盘并协调部署的控制平面。无论哪种模式,你的应用、数据库和服务都仍然运行在你连接的服务器上。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+如果你想自己运维 Coolify 实例,掌控它的更新、备份、可用性和恢复,请选择**自托管 Coolify**。
+
+如果你希望由 Coolify 团队代为运维实例,请选择 **Coolify Cloud**。工作负载所在的服务器仍然由你提供并保障安全。
+
+</CoolCallout>
+
+---
+
+## 哪些保持不变
+
+你的选择改变的只是由谁运维 Coolify 实例。资源工作流程不会变化,工作负载也不会被搬到 Coolify 托管的服务器上。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '功能集完全相同',
+      description: '无论哪种模式,都可以部署和管理应用、数据库和一键服务。',
+      icon: Layers,
+    },
+    {
+      title: '工作负载服务器归你',
+      description: '应用、数据库和服务所在的服务器由你提供。',
+      icon: Server,
+    },
+    {
+      title: '标准 Docker 资源',
+      description: '资源以 Docker 容器、网络和存储的形式运行在你连接的服务器上。',
+      icon: Box2,
+    },
+    {
+      title: '一台或多台服务器',
+      description: '一个 Coolify 实例可以协调多台已连接服务器上的资源。',
+      icon: ServerCloud,
+    },
+  ]}
+/>
+
+---
+
+## 自托管 Coolify 与 Coolify Cloud 对比
+
+主要差异在于控制平面运维、仪表盘访问、通知送达方式和成本。
+
+| 方面 | 自托管 Coolify | Coolify Cloud |
+| :--- | :--- | :--- |
+| Coolify 实例 | 运行在你掌控的基础设施上。 | 运行在 Coolify 团队管理的基础设施上。 |
+| 安装与维护 | 由你安装、监控、维护,并从备份恢复实例。 | 由 Coolify 团队安装、监控、维护,并从备份恢复实例。 |
+| Coolify 更新 | 由你决定何时更新实例。 | 控制平面更新由 Coolify 团队管理。 |
+| Coolify 实例备份 | 由你配置、存放并演练实例备份。 | Cloud 实例的备份由 Coolify 团队管理。 |
+| 仪表盘访问 | 由你为实例配置域名。 | 使用 [app.coolify.io](https://app.coolify.io)。 |
+| 邮件告警 | 由你配置 SMTP 或 Resend。 | Coolify 通知的邮件送达由 Coolify 团队预先配置。 |
+| 其他通知渠道 | 每个渠道由你自行配置,例如 Discord 或 Telegram。 | 每个渠道由你自行配置,例如 Discord 或 Telegram。 |
+| 功能 | 包含当前及未来的所有 Coolify 功能,永久免费。 | 当前及未来的所有 Coolify 功能都包含在订阅内。 |
+| 代码库 | 开源。 | 开源。 |
+| 团队 | 不限数量。 | 不限数量;每个团队需要单独的订阅。 |
+| 团队成员 | 不限数量。 | 不限数量。 |
+| 已连接的服务器 | 不限数量。 | 不限数量。前两台之后的每台服务器都会增加订阅费用。 |
+| 工作负载服务器与数据 | 应用、数据库、服务和持久化数据运行在你的服务器上。 | 应用、数据库、服务和持久化数据运行在你的服务器上。 |
+| 平台成本 | 无 Coolify 授权费,只需为你的基础设施付费。 | 付费托管服务;工作负载服务器仍需你自行付费。 |
+
+---
+
+## 成本对比
+
+自托管 Coolify 没有授权费。但运行 Coolify 实例和工作负载的基础设施仍需你付费。
+
+Coolify Cloud 每月 5 美元起,最多包含两台已连接的服务器。每增加一台已连接的服务器,每月加收 3 美元。
+
+Cloud 定价可能调整。订阅前请查看[当前 Coolify Cloud 定价](https://coolify.io/pricing)。
+
+---
+
+## 理解责任边界
+
+Coolify Cloud 管理的是控制平面,而不是你连接到它的服务器和工作负载。如果自托管,这条边界的两侧都由你运维。
+
+<CoolCompare
+  id="coolify-deployment-responsibilities"
+  className="not-prose"
+  icon={ShieldSecurity2}
+  title="每一层由谁运维"
+  description="使用 Coolify Cloud 时,Coolify 团队运维控制平面,而已连接的基础设施仍由你运维。"
+>
+<CoolCompareColumn
+  title="Coolify Cloud 负责"
+  items={[
+    '控制平面的托管与可用性',
+    'Coolify 更新与运维维护',
+    'Cloud 实例的备份与恢复',
+    '为 Coolify 通知预先配置的邮件送达',
+  ]}
+/>
+<CoolCompareColumn
+  title="两种模式都由你负责"
+  items={[
+    '已连接服务器的选型与付费',
+    '操作系统更新、SSH 访问、防火墙规则和 DNS',
+    '应用数据、数据库数据,以及经过演练的备份与恢复策略',
+    '机密、访问权限和已暴露工作负载的安全',
+  ]}
+/>
+</CoolCompare>
+
+把生产工作负载放到已连接的服务器上之前,先阅读[安全模型](/core/security-model)。
+
+---
+
+## 选择你的路径
+
+如果对实例的掌控比省去控制平面维护更重要,请选择自托管 Coolify。如果你想要一个托管实例,而且订阅符合你的运营模式,请选择 Coolify Cloud。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '从自托管开始',
+      href: '/start-with-self-hosted',
+      description: '在你掌控的基础设施上安装 Coolify,自行运维实例。',
+      icon: Server,
+    },
+    {
+      title: '从 Coolify Cloud 开始',
+      href: '/start-with-cloud',
+      description: '使用托管的 Coolify 实例,接入你自己的工作负载服务器。',
+      icon: Cloud,
+    },
+    {
+      title: '审视安全模型',
+      href: '/core/security-model',
+      description: '了解 Coolify 提供的控制措施,以及你必须自行保障的基础设施。',
+      icon: ShieldSecurity2,
+    },
+  ]}
+/>

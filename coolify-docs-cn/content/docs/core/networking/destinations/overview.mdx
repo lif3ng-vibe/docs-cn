@@ -1,0 +1,79 @@
+---
+title: 目标概览
+description: 了解 Coolify 如何使用 Docker 网络目标（Destination）在服务器上部署资源。
+---
+
+import { ArrowsRight, Settings, Warning22 } from 'reicon-react';
+
+# 目标（Destination）概览
+
+目标（Destination）代表你某台服务器上的一个 Docker 网络。选择一个目标，就是告诉 Coolify 在部署应用、数据库或服务时使用哪台服务器和哪个 Docker 网络。
+
+每个目标都属于一台服务器。一台服务器可以有多个目标，一个目标也可以被多个资源使用。
+
+<Callout type="info" title="从默认目标开始">
+Coolify 会在安装时创建一个名为 `coolify` 的目标。应用默认使用这个目标。Docker Compose 应用是例外：它们默认使用自己的资源专属网络，除非你启用 **Connect To Predefined Network**。
+</Callout>
+
+## 目标决定了什么
+
+一个目标由三部分信息组成：
+
+| 属性 | 用途 |
+| :--- | :--- |
+| **Name** | 在 Coolify 面板中标识该目标。 |
+| **Server** | 标识资源将要运行的机器。 |
+| **Docker Network** | 标识资源在该服务器上可以加入的 Docker 网络。 |
+
+同一 Docker 网络上的资源可以通过容器名或服务名和内部端口相互通信。不同网络上的资源彼此隔离，除非你把它们接到同一个共享网络。
+
+目标不会在服务器之间转发流量，也不能替代 DNS、防火墙或代理配置。从公网域名到 Coolify Proxy、Docker 网络再到资源容器的完整路径，请阅读[Coolify 中的网络](/core/networking-in-coolify)。
+
+## 默认目标
+
+默认的 `coolify` 目标对应服务器上的 `coolify` Docker 网络。
+
+创建资源时，Coolify 会先要求你选择一台服务器。如果该服务器只有一个目标，Coolify 会自动选中它；如果有多个目标，则由你为新资源选择 Docker 网络。
+
+默认的 `coolify` 目标无法从面板中删除。
+
+## 何时创建其他目标
+
+大多数部署只需要默认的 `coolify` 目标。当特定应用需要使用一个独立于默认网络的 Docker 网络时，再创建其他目标。
+
+创建更多目标并不会创建更多服务器。每个目标仍然只属于一台已连接的服务器。
+
+## Docker Compose 的目标行为
+
+Docker Compose 应用与服务栈默认使用资源专属的 Docker 网络，不会自动加入它们选定的 Coolify 目标。
+
+当 Docker Compose 资源需要通过其 Coolify 目标与其他资源通信时，启用 **Connect To Predefined Network**。启用该设置之前，请先阅读[Docker Compose 网络](/applications/builds/docker-compose#application-networking)。
+
+<Callout type="warning" title="Docker Swarm 目标已弃用">
+已有的 Coolify v4 Docker Swarm 目标可能仍会带着 **Deprecated** 标记出现。请不要创建新的 Swarm 部署。维护已有部署时，请阅读[Docker Swarm（已弃用）](/core/infrastructure/scaling/docker-swarm)。
+</Callout>
+
+## 继续了解目标
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '创建目标',
+      href: '/core/networking/destinations/create',
+      description: '为部署创建另一个 Docker 网络，或扫描服务器上已存在的网络。',
+      icon: ArrowsRight,
+    },
+    {
+      title: '管理目标',
+      href: '/core/networking/destinations/manage',
+      description: '查看资源、重命名目标、选择部署网络或克隆资源。',
+      icon: Settings,
+    },
+    {
+      title: '删除目标',
+      href: '/core/networking/destinations/delete',
+      description: '检查关联资源，安全移除目标及其 Docker 网络。',
+      icon: Warning22,
+    },
+  ]}
+/>

@@ -1,0 +1,177 @@
+---
+title: 备份
+description: 在 Coolify 中为 PostgreSQL、MySQL、MariaDB、MongoDB、ClickHouse 和 SQLite 数据库制定备份计划、设置保留策略并选择存储位置。
+---
+
+import { BranchUp, Refresh23, Server } from 'reicon-react';
+
+# 备份
+
+Coolify 可以针对 PostgreSQL、MySQL、MariaDB、MongoDB、ClickHouse 和 SQLite 创建按计划执行、感知数据库引擎的备份。每条备份计划都会在数据库所在服务器上生成备份，并可将副本上传到 S3 兼容的存储服务商。要部署数据库并开启备份，请从[数据库](/databases#借助备份自托管数据库)开始。
+
+Redis、Dragonfly 和 KeyDB 不支持这套计划备份数据库的流程。这几类数据库请使用引擎自带的持久化与备份工具，或者单独部署一个具备备份能力的服务。
+
+<Callout type="warning" title="备份成功不等于恢复可用">
+
+备份成功只能证明 Coolify 创建了一个文件。在把备份当作可恢复的保障之前，请先[恢复一份副本](/databases/restore)到一次性数据库中，并确认应用能够正常读取。
+
+</Callout>
+
+## 创建备份计划
+
+1. 打开一个受支持的数据库。
+2. 在资源导航中选择 **Backups**（备份）。
+3. 在 **Database backups**（数据库备份）旁选择 **+ Add**（添加）。
+4. 输入 cron 表达式或受支持的人类可读频率。
+5. 选择 **Add schedule**（添加计划）。
+
+计划在数据库部署所在的服务器上执行。**Timezone**（时区）字段是只读的：如果服务器配置了时区就使用服务器时区，否则使用 Coolify 实例的时区。
+
+SQLite 备份使用其已配置的数据库文件。应用连接与文件恢复参见 [SQLite](/databases/sqlite)。
+
+备份任务只在数据库运行期间执行。如果计划触发时数据库处于停止状态，Coolify 会跳过该次执行。
+
+## 备份服务内的数据库
+
+部署在 Service（服务）内部的数据库组件，使用的是其运行容器所在环境的凭据。这与独立的数据库资源不同——后者的连接信息由 Coolify 直接保存。
+
+Coolify 读取的是下表中解析后的容器变量。这些变量名不必与父 Service 的 **Environment Variables**（环境变量）页面上显示的变量名一致。一键 Service 通常会把生成的 `SERVICE_PASSWORD_POSTGRES` 之类的值，在其 Compose 定义中映射为 `POSTGRES_PASSWORD`。
+
+| 数据库 | Coolify 使用的变量 | 回退行为 |
+| :--- | :--- | :--- |
+| PostgreSQL | `POSTGRES_PASSWORD`、`POSTGRES_USER`、`POSTGRES_DB` | `POSTGRES_USER` 默认为 `postgres`。`POSTGRES_DB` 默认为解析出的用户名。当 `POSTGRES_PASSWORD` 缺失时，Coolify 会在不设置 `PGPASSWORD` 的情况下执行导出；使用密码认证的数据库必须提供该值。 |
+| MySQL | `MYSQL_ROOT_PASSWORD`、`MYSQL_DATABASE` | `MYSQL_DATABASE` 没有回退值。缺少它时，备份会在运行 `mysqldump` 之前中止。使用密码认证的标准数据库还需要 `MYSQL_ROOT_PASSWORD`。 |
+| MariaDB | `MARIADB_ROOT_PASSWORD` 或 `MYSQL_ROOT_PASSWORD`；`MARIADB_DATABASE` 或 `MYSQL_DATABASE` | Coolify 会先检查 `MARIADB_*` 名称，再回退到对应的 `MYSQL_*` 名称。标准的密码认证备份至少需要一个密码变量和一个数据库变量。 |
+| MongoDB | `MONGO_INITDB_ROOT_USERNAME`、`MONGO_INITDB_ROOT_PASSWORD` | Coolify 会用这两个值构造服务数据库的连接 URL。任一值缺失时备份都会失败。 |
+
+例如，PostgreSQL 组件可以把 Service 变量映射为 Coolify 读取的名称：
+
+```yaml
+services:
+  postgres:
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+```
+
+数据库容器内的变量名区分大小写。如果 Compose 定义已经把生成的 Service 变量映射为这些名称，就不要再向 **Environment Variables** 中添加重复的 `POSTGRES_*`、`MYSQL_*`、`MARIADB_*` 或 `MONGO_INITDB_*` 条目。
+
+验证或修正配置的步骤：
+
+1. 打开父 Service，选择 **Edit Compose File**（编辑 Compose 文件）。
+2. 找到数据库组件，检查其 `environment` 条目。
+3. 确认表中要求的容器变量名已存在，并映射到了预期的 Service 变量或值。
+4. 要修改 `SERVICE_PASSWORD_POSTGRES` 这类被引用的值，请打开 **Environment Variables**。若要修改 Compose 文件里的硬编码值，则直接在 Compose 文件中修改。
+5. 重启或重新部署 Service，让 Coolify 用更新后的环境重建数据库容器。
+6. 确认数据库组件已在运行，然后打开它的备份计划并选择 **Back up now**（立即备份）。
+7. 查看执行状态和消息。
+
+生成、引用和硬编码 Compose 值的详细说明见 [Service 环境变量](/services/configuration/environment-variables)。
+
+缺少 MySQL 或 MariaDB 数据库名变量时，任务可能在 Coolify 生成正常执行记录之前就中止。如果 **Back up now** 没有产生任何执行记录，请确认数据库正在运行，并对照表格复查变量。
+
+## 设置备份范围
+
+打开一条计划，使用 **General（常规）> Backup schedule**（备份计划）配置每次执行包含哪些数据库。选择 **Enable backup**（启用备份）或 **Disable backup**（停用备份）来控制计划执行，编辑字段后选择 **Save changes**（保存更改）。
+
+| 数据库 | 范围控件 | Coolify 创建的备份 |
+| :--- | :--- | :--- |
+| PostgreSQL | **Database selection**（数据库选择，**All databases**（所有数据库）或 **Specific databases**（指定数据库））与 **Databases to back up**（要备份的数据库） | 所选数据库的 `pg_dump` 自定义格式；选择全部数据库时为 `pg_dumpall` 的 gzip 输出。 |
+| MySQL | **Database selection**（**All databases** 或 **Specific databases**）与 **Databases to back up** | `mysqldump` 输出；全库导出使用 gzip 压缩。 |
+| MariaDB | **Database selection**（**All databases** 或 **Specific databases**）与 **Databases to back up** | `mariadb-dump` 输出。所选数据库直接导出。全库导出在 `pigz` 可用时用 `pigz` 压缩，否则用 `gzip`，文件名以 `.gz` 结尾。 |
+| MongoDB | **Databases to include**（要包含的数据库） | `mongodump` gzip 归档。留空则包含所有数据库和集合。 |
+| ClickHouse | **Databases to back up**（要备份的数据库） | 用数据库自带的备份命令创建的 ClickHouse 备份归档。 |
+
+对于 PostgreSQL、MySQL 和 MariaDB，先选择 **Specific databases**，然后在 **Databases to back up** 中逐个输入数据库名并按 Enter。对于 ClickHouse，输入以逗号分隔的列表。字段留空时使用资源中配置的数据库。
+
+对于 MongoDB，使用 `database:collection1,collection2|database2` 格式来排除各数据库中的集合。例如：
+
+```sh
+app:events,logs|analytics
+```
+
+这表示包含 `app` 中除 `events` 和 `logs` 之外的所有集合，以及 `analytics` 中的全部集合。字段留空则包含所有数据库和集合。
+
+## 选择执行频率
+
+Coolify 接受标准的五段式 cron 表达式，也接受以下命名计划：
+
+| 名称 | Cron 表达式 |
+| :--- | :--- |
+| `every_minute` | `* * * * *` |
+| `hourly` | `0 * * * *` |
+| `daily` | `0 0 * * *` |
+| `weekly` | `0 0 * * 0` |
+| `monthly` | `0 0 1 * *` |
+| `yearly` | `0 0 1 1 *` |
+
+当数据库导出需要更长时间时，把 **Timeout**（超时时间）设置为不低于 `60` 秒。该超时作用于备份任务；未设置时任务内默认为 `3600` 秒。
+
+## 将备份保存在本地
+
+Coolify 把本地数据库备份写在部署服务器的 `/data/coolify/backups` 之下。具体子目录包含团队、数据库和执行名称等信息；请用 **Executions**（执行记录）页查看结果，不要依赖手工拼出的路径。
+
+本地保留策略可能在上次执行完成后清理掉成功的备份文件。在 **Retention**（保留策略）中，把以下任意一项设为 `0` 即表示不限制：
+
+- **Backups to keep**（保留备份数）
+- **Days to keep**（保留天数）
+- **Maximum storage (GB)**（最大存储空间，GB）
+
+这几项限制彼此独立。任一配置的限制达到阈值时，Coolify 就会删除备份，并优先保留最近的备份。
+
+## 将备份上传到 S3
+
+1. 在 [S3 存储](/core/s3-storage/overview)下配置并验证一个 S3 兼容存储。
+2. 打开数据库计划，进入 **S3 storage**（S3 存储）。
+3. 选择已验证的 **S3 storage**，选择 **Enable S3**（启用 S3），然后选择 **Save changes**。
+4. 可选：把 **Local copy**（本地副本）设为 **Delete after S3 upload**（S3 上传后删除）。
+
+本地导出成功后，Coolify 会把本地备份文件上传到所选的 S3 存储。上传失败时本地备份通常仍然可用，执行记录会报告 S3 警告。
+
+**Local copy > Delete after S3 upload** 会在 S3 上传成功后删除本地文件，但不会删除 S3 上的副本。S3 保留策略要在 **S3 backups**（S3 备份）下单独设置，同样使用 **Backups to keep**、**Days to keep** 和 **Maximum storage (GB)**，`0` 表示不限制。本地与 S3 的保留规则互不影响。
+
+## 运行并验证备份
+
+在数据库运行期间打开一条计划并选择 **Back up now**。Coolify 会把备份任务加入队列，并在计划中显示执行情况。
+
+打开执行记录，确认：
+
+- 状态为 **Success**（成功）
+- 数据库名称与预期范围一致
+- 文件大小大于零
+- 启用了 S3 时上传状态成功
+- 未把 **Local copy** 设为 **Delete after S3 upload** 时，本地副本仍然存在
+
+S3 上传失败不一定意味着本地数据库导出失败。请阅读执行消息和通知，确认哪一份副本可用。
+
+## 相关指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '恢复数据库',
+      href: '/databases/restore',
+      description: '把兼容的文件或 S3 备份导入受支持的数据库。',
+      icon: Refresh23,
+    },
+    {
+      title: 'S3 存储',
+      href: '/core/s3-storage/overview',
+      description: '配置一个 S3 兼容目标，把备份副本存到服务器之外。',
+      icon: Server,
+    },
+    {
+      title: '持久化存储',
+      href: '/core/persistent-storage/storage-mounts/overview',
+      description: '了解数据库容器上挂载的运行时存储。',
+      icon: BranchUp,
+    },
+  ]}
+/>
+
+## 调度与失败的执行
+
+到期的数据库备份每分钟派发一次，独立于其他类型的计划。排队任务丢失的计划备份会在 60 分钟后重新入队。数据库正在启动、重启或导入时会跳过备份；超出超时时间的备份会以超时错误失败。
+
+对多个数据库的备份，每个数据库都有各自的结果和完成时间。PostgreSQL、MySQL 和 MariaDB 的全库备份在导出命令失败时会直接失败，不会保留不完整的归档。依赖一组备份之前，请逐项核对每个结果。

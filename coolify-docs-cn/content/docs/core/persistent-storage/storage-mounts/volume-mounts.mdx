@@ -1,0 +1,98 @@
+---
+title: 卷挂载
+description: 为 Coolify 应用或数据库添加命名 Docker 卷，并验证其数据在重新部署后依然保留。
+---
+
+# 卷挂载（volume mount）
+
+卷挂载把数据存储在资源部署服务器上的一个命名 Docker 卷中。卷的目录由 Docker 管理，Coolify 则把该卷挂载到每个替换后容器内的 **Destination Path**。
+
+当数据必须在重新部署后保留、但你不需要它出现在特定的服务器文件系统路径上时，选择卷挂载。
+
+## 何时使用卷挂载
+
+卷挂载适合作为以下场景的默认选择：
+
+- 应用的上传内容和生成文件
+- 有状态的应用数据
+- 数据库的数据目录
+- 必须在容器替换后保留的缓存
+
+不要把卷用于临时构建文件或应用可以安全重建的缓存。持久化数据会一直占用磁盘空间，直到你移除或清理该卷。
+
+## 添加卷挂载
+
+添加挂载之前，先找到应用实际写入数据的精确目录。请查阅镜像或应用文档，不要想当然地认为路径以 `/app` 开头。
+
+1. 在 Coolify 中打开该应用或数据库。
+2. 选择 **Configuration** > **Persistent Storage**。
+3. 选择 **Add** > **Volume Mount**。
+4. 查看预填的基于资源的 **Name**，必要时修改。
+5. 填写容器内的 **Destination Path**。例如，只有当应用确实把上传内容写入该精确路径时才使用 `/app/uploads`。
+6. 选择 **Add**。
+7. 重新部署该资源，让 Docker 在创建新容器时附带该挂载。
+
+Coolify 会在名称前加上资源 UUID 前缀，以避免部署服务器上的名称冲突。因此 `docker volume ls` 显示的名称会比 **Name** 中填写的值更长。
+
+验证挂载的方法：让应用在目标路径下写入一个测试文件，然后再次重新部署该资源，确认应用仍能读取该文件。
+
+## 在预览部署中使用卷挂载
+
+应用的预览部署默认使用独立的存储。Coolify 会在卷名称后追加 `-pr-N` 后缀，其中 `N` 是拉取请求编号。
+
+创建挂载后，如果每个预览都应拥有隔离的数据，请保持 **Add suffix for PR deployments** 处于启用状态。只有当主应用和所有预览可以安全共享同一个卷时才禁用它。
+
+<Callout type="warning" title="共享的预览数据可能被多个部署修改">
+共享卷意味着主应用和预览容器都能访问同一批文件。预览可能覆盖生产数据，或应用不兼容的数据变更。
+</Callout>
+
+## 在 Docker Compose 中定义卷
+
+对于 Docker Compose 应用或一键服务，在 Compose 文件中定义命名卷：
+
+```yaml
+services:
+  app:
+    image: example/app:latest
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
+```
+
+把 `/app/data` 替换为镜像实际使用的数据目录。保存 Compose 文件并在 Coolify 中重新加载其配置。
+
+Coolify 会为受管的 Compose 卷名称添加前缀以避免冲突，但会保留声明为 `external: true` 的卷。使用过已重命名外部卷的既有资源会保留其当前卷，直到你显式迁移。请查看部署日志，把数据复制到外部卷，并按照存储页面的迁移说明操作后再切换。Compose 的 `driver`、`driver_opts` 和 `labels` 会被保留；既有卷保持原有设置。**Persistent Storage** 页面会把生成的挂载显示为只读，因为其配置由 Compose 文件掌控。当源路径或目标路径需要更改时，请编辑 Compose 文件。
+
+## 备份卷
+
+对于应用，Coolify 可以为 Volume Mount（包括带 **Source Path** 的 Volume Mount）创建计划化的文件级归档。归档可以保留在部署服务器上，也可以选择复制到 S3 兼容存储。
+
+阅读[存储挂载备份](/core/persistent-storage/storage-mounts/backups)了解如何选择目标、降低归档不一致的风险、设置保留策略并核查每次执行。
+
+<Callout type="warning" title="数据库请使用感知应用的备份">
+在数据库写入期间创建的文件级卷归档可能不一致。数据库数据请使用数据库引擎支持的备份工作流。如果仍要对其存储做归档，请停止写入，或启用 **Stop containers while creating the archive**。
+</Callout>
+
+只要卷的存储备份计划存在，Coolify 就不允许你删除该卷。请先删除该计划及其归档，并在确认不再需要其数据后再删除卷。
+
+## 检查卷
+
+通过 SSH 连接到部署服务器，然后列出它的 Docker 卷：
+
+```bash
+docker volume ls
+```
+
+找到卷的实际名称后进行检查：
+
+```bash
+docker volume inspect <actual-volume-name>
+```
+
+检查输出包含 Docker 在服务器端的挂载点。应用运行期间，请避免修改 Docker 内部卷目录中的文件。
+
+<Callout type="error" title="Docker 清理可能永久删除卷数据">
+未被使用的卷中仍可能存有重要数据。在你确认并备份了清理可能移除的每一个卷之前，请保持 **Delete Unused Volumes** 处于禁用状态。启用前请先阅读 [Docker 自动清理](/core/infrastructure/servers/automated-docker-cleanup)。
+</Callout>

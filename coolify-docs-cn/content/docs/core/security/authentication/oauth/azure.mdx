@@ -1,0 +1,105 @@
+---
+title: Azure
+description: 通过应用注册、租户 ID 和客户端密钥,为 Coolify 配置 Microsoft Entra ID OAuth 登录。
+---
+
+# 配置 Azure OAuth
+
+把 Coolify 注册为 Microsoft Entra Web 应用。Coolify 使用 Microsoft Graph 的 `User.Read` 获取登录用户的姓名和用户主体名称(UPN)。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify 回调:** `https://coolify.shadowarcanist.com/auth/azure/callback`
+- **Tenant:** Microsoft Entra 的 **Directory (tenant) ID**
+</Callout>
+
+## 设置 Azure OAuth
+
+<Steps>
+<Step>
+
+### 创建应用注册
+
+打开 [Microsoft Entra 管理中心](https://entra.microsoft.com/),前往 **Identity > Applications > App registrations**,选择 **New registration**。
+
+输入一个名称,例如 `Coolify`。选择与允许登录的人群相符的受支持账户类型。
+
+在 **Redirect URI** 下选择 **Web**,并输入:
+
+```txt
+https://coolify.shadowarcanist.com/auth/azure/callback
+```
+
+选择 **Register**。
+
+</Step>
+<Step>
+
+### 复制应用程序和租户 ID
+
+在应用注册的 **Overview** 页面,复制:
+
+- **Application (client) ID**
+- **Directory (tenant) ID**
+
+对于单租户组织,请在 Coolify 中使用 Directory 租户 ID。对于按相应账户类型配置的应用注册,Microsoft 也支持 `organizations`、`common` 或 `consumers` 等租户选择符。
+
+</Step>
+<Step>
+
+### 创建客户端密钥
+
+打开 **Certificates & secrets > Client secrets**,选择 **New client secret**,输入描述和有效期,然后选择 **Add**。
+
+立即复制密钥的 **Value**。不要复制 **Secret ID**;Coolify 需要的是密钥值。
+
+</Step>
+<Step>
+
+### 确认 Microsoft Graph 访问权限
+
+打开 **API permissions**,确认已包含委托的 Microsoft Graph 权限 **User.Read**。如果注册中没有,请添加。
+
+当你的 Microsoft Entra 策略要求时,请完成管理员同意。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Azure
+
+打开 **Settings > Authentication**,找到 **Azure**。
+
+| Coolify 字段 | Microsoft Entra 值 |
+| :--- | :--- |
+| **Client ID** | **Application (client) ID** |
+| **Client Secret** | 客户端密钥 **Value** |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/azure/callback` |
+| **Tenant** | **Directory (tenant) ID**,或该应用注册允许的租户选择符。 |
+
+选择 **Save**,然后为 Azure 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 Azure 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with Azure**。使用应用注册允许的账户登录,然后确认 Coolify 打开了对应的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Microsoft 报告回复 URL 不匹配">
+
+打开应用注册的 **Authentication**,确认 **Web** 重定向 URI 与公开 Coolify 域名上的 `/auth/azure/callback` 完全一致。
+
+</Accordion>
+<Accordion title="Microsoft 登录后 Coolify 回到登录页">
+
+确认 **User.Read** 已授予,并且 Microsoft Graph 返回的用户主体名称可以被 Coolify 用作账户邮箱。同时确认客户端密钥尚未过期。
+
+</Accordion>
+</Accordions>

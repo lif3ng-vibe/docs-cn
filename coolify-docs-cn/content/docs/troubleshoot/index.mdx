@@ -1,0 +1,156 @@
+---
+title: 故障排查概览
+description: 全面的 Coolify 故障排查指南，涵盖部署错误、服务器问题、代理故障、SSL 证书以及应用配置修复。
+---
+
+import { Box2, Computer, Globe3, Layers, Package, Server } from 'reicon-react';
+
+# 🔧 故障排查
+
+本节提供解决 Coolify 使用中可能遇到的各类问题的方案。选择与你的问题匹配的分类即可。
+
+## 安装
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '安装脚本失败',
+      href: '/troubleshoot/installation/install-script-failed',
+      description: '排查安装失败，或安装完成但面板和容器无法正常工作的情况。',
+      icon: Package,
+    },
+    {
+      title: 'Docker 安装失败',
+      href: '/troubleshoot/installation/docker-install-failed',
+      description: '修复 Docker 安装步骤在非 LTS 操作系统上失败的问题。',
+      icon: Package,
+    },
+  ]}
+/>
+
+## 应用
+
+<CoolNextSteps
+  cards={[
+    {
+      title: 'Bad Gateway（502）',
+      href: '/troubleshoot/applications/bad-gateway',
+      description: '解决因端口错误、主机映射不当或应用只绑定 localhost 导致的 502 错误。',
+      icon: Box2,
+    },
+    {
+      title: 'No Available Server（503）',
+      href: '/troubleshoot/applications/no-available-server',
+      description: '修复因健康检查失败、域名不匹配或 Traefik 问题导致的 503 错误。',
+      icon: Box2,
+    },
+    {
+      title: 'Gateway Timeout（504）',
+      href: '/troubleshoot/applications/gateway-timeout',
+      description: '修复因自定义网络隔离或代理超时过短导致的 504 错误。',
+      icon: Box2,
+    },
+    {
+      title: '获取访问令牌失败',
+      href: '/troubleshoot/applications/failed-to-get-token',
+      description: '修复因服务器时钟漂移导致的部署期间 GitHub 令牌错误。',
+      icon: Box2,
+    },
+  ]}
+/>
+
+## 面板
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '面板无法访问',
+      href: '/troubleshoot/dashboard/dashboard-inaccessible',
+      description: '通过检查代理、容器和防火墙恢复面板访问。',
+      icon: Computer,
+    },
+    {
+      title: '面板加载缓慢',
+      href: '/troubleshoot/dashboard/dashboard-slow-performance',
+      description: '为加载缓慢的面板提速，问题通常由 Cloudflare Rocket Loader 引起。',
+      icon: Computer,
+    },
+  ]}
+/>
+
+## Docker
+
+<CoolNextSteps
+  cards={[
+    {
+      title: 'GitHub 个人访问令牌过期',
+      href: '/troubleshoot/docker/expired-github-personal-access-token',
+      description: '通过登出或续期过期的 PAT，修复 ghcr.io 身份验证错误。',
+      icon: Layers,
+    },
+  ]}
+/>
+
+## 服务器
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '连接不稳定',
+      href: '/troubleshoot/server/connection-issues',
+      description: '修复 UFW 或 iptables 对 22 端口的限流规则导致的连接中断。',
+      icon: Server,
+    },
+    {
+      title: '构建期间服务器崩溃',
+      href: '/troubleshoot/server/crash-during-build',
+      description: '把构建任务分流到构建服务器上，避免构建压垮服务器。',
+      icon: Server,
+    },
+    {
+      title: '2FA 突然失效',
+      href: '/troubleshoot/server/two-factor-stopped-working',
+      description: '通过 NTP 同步服务器时钟，修复双重验证码被拒的问题。',
+      icon: Server,
+    },
+    {
+      title: '树莓派崩溃',
+      href: '/troubleshoot/server/raspberry-crashes',
+      description: '让低内存型号的树莓派在高负载下不再崩溃。',
+      icon: Server,
+    },
+    {
+      title: '服务器验证问题',
+      href: '/troubleshoot/server/validation-issues',
+      description: '解决因 SSH 密钥格式错误或缺少授权导致的服务器验证错误。',
+      icon: Server,
+    },
+  ]}
+/>
+
+## DNS 与域名
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '泛域名 SSL 证书',
+      href: '/troubleshoot/dns-and-domains/wildcard-ssl-certs',
+      description: '修复 Coolify 未对域名使用泛域名 SSL 证书的问题。',
+      icon: Globe3,
+    },
+    {
+      title: "Let's Encrypt 不工作",
+      href: '/troubleshoot/dns-and-domains/lets-encrypt-not-working',
+      description: '修复因端口、DNS 或代理干扰导致 Let\'s Encrypt 无法签发证书的问题。',
+      icon: Globe3,
+    },
+    {
+      title: '找不到证书解析器',
+      href: '/troubleshoot/dns-and-domains/certificate-resolver-doesnt-exist',
+      description: '修复由 acme.json 文件权限引起的 "cert resolver doesn\'t exist" 错误。',
+      icon: Globe3,
+    },
+  ]}
+/>
+
+如果你想建议新的故障排查指南或参与贡献，欢迎在我们的 GitHub [文档仓库](https://github.com/coollabsio/documentation-coolify/issues)提交 pull request 或发起 issue，并附上详细描述。

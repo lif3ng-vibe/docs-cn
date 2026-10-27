@@ -1,0 +1,68 @@
+---
+title: 概览
+description: 用团队范围内的标签为 Coolify 应用和服务分组，便于筛选和批量部署。
+---
+
+import { ArrowsRight, Rocket2, Settings, Tags } from 'reicon-react';
+
+# 标签概览
+
+标签可以把跨项目、跨环境的相关应用和服务归为一组。借助标签，你可以从一个页面或一个 webhook 找到整组资源，并重新部署其中的每一个。
+
+<CoolCallout icon={ArrowsRight} title="简要说明">
+
+在资源的 **Tags** 页面添加标签。然后在主侧边栏打开 **Tags**，查看带有该标签的资源、将它们一起重新部署，或复制该标签的部署 webhook URL。
+
+</CoolCallout>
+
+---
+
+## 标签的作用
+
+标签描述的是对团队有意义的关联关系，例如：
+
+- `production`：服务生产流量的资源
+- `storefront`：某个应用及其配套服务
+- `eu`：部署在同一区域的资源
+- `release-group-a`：需要一起重新部署的资源
+
+标签不会改变资源配置、网络或部署顺序，只是提供一个用于导航和批量部署的共享分组。
+
+---
+
+## 标签的作用范围
+
+标签属于当前团队。在一个团队创建的标签不会对其他团队的资源分组，部署 webhook 也只对令牌所在团队可用的资源生效。
+
+Coolify 以小写形式存储标签名。在同一团队内，使用相同名称的资源共享同一个标签。
+
+按标签批量部署覆盖的是分配了该标签的应用和服务。
+
+---
+
+## 管理和部署已打标签的资源
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: '管理标签',
+      description: '为应用和服务创建、分配、复用和移除标签。',
+      href: '/core/automation/tags/manage-tags',
+      icon: Settings,
+    },
+    {
+      title: '按标签部署',
+      description: '查看标签并重新部署其下所有已分配的应用和服务。',
+      href: '/core/automation/tags/deploy-by-tag',
+      icon: Rocket2,
+    },
+    {
+      title: '使用部署 webhook',
+      description: '从 CI、其他平台或你自己的自动化系统触发标签部署。',
+      href: '/core/automation/deploy-webhooks',
+      icon: Tags,
+    },
+  ]}
+/>

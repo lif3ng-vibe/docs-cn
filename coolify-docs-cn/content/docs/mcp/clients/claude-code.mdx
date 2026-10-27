@@ -1,0 +1,25 @@
+---
+title: Claude Code
+description: 配置 Claude Code，连接 Coolify 的 Streamable HTTP MCP 服务器。
+---
+
+# 将 Claude Code 连接到 MCP
+
+Claude Code 可以直接连接 Coolify 的 Streamable HTTP MCP 端点。
+
+## 添加 Coolify 服务器
+
+在终端中运行以下命令，并替换其中的 URL 与令牌：
+
+```sh
+claude mcp add --transport http coolify https://app.coolify.io/mcp \
+  --header "Authorization: Bearer 67|abcthisisa123dummytoken"
+```
+
+仅做查看时，使用带 `read` 权限的令牌即可。只有当 Claude Code 必须执行部署或生命周期操作时，才追加 `deploy` 权限。
+
+## 验证连接
+
+启动 Claude Code，让它调用 `get_current_team` 或 `get_infrastructure_overview`，并确认返回结果中只包含预期团队的资源。
+
+实例与团队的启用方式、令牌权限以及安全要求，参见[设置 MCP](/mcp/setup)。

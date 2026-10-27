@@ -1,0 +1,91 @@
+---
+title: 概览
+description: 查找用于配置 Docker Compose Service 及其组件的 Coolify 设置。
+---
+
+import { BranchUp, Box2, Settings } from 'reicon-react';
+
+# 配置 Service
+
+打开一个 Service 并选择**配置（Configuration）**，即可修改栈、其 Compose 组件、环境值、存储、自动化与组织归属。
+
+Service 有两个配置层级：
+
+- 栈设置作用于整个 Docker Compose 资源
+- 组件设置作用于检测到的某个应用或数据库容器
+
+## 栈配置页面
+
+| <span className="inline-block min-w-40 whitespace-nowrap">配置页面</span> | 控制内容 | 指南 |
+| :--- | :--- | :--- |
+| **General** | Service 名称、描述、预定义网络访问、service 专属字段、Compose 定义与组件列表。 | [查看常规设置](/services/configuration/general) |
+| **Networking** | 栈内通信、经 `coolify` 网络的通信、跨服务器通信，以及域名或发布端口。 | [配置 Service 网络](/services/configuration/networking) |
+| **Environment Variables** | Coolify 渲染 Service `.env` 文件和 Compose 定义所用的值。 | [配置环境变量](/services/configuration/environment-variables) |
+| **Persistent Storages** | 按组件分组的已解析卷、目录和文件。 | [查看持久化存储](/services/configuration/persistent-storage) |
+| **Scheduled Tasks** | Coolify 按计划在某个 Service 容器内运行的命令。 | [配置计划任务](/services/operations/scheduled-tasks) |
+| **Webhooks** | 用于 Service 生命周期操作的、经过身份验证的请求。 | [使用部署 webhook](/core/automation/deploy-webhooks) |
+| **Resource Operations** | 把 Service 克隆到另一个目标，或在项目与环境之间移动。 | [克隆或移动 Service](/services/operations/resource-operations) |
+| **Tags** | 用于组织与自动化资源的团队级标签。 | [用标签组织资源](/core/automation/tags/overview) |
+| **Danger Zone** | 永久删除 Service 与可选的 Docker 清理操作。 | [删除 Service](/services/operations/danger-zone) |
+
+## 组件设置
+
+在**配置 > 常规（General）**下的组件卡片上选择 **Settings**。
+
+应用组件设置可以包括：
+
+- 显示名称、描述、镜像和域名
+- gzip 压缩与路径前缀剥离
+- 聚合状态排除与日志转发
+
+数据库组件设置可以包括：
+
+- 显示名称、描述和镜像
+- 公开 TCP 代理与公开端口
+- 聚合状态排除与日志转发
+- 受支持的备份与导入控制
+
+Coolify 在解析 Compose 时会识别常见的数据库镜像。如果某个组件分类有误，其设置会提供 **Convert to Application** 或 **Convert to Database**。转换改变的是 Coolify 呈现和操作该组件的方式；它不会把镜像换成另一个数据库或应用。
+
+## 应用配置更改
+
+保存设置会更新 Coolify 存储的配置，但不一定会立即重建运行中的容器。
+
+请使用：
+
+- **Deploy** 用于首次部署或已停止的 Service
+- **Restart** 在不先拉取更新镜像的情况下重建栈
+- **Pull Latest Images & Restart** 拉取已保存的镜像标签并重建栈
+
+保存后请留意配置变更指示器。重启之后逐一验证每个组件，尤其是在更改了 Compose、镜像、变量、域名、网络或挂载之后。
+
+<Callout type="warning" title="更改栈之前先备份状态">
+
+镜像、卷、凭据或 Compose 的变更可能导致有状态组件不可用，或与其现有数据不兼容。修改生产 Service 之前，请创建经过验证的备份，并阅读该组件的升级说明。
+
+</Callout>
+
+## 继续了解配置指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '常规设置',
+      href: '/services/configuration/general',
+      description: '配置栈与每个检测到的组件。',
+      icon: Settings,
+    },
+    {
+      title: 'Docker Compose',
+      href: '/services/configuration/docker-compose',
+      description: '编辑已保存的定义并复查可部署结果。',
+      icon: Box2,
+    },
+    {
+      title: '持久化存储',
+      href: '/services/configuration/persistent-storage',
+      description: '保护可替换的 Service 容器之外的数据。',
+      icon: BranchUp,
+    },
+  ]}
+/>

@@ -1,0 +1,136 @@
+---
+title: 创建目标
+description: 在 Coolify 中创建另一个 Docker 网络目标（Destination），或扫描服务器上已存在的网络。
+---
+
+# 创建目标（Destination）
+
+当需要另一个 Docker 网络来实现隔离时，就创建一个目标（Destination）。
+## 开始之前
+
+你需要：
+
+- 一台已通过验证、可正常访问、能够运行已部署资源的服务器
+- 一个尚未在该服务器上注册为目标的 Docker 网络名称
+
+构建服务器不能被选作部署目标。如果还需要连接服务器，请先按照[添加服务器](/core/infrastructure/servers/add-server)操作。
+
+## 创建新的目标
+
+<Steps>
+<Step>
+
+### 打开新建目标表单
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/create-destination.webp" alt="Coolify 的 Destinations 页面及 Add 按钮" />
+
+1. 在 Coolify 侧边栏中选择 **Destinations**。
+2. 选择 **New destination**。
+
+也可以打开 **Servers**，选择一台服务器，打开 **Destinations**，再选择 **+ Add**。Coolify 会在表单中使用所选的服务器。
+
+</Step>
+<Step>
+
+### 配置目标
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/create-destination-modal.webp" alt="包含 Name、Network 和服务器字段的新建目标表单" />
+
+继续之前请先核对生成的各项值：
+
+<table>
+  <colgroup>
+    <col style={{ width: '1%' }} />
+    <col />
+  </colgroup>
+  <thead>
+    <tr>
+      <th className="whitespace-nowrap">字段</th>
+      <th>填写内容</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="whitespace-nowrap"><strong>Name</strong></td>
+      <td>该网络在 Coolify 面板中易于辨认的名称。Coolify 最初会把服务器名和生成的网络值组合在一起。</td>
+    </tr>
+    <tr>
+      <td className="whitespace-nowrap"><strong>Network</strong></td>
+      <td>Docker 网络名称。可以保留生成的值，也可以输入以字母或数字开头、只包含字母、数字、句点、连字符和下划线的名称。</td>
+    </tr>
+    <tr>
+      <td className="whitespace-nowrap"><strong>Server</strong></td>
+      <td>已通过验证、可正常访问，并将承载这个 Docker 网络的服务器。</td>
+    </tr>
+  </tbody>
+</table>
+
+**Network** 的值最多 255 个字符，并且在该服务器上同类型的目标之间必须唯一。目标创建后无法再更改此值。
+
+</Step>
+<Step>
+
+### 创建并验证目标
+
+选择 **Create destination**。
+
+Coolify 会记录该目标，在 Docker 网络尚不存在时创建它，并把 Coolify Proxy 接入服务器上它所需要的网络。
+
+创建完成后会打开该目标的 **General** 页面，请确认 **Name**、**Server IP** 和 **Docker Network** 显示的都是你选择的值。
+
+</Step>
+</Steps>
+
+## 导入已有的 Docker 网络
+
+如果 Docker 网络已经存在，却没有出现在 Coolify 中，可以使用服务器的目标扫描功能。
+
+<Steps>
+<Step>
+
+### 扫描服务器
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/scan-networks.webp" alt="服务器 Destinations 页面显示 Scan for Destinations 找到的网络" />
+
+1. 在 Coolify 侧边栏中选择 **Servers**。
+2. 选择拥有该 Docker 网络的服务器。
+3. 打开 **Destinations**。
+4. 选择 **Scan networks**。
+
+Coolify 会排除内置的 `bridge`、`host` 和 `none` 网络，以及已经注册为目标的网络。
+
+</Step>
+<Step>
+
+### 添加发现的网络
+
+在 **Discovered networks** 下方，为要使用的网络选择 **Add &lt;network-name&gt;**。
+
+Coolify 会把该网络添加到 **Destinations** 之下，并把 Coolify Proxy 接入服务器上它所需要的网络。选中该目标，确认其 **Docker Network** 值与已有网络名称一致。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="网络已添加到该服务器">
+
+请打开已有的目标，而不是为同一个网络再创建一个条目。
+
+</Accordion>
+
+<Accordion title="找不到服务器">
+
+确认该服务器属于当前团队，已通过验证、可正常访问，并且没有只被配置为构建服务器。
+
+</Accordion>
+
+<Accordion title="Docker 网络名称无效">
+
+名称要以字母或数字开头，并去掉句点、连字符、下划线之外的空格或其他字符。
+
+</Accordion>
+
+</Accordions>

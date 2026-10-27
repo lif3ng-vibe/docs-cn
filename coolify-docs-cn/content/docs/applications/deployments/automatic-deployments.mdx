@@ -1,0 +1,167 @@
+---
+title: 自动部署
+description: 借助 Git 提供商 webhook 或来自外部 CI 的身份验证部署请求，实现自动部署。
+---
+
+import { BranchUp, Code, Globe3 } from 'reicon-react';
+
+# 自动部署
+
+当 Git 提供商报告仓库变更，或外部工作流发送经过身份验证的部署请求时，Coolify 会自动开始部署。
+
+请根据应用源码的接入方式选择对应的触发方式：
+
+<Tabs id="automatic-deployment-methods" items={['Git 集成', '仓库 webhook', '外部工作流']}>
+<Tab value="Git 集成" icon={BranchUp}>
+
+当应用是通过 [GitHub App](/applications/sources/github/app) 或 [GitLab 源码集成](/applications/sources/gitlab) 选择仓库创建的，请使用此方式。
+
+该集成会替 Coolify 接收提供商事件，因此无需复制手动 Git webhook URL。
+
+<Steps>
+<Step>
+
+### 启用自动部署
+
+打开应用，进入 **高级 > 部署**（Advanced > Deployment），在 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署）。
+
+</Step>
+<Step>
+
+### 推送到已配置的分支
+
+向应用所选的分支推送提交。推送到其他分支不会更新生产环境的应用，除非该分支被配置为预览部署，或属于另一个应用。
+
+</Step>
+<Step>
+
+### 验证部署
+
+打开 **Deployment Logs**（部署日志），确认针对这次推送出现了 webhook 部署记录。
+
+如果没有出现部署记录，请检查提供商集成，并确认应用仍拥有该仓库的访问权限。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="仓库 webhook" icon={Globe3}>
+
+当应用是通过公开仓库 URL 或 **Private Repository (with deploy key)**（带部署密钥的私有仓库）创建时，请使用此方式。
+
+这两类源码方式只能克隆仓库，不会自动配置提供商事件。需要手动添加 Git webhook，让提供商能够通知 Coolify。
+
+<Steps>
+<Step>
+
+### 复制提供商的 webhook URL
+
+打开应用，选择 **Webhooks**，在 **Manual Git webhooks**（手动 Git webhook）区域复制对应仓库提供商的 URL。
+
+</Step>
+<Step>
+
+### 配置密钥
+
+在对应的 **Webhook secret**（webhook 密钥）字段中输入一段足够长的随机值，然后选择 **Save changes**（保存更改）。
+
+在仓库提供商处创建 webhook：URL 填写从 Coolify 复制的地址，密钥填写相同的值。不要复用账号密码、API 令牌或部署密钥。
+
+</Step>
+<Step>
+
+### 选择仓库事件
+
+启用提供商的 push 事件。只有当应用同时使用预览部署时，才添加 pull request 或 merge request 事件。
+
+各提供商的事件名称与投递设置详见[手动 Git webhook](/applications/deployments/manual-webhooks)。
+
+</Step>
+<Step>
+
+### 启用并验证自动部署
+
+打开 **高级 > 部署**，在 **Auto deploy** 中选择 **Deploy on push (webhooks)**，然后向已配置的分支推送一个提交。
+
+打开 **Deployment Logs**，确认出现了 webhook 部署记录。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="外部工作流" icon={Code}>
+
+当 CI 需要先运行测试、完成审批或执行外部镜像构建，再通知 Coolify 部署时，请使用此方式。
+
+经过身份验证的 **Deploy Webhook**（部署 webhook）会直接启动部署。使用此方式时，**Auto deploy** 无需设置为推送时部署。
+
+<Steps>
+<Step>
+
+### 创建 API 令牌
+
+创建一个具备部署该应用权限的 Coolify [API 令牌](/core/security/credentials/api-tokens)。
+
+</Step>
+<Step>
+
+### 复制部署 webhook
+
+打开应用，选择 **Webhooks**，然后复制 **Deploy webhook URL**（部署 webhook URL）。
+
+将 webhook URL 和 API 令牌作为机密（Secret）保存到外部 CI 系统中。
+
+</Step>
+<Step>
+
+### CI 成功后调用 Coolify
+
+把该请求添加到工作流的测试、构建或审批步骤之后：
+
+```sh
+curl --fail --request POST "$COOLIFY_WEBHOOK" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN"
+```
+
+[GitHub Actions 工作流](/applications/sources/github/actions#添加-github-actions-工作流)在一个完整示例中展示了相同的身份验证模式。
+
+</Step>
+<Step>
+
+### 验证部署
+
+运行工作流，然后打开 **Deployment Logs**，确认 Coolify 已收到经过身份验证的请求。
+
+如果请求失败，请检查 CI 返回的响应，并确认 webhook URL 和令牌在保存时没有带入多余的空白字符。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## 按变更路径限制部署
+
+当 monorepo 只应在匹配的文件发生变更时才部署，可以使用 **常规 > 构建**（General > Build）下的 **Watch Paths**（监视路径）。
+
+每行填写一个模式。逗号不能用来分隔模式：Coolify 会把 `apps/api/**,packages/shared/**` 当作一个模式，结果两个目录都匹配不到。
+
+模式按顺序求值，支持 `*`、`**`、`?` 以及用 `!` 表示的取反，最后匹配的模式生效。
+
+例如：
+
+```sh
+apps/api/**
+packages/shared/**
+!apps/api/**/*.md
+```
+
+监视路径过滤的是包含变更文件信息的 Git 提供商 webhook 事件，不会阻止从控制台手动发起的部署，也不会阻止通过经过身份验证的 **Deploy Webhook** 发起的部署。
+
+在把它用于生产自动化之前，先用一个只改动文档的提交来验证这些模式。
+
+## 禁用自动 Git 部署
+
+在 **高级 > 部署**（Advanced > Deployment）的 **Auto deploy** 中选择 **Manual deployments only**（仅手动部署），即可在保留源码连接的同时，忽略来自 Git 提供商事件的自动提交部署。
+
+你仍然可以选择 **Deploy**（部署）或 **Redeploy**（重新部署），也可以从外部工作流调用经过身份验证的 **Deploy Webhook**。

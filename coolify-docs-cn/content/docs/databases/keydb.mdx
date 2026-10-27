@@ -1,0 +1,107 @@
+---
+title: KeyDB
+description: 在 Coolify 上部署和运维 KeyDB，提供 Redis 兼容连接、持久化存储、TLS 和健康检查。
+---
+
+# KeyDB
+
+Coolify 将 KeyDB 作为独立的 Redis 兼容数据存储部署到所选的服务器和目标上。新资源会自动获得生成的密码、位于 `/data` 的持久化卷、内部连接 URL 和健康检查。
+
+KeyDB 是一种 Redis 兼容的数据存储，支持多线程，并兼容 Redis 命令和客户端。
+
+## 创建 KeyDB 数据库
+
+<Steps>
+<Step>
+
+### 打开新建资源
+
+打开数据库应归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 KeyDB
+
+在 **Databases**（数据库）下选择 **KeyDB**。也可以按名称搜索 **KeyDB**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择要运行 KeyDB 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 KeyDB 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 创建资源并打开 **General**（常规）。请检查镜像、生成的密码、SSL 设置和连接 URL。除非外部客户端需要访问，否则保持默认的私有网络设置。
+
+</Step>
+<Step>
+
+### 启动 KeyDB
+
+选择 **Start**（启动）并留意启动输出。等 KeyDB 进入运行且健康的状态后，把 **KeyDB URL (internal)**（内部 URL）复制给同一目标网络中的应用。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| 内部端口 | `6379`；TLS 使用 `6380` |
+| 默认镜像 | `eqalpha/keydb:latest` |
+| 认证 | 生成的密码 |
+| 数据挂载 | `/data` |
+| 计划数据库备份 | Coolify 不支持 |
+| SSL | 通过 **SSL** 开关支持 |
+
+KeyDB 使用 Redis 协议，Coolify 数据库表单中不提供用户名字段。
+
+
+## 连接 KeyDB
+
+同一 Coolify 目标网络上的应用请使用 **KeyDB URL (internal)**：
+
+```sh
+redis://:<password>@<database-container>:6379/0
+```
+
+启用 SSL 后，使用生成的 `rediss` URL 和 TLS 端口 `6380`。当 **Public access（公开访问）> Access** 为 **Public through TCP proxy**（经 TCP 代理公开）时，使用生成的 **KeyDB URL (public)**（公开 URL）。
+
+## 配置 KeyDB
+
+打开 **General** 修改镜像、密码、**Port mappings**（端口映射）、公开代理、**Custom KeyDB configuration**（自定义 KeyDB 配置）和受支持的自定义 Docker 选项。打开 **Persistent Storage**（持久化存储）管理 `/data` 卷。
+
+自定义 KeyDB 配置会写成启动 KeyDB 所用的配置文件。设置之后，Coolify 就使用该文件，并且只在文件未定义 `requirepass` 时才补上密码。持久化等必需设置请一并写进该文件。
+
+## 备份与持久化
+
+Coolify 不为 KeyDB 创建计划数据库备份。需要恢复副本时，请保留 `/data` 持久化卷，并配置 KeyDB 支持的持久化或复制特性。恢复请单独测试。
+
+## SSL 与健康检查
+
+KeyDB 提供 **SSL** 开关，但没有 SSL 模式选择器。CA 证书挂载与 TLS 连接流程见[数据库 SSL](/databases/ssl)。
+
+在 **Healthcheck**（健康检查）下配置 Docker 健康检查，保存后重启 KeyDB。
+
+## KeyDB 官方资源
+
+- [KeyDB 文档](https://docs.keydb.dev/)
+- [KeyDB 源码](https://github.com/EQ-Alpha/KeyDB)
+- [KeyDB Docker 镜像](https://hub.docker.com/r/eqalpha/keydb)
+
+## 密码环境变量
+
+对新建数据库，`REDIS_PASSWORD` 同时控制服务器密码和连接 URL。此版本之前创建的数据库会保留已存储的密码，除非该变量引用了机密管理器。更改远程机密后，请重启数据库并验证连接。

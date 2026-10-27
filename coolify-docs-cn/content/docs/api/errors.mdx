@@ -1,0 +1,101 @@
+---
+title: 错误
+description: 解读 Coolify API 状态码，排查认证、授权、校验和限流相关的失败。
+---
+
+# API 错误
+
+Coolify 用 HTTP 状态码来区分请求成功与认证、授权、校验、冲突和限流失败。请查阅具体端点文档中的响应说明，因为可用的状态码和响应字段因操作而异。
+
+## 错误响应
+
+大多数 API 错误返回一个带 `message` 字段的 JSON 对象：
+
+```json
+{
+  "message": "Unauthenticated."
+}
+```
+
+校验失败还可能包含以请求字段为键的 `errors` 对象：
+
+```json
+{
+  "message": "Validation error.",
+  "errors": {
+    "name": ["The name field is required."]
+  }
+}
+```
+
+不要通过解析人类可读的 message 来判断请求是否成功。请以 HTTP 状态码为准，再把消息和字段错误记录下来用于诊断。
+
+---
+
+## 状态码
+
+| 状态 | 含义 | 客户端应对 |
+| :--- | :--- | :--- |
+| `200 OK` | 请求成功。 | 读取响应体获取操作结果。 |
+| `201 Created` | Coolify 已创建所请求的资源。 | 保存返回的标识符，并在需要时核实资源状态。 |
+| `400 Bad Request` | 请求或令牌对该操作无效。 | 检查端点 schema、参数和完整的令牌值。 |
+| `401 Unauthenticated` | Coolify 无法认证该请求。 | 更换缺失、无效、过期或被撤销的令牌。 |
+| `403 Forbidden` | 已认证的调用方无权执行该操作。 | 检查令牌权限、团队角色、API 访问开关和来源 IP 白名单。 |
+| `404 Not Found` | 调用方无法访问该路由或所请求的资源。 | 检查 URL、资源标识符和令牌所属团队。 |
+| `409 Conflict` | 所请求的变更与现有状态冲突，例如域名已存在。 | 阅读响应，解决冲突状态后重试。 |
+| `422 Unprocessable Content` | 一个或多个请求字段未通过校验。 | 修正 `errors` 中列出的字段，然后重新发起请求。 |
+| `429 Too Many Requests` | 请求限额、部署队列或上游服务提供方暂时拒绝了请求。 | 遵循 `Retry-After` 及[限流应对指南](/api/rate-limits#处理-429-响应)。 |
+
+**Endpoints** 下的每个操作页面都列出了该操作已文档化的响应。
+
+---
+
+## 诊断认证与授权失败
+
+遇到 `401 Unauthenticated` 时，请确认：
+
+- 请求头使用 `Authorization: Bearer <api-token>`
+- 完整的令牌值（含 ID 和 `|` 分隔符）均已带上
+- 令牌未过期、未被撤销
+- 令牌所有者仍属于该令牌的团队
+
+用户修改密码会撤销其已签发的 API 令牌。发生这种情况时，请创建替换令牌。
+
+遇到 `403 Forbidden` 时，请确认：
+
+- 令牌具备该端点所需的 `read`、`write` 或 `deploy` 权限
+- 使用 `write` 或 `root` 时，令牌所有者仍拥有管理员或所有者角色
+- 自托管实例上已启用 **API Access**（API 访问）
+- 配置了白名单时，调用方符合 **Allowed IPs for API Access**（API 访问允许的 IP）
+
+令牌权限创建后不可更改。请创建具备所需权限的替换令牌，并撤销旧令牌。
+
+### IP 白名单拒绝
+
+在自托管实例上，来自 **Allowed IPs for API Access**（API 访问允许的 IP）之外地址的请求会返回 `403 Forbidden`：
+
+```json
+{
+  "success": true,
+  "message": "You are not allowed to access the API."
+}
+```
+
+即使该响应包含 `"success": true`，也要把 HTTP `403` 状态当作失败信号。将调用方的确切来源 IP 地址或网段加入白名单，然后重新发起请求。支持的取值与配置步骤请遵循[按 IP 地址限制 API 访问](/api/ip-allowlist#按-ip-地址限制-api-访问)。
+
+---
+
+## 数据缺失或被脱敏
+
+请求成功也可能缺少预期的资源，或对敏感值做了脱敏。
+
+- 如果找不到某个资源，请确认它属于创建令牌时记录的团队。为其他团队请单独创建令牌。
+- 如果密码、私钥、环境变量值、日志或 Compose 内容被脱敏，请在端点所需权限之外，使用带有 `read:sensitive` 的令牌。
+
+完整的请求与访问检查流程请阅读[授权](/api/authorization)。
+
+## 数据库导入与日志请求
+
+并发的数据库启动、重启或导入操作可能返回 `409`。请等待当前操作结束并查看其结果后再重试。数据库创建请求对无效输入返回 `422`，接受数字型的资源限额，并将 `instant_deploy` 解析为布尔值。
+
+`GET /applications/{uuid}/logs` 支持 `service_name` 来选择 Compose 容器，没有匹配的运行中容器时返回 `404`。服务器域名请求可通过 `GET /servers/{uuid}/domains?uuid=<application-uuid>` 过滤某个应用。

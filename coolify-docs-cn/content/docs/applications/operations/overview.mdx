@@ -1,0 +1,155 @@
+---
+title: 总览
+description: 监控、排查、维护并保护运行中的应用。
+---
+
+import { BrowserTerminal, CalendarAdd, Refresh23 } from 'reicon-react';
+
+# 运维应用
+
+应用部署完成后，Coolify 为部署活动、容器输出、终端访问、备份和运行时指标提供了各自独立的视图。
+
+根据你想了解或修改的内容选择对应的页面。部署日志和应用日志回答的是不同的问题。
+
+## 知道去哪里看
+
+| <span className="inline-block min-w-36 whitespace-nowrap">页面</span> | 用途 |
+| :--- | :--- |
+| **设置页面** | 通过应用侧边栏修改源码、构建、运行时、存储、健康检查、资源限制等应用设置。 |
+| **Deployment Logs** | 跟踪当前和历史部署操作，包括源码检出、镜像构建或拉取、容器替换。 |
+| **Backups** | 为符合条件的应用卷和目录挂载配置并检查计划归档。 |
+| **Runtime Logs** | 读取应用当前容器的 stdout 和 stderr 输出。 |
+| **Terminal** | 在选定的运行容器中打开交互式 shell。 |
+
+**Runtime Logs** 可以显示应用所在各台可用部署服务器上的容器，包括预览容器。**Terminal** 只有在终端访问已启用、你的团队角色有权使用、且应用存在符合条件的运行容器时才会出现。部署到 Docker Swarm 的应用没有此功能。
+
+## 选择生命周期操作
+
+| 目标 | 操作 | Coolify 做什么 |
+| :--- | :--- | :--- |
+| 首次部署应用 | **Deploy** | 启动已配置的部署流程。 |
+| 应用源码、镜像、构建期或部署层面的变更 | **Redeploy** | 再次执行正常部署流程，并在支持时采用[滚动更新](/applications/deployments/rolling-updates)。 |
+| 重建运行时但不打算重新构建 | **Restart** | 通过部署队列执行重启路径。Docker Image 应用会重新拉取已保存的镜像引用。 |
+| 不使用构建缓存重建 Coolify 生成的源码镜像 | **Force deploy (without cache)** | 在禁用自动生成构建缓存的情况下发起部署。自定义的 Docker Compose 构建命令自行控制缓存行为。 |
+| 让应用下线但不删除其配置 | **Stop** | 停止其容器并清除非持久化的容器数据。持久化挂载和 Coolify 资源保持不变。 |
+
+只改了运行时配置、无需重新构建时，使用 **Restart**（重启）。源码、所选镜像、构建参数或构建期变量发生变化时，使用 **Redeploy**（重新部署）。
+
+部署历史与操作细节请参阅[部署应用](/applications/deployments/overview)。
+
+## 诊断应用问题
+
+<Steps>
+<Step>
+
+### 检查应用状态
+
+确认应用处于运行、停止、不健康还是反复重启的状态。**Runtime Logs** 旁边的重启指示器会显示 Coolify 记录到的容器重启。
+
+</Step>
+<Step>
+
+### 检查最近一次部署
+
+如果问题是在部署、重新部署或重启过程中出现的，打开 **Deployment Logs**。从第一条失败的命令看起，而不是只看最后的失败摘要。
+
+构建或镜像拉取失败会显示在这里，而不会出现在运行时应用日志中。
+
+</Step>
+<Step>
+
+### 阅读容器输出
+
+打开 **Runtime Logs**，找到受影响的服务器和容器，然后查看故障时间点前后的输出。
+
+应用异常、崩溃、启动失败、连接错误和进程输出，都看这些日志。如果没有列出任何容器，请确认部署服务器可用、应用存在运行中的容器。
+
+</Step>
+<Step>
+
+### 必要时检查运行中的容器
+
+打开 **Terminal**（终端），选择容器并连接。可以用它在容器内部检查文件、环境变量、DNS 解析、网络连接、进程，或运行健康检查命令。
+
+不要把终端里的改动当作配置。只在容器内安装或修改的文件，可能在重启或部署后消失。持久性的变更请放进源码、镜像、环境变量或持久化存储。
+
+</Step>
+<Step>
+
+### 检查资源用量
+
+当应用响应缓慢、因资源占用被终止，或负载下表现异常时，打开 **Metrics**（指标）。
+
+应用指标需要 Sentinel，Docker Compose 应用不支持。启用方式、采样与保留策略请参阅[指标](/core/observability/monitoring/metrics)。
+
+</Step>
+</Steps>
+
+## 保护应用状态
+
+<Callout type="warning" title="容器文件系统是临时的">
+
+写在持久化挂载之外的数据，可能随 Coolify 替换或移除容器而消失。上传文件、生成的文件和其他必要状态，请存放在持久化存储、数据库或外部对象存储中。
+
+</Callout>
+
+持久化存储让数据独立于可替换的容器存在，但它不等于备份。请根据数据类型选择对应的路径：
+
+- [持久化存储](/core/persistent-storage/storage-mounts/overview)介绍卷、目录和文件挂载。
+- [存储挂载备份](/core/persistent-storage/storage-mounts/backups)介绍符合条件的应用挂载的计划归档。
+- [数据库备份](/databases/backups)介绍具备数据库感知能力的备份命令与计划。
+
+至少保留一份经过验证、存放在部署服务器之外的备份。同一台服务器上的本地备份，防不住这台服务器本身丢失。
+
+## 运行周期性任务
+
+需要按计划在应用容器内运行的命令，使用 **Scheduled Tasks**（计划任务），例如框架调度器、队列维护或缓存清理。
+
+已禁用的任务不会开始计划执行。已启用的任务在应用没有运行容器或部署服务器不可用时执行会失败。命令、频率、超时和目标容器的配置请参阅[应用计划任务](/applications/operations/scheduled-tasks)。
+
+使用[标签](/core/automation/tags/overview)跨项目和环境对相关资源分组。
+
+## 移除或移动应用
+
+如果应用要保留配置但处于下线状态，使用 **Stop**。只有确实要永久移除该资源时才使用 **Danger Zone**；删除前请先阅读[Danger Zone](/applications/operations/danger-zone)。
+
+使用[资源操作](/applications/operations/resource-operations)可以把应用克隆到另一个目标，或在同一 Coolify 实例上的项目和环境之间移动。
+
+要把应用及其状态迁移到另一个 Coolify 控制平面，请按照[迁移应用](/applications/operations/migrate-between-instances)操作。
+
+## 继续运维应用
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '安排应用任务',
+      href: '/applications/operations/scheduled-tasks',
+      description: '在应用容器内运行周期性命令。',
+      icon: CalendarAdd,
+    },
+    {
+      title: '克隆或移动应用',
+      href: '/applications/operations/resource-operations',
+      description: '调整应用的归属位置或部署位置。',
+      icon: Refresh23,
+    },
+    {
+      title: '跨实例迁移',
+      href: '/applications/operations/migrate-between-instances',
+      description: '重建应用并逐项迁移有状态的依赖。',
+      icon: BrowserTerminal,
+    },
+  ]}
+/>
+
+## 资源操作按钮
+
+资源的主操作是一键按钮，次要操作放在旁边的下拉菜单中。破坏性操作需要在 Coolify 弹窗中确认，继续之前请看清列出的影响。
+
+## 跟踪进行中的操作
+
+使用 **Deploying… View log** 可以重新打开正在进行的部署或启动日志。操作进行中时点击 Deploy、Start 或 Restart 也会重新打开对应日志。进行中的部署指示器会显示在侧边栏、移动端顶栏和控制台上。
+
+容器日志查看器将 **Time**、**Type** 和 **Message** 分列显示。展开某一行可以查看格式化后的 JSON。如果容器列表无法加载，请阅读显示的错误信息，不要据此认定没有容器在运行。
+
+查看容器日志需要拥有更新该资源的权限。通过 API 请求日志则需要 `read:sensitive` 或 `root` 权限。

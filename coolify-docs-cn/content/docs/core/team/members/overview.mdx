@@ -1,0 +1,67 @@
+---
+title: 概览
+description: 了解团队成员身份如何控制对团队范围资源的访问,并选择合适的成员管理任务。
+---
+
+import { ArrowsRight, Settings, UserAdd, UserRemove2 } from 'reicon-react';
+
+# 成员概览
+
+Coolify 团队把人员、资源和他们协作所需的设置组织在一起。每个人可以属于多个团队,并在每个团队中拥有不同的角色。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+在更改团队成员之前,先选中要操作的团队。Owner 和管理员可以邀请人员、更改其他成员的角色、撤销待处理邀请,以及移除成员。
+
+</CoolCallout>
+
+---
+
+## 团队成员身份的工作方式
+
+Coolify 把当前激活的团队作为仪表盘工作的边界。仪表盘中显示的项目、服务器、共享变量、凭据、通知设置和其他团队拥有的资源,都归属于该团队。
+
+切换团队时,Coolify 会更换仪表盘中可用的资源和设置。你的角色也会按新激活的团队重新评估。
+
+把某人移出团队,移除的是其对团队的访问。这不会删除其 Coolify 账户、其在其他团队的成员身份,也不会删除团队拥有的资源。
+
+授予管理权限之前,先阅读[角色与权限](/core/team/roles-and-permissions)。
+
+---
+
+## Members 页面显示什么
+
+在 Coolify 侧边栏打开 **Team**,然后选择 **Members**。
+
+成员列表显示每个人的姓名、邮箱地址、在当前团队中的角色,以及你可执行的操作。Owner 和管理员还能看到邀请表单和所有待处理邀请。
+
+Coolify 会用 **You** 标记你自己的行。你无法在此页面更改自己的角色或移除自己。
+
+---
+
+## 选择下一步任务
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: '添加成员',
+      description: '通过电子邮件邀请某人,或创建一个邀请链接分享给对方。',
+      href: '/core/team/members/add-a-member',
+      icon: UserAdd,
+    },
+    {
+      title: '管理成员',
+      description: '审查团队、更改角色,并撤销待处理邀请。',
+      href: '/core/team/members/manage-members',
+      icon: Settings,
+    },
+    {
+      title: '移除成员',
+      description: '把某人移出当前团队,而不删除其账户。',
+      href: '/core/team/members/remove-a-member',
+      icon: UserRemove2,
+    },
+  ]}
+/>

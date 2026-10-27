@@ -1,0 +1,90 @@
+---
+title: 发起请求
+description: 构造 Coolify API 的 URL，发送请求头与 JSON 请求体，并处理 API 响应。
+---
+
+# 发起 API 请求
+
+每个端点都规定了 HTTP 方法、路径、参数、请求体和可能的响应。将文档中的路径与你的 Coolify 部署的[基础 URL](/api/overview#基础-url) 组合起来使用。
+
+<Callout type="info" title="示例数据">
+本页示例使用以下样例值：
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **API token:** `67|abcthisisa123dummytoken`
+- **Project UUID:** `x0k4w8s4o0c8g4k4c0s4`
+- **Application UUID:** `g8k4s0w8c4o0k8w4s0c4`
+
+发送请求前，请把这些值替换为你自己的 Coolify URL、API 令牌和资源 UUID。令牌的创建与安全存放请遵循 [API 令牌](/core/security/credentials/api-tokens)。
+</Callout>
+
+## 构造请求 URL
+
+在 **Endpoints** 下选择一个操作，然后使用该页面展示的 HTTP 方法和路径。
+
+例如，某个端点文档写的是：
+
+```txt
+PATCH /projects/{uuid}
+```
+
+把 `{uuid}` 替换为你项目的 UUID 后，就得到如下 URL：
+
+```txt
+https://coolify.shadowarcanist.com/api/v1/projects/x0k4w8s4o0c8g4k4c0s4
+```
+
+有些端点还文档化了查询参数，例如：
+
+```txt
+POST https://coolify.shadowarcanist.com/api/v1/deploy?uuid=g8k4s0w8c4o0k8w4s0c4&force=true
+```
+
+这些 UUID 只是示例，请替换成你的 Coolify 实例中项目或应用的 UUID。
+
+---
+
+## 发送请求头
+
+受保护的端点要求把完整的 API 令牌作为 Bearer 凭据发送。用 `Accept: application/json` 请求 JSON 响应：
+
+```sh
+export COOLIFY_URL="https://coolify.shadowarcanist.com"
+export COOLIFY_TOKEN="67|abcthisisa123dummytoken"
+
+curl --fail-with-body \
+  --request GET \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/teams/current"
+```
+
+请求包含 JSON 请求体时，再加 `Content-Type: application/json`：
+
+```sh
+curl --fail-with-body \
+  --request PATCH \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"production-platform"}' \
+  "$COOLIFY_URL/api/v1/projects/x0k4w8s4o0c8g4k4c0s4"
+```
+
+运行请求前请先替换示例中的项目 UUID。
+
+---
+
+## 发送 JSON 请求体
+
+对 `POST` 和 `PATCH` 请求，请遵循端点页面展示的请求体字段和取值类型。请求体以 JSON 发送，并带上 `Content-Type: application/json`。
+
+---
+
+## 处理响应
+
+使用响应体之前先检查 HTTP 状态。大多数 API 端点返回 JSON。公开的 `/api/health` 和 `/api/v1/health` 端点是例外，它们返回纯文本 `OK`，且不需要令牌。
+
+cURL 的 `--fail-with-body` 选项在遇到 HTTP 错误时返回非零退出码，同时保留响应体供诊断。
+
+常见状态码请阅读[错误](/api/errors)，API 响应附带的限额响应头请阅读[速率限制](/api/rate-limits)。

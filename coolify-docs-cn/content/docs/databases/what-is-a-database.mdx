@@ -1,0 +1,81 @@
+---
+title: 什么是数据库
+description: 了解 Coolify 中的独立数据库、自动生成的连接信息以及持久化数据。
+---
+
+import { Box2, BranchUp, Rocket2 } from 'reicon-react';
+
+# 什么是数据库
+
+数据库为应用存储并组织数据。在 Coolify 中，独立数据库（standalone database）是指由 Coolify 在所选服务器和目标（Destination）上以 Docker 容器形式部署并管理的数据库引擎。
+
+Coolify 目前为 PostgreSQL、MySQL、MariaDB、MongoDB、Redis、Dragonfly、KeyDB、ClickHouse 以及实验性的 SQLite 提供一键资源。
+
+## 什么是一键数据库？
+
+一键数据库（one-click database）是 Coolify 从 **New Resource > Databases**（新建资源 > 数据库）列表创建的独立数据库资源。你只需选择一个受支持的引擎，Coolify 就会创建数据库资源，包含引擎专属的镜像、生成的凭据、连接信息、持久化存储以及部署所需的配置。
+
+"一键"指的是 Coolify 帮你完成了初始资源配置，并不意味着它是托管集群，也不代表 Coolify 提供复制（replication）、自动故障转移或多节点拓扑。最终得到的是一个数据库资源，以 Docker 容器的形式运行在你选择的服务器和目标上。
+
+创建与部署的生命周期请阅读[数据库如何工作](/databases/how-databases-work#一键数据库在-coolify-中的工作方式)。
+
+如果需要 Docker Compose 拓扑、多个数据库容器、不受支持的引擎，或一键数据库表单未提供的配置，请改用[服务](/services)。
+
+## 数据库资源包含什么
+
+Coolify 创建一键数据库时，会创建并保存以下内容：
+
+| 组成部分 | 用途 |
+| :--- | :--- |
+| 数据库容器 | 在你选择的服务器和目标上运行所选的数据库引擎。 |
+| 生成的凭据 | 提供连接信息所使用的初始用户名、密码和数据库名。 |
+| 持久化存储 | 让数据库文件脱离可被替换的容器而保留。 |
+| 内部 URL | 为同一目标网络内的应用提供连接字符串。 |
+| 配置与运维 | 让你管理网络、健康检查、（受支持引擎的）备份、日志、终端访问和生命周期操作。 |
+
+具体的连接格式、存储路径、SSL 行为和备份支持取决于数据库引擎。改动生产数据库之前，请先阅读对应引擎的指南。
+
+## 独立数据库与应用
+
+应用使用数据库，但并不包含数据库的数据。把两者作为独立资源管理，就可以在不替换数据库容器的情况下部署应用。
+
+对同一 Coolify 目标上的应用，请使用数据库的 **Internal URL**（内部 URL）。该 URL 由 Coolify 用数据库容器名和内部端口构成，内部连接时不要把容器名替换成服务器 IP。
+
+如果客户端运行在目标网络之外，仅在确有必要时才配置[网络访问](/databases#网络访问)。公开的数据库端点暴露的是数据库协议，因此请用防火墙限制端口，并在引擎支持时启用 SSL。
+
+## 独立数据库不是什么
+
+独立数据库不是应用，也不是托管数据库服务。Coolify 管理的是资源配置和容器生命周期，而数据完整性、复制、集群和升级流程仍由数据库引擎自身负责。
+
+<Callout type="warning" title="持久化存储不等于备份">
+
+持久化卷能在正常的容器替换中保护数据，但无法应对卷被删除、磁盘故障、数据损坏或服务器丢失。受支持的引擎请配置[数据库备份](/databases/backups)，并先演练一次[恢复](/databases/restore)再真正依赖它。
+
+</Callout>
+
+## 继续学习
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '数据库如何工作',
+      href: '/databases/how-databases-work',
+      description: '了解容器、卷、网络与连接的完整生命周期。',
+      icon: Box2,
+    },
+    {
+      title: '选择数据库',
+      href: '/databases/choose-a-database',
+      description: '比较受支持的引擎，选择合适的部署方式。',
+      icon: BranchUp,
+    },
+    {
+      title: '部署你的第一个数据库',
+      href: '/deploy-your-first-database',
+      description: '创建、启动并连接你的第一个 Redis 数据库。',
+      icon: Rocket2,
+    },
+  ]}
+/>
+
+SQLite 为实验性功能。同一服务器上的应用通过挂载其数据卷访问数据库文件，而非使用内部 URL。参见 [SQLite](/databases/sqlite)。

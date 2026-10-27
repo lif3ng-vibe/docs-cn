@@ -1,0 +1,17 @@
+---
+title: 服务器
+description: 使用 Coolify MCP 查看服务器、目标（Destination）、域名与服务器资源。
+---
+
+# 服务器
+
+| 工具 | 用途 |
+| :--- | :--- |
+| `list_servers` | 列出团队可见的服务器；可按可达性筛选。 |
+| `get_server` | 按 UUID 查看单个服务器。敏感的连接字段会保持脱敏。 |
+| `get_server_domains` | 列出某个服务器上托管的域名。 |
+| `get_server_resources` | 列出某个服务器上定义的资源。 |
+| `list_destinations` | 列出 Docker 目标（Destination）；可按服务器筛选。 |
+| `get_destination` | 按 UUID 查看单个 Docker 目标（Destination）。 |
+
+如需数量统计和服务器健康状态提示，请先使用 `get_infrastructure_overview`。

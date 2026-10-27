@@ -1,0 +1,193 @@
+---
+title: 构建与部署模型
+description: Coolify 如何构建或拉取应用镜像,并在已连接的服务器上替换运行中的容器。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  BranchUp,
+  BrowserCode,
+  Layers,
+  Package,
+  Refresh23,
+} from 'reicon-react';
+
+# 构建与部署模型
+
+Coolify 将源代码、Docker 配置或现有镜像变成已连接服务器上运行中的容器。
+
+具体路径取决于 Coolify 是构建镜像、从镜像仓库拉取镜像,还是应用 Docker Compose 定义。Coolify 负责协调部署,而 Docker 则在你的基础设施上构建并运行工作负载。
+
+本页聚焦应用。数据库和一键服务使用各自的 Docker 生命周期,并不遵循此处描述的每一条构建路径。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+每次部署都是一个排队的操作。Coolify 解析请求的源码或镜像,准备运行时配置,启动所需的容器,并根据可用的替换路径更新运行中的应用。
+
+最终结果是一组连接服务器上的标准 Docker 资源。Coolify 就是部署和管理这些资源的开源控制平面。
+
+</CoolCallout>
+
+---
+
+## 什么会触发部署
+
+一次应用部署会把 Coolify 中保存的配置与某个触发器结合起来,例如 **Deploy**、**Redeploy**、Git webhook 或 API 请求。
+
+应用源码决定了 Coolify 在启动容器之前是否需要构建。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: 'Git 仓库',
+      description: '选定分支与提交,然后用 Nixpacks、Railpack(Beta)、Static、Dockerfile 或 Docker Compose 创建镜像。',
+      icon: BranchUp,
+    },
+    {
+      title: '无 Git 的 Dockerfile',
+      description: '把 Dockerfile 存放在 Coolify 中,无需连接仓库即可构建镜像。',
+      icon: BrowserCode,
+    },
+    {
+      title: 'Docker Compose',
+      description: '使用来自仓库的 Compose 定义,或直接在 Coolify 中输入一份定义,构建多容器应用。',
+      icon: Layers,
+    },
+    {
+      title: '现有 Docker 镜像',
+      description: '从容器镜像仓库部署镜像标签或 SHA256 摘要,无需构建源代码。',
+      icon: Box2,
+    },
+  ]}
+/>
+
+---
+
+## 从配置到运行中的容器
+
+即使源码和替换路径各不相同,Coolify 也遵循大致相同的生命周期。
+
+<CoolFlow
+  id="application-deployment-flow"
+  icon={Layers}
+  title="从部署触发到运行中的容器"
+  description="一次部署会让应用的一个请求版本依次经过排队、镜像准备、运行时配置和容器更新。"
+  steps={[
+    '将部署加入队列',
+    '解析源码与版本',
+    '构建或拉取所需镜像',
+    '应用运行时配置',
+    '启动容器并配置路由',
+  ]}
+  list={[
+    'Coolify 记录这次部署。当队列空位出现、Coolify 派发任务时,状态会从"排队中"变为"进行中"。',
+    '对于 Git 源码,Coolify 会检出请求的提交。其他路径则使用已保存的 Dockerfile、Compose 定义或镜像引用。',
+    'Docker 按所选方法构建,或从镜像仓库拉取现有镜像。',
+    'Coolify 写入环境配置,并附加配置好的网络、持久化存储和代理标签。',
+    'Docker 启动容器。对于 HTTP 应用,部署服务器上的代理会把配置好的域名路由到这些容器。',
+  ]}
+  endnote="Coolify 保存部署状态和日志。Docker 运行生成的容器,而镜像、网络和存储都保留在已连接的服务器上。"
+/>
+
+---
+
+## Coolify 如何准备镜像
+
+每个应用容器都从 Docker 镜像开始。Coolify 可以从应用源码创建该镜像,也可以使用镜像仓库中已有的镜像。
+
+<CoolCompare
+  id="image-preparation-paths"
+  className="not-prose"
+  icon={Package}
+  title="构建或拉取镜像"
+  description="基于源码的应用在部署过程中创建镜像。Docker Image 应用直接使用已有镜像,而 Docker Compose 可以在其各个服务中组合使用两种方式。"
+>
+<CoolCompareColumn
+  title="从源码构建"
+  items={[
+    'Git 应用可以使用 Nixpacks、Railpack(Beta)、Static、Dockerfile 或 Docker Compose。',
+    '默认情况下,Coolify 在部署服务器上进行构建。',
+    'Nixpacks、Railpack、Static 和 Dockerfile 构建可以在专用构建服务器上运行,并通过镜像仓库交付镜像。',
+    '用 Nixpacks、Railpack、Static 或 Dockerfile 构建的镜像可以留在部署服务器上,也可以推送到已配置的镜像仓库。',
+  ]}
+/>
+<CoolCompareColumn
+  title="使用现有镜像"
+  items={[
+    'Docker Image 应用接受带标签或 SHA256 摘要的镜像名称。',
+    'Coolify 在部署时拉取镜像,而不是克隆并构建源代码。',
+    '运行时环境变量、存储、网络、域名和健康检查依然适用。',
+    '如果镜像仓库在 `latest` 这类可变标签下发布了不同的镜像,下一次部署可能在没有源码变更的情况下拉取到该镜像。',
+  ]}
+/>
+</CoolCompare>
+
+对于使用 Nixpacks、Railpack、Static 或 Dockerfile 的 Git 部署,Coolify 会查找带有请求提交标签的镜像。如果该镜像已存在于本地或已配置的镜像仓库中,且构建配置没有变化,Coolify 会跳过构建并复用该镜像。
+
+当你需要 Coolify 在不使用 Docker 构建缓存的情况下重新构建镜像时,可使用 **Force deploy (without cache)**。
+
+服务器角色决定一台机器能否构建、能否部署,还是两者兼备。仅部署(deployment-only)的服务器从不在本地构建。专用构建服务器会把构建负载从部署服务器上分离出去。使用构建服务器需要提供镜像仓库中的镜像名称,以便部署服务器能拉取构建完成的镜像。服务器与镜像仓库的具体要求参阅[构建服务器](/core/infrastructure/servers/build-servers)。
+
+---
+
+## Coolify 如何替换运行中的容器
+
+对于基于源码的应用,Coolify 会先完成镜像构建,再去更动运行中的容器。源码构建失败时,当前应用版本会继续运行。
+
+构建完成之后,或在 Coolify 准备好现有镜像引用与运行时配置之后,替换行为取决于应用类型和配置。
+
+<CoolCompare
+  id="container-replacement-paths"
+  className="not-prose"
+  columns={3}
+  icon={Refresh23}
+  title="容器替换路径"
+  description="所选路径决定当前容器何时停止,以及新版本未能就绪时会发生什么。"
+>
+<CoolCompareColumn
+  title="滚动更新"
+  items={[
+    '当容器与网络设置允许 Coolify 启动第二个容器时,用于 Nixpacks、Railpack、Static、Dockerfile 和 Docker Image 应用。',
+    '在当前容器继续运行的同时启动新容器。',
+    '配置了健康检查时,会等待新容器变得健康后再移除当前容器。',
+    '如果健康检查失败,则移除新容器,当前容器继续运行。',
+  ]}
+/>
+<CoolCompareColumn
+  title="先停后启"
+  items={[
+    '当主机端口映射、固定或自定义容器名、预览部署或自定义 IP 阻止滚动更新时使用。',
+    '在启动新容器之前先停止当前容器。',
+    '新容器启动期间可能造成服务中断。',
+    '源码构建仍会在 Coolify 停止当前容器之前完成。',
+  ]}
+/>
+<CoolCompareColumn
+  title="Compose 或 Swarm 更新"
+  items={[
+    'Docker Compose 构建或拉取所需的服务镜像,然后通过 `docker compose up` 调和整个栈。',
+    'Compose 部署不使用 Coolify 应用层的滚动替换路径。',
+    '对于以 Docker Swarm 为目标的 Nixpacks、Railpack、Static、Dockerfile 和 Docker Image 应用,Coolify 使用 `docker stack deploy`,由 Swarm 控制服务更新。',
+    '可用性取决于 Compose 或 Swarm 服务定义及就绪配置。',
+  ]}
+/>
+</CoolCompare>
+
+当滚动更新需要验证新容器是否就绪时,请配置[健康检查](/applications/configuration/health-checks)。如果没有配置健康检查、镜像也没有自带健康检查,Coolify 就无法在将新容器视为可用之前测试应用的就绪状态。
+
+在应用页面打开 **Deployments** 可以查看每次部署的状态及其日志。应用运行起来之后,使用 **Logs**、非 Swarm 服务器上的 **Terminal**,以及应用生命周期操作来管理容器。
+
+---
+
+## 部署之间什么会保留
+
+容器是可替换的。持久化数据必须存放在容器可写文件系统之外,这样新容器才能使用同一份数据。
+
+- **构建时配置**影响镜像,可能需要重新构建。
+- **运行时配置**在容器启动时应用,因此当只有运行时设置发生变化时,Coolify 可以复用同一镜像。
+- **持久化卷与挂载文件**位于可替换的容器文件系统之外,并会附加到新容器的定义上。
+- **未挂载的容器数据**不是持久化的,当 Coolify 替换或移除容器时可能丢失。
+
+镜像、容器、卷和网络之间的关系参阅[Docker 与容器](/core/docker-and-containers)。

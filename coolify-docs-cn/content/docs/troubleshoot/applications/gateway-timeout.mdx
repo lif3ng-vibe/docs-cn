@@ -1,0 +1,281 @@
+---
+title: Gateway Timeout 错误
+description: 通过解决网络隔离问题、调整 Traefik、Caddy 和 Nginx 的代理超时，解决 Coolify 中的 Gateway Timeout（504）错误。
+tags:
+  [
+    "Gateway Timeout",
+    "504",
+    "Troubleshooting",
+    "Coolify",
+    "Traefik",
+    "Caddy",
+    "Nginx",
+  ]
+---
+
+# Gateway Timeout（504）错误
+
+Gateway Timeout（网关超时）错误是指 Coolify 代理在配置的超时时间内没有收到应用的响应。它与 [Bad Gateway（502）](/troubleshoot/applications/bad-gateway#bad-gateway502错误)错误不同——后者表示代理根本无法连接到你的应用。
+
+## 常见原因
+
+在 Coolify 中，引发 504 Gateway Timeout 错误的主要有两类场景：
+
+1. **自定义 Docker 网络隔离**——代理无法访问使用自定义网络的应用
+2. **大文件上传/下载超时**——默认超时设置对大文件传输来说太短
+
+<Accordions type="multiple">
+
+<Accordion title="问题 1：自定义 Docker 网络隔离">
+
+### 症状
+
+- 应用部署后起初一切正常
+- 数小时或数天后出现 504 Gateway Timeout 错误
+- 通过 IP 加端口可以直接访问应用（需要手动端口映射）
+- 重启应用可暂时解决问题
+- 配置中使用了自定义 Docker 网络
+
+### 根本原因
+
+当你在 Docker Compose 文件中定义自定义 Docker 网络时，`coolify-proxy` 容器运行在 Coolify 自己的网络里，而应用运行在自定义网络中。这种网络隔离导致代理无法访问应用——尤其当 Docker 内部 DNS 因时序和网络加入顺序不同而返回不同 IP 时，问题更为明显。
+
+### 诊断
+
+1. **检查应用是否使用了自定义网络**：
+
+   ```bash
+   docker inspect <your-container-name> --format='{{range $k,$v := .NetworkSettings.Networks}}Network: {{$k}}, IP: {{$v.IPAddress}}, Gateway: {{$v.Gateway}}{{println}}{{end}}'
+   ```
+
+2. **确认代理的网络连接**：
+
+   ```bash
+   docker inspect coolify-proxy --format='{{range $k,$v := .NetworkSettings.Networks}}Network: {{$k}}, IP: {{$v.IPAddress}}, Gateway: {{$v.Gateway}}{{println}}{{end}}'
+   ```
+
+### 解决方案
+
+<Tabs items={['使用 Coolify 目标（推荐）', '手动连接网络（临时）']}>
+<Tab value="使用 Coolify 目标（推荐）">
+
+改用 [目标（Destination）](/core/networking/destinations/overview)而不是自定义网络，让 Coolify 自动管理网络：
+
+1. 从 Docker Compose 文件中移除自定义网络定义
+2. 在 Coolify 的 **Destinations**（目标）下[创建网络目标](/core/networking/destinations/create)
+3. [将 Docker Compose 资源连接到其预定义的目标](/core/networking/destinations/manage#连接-docker-compose-资源)
+4. 重新部署
+
+**修改前**（有问题）：
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    networks:
+      - custom-network
+
+networks:
+  custom-network:
+    driver: bridge
+```
+
+**修改后**（推荐）：
+
+```yaml
+services:
+  app:
+    image: myapp:latest
+    # Let Coolify handle networking
+```
+
+</Tab>
+<Tab value="手动连接网络（临时）">
+
+如果必须使用自定义网络，请手动把代理接入：
+
+```bash
+docker network connect <your-network-name> coolify-proxy
+```
+
+**注意**：这只是临时方案，代理重启后可能需要重新执行。
+
+</Tab>
+</Tabs>
+
+</Accordion>
+
+<Accordion title="问题 2：大文件上传/下载超时">
+
+### 症状
+
+- 上传大文件（大于 100MB）时出现 504 错误
+- 向镜像仓库推送大体积 Docker 镜像时出现 504 错误
+- 长时间请求未完成时出现 504 错误（Traefik/Nginx 下为超过 60 秒）
+- 小文件和快速请求一切正常
+
+### 根本原因
+
+默认超时行为取决于你使用的代理：
+
+- **Traefik**：默认读取超时为 60 秒
+- **Caddy**：没有默认超时（请求可以无限期运行）
+- **Nginx**（一键数据库）：默认超时为 60 秒
+
+任何超过配置超时的请求都会以 504 Gateway Timeout 错误收场，即使后端应用仍在处理该请求。
+
+### 诊断
+
+1. **确认你使用的代理**：
+
+   - 在 Coolify UI 中进入 **服务器 > [你的服务器] > 代理**
+   - 页面会显示代理类型（Traefik、Caddy 等）
+
+2. **检查当前代理配置**：
+
+   - 进入 **服务器 > [你的服务器] > 代理**，查看是否有超时相关设置
+   - 检查应用/服务是否存在可能覆盖默认值的自定义标签（labels）
+
+3. **在应用日志中关注请求耗时**：
+
+   - 进入 Coolify 中应用/服务的日志页面
+   - 留意耗时超过 60 秒的长时间请求
+
+4. **换一个更小的文件测试，确认问题与文件大小相关**
+
+### 解决方案
+
+<Tabs items={['调大代理超时', '实现分块上传', '改用后台处理']}>
+<Tab value="调大代理超时">
+
+配置方法取决于你的代理类型：
+
+<Tabs items={['Traefik', 'Caddy', 'Nginx']}>
+<Tab value="Traefik">
+
+##### 针对 Traefik（默认代理）
+
+添加自定义 Traefik 配置来调大超时。根据需求不同，有多种实现方式：
+
+进入服务器的代理设置，在 command 部分添加新的超时项：
+
+```yaml
+command:
+  - '--entrypoints.https.transport.respondingTimeouts.readTimeout=5m'
+  - '--entrypoints.https.transport.respondingTimeouts.writeTimeout=5m'
+  - '--entrypoints.https.transport.respondingTimeouts.idleTimeout=5m'
+```
+
+更多 Traefik 超时说明见[官方文档](https://doc.traefik.io/traefik/reference/install-configuration/entrypoints/#超时时间)。
+
+</Tab>
+<Tab value="Caddy">
+
+##### 针对 Caddy
+
+Caddy 没有默认超时，通常不会遇到超时问题。不过，如果你需要主动设置超时（出于安全或资源管理的考虑）：
+
+1. 在 Coolify 的 **Container Labels**（容器标签）中添加以下内容：
+
+```yaml
+# Set a 5-minute timeout (300 seconds)
+caddy.servers.timeouts.read_body=300s
+caddy.servers.timeouts.read_header=300s
+caddy.servers.timeouts.write=300s
+caddy.servers.timeouts.idle=5m
+```
+
+更多 Caddy 超时说明见[官方文档](https://caddyserver.com/docs/caddyfile/options#timeouts)。
+
+</Tab>
+<Tab value="Nginx">
+
+##### 针对 Nginx（一键数据库）
+
+在 Coolify 中，一键数据库的 Nginx 配置无法直接修改。因此应**完全绕过 Nginx** 来避免超时问题：
+
+1. 进入 Coolify 中该数据库的设置
+2. **关闭** "Make it publicly available?"（设为公开可用）选项
+3. 改用 **Port Mappings**（端口映射）直接暴露数据库端口，然后重启数据库
+4. 这样端口直接从容器映射出来，绕过了 Nginx 及其超时限制
+
+**示例**：对于 PostgreSQL 数据库，映射端口 `5432:5432` 即可直连访问，不受任何代理超时限制。
+
+更多数据库公开访问说明见：[一键数据库](/databases/#ports-mapping-vs-public-port)。
+
+</Tab>
+</Tabs>
+
+</Tab>
+<Tab value="实现分块上传">
+
+对于特别大的文件，可以考虑在应用中实现分块上传：
+
+1. 在客户端把大文件拆成更小的分块
+2. 逐块上传（每块都控制在超时限制以内）
+3. 在服务端重新拼装
+
+</Tab>
+<Tab value="改用后台处理">
+
+对于长时间运行的操作：
+
+1. 接受请求后立即返回一个任务 ID
+2. 在后台处理该请求
+3. 提供一个查询任务状态的端点
+
+</Tab>
+</Tabs>
+
+</Accordion>
+
+</Accordions>
+
+## 快速排查清单
+
+按以下步骤逐一检查，定位你的具体问题：
+
+1. **确认错误码**：
+
+   - 504 = Gateway Timeout（即本篇指南）
+   - 502 = Bad Gateway（见 [Bad Gateway 排查指南](/troubleshoot/applications/bad-gateway)）
+
+2. **确认出现时机**：
+
+   - 立即出现 = 多半是网络/配置问题
+   - 约 60 秒后出现 = 多半是超时问题
+   - 数小时/数天后随机出现 = 多半是网络隔离问题
+
+3. **检查网络配置**：
+
+   ```bash
+   # List all Docker networks
+   docker network ls
+
+   # Check which networks your containers are using
+   docker ps --format "table {{.Names}}\t{{.Networks}}"
+   ```
+
+## 预防建议
+
+1. **避免使用自定义 Docker 网络**，除非确有必要
+2. 初次部署时就**按应用需求设置合适的超时**
+3. **配置健康检查**以保持连通性
+4. **定期查看代理日志**，留意超时规律
+5. 长时间操作要**提供进度提示**，避免客户端超时
+
+## 支持
+
+如果以上方案仍无法解决网关超时问题：
+
+1. 收集诊断信息：
+
+   ```bash
+   # Save this output
+   docker ps --format "table {{.Names}}\t{{.Networks}}\t{{.Status}}"
+   docker logs coolify-proxy --tail 200 > proxy-logs.txt
+   docker logs <your-container-name> --tail 200 > app-logs.txt
+   ```
+
+2. 加入我们的 [Discord 社区](https://coolify.io/discord)
+3. 分享你的配置、日志以及已经尝试过的具体步骤

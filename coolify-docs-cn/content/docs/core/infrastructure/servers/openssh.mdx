@@ -1,0 +1,640 @@
+---
+title: OpenSSH
+description: 为 localhost 服务器或接入 Coolify 的远程服务器配置 OpenSSH。
+---
+
+# 配置 OpenSSH
+
+Coolify 使用 SSH 管理接入的服务器。
+
+配置安装了自托管 Coolify 实例的服务器时选择 **Localhost**；为 Coolify Cloud 或自托管 Coolify 准备其他 Linux 服务器时选择 **Remote server**（远程服务器）。
+
+---
+
+## 选择服务器
+
+<Tabs id="openssh-server-type" items={['Localhost', '远程服务器']}>
+<Tab value="Localhost">
+
+官方 Coolify 安装脚本通常会安装 OpenSSH 并创建 **localhost** SSH 连接。想在安装 Coolify 之前配置 OpenSSH 请选 **Semi-automatic**（半自动）；localhost 连接缺失或损坏时选 **Manual**（手动）。
+
+<Callout type="warning" title="保持当前服务器会话开启">
+在 **localhost** 服务器成功连接之前，不要关闭当前的 SSH 或控制台会话。如果 SSH 访问中断，你需要这个会话来修复配置。
+</Callout>
+
+<Tabs id="openssh-localhost-method" items={['半自动', '手动']}>
+<Tab value="半自动">
+
+### 在安装 Coolify 前配置 OpenSSH
+
+适用于想自己安装并配置 OpenSSH，但让 Coolify 安装脚本创建 **localhost** SSH 密钥和控制台连接的情况。
+
+<Steps>
+<Step>
+
+### 登录服务器
+
+通过 SSH 以 `root` 用户登录，或使用托管商提供的控制台。
+
+</Step>
+<Step>
+
+### 安装 OpenSSH
+
+根据服务器操作系统运行以下命令。
+
+<Tabs id="openssh-semi-automatic-install" items={['Ubuntu 或 Debian', 'RHEL 系', 'SUSE', 'Arch Linux', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+apt-get update
+apt-get install -y openssh-server
+systemctl enable --now ssh
+```
+
+</Tab>
+<Tab value="RHEL 系">
+
+适用于 CentOS、RHEL、Rocky Linux、AlmaLinux、Fedora、Amazon Linux、Oracle Linux 或 TencentOS。
+
+```sh
+dnf install -y openssh-server
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="SUSE">
+
+```sh
+zypper refresh
+zypper install -y openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Arch Linux">
+
+```sh
+pacman -Sy --noconfirm openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+apk add openssh
+rc-update add sshd default
+service sshd start
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 配置基于密钥的 SSH 访问
+
+打开 OpenSSH 配置文件：
+
+```sh
+nano /etc/ssh/sshd_config
+```
+
+找到这些设置并改为下面的值；如果不存在，添加到文件末尾。
+
+```ini
+PubkeyAuthentication yes
+PermitRootLogin prohibit-password
+```
+
+`PermitRootLogin prohibit-password` 允许 `root` 使用 SSH 密钥连接，但禁止基于密码的 SSH 登录。
+
+<Callout type="warning" title="确认当前 SSH 密钥可用">
+重启 OpenSSH 之前，确认当前 `root` 登录所用的公钥已在 `/root/.ssh/authorized_keys` 中。否则请保持控制台开启，以便恢复访问。
+</Callout>
+
+</Step>
+<Step>
+
+### 检查并重启 OpenSSH
+
+检查配置：
+
+```sh
+sshd -t
+```
+
+命令应无任何输出。如果报告错误，先修正文件再继续。
+
+根据服务器操作系统重启 OpenSSH：
+
+<Tabs id="openssh-semi-automatic-restart" items={['Ubuntu 或 Debian', 'RHEL、SUSE 或 Arch', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+systemctl restart ssh
+```
+
+</Tab>
+<Tab value="RHEL、SUSE 或 Arch">
+
+```sh
+systemctl restart sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+service sshd restart
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 运行 Coolify 安装脚本
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+脚本会使用你配置的 OpenSSH 服务，创建并授权 **localhost** SSH 密钥，并把 **localhost** 服务器添加到 Coolify。
+
+</Step>
+<Step>
+
+### 确认 localhost 服务器就绪
+
+1. 打开 Coolify 控制台。
+2. 选择 **Servers**。
+3. 打开 **localhost**。
+4. 确认 **General** 页面显示 **Server is reachable and validated**（服务器可达且已验证）。
+
+如果 **localhost** 不可达，请使用 **手动** 标签页。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="手动">
+
+### 手动配置 OpenSSH 与 localhost 连接
+
+自动设置未完成或现有 **localhost** 连接损坏时，按这些步骤操作。
+
+<Steps>
+<Step>
+
+### 登录服务器
+
+通过 SSH 以 `root` 登录，或使用托管商提供的控制台。
+
+</Step>
+<Step>
+
+### 安装 OpenSSH
+
+根据服务器操作系统运行以下命令。
+
+<Tabs id="openssh-install-operating-system" items={['Ubuntu 或 Debian', 'RHEL 系', 'SUSE', 'Arch Linux', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+apt-get update
+apt-get install -y openssh-server
+systemctl enable --now ssh
+```
+
+</Tab>
+<Tab value="RHEL 系">
+
+适用于 CentOS、RHEL、Rocky Linux、AlmaLinux、Fedora、Amazon Linux、Oracle Linux 或 TencentOS。
+
+```sh
+dnf install -y openssh-server
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="SUSE">
+
+```sh
+zypper refresh
+zypper install -y openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Arch Linux">
+
+```sh
+pacman -Sy --noconfirm openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+apk add openssh
+rc-update add sshd default
+service sshd start
+```
+
+</Tab>
+</Tabs>
+
+OpenSSH 已安装，并配置为开机自启。
+
+</Step>
+<Step>
+
+### 配置基于密钥的 SSH 访问
+
+打开 OpenSSH 配置文件：
+
+```sh
+nano /etc/ssh/sshd_config
+```
+
+找到这些设置并改为下面的值；如果不存在，添加到文件末尾。
+
+```ini
+PubkeyAuthentication yes
+PermitRootLogin prohibit-password
+```
+
+`PermitRootLogin prohibit-password` 允许 `root` 使用 SSH 密钥连接，但禁止基于密码的 SSH 登录。
+
+<Callout type="warning" title="先不要重启 OpenSSH">
+保持此服务器会话开启。在 localhost 公钥写入 `/root/.ssh/authorized_keys` 之前不要重启 OpenSSH，否则可能丢失 SSH 访问。
+</Callout>
+
+</Step>
+<Step>
+
+### 生成 localhost SSH 密钥
+
+创建 Coolify 所需的目录：
+
+```sh
+mkdir -p /data/coolify/ssh/keys
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+```
+
+生成一把不带 passphrase 的新密钥：
+
+```sh
+ssh-keygen -t ed25519 -a 100 \
+  -f /data/coolify/ssh/keys/id.root@host.docker.internal \
+  -q -N "" -C coolify
+```
+
+如果命令询问是否覆盖已有密钥，输入 `y`。后续步骤会把替换用的私钥添加到 Coolify。
+
+</Step>
+<Step>
+
+### 授权 localhost SSH 密钥
+
+把生成的公钥添加给 `root` 账号：
+
+```sh
+cat /data/coolify/ssh/keys/id.root@host.docker.internal.pub \
+  >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+chown 9999:root /data/coolify/ssh/keys/id.root@host.docker.internal
+```
+
+密钥不能带 passphrase。Coolify 连接时无法响应交互式的 passphrase 或两步验证提示。
+
+</Step>
+<Step>
+
+### 检查并重启 OpenSSH
+
+重启服务前先检查配置：
+
+```sh
+sshd -t
+```
+
+命令应无任何输出。如果报告错误，先修正文件再继续。
+
+根据服务器操作系统重启 OpenSSH：
+
+<Tabs id="openssh-restart-operating-system" items={['Ubuntu 或 Debian', 'RHEL、SUSE 或 Arch', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+systemctl restart ssh
+```
+
+</Tab>
+<Tab value="RHEL、SUSE 或 Arch">
+
+```sh
+systemctl restart sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+service sshd restart
+```
+
+</Tab>
+</Tabs>
+
+保持当前会话开启，先用第二个终端确认基于密钥的 SSH 访问仍然可用，再关闭原会话。
+
+</Step>
+<Step>
+
+### 复制 localhost 私钥
+
+在服务器终端显示私钥：
+
+```sh
+cat /data/coolify/ssh/keys/id.root@host.docker.internal
+```
+
+复制完整输出，包括 `BEGIN` 和 `END` 行。
+
+</Step>
+<Step>
+
+### 打开控制台的 Keys & Tokens 页面
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/private-keys/private-keys-page.webp" alt="Coolify 的 Private Keys 页面与 Add 按钮" />
+
+1. 在 Coolify 侧边栏打开 **Keys & Tokens**。
+2. 选择 **Private Keys**。
+3. 选择 **+ Add**（添加）。
+
+</Step>
+<Step>
+
+### 添加 localhost 私钥
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/private-keys/new-private-key-form.webp" alt="Coolify 的 New Private Key 表单" />
+
+1. 输入 `localhost key` 之类的名称。
+2. 把上一步复制的值粘贴到 **Private Key**。
+3. 选择 **Continue**（继续）。
+
+不要把私钥粘贴到 **Public Key** 或 `/root/.ssh/authorized_keys` 中。
+
+</Step>
+<Step>
+
+### 打开 localhost 服务器
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/openssh/localhost-server.webp" alt="Coolify Servers 页面中的 localhost 服务器" />
+
+1. 在 Coolify 侧边栏打开 **Servers**。
+2. 选择 **localhost**。
+
+</Step>
+<Step>
+
+### 选择私钥
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/openssh/localhost-private-key.webp" alt="Coolify 中 localhost 服务器的 Private Key 页面" />
+
+1. 在服务器侧边栏选择 **Private Key**。
+2. 找到上一步添加的密钥。
+3. 选择 **Use this key**（使用此密钥）。
+
+保存新密钥前，Coolify 会先检查连接。
+
+</Step>
+<Step>
+
+### 验证 localhost 服务器
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/add-server/validate-server.webp" alt="localhost General 页面上的 Validate Server 按钮" />
+
+1. 打开 **localhost** 服务器的 **General**。
+2. 选择 **Validate connection**（验证连接）。
+3. 等待验证完成。
+
+页面显示 **Server is reachable and validated**（服务器可达且已验证）即完成设置。
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/add-server/validated-server.webp" alt="Coolify 中已验证的 localhost 服务器" />
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+</Tab>
+<Tab value="远程服务器">
+
+### 在远程服务器上配置 OpenSSH
+
+大多数 Linux 服务器已预装 OpenSSH。按以下步骤在需要时安装，并确认已启用公钥认证。
+
+<Steps>
+<Step>
+
+### 登录服务器
+
+通过 SSH 以 `root` 登录，或使用服务器控制台。
+
+</Step>
+<Step>
+
+### 安装 OpenSSH
+
+如果缺少 OpenSSH，根据服务器操作系统运行以下命令。
+
+<Tabs id="openssh-remote-install" items={['Ubuntu 或 Debian', 'RHEL 系', 'SUSE', 'Arch Linux', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+apt-get update
+apt-get install -y openssh-server
+systemctl enable --now ssh
+```
+
+</Tab>
+<Tab value="RHEL 系">
+
+适用于 CentOS、RHEL、Rocky Linux、AlmaLinux、Fedora、Amazon Linux、Oracle Linux 或 TencentOS。
+
+```sh
+dnf install -y openssh-server
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="SUSE">
+
+```sh
+zypper refresh
+zypper install -y openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Arch Linux">
+
+```sh
+pacman -Sy --noconfirm openssh
+systemctl enable --now sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+apk add openssh
+rc-update add sshd default
+service sshd start
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 确认 root 的 SSH 密钥已授权
+
+禁用基于密码的 root 登录之前，确认 `root` 账号所用的公钥已在 `/root/.ssh/authorized_keys` 中。
+
+如果还没有添加密钥，先完成[创建并授权 SSH 密钥](/core/infrastructure/servers/add-server#创建并授权-ssh-密钥)，再回到这一步。
+
+</Step>
+<Step>
+
+### 更新 OpenSSH 配置
+
+打开配置文件：
+
+```sh
+nano /etc/ssh/sshd_config
+```
+
+找到这些设置并改为下面的值；如果不存在，添加到文件末尾。
+
+```ini
+PubkeyAuthentication yes
+PermitRootLogin prohibit-password
+```
+
+`PermitRootLogin prohibit-password` 允许 `root` 使用 SSH 密钥连接，但禁止基于密码的 SSH 登录。
+
+<Callout type="warning" title="保持当前会话开启">
+在确认公钥可用之前，不要关闭当前的 SSH 或控制台会话。新连接失败时，你需要这个会话来修正配置。
+</Callout>
+
+</Step>
+<Step>
+
+### 检查并重启 OpenSSH
+
+检查配置：
+
+```sh
+sshd -t
+```
+
+命令应无任何输出。如果报告错误，先修正文件再重启 OpenSSH。
+
+根据服务器操作系统重启 OpenSSH：
+
+<Tabs id="openssh-remote-restart" items={['Ubuntu 或 Debian', 'RHEL、SUSE 或 Arch', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+systemctl restart ssh
+```
+
+</Tab>
+<Tab value="RHEL、SUSE 或 Arch">
+
+```sh
+systemctl restart sshd
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+service sshd restart
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 确认 SSH 连接
+
+打开第二个终端，用已授权的密钥连接：
+
+```sh
+ssh root@<server-ip>
+```
+
+如果 OpenSSH 使用 `22` 以外的端口，运行：
+
+```sh
+ssh -p <ssh-port> root@<server-ip>
+```
+
+此连接成功之前，保持原来的服务器会话开启。
+
+</Step>
+<Step>
+
+### 将服务器接入 Coolify
+
+完成[连接服务器](/core/infrastructure/servers/add-server#连接服务器)的步骤并验证服务器。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="为什么验证显示 Permission denied (publickey)？">
+
+为服务器选择的私钥与 SSH 用户 `authorized_keys` 文件中的公钥不匹配。
+
+**localhost**：在 **手动** 标签页中重做 **授权 localhost SSH 密钥** 和 **选择私钥** 两个步骤。
+
+远程服务器：重做[添加服务器](/core/infrastructure/servers/add-server#创建并授权-ssh-密钥)中的 SSH 密钥步骤。
+
+</Accordion>
+
+<Accordion title="为什么验证超时？">
+
+确认服务器 IP 地址和 SSH 端口正确，然后确认[防火墙](/core/infrastructure/servers/firewall)允许来自 Coolify 的 SSH 连接。
+
+</Accordion>
+
+<Accordion title="为什么 SSH 连接被拒绝？">
+
+OpenSSH 未运行或监听在其他端口。启动 OpenSSH 服务，然后确认 **Servers > 你的服务器 > General** 中的端口与 OpenSSH 实际使用的端口一致。
+
+</Accordion>
+
+</Accordions>

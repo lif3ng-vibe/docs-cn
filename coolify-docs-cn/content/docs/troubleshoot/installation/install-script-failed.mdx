@@ -1,0 +1,660 @@
+---
+title: Coolify 安装脚本失败
+description: 逐步排查日志、Docker 问题、端口冲突与容器故障，调试并修复 Coolify 安装脚本的失败。
+---
+
+# Coolify 安装脚本失败
+
+如果 Coolify 安装脚本执行完毕却无法访问 Coolify，或者容器缺失，本指南将帮你调试并修复该问题。
+
+## 常见症状
+
+- 安装脚本执行完毕，但**没有显示访问 URL**
+- 脚本显示成功，但 8000 端口上**无法访问 Coolify 网页界面**
+- **Docker 容器缺失**或未运行
+- 安装看似完成，但**总有些东西不工作**
+
+
+<Callout type="warn" title="重要提示">
+
+按照本指南操作之前，请先阅读[自托管安装指南](/start-with-self-hosted)，确保你的系统满足全部要求。
+
+</Callout>
+
+
+## 开启详细模式调试
+
+如果安装出了问题，可以用**详细模式（verbose mode）**运行安装脚本，查看实际执行的每一条命令：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh -o install.sh
+bash -x install.sh 2>&1 | tee installation-debug.log
+```
+
+该命令会：
+
+- 逐条显示正在执行的命令（`bash -x`）
+- 同时显示标准输出和标准错误（`2>&1`）
+- 把全部输出保存到 `installation-debug.log` 供事后查看（`tee`）
+
+
+<Callout type="info">
+
+详细模式对精确定位安装失败的位置极其有用。在 Discord 求助时请附上详细日志。
+
+</Callout>
+
+
+## 诊断步骤
+
+<Steps>
+
+<Step>
+
+### 检查安装日志
+
+安装脚本会生成日志文件，其中包含安装过程的重要信息。
+
+安装过程会在 `/data/coolify/source/` 下创建两个日志文件：
+
+1. **安装日志**：`installation-YYYYMMDD-HHMMSS.log`
+2. **升级日志**：`upgrade-YYYY-MM-DD-HH-MM-SS.log`
+
+
+<Callout type="info">
+
+安装脚本内部会调用升级脚本，因此初次安装时两个日志都会生成。
+
+</Callout>
+
+
+找到最新的日志文件：
+
+```bash
+# List all log files sorted by date (most recent first)
+ls -lt /data/coolify/source/*.log | head -5
+```
+
+查看安装日志：
+
+```bash
+# Replace the date/time with your actual log file
+tail -100 /data/coolify/source/installation-YYYYMMDD-HHMMSS.log
+
+# Or view the entire log
+cat /data/coolify/source/installation-YYYYMMDD-HHMMSS.log
+```
+
+查看升级日志：
+
+```bash
+# Replace the date/time with your actual log file
+tail -100 /data/coolify/source/upgrade-YYYY-MM-DD-HH-MM-SS.log
+
+# Or view the entire log
+cat /data/coolify/source/upgrade-YYYY-MM-DD-HH-MM-SS.log
+```
+
+在日志中查找包含以下内容的错误信息：
+
+- `ERROR:`
+- `Failed to`
+- `could not`
+- `Connection refused`
+- `Permission denied`
+- `No such file or directory`
+
+</Step>
+
+<Step>
+
+### 确认 Docker 安装
+
+检查 Docker 是否已正确安装并运行：
+
+```bash
+# Check Docker version
+docker --version
+
+# Check Docker Compose plugin
+docker compose version
+
+# Check if Docker daemon is running
+sudo systemctl status docker
+```
+
+`docker --version` 的**预期输出**：
+
+```
+Docker version 27.0.x, build xxxxx
+```
+
+如果 Docker 未安装或未运行：
+
+```bash
+# Start Docker service
+sudo systemctl start docker
+
+# Enable Docker to start on boot
+sudo systemctl enable docker
+```
+
+
+<Callout type="warn" title="不支持通过 Snap 安装的 Docker">
+
+如果你是通过 snap 安装的 Docker，必须先移除它并重新正确安装 Docker。安装脚本会检测并阻止基于 snap 的 Docker 安装。
+
+```bash
+# Remove Docker snap
+sudo snap remove docker
+
+# Then re-run the Coolify installation script
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+```
+
+
+</Callout>
+
+</Step>
+
+<Step>
+
+### 检查端口占用情况
+
+Coolify 需要一些特定端口可用。初次安装最关键的是 **8000 端口**。
+
+
+<Callout type="error" title="关键端口">
+
+8000 端口必须空闲供 Coolify 网页界面使用。如果有其他程序占用了该端口，安装会静默失败。
+
+</Callout>
+
+
+用以下任意工具检查 8000 端口：
+
+<Tabs items={['ss', 'lsof', 'netstat']}>
+<Tab value="ss">
+
+```bash
+sudo ss -tulpn | grep :8000
+```
+
+</Tab>
+<Tab value="lsof">
+
+```bash
+sudo lsof -i :8000
+```
+
+</Tab>
+<Tab value="netstat">
+
+```bash
+sudo netstat -tulpn | grep :8000
+```
+
+</Tab>
+</Tabs>
+
+如果这些命令**没有输出**，说明端口空闲 ✓
+
+如果有输出，说明**有程序正在占用 8000 端口**。示例：
+
+```
+tcp   LISTEN  0  4096  *:8000  *:*  users:(("some-app",pid=1234,fd=3))
+```
+
+其他 Coolify 端口也可以用同样方式检查：
+
+```bash
+# Port 6001 (Reverb realtime updates)
+sudo ss -tulpn | grep :6001
+
+# Port 6002 (web terminal)
+sudo ss -tulpn | grep :6002
+
+# Port 5432 (PostgreSQL - usually internal only)
+sudo ss -tulpn | grep :5432
+
+# Port 6379 (Redis - usually internal only)
+sudo ss -tulpn | grep :6379
+```
+
+如果 8000 端口已被占用，你有两个选择：
+
+<Tabs items={['停止冲突的服务', '更改 Coolify 端口']}>
+<Tab value="停止冲突的服务">
+
+```bash
+# Find the process ID (PID) from the ss/lsof output
+sudo kill <PID>
+
+# Or stop the service if you know what it is
+sudo systemctl stop <service-name>
+```
+
+</Tab>
+<Tab value="更改 Coolify 端口">
+
+修改 `/data/coolify/source/.env` 中的 `APP_PORT` 变量，然后重新运行安装脚本。
+
+</Tab>
+</Tabs>
+
+</Step>
+
+<Step>
+
+### 检查 Docker 容器
+
+检查所有 Coolify 容器是否在运行：
+
+```bash
+# List all containers (running and stopped)
+docker ps -a
+
+# Filter for Coolify containers only
+docker ps -a --filter "name=coolify"
+```
+
+你应该能看到这些容器：
+
+| 容器名             | 状态   | 用途                       |
+| ------------------ | ------ | -------------------------- |
+| `coolify`          | Up     | 主应用、实时更新和网页终端 |
+| `coolify-db`       | Up     | PostgreSQL 数据库          |
+| `coolify-redis`    | Up     | Redis 缓存                 |
+
+
+<Callout type="info" title="注意">
+
+`coolify-proxy` 容器在安装时**不会**创建。它会在你部署第一个应用或启用代理时才创建。
+
+</Callout>
+
+
+如果容器处于 **stopped** 或 **exited** 状态，查看其日志：
+
+```bash
+# View logs for specific container
+docker logs coolify
+docker logs coolify-db
+docker logs coolify-redis
+
+# Follow logs in real-time
+docker logs -f coolify
+```
+
+如果容器已停止，尝试启动它们：
+
+```bash
+# Start all Coolify containers
+cd /data/coolify/source
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+</Step>
+
+<Step>
+
+### 确认 Docker 镜像
+
+检查所需的 Docker 镜像是否都拉取成功：
+
+```bash
+# List Coolify-related images
+docker images | grep coolify
+docker images | grep ghcr.io/coollabsio
+```
+
+至少应看到：
+
+- `ghcr.io/coollabsio/coolify`（或你的自定义镜像仓库）
+- `ghcr.io/coollabsio/coolify-helper`
+
+如果镜像缺失，可能安装时网络出了问题。尝试手动拉取：
+
+```bash
+# Pull the latest Coolify images
+docker pull ghcr.io/coollabsio/coolify:latest
+docker pull ghcr.io/coollabsio/coolify-helper:latest
+
+# Then restart Coolify
+cd /data/coolify/source
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate
+```
+
+
+<Callout type="info" title="镜像仓库身份验证">
+
+如果你使用的自定义 Docker 镜像仓库需要身份验证，可能需要先运行 `docker login`。
+
+</Callout>
+
+</Step>
+
+<Step>
+
+### 检查 Docker 网络
+
+确认 Coolify 的 Docker 网络是否存在：
+
+```bash
+# List Docker networks
+docker network ls | grep coolify
+```
+
+**预期输出**：
+
+```
+<network-id>   coolify   bridge   local
+```
+
+如果网络不存在，创建它：
+
+```bash
+# Try creating with IPv6 support first
+docker network create --attachable --ipv6 coolify
+
+# If that fails, create without IPv6
+docker network create --attachable coolify
+```
+
+</Step>
+
+<Step>
+
+### 确认磁盘空间
+
+检查可用磁盘空间：
+
+```bash
+df -h /
+```
+
+Coolify 的要求：
+
+- **总磁盘空间至少 30GB**
+- **可用空间至少 20GB**
+
+
+<Callout type="warn" title="磁盘空间不足">
+
+如果空间低于要求，安装可能显示完成但运行中出问题。可以考虑：
+
+- 清理未使用的 Docker 资源：`docker system prune -a`
+- 扩容磁盘/卷（volume）
+- 换用更大的服务器
+
+</Callout>
+
+</Step>
+
+</Steps>
+
+## 常见问题与解决方案
+
+<Accordions type="multiple">
+
+<Accordion title="脚本执行完毕但未显示访问 URL">
+
+**症状**：
+
+- 安装脚本执行完毕
+- 没有任何报错
+- 但没有显示 `http://your-ip:8000` 这样的 URL
+
+**可能原因**：
+
+1. 容器创建静默失败
+2. 网络问题导致无法获取公网 IP
+3. Docker 镜像拉取失败
+
+**解决方案**：
+
+```bash
+# Check if containers are running
+docker ps --filter "name=coolify"
+
+# If containers are missing, check upgrade log
+cat /data/coolify/source/upgrade-*.log
+
+# Look for errors in the log, then re-run upgrade
+cd /data/coolify/source
+bash upgrade.sh latest latest ghcr.io false
+```
+
+</Accordion>
+
+<Accordion title="8000 端口已被占用">
+
+**症状**：
+
+- 安装完成
+- 容器看起来在运行
+- 但无法访问 Coolify 网页界面
+
+**解决方案**：
+
+参见上文[检查端口占用情况](#检查端口占用情况)。
+
+</Accordion>
+
+<Accordion title="Docker 镜像拉取失败">
+
+**症状**：
+
+- 安装耗时非常长
+- 出现 "failed to pull image" 或 "manifest unknown" 之类错误
+- 部分 Docker 镜像缺失
+
+**可能原因**：
+
+1. 网络连接问题
+2. DNS 解析问题
+3. 镜像仓库限流
+4. 自定义镜像仓库身份验证问题
+
+**解决方案**：
+
+```bash
+# Test network connectivity to GitHub Container Registry
+curl -I https://ghcr.io
+
+# Check DNS resolution
+nslookup ghcr.io
+
+# Try pulling images manually
+docker pull ghcr.io/coollabsio/coolify:latest
+
+# If using custom registry, login first
+docker login your-registry.com
+```
+
+</Accordion>
+
+<Accordion title="权限不足">
+
+**症状**：
+
+- 日志中出现 "Permission denied" 错误
+- 无法创建目录
+- 无法修改 `/data/coolify/` 中的文件
+
+**解决方案**：
+
+安装脚本必须以 **root** 或 **sudo** 运行：
+
+```bash
+# Re-run with sudo
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+```
+
+</Accordion>
+
+<Accordion title="SSH 配置问题">
+
+**症状**：
+
+- 安装完成
+- 可以访问 Coolify 但无法连接 localhost 服务器
+- Coolify 界面出现 SSH 相关报错
+
+**可能原因**：
+
+- SSH 的 `PermitRootLogin` 被禁用
+- SSH 密钥未正确配置
+
+**解决方案**：
+
+检查 SSH 配置：
+
+```bash
+# Check PermitRootLogin setting
+sudo sshd -T | grep permitrootlogin
+```
+
+应显示：
+
+- `permitrootlogin yes`，或
+- `permitrootlogin prohibit-password`，或
+- `permitrootlogin without-password`
+
+如果显示 `permitrootlogin no`，参见 [OpenSSH 配置指南](/core/infrastructure/servers/openssh)。
+
+</Accordion>
+
+</Accordions>
+
+## 手动核查清单
+
+运行这些命令可获得完整的诊断报告：
+
+```bash
+echo "=== COOLIFY INSTALLATION DIAGNOSTICS ==="
+echo ""
+
+echo "1. Installation Logs:"
+ls -lt /data/coolify/source/*.log 2>/dev/null | head -5 || echo "No logs found"
+echo ""
+
+echo "2. Docker Version:"
+docker --version
+docker compose version
+echo ""
+
+echo "3. Docker Service Status:"
+sudo systemctl status docker --no-pager -l
+echo ""
+
+echo "4. Coolify Containers:"
+docker ps -a --filter "name=coolify" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+echo ""
+
+echo "5. Docker Images:"
+docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep -E "REPOSITORY|coolify"
+echo ""
+
+echo "6. Docker Networks:"
+docker network ls | grep -E "NETWORK|coolify"
+echo ""
+
+echo "7. Port 8000 Status:"
+sudo ss -tulpn | grep :8000 || echo "Port 8000 is free"
+echo ""
+
+echo "8. Disk Space:"
+df -h /
+echo ""
+
+echo "9. Environment File:"
+ls -lh /data/coolify/source/.env 2>/dev/null || echo ".env file not found"
+echo ""
+```
+
+求助时请附上这段诊断脚本的输出。
+
+## 恢复步骤
+
+<Tabs items={['直接重试（不重置）', '彻底重装', '手动安装']}>
+<Tab value="直接重试（不重置）">
+
+如果只想重试且不丢数据：
+
+```bash
+# Re-run the installation script
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+```
+
+该脚本设计为**幂等**的（可以安全地多次运行）。
+
+</Tab>
+<Tab value="彻底重装">
+
+如果想彻底卸载后从头再来：
+
+
+<Callout type="error" title="警告">
+
+这会删除所有 Coolify 数据，包括应用、数据库和设置！
+
+</Callout>
+
+
+按照[卸载指南](/core/instance-management/uninstallation)正确卸载 Coolify，然后重新运行安装脚本：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+```
+
+</Tab>
+<Tab value="手动安装">
+
+如果自动脚本一直失败，可以尝试[手动安装](/start-with-self-hosted#manual-installation)方法。
+
+</Tab>
+</Tabs>
+
+## 获取帮助
+
+如果按照以上所有步骤操作后仍有问题，请在我们的 [Discord 社区](https://coolify.io/discord)求助。
+
+### 需要提供的信息
+
+求助时请附上：
+
+1. **系统信息**：
+
+   ```bash
+   cat /etc/os-release
+   uname -m
+   ```
+
+2. **安装日志**（最后 100 行）：
+
+   ```bash
+   tail -100 /data/coolify/source/installation-*.log
+   tail -100 /data/coolify/source/upgrade-*.log
+   ```
+
+3. **Docker 状态**：
+
+   ```bash
+   docker ps -a --filter "name=coolify"
+   docker images | grep coolify
+   ```
+
+4. 你在日志或屏幕上看到的**所有报错信息**
+
+5. 你已经**尝试过的修复方法**
+
+这些信息能帮助社区更快地诊断你的问题！
+
+## 相关文档
+
+- [自托管安装指南](/start-with-self-hosted)
+- [手动安装](/start-with-self-hosted#manual-installation)
+- [防火墙配置](/core/infrastructure/servers/firewall)
+- [OpenSSH 配置](/core/infrastructure/servers/openssh)
+- [Docker 安装失败](/troubleshoot/installation/docker-install-failed)

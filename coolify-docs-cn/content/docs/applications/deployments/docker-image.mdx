@@ -1,0 +1,121 @@
+---
+title: Docker Image
+description: 直接部署现有的 Docker 镜像，无需连接 Git 仓库或构建源码。
+---
+
+# 部署 Docker 镜像
+
+当镜像仓库中已经存在你想部署的应用镜像时，请使用 **Docker Image**（Docker 镜像）方式。
+
+Coolify 会在部署服务器上拉取选定的镜像，套用应用的运行时配置，然后启动容器。这种部署类型既不会克隆仓库，也不会构建镜像。
+
+## 何时使用 Docker Image
+
+在以下情况下选择 Docker Image：
+
+- CI 系统已经负责构建并发布应用镜像
+- 你想部署来自 Docker Hub 或其他镜像仓库的公开镜像
+- 你手里有一个带版本的镜像，希望 Coolify 基于它创建应用容器
+- 你希望通过标签（tag）或不可变的 SHA256 摘要来部署
+
+如果希望 Coolify 按照你掌控的指令来构建镜像，请使用 [Dockerfile](/applications/builds/dockerfile)。如果一个定义需要同时管理多个服务，请使用 [Docker Compose](/applications/builds/docker-compose)。
+
+## 开始之前
+
+请确认你已准备好：
+
+- 完整的镜像名称，例如 `ghcr.io/example/api`
+- 来自镜像仓库或镜像发布方的标签或 SHA256 摘要
+- 镜像内进程监听的内部端口
+- 如果镜像是私有的，部署服务器上还要配置好镜像仓库凭据
+
+部署私有镜像前，请先参阅 [Docker 镜像仓库身份验证](/applications/builds/docker-registries#认证私有镜像仓库)。每台需要拉取该镜像的服务器都要完成认证。
+
+## 选择标签还是摘要
+
+| 参考方式 | 示例 | 适用场景 |
+| :--- | :--- | :--- |
+| Tag | `ghcr.io/example/api:1.4.0` | 镜像仓库会发布清晰可辨的发行版本。 |
+| Mutable tag | `ghcr.io/example/api:latest` | 你能接受同一标签背后的内容日后被其他镜像替换。 |
+| SHA256 digest | `ghcr.io/example/api@sha256:<64-character-digest>` | 部署必须锁定固定的镜像内容。 |
+
+<Callout type="warning" title="生产环境建议使用版本标签或摘要">
+
+如果 **Tag** 和 **SHA256 Digest** 都留空，Coolify 会使用 `latest`。可变标签在后续部署时可能解析到不同的镜像内容。
+
+如果你的镜像仓库不会改写发行标签，请使用版本标签；如果部署必须始终拉取相同的镜像内容，请使用摘要。
+
+</Callout>
+
+## 部署 Docker 镜像
+
+<Steps>
+<Step>
+
+### 选择 Docker Image
+
+打开项目和环境，选择 **+ New**（新建），再选择 **Docker Image**。
+
+</Step>
+<Step>
+
+### 填写镜像引用
+
+在 **Image Name**（镜像名称）下填写镜像仓库地址，也可以直接粘贴完整的引用，例如：
+
+```sh
+ghcr.io/example/api:1.4.0
+```
+
+如果粘贴的内容带有标签或摘要，Coolify 会自动拆分填入对应的字段。
+
+你也可以只填写仓库名，再补全 **Tag (optional)** 或 **SHA256 Digest (optional)** 其中一项，两者不可同时填写。如果使用独立的摘要字段，只需输入 64 位十六进制值，不要带 `sha256:` 前缀。
+
+选择 **Save**（保存）即可创建应用。
+
+</Step>
+<Step>
+
+### 配置运行时
+
+打开 **General**（常规）页，把 **Ports Exposes** 设置为镜像内进程监听的内部端口。Docker Image 应用默认使用端口 `80`；如果镜像监听的是其他端口，请替换它。
+
+按需添加域名、运行时环境变量、持久化存储、健康检查和资源限制。这些设置会在 Coolify 启动容器时生效，不会改动镜像本身。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**（部署），然后打开 **Deployment Logs**（部署日志）查看操作日志。
+
+确认 Coolify 拉取的是预期的镜像引用、容器正常启动，并且部署结果显示成功。再打开应用日志和已配置的域名，验证进程确实监听在预期的端口上。
+
+</Step>
+</Steps>
+
+## 更换已部署的镜像
+
+打开 **常规 > Docker Registry**（General > Docker Registry）。
+
+- **Docker Image** 存放镜像仓库与仓库名称。
+- **Docker Image Tag or Hash** 存放所选标签，或以 `sha256-<64-character-digest>` 形式保存的摘要。
+
+保存新值后选择 **Redeploy**（重新部署）。Coolify 会先拉取选定的镜像，再执行替换。
+
+重新部署同一个可变标签时，拉取的是该标签当前发布的镜像；摘要则始终指向相同的镜像内容。
+
+**Restart**（重启）同样会重新拉取已保存的镜像引用。如果应用使用的是可变标签，即使只改了运行时配置，重启也可能部署不同的镜像内容。
+
+## Docker Image 会跳过哪些环节
+
+Docker Image 类型的应用不会用到：
+
+- Git 源或部署密钥（deploy key）
+- Nixpacks、Railpack、Static、Dockerfile 或 Docker Compose 构建
+- install、build 或 start 命令检测
+- 自动 Git 部署
+
+镜像自带文件系统和默认进程。Coolify 仍会管理运行时环境变量、存储、网络、域名、健康检查、日志、部署历史、基于镜像标签创建的预览，以及所支持的替换行为。
+
+接下来可参阅 [Docker 镜像仓库](/applications/builds/docker-registries)了解私有仓库的访问方式，参阅[预览部署](/applications/deployments/preview-deployments)了解基于标签的预览，参阅[滚动更新](/applications/deployments/rolling-updates)了解替换要求。

@@ -1,0 +1,117 @@
+---
+title: Clerk
+description: 通过创建 Clerk OAuth 应用并使用其 Frontend API URL，为 Coolify 配置 Clerk SSO。
+---
+
+# 配置 Clerk SSO
+
+通过创建一个具有 profile 和 email 权限的 Clerk OAuth 应用，将 Clerk 配置为 Coolify 的身份提供商。
+
+<Callout type="warning" title="需要 Coolify v4.3.0">
+  Clerk SSO 在 Coolify v4.3.0 及以上版本可用
+</Callout>
+
+<Callout type="warning" title="示例数据">
+按照指南操作时，请替换以下值：
+
+- **Coolify 回调**：`https://coolify.shadowarcanist.com/auth/clerk/callback`
+- **Clerk Base URL**：`https://shadowarcanist.clerk.accounts.dev`
+</Callout>
+
+## 设置 Clerk SSO
+
+<Steps>
+<Step>
+
+### 创建 Clerk OAuth 应用
+
+打开将为 Coolify 用户做身份验证的 Clerk 实例对应的 Clerk Dashboard，进入 **OAuth applications**（OAuth 应用）。
+
+选择 **Add OAuth application**（添加 OAuth 应用），输入 `Coolify` 之类的名称，并勾选 `email` 和 `profile` 作用域。只有当其他客户端需要 OIDC 时才添加 `openid`；Coolify 的 Clerk 集成只请求 `email` 和 `profile`。
+
+选择 **Add**（添加）。
+
+如果 Dashboard 导航有所不同，请参阅 Clerk 的 [OAuth 应用指南](https://clerk.com/docs/guides/configure/auth-strategies/oauth/single-sign-on)。
+
+</Step>
+<Step>
+
+### 保存 Clerk 凭据
+
+从创建弹窗中复制 **Client Secret** 并妥善保管，Clerk 之后不会再显示完整密钥。
+
+在该 OAuth 应用的设置页面复制 **Client ID**。
+
+</Step>
+<Step>
+
+### 注册 Coolify 重定向地址
+
+在该 Clerk OAuth 应用的 **Redirect URIs** 下添加以下值：
+
+```txt
+https://coolify.shadowarcanist.com/auth/clerk/callback
+```
+
+保存该应用。
+
+使用 Clerk 的用户和组织管理功能，决定哪些人可以通过该 OAuth 应用进行身份验证。
+
+</Step>
+<Step>
+
+### 复制 Clerk Base URL
+
+在 Clerk Dashboard 中打开 **API Keys**，复制实例的 **Frontend API URL**。开发实例通常形如：
+
+```txt
+https://shadowarcanist.clerk.accounts.dev
+```
+
+生产实例可能使用 Clerk 自定义域名。请使用 Clerk 显示的源地址，不要附加 `/oauth/authorize`、`/oauth/token` 等路径。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Clerk
+
+打开 **设置 > 身份验证**，找到 **Clerk**。
+
+| Coolify 字段 | Clerk 取值 |
+| :--- | :--- |
+| **Client ID** | Clerk OAuth 应用的客户端 ID |
+| **Client Secret** | Clerk OAuth 应用的客户端密钥 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/clerk/callback` |
+| **Base URL** | Clerk 的 Frontend API URL |
+
+点击 **Save**（保存），然后开启 Clerk 的 **Enabled**（启用）开关。
+
+</Step>
+<Step>
+
+### 验证 Clerk 登录
+
+在无痕浏览器窗口中打开 Coolify 登录页面，选择 **Login with Clerk**（使用 Clerk 登录）。完成 Clerk 身份验证后，确认 Coolify 打开的是与 Clerk 主邮箱地址匹配的账号。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Clerk 拒绝重定向 URI">
+
+确认 Clerk OAuth 应用在 **Redirect URIs** 中列出了准确的 Coolify 公网回调地址。
+
+</Accordion>
+<Accordion title="Coolify 无法发起 Clerk 身份验证">
+
+确认 **Base URL** 是 Clerk Frontend API 的源地址，而不是 `dashboard.clerk.com`，也不是附加了 `/oauth/authorize` 的 URL。
+
+</Accordion>
+<Accordion title="Coolify 被重定向回登录页面">
+
+确认该 OAuth 应用授予了 `email` 和 `profile` 作用域、Clerk 用户拥有主邮箱地址，且 Coolify 中保存的客户端密钥是最新的。
+
+</Accordion>
+</Accordions>

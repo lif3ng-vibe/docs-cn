@@ -1,0 +1,47 @@
+---
+title: Cloudflare R2
+description: 创建存储桶、配置 API 令牌和访问凭证，把 Cloudflare R2 的 S3 兼容存储配置为 Coolify 备份目标。
+---
+
+# Cloudflare R2
+
+Cloudflare R2 是 S3 兼容存储，可用于 Coolify 备份。
+
+## 配置 Cloudflare R2
+
+<Steps>
+<Step>
+
+### 创建存储桶
+
+在 Cloudflare R2 仪表盘中创建用于存放备份文件的存储桶。
+
+</Step>
+<Step>
+
+### 创建 R2 API 令牌
+
+创建一个具有 **Object Read & Write** 权限的 R2 API 令牌。如果不想让它访问其他 R2 存储桶，请把令牌的作用域限定为备份存储桶。
+
+</Step>
+<Step>
+
+### 保存 S3 凭证
+
+Cloudflare 创建令牌后，复制确认页面上显示的 S3 客户端凭证。
+
+<Callout type="success" title="Coolify 需要的值">
+保存 **Access Key ID**、**Secret Access Key** 和 **S3 endpoint**。把存储添加到 Coolify 时这三项值缺一不可。
+</Callout>
+
+</Step>
+<Step>
+
+### 把 Cloudflare R2 添加到 Coolify
+
+在 Coolify 侧边栏打开 **S3 Storage**，选择 **New storage**，然后填写前几步得到的存储桶名称、端点和凭证。将 **Protocol** 设为 `https`，**Host** 设为 R2 S3 端点中的主机名（去掉 `https://`）。标准端点下 **Port** 和 **Path** 留空。**Region** 保持 R2 的默认值。
+
+选择 **Validate Connection & Continue**。Coolify 会通过列出存储桶中的对象来验证连接。
+
+</Step>
+</Steps>

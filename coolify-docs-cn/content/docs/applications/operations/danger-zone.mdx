@@ -1,0 +1,80 @@
+---
+title: 危险操作区
+description: 永久删除应用，并选择 Coolify 要一并移除哪些相关 Docker 资源。
+---
+
+# 删除应用
+
+删除应用会把它从 Coolify 中移除，停止其生产和预览容器，并清掉它的环境变量。删除操作无法撤销。
+
+打开应用，然后选择 **Danger Zone**（危险操作区）。
+
+## 删除之前
+
+- 备份所有包含必要数据的持久化卷。
+- 记录重建应用所需的源码、域名、环境变量、存储挂载和部署设置。
+- 如果应用必须保持可用，请在删除前先把生产流量迁走。
+- 确认你拥有删除该应用的权限，否则 Coolify 会显示 **Insufficient Permissions**（权限不足）。
+
+<Callout type="danger" title="删除卷会永久移除其中的数据">
+
+应用回滚镜像并不是持久化卷的备份。继续之前，请确认卷的备份保存在受影响卷之外的地方。
+
+删除应用时，其计划任务的卷备份配置以及这些计划生成的备份档案，也会一并从本地和 S3 存储中删除。无论你在删除时勾选了哪些可选项，这一步都会发生。
+
+</Callout>
+
+## 删除应用
+
+<Steps>
+<Step>
+
+### 查看删除操作
+
+选择 **Delete**（删除），并在确认弹窗中查看各项操作。Coolify 默认勾选全部四个可选项：
+
+| 操作 | 结果 |
+| :--- | :--- |
+| **Permanently delete all volumes associated with this resource.**（永久删除该资源关联的所有卷） | 删除该应用的 Docker 卷以及对应的 Coolify 存储记录。 |
+| **Permanently delete all non-predefined networks associated with this resource.**（永久删除该资源关联的所有非预定义网络） | 删除未被定义为共享网络的应用网络。 |
+| **Permanently delete all configuration files from the server.**（永久删除服务器上的所有配置文件） | 从应用所在服务器删除 Coolify 生成的配置文件。 |
+| **Run Docker Cleanup (remove unused images and builder cache).**（运行 Docker 清理，移除未使用的镜像和构建缓存） | 删除完成后在应用服务器上启动 Docker 清理。 |
+
+即使取消勾选所有可选项，应用记录、环境变量、文件挂载记录、计划卷备份配置及其档案、应用容器仍会被移除。
+
+</Step>
+<Step>
+
+### 确认应用名称
+
+输入确认弹窗中显示的应用名称，必须完全一致。如果实例级两步确认设置被禁用，Coolify 会跳过这一步。
+
+</Step>
+<Step>
+
+### 确认密码
+
+输入你的 Coolify 账号密码，然后确认删除。没有密码的 OAuth 账号，以及实例级两步确认设置被禁用时，Coolify 会跳过密码确认。
+
+随后 Coolify 会返回项目环境，删除任务会在后台移除选定的 Docker 资源。
+
+</Step>
+</Steps>
+
+## 核实删除结果
+
+请确认：
+
+1. 应用不再出现在项目环境中。
+2. 其生产和预览容器不再出现在服务器上。
+3. 需要继续使用的域名现已指向替代应用。
+
+Coolify 不会管理你 DNS 服务商处的 DNS 记录。过时的记录需要另行删除或更新。
+
+## 重建已删除的应用
+
+Coolify 无法从 Danger Zone 恢复已删除的应用记录。请创建一个新应用，配置源码和环境变量，挂载新的或已恢复的存储，然后部署。
+
+如需从删除前的备份恢复数据，请使用[持久化存储备份](/core/persistent-storage/storage-mounts/backups)。
+
+当服务器不可达时，删除资源会警告 Docker 资源仍留在服务器上，之后会通知团队。等服务器恢复访问后，再清理这些资源。

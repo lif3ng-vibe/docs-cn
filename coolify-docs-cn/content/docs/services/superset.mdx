@@ -1,0 +1,66 @@
+---
+title: "Superset"
+description: "Open-source data visualization and exploration platform."
+og:
+  description: "Deploy Superset on Coolify for modern data exploration, interactive dashboards, SQL editor, and business intelligence visualization."
+category: "Analytics"
+icon: "/docs-cn/coolify/images/services/superset-logo.svg"
+---
+
+# Superset
+
+<ZoomImage src="/docs-cn/coolify/images/services/superset-logo.svg" alt="Superset logo" />
+
+## What is Superset?
+
+Superset is a modern data exploration and data visualization platform. Superset can replace or augment proprietary business intelligence tools for many teams. Superset integrates well with a variety of data sources.
+
+## Variants
+
+- **Superset with PostgreSQL:** Includes PostgreSQL and Redis.
+
+## Unofficial Docker Image
+
+Superset [does not support the use of Docker Compose in production](https://superset.apache.org/admin-docs/installation/docker-compose/). Coolify's Superset template uses a [third-party, unofficial Docker image created by amancevice](https://github.com/amancevice/docker-superset).
+
+## Usage
+
+### Initial Setup
+
+After deploying the template, you will need to initialise the database and create your admin user. This can be done as follows:
+
+1. Open a terminal session to the Superset Docker container.
+
+2. Run one of the commands below, noting the `-` symbol:
+
+   ```bash
+   # Basic initialisation
+   superset-init
+
+   # Alternatively, to also load demo data, use
+   superset-demo
+   ```
+
+   The source code for these scripts is available [here](https://github.com/amancevice/docker-superset/tree/main/bin).
+
+3. Follow the prompts to complete the setup.
+
+You can find the video instructions for this process in [Coolify's GitHub repository's pull request #4891](https://github.com/coollabsio/coolify/pull/4891).
+
+### Connecting to Other Databases on the Coolify Network
+
+To connect to databases hosted on Coolify but external to the Superset service template, enable [Connect To Predefined Network](/applications/builds/docker-compose#connect-to-predefined-networks). Use the database's internal hostname and port for the connection.
+
+For network isolation, you can [create a separate destination](/core/networking/destinations/create) and deploy Superset and the databases it needs to that destination. You still need to enable **Connect To Predefined Network** for Superset: service stacks use their own network by default. Containers on the shared network use generated names, so verify the database hostname rather than assuming a generic name such as `postgres`.
+
+### Configuring Superset
+
+Please refer to the [official documentation](https://superset.apache.org/docs/configuration/configuring-superset) for how you can tweak your `superset_config.py`.
+
+This Python configuration file can be edited from the service's **Persistent Storages** page. Read [File Mounts](/core/persistent-storage/storage-mounts/file-mounts) for the file editing and size limits.
+
+## Links
+
+- [Official Website](https://superset.apache.org)
+- [GitHub](https://github.com/apache/superset)
+- [Unofficial Docker Image](https://github.com/amancevice/docker-superset)

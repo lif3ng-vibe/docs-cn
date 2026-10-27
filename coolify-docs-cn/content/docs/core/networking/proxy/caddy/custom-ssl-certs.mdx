@@ -1,0 +1,94 @@
+---
+title: 自定义 SSL 证书
+description: 把你的证书和私钥挂载进 Coolify 的 Caddy 代理，并配置资源的 TLS 标签。
+---
+
+# 自定义 SSL 证书
+
+Caddy 通常会为 HTTPS 域名自动获取证书。当你的组织或其他证书服务商替你管理 TLS 证书时，可以使用自定义证书。
+
+Caddy 支持 `tls <certificate-file> <key-file>`，参见它的 [TLS 指令示例](https://caddyserver.com/docs/caddyfile/directives/tls#examples)。Coolify 使用 [caddy-docker-proxy](https://github.com/lucaslorentz/caddy-docker-proxy#labels-to-caddyfile-conversion)，因此你需要把等效的标签添加到资源已有的 Caddy 路由上。
+
+## 准备证书文件
+
+你需要：
+
+- 一份 PEM 编码的证书，包含所有必需的中间证书，其使用者备用名称（SAN）覆盖目标域名
+- 与之匹配的未加密私钥
+- 在每台由 Caddy 代理服务该域名的服务器上拥有 shell 访问权限
+
+在每台服务器上创建证书目录：
+
+```bash
+sudo install -d -m 700 /data/coolify/proxy/caddy/certs
+```
+
+把文件从你的电脑复制到服务器，替换其中的路径和服务器地址：
+
+```bash
+scp /path/to/example.com.crt root@<server-address>:/data/coolify/proxy/caddy/certs/example.com.crt
+scp /path/to/example.com.key root@<server-address>:/data/coolify/proxy/caddy/certs/example.com.key
+```
+
+限制对私钥的访问：
+
+```bash
+sudo chmod 600 /data/coolify/proxy/caddy/certs/example.com.key
+```
+
+<Callout type="warning" title="保护好私钥">
+请通过加密连接传输私钥。绝不把私钥提交到 Git，也不要把内容粘贴到 Coolify 面板。如果你以非 root 用户运行 Caddy，需确保该用户能读取文件，同时又不会把私钥变成公开可读。
+</Callout>
+
+## 将文件挂载进 Caddy
+
+打开 **Servers > your server > Proxy > Configuration**。把下面的挂载添加到 `caddy` 服务已有的 `volumes` 列表中，其余配置保持不变：
+
+```yaml
+services:
+  caddy:
+    volumes:
+      # Keep the existing mounts.
+      - /data/coolify/proxy/caddy/certs:/certs:ro
+```
+
+选择 **Save changes**，再选择 **Restart Proxy** 以应用新的挂载。Caddy 将在代理容器内的 `/certs/example.com.crt` 和 `/certs/example.com.key` 读取这些文件。
+
+## 配置资源的证书
+
+在添加证书标签之前，先为资源配置一个 HTTPS 域名，例如 `https://example.com`。
+
+对于标准应用，打开 **General > Container labels**，将 **Label management** 设为 **Managed manually (edit labels yourself)**。保留已生成的路由标签，并添加：
+
+```ini
+caddy_0.tls=/certs/example.com.crt /certs/example.com.key
+```
+
+使用现有 HTTPS 域名标签的前缀。例如，如果是 `caddy_1=https://example.com`，就应使用 `caddy_1.tls`。若该路由已有 `tls` 值，直接替换它，不要再添加第二个。
+
+对于 Docker Compose 应用，把同样的标签添加到接收流量的服务上：
+
+```yaml
+services:
+  app:
+    labels:
+      # Keep the existing routing labels.
+      - 'caddy_0.tls=/certs/example.com.crt /certs/example.com.key'
+```
+
+保存并重新部署资源。该标签会在已有的 site 块中生成如下 Caddyfile 指令：
+
+```yaml
+https://example.com {
+    tls /certs/example.com.crt /certs/example.com.key
+    # Existing routing directives remain here.
+}
+```
+
+这是生成配置的示意。请把标签配置在已有路由上，以保留 Coolify 的上游路由。
+
+## 验证与续期
+
+打开 HTTPS 域名，检查其证书颁发者、覆盖的主机名和有效期。如果 Caddy 无法读取文件或持续提供另一张证书，请检查 **Servers > your server > Proxy > Logs**。
+
+以这种方式提供的证书，Caddy 不会自动续期。请在到期前替换证书和密钥文件，然后重启代理以加载它们。来自私有 CA 的证书还要求客户端信任该 CA。

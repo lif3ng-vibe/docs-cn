@@ -1,0 +1,30 @@
+---
+title: 树莓派崩溃
+description: 通过升级到 4GB 以上内存或在 2GB 型号上限制 Docker 内存占用（SD 卡较慢时尤需如此），解决 Coolify 中树莓派崩溃的问题。
+---
+
+# 树莓派崩溃
+如果你使用只有 2GB 内存的树莓派，即使开启了 swap 空间，也可能遇到系统崩溃。
+
+这多半是树莓派常用的 SD 卡速度较慢、不够稳定导致的。
+
+## 解决方案
+
+<Tabs items={['升级内存', '限制 Docker 内存']}>
+<Tab value="升级内存">
+
+升级到 4GB 以上内存的树莓派，稳定性更好。
+
+</Tab>
+<Tab value="限制 Docker 内存">
+
+或者，在 `/etc/docker/daemon.json` 文件中添加以下配置来限制 Docker 的内存占用：
+
+```json
+{
+"memory": "1.8g"
+}
+```
+
+</Tab>
+</Tabs>

@@ -1,0 +1,70 @@
+---
+title: 动态配置
+description: 通过 Coolify 添加基于文件的 Traefik 路由、服务、中间件和 TLS 设置。
+---
+
+# 动态配置
+
+Traefik 把启动配置与动态路由配置分开。Coolify 把基于文件的动态配置存放在所选服务器的 `/data/coolify/proxy/dynamic/` 下，并挂载到代理容器内的 `/traefik/dynamic/`。
+
+Traefik 会监视该目录，因此合法的文件更改无需重启代理即可生效。
+
+## 添加配置文件
+
+<Steps>
+<Step>
+
+### 打开 Dynamic Configurations
+
+打开 **Servers > your server > Proxy > Dynamic Configurations**。
+
+</Step>
+<Step>
+
+### 创建文件
+
+选择 **Add**，输入文件名和合法的 Traefik YAML，然后保存。
+
+如果文件名没有 `.yaml` 或 `.yml` 扩展名，Coolify 会补上 `.yaml`。文件名可以包含字母、数字、句点、连字符和下划线，但不能包含路径分隔符，也不能以句点开头。
+
+</Step>
+<Step>
+
+### 验证 Traefik 已加载
+
+刷新 **Dynamic Configurations** 页面，确认文件已经出现。然后检查文件所定义的行为是否生效，并查看 **Servers > your server > Proxy > Logs** 是否有解析或提供者错误。
+
+</Step>
+</Steps>
+
+下面的示例定义了一个可复用的响应头中间件：
+
+```yaml
+http:
+  middlewares:
+    security-headers:
+      headers:
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: no-referrer
+```
+
+在 Traefik 路由中以 `security-headers@file` 引用它。
+
+<Callout type="info" title="Coolify 生成的文件是只读的">
+Coolify 会显示 `coolify.yaml`、`default_redirect_503.yaml` 等生成文件，但不提供编辑或删除它们的控件。请修改对应的 Coolify 设置，而不是替换生成文件。
+</Callout>
+
+## 编辑或删除自定义文件
+
+在 **Dynamic Configurations** 中打开自定义文件，修改其 YAML 并保存。只有先移除对该文件所定义的中间件、服务或 TLS 选项的所有路由引用之后，才能删除文件。
+
+YAML 语法错误或引用的对象缺失，会让受影响的路由不可用，即使 Traefik 本身仍在运行。更改失败时，恢复上一个可正常工作的文件内容，并查看代理日志。
+
+## 何时需要重启代理
+
+动态文件会被监视，通常不需要重启。当你修改主文件 `/data/coolify/proxy/docker-compose.yml` 时才需要重启代理，包括 Traefik 命令行参数、环境变量、端口、卷或代理镜像的更改。
+
+<Callout type="warning" title="在 Coolify 中编辑主配置">
+一旦代理配置保存在 Coolify 中，对 `/data/coolify/proxy/docker-compose.yml` 的直接修改就不会同步回 UI。请在 **Servers > your server > Proxy > Configuration** 下修改并保存。通过 Coolify 启动或重启代理时，会把已保存的配置写入磁盘，可能覆盖只存在于磁盘上的修改。
+</Callout>

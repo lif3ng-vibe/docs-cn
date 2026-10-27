@@ -1,0 +1,19 @@
+---
+title: Phoenix
+description: 使用 Elixir/Erlang、Nixpacks、环境变量与数据库集成，在 Coolify 上部署 Phoenix 框架应用。
+---
+
+# Phoenix
+
+Phoenix 是一个用 Elixir/Erlang 编写的高效 Web 框架，速度与可维护性兼得。
+
+## 要求
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`
+- 将 `MIX_ENV` 设为 `prod`
+  - 它应是 `Build time`（构建时）环境变量
+- 将 `SECRET_KEY_BASE` 设为一个随机字符串（https://hexdocs.pm/phoenix/deployment.html#handling-of-your-application-secrets）
+  - 它应是 `Build time` 环境变量
+- 将 `DATABASE_URL` 设为你的数据库连接字符串
+  - 它应是 `Build time` 环境变量
+- 将 `Ports Exposes` 设为 `4000`（默认值）

@@ -1,0 +1,21 @@
+---
+title: 概览
+description: 为公开与私有应用仓库选择合适的 GitHub 来源方式。
+---
+
+# GitHub
+
+Coolify 可以通过公开 HTTPS URL、仓库部署密钥或 GitHub App 部署 GitHub 仓库。
+
+| 方式 | 适用场景 | 指南 |
+| :--- | :--- | :--- |
+| 公开仓库 | 无需身份验证的公开源码。 | [部署公开 GitHub 仓库](/applications/sources/github/public-repository) |
+| 部署密钥 | 单个私有仓库，或无法安装 App 的组织。 | [使用 GitHub 部署密钥](/applications/sources/github/deploy-key) |
+| GitHub App | 选定的公开或私有仓库，集成 push 与拉取请求事件。 | [设置 GitHub App](/applications/sources/github/app) |
+| GitHub Actions | 在 Coolify 部署前先在 GitHub 中构建并发布镜像。 | [使用 GitHub Actions 构建并部署](/applications/sources/github/actions) |
+
+想要最完整的集成，请使用 [GitHub App](/applications/sources/github/app)。它的仓库安装配置决定了 Coolify 能列出并克隆哪些仓库。
+
+继续阅读 [GitHub 自动部署](/applications/sources/github/auto-deploy)了解推送触发的部署，或阅读 [GitHub 预览部署](/applications/sources/github/preview-deploy)了解拉取请求场景。
+
+GitHub Container Registry 与仓库访问相互独立。当部署需要拉取或推送 `ghcr.io` 镜像时，请阅读 [Docker 镜像仓库](/applications/builds/docker-registries)。

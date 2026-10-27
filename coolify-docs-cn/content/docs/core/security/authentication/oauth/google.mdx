@@ -1,0 +1,94 @@
+---
+title: Google
+description: 创建 Web OAuth 客户端并配置 Coolify 回调 URL,为 Coolify 配置 Google OAuth 登录。
+---
+
+# 配置 Google OAuth
+
+为 Web 应用创建一个 Google OAuth 客户端,让 Google 能把用户的 OpenID 资料和电子邮箱地址返回给 Coolify。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **Authorized redirect URI:** `https://coolify.shadowarcanist.com/auth/google/callback`
+- **Hosted domain:** `shadowarcanist.com`(可选)
+</Callout>
+
+## 设置 Google OAuth
+
+<Steps>
+<Step>
+
+### 选择 Google Cloud 项目
+
+打开 [Google Auth Platform](https://console.cloud.google.com/auth/overview),选择或创建将拥有该 OAuth 客户端的 Google Cloud 项目。
+
+如果 Google 要求你配置同意屏幕(consent screen),请完成 **Branding**,选择合适的 **Audience**,并添加联系信息。对于处于测试状态的外部应用,把每一位要测试 Coolify 的人都添加为测试用户。
+
+</Step>
+<Step>
+
+### 创建 Web OAuth 客户端
+
+打开 **Clients**,选择 **Create client**,应用类型选择 **Web application**。
+
+输入一个名称,例如 `Coolify`。在 **Authorized redirect URIs** 下添加:
+
+```txt
+https://coolify.shadowarcanist.com/auth/google/callback
+```
+
+创建该客户端。
+
+</Step>
+<Step>
+
+### 保存 Google 凭据
+
+复制生成的 **Client ID** 和 **Client secret**。你也可以下载客户端 JSON,但 Coolify 只需要这两个值。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Google
+
+打开 **Settings > Authentication**,找到 **Google**。
+
+| Coolify 字段 | Google 值 |
+| :--- | :--- |
+| **Client ID** | Google Web 客户端的 client ID。 |
+| **Client Secret** | Google 的 client secret。 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/google/callback` |
+| **Hosted domain** | 可选的允许 Google Workspace 域,例如 `shadowarcanist.com`。使用 `*` 表示任意 Workspace 域。 |
+
+选择 **Save**,然后为 Google 打开 **Enabled**。
+
+<Callout type="warning" title="Hosted domain 会限制登录">
+Coolify 会强制执行所配置的 Workspace 域。`*` 允许任意 Google Workspace 账户,但会拒绝个人 Google 账户。如果不需要 Workspace 限制,请把该字段留空。
+</Callout>
+
+</Step>
+<Step>
+
+### 验证 Google 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with Google**。如果被要求,完成同意流程,然后确认 Coolify 打开了与 Google 邮箱地址匹配的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Google 报告 `redirect_uri_mismatch`">
+
+在 Google Auth Platform 中打开该 Web 客户端,对比 **Authorized redirect URIs** 与 Coolify 的 **Redirect URI**。Google 要求完全一致。
+
+</Accordion>
+<Accordion title="Google 提示该应用对该用户不可用">
+
+如果同意屏幕处于测试状态,请把该 Google 账户添加到 **Audience > Test users**。对于内部应用,确认该账户属于所选的 Google Workspace 组织。
+
+</Accordion>
+</Accordions>

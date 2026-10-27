@@ -1,0 +1,108 @@
+---
+title: 添加成员
+description: 通过电子邮件或生成的邀请链接,把一个人邀请到 Coolify 团队。
+---
+
+import { Link, Mailbox } from 'reicon-react';
+
+# 添加成员
+
+把一个人邀请到当前团队,并选择其接受邀请后将获得的角色。
+
+## 邀请之前
+
+你必须是当前团队的 **Owner** 或 **Admin**。
+
+为对方选择所需的最低角色:
+
+- **Member**:对团队资源只读
+- **Admin**:管理团队设置、邀请以及 Admin 或 Member 层级的成员
+- **Owner**:对角色拥有完全控制权,包括其他 Owner
+
+只有 Owner 才能邀请另一位 Owner。角色对比参阅[角色与权限](/core/team/roles-and-permissions)。
+
+从 Coolify 发送邀请需要启用事务邮件。如果邮件未配置,你仍然可以生成链接并自行发送给对方。
+
+---
+
+## 邀请成员
+
+<Steps>
+<Step>
+
+### 打开当前团队的 Members 页面
+
+1. 确认目标团队处于激活状态。
+2. 在 Coolify 侧边栏选择 **Team**。
+3. 选择 **Members**。
+
+</Step>
+<Step>
+
+### 输入电子邮箱地址
+
+在 **Invite a member** 下输入对方的电子邮箱地址。Coolify 会把邀请邮箱地址统一为小写,并用该地址判定谁可以接受邀请。
+
+如果该地址已属于本团队,Coolify 会提示此人已是成员。如果 Coolify 提示该地址已有待处理的邀请,你必须等该邀请被接受、由创建它的团队撤销或自然过期,才能再创建新的邀请。
+
+</Step>
+<Step>
+
+### 选择角色
+
+在 **Role** 中选择 **Member**、**Admin** 或 **Owner**。
+
+Admin 可以邀请 Member 和 Admin。Owner 可以邀请全部三种角色。
+
+</Step>
+</Steps>
+
+---
+
+## 发送或复制邀请
+
+<Tabs id="member-invitation-delivery" items={['Email', 'Invitation link']}>
+<Tab value="Email" icon={Mailbox}>
+
+### 通过电子邮件发送邀请
+
+选择 **Send email**。Coolify 会使用实例的事务邮件配置,把邀请发送到输入的地址。
+
+</Tab>
+
+<Tab value="Invitation link" icon={Link}>
+
+### 分享邀请链接
+
+选择 **Generate link**,邀请会出现在 **Pending Invitations** 下。在 HTTPS 仪表盘上,选择 **Copy Invitation Link** 并直接发给对方;在 HTTP 仪表盘上,请手动复制显示的链接。
+
+<Callout type="warning" title="链接只发给受邀人">
+邀请与输入的电子邮箱地址绑定,并授予所选角色。在邀请被接受或撤销之前,请把链接当作敏感信息对待。
+</Callout>
+
+</Tab>
+</Tabs>
+
+当该邮箱地址还没有 Coolify 账户时,Coolify 会在邀请流程中为该地址准备一个账户。受邀人使用链接登录、加入团队,并按提示设置自己的密码。
+
+已有的 Coolify 用户必须用受邀邮箱地址登录,然后在邀请页面上接受。仅登录不再自动接受邀请。待处理的邀请也会显示在仪表盘上。
+
+---
+
+## 验证邀请
+
+在对方接受之前,确认 **Pending Invitations** 显示的电子邮箱地址、送达方式和角色都正确。
+
+对方接受之后,确认:
+
+1. 该邀请不再出现在 **Pending Invitations** 下
+2. 此人出现在成员列表中
+3. **Role** 列显示你所选的角色
+
+---
+
+## 如果邀请未被接受
+
+邀请链接的有效期为三天。链接过期后,请创建新的邀请。
+
+要在链接被接受之前使其失效,点击待处理邀请旁边的 **Revoke**。被撤销的链接不能再用于加入团队。

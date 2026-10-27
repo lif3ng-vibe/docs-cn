@@ -1,0 +1,74 @@
+name: Enforce PR Standards
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const actor = context.actor;
+            const prUser = pr.user.login;
+            const prNumber = pr.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const currentBase = pr.base.ref;
+            const body = pr.body?.trim() || '';
+
+            const maintainers = ['andrasbacsai', 'peaklabs-dev', 'ShadowArcanist', 'Cinzya', 'adiologydev'];
+
+            // Skip validation for maintainer PRs or events triggered by a maintainer
+            if (maintainers.includes(prUser) || maintainers.includes(actor)) {
+              console.log(`Maintainer PR or event detected (author: ${prUser}, actor: ${actor}). Skipping validation.`);
+              return;
+            }
+
+            // If PR description is empty, close it with a comment
+            if (body === '') {
+              console.log(`PR #${prNumber} has empty description. Closing...`);
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `Hi @${prUser},\n\nThis PR was automatically closed because it has no description.\n\nYou can either fix this PR or open a new one. If you'd like this PR to be reopened, feel free to ping "ShadowArcanist" (preferred) or another maintainer.`
+              });
+
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: prNumber,
+                state: 'closed'
+              });
+              return;
+            }
+
+            // Change base branch to `next` if targeting wrong branch
+            if (currentBase !== 'next') {
+              console.log(`Changing base branch from ${currentBase} to next for PR #${prNumber}`);
+
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: prNumber,
+                base: 'next'
+              });
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `Hi @${prUser},\n\nThe base branch was automatically changed to \`next\`.\n\nAll contributors must target the \`next\` branch.\n\nA maintainer will review your PR when they have some free time`
+              });
+            }

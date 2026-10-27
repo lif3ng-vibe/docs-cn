@@ -1,0 +1,57 @@
+---
+title: 常规
+description: 配置数据库镜像、凭据、引擎设置、端口和公开访问。
+---
+
+# 常规设置
+
+打开数据库资源，然后选择 **General**（常规）。该页面包含通用的资源设置，以及针对所选数据库引擎的专属控件。
+
+## 通用设置
+
+| 设置 | 控制内容 |
+| :--- | :--- |
+| **Name** | 在 Coolify 全局显示的数据库名称。 |
+| **Description** | 关于数据库或其负责人的可选说明。 |
+| **Image** | 运行数据库所用的 Docker 镜像与标签。 |
+| **Credentials and initial database** | 引擎入口脚本和 Coolify 连接信息所用的账号与数据库值。标签随引擎而异。 |
+| **Port mappings** | Docker 主机到容器的端口映射，例如 `15432:5432`。 |
+| **Public access > Access** | 选择 **Private**（私有）或 **Public through TCP proxy**（经 TCP 代理公开）。设置 **Public port**（公开端口）后，公开选项会为外部客户端启动一个独立的 TCP 代理。 |
+| **Public port** | 公开 TCP 代理使用的服务器端口。 |
+| **Proxy timeout** | 公开代理保持空闲连接的时长。默认为 `3600`，最小为 `1`。 |
+| **Custom engine configuration** | 挂载或传给所选数据库镜像的可选配置文本。 |
+
+连接字段带有引擎名称，例如 **Postgres URL (internal)** 和 **Postgres URL (public)**。配置公开访问后，公开 URL 才会可用。
+
+Coolify 默认不公开数据库端点。同一目标网络上的应用请优先使用 **Internal URL**。开启公开访问前，先阅读[网络访问](/databases#网络访问)。
+
+## 引擎专属设置
+
+可用控件随所选引擎变化：
+
+| 数据库引擎 | 附加设置 |
+| :--- | :--- |
+| [PostgreSQL](/databases/postgresql) | 初始数据库参数、主机认证方式、自定义 PostgreSQL 配置和初始化脚本。 |
+| [MySQL](/databases/mysql) | root 与普通用户凭据、初始数据库和自定义 MySQL 配置。 |
+| [MariaDB](/databases/mariadb) | root 与普通用户凭据、初始数据库和自定义 MariaDB 配置。 |
+| [MongoDB](/databases/mongodb) | 初始 root 凭据、初始数据库和自定义 MongoDB 配置。 |
+| [Redis](/databases/redis) | 用户名、密码和自定义 Redis 配置。 |
+| [Dragonfly](/databases/dragonfly) | 密码和受支持的自定义 Docker 选项。 |
+| [KeyDB](/databases/keydb) | 密码和自定义 KeyDB 配置。 |
+| [ClickHouse](/databases/clickhouse) | 初始管理员凭据和原生数据库端口。 |
+
+## 保持凭据同步
+
+Coolify 使用保存在 **General** 中的值来构造连接 URL 并执行数据库自动化。如果你直接在数据库内部修改了用户名、密码或初始数据库，也要同步更新 Coolify 中对应的值。
+
+Redis、Dragonfly 和 KeyDB 通过容器配置或环境变量应用认证。修改这些值时请遵循对应引擎的指南，确保运行中的数据库与 Coolify 使用相同的凭据。
+
+## 应用更改
+
+选择 **Save changes**（保存更改）；当 Coolify 标记配置已变更时，重启或重新部署数据库。修改连接信息后，请确认数据库成功启动，并从资源中复制更新后的 **Internal URL**。
+
+<Callout type="warning" title="没有迁移方案就不要更换生产镜像">
+
+更换 Docker 镜像可能改变数据库大版本或可用配置。部署新镜像前，请先取得经验证的备份，确认引擎的升级流程和持久化数据路径。
+
+</Callout>

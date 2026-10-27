@@ -1,0 +1,52 @@
+---
+title: MCP 的工作原理
+description: 了解 Coolify 如何对 MCP 客户端进行身份验证、限定数据范围，以及如何暴露工具、资源与提示。
+---
+
+# MCP 的工作原理
+
+Coolify 在 `/mcp` 暴露一个 MCP 服务器。支持 MCP 的客户端向该端点发送携带 Coolify API 令牌的 Streamable HTTP 请求。
+
+## 连接流程
+
+1. 为 Coolify 实例启用 MCP。
+2. 保持令牌所属团队的 MCP 处于启用状态。
+3. 为该团队创建一个 API 令牌。
+4. 使用端点与 Bearer 令牌配置客户端。
+5. 客户端协商 MCP 能力，随后调用工具、读取资源或使用提示。
+
+## 身份验证与作用域
+
+客户端将完整令牌作为 Bearer 凭据发送：
+
+```http
+Authorization: Bearer 67|abcthisisa123dummytoken
+```
+
+令牌绑定到一个 Coolify 团队，MCP 只会返回该团队拥有的资源。当一个客户端需要访问多个团队时，请为每个团队各创建一个令牌。
+
+必须先启用实例的 MCP 设置，`/mcp` 才会响应。团队所有者可以为单个团队禁用 MCP。实例层面被禁用时返回 `404`；团队层面被禁用时返回 `403`。
+
+## MCP 原语
+
+<Tabs items={['工具', '资源', '提示']}>
+<Tab value="工具">
+
+工具（Tools）执行 Coolify 的查询与操作。读取类工具需要 `read` 权限，部署与生命周期类工具需要 `deploy` 权限。[MCP 能力](/mcp/capabilities/overview)按任务对工具做了分组。
+
+</Tab>
+<Tab value="资源">
+
+资源（Resources）是 MCP 客户端可以直接请求的只读地址。Coolify 目前暴露了基础设施概览与应用摘要两类资源。
+
+</Tab>
+<Tab value="提示">
+
+提示（Prompts）为客户端提供引导式工作流。Coolify 内置了用于排查应用问题以及解释部署失败原因的提示。
+
+</Tab>
+</Tabs>
+
+## 响应边界
+
+Coolify 返回带 `data` 的结构化响应，并可能附带 `_pagination`、`_actions` 或失败详情。环境变量值、配置快照和完整部署日志不会被返回。日志摘要有数量上限，脱敏为尽力而为。

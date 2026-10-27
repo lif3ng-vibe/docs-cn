@@ -1,0 +1,66 @@
+---
+title: S3 存储概览
+description: 使用 Amazon S3、Cloudflare R2、Neon Object Storage、Supabase Storage 及其他受支持的提供商，为 Coolify 备份配置 S3 兼容存储。
+---
+
+# S3 存储概览
+
+Coolify 连接 S3 兼容存储来存放备份文件。你先在存储提供商处创建存储桶，然后把它作为 S3 存储添加到 Coolify。
+
+## 添加 S3 存储之前的准备
+
+先在提供商处创建存储桶，并收集以下连接信息：
+
+- 端点（Endpoint）
+- 存储桶名称
+- 区域（Region）
+- 访问密钥（Access Key）
+- 秘密密钥（Secret Key）
+
+Coolify 使用 MinIO 的 [`mc` 客户端](https://min.io/docs/minio/linux/reference/minio-mc.html)传输备份文件。验证存储时，Coolify 会向配置的存储桶发送一次 `ListObjectsV2` 请求。
+
+<Callout type="info" title="先创建存储桶再验证">
+在 Coolify 中添加并验证存储之前，存储桶必须已经存在。
+</Callout>
+
+## 选择存储提供商
+
+以下指南涵盖各提供商的完整配置流程，以及需要在 Coolify 中填写的值：
+
+| 提供商 | 提供商侧配置 | 指南 |
+| :--- | :--- | :--- |
+| Amazon S3 | S3 存储桶、IAM 策略、IAM 用户和访问密钥 | [配置 Amazon S3](/core/s3-storage/aws) |
+| Cloudflare R2 | R2 存储桶和 Object Read & Write API 令牌 | [配置 Cloudflare R2](/core/s3-storage/r2) |
+| Neon Object Storage | 分支存储桶、S3 端点和访问密钥对 | [配置 Neon Object Storage](/core/s3-storage/neon) |
+| Supabase Storage | Storage 存储桶、S3 端点和访问密钥对 | [配置 Supabase Storage](/core/s3-storage/supabase) |
+
+### 其他受支持的提供商
+
+Coolify 还支持以下 S3 兼容存储提供商：
+
+- DigitalOcean Spaces
+- MinIO
+- Backblaze B2
+- Scaleway Object Storage
+- Hetzner S3 Storage
+- Wasabi Hot Cloud Storage
+- Vultr
+- CloudPe Object Storage
+- IDrive e2
+
+其他提供商也可能可以正常使用。如果你成功接入了其他提供商，请告知 Coolify 团队。
+
+## 把存储添加到 Coolify
+
+准备好存储桶和凭证之后：
+
+1. 在 Coolify 侧边栏打开 **S3 Storage**。
+2. 选择 **New storage**。
+3. 填写 **Name**、可选的 **Description**、**Bucket**、**Region**、**Access Key** 和 **Secret Key**。端点需拆分为 **Protocol**、**Host**、可选的 **Port** 和可选的 **Path**。存储桶名称与端点分开填写。
+4. 选择 **Validate Connection & Continue**。
+
+验证通过后，Coolify 会打开该存储的详情页面。此后配置备份时即可选择这个 S3 存储。
+
+## 恢复不可用的存储
+
+Coolify 每小时会重新测试一次被标记为不可用的 S3 存储。连接恢复后，该存储会自动变为可用。你也可以在修正凭证或网络连通性问题后手动验证。

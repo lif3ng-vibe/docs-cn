@@ -1,0 +1,226 @@
+---
+title: "Node.js 多核扩展"
+description: "使用 PM2 集群模式或 SO_REUSEPORT 把 Node.js、Bun 或 Deno 应用扩展到所有可用 CPU 核心，并附 Coolify 的 Dockerfile 与 Nixpacks 示例。"
+---
+
+# Node.js 多核扩展
+
+## 问题所在
+
+JavaScript 运行时的事件循环**在每个进程中只运行在单个线程上**。一个 `node app.js`（或 `bun`/`deno`）进程无论宿主机性能多强，都只能吃满**一个 CPU 核心**——无论是处理 HTTP 请求、消费队列、跑定时任务，还是做 CPU 密集型计算。
+
+这一点适用于所有主流 JS 运行时：
+
+| 运行时 | 引擎 | 单线程事件循环 |
+| --- | --- | --- |
+| Node.js | V8 | 是 |
+| Bun | JavaScriptCore | 是 |
+| Deno | V8 | 是 |
+
+这是运行时自身的特性，而不是平台的限制——裸金属、Docker、Kubernetes 或任何 PaaS 上都一样。
+
+
+<Callout type="info" title="Coolify 容器没有 CPU 上限">
+
+默认情况下，Coolify 不限制容器的 CPU 使用，宿主机的所有核心都可用——你只需要让运行时去使用它们。
+
+</Callout>
+
+
+## 解决方案
+
+在容器内运行**多个 worker 进程**。每种运行时都有自己的推荐机制：
+
+| 运行时 | 方案 | 代码改动 | 说明 |
+| --- | --- | --- | --- |
+| Node.js | **PM2 集群模式** | 无需改动 | 最简单；直接包装现有的启动命令 |
+| Node.js | `node:cluster` 模块 | 应用层改动 | 内置能力，无额外依赖 |
+| Bun | `Bun.serve({ reusePort: true })` | 应用内一行改动 | 由内核通过 `SO_REUSEPORT` 负载均衡 |
+| Deno | `Deno.serve({ reusePort: true })` | 应用内一行改动 | 与 Bun 使用相同的内核机制 |
+
+本指南介绍 **PM2 集群模式**（Node.js）和 **`reusePort`**（Bun、Deno）两种方案，并给出 [Dockerfile](/applications/builds/dockerfile) 与 [Nixpacks](/applications/builds/nixpacks/overview) 构建包的示例。
+
+## 技术背景
+
+- V8（以及 JavaScriptCore）的事件循环是**每个进程**单线程的。
+- libuv 的线程池（Node 中默认 4 个线程）会分担一部分 I/O 工作，但你的 JavaScript 代码仍然只跑在一个核心上。
+- 要用上多个核心，要么在容器内运行多个进程，要么使用支持多进程监听同一端口的运行时（Bun 和 Deno 通过 `reusePort` 实现）。
+
+## Dockerfile 示例（PM2 集群模式）
+
+适用于使用 [Dockerfile 构建包](/applications/builds/dockerfile)构建的应用。
+
+```dockerfile
+FROM node:lts-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev && npm install -g pm2
+
+COPY . .
+
+EXPOSE 3000
+CMD ["pm2-runtime", "-i", "max", "dist/index.js"]
+```
+
+要点：
+
+- `pm2-runtime -i max` 会为每个可用 CPU 核心派生一个 worker，并让 PM2 保持在前台运行（Docker 要求 PID 1 不能退出，因此必须如此）。
+- 把 `dist/index.js` 替换成你的实际入口文件。
+- 在平台的网络设置中暴露应用监听的端口（这里是 `3000`）——在 Coolify 中对应 **Ports Exposes**（暴露端口）字段。
+
+## Nixpacks 示例
+
+适用于使用 [Nixpacks 构建包](/applications/builds/nixpacks/overview)构建的应用。
+
+<Tabs id="nixpacks-pm2" items={['环境变量', 'nixpacks.toml']}>
+<Tab value="环境变量">
+
+在应用上设置以下环境变量（Coolify 中：打开你的应用 → **Environment Variables**）：
+
+```
+NIXPACKS_START_CMD=pm2-runtime -i max dist/index.js
+```
+
+然后把 `pm2` 加入 `package.json` 的 `dependencies` 部分，让 Nixpacks 在构建时安装它。
+
+</Tab>
+<Tab value="nixpacks.toml">
+
+```toml
+[phases.setup]
+nixPkgs = ["nodejs", "pm2"]
+
+[start]
+cmd = "pm2-runtime -i max dist/index.js"
+```
+
+这种方式把多核配置纳入版本控制，本地与远程构建都能生效。
+
+</Tab>
+</Tabs>
+
+## Bun 替代方案（一行代码实现多核）
+
+Bun 的 HTTP 服务器可以用 `SO_REUSEPORT` 在多个进程间绑定同一端口。运行 N 个 Bun 进程，内核会自动在它们之间负载均衡传入的连接。
+
+### 应用代码
+
+```js
+Bun.serve({
+  port: 3000,
+  reusePort: true,
+  fetch(req) {
+    return new Response("Hello from Bun");
+  },
+});
+```
+
+### 构建配置
+
+<Tabs id="js-multicore-build" items={['Dockerfile', 'nixpacks.toml']}>
+<Tab value="Dockerfile">
+
+```dockerfile
+FROM oven/bun:alpine
+
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --production
+
+COPY . .
+
+EXPOSE 3000
+# Spawn one Bun process per available core.
+CMD ["sh", "-c", "for i in $(seq 1 $(nproc)); do bun run server.js & done; wait"]
+```
+
+</Tab>
+<Tab value="nixpacks.toml">
+
+```toml
+[phases.setup]
+nixPkgs = ["bun"]
+
+[start]
+cmd = "sh -c 'for i in $(seq 1 $(nproc)); do bun run server.js & done; wait'"
+```
+
+</Tab>
+</Tabs>
+
+注意事项：
+
+- `reusePort: true` 需要 Linux 内核 ≥ 3.9（所有现代发行版都满足）。
+- 每个 Bun 进程相互独立——没有主进程/worker 之间的 IPC，共享状态请使用 Redis 或数据库。
+- 比 PM2 更简单，但没有内置的单 worker 自动重启；可配合 Docker 的 `restart: unless-stopped`（Coolify 的默认值）在父 shell 崩溃后恢复。
+
+## Deno 替代方案（一行代码实现多核）
+
+Deno 的 `Deno.serve` 同样接受 `reusePort` 参数，因此也可以启动 N 个进程绑定同一端口，由内核分发连接。
+
+### 应用代码
+
+```ts
+Deno.serve({ port: 3000, reusePort: true }, (_req) => {
+  return new Response("Hello from Deno");
+});
+```
+
+### 构建配置
+
+<Tabs id="js-multicore-build" items={['Dockerfile', 'nixpacks.toml']}>
+<Tab value="Dockerfile">
+
+```dockerfile
+FROM denoland/deno:alpine
+
+WORKDIR /app
+COPY . .
+RUN deno cache server.ts
+
+EXPOSE 3000
+# Spawn one Deno process per available core.
+CMD ["sh", "-c", "for i in $(seq 1 $(nproc)); do deno run --allow-net server.ts & done; wait"]
+```
+
+</Tab>
+<Tab value="nixpacks.toml">
+
+```toml
+[phases.setup]
+nixPkgs = ["deno"]
+
+[start]
+cmd = "sh -c 'for i in $(seq 1 $(nproc)); do deno run --allow-net server.ts & done; wait'"
+```
+
+</Tab>
+</Tabs>
+
+与 Bun 相同的限制同样适用：进程间没有 IPC，也没有内置的单 worker 重启。
+
+## 注意事项
+
+
+<Callout type="warn" title="进程内状态无法随扩展而扩展">
+
+各个 worker **不会**共享进程内内存。会话、内存缓存、限流计数器、WebSocket 连接映射等都必须迁移到 Redis 或其他外部存储。
+
+</Callout>
+
+
+- **WebSocket**：连接会被分散到多个 worker 上。请在代理层使用粘性会话（sticky session），或把发布/订阅迁移到 Redis，让任意 worker 都能投递消息。
+- **优雅关闭**：每个 worker 都要正确响应 `SIGTERM`。PM2 会自动处理。
+- **内存**：大致按线性增长——N 个 worker 约等于 N 乘以单进程 RSS。请据此选择服务器规格。
+- **日志输出**：PM2 会合并各 worker 的日志；Bun 的 `reusePort` 方案中每个进程独立写日志，可能相互交错。建议使用结构化 JSON 日志。
+
+## 验证多核是否生效
+
+部署完成后，SSH 到运行容器的主机，检查进程情况：
+
+```bash
+docker exec -it <container> top
+```
+
+你应该能看到多个 `node`、`bun` 或 `deno` 进程。对应用施加负载（例如用 `autocannon -c 200 http://<host>:3000/`），确认 `htop`/`top` 显示负载分散在宿主机的所有核心上，而不是集中在某一个核心。

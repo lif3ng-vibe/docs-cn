@@ -1,0 +1,12 @@
+{
+  "title": "配置",
+  "pages": [
+    "overview",
+    "general",
+    "advanced",
+    "environment-variables",
+    "persistent-storage",
+    "health-checks",
+    "resource-limits"
+  ]
+}

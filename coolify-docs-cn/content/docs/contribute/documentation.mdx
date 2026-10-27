@@ -1,0 +1,213 @@
+---
+title: 参与文档贡献
+description: 本指南介绍如何参与 Coolify 文档贡献，涵盖仓库设置、基于 Bun 的本地开发、图片规范与 pull request 工作流。
+---
+
+import {
+  ArrowsRight,
+  BranchUp,
+  BrowserTerminal,
+  Clipboard,
+  DocumentText2,
+  Image,
+  MessageQuestion2,
+  Package,
+  Rocket,
+  StarSparkle,
+  Warning22,
+} from 'reicon-react';
+
+# Coolify 文档贡献指南
+
+<CoolCallout icon={Warning22} title="外部贡献暂时暂停" type="danger">
+
+由于大量低质量的 pull request 垃圾提交，外部贡献暂时停止。恢复外部贡献**尚无明确时间表**。
+
+在外部贡献重新开放之前，请先不要提交外部 pull request。以下工作流程仍可供参考。
+
+</CoolCallout>
+
+为 Coolify 文档提交更新和修复，使用与其他 Coolify 贡献相同的工作流和评审标准。
+
+<CoolDocsPage>
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+Fork [coollabsio/coolify-docs](https://github.com/coollabsio/coolify-docs)，基于 `next` 分支工作，用 Bun 在本地运行文档站，然后向 `next` 发起聚焦的 pull request。
+
+</CoolCallout>
+
+---
+
+<CoolFlow
+  id="repository-workflow"
+  icon={BranchUp}
+  title="仓库工作流"
+  description="文档仓库沿用与 Coolify 相同的分支模型：生产内容在 main 上，新工作先进入 next。"
+  steps={[
+    '把文档仓库 fork 到你的 GitHub 账号',
+    '从 `next` 分支克隆你的 fork',
+    '为本次文档改动创建一个小分支',
+    '向 `next` 发起 pull request',
+  ]}
+  list={[
+    '不要向 `main` 发起 pull request。',
+    '让每个分支聚焦于一项文档修复、一篇指南或一次清理。',
+    '改动结构或组件模式之前，先参考相邻页面的做法。',
+  ]}
+/>
+
+---
+
+<CoolCallout icon={BrowserTerminal} title="本地开发">
+
+在仓库根目录安装依赖并启动文档站。
+
+```bash
+bun install
+bun run dev
+```
+
+开发服务器启动于 [http://localhost:3000/docs/](http://localhost:3000/docs/)。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="包管理器提示" type="warn">
+
+本项目使用的包管理器是 Bun。如果你在本地使用其他工具，请不要提交其 lockfile 或配置文件。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="写作与结构">
+
+- 使用清晰简单的英文写作，照顾可能以英语为外语的读者。
+- 把指南拆成小步骤，让刚上手自托管的人无需猜测就能照做。
+- 当截图有助于说明界面、设置或预期结果时，请附上截图。
+- 在创造新东西之前，先以现有文档组件和相邻页面为范式。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Image} title="图片与截图" contentClassName="!p-0">
+<CoolPanel>
+
+截图应当让步骤更易跟着操作，而不是用来装饰页面。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+| 规则 | 要求 |
+| :--- | :--- |
+| 格式 | 文档截图与插图使用 .webp 格式。 |
+| 存放位置 | 图片文件放在 `public/images/...`，然后在 MDX 中以 `/images/...` 引用。 |
+| 组件 | 向文档添加图片时使用可缩放图片组件。 |
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+文档截图请使用以下组件：
+
+```tsx
+<ZoomableImage src="/images/path-to-the-image.webp" alt="Describe the image" />
+```
+
+示例：
+
+```tsx
+<ZoomableImage src="/images/applications/domain.webp" alt="Application domain settings" />
+```
+
+</CoolPanel>
+</CoolCallout>
+
+---
+
+<CoolFlow
+  id="pull-request-flow"
+  icon={Clipboard}
+  title="提交你的贡献"
+  description="让评审更轻松：说明改了什么、为什么改，以及你是如何验证的。"
+  steps={[
+    '提交并将更改推送到你的 fork',
+    '向 `coollabsio/coolify-docs` 发起 pull request',
+    '将目标分支设为 `next`',
+    '描述本次更新，必要时附上截图',
+  ]}
+  list={[
+    'pull request 一律面向 `next` 分支。',
+    '说明哪个页面或流程发生了变化，以及原因。',
+    '当改动影响可见布局或用户操作步骤时，请附截图。',
+    '不要提交 Bun 以外其他工具生成的 lockfile 或包管理器文件。',
+    '一个 pull request 只聚焦一项文档改动。',
+  ]}
+/>
+
+---
+
+<CoolCallout icon={Rocket} title="文档现状说明">
+
+文档正在积极重写，以获得更好的结构与可读性。提升准确性、消除困惑或遵循现有页面模式的贡献尤其受欢迎。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={MessageQuestion2} title="常见问题" contentClassName="!p-0">
+<CoolAccordions>
+<Accordion title="可以直接修复错别字吗？">
+
+可以。小而明显的文档修复可以直接以 pull request 形式提交，无需事先讨论。
+
+</Accordion>
+<Accordion title="应该面向 main 还是 next？">
+
+面向 next。main 分支代表生产环境，next 是开发分支。
+
+</Accordion>
+<Accordion title="本地可以用 npm、pnpm 或 yarn 吗？">
+
+本地可以使用其他包管理器，但不要把其生成的文件包含在提交里。
+
+</Accordion>
+<Accordion title="应该在哪里提问？">
+
+仓库相关的问题请开 issue，或在 Discord 的 contribute 频道提问。
+
+</Accordion>
+</CoolAccordions>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="开发指南">
+<CoolActionCardGrid>
+<CoolActionCard
+  href="/contribute/coolify"
+  icon={StarSparkle}
+  title="Coolify 核心"
+  type="secondary"
+  description="为 Coolify 主仓库搭建本地开发环境并准备代码贡献。"
+  bullets={['本地开发栈搭建', '开发工具', '重置步骤']}
+  btn-cta="查看核心指南"
+/>
+<CoolActionCard
+  href="/contribute/service"
+  icon={Package}
+  title="服务模板"
+  type="secondary"
+  description="按照约定的结构与验证方式添加一键服务模板。"
+  bullets={['模板结构', '元数据规则', '测试清单']}
+  btn-cta="查看服务指南"
+/>
+</CoolActionCardGrid>
+</CoolCallout>
+
+
+## 未发布功能的 API schema
+
+API 参考读取 `config/openapi.json`。抓取脚本默认使用上游 Coolify 的 `main` 分支；如果要为未发布的特性撰写文档，请把 `COOLIFY_OPENAPI_URL` 设为对应 release 版本的原始 schema URL。刷新 schema 后，请检查生成的端点路由和重定向。网络故障时会保留本地 spec，因此提交 API 相关改动前，请确认其中包含预期的端点。
+
+</CoolDocsPage>

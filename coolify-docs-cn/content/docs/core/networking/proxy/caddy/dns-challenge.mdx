@@ -1,0 +1,147 @@
+---
+title: DNS 质询
+description: 构建带 DNS 提供商模块的 Caddy，并在 Coolify 中使用基于 DNS 的 ACME 验证。
+---
+
+# DNS 质询（DNS challenge）
+
+Caddy 默认的 HTTP 质询要求 `80` 端口可从公网访问。当你需要泛域名证书，或无法在证书验证期间暴露 `80` 端口时，请使用 DNS 质询。
+
+Caddy 的 DNS 提供商是编译进 Caddy 二进制文件的模块。Coolify 默认的 `lucaslorentz/caddy-docker-proxy:2.13-alpine` 镜像不包含这些模块，因此你需要从代理的 Docker Compose 配置构建一个兼容镜像。
+
+## 准备条件
+
+- 一个由 [Caddy DNS 提供商](https://github.com/orgs/caddy-dns/repositories)托管的域名
+- 拥有创建和删除 DNS 记录权限的服务商凭据
+
+<Callout type="warning" title="先在非生产服务器上构建和测试">
+更换代理镜像会重建对外提供全部公网路由的组件。模块构建失败或 Caddy 选项无效，可能导致所有路由不可用。
+</Callout>
+
+## 添加支持 DNS 的 Caddy 构建
+
+打开 **Servers > your server > Proxy > Configuration**。在 `caddy` 服务中，删除现有的 `image` 行，并添加下面对应服务商的 `build`、凭据和 `caddy.acme_dns` 标签。保留已有的 networks、ports、volumes 和 Coolify 标签。
+
+每个示例都用红色标出原有的 image 行，用绿色标出替换的行。
+
+<Tabs items={['Cloudflare', 'Hetzner', 'AWS Route 53']}>
+<Tab value="Cloudflare">
+
+```yaml
+services:
+  caddy:
+    image: 'lucaslorentz/caddy-docker-proxy:2.13-alpine' # [!code --][!code focus]
+    build: # [!code ++:9][!code focus:9]
+      dockerfile_inline: |
+        FROM caddy:2.11-builder AS builder
+        RUN xcaddy build \
+          --with github.com/lucaslorentz/caddy-docker-proxy/v2@v2.8.11 \
+          --with github.com/caddy-dns/cloudflare@v0.2.4
+        FROM caddy:2.11-alpine
+        COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+        CMD ["caddy", "docker-proxy"]
+    environment:
+      - CADDY_DOCKER_POLLING_INTERVAL=5s
+      - CADDY_DOCKER_CADDYFILE_PATH=/dynamic/Caddyfile
+      - CF_API_TOKEN=<cloudflare-api-token> # [!code ++][!code focus]
+    labels:
+      - coolify.managed=true
+      - coolify.proxy=true
+      - 'caddy.acme_dns=cloudflare {env.CF_API_TOKEN}' # [!code ++][!code focus]
+```
+
+</Tab>
+<Tab value="Hetzner">
+
+```yaml
+services:
+  caddy:
+    image: 'lucaslorentz/caddy-docker-proxy:2.13-alpine' # [!code --][!code focus]
+    build: # [!code ++:9][!code focus:9]
+      dockerfile_inline: |
+        FROM caddy:2.11-builder AS builder
+        RUN xcaddy build \
+          --with github.com/lucaslorentz/caddy-docker-proxy/v2@v2.8.11 \
+          --with github.com/caddy-dns/hetzner/v2@v2.0.0
+        FROM caddy:2.11-alpine
+        COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+        CMD ["caddy", "docker-proxy"]
+    environment:
+      - CADDY_DOCKER_POLLING_INTERVAL=5s
+      - CADDY_DOCKER_CADDYFILE_PATH=/dynamic/Caddyfile
+      - HETZNER_API_TOKEN=<hetzner-api-token> # [!code ++][!code focus]
+    labels:
+      - coolify.managed=true
+      - coolify.proxy=true
+      - 'caddy.acme_dns=hetzner {env.HETZNER_API_TOKEN}' # [!code ++][!code focus]
+```
+
+</Tab>
+<Tab value="AWS Route 53">
+
+```yaml
+services:
+  caddy:
+    image: 'lucaslorentz/caddy-docker-proxy:2.13-alpine' # [!code --][!code focus]
+    build: # [!code ++:9][!code focus:9]
+      dockerfile_inline: |
+        FROM caddy:2.11-builder AS builder
+        RUN xcaddy build \
+          --with github.com/lucaslorentz/caddy-docker-proxy/v2@v2.8.11 \
+          --with github.com/caddy-dns/route53@v1.6.2
+        FROM caddy:2.11-alpine
+        COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+        CMD ["caddy", "docker-proxy"]
+    environment:
+      - CADDY_DOCKER_POLLING_INTERVAL=5s
+      - CADDY_DOCKER_CADDYFILE_PATH=/dynamic/Caddyfile
+      - AWS_ACCESS_KEY_ID=<access-key-id> # [!code ++:3][!code focus:3]
+      - AWS_SECRET_ACCESS_KEY=<secret-access-key>
+      - AWS_REGION=<region>
+    labels:
+      - coolify.managed=true
+      - coolify.proxy=true
+      - caddy.acme_dns=route53 # [!code ++][!code focus]
+```
+
+</Tab>
+</Tabs>
+
+要使用其他提供商，请使用其仓库中的模块路径和配置。重启代理之前，先确认模块版本支持所选的 Caddy 版本。
+
+## 重启并验证
+
+保存代理配置，然后选择 **Restart Proxy**。首次重启会构建自定义镜像，耗时可能比普通重启更长。
+
+重新部署一个带 HTTPS 域名的资源，打开该域名并检查其证书。镜像构建、模块、DNS 或 ACME 方面的错误，请查看 **Servers > your server > Proxy > Logs**。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="Caddy 报告未知的 DNS 提供商">
+
+模块没有编译进正在运行的二进制文件。确认 `xcaddy build` 命令包含正确的提供商模块，然后重新构建并重启代理。
+
+</Accordion>
+
+<Accordion title="DNS 验证超时">
+
+确认令牌可以编辑正确的 DNS 区域，并且 `_acme-challenge` TXT 记录能够公开可见。如有需要，按照提供商模块的文档设置传播等待。
+
+</Accordion>
+
+<Accordion title="Let's Encrypt 速率限制阻碍测试">
+
+测试期间添加 staging CA 标签：
+
+```yaml
+labels: # [!code ++:2][!code focus:2]
+  - caddy.acme_ca=https://acme-staging-v02.api.letsencrypt.org/directory
+```
+
+验证成功后移除该标签。staging 证书不受浏览器信任。
+
+</Accordion>
+
+</Accordions>

@@ -1,0 +1,117 @@
+---
+title: "角色与权限"
+description: 对比 Owner、Admin 和 Member 在团队管理、资源、服务器、凭据和 API 令牌上的访问差异。
+---
+
+# 角色与权限
+
+Coolify 为每个人在其加入的每个团队中分配一个角色。一个人可以是一个团队的 Owner,同时是另一个团队的 Member 或 Admin。
+
+在 Coolify v4.x 中,**Member** 是面向大多数团队资源的只读角色。**Admin** 和 **Owner** 可以操作资源并管理团队设置。Owner 还额外掌握谁可以成为或继续保持 Owner 的控制权。
+
+## 角色对比
+
+### 团队与成员
+
+| 权限 | Owner | Admin | Member |
+| :--- | :---: | :---: | :---: |
+| 查看团队和成员列表 | Yes | Yes | Yes |
+| 更改团队名称和描述 | Yes | Yes | No |
+| 邀请 Member 或 Admin | Yes | Yes | No |
+| 邀请 Owner | Yes | No | No |
+| 更改或移除 Member 或 Admin | Yes | Yes | No |
+| 更改或移除 Owner | Yes | No | No |
+| 删除符合条件的团队 | Yes | Yes | No |
+
+成员管理控制作用于其他人。Coolify 不会在 **Members** 页面上显示更改自己角色或移除自己的操作。
+
+### 项目与资源
+
+| 权限 | Owner | Admin | Member |
+| :--- | :---: | :---: | :---: |
+| 查看项目、环境、应用、数据库和服务 | Yes | Yes | Yes |
+| 创建、更新或删除项目和环境 | Yes | Yes | No |
+| 创建、更新或删除应用、数据库和服务 | Yes | Yes | No |
+| 部署应用和服务 | Yes | Yes | No |
+| 启动、停止、重启或以其他方式操作资源 | Yes | Yes | No |
+| 管理部署、环境变量、存储、计划任务、标签、webhook 和备份 | Yes | Yes | No |
+| 打开资源终端 | Yes | Yes | No |
+
+Member 访问让一个人可以查看团队资源,但不能更改或部署它们。某个页面对 Member 可能仍然可见,但其编辑和操作控件不可用。
+
+### 服务器与目标
+
+| 权限 | Owner | Admin | Member |
+| :--- | :---: | :---: | :---: |
+| 查看团队服务器和目标(Destination) | Yes | Yes | Yes |
+| 添加、更新或移除服务器和目标 | Yes | Yes | No |
+| 管理代理和服务器证书颁发机构 | Yes | Yes | No |
+| 查看或管理服务器安全与 Sentinel | Yes | Yes | No |
+| 使用 Web Terminal | Yes | Yes | No |
+
+终端命令运行在你的基础设施上。因此,Coolify 把全局 [Web Terminal](/core/infrastructure/servers/web-terminal) 和资源终端都限制为 Owner 和 Admin 可用。
+
+### 团队配置与凭据
+
+| 权限 | Owner | Admin | Member |
+| :--- | :---: | :---: | :---: |
+| 查看共享变量条目 | Yes | Yes | Yes |
+| 创建、更新或删除共享变量 | Yes | Yes | No |
+| 查看通知设置 | Yes | Yes | Yes |
+| 配置通知或发送测试通知 | Yes | Yes | No |
+| 查看团队 S3 存储、Git 源和私钥条目 | Yes | Yes | Yes |
+| 创建、更新或删除 S3 存储、Git 源和私钥 | Yes | Yes | No |
+| 查看或管理 cloud-init 脚本和云提供商令牌 | Yes | Yes | No |
+
+查看凭据条目并不意味着 Coolify 会显示每一个存储的机密。即使周边资源可见,机密字段仍可保持隐藏。
+
+### API 令牌
+
+当实例启用了 API 访问时,每种角色都可以创建和吊销自己的令牌。
+
+| 权限 | Owner | Admin | Member |
+| :--- | :---: | :---: | :---: |
+| 创建和吊销个人 API 令牌 | Yes | Yes | Yes |
+| 创建具有 `read` 权限的令牌 | Yes | Yes | Yes |
+| 授予 `read:sensitive`、`write`、`write:sensitive`、`deploy` 或 `root` 权限 | Yes | Yes | No |
+
+API 令牌属于创建者本人,并限定在当前团队范围内。Member 可以创建只读令牌,但不能授予其敏感、写入、部署或 root 权限。可用令牌权限参见 [API 权限](/api/permissions)。
+
+---
+
+## 仅 Owner 可用的控制
+
+Owner 是最高的团队角色。只有 Owner 可以:
+
+- 邀请另一位 Owner
+- 把 Admin 或 Member 提升为 Owner
+- 把另一位 Owner 更改为 Admin 或 Member
+- 把另一位 Owner 移出团队
+
+多人可以同时拥有 Owner 角色。请始终保持至少一位可信的 Owner 可用,避免团队依赖单一账户。
+
+---
+
+## 实例管理
+
+团队角色与实例管理是分离的。在自托管的 Coolify 实例上,只有默认团队的 Owner 或 Admin 才能查看或更新实例级设置并访问系统资源。
+
+在其他团队拥有 Owner 或 Admin 角色,并不意味着此人就是实例管理员。该角色只作用于那个团队的资源。
+
+---
+
+## 选择角色
+
+- 当此人只需要查看团队资源及其当前状态时,选择 **Member**。
+- 当此人需要部署和操作资源、管理服务器与凭据、更改团队设置,以及管理 Member 或 Admin 时,选择 **Admin**。
+- 只有当此人还需要授予、更改或移除 Owner 权限时,才选择 **Owner**。
+
+使用能满足其所需访问的最低角色。你可以在 **Teams > Members** 中更新其他人的角色。角色变更规则与验证步骤遵循[管理成员](/core/team/members/manage-members)。
+
+团队管理员和所有者可以查看[审计日志](/core/team/audit-log)事件。Member 无法读取团队审计日志。
+
+## 仪表盘中的敏感内容
+
+没有资源更新权限的用户无法查看容器日志、计划任务的命令/输出、Compose 或文件挂载内容、硬编码的 Compose 环境变量值、代理配置、服务器共享值,以及受保护凭据(例如 basic-auth 密码、log drain 密钥和 Sentinel 令牌)。敏感 API 响应还有额外的令牌权限检查,参见 [API 权限](/api/permissions)。
+
+团队 Danger Zone 仅对其所有者可见。Impersonation(身份模拟)和团队管理视图需要实例管理员。私钥、Git 源、S3 存储和集成令牌等凭据必须归属于拥有该资源的团队。

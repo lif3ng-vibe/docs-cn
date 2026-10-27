@@ -1,0 +1,83 @@
+---
+title: IP 白名单
+description: 在自托管 Coolify 实例上启用 API，并按来源 IP 地址或网段限制经过认证的请求。
+---
+
+# API IP 白名单
+
+自托管 Coolify 的管理员可以为实例启用 API 访问，并将经过认证的 API 端点限制到特定的来源地址。Coolify Cloud 处理客户请求时不使用这些自托管控件。
+
+## API 访问控制
+
+打开 **Settings > Advanced**（设置 > 高级）。在 **API and MCP** 下，页面包含：
+
+- **API access**（API 访问）：允许或阻止经过认证的 REST API 请求
+- **Allowed API IPs**（允许的 API IP）：接受精确 IP 地址和 CIDR 表示法的网段
+
+**API access** 关闭时，即使 Bearer 令牌有效，受保护的 API 请求也会返回 `403 Forbidden`。
+
+---
+
+## 按 IP 地址限制 API 访问
+
+**Allowed API IPs** 是实例级的白名单。当该字段包含一条或多条记录时，只要请求的来源 IP 不匹配某个精确地址或所列网段之一，Coolify 就会拒绝该请求。
+
+修改白名单之前，请先确认每个 API 客户端到达 Coolify 时使用的来源地址。如果客户端通过 NAT 连接，请添加其公网出口 IP 地址，而不是私有地址。
+
+1. 打开 **Settings > Advanced**（设置 > 高级）。
+2. 在 **API and MCP** 下，将 **API access** 设为 **Enabled**（启用）。
+3. 在 **Allowed API IPs** 中输入精确的 IPv4 或 IPv6 地址，或 CIDR 表示法的网段。
+4. 多条记录之间用逗号分隔。
+5. 选择 **Save changes**（保存更改）。
+
+例如：
+
+```txt
+203.0.113.10,198.51.100.0/24,2001:db8::/32
+```
+
+这个例子允许一个 IPv4 地址、一个 IPv4 网段和一个 IPv6 网段。
+
+| 记录类型 | 接受的值 |
+| :--- | :--- |
+| 精确地址 | 有效的 IPv4 或 IPv6 地址 |
+| IPv4 网段 | `/0` 到 `/32` 的 CIDR 前缀 |
+| IPv6 网段 | `/0` 到 `/128` 的 CIDR 前缀 |
+| 多条记录 | 逗号分隔的地址或网段 |
+
+将该字段留空或设为 `0.0.0.0` 会允许来自任意来源地址的 API 请求。对出口地址稳定的生产集成，请使用收紧的列表。
+
+---
+
+## 从 Coolify Docker 网络调用 API
+
+当 API 客户端运行在接入 `coolify` Docker 网络的容器中时，可以直接向 Coolify 容器发送请求：
+
+```txt
+http://coolify:8080/api/v1
+```
+
+Coolify 看到的请求来源是客户端的容器地址，而不是其公网出口地址。Docker 在这种连接上可能使用 IPv6 地址，因此请把分配给 `coolify` 网络的 IPv4 和 IPv6 子网都加入白名单。
+
+在 Coolify 服务器上列出已配置的子网：
+
+```sh
+docker network inspect coolify \
+  --format '{{range .IPAM.Config}}{{println .Subnet}}{{end}}'
+```
+
+将该命令返回的所有 IPv4 和 IPv6 子网以逗号分隔加入 **Allowed API IPs**。
+
+<Callout type="warning" title="仅在必要时放行整个网段">
+放行整个 Docker 子网意味着该子网上的每个容器都能通过 IP 检查。API 令牌及其权限仍然生效，但你应该只把受信任的容器接入 `coolify` 网络。
+</Callout>
+
+---
+
+## 验证白名单
+
+保存后，从每个被允许的客户端发起一次经过认证的请求，确认每个请求都能成功到达端点。
+
+来自白名单之外地址的请求会返回 `403 Forbidden`，消息为 `You are not allowed to access the API.` 完整响应参见 [IP 白名单拒绝](/api/errors#ip-白名单拒绝)。
+
+如果某个应当被允许的客户端被拒绝，请确认它连接 Coolify 时使用的公网来源 IP 地址，将该确切地址或其所需网段加入白名单，保存设置后重试。

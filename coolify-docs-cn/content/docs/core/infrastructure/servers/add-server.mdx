@@ -1,0 +1,175 @@
+---
+title: 添加服务器
+description: 通过 SSH 把现有 Linux 服务器接入 Coolify，并为部署做好准备。
+---
+
+# 手动添加服务器
+
+如果已经有一台 Linux 服务器，可以使用 **IP address or domain**（IP 地址或域名）的服务器接入流程。Coolify 会通过 SSH 连接它，并准备好在其上运行应用、数据库和服务。
+
+如果想在 Coolify 控制台中直接购买并创建服务器，请参阅[创建云服务器](/core/infrastructure/servers/provision-cloud-server)。
+
+## 准备工作
+
+开始之前，请确保具备：
+
+- 一台拥有 Coolify 可访问的 IP 地址或主机名的 Linux 服务器
+- 服务器的控制台或密码访问方式
+- 开放的 SSH 端口（通常是 `22`）
+- Coolify 控制台的访问权限
+
+本指南使用 `root` 账号。如果想用其他账号连接，请先完成[非 root 用户](/core/infrastructure/servers/non-root-user)的设置。
+
+如果服务器没有公网 IP，或你不想把 SSH 暴露到公网，可以通过 [Cloudflare Tunnel 的服务器 SSH 访问](/integrations/networking/cloudflare/tunnels/server-ssh)接入。
+
+<Callout type="warning" title="尽量使用全新的服务器">
+服务器验证过程可能安装 Docker 并重启 Docker 服务，已有容器可能会暂时不可用。
+</Callout>
+
+---
+
+## 创建并授权 SSH 密钥
+
+Coolify 必须持有一把私钥，其公钥已在服务器账号上授权。
+
+<Steps>
+<Step>
+
+### 在 Coolify 中创建密钥
+
+1. 打开 **Keys & Tokens > Private Keys**。
+2. 打开 **New private key**（新建私钥），选择 **Generate ED25519**（生成 ED25519）。
+3. 点击生成的密钥旁的 **Edit**（编辑）图标。
+4. 起一个易于辨认的名称，选择 **Save changes**（保存更改）。
+5. 复制完整的 **Public key**（公钥）。
+
+不要添加 passphrase。Coolify 必须能在无交互提示的情况下使用私钥。
+
+</Step>
+<Step>
+
+### 在服务器上授权公钥
+
+连接到服务器：
+
+```sh
+ssh root@<server-ip>
+```
+
+如果 SSH 使用 `22` 以外的端口，运行：
+
+```sh
+ssh -p <ssh-port> root@<server-ip>
+```
+
+创建 SSH 目录并打开 authorized_keys 文件：
+
+```sh
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+nano ~/.ssh/authorized_keys
+```
+
+在新的一行粘贴完整公钥，保存文件，然后运行：
+
+```sh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+</Step>
+</Steps>
+
+也可以在服务器表单中 **Private key**（私钥）旁的 **New key**（新建密钥）菜单里生成或导入私钥。验证之前，对应的公钥必须已存在于服务器用户的 `~/.ssh/authorized_keys` 文件中。
+
+---
+
+## 连接服务器
+
+<Steps>
+<Step>
+
+### 打开服务器表单
+
+1. 在 Coolify 侧边栏选择 **Servers**（服务器）。
+2. 选择 **New server**（新建服务器）。
+3. 选择 **IP address or domain**（IP 地址或域名）。
+
+</Step>
+<Step>
+
+### 填写连接信息
+
+| 字段 | 填写内容 |
+| :--- | :--- |
+| **Name** | 一个你能认出的名称，例如 `production-server`。 |
+| **Description** | 可选填写服务器用途说明。 |
+| **IP address or domain** | 可访问的 IP 地址或主机名，不要带 `http://` 或 `https://`。 |
+| **Port** | SSH 端口，通常是 `22`。 |
+| **User** | 本指南填 `root`。 |
+| **Private key** | 选择你已在服务器上授权其公钥的那把密钥。 |
+| **Server role** | 根据服务器用途选择 **Deployments and builds**（部署与构建）、**Deployments only**（仅部署）或 **Builds only**（仅构建）。 |
+
+展开 **Advanced settings**（高级设置）可以看到 **User**、**Port** 和 **Server role**。既构建又运行资源的服务器选 **Deployments and builds**；想把构建留在其他服务器上就选 **Deployments only**；专用构建服务器选 **Builds only**。参见[服务器角色](/core/infrastructure/servers/build-servers#服务器角色)。
+
+选择 **Continue**（继续）。Coolify 会创建服务器记录并打开其 **General**（通用）页面。
+
+</Step>
+<Step>
+
+### 验证服务器
+
+选择 **Validate connection**（验证连接）打开验证面板。验证成功后，该操作会变为 **Revalidate connection**（重新验证连接）。
+
+验证过程中，Coolify 会：
+
+1. 测试 SSH 连接
+2. 检查操作系统和所需工具
+3. 安装或校验 Docker Engine 和 Docker Compose
+4. 记录服务器信息
+5. 启动 Coolify 代理
+
+在全新服务器上，这个过程可能需要几分钟。
+
+</Step>
+<Step>
+
+### 确认服务器就绪
+
+等到 **General** 页面显示服务器可达且已通过验证。此后即可将该服务器选为部署目标。
+
+如果验证报告 SSH 错误：
+
+- 核对 IP 地址或域名、端口和用户
+- 确认所选私钥与该用户 `~/.ssh/authorized_keys` 文件中的公钥匹配
+- 确认 SSH 端口已在[防火墙](/core/infrastructure/servers/firewall)中放行
+- 按照 [OpenSSH](/core/infrastructure/servers/openssh) 检查 SSH 服务
+
+</Step>
+</Steps>
+
+---
+
+## 设置泛域名
+
+验证完成后，可以在 **General** 下设置 **Wildcard Domain**（泛域名）。
+
+例如设置 `https://example.com` 后，Coolify 会为新资源建议 `https://<application-id>.example.com` 这样的域名。使用生成的域名之前，先创建一条指向该服务器的 `*.example.com` DNS 记录。
+
+该设置不会修改既有资源的域名、不会更新 DNS，也不会改变 Coolify 连接服务器的方式。
+
+---
+
+## Oracle Cloud（免费 ARM）注意事项
+
+无论是作为 Coolify 宿主机还是远程服务器，Oracle Cloud 免费 ARM 服务器都需要额外几步才能被 Coolify 使用。
+
+**使用 root 用户**。Oracle 镜像默认禁用 root 登录，启用方法：
+
+1. 切换到 root：`sudo su -`
+2. 在 `/etc/ssh/sshd_config` 中把 `PermitRootLogin` 设为 `without-password`。
+3. 重启 SSH：`service sshd restart`
+4. 把 [Coolify 中配置的 SSH 密钥](#创建并授权-ssh-密钥)的公钥添加到 `/root/.ssh/authorized_keys`。
+
+**或者使用非 root 用户**。具备免密 `sudo` 的非 root 用户也可行（实验性）。把 Coolify SSH 密钥加入该用户的 `~/.ssh/authorized_keys`，然后按[非 root 用户](/core/infrastructure/servers/non-root-user)操作。
+
+**放行防火墙**。Oracle ARM 服务器默认启用防火墙。如果在这台服务器上自托管 Coolify，请放行所需端口——参见[防火墙](/core/infrastructure/servers/firewall)。

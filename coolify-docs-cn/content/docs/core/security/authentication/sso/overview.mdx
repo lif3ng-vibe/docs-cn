@@ -1,0 +1,48 @@
+---
+title: 概览
+description: 使用 OpenID Connect、Authentik、Clerk 或 Zitadel 配置 Coolify 的集中式登录。
+---
+
+# SSO 概览
+
+单点登录（SSO）让组织可以使用自己的身份提供商作为自托管 Coolify 实例的登录认证方。Coolify 在 **设置 > 身份验证** 下为 Authentik、Clerk 和 Zitadel 提供了专门的集成。
+
+<Callout type="warning" title="SSO 需要 Coolify v4.3.0">
+Authentik、Clerk 和 Zitadel 集成在 Coolify v4.3.0 及以上版本可用
+</Callout>
+
+<Callout type="info" title="SSO 配置仅适用于自托管 Coolify">
+Coolify Cloud 的身份验证由平台自行管理。根团队管理员或所有者可以为自托管实例配置 SSO 提供商。
+</Callout>
+
+## 选择 SSO 提供商
+
+| 提供商 | 需要创建的内容 | 指南 |
+| :--- | :--- | :--- |
+| Authentik | OAuth2/OpenID Connect 提供商和应用 | [配置 Authentik SSO](/core/security/authentication/sso/authentik) |
+| Clerk | 具有 profile 和 email 作用域的 OAuth 应用 | [配置 Clerk SSO](/core/security/authentication/sso/clerk) |
+| Zitadel | 使用授权码流程的机密（confidential）Web 应用 | [配置 Zitadel SSO](/core/security/authentication/sso/zitadel) |
+
+其他 OIDC 提供商请使用 [OpenID Connect](/core/security/authentication/sso/oidc)。
+
+## Coolify 如何处理 SSO 账号
+
+Coolify 会将用户与提供商身份绑定。关联现有账号要求邮箱已通过验证，[OAuth 登录](/core/security/authentication/oauth/overview)中所述的旧版无密码账号例外情况除外。每个账号只能绑定一个提供商。
+
+在身份提供商处限制对 Coolify 应用的访问，然后在 Coolify 中分配所需的团队角色。提供商的分组和声明不会自动分配角色。提供商可以将新建用户以成员身份自动加入根团队。
+
+启用 Coolify 的 2FA 后，SSO 登录同样需要通过验证。无密码的 SSO 用户可以在个人资料页启用 2FA。
+
+账号创建和密码注册策略可在 **设置 > 身份验证** 下配置。禁用新账号创建不会阻止已绑定的用户登录。
+
+移除提供商访问权限会阻止其后的提供商登录，但不会移除仍然有效的 Coolify 会话、团队成员身份或 API 令牌。用户离职（offboarding）时需要在 Coolify 中完成这些操作。
+
+## 在正式依赖 SSO 之前进行测试
+
+使用无痕浏览器窗口，并验证以下各项：
+
+- 已分配的用户能进入预期的 Coolify 账号和团队
+- 未分配的提供商用户无法通过身份验证
+- 注册被禁用时，新邮箱地址无法创建账号
+- 提供商的多重身份验证已强制启用
+- 至少有一名管理员保留了一条经过测试的恢复登录途径

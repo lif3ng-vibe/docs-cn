@@ -1,0 +1,565 @@
+---
+title: 部署你的第一个服务
+description: 使用 Umami 在 Coolify 上部署你的第一个一键服务，并登录验证其正常运行。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Database,
+  Globe3,
+  Key2,
+  Rocket2,
+  Server,
+  Settings,
+  SignalStream,
+  Warning22,
+  WindowPointer,
+} from 'reicon-react';
+
+# 部署你的第一个服务
+
+在 Coolify 上部署第一个服务，能在一个简单的流程中帮你验证一键资源、代理路由、生成的域名以及浏览器访问是否都正常。
+
+在本指南中，你将从一键服务资源列表部署开源分析服务 **Umami**。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+创建或打开一个项目、创建一个 Umami 服务资源、在 URL 配置中保留服务端口、执行部署、打开公开 URL，并用默认凭据登录。
+
+这条路径非常适合首次服务部署，因为 Umami 开箱即用、使用预构建的 Docker 镜像，部署完成后还能在浏览器里做一次明确的验证。
+
+</CoolCallout>
+
+---
+
+
+## 开始之前
+
+部署服务之前，先确认以下事项已就绪。
+
+<CoolActionCardGrid
+  data-first-service
+  className="not-prose my-5"
+  surface
+  cards={[
+    {
+      title: '可访问控制台',
+      description: '你能登录 Coolify 并看到主控制台。',
+      bullets: ['你能在浏览器中访问 Coolify', '控制台加载无报错'],
+      icon: WindowPointer,
+    },
+    {
+      title: '服务器已连接',
+      description: 'Coolify 的 Servers 页面上至少列出了一台服务器。',
+      bullets: ['从侧边栏打开 Servers', '自托管安装在本地跑的话，localhost 即可'],
+      icon: Server,
+    },
+    {
+      title: '代理正在运行',
+      description: '服务需要代理把生成的 URL 路由到正确的容器。',
+      bullets: ['打开服务器页面', '代理若已停止则启动它'],
+      icon: SignalStream,
+    },
+  ]}
+/>
+
+如果 Coolify 还没就绪，请先阅读[从自托管开始](/start-with-self-hosted)或[从 Coolify Cloud 开始](/start-with-cloud)。
+
+---
+
+
+## 部署概览
+
+<section data-first-service className="not-prose my-5">
+<CoolFlow
+  id="first-service-deployment-flow"
+  icon={Settings}
+  title="首个服务部署流程"
+  description="这次首次服务部署选用 Umami，因为它是一个现成的一键服务，部署完成后在浏览器里即可明确验证。"
+  steps={[
+    '创建或打开一个项目',
+    '选择 Umami',
+    '检查服务 URL',
+    '部署服务',
+    '打开 URL 并登录',
+  ]}
+  list={[
+    '创建或打开服务将要所在的项目。',
+    '从服务资源列表中选择 Umami。',
+    '在 Coolify 的 URL 配置中保留服务端口。',
+    '部署 Umami 并等待容器启动。',
+    '打开不带端口的公开 URL 并登录。',
+  ]}
+  endnote="完成后你应该得到运行中的 Umami 容器、一个生成的服务 URL，以及一次成功的登录页访问。"
+/>
+</section>
+
+<CoolCallout icon={Settings} title="服务以容器方式运行">
+
+Coolify 从预定义模板部署一键服务。在本指南中，Coolify 会创建并运行 Umami 所需的容器，然后通过 Coolify 代理路由流量。
+
+一键服务使用预构建的 Docker 镜像，所以这次首次测试不需要配置 Git 仓库或构建设置。
+
+</CoolCallout>
+
+---
+
+
+## 部署你的第一个 Umami 服务
+
+选择你想使用的部署方式。每个标签页最终都会得到相同的首次部署结果。
+
+<Tabs items={['Dashboard', 'API', 'CLI', 'MCP']}>
+<Tab value="Dashboard">
+
+<Steps>
+<Step>
+
+### 创建你的第一个项目
+
+在 Coolify 控制台中：
+
+- 点击 **New Project**
+- 输入项目名，例如 `my-first-project`
+- 点击 **Continue**
+
+
+<Callout type="success" title="提示">
+
+如果你已经有项目，跳过这一步，直接进入第 2 步。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 创建新资源
+
+打开你的项目，点击 **Create New Resource**。
+
+
+资源是 Coolify 替你运行的东西，比如应用、数据库或服务。在本指南中，资源是一个 Umami 服务。
+
+</Step>
+<Step>
+
+### 从服务列表中选择 Umami
+
+在资源列表中：
+
+- 搜索 **Umami**
+- 点击 **Umami**
+
+
+Coolify 会用生成的设置创建一个 Umami 服务资源。
+
+</Step>
+<Step>
+
+### 检查服务 URL
+
+Coolify 会为服务生成一个 URL，方便你快速测试。
+
+<CoolCompare
+  data-first-service
+  className="not-prose my-5"
+  id="first-service-url"
+  icon={Globe3}
+  title="生成的 URL 还是你自己的域名"
+>
+<CoolCompareColumn
+  title="最快的首次测试"
+  code="http://<uuid>.<server-ip>.sslip.io:3000"
+  items={[
+    '在 Coolify 的 URL 配置中保留 `:3000`。',
+    '在浏览器访问不带 `:3000` 的 URL。',
+    '只用来确认服务和代理是否正常。',
+  ]}
+/>
+<CoolCompareColumn
+  title="生产风格测试"
+  code="https://analytics.example.com:3000"
+  items={[
+    '把 DNS 指向你的服务器 IP 地址。',
+    '在 Coolify 的 URL 配置中保留 `:3000`。',
+    '在浏览器访问 `https://analytics.example.com`。',
+  ]}
+/>
+</CoolCompare>
+
+<CoolCallout icon={Settings} title="在 Coolify 中保留服务端口">
+
+首次部署可以保留生成的 `sslip.io` URL。不要从 Coolify 的 URL 输入框中删掉 `:3000` 端口，因为 Coolify 要靠它把流量路由到 Umami。
+
+</CoolCallout>
+
+如果你使用自己的域名，请在 Coolify 中将其配置为 `https://analytics.example.com:3000`。确保 DNS 指向你的服务器 IP 地址，并且服务器防火墙已放行端口 `80` 和 `443`。
+
+</Step>
+<Step>
+
+### 部署
+
+点击 **Deploy** 按钮。
+
+
+Coolify 会拉取所需的 Docker 镜像并启动 Umami 容器。
+
+部署完成后，准备好以下信息：
+
+- 不带端口的公开服务 URL
+- Umami 用户名：`admin`
+- Umami 密码：`umami`
+
+</Step>
+<Step>
+
+### 打开 Umami 并登录
+
+在浏览器中打开不带端口的公开服务 URL。
+
+例如，如果 Coolify 中配置的是 `http://<uuid>.<server-ip>.sslip.io:3000`，就访问 `http://<uuid>.<server-ip>.sslip.io`。
+
+如果你使用自己的域名且 Coolify 中配置的是 `https://analytics.example.com:3000`，就访问 `https://analytics.example.com`。
+
+你应该会看到 Umami 登录页。用默认凭据登录：
+
+```txt
+username: admin
+password: umami
+```
+
+
+<Callout type="warning" title="修改默认密码">
+
+首次测试通过后，请在把服务用于真实流量之前修改 Umami 的默认密码。
+
+</Callout>
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="API">
+
+<Callout type="info" title="API 前提条件">
+
+为本教程创建一个 `root` API 令牌。Coolify Cloud 已默认启用 API 访问，Cloud 用户只需创建令牌即可。在自托管 Coolify 上，还需要管理员[启用 API 访问](/api/ip-allowlist#api-访问控制)。发送这些请求之前，请先阅读 [API 授权](/api/authorization)。
+
+在即将运行 cURL 的终端里设置你的基础 URL 和令牌：
+
+```sh
+export COOLIFY_URL="https://<your-coolify-domain>"
+export COOLIFY_TOKEN="<api-token>"
+```
+
+Coolify Cloud 用户应把 `COOLIFY_URL` 设为 `https://app.coolify.io`。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+创建项目、复制其 UUID，然后列出服务器并复制目标服务器的 UUID：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"my-first-project"}' \
+  "$COOLIFY_URL/api/v1/projects"
+
+export PROJECT_UUID="<project-uuid>"
+
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/servers"
+
+export SERVER_UUID="<server-uuid>"
+```
+
+如果项目已存在，改用 `GET /api/v1/projects`。
+
+</Step>
+<Step>
+
+### 创建并部署 Umami
+
+创建 `umami` 一键服务并立即启动：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data "{"type":"umami","name":"my-first-umami","project_uuid":"$PROJECT_UUID","server_uuid":"$SERVER_UUID","environment_name":"production","instant_deploy":true}" \
+  "$COOLIFY_URL/api/v1/services"
+```
+
+复制返回的服务 `uuid` 和域名：
+
+```sh
+export SERVICE_UUID="<service-uuid>"
+```
+
+</Step>
+<Step>
+
+### 验证 Umami
+
+持续读取服务信息，直到其状态变为 `running`：
+
+```sh
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/services/$SERVICE_UUID"
+```
+
+打开返回的公开域名，用 `admin` 和 `umami` 登录。测试成功后修改默认密码。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="CLI">
+
+<Callout type="info" title="CLI 前提条件">
+
+[安装 Coolify CLI](/cli/installation)，然后为将要拥有该资源的团队创建一个 `root` API 令牌。
+
+**Coolify Cloud：** API 访问已默认启用。把令牌保存到预配置的 `cloud` 上下文中，选中它，然后验证认证：
+
+```sh
+coolify context set-token cloud <api-token>
+coolify context use cloud
+coolify context verify
+```
+
+**自托管 Coolify：** 需要管理员先[启用 API 访问](/api/ip-allowlist#api-访问控制)。使用不带 `/api/v1` 的完整实例 URL 添加一个上下文，然后验证认证：
+
+```sh
+coolify context add --default production https://coolify.example.com <api-token>
+coolify context verify
+```
+
+验证成功会提示连接与认证均有效。令牌安全、IP 白名单与故障排查请参见 [CLI 认证](/cli/authentication)。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+```sh
+coolify project create --name my-first-project
+coolify server list
+```
+
+复制项目和服务器 UUID。如果项目已存在，改用 `coolify project list`。
+
+</Step>
+<Step>
+
+### 确认服务类型并部署 Umami
+
+列出你安装的 CLI 所支持的服务类型，然后创建 Umami：
+
+```sh
+coolify service create --list-types
+
+coolify service create umami \
+  --project-uuid <project-uuid> \
+  --server-uuid <server-uuid> \
+  --environment-name production \
+  --name my-first-umami \
+  --instant-deploy
+```
+
+从响应中复制服务 UUID。
+
+</Step>
+<Step>
+
+### 验证 Umami
+
+```sh
+coolify service get <service-uuid>
+coolify service logs <service-uuid> --lines 100
+```
+
+等待服务状态变为 `running`。打开其公开域名，用 `admin` 和 `umami` 登录，然后修改默认密码。全部选项请参见 [`coolify service create`](/cli/command-reference/commands/service/create)。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="MCP">
+
+<Callout type="warning" title="MCP 暂不支持创建操作">
+
+Coolify MCP 可以检查和启动现有资源，但其当前的工具无法创建应用、数据库、服务或项目。请先通过 Dashboard、API 或 CLI 标签页创建资源，之后再用下面的提示词启动并验证它，无需回到控制台。
+
+</Callout>
+
+完成[设置 Coolify MCP](/mcp/setup) 后，为这个端到端工作流创建一个 `root` 令牌，然后把服务 UUID 或准确名称告诉你的客户端。提示词需要检查服务、启动服务、再次检查服务。`deploy` 令牌无法执行这些读取操作，因为选择 `deploy` 会创建仅能部署的令牌。
+
+<Callout type="warning" title="教程结束后请吊销 root 令牌">
+
+`root` 令牌会绕过 `read`、`write` 和 `deploy` 端点检查，并能返回支持的敏感数据。它仍然只限于当前团队使用，但其权限超出了日常 MCP 使用所需。完成这次首次部署后请吊销它。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 找到 Umami
+
+```txt
+Find the service named my-first-umami in my-first-project. Show me its UUID, current status, public domain, and application components. Do not change anything yet.
+```
+
+确认返回的服务正是你创建的 Umami 资源。
+
+</Step>
+<Step>
+
+### 启动并验证 Umami
+
+```txt
+Start the Coolify service with UUID <service-uuid>. Then check its status and tell me when it is running. Show me the public domain I should open, and do not stop or restart any other resource.
+```
+
+打开返回的域名，用 Umami 默认凭据登录。MCP 客户端会用 `control` 启动服务，再用服务检查工具进行验证。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 首次部署的常见问题
+
+当 Umami 部署成功、但浏览器测试表现不符合预期时，按下面各项排查。
+
+<CoolActionCardGrid
+  data-first-service
+  className="not-prose my-5"
+  surface
+  tabId="first-service-issues"
+  cards={[
+    {
+      title: '链接打不开',
+      description: '通常意味着 DNS、防火墙或代理路由尚未就绪。',
+      href: '#first-service-issues',
+      icon: SignalStream,
+    },
+    {
+      title: '登录失败',
+      description: '通常意味着登录信息有误。',
+      href: '#first-service-issues',
+      icon: Key2,
+    },
+    {
+      title: '网站不安全',
+      description: 'sslip.io 可能被限流。要用 TLS 请换真实域名。',
+      href: '#first-service-issues',
+      icon: Warning22,
+    },
+  ]}
+/>
+
+
+<Tabs id="first-service-issues" items={["Link doesn't open", 'Login fails', 'Site not secure']}>
+<Tab value="Link doesn't open" icon={SignalStream}>
+
+通常意味着生成的 URL 无法经由你的服务器和代理访问到服务，或者打开 URL 时的端口行为不对。
+
+检查：
+
+- Umami 部署处于 **running** 状态
+- Coolify 中的 URL 输入框仍包含服务端口，例如 `:3000`
+- 你在浏览器里打开的是不带 `:3000` 的公开 URL
+- Coolify 代理正在服务器上运行
+- 服务器防火墙放行了端口 `80` 和 `443`
+- 如果用的是自己的域名，DNS 已指向你的服务器 IP 地址
+
+</Tab>
+<Tab value="Login fails" icon={Key2}>
+
+通常意味着凭据与 Umami 期望的不一致。
+
+检查：
+
+- 首次登录用 `admin` 作为用户名
+- 修改之前用 `umami` 作为密码
+- 去掉两个值前后误输入的空格
+- 如果密码已经改过，就使用更新后的 Umami 凭据
+
+</Tab>
+<Tab value="Site not secure" icon={Warning22}>
+
+用 `http://` 打开服务时，浏览器会显示「网站不安全」警告。
+要让警告消失，请用 `https://` 打开服务。
+`https://` 要生效，Coolify 需要从 Let's Encrypt 获取 TLS 证书。
+Let's Encrypt 可能对 `sslip.io` 这类共享测试域名限流，所以请使用真实域名。
+
+如果你使用自己的域名，请确保：
+
+- DNS 已正确指向你的服务器 IP
+- 域名在 Coolify 中以 `https://` 形式添加，例如 `https://analytics.example.com`
+- 修改域名后重启服务
+
+</Tab>
+</Tabs>
+
+---
+
+
+## 接下来做什么
+
+第一个服务证明了 Coolify 能够创建一键服务、启动其容器、经由代理路由 URL，并在浏览器中加载服务页面。
+
+<CoolNextSteps
+  data-first-service
+  cards={[
+    {
+      title: '部署一个应用',
+      description: '当你想运行自己的镜像或代码时，部署一个应用。',
+      href: '/deploy-your-first-app',
+      icon: Rocket2,
+    },
+    {
+      title: '部署一个数据库',
+      description: '当应用或服务需要持久化数据时，部署一个数据库。',
+      href: '/deploy-your-first-database',
+      icon: Database,
+    },
+    {
+      title: '浏览服务',
+      description: '浏览一键服务目录，再部署一个资源。',
+      href: '/services/all',
+      icon: Box2,
+    },
+  ]}
+/>

@@ -1,0 +1,103 @@
+---
+title: Redis
+description: 在 Coolify 上部署并运维 Redis，涵盖生成的凭据、持久化存储、TLS、健康检查以及私有或公网连接 URL。
+---
+
+# Redis
+
+Coolify 将 Redis 作为独立的内存数据存储部署到所选的服务器与目标（Destination）上。新建的资源会获得自动生成的密码、位于 `/data` 的持久化卷、内部连接 URL 和一个健康检查。
+
+Redis 是一种键值（key-value）数据存储，常用于缓存、队列、流和短生命周期的应用状态。
+
+## 创建 Redis 数据库
+
+<Steps>
+<Step>
+
+### 打开 New Resource
+
+打开数据库将要归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 Redis
+
+在 **Databases**（数据库）下选择 **Redis**，也可以按名称搜索 **Redis**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择运行 Redis 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 Redis 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 会创建资源并打开 **General**（通用）页面。检查镜像、用户名、生成的密码、SSL 设置和连接 URL。除非外部客户端需要访问，否则保持默认的私有网络。
+
+</Step>
+<Step>
+
+### 启动 Redis
+
+选择 **Start**（启动），并关注启动输出。等 Redis 进入运行且健康的状态后，将 **Redis URL (internal)**（内部 Redis URL）复制到同一目标网络内的应用中。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| Internal port | `6379`；TLS 使用 `6380` |
+| 默认镜像 | `redis:7.2` |
+| Username | `default` |
+| 数据挂载 | `/data` |
+| 数据库计划备份 | Coolify 不支持 |
+| SSL | 通过 **SSL** 开关支持 |
+
+Coolify 将 Redis 的用户名和密码存为运行时环境变量。如果你在 Redis 内部或 **Environment Variables**（环境变量）下修改了 `REDIS_USERNAME` 或 `REDIS_PASSWORD`，请将这些值与资源配置中显示的凭据保持同步。
+
+
+## 连接 Redis
+
+同一 Coolify 目标网络内的应用请使用 **Redis URL (internal)**（内部 Redis URL）：
+
+```sh
+redis://:<password>@<database-container>:6379/0
+```
+
+启用 SSL 后，Coolify 会改用 `rediss` 方案和 TLS 端口 `6380`。当 **Public access > Access**（公共访问 > 访问）设置为 **Public through TCP proxy**（通过 TCP 代理公开）时，请直接复制生成的 **Redis URL (public)**（公共 Redis URL），不要手动修改主机地址。
+
+## 配置 Redis
+
+打开 **General**（通用）页面，可修改镜像、凭据、**Port mappings**（端口映射）、公共代理、**Custom Redis configuration**（自定义 Redis 配置）以及受支持的自定义 Docker 选项。设置了 **Custom Redis configuration** 后，Coolify 会将其写入 Redis 配置文件并用该文件启动 Redis。请把所需的持久化与认证指令写进去；只有当文件尚未定义 `requirepass` 时，Coolify 才会补上密码。
+
+打开 **Persistent Storage**（持久化存储）可管理 `/data` 卷。持久化存储能让 Redis 数据在容器重建后保留，但它不是计划备份。
+
+## 备份与持久化
+
+Redis、Dragonfly 和 KeyDB 不支持 Coolify 的数据库计划备份页面。请自行配置持久化，并在需要可恢复副本时使用 Redis 兼容的快照（snapshot）或 AOF（append-only file）工具。恢复流程请脱离运行中的资源单独演练。
+
+## SSL 与健康检查
+
+Redis 直接提供 **SSL** 开关，没有 SSL 模式选择器。生成的 TLS URL 使用 `rediss` 方案和端口 `6380`；如有需要，请在客户端库中配置 CA 校验。用 TLS 连接应用前，请先阅读[数据库 SSL](/databases/ssl)。
+
+在 **Healthcheck**（健康检查）下配置 Docker 健康检查，保存后重启 Redis。
+
+## Redis 官方资源
+
+- [Redis 文档](https://redis.io/docs/)
+- [Redis 源码](https://github.com/redis/redis)
+- [Redis Docker 镜像](https://hub.docker.com/_/redis)

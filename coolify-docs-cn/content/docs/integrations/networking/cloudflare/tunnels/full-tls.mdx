@@ -1,0 +1,396 @@
+---
+title: "Full TLS"
+description: "通过源站证书、严格 TLS 加密与正确的域名配置，为经由 Cloudflare Tunnel 的 Coolify 资源配置端到端 HTTPS。"
+---
+
+# 为所有资源配置完整 HTTPS/TLS
+
+通过 Cloudflare 隧道化 Coolify 资源时，通常由 Cloudflare 处理 HTTPS 与 TLS 终止，而你的资源在 Coolify 上通过 HTTP 运行。
+
+这套方案对多数用户已经够用，但有些用户会遇到 URL 不匹配的问题，尤其是那些要求 Coolify 端必须使用 HTTPS 才能签发 JWT 令牌或处理回调 URL 的应用。
+
+本指南通过让资源完全运行在 HTTPS 上来解决这一问题：绕过 Cloudflare 的 HTTPS 处理，确保你的应用在安全连接下正常工作。
+
+## 适合谁使用
+
+本指南适合以下用户：
+
+- 已经按照[用 Cloudflare Tunnel 隧道化所有资源](/integrations/networking/cloudflare/tunnels/all-resource)或[用 Cloudflare Tunnel 隧道化单个资源](/integrations/networking/cloudflare/tunnels/single-resource)指南完成配置。
+- 需要让部署在 Coolify 上的资源运行在 HTTPS 上，以满足应用对 JWT 签发、回调等功能的要求。
+
+## 环境要求
+
+按照本指南操作，你需要：
+
+- 一套按前面指南配置好的、可正常工作的 Cloudflare Tunnel。
+- 一个已在 Cloudflare 中配置好、能处理 HTTP 流量并重定向到 HTTPS 的域名。
+
+## 开始之前
+
+- 如果你的 Coolify 实例与要配置的域名在同一个隧道上，开始这些步骤之前，请先确认你能通过服务器 IP 和端口（例如 **203.0.113.1:8000**）访问 Coolify Dashboard。
+- 默认端口是 **8000**；如果你更改或禁用了它，请确保你能通过新端口访问 Coolify Dashboard，或者在服务器上重新启用端口 **8000**。
+
+---
+
+
+<Callout type="warn" title="示例数据">
+
+本指南在步骤中使用以下示例数据。请照做时替换为你自己的真实数据：
+
+- **源站 IPv4 地址**：203.0.113.1
+- **域名**：shadowarcanist.com
+- **用户名**：shadowarcanist
+
+</Callout>
+
+
+## 1. 配置源站 TLS 证书
+你的服务器与 Cloudflare 之间的通信使用 TLS 证书加密。
+
+有两种做法：
+
+* 使用 Cloudflare 提供的 TLS 证书
+* 从受信任的公共证书颁发机构获取你自己的 TLS 证书（这需要进行 DNS 验证）
+
+
+
+下面是 **Cloudflare 源站证书（Cloudflare Origin Certificate）** 与 **公共 CA 证书（Public CA Certificate）** 的简要对比：
+
+| 对比项 | Cloudflare 源站证书 | 公共 CA 证书 |
+|----------|------------------------|----------------|
+| 受信方 | 仅 Cloudflare | 浏览器、操作系统、Cloudflare |
+| 适用场景 | 仅 Cloudflare ↔ 源站 | 任何直接访问的客户端 |
+| 浏览器直接访问 | 用户绕过 Cloudflare 时会报证书错误 | ✅ 正常工作 |
+| 需要 CF 代理 | ✅ 是 | ❌ 否 |
+| 无 CF 时可用 | ❌ 否 | ✅ 是 |
+| 签发方 | Cloudflare | 公共 CA（如 Let's Encrypt） |
+| 费用 | 免费 | 免费 |
+| DNS 验证 | ❌ 不需要 | ✅ 需要 |
+
+<Callout type="success" title="提示">
+  如果你计划让 Cloudflare 始终位于应用之前，请使用 Cloudflare 源站证书；否则请使用公共 CA 证书。
+</Callout>
+
+配置源站 TLS 证书有两种方式，请从下面选择其中一种：
+
+
+<Tabs items={['Cloudflare 源站证书', '公共 CA 证书']}>
+
+<Tab value="Cloudflare 源站证书">
+下面这张简明的高层示意图，帮你直观了解它的工作方式：
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/cf-origin-certificate-overview-diagram.webp" />
+
+---
+
+## A. 创建 Cloudflare 源站证书 [!toc]
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/1.webp" />
+
+1. 在你的 Cloudflare dashboard 中进入 **SSL/TLS**。
+2. 选择 **Origin Server（源服务器）**。
+3. 选择 **Origin Certificates**。
+3. 点击 **Create Certificate** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/2.webp" />
+
+1. 密钥类型选择 **RSA (2048)**。
+2. 添加你希望证书覆盖的主机名。
+3. 把证书有效期设为 **15 years（15 年）**。
+4. 点击 **Create** 按钮。
+
+<Callout type="warn" title="注意！">
+
+  - **`shadowarcanist.com`** 只覆盖主域名。
+  - **`*.shadowarcanist.com`** 覆盖所有子域名。
+  
+  在 Cloudflare 免费套餐中，泛域名证书只覆盖一层子域名。
+  
+  例如，它对 **`coolify.shadowarcanist.com`** 有效，但对 **`www.coolify.shadowarcanist.com`** 无效。
+  
+  要覆盖多层子域名，你需要购买 [Advanced Certificate Manager ↗](https://www.cloudflare.com/application-services/products/advanced-certificate-manager/)。
+
+</Callout>
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/3.webp" />
+
+1. 密钥格式选择 **PEM**。
+2. 复制你的 **Origin Certificate（源站证书）** 并妥善保存。
+3. 复制你的 **Private Key（私钥）** 并妥善保存。
+4. 点击 **Ok** 按钮。
+
+接下来，把这些文件放到运行 Coolify 的服务器上，并配置 Coolify 使用该证书。
+
+---
+
+## B. 把证书添加到你的服务器 [!toc]
+通过 SSH 登录你的服务器，或使用 Coolify 的终端功能。本指南使用我本地的外部终端：
+```bash
+ssh shadowarcanist@203.0.113.1
+```
+
+登录后，进入 Coolify 代理目录：
+```bash
+$ cd /data/coolify/proxy
+```
+
+证书路径在 Caddy 与 Traefik 之间略有差异，请根据你使用的代理，从下面对应的小节中选择。
+
+<Tabs items={['Traefik', 'Caddy']}>
+
+<Tab value="Traefik">
+
+创建 `certs` 目录：
+```bash
+$ mkdir certs
+```
+
+确认目录已创建：
+```bash
+$ ls
+> acme.json  certs docker-compose.yml  dynamic
+```
+
+现在进入 **certs** 目录：
+```bash
+$ cd certs
+```
+
+</Tab>
+
+<Tab value="Caddy">
+
+创建 `caddy/data/certs` 目录：
+```bash
+$ mkdir -p caddy/data/certs
+```
+
+确认目录已创建：
+```bash
+$ ls caddy/data
+> certs
+```
+
+现在进入 **certs** 目录：
+```bash
+$ cd caddy/data/certs
+```
+
+</Tab>
+
+</Tabs>
+
+
+为证书和私钥创建两个新文件：
+```bash
+$ touch shadowarcanist.cert shadowarcanist.key
+```
+
+确认文件已创建：
+```bash
+$ ls
+> shadowarcanist.cert shadowarcanist.key
+```
+
+打开 **shadowarcanist.cert** 文件，粘贴来自 Cloudflare dashboard 的证书：
+```bash
+$ nano shadowarcanist.cert 
+```
+粘贴证书后保存并退出。
+
+对 **shadowarcanist.key** 文件做同样的操作，粘贴私钥：
+```bash
+$ nano shadowarcanist.key 
+```
+保存并退出。
+
+至此，源站证书已安装到你的服务器上。
+
+---
+
+
+## C. 配置 Coolify 代理使用源站证书 [!toc]
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/8.webp" />
+
+1. 在侧边栏进入 **Server（服务器）** 部分。
+2. 选择 **Proxy（代理）**。
+3. 打开 **Dynamic Configuration** 页面。
+4. 点击 **Add** 按钮。
+
+系统会提示你输入动态配置。
+
+动态配置文件在 Caddy 与 Traefik 之间略有差异，请根据你使用的代理，从下面对应的小节中选择。
+
+
+<Tabs items={['Traefik', 'Caddy']}>
+
+<Tab value="Traefik">
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/9.webp" />
+
+1. 为你的配置取一个名字（必须以 `.yaml` 结尾）。
+2. 在配置字段中填入以下内容：
+```yaml
+tls:
+  certificates:
+    -
+      certFile: /traefik/certs/shadowarcanist.cert
+      keyFile: /traefik/certs/shadowarcanist.key
+```
+
+3. 保存配置。
+
+<Callout type="info" title="添加多张证书">
+  
+  如果你想添加多张证书与私钥，可以这样写：
+  ```yaml
+  tls:
+    certificates:
+      -
+        certFile: /traefik/certs/shadowarcanist.cert
+        keyFile: /traefik/certs/shadowarcanist.key
+      -
+        certFile: /traefik/certs/name2.cert
+        keyFile: /traefik/certs/name2.key
+      -
+        certFile: /traefik/certs/name3.cert
+        keyFile: /traefik/certs/name3.key
+  ```
+  
+</Callout>
+
+
+</Tab>
+
+<Tab value="Caddy">
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/10.webp" />
+
+1. 为你的配置取一个名字（必须以 `.caddy` 结尾）。
+2. 在配置字段中填入以下内容：
+```bash
+*.shadowarcanist.com, shadowarcanist.com {
+    tls /data/certs/shadowarcanist.cert /data/certs/shadowarcanist.key
+}
+```
+
+<Callout type="info" title="说明">
+  
+泛域名 `*.shadowarcanist.com` 覆盖所有子域名；如果你只想保护单个域名（即 `shadowarcanist.com`），请把它去掉。
+</Callout>
+
+
+3. 保存配置。
+
+<Callout type="info" title="添加多张证书">
+  
+  如果你想添加多张证书与私钥，可以这样写：
+  ```bash
+  *.shadowarcanist.com, shadowarcanist.com {
+      tls /data/certs/shadowarcanist.cert /data/certs/shadowarcanist.key
+  }
+  
+  *.name2.com, name2.com {
+      tls /data/certs/name2.cert /data/certs/name2.key
+  }
+  
+  *.name3.com, name3.com {
+      tls /data/certs/name3.cert /data/certs/name3.key
+  }
+  ```
+  
+</Callout>
+
+
+</Tab>
+
+</Tabs>
+
+从现在起，Coolify 会使用源站证书处理匹配该主机名的请求。
+
+</Tab>
+
+<Tab value="公共 CA 证书">
+下面这张简明的高层示意图，帮你直观了解它的工作方式：
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/public-ca-origin-certificate-overview-diagram.webp" />
+
+我们已有为 TLS 证书配置 DNS 验证的指南，可以在这里查阅：
+
+- [Traefik DNS 验证](/core/networking/proxy/traefik/dns-challenge)
+- [Caddy DNS 验证](/core/networking/proxy/caddy/dns-challenge)
+
+按上述指南完成 DNS 验证配置后，再回到本指南继续。
+
+  
+</Tab>
+
+</Tabs>
+
+
+## 2. 配置 TLS 加密模式
+要让 Cloudflare 在连接你的服务器时使用更严格的加密，请在 Cloudflare 中配置 TLS 加密：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/5.webp" />
+
+1. 在 Cloudflare 中进入 **SSL/TLS**。
+2. 选择 **Overview（概述）**。
+3. 点击 **Configure** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/6.webp" />
+
+1. 加密模式选择 **Full (Strict)**。
+2. 点击 **Save** 按钮。
+
+## 3. 配置 Always Use HTTPS
+要让 Cloudflare 自动把 HTTP 请求重定向到 HTTPS，请在 Cloudflare 中配置重定向：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/security/cloudflare/ddos-protection/7.webp" />
+
+1. 在 Cloudflare 中进入 **SSL/TLS**。
+2. 选择 **Edge Certificates（边缘证书）**。
+3. 启用 **Always Use HTTPS**。
+
+
+## 4. 配置隧道使用 HTTPS
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/full-tls/17.webp" />
+
+1. 点击三点图标打开设置菜单。
+2. 点击 **Edit route** 选项。
+
+接下来，按如下方式更新 Service URL：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/full-tls/18.webp" />
+
+把类型从 `http://localhost:80` 改为 `https://localhost:443`
+
+
+### 疑难排查：切换 HTTPS 后出现 502 Bad Gateway
+
+把 Service URL 改成 `https://localhost:443` 之后如果出现 **502 Bad Gateway**，请检查 cloudflared 日志中是否存在证书主机名不匹配的问题。其他源站连接故障同样可能表现为 502。
+
+你的源站证书是为你的域名签发的（例如 `shadowarcanist.com` / `*.shadowarcanist.com`），而隧道现在连接的是 `https://localhost:443`。`cloudflared` 校验证书时，期望证书与 `localhost` 匹配，但证书只覆盖你的域名。校验失败，Cloudflare 便返回 502。
+
+**解决办法**：告诉 `cloudflared` 应当从证书中期待哪个主机名。
+
+1. 在 Cloudflare dashboard 中进入 **Networking → Tunnels**，然后选中你的隧道。
+2. 在 **Routes** 中，找到已发布应用对应的 **Edit route**。
+3. 保持 Service URL 为 `https://localhost:443`。
+4. 展开 **Additional application settings**，再展开 **TLS**。
+5. 把 **Origin Server Name** 设为证书覆盖的某个主机名，例如 `coolify.shadowarcanist.com`。请使用具体主机名，不要填 `*.shadowarcanist.com`。
+6. 保持 **Disable TLS certificate verification** 处于关闭状态，然后保存路由。其他 HTTPS 路由也照此办理，各自使用其源站所供证书覆盖的主机名。
+
+<Callout type="info">
+  更多诊断手段参见 [Cloudflare 的 HTTPS 源站疑难排查指南](https://developers.cloudflare.com/tunnel/troubleshooting/https-origins/)。更改该 zone 的 SSL/TLS 模式无法解决 cloudflared 与源站之间的主机名不匹配。
+</Callout>
+
+
+## 5. 把 URL 从 HTTP 更新为 HTTPS
+
+现在，把 Coolify 中的所有 URL 从 **HTTP** 更新为 **HTTPS**，包括各个资源以及设置页面上的实例域名。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/full-tls/10.webp" />
+
+<br />
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/full-tls/11.webp" />
+
+**恭喜**！你的所有资源现在始终运行在 HTTPS 上了。

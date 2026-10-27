@@ -1,0 +1,117 @@
+---
+title: Zitadel
+description: 通过机密（confidential）Web 应用、客户端密钥和实例 Base URL，为 Coolify 配置 Zitadel SSO。
+---
+
+# 配置 Zitadel SSO
+
+在 Zitadel 中创建一个机密（confidential）Web 应用，让 Coolify 可以使用授权码流程，并请求用户的 OpenID profile 和邮箱地址。
+
+<Callout type="warning" title="需要 Coolify v4.3.0">
+  Zitadel SSO 在 Coolify v4.3.0 及以上版本可用
+</Callout>
+
+<Callout type="warning" title="示例数据">
+按照指南操作时，请替换以下值：
+
+- **Coolify 回调**：`https://coolify.shadowarcanist.com/auth/zitadel/callback`
+- **Zitadel Base URL**：`https://id.shadowarcanist.com`
+</Callout>
+
+## 设置 Zitadel SSO
+
+<Steps>
+<Step>
+
+### 创建或选择 Zitadel 项目
+
+打开 Zitadel Console，选择将拥有该集成的组织，然后为 Coolify 创建或打开一个项目。
+
+如果只允许特定组织成员访问 Coolify，请使用项目角色和用户授权（user grants）。
+
+如果 Console 导航有所不同，请参阅 Zitadel 的 [OIDC 登录指南](https://zitadel.com/docs/guides/integrate/login/oidc/login-users)。
+
+</Step>
+<Step>
+
+### 添加 Web 应用
+
+在项目中选择 **New Application**（新建应用），输入 `Coolify` 之类的名称，并选择 **Web** 作为应用类型。
+
+选择带客户端密钥的授权码流程。令牌端点认证方式选择 **POST**，这样客户端 ID 和密钥会随令牌请求一起发送。
+
+</Step>
+<Step>
+
+### 注册回调 URL
+
+添加以下重定向 URI：
+
+```txt
+https://coolify.shadowarcanist.com/auth/zitadel/callback
+```
+
+生产 HTTPS 域名请保持开发模式（dev mode）为关闭状态，然后完成应用创建。
+
+Coolify 会请求 `openid`、`profile` 和 `email` 作用域。
+
+</Step>
+<Step>
+
+### 保存 Zitadel 凭据
+
+复制生成的 **Client ID** 和 **Client Secret**，并妥善保管密钥。
+
+将 Zitadel 实例的源地址（origin）记录为 **Base URL**，例如 `https://id.shadowarcanist.com`。不要追加 `/oauth/v2/authorize`、`/oauth/v2/token` 或 `/oidc/v1/userinfo`。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Zitadel
+
+打开 **设置 > 身份验证**，找到 **Zitadel**。
+
+| Coolify 字段 | Zitadel 取值 |
+| :--- | :--- |
+| **Client ID** | Zitadel Web 应用的客户端 ID |
+| **Client Secret** | Zitadel Web 应用的客户端密钥 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/zitadel/callback` |
+| **Base URL** | Zitadel 实例源地址 |
+
+点击 **Save**（保存），然后开启 Zitadel 的 **Enabled**（启用）开关。
+
+<Callout type="warning" title="登录需要 Base URL">
+在 **Base URL** 尚未填写时，Coolify 可能仍允许开启该提供商卡片。但缺少它 Zitadel 登录就无法工作，因为 Coolify 要根据这个值构建授权、令牌和用户信息端点。
+</Callout>
+
+</Step>
+<Step>
+
+### 验证 Zitadel 登录
+
+在无痕浏览器窗口中打开 Coolify 登录页面，选择 **Login with Zitadel**（使用 Zitadel 登录）。完成身份验证后，确认 Coolify 打开的是与 Zitadel 邮箱地址匹配的账号。
+
+用一个缺少所需项目授权或不在提供商访问策略内的用户测试，确认 Zitadel 会阻止其访问。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Zitadel 提示重定向 URI 无效">
+
+打开该 Web 应用，确认其重定向 URI 与 Coolify 公网域名加 `/auth/zitadel/callback` 路径完全一致。
+
+</Accordion>
+<Accordion title="令牌交换失败">
+
+确认该 Web 应用使用了客户端密钥和 **POST** 令牌端点认证方式，然后确认 Coolify 中保存的客户端密钥没有轮换失效。
+
+</Accordion>
+<Accordion title="Coolify 无法连接 Zitadel">
+
+确认 **Base URL** 是 Zitadel 实例的源地址，并且可以从 Coolify 服务器访问。不要填写 Console 页面或 OAuth 端点路径。
+
+</Accordion>
+</Accordions>

@@ -1,0 +1,161 @@
+---
+title: 代理概览
+description: 选择、运营和切换在 Coolify 服务器上路由公网 HTTP 和 HTTPS 流量的代理。
+---
+
+import { ArrowsRight, Layers, Route, ShieldSecurity2 } from 'reicon-react';
+
+# 代理概览
+
+选定集成代理后，Coolify 会在每台承载资源的服务器上运行一个 `coolify-proxy` 容器。代理接收公网 HTTP 和 HTTPS 请求，把每个请求匹配到已配置的域名，并通过 Docker 网络转发到正确的资源容器。
+
+[Traefik](https://traefik.io/) 是 Coolify 的默认代理。你也可以改用 [Caddy](https://caddyserver.com/)，或者选择 [Custom (None)](/core/networking/proxy/custom/overview)，在无 Coolify 托管路由的情况下运营自己的代理。
+
+<CoolCallout icon={ArrowsRight} title="简明版">
+
+没有特别的理由就用 Traefik。只有当你准备好在 Coolify 之外自行配置域名、TLS 证书、重定向和路由时，才选择 **Custom (None)**。
+
+切换代理会临时中断该服务器上的所有公网路由。停止当前代理之前，先准备好目标代理的配置。
+
+</CoolCallout>
+
+---
+
+## 选择代理
+
+<CoolCompare
+  id="proxy-options"
+  className="not-prose"
+  columns={3}
+  icon={Layers}
+  title="代理选项"
+  description="所选方案应用于一台服务器上的公网 HTTP 和 HTTPS 流量。"
+>
+<CoolCompareColumn
+  title="Traefik"
+  items={[
+    '默认的集成代理',
+    'Coolify 生成路由、中间件标签和 TLS 证书设置',
+    '对大多数 Coolify 部署而言文档和支持最完善',
+  ]}
+/>
+<CoolCompareColumn
+  title="Caddy"
+  items={[
+    'Traefik 之外的集成替代方案',
+    'Coolify 生成 Caddy Docker 标签并管理自动 HTTPS',
+    '目前在 Coolify 中相关文档少于 Traefik',
+  ]}
+/>
+<CoolCompareColumn
+  title="Custom (None)"
+  items={[
+    '不运行 Coolify Proxy 容器',
+    'Coolify 不为你的代理管理路由或 TLS 证书',
+    '完整的流量路径由你自己掌控',
+  ]}
+/>
+</CoolCompare>
+
+直连的主机端口映射会绕过代理。只有当客户端必须直连，或协议不适合放在 HTTP 反向代理之后时，才使用映射端口。
+
+---
+
+## 打开代理设置
+
+1. 在 Coolify 面板中打开 **Servers**。
+2. 选择接收资源流量的服务器。
+3. 选择 **Proxy**。
+
+**Configuration** 页面显示所选代理、它生成的 Docker Compose 配置，以及启动、停止、重启、保存或重置该配置的控件。**Dynamic Configurations** 存放文件提供者（file provider）配置，**Logs** 显示代理输出。
+
+<Callout type="warning" title="自定义配置可能影响所有路由">
+无效的代理配置可能导致服务器上的所有应用和服务无法访问。请保留一份可正常工作的自定义配置副本，并尽可能在非生产服务器上测试更改。
+</Callout>
+
+---
+
+## 在 Traefik 和 Caddy 之间切换
+
+Coolify 要求先停止正在运行的代理才允许切换。请规划一个维护窗口，因为在新代理启动且资源具备兼容标签之前，公网路由会一直不可用。
+
+<Steps>
+<Step>
+
+### 准备资源标签
+
+确认应用和服务具备目标代理所需的标签。
+
+对于 **Label management** 设为 **Managed by Coolify (auto-generated)** 的应用，打开其 **General** 页面，如果生成的标签已过时，使用 **Reset to defaults**。对于 Docker Compose 应用或服务，保存 Compose 配置，让 Coolify 生成当前的代理标签。
+
+</Step>
+<Step>
+
+### 停止当前代理
+
+打开 **Servers > your server > Proxy**，然后选择 **Stop Proxy**。等待状态变为 **Proxy Exited**。
+
+停止代理会中断经由它路由的所有资源的 HTTP 和 HTTPS 流量。
+
+</Step>
+<Step>
+
+### 选择新代理
+
+选择 **Switch Proxy**，确认警告，然后选择 **Traefik** 或 **Caddy**。Coolify 会替换所选的代理类型并生成其默认配置。
+
+上一个代理配置中的自定义更改可能无法延续。只重建新代理支持的设置即可。
+
+</Step>
+<Step>
+
+### 启动代理并重新部署资源
+
+选择 **Start Proxy**。重新部署或重启每个受影响的应用和服务，让目标代理标签出现在运行中的容器上。
+
+</Step>
+<Step>
+
+### 验证公网路由
+
+至少打开服务器上的一个 HTTP 域名和一个 HTTPS 域名。确认 HTTPS 使用的是预期的证书、重定向行为正确，且资源能通过新代理正常响应。
+
+如果某条路由失败，检查 **Servers > your server > Proxy > Logs** 和资源生成的标签。
+
+</Step>
+</Steps>
+
+---
+
+## 配置所选代理
+
+对于外部代理，请阅读[自定义代理](/core/networking/proxy/custom/overview)了解安装方式、功能取舍和变通办法。[ShadowArcanist 的 nginx 案例研究](/core/networking/proxy/custom/nginx)展示了一次迁移中的决策与问题。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '配置 Traefik',
+      href: '/core/networking/proxy/traefik/overview',
+      description: '管理 Traefik 中间件、证书、动态配置和流量路由。',
+      icon: Route,
+    },
+    {
+      title: '配置 Caddy',
+      href: '/core/networking/proxy/caddy/overview',
+      description: '使用 Coolify 托管的 Caddy 路由和现有的 Caddy 专属指南。',
+      icon: ShieldSecurity2,
+    },
+    {
+      title: '了解网络',
+      href: '/core/networking-in-coolify',
+      description: '理解域名、代理、Docker 网络与容器端口如何协同工作。',
+      icon: Layers,
+    },
+  ]}
+/>
+
+## 网络连接与配置变更
+
+Coolify 会在创建目标（Destination）、部署资源或代理启动/重启时，把代理接入目标网络。它不再在每小时检查或服务器验证时重连所有网络。如果缺少所需的网络连接，请重新部署资源或重启代理。
+
+代理配置在保存前会先校验。新配置使用 Traefik v3.7 或 caddy-docker-proxy 2.13；已有的自定义配置在更换镜像版本之前应先审查。

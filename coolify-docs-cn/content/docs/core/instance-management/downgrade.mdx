@@ -1,0 +1,123 @@
+---
+title: 降级 Coolify
+description: 从终端把自托管 Coolify 实例退回更早的版本,并附带备份与恢复保障。
+---
+
+# 降级 Coolify
+
+降级 Coolify 替换的是自托管 Coolify 控制平面的版本。它不会回滚你的应用、数据库、服务、受管服务器或它们的数据。
+
+<Callout type="warn" title="仅限自托管实例">
+Coolify Cloud 的实例版本由 Coolify 团队管理。如果最新版本造成严重问题,你必须等待 Coolify 团队来降级实例。如果你在使用 Coolify 时遇到任何问题,请[联系 Coolify 团队](/support)。
+</Callout>
+
+降级 Coolify 必须使用终端。仪表盘和自动更新只会安装更新的版本。
+
+## 降级之前
+
+- [创建实例备份](/core/backup-and-recovery/instance-backup)。
+- 查阅当前版本与目标版本的[发布说明](https://github.com/coollabsio/coolify/releases)。
+- 选择一个维护窗口:Coolify 重启期间仪表盘不可用,但你的应用会继续运行。
+- 检查是否有进行中的部署,等它们完成后再继续。
+
+<Callout type="danger" title="提前规划恢复">
+较旧的 Coolify 版本可能与较新版本对数据库所做的更改不兼容。
+
+更换版本并不会把数据库恢复到早前的状态。如果降级破坏了你的 Coolify 实例,应恢复已知良好的实例备份,而不是一路降级穿越多个旧版本。
+</Callout>
+
+## 执行降级
+
+<Steps>
+<Step>
+
+### 禁用自动更新
+
+防止 Coolify 在降级后又回到最新版本。
+
+打开左侧边栏的 **Settings**,选择 **Updates**。
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/downgrade/updates-settings-overview.webp" alt="Settings 与 Updates 导航,可见 Automatic updates 控件" />
+
+在 **Automatic updates** 下选择 **Disabled**。该设置会立即保存。
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/downgrade/updates-automatic-updates.webp" alt="Updates 设置中的 Automatic updates 选择器,当前为 Enabled" />
+
+如果你无法更改 **Automatic updates**,检查 `/data/coolify/source/.env` 中是否存在 `AUTOUPDATE` 环境变量。如果存在,把它设为 `false`。
+
+升级脚本在修改 `.env` 之前会保存一份带时间戳的备份。为防万一,降级前请自行另存一份 `/data/coolify/source/.env`。
+
+</Step>
+
+<Step>
+
+### 安装目标版本
+
+通过 SSH 连接到 Coolify 服务器:
+
+```sh
+ssh root@<server-ip>
+```
+
+把 `<server-ip>` 替换为你服务器的 IP 地址。如果你平时用非 root 账户登录,先运行 `sudo -i` 进入 root shell。
+
+使用确切的目标版本运行升级脚本:
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/upgrade.sh | bash -s 4.3.21
+```
+
+把 `4.3.21` 替换为你所选发布对应的版本号。
+
+升级脚本会下载 Coolify 配置文件、拉取目标 Coolify 镜像,然后在后台重启 Coolify 容器。请等到重启确认信息出现后再关闭 SSH 会话。
+
+</Step>
+
+<Step>
+
+### 验证降级结果
+
+升级脚本完成后,等仪表盘恢复可用,然后确认:
+
+- 仪表盘可以打开,并显示预期的 Coolify 版本
+- 能看到你的项目和资源
+- 受管服务器仍能连接
+
+升级脚本会写入带时间戳的日志,例如 `/data/coolify/source/upgrade-2026-07-11-12-00-00.log`。如果仪表盘仍不可用或某个容器启动失败,查看最新的 `upgrade-*.log` 文件。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="降级后 Coolify 又升级了">
+
+回到 **Settings > Updates**,确认 **Automatic updates** 已设为 **Disabled**。
+
+如果该控件因 `/data/coolify/source/.env` 中设置了 `AUTOUPDATE` 而不可用,把它改为 `AUTOUPDATE=false`,然后重新运行目标版本命令。
+
+</Accordion>
+
+<Accordion title="Coolify 仪表盘持续不可用">
+
+先查看最新的 `/data/coolify/source/upgrade-*.log` 文件。
+
+检查 `coolify`、`coolify-db` 和 `coolify-redis` 容器是否在运行且状态健康。然后确认防火墙仍然允许访问仪表盘。
+
+[Reverb 迁移](/core/instance-management/reverb-migration)之前的版本还会启动一个 `coolify-realtime` 容器。降级到那些版本会让该容器重新出现,端口 `6001` 和 `6002` 也会再次移到它上面。
+
+</Accordion>
+
+<Accordion title="目标版本无法兼容现有数据">
+
+如果目标版本无法使用现有数据库,或仪表盘持续不可用,请到此为止。不要继续向更旧的版本降级。
+
+使用变更前创建的备份,按照[恢复 Coolify 实例](/core/backup-and-recovery/instance-restore)操作。
+
+恢复会同时使用备份数据库和配套的 `.env` 文件,这样 Coolify 才能保留读取加密值所需的加密密钥。
+
+</Accordion>
+
+</Accordions>

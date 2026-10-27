@@ -1,0 +1,254 @@
+---
+title: 健康检查
+description: 在 Coolify、Dockerfile 或 Docker Compose 中配置 HTTP 或命令健康检查。
+keywords: ["Healthchecks", "No available server", "404", "503"]
+---
+
+import { Code, Globe3, Layers } from 'reicon-react';
+
+# 健康检查
+
+健康检查告诉 Docker 和 Coolify，一个应用容器是否已就绪。健康检查是可选的，但它为部署和滚动替换提供就绪信号。
+
+该路由行为只在 Coolify Proxy 使用 Traefik 时生效。启用应用健康检查后，Traefik 会把不健康的容器移出路由。如果所有应用容器都不健康，Traefik 可能返回 `404 Not Found` 或 `No available server`，而不是转发请求。
+
+## 选择在哪里定义检查
+
+| 位置 | 适用场景 | 可用性 |
+| :--- | :--- | :--- |
+| **Healthcheck** | 不改动镜像定义即可配置 HTTP 请求或命令。 | Nixpacks、Railpack、Static、Dockerfile 和 Docker Image 应用。 |
+| Dockerfile `HEALTHCHECK` | 让检查随镜像走，镜像在哪里运行都能用。 | 任何由 Dockerfile 构建的镜像。 |
+| Docker Compose `healthcheck` | 为 Compose 应用中的每个服务单独配置检查。 | Docker Compose 应用和用户自定义服务（Service）。 |
+
+Docker Compose 应用不使用标准应用的 **Healthcheck**（健康检查）页面。请在每个服务的 Dockerfile 或 Compose 定义中定义检查。
+
+对于非 Compose 的 Dockerfile 应用，Coolify 会识别镜像的 `HEALTHCHECK` 并使用它，而不添加面板中配置的健康检查。要把这类应用切换为 Coolify 托管的检查，先移除 Dockerfile 指令再重新部署。
+
+<span id="configure-health-checks" />
+
+## 在 Coolify 中配置健康检查
+
+打开应用，选择 **Healthcheck**，然后在 **Check type**（检查类型）下选择 **HTTP** 或 **CMD**。
+
+<Callout type="warning" title="HTTP 检查要求容器内有 curl 或 wget">
+
+Coolify 在应用容器内部执行面板配置的 HTTP 检查。最终的应用镜像必须包含 `curl` 或 `wget`；只在部署服务器上安装其中一个是不够的。缺少它们时，HTTP 检查会失败，Docker 会把容器标记为不健康。
+
+</Callout>
+
+<Tabs id="application-healthcheck-types" items={['HTTP', 'CMD']}>
+<Tab value="HTTP" icon={Globe3}>
+
+当应用暴露一个能报告自己是否可以接收请求的端点时，选择 HTTP。
+
+<Steps>
+<Step>
+
+### 创建就绪端点
+
+给应用添加一个 `/health` 之类的端点。它应只在进程就绪时返回成功，保持轻量，并避免改动应用数据。
+
+</Step>
+<Step>
+
+### 配置请求
+
+填写：
+
+- **Method**（方法）：`GET` 或 `POST`
+- **Scheme**（协议）：`http` 或 `https`
+- **Host**（主机）：通常为 `localhost`
+- **Port**（端口）：容器内部使用的端口；留空时 Coolify 使用 **Ports Exposes** 中的第一个值
+- **Path**（路径）：就绪路径，例如 `/health`
+
+静态应用由 Coolify 使用端口 `80`。
+
+</Step>
+<Step>
+
+### 确认容器内有 HTTP 客户端
+
+打开应用的 **Terminal**（终端），确认运行中的容器至少包含一个受支持的客户端：
+
+```sh
+command -v curl || command -v wget
+```
+
+当检查依赖所选 HTTP 方法时使用 `curl`。生成的 `wget` 回退会按它常规的请求行为执行。
+
+</Step>
+<Step>
+
+### 测试端点
+
+打开应用的 **Terminal**，执行同样的内部请求：
+
+```sh
+curl --fail http://localhost:3000/health
+```
+
+把 `3000` 和 `/health` 替换为健康检查表单中填写的值。命令应以退出码 `0` 结束。
+
+</Step>
+</Steps>
+
+<Callout type="info" title="当前的响应校验">
+
+生成的 HTTP 检查目前以 `curl` 或 `wget` 的退出状态判断健康。虽然表单中有 **Expected code**（预期状态码）和 **Expected response text**（预期响应文本）字段，但生成的检查并不会把响应与这两个字段做比较。
+
+</Callout>
+
+</Tab>
+<Tab value="CMD" icon={Code}>
+
+当本地进程、文件、套接字或依赖能比 HTTP 端点更好地反映就绪状态时，选择 CMD。
+
+<Steps>
+<Step>
+
+### 选择命令
+
+使用应用容器内存在的命令，且只在应用就绪时以退出码 `0` 结束。
+
+PostgreSQL 工具：
+
+```sh
+pg_isready -U postgres
+```
+
+镜像内自带健康检查脚本的 Node.js 应用：
+
+```sh
+node healthcheck.js
+```
+
+</Step>
+<Step>
+
+### 填写命令
+
+选择 **CMD**，然后在 **Command**（命令）下填写命令。
+
+命令可以包含字母、数字、空格和安全参数字符。不允许使用 `;`、`|`、`&`、`$()`、`>`、`<` 等 shell 运算符和替换。多步逻辑请放进镜像内的脚本，再在 **Command** 中运行该脚本。
+
+</Step>
+<Step>
+
+### 测试命令
+
+打开应用的 **Terminal**，原样执行该命令，然后检查退出码：
+
+```sh
+pg_isready -U postgres
+echo $?
+```
+
+应用就绪时结果必须为 `0`，未就绪时为非零。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+### 配置时间参数
+
+这些设置对 HTTP 和 CMD 检查都适用：
+
+| 设置 | 行为 |
+| :--- | :--- |
+| **Interval (seconds)**（间隔，秒） | 两次健康检查尝试之间的时间。至少 1 秒。 |
+| **Timeout (seconds)**（超时，秒） | 单次尝试允许的最长时间。至少 1 秒。 |
+| **Retries**（重试次数） | Docker 把容器标记为不健康前所需的连续失败次数。至少为 1。 |
+| **Start period (seconds)**（启动期，秒） | 失败不计入重试上限的启动阶段。 |
+
+启动较慢的应用要给足 **Start period (seconds)**，让它完成迁移、缓存加载或其他必需的初始化。
+
+### 保存并启用检查
+
+选择 **Save changes**（保存更改），然后选择 **Enable**（启用）并确认 **Enable healthcheck**（启用健康检查）。
+
+如果应用已在运行，请重启或重新部署，让 Coolify 带着健康检查配置重建容器。停用检查同样需要重建容器配置后，Docker 才会停止执行它。
+
+## 随应用定义检查
+
+当健康检查应随镜像或 Compose 服务走、而不是归属某一个 Coolify 应用时，把它保留在 Docker 配置里。
+
+<Tabs id="healthcheck-code-definitions" items={['Dockerfile', 'Docker Compose']}>
+<Tab value="Dockerfile" icon={Code}>
+
+先安装检查所用的命令，再添加 `HEALTHCHECK` 指令：
+
+```dockerfile
+FROM node:22-alpine
+
+RUN apk add --no-cache curl
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl --fail http://localhost:3000/health || exit 1
+
+CMD ["npm", "start"]
+```
+
+该命令在由该镜像创建的容器内运行。它必须使用内部监听端口，且 `HEALTHCHECK` 引用的所有二进制都必须安装在镜像的最后阶段。
+
+对于非 Compose 的 Dockerfile 应用，Coolify 会识别这条指令，且不会把面板配置的健康检查加进生成的容器定义。
+
+</Tab>
+<Tab value="Docker Compose" icon={Layers}>
+
+给每个需要就绪信号的服务添加 `healthcheck`：
+
+```yaml
+services:
+  api:
+    build: .
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    build: ./worker
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+```
+
+每条命令都在各自的服务容器内运行。`api` 镜像必须包含 `curl`，`worker` 镜像必须在其工作目录路径下包含 `healthcheck.js`。
+
+Compose 的 `healthcheck` 会为该服务覆盖镜像 Dockerfile 中的 `HEALTHCHECK`。服务应继承镜像的检查时，省略 Compose 中的这一块。
+
+Compose 特有行为（包括一次性服务）请阅读 [Docker Compose 健康检查](/applications/builds/docker-compose#健康检查)。
+
+</Tab>
+</Tabs>
+
+## 健康检查与滚动更新
+
+在应用级滚动更新期间，健康检查让 Coolify 可以先等新容器就绪，再移除当前运行的容器。如果替换容器未通过检查，Coolify 可以移除它，让健康版本继续运行。
+
+滚动替换还依赖容器命名、网络和端口设置。在依赖零停机替换之前，请先阅读[滚动更新](/applications/deployments/rolling-updates)。
+
+## 排查失败的检查
+
+1. 打开应用的 **Terminal**（终端）。
+2. 原样执行健康检查使用的请求或命令。
+3. 确认相关二进制存在于容器内。
+4. 确认检查使用容器内部端口，而不是公开端口或主机映射端口。
+5. 查看 **Runtime Logs**（运行日志），排查启动或依赖故障。
+
+当 Traefik 没有健康目标时，按照[无可用服务器](/troubleshoot/applications/no-available-server)排查。

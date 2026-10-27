@@ -1,0 +1,56 @@
+---
+title: Cursor Origin
+description: 在 Coolify 与 Origin 之间共享部署密钥，部署私有的 Cursor Origin 仓库。
+---
+
+# Cursor Origin
+
+Coolify 可以通过 SSH 部署私有的 [Cursor Origin](https://cursor.com/origin) 仓库。把私钥保存在 Coolify 中，将对应的 SSH 密钥添加到 Origin，然后使用部署密钥来源创建应用。
+
+<Steps>
+<Step>
+
+### 在 Coolify 中添加部署密钥
+
+1. 在 Coolify 控制面板中打开 **Keys & Tokens**（密钥与令牌）。
+2. 选择 **Private Keys**（私钥），然后选择 **New private key**（新建私钥）。
+3. 选择 **Generate ED25519**（生成 ED25519）或 **Generate RSA**（生成 RSA）即可立即生成并保存密钥。若要使用现有密钥，选择 **Add manually**（手动添加），粘贴完整私钥，然后选择 **Continue**（继续）。
+4. 打开已保存密钥的编辑图标，即可查看其公钥或修改名称。编辑完成后选择 **Save changes**（保存更改）。
+
+配置 Origin 期间请保持该密钥可用。Origin 必须使用你在 Coolify 中保存的同一把密钥。
+
+</Step>
+<Step>
+
+### 将密钥添加到 Origin
+
+在仓库目录下运行：
+
+```bash
+origin ssh-key add
+```
+
+按照 Origin CLI 的提示操作，添加与 Coolify 中保存的私钥相对应的 SSH 密钥。
+
+</Step>
+<Step>
+
+### 在 Coolify 中创建应用
+
+1. 在 Coolify 中打开你的项目，选择 **+ New**（新建）。
+2. 选择 **Private Repository (with deploy key)**（私有仓库（带部署密钥））。
+3. 选择将运行该应用的服务器。
+4. 选择第一步中保存的私钥。
+5. 输入仓库的 SSH 克隆 URL 并继续。
+6. 配置应用，然后部署。
+
+</Step>
+</Steps>
+
+<Callout type="info" title="使用 SSH 仓库 URL">
+
+部署密钥用于 SSH 连接的身份验证。HTTPS 仓库 URL 不会用到它。
+
+</Callout>
+
+想进一步了解这种来源类型，请参阅[部署密钥](/applications/sources/deploy-keys)。构建与应用设置请参阅[应用](/applications)。

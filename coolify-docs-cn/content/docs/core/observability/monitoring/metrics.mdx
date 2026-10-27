@@ -1,0 +1,209 @@
+---
+title: 指标
+description: 为服务器、应用和独立数据库启用并查看 Coolify CPU 与内存指标。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Database,
+  Layers,
+  Server,
+  Warning22,
+} from 'reicon-react';
+
+# 指标
+
+Coolify 展示由 Sentinel 采集的 CPU 与内存历史数据。服务器图表显示总体的 CPU 与内存使用情况，资源图表则显示单个应用或独立数据库容器的使用情况。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+在符合条件的服务器上启用指标，通过 Sentinel 采集 CPU 与内存采样。采样与保留按服务器配置，图表只显示该服务器上仍保存着的历史数据。
+
+</CoolCallout>
+
+<CoolCallout type="warning" icon={Warning22} title="资源指标存在限制">
+
+Docker Compose 应用和一键服务部署不支持资源指标。此外，资源容器必须处于运行状态，Coolify 才能显示其指标。
+
+</CoolCallout>
+
+---
+
+## 提供哪些指标
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '服务器 CPU',
+      description: '显示所选时间段内服务器总体 CPU 当前使用的百分比。',
+      icon: Server,
+    },
+    {
+      title: '服务器内存',
+      description: '显示所选时间段内服务器总体内存当前使用的百分比。',
+      icon: Layers,
+    },
+    {
+      title: '应用容器',
+      description: '显示运行中的非 Compose 应用容器的 CPU 百分比与内存占用（MB）。',
+      icon: Box2,
+    },
+    {
+      title: '独立数据库',
+      description: '显示运行中的独立数据库容器的 CPU 百分比与内存占用（MB）。',
+      icon: Database,
+    },
+  ]}
+/>
+
+---
+
+## 启用指标之前
+
+- 使用已验证、非 Swarm 且未配置为构建服务器的服务器。
+- 在该服务器上启用并同步 [Sentinel](/core/observability/monitoring/sentinel)。
+- 在所连接的服务器上预留足够的磁盘空间，以支撑你配置的采样率与保留期。
+
+---
+
+## 启用指标
+
+指标在服务器级启用，并使用已分配给该服务器的 Sentinel 容器。
+
+<Steps>
+<Step>
+
+### 选择服务器
+
+打开**服务器（Servers）**，选择符合条件的已连接服务器。
+
+</Step>
+<Step>
+
+### 打开 Charts 页面
+
+打开**图表（Charts）**，选择**Enable Metrics**（启用指标）。
+
+</Step>
+<Step>
+
+### 等待 Sentinel 重启
+
+Coolify 会保存设置，并在启用指标采集器的情况下重启 Sentinel。采集器随即开始存储服务器采样以及受支持的运行中资源的采样。
+
+</Step>
+<Step>
+
+### 确认指标可用
+
+等待 **CPU Usage** 与 **Memory Usage** 图表开始显示数据。
+
+</Step>
+</Steps>
+
+如果 Sentinel 处于禁用状态，指标页面会提示你先启用它。在服务器符合条件时，启用指标会顺带启动 Sentinel。
+
+---
+
+## 查看指标
+
+服务器图表和资源图表使用不同的内存单位。
+
+<ZoomableImage
+  src="/docs-cn/coolify/images/core/observability/monitoring/metrics/server-metrics.webp"
+  alt="Coolify 服务器指标页面，含时间范围选择器以及 CPU 与内存图表"
+/>
+
+<Tabs id="server-and-resource-metrics" items={['Server', 'Application and database']}>
+<Tab value="Server" icon={Server}>
+
+### 服务器指标
+
+打开**服务器（Servers）> [server] > Charts**。
+
+- **CPU Usage** 是服务器总体 CPU 的使用百分比。
+- **Memory Usage** 是服务器总体内存的使用百分比。
+
+</Tab>
+
+<Tab value="Application and database" icon={Box2}>
+
+### 应用与数据库指标
+
+打开应用或独立数据库，然后选择**图表（Charts）**。
+
+- **CPU Usage** 是资源容器的 CPU 使用百分比。
+- **Memory Usage** 是资源容器的内存占用，以 MB 计。
+
+</Tab>
+</Tabs>
+
+指标页面提供以下时间范围：
+
+- 5 分钟和 10 分钟，支持实时刷新
+- 30 分钟
+- 1 小时
+- 12 小时
+- 1 周
+- 30 天
+
+实时范围每五秒向 Coolify 请求一次新图表数据。Sentinel 的采样率决定了新指标点出现的频率。
+
+---
+
+## 采样与保留
+
+打开**服务器（Servers）> [server] > Charts** 修改这些值：
+
+- **Collection rate** 控制采集间隔。默认值为 `10`，最小值为 `1`。
+- **History retention** 控制本地保留期。默认值为 `7`，最小值为 `1`。
+
+- **Push interval** 控制健康报告频率。默认值为 `60` 秒，最小值为 `10`。
+
+保存设置后即可生效。图表提示框会同时显示你的本地时间和 UTC。
+
+Sentinel 把这些历史数据存储在所连接服务器的 `/data/coolify/sentinel` 目录下。采集间隔越短，生成的数据点越多，占用的磁盘空间也越大。
+
+图表可提供的时间范围可能长于实际保留的数据。例如，当**History retention**保持七天的默认值时，30 天图表只会显示已有的历史。
+
+---
+
+## 禁用指标
+
+打开服务器**图表（Charts）**页面，选择 **Disable Metrics**（禁用指标）。Coolify 会在禁用采集器的状态下重启 Sentinel。
+
+禁用指标不会禁用 Sentinel 本身。服务器心跳、容器状态、健康信息和磁盘使用报告可以在没有 CPU 与内存历史的情况下继续工作。
+
+---
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="服务器图表不显示数据">
+
+确认服务器的指标页面显示指标已启用，且 Sentinel 显示 **In Sync**（已同步）。
+
+如果 Sentinel 未同步，请先按照[Sentinel 故障排查](/core/observability/monitoring/sentinel#故障排查)处理，再回头检查图表。
+
+</Accordion>
+
+<Accordion title="应用或数据库图表不显示数据">
+
+确认应用或独立数据库处于运行状态。
+
+Docker Compose 应用和一键服务部署目前不支持资源指标。
+
+</Accordion>
+
+<Accordion title="所选范围内缺少历史数据">
+
+把所选图表范围与 **History retention** 对比一下。超出配置保留期的数据不可用。
+
+例如，当保留设置保持七天的默认值时，30 天图表只会显示七天历史。
+
+</Accordion>
+
+</Accordions>

@@ -1,0 +1,76 @@
+---
+title: 管理任务
+description: 在 Coolify 中更新、启用、停用、运行和删除计划任务。
+---
+
+# 管理计划任务
+
+每个应用和服务都维护自己的计划任务。打开任务即可修改配置，或控制它能否运行。
+
+## 打开任务
+
+1. 打开应用或服务。
+2. 选择 **Scheduled Tasks**。
+3. 选择要管理的任务。
+
+任务页面会显示其配置和最近的执行记录。
+
+---
+
+## 更新任务配置
+
+可以修改任务的 **Name**、**Schedule**、**Timeout (seconds)**、**Container** 或 **Service**，以及 **Command**。
+
+修改后点击 **Save changes**。Coolify 会在保存前校验调度表达式。
+
+如果改动了命令或目标容器，请先手动运行一次任务并检查输出，再依赖下一次计划执行。
+
+---
+
+## 启用或停用任务
+
+点击 **Disable** 可停止后续的计划执行，但不会删除配置及其历史记录。需要任务恢复按计划运行时，点击 **Enable**。
+
+停用任务不会中断已经在运行的执行。
+
+---
+
+## 立即运行任务
+
+当应用或服务正在运行时，点击 **Execute now** 可立即派发任务。手动执行使用已保存的命令、容器和超时设置，但不会改变任务的下一次计划时间。
+
+打开 **Recent executions** 中的新记录以核实结果。
+
+如果看不到 **Execute now**，请先启动该资源。
+
+---
+
+## 删除任务
+
+<Callout type="warn" title="删除不可恢复">
+删除计划任务会将其配置从资源中移除，其执行历史也将无法再从控制台查看。如果以后可能还需要，请改用停用。
+</Callout>
+
+1. 打开任务。
+2. 点击 **Delete**。
+3. 在确认对话框中输入显示的计划任务名称。
+4. 点击 **Permanently Delete**。
+
+Coolify 会返回该资源的 **Scheduled Tasks** 列表，被删除的任务不再运行。
+
+---
+
+## 故障排除
+
+<Accordions type="multiple">
+<Accordion title="已保存的任务没有按计划运行">
+
+确认任务已启用、应用或服务正在运行，且其服务器已验证并且功能正常。然后将 **Schedule** 与 [Cron 语法](/core/automation/cron-syntax)以及服务器时区对照检查。
+
+</Accordion>
+<Accordion title="Execute Now 在错误的容器中运行了命令">
+
+打开任务，将 **Container** 或 **Service** 设置为包含该命令的组件。保存修改后再重新运行任务。
+
+</Accordion>
+</Accordions>

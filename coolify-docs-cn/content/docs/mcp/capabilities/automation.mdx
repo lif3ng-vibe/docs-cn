@@ -1,0 +1,15 @@
+---
+title: 自动化
+description: 使用 Coolify MCP 查看计划任务、执行记录、不健康资源与资源健康状态提示。
+---
+
+# 自动化
+
+| 工具 | 用途 |
+| :--- | :--- |
+| `list_scheduled_tasks` | 列出应用或服务的计划任务。 |
+| `list_scheduled_task_executions` | 列出某个计划任务最近的执行记录。 |
+| `list_unhealthy_resources` | 找出看起来不健康或已宕机的资源；首次快速排查可用 `sample_only=true` 降低开销。 |
+| `get_infrastructure_overview` | 返回基于 SQL 的健康状态提示计数和未完成部署数量。 |
+
+任务命令正文与执行消息需要 `read:sensitive` 权限，且只会尽力脱敏。

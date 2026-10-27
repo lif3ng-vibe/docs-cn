@@ -1,0 +1,101 @@
+---
+title: Docker 自动清理
+description: 配置定时 Docker 清理，安全移除服务器上未使用的镜像、卷和网络。
+---
+
+# Docker 自动清理
+
+Docker 会把镜像和构建文件保存在服务器上。日积月累，未使用的文件可能占满磁盘，导致部署无法完成。
+
+Coolify 可以按计划自动清理服务器，或在磁盘使用率达到阈值时自动清理。
+
+<Callout type="warning" title="Docker 清理可能占用大量 CPU">
+Docker 清理在扫描和删除未使用数据时可能占用大量 CPU。如果服务器 CPU 资源有限，请降低清理频率，并在应用流量较少时执行。
+</Callout>
+
+---
+
+## 配置 Docker 清理
+
+<Steps>
+<Step>
+
+### 打开 Docker Cleanup
+
+1. 在 Coolify 侧边栏打开 **Servers**（服务器）。
+2. 选择要清理的服务器。
+3. 在服务器菜单中选择 **Docker Cleanup**。
+
+页面会显示清理设置和最近的清理执行记录。
+
+</Step>
+<Step>
+
+### 设置清理时机
+
+推荐先这样设置：
+
+- **Cleanup frequency**（清理频率）保持 `0 0 * * *`，每天零点检查一次。
+- 如果希望每次到达计划时间都执行清理，把 **Cleanup trigger**（清理触发器）设为 **Run on every schedule**（按计划执行）。
+- 如果希望等到磁盘使用率达到 **Disk threshold**（磁盘阈值）才清理，把 **Cleanup trigger** 设为 **Only above disk threshold**（仅超过磁盘阈值时）。
+- 阈值保持 `80`，除非你需要更早开始清理。
+
+修改计划或阈值后，选择 **Save changes**（保存更改）。
+
+<Callout type="info" title="安全的初始配置">
+保持卷和网络删除为关闭状态，保留应用镜像保留策略。这样既能清除常见的未使用 Docker 数据，又不会刻意删除持久化卷或所有回滚镜像。
+</Callout>
+
+</Step>
+<Step>
+
+### 设置允许 Coolify 删除的内容
+
+在 **Advanced cleanup**（高级清理）下，默认保留未使用的卷、未使用的网络和应用回滚镜像：
+
+| 设置与选项 | 效果 |
+| :--- | :--- |
+| **Unused volumes > Delete unused volumes** | 删除所有当前未挂载到任何容器的 Docker 卷。 |
+| **Unused networks > Delete unused networks** | 删除所有当前没有被任何容器使用的 Docker 网络。 |
+| **Application images > Delete all old images** | 删除旧的应用镜像，而不是保留配置数量的镜像用于回滚。 |
+
+<Callout type="error" title="未使用的卷可能仍含重要数据">
+停止或删除容器后，可能留下包含应用或数据库数据的未使用卷。在启用 **Unused volumes > Delete unused volumes** 之前，请先备份重要数据并逐一确认每个卷。
+</Callout>
+
+除非已确认这些未使用对象可以删除，否则请保持 **Keep unused volumes**、**Keep unused networks** 和 **Keep retained images** 处于勾选状态。
+
+</Step>
+<Step>
+
+### 执行手动清理
+
+在依赖定时任务之前，先用手动清理确认设置：
+
+1. 检查三个高级清理选项。
+2. 选择 **Run cleanup**（运行清理），查看确认信息，然后选择 **Run Docker Cleanup**。
+3. 等待执行完成。
+
+手动清理不会等待计划时间或磁盘阈值。如果已有清理正在执行，它会排队等待当前执行完成，而不是被丢弃。每台服务器同一时间只运行一个清理任务。
+
+</Step>
+<Step>
+
+### 检查清理结果
+
+打开 **Recent executions**（最近执行），选择最新一次清理。
+
+确认以下各项：
+
+1. 执行成功完成
+2. 命令输出中没有意外报错
+3. 在存在未使用数据时磁盘使用率有所下降
+4. 重要的应用和数据库仍正常运行
+5. 你预期的应用回滚镜像仍然可用
+
+</Step>
+</Steps>
+
+## 资源操作后的清理
+
+只有当磁盘使用率达到或超过所配置的清理阈值，且过去一小时内没有已完成的清理时，停止或删除资源才会触发 Docker 清理。计划清理由独立的调度进程每分钟分发一次。丢失的排队清理任务会被记录为失败，并通知团队。

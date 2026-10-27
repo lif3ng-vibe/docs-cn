@@ -1,0 +1,143 @@
+---
+title: 用 Coolify 将 Webstudio 项目部署到 Hetzner
+description: 完整讲解如何借助 Docker、GitHub 集成与自动部署，用 Coolify 把 Webstudio 项目部署到 Hetzner 服务器。
+---
+
+# 用 Coolify 部署 Webstudio 项目
+
+Coolify 能让你的 Webstudio 项目部署到 Hetzner 变得既简单又强大。
+
+在本指南中，你将学会如何设置项目、部署到 Hetzner 服务器，并让基础设施完全掌控在自己手中——只需几个简单的步骤。
+
+
+<Callout type="warn" title="注意！">
+
+本指南使用的是 Hetzner 的服务器。
+
+不过，如果你使用的是其他主机服务商，同样可以参照本指南在其服务器上操作。
+
+如果你更喜欢看视频而不是读文档，可以观看这份[教程视频](https://youtu.be/OnHLO2Plt2E?si=yDM77oK7Xd5UsRSP)。
+
+</Callout>
+
+
+## 你需要准备什么
+
+开始之前，请确保你已经拥有：
+
+- 一个用于托管代码的 [GitHub 账号](https://github.com?utm_source=coolify.io)。
+- 一个用于创建服务器的 [Hetzner 账号](https://coolify.io/hetzner)（或任意其他主机服务商的账号）。
+- 本地安装好 [Webstudio CLI](https://docs.webstudio.is/university/self-hosting/cli?utm_source=coolify.io)，用于管理项目导出。
+
+## 1. 创建 GitHub 仓库
+
+先在 GitHub 上[新建一个仓库](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository)，用来存放你的 Webstudio 项目代码。
+
+仓库创建好后，[将其克隆](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)到本地，开始本地开发。
+
+## 2. 导出 Webstudio 项目
+
+使用 Webstudio 的 [CLI](https://docs.webstudio.is/university/self-hosting/cli) 导出项目，并选择 **Docker** 选项。
+
+这样项目就能通过 Coolify 部署，无需额外安装依赖。
+
+## 3. 将代码推送到 GitHub
+
+项目导出到本地后，[把代码推送](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository)到你刚创建的 GitHub 仓库。这样项目就可以被部署了。
+
+## 4. 准备你的 Hetzner 服务器
+
+
+<Callout type="warn" title="注意！">
+
+如果你已经有一台服务器，就不必再购买新的。
+
+**Webstudio 官方建议**服务器至少配备 **1 个 CPU 和 2 GB 内存**，以保证流畅运行。
+
+如果你的服务器已经连接到 Coolify，可直接跳到[第 6 步](#6-在-coolify-上配置项目)。
+
+</Callout>
+
+按以下步骤准备好你的 Hetzner 服务器：
+
+1. **新建服务器**： 登录 [Hetzner Cloud 控制台 ↗](https://console.hetzner.cloud/)，创建一台新服务器。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/1.webp" />
+
+1. **选择区域**： 选择最适合你需求的区域。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/2.webp" />
+
+1. **选择 Ubuntu**： 挑选一个 Ubuntu 镜像（务必确认是 Docker 支持的版本，参见 [Docker 的 Ubuntu 系统要求](https://docs.docker.com/engine/install/ubuntu/#os-requirements)）。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/3.webp" />
+
+1. **配置资源**： 推荐使用共享型 CPU、内存至少 2 GB 的机型。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/4.webp" />
+
+1. **分配 IPv4 地址**： 确保你的服务器拥有独立的 IPv4 地址。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/5.webp" />
+
+
+1. **完成创建**： 点击 **Create and Buy Now**（立即创建并购买），然后等待服务器创建完成。
+
+1. **保存 IP**： 复制服务器的 IPv4 地址，稍后会用到。
+
+## 5. 将 Coolify 连接到你的服务器
+
+
+<Callout type="warn" title="注意！">
+
+如果你的服务器已经连接到 Coolify，可直接跳到[下一步](#6-在-coolify-上配置项目)。
+
+</Callout>
+
+
+1. **添加私钥**： 登录你的 Coolify 账号（新用户请先注册），然后添加一把新的私钥（Private Key）。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/6.webp" />
+  <br />
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/7.webp" />
+
+2. **添加服务器**： 进入 **Servers**（服务器）标签页，填入 Hetzner 服务器的 IPv4 地址，添加一台新服务器。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/8.webp" />
+  <br />
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/9.webp" />
+
+3. **验证服务器**： 点击 **Validate Server & Install Docker Engine**（验证服务器并安装 Docker 引擎）。Coolify 会自动在服务器上安装所有必需组件。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/10.webp" />
+
+4. **检查状态**： 完成后，你会看到绿色的 **Proxy Running**（代理运行中）状态，说明一切就绪。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/11.webp" />
+
+## 6. 在 Coolify 上配置项目
+1. **新建项目**： 进入 **Projects**（项目）板块，创建一个新项目。
+
+2. **添加资源**： 添加一个新资源，并选择你的 GitHub 仓库作为来源。
+
+3. **连接仓库**： 通过 GitHub App 集成授权访问你的仓库。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/12.webp" />
+
+4. **选择构建包**： 将 Build Pack（构建包）改为 **Dockerfile**，然后点击继续（Continue）按钮。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/13.webp" />
+
+5. **配置域名并部署**： 在域名字段填入你的域名，点击 **Deploy**（部署），等待 Coolify 构建并部署你的项目。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/14.webp" />
+
+6. **部署成功**： 部署完成后，你会看到 "Deployment is Finished"（部署已完成）的提示。
+
+7. **访问站点**： 使用项目仪表盘顶部的 **Links**（链接）按钮访问你的线上站点。
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/15.webp" />
+
+8. **可选——第三方域名**： 如果你的项目从外部来源加载图片，请把这些域名以逗号分隔的形式添加到环境变量 `DOMAINS` 中。（添加变量后记得重启应用）
+  <ZoomImage src="/docs-cn/coolify/images/knowledge-base/how-tos/webstudio-with-hetzner/16.webp" />
+
+## 7. 更新你的 Webstudio 站点
+
+要发布更新、保持站点最新，请按以下步骤操作：
+
+1. **发布更改**： 在 Webstudio 编辑器中点击 **Publish**（发布），生成最新的构建数据。
+2. **同步并构建**： 在终端中运行以下命令：
+   ```bash
+   webstudio sync
+   webstudio build --template docker
+   ```
+3. **推送更新**： 提交并将更改推送到 GitHub。Coolify 会检测到更新，并自动触发一次新的部署。
+
+大功告成！

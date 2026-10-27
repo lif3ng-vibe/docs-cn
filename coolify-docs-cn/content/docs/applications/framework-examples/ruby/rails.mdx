@@ -1,0 +1,16 @@
+---
+title: Ruby on Rails
+description: 在 Coolify 上部署 Ruby on Rails 应用：数据库迁移、MVC 模式支持与自动化部署流程。
+---
+
+# Ruby on Rails
+
+Ruby on Rails 是一个 Web 应用框架，按照模型-视图-控制器（MVC）模式构建数据库后端 Web 应用所需的一切都已内置。
+
+## 要求
+
+如果想在部署期间用 `NIXPACKS` build pack 完成数据库迁移，需要把 `Start Command`（启动命令）设置为：
+
+```bash
+bundle exec rake db:migrate && bundle exec bin/rails server -b 0.0.0.0 -p ${PORT:-3000} -e $RAILS_ENV
+```

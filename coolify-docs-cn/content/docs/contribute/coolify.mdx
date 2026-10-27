@@ -1,0 +1,320 @@
+---
+title: 参与核心开发
+description: 搭建 Coolify 核心开发环境，运行本地开发栈，并准备好可供评审的 pull request。
+---
+
+import {
+  ArrowsRight,
+  BranchUp,
+  BrowserTerminal,
+  Checklist2,
+  Clipboard,
+  Database,
+  DocumentText2,
+  Key,
+  Monitor,
+  Package,
+  Rocket,
+  Settings,
+  Warning22,
+} from 'reicon-react';
+
+# 为 Coolify 做贡献
+
+<CoolCallout icon={Warning22} title="外部贡献暂时暂停" type="danger">
+
+由于大量低质量的 pull request 垃圾提交，外部贡献暂时停止。恢复外部贡献**尚无明确时间表**。
+
+在外部贡献重新开放之前，请先不要提交外部 pull request。以下工作流程仍可供参考。
+
+</CoolCallout>
+
+本文介绍如何搭建本地 Coolify 开发环境，并为核心仓库准备代码贡献。
+
+<CoolDocsPage>
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+安装 Docker 和 Spin，并在本地 fork [coollabsio/coolify](https://github.com/coollabsio/coolify)。用 `spin up` 启动开发栈，在 **http://localhost:8000** 测试；修复类改动向 `main` 发起 pull request，新特性则面向当前的 `release/v4.x` 分支。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Monitor} title="搭建开发环境" contentClassName="!p-0">
+<CoolAccordions>
+<Accordion title="Windows">
+
+使用 WSL2 加 Docker CE，获得最接近 Linux 的开发体验。
+
+- 安装 [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install?ref=coolify)，并选择一个 Linux 发行版（如 Ubuntu）。
+- 在 WSL2 内安装 [Docker Engine](https://docs.docker.com/engine/install/?ref=coolify)，或使用启用 WSL2 后端的 [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/?ref=coolify)。
+- 安装 [Spin for Windows](https://serversideup.net/open-source/spin/docs/installation/install-windows#download-and-install-spin-into-wsl2?ref=coolify)。
+
+</Accordion>
+<Accordion title="macOS">
+
+本地开发推荐使用 OrbStack，它比 Docker Desktop 更轻量。
+
+- 安装 [OrbStack](https://docs.orbstack.dev/quick-start#installation?ref=coolify) 或 [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/?ref=coolify)。
+- 安装 [Spin for macOS](https://serversideup.net/open-source/spin/docs/installation/install-macos/#download-and-install-spin?ref=coolify)。
+- 如果启动开发栈时出现权限错误，尝试用 sudo 运行 Spin。
+
+</Accordion>
+<Accordion title="Linux">
+
+推荐使用 Docker Engine，可以省去额外的虚拟机层。
+
+- 为你的发行版安装 [Docker Engine](https://docs.docker.com/engine/install/?ref=coolify)，如果想要图形界面也可以使用 [Docker Desktop for Linux](https://docs.docker.com/desktop/install/linux-install/?ref=coolify)。
+- 安装 [Spin for Linux](https://serversideup.net/open-source/spin/docs/installation/install-linux#configure-docker-permissions?ref=coolify)。
+- 确保你的用户可以直接运行 Docker 命令，避免反复重来安装流程。
+
+</Accordion>
+</CoolAccordions>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Checklist2} title="验证安装">
+
+安装好 Docker 或 OrbStack 与 Spin 之后，确认两个命令都可用。
+
+```bash
+docker --version
+spin --version
+```
+
+</CoolCallout>
+
+---
+
+<CoolFlow
+  id="local-repository"
+  icon={BranchUp}
+  title="Fork 并设置本地仓库"
+  description="在自己的 fork 上工作，改动就绪后再向 Coolify 发起 pull request。"
+  steps={[
+    'Fork [Coolify 仓库](https://github.com/coollabsio/coolify)',
+    '在本地克隆你的 fork',
+    '在代码编辑器中打开该仓库',
+    '让每次改动聚焦于一个问题或一个特性',
+  ]}
+  list={[
+    '你可以用 Git 克隆，也可以使用 [GitHub Desktop](https://desktop.github.com/?ref=coolify)。',
+    '好用的编辑器包括 [VS Code](https://code.visualstudio.com/download?ref=coolify)、[Cursor](https://www.cursor.com/?ref=coolify) 和 [Zed](https://zed.dev/download?ref=coolify)。',
+    '使用能描述本次改动的分支名。',
+  ]}
+/>
+
+---
+
+<CoolFlow
+  id="environment-variables"
+  icon={Key}
+  title="配置环境变量"
+  description="Coolify 自带开发环境示例文件，启动开发栈前先复制一份。"
+  steps={[
+    '在仓库根目录找到 `.env.development.example`',
+    '复制一份并把副本重命名为 `.env`',
+    '检查其中的值，并按你的机器情况调整',
+    '启动 Spin 前保存文件',
+  ]}
+  list={[
+    '本地机密保存在 `.env` 中，不要提交该文件。',
+    '启动开发栈前先过一遍示例值。',
+    '修改环境变量后要重启 Spin。',
+  ]}
+/>
+
+---
+
+<CoolCallout icon={Rocket} title="启动 Coolify">
+
+在本地 Coolify 仓库中打开一个终端，并让进程保持运行。
+
+```bash
+spin up
+```
+
+如果遇到权限错误（macOS 上尤其常见），运行：
+
+```bash
+sudo spin up
+```
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="启动提示" type="warn">
+
+启动过程中你可能会看到一些报错。开发栈启动阶段出现这些情况属于正常现象。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={BrowserTerminal} title="开始开发" contentClassName="!p-0">
+<CoolPanel>
+
+使用预置的开发账号在本地登录。
+
+<CoolValueGrid>
+  <CoolValueCard label="URL">http://localhost:8000</CoolValueCard>
+  <CoolValueCard label="用户名">test@example.com</CoolValueCard>
+  <CoolValueCard label="密码">password</CoolValueCard>
+</CoolValueGrid>
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+| 工具 | URL | 说明 |
+| :--- | :--- | :--- |
+| Coolify 应用 | http://localhost:8000 | 使用 test@example.com 和 password 登录。 |
+| Laravel Horizon | http://localhost:8000/horizon | 仅 root 用户及 `HORIZON_ALLOWED_EMAILS` 中列出的用户可用。 |
+| Mailpit | http://localhost:8025 | 接收本地开发邮件。 |
+| Telescope | http://localhost:8000/telescope | 默认关闭；设置 TELESCOPE_ENABLED=true 可启用。 |
+
+</CoolPanel>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Settings} title="启用 Telescope">
+
+Telescope 默认关闭。需要调试面板时，把下面这行加进你的 `.env` 文件。
+
+```bash
+TELESCOPE_ENABLED=true
+```
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Clipboard} title="创建 pull request">
+
+- 提交并将更改推送到你的 fork。
+- 向 Coolify 仓库发起 pull request。
+- 修复、小改进和安全修复以 `main` 为目标分支。
+- 新特性和较大的改动以当前的 `release/v4.x` 分支为目标分支。`x` 是下一个 minor 版本：生产环境为 `4.4.x` 时，使用 `release/v4.5`。不存在 `next` 分支。
+- 从你要作为目标的同一条分支切出工作分支。
+- 在本地应用中手动测试改动的流程，不要只依赖测试文件。
+- 按 pull request 模板填写维护者需要的细节。
+- pull request 一旦可以评审，就尽快移出草稿（draft）状态。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="草稿 pull request" type="warn">
+
+长期停留在草稿状态的 pull request 可能会被维护者关闭。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Database} title="开发备忘">
+
+切换分支、拉取更新或修改数据库结构之后，请执行迁移。
+
+```bash
+docker exec -it coolify php artisan migrate
+```
+
+如需用默认种子数据重置开发数据库，运行：
+
+```bash
+docker exec -it coolify php artisan migrate:fresh --seed
+```
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Warning22} title="重置开发环境" type="warn">
+
+如果本地开发栈或数据库坏了，可以删除开发容器和卷（volume），然后从干净状态重新开始。
+
+<Steps>
+<Step>
+
+**停止正在运行的 Spin 进程**
+
+在运行 Spin 的终端里按 Ctrl+C。
+
+</Step>
+<Step>
+
+**删除开发容器**
+
+```bash
+docker rm coolify coolify-db coolify-redis coolify-testing-host coolify-minio coolify-vite-1 coolify-mail
+```
+
+</Step>
+<Step>
+
+**删除开发卷**
+
+```bash
+docker volume rm coolify_dev_backups_data coolify_dev_postgres_data coolify_dev_coolify_data coolify_dev_minio_data
+```
+
+如果你的卷名不带 `coolify` 前缀，运行前先把命令中卷名的前缀去掉。
+
+</Step>
+<Step>
+
+**清理未使用的镜像**
+
+```bash
+docker image prune -a
+```
+
+</Step>
+<Step>
+
+**重新启动 Coolify**
+
+```bash
+spin up
+```
+
+</Step>
+<Step>
+
+**执行迁移和填充器**
+
+```bash
+docker exec -it coolify php artisan migrate:fresh --seed
+```
+
+</Step>
+</Steps>
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="开发指南">
+<CoolActionCardGrid>
+<CoolActionCard
+  href="/contribute/service"
+  icon={Package}
+  title="服务模板"
+  type="secondary"
+  description="按照约定的结构与验证方式添加一键服务模板。"
+  bullets={['模板结构', '元数据规则', '测试清单']}
+  btn-cta="查看服务指南"
+/>
+<CoolActionCard
+  href="/contribute/documentation"
+  icon={DocumentText2}
+  title="文档"
+  type="secondary"
+  description="在保持现有行文风格与组件模式的前提下改进这些文档。"
+  bullets={['MDX 模式', '文档结构', '评审预期']}
+  btn-cta="查看文档指南"
+/>
+</CoolActionCardGrid>
+</CoolCallout>
+
+</CoolDocsPage>

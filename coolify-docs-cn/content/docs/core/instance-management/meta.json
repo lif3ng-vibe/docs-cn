@@ -1,0 +1,12 @@
+{
+  "title": "实例管理",
+  "pages": [
+    "instance-settings",
+    "environment-variables",
+    "update",
+    "reverb-migration",
+    "update-coolify-database",
+    "downgrade",
+    "uninstallation"
+  ]
+}

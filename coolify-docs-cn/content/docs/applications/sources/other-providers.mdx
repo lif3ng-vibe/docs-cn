@@ -1,0 +1,34 @@
+---
+title: 其他 Git 提供方
+description: 通过公开 HTTPS 访问或 SSH 部署密钥，从其他兼容 Git 的提供方部署。
+---
+
+# 其他 Git 提供方
+
+Coolify 可以从其他兼容 Git 的提供方部署，包括 Forgejo、Gogs 与自托管 Git 服务器。
+
+可选用：
+
+- [Public Repository](/applications/sources/public-repositories)（公开仓库），配合无需身份验证的 HTTPS 克隆 URL
+- [Private Repository (with deploy key)](/applications/sources/deploy-keys)（私有仓库（带部署密钥）），配合 SSH 克隆 URL
+
+部署服务器必须能解析并访问该 Git 主机。
+
+## 自动部署
+
+Coolify 内置的手动提供方 webhook 针对 GitHub、GitLab、Bitbucket 与 Gitea 做了各自的 payload 与签名处理。
+
+对于其他提供方，可以在必需检查通过后，用它的 CI 或工作流系统调用 **Deploy webhook URL**（部署 webhook URL）：
+
+```bash
+curl --fail --request POST "$COOLIFY_WEBHOOK" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN"
+```
+
+把 webhook URL 与 API 令牌作为受保护的 CI secret 保存。
+
+## 预览部署
+
+自动拉取请求预览要求提供方使用受支持的事件格式。如果提供方不受支持，可以通过 Coolify API 或 CI 的部署 webhook 自行实现所需的预览流程，也可以手动部署预览。
+
+在生产发布依赖这套集成之前，先测试克隆、一次手动部署和一次自动部署。

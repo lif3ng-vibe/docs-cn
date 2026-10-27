@@ -1,0 +1,46 @@
+---
+title: 概览
+description: 查找 Coolify API 的基础 URL，以及认证、访问控制、限额、错误和端点相关的文档。
+---
+
+# Coolify API
+
+Coolify REST API 让集成程序能够查看和管理团队、项目、应用、数据库、服务、服务器、部署以及其他 Coolify 资源。
+
+## 基础 URL
+
+| 部署方式 | 基础 URL |
+| :--- | :--- |
+| Coolify Cloud | `https://app.coolify.io/api/v1` |
+| 自托管 Coolify | `https://<your-coolify-domain>/api/v1` |
+
+例如，部署在 `https://coolify.shadowarcanist.com` 的自托管实例使用：
+
+```txt
+https://coolify.shadowarcanist.com/api/v1
+```
+
+公开的健康检查位于 `/api/health` 和 `/api/v1/health`，不需要 Bearer 令牌。
+
+---
+
+## 发送受保护请求之前
+
+1. 为集成所需的团队和权限创建 [API 令牌](/core/security/credentials/api-tokens)。
+2. 按照[授权](/api/authorization)的说明，将令牌作为 Bearer 凭据发送。
+3. 按照[发起请求](/api/making-requests)构造 URL、请求头、参数和请求体。
+4. 从 API 侧边栏的 **Endpoints** 中选择一个操作。
+
+在自托管实例上，还需要管理员启用 API 访问。使用 [IP 白名单](/api/ip-allowlist)启用 API，并可选地按来源地址限制请求。
+
+---
+
+## API 参考章节
+
+- [发起请求](/api/making-requests)：讲解 URL、方法、请求头、参数、请求体和响应。
+- [授权](/api/authorization)：讲解 Bearer 令牌与访问检查。
+- [权限](/api/permissions)：涵盖令牌能力、团队范围、角色与敏感数据。
+- [IP 白名单](/api/ip-allowlist)：涵盖自托管的 API 访问与来源 IP 限制。
+- [速率限制](/api/rate-limits)：说明请求限额、响应头与重试。
+- [错误](/api/errors)：讲解状态码与常见失败响应。
+- **Endpoints**：包含每个 API 操作生成的请求与响应 schema。

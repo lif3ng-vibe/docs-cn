@@ -1,0 +1,132 @@
+---
+title: 基本身份验证
+description: 使用 Caddy 的 HTTP 基本身份验证保护 Coolify 应用。
+---
+
+# 基本身份验证（Basic Authentication）
+
+HTTP 基本身份验证会在 Caddy 把请求转发给应用之前，要求提供用户名和密码。对于标准应用，Coolify 可以生成所需的 Caddy 标签和 bcrypt 哈希。
+
+<Callout type="info" title="敏感系统请使用应用自身的身份验证">
+HTTP 基本身份验证用一个共享凭据保护一条路由，它不能替代应用账户、基于角色的访问控制、多因素身份验证或单点登录（SSO）。
+</Callout>
+
+## 保护资源
+
+根据资源的部署方式选择对应的路径。
+
+<Tabs id="caddy-basic-auth-resource-type" items={['标准应用', 'Docker Compose 或服务']}>
+<Tab value="标准应用">
+
+### 自动方式
+<Steps>
+<Step>
+
+#### 打开应用设置
+
+打开应用，选择 **General**，然后找到 **Security > Authentication**。
+
+</Step>
+<Step>
+
+#### 添加凭据
+
+在 **Authentication** 中选择 **HTTP Basic Authentication**，然后输入 **Username** 和 **Password**，并保存应用设置。
+
+Coolify 会对密码做哈希处理，并为每条生成的 Caddy 路由添加一个 `caddy_<index>.basicauth.<username>` 标签。
+
+</Step>
+<Step>
+
+#### 重新部署并验证
+
+重新部署应用。在浏览器的隐私窗口中打开它的域名，确认浏览器在加载应用之前会请求新的凭据。
+
+</Step>
+</Steps>
+### 手动方式
+
+<Steps>
+<Step>
+#### 生成凭据
+    使用 Caddy CLI 生成 bcrypt 哈希：
+
+    ```bash
+    caddy hash-password --plaintext '<password>'
+    ```
+</Step>
+<Step>
+#### 添加标签
+打开应用的 **General** 页面，找到 **Container labels**，将 **Label management** 设为 **Managed manually (edit labels yourself)**。添加一个 `basicauth` 标签，其索引与 Coolify 已为你的域名生成的索引一致：
+
+```ini
+caddy_0.basicauth.<username>="<bcrypt-hash>" # [!code ++][!code focus]
+caddy_0.encode=zstd gzip
+caddy_0.handle.0_reverse_proxy={{upstreams 3000}}
+caddy_0.handle=/*
+caddy_0.header=-Server
+caddy_0.try_files={path} /index.html /index.php
+caddy_0=https://domain.com # [!code focus]
+caddy_ingress_network=coolify
+```
+</Step>
+<Step>
+
+    #### 重新部署并验证
+
+    重新部署应用。在浏览器的隐私窗口中打开它的域名，确认浏览器在加载应用之前会请求新的凭据。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="Docker Compose 或服务">
+
+使用 Caddy CLI 生成 bcrypt 哈希：
+
+```bash
+caddy hash-password --plaintext '<password>'
+```
+
+把结果添加到服务的标签中。`caddy_0` 前缀必须与你要保护的域名所生成的 Caddy 路由索引一致。
+
+```yaml
+services:
+  app:
+    image: nginx:alpine
+    labels: # [!code ++:2][!code focus:2]
+      - 'caddy_0.basicauth.<username>="<caddy-bcrypt-hash>"'
+```
+
+保存并重新部署资源。在隐私窗口中打开域名，验证提示和凭据是否正常。
+
+<Callout type="warning" title="请用 Caddy 生成哈希">
+不要把明文密码放进标签。Caddy 要求使用受支持的密码哈希格式，`caddy hash-password` 生成的正是正确格式。
+</Callout>
+
+</Tab>
+</Tabs>
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="登录提示没有出现">
+
+确认在启用身份验证或修改标签之后，资源已经重新部署。
+
+</Accordion>
+
+<Accordion title="凭据被拒绝">
+
+用 `caddy hash-password` 生成一个新哈希，替换现有的标签值，然后重新部署资源。不要使用明文密码，也不要使用为其他身份验证格式生成的哈希。
+
+</Accordion>
+
+<Accordion title="Caddy 身份验证标签未生效">
+
+确认 `caddy_0` 路由索引与运行容器上的域名标签匹配。查看 **Servers > your server > Proxy > Logs**，寻找 Caddyfile 适配或身份验证相关的错误。
+
+</Accordion>
+
+</Accordions>

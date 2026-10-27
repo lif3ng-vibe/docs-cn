@@ -1,0 +1,61 @@
+---
+title: Hetzner
+description: 使用 Coolify 的 Hetzner 优惠码，新 Hetzner 账户可获得有效期 3 个月的 20 欧元赠金。如何兑换，以及它与官方注册优惠的对比。
+---
+
+import {
+  ReceiptDiscount2,
+  SecuritySafe2,
+} from 'reicon-react';
+
+# Hetzner 优惠码：新用户专享 20 欧元赠金
+
+使用 Coolify 的 Hetzner 优惠码可获得 **20 欧元**账户赠金，适用于新 Hetzner 账户，有效期 3 个月。其他合作伙伴优惠见[优惠汇总](/offers)。
+
+<CoolDocsPage data-offers-page spacing="none">
+
+<CoolCallout icon={ReceiptDiscount2} title="优惠码" contentClassName="!p-0">
+<CoolPanelGrid>
+<CoolPanel>
+
+使用下方 Coolify 优惠码，即可获得 **20 欧元** Hetzner 账户赠金，有效期 3 个月。
+
+<CoolCopyCode label="优惠码" value="C00L1FYLM40" />
+
+</CoolPanel>
+<CoolPanel>
+
+**赠金对比**
+
+<CoolValueGrid columns={1}>
+<CoolValueCard layout="split" label="Coolify 优惠码" description="面向新 Hetzner 用户，有效期 3 个月。">€20</CoolValueCard>
+<CoolValueCard layout="split" label="Hetzner 注册码" description="面向新 Hetzner 用户，有效期 1 个月。">€50</CoolValueCard>
+</CoolValueGrid>
+
+</CoolPanel>
+</CoolPanelGrid>
+</CoolCallout>
+
+<Callout type="warning" title="仅限新 Hetzner 用户">
+
+Coolify 优惠码仅面向新 Hetzner 用户开放。
+
+</Callout>
+
+<CoolFlow
+  id="activate-promo-code"
+  icon={SecuritySafe2}
+  title="激活优惠码"
+  description="在创建任何资源之前，先从新建的 Hetzner 账户兑换优惠码。"
+  steps={[
+    '创建一个 [Hetzner 账户](https://accounts.hetzner.com/signUp)',
+    '打开 [User Account](https://accounts.hetzner.com/user) -> [Promo Codes](https://accounts.hetzner.com/user/promoCodes)',
+    '输入 Coolify 优惠码',
+  ]}
+  list={[
+    '赠金会自动抵扣后续账单。',
+    'Coolify 优惠码给你 3 个月时间使用这笔赠金。',
+  ]}
+/>
+
+</CoolDocsPage>

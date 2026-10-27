@@ -1,0 +1,256 @@
+---
+title: 安全模型
+description: 了解 Coolify 的安全边界、内置控制措施,以及你必须自行保障的基础设施与工作负载。
+---
+
+import {
+  ArrowsRight,
+  CloudStorage,
+  Database,
+  Globe3,
+  Key2,
+  Rocket2,
+  SecuritySafe2,
+  Server,
+  Settings,
+  ShieldSecurity2,
+  Warning22,
+} from 'reicon-react';
+
+# 安全模型
+
+Coolify 是一个特权控制平面:这一管理层存储凭据并通过 SSH 连接到服务器,从而能在你的基础设施上部署和管理 Docker 资源。
+
+Coolify 保护对自身控制功能的访问,并对受支持的 API 和 webhook 请求进行身份验证。而你控制的每一台服务器、应用、数据库、网络和备份,其安全仍由你负责。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+把对 Coolify 的管理访问当作特权基础设施访问来对待。保护 Coolify 账户、API 令牌、实例数据和 SSH 密钥,要像保护直接服务器访问一样谨慎。
+
+Coolify Cloud 改变的只是由谁运维 Coolify 实例。它并不会转移你所提供的服务器、应用、数据库和服务的安全责任。
+
+</CoolCallout>
+
+---
+
+## 安全边界
+
+Coolify 为管理层提供安全控制。这些控制不能替代主机加固、应用安全或事件响应计划。
+
+<CoolCompare
+  id="coolify-security-boundary"
+  className="not-prose"
+  icon={ShieldSecurity2}
+  title="每一层由谁保障"
+  description="该边界同时适用于自托管 Coolify 与 Coolify Cloud。如果选择自托管,Coolify 实例本身的运维和防护也由你负责。"
+>
+<CoolCompareColumn
+  title="Coolify 提供"
+  items={[
+    '仪表盘身份验证、可选的 2FA、OAuth 登录和基于团队的访问控制',
+    '经身份验证的 API 访问,令牌限定团队范围、可选权限、有效期和可选的来源 IP 限制',
+    '对受支持的凭据、私钥、环境变量值和集成机密进行加密的数据库存储',
+    '对受支持 Git 提供商 webhook 的签名或令牌校验',
+    '服务器本地的代理路由,以及已配置域名的 HTTPS 证书自动化',
+  ]}
+/>
+<CoolCompareColumn
+  title="你仍需负责"
+  items={[
+    '谁可以注册、加入团队、获得更高权限角色,以及创建或使用 API 令牌',
+    '操作系统与 Docker 更新、SSH 访问、防火墙规则和提供商网络控制',
+    '应用代码、依赖、容器镜像、运行时权限和公开端点',
+    'DNS、外部负载均衡器、CDN、WAF,以及服务器之外暴露的任何端口',
+    '机密轮换、工作负载数据、备份、恢复演练、监控和事件响应',
+  ]}
+/>
+</CoolCompare>
+
+对于 Coolify Cloud,Coolify 团队负责运维 Coolify 控制平面。但你的账户、API 令牌、已连接的服务器、已部署的资源和工作负载数据,仍需由你保障。
+
+---
+
+## Coolify 的安全控制
+
+内置控制覆盖控制平面安全的四个方面。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '账户访问',
+      description: '邮箱密码登录、可选的 OAuth 和 2FA、团队成员身份和角色,共同决定仪表盘访问权限。',
+      icon: SecuritySafe2,
+    },
+    {
+      title: 'API 自动化',
+      description: 'API 令牌属于某个团队,并带有选定的权限和可选的有效期。',
+      icon: Key2,
+    },
+    {
+      title: '存储的凭据',
+      description: 'Coolify 在把 SSH 私钥、环境变量值、提供商令牌和数据库密码等受支持的值写入数据库之前会先加密。',
+      icon: Database,
+    },
+    {
+      title: '部署触发器',
+      description: '受支持的 Git 提供商 webhook 会先用签名或共享令牌校验,之后才会把匹配的部署加入队列。',
+      icon: Rocket2,
+    },
+  ]}
+/>
+
+在自托管实例上,**Settings > Advanced** 还允许你禁用 API 访问,或将其限制到特定的 IP 地址和 CIDR 段。令牌的创建与吊销在 **Keys & Tokens > API Tokens** 中进行。
+
+可用的令牌权限和请求格式,参阅 [API 令牌](/core/security/credentials/api-tokens)。
+
+这些控制降低了 Coolify 所管理路径中的风险。它们不能替代安全审查、依赖更新或应用内部的运行时防护。
+
+---
+
+## 保护 Coolify 控制平面
+
+控制平面掌握着协调部署所需的访问能力。这一层的薄弱点会影响信任它的每一台已连接服务器。
+
+<CoolCallout type="warning" icon={Warning22} title="控制平面失守可能波及已连接的服务器">
+
+Coolify 存储 SSH 私钥,并用它们在已连接的服务器上运行命令。攻击者一旦获得对 Coolify 实例足够的管理权限,就能利用同样的管理路径。
+
+请限制管理访问。如果自托管 Coolify,请安装受支持的更新,并保护好实例数据库、`/data/coolify/source/.env`、备份和 SSH 密钥存储。
+
+</CoolCallout>
+
+### 保护账户访问
+
+- 保持 **Registration Allowed** 处于禁用状态,除非你确实允许他人自行创建账户。
+- 为每个拥有更高权限的账户启用 2FA,并妥善保存恢复码。
+- 只给团队成员所需的最低角色,不再需要时立即移除访问。
+- 与可信的身份提供商配置 OAuth 或 SSO,并限制该提供商允许登录的人员范围。
+
+### 限制 API 与集成访问
+
+- 仅当某个集成确实需要时,才启用 **API Access**。
+- 当调用方的来源地址可预测时,尽量在自托管实例上配置 **Allowed IPs for API Access**。
+- 为每个集成发放单独的令牌,只授予其所需的权限,并设置合理的有效期。
+- 吊销未使用或已泄露的令牌,并在所有使用它们的集成中替换。
+
+### 保护加密数据与恢复材料
+
+Coolify 在把受支持的凭据写入数据库之前会先加密。在自托管实例上,`/data/coolify/source/.env` 中的 `APP_KEY` 就是用于该加密的密钥。
+
+数据库备份不包含环境文件。请把 `APP_KEY` 单独保存在密码管理器或 Coolify 服务器之外的其他安全位置,并与该实例的其他恢复材料放在一起。缺少匹配的密钥时,Coolify 无法从恢复出来的数据库中读取加密凭据。
+
+确切的备份与 `APP_KEY` 操作流程,参阅[备份 Coolify](/core/backup-and-recovery/instance-backup)。
+
+### 保持控制平面可恢复
+
+对于自托管 Coolify,要安装受支持的更新、把实例备份存放在服务器之外,并演练[实例恢复流程](/core/backup-and-recovery/instance-restore)。Coolify Cloud 会处理控制平面的更新和备份,但你仍然需要为服务器上的工作负载准备恢复计划。
+
+---
+
+## 保护已连接的服务器与工作负载
+
+Coolify 自动化已连接服务器上的工作,但它不会成为这些服务器或其上资源的安全边界。
+
+### 加固每台服务器
+
+- 保持服务器上运行的操作系统、Docker Engine 和 Coolify 代理为最新。
+- 为 Coolify 使用专用的 SSH 密钥,并限制可以使用对应服务器账户的人员。
+- 在提供商防火墙或安全组中限制入站 SSH;网络设置允许时,也在主机防火墙中加以限制。
+- 只开放 Coolify 代理和你有意暴露的资源所需的端口。
+- 监控主机可用性、磁盘用量、身份验证活动和异常的容器变更。
+
+Coolify 的自动化 SSH 连接必须能在无交互提示的情况下工作。配置服务器账户和密钥时,遵循 [OpenSSH 指南](/core/infrastructure/servers/openssh)。
+
+### 控制网络暴露面
+
+应用流量会到达运行资源的服务器上的代理。请保护好该服务器前方的防火墙、DNS,以及任何外部负载均衡器、CDN 或 WAF。
+
+数据库和内部服务应保留在 Docker 网络中,除非它们需要公开访问。发布主机端口会创建一条不依赖基于域名的代理路由的直接网络路径,因此只在可信客户端需要该连接时才暴露。
+
+流量与 Docker 网络模型,参阅[Coolify 中的网络](/core/networking-in-coolify)。
+
+### 保护应用与数据
+
+- 部署之前审查源码仓库、容器镜像、Dockerfile 和 Docker Compose 配置。
+- 保持应用依赖和基础镜像为最新。
+- 在需要时于应用内部实现身份验证、授权、输入校验、速率限制和日志记录。
+- 独立于 Coolify 控制平面备份,单独备份应用和数据库数据,然后测试恢复。
+
+Docker 把工作负载隔离进容器和网络,但这种隔离不能替代主机加固或应用层安全。
+
+---
+
+## 生产环境安全基线
+
+把生产工作负载放到已连接的服务器上之前,先核对这份基线:
+
+1. 通过 HTTPS 提供 Coolify 仪表盘,并尽可能限制可访问它的人员。
+2. 除非确有必要,否则禁用公开注册;启用 2FA,并审查团队角色。
+3. 保持 API 访问默认禁用;确需启用时,限制来源 IP 并按最小权限发放独立令牌。
+4. 使用专用 SSH 密钥、加固 SSH、及时修补服务器,并只放行必需的防火墙端口。
+5. 审查部署来源、环境变量值、卷挂载和每一个公开暴露的端口。
+6. 备份工作负载数据。自托管 Coolify 还要备份实例数据库,并单独保存其 `APP_KEY`。
+7. 配置监控与告警,写明如何吊销访问,并在事故发生前演练恢复流程。
+
+安全是一项持续的运维责任。每当你添加服务器、授予访问、暴露新服务或更改集成时,都应重复这项审查。
+
+---
+
+## 下一步
+
+使用详细指南,把安全模型落实到你的 Coolify 实例和已连接的服务器上。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '检查实例设置',
+      href: '/core/instance-management/instance-settings',
+      description: '配置注册、API 访问、来源 IP 限制、OAuth、更新和其他自托管实例控制项。',
+      icon: Settings,
+    },
+    {
+      title: '备份 Coolify',
+      href: '/core/backup-and-recovery/instance-backup',
+      description: '保护自托管的控制平面数据库,并把匹配的 APP_KEY 存放到服务器之外。',
+      icon: CloudStorage,
+    },
+    {
+      title: '审视网络',
+      href: '/core/networking-in-coolify',
+      description: '理解代理流量、Docker 网络、公网端口和基础设施层面的责任。',
+      icon: Globe3,
+    },
+  ]}
+  groups={[
+    {
+      title: '访问与自动化',
+      description: '配置可以操作 Coolify 的人员与集成。',
+      icon: Key2,
+      links: [
+        { title: 'API 令牌', href: '/core/security/credentials/api-tokens' },
+        { title: 'SSH 密钥', href: '/core/security/credentials/ssh-keys' },
+        { title: 'OAuth', href: '/core/security/authentication/oauth/overview' },
+        { title: 'SSO', href: '/core/security/authentication/sso/overview' },
+        { title: '2FA', href: '/core/security/authentication/2fa' },
+        { title: '终端访问', href: '/core/infrastructure/servers/web-terminal' },
+      ],
+    },
+    {
+      title: '服务器与数据保护',
+      description: '加固服务器访问,并准备好你依赖的数据恢复路径。',
+      icon: Server,
+      links: [
+        { title: 'OpenSSH', href: '/core/infrastructure/servers/openssh' },
+        { title: '数据库 SSL', href: '/databases/ssl' },
+        { title: '恢复 Coolify 实例', href: '/core/backup-and-recovery/instance-restore' },
+      ],
+    },
+  ]}
+/>
+
+## 配置校验与机密
+
+Coolify 在使用 Git ref、基于 Git 的 Compose 定义、容器名、网络名、镜像引用、存储路径和代理配置之前,都会先校验它们。遇到校验错误请改正,而不要试图用 shell 语法绕过。
+
+排队的远程命令是加密的,任务结束后即被删除。命令和解析出的机密会从失败日志和通知中排除或脱敏。团队归属决定了可以选择哪些凭据和资源,即使在另一个浏览器标签页中切换了团队也是如此。

@@ -1,0 +1,140 @@
+---
+title: 修改 Root 邮箱
+description: 当登录邮箱不正确、无法访问或收不到 Coolify 验证邮件时，在服务器终端修改 root 账户邮箱，找回自托管 Coolify 实例的访问权限。
+---
+
+# 修改 Root 邮箱
+
+当 root 邮箱地址不正确、无法访问、或收不到 Coolify 的验证邮件时，可以在服务器终端修改它。
+
+<Callout type="warning" title="仅限自托管实例">
+Coolify Cloud 用户无法访问运行该命令的容器。如果无法通过仪表盘修改 Coolify Cloud 账户邮箱，请[联系 Coolify 团队](/support)。
+</Callout>
+
+## 选择合适的方式
+
+如果你已登录、且自托管实例可以发送事务邮件，请直接使用仪表盘：
+
+1. 打开 **Profile > General**。
+2. 选择 **Change Email**。
+3. 输入新地址，选择 **Send Verification Code**。
+4. 输入发送到新地址的六位验证码，然后选择 **Verify & Update Email**。
+
+如果你无法登录、无法访问当前邮箱、或尚未配置事务邮件，请使用下文的终端流程。终端命令会立即修改登录邮箱，且不会发送验证消息。
+
+## 修改邮箱之前
+
+请确认你已具备以下条件：
+
+- 可以 SSH 访问运行自托管 Coolify 实例的服务器
+- 在该服务器上运行 Docker 命令的权限
+- 知道 root 账户的当前密码，或已计划在修改邮箱后[重置 root 密码](/core/backup-and-recovery/reset-root-password)
+- 一个拼写正确、且未被同一 Coolify 实例上其他账户使用的邮箱地址
+
+<Callout type="warning" title="终端命令不会校验地址">
+该命令不会检查邮箱格式，也不会检查邮箱能否收信。Coolify 会以小写保存该地址，实例数据库会拒绝已被其他 Coolify 账户使用的地址。提交前请核对完整地址。
+</Callout>
+
+## 通过终端修改 root 邮箱
+
+<Steps>
+<Step>
+
+### 连接到 Coolify 服务器
+
+通过 SSH 连接到运行 Coolify 控制平面的机器：
+
+```sh
+ssh root@<server-ip>
+```
+
+把 `<server-ip>` 替换为服务器的 IP 地址。如果你以非 root 用户连接，该账户必须有运行 Docker 命令的权限。如果你的服务器要求，可在下文的 Docker 命令前加上 `sudo`。
+
+</Step>
+<Step>
+
+### 确认 Coolify 容器正在运行
+
+```sh
+docker inspect --format '{{.State.Status}}' coolify
+```
+
+该命令应输出 `running`。如果 Docker 报告 `coolify` 容器不存在或未运行，请先[更新或修复 Coolify 安装](/core/instance-management/update)再继续。
+
+</Step>
+<Step>
+
+### 运行修改邮箱命令
+
+```sh
+docker exec -it coolify php artisan root:change-email
+```
+
+Coolify 会显示如下交互提示：
+
+```console
+You are about to change the root user's email.
+Give me a new email for root user:
+```
+
+输入完整的新邮箱地址。Coolify 保存后，命令会输出：
+
+```console
+Updating root email...
+Root user's email updated successfully.
+```
+
+该命令只更新 root 账户的当前登录邮箱。当前密码、2FA 配置、浏览器会话和 API 令牌均保持不变。Coolify 不会重启，已部署的应用、数据库和服务也会继续运行。
+
+</Step>
+</Steps>
+
+## 验证新登录邮箱
+
+如果当前仪表盘会话仍然可用，先保持它打开。在浏览器的隐私窗口中打开 Coolify 登录页，并使用以下信息登录：
+
+- 新的邮箱地址
+- 原有的 root 密码
+- root 账户的双因素认证码（如果启用了 2FA）
+
+你应该能用新邮箱地址登录 root 账户，并且不再能用命令执行前的旧邮箱地址登录。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="更正填错的邮箱">
+
+如果命令保存了一个拼写错误或非预期的地址，请不要直接编辑 Coolify 数据库。在 Coolify 服务器上重新运行同一条命令：
+
+```sh
+docker exec -it coolify php artisan root:change-email
+```
+
+输入正确的地址，等待输出 `Root user's email updated successfully.`，然后用更正后的地址和原有密码再重复一次隐私窗口登录验证。
+
+</Accordion>
+
+<Accordion title="更新 root 用户邮箱失败">
+
+先确认没有其他 Coolify 账户已在使用新地址。`users` 表要求每个账户邮箱唯一，但数据库拒绝重复地址时命令只会报告一个笼统的失败。
+
+然后确认 `coolify-db` 容器正在运行：
+
+```sh
+docker inspect --format '{{.State.Status}}' coolify-db
+```
+
+如果命令没有输出 `running`，请先修复 Coolify 安装再重试。如果数据库正在运行且地址唯一，请保留命令输出并[联系支持](/support)。
+
+</Accordion>
+
+<Accordion title="命令执行成功但登录仍然失败">
+
+用小写形式输入新地址，并使用 root 账户的原有密码。如果密码也不可知，请按照[重置 Root 密码](/core/backup-and-recovery/reset-root-password)操作。
+
+如果邮箱和密码验证通过后 2FA 仍阻止登录，请按照[重置 2FA](/core/backup-and-recovery/reset-2fa)操作。
+
+</Accordion>
+
+</Accordions>

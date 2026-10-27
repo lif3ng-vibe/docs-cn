@@ -1,0 +1,57 @@
+---
+title: 更新 Traefik
+description: 查看 Traefik 发布说明，在 Coolify 中更改代理镜像版本，并重启代理。
+---
+
+# 更新 Traefik
+
+当 Coolify 显示 **Traefik patch update available** 或 **New Traefik minor version available** 时，即可更新代理：在 UI 中更改镜像版本、保存配置，然后重启代理。
+
+## 先检查兼容性
+
+打开 [Traefik releases](https://github.com/traefik/traefik/releases)，查看当前版本与你打算使用的版本之间的发布说明。按照其中链接的迁移指南，确认配置项是否发生变化或被移除。
+
+使用 Coolify 默认代理配置的用户通常无需额外更改配置即可完成更新。如果你修改过默认配置，请在更新前对照新版本检查自定义的命令参数、环境变量、路由规则、中间件和动态文件。大版本升级可能需要额外的迁移步骤。
+
+保留一份当前配置和镜像版本的副本，以便在需要时恢复。重启代理会造成经由它路由的资源短暂中断。
+
+<Steps>
+<Step>
+
+### 打开代理配置
+
+打开 **Servers**，选择对应服务器，然后进入 **Proxy > Configuration**。
+
+</Step>
+<Step>
+
+### 更改镜像版本
+
+在 **Configuration file** 中找到 `services.traefik` 下的 `image`，把它的标签替换为你审查过的版本。例如：
+
+```yaml
+services:
+  traefik:
+    image: traefik:v3.7.14
+    # Keep the rest of your existing configuration.
+```
+
+上面的版本仅作示例。请使用你选定的发布版本，并保留其余配置，同时应用其发布说明中要求的任何更改。请使用明确的版本标签，让日后的更新都是有意识的决定。
+
+<Callout type="info" title="在 Coolify 中进行更改">
+一旦 Coolify 保存了代理配置，直接对 `/data/coolify/proxy/docker-compose.yml` 所做的修改就不会同步回 UI。通过 Coolify 重启时可能覆盖仅存在于磁盘上的修改。
+</Callout>
+
+</Step>
+<Step>
+
+### 保存并重启
+
+选择 **Save changes**，然后选择 **Restart Proxy** 以应用新的镜像版本。
+
+等待代理报告其正在运行。检查 **Proxy > Logs** 中有无启动或配置错误，然后打开你的应用域名，验证 HTTPS 以及各项自定义路由和中间件是否正常。
+
+如果新版本出现问题，请在 UI 中恢复之前的镜像标签和配置，保存后再次重启代理。
+
+</Step>
+</Steps>

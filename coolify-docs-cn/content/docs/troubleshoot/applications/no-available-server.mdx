@@ -1,0 +1,342 @@
+---
+title: No Available Server 错误
+description: 通过排查健康检查、域名配置、端口不匹配与 Traefik 代理问题，解决 Coolify 中的 No Available Server（503）错误。
+tags: ["No Available Server", "503"]
+---
+
+# No Available Server（503）错误
+
+如果你部署的应用或服务显示 **"No Available Server"** 错误，说明 [Traefik](/core/networking/proxy/traefik/overview)（反向代理）在所给的加密 URL（`https`）下找不到任何（健康的）容器来转发流量。
+
+## 该错误的成因
+
+出现 "No Available Server" 错误的情形包括：
+
+1. **健康检查失败**——Traefik 认为你的容器不健康
+2. **域名配置问题**——域名设置不正确，或缺少 www/非 www 变体
+3. **端口不匹配**——暴露的端口与应用实际监听的端口不一致
+4. **部署停机**——容器更新期间的短暂停机
+5. **Traefik 自身问题**——Traefik 本身的故障（例如 Docker API 版本不匹配）
+
+## 快速排查步骤
+
+<Steps>
+<Step>
+
+### 检查容器健康状态
+
+首先，确认你的容器是否在健康运行：
+
+```bash
+# SSH into your server and check container status
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+```
+
+留意状态显示 `(unhealthy)` 的容器——这说明健康检查出了问题。
+
+</Step>
+<Step>
+
+### 检查域名配置
+
+确认你在应用或服务配置中填写的域名无误，且其 DNS 记录指向正确的 IP 地址。支持的格式见[域名](/core/networking/domains)文档。
+
+</Step>
+<Step>
+
+### 检查 Traefik 代理日志
+
+查看 Traefik 日志，寻找深层问题：
+
+通过 Coolify UI：
+
+- 进入 `Servers` → `[Your Server]` → `Proxy` → `Logs`
+
+或通过 SSH：
+
+```bash
+# Check proxy logs for errors
+docker logs coolify-proxy --tail 50
+```
+
+如果看到 `client version 1.24 is too old` 这类报错，说明存在 [Docker API 版本不匹配](#更新-traefik-修复-docker-api-版本问题)问题。
+
+</Step>
+</Steps>
+
+## 常见解决方案
+
+<Accordions type="multiple">
+<Accordion title="修复健康检查失败（最常见）">
+
+**症状**：
+
+- 容器在 Docker 中显示为 `(unhealthy)`
+- 健康检查路径返回错误
+- 容器内缺少依赖工具（如 `curl`/`wget`）
+
+**步骤**：
+
+1. **临时禁用健康检查**：
+
+   - 进入应用配置
+   - 禁用健康检查
+   - 重启应用
+
+   如果问题随之解决，说明问题出在健康检查本身。
+
+2. **修复健康检查问题**：
+
+
+<Callout type="info">
+
+   以下是修复健康检查的一些常见做法，请根据你的应用和健康检查命令自行调整。更多[健康检查配置](/applications/configuration/health-checks)说明见对应文档。
+
+</Callout>
+
+
+   **容器内缺少依赖**：
+
+   确保 Docker 镜像中安装了健康检查所需的全部工具。[应用](/applications)需要安装 `curl` 或 `wget`。
+
+   ```dockerfile
+   # Add curl to your Dockerfile
+   RUN apt-get update && apt-get install -y curl
+   # OR for Alpine images
+   RUN apk add --no-cache curl
+   ```
+
+   **健康检查路径/主机名错误**：
+
+   确保应用确实在提供健康检查端点且不返回错误。大多数情况下，主机名应为 `localhost` 或 `127.0.0.1`。
+
+   **端口不匹配**：
+
+   - 确保健康检查端口与应用的监听端口一致
+   - 应用跑在 `3000` 端口，健康检查就应使用 `3000` 端口
+
+3. **手动测试健康检查**：
+
+   如果以上方法仍未解决，就在容器内手动执行健康检查命令并分析输出。
+
+   你可以在 Coolify 中打开容器的 `Terminal`（终端）标签页，或者 SSH 到服务器后运行：
+
+   ```bash
+   # SSH into your server and test a health check which uses curl
+   docker exec -it <container-name> curl -f http://localhost:3000/health
+   ```
+
+</Accordion>
+<Accordion title="修复域名配置">
+
+#### 域名设置不正确
+
+**症状**：
+
+- 自动生成的域名（如 `sslip.io`）可以访问，自定义域名却不行
+
+**步骤**：
+确认域名在 Coolify 和你的 DNS 服务商两侧都配置正确。完整配置方法见[域名](/core/networking/domains)文档。
+
+#### 重定向问题
+
+**症状**：
+
+- 重定向被设为 `Redirect to www` 或 `Redirect to non-www`
+- 根域名可以访问而 www 不行（或相反）
+
+**步骤**：
+
+1. **同时添加 www 与非 www 域名**：
+
+   确保在 `Domains` 字段中同时填入域名的 www 和非 www 两个版本，例如：`https://example.com,https://www.example.com`
+
+2. **配置域名重定向**：
+
+   - 如果两者都要可用，将 `Direction` 设为 `Allow www & non-www`
+
+3. **重启应用**：
+   - 域名改动后务必重启
+
+#### HTTPS 问题
+
+如果你的网站只能通过 HTTP 访问而无法通过 HTTPS 访问，请检查域名配置：
+
+- **需要带 SSL 的 HTTPS**：在域名字段使用 `https://` 前缀：`https://example.com`
+- **仅 HTTP**：在域名字段使用 `http://` 前缀：`http://example.com`（不会生成 SSL 证书）
+
+确保域名配置中的协议与你期望的访问方式一致，然后重启应用。
+
+</Accordion>
+<Accordion title="修复端口配置">
+
+**症状**：
+
+- 应用/服务通过 `http://IP:port` 可以访问但域名不行（需要手动端口映射）
+- [Traefik](/core/networking/proxy/traefik/overview) 无法访问到应用
+
+**步骤**：
+
+1. **检查暴露的端口**：
+
+   代理需要知道你的应用监听哪个端口，请确认端口配置无误。
+
+   <ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/1.webp" alt="显示 No Available Server 的截图" />
+
+   在[应用](/applications)中，该端口定义在 `Ports Exposes` 字段。
+
+      <ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/4.webp" alt="显示 No Available Server 的截图" />
+
+   在 **Service Stacks**（服务堆栈）中，端口要么写在 `Domains` 字段 URL 的末尾（如 `https://example.com:3000`），要么通过 `Dockerfile` 中的 `EXPOSE` 指令定义。
+
+2. **确认应用监听地址**：
+
+   <ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/3.webp" alt="显示 No Available Server 的截图" />
+
+   你的应用/服务可能只绑定了 `localhost` 或 `127.0.0.1`，导致容器外部无法访问。请确保应用监听所有接口（`0.0.0.0`）。
+
+</Accordion>
+<Accordion title="应对部署停机">
+
+**症状**：
+
+- 部署期间短暂出现 "No Available Server"
+- 仅在容器更新时发生
+
+**解决方案**：配置滚动更新
+
+确保滚动更新配置正确，参见[滚动更新](/applications/deployments/rolling-updates)文档。
+
+</Accordion>
+<Accordion title="更新 Traefik 修复 Docker API 版本问题">
+
+**症状**：
+
+- 出现 "No Available Server" 错误
+- Coolify 代理日志显示如下报错：
+  ```text
+  Error response from daemon: client version 1.24 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version
+  ```
+- 应用容器运行健康，但访问域名时显示 "No Available Server"
+
+**根本原因**：
+问题源于 Traefik 此前硬编码了 Docker API 版本。
+
+
+<Callout type="info">
+
+Traefik 团队已在 **v2.11.31** 和 **v3.6.1** 中发布修复。从这两个版本起，Traefik 会自动协商 Docker API 版本，此问题不应再出现。
+
+</Callout>
+
+
+**解决方案**：
+
+如果你已在使用 Coolify，需要按以下步骤手动更新 Traefik：
+
+1. **进入代理配置**：
+
+   - 打开 Coolify 面板（云用户为 https://app.coolify.io/）→ 服务器 → [你的服务器] → 代理 → 配置
+
+2. **修改 Traefik 版本**：
+
+   - 将版本改为 `v3.6.1`（如果想继续留在 v2，则改为 `v2.11.31`）
+
+3. **重启代理**：
+   - 点击 `Restart Proxy`（重启代理）
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/no-available-server/update-traefik-version.webp" alt="Coolify 代理 Traefik 版本更新" />
+
+**注意**：
+
+- 连接到 Coolify 实例的每台服务器都需要执行此操作
+- 自托管用户和 Coolify Cloud 用户均适用
+  - （云用户：Traefik 运行在**你自己的服务器**上而非 Coolify 侧，因此需要你按上述指引自行更新）
+- 如果你曾修改 Docker daemon 配置来设置最低支持的 API 版本，建议将其改回，以免日后引发问题。
+
+
+<Callout type="warn" title="为什么 Coolify 不为现有服务器自动更新">
+
+部分用户有自定义配置（如 DNS challenge），升级到新版 Traefik 后可能失效。更新前请先查看 [Traefik 更新日志](https://github.com/traefik/traefik/releases)。
+
+- 如果你使用的是 Coolify 默认的 Traefik 配置，可以放心升级到 v3.6.1，不会出问题。
+- 如果你目前使用 Traefik v2 且不想升级到 v3，可以改为更新到已修复的 v2.11.31。
+
+</Callout>
+
+
+</Accordion>
+</Accordions>
+
+## 进阶调试
+
+<Accordions type="multiple">
+
+<Accordion title="查看 Traefik 配置">
+
+```bash
+# View Traefik dynamic configuration
+cat /data/coolify/proxy/dynamic/*.yml
+
+# Check Traefik logs
+docker logs coolify-proxy -f
+
+# Inspect container labels to verify Traefik routing configuration
+docker inspect <your-container-name> --format='{{json .Config.Labels}}' | jq
+```
+
+</Accordion>
+
+<Accordion title="查看应用日志">
+
+```bash
+# Check your application's logs for errors
+docker logs <your-container-name> -f
+```
+
+</Accordion>
+
+<Accordion title="从容器内部测试健康检查">
+
+```bash
+# Execute health check command manually
+docker exec -it <container-name> /bin/sh
+curl -f http://localhost:3000/health
+```
+
+</Accordion>
+
+</Accordions>
+
+## 预防建议
+
+1. **始终使用健康检查**：
+
+   - 在应用中实现 `/health` 端点
+   - 确保容器内备齐所有依赖（如 `curl`/`wget`）
+
+2. **先在本地测试**：
+
+   - 部署前先测试健康检查端点
+   - 确认端口配置与应用一致
+
+3. **监控容器状态**：
+
+   - 定期用 `docker ps` 检查是否有不健康的容器
+   - 为健康检查失败设置监控
+
+4. **使用预发布环境**：
+   - 先在预发布环境测试域名配置
+
+## 何时求助
+
+如果以上方案都无效，请加入我们的 [Discord 社区](https://coolify.io/discord)，并提供：
+
+- 应用日志
+- Coolify 代理日志
+- 容器健康状态（`docker ps`）
+- 域名配置截图
+- 健康检查配置
+- 你已经尝试过的步骤
+
+这些信息能帮助社区更好地诊断与你自身环境相关的复杂问题。

@@ -1,0 +1,11 @@
+{
+  "title": "通知渠道",
+  "pages": [
+    "email",
+    "discord",
+    "telegram",
+    "slack-mattermost",
+    "pushover",
+    "webhook"
+  ]
+}

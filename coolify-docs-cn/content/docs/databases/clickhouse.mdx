@@ -1,0 +1,114 @@
+---
+title: ClickHouse
+description: 在 Coolify 上部署和运维 ClickHouse，面向分析型工作负载，提供持久化存储、计划备份和健康检查。
+---
+
+# ClickHouse
+
+Coolify 将 ClickHouse 作为独立的分析型数据库部署到所选的服务器和目标（Destination）上。新资源会自动获得生成的管理员密码、位于 `/var/lib/clickhouse` 的持久化卷、内部连接 URL 和健康检查。
+
+ClickHouse 是一种面向列的数据库，适用于分析型查询和在线分析处理（OLAP）。
+
+## 创建 ClickHouse 数据库
+
+<Steps>
+<Step>
+
+### 打开新建资源
+
+打开数据库应归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 ClickHouse
+
+在 **Databases**（数据库）下选择 **ClickHouse**。也可以按名称搜索 **ClickHouse**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择要运行 ClickHouse 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 ClickHouse 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 创建资源并打开 **General**（常规）。请检查镜像、管理员用户名、生成的密码、原生端口和连接 URL。除非外部客户端需要访问，否则保持默认的私有网络设置。
+
+</Step>
+<Step>
+
+### 启动 ClickHouse
+
+选择 **Start**（启动）并留意启动输出。等 ClickHouse 进入运行且健康的状态后，把 **Clickhouse URL (internal)**（内部 URL）复制给同一目标网络中的客户端。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| 原生内部端口 | `9000` |
+| 默认镜像 | `clickhouse/clickhouse-server:25.11` |
+| HTTP 接口 | 容器内的 `8123` |
+| 管理员用户名 | `default` |
+| 数据库 | 未配置其他数据库时为 `default` |
+| 数据挂载 | `/var/lib/clickhouse` |
+| 计划备份 | 支持 |
+| SSL | 独立数据库界面中不可用 |
+
+
+Coolify 生成的 **Clickhouse URL (internal)** 使用原生协议和端口 `9000`：
+
+```sh
+clickhouse://<username>:<password>@<database-container>:9000/<database>
+```
+
+如果 HTTP 客户端或 GUI 需要 HTTP 接口，请用 **Port mappings**（端口映射）映射容器的 `8123` 端口。当 **Public access（公开访问）> Access** 为 **Public through TCP proxy**（经 TCP 代理公开）时，原生协议请使用生成的 **Clickhouse URL (public)**（公开 URL）；客户端需要 HTTP 时另行配置 HTTP 映射。
+
+例如，映射 `8123:8123` 后，HTTP 客户端可以用 ClickHouse 管理员用户名和密码连接 `http://<server-ip>:8123`。客户端使用原生 TCP 协议（如 `clickhouse-client`）时，映射 `9000:9000`。
+
+## 配置 ClickHouse
+
+打开 **General** 修改镜像、管理员凭据、**Port mappings**、公开代理和受支持的自定义 Docker 选项。当前独立 ClickHouse 表单不提供数据库名字段；生成的 URL 使用资源配置的数据库值，默认为 `default`。Coolify 在创建资源时会创建位于 `/var/lib/clickhouse` 的持久化卷。
+
+独立数据库界面中的 ClickHouse 不提供自定义配置编辑器和 SSL 选择器。需要直接管理自定义 ClickHouse 拓扑或配置文件时，请使用 Docker Compose 部署。
+
+## 备份与恢复 ClickHouse
+
+Coolify 支持按计划备份 ClickHouse。在 **Backups**（备份）下配置计划，输入一个或多个以逗号分隔的数据库名，并配置本地或 S3 保留策略。Coolify 会创建 ClickHouse 备份归档，并按计划的保留规则清理过期副本。
+
+请使用数据库的 **Terminal**（终端）或经认可的 ClickHouse 客户端来验证恢复出的表。Coolify 内置的[导入备份流程](/databases/restore#支持的备份)不支持 ClickHouse。
+
+<Callout type="warning" title="请单独验证 ClickHouse 备份">
+
+备份归档通过 ClickHouse 自身的备份流程创建。在依赖某个归档做恢复之前，先在一个一次性的 ClickHouse 资源上验证它。
+
+</Callout>
+
+## 健康检查
+
+Coolify 的默认健康检查会在容器内运行 `clickhouse-client` 并执行一条简单查询。在 **Healthcheck**（健康检查）下配置间隔、超时、重试次数和启动等待期，保存后重启 ClickHouse。
+
+## ClickHouse 官方资源
+
+- [ClickHouse 文档](https://clickhouse.com/docs)
+- [ClickHouse 源码](https://github.com/ClickHouse/ClickHouse)
+- [ClickHouse Docker 镜像](https://hub.docker.com/r/clickhouse/clickhouse-server)
+- [ClickHouse 备份与恢复](https://clickhouse.com/docs/operations/backup)
+
+## 使用文件挂载的既有数据卷
+
+如果较旧的 ClickHouse 资源带有文件挂载并受到了数据卷问题的影响，Coolify 会保留其既有数据，并要求你在下次启动前确认是否接管。确认前请检查该卷并做好备份；不要用空卷替换它。

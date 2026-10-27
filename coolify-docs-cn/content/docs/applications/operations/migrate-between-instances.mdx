@@ -1,0 +1,670 @@
+---
+title: 迁移应用
+description: 将一个应用及其持久化状态迁移到另一个 Coolify 实例。
+---
+
+# 迁移应用
+
+本指南把一个应用从源 Coolify 实例迁移到目标 Coolify 实例。它不会迁移 Coolify 控制平面、团队成员、服务器、项目或实例设置。
+
+Coolify 没有为应用提供一键式的导出导入操作。你需要在目标实例上重建应用，用临时域名验证，迁走所有有状态的依赖，最后再切换生产流量。
+
+<Callout type="warning" title="为最终复制安排维护窗口">
+
+源应用运行期间数据可能持续变化。在执行最终的数据库导出或文件复制之前，先停止写入或停掉源应用。在确认目标稳定之前，保持源端不再变动。
+
+</Callout>
+
+## 开始之前
+
+请确保你能访问：
+
+- 两个 Coolify 实例
+- 如果需要传输文件或 Docker 卷，还需通过 SSH 访问源和目标部署服务器
+- 应用使用的 Git 仓库或镜像仓库
+- 生产域名的 DNS
+- 数据库、对象存储、邮件、OAuth 及其他外部服务的凭据
+
+记录源应用的以下配置：
+
+| 源页面 | 需记录的内容 |
+| :--- | :--- |
+| **General** | 源码或镜像引用、分支、构建包（build pack）、基础目录、构建文件位置、命令、域名、内部端口和宿主机端口映射 |
+| **Environment Variables** | 生产变量、构建时设置、预览变量和共享变量引用 |
+| **Persistent Storage** | 挂载类型、卷或源路径、目标路径、文件内容和只读设置 |
+| **Advanced** | 与默认值不同的部署、Git、代理、容器和运维设置 |
+| 其他配置页面 | 健康检查、资源限制、计划任务、webhook、服务器、标签和预览设置 |
+
+同时列出应用使用的每个数据库、缓存、队列、存储桶、回调 URL 和第三方依赖。容器之外的状态，Coolify 无法全部发现。
+
+## 选择各类状态的迁移方式
+
+一个应用可以同时使用其中多种路径。
+
+| 状态类型 | 迁移路径 |
+| :--- | :--- |
+| 无持久化应用数据 | 按原配置重建，并从相同的源码或镜像部署。 |
+| 数据库 | 用数据库引擎支持的工具创建逻辑备份，传输后恢复到目标数据库。 |
+| Docker 卷 | 停止写入，将命名卷打包归档，传输后在目标卷中解压。 |
+| 目录或 bind mount | 将源目录原样复制到目标服务器，保留属主和权限。 |
+| Coolify 托管的文件挂载 | 在目标应用中重建该文件及其目标路径。 |
+| 主机文件挂载（Host File Mount） | 在目标服务器的所需路径上复制或独立重建该主机文件。 |
+| 外部对象存储或托管服务 | 保留现有依赖，或按该服务商支持的流程迁移，然后更新目标侧变量。 |
+
+不要用直接复制运行中数据库的 Docker 卷来替代数据库级备份。活动数据库文件可能产生不一致甚至不可用的副本。
+
+## 重建并测试应用
+
+<Steps>
+<Step>
+
+### 准备目标环境
+
+添加并验证目标部署服务器。确认其代理正在运行、能够访问所需的镜像仓库和外部依赖，并且 CPU、内存和存储足以支撑该应用。
+
+在目标实例上创建所需的私钥、Git 集成、镜像仓库认证、S3 存储目标和共享变量。这些实例和团队资源不会随应用一起复制。
+
+</Step>
+<Step>
+
+### 重建应用
+
+用相同的部署方式创建新应用，并填入此前记录的配置。
+
+首次部署使用临时域名和非生产凭据。先不要绑定生产域名，也不要改动生产 DNS。
+
+如果源应用引用了共享变量，请先重建这些变量，或把每个引用替换为目标实例上的预期值。
+
+</Step>
+<Step>
+
+### 在没有生产数据的情况下验证应用
+
+部署目标应用，确认 Coolify 构建或拉取的是预期镜像、容器正常启动，并且健康检查通过。
+
+打开临时域名，核查内部端口、环境变量、出站网络访问以及与各非生产依赖的连接。在迁移生产数据之前，先解决构建、代理或网络方面的故障。
+
+</Step>
+</Steps>
+
+## 迁移应用状态
+
+先在目标侧创建好挂载，再恢复数据。然后按照应用状态对应的路径逐项处理。一个应用可以使用多条路径。
+
+### 数据库与外部依赖
+
+用数据库引擎支持的工具创建逻辑备份，传输并恢复到目标数据库，然后用新的连接信息更新目标应用的变量。
+
+对于 Coolify 托管的数据库，先用[数据库备份](/databases/backups)生成恢复文件；如果目标数据库引擎支持 Coolify 的导入流程，再按照[恢复数据库](/databases/restore)操作。在目标应用使用数据库之前，先核验所需的表或记录。
+
+对象存储、队列、缓存等外部状态请按服务商支持的流程迁移。缓存通常无需迁移，除非应用把它当作持久数据使用。
+
+不要用直接复制运行中数据库的 Docker 卷来替代数据库级备份。活动数据库文件可能产生不一致甚至不可用的副本。
+
+### 持久化文件
+
+按照下文与各挂载方式对应的小节操作，然后确认目标容器用户对恢复后的内容有读写权限。
+
+## 切换到目标环境
+
+<Steps>
+<Step>
+
+### 执行最终同步
+
+停止写入或停掉源应用。创建最终的数据库导出，并复制自测试迁移以来发生过变化的文件。
+
+在目标侧恢复这一最终状态，然后重新部署或重启目标应用，使其使用最终的变量和挂载。
+
+</Step>
+<Step>
+
+### 切换生产流量
+
+先通过临时域名测试目标应用。验证登录、读取、写入、上传、后台任务、邮件、OAuth、webhook 及其他关键集成。
+
+将生产域名绑定到目标应用；如果域名指向的是另一台服务器，还需更新 DNS。在宣布迁移完成之前，确认 TLS 证书签发和路由都正常。
+
+</Step>
+<Step>
+
+### 重新接上自动化
+
+更新仍指向源实例或源服务器的手动 Git webhook、经过身份验证的部署 webhook、CI 机密、计划任务、镜像仓库凭据、监控和外部回调 URL。
+
+触发一次测试部署和一次计划任务或后台操作。
+
+</Step>
+</Steps>
+
+## 迁移 Docker 卷
+
+<Tabs id="docker-volume-migration-method" items={['计划备份', '手动']}>
+<Tab value="计划备份">
+
+如果源挂载受支持，可以使用计划任务的[存储挂载备份](/core/persistent-storage/storage-mounts/backups)流程。迁移前先把生成的 `.tar.gz` 档案下载下来，因为控制台不支持恢复存储档案。
+
+</Tab>
+<Tab value="手动">
+
+<Steps>
+<Step>
+
+<ZoomImage src="/docs-cn/coolify/images/applications/operations/migrate-between-instances/1.webp" alt="bind mount 使用服务器上自选的文件系统路径，而 Docker 卷使用由 Docker 管理的存储" />
+
+### 备份与恢复概览
+[Docker 官方推荐的卷迁移流程](https://docs.docker.com/engine/storage/volumes/#back-up-restore-or-migrate-data-volumes)如下：
+
+<ZoomImage src="/docs-cn/coolify/images/applications/operations/migrate-between-instances/2.webp" alt="Migrate Apps Different Host 截图" />
+
+1. 把卷**挂载**（Mount）到临时容器。
+2. 把卷内容**归档**（Archive）为 tar 包。
+3. 把 tar 包从容器**复制**（Copy）到宿主机，然后删除临时容器。
+4. 把 tar 包**传输**（Transfer）到新服务器。
+5. 在目标机上**创建**（Create）一个新卷。
+6. 把传输过来的 tar 包**挂载**（Mount）进临时容器。
+7. 把档案**解压**（Extract）进新卷。
+
+这一系列步骤能保证备份与恢复的一致性和安全性。下面提供可直接使用的脚本和详细说明。
+
+---
+
+
+<Callout type="info" title="注意">
+
+  下面的步骤包含一些脚本，帮助你便捷地以交互方式完成卷的备份、传输和恢复。
+  
+  脚本还会检查卷和备份是否存在，避免发生诸如恢复到错误卷之类的失误。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 备份卷
+
+1. **SSH 登录**存放 Docker 卷的服务器。
+2. **创建脚本** `backup.sh`：
+    ```bash
+    touch backup.sh && chmod +x backup.sh
+    ```
+3. **用编辑器打开** `backup.sh`，粘贴以下内容：
+
+    ```bash
+    #!/bin/bash
+    
+    # === INPUT PROMPTS ===
+    # Prompt for the Docker volume name and set the variable
+    read -p "[ Backup Agent ] [ INPUT ] Please enter the Docker volume name to back up: " VOLUME_NAME
+    
+    # Inform the user of the set volume name
+    echo "[ Backup Agent ] [ INFO ] Backup Volume is set to $VOLUME_NAME"
+    
+    # Check if the entered volume exists
+    if ! docker volume ls --quiet | grep -q "^$VOLUME_NAME$"; then
+        echo "[ Backup Agent ] [ ERROR ] Volume '$VOLUME_NAME' doesn't exist, aborting backup."
+        echo "[ Backup Agent ] [ ERROR ] Backup Failed!"
+        exit 1  # Exit if volume doesn't exist
+    else
+        echo "[ Backup Agent ] [ INFO ] Volume '$VOLUME_NAME' exists, continuing backup..."
+    fi
+    
+    # Prompt for the directory to save the backup
+    read -p "[ Backup Agent ] [ INPUT ] Please enter the directory to save the backup (Optional: press enter to use ./volume-backup): " BACKUP_DIR
+    # If no directory is entered, default to './volume-backup'
+    BACKUP_DIR=${BACKUP_DIR:-./volume-backup}
+    
+    # Inform the user of the backup location
+    echo "[ Backup Agent ] [ INFO ] Backup location is set to $BACKUP_DIR"
+    
+    # Set the backup file name based on the volume name
+    BACKUP_FILE="${VOLUME_NAME}-backup.tar.gz"
+    
+    # Inform the user of the backup file name
+    echo "[ Backup Agent ] [ INFO ] Backup file name is set to $BACKUP_FILE"
+    
+    # === SCRIPT START ===
+    # Check if the backup directory exists
+    if [ -d "$BACKUP_DIR" ]; then
+        echo "[ Backup Agent ] [ INFO ] Directory '$BACKUP_DIR' already exists, skipping directory creation."
+    else
+        echo "[ Backup Agent ] [ INFO ] Directory '$BACKUP_DIR' does not exist, creating directory."
+        # Create the backup directory, exit if creation fails
+        mkdir -p "$BACKUP_DIR" || { 
+            echo "[ Backup Agent ] [ ERROR ] Failed to create directory '$BACKUP_DIR', aborting backup."
+            echo "[ Backup Agent ] [ ERROR ] Backup Failed!"
+            exit 1
+        }
+    fi
+    
+    # Perform the backup operation
+    echo "[ Backup Agent ] [ INFO ] Backing up volume: $VOLUME_NAME to $BACKUP_DIR/$BACKUP_FILE"
+    
+    # Run the Docker container to create the backup
+    docker run --rm \
+      -v "$VOLUME_NAME":/volume \
+      -v "$(pwd)/$BACKUP_DIR":/backup \
+      busybox \
+      tar czf /backup/"$BACKUP_FILE" -C /volume . || { 
+        # If the backup fails, print an error message and exit
+        echo "[ Backup Agent ] [ ERROR ] Backup process failed, aborting."
+        echo "[ Backup Agent ] [ ERROR ] Backup Failed!"
+        exit 1
+    }
+    
+    # If everything succeeds, notify the user
+    echo "[ Backup Agent ] [ SUCCESS ] Backup completed!"
+    ```
+
+4. **查找卷名**，运行：
+
+   ```bash
+   docker volume ls
+   ```
+
+   也可以在 Coolify 的 **Persistent Storage**（持久化存储）页面查看（见下图）。
+   
+<ZoomImage src="/docs-cn/coolify/images/applications/operations/migrate-between-instances/3.webp" alt="Migrate Apps Different Host 截图" />
+5. **停止应用**，以确保备份时数据处于静止状态。
+6. **运行**脚本：
+
+   ```bash
+   ./backup.sh
+   ```
+
+   * 出现提示时，粘贴卷名。
+   * 按 **Enter** 使用默认备份目录（`./volume-backup`），或输入自定义路径。
+7. **确认**现在多了一个目录（例如 `volume-backup`），其中包含 `<VOLUME_NAME>-backup.tar.gz`。
+
+---
+
+</Step>
+<Step>
+
+### 把备份传输到新服务器
+
+<Callout type="success" title="提示">
+
+  如果你已经知道如何手动传输备份文件，可以直接跳到下一步。
+
+</Callout>
+
+
+1. **创建**第二个脚本 `transfer.sh`：
+   ```bash
+   touch transfer.sh && chmod +x transfer.sh
+   ```
+   
+2. **用编辑器打开** `transfer.sh`，粘贴以下内容：
+
+    ```bash
+    #!/bin/bash
+    
+    # =============== CONFIG VARIABLES ===============
+    SSH_PORT=22
+    SSH_USER="root"
+    SSH_IP="192.168.1.222"
+    SSH_KEY="$HOME/.ssh/local-vm"
+    SOURCE_PATH="./volume-backup"
+    DESTINATION_PATH="/root/backups/volume-backup"
+    MAX_RETRIES=3  # Max number of password attempts
+    
+    echo "[ Transfer Agent ] [ INFO ] Starting transfer..."
+    echo "[ Transfer Agent ] [ INFO ] Trying SSH key: $SSH_KEY"
+    echo "[ Transfer Agent ] [ INFO ] Transfer from: $SOURCE_PATH"
+    echo "[ Transfer Agent ] [ INFO ] Transfer to: $SSH_USER@$SSH_IP:$DESTINATION_PATH"
+    
+    # If SSH key file doesn't exist, fall back to password mode
+    if [ ! -f "$SSH_KEY" ]; then
+      echo "[ Transfer Agent ] [ WARN ] SSH key '$SSH_KEY' not found. Falling back to password authentication."
+      SSH_KEY=""
+    fi
+    
+    # If we need password-based auth, ensure Expect is installed
+    if [ -z "$SSH_KEY" ] && ! command -v expect >/dev/null 2>&1; then
+      echo "[ Transfer Agent ] [ ERROR ] The package expect is required for password authentication but not installed (Install it manually using sudo apt install expect and try again). Aborting."
+      exit 1
+    fi
+    
+    # ---------------------------------------------
+    # Helper: test whether $1 (the password) is valid by doing "ssh … exit"
+    # Returns 0 if OK, 1 if "Permission denied" (or any other failure)
+    test_password_with_expect() {
+      local PW="$1"
+    
+      expect -c "
+        log_user 0
+        set timeout 15
+        spawn ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_IP exit
+        expect {
+          \"*?assword:\" {
+            send -- \"$PW\r\"
+            expect {
+              \"Permission denied\" { exit 1 }
+              eof { exit [lindex [wait] 3] }
+            }
+          }
+          eof {
+            exit [lindex [wait] 3]
+          }
+        }
+      " >/dev/null 2>&1
+    
+      return $?
+    }
+    
+    # Prompt up to $MAX_RETRIES times for a correct password
+    get_password() {
+      local retries=0
+      while [ $retries -lt $MAX_RETRIES ]; do
+        read -s -p "[ Transfer Agent ] [ INPUT ] Please enter the SSH password for $SSH_USER@$SSH_IP: " SSHPASS
+        echo ""
+        test_password_with_expect "$SSHPASS"
+        if [ $? -eq 0 ]; then
+          # Password is correct
+          return 0
+        else
+          echo "[ Transfer Agent ] [ ERROR ] Invalid password. Please try again."
+          retries=$((retries + 1))
+        fi
+      done
+    
+      echo "[ Transfer Agent ] [ ERROR ] Maximum retries reached. Aborting."
+      exit 1
+    }
+    
+    # ---------------------------------------------
+    # STEP 0: Attempt SSH-key authentication (if a key is set)
+    if [ -n "$SSH_KEY" ]; then
+      # Use BatchMode to prevent falling back to password prompt
+      ssh -i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=no -p "$SSH_PORT" \
+        "$SSH_USER@$SSH_IP" exit >/dev/null 2>&1
+      RC=$?
+      if [ $RC -eq 0 ]; then
+        echo "[ Transfer Agent ] [ INFO ] SSH key is valid!"
+        USING_KEY=true
+      else
+        echo "[ Transfer Agent ] [ WARN ] SSH key authentication failed. Falling back to password authentication."
+        SSH_KEY=""
+        USING_KEY=false
+      fi
+    else
+      USING_KEY=false
+    fi
+    
+    # If key auth failed (or no key), prompt for password
+    if [ "$USING_KEY" = false ]; then
+      get_password
+      echo "[ Transfer Agent ] [ INFO ] Password is valid!"
+    fi
+    
+    # ---------------------------------------------
+    # STEP 1: Ensure the full DESTINATION_PATH exists on the remote side.
+    echo "[ Transfer Agent ] [ INFO ] Ensuring remote directory '$DESTINATION_PATH' exists..."
+    if [ -n "$SSH_KEY" ]; then
+      ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -p "$SSH_PORT" \
+        "$SSH_USER@$SSH_IP" "mkdir -p $DESTINATION_PATH" >/dev/null 2>&1
+      MKRC=$?
+    else
+      expect -c "
+        log_user 0
+        set timeout 5
+        spawn ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_IP mkdir -p $DESTINATION_PATH
+        expect {
+          \"*?assword:\" {
+            send -- \"$SSHPASS\r\"
+            exp_continue
+          }
+          eof {
+            exit [lindex [wait] 3]
+          }
+        }
+      " >/dev/null 2>&1
+      MKRC=$?
+    fi
+    
+    if [ $MKRC -ne 0 ]; then
+      echo "[ Transfer Agent ] [ ERROR ] Failed to create remote directory. Aborting."
+      exit 1
+    fi
+    
+    # ---------------------------------------------
+    # STEP 2: Copy only the contents of local "volume-backup" into that folder.
+    echo "[ Transfer Agent ] [ INFO ] Initiating file transfer..."
+    
+    # Capture any SCP stderr in a temp file so we can surface it if something goes wrong
+    SCP_LOG="$(mktemp)"
+    if [ -n "$SSH_KEY" ]; then
+      # Suppress stdout, capture only stderr
+      scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -P "$SSH_PORT" -r \
+          "$SOURCE_PATH"/. "$SSH_USER@$SSH_IP:$DESTINATION_PATH" > /dev/null 2> "$SCP_LOG"
+      SCP_RC=$?
+    else
+      expect -c "
+        log_user 0
+        set timeout -1
+        spawn scp -o StrictHostKeyChecking=no -P $SSH_PORT -r $SOURCE_PATH/. $SSH_USER@$SSH_IP:$DESTINATION_PATH
+        expect {
+          \"*?assword:\" {
+            send -- \"$SSHPASS\r\"
+            exp_continue
+          }
+          eof {
+            exit [lindex [wait] 3]
+          }
+        }
+      " 2> "$SCP_LOG"
+      SCP_RC=$?
+    fi
+    
+    if [ $SCP_RC -eq 0 ]; then
+      echo "[ Transfer Agent ] [ SUCCESS ] Transfer completed."
+      rm -f "$SCP_LOG"
+      exit 0
+    else
+      echo "[ Transfer Agent ] [ ERROR ] Transfer failed."
+      while IFS= read -r line; do
+        echo "[ Transfer Agent ]    $line"
+      done < "$SCP_LOG"
+      rm -f "$SCP_LOG"
+      exit 1
+    fi
+    ```
+    
+3. **调整**脚本顶部的变量（`SSH_IP`、`SSH_USER`、`SSH_KEY`、`DESTINATION_PATH`），使其匹配你的新服务器。
+4. **运行**传输：
+
+   ```bash
+   ./transfer.sh
+   ```
+
+   * 如果密钥认证成功，备份目录会通过 SCP 复制过去。
+   * 否则会提示输入 SSH 密码。
+
+---
+
+</Step>
+<Step>
+
+### 在新服务器上恢复备份
+
+
+<Callout type="info" title="注意">
+
+  本例使用 [Umami Analytics](https://umami.is/?utm_source=coolify.io)（PostgreSQL）演示如何恢复基于数据库的应用。请根据你自己的数据库调整路径和卷名。
+
+</Callout>
+
+
+1. 用 Coolify 在新服务器上**部署应用**，然后**停止它**，这样卷会创建出来但不会被占用。
+2. **SSH 登录**新服务器，**创建**脚本 `restore.sh`：
+
+   ```bash
+   touch restore.sh && chmod +x restore.sh
+   ```
+3. 把以下内容**粘贴**到 `restore.sh`：
+    ```bash
+    #!/bin/bash
+    
+    # === VOLUME NAME INPUT ===
+    # Prompt for the target Docker volume name to restore into
+    read -p "[ Restore Agent ] [ INPUT ] Enter the target Docker volume name to restore into: " TARGET_VOLUME
+    
+    # === VOLUME CHECK ===
+    # Check if the target volume exists
+    if ! docker volume ls --quiet | grep -q "^$TARGET_VOLUME$"; then
+      echo "[ Restore Agent ] [ ERROR ] Volume '$TARGET_VOLUME' doesn't exist."
+    
+      # Ask if the user wants to create the volume
+      read -p "[ Restore Agent ] [ INPUT ] Do you want to create a new volume with the name '$TARGET_VOLUME'? (y/N): " create_volume
+      if [[ "$create_volume" == "y" ]]; then
+        echo "[ Restore Agent ] [ INFO ] Creating volume '$TARGET_VOLUME'..."
+        docker volume create "$TARGET_VOLUME" || { 
+          echo "[ Restore Agent ] [ ERROR ] Failed to create volume '$TARGET_VOLUME', aborting restore."
+          echo "[ Restore Agent ] [ ERROR ] Restore Failed!"
+          exit 1
+        }
+        echo "[ Restore Agent ] [ INFO ] Volume '$TARGET_VOLUME' created successfully."
+      else
+        echo "[ Restore Agent ] [ INFO ] Volume '$TARGET_VOLUME' doesn't exist and user opted not to create it. Aborting restore."
+        echo "[ Restore Agent ] [ ERROR ] Restore Failed!"
+        exit 1
+      fi
+    else
+      echo "[ Restore Agent ] [ INFO ] Volume '$TARGET_VOLUME' exists, continuing..."
+    fi
+    
+    # === BACKUP DIRECTORY INPUT ===
+    # Prompt for the backup directory (default: ./volume-backup)
+    read -p "[ Restore Agent ] [ INPUT ] Enter the backup directory (default: ./volume-backup): " BACKUP_DIR
+    BACKUP_DIR=${BACKUP_DIR:-./volume-backup}
+    
+    # === BACKUP DIRECTORY CHECK ===
+    # Check if the backup directory exists
+    if [[ ! -d "$BACKUP_DIR" ]]; then
+      echo "[ Restore Agent ] [ ERROR ] Backup directory not found: $BACKUP_DIR"
+      echo "[ Restore Agent ] [ ERROR ] Restore Failed!"
+      exit 1
+    fi
+    echo "[ Restore Agent ] [ INFO ] Backup directory '$BACKUP_DIR' found, continuing..."
+    
+    # === BACKUP FILE INPUT ===
+    # Prompt for the backup file name
+    read -p "[ Restore Agent ] [ INPUT ] Enter the backup file name (e.g., abc123_postgresql.tar.gz): " BACKUP_FILE
+    
+    # === BACKUP FILE CHECK ===
+    # Check if the backup file exists
+    if [[ ! -f "$BACKUP_DIR/$BACKUP_FILE" ]]; then
+      echo "[ Restore Agent ] [ ERROR ] Backup file not found: $BACKUP_DIR/$BACKUP_FILE"
+      echo "[ Restore Agent ] [ ERROR ] Restore Failed!"
+      exit 1
+    fi
+    echo "[ Restore Agent ] [ INFO ] Backup file '$BACKUP_FILE' found, continuing..."
+    
+    # === SAFETY CONFIRMATION ===
+    echo "[ Restore Agent ] [ INFO ] Make sure containers using '$TARGET_VOLUME' are stopped!"
+    read -p "[ Restore Agent ] [ INPUT ] Proceed with restore? (y/N): " confirm
+    if [[ "$confirm" != "y" ]]; then
+      echo "[ Restore Agent ] [ ERROR ] Restore Failed: cancelled by user."
+      exit 1
+    fi
+    
+    # === RESTORE START ===
+    # Inform the user that restore is starting
+    echo "[ Restore Agent ] [ INFO ] Restoring $BACKUP_FILE into volume: $TARGET_VOLUME"
+    
+    # Run the Docker container to restore the backup
+    docker run --rm \
+      -v "$TARGET_VOLUME":/volume \
+      -v "$(pwd)/$BACKUP_DIR":/backup \
+      busybox \
+      sh -c "cd /volume && tar xzf /backup/$BACKUP_FILE" || { 
+        # If the restore process fails, print an error message and exit
+        echo "[ Restore Agent ] [ ERROR ] Docker restore process failed, aborting."
+        echo "[ Restore Agent ] [ ERROR ] Restore Failed!"
+        exit 1
+    }
+    
+    # If everything succeeds, notify the user
+    echo "[ Restore Agent ] [ SUCCESS ] Restore completed!"
+    ```
+
+4. **运行**脚本：
+
+   ```bash
+   ./restore.sh
+   ```
+
+   * 输入**卷名**（来自 `docker volume ls` 命令或 Coolify 的 Persistent Storage 页面）。
+   * 按 **Enter** 接受 `./volume-backup`，或输入自定义备份路径。
+   * 输入备份文件名（例如 `umami_postgresql-backup.tar.gz`）。
+   * 输入 `y` 确认继续。
+   
+---
+
+</Step>
+<Step>
+
+### 启动应用
+恢复完成后，进入 Coolify 控制台并点击 **Deploy**（部署）。
+
+应用现在应该已经在使用迁移过来的数据。如果没有，或日志显示错误，请重复恢复步骤，确保所有文件都正确复制。
+
+
+<Callout type="warn" title="注意">
+
+  如果新服务器上的数据库凭据（用户名、数据库名或密码）不同，请在 Coolify 控制台中更新，使其与旧服务器保持一致。
+  
+<ZoomImage src="/docs-cn/coolify/images/applications/operations/migrate-between-instances/4.webp" alt="Migrate Apps Different Host 截图" />
+
+</Callout>
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## 迁移目录、bind mount 或主机文件
+
+在 **Persistent Storage** 下找到源服务器上的确切路径。停止写入，然后在保留属主和权限的前提下复制内容。
+
+如果是目录，在源服务器上运行：
+
+```sh
+rsync -a --numeric-ids -e "ssh -p <ssh-port>" \
+  <source-path>/ \
+  <ssh-user>@<destination-server>:<destination-path>/
+```
+
+`<source-path>/` 末尾的 `/` 表示把目录内容复制进 `<destination-path>/`。
+
+在目标应用中创建相同的挂载，源路径填目标服务器上的路径，容器内仍使用原来的 **Destination Path**。如果是单个 Host File Mount，则复制文件而非目录，并在启动应用前确认其在目标服务器上的路径。
+
+对于 Coolify 托管的文件挂载，请在目标控制台中重建其内容，而不要复制自动生成的内部路径。
+
+## 验证迁移结果
+
+在目标侧逐项确认：
+
+- 生产域名由目标应用提供服务，TLS 证书有效
+- 运行的是预期的源码修订或镜像
+- 健康检查和应用日志显示运行稳定
+- 登录、读取、写入、上传和下载均正常
+- 数据库包含预期的最终数据
+- 计划任务、队列、webhook、邮件、OAuth 和外部回调均正常
+- 备份正常运行，并能在目标侧生成可用副本
+
+持续观察目标侧，直到确认稳定。源应用保持停止状态且不做改动，并按你选定的回滚期限保留最终备份。
+
+## 回滚切换
+
+如果切换流量后目标侧出现故障：
+
+1. 停止向目标侧写入
+2. 判断切换之后生产数据在目标侧是否发生了变化
+3. 如有需要，把这些变更恢复或同步回源依赖
+4. 将生产域名或 DNS 记录切回源应用
+5. 启动源应用并验证其关键用户流程
+
+如果没有核算目标侧已接受的写入，不要贸然把流量切回较旧的源数据库。DNS 回滚只改变路由，不会合并数据。

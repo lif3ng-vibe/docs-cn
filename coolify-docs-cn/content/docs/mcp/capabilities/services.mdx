@@ -1,0 +1,17 @@
+---
+title: 服务
+description: 使用 Coolify MCP 查看一键服务及其应用或数据库组件。
+---
+
+# 服务
+
+| 工具 | 用途 |
+| :--- | :--- |
+| `list_services` | 列出多容器服务，可按项目、环境、服务器、状态或名称筛选。 |
+| `get_service` | 按 UUID 查看单个服务。 |
+| `list_service_applications` | 列出服务内的应用组件。 |
+| `get_service_application` | 查看单个服务的应用组件。 |
+| `list_service_databases` | 列出服务内的数据库组件。 |
+| `get_service_database` | 查看单个服务的数据库组件。 |
+
+当服务包含多个容器时，请配合相应的子资源使用 `get_logs`。

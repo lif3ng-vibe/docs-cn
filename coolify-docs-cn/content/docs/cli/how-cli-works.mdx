@@ -1,0 +1,74 @@
+---
+title: CLI 的工作原理
+description: 了解 Coolify CLI 如何选择上下文、认证请求、调用 Coolify API、重试失败请求以及格式化响应。
+---
+
+# CLI 的工作原理
+
+Coolify CLI 把终端命令转换为对 Coolify REST API 的请求。它会选定一个已保存的 Coolify 连接，携带 API 令牌发送请求，并把响应格式化后呈现给用户或自动化流程。
+
+这一过程对 Coolify Cloud 和自托管 Coolify 同样适用。所选的 URL、令牌权限以及自托管的 API 控制项，共同决定了可用的资源与操作。
+
+## 从命令到响应
+
+运行资源类命令时，CLI 按以下顺序执行：
+
+1. 读取 CLI 配置文件。
+2. 选择 `--context` 指定的上下文；未指定时使用默认上下文。
+3. 使用 `--token` 提供的令牌；未提供时使用所选上下文中保存的令牌。
+4. 在上下文 URL 后拼接 `/api/v1/` 和命令对应的端点路径。
+5. 把令牌放进 `Authorization: Bearer <api-token>` 请求头发送。
+6. 检查 HTTP 响应，并把成功返回的数据格式化后输出到终端。
+
+例如，上下文 URL 为 `https://coolify.example.com`，操作使用 `resources`，则请求地址为：
+
+```txt
+https://coolify.example.com/api/v1/resources
+```
+
+资源类命令不会直接连接 Docker 引擎。Coolify 接收 API 请求，并在相应的资源或服务器上执行所请求的操作。
+
+## 上下文与令牌的优先级
+
+CLI 按以下顺序解析连接信息：
+
+| 设置项 | 首选 | 回退 |
+| :--- | :--- | :--- |
+| Coolify URL | 用 `--context` 选择的上下文 | 默认上下文 |
+| API 令牌 | 用 `--token` 提供的令牌 | 保存在所选上下文中的令牌 |
+
+`--token` 标志只改变当次命令使用的令牌，不会修改已保存的上下文。要更改已保存的 URL 或令牌，请参阅[上下文（Contexts）](/cli/contexts)。
+
+## 访问边界
+
+每个 API 令牌都属于创建它的 Coolify 用户和团队。CLI 只能访问该令牌所属团队的权限范围所允许的资源与操作。
+
+Coolify Cloud 始终保持 API 访问开启。在自托管 Coolify 上，会先检查 **API Access**（API 访问）开关和可选的 IP 允许列表，然后才检查令牌权限。令牌作用域参见 [API 权限](/api/permissions)，自托管控制项参见 [IP 允许列表](/api/ip-allowlist)。
+
+## 请求失败与重试
+
+每个 API 请求有 30 秒超时。当请求因网络错误、服务器错误或 `429 Too Many Requests` 响应而失败时，CLI 最多重试三次，等待时间分别为 1、2、4 秒。
+
+CLI 不会重试其他 `4xx` 响应。请先修正 URL、令牌、权限、命令参数或所请求的资源，再重新运行命令。
+
+如果所有尝试都失败，命令会返回错误并以非零状态码退出。这样 shell 脚本和 CI 任务就能在 Coolify 操作失败时及时中止。
+
+## 响应格式
+
+CLI 支持三种全局输出格式：
+
+| 格式 | 用途 |
+| :--- | :--- |
+| `table` | 默认的人类可读终端输出。 |
+| `json` | 供脚本和自动化使用的紧凑输出。 |
+| `pretty` | 带缩进的 JSON，便于检查和调试。 |
+
+为单条命令选择格式：
+
+```sh
+coolify --format json resource list
+```
+
+除非 API 令牌有读取权限且显式传入 `--show-sensitive`，敏感值会保持隐藏。请避免在共享终端和 CI 日志中使用 `--show-sensitive`。
+
+更多操作示例请参阅[部署应用](/cli/deploy-applications)、[用 CLI 自动化](/cli/automate-with-cli)或[管理数据库备份](/cli/database-backups)。各操作级别的语法与选项请在侧边栏打开 **Commands**（命令）查看。

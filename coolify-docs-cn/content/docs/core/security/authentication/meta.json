@@ -1,0 +1,9 @@
+{
+  "title": "身份验证",
+  "pages": [
+    "oauth",
+    "sso",
+    "2fa",
+    "profile"
+  ]
+}

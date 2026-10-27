@@ -1,0 +1,9 @@
+{
+  "title": "Caddy",
+  "pages": [
+    "[Overview](/core/networking/proxy/caddy/overview)",
+    "basic-auth",
+    "custom-ssl-certs",
+    "dns-challenge"
+  ]
+}

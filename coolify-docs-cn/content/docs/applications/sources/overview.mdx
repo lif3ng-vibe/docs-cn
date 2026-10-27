@@ -1,0 +1,59 @@
+---
+title: 概览
+description: 选择 Coolify 访问公开或私有 Git 仓库的方式。
+---
+
+import { BranchUp, Code, Key } from 'reicon-react';
+
+# 连接源代码
+
+基于 Git 的应用需要提供仓库 URL、分支，以及 Coolify 在部署路径上可用的身份验证方式。
+
+<CoolCallout icon={BranchUp} title="简版结论">
+
+公开仓库用 HTTPS；单个私有仓库用 SSH 部署密钥；需要按范围控制仓库访问并集成 webhook 时，用 GitHub App。
+
+</CoolCallout>
+
+---
+
+## 选择来源方式
+
+| 方式 | 适用场景 | 指南 |
+| :--- | :--- | :--- |
+| 公开仓库 | 仓库公开，无需凭据即可通过 HTTPS 克隆。 | [连接公开仓库](/applications/sources/public-repositories) |
+| 部署密钥 | 单个私有仓库需要只读 SSH 访问。 | [使用部署密钥](/applications/sources/deploy-keys) |
+| GitHub App | GitHub 仓库需要范围化访问、集成 webhook 与拉取请求事件。 | [配置 GitHub App](/applications/sources/github/app) |
+
+官方 Git App 集成会在来源中一并配置提供方 webhook。公开仓库与部署密钥则需要[手动 webhook](/applications/deployments/manual-webhooks) 才能实现自动部署与预览。
+
+## 仓库访问与容器镜像仓库相互独立
+
+Git 凭据让 Coolify 克隆源代码；镜像仓库凭据让 Docker 拉取或推送镜像。
+
+部署密钥无法向私有容器镜像仓库完成身份验证。当应用使用私有镜像或推送构建好的镜像时，请阅读 [Docker 镜像仓库](/applications/builds/docker-registries)。
+
+## 选择下一篇来源指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '连接公开仓库',
+      href: '/applications/sources/public-repositories',
+      description: '部署无需凭据即可通过 HTTPS 克隆的源码。',
+      icon: BranchUp,
+    },
+    {
+      title: '使用部署密钥',
+      href: '/applications/sources/deploy-keys',
+      description: '为一个私有仓库授予只读 SSH 访问。',
+      icon: Key,
+    },
+    {
+      title: '连接 GitHub',
+      href: '/applications/sources/github/overview',
+      description: '在公开仓库、部署密钥或 GitHub App 之间选择连接方式。',
+      icon: Code,
+    },
+  ]}
+/>

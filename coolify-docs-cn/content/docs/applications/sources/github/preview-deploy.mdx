@@ -1,0 +1,156 @@
+---
+title: GitHub 预览部署
+description: 独立部署拉取请求，配合范围化访问、变量、域名与 GitHub 评论。
+---
+
+# GitHub 预览部署
+
+预览部署把拉取请求与生产应用分开运行。拉取请求被合并或关闭后，Coolify 会移除对应的自动预览。
+
+## 功能特性
+
+### 预览域名
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/4.webp" alt="Coolify 中的 Preview URL Template 与 Load Pull Requests 控件" />
+
+**Preview URL Template**（预览 URL 模板）控制生成的域名：
+
+- `{{random}}` 插入一个随机值。
+- `{{pr_id}}` 插入拉取请求编号。
+
+<Callout type="warning" title="先创建泛 DNS 记录">
+
+要使用 `https://123.preview.example.com` 这样的域名，请为 `*.preview.example.com` 创建一条指向部署服务器的 `A` 或 `AAAA` 记录。
+
+</Callout>
+
+**Load Pull Requests**（加载拉取请求）会拉取当前处于打开状态的拉取请求。
+
+<Callout type="info" title="手动部署早先的拉取请求">
+
+启用预览部署之前就已打开的拉取请求，Coolify 不会自动部署。请选择 **Load Pull Requests**（加载拉取请求），再对需要的每个拉取请求选择 **Deploy**（部署）。
+
+</Callout>
+
+### 选择谁可以部署预览
+
+拉取请求中的代码未必可信——若不加以限制，公众贡献者就能在你的服务器上运行代码。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/1.webp" alt="Preview Deployments 与 Allow Public PR Deployments 设置" />
+
+- **Preview Deployments**（预览部署）为可信的仓库成员、协作者与贡献者启用预览。
+- **Allow Public PR Deployments**（允许公开 PR 部署）允许公众贡献者触发预览。
+
+除非你接受运行贡献者代码的风险，否则请保持公开拉取请求部署处于关闭状态。
+
+### 按范围隔离的机密
+
+Coolify 将生产与预览变量分开存放。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/2.webp" alt="生产与预览环境变量分组" />
+
+- **Production Environment Variables**（生产环境变量）仅用于主部署，不会传递给拉取请求预览。
+- **Preview Deployment Environment Variables**（预览部署环境变量）仅用于拉取请求部署。
+
+对于不可信的拉取请求，不要把生产凭据复制进预览变量，应使用权限受限的非生产凭据。
+
+### 自动评论
+
+Coolify 可以把部署状态与域名信息写进拉取请求，并在部署状态变化时更新该评论。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/3.webp" alt="GitHub 拉取请求上的 Coolify 预览部署评论" />
+
+<Callout type="info" title="评论功能需要 GitHub App">
+
+手动仓库 webhook 可以触发预览，但自动拉取请求评论需要 GitHub App 权限。
+
+</Callout>
+
+---
+
+## 设置预览部署
+
+选择应用接收拉取请求事件的方式。
+
+<Tabs id="github-preview-setup-method" items={['GitHub App', '仓库 webhook']}>
+<Tab value="GitHub App">
+
+先按照[设置 GitHub App](/applications/sources/github/app)操作。
+
+<Tabs id="github-preview-app-installation" items={['自动安装', '手动安装']}>
+<Tab value="自动安装">
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/1.webp" alt="自动安装 GitHub App 时的 Preview Deployments 权限" />
+
+在选择 **Register with GitHub**（在 GitHub 上注册）之前，把 **Preview deployment access**（预览部署访问）设为 **Read and update pull requests**（读取并更新拉取请求）。Coolify 会申请拉取请求读写权限，并为该 App 订阅拉取请求事件。
+
+</Tab>
+<Tab value="手动安装">
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/2.webp" alt="手动创建 GitHub App 时的 Pull Request 权限" />
+
+在 GitHub 上创建应用时：
+
+1. 在 **Repository permissions**（仓库权限）下将 **Pull requests** 设为 **Read and write**（读写）。
+2. 订阅 **Pull request**（拉取请求）事件。
+
+</Tab>
+</Tabs>
+
+### 更新现有 GitHub App
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/3.webp" alt="Coolify 中的更新 GitHub App 权限操作" />
+
+1. 打开 **Sources**（来源），选择该 GitHub App。
+2. 打开 **Permissions**（权限）。
+3. 选择 **Update**（更新）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/4.webp" alt="GitHub 上的 Pull Request 权限与事件订阅" />
+
+4. 将 **Pull requests** 设为 **Read and write**（读写）。
+5. 订阅 **Pull request**（拉取请求）事件。
+6. 接受权限更新。
+
+</Tab>
+<Tab value="仓库 webhook">
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/1.webp" alt="Coolify 中的 GitHub 手动 webhook URL 与 secret" />
+
+1. 打开 **Webhooks**（Webhook）。
+2. 在 **GitHub** 区域填入随机 **Webhook secret**（Webhook 密钥），选择 **Save changes**（保存更改）。
+3. 复制 **Manual Git webhooks**（手动 Git webhook）下的 GitHub URL。
+
+<Callout type="warning" title="保管好 webhook secret">
+
+该密钥用于验证 webhook 的推送。请确保 Coolify 与 GitHub 两边填写相同的值。
+
+</Callout>
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/2.webp" alt="GitHub 仓库设置中的 Webhooks 页面" />
+
+4. 在 GitHub 上打开仓库设置。
+5. 选择 **Webhooks > Add webhook**（添加 webhook）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/3.webp" alt="面向拉取请求事件配置的 GitHub webhook" />
+
+6. 把 Coolify URL 粘贴到 **Payload URL**。
+7. 填入相同的密钥。
+8. 保持勾选 **Enable SSL verification**（启用 SSL 校验）。
+9. 选择 **Let me select individual events**（让我单独选择事件）。
+10. 选择 **Pull requests**（拉取请求）。
+11. 保持勾选 **Active**（启用）。
+12. 选择 **Add webhook**（添加 webhook）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/4.webp" alt="GitHub 中已启用的拉取请求 webhook" />
+
+</Tab>
+</Tabs>
+
+---
+
+## 验证预览部署
+
+1. 打开或更新一个拉取请求。
+2. 确认 Coolify 创建了独立的预览部署。
+3. 打开生成的预览域名，验证改动是否符合预期。
+4. 关闭拉取请求，确认 Coolify 移除了自动预览。

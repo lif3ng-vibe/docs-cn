@@ -1,0 +1,2445 @@
+[
+  {
+    "name": "9Router",
+    "slug": "9router",
+    "icon": "/docs-cn/coolify/images/services/9router.svg",
+    "description": "AI coding gateway that routes requests from coding tools to multiple LLM providers.",
+    "category": "AI"
+  },
+  {
+    "name": "ActivePieces",
+    "slug": "activepieces",
+    "icon": "/docs-cn/coolify/images/services/activepieces-logo.png",
+    "description": "Open source no-code business automation.",
+    "category": "Automation"
+  },
+  {
+    "name": "Actual Budget",
+    "slug": "actualbudget",
+    "icon": "/docs-cn/coolify/images/services/actualbudget-logo.webp",
+    "description": "A local-first personal finance tool based on zero-based budgeting.",
+    "category": "Finance"
+  },
+  {
+    "name": "Affine",
+    "slug": "affine",
+    "icon": "/docs-cn/coolify/images/services/affine-logo.svg",
+    "description": "Open-source knowledge base and workspace combining docs, whiteboards, and databases.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Alexandrie",
+    "slug": "alexandrie",
+    "icon": "/docs-cn/coolify/images/services/alexandrie-logo.svg",
+    "description": "Markdown note-taking app focused on performance, local data, and knowledge graph navigation.",
+    "category": "Productivity"
+  },
+  {
+    "name": "AnythingLLM",
+    "slug": "anythingllm",
+    "icon": "/docs-cn/coolify/images/services/anythingllm-logo.svg",
+    "description": "An open-source LLM client that empowers developers to build and scale workflows quickly.",
+    "category": "AI"
+  },
+  {
+    "name": "AppFlowy",
+    "slug": "appflowy",
+    "icon": "/docs-cn/coolify/images/services/appflowy.svg",
+    "description": "Open-source alternative to Notion with workspaces for docs, wikis, and project management.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Apprise API",
+    "slug": "apprise-api",
+    "icon": "/docs-cn/coolify/images/services/appriseapi-logo.png",
+    "description": "RESTful API for Apprise notification library.",
+    "category": "Development"
+  },
+  {
+    "name": "Appsmith",
+    "slug": "appsmith",
+    "icon": "/docs-cn/coolify/images/services/appsmith-logo.svg",
+    "description": "A low-code application platform for building internal tools.",
+    "category": "Development"
+  },
+  {
+    "name": "Appwrite",
+    "slug": "appwrite",
+    "icon": "/docs-cn/coolify/images/services/appwrite-logo.svg",
+    "description": "A backend-as-a-service platform that simplifies the web & mobile app development.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Argilla",
+    "slug": "argilla",
+    "icon": "/docs-cn/coolify/images/services/argilla-logo.svg",
+    "description": "An open-source platform for building, training, and evaluating conversational AI models.",
+    "category": "AI"
+  },
+  {
+    "name": "Audiobookshelf",
+    "slug": "audiobookshelf",
+    "icon": "/docs-cn/coolify/images/services/audiobookshelf-logo.svg",
+    "description": "Self-hosted audiobook and podcast server.",
+    "category": "Media"
+  },
+  {
+    "name": "Authentik",
+    "slug": "authentik",
+    "icon": "/docs-cn/coolify/images/services/authentik-logo.png",
+    "description": "An open-source Identity Provider, focused on flexibility and versatility.",
+    "category": "Security"
+  },
+  {
+    "name": "Autobase",
+    "slug": "autobase",
+    "icon": "/docs-cn/coolify/images/services/autobase-logo.svg",
+    "description": "Open-source alternative to cloud-managed databases for PostgreSQL (self-hosted DBaaS).",
+    "category": "Database"
+  },
+  {
+    "name": "Azimutt",
+    "slug": "azimutt",
+    "icon": "/docs-cn/coolify/images/services/azimutt.png",
+    "description": "Database schema design, exploration, documentation, and analysis tool.",
+    "category": "Productivity",
+    "disabled": true
+  },
+  {
+    "name": "BabyBuddy",
+    "slug": "babybuddy",
+    "icon": "/docs-cn/coolify/images/services/babybuddy-logo.png",
+    "description": "It helps parents track their baby's daily activities, growth, and health with ease.",
+    "category": "Health",
+    "disabled": true
+  },
+  {
+    "name": "BentoPDF",
+    "slug": "bento-pdf",
+    "icon": "/docs-cn/coolify/images/services/bento-pdf.png",
+    "description": "Process PDFs entirely in your browser. No uploads. No servers. Complete privacy.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Beszel",
+    "slug": "beszel",
+    "icon": "/docs-cn/coolify/images/services/beszel-logo.webp",
+    "description": "Lightweight server monitoring hub with historical data, docker stats, and alerts.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Bitcoin Core",
+    "slug": "bitcoin-core",
+    "icon": "/docs-cn/coolify/images/services/bitcoin.svg",
+    "description": "Bitcoin Core full node software.",
+    "category": "Crypto"
+  },
+  {
+    "name": "Bluesky PDS",
+    "slug": "bluesky-pds",
+    "icon": "/docs-cn/coolify/images/services/bluesky-logo.svg",
+    "description": "Bluesky PDS (Personal Data Server) for decentralized social networking.",
+    "category": "Social Media"
+  },
+  {
+    "name": "Booklore",
+    "slug": "booklore",
+    "icon": "/docs-cn/coolify/images/services/booklore-logo.svg",
+    "description": "Open-source library management system for your digital book collection.",
+    "category": "Media",
+    "disabled": true
+  },
+  {
+    "name": "Bookstack",
+    "slug": "bookstack",
+    "icon": "/docs-cn/coolify/images/services/bookstack-logo.png",
+    "description": "Self-hosted wiki-style documentation platform.",
+    "category": "Documentation",
+    "disabled": true
+  },
+  {
+    "name": "Browserless",
+    "slug": "browserless",
+    "icon": "/docs-cn/coolify/images/services/browserless-logo.svg",
+    "description": "Headless Chrome as a service.",
+    "category": "Development"
+  },
+  {
+    "name": "BudgE",
+    "slug": "budge",
+    "icon": "/docs-cn/coolify/images/services/budge-logo.png",
+    "description": "A budgeting personal finance app.",
+    "category": "Finance",
+    "disabled": true
+  },
+  {
+    "name": "Budibase",
+    "slug": "budibase",
+    "icon": "/docs-cn/coolify/images/services/budibase-logo.svg",
+    "description": "Low-code platform for building internal tools and business apps.",
+    "category": "Development"
+  },
+  {
+    "name": "Bugsink",
+    "slug": "bugsink",
+    "icon": "/docs-cn/coolify/images/services/bugsink-logo.webp",
+    "description": "Self-hosted Error Tracking",
+    "category": "Development"
+  },
+  {
+    "name": "Bulwark",
+    "slug": "bulwark",
+    "icon": "/docs-cn/coolify/images/services/bulwark.svg",
+    "description": "Modern webmail client for Stalwart Mail Server built on the JMAP protocol.",
+    "category": "Email"
+  },
+  {
+    "name": "Buzz",
+    "slug": "buzz",
+    "icon": "/docs-cn/coolify/images/services/buzz-logo.svg",
+    "description": "Workspace where humans and AI agents collaborate on a self-hosted Nostr relay.",
+    "category": "Messaging"
+  },
+  {
+    "name": "Calcom",
+    "slug": "calcom",
+    "icon": "/docs-cn/coolify/images/services/calcom-logo.svg",
+    "description": "Open-source Calendly alternative for scheduling meetings.",
+    "category": "Productivity",
+    "disabled": true
+  },
+  {
+    "name": "Calibre Web",
+    "slug": "calibre-web",
+    "icon": "/docs-cn/coolify/images/services/calibreweb-logo.svg",
+    "description": "Web app for browsing, reading and downloading eBooks from a Calibre database.",
+    "category": "Media"
+  },
+  {
+    "name": "Calibre Web Automated with Downloader",
+    "slug": "calibre-web-automated-with-downloader",
+    "icon": "/docs-cn/coolify/images/services/calibre-web-automated-with-downloader.png",
+    "description": "Intuitive web interface for searching and requesting book downloads with Calibre-Web-Automated.",
+    "category": "Media"
+  },
+  {
+    "name": "Cap",
+    "slug": "cap",
+    "icon": "/docs-cn/coolify/images/services/cap.svg",
+    "description": "Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
+    "category": "Media"
+  },
+  {
+    "name": "Cap (CAPTCHA)",
+    "slug": "cap-captcha",
+    "icon": "/docs-cn/coolify/images/services/cap-captcha.png",
+    "description": "The self-hosted CAPTCHA for the modern web.",
+    "category": "Security"
+  },
+  {
+    "name": "Castopod",
+    "slug": "castopod",
+    "icon": "/docs-cn/coolify/images/services/castopod-logo.svg",
+    "description": "Open-source podcast hosting platform.",
+    "category": "Media",
+    "disabled": true
+  },
+  {
+    "name": "Celld",
+    "slug": "celld",
+    "icon": "/docs-cn/coolify/images/services/deno-kv.svg",
+    "description": "Self-hosted, distributed Durable Objects powered by Deno.",
+    "category": "Development"
+  },
+  {
+    "name": "Change Detection",
+    "slug": "changedetection",
+    "icon": "/docs-cn/coolify/images/services/changedetection-logo.png",
+    "description": "Website change detection monitor and notifications.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Chaskiq",
+    "slug": "chaskiq",
+    "icon": "/docs-cn/coolify/images/services/chaskiq-logo.png",
+    "description": "Open source customer engagement platform.",
+    "category": "Business"
+  },
+  {
+    "name": "Chatwoot",
+    "slug": "chatwoot",
+    "icon": "/docs-cn/coolify/images/services/chatwoot-logo.svg",
+    "description": "Open-source customer engagement suite.",
+    "category": "Business"
+  },
+  {
+    "name": "Checkmate",
+    "slug": "checkmate",
+    "icon": "/docs-cn/coolify/images/services/checkmate-logo.png",
+    "description": "Website monitoring and uptime service.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Chibisafe",
+    "slug": "chibisafe",
+    "icon": "/docs-cn/coolify/images/services/chibisafe-logo.svg",
+    "description": "A beautiful and performant vault to save all your files in the cloud.",
+    "category": "File Management"
+  },
+  {
+    "name": "Chroma",
+    "slug": "chroma",
+    "icon": "/docs-cn/coolify/images/services/chroma-logo.svg",
+    "description": "Open-source, AI-native vector database for building applications with embeddings.",
+    "category": "AI"
+  },
+  {
+    "name": "ClassicPress",
+    "slug": "classicpress",
+    "icon": "/docs-cn/coolify/images/services/classicpress-logo.svg",
+    "description": "A business-focused CMS with a strong community.",
+    "category": "CMS",
+    "disabled": true
+  },
+  {
+    "name": "Cloudbeaver",
+    "slug": "cloudbeaver",
+    "icon": "/docs-cn/coolify/images/services/cloudbeaver-logo.png",
+    "description": "Universal database tool with web interface.",
+    "category": "Development"
+  },
+  {
+    "name": "Cloudflare DDNS",
+    "slug": "cloudflare-ddns",
+    "icon": "/docs-cn/coolify/images/services/cloudflare-ddns.svg",
+    "description": "Cloudflare DNS updater for dynamic public IP addresses.",
+    "category": "Automation"
+  },
+  {
+    "name": "Cloudflared",
+    "slug": "cloudflared",
+    "icon": "/docs-cn/coolify/images/services/cloudflared-logo.svg",
+    "description": "Cloudflare Tunnel client.",
+    "category": "Networking"
+  },
+  {
+    "name": "Cloudreve",
+    "slug": "cloudreve",
+    "icon": "/docs-cn/coolify/images/services/cloudreve-logo.svg",
+    "description": "A self-hosted file management and sharing system.",
+    "category": "Storage"
+  },
+  {
+    "name": "Cockpit",
+    "slug": "cockpit",
+    "icon": "/docs-cn/coolify/images/services/cockpit-logo.svg",
+    "description": "Headless CMS with REST & GraphQL APIs.",
+    "category": "CMS",
+    "disabled": true
+  },
+  {
+    "name": "Code Server",
+    "slug": "code-server",
+    "icon": "/docs-cn/coolify/images/services/codeserver-logo.svg",
+    "description": "Run VS Code on any machine anywhere and access it in the browser.",
+    "category": "Development"
+  },
+  {
+    "name": "Coder",
+    "slug": "coder",
+    "icon": "/docs-cn/coolify/images/services/coder.svg",
+    "description": "Platform for creating and managing development environments on your own infrastructure.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "CodiMD",
+    "slug": "codimd",
+    "icon": "/docs-cn/coolify/images/services/codimd-logo.png",
+    "description": "Realtime collaborative markdown notes on all platforms.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Convertx",
+    "slug": "convertx",
+    "icon": "/docs-cn/coolify/images/services/convertx-logo.png",
+    "description": "File conversion service supporting multiple formats.",
+    "category": "Utilities"
+  },
+  {
+    "name": "Convex",
+    "slug": "convex",
+    "icon": "/docs-cn/coolify/images/services/convex-logo.svg",
+    "description": "Backend platform for web developers.",
+    "category": "Development"
+  },
+  {
+    "name": "Cryptgeon",
+    "slug": "cryptgeon",
+    "icon": "/docs-cn/coolify/images/services/cryptgeon-logo.png",
+    "description": "Secure note sharing service with self-destructing messages.",
+    "category": "Security"
+  },
+  {
+    "name": "Cyberchef",
+    "slug": "cyberchef",
+    "icon": "/docs-cn/coolify/images/services/cyberchef-logo.jpeg",
+    "description": "Data analysis and manipulation tool for cybersecurity.",
+    "category": "Security"
+  },
+  {
+    "name": "Dashboard",
+    "slug": "dashboard",
+    "icon": "",
+    "description": "A simple dashboard for your server.",
+    "category": "Administration",
+    "disabled": true
+  },
+  {
+    "name": "Dashy",
+    "slug": "dashy",
+    "icon": "/docs-cn/coolify/images/services/dashy-logo.png",
+    "description": "Customizable homepage dashboard for self-hosted services.",
+    "category": "Administration"
+  },
+  {
+    "name": "Databasus",
+    "slug": "databasus",
+    "icon": "/docs-cn/coolify/images/services/databasus-logo.svg",
+    "description": "A free, open source and self-hosted tool to backup PostgreSQL, MySQL and MongoDB with multiple storage backends.",
+    "category": "Backup"
+  },
+  {
+    "name": "Denokv",
+    "slug": "denokv",
+    "icon": "/docs-cn/coolify/images/services/denolookingup-logo.svg",
+    "description": "Deno's built-in key-value database service.",
+    "category": "Development"
+  },
+  {
+    "name": "Dify",
+    "slug": "dify",
+    "icon": "/docs-cn/coolify/images/services/dify.png",
+    "description": "Open-source platform for building LLM applications with workflows, retrieval-augmented generation, and AI agents.",
+    "category": "AI",
+    "disabled": true
+  },
+  {
+    "name": "Directus",
+    "slug": "directus",
+    "icon": "/docs-cn/coolify/images/services/directus-logo.svg",
+    "description": "An open-source headless CMS and API for custom databases.",
+    "category": "CMS"
+  },
+  {
+    "name": "Diun",
+    "slug": "diun",
+    "icon": "/docs-cn/coolify/images/services/diun-logo.svg",
+    "description": "Docker Image Update Notifier.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Docker Registry",
+    "slug": "docker-registry",
+    "icon": "/docs-cn/coolify/images/services/docker-registry-logo.png",
+    "description": "A Docker registry to store and manage your Docker images.",
+    "category": "Development"
+  },
+  {
+    "name": "Docling",
+    "slug": "docling",
+    "icon": "/docs-cn/coolify/images/services/docling.png",
+    "description": "Document processing service that converts PDFs, office documents, images, and HTML to Markdown, JSON, and other formats.",
+    "category": "AI"
+  },
+  {
+    "name": "Docmost",
+    "slug": "docmost",
+    "icon": "/docs-cn/coolify/images/services/docmost-logo.png",
+    "description": "Open-source document collaboration platform.",
+    "category": "Documentation"
+  },
+  {
+    "name": "Documenso",
+    "slug": "documenso",
+    "icon": "/docs-cn/coolify/images/services/documenso-logo.png",
+    "description": "Open-source DocuSign alternative for document signing.",
+    "category": "Business"
+  },
+  {
+    "name": "Docuseal",
+    "slug": "docuseal",
+    "icon": "/docs-cn/coolify/images/services/docuseal-logo.png",
+    "description": "Open source DocuSign alternative.",
+    "category": "Business"
+  },
+  {
+    "name": "DokuWiki",
+    "slug": "dokuwiki",
+    "icon": "/docs-cn/coolify/images/services/dokuwiki-logo.png",
+    "description": "A simple to use and highly versatile Open Source wiki software that doesn't require a database.",
+    "category": "Documentation",
+    "disabled": true
+  },
+  {
+    "name": "Dolibarr",
+    "slug": "dolibarr",
+    "icon": "/docs-cn/coolify/images/services/dolibarr.png",
+    "description": "Open-source ERP and CRM software.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Dozzle",
+    "slug": "dozzle",
+    "icon": "/docs-cn/coolify/images/services/dozzle-logo.svg",
+    "description": "Realtime log viewer for docker containers.",
+    "category": "Development"
+  },
+  {
+    "name": "Drizzle Gateway",
+    "slug": "drizzle-gateway",
+    "icon": "/docs-cn/coolify/images/services/drizzle-logo.jpeg",
+    "description": "Drizzle Studio for exploring SQL databases.",
+    "category": "Development"
+  },
+  {
+    "name": "Drupal",
+    "slug": "drupal",
+    "icon": "/docs-cn/coolify/images/services/drupal-logo.svg",
+    "description": "Open-source content management system.",
+    "category": "CMS",
+    "disabled": true
+  },
+  {
+    "name": "Duplicati",
+    "slug": "duplicati",
+    "icon": "/docs-cn/coolify/images/services/duplicati-logo.webp",
+    "description": "A free backup client that securely stores encrypted, incremental, compressed backups on cloud storage services and remote file servers.",
+    "category": "Backup"
+  },
+  {
+    "name": "Easyappointments",
+    "slug": "easyappointments",
+    "icon": "/docs-cn/coolify/images/services/easyappointments-logo.png",
+    "description": "Open-source appointment scheduler.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "EdgeDB",
+    "slug": "edgedb",
+    "icon": "/docs-cn/coolify/images/services/edgedb.svg",
+    "description": "Database built on PostgreSQL with a relational query engine and an object-oriented data model.",
+    "category": "Database",
+    "disabled": true
+  },
+  {
+    "name": "Elasticsearch",
+    "slug": "elasticsearch",
+    "icon": "/docs-cn/coolify/images/services/elasticsearch-logo.svg",
+    "description": "Free and Open Source, Distributed, RESTful Search Engine.",
+    "category": "Search"
+  },
+  {
+    "name": "ElectricSQL",
+    "slug": "electricsql",
+    "icon": "/docs-cn/coolify/images/services/electricsql.svg",
+    "description": "Sync shape-based subsets of your Postgres data over HTTP",
+    "category": "Database"
+  },
+  {
+    "name": "Emby",
+    "slug": "emby",
+    "icon": "/docs-cn/coolify/images/services/emby-logo.png",
+    "description": "A media server to organize, play, and stream audio and video to a variety of devices.",
+    "category": "Media"
+  },
+  {
+    "name": "Emby Stat",
+    "slug": "embystat",
+    "icon": "/docs-cn/coolify/images/services/embystat-logo.png",
+    "description": "A simple and easy-to-use Emby statistics dashboard.",
+    "category": "Media"
+  },
+  {
+    "name": "EMQX Enterprise",
+    "slug": "emqx-enterprise",
+    "icon": "/docs-cn/coolify/images/services/emqx-enterprise.svg",
+    "description": "Scalable, distributed MQTT messaging platform for IoT.",
+    "category": "IoT"
+  },
+  {
+    "name": "Engram",
+    "slug": "engram",
+    "icon": "/docs-cn/coolify/images/services/engram-logo.png",
+    "description": "Persistent memory sync server for AI coding agents (MCP).",
+    "category": "AI"
+  },
+  {
+    "name": "Ente",
+    "slug": "ente-photos",
+    "icon": "/docs-cn/coolify/images/services/ente-logo.webp",
+    "description": "A fully open-source, end-to-end encrypted platform for you to store data in the cloud without needing to trust the service provider.",
+    "category": "Productivity"
+  },
+  {
+    "name": "ESPHome",
+    "slug": "esphome",
+    "icon": "/docs-cn/coolify/images/services/esphome-logo.svg",
+    "description": "Open-source firmware framework for WiFi-enabled microcontrollers.",
+    "category": "IoT"
+  },
+  {
+    "name": "EspoCRM",
+    "slug": "espocrm",
+    "icon": "/docs-cn/coolify/images/services/espocrm.svg",
+    "description": "A free and open-source CRM platform.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Evolution API",
+    "slug": "evolution-api",
+    "icon": "/docs-cn/coolify/images/services/evolution-api-logo.svg",
+    "description": "WhatsApp API service for automation.",
+    "category": "Automation"
+  },
+  {
+    "name": "Excalidraw",
+    "slug": "excalidraw",
+    "icon": "/docs-cn/coolify/images/services/excalidraw-logo.svg",
+    "description": "Virtual whiteboard for sketching hand-drawn like diagrams.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Executor",
+    "slug": "executor",
+    "icon": "/docs-cn/coolify/images/services/executor.png",
+    "description": "Self-hosted server for AI agent integrations and code execution.",
+    "category": "Development"
+  },
+  {
+    "name": "Faraday",
+    "slug": "faraday",
+    "icon": "/docs-cn/coolify/images/services/faraday-logo.png",
+    "description": "Collaborative penetration testing and vulnerability management platform.",
+    "category": "Security"
+  },
+  {
+    "name": "Fider",
+    "slug": "fider",
+    "icon": "/docs-cn/coolify/images/services/fider-logo.svg",
+    "description": "An open platform to collect and organize customer feedback.",
+    "category": "Business"
+  },
+  {
+    "name": "Filebrowser",
+    "slug": "filebrowser",
+    "icon": "/docs-cn/coolify/images/services/filebrowser-logo.svg",
+    "description": "A file manager for the web.",
+    "category": "File Management"
+  },
+  {
+    "name": "FileFlows",
+    "slug": "fileflows",
+    "icon": "/docs-cn/coolify/images/services/fileflows-logo.svg",
+    "description": "A automatic file processing service.",
+    "category": "File Management"
+  },
+  {
+    "name": "Firefly III",
+    "slug": "firefly",
+    "icon": "/docs-cn/coolify/images/services/firefly-iii-logo.svg",
+    "description": "A personal finances manager.",
+    "category": "Finance",
+    "disabled": true
+  },
+  {
+    "name": "Firefox",
+    "slug": "firefox",
+    "icon": "/docs-cn/coolify/images/services/firefox-logo.png",
+    "description": "Firefox browser in a container.",
+    "category": "Browser"
+  },
+  {
+    "name": "Fizzy",
+    "slug": "fizzy",
+    "icon": "/docs-cn/coolify/images/services/fizzy-logo.png",
+    "description": "Kanban tracking tool for issues and ideas by 37signals.",
+    "category": "Project Management"
+  },
+  {
+    "name": "Flipt",
+    "slug": "flipt",
+    "icon": "/docs-cn/coolify/images/services/flipt-logo.svg",
+    "description": "Open-source feature flag management platform.",
+    "category": "Development"
+  },
+  {
+    "name": "Flowise",
+    "slug": "flowise",
+    "icon": "/docs-cn/coolify/images/services/flowise-logo.svg",
+    "description": "Drag & drop UI to build your customized LLM flow.",
+    "category": "AI"
+  },
+  {
+    "name": "Forgejo",
+    "slug": "forgejo",
+    "icon": "/docs-cn/coolify/images/services/forgejo-logo.svg",
+    "description": "A self-hosted Git service fork of Gitea.",
+    "category": "Development"
+  },
+  {
+    "name": "Formbricks",
+    "slug": "formbricks",
+    "icon": "/docs-cn/coolify/images/services/formbricks-logo.png",
+    "description": "A form builder for static sites.",
+    "category": "Development"
+  },
+  {
+    "name": "Foundryvtt",
+    "slug": "foundryvtt",
+    "icon": "/docs-cn/coolify/images/services/foundryvtt-logo.png",
+    "description": "Virtual tabletop for tabletop role-playing games.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Freescout",
+    "slug": "freescout",
+    "icon": "/docs-cn/coolify/images/services/freescout-logo.png",
+    "description": "Help desk and customer support application.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Freshrss",
+    "slug": "freshrss",
+    "icon": "/docs-cn/coolify/images/services/FreshRSS-logo.png",
+    "description": "Free, self-hostable RSS feed aggregator.",
+    "category": "RSS",
+    "disabled": true
+  },
+  {
+    "name": "Garage",
+    "slug": "garage",
+    "icon": "/docs-cn/coolify/images/services/garage-logo.svg",
+    "description": "S3-compatible distributed object storage service designed for self-hosting.",
+    "category": "Storage"
+  },
+  {
+    "name": "Ghost",
+    "slug": "ghost",
+    "icon": "/docs-cn/coolify/images/services/ghost-logo.svg",
+    "description": "A professional publishing platform.",
+    "category": "CMS"
+  },
+  {
+    "name": "Gitea",
+    "slug": "gitea",
+    "icon": "/docs-cn/coolify/images/services/gitea-logo.svg",
+    "description": "A painless self-hosted Git service.",
+    "category": "Development"
+  },
+  {
+    "name": "GitHub Runner",
+    "slug": "github-runner",
+    "icon": "/docs-cn/coolify/images/services/githubrunner-logo.png",
+    "description": "A GitHub Actions runner for Docker.",
+    "category": "Development"
+  },
+  {
+    "name": "GitLab",
+    "slug": "gitlab",
+    "icon": "/docs-cn/coolify/images/services/gitlab-logo.svg",
+    "description": "DevOps lifecycle tool.",
+    "category": "Development"
+  },
+  {
+    "name": "Glance",
+    "slug": "glance",
+    "icon": "/docs-cn/coolify/images/services/glance-logo.png",
+    "description": "All-in-one Home Server Dashboard.",
+    "category": "Administration"
+  },
+  {
+    "name": "Glances",
+    "slug": "glances",
+    "icon": "/docs-cn/coolify/images/services/glances-logo.png",
+    "description": "Cross-platform system monitoring tool.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Glitchtip",
+    "slug": "glitchtip",
+    "icon": "/docs-cn/coolify/images/services/glitchtip-logo.png",
+    "description": "An open-source error tracking tool.",
+    "category": "Development"
+  },
+  {
+    "name": "GLPI (Gestionnaire Libre de Parc Informatique)",
+    "slug": "glpi",
+    "icon": "/docs-cn/coolify/images/services/glpi-logo.svg",
+    "description": "Free, open-source IT Service Management platform for asset management, helpdesk, and service desk operations.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "GoatCounter",
+    "slug": "goatcounter",
+    "icon": "/docs-cn/coolify/images/services/goatcounter.svg",
+    "description": "Web analytics platform offering easy to use and meaningful privacy-friendly web analytics.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Gotenberg",
+    "slug": "gotenberg",
+    "icon": "/docs-cn/coolify/images/services/gotenberg-logo.png",
+    "description": "A Docker-powered stateless API for PDF files.",
+    "category": "Development"
+  },
+  {
+    "name": "Gotify",
+    "slug": "gotify",
+    "icon": "/docs-cn/coolify/images/services/gotify-logo.svg",
+    "description": "Open-source push notifications for web and mobile apps.",
+    "category": "Notifications"
+  },
+  {
+    "name": "GoWa",
+    "slug": "gowa",
+    "icon": "/docs-cn/coolify/images/services/gowa-logo.svg",
+    "description": "Golang WhatsApp - Built with Go for efficient memory use.",
+    "category": "Communication"
+  },
+  {
+    "name": "Grafana",
+    "slug": "grafana",
+    "icon": "/docs-cn/coolify/images/services/grafana-logo.svg",
+    "description": "The open platform for beautiful analytics and monitoring.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Gramps Web",
+    "slug": "gramps-web",
+    "icon": "/docs-cn/coolify/images/services/grampsweb-logo.svg",
+    "description": "The free, open-source genealogy system.",
+    "category": "Family"
+  },
+  {
+    "name": "Grimmory",
+    "slug": "grimmory",
+    "icon": "/docs-cn/coolify/images/services/grimmory.svg",
+    "description": "A self-hosted ebook library manager and reader, successor to Booklore.",
+    "category": "Media"
+  },
+  {
+    "name": "Grist",
+    "slug": "grist",
+    "icon": "/docs-cn/coolify/images/services/grist-logo.svg",
+    "description": "Modern relational spreadsheet combining flexibility and database robustness.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Grocy",
+    "slug": "grocy",
+    "icon": "/docs-cn/coolify/images/services/grocy-logo.svg",
+    "description": "A self-hosted groceries & household management solution for your home.",
+    "category": "Home",
+    "disabled": true
+  },
+  {
+    "name": "HashiCorp Vault",
+    "slug": "vault",
+    "icon": "/docs-cn/coolify/images/services/vault-logo.svg",
+    "description": "Secret management service for securely storing secrets and controlling access to them.",
+    "category": "Security"
+  },
+  {
+    "name": "Hatchet",
+    "slug": "hatchet",
+    "icon": "/docs-cn/coolify/images/services/hatchet-logo.svg",
+    "description": "Platform for running background tasks and durable workflows built on Postgres.",
+    "category": "Development"
+  },
+  {
+    "name": "Healthchecks",
+    "slug": "healthchecks",
+    "icon": "/docs-cn/coolify/images/services/healthchecks.webp",
+    "description": "Open-source cron job and background task monitoring service.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Heimdall",
+    "slug": "heimdall",
+    "icon": "/docs-cn/coolify/images/services/heimdall-logo.svg",
+    "description": "An elegant solution to organize all your web applications.",
+    "category": "Administration",
+    "disabled": true
+  },
+  {
+    "name": "Hermes Agent",
+    "slug": "hermes-agent",
+    "icon": "/docs-cn/coolify/images/services/hermes-agent-logo.png",
+    "description": "Autonomous AI agent from Nous Research with persistent memory, scheduling, and a web interface. Available as a two-container WebUI stack or a single-container dashboard.",
+    "category": "AI"
+  },
+  {
+    "name": "Heyform",
+    "slug": "heyform",
+    "icon": "/docs-cn/coolify/images/services/heyform-logo.svg",
+    "description": "Open-source form builder for conversational forms.",
+    "category": "Development"
+  },
+  {
+    "name": "Hoarder",
+    "slug": "hoarder",
+    "icon": "/docs-cn/coolify/images/services/hoarder-logo.png",
+    "description": "Self-hosted bookmark manager with AI-powered tagging.",
+    "category": "Bookmarks",
+    "disabled": true
+  },
+  {
+    "name": "Homarr",
+    "slug": "homarr",
+    "icon": "/docs-cn/coolify/images/services/homarr-logo.svg",
+    "description": "Customizable browser homepage and dashboard.",
+    "category": "Administration"
+  },
+  {
+    "name": "Home Assistant",
+    "slug": "home-assistant",
+    "icon": "/docs-cn/coolify/images/services/homeassistant-logo.svg",
+    "description": "Open-source home automation platform focused on local control and privacy.",
+    "category": "Home"
+  },
+  {
+    "name": "Homebox",
+    "slug": "homebox",
+    "icon": "/docs-cn/coolify/images/services/homebox-logo.svg",
+    "description": "Inventory and organization system built for the Home User.",
+    "category": "Home"
+  },
+  {
+    "name": "Homepage",
+    "slug": "homepage",
+    "icon": "/docs-cn/coolify/images/services/homepage-logo.png",
+    "description": "A modern homepage for your server.",
+    "category": "Administration"
+  },
+  {
+    "name": "Honcho",
+    "slug": "honcho",
+    "icon": "/docs-cn/coolify/images/services/honcho.svg",
+    "description": "Memory and reasoning tools for building personalized AI agents with stateful conversations.",
+    "category": "AI"
+  },
+  {
+    "name": "Hoppscotch",
+    "slug": "hoppscotch",
+    "icon": "/docs-cn/coolify/images/services/hoppscotch-logo.png",
+    "description": "Open-source API development ecosystem.",
+    "category": "Development"
+  },
+  {
+    "name": "Huly",
+    "slug": "huly",
+    "icon": "/docs-cn/coolify/images/services/huly-logo.svg",
+    "description": "Open-source platform for project management and team collaboration.",
+    "category": "Project Management",
+    "disabled": true
+  },
+  {
+    "name": "Imgcompress",
+    "slug": "imgcompress",
+    "icon": "/docs-cn/coolify/images/services/imgcompress-logo.webp",
+    "description": "Image tool for compression, format conversion, and AI background removal",
+    "category": "Media"
+  },
+  {
+    "name": "Immich",
+    "slug": "immich",
+    "icon": "/docs-cn/coolify/images/services/immich-logo.svg",
+    "description": "Self-hosted photo and video backup solution.",
+    "category": "Media"
+  },
+  {
+    "name": "Infisical",
+    "slug": "infisical",
+    "icon": "/docs-cn/coolify/images/services/infisical-logo.svg",
+    "description": "Open source secret management platform.",
+    "category": "Security"
+  },
+  {
+    "name": "InfluxDB",
+    "slug": "influxdb",
+    "icon": "/docs-cn/coolify/images/services/influxdb.svg",
+    "description": "Open-source time series database for metrics, events, and IoT data.",
+    "category": "Database"
+  },
+  {
+    "name": "Inngest",
+    "slug": "inngest",
+    "icon": "/docs-cn/coolify/images/services/inngest-logo.svg",
+    "description": "Durable workflow engine for background jobs, queues, and event-driven systems.",
+    "category": "Automation"
+  },
+  {
+    "name": "Invoice Ninja",
+    "slug": "invoice-ninja",
+    "icon": "/docs-cn/coolify/images/services/invoiceninja-logo.png",
+    "description": "Invoice management system.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "It Tools",
+    "slug": "it-tools",
+    "icon": "/docs-cn/coolify/images/services/ittools-logo.svg",
+    "description": "Collection of handy online tools for developers.",
+    "category": "Development"
+  },
+  {
+    "name": "Jean",
+    "slug": "jean",
+    "icon": "/docs-cn/coolify/images/services/jean.png",
+    "description": "Open-source desktop and server client for orchestrating AI coding agents.",
+    "category": "Development"
+  },
+  {
+    "name": "Jellyfin",
+    "slug": "jellyfin",
+    "icon": "/docs-cn/coolify/images/services/jellyfin-logo.svg",
+    "description": "The Free Software Media System.",
+    "category": "Media"
+  },
+  {
+    "name": "Jenkins",
+    "slug": "jenkins",
+    "icon": "/docs-cn/coolify/images/services/jenkins-logo.svg",
+    "description": "Open-source automation server.",
+    "category": "Development"
+  },
+  {
+    "name": "Jitsi Meet",
+    "slug": "jitsi",
+    "icon": "/docs-cn/coolify/images/services/jitsi.svg",
+    "description": "Open-source video conferencing platform for self-hosted meetings.",
+    "category": "Communication"
+  },
+  {
+    "name": "Joomla",
+    "slug": "joomla",
+    "icon": "/docs-cn/coolify/images/services/Joomla-Logo.svg",
+    "description": "Open-source content management system.",
+    "category": "CMS",
+    "disabled": true
+  },
+  {
+    "name": "Joplin",
+    "slug": "joplin",
+    "icon": "/docs-cn/coolify/images/services/joplin-logo.png",
+    "description": "Open-source note taking and to-do application.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Jupyter Notebook Python",
+    "slug": "jupyter-notebook-python",
+    "icon": "/docs-cn/coolify/images/services/jupyternotebook-logo.svg",
+    "description": "Interactive computing environment for Python.",
+    "category": "Development"
+  },
+  {
+    "name": "KaraKeep",
+    "slug": "karakeep",
+    "icon": "/docs-cn/coolify/images/services/karakeep-logo.svg",
+    "description": "Self-hostable bookmark-everything app with AI-based automatic tagging.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Keycloak",
+    "slug": "keycloak",
+    "icon": "/docs-cn/coolify/images/services/keycloak-logo.svg",
+    "description": "Open-source identity and access management solution.",
+    "category": "Security"
+  },
+  {
+    "name": "Kimai",
+    "slug": "kimai",
+    "icon": "/docs-cn/coolify/images/services/kimai-logo.svg",
+    "description": "An open-source time-tracking solution for teams of all sizes.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Kuzzle",
+    "slug": "kuzzle",
+    "icon": "/docs-cn/coolify/images/services/kuzzle-logo.png",
+    "description": "A powerful backend that enables you to build modern apps faster.",
+    "category": "Development"
+  },
+  {
+    "name": "Label Studio",
+    "slug": "labelstudio",
+    "icon": "/docs-cn/coolify/images/services/labelstudio-logo.png",
+    "description": "Open source data labeling platform.",
+    "category": "AI"
+  },
+  {
+    "name": "Langflow",
+    "slug": "langflow",
+    "icon": "/docs-cn/coolify/images/services/langflow.svg",
+    "description": "Open source Python-based framework for building AI applications.",
+    "category": "AI"
+  },
+  {
+    "name": "Langfuse",
+    "slug": "langfuse",
+    "icon": "/docs-cn/coolify/images/services/langfuse-logo.svg",
+    "description": "Open source LLM engineering platform.",
+    "category": "AI"
+  },
+  {
+    "name": "Leantime",
+    "slug": "leantime",
+    "icon": "/docs-cn/coolify/images/services/leantime-logo.svg",
+    "description": "Lean project management system for innovators.",
+    "category": "Project Management",
+    "disabled": true
+  },
+  {
+    "name": "LibreChat",
+    "slug": "librechat",
+    "icon": "/docs-cn/coolify/images/services/librechat-logo.svg",
+    "description": "Self-hosted, powerful, and privacy-focused chat UI for multiple AI models.",
+    "category": "AI"
+  },
+  {
+    "name": "Libreoffice",
+    "slug": "libreoffice",
+    "icon": "/docs-cn/coolify/images/services/libreoffice-logo.svg",
+    "description": "Free and open-source office suite.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Librespeed",
+    "slug": "librespeed",
+    "icon": "/docs-cn/coolify/images/services/librespeed.png",
+    "description": "Deploy Librespeed on Coolify for self-hosted lightweight speed test.",
+    "category": "Networking",
+    "disabled": true
+  },
+  {
+    "name": "Libretranslate",
+    "slug": "libretranslate",
+    "icon": "/docs-cn/coolify/images/services/libretranslate-logo.svg",
+    "description": "Free and open-source machine translation API.",
+    "category": "AI"
+  },
+  {
+    "name": "Lidarr",
+    "slug": "lidarr",
+    "icon": "/docs-cn/coolify/images/services/lidarr-logo.svg",
+    "description": "Music collection manager for Usenet and BitTorrent users.",
+    "category": "Media"
+  },
+  {
+    "name": "LimeSurvey",
+    "slug": "limesurvey",
+    "icon": "/docs-cn/coolify/images/services/limesurvey-logo.svg",
+    "description": "The most popular FOSS online survey tool on the web.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Linkding",
+    "slug": "linkding",
+    "icon": "/docs-cn/coolify/images/services/linkding-logo.svg",
+    "description": "A self-hosted bookmark manager designed to be minimal, fast, and easy to set up.",
+    "category": "Bookmarks"
+  },
+  {
+    "name": "Linkwarden",
+    "slug": "linkwarden",
+    "icon": "/docs-cn/coolify/images/services/linkwarden.svg",
+    "description": "Collaborative bookmark manager for collecting, organizing, and preserving web pages.",
+    "category": "Bookmarks"
+  },
+  {
+    "name": "Listmonk",
+    "slug": "listmonk",
+    "icon": "/docs-cn/coolify/images/services/listmonk-logo.svg",
+    "description": "Self-hosted newsletter and mailing list manager.",
+    "category": "Marketing"
+  },
+  {
+    "name": "Litellm",
+    "slug": "litellm",
+    "icon": "/docs-cn/coolify/images/services/litellm-logo.svg",
+    "description": "Open source LLM Gateway to manage authentication, loadbalancing, and spend tracking across 100+ LLMs. All in the OpenAI format.",
+    "category": "AI"
+  },
+  {
+    "name": "Litequeen",
+    "slug": "litequeen",
+    "icon": "/docs-cn/coolify/images/services/litequeen-logo.svg",
+    "description": "Lightweight service management platform.",
+    "category": "Administration",
+    "disabled": true
+  },
+  {
+    "name": "LobeChat",
+    "slug": "lobe-chat",
+    "icon": "/docs-cn/coolify/images/services/lobechat-logo.webp",
+    "description": "Open-source, modern AI chat framework with multi-provider support and knowledge base management.",
+    "category": "AI"
+  },
+  {
+    "name": "Logto",
+    "slug": "logto",
+    "icon": "/docs-cn/coolify/images/services/logto-logo.png",
+    "description": "Logto is an Auth0 alternative designed for modern apps and SaaS products.",
+    "category": "Security"
+  },
+  {
+    "name": "Lowcoder",
+    "slug": "lowcoder",
+    "icon": "/docs-cn/coolify/images/services/lowcoder-logo.svg",
+    "description": "Open-source low-code platform for building internal tools.",
+    "category": "Development"
+  },
+  {
+    "name": "macOS",
+    "slug": "macos",
+    "icon": "/docs-cn/coolify/images/services/macos.svg",
+    "description": "Run macOS in a containerized environment using the Dockur macOS project.",
+    "category": "Utilities",
+    "disabled": true
+  },
+  {
+    "name": "Mage AI",
+    "slug": "mage-ai",
+    "icon": "/docs-cn/coolify/images/services/mage-ai.svg",
+    "description": "Build, run, and manage data pipelines for integrating and transforming data.",
+    "category": "Automation"
+  },
+  {
+    "name": "Mailpit",
+    "slug": "mailpit",
+    "icon": "/docs-cn/coolify/images/services/mailpit-logo.svg",
+    "description": "Self-hosted email and SMTP testing tool.",
+    "category": "Development"
+  },
+  {
+    "name": "Marimo",
+    "slug": "marimo",
+    "icon": "/docs-cn/coolify/images/services/marimo-logo.svg",
+    "description": "Open-source reactive notebook for Python.",
+    "category": "Development"
+  },
+  {
+    "name": "Martin",
+    "slug": "martin",
+    "icon": "/docs-cn/coolify/images/services/martin.png",
+    "description": "PostGIS vector tile server.",
+    "category": "Development"
+  },
+  {
+    "name": "Matrix",
+    "slug": "matrix",
+    "icon": "/docs-cn/coolify/images/services/matrix-logo.svg",
+    "description": "Chat securely with your family, friends, community.",
+    "category": "Communication"
+  },
+  {
+    "name": "Mattermost",
+    "slug": "mattermost",
+    "icon": "/docs-cn/coolify/images/services/mattermost-logo.svg",
+    "description": "Open-source messaging platform for teams.",
+    "category": "Communication"
+  },
+  {
+    "name": "Mautic",
+    "slug": "mautic",
+    "icon": "/docs-cn/coolify/images/services/mautic-logo.svg",
+    "description": "Open-source marketing automation platform.",
+    "category": "Marketing",
+    "disabled": true
+  },
+  {
+    "name": "Maybe",
+    "slug": "maybe",
+    "icon": "/docs-cn/coolify/images/services/maybe-logo.svg",
+    "description": "Personal finance and wealth management application.",
+    "category": "Finance",
+    "disabled": true
+  },
+  {
+    "name": "Mealie",
+    "slug": "mealie",
+    "icon": "/docs-cn/coolify/images/services/mealie-logo.png",
+    "description": "Self-hosted recipe manager and meal planner.",
+    "category": "Home"
+  },
+  {
+    "name": "Mediawiki",
+    "slug": "mediawiki",
+    "icon": "/docs-cn/coolify/images/services/mediawiki-logo.svg",
+    "description": "A free and open-source wiki software package.",
+    "category": "Documentation",
+    "disabled": true
+  },
+  {
+    "name": "Meilisearch",
+    "slug": "meilisearch",
+    "icon": "/docs-cn/coolify/images/services/meilisearch-logo.svg",
+    "description": "A powerful, fast, open-source, easy to use, and deploy search engine.",
+    "category": "Search"
+  },
+  {
+    "name": "Memos",
+    "slug": "memos",
+    "icon": "/docs-cn/coolify/images/services/memos-logo.png",
+    "description": "Open-source, self-hosted memo hub with knowledge management.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Metabase",
+    "slug": "metabase",
+    "icon": "/docs-cn/coolify/images/services/metabase-logo.svg",
+    "description": "The simplest, fastest way to share data and analytics inside your company.",
+    "category": "Analytics"
+  },
+  {
+    "name": "MetaMCP",
+    "slug": "metamcp",
+    "icon": "/docs-cn/coolify/images/services/metamcp.png",
+    "description": "MCP Aggregator, Orchestrator, Middleware, Gateway in one application.",
+    "category": "AI"
+  },
+  {
+    "name": "Metube",
+    "slug": "metube",
+    "icon": "/docs-cn/coolify/images/services/metube-logo.png",
+    "description": "A self-hosted video sharing platform.",
+    "category": "Media"
+  },
+  {
+    "name": "Mindsdb",
+    "slug": "mindsdb",
+    "icon": "/docs-cn/coolify/images/services/mindsdb.svg",
+    "description": "Machine learning platform that brings AI to databases.",
+    "category": "AI"
+  },
+  {
+    "name": "Minecraft",
+    "slug": "minecraft",
+    "icon": "/docs-cn/coolify/images/services/minecraft-logo.svg",
+    "description": "Minecraft game server.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Miniflux",
+    "slug": "miniflux",
+    "icon": "/docs-cn/coolify/images/services/miniflux.svg",
+    "description": "Minimalist and opinionated feed reader.",
+    "category": "RSS"
+  },
+  {
+    "name": "MinIO",
+    "slug": "minio-community-edition",
+    "icon": "/docs-cn/coolify/images/services/minio-logo.svg",
+    "description": "A high-performance, distributed object storage system.",
+    "category": "Storage",
+    "disabled": true
+  },
+  {
+    "name": "MinIO",
+    "slug": "minio",
+    "icon": "/docs-cn/coolify/images/services/minio-logo.svg",
+    "description": "A high-performance, distributed object storage system.",
+    "category": "Storage",
+    "disabled": true
+  },
+  {
+    "name": "Mixpost",
+    "slug": "mixpost",
+    "icon": "/docs-cn/coolify/images/services/mixpost-logo.svg",
+    "description": "Self-hosted social media management software (Buffer alternative).",
+    "category": "Social Media",
+    "disabled": true
+  },
+  {
+    "name": "Moodle",
+    "slug": "moodle",
+    "icon": "/docs-cn/coolify/images/services/moodle-logo.png",
+    "description": "Open-source learning platform.",
+    "category": "Education",
+    "disabled": true
+  },
+  {
+    "name": "Mosquitto",
+    "slug": "mosquitto",
+    "icon": "/docs-cn/coolify/images/services/mosquitto-logo.svg",
+    "description": "Open-source MQTT broker.",
+    "category": "IoT"
+  },
+  {
+    "name": "N8N",
+    "slug": "n8n",
+    "icon": "/docs-cn/coolify/images/services/n8n-logo.png",
+    "description": "Workflow automation tool.",
+    "category": "Automation"
+  },
+  {
+    "name": "Navidrome",
+    "slug": "navidrome",
+    "icon": "/docs-cn/coolify/images/services/navidrome-logo.svg",
+    "description": "Modern music server and streamer compatible with Subsonic/Airsonic.",
+    "category": "Media"
+  },
+  {
+    "name": "Neon Ws Proxy",
+    "slug": "neon-ws-proxy",
+    "icon": "/docs-cn/coolify/images/services/neon-logo.svg",
+    "description": "WebSocket proxy for Neon database.",
+    "category": "Development"
+  },
+  {
+    "name": "Netbird-Client",
+    "slug": "netbird-client",
+    "icon": "/docs-cn/coolify/images/services/netbird-logo.png",
+    "description": "Connect your devices into a secure WireGuard-based mesh network.",
+    "category": "Networking"
+  },
+  {
+    "name": "NewAPI",
+    "slug": "newapi",
+    "icon": "/docs-cn/coolify/images/services/newapi-logo.png",
+    "description": "The next-generation LLM gateway and AI asset management system supports multiple languages.",
+    "category": "AI"
+  },
+  {
+    "name": "Newt-Pangolin",
+    "slug": "newt-pangolin",
+    "icon": "/docs-cn/coolify/images/services/pangolin_newt.svg",
+    "description": "User space WireGuard tunnel client and TCP/UDP proxy for securely exposing private resources.",
+    "category": "Networking"
+  },
+  {
+    "name": "Next Image Transformation",
+    "slug": "next-image-transformation",
+    "icon": "/docs-cn/coolify/images/services/next-image-transformation-logo.svg",
+    "description": "Image transformation service for Next.js.",
+    "category": "Development"
+  },
+  {
+    "name": "NextCloud",
+    "slug": "nextcloud",
+    "icon": "/docs-cn/coolify/images/services/nextcloud-logo.svg",
+    "description": "A safe home for all your data.",
+    "category": "Storage",
+    "disabled": true
+  },
+  {
+    "name": "Nitropage",
+    "slug": "nitropage",
+    "icon": "/docs-cn/coolify/images/services/nitropage-logo.svg",
+    "description": "Nitropage is an extensible, drag-and-drop website builder based on SolidStart, completely free and open source.",
+    "category": "Development"
+  },
+  {
+    "name": "NocoBase",
+    "slug": "nocobase",
+    "icon": "/docs-cn/coolify/images/services/nocobase-logo.png",
+    "description": "The most extensible AI-powered no-code platform with total control and infinite extensibility.",
+    "category": "Development"
+  },
+  {
+    "name": "NocoDB",
+    "slug": "nocodb",
+    "icon": "/docs-cn/coolify/images/services/nocodb-logo.svg",
+    "description": "Open Source Airtable Alternative.",
+    "category": "Database"
+  },
+  {
+    "name": "Nodebb",
+    "slug": "nodebb",
+    "icon": "/docs-cn/coolify/images/services/nodebb-logo.svg",
+    "description": "Node.js based forum software.",
+    "category": "Forum"
+  },
+  {
+    "name": "Ntfy",
+    "slug": "ntfy",
+    "icon": "/docs-cn/coolify/images/services/ntfy-logo.svg",
+    "description": "Simple HTTP-based pub-sub notification service.",
+    "category": "Notifications"
+  },
+  {
+    "name": "Observium",
+    "slug": "observium",
+    "icon": "/docs-cn/coolify/images/services/observium-logo.webp",
+    "description": "Low-maintenance auto-discovering network monitoring platform.",
+    "category": "Monitoring",
+    "disabled": true
+  },
+  {
+    "name": "Obsidian",
+    "slug": "obsidian",
+    "icon": "/docs-cn/coolify/images/services/obsidian-logo.svg",
+    "description": "A note-taking app that lets you create, link, and organize your notes with hundreds of plugins and themes.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Obsidian LiveSync",
+    "slug": "obsidian-livesync",
+    "icon": "/docs-cn/coolify/images/services/obsidian-livesync.svg",
+    "description": "Self-hosted sync backend for the Obsidian LiveSync plugin using CouchDB.",
+    "category": "Storage"
+  },
+  {
+    "name": "Odoo",
+    "slug": "odoo",
+    "icon": "/docs-cn/coolify/images/services/odoo-logo.svg",
+    "description": "Open source ERP and CRM.",
+    "category": "Business"
+  },
+  {
+    "name": "Ollama",
+    "slug": "ollama",
+    "icon": "/docs-cn/coolify/images/services/ollama-logo.svg",
+    "description": "A lightweight and efficient server for running large language models (LLMs) on your local machine or in the cloud.",
+    "category": "AI"
+  },
+  {
+    "name": "Once Campfire",
+    "slug": "once-campfire",
+    "icon": "/docs-cn/coolify/images/services/oncecampfire-logo.png",
+    "description": "Web-based chat application.",
+    "category": "Communication"
+  },
+  {
+    "name": "Onedev",
+    "slug": "onedev",
+    "icon": "/docs-cn/coolify/images/services/onedev-logo.svg",
+    "description": "Self-hosted Git server with integrated CI/CD and kanban.",
+    "category": "Development"
+  },
+  {
+    "name": "Onetime Secret",
+    "slug": "onetimesecret",
+    "icon": "/docs-cn/coolify/images/services/onetimesecret.svg",
+    "description": "Share secrets securely with self-destructing links that can only be viewed once.",
+    "category": "Security"
+  },
+  {
+    "name": "Open Archiver",
+    "slug": "open-archiver",
+    "icon": "/docs-cn/coolify/images/services/openarchiver-logo.svg",
+    "description": "Self-hosted, open-source email archiving solution with full-text search.",
+    "category": "Email"
+  },
+  {
+    "name": "Open Webui",
+    "slug": "open-webui",
+    "icon": "/docs-cn/coolify/images/services/openwebui-logo.svg",
+    "description": "User-friendly WebUI for LLMs, formerly Ollama WebUI.",
+    "category": "AI"
+  },
+  {
+    "name": "OpenBlocks",
+    "slug": "openblocks",
+    "icon": "/docs-cn/coolify/images/services/openblocks-logo.svg",
+    "description": "Open-source low code platform.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "OpenClaw",
+    "slug": "openclaw",
+    "icon": "/docs-cn/coolify/images/services/openclaw-logo.svg",
+    "description": "AI-powered coding assistant with multi-provider support and browser automation.",
+    "category": "AI"
+  },
+  {
+    "name": "OpenObserve",
+    "slug": "openobserve",
+    "icon": "/docs-cn/coolify/images/services/openobserve-logo.svg",
+    "description": "Observability platform for logs, metrics, traces, RUM, and session replays.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "OpenPanel",
+    "slug": "openpanel",
+    "icon": "/docs-cn/coolify/images/services/openpanel-logo.svg",
+    "description": "Open source alternative to Mixpanel and Plausible for product analytics.",
+    "category": "Analytics"
+  },
+  {
+    "name": "OpenWA",
+    "slug": "openwa",
+    "icon": "/docs-cn/coolify/images/services/openwa.png",
+    "description": "Open-source, self-hosted WhatsApp API gateway with a bundled dashboard.",
+    "category": "Messaging"
+  },
+  {
+    "name": "OpnForm",
+    "slug": "opnform",
+    "icon": "/docs-cn/coolify/images/services/opnform.svg",
+    "description": "Open-source form builder that lets you create beautiful forms and share them anywhere.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "OrangeHRM",
+    "slug": "orangehrm",
+    "icon": "/docs-cn/coolify/images/services/orangehrm-logo.svg",
+    "description": "Free HR management system for businesses.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Organizr",
+    "slug": "organizr",
+    "icon": "/docs-cn/coolify/images/services/organizr-logo.png",
+    "description": "Homepage organizer for your server services.",
+    "category": "Administration",
+    "disabled": true
+  },
+  {
+    "name": "Osticket",
+    "slug": "osticket",
+    "icon": "/docs-cn/coolify/images/services/osticket-logo.png",
+    "description": "Open-source help desk ticketing system.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Outline",
+    "slug": "getoutline",
+    "icon": "/docs-cn/coolify/images/services/getoutline-logo.jpeg",
+    "description": "Open-source collaboration tool.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Overseerr",
+    "slug": "overseerr",
+    "icon": "/docs-cn/coolify/images/services/overseerr-logo.svg",
+    "description": "A request management and media discovery tool built to work with your existing Plex ecosystem.",
+    "category": "Media"
+  },
+  {
+    "name": "Owncloud",
+    "slug": "owncloud",
+    "icon": "/docs-cn/coolify/images/services/owncloud-logo.svg",
+    "description": "File synchronization and sharing platform.",
+    "category": "Storage",
+    "disabled": true
+  },
+  {
+    "name": "Pairdrop",
+    "slug": "pairdrop",
+    "icon": "/docs-cn/coolify/images/services/pairdrop-logo.png",
+    "description": "Local file sharing in your browser.",
+    "category": "File Sharing"
+  },
+  {
+    "name": "Palworld",
+    "slug": "palworld",
+    "icon": "/docs-cn/coolify/images/services/palworld-logo.svg",
+    "description": "Dedicated server for Palworld multiplayer survival game with creature collection and base building.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Paperless",
+    "slug": "paperless",
+    "icon": "/docs-cn/coolify/images/services/paperless-logo.png",
+    "description": "Document management system that transforms physical documents into searchable online archives.",
+    "category": "Documentation"
+  },
+  {
+    "name": "Passbolt",
+    "slug": "passbolt",
+    "icon": "/docs-cn/coolify/images/services/passbolt-logo.svg",
+    "description": "Open source password manager for teams.",
+    "category": "Security",
+    "disabled": true
+  },
+  {
+    "name": "Paymenter",
+    "slug": "paymenter",
+    "icon": "/docs-cn/coolify/images/services/paymenter-logo.svg",
+    "description": "Open-Source Billing, Built for Hosting Providers.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "PeerTube",
+    "slug": "peertube",
+    "icon": "/docs-cn/coolify/images/services/peertube-logo.svg",
+    "description": "Free, open-source, decentralized video hosting platform.",
+    "category": "Media"
+  },
+  {
+    "name": "Penpot",
+    "slug": "penpot",
+    "icon": "/docs-cn/coolify/images/services/penpot-logo.svg",
+    "description": "Open Source design & prototyping platform.",
+    "category": "Design"
+  },
+  {
+    "name": "Peppermint",
+    "slug": "peppermint",
+    "icon": "/docs-cn/coolify/images/services/peppermint.png",
+    "description": "Open-source help desk and ticket management system for support teams.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "PG Back Web",
+    "slug": "pgbackweb",
+    "icon": "/docs-cn/coolify/images/services/pgbackweb-logo.png",
+    "description": "Effortless PostgreSQL backups with a user-friendly web interface.",
+    "category": "Database"
+  },
+  {
+    "name": "pgAdmin",
+    "slug": "pgadmin",
+    "icon": "/docs-cn/coolify/images/services/pgadmin-logo.svg",
+    "description": "A web-based database management tool for administering your PostgreSQL databases through a user-friendly interface.",
+    "category": "Development"
+  },
+  {
+    "name": "phpMyAdmin",
+    "slug": "phpmyadmin",
+    "icon": "/docs-cn/coolify/images/services/phpmyadmin-logo.svg",
+    "description": "MySQL database management tool.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Pi-hole",
+    "slug": "pi-hole",
+    "icon": "/docs-cn/coolify/images/services/pihole-logo.svg",
+    "description": "Network-wide ad blocker that acts as a DNS sinkhole.",
+    "category": "Security"
+  },
+  {
+    "name": "PingvinShare",
+    "slug": "pingvinshare",
+    "icon": "/docs-cn/coolify/images/services/pingvinshare-logo.svg",
+    "description": "Self-hosted file sharing platform that combines lightness and beauty.",
+    "category": "File Sharing",
+    "disabled": true
+  },
+  {
+    "name": "Plane",
+    "slug": "plane",
+    "icon": "/docs-cn/coolify/images/services/plane-logo.svg",
+    "description": "Open source project planning tool.",
+    "category": "Project Management"
+  },
+  {
+    "name": "Plausible Analytics",
+    "slug": "plausible",
+    "icon": "/docs-cn/coolify/images/services/plausible-logo.svg",
+    "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
+    "category": "Analytics",
+    "disabled": true
+  },
+  {
+    "name": "Plex",
+    "slug": "plex",
+    "icon": "/docs-cn/coolify/images/services/plex-logo.svg",
+    "description": "Media server software.",
+    "category": "Media"
+  },
+  {
+    "name": "Plunk",
+    "slug": "plunk",
+    "icon": "/docs-cn/coolify/images/services/plunk-logo.svg",
+    "description": "Self-hosted email marketing platform.",
+    "category": "Marketing"
+  },
+  {
+    "name": "Pocket ID",
+    "slug": "pocket-id",
+    "icon": "/docs-cn/coolify/images/services/pocketid-logo.webp",
+    "description": "A simple OIDC provider for passwordless authentication with passkeys.",
+    "category": "Security"
+  },
+  {
+    "name": "PocketBase",
+    "slug": "pocketbase",
+    "icon": "/docs-cn/coolify/images/services/pocketbase-logo.svg",
+    "description": "Open Source backend for your next SaaS and Mobile app.",
+    "category": "Development"
+  },
+  {
+    "name": "Portabase",
+    "slug": "portabase",
+    "icon": "/docs-cn/coolify/images/services/portabase.svg",
+    "description": "Open-source platform for automated database backups, secure storage, and on-demand recovery.",
+    "category": "Backup"
+  },
+  {
+    "name": "Portainer",
+    "slug": "portainer",
+    "icon": "/docs-cn/coolify/images/services/portainer-logo.png",
+    "description": "Container management platform.",
+    "category": "Development"
+  },
+  {
+    "name": "PostHog",
+    "slug": "posthog",
+    "icon": "/docs-cn/coolify/images/services/posthog-logo.svg",
+    "description": "Open source product analytics.",
+    "category": "Analytics",
+    "disabled": true
+  },
+  {
+    "name": "Postiz",
+    "slug": "postiz",
+    "icon": "/docs-cn/coolify/images/services/postiz-logo.png",
+    "description": "Social media scheduling and analytics tool.",
+    "category": "Social Media"
+  },
+  {
+    "name": "Prefect",
+    "slug": "prefect",
+    "icon": "/docs-cn/coolify/images/services/prefect-logo.png",
+    "description": "Open source workflow management platform.",
+    "category": "Development"
+  },
+  {
+    "name": "Privatebin",
+    "slug": "privatebin",
+    "icon": "/docs-cn/coolify/images/services/privatebin-logo.svg",
+    "description": "Minimalist, open-source online pastebin.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Prowlarr",
+    "slug": "prowlarr",
+    "icon": "/docs-cn/coolify/images/services/prowlarr-logo.svg",
+    "description": "A free and open source BitTorrent client.",
+    "category": "Media"
+  },
+  {
+    "name": "Proxyscotch",
+    "slug": "proxyscotch",
+    "icon": "/docs-cn/coolify/images/services/proxyscotch.png",
+    "description": "Tiny open-source CORS proxy made by Hoppscotch.",
+    "category": "Development"
+  },
+  {
+    "name": "Pterodactyl Panel",
+    "slug": "pterodactyl",
+    "icon": "/docs-cn/coolify/images/services/pterodactyl-logo.png",
+    "description": "Game server management panel with Wings daemon for hosting Minecraft, CS:GO, ARK and more.",
+    "category": "Gaming",
+    "disabled": true
+  },
+  {
+    "name": "Pydio Cells",
+    "slug": "pydio-cells",
+    "icon": "/docs-cn/coolify/images/services/pydio.webp",
+    "description": "File sharing platform for organizations.",
+    "category": "File Sharing"
+  },
+  {
+    "name": "Qbittorrent",
+    "slug": "qbittorrent",
+    "icon": "/docs-cn/coolify/images/services/qbittorrent-logo.svg",
+    "description": "Free and open-source BitTorrent client.",
+    "category": "Media"
+  },
+  {
+    "name": "Qdrant",
+    "slug": "qdrant",
+    "icon": "/docs-cn/coolify/images/services/qdrant-logo.svg",
+    "description": "Open source, AI-native vector database.",
+    "category": "AI"
+  },
+  {
+    "name": "RabbitMQ",
+    "slug": "rabbitmq",
+    "icon": "/docs-cn/coolify/images/services/rabbitmq-logo.svg",
+    "description": "Open source message broker.",
+    "category": "Development"
+  },
+  {
+    "name": "Radarr",
+    "slug": "radarr",
+    "icon": "/docs-cn/coolify/images/services/radarr-logo.svg",
+    "description": "A Media server software.",
+    "category": "Media"
+  },
+  {
+    "name": "Rallly",
+    "slug": "rallly",
+    "icon": "/docs-cn/coolify/images/services/rallly-logo.svg",
+    "description": "Open-source meeting scheduling tool.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Reactive Resume",
+    "slug": "reactive-resume",
+    "icon": "/docs-cn/coolify/images/services/rxresume-logo.svg",
+    "description": "A free and open source resume builder.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Readeck",
+    "slug": "readeck",
+    "icon": "/docs-cn/coolify/images/services/readeck-logo.svg",
+    "description": "Web article reader and bookmark manager.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Redis Insight",
+    "slug": "redis-insight",
+    "icon": "/docs-cn/coolify/images/services/redisinsight-logo.png",
+    "description": "Official Redis GUI that lets you do both GUI- and CLI-based interactions in a fully-featured desktop GUI client.",
+    "category": "Development"
+  },
+  {
+    "name": "Redlib",
+    "slug": "redlib",
+    "icon": "/docs-cn/coolify/images/services/redlib-logo.svg",
+    "description": "Private front-end for Reddit.",
+    "category": "Social Media"
+  },
+  {
+    "name": "Redmine",
+    "slug": "redmine",
+    "icon": "/docs-cn/coolify/images/services/redmine-logo.svg",
+    "description": "Flexible project management web application.",
+    "category": "Project Management"
+  },
+  {
+    "name": "Rivet Engine",
+    "slug": "rivet-engine",
+    "icon": "/docs-cn/coolify/images/services/rivet-logo.svg",
+    "description": "Backend engine for running stateful actors at scale with automatic scaling and distributed state management.",
+    "category": "Development"
+  },
+  {
+    "name": "Rocket.Chat",
+    "slug": "rocketchat",
+    "icon": "/docs-cn/coolify/images/services/rocketchat-logo.svg",
+    "description": "Open source team chat software.",
+    "category": "Communication"
+  },
+  {
+    "name": "RustFS",
+    "slug": "rustfs",
+    "icon": "/docs-cn/coolify/images/services/rustfs.png",
+    "description": "Distributed object storage system built with Rust and compatible with Amazon S3 APIs.",
+    "category": "Storage",
+    "disabled": true
+  },
+  {
+    "name": "Rybbit",
+    "slug": "rybbit",
+    "icon": "/docs-cn/coolify/images/services/rybbit.svg",
+    "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Ryot",
+    "slug": "ryot",
+    "icon": "/docs-cn/coolify/images/services/ryot-logo.svg",
+    "description": "Self-hosted platform for tracking various facets of your life.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Satisfactory",
+    "slug": "satisfactory",
+    "icon": "/docs-cn/coolify/images/services/satisfactory-logo.png",
+    "description": "Game server for Satisfactory open-world factory building game with a dash of exploration and combat.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Seafile",
+    "slug": "seafile",
+    "icon": "/docs-cn/coolify/images/services/seafile-logo.svg",
+    "description": "High-performance file syncing and sharing with knowledge management features.",
+    "category": "Storage"
+  },
+  {
+    "name": "SearXNG",
+    "slug": "searxng",
+    "icon": "/docs-cn/coolify/images/services/searxng-logo.svg",
+    "description": "Open source search engine.",
+    "category": "Search"
+  },
+  {
+    "name": "SeaweedFS",
+    "slug": "seaweedfs",
+    "icon": "/docs-cn/coolify/images/services/seaweedfs-logo.svg",
+    "description": "Simple and highly scalable distributed file system compatible with S3.",
+    "category": "Storage"
+  },
+  {
+    "name": "Sequin",
+    "slug": "sequin",
+    "icon": "/docs-cn/coolify/images/services/sequin-logo.svg",
+    "description": "The fastest Postgres change data capture.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Sessy",
+    "slug": "sessy",
+    "icon": "/docs-cn/coolify/images/services/sessy-logo.svg",
+    "description": "Email observability platform for monitoring Amazon SES deliveries, bounces, and more.",
+    "category": "Email"
+  },
+  {
+    "name": "SFTPGo",
+    "slug": "sftpgo",
+    "icon": "/docs-cn/coolify/images/services/sftpgo-logo.png",
+    "description": "Event-driven SFTP, FTP/S, HTTP/S and WebDAV server.",
+    "category": "File Management"
+  },
+  {
+    "name": "Shlink",
+    "slug": "shlink",
+    "icon": "/docs-cn/coolify/images/services/shlink-logo.svg",
+    "description": "The open source URL shortener.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "SigNoz",
+    "slug": "signoz",
+    "icon": "/docs-cn/coolify/images/services/signoz-logo.svg",
+    "description": "Open source observability platform native to OpenTelemetry with logs, traces, and metrics.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "SilverBullet",
+    "slug": "silverbullet",
+    "icon": "/docs-cn/coolify/images/services/silverbullet.png",
+    "description": "An open source personal productivity platform built on Markdown.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Siyuan",
+    "slug": "siyuan",
+    "icon": "/docs-cn/coolify/images/services/siyuan.svg",
+    "description": "A privacy-first, self-hosted, fully open source personal knowledge management software, written in typescript and golang.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Slash",
+    "slug": "slash",
+    "icon": "/docs-cn/coolify/images/services/slash-logo.svg",
+    "description": "Open-source, self-hosted links and notes manager.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Snapdrop",
+    "slug": "snapdrop",
+    "icon": "/docs-cn/coolify/images/services/snapdrop-logo.png",
+    "description": "Local file sharing in your browser.",
+    "category": "File Sharing",
+    "disabled": true
+  },
+  {
+    "name": "Snipe-IT",
+    "slug": "snipe-it",
+    "icon": "/docs-cn/coolify/images/services/snipe-it-logo.webp",
+    "description": "A free open source IT asset/license management system.",
+    "category": "Business",
+    "disabled": true
+  },
+  {
+    "name": "Soju",
+    "slug": "soju",
+    "icon": "/docs-cn/coolify/images/services/soju-logo.svg",
+    "description": "User-friendly IRC bouncer with modern features.",
+    "category": "Communication"
+  },
+  {
+    "name": "Soketi",
+    "slug": "soketi",
+    "icon": "/docs-cn/coolify/images/services/soketi-logo.jpeg",
+    "description": "Open-source WebSocket server.",
+    "category": "Development"
+  },
+  {
+    "name": "Soketi App Manager",
+    "slug": "soketi-app-manager",
+    "icon": "/docs-cn/coolify/images/services/soketi-app-manager-logo.svg",
+    "description": "Manage Soketi apps with application configuration and WebSocket server administration interface.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "SonarQube",
+    "slug": "sonarqube",
+    "icon": "/docs-cn/coolify/images/services/sonarqube-logo.svg",
+    "description": "Code analysis platform for finding code quality and security issues.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Sonarr",
+    "slug": "sonarr",
+    "icon": "/docs-cn/coolify/images/services/sonarr-logo.svg",
+    "description": "A internet PVR for Usenet and Torrents.",
+    "category": "Media"
+  },
+  {
+    "name": "Sonatype Nexus",
+    "slug": "nexus",
+    "icon": "/docs-cn/coolify/images/services/nexus-logo.png",
+    "description": "A repository manager that allows you to store, manage, and distribute your software artifacts.",
+    "category": "Development"
+  },
+  {
+    "name": "Spacebot",
+    "slug": "spacebot",
+    "icon": "/docs-cn/coolify/images/services/spacebot.png",
+    "description": "AI agent system with specialized processes for thinking, working, and remembering.",
+    "category": "AI"
+  },
+  {
+    "name": "SparkyFitness",
+    "slug": "sparkyfitness",
+    "icon": "/docs-cn/coolify/images/services/sparkyfitness.webp",
+    "description": "A comprehensive fitness app that helps users track nutrition, exercise, and body metrics.",
+    "category": "Health"
+  },
+  {
+    "name": "Stalwart",
+    "slug": "stalwart",
+    "icon": "/docs-cn/coolify/images/services/stalwart-logo.svg",
+    "description": "All-in-one mail server with SMTP, IMAP, POP3, JMAP, Sieve, built-in anti-spam, and a web admin interface.",
+    "category": "Email"
+  },
+  {
+    "name": "Statusnook",
+    "slug": "statusnook",
+    "icon": "/docs-cn/coolify/images/services/statusnook-logo.svg",
+    "description": "A status page system for your website.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Stirling PDF",
+    "slug": "stirling-pdf",
+    "icon": "/docs-cn/coolify/images/services/stirling-pdf-logo.png",
+    "description": "Powerful PDF manipulation tool.",
+    "category": "Documentation"
+  },
+  {
+    "name": "Strapi",
+    "slug": "strapi",
+    "icon": "/docs-cn/coolify/images/services/strapi-logo.svg",
+    "description": "Open-source headless CMS.",
+    "category": "CMS"
+  },
+  {
+    "name": "Supabase",
+    "slug": "supabase",
+    "icon": "/docs-cn/coolify/images/services/supabase-logo.svg",
+    "description": "Open source Firebase alternative.",
+    "category": "Development"
+  },
+  {
+    "name": "Superset",
+    "slug": "superset",
+    "icon": "/docs-cn/coolify/images/services/superset-logo.svg",
+    "description": "Open-source data visualization and exploration platform.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Supertokens",
+    "slug": "supertokens",
+    "icon": "/docs-cn/coolify/images/services/supertokens-logo.svg",
+    "description": "Open-source authentication solution.",
+    "category": "Security"
+  },
+  {
+    "name": "Sure",
+    "slug": "sure",
+    "icon": "/docs-cn/coolify/images/services/sure.png",
+    "description": "An all-in-one personal finance platform.",
+    "category": "Finance"
+  },
+  {
+    "name": "Swetrix",
+    "slug": "swetrix",
+    "icon": "/docs-cn/coolify/images/services/swetrix.svg",
+    "description": "Privacy-friendly and cookieless European web analytics alternative to Google Analytics.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Syncthing",
+    "slug": "syncthing",
+    "icon": "/docs-cn/coolify/images/services/syncthing-logo.svg",
+    "description": "Open Source Continuous File Synchronization.",
+    "category": "File Management"
+  },
+  {
+    "name": "Tailscale Client",
+    "slug": "tailscale-client",
+    "icon": "/docs-cn/coolify/images/services/tailscale-logo.svg",
+    "description": "Zero-config WireGuard VPN client for secure mesh networking and encrypted connections.",
+    "category": "Networking"
+  },
+  {
+    "name": "Teable",
+    "slug": "teable",
+    "icon": "/docs-cn/coolify/images/services/teable-logo.png",
+    "description": "No-code database built on PostgreSQL.",
+    "category": "Database"
+  },
+  {
+    "name": "Termix",
+    "slug": "termix",
+    "icon": "/docs-cn/coolify/images/services/termix-logo.svg",
+    "description": "Self-hosted application for managing SSH connections and remote desktops.",
+    "category": "Development"
+  },
+  {
+    "name": "Terraria Server",
+    "slug": "terraria-server",
+    "icon": "/docs-cn/coolify/images/services/terraria.svg",
+    "description": "Docker multi-arch image for Terraria game server.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Tolgee",
+    "slug": "tolgee",
+    "icon": "/docs-cn/coolify/images/services/tolgee-logo.svg",
+    "description": "Open source localization platform.",
+    "category": "Development"
+  },
+  {
+    "name": "Traccar",
+    "slug": "traccar",
+    "icon": "/docs-cn/coolify/images/services/traccar-logo.png",
+    "description": "Open-source GPS tracking platform.",
+    "category": "IoT"
+  },
+  {
+    "name": "TrailBase",
+    "slug": "trailbase",
+    "icon": "/docs-cn/coolify/images/services/trailbase-logo.svg",
+    "description": "Blazingly fast Rust/SQLite/Wasmtime app server with type-safe APIs.",
+    "category": "Development"
+  },
+  {
+    "name": "Transmission",
+    "slug": "transmission",
+    "icon": "/docs-cn/coolify/images/services/transmission-logo.svg",
+    "description": "Fast, easy, and free BitTorrent client.",
+    "category": "Media"
+  },
+  {
+    "name": "Trigger",
+    "slug": "trigger",
+    "icon": "/docs-cn/coolify/images/services/trigger-logo.png",
+    "description": "Open-source workflow automation tool.",
+    "category": "Automation"
+  },
+  {
+    "name": "TriliumNext",
+    "slug": "triliumnext",
+    "icon": "/docs-cn/coolify/images/services/triliumnext-logo.svg",
+    "description": "Build your personal knowledge base with TriliumNext Notes.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Twenty",
+    "slug": "twenty",
+    "icon": "/docs-cn/coolify/images/services/twenty-logo.svg",
+    "description": "Open-source CRM designed to fit your unique business needs.",
+    "category": "Business"
+  },
+  {
+    "name": "Typesense",
+    "slug": "typesense",
+    "icon": "/docs-cn/coolify/images/services/typesense-logo.png",
+    "description": "Open source alternative to Algolia and easier-to-use alternative to ElasticSearch.",
+    "category": "Search"
+  },
+  {
+    "name": "Umami",
+    "slug": "umami",
+    "icon": "/docs-cn/coolify/images/services/umami-logo.svg",
+    "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
+    "category": "Analytics"
+  },
+  {
+    "name": "Unleash",
+    "slug": "unleash",
+    "icon": "/docs-cn/coolify/images/services/unleash.svg",
+    "description": "Open-source feature management platform.",
+    "category": "Development"
+  },
+  {
+    "name": "Unstructured",
+    "slug": "unstructured",
+    "icon": "/docs-cn/coolify/images/services/unstructured-logo.png",
+    "description": "Open-source platform and tools to ingest and process unstructured documents for Retrieval Augmented Generation (RAG) and model fine-tuning.",
+    "category": "AI"
+  },
+  {
+    "name": "Uptime Kuma",
+    "slug": "uptime-kuma",
+    "icon": "/docs-cn/coolify/images/services/uptime-kuma-logo.svg",
+    "description": "A fancy self-hosted monitoring tool.",
+    "category": "Monitoring"
+  },
+  {
+    "name": "Usesend",
+    "slug": "usesend",
+    "icon": "/docs-cn/coolify/images/services/usesend-logo.svg",
+    "description": "Open-source email recall service.",
+    "category": "Email"
+  },
+  {
+    "name": "Vaultwarden",
+    "slug": "vaultwarden",
+    "icon": "/docs-cn/coolify/images/services/vaultwarden-logo.svg",
+    "description": "Unofficial Bitwarden compatible server.",
+    "category": "Security"
+  },
+  {
+    "name": "Vert",
+    "slug": "vert",
+    "icon": "/docs-cn/coolify/images/services/vert-logo.png",
+    "description": "Self-hosted file converter.",
+    "category": "Utilities"
+  },
+  {
+    "name": "Vikunja",
+    "slug": "vikunja",
+    "icon": "/docs-cn/coolify/images/services/vikunja-logo.svg",
+    "description": "The open-source to-do app.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Vvveb",
+    "slug": "vvveb",
+    "icon": "/docs-cn/coolify/images/services/vvveb-logo.png",
+    "description": "Powerful website builder with drag and drop functionality.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Wakapi",
+    "slug": "wakapi",
+    "icon": "/docs-cn/coolify/images/services/wakapi-logo.svg",
+    "description": "Open-source coding activity tracker.",
+    "category": "Development"
+  },
+  {
+    "name": "Weaviate",
+    "slug": "weaviate",
+    "icon": "/docs-cn/coolify/images/services/weaviate-logo.webp",
+    "description": "Open source, AI-native vector database.",
+    "category": "AI"
+  },
+  {
+    "name": "Web Check",
+    "slug": "web-check",
+    "icon": "/docs-cn/coolify/images/services/webcheck-logo.png",
+    "description": "All-in-one website analysis tool.",
+    "category": "Development"
+  },
+  {
+    "name": "Weblate",
+    "slug": "weblate",
+    "icon": "/docs-cn/coolify/images/services/weblate-logo.webp",
+    "description": "Web-based translation tool.",
+    "category": "Development"
+  },
+  {
+    "name": "Whoogle",
+    "slug": "whoogle",
+    "icon": "/docs-cn/coolify/images/services/whoogle-logo.png",
+    "description": "Self-hosted, ad-free, privacy-respecting metasearch engine.",
+    "category": "Search"
+  },
+  {
+    "name": "Wikijs",
+    "slug": "wikijs",
+    "icon": "/docs-cn/coolify/images/services/wikijs-logo.svg",
+    "description": "Modern and powerful wiki software built on Node.js.",
+    "category": "Documentation"
+  },
+  {
+    "name": "Windmill",
+    "slug": "windmill",
+    "icon": "/docs-cn/coolify/images/services/windmill-logo.svg",
+    "description": "Open-source developer platform.",
+    "category": "Development",
+    "disabled": true
+  },
+  {
+    "name": "Windows",
+    "slug": "windows",
+    "icon": "/docs-cn/coolify/images/services/windows.svg",
+    "description": "Run Windows in a containerized environment using the Dockur Windows project.",
+    "category": "Utilities",
+    "disabled": true
+  },
+  {
+    "name": "Wings",
+    "slug": "wings",
+    "icon": "/docs-cn/coolify/images/services/pterodactyl-logo.png",
+    "description": "Pterodactyl server control daemon for standalone game server node deployments.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Wireguard Easy",
+    "slug": "wireguard-easy",
+    "icon": "/docs-cn/coolify/images/services/wireguardeasy-logo.svg",
+    "description": "Easy-to-use WireGuard VPN server.",
+    "category": "Security"
+  },
+  {
+    "name": "WordPress",
+    "slug": "wordpress",
+    "icon": "/docs-cn/coolify/images/services/wordpress-logo.svg",
+    "description": "Website and blogging platform.",
+    "category": "CMS",
+    "disabled": true
+  },
+  {
+    "name": "Yamtrack",
+    "slug": "yamtrack",
+    "icon": "/docs-cn/coolify/images/services/yamtrack-logo.svg",
+    "description": "Self-hosted music scrobble database.",
+    "category": "Media"
+  },
+  {
+    "name": "Zep",
+    "slug": "zep",
+    "icon": "/docs-cn/coolify/images/services/zep.png",
+    "description": "Memory service that helps AI agents learn from user interactions and personalize responses.",
+    "category": "AI",
+    "disabled": true
+  },
+  {
+    "name": "Zero",
+    "slug": "zero",
+    "icon": "/docs-cn/coolify/images/services/zero.svg",
+    "description": "Query-driven sync engine for TypeScript apps backed by Postgres.",
+    "category": "Development"
+  },
+  {
+    "name": "Zipline",
+    "slug": "zipline",
+    "icon": "/docs-cn/coolify/images/services/zipline-logo.png",
+    "description": "Next generation ShareX / File upload server",
+    "category": "File Management"
+  }
+]

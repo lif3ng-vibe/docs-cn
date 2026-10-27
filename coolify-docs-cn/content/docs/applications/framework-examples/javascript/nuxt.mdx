@@ -1,0 +1,30 @@
+---
+title: Nuxt
+description: 使用 Nixpacks 构建配置在 Coolify 上部署 Nuxt 应用：支持服务器构建、静态生成与 Nitro。
+---
+
+# Nuxt
+
+Nuxt 是一个开源框架，让 Web 开发直观而强大，可以放心构建高性能、生产级的全栈 Web 应用与网站。
+
+[示例仓库。](https://github.com/coollabsio/coolify-examples/tree/main/javascript/frameworks/nuxt)
+
+## 服务器构建（Nuxt，使用 `nuxt build`）
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`。
+- 将 Start Command（启动命令）设为 `node .output/server/index.mjs`
+
+也可以把 package.json 里的 `start` 脚本设为 `node .output/server/index.mjs`，Nixpacks 会自动把它用作启动命令。
+
+## 静态构建（Nuxt，使用 `nuxt generate`）
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`。
+- 在 **Site type**（站点类型）中选择 **Static**（静态）。
+- 将 `Output Directory` 设为 `dist`。
+
+## Nitro 服务器构建（Nitro，使用 `nitro build`）
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`。
+- 将 Start Command（启动命令）设为 `node .output/server/index.mjs`
+
+也可以把 package.json 里的 `start` 脚本设为 `node .output/server/index.mjs`，Nixpacks 会自动把它用作启动命令。

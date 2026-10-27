@@ -1,0 +1,19 @@
+{
+  "title": "服务器",
+  "pages": [
+    "overview",
+    "add-server",
+    "provision-cloud-server",
+    "manage-server",
+    "remove-server",
+    "openssh",
+    "firewall",
+    "non-root-user",
+    "build-servers",
+    "github-actions-runners",
+    "server-patching",
+    "docker-images",
+    "automated-docker-cleanup",
+    "web-terminal"
+  ]
+}

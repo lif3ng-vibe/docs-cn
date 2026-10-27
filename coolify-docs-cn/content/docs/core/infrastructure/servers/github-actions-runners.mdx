@@ -1,0 +1,324 @@
+---
+title: GitHub Actions Runners
+description: 在 Coolify 构建服务器上、以临时 Docker 容器的方式运行组织的 GitHub Actions workflow 任务。
+---
+
+# GitHub Actions Runners
+
+Coolify 可以在你的[构建服务器](/core/infrastructure/servers/build-servers)上运行 GitHub 组织的 GitHub Actions workflow 任务。每个任务都在一个新的 runner 容器中运行，任务结束后 Coolify 会删除该容器。
+
+<Callout type="info" title="Beta">
+GitHub Actions runner 目前处于 Beta 阶段。后续版本的设置和行为可能发生变化。
+</Callout>
+
+runner 可以在自托管 Coolify 和 Coolify Cloud 下运行在你自己的服务器上。Coolify 绝不会把它们运行在运行 Coolify 本身的那台服务器上。
+
+## 工作原理
+
+1. workflow 任务声明 `runs-on: [self-hosted, <your label>]`。
+2. GitHub 通过你的 GitHub App 向 Coolify 发送 **Workflow job** webhook 事件。
+3. Coolify 找到一台已启用、标签匹配该任务且有空闲容量的构建服务器，并选择最空闲的一台。
+4. Coolify 在该服务器上启动一个临时 runner 容器，并向 GitHub 注册它。
+5. runner 领取一个任务。任务完成后，Coolify 会删除该容器及其网络和卷。
+
+当所有 runner 都忙时，任务会在 Coolify 队列中等待，直到有 runner 空闲。runner 无法启动时，Coolify 会将其移除并重试，最多 3 次。参见[监控 Runner](#监控-runner)。
+
+<Callout type="warning" title="仅用于可信的私有仓库">
+在 **Docker (privileged, full host access)**（特权 Docker，完全主机访问）模式下，每个任务都会获得一个特权的 Docker 守护进程，恶意 workflow 可以控制构建服务器。请使用 **Isolated Docker (Sysbox)**（隔离 Docker）或 **No Docker**（无 Docker）让任务与服务器隔离。Coolify 创建的 runner 组仅限私有仓库。不要把这些 runner 用于接受不受信任贡献者代码的仓库。
+</Callout>
+
+## 准备工作
+
+开始之前，请确保具备：
+
+- 一台具有 **Builds only**（仅构建）角色的服务器。参见[构建服务器](/core/infrastructure/servers/build-servers)。
+- Coolify 中一个属于 **GitHub 组织**的 GitHub App 源。runner 在组织级别注册，因此个人账号的 GitHub App 无法运行 workflow 任务。
+- 一台 GitHub 可以向其发送 webhook 事件的 Coolify 实例。
+- 构建服务器可以访问 `github.com`、`ghcr.io`（runner 镜像）和 Docker Hub（Docker sidecar 镜像）的出站网络。
+
+---
+
+## 设置 GitHub App
+
+GitHub App 需要以下权限和事件：
+
+| 类型 | 名称 | 权限 |
+|------|------|--------|
+| 组织权限 | Self-hosted runners | Write |
+| 仓库权限 | Actions | Read |
+| webhook 事件 | Workflow job | - |
+
+<Tabs id="github-app-runners" items={['创建新的 GitHub App', '更新现有 GitHub App']}>
+<Tab value="创建新的 GitHub App">
+
+<Steps>
+<Step>
+
+### 创建源
+
+1. 在 Coolify 侧边栏打开 **Sources**（源）。
+2. 选择 **+ Add**（添加）创建源。
+3. 填写 **Name**（名称）和 **Organization**（组织）。
+4. 在 **Use this App for**（App 用途）中选择 **GitHub Actions runners**。
+5. 选择 **Continue**（继续）。
+
+选择 **GitHub Actions runners** 时，**Organization** 字段为必填。
+
+</Step>
+<Step>
+
+### 在 GitHub 上注册 App
+
+1. 在下一页确认 **GitHub Actions runners** 已设置为 **Run workflow jobs on build servers**（在构建服务器上运行 workflow 任务）。
+2. 选择 **Register with GitHub**（在 GitHub 注册）。
+3. 完成注册，并在你的组织中安装该 App。
+
+Coolify 会为该 App 添加所需权限和 **Workflow job** webhook 事件。
+
+完整的注册流程参见[设置 GitHub App](/applications/sources/github/app)。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="更新现有 GitHub App">
+
+此流程适用于属于某个组织、且在你使用 runner 之前创建的 GitHub App。
+
+<Steps>
+<Step>
+
+### 在 GitHub 上更新 App
+
+1. 在 GitHub 上打开该 GitHub App 的设置。
+2. 在 **Permissions**（权限）中，把 **Organization permissions > Self-hosted runners** 设为 **Read and write**（读写）。
+3. 把 **Repository permissions > Actions** 设为 **Read-only**（只读）。
+4. 在 **Subscribe to events**（订阅事件）中勾选 **Workflow job**。
+5. 保存更改。
+6. 为组织中的 App 安装接受新权限。
+
+</Step>
+<Step>
+
+### 在 Coolify 中重新拉取权限
+
+1. 在 Coolify 侧边栏打开 **Sources**，选择该 GitHub App。
+2. 打开 **Permissions**，选择 **Refetch**（重新获取）。
+3. 确认 **GitHub Actions runners** 区域没有显示 **Not ready for runners**（尚未就绪）。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 在构建服务器上配置 runner
+
+<Steps>
+<Step>
+
+### 启用 runner
+
+1. 在 Coolify 侧边栏打开 **Servers** 并选择服务器。
+2. 打开 **GitHub Runners**。
+3. 选择 **Enable runners**（启用 runner）。
+
+Coolify 保存默认设置并显示 runner 配置。如果服务器没有 **Builds only** 角色，页面会显示 **This server is not enabled for builds**（此服务器未启用构建）。请先在服务器的 **General** 设置中修改角色。
+
+</Step>
+<Step>
+
+### 设置 runner 参数
+
+| 设置 | 说明 |
+|---------|-------------|
+| **GitHub App** | 接收 **Workflow job** 事件的组织 GitHub App。Coolify 会选择第一个具备全部所需权限的 App。 |
+| **Labels** | 逗号分隔的自定义标签，例如 `coolify`。Coolify 还会注册 `self-hosted` 和 `linux`。 |
+| **Application builds** | 选择 **Also build applications**（同时构建应用）或 **Dedicated to runners**（专用于 runner）。runner 启用期间，专用服务器不再用于应用构建。 |
+
+**Pull request jobs**（PR 任务）默认为 **Refuse pull request jobs**（拒绝 PR 任务）。由 pull request 启动的任务（包括 `pull_request_target` 和评审事件）会在任何步骤执行前被拒绝。只有当你的仓库和组织审批策略允许时，才选择 **Run pull request jobs**（运行 PR 任务）。该设置只对保存后启动的 runner 生效；push、定时和手动任务不受影响。
+
+如果 Coolify 显示 **The GitHub App is not ready**（GitHub App 尚未就绪），请先完成[设置 GitHub App](#设置-github-app)。App 未就绪时也可以保存设置，但在 App 具备所需权限之前，Coolify 不会收到任务。
+
+</Step>
+<Step>
+
+### 设置资源
+
+| 设置 | 默认值 | 说明 |
+|---------|---------|-------------|
+| **Parallel runners** | `2` | 这台服务器上同时运行的最大 runner 数（1 到 32）。 |
+| **CPU limit** | 无限制 | 每个 runner 的 CPU 数量，例如 `2`。 |
+| **Memory limit** | 无限制 | 每个 runner 的内存，例如 `4g`。 |
+| **Docker in jobs** | Docker (privileged, full host access) | 参见[任务中的 Docker](#任务中的-docker)。 |
+| **Runner image** | `ghcr.io/actions/actions-runner:latest` | 参见 [Runner 镜像](#runner-镜像)。 |
+
+CPU 和内存限制同时作用于 runner 容器及其 Docker sidecar。
+
+</Step>
+<Step>
+
+### 设置超时
+
+所有值的单位都是分钟。
+
+| 设置 | 默认值 | 说明 |
+|---------|---------|-------------|
+| **Queue wait** | `60` | 等待空闲 runner 超过该时长后，Coolify 会丢弃该任务。 |
+| **Idle runner** | `10` | runner 在该时长内没有领到任务时，Coolify 会将其移除。 |
+| **Job** | `360` | 任务运行超过该时长时，Coolify 会将其停止。 |
+
+</Step>
+<Step>
+
+### 保存设置
+
+选择 **Save**（保存）。
+
+当 GitHub App 具备全部所需权限后，Coolify 会在你的组织中创建一个名为 `Coolify <app-uuid>` 的 runner 组。该组仅限私有仓库。
+
+<Callout type="info" title="GitHub Free 组织">
+GitHub Free 套餐的组织无法创建 runner 组。此时 Coolify 会使用 **Default**（默认）runner 组并显示警告。请在 GitHub 上确认哪些仓库可以使用 Default 组。
+</Callout>
+
+</Step>
+</Steps>
+
+可以在多台构建服务器上配置 runner。Coolify 会把每个任务发送给标签匹配且最空闲的服务器。
+
+---
+
+## 在 workflow 中使用 runner
+
+在 `runs-on` 中加上 `self-hosted` 和你的一个自定义标签：
+
+```yaml
+jobs:
+  build:
+    runs-on: [self-hosted, coolify]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t my-app .
+```
+
+Coolify 只会在以下情况领取任务：
+
+- 任务至少要求你的一个自定义标签，且
+- 任务的所有标签都被 runner 注册（`self-hosted`、`linux` 和你的自定义标签）。
+
+只要求通用标签（如 `self-hosted`）的任务会留给其他 runner。这样可以避免 Coolify 抢走你组织中其他自托管 runner 的任务。
+
+自定义标签可以包含字母、数字、点、横线和下划线。不能只使用 `self-hosted`、`linux`、`x64`、`arm64`、`arm`、`windows` 或 `macos` 作为唯一标签。
+
+---
+
+## 任务中的 Docker
+
+| 模式 | 说明 |
+|------|-------------|
+| **Docker (privileged, full host access)** | 每个 runner 在特权的 sidecar 容器中获得自己的 Docker 守护进程。任务可能获得构建服务器的 root 权限。仅对可信仓库使用此模式。 |
+| **Isolated Docker (Sysbox)** | 每个 runner 在使用 [Sysbox](https://github.com/nestybox/sysbox) 运行时的非特权 sidecar 容器中获得自己的 Docker 守护进程。任务中的 root 用户在构建服务器上没有任何权限。服务器必须安装 Sysbox。参见[安装 Sysbox](#安装-sysbox)。 |
+| **No Docker (isolated, no container actions)** | 任务在无 Docker 的非特权容器中运行。 |
+
+各模式下可用的功能：
+
+| workflow 功能 | Docker（特权） | Isolated Docker（Sysbox） | No Docker |
+|------------------|:-------------------:|:------------------------:|:---------:|
+| Shell 步骤、JavaScript actions 和组合 actions | Yes | Yes | Yes |
+| `docker` 命令 | Yes | Yes | No |
+| 服务容器（`services:`） | Yes | Yes | No |
+| 容器任务（`container:`） | Yes | Yes | No |
+| Docker 容器 actions（`uses: docker://...` 或 `runs.using: docker` 的 actions） | Yes | Yes | No |
+
+Coolify 绝不会与 runner 共享宿主机的 Docker socket。每个 runner 拥有自己的网络和卷。
+
+### 安装 Sysbox
+
+选择 **Isolated Docker (Sysbox)** 时，Coolify 会检查服务器是否安装了 Sysbox。未安装时，选择 **Install Sysbox**（安装 Sysbox），Coolify 会显示安装日志。
+
+自动安装需要：
+
+- Debian 或 Ubuntu。
+- `amd64` 或 `arm64` 架构。
+- Linux 内核 5.12 或更高版本。
+
+安装过程中，Coolify 会：
+
+1. 把 Docker 当前的 `bip` 和 `default-address-pools` 值写入 `/etc/docker/daemon.json`，保留其他设置，并把原文件备份为 `/etc/docker/daemon.json.before-sysbox`。缺少这些值时，Sysbox 包会重启 Docker，或在存在容器时中止。
+2. 从 GitHub 下载固定版本的 Sysbox 包并校验其 SHA-256 校验和。
+3. 安装该包和 `fuse3`。Docker 会重新加载配置，运行中的容器不会被重启。
+
+其他发行版请[手动安装 Sysbox](https://github.com/nestybox/sysbox/blob/master/docs/user-guide/install-package.md)。当 Sysbox 服务运行且 Docker 列出 `sysbox-runc` 运行时时，Coolify 会检测到它。
+
+<Callout type="warning" title="Sysbox 已知问题">
+Sysbox 存在一个可能导致宿主机失去响应的[未解决问题](https://github.com/nestybox/sysbox/issues/1018)。Coolify 不会从服务器上移除 Sysbox。如需移除，请参阅 [Sysbox 卸载说明](https://github.com/nestybox/sysbox/blob/master/docs/user-guide/install-package.md)。
+</Callout>
+
+---
+
+## Runner 镜像
+
+默认情况下，Coolify 使用 `ghcr.io/actions/actions-runner:latest`，并在每次启动 runner 时重新拉取，保持 runner 最新。镜像仓库不可用时，Coolify 会使用服务器上已有的镜像。
+
+在 **Runner image** 中，你可以：
+
+- 固定版本，例如 `ghcr.io/actions/actions-runner:2.337.0`。
+- 使用基于官方 runner 镜像的自定义镜像来添加工具。
+
+<Callout type="warning" title="保持固定版本的镜像及时更新">
+落后最新 runner 版本超过 30 天的 runner，GitHub 会停止向其派发任务。如果你固定了版本或使用自定义镜像，请定期更新。
+</Callout>
+
+---
+
+## 监控 Runner
+
+**GitHub Runners** 页面的 **Recent runners**（最近 runner）区域显示排队的任务、活动中的 runner 及其结果。列表每 10 秒刷新一次。
+
+| 状态 | 说明 |
+|--------|-------------|
+| **Queued** | 任务在等待空闲 runner。 |
+| **Provisioning** | Coolify 正在启动 runner 容器。 |
+| **Waiting for job** | runner 已注册，等待 GitHub 派发任务。 |
+| **Running** | runner 正在执行任务。 |
+| **Completed** | 任务完成，Coolify 已移除 runner。 |
+| **Failed** | Coolify 尝试 3 次后仍无法启动 runner，错误信息中显示了原因。 |
+| **Cancelled** | 任务在 runner 启动前结束、runner 没有领到任务，或被用户取消。 |
+| **Timed out** | 任务等待或运行时间超过所配置的超时。 |
+
+runner 无法启动时，Coolify 会将其移除并把任务放回队列。它会在 30 秒后重试，然后是 60 秒后，可能会换到另一台构建服务器。等待期间，该行会显示 **Attempt 1 of 3 failed**（第 1 次尝试失败，共 3 次）或 **Attempt 2 of 3 failed** 及其原因。
+
+最后一次尝试失败后，任务会继续留在 GitHub 的队列中，直到 GitHub 将其取消。标签匹配的其他 runner 仍然可以领取它。
+
+要停止活动中的 runner，在其所在行选择 **Cancel**（取消）。
+
+---
+
+## 停用 runner
+
+选择 **Disable runners**（停用 runner）可以停止领取新任务。Coolify 会移除正在等待任务的 runner；正在运行的任务会继续执行至结束。Coolify 会保留该服务器的设置和执行历史。
+
+要重新开始领取任务，选择 **Enable runners**（启用 runner）。
+
+runner 处于启用状态时，不能更改构建服务器的角色。请先停用 runner。
+
+---
+
+## 故障排查
+
+| 问题 | 解决办法 |
+|---------|----------|
+| **This server is not enabled for builds** | 在服务器的 **General** 设置中把服务器角色设为 **Builds only**。 |
+| 看不到 **GitHub Runners** 菜单 | Coolify 不会在运行 Coolify 本身的服务器上运行 runner，请使用其他服务器。 |
+| 设置中没有显示 GitHub App | 添加一个属于组织的 GitHub App 并完成安装。 |
+| **The GitHub App is not ready** | 在 GitHub 上补齐缺失的权限或事件，然后在 App 的 **Permissions** 页面选择 **Refetch**。 |
+| 任务在 GitHub 上一直处于 **Queued** 而 Coolify 无反应 | 确认 `runs-on` 包含你的自定义标签之一，且任务的所有标签都被 runner 注册；确认 GitHub 能向 Coolify 发送 webhook 事件。 |
+| 任务在 Coolify 中一直处于 **Queued** | 所有 runner 都忙。调高 **Parallel runners** 或在更多构建服务器上配置 runner。 |
+| 任务在 **Initialize containers** 或某个 Docker 步骤失败 | 任务需要 Docker。选择 **Docker (privileged, full host access)** 或 **Isolated Docker (Sysbox)**。 |
+| **Install Sysbox** 失败 | 确认服务器运行 Debian 或 Ubuntu、`amd64` 或 `arm64` 架构、Linux 内核 5.12 及以上。否则请手动安装 Sysbox。 |
+| 手动安装后仍显示 **Sysbox is not installed** | 确认 `sysbox-mgr` 和 `sysbox-fs` 服务在运行、`/usr/bin/fusermount3` 存在，且 `docker info` 列出了 `sysbox-runc` 运行时。在 Debian 或 Ubuntu 上可选择 **Install Sysbox** 修复安装。 |
+| runner 显示 **Failed**，提示 **Could not start a runner after 3 attempts** | 阅读错误信息。Isolated Docker 模式下请检查服务器上的 Sysbox 服务。 |
+| GitHub 不向 runner 派发任务 | 固定版本或自定义的 **Runner image** 可能太旧，请使用更新的 runner 版本。 |
+| 任务找不到某个工具 | 使用基于官方 runner 镜像并包含该工具的自定义 **Runner image**。 |

@@ -1,0 +1,248 @@
+---
+title: 将实时服务迁移到 Reverb
+description: 为自托管 Coolify 实例从独立 Soketi 容器迁移到 Coolify 容器内的 Laravel Reverb 做准备。
+---
+
+# 将实时服务迁移到 Reverb
+
+新的 Coolify 版本会把 Laravel Reverb 和 Web 终端服务器运行在主 `coolify` 容器内,不再使用独立的 `coolify-realtime` 容器。
+
+大多数安装不需要任何手动更改。但如果你使用了自定义 Compose 覆盖、自定义实时端口、防火墙或 Cloudflare Tunnel,请在更新前检查你的配置。
+
+<Callout type="info" title="旧版覆盖仍保持兼容">
+更新过程接受 `docker-compose.custom.yml` 中的 `soketi` 覆盖。现有的代理路由和端口设置保持兼容。你可以把自定义端口绑定移到 `coolify` 上,让覆盖反映新的容器布局。
+</Callout>
+
+## 变更内容
+
+| 迁移前 | 迁移后 |
+| :--- | :--- |
+| Soketi 监听于 `coolify-realtime` | Reverb 监听于 `coolify` |
+| 终端服务器监听于 `coolify-realtime` | 终端服务器监听于 `coolify` |
+| 代理把实时流量发往 `coolify-realtime:6001` | 代理把实时流量发往 `coolify:6001` |
+| 代理把终端流量发往 `coolify-realtime:6002` | 代理把终端流量发往 `coolify:6002` |
+
+外部路径不变:
+
+- `/app/*` 承载浏览器 WebSocket 连接。
+- `/apps/*` 承载 Pusher 兼容的 API 请求。
+- `/terminal/ws` 承载 Web 终端连接。
+
+更新会保留现有的 Pusher application ID、key 和 secret。它也会保留 `SOKETI_PORT` 作为兼容的 Docker 主机端口设置。此次迁移期间不要重命名该变量。
+
+更新脚本还会移除旧的 `coolify-realtime` 容器。如果 `.env` 中仍包含 `PUSHER_BACKEND_HOST=coolify-realtime`,脚本会把它改为 `127.0.0.1`,因为 Reverb 现在与 Coolify 运行在同一个容器中。
+
+`coolify` 容器在 `coolify` Docker 网络上还保留 `coolify-realtime` 作为网络别名。仍然把流量发往 `coolify-realtime:6001` 或 `coolify-realtime:6002` 的反向代理可以继续工作。
+
+## 更新之前
+
+<Steps>
+<Step>
+
+### 备份实例配置
+
+```sh
+cd /data/coolify/source
+cp .env .env.before-reverb
+
+if [ -f docker-compose.custom.yml ]; then
+  cp docker-compose.custom.yml docker-compose.custom.yml.before-reverb
+fi
+```
+
+</Step>
+<Step>
+
+### 检查是否存在 Soketi 服务覆盖
+
+```sh
+grep -nE '^[[:space:]]*soketi:' docker-compose.custom.yml 2>/dev/null || true
+```
+
+如果命令有输出,请审查该覆盖。按下文所示迁移它是可选的;旧版 `soketi` 覆盖仍被接受。
+
+</Step>
+<Step>
+
+### 记录自定义实时设置
+
+```sh
+grep -E '^(PUSHER_HOST|PUSHER_PORT|PUSHER_SCHEME|PUSHER_BACKEND_PORT|SOKETI_PORT|TERMINAL_PORT)=' .env || true
+```
+
+在完成验证之前,请保留这份输出。
+
+</Step>
+</Steps>
+
+## 迁移自定义 Compose 覆盖
+
+旧的防火墙示例在两个服务上配置了端口:
+
+```yaml
+services:
+  coolify:
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-8000}:8080"
+  soketi:
+    ports: !override
+      - "127.0.0.1:${SOKETI_PORT:-6001}:6001"
+      - "127.0.0.1:6002:6002"
+```
+
+把全部三个绑定移到 `coolify` 服务:
+
+```yaml
+services:
+  coolify:
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-8000}:8080"
+      - "127.0.0.1:${SOKETI_PORT:-6001}:6001"
+      - "127.0.0.1:6002:6002"
+```
+
+Web 终端始终使用主机端口 `6002`。`TERMINAL_PORT` 不会改变 Docker 主机端口。
+
+如果你的覆盖删除了所有公开绑定,把下面这个:
+
+```yaml
+services:
+  coolify:
+    ports: !override []
+  soketi:
+    ports: !override []
+```
+
+改为:
+
+```yaml
+services:
+  coolify:
+    ports: !override []
+```
+
+只移动仍然需要的端口绑定。移除 Soketi 专属的镜像、命令、环境变量、健康检查和卷设置。`soketi` 服务块清空后,把它整个删除。
+
+<Callout type="warning" title="不要过早移除直接访问">
+在仪表盘、实时更新和终端都能通过你的域名正常工作之前,保持端口 `8000`、`6001` 和 `6002` 可达。完成验证之后,你就可以对它们加以限制。
+</Callout>
+
+## 检查环境变量
+
+这些变量的用途各不相同:
+
+| 变量 | 用途 |
+| :--- | :--- |
+| `SOKETI_PORT` | 源端口 `6001` 对应的兼容 Docker 主机端口覆盖 |
+| `REVERB_PORT` | 可选。对源端口 `6001` 的 Docker 主机端口优先于 `SOKETI_PORT`。如果你已经在用 `SOKETI_PORT`,则不需要它。 |
+| `PUSHER_PORT` | 浏览器使用的公网端口 |
+| `PUSHER_BACKEND_PORT` | Reverb 内部监听端口,通常为 `6001` |
+| `PUSHER_BACKEND_HOST` | Coolify 向 Reverb 发送事件所用的主机,通常不设置或为 `127.0.0.1` |
+| `TERMINAL_PORT` | 浏览器访问 Web 终端使用的公网端口,例如反向代理后面的 `443`。它不会改变 Docker 主机端口,后者始终是 `6002`。 |
+
+不要更改已有的 `SOKETI_PORT` 值。现有的防火墙规则和端口转发可能依赖它。
+
+对于 Cloudflare 后面的仪表盘,浏览器公网端口通常是 `443`:
+
+```bash
+PUSHER_PORT=443
+PUSHER_BACKEND_PORT=6001
+```
+
+对于经 Cloudflare 代理的主机名,不要设置 `PUSHER_PORT=6001`。端口 `6001` 是源端口,浏览器在端口 `443` 上连接 Cloudflare。
+
+如果你没有显式设置 `PUSHER_PORT`,保持不设置即可。Coolify 会从仪表盘请求中选择公网端口,并保持直接 IP 访问的兼容性。
+
+## Cloudflare 配置
+
+### 经 Coolify 代理访问仪表盘
+
+这是推荐的配置。把仪表盘主机名发到 Coolify 代理的端口 `80` 或 `443`。生成的代理配置路由:
+
+```text
+/app/*       -> coolify:6001
+/apps/*      -> coolify:6001
+/terminal/ws -> coolify:6002
+/*           -> coolify:8080
+```
+
+你不需要为 Reverb 或终端单独配置 Cloudflare 路由。
+
+对于在 Cloudflare 终止 TLS 的 Cloudflare Tunnel,把隧道服务 URL 设为 `http://localhost:80`。对于端到端 TLS,使用[完整 TLS 指南](/integrations/networking/cloudflare/tunnels/full-tls)中的 HTTPS 源配置。
+
+### 独立的实时主机名
+
+较旧的隧道配置可能使用单独的主机名:
+
+| 公网主机名或路径 | 隧道服务 |
+| :--- | :--- |
+| `coolify.example.com` | `http://localhost:8000` |
+| `coolify.example.com/terminal/ws` | `http://localhost:6002` |
+| `coolify-realtime.example.com` | `http://localhost:6001` |
+
+这种配置仍然兼容。保留:
+
+```bash
+PUSHER_HOST=coolify-realtime.example.com
+PUSHER_PORT=443
+PUSHER_BACKEND_PORT=6001
+```
+
+Cloudflare 路由仍会连接源端口 `6001`,但现在由 `coolify` 容器中的 Reverb 处理该端口。
+
+## 更新
+
+从 **Settings > Updates** 更新 Coolify。现有的实时路由、端口设置和旧版 `soketi` 覆盖保持兼容。在验证仪表盘、实时更新和终端之前,请保留配置备份。
+
+如果你选择手动迁移覆盖,请检查所有必需的端口绑定是否都已移到 `coolify` 上。如果更新报告配置错误,查看 `/data/coolify/source/upgrade-*.log` 中的更新日志。
+
+## 验证迁移
+
+更新后运行以下检查:
+
+```sh
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+docker logs --tail 100 coolify
+```
+
+确认:
+
+1. `coolify`、`coolify-db` 和 `coolify-redis` 正在运行。
+2. `coolify-realtime` 容器已消失,更新会移除它。
+3. 仪表盘能通过正常 URL 加载。
+4. 浏览器开发者工具显示对 `/app/...` 的 WebSocket 请求成功。
+5. 当 Cloudflare 通过 HTTPS 提供仪表盘时,WebSocket 请求使用 `wss` 和公网端口 `443`。
+6. 部署或状态变更无需刷新页面即可出现在仪表盘中。
+7. Web 终端能通过 `/terminal/ws` 连接。
+
+你也可以在两个浏览器标签页中打开 `/realtime` 并发送一个测试事件。
+
+## 故障排查
+
+### `coolify` 容器持续不健康
+
+容器健康检查现在包含 Reverb。检查容器内的 Reverb 日志,并确认没有其他进程监听端口 `6001`:
+
+```sh
+docker exec coolify curl --fail http://127.0.0.1:6001/up
+sudo ss -tulpn | grep :6001
+```
+
+容器不健康期间仪表盘仍可工作,只有实时更新会停止。
+
+### Cloudflare 对 WebSocket 请求返回错误
+
+- 确认浏览器连接的是公网端口 `443`,而不是源端口 `6001`。
+- 确认该 zone 已启用 Cloudflare WebSockets。
+- 确认隧道或代理路由包含 `/app/*`。
+- 确认 Coolify 代理能通过 `coolify` Docker 网络访问 `coolify:6001`。
+
+### 仪表盘正常但实时更新不工作
+
+检查 `/data/coolify/source/.env` 中的 `PUSHER_HOST` 和 `PUSHER_PORT`。当仪表盘和 Reverb 使用相同主机名时,移除过时的覆盖;对于独立的 Cloudflare 实时主机名,则保留端口 `443`。
+
+同时确认 `PUSHER_BACKEND_HOST` 未设置或为 `127.0.0.1`。该变量若是公网主机名,会把服务端事件发送到错误的位置。
+
+### 直接 IP 访问不再收到更新
+
+确认 `coolify` 容器把主机端口 `${REVERB_PORT:-${SOKETI_PORT:-6001}}` 发布到容器端口 `6001`,把主机端口 `6002` 发布到容器端口 `6002`。同时确认服务器防火墙允许你的客户端地址访问这些主机端口。

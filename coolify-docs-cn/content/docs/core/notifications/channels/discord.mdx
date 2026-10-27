@@ -1,0 +1,66 @@
+---
+title: Discord
+description: 通过 incoming webhook 将 Coolify 通知发送到 Discord 频道。
+---
+
+# Discord
+
+Coolify 通过为 Discord 文字频道创建的 incoming webhook 发送 Discord 通知。
+
+## 创建 Discord webhook
+
+<Steps>
+<Step>
+
+### 选择目标频道
+
+打开应接收 Coolify 通知的 Discord 服务器。创建一个文字频道（例如 `coolify-notifications`），或选择一个现有频道。
+
+你需要拥有在该服务器中管理 webhook 的权限。
+
+</Step>
+<Step>
+
+### 创建 webhook
+
+1. 打开 **Server Settings > Integrations > Webhooks**。
+2. 选择 **New Webhook**。
+3. 为 webhook 取一个易于辨认的名称，例如 `Coolify`。
+4. 选择应接收其消息的文字频道。
+5. 选择 **Copy Webhook URL**。
+
+</Step>
+</Steps>
+
+服务商侧的细节参见 [Discord 的 webhook 文档](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)。
+
+<Callout type="warning" title="保护好 webhook URL">
+任何拿到 URL 的人都可以向该 Discord 频道发送消息。请将其作为机密保存，URL 一旦泄露就更换 webhook。
+</Callout>
+
+---
+
+## 配置 Coolify
+
+1. 打开 **Notifications > Discord**。
+2. 将 URL 粘贴到 **Webhook URL**，选择 **Save changes**。
+3. 选择 **Enable**。
+4. 可选：将 **Critical event mention** 设为 **Mention @here**，在关键事件通知中附加 `@here`。Discord 只会提醒当时在线且有权访问该频道的成员。
+5. 在 **Notification events** 下，选择要发送到 Discord 的事件。
+6. 选择 **Send test**。
+
+在选择更多事件之前，先确认测试消息已出现在所选的 Discord 频道中。
+
+---
+
+## 排查 Discord 投递问题
+
+如果测试消息没有出现：
+
+1. 回到 **Server Settings > Integrations > Webhooks**，确认 webhook 仍然存在。
+2. 确认它指向你正在查看的频道。webhook 可能被移动到其他频道，而 Coolify 中的配置不受影响。
+3. 如果 webhook 被重建或其 token 发生变化，请重新复制 URL 并替换 Coolify 中保存的值。
+4. 确认目标频道仍然存在，且 webhook 可以向它发送消息。
+5. 先保存 URL 再选择 **Enable**，然后再次发送测试。
+
+每个事件设置背后的触发条件参见[通知事件](/core/notifications/events)。

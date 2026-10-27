@@ -1,0 +1,291 @@
+---
+title: 防火墙
+description: 放行 Coolify、其代理、已连接服务器和控制台功能所需的防火墙端口。
+---
+
+# 防火墙
+
+Coolify 需要 SSH 连接、Web 流量、控制台实时更新和 Web 终端的入站端口。
+
+所需端口取决于你使用自托管 Coolify 还是 Coolify Cloud。自托管用户还需区分配置的是 Coolify 服务器还是远程服务器。
+
+<Callout type="warning" title="保持 SSH 访问畅通">
+配置防火墙时不要移除 SSH 规则。错误的 SSH 规则可能把你锁在服务器外面。
+</Callout>
+
+## 选择正确的端口
+
+<Tabs id="firewall-coolify-type" items={['自托管', 'Coolify Cloud']}>
+<Tab value="自托管">
+
+<Tabs id="firewall-self-hosted-server-type" items={['Coolify 服务器', '远程服务器']}>
+<Tab value="Coolify 服务器">
+
+### 运行 Coolify 的服务器
+
+在安装了自托管 Coolify 实例的服务器上使用这些端口。
+
+| <span className="inline-block min-w-28">端口</span> | 用途 |
+| :--- | :--- |
+| `8000/tcp` | 通过 `http://<server-ip>:8000` 直接访问 Coolify 控制台 |
+| `6001/tcp` | 使用直接 IP 访问时控制台的实时更新 |
+| `6002/tcp` | 使用直接 IP 访问时的 Coolify Web 终端 |
+| `22/tcp` | SSH 访问（如果你配置了其他 SSH 端口则除外） |
+| `80/tcp` | 经 Coolify 代理的 HTTP 流量和证书签发 |
+| `443/tcp` | 经 Coolify 代理的 HTTPS 流量 |
+
+<Callout type="info" title="想用域名访问 Coolify 控制台？">
+当控制台可以通过 Coolify 代理使用域名访问后，就可以关闭 `8000`、`6001` 和 `6002` 端口的公网访问。控制台、实时连接和终端将通过代理使用 `80` 和 `443` 端口。
+</Callout>
+
+</Tab>
+<Tab value="远程服务器">
+
+### 连接到自托管 Coolify 的远程服务器
+
+在由你的自托管 Coolify 实例管理的远程服务器上使用这些端口。
+
+| <span className="inline-block min-w-28">端口</span> | 用途 |
+| :--- | :--- |
+| `22/tcp` | 来自运行 Coolify 服务器的 SSH 连接（如果你使用其他 SSH 端口则除外） |
+| `80/tcp` | 公网 HTTP 流量和证书签发 |
+| `443/tcp` | 公网 HTTPS 流量 |
+
+尽可能把 SSH 规则限制为运行 Coolify 那台服务器的公网 IP 地址。
+
+只有当这台服务器运行接收公网 Web 流量的应用或服务时，才需要 `80` 和 `443` 端口。
+
+</Tab>
+</Tabs>
+
+</Tab>
+<Tab value="Coolify Cloud">
+
+### 连接到 Coolify Cloud 的远程服务器
+
+在由 Coolify Cloud 管理的服务器上使用这些端口。
+
+| <span className="inline-block min-w-28">端口</span> | 用途 |
+| :--- | :--- |
+| `22/tcp` | 来自 Coolify Cloud 的 SSH 连接（如果你使用其他 SSH 端口则除外） |
+| `80/tcp` | 公网 HTTP 流量和证书签发 |
+| `443/tcp` | 公网 HTTPS 流量 |
+
+把 SSH 规则限制为 Coolify Cloud 公布的源地址：
+
+- [Coolify Cloud IPv4 地址](https://coolify.io/ipv4.txt)
+- [Coolify Cloud IPv6 地址](https://coolify.io/ipv6.txt)
+
+只有当这台服务器运行接收公网 Web 流量的应用或服务时，才需要 `80` 和 `443` 端口。
+
+</Tab>
+</Tabs>
+
+不要开放服务器用不到的端口。
+
+---
+
+## 配置防火墙
+
+<Tabs id="firewall-method" items={['托管商防火墙', 'ufw-docker', 'Compose override']}>
+<Tab value="托管商防火墙">
+
+### 使用托管商防火墙
+
+大多数托管商的控制台都提供网络防火墙。可用时优先使用它，因为它能在流量到达服务器之前拦截不需要的流量。
+
+1. 在托管商控制台打开防火墙、安全组或入站规则设置。
+2. 添加上一节列出的 TCP 规则。
+3. 把防火墙挂载到正确的服务器。
+4. 尽可能把 SSH 规则限制为 Coolify 的源地址。
+5. 只有当服务器接收公网 Web 流量时，才对 `0.0.0.0/0` 和 `::/0` 放行 `80` 和 `443` 端口。
+
+</Tab>
+<Tab value="ufw-docker">
+
+### 没有托管商防火墙时使用 ufw-docker
+
+Docker 会为发布的容器端口添加 NAT 和 iptables 规则，这些规则可能绕过 UFW 创建的常规规则。
+
+<Callout type="warning" title="不要只使用 UFW">
+用 UFW 封锁端口并不能保证 Docker 发布的端口也被封锁。不要只靠原生 UFW 保护资源。
+</Callout>
+
+托管商不提供防火墙时，可以使用 [ufw-docker](https://github.com/chaifeng/ufw-docker)。这是一个社区维护的工具，能让 UFW 规则对 Docker 发布的端口生效。
+
+按照 ufw-docker 仓库中的安装和规则说明操作。修改防火墙规则期间保持当前 SSH 会话不断开，并在关闭会话前从另一台机器验证效果。
+
+### 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="更新、服务器补丁或重启后 Coolify 无法访问">
+
+检查用 ufw-docker 创建的规则是否使用了 `coolify` 容器的 IP 地址。在 Coolify 更新、[服务器补丁](/core/infrastructure/servers/server-patching)或重启过程中容器重建时，可能获得新的 IP 地址，规则会继续指向旧 IP，从而阻断对 Coolify 的访问。
+
+移除使用旧容器 IP 的规则，改为按目标端口创建规则，这样容器 IP 变化后规则仍然有效。
+
+</Accordion>
+
+<Accordion title="重启或部署后应用无法访问">
+
+检查防火墙规则是否使用了应用容器的 IP 地址。应用容器在重启或重新部署后可能获得新的 IP 地址。
+
+通过域名访问的应用，应放行 Coolify 代理的 `80` 和 `443` 端口，而不是为单个应用容器 IP 创建规则。如果应用使用了公网端口映射，请针对该目标端口创建 ufw-docker 规则，不要绑定固定的容器 IP。
+
+</Accordion>
+
+</Accordions>
+
+</Tab>
+<Tab value="Compose override">
+
+### 用 Compose override 限制 Coolify 端口
+
+此选项仅适用于运行自托管 Coolify 实例的服务器，用于改变 Coolify 自身容器发布 `8000`、`6001` 和 `6002` 端口的方式。
+
+Coolify 的 Compose 文件存放在运行 Coolify 的服务器上的 `/data/coolify/source`。把 override 文件创建为 `/data/coolify/source/docker-compose.custom.yml`。
+
+它不能替代 SSH、应用、数据库或服务所需的防火墙规则。
+
+<Callout type="warning" title="先确保 Coolify 域名可用">
+只有在 Coolify 控制台、实时更新和 Web 终端都能通过所配置域名访问之后，才执行这些步骤。域名尚未生效就移除公网端口绑定，可能把你锁在 Coolify 外面。
+</Callout>
+
+<Callout type="warning" title="不要直接编辑基础 Compose 文件">
+Coolify 更新会替换 `/data/coolify/source/docker-compose.yml` 和 `/data/coolify/source/docker-compose.prod.yml`，直接对它们的修改会在更新时被重置。`docker-compose.custom.yml` 会被自动加载，且不会被 Coolify 更新替换。
+</Callout>
+
+<Steps>
+<Step>
+
+### 连接到 Coolify 服务器
+
+通过 SSH 连接到安装了自托管 Coolify 的服务器。
+
+</Step>
+<Step>
+
+### 打开 Coolify 源目录
+
+```sh
+cd /data/coolify/source
+```
+
+该目录包含运行 Coolify 所需的基础 Compose 文件。
+
+</Step>
+<Step>
+
+### 创建自定义 Compose 文件
+
+```sh
+nano docker-compose.custom.yml
+```
+
+选择以下示例之一并粘贴到文件中。
+
+<Tabs id="firewall-compose-override-example" items={['将端口绑定到 localhost', '移除端口绑定']}>
+<Tab value="将端口绑定到 localhost">
+
+此示例让直接访问端口仍可从 Coolify 服务器本机访问，同时阻止其他机器连接。
+
+```yaml
+services:
+  coolify:
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-8000}:8080"
+      - "127.0.0.1:${SOKETI_PORT:-6001}:6001"
+      - "127.0.0.1:6002:6002"
+```
+
+</Tab>
+<Tab value="移除端口绑定">
+
+当控制台已配置 Coolify 代理、不再需要通过 `8000`、`6001` 或 `6002` 直接访问时，使用此示例。
+
+```yaml
+services:
+  coolify:
+    ports: !override []
+```
+
+</Tab>
+</Tabs>
+
+按 <kbd>Ctrl</kbd> + <kbd>X</kbd>，然后 <kbd>Y</kbd>，再按 <kbd>Enter</kbd> 保存文件。
+
+</Step>
+<Step>
+
+### 校验 Compose 文件
+
+```sh
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  -f docker-compose.custom.yml \
+  config
+```
+
+只有命令无报错地输出合并后的配置时才继续。
+
+</Step>
+<Step>
+
+### 应用 Compose override
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+安装脚本会检测 `docker-compose.custom.yml`，并在启动 Coolify 时将其纳入。用域名打开 Coolify 控制台，确认实时更新和 Web 终端仍然正常。
+
+</Step>
+</Steps>
+
+其他修改和更多示例参见 [Compose overrides](/start-with-self-hosted#_4-compose-overrides)。
+
+</Tab>
+</Tabs>
+
+---
+
+## 确认防火墙生效
+
+保存规则之后：
+
+- 自托管 Coolify：用 `8000` 端口或所配置的域名打开控制台。
+- 在 **Servers > 你的服务器 > General** 验证一台已连接的服务器。
+- 打开一个应用域名，确认能通过 HTTPS 加载。
+- 如果你使用 [Web 终端](/core/infrastructure/servers/web-terminal)，打开它验证。
+
+如果服务器验证超时，先检查 SSH 端口和放行的源地址。如果验证通过但应用打不开，检查 `80` 和 `443` 端口，并确认域名指向了正确的服务器。
+
+---
+
+## 仅在需要时开放额外端口
+
+标准端口表已覆盖常规的 Coolify 访问。只有资源或集成需要时才开放其他端口。
+
+<Accordions type="multiple">
+
+<Accordion title="应用或数据库使用了公网端口映射">
+
+通过域名访问的应用经 Coolify 代理在 `80` 和 `443` 端口接收流量，无需开放其内部容器端口。
+
+如果添加了公网端口映射，就需要在防火墙中放行该端口。例如 PostgreSQL 映射到 `5432`，就需要为 `5432` 端口添加入站 TCP 规则。
+
+把数据库和管理端口的访问限制在需要它们的客户端 IP 内。除非有其他安全层保护，否则不要把这些端口暴露给 `0.0.0.0/0` 或 `::/0`。
+
+</Accordion>
+
+<Accordion title="GitHub webhook 无法到达 Coolify">
+
+已连接的仓库发生变更时，GitHub 会向 Coolify 控制台发送 webhook 请求。如果控制台通过 Coolify 代理使用域名，`80` 和 `443` 端口必须保持开放。
+
+如需按源地址限制 webhook 流量，请使用 [GitHub API 元数据](https://api.github.com/meta)中 `hooks` 下的当前网段。GitHub 可能会更改这些网段，请定期复查。
+
+</Accordion>
+
+</Accordions>

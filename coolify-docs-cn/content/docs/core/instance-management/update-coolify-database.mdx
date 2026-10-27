@@ -1,0 +1,203 @@
+---
+title: 更新 Coolify 数据库
+description: 更新或回滚自托管 Coolify 实例所用的内部 PostgreSQL 数据库。
+---
+
+# 更新 Coolify 数据库
+
+Coolify 把项目、资源、设置和部署历史存储在一个内部 PostgreSQL 数据库中。该数据库运行在 `coolify-db` 容器里。
+
+<Callout type="warning" title="仅限自托管实例">
+Coolify Cloud 用户无法访问内部 Coolify 数据库。如果你在访问 Coolify Cloud 时看到任何 `500` 状态码错误,请[联系 Coolify 团队](/support)。
+</Callout>
+
+正常的 [Coolify 更新](/core/instance-management/update)不会把这个数据库迁移到更新的 PostgreSQL 大版本。大版本变更需要本页描述的迁移脚本。
+
+本流程不适用于你作为项目资源部署的 PostgreSQL 数据库。那些数据库请单独备份和升级。
+
+## 更新之前
+
+- [创建实例备份](/core/backup-and-recovery/instance-backup),把备份复制到 Coolify 服务器之外,并确认 `/data/coolify/source/.env` 已保存在服务器之外。它包含实例的 `APP_KEY`。
+- 等进行中的部署完成后再开始迁移。
+- 选择一个比 `coolify-db` 当前所用版本更新的 PostgreSQL 大版本。
+
+迁移脚本会保留之前的 PostgreSQL Docker 卷,并在服务器上创建一份数据库转储。这两项是回滚保障,但都不能替代外部的实例备份。
+
+---
+
+## 更新数据库
+
+<Steps>
+<Step>
+
+### 检查迁移脚本
+
+在运行 Coolify 的服务器上,确认脚本存在且可执行:
+
+```sh
+test -x /data/coolify/source/upgrade-postgres.sh \
+  && echo "PostgreSQL upgrade script is ready"
+```
+
+如果命令没有任何输出,先[更新 Coolify](/core/instance-management/update)再重试。Coolify 安装与更新脚本会下载当前的迁移脚本,但不会自动运行它。
+
+</Step>
+<Step>
+
+### 检查当前 PostgreSQL 版本
+
+确认 `coolify-db` 正在运行,并打印其活跃的 PostgreSQL 版本:
+
+```sh
+docker ps --filter name=coolify-db --format '{{.Names}}  {{.Status}}'
+
+docker exec coolify-db sh -lc \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SHOW server_version;"'
+```
+
+第一条命令应显示 `coolify-db` 正在运行。第二条命令会打印当前 PostgreSQL 版本。
+
+目标版本必须是 `10` 或更新的 PostgreSQL 数字大版本,并且必须高于上面为运行中的 `coolify-db` 容器报告的大版本。脚本不支持通过传入更旧的版本号来降级。
+
+</Step>
+<Step>
+
+### 运行数据库更新
+
+<Callout type="error" title="Coolify 仪表盘将不可用">
+脚本会在创建数据库转储之前停止 `coolify` 应用容器,并在迁移期间保持停止。由该实例管理的应用、数据库、服务和 Coolify Proxy 会继续运行。
+</Callout>
+
+使用目标 PostgreSQL 大版本运行脚本。本例把内部数据库升级到 PostgreSQL 18:
+
+```sh
+/data/coolify/source/upgrade-postgres.sh 18
+```
+
+把 `18` 替换为你的目标大版本。脚本运行期间不要关闭 shell。
+
+脚本按以下顺序执行:
+
+1. 检测活跃的 PostgreSQL 版本、镜像、Docker 卷和挂载路径。
+2. 停止 `coolify` 应用容器以防止写入。
+3. 在 `/data/coolify/backups/internal-postgres/` 下创建压缩的 `pg_dumpall` 备份。
+4. 创建新的 Docker 卷,并启动一个目标 PostgreSQL 版本的临时容器。
+5. 把转储恢复到新卷,并检查 Coolify 数据库是否响应。
+6. 保存回滚元数据,并为新镜像和卷写入 Docker Compose 覆盖。
+7. 替换 `coolify-db` 容器,用升级后的数据库启动 Coolify 栈。
+
+如果更新过程中出现问题,脚本会在遇到错误时立即停止。保留终端输出,并查看 `/data/coolify/source/postgres-upgrade-<timestamp>.log` 了解迁移进度和记录的命令输出。
+
+</Step>
+<Step>
+
+### 验证数据库更新
+
+再次运行版本检查:
+
+```sh
+docker exec coolify-db sh -lc \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SHOW server_version;"'
+```
+
+确认输出以目标大版本开头。然后打开 Coolify 仪表盘并检查:
+
+- 仪表盘加载时没有数据库错误
+- 你的项目和资源都在
+- **Servers > localhost** 校验成功
+- 其他受管服务器仍能连接
+
+</Step>
+</Steps>
+
+---
+
+## 回滚数据库更新
+
+如果更新后的数据库无法工作,运行回滚命令:
+
+```sh
+/data/coolify/source/upgrade-postgres.sh rollback
+```
+
+回滚会读取 `/data/coolify/source/postgres-upgrade-rollback.env`,把 Coolify 栈切回之前活跃的 PostgreSQL 镜像、Docker 卷和挂载路径,然后启动栈。
+
+<Callout type="warning" title="回滚恢复的是最近一次更新之前使用的版本">
+回滚要求元数据文件和之前的 Docker 卷仍保留在 Coolify 服务器上。每次成功的数据库更新都会替换回滚元数据,因此该命令只能恢复最近一次更新之前的数据库版本。
+</Callout>
+
+| 数据库更新历史 | 回滚恢复到的版本 |
+| --- | --- |
+| PostgreSQL 15 到 PostgreSQL 18 | PostgreSQL 15 |
+| PostgreSQL 15 到 PostgreSQL 18 到 PostgreSQL 19 | PostgreSQL 18 |
+
+回滚不会删除更新后的 Docker 卷。在你确认之前的数据库版本和 Coolify 仪表盘都能正常工作之前,保留它。仅在识别清楚并确认不再需要之后,才移除未使用的卷。
+
+### 验证回滚
+
+检查活跃的 PostgreSQL 版本:
+
+```sh
+docker exec coolify-db sh -lc \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SHOW server_version;"'
+```
+
+确认输出以**回滚恢复到的版本**列中显示的版本开头。然后打开 Coolify 仪表盘并检查:
+
+- 仪表盘加载时没有数据库错误
+- 你的项目和资源都在
+- **Servers > localhost** 校验成功
+- 其他受管服务器仍能连接
+
+---
+
+## 数据库更新如何改变 Docker Compose
+
+迁移脚本不会更改 `/data/coolify/source/docker-compose.yml` 或 `/data/coolify/source/docker-compose.prod.yml`,而是创建这个覆盖文件:
+
+```sh
+/data/coolify/source/docker-compose.postgres-upgrade.yml
+```
+
+以默认卷名升级到 PostgreSQL 18 为例,该文件包含类似这样的配置:
+
+```yaml
+services:
+  postgres:
+    image: "postgres:18-alpine"
+    volumes:
+      - coolify-db:/var/lib/postgresql
+volumes:
+  coolify-db:
+    name: "coolify-db-pg18"
+    external: true
+```
+
+PostgreSQL 18 及更高版本使用 `/var/lib/postgresql` 作为容器挂载路径;更早的版本使用 `/var/lib/postgresql/data`。脚本会为目标版本选择正确的路径。
+
+之后的 Coolify 更新会在该文件存在时包含 `docker-compose.postgres-upgrade.yml`,因此升级后的 PostgreSQL 镜像和卷保持生效。如果 `/data/coolify/source/docker-compose.custom.yml` 也存在,PostgreSQL 升级覆盖会在它之后加载,并对冲突的 `postgres` 服务设置优先。
+
+要按 Coolify 加载的顺序查看完整的 Compose 配置,在 Coolify 服务器的 Bash shell 中运行以下命令:
+
+```bash
+cd /data/coolify/source
+
+compose_files=(-f docker-compose.yml -f docker-compose.prod.yml)
+[[ -f docker-compose.custom.yml ]] \
+  && compose_files+=(-f docker-compose.custom.yml)
+[[ -f docker-compose.postgres-upgrade.yml ]] \
+  && compose_files+=(-f docker-compose.postgres-upgrade.yml)
+
+docker compose --env-file .env "${compose_files[@]}" config
+```
+
+---
+
+## 数据库更新创建的文件
+
+| 文件 | 用途 |
+| --- | --- |
+| `/data/coolify/source/docker-compose.postgres-upgrade.yml` | 在正常 Coolify 更新期间保持升级后的 PostgreSQL 镜像、Docker 卷和挂载路径生效。 |
+| `/data/coolify/source/postgres-upgrade-rollback.env` | 记录之前活跃的数据库镜像、Docker 卷、挂载路径和覆盖状态,供回滚使用。 |
+| `/data/coolify/source/postgres-upgrade-<timestamp>.log` | 记录迁移或回滚的操作与错误。 |
+| `/data/coolify/backups/internal-postgres/postgres-upgrade-<timestamp>.sql.gz` | 包含数据库迁移前创建的压缩 `pg_dumpall` 备份。 |

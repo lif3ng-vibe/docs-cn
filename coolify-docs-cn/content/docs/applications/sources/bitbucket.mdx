@@ -1,0 +1,28 @@
+---
+title: Bitbucket
+description: 部署 Bitbucket 仓库，并配置仓库与拉取请求 webhook。
+---
+
+# Bitbucket
+
+公开仓库使用 HTTPS URL（参见[公开仓库](/applications/sources/public-repositories)），私有仓库使用带部署密钥的 SSH URL（参见[部署密钥](/applications/sources/deploy-keys)）。
+
+```sh
+https://bitbucket.org/example/application.git
+git@bitbucket.org:example/application.git
+```
+
+在仓库的 access key（访问密钥）设置中添加部署密钥的公钥。
+
+## 配置自动部署
+
+1. 在 Coolify 应用中打开 **Webhooks**（Webhook）。
+2. 复制 **Bitbucket** URL。
+3. 在 **Bitbucket** 区域填写 **Webhook secret**（Webhook 密钥），然后选择 **Save changes**（保存更改）。
+4. 在 Bitbucket 中打开仓库的 webhook 设置。
+5. 填入该 URL，并在提供方流程支持时配置相同的密钥。
+6. 启用 **Repository push**（仓库推送）。
+7. 如需预览部署，启用拉取请求的 **Created**（创建）、**Updated**（更新）、**Merged**（合并）与 **Declined**（拒绝）。
+8. 打开 **Advanced > Deployment**，在 Coolify 的 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署（webhook））。
+
+推送到配置的分支后查看 **Deployment Logs**（部署日志）。另可单独打开或更新一次拉取请求，验证预览事件是否正常。

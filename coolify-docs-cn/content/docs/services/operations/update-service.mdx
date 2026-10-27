@@ -1,0 +1,150 @@
+---
+title: 更新 Service
+description: 为已有的 Service 安全地更新镜像版本、Compose 配置与环境变量。
+---
+
+import { BranchUp, Refresh23, Warning22 } from 'reicon-react';
+
+# 更新 Service
+
+已有的 Service 保留自己已保存的 Compose 定义。Coolify 一键模板目录的变更只影响新建的 Service;Coolify 不会把这些变更合并进你已部署的 Service。
+
+更新往往不只是改个镜像标签。修改生产之前，请阅读上游发行说明，关注新增环境变量、移除的组件、Compose 变更、迁移与兼容性要求。
+
+<Callout type="warning" title="先在独立的 Service 中测试更新">
+
+克隆该 Service，或用同一个一键模板再建一个实例，在那里测试目标版本。克隆复制的是配置，不包括卷内容、绑定挂载的文件、数据库记录或外部服务数据。当更新包含状态迁移时，请单独恢复有代表性的数据。
+
+</Callout>
+
+## 选择更新路径
+
+| 当前配置 | 更新路径 |
+| :--- | :--- |
+| 镜像使用固定的版本标签 | 有计划地更改标签及所需的 Compose 设置。 |
+| 镜像使用 `latest` 等可变标签 | 只有当你明确想拉取该标签背后的当前镜像时，才用 **Pull Latest Images & Restart**。 |
+| 新版本更改了服务、变量、挂载、命令或迁移 | 对比完整的上游或一键模板，把每处需要的变更合并进 **Source Compose**。 |
+
+## 准备更新
+
+1. 确认每个要更改的组件的准确当前版本与目标版本。
+2. 阅读中间每个版本的上游变更日志与迁移指南。
+3. 检查新增或移除的环境变量、组件、卷、端口、命令、健康检查与代理要求。
+4. 保存一份 **Source Compose** 副本，并记录当前的域名、环境变量、存储、计划任务和组件设置。
+5. 用你验证过恢复流程的方法备份每个有状态组件。
+6. 准备一个独立的 Service 用于试更新；当兼容性依赖既有状态时，恢复有代表性的数据。
+
+不要把 Docker 卷当作唯一备份。失败的迁移可能在卷本身完好的情况下改动卷内的数据。
+
+## 应用更新
+
+<Tabs id="service-update-path" items={['Pinned version', 'Mutable tag', 'Template changes']}>
+<Tab value="Pinned version">
+
+### 有计划地更改版本
+
+1. 打开**配置（Configuration）> 常规（General）> Edit Compose File**。
+2. 在 **Source Compose** 中修改所需的镜像标签。
+3. 应用上游版本要求的每一处 Compose 或配置变更。
+4. 选择 **Save**（保存）。
+5. 复查重新解析后的组件卡片、**环境变量**、**持久化存储**与 **Show Deployable Compose**。
+6. 填写新增的必填变量，确认已删除的引用不再被需要。
+7. 部署试验 Service 并跟踪其部署输出。
+
+保存 Compose 会重新解析引用的环境变量。请检查生成的环境变量页面，不要想当然地认为新增引用已带上正确的生产值。
+
+</Tab>
+<Tab value="Mutable tag">
+
+### 重新拉取已保存的标签
+
+选择 **Advanced > Pull Latest Images & Restart**，对 Service 中已存储的镜像标签执行一次 Compose pull，然后重建栈。
+
+此操作不会用更新的一键模板替换已保存的 Compose 定义，也不会添加上游版本引入的变量、组件、挂载、命令或迁移步骤。
+
+<Callout type="warning" title="可变标签掩盖目标版本">
+
+在用于生产之前，确认该标签当前解析到的镜像版本。上游项目发布版本化标签时，优先使用版本化标签。
+
+</Callout>
+
+</Tab>
+<Tab value="Template changes">
+
+### 对比完整模板
+
+用当前一键模板创建一个临时 Service，或从上游项目获取更新后的 Compose 定义。与现有 Service 的 **Source Compose** 对比。
+
+复查以下变更：
+
+- 镜像标签与组件名
+- 环境变量引用与默认值
+- 卷、绑定挂载与文件内容
+- 端口、域名、标签与网络
+- 命令、依赖与健康检查
+- 新增、替换或移除的组件
+
+合并需要的结构性变更，同时保留现有 Service 既定的域名、凭据、存储与本地定制。保存定义，复查新解析的配置，然后部署试验 Service。
+
+新建对比 Service 时生成的凭据，不能替代现有生产 Service 正在使用的凭据。
+
+</Tab>
+</Tabs>
+
+## 验证试更新
+
+确认：
+
+1. 每个必需组件保持运行且健康
+2. 组件日志显示预期的应用版本
+3. 迁移与初始化步骤成功完成
+4. 公开域名能到达预期组件
+5. 数据库、缓存、队列、worker 与内部 API 连接成功
+6. 既有持久化数据存在且可写
+7. 计划任务与后台作业正常完成
+8. 日志中没有重复的兼容性、权限或启动错误
+
+实际走一遍对应用重要的工作流，而不只是看看落地页。在试更新与恢复流程验证通过之前，保持生产 Service 不动。
+
+## 更新生产
+
+1. 当更新可能中断流量或修改持久化状态时，安排维护窗口。
+2. 新建一份生产备份并确认其完成。
+3. 应用已在试验 Service 中验证过的 Compose 与环境变更。
+4. 部署，或使用已验证的镜像拉取操作。
+5. 跟踪部署输出，并对生产重复试更新的验证检查。
+
+部署后不要立即删除备份、旧 Compose 定义或记录的镜像版本。按你的应用和数据保留策略，把它们保留到所需的恢复期结束。
+
+## 安全回滚
+
+如果这次发布只更换了容器镜像、没有执行不兼容的数据迁移，恢复旧的 Compose 定义和固定镜像标签，然后重新部署即可。
+
+如果更新更改了数据库模式、文件或其他持久化状态，把镜像标签改回去未必能恢复兼容。请遵循上游的降级流程，或把验证过的更新前备份恢复到匹配的旧应用版本。
+
+验证期间部署、组件、连接或域名失败时，使用[Service 故障排查](/services/operations/troubleshooting)。
+
+## 相关指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '编辑 Docker Compose',
+      href: '/services/configuration/docker-compose',
+      description: '查看源 Compose、生成值与可部署定义。',
+      icon: BranchUp,
+    },
+    {
+      title: '克隆 Service',
+      href: '/services/operations/resource-operations',
+      description: '为更新测试创建独立的 Service 配置。',
+      icon: Refresh23,
+    },
+    {
+      title: '排查更新问题',
+      href: '/services/operations/troubleshooting',
+      description: '诊断失败的部署或不健康的组件。',
+      icon: Warning22,
+    },
+  ]}
+/>

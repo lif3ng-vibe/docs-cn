@@ -1,0 +1,74 @@
+---
+title: 认证
+description: 使用限定权限范围的 API 令牌，为 Coolify Cloud 或自托管实例认证 Coolify CLI。
+---
+
+import { Cloud, ServerCloud } from 'reicon-react';
+
+# 认证 Coolify CLI
+
+Coolify CLI 通过 Coolify REST API 进行认证。每个请求都会使用一个 API 令牌：它要么关联到已保存的[上下文（context）](/cli/contexts)，要么通过 `--token` 为单条命令临时提供。
+
+<Callout type="warning" title="把 API 令牌当作密码对待">
+为每个团队和自动化工作流使用独立的、最小权限的令牌。不要把令牌提交进仓库、粘贴到共享日志，或保存在无防护的脚本里。
+</Callout>
+
+## 创建 API 令牌
+
+按照 [API Tokens](/core/security/credentials/api-tokens)（API 令牌）为当前团队创建令牌。只勾选你计划运行的 CLI 命令所需的权限。
+
+在自托管 Coolify 上，管理员还必须启用 **API Access**（API 访问）；如果配置了允许列表，还需放行调用方的来源 IP。这些实例设置参见 [IP 允许列表](/api/ip-allowlist)。
+
+## 选择你的 Coolify 部署方式
+
+<Tabs id="cli-authentication-deployment" items={['Coolify Cloud', '自托管 Coolify']}>
+<Tab value="Coolify Cloud" icon={Cloud}>
+
+### 使用 Coolify Cloud 认证
+
+CLI 首次创建配置文件时，会为 `https://app.coolify.io` 创建一个 `cloud` 上下文。保存你的 Cloud 令牌，选中该上下文并验证：
+
+```sh
+coolify context set-token cloud <api-token>
+coolify context use cloud
+coolify context verify
+```
+
+验证成功时会报告连接和认证有效，并显示 Coolify 版本号。
+
+</Tab>
+
+<Tab value="自托管 Coolify" icon={ServerCloud}>
+
+### 使用自托管 Coolify 认证
+
+使用完整的实例 URL 创建上下文，不要带 `/api/v1`：
+
+```sh
+coolify context add --default production https://coolify.example.com <api-token>
+coolify context verify
+```
+
+URL 必须以 `http://` 或 `https://` 开头。任何通过网络访问的实例都应使用 HTTPS。
+
+</Tab>
+</Tabs>
+
+## 临时覆盖已保存的令牌
+
+全局 `--token <api-token>` 标志可以在单条命令中覆盖所选上下文里保存的令牌：
+
+```sh
+coolify --context production --token <api-token> resource list
+```
+
+交互式操作优先使用已保存的上下文。在自动化场景中，请从 CI 或编排平台的机密存储（secret store）注入覆盖值，而不要把令牌直接写进命令或配置文件。
+
+## 排查认证问题
+
+- 运行 `coolify context verify`，同时检验所选的 URL 和令牌。
+- `401` 响应通常意味着令牌缺失、过期、被吊销或无效。
+- `403` 响应可能意味着令牌缺少权限、自托管 API 访问已被禁用，或调用方不在 IP 允许列表内。
+- 如果看不到预期的资源，请确认令牌属于拥有这些资源的团队。
+
+完整的访问检查逻辑参见 [API 授权](/api/authorization)。添加、切换、更新或移除已保存的连接，请参阅[上下文（Contexts）](/cli/contexts)。

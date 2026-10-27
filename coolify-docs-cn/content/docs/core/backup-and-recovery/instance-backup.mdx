@@ -1,0 +1,178 @@
+---
+title: 备份 Coolify
+description: 创建并验证自托管 Coolify 实例的备份，保存实例加密密钥，并配置定期备份。
+---
+
+import { BrowserTerminal, Refresh23 } from 'reicon-react';
+
+# 备份 Coolify
+
+实例备份保存的是 Coolify 自身的数据，包括你的项目、资源、设置和部署历史。它不会备份你的应用、数据库或卷中存储的数据。
+
+<Callout type="warn" title="仅限自托管实例">
+Coolify Cloud 的实例备份由 Coolify 团队负责。但你仍需自行备份已部署到所连服务器上的应用和数据库。
+</Callout>
+
+对于自托管实例，打开左侧边栏的 **Settings**，然后选择 **Backup**。
+
+如果 Coolify 提示实例备份已禁用，请先验证运行 Coolify 的服务器：
+
+1. 选择 **Open server settings**。
+2. 在服务器页面上，选择 **Validate connection**。
+3. 验证成功后，重新打开 **Settings > Backup**。
+
+首次打开 **Backup** 时，选择 **Configure backup**。Coolify 随后会创建备份配置，并启用每天一次的备份计划。
+
+## 备份之前
+
+- 选好备份副本的存放位置，例如另一台服务器或你自己的电脑。不要把唯一一份副本留在 Coolify 服务器上。
+- 按下文说明保存实例的 `APP_KEY`。Coolify 用这把密钥加密存入数据库的机密信息。
+
+---
+
+## 选择备份途径
+
+仪表盘可用时优先使用仪表盘；当仪表盘不可用、或你需要一份不依赖已配置计划的备份时，使用终端。
+
+<Tabs id="manual-instance-backup" items={['仪表盘', '终端']}>
+<Tab value="仪表盘" icon={Refresh23}>
+
+### 从仪表盘创建备份
+
+<Steps>
+<Step>
+
+**将备份加入队列**
+
+在 **Backup schedule** 下选择 **Back up now**。
+
+<ZoomableImage src="/docs-cn/coolify/images/knowledge-base/how-tos/backup-restore-coolify/2.webp" alt="Scheduled Backup 区域中的 Back up now 操作" />
+
+</Step>
+<Step>
+
+**确认结果**
+
+选择 **Back up now** 后，**Executions** 下会出现一条新记录。备份就绪后，其状态会从 **In Progress** 变为 **Success**。如果变为 **Failed**，请阅读该记录中显示的消息。
+
+在 **Local Storage** 可用时选择 **Download**，即可把副本保存到你的电脑。
+
+</Step>
+</Steps>
+
+</Tab>
+
+<Tab value="终端" icon={BrowserTerminal}>
+
+### 从终端创建备份
+
+在托管 Coolify 的服务器上运行以下命令，生成备份文件：
+
+```sh
+mkdir -p /data/backups
+docker exec coolify-db \
+  pg_dump --format=custom --no-acl --no-owner \
+  --username=coolify coolify \
+  > /data/backups/coolify-db-manual-backup.dmp
+```
+
+确认文件存在且不为空：
+
+```sh
+test -s /data/backups/coolify-db-manual-backup.dmp \
+  && ls -lh /data/backups/coolify-db-manual-backup.dmp
+```
+
+备份此时已存放在 `/data/backups/coolify-db-manual-backup.dmp`。请把它复制到另一台电脑或服务器，以免 Coolify 服务器故障时丢失。
+
+</Tab>
+</Tabs>
+
+---
+
+## 保存实例加密密钥
+
+Coolify 在把已保存的凭证和私钥写入数据库之前会先加密。`/data/coolify/source/.env` 中的 `APP_KEY` 就是用于加密的密钥。数据库备份不包含这个文件。
+
+<Callout type="warn" title="没有这把密钥，恢复出的机密将无法读取">
+在需要恢复实例之前就保存好 `APP_KEY`。请像对待密码一样保管它，不要公开或分享。
+</Callout>
+
+在托管 Coolify 的服务器上显示该密钥：
+
+```sh
+grep '^APP_KEY=' /data/coolify/source/.env
+```
+
+把完整的 `APP_KEY=...` 行复制到密码管理器或 Coolify 服务器之外的其他安全位置。S3 实例备份只包含数据库备份文件，因此这把密钥必须单独保存。
+
+---
+
+## 配置定期备份
+
+默认 **Frequency** 为 `0 0 * * *`，即按实例时区在每天午夜创建一次备份。
+
+<Steps>
+<Step>
+
+**设置计划**
+
+{/* <ZoomableImage src="shadow-to-do" alt="Backup schedule settings with Frequency, Timezone, and Timeout" /> */}
+
+如果计划处于禁用状态，选择 **Enable backup**。选择 **Disable backup** 可暂停计划执行。在 **Frequency** 中输入有效的 cron 表达式，或使用 `every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`。
+
+**Timezone** 为只读，使用实例时区。
+
+将 **Timeout** 设为备份允许的最长运行时间（秒），然后选择 **Save changes**。可接受范围为 `60` 到 `36000`，默认为 `3600` 秒。
+
+</Step>
+<Step>
+
+**配置本地保留策略**
+
+{/* <ZoomableImage src="shadow-to-do" alt="Local Backup Retention settings" /> */}
+
+在 **Retention > Local backups** 下，任意组合设置以下限制：
+
+- **Backups to keep**：接受 `0` 或正整数。
+- **Days to keep**：接受 `0` 或正整数。
+- **Maximum storage (GB)**：接受 `0` 或正数（可含小数）。
+
+值为 `0` 表示该限制不设上限。各项限制相互独立，任意一项达到阈值时，Coolify 会移除最旧的成功备份。
+
+</Step>
+<Step>
+
+**添加 S3 副本**
+
+{/* <ZoomableImage src="shadow-to-do" alt="S3 backup and S3 Storage Retention settings" /> */}
+
+在 **S3 storage** 下选择一个已验证的 **S3 storage** 目标，选择 **Enable S3**，然后选择 **Save changes**。如果还没有已验证的目标，请先添加并验证一个存储目标。
+
+启用 S3 后，**Retention > S3 backups** 会为 S3 副本提供同样的三项独立限制。
+
+仅当 S3 应作为唯一备份位置时，才把 **Local copy** 设为 **Delete after S3 upload**。保持 **Keep local backup** 可同时保留两份副本。上传成功后 Coolify 会删除本地文件；若 S3 上传失败，Coolify 会保留本地文件，并把该次执行标记为 **Success (S3 Warning)**。
+
+仪表盘无法下载仅存在于远端的文件。此时请改为从你的 S3 存储提供商处下载备份。
+
+</Step>
+</Steps>
+
+---
+
+## 验证并管理备份
+
+**Executions** 会显示每次备份的状态、数据库名称、大小、位置和存储可用性。
+
+<ZoomableImage src="/docs-cn/coolify/images/knowledge-base/how-tos/backup-restore-coolify/3.webp" alt="一次成功备份执行及其文件位置与存储可用性" />
+
+要获得可用的备份，请确认执行结果显示 **Success**，且至少有一个存储位置可用。本地实例备份存放在 `/data/coolify/backups/coolify/coolify-db-<server-ip>/` 下；要定位某个具体文件，请使用执行记录中显示的精确 **Location**。
+
+可用操作取决于该次执行的状态：
+
+- **Download** 把本地备份保存到你的电脑。
+- **Delete** 移除本地备份；若存在 S3 副本，也可一并移除。
+- **Clean failed backups** 清除失败的执行记录。
+- **Clean deleted entries** 清除已标记为从本地存储删除的执行记录。它不会删除备份文件。
+
+请定期确认你仍能访问存放在另一台服务器或自己电脑上的副本，并确认 `APP_KEY` 仍然在手。要测试或执行恢复，请按照[恢复 Coolify 实例](/core/backup-and-recovery/instance-restore)操作。

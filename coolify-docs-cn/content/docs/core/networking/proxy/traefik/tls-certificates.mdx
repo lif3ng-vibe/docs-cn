@@ -1,0 +1,20 @@
+---
+title: TLS 证书
+description: 管理 Traefik 的 ACME 证书，并恢复 acme.json 的备份。
+---
+
+# Traefik TLS 证书
+
+打开 **Servers > [你的服务器] > Proxy > TLS Certificates**，即可查看存储在 Traefik `acme.json` 中的证书。本页面管理的是 Traefik 的 ACME 存储；如果你要使用自己提供的证书，请参考[自定义 SSL 证书](/core/networking/proxy/traefik/custom-ssl-certs)。
+
+## 删除证书
+
+删除证书前，请先核对该证书覆盖的域名。删除其条目只会把它从本地 ACME 存储中移除，并不会向证书颁发机构吊销该证书。
+
+更改之后，Coolify 会提示代理需要重启。请重启代理以应用更新后的存储。Traefik 可能需要为仍然需要证书的域名重新获取替代证书。
+
+## 恢复 ACME 存储
+
+Coolify 会在每次更改前备份 `acme.json`，并保留最近 10 份备份。在同一页面上，你可以选择某份备份进行恢复或删除。
+
+恢复备份会还原整个 ACME 存储文件，可能影响到多张证书。请在确认前仔细核对备份内容，并在 Coolify 提示需要时重启代理。

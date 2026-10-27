@@ -1,0 +1,249 @@
+---
+title: 恢复 Coolify
+description: 在同一台机器上恢复自托管 Coolify 实例，或把它迁移到替换机器上。
+---
+
+# 恢复 Coolify
+
+恢复 Coolify 会用一份备份替换实例数据库，还原你的项目、资源、设置、已保存的凭证和部署历史。
+
+它不会恢复你的应用、数据库、服务或卷中存储的数据。
+
+<Callout type="warn" title="仅限自托管实例">
+Coolify Cloud 的实例恢复由 Coolify 团队负责。本指南适用于自托管的 Coolify 实例。
+</Callout>
+
+## 恢复之前
+
+请确认你已具备以下条件：
+
+- 一个以 `.dmp` 结尾的 Coolify 数据库备份文件
+- 按照[备份 Coolify](/core/backup-and-recovery/instance-backup) 操作时保存的 `/data/coolify/source/.env` 中 `APP_KEY=` 之后的值
+- 可以 SSH 访问将要执行恢复的服务器
+- 创建备份时 Coolify 仪表盘中显示的版本号（如果你保存过）
+- 如果要把 Coolify 迁移到另一台机器，还需能访问原机器上的 `/data/coolify/ssh/keys/` 和 `~/.ssh/authorized_keys`，或这些文件的单独备份
+
+如果备份存放在 S3，请先从你的 S3 存储提供商处下载，并复制到将要执行恢复的服务器上。
+
+<Callout type="danger" title="当前的 Coolify 数据将被替换">
+恢复命令会在载入备份之前移除当前的 Coolify 数据库对象。除非备份文件和已保存的 `APP_KEY` 确实属于你要恢复的实例，否则请不要继续。
+</Callout>
+
+## 准备恢复目标
+
+确定你要把 Coolify 恢复到哪里。
+
+<Tabs id="restore-target" items={['同一台 Coolify 服务器', '替换服务器']}>
+<Tab value="同一台 Coolify 服务器">
+
+当你要在实例原先所在的机器上恢复 Coolify 时，选择此项。
+
+确认 `coolify-db` 容器正在运行，然后把备份放到该机器上的某个位置，例如 `/data/backups/coolify-db-backup.dmp`。
+
+```sh
+docker ps --filter name=coolify-db --format '{{.Names}}  {{.Status}}'
+```
+
+该命令应显示 `coolify-db` 正在运行且状态健康。
+
+</Tab>
+<Tab value="替换服务器">
+
+当你要把 Coolify 迁移到另一台机器时，选择此项。
+
+在恢复数据库之前，先在替换机器上安装 Coolify。请使用创建备份时所安装的版本。
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash -s 4.1.2
+```
+
+`4.1.2` 仅为示例。请替换为创建备份时所安装的版本。
+
+如果不知道之前的版本，则安装最新的稳定版本：
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
+```
+
+确认全新安装的仪表盘可以打开，然后把数据库备份复制到替换服务器上。
+
+</Tab>
+</Tabs>
+
+## 恢复实例
+
+<Steps>
+<Step>
+
+### 检查备份文件
+
+确认备份存在且不为空：
+
+```sh
+export BACKUP_PATH=/data/backups/coolify-db-backup.dmp
+test -s "$BACKUP_PATH" && ls -lh "$BACKUP_PATH"
+```
+
+如果你的备份存放在其他位置，请修改 `BACKUP_PATH` 的值。下文的恢复命令会使用这个变量，因此文件路径只需输入一次。
+
+</Step>
+
+<Step>
+
+### 停止 Coolify 控制平面
+
+停止可能使用实例数据库的容器，但保持 `coolify-db` 运行：
+
+```sh
+docker stop coolify coolify-redis
+```
+
+在 [Reverb 迁移](/core/instance-management/reverb-migration)之前的版本上，还需停止 `coolify-realtime` 容器。
+
+恢复期间仪表盘不可用。已部署的资源与 Coolify 代理会继续运行。
+
+</Step>
+
+<Step>
+
+### 设置已保存的 APP_KEY
+
+Coolify 需要创建数据库备份时所用的同一个 `APP_KEY` 值。缺少它，Coolify 将无法从恢复后的数据库中读取加密的凭证和私钥。
+
+在执行恢复的服务器上打开 Coolify 的环境文件：
+
+```sh
+sudo nano /data/coolify/source/.env
+```
+
+找到 `APP_KEY=` 行，把当前值替换为按照[备份 Coolify](/core/backup-and-recovery/instance-backup) 操作时保存的 `APP_KEY` 值。
+
+如果你是在原机器上恢复 Coolify，且现有值已经与保存的值一致，则保持 `APP_KEY=` 行不变。
+
+<Callout type="warning" title="只替换 APP_KEY">
+在替换服务器上，请保留新安装 `.env` 文件的其余内容。`DB_PASSWORD` 等值属于新安装，必须继续与其正在运行的容器保持一致。
+</Callout>
+
+</Step>
+
+<Step>
+
+### 恢复数据库
+
+在 `coolify-db` 是唯一使用数据库的 Coolify 容器时执行恢复：
+
+```sh
+docker exec -i coolify-db pg_restore \
+  --clean \
+  --if-exists \
+  --exit-on-error \
+  --no-acl \
+  --no-owner \
+  --username=coolify \
+  --dbname=coolify \
+  < "$BACKUP_PATH"
+```
+
+`--exit-on-error` 会在遇到第一个错误时停止恢复，避免把失败的恢复误判为成功。
+
+</Step>
+
+<Step>
+
+### 恢复 SSH 密钥
+
+<Tabs id="restore-ssh-keys" items={['同一台 Coolify 服务器', '替换服务器']}>
+<Tab value="同一台 Coolify 服务器">
+
+如果原始密钥文件仍在 `/data/coolify/ssh/keys/` 下，跳过这一步。
+
+如果这些文件已被删除，请先从单独的备份中恢复它们，再继续。
+
+</Tab>
+<Tab value="替换服务器">
+
+删除全新 Coolify 安装生成的密钥：
+
+```sh
+rm -f /data/coolify/ssh/keys/*
+```
+
+把原 Coolify 服务器上 `/data/coolify/ssh/keys/` 的内容复制到替换服务器的同一目录。如果原服务器已不可用，则使用该目录的单独备份。
+
+确保原 Coolify 服务器上对应的公钥也存在于替换服务器的 `~/.ssh/authorized_keys` 中。
+
+</Tab>
+</Tabs>
+
+</Step>
+
+<Step>
+
+### 启动 Coolify
+
+再次运行安装脚本。如果你安装的是特定 Coolify 版本，请带上该版本号：
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash -s 4.1.2
+```
+
+`4.1.2` 仅为示例。请替换为你在恢复数据库前安装的版本。如果你安装的是最新稳定版本，则省略 `-s 4.1.2`。
+
+安装脚本会启动 Coolify 容器，并执行所需的数据库迁移。
+
+请等待安装完成后再打开仪表盘。
+
+</Step>
+</Steps>
+
+## 验证恢复结果
+
+安装脚本完成后，打开 Coolify 仪表盘。
+
+确认：
+
+- 仪表盘打开时没有加密错误
+- 你的项目、环境和资源都在
+- **Servers > localhost** 验证成功
+- 其他受管服务器连接成功
+- 最近的部署记录和实例设置显示正常
+
+应用的卷和数据库数据不属于实例备份。需要时请从它们各自的备份中恢复这些资源。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="仪表盘显示加密错误或 Invalid MAC 错误">
+
+当前生效的 `APP_KEY` 与加密恢复数据库所用的密钥不一致。
+
+停止 `coolify`，确认 `/data/coolify/source/.env` 中是保存下来的 `APP_KEY` 值，然后再次运行安装脚本。当前版本的 Coolify 读取 `APP_KEY`；不要添加 `APP_PREVIOUS_KEYS`。
+
+</Accordion>
+
+<Accordion title="pg_restore 中途报错停止">
+
+保持 Coolify 控制平面容器处于停止状态，阅读命令输出中的第一个错误。确认该文件是由 `pg_dump --format=custom` 创建的非空 `.dmp` 备份，然后修正问题后重新执行恢复。
+
+</Accordion>
+
+<Accordion title="替换服务器验证失败">
+
+确认原始 SSH 密钥文件位于 `/data/coolify/ssh/keys/`，且原 Coolify 服务器上匹配的公钥已存在于替换服务器的 `~/.ssh/authorized_keys` 中。
+
+</Accordion>
+
+<Accordion title="另一台受管服务器无法连接">
+
+打开该服务器的 **Private Key** 页面，确认选择了预期的密钥。使用 **Copy public key**，并确保该公钥仍然存在于远程用户的 `~/.ssh/authorized_keys` 文件中。
+
+</Accordion>
+
+<Accordion title="应用数据缺失">
+
+实例备份只恢复 Coolify 自身的数据库。请从各自独立的备份中恢复每个应用的卷和每个数据库资源。
+
+</Accordion>
+
+</Accordions>

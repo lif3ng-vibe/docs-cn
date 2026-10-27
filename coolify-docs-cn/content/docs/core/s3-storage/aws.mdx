@@ -1,0 +1,230 @@
+---
+title: Amazon S3
+description: 通过创建存储桶、IAM 策略、IAM 用户和访问密钥，把 Amazon S3 接入 Coolify。
+---
+
+import { ArrowsRight } from 'reicon-react';
+
+# 配置 Amazon S3 存储
+
+把一个私有的 Amazon S3 存储桶接入 Coolify，让它可以存储备份文件。本指南会创建作用域限定于存储桶的 IAM 凭证，并在 Coolify 中验证存储连接。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时，请把这些示例值替换为你自己的值：
+
+- **S3 存储桶名称**：`envix-coolify-backups-s3`
+- **IAM 策略名称**：`EnvixCoolifyBackupS3Access`
+- **IAM 用户名**：`EnvixCoolifyBackupS3User`
+- **端点（Endpoint）**：`https://s3.ap-northeast-2.amazonaws.com`
+</Callout>
+
+<CoolCallout icon={ArrowsRight} title="简要说明">
+
+1. 在 AWS 控制台中创建一个存储桶。
+2. 使用下方的权限创建一个自定义 IAM 策略。
+3. 创建一个 IAM 用户并挂载该策略。
+4. 为该 IAM 用户创建访问密钥。
+5. 在 Coolify 中创建 S3 存储时填入访问密钥和秘密密钥。
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:GetObjectAcl",
+        "s3:PutObjectAcl",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::your-bucket-name",
+        "arn:aws:s3:::your-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
+
+把两个资源值中的 `your-bucket-name` 替换为你的存储桶名称。
+
+<Callout type="success" title="端点格式">
+使用不带存储桶名称的 S3 HTTP 端点，例如 `https://s3.eu-central-1.amazonaws.com`。
+</Callout>
+
+</CoolCallout>
+
+## 设置 Amazon S3
+
+<Steps>
+<Step>
+
+### 创建 S3 存储桶
+
+打开 [Amazon S3 控制台](https://console.aws.amazon.com/s3)，选择 **Create bucket**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/1.webp" alt="Amazon S3 控制台中的 Create bucket 按钮" />
+
+输入存储桶名称，并选择其 AWS Region、对象所有权和其他设置。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/2.webp" alt="Amazon S3 存储桶名称与 Region 设置" />
+
+<Callout type="info" title="除非需要不同的控制项，否则保留默认设置">
+默认设置即可满足标准私有备份存储桶的需要。只有当你的 AWS 合规要求有明确需要时，才更改加密、版本控制、对象所有权或公共访问设置。
+</Callout>
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/3.webp" alt="Amazon S3 存储桶对象所有权设置" />
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/4.webp" alt="Amazon S3 Block Public Access 设置" />
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/5.webp" alt="Amazon S3 存储桶的其他设置" />
+
+选择 **Create bucket**。AWS 创建完存储桶后，它会出现在存储桶列表中。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/6.webp" alt="存储桶列表中的新 Amazon S3 存储桶" />
+
+</Step>
+<Step>
+
+### 创建 IAM 策略
+
+打开 [IAM Policies](https://console.aws.amazon.com/iam/home#/policies)，选择 **Create policy**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/7.webp" alt="AWS IAM 中的 Create policy 按钮" />
+
+选择 **JSON** 策略编辑器。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/8.webp" alt="新建 AWS IAM 策略的 JSON 编辑器" />
+
+把下面这条策略粘贴进编辑器：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:GetObjectAcl",
+        "s3:PutObjectAcl",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::envix-coolify-backups-s3",
+        "arn:aws:s3:::envix-coolify-backups-s3/*"
+      ]
+    }
+  ]
+}
+```
+
+把两个资源值中的 `envix-coolify-backups-s3` 替换为上一步创建的存储桶名称。
+
+继续到策略详情页，输入策略名称。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/9.webp" alt="AWS IAM 策略名称输入框" />
+
+创建策略。创建完成后 AWS 会打开策略页面。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/10.webp" alt="已创建的 AWS IAM 策略" />
+
+<Callout type="success" title="按名称查找新策略">
+如果策略没有立即出现在列表中，请搜索你输入的精确策略名称。
+</Callout>
+
+</Step>
+<Step>
+
+### 创建 IAM 用户
+
+打开 [IAM Users](https://console.aws.amazon.com/iam/home#/users)，选择 **Create user**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/11.webp" alt="AWS IAM 中的 Create user 按钮" />
+
+输入 IAM 用户名。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/12.webp" alt="AWS IAM 用户名输入框" />
+
+输入名称后选择 **Next**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/13.webp" alt="新用户的 AWS IAM 权限选项" />
+
+1. 选择 **Attach policies directly**。
+2. 选择上一步创建的策略。
+3. 选择 **Next**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/14.webp" alt="AWS IAM 用户检查页面" />
+
+核对该用户，然后选择 **Create user**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/15.webp" alt="已创建的 AWS IAM 用户" />
+
+选择该用户名以创建其访问密钥。
+
+</Step>
+<Step>
+
+### 创建访问密钥
+
+在 IAM 用户页面，打开 **Security credentials**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/16.webp" alt="AWS IAM 用户的 Security credentials 选项卡" />
+
+在 **Access keys** 下，选择 **Create access key**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/17.webp" alt="AWS IAM 访问密钥用例选项" />
+
+选择 **Other**，然后继续。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/18.webp" alt="AWS IAM 中创建访问密钥的确认页面" />
+
+选择 **Create access key**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/19.webp" alt="AWS IAM 的访问密钥与秘密访问密钥" />
+
+把 **Access key** 和 **Secret access key** 保存到安全的位置，然后选择 **Done**。
+
+<Callout type="warning" title="离开页面前务必保存秘密访问密钥">
+关闭本页面后，AWS 不会再显示秘密访问密钥。如果丢失，请创建一个替代的访问密钥。
+</Callout>
+
+</Step>
+<Step>
+
+### 在 Coolify 中设置 Amazon S3
+
+在 Coolify 仪表盘中，从侧边栏打开 **S3 Storage**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/20.webp" alt="Coolify 侧边栏中的 S3 Storages 部分" />
+
+选择 **New storage**。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/21.webp" alt="Coolify 中的新建 S3 Storage 表单" />
+
+按以下步骤填写表单：
+
+1. 输入 S3 存储的名称。该名称仅用于在 Coolify 中标识它。
+2. 填写可选的描述。
+3. 将 **Protocol** 设为 `https`，**Host** 设为 `s3.YOUR_REGION_NAME.amazonaws.com`。标准 AWS 端点下 **Port** 和 **Path** 留空即可。存储桶名称单独填写。
+4. 输入 S3 存储桶名称。
+5. 输入存储桶所在的 AWS Region。
+6. 输入 IAM **Access Key**。
+7. 输入 IAM **Secret Key**。
+8. 选择 **Validate Connection & Continue**。
+
+验证通过后，Coolify 会打开该存储的详情页面。
+
+<ZoomImage src="/docs-cn/coolify/images/aws-s3/22.webp" alt="Coolify 中已验证的 Amazon S3 存储" />
+
+<Callout type="success" title="Amazon S3 存储已就绪">
+连接已配置并通过验证。现在你可以在配置[实例备份](/core/backup-and-recovery/instance-backup)或[数据库备份](/databases/backups)时选择该存储。
+</Callout>
+
+</Step>
+</Steps>

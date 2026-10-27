@@ -1,0 +1,38 @@
+---
+title: 服务器验证问题
+description: 确认 SSH 私钥包含 BEGIN 和 END OPENSSH PRIVATE KEY 头部以修复 libcrypto 错误，解决 Coolify 服务器验证错误。
+---
+
+# 服务器验证问题
+
+由于验证错误，你的服务器无法通过验证。
+
+<Accordions type="multiple">
+
+<Accordion title="私钥无效（`error in libcrypto`）">
+
+### 症状
+- 验证时收到 `error in libcrypto` 错误。
+
+### 解决方案
+检查添加到 Coolify 的私钥。它很可能缺少一些必要内容，比如 `-----BEGIN OPENSSH PRIVATE KEY-----` 和 `-----END OPENSSH PRIVATE KEY-----` 这两行。
+
+</Accordion>
+
+<Accordion title="Permission denied (publickey)（公钥被拒）">
+
+### 症状
+- 验证时收到：`Server is not reachable. Reason: root@host.docker.internal: Permission denied (publickey).`
+
+### 解决方案
+Coolify 无法连接服务器，因为该账号的 `~/.ssh/authorized_keys` 文件中缺少对应的公钥。安装时，公钥会生成在 `/data/coolify/ssh/keys/id.root@host.docker.internal.pub` 并自动添加到 `~/.ssh/authorized_keys`。
+
+如果没有被添加，请在服务器上手动追加：
+
+```bash
+cat /data/coolify/ssh/keys/id.root@host.docker.internal.pub >> ~/.ssh/authorized_keys
+```
+
+</Accordion>
+
+</Accordions>

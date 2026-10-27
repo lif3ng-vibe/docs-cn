@@ -1,0 +1,45 @@
+---
+title: "概览"
+description: "借助 Cloudflare Tunnel，无需端口转发即可安全连接 Coolify 资源——覆盖所有资源、单个应用、SSH 访问与完整 HTTPS 多种方案。"
+---
+
+# Cloudflare Tunnels
+
+[Cloudflare Tunnels](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) 让你无需在路由器上开放端口，就能把本地服务器或应用安全地暴露到互联网。
+
+这使它成为在旧笔记本电脑或树莓派这类设备上托管项目的绝佳选择。
+
+## 为什么使用 Cloudflare Tunnels？
+
+- 无需在你的设备上向公共互联网开放或转发端口。
+- 简化路由与 DNS 配置。
+- 支持暴露单个应用或多个服务。
+- 通过 Cloudflare Tunnel 路由流量，隐藏服务器的 IP 地址，对外只显示你的域名。
+- 即使你用的是动态 IP，甚至完全没有公网 IP，也能正常工作。
+- 省去管理和配置 SSL 证书的麻烦。
+
+## 什么时候不适合使用 Cloudflare Tunnels？
+
+- 如果你希望不经过代理层、直接访问服务器。
+- 如果你担心流量经由 Cloudflare 的服务器路由。
+- 如果你依赖其他防火墙工具——Cloudflare Tunnels 会绕过所有防火墙规则。
+- 如果你需要获得 Cloudflare 之外实体信任的 SSL 证书。
+
+## 在 Coolify 中使用 Cloudflare Tunnels 的几种方式
+
+你可以根据需要，用多种方式在 Coolify 中配置 Cloudflare Tunnels。下面是可用的选项，每个选项都附有详细指南链接，方便你完成配置：
+
+1. [所有资源](/integrations/networking/cloudflare/tunnels/all-resource) -> 为通过 Coolify 部署的所有资源使用一条隧道。这是对新手**最简单**、也**最推荐**的方式。
+
+2. [单个资源](/integrations/networking/cloudflare/tunnels/single-resource) -> 为通过 Coolify 部署的单个资源使用一条隧道。
+
+3. [服务器 SSH 访问](/integrations/networking/cloudflare/tunnels/server-ssh) -> 通过 Cloudflare Tunnel，用一个域名把你的服务器安全地接入 Coolify。
+
+4. [完整 HTTPS/TLS](/integrations/networking/cloudflare/tunnels/full-tls) -> 为所有域名与子域名配置始终开启的 **HTTPS**。通常情况下 Coolify 使用 **HTTP**、由 Cloudflare 负责 **HTTPS**；如果某些应用要求 Coolify 端直接使用 **HTTPS**，就需要这种方案。
+
+
+<Callout type="success" title="提示：">
+
+如果你刚开始接触 Coolify 和 Cloudflare Tunnels，强烈建议选择第一种方案[所有资源](/integrations/networking/cloudflare/tunnels/all-resource)，它的设置与管理都要容易得多。
+
+</Callout>

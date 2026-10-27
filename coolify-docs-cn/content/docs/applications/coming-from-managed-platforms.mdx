@@ -1,0 +1,84 @@
+---
+title: 从托管平台迁移而来
+description: 将托管部署平台的概念对应到 Coolify、Docker 和你掌控的服务器。
+---
+
+# 从托管平台迁移而来
+
+Vercel 这类托管平台把部署控制平面、构建基础设施、运行时基础设施、网络和平台默认值打包在一起。
+
+Coolify 提供部署控制平面，并协调你接入的服务器上的 Docker。这让你对基础设施有更多控制，但也意味着服务器容量、网络、数据持久化和恢复都成了你需要明确承担的责任。
+
+## 对照熟悉的概念
+
+| 托管平台概念 | Coolify 对应物 |
+| :--- | :--- |
+| 项目或应用 | Coolify 项目和环境中的一个资源 |
+| Git 集成 | [Git 源](/applications/sources/overview)、[部署密钥](/applications/sources/deploy-keys)或[公开仓库](/applications/sources/public-repositories) |
+| 框架预设 | [Nixpacks](/applications/builds/nixpacks/overview) 或 [Railpack](/applications/builds/railpack) 自动检测，或显式构建命令 |
+| 构建镜像 | 在部署服务器或[构建服务器](/core/infrastructure/servers/build-servers)上创建的 [Docker 镜像](/core/docker-and-containers#镜像与容器) |
+| Serverless 或托管运行时 | 在接入 Coolify 的服务器上运行的 [Docker 容器](/applications/how-applications-work) |
+| 生产域名 | 由部署服务器上 Coolify Proxy 路由的[资源域名](/core/networking/domains) |
+| 预览 URL | 拥有自动生成或自行配置域名的[预览部署](/applications/deployments/preview-deployments) |
+| 环境变量 | 具备构建时、运行时和预览作用域的[资源变量](/applications/configuration/environment-variables) |
+| 持久化数据 | [卷或 bind mount](/core/persistent-storage/storage-mounts/overview)、数据库或外部存储服务 |
+| 平台日志 | [部署日志与运行时容器日志](/applications/operations/overview#logs-and-terminal) |
+| 即时回滚 | [回滚](/applications/deployments/rollbacks)到仍保留在部署服务器上的镜像 |
+
+## 你必须决定的事
+
+在切换生产流量之前，按以下顺序规划 Coolify 部署。
+
+<Steps>
+<Step>
+
+### 选择应用运行的位置
+
+选择一台 CPU、内存、磁盘和网络容量都够用的[服务器](/core/infrastructure/servers/overview)。自托管安装最初自带一台 **localhost** 服务器，可以同时运行 Coolify 和已部署的资源。Coolify Cloud 则需要接入或创建一台服务器来承载部署的资源。
+
+</Step>
+<Step>
+
+### 选择 Coolify 部署什么
+
+按照[选择部署方式](/applications/choose-deployment-method)挑选与部署内容匹配的方式。Git 仓库可以使用 Nixpacks 或 Railpack 自动检测框架，也可以选 Static、Dockerfile 或 Docker Compose。镜像已由其他系统发布时，使用 Docker Image。
+
+</Step>
+<Step>
+
+### 规划数据持久化的位置
+
+找出必须在部署后仍然保留的上传文件、生成文件和应用状态。配置[持久化存储](/core/persistent-storage/storage-mounts/overview)，或改用外部数据服务，而不要依赖容器内的可写文件系统。
+
+</Step>
+<Step>
+
+### 规划流量如何到达应用
+
+确定应用需要的域名、DNS 记录和内部端口。部署服务器上的 Coolify Proxy 负责 HTTP 和 HTTPS 到该端口的路由。
+
+</Step>
+<Step>
+
+### 规划应用的恢复方式
+
+想好发布出问题、数据丢失或服务器故障时如何恢复。[回滚](/applications/deployments/rollbacks)可以重新部署保留下来的应用镜像，但不会恢复数据库或持久化文件。持久化数据要单独备份，并记录外部依赖的恢复方法。
+
+</Step>
+</Steps>
+
+## 安全的迁移顺序
+
+1. 在不改动生产 DNS 的情况下把应用部署到 Coolify。
+2. 配置环境变量和外部依赖。
+3. 在应用写入重要文件的位置添加持久化存储。
+4. 如果应用提供健康检查端点，配置并验证健康检查。
+5. 通过临时或自动生成的域名测试 Coolify 部署。
+6. 将生产 DNS 指向 Coolify 部署服务器。
+7. 监控运行时日志，并保持原平台可用，直到确认 Coolify 部署稳定。
+
+<Callout type="warning" title="有写入时不要移动有状态数据">
+
+迁移持久化数据之前，先停止写入，或使用数据库/存储系统官方支持的迁移流程。直接复制使用中的数据目录可能产生不一致的结果。
+
+</Callout>

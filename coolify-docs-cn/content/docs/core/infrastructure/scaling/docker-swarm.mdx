@@ -1,0 +1,62 @@
+---
+title: Docker Swarm（已弃用）
+description: 了解 Coolify 中 Docker Swarm 的弃用情况，以及维护现有 Coolify v4 部署所需满足的条件。
+---
+
+# Docker Swarm（已弃用）
+
+<Callout type="warning" title="实验性功能，已弃用">
+Coolify 最初以实验性功能的形式加入 Docker Swarm 支持，其中部分集成从未完整实现。Docker Swarm 将在 Coolify v5 中被移除。现有的 Swarm 部署在 Coolify v4 上仍可继续使用，但请不要创建新的 Swarm 部署。
+</Callout>
+
+Coolify v5 将用原生 Docker Compose 副本和 Coolify 自己的扩展方案取代 Docker Swarm 支持。在替代方案可用之前，必须在多台服务器上运行的新基础设施请使用[多服务器部署](/core/infrastructure/scaling/multi-server-deployments)搭配外部负载均衡器。
+
+## 现有的 Coolify v4 部署
+
+对于已经在使用 Swarm 的团队，Coolify v4 保留了现有的 Swarm 控制项；其他团队无法启用它。请在规划替代方案的同时维护好现有部署。
+
+在服务器的 **Swarm** 页面上，Coolify 会把服务器标识为 Swarm 管理节点（manager）或工作节点（worker）。在 Coolify 界面中，一个节点不能同时标记为这两种角色。
+
+对于部署到 Swarm 目标（Destination）的应用，**Swarm Configuration**（Swarm 配置）包括：
+
+- **Replicas**（副本数）：应用的 task 数量
+- **Only Start on Worker nodes**（仅在工作节点启动）：防止 task 在管理节点上启动
+- **Custom Placement Constraints**（自定义放置约束）：Docker Swarm 的放置规则
+
+这些设置不会创建 Swarm 集群。管理节点和工作节点必须已经属于一个正常运行的 Docker Swarm。
+
+## 镜像仓库与存储要求
+
+部署到 Swarm 目标的应用必须配置 **Docker Image**。管理节点会把构建好的镜像推送到该镜像仓库，每个可能运行该应用的节点都必须能拉取它。
+
+在管理节点和工作节点上，用所配置的服务器用户向镜像仓库完成认证。参见 [Docker 镜像仓库](/applications/builds/docker-registries#认证私有镜像仓库)。
+
+本地 Docker 卷（volume）只属于单个节点。如果 Swarm task 可能在工作节点之间迁移，请使用所有符合条件的节点都能访问的存储，例如共享网络文件系统或应用支持的外部存储服务。
+
+## 检查现有集群
+
+在管理节点上运行以下命令：
+
+```bash
+docker node ls
+```
+
+确认以下各项：
+
+- 有一台管理节点在 **MANAGER STATUS** 列显示 `Leader`
+- 每个所需的管理节点和工作节点在 **STATUS** 列显示 `Ready`
+- 每个可能运行该应用的节点在 **AVAILABILITY** 列显示 `Active`
+
+然后从 Coolify 部署应用，并在管理节点上核对预期的 task 数量：
+
+```bash
+docker service ls
+```
+
+**REPLICAS** 列的值应达到配置的副本数。如果 task 没有启动，用 `docker service ps <service-name>` 检查该服务。
+
+## 迁离 Docker Swarm
+
+在升级到 Coolify v5 之前先规划替代方案。记录应用的镜像、环境变量、域名、健康检查、存储、网络和放置要求，然后把应用部署到独立服务器，并在其前面放置负载均衡器。
+
+在移除 Swarm 服务之前，先通过公网域名测试替代方案。在新方案通过应用、数据和故障转移检查之前，保持现有的 Coolify v4 部署可用。

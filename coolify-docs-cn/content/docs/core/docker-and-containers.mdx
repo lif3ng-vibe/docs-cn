@@ -1,0 +1,272 @@
+---
+title: Docker 与容器
+description: Docker 镜像、容器、持久化存储、网络和 Compose 如何融入 Coolify 部署。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  HardDrive,
+  Hierarchy2,
+  Layers,
+  Package,
+  Rocket2,
+  Warning22,
+} from 'reicon-react';
+
+# Docker 与容器
+
+Coolify 使用 Docker 在你连接的服务器上运行应用、数据库和服务。Coolify 负责协调工作;Docker 则提供让每个资源得以运行的镜像、容器、存储和网络。
+
+第一次部署并不需要你手工管理 Docker。但理解这些 Docker 概念有助于你选择存储、看懂部署日志,以及诊断资源为何无法启动或连接。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+镜像描述要运行什么。容器是镜像的一个运行实例。持久化存储把数据保存在可替换的容器之外。网络把容器连接起来,而 Docker Compose 定义则描述多个容器如何一起运行。
+
+Coolify 准备容器配置,并指挥 Docker 构建或拉取镜像、附加存储与网络,在已连接的服务器上启动容器。
+
+</CoolCallout>
+
+---
+
+## Docker 核心概念
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '镜像',
+      description: '用于创建容器的打包应用文件与运行时依赖。',
+      icon: Package,
+    },
+    {
+      title: '容器',
+      description: '镜像的运行实例。一个 Coolify 资源可以运行一个或多个容器。',
+      icon: Box2,
+    },
+    {
+      title: '持久化存储',
+      description: '具名卷(volume)或绑定挂载,把数据保存在容器可替换文件系统之外。',
+      icon: HardDrive,
+    },
+    {
+      title: '网络',
+      description: '私有 Docker 网络,让相关容器与服务器代理相互通信。',
+      icon: Hierarchy2,
+    },
+  ]}
+/>
+
+Docker 的镜像、容器、存储和网络遵循标准 Docker 行为。Docker Compose 描述容器、存储和网络如何协作。Coolify 把你的资源设置转换为已连接服务器上的 Docker 操作。
+
+---
+
+## 镜像与容器
+
+镜像是 Docker 用来创建容器的可复用打包。镜像包含应用及其所需文件,但它本身并不是一个正在运行的应用。
+
+根据你在 Coolify 中的资源设置,Docker 可以从源代码构建应用镜像、从容器镜像仓库拉取预构建镜像,或启动 Docker Compose 文件中定义的镜像。
+
+<CoolCompare
+  id="images-and-containers"
+  className="not-prose"
+  icon={Box2}
+  title="镜像或容器"
+  description="Docker 从镜像创建容器,然后为该部署应用运行时配置。"
+>
+<CoolCompareColumn
+  title="镜像"
+  items={[
+    '用作容器起点的可复用打包。',
+    '从源代码构建,或从容器镜像仓库拉取。',
+    '可用于创建不止一个容器。',
+    '不包含正在运行的进程。',
+  ]}
+/>
+<CoolCompareColumn
+  title="容器"
+  items={[
+    '从镜像创建的运行实例。',
+    '接收环境变量、端口、存储挂载和网络。',
+    '可以启动、停止、重启或替换。',
+    '拥有属于该容器的可写文件系统。',
+  ]}
+/>
+</CoolCompare>
+
+重新部署期间,Coolify 可能会替换容器,以应用新镜像或新配置。镜像保持可复用,而新容器会获得当前的资源设置。
+
+更多细节参阅 Docker 关于[镜像](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/)与[容器](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)的指南。
+
+---
+
+## 持久化数据
+
+容器的可写文件系统不是存放需要跨重新部署留存数据的可靠位置。如果 Docker 删除并替换了容器,只存在该文件系统中的更改会随之消失。
+
+Coolify 的持久化存储可以使用具名 Docker 卷(volume),也可以使用来自服务器文件系统的绑定挂载(bind mount)。两种类型都是把容器之外的存储附加到容器内的某个路径上。
+
+<CoolCompare
+  id="container-and-persistent-data"
+  className="not-prose"
+  icon={HardDrive}
+  title="可替换的运行时数据与持久化数据"
+  description="重新部署可能替换容器。只有当资源把数据存放在容器之外时,数据才能留存。"
+>
+<CoolCompareColumn
+  title="容器内部"
+  items={[
+    '镜像提供的应用文件。',
+    '无需留存的临时文件与缓存。',
+    '在没有存储挂载的情况下写入容器文件系统的更改。',
+    '该容器被删除时一并移除。',
+  ]}
+/>
+<CoolCompareColumn
+  title="持久化存储"
+  items={[
+    '必须留存的数据库文件、上传内容或其他状态。',
+    '保存在具名 Docker 卷或绑定挂载的服务器路径中。',
+    '通过资源配置挂载到每个替换容器中。',
+    '容器被替换时保持独立、不受影响。',
+  ]}
+/>
+</CoolCompare>
+
+<CoolCallout icon={Warning22} title="写入重要数据之前先配置存储" type="warning">
+
+重新部署只保留已配置持久化存储或外部系统中的数据。事后添加挂载,无法找回已删除容器中的文件。
+
+持久化存储不是备份。请单独备份数据库、上传内容和其他重要数据。
+
+</CoolCallout>
+
+参阅[持久化存储](/core/persistent-storage/storage-mounts/overview)了解如何在 Coolify 中配置卷、绑定、目录和文件挂载。Docker 的[存储指南](https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/)解释了底层模型。
+
+---
+
+## 网络与 Docker Compose
+
+网络与 Compose 描述容器如何组合在一起。网络提供连接;Compose 记录期望的多容器配置。
+
+### 网络
+
+Docker 网络让容器之间可以通信,而不必把每个服务都直接暴露到互联网。同一网络上的容器可以访问它们需要的服务;位于不同、互不连接的网络上的容器,则无法通过这些网络通信。
+
+Coolify 创建或使用每个资源所需的网络,并在需要 HTTP 路由时连接服务器代理。代理接收公网流量,然后通过 Docker 网络把流量转发到正确的容器。
+
+域名、代理模式、公网端口和内部服务连接参阅[Coolify 中的网络](/core/networking-in-coolify)。Docker 的[网络指南](https://docs.docker.com/engine/network/)涵盖底层网络驱动与行为。
+
+### Docker Compose
+
+Docker Compose 文件描述一个或多个服务,以及它们的镜像、环境变量、端口、存储挂载、网络、健康检查和依赖关系。
+
+Coolify 会为应用、数据库等资源生成所需的 Compose 配置。对于 Docker Compose 应用或一键服务,Coolify 使用你提供或选择的 Compose 定义。你不需要为每个资源都编写 Compose 文件。
+
+Compose 定义的是期望的运行时配置;它不会让容器本地数据变得持久。存储仍然需要卷、绑定挂载或外部数据服务。
+
+服务、网络和卷之间的关系,参阅 Docker 的 [Compose 应用模型](https://docs.docker.com/compose/intro/compose-application-model/)。
+
+---
+
+## 资源标签
+
+Coolify 使用 UUID 标签标识资源容器:`coolify.applicationUuid`、`coolify.serviceUuid`、`coolify.service.subUuid` 和 `coolify.databaseUuid`。现有容器保持兼容,并会在下次部署或重启时获得新标签。请把依赖旧数字 ID 标签的脚本更新为使用对应的 UUID 标签。
+
+## 从配置到运行中的容器
+
+<CoolFlow
+  id="coolify-docker-flow"
+  icon={Layers}
+  title="从资源配置到运行中的容器"
+  description="具体命令因资源类型和部署策略而异,但 Docker 模型始终不变。"
+  steps={[
+    '配置资源',
+    '构建或拉取镜像',
+    '准备容器定义',
+    '连同存储与网络一起启动',
+    '按需路由流量',
+  ]}
+  list={[
+    '选择源码、构建方法、镜像、数据库或 Compose 定义,以及它应运行在哪台已连接的服务器上。',
+    'Docker 构建所需镜像,或从镜像仓库拉取现有镜像。',
+    'Coolify 准备环境变量、端口、健康检查、重启行为和其他运行时设置。',
+    'Docker 使用配置好的卷、绑定挂载和网络创建或替换容器。',
+    '对于 HTTP 资源,该服务器上的代理会把配置的域名路由到正确的容器。',
+  ]}
+  endnote="容器、网络和存储位于资源运行的已连接服务器上。Coolify 始终是协调后续操作的控制平面。"
+/>
+
+---
+
+## 查看 Docker 资源
+
+你可以在不改动 Docker 状态的前提下查看它。通过 SSH 连接到运行资源的服务器,然后使用标准的 Docker 列表命令:
+
+```bash
+docker ps
+docker image ls
+docker volume ls
+docker network ls
+```
+
+这些命令只显示当前服务器上的资源。如果一个 Coolify 实例管理多台已连接的服务器,请在你正在检查的资源所在的那台服务器上运行它们。
+
+### 检查自托管的 Coolify 容器
+
+自托管时,Coolify 本身也运行在容器中。在托管你的 Coolify 实例的机器上运行以下命令:
+
+```bash
+docker ps --filter "name=coolify" \
+  --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}"
+```
+
+Coolify Cloud 用户无法访问托管控制平面的主机。你可以改为检查连接到 Cloud 账户的工作负载服务器。
+
+<CoolCallout icon={Warning22} title="持久性改动请在 Coolify 中进行" type="warning">
+
+直接使用 Docker 命令,仅限查看和范围明确、谨慎进行的调试。直接对 Coolify 管理的容器所做的更改,可能在 Coolify 重建该容器时消失。
+
+请把持久性改动放入 Coolify 中的资源设置,或源 Docker Compose 文件里。
+
+</CoolCallout>
+
+---
+
+## 为什么标准 Docker 很重要
+
+Docker 让工作负载层保持熟悉且可移植。你可以在自己控制的服务器上使用常规的 Docker 概念和检查工具,运行中的资源也始终是标准 Docker 容器。
+
+如果 Coolify 控制平面变得不可用,已在运行的容器仍会留在其已连接的服务器上。在 Coolify 实例恢复之前,仪表盘控制和部署自动化无法使用。
+
+控制平面、已连接服务器、Docker 与代理流量之间的关系,参阅[Coolify 的工作原理](/core/how-coolify-works)。
+
+---
+
+## 深入了解
+
+继续阅读 Docker 模型中影响你下一次部署的那部分。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '构建与部署模型',
+      href: '/core/build-deployment-model',
+      description: '了解 Coolify 如何把源代码或现有镜像变成运行中的应用。',
+      icon: Rocket2,
+    },
+    {
+      title: 'Coolify 中的网络',
+      href: '/core/networking-in-coolify',
+      description: '跟踪公网流量经过服务器代理与私有 Docker 网络的过程。',
+      icon: Hierarchy2,
+    },
+    {
+      title: '持久化存储',
+      href: '/core/persistent-storage/storage-mounts/overview',
+      description: '为需要跨容器替换留存的数据,选择并配置卷、绑定、目录或文件挂载。',
+      icon: HardDrive,
+    },
+  ]}
+/>

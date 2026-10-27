@@ -1,0 +1,53 @@
+---
+title: 重定向次数过多
+description: 通过检查 SSL/TLS 加密模式、HTTPS 重定向和 Cloudflare Tunnel 设置，修复 ERR_TOO_MANY_REDIRECTS 与 Cloudflare 重定向循环。
+---
+
+# 重定向次数过多
+
+应用已经部署成功，但浏览器显示 **ERR_TOO_MANY_REDIRECTS**、**Too many redirects** 或 **The page isn't redirecting properly**，说明请求陷入了重定向循环。
+
+## Cloudflare SSL/TLS 模式
+
+<Callout type="info" title="Cloudflare 代理域名的快速修复">
+将 Cloudflare 的 SSL/TLS 加密模式至少设为 **Full**。如果 Coolify 代理持有应用域名的有效证书，优先选择 **Full (strict)**。
+</Callout>
+
+在 **Flexible** 加密模式下，访客可以用 HTTPS 连接 Cloudflare，但 Cloudflare 与你服务器之间走的是 HTTP。如果 Coolify 或应用把该请求重定向到 HTTPS，Cloudflare 会再次以 HTTP 请求服务器，循环就这样产生了。
+
+### 修改加密模式
+
+1. 在 Coolify 中打开应用的 **Domains**（域名）页面，确认域名使用 **HTTPS**。参见[域名配置](/core/networking/domains)。
+2. 确保 **Coolify 代理**在 **443** 端口接收 HTTPS 并出示该域名的证书。应用可以继续监听自己配置的内部端口，无需自行提供 HTTPS，也不必监听 443 端口。
+3. 在 Cloudflare 控制台中选择你的域名，打开 **SSL/TLS → Overview**（概述）。
+4. 如果源站证书未过期、与主机名匹配，且由公开受信的 CA 或 Cloudflare Origin CA 签发，选择 **Full (strict)**。**Full** 同样要求源站支持 HTTPS，但不校验其证书；建议先修好证书，以便使用严格模式。
+5. 用浏览器的隐私窗口重新打开应用，排除浏览器缓存的重定向干扰后再检查结果。
+
+如果 Cloudflare 正常代理且源站是 HTTPS，Coolify 的 **Redirect HTTP to HTTPS**（HTTP 重定向到 HTTPS）设置保持开启即可。
+
+更多说明见 Cloudflare 文档：[Full 加密](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full/) 与 [Full (strict) 加密](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)。
+
+## Cloudflare Tunnel 使用 HTTP 源站
+
+隧道的服务 URL 如果配置为 `http://localhost:80` 这类地址，即便访客使用 HTTPS，到达 Coolify 的仍然是 HTTP。修改域名的 SSL/TLS 加密模式并不会改变该隧道服务 URL。
+
+使用这种 HTTP 隧道方案时，请在资源的 **Domains** 页面将 **Redirect HTTP to HTTPS** 设为 **Disabled**（禁用）。由 Cloudflare 面向访客提供 HTTPS，隧道则以 HTTP 连接 Coolify 代理。
+
+按照 [Cloudflare Tunnel 资源配置指南](/integrations/networking/cloudflare/tunnels/all-resource#5-配置资源域名)操作。如果隧道与 Coolify 之间也要使用 HTTPS，请参考 [Full TLS HTTPS 指南](/integrations/networking/cloudflare/tunnels/full-tls)。
+
+## 如果循环仍未消除
+
+- 检查 Cloudflare 的 Redirect Rules 和旧版 Page Rules，看是否存在与 Coolify 或应用冲突的重定向。
+- 确保不存在一层把 HTTPS 重定向到 HTTP、另一层又把 HTTP 重定向到 HTTPS 的互相打架。
+- 确保 Cloudflare、Coolify 和应用对使用 `www` 还是根域名的口径一致。
+- 如果应用在代理后面强制 HTTPS，检查其可信代理（trusted proxy）配置，让它能识别请求的原始协议。
+
+要查看重定向链，可运行：
+
+```bash
+curl -sS -L -D - -o /dev/null --max-redirs 10 https://app.example.com
+```
+
+把 `app.example.com` 换成你的应用域名。观察状态码和 `Location` 头，看是否出现重复的 URL，或协议/主机名来回切换。
+
+更多示例见 [Cloudflare 重定向循环排查指南](https://developers.cloudflare.com/ssl/troubleshooting/too-many-redirects/)。

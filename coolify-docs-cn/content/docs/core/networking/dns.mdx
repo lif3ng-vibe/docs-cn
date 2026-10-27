@@ -1,0 +1,138 @@
+---
+title: DNS
+description: 将域名指向 Coolify 服务器，验证 DNS 记录，并配置泛域名与 DNS 验证。
+---
+
+import { Globe3, Layers, Route } from 'reicon-react';
+
+# DNS
+
+DNS 把 `app.example.com` 这样的域名连接到运行你 Coolify 资源的服务器。Coolify 负责配置资源路由和代理，但 DNS 记录需要你在 DNS 服务商处创建和管理。
+
+每个域名都应指向应用或服务实际运行的服务器，而不是运行 Coolify 面板的服务器。
+
+## 将域名指向服务器
+
+1. 在 Coolify 中打开资源，确认它所在的服务器。
+2. 复制服务器的公网 IPv4 地址；如果使用 IPv6，也复制其公网 IPv6 地址。
+3. 在管理该域名的服务商处打开 DNS 区域。
+4. 为要使用的主机名创建 DNS 记录。
+5. 等待公共 DNS 解析器返回新值。
+6. 按照[添加自定义域名](/core/networking/domains#添加自定义域名)在 Coolify 中配置对应的 URL，并重新部署资源。
+
+例如，要让 `app.example.com` 使用位于 `203.0.113.10` 的服务器，创建如下记录：
+
+| 类型 | 名称 | 值 |
+| :--- | :--- | :--- |
+| `A` | `app` | `203.0.113.10` |
+
+不同 DNS 服务商对 **Name** 字段的叫法不同，有些会直接显示完整主机名而不是 `app`。
+
+可以把多个根域名和子域名指向同一台服务器的 IP 地址。Coolify Proxy 会根据请求的主机名，把每个请求路由到正确的资源。
+
+## 选择 DNS 记录类型
+
+| 想使用的名称 | 记录类型 | 大多数服务商处的名称 | 值 |
+| :--- | :--- | :--- | :--- |
+| `example.com` | `A` | `@` 或留空 | 服务器的公网 IPv4 地址 |
+| `app.example.com` | `A` | `app` | 服务器的公网 IPv4 地址 |
+| `example.com` 的任意子域名 | `A` | `*` | 服务器的公网 IPv4 地址 |
+| IPv6 路由 | `AAAA` | `@`、某个子域名或 `*` | 服务器的公网 IPv6 地址 |
+
+只有当服务器及其网络路径支持 IPv6 流量时才创建 `AAAA` 记录。如果一个主机名同时有 `A` 和 `AAAA` 记录，两个地址必须都能到达同一个目标资源路径。即使 IPv4 正常，损坏的 IPv6 路径仍可能导致域名或证书请求失败。
+
+如果是自托管 Coolify 面板的域名，请把记录指向运行 Coolify 实例的服务器，然后按照[设置 Coolify 面板域名](/core/networking/domains#设置-coolify-面板域名)配置 URL。
+
+## 验证 DNS 更改
+
+DNS 更改可能需要一段时间才能生效，因为解析器会缓存之前的结果。排查 Coolify 之前，先确认公共解析结果。
+
+在自己的电脑上运行以下命令，把主机名替换成你的域名：
+
+```sh
+dig +short app.example.com A
+```
+
+输出应包含运行该资源的服务器的公网 IPv4 地址。如果创建了 `AAAA` 记录，请单独检查：
+
+```sh
+dig +short app.example.com AAAA
+```
+
+也可以直接查询 Coolify 默认的验证解析器：
+
+```sh
+dig @1.1.1.1 +short app.example.com A
+```
+
+如果结果为空或显示了意外的地址，请在服务商处检查记录名称、值和 DNS 区域。如果结果正确但域名打不开，请确认：
+
+- 资源在 Coolify 中使用的是同一个域名
+- 域名指向该资源实际运行的服务器
+- 服务器上已放行 `80` 和 `443` 端口
+- Coolify Proxy 正在该服务器上运行
+- 应用正在监听 Coolify 中配置的容器端口
+
+## 配置泛域名 DNS
+
+泛域名 DNS 记录可以让多个子域名解析到同一台服务器，而无需为每个名称单独建记录。例如，创建下面这条记录即可把 `example.com` 的子域名发送到 `203.0.113.10`：
+
+| 类型 | 名称 | 值 |
+| :--- | :--- | :--- |
+| `A` | `*` | `203.0.113.10` |
+
+泛域名记录覆盖匹配的子域名，但不覆盖根域名 `example.com`。如果同时使用根域名，请为它单独创建一条记录。
+
+泛域名记录解析到服务器之后，按照[使用生成的域名](/core/networking/domains#使用生成的域名)配置 **Wildcard Domain**，即可在 Coolify 中生成应用 URL。
+
+预览部署可能会根据应用的预览 URL 模板生成额外的子域名。在依赖生成的预览 URL 之前，确保 DNS 记录覆盖了这些名称。预览相关的配置参见[预览部署](/applications/deployments/preview-deployments)。
+
+## 配置 Coolify DNS 验证
+
+Coolify 可以对照公共 DNS 检查应用域名和自托管实例的 URL。DNS 验证默认开启。
+
+打开 **Settings > Advanced** 进行管理：
+
+- **DNS Validation**：开启或关闭该检查。
+- **Custom DNS Servers**：设置检查时使用的解析器，默认是 `1.1.1.1`。输入以逗号分隔的 IPv4 或 IPv6 解析器地址列表（如 `1.1.1.1,8.8.8.8`），或留空以使用系统解析器。
+
+当前的 DNS 验证检查域名的 `A` 记录。当某个地址与所选服务器的 IPv4 地址或已识别的 Cloudflare 代理地址匹配时，验证通过。对于生成的 `sslip.io` 域名，Coolify 会跳过这项检查。
+
+DNS 验证只能报告不匹配，并不能替代公共 DNS 检查。解析器缓存、错误的 `AAAA` 记录、防火墙规则或代理配置仍可能导致域名无法使用。
+
+## 使用国际化域名
+
+包含非 ASCII 字符的域名，要在创建 DNS 记录或填入 Coolify 之前先转换为 [Punycode](https://en.wikipedia.org/wiki/Punycode)。
+
+例如，`münchen.example.com` 应写作 `xn--mnchen-3ya.example.com`。有些 DNS 服务商会自动完成这种转换，但 DNS 记录与保存在 Coolify 中的域名必须解析到同一个主机名。
+
+## 相关网络指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '配置域名',
+      href: '/core/networking/domains',
+      description: '在 Coolify 中配置 URL 格式、目标端口、路径、重定向和生成的域名。',
+      icon: Globe3,
+    },
+    {
+      title: '理解网络',
+      href: '/core/networking-in-coolify',
+      description: '了解 DNS、Coolify Proxy、Docker 网络与容器端口如何协同工作。',
+      icon: Layers,
+    },
+    {
+      title: '配置代理',
+      href: '/core/networking/proxy/overview',
+      description: '选择并运营把公网 HTTP 和 HTTPS 流量路由到资源的代理。',
+      icon: Route,
+    },
+  ]}
+/>
+
+如果 DNS 解析正常但 HTTPS 仍然失败，请按照[Let's Encrypt 故障排查](/troubleshoot/dns-and-domains/lets-encrypt-not-working)处理。
+
+## Cloudflare 托管记录
+
+使用团队级 Cloudflare 集成令牌后，Coolify 可以在资源的 Domains 页面上创建、替换和删除托管 DNS 记录。令牌权限与记录生命周期请参阅[Cloudflare DNS 管理](/integrations/security/cloudflare/dns-management)。

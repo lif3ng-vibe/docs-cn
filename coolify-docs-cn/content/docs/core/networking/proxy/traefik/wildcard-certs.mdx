@@ -1,0 +1,120 @@
+---
+title: 泛域名证书
+description: 申请并使用一张同时覆盖根域名及其子域名的 Traefik 证书。
+---
+
+# 泛域名证书
+
+`*.example.com` 的泛域名证书覆盖第一级子域名，例如 `app.example.com` 和 `api.example.com`。它不覆盖根域名 `example.com`，也不覆盖 `www.app.example.com` 这类更深层级的名称，除非将这些名称单独包含进来。
+
+Traefik 只能通过 DNS challenge 申请泛域名证书。
+
+## 准备工作
+
+- 已配置并可正常工作的 [Traefik DNS Challenge](/core/networking/proxy/traefik/dns-challenge)
+- 如果根域名需要解析，为 `example.com` 配置一条根域名 DNS 记录
+- 一条指向服务器或上游流量入口的泛解析 DNS 记录，例如 `*.example.com`
+
+## 申请证书
+
+打开 **Servers > 你的服务器 > Proxy > Dynamic Configurations**，创建 `wildcard-example-com.yaml`：
+
+```yaml
+http:
+  routers:
+    wildcard-example-com:
+      rule: 'HostRegexp(`[a-z0-9-]+\.example\.com`)'
+      entryPoints:
+        - https
+      priority: 1
+      service: wildcard-placeholder
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: example.com
+            sans:
+              - '*.example.com'
+
+  services:
+    wildcard-placeholder:
+      loadBalancer:
+        servers: []
+```
+
+替换 `example.com`，然后保存文件。这个低优先级路由器负责申请证书，同时让各资源自己的路由器继续处理匹配到的应用流量。
+
+此动态文件通常无需重启 Traefik。持续查看 **Servers > 你的服务器 > Proxy > Logs**，直到 ACME 请求成功。
+
+## 使用泛域名证书
+
+先确定每个子域名归属于各自的资源，还是由一个应用承接全部子域名。
+
+<Tabs id="traefik-wildcard-routing" items={['独立资源域名', '一个应用承接所有子域名']}>
+<Tab value="独立资源域名">
+
+在每个应用或服务上设置常规的 HTTPS 域名，例如 `https://app.example.com`。Coolify 会生成资源路由器，Traefik 则从其证书存储中挑选匹配的泛域名证书。
+
+<ZoomImage src="/docs-cn/coolify/images/core/networking/proxy/traefik/wildcard-certificates/application-domain.webp" alt="Coolify 应用的域名输入框" />
+
+<ZoomImage src="/docs-cn/coolify/images/core/networking/proxy/traefik/wildcard-certificates/service-domain.webp" alt="Coolify 服务的域名输入框" className="mt-5" />
+
+重新部署每个有改动的资源，并核对域名所出示的证书。
+
+</Tab>
+<Tab value="一个应用承接所有子域名">
+
+仅当由一个应用处理任意租户子域名时才使用此方式。
+
+1. 保留上文的泛解析 DNS 记录和证书配置。
+2. 将该应用的 **Label management** 设为 **Managed manually (edit labels yourself)**。
+3. 根据 **Servers > 你的服务器 > Proxy > Configuration** 中显示的 Traefik 镜像版本，选用对应的配置。
+
+新建的 Coolify 代理配置使用 Traefik v3。仅当服务器仍在运行 v2 镜像时才保留 Traefik v2 规则语法。
+
+<Tabs id="traefik-wildcard-version" items={['Traefik v3', 'Traefik v2']}>
+<Tab value="Traefik v3">
+
+```ini
+traefik.http.routers.tenant-http.rule=Host(`app.example.com`) # [!code --][!code focus]
+traefik.http.routers.tenant-http.rule=HostRegexp(`[a-z0-9-]+\.example\.com`) # [!code ++][!code focus]
+traefik.http.routers.tenant-http.entryPoints=http
+traefik.http.routers.tenant-http.middlewares=redirect-to-https
+traefik.http.routers.tenant-https.rule=Host(`app.example.com`) # [!code --][!code focus]
+traefik.http.routers.tenant-https.rule=HostRegexp(`[a-z0-9-]+\.example\.com`) # [!code ++][!code focus]
+traefik.http.routers.tenant-https.entryPoints=https
+traefik.http.routers.tenant-https.tls=true
+traefik.http.routers.tenant-https.tls.certresolver=letsencrypt
+traefik.http.routers.tenant-https.service=tenant-service
+traefik.http.services.tenant-service.loadbalancer.server.port=<application-port>
+```
+
+</Tab>
+<Tab value="Traefik v2">
+
+```ini
+traefik.http.routers.tenant-http.rule=Host(`app.example.com`) # [!code --][!code focus]
+traefik.http.routers.tenant-http.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.example.com`) # [!code ++][!code focus]
+traefik.http.routers.tenant-http.entryPoints=http
+traefik.http.routers.tenant-http.middlewares=redirect-to-https
+traefik.http.routers.tenant-https.rule=Host(`app.example.com`) # [!code --][!code focus]
+traefik.http.routers.tenant-https.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.example.com`) # [!code ++][!code focus]
+traefik.http.routers.tenant-https.entryPoints=https
+traefik.http.routers.tenant-https.tls=true
+traefik.http.routers.tenant-https.tls.certresolver=letsencrypt
+traefik.http.routers.tenant-https.service=tenant-service
+traefik.http.services.tenant-service.loadbalancer.server.port=<application-port>
+```
+
+</Tab>
+</Tabs>
+
+`letsencrypt` 值必须与代理配置中的证书解析器名称一致。将 `<application-port>` 替换为应用在容器内监听的端口。
+
+重新部署应用，并至少测试两个子域名。
+
+<Callout type="warning" title="手动标签由你自行负责">
+选择手动管理标签后，Coolify 不再自动修复应用标签。如果应用变得无法访问，可使用 **Reset to defaults** 恢复生成的路由。
+</Callout>
+
+</Tab>
+</Tabs>

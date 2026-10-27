@@ -1,0 +1,184 @@
+---
+title: 网络
+description: 把 Service 组件彼此相连，并接入 Coolify 网络、其他 Docker 网络与外部客户端。
+---
+
+# 配置 Service 网络
+
+每个 Service 都有一个资源专属的 Docker 网络，供其 Compose 定义中的组件使用。Coolify 还会在每台已连接服务器上创建一个名为 `coolify` 的共享 Docker 网络。
+
+默认情况下，Service 组件只使用各自的资源专属网络。当它们还需要加入为 Service 选择的预定义 Docker 网络时，启用 **Connect To Predefined Network**。在标准安装中，这个网络是 `coolify`。
+
+## 理解两种 Service 网络
+
+| 网络 | 用途 |
+| :--- | :--- |
+| Service 网络 | 为单个 Service 栈创建的私有网络，名称基于 Service UUID。栈内组件自动使用它。 |
+| Coolify 网络 | Coolify 在服务器上创建的名为 `coolify` 的共享可接入网络。应用、独立数据库、Coolify 代理以及启用了 **Connect To Predefined Network** 的 Service 都可以使用它。 |
+
+`coolify` 网络让同一台服务器上相互独立的 Coolify 资源无需发布主机端口即可通信。它不会延伸到另一台服务器。
+
+<Callout type="info" title="预定义指的是所选的 Coolify 目标网络">
+
+默认目标（Destination）使用名为 `coolify` 的 Docker 网络。如果管理员创建了另一个目标并为 Service 选中它，**Connect To Predefined Network** 会把 Service 组件接入那个选中的网络。此设置只接入一个预定义网络，不会把 Service 连到服务器上的每个目标或 Docker 网络。
+
+</Callout>
+
+## 选择连接目标
+
+<Tabs id="service-networking-target" items={['Same Service', 'Coolify network', 'Other network', 'Other server', 'Public access']}>
+<Tab value="Same Service">
+
+同一个 Compose 定义中的组件通过 Service 网络通信。使用 Compose `services:` 键作为主机名，加上依赖在其容器内监听的端口：
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    environment:
+      DATABASE_URL: postgresql://app:password@database:5432/app
+
+  database:
+    image: postgres:17
+```
+
+在这个例子里，`api` 连接到 `database:5432`。它不应使用 `localhost`、公共域名或已发布的主机端口。在 `api` 内部，`localhost` 指的是 `api` 容器自身。
+
+这种私有连接不需要 `ports:` 或域名。Compose 的 `depends_on` 条目可以控制启动顺序，但调用方组件仍需容忍依赖需要一段时间才能就绪。
+
+</Tab>
+<Tab value="Coolify network">
+
+当 Service 需要私有访问同一台服务器上、接入了 `coolify` 网络的应用、独立数据库或另一个 Service 时，使用 `coolify` 网络。
+
+1. 确认两个资源运行在同一台服务器上。
+2. 确认另一个资源已接入 `coolify` 网络。
+3. 确认 Service 的预定义目标网络是 `coolify`。
+4. 打开 Service，选择**配置（Configuration）> 常规（General）**。
+5. 启用 **Connect To Predefined Network**。
+6. 重启或部署 Service。
+7. 使用另一个资源的内部主机名和内部端口。
+8. 从发起调用的 Service 组件测试连接。
+
+Coolify 会把每个 Service 组件接入预定义网络，并基于 Compose 服务名和 Service UUID 添加别名。使用默认目标时，预定义网络就是 `coolify`。当另一个资源需要调用该组件时，请使用 Coolify 显示的已部署容器名或别名。不要想当然地认为不带后缀的 Compose 服务名在自己的栈之外也是唯一的。
+
+对于独立数据库，使用 Coolify 显示的 **Internal URL**。对于另一个 Service，先确认其已部署的组件名和该组件监听的端口。
+
+<Callout type="info" title="域名不需要此设置">
+
+Coolify 启动栈时，Coolify 代理会加入 Service 网络。因此配置了域名的组件无需启用 **Connect To Predefined Network** 也能接收代理流量。启用此设置是为了与其他资源私有通信，而不仅仅是为了发布域名。
+
+</Callout>
+
+</Tab>
+<Tab value="Other network">
+
+处于不同 Docker 网络上的资源无法通过容器名互相解析或连接，除非它们共享同一个网络。
+
+**Connect To Predefined Network** 只把 Service 接入其预定义目标网络（通常是 `coolify`），不会接入服务器上的所有网络。
+
+可以从以下方案中选择：
+
+1. **使用一个共享网络。** 当这些资源本来就需要私有通信时，这是最简单的选项。对已有的 Service，可将其克隆到所需的目标并单独迁移数据。[克隆或移动 Service](/services/operations/resource-operations)解释了其中的数据边界。
+2. **使用域名或其他可路由端点。** 这能保留网络隔离，对 HTTP API 尤其合适。请求经由代理而非 Docker 的私有 DNS 传输。
+3. **在 Compose 中管理外部 Docker 网络。** 仅当你拥有这份 Compose 定义，且该网络已存在于同一台服务器上时才使用。
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    networks:
+      - shared
+
+networks:
+  shared:
+    external: true
+    name: existing-shared-network
+```
+
+<Callout type="warning" title="外部网络属于进阶的 Compose 责任">
+
+Coolify 不会创建或管理以这种方式声明的外部网络。该网络必须存在于所选服务器上，删除或重命名它会断开连接。声明外部 Compose 网络也不会改变仪表盘中 Service 的预定义目标。
+
+</Callout>
+
+</Tab>
+<Tab value="Other server">
+
+Docker 桥接网络及其容器 DNS 只存在于一个 Docker 主机上。一台服务器上的 `coolify` 网络不会把流量路由到另一台服务器的 `coolify` 网络。
+
+请使用服务器之间可路由的网络路径：
+
+- 经 Coolify 代理路由的 HTTP 或 HTTPS 域名
+- 由托管服务商提供的私有服务器地址
+- WireGuard 或 Tailscale 之类的 VPN 或 overlay 网络
+- 面向数据库、队列或其他非 HTTP 协议的加密 TCP 端点
+- 专为远程通信设计的应用层 API、隧道或消息代理
+
+接收方组件必须监听一条经该路径可达的地址。配置防火墙时只放行所需的来源、目标与端口。当流量离开可信私有网络时，再加上协议层的 TLS 与身份验证。
+
+不要把 Service 组件的容器名当作跨服务器主机名使用。容器名和 Docker 网络别名只在各自的 Docker 主机上有效。
+
+</Tab>
+<Tab value="Public access">
+
+### HTTP 域名
+
+在应用组件上配置 **Domains**。当进程监听的内部端口不是 `80` 时，把这个内部端口写进 Coolify 域名值里，例如 `https://api.example.com:3000`。
+
+访客仍然通过标准 HTTPS 连接。`:3000` 是在告诉 Coolify 代理使用组件容器内的哪个端口。
+
+基于域名的路由通常不需要 Compose `ports:` 映射。DNS 必须把主机名指向服务器，服务器代理必须在公共 HTTP 与 HTTPS 端口上运行且可达。
+
+完整的 DNS、服务器、代理、Docker 网络与容器链路，请阅读[Coolify 中的网络](/core/networking-in-coolify)。
+
+### 主机端口
+
+Compose `ports:` 条目会把组件端口发布到服务器的网络接口上：
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    ports:
+      - "8080:3000"
+```
+
+这会把服务器端口 `8080` 映射到容器端口 `3000`。除非绑定指定了主机地址，否则 Docker 会在服务器的所有接口上监听。该端口可以绕过基于域名的代理路由，直接暴露组件。
+
+只有当外部客户端需要直接的 TCP 或 UDP 访问时才使用发布端口。用托管服务商与服务器防火墙加以限制，避开常见的主机端口冲突，并确保应用协议自身的安全。
+
+若只想绑定在服务器回环接口上，请显式声明地址：
+
+```yaml
+ports:
+  - "127.0.0.1:8080:3000"
+```
+
+回环绑定只能从服务器自身访问，除非有另一个本地进程转发它。
+
+</Tab>
+</Tabs>
+
+## 验证连接
+
+更改网络配置之后：
+
+1. 保存设置或 Compose 定义，然后重启或部署 Service。
+2. 检查 **Show Deployable Compose**，确认每个组件都有预期的网络和端口。
+3. 在发起调用的组件上打开**终端（Terminal）**，用该镜像中可用的工具解析预期的内部主机名。
+4. 连接依赖的内部端口，验证应用层有响应，而不只是 DNS 解析成功。
+5. 对于域名，从外部客户端发起 HTTPS 请求，确认它到达了预期的组件。
+6. 对于发布端口，从允许的客户端测试可达，并确认在不该访问的网络中被阻断。
+
+如果私有通信失败，先确认两个容器运行在同一台服务器上并至少共享一个 Docker 网络。匹配的项目或环境名称不会带来网络连通性。
+
+## 网络边界
+
+- 项目或环境用来组织资源，它们不是网络边界。
+- Coolify 在每台已连接服务器上都会创建一个独立的 `coolify` 网络。
+- Service 使用自己的资源专属网络，即使另一个资源与其项目或环境相同。
+- **Connect To Predefined Network** 只把 Service 接入其唯一一个预定义目标网络（通常是 `coolify`）。
+- Docker 服务名只在相关容器共享的网络上解析。
+- 域名提供可路由的应用访问；它们不会合并 Docker 网络。
+- 发布端口暴露的是服务器接口，需要防火墙与协议层面的安全防护。

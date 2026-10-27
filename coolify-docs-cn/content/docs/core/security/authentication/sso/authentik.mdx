@@ -1,0 +1,119 @@
+---
+title: Authentik
+description: 通过 OAuth2/OpenID Connect 提供商、应用和 Base URL，为 Coolify 配置 Authentik SSO。
+---
+
+# 配置 Authentik SSO
+
+在 Authentik 中创建 OAuth2/OpenID Connect 提供商和应用，然后使用机密（confidential）客户端 ID 与密钥将该提供商接入 Coolify。
+
+<Callout type="warning" title="需要 Coolify v4.3.0">
+  Authentik SSO 在 Coolify v4.3.0 及以上版本可用
+</Callout>
+
+<Callout type="warning" title="示例数据">
+按照指南操作时，请替换以下值：
+
+- **Coolify 回调**：`https://coolify.shadowarcanist.com/auth/authentik/callback`
+- **Authentik Base URL**：`https://auth.shadowarcanist.com`
+- **应用名称**：`Coolify`
+</Callout>
+
+## 设置 Authentik SSO
+
+<Steps>
+<Step>
+
+### 创建 Authentik 应用
+
+登录 Authentik 管理界面，打开 **Applications > Applications**（应用 > 应用）。
+
+选择 **Create with Provider**（通过提供商创建），输入 `Coolify` 之类的名称并选择一个 slug，然后选择 **OAuth2/OpenID Connect** 作为提供商类型继续。
+
+如果你的 Authentik 版本需要单独创建提供商，请打开 **Applications > Providers**（应用 > 提供商），创建一个 **OAuth2/OpenID Provider**，再将其关联到新应用。
+
+如果你安装版本的导航或字段名称有所不同，请参阅 Authentik 的 [OAuth2/OpenID 提供商文档](https://docs.goauthentik.io/add-secure-apps/providers/oauth2/)。
+
+</Step>
+<Step>
+
+### 配置 OAuth2/OpenID 提供商
+
+将该提供商配置为机密（confidential）授权码客户端：
+
+| Authentik 设置 | 取值 |
+| :--- | :--- |
+| **客户端类型**（Client type） | **机密**（Confidential） |
+| **重定向 URI/Origin**（Redirect URIs/Origins） | 严格匹配 URI `https://coolify.shadowarcanist.com/auth/authentik/callback` |
+| **作用域**（Scopes） | 包含 `openid`、`profile` 和 `email`。Coolify 还会请求 Authentik 的 `goauthentik.io/api` 作用域。 |
+| **授权流程**（Authorization flow） | 选择你的用户需要完成的流程。 |
+| **签名密钥**（Signing key） | 使用你的 Authentik 策略所要求的签名密钥。 |
+
+对于 Authentik 2025.10 及更高版本，关联现有 Coolify 账号要求 email 作用域返回 `email_verified: true`。在 **Customization > Property Mappings**（自定义 > 属性映射）下，为 `email` 添加一个作用域映射，表达式如下：
+
+```python
+return {"email": request.user.email, "email_verified": True}
+```
+
+在该提供商上使用这个映射，替换默认的 email 映射。只为你所在组织信任其邮箱地址的用户声明已验证状态。
+
+保存提供商和应用。
+
+使用 Authentik 的策略、分组或应用绑定来限制哪些用户可以访问 Coolify 应用。
+
+</Step>
+<Step>
+
+### 保存 Authentik 凭据
+
+复制提供商的 **Client ID** 和 **Client Secret**，并妥善保管密钥。
+
+Coolify 中的 **Base URL** 是 Authentik 实例的源地址（origin），例如 `https://auth.shadowarcanist.com`。不要追加 `/application/o/authorize/` 或应用 slug。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Authentik
+
+打开 **设置 > 身份验证**，找到 **Authentik**。
+
+| Coolify 字段 | Authentik 取值 |
+| :--- | :--- |
+| **Client ID** | Authentik 提供商的客户端 ID |
+| **Client Secret** | Authentik 提供商的客户端密钥 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/authentik/callback` |
+| **Base URL** | Authentik 源地址，例如 `https://auth.shadowarcanist.com` |
+
+点击 **Save**（保存），然后开启 Authentik 的 **Enabled**（启用）开关。
+
+</Step>
+<Step>
+
+### 验证 Authentik 登录
+
+在无痕浏览器窗口中打开 Coolify 登录页面，选择 **Login with Authentik**（使用 Authentik 登录）。完成分配的 Authentik 流程后，确认 Coolify 打开的是与该 Authentik 邮箱地址匹配的账号。
+
+同时用一个被应用策略拒绝的 Authentik 用户测试，确认 Authentik 会阻止其访问。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Authentik 提示重定向 URI 无效">
+
+打开 Authentik 的 OAuth2/OpenID 提供商，核对其严格重定向 URI 与 Coolify 中的 **Redirect URI** 是否一致。除非你的 Authentik 策略要求，否则不要使用正则表达式。
+
+</Accordion>
+<Accordion title="Coolify 无法连接 Authentik">
+
+确认 **Base URL** 只包含 Authentik 的公开源地址，并且可以从 Coolify 服务器访问。Authentik 的授权、令牌和用户信息端点都位于 `/application/o/` 路径之下。
+
+</Accordion>
+<Accordion title="Coolify 被重定向回登录页面">
+
+确认提供商包含 `email` 作用域并能返回该用户的邮箱地址，同时检查应用策略是否允许该用户访问。
+
+</Accordion>
+</Accordions>

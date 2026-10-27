@@ -1,0 +1,220 @@
+---
+title: GitHub Actions
+description: 在 GitHub Actions 中构建并发布应用镜像，然后触发 Coolify 部署。
+---
+
+# GitHub Actions
+
+GitHub Actions 可以运行检查、把你的应用构建成 Docker 镜像、发布到容器镜像仓库，并且只有在前面的步骤全部通过后才触发 Coolify。
+
+完整可用的参考实现，请查看 [`github-actions`](https://github.com/coollabsio/coolify-examples/tree/main/github-actions) 示例及其[工作流文件](https://github.com/coollabsio/coolify-examples/blob/main/github-actions/.github/workflows/build.yaml)。
+
+## 构建并部署
+
+<Callout type="info" title="示例值">
+
+本指南使用以下取值：
+
+- **Docker 镜像**：`ghcr.io/shadowarcanist/tasklytics:latest`
+- **镜像仓库**：`ghcr.io`
+- **分支**：`main`
+
+请把这些值替换为你自己的镜像仓库与镜像。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 选择部署类型
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/1.webp" alt="Coolify 中基于 Docker 的应用选项" />
+
+镜像由 GitHub Actions 构建，因此 Coolify 必须直接部署已发布的镜像，而不是对同一份源码重新构建。
+
+二选一：
+
+- 为单个镜像创建 [Docker Image 应用](/applications/deployments/docker-image)。
+- 部署包含多个服务时使用 [Docker Compose](/applications/builds/docker-compose)，并用 `image:` 而非 `build:` 引用已发布的镜像。
+
+```yaml
+services:
+  web:
+    image: ghcr.io/shadowarcanist/tasklytics:latest
+```
+
+使用私有镜像前，先在部署服务器上完成身份验证。
+
+</Step>
+<Step>
+
+### 启用 Coolify API 访问
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/2.webp" alt="Coolify Advanced（高级）配置中的 API Access 设置" />
+
+在自托管的 Coolify 实例上：
+
+1. 打开 **Settings**（设置）。
+2. 选择 **Advanced**（高级）。
+3. 在 **API and MCP** 中，将 **API access**（API 访问）设为 **Enabled**（启用）。
+4. 选择 **Save changes**（保存更改）。
+
+<Callout type="info" title="Coolify Cloud">
+
+Coolify Cloud 默认已启用 API 访问。Cloud 用户无法访问自托管版的 **API access** 设置，因此可跳过这一步。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 创建 Coolify API 令牌
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/3.webp" alt="带 Deploy（部署）权限的新 Coolify API 令牌" />
+
+1. 打开 **Keys & Tokens**（密钥与令牌）> **API Tokens**（API 令牌）。
+2. 填写能标识该工作流的 **Description**（描述）。
+3. 通过 **Expires in**（有效期）设置令牌的使用期限。
+4. 打开 **Permissions**（权限），选择 **Deploy**（部署）。
+5. 选择 **Create token**（创建令牌）。
+6. 立即复制该令牌。
+
+在把它添加到 GitHub 之前，请先存放在密码管理器中。
+
+</Step>
+<Step>
+
+### 复制部署 webhook
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/4.webp" alt="应用配置中经过身份验证的 Deploy Webhook" />
+
+1. 打开该应用。
+2. 选择 **Webhooks**（Webhook）。
+3. 复制 **Deploy webhook URL**（部署 webhook URL）。
+
+URL 用于标识应用，API 令牌用于为请求授权。
+
+</Step>
+<Step>
+
+### 添加 GitHub 仓库 secrets
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/5.webp" alt="GitHub 上的 Actions 仓库 secrets 页面" />
+
+1. 打开 GitHub 仓库设置。
+2. 选择 **Secrets and variables**（secrets 与变量）> **Actions**。
+3. 选择 **New repository secret**（新建仓库 secret）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/6.webp" alt="COOLIFY_WEBHOOK 仓库 secret" />
+
+4. 创建 `COOLIFY_WEBHOOK`，值为经过身份验证的部署 webhook URL。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/7.webp" alt="保存 webhook 后再次新建仓库 secret 的操作" />
+
+5. 再次选择 **New repository secret**（新建仓库 secret）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/actions/8.webp" alt="COOLIFY_TOKEN 仓库 secret" />
+
+6. 创建 `COOLIFY_TOKEN`，值为 Coolify API 令牌。
+
+这两个值都不要提交到工作流文件中。
+
+</Step>
+<Step>
+
+### 添加 GitHub Actions 工作流
+
+创建 `.github/workflows/build.yaml`：
+
+```yaml
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: shadowarcanist/tasklytics
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Trigger Coolify deployment
+        run: |
+          curl --fail --request POST '${{ secrets.COOLIFY_WEBHOOK }}' \
+            --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+```
+
+工作流会先构建并发布镜像，然后才请求 Coolify 部署它。
+
+<Callout type="warning" title="所有必需检查通过后再部署">
+
+请把对 Coolify 的请求放在测试、安全检查、镜像构建与镜像仓库推送之后。否则 Coolify 可能拉取旧镜像，或部署未经校验的版本。
+
+</Callout>
+
+若要实现不可变的发布，请发布指向特定 commit 的标签，并在发布流程中更新所部署镜像的引用，而不是只依赖 `latest`。
+
+</Step>
+<Step>
+
+### 对部署服务器进行身份验证
+
+对于私有镜像仓库，请连接到每台需要拉取镜像的部署服务器，并以 Coolify 中配置的服务器用户身份完成 Docker 登录。
+
+<Tabs id="github-actions-registry-login" items={['GitHub Container Registry', 'Docker Hub']}>
+<Tab value="GitHub Container Registry">
+
+创建一个具有读取 packages 权限的 GitHub 令牌，然后运行：
+
+```bash
+echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_USERNAME" --password-stdin
+```
+
+</Tab>
+<Tab value="Docker Hub">
+
+运行：
+
+```bash
+docker login
+```
+
+尽可能使用 Docker Hub 访问令牌代替账户密码。
+
+</Tab>
+</Tabs>
+
+触发工作流并确认：
+
+1. GitHub Actions 发布了预期的镜像。
+2. 对 Coolify 的请求成功。
+3. Coolify 拉取了新镜像。
+4. 应用容器启动并通过健康检查。
+
+</Step>
+</Steps>

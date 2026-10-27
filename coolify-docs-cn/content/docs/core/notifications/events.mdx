@@ -1,0 +1,72 @@
+---
+title: 通知事件
+description: 选择 Coolify 通过各通知通道发送哪些部署、备份、计划任务、容器和服务器事件。
+---
+
+# 通知事件
+
+Coolify 允许你为邮件、Discord、Telegram、Slack、Pushover 和 webhook 通知分别选择事件。打开 **Notifications**，选择一个通道，然后在 **Notification events** 下的下拉菜单中调整该通道的事件选择。事件分为 **Deployments**、**Resources**、**Backups**、**Scheduled tasks** 和 **Servers**（邮件中为 **Server**）几组。
+
+为某个通道修改事件选择，不会影响其他通道。
+
+## 部署
+
+| 设置项 | Coolify 何时发送通知 |
+| :--- | :--- |
+| **Deployment Success** | 应用部署成功完成。 |
+| **Deployment Failure** | 应用部署失败。 |
+| **Resource status changes** | 应用或资源容器意外停止，或被自动重启。 |
+| **Restart limit reached** | 资源达到自动重启上限并被停止。 |
+
+Pull request 预览部署与常规应用部署使用相同的 **Deployment Success** 和 **Deployment Failure** 选择。
+
+---
+
+## 备份
+
+| 设置项 | Coolify 何时发送通知 |
+| :--- | :--- |
+| **Backup Success** | 计划的数据库备份成功完成。 |
+| **Backup Failure** | 计划的数据库备份失败，或本地备份成功但其 S3 上传失败。 |
+
+<Callout type="info" title="S3 上传警告走 Backup Failure">
+当 Coolify 完成本地备份但无法上传其 S3 副本时，会向选择了 **Backup Failure** 的通道发送一条警告。
+</Callout>
+
+---
+
+## 计划任务
+
+| 设置项 | Coolify 何时发送通知 |
+| :--- | :--- |
+| **Scheduled Task Success** | 应用的计划任务或服务的计划任务成功完成。 |
+| **Scheduled Task Failure** | 应用的计划任务或服务的计划任务失败。 |
+
+---
+
+## 服务器事件
+
+| 设置项 | Coolify 何时发送通知 |
+| :--- | :--- |
+| **Docker Cleanup Success** | 自动 Docker 清理任务成功完成。 |
+| **Docker Cleanup Failure** | 自动 Docker 清理任务失败。 |
+| **Disk usage warning**（邮件中为 **Server disk usage**） | 服务器磁盘用量超过为该服务器配置的阈值。 |
+| **Server Reachable** | 此前不可达的服务器恢复可达。 |
+| **Server Unreachable** | Coolify 连续两次检查都无法连接到某台服务器。 |
+| **Server Patching** | Coolify 在补丁检查中发现操作系统更新，或补丁检查失败。 |
+| **Traefik Proxy Outdated** | Coolify 检测到一台或多台服务器运行的 Traefik 版本过旧。 |
+
+---
+
+## 测试所选事件
+
+配置好通道后，使用它的测试操作：
+
+- 邮件使用 **Send test**，并要求填写收件地址。
+- Discord、Telegram、Slack、Pushover 和 webhook 通道使用 **Send test**。
+
+测试只能确认当前通道凭据可以送达消息，并不会触发或验证每一个已选事件。
+
+webhook 事件标识符和字段参见 [webhook 负载参考](/core/notifications/channels/webhook/payload-reference)。
+
+磁盘用量告警默认每台服务器每 24 小时重复一次；重复间隔可在该服务器的 **Advanced** 设置中配置。陷入重启循环的代理每小时最多发送一条容器重启通知。

@@ -1,0 +1,46 @@
+---
+title: 概览
+description: 查找 Coolify MCP 的设置路径、支持的客户端、能力与安全指南。
+---
+
+import { LaptopCode, Settings, Sparkles } from 'reicon-react';
+
+# MCP 概览
+
+Coolify MCP 通过 Streamable HTTP 把兼容的 AI 客户端连接到你的 Coolify 实例。按顺序阅读下面的页面，了解 MCP 的工作原理、完成设置并连接客户端。
+
+## 从这里开始
+
+1. 阅读 [什么是 MCP？](/mcp/what-is-mcp)，了解工具、资源、提示与作用范围。
+2. 阅读 [MCP 的工作原理](/mcp/how-mcp-works)，了解身份验证与团队边界。
+3. 按照[设置 MCP](/mcp/setup) 启用端点并创建令牌。
+4. 配置 [Claude Code](/mcp/clients/claude-code)、[Cursor](/mcp/clients/cursor) 或[其他 MCP 客户端](/mcp/clients/other-clients)。
+
+## 查找能力
+
+连接客户端后，使用 [MCP 能力](/mcp/capabilities/overview)按任务查找工具。可以从 `coolify_help`、`get_infrastructure_overview` 或 `search_resources` 入手。
+
+## 继续学习
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '什么是 MCP？',
+      href: '/mcp/what-is-mcp',
+      description: '了解工具、资源、提示以及 Streamable HTTP 各自提供什么。',
+      icon: Sparkles,
+    },
+    {
+      title: 'MCP 的工作原理',
+      href: '/mcp/how-mcp-works',
+      description: '了解身份验证、团队作用域与响应边界。',
+      icon: LaptopCode,
+    },
+    {
+      title: '设置 MCP',
+      href: '/mcp/setup',
+      description: '启用 MCP、创建令牌并连接 AI 客户端。',
+      icon: Settings,
+    },
+  ]}
+/>

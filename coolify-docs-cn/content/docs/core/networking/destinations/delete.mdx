@@ -1,0 +1,59 @@
+---
+title: 删除目标
+description: 在检查所有关联资源之后，安全地移除目标（Destination）及其 Docker 网络。
+---
+
+# 删除目标（Destination）
+
+删除独立的 Docker 目标（Destination）时，Coolify 会移除该目标，并从服务器上删除其 Docker 网络。默认的 `coolify` 目标无法从面板中删除。
+
+## 删除之前
+
+打开该目标并选择 **Resources**，查看页面上列出的每一个应用、数据库和服务。
+
+对于每个想要保留的资源：
+
+- 备份其数据库和持久化存储数据
+- 在另一个目标上重建或克隆该资源
+- 单独恢复或迁移其数据，因为克隆只复制配置
+
+<Callout type="error" title="先移除所有资源">
+删除 Docker 网络可能中断仍在使用它的容器。只有当 **Resources** 页面显示 **No resources are using this destination** 之后才能继续。
+</Callout>
+
+## 删除目标
+
+<Steps>
+<Step>
+
+### 打开目标
+
+1. 在 Coolify 侧边栏中选择 **Destinations**。
+2. 选择想要删除的目标。
+3. 打开 **Danger Zone**。
+
+</Step>
+<Step>
+
+### 确认删除
+
+1. 选择 **Delete destination**。
+2. 仔细查看删除操作提示。
+3. 按显示原样输入目标名称。
+4. 选择 **Permanently Delete**。
+
+Coolify 会把 Coolify Proxy 与该网络断开，从服务器上删除 Docker 网络，并把该目标从 Coolify 中移除。
+
+</Step>
+<Step>
+
+### 验证删除结果
+
+打开全局或服务器专属的 **Destinations** 页面，确认被删除的目标不再出现。
+
+</Step>
+</Steps>
+
+## 如果还需要这个目标
+
+已删除的目标没有恢复操作。请按照[创建目标](/core/networking/destinations/create)重新创建，然后分别重新部署或恢复每个资源。

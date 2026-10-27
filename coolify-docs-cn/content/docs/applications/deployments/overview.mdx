@@ -1,0 +1,68 @@
+---
+title: 总览
+description: 了解 Coolify 中应用部署的触发方式、历史记录、日志与生命周期操作。
+---
+
+import { BranchUp, History, Refresh23 } from 'reicon-react';
+
+# 部署应用
+
+部署是一个排队执行的操作，它会准备所需的镜像，并在选定的服务器上套用应用的运行时配置。
+
+部署可以从源码构建镜像、[拉取现有镜像](/applications/deployments/docker-image)，或者构建并拉取 Docker Compose 定义中各服务所需的镜像。Docker 会在你的基础设施上创建并运行这些容器。
+
+从源码到运行容器的完整链路，请参阅[构建与部署模型](/core/build-deployment-model)。
+
+<CoolCallout icon={Refresh23} title="一句话版本">
+
+部署可以手动发起，也可以由 Git 事件或自动化触发。通过 **Deployment Logs**（部署日志）可以查看队列、检查具体的操作日志并验证结果。
+
+</CoolCallout>
+
+---
+
+## 发起部署
+
+| 操作 | 适用时机 |
+| :--- | :--- |
+| **Deploy** | 首次部署一个已配置的应用。 |
+| **Redeploy** | 对已有应用再次执行正常的部署流程。 |
+| **Restart** | 通过部署队列重建运行时。基于源码的方式在符合条件时复用现有镜像，必要时也可以重新构建；Docker Image 方式会重新拉取已保存的镜像引用。 |
+| **Force deploy (without cache)** | 对 Coolify 生成的源码构建禁用缓存。自定义的 Docker Compose 构建命令自行控制缓存参数。 |
+| Git webhook | 部署从已连接仓库收到的新提交。 |
+| Deploy webhook 或 API | 从外部 CI 系统或自动化流程发起部署。 |
+
+部署请求会进入队列。Coolify 会记录其状态：排队中、进行中、成功、失败或已取消。
+
+## 查看部署历史
+
+打开应用的 **Deployment Logs**（部署日志），即可查看历史与进行中的操作。
+
+点开一次部署即可查看其日志。日志会显示所选的源码修订版本、镜像的构建或拉取过程、生成的配置以及容器操作。当部署未能完成时，从第一条失败的命令开始排查。
+
+源码构建失败不会影响正在运行的应用。构建之后的失败则取决于替换路径和健康检查配置。
+
+## 选择下一篇部署指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '自动部署',
+      href: '/applications/deployments/automatic-deployments',
+      description: '从仓库事件发起部署，并限制 monorepo 的触发条件。',
+      icon: BranchUp,
+    },
+    {
+      title: '预览部署',
+      href: '/applications/deployments/preview-deployments',
+      description: '将 pull request 与生产应用分开运行。',
+      icon: History,
+    },
+    {
+      title: '滚动更新',
+      href: '/applications/deployments/rolling-updates',
+      description: '了解 Coolify 何时可以在停止当前容器之前启动替换。',
+      icon: Refresh23,
+    },
+  ]}
+/>

@@ -1,0 +1,84 @@
+---
+title: 恢复数据库
+description: 从本地上传、服务器文件或 S3 兼容存储恢复数据库备份。
+---
+
+# 恢复数据库
+
+打开运行中数据库的 **Import Backup**（导入备份）页面，即可从你的电脑、数据库服务器或 S3 存储恢复备份。服务栈（service stack）内受支持的数据库组件同样可以使用导入功能。
+
+<Callout type="warning" title="导入前先保护现有数据">
+导入前请停止应用写入，并对目标另行做一次备份。仔细核对所选数据库、备份格式、生成的脚本和替换选项。导入可能覆盖数据与凭据。
+</Callout>
+
+## 支持的备份
+
+| 数据库 | 支持的恢复输入与选项 |
+| :--- | :--- |
+| PostgreSQL | SQL 转储、custom 归档、tar 归档以及全库转储。 |
+| MySQL 和 MariaDB | SQL 转储，包括全库备份；可选恢复用户与权限。 |
+| MongoDB | 归档文件与 dump 目录。 |
+| SQLite | 数据库文件；在 **Restore into** 下选择目标文件。 |
+| Redis、Dragonfly、KeyDB、ClickHouse | 没有内置的 Import Backup 流程；请使用引擎专属的恢复方式。 |
+
+Coolify 会在改动数据之前检测格式，并支持 gzip、bz2、xz、zip 压缩以及受支持的归档。请确保备份与目标引擎及版本匹配，且服务器有足够的剩余空间。
+
+## 检查恢复选项
+
+**Import command**（导入命令）以只读形式显示最终生成的恢复脚本。按需为单库或全库转储选择 **Backup contents**（备份内容）。
+
+- **Replace objects that already exist**（替换已存在的对象）对单库 PostgreSQL 导入默认关闭。启用后将采用此前的清理/替换行为；否则已有对象可能导致导入失败。
+- **Keep owners and privileges**（保留所有者与权限）对 PostgreSQL 归档默认关闭。仅当目标端已有所需角色、且你确实要恢复属主与授权时才启用。
+- **Restore users and privileges (mysql system database)**（恢复用户与权限（mysql 系统数据库））适用于 MySQL/MariaDB 全库导入。它可能替换用户和密码（包括管理员凭据），之后 Coolify 保存的凭据与健康检查可能需要相应更新。
+- **Restore into**（恢复到）用于选择已配置的 SQLite 文件。Coolify 会尽可能预选与备份名称对应的文件。
+- MongoDB 提供 **Replace collections that already exist**（替换已存在的集合）用于替换现有集合。
+
+PostgreSQL 恢复在单个事务中执行。SQL 备份的替换式恢复只有成功后才会换入新数据库。格式检测发生在破坏性变更之前；即便有这些保障，也请保留一份经过验证的备份以备恢复。
+
+## 选择并导入备份
+
+1. 在运行中的目标数据库上打开 **Import Backup**（导入备份）。
+2. 选择来源：
+   - 从你的电脑上传备份。
+   - 输入备份在服务器上的绝对路径，然后选择 **Check file**（检查文件）。
+   - 选择团队可用的 **S3 storage**（S3 存储），输入存储桶内的文件路径，并检查文件。
+3. 核对文件信息、备份内容、恢复选项和生成的导入命令。
+4. 启动恢复并完成确认。
+5. 关注 **Database Restore Output**（数据库恢复输出）直到操作结束。
+
+Coolify 使用当前选定的来源；之前未使用的上传不会替代已检查的服务器路径。导入进行期间，再次启动、重启或导入都会被拒绝。被中断或过期的导入会被停止并清理，不会无限期阻塞后续操作。
+
+## 通过 API 导入
+
+独立数据库请使用：
+
+| 端点 | 用途 |
+| :--- | :--- |
+| `POST /databases/{uuid}/imports/uploads` | 上传备份。 |
+| `POST /databases/{uuid}/imports` | 从选定来源启动导入。 |
+| `GET /databases/{uuid}/imports/{activity_id}` | 读取导入进度与结果。 |
+
+服务内数据库使用相同的后缀，路径为 `/services/{uuid}/databases/{database_uuid}/imports`。
+
+上传与启动导入需要 `write` 权限；服务器路径导入还需要 `deploy` 权限。选项包括 `replace_existing`、`keep_owners`、`restore_mysql_users` 和 `sqlite_database`。并发的数据库操作返回 `409`；无效请求返回 `422`。来源字段与上传格式请查阅 [API 参考](/api/overview)。
+
+### 示例：导入服务器文件
+
+停止应用写入并备份目标之后，使用备份在数据库服务器上的绝对路径启动导入：
+
+```sh
+curl --request POST "https://coolify.example.com/api/v1/databases/<database-uuid>/imports" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"source":"server","path":"/var/backups/database.sql.gz","dump_all":false,"replace_existing":false}'
+```
+
+请使用具备 `write` 和 `deploy` 能力的令牌。用返回的 activity ID 轮询活动端点，验证结果后再恢复写入。上传导入使用 `source: "upload"` 和 `upload_id`；S3 导入使用 `source: "s3"`、`s3_storage_uuid` 和 `path`。
+
+## 验证结果
+
+1. 确认数据库正在运行且状态健康，并检查其日志。
+2. 用数据库客户端连接，检查模式（schema）、表或集合以及有代表性的记录。
+3. 对 SQLite，确认应用读取的是预期的挂载文件。
+4. 如果导入恢复了用户或密码，请更新凭据。
+5. 验证通过后恢复应用写入，并创建一份新的[备份](/databases/backups)。

@@ -1,0 +1,144 @@
+---
+title: 管理服务器
+description: 更新已连接服务器的连接信息、域名、时区、构建角色和云提供商关联。
+---
+
+# 管理服务器
+
+打开 **Servers**，选择一台服务器，然后打开 **General**（通用）管理其标识、SSH 连接、域名默认值和角色。
+
+<Callout type="warning" title="连接变更可能导致服务器无法访问">
+修改 IP 地址、域名、SSH 用户、端口或连接超时之前，请先确认新连接可以从 Coolify 所在机器正常工作。
+</Callout>
+
+## 通用设置
+
+| 设置 | 控制内容 |
+| :--- | :--- |
+| **Name** | 服务器在 Coolify 中显示的名称。 |
+| **Description** | 关于服务器或其用途的可选备注。 |
+| **Wildcard domain** | Coolify 为新资源建议域名时可使用的基础域名。 |
+| **IP address or domain** | Coolify 用于 SSH 和服务器通信的地址。 |
+| **SSH user** | Coolify 用于 SSH 的账号。 |
+| **SSH port** | SSH 端口。 |
+| **Connection timeout** | Coolify 等待 SSH 连接的时长，1 到 300 秒。 |
+| **Server timezone** | 备份和 cron 计划任务等定时操作使用的时区。 |
+| **Server role** | 选择 **Deployments only**（仅部署）、**Builds only**（仅构建）或 **Deployments and builds**（部署与构建）。参见[服务器角色](/core/infrastructure/servers/build-servers#服务器角色)。 |
+
+修改不会自动保存的字段后，选择 **Save changes**（保存更改）。如果修改了连接信息，请重新执行服务器验证，确认 Coolify 仍能访问它。
+
+有托管资源的服务器不能切换为 **Builds only**，请先迁移或删除这些资源。GitHub Actions runner 处于启用状态时角色也无法更改。修改角色前请先阅读[构建服务器](/core/infrastructure/servers/build-servers)。
+
+### 泛域名
+
+例如，把 **Wildcard domain** 设为 `https://example.com` 后，Coolify 会为新资源建议 `https://<application-id>.example.com` 这样的域名。
+
+需要创建一条指向该服务器的 `*.example.com` DNS 记录。修改该设置不会创建 DNS 记录，也不会更新已分配给资源的域名。
+
+---
+
+## 服务器详情
+
+验证成功后，**General** 页面会显示检测到的信息，例如：
+
+- 操作系统
+- CPU 架构和核心数
+- 内存
+- 内核版本
+- Docker 版本
+
+Coolify 在验证或检查服务器时会刷新这些信息。可以用它确认所连接的机器及其可用资源与预期一致。
+
+---
+
+## 将现有服务器关联到云提供商
+
+如果是手动添加的 Hetzner、DigitalOcean、Vultr 或 Hostinger 服务器，可以把它在 Coolify 中的记录关联到对应的提供商机器。
+
+关联后，Coolify 可以读取提供商状态，并在机器停机时显示 **Power On**（开机）等提供商支持的操作。它不会创建新机器。
+
+<Steps>
+<Step>
+
+### 添加提供商令牌
+
+按照[云令牌](/core/security/credentials/cloud-tokens)为包含该服务器的账号添加令牌。
+
+</Step>
+<Step>
+
+### 打开关联流程
+
+1. 打开 **Servers** 并选择该服务器。
+2. 打开 **General**。
+3. 选择 **Link Cloud Provider**（关联云提供商）。
+4. 选择 **Hetzner**、**DigitalOcean**、**Vultr** 或 **Hostinger**。
+5. 选择匹配的提供商令牌。
+
+</Step>
+<Step>
+
+### 找到提供商机器
+
+使用提供商的服务器 ID 或服务器 IP 地址搜索。
+
+确认 **Match Found**（找到匹配）显示的是目标机器，然后选择 **Link This Server**（关联此服务器）。
+
+Hostinger 的流程有所不同：
+
+1. 选择 **Link Provider**（关联提供商），然后选择 **Hostinger**。
+2. 选择 Hostinger 令牌。
+3. 输入虚拟机 ID，或选择 **Search By Server IP**（按服务器 IP 搜索）。
+4. 选择 **Link Resource**（关联资源）。
+
+</Step>
+<Step>
+
+### 确认关联
+
+回到服务器页面确认已显示提供商状态。状态过期时，先刷新再执行提供商相关操作。
+
+已关联的 Hostinger 服务器会显示 `Hostinger · <state>` 徽标，选择 **Refresh Status**（刷新状态）更新它。VPS 停机时可以从 Coolify 启动。VPS 停机或被暂停期间，Coolify 不会通过 SSH 验证服务器。
+
+</Step>
+</Steps>
+
+<Callout type="warning" title="仔细核对服务器">
+只能关联这条 Coolify 服务器记录所对应的提供商机器。提供商操作和删除选项会作用于被关联的机器。
+</Callout>
+
+---
+
+## 连接变更后重新验证
+
+修改以下内容后需要重新验证：
+
+- IP 地址或域名
+- SSH 用户或端口
+- 网络路由、防火墙规则或隧道配置
+
+连接失败时，恢复之前的设置，或使用提供商控制台修复 SSH 访问。常规检查请参阅 [OpenSSH](/core/infrastructure/servers/openssh) 和[防火墙](/core/infrastructure/servers/firewall)。
+
+---
+
+## 构建与部署限制
+
+打开 **Advanced**（高级）控制服务器同时运行多少个部署，以及每个部署最多运行多久。
+
+| 设置 | 控制内容 | 默认值 |
+| :--- | :--- | :--- |
+| **Concurrent builds** | 这台服务器上同时运行的构建和部署进程数量。调高可并行部署更多资源；调低可避免小型服务器在构建期间资源耗尽。 | `2` |
+| **Deployment timeout** | 单个部署在被 Coolify 取消前最长可运行的时间。大镜像或确实耗时较长的构建可以调高。 | `3600` |
+| **Queue limit** | 队列中允许等待的最大部署数量。达到上限后，Coolify 会以 HTTP `429` 拒绝新的部署。 | — |
+
+修改这些值后选择 **Save changes**。
+
+<Callout type="info" title="限制按服务器独立计算">
+并发构建数和队列上限按每台服务器独立计算。专用[构建服务器](/core/infrastructure/servers/build-servers)有自己的限制，在那边调高不会影响其他服务器上的部署。
+</Callout>
+
+## 磁盘使用量通知
+
+在 **Advanced** 下设置磁盘过高通知间隔。每台服务器的告警在每个间隔内最多重复一次，默认 24 小时。如果使用率曾比阈值低至少 5 个百分点、之后又超过阈值，Coolify 可以提前告警。对应的 API 字段是 `server_disk_usage_notification_interval_hours`。
+
+连续两次连接检查失败后，服务器会被标记为不可达。单次检查失败不会把所有资源标记为已退出；部署尝试失败前会重新检查被标记为不可达的服务器。

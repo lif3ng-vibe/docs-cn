@@ -1,0 +1,25 @@
+---
+title: Cursor
+description: 配置 Cursor，连接 Coolify 的 Streamable HTTP MCP 服务器。
+---
+
+# 将 Cursor 连接到 MCP
+
+Cursor 支持通过 Streamable HTTP 连接远程 MCP 服务器。
+
+## 在 Cursor 中添加 Coolify
+
+1. 打开 Cursor 设置。
+2. 打开 **Tools & Integrations**（工具与集成），选择 **MCP**。
+3. 添加一个新的远程 MCP 服务器。
+4. 将 URL 设置为 `https://app.coolify.io/mcp`。
+5. 将 Authorization 请求头设置为 `Bearer 67|abcthisisa123dummytoken`。
+6. 保存该服务器并启用它。
+
+仅做查看时，使用带 `read` 权限的令牌即可。只有当 Cursor 必须执行部署或生命周期操作时，才追加 `deploy` 权限。
+
+## 验证连接
+
+让 Cursor 调用 `get_current_team` 或 `get_infrastructure_overview`，并确认返回结果中只包含预期团队的资源。
+
+实例与团队的启用方式、令牌权限以及安全要求，参见[设置 MCP](/mcp/setup)。

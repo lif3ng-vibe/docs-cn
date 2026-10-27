@@ -1,0 +1,32 @@
+---
+title: NextJS
+description: 在 Coolify 上部署 Next.js 应用：支持服务端渲染、静态构建、Nixpacks 或自定义 Dockerfile 配置。
+---
+
+# NextJS
+
+NextJS 是一个 React 框架，提供服务端渲染、静态网站生成等能力。
+
+[示例仓库。](https://github.com/coollabsio/coolify-examples/tree/main/javascript/frameworks/nextjs)
+
+## 使用 Nixpacks 部署
+
+### 服务器构建（NodeJS）
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`。
+
+### 静态构建（SPA）
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`。
+- 在 **Site type**（站点类型）中选择 **Static**（静态）。
+- 将 `Output Directory` 设为 `out`。
+
+## 使用 Dockerfile 部署
+
+如果 Nixpacks 用起来有问题，或想对构建阶段有更多控制，可以改用 Dockerfile 部署 NextJS 应用。
+
+### 前置条件
+
+1. 将 `Ports Exposes` 字段设为 `3000`。
+2. 在项目根目录创建 `Dockerfile`，内容复制自官方 [NextJS 仓库](https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile)。
+3. 将 **Build strategy**（构建策略）设为 `Dockerfile`。

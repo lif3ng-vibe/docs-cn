@@ -1,0 +1,9 @@
+{
+  "title": "计划任务",
+  "pages": [
+    "overview",
+    "create-a-task",
+    "manage-tasks",
+    "execution-history"
+  ]
+}

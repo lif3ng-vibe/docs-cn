@@ -1,0 +1,40 @@
+---
+title: Jekyll
+description: 在 Coolify 上部署 Jekyll 静态站点：使用 Nixpacks 或 Dockerfile，配合 Ruby、Nginx 与自动构建流程。
+---
+
+# Jekyll
+
+Jekyll 是一款简单、原生支持博客的静态站点生成器，适用于个人、项目或组织站点。
+
+## 使用 Nixpacks 部署
+
+Nixpacks 部署 Jekyll 应用对源码有一些前置要求，更多信息见[这里](https://nixpacks.com/docs/providers/ruby)。
+
+## 使用 Dockerfile 部署
+
+如果想省事，可以用 Dockerfile 部署 Jekyll 应用。
+
+### 前置条件
+
+1. 将 `Ports Exposes` 字段设为 `80`。
+2. 在项目根目录创建 `Dockerfile`，内容如下：
+
+```dockerfile
+FROM ruby:3.1.1 AS builder
+RUN apt-get update -qq && apt-get install -y build-essential nodejs
+WORKDIR /srv/jekyll
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+COPY . .
+RUN chown 1000:1000 -R /srv/jekyll
+RUN bundle exec jekyll build -d /srv/jekyll/_site
+
+FROM nginx:alpine
+COPY --from=builder /srv/jekyll/_site /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+3. 确保项目根目录下有 `Gemfile` 与 `Gemfile.lock`。
+4. 将 buildpack 设为 `Dockerfile`。

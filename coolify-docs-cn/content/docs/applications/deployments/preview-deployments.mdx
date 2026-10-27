@@ -1,0 +1,279 @@
+---
+title: 预览部署
+description: 将 pull request 单独部署，具备独立的访问权限、环境变量、域名与 Git 提供商事件。
+---
+
+# 预览部署
+
+预览部署会把 pull request 或 merge request 中的代码与生产应用分开运行。每个预览都可以使用自己的域名和环境变量，不会替换生产部署。
+
+当对应的 pull request 或 merge request 被关闭或合并后，Coolify 会删除自动创建的预览。
+
+## 启用预览部署之前
+
+请确认应用能从已配置的分支成功部署，且部署服务器的资源足以同时运行生产容器和预览容器。
+
+<Callout type="warning" title="将预览代码视为不可信代码">
+
+pull request 可能会在部署服务器上运行代码。不要向预览部署暴露生产环境凭据，并将 **PR deployment access**（PR 部署访问权限）保持为 **Repository members only**（仅仓库成员），除非你能接受运行公开贡献者代码的风险。
+
+</Callout>
+
+## 启用预览部署
+
+打开应用，在设置侧边栏中选择 **Preview Deployments**，然后选择 **Enable preview deployments**（启用预览部署）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/1.webp" alt="Preview Deployments 与 Allow Public PR Deployments 设置" />
+
+当 **PR deployment access** 设置为 **Repository members only** 时，Coolify 会阻止来自 fork 的 pull request，除非作者是仓库的 owner、member 或 collaborator。只有当你希望任何人都能触发预览时，才选择 **Public (fork PRs allowed)**（公开，允许 fork PR）。来自其他仓库的 GitLab、Gitea 和 Bitbucket pull request 则必须启用公开预览部署。
+
+## 接入 pull request 事件
+
+选择 Coolify 接收该应用 pull request 或 merge request 事件的方式。
+
+<Tabs id="preview-deployment-event-source" items={['GitHub App', '仓库 webhook']}>
+<Tab value="GitHub App">
+
+请先按照[设置 GitHub App](/applications/sources/github/app) 操作。其仓库安装范围必须包含该应用所用的仓库。
+
+<Tabs id="preview-github-app-setup" items={['自动安装', '手动安装']}>
+<Tab value="自动安装">
+
+<Steps>
+<Step>
+
+### 在 Coolify 中启用预览权限
+
+在自动安装 GitHub App 的过程中，先把 **Preview deployment access**（预览部署访问权限）设为 **Read and update pull requests**（读取并更新 pull request），再选择 **Register with GitHub**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/1.webp" alt="自动安装 GitHub App 过程中的 Preview Deployments 权限" />
+
+Coolify 会申请 pull request 的读写权限，并为该 App 订阅 pull request 事件。
+
+</Step>
+<Step>
+
+### 完成 GitHub App 安装
+
+完成注册，并在所需的账号和仓库上安装该 GitHub App。
+
+</Step>
+<Step>
+
+### 验证事件连接
+
+打开或更新一个 pull request，然后在 Coolify 中打开 **Preview Deployments**，确认该 pull request 出现在列表中。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="手动安装">
+
+<Steps>
+<Step>
+
+### 授予 pull request 权限
+
+创建 GitHub App 时，打开 **Repository permissions**，把 **Pull requests** 设为 **Read and write**（读写）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/2.webp" alt="手动创建 GitHub App 时的 Pull request 权限设置" />
+
+</Step>
+<Step>
+
+### 订阅 pull request 事件
+
+在 **Subscribe to events** 下选择 **Pull request**，然后完成 GitHub App 的创建与安装。
+
+</Step>
+<Step>
+
+### 验证事件连接
+
+打开或更新一个 pull request，然后在 Coolify 中打开 **Preview Deployments**，确认该 pull request 出现在列表中。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+### 更新已有的 GitHub App
+
+如果创建 GitHub App 时没有授予预览权限，请先更新它再测试预览。
+
+<Steps>
+<Step>
+
+### 打开 GitHub App 的权限设置
+
+在 Coolify 中打开 **Sources**，选择对应的 GitHub App，打开 **Permissions**，然后选择 **Update**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/3.webp" alt="Coolify 中更新 GitHub App 权限的操作" />
+
+</Step>
+<Step>
+
+### 更新 GitHub 权限
+
+在 GitHub 上，将 **Repository permissions** 下的 **Pull requests** 设为 **Read and write**，并订阅 **Pull request** 事件。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/github-app/4.webp" alt="GitHub 上的 Pull request 权限与事件订阅" />
+
+</Step>
+<Step>
+
+### 接受并验证更新
+
+接受权限更新，然后打开或更新一个 pull request，确认它出现在 **Preview Deployments** 列表中。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="仓库 webhook">
+
+此方式适用于通过公开仓库 URL 或 **Private Repository (with deploy key)**（带部署密钥的私有仓库）创建的应用。
+
+<Steps>
+<Step>
+
+### 复制提供商的 webhook 信息
+
+打开 **Webhooks**。在对应的 **Webhook secret**（webhook 密钥）字段中输入一段足够长的随机值，选择 **Save changes**（保存更改），然后在 **Manual Git webhooks**（手动 Git webhook）区域复制对应仓库提供商的 URL。
+
+以 GitHub 为例，字段如下所示：
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/1.webp" alt="Coolify 中的 GitHub 手动 webhook URL 和密钥" />
+
+</Step>
+<Step>
+
+### 添加仓库 webhook
+
+将复制的 URL 和相同的密钥添加到仓库的 webhook 设置中。各提供商的具体操作路径和事件名称请参阅[手动 Git webhook](/applications/deployments/manual-webhooks#选择仓库提供商)。
+
+以 GitHub 为例，打开 **Settings > Webhooks > Add webhook**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/2.webp" alt="GitHub 仓库设置中的 Webhooks 页面" />
+
+</Step>
+<Step>
+
+### 选择 pull request 事件
+
+以 GitHub 为例，把 Coolify URL 粘贴到 **Payload URL**，输入相同的密钥，保持 **Enable SSL verification** 勾选，选择 **Let me select individual events**，然后勾选 **Pull requests**，保持 **Active** 勾选，最后点击 **Add webhook**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/3.webp" alt="已配置 pull request 事件的 GitHub webhook" />
+
+</Step>
+<Step>
+
+### 验证 webhook
+
+打开或更新一个 pull request，确认提供商显示投递成功，且 Coolify 已创建预览。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/webhook/4.webp" alt="GitHub 中生效的 pull request webhook" />
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## 配置预览域名
+
+打开 **Preview Deployments**。在 **Preview URL template** 下，**URL template** 决定生成的域名：
+
+- `{{pr_id}}` 插入 pull request 或 merge request 编号。
+- `{{random}}` 插入一个随机值。
+- `{{domain}}` 插入生产应用的域名。
+
+默认模板为 `{{pr_id}}.{{domain}}`。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/4.webp" alt="Coolify 中的 Preview URL Template 与 Load Pull Requests 控件" />
+
+例如，`{{pr_id}}.preview.example.com` 会为编号 123 的 pull request 生成 `123.preview.example.com`。
+
+<Callout type="warning" title="使用生成的子域名前先创建泛域名 DNS">
+
+要使用 `123.preview.example.com` 这类域名，需要为 `*.preview.example.com` 创建一条指向部署服务器的 `A` 或 `AAAA` 记录。
+
+</Callout>
+
+你也可以为单个预览单独填写域名。Docker Compose 预览的每个服务还可以有各自的域名。
+
+## 将预览变量与生产环境隔离
+
+Coolify 将生产环境变量和预览环境变量分成独立的两组。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/2.webp" alt="生产与预览环境变量分组" />
+
+- **Production Environment Variables** 应用于主部署。
+- **Preview Deployment Environment Variables** 应用于 pull request 和 merge request 部署。
+
+预览用的数据库、存储和外部服务请使用非生产凭据。预览容器是临时的，但写入外部服务的数据在 Coolify 删除预览后可能仍然留存。
+
+变量的作用域和构建时取值请参阅[环境变量](/applications/configuration/environment-variables)。
+
+## 载入已存在的 pull request
+
+在启用预览部署之前就已存在的 pull request，Coolify 不会自动部署。
+
+对于基于 GitHub 的应用，打开 **Preview Deployments** 并选择 **Load Pull Requests**。在 **Pull requests** 对话框中，对需要预览的每个请求点击其旁的 **Deploy preview**。若想准备好预览但不部署，可使用 **Configure**。
+
+## GitHub pull request 评论
+
+GitHub App 可以把预览部署的状态和域名以评论的形式添加到 pull request 上，并在部署状态变化时更新该评论。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/preview-deploy/3.webp" alt="Coolify 在 GitHub pull request 上的预览部署评论" />
+
+手动仓库 webhook 也能触发预览，但自动 pull request 评论需要拥有相应权限的 GitHub App。
+
+## 手动部署 Docker Image 预览
+
+对于 [Docker Image 应用](/applications/deployments/docker-image)，打开 **Preview Deployments** 并使用 **Manual preview**（手动预览）。
+
+填写：
+
+- **Preview ID:** 预览标识，用于预览的命名、域名、日志和清理
+- **Docker Tag:** 要部署的镜像标签，例如 `pr_1234`
+
+选择 **Deploy Preview**（部署预览）。当外部 CI 系统为每个 pull request 构建一个镜像标签时，这种方式非常有用。
+
+## 管理预览
+
+打开 **Preview Deployments** 查看每个预览。使用 **Preview links** 打开其域名或 Git 请求，使用 **Preview logs** 查看部署与运行日志，使用 **Preview actions** 执行生命周期操作。
+
+根据预览的状态，你可以：
+
+- 选择 **Deploy**（部署）或 **Redeploy**（重新部署）
+- 选择 **Force deploy (without cache)**（强制部署，不使用缓存）
+- 选择 **Stop**（停止）以移除其容器和其他非持久化的运行时资源
+- 选择 **Delete**（删除）以永久移除该预览部署
+
+## 验证预览生命周期
+
+1. 打开或更新一个 pull request 或 merge request。
+2. 确认 Coolify 创建了独立的预览部署。
+3. 打开预览域名并测试改动内容。
+4. 关闭或合并该请求。
+5. 确认 Coolify 移除了自动创建的预览。
+
+## 通过 API 管理预览
+
+使用 `GET /applications/{uuid}/previews` 列出预览，使用 `GET /applications/{uuid}/previews/{pull_request_id}` 查看单个预览。创建或重新部署预览需要 `deploy` 权限：
+
+```sh
+curl --request POST "https://coolify.example.com/api/v1/applications/<application-uuid>/previews" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"pull_request_id":42,"git_type":"github","force":false}'
+```
+
+使用实际托管该请求的提供商。Bitbucket 还需要提供 `commit` SHA。pull request ID 必须是不超过 `2147483647` 的正整数；无效的 ID 会返回校验错误，MCP deploy 工具也不例外。
+
+携带 `pull_request_id` 调用 `POST /deploy` 时，deploy-key 和 public-repository 类型的应用也会部署对应的 pull request 引用。Gitea 预览使用该 pull request 的 head commit。UI 中的 pull request 列表和状态更新仅支持 GitHub App 来源。
+
+请求被接受后，请检查部署历史。关闭或删除预览只会移除其自身的容器以及 Coolify 创建的网络和卷（volume）。

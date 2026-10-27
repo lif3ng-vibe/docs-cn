@@ -1,0 +1,90 @@
+---
+title: 计划任务
+description: 在选定的 Service 容器内运行循环命令，并验证其执行。
+---
+
+import { CalendarAdd, History, Settings } from 'reicon-react';
+
+# 运行 Service 计划任务
+
+计划任务让 Coolify 按重复计划在 Service 容器内运行命令。适用于框架调度器、队列维护、报表生成、缓存清理以及其他属于单个组件内部的工作。
+
+Coolify 通过运行中容器内的 shell 执行命令。计划使用 Service 部署服务器上配置的时区。
+
+<Callout type="info" title="详细的计划任务参考">
+
+本页介绍 Service 侧的工作流。[Core 中的计划任务章节](/core/automation/scheduled-tasks/overview)更详细地讲解了任务创建、管理、执行历史、输出下载、cron 行为与故障排查。
+
+</Callout>
+
+## 打开计划任务
+
+<Steps>
+<Step>
+
+### 打开 Service 页面
+
+打开 Service，选择**配置（Configuration）> Scheduled Tasks**。
+
+</Step>
+<Step>
+
+### 选择详细指南
+
+选择 **+ Add** 新建任务，或选择现有任务进行管理。完整的逐字段操作流程请遵循[Core 上的计划任务指南](/core/automation/scheduled-tasks/create-a-task)。
+
+</Step>
+<Step>
+
+### 运行首次执行
+
+在目标 Service 组件运行期间，打开任务并选择 **Execute Now**（立即执行）。
+
+在 **Recent executions** 下打开新记录。确认它成功完成，且输出或效果与命令应有的结果一致。
+
+</Step>
+</Steps>
+
+## Service 专属行为
+
+执行时，Coolify 会找到属于该 Service 的运行中应用与数据库容器，并通过 `sh -c` 在选定容器内运行已保存的命令。
+
+在遵循详细指南之前，先检查这些 Service 专属要求：
+
+- 会更改或删除数据的命令，先通过目标组件的**终端（Terminal）**测试。
+- 命令按其在容器内的实际运行方式输入；不要包含 `docker exec`。
+- 当 Service 有多个运行组件时，把 **Container name** 设为 Compose 服务名。
+- 使用不带生成的 `-<service-uuid>` 后缀的 Compose 服务名。例如，对 `worker-<service-uuid>` 选择 `worker`。
+- 计划使用 Service 部署服务器上配置的时区。
+- **Timeout (seconds)** 接受 `60` 到 `36000`，默认 `300`。
+
+当恰好只有一个组件容器在运行时，Coolify 可以在未保存容器名的情况下使用它。以下情况会导致执行失败：没有任何 Service 容器在运行；有多个容器可选却未指定名称；找不到配置的组件；命令以错误退出；或命令超出超时时间。
+
+Coolify 会在 **Recent executions** 下记录状态、耗时和捕获的输出。成功退出不代表命令产生了预期结果，必要时请验证受影响的记录、文件或外部系统。
+
+重命名或删除 Compose 服务时，请更新或删除所有以其旧名为目标的计划任务。Coolify 不会自动把任务重新指向其他组件。
+
+## 使用详细的 Core 指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '创建任务',
+      href: '/core/automation/scheduled-tasks/create-a-task',
+      description: '查看每个字段、允许的取值与创建步骤。',
+      icon: CalendarAdd,
+    },
+    {
+      title: '管理任务',
+      href: '/core/automation/scheduled-tasks/manage-tasks',
+      description: '更新、启用、禁用、运行或删除任务。',
+      icon: Settings,
+    },
+    {
+      title: '查看执行历史',
+      href: '/core/automation/scheduled-tasks/execution-history',
+      description: '检查状态、耗时、命令输出与日志。',
+      icon: History,
+    },
+  ]}
+/>

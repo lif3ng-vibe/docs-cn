@@ -1,0 +1,13 @@
+{
+  "title": "Integrations",
+  "root": true,
+  "pages": [
+    "---网络---",
+    "networking/cloudflare/tunnels",
+    "---安全---",
+    "security/secret-managers",
+    "security/using-secret-managers",
+    "security/cloudflare/ddos-protection",
+    "external:[CrowdSec](https://www.crowdsec.net/blog/securing-automated-app-deployment-crowdsec-and-coolify)"
+  ]
+}

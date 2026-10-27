@@ -1,0 +1,118 @@
+---
+title: 服务器补丁
+description: 在 Coolify 控制台中检查操作系统软件包更新，并安装选定的更新。
+---
+
+# 修补服务器软件包
+
+**Server Patching**（服务器补丁）让你可以在 Coolify 控制台中检查操作系统软件包更新并安装。
+
+Coolify 不会自动安装更新。单个软件包还是全部可用包、何时更新，都由你决定。
+
+<Callout type="error" title="安装前先评估更新">
+Docker、内核和系统更新可能重启服务，或要求重启服务器。选择 **Update All Packages**（更新所有软件包）之前，请备份重要数据并选定维护窗口。
+
+较新的软件包版本（尤其是 Docker 版本）可能引入破坏 Coolify 或应用的变更。更新前请仔细阅读发布说明。
+</Callout>
+
+---
+
+## 更新服务器软件包
+
+<Steps>
+<Step>
+
+### 打开 Server Patching
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/server-patching/server-patching-page.webp" alt="Coolify 的 Server Patching 页面" />
+
+1. 在 Coolify 侧边栏打开 **Servers**。
+2. 选择要更新的服务器。
+3. 在服务器菜单中选择 **Security**（安全）。
+4. 选择 **Server Patching**。
+
+</Step>
+<Step>
+
+### 检查更新
+
+选择 **Check for Updates**（检查更新）。
+
+Coolify 会连接服务器并刷新软件包列表。检查完成前保持页面打开。
+
+有可用更新时，页面会列出软件包名称和可安装的版本。如果检查成功但没有显示任何软件包，说明服务器已是最新。
+
+</Step>
+<Step>
+
+### 评估软件包
+
+安装任何东西之前：
+
+1. 阅读更新列表中的软件包名称。
+2. 查看你运行的重要服务的发布说明。
+3. 特别留意 Docker 和内核软件包。
+4. 为重要的应用和数据库创建最新备份。
+
+对某个软件包没有把握时，在维护窗口内更新，或交给服务器管理员处理。
+
+</Step>
+<Step>
+
+### 安装更新
+
+选择以下方式之一：
+
+- 点击某个软件包旁的 **Update**（更新），只安装该更新。
+- 选择 **Update All Packages**（更新所有软件包），安装列表中的全部内容。
+
+Coolify 要求确认时完成确认。更新运行期间，活动窗口会显示服务器的输出。
+
+命令执行完成前不要关闭活动窗口。
+
+</Step>
+<Step>
+
+### 再次检查服务器
+
+更新完成后：
+
+1. 再次选择 **Check for Updates**。
+2. 确认已安装的软件包不再出现在列表中。
+3. 回到 **Servers**，确认服务器可达。
+4. 打开该服务器上承载的重要应用和数据库。
+5. 如果更新需要重启，用你常用的服务器管理方式重启服务器，并等待它重新连上 Coolify。
+
+</Step>
+</Steps>
+
+---
+
+## 更新通知
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/server-patching/notification-setting.webp" alt="Server Patching 通知设置" />
+
+Coolify 每周检查一次已连接服务器的软件包更新。有可用更新或检查失败时，会发送 **Server Patching** 通知。
+
+查看通知设置：
+
+1. 在 Coolify 中打开 **Notifications**（通知）。
+2. 选择你使用的通知渠道。
+3. 找到 **Server Patching**。
+4. 开启或关闭该通知，并保存渠道设置。
+
+每周检查只报告可用更新，不会安装它们。
+
+---
+
+## 支持的软件包管理器
+
+Server Patching 目前支持 APK、APT、DNF、Pacman 和 Zypper。Coolify 通过读取服务器上的 `/etc/os-release` 来选择软件包管理器。
+
+| 软件包管理器 | 操作系统 |
+| --- | --- |
+| APK | Alpine Linux |
+| APT | Ubuntu, Debian, Raspberry Pi OS, Pop!_OS, Linux Mint, Zorin OS |
+| DNF | Fedora, CentOS, RHEL, Rocky Linux, AlmaLinux, Oracle Linux, Amazon Linux |
+| Pacman | Arch Linux, Manjaro, EndeavourOS |
+| Zypper | SLES, openSUSE Leap, openSUSE Tumbleweed |

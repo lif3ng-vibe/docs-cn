@@ -1,0 +1,104 @@
+---
+title: 管理数据库备份
+description: 用 Coolify CLI 配置、执行并验证计划的数据库备份。
+---
+
+# 用 CLI 管理数据库备份
+
+本工作流为现有数据库创建备份配置、立即执行一次，并验证执行结果。
+
+## 开始之前
+
+你需要：
+
+- 一个已验证的 CLI 上下文，具备管理该数据库的权限
+- 数据库 UUID
+- 如需把备份同时上传到 S3 兼容存储，还需要 S3 存储 UUID
+- 一个 cron 表达式和保留策略
+
+先找到数据库和可用的 S3 目标：
+
+```sh
+coolify context verify
+coolify database list
+coolify s3 list
+```
+
+<Steps>
+<Step>
+
+### 创建备份配置
+
+下面的示例每天 02:00 执行一次，本地备份保留 7 天，并上传一份副本到 S3：
+
+```sh
+coolify database backup create <database-uuid> \
+  --frequency "0 2 * * *" \
+  --enabled \
+  --save-s3 \
+  --s3-storage-uuid <s3-storage-uuid> \
+  --retention-days-locally 7
+```
+
+数量、时长、存储大小、超时、数据库筛选以及 S3 保留等选项，参见 [Backup create](/cli/command-reference/commands/database/backup-create)。
+
+响应中包含备份配置的 UUID，请保存下来，后续更新、手动执行和查看执行历史都会用到。
+
+</Step>
+<Step>
+
+### 立即执行备份
+
+不必等下一次计划时间，直接触发新配置：
+
+```sh
+coolify database backup trigger <database-uuid> <backup-uuid>
+```
+
+手动触发备份不会改变其计划。
+
+</Step>
+<Step>
+
+### 验证执行结果
+
+列出该配置的执行记录：
+
+```sh
+coolify database backup executions <database-uuid> <backup-uuid>
+```
+
+确认最近一次执行成功完成。启用 S3 存储时，还要确认预期的备份已出现在配置的存储桶中。
+
+</Step>
+<Step>
+
+### 调整保留策略或计划
+
+更新现有配置：
+
+```sh
+coolify database backup update <database-uuid> <backup-uuid> \
+  --frequency "0 3 * * *" \
+  --retention-days-locally 14
+```
+
+该命令只修改你提供的标志；未提供任何更新标志时会报错。
+
+</Step>
+<Step>
+
+### 移除备份配置
+
+```sh
+coolify database backup delete <database-uuid> <backup-uuid>
+```
+
+删除后，列出备份配置，确认被移除的 UUID 已不存在：
+
+```sh
+coolify database backup list <database-uuid>
+```
+
+</Step>
+</Steps>

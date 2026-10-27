@@ -1,0 +1,12 @@
+{
+  "title": "故障排查",
+  "root": true,
+  "pages": [
+    "installation",
+    "applications",
+    "dashboard",
+    "docker",
+    "server",
+    "dns-and-domains"
+  ]
+}

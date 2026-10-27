@@ -1,0 +1,50 @@
+---
+title: 什么是 MCP？
+description: 了解 Coolify 的 Model Context Protocol 服务器，以及 AI 客户端如何访问你的 Coolify 资源。
+---
+
+import { LaptopCode, Settings, Sparkles } from 'reicon-react';
+
+# 什么是 MCP？
+
+Coolify 的 Model Context Protocol（MCP）服务器让兼容的 AI 客户端能够通过一条标准 HTTP 连接，检查并操作 Coolify 团队中的资源。
+
+MCP 为 AI 客户端提供对 Coolify 数据的结构化访问。客户端可以询问基础设施状况、查找资源、检查部署、读取受支持的日志，并执行其 API 令牌所允许的生命周期操作。
+
+## MCP 提供什么
+
+| 能力 | 用途 |
+| :--- | :--- |
+| 工具（Tools） | 让 AI 客户端调用 Coolify 操作，例如列出应用或启动资源。 |
+| 资源（Resources） | 提供可寻址的只读数据，例如基础设施概览或应用摘要。 |
+| 提示（Prompts） | 为排查应用问题、解释部署失败等任务提供引导式工作流。 |
+| Streamable HTTP | 让 MCP 客户端经由 `/mcp` 连接 Coolify，无需本地 MCP 进程。 |
+
+## MCP 不做什么
+
+MCP 不会绕过 Coolify 的身份验证、团队作用域、API 访问、令牌权限或敏感值脱敏。每个请求都使用 API 令牌，每个资源都属于该令牌绑定的团队。
+
+## 继续学习
+
+<CoolNextSteps
+  cards={[
+    {
+      title: 'MCP 的工作原理',
+      href: '/mcp/how-mcp-works',
+      description: '了解连接、身份验证、团队作用域与响应边界。',
+      icon: LaptopCode,
+    },
+    {
+      title: '设置 MCP',
+      href: '/mcp/setup',
+      description: '启用 MCP、创建限定作用域的令牌并连接 AI 客户端。',
+      icon: Settings,
+    },
+    {
+      title: 'MCP 能力',
+      href: '/mcp/capabilities/overview',
+      description: '按 Coolify 任务查找工具、资源与提示。',
+      icon: Sparkles,
+    },
+  ]}
+/>

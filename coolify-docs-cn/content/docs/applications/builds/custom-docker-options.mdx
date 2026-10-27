@@ -1,0 +1,99 @@
+---
+title: 自定义 Docker 选项
+description: 为 Coolify 应用添加受支持的 Docker 运行选项，而无需替换其 Dockerfile。
+---
+
+# 自定义 Docker 选项
+
+使用 **常规（General）> 自定义 Docker 选项（Custom Docker Options）**，向启动应用容器的命令添加受支持的参数。
+
+仅当选项属于容器运行时本身时才使用此字段。镜像构建请写在 Dockerfile 中；CPU、内存、GPU、端口、存储和环境变量等配置，在提供专用设置时应优先使用 Coolify 的对应设置。
+
+## 受支持的选项
+
+Coolify 接受以下选项：
+
+- `--ip`
+- `--ip6`
+- `--shm-size`
+- `--dns`
+- `--cap-add`
+- `--cap-drop`
+- `--security-opt`
+- `--sysctl`
+- `--device`
+- `--ulimit`
+- `--init`
+- `--privileged`
+- `--gpus`
+- `--hostname`
+- `--entrypoint`
+- `--add-host`
+- `--pids-limit`
+- `--read-only`
+- `--runtime`
+- `--tmpfs`
+
+Coolify 只会把上述列出的选项转换为生成的容器配置。其他 Docker run 选项（例如 `--network`、`--name`、`-v`、`-p` 和 `-e`）不会被应用，因为它们可能与 Coolify 管理的网络、存储或生命周期配置发生冲突。部署日志中会出现一条警告，列出每个未被应用的选项。
+
+这类取值请改用 Coolify 的专用设置：卷（volume）用 **持久化存储（Persistent Storage）**，`-e` 用 **环境变量（Environment Variables）**，网络相关配置则用网络与端口设置。
+
+## 使用自定义 seccomp 配置文件
+
+把配置文件放到服务器上，然后用绝对路径引用它：
+
+```sh
+--security-opt seccomp=/etc/docker/seccomp-profile.json
+```
+
+如果服务器上不存在该文件，部署会失败并报 `bind source path does not exist` 错误。
+
+## 添加选项
+
+输入一个或多个参数：
+
+```sh
+--shm-size 1g --init
+```
+
+保存应用并重新部署，然后查看部署日志和容器行为。
+
+## 覆盖入口点
+
+当镜像中已包含所需的可执行文件，但其默认入口点不适合该应用时，可以使用 `--entrypoint`：
+
+```sh
+--entrypoint /app/start-worker.sh
+```
+
+Coolify 接受以下入口点写法：
+
+```sh
+--entrypoint /bin/sh
+--entrypoint="/app/start-worker.sh"
+--entrypoint "sh -c 'php artisan horizon'"
+```
+
+当入口点包含空格或参数时，请使用带引号的形式。Coolify 会将该值转换为生成的部署配置所使用的 Compose `entrypoint` 字段。
+
+入口点可执行文件必须存在于镜像内部。如果它启动的进程退出，Docker 会将应用容器视为已停止。
+
+覆盖入口点可以用同一个镜像运行不同的进程，例如用队列工作进程（queue worker）代替 Web 服务器：
+
+```sh
+--entrypoint "sh -c 'npm run worker'"
+```
+
+也可以运行镜像自带的初始化脚本：
+
+```sh
+--entrypoint /app/custom-init.sh
+```
+
+只填写一个 `--entrypoint` 值。如果需要传递多个命令参数，请把它们放进带引号的值里，而不要重复该选项。
+
+<Callout type="warning" title="特权选项会扩大容器的访问权限">
+
+`--privileged`、`--device` 以及添加 Linux 能力（capabilities）等选项会削弱容器的隔离边界。只授予应用真正需要的访问权限，并确认镜像来源可信。
+
+</Callout>

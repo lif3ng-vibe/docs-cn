@@ -1,0 +1,90 @@
+---
+title: Neon Object Storage
+description: 使用分支端点、存储桶、区域和访问密钥，把 Neon Object Storage 配置为 S3 兼容的备份目标。
+---
+
+# Neon Object Storage
+
+Neon Object Storage 提供一个 S3 兼容端点，可用于 Coolify 备份。
+
+<Callout type="info" title="存储桶属于某个分支">
+Neon Object Storage 的存储桶作用域限定于一个 Neon 分支，每个分支都有自己的 S3 端点。请选择应保存备份的分支（通常是生产分支），并使用该分支的端点和凭证。
+</Callout>
+
+## 配置 Neon Object Storage
+
+<Steps>
+<Step>
+
+### 创建存储桶
+
+在 [Neon 控制台](https://console.neon.tech)中打开你的项目，选择分支，然后打开 **Object storage** 选项卡。选择 **+ Create bucket**，输入名称，保持访问级别为 **private**，然后选择 **Create**。
+
+你也可以用 [Neon CLI](https://neon.com/docs/storage/buckets#创建存储桶) 创建存储桶：
+
+```bash
+neon buckets create coolify-backups
+```
+
+</Step>
+<Step>
+
+### 复制 S3 连接信息
+
+选择 **Connect** 并打开 **Storage** 选项卡。切换到 **.env** 选项卡，复制以下四个值：
+
+| Neon 值 | 示例 |
+|---|---|
+| `AWS_ENDPOINT_URL_S3` | `https://br-cool-darkness-a1b2c3d4.storage.c-1.us-east-2.aws.neon.tech` |
+| `AWS_ACCESS_KEY_ID` | `nak_live_...` |
+| `AWS_SECRET_ACCESS_KEY` | `nsk_live_...` |
+| `AWS_REGION` | `us-east-2` |
+
+如需为 Coolify 单独创建一对访问密钥，请改用 Neon CLI：
+
+```bash
+neon credentials create --scope storage:read --scope storage:write --name coolify
+```
+
+用 `token_id` 作为访问密钥，`s3_secret_access_key` 作为秘密密钥。
+
+<Callout type="success" title="保存两把密钥">
+请把访问密钥和秘密密钥保存到安全的位置。
+</Callout>
+
+</Step>
+<Step>
+
+### 把 Neon Object Storage 添加到 Coolify
+
+在 Coolify 中打开 **S3 Storage**，选择 **New storage**。填写：
+
+| Coolify 字段 | Neon 值 |
+|---|---|
+| **Protocol** | `https`。 |
+| **Host** | 来自 `AWS_ENDPOINT_URL_S3` 的主机名，去掉 `https://`。例如 `br-cool-darkness-a1b2c3d4.storage.c-1.us-east-2.aws.neon.tech`。 |
+| **Port** | 留空。 |
+| **Path** | 留空。 |
+| **Bucket** | 在 Neon 中创建的存储桶。 |
+| **Region** | `AWS_REGION` 的值，例如 `us-east-2`。 |
+| **Access Key** | `AWS_ACCESS_KEY_ID` 的值。 |
+| **Secret Key** | `AWS_SECRET_ACCESS_KEY` 的值。 |
+
+选择 **Validate Connection & Continue**。
+
+<Callout type="warning" title="不要把存储桶名称附加到端点上">
+**Host** 中只填写分支主机名，**Bucket** 中只填写存储桶名称。不要把存储桶名称拼接到端点后面。
+</Callout>
+
+</Step>
+</Steps>
+
+## 验证连接
+
+Coolify 通过一次 `ListObjectsV2` 请求验证连接，因此存储桶必须在验证之前就已存在。
+
+Neon Object Storage 支持 Coolify 备份所用的 S3 操作：列出、上传（包括分段上传）、用于恢复的下载，以及删除。
+
+<Callout type="warning" title="单个备份文件上限：5 GiB">
+Neon Object Storage 将每个对象限制为 **5 GiB**（包括分段上传）。Coolify 会把每个备份文件作为单个对象上传，因此超过 5 GiB 的文件无法存入 Neon，即使连接验证成功也一样。如果备份文件可能超过此上限，请使用其他 S3 兼容提供商。参见 [Neon 的存储限制](https://neon.com/docs/storage/overview#limits)。
+</Callout>

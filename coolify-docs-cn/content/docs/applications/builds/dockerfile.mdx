@@ -1,0 +1,198 @@
+---
+title: Dockerfile
+description: 使用仓库自带的 Dockerfile 或直接在 Coolify 中填写的 Dockerfile 构建应用镜像。
+---
+
+import { BranchUp, Code } from 'reicon-react';
+
+# Dockerfile
+
+当你需要精确控制基础镜像、安装的软件包、复制的文件、构建阶段、运行时用户以及容器默认命令时，就使用 Dockerfile。
+
+Coolify 可以从 Git 仓库读取 Dockerfile，也可以在不使用 Git 的情况下直接保存一份。部署时，Coolify 按其中的指令构建镜像，再创建一个容器，并把应用的域名、环境变量、存储、网络、健康检查和运行时设置应用上去。
+
+## 选择 Dockerfile 的存放位置
+
+| 方式 | 适用场景 | Dockerfile 位置 |
+| :--- | :--- | :--- |
+| Git 仓库 | 构建需要应用源码或其他仓库文件。 | 由**基础目录**（Base Directory）和 **Dockerfile Location** 组合而成的路径。 |
+| 不使用 Git 的 Dockerfile | 不需要检出仓库文件即可构建镜像。 | 保存在 Coolify 的 **常规（General）> Dockerfile** 中。 |
+
+不使用 Git 填写的 Dockerfile 没有仓库构建上下文（build context），其 `COPY` 和 `ADD` 指令无法读取仓库中的应用文件。
+
+## 使用 Dockerfile 部署
+
+按照 Dockerfile 及其构建上下文的存放位置，选择对应的方式。
+
+<Tabs id="dockerfile-source" items={['Git 仓库', '不使用 Git']}>
+<Tab value="Git 仓库" icon={BranchUp}>
+
+仓库自带的 Dockerfile 可以从仓库复制应用文件，并能使用基于 Git 的自动部署。
+
+<Steps>
+<Step>
+
+### 连接仓库
+
+打开目标项目和环境，然后选择 **+ New**（新建）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/1.webp" alt="Coolify 项目中的 New Resource（新建资源）按钮" />
+
+选择公开仓库、部署密钥（deploy key）或受支持的 Git App。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/2.webp" alt="Dockerfile 应用的 Git 仓库来源选项" />
+
+对于公开仓库，粘贴其 HTTPS URL，然后选择 **Check Repository**（检查仓库）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/3.webp" alt="Dockerfile 应用的公开仓库 URL 输入框" />
+
+</Step>
+<Step>
+
+### 选择 Dockerfile
+
+创建时在 **Build pack**（构建包）中选择 **Dockerfile**。创建之后，该选择对应 **常规（General）> 构建流水线（Build pipeline）** 下的**构建策略（Build strategy）**。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/4.webp" alt="Build Pack 选择器中的 Dockerfile 选项" />
+
+</Step>
+<Step>
+
+### 配置构建上下文
+
+把**基础目录**（Base Directory）设为 Docker 应作为构建上下文使用的仓库目录，把 **Dockerfile Location** 设为 Dockerfile 相对于该目录的路径。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/5.webp" alt="Dockerfile 应用的 Branch（分支）和 Base Directory（基础目录）字段" />
+
+</Step>
+<Step>
+
+### 配置运行时
+
+继续进入应用，把 **Ports Exposes**（暴露端口）设为进程使用的内部端口。
+
+进程必须监听 `0.0.0.0` 而不仅是 `127.0.0.1`，Coolify 代理才能访问到它。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/6.webp" alt="Dockerfile 应用的域名与暴露端口设置" />
+
+添加所需的域名、环境变量和持久化存储。不要把生产机密（Secret）复制进 Dockerfile 或镜像层。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/7.webp" alt="Dockerfile 应用的 Environment Variables（环境变量）页面" />
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**（部署），并在部署日志中查看 Docker 构建各阶段。
+
+容器启动后，验证应用日志、内部端口、健康状态和公开域名。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="不使用 Git" icon={Code}>
+
+当仅凭 Dockerfile 指令就能构建完整镜像、不需要仓库中的应用文件时，使用这种方式。
+
+<Steps>
+<Step>
+
+### 选择 Dockerfile
+
+打开目标项目和环境，选择 **+ New**，然后选择 **Dockerfile**。
+
+</Step>
+<Step>
+
+### 填写 Dockerfile
+
+把完整的 Dockerfile 粘贴进编辑器，例如：
+
+```dockerfile
+FROM nginx:alpine
+RUN printf '<h1>Hello from Coolify</h1>' > /usr/share/nginx/html/index.html
+EXPOSE 80
+```
+
+选择 **Save**（保存）。Coolify 会创建一个应用并打开其配置。
+
+Coolify 会把第一条 `EXPOSE` 指令作为 **Ports Exposes** 的初始值。如果 Dockerfile 中没有 `EXPOSE` 指令，初始端口为 `80`。
+
+</Step>
+<Step>
+
+### 配置应用
+
+打开 **General**（常规）编辑已保存的 **Dockerfile**，或修正 **Ports Exposes**。
+
+添加所需的域名、运行时环境变量、存储、健康检查和资源限制。这些运行时设置不会被写进镜像。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**，并在部署日志中查看 Docker 构建各阶段。
+
+确认容器已启动，然后验证应用日志、内部端口、健康状态和公开域名。
+
+</Step>
+</Steps>
+
+这类应用没有 Git 来源，因此 Git push 事件和 pull request 预览部署（preview deployment）均不适用。镜像指令发生变化时，编辑已保存的 Dockerfile 并重新部署。
+
+</Tab>
+</Tabs>
+
+## 构建参数
+
+Coolify 可以把已配置的构建变量作为 Docker 构建参数（build arguments）注入。
+
+当 Dockerfile 自行声明并消费所有必需的 `ARG` 时，在 **高级（Advanced）> 构建（Build）** 下把 **Build arguments**（构建参数）设为 **Managed manually in Dockerfile**（由 Dockerfile 手动管理）。
+
+对于基于 Git 的 Dockerfile 应用，默认情况下 `SOURCE_COMMIT` 不参与构建，这样层未变化的提交可以复用缓存。仅当镜像内容需要用到提交值时，才在 **高级（Advanced）> 构建（Build）** 下把 **Source commit availability**（源提交可用性）设为 **Available during build**（构建期间可用）。
+
+在 Docker BuildKit 可用时，敏感的构建期取值请使用 **Build secrets > Docker BuildKit secrets**。把凭据传给构建之前，请先阅读 [环境变量](/applications/configuration/environment-variables#构建与运行时作用域)。
+
+## 镜像健康检查
+
+Dockerfile 中可以定义：
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl --fail http://localhost:3000/health || exit 1
+```
+
+镜像内必须包含检查所用的命令。
+
+也可以改为在应用的 **Healthcheck**（健康检查）下配置。优先级与路由行为请参阅 [健康检查](/applications/configuration/health-checks)。
+
+## 部署命令
+
+**Pre-deployment**（部署前命令）在当前应用容器被替换前运行；**Post-deployment**（部署后命令）在新部署的容器中运行。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/8.webp" alt="部署前与部署后命令字段" />
+
+当前不存在容器时（包括首次部署），Coolify 会跳过部署前命令。部署前命令失败会中止部署。
+
+Coolify 会先标记部署完成，再运行部署后命令。部署后命令失败会记录在部署日志中，但不会改变部署已成功的状态。
+
+请使用可以重复执行的命令，并先在非生产环境中测试数据库迁移等有状态操作。
+
+## Node.js 多核扩展
+
+普通的 Node.js 进程只会使用一个 CPU 核。当 Node.js 或 Bun 应用需要通过一次 Dockerfile 部署利用多个核时，请参阅 [Node.js 多核扩展](/knowledge-base/nodejs-multi-core-scaling)。
+
+## 排查运行时问题
+
+如果构建成功但域名无法访问：
+
+1. 检查 **Runtime Logs**（运行日志），看是否有进程退出或端口绑定错误
+2. 确认进程监听 `0.0.0.0`
+3. 确认 **Ports Exposes** 中填有内部监听端口
+4. 在 **Terminal**（终端）内验证健康检查请求
+5. 当代理没有健康目标时，按照 [无可用服务器](/troubleshoot/applications/no-available-server) 排查
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/dockerfile/9.webp" alt="域名无法访问的应用的端口配置" />

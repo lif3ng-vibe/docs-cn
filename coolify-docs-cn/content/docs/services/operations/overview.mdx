@@ -1,0 +1,82 @@
+---
+title: 概览
+description: 部署、更新、监控并保护一个 Docker Compose Service。
+---
+
+import { BranchUp, BrowserTerminal, Refresh23 } from 'reicon-react';
+
+# 运维 Service
+
+Service 部署完成后，Coolify 提供栈生命周期操作、部署输出、容器日志、终端访问、计划任务、组件控制与资源操作。
+
+## 知道去哪里找
+
+| 页面或控件 | 用途 |
+| :--- | :--- |
+| **Configuration** | 修改 Compose 定义、组件、环境变量、存储与自动化。 |
+| **Deployment output** | 跟踪当前操作的镜像拉取、生成配置、Compose 启动与命令失败。 |
+| **Logs** | 读取 Service 容器的 stdout 和 stderr。 |
+| **Terminal** | 当你的角色有终端权限时，在选定的运行容器中打开 shell。 |
+| **Component Settings** | 修改单个组件的域名、镜像、数据库公开访问、状态排除或日志转发行为。 |
+| **Update Service** | 更改镜像版本，合并所需的 Compose 或环境更新。 |
+| **Troubleshooting** | 诊断失败的部署、降级的组件、配置差异、连接失败或域名错误。 |
+| **Scheduled Tasks** | 在选定的组件容器内按计划运行循环命令。 |
+| **Resource Operations** | 克隆 Service，或在项目与环境之间移动。 |
+| **Danger Zone** | 永久删除 Service 及选定的 Docker 资源。 |
+
+## 选择生命周期操作
+
+| 目标 | 操作 | Coolify 做什么 |
+| :--- | :--- | :--- |
+| 部署新建或已停止的 Service | **Deploy** | 拉取配置的镜像，写入生成的 Compose 与 `.env` 文件，并运行栈。 |
+| 重建运行中的栈但不打算更新镜像 | **Restart** | 先停止当前容器，再从已保存配置启动栈，不执行 Compose pull。 |
+| 拉取 Compose 中保存的镜像标签并重建栈 | **Advanced > Pull Latest Images & Restart** | 执行 Compose pull，然后重建栈。 |
+| 让栈下线但不删除其配置 | **Stop** | 停止并移除组件容器。持久化卷与 Service 资源保持不变。 |
+| 从卡住或降级的部署中恢复 | **Advanced > Force Restart** 或 **Force Deploy** | 必要时把进行中的部署记录标记为失败，并启动强制部署流程。仅在检查过当前操作和日志后使用。 |
+
+<Callout type="warning" title="拉取镜像就是一次升级">
+
+可变标签可能解析到与当前运行镜像不同的软件。在生产环境选择 **Pull Latest Images & Restart** 之前，请阅读上游发行说明、备份有状态组件，并确认版本兼容性。
+
+</Callout>
+
+## 保护 Service 状态
+
+<Callout type="warning" title="容器文件系统是临时的">
+
+当 Coolify 重建容器时，未挂载为持久卷的数据可能消失。在依赖 Service 生命周期操作之前，先识别并备份每个有状态组件。
+
+</Callout>
+
+数据库使用具备数据库感知能力的备份，文件数据使用存储备份。并在 Service 服务器之外保留一份经过测试的副本。
+
+## 运行循环命令
+
+必须按计划在某个 Service 容器内运行的命令，使用**配置（Configuration）> Scheduled Tasks**。多容器 Service 需要填写 Compose 服务名，Coolify 才能选中正确的运行容器。
+
+频率、超时、目标、手动执行与验证的细节，请遵循[计划任务](/services/operations/scheduled-tasks)。
+
+## 继续运维 Service
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '更新 Service',
+      href: '/services/operations/update-service',
+      description: '安全地测试并应用镜像、Compose 与环境变更。',
+      icon: Refresh23,
+    },
+    {
+      title: '克隆或移动 Service',
+      href: '/services/operations/resource-operations',
+      description: '更改目标或仪表盘组织归属。',
+      icon: BranchUp,
+    },
+    {
+      title: '排查 Service 问题',
+      href: '/services/operations/troubleshooting',
+      description: '按分支处理失败的部署、组件、连接或域名。',
+      icon: BrowserTerminal,
+    },
+  ]}
+/>

@@ -1,0 +1,100 @@
+---
+title: 用 CLI 实现自动化
+description: 在脚本和 CI 任务中使用 Coolify CLI 的上下文、JSON 输出、批量部署和退出状态码。
+---
+
+# 用 Coolify CLI 实现自动化
+
+CLI 支持多个 Coolify 实例、结构化输出，以及失败命令返回非零退出状态。凭借这些特性，脚本和 CI 任务无需解析人类可读的表格，就能检查资源并发起部署。
+
+<Steps>
+<Step>
+
+### 配置独立的上下文
+
+为每个 Coolify 实例保存一个上下文：
+
+```sh
+coolify context add production https://coolify.example.com <production-token>
+coolify context add staging https://staging-coolify.example.com <staging-token>
+coolify context use production
+```
+
+为单条命令临时使用其他上下文，而不改变默认值：
+
+```sh
+coolify --context staging resource list
+```
+
+在自动化中使用每个上下文之前，先逐一验证：
+
+```sh
+coolify --context production context verify
+coolify --context staging context verify
+```
+
+</Step>
+<Step>
+
+### 获取结构化输出
+
+脚本中使用紧凑的 JSON：
+
+```sh
+coolify --format json resource list
+```
+
+开发或调试脚本时使用格式化 JSON：
+
+```sh
+coolify --format pretty deploy list
+```
+
+`table` 是交互式终端的默认格式。自动化中不要解析表格列，因为其显示方式可能变化。
+
+</Step>
+<Step>
+
+### 部署多个资源
+
+用逗号分隔的资源名发起批量部署：
+
+```sh
+coolify --context production deploy batch api,worker,frontend
+```
+
+仅当每个指定资源都必须在未检测到变更的情况下也执行部署时，才加 `--force`：
+
+```sh
+coolify --context production deploy batch api,worker,frontend --force
+```
+
+验证产生的部署：
+
+```sh
+coolify --context production --format json deploy list
+```
+
+</Step>
+<Step>
+
+### 安全地处理失败
+
+CLI 命令失败时返回非零退出状态，shell 脚本和 CI 任务因此可以立即中止：
+
+```sh
+set -e
+
+coolify --context production context verify
+coolify --context production deploy name api
+```
+
+在自动化环境中请遵守以下限制：
+
+- 把 API 令牌存放在 CI 的机密管理器中，不要放在仓库文件或命令参数里。
+- 不要在共享日志中使用 `--show-sensitive`。
+- `--debug` 只在排查诊断时使用，因为它会在输出中加入运维细节。
+- 只给上下文令牌授予该任务所需的权限。
+
+</Step>
+</Steps>

@@ -1,0 +1,214 @@
+---
+title: 手动 Git Webhooks
+description: 为通过公开仓库 URL 或部署密钥接入的应用配置仓库事件。
+---
+
+# 手动 Git webhook
+
+手动 Git webhook 让 GitHub、GitLab、Bitbucket 或 Gitea 在仓库发生变化时通知 Coolify。当应用是通过公开仓库 URL 或 **Private Repository (with deploy key)**（带部署密钥的私有仓库）创建时，就需要用到它。
+
+通过官方 Git App 接入的应用由该集成接收提供商事件，无需配置手动 Git webhook。
+
+<Callout type="info" title="部署 webhook 是另一回事">
+
+**Deploy webhook URL**（部署 webhook URL）用于在外部工作流携带 API 令牌调用 Coolify 时启动部署，它并不是仓库 webhook。如果需要 CI 直接调用 Coolify，请参阅[自动部署](/applications/deployments/automatic-deployments)并选择“外部工作流”。
+
+</Callout>
+
+## 选择仓库提供商
+
+每个提供商都有各自的 URL 和密钥，位于 **Webhooks** 页的 **Manual Git Webhooks**（手动 Git webhook）区域。只需配置实际托管仓库的那一家。新建或修改后的密钥必须至少包含 16 个字符，可以用密钥字段旁的生成器生成随机值，再把同一个值保存到 Git 提供商处。
+
+对于生产部署，请选择提供商的 push 事件，并在 **高级 > 部署**（Advanced > Deployment）的 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署）。如果要使用[预览部署](/applications/deployments/preview-deployments)，还需要勾选下文列出的 pull request 或 merge request 事件。
+
+<Tabs id="manual-git-webhook-provider" items={['GitHub', 'GitLab', 'Bitbucket', 'Gitea']}>
+<Tab value="GitHub">
+
+<Steps>
+<Step>
+
+### 启用自动分支部署
+
+打开应用，进入 **高级 > 部署**（Advanced > Deployment）。如果推送到已配置分支时需要自动部署，在 **Auto deploy** 中选择 **Deploy on push (webhooks)**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/1.webp" alt="应用高级设置中已启用 Auto deploy" />
+
+</Step>
+<Step>
+
+### 复制 GitHub webhook 信息
+
+打开 **Webhooks**。在 **GitHub** 区域的 **Webhook secret**（webhook 密钥）中输入一段足够长的随机值，选择 **Save changes**（保存更改），然后复制 **Manual Git webhooks** 下方的 **GitHub** URL。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/2.webp" alt="Coolify 中的 GitHub 手动 webhook URL 和密钥" />
+
+请妥善保管该密钥。GitHub 签署 webhook 投递时必须使用相同的值。
+
+</Step>
+<Step>
+
+### 在 GitHub 上添加 webhook
+
+打开 GitHub 仓库，选择 **Settings > Webhooks > Add webhook**，然后填写：
+
+- **Payload URL:** 从 Coolify 复制的 GitHub URL
+- **Content type:** `application/json` 或 `application/x-www-form-urlencoded`
+- **Secret:** 保存到 Coolify 的那个值
+
+保持 **Enable SSL verification** 处于勾选状态。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/3.webp" alt="GitHub 仓库设置中的 Add webhook 按钮" />
+
+</Step>
+<Step>
+
+### 选择事件
+
+如果只需要已配置分支的自动部署，选择 **Just the push event**。
+
+如果应用还使用预览部署，选择 **Let me select individual events**，然后勾选 **Pushes** 和 **Pull requests**。保持 **Active** 勾选，再点击 **Add webhook**。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/4.webp" alt="GitHub webhook 事件与密钥设置" />
+
+</Step>
+<Step>
+
+### 验证 webhook
+
+向应用的已配置分支推送一个提交。打开 Coolify 的 **Deployment Logs**（部署日志），确认出现了 webhook 部署记录。
+
+GitHub 也会在 **Settings > Webhooks** 下显示该 webhook 及其最近的投递记录。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/5.webp" alt="GitHub 仓库设置中已配置的 webhook" />
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="GitLab">
+
+<Steps>
+<Step>
+
+### 复制 GitLab webhook 信息
+
+打开 Coolify 的 **Webhooks**。在 **GitLab** 区域的 **Webhook secret** 中输入一段足够长的随机值，选择 **Save changes**，然后复制 **GitLab** URL。
+
+</Step>
+<Step>
+
+### 在 GitLab 上添加 webhook
+
+打开 GitLab 项目，选择 **Settings > Webhooks**。将 Coolify URL 粘贴到 **URL**，并在 **Secret token** 中输入相同的值。
+
+</Step>
+<Step>
+
+### 选择事件
+
+选择 **Push events** 用于自动分支部署。如果应用使用预览部署，还需勾选 **Merge request events**，然后添加 webhook。
+
+</Step>
+<Step>
+
+### 启用并验证部署
+
+在 Coolify 中打开 **高级 > 部署**，在 **Auto deploy** 中选择 **Deploy on push (webhooks)**，然后推送到已配置的分支。打开 **Deployment Logs**，确认出现了 webhook 部署记录。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="Bitbucket">
+
+<Steps>
+<Step>
+
+### 复制 Bitbucket webhook 信息
+
+打开 Coolify 的 **Webhooks**。在 **Bitbucket** 区域的 **Webhook secret** 中输入一段足够长的随机值，选择 **Save changes**，然后复制 **Bitbucket** URL。
+
+</Step>
+<Step>
+
+### 在 Bitbucket 上添加 webhook
+
+打开 Bitbucket 仓库，选择 **Repository settings > Webhooks > Add webhook**。粘贴 Coolify URL，并输入相同的密钥。
+
+</Step>
+<Step>
+
+### 选择事件
+
+选择 **Repository push** 用于自动分支部署。
+
+如果使用预览部署，还需勾选以下 pull request 事件：
+
+- **Created**（创建）
+- **Updated**（更新）
+- **Merged**（合并）
+- **Declined**（拒绝）
+
+保存 webhook。
+
+</Step>
+<Step>
+
+### 启用并验证部署
+
+在 Coolify 中打开 **高级 > 部署**，在 **Auto deploy** 中选择 **Deploy on push (webhooks)**，然后推送到已配置的分支。打开 **Deployment Logs**，确认出现了 webhook 部署记录。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="Gitea">
+
+<Steps>
+<Step>
+
+### 复制 Gitea webhook 信息
+
+打开 Coolify 的 **Webhooks**。在 **Gitea** 区域的 **Webhook secret** 中输入一段足够长的随机值，选择 **Save changes**，然后复制 **Gitea** URL。
+
+</Step>
+<Step>
+
+### 在 Gitea 上添加 webhook
+
+打开 Gitea 仓库，选择 **Settings > Webhooks > Add Webhook > Gitea**。将 Coolify URL 粘贴到 **Target URL**，并输入相同的密钥。
+
+</Step>
+<Step>
+
+### 选择事件
+
+选择 **Push** 事件用于自动分支部署。如果应用使用预览部署，还需勾选 **Pull Request** 事件，然后添加 webhook。
+
+</Step>
+<Step>
+
+### 启用并验证部署
+
+在 Coolify 中打开 **高级 > 部署**，在 **Auto deploy** 中选择 **Deploy on push (webhooks)**，然后推送到已配置的分支。打开 **Deployment Logs**，确认出现了 webhook 部署记录。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## 排查部署记录未出现
+
+在仓库提供商处打开该 webhook 的最近投递记录，然后逐项检查：
+
+1. 提供商发送的事件是 Coolify 支持的类型
+2. 该次投递收到了成功的 HTTP 响应
+3. 提供商密钥与 Coolify 中保存的密钥完全一致
+4. Coolify 的 webhook URL 可以从公网访问
+5. **高级 > 部署**下的 **Auto deploy** 已针对 push 事件设置为 **Deploy on push (webhooks)**
+6. 推送的分支与应用中配置的分支一致
+
+只有启用 **Preview Deployments**（预览部署）后，pull request 或 merge request 事件才会创建预览。
+
+来自同一客户端地址、同一仓库和同一分支的重复签名验证失败会被限流，签名正确的投递仍会被正常接受。webhook 响应不会透露匹配到的应用，请通过部署历史来核实。

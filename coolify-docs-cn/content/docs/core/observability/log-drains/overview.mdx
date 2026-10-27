@@ -1,0 +1,222 @@
+---
+title: 概览
+description: 了解 Coolify 如何把应用、数据库和服务容器日志转发到外部目标。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Database,
+  Globe3,
+  Layers,
+  Settings,
+  Warning22,
+} from 'reicon-react';
+
+# 日志转发概览
+
+Coolify 的日志转发（log drain）会把工作负载容器的输出转发到外部日志目标（Destination）。在服务器上配置一个目标，再为需要纳入的资源开启日志转发即可。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+在服务器上启用 Axiom、New Relic 或自定义 Fluent Bit 配置。然后为每个应用、数据库或服务组件打开**日志转发（Log drain）**，并重启或重新部署它。
+
+</CoolCallout>
+
+---
+
+## 日志转发包含哪些内容
+
+Coolify 会在服务器上启动 `coolify-log-drain`。已开启转发的资源容器把各自的 `stdout` 和 `stderr` 发送到这个本地 Fluent Bit 容器，由它把记录转发到你的目标。
+
+<CoolCompare
+  id="log-drain-scope"
+  className="not-prose"
+  icon={Layers}
+  title="日志转发范围"
+  description="日志转发覆盖已开启转发的工作负载容器，而不是 Coolify 中所有可用的日志。"
+>
+<CoolCompareColumn
+  title="会转发"
+  items={[
+    '应用与 Docker Compose 应用的容器输出',
+    '独立数据库的容器输出',
+    '一键服务内已开启转发的应用与数据库组件的输出',
+  ]}
+/>
+<CoolCompareColumn
+  title="不会转发"
+  items={[
+    'Coolify 的部署与构建日志',
+    'Coolify 控制平面（control plane）容器日志',
+    '未开启 Drain Logs 的资源的输出',
+  ]}
+/>
+</CoolCompare>
+
+---
+
+## 选择目标
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: 'Axiom',
+      description: '使用 Axiom API 令牌把日志发送到已有的数据集。',
+      href: '/core/observability/log-drains/axiom',
+      icon: Database,
+    },
+    {
+      title: 'New Relic',
+      description: '使用 ingest license key 把日志发送到所在区域的 New Relic Log API。',
+      href: '/core/observability/log-drains/new-relic',
+      icon: Globe3,
+    },
+    {
+      title: '自定义 Fluent Bit',
+      description: '提供完整的 Fluent Bit 配置和可选的解析器定义。',
+      href: '/core/observability/log-drains/custom-fluent-bit',
+      icon: Settings,
+    },
+  ]}
+/>
+
+一台服务器同一时间只能启用一个 Coolify 托管的日志转发。请按照对应的目标指南准备凭据和配置。
+
+---
+
+## 配置服务器
+
+1. 打开**服务器（Servers）**，选择运行这些资源的已验证服务器。
+2. 打开**日志转发（Log Drains）**。
+3. 在**状态（Status）**为**禁用（Disabled）**时，输入并保存其中一个目标的设置。
+4. 把**状态**设为**启用（Enabled）**，启动 `coolify-log-drain`。
+
+<CoolCallout type="info" title="在日志服务商处验证送达">
+
+Coolify 只检查必填字段的格式，不会验证服务商身份验证，也不会发送测试事件。
+
+</CoolCallout>
+
+---
+
+## 为资源启用日志转发
+
+必须先启用服务器级转发，否则 Coolify 会再次关闭资源的**日志转发（Log drain）**设置。
+
+<CoolCallout type="warning" icon={Warning22} title="更改 Drain Logs 后请重启资源">
+
+Coolify 在创建资源容器时应用 Docker 日志驱动。开启或关闭**日志转发**之后，请重启或重新部署该资源。
+
+</CoolCallout>
+
+<Tabs id="resource-log-drain" items={['Application', 'Standalone database', 'Service component']}>
+<Tab value="Application" icon={Box2}>
+
+<Steps>
+<Step>
+
+### 打开应用
+
+打开应用，然后选择**高级（Advanced）**。Docker Compose 应用同样适用。
+
+</Step>
+<Step>
+
+### 开启 Drain Logs
+
+在**日志（Logs）**下，把**日志转发（Log drain）**设为**Send logs to the log drain endpoint**（把日志发送到转发端点）。
+
+</Step>
+<Step>
+
+### 应用更改
+
+重启或重新部署该应用。
+
+</Step>
+</Steps>
+
+</Tab>
+
+<Tab value="Standalone database" icon={Database}>
+
+<Steps>
+<Step>
+
+### 打开数据库
+
+打开独立数据库，然后选择**常规（General）**。
+
+</Step>
+<Step>
+
+### 开启 Drain Logs
+
+在**日志投递（Log delivery）**下，把**日志转发（Log drain）**设为**Forward logs to the server drain**（把日志转发到服务器转发器）。
+
+</Step>
+<Step>
+
+### 应用更改
+
+重启该数据库。
+
+</Step>
+</Steps>
+
+</Tab>
+
+<Tab value="Service component" icon={Layers}>
+
+<Steps>
+<Step>
+
+### 打开组件
+
+在一键服务中打开应用或数据库组件，找到**高级（Advanced）**。
+
+</Step>
+<Step>
+
+### 开启 Drain Logs
+
+把**日志转发（Log drain）**设为**Send logs to drain**（把日志发送到转发器）。
+
+</Step>
+<Step>
+
+### 应用更改
+
+重启或重新部署该服务。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 验证送达
+
+1. 让资源向 `stdout` 或 `stderr` 写入一条可识别的消息。
+2. 打开日志服务商控制台，在近期事件中搜索这条消息。
+3. 如果找不到事件，检查资源服务器上的日志转发容器：
+
+```sh
+docker ps --filter name=coolify-log-drain
+docker logs --tail 100 coolify-log-drain
+```
+
+内置的 Axiom 和 New Relic 目标每五秒刷新一次。自定义配置则使用自己的 **Flush** 值。
+
+---
+
+## 局限
+
+- 一台服务器同一时间只能使用一个 Coolify 托管的日志转发。
+- 保留策略、查询、仪表盘和基于日志的告警由外部服务商管理。
+- 禁用服务器级转发会停止投递，但不会清除资源上已保存的**日志转发**设置。

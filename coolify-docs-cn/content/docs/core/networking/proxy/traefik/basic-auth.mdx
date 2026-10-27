@@ -1,0 +1,157 @@
+---
+title: 基本身份验证
+description: 使用 Traefik 的 HTTP 基本身份验证保护 Coolify 应用和 Docker Compose 服务。
+---
+
+# 基本身份验证（Basic Authentication）
+
+HTTP 基本身份验证会在 Traefik 把请求转发给资源之前，要求提供用户名和密码。对于标准应用，Coolify 可以生成所需的 Traefik 中间件标签；Docker Compose 应用和服务则在 Compose 文件中使用标签。
+
+<Callout type="info" title="敏感系统请使用应用自身的身份验证">
+HTTP 基本身份验证用一个共享凭据保护一条路由，它不能替代应用账户、基于角色的访问控制、多因素身份验证或单点登录（SSO）。
+</Callout>
+
+## 保护资源
+
+根据资源的部署方式选择对应的路径。
+
+<Tabs id="traefik-basic-auth-resource-type" items={['标准应用', 'Docker Compose 或服务']}>
+<Tab value="标准应用">
+
+### 自动方式
+
+启用内置设置后，Coolify 会对密码做哈希并生成 Traefik 中间件。
+
+<Steps>
+<Step>
+
+#### 打开应用设置
+
+打开应用，选择 **General**，然后找到 **Security > Authentication**。
+
+</Step>
+<Step>
+
+#### 添加凭据
+
+在 **Authentication** 中选择 **HTTP Basic Authentication**，然后输入 **Username** 和 **Password**，并保存应用设置。
+
+保持 **Label management** 为 **Managed by Coolify (auto-generated)**，让 Coolify 继续生成代理标签。
+
+</Step>
+<Step>
+
+#### 重新部署并验证
+
+重新部署应用。在浏览器的隐私窗口中打开它的域名，确认浏览器在加载应用之前会请求新的凭据。
+
+</Step>
+</Steps>
+
+### 手动方式
+
+<Steps>
+<Step>
+
+#### 生成凭据
+
+用 `htpasswd` 生成 bcrypt 凭据。在 Debian 或 Ubuntu 上，该命令由 `apache2-utils` 软件包提供：
+
+```bash
+htpasswd -nbB <username> '<password>'
+```
+
+</Step>
+<Step>
+#### 添加标签
+    打开应用的 **General** 页面，找到 **Container labels**，将 **Label management** 设为 **Managed manually (edit labels yourself)**。基本身份验证需要两个标签：一个用来**定义**中间件，一个把它**挂到** HTTPS 路由上。
+
+    ```ini
+    traefik.enable=true
+    traefik.http.middlewares.http-basic-auth.basicauth.users=<username>:<bcrypt-hash> # [!code ++][!code focus]
+    traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+    traefik.http.routers.http-0-<uuid>.entryPoints=http
+    traefik.http.routers.http-0-<uuid>.middlewares=redirect-to-https
+    traefik.http.routers.http-0-<uuid>.rule=Host(`domain.com`) && PathPrefix(`/`)
+    traefik.http.routers.http-0-<uuid>.service=http-0-<uuid>
+    traefik.http.routers.https-0-<uuid>.entryPoints=https
+    traefik.http.routers.https-0-<uuid>.middlewares=http-basic-auth # [!code ++][!code focus]
+    traefik.http.routers.https-0-<uuid>.rule=Host(`domain.com`) && PathPrefix(`/`) # [!code focus]
+    traefik.http.routers.https-0-<uuid>.service=https-0-<uuid>
+    traefik.http.routers.https-0-<uuid>.tls.certresolver=letsencrypt
+    traefik.http.routers.https-0-<uuid>.tls=true
+    traefik.http.services.http-0-<uuid>.loadbalancer.server.port=3000
+    traefik.http.services.https-0-<uuid>.loadbalancer.server.port=3000
+    ```
+    如果 HTTPS 路由已经列出了 `gzip` 等中间件，请在现有的逗号分隔值末尾追加 `,http-basic-auth`，而不是替换它。
+
+    选择手动标签管理意味着你要承担哪些责任，参见[自定义中间件](/core/networking/proxy/traefik/custom-middlewares)。
+</Step>
+<Step>
+
+    #### 重新部署并验证
+
+    重新部署应用。在浏览器的隐私窗口中打开它的域名，确认浏览器在加载应用之前会请求新的凭据。
+
+</Step>
+</Steps>
+<Callout type="warning" title="不要把明文密码存进标签">
+    在 Traefik 标签中只使用 `htpasswd` 的输出。把明文密码保存在密码管理器里；需要轮换时，替换哈希并重新部署资源。
+</Callout>
+
+</Tab>
+<Tab value="Docker Compose 或服务">
+
+用 `htpasswd` 生成 bcrypt 凭据。在 Debian 或 Ubuntu 上，该命令由 `apache2-utils` 软件包提供：
+
+```bash
+htpasswd -nbB <username> '<password>'
+```
+
+输出形如 `<username>:<bcrypt-hash>`。在 **Escape special characters in labels?** 保持开启（默认状态）时，源 Compose 文件中每个 `$` 只写一次，Coolify 会在可部署的 Compose 文件里写出所需的 `$$` 形式。
+
+把中间件定义和 Coolify 中间件简写添加到接收该域名的服务上：
+
+```yaml
+services:
+  app:
+    image: nginx:alpine
+    labels: # [!code ++:3][!code focus:3]
+      - 'traefik.http.middlewares.app-auth.basicauth.users=<username>:<bcrypt-hash>'
+      - 'coolify.traefik.middlewares=app-auth'
+```
+
+`coolify.traefik.middlewares` 告诉 Coolify 把 `app-auth` 加到生成的路由中间件链上。保存并重新部署 Compose 资源，然后在隐私窗口中验证域名。
+
+<Callout type="warning" title="不要把明文密码存进标签">
+在 Traefik 标签中只使用 `htpasswd` 的输出。把明文密码保存在密码管理器里；需要轮换时，替换哈希并重新部署资源。
+</Callout>
+
+</Tab>
+</Tabs>
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="登录提示没有出现">
+
+确认在启用身份验证或修改标签之后，资源已经重新部署。
+
+对于 Docker Compose 应用或服务，检查运行中容器的标签，确认 `app-auth` 已挂到预期的路由上。查看 **Servers > your server > Proxy > Logs**，寻找中间件缺失的错误。
+
+</Accordion>
+
+<Accordion title="Traefik 报告标签无效">
+
+保持 **Escape special characters in labels?** 开启，并在源 Compose 文件中每个 `$` 只写一次。如果你关闭了该设置，就要自己把每个 `$` 写成 `$$`。另外检查标签的引号，并确保生成的 `<username>:<bcrypt-hash>` 值保持在一行内。
+
+</Accordion>
+
+<Accordion title="另一个中间件失效">
+
+添加基本身份验证时，保留所有已有的中间件名称。把 `app-auth` 追加到生成的中间件链上，而不是替换 `gzip` 或其他自定义中间件。
+
+</Accordion>
+
+</Accordions>

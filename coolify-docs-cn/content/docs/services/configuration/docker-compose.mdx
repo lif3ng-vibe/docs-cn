@@ -1,0 +1,182 @@
+---
+title: Docker Compose
+description: 编辑存储在 Service 上的 Docker Compose 定义，并了解 Coolify 如何把它转化为一次部署。
+---
+
+# Docker Compose
+
+每个 Service 都基于一份存储在 Coolify 中的 Docker Compose 定义。一键 Service 以复制的模板起步；用户自定义 Service 则以你通过 **Docker Compose Empty** 输入的 YAML 起步。
+
+打开**配置（Configuration）> 常规（General）**，选择 **Edit Compose File**（编辑 Compose 文件），即可查看或修改定义。
+
+## 源定义与可部署 Compose
+
+| 视图 | 用途 | <span className="whitespace-nowrap">可编辑</span> |
+| :--- | :--- | :---: |
+| **Source Compose** | 存储在 Service 上的定义，保存时会被重新解析。 | 是 |
+| **Deployable Compose** | Coolify 生成的定义，写入 Service 配置目录并发送给 Docker Compose。 | 否 |
+
+Coolify 可能会在可部署定义中添加或规范化容器名、标签、卷（volume）名、网络、环境引用以及代理配置。
+
+排查问题时，先确认目标设置存在于源定义中，再用可部署视图查看实际传给 Docker Compose 的输入。
+
+## 编辑用户自定义 Service
+
+1. 打开**配置 > 常规 > Edit Compose File**。
+2. 修改 **Source Compose**。
+3. 对通过 **Docker Compose Empty** 创建的 Service，选择 **Validate**（校验）进行检查。
+4. 选择 **Save**（保存）。
+5. 检查更新后的组件卡片、环境变量、存储以及 **Deployable Compose**。
+6. 部署或重启 Service。
+7. 跟踪部署输出，并逐一验证所有必需组件。
+
+保存会重新解析定义。删除或重命名某个 Compose 服务会改变 Coolify 识别组件的方式，因此动手前请先备份其数据并检查存储名称。
+
+## 环境引用
+
+使用 Compose 插值引用一个值，以便在**配置 > 环境变量（Environment Variables）**下管理它：
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+```
+
+`${DATABASE_URL:?}` 把该值标记为必填。只要必填的 Service 变量为空，Coolify 就会阻止部署。`${LOG_LEVEL:-info}` 则以 `info` 作为初始回退值。
+
+硬编码的值会保留在 Compose 定义中。Coolify 可以展示它们供参考，但要修改请在 **Source Compose** 中进行。
+
+## 生成的 Service 值
+
+Coolify 能识别 Compose 中的 `SERVICE_<TYPE>_<ID>` 变量名，并据此生成可复用的 URL、域名、用户名、密码和随机值。
+
+`<ID>` 用于标识这个值，让你得以复用它。对于 URL 和 FQDN 变量，请用 Compose 服务名作为 ID，并把服务名中的连字符和句点在变量名中替换为下划线。只要复用同一个完整变量名，在整个 Service 范围内得到的都是同一个存储值。
+
+### 全部魔法环境变量
+
+| 模式 | 生成的值 | 长度 |
+| :--- | :--- | :--- |
+| `SERVICE_NAME_<SERVICE>` | Compose 服务名。Coolify 会为每个 Compose 服务自动创建这个变量。 | 不适用 |
+| `SERVICE_URL_<SERVICE>` | 匹配 Compose 服务的带协议 URL。 | 不适用 |
+| `SERVICE_URL_<SERVICE>_<PORT>` | 带协议的 URL，路由到指定的内部端口。 | 不适用 |
+| `SERVICE_FQDN_<SERVICE>` | 匹配 Compose 服务的主机名，不含协议。 | 不适用 |
+| `SERVICE_FQDN_<SERVICE>_<PORT>` | 不含协议的主机名，与路由到指定内部端口的 URL 配对。 | 不适用 |
+| `SERVICE_USER_<ID>` | 随机字母数字用户名。 | 16 个字符 |
+| `SERVICE_LOWERCASEUSER_<ID>` | 随机小写字母数字用户名。 | 16 个字符 |
+| `SERVICE_PASSWORD_<ID>` | 不含符号的随机密码。 | 32 个字符 |
+| `SERVICE_PASSWORD_64_<ID>` | 不含符号的随机密码。 | 64 个字符 |
+| `SERVICE_PASSWORDWITHSYMBOLS_<ID>` | 含符号的随机密码。 | 32 个字符 |
+| `SERVICE_PASSWORDWITHSYMBOLS_64_<ID>` | 含符号的随机密码。 | 64 个字符 |
+| `SERVICE_BASE64_<ID>` 或 `SERVICE_BASE64_32_<ID>` | 随机字母数字字符串。尽管名字如此，该值并未做 Base64 编码。 | 32 个字符 |
+| `SERVICE_BASE64_64_<ID>` | 随机字母数字字符串，未做 Base64 编码。 | 64 个字符 |
+| `SERVICE_BASE64_128_<ID>` | 随机字母数字字符串，未做 Base64 编码。 | 128 个字符 |
+| `SERVICE_REALBASE64_<ID>` 或 `SERVICE_REALBASE64_32_<ID>` | 随机字节的 Base64 编码。 | 编码前 32 个随机字节 |
+| `SERVICE_REALBASE64_64_<ID>` | 随机字节的 Base64 编码。 | 编码前 64 个随机字节 |
+| `SERVICE_REALBASE64_128_<ID>` | 随机字节的 Base64 编码。 | 编码前 128 个随机字节 |
+| `SERVICE_HEX_32_<ID>` | 随机十六进制字符串。 | 32 个字符 |
+| `SERVICE_HEX_64_<ID>` | 随机十六进制字符串。 | 64 个字符 |
+| `SERVICE_HEX_128_<ID>` | 随机十六进制字符串。 | 128 个字符 |
+| `SERVICE_SUPABASEANON_<ID>` | 带 `anon` 角色的 Supabase JWT，用 `SERVICE_PASSWORD_JWT` 签名。 | JWT |
+| `SERVICE_SUPABASESERVICE_<ID>` | 带 `service_role` 角色的 Supabase JWT，用 `SERVICE_PASSWORD_JWT` 签名。 | JWT |
+
+只有当 Service 同时定义了 `SERVICE_PASSWORD_JWT` 时，才会生成 Supabase 专用变量。
+
+### 变量名中的下划线
+
+`DATABASE_PASSWORD` 这类普通变量名可以包含下划线。但对于生成的用户名、密码和随机值，请把 `<ID>` 保持为一个整体：写成 `SERVICE_PASSWORD_DBPASSWORD` 或 `SERVICE_PASSWORD_64_DBPASSWORD`，而不是 `SERVICE_PASSWORD_DB_PASSWORD`。
+
+URL/FQDN 变量使用规范化后的 Compose 服务名，例如 `my-api` 变成 `MY_API`。其末尾的数字段表示内部端口，如 `SERVICE_URL_API_3000`。各类型、标识符、长度与端口之间的差异，参见[带注释的命名示例](/applications/builds/docker-compose#生成变量的命名)。
+
+在多个组件中使用同一个完整变量名，即可复用同一个存储值：
+
+```yaml
+services:
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+
+  api:
+    image: example/api:1.0
+    environment:
+      DATABASE_USER: ${SERVICE_USER_POSTGRES}
+      DATABASE_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+```
+
+生成的值会在多次部署之间保留，并显示在**环境变量**下。密码和随机值可以在那里编辑。URL、FQDN 和服务名变量则由 Coolify 根据 Service 定义和域名配置管理。
+
+## 域名与内部端口
+
+在需要生成域名的组件上声明 `SERVICE_URL_<SERVICE>` 或 `SERVICE_FQDN_<SERVICE>`。当代理需要路由到特定内部端口时，追加数字端口后缀：
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    environment:
+      SERVICE_URL_API_3000: /v1
+      PUBLIC_URL: ${SERVICE_URL_API_3000}
+```
+
+Coolify 会把生成的域名关联到 `api` 组件，把它路由到端口 `3000`，并把 `/v1` 追加到 URL 值末尾。
+
+你也可以在解析之后设置组件的 **Domains** 字段。更改域名后请复查生成的变量。
+
+## 存储由 Compose 管理
+
+在源定义中声明 Service 的卷和绑定挂载：
+
+```yaml
+services:
+  app:
+    image: example/app:1.0
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
+```
+
+Coolify 会为受管的卷名添加前缀以避免冲突，并把解析结果显示在**配置 > 持久化存储（Persistent Storages）**下。存储视图对 Service 组件是只读的；要修改挂载，请编辑 Compose 定义。
+
+## 健康检查由 Compose 管理
+
+Service 没有独立应用或数据库那样的健康检查配置页面。请在镜像或 Compose 服务中定义健康检查：
+
+```yaml
+services:
+  api:
+    image: example/api:1.0
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+对于一次性的或可选的 Compose 服务，如果不希望它影响 Service 的整体健康，可以使用 `exclude_from_hc: true`。
+
+## 网络
+
+同一个栈中的组件可以在 Service 专属网络上直接使用各自的 Compose 服务名。仅内部使用的组件不要发布 `ports:`。
+
+当栈需要与所选目标（Destination）上的其他资源通信时，启用 **Connect To Predefined Network**。在依赖主机端口或跨资源 DNS 名称之前，请先阅读[Coolify 中的网络](/core/networking-in-coolify)。
+
+## 更新一键 Service
+
+一键模板在资源创建时被复制。Coolify 不会把日后的模板变更合并到已保存的 Service 中。
+
+更新之前：
+
+1. 阅读上游发行说明和对应的 Service 指南。
+2. 备份持久化数据，并测试其恢复路径。
+3. 对比当前源定义与较新模板或上游 Compose 的变更。
+4. 有计划地应用所需的镜像、变量、挂载与迁移变更。
+5. 保存，复查可部署定义，并在维护窗口内部署。
+6. 验证每个组件和应用工作流。
+
+只有当"拉取 Compose 中已存储的标签"正是你想要的更新时，才使用 **Pull Latest Images & Restart**。像 `latest` 这样的可变标签可能在无感知的情况下变化，也看不出将运行哪个版本，因此在上游项目提供版本化标签时，生产镜像应当固定版本。

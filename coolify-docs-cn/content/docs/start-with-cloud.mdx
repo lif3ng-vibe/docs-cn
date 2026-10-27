@@ -1,0 +1,473 @@
+---
+title: 从 Coolify Cloud 开始
+description: 使用 Coolify Cloud，用你自己的服务器跑业务，Coolify 实例交由 Coolify 团队托管。
+---
+
+import {
+  ArrowsRight,
+  Database,
+  Flash12,
+  Key2,
+  LaptopCode,
+  Plus,
+  Rocket2,
+  Screencast2,
+  Server,
+  ServerCloud,
+  ServerUpdate,
+  Settings,
+  SecuritySafe2,
+  ShieldSecurity2,
+  SignalStream,
+  StarSparkle,
+  Warning22,
+  WindowPointer,
+} from 'reicon-react';
+
+# 从 Coolify Cloud 开始
+
+选择 Coolify Cloud，意味着 Coolify 团队替你运行 Coolify 实例，而你在自己掌控的服务器上运行工作负载。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+在 [app.coolify.io/register](https://app.coolify.io/register) 创建 Cloud 账户、选择订阅、添加 SSH 密钥、验证服务器，然后部署你的第一个资源。
+
+Cloud 负责 Coolify 控制平面。你自己的服务器和工作负载仍然由你管理。
+
+</CoolCallout>
+
+如果你还在 Cloud 与自托管之间犹豫，请先阅读[选择你的路径](/choose-your-path)。
+
+
+## 开始之前
+
+先核对以下要求，让 Cloud 上手引导能顺利完成服务器验证，避免 SSH、防火墙或套餐限制半路卡住。
+
+| 章节 | 检查项 |
+| :--- | :--- |
+| [1. Cloud 的工作方式](#1-cloud-的工作方式) | 了解 Cloud 实例运行在哪里，以及它如何连接你的服务器。 |
+| [2. 共享责任模型](#2-共享责任模型) | 确认控制平面、服务器、工作负载和备份各自由谁负责。 |
+| [3. 需要自备服务器](#3-需要自备服务器) | 确认你已有用于承载工作负载的服务器基础设施。 |
+| [4. 项目所需的服务器资源](#4-项目所需的服务器资源) | 确认你的服务器有足够的 CPU、内存和存储来支撑工作负载。 |
+| [5. 订阅与服务器数量限制](#5-订阅与服务器数量限制) | 确认你的套餐支持你想连接的服务器数量。 |
+| [6. 服务器访问要求](#6-服务器访问要求) | 确认 SSH 访问、Docker 支持和防火墙规则均已就绪。 |
+
+---
+
+### 1. Cloud 的工作方式
+
+在 Coolify Cloud 中，Coolify 实例、控制台、控制平面及相关服务都运行在 Coolify 团队管理的基础设施上。
+
+你**无法**直接访问这套托管基础设施。
+
+Coolify Cloud 的基础设施托管在德国 Falkenstein 的 Hetzner 机房。它通过文档中列出的 [IPv4 地址](https://coolify.io/ipv4.txt)和 [IPv6 地址](https://coolify.io/ipv6.txt)经由 SSH 连接到你的服务器。
+
+<CoolCallout icon={StarSparkle} title="托管控制平面">
+
+Cloud 负责托管、更新、维护 Coolify 控制平面并为其备份。而你的应用、数据库、服务、域名、机密（Secret）和工作负载数据仍然留在你自己连接的服务器上。
+
+</CoolCallout>
+
+---
+
+### 2. 共享责任模型
+
+Coolify Cloud 管理 Coolify 控制平面；你管理的则是接入它的服务器和工作负载。
+
+| 对比维度 | 由 Cloud 管理 | 由你管理 | 备注 |
+| :--- | :--- | :--- | :--- |
+| Coolify 控制平面托管 | 是 | 否 | 通过 app.coolify.io 提供 |
+| 控制平面更新与维护 | 是 | 否 | 由 Coolify 团队处理 |
+| 控制平面备份 | 是 | 否 | 覆盖 Cloud 实例数据 |
+| 服务器操作系统更新与加固 | 否 | 是 | 适用于你接入的每台服务器 |
+| 应用与数据库的运行时/数据 | 否 | 是 | 运行在你自己的基础设施上 |
+| 应用备份与恢复 | 否 | 是 | 需自行为工作负载配置备份 |
+
+<CoolCallout icon={ShieldSecurity2} title="服务器的安全仍由你负责">
+
+Coolify Cloud 管理 Coolify 实例。但服务器操作系统的更新、防火墙策略、应用数据、数据库数据以及你基础设施上运行的工作负载备份，仍由你自己管理。
+
+</CoolCallout>
+
+---
+
+### 3. 需要自备服务器
+
+Coolify Cloud **不**提供工作负载服务器。应用、数据库和服务的运行，需要你自己准备服务器基础设施。
+
+你的服务器可以是：
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: 'VPS',
+      description: '任意服务商提供的虚拟专用服务器（VPS）。',
+      icon: ServerCloud,
+    },
+    {
+      title: '独立服务器',
+      description: '由你掌控的整台物理服务器。',
+      icon: Server,
+    },
+    {
+      title: '虚拟机',
+      description: '运行在你自己基础设施上的 Linux 虚拟机。',
+      icon: Screencast2,
+    },
+    {
+      title: '树莓派（Raspberry Pi）',
+      description: '支持 64 位的树莓派设备。',
+      icon: ServerUpdate,
+    },
+    {
+      title: '笔记本电脑',
+      description: '一台带 SSH 访问的旧 Linux 笔记本或闲置本。',
+      icon: LaptopCode,
+    },
+    {
+      title: '任意 Linux 设备',
+      description: '任何能运行 Linux 且可 SSH 访问的设备。',
+      icon: Flash12,
+    },
+  ]}
+/>
+
+<CoolCallout icon={ServerCloud} title="服务器服务商">
+
+如果你还没选好服务器服务商，可以考虑 [Hetzner](https://coolify.io/hetzner)。
+使用我们的[推荐链接](https://coolify.io/hetzner)还能为项目贡献一份支持。
+
+</CoolCallout>
+
+---
+
+### 4. 项目所需的服务器资源
+
+所需资源取决于你的项目。如果你要托管多个服务或较大的应用，请选择 CPU、内存和存储配置更高的服务器。
+
+<CoolResourceShowcase
+  icon={ServerCloud}
+  title="生产环境配置示例"
+  description="ShadowArcanist 在一台服务器上运行混合生产负载，资源配置如下。这些应用均在外部构建，工作负载经过深度优化，因此在有限的资源上也能跑得很稳。把它当作粗略的参考基准，而非固定推荐。"
+  profile={[
+    {
+      label: '托管服务商',
+      value: 'Hetzner',
+    },
+    {
+      label: '服务器类型',
+      value: 'CAX11',
+    },
+  ]}
+  resources={[
+    {
+      label: '内存',
+      value: '4 GB',
+      description: '平均占用：2.1 GB',
+    },
+    {
+      label: 'CPU',
+      value: '2 核',
+      description: '平均占用：40-70%',
+    },
+    {
+      label: '存储',
+      value: '40 GB',
+      description: '平均占用：27 GB',
+    },
+  ]}
+  supports={[
+    '16 个静态站点',
+    '9 个 Rust API 服务',
+    '5 个 Rust 应用（全栈）',
+    '4 个 Rust Discord 机器人',
+    '7 个 Rust worker',
+    '2 个 Valkey 数据库',
+    '1 个 PostgreSQL 数据库',
+    'Beszel',
+  ]}
+/>
+
+---
+
+### 5. 订阅与服务器数量限制
+
+Coolify Cloud 是一项按量付费的服务。
+
+定价从 **每月 5 美元**起步，并随你连接的服务器数量增加（每台额外服务器 **每月 3 美元**）。
+
+订阅按已连接服务器数量计费，因此请先确定需要的服务器数量并完成付款，再添加更多服务器。
+
+<CoolCallout icon={ServerCloud} title="包含的服务器槽位">
+
+基础 **每月 5 美元**订阅包含 **2 个服务器槽位**，也就是说你最多可以连接 2 台服务器，而无需为额外的服务器槽位付费。
+
+如果你需要连接第 3 台或更多服务器，每个额外的服务器槽位费用为 **每月 3 美元**。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="服务器数量超限报错" type="warn">
+
+如果 Cloud 提示你超出了当前套餐允许的已连接服务器数量上限，请移除一台已连接的服务器，或升级套餐。若问题依旧，发邮件至 **[hi@coollabs.io](mailto:hi@coollabs.io)** 并描述问题。
+
+</CoolCallout>
+
+---
+
+### 6. 服务器访问要求
+
+要将服务器接入 Coolify Cloud，请确保：
+
+<CoolActionCardGrid
+  data-cloud-start
+  surface
+  cards={[
+    {
+      title: 'SSH 访问',
+      href: '/core/infrastructure/servers/openssh',
+      description: '配置 OpenSSH，让 Coolify 能连接你的服务器。',
+      bullets: [
+        '确认 SSH 从你的机器可用',
+        '使用 root 或具备 sudo 权限的用户',
+      ],
+      icon: SecuritySafe2,
+      'btn-cta': '配置 SSH',
+      type: 'secondary',
+    },
+    {
+      title: '防火墙端口',
+      href: '/core/infrastructure/servers/firewall',
+      description: '在防火墙上放行所需端口。',
+      bullets: [
+        '放行 SSH 访问',
+        '开放 Coolify 与应用端口',
+      ],
+      icon: SignalStream,
+      'btn-cta': '配置防火墙',
+      type: 'primary',
+    },
+  ]}
+/>
+
+---
+
+
+## 开始使用 Coolify Cloud
+
+<section data-cloud-start className="not-prose my-5">
+<CoolFlow
+  id="cloud-onboarding-flow"
+  icon={Rocket2}
+  title="Cloud 上手引导流程"
+  description="Cloud 上手引导会把托管的 Coolify 控制平面连接到你自己提供的服务器，用于承载应用、数据库和服务。"
+  steps={[
+    '创建 Cloud 账户',
+    '选择订阅',
+    '添加 SSH 私钥',
+    '添加并验证服务器',
+    '部署第一个资源',
+  ]}
+  list={[
+    '使用你希望用于售后支持的邮箱创建 Cloud 账户。',
+    '选择你想连接的服务器数量。',
+    '添加或创建用于服务器访问的 SSH 密钥。',
+    '验证你的第一台服务器并安装 Docker Engine。',
+    '部署你的第一个应用、数据库或服务。',
+  ]}
+  endnote="完成后你应该得到一个 Cloud 账户、一份生效的订阅、一台验证通过的服务器，以及第一个部署目标。"
+/>
+</section>
+
+---
+
+### 1. 创建 Cloud 账户
+
+访问 [app.coolify.io/register](https://app.coolify.io/register)，用你的邮箱地址创建账户。
+
+这个邮箱与你的 Cloud 账户绑定。之后若需要账户或支付方面的帮助，请用同一个邮箱地址联系 Coolify 团队。
+
+---
+
+### 2. 选择订阅方案
+
+选择你想连接的服务器数量并完成付款。
+
+这一步完成后，Cloud 上手引导会自动开始。
+
+---
+
+### 3. 添加 SSH 私钥
+
+这是 Coolify Cloud 上手引导的第一步。
+
+你可以使用现成的 SSH 密钥，也可以在 Cloud 上手引导中新建一个。
+
+<Tabs items={['Existing key', 'Create new key']}>
+<Tab value="Existing key" icon={Key2}>
+
+选择 **Existing key**，然后粘贴 Cloud 将用于连接服务器的 SSH 私钥。
+
+请确保与之配对的公钥已存在于下一步所选服务器用户的 `~/.ssh/authorized_keys` 中。
+
+{/* <ZoomableImage src="shadow-to-do" alt="Add private key in Coolify Cloud" /> */}
+
+</Tab>
+
+<Tab value="Create new key" icon={Plus}>
+
+选择 **Create new key**，复制生成的公钥，然后把它添加到服务器的 `~/.ssh/authorized_keys` 中。
+
+如果你还没有为 Cloud 上手引导准备好密钥，就选这个选项。
+
+{/* <ZoomableImage src="shadow-to-do" alt="Private key setup in Coolify Cloud" /> */}
+
+</Tab>
+</Tabs>
+
+---
+
+### 4. 添加你的服务器
+
+接下来添加你要部署到的服务器：
+
+- 给服务器起个名字
+- 填入服务器的公网 IP 地址
+- 选择 SSH 端口
+- 选择服务器用户账户
+
+{/* <ZoomableImage src="shadow-to-do" alt="Add server in Coolify Cloud" /> */}
+<br />
+{/* <ZoomableImage src="shadow-to-do" alt="Server connection form in Coolify Cloud" /> */}
+
+然后点击 **Validate Server & Install Docker Engine**。
+
+Coolify Cloud 会验证 SSH 连接，并在你的服务器上安装所需组件。
+
+{/* <ZoomableImage src="shadow-to-do" alt="Validate server and install Docker Engine action" /> */}
+
+验证通过后，你会在上手引导中看到服务器状态更新。
+
+{/* <ZoomableImage src="shadow-to-do" alt="Server status after validation" /> */}
+
+---
+
+### 5. 部署你的第一个应用
+
+服务器验证通过后，按照以下任一指南部署你的第一个资源：
+
+<CoolNextSteps
+  data-cloud-start
+  cards={[
+    {
+      title: '部署一个应用',
+      href: '/deploy-your-first-app',
+      description: '服务器连接完成后，从应用部署开始。',
+      icon: WindowPointer,
+    },
+    {
+      title: '部署一个数据库',
+      href: '/deploy-your-first-database',
+      description: '当第一个应用需要持久化数据时，添加数据库。',
+      icon: Database,
+    },
+    {
+      title: '部署一个服务',
+      href: '/deploy-your-first-service',
+      description: '从服务目录中启动一个一键服务。',
+      icon: Settings,
+    },
+  ]}
+/>
+
+
+## 常见速答
+
+<Accordions type="multiple">
+
+<Accordion title="有 Cloud 独占功能吗？">
+
+没有。Cloud 与自托管共享同一套核心功能。
+
+</Accordion>
+
+<Accordion title="每月 5 美元的基础套餐包含服务器槽位吗？">
+
+包含。每月 5 美元的基础套餐包含 2 个服务器槽位。
+
+</Accordion>
+
+<Accordion title="未使用的额外服务器槽位也要付费吗？">
+
+是的。只要订阅里包含额外服务器槽位，即使你没有全部用上，也要为这些槽位付费。只有在确实需要更多服务器容量时再提高订阅档位。
+
+</Accordion>
+
+<Accordion title="提供折扣码吗？">
+
+不提供。Coolify Cloud 没有折扣码。
+
+</Accordion>
+
+<Accordion title="Cloud 会备份我的应用数据吗？">
+
+不会。Cloud 只备份 Coolify Cloud 实例数据。应用数据的备份仍由你自己负责。
+
+</Accordion>
+
+<Accordion title="Cloud 控制台能用我自己的域名吗？">
+
+不能。Cloud 控制台通过 `app.coolify.io` 提供。
+
+</Accordion>
+
+<Accordion title="Cloud 订阅暂停后，我的应用会停吗？">
+
+你的应用会继续在自己的服务器上运行。Coolify 控制台的访问会受到限制，但正在运行的工作负载仍留在你的基础设施上。
+
+</Accordion>
+
+<Accordion title="需要把 Cloud IP 加入白名单吗？">
+
+某些环境下需要。请放行 Cloud IP 的 `SSH` 端口访问：[IPv4](https://coolify.io/ipv4.txt) 与 [IPv6](https://coolify.io/ipv6.txt)。
+
+</Accordion>
+
+</Accordions>
+
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="SSH 密钥不工作">
+
+如果认证失败：
+
+- 确认服务器 `~/.ssh/authorized_keys` 中的公钥正确
+- 确认服务器上密钥与文件的权限正确
+- 确认使用的 SSH 用户、IP 地址和端口无误
+- 确认密钥没有设置口令（passphrase）
+- 确认防火墙允许 Cloud 访问 SSH 端口
+
+</Accordion>
+
+<Accordion title="因套餐限制导致服务器验证失败">
+
+如果 Cloud 提示你超出了当前套餐允许的已连接服务器数量：
+
+- 移除一台已连接的服务器
+- 升级套餐以支持更多已连接服务器
+- 若问题仍未解决，发邮件至 **[hi@coollabs.io](mailto:hi@coollabs.io)**
+
+</Accordion>
+
+<Accordion title="应该去哪里求助？">
+
+一般搭建问题，请加入 [Discord 社区](https://coolify.io/discord)，在 **support-forum** 频道提问。
+
+账户或支付问题，请用 Cloud 账户的邮箱地址发邮件至 **[hi@coollabs.io](mailto:hi@coollabs.io)**。
+
+</Accordion>
+
+</Accordions>

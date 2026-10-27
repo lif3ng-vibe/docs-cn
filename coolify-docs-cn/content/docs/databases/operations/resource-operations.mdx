@@ -1,0 +1,93 @@
+---
+title: 资源操作
+description: 将独立数据库克隆到另一个目标（Destination），或在项目与环境之间移动。
+---
+
+# 克隆或移动数据库
+
+打开数据库，选择 **Resource Operations**（资源操作）。该页面提供以下操作：
+
+- **Clone to another destination**（克隆到另一个目标）：在另一台服务器或网络目标上创建第二个数据库资源。
+- **Clone to another environment**（克隆到另一个环境）：把配置复制到同一服务器与网络下的另一个项目环境。
+- **Move Resource**（移动资源）：在同一个 Coolify 实例内更改现有数据库所属的项目和环境。
+
+这些放置类操作都不会迁移数据库内容。克隆会从一块全新的持久化卷开始，而移动只改变归属，不复制数据。
+
+<Tabs id="database-resource-operations" items={['克隆资源', '移动资源']}>
+<Tab value="克隆资源">
+
+当需要在另一台服务器或网络目标上使用相同配置时，克隆数据库。
+
+<Callout type="warning" title="克隆不会复制数据库数据">
+
+Coolify 会复制数据库配置、环境变量、存储定义、计划备份配置和标签，但不会复制数据库卷中的内容或其他存储文件。克隆不是备份，也不是副本（replica）。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 准备目标位置
+
+确认目标服务器可以承载资源，并且具备克隆要使用的网络目标。构建服务器无法承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标位置
+
+打开 **Resource Operations**（资源操作）。在 **Clone to another destination**（克隆到另一个目标）下，先选择 **Server**（服务器），再选择 **Network destination**（网络目标）。
+
+</Step>
+<Step>
+
+### 克隆并检查
+
+选择 **Clone Resource**（克隆资源）。克隆出来的数据库处于停止状态。启动之前，请检查其生成的名称、镜像、凭据、内部与公网连接信息、存储挂载、环境变量、备份设置、端口、SSL 设置和标签。
+
+为克隆数据库分配一个独立的域名或端口映射。在恢复或复制好所需数据并测试连接之前，不要把生产应用指向它。
+
+</Step>
+</Steps>
+
+### 克隆到另一个环境
+
+在 **Clone to another environment**（克隆到另一个环境）下，选择 **Project**（项目）和 **Environment**（环境），然后选择 **Clone resource**（克隆资源）。检查处于停止状态的克隆数据库，启动之前先恢复所需数据。
+
+</Tab>
+<Tab value="移动资源">
+
+当数据库应当归属同一 Coolify 实例上的另一个项目或环境时，移动数据库。移动不会改变数据库所在的服务器、网络目标、配置或持久化卷。
+
+<Callout type="info" title="移动不等于服务器迁移">
+
+运行中的数据库不会被停止，其数据也不会被复制。如果要在另一台服务器上运行第二份数据库，请使用 **Clone Resource**（克隆资源），然后单独恢复或复制数据。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 选择目标项目
+
+打开 **Resource Operations**（资源操作）。在 **Move Resource**（移动资源）下，选择 **Project**（项目）。
+
+</Step>
+<Step>
+
+### 选择目标环境
+
+选择 **Environment**（环境）。Coolify 会排除该数据库当前所处的环境。可以从当前项目或其他项目中选择一个环境。
+
+</Step>
+<Step>
+
+### 移动并验证
+
+选择 **Move Resource**（移动资源）。Coolify 会在不停止运行中资源的情况下更改数据库的项目和环境。从新位置打开该数据库，验证其状态、内部 URL、备份、webhook 以及相关应用的引用。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>

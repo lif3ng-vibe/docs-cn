@@ -1,0 +1,120 @@
+---
+title: 故障排查
+description: 诊断 Service 中失败的部署、降级的组件、配置差异、连接失败与域名错误。
+---
+
+# 排查 Service 问题
+
+当 Service 无法部署、某个组件降级、运行配置与已保存的 Compose 定义不一致，或客户端无法访问某个组件时，请使用本页。
+
+先定位出问题的层。在从第一次失败收集证据之前，不要重启整个栈或同时修改多个设置。
+
+## 定位故障层
+
+| 症状 | 从这里开始 |
+| :--- | :--- |
+| 容器启动前部署就停止 | 部署输出中的第一条失败命令。 |
+| 某组件处于退出、重启或不健康状态 | 该组件的状态与容器日志。 |
+| 容器在运行，但一个组件无法访问另一个 | 共享 Docker 网络、内部主机名与内部端口。 |
+| 应用内部正常，但域名访问失败 | 组件域名、内部监听端口、DNS 与 Coolify 代理。 |
+| 运行中的容器与已保存设置不符 | **Source Compose**、**Deployable Compose** 与环境变量。 |
+
+## 按症状处理
+
+<Tabs id="service-troubleshooting-symptom" items={['Deployment fails', 'Component degraded', 'Configuration differs', 'Connection fails', 'Domain fails']}>
+<Tab value="Deployment fails">
+
+### 找到第一条失败的部署命令
+
+打开失败的 **Deploy**、**Restart** 或镜像拉取操作的部署输出。从第一条报告错误的命令看起；后续失败可能是该命令的连锁后果。
+
+根据错误选择下一步检查：
+
+| 证据 | 下一步检查 |
+| :--- | :--- |
+| 镜像未找到或镜像仓库授权失败 | 确认镜像名、标签与镜像仓库凭据。 |
+| Compose 校验或插值失败 | 检查 **Source Compose** 中的无效 YAML、不支持的取值或为空的必填变量。 |
+| 卷或绑定挂载权限失败 | 确认来源在 Service 服务器上存在，且容器用户可访问。 |
+| 容器启动后立即退出 | 打开该组件的**日志（Logs）**，排查第一条应用错误。 |
+| 启动期间依赖不可用 | 确认依赖容器在运行、健康，并可通过内部主机名和端口访问。 |
+
+只应用有错误依据的修正，然后再次部署。当部署完成且每个必需组件保持运行或健康时，即视为恢复。
+
+</Tab>
+<Tab value="Component degraded">
+
+### 找出影响 Service 状态的组件
+
+打开**配置（Configuration）> 常规（General）**，逐个检查组件卡片。聚合的 Service 状态可能已降级，而其他若干组件仍健康。
+
+打开受影响组件的**日志（Logs）**，寻找第一条重复出现的启动、健康检查、权限、迁移或依赖错误。修正该原因后，若改动不影响栈的其余部分，只重启该组件。涉及共享 Compose、环境、网络或存储的更改，则重启或部署整个 Service。
+
+**Exclude from service status** 只用于真正可选或一次性的组件。不要为了聚合状态好看而排除必需的数据库、worker、代理或应用。
+
+当组件保持运行、定义的健康检查通过，且 Service 不再因该组件报告降级时，即视为恢复。
+
+</Tab>
+<Tab value="Configuration differs">
+
+### 对比存储的定义与生成的定义
+
+打开**配置 > 常规 > Edit Compose File**。
+
+1. 在 **Source Compose** 中检查你本想保存的值。
+2. 打开 **Show Deployable Compose**，找到发给 Docker Compose 的生成值。
+3. 当字段使用 `${VARIABLE}` 插值时，检查**环境变量（Environment Variables）**。
+4. 在可部署定义中检查生成的域名、容器名、网络和卷名。
+5. 保存正确的源值，然后重启或部署 Service。
+
+不要把编辑运行中的容器当作长久之计。通过**终端（Terminal）**对容器文件系统或环境所做的更改，会在 Coolify 重建组件时消失。
+
+当 **Deployable Compose** 包含预期值，且重建后的容器报告相同配置时，即视为恢复。
+
+</Tab>
+<Tab value="Connection fails">
+
+### 确认容器共享网络
+
+同一个 Service 内的组件，使用 Compose 服务名和内部端口。不要用 `localhost` 访问另一个组件。
+
+对于 Service 之外的资源，确认两个资源运行在同一台服务器上并共享一个 Docker 网络。只有当 Service 必须加入其预定义网络（通常是 `coolify`）时才启用 **Connect To Predefined Network**。
+
+单独检查接收方进程：它必须监听预期的内部端口，且地址可从其他容器访问。在修正主机名、端口、网络或监听地址后，从调用方组件测试依赖。
+
+完整的网络模型与连接路径，请阅读[Service 网络](/services/configuration/networking)。
+
+</Tab>
+<Tab value="Domain fails">
+
+### 把组件健康与代理路由分开判断
+
+先确认组件在运行，并在其内部端口上有响应。如果没有，先排查组件本身，再动 DNS 或代理设置。
+
+如果组件内部正常：
+
+1. 确认 **Domains** 包含预期主机名。
+2. 组件不监听端口 `80` 时，把内部端口写进 Coolify 域名值，例如 `https://app.example.com:3000`。
+3. 确认 DNS 把主机名指向 Service 服务器。
+4. 确认 Coolify 代理在该服务器上运行。
+5. 判断响应是 DNS 错误、TLS 错误、`502` 还是 `504`，然后按对应的排查指南处理。
+
+代理无法连接组件时，参考[Bad Gateway (502)](/troubleshoot/applications/bad-gateway)。代理连上了但未及时收到响应时，参考[Gateway Timeout (504)](/troubleshoot/applications/gateway-timeout)。
+
+当外部 HTTPS 请求到达预期组件、且其日志记录了该请求时，即视为恢复。
+
+</Tab>
+</Tabs>
+
+## 收集支持所需的信息
+
+如果 Service 仍然失败，请记录：
+
+- Service 与受影响组件的名称
+- 第一条失败的部署命令及其错误
+- 受影响组件的状态与相关日志行
+- 与故障相关的源定义与可部署 Compose 片段
+- 问题影响的是内部流量、域名，还是两者
+- 相关容器所在的服务器与共享的 Docker 网络
+- 已尝试过的补救措施及其结果
+
+分享 Compose 或环境变量输出之前，删除密码、令牌、私钥和其他机密值。

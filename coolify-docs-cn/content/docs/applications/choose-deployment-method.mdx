@@ -1,0 +1,62 @@
+---
+title: 选择部署方式
+description: 选择 Coolify 的部署来源：Git 仓库、免 Git 直接填写的 Dockerfile、基于 Git 的 Docker Compose 定义，或现成镜像。
+---
+
+# 选择部署方式
+
+选择与你现有输入匹配的方式。部署方式决定 Coolify 接收什么；构建方式决定 Coolify 如何从 Git 源码创建镜像。
+
+## 根据你拥有的内容选择
+
+| 你拥有 | Coolify 做什么 | 指南 |
+| :--- | :--- | :--- |
+| 一个 Git 仓库 | Coolify 检出所选提交并准备所需的镜像。 | [对比构建方式](/applications/builds/overview) |
+| 一个不含 Git 仓库的 Dockerfile | Coolify 保存 Dockerfile，按其指令构建镜像，再用该镜像创建应用容器。 | [使用 Dockerfile](/applications/builds/dockerfile) |
+| 一个包含 Compose 文件的 Git 仓库 | Coolify 读取定义，为带 `build:` 的服务构建镜像，为带 `image:` 的服务拉取镜像，并用 Docker Compose 套用该定义。 | [使用 Docker Compose](/applications/builds/docker-compose) |
+| 一个已发布到镜像仓库的镜像 | Coolify 拉取镜像，套用已保存的运行时配置，并据此创建容器。 | [部署 Docker 镜像](/applications/deployments/docker-image) |
+
+## 使用 Git 仓库
+
+通过公开 URL、部署密钥或受支持的 Git App 连接仓库，然后选择 **Build strategy**（构建策略）。
+
+- 自动框架与命令检测够用时，使用 [Nixpacks](/applications/builds/nixpacks/overview) 或 [Railpack](/applications/builds/railpack)。
+- 仓库里已经是成品网站文件时，使用 [Static](/applications/builds/static)。
+- 仓库定义单个自定义镜像时，使用 [Dockerfile](/applications/builds/dockerfile)。
+- 仓库定义多个服务或由 Compose 接管的运行时配置时，使用 [Docker Compose](/applications/builds/docker-compose)。
+
+这些选项之间的差异请阅读[对比构建方式](/applications/builds/overview)。
+
+## 免 Git 使用 Dockerfile
+
+想把 Dockerfile 直接粘贴进 Coolify 而不连接仓库时，选择 **+ New > Dockerfile**。
+
+这种方式把 Dockerfile 保存在 Coolify 中，不会检出应用源码。因此 `COPY` 指令无法读取仓库里的文件。如果镜像构建需要项目文件，请改用 Git 仓库方式。
+
+## 使用来自 Git 的 Docker Compose
+
+当 Git 仓库中存放着 Application 的 Compose 定义时，将 **Build strategy** 选为 **Docker Compose**。
+
+Compose 文件就是其所定义服务的唯一权威来源。不要指望每个标准应用设置都能覆盖由 Compose 接管的配置。
+
+<Callout type="info" title="Docker Compose Empty 创建的是 Service">
+
+选择 **+ New > Docker Compose Empty** 创建的是用户自定义 Service，而不是 Application。如果 Compose 定义不存放在 Git 中，请使用 [Services](/services)。
+
+</Callout>
+
+## 使用现有 Docker 镜像
+
+如果 CI 或其他构建系统已经负责发布镜像，请使用 [Docker Image 应用](/applications/deployments/docker-image)。
+
+填写带标签的镜像（如 `ghcr.io/example/api:1.4.0`）或 SHA256 摘要。摘要锁定不可变的镜像内容；`latest` 这类可变标签在后续部署时可能解析到不同的内容。
+
+## 验证选择
+
+创建应用后：
+
+1. 在 **General** 下确认所选方式对应的仓库与构建方法、保存的 Dockerfile、Compose 位置或镜像引用。
+2. 非 Compose 的 Application，把 **Ports Exposes** 设置为进程监听的端口；Docker Compose 则在每个对外服务上配置域名和内部端口。
+3. 部署应用。
+4. 打开 **Deployment Logs**，确认操作成功。
+5. 打开已配置的域名，或测试暴露的服务。

@@ -1,0 +1,168 @@
+---
+title: "使用 Colima 的 macOS 安装指南"
+description: "在 macOS 上通过带 Docker 的 Colima 虚拟机安装 Coolify，涵盖虚拟机创建、网络配置与 SSH 配置。"
+---
+
+# 使用 Colima 的 macOS 安装指南
+
+本指南带你一步步在 macOS 上借助 [Colima](https://github.com/abiosoft/colima?utm_source=coolify.io)（一款轻量级容器运行时）搭建 Coolify。
+
+## 前置条件
+
+- 一台 Mac（Intel 或 Apple Silicon）
+- 已安装 [Homebrew](https://brew.sh/?utm_source=coolify.io)
+- Mac 上已启用远程登录——参见 [Apple 的允许远程访问指南](https://support.apple.com/guide/mac-help/mchlp1066/mac?utm_source=coolify.io)，在**系统设置 > 通用 > 共享 > 远程登录**（Remote Login）中启用 SSH
+- 一把未设置口令（passphrase）的 SSH 密钥
+
+
+<Callout type="warn" title="注意">
+
+Coolify 使用的 SSH 密钥不能设置口令，也不能启用 2FA，否则你将无法完成上手引导（onboarding）流程。
+
+</Callout>
+
+
+## 安装 Colima
+
+1. 用 Homebrew 安装 Colima 和 Docker：
+
+   ```bash
+   brew install colima docker
+   ```
+
+2. 验证安装结果：
+
+   ```bash
+   colima version
+   ```
+
+## 创建虚拟机
+
+1. 以最低资源配置启动一个新的 Colima 虚拟机：
+
+   ```bash
+   colima start -c 2 -m 2 -d 30 --ssh-port 2222 --network-address --network-mode bridged --save-config
+   ```
+
+   这条命令会创建一台这样的虚拟机：
+   - **2 个 CPU 核心**（`-c 2`）
+   - **2 GB 内存**（`-m 2`）
+   - **30 GB 磁盘空间**（`-d 30`）
+   - **SSH 监听 2222 端口**（`--ssh-port 2222`）
+   - **桥接网络**（`--network-address --network-mode bridged`）——虚拟机会从路由器获取自己的 IP
+   - **保存配置**（`--save-config`）——持久化这些设置，之后的 `colima start` 会沿用同一配置
+
+
+<Callout type="info" title="提示">
+
+   这些数值可以按需调整。以上是同时运行 Coolify 和若干服务时的推荐最低配置。
+
+</Callout>
+
+
+2. 确认虚拟机正在运行：
+
+   ```bash
+   colima status
+   ```
+
+## 网络配置
+
+Colima 支持两种网络模式：**桥接模式**（bridged，推荐）和**共享模式**（shared）。
+
+### 桥接模式（本指南默认）
+
+上面的命令使用了 `--network-address --network-mode bridged`，会直接从路由器的 DHCP 服务器给虚拟机分配一个 IP 地址。这样虚拟机就像网络中的一台独立设备，局域网内的其他设备都能访问到 Coolify。
+
+
+<Callout type="info">
+
+桥接模式默认使用 `en0` 接口。如果你的 Mac 使用的是其他网络接口，请用 `--network-interface <name>` 指定。
+
+</Callout>
+
+
+查看虚拟机的 IP 地址：
+
+```bash
+colima list
+```
+
+### 共享模式
+
+如果你不需要让网络中的其他设备访问 Coolify——例如打算配合 [Tailscale](https://tailscale.com/?utm_source=coolify.io) 使用，或只需要从自己的 Mac 访问——可以省略网络相关参数：
+
+```bash
+colima start -c 2 -m 2 -d 30 --ssh-port 2222 --save-config
+```
+
+在共享模式下，虚拟机会获得一个私有子网内的 IP，只有宿主 Mac 能访问。
+
+## SSH 配置
+
+Coolify 通过 SSH 连接服务器。由于创建虚拟机时指定了 `--ssh-port 2222`，SSH 端口是固定的，重启后也不会变化。
+
+随时可以用以下命令核对 SSH 配置：
+
+```bash
+colima ssh-config
+```
+
+该命令会输出完整的 SSH 配置，包括虚拟机使用的**主机名**、**端口**、**用户**和**身份文件**。
+
+在 Coolify 的上手引导或服务器设置中添加服务器时，请使用输出中的主机名和端口。
+
+
+<Callout type="info" title="提示">
+
+创建虚拟机时如果省略 `--ssh-port`，Colima 会随机分配一个空闲端口，重启后可能变化。可用 `colima ssh-config` 查看当前端口。
+
+</Callout>
+
+
+## 安装 Coolify
+
+1. SSH 进入 Colima 虚拟机：
+
+   ```bash
+   colima ssh
+   ```
+
+2. 在虚拟机内按照 [Coolify 自托管安装流程](/start-with-self-hosted#quick-installation-recommended)继续操作。
+
+3. 安装完成后，根据网络模式访问 Coolify 的 Web 界面：
+
+   - **桥接模式**：在网络中的任意设备上打开 `http://<vm-ip>:8000`。
+   - **共享模式**：只能从你的 Mac 打开 `http://<vm-ip>:8000`（其他设备无法访问虚拟机）。
+
+   虚拟机的 IP 地址可用 `colima list` 查询。
+
+4. 在 Coolify 的 Web 界面中，进入服务器设置，把 **SSH 端口**设为创建虚拟机时指定的端口（例如 `2222`）。Coolify 会通过这个端口用 SSH 管理服务器。
+
+## 从头开始
+
+如果出了问题想推倒重来，可以删除虚拟机后重新创建。
+
+- 删除虚拟机但保留磁盘数据：
+
+  ```bash
+  colima delete
+  ```
+
+- 删除虚拟机及其全部数据：
+
+  ```bash
+  colima delete --data
+  ```
+
+删除后，回到[创建虚拟机](#创建虚拟机)重新搭建。
+
+## 安装后步骤
+
+### 开机自动启动 Colima
+
+如果希望 Mac 开机时自动启动 Colima：
+
+```bash
+brew services start colima
+```

@@ -1,0 +1,227 @@
+---
+title: 自定义代理概览
+description: 了解自定义代理如何与 Coolify 协作，以及哪些路由、证书和网络功能需要你自己管理。
+---
+
+# 自定义代理概览
+
+自定义代理是你在 Coolify 之外配置和运营的反向代理。它接收发往你域名的请求并转发给应用和服务容器，而 Coolify 继续构建、部署和管理这些资源。
+
+如果你已经在运营一个反向代理，或者路由需求需要一套独立配置，这个选项会很有用。域名路由、TLS 证书、Docker 网络连接和代理维护原本由 Coolify 通过 Traefik 或 Caddy 集成处理，改用自定义代理后都由你负责。
+
+<Callout type="warning" title="除非确有需要，否则使用集成代理">
+
+Traefik 是大多数部署的默认且推荐的代理。选择 **Custom (None)** 并不会把另一个代理集成进 Coolify。Coolify 中的域名和代理设置不会配置你的外部代理。
+
+切换会中断当前代理提供的所有路由。停止当前代理之前，先准备好替代方案以及恢复原代理的办法。
+
+</Callout>
+
+## 有哪些变化
+
+| Coolify 托管的功能 | 使用自定义代理时 | 变通办法 |
+| :--- | :--- | :--- |
+| 根据资源域名和端口生成路由 | 在 UI 和 API 中设置域名不会在你的代理里创建路由。 | 自己维护主机名、路径与内部目标端口的映射，或为你的代理实现自动发现。 |
+| 自动 HTTPS 与泛域名证书 | Coolify 不会为你的代理获取或续期证书。 | 使用代理自身的证书支持或外部 ACME 客户端。安排续期计划，并在续期后重载证书。 |
+| HTTP 重定向、默认重定向与未知主机名处理 | 集成代理的行为不再适用。 | 在自定义代理中配置 HTTP 到 HTTPS 的重定向、规范域名和默认虚拟主机。 |
+| 基本身份验证、中间件与代理响应头 | Coolify 不会为你的自定义代理配置身份验证、中间件或响应头。 | 在自定义代理中配置身份验证、转发头、压缩和所需的响应头。 |
+| 预览部署 URL | 预览部署不会自动获得外部路由。 | 为每个预览单独创建路由和目标，或自动化发现与清理。 |
+| Docker 网络连接 | Coolify 不会自动把你的自定义代理接入资源网络。 | 在自定义代理与它需要访问的资源的 Compose 文件中加入共享网络，或将自定义代理接入 Coolify 创建的资源网络。 |
+| Coolify 中的代理启动、重启、配置与日志 | Coolify 不运营你的自定义代理，必须在外部管理。 | 在 Coolify 之外启动和重启代理、校验并重载配置、查看日志。 |
+| 集成流量分析 | 面板流量分析只支持 Traefik 或 Caddy。 | 使用自定义代理提供的指标，在外部搭建分析。 |
+| 到 Coolify 面板与实时服务的路由 | Coolify 不会为你的自定义代理生成这些路由。 | 在自定义代理中为面板、实时更新和 Web 终端添加路由。所需端口见[防火墙指南](/core/infrastructure/servers/firewall)，路径见 [realtime 迁移](/core/instance-management/reverb-migration)。 |
+
+应用构建、部署、存储、环境变量和容器健康检查仍由 Coolify 负责。容器健康并不能证明其外部路由可用，两者都要验证。
+
+## 准备你的自定义代理
+
+把当前代理使用的域名、应用端口、路径规则、WebSocket 连接、重定向、身份验证设置和证书记录下来。包括预览部署和 Coolify 面板（如果你通过代理访问它们）。
+
+把自定义代理的 Compose 文件、配置和证书放在服务器上一个独立的目录中，例如 `/data/custom-proxy`。配置自定义代理在服务器重启后自动启动。确保在 Coolify 面板不可用时，你也能从服务器终端重启它。
+
+在把流量切换过去之前，先测试自定义代理。使用测试服务器或未被占用的端口，让当前代理在测试期间继续运行。
+
+## 将代理连接到资源
+
+你的自定义代理可以通过共享 Docker 网络，或通过映射到服务器的端口访问应用。共享网络让同一服务器上的容器无需发布应用端口即可互相通信。
+
+如果使用端口映射，配置自定义代理连接服务器地址和映射端口。记录应用已占用的端口：在同一服务器地址上，两个应用不能绑定同一个端口。
+
+<Callout type="warning" title="保护好映射端口">
+
+映射端口会把应用直接暴露出去，客户端可以绕过你的自定义代理。没有合适的防火墙规则时，这些应用可能对任何人可访问。只向需要这些端口的客户端（包括你的自定义代理）开放访问，并按照[防火墙指南](/core/infrastructure/servers/firewall)配置与 Docker 发布端口配合的规则。
+
+</Callout>
+
+通过 Docker 网络连接时，在下面选择你的资源类型。
+
+<Tabs id="custom-proxy-resource-networks" items={['应用与数据库', 'Compose 与服务']}>
+<Tab value="应用与数据库">
+
+不使用 Docker Compose 的应用和一键数据库默认使用 `coolify` 网络。如果你把资源配置为使用其他 Docker 网络，就把自定义代理接入那个网络。
+
+把自定义代理接入同一网络，在代理的 Compose 文件中添加：
+
+```yaml
+services:
+  proxy:
+    # Keep your proxy image, ports, volumes, and other settings here.
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
+```
+
+用这份配置启动或重建代理之后，以应用的内部容器名或网络别名加内部端口作为路由目标。对于一键数据库，Coolify 会在其 **Internal URL** 中显示连接信息。
+
+大多数数据库使用 TCP 协议而非 HTTP。代理数据库连接要求你的自定义代理支持其协议。
+
+</Tab>
+<Tab value="Compose 与服务">
+
+Docker Compose 应用和服务栈默认各自拥有独立的 Docker 网络。除非在资源设置中启用 **Connect To Predefined Network**，它们不会连接到 `coolify`。在标准配置下，该选项会添加一条到 `coolify` 的连接；如果你为资源配置了其他预定义网络，该选项会把它连接到那个网络。
+
+从以下网络方案中选择一个：
+
+- 把自定义代理接入 Coolify 为该应用或服务创建的网络。下面的示例展示了如何把现有网络加入代理的 Compose 文件。
+- 为应用或服务启用 **Connect To Predefined Network**，然后把自定义代理接入 `coolify`，示例见 **应用与数据库** 标签页。如果使用其他预定义网络，把 `coolify` 替换为那个网络的名称。
+- 为自定义代理和它服务的应用新建一个网络，把它同时加入自定义代理的 Compose 文件和应用或服务在 Coolify 中的 Compose 配置。下面的 **使用独立的共享网络** 示例展示了做法。
+
+### 加入已有的资源网络
+
+在服务器上运行 `docker network ls` 列出网络。找到 Coolify 为你的应用或服务创建的网络，其名称基于资源的 UUID。
+
+在自定义代理的 Compose 文件中加入以下网络设置，把 `resource-network-name` 替换为那个现有网络的名称：
+
+```yaml
+services:
+  proxy:
+    # Keep your proxy image, ports, volumes, and other settings here.
+    networks:
+      - resource-network-name
+
+networks:
+  resource-network-name:
+    external: true
+```
+
+这里的 `external: true` 告诉 Docker 使用已经存在的网络。保存文件后启动或重建自定义代理，让它加入该网络。
+
+### 使用独立的共享网络
+
+在资源服务器上创建一次网络：
+
+```sh
+docker network create custom-proxy
+```
+
+把它加入自定义代理的 Compose 文件：
+
+```yaml
+services:
+  proxy:
+    # Keep your proxy image, ports, volumes, and other settings here.
+    networks:
+      - custom-proxy
+
+networks:
+  custom-proxy:
+    external: true
+```
+
+再把它加入保存在 Coolify 中的资源 Compose 定义里面面向 Web 的服务：
+
+```yaml
+services:
+  web:
+    image: example/app:1.0
+    networks:
+      custom-proxy:
+        aliases:
+          - example-app-web
+
+networks:
+  custom-proxy:
+    external: true
+```
+
+这些示例只展示需要添加的网络设置，Compose 文件中已有的其他设置和网络都要保留。保存后重新部署应用或服务，然后配置自定义代理连接 `example-app-web` 及应用的内部端口。不需要把这个端口映射到服务器。
+
+<Callout type="warning" title="使用独立网络和唯一别名">
+
+如果你在 Coolify 为应用或服务自动创建的网络上添加自定义别名，Coolify 生成部署配置时可能会移除它。把自定义别名加到独立的网络上（例如上面示例中的 `custom-proxy`），Coolify 就会保留它。
+
+Docker 还会把服务名和容器名作为网络别名。多个栈共享一个网络时，`web` 这类名字可能冲突。为每个代理目标使用唯一别名。
+
+</Callout>
+
+只把代理需要访问的组件接入共享网络。同一共享网络上的所有容器都能访问彼此的监听端口，把数据库或其他内部组件接进来会不必要地扩大访问面。
+
+更多关于资源网络和 **Connect To Predefined Network** 的内容，请阅读 [Docker Compose 网络](/applications/builds/docker-compose#compose-网络)和[服务网络](/services/configuration/networking)。
+
+</Tab>
+</Tabs>
+
+### 容器名称与重新部署
+
+应用容器名在每次部署时可能变化。服务容器名一般稳定，但 IP 地址仍可能改变。**Consistent container name** 可以稳定应用的名称，但不会保留其 IP，也不会让部署不中断。
+
+尽量使用稳定的别名，并配置代理在目标地址变化时重新解析名称。验证它能在应用离线时启动、在应用恢复后自动恢复。示例见 [nginx 如何在重新部署后找到应用容器](/core/networking/proxy/custom/nginx#让目标在重新部署后保持稳定)。
+
+## 切换到 Custom（None）
+
+<Steps>
+<Step>
+
+### 保留恢复路径
+
+备份 `/data/coolify/proxy`，其中包含当前代理的配置和持久化数据，包括证书和自定义配置文件。切换期间保持一个 SSH 会话在线。
+
+如果你是自托管 Coolify，在停止代理之前先通过 `http://<Server-IP>:8000` 直接打开面板，并在切换期间使用这个地址。如果面板域名使用的正是你要停止的代理，停止代理后通过域名的面板访问就会失效。继续之前先确认直接访问可用。
+
+在自托管实例上，选择 **Custom (None)** 不会移除默认发布的面板和实时端口：`8000`、`6001` 和 `6002`。自定义 Compose 覆盖可能改变这些绑定。等新路由正常后，再单独复核访问方式。
+
+</Step>
+<Step>
+
+### 停止集成代理
+
+打开 **Servers > your server > Proxy**，选择 **Stop Proxy**。等待状态变为 **Proxy Exited**。确认旧代理已经释放替代方案要使用的宿主端口。
+
+</Step>
+<Step>
+
+### 选择 Custom
+
+选择 **Switch Proxy**，确认警告，然后选择 **Custom**。Coolify 会把这个选择存为 `NONE`，并把代理的配置与运营留给你。
+
+</Step>
+<Step>
+
+### 启动替代代理
+
+按计划应用宿主端口绑定，并用其自身的部署流程启动外部代理。检查它的日志、配置校验、证书和网络连接。
+
+</Step>
+<Step>
+
+### 验证路由与恢复
+
+测试应用路由、重定向、WebSocket、身份验证、大请求和证书续期。重新部署一个应用，确认代理能找到它的新地址。
+
+如果你代理了 Coolify 实例，验证登录、实时部署更新和 Web 终端。UI 与实时目标见 [realtime 迁移](/core/instance-management/reverb-migration)。
+
+</Step>
+</Steps>
+
+## 维护这套配置
+
+让路由配置、证书、续期任务和备份独立于它们暴露的应用。在一次无效的配置更改之后，测试代理的重启与恢复。确保任何管理面板不可用时，证书续期仍然照常运行。
+
+删除资源之前先移除它的路由。如果你把代理直接接入了资源的 UUID 网络，移除路由时一并断开。只要有其他容器还接在上面，Docker 就无法删除网络，所以资源删除后网络可能仍然存在。
+
+要回到集成代理，先停止外部代理并释放其宿主端口。在 Coolify 中选择 Traefik 或 Caddy，恢复相关配置，然后按照[代理切换流程](/core/networking/proxy/overview#在-traefik-和-caddy-之间切换)操作。验证运行中的资源带有正确的标签，且每条路由都恢复正常。
+
+有关其中决策与问题的完整实例，请阅读 [ShadowArcanist 的 nginx 迁移案例研究](/core/networking/proxy/custom/nginx)。

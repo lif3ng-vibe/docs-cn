@@ -1,0 +1,85 @@
+---
+title: 部署密钥
+description: 让 Coolify 通过 SSH 只读访问一个私有 Git 仓库。
+---
+
+# 部署密钥
+
+部署密钥（deploy key）允许一把 SSH 密钥访问一个私有仓库。当你无法安装 Git App，或更希望按仓库粒度控制访问时，就使用它。
+
+## 创建部署密钥
+
+<Steps>
+<Step>
+
+### 在 Coolify 中生成密钥
+
+打开 **Keys & Tokens**（密钥与令牌）> **Private Keys**（私钥），选择 **New private key**（新建私钥），然后选择 **Generate ED25519**（生成 ED25519）或 **Generate RSA**（生成 RSA）。Coolify 会立即保存密钥。
+
+打开已保存密钥的编辑图标，为它取一个能标识对应仓库的名称，选择 **Save changes**（保存更改），并复制 **Public key**（公钥）。
+
+</Step>
+<Step>
+
+### 将公钥添加到仓库
+
+打开仓库的 deploy key 或 access key 设置，添加刚复制的公钥。
+
+保持写权限关闭。Coolify 只需要克隆和拉取仓库。
+
+</Step>
+<Step>
+
+### 复制 SSH 仓库 URL
+
+使用提供方的 SSH 克隆 URL：
+
+```sh
+git@github.com:coollabsio/coolify-examples.git
+```
+
+**Private Repository (with deploy key)** 不要使用 HTTPS URL。
+
+</Step>
+<Step>
+
+### 创建应用
+
+打开一个项目，选择 **+ New**（新建），再选择 **Private Repository (with deploy key)**（私有仓库（带部署密钥））。
+
+选择服务器，选定已保存的私钥，粘贴 SSH URL，然后配置应用。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**（部署）。在部署日志中确认仓库克隆成功、分支符合预期。
+
+</Step>
+</Steps>
+
+## 自动部署
+
+SSH 密钥只提供仓库访问能力，部署如何触发还需要你来选择。
+
+<Tabs id="deploy-key-automatic-deployment" items={['仓库 webhook', '外部工作流']}>
+<Tab value="仓库 webhook">
+
+添加[手动 Git webhook](/applications/deployments/manual-webhooks)，然后在 **Advanced > Deployment > Auto deploy**（高级 > 部署 > 自动部署）下选择 **Deploy on push (webhooks)**（推送时部署（webhook））。此后当配置的分支发生变化时，提供方就会通知 Coolify。
+
+如果你希望通过一个集成同时完成 GitHub 仓库选择与 webhook 配置，请改用 [GitHub App](/applications/sources/github/app)。
+
+</Tab>
+<Tab value="外部工作流">
+
+在 GitHub Actions 或其他 CI 系统的检查通过后，调用经过身份验证的 **Deploy Webhook**（部署 webhook）。
+
+[GitHub Actions 示例](/applications/sources/github/actions#添加-github-actions-工作流)中的部署步骤展示了身份验证的写法。
+
+</Tab>
+</Tabs>
+
+## 密钥范围
+
+最好为每个仓库单独使用一把部署密钥。一旦某把密钥泄露，就把它从仓库和 Coolify 中移除，重新创建一把，在 **Git Source**（Git 来源）下挂载新密钥，然后重新部署。

@@ -1,0 +1,117 @@
+---
+title: 实例环境变量
+description: 为自托管 Coolify 实例配置 PHP 内存、worker 和计划任务分发,并使环境更改生效。
+---
+
+# 实例环境变量
+
+自托管的 Coolify 从 `/data/coolify/source/.env` 读取实例环境。PHP 内存、worker 和计划任务分发这类未在仪表盘中暴露的设置,都可以使用这个文件。
+
+这些设置影响的是 Coolify 实例本身。要配置已部署的应用,请使用该应用的[环境变量](/applications/configuration/environment-variables)和镜像配置。
+
+## PHP 内存与 worker 设置
+
+当对应变量未设置时,标准生产 Compose 配置会提供以下默认值:
+
+| 变量 | Coolify 默认值 | 用途 |
+| :--- | :--- | :--- |
+| `PHP_MEMORY_LIMIT` | `256M` | 单个 PHP 脚本的内存上限。 |
+| `PHP_FPM_PM_CONTROL` | `dynamic` | PHP-FPM 进程管理模式。镜像支持 `dynamic`、`ondemand` 和 `static`。 |
+| `PHP_FPM_PM_START_SERVERS` | `1` | 使用 `dynamic` 模式时启动的 worker 数量。 |
+| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `1` | `dynamic` 模式下维持的最小空闲 worker 数。 |
+| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `10` | `dynamic` 模式下维持的最大空闲 worker 数。 |
+
+`PHP_MEMORY_LIMIT` 与 Docker 的容器内存限制相互独立。调高它并不会给容器或服务器分配更多内存。PHP worker 和其他进程仍共享可用内存。
+
+worker 设置要与所选进程管理模式和服务器资源保持一致。镜像支持的其他设置列在 [Server Side Up PHP 环境变量参考](https://serversideup.net/open-source/docker-php/docs/reference/environment-variable-specification)中。Coolify 自身的配置可能覆盖镜像默认值,因此修改后请核实实际生效的值。
+
+## 计划任务分发
+
+`SCHEDULED_JOBS_DISPATCH_MODE` 控制调度器如何每分钟检查哪些数据库备份、任务、卷备份和 Docker 清理已到期:
+
+| 取值 | 行为 |
+| :--- | :--- |
+| `sequential` | 一个进程依次检查全部四类任务。占用 CPU 和内存最少。某类任务变慢会拖累其他类型。 |
+| `concurrent` | 每类任务一个进程,同时运行。某类任务变慢不会拖累其他类型,但每个进程都要加载 Coolify,每分钟的 CPU 和内存占用更高。 |
+
+当变量未设置或取其他值时,自托管实例使用 `sequential`。当许多备份或任务在同一分钟内到期、某类慢任务拖累其他任务时,使用 `concurrent`。
+
+要更改模式,在 `/data/coolify/source/.env` 中添加或更新这一行:
+
+```dotenv
+SCHEDULED_JOBS_DISPATCH_MODE=concurrent
+```
+
+然后按照下文的[应用更改](#应用更改)重建 Coolify 容器,同时保留当前镜像和任何自定义 Compose 覆盖。
+
+## 修改设置
+
+连接到 Coolify 实例所在的服务器。先备份现有环境文件,再编辑它:
+
+```bash
+cp /data/coolify/source/.env /data/coolify/source/.env.backup
+nano /data/coolify/source/.env
+```
+
+例如,要把 PHP 内存上限提高到 `512M`,添加或更新这一行:
+
+```dotenv
+PHP_MEMORY_LIMIT=512M
+```
+
+请更新已有条目,而不要添加重复的键。实例的其他值(包括 `APP_KEY`)保持不变。备份要妥善保管:其中包含实例凭据。
+
+不要通过编辑生成的 `docker-compose.prod.yml` 来更改这些默认值。安装与更新脚本可能会替换该文件。
+
+## 应用更改
+
+修改 `.env` 不会更新现有容器的环境。请用你安装时的 Compose 配置重建 Coolify 容器;单纯的 `docker restart coolify` 不会重新加载这些变量。
+
+对于标准的自托管安装,在 source 文件夹中用 Bash 运行以下命令:
+
+```bash
+cd /data/coolify/source || exit 1
+coolify_image=$(docker inspect --format '{{.Config.Image}}' coolify) || exit 1
+compose_files=(-f docker-compose.yml -f docker-compose.prod.yml)
+if [ -f docker-compose.custom.yml ]; then
+  compose_files+=(-f docker-compose.custom.yml)
+fi
+
+docker compose "${compose_files[@]}" -f - up -d --no-deps --force-recreate coolify <<EOF
+services:
+  coolify:
+    image: "$coolify_image"
+EOF
+```
+
+最后的内联覆盖让命令沿用正在运行的 Coolify 镜像,而不是回退到 Compose 文件的默认镜像标签。命令还会在存在 `docker-compose.custom.yml` 时把它包含进来。详见 [Compose 覆盖](/start-with-self-hosted#compose-overrides)。
+
+不需要先运行 `docker compose down`。`--force-recreate` 会替换 Coolify 容器,`--no-deps` 则让 PostgreSQL 和 Redis 继续运行。Coolify 重启期间仪表盘会短暂不可用。
+
+## 验证配置
+
+在重建后的容器内检查 PHP 内存上限:
+
+```bash
+docker exec coolify php -r 'echo ini_get("memory_limit"), PHP_EOL;'
+```
+
+对于上面的示例,结果应为 `512M`。要查看实际生效的 PHP-FPM 池配置,运行:
+
+```bash
+docker exec coolify php-fpm -tt
+```
+
+确认仪表盘仍能加载;如果启动失败,查看容器日志:
+
+```bash
+docker logs --tail 100 coolify
+```
+
+## 何时使用 Compose 覆盖
+
+实例配置或其容器镜像支持的参数,用 `.env` 处理。`mem_limit`、CPU 限制、端口绑定和额外文件挂载这类 Compose 属性,使用 `/data/coolify/source/docker-compose.custom.yml`。
+
+任意的环境变量并不会自动变成 PHP 设置。如果某个参数没有环境变量支持,就需要借助镜像所支持的配置文件机制。Coolify 还自带 PHP 配置,因此在假设某个镜像设置已生效之前,请先检查实际加载的配置。
+
+容器限制与挂载配置,参阅 [Compose 覆盖示例](/start-with-self-hosted#examples)。

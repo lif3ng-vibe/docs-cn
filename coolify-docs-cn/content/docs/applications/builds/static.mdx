@@ -1,0 +1,115 @@
+---
+title: Static
+description: 把预构建的静态文件打包进 Nginx 镜像，并用 Coolify 部署。
+---
+
+# Static
+
+**Static** 构建包（build pack）会把 Git 仓库中已有的文件打包进 Nginx 镜像。
+
+当仓库中已经包含要对外提供的最终 HTML、CSS、JavaScript 及其他资源时，使用它。它不会执行框架构建命令。
+
+如果仓库必须先运行 `npm run build` 或其他编译步骤才能得到静态文件，请改用 Nixpacks、Railpack 或 Dockerfile。
+
+## 部署静态文件
+
+<Steps>
+<Step>
+
+### 准备仓库
+
+把最终的静态文件提交到仓库。
+
+如果它们位于 `dist` 之类的子目录，先在创建应用前确认好该路径。
+
+</Step>
+<Step>
+
+### 创建资源
+
+打开将要容纳该应用的项目和环境，然后选择 **+ New**（新建）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/1.webp" alt="Coolify 项目中的 New Resource（新建资源）按钮" />
+
+</Step>
+<Step>
+
+### 选择仓库来源
+
+连接公开仓库、部署密钥（deploy key）或受支持的 Git App。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/2.webp" alt="Coolify 中的 Git 仓库来源选项" />
+
+对于公开仓库，粘贴其 HTTPS URL，然后选择 **Check Repository**（检查仓库）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/3.webp" alt="静态应用的公开仓库 URL 输入框" />
+
+</Step>
+<Step>
+
+### 选择 Static
+
+创建时在 **Build pack**（构建包）中选择 **Static**。创建之后，该选择对应 **常规（General）> 构建流水线（Build pipeline）** 下的**构建策略（Build strategy）**。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/4.webp" alt="Build Pack 选择器中的 Static 选项" />
+
+</Step>
+<Step>
+
+### 设置基础目录
+
+把**基础目录**（Base Directory）设为包含成品网站文件的目录。
+
+文件在仓库根目录时用 `/`；在子目录中时用 `/dist` 这类路径。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/5.webp" alt="Static 构建的 Base Directory（基础目录）字段" />
+
+选择 **Continue**（继续）。
+
+</Step>
+<Step>
+
+### 查看 Web 服务器
+
+Coolify 使用 Nginx 来承载这些静态文件。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/6.webp" alt="Static 构建选择 Nginx 作为 Web 服务器" />
+
+</Step>
+<Step>
+
+### 配置域名
+
+打开 **Domains**（域名），选择 **Add domain**（添加域名），填写协议、主机名以及目标端口或路径。每个额外的主机名都要单独添加。参见[域名](/core/networking/domains)。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/7.webp" alt="静态应用的 Domains（域名）字段" />
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**（部署）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/8.webp" alt="静态应用的 Deploy 按钮" />
+
+打开域名，验证站点使用的一个文档、一个资源以及一条客户端路由。
+
+</Step>
+</Steps>
+
+## Nginx 配置
+
+Coolify 为静态镜像提供默认的 Nginx 配置。
+
+打开 **General**（常规），生成配置；只有当站点需要单页应用回退、自定义响应头或缓存规则等行为时才进行编辑。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/static/9.webp" alt="静态应用的 Generate 按钮与 Nginx 配置编辑器" />
+
+保存更改并重新部署应用。Coolify 会在镜像构建期间把 Nginx 配置复制进静态镜像，因此复用现有镜像的重启无法使更改生效。
+
+<Callout type="info" title="在 Coolify 中构建前端">
+
+如果仓库中是源码而非最终产物，请[使用 Nixpacks 部署](/applications/builds/nixpacks/deploy)或使用 [Railpack](/applications/builds/railpack)，在 **Site type**（站点类型）中选择 **Static**，并把构建输出设置为 **Publish Directory**（发布目录）。
+
+</Callout>

@@ -1,0 +1,168 @@
+---
+title: 更新 Coolify
+description: 从仪表盘或终端更新自托管 Coolify 实例,并配置自动更新。
+---
+
+import { Autobrightness2, BrowserTerminal, Refresh23 } from 'reicon-react';
+
+# 更新 Coolify
+
+更新 Coolify 改变的是自托管 Coolify 控制平面。它不会更新你用 Coolify 管理的应用、数据库、服务或服务器。
+
+<Callout type="warn" title="Coolify Cloud">
+如果你使用 **Coolify Cloud**,实例更新由 Coolify 团队管理。你需要等待 Coolify 团队来更新实例。
+</Callout>
+
+对于自托管实例,打开左侧边栏的 **Settings**,选择 **Updates**。
+
+
+## 更新之前
+
+- [创建实例备份](/core/backup-and-recovery/instance-backup)。
+- 查阅你计划安装版本的[发布说明](https://github.com/coollabsio/coolify/releases)。
+- 检查是否有进行中的部署;更新过程中它们可能失败。
+
+<Callout type="info" title="从使用 Soketi 的版本升级?">
+如果你使用了自定义 Compose 覆盖、实时端口、防火墙规则或 Cloudflare Tunnel,请在更新前阅读 [Reverb 迁移指南](/core/instance-management/reverb-migration)。
+</Callout>
+
+---
+
+## 选择更新方式
+
+<Tabs id="coolify-update-path" items={['Automatic', 'Dashboard', 'Terminal']}>
+<Tab value="Automatic" icon={Autobrightness2}>
+
+## 自动更新
+
+启用 **Automatic updates** 并设置 **Update frequency**。之后 Coolify 会检查新版本,并在有新版本时自动安装。
+
+### 启用自动更新
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/automatic-updates-overview.webp" alt="依次高亮显示的 Settings、Updates 和 Automatic updates 控件" />
+
+在 **Automatic updates** 下选择 **Enabled**。该选项会立即保存,**Update frequency** 随之可用。
+
+如果仪表盘中无法配置自动更新,说明 `/data/coolify/source/.env` 中设置了 `AUTOUPDATE`。请改为在该文件中配置自动更新。
+
+### 更新频率
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/automatic-update-frequency.webp" alt="Automatic updates 设置中的 Update frequency 字段" />
+
+**Update frequency** 设置 Coolify 检查新版本并在有新版本时安装的频率。输入 cron 表达式或预设值(如 `every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`),然后点击 **Save changes**。默认值为 `0 0 * * *`,即按实例时区每天零点运行。
+
+更新期间,Coolify 会重启以应用新版本。仪表盘会短暂不可用,通常不到一分钟。
+
+**当 `/data/coolify/source/.env` 中设置了 `AUTOUPDATE` 时,Update frequency 不可用。**
+
+
+### 检查频率
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/automatic-update-check-frequency.webp" alt="Update checks 中的 Check frequency 字段和 Check now 按钮" />
+
+**Check frequency** 设置 Coolify 检查 [CDN 上的版本文件](https://cdn.coollabs.io/coolify/versions.json)并更新可用版本状态的频率。只有当新版本可用时,Coolify 才会安装更新。输入 cron 表达式或预设值(如 `every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`),然后点击 **Save changes**。默认值为 `0 * * * *`,即每小时运行。
+
+点击 **Check now** 可立即检查新版本。这不会安装更新。
+
+</Tab>
+
+<Tab value="Dashboard" icon={Refresh23}>
+
+## 通过仪表盘手动更新
+
+打开 **Settings** 页面,选择 **Updates**。
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-settings-updates.webp" alt="Settings 与 Updates 导航,可见 Update Coolify 区块" />
+
+### 检查频率
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-update-check-frequency.webp" alt="Update checks 设置中的 Check frequency 字段和 Check now 按钮" />
+
+当新版本可用时,Coolify 会在侧边栏左上角的版本号旁显示 **Update available**。**Check frequency** 控制 Coolify 检查 [CDN 上的版本文件](https://cdn.coollabs.io/coolify/versions.json)的频率。要立即检查,点击 **Update checks** 区块中的 **Check now**。这只会检查更新,不会安装。
+
+### Update Coolify
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-upgrade-entry-points.webp" alt="高亮显示的 Upgrade Now 按钮与 Update available 徽标两个更新入口" />
+
+点击 **Update Coolify** 区块中的 **Upgrade Now**,或点击侧边栏版本号旁的 **Update available**。两种方式都会打开升级弹窗。
+
+### 确认更新版本
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-upgrade-confirmation.webp" alt="Upgrade available 弹窗显示当前与新版版本号,高亮 Upgrade Now" />
+
+在弹窗中确认当前版本和新版本。检查没有等待中或进行中的部署,因为更新期间的部署会失败。然后点击 **Upgrade Now** 开始更新。
+
+### 等待更新完成
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-upgrade-progress.webp" alt="Upgrading 弹窗显示 Preparing、Helper、Image 和 Restart 各阶段" />
+
+更新通常不到一分钟。视网络状况和服务器资源,也可能更久。Coolify 在应用更新时会重启,因此仪表盘可能短暂不可用。
+
+如果进度弹窗停留在 **Restart** 超过五分钟,刷新页面。Coolify 可能已完成更新,只是没能自动重新加载页面。如果看到 **Gateway Timeout** 或 **Bad Gateway** 错误,等两分钟再刷新。如果刷新后错误仍在,检查 `/data/coolify/source/upgrade-*` 下的更新日志。
+
+### 升级完成
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/update/dashboard-upgrade-complete.webp" alt="Upgrade complete 弹窗确认新版本,带 Reload Now 按钮" />
+
+所有更新阶段完成后,Coolify 会确认新版本并重新加载页面。如果页面没有自动重载,点击 **Reload Now**。
+
+</Tab>
+
+<Tab value="Terminal" icon={BrowserTerminal}>
+
+### 通过终端手动更新
+
+使用 Coolify 升级脚本更新现有实例。
+
+<Callout type="warn" title="不要用 install.sh 更新">
+在现有实例上,`install.sh` 会重置 `/data/coolify` 下的属主与权限,包括受管服务的数据。请改用 `upgrade.sh`。
+</Callout>
+
+<Steps>
+<Step>
+
+**连接到 Coolify 服务器**
+
+通过 SSH 连接到运行 Coolify 实例的服务器:
+
+```sh
+ssh <username>@<server-ip>
+```
+
+</Step>
+<Step>
+
+**运行升级脚本**
+
+使用你想安装的 Coolify 版本运行升级脚本。版本号不带前导 `v`。
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/upgrade.sh | bash -s 4.3.23
+```
+
+把 `4.3.23` 替换为你要安装的 Coolify 版本。升级脚本在此过程中会从 [CDN 上的版本文件](https://cdn.coollabs.io/coolify/versions.json)更新配置文件。
+
+<Callout type="warn" title="必须指定版本">
+不要省略版本号。省略时,脚本会向 `.env` 写入 `COOLIFY_VERSION=latest`,导致更新检查无法正常工作。
+</Callout>
+
+</Step>
+<Step>
+
+**访问仪表盘**
+
+等脚本运行完毕,然后打开仪表盘确认一切正常。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 验证更新
+
+更新之后,确认仪表盘可以访问、显示预期的 Coolify 版本,并且你的资源正在运行。
+
+如果仪表盘没有恢复,查看 Coolify 服务器上的更新日志。Coolify 把更新日志写在 `/data/coolify/source/` 下,文件名形如 `upgrade-2026-07-11-12-00-00.log`。

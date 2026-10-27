@@ -1,0 +1,40 @@
+---
+title: "Mediawiki"
+description: "A free and open-source wiki software package."
+og:
+  description: "Run MediaWiki on Coolify for Wikipedia-style documentation, knowledge bases, collaborative editing, and structured wiki content management."
+category: "Documentation"
+icon: "/docs-cn/coolify/images/services/mediawiki-logo.svg"
+disabled: true
+---
+
+<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+
+This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+
+See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+
+</Callout>
+
+<ZoomImage src="https://www.mediawiki.org/static/images/icons/mediawikiwiki.svg" alt="Mediawiki" />
+
+## What is Mediawiki?
+
+Free and open source collaborative space for managing and sharing knowledge.
+
+## Installation Steps
+
+1. Comment out the shared volume for LocalSettings in your configuration.
+2. Start the container.
+3. Go to `http(s)://your-domain` to access the MediaWiki installation wizard.
+4. Configure MediaWiki according to your needs through the wizard.
+5. Download the generated `LocalSettings.php` file.
+6. Stop the container.
+7. Move the downloaded `LocalSettings.php` file to the specified file mount path on your server.
+8. Uncomment the shared volume configuration to mount the `LocalSettings.php` file to the specified file mount path on your server.
+9. Restart the container.
+
+## Links
+
+- [The official website](https://www.mediawiki.org/wiki/MediaWiki)
+- [GitHub](https://github.com/wikimedia/mediawiki)

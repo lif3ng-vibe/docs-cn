@@ -1,0 +1,79 @@
+---
+title: 部署公开 GitHub 仓库
+description: 把公开 GitHub 仓库的 URL 交给 Coolify，即可部署应用。
+---
+
+# 部署公开 GitHub 仓库
+
+无需创建 GitHub App 或部署密钥，即可部署任何公开的 GitHub 仓库。
+
+<Steps>
+<Step>
+
+### 创建资源
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/public-repository/1.webp" alt="带 New 按钮的 Coolify 项目页面" />
+
+1. 打开目标项目与环境。
+2. 选择 **+ New**（新建）。
+
+</Step>
+<Step>
+
+### 选择 Public Repository
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/public-repository/2.webp" alt="Coolify 中的 Public Repository 资源类型" />
+
+选择 **Public Repository**（公开仓库）。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+<Callout type="info" title="自托管 Coolify 自带 localhost">
+
+自托管安装自带一台 **localhost** 服务器。在没有其他部署服务器可用时，Coolify 会自动选中它。
+
+</Callout>
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/public-repository/3.webp" alt="公开仓库应用的服务器选择" />
+
+选择应用将要运行的服务器。
+
+</Step>
+<Step>
+
+### 输入仓库 URL
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/public-repository/4.webp" alt="Coolify 中的 Public Git repository URL 字段" />
+
+粘贴公开 GitHub 仓库的 URL。
+
+<Callout type="success" title="通过 URL 选择分支">
+
+对于 `https://github.com/coollabsio/coolify-examples`，Coolify 会选择 `main`。
+
+对于 `https://github.com/coollabsio/coolify-examples/tree/next`，Coolify 会选择 `next`。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 配置并部署
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/public-repository/5.webp" alt="检查公开仓库后的构建配置" />
+
+1. 选择 **Check Repository**（检查仓库）。
+2. 选择 **Build pack**（构建包）、内部端口、基础目录及其他所需设置。
+3. 继续进入应用配置。
+4. 配置域名与所需变量。
+5. 部署应用。
+
+若拿不准该选哪种构建方式，请阅读[构建应用](/applications/builds/overview)。
+
+打开 **Deployment Logs**（部署日志），在日志中确认仓库、分支与 commit。
+
+</Step>
+</Steps>

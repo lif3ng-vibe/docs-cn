@@ -1,0 +1,69 @@
+---
+title: Coolify 未使用泛域名 SSL 证书
+description: 通过核实证书安装、检查代理配置并清理浏览器缓存，解决 Coolify 中的泛域名 SSL 证书问题。
+---
+
+# Coolify 未使用泛域名 SSL 证书
+
+如果你的泛域名（wildcard）SSL 证书在域名上没有生效，可能是配置出了问题。请按下面的方法检查并修复。
+
+<Steps>
+<Step>
+
+### 检查 SSL 证书有效性
+
+- **核实证书**：确认 SSL 证书对该域名有效。
+  - 确认通用名称（Common Name，CN）与你的域名一致。
+  - 再次确认泛域名证书没有过期。
+
+</Step>
+<Step>
+
+### 核实证书安装
+
+- **文件扩展名**：确保 SSL 证书文件以 `.cert` 结尾，私钥文件以 `.key` 结尾。
+  - 有些服务商提供的是 `.pem` 格式文件，添加到服务器前必须转换为 `.cert` 和 `.key`（直接把证书重命名为 `.cert`、私钥重命名为 `.key` 即可）
+- **文件位置**：确保 `.cert` 和 `.key` 文件位于 `/data/coolify/proxy/certs` 目录下。
+
+</Step>
+<Step>
+
+### 检查 Coolify 代理配置
+
+- **在面板中添加证书**：确保你已通过面板在 Coolify 代理中添加了 SSL 证书配置。详见[此处](/core/networking/proxy/traefik/custom-ssl-certs)。
+- **检查文件挂载**：如果你修改过代理配置，请确认 `/data/coolify/proxy` 目录已正确挂载。
+
+</Step>
+<Step>
+
+### 移除旧证书
+
+- **旧证书问题**：Coolify 代理可能正在使用 `acme.json` 文件中保存的旧证书。
+- **操作**：删除 `/data/coolify/proxy` 目录下的 `acme.json` 文件，然后在面板中点击 Restart Proxy（重启代理）按钮重启 Coolify 代理。
+
+</Step>
+<Step>
+
+### 清理浏览器缓存
+
+- **缓存问题**：浏览器可能缓存了旧的 SSL 证书。
+- **操作**：换一个浏览器或网络访问你的网站看看。
+  - 也可以用 [Browserling](https://www.browserling.com?utm_source=coolify.io) 这类沙箱工具测试网站。
+
+</Step>
+<Step>
+
+### 核实 DNS 质询配置
+
+- **DNS 质询检查**：如果你使用 DNS 质询，确认其设置正确。
+- **操作**：确认你选择了正确的 DNS 服务商和 API 密钥（API Keys），并检查质询设置是否配置妥当。
+
+</Step>
+</Steps>
+
+## 支持
+
+如果以上步骤都无效，还可以尝试以下途径：
+
+- **社区求助**：加入我们的 [Discord 社区](https://coolify.io/discord)，在支持论坛频道发帖。
+- **要提供的内容**：描述你的问题、附上配置截图和相关报错信息，并说明已经尝试过的步骤。

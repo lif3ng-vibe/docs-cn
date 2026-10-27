@@ -1,0 +1,14 @@
+---
+title: 集成
+description: 使用 Coolify MCP 查看 GitHub 集成，并浏览仓库与分支。
+---
+
+# 集成
+
+| 工具 | 用途 |
+| :--- | :--- |
+| `list_github_apps` | 列出团队可用的 GitHub App，不返回机密信息。 |
+| `list_github_repositories` | 通过团队的 GitHub App 列出仓库。 |
+| `list_github_branches` | 通过团队的 GitHub App 列出某个仓库的分支。 |
+
+只有存在可用的 GitHub App 时，仓库与分支工具才会注册。请先调用 `list_github_apps`。

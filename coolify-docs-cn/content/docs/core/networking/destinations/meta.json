@@ -1,0 +1,9 @@
+{
+  "title": "目标",
+  "pages": [
+    "overview",
+    "create",
+    "manage",
+    "delete"
+  ]
+}

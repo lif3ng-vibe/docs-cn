@@ -1,0 +1,146 @@
+---
+title: 常规
+description: 配置 Service 栈、编辑其 Compose 定义，并管理应用与数据库组件。
+---
+
+# 常规设置
+
+打开一个 Service，选择**配置（Configuration）> 常规（General）**。这个页面把整个栈的设置与 Compose 定义中检测到的每个应用、数据库组件的卡片组合在一起。
+
+## Service Stack
+
+根据要修改的设置选择对应的标签页。
+
+<Tabs id="service-stack-configuration" items={['Details', 'Network', 'Template values', 'Compose']}>
+<Tab value="Details">
+
+### 资源详情
+
+**Service Name** 标识该资源在其项目和环境中。修改显示名称不会重命名 Compose 服务及其运行中的容器。
+
+**Description** 用于记录栈的用途、负责人或环境。它不影响部署。
+
+</Tab>
+<Tab value="Network">
+
+### 预定义网络
+
+默认情况下，Service 组件只使用栈的资源专属网络。当它们还需要通过为 Service 选择的预定义网络通信时，启用 **Connect To Predefined Network**。在默认目标（Destination）上，这个网络是名为 `coolify` 的共享 Docker 网络。
+
+Coolify 会把每个 Service 组件接入该网络，并基于其 Compose 服务名和 Service UUID 添加别名。同一栈内的组件仍应使用 Compose 服务名和内部端口。
+
+不要仅仅为了暴露一个 HTTP 组件而启用此设置。请在组件上配置域名，让 Coolify 代理（Proxy）路由公共流量。
+
+`coolify` 网络、自定义目标网络、跨服务器通信、域名与发布端口的详情，请阅读[Service 网络](/services/configuration/networking)。
+
+</Tab>
+<Tab value="Template values">
+
+### Service Specific Configuration
+
+一些一键模板会把生成的凭据或应用专属值放在 **Service Specific Configuration** 下。
+
+修改之前请先查看每个字段的辅助说明和对应的 Service 指南。Coolify 会把值保存到 Service 环境中，并重新解析 Compose 定义。
+
+</Tab>
+<Tab value="Compose">
+
+### Compose 编辑器
+
+选择 **Edit Compose File**（编辑 Compose 文件），打开存储在 Service 上的定义。
+
+| 控件 | 用途 |
+| :--- | :--- |
+| **Show Source Compose** | 回到可编辑的 Compose 定义。 |
+| **Show Deployable Compose** | 查看发给 Docker Compose 的生成定义。 |
+| **Validate** | 校验通过 **Docker Compose Empty** 创建的用户自定义 Service。 |
+| **Escape special characters in labels?** | 控制是否转义标签中的 `$` 等字符。 |
+
+修改镜像、卷、环境引用、网络或代理相关值之前，请先阅读[Docker Compose](/services/configuration/docker-compose)。
+
+</Tab>
+</Tabs>
+
+## Service 组件
+
+每个组件卡片对应从 Compose `services:` 映射解析出的一个条目。根据要操作的组件或动作选择对应标签页。
+
+<Tabs id="service-component-configuration" items={['Overview', 'Application', 'Database', 'Classification']}>
+<Tab value="Overview">
+
+### 组件卡片
+
+卡片会显示组件名称、镜像、状态以及已配置的域名（如有）。
+
+| 动作 | 用途 |
+| :--- | :--- |
+| **Settings** | 打开该组件专属的 General 与 Advanced 页面。 |
+| **Restart** | 只重启该组件正在运行的容器。 |
+| **Backups** | 在受支持且被识别的数据库组件上打开备份控制。 |
+
+只有当其依赖能够容忍中断时，才单独重启一个组件。当 Compose 或共享环境的更改会影响多个组件时，请部署或重启整个 Service。
+
+</Tab>
+<Tab value="Application">
+
+### General
+
+| 设置 | 行为 |
+| :--- | :--- |
+| **Name** | 设置一个人类可读的组件名，不改变其 Compose 服务名。 |
+| **Description** | 记录该组件的上下文信息。 |
+| **Domains** | 让一个或多个 HTTP URL 经由 Coolify 代理路由。进程不监听端口 `80` 时，请加上内部端口。 |
+| **Image** | 修改写入生成的 Compose 定义的镜像引用。修改前请评估上游的升级路径。 |
+
+例如，当组件监听端口 `3000` 时，使用 `https://app.example.com:3000`。访客仍然使用常规 HTTPS；后缀只是选择容器内部的端口。
+
+### Advanced
+
+**Advanced** 页面可以配置：
+
+- **Enable Gzip Compression**
+- **Strip Prefixes**
+- **Exclude from service status**
+- **Drain Logs**（服务器启用了日志转发时）
+
+</Tab>
+<Tab value="Database">
+
+### General
+
+General 页面可以修改数据库组件的人类可读名称、描述和镜像。还可以启用 **Make it publicly available**，并为数据库 TCP 代理选择一个 **Public Port**。
+
+<Callout type="warning" title="数据库组件默认保持私有">
+
+只有当 Service 网络之外的客户端必须连接数据库时才将其暴露。用服务器或提供商防火墙限制公开端口，使用数据库引擎支持的加密，并且不要在预期环境之外复用生成的凭据。
+
+</Callout>
+
+### Advanced 与数据操作
+
+**Advanced** 页面可以把组件排除在 Service 的聚合状态之外，并启用服务器日志转发。被识别的数据库组件在底层引擎受支持时，还可以显示 **Backups** 和 **Import Backup** 页面。
+
+更改数据库镜像标签不是数据库升级流程。更改生产镜像之前，请先创建并验证一份兼容的备份。
+
+</Tab>
+<Tab value="Classification">
+
+### 转换组件
+
+只有当 Coolify 对 Compose 服务的分类有误时，才使用 **Convert to Database** 或 **Convert to Application**。
+
+转换会保留 Compose 服务条目和镜像，只改变 Coolify 展示的组件控制项。转换之后，请复查域名、公开端口、存储、备份、健康状态和日志设置，再重新部署。
+
+</Tab>
+</Tabs>
+
+## 保存并验证更改
+
+1. 保存栈或组件设置。
+2. 当更改会影响生成的 Compose 时，检查 **Show Deployable Compose**。
+3. 重启或部署 Service。
+4. 跟踪部署输出。
+5. 确认每个必需组件都在运行且健康。
+6. 打开已配置的域名，测试内部依赖。
+
+如果某个组件失败，检查该容器的**日志（Logs）**，并对比源定义与可部署 Compose。

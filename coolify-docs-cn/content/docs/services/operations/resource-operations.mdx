@@ -1,0 +1,55 @@
+---
+title: 资源操作
+description: 把 Service 克隆到另一个目标，或在项目与环境之间移动。
+---
+
+# 克隆或移动 Service
+
+打开一个 Service，选择**配置（Configuration）> 资源操作（Resource Operations）**。此页面提供两种不同的放置操作：
+
+- **Clone Resource**（克隆资源）在选定的服务器和网络目标上创建另一个 Service。
+- **Move Resource**（移动资源）更改包含现有 Service 的项目和环境。
+
+两个操作都不能把 Service 移动到另一个 Coolify 实例。
+
+<Tabs id="service-resource-operations" items={['Clone resource', 'Move resource']}>
+<Tab value="Clone resource">
+
+克隆会基于已保存的配置创建另一个 Service。源 Service 留在当前目标上，不会被替换。
+
+<Callout type="warning" title="克隆不会迁移 Service 数据">
+
+请把克隆当作一个全新的栈。不要想当然地认为 Docker 卷内容、绑定挂载的文件、数据库记录或外部服务中的数据已经移动到了目标上。为每个有状态组件规划单独的、经过验证的传输或恢复。
+
+</Callout>
+
+Service 克隆可以复制栈配置，例如 Compose 定义、环境变量、计划任务和标签。部署之前请复查生成的域名、凭据、存储定义、服务器路径和自动化。
+
+1. 确认目标服务器已通过验证、可以承载资源，并具备所需的网络目标。构建服务器不能承载 Service。
+2. 在目标服务器上配置所需的镜像仓库、代理、DNS、防火墙与外部服务访问。
+3. 在 **Clone Resource** 下，选择 **Select Server** 与 **Select Network Destination**。
+4. 选择 **Clone Resource**。
+5. 打开新 Service，复查其源定义与可部署 Compose、环境变量、域名、存储、计划任务和标签。
+6. 把所需数据恢复或传输到新的卷和服务器路径中。
+7. 使用临时域名或隔离的外部依赖部署。
+8. 在迁移生产流量之前，验证每个组件。
+
+从原始 Compose 定义复制来的绑定来源必须存在于目标服务器上，且具备预期的内容和权限。数据库组件必须用引擎兼容的流程恢复，而不是只复制它的连接变量。
+
+</Tab>
+<Tab value="Move resource">
+
+当 Service 应属于同一 Coolify 实例上的另一个项目或环境时，移动它。移动改变的是仪表盘组织；它不会改变部署服务器或网络目标。
+
+1. 在 **Move Resource** 下，选择 **Select Target Project**。
+2. 选择 **Select Target Environment**。Coolify 会把当前环境从可选目标中排除。
+3. 选择 **Move Resource**。
+4. 从新的项目和环境打开 Service。
+5. 核对 Service 状态、域名、日志、计划任务、标签以及来自相关资源的链接。
+
+移动不会刻意停止运行中的容器。项目或环境级别的约定和外部自动化不会自动跟随仪表盘路径的变化，因此请更新引用了原项目或环境的地方。
+
+当栈必须运行在另一台服务器或网络目标上时，请改用 **Clone Resource**。
+
+</Tab>
+</Tabs>

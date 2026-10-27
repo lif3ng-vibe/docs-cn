@@ -1,0 +1,101 @@
+---
+title: 仪表板
+description: 在 Coolify 中通过一个专用且经过身份验证的域名暴露 Traefik 仪表板。
+---
+
+# Traefik 仪表板
+
+新的代理配置不会暴露 Traefik 仪表板。升级会从已保存的配置中移除旧版仪表板路由；重启代理即可应用该更改。要访问仪表板，请创建一条动态路由，通过 HTTPS 暴露它并用基本身份验证保护。
+
+<Callout type="warning" title="使用专用的仪表板主机名">
+不要把 Traefik 仪表板挂在与 Coolify 面板相同主机名的 `/api` 路径上。Traefik 仪表板使用 `/api`，会与 Coolify 的 API 路由冲突。请使用 `traefik.example.com` 这样的独立主机名。
+</Callout>
+
+## 创建仪表板凭据
+
+用 `htpasswd` 生成 bcrypt 凭据：
+
+```bash
+htpasswd -nbB <username> '<password>'
+```
+
+复制完整的 `<username>:<hash>` 输出。动态 YAML 不需要 Docker Compose 那样的美元符号转义。
+
+## 启用仪表板 API
+
+在代理配置中，以安全模式启用仪表板 API，即 `--api.dashboard=true`。保存通过校验的配置并重启代理。保持 insecure 模式关闭。
+
+<Callout type="warning" title="在 Coolify 中编辑主配置">
+一旦代理配置保存在 Coolify 中，对 `/data/coolify/proxy/docker-compose.yml` 的直接修改就不会同步回 UI。请在 **Servers > your server > Proxy > Configuration** 下修改并保存。通过 Coolify 启动或重启代理时，会把已保存的配置写入磁盘，可能覆盖只存在于磁盘上的修改。
+</Callout>
+
+## 添加仪表板路由
+
+打开 **Servers > your server > Proxy > Dynamic Configurations**，选择 **Add**，创建 `traefik-dashboard.yaml`：
+
+```yaml
+http:
+  middlewares:
+    dashboard-auth:
+      basicAuth:
+        users:
+          - '<username>:<bcrypt-hash>'
+    dashboard-https-redirect:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    dashboard-http:
+      rule: 'Host(`traefik.example.com`)'
+      entryPoints:
+        - http
+      middlewares:
+        - dashboard-https-redirect
+      service: api@internal
+
+    dashboard-https:
+      rule: 'Host(`traefik.example.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))'
+      entryPoints:
+        - https
+      middlewares:
+        - dashboard-auth
+      service: api@internal
+      tls:
+        certResolver: letsencrypt
+```
+
+替换主机名和凭据，然后保存文件。把该主机名的 DNS 记录指向这台服务器。
+
+打开 `https://traefik.example.com/dashboard/`，用配置好的凭据登录。
+
+## 不要在公网服务器上使用 insecure 模式
+
+设置 `--api.insecure=true` 会把仪表板直接暴露在 Traefik 的 API 端口上，且没有任何身份验证。如果你的代理配置发布了 `8080` 端口，开启 insecure 模式可能让仪表板穿透服务器防火墙暴露出去。
+
+请改用上面经过身份验证的 HTTPS 路由。如果为了隔离调试临时开启 insecure 模式，请在防火墙上限制 `8080` 端口，并在结束后立即移除 `--api.insecure=true`。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="仪表板页面或其静态资源无法加载">
+
+打开 `/dashboard/` 时要带上末尾的斜杠。Traefik 仪表板的重定向和静态资源依赖它。
+
+查看 **Servers > your server > Proxy > Logs**，寻找动态配置解析错误。
+
+</Accordion>
+
+<Accordion title="仪表板与 Coolify API 冲突">
+
+确认 Traefik 仪表板使用了与 Coolify 面板不同的主机名。两个产品都使用 `/api` 路径，所以在这套路由配置下不能共用同一个主机名。
+
+</Accordion>
+
+<Accordion title="仪表板主机名无法解析">
+
+确认它的 DNS 记录指向运行这个 Traefik 代理的服务器，并且 `80` 和 `443` 端口能够到达该服务器。
+
+</Accordion>
+
+</Accordions>

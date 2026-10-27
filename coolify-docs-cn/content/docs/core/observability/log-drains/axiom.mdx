@@ -1,0 +1,195 @@
+---
+title: Axiom
+description: 将 Coolify 应用、数据库和服务容器日志发送到 Axiom 数据集。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Database,
+  Globe3,
+  Server,
+  Settings,
+} from 'reicon-react';
+
+# 将日志发送到 Axiom
+
+Coolify 内置的 Axiom 日志转发（log drain）通过 HTTPS 把已启用转发的资源日志发送到现有 Axiom 数据集。
+
+<CoolCallout icon={ArrowsRight} title="简要说明">
+
+创建一个 Axiom 数据集和具备摄入权限的 API 令牌，把两个值保存到服务器的 **Log Drains** 页面并启用 Axiom 转发，然后按[为资源启用日志转发](/core/observability/log-drains/overview#为资源启用日志转发)的说明配置 **Log drain**，并重启需要转发的每个资源。
+
+</CoolCallout>
+
+---
+
+## 开始之前
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: 'Axiom 数据集',
+      description: '创建用于接收转发负载记录的数据集。',
+      icon: Database,
+    },
+    {
+      title: 'API 令牌',
+      description: '创建一个能向所选数据集摄入事件的令牌。',
+      icon: Settings,
+    },
+    {
+      title: '已验证的服务器',
+      description: '使用运行资源的服务器，并确认其能通过 443 端口访问 api.axiom.co。',
+      icon: Server,
+    },
+  ]}
+/>
+
+在 [Axiom](https://axiom.co/docs) 中创建数据集和令牌，然后复制它们的精确值，再打开 Coolify。Coolify 的两个 Axiom 字段都接受字母、数字、下划线、连字符和句点。
+
+内置集成将数据发送到 443 端口的 `api.axiom.co`。该端点无法在 Coolify 的 Axiom 区块中修改。
+
+---
+
+## 在 Coolify 中配置 Axiom
+
+<CoolFlow
+  id="configure-axiom-log-drain"
+  icon={Database}
+  title="将服务器连接到 Axiom"
+  description="编辑各字段时保持转发停用，值保存完成后再启用。"
+  steps={[
+    '打开服务器 Log Drains 页面',
+    '填写 API 密钥',
+    '填写数据集名称',
+    '保存 Axiom 设置',
+    '启用转发',
+  ]}
+  list={[
+    <>打开 <strong>Servers</strong>，选择运行资源的服务器，然后打开 <strong>Log Drains</strong>。</>,
+    <>在 <strong>Axiom</strong> 中，保持 <strong>Status</strong> 为 <strong>Disabled</strong>，并把 Axiom 令牌粘贴到 <strong>API key</strong>。</>,
+    <>在 <strong>Dataset name</strong> 中填入精确的数据集名称。</>,
+    <>在 Axiom 区块中选择 <strong>Save changes</strong>。</>,
+    <>将 <strong>Status</strong> 设为 <strong>Enabled</strong>。Coolify 会启动服务器的 <code>coolify-log-drain</code> 容器。</>,
+  ]}
+  endnote="同一时间只能启用一个服务器级日志转发目的地。启用 Axiom 前，请先停用另一个已启用的目的地。"
+/>
+
+<CoolCallout type="info" title="启用转发不等于摄入测试">
+
+Coolify 只检查两个字段已填写且字符合法，并不会在显示已启用状态之前验证令牌、数据集权限或 Axiom 摄入是否正常。
+
+</CoolCallout>
+
+---
+
+## 为资源启用
+
+按[为资源启用日志转发](/core/observability/log-drains/overview#为资源启用日志转发)操作，然后重启或重新部署该资源。
+
+Axiom 配置以 gzip 压缩的 JSON 发送日志，把事件时间以 ISO 8601 格式写入 `_time`，并每五秒刷新一次。
+
+---
+
+## 识别日志
+
+内置配置会添加几个便于筛选记录的字段。
+
+<CoolCompare
+  id="axiom-log-fields"
+  className="not-prose"
+  icon={Box2}
+  title="内置日志标识"
+  description="服务器标签自动添加。资源标签只有在资源提供 COOLIFY_APP_NAME 时才会添加。"
+>
+<CoolCompareColumn
+  title="服务器标签"
+  code="coolify.server_name"
+  items={[
+    '自动添加到每条记录',
+    '标识转发该记录的 Coolify 服务器',
+  ]}
+/>
+<CoolCompareColumn
+  title="资源标签"
+  code="coolify.app_name"
+  items={[
+    '由资源环境变量 `COOLIFY_APP_NAME` 生成',
+    '保存该变量并重启资源后生效',
+  ]}
+/>
+</CoolCompare>
+
+例如，为资源添加以下环境变量：
+
+```dotenv
+COOLIFY_APP_NAME=web
+```
+
+内置过滤器会排除消息中包含 `127.0.0.1` 的日志记录。因此本地健康检查请求可能不会出现在数据集中。
+
+---
+
+## 验证投递
+
+1. 让资源向 `stdout` 或 `stderr` 写入一条可辨认的消息。
+2. 等待至少五秒。
+3. 打开 Axiom 数据集，在近期事件中搜索该消息、`coolify.server_name` 或 `coolify.app_name`。
+
+必须在 Axiom 中完成验证，因为 Coolify 不会执行服务商连接测试。
+
+---
+
+## 更新数据集或令牌
+
+1. 在 Axiom 区块将 **Status** 设为 **Disabled**。
+2. 更新 **API key** 或 **Dataset name**。
+3. 选择 **Save changes**。
+4. 重新将 **Status** 设为 **Enabled**。
+5. 生成一条新的资源日志，确认它到达了预期的数据集。
+
+---
+
+## 修复日志缺失
+
+1. 确认 Axiom 是已启用的服务器转发目的地，且资源的 **Log drain** 设置已开启。
+2. 确认你在开启设置后重启或重新部署了资源。
+3. 确认令牌能够向 Coolify 中填写的精确数据集名称摄入数据。
+4. 确认服务器能访问 `api.axiom.co:443`。
+5. 检查资源服务器上的 Fluent Bit 容器：
+
+```sh
+docker ps --filter name=coolify-log-drain
+docker logs --tail 100 coolify-log-drain
+```
+
+认证、数据集和网络错误都会出现在 Fluent Bit 的输出中。
+
+---
+
+## 继续了解日志转发
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '日志转发概览',
+      href: '/core/observability/log-drains/overview',
+      description: '查看服务器级管线、资源配置和投递检查。',
+      icon: Server,
+    },
+    {
+      title: '使用 New Relic',
+      href: '/core/observability/log-drains/new-relic',
+      description: '将启用转发的负载日志发送到区域 New Relic Log API。',
+      icon: Globe3,
+    },
+    {
+      title: '使用自定义 Fluent Bit',
+      href: '/core/observability/log-drains/custom-fluent-bit',
+      description: '为其他目的地提供完整的 Fluent Bit 配置。',
+      icon: Settings,
+    },
+  ]}
+/>

@@ -1,0 +1,77 @@
+---
+title: Supabase Storage
+description: 使用项目端点、存储桶、区域和访问密钥，把 Supabase Storage 配置为 S3 兼容的备份目标。
+---
+
+# Supabase Storage
+
+Supabase Storage 提供一个 S3 兼容端点，可用于 Coolify 备份。
+
+<Callout type="info" title="Supabase 托管的项目">
+本指南把 Supabase 项目当作 Coolify 备份的远程 S3 存储端点使用，与在 Coolify 上自托管 [Supabase 服务](/services/supabase)是两回事。
+</Callout>
+
+## 配置 Supabase Storage
+
+<Steps>
+<Step>
+
+### 创建存储桶
+
+在 Supabase 中创建用于存放备份文件的存储桶。
+
+</Step>
+<Step>
+
+### 创建访问密钥对
+
+打开项目，进入 **Storage > S3 Configuration**，然后创建一个新的访问密钥对。
+
+<Callout type="success" title="保存两把密钥">
+请把 **Access Key ID** 和 **Secret Access Key** 保存到安全的位置。
+</Callout>
+
+</Step>
+<Step>
+
+### 复制端点和区域
+
+复制 S3 端点：
+
+- 首选：`https://<project-ref>.storage.supabase.co/storage/v1/s3`
+- 备用：`https://<project-ref>.supabase.co/storage/v1/s3`
+
+同时记下 Supabase 仪表盘中显示的项目区域（Region）。
+
+</Step>
+<Step>
+
+### 把 Supabase Storage 添加到 Coolify
+
+在 Coolify 中打开 **S3 Storage**，选择 **New storage**。填写：
+
+| Coolify 字段 | Supabase 值 |
+|---|---|
+| **Protocol** | `https`。 |
+| **Host** | `<project-ref>.storage.supabase.co`，或备用的 `<project-ref>.supabase.co`。 |
+| **Port** | 标准 HTTPS 端点下留空。 |
+| **Path** | `/storage/v1/s3`。 |
+| **Bucket** | 在 Supabase 中创建的存储桶。 |
+| **Region** | Supabase 项目区域。 |
+| **Access Key** | 生成的 **Access Key ID**。 |
+| **Secret Key** | 生成的 **Secret Access Key**。 |
+
+选择 **Validate Connection & Continue**。
+
+<Callout type="warning" title="保留完整的端点路径">
+按上文方式拆分端点，并把 `/storage/v1/s3` 保留在 **Path** 中。不要把存储桶名称拼接到端点后面。
+</Callout>
+
+</Step>
+</Steps>
+
+## 验证连接
+
+Coolify 通过一次 `ListObjectsV2` 请求验证连接，因此存储桶必须在验证之前就已存在。
+
+Supabase Storage 是 S3 兼容的，但并不支持 Amazon S3 的全部特性。对于 Coolify 备份，上文的端点、存储桶、区域和访问密钥即为所需的全部值。

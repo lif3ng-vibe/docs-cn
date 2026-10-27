@@ -1,0 +1,307 @@
+---
+title: "单个资源"
+description: "通过 Cloudflare Tunnel、端口映射与域名配置安全访问单个 Coolify 应用，并支持多资源隧道化。"
+---
+
+# 通过 Cloudflare Tunnel 访问单个资源
+
+使用 Cloudflare Tunnel 访问部署在 Coolify 上的资源，可以在不暴露服务器 IP 地址、也没有服务器公网 IP 的情况下，安全地访问你的应用。
+
+## 适合谁使用
+
+以下场景非常适合这种方案：
+
+- 服务器没有公网 IP（可能是笔记本电脑、树莓派等设备）。
+- 无法进行端口转发（例如使用家庭宽带，或处于内网中）。
+- 希望服务器的 IP 地址保持私密，避免暴露给公共互联网。
+- 已有应用部署在 Coolify 上，需要一种从外部安全访问它的方法。
+
+## 环境要求
+
+按照本指南操作，你需要：
+
+- 一个免费的 [Cloudflare](https://cloudflare.com) 账户。
+- 一个 **DNS 托管在 Cloudflare** 的域名。
+- 你的资源必须通过 Coolify 部署和管理。
+
+## 开始之前
+
+- 默认你已经在运行 Coolify，并且部署好了应用。
+- 如果你的应用依赖 HTTPS 才能实现 cookie、登录等功能，那么在完成本指南后，还需要继续操作 [Full TLS HTTPS 指南](/integrations/networking/cloudflare/tunnels/full-tls)。因为本方案中 Cloudflare 在外部负责 HTTPS，而你的应用在 Coolify 内部通过 HTTP 运行。
+
+## 工作原理
+
+下面这张简明的高层示意图，帮你直观了解它的工作方式：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/high-level-diagram.webp" />
+
+---
+
+
+<Callout type="warn" title="示例数据">
+
+本指南在步骤中使用以下示例数据。请照做时替换为你自己的真实数据：
+
+- **域名**：shadowarcanist.com
+- **Ports Exposes（暴露端口）**：80
+- **Ports Mapping（端口映射）**：4477:80
+
+</Callout>
+
+
+---
+
+## 1. 为隧道配置你的应用
+
+要让你的应用支持隧道访问，请按以下步骤操作：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/0.webp" />
+
+1. 清空 **Domains（域名）** 字段中的所有域名。
+2. 在 **Ports Exposes** 中填入正确的端口（即你的应用使用的端口）。
+3. 在 **Port Mappings** 中填入正确的端口映射（左边是宿主机端口，右边是应用端口）。
+4. 点击 **Deploy** 按钮部署你的应用。
+
+## 2. 创建 Cloudflare Tunnel
+
+要创建 Cloudflare Tunnel，先登录你的 [Cloudflare dashboard](https://dash.cloudflare.com/)
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/1.webp" />
+
+1. 在侧边栏进入 **Networking（网络）**。
+2. 点击 **Tunnels**。
+3. 点击 **Create tunnel** 按钮。
+
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/2.webp" />
+
+系统会提示你输入隧道名称。填一个你喜欢的名字，然后点击 **Create tunnel** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/3.webp" />
+
+1. 选择 **Docker** 选项。
+2. 复制 docker run 命令，其中包含你这条隧道的令牌（令牌以 "`eyJ`" 开头）。请只保存令牌本身（去掉前面的命令部分），并妥善保管，后面会用到。
+
+
+## 3. 在 Coolify 上部署 cloudflared
+
+在 Coolify dashboard 中进入你的项目，点击 `+ New` 按钮创建一个新资源。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/4.webp" />
+
+搜索 `Cloudflared` 并点击它。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/5.webp" />
+
+进入 **Environment Variables（环境变量）** 页面，填入你的隧道令牌，然后部署 Cloudflared 应用。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/6.webp" />
+
+cloudflared 开始运行后，你就能在 Cloudflare dashboard 上看到它的状态
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/7.webp" />
+
+点击继续按钮完成隧道创建。
+
+## 4. 配置 TLS 加密模式
+要让 Cloudflare 在连接你的服务器时使用更严格的加密，请在 Cloudflare 中配置 TLS 加密：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/8.webp" />
+
+1. 在 Cloudflare 中进入 **SSL/TLS**。
+2. 选择 **Overview（概述）**。
+3. 点击 **Configure** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/9.webp" />
+
+1. 加密模式选择 **Full (Strict)**。
+2. 点击 **Save** 按钮。
+
+
+## 5. 配置隧道路由
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/10.webp" />
+
+1. 点击你的隧道。
+2. 点击 **Configure（配置）** 选项。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/11.webp" />
+
+1. 选择 **Routes（路由）**。
+2. 点击 **Add route** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/12.webp" />
+
+3. 选择 **Published Application** 作为路由类型。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/13.webp" />
+
+1. **Subdomain（子域名）** ——（可选）你可以让资源通过任意子域名/域名访问。本指南使用 `helixa` 子域名。
+2. **Domain（域名）** —— 选择你要用于隧道的域名。
+3. **Path（路径）** —— 留空。
+4. **Service URL** —— 填入 **http://localhost:4477**（这一步非常关键）。端口 4477 就是我们在[步骤 1](/integrations/networking/cloudflare/tunnels/single-resource#1-为隧道配置你的应用)中映射到宿主机的那个端口。
+6. 填写完信息后，点击 **Add route** 按钮。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/14.webp" />
+
+
+**恭喜**！你已经成功部署了一个可以让互联网上任何人通过你的域名访问的资源。
+
+---
+
+## 隧道化多个资源
+
+最省事的方式是按照我们的[隧道化所有资源](/integrations/networking/cloudflare/tunnels/single-resource)指南操作，它使用 Coolify 内置的代理。
+
+如果你不想使用代理，还有两种替代方法：
+
+
+<Tabs items={['隧道化多个单资源', '隧道化 Coolify']}>
+
+<Tab value="隧道化多个单资源">
+
+如果你想逐个暴露不同的应用，可以参照我们的[隧道化所有资源](/integrations/networking/cloudflare/tunnels/single-resource)指南，或者采用另一种方法：
+
+1. 为你的新资源执行[步骤 1](/integrations/networking/cloudflare/tunnels/single-resource#1-为隧道配置你的应用)。
+
+2. 按照[步骤 5](/integrations/networking/cloudflare/tunnels/single-resource#5-配置隧道路由)所述，在 Cloudflare Tunnel 上创建一条新路由。
+
+无需为每个资源单独建隧道，只需创建一条新路由，指向你的应用正在监听的端口即可。
+
+</Tab>
+
+<Tab value="隧道化 Coolify">
+
+你可以通过一条指向 Coolify 代理的隧道路由，同时暴露 Coolify dashboard、实时更新和终端连接。
+
+确保 Coolify 代理运行在安装了 Coolify 实例的那台服务器上。隧道将在 `80` 端口连接到这个代理。
+
+### 1. 设置 Coolify 实例 URL [!toc]
+
+在 Coolify 中打开 **Settings > General**，把 [URL](/core/instance-management/instance-settings#url) 设为你的 dashboard 域名，例如 `https://coolify.shadowarcanist.com`。
+
+然后禁用 [Redirect HTTP to HTTPS](/core/instance-management/instance-settings#redirect-http-to-https)。Cloudflare Tunnel 通过 HTTP 连接代理，保留重定向会造成重定向循环。
+
+Coolify 使用实例 URL 生成 dashboard 的代理路由：
+
+```text
+/app/*       -> coolify:6001
+/apps/*      -> coolify:6001
+/terminal/ws -> coolify:6002
+/*           -> coolify:8080
+```
+
+### 2. 在 Cloudflare Tunnel 中创建路由 [!toc]
+
+按照[步骤 5](/integrations/networking/cloudflare/tunnels/single-resource#5-配置隧道路由)操作，并使用以下映射：
+
+| 域名 | Service | 用途 |
+|---|---|---|
+| `coolify.shadowarcanist.com` | `http://localhost:80` | Coolify dashboard、实时更新与终端 |
+
+端口 `6001` 和 `6002` 不需要单独的隧道路由。这种方案也无需设置 `PUSHER_HOST`、`PUSHER_PORT`、`TERMINAL_HOST` 或 `TERMINAL_PORT`。
+
+如果你之前用的是分离路由，请从 `/data/coolify/source/.env` 中移除过时的 `PUSHER_HOST`、`PUSHER_PORT`、`TERMINAL_HOST` 和 `TERMINAL_PORT` 覆盖项。已有覆盖项的优先级高于自动探测的主机名与端口。修改 `.env` 后，重启 Coolify 以应用更改：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+### 3. 验证配置 [!toc]
+
+1. 访问 `https://coolify.shadowarcanist.com` 打开你的 Coolify dashboard。
+2. 在另一个浏览器标签页访问 `https://coolify.shadowarcanist.com/realtime`，测试实时功能。你应该会看到一条测试事件通知。
+3. 在浏览器的网络面板中，确认实时与终端 WebSocket 连接使用的都是 Coolify dashboard 的主机名。
+
+
+<Callout type="warn" title="注意！">
+
+Cloudflare Tunnel 从服务器内部连接 Coolify 代理。端口 `8000`、`6001` 和 `6002` 无需对外暴露。
+
+</Callout>
+
+### 独立的实时域名 [!toc]
+
+把 Coolify 实时与终端服务分开路由的既有隧道仍然有效：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/single-resource/15.webp" />
+
+| 域名 / 路径 | Service | 用途 |
+|---|---|---|
+| `coolify.shadowarcanist.com/terminal/ws` | `http://localhost:6002` | WebSocket 终端 |
+| `coolify-realtime.shadowarcanist.com` | `http://localhost:6001` | 实时更新（Reverb） |
+| `coolify.shadowarcanist.com` | `http://localhost:8000` | Coolify dashboard |
+
+请保持上面带路径的终端路由位于 dashboard 路由之前，这样 Cloudflare 才会优先匹配它。这三个源站端口都属于 `coolify` 容器。详见 [Reverb 迁移指南](/core/instance-management/reverb-migration)。
+
+这种方案需要在 `/data/coolify/source/.env` 中配置一个独立的实时域名：
+
+```bash
+PUSHER_HOST=coolify-realtime.shadowarcanist.com
+PUSHER_PORT=443
+```
+
+它告诉浏览器应在哪里建立实时 WebSocket 连接。服务端的事件分发仍在 `coolify` 容器内部进行，因此不要把 `PUSHER_BACKEND_HOST` 设为这个主机名。
+
+修改 `.env` 后，运行以下命令重启 Coolify：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+</Tab>
+</Tabs>
+
+
+---
+
+
+## 已知问题与解决办法
+
+### Realtime 或终端连接因 localhost 失败
+
+在某些服务器上，`localhost` 会解析到 IPv6 环回地址 `::1`，而源站端口只能通过 IPv4 访问。如果 dashboard 能打开，但实时更新或终端连接失败，请检查 cloudflared 日志中的源站连接错误，并尝试显式的 IPv4 环回地址。
+
+对于上面的单路由方案，把隧道 Service URL 从 `http://localhost:80` 改为 `http://127.0.0.1:80`。
+
+如果你用的是旧版分离路由，请保持其顺序，只改源站地址：
+
+| 路由 | IPv4 Service URL |
+| :--- | :--- |
+| dashboard 主机名加 `/terminal/ws` | `http://127.0.0.1:6002` |
+| 独立实时域名 | `http://127.0.0.1:6001` |
+| dashboard 主机名 | `http://127.0.0.1:8000` |
+
+对于 HTTPS 源站，使用 `https://127.0.0.1:443`，并保持 **Origin Server Name** 设为证书覆盖的主机名，参见 [HTTPS 隧道疑难排查](/integrations/networking/cloudflare/tunnels/full-tls#疑难排查切换-https-后出现-502-bad-gateway)。
+
+保存路由，重载 Coolify，然后再次测试实时更新与终端。如果连接仍然失败，请检查源站监听、隧道日志和 WebSocket 请求。这一变通方案只解决环回地址选择问题；其他连接故障与网关超时需要另行排查。
+
+### 既有 DNS 记录导致路由无法生效
+
+当你在[步骤 5](/integrations/networking/cloudflare/tunnels/single-resource#5-配置隧道路由)中创建新路由时，Cloudflare 会为该主机名创建一条 DNS 记录。
+
+但如果该主机名的 DNS 记录已经存在，Cloudflare 不会更新已有记录。
+
+这种情况下你的应用将无法工作。要解决这个问题，请按以下步骤操作：
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/all-resource/8.webp" />
+
+1. 点击你的隧道。
+2. 点击 **Configure（配置）** 选项。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/all-resource/18.webp" />
+
+3. 在 Tunnels 详情区域复制你的隧道 ID。
+
+<ZoomImage src="/docs-cn/coolify/images/integrations/networking/cloudflare/tunnels/all-resource/19.webp" />
+
+按以下信息创建一条新的 DNS 记录：
+
+1. 在 Cloudflare dashboard 中进入 **DNS**。
+2. 选择 **Records（记录）**。
+3. 添加一条 **CNAME** 记录。
+4. 名称填 `*` 或你的子域名（应与隧道上应用的主机名一致）。
+5. **Target（目标）** 填入隧道 ID，后跟 `.cfargotunnel.com`。
+6. 把代理状态设为 **Proxied（已代理）**。
+
+现在访问你应用的域名，应该就能正常访问了。

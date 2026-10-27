@@ -1,0 +1,251 @@
+---
+title: 创建云服务器
+description: 在 Coolify 控制台中购买并创建 Hetzner、DigitalOcean、Vultr 或 Hostinger 服务器。
+---
+
+import { CloudBolt, Droplet, Server, ServerCloud } from 'reicon-react';
+
+# 创建云服务器
+
+Coolify 可以在已关联的 Hetzner、DigitalOcean、Vultr 或 Hostinger 账号中创建服务器。提供商分配 IP 地址后，验证服务器，让 Coolify 为部署做好准备。
+
+<Callout type="warning" title="这会创建一台计费服务器">
+选择 **Buy & Create Server** 会向提供商发送创建服务器的请求，提供商会按所选套餐和选项向你的账号收费。
+
+Hostinger 订单属于付费购买。Hostinger 会按完整计费周期（1 个月、1 年或 2 年）向账号的默认支付方式收费，不按小时计费。参见 [Hostinger 计费与删除](#hostinger-计费与删除)。
+</Callout>
+
+## 准备工作
+
+开始之前：
+
+1. 按照[云令牌](/core/security/credentials/cloud-tokens)添加有效的提供商令牌。
+2. 打开 **Keys & Tokens > Private Keys**，创建或导入 SSH 密钥。
+3. 确认提供商账号可以创建服务器，且有有效的支付方式。
+
+需要时，Coolify 会把所选公钥上传给提供商。新服务器使用 `root` 用户和 SSH 端口 `22`。
+
+---
+
+## 创建服务器
+
+<Steps>
+<Step>
+
+### 选择提供商
+
+1. 在 Coolify 侧边栏选择 **Servers**（服务器）。
+2. 选择 **New server**（新建服务器）。
+3. 选择 **Hetzner**、**DigitalOcean**、**Vultr** 或 **Hostinger**。
+4. 选择该提供商账号的云令牌。
+
+</Step>
+<Step>
+
+### 配置服务器
+
+填写所选提供商的字段。
+
+<Tabs id="provision-provider-fields" items={['Hetzner', 'DigitalOcean', 'Vultr', 'Hostinger']}>
+<Tab value="Hetzner" icon={ServerCloud}>
+
+| 字段 | 选择内容 |
+| :--- | :--- |
+| **Server Name** | 一个易于辨认的服务器名称。 |
+| **Location** | Hetzner 数据中心位置。 |
+| **Server Type** | 服务器套餐和资源。 |
+| **Image** | 受支持的 Linux 镜像。 |
+| **Private Key** | Coolify 将使用的 SSH 密钥。 |
+
+在 **Advanced Hetzner Options** 下，可以添加额外的 SSH 密钥、防火墙和私有网络；控制 IPv4 和 IPv6；启用 Hetzner 备份；以及提供 cloud-init 脚本。
+
+Hetzner 备份会在服务器月费上加收 20%。
+
+</Tab>
+<Tab value="DigitalOcean" icon={Droplet}>
+
+| 字段 | 选择内容 |
+| :--- | :--- |
+| **Server Name** | 一个易于辨认的 Droplet 名称。 |
+| **Region** | DigitalOcean 数据中心区域。 |
+| **Size** | Droplet 套餐和资源。 |
+| **Image** | 受支持的 Linux 镜像。 |
+| **Private Key** | Coolify 将使用的 SSH 密钥。 |
+
+在高级选项下，可以添加额外的 SSH 密钥、控制 IPv6、启用 DigitalOcean 监控，以及提供 cloud-init 脚本。
+
+</Tab>
+<Tab value="Vultr" icon={CloudBolt}>
+
+| 字段 | 选择内容 |
+| :--- | :--- |
+| **Server Name** | 一个易于辨认的实例名称。 |
+| **Region** | Vultr 数据中心区域。 |
+| **Plan** | 实例套餐和资源。 |
+| **Operating System** | 受支持的 Linux 镜像。 |
+| **Private Key** | Coolify 将使用的 SSH 密钥。 |
+
+在高级选项下，可以添加 SSH 密钥、控制 IPv6、禁用公网 IPv4，以及提供 cloud-init 脚本。
+
+除非 Coolify 有其他可用的 SSH 通道连接服务器，否则不要禁用公网 IPv4。
+
+</Tab>
+<Tab value="Hostinger" icon={Server}>
+
+Hostinger 表单位于 `/servers/new/hostinger`。
+
+| 字段 | 选择内容 |
+| :--- | :--- |
+| **Server name** | VPS 的名称。使用完全限定域名（如 `vps.example.com`）可同时将其设为 VPS 主机名。 |
+| **Data center** | Hostinger 数据中心。 |
+| **Plan and billing period** | KVM 套餐（KVM 1、KVM 2、KVM 4 或 KVM 8）和计费周期（1 个月、1 年或 2 年）。标签会显示首个周期价格和续订价格。 |
+| **Operating system** | 纯操作系统，默认为 Ubuntu 24.04 LTS。 |
+| **Private key** | Coolify 将使用的 SSH 密钥，Coolify 会把它添加到 VPS。 |
+
+也可以不选纯操作系统，而是选择 **Operating system with application**（带应用的操作系统）。这类模板会在 VPS 上安装应用或控制面板，应用可能占用 `80` 和 `443` 端口，而 Coolify 代理也需要这两个端口。Coolify 服务器请使用纯操作系统。
+
+在高级选项下，你可以：
+
+- 开关 **Enable weekly Hostinger backups (extra cost)**（启用 Hostinger 每周备份，额外收费）。默认关闭。Hostinger 的备份需要额外付费，开启前请在 hPanel 确认价格。
+- 添加 Hostinger 账号中的更多 SSH 密钥。
+- 选择 Hostinger 安装后脚本。
+
+如果服务器名称不是完全限定域名（不含点），Hostinger 会使用其默认主机名，例如 `srv123456.hstgr.cloud`。
+
+Hostinger 不使用 cloud-init。启动配置请使用 Hostinger 安装后脚本。
+
+</Tab>
+</Tabs>
+
+在 Hetzner、DigitalOcean 或 Vultr 上需要启动配置时，选择已保存的脚本或在 cloud-init 字段中输入。使用该选项前请先阅读 [Cloud-Init 脚本](/core/security/credentials/cloud-init-scripts)。
+
+</Step>
+<Step>
+
+### 发送创建请求
+
+核对所选套餐和选项，然后选择 **Buy & Create Server**（购买并创建服务器）。Hostinger 则选择 **Buy and create**（购买并创建）。
+
+Coolify 会立即创建服务器记录。提供商可能需要几分钟来创建机器并分配公网 IP 地址。
+
+</Step>
+<Step>
+
+### 等待提供商
+
+保持服务器页面打开，等待 Coolify 检查提供商状态并更新服务器 IP 地址。
+
+等到：
+
+- 提供商显示服务器正在运行
+- 服务器拿到最终可访问的 IP 地址
+- SSH 已有足够时间启动
+
+如果提供商显示机器已停机或不可用，先在提供商控制台开机或重新关联，再进行验证。
+
+对 Hostinger，Coolify 会等待一小段时间获取公网 IP。IP 可能 1 到 2 分钟后才出现，Coolify 会自动把它添加到服务器。
+
+</Step>
+<Step>
+
+### 验证服务器
+
+选择 **Validate connection**（验证连接）。验证成功后，服务器页面会显示 **Revalidate connection**（重新验证连接）。
+
+Coolify 会检查 SSH 访问、操作系统、所需工具、Docker Engine 和 Docker Compose。验证完成后，确认服务器可达且已通过验证。
+
+</Step>
+</Steps>
+
+---
+
+## Hostinger 计费与删除
+
+Hostinger 与其他提供商的机制不同。购买 Hostinger VPS 之前请先阅读本节。
+
+### 支付仍在处理中
+
+有时 Hostinger 接受了订单但支付尚未完成。此时 Coolify 不会创建服务器，而是显示以下消息：
+
+```text
+Hostinger order N is waiting for payment. Finish the VPS setup in hPanel.
+```
+
+打开 [hPanel](https://hpanel.hostinger.com/) 完成 VPS 设置。要在 Coolify 中管理这台 VPS，请先[添加服务器](/core/infrastructure/servers/add-server)，再[把它关联到 Hostinger](/core/infrastructure/servers/manage-server#将现有服务器关联到云提供商)。
+
+### 支付后设置失败
+
+有时 Hostinger 已扣款，但 VPS 设置失败。Coolify 会重试设置，并把 VPS 关联到服务器记录，避免你丢失它。
+
+如果设置仍然失败，服务器会显示 `initial` 状态。请在 hPanel 中完成 VPS 设置。
+
+### 服务器状态
+
+已关联的 Hostinger 服务器会在服务器页面显示 `Hostinger · <state>` 徽标。选择 **Refresh Status**（刷新状态）可从 Hostinger 获取当前状态。
+
+VPS 停机时可以从 Coolify 启动。VPS 停机或被暂停期间，Coolify 不会通过 SSH 验证服务器。
+
+### 删除 Hostinger VPS
+
+Hostinger 没有立即删除 VPS 的 API。在 Coolify 中删除服务器时，可以选择 **Also delete VPS from Hostinger (at the end of the paid period)**（同时从 Hostinger 删除 VPS，在付费期结束时）。Coolify 会关闭 VPS 的自动续订；VPS 会一直运行到付费期结束，之后 Hostinger 会删除该 VPS 及其全部数据。
+
+如果不选该选项，VPS 会继续运行，Hostinger 会继续计费。
+
+想立即删除 VPS，或在 30 天退款期内申请退款，请在 hPanel 的 **Billing > Subscriptions**（账单 > 订阅）中取消该 VPS。
+
+完整的删除步骤请阅读[移除服务器](/core/infrastructure/servers/remove-server)。
+
+---
+
+## 通过 API 创建 Hostinger 服务器
+
+也可以通过 [Coolify API](/api/overview) 创建 Hostinger 服务器。所有端点位于 `/api/v1` 下，使用 Bearer 令牌。
+
+用以下端点查询请求所需的值。`cloud_provider_token_uuid` 作为查询参数发送。
+
+| 端点 | 返回内容 |
+| :--- | :--- |
+| `GET /hostinger/data-centers` | Hostinger 数据中心。 |
+| `GET /hostinger/catalog` | KVM 套餐及其价格。 |
+| `GET /hostinger/templates` | 操作系统模板。 |
+| `GET /hostinger/ssh-keys` | Hostinger 账号中的 SSH 密钥。 |
+| `GET /hostinger/post-install-scripts` | 安装后脚本。令牌无权限时返回 `403` 及 Hostinger 的消息。 |
+
+然后发送 `POST /servers/hostinger`，字段如下：
+
+| 字段 | 类型 | 必填 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `cloud_provider_token_uuid` | string | 是 | Hostinger 云令牌的 UUID。 |
+| `item_id` | string | 是 | 套餐和计费周期的价格 ID，例如 `hostingercom-vps-kvm1-usd-1m`。 |
+| `data_center_id` | integer | 是 | 数据中心 ID。 |
+| `template_id` | integer | 是 | 操作系统模板 ID。 |
+| `private_key_uuid` | string | 是 | Coolify 私钥的 UUID。 |
+| `name` | string | 否 | 服务器名称。 |
+| `enable_backups` | boolean | 否 | 启用 Hostinger 每周备份（额外收费），默认 `false`。 |
+| `public_key_ids` | integer 数组 | 否 | Hostinger 账号中其他 SSH 密钥的 ID。 |
+| `post_install_script_id` | integer | 否 | Hostinger 安装后脚本的 ID。 |
+| `instant_validate` | boolean | 否 | 立即验证服务器。 |
+
+API 返回：
+
+- `201`：Coolify 创建服务器时附带 `uuid`、`hostinger_virtual_machine_id`、`ip` 和 `provisioning`。
+- `202`：支付仍在处理中，附带 `message`，Coolify 不会创建服务器。
+- `422`：请求无效。
+- `429`：请求过于频繁。Hostinger 约允许每分钟 90 个请求。
+
+<Callout type="warning" title="API 同样会购买 VPS">
+成功的 `POST /servers/hostinger` 请求会下付费订单，Hostinger 会向账号的默认支付方式收费。
+</Callout>
+
+---
+
+## 创建失败时
+
+- 确认云令牌有效且具有写权限。
+- 确认提供商账号可以在所选区域创建所选套餐。
+- 检查提供商配额、账号余额和支付状态。
+- 确认所选 SSH 密钥有效。
+- 重试前先到提供商控制台确认机器是否已创建，并在那里删除不需要的计费机器。
+- Hostinger：重试前先打开 hPanel。即使 Coolify 显示错误，Hostinger 也可能已经扣款。参见 [Hostinger 计费与删除](#hostinger-计费与删除)。
+
+令牌相关检查请参阅[云令牌故障排查](/core/security/credentials/cloud-tokens#故障排查)。

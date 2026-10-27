@@ -1,0 +1,224 @@
+---
+title: 数据库
+description: 在 Coolify 上自托管 PostgreSQL、MySQL、MariaDB、MongoDB、Redis、Dragonfly、KeyDB、ClickHouse 或 SQLite，引擎支持的还提供计划备份与恢复。
+---
+
+import { Box2, BranchUp, Settings } from 'reicon-react';
+
+# 数据库
+
+要想用最省事的方式自托管一个带备份的数据库，就是在你掌控的服务器上安装 Coolify，创建一个一键数据库，再添加一条可上传到 S3 兼容存储的备份计划。PostgreSQL、MySQL、MariaDB、MongoDB、ClickHouse 和实验性的 SQLite 可以按计划备份；面板恢复对其中除 ClickHouse 之外的所有引擎都可用。Redis、Dragonfly 和 KeyDB 不支持计划备份和面板恢复，而服务器安全和定期的恢复演练始终由你自己负责。
+
+Coolify 把每个独立数据库作为一个容器部署到你选定的服务器和网络。资源自带生成的凭据、持久化数据卷、内部连接 URL，以及网络、健康检查、存储和资源限制的控件。引擎在下面列表中就用一键数据库；不在列表中的引擎或拓扑就用 Docker Compose。
+
+如果你是第一次接触 Coolify 数据库，建议从[什么是数据库](/databases/what-is-a-database)、[数据库的工作原理](/databases/how-databases-work)和[选择数据库](/databases/choose-a-database)读起。备份路径见[下文](#借助备份自托管数据库)。如果第一次部署只需要一个能跑起来的容器，可参考[部署你的第一个数据库](/deploy-your-first-database)；该指南使用的 Redis 没有计划备份。
+
+## 支持的数据库引擎
+
+| 数据库 | 最适合 | 计划备份 | 面板恢复 | 默认内部端口 |
+| :--- | :--- | :---: | :---: | :---: |
+| [PostgreSQL](/databases/postgresql) | 关系型数据、扩展和事务型工作负载 | 支持 | 支持 | `5432` |
+| [MySQL](/databases/mysql) | 关系型应用与广泛的生态支持 | 支持 | 支持 | `3306` |
+| [MariaDB](/databases/mariadb) | 兼容 MySQL 的关系型工作负载 | 支持 | 支持 | `3306` |
+| [MongoDB](/databases/mongodb) | 面向文档的数据与灵活的表结构 | 支持 | 支持 | `27017` |
+| [Redis](/databases/redis) | 缓存、队列、流和键值数据 | 不支持 | 不支持 | `6379` |
+| [Dragonfly](/databases/dragonfly) | 兼容 Redis、基于多线程数据存储的工作负载 | 不支持 | 不支持 | `6379` |
+| [KeyDB](/databases/keydb) | 兼容 Redis、采用多线程的工作负载 | 不支持 | 不支持 | `6379` |
+| [ClickHouse](/databases/clickhouse) | 分析型与列式工作负载 | 支持 | 不支持 | `9000` |
+| [SQLite](/databases/sqlite) | 同一服务器上的文件型数据库；实验性 | 支持 | 支持 | 无 |
+
+"计划备份"指 Coolify 可以从数据库的 **Backups**（备份）页面执行针对该引擎的导出；"面板恢复"指 **Import Backup**（导入备份）可以在数据库运行时加载备份。Redis、Dragonfly、KeyDB 和 ClickHouse 仍会打开 **Import Backup** 页面，页面会说明不支持恢复。Redis、Dragonfly 和 KeyDB 不显示 **Backups**，但它们仍有持久化存储。
+
+ClickHouse 和 SQLite 的计划只适用于独立数据库资源。[Service](/services)（服务）内的 PostgreSQL、MySQL、MariaDB 或 MongoDB 数据库可以使用同一套计划备份流程，参见[备份服务内的数据库](/databases/backups#备份服务内的数据库)。
+
+## 借助备份自托管数据库
+
+1. 如果还没有运行 Coolify，请先安装。参见[从自托管开始](/start-with-self-hosted)。[Coolify Cloud](/start-with-cloud) 只托管 Coolify 实例本身。无论哪种方式，数据库都运行在你提供的服务器上。
+2. 打开一个项目并选择 **Create New Resource**（新建资源），然后从上表中选择支持计划备份的引擎。选择服务器和 Docker 网络。构建服务器无法选择，因为它们不承载运行中的数据库资源。镜像选项跟随当前 Coolify 版本；更换大版本前请先阅读[选择数据库](/databases/choose-a-database)。
+3. 检查生成的凭据和持久化卷，然后选择 **Start**（启动）。等数据库进入运行且健康的状态后，把 **Internal URL**（内部 URL）复制给同一目标网络中的应用。新数据库没有公开端点。发布端口前，请阅读[网络访问](#网络访问)和[数据库 SSL](/databases/ssl)。
+4. 打开 **Backups**，选择 **+ Add**（添加），输入五段式 cron 表达式或以下名称之一：`every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`。计划使用服务器时区；服务器没有时区时使用 Coolify 实例时区。计划触发时数据库若处于停止状态，Coolify 会跳过该次执行。范围与各引擎的导出命令见[数据库备份](/databases/backups)。
+5. 设置保留策略。**Backups to keep**（保留备份数）、**Days to keep**（保留天数）和 **Maximum storage (GB)**（最大存储空间，GB）都可用 `0` 表示不限制。这几项限制彼此独立：任一限制达到阈值时，Coolify 就会删除备份，并优先保留最近的备份。S3 保留策略使用同样三个字段，且与本地限制互不影响。本地文件写在数据库服务器的 `/data/coolify/backups` 之下。
+6. 把副本送到服务器之外。添加并验证一个 [S3 兼容存储](/core/s3-storage/overview)。存储桶必须已经存在。Coolify 为 Amazon S3、Cloudflare R2、Neon Object Storage 和 Supabase Storage 提供了配置指南，还支持 DigitalOcean Spaces、MinIO、Backblaze B2、Scaleway Object Storage、Hetzner S3 Storage、Wasabi Hot Cloud Storage、Vultr、CloudPe Object Storage 和 IDrive e2。在计划中选择该存储并 **Enable S3**（启用 S3）。**Delete after S3 upload**（S3 上传后删除）只在上传成功后才删除本地文件。
+7. 在数据库运行期间选择 **Back up now**（立即备份）。确认执行状态为 **Success**（成功）、数据库名称与所选范围一致、文件大小大于零，以及启用了 S3 时上传成功。
+8. 信任备份之前先恢复一次。对 PostgreSQL、MySQL、MariaDB、MongoDB 和 SQLite，**Import Backup** 接受来自你电脑的文件、服务器上的绝对路径或 S3 存储中的对象。先停止应用写入，并对目标单独做一次备份。ClickHouse 没有内置导入，需用 ClickHouse 客户端恢复该归档。参见[恢复数据库](/databases/restore)。
+
+## 仍需你自己负责的事项
+
+Coolify 负责创建数据库资源和备份文件，但不会接管你的服务器，也不能证明备份一定可以恢复。
+
+- **服务器安全**：操作系统更新、防火墙规则和 SSH 访问都由你负责，使用 Coolify Cloud 时也一样。补丁检查发现操作系统更新时，Coolify 可以通知你。参见[防火墙](/core/infrastructure/servers/firewall)和[通知事件](/core/notifications/events)。
+- **恢复演练**：备份成功只能证明 Coolify 创建了一个文件。请把副本恢复到一次性数据库中，确认应用能够读取。
+- **服务器外的副本**：本地备份与数据库在同一台服务器上。启用 S3，服务器丢失时才不会连唯一的副本一起失去。
+- **Coolify 实例备份**：[实例备份](/core/backup-and-recovery/instance-backup)保存的是 Coolify 的项目和设置，不会备份数据库里存的数据。
+- **单容器而非集群**：一键数据库是单个容器。复制、故障转移和多节点拓扑不属于该资源。需要时请使用 Compose [Service](/databases/choose-a-database) 或外部数据库。
+- **大版本升级**：没有引擎升级流程和经验证的备份，不要把生产数据库镜像换成别的大版本。
+- **指标覆盖范围**：在服务器上启用指标（metrics）后，可通过 Sentinel 采集 CPU 和内存采样。这些图表不包含查询性能。参见[指标](/core/observability/monitoring/metrics)。
+
+## 常见问题
+
+<Accordions type="multiple">
+
+<Accordion title="Coolify 可以按计划备份哪些数据库？">
+
+PostgreSQL、MySQL、MariaDB、MongoDB、ClickHouse 和实验性的 SQLite。Redis、Dragonfly 和 KeyDB 不显示 **Backups** 页面。Service 内的 PostgreSQL、MySQL、MariaDB 或 MongoDB 数据库也可以按计划备份。详情与导出命令见[数据库备份](/databases/backups)。
+
+</Accordion>
+
+<Accordion title="哪些数据库可以从面板恢复？">
+
+PostgreSQL、MySQL、MariaDB、MongoDB 和 SQLite。**Import Backup** 接受来自你电脑的文件、服务器上的路径或 S3 存储。Redis、Dragonfly、KeyDB 和 ClickHouse 会打开同样的页面并说明不支持恢复。参见[恢复数据库](/databases/restore)。
+
+</Accordion>
+
+<Accordion title="可以把备份发送到 Amazon S3、Cloudflare R2 或 Backblaze B2 吗？">
+
+可以。Coolify 支持上传到 S3 兼容存储。配置指南覆盖 Amazon S3、Cloudflare R2、Neon Object Storage 和 Supabase Storage。Backblaze B2 在受支持的服务商列表中，同列的还有 DigitalOcean Spaces、MinIO、Scaleway Object Storage、Hetzner S3 Storage、Wasabi Hot Cloud Storage、Vultr、CloudPe Object Storage 和 IDrive e2。存储桶必须先存在才能验证。参见 [S3 存储](/core/s3-storage/overview)。
+
+</Accordion>
+
+<Accordion title="备份会保留多久？">
+
+由你决定。本地和 S3 的保留策略相互独立，各自都有 **Backups to keep**、**Days to keep** 和 **Maximum storage (GB)**。`0` 表示不限制。任一配置的限制达到阈值时，Coolify 就会删除备份，并优先保留最近的备份。
+
+</Accordion>
+
+<Accordion title="这是时间点恢复（PITR）吗？">
+
+不是。计划备份是任务执行时取得的一份导出或归档：PostgreSQL 用 `pg_dump` 或 `pg_dumpall`，MySQL 用 `mysqldump`，MariaDB 用 `mariadb-dump`，MongoDB 用 `mongodump`，ClickHouse 用 `BACKUP DATABASE`，SQLite 用 `VACUUM INTO`。恢复它得到的是那份副本，而不是两次执行之间的任意时刻。
+
+</Accordion>
+
+<Accordion title="数据库会暴露在互联网上吗？">
+
+默认不会。新数据库没有公开端点。同一 Coolify 网络上的应用使用内部 URL。如果外部客户端必须连接，可使用端口映射或 **Public through TCP proxy**（经 TCP 代理公开），用防火墙限制端口，并在引擎支持时启用 SSL。参见[网络访问](#网络访问)和[数据库 SSL](/databases/ssl)。
+
+</Accordion>
+
+<Accordion title="Coolify Cloud 会托管数据库吗？">
+
+不会。无论自托管 Coolify 还是 Coolify Cloud，应用、数据库、服务和持久化数据都运行在你自己的服务器上。参见[自托管与 Coolify Cloud 对比](/core/selfhosted-cloud-comparison)。
+
+</Accordion>
+
+<Accordion title="实例备份会保存我的数据库数据吗？">
+
+不会。实例备份保存的是 Coolify 自身的项目、资源、设置和部署历史。数据库数据需要上文介绍的数据库备份计划。参见[实例备份](/core/backup-and-recovery/instance-backup)。
+
+</Accordion>
+
+</Accordions>
+
+## 部署数据库
+
+1. 打开一个项目并选择 **Create New Resource**。
+2. 从数据库列表中选择一个数据库。
+3. 选择数据库应运行的服务器和目标。
+4. 在 **General** 下检查生成的凭据和设置。
+5. 选择 **Start**。
+
+Coolify 会在所选目标上创建数据库容器。数据库默认不会获得公开的网络端点。
+
+完整的首次部署演练见[部署你的第一个数据库](/deploy-your-first-database)。
+
+## 连接应用
+
+当应用与数据库运行在同一个 Coolify 目标网络上时，使用数据库的 **Internal URL**。Coolify 用数据库容器名、内部端口、凭据和所选数据库构造这个 URL。
+
+从数据库的 **General** 配置中复制该 URL，并加进应用的环境变量。内网连接时不要用服务器 IP 替换容器名。
+
+如果应用运行在别的服务器或网络上，只有在数据库必须接受外部流量时才使用公开连接。两种公开访问方式见[网络访问](#网络访问)。
+
+<span id="ports-mapping-vs-public-port" />
+
+## 网络访问
+
+Coolify 提供两种暴露数据库端口的方式：
+
+| 方式 | 作用 | 适用场景 |
+| :--- | :--- | :--- |
+| **Port mappings**（端口映射） | 为数据库容器添加一条 Docker 主机到容器的端口映射。 | 需要固定主机端口，或客户端直连服务器。 |
+| **Public access > Access > Public through TCP proxy** | 在所选 **Public port**（公开端口）上运行一个独立的 Nginx TCP 代理。 | 需要公开连接，又不想为了改端口而改动数据库容器的端口映射。 |
+
+端口映射的格式为 `host-port:container-port`，例如 `15432:5432`。可以输入多条以逗号分隔的映射。生成的配置变化时，数据库容器会被重建。
+
+公开 TCP 代理要求数据库处于运行状态，且 **Public port** 在 `1` 到 `65535` 之间。**Proxy timeout**（代理超时）默认为 `3600`，最小为 `1`。代理独立于数据库容器，因此修改公开端口或超时只会更新代理，而不会动到数据库进程。
+
+<Callout type="warning" title="数据库端口默认保持私有">
+
+公开的数据库端口会把一种数据库协议暴露给网络。请尽量使用私有网络。如果外部客户端必须连接，请用服务器或服务商防火墙限制该端口，并在引擎支持时启用 SSL。
+
+</Callout>
+
+数据库公开后，Coolify 会在内部 URL 旁边显示一个 **Public URL**（公开 URL）。请直接使用生成的 URL，不要手工拼装连接字符串。
+
+## 持久化数据
+
+Coolify 在创建独立数据库时会创建一个命名的 Docker 卷。该卷独立于数据库容器，因此重新部署或重建容器不会删除数据库数据。
+
+| 数据库 | 容器内数据路径 |
+| :--- | :--- |
+| PostgreSQL 18 之前 | `/var/lib/postgresql/data` |
+| PostgreSQL 18 及更高 | `/var/lib/postgresql` |
+| MySQL 和 MariaDB | `/var/lib/mysql` |
+| MongoDB | `/data/db` 与 `/data/configdb` |
+| Redis、Dragonfly 和 KeyDB | `/data` |
+| ClickHouse | `/var/lib/clickhouse` |
+
+持久化存储不是感知数据库的备份。请为受支持的引擎使用[数据库备份](/databases/backups)，并在依赖之前测试[数据库恢复](/databases/restore)。
+
+打开 **Persistent Storage**（持久化存储）可以添加或更改存储挂载。更改或删除挂载可能让容器无法访问既有数据，保存前请核对源路径和目标路径。
+
+## 数据库健康状态
+
+Coolify 可以为每个独立数据库附加 Docker 健康检查。打开 **Healthcheck**（健康检查）配置：
+
+- **Interval (seconds)**：两次检查的间隔；最小 `1`。
+- **Timeout (seconds)**：单次检查的最长时间；最小 `1`。
+- **Retries**：Docker 把容器标记为不健康前允许的失败次数；最小 `1`。
+- **Start period (seconds)**：失败不计数启动等待期；最小 `0`。
+
+在当前 Coolify 版本中，健康检查默认启用。保存设置、启用或停用检查后，请重启数据库以应用生成的容器配置。
+
+## 数据库资源导航
+
+数据库资源导航把配置与日常操作分开：
+
+| 区域 | 用途 | 指南 |
+| :--- | :--- | :--- |
+| **General** | 修改引擎凭据、镜像、端口、代理和引擎专属配置。 | [常规设置](/databases/configuration/general) |
+| **Environment Variables** | 管理传给数据库容器的运行时变量。 | [环境变量](/databases/configuration/environment-variables) |
+| **Servers** | 查看或更改所选的服务器和目标。 | [配置多服务器部署](/core/infrastructure/scaling/multi-server-deployments) |
+| **Persistent Storage** | 管理跨容器重建保留数据库数据的命名卷和挂载。 | [持久化存储](/databases/configuration/persistent-storage) |
+| **Import Backup** | 在数据库运行时恢复受支持的 PostgreSQL、MySQL、MariaDB、MongoDB 或 SQLite 备份。其他引擎会显示不支持恢复。 | [恢复数据库](/databases/restore) |
+| **Webhooks** | 创建供外部自动化调用数据库操作的认证请求。 | [部署 webhook](/core/automation/deploy-webhooks) |
+| **Healthcheck** | 配置 Docker 就绪与存活探测。 | [健康检查](/databases/configuration/health-checks) |
+| **Resource Limits** | 为数据库容器设置 CPU 和内存限制。 | [资源限制](/databases/configuration/resource-limits) |
+| **Resource Operations** | 把数据库克隆到其他目标，或在项目与环境之间移动。 | [克隆或移动数据库](/databases/operations/resource-operations) |
+| **Metrics** | 查看数据库容器的 CPU 和内存用量。 | [查看资源指标](/core/observability/monitoring/metrics) |
+| **Tags** | 整理资源并配合基于标签的自动化。 | [用标签整理资源](/core/automation/tags/overview) |
+| **Danger Zone** | 删除数据库资源，并选择要一并移除的相关 Docker 资源。 | [删除数据库](/databases/operations/danger-zone) |
+
+## 继续阅读数据库指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '选择数据库',
+      href: '/databases/choose-a-database',
+      description: '比较一键引擎、版本、备份支持与服务。',
+      icon: BranchUp,
+    },
+    {
+      title: '配置备份',
+      href: '/databases/backups',
+      description: '为感知数据库的备份制定计划并设置保留策略。',
+      icon: Box2,
+    },
+    {
+      title: '用 SSL 保护连接',
+      href: '/databases/ssl',
+      description: '启用 SSL 并选择引擎支持的校验模式。',
+      icon: Settings,
+    },
+  ]}
+/>

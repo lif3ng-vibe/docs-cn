@@ -1,0 +1,74 @@
+---
+title: 公开仓库
+description: 无需创建 Git 来源或部署密钥，直接部署公开 Git 仓库。
+---
+
+# 公开仓库
+
+仓库无需身份验证即可通过 HTTPS 克隆时，使用 **Public Repository**（公开仓库）。
+
+## 创建应用
+
+<Steps>
+<Step>
+
+### 复制 HTTPS URL
+
+复制仓库的克隆 URL：
+
+```sh
+https://github.com/coollabsio/coolify-examples.git
+```
+
+这种来源类型不要使用 SSH URL。
+
+</Step>
+<Step>
+
+### 选择 Public Repository
+
+打开一个项目，选择 **+ New**（新建），再选择 **Public Repository**（公开仓库）。
+
+Coolify 询问时选择部署服务器。
+
+</Step>
+<Step>
+
+### 检查仓库
+
+粘贴 HTTPS URL，选择 **Check Repository**（检查仓库）。
+
+Coolify 会加载仓库与分支信息。如果 URL 中带有 GitHub 分支路径（例如 `https://github.com/ShadowArcanist/netviz/tree/v2`），Coolify 会预选该分支；否则请在继续前核对所选分支。
+
+</Step>
+<Step>
+
+### 配置并部署
+
+选择 [**Build pack**](/applications/builds/overview)（构建包）、基础目录及其他必需的构建设置。应用需要公开访问时，配置内部端口与域名。
+
+选择 **Deploy**（部署），并检查部署日志。
+
+</Step>
+</Steps>
+
+## 启用自动部署
+
+直接用 URL 连接公开仓库不会配置自动部署。要自动部署新 commit，请使用仓库 webhook 或外部工作流。
+
+<Tabs id="public-repository-automatic-deployment" items={['仓库 webhook', '外部工作流']}>
+<Tab value="仓库 webhook">
+
+添加[手动 Git webhook](/applications/deployments/manual-webhooks)，然后在 **Advanced > Deployment > Auto deploy**（高级 > 部署 > 自动部署）下选择 **Deploy on push (webhooks)**（推送时部署（webhook））。此后当配置的分支发生变化时，提供方就会通知 Coolify。
+
+如果你希望通过一个集成同时完成 GitHub 仓库选择与 webhook 配置，请改用 [GitHub App](/applications/sources/github/app)。
+
+</Tab>
+<Tab value="外部工作流">
+
+在 GitHub Actions 或其他 CI 系统的检查通过后，调用经过身份验证的 **Deploy Webhook**（部署 webhook）。
+
+[GitHub Actions 示例](/applications/sources/github/actions#添加-github-actions-工作流)中的部署步骤展示了身份验证的写法。
+
+</Tab>
+</Tabs>

@@ -1,0 +1,71 @@
+---
+title: Coolify 面板加载缓慢
+description: 通过禁用 Cloudflare Rocket Loader、检查服务器位置并优化代理设置，解决 Coolify 面板加载缓慢的问题。
+---
+
+# Coolify 面板加载缓慢
+
+如果你的 Coolify 面板加载非常缓慢，或者某些页面根本打不开，这篇指南可能正适合你。
+
+<Steps>
+<Step>
+
+### 确定你的域名接入方式
+
+先问自己一个问题：**你的域名 DNS 是否由 Cloudflare 托管？**
+
+- **是**：问题很可能是 Cloudflare 的 [Rocket Loader](https://developers.cloudflare.com/speed/optimization/content/rocket-loader/) 功能导致的。
+- **否**：卡顿可能由你的服务器或其他因素造成。
+
+</Step>
+<Step>
+
+### 用服务器 IP 测试
+
+### A. 开放防火墙端口
+
+- **操作**：确保防火墙已放行 **8000** 端口。
+- **原因**：这样可以不经过代理直接访问 Coolify 面板。
+
+### B. 直接访问面板
+
+- **操作**：打开浏览器访问：  
+  `http://203.0.113.1:8000`（把 `203.0.113.1` 换成你服务器的实际 IP 地址）
+- **观察结果**：
+  - 如果面板速度正常且所有页面都能正确加载，问题多半出在 Cloudflare 的 [Rocket Loader](https://developers.cloudflare.com/speed/optimization/content/rocket-loader/) 上。
+  - 如果性能没有改善，问题可能与服务器位置或你的网络速度有关。
+
+</Step>
+<Step>
+
+### 处理 Cloudflare Rocket Loader
+
+如果面板通过服务器 IP 访问很快、通过自定义域名访问很慢，试试下面的方法：
+
+- **操作**：登录你的 [Cloudflare 控制台](https://dash.cloudflare.com/)。
+
+    <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dashboard/dashboard-slow-performance/rocket-loader.webp" alt="Rocket Loader 报错示例" />
+
+- **动作**：
+  - 在侧边栏进入 **Speed**（速度）。
+  - 进入 **Optimization**（优化），点击 **Content Optimization**（内容优化）。
+  - 将 **Rocket Loader** 的开关切换为 **Off**（关闭）。
+- **等待**：等几分钟让改动生效，然后用域名访问你的 Coolify 面板。
+
+</Step>
+<Step>
+
+### 寻求进一步帮助
+
+如果以上步骤都无效：
+
+- **社区求助**：加入我们的 [Discord 社区](https://coolify.io/discord)，在支持论坛频道发帖。
+- **要提供的内容**：附上问题现象的录屏，并说明你已经尝试过的步骤。
+
+</Step>
+</Steps>
+
+## 常见问题小结
+
+- **Cloudflare Rocket Loader**：多数情况下，使用 Cloudflare 托管的域名时，问题都出在 Rocket Loader 上
+- **服务器或网络问题**：服务器与用户之间的网络连接不稳定，也可能导致性能问题。

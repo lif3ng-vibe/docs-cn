@@ -1,0 +1,370 @@
+---
+title: "向 Coolify 添加新的服务模板"
+description: 使用带魔法环境变量、存储处理与一键部署能力的 Docker Compose，为 Coolify 添加新的服务模板。
+---
+
+import {
+  ArrowsRight,
+  Checklist2,
+  Clipboard,
+  Database,
+  DocumentText2,
+  Image,
+  MessageQuestion2,
+  Package,
+  Rocket,
+  StarSparkle,
+  Warning22,
+} from 'reicon-react';
+
+# 为 Coolify 添加新的服务模板
+
+<CoolCallout icon={Warning22} title="外部贡献暂时暂停" type="danger">
+
+由于大量低质量的 pull request 垃圾提交，外部贡献暂时停止。恢复外部贡献**尚无明确时间表**。
+
+在外部贡献重新开放之前，请先不要提交外部 pull request。以下工作流程仍可供参考。
+
+</CoolCallout>
+
+Coolify 中的服务本质上是模板：由普通的 Docker Compose 文件加上 Coolify 元数据、魔法环境变量、存储处理和一键部署行为构成。
+
+<CoolDocsPage>
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+添加 compose 文件和 logo，通过 **Docker Compose Empty** 测试，向当前的 `release/v4.x` 分支发起模板 pull request，并在模板可合并之前提交配套的服务文档 pull request。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="准入条件" type="warn">
+
+服务的上游仓库必须拥有至少 **1,000 个 GitHub star**，才能作为一键服务加入 Coolify。
+
+</CoolCallout>
+
+---
+
+<CoolFlow
+  id="template-flow"
+  icon={Package}
+  title="添加服务模板"
+  description="从普通的 Docker Compose 文件开始，再加上元数据和 Coolify 特有的变量，让它成为可用的一键服务。"
+  steps={[
+    '在 compose 文件顶部添加元数据',
+    '编写 Docker Compose 服务',
+    '关键配置使用必填变量',
+    '在 Coolify 仓库中添加服务 logo',
+    '用 Docker Compose Empty 测试',
+    '向 Coolify 发起模板 pull request',
+    '发起必需的服务文档 pull request',
+  ]}
+  list={[
+    '阅读 [Docker Compose 环境变量指南](/docs-cn/coolify/applications/builds/docker-compose#环境变量)。',
+    '尽量使用生成变量和存储处理。',
+    '让模板聚焦于一个可正常运行的默认部署。',
+    '对用户在部署前必须配置的内容做好文档说明。',
+  ]}
+/>
+
+---
+
+<CoolCallout icon={Checklist2} title="元数据" contentClassName="!p-0">
+<CoolPanel>
+
+以注释形式在 compose 文件顶部添加元数据。
+
+```yaml
+# documentation: https://docs.example.com/
+# slogan: A brief description of your service
+# category: One word, broad app type
+# tags: tag1,tag2,tag3
+# logo: svgs/your-service.svg
+# port: 1234
+```
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+| 字段 | 要求 |
+| :--- | :--- |
+| documentation | 指向服务官方文档的链接。 |
+| slogan | 在 Coolify 中展示的简短描述。 |
+| category | 一个宽泛的应用类型，用一个单词表示。 |
+| tags | 逗号分隔的搜索关键词。 |
+| logo | 服务 logo 的路径，例如 svgs/example.svg。 |
+| port | 服务的主入口端口。 |
+
+</CoolPanel>
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="端口说明" type="warn">
+
+务必指定端口。Caddy 代理无法自动判断所有服务的端口。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Database} title="Docker Compose" contentClassName="!p-0">
+<CoolPanel>
+
+使用 Coolify 魔法变量表示生成值和用户提供的配置。声明服务所需的存储挂载。
+
+```yaml
+services:
+  app:
+    image: your-service-image:1.2.3
+    environment:
+      - DATABASE_URL=${COOLIFY_DATABASE_URL}
+    volumes:
+      - app-data:/data
+```
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+把关键配置标记为必填，让用户清楚部署前必须设置哪些内容。
+
+```yaml
+services:
+  app:
+    image: your-service:1.2.3
+    environment:
+      # Required - must be set by the user
+      - DATABASE_URL=${DATABASE_URL:?}
+      - API_KEY=${API_KEY:?}
+
+      # Required with sensible defaults
+      - PORT=${PORT:?8080}
+      - LOG_LEVEL=${LOG_LEVEL:?info}
+
+      # Optional with fallback values
+      - DEBUG=${DEBUG:-false}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+```
+
+不要使用 <CoolInlineValue>latest</CoolInlineValue> 或其他浮动标签。把镜像固定到具体版本。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+### Coolify 自动添加的配置
+
+对于普通服务模板，Coolify 会生成一部分部署配置：
+
+| 配置项 | 模板中应如何处理 |
+| :--- | :--- |
+| `container_name` | 省略即可。Coolify 会根据 Compose 服务名和资源 UUID 生成名称。 |
+| `restart` | 省略即使用 Coolify 默认的 `unless-stopped`。仅当服务需要不同行为时才显式设置，例如一次性初始化容器使用 `restart: "no"`。 |
+| 顶层 `volumes` | 普通命名卷的空声明可以省略。Coolify 会为服务引用到的命名卷补充声明。当声明包含 `external`、`name` 或驱动配置等选项时，请保留显式声明。 |
+| 默认网络 | Coolify 会创建资源专属网络并接入代理。仅当模板确实需要时才声明自定义网络。 |
+
+上面的示例仍然需要在服务的 `volumes` 中写明 `app-data:/data`：Coolify 无法推断哪些容器路径需要持久化存储。它会根据该挂载生成命名卷声明，但不会把每个容器目录都持久化。
+
+请通过 **Docker Compose Empty** 测试解析后的部署。上述自动补充只作用于 Coolify 的常规服务解析，不适用于直接用 Docker Compose 运行模板，也不适用于应用的原始 Compose 部署模式。
+
+</CoolPanel>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Image} title="Logo 与测试" contentClassName="!p-0">
+<CoolPanel>
+
+把 logo 放进 Coolify 仓库并在 compose 元数据中引用，然后在发起 pull request 前测试 compose 文件。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+- 示例：名为 <CoolInlineValue>wordpress</CoolInlineValue> 的服务应使用 <CoolInlineValue>templates/compose/wordpress.yaml</CoolInlineValue>、<CoolInlineValue>svgs/wordpress.svg</CoolInlineValue> 和 <CoolInlineValue># logo: svgs/wordpress.svg</CoolInlineValue>。
+- 优先使用 SVG logo。仅在 SVG 不可用时使用 WebP 或 PNG。
+- 避免使用低质量的 JPG logo。
+- 从一个全新的 Docker Compose Empty 资源开始测试，不要只测已经跑起来的本地容器。
+- 确认服务能启动、暴露的端口可访问。
+
+</CoolPanel>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={Clipboard} title="pull request 检查清单">
+
+- 模板 pull request 面向 Coolify 仓库当前的 `release/v4.x` 分支（例如生产环境为 `4.4.x` 时，面向 `release/v4.5`）。
+- 添加 `templates/compose/<service>.yaml`。
+- 添加 `svgs/<service>.svg`，并在 compose 元数据中引用同一路径。
+- 通过 Docker Compose Empty 部署流程测试模板。
+- 在本仓库发起配套的服务文档 pull request；这是模板 PR 合并前的必要条件。
+- 在模板 pull request 中附上文档 pull request 的链接，方便评审者一并检查。
+
+</CoolCallout>
+
+<CoolCallout icon={Rocket} title="生成的模板数据">
+
+Coolify 从 <CoolInlineValue>templates/service-templates.json</CoolInlineValue> 进行部署，它是由 Coolify 仓库中的 compose 模板解析生成的列表。你无需直接编辑该 JSON 文件。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="添加服务文档" contentClassName="!p-0">
+<CoolPanel>
+
+在服务模板 pull request 合并之前，先在本仓库发起配套的文档页面 pull request。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+- 把服务 logo 放到 `public/images/services` 下。
+- 创建 `content/docs/services/<service-slug>.mdx`。
+- slug 和文件名使用小写 kebab-case。
+- 运行服务生成器，或交给 dev/build 自动执行。
+- 检查服务卡片、分类筛选和全部服务目录条目。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+文档页面以下面的 frontmatter 开头。描述保持简短，让卡片和搜索结果保持可读。
+
+```yaml
+---
+title: "Service Name"
+description: "Short service description for cards and search."
+og:
+  description: "SEO/social-card description."
+category: "Analytics"
+icon: "/images/services/service-name-logo.svg"
+---
+```
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+| 字段 | 必填 | 说明 |
+| :--- | :--- | :--- |
+| title | 是 | 服务卡片上展示的名称。 |
+| description | 是 | 用于卡片和搜索结果的简短描述。 |
+| category | 是 | 概览页和生成的全部服务页所用的分类。 |
+| icon | 可选 | 仅当自动 logo 解析找不到 logo 时才设置。 |
+| og.description | 可选 | 更长的社交与 SEO 描述。 |
+| disabled | 可选 | 设为 true 可在列表中隐藏该服务，同时保留页面可访问。 |
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+要在生成的列表中隐藏服务同时保留页面可访问，请在服务页 frontmatter 中加入 disabled 字段：
+
+```yaml
+---
+title: "Service Name"
+description: "Short service description for cards and search."
+category: "Analytics"
+disabled: true
+---
+```
+
+</CoolPanel>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="服务文档起步模板">
+
+可将以下内容作为服务页面正文的小型起点。
+
+```markdown
+# Service Name
+
+![Service Name](/docs-cn/coolify/images/services/service-name-logo.svg)
+
+## What is Service Name?
+
+Brief description and use cases.
+
+## Links
+
+- [Official website](https://example.com?utm_source=coolify.io)
+- [GitHub](https://github.com/example/repo?utm_source=coolify.io)
+```
+
+当图片放大查看更有帮助时，用可缩放图片组件添加截图：
+
+```tsx
+<ZoomableImage src="/images/services/service-name-dashboard.webp" alt="Service dashboard" />
+```
+
+不要对 logo 使用 <CoolInlineValue>ZoomableImage</CoolInlineValue>。
+
+</CoolCallout>
+
+<CoolCallout icon={Rocket} title="重新生成列表">
+
+服务概览和全部服务目录由服务 frontmatter 生成。生成器会在 dev 和 build 时运行，检查某个服务页面时也可以直接手动运行。
+
+```bash
+bun run generate:services
+```
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={MessageQuestion2} title="请求新服务">
+
+如果你希望有某个服务模板但不打算自己提交，请先搜索[服务模板请求区](https://github.com/coollabsio/coolify/discussions/categories/service-template-requests)。给已有请求点赞（upvote），如果不存在再新建。
+
+</CoolCallout>
+
+---
+
+<CoolCallout icon={MessageQuestion2} title="常见问题" contentClassName="!p-0">
+<CoolAccordions>
+<Accordion title="任何服务都能加入吗？">
+
+不能。上游服务仓库必须至少拥有 1,000 个 GitHub star，才能作为一键服务加入。
+
+</Accordion>
+<Accordion title="为什么端口是必填的？">
+
+Caddy 无法总是自动检测出正确的服务端口。元数据中的 port 告诉 Coolify 该暴露哪个端口。
+
+</Accordion>
+<Accordion title="应该手动编辑生成的服务列表文件吗？">
+
+不应该。服务列表由服务文档 frontmatter 生成，并由生成器脚本刷新。
+
+</Accordion>
+<Accordion title="不想自己添加时，去哪里请求服务？">
+
+使用 GitHub Discussions 中的服务模板请求分类。先搜索，再给已有请求点赞或新建请求。
+
+</Accordion>
+</CoolAccordions>
+</CoolCallout>
+
+---
+
+<CoolCallout icon={DocumentText2} title="开发指南">
+<CoolActionCardGrid>
+<CoolActionCard
+  href="/contribute/coolify"
+  icon={StarSparkle}
+  title="Coolify 核心"
+  type="secondary"
+  description="为 Coolify 主仓库搭建本地开发环境并准备代码贡献。"
+  bullets={['本地开发栈搭建', '开发工具', 'pull request 预期']}
+  btn-cta="查看核心指南"
+/>
+<CoolActionCard
+  href="/contribute/documentation"
+  icon={DocumentText2}
+  title="文档"
+  type="secondary"
+  description="在遵循现有 MDX 与组件模式的前提下新增或改进文档页面。"
+  bullets={['文档环境搭建', '图片路径', '评审预期']}
+  btn-cta="查看文档指南"
+/>
+</CoolActionCardGrid>
+</CoolCallout>
+
+</CoolDocsPage>

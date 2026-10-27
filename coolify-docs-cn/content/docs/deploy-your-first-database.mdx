@@ -1,0 +1,571 @@
+---
+title: 部署你的第一个数据库
+description: 通过一键资源列表在 Coolify 上部署你的第一个 Redis 数据库，并在终端中测试连接。
+---
+
+import {
+  ArrowsRight,
+  BrowserTerminal,
+  Database,
+  Key2,
+  Plug2,
+  Rocket2,
+  Server,
+  Settings,
+  ShieldAlert,
+  TerminalSquare,
+  WindowPointer,
+} from 'reicon-react';
+
+# 部署你的第一个数据库
+
+在 Coolify 上部署第一个数据库，能在一个简单的流程中帮你验证数据库创建、凭据、端口映射和终端访问是否都正常。
+
+在本指南中，你将从一键数据库资源列表部署 **Redis**。
+
+一键数据库是一种独立运行的数据库资源，由 Coolify 从其 **New Resource > Databases** 列表创建。Coolify 会提供 Redis 镜像、生成的凭据、持久化存储、网络和连接信息，让你无需编写 Docker Compose 文件即可完成部署。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+创建或打开一个项目、创建一个 Redis 数据库资源、映射一个宿主机端口、部署 Redis、复制生成的密码，然后在终端里执行 `PING`。
+
+这条路径非常适合首次数据库部署，因为 Redis 轻量又易于测试。
+
+</CoolCallout>
+
+---
+
+
+## 开始之前
+
+部署数据库之前，先确认以下事项已就绪。
+
+<CoolActionCardGrid
+  data-first-database
+  className="not-prose my-5"
+  surface
+  cards={[
+    {
+      title: '可访问控制台',
+      description: '你能登录 Coolify 并看到主控制台。',
+      bullets: ['你能在浏览器中访问 Coolify', '控制台加载无报错'],
+      icon: WindowPointer,
+    },
+    {
+      title: '服务器已连接',
+      description: 'Coolify 的 Servers 页面上至少列出了一台服务器。',
+      bullets: ['从侧边栏打开 Servers', '自托管安装在本地跑的话，localhost 即可'],
+      icon: Server,
+    },
+    {
+      title: '终端已就绪',
+      description: '你能在自己的电脑上运行一条命令来测试 Redis。',
+      bullets: ['已安装 redis-cli 就用它', '没有 redis-cli 就用 Docker'],
+      icon: TerminalSquare,
+    },
+  ]}
+/>
+
+如果 Coolify 还没就绪，请先阅读[从自托管开始](/start-with-self-hosted)或[从 Coolify Cloud 开始](/start-with-cloud)。
+
+---
+
+
+## 部署概览
+
+<section data-first-database className="not-prose my-5">
+<CoolFlow
+  id="first-database-deployment-flow"
+  icon={Database}
+  title="首个数据库部署流程"
+  description="这次首次数据库部署选用 Redis，因为它足够轻量、部署迅速，而且便于在终端里直接测试。"
+  steps={[
+    '创建或打开一个项目',
+    '选择 Redis',
+    '映射宿主机端口',
+    '开放防火墙',
+    '部署 Redis',
+    '用 redis-cli 测试',
+  ]}
+  list={[
+    '创建或打开数据库将要所在的项目。',
+    '从数据库资源列表中选择 Redis。',
+    '映射一个临时宿主机端口，供终端测试使用。',
+    '在防火墙规则中放行该宿主机端口。',
+    '部署 Redis 并复制生成的密码。',
+    '在 redis-cli 中执行 PING，确认 Redis 返回 PONG。',
+  ]}
+  endnote="完成后你应该得到一个运行中的 Redis 容器、一个已被防火墙放行的映射宿主机端口、一个 Redis 密码，以及一次成功的 PONG 响应。"
+/>
+</section>
+
+<CoolCallout icon={Database} title="数据库以容器方式运行">
+
+Coolify 以容器（Container）的形式部署数据库。在本指南中，Coolify 会创建并运行一个 Redis 容器、生成凭据，并把数据库数据保留在服务器上。
+
+Redis 容器在内部监听端口 `6379`。你需要映射一个临时宿主机端口，让终端能够连上来测试。
+
+</CoolCallout>
+
+---
+
+
+## 部署你的第一个 Redis 数据库
+
+选择你想使用的部署方式。每个标签页最终都会得到相同的首次部署结果。
+
+<Tabs items={['Dashboard', 'API', 'CLI', 'MCP']}>
+<Tab value="Dashboard">
+
+<Steps>
+<Step>
+
+### 创建你的第一个项目
+
+在 Coolify 控制台中：
+
+- 点击 **New Project**
+- 输入项目名，例如 `my-first-project`
+- 点击 **Continue**
+
+<Callout type="success" title="提示">
+
+如果你已经有项目，跳过这一步，直接进入第 2 步。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 创建新资源
+
+打开你的项目，点击 **Create New Resource**。
+
+资源是 Coolify 替你运行的东西，比如应用、数据库或服务。在本指南中，资源是一个 Redis 数据库。
+
+</Step>
+<Step>
+
+### 从数据库列表中选择 Redis
+
+在资源列表中：
+
+- 搜索 **Redis**
+- 点击 **Redis**
+
+Coolify 会用生成的设置和凭据创建一个 Redis 数据库资源。
+
+</Step>
+<Step>
+
+### 配置端口映射
+
+设置一个临时端口映射，以便你能从终端连接。
+
+示例：
+
+```txt
+6380:6379
+```
+
+<CoolCompare
+  data-first-database
+  className="not-prose my-5"
+  id="redis-port-mapping"
+  icon={Plug2}
+  title="Redis 端口映射"
+>
+<CoolCompareColumn
+  title="宿主机端口"
+  code="6380"
+  items={[
+    '这是你从终端连接时使用的服务器端口。',
+    '如果 6380 已被占用，换一个空闲的宿主机端口。',
+  ]}
+/>
+<CoolCompareColumn
+  title="容器端口"
+  code="6379"
+  items={[
+    '这是容器内部 Redis 的端口。',
+    '本指南中这一侧保持 6379 不变。',
+  ]}
+/>
+</CoolCompare>
+
+</Step>
+<Step>
+
+### 在防火墙上放行映射的宿主机端口
+
+端口映射把 Redis 发布到了服务器上，但你的防火墙或云服务商可能仍会拦截入站流量。
+
+在管理 Redis 所在服务器防火墙规则的地方，放行映射的宿主机端口（例如 TCP `6380`）。不同服务商和服务器配置的做法各不相同，请检查你的服务商防火墙、安全组或服务器防火墙配置。
+
+为了测试更安全，建议只对你的 IP 地址放行该端口，测试结束后再关闭。通用指引请参见[防火墙](/core/infrastructure/servers/firewall)。
+
+<CoolCallout icon={ShieldAlert} title="不要随意暴露数据库" type="warn">
+
+在生产环境中，把数据库端口公网暴露是有风险的做法。本指南映射 Redis 端口，只是为了让你能在终端里测试这次首次部署。
+
+对真正的生产工作负载而言，除非有明确理由并配好严格的网络管控，否则请保持数据库私有。
+
+</CoolCallout>
+
+</Step>
+<Step>
+
+### 启动 Redis
+
+点击 **Start**。
+
+部署完成后，准备好以下信息：
+
+- 服务器 IP 地址
+- 映射的宿主机端口，例如 `6380`
+- 来自 Coolify 控制台的 Redis 密码
+
+</Step>
+<Step>
+
+### 从终端连接 Redis
+
+在终端中使用 `redis-cli`：
+
+```sh
+redis-cli --user default -h <server-ip> -p <host-port> -a "<redis-password>"
+```
+
+示例：
+
+```sh
+redis-cli --user default -h 203.0.113.10 -p 6380 -a "your-password"
+```
+
+然后执行：
+
+```sh
+PING
+```
+
+如果一切正常，Redis 会返回：
+
+```txt
+PONG
+```
+
+<Callout type="info" title="没有安装 redis-cli？">
+
+改用一个临时 Redis 容器来运行 `redis-cli`：
+
+```sh
+docker run --rm -it redis:alpine redis-cli --user default -h <server-ip> -p <host-port> -a "<redis-password>" PING
+```
+
+连接正常时会返回 `PONG`。
+
+</Callout>
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="API">
+
+<Callout type="info" title="API 前提条件">
+
+为本教程创建一个 `root` API 令牌。Coolify Cloud 已默认启用 API 访问，Cloud 用户只需创建令牌即可。在自托管 Coolify 上，还需要管理员[启用 API 访问](/api/ip-allowlist#api-访问控制)。发送这些请求之前，请先阅读 [API 授权](/api/authorization)。
+
+在即将运行 cURL 的终端里设置你的基础 URL 和令牌：
+
+```sh
+export COOLIFY_URL="https://<your-coolify-domain>"
+export COOLIFY_TOKEN="<api-token>"
+```
+
+Coolify Cloud 用户应把 `COOLIFY_URL` 设为 `https://app.coolify.io`。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+创建项目，然后复制其 UUID：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"my-first-project"}' \
+  "$COOLIFY_URL/api/v1/projects"
+
+export PROJECT_UUID="<project-uuid>"
+```
+
+列出服务器，复制目标服务器的 UUID 并设置：
+
+```sh
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/servers"
+
+export SERVER_UUID="<server-uuid>"
+```
+
+如果项目已存在，改用 `GET /api/v1/projects`。
+
+</Step>
+<Step>
+
+### 创建并启动 Redis
+
+下面的请求会把 Redis 发布到服务器端口 `6380`，在省略 `redis_password` 时自动生成密码，并立即启动：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data "{"project_uuid":"$PROJECT_UUID","server_uuid":"$SERVER_UUID","environment_name":"production","name":"my-first-redis","is_public":true,"public_port":6380,"instant_deploy":true}" \
+  "$COOLIFY_URL/api/v1/databases/redis"
+```
+
+从响应中复制数据库 UUID：
+
+```sh
+export DATABASE_UUID="<database-uuid>"
+```
+
+测试之前，先在服务器防火墙中仅对你的 IP 地址放行 TCP 端口 `6380`。不要对全部来源开放该端口。
+
+</Step>
+<Step>
+
+### 读取密码并测试 Redis
+
+本教程使用的 `root` 令牌允许 API 响应中包含密码：
+
+```sh
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/databases/$DATABASE_UUID"
+```
+
+复制 Redis 密码，然后按 Dashboard 标签页中的方法执行同样的 `redis-cli` 测试。收到 `PONG` 响应即说明 Redis 可达。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="CLI">
+
+<Callout type="info" title="CLI 前提条件">
+
+[安装 Coolify CLI](/cli/installation)，然后为将要拥有该资源的团队创建一个 `root` API 令牌。
+
+**Coolify Cloud：** API 访问已默认启用。把令牌保存到预配置的 `cloud` 上下文中，选中它，然后验证认证：
+
+```sh
+coolify context set-token cloud <api-token>
+coolify context use cloud
+coolify context verify
+```
+
+**自托管 Coolify：** 需要管理员先[启用 API 访问](/api/ip-allowlist#api-访问控制)。使用不带 `/api/v1` 的完整实例 URL 添加一个上下文，然后验证认证：
+
+```sh
+coolify context add --default production https://coolify.example.com <api-token>
+coolify context verify
+```
+
+验证成功会提示连接与认证均有效。令牌安全、IP 白名单与故障排查请参见 [CLI 认证](/cli/authentication)。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+```sh
+coolify project create --name my-first-project
+coolify server list
+```
+
+复制项目和服务器 UUID。如果项目已存在，改用 `coolify project list`。
+
+</Step>
+<Step>
+
+### 创建并启动 Redis
+
+```sh
+coolify database create redis \
+  --project-uuid <project-uuid> \
+  --server-uuid <server-uuid> \
+  --environment-name production \
+  --name my-first-redis \
+  --is-public \
+  --public-port 6380 \
+  --instant-deploy
+```
+
+从响应中复制数据库 UUID。测试之前，先在服务器防火墙中仅对你的 IP 地址放行 TCP 端口 `6380`。
+
+</Step>
+<Step>
+
+### 读取连接信息并测试 Redis
+
+```sh
+coolify database get <database-uuid>
+```
+
+复制生成的密码，然后测试连接：
+
+```sh
+redis-cli --user default -h <server-ip> -p 6380 -a "<redis-password>" PING
+```
+
+收到 `PONG` 响应即证明部署成功。其他数据库类型和选项请参见 [`coolify database create`](/cli/command-reference/commands/database/create)。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="MCP">
+
+<Callout type="warning" title="MCP 暂不支持创建操作">
+
+Coolify MCP 可以检查和启动现有资源，但其当前的工具无法创建应用、数据库、服务或项目。请先通过 Dashboard、API 或 CLI 标签页创建资源，之后再用下面的提示词启动并验证它，无需回到控制台。
+
+</Callout>
+
+完成[设置 Coolify MCP](/mcp/setup) 后，为这个端到端工作流创建一个 `root` 令牌，然后把 Redis 的 UUID 或准确名称告诉你的客户端。提示词需要检查 Redis、启动 Redis，并读取其敏感连接信息。`deploy` 令牌无法执行读取操作，而 `read:sensitive` 无法启动数据库。
+
+<Callout type="warning" title="教程结束后请吊销 root 令牌">
+
+`root` 令牌会绕过 `read`、`write` 和 `deploy` 端点检查，并能返回支持的敏感数据。它仍然只限于当前团队使用，但其权限超出了日常 MCP 使用所需。完成这次首次部署后请吊销它。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 找到 Redis
+
+```txt
+Find the database named my-first-redis in my-first-project. Show me its UUID, type, current status, and public connection settings. Do not change anything yet.
+```
+
+确认返回的数据库正是你创建的 Redis 资源。
+
+</Step>
+<Step>
+
+### 启动并验证 Redis
+
+```txt
+Start the Coolify database with UUID <database-uuid>. Then check its status and tell me when it is running. Show the host, public port, and Redis password needed for a redis-cli PING test. Do not stop or restart any other resource.
+```
+
+按 Dashboard 或 CLI 标签页中的命令运行 `redis-cli`。收到 `PONG` 响应即验证部署成功。除非 MCP 令牌带有 `read:sensitive`，否则敏感值会保持脱敏。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 首次部署的常见问题
+
+当 Redis 部署成功、但终端测试表现不符合预期时，按下面各项排查。
+
+<Tabs id="first-database-issues" items={['Connection refused', 'Auth failed', 'redis-cli missing']}>
+<Tab value="Connection refused" icon={Plug2}>
+
+通常意味着 Redis 在你使用的宿主机端口上不可达。
+
+检查：
+
+- Redis 部署处于 **running** 状态
+- **Ports Mappings** 中使用的正是你连接的宿主机端口
+- 服务器防火墙放行了该映射的宿主机端口
+- 你用的是服务器 IP 地址，而不是 Redis 容器的 IP
+
+</Tab>
+<Tab value="Auth failed" icon={Key2}>
+
+通常意味着命令中的密码与 Coolify 里的 Redis 密码不一致。
+
+检查：
+
+- 从 Coolify 控制台重新复制 Redis 密码
+- 密码含特殊字符时用引号包起来
+- 去掉密码前后误输入的空格
+
+</Tab>
+<Tab value="redis-cli missing" icon={BrowserTerminal}>
+
+如果你的电脑上没有 `redis-cli`，可以用 Docker 临时运行一个。
+
+```sh
+docker run --rm -it redis:alpine redis-cli --user default -h <server-ip> -p <host-port> -a "<redis-password>" PING
+```
+
+如果连 Docker 也没装，就在本地安装 Redis CLI，或者换一台有它的机器测试。
+
+</Tab>
+</Tabs>
+
+---
+
+
+## 接下来做什么
+
+第一个数据库证明了 Coolify 能够创建数据库、生成凭据、暴露测试端口并接受连接。
+
+<CoolNextSteps
+  data-first-database
+  cards={[
+    {
+      title: '部署一个应用',
+      description: '部署一个能连接数据库的应用。',
+      href: '/deploy-your-first-app',
+      icon: Rocket2,
+    },
+    {
+      title: '部署一个服务',
+      description: '从 Coolify 目录中部署一个现成的服务。',
+      href: '/deploy-your-first-service',
+      icon: Settings,
+    },
+    {
+      title: '了解数据库',
+      description: '了解 Coolify 如何管理数据库资源、密码与备份。',
+      href: '/databases',
+      icon: Database,
+    },
+  ]}
+/>
+
+如果想尝试一个实验性的基于文件的数据库，请阅读 [SQLite](/databases/sqlite)。它的应用将数据库卷（volume）挂载在同一台服务器上，而不是使用网络连接 URL。

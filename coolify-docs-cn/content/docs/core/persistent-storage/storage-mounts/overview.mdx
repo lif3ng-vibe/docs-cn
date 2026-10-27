@@ -1,0 +1,95 @@
+---
+title: 概览
+description: 了解持久化存储如何让应用和数据库数据脱离可随时替换的容器，并在 Coolify 中选择正确的挂载类型。
+---
+
+import { CloudStorage, HardDrive, Package, Server } from 'reicon-react';
+
+# 持久化存储概览
+
+容器是可替换的。当 Coolify 重新部署一个资源时，Docker 可能会移除它当前的容器，并基于最新镜像和配置创建一个新容器。
+
+只写入容器文件系统的数据会随容器的移除而消失。持久化存储把重要数据保存在部署服务器上，并按应用期望的路径挂载进每个替换后的容器。
+
+<Callout type="warning" title="持久化存储不是备份">
+持久化存储能保护数据免于正常的容器替换，但无法防范误删、磁盘故障、服务器丢失或数据损坏。对于应用的卷和目录挂载，Coolify 可以创建[计划存储备份](/core/persistent-storage/storage-mounts/backups)。请至少在部署服务器之外保留一份备份，并演练如何恢复它。
+</Callout>
+
+## 持久化存储的工作原理
+
+存储挂载连接两个位置：
+
+- 容器外的存储位置，例如 Docker 卷或部署服务器上的一个目录
+- 容器内的 **Destination Path**，应用在这里读写数据
+
+例如，应用可能把上传内容写入容器内的 `/app/uploads`。在该目标位置建立挂载后，上传内容会存放在可替换的容器之外，并在重新部署后依然可用。
+
+只有写在挂载目标路径下的数据才是持久的。事后添加挂载无法找回 Docker 已移除容器中的数据。
+
+## 选择存储挂载
+
+Coolify 在 **Persistent Storage** 下提供四种选项。新建的 **Volume Mount** 使用命名 Docker 卷（包括在 Swarm 上）。使用绑定源的既有卷记录会将其保留为只读的 **Source Path**。这些仪表盘工作流对应两种底层 Docker 存储类型：命名卷和绑定挂载。
+
+| Coolify 中的选项 | 存储位置 | 适用场景 |
+| :--- | :--- | :--- |
+| **Volume Mount** | 部署服务器上由 Docker 管理的命名卷 | 不需要特定服务器路径时的应用数据、上传内容和数据库文件 |
+| 带 **Source Path** 的既有 **Volume Mount** | 你在部署服务器上选择的精确目录 | 需要直接从服务器文件系统检查、复制或管理的数据 |
+| **Directory Mount** | 你在部署服务器上选择的精确目录 | 由 Coolify 按需创建并显示在 **Directories** 下的服务器目录 |
+| **File Mount** | 部署服务器上由 Coolify 托管的文件 | 挂载到容器内一个精确路径的单个配置文件 |
+| **Host File Mount** | 部署服务器上你选择的精确路径上的既有文件 | 由 Coolify 挂载但不创建、编辑、更改权限或删除的文件 |
+
+除非应用或运维要求需要特定的服务器路径，否则请从[卷挂载（volume mount）](/core/persistent-storage/storage-mounts/volume-mounts)开始。卷的存放位置由 Docker 管理，你只需提供名称和容器内目标路径。
+
+当源必须是一个已知的服务器目录时，使用[绑定挂载（bind mount）](/core/persistent-storage/storage-mounts/bind-mounts)。当容器只需要一个文件而非目录时，使用[文件挂载（file mount）](/core/persistent-storage/storage-mounts/file-mounts)。Coolify 既可以托管文件内容，也可以不加管理地绑定一个既有的主机文件。
+
+## 挂载在哪里配置
+
+对于标准应用或独立数据库：
+
+1. 在对应的项目和环境中打开该资源。
+2. 选择 **Configuration**。
+3. 选择 **Persistent Storage**。
+4. 选择 **Add**，然后选择挂载类型。
+
+对于 Docker Compose 应用或一键服务，Compose 文件是唯一事实来源。请在 Compose 文件中定义或修改挂载，然后重新加载 Compose 配置。Coolify 会在仪表盘中显示解析出的卷挂载，但不允许你在那里修改这些卷字段。
+
+部署服务器保存着卷或绑定挂载的文件。如果一个 Coolify 实例管理多台服务器，为某个资源配置的存储不会自动复制到其他服务器。
+
+## 重要的存储边界
+
+- **目标路径取决于镜像**。请使用应用实际写入数据的精确路径。`/app` 很常见，但它并不是通用的容器基础目录。
+- **服务器存储只属于该服务器**。Docker 卷或本地绑定挂载不会因为多台服务器接入了 Coolify 就变成共享存储。
+- **当前的多服务器应用无法使用持久化存储**。Coolify 会阻止为已配置持久化存储的应用添加其他部署服务器。
+- **权限规则依然生效**。容器内运行的用户必须能够读写挂载的目标位置及其底层存储。
+- **共享可写路径需要协调**。除非应用支持并发访问和文件锁定，否则不要把同一个可写目录或文件挂载进多个容器。
+
+## 继续阅读挂载指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '卷挂载',
+      href: '/core/persistent-storage/storage-mounts/volume-mounts',
+      description: '让 Docker 为持久化的应用或数据库数据管理存储位置。',
+      icon: HardDrive,
+    },
+    {
+      title: '绑定挂载',
+      href: '/core/persistent-storage/storage-mounts/bind-mounts',
+      description: '把部署服务器上的特定目录映射进容器。',
+      icon: Server,
+    },
+    {
+      title: '文件挂载',
+      href: '/core/persistent-storage/storage-mounts/file-mounts',
+      description: '把一个托管文件或既有主机文件挂载到容器内的精确路径。',
+      icon: Package,
+    },
+    {
+      title: '存储挂载备份',
+      href: '/core/persistent-storage/storage-mounts/backups',
+      description: '为符合条件的应用存储挂载安排本地归档和可选的 S3 副本。',
+      icon: CloudStorage,
+    },
+  ]}
+/>

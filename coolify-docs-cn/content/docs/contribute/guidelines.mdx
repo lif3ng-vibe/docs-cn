@@ -1,0 +1,233 @@
+---
+title: 贡献指南
+description: 了解哪些 Coolify 贡献容易被接受、何时应先讨论再动手，以及如何规范地提交 pull request。
+---
+
+import { ContributionGuidelinesPage } from '@/components/pages/contribution-guidelines-page';
+import {
+  ArrowsRight,
+  Box5,
+  BranchUp,
+  BrowserCode,
+  Bug,
+  Checklist2,
+  DocumentText2,
+  MagicWand,
+  MedalStars,
+  MessageQuestion2,
+  ShieldCheck,
+  StarSparkle,
+  Warning22,
+} from 'reicon-react';
+
+# 为 Coolify 做贡献
+
+<CoolCallout icon={Warning22} title="外部贡献暂时暂停" type="danger">
+
+由于大量低质量的 pull request 垃圾提交，外部贡献暂时停止。恢复外部贡献**尚无明确时间表**。
+
+在外部贡献重新开放之前，请先不要提交外部 pull request。以下工作流程仍可供参考。
+
+</CoolCallout>
+
+很高兴你有兴趣为 Coolify 做贡献。
+
+<ContributionGuidelinesPage>
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+Coolify 拥有 47 万+ 用户，由两位核心维护者维护。我们欢迎贡献，但方向一致比数量更重要：让改动保持聚焦，较大的工作先讨论再动手，提交前做好测试；修复类改动面向 `main`，新特性面向当前的 `release/v4.x` 分支。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="重要提示" type="warn">
+
+这些准则比许多开源项目更严格，这是有意为之。清晰的结构和边界能减轻维护者的倦怠，让 Coolify 长期可持续。
+
+</CoolCallout>
+
+<CoolCallout icon={MessageQuestion2} title="贡献方式">
+<CoolCardGrid columns={2}>
+<CoolCard
+  icon={MedalStars}
+  title="帮助其他用户"
+  description="在你能够确认答案时，到 Discord 或 GitHub Discussions 回答问题。"
+  bullets={['保持耐心与尊重', '分享经过验证的信息', '记住支持是自愿行为']}
+  buttons={[
+    { href: 'https://coollabs.io/discord', label: '加入 Discord', type: 'primary' },
+    { href: 'https://github.com/coollabsio/coolify/discussions', label: '查看讨论区', type: 'tertiary' },
+  ]}
+/>
+
+<CoolCard
+  icon={Bug}
+  title="报告 bug"
+  description="只有当 bug 可复现且尚未有人报告时才新建 issue。"
+  bullets={['附上复现步骤', '写明预期与实际结果', '附上日志或截图']}
+  buttons={[
+    { href: 'https://github.com/coollabsio/coolify/issues', label: '打开 issues', type: 'secondary' },
+  ]}
+/>
+
+<CoolCard
+  icon={BrowserCode}
+  title="提交代码"
+  description="小修复随时欢迎。较大的改动需要先对齐方向再动手实现。"
+  bullets={['一个 pull request 只做一个逻辑改动', '关联相应的 issue 或讨论', '修复面向 main，特性面向 release/v4.x']}
+  buttons={[
+    { href: 'https://github.com/coollabsio/coolify', label: '查看仓库', type: 'secondary' },
+  ]}
+/>
+
+<CoolCard
+  icon={DocumentText2}
+  title="改进文档与服务"
+  description="帮助改进文档，或添加一键服务模板。"
+  bullets={['措辞保持清晰', '沿用现有文档模式', '遵守服务贡献规则']}
+  buttons={[
+    { href: '/contribute/documentation', label: '阅读文档指南', type: 'secondary' },
+  ]}
+/>
+</CoolCardGrid>
+</CoolCallout>
+
+<CoolCompare
+  id="project-direction"
+  icon={ShieldCheck}
+  title="项目方向"
+  description="Coolify v4 专注于稳定性与可持续维护。小而聚焦的贡献更易于评审；较大或方向性的改动需要先与维护者对齐再实现。"
+>
+<CoolCompareColumn
+  title="容易被接受"
+  items={[
+    '附带清晰复现路径的小 bug 修复',
+    '提升清晰度或准确性的文档修复',
+    '遵循模板规则的一键服务新增',
+    '附带测试或人工验证的小范围代码质量改进',
+  ]}
+/>
+
+<CoolCompareColumn
+  title="先讨论或避免"
+  items={[
+    '未经事先讨论的重大特性或架构改动',
+    '未经事先讨论的大规模 UI/UX 重写',
+    '混入无关修复的大范围重构',
+    '低投入的 AI 生成 pull request',
+    '面向错误分支的 pull request',
+  ]}
+/>
+</CoolCompare>
+
+<CoolFlow
+  id="pull-request-flow"
+  icon={BranchUp}
+  title="发起 pull request 之前"
+  description="除小而明显的修复之外，任何改动都请先与维护者对齐，再投入时间实现。"
+  steps={[
+    '查看已有的 issue 和讨论',
+    '编码前先讨论较大的改动',
+    '一个 pull request 只包含一个逻辑改动',
+    '在干净环境中测试改动',
+    '修复面向 main、特性面向 release/v4.x 发起 pull request',
+  ]}
+  list={[
+    '尽可能在 pull request 中关联并关闭相应的 issue 或讨论。',
+    '不要重新格式化无关文件或修复无关的风格问题。',
+    '把贡献者协议保留在 pull request 描述中。',
+    '附上详细的测试步骤，让维护者能够复现结果。',
+  ]}
+/>
+
+<CoolCallout icon={Checklist2} title="Commit 与 pull request 格式" contentClassName="!p-0">
+<CoolPanel>
+
+提交信息和 pull request 标题应以动作和类别开头。描述保持简洁；罗列每处细小改动的长篇大论可能会被拒绝。
+
+</CoolPanel>
+<CoolPanel withDivider>
+
+| 前缀 | 用途 |
+| :--- | :--- |
+| fix(ui): | UI 相关修复 |
+| fix(api): | API 相关修复 |
+| feat(api): | API 相关新增 |
+| feat(service): | 一键服务改动 |
+
+</CoolPanel>
+</CoolCallout>
+
+<CoolCallout icon={MagicWand} title="AI 使用说明">
+
+允许使用 AI 工具，但你必须在 pull request 描述中说明。你仍有责任理解每一处改动、验证正确性并遵循项目既有模式。
+
+</CoolCallout>
+
+<CoolCallout icon={MessageQuestion2} title="常见问题" contentClassName="!p-0">
+<CoolAccordions>
+<Accordion title="修复错别字或小 bug 前需要先问吗？">
+
+不需要。小而明显的修复可以直接以 pull request 提交。
+
+</Accordion>
+<Accordion title="可以为新特性直接开 pull request 吗？">
+
+请先在 GitHub Discussions 或 Discord 上讨论。未经事先对齐的新特性 pull request 可能会被直接关闭、不予评审。
+
+</Accordion>
+<Accordion title="可以认领已有的 issue 吗？">
+
+请先留言确认该 issue 仍然有效，且没有其他人正在处理。
+
+</Accordion>
+<Accordion title="修别的问题时能顺手清理代码吗？">
+
+请让 pull request 聚焦于既定目标。重构和清理工作应单独讨论、单独提交。
+
+</Accordion>
+<Accordion title="可以用 AI 辅助吗？">
+
+可以，但要在 pull request 描述中说明。你必须理解、验证每一处改动并为其负责。
+
+</Accordion>
+<Accordion title="为什么我的 pull request 被关闭且没有详细反馈？">
+
+通常意味着该改动与项目方向不符、需要占用过多评审精力，或涉及不在计划内的工作。
+
+</Accordion>
+</CoolAccordions>
+</CoolCallout>
+
+<CoolCallout icon={DocumentText2} title="开发指南">
+<CoolActionCardGrid>
+<CoolActionCard
+  href="/contribute/coolify"
+  icon={StarSparkle}
+  title="Coolify 核心"
+  type="secondary"
+  description="为 Coolify 主仓库搭建本地开发环境并准备代码贡献。"
+  bullets={['本地开发环境搭建', '代码贡献流程', 'pull request 预期']}
+  btn-cta="查看核心指南"
+/>
+<CoolActionCard
+  href="/contribute/service"
+  icon={Box5}
+  title="服务模板"
+  type="secondary"
+  description="按照约定的结构、元数据与验证方式添加一键服务模板。"
+  bullets={['模板要求', '服务元数据', '测试清单']}
+  btn-cta="查看服务指南"
+/>
+<CoolActionCard
+  href="/contribute/documentation"
+  icon={DocumentText2}
+  title="文档"
+  type="secondary"
+  description="在保持现有行文风格与组件模式的前提下改进这些文档。"
+  bullets={['文档结构', 'MDX 模式', '评审预期']}
+  btn-cta="查看文档指南"
+/>
+</CoolActionCardGrid>
+</CoolCallout>
+
+</ContributionGuidelinesPage>

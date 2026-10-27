@@ -1,0 +1,157 @@
+---
+title: 邮件
+description: 使用托管邮件、自托管实例级事务邮件、SMTP 或 Resend 配置 Coolify 邮件通知。
+---
+
+import { Cloud, Rocket2, Server, ServerCloud } from 'reicon-react';
+
+# 邮件
+
+Coolify 可以通过托管邮件服务、团队专属的 SMTP 服务器或 Resend 发送团队通知。自托管团队还可以复用为整个 Coolify 实例配置的事务邮件服务商。
+
+打开 **Notifications > Email** 配置该通道。
+
+<Callout type="info" title="全实例邮件仅限自托管">
+**Email service > Use system-wide settings** 选项仅出现在自托管 Coolify 中。它使用在 [**Settings > Email**](/core/instance-management/instance-settings#transactional-email) 下为 Coolify 实例配置的发件人和 SMTP 或 Resend 服务商。
+
+Coolify Cloud 显示的是 **Use hosted email service**。Cloud 用户无需配置全实例服务商。
+</Callout>
+
+## 选择邮件服务商
+
+可选方案取决于你使用 Coolify 的方式：
+
+| 服务商 | 可用范围 | 所需准备 |
+| :--- | :--- | :--- |
+| **Use hosted email service** | Coolify Cloud | 无需任何服务商凭据。 |
+| **Use system-wide settings** | 自托管 Coolify | **Settings > Email** 下已有可用的邮件服务商。 |
+| **SMTP server** | Coolify Cloud 与自托管 Coolify | SMTP 发件人、主机、端口、加密方式，以及可选的认证信息。 |
+| **Resend** | Coolify Cloud 与自托管 Coolify | 发件人名称、发件地址和 Resend API 密钥。 |
+
+一个团队同一时间只能使用一种邮件方式。托管和全实例选项会停用团队专属的 SMTP 与 Resend；启用团队 SMTP 会停用 Resend，启用 Resend 则会停用 SMTP。
+
+开始之前，先准备好所选方式需要的值：
+
+- **SMTP**：从邮件服务商处复制主机、端口、加密方式、用户名和密码。确认服务商允许你使用的发件地址。
+- **Resend**：在 Resend 中验证发信域名或发件人，并创建 API 密钥。
+- **全实例邮件**：先配置并测试实例级服务商。这需要自托管实例设置的访问权限。
+
+---
+
+## 使用托管或全实例服务商
+
+控制台会根据你的 Coolify 部署类型显示对应选项，两个选项不会同时出现。
+
+<Tabs id="notification-email-deployment-type" items={['Self-hosted', 'Coolify Cloud']}>
+<Tab value="Self-hosted" icon={Server}>
+
+<Steps>
+<Step>
+
+### 配置实例服务商
+
+以实例管理员身份打开 [**Settings > Email**](/core/instance-management/instance-settings#transactional-email)。填写共享发件人信息，配置 SMTP 或 Resend 之一，启用该服务商并保存。
+
+在实例设置页使用 **Send test**。测试送达后再继续。这样能先确认全实例服务商可用，再让团队复用它。
+
+</Step>
+<Step>
+
+### 团队复用该配置
+
+打开团队的 **Notifications > Email**，将 **Email service** 设为 **Use system-wide settings**。
+
+团队此后使用实例的发件人和服务商凭据。它不会获得这些凭据的独立副本，团队成员也无法在 Notifications 页面修改它们。
+
+</Step>
+<Step>
+
+### 选择事件并测试团队通道
+
+在 **Notification events** 下选择要通过邮件发送的事件。然后选择 **Send test**，输入一个你能访问的收件地址并发送测试。
+
+</Step>
+</Steps>
+
+事件选择和测试收件人仍然是这个团队专属的。修改全实例服务商会影响所有复用它的团队。
+
+</Tab>
+<Tab value="Coolify Cloud" icon={Cloud}>
+
+1. 打开团队的 **Notifications > Email**。
+2. 将 **Email service** 设为 **Use hosted email service**。无需 SMTP 主机、密码或 Resend API 密钥。
+3. 在 **Notification events** 下选择要通过邮件发送的事件。
+4. 选择 **Send test**，输入一个你能访问的收件地址并发送测试。
+5. 在依赖该通道发送运维告警之前，先确认消息能够送达。
+
+</Tab>
+</Tabs>
+
+---
+
+## 配置团队自己的服务商
+
+当这个团队需要使用自己的邮件服务商，而不是托管或全实例配置时，选择 SMTP 或 Resend。
+
+<Tabs id="notification-email-provider" items={['SMTP', 'Resend']}>
+<Tab value="SMTP" icon={ServerCloud}>
+
+填入 SMTP 服务商提供的连接信息。
+
+1. 打开 **Notifications > Email**，将 **Email service** 设为 **Use team email settings**。
+2. 填写 **From name** 和有效的 **From address**。两项都必填；任一为空时保存会报错，例如 `From Address is required. (and 1 more error)`。
+3. 在 **SMTP server** 下填入邮件服务商提供的连接信息：
+
+   | 字段 | 值 |
+   | :--- | :--- |
+   | **Host** | SMTP 主机名，例如 `smtp.example.com`。 |
+   | **Port** | 服务商的 SMTP 端口。常见值为 `587`、`465` 和 `25`；Coolify 接受 `1` 到 `65535` 之间的端口。 |
+   | **Encryption** | `StartTLS`、`TLS/SSL` 或 `None`。端口 `587` 通常使用 StartTLS，端口 `465` 通常使用 TLS/SSL，但请以服务商的说明为准。 |
+   | **SMTP username** | 认证用户名（如需要）。 |
+   | **SMTP password** | 认证密码（如需要）。 |
+   | **Timeout** | 可选的发送超时时间，单位为秒。 |
+   | **EHLO domain** | 可选。Coolify 在 SMTP `EHLO` 命令中发送的完整限定域名，例如 `coolify.example.com`。留空则使用系统默认值。 |
+
+4. 将各项值与服务商文档核对。端口与加密方式不匹配会导致 Coolify 无法建立连接。
+5. 在 **SMTP server** 区块中选择 **Save changes**。
+6. 将 **SMTP delivery** 设为 **Enabled**，然后选择 **Save changes**。SMTP 启用后，Coolify 会停用 Resend。
+
+<Callout type="warning" title="不要在不可信网络上使用未加密的 SMTP">
+只有当邮件服务商明确要求且连接始终处于可信网络中时，才选择 **None**。优先选择服务商支持的加密方式。
+</Callout>
+
+</Tab>
+<Tab value="Resend" icon={Rocket2}>
+
+先创建 Resend API 密钥，并使用 Resend 已验证的发件地址。
+
+1. 在 [Resend 控制台](https://resend.com/api-keys)创建 API 密钥。
+2. 在 Resend 中验证 Coolify 将要使用的域名或发件地址。
+3. 打开 **Notifications > Email**，将 **Email service** 设为 **Use team email settings**。
+4. 填写 **From name** 和已验证的 **From address**。Resend 同样要求这两项。
+5. 在 **Resend** 下填入 **API key**，选择 **Save changes**。
+6. 将 **Resend delivery** 设为 **Enabled**，然后选择 **Save changes**。Resend 启用后，Coolify 会停用 SMTP。
+
+</Tab>
+</Tabs>
+
+---
+
+## 选择事件并验证投递
+
+在 **Notification events** 下选择要通过邮件发送的事件。每个设置背后的触发条件参见[通知事件](/core/notifications/events)。
+
+选择 **Send test**，输入一个你能访问的收件地址并发送测试，然后确认消息已送达。如果没有送达，请检查服务商的活动日志、发件人验证、SMTP 端口访问以及垃圾邮件文件夹。
+
+---
+
+## 排查邮件投递问题
+
+如果测试邮件没有送达：
+
+1. 确认目标服务商已启用。SMTP、Resend 和托管（或全实例）选项互斥。
+2. 对于 SMTP，将主机、端口和加密方式与服务商的当前设置核对。同时确认 Coolify 服务器能在该端口建立出站连接。
+3. 确认服务商是否要求验证 **From address** 或其域名。
+4. 查看服务商的投递或活动日志。请求被接受后仍可能因发件人策略或收件方过滤而被拒绝。
+5. 检查收件人的垃圾或垃圾邮件文件夹。
+6. 使用自托管全实例服务商时，先从 **Settings > Email** 发送一封测试邮件。如果同样失败，请先修复实例级服务商，再排查团队通道。

@@ -1,0 +1,94 @@
+---
+title: Discord
+description: 通过 Discord 应用和已注册的重定向 URI,为 Coolify 配置 Discord OAuth 登录。
+---
+
+# 配置 Discord OAuth
+
+创建一个 Discord 应用,让 Coolify 能在登录时请求 `identify` 和 `email` scope。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **Redirect:** `https://coolify.shadowarcanist.com/auth/discord/callback`
+</Callout>
+
+## 设置 Discord OAuth
+
+<Steps>
+<Step>
+
+### 创建 Discord 应用
+
+打开 [Discord Developer Portal](https://discord.com/developers/applications),选择 **New Application**,输入一个名称(例如 `Coolify`),然后创建应用。
+
+用于 Coolify 登录的应用不需要机器人(bot)。
+
+</Step>
+<Step>
+
+### 注册 Coolify 重定向
+
+打开该 Discord 应用的 **OAuth2**。在 **Redirects** 下选择 **Add Redirect** 并输入:
+
+```txt
+https://coolify.shadowarcanist.com/auth/discord/callback
+```
+
+保存更改。
+
+Coolify 在发起授权时会自带 `identify` 和 `email` scope。你不需要从 Discord 生成或复制 OAuth URL。
+
+</Step>
+<Step>
+
+### 复制 Discord 凭据
+
+在 **OAuth2** 或 **General Information** 页面,复制 **Client ID**。
+
+复制或重置 **Client Secret**,然后完整妥善地保管。重置 secret 会使之前的值失效。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Discord
+
+打开 **Settings > Authentication**,找到 **Discord**。
+
+| Coolify 字段 | Discord 值 |
+| :--- | :--- |
+| **Client ID** | Discord 应用的 **Client ID** |
+| **Client Secret** | Discord 应用的 **Client Secret** |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/discord/callback` |
+
+选择 **Save**,然后为 Discord 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 Discord 登录
+
+Coolify 通过电子邮箱地址识别已有用户。Discord 账户上的邮箱地址必须与 Coolify 账户上的邮箱地址一致,比较时不区分大小写。
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with Discord**。授权该应用,然后确认 Coolify 打开了邮箱地址匹配的账户。
+
+只有当 Discord 返回已验证的邮箱地址时,才能关联已有账户。新账户遵循注册设置。参见 [OAuth 登录行为](/core/security/authentication/oauth/overview)。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Discord 报告重定向 URI 无效">
+
+确认确切的 Coolify 回调地址出现在 Discord 应用的 **OAuth2 > Redirects** 列表中,并且已保存。
+
+</Accordion>
+<Accordion title="Coolify 回到登录页">
+
+确认 Discord 账户设置了邮箱地址,并且与已有 Coolify 账户的邮箱地址一致。同时确认授权页面同时包含 `identify` 和 `email` 访问。如果重置过 client secret,请更新 Coolify 中的 **Client Secret**。
+
+</Accordion>
+</Accordions>

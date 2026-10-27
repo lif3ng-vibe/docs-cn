@@ -1,0 +1,61 @@
+---
+title: 切换 GitHub App
+description: 把现有应用迁移到另一个 GitHub App 来源。
+---
+
+# 切换 GitHub App
+
+当仓库迁移到另一个账户或组织，或者你想换一套访问策略时，可以切换应用所使用的 GitHub App。
+
+新的 GitHub App 必须先拥有该仓库的访问权限，Coolify 才能从中克隆。
+
+## 1. 必要时先迁移仓库
+
+仓库要迁移到另一个账户或组织时，先在 GitHub 上完成转移。
+
+如果仓库位置不变，只是更换 GitHub App 访问授权，可跳过这一步。
+
+## 2. 添加新的 GitHub App
+
+按照[设置 GitHub App](/applications/sources/github/app)操作，并为目标仓库完成安装。
+
+在应用通过新 App 成功部署之前，保留原有 GitHub App 的安装。
+
+## 3. 确认仓库访问权限
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/switch-apps/1.webp" alt="Coolify 中带 Update Repositories 操作的 GitHub App 来源" />
+
+1. 打开 **Sources**（来源），选择新的 GitHub App。
+2. 进入 **General**（常规），选择 **Repositories**（仓库）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/switch-apps/2.webp" alt="GitHub App 安装的仓库访问设置" />
+
+3. 在 GitHub 的 **Repository access**（仓库访问）下，确认已勾选该应用的仓库。
+4. 回到 Coolify，刷新仓库列表。
+
+## 4. 更换应用的来源
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/switch-apps/3.webp" alt="应用配置中的 Change Git Source 控件" />
+
+1. 打开该应用。
+2. 选择 **Git Source**（Git 来源）。
+3. 在 **Git source** 下选择新的 GitHub App。
+4. 确认更改。
+
+## 5. 必要时更新仓库名称
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/switch-apps/4.webp" alt="更换应用的 GitHub App 后的 Repository 字段" />
+
+如果仓库迁移到了另一个账户或组织，把 **Repository**（仓库）从原来的 `owner/repository` 值更新为新位置。
+
+仓库所有者与名称都没变时，可跳过这一步。
+
+## 6. 重新部署并验证
+
+1. 编辑仓库字段后选择 **Save changes**（保存更改）。
+2. 选择 **Redeploy**（重新部署）。
+3. 打开 **Deployment Logs**（部署日志），确认 Coolify 克隆的是预期的仓库与 commit。
+4. 向配置的分支推送一个测试 commit。
+5. 确认新 GitHub App 成功投递 webhook，且 Coolify 启动了 webhook 部署。
+
+只有在使用原 App 的所有应用都完成切换并验证之后，才移除原来的 GitHub App。

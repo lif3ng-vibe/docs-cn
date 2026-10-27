@@ -1,0 +1,113 @@
+---
+title: 部署应用
+description: 用 Coolify CLI 创建、配置、部署并监控应用。
+---
+
+# 用 CLI 部署应用
+
+本工作流从公开的 Git 仓库创建应用、配置环境变量、执行部署并验证结果。
+
+## 开始之前
+
+你需要：
+
+- 一个已验证的 CLI 上下文，其令牌具备创建和部署应用的权限
+- 目标项目和目标服务器的 UUID
+- 目标环境的名称或 UUID
+- 一个公开的 Git 仓库、分支、构建包（build pack）和暴露端口
+
+先找到所需的资源：
+
+```sh
+coolify context verify
+coolify project list
+coolify server list
+```
+
+<Steps>
+<Step>
+
+### 创建应用
+
+```sh
+coolify app create public \
+  --server-uuid <server-uuid> \
+  --project-uuid <project-uuid> \
+  --environment-name production \
+  --git-repository https://github.com/example/api \
+  --git-branch main \
+  --build-pack nixpacks \
+  --ports-exposes 3000
+```
+
+响应中包含新应用的 UUID，请保存下来供后续命令使用。
+
+所有可用的构建、路由、健康检查、资源限制和部署选项，参见 [Create public](/cli/command-reference/commands/app/create-public)。
+
+</Step>
+<Step>
+
+### 配置环境变量
+
+创建单个变量：
+
+```sh
+coolify app env create <application-uuid> \
+  --key API_URL \
+  --value https://api.example.com
+```
+
+要加载多个变量，可以同步 dotenv 文件：
+
+```sh
+coolify app env sync <application-uuid> --file .env.production
+```
+
+同步会更新键名匹配的变量并创建缺失的键，但不会删除文件中未出现的变量。
+
+<Callout type="warning" title="别让机密进入命令历史">
+命令参数可能被存入 shell 历史或 CI 日志。敏感值请通过自动化平台的机密管理机制传递，并检查其日志脱敏效果。
+</Callout>
+
+</Step>
+<Step>
+
+### 部署应用
+
+按应用 UUID 部署：
+
+```sh
+coolify deploy uuid <application-uuid>
+```
+
+也可以按 Coolify 名称部署：
+
+```sh
+coolify deploy name <application-name>
+```
+
+仅当必须在未检测到变更的情况下也执行部署时，才使用 `--force`。
+
+</Step>
+<Step>
+
+### 验证部署
+
+列出部署并查看返回的部署 UUID：
+
+```sh
+coolify deploy list
+coolify deploy get <deployment-uuid>
+```
+
+然后检查运行中的应用及其日志：
+
+```sh
+coolify app get <application-uuid>
+coolify app logs <application-uuid> --lines 100 --show-timestamps
+```
+
+对于 Docker Compose 应用，加 `--service <name>` 可只选择其中一个服务容器；需要持续输出新日志时加 `--follow`。
+
+</Step>
+</Steps>

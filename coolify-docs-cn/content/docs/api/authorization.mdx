@@ -1,0 +1,68 @@
+---
+title: 授权
+description: 使用 Bearer 令牌对 Coolify API 请求进行身份验证，并了解每个请求会经过哪些访问检查。
+---
+
+# API 授权
+
+Coolify 使用 Bearer 令牌对受保护的 API 请求进行身份验证。每个令牌属于创建它的用户和当前团队，并包含创建时所选的权限。
+
+## 发起请求之前
+
+按照 [API 令牌](/core/security/credentials/api-tokens)的指引：
+
+- 为正确的当前团队创建令牌
+- 选择权限和有效期
+- 将令牌复制到调用方的机密存储中
+
+为每个集成和每个团队使用独立的令牌。不要把令牌放进源代码、查询字符串或部署日志。
+
+Coolify Cloud 的 API 访问默认已开启，Cloud 用户只需创建令牌即可。在自托管（self-hosted）实例上，管理员还需要[启用 API 访问](/api/ip-allowlist#api-访问控制)。
+
+---
+
+## 发送 Bearer 令牌
+
+在每个受保护请求的 `Authorization` 头中携带完整令牌：
+
+```sh
+export COOLIFY_URL="https://coolify.shadowarcanist.com"
+export COOLIFY_TOKEN="<api-token>"
+
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  "$COOLIFY_URL/api/v1/teams/current"
+```
+
+请求头格式为：
+
+```txt
+Authorization: Bearer <api-token>
+```
+
+令牌由 ID、一个 `|` 分隔符和机密值组成。请原样发送创建令牌时 Coolify 显示的完整值。
+
+请求成功时返回与该令牌绑定的团队。
+
+---
+
+## 授权检查
+
+受保护的请求会经过以下检查：
+
+1. 令牌存在、未过期，并能认证一个用户。
+2. 该用户仍属于创建令牌时记录的团队。
+3. 在自托管实例上，[API 访问](/api/ip-allowlist)已启用，且调用方符合 IP 白名单（如已设置）。
+4. 令牌拥有端点所需的权限，除非它具备 `root`。
+5. 使用 `write` 或 `root` 的令牌，其所有者仍须是团队管理员或所有者。
+
+| 状态 | 典型含义 |
+| :--- | :--- |
+| `401` | 未认证。令牌缺失、无效、过期、被撤销，或其所有者已不再是团队成员。 |
+| `403` | 已禁止。API 访问或调用方 IP 被封禁、令牌缺少所需权限，或令牌所有者缺少所需角色。 |
+
+其他状态码与响应处理指引参见 [API 错误](/api/errors)。
+
+---
+
+选择令牌能力之前请先阅读[权限](/api/permissions)。基础 URL 与 API 参考的其他章节请阅读 [API 概览](/api/overview)。

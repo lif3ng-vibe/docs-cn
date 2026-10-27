@@ -1,0 +1,734 @@
+---
+title: 实例设置
+description: 配置自托管 Coolify 实例的 URL、访问、更新、备份、邮件和身份验证等设置。
+---
+
+import {
+  CloudStorage,
+  Database,
+  Mailbox,
+  Refresh23,
+  Settings,
+  Setting2,
+} from 'reicon-react';
+
+# 实例设置
+
+实例设置控制的是 Coolify 控制平面本身。这些设置改变的是 Coolify 实例自身,而不是某个项目、应用、数据库、服务或服务器。
+
+<Callout type="warn" title="Coolify Cloud">
+如果你使用 **Coolify Cloud**,Coolify 实例由 Coolify 团队代为管理。Coolify Cloud 用户无法访问或编辑这些设置。
+</Callout>
+
+<Callout type="info" title="示例数据">
+
+本指南使用以下示例数据。实际操作时请替换为你自己的数据:
+
+- **域名:** `shadowarcanist.com`
+- **Coolify 仪表盘:** `https://coolify.shadowarcanist.com`
+
+</Callout>
+
+打开左侧边栏的 **Settings**,或直接访问:
+
+```bash
+https://coolify.shadowarcanist.com/settings
+```
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-settings-tab.webp" alt="Settings 页面,实例设置导航中选中 General" />
+
+Settings 页面把选项分为 **Configuration**(General、Advanced、Updates)和 **Instance**(Backup、Email、Authentication)两组。在 Settings 导航中选择一个区块,然后点击 **Save changes** 应用修改。
+
+## Configuration
+
+<Tabs id="instance-settings-configuration" items={['General', 'Advanced', 'Updates']}>
+<Tab value="General" icon={Settings}>
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-settings-overview.webp" alt="打开 Settings,然后在实例设置导航中选择 General" />
+
+General 用于配置仪表盘 URL、HTTP 转 HTTPS 行为、实例名称、时区,以及 Coolify 应使用的网络地址。
+
+### URL
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-url.webp" alt="General 设置中的 URL 字段" />
+
+这是你打开 Coolify 仪表盘所用的地址。Coolify 需要生成指回实例的链接时也会使用它。如果你希望仪表盘使用 HTTPS,该值必须以 `https://` 开头。
+
+在 **URL** 中输入完整的仪表盘 URL,然后点击 **Save changes**。修改之前,请确保该域名的 DNS 已指向 Coolify 所在的服务器。如果启用了 DNS 校验,Coolify 会检查该域名。当实例 URL 已被其他资源占用时,Coolify 也会给出警告。
+
+**可接受的值:**
+- 带协议的完整 URL,例如 `https://coolify.shadowarcanist.com`。
+- 仪表盘需要通过 HTTPS 提供时使用 `https://`。
+- 根域名或子域名。
+
+**注意:**
+- 不支持带路径的 URL,例如 `https://shadowarcanist.com/coolify`。
+- 不要把应用或服务的域名复用给仪表盘。如果实例 URL 与资源域名冲突,SSL 证书和路由可能变得不可预测。
+
+---
+
+### Redirect HTTP to HTTPS
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-redirect-http-to-https.webp" alt="Redirect HTTP to HTTPS 设置" />
+
+控制是否把通过 HTTP 发往 Coolify 仪表盘的请求重定向到 HTTPS。
+
+选择 **Enabled** 或 **Disabled**,然后点击 **Save changes**。
+
+**注意:**
+
+- 如果反向代理或 Cloudflare Tunnel 通过 HTTP 连接 Coolify,而用户通过 HTTPS 访问仪表盘,启用该设置可能造成重定向循环。当你的代理负责 HTTPS 重定向时,请在 Coolify 中禁用该重定向。
+- 当 Cloudflare 使用 **Full** 或 **Full (Strict)** SSL 时,保持启用。
+
+**可接受的值:**
+
+- Enabled:把 HTTP 请求重定向到 HTTPS。
+- Disabled:不重定向 HTTP 请求。
+
+---
+
+### Name
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-name.webp" alt="General 设置中的 Name 字段" />
+
+在浏览器标签页显示的页面标题前加上方括号包裹的实例名称。例如,名称设为 `Production` 时会显示为 `[Production] Settings | Coolify`。它不会改变侧边栏中的 Coolify 名称或标志。
+
+更新 **Name**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 任意不超过 255 个字符的文本。
+- 留空以保留默认的 Coolify 实例名称。
+
+---
+
+### Instance timezone
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-timezone.webp" alt="General 设置中的 Instance timezone 选择器" />
+
+该时区用于实例级的计划安排,包括更新检查和自动更新。它不会改变你的应用或数据库内部的时区。
+
+在 **Instance timezone** 中搜索时区,从列表中选择,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 仪表盘列表中的有效时区标识符,例如 `UTC`、`Europe/Berlin` 或 `America/New_York`。
+
+**注意:**
+
+- 当服务器配置了时区时,数据库备份计划可以使用服务器时区;否则回退到实例时区。
+
+---
+
+### Instance public IPv4
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-public-ipv4.webp" alt="General 设置中的 Instance public IPv4 字段" />
+
+Coolify 通常能检测到运行实例的服务器的公网 IPv4 地址。仅当检测到的地址不正确时才使用此字段,这种情况常见于拥有多个公网 IP 的服务器。
+
+输入 Coolify 应使用的 IPv4 地址,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 留空则由 Coolify 使用检测到的地址。
+- 有效的 IPv4 地址,例如 `203.0.113.10`。
+
+---
+
+### Instance public IPv6
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/general-public-ipv6.webp" alt="General 设置中的 Instance public IPv6 字段" />
+
+Coolify 通常能检测到运行实例的服务器的公网 IPv6 地址。仅当 Coolify 选择了错误的 IPv6 地址或无法检测到时才使用此字段。
+
+输入 Coolify 应使用的 IPv6 地址,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 留空则由 Coolify 使用检测到的地址。
+- 有效的 IPv6 地址,例如 `2001:db8::1`。
+
+</Tab>
+
+<Tab value="Advanced" icon={Setting2}>
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-settings-overview.webp" alt="实例设置导航中选中 Advanced,可见 Advanced 设置的各个区块" />
+
+Advanced 包含访问、DNS 校验、API 与 MCP、出站端点、界面与遥测,以及镜像存储等控制项。
+
+## Access
+
+### Registration
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-registration.webp" alt="Advanced 设置中的 Registration 设置" />
+
+控制用户能否从注册页面自行创建账户。选择 **Anyone can register** 或 **Registration disabled**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Anyone can register:**能访问注册页面的任何人都可以创建账户。
+- **Registration disabled:**只有管理员可以创建账户。
+
+**注意:**
+
+- 除非你确实需要公开自注册,否则保持注册禁用。
+
+---
+
+### Destructive action confirmation
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-destructive-action-confirmation.webp" alt="Advanced 设置中的 Destructive action confirmation 设置" />
+
+控制危险操作是否需要密码加文本的双重确认。选择 **Require two-step confirmation** 或 **Skip two-step confirmation**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Require two-step confirmation:**危险操作需要额外的确认步骤。
+- **Skip two-step confirmation:**危险操作不需要额外的确认步骤。
+
+**注意:**
+
+- 跳过确认会提高误删或误改的几率。
+
+---
+
+## DNS
+
+### DNS validation
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-dns-validation.webp" alt="Advanced 设置中的 DNS validation 设置" />
+
+在部署之前检查自定义域名是否指向正确的服务器。选择 **Enabled** 或 **Disabled**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Enabled:**部署前校验自定义域名。
+- **Disabled:**跳过 DNS 校验。
+
+---
+
+### Custom DNS servers
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-custom-dns-servers.webp" alt="Advanced 设置中的 Custom DNS servers 字段" />
+
+更改 Coolify 做域名校验时使用的 DNS 解析器。在 **Custom DNS servers** 中输入解析器 IP,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 留空则使用系统默认 DNS 解析器。
+- 逗号分隔的有效 IPv4 或 IPv6 地址列表,例如 `1.1.1.1,8.8.8.8`。
+
+---
+
+## API and MCP
+
+### API access
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-api-access.webp" alt="Advanced 设置中的 API access 设置" />
+
+控制是否允许对 Coolify REST API 的经身份验证请求。选择 **Enabled** 或 **Disabled**,然后点击 **Save changes**。API 令牌的相关内容参阅 [API 令牌](/core/security/credentials/api-tokens)。
+
+**可接受的值:**
+
+- **Enabled:**接受经身份验证的 API 请求。
+- **Disabled:**阻止 API 请求。
+
+---
+
+### MCP server
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-mcp-server.webp" alt="Advanced 设置中的 MCP server 设置" />
+
+为经过身份验证的客户端启用 `/mcp` 端点。使用你的实例 URL 加 `/mcp`,并用通过 [API 令牌](/core/security/credentials/api-tokens)创建的 Sanctum bearer 令牌进行身份验证。
+
+**可接受的值:**
+
+- **Enabled:**实例 MCP 端点对经过身份验证的客户端可用。
+- **Disabled:**实例 MCP 端点不可用。
+
+详细指南参阅 [MCP 集成](/mcp/what-is-mcp)。
+
+---
+
+### Allowed API IPs
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-allowed-api-ips.webp" alt="Advanced 设置中的 Allowed API IPs 字段" />
+
+限制哪些来源 IP 地址可以调用 Coolify API。输入逗号分隔的 IP 或 CIDR 段,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 留空或 `0.0.0.0` 表示允许从任何位置访问 API。
+- 单个 IPv4 或 IPv6 地址,例如 `192.168.1.100` 或 `2001:db8::10`。
+- CIDR 段,例如 `10.0.0.0/8` 或 `203.0.113.0/24`。
+
+**注意:**
+
+- 不建议生产实例允许从任何位置访问。
+
+---
+
+## Outbound endpoints
+
+这些控制项限制 Coolify 发起出站请求时可以到达的内部目的地。
+
+### Allowed internal targets
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-allowed-internal-targets.webp" alt="Advanced 设置中的 Allowed internal targets 字段" />
+
+列出 Coolify 发起出站请求时可以到达的内部目的地。输入你的集成所需的主机名、IP 地址或 CIDR 段,条目之间用逗号或换行分隔,然后点击 **Save changes**。
+
+---
+
+### Localhost targets
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-localhost-targets.webp" alt="Advanced 设置中的 Localhost targets 设置" />
+
+控制出站请求是否可以指向 localhost 地址。选择 **Allowed** 或 **Blocked**,然后点击 **Save changes**。
+
+**注意:**
+
+- 回环目标还必须包含在 **Allowed internal targets** 中。
+
+---
+
+## Interface and telemetry
+
+### Navigation
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-navigation.webp" alt="Advanced 设置中的 Navigation 设置" />
+
+启用 SPA 式导航与预取,让仪表盘页面切换更流畅。选择 **SPA navigation** 或 **Full page navigation**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **SPA navigation:**仪表盘链接可以预取并在页面之间切换,无需整页重载。
+- **Full page navigation:**仪表盘导航使用整页加载。
+
+**注意:**
+
+- 如果浏览器或 Livewire 更改后仪表盘出现导航问题,请选择整页导航。
+
+---
+
+### Anonymous telemetry
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-anonymous-telemetry.webp" alt="Advanced 设置中的 Anonymous telemetry 设置" />
+
+控制该实例是否向 Coolify 发送匿名安装计数,计入 [coolify.io](https://coolify.io/) 上展示的自托管安装数。Coolify 不会存储 IP 地址,也不会发送错误报告。
+
+选择 **Enabled** 或 **Disabled**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Enabled:**不发送匿名安装计数。
+- **Disabled:**允许发送匿名安装计数。
+
+---
+
+### Sponsorship reminders
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-sponsorship-reminders.webp" alt="Advanced 设置中的 Sponsorship reminders 设置" />
+
+控制 Coolify 是否每月显示一次赞助弹窗。选择 **Enabled** 或 **Disabled**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Enabled:**可以显示每月赞助提醒。
+- **Disabled:**该实例隐藏赞助提醒。
+
+---
+
+## Image storage
+
+这些控制项决定压缩后的头像和项目图标存储在哪里,以及 Coolify 如何提供它们。
+
+### Storage destination
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-storage-destination.webp" alt="Advanced 设置中的图片存储目的地设置" />
+
+选择 **Local storage** 或已配置的 S3 兼容存储目的地,然后点击 **Save changes**。在此选择之前,先在 **Storages** 中添加并测试 S3 存储。
+
+---
+
+### Image CDN URL
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/advanced-image-cdn-url.webp" alt="Advanced 设置中的 Image CDN URL 字段" />
+
+可选:为存储在 S3 上的头像和项目图标设置公开的 CDN URL。输入你的 CDN 提供的 URL,然后点击 **Save changes**。
+
+</Tab>
+
+<Tab value="Updates" icon={Refresh23}>
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-settings-overview.webp" alt="选中 Settings,然后在实例设置导航中选择 Updates" />
+
+使用 Updates 页面检查新的 Coolify 版本、手动安装更新,或配置自动更新。
+
+### Update Coolify
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-upgrade-now.webp" alt="Updates 设置中的 Upgrade Now 按钮" />
+
+当有更新可用时,点击 **Upgrade Now** 开始更新。Coolify 会自动安装最新版本。详情参阅[更新 Coolify](/core/instance-management/update)。
+
+---
+
+### Update checks
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-check-frequency.webp" alt="Updates 设置中的 Check frequency 字段" />
+
+设置 Coolify 检查 [Coolify 版本文件](https://cdn.coollabs.io/coolify/versions.json)中新版本的频率。
+
+设置 **Check frequency**,然后点击 **Save changes**。点击 **Check Now** 可立即检查更新。
+
+**可接受的值:**
+
+- `every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`,或有效的 cron 表达式。
+- 默认值为 `0 * * * *`,即每小时检查一次。
+
+---
+
+### Automatic updates
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-automatic-updates.webp" alt="Updates 设置中的 Automatic updates 选择器" />
+
+控制 Coolify 是否按配置的计划自动安装更新。
+
+在 **Automatic updates** 下选择 **Enabled** 或 **Disabled**。该设置会立即保存。启用后,设置 **Update frequency** 并点击 **Save changes**。如果该控件不可用,说明 `/data/coolify/source/.env` 中设置了 `AUTOUPDATE`,自动更新由它控制。
+
+**可接受的值:**
+
+- **Enabled:**Coolify 按配置的计划安装更新。
+- **Disabled:**Coolify 不自动安装更新。
+
+---
+
+### Update frequency
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-update-frequency.webp" alt="Updates 设置中的 Update frequency 字段" />
+
+设置启用自动更新后 Coolify 安装更新的频率。
+
+在 **Update frequency** 中输入计划,然后点击 **Save changes**。该字段在启用自动更新后可用;当设置了 `AUTOUPDATE` 变量时,由 `/data/coolify/source/.env` 中的 `AUTOUPDATE` 管理。
+
+**可接受的值:**
+
+- `every_minute`、`hourly`、`daily`、`weekly`、`monthly`、`yearly`,或有效的 cron 表达式。
+- 默认值为 `0 0 * * *`,即每天 `00:00` 运行。
+
+---
+
+### Image registry
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/updates-image-registry.webp" alt="Updates 设置中的 Docker registry 选择器" />
+
+选择 Coolify 拉取自身镜像所用的镜像仓库。当当前源被限流或不可达时切换镜像仓库,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- **Docker Hub**
+- **GitHub Container Registry**
+
+</Tab>
+</Tabs>
+
+## Instance
+
+<Tabs id="instance-settings-instance" items={['Backup', 'Email', 'Authentication']}>
+<Tab value="Backup" icon={Database}>
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-settings-overview.webp" alt="选中 Settings,然后在实例设置导航中选择 Backup" />
+
+Backup 页面管理 Coolify 内部数据库的备份。它不会备份应用卷或外部数据库。完整的备份指南参见[实例备份](/core/backup-and-recovery/instance-backup)。
+
+### 首次设置
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-first-time-setup.webp" alt="未配置实例备份时显示的 Configure backup 操作" />
+
+当实例备份尚未配置时,页面会显示 **Backup is not configured**。点击 **Configure backup** 以创建内部 `coolify-db` 资源及其计划备份。localhost 服务器必须可用;如果不可用,先打开服务器设置并验证 localhost 连接。
+
+---
+
+### Instance database
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-instance-database.webp" alt="Backup 页面上的内部 coolify-db 资源详情" />
+
+该区块显示用于实例备份的 Coolify 内部 `coolify-db` 资源。其 **Name**、**UUID**、**User** 和 **Password** 为只读。你可以编辑 **Description** 并点击 **Save changes**。
+
+---
+
+### Backup schedule
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-schedule.webp" alt="Backup 页面上的备份计划设置" />
+
+#### 启用或禁用备份
+
+使用 **Enable backup** 或 **Disable backup** 开启或关闭计划备份任务。该操作会立即保存。
+
+点击 **Back up now** 可立即开始一次备份,无需等待下一次计划运行。执行该操作时数据库必须处于运行状态。
+
+#### 频率
+
+设置内部 Coolify 数据库的备份频率。输入预设值(如 `hourly`、`daily`、`weekly`、`monthly`、`yearly`、`every_minute`)或有效的 cron 表达式,然后点击 **Save changes**。例如,`0 0 * * *` 表示每天零点运行。
+
+#### 时区
+
+显示 Coolify 用于备份计划的时区。该字段为只读,使用为 Coolify 的 localhost 服务器设置的时区;若未设置服务器时区,则使用实例时区。
+
+#### 超时时间
+
+设置备份的最长运行时间(秒)。备份超过该时间时,Coolify 会把该次执行标记为失败。输入 `60` 到 `36000` 之间的值,然后点击 **Save changes**。
+
+#### 备份缺失告警阈值
+
+设置多少天没有备份执行后,Coolify 通过备份失败通知渠道发送告警。输入 `0` 禁用该告警,或输入 `1` 到 `365` 之间的值,然后点击 **Save changes**。
+
+---
+
+### S3 storage
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-s3-storage.webp" alt="Backup 页面上的 S3 存储设置" />
+
+使用 S3 存储为每次实例备份保留一份远程副本。启用 S3 备份之前,先[设置并验证一个 S3 存储目的地](/core/s3-storage/overview)。
+
+点击 **Enable S3** 开启上传,然后选择一个 **S3 storage** 目的地。选择 **Local copy** 是 **Keep local backup** 还是 **Delete after S3 upload**。更新本地副本选项后保存更改。在存在已验证的目的地之前,存储选择器不可用。
+
+---
+
+### Retention
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-retention.webp" alt="本地与 S3 备份的保留设置" />
+
+为 **Local backups** 和 **S3 backups** 分别设置保留上限。任一上限先达到时,最旧的备份会被移除。某个上限设为 `0` 表示该项不限制。输入上限,然后点击 **Save changes**。
+
+每个位置可设置:
+
+- **Backups to keep:**保留的近期备份最大数量。
+- **Days to keep:**移除超过该天数的备份。
+- **Maximum storage (GB):**总大小达到该值后移除最旧的备份。接受小数值。
+
+---
+
+### Executions
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/backup-executions.webp" alt="实例备份执行历史" />
+
+查看备份状态、数据库、文件路径、完成时间、耗时、大小,以及本地或 S3 可用性。
+
+要删除备份,点击其删除图标。Coolify 是否要求密码确认取决于[危险操作确认](#危险操作确认)设置:**Require two-step confirmation** 会弹出确认提示,**Skip two-step confirmation** 则跳过。Coolify 会删除仍存在的本地备份文件,并把该次执行从列表中移除。
+
+点击成功记录上的下载图标即可下载其备份。
+
+**Clean failed backups** 移除失败执行的记录行。**Clean deleted entries** 移除本地文件已被删除的备份的记录行;它不会删除文件。计划或手动备份完成后,成功记录会出现在这里。
+
+</Tab>
+
+<Tab value="Email" icon={Mailbox}>
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/email-settings-overview.webp" alt="实例设置中的 Email,包含 Sender、SMTP server 和 Resend 区块" />
+
+配置发件人身份,并选择用 SMTP 或 Resend 发送 Coolify 的事务邮件。
+
+### Sender
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/email-sender.webp" alt="Sender 区块,高亮显示 From name 与 From address" />
+
+发件人设置由 SMTP 和 Resend 共用。
+
+#### From name
+
+设置外发邮件显示的名称,例如密码重置和邀请邮件。输入名称,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 必填文本,例如 `Coolify`。
+
+#### From address
+
+设置外发邮件使用的发件人地址。输入有效的电子邮箱地址,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 必填的电子邮箱地址,例如 `noreply@shadowarcanist.com`。
+
+---
+
+### SMTP server
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/email-smtp-server.webp" alt="高亮显示的 SMTP server 设置" />
+
+把 Coolify 连接到兼容 SMTP 的邮件服务商。
+
+输入你的服务商提供的 **Host**、**Port** 和 **Encryption** 必填值,其余字段按需填写。
+
+#### SMTP delivery
+
+选择 **Enabled** 通过 SMTP 发送邮件,或 **Disabled** 关闭 SMTP。该选择会立即保存。启用 SMTP 会关闭 Resend。
+
+#### Host
+
+输入邮件服务商提供的 SMTP 服务器主机名,例如 `smtp.mailgun.org`。
+
+#### Port
+
+输入邮件服务商提供的端口。取值必须在 `1` 到 `65535` 之间;常见值为 `587`、`465` 和 `25`。
+
+#### Encryption
+
+选择邮件服务商要求的加密方式:
+
+- **StartTLS**
+- **TLS / SSL**
+- **None**
+
+#### Username and password
+
+输入 SMTP 服务商要求的凭据。如果服务商不要求身份验证,这些字段留空。
+
+#### Timeout
+
+设置最长送达时间(秒)。留空则使用默认邮件行为。
+
+#### EHLO domain
+
+可选:设置 Coolify 在 SMTP EHLO 命令中发送的完全限定域名。留空则使用系统默认值。
+
+编辑 SMTP 连接设置后,点击 **Save changes**。
+
+---
+
+### Resend
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/email-resend.webp" alt="Resend 送达设置,高亮显示 API key" />
+
+把 Coolify 连接到 [Resend](https://resend.com),通过该服务商发送事务邮件。
+
+在 Resend 中创建 API 密钥并填入 **API key**。启用 Resend 时该密钥必填。在 **Resend delivery** 下选择 **Enabled** 使用 Resend,或 **Disabled** 关闭它。该选择会立即保存,启用 Resend 会关闭 SMTP。点击 **Save changes** 保存 API 密钥和发件人字段。
+
+</Tab>
+
+<Tab value="Authentication">
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-settings-overview.webp" alt="Authentication 设置页面,导航中列出各 OAuth 提供商" />
+
+**Authentication** 页面列出 Coolify 支持的 OAuth 提供商。每个提供商都有自己的区块,包含 **Enable** 操作、凭据、重定向 URI,以及该提供商要求的其他字段。
+
+在启用 OAuth 的同时,该页面也控制密码注册。每个提供商都可以把新创建的用户自动以成员身份加入 Root 团队。OIDC 用户创建与验证控制参见 [OpenID Connect](/core/security/authentication/sso/oidc)。
+
+### OAuth providers
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-providers.webp" alt="Authentication 设置中的 OAuth 提供商列表" />
+
+当前支持的提供商:
+
+- Authentik
+- Bitbucket
+- Clerk
+- Discord
+- GitHub
+- GitLab
+- Google
+- Infomaniak
+- Microsoft
+- OpenID Connect (OIDC)
+- Zitadel
+
+详细指南参阅 [OAuth 设置](/core/security/authentication/oauth/overview)。
+
+---
+
+### Enabled providers
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-enabled-providers.webp" alt="已启用的 OAuth 提供商,显示 Disable 按钮" />
+
+控制该提供商是否作为登录选项出现在 Coolify 登录页上。
+
+填写该提供商的必填字段,然后点击 **Enable**。点击 **Disable** 可把该提供商从登录页移除。
+
+---
+
+### Redirect URI
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-redirect-uri.webp" alt="OAuth 提供商设置中的 Redirect URI 字段" />
+
+定义授权完成后身份提供商重定向回的回调 URL。
+
+把 Coolify 显示的 **Redirect URI** 复制到提供商处的 OAuth 应用中;如果你覆盖了它,还要在 Coolify 中保存相同的值。
+
+**可接受的值:**
+
+- 与提供商回调匹配的完整 URL,通常为 `https://coolify.shadowarcanist.com/auth/<provider>/callback`。
+
+---
+
+### Client ID
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-client-id.webp" alt="OAuth 提供商设置中的 Client ID 字段" />
+
+存储来自身份提供商的 OAuth 应用 client ID。
+
+在提供商处创建一个 OAuth 应用,复制其 client ID,粘贴到 **Client ID**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 提供商签发的、该提供商要求的任意 client ID 字符串。
+
+---
+
+### Client Secret
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-client-secret.webp" alt="OAuth 提供商设置中的 Client Secret 字段" />
+
+存储来自身份提供商的 OAuth 应用密钥。
+
+复制提供商的 client secret,粘贴到 **Client Secret**,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 提供商签发的、该提供商要求的任意 client secret 字符串。
+
+---
+
+### 提供商专属字段
+
+当提供商有额外要求时,其区块会显示对应的字段。
+
+### Base URL
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-base-url.webp" alt="OAuth 提供商设置中的 Base URL 字段" />
+
+存储自托管或基于 issuer 的 OAuth 提供商的基础 URL。
+
+输入提供商基础 URL,然后点击 **Save changes**。
+
+**可接受的值:**
+
+- 使用提供商提供的完整 URL,例如 `https://auth.shadowarcanist.com`。
+
+---
+
+### Tenant
+
+<ZoomableImage src="/docs-cn/coolify/images/core/instance-management/instance-settings/authentication-tenant.webp" alt="Azure OAuth 提供商设置中的 Tenant 字段" />
+
+存储支持或要求按租户(tenant)限定范围的提供商的租户信息。
+
+对于 Azure,输入要求的租户值。Google 使用 **Hosted domain** 字段把登录限制到配置的 Workspace 域;`*` 表示允许任意 Workspace 账户。
+
+**可接受的值:**
+
+- Azure:必填的租户值。
+- Google:可选的允许 Workspace 域,例如 `shadowarcanist.com`,或 `*`。
+</Tab>
+
+
+
+</Tabs>
+
+## 实例环境设置
+
+在实例环境中设置 `HORIZON_ALLOWED_EMAILS`,可以授权其他用户访问 Laravel Horizon。Horizon 的 URL 参见 [Coolify 开发](/contribute/coolify)。
+
+`SSH_COMMAND_TIMEOUT` 默认为 `3600` 秒。设为 `0` 或无效值时会使用该默认值,而不是禁用超时。
+
+`PROXY_CONNECT_NETWORKS_INTERVAL_SECONDS` 和 `NIGHTWATCH_ENABLED` 已被移除。代理网络会在目标(Destination)创建、部署和代理启动/重启时连接。Laravel Nightwatch 不再在 Coolify 容器内运行。

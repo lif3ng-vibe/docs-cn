@@ -1,0 +1,9 @@
+{
+  "title": "监控",
+  "pages": [
+    "overview",
+    "sentinel",
+    "metrics",
+    "traffic-analytics"
+  ]
+}

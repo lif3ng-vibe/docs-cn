@@ -1,0 +1,28 @@
+---
+title: DNS 管理
+description: 添加 Cloudflare 集成令牌，从 Coolify 管理应用的 DNS 记录。
+---
+
+# Cloudflare DNS 管理
+
+Coolify 可以使用团队的 Cloudflare 集成令牌，为应用与服务域名创建 DNS 记录。它会把每个主机名匹配到一个可访问的 Cloudflare zone，并把记录指向资源所在的服务器。
+
+## 添加令牌
+
+1. 创建一个 Cloudflare API 令牌，为你希望 Coolify 管理的 zone 授予 **Zone > DNS > Edit** 与 **Zone > Zone > Read** 权限。
+2. 在 Coolify 中打开 **Keys & Tokens > Integration Tokens**，选择 **New token**，然后在 **Provider（提供商）** 中选择 **Cloudflare**。
+3. 填写 **Token name**，粘贴 **API token**，并勾选 **DNS** 能力。
+4. 可选：启用 **Automatically configure DNS**。当存在唯一无歧义的匹配凭据时，新域名会自动完成配置。
+5. 选择 **Validate and add**。打开已保存令牌的编辑图标，即可查看 **Domains this token can manage**。更改提供商权限后使用 **Refresh zones**，编辑凭据时使用 **Validate and save**。
+
+集成令牌属于团队。请把令牌添加到拥有该资源的团队。这套令牌流程与为代理配置 DNS 验证（用于签发证书）是相互独立的。
+
+## 管理域名
+
+打开应用或服务的 **Domains（域名）** 页面并添加主机名。Coolify 会把它匹配到团队令牌可用的 zone，并提供针对该服务器的 DNS 配置。
+
+如果某条记录已经指向别处，请在使用替换操作前先核对现有值。通过这套流程创建的记录会显示 **Managed by Coolify**。删除受管理的域名时，会在确认后提供一并删除其 DNS 记录的选项；批准删除前，请先确认该主机名没有其他用途。
+
+更改记录后请重新检查 DNS。Coolify 会覆盖上一次的检查结果，包括预览域名的检查。IPv6 地址按值比较，而不是按书写形式比较。
+
+如果没有匹配的 zone，请检查令牌的 zone 范围与权限、刷新可用 zone，或按照 [DNS](/core/networking/dns) 手动配置记录。

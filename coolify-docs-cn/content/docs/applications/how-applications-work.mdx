@@ -1,0 +1,64 @@
+---
+title: 应用的工作原理
+description: 了解 Coolify 如何把应用源码或现有镜像变成运行中的 Docker 容器。
+---
+
+# 应用的工作原理
+
+Coolify 把保存在控制平面中的应用定义，与已接入服务器上的 Docker 资源组合起来。
+
+应用定义包含源码或镜像引用、构建方式、运行时设置、部署目标和运维设置。Docker 保存准备好的镜像，并运行由这些镜像创建的容器。
+
+## 从源码到运行中的应用
+
+1. 部署可以从控制台、Git webhook、部署 webhook 或 API 请求发起。
+2. Coolify 将部署加入队列。
+3. Coolify 检出源码、读取 Docker 配置，或解析已保存的镜像引用。
+4. Docker 构建或拉取所需的镜像。
+5. Coolify 套用环境变量、网络、存储、端口、域名和健康检查设置。
+6. Docker 启动应用容器，包括 Compose 服务的容器。
+7. Coolify 代理把已配置的域名路由到健康的 HTTP 容器。
+
+完整生命周期和替换路径请阅读[构建与部署模型](/core/build-deployment-model)。
+
+## 控制平面与工作负载服务器
+
+Coolify 实例是控制平面，负责提供控制台、保存配置并协调部署。
+
+接入的服务器是工作负载机器，存放应用的 Docker 资源并运行其容器。这些资源包括：
+
+- Docker 镜像
+- 应用容器
+- Docker 网络
+- 卷和 bind mount 的文件
+- 代理配置和证书数据
+
+如果 Coolify 实例不可用，只要 Docker、代理、服务器和网络仍正常，已在运行的容器可以继续对外提供服务。在控制平面恢复之前，你无法发起新的 Coolify 操作。
+
+## 容器是可替换的
+
+部署可以用基于新镜像或新配置创建的另一个容器替换当前容器。
+
+只写到容器文件系统的数据，会随 Docker 移除容器而消失。必要的数据请存入[持久化存储挂载](/core/persistent-storage/storage-mounts/overview)或外部数据服务。
+
+<Callout type="warning" title="持久化存储不等于备份">
+
+卷或 bind mount 能在正常的容器替换中保留下来，但防不住误删、磁盘故障、数据损坏或服务器丢失。应用在本地保存重要文件时，请配置[存储挂载备份](/core/persistent-storage/storage-mounts/backups)。
+
+</Callout>
+
+## 网络
+
+对 HTTP 应用而言，已配置的域名指向服务器。Coolify 代理接收请求并转发到容器内的应用端口。
+
+宿主机端口映射会绕过这条基于域名的代理路径，把容器端口直接发布到服务器上。宿主机端口映射还会让 Coolify 无法使用常规的[滚动替换路径](/applications/deployments/rolling-updates)，因为两个容器不能同时绑定同一个宿主机端口。
+
+域名、代理路由、Docker 网络和资源间通信，请阅读[Coolify 中的网络](/core/networking-in-coolify)。
+
+## 构建与部署是两回事
+
+构建产出镜像。部署准备所需的镜像和运行时配置，然后创建或更新应用容器。
+
+[Nixpacks](/applications/builds/nixpacks/overview)、[Railpack](/applications/builds/railpack)、[Static](/applications/builds/static)、[Dockerfile](/applications/builds/dockerfile) 和 [Docker Compose](/applications/builds/docker-compose) 可以从源码构建镜像。[Docker Image 应用](/applications/deployments/docker-image)跳过源码构建，直接拉取现有镜像。
+
+同一镜像可以用不同的运行时变量或容器设置重新部署。构建期的变更则需要重新构建镜像。

@@ -1,0 +1,313 @@
+---
+title: 高级设置
+description: 配置应用的高级构建、部署、Git、代理、重启、日志和 GPU 行为。
+---
+
+import { Box2, BranchUp, Code, Globe3, Server, Settings } from 'reicon-react';
+
+# 高级设置
+
+打开一个应用，然后在应用设置侧边栏中选择 **Advanced**（高级）。这些控件会改变构建缓存、部署触发、容器名称、代理行为、重启处理、日志和 GPU 访问。
+
+可用控件取决于应用的来源和构建方式。不适用的设置会被隐藏。
+
+## 各应用类型的可用设置
+
+| 应用类型 | 额外显示的设置 |
+| :--- | :--- |
+| 基于 Git 的应用 | 自动部署、子模块、Git LFS 和克隆深度。预览相关控件位于 **Preview Deployments**。 |
+| Docker Compose 应用 | **Compose deployment** 和 **Predefined network**。GPU 控件被隐藏。 |
+| 非 Compose 应用 | GPU 控件。 |
+| 所有应用 | 构建、容器名称、代理、停止、重启和日志转发控件。 |
+
+<Tabs id="application-advanced-configuration" items={['Build', 'Deployment', 'Git', 'Docker compose', 'Container', 'Proxy', 'Operations', 'Logs', 'GPU']}>
+<Tab value="Build" icon={Code}>
+
+Build 控制缓存复用、Docker 构建参数和提交元数据。
+
+<span id="disable-build-cache" />
+
+### 构建缓存
+
+在 **Build cache**（构建缓存）下选择 **Rebuild from scratch every time**（每次从头重建），可阻止 Coolify 生成的构建在每次部署时复用 Docker 构建缓存。
+
+正常部署请选择 **Use Docker build cache**（使用 Docker 构建缓存）。如果只有下一次部署需要一次干净的生成构建，则改用 **Force deploy (without cache)**（强制部署，不使用缓存）。
+
+自定义 Docker Compose 构建命令自行控制缓存标志，因此该设置无法为这类命令增删缓存参数。
+
+---
+
+<span id="inject-build-args-to-dockerfile" />
+
+### 构建参数
+
+**Build arguments**（构建参数）默认为 **Inject build args automatically**（自动注入构建参数）。Coolify 会为构建期间可用的应用变量添加 `ARG` 指令。
+
+当 Dockerfile 自行声明并管理所有必需的 `ARG` 时，选择 **Managed manually in Dockerfile**（由 Dockerfile 手动管理）。这可以避免重复注入指令，并让 Dockerfile 完全掌控缓存边界。
+
+---
+
+<span id="include-source-commit-in-build" />
+
+### 源提交可用性（Source commit availability）
+
+当镜像构建需要 `SOURCE_COMMIT`（所选 Git 提交哈希）时，在 **Source commit availability**（源提交可用性）下选择 **Available during build**（构建期间可用）。
+
+默认值为 **Runtime only (preserves cache)**（仅运行时，保留缓存），这样其他输入相同的提交可以复用缓存的镜像层。`SOURCE_COMMIT` 被排除在构建之外时，运行中的容器仍能使用它。
+
+在为每次部署都启用它之前，请先阅读[构建缓存](/applications/builds/overview#构建缓存)。
+
+</Tab>
+<Tab value="Deployment" icon={BranchUp}>
+
+这些设置只出现在连接了 Git 仓库的应用上。
+
+### 自动部署（Auto Deploy）
+
+在 **Deployment**（部署）下，把 **Auto deploy**（自动部署）设为 **Deploy on push (webhooks)**（push 时部署，webhook），即可让受支持的 Git webhook 事件触发部署。该选项默认启用，但仓库连接仍需具备可用的 webhook 或提供商集成。
+
+如果部署只应从 Coolify 面板、API、部署 webhook 或外部工作流发起，请选择 **Manual deployments only**（仅手动部署）。
+
+---
+
+### 预览部署
+
+预览的启用与 pull request 访问权限在应用设置侧边栏的 **Preview Deployments**（预览部署）页配置。选择 **Enable preview deployments**（启用预览部署），然后在 **PR deployment access**（PR 部署访问权限）中选择 **Repository members only**（仅仓库成员）或 **Public (fork PRs allowed)**（公开，允许 fork PR）。
+
+公开预览可能运行贡献者控制的代码。更改访问权限之前，请先阅读[预览部署](/applications/deployments/preview-deployments)。
+
+---
+
+</Tab>
+<Tab value="Git" icon={BranchUp}>
+
+### 子模块（Submodules）
+
+当所选仓库提交依赖 Git 子模块时，在 **Git > Submodules** 下选择 **Clone submodules**（克隆子模块）。Coolify 会在检出源码时一并拉取它们。
+
+所连接的来源或部署密钥必须能访问每个私有子模块。
+
+对于同一 GitHub 用户或组织下的私有子模块，建议在 `.gitmodules` 中使用相对 URL：
+
+```ini
+[submodule "prisma"]
+    path = prisma
+    url = ../prisma.git
+```
+
+相对 URL 会复用已认证的父仓库远程地址，而不是另起一个未认证的 HTTPS 克隆。如果检出仍然失败，请确认 GitHub App 安装或部署密钥能访问两个仓库。
+
+只改子模块仓库并不会更新父仓库记录的提交。部署之前，先把新的子模块指针提交到父仓库。
+
+---
+
+### LFS
+
+当仓库用 Git Large File Storage 存放所需文件时，在 **Git LFS** 下选择 **Enabled**（启用）。Coolify 会在检出源码时下载 LFS 管理的内容。
+
+构建不需要 LFS 对象时保持禁用。
+
+---
+
+### 浅克隆（Shallow Clone）
+
+在 **Clone depth**（克隆深度）下选择 **Shallow clone (latest commit only)**（浅克隆，仅最新提交），即可用 `--depth=1` 只检出最新提交历史。对大型仓库，这能减少克隆时间和传输的历史。
+
+构建需要更早的提交、完整标签或基于历史的版本号时，选择 **Full history**（完整历史）。
+
+提供商 webhook 的配置请阅读[自动部署](/applications/deployments/automatic-deployments)。
+
+</Tab>
+<Tab value="Docker compose" icon={Code}>
+
+<span id="raw-compose-deployment" />
+
+### Compose 部署方式（Compose deployment）
+
+此设置只出现在 Docker Compose 应用上。正常情况下，Coolify 会解析 Compose 定义，并添加管理部署所需的网络、标签等配置。
+
+<Callout type="warning" title="Raw 模式会去掉 Coolify 的 Compose 修改">
+
+当 **Compose deployment** 设为 **Raw (deploy file as-is)**（原样部署文件）时，Coolify 会按 Compose 定义的原样进行部署。定义必须自带代理标签、网络以及其他所需的运行时配置。
+
+</Callout>
+
+启用之前请先阅读[应用的 Raw Compose 部署](/applications/builds/docker-compose#应用的-raw-compose-部署)。
+
+---
+
+<span id="connect-to-predefined-network" />
+
+### 预定义网络（Predefined network）
+
+此设置只出现在 Docker Compose 应用上。当 Compose 应用中的服务必须与所选 Coolify 目标（Destination）网络上的资源通信时，在 **Docker compose > Predefined network（预定义网络）** 下选择 **Connect to predefined network**（连接到预定义网络）。
+
+Compose 服务本身已获得一个私有网络，用于定义内部的相互通信。加入预定义网络只在需要跨 Coolify 资源通信时才必要，且加入后服务的 DNS 名称可能发生变化。
+
+在配置其他资源的主机名之前，请先阅读 [Compose 网络](/applications/builds/docker-compose#compose-网络)。
+
+</Tab>
+<Tab value="Container" icon={Box2}>
+
+Container 设置控制分配给非预览应用容器的运行时名称。
+
+<span id="consistent-container-names" />
+
+### 容器命名
+
+在 **Container > Container naming**（容器命名）下选择 **Consistent name (no rolling updates)**（固定名称，无滚动更新），即可在每次部署时使用应用 UUID 作为容器名。
+
+<Callout type="warning" title="固定名称会禁用滚动更新">
+
+Docker 无法同时以相同名称运行当前容器和替换容器。启用此设置后，Coolify 将无法在运行中的容器旁启动替换容器。
+
+</Callout>
+
+应用依赖[滚动更新](/applications/deployments/rolling-updates)时，选择 **Generated name (rolling updates)**（生成名称，滚动更新）。
+
+---
+
+### 自定义容器名（Custom Container Name）
+
+选择固定命名后会出现 **Custom container name**（自定义容器名）。当其他系统必须用这个确切的运行时名称访问容器时，填写一个易识别的固定名称。
+
+保存时 Coolify 会把该值转换为 slug 格式。名称在同一部署服务器上的各应用之间必须唯一。
+
+自定义名称同样会禁用滚动更新，因为当前容器和替换容器无法同时使用它。需要每次部署使用不同名称时，请选择生成式命名。
+
+### 容器名前缀
+
+在不启用固定命名的情况下，可以设置可选的 **Container Name Prefix**（容器名前缀），让生成的名称更易读，同时保留滚动更新。Coolify 会把前缀转为 slug 格式，限制在 30 个字符以内，并要求它在每台服务器上唯一。
+
+| 应用 | 使用前缀 `shop-api` 时生成的名称 |
+| :--- | :--- |
+| 单容器 | `shop-api-20260908T141530` |
+| Compose 服务 `web` | `web-shop-api-20260908T141530` |
+
+不设前缀时，生成的名称为应用 UUID 加时间戳。旧的时间戳后缀仍可被识别。固定命名模式下，自定义名称会让单容器得到 `shop-api`，Compose 服务得到 `web-shop-api`。
+
+对应的 API 字段是 `custom_container_name_prefix`。设置 `custom_internal_name` 会启用固定命名；把它与 `is_consistent_container_name_enabled: false` 同时使用会返回 `422`。对于曾在固定命名关闭的情况下也应用了所存自定义名称的应用，会被迁移到固定命名模式，以保留其名称。
+
+</Tab>
+<Tab value="Proxy" icon={Globe3}>
+
+Proxy 设置会更改 Coolify Proxy 为应用所配置域名生成的标签。
+
+<span id="force-https" />
+
+### HTTPS 重定向
+
+打开 **Domains**（域名），在 **Redirect HTTP to HTTPS**（HTTP 重定向到 HTTPS）中选择 **Enabled**（启用）。当配置了 HTTPS 域名且标签由 Coolify 管理时，会出现该控件。
+
+域名、DNS 和证书必须已支持 HTTPS。选择此选项并不会把纯 HTTP 域名转换成 HTTPS 域名。
+
+---
+
+<span id="enable-gzip-compression" />
+
+### Gzip 压缩
+
+在 **Gzip compression**（Gzip 压缩）中选择 **Enabled**（启用），Coolify Proxy 即可压缩受支持的响应。
+
+应用已自行压缩响应，或流式/二进制工作负载不适合被代理压缩时，选择 **Disabled**（禁用）。
+
+---
+
+<span id="strip-prefixes" />
+
+### 路径前缀
+
+当应用暴露在某个路径下、但应收到不带该路由前缀的请求时，在 **Path prefixes**（路径前缀）下选择 **Strip prefixes**（去除前缀）。例如，对 `/api/users` 的请求可以以 `/users` 的形式转发到容器。
+
+更改此设置后请测试应用路由，因为应用生成的链接或重定向可能仍包含原始前缀。
+
+<Callout type="info" title="手动标签接管这些设置">
+
+当 **General > Container labels > Label management** 设为 **Managed manually (edit labels yourself)**（手动管理，自行编辑标签）时，代理控件不可用。手动标签模式下，请自行修改等价的代理标签。
+
+</Callout>
+
+</Tab>
+<Tab value="Operations" icon={Settings}>
+
+Operations 控制优雅停止、崩溃重启上限、日志转发，以及更改何时到达运行中的容器。
+
+### 停止宽限期（Stop Grace Period，秒）
+
+在滚动更新、手动停止和重启时，Coolify 会等待应用进程优雅停止。
+
+**可接受的取值**：
+
+- 留空使用默认的 30 秒。
+- 输入 `1` 到 `3600` 秒之间的整数。
+
+请给进程足够的时间在收到停止信号后完成进行中的工作。调大该值无法解决进程忽略信号的问题。
+
+---
+
+### 最大重启次数（Max Restart Count）
+
+**Max Restart Count**（最大重启次数）限制 Coolify 对崩溃应用自动重启的次数，超过后 Coolify 会停止应用并发送通知。
+
+**可接受的取值**：
+
+- 默认为 `10` 次重启。
+- 输入 `0` 表示不限制。
+- 输入正整数设置其他上限。
+
+---
+
+### 应用更改
+
+大多数下拉框、**Stop grace period (seconds)**（停止宽限期，秒）和 **Max restart count**（最大重启次数）即时保存。编辑过的容器名称字段和 GPU 配置需使用 **Save changes**（保存更改）。
+
+更改了影响镜像、容器名称、代理标签、网络、停止行为、日志或 GPU 访问的设置后，请重新部署或重启应用。
+
+</Tab>
+<Tab value="Logs" icon={Settings}>
+
+<span id="drain-logs" />
+
+### 日志转发（Log drain）
+
+在 **Logs > Log drain** 下选择 **Send logs to the log drain endpoint**（把日志发送到日志转发端点），即可把应用日志转发到部署服务器上配置的日志转发端点。
+
+该服务器未启用日志转发时，Coolify 会拒绝此设置。为应用启用之前，请先按[日志转发](/core/observability/log-drains/overview)操作。
+
+</Tab>
+<Tab value="GPU" icon={Server}>
+
+GPU 控件只出现在非 Compose 应用上。部署服务器必须已装好可用的 GPU 驱动，并配置了支持 GPU 的容器运行时。
+
+<span id="enable-gpu" />
+
+### GPU 访问
+
+在 **GPU > GPU access** 下选择 **Enabled**（启用），为应用容器添加 GPU 访问。启用后会出现更多 GPU 字段。
+
+---
+
+### GPU 驱动（GPU Driver）
+
+**GPU driver**（GPU 驱动）选择容器运行时的 GPU 驱动。填写部署服务器上配置的驱动。
+
+---
+
+### GPU 数量与设备 ID
+
+用 **GPU count**（GPU 数量）申请一定数量的 GPU。留空则容器可以访问所有可用 GPU。
+
+用 **GPU device ids**（GPU 设备 ID）以逗号分隔列表选择特定设备，例如 `0,2`。
+
+不要同时设置 **GPU count** 和 **GPU device ids**。两者同时提供时，Coolify 会拒绝该配置并清空这两个值。
+
+---
+
+### GPU 选项
+
+**GPU options**（GPU 选项）接受额外的驱动相关运行时选项。只添加部署服务器上所装 GPU 驱动和容器运行时支持的选项。
+
+选择 **Save changes**（保存更改），然后重新部署或重启应用，并在容器内验证 GPU 访问。
+
+</Tab>
+</Tabs>

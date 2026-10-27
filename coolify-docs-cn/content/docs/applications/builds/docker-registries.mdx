@@ -1,0 +1,96 @@
+---
+title: Docker 镜像仓库
+description: 拉取现有的应用镜像，并把 Coolify 构建出的镜像推送到 Docker 镜像仓库。
+---
+
+# Docker 镜像仓库
+
+Coolify 既可以拉取现有镜像供 Docker Image 应用使用，也可以推送由应用源码构建出的镜像。
+
+镜像仓库的认证信息由 Docker 存储，对应的是 Coolify 执行 Docker 命令所用的服务器用户。
+
+## 拉取现有镜像
+
+创建一个 [Docker Image 应用](/applications/deployments/docker-image)，并填写镜像引用：
+
+```sh
+ghcr.io/example/api:1.4.0
+```
+
+也可以使用 SHA256 digest：
+
+```sh
+ghcr.io/example/api@sha256:<digest>
+```
+
+digest 标识固定的镜像内容。而标签（tag）在仓库发布同名标签的另一个镜像之后，可能解析到不同的内容。
+
+## 推送 Coolify 构建的镜像
+
+打开 **常规（General）> Docker Registry**。
+
+| 字段 | 用途 |
+| :--- | :--- |
+| **Docker Image** | 镜像仓库与仓库名，例如 `ghcr.io/example/api`。留空则 Coolify 不会推送构建出的镜像。 |
+| **Docker Image Tag** | 可选的附加标签。对于基于 Git 的构建，Coolify 还会用源提交（source commit）为镜像打标签。 |
+
+部署应用，并确认仓库中出现了预期的镜像和标签。
+
+<span id="docker-credentials" />
+
+## 认证私有镜像仓库
+
+在主导航栏打开 **Registries**（镜像仓库），或前往 **Servers（服务器）> [服务器] > Registries**。该页面列出了已保存的服务器登录凭据，以及应用所需的镜像仓库。
+
+1. 选择 **Log in**（登录）；如果使用全局页面，还需选择目标服务器。
+2. 选择服务商预设：Docker Hub、GHCR、GitLab、Google Artifact Registry、Azure ACR、AWS ECR，或自定义镜像仓库。
+3. 填写镜像仓库地址、用户名以及密码或令牌（token）。Google Artifact Registry 还可以使用服务账号 JSON 密钥。
+4. 选择 **Log in**。Coolify 会以所配置的服务器用户执行 `docker login`。
+5. 部署前先验证登录是否可用。用 **Update login**（更新登录）替换凭据，或用 **Log out**（退出登录）移除登录。
+
+Coolify 不会把令牌存入自己的数据库。Docker 把服务器登录信息保存在 `~/.docker/config.json` 中；这些凭据只是经过编码，并没有加密。每一台需要该镜像的部署和构建服务器都要完成认证。
+
+API 提供 `GET /servers/{uuid}/registries`、`POST /servers/{uuid}/registries`、`POST /servers/{uuid}/registries/{registry}/check` 和 `DELETE /servers/{uuid}/registries/{registry}`。列出镜像仓库登录信息需要 `read:sensitive` 权限。
+
+### 通过 SSH 认证
+
+也可以用所配置的服务器用户通过 SSH 连接服务器并完成认证：
+
+```bash
+docker login <registry-host>
+```
+
+基于令牌的认证方式：
+
+```bash
+printf '%s' "$REGISTRY_TOKEN" | docker login <registry-host> --username <registry-user> --password-stdin
+```
+
+Docker 会为该服务器用户保存凭据。每一台需要推送或拉取私有镜像的机器都要重复这个认证。
+
+<Callout type="warning" title="构建服务器需要共享的镜像仓库链路">
+
+构建服务器无法直接运行构建完成的应用。请配置镜像仓库镜像名，并让构建服务器和部署服务器都完成认证，前者才能推送镜像、后者才能拉取镜像。
+
+</Callout>
+
+## 在 Docker Swarm 中使用镜像仓库
+
+每一个可能运行该应用的 manager 和 worker 节点，都必须能解析、访问镜像仓库并完成认证。
+
+Coolify 会把镜像仓库认证传给 `docker stack deploy`，但镜像仍必须能被每个 Swarm 节点从仓库拉取。在依赖该部署之前，先在每个节点上测试一次镜像拉取。
+
+## 在 Coolify 中托管镜像仓库
+
+Coolify 自带 [Docker Registry 一键服务](/services/docker-registry)。
+
+当前模板会：
+
+- 运行 `registry:3`
+- 通过 Coolify 服务变量创建仓库用户名和密码
+- 在服务启动时生成 htpasswd 文件
+- 把镜像存储在持久化的 `registry-data` 卷中
+
+创建该服务并配置公开域名，然后在每台需要推送或拉取镜像的服务器上，用生成的凭据执行 `docker login <registry-domain>`。
+
+随着镜像和标签不断增多，仓库存储会持续增长。请把 `registry-data` 卷纳入备份，在 Coolify 之外配置保留策略；如果仓库需要使用外部存储后端，请参阅上游的 [存储驱动文档](https://distribution.github.io/distribution/storage-drivers/)。

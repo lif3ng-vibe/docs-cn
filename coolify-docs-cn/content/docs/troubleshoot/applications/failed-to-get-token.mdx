@@ -1,0 +1,18 @@
+---
+title: 部署期间获取访问令牌失败
+description: 修复 Coolify 部署中因 NTP 时间同步问题影响身份验证期间 JWT "iat" 声明校验而导致的 GitHub 访问令牌错误。
+---
+
+# 获取访问令牌失败
+
+你的部署失败了，因为无法从 GitHub 获取访问令牌（access token）。
+
+该错误通常与 NTP 时间同步问题有关。
+
+
+## 错误
+`'Issued at' claim (iat) must be an Integer representing the time that assertion issued.`
+
+
+## 解决方案
+请参照 [2FA 突然失效](/troubleshoot/server/two-factor-stopped-working)页面的解决方案进行操作。

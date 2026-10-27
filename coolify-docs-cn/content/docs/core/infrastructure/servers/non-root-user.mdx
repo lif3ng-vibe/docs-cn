@@ -1,0 +1,198 @@
+---
+title: 非 root 用户
+description: 创建非 root SSH 用户，并授予 Coolify 管理服务器所需的访问权限。
+---
+
+# 使用非 root 服务器用户
+
+Coolify 可以使用 `root` 以外的账号连接服务器。该功能为实验性，且仍要求该账号能通过免密 `sudo` 执行命令。
+
+<Callout type="warning" title="该账号仍拥有 root 级权限">
+本指南创建的用户可以免密以 `root` 身份运行任何命令。请使用专属于 Coolify 的专用账号和 SSH 密钥。
+</Callout>
+
+本指南以 `cooluser` 作为用户名。请把 `cooluser` 替换为你想用的用户名。
+
+---
+
+## 配置非 root 用户
+
+<Steps>
+<Step>
+
+### 以 root 登录
+
+通过 SSH 或服务器控制台以 `root` 连接服务器。
+
+在 Coolify 成功验证新账号之前，保持此会话不断开。
+
+</Step>
+<Step>
+
+### 创建用户
+
+根据服务器操作系统运行对应命令。
+
+<Tabs id="non-root-user-operating-system" items={['Ubuntu 或 Debian', 'RHEL 系', 'SUSE', 'Arch Linux', 'Alpine Linux']}>
+<Tab value="Ubuntu 或 Debian">
+
+```sh
+useradd --create-home --user-group --shell /bin/bash --password 'NP' cooluser
+```
+
+</Tab>
+<Tab value="RHEL 系">
+
+适用于 CentOS、RHEL、Rocky Linux、AlmaLinux、Fedora、Amazon Linux、Oracle Linux 或 TencentOS。
+
+```sh
+useradd --create-home --user-group --shell /bin/bash --password 'NP' cooluser
+```
+
+</Tab>
+<Tab value="SUSE">
+
+```sh
+useradd --create-home --user-group --shell /bin/bash --password 'NP' cooluser
+```
+
+</Tab>
+<Tab value="Arch Linux">
+
+```sh
+useradd --create-home --user-group --shell /bin/bash --password 'NP' cooluser
+```
+
+</Tab>
+<Tab value="Alpine Linux">
+
+```sh
+adduser -D -s /bin/ash cooluser
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="info" title="为什么使用 --password 'NP'">
+`--password 'NP'` 让账号保持未锁定，同时禁用密码登录（`NP` 不是合法的哈希值）。新建账号若不做处理，密码处于锁定状态（`/etc/shadow` 中显示 `!`），而 OpenSSH 会拒绝密钥登录被锁定的账号，导致 Coolify 的服务器验证失败。
+
+Alpine 的 busybox `adduser` 没有对应的参数，账号会保持锁定。Alpine 的 OpenSSH 编译时未启用 PAM，仍接受密钥登录，因此无需处理。如果你的 Alpine 构建启用了 PAM，请用 `apk add shadow && usermod -p 'NP' cooluser` 解锁账号。
+</Callout>
+
+确认账号存在且未锁定：
+
+```sh
+id cooluser
+passwd -S cooluser
+```
+
+`id` 会输出用户的 ID 和分组信息。在 `passwd -S` 的输出中，状态字段（第二列）应为 `P` 而不是 `L`。
+
+</Step>
+<Step>
+
+### 打开 Coolify 控制台
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/private-keys/private-keys-page.webp" alt="Coolify 的 Private Keys 页面与 Add 按钮" />
+
+1. 在侧边栏选择 **Keys & Tokens**。
+2. 选择 **Private Keys**（私钥）。
+3. 打开 **New private key**（新建私钥）。
+
+</Step>
+<Step>
+
+### 生成 SSH 密钥
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/private-keys/new-private-key-form.webp" alt="Coolify 的 New Private Key 表单" />
+
+1. 选择 **Generate ED25519**（生成 ED25519），Coolify 会生成并保存密钥。
+2. 点击其 **Edit**（编辑）图标，输入 `cooluser-key` 之类的名称。
+3. 复制完整的 **Public key**（公钥）。
+4. 选择 **Save changes**（保存更改）。
+
+不要给私钥添加 passphrase。Coolify 必须能在无交互提示的情况下使用它。
+
+</Step>
+<Step>
+
+### 把密钥添加给新用户
+
+回到服务器上的 root 会话，运行：
+
+```sh
+install -d -m 700 -o cooluser -g cooluser /home/cooluser/.ssh
+nano /home/cooluser/.ssh/authorized_keys
+```
+
+在新的一行粘贴公钥并保存文件，然后运行：
+
+```sh
+chown cooluser:cooluser /home/cooluser/.ssh/authorized_keys
+chmod 600 /home/cooluser/.ssh/authorized_keys
+```
+
+</Step>
+<Step>
+
+### 允许免密 sudo
+
+确认已安装 `sudo` 命令，然后以 `root` 运行：
+
+```sh
+echo 'cooluser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/cooluser
+chmod 440 /etc/sudoers.d/cooluser
+```
+
+检查新用户能否免密使用 `sudo`：
+
+```sh
+su - cooluser -c 'sudo -n whoami'
+```
+
+该命令应直接输出 `root`，不询问密码。
+
+</Step>
+<Step>
+
+### 准备 Coolify 数据目录
+
+Coolify 把应用、数据库、服务、代理和证书文件存放在服务器的 `/data/coolify` 下。
+
+创建目录并把所有权交给非 root 用户：
+
+```sh
+mkdir -p /data/coolify
+chown -R cooluser:cooluser /data/coolify
+chmod -R o-rwx /data/coolify
+```
+
+现在 `cooluser` 用户可以管理 `/data/coolify` 下的文件。为非 root 服务器用户创建其他目录时，Coolify 也采用相同的属主模式。
+
+</Step>
+<Step>
+
+### 继续添加服务器
+
+按照[连接服务器](/core/infrastructure/servers/add-server#连接服务器)添加并验证服务器。
+
+填写服务器表单时：
+
+- 在 **User** 中填 `cooluser`。
+- 选择公钥已添加到 `/home/cooluser/.ssh/authorized_keys` 的那把私钥。
+- 跳过该指南中的密钥创建步骤，因为密钥已配置完成。
+
+验证完成后，服务器的 **General** 页面应显示 **Server is reachable and validated**（服务器可达且已验证）。
+
+如果验证失败：
+
+- 再运行一次 `su - cooluser -c 'sudo -n true'`。如果询问密码，说明 sudo 规则有误。
+- 运行 `passwd -S cooluser` 确认状态为 `P`。状态为 `L`（锁定）的账号会拒绝密钥登录。
+- 确认公钥已写入 `/home/cooluser/.ssh/authorized_keys`。
+- 确认 Coolify 中 **User** 是 `cooluser`。
+- 检查 [OpenSSH](/core/infrastructure/servers/openssh) 设置和 SSH 端口的[防火墙](/core/infrastructure/servers/firewall)规则。
+
+</Step>
+</Steps>
+
+即使 SSH 用户无法直接写入 `/data/coolify`，Coolify 也支持代理操作、数据库启动/备份、部署、日志转发和卷克隆。请保持文档所述的 sudo 访问可用，而不要把资源数据目录改为广泛可写。

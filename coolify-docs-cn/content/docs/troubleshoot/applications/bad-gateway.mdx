@@ -1,0 +1,171 @@
+---
+title: Bad Gateway 错误
+description: 通过检查端口配置、主机映射、监听地址与容器健康状态，修复 Coolify 中的 Bad Gateway（502）错误。
+tags: ["Bad Gateway", "502", "Troubleshooting", "Coolify", "Traefik"]
+---
+
+# Bad Gateway（502）错误
+
+如果通过服务器 IP 地址加端口访问你部署的应用**有时**可以打开，但通过自己的域名访问时却出现 **Bad Gateway** 错误，问题多半源于端口配置不当、主机映射错误，或应用只监听 localhost。
+
+## 应用与服务有什么区别？
+
+- **应用**（Application）：由你使用 Git 仓库或**除一键服务之外**的任何部署方式部署的应用。
+
+- **服务**（Service）：通过 Compose 文件或 Coolify 一键服务部署的应用。这类部署可能有不同的网络设置和 UI 区块（例如你在 UI 中可能看不到 Network 部分）。
+
+## 症状
+
+- 应用可以通过服务器 IP 加端口号访问，但无法通过域名访问。
+
+## 诊断
+
+<Steps>
+<Step>
+
+### 端口配置
+
+- **应用**：确认应用监听的端口已正确填写在 Coolify 面板的 **Port Exposes**（暴露端口）字段中。
+- **服务**：检查 Compose 或一键服务配置中的网络设置是否恰当。
+
+</Step>
+<Step>
+
+### 主机映射
+
+- **应用**：确认应用端口没有错误地映射到宿主机系统。
+- **服务**：确认 Compose 文件或服务配置中的端口映射与代理的路由要求一致。
+
+</Step>
+<Step>
+
+### 监听地址
+
+检查应用是否在容器内只监听 `localhost`。应将其配置为监听所有网络接口（`0.0.0.0`）。
+
+</Step>
+<Step>
+
+### 域名中包含端口
+
+如有需要，确保你的域名 URL 中带有正确的端口号。
+
+</Step>
+<Step>
+
+### 容器状态
+
+检查应用或服务所在容器的状态：是否显示 unhealthy（不健康）？是否卡在 Starting？健康检查失败可能就是原因所在。
+
+</Step>
+</Steps>
+
+## 解决方案
+
+<Tabs items={['应用', '服务']}>
+<Tab value="应用">
+
+<Steps>
+<Step>
+
+### 更新端口设置
+
+在 Coolify 面板的 **Port Exposes**（暴露端口）字段中填入正确的端口号，然后重启应用。
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/1.webp" alt="显示 Bad Gateway 的截图" />
+
+</Step>
+<Step>
+
+### 移除主机端口映射
+
+如果端口被映射到了宿主机，请移除该映射，让代理能正确路由流量，然后重启应用。
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/2.webp" alt="显示 Bad Gateway 的截图" />
+
+</Step>
+<Step>
+
+### 调整监听地址
+
+修改应用，让它监听所有网络接口（`0.0.0.0`），而不是只监听 `localhost`。
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/3.webp" alt="显示 Bad Gateway 的截图" />
+
+</Step>
+<Step>
+
+### 修正域名 URL
+
+如有需要，在域名 URL 末尾补上正确的端口号，然后重启应用。
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/4.webp" alt="显示 Bad Gateway 的截图" />
+
+</Step>
+<Step>
+
+### 重启容器 / 检查日志
+
+重启容器，或查看容器日志来定位问题。
+
+<ZoomImage src="/docs-cn/coolify/images/troubleshoot/applications/bad-gateway/5.webp" alt="显示 Bad Gateway 的截图" />
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="服务">
+
+服务没有 **Port Exposes**（暴露端口）字段，端口配置方式有所不同。请按以下步骤逐一排查。
+
+<Steps>
+<Step>
+
+### 在域名 URL 中设置正确端口
+
+对于服务，应用监听的端口直接写在 **Domains**（域名）字段 URL 的**末尾**（例如 `https://example.com:3000`）。
+
+确保 URL 末尾的端口与应用在容器内实际监听的端口一致。如果指向了错误的端口，请改正后重启服务。
+
+</Step>
+<Step>
+
+### 检查监听地址
+
+确保服务在容器内监听所有网络接口（`0.0.0.0`），而不只是 `localhost` 或 `127.0.0.1`。绑定在 `localhost` 上的服务从代理一侧无法访问。
+
+</Step>
+<Step>
+
+### 检查 Compose 端口映射
+
+如果 Compose 文件把端口发布到了宿主机（例如 `ports: - "3000:3000"`），代理可能无法路由到该端口。应让 Coolify 通过域名来路由流量，而不是把端口映射到宿主机，然后重启服务。
+
+</Step>
+<Step>
+
+### 验证健康检查
+
+如果配置了健康检查，确保它能够通过。容器不健康或卡在启动状态时，代理就没有健康目标可以转发流量。可临时禁用健康检查来测试——如果错误随之消失，问题就出在健康检查上。
+
+</Step>
+<Step>
+
+### 重启并检查日志
+
+重启服务并查看容器日志，排查遗留问题。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## 支持
+
+如果以上步骤仍未解决问题，请加入我们的 [Discord 社区](https://coolify.io/discord)，并提供：
+
+- 应用日志
+- Coolify 代理日志
+- 配置截图
+- 你已经尝试过的步骤

@@ -1,0 +1,63 @@
+---
+title: 执行历史
+description: 在 Coolify 中查看计划任务的状态、耗时、输出和可下载日志。
+---
+
+# 计划任务执行历史
+
+Coolify 会在 **Recent executions** 下记录每一次计划执行和手动执行。借助这些记录，你可以确认命令是否执行完毕，并在失败时检查其输出。
+
+## 打开执行历史
+
+1. 打开应用或服务。
+2. 选择 **Scheduled Tasks**。
+3. 选择一个任务。
+4. 滚动到 **Recent executions**。
+
+Coolify 显示最近 20 条执行记录，按时间倒序排列。
+
+---
+
+## 解读执行记录
+
+| <span className="inline-block min-w-28 whitespace-nowrap">状态</span> | 含义 | 处理方式 |
+| --- | --- | --- |
+| <span className="whitespace-nowrap"><strong>In Progress</strong></span> | 命令仍在运行。 | 在 Coolify 刷新记录期间保持任务页面打开。 |
+| <span className="whitespace-nowrap"><strong>Success</strong></span> | 命令已退出且未报告错误。 | 打开输出，确认命令产生了预期结果。 |
+| <span className="whitespace-nowrap"><strong>Failed</strong></span> | 命令失败、超时，或无法在所选容器中运行。 | 打开输出，从第一条报错看起。 |
+
+已完成的记录还会显示开始时间、结束时间和耗时。时间按运行资源的服务器所配置的时区显示。
+
+---
+
+## 查看与下载输出
+
+查看计划命令及其输出需要拥有更新该资源的权限。通过 API 访问任务输出需要 `read:sensitive` 权限。
+
+点击某条执行记录即可展开其捕获的输出。
+
+输出较长时，点击 **Load More** 展开下一批行，或点击 **Load All** 显示完整的捕获输出。点击 **Download Logs** 可将非空输出保存为 `.log` 文件。
+
+一次执行也可能在没有打印任何输出的情况下成功。当输出本身不足以判断时，请核实命令的实际执行结果。
+
+---
+
+## 故障排除
+
+<Accordions type="multiple">
+<Accordion title="执行一直处于 In Progress">
+
+超出超时时间的执行会被标记为失败，并附上超时错误。丢失的已排队计划任务会被记录为失败，并通知团队。刷新任务页面查看结果。如果命令经常需要更多时间，可调大 **Timeout** 后重新运行。控制台最多接受 `36000` 秒。
+
+</Accordion>
+<Accordion title="没有记录到输出">
+
+命令可能没有向标准输出或标准错误写入内容。请检查命令预期产生的效果。如果需要可见的记录，可修改命令或脚本，让其打印一条简洁的成功或失败信息。
+
+</Accordion>
+<Accordion title="执行因找不到有效容器而失败">
+
+确认资源正在运行，且 **Container name** 或 **Service name** 与目标组件一致。保存任务后，再点击 **Execute Now**。
+
+</Accordion>
+</Accordions>

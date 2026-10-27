@@ -1,0 +1,41 @@
+---
+title: SvelteKit
+description: 在 Coolify 上部署 SvelteKit 应用：用 adapter-static 做静态构建，或用 adapter-node 做 Node 服务器构建。
+---
+
+# SvelteKit
+
+SvelteKit 是一个可构建各种规模 Web 应用的框架，开发体验出色，并提供灵活的基于文件系统的路由。
+
+## 静态构建（`adapter-static`）
+
+构建静态站点需要使用 `@sveltejs/adapter-static` 适配器（[文档](https://kit.svelte.dev/docs/adapter-static)）。
+
+1. 在 **General > Build pipeline**（常规 > 构建流水线）下，在 **Site type**（站点类型）中选择 **Static**（静态）。
+2. 将 `Publish Directory` 设为 `/build`
+
+## Node 服务器（`adapter-node`）
+
+构建基于 Node 服务器的 SvelteKit 应用需要使用 `@sveltejs/adapter-node` 适配器（[文档](https://kit.svelte.dev/docs/adapter-node)）。
+
+1. 在 **General > Build pipeline**（常规 > 构建流水线）下，在 **Site type**（站点类型）中选择 **Dynamic**（动态）。
+2. 将 `Install Command` 设为 `npm install`。
+3. 将 `Build Command` 设为 `npm run build`。
+4. 将 `Start Command` 设为 `node build`。
+5. 选择 **Save changes**（保存更改）。
+6. 在 Environment Variables（环境变量）标签页中，查看 Nix 支持的当前 Node 版本。在下面的示例截图中为 `version 22`。
+  <ZoomImage src="/docs-cn/coolify/images/applications/sveltekit/deploy-settings.png" />
+7. 在 `package.json` 中添加 `engines`，填入与环境变量一致的 Node 版本。例如
+
+```json
+"engines": {
+			"node": ">=22"
+}
+```
+
+8. 提交 Git commit
+9. 在 Coolify 控制面板中点击 Deploy（部署）
+10. 添加一个环境变量 `ORIGIN`，值为应用的实际域名。例如：
+    <ZoomImage src="/docs-cn/coolify/images/applications/sveltekit/env-vars.png" />
+11. 可选但推荐：打开 **Healthcheck**（健康检查），选择 **Enable**（启用），并确认 **Enable healthcheck**（启用健康检查）
+    <ZoomImage src="/docs-cn/coolify/images/applications/sveltekit/healthcheck.png" />

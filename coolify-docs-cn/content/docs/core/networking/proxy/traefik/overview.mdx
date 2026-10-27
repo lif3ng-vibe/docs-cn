@@ -1,0 +1,94 @@
+---
+title: Traefik 概览
+description: 了解 Coolify 如何使用 Traefik，并针对常见代理改动选择正确的指南。
+---
+
+import { ArrowsRight, ChartSquare, Lock2, Route, ShieldSecurity2 } from 'reicon-react';
+
+# Traefik 概览
+
+Traefik 是 Coolify 默认集成的反向代理。Coolify 会根据资源的域名和容器端口生成 Traefik 路由，把代理接入所需的 Docker 网络，并为 HTTPS 域名自动配置 TLS 证书。
+
+大多数部署不需要直接编辑 Traefik。只有当生成的默认配置无法满足你的路由、证书或认证需求时，才需要参考这些代理指南。
+
+<CoolCallout icon={ArrowsRight} title="简要说明">
+
+在应用或服务上设置一个域名，Coolify 就会生成常规的 Traefik 路由。动态配置用于定义可复用的基于文件的中间件、自定义证书、仪表盘和负载均衡服务。
+
+修改主 Traefik Docker Compose 配置后需要重启代理。基于文件的动态配置会被实时监听，无需重启 Traefik 即可生效。
+
+</CoolCallout>
+
+---
+
+## Coolify 管理的内容
+
+Coolify 会配置：
+
+- 已连接服务器上的 `coolify-proxy` Traefik 容器
+- 端口 `80` 和 `443` 上的公共 `http` 与 `https` 入口点
+- 用于生成路由和动态配置的 Docker 与 file provider
+- 用于 HTTP challenge 的 `letsencrypt` TLS 证书解析器
+- 资源的路由器、中间件、服务和目标端口标签
+- 让 Traefik 能够访问已路由资源的 Docker 网络
+
+主配置存储在 `/data/coolify/proxy/docker-compose.yml`。Traefik file provider 配置存储在 `/data/coolify/proxy/dynamic/` 下，并挂载到代理容器内的 `/traefik/dynamic/`。
+
+<Callout type="warning" title="在 Coolify 中编辑主配置">
+代理配置在 Coolify 中保存后，Coolify 不会把对 `/data/coolify/proxy/docker-compose.yml` 的手动改动同步回 UI。请前往 **Servers > 你的服务器 > Proxy > Configuration** 进行修改并在那里保存。通过 Coolify 启动或重启代理时，会把它保存的配置写入磁盘，可能覆盖仅存在于磁盘上的修改。
+</Callout>
+
+<Callout type="warning" title="保持生成的路由完好">
+重置代理配置会移除主 Docker Compose 文件中的自定义更改。如果选择了手动管理标签后再编辑应用标签，则需要由你自行保留每一条生成的路由和中间件标签。
+</Callout>
+
+---
+
+## 选择 Traefik 指南
+
+如果 Coolify 显示了新版本提示，请按照[更新 Traefik](/core/networking/proxy/traefik/update)检查兼容性、更改镜像版本并重启代理。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '保护资源',
+      href: '/core/networking/proxy/traefik/basic-auth',
+      description: '通过 Coolify 或 Traefik 标签添加 HTTP 基本认证。',
+      icon: Lock2,
+    },
+    {
+      title: '添加动态配置',
+      href: '/core/networking/proxy/traefik/dynamic-config',
+      description: '创建可复用的基于文件的中间件、路由器、服务和 TLS 设置。',
+      icon: Route,
+    },
+    {
+      title: '打开仪表盘',
+      href: '/core/networking/proxy/traefik/dashboard',
+      description: '通过一个专用的、经过认证的域名公开 Traefik 仪表盘。',
+      icon: ChartSquare,
+    },
+  ]}
+  groups={[
+    {
+      title: '证书',
+      description: '选择 Traefik 获取或加载 TLS 证书的方式。',
+      icon: ShieldSecurity2,
+      links: [
+        { title: '自定义 SSL 证书', href: '/core/networking/proxy/traefik/custom-ssl-certs' },
+        { title: 'DNS challenge', href: '/core/networking/proxy/traefik/dns-challenge' },
+        { title: '泛域名证书', href: '/core/networking/proxy/traefik/wildcard-certs' },
+      ],
+    },
+    {
+      title: '高级路由',
+      description: '调整 Traefik 处理和分发请求的方式。',
+      icon: Route,
+      links: [
+        { title: '自定义中间件', href: '/core/networking/proxy/traefik/custom-middlewares' },
+        { title: '负载均衡', href: '/core/networking/proxy/traefik/load-balancing' },
+        { title: '使用 Authentik 保护', href: '/core/networking/proxy/traefik/protect-services-with-authentik' },
+      ],
+    },
+  ]}
+/>

@@ -1,0 +1,79 @@
+---
+title: 概览
+description: 了解 Nixpacks 如何识别应用的代码库并生成镜像构建指令。
+---
+
+# Nixpacks
+
+Nixpacks 会从代码库中识别应用的语言和框架，并生成一个 Dockerfile。Coolify 再根据这些生成的指令构建应用镜像。
+
+当代码库遵循受支持的约定、且不需要自定义 Dockerfile 时，可以使用 Nixpacks。Nixpacks 适用于基于 Git 的应用。
+
+<Callout type="warning" title="Nixpacks 已进入维护模式">
+
+Railway 已声明 [Nixpacks](https://github.com/railwayapp/nixpacks) 不再活跃开发，并推荐 [Railpack](https://github.com/railwayapp/railpack) 作为后继者。
+
+Coolify 仍然支持 Nixpacks。新建应用时可以先评估 Railpack，但注意 Coolify 目前把 Railpack 标记为 **Beta**。在切换现有应用之前请先测试生成的镜像，因为两个构建器使用的配置文件不同，产出也可能不同。
+
+</Callout>
+
+## 何时使用 Nixpacks
+
+Nixpacks 适合以下场景：
+
+- 应用使用 Nixpacks 支持的语言或框架
+- 清单文件和锁文件位于所配置的**基础目录**（Base Directory）内
+- 自动识别安装、构建和启动命令已经足够
+- 构建只需要少量命令、软件包或阶段（phase）覆盖
+
+当镜像需要精确的基础镜像、操作系统配置、复制指令、用户或构建阶段时，请使用 [Dockerfile](/applications/builds/dockerfile)。
+
+完整的配置流程请参阅[使用 Nixpacks 部署](/applications/builds/nixpacks/deploy)。
+
+## Coolify 如何使用 Nixpacks
+
+每次部署时，Coolify 都会把应用源码目录和构建配置交给 Nixpacks。Nixpacks 识别提供商（provider）、软件包和命令，然后生成用于构建镜像的 Dockerfile。
+
+服务器应用：Coolify 用该镜像启动容器，并把请求路由到已配置的内部端口。
+
+静态应用：Nixpacks 构建前端，Coolify 把所选的 **Publish Directory**（发布目录）复制进 Nginx 镜像。
+
+## 配置 Nixpacks
+
+Coolify 会在 **General**（常规）下显示识别出的 **Install Command**（安装命令）、**Build Command**（构建命令）和 **Start Command**（启动命令）。只覆盖应用确实需要修改的命令。
+
+Nixpacks 也可以从应用源码目录读取 `nixpacks.toml` 或 `nixpacks.json`。当构建需要 Coolify 命令字段无法表达的软件包、阶段或行为时，使用配置文件。
+
+Nixpacks 的环境变量使用 `NIXPACKS_` 前缀。在 **Environment Variables**（环境变量）下添加构建配置，并保持 **Build time**（构建时机）为 **Available during build**（构建期间可用）。
+
+受支持的文件格式请参阅 [Nixpacks configuration documentation](https://nixpacks.com/docs/configuration/file?utm_source=coolify.io)。
+
+## 静态应用
+
+当 **Site type**（站点类型）为 **Static**（静态）或 **SPA (single-page application)**（单页应用）时，Coolify 会通过 Nginx 承载所选的发布目录。
+
+只有当默认静态服务器配置不够用时，才使用 **常规（General）> 构建流水线（Build pipeline）> Custom Nginx configuration（自定义 Nginx 配置）**。保存更改后需要重新部署，因为 Coolify 会在镜像构建期间把配置复制进最终的静态镜像。
+
+## Node.js 版本
+
+Nixpacks 会从 `engines.node`、`.nvmrc`、`.node-version` 等仓库配置中，或从 `NIXPACKS_NODE_VERSION` 选择 Node.js 版本。
+
+在依赖特定次版本或补丁版本之前，请先阅读 [Node.js 版本选择](/applications/builds/nixpacks/node-versioning)。
+
+### 让 Node.js 使用多个 CPU 核
+
+普通的 Node.js 进程只会使用一个 CPU 核。当 Node.js 或 Bun 应用需要通过一次 Nixpacks 部署利用多个核时，请参阅 [Node.js 多核扩展](/knowledge-base/nodejs-multi-core-scaling)。
+
+## 排查识别问题
+
+如果构建使用了错误的提供商或命令：
+
+1. 确认**基础目录**（Base Directory）中包含应用清单文件
+2. 查看部署日志中生成的构建计划
+3. 从该源码目录中移除相互冲突的锁文件或清单文件
+4. 添加 Nixpacks 配置文件，或覆盖受影响的命令
+5. 构建需要完全掌控镜像时，改用 [Dockerfile](/applications/builds/dockerfile)
+
+### Nixpacks 解析出旧版软件包
+
+Nixpacks 可能从其选定的 nixpkgs 归档中解析出旧版软件包。Node.js 相关内容请阅读 [Node.js 版本选择](/applications/builds/nixpacks/node-versioning)；其他软件包请参阅上游的 [nixpkgs archive setting](https://nixpacks.com/docs/configuration/file#nixpkgs-archive?utm_source=coolify.io)，并在投入生产前先测试归档变更。

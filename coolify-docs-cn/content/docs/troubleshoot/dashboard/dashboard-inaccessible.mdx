@@ -1,0 +1,137 @@
+---
+title: 无法通过实例域名访问面板
+description: 通过检查代理状态、容器健康状况、防火墙端口并排查域名配置，解决 Coolify 面板无法访问的问题。
+---
+
+# Coolify 面板无法访问
+
+无法访问 Coolify 面板？请按照以下步骤排查并解决问题。
+
+<Steps>
+<Step>
+
+### 确定你的访问方式
+
+先问自己一个问题：**你打算怎么访问面板？**
+
+- **自定义域名**：如果你用的是为 Coolify 面板配置的域名，问题可能出在 Coolify 代理上。
+- **服务器 IP 直连**：如果你用的是服务器 IP 地址，问题可能与服务器或容器状态有关。
+
+</Step>
+<Step>
+
+### 用服务器 IP 测试
+
+### A. 开放防火墙端口
+
+- **操作**：确保防火墙已放行 `8000` 端口。
+- **原因**：这样可以不经过代理直接访问 Coolify 面板。
+
+### B. 直接访问面板
+
+- **操作**：打开浏览器访问：`http://203.0.113.1:8000`（把 `203.0.113.1` 换成你服务器的实际 IP 地址）
+- **观察结果**：
+  - 如果能看到登录页，说明面板不经过代理也工作正常（跳到[第 4 步](#处理代理相关问题)）。
+  - 如果看不到登录页，问题可能出在服务器或 Coolify 的 Docker 容器上。
+
+</Step>
+<Step>
+
+### 检查 Coolify 容器
+
+如果通过 IP 地址无法访问面板，请按以下步骤操作：
+
+### A. 确认容器状态
+
+- **操作**：SSH 到你的服务器。
+- **命令**：
+  ```bash
+  docker ps --format "table {{.Names}}\t{{.Status}}"
+  ```
+- **检查要点**：
+
+  - 确认 Coolify 相关容器都在运行且状态健康。
+
+    <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dashboard/dashbord-inaccessible/1.webp" alt="显示面板无法访问的截图" />
+
+### B. 重启容器（如有必要）
+
+- **操作**：如果容器显示在运行但问题依旧，尝试重启它。
+- **命令**：
+  ```bash
+  docker restart NAME
+  ```
+  （把 `NAME` 换成你的实际容器名）
+- **测试**：重启后再次访问 `http://203.0.113.1:8000`（把 `203.0.113.1` 换成你服务器的实际 IP 地址）。如果仍不行，跳到[第 5 步](#寻求进一步帮助)
+
+### C. Coolify 相关容器端口冲突
+
+有时问题出在非 Coolify 容器占用了与 Coolify 面板相同的端口（如 8000 端口），从而引发冲突。
+
+- **步骤**：
+
+1. SSH 到你的服务器。
+2. 优雅地停止所有 Docker 容器：
+   ```bash
+   docker stop $(docker ps -q)
+   ```
+3. 只启动与 Coolify 相关的容器：
+   ```bash
+   docker start $(docker ps -a -q --filter "name=coolify")
+   ```
+4. 再次访问 Coolify 面板。8000 端口上的冲突已清除，此时面板应该可以访问了。
+
+- **后续**：在 Coolify 面板中检查是否有容器与 Coolify 实例使用了相同端口，并相应修改端口（别忘了核对防火墙规则）
+
+</Step>
+<Step>
+
+### 处理代理相关问题
+
+如果面板通过服务器 IP 可以访问但自定义域名不行，请按以下步骤操作：
+
+### A. 启动代理
+
+- **操作**：进入 Coolify 面板的 **Proxy**（代理）页面。
+- **动作**：点击 **Start Proxy**（启动代理）按钮。
+
+    <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dashboard/dashbord-inaccessible/2.webp" alt="显示面板无法访问的截图" />
+
+- **等待**：等大约两分钟，再用自定义域名访问面板试试。
+
+### B. 检查最近的改动
+
+- **自问**：问题出现之前你是否改过代理配置？
+
+  - **如果是**：把代理配置重置为默认设置，然后重启代理。
+
+    <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dashboard/dashbord-inaccessible/3.webp" alt="显示面板无法访问的截图" />
+
+  - **等待**：等大约两分钟，再用自定义域名访问面板试试。
+
+### C. 查看代理日志
+
+- **操作**：查看代理日志中有没有报错或警告信息。
+
+    <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dashboard/dashbord-inaccessible/4.webp" alt="显示面板无法访问的截图" />
+
+- **后续**：如果看到报错，它们可能提示了需要修复的地方（跳到下一步）。
+
+</Step>
+<Step>
+
+### 寻求进一步帮助
+
+如果以上步骤都无效，请这样做：
+
+- **社区求助**：加入我们的 [Discord 社区](https://coolify.io/discord)，在支持论坛频道发帖。
+- **要提供的内容**：把你看到的完整报错信息，以及已经尝试过的步骤一并说明。
+
+</Step>
+</Steps>
+
+## 常见问题小结
+
+- **代理未运行**：多数问题往往是 Coolify 代理没有运行导致的。
+- **代理配置错误**：代理配置中的错误设置可能阻断访问。
+- **容器健康**：Coolify 容器不健康也可能是原因。

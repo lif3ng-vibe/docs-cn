@@ -1,0 +1,321 @@
+---
+title: 域名
+description: 为 Coolify 应用和服务配置域名、HTTPS、目标端口、路径、重定向、搜索引擎收录与生成的域名。
+---
+
+import { ArrowsRight, Globe3, Lock2, Route, ShieldSecurity2 } from 'reicon-react';
+
+# 域名
+
+Coolify 使用域名，让公网 HTTP 和 HTTPS 流量经过代理路由到应用或面向 Web 的服务容器。
+
+域名的 DNS 记录指向运行资源的服务器，Coolify 代理随后匹配主机名和路径，把请求转发到正确的容器端口。
+
+<CoolCallout icon={ArrowsRight} title="简明版">
+
+先完成 [DNS 设置](/core/networking/dns)，在 **Domains** 中添加主机名，在 **Protocol** 中选择 **http** 或 **https**，然后重新部署资源。
+
+使用 `https://` 即可获得自动 TLS。追加端口可以定位容器内的特定端口，追加路径则可以让多个资源共享一个主机名。
+
+</CoolCallout>
+
+---
+
+## 选择域名方案
+
+根据资源的使用方式选择合适的方案。
+
+<CoolCompare
+  id="domain-options"
+  className="not-prose"
+  columns={3}
+  icon={Globe3}
+  title="域名方案"
+  description="三种方案都通过集成的 Coolify 代理路由流量。"
+>
+<CoolCompareColumn
+  title="自己的域名"
+  items={[
+    '推荐用于生产环境的应用和服务',
+    '需要一条指向资源服务器的 DNS 记录',
+    '支持自动 TLS、路径、目标端口和重定向',
+  ]}
+/>
+<CoolCompareColumn
+  title="泛域名生成的域名"
+  items={[
+    '使用你拥有的域名并配置泛域名 DNS 记录',
+    '由 Coolify 为每个应用生成一个子域名',
+    '适合在一台服务器上创建大量应用的场景',
+  ]}
+/>
+<CoolCompareColumn
+  title="sslip.io 测试域名"
+  items={[
+    '从服务器 IP 地址生成，无需手动配置 DNS',
+    '适合验证首次部署或代理路由',
+    '面向临时测试，不适合生产流量',
+  ]}
+/>
+</CoolCompare>
+
+域名不会暴露独立的数据库。当外部客户端需要连接数据库时，请使用数据库的公开端口。
+
+以下说明假设服务器使用集成的 Traefik 或 Caddy 代理。若选择 **Custom (None)**，则需要在自己的代理中配置路由和 TLS。继续之前请先阅读[代理概览](/core/networking/proxy/overview)。
+
+---
+
+## 添加自定义域名
+
+开始之前，先[将域名指向资源服务器并验证其 DNS 记录](/core/networking/dns#将域名指向服务器)。资源服务器上必须放行入站 TCP 端口 `80` 和 `443`，并且应用要监听 Coolify 将要定位的容器端口。
+
+<Steps>
+<Step>
+
+### 在 Coolify 中填写域名
+
+打开应用或服务，在其设置侧边栏中选择 **Domains**。
+
+1. 选择 **Add domain**。
+2. 在 **Protocol** 中选择 **https** 或 **http**。
+3. 在 **Domain** 中输入主机名，例如 `app.shadowarcanist.com`。
+4. 当代理需要定位特定容器端口时设置 **Port**；路由 `/api` 这类前缀时设置 **Path**。
+5. 对于 Docker Compose，选择接收请求的非数据库 **Service**。
+6. 选择 **Add domain** 保存路由；继续之前先处理任何 DNS 或域名冲突警告。
+
+</Step>
+<Step>
+
+### 重新部署并验证域名
+
+重新部署资源，让代理使用新配置。
+
+部署完成后：
+
+1. 确认主机名解析到预期的服务器或 CDN。
+2. 在浏览器中打开配置的 URL。
+3. 确认它加载的是目标应用。
+4. 对于 `https://` URL，确认浏览器显示了预期的证书。
+
+如果最近更改过 DNS，可能需要等待上一条记录的 TTL 过期。
+
+</Step>
+</Steps>
+
+### 支持的域名格式
+
+域名表单区分 **Protocol**、**Domain**、**Port** 和 **Path**。下表展示对应的 URL 结果；每个主机名要作为单独的域名添加。
+
+| 目标 | 生成的 URL |
+| :--- | :--- |
+| 路由一个主机名 | `https://app.example.com` |
+| 路由多个主机名 | `https://app.example.com,https://www.example.com` |
+| 定位容器端口 `3000` | `https://app.example.com:3000` |
+| 将路径路由到容器端口 `80` | `https://app.example.com/api` |
+| 将路径路由到容器端口 `8080` | `https://app.example.com:8080/api` |
+
+**Port** 留空时，普通应用使用 **Ports exposes** 中的第一个值，静态站点使用端口 `80`。Docker Compose 路由在可检测到时使用所选服务检测到的端口。当检测到的默认值与应用不符时，请显式设置 **Port**。
+
+通过 **Add domain** 逐个添加多个主机名。Coolify 会规范化应用域名并拒绝重复条目。
+
+当值中同时包含端口和路径时，端口要写在路径前面：
+
+- 正确：`https://app.shadowarcanist.com:8080/api`
+- 错误：`https://app.shadowarcanist.com/api:8080`
+
+---
+
+## 路由到端口或路径
+
+域名值中的端口选择的是容器内部的端口，并不会创建公网主机端口映射。访客仍然通过代理的 `443` 端口访问 `https://` 域名。
+
+| 域名值 | 代理行为 |
+| :--- | :--- |
+| `https://app.shadowarcanist.com` | 把该主机名的请求发送到资源的默认容器端口。 |
+| `https://app.shadowarcanist.com:3000` | 把该主机名的请求发送到容器内的 `3000` 端口。 |
+| `https://shadowarcanist.com/api` | 把以 `/api` 开头的请求发送到资源的默认容器端口。 |
+| `https://shadowarcanist.com:8080/api` | 把以 `/api` 开头的请求发送到容器内的 `8080` 端口。 |
+
+基于路径的路由可以让多个资源共享一个主机名。例如，一个应用使用 `https://shadowarcanist.com`，另一个应用使用 `https://shadowarcanist.com/api`。
+
+Coolify 会根据该值创建路径前缀路由。在代理的路由模型中，更具体的路径优先于根路由。
+
+### 控制前缀剥离
+
+默认情况下，Coolify 会在转发请求之前剥离已配置的前缀。对 `https://shadowarcanist.com/api/users` 的请求到达应用时是 `/users`。
+
+如果应用期望直接收到 `/api/users`，可以在应用中打开 **Advanced > Proxy**，在 **Path prefixes** 中选择 **Keep paths as-is**。
+
+<Callout type="warning" title="不要依赖根路由作为兜底">
+让共享同一主机名的每个资源都保持运行且健康。一旦某个路径路由不可用，最终结果取决于其余的代理路由和应用的响应。
+</Callout>
+
+---
+
+## 配置 HTTPS 与重定向
+
+希望集成代理配置 TLS 时，使用 `https://` URL。Coolify 生成路由，由 Traefik 或 Caddy 申请并续期证书。
+
+`http://` 值创建的是 HTTP 路由。其他资源或代理设置仍可能把该路由重定向到 HTTPS。
+
+<Callout type="warning" title="签发证书需要公网可达的路由">
+主机名必须能通过资源服务器或配置正确的 CDN 解析，端口 `80` 和 `443` 必须能到达 Coolify 代理，且该域名必须已写入资源配置。
+</Callout>
+
+如果浏览器显示证书警告，请按照[Let's Encrypt 不工作](/troubleshoot/dns-and-domains/lets-encrypt-not-working)排查。泛域名证书请参考 [Traefik](/core/networking/proxy/traefik/wildcard-certs) 或 [Caddy DNS challenge](/core/networking/proxy/caddy/dns-challenge) 的指南。
+
+### www 与非 www 重定向
+
+在 **Domains** 中添加两个主机名，并为两者创建 DNS 记录。编辑某个域名，然后用 **www redirect** 选择规范主机名。对于 Compose 应用，该选择会应用于所选服务的所有域名。
+
+| **www redirect** | 行为 |
+| :--- | :--- |
+| **No redirect** | 同时服务两个已配置的主机名，不做 Coolify 托管的重定向。 |
+| **Redirect to www** | 把非 www 主机名重定向到已配置的 `www` 主机名。 |
+| **Redirect to non-www** | 把 `www` 主机名重定向到已配置的非 www 主机名。 |
+
+只有当 **Domains** 中存在 `www` URL 时，Coolify 才会启用 **Redirect to www**。对应的 `www` DNS 记录也必须解析到资源服务器。
+
+---
+
+## 控制搜索引擎收录
+
+Coolify 可以把单个应用或服务域名标记为 **Noindex**，无需修改应用代码。集成的 Traefik 或 Caddy 代理随后会为该域名添加以下响应头：
+
+```http
+X-Robots-Tag: noindex, nofollow
+```
+
+拥有多个域名的资源可以让生产域名保持可收录，同时把预发布或临时域名标记为 noindex。
+
+1. 打开应用或服务，在其设置侧边栏中选择 **Domains**。
+2. 编辑该域名。
+3. 在 **Search engine indexing** 中选择 **Noindex**，然后保存；选择 **Indexable** 即可移除该响应头。
+4. 重新部署资源以应用更新后的代理配置。
+5. 检查响应头：
+
+```sh
+curl -sI https://staging.example.com | grep -i x-robots-tag
+```
+
+noindex 域名会返回：
+
+```http
+x-robots-tag: noindex, nofollow
+```
+
+预览部署的域名始终以 noindex 提供。删除域名时，其已保存的收录设置也会一并删除；重命名域名则会保留该设置。
+
+<Callout type="warning" title="Noindex 不会让域名变成私有">
+搜索爬虫可以自行决定是否遵守该响应头，而且任何知道 URL 的人仍然可以打开它。需要限制访问时，请使用身份验证或网络限制。
+</Callout>
+
+对于应用，该选项只在 **General > Container labels > Label management** 设为 **Managed by Coolify (auto-generated)** 时可用。若选择手动管理标签，请在自定义代理标签中添加等效的 `X-Robots-Tag` 响应头。
+
+---
+
+## 使用生成的域名
+
+Coolify 可以根据服务器的 **Wildcard Domain** 设置生成应用域名。
+
+配置生成的域名之前，先为服务器[创建并验证泛域名 DNS 记录](/core/networking/dns#配置泛域名-dns)。
+
+<Steps>
+<Step>
+
+### 配置服务器泛域名
+
+在 Coolify 中打开 **Servers**，选择该服务器并打开 **General**。在 **Wildcard Domain** 中输入 `https://shadowarcanist.com`，然后保存服务器。
+
+</Step>
+<Step>
+
+### 生成应用域名
+
+打开该服务器上的一个应用，选择 **Domains**，再选择 **Add domain**。在表单中使用 **Generate domain**，核对生成的值后添加域名。
+
+Coolify 会生成形如 `https://<application-id>.shadowarcanist.com` 的主机名。重新部署应用后打开生成的 URL，确认它正常工作。
+
+</Step>
+</Steps>
+
+泛域名设置只影响生成的域名，不会更改已分配给资源的域名。
+
+**Wildcard Domain** 为空时，Coolify 可以根据服务器 IP 地址生成 `sslip.io` 域名。在配置自己的域名之前，可以用这个 URL 验证部署或代理路由。
+
+---
+
+## 使用 sslip.io 测试域名
+
+当服务器没有配置 [Wildcard Domain](#使用生成的域名) 时，Coolify 会在你创建资源时根据服务器 IP 地址生成一个 [sslip.io](https://sslip.io?utm_source=coolify.io) 域名。
+
+`sslip.io` 是一项免费的公共 DNS 服务，能把任何包含 IP 地址的子域名解析回该 IP 地址。无需注册、无需创建 DNS 记录、无需安装证书——它是一个*魔法解析器*：
+
+- `1.2.3.4.sslip.io` 解析到 `1.2.3.4`
+- `anything.1.2.3.4.sslip.io` 同样解析到 `1.2.3.4`
+- `myapp.staging.1.2.3.4.sslip.io` 也解析到 `1.2.3.4`
+
+由于 IP 地址编码在主机名里，sslip.io 可以为无限多的子域名提供解析，且不需要任何人提前配置 DNS。这让你在指向真实域名之前，几秒钟内就能在新服务器上获得一个可用的 URL。
+
+<Callout type="info" title="生成的 sslip.io URL 停留在 HTTP">
+生成的 URL 始终使用 `http://`。不要把它改成 `https://`：[Let's Encrypt](https://letsencrypt.org?utm_source=coolify.io) 对整个共享的 `sslip.io` 区域有速率限制，证书签发会失败。需要 HTTPS 时，请使用自己的域名或你拥有的泛域名。
+</Callout>
+
+<Callout type="idea" title="何时使用 sslip.io 域名">
+sslip.io 域名最适合在新服务器上试用 Coolify、分享快速预览链接以及内部演示——任何纯 HTTP 加一个立即可用的 URL 就足够的场景。在需要 TLS、正式上线或把链接分享给最终用户之前，请迁移到自定义域名或你拥有的泛域名。
+</Callout>
+
+---
+
+## 解决域名冲突
+
+当同一个完整域名已分配给同团队内的另一个应用、服务或 Coolify 面板时，Coolify 会发出警告。
+
+<Callout type="warning" title="不要在多个资源间复用域名">
+复用域名会让路由变得不可预测，还可能导致无法提供正确的 TLS 证书。只有一个资源能可靠地接收流量。
+</Callout>
+
+打开冲突信息中链接的资源，移除或修改它的域名。只有当你是有意替换那条路由时，才可以忽略该警告。
+
+---
+
+## 设置 Coolify 面板域名
+
+自托管用户可以在 **Settings > General** 中为 Coolify 面板分配域名。
+
+在[把 DNS 记录指向运行 Coolify 的服务器](/core/networking/dns#将域名指向服务器)之后，再把 **URL** 设置为 `https://coolify.shadowarcanist.com` 这样的完整值。不要把应用或服务的域名挪用给面板。
+
+完整设置说明请阅读[实例设置](/core/instance-management/instance-settings#url)。
+
+---
+
+## 继续配置域名路由
+
+使用以下指南准备公网路由，或排查表现异常的域名。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '配置防火墙',
+      href: '/core/infrastructure/servers/firewall',
+      description: '在资源服务器上放行 HTTP、HTTPS 和证书签发所需的端口。',
+      icon: ShieldSecurity2,
+    },
+    {
+      title: '排查证书问题',
+      href: '/troubleshoot/dns-and-domains/lets-encrypt-not-working',
+      description: '检查 DNS、代理可达性、速率限制和证书解析器错误。',
+      icon: Lock2,
+    },
+    {
+      title: '排查代理路由',
+      href: '/troubleshoot/applications/bad-gateway',
+      description: '沿代理到应用容器及其目标端口的路径追踪失败的路由。',
+      icon: Route,
+    },
+  ]}
+/>
+
+## Cloudflare 托管记录
+
+使用团队级 Cloudflare 集成令牌后，Coolify 可以在资源的 Domains 页面上创建、替换和删除托管 DNS 记录。令牌权限与记录生命周期请参阅[Cloudflare DNS 管理](/integrations/security/cloudflare/dns-management)。

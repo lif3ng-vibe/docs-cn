@@ -1,0 +1,90 @@
+---
+title: 持久化存储
+description: 配置应用的卷、目录和文件挂载，把数据存放在可替换的容器之外。
+---
+
+# 配置持久化存储
+
+应用容器是可替换的。只写入容器文件系统的数据，会在 Coolify 重新部署或移除该容器时丢失。
+
+使用 **Persistent Storage**（持久化存储）把应用数据挂载到容器之外、应用期望的路径上。
+
+<Callout type="info" title="详细的存储参考">
+
+本页介绍应用侧的工作流程。卷（volume）、bind、目录、文件、主机文件、权限和备份行为的详细说明，见 [Core 中的持久化存储章节](/core/persistent-storage/storage-mounts/overview)。
+
+</Callout>
+
+## 理解挂载的两端
+
+每个挂载都连接：
+
+- 部署服务器上的一个存储位置
+- 应用容器内的一个 **Destination Path**（目标路径）
+
+例如，应用把上传文件写到 `/app/uploads`，挂载的 **Destination Path** 就必须是 `/app/uploads`。只有写在该目标路径之下的数据才是持久的。
+
+| Coolify 选项 | 适用场景 |
+| :--- | :--- |
+| **Volume Mount**（卷挂载） | 交给 Docker 管理存储位置时。只有当卷必须使用特定服务器路径时才填写 **Source Path**（源路径）。 |
+| **Directory Mount**（目录挂载） | 应用需要部署服务器上的特定目录时。 |
+| **File Mount**（文件挂载） | 容器需要一个由 Coolify 管理内容的文件时。 |
+| **Host File Mount**（主机文件挂载） | 容器需要部署服务器上某个确切路径的既有文件时。 |
+
+选择挂载之前，请先阅读[存储挂载类型](/core/persistent-storage/storage-mounts/overview#选择存储挂载)。
+
+## 为应用添加挂载
+
+<Steps>
+<Step>
+
+### 打开 Persistent Storage
+
+在其项目和环境里打开应用，在资源侧边栏中选择 **Persistent Storage**。
+
+</Step>
+<Step>
+
+### 选择挂载类型
+
+选择 **Add**（添加），然后选择 **Volume Mount**、**Directory Mount**、**File Mount** 或 **Host File Mount**。不确定用哪种类型时，先阅读[存储挂载类型](/core/persistent-storage/storage-mounts/overview#选择存储挂载)比较各自的工作方式。
+
+</Step>
+<Step>
+
+### 填写源与目标
+
+按所选挂载类型填写所需的源位置或文件内容，并填写应用在容器内使用的确切 **Destination Path**。
+
+对于需要在服务器之间迁移的卷或目录，记下源名称或路径。做[迁移](/applications/operations/migrate-between-instances)或恢复备份时会用到。
+
+</Step>
+<Step>
+
+### 保存并应用挂载
+
+保存挂载，然后重新部署或重启应用，让容器带着新挂载启动。
+
+在依赖该挂载之前，先验证应用能读写预期的数据。
+
+</Step>
+</Steps>
+
+## Compose 应用
+
+对于 Docker Compose 应用，Compose 文件是卷和 bind mount 定义的唯一事实来源。在 Compose 文件中定义或修改挂载，然后重新加载 Compose 配置。Coolify 会显示解析出的挂载，但不为 Compose 服务提供同样的挂载编辑器。
+
+## 重要边界
+
+- 挂载无法找回已写入被移除容器中的数据。
+- 存储是部署服务器本地的；把另一台服务器接入 Coolify 并不会让挂载变成共享的。
+- 容器用户必须有读写挂载目标的权限。
+- 不要在容器之间共享可写目录，除非应用本身支持并发访问和文件锁。
+- 持久化存储不等于备份。符合条件的卷和目录挂载请使用[存储挂载备份](/core/persistent-storage/storage-mounts/backups)，并单独测试恢复流程。
+
+## 继续 Core 指南
+
+- [卷挂载](/core/persistent-storage/storage-mounts/volume-mounts)
+- [Bind 挂载](/core/persistent-storage/storage-mounts/bind-mounts)
+- [文件挂载](/core/persistent-storage/storage-mounts/file-mounts)
+- [存储挂载备份](/core/persistent-storage/storage-mounts/backups)

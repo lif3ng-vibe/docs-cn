@@ -1,0 +1,43 @@
+---
+title: 连接不稳定
+description: 通过移除 UFW LIMIT 规则、调整 iptables 并配置 22 端口 SSH 访问的防火墙设置，解决 Coolify 服务器连接不稳定的问题。
+---
+
+# 连接不稳定
+
+如果你遇到连接不稳定，多数情况（90%）是防火墙问题——ufw、iptables，或你服务器上的某些配置，以及 Coolify 实例（或 Coolify Cloud）与服务器之间的配置问题。
+
+## 症状
+
+- 服务器时通时不通。
+- 你收到大量连接丢失的失败告警邮件。
+
+## 诊断
+
+- 用 `ufw status numbered` 检查 UFW 规则，看 22 端口是否设有 `LIMIT` 规则。
+- 用 `iptables -L -v -n` 检查 iptables 规则，看 22 端口是否设有 `LIMIT` 规则。
+- 检查服务器日志（`/var/log/ufw.log`、`/var/log/iptables.log`、`/var/log/auth.log`、`/var/log/kern.log`）中是否有防火墙相关错误。
+
+## 解决方案
+
+- UFW
+  - `ufw status numbered`——如果 22 端口已放行但带有 `LIMIT` 规则，问题就在这里。
+  - `ufw delete <rule_number>`——删除该规则。你可能同时有 IPv4 和 IPv6 两条规则，需要都删掉。
+    - 删除规则后，用 `ufw status numbered` 检查状态，确认规则已删除，并看清下一个规则编号。
+  - `ufw allow 22/tcp`——添加不带限流的规则。
+
+   或
+
+  - `ufw limit 22/tcp 100/minute`——设置更高的限流上限。
+
+如果你使用 Coolify Cloud，可以在 UFW 规则中为每个 IP 添加以下条目，放行来自 Coolify Cloud IP 地址的连接：
+
+```bash
+# For each IPv4 address
+ufw allow from <ipv4> to any port 22
+
+# For each IPv6 subnet
+ufw allow from <ipv6> to any port 22
+```
+
+> 当前的 Coolify Cloud IP 地址可在 https://coolify.io/ipv4.txt 和 https://coolify.io/ipv6.txt 查看

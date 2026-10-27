@@ -1,0 +1,73 @@
+---
+title: 概览
+description: 了解 Coolify 如何在应用和服务容器内运行计划命令。
+---
+
+import { ArrowsRight, CalendarAdd, History, Settings } from 'reicon-react';
+
+# 计划任务概览
+
+计划任务让 Coolify 能够按固定周期在应用或服务容器内运行命令。适用于框架调度器、队列维护、缓存清理和周期性导入等工作。
+
+<CoolCallout icon={ArrowsRight} title="简要说明">
+
+在应用或服务的 **Scheduled Tasks** 页面添加任务，选择命令、调度、超时和目标容器。Coolify 会记录每次运行的结果和输出。
+
+</CoolCallout>
+
+---
+
+## 计划任务包含哪些配置
+
+每个任务有五项主要设置：
+
+- **Name**：在 Coolify 中标识该任务。
+- **Command**：Coolify 在容器内运行的准确命令。
+- **Frequency**：控制命令何时运行，接受五字段 cron 表达式或受支持的命名调度。
+- **Timeout**：限制单次执行的最长运行时间。
+- **Container name**：当资源有多个容器时，选择命令在哪里运行。
+
+受支持的字段、命名调度和示例详见 [Cron 语法](/core/automation/cron-syntax)。
+
+---
+
+## 任务的运行方式
+
+计划任务、数据库备份、卷（volume）备份和 Docker 清理各自拥有独立的调度进程，每分钟派发一次到期的工作。某一类队列繁忙或调度缓慢，不会拖延其他类型的派发。
+
+Coolify 按运行资源的服务器所配置的时区计算调度。任务到期时，Coolify 会在所选运行容器内的 shell 中执行命令。
+
+任务被停用、应用或服务未运行，或所连接的服务器不可用时，计划执行会被跳过。多容器任务还需要正确的容器或服务名称。
+
+夏令时重复一个小时时，固定时间调度只运行一次。某个调度失败也不会阻止其他到期调度被派发。
+
+Coolify 启动命令后，**Recent executions** 会显示其状态、开始和结束时间、耗时以及捕获的输出。
+
+---
+
+## 选择下一步
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: '创建任务',
+      description: '配置命令、调度、超时和目标容器。',
+      href: '/core/automation/scheduled-tasks/create-a-task',
+      icon: CalendarAdd,
+    },
+    {
+      title: '管理任务',
+      description: '编辑、启用、停用、运行或彻底删除任务。',
+      href: '/core/automation/scheduled-tasks/manage-tasks',
+      icon: Settings,
+    },
+    {
+      title: '查看执行历史',
+      description: '检查任务状态、耗时、命令输出和可下载日志。',
+      href: '/core/automation/scheduled-tasks/execution-history',
+      icon: History,
+    },
+  ]}
+/>

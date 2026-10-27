@@ -1,0 +1,78 @@
+---
+title: Symfony
+description: 在 Coolify 上部署 Symfony PHP 应用：Nixpacks、Doctrine 迁移、数据库连接与可信代理配置。
+---
+
+# Symfony
+
+Symfony 是构建网站与 Web 应用的领先 PHP 框架，基于 Symfony Components 打造。
+
+## 要求
+
+- 将 **Build strategy**（构建策略）设为 `nixpacks`
+- 设置 `APP_ENV`
+- 设置 `APP_SECRET`
+- 将 `NIXPACKS_PHP_FALLBACK_PATH` 设为 `/index.php`
+- 将 `NIXPACKS_PHP_ROOT_DIR` 设为 `/app/public`
+- 将 `Ports Exposes` 设为 `80`
+
+### 数据库迁移
+
+如果使用 Doctrine，可以添加如下 `Post-deployment script`（部署后脚本）：
+
+`php bin/console doctrine:migrations:migrate --all-or-nothing --no-interaction`
+
+### 其他组件
+
+如果应用需要数据库或 Redis，可以直接在 Coolify 控制面板中提前创建。
+
+你会拿到连接字符串，在应用中使用它们并设置为环境变量：
+
+```bash
+DATABASE_URL=postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8
+
+REDIS_HOST=<REDIS_HOST>
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+### 可信代理
+
+可能需要配置[可信代理](https://symfony.com/doc/current/deployment/proxies.html)：
+
+- 将环境变量 `TRUSTED_PROXIES` 设为你服务器的 IP
+- 添加如下 Symfony 配置：
+
+```yaml
+# config/packages/framework.yaml
+
+framework:
+    trusted_proxies: "%env(TRUSTED_PROXIES)%"
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
+```
+
+### 持久化 php.ini 自定义
+
+想自定义 php.ini 中的设置，可以用 `php_admin_value` 指令追加到 `php-fpm.conf` 文件里，如下所示：
+
+```toml
+"php-fpm.conf" = '''
+[www]
+listen = 127.0.0.1:9000
+user = www-data
+group = www-data
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 50
+pm.min_spare_servers = 4
+pm.max_spare_servers = 32
+pm.start_servers = 18
+clear_env = no
+
+php_admin_value[memory_limit] = 512M
+php_admin_value[max_execution_time] = 60
+php_admin_value[max_input_time] = 60
+php_admin_value[post_max_size] = 256M
+'''
+```

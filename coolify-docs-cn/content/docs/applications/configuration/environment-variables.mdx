@@ -1,0 +1,138 @@
+---
+title: 环境变量
+description: 为构建阶段、运行容器和预览部署配置应用取值。
+---
+
+# 环境变量
+
+应用环境变量把配置传递给镜像构建、运行中的容器，或两者兼有。
+
+打开应用，然后选择 **Environment Variables**（环境变量）。
+
+<Callout type="info" title="预览部署有独立的取值">
+
+生产变量和预览变量显示在各自独立的分组中。应当不同的取值（例如预览数据库或回调 URL）请放在预览分组里。
+
+</Callout>
+
+<span id="developer-view" />
+
+## 添加变量
+
+用 **Normal view**（普通视图）逐个配置变量。选择 **Add**（添加），填写 **Name**（名称）和 **Value**（值），选择其作用域和取值设置，然后选择 **Add variable**（添加变量）。选择变量名或其编辑图标即可修改，然后选择 **Update variable**（更新变量）。
+
+用 **Developer view**（开发者视图）以 `.env` 格式粘贴或编辑多个取值：
+
+```dotenv
+NODE_ENV=production
+LOG_LEVEL=info
+API_URL=https://api.example.com
+```
+
+以 `#` 开头的行会被忽略。保存 Developer view 时，Coolify 会按其内容创建、更新和删除条目。
+
+已锁定的机密和多行取值无法在 Developer view 中编辑，请在 Normal view 中修改这些条目。
+
+## 构建与运行时作用域
+
+**Build time**（构建时机）和 **Runtime**（运行时）是两个独立的下拉框。新变量默认为 **Available during build**（构建期间可用）和 **Available in the container**（容器内可用）。
+
+| 设置 | 镜像构建 | 运行容器 |
+| :--- | :---: | :---: |
+| 构建与运行时 | 可用 | 可用 |
+| 仅构建 | 可用 | 不可用 |
+| 仅运行时 | 不可用 | 可用 |
+
+只在容器启动后才被应用读取的机密，请把 **Build time** 设为 **Not available during build**（构建期间不可用）。
+
+<Callout type="warning" title="构建参数可能仍然可见">
+
+传统的 Docker 构建参数可能出现在镜像元数据中。构建服务器支持 Docker BuildKit 时，敏感的构建期取值请把 **Build secrets**（构建机密）设为 **Docker BuildKit secrets**。BuildKit 不可用时，Coolify 会回退为构建参数。
+
+</Callout>
+
+### 示例：私有 npm 仓库
+
+构建期间需要向私有 npm 仓库认证时，使用构建变量，而不要把令牌提交到仓库。
+
+1. 在项目根目录添加 `.npmrc` 文件：
+
+   ```ini
+   //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+   ```
+
+2. 添加 `NPM_TOKEN`，把 **Build time** 设为 **Available during build**（构建期间可用）（该令牌只在 `npm install` 期间需要），并把它的值设为你的仓库令牌。
+
+3. 部署应用。构建过程会读取 `NPM_TOKEN` 并向仓库认证。
+
+## 多行与字面值
+
+取值包含换行（例如私钥、证书或配置文件）时，把 **Value type**（值类型）设为 **Multiline**（多行）。
+
+`$` 等字符必须保持原样时，把 **Interpolation**（插值）设为 **Literal (keep $ characters as-is)**（字面量，$ 字符保持原样）。不这样做的话，Coolify 可能会展开取值中包含的引用。多行取值本身就按字面量处理。
+
+## 共享变量
+
+与其把同一个值复制进每个资源，不如引用团队、项目、环境或服务器级变量：
+
+```sh
+{{environment.DATABASE_URL}}
+```
+
+创建正确作用域的取值并赋给应用变量的方法，请按[共享变量](/core/team/shared-variables)操作。
+
+## 外部机密管理器
+
+可以接入 Doppler、Infisical 或 HashiCorp Vault，并用 `{{vault.KEY}}` 引用远程取值。操作方法见[使用机密管理器](/integrations/security/using-secret-managers)。
+
+## 预定义应用变量
+
+Coolify 通过预定义取值提供部署信息。
+
+| 变量 | 取值 |
+| :--- | :--- |
+| `COOLIFY_FQDN` | 应用的域名。 |
+| `COOLIFY_URL` | 应用的 URL。 |
+| `COOLIFY_BRANCH` | 所选 Git 分支。 |
+| `COOLIFY_RESOURCE_UUID` | Coolify 资源标识符。 |
+| `COOLIFY_CONTAINER_NAME` | 生成的容器名。 |
+| `SOURCE_COMMIT` | 部署的 Git 提交。 |
+| `PORT` | 未设置 `PORT` 时取第一个暴露端口。 |
+| `HOST` | 未设置 `HOST` 时取 `0.0.0.0`。 |
+
+为保留缓存复用，Coolify 默认把 `SOURCE_COMMIT` 排除在 Docker 构建之外。构建需要它时，把 **Advanced > Build > Source commit availability** 设为 **Available during build**（构建期间可用）。
+
+应用期望别的名称时，把预定义取值赋给你自己的键：
+
+```dotenv
+APP_REVISION=$SOURCE_COMMIT
+```
+
+## Docker Compose 变量
+
+Coolify 会识别 Compose 定义中的变量引用，并把它们显示为应用变量：
+
+```yaml
+services:
+  api:
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_KEY: ${API_KEY:?}
+```
+
+`${API_KEY:?}` 把变量标记为必填。取值为空时，Coolify 会阻止部署。
+
+URL、用户名、密码和随机字符串等生成的堆栈值，请阅读 [Docker Compose](/applications/builds/docker-compose)。
+
+## 应用更改
+
+保存变量后，重新部署或重启应用，让 Coolify 重建运行时环境。
+
+构建期取值有变化时使用一次新的部署；只有运行时取值变化时使用 **Restart**（重启）。基于源码的方式在符合条件时复用现有镜像；Docker Image 则重新拉取已保存的镜像引用。
+
+## 命名与复制取值
+
+新环境变量名必须匹配 `[A-Za-z_][A-Za-z0-9_.]*`：以字母或下划线开头，其后使用字母、数字、下划线或点号。已有的无效仅运行时名称（例如 `my-var`）会带着警告和建议名称部署；无效的构建期名称则会中止镜像构建。
+
+用复制按钮可以复制解析后的值。共享变量和 `$SERVICE_*` 引用会解析为实际取值。已锁定的变量没有复制按钮；对已锁定共享变量的引用会保持引用形式，不会暴露机密。

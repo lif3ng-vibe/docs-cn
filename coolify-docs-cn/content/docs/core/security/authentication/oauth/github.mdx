@@ -1,0 +1,95 @@
+---
+title: GitHub
+description: 创建 OAuth App 并注册 Coolify 回调 URL,为 Coolify 配置 GitHub OAuth 登录。
+---
+
+# 配置 GitHub OAuth
+
+创建一个 GitHub OAuth App,让 GitHub 能在登录后向 Coolify 返回已验证的主电子邮箱地址。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **Authorization callback URL:** `https://coolify.shadowarcanist.com/auth/github/callback`
+</Callout>
+
+## 设置 GitHub OAuth
+
+<Steps>
+<Step>
+
+### 打开 GitHub OAuth Apps
+
+打开 [GitHub Developer settings](https://github.com/settings/developers),选择 **OAuth Apps**,然后选择 **New OAuth App**。
+
+如果要让组织拥有该凭据,请打开该组织的设置,并在那里创建 OAuth App。你需要有管理所选账户或组织 OAuth Apps 的权限。
+
+</Step>
+<Step>
+
+### 注册 Coolify 应用
+
+填写 GitHub 表单:
+
+| GitHub 字段 | 值 |
+| :--- | :--- |
+| **Application name** | 一个可辨识的名称,例如 `Coolify`。 |
+| **Homepage URL** | 公开的 Coolify URL,例如 `https://coolify.shadowarcanist.com`。 |
+| **Application description** | 可选:给授权该应用的用户看的说明。 |
+| **Authorization callback URL** | `https://coolify.shadowarcanist.com/auth/github/callback` |
+
+选择 **Register application**。
+
+<Callout type="info" title="另一个 Coolify 域名需要单独的应用">
+一个 GitHub OAuth App 只有一个回调 URL。当第二个 Coolify 实例使用不同的公开域名时,请另建一个 OAuth App。
+</Callout>
+
+</Step>
+<Step>
+
+### 创建客户端密钥
+
+在 OAuth App 页面,复制 **Client ID**,然后选择 **Generate a new client secret**。
+
+复制生成的 client secret 并妥善保管。在 Coolify 中需要完整的 secret。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 GitHub
+
+在 Coolify 中打开 **Settings > Authentication**,找到 **GitHub**。
+
+| Coolify 字段 | GitHub 值 |
+| :--- | :--- |
+| **Client ID** | GitHub OAuth App 的 client ID。 |
+| **Client Secret** | 生成的 GitHub client secret。 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/github/callback` |
+
+选择 **Save**,然后为 GitHub 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 GitHub 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with GitHub**。如果 GitHub 要求,授权该 OAuth App,然后确认 Coolify 打开了与已验证 GitHub 主邮箱相同的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="GitHub 报告重定向 URI 不匹配">
+
+对比 GitHub 中的 **Authorization callback URL** 与 Coolify 中的 **Redirect URI**。协议、域名、`/auth/github/callback` 路径和结尾斜杠都必须一致。
+
+</Accordion>
+<Accordion title="Coolify 回到登录页">
+
+GitHub 必须返回已验证的主电子邮箱地址。确认 GitHub 账户在 **Settings > Emails** 下设置了主邮箱,并且 OAuth 授权授予了所请求的 `user:email` 访问。
+
+</Accordion>
+</Accordions>

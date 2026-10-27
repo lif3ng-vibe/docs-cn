@@ -1,0 +1,97 @@
+---
+title: 数据库 SSL
+description: 在 Coolify 中为独立数据库连接启用 SSL、选择校验模式，并在需要时挂载 Coolify CA 证书。
+---
+
+# 数据库 SSL
+
+Coolify 可以为受支持的独立数据库生成服务器证书，并将证书添加到数据库容器中。对于暴露 SSL 连接参数的引擎，**General**（通用）页面还会把这些参数写入生成的内部和公网连接 URL。
+
+SSL 设置需要在数据库的 **General**（通用）页面修改。修改 **SSL** 或 **SSL mode**（SSL 模式）前请先停止数据库，保存后再重启，使生成的证书和连接端口生效。
+
+<Callout type="warning" title="更新连接 URL">
+
+只有连接配置中启用了 SSL，应用才会真正使用 SSL。启用 SSL 后请复制新的 **Internal URL**（内部 URL）或 **Public URL**（公共 URL），并更新连接数据库的应用。
+
+</Callout>
+
+## 启用 SSL
+
+1. 停止数据库。
+2. 打开 **General**（通用）。
+3. 在 **SSL configuration**（SSL 配置）下，将 **SSL** 设为 **Enabled**（启用）。
+4. 如果数据库提供 **SSL mode**（SSL 模式）字段，请选择一种模式。
+5. 如果还改了其他配置，选择 **Save changes**（保存更改），然后重启数据库。
+
+Coolify 会创建一个由该数据库所在服务器的 CA 证书签发的数据库证书。如果服务器尚无 CA 证书，Coolify 会尝试生成一个。证书状态和过期时间显示在数据库的 General 页面上。
+
+要重新生成数据库证书，请使用 General 页面上的 **Regenerate SSL Certificates**（重新生成 SSL 证书），然后重启数据库。PostgreSQL、MySQL、MariaDB、Redis、KeyDB 和 Dragonfly 使用独立的 `server.crt` 和 `server.key` 文件。新建和重新生成的证书均使用 P-256 密钥，包括为了兼容 MongoDB Compass 等 Electron 客户端。服务器上的 CA 文件与签发 CA 一致。重新生成证书后，连接的应用可能需要重新信任服务器 CA。
+
+## SSL 模式
+
+<Tabs id="database-ssl-modes" items={['PostgreSQL', 'MySQL', 'MongoDB', 'MariaDB, Redis, Dragonfly & KeyDB', 'ClickHouse']}>
+<Tab value="PostgreSQL">
+
+PostgreSQL 暴露以下模式。默认为 `require`。
+
+| 模式 | 行为 |
+| :--- | :--- |
+| `allow` | 允许非加密连接，不要求 SSL。 |
+| `prefer` | 优先尝试 SSL，失败时可回退到非加密连接。 |
+| `require` | 要求加密，但不校验服务器证书。 |
+| `verify-ca` | 要求加密，并校验证书颁发机构。 |
+| `verify-full` | 要求加密，校验 CA，并校验服务器主机名。 |
+
+仅当客户端容器信任 Coolify CA 证书时，才使用 `verify-ca` 或 `verify-full`。
+
+</Tab>
+<Tab value="MySQL">
+
+MySQL 提供 **Prefer**、**Require**、**Verify CA** 和 **Verify Full**。默认为 **Require**。Coolify 会将这些值作为 `ssl-mode` 选项写入连接 URL。**Verify CA** 和 **Verify Full** 还要求客户端信任 Coolify CA 证书。
+
+</Tab>
+<Tab value="MongoDB">
+
+MongoDB 暴露 `allow`、`prefer`、`require` 和 `verify-full`。默认为 `require`，且新建的 MongoDB 资源默认将 **SSL** 设为 **Enabled**。生成的 MongoDB URL 使用 `/etc/mongo/certs/ca.pem` 作为 CA，并在 `verify-full` 时追加 `/etc/mongo/certs/server.pem`。如果消费方应用运行在另一个容器中，请按其 MongoDB 驱动的要求挂载或配置客户端证书路径，不要想当然地认为数据库容器内的路径对应用可用。
+
+</Tab>
+<Tab value="MariaDB, Redis, Dragonfly & KeyDB">
+
+在 Coolify 界面中，这些数据库提供 **SSL** 下拉框，但没有 SSL 模式选择器。Coolify 会配置数据库的 TLS 监听。Redis、Dragonfly 和 KeyDB 生成的 URL 使用 `rediss` 方案和 TLS 端口 `6380`；连接时请用其 SSL 选项配置 MariaDB 客户端。
+
+</Tab>
+<Tab value="ClickHouse">
+
+ClickHouse 在独立数据库界面中不提供 SSL 控件。
+
+</Tab>
+</Tabs>
+
+## 信任 Coolify CA 证书
+
+当连接 URL 要求证书校验时，请把服务器 CA 证书挂载到连接数据库的应用容器中。Coolify 客户端常用的挂载为：
+
+```sh
+/data/coolify/ssl/coolify-ca.crt:/etc/ssl/certs/coolify-ca.crt:ro
+```
+
+左边是数据库服务器上的路径，右边是应用容器内的路径。请配置应用或 Compose 服务，用客户端库的 CA 选项信任 `/etc/ssl/certs/coolify-ca.crt`。
+
+Redis、Dragonfly 和 KeyDB 不提供普通的 SSL 模式选择器。它们生成的 URL 使用 `rediss` 和端口 `6380`；如有需要，请在客户端库中配置 CA 校验。对这些引擎，生成的 URL 不会附加 CA 参数。
+
+对 Compose 应用，请将挂载定义在真正建立数据库连接的服务上，而不只是数据库服务。
+
+## 验证连接
+
+重启数据库之后：
+
+1. 从数据库的 **General**（通用）页面复制更新后的连接 URL。
+2. 如果使用证书校验，确认客户端容器内已有 CA 文件。
+3. 运行应用的数据库连接检查，或执行一条简单查询。
+4. 连接失败时查看数据库日志。
+
+仍使用旧的非 SSL 参数的 URL 可能以非 SSL 方式连接成功，也可能直接失败，取决于引擎和客户端。请更新消费方应用的配置，而不是只改数据库资源。
+
+## 服务器 CA 管理
+
+打开服务器的高级 CA 证书设置，可查看或重新生成服务器 CA 证书。重新生成服务器 CA 可能使此前由旧 CA 签发的证书失效；请重启受影响的数据库，并让信任该 CA 的客户端完成更新后再使用新证书。

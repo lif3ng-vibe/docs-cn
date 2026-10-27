@@ -1,0 +1,130 @@
+---
+title: 创建任务
+description: 为 Coolify 应用或服务创建计划命令，并验证其首次执行。
+---
+
+# 创建计划任务
+
+当应用或服务需要按固定周期重复执行同一条命令时，就为它创建计划任务。
+
+## 创建任务之前
+
+先确认以下信息：
+
+- 在资源容器内可正常运行的准确命令
+- 命令的执行频率
+- 命令应由哪个容器或服务组件执行
+- 允许命令运行的最长时间
+
+如果命令会修改或删除数据，请先在目标容器内测试，再安排调度。
+
+---
+
+## 创建任务
+
+<Steps>
+<Step>
+
+### 打开 Scheduled Tasks
+
+打开应用或服务，在资源侧边栏选择 **Scheduled Tasks**。
+
+</Step>
+<Step>
+
+### 打开任务表单
+
+点击 **+ Add**。Coolify 会打开 **New Scheduled Task**。
+
+</Step>
+<Step>
+
+### 为任务命名
+
+输入一个能说明命令用途的简短名称，例如 `Run Laravel scheduler` 或 `Clear expired sessions`。
+
+</Step>
+<Step>
+
+### 输入命令
+
+按命令在容器内实际运行的形式原样输入，例如：
+
+```sh
+php artisan schedule:run
+```
+
+不要包含 `docker exec`。Coolify 会在执行命令前先进入所选容器。
+
+</Step>
+<Step>
+
+### 设置执行频率
+
+输入五字段 cron 表达式（如 `0 0 * * *`），或命名调度（如 `daily`）。
+
+调度使用运行资源的服务器所配置的时区。更多示例参见 [Cron 语法](/core/automation/cron-syntax)。
+
+</Step>
+<Step>
+
+### 设置超时
+
+输入以秒为单位的最大执行时间。控制台接受 `60` 到 `36000` 之间的值，默认为 `300` 秒。
+
+取值应大于任务正常运行耗时，同时又要足够短，以便及时终止卡死的命令。
+
+</Step>
+<Step>
+
+### 选择容器
+
+应用只有一个容器时，**Container** 可以留空。如果应用有多个容器，请选择或输入包含该命令的容器。
+
+对于服务，请选择对应的服务组件。如果之后手动输入，请使用 Docker Compose 定义中的组件名（例如 `mysql`），不要带 Coolify 生成的资源后缀。
+
+</Step>
+<Step>
+
+### 保存任务
+
+点击 **Add task**。Coolify 会以启用状态创建任务，并将其加入 **Scheduled Tasks** 列表。
+
+</Step>
+</Steps>
+
+---
+
+## 验证任务
+
+打开新建的任务。如果资源正在运行，点击 **Execute now**。
+
+在 **Recent executions** 下打开新的执行记录，确认：
+
+- 状态变为 **Success**
+- 显示了开始和结束时间
+- 命令输出符合预期
+
+计划执行使用同样的命令、容器和超时设置，其结果也会出现在同一份执行历史中。
+
+---
+
+## 故障排除
+
+<Accordions type="multiple">
+<Accordion title="Coolify 提示 cron 表达式无效">
+
+请使用有效的五字段表达式，或 Coolify 支持的命名调度。命名值 `daily` 有效；`@every_minute` 不受支持。可与 [Cron 语法](/core/automation/cron-syntax) 对照检查。
+
+</Accordion>
+<Accordion title="任务提示存在多个容器">
+
+打开任务，将 **Container** 设置为应当执行该命令的应用容器或服务组件。
+
+</Accordion>
+<Accordion title="任务提示没有正在运行的容器">
+
+先启动应用或服务，确认目标容器正在运行，然后再次点击 **Execute now**。
+
+</Accordion>
+</Accordions>

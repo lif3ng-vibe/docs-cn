@@ -1,0 +1,78 @@
+---
+title: 管理目标
+description: 查看资源、重命名目标、选择部署网络，并将资源克隆到另一个目标（Destination）。
+---
+
+# 管理目标（Destination）
+
+使用 **Destinations** 页面可以查看团队各台服务器上的 Docker 网络、了解哪些资源在使用某个网络，以及更改或移除目标（Destination）。
+
+## 查找目标
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/destinations-overview.webp" alt="Destinations 页面列出目标名称及其所在服务器" />
+
+在 Coolify 侧边栏中选择 **Destinations**，即可查看当前团队中所有可用服务器上的目标。每个条目都会显示目标名称及其所在服务器。
+
+要查看单台服务器的目标，选择 **Servers**，选中该服务器，再打开 **Destinations**。
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/destinations-server-overview.webp" alt="服务器 Destinations 页面显示可用的目标" />
+
+## 查看目标详情与资源
+
+选择一个目标即可打开其管理页面。
+
+- **General** 显示它在面板中的名称、服务器 IP 地址和 Docker 网络名称。
+- **Resources** 列出记录在独立 Docker 目标下的应用、数据库和服务。可以使用搜索框按资源、项目、环境或类型筛选。
+
+<ZoomImage src="/docs-cn/coolify/images/destinations/destinations-settings.webp" alt="目标 General 页面显示 Name、Server IP 和 Docker Network" />
+
+| 字段 | 行为 |
+| :--- | :--- |
+| **Name** | 可编辑的面板显示名称。重命名不会更改 Docker 网络的名称。 |
+| **Server IP** | 只读，显示拥有该目标的服务器地址。 |
+| **Docker Network** | 只读，显示该服务器上使用的 Docker 网络名称。 |
+
+## 重命名目标
+
+1. 打开目标的 **General** 页面。
+2. 修改 **Name**。
+3. 选择 **Save changes**。
+4. 返回 **Destinations**，确认新名称与同一台服务器一起出现。
+
+服务器和 Docker 网络在创建后无法更改。如果某个资源需要不同的服务器或网络，请另建一个目标。
+
+## 为新资源选择目标
+
+创建应用、数据库或服务时，Coolify 会要求你选择一台服务器。
+
+- 如果服务器上只有一个目标，Coolify 会自动选中它。
+- 如果服务器上有多个目标，请选择资源应使用的 Docker 网络所对应的目标。
+
+所选目标会成为资源配置的一部分。Coolify 不提供把现有资源就地改到另一个目标的操作。
+
+## 将资源克隆到另一个目标
+
+当需要在另一台服务器或另一个 Docker 网络上获得资源配置的独立副本时，可以克隆资源。
+
+1. 在相应的项目与环境中打开该资源。
+2. 在资源侧边栏中选择 **Resource Operations**。
+3. 在 **Clone to another destination** 下，选择 **Server**。
+4. 选择 **Network destination**。
+5. 选择 **Clone resource**。
+6. 打开克隆出的资源，在部署之前核对它的目标与配置。
+
+<Callout type="warning" title="克隆不会复制资源数据">
+克隆会复制环境变量、构建设置等配置，但不会复制数据库内容、持久化存储文件，或由外部服务商保存的数据。原资源保持不变。
+</Callout>
+
+如果克隆出来的资源也需要已有数据，请使用备份或该资源专属的迁移流程。同一页面上的 **Move Resource** 只会更改项目或环境，不会更改服务器或网络目标。
+
+## 连接 Docker Compose 资源
+
+Docker Compose 应用与服务栈默认使用资源专属的网络，即使该资源已经选定了目标。
+
+如果它的容器必须加入所选目标、并与该 Docker 网络上的其他资源通信，请在资源设置中启用 **Connect To Predefined Network**。Compose 的要求与限制请阅读[Docker Compose 网络](/applications/builds/docker-compose#application-networking)。
+
+不要只是为了复现一个 Coolify 目标而添加自定义 Compose 网络。相互冲突的网络配置可能导致 Coolify Proxy 无法访问该资源。
+
+要移除目标及其 Docker 网络，请按照[删除目标](/core/networking/destinations/delete)操作。

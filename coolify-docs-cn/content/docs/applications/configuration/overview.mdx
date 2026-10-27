@@ -1,0 +1,87 @@
+---
+title: 概览
+description: 查找应用创建后用于配置它的各项 Coolify 设置。
+---
+
+import { BranchUp, Pulse, Settings } from 'reicon-react';
+
+# 配置应用
+
+打开一个应用，使用它的设置侧边栏来更改 Coolify 准备镜像、启动容器、暴露流量和运营工作负载的方式。
+
+可用页面取决于应用类型和目标（Destination）。例如，**Git Source** 只在基于 Git 的应用中出现，**Swarm** 只在 Docker Swarm 目标上出现，而应用的 **Healthcheck** 页面不用于 Docker Compose。
+
+<CoolCallout icon={Settings} title="简版结论">
+
+构建、镜像和端口设置用 **General**（常规），公开路由用 **Domains**（域名）。其余配置页面分别对应环境变量、存储、来源认证、自动化、健康、限制和运维操作。
+
+</CoolCallout>
+
+---
+
+## 配置页面
+
+| <span className="whitespace-nowrap">配置页面</span> | 控制内容 | 指南 |
+| :--- | :--- | :--- |
+| **General** | 应用标识、构建策略、访问摘要、镜像设置、端口、容器标签和部署命令。 | [查看 General 设置](/applications/configuration/general) |
+| **Domains** | 公开域名、目标端口、路径、重定向和搜索引擎收录。 | [配置域名](/core/networking/domains) |
+| **Advanced** | 构建缓存、容器命名、自动部署、Git clone 选项、代理行为、重启限制、日志转发（log drain）和 GPU 访问。 | [查看 Advanced 设置](/applications/configuration/advanced) |
+| **Swarm** | 部署到 Swarm 目标的应用所用的 Docker Swarm 服务设置。 | [配置 Docker Swarm](/core/infrastructure/scaling/docker-swarm) |
+| **Environment Variables** | 传递给应用的构建期和运行时取值。 | [配置环境变量](/applications/configuration/environment-variables) |
+| **Persistent Storage** | 挂载在可替换容器文件系统之外的卷、目录和文件挂载。 | [配置应用持久化存储](/applications/configuration/persistent-storage) |
+| **Deployment Logs** | 构建与部署的历史和输出。 | [部署概览](/applications/deployments/overview) |
+| **Runtime Logs** | 运行中应用容器的输出。 | [可观测性概览](/core/observability/monitoring/overview) |
+| **Git Source** | 基于 Git 的应用所连接的 Git 来源或部署密钥。 | [配置来源](/applications/sources/overview) |
+| **Servers** | 被选中运行该应用的服务器。 | [配置多服务器部署](/core/infrastructure/scaling/multi-server-deployments) |
+| **Scheduled Tasks** | Coolify 按计划在应用容器内运行的命令。 | [配置应用计划任务](/applications/operations/scheduled-tasks) |
+| **Webhooks** | 带认证的部署 webhook 和手动 Git 提供商 webhook。 | [使用部署 webhook](/core/automation/deploy-webhooks)<br />[配置手动 Git webhook](/applications/deployments/manual-webhooks) |
+| **Preview Deployments** | pull request 或 merge request 环境以及手动预览部署。 | [配置预览部署](/applications/deployments/preview-deployments) |
+| **Healthcheck** | 用于判定非 Compose 应用是否健康的 HTTP 或命令检查。 | [配置健康检查](/applications/configuration/health-checks) |
+| **Rollback** | 仍可用于部署的历史构建镜像。 | [回滚应用](/applications/deployments/rollbacks) |
+| **Resource Limits** | 应用于应用容器的 CPU 和内存限制。 | [配置资源限制](/applications/configuration/resource-limits) |
+| **Resource Operations** | 把应用克隆到另一个目标，或在项目和环境之间移动。 | [克隆或移动应用](/applications/operations/resource-operations) |
+| **Metrics** | 容器指标的收集与展示。 | [监控资源指标](/core/observability/monitoring/metrics) |
+| **Tags** | 用于组织资源的团队级标签。 | [用标签组织资源](/core/automation/tags/overview) |
+| **Danger Zone** | 破坏性操作，包括删除应用。 | [删除应用](/applications/operations/danger-zone) |
+
+## 应用配置更改
+
+保存设置会更新已存储的配置，但不一定会立即替换正在运行的容器。
+
+更改了影响容器的设置（包括环境变量、存储、健康检查、端口、网络和资源限制）之后，请部署或重启应用。构建配置的更改则需要一次会创建或复用镜像的部署。
+
+可用的操作：
+
+- **Deploy**（部署）：用于首次部署
+- **Redeploy**（重新部署）：再次执行部署流程
+- **Restart**（重启）：通过部署队列重建运行时；基于源码的方式在符合条件时复用现有镜像，Docker Image 则重新拉取已保存的镜像引用
+- **Force deploy (without cache)**（强制部署，不使用缓存）：对 Coolify 生成的源码构建禁用缓存；自定义 Docker Compose 构建命令自行控制缓存标志
+
+镜像准备与容器替换的区别，请阅读[构建与部署模型](/core/build-deployment-model)。
+
+## 相关配置指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '环境变量',
+      href: '/applications/configuration/environment-variables',
+      description: '区分构建期、运行时、共享和预览取值。',
+      icon: Settings,
+    },
+    {
+      title: '健康检查',
+      href: '/applications/configuration/health-checks',
+      description: '配置路由和滚动更新所依赖的就绪信号。',
+      icon: Pulse,
+    },
+    {
+      title: '持久化存储',
+      href: '/core/persistent-storage/storage-mounts/overview',
+      description: '把必要数据存放在可替换的容器文件系统之外。',
+      icon: BranchUp,
+    },
+  ]}
+/>
+
+可以使用应用设置筛选器查找页面，包括 **Advanced > Proxy** 这类嵌套设置。侧边栏分组会折叠，仅保持当前页面所在分组展开。

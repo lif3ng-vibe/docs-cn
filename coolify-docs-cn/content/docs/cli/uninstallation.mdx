@@ -1,0 +1,132 @@
+---
+title: 卸载
+description: 移除 Coolify CLI 二进制文件，并可选删除其保存的上下文和 API 令牌。
+---
+
+import { Code, Computer, Package, TerminalSquare } from 'reicon-react';
+
+# 卸载 Coolify CLI
+
+卸载 CLI 只会移除本地的 `coolify` 命令，不会移除你的 Coolify 实例，也不会动任何通过 Coolify 管理的应用、数据库、服务、服务器或其他资源。
+
+## 移除 CLI
+
+使用当初安装该二进制文件的方式。
+
+<Tabs id="cli-uninstallation-method" items={['Linux 与 macOS', 'Homebrew', 'Windows', 'Go']}>
+<Tab value="Linux 与 macOS" icon={TerminalSquare}>
+
+### 移除安装脚本安装的二进制文件
+
+全局安装：
+
+```sh
+sudo rm /usr/local/bin/coolify
+```
+
+按用户安装：
+
+```sh
+rm ~/.local/bin/coolify
+```
+
+</Tab>
+
+<Tab value="Homebrew" icon={Package}>
+
+### 用 Homebrew 卸载
+
+```sh
+brew uninstall coolify-cli
+```
+
+</Tab>
+
+<Tab value="Windows" icon={Computer}>
+
+### 移除 PowerShell 安装的二进制文件
+
+管理员安装时，请以管理员身份运行 PowerShell：
+
+```powershell
+Remove-Item "$env:ProgramFiles\Coolify\coolify.exe"
+```
+
+按用户安装：
+
+```powershell
+Remove-Item "$env:LOCALAPPDATA\Coolify\coolify.exe"
+```
+
+如果安装器把相应的 `Coolify` 目录加进了用户或系统 `PATH`，且没有其他程序使用该目录，请把它从 `PATH` 中移除。
+
+</Tab>
+
+<Tab value="Go" icon={Code}>
+
+### 移除 Go 安装的二进制文件
+
+在 Linux 或 macOS 上，先打印 Go 安装二进制文件的目录：
+
+```sh
+go env GOBIN GOPATH
+```
+
+如果设置了 `GOBIN`，从该目录移除 `coolify`；否则从第一个 `GOPATH` 条目下的 `bin` 目录移除。常见的默认位置：
+
+```sh
+rm "$(go env GOPATH)/bin/coolify"
+```
+
+在 Windows 上，在 PowerShell 中运行：
+
+```powershell
+$goBin = go env GOBIN
+if (-not $goBin) { $goBin = Join-Path (go env GOPATH) "bin" }
+Remove-Item (Join-Path $goBin "coolify.exe")
+```
+
+</Tab>
+</Tabs>
+
+## 验证二进制文件已移除
+
+打开一个新终端，然后运行：
+
+```sh
+coolify version
+```
+
+shell 应提示 `coolify` 不是可识别的命令。如果仍能运行，请在 Linux 或 macOS 上用 `command -v coolify`、在 PowerShell 中用 `Get-Command coolify` 查看实际解析到的路径，再用对应的方式移除残留安装。
+
+## 可选：删除已保存的上下文
+
+<Callout type="danger" title="删除配置无法撤销">
+CLI 配置包含所有已保存的 Coolify URL 和 API 令牌。删除文件前，请先复制仍需要的上下文信息。删除本地文件并不会在 Coolify 中吊销这些 API 令牌。
+</Callout>
+
+只有在不再需要已保存上下文时才删除配置。
+
+<Tabs id="cli-configuration-removal" items={['Linux 与 macOS', 'Windows']}>
+<Tab value="Linux 与 macOS" icon={TerminalSquare}>
+
+### 删除 Linux 或 macOS 配置
+
+```sh
+rm ~/.config/coolify/config.json
+```
+
+</Tab>
+
+<Tab value="Windows" icon={Computer}>
+
+### 删除 Windows 配置
+
+```powershell
+Remove-Item "$env:APPDATA\coolify\config.json"
+```
+
+</Tab>
+</Tabs>
+
+请在每个相关 Coolify 团队的 **Keys & Tokens > API Tokens**（密钥与令牌 > API 令牌）中吊销不再使用的令牌。仅删除本地文件不会使这些令牌失效。

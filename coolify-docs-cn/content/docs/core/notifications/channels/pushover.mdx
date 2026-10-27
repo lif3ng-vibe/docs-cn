@@ -1,0 +1,66 @@
+---
+title: Pushover
+description: 通过 Pushover 应用发送 Coolify 推送通知。
+---
+
+# Pushover
+
+Coolify 使用你的 Pushover 用户密钥（user key）和为 Pushover 应用创建的 API 令牌发送通知。
+
+## 创建 Pushover 应用
+
+配置 Coolify 之前，请先登录 Pushover，并在你的账户下注册至少一部手机、平板或桌面客户端。测试通知会送达该账户注册的设备。
+
+<Steps>
+<Step>
+
+### 复制用户密钥
+
+登录 [Pushover 控制台](https://pushover.net/)。在账户主页复制 **Your User Key**。
+
+用户密钥标识接收通知的 Pushover 账户，它不同于下一步创建的应用 API 令牌。
+
+</Step>
+<Step>
+
+### 创建应用令牌
+
+1. 打开 [Create an Application/API Token](https://pushover.net/apps/build)。
+2. 输入应用名称，例如 `Coolify`。
+3. 接受条款并创建应用。描述、URL 和图标为可选项，除非 Pushover 另有说明。
+4. 打开创建好的应用，复制其 **API Token/Key**。
+
+应用令牌将 Coolify 标识为发送方，并让 Pushover 单独统计它的消息用量。
+
+</Step>
+</Steps>
+
+<Callout type="warning" title="保护好 API 令牌">
+请将 Pushover API 令牌作为机密保存。一旦泄露，请在 Pushover 中更换令牌并更新 Coolify。
+</Callout>
+
+---
+
+## 配置 Coolify
+
+1. 打开 **Notifications > Pushover**。
+2. 填入 **User key** 和 **API token**，然后选择 **Save changes**。
+3. 选择 **Enable**。
+4. 在 **Notification events** 下，选择要通过 Pushover 发送的事件。
+5. 选择 **Send test**。
+
+在选择更多事件之前，先确认测试通知已送达连接到 Pushover 账户的某台设备。
+
+---
+
+## 排查 Pushover 投递问题
+
+如果测试通知没有送达：
+
+1. 确认 **User key** 来自接收方账户的主页。
+2. 确认 **API token** 来自你为 Coolify 创建的那个 Pushover 应用。不要在两个字段里填同一个用户密钥。
+3. 确认接收方 Pushover 账户至少有一台已注册且处于活跃状态的设备。
+4. 打开 Pushover 应用页面，查看其消息用量和状态。
+5. 如果重新生成过应用令牌，请把新值保存到 Coolify 并再次测试。
+
+每个事件设置背后的触发条件参见[通知事件](/core/notifications/events)。

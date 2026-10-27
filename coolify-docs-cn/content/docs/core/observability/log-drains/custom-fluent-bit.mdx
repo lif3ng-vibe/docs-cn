@@ -1,0 +1,267 @@
+---
+title: 自定义 Fluent Bit
+description: 配置 Coolify 使用完整的自定义 Fluent Bit 配置转发资源容器日志。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Globe3,
+  Layers,
+  Server,
+  Settings,
+  Warning22,
+} from 'reicon-react';
+
+# 配置自定义 Fluent Bit 日志转发
+
+当内置的 Axiom 和 New Relic 目标（Destination）无法满足你的日志服务商时，请使用**自定义 Fluent Bit（Custom Fluent Bit）**。Coolify 会按你提供的原样运行配置，因此你必须自行定义日志服务商所需的输入、过滤器、解析、输出、身份验证与目标行为。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+提供一份完整的 Fluent Bit 2.0 配置，让它在端口 `24224` 上接受 `forward` 协议，并把记录发送到你的目标。Coolify 负责写入配置、启动 `coolify-log-drain`，并把已开启转发的资源容器接入其中。
+
+</CoolCallout>
+
+<CoolCallout type="warning" icon={Warning22} title="Coolify 不校验 Fluent Bit 语法">
+
+Coolify 只检查 **Fluent Bit 配置**是否为空。一条无效的指令、一个不可用的插件或被拒绝的凭据，都可能让 `coolify-log-drain` 停止运行或无法投递日志。
+
+</CoolCallout>
+
+---
+
+## 开始之前
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '服务商要求',
+      description: '收集端点地址、身份验证凭据、TLS 要求与负载格式。',
+      icon: Globe3,
+    },
+    {
+      title: 'Fluent Bit 配置',
+      description: '定义你的目标所需的输入、过滤器、解析、输出、重试与刷新行为。',
+      icon: Settings,
+    },
+    {
+      title: '已验证的服务器',
+      description: '确认资源所在服务器能够访问目标，且没有启用其他日志转发。',
+      icon: Server,
+    },
+  ]}
+/>
+
+在编写配置之前，请先阅读 [Fluent Bit 配置文档](https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/configuration-file)。
+
+配置中包含凭据时，应将其视为敏感内容。Coolify 不会为服务商机密提供单独的自定义环境变量字段。
+
+---
+
+## Coolify 如何运行配置
+
+<CoolFlow
+  id="custom-fluent-bit-runtime"
+  icon={Layers}
+  title="从保存配置到转发记录"
+  description="Coolify 管理容器与文件挂载，而你的配置控制 Fluent Bit 本身。"
+  steps={[
+    '保存主配置',
+    '写入服务器文件',
+    '启动 Fluent Bit 2.0',
+    '接收资源记录',
+    '把记录发送到目标',
+  ]}
+  list={[
+    <>Coolify 保存<strong>Fluent Bit 配置</strong>与可选的<strong>解析器配置</strong>。</>,
+    '它会把受管文件写入资源服务器上的 `/data/coolify/log-drains` 目录。',
+    '`coolify-log-drain` 容器基于镜像 `cr.fluentbit.io/fluent/fluent-bit:2.0` 启动，启动参数为 `-c /fluent-bit.conf`。',
+    '已开启转发的资源通过 Fluentd 驱动，把 Docker 日志记录发送到 `tcp://127.0.0.1:24224`。',
+    '你的过滤器、解析器和输出负责转换并交付这些记录。',
+  ]}
+  endnote="你的主配置必须监听 Fluent Bit forward 协议的 24224 端口。"
+/>
+
+默认情况下，Coolify 会在资源服务器上写入这些文件：
+
+| 文件 | 用途 |
+| :--- | :--- |
+| `/data/coolify/log-drains/fluent-bit.conf` | **Fluent Bit 配置**中的完整内容 |
+| `/data/coolify/log-drains/parsers.conf` | **解析器配置**中的可选内容 |
+| `/data/coolify/log-drains/docker-compose.yml` | Coolify 托管的 Fluent Bit 服务 |
+
+容器会把这两个配置文件挂载到 `/fluent-bit.conf` 和 `/parsers.conf`。
+
+---
+
+## 编写主配置
+
+下面这个骨架展示了必需的输入部分和一个 HTTPS 输出示例。请把主机、URI、身份验证与输出选项替换为你的日志服务商支持的值：
+
+```ini
+[SERVICE]
+  Flush        5
+  Daemon       off
+  Log_Level    info
+  Parsers_File parsers.conf
+
+[INPUT]
+  Name              forward
+  Listen            0.0.0.0
+  Port              24224
+  Buffer_Chunk_Size 1M
+  Buffer_Max_Size   6M
+
+[OUTPUT]
+  Name   http
+  Match  *
+  Host   logs.example.com
+  Port   443
+  URI    /ingest
+  format json
+  tls    On
+```
+
+该示例并非针对特定服务商的完整配置。启用转发之前，请补充服务商要求的请求头、令牌、负载、重试与 TLS 选项。
+
+只能使用 Coolify 所用 Fluent Bit 2.0 镜像中自带的输入、过滤器、解析器和输出插件。
+
+---
+
+## 添加解析器定义
+
+**解析器配置**是可选的。它会写入 `parsers.conf`，但添加解析器定义并不会自动生效，主配置必须显式引用该解析器。
+
+例如，把下面的解析器定义添加到**解析器配置**：
+
+```ini
+[PARSER]
+  Name   app_json
+  Format json
+```
+
+然后在 **Fluent Bit 配置**中添加一个 parser 过滤器：
+
+```ini
+[FILTER]
+  Name         parser
+  Match        *
+  Key_Name     log
+  Parser       app_json
+  Reserve_Data On
+```
+
+这个示例会解析存放在传入 `log` 字段中的 JSON，并保留记录的其他字段。
+
+---
+
+## 配置 Coolify
+
+1. 打开**服务器（Servers）**，选择运行这些资源的服务器。
+2. 打开**日志转发（Log Drains）**。
+3. 在**自定义 Fluent Bit** 区块中，保持**状态（Status）**为**禁用（Disabled）**。
+4. 把完整的主配置粘贴到 **Fluent Bit 配置**中。
+5. 如有需要，把解析器定义粘贴到**解析器配置**中。
+6. 在自定义区块中选择**保存更改（Save changes）**。
+7. 把**状态**设为**启用（Enabled）**。Coolify 会写入文件并启动 `coolify-log-drain`。
+
+---
+
+## 为资源启用
+
+按照[为资源启用日志转发](/core/observability/log-drains/overview#为资源启用日志转发)操作，然后重启或重新部署该资源。
+
+你的自定义配置会接收本地 Fluentd 驱动交付的 Docker 日志记录。
+
+<CoolCompare
+  id="custom-and-built-in-log-fields"
+  className="not-prose"
+  icon={Box2}
+  title="记录增强"
+  description="自定义转发会接收 Docker 记录，但不会继承内置目标使用的过滤器和记录修改器。"
+>
+<CoolCompareColumn
+  title="内置 Axiom 与 New Relic"
+  items={[
+    '自动添加 `coolify.server_name`',
+    '把 `COOLIFY_APP_NAME` 重命名为 `coolify.app_name`',
+    '排除包含 `127.0.0.1` 的消息',
+  ]}
+/>
+<CoolCompareColumn
+  title="自定义 Fluent Bit"
+  items={[
+    '使用本地 Fluentd 驱动交付的记录',
+    '需要在你的配置中自行添加或重命名标识字段',
+    '只应用你定义的过滤器',
+  ]}
+/>
+</CoolCompare>
+
+---
+
+## 验证送达
+
+1. 让已开启转发的资源向 `stdout` 或 `stderr` 写入一条可识别的消息。
+2. 等待配置中的 **Flush** 间隔。
+3. 确认消息出现在外部目标中。
+4. 确认 Fluent Bit 容器仍在运行：
+
+```sh
+docker ps --filter name=coolify-log-drain
+docker logs --tail 100 coolify-log-drain
+```
+
+在 Coolify 的服务器终端中，或通过 SSH 在托管资源的服务器上运行这些命令。
+
+---
+
+## 更新配置
+
+转发处于启用状态时，配置字段是只读的。
+
+1. 把**状态**设为**禁用**，停止 `coolify-log-drain`。
+2. 更新主配置或解析器配置。
+3. 选择**保存更改**。
+4. 再次把**状态**设为**启用**。
+5. 生成一条新的资源日志，并在外部验证结果。
+
+---
+
+## 排查自定义转发失败
+
+- 确认主配置中有监听端口 `24224` 的 `forward` 输入。
+- 阅读 `docker logs --tail 100 coolify-log-drain` 的输出，排查语法、插件、DNS、TLS 与身份验证错误。
+- 确认主配置引用的每个解析器都存在于**解析器配置**中。
+- 确认所用的插件和选项在 Fluent Bit 2.0 中可用。
+- 确认资源的**日志转发（Log drain）**设置已启用，且之后重启过该资源。
+- 确认资源服务器能够访问所配置的输出主机和端口。
+
+---
+
+## 继续了解日志转发
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '日志转发概览',
+      href: '/core/observability/log-drains/overview',
+      description: '回顾服务器级流水线、资源配置与送达检查。',
+      icon: Server,
+    },
+    {
+      title: '使用 Axiom',
+      href: '/core/observability/log-drains/axiom',
+      description: '为已有的 Axiom 数据集使用内置目标。',
+      icon: Globe3,
+    },
+    {
+      title: '使用 New Relic',
+      href: '/core/observability/log-drains/new-relic',
+      description: '使用面向 New Relic Log API 的内置目标。',
+      icon: Settings,
+    },
+  ]}
+/>

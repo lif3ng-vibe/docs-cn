@@ -1,0 +1,104 @@
+---
+title: 更新
+description: 使用 CLI 内置命令或安装时采用的包管理方式更新 Coolify CLI。
+---
+
+import { Code, Computer, Package, Refresh23, TerminalSquare } from 'reicon-react';
+
+# 更新 Coolify CLI
+
+CLI 启动时会检查 GitHub 上是否有新版本。有更新可用时，它会向标准错误输出版本号和 `coolify update` 命令。
+
+## 选择更新方式
+
+如果希望由原来的包或安装方式继续管理后续更新，请使用对应的方式更新。
+
+<Tabs id="cli-update-method" items={['内置更新器', '安装脚本', 'Homebrew', 'Windows', 'Go']}>
+<Tab value="内置更新器" icon={Refresh23}>
+
+### 更新当前二进制文件
+
+内置更新器会为你的操作系统和架构下载最新 release，然后替换正在运行的 CLI 二进制文件：
+
+```sh
+coolify update
+```
+
+如果二进制文件安装在 `/usr/local/bin` 或 `%ProgramFiles%\Coolify` 这类系统目录，请以替换该文件所需的管理员权限运行命令。
+
+</Tab>
+
+<Tab value="安装脚本" icon={TerminalSquare}>
+
+### 重新运行 Linux 或 macOS 安装脚本
+
+全局安装：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.sh | bash
+```
+
+安装到 `~/.local/bin` 的情况：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.sh | bash -s -- --user
+```
+
+安装器会显示已安装的版本，并在替换现有二进制文件前先询问。
+
+</Tab>
+
+<Tab value="Homebrew" icon={Package}>
+
+### 用 Homebrew 升级
+
+```sh
+brew update
+brew upgrade coolify-cli
+```
+
+</Tab>
+
+<Tab value="Windows" icon={Computer}>
+
+### 重新运行 PowerShell 安装脚本
+
+管理员安装：
+
+```powershell
+irm https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.ps1 | iex
+```
+
+按用户安装：
+
+```powershell
+$env:COOLIFY_USER_INSTALL=1; irm https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.ps1 | iex
+```
+
+安装器会显示已安装的版本，并在替换现有二进制文件前先询问。
+
+</Tab>
+
+<Tab value="Go" icon={Code}>
+
+### 用 Go 重新安装
+
+```sh
+go install github.com/coollabsio/coolify-cli/coolify@latest
+```
+
+Go 会替换 `GOBIN` 中的二进制文件（未设置 `GOBIN` 时为 `GOPATH/bin`）。
+
+</Tab>
+</Tabs>
+
+## 验证更新
+
+```sh
+coolify version
+coolify context verify
+```
+
+确认 `coolify version` 显示的是预期的 CLI 版本。上下文验证成功则说明更新后的 CLI 仍能连接所选 Coolify 实例并完成认证。
+
+更新 CLI 不会改动其配置文件或已保存的上下文。

@@ -1,0 +1,102 @@
+---
+title: 2FA
+description: 配置双因素认证、保存恢复码,并管理 Coolify 账户的 2FA。
+---
+
+# 双因素认证(2FA)
+
+双因素认证(2FA)在密码、OAuth 或 SSO 登录成功之后,再增加一道验证器验证码挑战。每位 Coolify 用户都在自己的个人资料页面上为自己的账户配置 2FA。
+
+<Callout type="info" title="2FA 同样保护 OAuth 和 SSO 登录">
+当账户启用 2FA 后,Coolify 会在提供商身份验证完成后再要求 2FA 验证。SSO 用户无需 Coolify 密码也能启用 2FA。
+</Callout>
+
+## 配置 2FA
+
+开始之前,先安装一个支持基于时间的一次性密码(TOTP)的验证器应用。
+
+<Steps>
+<Step>
+
+### 打开你的个人资料
+
+在 Coolify 中打开用户菜单,选择 **Profile**。找到 **Two-factor Authentication**,然后选择 **Configure 2FA**。
+
+如果 Coolify 要求,请确认你的密码。
+
+</Step>
+<Step>
+
+### 把 Coolify 添加到验证器
+
+用验证器应用扫描二维码。
+
+如果无法扫描,选择 **Show manual setup**,把密钥或 OTP URL 复制到验证器应用中。请把该密钥当作密码对待,因为任何拿到它的人都能生成有效验证码。
+
+</Step>
+<Step>
+
+### 确认验证器验证码
+
+在 **One-time code** 中输入验证器应用显示的六位验证码,然后选择 **Validate 2FA**。
+
+只有验证码通过后,Coolify 才会启用 2FA。
+
+</Step>
+<Step>
+
+### 保存恢复码
+
+复制确认后显示的每一个恢复码,把它们保存在 Coolify 之外的密码管理器或其他安全位置。
+
+不要把唯一一份副本留在浏览器里、Coolify 服务器上,或与验证器应用相同的设备上。
+
+</Step>
+</Steps>
+
+---
+
+## 使用 2FA 登录
+
+在 Coolify 接受你的密码或完成提供商登录之后,输入验证器应用当前显示的六位验证码。
+
+要改用恢复码,选择 **Use Recovery Code Instead**,输入一个已保存的恢复码并继续。之后可通过 **Use Authenticator Code Instead** 切回验证器验证码。
+
+如果正确的验证器验证码被拒绝,检查运行验证器的设备和 Coolify 服务器的时钟是否准确。自托管服务器的时间检查方法,参阅 [2FA 失效排查](/troubleshoot/server/two-factor-stopped-working)。
+
+---
+
+## 管理恢复码
+
+在以下情况,打开 **Profile > Two-factor Authentication** 并选择 **Regenerate recovery codes**:
+
+- 某个恢复码可能已泄露
+- 已保存的那组恢复码丢失
+- 你的恢复码存放位置发生变化
+
+重新生成后,Coolify 会显示新的恢复码组。请用新验证码替换之前保存的每一份副本。
+
+---
+
+## 禁用 2FA
+
+打开 **Profile > Two-factor Authentication**,选择 **Disable 2FA**。如果被要求,请确认你的密码。
+
+禁用 2FA 会从账户中移除验证器配置及其恢复码。它不会更改账户密码,也不会禁用 OAuth 提供商。
+
+---
+
+## 没有可用验证码时找回访问权限
+
+先尝试破坏性最小的恢复路径:
+
+1. 检查验证器设备的时间和自托管 Coolify 服务器的时间。
+2. 使用设置期间保存的某个恢复码。
+3. 如果都不行,使用适用于你的 Coolify 部署的恢复路径。
+
+| 部署方式 | 恢复路径 |
+| :--- | :--- |
+| 自托管 Coolify | 服务器管理员可以按照[重置 2FA](/core/backup-and-recovery/reset-2fa)操作。该流程会清除所选账户的验证器密钥和恢复码。 |
+| Coolify Cloud | [联系 Coolify 团队](/support)。Coolify Cloud 用户无法访问自托管重置流程所需的容器。 |
+
+访问恢复后,请重新配置 2FA 并保存新的恢复码。

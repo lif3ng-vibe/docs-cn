@@ -1,0 +1,19 @@
+---
+title: Django
+description: 在 Coolify 上部署 Django 应用：gunicorn、自动构建、环境变量与 Python 包管理。
+---
+
+# Django
+
+Django 是一个高级 Python Web 框架，倡导快速开发与简洁务实的设计。
+
+## 要求
+
+1. 设置 `requirements.txt` 与 `manage.py` 所在的基础目录。
+
+> 在示例仓库中是 `/coolify`。
+
+2. 在 `requirements.txt` 文件中加入 `gunicorn`，参见[官方文档](https://gunicorn.org/install/)。
+3. 在 `settings.py` 文件的 `ALLOWED_HOSTS` 中加入 `localhost` 和你的 `domain`，参见[官方文档](https://docs.djangoproject.com/en/4.2/ref/settings/#allowed-hosts)。
+
+> 健康检查要正常工作，必须有 `localhost`。

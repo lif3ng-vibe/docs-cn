@@ -1,0 +1,157 @@
+---
+title: 共享变量
+description: 创建团队、项目、环境和服务器范围的值,并在 Coolify 资源配置中引用它们。
+---
+
+# 共享变量
+
+共享变量让你只定义一次某个值,然后在多个资源中引用它。Coolify 支持团队、项目、环境和服务器四种范围。
+
+定义共享变量并不会自动把它加进每个应用、数据库或服务。你需要在需要该值的地方添加引用,然后根据资源配置变更的要求重新部署或重启资源。
+
+## 共享变量的工作方式
+
+共享变量由名称、值和范围组成。例如,一个名为 `NODE_ENV` 的团队变量可以这样引用:
+
+```txt
+{{team.NODE_ENV}}
+```
+
+`team` 是固定的字面范围关键字,不要替换成团队的名字。
+
+Coolify 准备资源配置时,会把有效的引用替换为该范围下存储的值。如果引用没有匹配到可用的共享变量,它会保持未解析状态。
+
+---
+
+## 选择范围
+
+使用能覆盖所有需要该值的资源的最小范围。
+
+| 范围 | 可用于 | 引用语法 |
+| :--- | :--- | :--- |
+| **Team** | 当前团队的资源 | `{{team.VARIABLE_NAME}}` |
+| **Project** | 某个项目中的资源 | `{{project.VARIABLE_NAME}}` |
+| **Environment** | 某个项目环境中(如 `production` 或 `staging`)的资源 | `{{environment.VARIABLE_NAME}}` |
+| **Server** | 部署到某台服务器上的资源 | `{{server.VARIABLE_NAME}}` |
+
+范围关键字 `team`、`project`、`environment` 和 `server` 是固定的。只需把 `VARIABLE_NAME` 替换为共享变量的名称。
+
+服务器范围的引用使用运行该资源的那台服务器。这样,同一份资源配置在部署到不同服务器时,可以解析出各自的服务器专属值。
+
+---
+
+## 创建共享变量
+
+<Steps>
+<Step>
+
+### 打开共享变量
+
+在 Coolify 侧边栏选择 **Shared Variables**。
+
+</Step>
+<Step>
+
+### 选择范围
+
+选择 **Team wide**、**Project wide**、**Environment wide** 或 **Server wide**。
+
+对于项目、环境或服务器范围,选择应当拥有该变量的具体条目。
+
+</Step>
+<Step>
+
+### 添加变量
+
+选择 **Add variable**,然后输入:
+
+- **Name**:变量键名,例如 `NODE_ENV`
+- **Value**:要复用的值,例如 `production`
+- **Comment**:关于该值用途的可选说明
+
+当值包含换行时,把 **Value type** 设为 **Multiline**。然后选择 **Add variable**。
+
+新条目会出现在所选范围的页面上。
+
+</Step>
+</Steps>
+
+---
+
+## 引用共享变量
+
+<Steps>
+<Step>
+
+### 打开资源的环境变量
+
+打开需要该值的应用、数据库或服务,然后进入其 **Environment Variables** 页面。
+
+</Step>
+<Step>
+
+### 添加资源变量
+
+创建工作负载应接收的环境变量。例如:
+
+```dotenv
+NODE_ENV={{team.NODE_ENV}}
+```
+
+等号左边是工作负载可获得的环境变量,右边告诉 Coolify 要插入哪个共享值。
+
+你还可以把共享引用与文本组合:
+
+```dotenv
+DATABASE_URL=postgresql://{{environment.DB_HOST}}:{{environment.DB_PORT}}/app
+```
+
+</Step>
+<Step>
+
+### 应用并验证更改
+
+保存资源环境变量,然后在其配置要求时重新部署或重启资源。
+
+在工作负载内部或通过其行为,验证环境变量包含预期的解析值。不要把机密值打印到公开的部署日志中。
+
+</Step>
+</Steps>
+
+---
+
+## 在 Developer view 中管理变量
+
+在范围页面上选择 **Developer view**,可以把普通共享变量当作 `KEY=value` 行来编辑。选择 **Save changes** 会应用编辑器的完整内容。
+
+以 `#` 开头的行被视为注释。Developer view 可以创建新变量、更新已有的普通值,并删除编辑器中省略的变量。
+
+<Callout type="warning" title="Developer view 保存的是完整列表">
+删除某个变量的行并保存,会删除该共享变量。选择 **Save changes** 之前,请通读整个编辑器内容。
+</Callout>
+
+锁定和多行变量在 Developer view 中显示为占位符,无法在此修改。多行变量请在 **Normal view** 中编辑。要更改锁定的值,先删除该变量再重新创建。
+
+---
+
+## 更新或删除共享变量
+
+在 **Normal view** 中,打开变量条目即可更改其名称、值、注释或 **Value type**,然后选择 **Update variable**。
+
+引用使用的是变量名称。重命名共享变量后,请更新所有使用旧名称的 `{{scope.VARIABLE_NAME}}` 引用。
+
+要永久移除变量,选择 **Delete**,在确认对话框中输入显示的变量名,然后选择 **Permanently Delete**。
+
+删除共享变量不会把它的引用从资源配置中移除。请在受影响资源下次部署之前,搜索并替换或删除这些引用。
+
+---
+
+## 在 Docker Compose 中使用共享变量
+
+Docker Compose 资源可以在其 Compose 配置中引用共享变量。引用的位置取决于该值是用于 Compose 插值,还是容器环境变量。
+
+支持的模式与示例参阅 [Docker Compose 中的环境变量](/applications/builds/docker-compose#环境变量)。
+
+## 复制已解析的值
+
+资源环境变量页面可以复制解析后的共享值。锁定的共享变量引用仍是引用,不能作为机密值复制。把无效的键名改为符合 `[A-Za-z_][A-Za-z0-9_.]*` 的形式,然后更新它们的引用。

@@ -1,0 +1,220 @@
+---
+title: Coolify 是什么
+description: Coolify 是开源、可自托管的 Heroku、Vercel 和 Netlify 替代品。通过 SSH 把应用、数据库和服务部署到你拥有的任意服务器上。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Database,
+  Globe3,
+  Layers,
+  Rocket2,
+  Server,
+  ServerCloud,
+  Settings,
+  ShieldSecurity2,
+  WindowPointer,
+} from 'reicon-react';
+
+# Coolify 是什么
+
+Coolify 是一个开源、可自托管的平台,用于在你掌控的服务器上部署和管理应用、数据库和服务。
+
+Coolify 为你提供平台即服务(PaaS)式的工作流程:从仪表盘或 API 配置、部署和运维资源,而工作负载始终是你基础设施上的标准 Docker 资源。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+Coolify 是你基础设施的控制平面。它通过 SSH 连接到每台服务器,把服务器准备好以运行 Docker 工作负载,并协调构建、部署、域名、HTTPS、健康检查和日常运维。
+
+你可以自己运行 Coolify 实例,也可以使用 Coolify Cloud。两种情况下,应用、数据库和服务所在的服务器都由你提供。
+
+</CoolCallout>
+
+---
+
+## Coolify 管理什么
+
+Coolify 把每个可部署的条目称为**资源(Resource)**。资源属于某个项目和环境,然后运行在连接到 Coolify 的服务器上。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '应用',
+      description: '从 Git 仓库、Dockerfile、Docker Compose 文件或预构建 Docker 镜像部署。',
+      icon: WindowPointer,
+    },
+    {
+      title: '数据库',
+      description: '运行受支持的数据库,配备持久化存储、生命周期控制和备份配置。',
+      icon: Database,
+    },
+    {
+      title: '一键服务',
+      description: '从持续维护的 Docker Compose 模板启动预配置的软件。',
+      icon: Box2,
+    },
+    {
+      title: '资源操作',
+      description: '管理域名、环境变量、部署、健康检查、日志、存储和容器生命周期。',
+      icon: Settings,
+    },
+  ]}
+/>
+
+一个 Coolify 实例可以管理一台或多台已连接服务器上的资源。
+
+---
+
+## Coolify 如何融入你的基础设施
+
+Coolify 实例负责协调工作;Docker 在你连接的服务器上运行生成的资源。
+
+<CoolFlow
+  id="coolify-resource-flow"
+  icon={Layers}
+  title="从配置到运行中的容器"
+  description="无论资源从源代码、容器镜像、数据库还是一键模板开始,大多遵循同一个基本模型。"
+  steps={[
+    '连接服务器',
+    '创建资源',
+    '构建或拉取镜像',
+    '启动 Docker 容器',
+    '按需路由流量',
+  ]}
+  list={[
+    'Coolify 校验已连接服务器上的 SSH 访问和 Docker 环境。',
+    '你选择源码、镜像、数据库或服务模板,并配置其设置。',
+    'Coolify 在需要时构建镜像,或从镜像仓库拉取现有镜像。',
+    'Docker 运行容器,并把持久化数据保存在卷或挂载的存储中。',
+    '对于 HTTP 资源,该服务器上的代理把配置的域名路由到正确的容器,并处理 HTTPS。',
+  ]}
+  endnote="Coolify 实例从仪表盘和 API 协调整个生命周期。HTTP 资源的流量会前往运行该资源的服务器上的代理。"
+/>
+
+已部署的资源使用你服务器上的标准 Docker 容器、网络和存储,因此不依赖任何专有的 Coolify 运行时。如果 Coolify 实例不可用,已在运行的资源会继续运行;在实例恢复之前,你失去的是 Coolify 的自动化和仪表盘控制。
+
+工作负载数据和持久化存储保留在已连接的服务器上。控制平面、已连接服务器、Docker 和代理流量的更多细节,参阅[Coolify 的工作原理](/core/how-coolify-works)。
+
+---
+
+## 哪些仍在你的掌控之中
+
+Coolify 不是工作负载服务器的托管商。Coolify 在你提供的基础设施上自动化部署工作,但基础设施本身仍由你运维。
+
+<CoolCompare
+  id="coolify-responsibility-boundary"
+  className="not-prose"
+  icon={ShieldSecurity2}
+  title="责任边界"
+  description="这条责任边界同时适用于自托管 Coolify 与 Coolify Cloud。自托管时,Coolify 实例也由你运维。"
+>
+<CoolCompareColumn
+  title="Coolify 负责协调"
+  items={[
+    '服务器连接校验和 Docker 环境准备',
+    '应用构建、镜像拉取、部署和生命周期操作',
+    '资源配置、环境变量、日志和健康检查',
+    '代理路由、域名和 HTTPS 证书自动化',
+  ]}
+/>
+<CoolCompareColumn
+  title="你仍需负责"
+  items={[
+    '已连接服务器的选型与付费',
+    '操作系统更新、SSH 访问、防火墙规则和 DNS',
+    '应用数据、数据库数据,以及经过演练的备份与恢复策略',
+    '机密、访问权限和已暴露工作负载的安全',
+    '自托管时 Coolify 实例的更新、备份与恢复',
+  ]}
+/>
+</CoolCompare>
+
+把生产工作负载放到已连接的服务器上之前,先阅读[安全模型](/core/security-model)。
+
+---
+
+## 自托管还是 Coolify Cloud
+
+Coolify 有两种部署模式。资源工作流程完全相同,差别只在于由谁运维 Coolify 控制平面。
+
+<CoolCompare
+  id="coolify-deployment-models"
+  className="not-prose"
+  icon={ServerCloud}
+  title="选择由谁运行 Coolify 实例"
+  description="无论哪种模式,应用、数据库和服务都运行在你连接的服务器上。"
+>
+<CoolCompareColumn
+  title="自托管"
+  items={[
+    '在你掌控的基础设施上安装 Coolify 实例。',
+    '自行决定何时更新 Coolify 实例,并管理它的备份与恢复。',
+    '用一个实例管理一台或多台已连接的服务器。',
+  ]}
+/>
+<CoolCompareColumn
+  title="Coolify Cloud"
+  items={[
+    '使用由 Coolify 团队托管维护的 Coolify 实例。',
+    '把你自己的服务器连接到托管控制平面。',
+    '保留那些服务器上操作系统、网络和工作负载的责任。',
+  ]}
+/>
+</CoolCompare>
+
+详细的职责与定价对比,参阅[自托管 Coolify 与 Coolify Cloud 对比](/core/selfhosted-cloud-comparison)。
+
+---
+
+## 开始使用 Coolify
+
+如果你是 Coolify 新手,先选择一种控制平面模式,然后连接一台服务器并部署第一个资源。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '选择你的路径',
+      href: '/choose-your-path',
+      description: '在搭建 Coolify 实例之前,比较两条起步路径。',
+      icon: Globe3,
+    },
+    {
+      title: '从自托管开始',
+      href: '/start-with-self-hosted',
+      description: '在你掌控的基础设施上安装 Coolify,准备好第一台服务器。',
+      icon: Server,
+    },
+    {
+      title: '从 Coolify Cloud 开始',
+      href: '/start-with-cloud',
+      description: '使用托管控制平面,接入你自己的工作负载服务器。',
+      icon: ServerCloud,
+    },
+  ]}
+  groups={[
+    {
+      title: '理解这个平台',
+      description: '了解控制平面、Docker、构建、网络和安全如何配合。',
+      icon: Layers,
+      links: [
+        { title: 'Coolify 的工作原理', href: '/core/how-coolify-works' },
+        { title: 'Docker 与容器', href: '/core/docker-and-containers' },
+        { title: '构建与部署模型', href: '/core/build-deployment-model' },
+        { title: 'Coolify 中的网络', href: '/core/networking-in-coolify' },
+        { title: '安全模型', href: '/core/security-model' },
+      ],
+    },
+    {
+      title: '部署第一个资源',
+      description: '用一份新手部署指南验证你的环境。',
+      icon: Rocket2,
+      links: [
+        { title: '部署你的第一个应用', href: '/deploy-your-first-app' },
+        { title: '部署你的第一个数据库', href: '/deploy-your-first-database' },
+        { title: '部署你的第一个服务', href: '/deploy-your-first-service' },
+      ],
+    },
+  ]}
+/>

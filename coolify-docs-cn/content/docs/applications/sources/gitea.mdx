@@ -1,0 +1,28 @@
+---
+title: Gitea
+description: 部署 Gitea 仓库，并配置推送与拉取请求 webhook。
+---
+
+# Gitea
+
+公开仓库使用 HTTPS URL（参见[公开仓库](/applications/sources/public-repositories)），私有仓库使用带部署密钥的 SSH URL（参见[部署密钥](/applications/sources/deploy-keys)）。
+
+```sh
+https://gitea.example.com/example/application.git
+git@gitea.example.com:example/application.git
+```
+
+创建私有应用之前，先把部署密钥的公钥添加到仓库中。
+
+## 配置自动部署
+
+1. 在 Coolify 应用中打开 **Webhooks**（Webhook）。
+2. 复制 **Gitea** URL。
+3. 在 **Gitea** 区域填写 **Webhook secret**（Webhook 密钥），然后选择 **Save changes**（保存更改）。
+4. 在 Gitea 中打开仓库的 webhook 设置。
+5. 填入该 URL 与相同的密钥。
+6. 启用 **Push**（推送）。
+7. 如使用预览部署，请启用拉取请求事件。
+8. 打开 **Advanced > Deployment**，在 Coolify 的 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署（webhook））。
+
+先验证一次推送部署。随后打开或更新一个拉取请求，检查 **Preview Deployments**（预览部署）。

@@ -1,0 +1,117 @@
+---
+title: 使用 Nixpacks 部署
+description: 使用 Nixpacks 从 Git 源部署服务器应用或静态应用。
+---
+
+# 使用 Nixpacks 部署
+
+本指南介绍如何连接 Git 仓库、让 Nixpacks 识别应用，并通过 Coolify 部署生成的镜像。
+
+如果需要判断自动识别是否适合你的代码库，请先阅读 [Nixpacks 概览](/applications/builds/nixpacks/overview)。
+
+## 部署应用
+
+<Steps>
+<Step>
+
+### 创建资源
+
+打开目标项目和环境，然后选择 **+ New**（新建）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/1.webp" alt="Coolify 项目中的 New Resource（新建资源）按钮" />
+
+</Step>
+<Step>
+
+### 连接仓库
+
+从[公开仓库](/applications/sources/public-repositories)、[部署密钥（deploy key）](/applications/sources/deploy-keys)或受支持的 Git App 创建应用。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/2.webp" alt="Nixpacks 应用的 Git 仓库来源选项" />
+
+对于公开仓库，粘贴其 HTTPS URL，然后选择 **Check Repository**（检查仓库）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/3.webp" alt="Nixpacks 应用的公开仓库 URL 输入框" />
+
+选择仓库和分支。
+
+</Step>
+<Step>
+
+### 选择 Nixpacks
+
+创建时在 **Build pack**（构建包）中选择 **Nixpacks**。创建之后，该选择对应 **常规（General）> 构建流水线（Build pipeline）** 下的**构建策略（Build strategy）**。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/4.webp" alt="Build Pack 选择器中的 Nixpacks 选项" />
+
+把**基础目录**（Base Directory）设为 Nixpacks 应检查的目录。仓库根目录用 `/`；monorepo 中的应用则用 `/apps/api` 这类路径。
+
+</Step>
+<Step>
+
+### 选择应用类型
+
+创建完成后，通过 **常规（General）> 构建流水线（Build pipeline）> Site type（站点类型）** 选择 **Dynamic**（动态）、**Static**（静态）或 **SPA (single-page application)**（单页应用）。
+
+静态输出：
+
+- 创建时在 **Output type**（输出类型）中选择 **Static site**（静态站点）
+- 填写 **Publish Directory**（发布目录），例如 `/dist`
+- 保留生成的 Nginx 端口 `80`
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/5.webp" alt="Nixpacks 应用的静态站点设置" />
+
+服务器应用：
+
+- 创建时在 **Output type**（输出类型）中选择 **Web application**（Web 应用）
+- 填写进程监听的内部端口
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/8.webp" alt="Nixpacks 构建的服务器应用设置" />
+
+</Step>
+<Step>
+
+### 添加环境变量
+
+继续进入应用，打开 **Environment Variables**（环境变量）。
+
+添加应用所需的取值。构建命令需要读取的值，请在 **Build time**（构建时机）中选择 **Available during build**（构建期间可用）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/9.webp" alt="Nixpacks 应用的 Environment Variables（环境变量）页面" />
+
+</Step>
+<Step>
+
+### 检查识别出的命令
+
+打开 **General**（常规），查看识别出的 **Install Command**（安装命令）、**Build Command**（构建命令）和 **Start Command**（启动命令）。
+
+只有当识别结果不正确、或代码库需要自定义命令时才进行覆盖。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/10.webp" alt="Nixpacks 应用的 Install（安装）、Build（构建）和 Start（启动）命令字段" />
+
+</Step>
+<Step>
+
+### 部署并验证
+
+如果应用需要公开访问，先配置域名，然后选择 **Deploy**（部署）。
+
+查看部署日志，确认 Nixpacks 选择了哪些提供商（provider）、软件包和命令。
+
+服务器应用：打开应用日志，确认进程监听已配置的内部端口。静态应用：打开域名，验证生成的静态资源和一条客户端路由。
+
+</Step>
+</Steps>
+
+## 配置静态输出
+
+Coolify 使用 Nginx 来承载 Nixpacks 构建出的静态站点。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/6.webp" alt="静态 Nixpacks 应用选择 Nginx" />
+
+只有当站点需要单页应用回退、自定义响应头或缓存规则等行为时，才使用 **常规（General）> 构建流水线（Build pipeline）> Custom Nginx configuration（自定义 Nginx 配置）**。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/nixpacks/7.webp" alt="静态 Nixpacks 应用的 Generate 按钮与 Nginx 配置编辑器" />
+
+保存更改并重新部署应用。Coolify 会在镜像构建期间把 Nginx 配置复制进最终的静态镜像，因此复用现有镜像的重启无法使更改生效。

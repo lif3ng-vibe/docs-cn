@@ -1,0 +1,232 @@
+---
+title: 构建服务器
+description: 添加专用构建服务器，并配置应用使用它进行 Docker 镜像构建。
+---
+
+# 构建服务器
+
+构建服务器在单独的机器上构建应用镜像。构建完成的镜像被推送到容器镜像仓库，再由部署服务器拉取并运行。
+
+默认情况下，Coolify 在应用将要部署的那台服务器上构建应用。当构建过程在部署服务器上占用过多 CPU、内存或磁盘空间时，可以添加构建服务器。
+
+## 服务器角色
+
+在服务器的 **General** 设置中设置 **Server role**（服务器角色）：
+
+| 角色 | 行为 | API 取值 |
+| :--- | :--- | :--- |
+| 仅部署 | 运行资源；镜像必须在别处构建。应用需要填写 Docker 镜像名。 | `deployment` |
+| 仅构建 | 为其他服务器构建镜像；不能承载资源部署。GitHub Actions runner 需要此角色。 | `build` |
+| 部署与构建 | 在本服务器上构建镜像并运行资源。 | `both` |
+
+API 使用 `server_role`。已弃用的 `is_build_server` 字段仍然兼容，但新的集成请使用 `server_role`。
+
+在 **Team**（团队）下配置 **Build server fallback**（构建服务器回退），决定在没有可用构建服务器时，构建是否可以回退到部署服务器。该服务器必须拥有允许构建的角色。如果构建绝不能落在部署机器上，请禁用回退。
+
+## 准备工作
+
+开始之前，请确保具备：
+
+- 一台没有运行应用、数据库或服务的全新远程服务器
+- 构建服务器上已安装 Docker Engine，或允许 Coolify 安装它
+- 一个 Coolify 可推送完成镜像的容器镜像仓库
+- 应用的镜像仓库地址，例如 `ghcr.io/example/my-app`
+- 应用源码仓库的访问权限
+
+构建服务器应与部署服务器使用相同的 CPU 架构。
+
+<Callout type="warning" title="构建服务器不能运行资源">
+被标记为构建服务器的服务器不能再被选为部署目标。不要在运行应用、数据库或服务的服务器上启用该设置。
+</Callout>
+
+---
+
+## 配置构建服务器
+
+选择是添加新服务器，还是使用已接入 Coolify 的服务器。
+
+<Tabs id="configure-build-server" items={['添加新服务器', '使用现有服务器']}>
+<Tab value="添加新服务器">
+
+<Steps>
+<Step>
+
+### 准备 SSH 密钥
+
+打开服务器表单之前，先完成[创建并授权 SSH 密钥](/core/infrastructure/servers/add-server#创建并授权-ssh-密钥)。
+
+</Step>
+<Step>
+
+### 打开 Servers 页面
+
+1. 打开 Coolify 控制台。
+2. 在侧边栏选择 **Servers**（服务器）。
+3. 选择 **New server**（新建服务器）。
+4. 选择 **IP address or domain**（IP 地址或域名）。
+
+</Step>
+<Step>
+
+### 添加构建服务器
+
+1. 输入服务器名称、IP 地址或域名、SSH 端口、用户和私钥。
+2. 展开 **Advanced settings**（高级设置），把 **Server role** 设为 **Builds only**（仅构建）。
+3. 选择 **Continue**（继续）。
+
+Coolify 会添加服务器并打开其 **General**（通用）页面。
+
+</Step>
+<Step>
+
+### 验证构建服务器
+
+1. 选择 **Validate connection**（验证连接）。
+2. 保持页面打开，等待 Coolify 验证 SSH 连接并准备 Docker。
+3. 等待页面显示 **Server is reachable and validated**（服务器可达且已验证）。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="使用现有服务器">
+
+<Steps>
+<Step>
+
+### 确认服务器上没有资源
+
+1. 在 Coolify 侧边栏打开 **Servers**。
+2. 选择要使用的服务器。
+3. 打开 **Resources > Managed**（资源 > 托管）。
+4. 确认页面显示 **No managed resources found**（未找到托管资源）。
+
+如果服务器上有托管资源，请先迁移或删除它们再继续。只要还有资源连接在该服务器上，Coolify 就会禁用构建服务器设置。
+
+</Step>
+<Step>
+
+### 启用构建服务器角色
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/build-servers/existing-server-build-setting.webp" alt="现有服务器 General 页面上的构建服务器设置" />
+
+1. 打开该服务器的 **General**。
+2. 展开 **Advanced settings**，把 **Server role** 设为 **Builds only**。
+
+设置立即保存。只要它仍是构建服务器，就无法再被选为部署目标。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+<Callout type="info" title="使用多台构建服务器？">
+当有多台可用的构建服务器时，Coolify 会为每次构建随机选择一台。
+</Callout>
+
+<Callout type="idea" title="运行 GitHub Actions 任务">
+构建服务器还可以运行你组织的 GitHub Actions workflow 任务。参见 [GitHub Actions runners](/core/infrastructure/servers/github-actions-runners)。
+</Callout>
+
+---
+
+## 登录容器镜像仓库
+
+使用 **Servers > [server] > Registries** 在构建服务器和部署服务器上完成登录。预设和凭据更新参见[镜像仓库登录](/applications/builds/docker-registries#认证私有镜像仓库)。下方的 SSH 操作方式仍然可用。
+
+<Steps>
+<Step>
+
+### 连接到构建服务器
+
+使用服务器 **General** 页面上配置的同一个 SSH 用户连接：
+
+```sh
+ssh <user>@<build-server-ip>
+```
+
+把 `<user>` 和 `<build-server-ip>` 替换为你服务器的实际值。
+
+如果服务器使用的 SSH 端口不是 `22`，运行：
+
+```sh
+ssh -p <ssh-port> <user>@<build-server-ip>
+```
+
+</Step>
+<Step>
+
+### 登录镜像仓库
+
+```sh
+docker login <registry-domain>
+```
+
+把 `<registry-domain>` 替换为镜像仓库主机名，例如 `ghcr.io`。按提示输入镜像仓库用户名和访问令牌。
+
+登录会为当前 SSH 用户创建 `~/.docker/config.json`。构建服务器上必须有这个文件。
+
+如果镜像仓库是私有的，部署服务器上也要登录镜像仓库，这样它才能拉取构建完成的镜像。
+
+</Step>
+</Steps>
+
+---
+
+## 配置应用使用构建服务器
+
+<Steps>
+<Step>
+
+### 打开应用的 General 页面
+
+1. 在 Coolify 侧边栏打开 **Projects**（项目）。
+2. 选择项目和环境。
+3. 选择要使用构建服务器的应用。
+4. 打开 **General**（通用）。
+
+</Step>
+<Step>
+
+### 填写 Docker 镜像
+
+在 **Docker Image** 中填入完整的镜像仓库地址，例如 `ghcr.io/example/my-app`。
+
+填写后选择 **Save**（保存）。在设置 **Docker Image** 之前，Coolify 无法使用构建服务器部署。
+
+</Step>
+<Step>
+
+### 启用构建服务器
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/build-servers/application-build-server-setting.webp" alt="应用 General 页面上的 Use a Build Server 设置" />
+
+1. 找到 **Use a Build Server?**（使用构建服务器）。
+2. 开启该设置。
+
+设置立即保存。Docker Compose 应用不支持此设置。
+
+</Step>
+<Step>
+
+### 部署应用
+
+发起新的部署并打开部署日志。
+
+当 Coolify 选中一台构建服务器时，日志会显示：
+
+```console
+Found a suitable build server (<server-name>).
+```
+
+等待部署完成，然后确认：
+
+1. 构建完成的镜像已出现在容器镜像仓库中
+2. 应用已在其部署服务器上运行
+3. 应用可以通过所配置的域名打开
+
+如果没有可用的构建服务器，只有在团队启用 **Build server fallback** 且该服务器允许构建时，Coolify 才会在部署服务器上构建。**Deployments only**（仅部署）服务器永远不会自己构建镜像。
+
+</Step>
+</Steps>

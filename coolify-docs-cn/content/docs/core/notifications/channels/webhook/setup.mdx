@@ -1,0 +1,107 @@
+---
+title: 配置
+description: 将 Coolify 配置为以 JSON POST 请求把通知事件发送到 HTTP 或 HTTPS 端点。
+---
+
+# 设置 webhook 通知
+
+Coolify 的 webhook 通知会向你控制的端点发送 JSON `POST` 请求。通过该通道可以把 Coolify 接入自动化工作流、事件响应系统或自定义应用。
+
+## 开始之前
+
+准备一个满足以下条件的端点：
+
+- 接受基于 HTTP 或 HTTPS 的 `POST` 请求。
+- 接受 JSON 请求体。
+- 可从 Coolify 实例访问。
+- 能记录请求，或提供其他验证投递的方式。
+- 接受请求后立即返回成功的 HTTP 响应。
+- 在投递重试时，能够安全地多次接收同一事件。
+
+首次测试可使用开发端点或请求检查工具，便于查看方法、请求头和 JSON 请求体。测试成功后再切换到生产端点。
+
+---
+
+## 配置 webhook
+
+<Steps>
+<Step>
+
+### 添加端点
+
+打开 **Notifications > Webhook**，在 **Webhook URL** 中填入端点，选择 **Save changes**。
+
+</Step>
+<Step>
+
+### 启用通道
+
+选择 **Enable**。Coolify 要求先有有效的 webhook URL，才能启用通道。
+
+</Step>
+<Step>
+
+### 选择事件
+
+在 **Notification events** 下，选择要发送到该端点的事件。每个触发条件参见[通知事件](/core/notifications/events)。
+
+</Step>
+<Step>
+
+### 发送测试
+
+选择 **Send test**，并检查端点收到的请求。
+
+确认以下全部条件：
+
+- 请求方法为 `POST`。
+- 请求体是有效的 JSON。
+- 请求体包含 `"event": "test"`。
+- 端点在不等待长时间任务的情况下返回成功响应。
+
+收到测试请求只能证明 Coolify 能访问当前 URL 并提交请求，并不能证明你的应用能处理每个事件的专属字段。
+
+</Step>
+</Steps>
+
+---
+
+## 端点要求
+
+Coolify 接受 `http` 或 `https` 协议的 URL，且 URL 必须包含有效主机。
+
+出于服务端请求防护，Coolify 会拒绝：
+
+- `localhost`、`0.0.0.0` 和 IPv6 回环地址。
+- `127.0.0.0/8` 中的 IPv4 地址。
+- `169.254.0.0/16` 中的链路本地（link-local）IPv4 地址，包括常见的云元数据端点。
+- 以 `.internal` 结尾的主机名。
+
+私网 IP 地址是被接受的，但 Coolify 实例仍需有到达该端点的网络路由。
+
+---
+
+## 投递行为
+
+Coolify 将 webhook 投递排入队列，并使用 Laravel 的 HTTP 客户端发送 JSON 请求体。一次投递任务最多尝试五次，出现未处理异常后间隔 10 秒再重试。
+
+Coolify 目前不会仅因端点返回非 2xx 的 HTTP 状态码就判定任务失败。你的应用接受事件时应返回 2xx 响应，并通过接收方的日志或监控来发现被拒绝的请求。
+
+端点应尽快响应，并能安全处理重复的事件负载。Coolify 不会添加签名或共享密钥请求头，因此当端点暴露在公网上时，请使用难以猜测的 HTTPS URL 或经过认证的网关。
+
+所有事件标识符和字段详见 [webhook 负载参考](/core/notifications/channels/webhook/payload-reference)。
+
+---
+
+## 排查 webhook 投递问题
+
+如果测试请求没有到达你的端点：
+
+1. 确认 URL 以 `http://` 或 `https://` 开头，且包含接收方期望的完整路径。
+2. 确认 URL 不在上面列出的回环、链路本地或 `.internal` 地址段内。
+3. 在 Coolify 服务器的网络环境中，确认 DNS 能解析主机名，且防火墙允许该连接。
+4. 查看接收服务的访问日志和应用日志。请求可能到达了反向代理，却在应用记录之前失败。
+5. 确认端点接受带 JSON 请求体的 `POST` 并及时响应。
+6. 如果使用了私网 IP，确认 Coolify 实例有到达该私网的路由。
+
+如果测试成功而生产事件没有到达，请确认该事件已在 **Notification events** 下启用，并将接收方的解析逻辑与[对应事件的负载](/core/notifications/channels/webhook/payload-reference)比对。

@@ -1,0 +1,66 @@
+---
+title: Caddy 概览
+description: 了解 Coolify 的 Caddy 集成，以及什么时候用它替代 Traefik。
+---
+
+import { ArrowsRight, Key2, ShieldSecurity2 } from 'reicon-react';
+
+# Caddy 概览
+
+Caddy 是 Traefik 之外的集成代理选项。Coolify 运行 `lucaslorentz/caddy-docker-proxy`，为资源域名生成 Caddy 标签，并把 Caddy 配置与证书数据保存在所选服务器上。
+
+<Callout type="warning" title="Coolify 对 Caddy 的支持">
+Caddy 受支持，但 Traefik 才是默认代理，也是 Coolify 核心团队在生产环境中使用的代理。因此 Traefik 拥有更广泛的文档与支持覆盖。如果你熟悉 Caddy，或需要某个 Caddy 特有的功能，就选择 Caddy。
+</Callout>
+
+<CoolCallout icon={ArrowsRight} title="简明版">
+
+Coolify 可以生成普通的 Caddy 路由和自动 HTTPS 设置。高级 Caddy 功能可能需要修改代理的 Docker Compose 配置、构建自定义 Caddy 镜像，或调整 `/data/coolify/proxy/caddy/dynamic/` 下的文件。
+
+</CoolCallout>
+
+---
+
+## Coolify 管理哪些内容
+
+对于使用 Caddy 的服务器，Coolify 会：
+
+- 以 `coolify-proxy` 容器的形式运行代理
+- 监听 `80` 和 `443` 端口，包括 UDP `443` 端口上的 HTTP/3
+- 为应用和服务域名生成 Caddy Docker 标签
+- 把主配置存放在 `/data/coolify/proxy/caddy/docker-compose.yml`
+- 把动态 Caddy 片段存放在 `/data/coolify/proxy/caddy/dynamic/` 下
+- 在面板中修改动态配置后重新加载 Caddy
+
+代理会从其动态目录导入 `*.caddy` 文件。Coolify 生成的文件（如 `Caddyfile`、`coolify.caddy` 和默认请求处理器）在面板中显示为只读。
+
+<Callout type="warning" title="Caddy 与 Traefik 的配置不可互换">
+切换代理会替换代理类型和默认配置。请用 Caddy 语法重建自定义路由，并重新部署资源，让它们的 Caddy 标签生效。
+</Callout>
+
+---
+
+## 配置 Caddy
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '基本身份验证',
+      href: '/core/networking/proxy/caddy/basic-auth',
+      description: '使用 Coolify 托管的凭据或 Caddy 标签保护应用。',
+      icon: Key2,
+    },
+    {
+      title: '自定义 SSL 证书',
+      href: '/core/networking/proxy/caddy/custom-ssl-certs',
+      description: '挂载你的证书和私钥，并在已有的 Caddy 路由上配置 TLS。',
+      icon: ShieldSecurity2,
+    },
+    {
+      title: 'DNS 质询',
+      href: '/core/networking/proxy/caddy/dns-challenge',
+      description: '构建带 DNS 提供商模块的 Caddy 镜像，并配置基于 DNS 的证书验证。',
+      icon: ShieldSecurity2,
+    },
+  ]}
+/>

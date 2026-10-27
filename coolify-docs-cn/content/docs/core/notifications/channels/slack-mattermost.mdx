@@ -1,0 +1,114 @@
+---
+title: "Slack & Mattermost"
+description: 通过 Slack 兼容的 incoming webhook 将 Coolify 通知发送到 Slack 或 Mattermost。
+---
+
+import { HashtagChat, Messages2 } from 'reicon-react';
+
+# Slack 与 Mattermost
+
+Coolify 的 **Slack** 通知通道接受 Slack incoming webhook URL。Mattermost 的 incoming webhook 使用兼容的消息格式，因此可以在 Coolify 的同一个页面上配置 Mattermost。
+
+## 配置服务商
+
+选择接收 Coolify 通知的服务商。
+
+<Tabs id="slack-compatible-provider" items={['Slack', 'Mattermost']}>
+<Tab value="Slack" icon={HashtagChat}>
+
+为应接收通知的 Slack 频道创建一个 incoming webhook。
+
+<Steps>
+<Step>
+
+### 创建 Slack 应用
+
+1. 打开 [Slack API 应用页面](https://api.slack.com/apps)。
+2. 选择 **Create New App > From scratch**。
+3. 输入名称（例如 `Coolify Notifications`），并选择拥有目标频道的工作区。
+4. 选择 **Create App**。
+
+你需要拥有在工作区安装或授权应用的权限。如果需要审批，请请工作区管理员完成。
+
+</Step>
+<Step>
+
+### 创建 incoming webhook
+
+1. 在应用设置中打开 **Incoming Webhooks**。
+2. 开启 **Activate Incoming Webhooks**。
+3. 选择 **Add New Webhook to Workspace**。
+4. 选择应接收 Coolify 通知的频道并授权该应用。
+5. 复制 **Webhook URLs for Your Workspace** 下显示的 webhook URL。
+
+</Step>
+<Step>
+
+### 将 webhook 添加到 Coolify
+
+打开 **Notifications > Slack**，将 URL 粘贴到 **Webhook URL**，选择 **Save changes**，然后选择 **Enable**。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="Mattermost" icon={Messages2}>
+
+先创建 Mattermost incoming webhook，然后在 Coolify 的 **Slack** 页面填入。
+
+<Steps>
+<Step>
+
+### 确认集成功能可用
+
+登录拥有目标频道的 Mattermost 团队。Mattermost 管理员必须允许 incoming webhook，且你的账户需要有创建权限。如果 **Integrations** 或 **Incoming Webhooks** 不存在，请联系管理员。
+
+</Step>
+<Step>
+
+### 创建 incoming webhook
+
+1. 打开 **Product Menu > Integrations > Incoming Webhooks**。
+2. 选择 **Add Incoming Webhook**。
+3. 输入易于辨认的标题和描述，然后选择目标频道。
+4. 保存 webhook 并复制生成的 URL。它通常形如 `https://mattermost.example.com/hooks/...`。
+
+Mattermost 只在创建完成后显示完整 URL。请当场复制，因为它授予通过该集成发送消息的权限。
+
+</Step>
+<Step>
+
+### 将 webhook 添加到 Coolify
+
+在 Coolify 中打开 **Notifications > Slack**，将 Mattermost URL 粘贴到 **Webhook URL**，选择 **Save changes**，然后选择 **Enable**。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+<Callout type="warning" title="保护好 webhook URL">
+webhook URL 授权向其目标频道发送消息。请将它作为机密保存，一旦泄露，请在服务商和 Coolify 中同步更换。
+</Callout>
+
+---
+
+## 选择事件并验证投递
+
+在 **Notification events** 下，选择要通过该通道发送的事件。每个触发条件参见[通知事件](/core/notifications/events)。
+
+选择 **Send test**，确认消息已到达 Slack 或 Mattermost 频道。如果没有到达，请检查 incoming webhook 仍处于启用状态，且仍指向该集成有权访问的频道。
+
+---
+
+## 排查 Slack 或 Mattermost 投递问题
+
+如果测试消息没有到达：
+
+1. 确认保存的 URL 属于你正在检查的服务商、工作区或服务器。
+2. 确认 webhook 仍然存在，且仍指向一个可访问的频道。
+3. 如果应用或 webhook 被重新安装或重建，请把新 URL 复制到 Coolify 并保存。
+4. 在 Slack 中，确认该应用对工作区和频道仍然保持授权。
+5. 在 Mattermost 中，确认服务器的集成设置里 incoming webhook 仍然启用。
+6. 在启用生产事件之前，再发送一次测试。

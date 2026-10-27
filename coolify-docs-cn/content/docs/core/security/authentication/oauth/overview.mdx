@@ -1,0 +1,58 @@
+---
+title: 概览
+description: 了解 Coolify 中 OAuth 登录的行为方式，并选择对应提供商的配置指南。
+---
+
+# OAuth 概览
+
+OAuth 让用户可以通过受支持的外部提供商登录自托管（self-hosted）的 Coolify 实例，而无需输入 Coolify 密码。
+
+<Callout type="info" title="OAuth 配置仅适用于自托管 Coolify">
+Coolify Cloud 的登录提供商由平台自行管理。在自托管实例上，根团队（Root team）管理员或所有者可以在 **设置 > 身份验证** 下配置提供商。
+</Callout>
+
+## OAuth 登录的工作原理
+
+Coolify 会将账号与登录时返回的提供商身份绑定。升级后的首次 OAuth 登录中，只有提供商已验证其邮箱地址时，现有账号才会被绑定。此前版本中通过 OAuth 创建的无密码账号不受此限制。
+
+每个账号只能绑定一个 OAuth 提供商。如果你此前用同一邮箱地址使用过多个提供商，请在升级后的首次登录时使用想保留的那个提供商。之后的登录将依据已绑定的身份进行，而不是仅靠邮箱匹配。
+
+新账号遵循注册设置。已绑定的身份会显示在**个人资料**（Profile）页面上，由提供商管理的邮箱地址无法在 Coolify 中修改。被拒绝的登录会在登录页面上显示原因。
+
+启用 Coolify 的 2FA 后，OAuth 登录同样需要提供 Coolify 验证器或恢复代码。没有密码的用户可以在个人资料页启用 2FA。参见[两步验证（2FA）](/core/security/authentication/2fa)。
+
+## 选择 OAuth 提供商
+
+每篇指南都会介绍如何创建外部提供商应用、注册准确的 Coolify 回调 URL、将提供商凭据添加到 Coolify，并验证登录。
+
+| 提供商 | 需要创建的内容 | 指南 |
+| :--- | :--- | :--- |
+| GitHub | 具有 `user:email` 权限的 OAuth App | [配置 GitHub OAuth](/core/security/authentication/oauth/github) |
+| GitLab | 具有 `read_user` 权限的 OAuth 应用 | [配置 GitLab OAuth](/core/security/authentication/oauth/gitlab) |
+| Google | 具有 OpenID、profile 和 email 权限的 Web OAuth 客户端 | [配置 Google OAuth](/core/security/authentication/oauth/google) |
+| Azure | 注册 Microsoft Entra 应用并授予 `User.Read` 权限 | [配置 Azure OAuth](/core/security/authentication/oauth/azure) |
+| Bitbucket | 可访问邮箱的 OAuth consumer | [配置 Bitbucket OAuth](/core/security/authentication/oauth/bitbucket) |
+| Discord | 使用 `identify` 和 `email` 权限的 Discord 应用 | [配置 Discord OAuth](/core/security/authentication/oauth/discord) |
+| Infomaniak | Infomaniak Application 凭据 | [配置 Infomaniak OAuth](/core/security/authentication/oauth/infomaniak) |
+
+Authentik、Clerk 和 Zitadel 请使用 [SSO 指南](/core/security/authentication/sso/overview)。
+
+## 控制账号创建
+
+在启用了 OAuth 提供商的情况下，可以在 **设置 > 身份验证** 中禁用密码注册。此时登录页面会显示 **Only OAuth registration is enabled**（仅允许 OAuth 注册）。OIDC 提供商还有一个 **Allow OIDC user creation**（允许创建 OIDC 用户）设置，即使密码注册已禁用，也可以借此允许创建账号。
+
+每个提供商都可以开启 **Auto-join new users to Root team**（自动将新用户加入根团队），让新用户以成员身份加入根团队，而不是创建个人团队。该设置只对新建用户生效。Coolify 不会将提供商的分组或声明（claim）映射为团队角色；这些角色需要在 Coolify 中管理。
+
+## 提供商变更后保持已关联身份可用
+
+如果你更换了自托管的 GitLab、Authentik、Clerk 或 Zitadel 主机，或更换了 Azure 租户，需要在 Coolify 服务器上对现有身份执行重新生成密钥（rekey）操作：
+
+```sh
+docker exec coolify php artisan oauth:rekey <provider> --from=<old-URL-or-tenant>
+```
+
+将 `<provider>` 替换为 `gitlab`、`authentik`、`clerk`、`zitadel` 或 `azure`。在修改设置之前，先保留旧的 URL 或租户值。
+
+## 安全测试
+
+每次只配置并测试一个提供商。先用非 root 账号测试，并在通过无痕浏览器窗口验证提供商登录可用之前，保留一个可用的管理员密码。

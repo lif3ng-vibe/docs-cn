@@ -1,0 +1,13 @@
+{
+  "title": "知识库",
+  "root": true,
+  "pages": [
+    "---安全公告---",
+    "php-security-advisory-2026",
+    "---扩展---",
+    "nodejs-multi-core-scaling",
+    "hetzner-loadbalancing",
+    "---操作指南---",
+    "...how-to"
+  ]
+}

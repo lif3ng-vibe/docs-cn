@@ -1,0 +1,18 @@
+---
+title: 部署
+description: 使用 Coolify MCP 查看、排队、控制与取消部署。
+---
+
+# 部署
+
+| 工具 | 权限 | 用途 |
+| :--- | :--- | :--- |
+| `list_deployments` | `read` | 列出排队中、进行中的部署，或某个应用的部署历史。 |
+| `get_deployment` | `read` | 查看单个部署；不返回构建日志。 |
+| `deploy` | `deploy` | 按 UUID 将一个应用部署加入队列。支持强制重新构建和预览 ID。 |
+| `cancel_deployment` | `deploy` | 取消排队中或进行中的部署。 |
+| `control` | `deploy` | 启动、停止或重启应用、数据库或服务。`stop` 需要 `confirm=true`。 |
+
+在授予 `deploy` 权限之前，请先阅读[安全](/mcp/security)。
+
+预览的 pull request ID 必须是不大于 `2147483647` 的正整数，无效的 ID 会触发校验错误。相关 API 工作流参见[预览部署](/applications/deployments/preview-deployments#通过-api-管理预览)。

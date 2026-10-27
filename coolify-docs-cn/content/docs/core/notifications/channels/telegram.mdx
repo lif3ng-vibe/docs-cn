@@ -1,0 +1,139 @@
+---
+title: Telegram
+description: 为 Coolify 通知配置 Telegram 机器人、chat 以及可选的 topic ID。
+---
+
+# Telegram
+
+Coolify 通过机器人（bot）发送 Telegram 通知。你需要机器人的 API 令牌，以及应接收通知的群组、频道或会话的 ID。
+
+## 创建机器人和目标
+
+<Steps>
+<Step>
+
+### 创建 Telegram 机器人
+
+1. 在 Telegram 中打开 [BotFather](https://t.me/botfather)，确认该账户是官方的 `@BotFather`。
+2. 发送 `/newbot`。
+3. 按提示为机器人选择一个显示名称和一个唯一的用户名。
+4. 复制 BotFather 返回的机器人 API 令牌。
+
+</Step>
+<Step>
+
+### 创建或选择接收目标
+
+为通知创建一个群组、频道或直接会话，也可以使用现有目标。使用专门的群组可以把部署和服务器告警与日常聊天分开。
+
+通过搜索你创建的用户名把机器人加入目标。对于频道，将机器人提升为有发帖权限的管理员。对于群组，确保其权限设置允许机器人发送消息；如果群组的限制需要，就提升它。
+
+</Step>
+<Step>
+
+### 可选：创建话题
+
+要把不同事件路由到不同的讨论串，请使用开启了 **Topics** 的 Telegram 群组：
+
+1. 打开群组设置并编辑群组。
+2. 启用 **Topics**。
+3. 创建你要使用的话题，例如 `Deployments`、`Backups` 和 `Servers`。
+4. 在每个需要获取 ID 的话题里发送一条消息。
+
+Telegram 只对支持论坛话题（forum topics）的群组显示 Topics 选项。
+
+</Step>
+<Step>
+
+### 为机器人生成一条更新
+
+在目标中发送一条新消息。如果使用话题，请在相应话题内发送。Telegram 必须先向机器人投递一条更新，其 API 响应里才会包含 chat 或 thread ID。
+
+</Step>
+</Steps>
+
+<Callout type="warning" title="保护好机器人令牌">
+任何拿到机器人令牌的人都能使用该 bot API。请将令牌作为机密保存。一旦泄露，请用 BotFather 吊销并重建。
+</Callout>
+
+---
+
+## 查找 chat 和 topic ID
+
+1. 在浏览器中打开 `https://api.telegram.org/bot<BOT_TOKEN>/getUpdates`，并将整个 `<BOT_TOKEN>` 占位符替换为 BotFather 提供的令牌。
+2. 在 JSON 响应中找到最新的 `message` 对象。
+3. 复制 `message.chat.id` 作为 **Chat ID**。群组和频道的 ID 通常是负数，要带上开头的 `-`。
+4. 如果消息是在话题内发送的，复制 `message.message_thread_id` 作为该话题的 ID。
+
+例如，响应中的相关部分可能如下：
+
+```json
+{
+  "message": {
+    "message_thread_id": 42,
+    "chat": {
+      "id": -1001234567890
+    }
+  }
+}
+```
+
+如果响应里没有目标，请在群组或话题中再发送一条消息，然后重新请求 `getUpdates`。
+
+---
+
+## 配置 Coolify
+
+<Steps>
+<Step>
+
+### 保存机器人和 chat
+
+打开 **Notifications > Telegram**。按 Telegram 返回的原样填写 **Bot API token** 和 **Chat ID**（chat ID 为负数时要包含开头的 `-`），然后选择 **Save changes**。
+
+</Step>
+<Step>
+
+### 启用通道
+
+选择 **Enable**。如果 Coolify 无法保持通道启用，请重新检查两个必填值是否已保存。
+
+</Step>
+<Step>
+
+### 选择事件和话题
+
+在 **Notification events** 下，选择要发送到 Telegram 的事件。
+
+要把某个支持的事件路由到话题，先启用该事件，然后在 **Forum topics** 下为它填入该话题的数字 **Topic ID**，再选择 **Save changes**。留空则把事件发送到主会话。
+
+</Step>
+<Step>
+
+### 发送测试
+
+选择 **Send test**，确认消息已到达所配置的会话。通用测试使用主会话配置，而不是自定义 thread ID。
+
+</Step>
+</Steps>
+
+<Callout type="info" title="自定义 thread ID 的限制">
+自定义 thread ID 目前适用于部署成功与失败、应用和容器停止或重启、备份成功与失败、计划任务、Docker 清理、磁盘用量、服务器可达性以及服务器补丁事件。
+
+重启上限告警、备份 S3 上传警告、Traefik 代理版本过旧告警以及测试通知会发送到主会话，不使用自定义 thread ID。
+</Callout>
+
+---
+
+## 排查 Telegram 投递问题
+
+如果测试消息没有到达：
+
+1. 确认从 BotFather 复制的令牌没有多余空格，且 `getUpdates` URL 中的 `<BOT_TOKEN>` 占位符已被完整替换。
+2. 如果响应为空或没有显示该会话，请在目标中发送一条新消息，然后重新加载 `getUpdates`。
+3. 负数的群组或频道 ID 要包含开头的负号。
+4. 确认机器人仍是目标成员且有发帖权限。频道通常要求机器人是管理员。
+5. 如果只有话题路由的事件失败，请确认 thread ID 与已保存的 chat ID 属于同一个群组，且该事件支持自定义 thread ID。
+6. 如果令牌在 BotFather 中被吊销，请把替换令牌保存到 Coolify 并再次测试。
+
+每个事件设置背后的触发条件参见[通知事件](/core/notifications/events)。

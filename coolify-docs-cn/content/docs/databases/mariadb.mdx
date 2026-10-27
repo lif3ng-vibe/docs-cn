@@ -1,0 +1,111 @@
+---
+title: MariaDB
+description: 在 Coolify 上部署和运维 MariaDB，提供生成的凭据、持久化存储、健康检查、SSL 以及备份与恢复支持。
+---
+
+# MariaDB
+
+Coolify 将 MariaDB 作为独立容器部署到所选的服务器和目标上。新资源会自动获得生成的 root 密码和应用用户密码、持久化数据卷、内部连接 URL 和健康检查。
+
+MariaDB 是一个开源关系型数据库，兼容大量 MySQL 客户端、表结构和工具。
+
+## 创建 MariaDB 数据库
+
+<Steps>
+<Step>
+
+### 打开新建资源
+
+打开数据库应归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 MariaDB
+
+在 **Databases**（数据库）下选择 **MariaDB**。也可以按名称搜索 **MariaDB**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择要运行 MariaDB 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 MariaDB 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 创建资源并打开 **General**（常规）。请检查镜像、root 密码、普通用户名和密码、初始数据库以及连接 URL。除非外部客户端需要访问，否则保持默认的私有网络设置。
+
+</Step>
+<Step>
+
+### 启动 MariaDB
+
+选择 **Start**（启动）并留意启动输出。等 MariaDB 进入运行且健康的状态后，把 **MariaDB URL (internal)**（内部 URL）复制给同一目标网络中的应用。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| 内部端口 | `3306` |
+| 默认镜像 | `mariadb:11` |
+| 普通用户 | `mariadb` |
+| 初始数据库 | `default` |
+| 数据挂载 | `/var/lib/mysql` |
+| 计划备份 | 支持 |
+| SSL | 通过 **SSL** 开关支持 |
+
+root 密码和普通用户密码在创建资源时生成。如果你在 MariaDB 内部修改了凭据或初始数据库，请同步更新 **General** 中对应的值，连接 URL 和自动备份才能继续正常工作。
+
+
+## 连接 MariaDB
+
+MariaDB 使用兼容 MySQL 的连接 URL。同一 Coolify 目标网络上的应用请使用 **MariaDB URL (internal)**：
+
+```sh
+mysql://<user>:<password>@<database-container>:3306/<database>
+```
+
+只有在配置了 **Public access（公开访问）> Access > Public through TCP proxy**（经 TCP 代理公开）和 **Public port**（公开端口）之后，Coolify 才会显示 **MariaDB URL (public)**（公开 URL）。除非外部客户端需要直连，否则请保持数据库私有。
+
+## 配置 MariaDB
+
+打开 **General** 修改镜像、凭据、**Port mappings**（端口映射）、公开代理、自定义 Docker 选项和 **Custom MariaDB configuration**（自定义 MariaDB 配置）。更改生成的容器配置后请重启资源。
+
+## 备份与恢复 MariaDB
+
+Coolify 使用 `mariadb-dump` 做计划备份。所选数据库会被直接导出。**Database selection > All databases**（数据库选择 > 所有数据库）会运行 `mariadb-dump --all-databases`，并在 `pigz` 可用时用 `pigz` 压缩输出，否则用 `gzip`，全库文件名以 `.gz` 结尾。选择 **Specific databases**（指定数据库）时，在 **Databases to back up**（要备份的数据库）中逐个输入名称并按 Enter。
+
+计划、保留策略和 S3 存储通过[数据库备份](/databases/backups)配置。数据库运行时，内置的 **Import Backup**（导入备份）表单接受 MariaDB 备份；导入流程见[恢复数据库](/databases/restore)。
+
+<Callout type="warning" title="恢复会替换数据">
+
+确认导入之前，请停止应用写入并核实目标资源。对不能被替换的数据，请另行保留一份副本。
+
+</Callout>
+
+## SSL 与健康检查
+
+MariaDB 提供 **SSL** 开关，但没有 SSL 模式选择器。Coolify 负责配置数据库的 TLS 监听；连接时请在 MariaDB 客户端上配置其 SSL 选项。CA 证书流程见[数据库 SSL](/databases/ssl)。
+
+在 **Healthcheck**（健康检查）下配置 Docker 健康检查，保存后重启 MariaDB。
+
+## MariaDB 官方资源
+
+- [MariaDB 文档](https://mariadb.com/kb/en/documentation/)
+- [MariaDB 源码](https://github.com/MariaDB/server)
+- [MariaDB Docker 镜像](https://hub.docker.com/_/mariadb)
+- [MariaDB 导出工具文档](https://mariadb.com/kb/en/mariadb-dump/)

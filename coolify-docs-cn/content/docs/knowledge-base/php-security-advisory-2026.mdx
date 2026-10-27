@@ -1,0 +1,152 @@
+---
+title: "2026 年 PHP 安全公告（PHP2Shell）"
+description: "PHP2Shell（CVE-2026-109618 与 CVE-2026-109619）对应的 Coolify 修复版本与更新说明，涵盖自托管实例、Coolify Cloud 及已部署应用的处置指引。"
+---
+
+# 2026 年 PHP 安全公告（PHP2Shell）
+
+**最后更新：2026 年 10 月 21 日——修复版本已发布**。
+
+<Callout type="error" title="立即更新自托管的 Coolify">
+PHP2Shell 包含两个严重的 PHP 远程代码执行漏洞，编号分别为 [CVE-2026-109618](https://www.cve.org/CVERecord?id=CVE-2026-109618) 和 [CVE-2026-109619](https://www.cve.org/CVERecord?id=CVE-2026-109619)。所有 v4 版本线中未打补丁的 Coolify 安装均受影响。请安装下文列出的修复版本；**推荐使用 v4.4.7**。
+</Callout>
+
+## 已修复的 Coolify 版本
+
+PHP 修复已向后移植到每一条 v4 minor 版本线。如果你需要停留在当前的 minor 版本上，请安装对应的安全版本：
+
+| 你的版本线 | 首个修复版本 |
+| :--- | :--- |
+| v4.0.x | [v4.0.1](https://github.com/coollabsio/coolify/releases/tag/v4.0.1) |
+| v4.1.x | [v4.1.3](https://github.com/coollabsio/coolify/releases/tag/v4.1.3) |
+| v4.2.x | [v4.2.1](https://github.com/coollabsio/coolify/releases/tag/v4.2.1) |
+| v4.3.x | [v4.3.24](https://github.com/coollabsio/coolify/releases/tag/v4.3.24) |
+| v4.4.x | [v4.4.7](https://github.com/coollabsio/coolify/releases/tag/v4.4.7) |
+
+**我们建议尽可能升级到 v4.4.7**。停留在较旧的 minor 版本线虽然能解决 PHP2Shell，但会错过其他未向后移植的安全修复。
+
+## 自托管 Coolify 用户
+
+### 从仪表盘更新 v4.4
+
+打开 **设置 → 更新 → 立即检查 → 更新**（Settings → Update → Check now → Update），安装 **v4.4.7**。完整的更新流程参见[升级指南](/core/instance-management/update)。
+
+### 继续留在 v4.0–v4.3 稳定版本线
+
+通过 SSH 连接到运行 Coolify 的服务器，执行：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/patch.sh | sudo bash
+```
+
+该脚本会检测你当前的 minor 版本，并从上表中安装对应的安全版本。它只会重建 **Coolify 容器**，你已部署的应用容器会继续保持运行。脚本要求实例处于**运行中的稳定 Coolify 版本**；beta、RC 和 nightly 构建不受支持。
+
+<Callout type="warn" title="Coolify 之前处于停止状态？">
+对于已停止的稳定版实例，可以使用[终端升级流程](/core/instance-management/update#通过终端手动更新)直接安装 **v4.4.7**，无需先重启未打补丁的实例。如果你需要借助 `patch.sh` 停留在 v4.0–v4.3，请先[将 Coolify 与公网隔离](#方案-2隔离-coolify-并使用-ssh-隧道)，再运行 `docker start coolify`，然后通过 SSH 执行补丁脚本。在补丁成功安装之前，请保持隔离状态。
+</Callout>
+
+### 从 v4 beta 或更早版本迁移
+
+先在 Coolify 服务器的 SSH 会话中安装 **v4.0.1** 安全版本：
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash -s 4.0.1
+```
+
+这条锁定版本的安装命令是 v4 beta 或更早版本的恢复路径。v4.0.1 运行起来之后，立即通过 **设置 → 更新 → 立即检查 → 更新**（Settings → Update → Check now → Update）继续升级到 **v4.4.7**。
+
+### 恢复访问前先确认更新
+
+检查仪表盘中显示的版本号，或确认补丁脚本报告容器在预期的安全版本上健康运行。如果你之前移除了实例域名或屏蔽了公网访问，请在确认更新成功后再恢复必要的访问。你也可以继续使用 SSH 隧道。
+
+## Coolify Cloud 用户
+
+**Coolify Cloud 已完成修复。** 你无需执行上述任何实例更新命令；平台更新由 Coolify 团队负责管理。
+
+<Callout type="warn" title="你的 PHP 应用需要单独处理">
+Cloud 上的修复保护的是 Coolify 平台本身，不会更新你部署在自己服务器上的 PHP 应用。请单独更新这些应用的 PHP 运行时或容器镜像，并按需重新构建或重新部署。这一条同样适用于由自托管 Coolify 管理的应用。
+</Callout>
+
+## 如果无法立即更新
+
+PHP 官方已在两份安全公告中发布了针对特定配置的临时指引：
+
+- [GHSA-w8hw-w9fx-j79w：通过 OOM 破坏实现 RCE](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w#mitigation)。
+- [GHSA-6wmf-4rv5-p3rp：通过残留全局状态实现 RCE](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp#mitigation)。
+
+请**同时**遵循两份公告中适用于你的 PHP 配置的缓解指引。这些措施能降低暴露面，但无法覆盖所有受影响的执行路径。**安装包含 PHP 补丁的 Coolify 版本，才是对实例唯一彻底的缓解手段**。不要用单个 PHP 设置或请求过滤来代替更新。
+
+### Cloudflare WAF 只是权宜之计
+
+Cloudflare [已针对已知利用路径发布了 WAF 规则](https://x.com/dok2001/status/2112811965735202970)，Free 套餐也可使用。这些规则既不会修复 PHP，也无法保证抵御所有利用路径。它们只检查经过 Cloudflare 的流量；对服务器的直接访问可以绕过它们。即使你的服务在 Cloudflare 后面，也请更新 Coolify 和你的 PHP 应用。
+
+### 让未修复的实例保持离线或隔离
+
+如果暂时无法安装修复版本，请在准备更新期间采取以下隔离措施之一，并在确认修复版本已经运行之前一直保持。
+
+<Tabs id="php-security-2026-isolation" items={['停止 Coolify', '使用 SSH 隧道']}>
+<Tab value="停止 Coolify">
+
+### 方案 1：停止 Coolify（推荐）
+
+通过 SSH 连接到运行 Coolify 实例的服务器，执行：
+
+```bash
+docker stop coolify
+```
+
+这会停止 Coolify 容器，使仪表盘和 API 不可用，包括通过实例域名的访问。Coolify 停止期间你无法通过它管理资源；webhook 触发的部署和 Coolify 的后台任务也会不可用。
+
+**你已部署的应用、数据库和服务会继续运行。** 请保持 Docker、Coolify 代理和你的应用容器处于运行状态。
+
+准备好打补丁时，使用上文的更新路径即可。对于已停止的稳定版实例，[终端升级流程](/core/instance-management/update#通过终端手动更新)可以安装 v4.4.7 并随后启动 Coolify。Coolify 停止期间无法执行自动更新和 `patch.sh`。
+
+</Tab>
+<Tab value="使用 SSH 隧道">
+
+### 方案 2：隔离 Coolify 并使用 SSH 隧道
+
+如果你需要在阻止公网访问 Coolify 的同时继续管理实例，请选择此方案。
+
+1. 在 Coolify 仪表盘中打开 **设置 → 通用**（Settings → General），清空 **URL** 字段中的实例域名，然后点击 **Save changes**（保存更改）。这会自动移除 Coolify 实例域名对应的代理路由，该路由无需手动修改代理配置。参见[实例 URL 设置](/core/instance-management/instance-settings#url)。
+2. 屏蔽运行 Coolify 的服务器上 **8000、6001 和 6002** 端口的公网入站 TCP 访问。它们分别是仪表盘、实时更新和 Web 终端的默认端口。如果你的部署还暴露了 **6000** 端口，以及其他用于访问 Coolify 的自定义端口，也请一并屏蔽。
+3. 如果你另行配置了其他访问 Coolify 的途径，例如外部反向代理或 Cloudflare Tunnel，也请一并禁用。
+4. 从服务器外部验证 Coolify 已无法通过原域名、公网 IP 地址及任何备用路径访问。配置了 IPv4 和 IPv6 的要分别检查。保持 SSH 可访问，以便使用下文的隧道。
+
+请保持 **80 和 443** 端口可供你已部署的应用使用。第 1 步清空实例 URL 只会移除 Coolify 的域名路由，应用路由不受影响。
+
+<Callout type="warn" title="使用能拦截 Docker 发布端口的防火墙">
+Coolify 依赖 Docker，而 Docker 发布的端口可以绕过常规的 UFW 规则。仅靠一条 UFW 拒绝规则，Coolify 可能仍然可以从互联网访问。**只要主机服务商提供防火墙，就优先用它**来阻止对 Coolify 端口的公网访问。
+
+如果你的主机服务商不提供防火墙，可以使用 [ufw-docker](https://github.com/chaifeng/ufw-docker) 这类工具，让 UFW 的过滤规则对 Docker 发布的端口同样生效。按照其安装与规则说明操作，更多细节参见 [Coolify 防火墙指南](/core/infrastructure/servers/firewall)。请从另一台机器验证 Coolify 已不可访问。如果无法确认 Coolify 已被隔离，请改用**方案 1**。
+</Callout>
+
+在**你自己的电脑**上运行以下命令，通过 SSH 转发 Coolify 端口：
+
+```bash
+echo "Opening tunnel — press Ctrl+C to stop" && \
+ssh -N -o ExitOnForwardFailure=yes \
+  -L 127.0.0.1:8000:localhost:8000 \
+  -L 127.0.0.1:6001:localhost:6001 \
+  -L 127.0.0.1:6002:localhost:6002 \
+  root@203.0.113.26
+```
+
+把 `203.0.113.26` 替换为你的服务器 IP 地址。如果你的安装使用了不同的 SSH 用户、SSH 端口或转发端口，请相应调整。本地端口绑定在 `127.0.0.1` 上，因此网络中的其他电脑无法使用你的隧道。
+
+保持终端开启，在浏览器中访问 [http://localhost:8000](http://localhost:8000)。用完后按 **Ctrl+C** 关闭隧道。隧道关闭后，Coolify 仍在服务器上继续运行。
+
+</Tab>
+</Tabs>
+
+## 这些版本中的其他安全更新
+
+[v4.4.7 发布说明](https://github.com/coollabsio/coolify/releases/tag/v4.4.7)还包含 PHP 之外的依赖更新：
+
+| 组件 | 安全更新 | 你需要做什么 |
+| :--- | :--- | :--- |
+| Sentinel **1.1.2** | 修复 [CVE-2026-111943](https://www.cve.org/CVERecord?id=CVE-2026-111943)。 | Coolify 会自动更新 Sentinel。 |
+| cloudflared **2026.10.3** | 应对 [eMudhra 证书失窃事件](https://blog.cloudflare.com/emudhra-certificate-compromise/)。 | 如果你另行运营 Cloudflare Tunnel 部署，也请一并更新。 |
+| Coolify **v4.4.7** 中的 Node.js **24.22.1** | 包含对多个 Node.js 漏洞的修复。 | 请单独更新你自己的 Node.js 应用中的运行时。 |
+
+更新 Coolify **不会**更新已部署应用内部的运行时。请单独排查这些应用（包括 PHP 和 Node.js 工作负载），并应用相应的运行时或镜像更新。

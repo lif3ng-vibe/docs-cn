@@ -1,0 +1,94 @@
+---
+title: 速率限制
+description: 了解 Coolify API 的请求限额、响应头、重置时间与安全的重试行为。
+---
+
+# API 速率限制
+
+Coolify 会限制 API 请求频率，以保护实例免受过大流量的冲击。客户端应读取速率限制响应头，而不要想当然地认为每个实例都用默认值。
+
+## 默认限额
+
+| 请求 | 默认限额 | 时间窗口 |
+| :--- | :--- | :--- |
+| 一般 API 请求 | 200 次 | 1 分钟 |
+| `/api/health` | 1,000 次 | 1 分钟 |
+
+Coolify Cloud 使用这些默认限额。自托管实例同样使用默认值，除非管理员通过 `API_RATE_LIMIT` 修改了一般限额。健康检查端点保持其独立的 1,000 次限额。
+
+Coolify 在有已认证用户时按该用户区分限流桶；没有已认证用户的请求则按来源 IP 地址分组。
+
+---
+
+## 速率限制响应头
+
+API 响应包含描述当前请求桶的响应头：
+
+| 响应头 | 出现时机 | 含义 |
+| :--- | :--- | :--- |
+| `X-RateLimit-Limit` | API 响应 | 当前窗口内允许的最大请求数。 |
+| `X-RateLimit-Remaining` | API 响应 | 当前请求之后，本窗口剩余的请求数。 |
+| `Retry-After` | 限流响应 | 重试前需要等待的秒数。 |
+| `X-RateLimit-Reset` | 限流响应 | 可再次发起请求的 Unix 时间戳（秒）。 |
+
+只查看响应头而不下载响应体：
+
+```sh
+export COOLIFY_URL="https://coolify.shadowarcanist.com"
+export COOLIFY_TOKEN="67|abcthisisa123dummytoken"
+
+curl --head \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  "$COOLIFY_URL/api/v1/teams/current"
+```
+
+某些端点也可能因为部署队列或上游云服务提供方繁忙而返回 `429 Too Many Requests`。只要响应提供了 `Retry-After` 就使用它，即使 `X-RateLimit-Remaining` 显示 Coolify 的一般 API 限额仍有余量。
+
+---
+
+## 处理 429 响应
+
+当 Coolify 返回 `429 Too Many Requests` 时：
+
+1. 暂停发送受影响操作的请求。
+2. 将 `Retry-After` 读取为秒数。
+3. 等待该时间间隔后再重试。
+4. 如果反复尝试仍然失败，加入指数退避和随机抖动（jitter）。
+5. 除非端点和客户端能防止重复变更，否则不要重试非安全的写请求。
+
+不要对同一个失败的请求并发重试。并发重试会更快耗尽剩余配额，还可能重复执行写操作。
+
+---
+
+## 修改实例级速率限制
+
+<Tabs items={['自托管', 'Coolify Cloud']}>
+<Tab value="自托管">
+
+修改 `/data/coolify/source/.env` 中的 `API_RATE_LIMIT`，即可更改每分钟允许的一般 API 请求数：
+
+```dotenv
+API_RATE_LIMIT=400
+```
+
+正在运行的容器不会在普通重启时应用此更改。请运行 Coolify 安装脚本，用更新后的环境变量重建 Coolify 容器：
+
+```sh
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+安装脚本同时会把 Coolify 更新到最新版本。如需安装特定版本，请遵循[更新 Coolify](/core/instance-management/update#通过终端手动更新)。
+
+容器重建完成后，发起一次请求，确认 `X-RateLimit-Limit` 显示了新的限额。
+
+调高这个值并不会提升 Coolify 实例、部署队列或上游服务提供方的容量。在调高之前，优先考虑客户端缓存、请求合并与退避。
+
+</Tab>
+<Tab value="Coolify Cloud">
+
+Coolify Cloud 用户无法修改实例环境。如需更高的限额，请[联系 Coolify 支持](/support)，说明该集成为什么每分钟需要超过 200 次一般 API 请求。请附上所调用的端点以及预期的持续与峰值请求速率，以便评估申请。
+
+</Tab>
+</Tabs>
+
+一般限流响应与其他 API 失败的区别参见 [API 错误](/api/errors)。

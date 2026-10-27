@@ -1,0 +1,107 @@
+---
+title: Web 终端
+description: 为服务器或容器打开浏览器终端，并启用或禁用服务器的终端访问。
+---
+
+# Web 终端
+
+Coolify Web 终端让你可以在控制台中为已连接的服务器或运行中的容器打开 shell。
+
+只有团队所有者和管理员可以使用终端功能。命令以所选服务器用户或容器的权限运行，用完请关闭终端。
+
+## 开始之前
+
+请确认：
+
+- 服务器可达且已通过验证
+- 服务器已启用 **Terminal Access**（终端访问）
+- 你是团队所有者或管理员
+
+---
+
+## 打开终端
+
+<Steps>
+<Step>
+
+### 选择服务器或容器
+
+1. 在 Coolify 侧边栏选择 **Terminal**（终端）。
+2. 在 **Start a terminal session**（启动终端会话）下，需要时用 **Filter targets**（筛选目标）查找目标。
+3. 选择服务器或运行中的容器，Coolify 会立即启动会话。
+
+Coolify 会在服务器上创建短期的终端会话令牌，而不是通过浏览器传输 SSH 命令细节。等待命令提示符出现。如果会话无法启动，终端会显示错误；请查看错误，确认服务器可达性和终端访问后再重试。
+
+</Step>
+<Step>
+
+### 确认终端可用
+
+先运行一个只读命令：
+
+```sh
+pwd
+```
+
+对服务器，输出应显示 Coolify 中所配置 SSH 用户的当前目录；对容器，显示的是容器内的当前目录。
+
+现在可以运行为完成任务所需的命令了。完成后关闭浏览器终端。
+
+</Step>
+</Steps>
+
+## 打开资源终端
+
+单个服务器、应用、数据库或服务提供终端页面时，也可以从资源本身打开 **Terminal**。
+
+全局 Terminal 页面和这些资源终端都受同一个服务器设置控制。
+
+---
+
+## 更改终端访问
+
+当不应该让任何人打开某台服务器及其容器的控制台终端时，使用此设置。
+
+<Steps>
+<Step>
+
+### 禁用终端访问
+
+<ZoomImage src="/docs-cn/coolify/images/core/infrastructure/servers/web-terminal/terminal-access-setting.webp" alt="服务器 Security 下的 Terminal Access 设置" />
+
+1. 打开 **Servers**。
+2. 选择该服务器。
+3. 选择 **Security**（安全）。
+4. 打开 **Terminal Access**。
+
+5. 选择 **Disable terminal**（禁用终端）。
+6. 在确认窗口中输入服务器名称和你的 Coolify 账号密码。
+7. 完成确认。
+
+更改立即生效。该服务器及其容器会从控制台终端选择器中消失，对所有者和管理员也是如此。
+
+禁用此设置不会阻止 Coolify 之外的正常 SSH 连接。
+
+</Step>
+<Step>
+
+### 重新启用终端访问
+
+1. 回到 **Servers > 你的服务器 > Security > Terminal Access**。
+2. 选择 **Enable terminal**（启用终端）。
+3. 输入服务器名称和你的 Coolify 账号密码。
+4. 完成确认。
+5. 回到 **Terminal**，确认服务器出现在目标列表中。
+
+</Step>
+</Steps>
+
+---
+
+## 终端无法连接时
+
+- 在服务器的 **General** 页面确认服务器可达。
+- 确认已启用 **Terminal Access**。
+- 如果选择的是容器，确认容器正在运行。
+- 如果是通过 `8000` 端口直接访问自托管 Coolify 控制台，确认[防火墙](/core/infrastructure/servers/firewall)已放行 `6002` 端口。
+- 先试服务器终端再试容器终端，确认 SSH 连接正常。

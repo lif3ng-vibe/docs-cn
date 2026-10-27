@@ -1,0 +1,115 @@
+---
+title: 使用 Authentik 保护
+description: 通过 Traefik 中间件为 Coolify 资源添加 Authentik 转发认证。
+---
+
+# 使用 Authentik 保护
+
+Traefik 的 `forwardAuth` 中间件可以在请求到达应用之前，先将其发送给 Authentik 的代理提供者（proxy provider）。Authentik 负责处理登录，并在认证成功后把身份标头返回给 Traefik。
+
+当 Authentik 与受保护资源位于同一台 Coolify 服务器上、可以通过共享的 Docker 网络通信时，可使用本指南。
+
+## 配置 Authentik
+
+部署 [Authentik 服务](/services/authentik)，然后按照 Authentik 的[转发认证文档](https://docs.goauthentik.io/docs/add-secure-apps/providers/proxy/)完成以下步骤：
+
+1. 创建一个使用转发认证的代理提供者。
+2. 创建一个 Authentik 应用并挂载该代理提供者。
+3. 当你需要跨子域单点登录时，把提供者的 cookie 域设置为受保护服务共享的父域名。
+4. 将受保护的域名添加到 Authentik 的应用或提供者配置中。
+
+确保 Authentik server 容器与受保护资源共享一个 Traefik 可以用来访问 Authentik 的 Docker 网络。
+
+## 创建 Traefik 中间件
+
+在共享网络上找到 Authentik server 容器或服务名称。下例中为 `authentik-server`，监听端口 `9000`。
+
+打开 **Servers > 你的服务器 > Proxy > Dynamic Configurations**，创建 `authentik-forward-auth.yaml`：
+
+```yaml
+http:
+  middlewares:
+    authentik-forward-auth:
+      forwardAuth:
+        address: 'http://authentik-server:9000/outpost.goauthentik.io/auth/traefik'
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-entitlements
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+          - X-authentik-jwt
+          - X-authentik-meta-jwks
+          - X-authentik-meta-outpost
+          - X-authentik-meta-provider
+          - X-authentik-meta-app
+          - X-authentik-meta-version
+```
+
+把 `authentik-server` 替换为实际的内部主机名。除非代理无法通过内网访问 Authentik、且你有意让流量走外部路径，否则不要使用 Authentik 的公共 URL。
+
+## 附加中间件
+
+<Tabs items={['标准应用', 'Docker Compose 或服务']}>
+<Tab value="标准应用">
+
+打开应用的 **General** 页面，找到 **Container labels**。将 **Label management** 设为 **Managed manually (edit labels yourself)**，然后把 file provider 中间件追加到现有的 HTTPS 路由器上：
+
+```ini
+traefik.http.routers.https-0-<resource-id>.middlewares=gzip # [!code --][!code focus]
+traefik.http.routers.https-0-<resource-id>.middlewares=gzip,authentik-forward-auth@file # [!code ++][!code focus]
+```
+
+保存并重新部署应用。
+
+</Tab>
+<Tab value="Docker Compose 或服务">
+
+把 Coolify 简写标签添加到接收该域名的服务上：
+
+```yaml
+services:
+  app:
+    image: nginx:alpine
+    labels: # [!code ++:2][!code focus:2]
+      - 'coolify.traefik.middlewares=authentik-forward-auth@file'
+```
+
+保存并重新部署该资源。
+
+</Tab>
+</Tabs>
+
+## 验证认证
+
+在浏览器的隐私窗口中打开受保护的域名。Traefik 应会把你重定向到 Authentik，登录完成后再回到应用。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="请求返回网关错误或 500 响应">
+
+确认共享 Docker 网络中 Authentik 的内部主机名和端口。同时检查 Authentik 日志以及 **Servers > 你的服务器 > Proxy > Logs** 中的连接错误。
+
+</Accordion>
+
+<Accordion title="用户没有被重定向到 Authentik">
+
+确认代理提供者已分配给正确的 Authentik 应用，并且 `authentik-forward-auth@file` 已附加到资源的 HTTPS 路由器上。
+
+</Accordion>
+
+<Accordion title="认证后反复回到登录页">
+
+确认 Authentik 提供者的 cookie 域覆盖受保护的主机名，且受保护域名已分配给预期的 Authentik 应用。
+
+</Accordion>
+
+</Accordions>
+
+<Callout type="warning" title="保留恢复途径">
+转发认证路由一旦出问题，可能把所有用户都挡在受保护应用之外。在保护管理类服务之前，请确保 Coolify 仪表盘可以通过独立域名访问，并清楚如何移除中间件标签。
+</Callout>

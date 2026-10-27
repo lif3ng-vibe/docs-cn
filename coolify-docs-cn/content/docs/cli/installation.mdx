@@ -1,0 +1,106 @@
+---
+title: 安装
+description: 在 Linux、macOS 或 Windows 上安装并验证 Coolify CLI。
+---
+
+import { Code, Computer, TerminalSquare } from 'reicon-react';
+
+# 安装 Coolify CLI
+
+在将要向 Coolify 发送请求的电脑或 CI 运行器上安装 `coolify` 二进制文件。
+
+## 选择安装方式
+
+<Tabs id="cli-installation-method" items={['Linux 与 macOS', 'Windows', 'Go']}>
+<Tab value="Linux 与 macOS" icon={TerminalSquare}>
+
+### 使用安装脚本安装
+
+安装脚本会自动识别 `amd64` 和 `arm64`，下载最新的 GitHub release，并把二进制文件安装到 `/usr/local/bin`：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.sh | bash
+```
+
+全局安装可能会请求 `sudo`。如果没有管理员权限，可以传入 `--user`，二进制文件会写入 `~/.local/bin`：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.sh | bash -s -- --user
+```
+
+如果 shell 找不到 `coolify`，请把 `~/.local/bin` 加入 `PATH`。
+
+### Homebrew
+
+在 macOS 或 Linux 上，可以从 Coolify tap 安装：
+
+```sh
+brew install coollabsio/coolify-cli/coolify-cli
+```
+
+</Tab>
+
+<Tab value="Windows" icon={Computer}>
+
+### 使用 PowerShell 安装
+
+以管理员身份运行 PowerShell，安装到 `%ProgramFiles%\Coolify`：
+
+```powershell
+irm https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.ps1 | iex
+```
+
+如需在无管理员权限的情况下按用户安装，则安装到 `%LOCALAPPDATA%\Coolify`：
+
+```powershell
+$env:COOLIFY_USER_INSTALL=1; irm https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.ps1 | iex
+```
+
+要安装特定版本，请在运行安装器前设置 `COOLIFY_VERSION`：
+
+```powershell
+$env:COOLIFY_VERSION='v1.0.0'; irm https://raw.githubusercontent.com/coollabsio/coolify-cli/main/scripts/install.ps1 | iex
+```
+
+如果安装器更新 `PATH` 后仍找不到 `coolify`，请重启终端。
+
+</Tab>
+
+<Tab value="Go" icon={Code}>
+
+### 使用 Go 安装
+
+如果已安装 Go，可将最新的 CLI release 构建并安装到 `GOBIN`（未设置 `GOBIN` 时为 `GOPATH/bin`）：
+
+```sh
+go install github.com/coollabsio/coolify-cli/coolify@latest
+```
+
+确保该目录在 `PATH` 中。
+
+</Tab>
+</Tabs>
+
+## 验证安装
+
+```sh
+coolify version
+coolify --help
+```
+
+首次执行 CLI 命令时，若配置文件不存在会自动创建。按照[认证](/cli/authentication)配置令牌，然后使用[上下文（Contexts）](/cli/contexts)管理已保存的 Coolify 连接。
+
+## 启用 shell 补全
+
+为你的 shell 生成补全配置说明：
+
+```sh
+coolify completion bash
+coolify completion zsh
+coolify completion fish
+coolify completion powershell
+```
+
+运行 `coolify completion <shell> --help`，查看立即加载补全或为后续会话启用补全的命令。
+
+之后要安装更新的版本，参见[更新 Coolify CLI](/cli/update)。要移除二进制文件（可选连同已保存的上下文），参见[卸载 Coolify CLI](/cli/uninstallation)。

@@ -1,0 +1,18 @@
+{
+  "title": "API 参考",
+  "root": true,
+  "pages": [
+    "---快速开始---",
+    "overview",
+    "making-requests",
+    "---访问与安全---",
+    "authorization",
+    "permissions",
+    "ip-allowlist",
+    "---请求与响应---",
+    "rate-limits",
+    "errors",
+    "---端点---",
+    "...endpoints"
+  ]
+}

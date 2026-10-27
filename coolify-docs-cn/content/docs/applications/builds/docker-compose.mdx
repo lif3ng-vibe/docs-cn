@@ -1,0 +1,507 @@
+---
+title: Docker Compose
+description: 从 Git 仓库部署 Docker Compose，或使用直接存储在 Coolify 中的定义。
+---
+
+import { BranchUp, Layers } from 'reicon-react';
+
+# Docker Compose
+
+Coolify 支持两种 Docker Compose 使用方式：来自 Git 仓库，或把定义直接粘贴进 Coolify。
+
+这两种方式会创建不同类型的资源：
+
+| 方式 | 创建的资源 | Compose 定义 | Git 自动化 |
+| :--- | :--- | :--- | :--- |
+| 使用 **Docker Compose** 构建包（build pack）的 Git 仓库 | 应用 | 存放在仓库中。 | 支持基于分支的部署、webhook 和预览部署。 |
+| **Docker Compose Empty**（空白 Docker Compose） | 用户自定义服务（Service） | 粘贴进 Coolify 并由其存储。 | 没有 Git 来源、分支或 pull request 事件。 |
+
+无论哪种方式，Compose 定义都决定了服务的镜像、构建、命令、环境变量引用、卷（volume）、健康检查、依赖关系以及 Compose 网络。Coolify 会解析这份定义，并补上管理该资源所需的配置。
+
+## 创建 Docker Compose 资源
+
+<Tabs id="docker-compose-source" items={['Git 仓库', 'Docker Compose Empty']}>
+<Tab value="Git 仓库" icon={BranchUp}>
+
+当 Compose 定义应当纳入版本控制、且部署需要跟随仓库变化时，使用这种方式。
+
+<Steps>
+<Step>
+
+### 选择来源
+
+打开目标项目和环境，然后选择 **+ New**（新建）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/1.webp" alt="Coolify 项目中的 New Resource（新建资源）按钮" />
+
+选择公开仓库、部署密钥（deploy key）或受支持的 Git App。仓库中必须包含 Compose 文件。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/2.webp" alt="Docker Compose 应用的 Git 仓库来源选项" />
+
+对于公开仓库，粘贴其 HTTPS URL，然后选择 **Check Repository**（检查仓库）。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/3.webp" alt="Docker Compose 应用的公开仓库 URL 输入框" />
+
+</Step>
+<Step>
+
+### 选择 Docker Compose
+
+在 **常规（General）> 构建流水线（Build pipeline）** 中，将**构建策略**（Build strategy）选为 **Compose**。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/4.webp" alt="Build Pack 选择器中的 Docker Compose 选项" />
+
+设置：
+
+- **基础目录（Base Directory）**：仓库中包含该应用的目录
+- **Docker Compose 位置（Docker Compose Location）**：Compose 文件相对于基础目录的路径
+
+Coolify 定位文件时会把这两个值拼接在一起。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/5.webp" alt="Branch（分支）、Base Directory（基础目录）和 Docker Compose Location（Docker Compose 位置）字段" />
+
+</Step>
+<Step>
+
+### 加载并检查定义
+
+保存配置并检查 **Docker Compose Content**（Docker Compose 内容）。对于基于 Git 的应用，应在仓库中编辑源文件并重新加载应用配置，而不要把这里渲染出来的内容当作主副本。
+
+确认每个服务都具备所需的镜像或构建定义、环境变量引用、卷和健康检查。
+
+</Step>
+<Step>
+
+### 配置公开服务
+
+打开 **Domains**（域名），选择 **Add domain**（添加域名），选择接收请求的 **Service**（服务），并为每个需要公开的 HTTP 服务填写协议、主机名、内部端口和可选路径。
+
+如果服务监听 `3000` 端口，请把该内部端口写进值里：
+
+```sh
+https://app.example.com:3000
+```
+
+公开访问请求仍然使用普通的 HTTP 或 HTTPS 端口。后缀只是告诉 Coolify 代理，请求应转发到哪个容器端口。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**（部署）。打开 **Deployment Logs**（部署日志），等待操作完成。
+
+逐一验证各个公开域名，并通过 **Runtime Logs**（运行日志）排查未能启动或未进入健康状态的服务。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="Docker Compose Empty" icon={Layers}>
+
+这种方式可以在不连接 Git 仓库的情况下，用一份 Compose 定义创建用户自定义服务（Service）。
+
+<Steps>
+<Step>
+
+### 选择 Docker Compose Empty
+
+打开目标项目和环境，选择 **+ New**，然后选择 **Docker Compose Empty**。
+
+在 Coolify 询问时，选择部署所用服务器和目标（Destination）。
+
+</Step>
+<Step>
+
+### 填写 Compose 定义
+
+把完整的 YAML 定义粘贴到 **Docker Compose file**（Docker Compose 文件）中。
+
+定义中必须包含该堆栈所需的每一个服务、镜像或构建指令、环境变量引用、卷、健康检查和依赖关系。
+
+</Step>
+<Step>
+
+### 创建服务
+
+选择 **Save**（保存）。Coolify 会校验并解析定义，创建一个用户自定义服务，并打开其配置页面。
+
+部署之前，先检查识别出的服务、生成的环境变量、域名和存储。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+选择 **Deploy**，然后逐个查看定义中各服务的部署日志。
+
+确认所需的容器都在正常运行且处于健康状态。打开每一个已配置的公开域名，并验证存在依赖关系的服务之间能否正常通信。
+
+</Step>
+</Steps>
+
+之后如需修改定义，打开该服务的配置页面并选择 **Edit Compose File**（编辑 Compose 文件）。保存更改后重新部署该服务。
+
+由于这类资源没有 Git 来源，仓库 webhook 和 pull request 预览部署（preview deployment）均不适用。用户自定义服务的生命周期请参阅[服务](/services)。
+
+</Tab>
+</Tabs>
+
+## 配置 Compose 定义
+
+对于基于 Git 的应用，在仓库中编辑 Compose 文件，然后重新部署所选提交。对于 **Docker Compose Empty**，在服务配置中使用 **Edit Compose File**。
+
+<span id="defining-environment-variables" />
+<span id="shared-environment-variables" />
+
+## 环境变量
+
+Compose 服务 `environment:` 段中的值，可以直接来自 Compose 文件，也可以来自 Coolify。
+
+```yaml
+services:
+  api:
+    environment:
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+```
+
+`APP_ENV` 在 Compose 定义中被固定为 `production`。它会传入容器，但 Coolify 不会为它创建可编辑的变量。
+
+`${DATABASE_URL}` 则告诉 Coolify，在资源的 **Environment Variables**（环境变量）下创建 **DATABASE_URL**。请在该处填写连接字符串，而不要把它提交到 Compose 文件里。
+
+列表形式和映射形式都可以：
+
+```yaml
+services:
+  api:
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+```
+
+### 默认值与必填值
+
+Compose 的变量运算符决定了尚未填写值时的行为：
+
+| 语法 | 行为 | 典型用途 |
+| :--- | :--- | :--- |
+| `${VARIABLE}` | 在 Coolify 中创建一个可编辑的空变量。 | 允许为空、或稍后再填的值。 |
+| `${VARIABLE:-text}` | 创建变量并以 `text` 作为初始值。变量未设置或为空时，Compose 采用该回退值。 | 带安全默认值的可选项。 |
+| `${VARIABLE-text}` | 创建变量并以 `text` 作为初始值。仅当变量未设置时，Compose 才采用该回退值。 | 需要保留"故意留空"值的设置项。 |
+| `${VARIABLE:?}` | 将变量标记为必填。为空时 Coolify 会高亮提示，并阻止部署，直到填入值。 | 堆栈启动必不可少的凭据或连接值。 |
+| `${VARIABLE?}` | 在 Coolify 中同样标记为必填。在 Compose 插值语义里，不带冒号的形式会区分"未设置"和"空值"。 | 除非有意利用 Compose 的这一区分，否则建议使用 `${VARIABLE:?}`。 |
+
+例如：
+
+```yaml
+services:
+  api:
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_KEY: ${API_KEY:?}
+```
+
+Coolify 加载定义后，**LOG_LEVEL** 的初始值为 `info`，而 **DATABASE_URL** 和 **API_KEY** 等待填值。资源必须等 **API_KEY** 有了值才能部署。
+
+再次加载 Compose 定义时，Coolify 会保留已有值。在面板中把 `LOG_LEVEL` 从 `info` 改成 `debug` 之后，不会因为 Compose 文件里仍是 `${LOG_LEVEL:-info}` 就被覆盖回去。
+
+默认值可以引用其他 Compose 变量或生成的变量：
+
+```yaml
+services:
+  api:
+    environment:
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-${SERVICE_URL_API}/v1}
+```
+
+Coolify 会创建 **PUBLIC_API_URL**，并保留其默认值中嵌套的 `SERVICE_URL_API` 引用。嵌套表达式时注意保持花括号配对。
+
+### 复用同一变量
+
+当多个服务或字段需要同一个值时，可以在定义的任意位置引用同一个键：
+
+```yaml
+services:
+  api:
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+  worker:
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+```
+
+两个容器拿到的都是 Coolify 中保存的 **DATABASE_URL** 值。
+
+同样的替换也适用于 Compose 的其他字段，包括 bind mount 的源路径：
+
+```yaml
+services:
+  api:
+    volumes:
+      - /data/${TENANT_NAME}:/app/data
+```
+
+### 使用共享变量
+
+共享变量可以用 `{{environment.DATABASE_URL}}` 这样的引用语法赋给对应的应用变量。
+
+先在 Compose 定义中声明 `${DATABASE_URL}`，然后打开 **Environment Variables**，把它的值设置为共享变量引用：
+
+```dotenv
+DATABASE_URL={{environment.DATABASE_URL}}
+```
+
+构建/运行时作用域与机密（Secret）处理，请参阅 [环境变量](/applications/configuration/environment-variables)。
+
+<span id="coolifys-magic-environment-variables" />
+
+### 生成的堆栈值
+
+当 Compose 定义中出现名为 `SERVICE_<TYPE>_<ID>` 的变量时，Coolify 可以自动生成域名、用户名、密码或随机值。
+
+`<ID>` 标识这个值归属于谁。对于 `SERVICE_URL` 和 `SERVICE_FQDN`，请使用 Compose 服务名，这样 Coolify 才能把生成的域名分配给对应服务。变量名中的连字符或点号要替换为下划线。只要完整变量名相同，资源内的每个服务拿到的都是同一个存储值。
+
+| 模式 | 生成的值 | 长度 |
+| :--- | :--- | :--- |
+| `SERVICE_URL_<ID>` | 基于所配置泛域名（wildcard domain）的 URL。 | 不适用 |
+| `SERVICE_FQDN_<ID>` | 域名取自生成的 URL，不带协议（scheme）。 | 不适用 |
+| `SERVICE_USER_<ID>` | 随机字母数字用户名。 | 16 字符 |
+| `SERVICE_LOWERCASEUSER_<ID>` | 随机小写字母数字用户名。 | 16 字符 |
+| `SERVICE_PASSWORD_<ID>` | 不含符号的随机密码。 | 32 字符 |
+| `SERVICE_PASSWORD_64_<ID>` | 不含符号的随机密码。 | 64 字符 |
+| `SERVICE_PASSWORDWITHSYMBOLS_<ID>` | 含符号的随机密码。 | 32 字符 |
+| `SERVICE_PASSWORDWITHSYMBOLS_64_<ID>` | 含符号的随机密码。 | 64 字符 |
+| `SERVICE_BASE64_<ID>` 或 `SERVICE_BASE64_32_<ID>` | 随机字母数字字符串。虽然名字带 Base64，但这个值并没有经过 Base64 编码。 | 32 字符 |
+| `SERVICE_BASE64_64_<ID>` | 随机字母数字字符串，未经 Base64 编码。 | 64 字符 |
+| `SERVICE_BASE64_128_<ID>` | 随机字母数字字符串，未经 Base64 编码。 | 128 字符 |
+| `SERVICE_REALBASE64_<ID>` 或 `SERVICE_REALBASE64_32_<ID>` | 随机字节的 Base64 编码。 | 编码前 32 个随机字节 |
+| `SERVICE_REALBASE64_64_<ID>` | 随机字节的 Base64 编码。 | 编码前 64 个随机字节 |
+| `SERVICE_REALBASE64_128_<ID>` | 随机字节的 Base64 编码。 | 编码前 128 个随机字节 |
+| `SERVICE_HEX_32_<ID>` | 随机十六进制字符串。 | 32 字符 |
+| `SERVICE_HEX_64_<ID>` | 随机十六进制字符串。 | 64 字符 |
+| `SERVICE_HEX_128_<ID>` | 随机十六进制字符串。 | 128 字符 |
+
+#### 生成变量的命名
+
+普通环境变量名里可以出现下划线，比如 `DATABASE_PASSWORD`。而在 Coolify 的魔法变量中，某些下划线是分隔符，解析器靠它们判断要生成什么：
+
+```text
+SERVICE_PASSWORD_64_DB
+│       │        │  └─ Identifier: DB
+│       │        └──── Size: 64 characters
+│       └───────────── Type: PASSWORD
+└───────────────────── Coolify magic-variable prefix
+
+SERVICE_URL_API_3000
+│       │   │   └───── Internal port: 3000
+│       │   └───────── Compose service: api
+│       └───────────── Type: URL
+└───────────────────── Coolify magic-variable prefix
+```
+
+对于生成的用户名、密码和随机值，`<ID>` 必须是不含下划线的单个词。例如应写 `DBPASSWORD`，而不是 `DB_PASSWORD`。多加一个下划线可能改变解析出的类型或长度，而不是扩展标识符。
+
+| 示例 | 含义 |
+| :--- | :--- |
+| `DATABASE_PASSWORD` | 普通变量。允许使用下划线；Coolify 不会根据这个名称生成值。 |
+| `SERVICE_PASSWORD_DBPASSWORD` | 为标识符 `DBPASSWORD` 生成密码。 |
+| `SERVICE_PASSWORD_64_DBPASSWORD` | 为该标识符生成 64 字符密码。 |
+| `SERVICE_PASSWORD_DB_PASSWORD` | 错误的密码生成变量名：`DB_PASSWORD` 不是单个标识符词。 |
+| `SERVICE_URL_API_3000` | 为 Compose 服务 `api` 生成 URL，并路由到内部端口 `3000`。 |
+
+URL 和 FQDN 类变量名则遵循服务名归一化规则：名为 `my-api` 或 `my.api` 的 Compose 服务，在变量名中写作 `MY_API`。这条规则与生成凭据的标识符规则相互独立。URL/FQDN 变量名末尾的数字段会被解释为端口。
+
+引用这些生成的变量名，即可生成并复用凭据：
+
+```yaml
+services:
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+
+  api:
+    image: example/api:latest
+    environment:
+      DATABASE_USER: ${SERVICE_USER_POSTGRES}
+      DATABASE_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+      SESSION_SECRET: ${SERVICE_REALBASE64_64_API}
+```
+
+Coolify 只生成一个 PostgreSQL 用户名和密码，并把同一对凭据提供给两个服务。API 则拿到一个独立的 Base64 编码会话机密。
+
+### 为服务生成域名
+
+`SERVICE_URL_<ID>` 包含协议（scheme），`SERVICE_FQDN_<ID>` 则是不带协议的域名。当代理需要路由到特定的内部容器端口时，加上数字后缀；当生成的 URL 需要路径时，把路径作为变量值：
+
+```yaml
+services:
+  api:
+    environment:
+      SERVICE_URL_API_3000: /v1
+      PUBLIC_API_URL: ${SERVICE_URL_API_3000}
+      PUBLIC_API_HOST: ${SERVICE_FQDN_API_3000}
+```
+
+配置了泛域名后，Coolify 会为该资源生成 URL、追加 `/v1`，并配置路由到 `api` 容器内的 `3000` 端口。公开 URL 仍使用普通的 HTTP 或 HTTPS 端口。
+
+每个生成域名的变量都要使用与之匹配的服务名：
+
+```yaml
+services:
+  frontend:
+    environment:
+      SERVICE_URL_FRONTEND: /
+  api:
+    environment:
+      SERVICE_URL_API_8080: /v1
+```
+
+生成的值会在多次部署之间保留，并显示在 **Environment Variables** 下。密码和随机值可以在那里编辑；生成的 URL 和 FQDN 值则由 Coolify 通过资源的域名配置来管理。
+
+## 存储
+
+在 Compose 文件中定义由 Compose 管理的卷：
+
+```yaml
+services:
+  app:
+    image: example/app:latest
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
+```
+
+Coolify 会把解析出的存储显示在 **Persistent Storage**（持久化存储）下，但其中 Compose 管理的字段是只读的，需要在 Compose 定义中修改。
+
+标记为 `external: true` 的卷使用其声明的 Docker 名称。已有资源会保留之前重命名过的卷；在把数据迁移到外部卷之前，请先查看部署日志和存储页面。预览部署会保留各自的卷。重命名受管卷时，Coolify 会保留 `driver`、`driver_opts` 和 `labels`。
+
+相对 bind 源路径会基于资源目录解析，包括受支持的 `../` 形式。存储路径会经过校验；受管的文件路径必须留在资源目录之内。删除预览时，只会移除 Coolify 为该预览创建的网络和卷。
+
+对于相对仓库的 bind 源，Coolify 还支持 `is_directory: true` 和 `content:` 扩展。只在部署确实需要创建该目录或文件时才使用它们。
+
+<Callout type="warning" title="文件 bind 源必须先存在">
+
+使用文件 bind mount 时，要么在部署前先创建源文件，要么使用 `content:` 让 Coolify 代为创建。如果该文件来自 Git 仓库，请在 **常规（General）> 构建流水线（Build pipeline）** 下启用 **Preserve repository during deployment**（部署期间保留仓库），使其在部署目录中仍然可用。
+
+如果 Docker 收到的文件源并不存在，它可能会在该路径上创建一个目录。随后容器将无法启动，并报出类似 `not a directory: unknown` 的错误。
+
+</Callout>
+
+在容器启动前创建一个相对仓库的目录：
+
+```yaml
+services:
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    volumes:
+      - type: bind
+        source: ./srv
+        target: /srv
+        is_directory: true
+```
+
+创建一个带有预定义内容、相对仓库的文件：
+
+```yaml
+services:
+  database:
+    image: postgres:17
+    volumes:
+      - type: bind
+        source: ./init/99-roles.sql
+        target: /docker-entrypoint-initdb.d/99-roles.sql
+        content: |
+          CREATE ROLE app;
+```
+
+在选择路径或备份行为之前，请先阅读 [持久化存储](/core/persistent-storage/storage-mounts/overview)。
+
+如果文件 bind mount 失败并报 `not a directory: unknown`，请检查部署服务器上的源路径，确认它以文件而非目录的形式存在，然后重新部署该资源。
+
+## 健康检查
+
+健康检查应定义在镜像的 Dockerfile 或 Compose 服务中。基于 Git 的 Docker Compose 应用不使用标准应用的 **Healthcheck**（健康检查）页面，用户自定义服务也使用其 Compose 定义中的检查。
+
+```yaml
+services:
+  api:
+    image: example/api:latest
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+对于一次性的服务（例如执行迁移的容器），使用 `exclude_from_hc: true`，让它不影响应用整体的健康状态。
+
+<span id="connect-to-predefined-networks" />
+
+## Compose 网络
+
+Coolify 会为 Compose 资源创建一个专属网络。定义中的各个服务可以通过服务名和内部端口互相访问。
+
+在 **高级（Advanced）> Docker compose > Predefined network（预定义网络）** 下，只有当 Compose 服务必须与所选 Coolify 目标上的其他资源通信时，才选择 **Connect to predefined network**（连接到预定义网络）。名称可能会加上前缀以避免冲突，因此在把它当主机名使用之前，请先核实实际生成的容器或服务名。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/6.webp" alt="Docker Compose 应用的 Connect To Predefined Network 选项" />
+
+除非服务必须能从服务器网络接口直接访问，否则不要用 `ports:` 发布端口。发布的主机端口会绕开基于域名的代理路由，可能把内部服务暴露出去。
+
+## 应用的 Raw Compose 部署
+
+对于基于 Git 的 Docker Compose 应用，在 **高级（Advanced）> Docker compose > Compose deployment（Compose 部署方式）** 下选择 **Raw (deploy file as-is)**（原样部署文件）后，定义会不经 Coolify 大多数修改直接生效。代理标签、网络等通常由正常部署流程生成的配置，都需要你自己提供。
+
+<ZoomImage src="/docs-cn/coolify/images/builds/packs/compose/7.webp" alt="Raw Compose Deployment 选项" />
+
+<Callout type="warning" title="Raw 模式要求完全掌控 Docker Compose">
+
+只有当 Compose 定义已经包含暴露和运行该应用所需的一切时，才启用 Raw 模式。原样部署时，Coolify 无法替你补齐缺失的代理或网络配置。
+
+</Callout>
+
+## 应用标签
+
+对于正常的基于 Git 的 Docker Compose 应用，如果缺少以下管理标签，Coolify 会自动补上：
+
+```yaml
+labels:
+  - coolify.managed=true
+  - coolify.applicationId=<application-id>
+  - coolify.type=application
+```
+
+对于应用中配置的域名，Coolify 也会生成所需的代理标签。只有当 **Compose deployment** 为 **Raw (deploy file as-is)** 时，才需要自己定义并维护代理标签。
+
+## 应用构建参数
+
+对于基于 Git 的 Docker Compose 应用，Coolify 可以把应用构建变量作为 Docker 构建参数（build arguments）注入使用 `build:` 的服务。
+
+当服务的 Dockerfile 自行声明并消费所有必需的 `ARG` 时，在 **高级（Advanced）> 构建（Build）** 下把 **Build arguments**（构建参数）设为 **Managed manually in Dockerfile**（由 Dockerfile 手动管理）。
+
+默认情况下 `SOURCE_COMMIT` 不参与构建，这样层未变化的提交可以复用缓存。仅当镜像内容需要用到提交值时，才在 **高级（Advanced）> 构建（Build）** 下把 **Source commit availability**（源提交可用性）设为 **Available during build**（构建期间可用）。
+
+## 应用 Compose 命令
+
+对于基于 Git 的 Docker Compose 应用，**Custom Build Command**（自定义构建命令）和 **Custom Start Command**（自定义启动命令）字段会取代常规的 Compose 命令。除非自定义命令自带这些参数，否则 Coolify 会注入 Compose 文件和环境文件标志。
+
+路径请保持相对于**基础目录（Base Directory）**，并使用 Coolify 解析的同一份 Compose 定义。否则，生成的域名、标签和变量可能与实际部署的服务对不上。
+
+## 排查不可用的域名
+
+如果域名显示 **No Available Server**（无可用服务器）：
+
+1. 检查部署日志和服务日志
+2. 确认目标服务正在运行且健康
+3. 当服务的内部监听端口不是 `80` 时，确认域名中包含该端口
+4. 确认进程监听 `0.0.0.0`，而不仅是 `127.0.0.1`
+5. 按照 [无可用服务器](/troubleshoot/applications/no-available-server) 进行代理排查
+
+## 网络名称中的变量
+
+Compose 网络名称支持插值，例如 `${NETWORK:-coolify}` 和 `${COMPOSE_PROJECT_NAME}_default`，服务的 `networks:` 条目同样适用。仅由单个变量构成的网络名称，会被添加为一个可编辑的环境变量。

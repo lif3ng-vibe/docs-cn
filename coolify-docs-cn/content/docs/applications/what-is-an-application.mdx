@@ -1,0 +1,73 @@
+---
+title: 什么是应用
+description: 了解 Coolify 中应用是什么，以及部署前需要准备什么。
+---
+
+import { BranchUp, Box2, Server } from 'reicon-react';
+
+# 什么是应用
+
+应用是一种工作负载，Coolify 以一个或多个 Docker 容器的形式把它部署并管理在已接入的服务器上。
+
+你提供 Git 仓库、Dockerfile 或镜像引用（Git 仓库里也可以包含 Docker Compose 定义）。Coolify 负责协调镜像准备、运行时配置、域名、健康检查、日志和生命周期操作。
+
+## 应用包含什么
+
+| 组成部分 | 用途 |
+| :--- | :--- |
+| 部署输入 | Git 仓库、免 Git 填写的 Dockerfile，或现有 Docker 镜像引用。Git 仓库可以用 Docker Compose 作为构建包。 |
+| 构建方式 | Coolify 如何从 Git 源码准备所需镜像。大多数方式构建一个镜像；Docker Compose 可以为每个服务构建或拉取镜像。Docker Image 应用会跳过这个阶段。 |
+| 运行时配置 | 环境变量、域名、端口、网络、存储、健康检查和资源限制。 |
+| 部署历史 | 构建或拉取镜像、套用运行时配置、启动容器等排队中和已完成的操作。 |
+| 运维 | 日志、终端访问、备份、回滚、指标、标签和生命周期操作。 |
+
+## Coolify 管理什么
+
+Coolify 保存应用配置，并在所选服务器上协调 Docker。视部署方式而定，Coolify 可以：
+
+- 克隆 Git 仓库
+- 构建或拉取 Docker 镜像
+- 创建运行时环境文件
+- 挂接网络和持久化存储
+- 为应用域名配置代理路由
+- 启动、停止、重启和替换容器
+- 记录部署状态和日志
+
+接入的服务器、Docker 守护进程、DNS 记录、防火墙、应用数据和外部服务，仍属于你的基础设施。
+
+## 部署之前
+
+请确认：
+
+- Coolify 有一台已验证的部署服务器
+- 应用需要域名时，Coolify 代理正在运行
+- Coolify 能访问源码或镜像
+- 你知道应用监听哪个端口
+- 持久化数据有明确的存储和备份方案
+
+想在接入自己的源码之前先验证部署，请按照[部署你的第一个应用](/deploy-your-first-app)操作。
+
+## 继续了解
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '应用的工作原理',
+      href: '/applications/how-applications-work',
+      description: '了解从源码或镜像到运行中容器的完整路径。',
+      icon: Box2,
+    },
+    {
+      title: '选择部署方式',
+      href: '/applications/choose-deployment-method',
+      description: '在 Git 源、免 Git Dockerfile、基于 Git 的 Docker Compose 和现有镜像之间选择。',
+      icon: BranchUp,
+    },
+    {
+      title: '来自托管平台',
+      href: '/applications/coming-from-managed-platforms',
+      description: '把托管平台概念对应到 Coolify 和你自己的服务器。',
+      icon: Server,
+    },
+  ]}
+/>

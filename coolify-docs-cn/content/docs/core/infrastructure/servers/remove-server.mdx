@@ -1,0 +1,128 @@
+---
+title: 移除服务器
+description: 从 Coolify 移除服务器、按需删除其资源，并了解提供商侧删除的行为。
+---
+
+# 移除服务器
+
+删除服务器总会把它在 Coolify 数据库中的记录移除。根据所选选项，Coolify 还可以删除其托管资源以及关联的 Hetzner、DigitalOcean、Vultr 或 Hostinger 机器。
+
+自托管 Coolify 安装中的 **localhost** 服务器无法删除。
+
+<Callout type="error" title="先备份重要数据">
+删除资源或关联的提供商机器，可能会永久销毁该机器上的应用文件、数据库、卷和备份。
+</Callout>
+
+## 决定删除什么
+
+打开删除对话框之前，先确定要达成的结果。
+
+| 选项 | 结果 |
+| :--- | :--- |
+| **Only delete server from Coolify** | 只从 Coolify 移除该服务器。Linux 机器、Docker 安装和文件都会保留。 |
+| **Delete all resources** | 先删除 Coolify 在这台服务器上管理的所有资源，再从数据库中移除服务器。 |
+| **Also delete server/droplet from the provider** | 向关联的 Hetzner 服务器、Vultr 实例或 DigitalOcean Droplet 发送删除请求。对 Hostinger VPS 则关闭自动续订，付费期结束后由 Hostinger 删除 VPS。 |
+
+提供商侧删除默认不勾选。如果保持关闭，机器仍然存在，提供商会继续计费。
+
+<Callout type="warning" title="Hostinger 会在付费期结束时删除 VPS">
+Hostinger 没有立即删除 VPS 的 API。如果选择 Hostinger 选项，Coolify 会关闭自动续订；VPS 会一直运行到付费期结束，之后 Hostinger 会删除该 VPS 及其全部数据。
+
+想立即删除 VPS，或在 30 天退款期内申请退款，请在 [hPanel](https://hpanel.hostinger.com/) 的 **Billing > Subscriptions**（账单 > 订阅）中取消该 VPS。
+</Callout>
+
+---
+
+## 删除前的准备
+
+<Steps>
+<Step>
+
+### 检查托管资源
+
+1. 打开 **Servers** 并选择该服务器。
+2. 打开 **Resources > Managed**（资源 > 托管）。
+3. 检查列出的每个应用、数据库和服务。
+
+备份重要数据。把要保留的资源重新部署到其他服务器，并更新它们的 DNS 记录。
+
+</Step>
+<Step>
+
+### 决定资源的处理方式
+
+最安全、最可控的做法是：在移除服务器之前，先逐个迁移或删除资源。
+
+如果仍有资源，确认对话框会提供 **Delete all resources** 选项并显示将删除的数量。只有在所有剩余资源都可以销毁时才启用它。
+
+</Step>
+<Step>
+
+### 检查提供商关联
+
+如果服务器关联了 Hetzner、DigitalOcean、Vultr 或 Hostinger，需要决定是否同时删除实际的提供商机器。
+
+如果从 Coolify 移除后还需要这台机器、其文件或控制台访问，请保持提供商选项为关闭。
+
+</Step>
+</Steps>
+
+---
+
+## 删除服务器
+
+<Steps>
+<Step>
+
+### 打开 Danger Zone
+
+打开服务器的 **Danger**（危险）页面，在 **Danger Zone**（危险区域）下找到 **Delete Server**（删除服务器）。
+
+</Step>
+<Step>
+
+### 核对确认信息
+
+选择 **Delete**（删除），仔细核对对话框中列出的每一项操作。
+
+在适用的情况下：
+
+- 只有在剩余托管资源都可以销毁时，才启用 **Delete all resources**
+- 只有在要永久删除关联的 Hetzner 服务器时，才启用 **Also delete server from Hetzner Cloud**
+- 只有在要永久删除关联的 Vultr 实例时，才启用 **Also delete server from Vultr**
+- 只有在要永久删除关联的 DigitalOcean Droplet 时，才启用 **Also delete droplet from DigitalOcean**
+- 只有在付费期结束后要删除关联的 Hostinger VPS 时，才启用 **Also delete VPS from Hostinger (at the end of the paid period)**
+
+输入所需的确认值，完成删除。
+
+</Step>
+<Step>
+
+### 核实结果
+
+确认 **Servers** 页面上已不再显示该服务器。
+
+如果选择了提供商侧删除，请打开提供商控制台确认机器已被删除。如果仍存在，请通过提供商控制台删除，以免产生意外费用。
+
+对 Hostinger，打开 hPanel 确认自动续订已关闭。VPS 会保持可用直到付费期结束。
+
+</Step>
+</Steps>
+
+<Callout type="info" title="仅删除 Coolify 记录不会清理机器">
+Coolify 不会因为你删除服务器记录就卸载 Docker 或删除应用文件。如果机器仍保留在提供商处，请自行清理或另作他用。
+</Callout>
+
+---
+
+## 重新添加机器
+
+已删除的服务器记录没有恢复操作。
+
+如果 Linux 机器还在，按照[添加服务器](/core/infrastructure/servers/add-server)重新验证，这会创建一条新的 Coolify 服务器记录。
+
+已删除记录下的应用、数据库和服务不会自动恢复，即使它们的容器或文件还留在机器上。需要 Coolify 管理的每个资源都要重新创建或重新部署。
+
+## 通过 API 进行提供商侧删除
+
+对 Hetzner、Vultr 或 DigitalOcean，`DELETE /servers/{uuid}?delete_from_provider=true` 会同时删除关联的提供商机器。发起删除请求前请先核对提供商关联。该参数默认为 `false`。只有当你同时打算删除所有资源时才使用 `force=true`。删除服务器会将其排队中的部署标记为失败。

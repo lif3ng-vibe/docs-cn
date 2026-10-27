@@ -1,0 +1,100 @@
+---
+title: 持久化存储
+description: 查看 Service 所使用的由 Compose 管理的卷、目录与文件挂载。
+---
+
+# 配置持久化存储
+
+Service 容器是可替换的。请把必需的文件和数据库数据放到容器文件系统之外，即在 Service 的 Docker Compose 定义中声明挂载。
+
+打开**配置（Configuration）> 持久化存储（Persistent Storages）**，查看按应用和数据库组件分组的已解析挂载。
+
+<Callout type="info" title="Compose 定义是唯一事实来源">
+
+从 Service 解析出的存储在持久化存储页面上是只读的。请在**配置 > 常规 > Edit Compose File** 下添加、修改或删除挂载，然后保存并复查解析结果。
+
+</Callout>
+
+## 选择挂载类型
+
+| Compose 挂载 | 适用场景 |
+| :--- | :--- |
+| 命名卷（Named volume） | 希望 Docker 管理服务器端的存储位置。 |
+| 目录绑定挂载 | 栈必须使用 Service 服务器上的特定目录。 |
+| 文件绑定挂载 | 组件需要在一个精确路径上使用单个配置或数据文件。 |
+
+每个挂载都有一个来源和一个容器内的目标路径。目标路径必须与组件实际写入或读取数据的路径一致。
+
+选择来源路径之前，请先阅读[存储挂载类型](/core/persistent-storage/storage-mounts/overview#选择存储挂载)。
+
+## 定义命名卷
+
+```yaml
+services:
+  database:
+    image: postgres:17
+    volumes:
+      - database-data:/var/lib/postgresql/data
+
+volumes:
+  database-data:
+```
+
+Coolify 会为部署后的卷（volume）名加上资源标识前缀，以避免冲突。实际使用的名称请查看 **Show Deployable Compose** 或**持久化存储**。
+
+## 定义目录或文件
+
+相对的绑定来源会存储在 Service 配置目录下。Coolify 支持 Compose 扩展，可以把相对来源标记为目录，或提供受管的文件内容。
+
+```yaml
+services:
+  app:
+    image: example/app:1.0
+    volumes:
+      - type: bind
+        source: ./data
+        target: /app/data
+        is_directory: true
+      - type: bind
+        source: ./config/app.yaml
+        target: /app/config.yaml
+        content: |
+          logLevel: info
+```
+
+只有当你确实要依赖所选服务器上的那个精确路径时，才使用绝对来源路径。该路径必须存在，且权限适合容器用户。
+
+## 安全地更改挂载
+
+<Callout type="warning" title="更改挂载可能让现有数据不可见">
+
+更改来源或目标不会移动现有文件。旧数据仍留在服务器的其他地方，而容器可能以空卷或另一个目录启动。
+
+</Callout>
+
+1. 确认组件以及存放必需数据的容器目标路径。
+2. 备份来源数据并测试恢复路径。
+3. 更改数据库或共享可写挂载时，先停止应用写入。
+4. 编辑 Compose 定义。
+5. 保存并复查 **Show Deployable Compose** 与**持久化存储**。
+6. 部署或重启 Service。
+7. 在删除旧来源之前，验证组件能读写预期的文件。
+
+## 备份 Service 数据
+
+持久化存储能在容器正常重建中幸存；但它不是备份。
+
+为每个组件选择合适的备份方式：
+
+- 数据库数据使用具备数据库感知能力的导出（dump）
+- 已解析挂载及界面支持时，使用[存储挂载备份](/core/persistent-storage/storage-mounts/backups)
+- 没有 Coolify 备份控制的挂载，使用外部备份工具
+
+在 Service 服务器之外至少保留一份经过测试的副本。同一块磁盘上的本地归档无法抵御服务器或磁盘损失。
+
+## 重要边界
+
+- 挂载无法找回只写入已删除容器文件系统的数据。
+- 克隆 Service 时，服务器路径不会自动在另一台服务器上可用。
+- 在组件之间共享同一个可写挂载，需要应用自身支持并发与文件锁。
+- 从 Compose 中移除挂载可能会同时删除其 Coolify 存储记录；不要把这条记录当作重要数据的唯一清单。

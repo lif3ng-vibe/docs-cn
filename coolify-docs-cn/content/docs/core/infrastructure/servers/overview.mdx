@@ -1,0 +1,106 @@
+---
+title: 服务器概览
+description: 了解 Coolify 中的服务器角色，并选择合适的方式添加、创建和管理服务器。
+---
+
+import { BrowserTerminal, HardDrive, Refresh23, Rocket2, Server, ServerCloud, Settings } from 'reicon-react';
+
+# 服务器概览
+
+服务器是 Coolify 运行应用、数据库和服务，或构建应用镜像的机器。
+
+Coolify 通过 SSH 管理已连接的服务器。机器及其提供商账号仍由你掌控。
+
+<Callout type="info" title="使用 Coolify Cloud？">
+Coolify Cloud 用户必须先连接或创建服务器，才能部署资源。自托管安装自带一台 **localhost** 服务器。
+</Callout>
+
+## 服务器角色
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: 'Localhost',
+      description: '运行自托管 Coolify 实例的服务器，也可以运行已部署的资源。',
+      icon: Server,
+    },
+    {
+      title: '部署服务器',
+      description: '运行 Coolify 管理的应用、数据库和服务的远程 Linux 服务器。',
+      icon: ServerCloud,
+    },
+    {
+      title: '构建服务器',
+      description: '专门构建应用镜像、不能运行已部署资源的服务器。',
+      icon: Rocket2,
+    },
+  ]}
+/>
+
+### Localhost
+
+自托管安装一开始就有一台名为 **localhost** 的服务器。你可以向它部署资源，但这些资源会和 Coolify 控制台共享 CPU、内存和存储。
+
+对于生产工作负载，建议添加远程服务器，让应用活动不影响 Coolify 本身。localhost 服务器无法删除。
+
+### 部署服务器
+
+部署服务器是你拥有或租用、并接入 Coolify 的 Linux 服务器。用它来：
+
+- 配合 Coolify Cloud 部署资源
+- 让工作负载与 Coolify 控制台相互隔离
+- 在其他位置部署资源
+- 把工作负载拆分到多台机器
+
+Coolify 需要一条可用的 SSH 通道。服务器可以使用可访问的 IP 地址、主机名或 [Cloudflare Tunnel](/integrations/networking/cloudflare/tunnels/server-ssh)。
+
+### 构建服务器
+
+应用默认在其部署服务器上构建。单独的构建服务器是可选的，适合构建需要专属 CPU、内存或存储的情况。
+
+被标记为构建服务器的服务器不能再承载应用、数据库或服务。启用该角色前请先阅读[构建服务器](/core/infrastructure/servers/build-servers)。
+
+---
+
+## 选择添加服务器的方式
+
+| 你的情况 | 指南 |
+| :--- | :--- |
+| 已有一台 Linux 服务器 | [手动添加服务器](/core/infrastructure/servers/add-server) |
+| 想让 Coolify 在 Hetzner、DigitalOcean、Vultr 或 Hostinger 上购买并创建服务器 | [创建云服务器](/core/infrastructure/servers/provision-cloud-server) |
+| 需要一台只用于应用构建的服务器 | [配置构建服务器](/core/infrastructure/servers/build-servers) |
+
+无论手动添加还是提供商创建的服务器，都必须先通过验证，Coolify 才能向其部署资源。验证过程中，Coolify 会检查 SSH 访问、核对操作系统和所需工具，并安装或校验 Docker Engine 和 Docker Compose。
+
+<Callout type="warning" title="验证可能改动服务器">
+验证可能安装 Docker 并重启 Docker 服务。尽量使用全新的服务器。已有容器可能会暂时不可用。
+</Callout>
+
+---
+
+## 连接服务器之后
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '管理服务器设置',
+      href: '/core/infrastructure/servers/manage-server',
+      description: '更新连接、时区、泛域名和云提供商关联。',
+      icon: Settings,
+    },
+    {
+      title: '修补服务器软件包',
+      href: '/core/infrastructure/servers/server-patching',
+      description: '检查操作系统软件包更新，并自行决定何时安装。',
+      icon: Refresh23,
+    },
+    {
+      title: '配置 Docker 清理',
+      href: '/core/infrastructure/servers/automated-docker-cleanup',
+      description: '设置定时清理，并控制 Coolify 可以移除哪些未使用的 Docker 数据。',
+      icon: HardDrive,
+    },
+  ]}
+/>

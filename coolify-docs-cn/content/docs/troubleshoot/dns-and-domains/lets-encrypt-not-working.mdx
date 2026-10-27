@@ -1,0 +1,169 @@
+---
+title: Coolify 上 Let's Encrypt 未生成 SSL 证书
+description: 通过放行 80/443 端口、检查 DNS 记录、核实 Cloudflare 设置并排查验证质询，修复 Let's Encrypt SSL 证书签发失败。
+---
+
+# Let's Encrypt 未生成 SSL 证书
+
+如果你使用 Coolify 代理的默认设置，而网站突然提示连接不安全，多半是网站正在使用 Coolify 代理的自签名证书。本指南将帮你解决这个问题。
+
+<Steps>
+<Step>
+
+### 了解域名所有权质询（challenge）
+
+Coolify 使用 [Let's Encrypt](https://letsencrypt.org?utm_source=coolify.io) 为你的域名生成 SSL 证书。
+
+默认情况下，Let's Encrypt 用 **HTTP 质询**（HTTP challenge）验证域名，但部分用户可能使用 **TLS-ALPN-01 质询**。两者的原理如下：
+
+<Tabs items={['HTTP 质询', 'TLS-ALPN-01 质询']}>
+<Tab value="HTTP 质询">
+
+Let's Encrypt 通过 80 端口向你的服务器发送一个带唯一令牌的 HTTP 请求。如果服务器返回正确的令牌，即确认域名所有权，随后签发证书。
+
+</Tab>
+<Tab value="TLS-ALPN-01 质询">
+
+Let's Encrypt 通过 443 端口（HTTPS）验证你的域名。在 TLS 握手过程中，Let's Encrypt 期望服务器给出一个特殊响应。响应正确即完成域名验证，随后签发证书。
+
+如果这一步失败，你会收到 SSL 握手错误。
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 检查端口可达性
+
+确保对应的质询方式所需端口已放行：
+
+<Tabs items={['HTTP 质询', 'TLS-ALPN-01 质询']}>
+<Tab value="HTTP 质询">
+
+80 端口（HTTP）必须开放并可从互联网访问。如果 80 端口关闭或被防火墙拦截，Let's Encrypt 就无法验证你的域名，也无法生成 SSL 证书。
+
+</Tab>
+<Tab value="TLS-ALPN-01 质询">
+
+443 端口（HTTPS）必须开放并可从互联网访问。如果 443 端口关闭或被防火墙拦截，Let's Encrypt 就无法验证你的域名，也无法生成 SSL 证书。
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 使用第三方代理的情形
+
+如果你的网站经由 [Cloudflare](https://www.cloudflare.com?utm_source=coolify.io) 这类第三方服务代理，代理可能干扰 **HTTP** 或 **TLS-ALPN-01** 质询，导致 Let's Encrypt 无法验证你的域名。此时你要么改用 DNS 质询，要么停止通过第三方服务代理你的域名。
+
+</Step>
+<Step>
+
+### 检查 Let's Encrypt 服务状态
+
+有时问题出在 Let's Encrypt 自己那边。可以[在这里](https://letsencrypt.status.io?utm_source=coolify.io)查看 Let's Encrypt 的服务状态。如果确实有故障，等他们修复后再重试。
+
+</Step>
+<Step>
+
+### 关于证书有效期的说明
+
+Let's Encrypt 证书有效期为 90 天。只要证书仍在有效期内，即使所需的 80 端口已关闭、或域名正在被代理，你的域名也可能照常工作，因为 Coolify 会继续沿用现有有效证书直到过期。
+
+但如果你的域名通过 HTTPS 正常运行了几个月，却突然无法生成新的 SSL 证书，很可能是现有证书已经过期。此时，由于前面提到的问题（如 80 端口关闭或代理干扰），Coolify 将无法生成新证书。
+
+</Step>
+<Step>
+
+### 强制重新生成证书
+
+如果服务器上保存的证书已损坏或过期，可以将其删除，强制 Coolify 生成新证书。
+
+- 打开服务器终端并运行：
+  ```bash
+  rm /data/coolify/proxy/acme.json
+  ```
+- 然后在面板中点击 Restart Proxy（重启代理）按钮，重启 Coolify 代理。
+
+<Accordions type="multiple">
+
+<Accordion title="指南：如何在面板中重启代理？">
+
+
+  1. 在 Coolify 面板中选择你的服务器
+     <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dns-and-domains/lets-encrypt-not-working/1.webp" alt="显示 Let's Encrypt 不工作的截图" />
+
+  2. 点击 Restart Proxy（重启代理）按钮
+     <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dns-and-domains/lets-encrypt-not-working/2.webp" alt="显示 Let's Encrypt 不工作的截图" />
+
+</Accordion>
+
+</Accordions>
+
+</Step>
+<Step>
+
+### 检查 WAF 设置
+
+如果你使用了 [Cloudflare WAF](https://www.cloudflare.com/en-gb/application-services/products/waf/?utm_source=coolify.io) 这类 Web 应用防火墙（WAF），请确保它没有拦截 Let's Encrypt 的请求。
+
+</Step>
+<Step>
+
+### 检查 Coolify 代理日志
+
+在 Coolify 代理日志中查找错误信息。
+
+- 如果看到带 429 状态码的错误信息，说明 Let's Encrypt 已对你的服务器 IP 进行限流。
+
+  - 此时稍等片刻再检查域名即可。多数用户不会遇到这种情况，但使用共享 IP 地址时有可能发生。
+
+- 如果看到带 403 状态码的错误信息，说明 Let's Encrypt 的请求被 Web 应用防火墙（WAF）之类的组件拦截了。
+
+<Accordions type="multiple">
+
+<Accordion title="指南：如何查看 Coolify 代理日志？">
+
+
+  1. 在 Coolify 面板中选择你的服务器
+     <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dns-and-domains/lets-encrypt-not-working/1.webp" alt="显示 Let's Encrypt 不工作的截图" />
+
+  2. 进入代理部分，点击刷新按钮
+     <ZoomImage src="/docs-cn/coolify/images/troubleshoot/dns-and-domains/lets-encrypt-not-working/3.webp" alt="显示 Let's Encrypt 不工作的截图" />
+
+</Accordion>
+
+</Accordions>
+
+</Step>
+<Step>
+
+### 核实 DNS 记录
+
+Let's Encrypt 会通过 DNS 查询解析你服务器的 IP 地址。如果你同时配置了指向服务器的 **IPv4（A 记录）**和 **IPv6（AAAA 记录）**，Let's Encrypt 会在域名所有权质询时同时验证这两条记录。
+
+- **如果 IPv4 和 IPv6 同时存在**，Let's Encrypt 可能优先使用 **IPv6** 进行质询，但 **IPv4 和 IPv6 都应能独立完成质询**。
+
+#### 为什么这很重要：
+
+如果 **IPv4** 或 **IPv6** 地址配置有误，质询就可能失败。例如：
+
+- 如果你的域名同时解析到 **IPv4** 和 **IPv6**，但 **IPv6（AAAA 记录）**上 **80 端口是关闭的**，HTTP 质询就会失败；同样，如果 IPv6 的 **443 端口**关闭，TLS-ALPN 质询也会失败，即使 **IPv4** 能通过质询。
+
+为确保验证成功：
+
+- **IPv4（A 记录）**和 **IPv6（AAAA 记录）**都必须能正确提供质询文件。
+
+如果不需要 IPv6，可以从 DNS 配置中移除 **AAAA 记录**，这样 Let's Encrypt 会改用 **IPv4** 进行质询。
+
+</Step>
+</Steps>
+
+## 支持
+
+如果以上步骤都无效，还可以尝试以下途径：
+
+- **社区求助**：加入我们的 [Discord 社区](https://coolify.io/discord)，在支持论坛频道发帖。
+- **要提供的内容**：描述你的问题、相关报错信息，以及已经尝试过的步骤。

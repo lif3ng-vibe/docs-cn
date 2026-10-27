@@ -1,0 +1,77 @@
+---
+title: 构建期间服务器崩溃
+description: 通过把构建任务分流到外部构建服务器、使用 GitHub Actions 或升级服务器资源，解决 Coolify 构建期间服务器崩溃的问题。
+---
+
+# 构建期间服务器无响应或崩溃
+
+Coolify 支持两种部署方式：使用**预构建**的 Docker 镜像部署，以及从**源码**构建部署。弄清自己用的是哪种方式，有助于更准确地解决性能问题。
+
+<Steps>
+<Step>
+
+### 了解你的部署方式
+
+#### A. 预构建 Docker 镜像部署
+
+- Coolify 从你或他人已构建好的现有 Docker 镜像启动新容器。
+
+#### B. 源码构建部署
+
+- Coolify 在你的服务器上用应用源码构建 Docker 镜像，然后用这个新构建的镜像启动容器。
+
+</Step>
+<Step>
+
+### 排查性能问题
+
+如果部署期间服务器变得非常缓慢甚至崩溃，请根据部署方式考虑以下措施：
+
+- **预构建镜像部署**：
+
+  - 容器直接从镜像启动，资源占用高多半是正在运行的应用所致。
+  - **解决方案**：考虑升级服务器配置，更好地满足应用的资源需求。
+
+- **源码构建部署**：
+
+  - 镜像构建过程可能压垮你的服务器。
+  - **解决方案**：把构建过程分流到外部[构建服务器（Build Server）](/core/infrastructure/servers/build-servers)，或改用 [GitHub Actions](https://docs.github.com/en/actions) 之类的方案在外部完成构建。也可以考虑升级服务器配置。
+
+- **通用建议**：  
+  SSH 到服务器运行 `htop` 监控进程。找出占用资源过多的进程，必要时将其终止。
+
+</Step>
+<Step>
+
+### 用 GitHub Actions 分流构建
+
+要降低部署期间服务器的负载，请按以下流程操作：
+
+- **流程**：
+  - 使用 [GitHub Actions](https://docs.github.com/en/actions) 在外部构建 Docker 镜像。
+  - 把构建好的镜像推送到容器镜像仓库（例如 [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)）。
+  - 构建完成后，配置 Coolify 自动部署新版本。
+- **好处**：这种方式把服务器上的工作量降到最低，部署更加顺畅。
+
+- **了解更多**：[查看我们的 GitHub Actions workflow 文件](https://github.com/coollabsio/documentation-coolify/blob/main/.github/workflows/production-build.yml)。
+
+</Step>
+</Steps>
+
+## 小结
+
+- **部署方式**：
+  - **预构建镜像**：直接从现有镜像启动容器。
+  - **源码构建**：先在服务器上构建镜像，再启动容器。
+- **问题排查**：
+  - 判断问题是源于应用的资源需求，还是镜像构建过程。
+  - 按需升级服务器或分流构建。
+- **优化**：
+  - 用 GitHub Actions 在外部构建 Docker 镜像能显著降低本地资源占用。
+
+## 支持
+
+如果以上步骤都无效，请这样做：
+
+- **社区求助**：加入我们的 [Discord 社区](https://coolify.io/discord)，在支持论坛频道发帖。
+- **要提供的内容**：你遇到的问题、服务器配置（如操作系统、CPU、内存），以及已经尝试过的步骤。

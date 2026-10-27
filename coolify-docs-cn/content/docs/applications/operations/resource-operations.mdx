@@ -1,0 +1,122 @@
+---
+title: 资源操作
+description: 将应用克隆到另一个目标，或在项目与环境之间移动应用。
+---
+
+# 克隆或移动应用
+
+**Resource Operations**（资源操作）提供以下放置操作：
+
+- **Clone to another destination**（克隆到其他目标）在选定的服务器和网络目标上创建另一个应用。
+- **Clone to another environment**（克隆到其他环境）把应用复制到当前服务器和网络上的另一个项目环境。
+- **Move resource**（移动资源）改变现有应用所属的项目和环境。
+
+这些操作都不能把应用移到另一个 Coolify 实例。相关流程请参阅[迁移应用](/applications/operations/migrate-between-instances)。
+
+<Tabs id="application-resource-operation" items={['克隆资源', '移动资源']}>
+<Tab value="克隆资源">
+
+克隆会把应用配置复制到一个新的、处于停止状态的应用中。源应用继续运行，不做任何改动。
+
+<Callout type="warning" title="克隆不会复制已存储的应用数据">
+
+Coolify 会复制存储定义，但不会通过这个应用级流程复制 Docker 卷、bind mount 或目录内的文件。数据库和其他外部状态同样保持独立。
+
+在部署克隆之前，先规划好如何复制所需的状态。
+
+</Callout>
+
+克隆出的配置包括应用设置、环境变量、预览变量、存储定义、计划任务、标签和预览记录。部署前请逐项检查复制过来的值，尤其是域名、机密、服务器路径和外部依赖地址。
+
+<Steps>
+<Step>
+
+### 准备目标
+
+确认目标服务器已通过验证、能够承载资源，并具备所需的网络目标。构建服务器不能被选择，因为它们不承载运行中的资源。
+
+在该服务器上配置应用所需的仓库、镜像仓库、代理、DNS 和外部服务访问。
+
+</Step>
+<Step>
+
+### 打开 Clone Resource
+
+打开应用，选择 **Resource Operations**。在 **Clone to another destination** 下选择 **Server**。
+
+</Step>
+<Step>
+
+### 选择网络目标
+
+为选定的服务器选择 **Network destination**，然后选择 **Clone resource**。
+
+Coolify 会在当前项目环境中创建一个停止状态的应用，名称以 `clone-of-` 开头。
+
+</Step>
+<Step>
+
+### 检查克隆结果
+
+部署之前请检查：
+
+- 域名和代理标签，避免克隆与源应用冲突
+- 生产和预览环境变量
+- 目标服务器对源码或镜像仓库的访问
+- 持久化存储的名称和源路径
+- 计划任务，避免克隆意外重复执行周期性工作
+- 数据库、缓存、队列、存储和回调地址
+
+所需的持久化数据要单独复制或恢复。从源配置复制过来的 bind mount 路径，必须在目标服务器上存在，并具备预期的文件和权限。
+
+</Step>
+<Step>
+
+### 部署并验证克隆
+
+用临时域名部署克隆出的应用。在接入生产流量之前，验证镜像、健康检查、日志、存储、依赖和关键应用流程。
+
+</Step>
+</Steps>
+
+### 克隆到另一个环境
+
+在 **Clone to another environment** 下选择 **Project** 和 **Environment**，然后选择 **Clone resource**。这种方式沿用当前服务器和网络目标。部署克隆之前，请检查复制过来的配置和持久化存储需求。
+
+</Tab>
+<Tab value="移动资源">
+
+当应用应归属同一 Coolify 实例上的另一个项目或环境时，使用移动。应用会保留其服务器、网络目标、配置、域名和运行中的容器。
+
+如果应用需要运行在另一台服务器或网络目标上，请改用 **Clone resource**。
+
+<Steps>
+<Step>
+
+### 选择目标位置
+
+打开 **Resource Operations**。在 **Move resource** 下选择 **Project**。
+
+选择 **Environment**。Coolify 会把应用当前所在的环境从可选项中排除。
+
+</Step>
+<Step>
+
+### 移动资源
+
+选择 **Move resource**。Coolify 会在不停止运行中应用的情况下更改其所属项目和环境。
+
+</Step>
+<Step>
+
+### 验证新位置
+
+确认应用出现在所选的项目和环境中。打开其域名和日志，确认现有运行时仍然可用。
+
+同时检查应用之外的项目或环境层面的约定，例如团队规范、相关资源，以及使用旧控制台路径的自动化流程。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>

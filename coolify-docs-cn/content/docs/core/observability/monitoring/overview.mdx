@@ -1,0 +1,122 @@
+---
+title: 概览
+description: 了解 Coolify 如何监控服务器可用性、容器状态、磁盘用量、备份以及 CPU 与内存指标。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Globe3,
+  Layers,
+  Server,
+  Settings,
+  ShieldSecurity2,
+} from 'reicon-react';
+
+# 监控概览
+
+Coolify 会跟踪已连接服务器的状态以及其上运行的工作负载。仪表盘显示当前状态，通知渠道则可以把选定的故障和运维事件报告给你的团队。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+[Sentinel](/core/observability/monitoring/sentinel) 在受支持的服务器上提供首选的服务器到 Coolify 状态链路。[指标](/core/observability/monitoring/metrics)在此基础上增加 CPU 与内存历史图表。指标可以单独禁用，Sentinel 仍会继续上报服务器与容器健康状态。
+
+</CoolCallout>
+
+---
+
+## Coolify 监控什么
+
+Coolify 的监控涵盖服务器状态、工作负载状态、资源用量、运维事件和日志。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '服务器可用性',
+      description: '显示已连接的服务器是否可达、已验证、可用。',
+      icon: Server,
+    },
+    {
+      title: '工作负载状态',
+      description: '报告应用、数据库和服务的容器状态与 Docker 健康状态。',
+      icon: Box2,
+    },
+    {
+      title: '磁盘检查与指标',
+      description: '检查磁盘用量并记录 CPU 与内存指标。',
+      icon: Layers,
+    },
+    {
+      title: '事件与日志',
+      description: '发送运维通知并转发工作负载日志。',
+      icon: Globe3,
+    },
+  ]}
+/>
+
+---
+
+## 监控边界
+
+内置监控提供平台与容器层面的可见性，但它并不是一套完整的外部可观测性系统。
+
+<CoolCompare
+  id="monitoring-boundaries"
+  className="not-prose"
+  icon={ShieldSecurity2}
+  title="Coolify 覆盖的范围"
+  description="当你需要端点检查、阈值告警、长期分析或由服务商管理的保留策略时，请使用外部工具。"
+>
+<CoolCompareColumn
+  title="Coolify 内置"
+  items={[
+    '服务器可达性、验证状态与磁盘用量检查',
+    '容器状态与 Docker 健康信息',
+    '启用 Sentinel 指标后的 CPU 与内存历史图表',
+    '选定的运维通知与工作负载日志转发',
+  ]}
+/>
+<CoolCompareColumn
+  title="需要外部系统"
+  items={[
+    '基于内置图表的 CPU 或内存阈值告警',
+    '从基础设施外部发起的公网端点检查',
+    '超出你配置的健康端点之外的应用工作流检查',
+    '日志保留、查询、仪表盘与基于日志的告警',
+  ]}
+/>
+</CoolCompare>
+
+日志转发（log drain）负责转发工作负载容器输出。它不转发 Coolify 部署日志，也不能替代日志服务商中的保留与告警控制。
+
+---
+
+## 代理流量分析
+
+[流量分析](/core/observability/monitoring/traffic-analytics)为 Traefik 和 Caddy 提供请求量、带宽、访客、延迟与流量拆解数据。需要在每台服务器上单独启用，采集默认关闭。
+
+## 继续了解可观测性
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '配置 Sentinel',
+      href: '/core/observability/monitoring/sentinel',
+      description: '设置服务器健康报告、容器状态、磁盘用量与指标采集。',
+      icon: Server,
+    },
+    {
+      title: '启用指标',
+      href: '/core/observability/monitoring/metrics',
+      description: '为服务器和受支持的资源采集并查看 CPU 与内存历史。',
+      icon: Layers,
+    },
+    {
+      title: '配置日志转发',
+      href: '/core/observability/log-drains/overview',
+      description: '把选定的工作负载容器日志转发到外部目标。',
+      icon: Settings,
+    },
+  ]}
+/>

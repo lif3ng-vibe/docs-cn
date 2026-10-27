@@ -1,0 +1,155 @@
+---
+title: Railpack
+description: 使用 Coolify 的 Railpack Beta 构建方式，从 Git 源创建应用镜像。
+---
+
+# Railpack
+
+Railpack 是 Railway 推出的 Nixpacks 后继者。它会从代码库中识别应用的语言和框架、安装依赖，并使用 Docker BuildKit 创建应用镜像。
+
+Railpack 可以构建服务器应用，也可以构建产出静态文件的前端应用。Coolify 仅为基于 Git 的应用支持 Railpack。
+
+<Callout type="warning" title="Railpack 处于 Beta 阶段">
+
+Coolify 将 Railpack 标记为 **Beta**。在替换现有生产构建之前，请先测试生成的镜像和应用行为。
+
+</Callout>
+
+## 使用 Railpack 部署
+
+<Steps>
+<Step>
+
+### 连接仓库
+
+从[公开仓库](/applications/sources/public-repositories)、[部署密钥（deploy key）](/applications/sources/deploy-keys)或受支持的 Git App 创建应用。
+
+选择仓库和分支。
+
+</Step>
+<Step>
+
+### 选择 Railpack
+
+创建时在 **Build pack**（构建包）中选择 **Railpack**。创建之后，该选择对应 **常规（General）> 构建流水线（Build pipeline）** 下的**构建策略（Build strategy）**。
+
+把**基础目录**（Base Directory）设为 Railpack 应检查的目录。仓库根目录用 `/`；monorepo 中的应用则用 `/apps/api` 这类路径。
+
+</Step>
+<Step>
+
+### 配置应用类型
+
+创建完成后，通过 **常规（General）> 构建流水线（Build pipeline）> Site type（站点类型）** 选择 **Dynamic**（动态）、**Static**（静态）或 **SPA (single-page application)**（单页应用）。
+
+服务器应用：
+
+- 创建时在 **Output type**（输出类型）中选择 **Web application**（Web 应用）
+- 填写进程监听的内部端口
+
+静态输出：
+
+- 创建时在 **Output type**（输出类型）中选择 **Static site**（静态站点）
+- 填写 **Publish Directory**（发布目录），例如 `/dist`
+- 保留生成的 Nginx 端口 `80`
+
+</Step>
+<Step>
+
+### 检查识别出的命令
+
+继续进入 **General**（常规），查看识别出的 **Install Command**（安装命令）、**Build Command**（构建命令）和 **Start Command**（启动命令）。
+
+只有当识别结果不正确、或代码库需要自定义命令时才进行覆盖。
+
+</Step>
+<Step>
+
+### 部署并验证
+
+配置所需的环境变量和域名，然后选择 **Deploy**（部署）。
+
+在把应用投入生产之前，先查看部署日志，确认生成的构建计划和命令。
+
+</Step>
+</Steps>
+
+<Callout type="info" title="Railpack 需要 Docker Buildx">
+
+执行构建的服务器和 Coolify 辅助容器都必须安装 Docker Buildx CLI 插件。任何一处缺少 Buildx，Railpack 部署都会报错终止。
+
+</Callout>
+
+## 命令覆盖
+
+Coolify 可以把安装、构建和启动命令的覆盖传给 Railpack。
+
+直接覆盖可使用 **General**（常规）下的 **Install Command**、**Build Command** 和 **Start Command** 字段。构建需要额外软件包、多条命令或其他仓库自有配置时，使用 `railpack.json`。
+
+## Railpack 环境变量
+
+Railpack 构建变量使用 `RAILPACK_` 前缀。在 **Environment Variables**（环境变量）下添加，并把 **Build time**（构建时机）设为 **Available during build**（构建期间可用）。
+
+| 变量 | 用途 |
+| :--- | :--- |
+| `RAILPACK_BUILD_CMD` | 覆盖识别出的构建命令。 |
+| `RAILPACK_INSTALL_CMD` | 覆盖识别出的安装命令。 |
+| `RAILPACK_START_CMD` | 覆盖容器启动命令。 |
+| `RAILPACK_PACKAGES` | 以空格分隔的 `package[@version]` 形式安装额外的 [Mise](https://mise.jdx.dev?utm_source=coolify.io) 软件包。 |
+| `RAILPACK_BUILD_APT_PACKAGES` | 在构建环境中安装额外的 APT 软件包（以空格分隔）。 |
+| `RAILPACK_DEPLOY_APT_PACKAGES` | 在最终镜像中安装额外的 APT 软件包（以空格分隔）。Coolify 还会添加 `curl` 和 `wget`。 |
+| `RAILPACK_DISABLE_CACHES` | 禁用指定的 BuildKit 缓存键；使用 `*` 可禁用所有 Railpack 缓存。 |
+| `RAILPACK_VERBOSE` | 启用 Railpack 详细输出。 |
+
+如果应用只需要覆盖安装、构建或启动命令，请使用 Coolify 的命令字段，而不要定义这三个命令变量。
+
+可用的取值和更多变量请参阅上游的 [Railpack environment variables](https://railpack.com/config/environment-variables/?utm_source=coolify.io)。
+
+## `railpack.json`
+
+把 `railpack.json` 放进**基础目录**（Base Directory）所选的应用源码目录：
+
+```json
+{
+  "$schema": "https://schema.railpack.com",
+  "packages": {
+    "node": "22"
+  },
+  "steps": {
+    "install": {
+      "commands": ["npm install"]
+    },
+    "build": {
+      "commands": ["npm run build"]
+    }
+  },
+  "deploy": {
+    "startCommand": "node dist/index.js"
+  }
+}
+```
+
+`$schema` 值用于启用编辑器校验和补全。部署时，Coolify 会读取该文件，并把得到的配置传给 `railpack prepare`。
+
+受支持的格式请参阅 [Railpack configuration-file reference](https://railpack.com/config/file/?utm_source=coolify.io)。
+
+## 静态输出
+
+当 **Site type**（站点类型）为 **Static**（静态）或 **SPA (single-page application)**（单页应用）时，Railpack 负责构建应用，Coolify 把所选发布目录复制进 Nginx 镜像。
+
+只有当默认静态服务器配置不够用时，才使用 **常规（General）> 构建流水线（Build pipeline）> Custom Nginx configuration（自定义 Nginx 配置）**。保存更改后需要重新部署，因为 Coolify 会在镜像构建期间把配置复制进最终的静态镜像。
+
+## 选择 Railpack 还是 Nixpacks
+
+两种方式都能识别受支持的代码库、创建镜像、支持静态输出，并允许命令覆盖。
+
+| 差异 | Railpack | Nixpacks |
+| :--- | :--- | :--- |
+| 仓库配置文件 | `railpack.json` | `nixpacks.toml` 或 `nixpacks.json` |
+| 镜像构建 | 经 Docker Buildx 使用 Docker BuildKit frontend | 生成 Dockerfile 后由 Docker 构建 |
+| 软件包版本 | [Mise](https://mise.jdx.dev?utm_source=coolify.io) | Nix |
+| 构建变量前缀 | `RAILPACK_` | `NIXPACKS_` |
+| 上游开发状态 | 活跃开发中的后继者 | 维护模式，不再活跃开发 |
+| Coolify 中的状态 | **Beta** | 已支持 |
+
+当仓库需要超出这两个自动构建器能力的确定性镜像指令时，请使用 [Dockerfile](/applications/builds/dockerfile)。

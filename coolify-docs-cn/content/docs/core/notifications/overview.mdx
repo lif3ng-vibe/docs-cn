@@ -1,0 +1,54 @@
+---
+title: 概览
+description: 了解 Coolify 如何通过邮件、Discord、Telegram、Slack、Mattermost、Pushover 和 webhook 发送团队通知。
+---
+
+# 通知概览
+
+当所选的部署、备份、计划任务、容器和服务器事件发生时，Coolify 会发送团队通知。每个通知通道都有各自的连接信息和事件选择，因此你可以把紧急告警发到一个目的地，把日常更新发到另一个目的地。
+
+## 通知的工作方式
+
+一条通知需要同时满足两部分配置：
+
+1. 一个已启用且连接信息有效的通道。
+2. 在该通道的 **Notification events** 下选中了相应事件。
+
+Coolify 按当前团队保存通知设置。拥有更新通知设置权限的团队成员可以修改通道，而发送测试通知需要对应的权限。
+
+---
+
+## 选择通道
+
+| 通道 | 所需准备 | 指南 |
+| :--- | :--- | :--- |
+| Email | 托管邮件、全实例事务邮件、SMTP 或 Resend API 密钥 | [邮件](/core/notifications/channels/email) |
+| Discord | 一个 Discord webhook URL | [Discord](/core/notifications/channels/discord) |
+| Telegram | 机器人 API 令牌和 chat ID | [Telegram](/core/notifications/channels/telegram) |
+| Slack 或 Mattermost | 一个 Slack 兼容的 incoming webhook URL | [Slack 与 Mattermost](/core/notifications/channels/slack-mattermost) |
+| Pushover | Pushover 用户密钥和应用 API 令牌 | [Pushover](/core/notifications/channels/pushover) |
+| Webhook | 一个接受 JSON `POST` 请求的 HTTP 或 HTTPS 端点 | [Webhook 通知](/core/notifications/channels/webhook/setup) |
+
+可以同时启用多个通道。每个通道的事件选择相互独立。
+
+---
+
+## 配置通知
+
+具体字段因通道而异，但主要流程一致：
+
+1. 在 Coolify 侧边栏打开 **Notifications**。
+2. 选择一个通道。
+3. 填写并保存该通道的连接信息。
+4. 选择 **Enable**。
+5. 在 **Notification events** 下展开每个事件分组的下拉菜单，选择要通过该通道发送的事件。
+6. 选择 **Send test**，确认消息已到达目的地。
+
+如果测试没有到达，请保持通道启用，同时检查凭据、目的地权限和服务商日志。
+
+---
+
+## 延伸阅读
+
+- [通知事件](/core/notifications/events)解释了每个可选项及其触发条件。
+- [Webhook 负载参考](/core/notifications/channels/webhook/payload-reference)记录了每个 webhook 事件的 JSON 请求体。

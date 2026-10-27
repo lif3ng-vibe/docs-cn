@@ -1,0 +1,49 @@
+---
+title: Coolify 代理找不到证书解析器
+description: 通过 chmod 600 设置正确的 acme.json 文件权限，修复非 root 用户运行 Coolify 时 Traefik 的 "letsencrypt cert resolver not found" 错误。
+---
+
+
+# Coolify 代理找不到证书解析器
+如果你在 Coolify 代理日志中看到 `Cert resolver doesn't exist letsencrypt` 错误信息，通常意味着你的域名缺少 SSL 证书。Coolify 以非 root 用户账号运行时经常出现此问题。
+
+
+## 症状
+- Coolify 代理没有为你的域名生成 SSL 证书。
+- Coolify 代理日志中出现 `Cert resolver doesn't exist letsencrypt` 错误。
+
+
+## 诊断
+排查时，运行以下命令检查 `/data/coolify/proxy` 目录下 `acme.json` 文件的权限：
+
+```bash
+ls /data/coolify/proxy
+```
+
+输出大致如下：
+
+```bash
+-rwxr-x--- 1 shadowarcanist shadowarcanist 32757 Sep  3 15:39 acme.json
+-rwxr-x--- 1 shadowarcanist shadowarcanist  1762 Sep  3 18:36 docker-compose.yml
+drwxr-x--- 2 shadowarcanist shadowarcanist  4096 Sep  3 15:06 dynamic
+```
+
+## 根本原因
+以非 root 用户账号运行 Coolify 时，`/data/coolify` 目录的权限可能没有设置正确。
+
+如果 `acme.json` 文件的权限**过于宽松**（太开放），Traefik 会拒绝使用该文件，从而无法读取它并生成 SSL 证书。
+
+反过来，如果权限**过于严格**，Traefik 同样无法读写该文件。
+
+Traefik 要求 `acme.json` 文件的权限恰到好处才能正常工作。
+
+
+## 解决方案
+运行以下命令设置正确的权限即可修复：
+
+```bash
+sudo chmod 600 /data/coolify/proxy/acme.json
+```
+
+### `sudo chmod 600` 做了什么？
+`chmod 600` 命令会把 `/data/coolify/proxy/acme.json` 的文件权限改为仅文件所有者（即 Coolify 使用的用户账号）可读写。这样既能防止其他人访问或修改该文件，又不影响 Traefik 使用它。

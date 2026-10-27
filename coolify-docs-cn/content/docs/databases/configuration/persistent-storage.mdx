@@ -1,0 +1,53 @@
+---
+title: 持久化存储
+description: 配置卷、目录和文件挂载，让数据库数据保存在可随时替换的容器之外。
+---
+
+# 配置持久化存储
+
+数据库容器是可替换的。Coolify 把数据库文件挂载在容器之外，这样常规的容器重建不会带走数据。
+
+打开数据库资源，然后选择 **Persistent Storage**（持久化存储）。
+
+<Callout type="warning" title="不要删除数据库的数据挂载">
+
+删除或更改数据挂载可能让既有数据库看起来变空，或导致它无法启动。更改存储前，请先取得经验证的备份，并确认引擎的数据路径。
+
+</Callout>
+
+## 数据库默认数据路径
+
+Coolify 会为一键数据库在引擎的数据路径上创建默认持久化卷：
+
+| 数据库 | 数据路径 |
+| :--- | :--- |
+| PostgreSQL 18 之前 | `/var/lib/postgresql/data` |
+| PostgreSQL 18 及更高 | `/var/lib/postgresql` |
+| MySQL 和 MariaDB | `/var/lib/mysql` |
+| MongoDB | `/data/db` 与 `/data/configdb` |
+| Redis、Dragonfly 和 KeyDB | `/data` |
+| ClickHouse | `/var/lib/clickhouse` |
+
+请使用与所选镜像和大版本对应的路径。PostgreSQL 18 的默认路径与更早的 PostgreSQL 镜像不同。
+
+## 添加挂载
+
+选择 **Add**（添加），然后选择与数据库配置匹配的挂载类型：
+
+| 挂载类型 | 适用场景 |
+| :--- | :--- |
+| **Volume Mount** | 挂载到容器目标路径上的 Docker 托管卷（volume）。 |
+| **Directory Mount** | 部署服务器上已存在或需要创建的目录。 |
+| **File Mount** | 内容由 Coolify 管理的配置文件。 |
+| **Host File Mount** | 服务器上已存在、需要 Coolify 绑定进容器的文件。 |
+
+请输入数据库镜像所要求的确切 **Destination Path**（目标路径）。保存挂载后，重启或重新部署数据库，并确认它带着预期的数据正常启动。
+
+## 存储边界
+
+- 除非 Docker 目标提供了共享存储，否则存储仅限于部署服务器本地。
+- 数据库进程必须对挂载路径拥有读写权限。
+- 挂载无法找回已经从容器或卷中删除的数据。
+- 持久化存储不是备份。请为受支持的引擎配置[数据库备份](/databases/backups)，并测试[数据库恢复](/databases/restore)。
+
+挂载权限、源路径和备份行为详见[核心持久化存储指南](/core/persistent-storage/storage-mounts/overview)。

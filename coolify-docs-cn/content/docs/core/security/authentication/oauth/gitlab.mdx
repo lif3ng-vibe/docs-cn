@@ -1,0 +1,93 @@
+---
+title: GitLab
+description: 创建 read_user 应用,为 Coolify 配置 GitLab.com 或自托管 GitLab 的 OAuth 登录。
+---
+
+# 配置 GitLab OAuth
+
+创建一个 GitLab OAuth 应用,让 Coolify 能读取经过身份验证用户的资料和电子邮箱地址。同一个 Coolify 提供商卡片同时支持 GitLab.com 和自托管(self-managed)GitLab。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换这些值:
+
+- **Coolify 回调:** `https://coolify.shadowarcanist.com/auth/gitlab/callback`
+- **GitLab.com Base URL:** 留空
+- **Self-managed Base URL:** `https://gitlab.shadowarcanist.com`
+</Callout>
+
+## 设置 GitLab OAuth
+
+<Steps>
+<Step>
+
+### 打开 GitLab 应用
+
+登录 GitLab,打开头像菜单,选择 **Edit profile**,然后打开 **Access > Applications**。
+
+在自托管实例上,如果需要由组织持有该应用,管理员可以改为创建实例级应用。应用位置的适用情况,遵循 GitLab 的 [OAuth provider 文档](https://docs.gitlab.com/integration/oauth_provider/)。
+
+</Step>
+<Step>
+
+### 创建 OAuth 应用
+
+选择 **Add new application** 并输入:
+
+| GitLab 字段 | 值 |
+| :--- | :--- |
+| **Name** | 一个可辨识的名称,例如 `Coolify`。 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/gitlab/callback` |
+| **Confidential** | 启用。Coolify 需要存储并使用 client secret。 |
+| **Scopes** | 选择 `read_user`。 |
+
+保存该应用。
+
+</Step>
+<Step>
+
+### 保存 GitLab 凭据
+
+从创建好的应用中复制 **Application ID** 和 **Secret**。
+
+请妥善保管 secret。如果 GitLab 已无法显示完整值,先创建或轮换 secret 再继续。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 GitLab
+
+打开 **Settings > Authentication**,找到 **GitLab**。
+
+| Coolify 字段 | GitLab 值 |
+| :--- | :--- |
+| **Client ID** | GitLab 的 **Application ID**。 |
+| **Client Secret** | GitLab 应用的 **Secret**。 |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/gitlab/callback` |
+| **Base URL** | GitLab.com 留空。自托管 GitLab 只填其源地址(origin),例如 `https://gitlab.shadowarcanist.com`。 |
+
+选择 **Save**,然后为 GitLab 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 GitLab 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with GitLab**。如果被要求,批准该应用,然后确认 Coolify 打开了与 GitLab 邮箱地址匹配的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="自托管 GitLab 重定向到了 GitLab.com">
+
+把 **Base URL** 设置为自托管 GitLab 的源地址。不要包含 `/oauth/authorize`、`/api` 或任何后续应用路径。
+
+</Accordion>
+<Accordion title="GitLab 拒绝回调">
+
+确认 GitLab 与 Coolify 两边都是确切的 `https://coolify.shadowarcanist.com/auth/gitlab/callback` 值,并且该应用为 confidential 且带有 `read_user` scope。
+
+</Accordion>
+</Accordions>

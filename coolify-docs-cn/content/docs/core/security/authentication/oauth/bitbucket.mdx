@@ -1,0 +1,92 @@
+---
+title: Bitbucket
+description: 通过 OAuth consumer 和邮箱权限,为 Coolify 配置 Bitbucket Cloud OAuth 登录。
+---
+
+# 配置 Bitbucket OAuth
+
+创建一个 Bitbucket Cloud OAuth consumer,让 Coolify 能读取登录用户的资料和已确认的主电子邮箱地址。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **Callback URL:** `https://coolify.shadowarcanist.com/auth/bitbucket/callback`
+</Callout>
+
+## 设置 Bitbucket OAuth
+
+<Steps>
+<Step>
+
+### 打开 OAuth consumers
+
+打开 Bitbucket Cloud,选择将拥有该集成的工作区,然后前往 **Workspace settings > OAuth consumers**。
+
+你需要管理该工作区设置的权限。如果工作区导航不同,请查阅 Atlassian 的 [Bitbucket OAuth 文档](https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/)。
+
+</Step>
+<Step>
+
+### 添加 OAuth consumer
+
+选择 **Add consumer** 并输入:
+
+| Bitbucket 字段 | 值 |
+| :--- | :--- |
+| **Name** | 一个可辨识的名称,例如 `Coolify`。 |
+| **Website** | `https://coolify.shadowarcanist.com` |
+| **Callback URL** | `https://coolify.shadowarcanist.com/auth/bitbucket/callback` |
+
+在权限部分,授予账户和电子邮箱地址的读取权限。Coolify 请求 `email` scope,并使用 Bitbucket 返回的已确认主邮箱。
+
+保存该 consumer。
+
+</Step>
+<Step>
+
+### 保存 Bitbucket 凭据
+
+展开创建好的 consumer,复制其 **Key** 和 **Secret**。
+
+Bitbucket 的 **Key** 就是 OAuth client ID。请妥善保管 secret。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Bitbucket
+
+打开 **Settings > Authentication**,找到 **Bitbucket**。
+
+| Coolify 字段 | Bitbucket 值 |
+| :--- | :--- |
+| **Client ID** | OAuth consumer 的 **Key** |
+| **Client Secret** | OAuth consumer 的 **Secret** |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/bitbucket/callback` |
+
+选择 **Save**,然后为 Bitbucket 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 Bitbucket 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with Bitbucket**。如果被要求,批准该 consumer,然后确认 Coolify 打开了与已确认 Bitbucket 主邮箱匹配的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Bitbucket 拒绝回调 URL">
+
+对比 consumer 的 **Callback URL** 与 Coolify 中的 **Redirect URI**。两者必须使用相同的 HTTPS 域名和 `/auth/bitbucket/callback` 路径。
+
+</Accordion>
+<Accordion title="Coolify 没有收到邮箱地址">
+
+确认该 consumer 已有邮箱读取权限,并且 Bitbucket 账户设置了已确认的主电子邮箱地址。
+
+</Accordion>
+</Accordions>

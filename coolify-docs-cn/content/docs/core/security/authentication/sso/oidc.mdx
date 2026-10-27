@@ -1,0 +1,41 @@
+---
+title: OpenID Connect
+description: 将 OpenID Connect 身份提供商接入 Coolify，并控制账号创建。
+---
+
+# OpenID Connect
+
+可以使用通用的 OpenID Connect（OIDC）提供商登录自托管的 Coolify 实例。以根团队管理员或所有者身份在 **设置 > 身份验证 > OpenID Connect** 下进行配置。
+
+## 配置提供商
+
+1. 在你的身份提供商处创建一个机密（confidential）Web 应用。
+2. 将 Coolify 显示的 **Redirect URI** 复制到提供商允许的重定向 URI 列表中，保持完全一致，包括协议和路径。
+3. 在 Coolify 中填写 **Issuer URL**、**Client ID** 和 **Client secret**。Coolify 会从 issuer 自动发现授权、令牌、userinfo 和 JWKS 端点。
+4. 将 **Scopes** 设置为包含 `openid`；在提供商支持时加入 `email` 和 `profile`，并请求提供商所需的任何其他作用域。
+5. 根据你的提供商配置 **Use PKCE**（使用 PKCE）、**Require verified email**（要求已验证邮箱）和 **Clock skew (seconds)**（时钟偏差秒数）。还可以自定义 **Login button label**（登录按钮文字）。
+6. 保存设置并启用该提供商。
+
+在开始配置之前先设置好实例 URL，这样 Coolify 才能生成正确的默认回调 URL。
+
+## 注册与团队成员身份
+
+**Allow OIDC user creation**（允许创建 OIDC 用户）允许 OIDC 登录成功后在密码注册已禁用的情况下创建用户。如果只允许现有用户登录，请将其禁用。**Auto-join new users to Root team**（自动将新用户加入根团队）会把新建用户以成员身份加入根团队，而不会创建个人团队。
+
+在 **设置 > 身份验证** 下，可以在启用 OAuth 的同时禁用密码注册。关联现有用户之前，请先了解 [OAuth 账号绑定](/core/security/authentication/oauth/overview)。关联现有账号要求邮箱已通过验证；禁用 OIDC 验证设置并不能绕过这一要求。
+
+## Microsoft Entra ID
+
+使用以下 issuer URL，替换租户占位符：
+
+```text
+https://login.microsoftonline.com/<tenant-ID>/v2.0
+```
+
+在应用注册中，添加可选的 ID 令牌声明 `email` 和 `xms_edov`。Coolify 接受 `xms_edov` 作为邮箱已验证的凭据。请注册 Coolify 显示的 OIDC 回调地址，而不是独立的 Microsoft OAuth 集成所用的回调地址。
+
+## 验证登录
+
+使用已获批准的非 root 用户在无痕浏览器窗口中测试。确认打开的是预期的账号和团队、新账号创建符合你的策略，且启用 2FA 时 Coolify 会要求输入 2FA 验证码。已关联的身份会显示在 **个人资料**（Profile）页面；由提供商管理的邮箱地址无法在此处修改。
+
+如果登录失败，请查看登录页面上显示的原因，并检查 issuer、回调地址、作用域和邮箱验证声明。测试期间请保留一条可用的管理员恢复登录途径。

@@ -1,0 +1,86 @@
+---
+title: Infomaniak
+description: 通过 Application 凭据和回调 URL,为 Coolify 配置 Infomaniak OAuth 登录。
+---
+
+# 配置 Infomaniak OAuth
+
+创建一个 Infomaniak Application 凭据,让 Coolify 能在登录时请求 OpenID、邮箱和资料信息。
+
+<Callout type="warning" title="示例数据">
+按照本指南操作时,请替换示例域名:
+
+- **Coolify URL:** `https://coolify.shadowarcanist.com`
+- **Redirect URL:** `https://coolify.shadowarcanist.com/auth/infomaniak/callback`
+</Callout>
+
+## 设置 Infomaniak OAuth
+
+<Steps>
+<Step>
+
+### 打开 Infomaniak 应用
+
+登录 Infomaniak,在用户资料设置中打开 [Applications](https://manager.infomaniak.com/v3/ng/profile/user/applications/list)。
+
+选择创建应用凭据的选项。
+
+</Step>
+<Step>
+
+### 创建应用
+
+应用类型选择 **Application**。输入一个可辨识的名称(例如 `Coolify`),并使用以下重定向 URL:
+
+```txt
+https://coolify.shadowarcanist.com/auth/infomaniak/callback
+```
+
+创建该应用。
+
+</Step>
+<Step>
+
+### 保存 Infomaniak 凭据
+
+复制 Infomaniak 显示的应用 client ID 和 client secret。离开凭据页面前,请先妥善保管 client secret。
+
+</Step>
+<Step>
+
+### 在 Coolify 中配置 Infomaniak
+
+打开 **Settings > Authentication**,找到 **Infomaniak**。
+
+| Coolify 字段 | Infomaniak 值 |
+| :--- | :--- |
+| **Client ID** | Infomaniak 应用的 client ID |
+| **Client Secret** | Infomaniak 应用的 client secret |
+| **Redirect URI** | `https://coolify.shadowarcanist.com/auth/infomaniak/callback` |
+
+选择 **Save**,然后为 Infomaniak 打开 **Enabled**。
+
+</Step>
+<Step>
+
+### 验证 Infomaniak 登录
+
+在浏览器的隐私窗口中打开 Coolify 登录页,选择 **Login with Infomaniak**。完成授权,然后确认 Coolify 打开了与 Infomaniak 邮箱地址匹配的账户。
+
+</Step>
+</Steps>
+
+## 故障排查
+
+<Accordions type="multiple">
+<Accordion title="Infomaniak 拒绝重定向 URL">
+
+打开该 Infomaniak 应用,确认其重定向 URL 与公开 Coolify 域名和 `/auth/infomaniak/callback` 路径完全一致。
+
+</Accordion>
+<Accordion title="Coolify 回到登录页">
+
+确认 client ID 和 secret 属于同一个 Infomaniak 应用,并且 Infomaniak 账户能返回邮箱地址。如果最初的 secret 没有保存完整,请创建新的 secret。
+
+</Accordion>
+</Accordions>

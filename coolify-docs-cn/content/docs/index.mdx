@@ -1,0 +1,91 @@
+---
+title: 首页
+description: 在自己的服务器上安装 Coolify，从 Git 部署应用，运行数据库和 300 多个一键服务。提供自托管与 Coolify Cloud 双路线指南。
+---
+
+import {
+  Rocket2,
+  WindowPointer,
+  Database,
+  MedalStars,
+  Settings,
+} from 'reicon-react';
+
+# 用 Coolify 构建与部署
+这本手册带你用 Coolify 掌控并运营自己的基础设施。
+
+<CoolDocsPage>
+
+<CoolCallout id="get-started" icon={Rocket2} title="快速开始">
+
+几分钟内搭好 Coolify 并部署你的第一个应用。
+
+<MediaCardGroup columns={3}>
+  <MediaCard title="搭建 Coolify" imageSrc="/docs-cn/coolify/images/home/setup-coolify.webp" href="/choose-your-path" />
+  <MediaCard title="部署你的第一个应用" imageSrc="/docs-cn/coolify/images/home/deploy-first-app.webp" href="/deploy-your-first-app" />
+  <MediaCard title="部署你的第一个数据库" imageSrc="/docs-cn/coolify/images/home/deploy-first-db.webp" href="/deploy-your-first-database" />
+  <MediaCard title="API" imageSrc="/docs-cn/coolify/images/home/api.webp" href="/api/overview" />
+  <MediaCard title="CLI" imageSrc="/docs-cn/coolify/images/home/cli.webp" href="/cli/what-is-the-coolify-cli" />
+  <MediaCard title="MCP" imageSrc="/docs-cn/coolify/images/home/mcp.webp" href="/mcp/what-is-mcp" />
+</MediaCardGroup>
+
+</CoolCallout>
+
+<CoolCallout icon={WindowPointer} title="任何语言、任何框架都能部署。">
+
+只要 Docker 能打包，Coolify 就能运行。
+
+<MediaCardGroup columns={3}>
+  <MediaCard title="Laravel" imageSrc="/docs-cn/coolify/images/home/laravel.webp" href="/applications/framework-examples/php/laravel" />
+  <MediaCard title="Next.js" imageSrc="/docs-cn/coolify/images/home/nextjs.webp" href="/applications/framework-examples/javascript/nextjs" />
+  <MediaCard title="Spring Boot" imageSrc="/docs-cn/coolify/images/home/spring.webp" href="/applications/" />
+  <MediaCard title="Django" imageSrc="/docs-cn/coolify/images/home/django.webp" href="/applications/framework-examples/python/django" />
+  <MediaCard title="Ruby on Rails" imageSrc="/docs-cn/coolify/images/home/rails.webp" href="/applications/framework-examples/ruby/rails" />
+  <MediaCard title="查看全部框架指南" icon={WindowPointer} href="/applications" />
+</MediaCardGroup>
+
+</CoolCallout>
+
+<CoolCallout icon={Database} title="任何数据库都能部署">
+
+只要你的数据库有 Docker 镜像，Coolify 就能部署它。
+
+<MediaCardGroup columns={3}>
+  <MediaCard title="PostgreSQL" imageSrc="/docs-cn/coolify/images/home/postgres.webp" href="/databases/postgresql" />
+  <MediaCard title="MySQL" imageSrc="/docs-cn/coolify/images/home/mysql.webp" href="/databases/mysql" />
+  <MediaCard title="Redis" imageSrc="/docs-cn/coolify/images/home/redis.webp" href="/databases/redis" />
+  <MediaCard title="MongoDB" imageSrc="/docs-cn/coolify/images/home/mongodb.webp" href="/databases/mongodb" />
+  <MediaCard title="ClickHouse" imageSrc="/docs-cn/coolify/images/home/clickhouse.webp" href="/databases/clickhouse" />
+  <MediaCard title="查看全部数据库指南" icon={Database} href="/databases" />
+</MediaCardGroup>
+
+</CoolCallout>
+
+<CoolCallout icon={Settings} title="任何服务都能部署">
+
+通过**一键服务（One-click service）**模板，部署 **300 多款**开源软件。
+
+<MediaCardGroup columns={3}>
+  <MediaCard title="Appwrite" imageSrc="/docs-cn/coolify/images/home/appwrite.webp" href="/services/appwrite" />
+  <MediaCard title="Grafana" imageSrc="/docs-cn/coolify/images/home/grafana.webp" href="/services/grafana" />
+  <MediaCard title="Elastic Search" imageSrc="/docs-cn/coolify/images/home/elastic-search.webp" href="/services/elasticsearch" />
+  <MediaCard title="WordPress" imageSrc="/docs-cn/coolify/images/home/wordpress.webp" href="/services/wordpress" />
+  <MediaCard title="Jellyfin" imageSrc="/docs-cn/coolify/images/home/jellyfin.webp" href="/services/jellyfin" />
+  <MediaCard title="查看全部服务模板" icon={Settings} href="/services/all" />
+</MediaCardGroup>
+
+</CoolCallout>
+
+<CoolCallout icon={MedalStars} title="帮助与支持">
+
+从社区和 Coolify 团队获得帮助。
+
+<MediaCardGroup columns={3}>
+  <MediaCard title="Discord 社区" imageSrc="/docs-cn/coolify/images/home/discord-community.webp" href="/support" />
+  <MediaCard title="Github 讨论" imageSrc="/docs-cn/coolify/images/home/github-discussions.webp" href="https://github.com/coollabsio/coolify/discussions" />
+  <MediaCard title="邮件" imageSrc="/docs-cn/coolify/images/home/email.webp" href="/support" />
+</MediaCardGroup>
+
+</CoolCallout>
+
+</CoolDocsPage>

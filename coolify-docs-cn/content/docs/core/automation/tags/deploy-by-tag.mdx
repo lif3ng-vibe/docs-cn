@@ -1,0 +1,82 @@
+---
+title: 按标签部署
+description: 从控制台或标签 webhook 重新部署一组 Coolify 应用和服务。
+---
+
+# 按标签部署资源
+
+当多个应用和服务需要作为一个整体一起启动或重新部署时，可按标签部署。Coolify 会对当前团队中分配了所选标签的每个资源执行操作。
+
+## 部署之前
+
+在主侧边栏打开 **Tags** 并选择标签，检查 **Tag Details** 下列出的每个应用和服务。
+
+如果某个资源不应属于该部署组，请先从该资源上移除标签，再继续操作。
+
+<Callout type="warn" title="该操作会影响带有此标签的所有资源">
+**Redeploy All** 会为整组资源启动操作。部署或重启进行期间，资源可能暂时不可用。
+</Callout>
+
+---
+
+## 从控制台重新部署
+
+<Steps>
+<Step>
+
+### 选择标签
+
+在主侧边栏打开 **Tags**，然后选择要部署的标签。
+
+</Step>
+<Step>
+
+### 检查分组
+
+查看 **Tag Details** 下列出的应用和服务。如需先确认某个资源的当前配置，可以点开对应的资源卡片。
+
+</Step>
+<Step>
+
+### 启动部署
+
+点击 **Redeploy All**。在确认对话框中输入标签名称，然后再次点击 **Redeploy All**。
+
+Coolify 会为该标签下的每个应用排队部署，并启动其中的每个服务。
+
+</Step>
+<Step>
+
+### 验证资源
+
+在标签页面关注 **Deployments**，查看已排队和进行中的应用部署。打开每条应用部署记录检查其日志。
+
+对于服务，打开服务页面确认其组件正在运行。
+
+</Step>
+</Steps>
+
+---
+
+## 用 webhook 自动化部署
+
+所选标签的 **Deploy Webhook URL** 调用的是同一个团队范围内的部署 API。当你不想打开控制台时，可以在 CI 或其他自动化系统中使用它。
+
+创建 `deploy` 权限令牌、调用 URL 并验证响应的完整步骤，参见[部署 Webhook](/core/automation/deploy-webhooks)。
+
+---
+
+## 故障排除
+
+<Accordions type="multiple">
+<Accordion title="标签页面上缺少某个资源">
+
+打开该资源的 **Tags** 页面，确认它确实被分配了同一个标签。同时确认你正在使用的团队就是创建该标签的团队。
+
+</Accordion>
+<Accordion title="Redeploy All 之后没有出现任何部署">
+
+确认该标签下仍分配有应用或服务。应用部署会出现在标签的 **Deployments** 列表中；服务则需要到各自的资源页面确认。
+
+</Accordion>
+</Accordions>

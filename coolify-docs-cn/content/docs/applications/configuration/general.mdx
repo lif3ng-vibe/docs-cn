@@ -1,0 +1,324 @@
+---
+title: 常规设置
+description: 配置应用的标识、构建方式、域名、镜像设置、端口、标签和部署命令。
+---
+
+import { Box2, BrowserCode, Code, Globe3, Layers, Package, Rocket2, Settings, Tags } from 'reicon-react';
+
+# 常规设置
+
+打开一个应用，然后在应用设置侧边栏中选择 **General**（常规）。此页面包含的设置决定了 Coolify 构建或拉取什么、到哪里找源文件、哪些容器端口接收流量，以及最终容器如何启动。
+
+这些控件会随应用的来源、**构建策略**（Build strategy）和部署目标（Destination）而变化。不适用于当前所选方式的设置会被隐藏，而不是禁用。
+
+## 各部署方式的可用设置
+
+用这张表确认 **General** 中哪些部分适用于该应用：
+
+| 部署方式 | 显示的主要设置 |
+| :--- | :--- |
+| Nixpacks 或 Railpack | 构建命令、仓库路径、静态站点控件、发布目录、域名、镜像仓库输出、网络设置和容器标签。 |
+| Static | 静态服务器镜像、仓库根目录、自定义 Nginx 配置、域名、镜像仓库输出、网络设置和容器标签。 |
+| 来自 Git 的 Dockerfile | 仓库根目录、Dockerfile 路径、可选构建阶段、域名、镜像仓库输出、网络设置和容器标签。 |
+| 不使用 Git 的 Dockerfile | 保存在 Coolify 中的 Dockerfile、可选构建阶段、域名、镜像仓库输出、网络设置和容器标签。不显示 **Build strategy** 选择器。 |
+| 来自 Git 的 Docker Compose | Compose 文件路径、各服务的域名、解析后的 Compose 内容、仓库保留、可选 Compose 命令和标签转义。 |
+| Docker Image | 镜像名、标签或哈希、容器选项、域名、网络设置和容器标签。不显示 **Build strategy** 选择器。 |
+
+Docker Compose 应用不使用此页面上的单容器 **Network**、**HTTP Basic Authentication** 或可编辑 **Active labels** 控件。端口、健康检查、服务环境变量条目、卷和标签请在 Compose 定义中配置。
+
+<Tabs id="application-general-configuration" items={['General', 'Build', 'Network', 'Labels', 'Deployment']}>
+<Tab value="General" icon={Settings}>
+
+General 包含应用的身份信息，以及一个链接到域名配置的 **Access**（访问）摘要。
+
+### 应用信息
+
+**Name**（名称）在整个 Coolify 面板中标识该应用，为必填项。**Description**（描述）为可选项，可记录工作负载的用途、负责人或其他团队上下文。
+
+使用顶栏的资源菜单在当前环境的应用之间切换。
+
+---
+
+### 域名（Domains）
+
+在应用设置侧边栏中选择 **Domains**（域名），或使用 **Access** 中的域名管理操作。请在该处逐个添加和编辑域名，而不是在 General 中输入逗号分隔的列表。
+
+选择 **Add domain**（添加域名），然后填写 **Protocol**（协议）、**Domain**（域名）、可选的内部 **Port**（端口）和可选的 **Path**（路径）。Docker Compose 应用还需要选择接收请求的 **Service**（服务）。
+
+域名端口用于选择容器内部的端口，并不会把该端口发布到服务器上。例如，HTTPS 域名 `example.com` 加端口 `3000`，访客访问的仍是 `https://example.com`，流量则被转发到容器端口 `3000`。
+
+编辑域名即可设置 **www redirect**（www 重定向）和 **Search engine indexing**（搜索引擎收录）。配置了 HTTPS 域名后，Domains 页面还会提供 **Redirect HTTP to HTTPS**（HTTP 重定向到 HTTPS）。
+
+标签改为手动管理时，应改为在标签中配置路由。更改生产路由之前，请先阅读[域名](/core/networking/domains)。
+
+</Tab>
+<Tab value="Build" icon={Code}>
+
+Build 包含准备应用所需的来源、镜像、仓库和镜像仓库设置。
+
+<span id="build-pack" />
+
+### 构建策略（Build strategy）
+
+**构建策略**（Build strategy）决定 Coolify 如何从 Git 源准备应用：
+
+- [Nixpacks](/applications/builds/nixpacks/overview) 识别代码库并生成镜像构建计划。
+- [Railpack](/applications/builds/railpack) 识别代码库并用 Railpack 构建镜像。
+- [Static](/applications/builds/static) 通过静态 Web 服务器镜像承载仓库内容。
+- [Dockerfile](/applications/builds/dockerfile) 使用 Dockerfile 构建镜像。
+- [Docker Compose](/applications/builds/docker-compose) 构建或拉取 Compose 服务所需的镜像。
+
+Docker Image 应用以及直接用存储在 Coolify 中的 Dockerfile 创建的应用，无法使用该选择器。如果部署必须换用其他方式，请新建一个应用。
+
+<Tabs id="application-build-method-settings" items={['Nixpacks & Railpack', 'Static', 'Dockerfile', 'Docker Compose', 'Docker Image']}>
+<Tab value="Nixpacks & Railpack" icon={Package}>
+
+Coolify 会从代码库识别 **Install Command**（安装命令）、**Build Command**（构建命令）和 **Start Command**（启动命令）。只有识别出的命令不适用时才填写覆盖值。
+
+覆盖命令时，请保持对应的 Nixpacks 或 Railpack 配置与 Coolify 中填写的值一致。部署日志会显示生成的构建计划以及实际执行的命令。
+
+**基础目录（Base Directory）** 选择 Coolify 视为应用根目录的仓库目录。仓库根目录用 `/`；monorepo 应用用 `/apps/api` 这类路径。
+
+在 **Build pipeline**（构建流水线）下，如果构建产出的是应由 Web 服务器承载的文件、而不是启动长期运行的应用进程，请在 **Site type**（站点类型）中选择 **Static**。然后配置：
+
+- 当客户端路由需要回退到入口页时，在 **Site type** 中选择 **SPA (single-page application)**（单页应用）。
+- **Publish Directory**（发布目录）：填写构建输出目录，例如 `/dist` 或 `/build`。启用静态站点模式后此字段必填。
+- 当生成的静态站点配置无法满足应用的路由或响应头要求时，使用 **Custom Nginx configuration**（自定义 Nginx 配置）。
+
+</Tab>
+<Tab value="Static" icon={BrowserCode}>
+
+**Static** 构建包（build pack）直接承载仓库文件，不执行框架构建命令。
+
+**Web server**（Web 服务器）选择用于承载文件的容器镜像。当前可选镜像为 `nginx:alpine`。
+
+**基础目录（Base Directory）** 选择包含待承载文件的仓库目录。**Custom Nginx configuration** 会替换生成的服务器配置。**Generate default**（生成默认值）会用 Coolify 针对所选静态站点行为生成的配置，覆盖当前的自定义值。
+
+</Tab>
+<Tab value="Dockerfile" icon={Code}>
+
+对于基于 Git 的应用，Coolify 组合 **基础目录（Base Directory）** 和 **Dockerfile Location** 来定位 Dockerfile：
+
+```plaintext
+Base Directory: /apps/api
+Dockerfile Location: /docker/Dockerfile
+Resolved file: /apps/api/docker/Dockerfile
+```
+
+两个路径都以 `/` 开头。**基础目录（Base Directory）** 还定义了 `COPY` 和 `ADD` 指令可用的构建上下文（build context）。
+
+**Docker Build Stage Target** 从多阶段 Dockerfile 中选择一个命名阶段。留空则构建 Dockerfile 的最后阶段。
+
+对于以**不使用 Git 的 Dockerfile** 方式创建的应用，可编辑的 **Dockerfile** 字段保存着 Coolify 存储的定义。由于没有连接仓库，不会显示仓库路径控件。
+
+构建上下文示例和完整部署流程请阅读 [Dockerfile 部署](/applications/builds/dockerfile)。
+
+</Tab>
+<Tab value="Docker Compose" icon={Layers}>
+
+Coolify 组合 **基础目录（Base Directory）** 和 **Docker Compose Location** 来定位 Compose 文件。两个路径都以 `/` 开头：
+
+```plaintext
+Base Directory: /deploy
+Docker Compose Location: /compose.yaml
+Resolved file: /deploy/compose.yaml
+```
+
+**Load Compose File**（加载 Compose 文件）会解析仓库中的文件；加载过一次后，**Reload Compose File**（重新加载 Compose 文件）会再次读取。随后 Coolify 显示：
+
+- **Docker Compose Content (raw)**：从仓库读取的定义。
+- **Docker Compose Content**：Coolify 加入受管配置后可用于部署的定义。
+- **Show Raw Compose**（显示原始 Compose）或 **Show Deployable Compose**（显示可部署 Compose）用于在两者之间切换。
+
+这些字段为只读。请在 Git 仓库中编辑 Compose 文件，然后在 Coolify 中重新加载。
+
+当 **基础目录（Base Directory）** 下的仓库内容也需要复制进部署目录时，启用 **Preserve repository during deployment**（部署期间保留仓库）。当 Compose 定义在运行时（而不只在镜像构建期间）使用仓库相对路径的文件时，这会很有用。
+
+**Custom Build Command**（自定义构建命令）和 **Custom Start Command**（自定义启动命令）会替换生成的 Compose 命令。除非命令自带 `-f` 或 `--env-file` 标志，否则 Coolify 会补上 Compose 文件和环境文件标志。填写覆盖值后，**Final Build Command (Preview)**（最终构建命令预览）或 **Final Start Command (Preview)**（最终启动命令预览）会显示 Coolify 将执行的命令。
+
+自定义命令的路径请保持相对于 **基础目录（Base Directory）**，并使用 Coolify 解析的同一份 Compose 文件。否则，生成的域名、标签和变量可能与实际部署的服务对不上。
+
+环境变量模式、存储、服务网络和 Raw 部署，请阅读 [Docker Compose 部署](/applications/builds/docker-compose)。
+
+</Tab>
+<Tab value="Docker Image" icon={Box2}>
+
+**Image**（镜像）填写镜像仓库中的镜像名，例如 `nginx` 或 `ghcr.io/example/api`。
+
+**Tag**（标签）接受 `latest`、`v1.2.3` 这类标签，或 Coolify 所示格式的镜像哈希。当部署必须使用不可变镜像、而不是移动标签当前指向的内容时，请固定版本或 digest。
+
+**Custom Docker Options**（自定义 Docker 选项）向启动容器的命令添加受支持的选项。添加能力（capabilities）、设备、挂载或运行时设置之前，先通过[自定义 Docker 选项](/applications/builds/custom-docker-options)确认受支持的参数。
+
+</Tab>
+</Tabs>
+
+---
+
+### 构建服务器与容器选项
+
+**Builder selection**（构建器选择）出现在非 Compose 的源码构建中。只有先把另一台服务器配置为[构建服务器](/core/infrastructure/servers/build-servers)，才选择专用构建器。Coolify 会在那台服务器上构建镜像并推送到所配置的镜像仓库，再由部署服务器拉取。此方式必须填写镜像仓库镜像名。
+
+Nixpacks、Railpack、Static、Dockerfile 和 Docker Image 应用也会显示 **Custom Docker Options**。这些选项影响 Coolify 启动容器的方式，不会改变镜像构建。Docker Compose 应用则在 Compose 文件中定义等价的运行时配置。
+
+---
+
+### Git 仓库设置
+
+**Watch Paths**（监听路径）每行接受一个模式。模式语法参见[按变更路径限制部署](/applications/deployments/automatic-deployments#按变更路径限制部署)。
+
+通过 GitHub App 或 GitLab 来源集成选择仓库时，才能使用 **Watch Paths**。从公开仓库 URL 或部署密钥创建的应用无法使用。
+
+该设置用于筛选哪些变更路径可以触发 webhook 部署。
+
+模式按顺序求值，支持 `*`、`**`、`?` 和 `!`，并采用最后一个匹配的模式。添加排除项之前，请先阅读[按变更路径限制部署](/applications/deployments/automatic-deployments#按变更路径限制部署)。
+
+---
+
+### Docker 镜像仓库
+
+Docker Compose 应用不显示 **Container image**（容器镜像）部分，因为每个服务的 `image:` 或 `build:` 配置都应写在 Compose 定义中。
+
+对于 Docker Image 应用，**Image** 和 **Tag** 标识 Coolify 拉取的镜像。
+
+对于源码构建，**Image** 填写 Coolify 构建后可推送的镜像名。私有镜像仓库需包含仓库主机名，例如 `ghcr.io/example/api`。如果设置了 **Tag**，Coolify 会在基于提交的标签之外再推送该标签。
+
+当应用使用 Docker Swarm、额外的部署服务器或独立的构建服务器时，必须填写输出镜像名。这些地方都必须能从镜像仓库拉取构建出的镜像。
+
+认证和镜像命名请阅读 [Docker 镜像仓库](/applications/builds/docker-registries)。
+
+</Tab>
+<Tab value="Network" icon={Globe3}>
+
+Network 控制非 Compose 应用如何被 Coolify Proxy 和其他容器访问。Docker Compose 应用改为在 Compose 文件中定义端口和服务网络。
+
+### 暴露端口（Ports Exposes）
+
+**Ports Exposes**（暴露端口）是容器内部使用的端口的逗号分隔列表：
+
+```plaintext
+3000
+3000,3001
+```
+
+域名未指定其他内部端口时，Coolify 用第一个端口做代理路由。健康检查未配置端口时，第一个端口也会成为默认健康检查端口。
+
+如果存在 `PORT` 环境变量，Coolify 会报告它的值是否出现在 **Ports Exposes** 中。没有暴露任何监听端口时，域名无法访问 HTTP 应用。对于不接收 HTTP 流量的 worker、机器人或计划进程，把该字段留空是合法的。
+
+静态应用的该字段为只读，因为静态服务器端口由 Coolify 选定。启用手动容器标签编辑后，该字段也会变为只读。
+
+---
+
+### 端口映射（Port Mappings）
+
+**Port Mappings**（端口映射）把容器端口直接发布到部署服务器的网络接口上。使用逗号分隔的 `host:container` 条目：
+
+```plaintext
+3000:3000,3002:3002
+```
+
+<Callout type="warning" title="端口映射会绕过域名路由">
+
+任何能访问被映射服务器端口的人都可以不经域名代理规则直接连接。固定的主机端口还会让 Coolify 无法在当前容器旁启动替换容器，因此无法进行滚动更新。
+
+</Callout>
+
+Docker Swarm 目标不显示 **Port Mappings**。
+
+---
+
+### 网络别名（Network Aliases）
+
+**Network Aliases**（网络别名）为应用容器在其 Docker 网络上提供额外的主机名。同一网络上的其他容器可以使用别名，而不必用生成的容器名。
+
+当依赖容器需要一个跨部署保持不变的主机名时，使用别名。例如，把 **Network Aliases** 设为 `api.internal`，然后让同一 Docker 网络上的 worker 连接到：
+
+```plaintext
+http://api.internal:3000
+```
+
+多个别名用逗号分隔，例如 `api.internal,api.local`。每个别名在 Docker 网络内必须唯一，才能解析到预期的容器。
+
+别名属于容器私有网络。它不会创建公开 DNS 记录、配置域名，也不会让 Docker 网络之外的浏览器访问到应用。
+
+Docker Swarm 目标不显示该字段。在跨资源依赖容器 DNS 名称之前，请先阅读 [Coolify 中的网络](/core/networking-in-coolify)。
+
+</Tab>
+<Tab value="Labels" icon={Tags}>
+
+Labels 包含代理认证，以及 Coolify 用于路由和管理的容器元数据。
+
+### HTTP Basic Authentication
+
+在 **Security**（安全）下的 **Authentication**（认证）中选择 **HTTP Basic Authentication**，为非 Compose 应用加一层代理用户名和密码。填写 **Username**（用户名）和 **Password**（密码），然后重新部署或重启应用，使代理配置刷新。
+
+Docker Compose 应用请通过 Compose 标签定义所需的代理中间件，而不是用这个控件。
+
+---
+
+### 容器标签
+
+Coolify 通常会为域名路由和其他受管容器行为生成 **Active labels**（生效标签）。
+
+当 **Label management**（标签管理）为 **Managed by Coolify (auto-generated)**（由 Coolify 管理，自动生成）时：
+
+- 标签编辑器为只读
+- **Domains**、**www redirect** 和 **Ports Exposes** 仍是主要控件
+- 配置变化时，Coolify 会重新生成对应的标签
+
+只有需要完全掌控标签配置时，才在 **Label management** 中选择 **Managed manually (edit labels yourself)**（手动管理，自行编辑标签）。手动模式下：
+
+- **Active labels** 变为可编辑
+- **Domains**、**www redirect** 和 **Ports Exposes** 变为只读
+- 容器重建时，Coolify 不会修复不完整的代理标签
+
+<Callout type="warning" title="手动标签会取代 Coolify 生成的路由">
+
+切换到手动标签管理之前，先复制生成的标签，并弄清它们实现的代理配置。缺失或无效的路由标签可能导致应用在重启或部署后无法访问。
+
+</Callout>
+
+选择 **Managed by Coolify (auto-generated)** 可恢复 Coolify 生成的标签。**Reset to defaults**（恢复默认）还会把所有自定义代理标签替换为当前 Coolify 默认值。
+
+在 **Special characters**（特殊字符）中选择 **Escape special characters ($ becomes $$)**（转义特殊字符，$ 变为 $$），可在标签存储前把 `$` 等字符转换为转义形式。当标签有意包含需要容器平台展开的环境变量引用时，选择 **Keep unescaped (allow env variables)**（保持不转义，允许环境变量）。
+
+Docker Compose 应用不显示独立的标签编辑器。它们的标签在 Compose 文件中定义；**Escape special characters in labels?**（标签转义特殊字符？）设置仍然控制转义。
+
+</Tab>
+<Tab value="Deployment" icon={Rocket2}>
+
+Deployment 包含围绕部署运行的命令，并说明保存的更改何时到达运行中的容器。
+
+### 部署前命令
+
+**Pre-deployment**（部署前命令）通过 `sh -c` 在当前运行的应用容器内执行。Coolify 会在准备好部署工作区之后、构建或启动替换容器之前运行它。
+
+命令退出即部署前阶段结束。命令成功时 Coolify 继续部署；失败则中止部署。首次部署时应用容器尚不存在，Coolify 会跳过该命令。
+
+对于 Docker Compose 应用，旁边的 **Container Name**（容器名称）用于选择命令在其中运行的现有服务容器。只有 Compose 应用只有一个容器时才留空。
+
+此命令适合必须在当前运行版本被替换之前、针对它完成的工作。它在容器内运行，而不是直接在部署服务器上。
+
+---
+
+### 部署后命令
+
+**Post-deployment**（部署后命令）通过 `sh -c` 在新部署的应用容器内执行，时机是 Coolify 标记部署完成之后。
+
+命令退出即部署后阶段结束。失败会写入部署日志，但由于新容器已经部署完成，部署仍保持成功状态。
+
+对于 Docker Compose 应用，旁边的 **Container Name** 用于选择命令在其中运行的新部署服务容器。只有 Compose 应用只有一个容器时才留空。
+
+此命令适合依赖新部署版本的工作，例如预热应用缓存。它在容器内运行，而不是直接在部署服务器上。
+
+---
+
+### 应用更改
+
+编辑过的字段请选择 **Save changes**（保存更改）。即时保存的下拉框无需此操作。
+
+更改构建方式、构建命令、源码路径、镜像、Dockerfile、Compose 位置、构建期取值或镜像仓库输出后，请重新部署。更改运行时端口、标签、认证或部署命令后，请重启或重新部署，让 Coolify 重建容器及其代理配置。
+
+镜像与容器的生命周期，请阅读[构建与部署模型](/core/build-deployment-model)。
+
+</Tab>
+</Tabs>

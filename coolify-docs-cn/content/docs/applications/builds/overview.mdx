@@ -1,0 +1,87 @@
+---
+title: 概览
+description: 比较 Coolify 为从 Git 源创建的应用准备 Docker 镜像的几种方式。
+---
+
+import { Box2, BrowserCode, Layers, Package } from 'reicon-react';
+
+# 构建应用
+
+每个应用容器都始于一个 Docker 镜像。对于 Git 源，所选的**构建策略**（Build strategy）决定了 Coolify 如何准备所需的镜像。Nixpacks、Railpack、Static 和 Dockerfile 各构建一个应用镜像；Docker Compose 则可以为每个服务构建或拉取镜像。
+
+[Docker Image 应用](/applications/deployments/docker-image)会跳过这一构建阶段，因为镜像已经存在于镜像仓库中。
+
+<CoolCallout icon={Package} title="简版结论">
+
+自动识别用 Nixpacks 或 Railpack；已有构建产物用 Static；单个自定义镜像用 Dockerfile；多服务定义用 Docker Compose。
+
+</CoolCallout>
+
+---
+
+## 比较构建方式
+
+创建表单把这些选项称为 **Build pack**（构建包）；创建之后，则在 **常规（General）> 构建流水线（Build pipeline）** 下使用**构建策略（Build strategy）**。Nixpacks、Railpack、Static 和 Dockerfile 各产出一个应用镜像。Docker Compose 的范围更广：每个服务既可以从源码构建镜像，也可以从镜像仓库拉取镜像。
+
+| 方式 | 适用场景 | 指南 |
+| :--- | :--- | :--- |
+| Nixpacks | 代码库遵循受支持的语言或框架约定。通过自动识别、命令覆盖或 `nixpacks.toml` 配置。 | [使用 Nixpacks 部署](/applications/builds/nixpacks/deploy) |
+| Railpack（Beta） | 仓库受 Railway 较新的自动构建系统支持。通过自动识别、命令覆盖或 `railpack.json` 配置。 | [配置 Railpack](/applications/builds/railpack) |
+| Static | 仓库中包含已完成的网站文件。在 Coolify 中配置其目录和可选的 Web 服务器设置。 | [配置静态构建](/applications/builds/static) |
+| Dockerfile | 仓库中包含一个自定义镜像定义，配合 Coolify 运行时设置使用。 | [使用 Dockerfile](/applications/builds/dockerfile) |
+| Docker Compose | 应用需要一份含一个或多个服务的 Compose 定义。 | [使用 Docker Compose](/applications/builds/docker-compose) |
+
+自动识别够用时，选择 [Nixpacks](/applications/builds/nixpacks/overview) 或 [Railpack](/applications/builds/railpack)。需要仓库显式定义镜像或服务拓扑时，选择 [Dockerfile](/applications/builds/dockerfile) 或 [Docker Compose](/applications/builds/docker-compose)。
+
+## 构建在哪里运行
+
+默认情况下，Coolify 在部署服务器上执行镜像构建。
+
+[构建服务器](/core/infrastructure/servers/build-servers)把构建占用的 CPU、内存和磁盘与运行应用的服务器分开。构建服务器不能运行已部署的资源。构建完成的镜像必须能通过所配置的镜像仓库路径供部署服务器获取。
+
+## 构建与运行时配置
+
+构建期变量和命令影响镜像；运行时变量、域名、存储和容器设置影响由该镜像创建的容器。
+
+仅运行时的改动可以复用现有镜像。Dockerfile、Compose 构建定义、源提交、构建命令或构建期变量的变化，则可能需要重新构建。
+
+## 构建缓存
+
+在缓存可用时，Docker 会复用未变化的构建层。在 **Advanced**（高级）下，**Disable Build Cache**（禁用构建缓存）会强制每个构建步骤重新执行。
+
+Coolify 默认把 `SOURCE_COMMIT` 排除在构建之外，这样不同的提交可以复用未变化的层。仅当构建本身需要提交值时，才在 **高级（Advanced）> 构建（Build）** 下把 **Source commit availability**（源提交可用性）设为 **Available during build**（构建期间可用）。
+
+某次部署必须在无缓存层的情况下执行 Coolify 生成的构建时，使用 **Force deploy (without cache)**（强制部署，不使用缓存）。自定义的 Docker Compose 构建命令则自行控制缓存标志。
+
+## 把构建出的镜像推送到镜像仓库
+
+构建出的镜像需要推送到镜像仓库时，在 **General**（常规）下配置 **Docker Image** 和 **Docker Image Tag**。
+
+镜像名、标签、认证和构建服务器要求，请阅读 [Docker 镜像仓库](/applications/builds/docker-registries)。
+
+---
+
+## 选择下一篇构建指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '使用自动识别',
+      href: '/applications/builds/nixpacks/deploy',
+      description: '用 Nixpacks 从遵循约定的应用仓库创建镜像。',
+      icon: Package,
+    },
+    {
+      title: '使用 Dockerfile',
+      href: '/applications/builds/dockerfile',
+      description: '用仓库自带的 Docker 指令精确控制一个应用镜像。',
+      icon: BrowserCode,
+    },
+    {
+      title: '使用 Docker Compose',
+      href: '/applications/builds/docker-compose',
+      description: '部署一份包含多个服务、网络和卷的定义。',
+      icon: Layers,
+    },
+  ]}
+/>

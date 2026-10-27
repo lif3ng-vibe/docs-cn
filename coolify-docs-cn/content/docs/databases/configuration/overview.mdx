@@ -1,0 +1,75 @@
+---
+title: 概览
+description: 查找用于配置已创建的独立数据库的各项 Coolify 设置。
+---
+
+import { BranchUp, Pulse, Settings } from 'reicon-react';
+
+# 配置数据库
+
+打开数据库资源，从资源侧边栏选择一个页面。**General**（常规）包含引擎设置、凭据和网络；存储、健康检查、环境变量和资源限制各有独立页面。
+
+可用页面取决于数据库引擎和资源状态。例如，**Backups**（备份）只对 Coolify 数据库备份流程支持的引擎可用，而 **Import Backup**（导入备份）对所有数据库都显示，且只支持恢复 PostgreSQL、MySQL、MariaDB、MongoDB 和 SQLite。
+
+## 配置页面
+
+| <span className="inline-block min-w-36 whitespace-nowrap">配置页面</span> | 控制内容 | 指南 |
+| :--- | :--- | :--- |
+| **General** | 数据库标识、镜像、凭据、引擎设置、网络访问和代理设置。 | [查看常规设置](/databases/configuration/general) |
+| **Environment Variables** | 传给数据库容器的运行时变量。 | [配置环境变量](/databases/configuration/environment-variables) |
+| **Servers** | 数据库运行所在的服务器和目标。 | [配置多服务器部署](/core/infrastructure/scaling/multi-server-deployments) |
+| **Persistent Storage** | 挂载进数据库容器的卷、目录和文件。 | [配置持久化存储](/databases/configuration/persistent-storage) |
+| **Import Backup** | 恢复受支持的 PostgreSQL、MySQL、MariaDB、MongoDB 或 SQLite 备份。该页面在不支持的引擎上也会显示，并说明不支持恢复。 | [恢复数据库](/databases/restore) |
+| **Webhooks** | 供外部自动化调用数据库操作的经过认证的请求。 | [部署 webhook](/core/automation/deploy-webhooks) |
+| **Healthcheck** | 用于上报数据库健康状态的 Docker 健康探测。 | [配置健康检查](/databases/configuration/health-checks) |
+| **Resource Limits** | 应用到数据库容器的 CPU 和内存限制。 | [配置资源限制](/databases/configuration/resource-limits) |
+| **Resource Operations** | 把数据库克隆到其他目标，或在项目与环境之间移动。 | [克隆或移动数据库](/databases/operations/resource-operations) |
+| **Metrics** | 数据库容器的 CPU 和内存用量。 | [查看资源指标](/core/observability/monitoring/metrics) |
+| **Tags** | 用于整理资源的团队级标签。 | [用标签整理资源](/core/automation/tags/overview) |
+| **Danger Zone** | 危险操作，包括删除数据库资源。 | [删除数据库](/databases/operations/danger-zone) |
+
+## 应用配置更改
+
+保存设置会更新数据库资源的配置，但不一定会立即重建运行中的容器。
+
+更改会影响容器的设置后，请重启或重新部署数据库，包括：
+
+- 镜像、凭据或引擎配置
+- 环境变量
+- 持久化存储挂载
+- 端口或公开代理设置
+- 健康检查设置
+- 资源限制
+
+用配置变更指示器和数据库状态确认 Coolify 是否在等待重启或重新部署。
+
+<Callout type="warning" title="更改数据库配置前先备份">
+
+在生产镜像、数据挂载、引擎配置或凭据变更之前，请先完成并验证一次数据库备份。配置改动可能导致数据库无法启动，即使存储的数据完好无损。
+
+</Callout>
+
+## 继续阅读配置指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '环境变量',
+      href: '/databases/configuration/environment-variables',
+      description: '把运行时配置和机密传给数据库容器。',
+      icon: Settings,
+    },
+    {
+      title: '健康检查',
+      href: '/databases/configuration/health-checks',
+      description: '配置 Docker 判定数据库是否健康的方式。',
+      icon: Pulse,
+    },
+    {
+      title: '持久化存储',
+      href: '/databases/configuration/persistent-storage',
+      description: '把数据库文件保存在可随时替换的容器文件系统之外。',
+      icon: BranchUp,
+    },
+  ]}
+/>

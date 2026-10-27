@@ -1,0 +1,86 @@
+---
+title: 选择你的路径
+description: 根据你的目标、责任划分和运维经验，在自托管 Coolify 与 Coolify Cloud 之间做出选择。
+---
+
+import {
+  ArrowsRight,
+  Checklist2,
+  Cloud,
+  Server,
+  Warning22,
+} from 'reicon-react';
+
+# 选择你的路径
+
+Coolify 有两种使用方式：自托管（Self-hosted），即自己运行并维护 Coolify 实例；或者使用 Coolify Cloud，由 Coolify 团队代为运行和维护 Coolify 实例。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+自托管和 Cloud 提供完全相同的 Coolify 功能。区别只在于由谁来运营 Coolify 实例：你自己管理，或者交给 Coolify 管理。
+
+</CoolCallout>
+
+| 对比维度 | 自托管 | Coolify Cloud |
+| :--- | :--- | :--- |
+| Coolify 实例 | 由你负责安装、更新、备份、监控和恢复 Coolify 实例。 | Coolify 团队负责运行、更新、备份、监控和恢复 Coolify 实例。 |
+| 你的服务器 | 服务器由你提供，操作系统的安全、SSH 访问、防火墙和网络也由你保障。 | 服务器同样由你提供，操作系统的安全、SSH 访问、防火墙和网络同样由你保障。 |
+| 你的工作负载 | 应用、数据库、卷（volume）、机密（Secret）和运行时安全仍由你负责。 | 应用、数据库、卷、机密和运行时安全仍由你负责。 |
+| Coolify 更新 | 由你决定何时更新 Coolify，以及如何安排维护窗口。 | Coolify 团队为你应用控制平面更新。 |
+| 成本模式 | 无 Coolify 许可费。你只需为自己的基础设施和运维时间买单。 | Coolify 实例属于付费托管服务。你自己的服务器费用仍需自理。 |
+| 功能集 | 包含全部 Coolify 功能。 | 与自托管完全一致，没有 Cloud 独占功能的付费墙。 |
+
+<CoolDocsPage>
+
+<CoolActionCardGrid
+  cards={[
+    {
+      title: '自托管 Coolify',
+      href: '/start-with-self-hosted',
+      icon: Server,
+      type: 'secondary',
+      description: '如果对你来说，掌控力、可审计性和自主运维比最快的上手速度更重要，就选这一条路。',
+      bullets: [
+        '安装和升级由你自己管理',
+        '实例的备份与恢复规划由你负责',
+        '维护节奏和运维标准由你掌控',
+        '所有平台数据都在你的掌控之下',
+        '没有持续的平台订阅开销',
+      ],
+      'btn-cta': '选择自托管',
+    },
+    {
+      title: 'Coolify Cloud',
+      href: '/start-with-cloud',
+      icon: Cloud,
+      type: 'primary',
+      description: '如果你想用最快的速度上线，并且少操心控制平面维护，就选这一条路。',
+      bullets: [
+        '控制平面由 Coolify 团队管理',
+        '平台更新由 Coolify 团队处理',
+        '服务器和工作负载的所有权仍归你',
+        '控制平面内置高可用',
+        '无需任何平台维护',
+      ],
+      'btn-cta': '选择 Cloud',
+    },
+  ]}
+/>
+
+<CoolCallout icon={Checklist2} title="为什么这个选择很重要">
+
+两条路带给你的核心产品体验完全相同，差别在于由谁来运营和维护 Coolify 实例。
+
+Coolify Cloud 的托管实例按月订阅收费，而自托管让你自己运行实例，无需支付持续的平台费用。
+
+</CoolCallout>
+
+<CoolCallout icon={Warning22} title="仍然拿不定主意？" type="warn">
+
+**如果你有信心运维控制平面，就从自托管开始。**
+
+自托管从第一天起就给你最清晰的所有权模型。当你希望 Coolify 团队替你处理实例维护时，再选 Cloud。
+
+</CoolCallout>
+
+</CoolDocsPage>

@@ -1,0 +1,15 @@
+---
+title: 数据库
+description: 使用 Coolify MCP 列出并查看独立数据库及其备份计划。
+---
+
+# 数据库
+
+| 工具 | 用途 |
+| :--- | :--- |
+| `list_databases` | 列出独立数据库，可按项目、环境、服务器、状态或名称筛选。 |
+| `get_database` | 按 UUID 查看单个数据库。 |
+| `list_database_backups` | 列出某个数据库的备份计划。 |
+| `list_backup_executions` | 列出某个数据库计划备份的执行记录。 |
+
+备份执行消息需要 `read:sensitive` 权限，且只会尽力脱敏。

@@ -1,0 +1,177 @@
+---
+title: 部署 Webhook
+description: 通过经过身份验证的 webhook URL，从 CI 和外部自动化触发 Coolify 资源或标签部署。
+---
+
+# 部署 webhook
+
+部署 webhook 是一个经过身份验证的 Coolify API URL，无需打开控制台即可启动部署。适合在 CI 检查通过后调用，在 Git 托管平台没有原生 Coolify 集成时使用，或接入其他自动化系统。
+
+资源部署 webhook 面向单个应用或服务；标签部署 webhook 面向被分配了所选[标签](/core/automation/tags/overview)的所有应用和服务。
+
+## 开始之前
+
+你需要：
+
+- 已为 Coolify 实例启用 API 访问
+- 有权为当前团队创建 API 令牌
+- 准备好要让 webhook 部署的资源或标签
+- 在调用 webhook 的系统中准备一个安全的机密存储
+
+在自托管实例上，若 API 处于关闭状态，请打开 **Settings > Advanced** 并开启 **API Access**。
+
+---
+
+## 创建部署令牌
+
+<Steps>
+<Step>
+
+### 打开 API Tokens
+
+在主侧边栏打开 **Keys & Tokens**，然后选择 **API Tokens**。
+
+</Step>
+<Step>
+
+### 配置令牌
+
+填写描述、选择有效期，并勾选 `deploy` 权限。
+
+仅含 deploy 权限的令牌可以触发部署 webhook，而不会获得对 API 的通用读写权限。
+
+</Step>
+<Step>
+
+### 创建并复制令牌
+
+点击 **Create**，然后立即复制令牌。Coolify 只显示一次令牌值。
+
+</Step>
+<Step>
+
+### 保存令牌
+
+将其保存到你的 CI 或自动化平台的机密存储中，例如命名为 `COOLIFY_TOKEN`。不要把它提交到代码仓库，也不要直接写进工作流文件。
+
+</Step>
+</Steps>
+
+团队归属、有效期和 API 访问控制详见 [API 令牌](/core/security/credentials/api-tokens)。
+
+---
+
+## 复制 webhook URL
+
+选择与部署目标匹配的 URL。
+
+<Tabs id="deploy-webhook-target" items={['Resource', 'Tag']}>
+<Tab value="Resource">
+
+使用资源 webhook 部署单个应用或服务。
+
+1. 打开该应用或服务。
+2. 选择 **Webhooks**。
+3. 复制 **Deploy Webhook (auth required)**。
+
+生成的 URL 形如：
+
+```txt
+https://coolify.shadowarcanist.com/api/v1/deploy?uuid=<resource-uuid>&force=false
+```
+
+</Tab>
+<Tab value="Tag">
+
+使用标签 webhook 部署分配了某个标签的全部应用和服务。
+
+1. 在主侧边栏打开 **Tags**。
+2. 选择该标签。
+3. 复制 **Deploy Webhook URL**。
+
+生成的 URL 形如：
+
+```txt
+https://coolify.shadowarcanist.com/api/v1/deploy?tag=<tag-name>
+```
+
+在自动化整组部署之前，先阅读[按标签部署](/core/automation/tags/deploy-by-tag)。
+
+</Tab>
+</Tabs>
+
+---
+
+## 触发部署
+
+将复制的 URL 存为 `COOLIFY_DEPLOY_WEBHOOK`，然后发送一个在 `Authorization` 头中携带令牌的 `GET` 请求：
+
+```sh
+curl --request GET "$COOLIFY_DEPLOY_WEBHOOK" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN"
+```
+
+Coolify 也接受 `POST` 请求。该端点要求提供 `uuid` 或 `tag` 之一，不要在同一次请求中同时发送两者。
+
+<Callout type="warn" title="保护好 API 令牌">
+URL 只负责标识部署目标，真正授权操作的是 Bearer 令牌。一旦泄露，请在 **Keys & Tokens > API Tokens** 中吊销该令牌。
+</Callout>
+
+---
+
+## 请求选项
+
+| 选项 | 用途 | 示例 |
+| --- | --- | --- |
+| `uuid` | 部署一个或多个资源 UUID，多个 UUID 用逗号分隔。 | `uuid=abc,def` |
+| `tag` | 部署一个或多个标签组，多个名称用逗号分隔。 | `tag=api,worker` |
+| `force` | 不使用构建缓存重新构建应用。 | `force=true` |
+
+对于 JSON `POST` 请求，在请求体中发送同样的选项名：
+
+```sh
+curl --request POST "https://coolify.shadowarcanist.com/api/v1/deploy" \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"uuid":"<resource-uuid>","force":false}'
+```
+
+---
+
+## 验证部署
+
+应用请求成功后会返回部署详情，若已排队部署还会包含部署 UUID。打开应用的 **Deployments** 页面，确认对应的部署成功开始并完成。
+
+对于服务或标签请求，请在各资源的 Coolify 页面中逐一验证。API 请求被接受并不代表每个资源都恢复健康。
+
+---
+
+## 故障排除
+
+<Accordions type="multiple">
+<Accordion title="请求返回 401 Unauthorized">
+
+确认 `Bearer` 后携带了完整令牌、令牌未过期，并且令牌属于拥有目标资源或标签的团队。
+
+</Accordion>
+<Accordion title="请求返回 403 Forbidden">
+
+创建或改用具有 `deploy` 权限的令牌。只读令牌无法触发该端点。
+
+</Accordion>
+<Accordion title="请求提示需要 uuid 或 tag">
+
+重新复制生成的 URL，或在查询串或 JSON 请求体中恰好包含 `uuid` 和 `tag` 之一。
+
+</Accordion>
+<Accordion title="未找到任何资源">
+
+确认资源 UUID 或标签名称正确，且属于令牌所在的团队。对于标签请求，确认至少还有一个应用或服务带有该标签。
+
+</Accordion>
+<Accordion title="请求返回 429 Too Many Requests">
+
+等待 `Retry-After` 间隔后再重试。整组部署创建期间，繁忙的应用部署队列同样可能返回 `429`。
+
+</Accordion>
+</Accordions>

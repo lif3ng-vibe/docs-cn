@@ -1,0 +1,545 @@
+---
+title: 部署你的第一个应用
+description: 使用 Docker Image 选项在 Coolify 上部署你的第一个应用，以一个简单的 nginx 示例演示。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Camera,
+  Database,
+  Globe3,
+  Rocket2,
+  Server,
+  Settings,
+  SignalStream,
+  Warning22,
+  WindowPointer,
+} from 'reicon-react';
+
+# 部署你的第一个应用
+
+在 Coolify 上部署第一个应用，是验证整套环境端到端正常工作的最快方式。
+
+在本指南中，你将使用 **Docker Image** 选项部署一个 **Nginx** 应用。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+你将创建一个项目、创建一个 Docker Image 资源、使用 `nginx:alpine`、暴露端口 `80`、执行部署，然后打开生成的应用 URL。
+
+这条路径非常适合第一次部署，因为你既不需要 Git 仓库，也不需要构建配置。
+
+</CoolCallout>
+
+---
+
+
+## 开始之前
+
+部署应用之前，先确认以下事项已就绪。
+
+<CoolActionCardGrid
+  data-first-app
+  className="not-prose my-5"
+  surface
+  cards={[
+    {
+      title: '可访问控制台',
+      description: '你能登录 Coolify 并看到主控制台。',
+      bullets: ['你能在浏览器中访问 Coolify', '控制台加载无报错'],
+      icon: WindowPointer,
+    },
+    {
+      title: '服务器已连接',
+      description: 'Coolify 的 Servers 页面上至少列出了一台服务器。',
+      bullets: ['从侧边栏打开 Servers', '自托管安装在本地跑的话，localhost 即可'],
+      icon: Server,
+    },
+    {
+      title: '代理正在运行',
+      description: '在 Coolify 中打开服务器页面，检查代理状态。',
+      bullets: ['状态显示 Proxy is running', '如果已停止，点击 Start Proxy'],
+      icon: SignalStream,
+    },
+  ]}
+/>
+
+如果 Coolify 还没就绪，请先阅读[从自托管开始](/start-with-self-hosted)或[从 Coolify Cloud 开始](/start-with-cloud)。
+
+---
+
+
+## 部署概览
+
+<section data-first-app className="not-prose my-5">
+<CoolFlow
+  id="first-app-deployment-flow"
+  icon={Rocket2}
+  title="首个应用部署流程"
+  description="这次首次部署使用预构建的 Docker 镜像，因此你可以在不添加 Git 或构建设置的情况下，验证 Coolify 能否创建应用、启动应用并给你一个 URL。"
+  steps={[
+    '创建或打开一个项目',
+    '选择 Docker Image',
+    '填入 nginx:alpine',
+    '设置端口 80',
+    '部署并打开 URL',
+  ]}
+  list={[
+    '创建或打开应用将要所在的项目。',
+    '使用 Docker Image 资源类型，无需仓库或构建设置。',
+    '部署 nginx:alpine 并暴露端口 80。',
+    '首次测试使用生成的 sslip.io 域名。',
+    '打开生成的 URL，确认 Nginx 欢迎页正常加载。',
+  ]}
+  endnote="完成后你应该得到一个运行中的 nginx 容器、一个生成的应用 URL，以及可见的 Nginx 欢迎页。"
+/>
+</section>
+
+<CoolCallout icon={Box2} title="应用以容器方式运行">
+
+Coolify 以容器（Container）的形式部署应用。容器把应用及其运行所需的一切打包在一起，因此 Coolify 可以启动、停止、重启它，并把流量路由过去。
+
+在本指南中，`nginx:alpine` 就是 Coolify 将要运行的容器镜像。
+
+</CoolCallout>
+
+---
+
+
+## 部署你的第一个 nginx 应用
+
+选择你想使用的部署方式。每个标签页最终都会得到相同的首次部署结果。
+
+<Tabs items={['Dashboard', 'API', 'CLI', 'MCP']}>
+<Tab value="Dashboard">
+
+<Steps>
+<Step>
+
+### 创建你的第一个项目
+
+在 Coolify 控制台中：
+
+- 点击 **New Project**
+- 输入项目名，例如 `my-first-project`
+- 点击 **Continue**
+
+
+<Callout type="success" title="提示">
+
+如果你已经有项目，跳过这一步，直接进入第 2 步。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 创建新资源
+
+打开你的项目，点击 **Create New Resource**。
+
+
+资源是 Coolify 替你运行的东西，比如应用、数据库或服务。在本指南中，资源是一个小型 Nginx 应用。
+
+</Step>
+<Step>
+
+### 选择部署类型
+
+在部署选项中选择 **Docker Image**。
+
+
+之所以选这个选项，是因为这个应用已经以现成的容器镜像存在。Coolify 只需要拉取镜像并启动它。
+
+</Step>
+<Step>
+
+### 填入镜像引用
+
+在镜像输入框中填入：
+
+```js
+nginx:alpine
+```
+
+然后进入配置页面。
+
+
+这个镜像会启动一个简单的 Web 服务器，显示默认的 Nginx 欢迎页，因此非常适合作为首次部署测试。
+
+</Step>
+<Step>
+
+### 配置网络设置
+
+设置：
+
+- **Ports Exposes**：`80`
+
+
+Nginx 监听端口 `80`，所以 Coolify 需要知道应该把 Web 流量发到应用内部的 `80` 端口。
+
+默认情况下，Coolify 会生成一个形如 `http://<uuid>.<server-ip>.sslip.io` 的测试域名。
+
+<CoolCompare
+  data-first-app
+  className="my-5"
+  id="first-app-network"
+  icon={Globe3}
+  title="生成的 URL 还是你自己的域名"
+>
+<CoolCompareColumn
+  title="最快的首次测试"
+  code="http://<uuid>.<server-ip>.sslip.io"
+  items={[
+    '保留生成的 sslip.io URL。',
+    '无需配置 DNS 即可立即部署。',
+    '只用来确认路由是否正常。',
+  ]}
+/>
+<CoolCompareColumn
+  title="生产风格测试"
+  code="https://shadowarcanist.com"
+  items={[
+    '把 DNS 指向你的服务器 IP 地址。',
+    '在 Coolify 中替换生成的域名。',
+    '使用 https:// 以便签发 TLS 证书。',
+  ]}
+/>
+</CoolCompare>
+
+<Callout type="info" title="注意">
+
+对于第一次部署测试，使用生成的 `sslip.io` 域名是最快的路径。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 部署
+
+点击 **Deploy** 按钮。
+
+
+部署过程中，Coolify 会：
+
+- 拉取 `nginx:alpine`
+- 创建并启动容器
+- 将其接入代理，让生成的 URL 能访问到它
+
+等部署完成后再打开应用链接。
+
+</Step>
+<Step>
+
+### 访问应用链接
+
+部署完成后：
+
+- 打开 Coolify 中显示的应用 URL
+- 确认默认的 Nginx 欢迎页正常加载
+
+
+<CoolCallout icon={Camera} title="成功的样子">
+
+如果你能在浏览器里看到默认的 Nginx 欢迎页，说明你的第一次 Coolify 应用部署成功了。
+
+</CoolCallout>
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="API">
+
+<Callout type="info" title="API 前提条件">
+
+为本教程创建一个 `root` API 令牌。Coolify Cloud 已默认启用 API 访问，Cloud 用户只需创建令牌即可。在自托管 Coolify 上，还需要管理员[启用 API 访问](/api/ip-allowlist#api-访问控制)。发送这些请求之前，请先阅读 [API 授权](/api/authorization)。
+
+在即将运行 cURL 的终端里设置你的基础 URL 和令牌：
+
+```sh
+export COOLIFY_URL="https://<your-coolify-domain>"
+export COOLIFY_TOKEN="<api-token>"
+```
+
+Coolify Cloud 用户应把 `COOLIFY_URL` 设为 `https://app.coolify.io`。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+创建项目：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"my-first-project"}' \
+  "$COOLIFY_URL/api/v1/projects"
+```
+
+复制响应中的 `uuid` 并设为 `PROJECT_UUID`。然后列出你的服务器，复制将要运行 Nginx 的那台服务器的 UUID：
+
+```sh
+export PROJECT_UUID="<project-uuid>"
+
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/servers"
+
+export SERVER_UUID="<server-uuid>"
+```
+
+如果你已有项目，用 `GET /api/v1/projects` 查询即可，不必再新建一个。
+
+</Step>
+<Step>
+
+### 创建并部署应用
+
+在项目的 `production` 环境中创建 Docker Image 应用。`instant_deploy` 会将首次部署排入队列，而 `autogenerate_domain` 会为应用生成一个测试 URL：
+
+```sh
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data "{"project_uuid":"$PROJECT_UUID","server_uuid":"$SERVER_UUID","environment_name":"production","docker_registry_image_name":"nginx","docker_registry_image_tag":"alpine","ports_exposes":"80","name":"my-first-nginx","autogenerate_domain":true,"instant_deploy":true}" \
+  "$COOLIFY_URL/api/v1/applications/dockerimage"
+```
+
+复制返回的应用 `uuid`：
+
+```sh
+export APPLICATION_UUID="<application-uuid>"
+```
+
+</Step>
+<Step>
+
+### 验证应用
+
+持续读取应用信息，直到其状态变为 `running`：
+
+```sh
+curl --fail-with-body \
+  --header "Authorization: Bearer $COOLIFY_TOKEN" \
+  --header "Accept: application/json" \
+  "$COOLIFY_URL/api/v1/applications/$APPLICATION_UUID"
+```
+
+打开为应用返回的域名。默认的 Nginx 欢迎页即证明部署成功。响应结构和错误处理请参见 [API 参考](/api/overview)。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="CLI">
+
+<Callout type="info" title="CLI 前提条件">
+
+[安装 Coolify CLI](/cli/installation)，然后为将要拥有该资源的团队创建一个 `root` API 令牌。
+
+**Coolify Cloud：** API 访问已默认启用。把令牌保存到预配置的 `cloud` 上下文中，选中它，然后验证认证：
+
+```sh
+coolify context set-token cloud <api-token>
+coolify context use cloud
+coolify context verify
+```
+
+**自托管 Coolify：** 需要管理员先[启用 API 访问](/api/ip-allowlist#api-访问控制)。使用不带 `/api/v1` 的完整实例 URL 添加一个上下文，然后验证认证：
+
+```sh
+coolify context add --default production https://coolify.example.com <api-token>
+coolify context verify
+```
+
+验证成功会提示连接与认证均有效。令牌安全、IP 白名单与故障排查请参见 [CLI 认证](/cli/authentication)。
+
+</Callout>
+
+<Callout type="warning" title="生产环境请使用最小权限令牌">
+
+本教程使用 `root` 令牌，这样同一个凭据可以在所有读取、写入、部署和敏感数据请求中通用。`root` 令牌的权限远超大多数集成所需。生产环境中，请为每个工作流单独创建只具备所需权限的令牌，并在教程结束后吊销本教程令牌。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 创建项目并找到服务器
+
+```sh
+coolify project create --name my-first-project
+coolify server list
+```
+
+从输出中复制项目和服务器 UUID。如果项目已存在，改用 `coolify project list`。
+
+</Step>
+<Step>
+
+### 创建并部署应用
+
+```sh
+coolify app create dockerimage \
+  --project-uuid <project-uuid> \
+  --server-uuid <server-uuid> \
+  --environment-name production \
+  --name my-first-nginx \
+  --docker-registry-image-name nginx \
+  --docker-registry-image-tag alpine \
+  --ports-exposes 80 \
+  --instant-deploy
+```
+
+从响应中复制应用 UUID。
+
+</Step>
+<Step>
+
+### 验证应用
+
+```sh
+coolify app get <application-uuid>
+coolify app logs <application-uuid> --lines 100
+```
+
+等待应用状态变为 `running`，然后打开它生成的域名。所有可用参数请参见 [`coolify app create dockerimage`](/cli/command-reference/commands/app/create-dockerimage)。
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="MCP">
+
+<Callout type="warning" title="MCP 暂不支持创建操作">
+
+Coolify MCP 可以检查和启动现有资源，但其当前的工具无法创建应用、数据库、服务或项目。请先通过 Dashboard、API 或 CLI 标签页创建资源，之后再用下面的提示词启动并验证它，无需回到控制台。
+
+</Callout>
+
+完成[设置 Coolify MCP](/mcp/setup) 后，为这个端到端工作流创建一个 `root` 令牌，然后把应用 UUID 或其准确名称告诉你的 MCP 客户端。提示词需要检查应用、启动应用、再次检查应用。`deploy` 令牌无法执行这些读取操作，因为选择 `deploy` 会创建仅能部署的令牌。
+
+<Callout type="warning" title="教程结束后请吊销 root 令牌">
+
+`root` 令牌会绕过 `read`、`write` 和 `deploy` 端点检查，并能返回支持的敏感数据。它仍然只限于当前团队使用，但其权限超出了日常 MCP 使用所需。完成这次首次部署后请吊销它。
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 找到应用
+
+```txt
+Find the application named my-first-nginx in my-first-project. Show me its UUID, current status, and domain. Do not change anything yet.
+```
+
+确认返回的应用正是你创建的那个。
+
+</Step>
+<Step>
+
+### 启动并验证应用
+
+```txt
+Start the Coolify application with UUID <application-uuid>. Then check its status and tell me when it is running. Show me the domain I should open, and do not stop or restart any other resource.
+```
+
+打开返回的域名，确认默认的 Nginx 欢迎页正常加载。客户端会使用 MCP `control` 工具启动资源，再使用应用检查工具进行验证。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+---
+
+## 首次部署的常见问题
+
+当部署已完成、但应用链接表现不符合预期时，按下面各项排查。
+
+
+<Tabs id="first-app-issues" items={['No Available Server', "Link doesn't open", 'Site not secure']}>
+<Tab value="No Available Server" icon={Warning22}>
+
+通常是端口设置不对。
+
+检查：
+
+- **Ports Exposes** 已设为 `80`
+- 镜像是 `nginx:alpine`
+
+</Tab>
+<Tab value="Link doesn't open" icon={SignalStream}>
+
+通常意味着浏览器无法访问服务器或代理。
+
+检查：
+
+- Coolify 代理显示 **Proxy is running**
+- 服务器防火墙放行了端口 `80` 和 `443`
+- 如果用的是自己的域名，DNS 已指向你的服务器 IP 地址
+
+</Tab>
+<Tab value="Site not secure" icon={Globe3}>
+
+用 `http://` 打开应用时，浏览器会显示「网站不安全」警告。
+要让警告消失，请用 `https://` 打开应用。
+`https://` 要生效，Coolify 需要从 Let's Encrypt 获取 TLS 证书。
+Let's Encrypt 可能对 `sslip.io` 这类共享测试域名限流，所以请使用真实域名。
+
+如果你使用自己的域名，请确保：
+
+- DNS 已正确指向你的服务器 IP
+- 域名在 Coolify 中以 `https://` 形式添加，例如 `https://shadowarcanist.com`
+- 修改域名后重启应用
+
+</Tab>
+</Tabs>
+
+---
+
+## 接下来做什么
+
+第一个应用证明了 Coolify 能够创建并运行应用。接下来，你可以部署数据库、部署服务，或者了解基于 Git 的应用构建方式。
+
+<CoolNextSteps
+  data-first-app
+  cards={[
+    {
+      title: '部署一个数据库',
+      description: '当应用需要持久化数据时，部署一个数据库。',
+      href: '/deploy-your-first-database',
+      icon: Database,
+    },
+    {
+      title: '部署一个服务',
+      description: '从 Coolify 目录中部署一个现成的服务。',
+      href: '/deploy-your-first-service',
+      icon: Settings,
+    },
+    {
+      title: '了解构建包',
+      description: '从预构建镜像进阶到基于 Git 的应用部署。',
+      href: '/applications/builds/overview',
+      icon: Box2,
+    },
+  ]}
+/>

@@ -1,0 +1,54 @@
+---
+title: 选择数据库
+description: 为你的工作负载选择受支持的数据库引擎、版本和部署方式。
+---
+
+# 选择数据库
+
+请选择与应用现有数据模型和工作负载相匹配的数据库引擎。[什么是数据库](/databases/what-is-a-database)介绍了 Coolify 为每种受支持引擎创建的一键资源。
+
+## 选择数据库引擎
+
+| 数据库引擎 | 适用场景 | 默认端口 | 计划备份 | 面板恢复 |
+| :--- | :--- | :---: | :---: | :---: |
+| [PostgreSQL](/databases/postgresql) | 关系型数据、事务和 PostgreSQL 扩展。 | `5432` | 支持 | 支持 |
+| [MySQL](/databases/mysql) | 关系型应用和 MySQL 生态。 | `3306` | 支持 | 支持 |
+| [MariaDB](/databases/mariadb) | 兼容 MySQL 的关系型工作负载。 | `3306` | 支持 | 支持 |
+| [MongoDB](/databases/mongodb) | 文档数据与灵活的表结构。 | `27017` | 支持 | 支持 |
+| [SQLite](/databases/sqlite) | 以文件形式存在、挂载进同一服务器上应用中的数据库；实验性。 | 无 | 支持 | 支持 |
+| [Redis](/databases/redis) | 缓存、队列、流和键值数据。 | `6379` | 不支持 | 不支持 |
+| [Dragonfly](/databases/dragonfly) | 兼容 Redis、基于多线程数据存储的工作负载。 | `6379` | 不支持 | 不支持 |
+| [KeyDB](/databases/keydb) | 兼容 Redis、采用多线程的工作负载。 | `6379` | 不支持 | 不支持 |
+| [ClickHouse](/databases/clickhouse) | 分析型查询与列式数据。 | `9000` | 支持 | 不支持 |
+
+"计划备份"指该数据库资源提供 Coolify 针对特定引擎的备份流程；"面板恢复"指可以通过 **Import Backup**（导入备份）加载备份。ClickHouse 可以按计划备份，但其 **Import Backup** 页面会说明不支持恢复。Redis、Dragonfly 和 KeyDB 两者都不提供。备份有支持并不代表引擎自己不能做备份。每种引擎的部署与备份路径见[数据库](/databases#借助备份自托管数据库)。
+
+## 选择一键数据库还是服务
+
+如果一个独立的数据库容器就够用，并且希望由 Coolify 托管它的标准配置和生命周期，就用一键数据库。
+
+[Service](/services)（服务）是一个 Docker Compose 部署。一键 Service 从精选的 Compose 模板起步；**Docker Compose Empty**（空白 Compose）则允许你提供自己的 Compose 文件。需要多个数据库节点、自定义拓扑、不受支持的引擎，或一键数据库表单未暴露的配置时，就用 Service。
+
+<Callout type="info" title="数据库资源不是应用">
+
+请从 **New Resource**（新建资源）> **Databases**（数据库）创建数据库。应用只用于运行应用镜像的工作负载。把应用和数据库保持为相互独立的资源，两者的容器和部署才能拥有各自的生命周期。创建流程与资源边界见[什么是数据库](/databases/what-is-a-database)。
+
+</Callout>
+
+## 选择版本与镜像
+
+数据库选择器提供当前 Coolify 版本所支持的版本和镜像。PostgreSQL 目前提供 PostgreSQL 18、17 和 16，以及 Supabase PostgreSQL、PostGIS 和 PGVector 扩展镜像。请根据应用的兼容性、架构和迁移要求选择镜像。
+
+在没有确认引擎升级流程、也没有先取得经验证的备份之前，不要把生产数据库镜像换成别的大版本。数据库镜像版本不等于 Coolify 版本。
+
+## 核查你的选择
+
+创建数据库之后：
+
+1. 打开 **General**（常规），确认镜像、凭据、数据库名和内部端口。
+2. 在 **Persistent Storage**（持久化存储）下确认持久化存储挂载。
+3. 启动数据库，检查其状态和日志。
+4. 使用 **Internal URL**（内部 URL）连接同一目标（Destination）上的应用，或为 SQLite 挂载数据卷。
+5. 为受支持的引擎配置[备份](/databases/backups)，并验证[恢复流程](/databases/restore)。
+
+如果应用用的是其他引擎或需要集群，不要硬塞进一键资源。改用 Compose 服务或外部数据库服务商。

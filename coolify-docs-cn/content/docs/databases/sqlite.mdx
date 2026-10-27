@@ -1,0 +1,27 @@
+---
+title: SQLite
+description: 创建实验性的 SQLite 数据库，并将其文件挂载到同一服务器上的应用。
+---
+
+# SQLite
+
+SQLite 支持目前是实验性的。Coolify 使用 `peakimages/sqlite` 镜像和持久化数据卷运行一个独立的数据库资源。应用通过卷挂载访问数据库文件，而不是通过网络连接 URL。
+
+## 创建数据库
+
+1. 在项目环境中，选择 **New Resource > Databases > SQLite**（新建资源 > 数据库 > SQLite）。
+2. 选择服务器和目标（Destination）。
+3. 在 **General**（通用）下检查镜像和 **File names**（文件名）。
+4. 启动数据库，创建其文件和卷。
+
+## 连接应用
+
+在数据库的 **General > Connect application**（通用 > 连接应用）区块下，选择同一服务器上的应用，指定容器内的 **Mount path**（挂载路径），然后选择 **Mount volume**（挂载卷）。将应用配置为在该路径打开数据库文件，并重新部署应用。应用必须以用户 `65532` 或 root 身份运行才能访问这些文件。
+
+对 Docker Compose 应用，Coolify 会显示需要添加到使用 SQLite 的服务中的卷配置行。将它们复制进应用的 Compose 文件并重新部署。请先启动 SQLite 数据库，因为 Compose 不会创建这个外部卷。
+
+Coolify 会保护已连接的卷。使用 **Unlink**（取消关联）可移除受管的应用连接；对 Compose 连接，请从 Compose 文件中删除卷引用。取消关联前请先检查应用配置，以免它继续写入意外的本地文件。
+
+## 备份与恢复
+
+SQLite 支持手动和计划的[数据库备份](/databases/backups)。使用[导入备份](/databases/restore)恢复备份，并在 **Restore into**（恢复到）下选择目标数据库文件。替换文件前请先停止应用写入，恢复完成后验证应用。

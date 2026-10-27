@@ -1,0 +1,669 @@
+---
+title: NGINX
+description: 一份案例研究：ShadowArcanist 如何用手工配置的 NGINX 方案替换 Traefik，以及背后的配置片段。
+---
+
+# NGINX
+
+<Callout type="warning" title="案例研究，而非安装指南">
+
+Coolify 团队成员 **ShadowArcanist** 在一台生产服务器上用 NGINX 替换了 Traefik，停机时间约 20 秒。本页介绍这套配置是如何搭建的、为什么这样搭建，并摘录其中部分片段，展示手工管理代理都涉及哪些工作。
+
+它不是一步步的教程，这些片段也不能拿来直接安装使用。Coolify 不会配置、启动或监控这个代理。[自定义代理概览](/core/networking/proxy/custom/overview)说明了使用自定义代理时，你要从 Coolify 手中接管哪些功能。
+
+</Callout>
+
+## 为什么要更换
+
+这台服务器运行约 19 个应用，通过 Coolify 从 Docker 镜像和 Docker Compose 文件部署。Traefik 在它上面服务着 31 个域名。
+
+问题出在内存上。刚重启时，Traefik 的空闲内存很低；运行超过 6 小时后，它空闲时占用超过 40 MB，在流量极小的情况下占用 70–80 MB。换用其他 Traefik 版本也无济于事，调整 Go 的内存环境变量同样没用，反而只是推高了 CPU 占用。
+
+由于服务器流量不大，Traefik 容器被限制为 512 MB 内存。一天夜里，Traefik 用光了全部配额，因内存耗尽（out-of-memory）错误崩溃，Docker 随后重启了它。访问日志显示，崩溃前一小时只有约 170 个请求，没有任何流量高峰。
+
+## 为什么选 NGINX
+
+ShadowArcanist 先在一台独立的服务器上测试了 NGINX 和 Angie（一个 NGINX 分支）。NGINX 内存占用更低，能处理的请求更多。后来的一次基准测试把 NGINX、Traefik 和 Caddy 放在同一负载下对比：在一台 2 vCPU 的测试服务器上，用一个后端承接 17 个 HTTPS 主机。版本分别是 NGINX 1.31.6（`nginx:1.31-alpine`）、Traefik 3.7.14（`traefik:v3.7`，Coolify 为新服务器默认提供的版本）和 Caddy 2.11.7（`caddy:2`）。
+
+| 测量项 | NGINX | Traefik | Caddy |
+| :--- | :--- | :--- | :--- |
+| 空闲内存 | 3.8 MB | 19.4 MB | 15.2 MB |
+| 负载下的峰值内存 | 10.7 MB | 126 MB | 54 MB |
+| 每秒 510 请求时的 CPU | 单核的 5.3% | 15.0% | 17.8% |
+| 2 个共享 vCPU 上的吞吐量（HTTP/1.1） | 19.3K req/s | 12.0K req/s | 10.5K req/s |
+
+负载结束后，NGINX 回落到 4 MB 左右，而 Traefik 和 Caddy 仍保留着大部分峰值内存。在正常请求速率下，三者的 p50 延迟都低于 1 ms，所以差别在资源占用，不在速度。
+
+这只是单机上的一次测量，不是通用排名，但它让 NGINX 成了最终选择。
+
+另外两个需求决定了这套配置的形态：
+
+- **跨多个 Cloudflare 账户的泛域名证书**：[Lego](https://go-acme.github.io/lego/) 通过 DNS-01 质询签发证书，因此服务器不需要 `80` 端口。
+- **路由数量可控**：每个域名一个文件、手工编写就足够了，不需要自动容器发现。
+
+---
+
+## 整套架构如何协作
+
+NGINX 在 Coolify 之外的 `/data/nginx-proxy` 中作为独立的 Docker Compose 项目运行。Coolify 继续部署应用，其代理设置为 **Custom (None)**。
+
+这台服务器上的每个公网域名都经过 Cloudflare 代理。访客连接到 Cloudflare，Cloudflare 再连接到 NGINX。本页中的几个选择——比如访客 IP 的处理、keep-alive 超时和 HTTPS 重定向——都依赖这一点。
+
+```sh
+/data/nginx-proxy/
+├── compose.yaml
+├── .env                        # host addresses for the listeners
+├── config/                     # mounted read-only into NGINX
+│   ├── current -> versions/3   # the version NGINX loads
+│   └── versions/
+│       └── 3/
+│           ├── nginx.conf      # shared settings
+│           ├── proxy.conf      # headers for every proxied location
+│           ├── cloudflare-ips.conf
+│           ├── default.conf    # catch-all for unknown names
+│           └── hosts/          # one file per domain
+├── certs/                      # written by Lego
+├── secrets/                    # Cloudflare API tokens
+├── lego.yml                    # which certificates to issue
+├── lego-renew.sh               # daily renewal, run by cron
+├── logs/                       # access.log and error.log
+└── rotate.sh                   # log rotation
+```
+
+每次配置更改都会放入 `versions/` 下的一个新文件夹，`current` 指向正在使用的那个。回滚就是改一下这个链接，再重载。[变更与回滚](#变更与回滚)解释了原因。
+
+NGINX、Lego 和日志轮转都以同一个用户（UID `55555`）运行。Lego 写入的私钥只有属主可读，所以 NGINX 也以同一用户运行才能读取它们。
+
+---
+
+## Compose 文件
+
+```yaml title="/data/nginx-proxy/compose.yaml"
+name: nginx-proxy
+
+services:
+  nginx:
+    image: nginx:1.31-alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    user: '55555:55555'
+    mem_limit: 100m
+    command: ['nginx', '-g', 'daemon off;', '-c', '/etc/nginx/managed/current/nginx.conf']
+    ports:
+      # HTTPS only: Lego uses DNS-01, so nothing listens on port 80.
+      - '${PUBLIC_IP}:443:443'
+      # Private listener, reachable only over a VPN address.
+      - '${PRIVATE_IP}:443:8443'
+    volumes:
+      - ./config:/etc/nginx/managed:ro
+      - ./certs:/certs:ro
+      - ./logs:/var/log/nginx-proxy
+    networks:
+      - nginx-proxy
+      - coolify
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  logrotate:
+    image: alpine:3.22
+    container_name: nginx-logrotate
+    restart: unless-stopped
+    user: '55555:55555'
+    mem_limit: 10m
+    network_mode: none
+    environment:
+      - LOG_ROTATE_MB=20
+      - LOG_KEEP=5
+    command: ['/bin/sh', '/rotate.sh']
+    volumes:
+      - ./logs:/logs
+      - ./rotate.sh:/rotate.sh:ro
+
+networks:
+  nginx-proxy:
+    external: true
+  coolify:
+    external: true
+```
+
+`.env` 保存两个宿主地址：
+
+```sh title="/data/nginx-proxy/.env"
+PUBLIC_IP=203.0.113.10
+PRIVATE_IP=100.92.0.1
+```
+
+这个文件里的一些选择比看上去更重要：
+
+- **`443` 端口上的两个监听**：Docker 把容器端口 `443` 发布到公网地址，把容器端口 `8443` 发布到 VPN 地址（这台服务器上是 NetBird）。只监听 `8443` 的主机无法从互联网访问。两个地址必须不同，因为两者都要占用宿主机的 `443` 端口。
+- **挂载的是 `config` 文件夹，而不是单个文件**：Docker 会把单文件挂载绑定到该文件的 inode。编辑器和 `cp` 经常用新 inode 替换文件，容器就会继续读旧文件。挂载文件夹内部的更改则始终可见。
+- **两个网络**：`nginx-proxy` 是一个独立网络，Compose 应用以别名加入；`coolify` 让 NGINX 能访问 Coolify 本身以及不使用 Docker Compose 的应用。两个网络都在 NGINX 启动之前就已存在，所以文件把它们标记为 `external`。
+- **内存**：100 MB 的限制在这台服务器上给 NGINX 留了充足的余量。
+
+---
+
+## 主配置
+
+`nginx.conf` 保存所有域名共享的设置。由于 NGINX 以 UID `55555` 运行，PID 文件和临时文件都放在 `/tmp`，也没有 `user` 指令。
+
+```nginx title="config/versions/3/nginx.conf"
+worker_processes 4;
+pid /tmp/nginx.pid;
+error_log /var/log/nginx-proxy/error.log warn;
+
+events {
+    worker_connections 4096;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Keep NGINX's default: Cloudflare reuses idle origin connections.
+    keepalive_timeout 75s;
+
+    client_body_temp_path /tmp/client_body;
+    proxy_temp_path /tmp/proxy;
+    fastcgi_temp_path /tmp/fastcgi;
+    uwsgi_temp_path /tmp/uwsgi;
+    scgi_temp_path /tmp/scgi;
+
+    # Docker's DNS, so a redeployed container is found again.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    resolver_timeout 2s;
+
+    # Real visitor IP, accepted only from Cloudflare's ranges.
+    include /etc/nginx/managed/current/cloudflare-ips.conf;
+    real_ip_header CF-Connecting-IP;
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      '';
+    }
+
+    log_format json escape=json '{"time":"$msec","host":"$host",'
+        '"method":"$request_method","path":"$uri","status":$status,'
+        '"bytes":$bytes_sent,"request_time":$request_time,'
+        '"upstream":"$upstream_addr","upstream_status":"$upstream_status",'
+        '"ip":"$remote_addr","country":"$http_cf_ipcountry",'
+        '"ua":"$http_user_agent"}';
+    access_log /var/log/nginx-proxy/access.log json;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    include /etc/nginx/managed/current/default.conf;
+    include /etc/nginx/managed/current/hosts/*.conf;
+}
+```
+
+| 设置项 | 存在的原因 |
+| :--- | :--- |
+| `worker_processes 4`、`worker_connections 4096` | 四个 worker 进程把流量分担到各个 CPU 核心上，每个进程可以持有 4096 个打开的连接。`auto` 则改为每个核心启动一个 worker。 |
+| `keepalive_timeout 75s` | Cloudflare 会复用与源站之间的空闲连接，最长 900 秒。如果 NGINX 恰好在 Cloudflare 通过某条连接发来请求时关闭了它，访客会收到 `520`。NGINX 的默认值能减少这种情况。参见 [Cloudflare 连接限制](https://developers.cloudflare.com/fundamentals/reference/connection-limits/)。 |
+| `resolver 127.0.0.11` | Docker 内置的 DNS 服务器。NGINX 用它在重新部署之后重新查找容器名。 |
+| `resolver_timeout 2s` | 限制解析器给出 NGINX 无法接受的答案时的等待时间。参见[让目标在重新部署后保持稳定](#让目标在重新部署后保持稳定)。 |
+| `real_ip_header CF-Connecting-IP` | 用访客的真实地址替换连接地址，但只对来自 `cloudflare-ips.conf` 中网段的请求生效。 |
+| `$connection_upgrade` map | 让 WebSocket 升级请求通过。普通请求会得到空的 `Connection` 头，因此与应用的连接保持打开以供复用。 |
+| JSON 访问日志 | 每个请求一行，便于用 `jq` 检索。`$uri` 不含查询字符串，因此查询字符串不会进入日志。 |
+
+### 共享的代理头
+
+每个被代理的 location 都包含 `proxy.conf`，这样这些头部只需要写一处：
+
+```nginx title="config/versions/3/proxy.conf"
+proxy_http_version 1.1;
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_connect_timeout 5s;
+```
+
+### Cloudflare IP 段
+
+`cloudflare-ips.conf` 逐行列出 Cloudflare 在 [cloudflare.com/ips](https://www.cloudflare.com/ips/) 公布的所有网段：
+
+```nginx title="config/versions/3/cloudflare-ips.conf"
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+# ... every other IPv4 and IPv6 range
+set_real_ip_from 2400:cb00::/32;
+```
+
+有了这些行，NGINX 记录并转发的是访客地址，而不是 Cloudflare 的地址。如果少了某个网段，来自该网段的访客就会显示为 Cloudflare 的地址。
+
+### 未知主机名
+
+如果没有默认服务器，NGINX 会用配置中的第一个主机应答未知主机名的请求，并展示该主机的证书。这套配置为每个监听都准备了一个兜底（catch-all）：
+
+```nginx title="config/versions/3/default.conf"
+server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+}
+
+server {
+    listen 8443 ssl default_server;
+    ssl_reject_handshake on;
+}
+```
+
+`ssl_reject_handshake` 会为任何没有对应 `server` 块的主机名终止 TLS 握手。在 Cloudflare 之后，这些请求会以 Cloudflare 错误页失败，永远不会到达应用。
+
+---
+
+## 应用如何接入
+
+一条路由需要一个名称和一个 NGINX 能通过 Docker 网络访问的端口。没有任何应用发布主机端口。
+
+<Tabs id="nginx-application-networks" items={['Compose 应用', '非 Compose 应用']}>
+<Tab value="Compose 应用">
+
+Compose 应用和一键服务各自拥有自己的网络。在这台服务器上，它们的 Web 服务还会以别名加入共享的 `nginx-proxy` 网络。在 Coolify 中资源的 Compose 文件里，写法如下：
+
+```yaml
+services:
+  web:
+    # The service's other settings stay here.
+    networks:
+      nginx-proxy:
+        aliases:
+          - example-app
+
+networks:
+  nginx-proxy:
+    external: true
+```
+
+NGINX 以 `example-app` 这个名字访问应用，端口是它在容器内监听的端口。这个网络是在服务已有网络之外追加的，不会替换它们。
+
+每个应用都有自己的别名。Docker 还会在网络上注册 Compose 服务名，所以像 `web` 这样的名字可能同时匹配到多个栈的容器。
+
+早期遇到的一个问题，是把别名加到了 Coolify 为每个资源创建的网络上。Coolify 生成部署配置时可能会移除这些别名；而加在独立的 `nginx-proxy` 网络上的别名会保留下来。
+
+只有 NGINX 需要访问的容器才加入这个网络。数据库和其他内部服务留在资源自己的网络上。
+
+</Tab>
+<Tab value="非 Compose 应用">
+
+不使用 Docker Compose 的应用（例如用 Nixpacks、Dockerfile 或 Docker 镜像构建的应用）默认使用 `coolify` 网络，NGINX 也在这个网络上。
+
+Coolify 每次部署都会给这些容器起新名字，所以路由不能依赖容器名。改为让每个应用在其 Coolify 配置的 **Networking** 区域中，通过 **Network aliases** 字段设置别名，例如 `example-api`。
+
+Coolify 会在每次部署时把这些别名以 `coolify` 网络加到容器上，因此 NGINX 总能以 `example-api` 和其内部端口访问应用，不需要改动 Compose 文件。
+
+</Tab>
+</Tabs>
+
+共享网络只是选项之一。代理也可以加入资源自己的网络，或通过已发布的主机端口连接。[自定义代理组网](/core/networking/proxy/custom/overview#将代理连接到资源)介绍了这些选项，以及发布端口所需的防火墙规则。
+
+---
+
+## 域名文件
+
+每个域名在 `hosts/` 中都有自己的文件。在 Coolify 里更改域名不会改动这些文件；新增域名意味着新建一个文件并重载。
+
+<Tabs id="nginx-host-examples" items={['应用', '私有应用', '重定向', 'Coolify 面板']}>
+<Tab value="应用">
+
+```nginx title="config/versions/3/hosts/app.example.com.conf"
+upstream app_example_com {
+    zone app_example_com 64k;
+    server example-app:3000 resolve;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name app.example.com;
+
+    ssl_certificate /certs/certificates/example.com.crt;
+    ssl_certificate_key /certs/certificates/example.com.key;
+    client_max_body_size 100m;
+
+    location / {
+        proxy_pass http://app_example_com;
+        include /etc/nginx/managed/current/proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 60s;
+    }
+}
+```
+
+每个 `upstream` 名称在所有主机文件中都唯一。`Upgrade` 和 `Connection` 两行用于承载 WebSocket 连接，参见 [NGINX WebSocket 代理](https://nginx.org/en/docs/http/websocket.html)。
+
+`client_max_body_size` 限制上传大小。NGINX 默认是 1 MB，会打断大多数文件上传，所以每个主机都单独设置。这台服务器上的一个相册应用用的是 `0`，即取消限制。
+
+</Tab>
+<Tab value="私有应用">
+
+Grafana 这类内部工具只监听私有监听。它们可以通过 VPN 访问，但无法从互联网访问：
+
+```nginx title="config/versions/3/hosts/grafana.example.com.conf"
+upstream grafana_example_com {
+    zone grafana_example_com 64k;
+    server grafana:3000 resolve;
+}
+
+server {
+    listen 8443 ssl;
+    http2 on;
+    server_name grafana.example.com;
+
+    ssl_certificate /certs/certificates/example.com.crt;
+    ssl_certificate_key /certs/certificates/example.com.key;
+
+    location / {
+        proxy_pass http://grafana_example_com;
+        include /etc/nginx/managed/current/proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+}
+```
+
+该域名的 DNS 记录指向 VPN 地址。由于证书是通过 DNS-01 签发的泛域名证书，主机不需要公开也能拿到证书。
+
+</Tab>
+<Tab value="重定向">
+
+只做重定向的主机没有 upstream：
+
+```nginx title="config/versions/3/hosts/old.example.com.conf"
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name old.example.com;
+
+    ssl_certificate /certs/certificates/example.com.crt;
+    ssl_certificate_key /certs/certificates/example.com.key;
+
+    location / {
+        return 301 https://new.example.com$request_uri;
+    }
+}
+```
+
+`301` 和 `308` 表示永久移动，`302` 和 `307` 表示临时移动。`307` 和 `308` 会保留请求方法，因此 `POST` 仍然是 `POST`。
+
+</Tab>
+<Tab value="Coolify 面板">
+
+Coolify 面板有三个目标：`8080` 端口上的 UI、`6001` 上的实时更新，以及 `6002` 上的 Web 终端。把所有请求都发到 `8080` 会破坏实时更新和终端。在这台服务器上，面板是 `8443` 监听上的一个私有主机。
+
+```nginx title="config/versions/3/hosts/coolify.example.com.conf"
+upstream coolify_ui {
+    zone coolify_ui 64k;
+    server coolify:8080 resolve;
+}
+
+upstream coolify_realtime {
+    zone coolify_realtime 64k;
+    server coolify:6001 resolve;
+}
+
+upstream coolify_terminal {
+    zone coolify_terminal 64k;
+    server coolify:6002 resolve;
+}
+
+server {
+    listen 8443 ssl;
+    http2 on;
+    server_name coolify.example.com;
+
+    ssl_certificate /certs/certificates/example.com.crt;
+    ssl_certificate_key /certs/certificates/example.com.key;
+    client_max_body_size 256m;
+
+    location / {
+        proxy_pass http://coolify_ui;
+        include /etc/nginx/managed/current/proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
+    }
+
+    location /app {
+        proxy_pass http://coolify_realtime;
+        include /etc/nginx/managed/current/proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
+    }
+
+    location /terminal/ws {
+        proxy_pass http://coolify_terminal;
+        include /etc/nginx/managed/current/proxy.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
+    }
+}
+```
+
+三个目标都是 `coolify` 容器，经由 `coolify` 网络访问。近期的 Coolify 版本移除了独立的 `coolify-realtime` 容器，实时更新和终端改由 `coolify` 本身提供；参见 [realtime 迁移](/core/instance-management/reverb-migration)。
+
+`proxy_request_buffering off` 让上传（例如备份文件）直接流式传输给 Coolify，而不是先存在 NGINX 里。`client_max_body_size 256m` 与 Coolify 自身的上传限制一致，因此较大的服务器迁移文件不会被 NGINX 拒绝。
+
+</Tab>
+</Tabs>
+
+这套配置只提供 HTTPS。由于 `80` 端口上没有监听，`http://` URL 不会在源站重定向到 HTTPS。这台服务器上由 Cloudflare 的 **Always Use HTTPS** 设置完成重定向。不使用 Cloudflare 的配置则需要一个 `listen 80` 的 server 返回 `301` 到 HTTPS URL。
+
+---
+
+## 让目标在重新部署后保持稳定
+
+重新部署的容器可以保留名字，但拿到新的 IP 地址。默认情况下，NGINX 只在加载配置时解析一次名称，并一直沿用那个地址。
+
+这套配置中的每个 upstream 由三部分组成：
+
+- `nginx.conf` 中的 `resolver 127.0.0.11 valid=10s`，让 NGINX 在 10 秒后再次询问 Docker 的 DNS。
+- `upstream` 块中的 `zone`，让解析出的地址在各个 worker 进程之间共享。
+- `server` 行上的 `resolve`，让 NGINX 持续关注这个名称。
+
+三者配合，NGINX 无需重载就能找到新容器。开源版 NGINX 从 1.27.3 起支持 `resolve`；参见 [upstream 模块文档](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#服务器)。
+
+`resolve` 还让 NGINX 能在应用下线时照常启动。该路由返回 `502`，容器恢复后自动恢复。如果写的是普通的 `proxy_pass http://example-app:3000;`，名称解析失败时 NGINX 会拒绝启动。
+
+在一次重新部署测试中，一条路由返回 `502` 约半秒后，新容器就开始应答了。
+
+有一次延迟长得多。在测试服务器上，NetBird 的 DNS 解析器返回了一个 NGINX 不接受的答案，NGINX 等满了默认的 30 秒解析超时。`resolver_timeout 2s` 把这个延迟缩短了。
+
+---
+
+## 用 Lego 签发证书
+
+Lego 通过 Cloudflare 的 DNS-01 质询签发泛域名证书。它以短生命周期容器的方式运行，把证书写入 `certs/` 后退出。NGINX 只读取证书文件，接触不到 Cloudflare 令牌。
+
+### 令牌
+
+每个 Cloudflare 账户都有一个 API 令牌，对其证书覆盖的区域拥有 **Zone: Read** 和 **DNS: Edit** 权限。每个令牌放在 `secrets/` 下自己的文件里：
+
+```sh title="/data/nginx-proxy/secrets/cloudflare.env"
+CF_DNS_API_TOKEN=your-cloudflare-api-token
+```
+
+容器环境中没有设置任何 `CLOUDFLARE_*` 或 `CF_*` 变量。全局变量的优先级高于 env 文件，可能让 Lego 用错账户。
+
+### 证书清单
+
+Lego v5 从一个文件读取所有账户、质询和证书。`challenges` 下的每一项指向一个 Cloudflare 账户的令牌文件：
+
+```yaml title="/data/nginx-proxy/lego.yml"
+storage: /data
+servers:
+  letsencrypt:
+    url: https://acme-v02.api.letsencrypt.org/directory
+accounts:
+  main:
+    server: letsencrypt
+    email: 'admin@example.com'
+    acceptsTermsOfService: true
+challenges:
+  'cloudflare-main':
+    dns:
+      provider: cloudflare
+      envFile: '/secrets/main.env'
+  'cloudflare-second':
+    dns:
+      provider: cloudflare
+      envFile: '/secrets/second.env'
+certificates:
+  'example.com':
+    challenge: 'cloudflare-main'
+    account: main
+    domains: ['example.com', '*.example.com']
+    renew:
+      disableRandomSleep: true
+  'example.org':
+    challenge: 'cloudflare-second'
+    account: main
+    domains: ['example.org', '*.example.org']
+    renew:
+      disableRandomSleep: true
+```
+
+泛域名只覆盖一层：`*.example.com` 覆盖 `app.example.com`，但不覆盖 `api.app.example.com`。
+
+`disableRandomSleep` 很重要，因为 Lego 由 cron 拉起。没有它，当输出不是终端时，Lego 每张证书可能等待最多 8 分钟。
+
+Lego 写出 `certs/certificates/example.com.crt`（包含证书及其证书链）和 `example.com.key`。域名文件里用的就是这些路径。首次运行用大约 53 秒签发了两张证书；后续运行只需几秒，且只续期到期的证书。
+
+### 每日续期
+
+一个脚本每天由宿主机的 cron 运行 Lego，并且只在证书文件发生变化时重载 NGINX：
+
+```sh title="/data/nginx-proxy/lego-renew.sh"
+#!/bin/sh
+set -eu
+DIR=/data/nginx-proxy
+
+snapshot() { cksum "$DIR"/certs/certificates/*.crt 2>/dev/null || true; }
+before=$(snapshot)
+
+docker run --rm --name nginx-proxy-lego \
+  --user 55555:55555 \
+  -v "$DIR/certs:/data" \
+  -v "$DIR/lego.yml:/config/lego.yml:ro" \
+  -v "$DIR/secrets:/secrets:ro" \
+  goacme/lego:v5.5.2 --config /config/lego.yml
+
+if [ "$(snapshot)" != "$before" ]; then
+  docker kill -s HUP nginx-proxy
+fi
+```
+
+```sh title="/etc/cron.d/nginx-proxy-lego"
+17 4 * * * root /data/nginx-proxy/lego-renew.sh 2>&1 | logger -t nginx-proxy-lego
+```
+
+Lego 容器与 NGINX 使用相同的 UID。固定的容器名防止运行重叠：第一个容器还在时，第二次运行无法启动。
+
+只更新证书文件并不够。NGINX 只有在 `HUP` 信号触发重载之后，才会提供续期后的证书。把续期放在宿主机的 cron 而不是容器里运行，能让它独立于服务器上的其他任何东西。
+
+---
+
+## 日志
+
+NGINX 把 `access.log` 和 `error.log` 写到 `logs/`。`logrotate` 容器运行一个小循环，文件一旦超过 20 MB 就复制并截断，保留五份旧副本：
+
+```sh title="/data/nginx-proxy/rotate.sh"
+#!/bin/sh
+set -u
+max=$(( ${LOG_ROTATE_MB:-20} * 1024 * 1024 ))
+keep=${LOG_KEEP:-5}
+
+while true; do
+  for f in /logs/access.log /logs/error.log; do
+    size=$(stat -c %s "$f" 2>/dev/null || echo 0)
+    if [ "$size" -ge "$max" ]; then
+      i=$keep
+      rm -f "$f.$i"
+      while [ "$i" -gt 1 ]; do
+        j=$((i - 1))
+        [ -f "$f.$j" ] && mv "$f.$j" "$f.$i"
+        i=$j
+      done
+      cp -p "$f" "$f.1" && : > "$f"
+    fi
+  done
+  sleep 60
+done
+```
+
+复制再截断保持了同一个文件的打开状态，因此 NGINX 不需要信号来重新打开日志。在复制和截断之间写入的几行可能丢失，在这里可以接受。
+
+由于每行都是 JSON，标准工具就能回答大部分问题。例如查看最近的服务器错误：
+
+```sh
+jq -c 'select(.status >= 500)' /data/nginx-proxy/logs/access.log | tail -n 20
+```
+
+错误日志区分了几种常见故障：应用宕机是 `connect() failed`，Docker 不认识的名字是 `could not be resolved`，应用太慢是 `upstream timed out`。
+
+---
+
+## 变更与回滚
+
+直接编辑文件并不会改变 NGINX 提供的内容。NGINX 只在启动和重载时读取配置。
+
+这套配置中的更改会先复制出当前版本的一份副本，然后让 `current` 指向副本，NGINX 测试它，只有测试通过才重载：
+
+```sh
+cd /data/nginx-proxy/config
+
+old=$(readlink current)
+new=versions/$(date +%Y%m%d-%H%M%S)
+cp -a "$old" "$new"
+
+# ... the files in $new are edited here ...
+
+ln -sfn "$new" current
+if docker exec nginx-proxy nginx -t -c /etc/nginx/managed/current/nginx.conf; then
+  docker kill -s HUP nginx-proxy
+else
+  ln -sfn "$old" current
+fi
+```
+
+如果测试失败，`current` 退回旧版本。运行中的 NGINX 不受影响，因为它还没有重载。日后的回滚同理：让 `current` 指向更旧的版本，然后重载。
+
+重载期间，NGINX 用新配置启动新的 worker 进程，旧 worker 处理完已接受的请求后退出。参见 [NGINX 重载行为](https://nginx.org/en/docs/control.html)。
+
+<Callout type="info" title="为什么用链接而不是就地编辑">
+
+如果 NGINX 在活动文件被改到一半时重启，它会加载改了一半的更改。版本文件夹在 `current` 指向它之前就是完整的，上一个版本也仍保留在磁盘上。
+
+链接位于已挂载的 `config` 文件夹内部。替换挂载的文件夹本身，会让容器继续读旧的文件夹。
+
+</Callout>
+
+重载用的是 `docker kill -s HUP` 而不是 `nginx -s reload`。NGINX 使用自定义的配置路径和 PID 文件，不带相同 `-c` 选项的 `nginx -s reload` 会找错 PID 文件。
+
+重载不会应用 Docker 层面的更改。`compose.yaml` 中端口、网络、挂载或镜像的更改需要 `docker compose up -d` 来重建容器。
+
+---
+
+## 切换生产流量
+
+Traefik 和 NGINX 都需要服务器的 `443` 端口，因此无法在同一地址上同时运行。在停止 Traefik 之前，一切已准备就绪：
+
+- 为 Traefik 服务着的每个域名准备好域名文件，包括重定向、WebSocket 路由和 Coolify 面板。
+- 每个 Compose 应用都接入了 `nginx-proxy`，其他应用都在 Coolify 中设置了网络别名，并且全部重新部署。
+- 所有证书都已签发并存在于 `certs/certificates/`。
+- 配置已用 `docker compose run --rm nginx nginx -t -c /etc/nginx/managed/current/nginx.conf` 测试过。`docker compose run` 不发布端口，所以测试可以在 Traefik 仍占用 `443` 端口时进行。
+
+切换本身就是：停止 Traefik、在 Coolify 中选择 **Custom (None)**、启动 NGINX 项目。中断持续了约 20 秒。[自定义代理概览](/core/networking/proxy/custom/overview#切换到-customnone)涵盖了这次切换中 Coolify 侧的操作。
+
+首页能打开并不代表切换完成了。登录、上传、WebSocket、重定向，以及 Coolify 面板的实时更新和终端都需要逐一检查，然后再重新部署一次以确认 NGINX 找得到新容器。
+
+`/data/coolify/proxy` 中旧的 Traefik 配置留在服务器上作为退路：停掉 NGINX、在 Coolify 中选回 Traefik、再次启动代理即可。

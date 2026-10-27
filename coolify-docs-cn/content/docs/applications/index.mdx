@@ -1,0 +1,59 @@
+---
+title: 应用
+description: 用 Coolify 理解、部署、配置和运维应用。
+---
+
+import { BranchUp, Box2, Settings } from 'reicon-react';
+
+# 应用
+
+Coolify 把应用作为 Docker 容器部署到已接入的服务器上。可以从 Git 仓库、免 Git 直接填写的 Dockerfile 或现有 Docker 镜像创建 Application。基于 Git 的 Application 还能使用仓库中的 Docker Compose 定义。
+
+如果你刚接触自托管，或正从托管部署平台迁移过来，请从**认识 Application**开始。这一部分会讲清 Coolify 管理哪些基础设施、哪些仍由你负责，以及如何选择部署方式。
+
+<Callout type="info" title="在找一键应用？">
+
+以现成 Coolify 服务模板形式分发的软件，请使用 [Services](/services)。当你掌控源码、Docker 配置或镜像引用时，使用 Applications。
+
+</Callout>
+
+## 找到对应的章节
+
+| 如果你想 | 从这里开始 |
+| :--- | :--- |
+| 了解应用是什么、运行在哪里 | [什么是应用](/applications/what-is-an-application) |
+| 在 Git 源、免 Git Dockerfile、基于 Git 的 Docker Compose 和现有镜像之间做选择 | [选择部署方式](/applications/choose-deployment-method) |
+| 连接 GitHub、GitLab、Bitbucket、Gitea 或其他 Git 提供商 | [源码](/applications/sources/overview) |
+| 配置 Coolify 如何构建源码 | [构建](/applications/builds/overview) |
+| 管理域名、端口、变量、健康检查和高级设置 | [配置](/applications/configuration/overview) |
+| 查看部署、预览、滚动更新和回滚 | [部署](/applications/deployments/overview) |
+| 使用日志、终端、备份或资源操作 | [运维](/applications/operations/overview) |
+
+## 从第一个应用开始
+
+如果你之前没部署过应用，请按照[部署你的第一个应用](/deploy-your-first-app)操作。该指南使用 `nginx:alpine`，让你在接入源码之前先验证服务器、Docker、代理和自动生成的域名。
+
+完成首次部署后，根据你想运行的应用选择对应的路径。
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '认识 Application',
+      href: '/applications/what-is-an-application',
+      description: '了解应用运行在哪里，哪些责任从托管平台转移到你身上。',
+      icon: Box2,
+    },
+    {
+      title: '选择部署方式',
+      href: '/applications/choose-deployment-method',
+      description: '在 Git 源、免 Git Dockerfile、基于 Git 的 Docker Compose 和现有镜像之间选择。',
+      icon: BranchUp,
+    },
+    {
+      title: '配置应用',
+      href: '/applications/configuration/overview',
+      description: '查找构建、域名、变量、存储、健康检查和运维相关的设置。',
+      icon: Settings,
+    },
+  ]}
+/>

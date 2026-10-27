@@ -1,0 +1,496 @@
+---
+title: "负载参考"
+description: "Coolify webhook 通知事件标识符、JSON 字段、可选值和示例负载的参考。"
+---
+
+import {
+  Box2,
+  CheckCircle,
+  CloudCross2,
+  Database,
+  HardDrive,
+  NotifRemove,
+  Refresh23,
+  Route,
+  Server,
+  ServerCloud,
+  ServerUpdate,
+  Warning22,
+} from 'reicon-react';
+
+# Webhook 负载参考
+
+Coolify 以 JSON `POST` 请求把 webhook 通知发送到 **Notifications > Webhook** 下配置的端点。使用本参考前，请先完成 [Webhook 配置](/core/notifications/channels/webhook/setup)。
+
+请求使用 `Content-Type: application/json` 头。每个负载都包含以下字段：
+
+| 字段 | 类型 | 说明 |
+|-------|------|-------------|
+| `success` | boolean | 成功事件为 `true`；失败和告警为 `false`。 |
+| `event` | string | 机器可读的事件标识符。 |
+| `message` | string | 人类可读的事件摘要。 |
+
+在各分区中选择一个事件标识符，即可查看其请求体和条件字段。
+
+---
+
+## 应用部署与状态
+
+<Tabs id="webhook-application-events" items={['deployment_success', 'deployment_failed', 'status_changed', 'restart_limit_reached']}>
+<Tab value="deployment_success" icon={CheckCircle}>
+
+应用部署成功完成时发送。
+
+```json
+{
+  "success": true,
+  "event": "deployment_success",
+  "message": "New version successfully deployed",
+  "application_name": "my-app",
+  "application_uuid": "...",
+  "deployment_uuid": "...",
+  "deployment_url": "...",
+  "project": "...",
+  "environment": "...",
+  "fqdn": "..."
+}
+```
+
+
+<Callout type="info" title="Pull request 预览">
+
+Pull request 预览部署会附加以下字段：
+
+```json
+{
+  "pull_request_id": 123,
+  "preview_fqdn": "..."
+}
+```
+
+</Callout>
+
+应用配置了域名时会包含 `fqdn`。无论常规部署还是预览部署的负载，都可能缺少该字段。
+
+</Tab>
+<Tab value="deployment_failed" icon={Warning22}>
+
+应用部署失败时发送。
+
+```json
+{
+  "success": false,
+  "event": "deployment_failed",
+  "message": "Deployment failed",
+  "application_name": "my-app",
+  "application_uuid": "...",
+  "deployment_uuid": "...",
+  "deployment_url": "...",
+  "project": "...",
+  "environment": "...",
+  "fqdn": "..."
+}
+```
+
+结构与 `deployment_success` 相同，只是 `"success": false`。PR 预览字段同样适用。
+
+</Tab>
+<Tab value="status_changed" icon={Refresh23}>
+
+应用意外停止时发送（非手动停止）。
+
+```json
+{
+  "success": false,
+  "event": "status_changed",
+  "message": "Application stopped",
+  "application_name": "my-app",
+  "application_uuid": "...",
+  "project": "...",
+  "environment": "...",
+  "fqdn": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="restart_limit_reached" icon={NotifRemove}>
+
+应用达到自动重启上限后被 Coolify 停止时发送。此事件对应 **Resources > Restart limit reached** 通知选项。
+
+```json
+{
+  "success": false,
+  "event": "restart_limit_reached",
+  "message": "Restart limit reached",
+  "application_name": "my-app",
+  "application_uuid": "...",
+  "restart_count": 10,
+  "max_restart_count": 10,
+  "url": "...",
+  "project": "...",
+  "environment": "...",
+  "fqdn": "..."
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## 数据库备份
+
+<Tabs id="webhook-backup-events" items={['backup_success', 'backup_failed', 'backup_success_with_s3_warning']}>
+<Tab value="backup_success" icon={Database}>
+
+数据库备份成功完成时发送。
+
+```json
+{
+  "success": true,
+  "event": "backup_success",
+  "message": "Database backup successful",
+  "database_name": "...",
+  "database_uuid": "...",
+  "database_type": "...",
+  "frequency": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="backup_failed" icon={Warning22}>
+
+数据库备份失败时发送。
+
+```json
+{
+  "success": false,
+  "event": "backup_failed",
+  "message": "Database backup failed",
+  "database_name": "...",
+  "database_uuid": "...",
+  "database_type": "...",
+  "frequency": "...",
+  "error_output": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="backup_success_with_s3_warning" icon={CloudCross2}>
+
+本地备份成功但上传到 S3 失败时发送。
+
+```json
+{
+  "success": true,
+  "event": "backup_success_with_s3_warning",
+  "message": "Database backup succeeded locally, S3 upload failed",
+  "database_name": "...",
+  "database_uuid": "...",
+  "database_type": "...",
+  "frequency": "...",
+  "s3_error": "...",
+  "s3_storage_url": "...",
+  "url": "..."
+}
+```
+
+
+<Callout type="info">
+
+只有 S3 存储 URL 可用时才会包含 `s3_storage_url`。
+
+</Callout>
+
+</Tab>
+</Tabs>
+
+---
+
+## 计划任务
+
+<Tabs id="webhook-task-events" items={['task_success', 'task_failed']}>
+<Tab value="task_success" icon={CheckCircle}>
+
+计划任务成功完成时发送。
+
+```json
+{
+  "success": true,
+  "event": "task_success",
+  "message": "Scheduled task succeeded",
+  "task_name": "...",
+  "task_uuid": "...",
+  "output": "...",
+  "application_uuid": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="task_failed" icon={Warning22}>
+
+计划任务失败时发送。
+
+```json
+{
+  "success": false,
+  "event": "task_failed",
+  "message": "Scheduled task failed",
+  "task_name": "...",
+  "task_uuid": "...",
+  "output": "...",
+  "application_uuid": "...",
+  "url": "..."
+}
+```
+
+
+<Callout type="info">
+
+应用级任务会包含 `application_uuid`。服务级任务则包含 `service_uuid`。`url` 只在可用时出现。
+
+</Callout>
+
+</Tab>
+</Tabs>
+
+---
+
+## Docker 清理
+
+<Tabs id="webhook-cleanup-events" items={['docker_cleanup_success', 'docker_cleanup_failed']}>
+<Tab value="docker_cleanup_success" icon={CheckCircle}>
+
+Docker 清理任务成功完成时发送。
+
+```json
+{
+  "success": true,
+  "event": "docker_cleanup_success",
+  "message": "Docker cleanup job succeeded",
+  "server_name": "...",
+  "server_uuid": "...",
+  "cleanup_message": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="docker_cleanup_failed" icon={Warning22}>
+
+Docker 清理任务失败时发送。
+
+```json
+{
+  "success": false,
+  "event": "docker_cleanup_failed",
+  "message": "Docker cleanup job failed",
+  "server_name": "...",
+  "server_uuid": "...",
+  "error_message": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## 服务器事件
+
+<Tabs id="webhook-server-events" items={['server_reachable', 'server_unreachable', 'high_disk_usage', 'server_patch_check', 'server_patch_check_error', 'traefik_version_outdated']}>
+<Tab value="server_reachable" icon={Server}>
+
+此前不可达的服务器恢复可达时发送。
+
+```json
+{
+  "success": true,
+  "event": "server_reachable",
+  "message": "Server revived",
+  "server_name": "...",
+  "server_uuid": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="server_unreachable" icon={ServerCloud}>
+
+Coolify 无法连接到某台服务器时发送。
+
+```json
+{
+  "success": false,
+  "event": "server_unreachable",
+  "message": "Server unreachable",
+  "server_name": "...",
+  "server_uuid": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="high_disk_usage" icon={HardDrive}>
+
+服务器磁盘用量超过所配置的阈值时发送。
+
+```json
+{
+  "success": false,
+  "event": "high_disk_usage",
+  "message": "High disk usage detected",
+  "server_name": "...",
+  "server_uuid": "...",
+  "disk_usage": 85,
+  "threshold": 80,
+  "url": "..."
+}
+```
+
+`disk_usage` 和 `threshold` 是整数百分比。
+
+</Tab>
+<Tab value="server_patch_check" icon={ServerUpdate}>
+
+检测到服务器有可用的系统补丁时发送。
+
+```json
+{
+  "success": false,
+  "event": "server_patch_check",
+  "message": "Server patches available",
+  "server_name": "...",
+  "server_uuid": "...",
+  "total_updates": 12,
+  "os_id": "ubuntu",
+  "package_manager": "apt",
+  "updates": [...],
+  "critical_packages_count": 2,
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="server_patch_check_error" icon={Warning22}>
+
+Coolify 无法完成服务器补丁检查时发送。
+
+```json
+{
+  "success": false,
+  "event": "server_patch_check_error",
+  "message": "Failed to check patches",
+  "server_name": "...",
+  "server_uuid": "...",
+  "os_id": "ubuntu",
+  "package_manager": "apt",
+  "error": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="traefik_version_outdated" icon={Route}>
+
+一台或多台服务器运行的 Traefik 代理版本过旧时发送。
+
+```json
+{
+  "success": false,
+  "event": "traefik_version_outdated",
+  "message": "Traefik proxy outdated",
+  "affected_servers_count": 1,
+  "servers": [
+    {
+      "name": "...",
+      "uuid": "...",
+      "current_version": "v3.1.0",
+      "latest_version": "v3.1.4",
+      "update_type": "patch_update",
+      "upgrade_target": "v3.2",
+      "newer_branch_target": "...",
+      "newer_branch_latest": "..."
+    }
+  ]
+}
+```
+
+| 字段 | 说明 |
+|-------|-------------|
+| `update_type` | `patch_update` 或 `minor_upgrade` |
+| `upgrade_target` | 目标次版本——仅在 `minor_upgrade` 时出现 |
+| `newer_branch_target` / `newer_branch_latest` | 存在更新的大版本/次版本分支时出现 |
+
+</Tab>
+</Tabs>
+
+---
+
+## 容器事件
+
+<Tabs id="webhook-container-events" items={['container_stopped', 'container_restarted']}>
+<Tab value="container_stopped" icon={Box2}>
+
+容器意外停止时发送（非手动停止操作）。
+
+```json
+{
+  "success": false,
+  "event": "container_stopped",
+  "message": "Resource stopped unexpectedly",
+  "container_name": "...",
+  "server_name": "...",
+  "server_uuid": "...",
+  "url": "..."
+}
+```
+
+</Tab>
+<Tab value="container_restarted" icon={Refresh23}>
+
+容器被 Coolify 自动重启时发送。
+
+```json
+{
+  "success": true,
+  "event": "container_restarted",
+  "message": "Resource restarted automatically",
+  "container_name": "...",
+  "server_name": "...",
+  "server_uuid": "...",
+  "url": "..."
+}
+```
+
+
+<Callout type="info">
+
+`url` 只在可用时出现。
+
+</Callout>
+
+</Tab>
+</Tabs>
+
+---
+
+## 测试事件
+
+### `test`
+
+在 Coolify 控制台点击 **Send test** 时发送。
+
+```json
+{
+  "success": true,
+  "event": "test",
+  "message": "This is a test webhook notification from Coolify.",
+  "url": "..."
+}
+```

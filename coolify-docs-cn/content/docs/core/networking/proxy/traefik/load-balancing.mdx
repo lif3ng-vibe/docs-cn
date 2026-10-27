@@ -1,0 +1,102 @@
+---
+title: 负载均衡
+description: 把一个 Traefik 域名的流量路由到多个可达的上游服务器或容器。
+---
+
+# 负载均衡
+
+Traefik 负载均衡服务会把一个域名的请求分发到多个上游 URL。上游可以是同一台服务器上的容器，也可以是其他服务器上的服务，只要 `coolify-proxy` 容器能访问每个 URL。
+
+
+## 准备上游
+
+创建路由之前：
+
+- 至少部署两个健康的上游实例
+- 让每个上游在 Traefik 容器可达的地址和端口上可用
+- 把公网域名指向运行这个 Traefik 代理的服务器
+- 决定公网域名的 HTTPS 是否由 Traefik 终结
+- 移除使用相同主机名和路径的其他资源路由
+
+除非服务运行在 Traefik 容器内部，否则不要对上游使用 `localhost`。宿主机服务使用 `host.docker.internal:<port>`；共享 Docker 网络上的容器使用其容器名或服务名加内部端口。
+
+## 添加负载均衡路由
+
+打开 **Servers > your server > Proxy > Dynamic Configurations**，选择 **Add**，创建 `app-load-balancer.yaml`。
+
+<Tabs items={['HTTPS', '仅 HTTP']}>
+<Tab value="HTTPS">
+
+```yaml
+http:
+  middlewares:
+    load-balancer-https-redirect:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    app-load-balancer-http:
+      rule: 'Host(`app.example.com`)'
+      entryPoints:
+        - http
+      middlewares:
+        - load-balancer-https-redirect
+      service: app-load-balancer
+
+    app-load-balancer-https:
+      rule: 'Host(`app.example.com`)'
+      entryPoints:
+        - https
+      service: app-load-balancer
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    app-load-balancer:
+      loadBalancer:
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+        servers:
+          - url: 'http://192.168.1.23:3000'
+          - url: 'http://192.168.1.65:3000'
+```
+
+替换域名、健康检查路径和上游 URL。如果应用没有提供返回成功状态的端点，移除 `healthCheck`。
+
+</Tab>
+<Tab value="仅 HTTP">
+
+```yaml
+http:
+  routers:
+    app-load-balancer:
+      rule: 'Host(`app.example.com`)'
+      entryPoints:
+        - http
+      service: app-load-balancer
+
+  services:
+    app-load-balancer:
+      loadBalancer:
+        servers:
+          - url: 'http://192.168.1.23:3000'
+          - url: 'http://192.168.1.65:3000'
+```
+
+只有当 TLS 在流量到达 Traefik 之前已由另一个可信代理或负载均衡器终结时，才使用纯 HTTP 的公网路由。
+
+</Tab>
+</Tabs>
+
+## 验证流量分配
+
+保存动态配置，然后：
+
+1. 打开公网域名，确认它能响应。
+2. 检查 **Servers > your server > Proxy > Logs**，寻找连接或配置错误。
+3. 停掉一个上游，确认请求仍能经由健康的上游继续处理。
+4. 恢复该上游，确认它重新投入服务。
+
+如果每个请求都返回网关错误，请从代理所在网络逐一测试每个上游 URL，并确认服务监听在文档所述的内部端口上。

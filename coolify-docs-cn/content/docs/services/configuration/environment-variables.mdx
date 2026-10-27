@@ -1,0 +1,105 @@
+---
+title: 环境变量
+description: 配置 Service 的 Docker Compose 定义所引用的值。
+---
+
+# 环境变量
+
+Service 环境变量为 Coolify 渲染栈的 `.env` 文件和可部署 Compose 定义提供取值。
+
+打开 Service，然后选择**配置（Configuration）> 环境变量（Environment Variables）**。
+
+## 理解变量的来源
+
+| 来源 | 在哪里修改 |
+| :--- | :--- |
+| Compose 中的 `${VARIABLE}` 引用 | **环境变量（Environment Variables）** |
+| Compose `environment:` 条目中的硬编码值 | **Edit Compose File** |
+| `SERVICE_URL_*`、`SERVICE_FQDN_*` 或 `SERVICE_NAME_*` | 对应的域名或 Compose 服务；这些变量由 Coolify 管理。 |
+| 生成的凭据（如 `SERVICE_PASSWORD_*`） | **环境变量**，除非该字段被模板或你的角色锁定。 |
+| 共享变量引用 | 共享变量的作用域，以及引用它的 Service 变量。 |
+
+Coolify 会单独展示硬编码的 Compose 值，并把生成的 URL、FQDN 和服务名值从该列表中过滤出去。
+
+## 添加与编辑值
+
+使用**普通视图（Normal view）**一次管理一个变量。Service 变量可以是多行的或字面的：
+
+- 证书、私钥或带换行的配置值，请开启 **Is Multiline?**
+- 当 `$` 引用必须保持为文本而不被展开时，请开启 **Is Literal?**
+
+使用**开发者视图（Developer view）**可以按 `.env` 格式一次编辑多条条目：
+
+```dotenv
+APP_ENV=production
+DATABASE_URL=postgresql://app:password@database:5432/app
+LOG_LEVEL=info
+```
+
+保存开发者视图会创建、更新和删除受管变量，使其与文本保持一致。已锁定的机密和多行值无法在开发者视图中修改。
+
+## 必填值与默认值
+
+Compose 表达式决定初始的必填要求：
+
+| 语法 | Coolify 行为 |
+| :--- | :--- |
+| `${VARIABLE}` | 创建一个可编辑、允许为空的值。 |
+| `${VARIABLE:-default}` | 创建变量，并以回退值作为初始值。 |
+| `${VARIABLE:?}` | 把变量标记为必填，为空时阻止部署。 |
+
+例如：
+
+```yaml
+services:
+  app:
+    environment:
+      APP_SECRET: ${APP_SECRET:?}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+```
+
+保存 Compose 定义后，部署前请填入 **APP_SECRET**。
+
+## 跨组件复用值
+
+让每个需要该值的组件都引用同一个变量：
+
+```yaml
+services:
+  api:
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?}
+  worker:
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?}
+```
+
+Coolify 会为整个 Service 存储一个 **DATABASE_URL** 值，并把它写入 Docker Compose 使用的 `.env` 文件。
+
+当多个 Coolify 资源需要同一个值时，使用共享变量：
+
+```dotenv
+DATABASE_URL={{environment.DATABASE_URL}}
+```
+
+团队、项目、环境和服务器作用域详见[共享变量](/core/team/shared-variables)。
+
+## 外部机密管理器
+
+可以对接 Doppler、Infisical 或 HashiCorp Vault，并用 `{{vault.KEY}}` 引用远程值。数据源设置对整个 Service 栈生效。参见[使用机密管理器](/integrations/security/using-secret-managers)。
+
+## 生成的域名与凭据
+
+以 `SERVICE_` 开头的变量可以指示 Coolify 生成值。URL 和 FQDN 变量与匹配的 Compose 服务及其域名配置绑定。密码、用户名和随机值变量会随 Service 持久保存，供各组件共享。
+
+在重命名或删除这类变量之前，请先阅读[Docker Compose 生成的 Service 值](/services/configuration/docker-compose#生成的-service-值)。只要 Compose 定义仍在使用某个受管变量，Coolify 就会阻止删除它；请先从 Compose 中移除引用。
+
+## 应用并验证更改
+
+1. 保存变量。
+2. 确认所有必填值都已填写。
+3. 重启或部署 Service，让 Coolify 重写 `.env` 并重建容器。
+4. 检查部署输出和组件日志。
+5. 验证消费该值的行为是否符合预期。
+
+不要把生产机密粘贴到支持消息或截图里。即使团队成员能查看 Service，其对机密值的访问也可能受到限制。

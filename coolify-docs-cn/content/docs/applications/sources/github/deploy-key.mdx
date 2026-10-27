@@ -1,0 +1,156 @@
+---
+title: GitHub 部署密钥
+description: 让 Coolify 只读访问一个私有 GitHub 仓库。
+---
+
+# GitHub 部署密钥
+
+部署密钥让 Coolify 通过 SSH 只读访问一个私有 GitHub 仓库，无需使用个人访问令牌或账户级 SSH 密钥。
+
+以下情况适合使用部署密钥：
+
+- 希望 Coolify 只访问一个私有仓库
+- 无法在组织中安装 GitHub App
+- 更倾向于按仓库粒度的只读访问
+
+如果 Coolify 需要以集成方式访问多个仓库，请使用 [GitHub App](/applications/sources/github/app)。
+
+<Callout type="info" title="示例值">
+
+本指南使用以下取值：
+
+- **仓库所有者**：`ShadowArcanist`
+- **仓库名称**：`coolify-dev`
+- **密钥名称**：`Deploy Key Tutorial`
+- **SSH URL**：`git@github.com:ShadowArcanist/coolify-dev.git`
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 在 Coolify 中创建私钥
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/1.webp" alt="Coolify 中的 Private Keys 页面" />
+
+1. 打开 **Keys & Tokens**（密钥与令牌）。
+2. 选择 **Private Keys**（私钥）。
+3. 打开 **New private key**（新建私钥）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/2.webp" alt="Coolify 中的 SSH 密钥生成操作" />
+
+4. 选择 **Generate RSA**（生成 RSA）或 **Generate ED25519**（生成 ED25519）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/3.webp" alt="Coolify 中生成的 SSH 公钥" />
+
+5. Coolify 会立即保存生成的密钥。选择它的 **Edit**（编辑）图标。
+6. 复制 **Public key**（公钥）。
+
+<Callout type="success" title="也可以在 Coolify 之外生成密钥">
+
+运行：
+
+```bash
+ssh-keygen -t rsa -b 4096 -C "coolify-deploy-key"
+```
+
+把生成的私钥粘贴到 Coolify，并在 GitHub 上使用对应的 `.pub` 文件。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 在 GitHub 上添加部署密钥
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/4.webp" alt="GitHub 仓库设置中的 Deploy keys 页面" />
+
+1. 打开仓库设置。
+2. 选择 **Deploy keys**（部署密钥）。
+3. 选择 **Add deploy key**（添加部署密钥）。
+
+直达 URL 的格式如下：
+
+```txt
+https://github.com/OWNER/REPOSITORY/settings/keys
+```
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/5.webp" alt="GitHub 上的新建部署密钥表单" />
+
+4. 填写一个描述性标题。
+5. 粘贴从 Coolify 复制的公钥。
+6. 保持 **Allow write access**（允许写访问）关闭。
+7. 选择 **Add key**（添加密钥）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/6.webp" alt="GitHub 上保存好的只读部署密钥" />
+
+</Step>
+<Step>
+
+### 复制仓库 SSH URL
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/7.webp" alt="GitHub Code 菜单中的 SSH 克隆 URL" />
+
+1. 打开 GitHub 仓库。
+2. 选择 **Code > Local > SSH**。
+3. 复制 SSH URL，例如 `git@github.com:ShadowArcanist/coolify-dev.git`。
+
+</Step>
+<Step>
+
+### 创建资源
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/8.webp" alt="带 New 按钮的 Coolify 项目页面" />
+
+打开目标项目与环境，然后选择 **+ New**（新建）。
+
+</Step>
+<Step>
+
+### 选择部署密钥资源类型
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/9.webp" alt="Private Repository (with Deploy Key) 资源类型" />
+
+选择 **Private Repository (with Deploy Key)**（私有仓库（带部署密钥））。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+<Callout type="info" title="自托管 Coolify 自带 localhost">
+
+自托管安装自带一台 **localhost** 服务器。在没有其他部署服务器可用时，Coolify 会自动选中它。
+
+</Callout>
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/10.webp" alt="部署密钥应用的服务器选择" />
+
+选择应用将要运行的服务器。
+
+</Step>
+<Step>
+
+### 选择部署密钥
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/11.webp" alt="部署密钥应用的私钥选择" />
+
+选择在 Coolify 中创建的私钥。
+
+</Step>
+<Step>
+
+### 配置并部署
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/deploy-key/12.webp" alt="部署密钥应用的 SSH 仓库与构建配置" />
+
+1. 粘贴 GitHub SSH URL。
+2. 选择分支、**Build pack**（构建包）、内部端口及其他所需设置。
+3. 继续完成应用配置，然后部署。
+
+打开 **Deployment Logs**（部署日志），确认 Coolify 克隆的是该私有仓库与目标 commit。
+
+参照 [GitHub 自动部署](/applications/sources/github/auto-deploy)，通过仓库 webhook 部署新 commit。
+
+</Step>
+</Steps>

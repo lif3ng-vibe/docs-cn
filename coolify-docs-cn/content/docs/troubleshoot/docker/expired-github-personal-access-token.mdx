@@ -1,0 +1,39 @@
+---
+title: "GitHub 个人访问令牌（PAT）过期"
+description: "通过登出 ghcr.io 或续期过期的 GitHub 个人访问令牌（PAT），修复 Docker 部署中的 GitHub Container Registry 身份验证错误。"
+---
+# GitHub 个人访问令牌（PAT）过期
+
+如果你遇到以下错误，说明 Docker 无法通过 GitHub Container Registry（ghcr.io）的身份验证：
+
+## 错误
+
+```bash
+  Error response from daemon: Head "https://ghcr.io/v2/coollabsio/coolify-helper/manifests/1.0.1": unauthorized: authentication required
+```
+
+或
+
+```bash
+  Unable to find image 'ghcr.io/coollabsio/coolify-helper:latest' locally
+  docker: Error response from daemon: Head "https://ghcr.io/v2/coollabsio/coolify-helper/manifests/latest": denied: denied
+```
+
+## 解决方案
+你有两种选择：
+
+<Tabs items={['登出 ghcr.io', '续期 PAT']}>
+<Tab value="登出 ghcr.io">
+
+- 运行以下命令登出 GitHub Container Registry（ghcr.io）：
+  ```bash
+    docker logout ghcr.io
+  ```
+
+</Tab>
+<Tab value="续期 PAT">
+
+- 如果部署需要保持经过身份验证的访问，请续期你的 GitHub 个人访问令牌（PAT）。
+
+</Tab>
+</Tabs>

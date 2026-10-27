@@ -1,0 +1,223 @@
+---
+title: 自定义中间件
+description: 为 Coolify 资源添加可复用的 Traefik 请求中间件和重定向。
+---
+
+# 自定义中间件
+
+Traefik 中间件会在请求到达资源之前对其进行处理。常见用途包括速率限制、响应头、IP 白名单、重定向和外部身份验证。
+
+中间件的挂载方式取决于资源类型。标准应用可以使用生成的标签或手动编辑的标签；Docker Compose 应用和服务可以使用 Coolify 的 `coolify.traefik.middlewares` 简写。
+
+<Callout type="warning" title="尽可能让标签由 Coolify 托管">
+在 **Label management** 中选择 **Managed manually (edit labels yourself)** 后，Coolify 将不再重新生成应用标签。应用的所有路由、中间件、服务和证书标签都改由你负责。如果动态配置加一个小引用标签就能满足需求，优先采用那种方式。
+</Callout>
+
+## 定义可复用的中间件
+
+打开 **Servers > your server > Proxy > Dynamic Configurations**，创建一个诸如 `shared-middlewares.yaml` 的文件。从与你要做的请求处理相匹配的示例入手。可以在同一个文件中组合多个中间件定义。
+
+<Tabs id="traefik-middleware-example" items={['速率限制', '安全响应头', 'IP 白名单']}>
+<Tab value="速率限制">
+
+```yaml
+http:
+  middlewares:
+    app-rate-limit:
+      rateLimit:
+        average: 100
+        period: 1m
+        burst: 50
+```
+
+</Tab>
+<Tab value="安全响应头">
+
+```yaml
+http:
+  middlewares:
+    security-headers:
+      headers:
+        contentTypeNosniff: true
+        frameDeny: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+```
+
+</Tab>
+<Tab value="IP 白名单">
+
+```yaml
+http:
+  middlewares:
+    internal-only:
+      ipAllowList:
+        sourceRange:
+          - '192.168.1.0/24'
+          - '10.0.0.0/8'
+```
+
+</Tab>
+</Tabs>
+
+`@file` 后缀标识该中间件由 Traefik 的文件提供者加载。
+
+## 把中间件挂到资源上
+
+<Tabs items={['标准应用', 'Docker Compose 或服务']}>
+<Tab value="标准应用">
+
+打开应用的 **General** 页面并找到 **Container labels**。将 **Label management** 设为 **Managed manually (edit labels yourself)**，然后把中间件名称追加到已有的 HTTPS 路由标签上：
+
+```ini
+traefik.http.routers.https-0-<resource-id>.middlewares=gzip # [!code --][!code focus]
+traefik.http.routers.https-0-<resource-id>.middlewares=gzip,app-rate-limit@file,security-headers@file # [!code ++][!code focus]
+```
+
+保留所有已有的中间件名称。保存并重新部署应用。
+
+如果路由出问题了，选择 **Reset to defaults**，把 **Label management** 改回 **Managed by Coolify (auto-generated)**，重新部署后再试。
+
+</Tab>
+<Tab value="Docker Compose 或服务">
+
+把 Coolify 简写添加到接收该域名的服务上：
+
+```yaml
+services:
+  app:
+    image: nginx:alpine
+    labels: # [!code ++:2][!code focus:2]
+      - 'coolify.traefik.middlewares=app-rate-limit@file,security-headers@file'
+```
+
+Coolify 生成路由时会读取这个值，并把指定名称的中间件加入中间件链。保存并重新部署资源。
+
+</Tab>
+</Tabs>
+
+也可以用 Docker 标签定义中间件，例如：
+
+```yaml
+labels: # [!code ++:5][!code focus:5]
+  - 'traefik.http.middlewares.app-rate-limit.ratelimit.average=100'
+  - 'traefik.http.middlewares.app-rate-limit.ratelimit.period=1m'
+  - 'traefik.http.middlewares.app-rate-limit.ratelimit.burst=50'
+  - 'coolify.traefik.middlewares=app-rate-limit'
+```
+
+多个资源共享同一个中间件时，用基于文件的配置；中间件只属于一个 Compose 服务时，用标签。
+
+---
+
+## 重定向
+
+根据需要的结果选择对应重定向。
+
+<Tabs id="traefik-redirect-type" items={['www 与非 www', '一个域名到另一个域名']}>
+<Tab value="www 与非 www">
+
+标准应用在 **Domains** 中有内置的 **www redirect** 设置。添加两个主机名，保持标签由 Coolify 托管，然后选择以下之一：
+
+| www redirect | 结果 |
+|---|---|
+| **No redirect** | 两个已配置的主机名都保持可用。 |
+| **Redirect to www** | 非 `www` 主机名重定向到已配置的 `www` 主机名。 |
+| **Redirect to non-www** | `www` 主机名重定向到已配置的非 `www` 主机名。 |
+
+选择 **Save changes**；如果运行中的容器还没有拿到重新生成的标签，就重新部署。两个主机名也都需要有指向服务器的 DNS 记录。
+
+### Docker Compose 应用与服务
+
+把两个域名都添加到资源上，然后把重定向中间件标签加到接收它们的服务上。
+
+<Tabs id="traefik-compose-www-redirect" items={['Redirect to www', 'Redirect to non-www']}>
+<Tab value="Redirect to www">
+
+```yaml
+labels: # [!code ++:5][!code focus:5]
+  - 'traefik.http.middlewares.example-redirect.redirectregex.regex=^(http|https)://(?:www\.)?(.+)'
+  - 'traefik.http.middlewares.example-redirect.redirectregex.replacement=${1}://www.${2}'
+  - 'traefik.http.middlewares.example-redirect.redirectregex.permanent=true'
+  - 'coolify.traefik.middlewares=example-redirect'
+```
+
+</Tab>
+<Tab value="Redirect to non-www">
+
+```yaml
+labels: # [!code ++:5][!code focus:5]
+  - 'traefik.http.middlewares.example-redirect.redirectregex.regex=^(http|https)://www\.(.+)'
+  - 'traefik.http.middlewares.example-redirect.redirectregex.replacement=${1}://${2}'
+  - 'traefik.http.middlewares.example-redirect.redirectregex.permanent=true'
+  - 'coolify.traefik.middlewares=example-redirect'
+```
+
+</Tab>
+</Tabs>
+
+这些示例假设 **Escape special characters in labels?** 保持开启。如果你关闭了它，就要在源 Compose 文件中把每个 `$` 写成 `$$`。
+
+</Tab>
+<Tab value="一个域名到另一个域名">
+
+创建一个保留请求路径的动态中间件：
+
+```yaml
+http:
+  middlewares:
+    move-domain:
+      redirectRegex:
+        regex: '^https?://source\.example\.com/(.*)'
+        replacement: 'https://target.example.com/${1}'
+        permanent: true
+```
+
+把 `https://source.example.com` 配置为资源上的域名，让 Traefik 创建源路由和证书，然后用上文适合该资源的方式挂载 `move-domain@file`。
+
+<Callout type="info" title="测试期间使用临时重定向">
+在源主机名、证书、路径处理和目标都确认正确之前，保持 `permanent: false`。浏览器和搜索引擎可能缓存永久重定向。
+</Callout>
+
+</Tab>
+</Tabs>
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="Traefik 找不到中间件">
+
+确认中间件名称和提供者后缀完全匹配。文件提供者的中间件使用 `@file`。
+
+查看 **Servers > your server > Proxy > Logs**，寻找中间件缺失或 YAML 错误。
+
+</Accordion>
+
+<Accordion title="中间件已定义但没有改变请求">
+
+确认中间件已挂到预期的路由上。只定义中间件而不把它加到路由上，是不会处理流量的。
+
+</Accordion>
+
+<Accordion title="已有中间件失效">
+
+编辑生成的路由链时，保留 `gzip` 等已有中间件。追加新中间件，而不是替换整个值。
+
+</Accordion>
+
+<Accordion title="含美元符号的标签无效">
+
+Coolify 默认开启 **Escape special characters in labels?**。该设置开启时，在源 Compose 文件中每个美元符号只写一次。例如：
+
+```yaml
+- 'traefik.http.middlewares.example-redirect.redirectregex.replacement=${1}://${2}'
+```
+
+Coolify 会在可部署的 Compose 文件中把每个 `$` 写成 `$$`，让 Docker Compose 把单个 `$` 传给 Traefik。部署后，`docker inspect` 显示的替换值应是 `${1}://${2}`。
+
+如果你关闭了 **Escape special characters in labels?**，就要自己转义每个美元符号，在源 Compose 文件中写成 `$$`。
+
+</Accordion>
+
+</Accordions>

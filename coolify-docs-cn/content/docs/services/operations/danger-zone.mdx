@@ -1,0 +1,76 @@
+---
+title: 危险区
+description: 永久删除一个 Service，并选择 Coolify 一并移除哪些相关 Docker 资源。
+---
+
+# 删除 Service
+
+打开 Service，选择**配置（Configuration）> 危险区（Danger Zone）**，即可永久移除该 Service 资源。Coolify 会在删除任务中停止并移除其组件容器。
+
+删除操作无法从 Coolify 撤销。
+
+<Callout type="danger" title="删除前备份每个有状态组件">
+
+删除 Service 的卷会连带删除其中数据。请用数据库引擎兼容的方式备份数据库，备份必需文件，并在计划删除的资源之外测试每条恢复路径。
+
+</Callout>
+
+## 删除之前
+
+- 确认没有应用、用户或外部自动化仍在依赖该 Service。
+- 记录重建它所需的源 Compose 定义、环境值、域名、镜像、挂载、计划任务和外部依赖。
+- 导出或备份每个数据库和有状态组件。
+- 若 Service 必须保持可用，先迁移生产流量。
+- 确认你有删除该资源的权限。
+- 逐一复查每个可选删除动作，不要默认接受。
+
+## 删除动作
+
+确认弹窗默认勾选以下动作：
+
+| 动作 | 效果 |
+| :--- | :--- |
+| **Permanently delete all volumes associated with this resource.** | 删除挂在 Service 组件上的 Docker 卷及其存储的数据。 |
+| **Permanently delete all non-predefined networks associated with this resource.** | 删除非预定义共享网络的 Service 网络。 |
+| **Permanently delete all configuration files from the server.** | 从服务器上删除生成的 Service 配置目录。 |
+| **Run Docker Cleanup (remove unused images and builder cache).** | 在 Service 所在服务器上排队执行 Docker 清理。 |
+
+即使清空可选的 Docker 资源动作，Service 记录、组件记录、计划任务、标签和容器仍会被移除。
+
+清空卷动作会保留选中的 Docker 卷；但它不会保留 Coolify Service，也不会自动把这些卷重新接给未来的资源。如果你打算之后手动找回，请在删除前记下它们的实际 Docker 名称。
+
+## 确认删除
+
+1. 选择 **Delete**（删除）。
+2. 复查已勾选的动作。
+3. 在 Coolify 要求时输入确切的 Service 名称。
+4. 在适用密码确认时输入你的 Coolify 账户密码。
+5. 确认删除。
+
+删除任务在后台停止容器并移除所选资源，同时 Coolify 会返回项目环境页面。
+
+## 验证删除
+
+确认：
+
+1. Service 不再出现在项目环境中。
+2. 其应用与数据库容器不再运行于服务器上。
+3. 你特意保留的卷仍以其记录的 Docker 名称存在。
+4. 应继续使用的域名现在路由到替代资源。
+5. 应用和自动化不再使用已删除的数据库、队列、缓存或 webhook 端点。
+
+Coolify 不会删除你 DNS 服务商处的 DNS 记录。过时记录请单独删除或更新。
+
+## 强制删除卡住的 Service
+
+如果某个 Service 无法从仪表盘删除，请通过 SSH 连接到运行 Coolify 的服务器并执行：
+
+```sh
+docker exec -it coolify php artisan services:delete
+```
+
+按提示选择要删除的 Service。仅当上述仪表盘删除无法移除 Service 时才使用此方式。
+
+## 重建已删除的 Service
+
+Coolify 无法从危险区恢复已删除的 Service 记录。请新建一个一键或用户自定义 Service，复查其生成值，恢复每个持久化依赖，先用临时域名部署，再接回生产流量。

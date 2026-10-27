@@ -1,0 +1,87 @@
+---
+title: 计划任务
+description: 在应用容器内运行周期性命令并验证其执行。
+---
+
+import { CalendarAdd, History, Settings } from 'reicon-react';
+
+# 运行应用计划任务
+
+计划任务让 Coolify 可以按周期在应用容器内运行命令。框架调度器、队列维护、清理命令、数据导入，以及其他属于已部署应用内部的工作，都适合用它来跑。
+
+Coolify 在运行中容器的 shell 里执行该命令。计划使用应用部署服务器所配置的时区。
+
+<Callout type="info" title="计划任务详细参考">
+
+本页介绍应用侧的工作流。任务管理、执行历史、输出下载、cron 行为和故障排查的更多细节，见 [Core 部分的 Scheduled Tasks 章节](/core/automation/scheduled-tasks/overview)。
+
+</Callout>
+
+## 打开 Scheduled Tasks
+
+<Steps>
+<Step>
+
+### 打开应用页面
+
+打开应用，选择 **Scheduled Tasks**。
+
+</Step>
+<Step>
+
+### 选择详细指南
+
+选择 **+ Add** 新建任务，或选择已有任务进行管理。逐字段的完整操作步骤请参照 Core 指南。
+
+</Step>
+<Step>
+
+### 运行第一次执行
+
+在应用运行期间打开该任务，选择 **Execute now**（立即执行）。
+
+在 **Recent executions** 下打开新记录，确认其成功结束，且输出或效果与命令预期一致。
+
+</Step>
+</Steps>
+
+## 应用侧的特定行为
+
+计划时间到达时，Coolify 会找到应用的运行容器，并通过 `sh` 执行已保存的命令。
+
+在按详细指南操作之前，先确认这些应用侧的特定要求：
+
+- 会改动或删除数据的命令，先通过应用的 **Terminal** 测试。
+- 命令按容器内的执行形式填写，不要包含 `docker exec`。
+- 应用有多个容器时，设置 **Container**。
+- 计划使用应用部署服务器所配置的时区。
+- **Timeout (seconds)** 接受 `60` 到 `36000`，默认 `300`。
+
+出现以下情况时执行会失败：应用没有运行中的容器、找不到配置的容器、命令出错退出，或命令超出超时时间。
+
+Coolify 会在 **Recent executions** 下记录状态、耗时和捕获的输出。命令成功退出并不代表它产生了预期的应用效果，必要时请核查受影响的记录、文件或外部系统。
+
+## 使用详细的 Core 指南
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '创建任务',
+      href: '/core/automation/scheduled-tasks/create-a-task',
+      description: '逐项了解字段、可填值和创建步骤。',
+      icon: CalendarAdd,
+    },
+    {
+      title: '管理任务',
+      href: '/core/automation/scheduled-tasks/manage-tasks',
+      description: '更新、启用、禁用、运行或删除任务。',
+      icon: Settings,
+    },
+    {
+      title: '查看执行历史',
+      href: '/core/automation/scheduled-tasks/execution-history',
+      description: '查看状态、耗时、命令输出和日志。',
+      icon: History,
+    },
+  ]}
+/>

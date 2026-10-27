@@ -1,0 +1,97 @@
+---
+title: 绑定挂载
+description: 把 Coolify 部署服务器上的特定目录映射进应用或数据库容器。
+---
+
+# 绑定挂载（bind mount）
+
+绑定挂载把部署服务器上的一个目录直接映射到容器内的某个路径。
+
+**Source Path** 是服务器上的目录，**Destination Path** 是同一批文件在容器内出现的位置。在任一位置所做的修改都作用于同一份数据。
+
+## 何时使用绑定挂载
+
+在以下情况下使用绑定挂载：
+
+- 需要一个可预期的服务器路径，供备份或外部工具使用
+- 需要把一个已存在的目录挂载进容器
+- 需要通过 SSH 直接访问文件
+- 需要与同一台服务器上另一个经过仔细协调的进程共享目录
+
+如果不需要特定的服务器路径，请使用[卷挂载（volume mount）](/core/persistent-storage/storage-mounts/volume-mounts)。由 Docker 管理的卷能降低选到不安全路径或服务器权限不当的风险。
+
+## 绑定挂载选项
+
+Coolify 会显示已有的基于绑定的卷记录，并为标准应用和独立数据库提供目录挂载：
+
+| 工作流 | 字段 | <span className="whitespace-nowrap">仪表盘位置</span> | 行为 |
+| :--- | :--- | :--- | :--- |
+| 带 **Source Path** 的既有 **Volume Mount** | **Name**、**Source Path**、**Destination Path** | **Volumes** | 保留既有源目录；Source Path 为只读 |
+| **Directory Mount** | **Source Directory**、**Destination Directory** | **Directories** | 按需创建源目录，并由 Coolify 单独管理该目录记录 |
+
+新建目录型绑定挂载请使用 **Directory Mount**。新建的 **Volume Mount** 会创建命名 Docker 卷，不再接受主机源路径。
+
+## 添加绑定挂载
+
+本例把部署服务器上的 `/srv/my-app/uploads` 映射到容器内的 `/app/uploads`。
+
+1. 通过 SSH 连接到部署服务器，创建 `/srv/my-app/uploads`。
+2. 按应用镜像运行所用的用户设置其属主和权限。
+3. 在 Coolify 中打开该应用或数据库。
+4. 选择 **Configuration** > **Persistent Storage**。
+5. 选择 **Add** > **Directory Mount**。
+6. 在 **Source Directory** 中填写 `/srv/my-app/uploads`。
+7. 仅当应用会把上传内容写入该位置时，才在 **Destination Directory** 中填写 `/app/uploads`。
+8. 选择 **Add**，然后重新部署该资源。
+
+通过应用上传或创建一个测试文件，确认它出现在部署服务器的 `/srv/my-app/uploads` 下。再重新部署一次，确认应用仍能读取该文件。
+
+<Callout type="warning" title="选用专用的源目录">
+不要把 `/`、`/etc`、`/var/lib/docker`、`/data/coolify` 或其他大范围系统目录挂载进应用容器。请使用一个只包含该资源所需文件的专用目录。
+</Callout>
+
+## 准备权限
+
+Docker 不会在服务器与容器之间转换文件属主。容器内以用户 ID `1000` 运行的进程，在服务器上同样以用户 ID `1000` 访问源文件。
+
+查阅镜像文档确认其运行时用户，然后据此设置源目录的属主和权限。如果应用报出 `Permission denied`，请先检查服务器上的数字属主和容器内运行的用户，而不是直接把目录改成全局可写。
+
+## 在预览部署中使用绑定挂载
+
+对于应用的预览部署，Coolify 默认会在绑定挂载源路径后追加 `-pr-N`。编号为 `12` 的拉取请求因此会使用 `/srv/my-app/uploads-pr-12` 而不是 `/srv/my-app/uploads`。
+
+保持 **Add suffix for PR deployments** 处于启用状态，即可隔离预览数据。只有当源内容是只读配置、或应用本身即为并发访问同一批文件而设计时，才应禁用它。
+
+## 在 Docker Compose 中定义绑定挂载
+
+对于 Docker Compose 应用或一键服务，在 Compose 文件中定义服务器路径：
+
+```yaml
+services:
+  app:
+    image: example/app:latest
+    volumes:
+      - /srv/my-app/uploads:/app/uploads
+```
+
+部署前请先在部署服务器上以正确的权限创建 `/srv/my-app/uploads`。Coolify 会解析该挂载并显示在 **Persistent Storage** 下，但 Compose 文件始终是唯一事实来源。
+
+关于仓库相对路径的目录，请阅读 [Docker Compose 存储指南](/applications/builds/docker-compose#存储)。Coolify 会把受支持的相对源解析为该资源在部署服务器上的配置目录。
+
+## 备份和迁移绑定挂载的数据
+
+对于应用，Coolify 可以对本页两种绑定挂载工作流（带 **Source Path** 的既有 **Volume Mount** 和 **Directory Mount**）安排文件级归档。阅读[存储挂载备份](/core/persistent-storage/storage-mounts/backups)了解如何配置本地归档、可选的 S3 副本和保留策略。
+
+如需手动备份或迁移服务器，直接复制部署服务器上的源目录即可。容器内的目标路径只是这同一批文件的另一视角。
+
+将该资源迁移到另一台服务器时：
+
+1. 暂停应用的写入。
+2. 把源目录复制到目标服务器上的相同路径，或将挂载更新为新的绝对路径。
+3. 保留所需的数字属主和权限。
+4. 在目标服务器上部署该资源。
+5. 验证应用能读写挂载的数据。
+
+<Callout type="error" title="删除 Directory Mount 可能删除其内容">
+Directory Mount 的删除对话框可能会从部署服务器上移除源目录及其全部内容。删除挂载前请先备份该目录，并逐条阅读每个确认选项。如果该目录设有存储备份计划，必须先删除该计划及其归档，Coolify 才会允许你删除挂载。
+</Callout>

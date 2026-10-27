@@ -1,0 +1,222 @@
+---
+title: 重置 2FA
+description: 在服务器终端清除账户的双因素认证配置，找回自托管 Coolify 账户的访问权限。
+---
+
+import { ShieldSecurity2, UserTick2 } from 'reicon-react';
+
+# 重置 2FA
+
+当账户无法通过 2FA 验证、又没有可用的恢复码时，可以在服务器终端重置双因素认证（2FA）。重置会移除该账户当前的身份验证器配置和恢复码，但不会修改账户密码。
+
+<Callout type="warning" title="仅限自托管实例">
+Coolify Cloud 用户无法访问本流程所需的容器。如果无法通过 Coolify Cloud 账户的 2FA 验证，请[联系 Coolify 团队](/support)。
+</Callout>
+
+## 选择合适的恢复方式
+
+按可用性依次尝试以下方式：
+
+1. 输入账户身份验证器应用中当前生成的验证码。
+2. 输入配置 2FA 时保存的某个恢复码。
+3. 如果应用中选择的账户正确、但验证码仍被拒绝，请先检查 [2FA 时间同步](/troubleshoot/server/two-factor-stopped-working)，再考虑清除配置。
+4. 当身份验证器和恢复码都不可用时，使用下文的终端流程。
+
+## 重置 2FA 之前
+
+请确认你已具备以下条件：
+
+- 可以 SSH 访问运行自托管 Coolify 实例的服务器
+- 在该服务器上运行 Docker 命令的权限
+- 受影响账户的邮箱地址（重置 root 账户时除外）
+- 重置后登录验证所需的账户密码
+
+如果你要重置 root 账户但不知道其密码，请在验证访问之前先按照[重置 Root 密码](/core/backup-and-recovery/reset-root-password)操作。
+
+<Callout type="warning" title="当前 2FA 配置将被移除">
+本流程会清除所选账户的身份验证器密钥和恢复码。该账户原有的身份验证器条目和所有恢复码都将失效。恢复访问后请重新配置 2FA。
+</Callout>
+
+## 在服务器上重置 2FA
+
+<Steps>
+<Step>
+
+### 连接到 Coolify 服务器
+
+通过 SSH 连接到运行 Coolify 控制平面的机器：
+
+```sh
+ssh root@<server-ip>
+```
+
+把 `<server-ip>` 替换为服务器的 IP 地址。如果你以非 root 用户连接，该账户必须有运行 Docker 命令的权限。如果你的服务器要求，可在下文的 Docker 命令前加上 `sudo`。
+
+</Step>
+<Step>
+
+### 确认 Coolify 容器正在运行
+
+```sh
+docker inspect --format '{{.State.Status}}' coolify
+```
+
+该命令应输出 `running`。如果不是，请先[更新或修复 Coolify 安装](/core/instance-management/update)再继续。
+
+</Step>
+<Step>
+
+### 打开 Laravel Tinker
+
+在 `coolify` 容器内运行 Tinker：
+
+```sh
+docker exec -it coolify php artisan tinker
+```
+
+等待出现 `>` 提示符后，再输入后续步骤中的 PHP 命令。
+
+</Step>
+<Step>
+
+### 选择受影响的账户
+
+<Tabs id="reset-2fa-account" items={['Root 账户', '其他账户']}>
+<Tab value="Root 账户" icon={ShieldSecurity2}>
+
+按用户 ID `0` 选择 root 账户：
+
+```php
+$user = App\Models\User::find(0);
+```
+
+</Tab>
+<Tab value="其他账户" icon={UserTick2}>
+
+把 `user@example.com` 替换为该账户的完整邮箱地址：
+
+```php
+$user = App\Models\User::where('email', strtolower('user@example.com'))->first();
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 核对所选账户
+
+```php
+$user?->only(['id', 'email', 'two_factor_confirmed_at']);
+```
+
+Tinker 应输出预期的用户 ID 和邮箱地址。启用 2FA 时，`two_factor_confirmed_at` 通常包含一个时间戳。
+
+如果 Tinker 输出 `null` 或显示了其他账户，请不要继续。先选择正确的账户。
+
+</Step>
+<Step>
+
+### 清除 2FA 配置
+
+```php
+$user->two_factor_secret = null;
+$user->two_factor_recovery_codes = null;
+$user->two_factor_confirmed_at = null;
+$user->save();
+```
+
+最后一条命令应返回 `true`。这些赋值只更新所选账户的 2FA 字段。
+
+</Step>
+<Step>
+
+### 验证数据库更新
+
+```php
+$user->refresh()->only([
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'two_factor_confirmed_at',
+]);
+```
+
+Tinker 应报告这三个字段均为 `null`：
+
+```console
+[
+  "two_factor_secret" => null,
+  "two_factor_recovery_codes" => null,
+  "two_factor_confirmed_at" => null,
+]
+```
+
+退出 Tinker：
+
+```php
+exit;
+```
+
+此次更新后 Coolify 无需重启。已部署的应用、数据库和服务不受影响。
+
+</Step>
+</Steps>
+
+## 验证账户访问
+
+在浏览器的隐私窗口中打开 Coolify 登录页，使用受影响账户的邮箱地址和密码登录。
+
+你应该能在不出现 2FA 验证的情况下登录。如果该账户是 root 账户且其邮箱地址也不可用，请按照[修改 Root 邮箱](/core/backup-and-recovery/change-root-email)操作。
+
+## 重新配置 2FA
+
+登录之后：
+
+1. 打开 **Profile > General**。
+2. 在 **Two-factor Authentication** 下选择 **Configure**。
+3. 把新配置添加到你的身份验证器应用，并用当前验证码完成验证。
+4. 把新的恢复码保存在 Coolify 服务器之外的安全位置。
+5. 再次通过隐私窗口登录，确认新的身份验证器验证码可用。
+
+重置过程中清除的身份验证器密钥和恢复码无法重新使用。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="账户查询返回 null">
+
+对于 root 账户，确认你使用的是 `App\Models\User::find(0)`。对于其他账户，检查完整邮箱地址，并用小写邮箱重新执行查询。
+
+在 `$user?->only(...)` 输出你要重置的账户之前，不要清除任何字段。
+
+</Accordion>
+
+<Accordion title="保存 2FA 重置失败">
+
+退出 Tinker，确认内部数据库容器正在运行：
+
+```sh
+docker inspect --format '{{.State.Status}}' coolify-db
+```
+
+该命令应输出 `running`。如果数据库正在运行，请重新打开 Tinker，重新选择账户并再次执行更新。如果保存仍然失败，请保留错误输出并[联系支持](/support)。
+
+</Accordion>
+
+<Accordion title="登录页仍要求输入 2FA 验证码">
+
+重新打开 Tinker，选择同一个账户，再次执行数据库验证命令。三个 2FA 字段必须都报告 `null`。
+
+然后打开一个新的隐私窗口重新登录。已经显示 2FA 验证的页面可能仍停留在上一次登录尝试的状态。
+
+</Accordion>
+
+<Accordion title="2FA 重置后密码被拒绝">
+
+重置 2FA 不会修改账户密码。root 账户请按照[重置 Root 密码](/core/backup-and-recovery/reset-root-password)操作；其他账户在实例可以发送事务邮件时，可使用 **Forgot Password** 功能。
+
+</Accordion>
+
+</Accordions>

@@ -1,0 +1,223 @@
+---
+title: New Relic
+description: 把 Coolify 应用、数据库和服务容器日志发送到 New Relic Logs。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Globe3,
+  Server,
+  Settings,
+} from 'reicon-react';
+
+# 把日志发送到 New Relic
+
+Coolify 内置的 New Relic 日志转发会把已开启转发的资源日志发送到 New Relic Log API。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+复制一个采集许可密钥（ingest license key），选择你的 New Relic 区域对应的 Log API 端点，把这两个值保存到服务器的**日志转发（Log Drains）**页面，然后按照[为资源启用日志转发](/core/observability/log-drains/overview#为资源启用日志转发)中的说明配置**日志转发（Log drain）**，并重启每一个需要转发的资源。
+
+</CoolCallout>
+
+---
+
+## 开始之前
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '采集许可密钥',
+      description: '使用 New Relic 的 ingest license key，而不是用户密钥或其他类型的 API 密钥。',
+      icon: Settings,
+    },
+    {
+      title: '区域端点',
+      description: '选择账户存储数据所在区域的完整 HTTPS Log API URL。',
+      icon: Globe3,
+    },
+    {
+      title: '已验证的服务器',
+      description: '使用运行这些资源的服务器，并确认它能在 443 端口访问所选端点。',
+      icon: Server,
+    },
+  ]}
+/>
+
+创建或复制一个 New Relic [ingest license key](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/#ingest-license-key)。**License key（许可密钥）**字段接受字母、数字、下划线、连字符和句点。
+
+---
+
+## 选择端点
+
+<CoolCompare
+  id="new-relic-log-endpoints"
+  className="not-prose"
+  icon={Globe3}
+  title="New Relic Log API 端点"
+  description="使用你的 New Relic 账户存储数据所在区域的端点。"
+>
+<CoolCompareColumn
+  title="United States"
+  code="https://log-api.newrelic.com/log/v1"
+  items={[
+    '适用于美国数据区域的账户',
+    '保留完整的 HTTPS URL，包括 `/log/v1`',
+  ]}
+/>
+<CoolCompareColumn
+  title="European Union"
+  code="https://log-api.eu.newrelic.com/log/v1"
+  items={[
+    '适用于欧盟数据区域的账户',
+    '保留完整的 HTTPS URL，包括 `/log/v1`',
+  ]}
+/>
+</CoolCompare>
+
+Coolify 要求 **Endpoint（端点）**必须是有效 URL。
+
+---
+
+## 在 Coolify 中配置 New Relic
+
+<CoolFlow
+  id="configure-new-relic-log-drain"
+  icon={Globe3}
+  title="把服务器连接到 New Relic"
+  description="编辑各字段时保持转发处于禁用状态，保存值之后再启用。"
+  steps={[
+    '打开服务器日志转发页面',
+    '输入许可密钥',
+    '输入区域端点',
+    '保存 New Relic 设置',
+    '启用转发',
+  ]}
+  list={[
+    <>打开<strong>服务器（Servers）</strong>，选择运行这些资源的服务器，然后打开<strong>日志转发（Log Drains）</strong>。</>,
+    <>在<strong>New Relic</strong>区块中，保持<strong>状态（Status）</strong>为<strong>禁用（Disabled）</strong>，并把 ingest license key 粘贴到 <strong>License key</strong> 中。</>,
+    <>在 <strong>Endpoint</strong> 中输入所在区域的 Log API URL。</>,
+    <>在 New Relic 区块中选择<strong>保存更改（Save changes）</strong>。</>,
+    <>把<strong>状态</strong>设为<strong>启用（Enabled）</strong>。Coolify 会启动该服务器的 <code>coolify-log-drain</code> 容器。</>,
+  ]}
+  endnote="同一时间只能启用一个服务器级日志转发。启用 New Relic 之前，请先禁用其他已启用的目标。"
+/>
+
+<CoolCallout type="info" title="启用转发不等于完成接入测试">
+
+Coolify 只检查必填字段的格式并启动 Fluent Bit。它不会验证许可密钥，也不会向 New Relic 端点发送测试事件。
+
+</CoolCallout>
+
+---
+
+## 为资源启用
+
+按照[为资源启用日志转发](/core/observability/log-drains/overview#为资源启用日志转发)操作，然后重启或重新部署该资源。
+
+内置的 New Relic 配置每五秒刷新一次记录。
+
+---
+
+## 识别日志
+
+内置配置会添加一些字段，帮助你筛选记录。
+
+<CoolCompare
+  id="new-relic-log-fields"
+  className="not-prose"
+  icon={Box2}
+  title="内置日志标识"
+  description="服务器标签是自动添加的。资源标签只有在资源提供了 COOLIFY_APP_NAME 时才会添加。"
+>
+<CoolCompareColumn
+  title="Server label"
+  code="coolify.server_name"
+  items={[
+    '自动添加到每条记录',
+    '标识转发这条记录的 Coolify 服务器',
+  ]}
+/>
+<CoolCompareColumn
+  title="Resource label"
+  code="coolify.app_name"
+  items={[
+    '由资源环境变量 `COOLIFY_APP_NAME` 生成',
+    '保存变量并重启资源后可用',
+  ]}
+/>
+</CoolCompare>
+
+例如，给资源添加这个环境变量：
+
+```dotenv
+COOLIFY_APP_NAME=worker
+```
+
+内置过滤器会排除消息中包含 `127.0.0.1` 的日志记录，因此本地健康检查请求可能不会出现在 New Relic 中。
+
+---
+
+## 验证送达
+
+1. 让资源向 `stdout` 或 `stderr` 写入一条可识别的消息。
+2. 等待至少五秒。
+3. 打开 New Relic Logs，在近期事件中搜索该消息、`coolify.server_name` 或 `coolify.app_name`。
+
+必须在 New Relic 中进行验证，因为 Coolify 不会执行服务商连接测试。
+
+---
+
+## 更新端点或许可密钥
+
+1. 在 New Relic 区块中把**状态**设为**禁用**。
+2. 更新 **License key** 或 **Endpoint**。
+3. 选择**保存更改**。
+4. 再次把**状态**设为**启用**。
+5. 生成一条新的资源日志，确认它已到达 New Relic。
+
+---
+
+## 排查日志缺失
+
+1. 确认 New Relic 是已启用的服务器级转发，且资源的**日志转发（Log drain）**设置已打开。
+2. 确认你在启用该设置之后重启或重新部署过资源。
+3. 确认密钥是与端点同一 New Relic 账户、同一区域的 ingest license key。
+4. 确认服务器能在 `443` 端口访问所选端点。
+5. 检查资源服务器上的 Fluent Bit 容器：
+
+```sh
+docker ps --filter name=coolify-log-drain
+docker logs --tail 100 coolify-log-drain
+```
+
+身份验证、端点和网络错误都会出现在 Fluent Bit 的输出中。
+
+---
+
+## 继续了解日志转发
+
+<CoolNextSteps
+  cards={[
+    {
+      title: '日志转发概览',
+      href: '/core/observability/log-drains/overview',
+      description: '回顾服务器级流水线、资源配置与送达检查。',
+      icon: Server,
+    },
+    {
+      title: '使用 Axiom',
+      href: '/core/observability/log-drains/axiom',
+      description: '把已开启转发的工作负载日志发送到已有的 Axiom 数据集。',
+      icon: Globe3,
+    },
+    {
+      title: '使用自定义 Fluent Bit',
+      href: '/core/observability/log-drains/custom-fluent-bit',
+      description: '为其他目标提供完整的 Fluent Bit 配置。',
+      icon: Settings,
+    },
+  ]}
+/>

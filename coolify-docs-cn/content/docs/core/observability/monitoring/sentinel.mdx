@@ -1,0 +1,185 @@
+---
+title: Sentinel
+description: 配置并排查 Coolify Sentinel 的服务器健康、容器状态、磁盘用量与指标采集。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Layers,
+  Server,
+  Settings,
+  Warning22,
+} from 'reicon-react';
+
+# Sentinel
+
+[Sentinel](https://github.com/coollabsio/sentinel) 是 Coolify 运行在已连接服务器上的 Rust 轻量代理。它把服务器与容器健康状态报告给你的 Coolify 实例，并可以采集 CPU 与内存图表所需的数据。
+
+<CoolCallout icon={ArrowsRight} title="简要版本">
+
+Coolify 在每台符合条件的服务器上以 `coolify-sentinel` 容器的形式运行 Sentinel。Sentinel 向 Coolify 发送经过身份验证的状态更新，并在指标启用时把指标历史存储在本地。
+
+</CoolCallout>
+
+<CoolCallout type="warning" icon={Warning22} title="并非所有服务器都可用 Sentinel">
+
+构建服务器和 Docker Swarm 服务器不支持 Sentinel。配置 Sentinel 之前，请先验证一台标准 Docker 服务器。
+
+</CoolCallout>
+
+---
+
+## Sentinel 上报什么
+
+Sentinel 提供从已连接服务器到 Coolify 的首选状态链路。
+
+<CoolIconCardGrid
+  surface
+  cards={[
+    {
+      title: '服务器心跳',
+      description: '只要经过身份验证的更新持续到达，服务器就会保持 Sentinel In Sync（已同步）状态。',
+      icon: Server,
+    },
+    {
+      title: '容器状态',
+      description: '报告服务器上资源的运行状态与 Docker 健康信息。',
+      icon: Box2,
+    },
+    {
+      title: '磁盘用量',
+      description: '在常规状态更新中包含服务器根文件系统的用量。',
+      icon: Settings,
+    },
+    {
+      title: 'CPU 与内存历史',
+      description: '在单独的指标设置启用后，采集服务器与受支持资源的指标。',
+      icon: Layers,
+    },
+  ]}
+/>
+
+---
+
+## Sentinel 的工作方式
+
+<CoolFlow
+  id="sentinel-status-flow"
+  icon={Server}
+  title="从 Sentinel 到 Coolify"
+  description="容器读取本地 Docker 与主机信息，然后把结果发送到 Coolify 控制平面（control plane）。"
+  steps={[
+    '启动 `coolify-sentinel`',
+    '读取主机与 Docker 状态',
+    '发送经过身份验证的更新',
+    '刷新服务器心跳',
+    '在启用时存储指标采样',
+  ]}
+  list={[
+    'Coolify 在选定的已连接服务器上启动 Sentinel。',
+    '容器读取服务器与容器信息，不会把 API 发布到主机端口上。',
+    <>Sentinel 按照配置的 <strong>Push interval</strong>，使用 <strong>Sentinel token</strong> 向 <strong>Coolify URL</strong> 发送更新。</>,
+    <>只要心跳保持最新，Coolify 就显示<strong>Sentinel In Sync</strong>。</>,
+    '需要位于 `/data/coolify/sentinel` 的指标历史时，Coolify 会从容器内部查询 API。',
+  ]}
+  endnote="心跳过期后，Coolify 会把 Sentinel 标记为 Out of Sync，并改用基于 SSH 的检查，直到 Sentinel 恢复。"
+/>
+
+新服务器默认启用 Sentinel，但已有服务器可能仍处于禁用状态。指标采集则默认单独禁用。
+
+---
+
+## 启用或同步 Sentinel
+
+1. 打开**服务器（Servers）**，选择该服务器。
+2. 打开**Sentinel > Configuration**。
+3. 如果 Sentinel 处于禁用状态，选择 **Enable Sentinel**（启用 Sentinel）。
+4. 如果 Coolify 显示 **Out of Sync**（未同步），选择 **Sync**（同步）。如果 Sentinel 已经在运行，同一按钮会显示为 **Restart**（重启）。
+5. 等待服务器头部显示 **Sentinel In Sync**。
+
+Sentinel 需要一个能从已连接服务器访问的 URL。如果 **Coolify URL** 为空，请先配置实例 [URL](/core/instance-management/instance-settings#url)，然后回到 Sentinel 再次同步。
+
+---
+
+## Sentinel 设置
+
+| 设置 | 默认值 | 允许的取值与作用 |
+| :--- | :--- | :--- |
+| **Coolify URL** | 由 Coolify 实例设置生成 | 一个完整 URL。Sentinel 把更新发送到这个地址。更改实例 URL 会同步更新使用生成 URL 的远程服务器。 |
+| **Sentinel token** | 由 Coolify 生成 | 必需的身份验证令牌。请使用 **Regenerate**（重新生成），不要自建令牌。 |
+
+采集率、历史保留与推送间隔在服务器的**图表（Charts）**页面配置。参见[采样与保留](/core/observability/monitoring/metrics#采样与保留)。
+
+更改 Sentinel 自定义镜像后，请使用 **Apply and restart**（应用并重启）。Sentinel 以 Docker 的 `unless-stopped` 重启策略运行。Coolify 会重启不健康或停止推送的代理，并在 Sentinel 未同步期间显示最近一次推送错误。
+
+请把 Sentinel token 当作机密对待。Coolify 会把它加密存储在实例数据库中，并以环境变量的形式发送给 Sentinel 容器。
+
+---
+
+## Sentinel 与指标
+
+Sentinel 与指标的控制相互独立。
+
+<CoolCompare
+  id="sentinel-and-metrics"
+  className="not-prose"
+  icon={Layers}
+  title="状态上报与指标历史"
+  description="即使不需要历史图表，也建议保持 Sentinel 启用以获得状态上报。"
+>
+<CoolCompareColumn
+  title="仅 Sentinel（无指标）"
+  items={[
+    '向 Coolify 发送心跳',
+    '报告容器状态与 Docker 健康信息',
+    '报告根文件系统用量',
+    '不采集 CPU 与内存历史',
+  ]}
+/>
+<CoolCompareColumn
+  title="Sentinel 加指标"
+  items={[
+    '保留全部服务器与容器状态上报',
+    '采集服务器 CPU 与内存历史',
+    '为受支持的资源容器采集指标',
+    '按采样率与保留期占用本地磁盘空间',
+  ]}
+/>
+</CoolCompare>
+
+在**服务器（Servers）> [server] > Charts** 中启用或禁用采集器。禁用 Sentinel 会同时禁用指标。关于图表范围、保留与资源限制，请阅读[指标](/core/observability/monitoring/metrics)。
+
+---
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="Sentinel 一直处于 Out of Sync">
+
+确认服务器已通过验证，并且在 Coolify 中显示为可达。然后打开 **Sentinel > Configuration**，选择 **Sync**。
+
+如果 Sentinel 仍未同步，打开 **Sentinel > Logs**，阅读 `coolify-sentinel` 容器的输出。
+
+恢复之后，确认服务器头部变为 **Sentinel In Sync**，且时间戳持续更新。
+
+</Accordion>
+
+<Accordion title="Coolify URL 为空或不可达">
+
+Sentinel 需要一个已连接服务器能够访问的 **Coolify URL**。
+
+如果该字段为空，请配置实例 [URL](/core/instance-management/instance-settings#url)，然后回到 **Sentinel > Configuration**，再次选择 **Sync**。
+
+</Accordion>
+
+<Accordion title="Sentinel 日志显示身份验证错误">
+
+打开 **Sentinel > Configuration**，选择 **Sentinel token** 旁边的 **Regenerate**。
+
+Coolify 会创建新令牌并重启 Sentinel。确认服务器恢复到 **Sentinel In Sync**。
+
+</Accordion>
+
+</Accordions>

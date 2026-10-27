@@ -1,0 +1,63 @@
+---
+title: 什么是 Coolify CLI？
+description: 安装并配置 Coolify CLI，从终端或自动化流程中管理 Coolify 资源。
+---
+
+# 什么是 Coolify CLI？
+
+Coolify CLI 让你可以在终端中查看和管理 Coolify 资源。它调用 Coolify REST API，同时适用于 Coolify Cloud 和自托管的 Coolify。
+
+CLI 适合用于可重复的部署、脚本、CI 任务、资源盘点，以及其他不需要仪表盘的运维操作。
+
+## 开始之前
+
+你需要：
+
+- 一个具备命令所需权限的 [API 令牌](/core/security/credentials/api-tokens)
+- API 访问权限——Coolify Cloud 默认开启，自托管 Coolify 则需要[由管理员启用](/api/ip-allowlist)
+
+## 快速开始
+
+1. [安装 CLI](/cli/installation)。
+2. [认证 CLI](/cli/authentication)，并为 Coolify Cloud 或你的自托管实例[创建上下文（context）](/cli/contexts)。
+3. 用 `coolify context verify` 验证已保存的 URL 和令牌。
+4. 运行一条资源盘点命令：
+
+```sh
+coolify resource list
+```
+
+该命令会使用你的默认上下文，以表格形式展示该令牌可访问的应用、服务和数据库。
+
+## CLI 如何连接 Coolify
+
+阅读 [CLI 的工作原理](/cli/how-cli-works)，了解 CLI 如何选择上下文、认证 API 请求、处理失败以及格式化响应。
+
+## 查找命令与选项
+
+运行 `coolify --help` 列出命令组。在任意组或命令后加 `--help`，即可查看其当前的参数和标志：
+
+```sh
+coolify app --help
+coolify app create --help
+coolify database backup --help
+```
+
+内置帮助是所装 CLI 版本的权威参考。在侧边栏打开 **Commands**（命令）可查看各操作级别的语法与选项。完整工作流请参阅[部署应用](/cli/deploy-applications)、[用 CLI 自动化](/cli/automate-with-cli)或[管理数据库备份](/cli/database-backups)。
+
+有新版本发布时，参见[更新 Coolify CLI](/cli/update)。要移除本地命令而不影响通过 Coolify 管理的资源，参见[卸载 Coolify CLI](/cli/uninstallation)。
+
+## 配合 AI 代理使用 CLI
+
+CLI 仓库为需要机器可读命令上下文的工具发布了生成的目录文件：
+
+- [`llms.txt`](https://github.com/coollabsio/coolify-cli/blob/main/llms.txt) 包含简明的使用说明和常用命令。
+- [`llms-full.txt`](https://github.com/coollabsio/coolify-cli/blob/main/llms-full.txt) 包含完整的命令与标志目录。
+
+CLI 贡献者可以在仓库中用以下命令重新生成这两个文件：
+
+```sh
+go run ./coolify docs llms
+```
+
+[Coolify CLI 源码仓库](https://github.com/coollabsio/coolify-cli)还包含 CLI 开发的构建、测试、贡献和发布说明。

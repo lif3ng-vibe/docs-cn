@@ -1,0 +1,40 @@
+---
+title: 流量分析
+description: 为 Traefik 和 Caddy 启用代理流量分析，并配置采集与保留。
+---
+
+# 流量分析
+
+Coolify 基于 Rust 的 Sentinel 代理会读取 JSON 格式的代理访问日志，并为流量分析存储聚合汇总数据。支持 Traefik 和 Caddy。采集默认关闭，按服务器启用。
+
+## 启用采集
+
+1. 打开**服务器（Servers）> [server] > Analytics**。
+2. 启用流量分析，并确认重启提示。
+3. 等待代理和 Sentinel 重启。流量可能出现短暂中断。
+4. 对于 Caddy，在启用或禁用分析后重新部署应用与服务栈，以更新它们的日志标签。
+5. 通过代理发送一些请求，然后查看分析视图。
+
+Caddy 要求 caddy-docker-proxy 2.9 或更新版本。新的 Coolify 配置使用 2.13。如果页面提示配置不受支持或镜像过旧，请先解决再启用采集。
+
+## 配置采集
+
+| 设置 | 作用 |
+| :--- | :--- |
+| Top-N cap | 每个维度（如路径或国家/地区）保留的最大去重取值数量。溢出的部分归入 Other。 |
+| Sample threshold | 每秒事件数超过该阈值时，Sentinel 会对流量采样。`0` 表示禁用采样。 |
+| Hourly retention | 细粒度小时级汇总的保留天数。 |
+| Daily retention | 天级汇总的保留天数。 |
+| Geolocation | 启用或禁用访客国家/地区富化。 |
+| GeoIP refresh interval | GeoIP 数据库更新检查的间隔天数。 |
+| MaxMind GeoIP license key | 下载 GeoLite2 的可选密钥。没有密钥时，GeoIP 也能通过默认数据源工作。 |
+
+编辑后请保存设置。原始访问日志会在服务器上轮转；Coolify 的分析只存聚合数据，不存原始请求日志。
+
+## 查看分析
+
+可以使用仪表盘小组件、全局 **Analytics** 页面、服务器的 **Analytics** 页面，或者应用或服务的 **Analytics** 标签页。全局页面支持按服务器和应用筛选。
+
+视图包括带迷你走势图的请求量、带宽、独立访客与 p95 延迟、请求图表、状态码拆解、国家地球仪与国家列表，以及设备、路径、主机、来源（referrer）和浏览器拆解。24 小时范围支持可选的实时刷新。
+
+流量分析统计的是到达受支持代理的请求。CPU 与内存历史属于单独的[指标](/core/observability/monitoring/metrics)。如果 Caddy 视图没有数据，请检查代理版本，并在更改采集设置后重新部署资源。

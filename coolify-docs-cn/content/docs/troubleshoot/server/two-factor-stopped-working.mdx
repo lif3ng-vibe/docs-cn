@@ -1,0 +1,28 @@
+---
+title: 2FA 突然失效
+description: 通过 NTP 同步服务器时间、检查 systemd-timesyncd 并放行防火墙 123 端口，解决 Coolify 中双重验证（2FA）失败的问题。
+---
+
+# 2FA 突然失效
+这通常是时间同步问题。
+
+## 诊断
+- 用 `date` 检查服务器时间——如果时间不准，就需要同步。
+- 用 `cat /etc/ntp.conf` 检查 NTP 配置。
+- 用 `systemctl status systemd-timesyncd.service` 检查操作系统是否在用 systemd 同步时间。
+- 检查防火墙（`ufw`、`iptables`）规则，看是否有规则拦截了时间同步端口（`123/udp, 123/tcp`）。
+
+## 解决方案
+
+<Tabs items={['systemd', '非 systemd']}>
+<Tab value="systemd">
+
+如果你的操作系统使用 systemd，可以用 `sudo timedatectl set-ntp true` 同步时间。
+
+</Tab>
+<Tab value="非 systemd">
+
+如果操作系统不使用 systemd，可以用 `sudo ntpdate ntp.ubuntu.com` 同步时间。
+
+</Tab>
+</Tabs>

@@ -1,0 +1,120 @@
+---
+title: 设置 MCP
+description: 启用 Coolify MCP、创建限定团队作用域的 API 令牌，并连接支持 MCP 的 AI 客户端。
+---
+
+# 设置 MCP
+
+设置 Coolify MCP 的完整路径：启用实例端点、确认团队访问、创建令牌，然后把端点添加到你的 AI 客户端。
+
+## 开始之前
+
+- 使用 Coolify Cloud，或一台拥有公网 HTTPS URL 的自托管 Coolify 实例。
+- 在自托管 Coolify 上，于**设置 > 高级**中启用 **API access（API 访问）**。
+- 选定客户端需要访问其资源的那个团队。
+- 创建一个权限刚好够用的 API 令牌。参见 [API 令牌](/core/security/credentials/api-tokens)。
+
+<Callout type="warning" title="保护令牌">
+MCP 客户端能执行其令牌允许的每一项操作。请把令牌保存在客户端的机密配置中，绝不提交到代码库，一旦泄露立即撤销。
+</Callout>
+
+## 示例值
+
+本指南的示例均以 Coolify Cloud 为准。如果你用的是自托管 Coolify 实例，请把所有 URL 中的 `app.coolify.io` 替换为你实例的域名，并换成你自己的令牌：
+
+<Callout type="info" title="示例数据">
+
+- **Coolify URL**：`https://app.coolify.io`
+- **MCP 端点**：`https://app.coolify.io/mcp`
+- **API 令牌**：`67|abcthisisa123dummytoken`
+
+</Callout>
+
+<Steps>
+<Step>
+
+### 启用 MCP
+
+<Callout type="info" title="Coolify Cloud">
+Coolify Cloud 的实例级 MCP 已经启用。跳过 Dashboard 和 API 两个标签页，直接前往[创建 MCP 令牌](#创建-mcp-令牌)。团队访问默认保持启用，但如果客户端收到 `403`，请检查团队设置。
+</Callout>
+
+<Tabs items={['Dashboard', 'API']}>
+<Tab value="Dashboard">
+
+<ZoomImage src="/docs-cn/coolify/images/mcp/enable-mcp.webp" alt="Coolify 高级设置中 MCP server 已启用" />
+
+1. 在侧边栏打开 **Settings（设置）**。
+2. 打开 **Advanced（高级）**。
+3. 在 **API and MCP** 中，把 **MCP server** 设为 **Enabled（已启用）**。
+4. 选择 **Save changes（保存更改）**。
+
+当前团队的设置里也必须启用 MCP。打开 **Team > General**，把 **MCP server** 设为 **Enabled for this team（对此团队启用）**，然后选择 **Save changes（保存更改）**。
+
+</Tab>
+<Tab value="API">
+
+在自托管实例上，使用 `root` API 令牌来启用或禁用实例端点。把示例 URL 替换为你实例的域名：
+
+```sh
+export COOLIFY_URL="https://coolify.example.com"
+export COOLIFY_ROOT_TOKEN="67|abcthisisa123dummytoken"
+
+curl --fail-with-body --request POST \
+  --header "Authorization: Bearer $COOLIFY_ROOT_TOKEN" \
+  "$COOLIFY_URL/api/v1/mcp/enable"
+```
+
+该端点会返回 `MCP server enabled.`。使用 `POST /api/v1/mcp/disable` 可以将其禁用。
+
+这些端点需要 `root` 令牌。`read` 或 `write` 令牌无法更改实例的 MCP 设置。
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### 创建 MCP 令牌
+
+在目标团队处于激活状态时，从 **Keys & Tokens > API Tokens** 创建令牌。
+
+Coolify 只会完整显示一次令牌。在离开 API Tokens 页面之前，请把它复制到客户端的机密配置里。
+
+- 用 `read` 做清单查看与检查。
+- 只在需要读取受支持的敏感数据或日志摘要时才添加 `read:sensitive`。
+- 需要执行部署、启动、停止、重启或取消操作时添加 `deploy`。
+- 不要把 `root` 用在普通 MCP 客户端上。
+
+MCP 端点 URL：
+
+```txt
+https://app.coolify.io/mcp
+```
+
+</Step>
+<Step>
+
+### 连接客户端
+
+为客户端配置以下内容：
+
+- **URL**：`https://app.coolify.io/mcp`
+- **Transport（传输方式）**：Streamable HTTP
+- **Authorization（授权）**：`Bearer 67|abcthisisa123dummytoken`
+
+按客户端指南操作：
+
+- [Claude Code](/mcp/clients/claude-code)
+- [Cursor](/mcp/clients/cursor)
+- [其他 MCP 客户端](/mcp/clients/other-clients)
+
+</Step>
+<Step>
+
+### 验证访问
+
+让客户端调用 `get_current_team` 或 `get_infrastructure_overview`。响应中应包含该令牌关联的团队与资源。
+
+</Step>
+</Steps>

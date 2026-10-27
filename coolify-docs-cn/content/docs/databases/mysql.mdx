@@ -1,0 +1,115 @@
+---
+title: MySQL
+description: 在 Coolify 上部署和运维 MySQL，提供生成的凭据、持久化存储、SSL、健康检查以及备份与恢复支持。
+---
+
+# MySQL
+
+Coolify 将 MySQL 作为独立容器部署到所选的服务器和目标上。新资源会自动获得生成的 root 密码和应用用户密码、持久化数据卷、内部连接 URL 和健康检查。
+
+MySQL 是一个开源关系型数据库，适用于需要 SQL 存储和事务的应用。
+
+## 创建 MySQL 数据库
+
+<Steps>
+<Step>
+
+### 打开新建资源
+
+打开数据库应归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 MySQL
+
+在 **Databases**（数据库）下选择 **MySQL**。也可以按名称搜索 **MySQL**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择要运行 MySQL 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 MySQL 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 创建资源并打开 **General**（常规）。请检查镜像、root 密码、普通用户名和密码、初始数据库以及连接 URL。除非外部客户端需要访问，否则保持默认的私有网络设置。
+
+</Step>
+<Step>
+
+### 启动 MySQL
+
+选择 **Start**（启动）并留意启动输出。等 MySQL 进入运行且健康的状态后，把 **MySQL URL (internal)**（内部 URL）复制给同一目标网络中的应用。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| 内部端口 | `3306` |
+| 默认镜像 | `mysql:8` |
+| 普通用户 | `mysql` |
+| 初始数据库 | `default` |
+| 数据挂载 | `/var/lib/mysql` |
+| 计划备份 | 支持 |
+| SSL | 支持 MySQL SSL 模式 |
+
+root 密码和普通用户密码在创建资源时生成。如果你在 MySQL 内部修改了凭据或初始数据库，请同步更新 **General** 中对应的值，连接 URL 和自动备份才会使用最新的值。
+
+
+## 连接 MySQL
+
+同一 Coolify 目标网络上的应用请使用 **MySQL URL (internal)**：
+
+```sh
+mysql://<user>:<password>@<database-container>:3306/<database>
+```
+
+当 **Public access（公开访问）> Access** 为 **Public through TCP proxy**（经 TCP 代理公开）时，Coolify 会用服务器地址和 **Public port**（公开端口）生成 **MySQL URL (public)**（公开 URL）。除非外部客户端需要直连，否则请保持 MySQL 私有。
+
+端口映射、公开 TCP 代理和防火墙注意事项见[数据库](/databases)。
+
+## 配置 MySQL
+
+打开 **General** 修改镜像、凭据、**Port mappings**、公开代理、自定义 Docker 选项和 **Custom MySQL configuration**（自定义 MySQL 配置）。Coolify 会把自定义配置挂载进 MySQL 容器，并在重启资源时重建生成的配置。
+
+请使用与应用及备份/恢复工具相匹配的镜像版本。把大版本变更应用到生产之前，先在数据副本上测试。
+
+## 备份与恢复 MySQL
+
+Coolify 使用 `mysqldump` 做计划备份。所选数据库会被直接导出；**Database selection > All databases**（数据库选择 > 所有数据库）会创建 gzip 压缩的全库导出。选择 **Specific databases**（指定数据库）时，在 **Databases to back up**（要备份的数据库）中逐个输入名称并按 Enter。
+
+计划、保留策略和 S3 存储在[数据库备份](/databases/backups)下配置。数据库运行时，内置的 **Import Backup**（导入备份）表单接受 MySQL 备份；导入流程见[恢复数据库](/databases/restore)。
+
+<Callout type="warning" title="恢复会替换数据">
+
+确认导入之前，请停止应用写入并核实目标资源。对不能被替换的数据，请另行保留一份副本。
+
+</Callout>
+
+## SSL 与健康检查
+
+MySQL 支持 **Prefer**（优先）、**Require**（要求）、**Verify CA**（校验 CA）和 **Verify Full**（完全校验）。校验模式要求客户端信任 Coolify CA 证书。参见[数据库 SSL](/databases/ssl)。
+
+在 **Healthcheck**（健康检查）下配置 Docker 健康检查，保存后重启 MySQL。
+
+## MySQL 官方资源
+
+- [MySQL 文档](https://dev.mysql.com/doc/)
+- [MySQL 源码](https://github.com/mysql/mysql-server)
+- [MySQL Docker 镜像](https://hub.docker.com/_/mysql)
+- [MySQL `mysqldump` 文档](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html)

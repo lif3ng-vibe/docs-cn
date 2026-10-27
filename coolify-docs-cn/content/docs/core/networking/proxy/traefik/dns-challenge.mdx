@@ -1,0 +1,159 @@
+---
+title: DNS 质询
+description: 配置 Traefik 通过 DNS 提供商的 API 获取 Let's Encrypt 证书。
+---
+
+# DNS 质询（DNS challenge）
+
+Coolify 默认的 Traefik 配置使用 ACME HTTP 质询，它要求 `80` 端口可从公网访问。当你需要泛域名证书，或无法在证书验证期间让 `80` 端口可达时，请改用 DNS 质询。
+
+Traefik 通过其 Lego DNS 提供商集成创建一条临时的 `_acme-challenge` TXT 记录，等待 DNS 验证通过，并在证书签发后删除该记录。
+
+## 准备条件
+
+- 一个由 [Lego 支持的 DNS 提供商](https://go-acme.github.io/lego/dns/)托管的域名
+- 拥有为所需 DNS 区域创建和删除记录权限的服务商凭据
+
+<Callout type="warning" title="使用权限受限的 DNS 凭据">
+创建只授予 Traefik 所需 DNS 区域和记录权限的令牌。在提供商支持范围受限令牌时，不要复用账户级密钥。
+</Callout>
+
+## 修改 Traefik 配置
+
+<Callout type="warning" title="在 Coolify 中编辑主配置">
+一旦代理配置保存在 Coolify 中，对 `/data/coolify/proxy/docker-compose.yml` 的直接修改就不会同步回 UI。请在 **Servers > your server > Proxy > Configuration** 下修改并保存。通过 Coolify 启动或重启代理时，会把已保存的配置写入磁盘，可能覆盖只存在于磁盘上的修改。
+</Callout>
+
+打开 **Servers > your server > Proxy > Configuration**。保留现有的 Docker Compose 配置，然后在 `traefik` 服务内部做两处更改：
+
+1. 在 `environment` 下添加 DNS 提供商凭据。
+2. 移除两个 `httpchallenge` 命令参数，添加该提供商的 `dnschallenge` 参数。
+
+每个示例都用颜色标出了要移除和添加的行。保留现有代理配置中的其他值。
+
+<Tabs items={['Cloudflare', 'Hetzner', 'AWS Route 53', 'Hostinger']}>
+<Tab value="Cloudflare">
+
+```yaml
+services:
+  traefik:
+    environment: # [!code ++:2][!code focus:2]
+      - CF_DNS_API_TOKEN=<cloudflare-api-token>
+    command:
+      # Keep the other existing command values.
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true' # [!code --:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http'
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare' # [!code ++:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json'
+```
+
+使用对相应区域拥有 DNS 编辑权限的 Cloudflare API 令牌。
+
+</Tab>
+<Tab value="Hetzner">
+
+```yaml
+services:
+  traefik:
+    environment: # [!code ++:2][!code focus:2]
+      - HETZNER_API_TOKEN=<hetzner-api-token>
+    command:
+      # Keep the other existing command values.
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true' # [!code --:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http'
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=hetzner' # [!code ++:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json'
+```
+
+</Tab>
+<Tab value="AWS Route 53">
+
+```yaml
+services:
+  traefik:
+    environment: # [!code ++:4][!code focus:4]
+      - AWS_ACCESS_KEY_ID=<access-key-id>
+      - AWS_SECRET_ACCESS_KEY=<secret-access-key>
+      - AWS_REGION=<region>
+    command:
+      # Keep the other existing command values.
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true' # [!code --:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http'
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53' # [!code ++:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json'
+```
+
+</Tab>
+<Tab value="Hostinger">
+
+```yaml
+services:
+  traefik:
+    environment: # [!code ++:2][!code focus:2]
+      - HOSTINGER_API_TOKEN=<hostinger-api-token>
+    command:
+      # Keep the other existing command values.
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true' # [!code --:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http'
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=hostinger' # [!code ++:2][!code focus:2]
+      - '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/traefik/acme.json'
+```
+
+</Tab>
+</Tabs>
+
+要使用其他提供商，请使用 [Lego DNS 提供商文档](https://go-acme.github.io/lego/dns/)中的标识符和环境变量。
+
+## 重启并验证
+
+保存代理配置，然后选择 **Restart Proxy**。重新部署一个带 HTTPS 域名的资源，触发证书签发。
+
+确认该域名提供了有效的证书，并查看 **Servers > your server > Proxy > Logs** 中的 ACME 消息。
+
+## 故障排查
+
+<Accordions type="multiple">
+
+<Accordion title="TXT 记录未能及时可见">
+
+增加传播延迟：
+
+```yaml
+- '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=0' # [!code --][!code focus]
+- '--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=30' # [!code ++][!code focus]
+```
+
+</Accordion>
+
+<Accordion title="CNAME 委派失败">
+
+一些提供商集成会跟进 `_acme-challenge` 的 CNAME 记录。如果你的委派配置需要关闭该行为，添加：
+
+```yaml
+services:
+  traefik:
+    environment: # [!code ++:2][!code focus:2]
+      - LEGO_DISABLE_CNAME_SUPPORT=true
+```
+
+</Accordion>
+
+<Accordion title="Let's Encrypt 速率限制阻碍测试">
+
+临时添加 staging ACME 服务器，重启代理并测试签发：
+
+```yaml
+- '--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory' # [!code ++][!code focus]
+```
+
+配置验证可用后移除 staging 行。staging 证书不受浏览器信任。
+
+</Accordion>
+
+</Accordions>
+
+当一个证书需要覆盖多个子域名时，继续阅读[泛域名证书](/core/networking/proxy/traefik/wildcard-certs)。

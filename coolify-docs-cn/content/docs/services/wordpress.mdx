@@ -1,0 +1,116 @@
+---
+title: "WordPress"
+description: "Website and blogging platform."
+og:
+  description: "Run WordPress on Coolify for blogging, CMS, e-commerce with plugins, themes, and world's most popular website building platform."
+category: "CMS"
+icon: "/docs-cn/coolify/images/services/wordpress-logo.svg"
+disabled: true
+---
+
+<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+
+This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+
+See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+
+</Callout>
+
+<ZoomImage src="https://raw.githubusercontent.com/logo/wordpress/caefc9aa315eafcf8687804564a11a9c5a77a561/images/logo.svg" alt="WordPress" />
+
+## What is WordPress?
+
+WordPress is a free and open-source content management system written in PHP and paired with a MySQL/MariaDB database.
+It is used for creating websites, blogs, and applications.
+
+## Deployment Variants
+
+- **WordPress with MariaDB:** Includes a MariaDB database.
+- **WordPress with MySQL:** Includes a MySQL database.
+- **WordPress without Database:** Uses an external database that you configure separately.
+
+## Links
+
+- [The official website](https://wordpress.org)
+- [GitHub](https://github.com/WordPress/WordPress)
+
+## FAQ
+
+<Accordions type="multiple">
+
+<Accordion title="How to increase the upload size limit?">
+
+You can increase the upload size limit by following these steps:
+
+1. Open the `.htaccess` file through Coolify's Terminal (or through SSH, and docker exec -ti `container_id` /bin/sh)
+2. Add the following lines to the end of the file with `vi` or `nano`:
+
+```php
+# END WordPress - this line already exists in the file
+
+php_value upload_max_filesize 256M
+php_value post_max_size 256M
+php_value max_execution_time 300
+php_value max_input_time 300
+```
+
+3. Save and close the file.
+4. Reload the website in your browser. The changes should be applied automatically.
+
+</Accordion>
+
+<Accordion title="How to fix a redirection loop in WordPress?">
+
+If your WordPress site is stuck in a redirection loop, follow these steps to resolve the issue:
+
+Access the .htaccess file:
+
+1. Open the `.htaccess` file through Coolify's Terminal (or through SSH, and docker exec -ti `container_id` /bin/sh)
+2. Navigate to the WordPress root directory and locate the .htaccess file. Edit the .htaccess file:
+
+```
+<IfModule mod_setenvif.c>
+  SetEnvIf X-Forwarded-Proto "^https$" HTTPS
+</IfModule>
+```
+
+3. Save and close the file.
+4. Reload the website in your browser. The changes should be applied automatically.
+
+</Accordion>
+
+<Accordion title="How to set up WordPress Multisite?">
+
+1. **Add WordPress** with the one-click installation.
+
+2. **Persist WordPress files on the host.** In the Compose configuration (edited from the UI), change:
+
+   ```yaml
+   volumes:
+     - "wordpress-files:/var/www/html"
+   ```
+
+   to:
+
+   ```yaml
+   volumes:
+     - "./wordpress:/var/www/html"
+   ```
+
+   This mounts the `wordpress` directory inside the service's configuration directory (`/data/coolify/services/<serviceUuid>/`) to `/var/www/html` in the container, so files you edit on the host are reflected in the container.
+
+3. **Configure WordPress.** Start the service and complete the initial setup.
+
+4. **Disable all plugins.** In the WordPress admin panel, go to **Plugins → Installed Plugins**, select all plugins, and choose **Deactivate**.
+
+5. **Enable Multisite.** Edit `wp-config.php` on the server and add:
+
+   ```php
+   define( 'WP_ALLOW_MULTISITE', true );
+   ```
+
+   Refresh the WordPress panel; a new **Network Setup** item appears under the **Tools** menu.
+
+</Accordion>
+
+</Accordions>

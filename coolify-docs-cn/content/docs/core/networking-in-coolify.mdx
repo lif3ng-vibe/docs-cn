@@ -1,0 +1,205 @@
+---
+title: Coolify 中的网络
+description: 公网流量、反向代理、Docker 网络和直连端口在 Coolify 中如何配合。
+---
+
+import {
+  ArrowsRight,
+  Box2,
+  Globe3,
+  Layers,
+  Server,
+  ShieldSecurity2,
+} from 'reicon-react';
+
+# Coolify 中的网络
+
+Coolify 把公网流量与私有容器流量分离开来。HTTP 和 HTTPS 请求从运行资源的服务器上的 Coolify Proxy 容器进入,而应用、数据库和服务则通过 Docker 网络相互通信。
+
+理解这些路径之后,域名、端口、目标(Destination)和代理设置都会变得更容易配置。
+
+<CoolCallout icon={ArrowsRight} title="简要版">
+
+对于域名,DNS 把主机名解析到运行资源的服务器。名为 `coolify-proxy` 的 Coolify Proxy 容器匹配域名和路径,然后通过 Docker 网络把请求转发到正确的容器端口。
+
+共享同一 Docker 网络的容器通过内部名称和端口直接通信。它们不需要公网域名,也不需要映射到服务器的端口。
+
+</CoolCallout>
+
+---
+
+## 三条网络路径
+
+大多数 Coolify 网络决策都属于以下三条路径之一。
+
+<CoolIconCardGrid
+  columns={3}
+  surface
+  cards={[
+    {
+      title: '公网 HTTP 与 HTTPS',
+      description: '对域名的请求会经过运行资源的服务器上的 Coolify Proxy 容器。',
+      icon: Globe3,
+    },
+    {
+      title: '私有容器流量',
+      description: '共享 Docker 网络上的容器使用内部名称和端口,不经公网暴露。',
+      icon: Box2,
+    },
+    {
+      title: '直连主机端口',
+      description: '主机端口映射在不使用 HTTP 域名路由的情况下暴露容器端口。',
+      icon: Server,
+    },
+  ]}
+/>
+
+域名是 Web 应用或 HTTP 服务的常规路径。数据库等依赖请使用私有网络。只有当客户端必须直连,或协议不适合放在 HTTP 代理之后时,才把端口映射到服务器。
+
+---
+
+## 公网流量如何到达资源
+
+Coolify 负责配置路由,但 Coolify 实例不会中转应用流量。请求直达资源所在服务器上的 Coolify Proxy 容器。
+
+<CoolFlow
+  id="public-traffic-flow"
+  icon={Globe3}
+  title="从域名到容器"
+  description="域名、代理路由、Docker 网络和容器端口必须描述同一条路径。"
+  steps={[
+    '把域名 DNS 记录指向服务器',
+    '把域名添加到应用或服务',
+    '在端口 `80` 或 `443` 接收请求',
+    '按主机名和路径匹配请求',
+    '把请求转发到容器端口',
+  ]}
+  list={[
+    'Coolify Proxy 以 `coolify-proxy` 容器的形式运行在资源所在服务器上。',
+    'Coolify 根据配置的域名和目标端口,为所选的集成代理(Traefik 或 Caddy)生成路由。',
+    '`https://` 域名会通过所选的集成代理启用 TLS 证书自动化。',
+    'Coolify Proxy 容器与目标容器共享一个 Docker 网络。',
+  ]}
+  endnote="只要服务器、Coolify Proxy 容器、资源容器、DNS 和上游网络保持可用,即使 Coolify 控制平面不可用,已在运行的资源也仍然可以访问。"
+/>
+
+应用必须监听为资源配置的端口。例如,如果应用在容器内监听端口 `3000`,那么即使访客通过标准 HTTPS 端口 `443` 连接,Coolify Proxy 容器也必须指向端口 `3000`。
+
+应用和服务可以使用域名。数据库默认使用私有网络,当外部客户端必须连接时,可以通过公共数据库端口单独暴露。
+
+---
+
+## 私有容器流量的工作方式
+
+**目标(Destination)** 代表已连接服务器上的一个 Docker 网络。在独立服务器上,Coolify 会在安装过程中创建一个名为 `coolify` 的可附加 Docker 网络。`coolify` 网络就是默认目标,Coolify 会把非 Docker Compose 应用部署到它,除非你选择了其他目标。
+
+Coolify Proxy 容器会加入 `coolify` 网络,以及 Docker Compose 应用和服务栈使用的资源专属网络。这样 Coolify Proxy 容器就能到达拥有公开路由的容器。同一共享网络上的其他容器,可以通过容器名或服务名、网络别名,以及依赖所监听的内部端口直接通信。
+
+常见的私有路径包括:
+
+- 应用通过数据库端口连接数据库
+- 一个服务容器通过 Docker Compose 服务名调用另一个服务
+- Coolify Proxy 容器把域名请求转发到应用端口
+
+私有流量不需要公网域名、公网 IP 地址或主机端口映射。不同 Docker 网络上的资源彼此隔离,除非你把它们连接到共享网络。
+
+Docker Compose 应用和服务栈默认使用自己的资源专属网络,不会自动加入 `coolify` 网络。当服务栈需要通过其 Coolify 目标访问另一个资源时,启用 **Connect To Predefined Network**。更改该连接之前,先阅读 [Docker Compose 网络](/applications/builds/docker-compose#application-networking)。
+
+---
+
+## 选择代理模式
+
+Coolify 支持两个集成代理 Traefik 和 Caddy,外加 **Custom (None)**。添加服务器时,Coolify 默认选择 Traefik。你也可以改选 Caddy,继续使用 Coolify 管理的路由和 TLS 证书;或者通过 **Custom (None)** 使用你自己的代理,自行管理整条公网流量路径。
+
+<CoolCompare
+  id="proxy-models"
+  className="not-prose"
+  columns={3}
+  icon={Layers}
+  title="代理模式"
+  description="在部署需要域名的资源之前,先比较各路由模式。"
+>
+<CoolCompareColumn
+  title="Traefik"
+  items={[
+    '与 Coolify 集成的代理',
+    '添加服务器时默认选中',
+    'Coolify 管理域名路由、生成的标签和 TLS 证书',
+  ]}
+/>
+<CoolCompareColumn
+  title="Caddy"
+  items={[
+    '可用来替代 Traefik 的代理',
+    'Coolify 管理 Caddy 路由配置、生成的标签和 TLS 证书',
+    '目前文档标注为实验性',
+  ]}
+/>
+<CoolCompareColumn
+  title="Custom (None)"
+  items={[
+    '使用你自己的代理以获得完全控制,而非运行 Coolify Proxy',
+    'Coolify 不为你的代理管理路由或 TLS 证书',
+    '由你配置路由、TLS 证书、重定向、中间件和其他代理行为',
+  ]}
+/>
+</CoolCompare>
+
+直接的主机端口映射会绕过代理。它通过服务器暴露所选的容器端口,因此你必须选择一个空闲的主机端口,并用适当的防火墙规则加以限制。应用的端口映射还会禁用该应用的滚动更新。
+
+---
+
+## 网络责任边界
+
+自托管 Coolify 与 Coolify Cloud 的责任边界相同:资源运行在你提供的服务器上。自托管时,通往 Coolify 实例本身的网络路径也由你运维。
+
+<CoolCompare
+  id="networking-responsibility-boundary"
+  className="not-prose"
+  icon={ShieldSecurity2}
+  title="各部分由谁管理"
+  description="Coolify 自动化已连接服务器上的容器路由,而服务器周边的基础设施由你掌控。"
+>
+<CoolCompareColumn
+  title="Coolify 负责协调"
+  items={[
+    '所选集成代理 Traefik 或 Caddy 的配置',
+    '应用和服务的域名、路径、目标端口与 TLS 证书自动化',
+    'Docker 网络创建,以及 Coolify Proxy 容器和资源所需的连接',
+    '内部端口、主机端口映射和网络别名的资源设置',
+  ]}
+/>
+<CoolCompareColumn
+  title="你仍需负责"
+  items={[
+    '把每个域名指向正确服务器的 DNS 记录',
+    '端口 `80`、`443`、SSH 及任何直接暴露端口的防火墙或安全组规则',
+    '确保每个应用监听其配置的容器端口',
+    '外部负载均衡器、CDN、WAF、私有网络和自定义代理配置',
+  ]}
+/>
+</CoolCompare>
+
+连接失败时,按顺序沿路径排查。对于域名,依次检查 DNS、防火墙、Coolify Proxy 容器状态、生成的路由、共享 Docker 网络和容器端口。对于私有依赖,依次检查共享网络、内部主机名、内部端口和凭据。
+
+---
+
+## 继续了解网络
+
+针对你需要配置的那部分路径,使用对应的详细指南。
+
+### 配置域名
+
+使用[域名](/core/networking/domains)配置 DNS 记录、HTTPS、目标端口、路径、重定向和生成的域名。
+
+### 配置代理
+
+- [选择或切换代理](/core/networking/proxy/overview)
+- [配置 Traefik](/core/networking/proxy/traefik/overview)
+- [配置 Caddy](/core/networking/proxy/caddy/overview)
+
+### 保障与排查流量
+
+- [配置服务器防火墙](/core/infrastructure/servers/firewall)
+- [排查 Let's Encrypt 问题](/troubleshoot/dns-and-domains/lets-encrypt-not-working)
+- [排查网关超时](/troubleshoot/applications/gateway-timeout)

@@ -1,0 +1,32 @@
+---
+title: Docker 安装失败
+description: 通过使用 Ubuntu LTS 版本或在非 LTS 操作系统上手动安装 Docker 24 及以上版本，修复 Coolify 安装过程中的 Docker 安装失败。
+---
+
+# Docker 安装失败
+如果 Coolify 安装脚本在 **"Installing Docker"**（安装 Docker）这一步失败，最常见的原因是服务器运行的是操作系统的**非 LTS 版本**——在 **Ubuntu** 系统上尤其常见。
+
+## 症状
+Coolify 安装脚本失败，报错类似：
+```bash
+ERROR: '27.0' not found amongst apt-cache madison results
+```
+
+## 解决方案
+
+<Tabs items={['手动安装 Docker', '使用 LTS 系统']}>
+<Tab value="手动安装 Docker">
+
+- 手动安装 Docker
+   -  按照官方 [Docker 安装指南](https://docs.docker.com/engine/install/#服务器)手动安装 Docker（**24** 及以上版本）
+
+或
+   
+</Tab>
+<Tab value="使用 LTS 系统">
+
+- 使用操作系统的 LTS 版本
+   -  切换到操作系统的**长期支持（LTS）**版本，例如 **Ubuntu 22.04 LTS** 或 **Debian 12**
+
+</Tab>
+</Tabs>

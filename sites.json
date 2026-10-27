@@ -332,5 +332,21 @@
       "stack": "Docusaurus 3.8",
       "snap": "2026-10-26"
     }
+  },
+  {
+    "name": "Coolify",
+    "slug": "coolify",
+    "desc": "Coolify 自托管 PaaS 官方文档中文镜像——开源的 Heroku/Netlify/Vercel 替代品：服务器管理、应用与数据库部署、反向代理、一键服务、备份恢复与 CLI/API/MCP 参考。",
+    "tags": [
+      "deployment",
+      "networking"
+    ],
+    "orig": "https://coolify.io/docs",
+    "repo": "https://github.com/coollabsio/coolify-docs",
+    "meta": {
+      "pages": "317 页（一期人工内容）",
+      "stack": "fumadocs + TanStack Start",
+      "snap": "main@2026-10-24"
+    }
   }
 ]

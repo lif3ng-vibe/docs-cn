@@ -1,0 +1,85 @@
+---
+title: 上下文（Contexts）
+description: 保存、选择、更新和移除 Coolify CLI 的 Cloud 与自托管实例连接。
+---
+
+# 管理 CLI 上下文
+
+上下文（context）会以 `production`、`staging` 这样的名称保存一个 Coolify URL 和 API 令牌。借助上下文，一份 CLI 安装即可连接 Coolify Cloud 和多个自托管实例，无需重复输入连接信息。
+
+<Callout type="warning" title="保护好 CLI 配置文件">
+配置文件以明文保存 API 令牌，创建时权限仅限当前用户。不要提交、分享或打印该文件。
+</Callout>
+
+## 添加上下文
+
+使用完整的实例 URL 创建自托管上下文，不要带 `/api/v1`：
+
+```sh
+coolify context add production https://coolify.example.com <api-token>
+```
+
+加上 `--default` 把新上下文设为默认：
+
+```sh
+coolify context add --default staging https://staging-coolify.example.com <api-token>
+```
+
+如果配置原本为空，那么添加的第一个上下文即使不加 `--default` 也会成为默认。
+
+Coolify Cloud 请按照[认证](/cli/authentication#使用-coolify-cloud-认证)更新预配置的 `cloud` 上下文。
+
+## 选择上下文
+
+列出已保存的上下文，并选择后续命令使用的默认上下文：
+
+```sh
+coolify context list
+coolify context use production
+```
+
+为单条命令临时使用其他上下文，而不改变默认值：
+
+```sh
+coolify --context staging app list
+```
+
+## 验证上下文
+
+```sh
+coolify context verify
+coolify context version
+```
+
+`context verify` 检查所选 URL 和认证是否有效。`context version` 输出所选实例返回的 Coolify 版本。
+
+## 更新上下文
+
+修改一个或多个已保存的属性：
+
+```sh
+coolify context update production --name primary
+coolify context update primary --url https://new-coolify.example.com
+coolify context set-token primary <replacement-api-token>
+```
+
+新名称已存在时重命名会失败。URL 必须以 `http://` 或 `https://` 开头。
+
+## 移除上下文
+
+```sh
+coolify context delete staging
+```
+
+删除默认上下文后，剩余上下文中的第一个会成为新的默认。删除上下文只会移除本地保存的 URL 和令牌，不会在 Coolify 中吊销该令牌。不再使用的凭据请在 **Keys & Tokens > API Tokens**（密钥与令牌 > API 令牌）中吊销。
+
+## 配置文件位置
+
+运行 `coolify config` 可打印当前生效的路径。
+
+| 平台 | 默认路径 |
+| :--- | :--- |
+| Linux 与 macOS | `~/.config/coolify/config.json` |
+| Windows | `%APPDATA%\coolify\config.json` |
+
+如果希望在移除 CLI 后一并删除所有已保存的上下文，请参阅[卸载](/cli/uninstallation#可选删除已保存的上下文)。

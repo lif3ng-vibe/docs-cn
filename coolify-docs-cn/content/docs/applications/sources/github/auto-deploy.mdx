@@ -1,0 +1,99 @@
+---
+title: GitHub 自动部署
+description: 通过 GitHub App、GitHub Actions 或仓库 webhook 从 GitHub 自动部署应用。
+---
+
+# GitHub 自动部署
+
+只要你向 GitHub 仓库推送变更，Coolify 就能部署应用的新版本。
+
+选择由 GitHub 触发部署的方式。
+
+<Tabs id="github-auto-deploy-method" items={['GitHub App', 'GitHub Actions', '仓库 webhook']}>
+<Tab value="GitHub App">
+
+### 通过 GitHub App 部署
+
+先按照[设置 GitHub App](/applications/sources/github/app)操作。
+
+通过 GitHub App 创建的应用，Coolify 会默认把 **Auto deploy**（自动部署）设为 **Deploy on push (webhooks)**（推送时部署（webhook））。如果它被设成了 **Manual deployments only**（仅手动部署）：
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/github-app/1.webp" alt="GitHub App 应用的 Auto Deploy 设置" />
+
+1. 打开该应用。
+2. 打开 **Advanced > Deployment**（高级 > 部署）。
+3. 在 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署（webhook））。
+4. 向配置的分支推送一个 commit，确认出现了部署记录。
+
+</Tab>
+<Tab value="GitHub Actions">
+
+### 通过 GitHub Actions 部署
+
+当工作流需要先运行测试、构建并发布镜像，再请求 Coolify 部署时，请使用 [GitHub Actions](/applications/sources/github/actions)。
+
+</Tab>
+<Tab value="仓库 webhook">
+
+### 通过仓库 webhook 部署
+
+适用于公开仓库，或通过部署密钥连接的私有仓库。
+
+<Steps>
+<Step>
+
+### 启用自动部署
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/1.webp" alt="应用 Advanced（高级）配置中的 Auto Deploy 设置" />
+
+1. 打开该应用。
+2. 打开 **Advanced > Deployment**（高级 > 部署）。
+3. 在 **Auto deploy**（自动部署）中选择 **Deploy on push (webhooks)**（推送时部署（webhook））。
+
+</Step>
+<Step>
+
+### 配置 GitHub webhook secret
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/2.webp" alt="Coolify 中的 GitHub 手动 webhook URL 与 secret 字段" />
+
+1. 打开 **Webhooks**（Webhook）。
+2. 在 **GitHub** 区域填入一个随机的 **Webhook secret**（Webhook 密钥）。
+3. 选择 **Save changes**（保存更改）。
+4. 复制 **Manual Git webhooks**（手动 Git webhook）下的 GitHub URL。
+
+<Callout type="warning" title="保管好 webhook secret">
+
+该密钥用于验证 webhook 的推送。请像保管密码一样保管它，并确保 Coolify 与 GitHub 两边填写相同的值。
+
+</Callout>
+
+</Step>
+<Step>
+
+### 在 GitHub 上添加 webhook
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/3.webp" alt="GitHub 仓库设置中的 Webhooks 页面" />
+
+1. 打开 GitHub 仓库设置。
+2. 选择 **Webhooks**（Webhook）。
+3. 选择 **Add webhook**（添加 webhook）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/4.webp" alt="面向 Coolify 的新建 GitHub webhook 表单" />
+
+4. 把 Coolify webhook URL 粘贴到 **Payload URL**。
+5. 在 **Secret** 中填入相同的密钥。
+6. 保持勾选 **Enable SSL verification**（启用 SSL 校验）。
+7. 选择 **Just the push event**（仅 push 事件）。
+8. 保持勾选 **Active**（启用）。
+9. 选择 **Add webhook**（添加 webhook）。
+
+<ZoomImage src="/docs-cn/coolify/images/applications/ci-cd/github/auto-deploy/webhooks/5.webp" alt="GitHub 中已启用的 Coolify webhook" />
+
+向配置的分支推送一个 commit，确认 GitHub 记录了一次成功的 webhook 投递，且 Coolify 启动了部署。
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>

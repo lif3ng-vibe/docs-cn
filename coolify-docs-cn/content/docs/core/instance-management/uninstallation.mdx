@@ -1,0 +1,317 @@
+---
+title: 卸载 Coolify
+description: 从已连接的服务器上移除自托管 Coolify 实例或 Coolify Cloud 服务。
+---
+
+import { Cloud } from 'reicon-react';
+
+# 卸载 Coolify
+
+卸载步骤取决于你使用 Coolify 的方式。
+
+对于自托管实例,以下步骤会移除 Coolify 的容器及其数据。
+
+对于 Coolify Cloud,以下步骤会从你的服务器上移除 Coolify Proxy 和 Sentinel。
+
+已部署的应用和服务在移除后可能继续运行。移除 Coolify Proxy 会使其提供的域名和 TLS 路由失效。
+
+<Tabs id="coolify-uninstall-type" items={['Self-hosted', 'Coolify Cloud']}>
+<Tab value="Self-hosted">
+
+
+## 移除自托管实例
+
+### 卸载之前
+
+- [创建实例备份](/core/backup-and-recovery/instance-backup),并在本服务器之外保留一份副本。
+- 单独保存 `/data/coolify/source/.env`。它包含恢复实例备份所需的加密密钥。
+- 保存或迁移移除后仍需要的应用配置、部署文件、本地备份和代理路由。它们存储在 `/data/coolify` 中。
+- 如果你的资源使用 Coolify 管理的域名或 TLS 证书,继续之前请先规划替代代理。
+- 确认没有进行中的部署,并且你已通过 SSH 连接到 Coolify 服务器。
+
+<Callout type="danger" title="此操作不可撤销">
+删除 `/data/coolify` 会永久移除 Coolify 的配置、SSH 密钥、部署文件、代理配置和本地存储的实例备份。
+
+实例备份只包含 Coolify 数据库;它不会备份你用 Coolify 部署的应用、数据库、服务或卷。
+</Callout>
+
+<Steps>
+<Step>
+
+### 连接到 Coolify 服务器
+
+通过 SSH 连接到运行 Coolify 实例的服务器:
+
+```sh
+ssh root@<server-ip>
+```
+
+把 `<server-ip>` 替换为你服务器的 IP 地址。如果你平时用非 root 账户登录,先运行 `sudo -i` 进入 root shell。
+
+</Step>
+
+<Step>
+
+### 移除 Coolify 容器
+
+```sh
+docker rm -f coolify coolify-db coolify-redis coolify-sentinel
+```
+
+[Reverb 迁移](/core/instance-management/reverb-migration)之前的安装还会有一个 `coolify-realtime` 容器。如果存在,也一并移除:
+
+```sh
+docker rm -f coolify-realtime
+```
+
+应用、数据库和服务容器会继续运行。
+
+按照服务器使用的 Docker 模式移除 Coolify Proxy。对于独立 Docker,运行:
+
+```sh
+docker rm -f coolify-proxy
+```
+
+对于 Docker Swarm,改为在管理节点上运行:
+
+```sh
+docker stack rm coolify-proxy
+```
+
+移除 Coolify Proxy 会使其提供的域名和 TLS 路由失效。
+
+</Step>
+
+<Step>
+
+### 移除 Coolify 数据卷
+
+移除存储 Coolify 数据库和 Redis 数据的卷:
+
+```sh
+docker volume rm coolify-db coolify-redis
+```
+
+不要在此过程中运行大范围的 `docker volume prune` 命令。它可能把服务器上属于其他工作负载的未使用卷一并删除。
+
+</Step>
+
+<Step>
+
+### 移除 Coolify 网络
+
+如果应用或服务容器仍在使用 `coolify` 网络,先把它们连接到其他网络再移除。如果你希望它们继续使用 `coolify` 网络,保留该网络并跳过下面的命令。
+
+当没有工作负载需要该网络时,移除它:
+
+```sh
+docker network rm coolify
+```
+
+</Step>
+
+<Step>
+
+### 删除 Coolify 文件
+
+确认你的备份以及仍需要的应用或服务文件都已存放在别处之后,删除 Coolify 数据目录:
+
+```sh
+rm -rf /data/coolify
+```
+
+这是最后一步破坏性操作。它会永久移除实例 `.env` 文件、本地实例备份,以及 Coolify 存储在 `/data/coolify` 下的部署与配置文件。
+
+</Step>
+
+<Step>
+
+### 移除 Docker 镜像
+
+<Callout type="info" title="镜像版本可能不同">
+镜像标签取决于你上次更新 Coolify 的时间。运行 `docker images` 查看服务器上的镜像和标签,然后在下面的命令中使用这些标签。
+</Callout>
+
+移除默认的 Coolify 镜像以释放磁盘空间:
+
+```sh
+docker rmi ghcr.io/coollabsio/coolify:latest
+docker rmi ghcr.io/coollabsio/coolify-helper:latest
+docker rmi ghcr.io/coollabsio/sentinel:1.0.1
+docker rmi postgres:15-alpine
+docker rmi redis:7-alpine
+```
+
+如果你移除了 `coolify-realtime` 容器,也移除它的镜像:
+
+```sh
+docker rmi ghcr.io/coollabsio/coolify-realtime:1.0.16
+```
+
+如果你使用默认的 Traefik 代理,也移除它的镜像:
+
+```sh
+docker rmi traefik:v3.7
+```
+
+如果你使用的是 Caddy:
+
+```sh
+docker rmi lucaslorentz/caddy-docker-proxy
+```
+
+</Step>
+</Steps>
+
+---
+
+### 验证移除结果
+
+确认没有残留的 Coolify 控制平面容器:
+
+```sh
+docker ps -a --format '{{.Names}}' | grep -E '^(coolify|coolify-db|coolify-redis|coolify-realtime|coolify-sentinel|coolify-proxy)(_|$)' || true
+```
+
+该命令不应返回任何容器名。
+
+然后确认 Docker 报告 `coolify-db` 和 `coolify-redis` 卷不存在,并且 `/data/coolify` 已不存在:
+
+```sh
+docker volume inspect coolify-db coolify-redis
+test ! -d /data/coolify && echo "Coolify data directory removed"
+```
+
+`docker volume inspect` 应报告这两个卷不存在。
+
+如果服务器上还留有应用或服务,直接用 Docker 管理或迁移它们,并在重新公开暴露之前替换 Coolify Proxy 的路由。
+
+</Tab>
+<Tab value="Coolify Cloud" icon={Cloud}>
+
+## 移除 Coolify Cloud 服务
+
+### 卸载之前
+
+ - 在 [Billing 页面](https://app.coolify.io/subscription/)取消你的订阅
+ - 如果你的资源使用 Coolify 管理的域名或 TLS 证书,继续之前请先规划替代代理。
+
+ ---
+
+<Steps>
+<Step>
+
+### 连接到服务器
+
+连接到你接入 Coolify Cloud 的那台服务器:
+
+```sh
+ssh root@<server-ip>
+```
+
+把 `<server-ip>` 替换为你服务器的 IP 地址。如果你平时用非 root 账户登录,先运行 `sudo -i` 进入 root shell。
+
+</Step>
+
+<Step>
+
+### 移除 Coolify 容器
+
+按照服务器使用的 Docker 模式移除代理。对于独立 Docker 服务器,运行:
+
+```sh
+docker rm -f coolify-proxy
+```
+
+对于 Docker Swarm 服务器,改为在管理节点上运行:
+
+```sh
+docker stack rm coolify-proxy
+```
+
+然后,如果 Sentinel 正运行在服务器上,把它移除:
+
+```sh
+if docker container inspect coolify-sentinel >/dev/null 2>&1; then
+  docker rm -f coolify-sentinel
+fi
+```
+
+移除 Coolify Proxy 会使其提供的域名和 TLS 路由失效。
+
+</Step>
+
+<Step>
+
+### 移除 Coolify 网络
+
+如果应用或服务容器仍在使用 `coolify` 网络,先把它们连接到其他网络再移除。如果你希望它们继续使用 `coolify` 网络,保留该网络并跳过下面的命令。
+
+当没有工作负载需要该网络时,移除它:
+
+```sh
+docker network rm coolify
+```
+
+</Step>
+
+<Step>
+
+### 删除 Coolify 文件
+
+备份这台服务器上你仍需要的应用或服务文件,然后移除 Coolify 数据目录:
+
+```sh
+rm -rf /data/coolify
+```
+
+这会永久删除 Coolify 存储在这台服务器 `/data/coolify` 下的文件,包括部署与配置文件。
+
+</Step>
+
+<Step>
+
+### 移除 Docker 镜像
+
+<Callout type="info" title="镜像版本可能不同">
+镜像标签取决于你上次更新 Coolify 的时间。运行 `docker images` 查看服务器上的镜像和标签,然后在下面的命令中使用这些标签。
+</Callout>
+
+移除默认的 Coolify 镜像以释放磁盘空间:
+
+```sh
+docker rmi ghcr.io/coollabsio/coolify-helper:latest
+docker rmi ghcr.io/coollabsio/sentinel:1.0.1
+```
+
+如果你使用默认的 Traefik 代理,也移除它的镜像:
+
+```sh
+docker rmi traefik:v3.7
+```
+
+如果你使用的是 Caddy:
+
+```sh
+docker rmi lucaslorentz/caddy-docker-proxy
+```
+
+</Step>
+</Steps>
+
+---
+
+### 验证移除结果
+
+确认没有残留的 Coolify 控制平面容器:
+
+```sh
+docker ps -a --format '{{.Names}}' | grep -E '^coolify-(proxy|sentinel)(_|$)' || true
+```
+
+该命令不应返回任何容器名。
+
+如果服务器上还留有应用或服务,直接用 Docker 管理或迁移它们,并在重新公开暴露之前替换 Coolify Proxy 的路由。
+
+</Tab>
+</Tabs>

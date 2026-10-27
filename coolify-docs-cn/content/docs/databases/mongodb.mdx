@@ -1,0 +1,115 @@
+---
+title: MongoDB
+description: 在 Coolify 上部署和运维 MongoDB，提供生成的凭据、持久化存储、SSL、健康检查和计划导出。
+---
+
+# MongoDB
+
+Coolify 将 MongoDB 作为独立容器部署到所选的服务器和目标上。新资源会自动获得生成的 root 密码、持久化数据卷、内部连接 URL 和健康检查。
+
+MongoDB 是一个文档数据库，存储类 JSON 的文档，而不是固定关系表中的行。
+
+## 创建 MongoDB 数据库
+
+<Steps>
+<Step>
+
+### 打开新建资源
+
+打开数据库应归属的项目和环境，然后选择 **New Resource**（新建资源）。
+
+</Step>
+<Step>
+
+### 选择 MongoDB
+
+在 **Databases**（数据库）下选择 **MongoDB**。也可以按名称搜索 **MongoDB**。
+
+</Step>
+<Step>
+
+### 选择服务器
+
+选择要运行 MongoDB 的服务器。构建服务器无法选择，因为它们不承载运行中的数据库资源。
+
+</Step>
+<Step>
+
+### 选择目标
+
+选择 MongoDB 要加入的 Docker 网络目标。
+
+</Step>
+<Step>
+
+### 检查生成的配置
+
+Coolify 创建资源并打开 **General**（常规）。请检查镜像、root 用户名、生成的密码、初始数据库、SSL 设置和连接 URL。除非外部客户端需要访问，否则保持默认的私有网络设置。
+
+</Step>
+<Step>
+
+### 启动 MongoDB
+
+选择 **Start**（启动）并留意启动输出。等 MongoDB 进入运行且健康的状态后，把 **Mongo URL (internal)**（内部 URL）复制给同一目标网络中的应用。
+
+</Step>
+</Steps>
+
+## 默认配置
+
+| 设置 | 默认值或行为 |
+| :--- | :--- |
+| 内部端口 | `27017` |
+| 默认镜像 | `mongo:7` |
+| root 用户名 | `root` |
+| 初始数据库 | `default` |
+| 数据挂载 | `/data/db` 与 `/data/configdb` |
+| 计划备份 | 支持 |
+| SSL | 支持 MongoDB SSL 模式 |
+
+如果你在 MongoDB 内部修改了 root 用户名、密码或初始数据库，请同步更新 **General** 中对应的值，生成的 URL 和自动备份才会使用最新的凭据。
+
+
+## 连接 MongoDB
+
+同一 Coolify 目标网络上的应用请使用 **Mongo URL (internal)**：
+
+```sh
+mongodb://<username>:<password>@<database-container>:27017/?directConnection=true
+```
+
+Coolify 生成的内部 URL 在端口后带有 `/?directConnection=true`。请尽量直接复制生成的 URL，不要手工重建。SSL 会追加 `tls=true` 和 CA 路径；`verify-full` 还会追加服务器证书路径。这些路径见[数据库 SSL](/databases/ssl)。
+
+只有在配置了 **Public access（公开访问）> Access > Public through TCP proxy**（经 TCP 代理公开）和 **Public port**（公开端口）之后，Coolify 才会显示 **Mongo URL (public)**（公开 URL）。除非外部客户端需要直连，否则请保持 MongoDB 私有。
+
+## 配置 MongoDB
+
+打开 **General** 修改镜像、root 凭据、**Port mappings**（端口映射）、公开代理、自定义 Docker 选项和 **Custom MongoDB configuration**（自定义 MongoDB 配置）。更改生成的容器配置后请重启资源。
+
+## 备份 MongoDB
+
+Coolify 使用 `mongodump` 并保存 gzip 压缩的归档。**Databases to include**（要包含的数据库）留空时包含所有数据库和集合。
+
+要排除集合，请使用以下格式：
+
+```sh
+app:events,logs|analytics
+```
+
+这表示包含 `app` 中除 `events` 和 `logs` 之外的所有集合，以及 `analytics` 中的全部集合。计划、保留策略和 S3 副本通过[数据库备份](/databases/backups)配置。
+
+数据库运行时，内置的 **Import Backup**（导入备份）表单接受 MongoDB 归档。请按[恢复数据库](/databases/restore)操作，再通过受控的客户端流程验证恢复出的集合。
+
+## SSL 与健康检查
+
+MongoDB 支持 `allow`、`prefer`、`require` 和 `verify-full`。`verify-full` 要求客户端信任 Coolify CA 证书。参见[数据库 SSL](/databases/ssl)。
+
+在 **Healthcheck**（健康检查）下配置 Docker 健康检查，保存后重启 MongoDB。
+
+## MongoDB 官方资源
+
+- [MongoDB 文档](https://www.mongodb.com/docs/)
+- [MongoDB 源码](https://github.com/mongodb/mongo)
+- [MongoDB Docker 镜像](https://hub.docker.com/_/mongo)
+- [`mongodump` 文档](https://www.mongodb.com/docs/database-tools/mongodump/)
