@@ -332,8 +332,13 @@
 		searchInput.value = '';
 		apply();
 	});
-	// `/` 聚焦搜索（输入框内不拦截）
+	// `/` 与 ⌘K/Ctrl+K（Vercel 皮肤语汇）聚焦搜索；输入框内不拦 `/`
 	document.addEventListener('keydown', function (e) {
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+			e.preventDefault();
+			searchInput.focus();
+			return;
+		}
 		if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
 		var t = e.target;
 		if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;

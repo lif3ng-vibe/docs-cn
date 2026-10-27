@@ -198,28 +198,12 @@ h1 {
 	font-size: 0.92rem;
 	margin: 2px 0 0;
 }
-.head-controls {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-left: auto;
-}
-/* MDN 皮肤：搜索掉到第二行占满全宽（设置钮留在其右） */
-[data-skin='mdn'] .head-controls,
-html:not([data-skin]) .head-controls {
-	flex: 1 1 100%;
-}
-[data-skin='mdn'] .search-wrap,
-html:not([data-skin]) .search-wrap {
-	flex: 1 1 auto;
-}
-[data-skin='mdn'] .settings-btn,
-html:not([data-skin]) .settings-btn {
-	order: 2;
-}
+/* 搜索与设置：brand-row 直接子元素，按皮肤用 order 排布
+   mdn —— 设置独占首行右上，大搜索第二行全宽
+   github / vercel —— 搜索 + 设置同行右端，高度与搜索框一致 */
 .search-wrap {
-	order: var(--search-order);
-	flex: 0 1 var(--search-w);
+	order: var(--search-order, 2);
+	flex: 1 1 100%;
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -230,6 +214,12 @@ html:not([data-skin]) .settings-btn {
 	border: var(--search-border);
 	border-radius: var(--search-radius);
 	transition: border-color 0.15s ease-out;
+}
+[data-skin='github'] .search-wrap,
+[data-skin='vercel'] .search-wrap {
+	order: 1;
+	flex: 0 1 var(--search-w);
+	margin-left: auto;
 }
 .search-wrap:focus-within {
 	border-color: var(--accent);
@@ -270,8 +260,11 @@ html:not([data-skin]) .settings-btn {
 	display: none;
 }
 .settings-btn {
+	order: 1;
+	margin-left: auto;
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 6px;
 	height: 34px;
 	padding: 0 12px;
@@ -284,6 +277,13 @@ html:not([data-skin]) .settings-btn {
 	cursor: pointer;
 	white-space: nowrap;
 	transition: color 0.15s ease-out, border-color 0.15s ease-out;
+}
+/* 同行时与搜索框严格等高 */
+[data-skin='github'] .settings-btn,
+[data-skin='vercel'] .settings-btn {
+	order: 2;
+	margin-left: 0;
+	height: var(--search-h);
 }
 .settings-btn:hover {
 	color: var(--accent);
@@ -760,16 +760,15 @@ footer a:hover {
 	.brand-row {
 		gap: 10px;
 	}
-	.head-controls {
-		flex: 1 1 100%;
-		margin-left: 0;
-	}
 	.search-wrap {
-		flex: 1 1 auto;
-		order: 0;
+		flex: 1 1 100%;
+		order: 2;
+		margin-left: 0;
 		height: 44px;
 	}
 	.settings-btn {
+		order: 1;
+		margin-left: auto;
 		height: 44px;
 	}
 	.filterbar {
@@ -857,17 +856,15 @@ footer a:hover {
 						<h1>docs-cn</h1>
 						<p class="sub">开源项目文档的中文翻译集合 · 收录 21 站 · 非官方翻译。</p>
 					</div>
-					<div class="head-controls">
-						<div class="search-wrap">
-							<svg class="search-ico" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.2"/><path d="m13.5 13.5-3.8-3.8"/></svg>
-							<input type="search" id="search" placeholder="搜索 21 个文档站…" autocomplete="off" aria-label="搜索站点名称或描述" />
-							<kbd class="kbd-hint" aria-hidden="true"></kbd>
-						</div>
-						<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">
-							<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h12M2 11.5h12"/><circle cx="6" cy="4.5" r="1.9" fill="#fff"/><circle cx="10.5" cy="11.5" r="1.9" fill="#fff"/></svg>
-							设置
-						</button>
+					<div class="search-wrap">
+						<svg class="search-ico" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.2"/><path d="m13.5 13.5-3.8-3.8"/></svg>
+						<input type="search" id="search" placeholder="搜索 21 个文档站…" autocomplete="off" aria-label="搜索站点名称或描述" />
+						<kbd class="kbd-hint" aria-hidden="true"></kbd>
 					</div>
+					<button class="settings-btn" id="settings-btn" type="button" aria-haspopup="dialog">
+						<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h12M2 11.5h12"/><circle cx="6" cy="4.5" r="1.9" fill="#fff"/><circle cx="10.5" cy="11.5" r="1.9" fill="#fff"/></svg>
+						设置
+					</button>
 				</div>
 			</div>
 		</header>
@@ -1521,8 +1518,13 @@ footer a:hover {
 		searchInput.value = '';
 		apply();
 	});
-	// `/` 聚焦搜索（输入框内不拦截）
+	// `/` 与 ⌘K/Ctrl+K（Vercel 皮肤语汇）聚焦搜索；输入框内不拦 `/`
 	document.addEventListener('keydown', function (e) {
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+			e.preventDefault();
+			searchInput.focus();
+			return;
+		}
 		if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
 		var t = e.target;
 		if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;

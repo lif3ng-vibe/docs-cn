@@ -172,28 +172,12 @@ h1 {
 	font-size: 0.92rem;
 	margin: 2px 0 0;
 }
-.head-controls {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-left: auto;
-}
-/* MDN 皮肤：搜索掉到第二行占满全宽（设置钮留在其右） */
-[data-skin='mdn'] .head-controls,
-html:not([data-skin]) .head-controls {
-	flex: 1 1 100%;
-}
-[data-skin='mdn'] .search-wrap,
-html:not([data-skin]) .search-wrap {
-	flex: 1 1 auto;
-}
-[data-skin='mdn'] .settings-btn,
-html:not([data-skin]) .settings-btn {
-	order: 2;
-}
+/* 搜索与设置：brand-row 直接子元素，按皮肤用 order 排布
+   mdn —— 设置独占首行右上，大搜索第二行全宽
+   github / vercel —— 搜索 + 设置同行右端，高度与搜索框一致 */
 .search-wrap {
-	order: var(--search-order);
-	flex: 0 1 var(--search-w);
+	order: var(--search-order, 2);
+	flex: 1 1 100%;
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -204,6 +188,12 @@ html:not([data-skin]) .settings-btn {
 	border: var(--search-border);
 	border-radius: var(--search-radius);
 	transition: border-color 0.15s ease-out;
+}
+[data-skin='github'] .search-wrap,
+[data-skin='vercel'] .search-wrap {
+	order: 1;
+	flex: 0 1 var(--search-w);
+	margin-left: auto;
 }
 .search-wrap:focus-within {
 	border-color: var(--accent);
@@ -244,8 +234,11 @@ html:not([data-skin]) .settings-btn {
 	display: none;
 }
 .settings-btn {
+	order: 1;
+	margin-left: auto;
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 6px;
 	height: 34px;
 	padding: 0 12px;
@@ -258,6 +251,13 @@ html:not([data-skin]) .settings-btn {
 	cursor: pointer;
 	white-space: nowrap;
 	transition: color 0.15s ease-out, border-color 0.15s ease-out;
+}
+/* 同行时与搜索框严格等高 */
+[data-skin='github'] .settings-btn,
+[data-skin='vercel'] .settings-btn {
+	order: 2;
+	margin-left: 0;
+	height: var(--search-h);
 }
 .settings-btn:hover {
 	color: var(--accent);
@@ -734,16 +734,15 @@ footer a:hover {
 	.brand-row {
 		gap: 10px;
 	}
-	.head-controls {
-		flex: 1 1 100%;
-		margin-left: 0;
-	}
 	.search-wrap {
-		flex: 1 1 auto;
-		order: 0;
+		flex: 1 1 100%;
+		order: 2;
+		margin-left: 0;
 		height: 44px;
 	}
 	.settings-btn {
+		order: 1;
+		margin-left: auto;
 		height: 44px;
 	}
 	.filterbar {

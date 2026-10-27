@@ -232,7 +232,7 @@ components:
 - **Headline**（700，1.08rem，-0.005em）：列表行站名（紧凑密度降到 0.98rem）；hover 变主色。
 - **Body**（400，0.9rem，1.55）：行描述；全局基准 14px/1.55。
 - **Label**（400，0.82–0.92rem）：副标题 0.92rem、chips 0.82rem、按钮/CTA 0.85rem（CTA 加 500 字重）、标签胶囊 0.75rem。
-- **Mono**（400，0.72–0.8rem）：kbd 快捷键提示 11px、元数据行 0.78rem、命中计数 0.8rem、EN 徽标 0.72rem/600/0.04em。
+- **Mono**（400，0.78–0.8rem）：kbd 快捷键提示 0.78rem、元数据行 0.78rem、命中计数 0.8rem、EN 徽标 0.78rem/600/0.04em。
 
 ### Named Rules
 
@@ -287,7 +287,7 @@ components:
 ### 搜索框（大搜索）
 - **形态：** 放大镜图标（15px）+ 无框输入 + 右端 kbd 提示，垂直居中于 14px 水平内衬的容器；`focus-within` 边框变主色（0.15s ease-out）。
 - **皮肤形态：** MDN 全宽 52px 高、1.5px 近黑边、6px 角，kbd 提示显示 `/`；GitHub 190×32px、1px 灰边，kbd 提示整体隐藏；Vercel 260×40px、1px `#eaeaea`、8px 角，kbd 提示显示 `⌘K`。
-- **行为：** 全局 `/` 键聚焦（输入态不拦截，三种皮肤一致；`⌘K` 仅为 Vercel 的皮肤语汇展示，未绑定实际快捷键）。placeholder：「搜索 N 个文档站…」。
+- **行为：** 全局 `/` 与 `Ctrl/⌘+K` 聚焦搜索（`/` 在输入态不拦截，三种皮肤一致；`⌘K` 是 Vercel 皮肤语汇，但快捷键真实绑定、全皮肤可用）。placeholder：「搜索 N 个文档站…」。设置钮与搜索框同行时严格等高（GitHub 32px / Vercel 40px）。
 
 ### Chips（过滤组）
 - **形态：** 皮肤三态——MDN 矩形（32px 高、1.5px 近黑边、4px 角）/ GitHub 胶囊（28px、灰底 1px 边）/ Vercel 下划线文字钮（34px、无边框、透明底 2px 下划线）。
