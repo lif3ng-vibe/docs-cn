@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summer School of Making：魏玛的木头、油墨与陶土</title>
+<meta name="description" content="在魏玛举行为期四周的暑期课程，涵盖家具、印刷与陶艺，7 月 1 日至 28 日。36 个名额；3 月 15 日截止申请。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@700&family=Karla:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="wordmark" href="#top" aria-label="Summer School of Making，首页">Summer School of Making</a>
+    <nav class="bar__nav" aria-label="主导航">
+      <a class="bar__link" href="#shops">工坊</a>
+      <a class="bar__link" href="#dates">日期</a>
+      <a class="btn btn--primary btn--bar" href="#apply">申请<span class="bar__by">，3 月 15 日截止</span></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-h">在魏玛，过一个动手做的夏天</h1>
+        <p class="lead">家具、印刷与陶艺，7 月 1 日至 28 日。</p>
+        <dl class="boxes">
+          <div><dt>名额</dt><dd>36</dd></div>
+          <div><dt>申请截止</dt><dd>3 月 15 日</dd></div>
+        </dl>
+        <div class="actions">
+          <a class="btn btn--primary" href="#apply">申请名额</a>
+          <a class="btn btn--outline" href="#shops">看看三间工坊</a>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <figure class="photo hero__photo" data-slot="hero" data-alt="白天里学校自己的工坊之一，工作台与机器已就绪">
+          <img src="photos/woodshop-1920.jpg" width="1920" height="1274" sizes="(min-width: 60rem) 46vw, 100vw" fetchpriority="high" style="object-position: 35% 55%" alt="一间洒满日光的木工坊，长排工作台与机器">
+        </figure>
+        <nav class="hero__codes" aria-label="三间工坊">
+          <a class="code code--furniture" href="#furniture" data-open="furniture">家具</a>
+          <a class="code code--print" href="#print" data-open="print">印刷</a>
+          <a class="code code--ceramics" href="#ceramics" data-open="ceramics">陶艺</a>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <section class="shops" id="shops" aria-labelledby="shops-h">
+    <div class="container">
+      <div class="head-split">
+        <h2 id="shops-h">三间工坊，一门课</h2>
+        <p class="lead">先选定你的首选。每间工坊在这一页都保有自己的颜色。</p>
+      </div>
+      <div class="switch">
+        <div class="tabs" role="tablist" aria-label="三间工坊"><button role="tab" class="tab tab--furniture" id="t-furniture" aria-controls="furniture" aria-selected="true">家具</button><button role="tab" class="tab tab--print" id="t-print" aria-controls="print" aria-selected="false" tabindex="-1">印刷</button><button role="tab" class="tab tab--ceramics" id="t-ceramics" aria-controls="ceramics" aria-selected="false" tabindex="-1">陶艺</button></div>
+        <article class="shop" role="tabpanel" id="furniture" aria-labelledby="t-furniture">
+          <figure class="photo shop__photo" data-slot="furniture" data-alt="家具工坊开工：工作台前的双手，车床或接榫">
+            <img src="photos/woodturning-indonesia-1920.jpg" width="1920" height="1280" sizes="(min-width: 60rem) 56vw, 100vw" loading="lazy" style="object-position: 40% 50%" alt="双手在车床上把稳凿刀，木屑纷飞">
+          </figure>
+          <div class="shop__cell code--furniture">
+            <h3>家具</h3>
+            <ul class="shop__covers"><li>榫卯</li><li>框架</li><li>涂饰</li></ul>
+            <a class="shop__go" href="#apply" data-pick="furniture">以家具为首选申请</a>
+          </div>
+        </article>
+        <article class="shop" role="tabpanel" id="print" aria-labelledby="t-print">
+          <figure class="photo shop__photo" data-slot="print" data-alt="印刷工坊开工：活字、油墨与压印机，正在揭下一张印张">
+            <img src="photos/american-french-tool-24x48-etching-press-1280.jpg" width="1280" height="1342" sizes="(min-width: 60rem) 56vw, 100vw" loading="lazy" style="object-position: 50% 55%" alt="一台带轮辐的蚀刻压印机立在空旷的印房里">
+          </figure>
+          <div class="shop__cell code--print">
+            <h3>印刷</h3>
+            <ul class="shop__covers"><li>纸张</li><li>油墨</li><li>压印机</li></ul>
+            <a class="shop__go" href="#apply" data-pick="print">以印刷为首选申请</a>
+          </div>
+        </article>
+        <article class="shop" role="tabpanel" id="ceramics" aria-labelledby="t-ceramics">
+          <figure class="photo shop__photo" data-slot="ceramics" data-alt="陶艺工坊开工：拉坯机、陶泥与工具">
+            <img src="photos/pottery-workshop-at-odisha-crafts-museum-02-1920.jpg" width="1920" height="1280" sizes="(min-width: 60rem) 56vw, 100vw" loading="lazy" style="object-position: 52% 45%" alt="陶艺师的双手在飞转的拉坯机上收拢陶泥成锥">
+          </figure>
+          <div class="shop__cell code--ceramics">
+            <h3>陶艺</h3>
+            <ul class="shop__covers"><li>陶泥</li><li>釉</li><li>窑</li></ul>
+            <a class="shop__go" href="#apply" data-pick="ceramics">以陶艺为首选申请</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cal" id="dates" aria-labelledby="dates-h">
+    <div class="container">
+      <div class="head-split">
+        <h2 id="dates-h">从 3 月到 7 月</h2>
+        <p class="lead">先申请。然后在工作台前度过四周，三间工坊同时进行。</p>
+      </div>
+      <div class="cal__grid">
+        <div class="cal__deadline is-next">
+          <p class="cal__tag">即将</p>
+          <p class="cal__day">3 月 15 日</p>
+          <p class="cal__what">申请截止</p>
+        </div>
+        <div class="cal__july">
+          <p class="cal__tag">即将</p>
+          <ol class="cal__weeks" aria-label="7 月的四周">
+            <li><b>第 1 周</b><span>7 月 1 日至 7 日</span></li>
+            <li><b>第 2 周</b><span>7 月 8 日至 14 日</span></li>
+            <li><b>第 3 周</b><span>7 月 15 日至 21 日</span></li>
+            <li><b>第 4 周</b><span>7 月 22 日至 28 日</span></li>
+          </ol>
+          <ul class="cal__shops" aria-label="整个 7 月开放的工坊">
+            <li class="code--furniture">家具</li>
+            <li class="code--print">印刷</li>
+            <li class="code--ceramics">陶艺</li>
+          </ul>
+          <div class="cal__ends"><span>7 月 1 日，工坊开放</span><span>7 月 28 日，最后一天</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="apply" id="apply" aria-labelledby="apply-h">
+    <div class="container apply__grid">
+      <div class="apply__head">
+        <h2 id="apply-h">申请名额</h2>
+        <p class="lead">面向学生，也面向任何正在转行的人。</p>
+        <dl class="facts">
+          <div><dt>地点</dt><dd>魏玛</dd></div>
+          <div><dt>时间</dt><dd>7 月 1 日至 28 日</dd></div>
+          <div><dt>名额</dt><dd>36</dd></div>
+          <div><dt>截止</dt><dd>3 月 15 日</dd></div>
+        </dl>
+      </div>
+      <form class="sheet" data-endpoint="" novalidate>
+        <div class="sheet__cell">
+          <label for="a-name">你的姓名</label>
+          <input id="a-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="sheet__cell">
+          <label for="a-email">邮箱</label>
+          <input id="a-email" name="email" type="email" autocomplete="email" inputmode="email" required>
+        </div>
+        <fieldset class="sheet__cell sheet__cell--wide pick">
+          <legend>首选工坊</legend>
+          <div class="pick__row">
+            <input type="radio" name="shop" id="s-furniture" value="furniture" required><label class="opt-furniture" for="s-furniture">家具</label>
+            <input type="radio" name="shop" id="s-print" value="print"><label class="opt-print" for="s-print">印刷</label>
+            <input type="radio" name="shop" id="s-ceramics" value="ceramics"><label class="opt-ceramics" for="s-ceramics">陶艺</label>
+          </div>
+        </fieldset>
+        <fieldset class="sheet__cell sheet__cell--wide pick pick--plain">
+          <legend>你的身份</legend>
+          <div class="pick__row pick__row--two">
+            <input type="radio" name="who" id="w-student" value="student"><label for="w-student">学生</label>
+            <input type="radio" name="who" id="w-change" value="changing career"><label for="w-change">正在转行</label>
+          </div>
+        </fieldset>
+        <div class="sheet__cell sheet__cell--wide">
+          <label for="a-why">你想做点什么？</label>
+          <textarea id="a-why" name="why" rows="3"></textarea>
+        </div>
+        <div class="sheet__foot">
+          <button class="btn btn--paper" type="submit">申请名额</button>
+          <p class="apply__help" id="apply-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="foot__line">木头、油墨与陶土。魏玛，7 月。</p>
+    <div class="foot__row">
+      <nav class="foot__links" aria-label="本页">
+        <a href="#shops">工坊</a>
+        <a href="#dates">日期</a>
+        <a href="#apply">申请</a>
+      </nav>
+      <p class="foot__legal">&copy; 2026 Summer School of Making</p>
+    </div>
+    <p class="foot__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Woodshop.jpg">Dolly442</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Woodturning_Indonesia.jpg">Bertrand from Paris, France</a>（CC BY 2.0）、<a href="https://commons.wikimedia.org/wiki/File:American_French_Tool_24x48_etching_press.jpg">ColinMB</a>（CC BY-SA 4.0）与 <a href="https://commons.wikimedia.org/wiki/File:Pottery_workshop_at_Odisha_Crafts_Museum_02.jpg">Kritzolina</a>（CC BY-SA 4.0），均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const tabs = [...document.querySelectorAll('.tabs [role="tab"]')]; if (!tabs.length) return;
+  const show = (t, focus) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; }); if (focus) t.focus(); };
+  tabs.forEach((t, i) => { t.addEventListener('click', () => show(t)); t.addEventListener('keydown', (e) => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length], true); } }); });
+  show(tabs[0]);
+  document.querySelectorAll('[data-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); show(document.getElementById('t-' + a.dataset.open)); document.getElementById('shops').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }));
+  document.querySelectorAll('[data-pick]').forEach((a) => a.addEventListener('click', () => { const r = document.getElementById('s-' + a.dataset.pick); if (r) r.checked = true; }));
+  /* the next date on the calendar, from the visitor's own date */
+  const now = new Date(), m = now.getMonth(), d = now.getDate();
+  const july = (m === 6 && d <= 28), toJuly = (m === 2 && d > 15) || m === 3 || m === 4 || m === 5;
+  const dl = document.querySelector('.cal__deadline'), jl = document.querySelector('.cal__july');
+  if (dl && jl) { dl.classList.toggle('is-next', !july && !toJuly); jl.classList.toggle('is-next', july || toJuly); jl.querySelector('.cal__tag').textContent = july ? '进行中' : '即将'; }
+})();
+(() => {
+  const form = document.querySelector('.sheet');
+  const help = document.getElementById('apply-help');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fields = [...form.querySelectorAll('input[type="text"], input[type="email"]')];
+    fields.forEach((i) => i.removeAttribute('aria-invalid'));
+    const bad = fields.find((i) => !i.checkValidity());
+    if (bad) { bad.setAttribute('aria-invalid', 'true'); bad.setAttribute('aria-describedby', 'apply-help'); help.textContent = bad.type === 'email' ? '邮箱地址看起来不完整。请按 name@example.com 的格式填写。' : '请填写姓名，让我们知道是谁在申请。'; bad.focus(); return; }
+    if (!form.querySelector('input[name="shop"]:checked')) { help.textContent = '请选择你想首选的工坊。'; form.querySelector('#s-furniture').focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：该表单尚未接入后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '你的申请已送达学校。' : '没有发送成功。请稍后再试。'; })
+      .catch(() => { help.textContent = '没有发送成功。请稍后再试。'; });
+  });
+})();
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

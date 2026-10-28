@@ -543,6 +543,21 @@ jobs:
         run: |
           mv site ../_site/impeccable-mirror
 
+      # hallmark 是纯静态站（上游原班无构建），全站相对路径引用，
+      # 子路径部署零改造，直接搬 site/ 即可。
+      - name: Restore hallmark-docs-cn dist
+        id: dist-hallmark
+        uses: actions/cache@v4
+        with:
+          path: _site/hallmark
+          key: dist-hallmark-${{ hashFiles('hallmark-docs-cn/site/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Collect hallmark-docs-cn
+        if: steps.dist-hallmark.outputs.cache-hit != 'true'
+        working-directory: hallmark-docs-cn
+        run: |
+          mv site ../_site/hallmark
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -579,10 +594,10 @@ jobs:
             echo '| agent-skills | ${{ steps.dist-agent-skills.outputs.cache-hit == 'true' }} |'
             echo '| impeccable | ${{ steps.dist-impeccable.outputs.cache-hit == 'true' }} |'
             echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
-            echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
             echo '| tailscale | ${{ steps.dist-tailscale.outputs.cache-hit == 'true' }} |'
             echo '| litellm | ${{ steps.dist-litellm.outputs.cache-hit == 'true' }} |'
           echo '| coolify | ${{ steps.dist-coolify.outputs.cache-hit == 'true' }} |'
+          echo '| hallmark | ${{ steps.dist-hallmark.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

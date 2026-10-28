@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fieldbook，用手机记好的农场记录</title>
+<meta name="description" content="Fieldbook 为小型畜牧场保管记录：牲畜移动、用药与田间作业，从手机上随手记下，随时可以迎检。每个农场每月 £12。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@600&amp;family=Red+Hat+Text:wght@400;500&amp;family=Red+Hat+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js'); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('stage'); setTimeout(() => { if (!window.__fieldbookMap) document.documentElement.classList.remove('stage'); }, 2500); } let tick = 0; addEventListener('resize', () => document.documentElement.style.setProperty('--tick', String(tick ^= 1)));</script>
+</head>
+<body id="top">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="wordmark" href="#top" aria-label="Fieldbook，回到页首">Fieldbook</a>
+    <nav class="bar__links" aria-label="页面导航"><a href="#book">记录册</a><a href="#day">一天</a><a href="#inspection">迎检</a><a href="#start">价格</a></nav>
+    <div class="bar__end">
+      <p class="bar__price"><span class="num">£12</span> 每月每农场</p>
+      <a class="btn btn--sm" href="#start">开一本农场册</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="hero__ground" aria-hidden="true"><canvas class="hero__canvas"></canvas></div>
+    <canvas class="loupe" aria-hidden="true"></canvas>
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-head">农场记录，在田头随手记下。</h1>
+        <p class="lead">移动、用药与田间作业，用手机记下，随时迎检。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#start">开一本农场册</a>
+          <a class="btn" href="#book">看看记录册</a>
+        </div>
+        <p class="hero__terms"><span class="num">£12</span> 每月每农场。</p>
+      </div>
+      <div class="hero__map" role="group" aria-label="示例农场地图上的今日记录">
+        <div class="farm">
+          <svg class="route" viewBox="0 0 1250 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <defs><mask id="route-draw" maskUnits="userSpaceOnUse" x="0" y="0" width="1250" height="1000"><path class="route__reveal" pathLength="1" d="M525 170 C 470 210 330 280 262 346 S 180 440 162 480"/></mask></defs>
+            <path class="route__line" mask="url(#route-draw)" d="M525 170 C 470 210 330 280 262 346 S 180 440 162 480"/>
+            <circle class="route__start" cx="525" cy="170" r="6"/>
+          </svg>
+          <button class="pin" type="button" data-entry="fld" style="--u: 0.47; --v: 0.44" aria-controls="entry" aria-pressed="false"><span class="pin__dot" aria-hidden="true"></span><span class="pin__tag"><span class="num">06:10</span> 田间作业</span></button>
+          <button class="pin" type="button" data-entry="med" style="--u: 0.31; --v: 0.69" aria-controls="entry" aria-pressed="false"><span class="pin__dot" aria-hidden="true"></span><span class="pin__tag"><span class="num">06:55</span> 用药</span></button>
+          <button class="pin is-on" type="button" data-entry="mov" style="--u: 0.13; --v: 0.48" aria-controls="entry" aria-pressed="true"><span class="pin__dot" aria-hidden="true"></span><span class="pin__tag"><span class="num">07:40</span> 移动</span></button>
+        </div>
+        <div class="entry hero__entry" id="entry" data-slot="demo-1" data-alt="从农场地图图钉打开的一条记录" data-keep>
+          <article class="entry__page" data-entry="mov" aria-label="07:40 的移动记录，示例">
+            <header class="entry__head"><span class="entry__kind"><i class="mark" data-kind="mov" aria-hidden="true"></i>移动</span><span class="entry__date num">10 月 8 日 周四</span><time class="entry__time num" datetime="2026-10-08T07:40">07:40</time></header>
+            <dl class="entry__cells">
+              <div><dt>数量</dt><dd><span class="num">24</span> 只母羊</dd></div>
+              <div><dt>经手人</dt><dd>你</dd></div>
+              <div><dt>从</dt><dd>山坡地</dd></div>
+              <div><dt>至</dt><dd>宅旁围场</dd></div>
+            </dl>
+          </article>
+          <article class="entry__page" data-entry="med" aria-label="06:55 的用药记录，示例" hidden>
+            <header class="entry__head"><span class="entry__kind"><i class="mark" data-kind="med" aria-hidden="true"></i>用药</span><span class="entry__date num">10 月 8 日 周四</span><time class="entry__time num" datetime="2026-10-08T06:55">06:55</time></header>
+            <dl class="entry__cells">
+              <div><dt>牲畜</dt><dd>母羊 <span class="num">0417</span></dd></div>
+              <div><dt>剂量</dt><dd><span class="num">10</span> 毫升</dd></div>
+              <div><dt>药物</dt><dd>驱虫药</dd></div>
+              <div><dt>批号</dt><dd class="num">B2241</dd></div>
+            </dl>
+          </article>
+          <article class="entry__page" data-entry="fld" aria-label="06:10 的田间作业记录，示例" hidden>
+            <header class="entry__head"><span class="entry__kind"><i class="mark" data-kind="fld" aria-hidden="true"></i>田间作业</span><span class="entry__date num">10 月 8 日 周四</span><time class="entry__time num" datetime="2026-10-08T06:10">06:10</time></header>
+            <dl class="entry__cells">
+              <div><dt>田地</dt><dd>长条地</dd></div>
+              <div><dt>面积</dt><dd><span class="num">3.6</span> 公顷</dd></div>
+              <div><dt>作业</dt><dd>镇压</dd></div>
+              <div><dt>经手人</dt><dd>你</dd></div>
+            </dl>
+          </article>
+          <div class="entry__foot">
+            <button class="entry__step entry__step--prev" type="button" aria-label="更早的记录" disabled></button>
+            <p class="entry__state"><i class="chip chip--ok" data-entry="mov">已入册</i><i class="chip chip--held" data-entry="med" hidden>休药期至 <span class="num">11 月 5 日</span></i><i class="chip chip--ok" data-entry="fld" hidden>已入册</i></p>
+            <button class="entry__step entry__step--next" type="button" aria-label="更晚的记录" disabled></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="book" id="book" aria-labelledby="book-head">
+    <div class="container">
+      <div class="sheet index" data-slot="demo-2" data-alt="你的农场册：每一条移动、用药与田间作业，最新在前">
+        <div class="index__top">
+          <div class="index__title">
+            <h2 id="book-head">记录册</h2>
+            <p class="index__farm">示例农场，养殖场编号 <span class="num">12/345/6789</span></p>
+          </div>
+          <div class="seg" role="group" aria-label="筛选显示的记录">
+            <button class="seg__tab" type="button" aria-pressed="true" data-log="all">全部记录</button>
+            <button class="seg__tab" type="button" aria-pressed="false" data-log="mov">移动</button>
+            <button class="seg__tab" type="button" aria-pressed="false" data-log="med">用药</button>
+            <button class="seg__tab" type="button" aria-pressed="false" data-log="fld">田间作业</button>
+          </div>
+        </div>
+        <table class="tbl">
+          <caption class="visually-hidden">农场册，最新在前，示例条目</caption>
+          <thead><tr><th scope="col">日期</th><th scope="col">类型</th><th scope="col">记录</th><th scope="col" class="r">数量</th><th scope="col">休药期</th><th scope="col">经手人</th></tr></thead>
+          <tbody>
+            <tr data-log="mov" class="is-lead"><td class="num">10 月 8 日 <span class="t">07:40</span></td><td><i class="chip chip--kind" data-kind="mov">移动</i></td><th scope="row">母羊，山坡地至宅旁围场</th><td class="num r">24 头</td><td></td><td>你</td></tr>
+            <tr data-log="med"><td class="num">10 月 8 日 <span class="t">06:55</span></td><td><i class="chip chip--kind" data-kind="med">用药</i></td><th scope="row">母羊 <span class="num">0417</span>，驱虫药，批号 <span class="num">B2241</span></th><td class="num r">10 毫升</td><td><i class="chip chip--held">至 <span class="num">11 月 5 日</span></i></td><td>你</td></tr>
+            <tr data-log="fld"><td class="num">10 月 8 日 <span class="t">06:10</span></td><td><i class="chip chip--kind" data-kind="fld">田间作业</i></td><th scope="row">长条地，镇压</th><td class="num r">3.6 公顷</td><td></td><td>你</td></tr>
+            <tr data-log="fld"><td class="num">10 月 6 日 <span class="t">10:00</span></td><td><i class="chip chip--kind" data-kind="fld">田间作业</i></td><th scope="row">山坡地，刈顶</th><td class="num r">5.2 公顷</td><td></td><td>承包商</td></tr>
+            <tr data-log="mov"><td class="num">10 月 5 日 <span class="t">14:15</span></td><td><i class="chip chip--kind" data-kind="mov">移动</i></td><th scope="row">羔羊，离场运往市场</th><td class="num r">30 头</td><td></td><td>农场帮工</td></tr>
+            <tr data-log="med"><td class="num">10 月 1 日 <span class="t">08:45</span></td><td><i class="chip chip--kind" data-kind="med">用药</i></td><th scope="row">羔羊，疫苗，批号 <span class="num">V0918</span></th><td class="num r">每只 2 毫升</td><td><i class="chip chip--ok">已解除</i></td><td>农场帮工</td></tr>
+            <tr data-log="med"><td class="num">9 月 24 日 <span class="t">17:05</span></td><td><i class="chip chip--kind" data-kind="med">用药</i></td><th scope="row">种公羊 <span class="num">0033</span>，抗生素，批号 <span class="num">A7730</span></th><td class="num r">5 毫升</td><td><i class="chip chip--held">至 <span class="num">10 月 22 日</span></i></td><td>兽医</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="field-band" id="field" aria-labelledby="field-head">
+    <div class="field-band__pic">
+      <figure class="field-band__photo" data-slot="photo-2" data-alt="你自己的田地、石墙与谷仓">
+        <img src="photos/2014-fields-swaledale-gunnerside-1920.jpg" width="1920" height="1440" loading="lazy" decoding="async" alt="绿色山谷草甸上、干砌石墙间的石造田间谷仓" style="object-position: 60% 62%">
+      </figure>
+      <div class="container field-band__in">
+        <h2 id="field-head">在田间当场记录，不靠事后补</h2>
+      </div>
+    </div>
+  </section>
+
+  <section class="day" id="day" aria-labelledby="day-head">
+    <div class="container">
+      <div class="day__head">
+        <h2 id="day-head">一天，按小时记</h2>
+        <p class="day__date">10 月 8 日 周四，示例农场</p>
+      </div>
+      <div class="sched" role="table" aria-label="10 月 8 日周四，按记录类型与时间排列的条目，示例">
+        <div class="sched__scale" role="row" aria-hidden="true"><span class="sched__name"></span><span class="sched__hours"><span class="num" style="--t:0">05:00</span><span class="num" style="--t:2">07:00</span><span class="num" style="--t:4">09:00</span><span class="num" style="--t:6">11:00</span><span class="num" style="--t:8">13:00</span><span class="num" style="--t:10">15:00</span><span class="num" style="--t:12">17:00</span></span></div>
+        <div class="sched__row" role="row">
+          <span class="sched__name" role="rowheader">移动</span>
+          <span class="sched__track" role="cell">
+            <span data-kind="mov" class="ev" style="--t:2.67"><time class="num" datetime="2026-10-08T07:40">07:40</time><b>母羊至宅旁围场</b><small class="num">24 头</small></span>
+          </span>
+        </div>
+        <div class="sched__row" role="row">
+          <span class="sched__name" role="rowheader">用药</span>
+          <span class="sched__track" role="cell">
+            <span data-kind="med" class="ev ev--med" style="--t:1.92"><time class="num" datetime="2026-10-08T06:55">06:55</time><b>母羊 <span class="num">0417</span>，驱虫药</b><small class="num">10 毫升</small></span>
+          </span>
+        </div>
+        <div class="sched__row" role="row">
+          <span class="sched__name" role="rowheader">田间作业</span>
+          <span class="sched__track" role="cell">
+            <span data-kind="fld" class="ev" style="--t:1.17"><time class="num" datetime="2026-10-08T06:10">06:10</time><b>长条地，镇压</b><small class="num">3.6 公顷</small></span>
+            <span data-kind="fld" class="ev ev--last ev--end" style="--t:10.5"><time class="num" datetime="2026-10-08T15:30">15:30</time><b>上草甸，耙地</b><small class="num">4.0 公顷</small></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="inspect" id="inspection" aria-labelledby="inspect-head">
+    <div class="container inspect__grid">
+      <div class="inspect__text">
+        <h2 id="inspect-head">检查员上门时，随时就绪</h2>
+        <p class="lead">迎检要查的三类记录，边干活边记好。</p>
+        <dl class="logs">
+          <div><dt><i class="mark" data-kind="mov" aria-hidden="true"></i>移动</dt><dd>每次进出移动，连头数一起记。</dd></div>
+          <div><dt><i class="mark" data-kind="med" aria-hidden="true"></i>用药</dt><dd>每一次用药，批号与休药期齐全。</dd></div>
+          <div><dt><i class="mark" data-kind="fld" aria-hidden="true"></i>田间作业</dt><dd>每件作业按田地分记，以公顷计。</dd></div>
+        </dl>
+      </div>
+      <div class="grid-page">
+        <div class="entry entry--still inspect__entry" data-slot="demo-3" data-alt="一条含批号与休药期的用药记录" data-keep>
+          <article class="entry__page" aria-label="9 月 24 日 17:05 的用药记录，示例">
+            <header class="entry__head"><span class="entry__kind"><i class="mark" data-kind="med" aria-hidden="true"></i>用药</span><span class="entry__date num">9 月 24 日 周三</span><time class="entry__time num" datetime="2026-09-24T17:05">17:05</time></header>
+            <dl class="entry__cells entry__cells--six">
+              <div><dt>牲畜</dt><dd>种公羊 <span class="num">0033</span></dd></div>
+              <div><dt>剂量</dt><dd><span class="num">5</span> 毫升</dd></div>
+              <div><dt>药物</dt><dd>抗生素</dd></div>
+              <div><dt>批号</dt><dd class="num">A7730</dd></div>
+              <div><dt>休药期</dt><dd><span class="num">28</span> 天</dd></div>
+              <div><dt>给药人</dt><dd>兽医</dd></div>
+            </dl>
+            <p class="entry__state"><i class="chip chip--held">休药期至 <span class="num">10 月 22 日</span></i></p>
+          </article>
+          <div class="entry__foot entry__foot--save"><span class="entry__save">存入记录册</span></div>
+        </div>
+        <figure class="doc" data-slot="demo-4" data-alt="导出并折起的迎检记录" data-keep>
+          <div class="doc__sheet">
+            <span class="doc__crease" style="top: 33.33%" aria-hidden="true"></span><span class="doc__crease" style="top: 66.67%" aria-hidden="true"></span>
+            <div class="doc__top">
+              <p class="doc__title">迎检记录</p>
+              <p class="doc__farm">示例农场，养殖场编号 <span class="num">12/345/6789</span></p>
+            </div>
+            <p class="doc__sub">用药</p>
+            <table class="doc__tbl">
+              <caption class="visually-hidden">已用药物，示例</caption>
+              <thead><tr><th scope="col">日期</th><th scope="col">牲畜</th><th scope="col">剂量</th><th scope="col">批号</th><th scope="col">解除日</th></tr></thead>
+              <tbody>
+                <tr><td class="num">10 月 8 日</td><td class="num">母羊 0417</td><td class="num">10 毫升</td><td class="num">B2241</td><td class="num">11 月 5 日</td></tr>
+                <tr><td class="num">10 月 1 日</td><td>羔羊</td><td class="num">2 毫升</td><td class="num">V0918</td><td class="num">10 月 1 日</td></tr>
+                <tr><td class="num">9 月 24 日</td><td class="num">种公羊 0033</td><td class="num">5 毫升</td><td class="num">A7730</td><td class="num">10 月 22 日</td></tr>
+              </tbody>
+            </table>
+            <p class="doc__sub">移动</p>
+            <table class="doc__tbl">
+              <caption class="visually-hidden">移动记录，示例</caption>
+              <tbody>
+                <tr><td class="num">10 月 8 日</td><td>母羊，山坡地至宅旁围场</td><td class="num r">24</td></tr>
+              </tbody>
+            </table>
+            <p class="doc__sub">田间作业</p>
+            <table class="doc__tbl">
+              <caption class="visually-hidden">田间作业，示例</caption>
+              <tbody>
+                <tr><td class="num">10 月 8 日</td><td>长条地，镇压</td><td class="num r">3.6 公顷</td></tr>
+                <tr><td class="num">10 月 6 日</td><td>山坡地，刈顶</td><td class="num r">5.2 公顷</td></tr>
+              </tbody>
+            </table>
+            <p class="doc__foot"><i class="chip chip--ok">可以迎检</i><span class="num">10 月 8 日 08:02</span></p>
+          </div>
+          <figcaption class="visually-hidden">导出的迎检记录：示例农场的用药与移动记录，示例条目。</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band offer" id="start" aria-labelledby="start-head">
+    <canvas class="band__map" aria-hidden="true"></canvas>
+    <div class="container band__grid">
+      <div class="band__text">
+        <h2 id="start-head">一口价，整本册子</h2>
+        <p class="lead">一个农场，从当天第一件活算起。</p>
+      </div>
+      <p class="band__pin" aria-hidden="true"><span class="pin__dot"></span><span class="pin__tag">你的第一条记录</span></p>
+      <div class="sheet offer__sheet">
+        <div class="offer__bill">
+        <ol class="bill">
+          <li><span>移动记录</span><span>已包含</span></li>
+          <li><span>用药记录</span><span>已包含</span></li>
+          <li><span>田间作业记录</span><span>已包含</span></li>
+          <li><span>迎检就绪</span><span>已包含</span></li>
+        </ol>
+        <div class="offer__foot">
+          <p class="offer__price"><b>£12</b><span>每月，按农场计</span></p>
+        </div>
+        </div>
+      <form class="open" data-endpoint="" novalidate aria-labelledby="open-head">
+        <p class="open__head" id="open-head">你的农场册</p>
+        <div class="field"><label for="farm">农场名称</label><input id="farm" name="farm" type="text" autocomplete="organization" required></div>
+        <div class="field"><label for="cph">养殖场编号</label><input class="num" id="cph" name="cph" type="text" inputmode="numeric" placeholder="12/345/6789" pattern="[0-9]{2}/[0-9]{3}/[0-9]{4}" required></div>
+        <div class="field"><label for="email">电子邮箱</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+        <button class="btn btn--primary" type="submit">开一本农场册</button>
+        <p class="open__help" id="open-help" aria-live="polite"></p>
+      </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="close">
+  <div class="container">
+    <p class="close__line">人还没回到屋里，册子已经记完。</p>
+    <div class="close__row">
+      <nav class="close__links" aria-label="页脚"><a href="#book">记录册</a><a href="#day">一天</a><a href="#inspection">迎检</a><a href="#start">价格</a></nav>
+      <p class="close__legal">© 2026 Fieldbook。为小型畜牧场做的记录工具。</p>
+    </div>
+    <p class="close__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Swaledale_Sheep,_Lake_District,_England_-_June_2009.jpg">Diliff</a>（CC BY-SA 3.0）、<a href="https://commons.wikimedia.org/wiki/File:2014_Fields_Swaledale_Gunnerside.jpg">Kreuzschnabel</a>（CC BY-SA 3.0），均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script src="map.js" defer></script>
+<script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  const say = { farm: '请填上你的农场名称。', cph: '养殖场编号请按 12/345/6789 的格式填写。', email: '这个邮箱地址似乎不完整，请按 name@example.com 的格式填写。' };
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('input')].filter((i) => { const ok = i.checkValidity(); i.toggleAttribute('aria-invalid', !ok); if (!ok) i.setAttribute('aria-describedby', help.id); else i.removeAttribute('aria-describedby'); return !ok; });
+    if (bad.length) { help.textContent = say[bad[0].name]; bad[0].focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：此表单尚未接入后端。'; return; }
+  });
+});
+(() => {
+  const btns = [...document.querySelectorAll('[data-log][aria-pressed]')];
+  const rows = [...document.querySelectorAll('tr[data-log]')];
+  btns.forEach((b) => b.addEventListener('click', () => {
+    btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    rows.forEach((r) => { r.hidden = b.dataset.log !== 'all' && r.dataset.log !== b.dataset.log; });
+  }));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark：谁改了方案，何时改的，为何改</title>
+<meta name="description" content="Benchmark 是一本实验室记录本，为科研实验室给实验方案分版管理，记下每一次改动是谁、何时、为何。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="container nav">
+  <div class="bar">
+    <a class="bar__mark" href="#top" aria-label="Benchmark，回到首页">Benchmark</a>
+    <nav class="bar__links" aria-label="主导航">
+      <a href="#reason">变更记录</a>
+      <a href="#before">版本</a>
+      <a href="#week">实验室</a>
+      <a href="#try">动手试试</a>
+      <a href="#questions">常见问题</a>
+    </nav>
+    <div class="bar__end"><a class="btn btn--line btn--nav" href="#request" data-to-request>申请使用</a></div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">是谁改了退火这一步？</h1>
+      <p class="lead">Benchmark 记录每一次方案改动是谁、何时、为何。</p>
+      <form class="ask" id="request" data-endpoint="" novalidate>
+        <label class="ask__label" for="email">工作邮箱</label>
+        <div class="ask__row">
+          <input class="input" id="email" name="email" type="email" autocomplete="email" placeholder="name@lab.example" required>
+          <button class="btn btn--amber" type="submit">申请使用</button>
+        </div>
+        <p class="ask__help" id="ask-help" aria-live="polite">面向科研实验室，凭申请开通。也可以先<a href="#try">试改一次</a>。</p>
+      </form>
+    </div>
+
+    <div class="hero__visual">
+      <div class="panels record" data-slot="hero" data-alt="Benchmark 中的一份方案：它的各版本、各步骤、被改的那一步，以及那次改动的记录">
+        <div class="record__head">
+          <span class="record__name">PCR，30 个循环</span>
+          <span class="record__where">方案，分子类</span>
+        </div>
+        <ol class="rail" aria-label="PCR，30 个循环的各版本">
+          <li><span class="m">v1</span></li>
+          <li><span class="m">v2</span></li>
+          <li><span class="m">v3</span></li>
+          <li><span class="m">v4</span></li>
+          <li class="is-now" aria-current="true"><span class="m">v5</span></li>
+        </ol>
+        <table class="steps">
+          <caption class="visually-hidden">示例方案的各步骤，第 5 版</caption>
+          <thead><tr><th scope="col">步骤</th><th scope="col">温度</th><th scope="col">时间</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><span class="m n">1</span>初始变性</th><td class="m">95&nbsp;°C</td><td class="m">3&nbsp;分钟</td></tr>
+            <tr><th scope="row"><span class="m n">2</span>变性</th><td class="m">95&nbsp;°C</td><td class="m">30&nbsp;秒</td></tr>
+            <tr class="is-changed"><th scope="row"><span class="m n">3</span>退火</th><td class="m"><del>58&nbsp;°C</del> <ins>60&nbsp;°C</ins></td><td class="m">30&nbsp;秒</td></tr>
+            <tr><th scope="row"><span class="m n">4</span>延伸</th><td class="m">72&nbsp;°C</td><td class="m">1&nbsp;分钟</td></tr>
+            <tr><th scope="row"><span class="m n">5</span>最终延伸</th><td class="m">72&nbsp;°C</td><td class="m">5&nbsp;分钟</td></tr>
+          </tbody>
+        </table>
+        <dl class="change">
+          <div><dt>谁</dt><dd class="amber">研究员</dd></div>
+          <div><dt>何时</dt><dd class="m cool">2026-10-09 09:41:07</dd></div>
+          <div><dt>版本</dt><dd class="m cool">v4 到 v5</dd></div>
+          <div class="change__why"><dt>为何</dt><dd>“58&nbsp;°C 下出现引物二聚体。”</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="reason" id="reason" aria-labelledby="reason-head">
+  <div class="container reason__grid">
+    <figure class="reading" aria-labelledby="reason-head">
+      <p class="reading__was m"><del>100&nbsp;V</del></p>
+      <p class="reading__now m">90<span class="reading__unit">V</span></p>
+    </figure>
+    <div class="reason__side">
+      <h2 id="reason-head">每个数值都留有缘由</h2>
+      <dl class="sign">
+        <div><dt>位置</dt><dd>Western blot 转膜，第 2 步</dd></div>
+        <div><dt>谁</dt><dd class="amber">实验室主管</dd></div>
+        <div><dt>何时</dt><dd class="m cool">2026-10-08 16:05:12</dd></div>
+        <div><dt>为何</dt><dd class="sign__why">“100&nbsp;V 下条带拖尾。”</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="before" id="before" aria-labelledby="before-head">
+  <div class="container">
+    <div class="switch" data-switch>
+      <div class="before__head">
+        <div class="before__text">
+          <h2 id="before-head">之前写的是什么？</h2>
+          <p class="lead">每个版本都保留，任意两版并排对照。</p>
+        </div>
+        <div class="seg" role="tablist" aria-label="要对比的版本">
+          <button type="button" role="tab" id="t-45" aria-controls="p-45" aria-selected="false" tabindex="-1"><span class="m">v4</span> 与 <span class="m">v5</span></button>
+          <button type="button" role="tab" id="t-35" aria-controls="p-35" aria-selected="true"><span class="m">v3</span> 与 <span class="m">v5</span></button>
+          <button type="button" role="tab" id="t-15" aria-controls="p-15" aria-selected="false" tabindex="-1"><span class="m">v1</span> 与 <span class="m">v5</span></button>
+        </div>
+      </div>
+
+      <div class="panels compare" role="tabpanel" id="p-45" hidden aria-labelledby="t-45" data-slot="compare-1" data-alt="你的方案中相邻两个版本并排对照">
+        <div class="compare__bar"><span class="compare__name">PCR，30 个循环</span><span class="compare__count">改动了一步</span></div>
+        <table class="diff">
+          <caption class="visually-hidden">第 4 版与第 5 版对照，示例</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">改动</span></th><th scope="col">步骤</th><th scope="col"><span class="m cool">v4</span> 10 月 2 日，研究员</th><th scope="col"><span class="m cool">v5</span> 10 月 9 日，研究员</th></tr></thead>
+          <tbody>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">1</span>初始变性</th><td class="m">95&nbsp;°C，3&nbsp;分钟</td><td class="m">95&nbsp;°C，3&nbsp;分钟</td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">2</span>变性</th><td class="m">95&nbsp;°C，30&nbsp;秒</td><td class="m">95&nbsp;°C，30&nbsp;秒</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">3</span>退火</th><td class="m was"><del>58&nbsp;°C</del>，30&nbsp;秒</td><td class="m now"><ins>60&nbsp;°C</ins>，30&nbsp;秒</td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">4</span>延伸</th><td class="m">72&nbsp;°C，1&nbsp;分钟</td><td class="m">72&nbsp;°C，1&nbsp;分钟</td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">5</span>最终延伸</th><td class="m">72&nbsp;°C，5&nbsp;分钟</td><td class="m">72&nbsp;°C，5&nbsp;分钟</td></tr>
+          </tbody>
+        </table>
+        <ol class="between" aria-label="v4 与 v5 之间的改动">
+          <li><span class="m cool">v5</span><span class="amber">研究员</span><span class="m cool">10 月 9 日</span><q>58&nbsp;°C 下出现引物二聚体。</q></li>
+        </ol>
+      </div>
+
+      <div class="panels compare" role="tabpanel" id="p-35" aria-labelledby="t-35" data-slot="compare-2" data-alt="你的方案两个版本并排对照，以及两版之间每处改动的缘由">
+        <div class="compare__bar"><span class="compare__name">PCR，30 个循环</span><span class="compare__count">改动了两步</span></div>
+        <table class="diff">
+          <caption class="visually-hidden">第 3 版与第 5 版对照，示例</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">改动</span></th><th scope="col">步骤</th><th scope="col"><span class="m cool">v3</span> 9 月 18 日，实验室主管</th><th scope="col"><span class="m cool">v5</span> 10 月 9 日，研究员</th></tr></thead>
+          <tbody>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">1</span>初始变性</th><td class="m">95&nbsp;°C，3&nbsp;分钟</td><td class="m">95&nbsp;°C，3&nbsp;分钟</td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">2</span>变性</th><td class="m">95&nbsp;°C，30&nbsp;秒</td><td class="m">95&nbsp;°C，30&nbsp;秒</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">3</span>退火</th><td class="m was"><del>58&nbsp;°C</del>，30&nbsp;秒</td><td class="m now"><ins>60&nbsp;°C</ins>，30&nbsp;秒</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">4</span>延伸</th><td class="m was">72&nbsp;°C，<del>45&nbsp;秒</del></td><td class="m now">72&nbsp;°C，<ins>1&nbsp;分钟</ins></td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">5</span>最终延伸</th><td class="m">72&nbsp;°C，5&nbsp;分钟</td><td class="m">72&nbsp;°C，5&nbsp;分钟</td></tr>
+          </tbody>
+        </table>
+        <ol class="between" aria-label="v3 与 v5 之间的改动">
+          <li><span class="m cool">v4</span><span class="amber">研究员</span><span class="m cool">10 月 2 日</span><q>延伸改为 1 分钟。</q></li>
+          <li><span class="m cool">v5</span><span class="amber">研究员</span><span class="m cool">10 月 9 日</span><q>58&nbsp;°C 下出现引物二聚体。</q></li>
+        </ol>
+      </div>
+
+      <div class="panels compare" role="tabpanel" id="p-15" hidden aria-labelledby="t-15" data-slot="compare-3" data-alt="你的方案最早与最新版本并排对照，以及中间的每一条缘由">
+        <div class="compare__bar"><span class="compare__name">PCR，30 个循环</span><span class="compare__count">改动了四步</span></div>
+        <table class="diff">
+          <caption class="visually-hidden">第 1 版与第 5 版对照，示例</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">改动</span></th><th scope="col">步骤</th><th scope="col"><span class="m cool">v1</span> 8 月 21 日，实验室主管</th><th scope="col"><span class="m cool">v5</span> 10 月 9 日，研究员</th></tr></thead>
+          <tbody>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">1</span>初始变性</th><td class="m">95&nbsp;°C，3&nbsp;分钟</td><td class="m">95&nbsp;°C，3&nbsp;分钟</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">2</span>变性</th><td class="m was"><del>94&nbsp;°C</del>，30&nbsp;秒</td><td class="m now"><ins>95&nbsp;°C</ins>，30&nbsp;秒</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">3</span>退火</th><td class="m was"><del>55&nbsp;°C</del>，30&nbsp;秒</td><td class="m now"><ins>60&nbsp;°C</ins>，30&nbsp;秒</td></tr>
+            <tr class="is-changed"><td class="g m" aria-label="已改动">±</td><th scope="row"><span class="m n">4</span>延伸</th><td class="m was">72&nbsp;°C，<del>45&nbsp;秒</del></td><td class="m now">72&nbsp;°C，<ins>1&nbsp;分钟</ins></td></tr>
+            <tr><td class="g m"></td><th scope="row"><span class="m n">5</span>最终延伸</th><td class="m">72&nbsp;°C，5&nbsp;分钟</td><td class="m">72&nbsp;°C，5&nbsp;分钟</td></tr>
+          </tbody>
+        </table>
+        <ol class="between" aria-label="v1 与 v5 之间的改动">
+          <li><span class="m cool">v2</span><span class="amber">研究员</span><span class="m cool">9 月 4 日</span><q>55&nbsp;°C 时条带偏弱。</q></li>
+          <li><span class="m cool">v3</span><span class="amber">实验室主管</span><span class="m cool">9 月 18 日</span><q>变性按聚合酶说明书来。</q></li>
+          <li><span class="m cool">v4</span><span class="amber">研究员</span><span class="m cool">10 月 2 日</span><q>延伸改为 1 分钟。</q></li>
+          <li><span class="m cool">v5</span><span class="amber">研究员</span><span class="m cool">10 月 9 日</span><q>58&nbsp;°C 下出现引物二聚体。</q></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="week" id="week" aria-labelledby="week-head">
+  <div class="container week__grid">
+    <figure class="week__photo">
+      <div class="week__frame" data-slot="photo-1" data-alt="你自己的实验室：运行方案的操作台，无需露出人脸">
+        <img src="photos/csiro-scienceimage-11401-csiro-researcher-with-pipette-1280.jpg" width="1280" height="1920" loading="lazy" style="object-position: 50% 40%" alt="一只戴手套的手在实验台边握着移液器，枪头朝下">
+      </div>
+      <figcaption>操作台上运行的，就是记录里的那一版。</figcaption>
+    </figure>
+    <div class="week__text">
+      <h2 id="week-head">实验室的一周，最新在前</h2>
+      <p class="lead">实验室主管沿一条轨迹读完所有改动。</p>
+      <ol class="trail" aria-label="实验室本周动态，示例">
+        <li><p class="trail__top"><b>qPCR，标准曲线</b><span class="m cool">v6</span></p><p class="trail__why">“稀释梯度到 1:10，五个点。”</p><p class="trail__meta"><span class="amber">研究员</span><span class="m cool">周四 14:30</span></p></li>
+        <li><p class="trail__top"><b>Western blot 转膜</b><span class="m cool">v8</span></p><p class="trail__why">“100&nbsp;V 下条带拖尾。”</p><p class="trail__meta"><span class="amber">实验室主管</span><span class="m cool">周三 16:05</span></p></li>
+        <li><p class="trail__top"><b>细胞传代</b><span class="m cool">v12</span></p><p class="trail__why">“提前一天长满，80% 时分瓶。”</p><p class="trail__meta"><span class="amber">研究员</span><span class="m cool">周二 11:20</span></p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="try" id="try" aria-labelledby="try-head">
+  <div class="container try__grid">
+    <div class="try__text">
+      <h2 id="try-head">缘由由你来写</h2>
+      <p class="lead">其余交给 Benchmark。你在这里输入的内容不会离开本页。</p>
+    </div>
+    <div class="panels pair">
+      <form class="pair__you" novalidate>
+        <p class="pair__who"><span class="chip chip--amber">人</span> 你写下的部分</p>
+        <div class="field"><label for="temp">第 3 步，退火温度</label><div class="unit"><input class="input m" id="temp" name="temperature" type="number" inputmode="decimal" min="40" max="80" step="0.5" value="62"><span>°C，持续 30&nbsp;秒</span></div></div>
+        <div class="field"><label for="why">为何要改？</label><textarea class="input" id="why" name="why" rows="3" autocomplete="off">60 °C 时条带偏弱。</textarea><p class="field__help" id="why-help" aria-live="polite"></p></div>
+      </form>
+      <div class="pair__system" aria-live="polite">
+        <p class="pair__who"><span class="chip chip--cool">系统</span> Benchmark 写下的部分</p>
+        <p class="pair__reading m"><del>60&nbsp;°C</del> <ins data-new>62&nbsp;°C</ins></p>
+        <dl class="pair__parts">
+          <div><dt>谁</dt><dd class="amber">你</dd></div>
+          <div><dt>何时</dt><dd class="m cool">保存时精确到秒</dd></div>
+          <div><dt>版本</dt><dd class="m cool">v5 到 v6</dd></div>
+          <div><dt>为何</dt><dd data-why>“60 °C 时条带偏弱。”</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="questions" id="questions" aria-labelledby="questions-head">
+  <div class="container questions__grid">
+    <h2 id="questions-head">实验室最先问的问题</h2>
+    <dl class="qa">
+      <div><dt>Benchmark 面向谁？</dt><dd>科研实验室：执行方案的研究员，以及维护方案的实验室主管。</dd></div>
+      <div><dt>一次改动会记录什么？</dt><dd>谁改的、何时改的、为何改，并记在这一版之上。</dd></div>
+      <div><dt>旧版本会丢失吗？</dt><dd>不会。每个版本都留着，可与任意其他版本并排查看。</dd></div>
+      <div class="qa__last"><dt>实验室如何开始？</dt><dd><span>用工作邮箱来申请。</span> <a class="btn btn--line" href="#request" data-to-request>申请使用</a></dd></div>
+    </dl>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container foot__in">
+    <p class="foot__sign">由 Benchmark 保管。</p>
+    <p class="foot__date"><time datetime="2026-10-21">2026 年 10 月 21 日</time></p>
+    <nav class="foot__links" aria-label="页脚"><a href="#reason">变更记录</a><a href="#before">版本</a><a href="#week">实验室</a><a href="#try">动手试试</a><a href="#questions">常见问题</a><a href="#request" data-to-request>申请使用</a></nav>
+    <p class="foot__legal">© 2026 Benchmark</p>
+    <p class="foot__credit" data-credits>Photograph: <a href="https://commons.wikimedia.org/wiki/File:CSIRO_ScienceImage_11401_CSIRO_researcher_with_pipette.jpg">Morgan Brown, CSIRO</a>, CC&nbsp;BY&nbsp;3.0，来自 Wikimedia Commons.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var temp = document.getElementById('temp'), why = document.getElementById('why');
+  if (!temp || !why) return;
+  var outNew = document.querySelector('[data-new]'), outWhy = document.querySelector('[data-why]'), help = document.getElementById('why-help');
+  function sync() {
+    var t = Number(temp.value);
+    var ok = temp.value !== '' && t >= 40 && t <= 80;
+    temp.toggleAttribute('aria-invalid', !ok);
+    outNew.textContent = ok ? (t % 1 ? t.toFixed(1) : String(t)) + ' °C' : '40 到 80 °C';
+    var reason = why.value.trim();
+    outWhy.textContent = reason ? '“' + reason + '”' : '保存改动前需要填写缘由。';
+    help.textContent = reason ? '' : '请用几句话说明缘由。';
+  }
+  temp.addEventListener('input', sync); why.addEventListener('input', sync); sync();
+})();
+document.querySelectorAll('[data-switch]').forEach(function (sw) {
+  var tabs = [].slice.call(sw.querySelectorAll('[role="tab"]'));
+  function pick(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tab.focus();
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { pick(t); });
+    t.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (e.key === 'Home') { e.preventDefault(); pick(tabs[0], true); }
+      else if (e.key === 'End') { e.preventDefault(); pick(tabs[tabs.length - 1], true); }
+      else if (d) { e.preventDefault(); pick(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+  pick(tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]);
+});
+document.querySelectorAll('[data-to-request]').forEach(function (a) {
+  a.addEventListener('click', function (e) {
+    var input = document.getElementById('email');
+    if (!input) return;
+    e.preventDefault();
+    document.getElementById('top').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    setTimeout(function () { input.focus({ preventScroll: true }); }, 450);
+  });
+});
+document.querySelectorAll('form[data-endpoint]').forEach(function (form) {
+  var input = form.querySelector('input'), help = form.querySelector('[aria-live]'), first = help.innerHTML;
+  input.addEventListener('input', function () { if (input.hasAttribute('aria-invalid') && input.checkValidity()) { input.removeAttribute('aria-invalid'); help.innerHTML = first; } });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var ok = input.checkValidity();
+    input.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '这个地址看起来不完整。请写成 name@lab.example 的格式。'; input.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：这个表单尚未连接后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then(function (r) { help.textContent = r.ok ? '已收到。回复将发送到 ' + input.value.trim() + '。' : '没有发送成功。请稍后再试。'; })
+      .catch(function () { help.textContent = '没有发送成功。请稍后再试。'; });
+  });
+});
+</script>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

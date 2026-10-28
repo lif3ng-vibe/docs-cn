@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hollins Orchard：六英亩苹果园，任你采摘</title>
+<meta name="description" content="Hollins Orchard 是赫里福德郡一座六英亩的苹果酒果园，种有 22 个苹果品种，9 月至 10 月开放自助采摘，并出售三款苹果酒。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@600&amp;family=Hanken+Grotesk:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <p class="nav__banner"><a href="#season" id="banner">自助采摘 9 月开放<span class="banner__more">，持续至 10 月底</span></a></p>
+  <div class="container nav__bar">
+    <a class="wordmark" href="#top" aria-label="Hollins Orchard，首页">Hollins Orchard</a>
+    <nav aria-label="主导航" class="nav__right">
+      <a href="#season">采摘季</a>
+      <a href="#varieties">品种</a>
+      <a href="#ciders">苹果酒</a>
+      <a class="nav__visit" href="#visit">到访</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero__text">
+      <h1 id="hero-title">六英亩苹果，任你采摘。</h1>
+      <p class="lead">赫里福德郡的一座苹果酒果园，开放自助采摘。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#visit">规划到访</a>
+        <a class="btn btn--quiet" href="#season">何时来</a>
+      </div>
+    </div>
+    <figure class="photo hero__photo" data-slot="hero" data-alt="Hollins Orchard 的果树行，苹果正熟">
+      <img src="photos/aepfel-p1260372-1920.jpg" width="2307" height="3076" fetchpriority="high" alt="一行棚架苹果树挂满红色果实" style="object-position: 50% 92%">
+    </figure>
+  </section>
+
+  <section class="season" id="season" aria-labelledby="season-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="season-title">枝头两个月。</h2>
+        <p class="lead season__status" id="status" aria-live="polite">采摘从 9 月持续到 10 月底。</p>
+      </div>
+      <ol class="months" aria-label="全年月份，标出自助采摘月份">
+        <li data-m="0">1 月</li><li data-m="1">2 月</li><li data-m="2">3 月</li><li data-m="3">4 月</li><li data-m="4">5 月</li><li data-m="5">6 月</li><li data-m="6">7 月</li><li data-m="7">8 月</li>
+        <li data-m="8" class="is-open"><b>9 月</b><span>自助采摘</span></li>
+        <li data-m="9" class="is-open"><b>10 月</b><span>自助采摘</span></li>
+        <li data-m="10">11 月</li><li data-m="11">12 月</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rows" aria-labelledby="rows-title">
+    <div class="container">
+      <figure class="photo rows__wide" data-slot="photo-1" data-alt="有人在果园里采摘的背影">
+        <img src="photos/apple-picker-grythengen-toten-norway-1920.jpg" width="4864" height="3647" loading="lazy" decoding="async" alt="一位白发采摘者探身入老苹果树，背影" style="object-position: 60% 38%">
+      </figure>
+      <div class="rows__under">
+        <h2 id="rows-title">伸手探入，托起一拧。</h2>
+        <p class="lead">熟透的苹果一拧就落进手心。还挂得牢的，再等一周。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="kinds" id="varieties" aria-labelledby="kinds-title">
+    <div class="container kinds__grid">
+      <div class="kinds__title"><p class="figure" aria-hidden="true">22</p><h2 id="kinds-title" class="kinds__unit"><span class="visually-hidden">22 </span>个苹果品种，种满果树行。</h2></div>
+      <dl class="kinds__rows">
+        <div><dt>种植用途</dt><dd>苹果酒，六英亩</dd></div>
+        <div><dt>果树行间</dt><dd>边采边尝</dd></div>
+        <div><dt>带回家</dt><dd>一袋你中意的树上摘下的苹果</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="ciders band--ink" id="ciders" aria-labelledby="ciders-title">
+    <div class="container ciders__grid">
+      <div class="ciders__head">
+        <h2 id="ciders-title">三款苹果酒，采完带回家。</h2>
+        <p class="ciders__note">价格即将公布。</p>
+      </div>
+      <ul class="ciders__list" role="list">
+        <li><h3>干型</h3><p>爽脆，佐餐宜</p></li>
+        <li><h3>半干</h3><p>更圆润，带一丝甜</p></li>
+        <li><h3>甜型</h3><p>适合一日将尽时</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="visit" id="visit" aria-labelledby="visit-title">
+    <div class="container visit__grid">
+      <figure class="photo visit__photo" data-slot="photo-2" data-alt="刚摘好的一篮苹果，放在草地上">
+        <img src="photos/apples-in-basket-2018-g1-1920.jpg" width="1920" height="1670" loading="lazy" decoding="async" alt="一只柳条篮堆满红苹果，立在草地上" style="object-position: 50% 45%">
+      </figure>
+      <div class="visit__text">
+        <h2 id="visit-title">规划到访。</h2>
+        <dl class="plan">
+          <div class="plan__row"><dt>时间</dt><dd>9 月至 10 月底</dd></div>
+          <div class="plan__row"><dt>地点</dt><dd>赫里福德郡，<span class="fill" data-fill="address">完整地址即将公布</span></dd></div>
+          <div class="plan__row"><dt>带回家</dt><dd>你的苹果和一瓶苹果酒</dd></div>
+        </dl>
+        <form class="signup" data-endpoint="" novalidate>
+          <label for="email">首批果树可采时，第一时间通知你</label>
+          <div class="signup__row">
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="email-help">
+            <button class="btn btn--quiet" type="submit">提醒我</button>
+          </div>
+          <p class="help" id="email-help" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__grid">
+    <p class="foot__colophon"><span class="foot__name">Hollins Orchard</span> 是赫里福德郡一座六英亩的苹果酒果园，种有 22 个苹果品种，出产三款苹果酒。</p>
+    <nav aria-label="页脚" class="foot__nav">
+      <a href="#season">采摘季</a>
+      <a href="#varieties">品种</a>
+      <a href="#ciders">苹果酒</a>
+      <a href="#visit">到访</a>
+    </nav>
+    <div class="foot__base">
+    <p class="legal">&copy; 2026 Hollins Orchard</p>
+    <p class="credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:%C3%84pfel_P1260372.jpg">Fischer.H</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Apple_picker_Grythengen_Toten_Norway.jpg">Øyvind Holmstad</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Apples_in_basket_2018_G1.jpg">George Chernilevsky</a> (public domain), via Wikimedia Commons</p>
+    </div>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script>
+(() => {
+  const m = new Date().getMonth();
+  const picking = m === 8 || m === 9;
+  const cell = document.querySelector(`.months li[data-m="${m}"]`);
+  if (cell) { cell.classList.add('is-now'); cell.setAttribute('aria-current', 'date'); cell.insertAdjacentHTML('beforeend', '<i class="months__now">当前</i>'); }
+  const status = document.getElementById('status');
+  const banner = document.getElementById('banner');
+  if (picking) {
+    const until = m === 8 ? '正在采摘，贯穿 9 月与 10 月。' : '正在采摘，直至 10 月底。';
+    status.textContent = until;
+    banner.innerHTML = '正在采摘<span class="banner__more">，直至 10 月底</span>';
+  } else {
+    status.textContent = '采摘将于 9 月重新开放，持续到 10 月底。';
+  }
+})();
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const input = form.querySelector('input'), help = form.querySelector('[aria-live]'), button = form.querySelector('button');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ok = input.checkValidity();
+    input.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { help.textContent = '邮箱地址看起来不完整。请按 name@example.com 的格式填写。'; input.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：该表单尚未接入后端。'; return; }
+    button.setAttribute('aria-busy', 'true');
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '果园会在首批果树可采时致函 ' + input.value.trim() + '。' : '发送失败。请稍后再试。'; })
+      .catch(() => { help.textContent = '发送失败。请稍后再试。'; })
+      .finally(() => button.removeAttribute('aria-busy'));
+  });
+});
+</script>
+</body>
+</html>

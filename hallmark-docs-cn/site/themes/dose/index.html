@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem，全家都看得见的用药提醒</title>
+<meta name="description" content="Tandem 在服药时间提醒全家人照看长辈吃药，并让每个人都能看到吃了什么。一个家庭免费。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700&amp;family=Instrument+Sans:wght@400;500&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>let tick = 0; addEventListener('resize', () => document.documentElement.style.setProperty('--tick', String(tick ^= 1)));</script>
+</head>
+<body id="top">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site">
+  <div class="container">
+    <nav class="tray" aria-label="页面">
+      <a class="wordmark" href="#top" aria-label="Tandem，回到顶部">Tandem</a>
+      <span class="tray__links"><a href="#day">一天的服药记录</a><a href="#family">一家人</a></span>
+      <span class="tray__end"><span class="tray__note">一个家庭免费</span><a class="btn btn--primary btn--sm" href="#start">开始设置</a></span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="hero__ground" aria-hidden="true"><i class="hero__window"></i></div>
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-head">妈妈八点把药吃了。</h1>
+        <p class="lead">Tandem 在服药时间提醒全家，并让大家看到吃了什么。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#start">设置你的家庭</a>
+          <a class="btn btn--secondary" href="#day">看一天的服药记录</a>
+        </div>
+        <p class="hero__terms">一个家庭免费。</p>
+      </div>
+
+      <figure class="hero__visual" aria-label="药盒里妈妈的一周：今天这格打开，标签升起，三部手机上打了勾">
+        <div class="scene">
+          <div class="org" role="group" aria-label="妈妈的周用药盒。打开某一天可读取它的标签。">
+            <i class="org__shade" aria-hidden="true"></i>
+            <div class="box" style="--i:0; --t: var(--p-mon)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="0" aria-label="周一"><span class="lid__top" aria-hidden="true"><b data-l="一"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box" style="--i:1; --t: var(--p-tue)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="1" aria-label="周二"><span class="lid__top" aria-hidden="true"><b data-l="二"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box" style="--i:2; --t: var(--p-wed)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="2" aria-label="周三"><span class="lid__top" aria-hidden="true"><b data-l="三"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box is-open" style="--i:3; --t: var(--p-thu)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <article class="label" id="label" aria-live="polite" aria-atomic="true" aria-label="今天的标签">
+                <div class="label__main">
+                  <p class="label__head"><span>妈妈的药片</span><span data-f="day">周四</span></p>
+                  <p class="label__what dose" data-f="title">早上的药片</p>
+                  <p class="label__row"><span data-f="amt">随早餐</span><span class="dose" data-f="time">08:00</span></p>
+                  <p class="stamp" data-kind="given"><span class="dose" data-f="s1">08:04 已服</span><span data-f="s2">由你的哥哥确认</span></p>
+                </div>
+                <p class="label__stub">发给你们三人</p>
+              </article>
+              <button class="lid" type="button" aria-pressed="true" aria-controls="label" data-day="3" aria-label="周四，今天"><span class="lid__top" aria-hidden="true"><b data-l="四"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box" style="--i:4; --t: var(--p-fri)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="4" aria-label="周五"><span class="lid__top" aria-hidden="true"><b data-l="五"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box" style="--i:5; --t: var(--p-sat)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="5" aria-label="周六"><span class="lid__top" aria-hidden="true"><b data-l="六"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+            <div class="box" style="--i:6; --t: var(--p-sun)"><i class="box__pool" aria-hidden="true"></i><i class="box__floor" aria-hidden="true"></i><i class="box__wall box__wall--back" aria-hidden="true"></i><i class="box__wall box__wall--l" aria-hidden="true"></i><i class="box__wall box__wall--r" aria-hidden="true"></i><i class="box__wall box__wall--front" aria-hidden="true"></i>
+              <button class="lid" type="button" aria-pressed="false" aria-controls="label" data-day="6" aria-label="周日"><span class="lid__top" aria-hidden="true"><b data-l="日"></b></span><span class="lid__under" aria-hidden="true"></span><span class="lid__edge" aria-hidden="true"></span><span class="lid__tab" aria-hidden="true"></span></button></div>
+          </div>
+        </div>
+        <i class="ripple" aria-hidden="true"></i>
+        <ul class="kin" aria-label="家人的手机">
+          <li class="chip is-ticked"><span class="chip__screen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="chip__text"><b>你的哥哥</b><span data-s>已服</span></span></li>
+          <li class="chip is-ticked"><span class="chip__screen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="chip__text"><b>你</b><span data-s>已看到</span></span></li>
+          <li class="chip is-ticked"><span class="chip__screen" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="chip__text"><b>你的姐姐</b><span data-s>已看到</span></span></li>
+        </ul>
+      </figure>
+    </div>
+  </section>
+
+  <section class="day" id="day" aria-labelledby="day-head">
+    <div class="container">
+      <div class="day__head">
+        <h2 id="day-head">周四，逐台手机</h2>
+        <p class="lead">妈妈一天的服药安排，如家人的手机所见。</p>
+      </div>
+      <ol class="stages">
+        <li class="stage plastic" style="--t: var(--p-wed)">
+          <div class="stage__text">
+            <h3>每部手机上的提醒</h3>
+            <ul class="stage__times">
+              <li><span class="dose">08:00</span> 提醒送达你们三部手机。</li>
+              <li><span class="dose">13:00</span> 到了午餐，它等在你的锁屏上。</li>
+            </ul>
+          </div>
+          <div class="stage__phones">
+            <figure class="slot phone" data-slot="demo-2" data-alt="服药时间提醒界面" role="img" aria-label="08:00 提醒：妈妈的早上的药片、随早餐，带"标记已服"和"还没"两个按钮，发给你们三人。">
+              <div class="ui ph" aria-hidden="true">
+                <div class="ph__top"><span class="ph__day">妈妈的药片</span><span class="ph__title">现在该服了</span></div>
+                <div class="due"><span class="dose due__time">08:00</span><span class="due__what">早上的药片</span><span class="due__amt">随早餐</span></div>
+                <div class="due__acts"><span class="due__go">标记已服</span><span class="due__wait">还没</span></div>
+                <p class="due__note">已发给你们三人</p>
+              </div>
+            </figure>
+            <figure class="slot phone phone--lock" data-slot="demo-4" data-alt="锁屏上的服药提醒" role="img" aria-label="周四 13:00 的锁屏，带一条 Tandem 提醒：午餐药片，该妈妈服了。">
+              <div class="ui ph lock" aria-hidden="true">
+                <span class="lock__day">周四</span>
+                <span class="dose lock__time">13:00</span>
+                <span class="lock__note"><b>Tandem</b><span>午餐药片，该妈妈服了</span></span>
+              </div>
+            </figure>
+          </div>
+        </li>
+        <li class="stage plastic" style="--t: var(--p-thu)">
+          <div class="stage__text">
+            <h3>谁来确认，谁来打勾</h3>
+            <ul class="stage__times">
+              <li><span class="dose">08:04</span> 你的哥哥就在跟前，点了"已服"。</li>
+              <li><span class="dose">13:10</span> 你来确认，她的清单打了勾。</li>
+            </ul>
+          </div>
+          <div class="stage__phones">
+            <figure class="slot phone" data-slot="demo-3" data-alt="一次服药打勾后的界面" role="img" aria-label="早上的药片已于 08:04 由你的哥哥确认，并注明你和你姐姐现在都能看到。">
+              <div class="ui ph" aria-hidden="true">
+                <div class="ph__top"><span class="ph__day">妈妈的药片</span><span class="ph__title">早上的药片</span></div>
+                <div class="given">
+                  <span class="given__mark"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+                  <span class="given__what">已服</span>
+                  <span class="given__when"><span class="dose">08:04</span>，由你的哥哥确认</span>
+                </div>
+                <p class="given__note">你和你姐姐现在都能看到这条。</p>
+              </div>
+            </figure>
+            <figure class="slot phone" data-slot="hero" data-alt="长辈药片的今日界面" role="img" aria-label="13:10 的今日界面：早上的药片由你的哥哥确认，午餐药片由你确认，晚上的药片和眼药水还没服。">
+              <div class="ui ph" aria-hidden="true">
+                <div class="ph__top"><span class="ph__day">周四</span><span class="ph__title">妈妈的药片</span></div>
+                <ol class="ph__doses">
+                  <li class="is-given"><span class="dose ph__time">08:00</span><span class="ph__what">早上的药片<span class="ph__by">你的哥哥</span></span><i class="ph__chip">已服</i></li>
+                  <li class="is-given"><span class="dose ph__time">13:00</span><span class="ph__what">午餐药片<span class="ph__by">你，<span class="dose">13:10</span></span></span><i class="ph__chip">已服</i></li>
+                  <li><span class="dose ph__time">20:00</span><span class="ph__what">晚上的药片</span><i class="ph__chip">该服了</i></li>
+                  <li><span class="dose ph__time">22:00</span><span class="ph__what">眼药水</span><i class="ph__chip">该服了</i></li>
+                </ol>
+              </div>
+            </figure>
+          </div>
+        </li>
+        <li class="stage plastic" style="--t: var(--p-sat)">
+          <div class="stage__text">
+            <h3>所有人同时看到</h3>
+            <ul class="stage__times">
+              <li><span class="dose">20:06</span> 你的姐姐看到了，无论她住在哪里。</li>
+              <li><span class="dose">22:00</span> 整周记录，每部手机上都一样。</li>
+            </ul>
+          </div>
+          <div class="stage__phones">
+            <figure class="slot phone" data-slot="demo-5" data-alt="你姐姐的动态界面，显示每次服药由谁确认" role="img" aria-label="你姐姐的动态界面：晚上的药片 20:06 由你确认，午餐药片 13:10 由你确认，早上的药片 08:04 由你的哥哥确认。">
+              <div class="ui ph" aria-hidden="true">
+                <div class="ph__top"><span class="ph__day">你姐姐的手机</span><span class="ph__title">动态</span></div>
+                <ol class="ph__doses ph__doses--feed">
+                  <li class="is-given"><span class="ph__what">晚上的药片<span class="ph__by">由你，<span class="dose">20:06</span></span></span><i class="ph__chip">已服</i></li>
+                  <li class="is-given"><span class="ph__what">午餐药片<span class="ph__by">由你，<span class="dose">13:10</span></span></span><i class="ph__chip">已服</i></li>
+                  <li class="is-given"><span class="ph__what">早上的药片<span class="ph__by">由你的哥哥，<span class="dose">08:04</span></span></span><i class="ph__chip">已服</i></li>
+                </ol>
+              </div>
+            </figure>
+            <figure class="slot phone" data-slot="demo-6" data-alt="整周界面，每天的服药" role="img" aria-label="整周界面：周一和周二 4/4 已服，周三 3/4、漏了眼药水，周四目前 3/4。">
+              <div class="ui ph" aria-hidden="true">
+                <div class="ph__top"><span class="ph__day">妈妈的药片</span><span class="ph__title">本周</span></div>
+                <ol class="ph__doses ph__doses--feed">
+                  <li class="is-given"><span class="ph__what">周一</span><i class="ph__chip">4/4</i></li>
+                  <li class="is-given"><span class="ph__what">周二</span><i class="ph__chip">4/4</i></li>
+                  <li><span class="ph__what">周三<span class="ph__by">漏了眼药水</span></span><i class="ph__chip">3/4</i></li>
+                  <li class="is-today"><span class="ph__what">周四<span class="ph__by">目前</span></span><i class="ph__chip">3/4</i></li>
+                </ol>
+              </div>
+            </figure>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="say band--ink" aria-labelledby="say-head">
+    <div class="container">
+      <h2 id="say-head" class="say__line">再也不用打电话去问妈妈。</h2>
+      <p class="say__sub">清单自己知道。</p>
+    </div>
+  </section>
+
+  <section class="family" id="family" aria-labelledby="family-head">
+    <div class="container family__grid">
+      <figure class="photo family__photo" data-slot="photo-2" data-alt="你们一家人的手叠在一起">
+        <img src="photos/grandmothers-hand-childrens-hands-1920.jpg" width="2210" height="2071" loading="lazy" decoding="async" alt="小孩子们的手叠放在祖母的手上" style="object-position: 50% 45%">
+      </figure>
+      <div class="family__side">
+        <h2 id="family-head" class="family__head">每部手机上同样的勾</h2>
+        <p class="lead">无论谁来确认服药，家里其他人都会看到。</p>
+        <div class="family__labels">
+          <article class="label label--flat" aria-label="晚上的药片随晚餐 20:00 服用，20:06 由你确认">
+            <div class="label__main">
+              <p class="label__head"><span>妈妈的药片</span><span>周四</span></p>
+              <p class="label__what dose">晚上的药片</p>
+              <p class="label__row"><span>随晚餐</span><span class="dose">20:00</span></p>
+              <p class="stamp" data-kind="given"><span class="dose">20:06 已服</span><span>由你确认</span></p>
+            </div>
+            <p class="label__stub">你们三人都已看到</p>
+          </article>
+          <article class="label label--flat label--missed" aria-label="周三 22:00 的眼药水，漏服，以灰色显示">
+            <div class="label__main">
+              <p class="label__head"><span>妈妈的药片</span><span>周三</span></p>
+              <p class="label__what dose">眼药水</p>
+              <p class="label__row"><span>睡前</span><span class="dose">22:00</span></p>
+              <p class="stamp" data-kind="missed"><span>漏服</span><span>漏了就一直灰着</span></p>
+            </div>
+            <p class="label__stub">你们三人都已看到</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="start" id="start" aria-labelledby="start-head">
+    <div class="container">
+      <div class="start__tray plastic">
+        <form class="start__text setup" data-endpoint="" novalidate>
+          <h2 id="start-head">一个家庭免费</h2>
+          <p class="lead">先选药是给谁的，再邀请家人。</p>
+          <fieldset class="keys">
+            <legend>药是给谁的？</legend>
+            <input type="radio" name="who" id="w-mum" value="妈妈" checked><label for="w-mum">妈妈</label>
+            <input type="radio" name="who" id="w-dad" value="爸爸"><label for="w-dad">爸爸</label>
+            <input type="radio" name="who" id="w-gran" value="奶奶"><label for="w-gran">奶奶</label>
+            <input type="radio" name="who" id="w-grandad" value="爷爷"><label for="w-grandad">爷爷</label>
+          </fieldset>
+          <button class="btn btn--primary" type="submit">设置你的家庭</button>
+          <p class="setup__help" id="setup-help" aria-live="polite"></p>
+        </form>
+        <div class="start__phone">
+          <figure class="slot phone" data-slot="demo-7" data-slot-name="The household screen, where the family is added" data-alt="家庭界面，在这里添加家人" role="img" aria-label="家庭界面：药是给谁的妈妈，然后是你、你的哥哥和你的姐姐，以及一个邀请家人的按钮。">
+            <div class="ui ph" aria-hidden="true">
+              <div class="ph__top"><span class="ph__day">设置</span><span class="ph__title"><span data-who>妈妈</span>的家庭</span></div>
+              <ol class="ph__doses ph__doses--feed hh">
+                <li class="hh__lead"><span class="ph__what"><span data-who>妈妈</span><span class="ph__by">药是给她的</span></span></li>
+                <li><span class="ph__what">你<span class="ph__by">由你设置</span></span><i class="ph__chip">已加入</i></li>
+                <li><span class="ph__what">你的哥哥</span><i class="ph__chip">已邀请</i></li>
+                <li><span class="ph__what">你的姐姐</span><i class="ph__chip">已邀请</i></li>
+              </ol>
+              <span class="hh__add">邀请家人</span>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__grid">
+    <p class="foot__mark">Tandem</p>
+    <nav class="foot__links" aria-label="页脚"><a href="#day">一天的服药记录</a><a href="#family">一家人</a><a href="#start">设置你的家庭</a></nav>
+    <p class="foot__legal">© 2026 Tandem</p>
+    <p class="foot__credits" data-credits>Photograph: <a href="https://commons.wikimedia.org/wiki/File:%D7%99%D7%93%D7%99%D7%99%D7%9D_%D7%A9%D7%9C_%D7%99%D7%9C%D7%93%D7%99%D7%9D_%D7%A2%D7%9C_%D7%99%D7%93_%D7%A9%D7%9C_%D7%A1%D7%91%D7%AA%D7%90.jpg">Hlmb</a> (CC BY-SA 4.0), via Wikimedia Commons</p>
+  </div>
+</footer>
+
+<script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+document.querySelectorAll('form.setup').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  const names = [...document.querySelectorAll('[data-who]')];
+  form.addEventListener('change', (e) => { if (e.target.name === 'who') { names.forEach((n) => { n.textContent = e.target.value; }); help.textContent = ''; } });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const who = form.querySelector('input[name="who"]:checked').value;
+    help.textContent = form.dataset.endpoint ? '' : '还没有任何设置：这个按钮没有连接后台。' + who + '的家庭界面显示在右边。';
+  });
+});
+
+/* The organiser: today plays its story once; any lid opens for real */
+(() => {
+  const hero = document.querySelector('.hero');
+  const vis = hero.querySelector('.hero__visual');
+  const boxes = [...vis.querySelectorAll('.box')];
+  const label = vis.querySelector('#label');
+  const chips = [...vis.querySelectorAll('.chip')];
+  const ripple = vis.querySelector('.ripple');
+  const f = (k) => label.querySelector(`[data-f="${k}"]`);
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const names = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const days = names.map((n, i) => i < 2 ? { day: n, title: n, amt: '四次服药', time: '', s1: '已服 4/4', s2: '你们三人都已看到', kind: 'given', chip: ['已看到', '已看到', '已看到'] }
+    : i === 2 ? { day: n, title: n, amt: '四次服药', time: '', s1: '已服 3/4', s2: '漏了眼药水', kind: 'missed', chip: ['已看到', '已看到', '已看到'] }
+    : i === 3 ? { day: n, title: '早上的药片', amt: '随早餐', time: '08:00', s1: '08:04 已服', s2: '由你的哥哥确认', kind: 'given', chip: ['已服', '已看到', '已看到'] }
+    : { day: n, title: n, amt: '四次服药', time: '', s1: '还没服', s2: '08:00 提醒', kind: 'due', chip: ['还没服', '还没服', '还没服'] });
+  let current = 3, busy = false;
+  const wait = (ms) => new Promise((r) => setTimeout(r, still.matches ? 0 : ms));
+
+  const fill = (i) => {
+    const d = days[i];
+    for (const k of ['day', 'title', 'amt', 'time', 's1', 's2']) f(k).textContent = d[k];
+    label.querySelector('.stamp').dataset.kind = d.kind;
+    label.style.setProperty('--cast', `var(--p-${keys[i]})`);
+    chips.forEach((c, j) => { c.querySelector('[data-s]').textContent = d.chip[j]; });
+  };
+  const spread = (d) => {
+    if (d.kind !== 'given') return;
+    const s = label.querySelector('.stamp').getBoundingClientRect();
+    const v = vis.getBoundingClientRect();
+    const cx = s.left + s.width / 2 - v.left, cy = s.top + s.height / 2 - v.top;
+    ripple.style.left = `${cx}px`; ripple.style.top = `${cy}px`;
+    ripple.classList.remove('is-on'); void ripple.offsetWidth; ripple.classList.add('is-on');
+    chips.forEach((c) => {
+      const r = c.querySelector('.chip__screen').getBoundingClientRect();
+      const far = Math.hypot(r.left + r.width / 2 - v.left - cx, r.top + r.height / 2 - v.top - cy);
+      setTimeout(() => c.classList.add('is-ticked'), still.matches ? 0 : 120 + far * 1.5);
+    });
+  };
+  const rise = async (i) => {
+    label.classList.add('is-unstamped');
+    label.classList.remove('is-sunk');
+    await wait(1000);
+    label.classList.remove('is-unstamped');
+    await wait(160);
+    spread(days[i]);
+  };
+  const open = async (i) => {
+    if (busy || i === current) return;
+    busy = true;
+    chips.forEach((c) => c.classList.remove('is-ticked'));
+    label.classList.add('is-sunk');
+    await wait(560);
+    boxes[current].classList.remove('is-open');
+    boxes[current].querySelector('.lid').setAttribute('aria-pressed', 'false');
+    current = i;
+    boxes[i].classList.add('is-open');
+    boxes[i].querySelector('.lid').setAttribute('aria-pressed', 'true');
+    label.classList.add('is-moving');
+    boxes[i].insertBefore(label, boxes[i].querySelector('.lid'));
+    fill(i);
+    void label.offsetWidth;
+    label.classList.remove('is-moving');
+    await wait(620);
+    await rise(i);
+    busy = false;
+  };
+  boxes.forEach((b, i) => b.querySelector('.lid').addEventListener('click', () => open(i)));
+
+  // pause the window light when the hero is off screen; the nav takes the paper once the hero has gone by
+  const nav = document.querySelector('.site');
+  new IntersectionObserver(([e]) => { hero.classList.toggle('is-away', !e.isIntersecting); }).observe(hero);
+  const sentinel = document.createElement('i'); sentinel.className = 'nav-sentinel'; hero.prepend(sentinel);
+  new IntersectionObserver(([e]) => nav.classList.toggle('is-over', !e.isIntersecting)).observe(sentinel);
+  nav.classList.add('is-live');
+
+  // the story, once: the lid lifts, the label rises out of the box, the stamp lands, the tick travels
+  if (!still.matches) {
+    label.classList.add('is-moving', 'is-sunk', 'is-unstamped');
+    boxes[3].classList.remove('is-open');
+    chips.forEach((c) => c.classList.remove('is-ticked'));
+    void label.offsetWidth;
+    label.classList.remove('is-moving');
+    (async () => {
+      await wait(450);
+      boxes[3].classList.add('is-open');
+      await wait(650);
+      await rise(3);
+    })();
+  }
+})();
+</script>
+</body>
+</html>

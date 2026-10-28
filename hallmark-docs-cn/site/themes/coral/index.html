@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tilly——替你催收逾期发票的自由职业者开票工具</title>
+<meta name="description" content="Tilly 是面向自由职业者的开票工具，替你发送提醒、登记回复并标记发票已付，每月 £8。">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js'); if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'animate' in Element.prototype) document.documentElement.classList.add('story');</script>
+</head>
+<body id="top">
+<a class="skip" href="#main">跳到正文</a>
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="deboss" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="3" seed="6" result="n"/>
+    <feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 1.38" result="cover"/>
+    <feComposite in="SourceGraphic" in2="cover" operator="in" result="ink"/>
+    <feOffset in="SourceAlpha" dx="1.1" dy="1.3" result="o1"/>
+    <feComposite in="SourceAlpha" in2="o1" operator="out" result="wall"/>
+    <feGaussianBlur in="wall" stdDeviation="0.45" result="wallb"/>
+    <feFlood flood-color="#4a1d12" flood-opacity="0.7"/>
+    <feComposite in2="wallb" operator="in"/>
+    <feComposite in2="SourceAlpha" operator="in" result="shade"/>
+    <feOffset in="SourceAlpha" dx="-0.7" dy="-0.8" result="o2"/>
+    <feComposite in="SourceAlpha" in2="o2" operator="out" result="floor"/>
+    <feGaussianBlur in="floor" stdDeviation="0.35" result="floorb"/>
+    <feFlood flood-color="#fff6ef" flood-opacity="0.55"/>
+    <feComposite in2="floorb" operator="in"/>
+    <feComposite in2="SourceAlpha" operator="in" result="light"/>
+    <feOffset in="SourceAlpha" dx="0.6" dy="0.7" result="o3"/>
+    <feComposite in="o3" in2="SourceAlpha" operator="out" result="lip"/>
+    <feFlood flood-color="#ffffff" flood-opacity="0.9"/>
+    <feComposite in2="lip" operator="in" result="lipw"/>
+    <feOffset in="SourceAlpha" dx="-0.5" dy="-0.6" result="o4"/>
+    <feComposite in="o4" in2="SourceAlpha" operator="out" result="edge"/>
+    <feGaussianBlur in="edge" stdDeviation="0.3" result="edgeb"/>
+    <feFlood flood-color="#3a2a1e" flood-opacity="0.22"/>
+    <feComposite in2="edgeb" operator="in" result="edgew"/>
+    <feMerge><feMergeNode in="lipw"/><feMergeNode in="edgew"/><feMergeNode in="ink"/><feMergeNode in="shade"/><feMergeNode in="light"/></feMerge>
+  </filter>
+</svg>
+
+<header class="site">
+  <div class="container site__in">
+    <a class="wordmark" href="#top" aria-label="Tilly，回到顶部">Tilly</a>
+    <nav class="site__nav" aria-label="页面导航">
+      <a class="site__link" href="#chase">如何催收</a>
+      <a class="site__link" href="#cost">定价</a>
+      <a class="btn btn--card btn--sm" href="#start">注册</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero desk" aria-labelledby="hero-head">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-head">再也不用写<br><span class="hang">“</span>跟进一下”<br>了。</h1>
+        <p class="lead">面向自由职业者的开票工具：替你发提醒、记回复、把发票标记为已付。</p>
+        <div class="actions">
+          <a class="btn btn--ink" href="#start">开始开票</a>
+          <a class="btn btn--card" href="#chase">看它如何催收</a>
+        </div>
+        <p class="hero__terms">每月 £8，只有一个套餐。</p>
+      </div>
+
+      <figure class="scene" data-slot="hero" data-scene data-alt="桌上的 0042 号发票：催款提醒封在开窗信封里，客户的回函压在发票下，发票盖着“已付”章" role="img" aria-label="俯拍桌面：示例厨房的 0042 号发票，380 英镑，印在棉纸上。一份副本已作为第 2 次提醒装进开窗信封寄出，客户的回函卡压在发票下，发票以珊瑚红盖着“已付”章。">
+        <div class="scene__in" aria-hidden="true">
+          <div class="sheet reply">
+            <p class="reply__text">抱歉，这单漏掉了。今天就付。</p>
+            <p class="reply__who">accounts@example.com</p>
+          </div>
+
+          <div class="sheet inv inv--file" data-file>
+            <span class="inv__from">示例工作室</span>
+            <span class="mono" aria-hidden="true">T</span>
+            <span class="inv__addr"><b>示例厨房</b>示例街 1 号<br>示例镇</span>
+            <span class="inv__no">发票 <span class="fig">0042</span></span>
+            <span class="inv__dates"><span>开票日 <span class="fig">9 月 18 日</span></span><span>到期日 <span class="fig">10 月 2 日</span></span></span>
+            <span class="inv__lines">
+              <span>菜单插画</span><span class="fig">£300.00</span>
+              <span>两轮修改</span><span class="fig">£80.00</span>
+              <span class="inv__total">合计</span><span class="fig inv__total">£380.00</span>
+            </span>
+            <span class="inv__pay">请通过银行转账付款，附言注明 0042。</span>
+            <span class="paid" data-paid>已付</span>
+          </div>
+
+          <div class="env">
+            <div class="env__flapwrap"><div class="env__flap"><i class="env__gum"></i></div></div>
+            <div class="env__back"></div>
+            <div class="sheet letter" data-letter>
+              <i class="sheet__lift" data-lift></i>
+              <span class="letter__from">示例工作室</span>
+              <span class="letter__addr"><b>示例厨房</b>示例街 1 号<br>示例镇</span>
+            </div>
+            <div class="env__glass"></div>
+            <div class="env__front">
+              <div class="env__paper"></div>
+              <span class="env__ppi" data-ppi><b>第 2 次提醒</b>由 Tilly 发送</span>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="q q--chase" id="chase" aria-labelledby="q1">
+    <div class="container">
+      <div class="q__head">
+        <h2 id="q1">我还得自己催吗？</h2>
+        <p class="lead">不用。这里有一张逾期发票，从第一次提醒到标记已付。</p>
+      </div>
+      <div class="pin" data-pin>
+        <figure class="slot folio pin__visual" data-slot="demo-3" data-alt="Tilly 里一张发票的记录，各条回复归档成卡片" data-step="3" role="img" aria-label="Tilly 中示例影业的 0044 号发票，2,150 英镑：9 月 30 日到期，第 1 次提醒于 10 月 3 日发出，客户的回复当天上午登记在案并与其他回复归档，10 月 10 日标记已付。">
+          <div class="folio__in" aria-hidden="true">
+            <div class="sheet record">
+              <div class="record__bar"><span class="record__mark">Tilly</span><span class="record__tabs"><span class="is-on">发票</span><span>客户</span><span>回复</span></span></div>
+              <div class="record__head">
+                <span class="record__who">示例影业</span>
+                <span class="record__what">发票 <span class="fig">0044</span><span class="fig">£2,150.00</span></span>
+              </div>
+              <ol class="record__steps">
+                <li><span>已发送</span><span class="fig">9 月 16 日</span></li>
+                <li><span>到期</span><span class="fig">9 月 30 日</span></li>
+                <li data-at="1"><span>第 1 次提醒，由 Tilly 发出</span><span class="fig">10 月 3 日 09:00</span></li>
+                <li data-at="2"><span>回复已登记</span><span class="fig">10 月 3 日 11:42</span></li>
+                <li data-at="3"><span>标记已付，提醒停止</span><span class="fig">10 月 10 日</span></li>
+              </ol>
+              <span class="paid paid--record" data-at="3">已付</span>
+            </div>
+            <div class="cards">
+              <div class="card"><span class="card__tab"><span>示例剧院</span><span class="fig">0039</span></span></div>
+              <div class="card"><span class="card__tab"><span>示例画廊</span><span class="fig">0040</span></span></div>
+              <div class="card"><span class="card__tab"><span>示例面包房</span><span class="fig">0041</span></span><p class="card__who">归档于 0041</p></div>
+              <div class="card card--front" data-at="2">
+                <span class="card__tab"><span>示例影业</span><span class="fig">0044</span></span>
+                <p class="card__text">抱歉，这单漏掉了。我们周五付款。</p>
+                <p class="card__who">finance@example.com，归档于 0044</p>
+              </div>
+            </div>
+          </div>
+        </figure>
+        <ol class="pin__panels" role="list">
+          <li class="pin__panel" data-step="1">
+            <h3>它替你发提醒</h3>
+            <p class="pin__hand">自己来：你发现逾期了，斟酌着起草一封邮件。</p>
+            <p class="pin__tilly">Tilly 替你写好提醒并发送。</p>
+          </li>
+          <li class="pin__panel" data-step="2">
+            <h3>它替你记回复</h3>
+            <p class="pin__hand">自己来：各种回信都混在收件箱里。</p>
+            <p class="pin__tilly">Tilly 把每条回复归档到对应的发票下。</p>
+          </li>
+          <li class="pin__panel" data-step="3">
+            <h3>它替你标记已付</h3>
+            <p class="pin__hand">自己来：你更新台账，祈祷没有漏掉什么。</p>
+            <p class="pin__tilly">Tilly 把发票标记为已付，催问就此打住。</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="q q--receive well-band" id="receive" aria-labelledby="q2">
+    <div class="container">
+      <div class="q__head q__head--split">
+        <div class="q__words">
+          <h2 id="q2">我的客户会收到什么？</h2>
+          <p class="lead">一段简短礼貌的提醒，发票一点即达。</p>
+        </div>
+        <fieldset class="tone">
+          <legend class="tone__legend">提醒的语气</legend>
+          <div class="tone__track">
+            <label class="tone__stop"><input type="radio" name="tone" value="friendly"><span>友好</span></label>
+            <label class="tone__stop"><input type="radio" name="tone" value="plain" checked><span>平实</span></label>
+            <label class="tone__stop"><input type="radio" name="tone" value="firm"><span>强硬</span></label>
+            <i class="tone__thumb" aria-hidden="true"></i>
+          </div>
+          <p class="visually-hidden" aria-live="polite" data-tone-say></p>
+        </fieldset>
+      </div>
+      <figure class="showcase">
+        <div class="slot client" data-slot="demo-2" data-alt="客户收到的提醒，以及它链接到的发票" role="img" aria-label="示例厨房收到的 0042 号发票第 2 次提醒：一封简短邮件，说明 380 英镑已于 10 月 2 日到期，附发票链接；旁边是棉纸上的发票本身，盖着“逾期”标。">
+          <div class="client__in" aria-hidden="true">
+            <div class="doc mail">
+              <div class="mail__head">
+                <p class="mail__subject">发票 0042 已逾期 7 天</p>
+                <div class="mail__meta">
+                  <span>发件人</span><span>示例工作室</span>
+                  <span>收件人</span><span>accounts@example.com</span>
+                  <span>发送时间</span><span class="fig">今天 09:00</span>
+                </div>
+              </div>
+              <div class="mail__body">
+                <p>您好：</p>
+                <div class="mail__tone">
+                  <p data-tone="friendly">祝这周顺利。温和提醒：0042 号发票 £380.00 已于 10 月 2 日到期。</p>
+                  <p data-tone="plain">简单提醒：0042 号发票 £380.00 已于 10 月 2 日到期，完整内容见下方。</p>
+                  <p data-tone="firm">0042 号发票 £380.00 已于 10 月 2 日到期，现已逾期。请在本周内安排付款。</p>
+                </div>
+                <p>谢谢！<br>示例工作室</p>
+                <span class="mail__link">查看发票 0042</span>
+              </div>
+              <p class="mail__foot"><span>由 Tilly 代示例工作室发送</span></p>
+            </div>
+            <div class="sheet bill">
+              <span class="mono">T</span>
+              <span class="bill__top"><span class="bill__title">发票 <span class="fig">0042</span></span><i class="status">逾期</i></span>
+              <span class="bill__parties"><span>开票方<b>示例工作室</b></span><span>付款方<b>示例厨房</b></span></span>
+              <span class="bill__meta"><span>开票日<b class="fig">2026 年 9 月 18 日</b></span><span>到期日<b class="fig">2026 年 10 月 2 日</b></span></span>
+              <span class="bill__lines">
+                <span>菜单插画，六道菜</span><span class="fig">£300.00</span>
+                <span>两轮修改</span><span class="fig">£80.00</span>
+                <span class="bill__total">合计</span><span class="fig bill__total">£380.00</span>
+              </span>
+              <span class="bill__pay">请通过银行转账付款，附言注明 0042。</span>
+            </div>
+          </div>
+        </div>
+        <figcaption>示例厨房收到的 0042 号发票第 2 次提醒。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band offer" id="cost" aria-labelledby="q5">
+    <div class="container offer__grid">
+      <div class="offer__text">
+        <h2 id="q5">要花多少钱？</h2>
+        <p class="price"><span class="price__fig">£8</span><span class="price__unit">每月</span></p>
+        <ul class="inc" role="list" aria-label="这 £8 包含什么">
+          <li>以 Tilly 名义发出的发票</li>
+          <li>替你写好并发出的提醒</li>
+          <li>回复归档到对应发票</li>
+          <li>已付发票标记并结清</li>
+        </ul>
+      </div>
+      <div class="post" id="start">
+        <div class="post__env">
+          <i class="post__side post__side--l" aria-hidden="true"></i>
+          <i class="post__side post__side--r" aria-hidden="true"></i>
+          <i class="post__bottom" aria-hidden="true"></i>
+          <span class="post__flapwrap" aria-hidden="true"><i class="post__flap"></i></span>
+          <div class="post__act">
+            <a class="btn btn--ink" href="#start" data-needs-url="signup">以每月 £8 开始</a>
+            <p class="post__terms">从下一张发票开始。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="close">
+  <div class="container">
+    <p class="close__line">发票发出去，催问交给 Tilly。</p>
+    <div class="close__row">
+      <a class="wordmark" href="#top" aria-label="Tilly，回到顶部">Tilly</a>
+      <nav class="close__links" aria-label="页脚">
+        <a href="#chase">如何催收</a>
+        <a href="#receive">客户收到什么</a>
+        <a href="#cost">定价</a>
+      </nav>
+      <p class="close__legal">© 2026 Tilly。面向自由职业者的开票服务。</p>
+    </div>
+  </div>
+</footer>
+
+<script src="scene.js" defer></script>
+</body>
+</html>

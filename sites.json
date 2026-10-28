@@ -348,5 +348,22 @@
       "stack": "fumadocs + TanStack Start",
       "snap": "main@2026-10-24"
     }
+  },
+  {
+    "name": "Hallmark",
+    "slug": "hallmark",
+    "desc": "Together AI 出品的设计 skill 官网中文镜像——让 Claude Code/Codex/OpenCode 生成的界面告别 AI 味：50 个主题、真实照片、自检 linter，73 页全量汉化含 README 完整译文。",
+    "tags": [
+      "frontend-design",
+      "skills",
+      "ai-agent"
+    ],
+    "orig": "https://www.usehallmark.com/",
+    "repo": "https://github.com/Nutlope/hallmark",
+    "meta": {
+      "pages": "73 页 + README 译文",
+      "stack": "纯静态 HTML（原班无构建）",
+      "snap": "main@6033bab 2026-10-28"
+    }
   }
 ]

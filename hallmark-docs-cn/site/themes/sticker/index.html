@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pip and Pocket：五张异形切割贴纸，六英镑</title>
+  <meta name="description" content="Pip and Pocket 是一间两人贴纸工作室，售卖异形切割乙烯基贴纸，每包 5 张售价 6 英镑，订单满 20 英镑免运费。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Sofia+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+
+  <header class="slab">
+    <div class="container slab__in">
+      <a class="wordmark" href="#top" aria-label="Pip and Pocket，首页">Pip and Pocket</a>
+      <nav class="slab__links" aria-label="主导航">
+        <a href="#pack">套装内容</a>
+        <a href="#how">如何运作</a>
+        <a class="basket" href="#order"><span>购物篮</span> <b role="status" aria-live="polite" id="basket-count">0</b></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-head">
+      <div class="container hero__grid">
+        <figure class="hero__figure">
+          <div class="diecut hero__photo" data-slot="hero" data-alt="你自己拍的 Pip and Pocket 贴纸照片：阳光下举起的一张，或贴满贴纸的笔记本顶盖">
+            <img src="photos/abziehen-der-r-ckseite-eines-geschlitzten-stickers-1920.jpg" width="4000" height="3000" fetchpriority="high" alt="两只手正在撕开一张白色异形切割贴纸的底纸" style="object-position: 45% 45%">
+          </div>
+          <span class="tag tag--price" aria-hidden="true">5 张 £6</span>
+        </figure>
+        <div class="hero__text">
+          <h1 id="hero-head">五张<span class="nb">异形切割</span>贴纸，六英镑。</h1>
+          <p class="lead">来自两人工作室的乙烯基贴纸，按包出售。</p>
+          <div class="actions">
+            <a class="btn btn--primary" href="#order">开始下单</a>
+            <a class="btn" href="#how">如何运作</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pack" id="pack" aria-labelledby="pack-head">
+      <div class="container">
+        <div class="split-head">
+          <h2 id="pack-head">一包里有什么。</h2>
+          <p class="split-head__line">五张贴纸，裁好形状，撕下即贴。</p>
+        </div>
+        <ul class="bento" role="list">
+          <li class="fact fact--lead">
+            <p class="fact__big" aria-hidden="true">5</p>
+            <p class="fact__name">每包贴纸数</p>
+            <p class="fact__line">五张一个价。</p>
+          </li>
+          <li class="fact fact--lime">
+            <p class="fact__word">异形切割</p>
+            <p class="fact__line">每一张都按自身轮廓裁切，而不是切成方块。</p>
+          </li>
+          <li class="fact fact--ink">
+            <p class="fact__word">乙烯基</p>
+            <p class="fact__line">撕开、贴上、压平。</p>
+          </li>
+          <li class="fact fact--white">
+            <p class="fact__word">£6</p>
+            <p class="fact__line">每包都是这个价。</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="studio" aria-labelledby="studio-head">
+      <div class="container studio__in">
+        <h2 id="studio-head" class="statement">每一包，都由我们两个人亲手打包。</h2>
+        <span class="tag tag--mark studio__tag" aria-hidden="true">一间两人工作室</span>
+      </div>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-head">
+      <div class="container">
+        <div class="split-head">
+          <h2 id="how-head">一份订单的流程。</h2>
+          <p class="split-head__line">从计数器到你的门口，一共三步。</p>
+        </div>
+        <ol class="steps" role="list">
+          <li class="step"><span class="step__n" aria-hidden="true">1</span><h3>选好包数</h3><p>在下方计数器里加购，每包五张。</p></li>
+          <li class="step"><span class="step__n" aria-hidden="true">2</span><h3>满 £20</h3><p>超过二十英镑，邮费我们出。</p></li>
+          <li class="step"><span class="step__n" aria-hidden="true">3</span><h3>我们寄出</h3><p>清点、打包、寄出，都由我们俩之一亲手完成。</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="order" id="order" aria-labelledby="order-head">
+      <div class="container order__grid">
+        <div class="order__text">
+          <h2 id="order-head">四包即免邮。</h2>
+          <table class="ladder">
+            <caption class="visually-hidden">不同包数的总价</caption>
+            <thead><tr><th scope="col">包数</th><th scope="col">贴纸</th><th scope="col">合计</th></tr></thead>
+            <tbody>
+              <tr data-row="1"><th scope="row">1</th><td>5</td><td class="ladder__price">£6</td></tr>
+              <tr data-row="2"><th scope="row">2</th><td>10</td><td class="ladder__price">£12</td></tr>
+              <tr data-row="3"><th scope="row">3</th><td>15</td><td class="ladder__price">£18</td></tr>
+              <tr data-row="4"><th scope="row">4</th><td>20</td><td class="ladder__price">£24 <span class="ladder__free">免邮</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <form class="counter diecut" data-endpoint="" novalidate aria-labelledby="order-head">
+          <div class="counter__row">
+            <span class="counter__label" id="packs-label">包数</span>
+            <div class="stepper" role="group" aria-labelledby="packs-label">
+              <button class="stepper__btn" type="button" data-step="-1" aria-label="减少一包">&minus;</button>
+              <output class="stepper__value" id="packs" aria-live="polite">0</output>
+              <button class="stepper__btn" type="button" data-step="1" aria-label="增加一包">+</button>
+            </div>
+          </div>
+          <p class="counter__total"><span id="total">£0</span><small id="count">0 张贴纸</small></p>
+          <div class="meter" role="img" aria-label="订单总额与 £20 免邮线的对比">
+            <span class="meter__fill" id="meter-fill" style="--fill: 0"></span>
+            <span class="meter__mark">免邮</span>
+          </div>
+          <p class="counter__note" id="note" aria-live="polite">四包即免邮。</p>
+          <button class="btn btn--primary" type="submit" aria-disabled="true">去结账</button>
+          <p class="counter__help" id="order-help" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="close">
+    <div class="container">
+      <p class="close__line">感谢你支持小店。</p>
+      <p class="close__sign"><a class="close__mark" href="#top" aria-label="Pip and Pocket，回到顶部">Pip and Pocket</a></p>
+      <div class="close__row">
+        <nav class="close__links" aria-label="页脚导航">
+          <a href="#pack">套装内容</a>
+          <a href="#how">如何运作</a>
+          <a href="#order">下单</a>
+        </nav>
+        <small>© 2026 Pip and Pocket</small>
+      </div>
+      <p class="close__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Abziehen_der_R%C3%BCckseite_eines_geschlitzten_Stickers.jpg">.viviwords</a> <span>(CC0)</span>，来自 Wikimedia Commons。</p>
+    </div>
+  </footer>
+
+  <script>
+(() => {
+  const PRICE = 6, FREE = 20;
+  const $ = (id) => document.getElementById(id);
+  const packs = $('packs'), total = $('total'), count = $('count'), note = $('note'), fill = $('meter-fill'), basket = $('basket-count');
+  const form = document.querySelector('form.counter'), submit = form.querySelector('[type="submit"]'), help = $('order-help');
+  const rows = document.querySelectorAll('.ladder tbody tr');
+  let n = 0;
+  const render = () => {
+    const sum = n * PRICE, short = Math.ceil((FREE - sum) / PRICE);
+    packs.textContent = n; basket.textContent = n; total.textContent = '£' + sum; count.textContent = (n * 5) + ' 张贴纸';
+    fill.style.setProperty('--fill', Math.min(sum / FREE, 1).toFixed(3));
+    note.textContent = n === 0 ? '四包即免邮。' : sum >= FREE ? '已免邮。' : (short === 1 ? '再买一包即免邮。' : '再买 ' + short + ' 包即免邮。');
+    rows.forEach((r) => r.classList.toggle('is-on', Number(r.dataset.row) === Math.min(n, 4)));
+    submit.setAttribute('aria-disabled', String(n === 0));
+    if (n > 0) help.textContent = '';
+  };
+  document.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => { n = Math.min(20, Math.max(0, n + Number(b.dataset.step))); render(); }));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (n === 0) { help.textContent = '请先加一包：按一下加号。'; return; }
+    help.textContent = form.dataset.endpoint ? '' : '未发送任何内容：结账还没有接入。';
+  });
+  render();
+})();
+  </script>
+
+  <script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lull：雨声、风声与远处的火车，入睡后渐渐淡出</title>
+<meta name="description" content="Lull 叠加雨声、风声与远处的火车声，待你入睡后再渐渐淡出。每月三英镑。">
+<meta name="theme-color" content="#05080f">
+<script>document.documentElement.classList.add('js');setTimeout(function(){document.documentElement.classList.add('is-ready')},2400);</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&family=Figtree:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="container nav__bar">
+    <a class="wordmark" href="#top" aria-label="Lull，回到顶部">Lull</a>
+    <nav aria-label="主导航">
+      <ul class="nav__links" role="list">
+        <li><a href="#sounds">三种声音</a></li>
+        <li><a href="#fade">淡出</a></li>
+        <li><a href="#price">价格</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn--small" href="#price">开始使用 Lull</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="night" aria-hidden="true">
+    <div class="night__grain"></div>
+    <div class="night__land"></div>
+    <canvas class="night__terrain" data-terrain></canvas>
+    <span class="train train--still"></span>
+    <canvas class="night__canvas" data-night></canvas>
+  </div>
+
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head" class="rise" style="--i: 0">雨声、风声，<br>与远处的火车。</h1>
+      <p class="lead rise" style="--i: 1">Lull 将三者叠在一起，待你入睡后再渐渐淡出。</p>
+      <div class="actions rise" style="--i: 2">
+        <a class="btn btn--primary" href="#price">每月 &pound;3，立即开始</a>
+        <a class="btn btn--quiet" href="#fade">看看它如何淡出</a>
+      </div>
+    </div>
+
+    <div class="mixer rise" style="--i: 3" data-mixer role="group" aria-label="示例混音：三个推子、一个淡出计时器和试听按钮">
+      <div class="mixer__head">
+        <p class="mixer__title">今晚</p>
+        <p class="mixer__status" data-status aria-live="polite"><span class="led" aria-hidden="true"></span><span data-status-text>示例混音</span></p>
+      </div>
+
+      <div class="mixer__channels">
+        <div class="ch" data-ch="rain" style="--level: 0.6">
+          <span class="ch__value" data-value>60</span>
+          <div class="ch__fader" role="slider" tabindex="0" aria-label="雨声" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
+            <span class="ch__scale"></span>
+            <span class="ch__slot"><span class="ch__glow"></span></span>
+            <span class="ch__cap"></span>
+          </div>
+          <span class="ch__name">雨声</span>
+        </div>
+        <div class="ch" data-ch="wind" style="--level: 0.35">
+          <span class="ch__value" data-value>35</span>
+          <div class="ch__fader" role="slider" tabindex="0" aria-label="风声" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35">
+            <span class="ch__scale"></span>
+            <span class="ch__slot"><span class="ch__glow"></span></span>
+            <span class="ch__cap"></span>
+          </div>
+          <span class="ch__name">风声</span>
+        </div>
+        <div class="ch" data-ch="train" style="--level: 0.15">
+          <span class="ch__value" data-value>15</span>
+          <div class="ch__fader" role="slider" tabindex="0" aria-label="远处的火车" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15">
+            <span class="ch__scale"></span>
+            <span class="ch__slot"><span class="ch__glow"></span></span>
+            <span class="ch__cap"></span>
+          </div>
+          <span class="ch__name">远处的火车</span>
+        </div>
+      </div>
+
+      <div class="timer" style="--t: 0.5; --p: 0">
+        <div class="timer__row">
+          <span class="timer__label">淡出</span>
+          <span class="timer__value" data-timer-value>30 分钟后</span>
+        </div>
+        <div class="timer__curve" data-timer role="slider" tabindex="0" aria-label="淡出时间" aria-valuemin="1" aria-valuemax="60" aria-valuenow="30" aria-valuetext="30 分钟">
+          <svg class="timer__svg" viewBox="0 0 300 56" preserveAspectRatio="none" focusable="false">
+            <defs>
+              <linearGradient id="fade-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="currentColor" stop-opacity="0.2"/>
+                <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path class="timer__area" data-timer-area d="M0 8 L90 8 C108 8 132 56 150 56 L300 56 L300 56 L0 56 Z" fill="url(#fade-fill)"/>
+            <path class="timer__line" data-timer-line d="M0 8 L90 8 C108 8 132 56 150 56 L300 56" fill="none" stroke="currentColor" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <span class="timer__head" aria-hidden="true"></span>
+          <span class="timer__handle" aria-hidden="true"></span>
+        </div>
+        <div class="timer__axis" aria-hidden="true"><span>现在</span><span>1 小时</span></div>
+      </div>
+
+      <button class="listen" type="button" data-listen disabled aria-pressed="false">
+        <span class="listen__icon" aria-hidden="true"></span><span data-listen-label>试听</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="mix" id="sounds" aria-labelledby="sounds-head">
+  <div class="container mix__grid">
+    <div class="mix__text">
+      <h2 id="sounds-head">三种声音，一份混音。</h2>
+      <p class="lead">每种声音都有独立的音量，雨声可以主导，火车则始终远远的。</p>
+      <ol class="sound-list" role="list">
+        <li><h3>雨声</h3><p>主导混音，稳稳落在窗玻璃上。</p><span class="sound-list__level" data-level-for="rain">60</span></li>
+        <li><h3>风声</h3><p>垫在雨声之下。</p><span class="sound-list__level" data-level-for="wind">35</span></li>
+        <li><h3>远处的火车</h3><p>音量压低，远远落在其他声音之后。</p><span class="sound-list__level" data-level-for="train">15</span></li>
+      </ol>
+    </div>
+
+    <div class="mix__app">
+    <figure class="phone" data-slot="app" data-alt="手机上的 Lull 混音器：雨声、风声与远处的火车分列三个推子，以及淡出开关">
+      <div class="phone__screen mixer mixer--app" data-mixer role="group" aria-label="Lull 应用内混音器，示例">
+        <div class="mixer__head">
+          <p class="mixer__title">今晚</p>
+          <p class="mixer__status"><span class="led" aria-hidden="true"></span><span data-status-text>示例混音</span></p>
+        </div>
+        <div class="mixer__channels">
+          <div class="ch" data-ch="rain" style="--level: 0.6">
+            <span class="ch__value" data-value>60</span>
+            <div class="ch__fader" role="slider" tabindex="0" aria-label="雨声，应用内" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
+              <span class="ch__scale"></span><span class="ch__slot"><span class="ch__glow"></span></span><span class="ch__cap"></span>
+            </div>
+            <span class="ch__name">雨声</span>
+          </div>
+          <div class="ch" data-ch="wind" style="--level: 0.35">
+            <span class="ch__value" data-value>35</span>
+            <div class="ch__fader" role="slider" tabindex="0" aria-label="风声，应用内" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35">
+              <span class="ch__scale"></span><span class="ch__slot"><span class="ch__glow"></span></span><span class="ch__cap"></span>
+            </div>
+            <span class="ch__name">风声</span>
+          </div>
+          <div class="ch" data-ch="train" style="--level: 0.15">
+            <span class="ch__value" data-value>15</span>
+            <div class="ch__fader" role="slider" tabindex="0" aria-label="远处的火车，应用内" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15">
+              <span class="ch__scale"></span><span class="ch__slot"><span class="ch__glow"></span></span><span class="ch__cap"></span>
+            </div>
+            <span class="ch__name">远处的火车</span>
+          </div>
+        </div>
+        <div class="switch-row">
+          <span class="switch-row__label">淡出<span>当你入睡之后</span></span>
+          <button class="switch" type="button" role="switch" aria-checked="true" aria-label="入睡后淡出" data-switch><span class="switch__knob"></span></button>
+        </div>
+        <button class="listen listen--app" type="button" data-listen disabled aria-pressed="false">
+          <span class="listen__icon" aria-hidden="true"></span><span data-listen-label>试听</span>
+        </button>
+      </div>
+    </figure>
+    <p class="phone__note">以上为示例音量。在这里或上方推动推子，夜色与声音都会随之变化。</p>
+    </div>
+  </div>
+</section>
+
+<section class="far" aria-labelledby="night-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="night-head">火车始终在远处。</h2>
+      <p class="lead">在混音里压得很低，适合听得见一切细节的耳朵。</p>
+    </div>
+    <figure class="photo far__photo" data-slot="photo-1" data-alt="夜色近景：玻璃上的雨痕，或一列远处驶过的火车">
+      <img src="photos/night-train-1920.jpg" width="1920" height="1277" loading="lazy" sizes="(min-width: 90rem) 1312px, 100vw" alt="一列深色的火车在夜里滑行而过，点亮的车窗拉成一道模糊的光带" style="object-position: 50% 20%">
+    </figure>
+  </div>
+</section>
+
+<section class="fade" id="fade" aria-labelledby="fade-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="fade-head">然后，一切渐渐淡出。</h2>
+      <p class="lead">一旦你睡着，三种声音便一同退去。</p>
+    </div>
+
+    <figure class="night-chart" data-chart>
+      <div class="night-chart__plot">
+        <svg class="night-chart__svg" viewBox="0 0 1000 300" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+          <path class="night-chart__line night-chart__line--rain" d="M0 120 L300 120 C466.5 120 583.5 300 750 300 L1000 300" vector-effect="non-scaling-stroke"/>
+          <path class="night-chart__line night-chart__line--wind" d="M0 195 L300 195 C466.5 195 583.5 300 750 300 L1000 300" vector-effect="non-scaling-stroke"/>
+          <path class="night-chart__line night-chart__line--train" d="M0 255 L300 255 C466.5 255 583.5 300 750 300 L1000 300" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <span class="night-chart__mark" style="--x: 0.58"></span>
+        <span class="night-chart__mark" style="--x: 0.8"></span>
+      </div>
+      <ol class="night-chart__stages" role="list">
+        <li style="--x: 0">
+          <p class="night-chart__when">当你渐渐入睡</p>
+          <p class="night-chart__levels"><span>雨声 <b>60</b></span><span>风声 <b>35</b></span><span>火车 <b>15</b></span></p>
+        </li>
+        <li style="--x: 0.58">
+          <p class="night-chart__when">已入睡，淡出中</p>
+          <p class="night-chart__levels"><span>雨声 <b>18</b></span><span>风声 <b>9</b></span><span>火车 <b>4</b></span></p>
+        </li>
+        <li style="--x: 0.8">
+          <p class="night-chart__when">安静直到天明</p>
+          <p class="night-chart__levels"><span>三者全部归 <b>0</b></span></p>
+        </li>
+      </ol>
+      <figcaption class="visually-hidden">当你渐渐入睡时，雨声、风声与远处火车分别保持在 60、35 与 15；一旦睡着便一同降下，直到清晨都保持寂静。以上为示例音量。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="close" id="price" aria-labelledby="price-head">
+  <div class="container close__grid">
+    <div class="close__text">
+      <h2 id="price-head">一个价格，每一晚。</h2>
+      <p class="lead">三种声音加淡出，每月三英镑。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#price">每月 &pound;3，立即开始</a>
+      </div>
+    </div>
+    <p class="close__figure" aria-hidden="true"><span class="close__num">&pound;3</span><span class="close__per">每月</span></p>
+  </div>
+  <div class="horizon" aria-hidden="true" data-horizon>
+    <span class="train"></span>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <p class="footer__signoff">晚安，浅眠的人。</p>
+    <nav class="footer__links" aria-label="页脚">
+      <a href="#sounds">三种声音</a>
+      <a href="#fade">淡出</a>
+      <a href="#price">价格</a>
+    </nav>
+    <p class="footer__legal">&copy; 2026 Lull. <span data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Night_Train.jpg">Tiraspolsky</a>（CC0），来自 Wikimedia Commons。</span> 本页声音由你的浏览器实时生成，且仅在你按下"试听"后才会播放。</p>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script src="night.js" defer></script>
+</body>
+</html>

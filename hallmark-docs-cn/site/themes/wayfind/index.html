@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Platform：里斯本地铁全站实时发车与最快出口</title>
+<meta name="description" content="Platform 在里斯本地铁每一站显示实时发车、延误与最快出口。免费。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@400;500;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="slab">
+  <div class="container slab__inner">
+    <a class="wordmark" href="#top" aria-label="Platform，回到顶部">Platform</a>
+    <nav class="slab__links" aria-label="主导航">
+      <a href="#departures">发车</a>
+      <a href="#exits">出口</a>
+      <a href="#delays">延误</a>
+    </nav>
+    <a class="btn btn--on-ink btn--small" href="#free">获取 Platform</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">出口在哪，就在哪上车。</h1>
+      <p class="lead">里斯本地铁每一站的实时发车、延误与最快出口。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#free">免费获取 Platform</a>
+        <a class="btn" href="#departures">查看车站示例</a>
+      </div>
+    </div>
+
+    <div class="hero__visual">
+      <figure class="frame hero__photo" data-slot="hero-photo" data-alt="里斯本地铁站台上，一列列车在等候">
+        <img src="photos/2025-08-06-lisbon-metro-train-waiting-at-santa-apol-nia-1920.jpg" width="1920" height="1281" fetchpriority="high" alt="一列红前脸的里斯本地铁列车停在浅色站台上，屏显指向 Santa Apolónia" style="object-position: 62% 55%">
+      </figure>
+      <figure class="phone" data-slot="hero" data-kind="product" data-alt="Platform 在 Baixa-Chiado 的车站屏：双向的下一班车、一处延误，以及停在 Chiado 出口的那节车厢">
+        <div class="phone__screen" aria-hidden="true">
+          <div class="phone__head">
+            <span class="phone__station">Baixa-Chiado</span>
+            <span class="phone__lines"><i class="sw sw--blue"></i><i class="sw sw--green"></i></span>
+          </div>
+          <div class="board">
+            <p class="board__line"><i class="sw sw--blue"></i>蓝线</p>
+            <div class="board__row"><span class="board__to">Santa Apolónia</span><span class="board__min">2 分钟</span></div>
+            <div class="board__row"><span class="board__to">Reboleira</span><span class="board__min">4 分钟</span></div>
+            <p class="board__line"><i class="sw sw--green"></i>绿线</p>
+            <div class="board__row"><span class="board__to">Cais do Sodré</span><span class="board__min">3 分钟</span></div>
+            <div class="board__row board__row--late"><span class="board__to">Telheiras，晚点</span><span class="board__min">+3</span></div>
+          </div>
+          <div class="exit">
+            <span class="exit__label">最快出口</span>
+            <span class="exit__where">前部车厢</span>
+            <span class="exit__to">Chiado 出口，扶梯上方</span>
+          </div>
+          <div class="phone__foot"><span class="live">实时</span><span>刚刚更新</span></div>
+        </div>
+        <figcaption class="visually-hidden">Baixa-Chiado 的车站屏（示例）：Santa Apolónia 2 分钟后到，Reboleira 4 分钟，Cais do Sodré 3 分钟，Telheiras 晚点 3 分钟，前往 Chiado 出口请乘前部车厢。</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="departures band--ink" id="departures" aria-labelledby="dep-head">
+  <div class="container">
+    <div class="dep__head">
+      <div>
+        <h2 id="dep-head">两条线，双向都看。</h2>
+        <p class="lead">选一个换乘站：经过的每一班车，精确到分钟。</p>
+      </div>
+      <div class="picker" role="radiogroup" aria-label="车站">
+        <button type="button" role="radio" aria-checked="true" data-station="alameda">Alameda</button>
+        <button type="button" role="radio" aria-checked="false" data-station="baixa">Baixa-Chiado</button>
+        <button type="button" role="radio" aria-checked="false" data-station="marques">Marquês</button>
+        <button type="button" role="radio" aria-checked="false" data-station="saldanha">Saldanha</button>
+      </div>
+    </div>
+    <table class="deptable">
+      <caption class="visually-hidden">所选车站的发车信息，示例时间</caption>
+      <thead><tr><th scope="col">线路</th><th scope="col">开往</th><th scope="col" class="num">下一班</th><th scope="col" class="num">再下一班</th><th scope="col" class="st">状态</th></tr></thead>
+      <tbody data-board>
+        <tr><td><i class="sw sw--green"></i>绿线</td><td>Cais do Sodré</td><td class="num">1 分钟</td><td class="num">6 分钟</td><td class="st">准点</td></tr>
+        <tr><td><i class="sw sw--green"></i>绿线</td><td>Telheiras</td><td class="num">3 分钟</td><td class="num">9 分钟</td><td class="st">准点</td></tr>
+        <tr><td><i class="sw sw--red"></i>红线</td><td>Aeroporto</td><td class="num">2 分钟</td><td class="num">8 分钟</td><td class="st">准点</td></tr>
+        <tr class="is-late"><td><i class="sw sw--red"></i>红线</td><td>São Sebastião</td><td class="num">5 分钟</td><td class="num">14 分钟</td><td class="st"><span>晚点 4 分钟</span></td></tr>
+      </tbody>
+    </table>
+    <p class="dep__note"><span class="live" data-live>App 内实时</span> 本页为示例时间。</p>
+  </div>
+</section>
+
+<section class="exits" id="exits" aria-labelledby="exit-head">
+  <div class="container exits__grid">
+    <figure class="frame exits__photo" data-slot="photo-1" data-alt="里斯本地铁车站内的楼梯与扶梯">
+      <img src="photos/metro-lisboa-january-2015-2a-1920.jpg" width="1920" height="1350" loading="lazy" decoding="async" alt="里斯本地铁车站内，一段宽楼梯与一部扶梯沿方形立柱一侧上行" style="object-position: 40% 50%">
+    </figure>
+    <div class="exits__text">
+      <h2 id="exit-head">下车直奔楼梯。</h2>
+      <p class="lead">出口屏会指明停得离你要出的口最近的那节车厢。</p>
+      <ol class="route" aria-label="从 Baixa-Chiado 出站的示例路线">
+        <li><b>前</b><span>要上的车厢</span></li>
+        <li><b>左</b><span>乘扶梯上行</span></li>
+        <li class="route__end"><b>Chiado</b><span>出站上街</span></li>
+      </ol>
+      <p class="exits__cap">Baixa-Chiado 的示例路线。</p>
+    </div>
+  </div>
+</section>
+
+<section class="lines" id="delays" aria-labelledby="del-head">
+  <div class="container">
+    <div class="lines__head">
+      <h2 id="del-head">进闸之前，晚点先知道。</h2>
+      <p class="lead">每条线的状态，进闸前一目了然。</p>
+    </div>
+    <ul class="lines__rows" aria-label="线路状态，示例">
+      <li class="is-late"><i class="sw sw--blue"></i><b>蓝线</b><span class="ends">Reboleira 至 Santa Apolónia</span><span class="state"><span class="live" aria-hidden="true"></span>晚点 3 分钟</span></li>
+      <li><i class="sw sw--yellow"></i><b>黄线</b><span class="ends">Odivelas 至 Rato</span><span class="state">准点</span></li>
+      <li><i class="sw sw--green"></i><b>绿线</b><span class="ends">Telheiras 至 Cais do Sodré</span><span class="state">准点</span></li>
+      <li><i class="sw sw--red"></i><b>红线</b><span class="ends">São Sebastião 至 Aeroporto</span><span class="state">准点</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="close" id="free" aria-labelledby="free-head">
+  <div class="container close__grid">
+    <div class="close__head">
+      <h2 id="free-head">每一站，都免费。</h2>
+      <p class="lead">每条线，从街面到站台，来回都覆盖。</p>
+    </div>
+    <div class="close__act">
+      <a class="btn btn--ink" href="#free">免费获取 Platform</a>
+      <a class="btn btn--on-signal" href="#departures">查看车站示例</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container foot__inner">
+    <p class="foot__word">Platform</p>
+    <nav class="foot__links" aria-label="页脚">
+      <a href="#departures">发车</a>
+      <a href="#exits">出口</a>
+      <a href="#delays">延误</a>
+      <a href="#free">免费获取 Platform</a>
+    </nav>
+    <p class="foot__legal">© 2026 Platform。里斯本地铁，每一站。</p>
+    <p class="foot__credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:2025-08-06,_Lisbon_Metro_train_waiting_at_Santa_Apol%C3%B3nia.jpg">Patrycja Rosa (ptrcnull)</a>（CC BY 4.0）与 <a href="https://commons.wikimedia.org/wiki/File:Metro_Lisboa_January_2015-2a.jpg">Alvesgaspar</a>（CC BY-SA 4.0），来自 Wikimedia Commons</p>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script>
+// The station picker: sample times for four interchanges, swapped in place like a board.
+(() => {
+  const S = (line, to, next, then, late) => ({ line, to, next, then, late });
+  const boards = {
+    alameda: [S('green', 'Cais do Sodré', 1, 6), S('green', 'Telheiras', 3, 9), S('red', 'Aeroporto', 2, 8), S('red', 'São Sebastião', 5, 14, 4)],
+    baixa: [S('blue', 'Santa Apolónia', 2, 7), S('blue', 'Reboleira', 4, 10, 3), S('green', 'Cais do Sodré', 3, 8), S('green', 'Telheiras', 1, 6)],
+    marques: [S('blue', 'Santa Apolónia', 3, 9), S('blue', 'Reboleira', 1, 7), S('yellow', 'Rato', 2, 8), S('yellow', 'Odivelas', 6, 12, 2)],
+    saldanha: [S('yellow', 'Rato', 4, 10), S('yellow', 'Odivelas', 2, 8), S('red', 'Aeroporto', 1, 7, 2), S('red', 'São Sebastião', 3, 9)],
+  };
+  const name = { blue: '蓝线', yellow: '黄线', green: '绿线', red: '红线' };
+  const body = document.querySelector('[data-board]');
+  const live = document.querySelector('[data-live]');
+  const radios = [...document.querySelectorAll('[data-station]')];
+  const render = (key) => {
+    body.innerHTML = boards[key].map((r) => `<tr${r.late ? ' class="is-late"' : ''}><td><i class="sw sw--${r.line}"></i>${name[r.line]}</td><td>${r.to}</td><td class="num">${r.next} 分钟</td><td class="num">${r.then} 分钟</td><td class="st">${r.late ? `<span>晚点 ${r.late} 分钟</span>` : '准点'}</td></tr>`).join('');
+    live.classList.remove('is-blink'); void live.offsetWidth; live.classList.add('is-blink');
+  };
+  const pick = (b) => { radios.forEach((x) => { const on = x === b; x.setAttribute('aria-checked', String(on)); x.tabIndex = on ? 0 : -1; }); render(b.dataset.station); };
+  radios.forEach((b, i) => {
+    b.tabIndex = i === 0 ? 0 : -1;
+    b.addEventListener('click', () => pick(b));
+    b.addEventListener('keydown', (e) => { const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!k) return; e.preventDefault(); const n = radios[(i + k + radios.length) % radios.length]; pick(n); n.focus(); });
+  });
+})();
+</script>
+</body>
+</html>

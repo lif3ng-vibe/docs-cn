@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenwick and Daughters，自 1921 年起在约克烘焙咖啡</title>
+<meta name="description" content="Fenwick and Daughters 每周在约克烘焙六款咖啡，以 250 g 袋装或订阅方式出售。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@600&family=Grenze:wght@400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="mast">
+  <div class="container mast__bar">
+    <a class="mast__link" href="#week">本周六款</a>
+    <a class="wordmark" href="#top" aria-label="Fenwick and Daughters，回到顶部">Fenwick and Daughters</a>
+    <a class="mast__link mast__link--end" href="#order">订购</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-h">
+    <figure class="hero__photo" data-slot="roaster" data-alt="约克的烘豆机运转中，一炉新豆正倾入冷却盘">
+      <img src="photos/cooling-time-for-coffee-1920.jpg" width="1920" height="1348" fetchpriority="high"
+           alt="拨片臂把刚烘好的豆子扫过冷却盘">
+    </figure>
+    <div class="container hero__inner">
+      <div class="plate fibre">
+        <h1 id="hero-h">在约克烘焙<br>自 1921 年起</h1>
+        <p class="lead">每周六款咖啡，250&nbsp;g 袋装或订阅均可。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#order">订购一袋</a>
+          <a class="btn" href="#week">看本周六款</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="week" id="week" aria-labelledby="week-h">
+    <div class="container">
+      <div class="split week__head">
+        <h2 id="week-h">本周六款</h2>
+        <p class="lead">本周在约克烘焙。选中一行即可订购。</p>
+      </div>
+      <div class="ledger-wrap">
+        <table class="ledger">
+          <thead>
+            <tr><th scope="col" class="idx">编号</th><th scope="col">咖啡</th><th scope="col">处理法</th><th scope="col">烘焙度</th><th scope="col">适合冲煮</th><th scope="col" class="r"><span class="visually-hidden">订购</span></th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="idx">1</td><th scope="row">耶加雪菲，埃塞俄比亚</th><td>水洗</td><td>浅烘</td><td>手冲</td><td class="r"><a class="pick" href="#order" data-coffee="1">订购<span class="visually-hidden"> 耶加雪菲，埃塞俄比亚</span></a></td></tr>
+            <tr><td class="idx">2</td><th scope="row">惠兰，哥伦比亚</th><td>水洗</td><td>中烘</td><td>手冲</td><td class="r"><a class="pick" href="#order" data-coffee="2">订购<span class="visually-hidden"> 惠兰，哥伦比亚</span></a></td></tr>
+            <tr><td class="idx">3</td><th scope="row">塞拉多，巴西</th><td>日晒</td><td>中烘</td><td>意式浓缩</td><td class="r"><a class="pick" href="#order" data-coffee="3">订购<span class="visually-hidden"> 塞拉多，巴西</span></a></td></tr>
+            <tr><td class="idx">4</td><th scope="row">安提瓜，危地马拉</th><td>水洗</td><td>中烘</td><td>手冲</td><td class="r"><a class="pick" href="#order" data-coffee="4">订购<span class="visually-hidden"> 安提瓜，危地马拉</span></a></td></tr>
+            <tr><td class="idx">5</td><th scope="row">基安布，肯尼亚</th><td>水洗</td><td>浅烘</td><td>手冲</td><td class="r"><a class="pick" href="#order" data-coffee="5">订购<span class="visually-hidden"> 基安布，肯尼亚</span></a></td></tr>
+            <tr><td class="idx">6</td><th scope="row">约克拼配</th><td>水洗与日晒</td><td>深烘</td><td>意式浓缩</td><td class="r"><a class="pick" href="#order" data-coffee="6">订购<span class="visually-hidden"> 约克拼配</span></a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="drum" aria-labelledby="drum-h">
+    <div class="container split drum__grid">
+      <figure class="photo drum__photo" data-slot="drum" data-alt="约克的烘豆机在两炉之间，滚筒悬于冷却盘上方">
+        <img src="photos/coffee-roasting-machine-the-roastery-coaltown-coffee-ammanfo-1920.jpg" width="1920" height="2560" loading="lazy"
+             alt="滚筒烘豆机与下方的铜制冷却盘" style="object-position: 50% 62%">
+      </figure>
+      <div class="drum__text">
+        <h2 id="drum-h">每一袋都在约克烘焙</h2>
+        <p class="lead">本周六款都在这里过滚筒，随后装袋。</p>
+        <dl class="facts">
+          <div><dt>烘焙间</dt><dd>约克</dd></div>
+          <div><dt>烘焙始于</dt><dd>1921</dd></div>
+          <div><dt>每周</dt><dd>六款咖啡，列于上表</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="ways band fibre" aria-labelledby="ways-h">
+    <div class="container">
+      <p class="statement">两种购买方式，六款咖啡始终如一。</p>
+      <h2 id="ways-h" class="visually-hidden">购买方式</h2>
+      <ol class="ways__rows" role="list">
+        <li><h3 class="ways__title">按袋购买</h3><p>本周六款任选一袋，两袋、三袋也行。</p><a class="ways__go" href="#order" data-kind="bag">订购一袋</a></li>
+        <li><h3 class="ways__title">订阅</h3><p>同样的袋装，按你选的节奏寄出。</p><a class="ways__go" href="#order" data-kind="subscription">开始订阅</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="cup" id="cup" aria-labelledby="cup-h">
+    <div class="container">
+      <div class="split cup__head">
+        <h2 id="cup-h">从麻袋到杯子</h2>
+        <p class="lead">生豆进炉，本周六款出炉，剩下的冲煮交给你。</p>
+      </div>
+      <div class="split cup__pair">
+        <figure class="cup__a">
+          <div class="photo" data-slot="green" data-alt="烘焙前的麻袋生豆">
+            <img src="photos/green-bean-coffee-1920.jpg" width="1920" height="1277" loading="lazy"
+                 alt="麻袋里的生咖啡豆洒在木桌上" style="object-position: 55% 60%">
+          </div>
+          <figcaption>生豆，入炉之前</figcaption>
+        </figure>
+        <figure class="cup__b">
+          <div class="photo" data-slot="cup" data-alt="一杯本周的咖啡">
+            <img src="photos/espresso-coffee-pouring-from-retro-espresso-machine-1920.jpg" width="1920" height="2876" loading="lazy"
+                 alt="意式浓缩从镀铬机身流入两只玻璃杯" style="object-position: 50% 62%">
+          </div>
+          <figcaption>咖啡，出炉之后</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="order-band" id="order" aria-labelledby="order-h">
+    <div class="container">
+      <form class="split order" data-endpoint="" novalidate>
+        <div class="order__text">
+          <h2 id="order-h">订购本周之选</h2>
+          <fieldset class="cells" data-group="coffee">
+            <legend>咖啡</legend>
+            <div class="cells__row cells__row--3">
+              <input type="radio" name="coffee" id="coffee-1" value="耶加雪菲，埃塞俄比亚" checked><label for="coffee-1"><span class="cells__no">1</span> 耶加雪菲</label>
+              <input type="radio" name="coffee" id="coffee-2" value="惠兰，哥伦比亚"><label for="coffee-2"><span class="cells__no">2</span> 惠兰</label>
+              <input type="radio" name="coffee" id="coffee-3" value="塞拉多，巴西"><label for="coffee-3"><span class="cells__no">3</span> 塞拉多</label>
+              <input type="radio" name="coffee" id="coffee-4" value="安提瓜，危地马拉"><label for="coffee-4"><span class="cells__no">4</span> 安提瓜</label>
+              <input type="radio" name="coffee" id="coffee-5" value="基安布，肯尼亚"><label for="coffee-5"><span class="cells__no">5</span> 基安布</label>
+              <input type="radio" name="coffee" id="coffee-6" value="约克拼配"><label for="coffee-6"><span class="cells__no">6</span> 约克拼配</label>
+            </div>
+          </fieldset>
+          <fieldset class="cells" data-group="kind">
+            <legend>购买方式</legend>
+            <div class="cells__row cells__row--2">
+              <input type="radio" name="kind" id="kind-bag" value="bag" checked><label for="kind-bag">按袋购买</label>
+              <input type="radio" name="kind" id="kind-sub" value="subscription"><label for="kind-sub">订阅</label>
+            </div>
+          </fieldset>
+          <div class="cells__pair">
+            <fieldset class="cells" data-group="bags">
+              <legend>每次袋数</legend>
+              <div class="cells__row cells__row--3">
+                <input type="radio" name="bags" id="bags-1" value="1" checked><label for="bags-1">1</label>
+                <input type="radio" name="bags" id="bags-2" value="2"><label for="bags-2">2</label>
+                <input type="radio" name="bags" id="bags-3" value="3"><label for="bags-3">3</label>
+              </div>
+            </fieldset>
+            <fieldset class="cells" data-group="often" disabled>
+              <legend>频率</legend>
+              <div class="cells__row cells__row--3">
+                <input type="radio" name="often" id="often-w" value="每周" checked><label for="often-w">每周</label>
+                <input type="radio" name="often" id="often-f" value="双周"><label for="often-f">双周</label>
+                <input type="radio" name="often" id="often-m" value="每月"><label for="often-m">每月</label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <div class="order__sum">
+          <p class="order__label">你的订单</p>
+          <p class="tally" aria-live="polite"><span class="tally__g">250&nbsp;g</span> <span class="tally__of">的 <span class="tally__coffee">耶加雪菲，埃塞俄比亚</span></span> <span class="tally__when">一次</span></p>
+          <dl class="order__terms">
+            <div><dt>袋装</dt><dd>250&nbsp;g，约克烘焙</dd></div>
+            <div><dt>价格</dt><dd><span class="fill" data-fill="price">价格待定</span></dd></div>
+          </dl>
+          <button class="btn btn--on-field" type="submit">提交订单</button>
+          <p class="help" id="order-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<aside class="buybar" aria-label="订购" hidden>
+  <div class="container buybar__inner">
+    <p class="buybar__text"><span class="buybar__name">本周六款</span> <span class="buybar__terms">按袋购买，或订阅</span></p>
+    <a class="btn btn--primary" href="#order">订购一袋</a>
+  </div>
+</aside>
+
+<footer class="letter">
+  <div class="container letter__inner">
+    <p class="letter__sign">来自烘焙间的致意，</p>
+    <p class="letter__name">Fenwick and Daughters</p>
+    <div class="letter__foot">
+      <nav class="letter__nav" aria-label="页脚">
+        <a href="#week">本周六款</a>
+        <a href="#cup">从麻袋到杯子</a>
+        <a href="#order">订购</a>
+      </nav>
+      <p class="legal">约克，自 1921 年起</p>
+      <p class="letter__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Cooling_time_for_coffee.jpg">Jameswasswa</a> (CC&nbsp;BY-SA&nbsp;4.0), <a href="https://commons.wikimedia.org/wiki/File:Coffee_roasting_machine,_The_Roastery,_Coaltown_Coffee,_Ammanford,_Wales.jpg">Vouliagmeni</a> (CC&nbsp;BY-SA&nbsp;4.0), <a href="https://commons.wikimedia.org/wiki/File:Green_Bean_Coffee.jpg">DeaPeaJay</a> (CC&nbsp;BY-SA&nbsp;2.0), <a href="https://commons.wikimedia.org/wiki/File:Espresso_coffee_pouring_from_retro_espresso_machine.jpg">Shixart1985</a> (CC&nbsp;BY&nbsp;2.0)，均来自 Wikimedia Commons。</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+(() => {
+  const form = document.querySelector('form.order');
+  const often = form.querySelector('[data-group="often"]');
+  const g = form.querySelector('.tally__g'), when = form.querySelector('.tally__when'), coffee = form.querySelector('.tally__coffee');
+  const submit = form.querySelector('button[type="submit"]');
+  const tally = () => {
+    const sub = form.elements.kind.value === 'subscription';
+    often.disabled = !sub;
+    const grams = 250 * Number(form.elements.bags.value);
+    g.textContent = grams >= 1000 ? `${grams / 1000} kg` : `${grams} g`;
+    coffee.textContent = form.elements.coffee.value;
+    when.textContent = sub ? form.elements.often.value : '一次';
+    submit.textContent = sub ? '开始订阅' : '提交订单';
+  };
+  form.addEventListener('change', tally);
+  document.querySelectorAll('[data-kind]').forEach((a) => a.addEventListener('click', () => { form.elements.kind.value = a.dataset.kind; tally(); }));
+  document.querySelectorAll('[data-coffee]').forEach((a) => a.addEventListener('click', () => { form.elements.coffee.value = form.querySelector(`#coffee-${a.dataset.coffee}`).value; tally(); }));
+  tally();
+  const help = form.querySelector('#order-help');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.dataset.endpoint) { help.textContent = '尚未发送：订单还未接入商店。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '烘焙间已收到你的订单。' : '发送失败。请稍后再试。'; })
+      .catch(() => { help.textContent = '发送失败。请稍后再试。'; });
+  });
+  const bar = document.querySelector('.buybar'), hero = document.querySelector('.hero'), order = document.getElementById('order');
+  if (bar && 'IntersectionObserver' in window) {
+    bar.hidden = false;
+    const seen = { hero: true, order: false };
+    const sync = () => bar.classList.toggle('is-up', !seen.hero && !seen.order);
+    new IntersectionObserver(([e]) => { seen.hero = e.isIntersecting; sync(); }).observe(hero);
+    new IntersectionObserver(([e]) => { seen.order = e.isIntersecting; sync(); }, { rootMargin: '0px 0px -20% 0px' }).observe(order);
+  }
+})();
+</script>
+</body>
+</html>

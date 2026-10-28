@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprout:读一点点,长出一座花园</title>
+<meta name="description" content="Sprout 是一款面向 5 到 8 岁孩子的每日五分钟阅读游戏,孩子每读一点,就种出一座小花园。免费 14 天,之后每月 4 英镑。">
+<link href="https://api.fontshare.com/v2/css?f[]=chillax@500,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="container bar__inner">
+    <a class="wordmark" href="#top" aria-label="Sprout,回到顶部">Sprout</a>
+    <nav class="knobs" aria-label="主导航">
+      <a class="knob" href="#round">一个回合</a>
+      <a class="knob" href="#garden">花园</a>
+      <a class="knob" href="#grown-ups">写给家长</a>
+    </nav>
+    <a class="btn btn--secondary btn--small" href="#start">免费开始</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">读一点点。<br>长出一座花园。</h1>
+      <p class="lead">一款给 5 到 8 岁孩子的每日五分钟阅读游戏。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#start">免费开始</a>
+        <a class="btn btn--secondary" href="#round">看一个回合</a>
+      </div>
+    </div>
+
+    <figure class="round-wrap">
+      <span class="sheet mat"><i></i><i></i></span>
+      <div class="card">
+        <figure class="play" data-slot="hero" data-alt="Sprout 的阅读回合:一句话拆成词卡,已读的词亮着黄色,还有五分钟计时器和今天的植物">
+          <div class="play__top">
+            <span class="tab">今天的回合</span>
+            <span class="timer" aria-hidden="true"><span class="timer__track"><span class="timer__sand"></span></span></span>
+            <span class="timer__time">还剩 <span class="num" data-time>4:12</span></span>
+          </div>
+          <div class="strip">
+            <span class="sheet paper-strip"><i></i><i></i></span>
+            <p class="words" role="group" aria-label="朗读句子:按顺序点读每个词"><button class="tile tile--pear" type="button" data-i="0" aria-pressed="true"><span>一只</span></button> <button class="tile tile--coral" type="button" data-i="1" aria-pressed="true"><span>狐狸</span></button> <button class="tile tile--mint" type="button" data-i="2" aria-pressed="true"><span>跑上</span></button> <span class="words__br"></span> <button class="tile tile--blue" type="button" data-i="3" aria-pressed="true"><span>了</span></button> <button class="tile tile--pear" type="button" data-i="4" aria-pressed="true"><span>那座</span></button> <button class="tile tile--coral" type="button" data-i="5" aria-pressed="true"><span>山丘。</span></button></p>
+          </div>
+          <div class="play__bottom">
+            <p class="play__say" aria-live="polite">读完六个词,长出六棵植物。</p>
+            <button class="btn btn--secondary btn--small" type="button" data-again hidden>再读一遍</button>
+            <button class="btn btn--secondary btn--small btn--icon" type="button" data-hear hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>听一听</button>
+          </div>
+          <figcaption class="visually-hidden">一个阅读回合:句子"一只狐狸跑上了那座山丘。"拆成六张词卡;每读一个词,下方的花园就长出一棵植物。</figcaption>
+        </figure>
+        <span class="curl" aria-hidden="true"></span>
+      </div>
+      <p class="sticker"><span class="sticker__in"><b>免费 14 天</b><span>之后每月<br>£4</span></span></p>
+    </figure>
+  </div>
+
+  <div class="hills" aria-hidden="true"><span class="sheet hill hill--1"><i></i><i></i></span><span class="sheet hill hill--2"><i></i><i></i></span></div>
+  <div class="ground" aria-hidden="true">
+    <div class="plot plot--full">
+        <span class="plant plant--far" style="--x: 3%; --s: 0.5; --lean: -3deg; --b: calc(100% - 54.6px)"><i class="plant__head plant__head--coral" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 8%; --s: 0.56; --lean: 2deg; --b: calc(100% - 56.4px)"><i class="plant__head plant__head--pear" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 13.5%; --s: 0.48; --lean: -1deg; --b: calc(100% - 62.3px)"><i class="plant__head plant__head--blue" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 21%; --s: 0.54; --lean: 3deg; --b: calc(100% - 62.9px)"><i class="plant__head plant__head--coral" style="--i: 3">u</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 26%; --s: 0.46; --lean: -2deg; --b: calc(100% - 63.7px)"><i class="plant__head plant__head--pear" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 38%; --s: 0.52; --lean: -3deg; --b: calc(100% - 68.5px)"><i class="plant__head plant__head--coral" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 44%; --s: 0.5; --lean: 2deg; --b: calc(100% - 64.2px)"><i class="plant__head plant__head--coral" style="--i: 2">x</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 57%; --s: 0.5; --lean: -1deg; --b: calc(100% - 52.6px)"><i class="plant__head plant__head--blue" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 63%; --s: 0.46; --lean: 3deg; --b: calc(100% - 50.0px)"><i class="plant__head plant__head--pear" style="--i: 2">*</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 72%; --s: 0.52; --lean: -2deg; --b: calc(100% - 49.0px)"><i class="plant__head plant__head--coral" style="--i: 3">u</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 80%; --s: 0.48; --lean: -3deg; --b: calc(100% - 49.6px)"><i class="plant__head plant__head--pear" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 88%; --s: 0.54; --lean: 2deg; --b: calc(100% - 54.8px)"><i class="plant__head plant__head--coral" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--far" style="--x: 95%; --s: 0.5; --lean: -1deg; --b: calc(100% - 53.9px)"><i class="plant__head plant__head--coral" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+    </div>
+    <span class="sheet soil soil--1"><i></i><i></i></span>
+    <div class="container ground__plants">
+      <div class="plot plot--old">
+        <span class="plant" style="--x: 7%; --s: 0.92; --lean: -4deg"><i class="plant__head plant__head--coral" style="--i: 4">u</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 1; --i: 2">(</i><b class="plant__seed">.</b></span>
+        <span class="plant" style="--x: 10.5%; --s: 0.72; --lean: 3deg"><i class="plant__head plant__head--pear" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant" style="--x: 14.5%; --s: 1; --lean: 2deg"><i class="plant__head plant__head--coral" style="--i: 5">*</i><span class="plant__stem"><i style="--i: 3">l</i><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 1; --i: 2">(</i><i class="leaf leaf--r" style="--at: 2; --i: 3">)</i><b class="plant__seed">.</b></span>
+        <span class="plant" style="--x: 24%; --s: 0.8; --lean: -3deg"><i class="plant__head plant__head--mint" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span>
+        <span class="plant" style="--x: 29%; --s: 0.86; --lean: 3deg"><i class="plant__head plant__head--blue" style="--i: 4">x</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span>
+        <span class="plant" style="--x: 32.5%; --s: 0.7; --lean: -2deg"><i class="plant__head plant__head--coral" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span>
+      </div>
+      <div class="plot plot--today">
+        <span class="plant plant--today" style="--x: 53.5%; --s: 0.95; --lean: -3deg" data-p="0"><i class="plant__head plant__head--pear" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--today" style="--x: 61%; --s: 1.05; --lean: 2deg" data-p="1"><i class="plant__head plant__head--coral" style="--i: 4">x</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 1; --i: 2">(</i><i class="leaf leaf--r" style="--at: 2; --i: 3">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--today" style="--x: 68.5%; --s: 0.85; --lean: -2deg" data-p="2"><i class="plant__head plant__head--mint" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 1; --i: 2">(</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--today" style="--x: 76.5%; --s: 1; --lean: 3deg" data-p="3"><i class="plant__head plant__head--blue" style="--i: 4">u</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><i class="leaf leaf--l" style="--at: 2; --i: 3">(</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--today" style="--x: 84.5%; --s: 0.88; --lean: -2deg" data-p="4"><i class="plant__head plant__head--pear" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--today" style="--x: 92.5%; --s: 1; --lean: 1deg" data-p="5"><i class="plant__head plant__head--coral" style="--i: 4">*</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 1; --i: 2">(</i><i class="leaf leaf--r" style="--at: 2; --i: 3">)</i><b class="plant__seed">.</b></span>
+      </div>
+    </div>
+    <span class="sheet soil soil--2"><i></i><i></i></span>
+    <div class="container ground__plants"><div class="plot plot--seeds"><span class="seed" style="--x: 53.5%">v</span><span class="seed" style="--x: 61%">v</span><span class="seed" style="--x: 68.5%">v</span><span class="seed" style="--x: 76.5%">v</span><span class="seed" style="--x: 84.5%">v</span><span class="seed" style="--x: 92.5%">v</span></div></div>
+    <div class="plot plot--full">
+        <span class="plant plant--front" style="--x: 2.6%; --s: 1.25; --lean: 4deg; --b: calc(26% - 36.9px)"><i class="plant__head plant__head--pear" style="--i: 4">*</i><span class="plant__stem"><i style="--i: 2">l</i><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--front" style="--x: 45.5%; --s: 1.3; --lean: -3deg; --b: calc(26% - 29.1px)"><i class="plant__head plant__head--coral" style="--i: 3">u</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--r" style="--at: 0; --i: 1">)</i><b class="plant__seed">.</b></span>
+        <span class="plant plant--front" style="--x: 96.8%; --s: 1.1; --lean: -5deg; --b: calc(26% - 31.9px)"><i class="plant__head plant__head--blue" style="--i: 2">o</i><span class="plant__stem"><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span>
+    </div>
+    <span class="sheet soil soil--3"><i></i><i></i></span>
+  </div>
+</section>
+
+<section class="moments" id="round" aria-labelledby="round-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="round-head">一个回合,四个环节。</h2>
+      <p class="lead">从第一页到最后一页,孩子看到的是这些。</p>
+    </div>
+    <div class="pin">
+      <div class="pin__stage" aria-hidden="true">
+        <div class="pin__tabs"></div>
+        <div class="pin__screens"></div>
+      </div>
+      <ol class="pin__panels">
+        <li class="moment" id="m-read">
+          <figure class="scr scr--read" data-slot="moment-read" data-alt="Sprout 的一页:一句短句,正在读的词亮着黄色">
+            <div class="scr__in" aria-hidden="true">
+              <div class="round__top"><span class="chip">第 2 页,共 6 页</span><span class="round__pages" style="--p: 0.33"></span><span class="round__time">还剩 4 分钟</span></div>
+              <p class="round__sentence"><span>一只蜜蜂</span> <mark>坐</mark> <span class="is-next">在红帽子上。</span></p>
+              <div class="round__bottom"><span class="chip chip--paper">听一听</span><span class="chip chip--ink round__next">下一页</span></div>
+            </div>
+            <figcaption class="visually-hidden">一页显示句子"一只蜜蜂坐在红帽子上。",其中"坐"字亮起。</figcaption>
+          </figure>
+          <div class="moment__text">
+            <h3 data-tab="读">读一页</h3>
+            <p>一次只出一句短句,正在读的词会亮起来。</p>
+          </div>
+        </li>
+        <li class="moment" id="m-hear">
+          <figure class="scr scr--hear" data-slot="moment-hear" data-alt="Sprout 的词卡:一个易错词,大字显示,配有发音按钮">
+            <div class="scr__in" aria-hidden="true">
+              <div class="round__top"><span class="chip">易错词</span></div>
+              <p class="hear__word"><mark>山丘</mark></p>
+              <div class="round__bottom"><span class="hear__from">出自"一只狐狸跑上了那座山丘。"</span><span class="chip chip--ink"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>听一听</span></div>
+            </div>
+            <figcaption class="visually-hidden">一张词卡,显示"山丘",并配有发音按钮。</figcaption>
+          </figure>
+          <div class="moment__text">
+            <h3 data-tab="听">听一个词</h3>
+            <p>被一个词难住了?点一下,Sprout 会大声读出来。</p>
+          </div>
+        </li>
+        <li class="moment" id="m-grow">
+          <figure class="scr scr--grow" data-slot="moment-grow" data-alt="读完一页后的 Sprout 花园:今天的植物长高了一点">
+            <div class="scr__in" aria-hidden="true">
+              <div class="round__top"><span class="chip chip--paper">你的花园</span></div>
+              <div class="grow__card">
+                <span class="grow__label">今天在长</span>
+                <span class="grow__name">豌豆</span>
+                <span class="grow grow--big" style="--g: 0.7"></span>
+              </div>
+              <div class="round__bottom"><span class="chip chip--paper">向日葵,开花中</span><span class="chip chip--paper">番茄,生长中</span></div>
+            </div>
+            <figcaption class="visually-hidden">花园界面:读完一页后,豌豆正在生长。</figcaption>
+          </figure>
+          <div class="moment__text">
+            <h3 data-tab="种">种一棵植物</h3>
+            <p>每读完一页,今天的植物就往前长一点。</p>
+          </div>
+        </li>
+        <li class="moment" id="m-stop">
+          <figure class="scr scr--stop" data-slot="moment-stop" data-alt="Sprout 回合的结尾:五分钟读完,明天见">
+            <div class="scr__in" aria-hidden="true">
+              <div class="round__top"><span class="chip chip--line">回合结束</span></div>
+              <p class="stop__title">五分钟到了。</p>
+              <div class="round__bottom"><span class="stop__line">明天见。</span><span class="chip chip--line">回到花园</span></div>
+            </div>
+            <figcaption class="visually-hidden">回合的结尾:"五分钟到了。明天见。"</figcaption>
+          </figure>
+          <div class="moment__text">
+            <h3 data-tab="停">五分钟就停</h3>
+            <p>五分钟一到,回合自动结束,谁也不会累着。</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="garden-sec" id="garden" aria-labelledby="garden-head">
+  <div class="container garden-sec__grid">
+    <div class="garden-sec__text">
+      <h2 id="garden-head">看花园一点点长满。</h2>
+      <p class="lead">植物在回合之间会留在原地,所以总有再回来的理由。</p>
+      <div class="seg" role="tablist" aria-label="免费期内的花园变化">
+        <button role="tab" id="g-t1" aria-controls="g-p1" aria-selected="true">第一天</button>
+        <button role="tab" id="g-t2" aria-controls="g-p2" aria-selected="false" tabindex="-1">一周</button>
+        <button role="tab" id="g-t3" aria-controls="g-p3" aria-selected="false" tabindex="-1">两周</button>
+      </div>
+    </div>
+    <div class="garden" data-slot="garden" data-kind="product" data-alt="Sprout 的花园界面:孩子靠阅读种出的一片片花圃" data-keep>
+      <section class="garden__state" role="tabpanel" id="g-p1" aria-labelledby="g-t1" data-keep>
+        <div class="garden__top"><h3 class="garden__title">你的花园</h3><p class="garden__when">第一个回合之后</p></div>
+        <div class="beds-wrap"><span class="sheet step step--1"><i></i><i></i></span><span class="sheet step step--2"><i></i><i></i></span><ul class="beds">
+          <li class="bed"><b>豌豆</b><span>刚种下</span><span class="plant plant--mini is-seed"><span class="plant__stem"></span><b class="plant__seed">.</b></span></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+        </ul></div>
+        <p class="garden__next"><span class="chip">明天的种子:向日葵</span></p>
+      </section>
+      <section class="garden__state" role="tabpanel" id="g-p2" aria-labelledby="g-t2" data-keep>
+        <div class="garden__top"><h3 class="garden__title">你的花园</h3><p class="garden__when">一周之后</p></div>
+        <div class="beds-wrap"><span class="sheet step step--1"><i></i><i></i></span><span class="sheet step step--2"><i></i><i></i></span><ul class="beds">
+          <li class="bed"><b>豌豆</b><span>开花中</span><span class="plant plant--mini"><i class="plant__head plant__head--coral" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>向日葵</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>番茄</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>雏菊</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>胡萝卜</b><span>发芽中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 2">v</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>菜豆</b><span>发芽中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 2">v</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>萝卜</b><span>刚种下</span><span class="plant plant--mini is-seed"><span class="plant__stem"></span><b class="plant__seed">.</b></span></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+          <li class="bed bed--empty"></li>
+        </ul></div>
+        <p class="garden__next"><span class="chip">明天的种子:生菜</span></p>
+      </section>
+      <section class="garden__state" role="tabpanel" id="g-p3" aria-labelledby="g-t3" data-keep>
+        <div class="garden__top"><h3 class="garden__title">你的花园</h3><p class="garden__when">两周之后</p></div>
+        <div class="beds-wrap"><span class="sheet step step--1"><i></i><i></i></span><span class="sheet step step--2"><i></i><i></i></span><ul class="beds">
+          <li class="bed"><b>豌豆</b><span>开花中</span><span class="plant plant--mini"><i class="plant__head plant__head--coral" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>向日葵</b><span>开花中</span><span class="plant plant--mini"><i class="plant__head plant__head--pear" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>番茄</b><span>开花中</span><span class="plant plant--mini"><i class="plant__head plant__head--coral" style="--i: 3">o</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>雏菊</b><span>开花中</span><span class="plant plant--mini"><i class="plant__head plant__head--coral" style="--i: 3">*</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><i class="leaf leaf--r" style="--at: 1; --i: 2">)</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>胡萝卜</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>菜豆</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>萝卜</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>生菜</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>虞美人</b><span>生长中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 3">T</i><span class="plant__stem"><i style="--i: 1">l</i><i style="--i: 0">l</i></span><i class="leaf leaf--l" style="--at: 0; --i: 1">(</i><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>南瓜</b><span>发芽中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 2">v</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>洋葱</b><span>发芽中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 2">v</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>韭葱</b><span>发芽中</span><span class="plant plant--mini"><i class="plant__head plant__head--green" style="--i: 2">v</i><span class="plant__stem"><i style="--i: 0">l</i></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>万寿菊</b><span>刚种下</span><span class="plant plant--mini is-seed"><span class="plant__stem"></span><b class="plant__seed">.</b></span></li>
+          <li class="bed"><b>草莓</b><span>刚种下</span><span class="plant plant--mini is-seed"><span class="plant__stem"></span><b class="plant__seed">.</b></span></li>
+        </ul></div>
+        <p class="garden__next"><span class="chip">明天的种子:香豌豆</span></p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section class="grown" id="grown-ups" aria-labelledby="grown-head">
+  <div class="grown__grid">
+    <figure class="photo grown__photo" data-slot="photo-kite" data-alt="回合结束后,你的孩子在户外,背对镜头,画面里没有正脸">
+      <img src="photos/child-playing-with-a-kite-1920.jpg" width="3093" height="2325" loading="lazy" sizes="(min-width: 60rem) 55vw, 100vw" alt="一个男孩背对镜头,在蓝天下举着一只自制风筝" style="object-position: 45% 45%">
+    </figure>
+    <div class="grown__text">
+      <h2 id="grown-head">五分钟一到,就去玩。</h2>
+      <dl class="facts">
+        <div><dt>适合 5 到 8 岁</dt><dd>专为刚开始识字的孩子设计。</dd></div>
+        <div><dt>每天一次</dt><dd>一个回合,上学日的晚上也安排得开。</dd></div>
+        <div><dt>免费 14 天</dt><dd>之后每月 £4。</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="start" id="start" aria-labelledby="start-head">
+  <span class="sheet band" aria-hidden="true"><i></i><i></i></span>
+  <div class="container start__grid">
+    <div class="start__plan">
+      <h2 id="start-head">开始第一个回合。</h2>
+      <fieldset class="pick">
+        <legend>什么时候开始?</legend>
+        <div class="pick__row">
+          <label class="pill"><input type="radio" name="start" value="today" checked><span>今天</span></label>
+          <label class="pill"><input type="radio" name="start" value="sat"><span>周六</span></label>
+          <label class="pill"><input type="radio" name="start" value="mon"><span>周一</span></label>
+        </div>
+      </fieldset>
+      <p class="pick__out" aria-live="polite">免费 14 天,之后 <mark>每月 £4</mark>。</p>
+      <div class="start__go">
+        <button class="btn btn--primary" type="button" data-start>免费试用 14 天</button>
+        <p class="start__note" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="card card--first">
+    <figure class="first" data-slot="first" data-alt="Sprout 的首屏:一座空花园,等着第一页被读完">
+      <div class="first__in" aria-hidden="true">
+        <span class="chip chip--well">第 1 天</span>
+        <p class="first__title">你的花园准备好了。</p>
+        <div class="first__bed"><span>读一页,种下第一颗种子。</span><i class="grow" style="--g: 0"></i></div>
+        <span class="chip chip--ink chip--big">开始阅读</span>
+      </div>
+      <figcaption class="visually-hidden">首屏:一座空花园和"开始阅读"按钮。</figcaption>
+    </figure>
+    <span class="curl" aria-hidden="true"></span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="mast">
+  <div class="mast__cut">
+    <div class="container">
+      <p class="mast__word" aria-hidden="true"><span style="--r: -2.5deg; --y: 4px">S</span><span style="--r: 1.5deg; --y: -6px">p</span><span style="--r: -1deg; --y: 2px">r</span><span style="--r: 2deg; --y: -4px">o</span><span style="--r: -1.5deg; --y: 6px">u</span><span style="--r: 1deg; --y: -2px">t</span></p>
+    </div>
+    <div class="ground ground--mast" aria-hidden="true"><span class="sheet soil soil--1"><i></i><i></i></span><span class="sheet soil soil--2"><i></i><i></i></span><span class="sheet soil soil--3"><i></i><i></i></span></div>
+  </div>
+  <div class="container">
+    <div class="mast__row">
+      <p class="mast__line">一款能种出花园的每日阅读游戏。</p>
+      <nav class="mast__links" aria-label="页脚">
+        <a href="#round">一个回合</a>
+        <a href="#garden">花园</a>
+        <a href="#grown-ups">写给家长</a>
+        <a href="#start">免费开始</a>
+      </nav>
+      <p class="mast__legal">© 2026 Sprout</p>
+    </div>
+    <p class="mast__credits" data-credits>Photograph: <a href="https://commons.wikimedia.org/wiki/File:Child_playing_with_a_kite.jpg">Wilfredor</a> (CC0), via Wikimedia Commons</p>
+  </div>
+</footer>
+
+<script src="round.js" defer></script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script>
+/* The pinned round: the moments' screens are cloned onto one sticky stage on wide screens */
+(() => {
+  const pin = document.querySelector('.pin'); if (!pin) return;
+  const stage = pin.querySelector('.pin__screens'), tabs = pin.querySelector('.pin__tabs');
+  const moments = [...pin.querySelectorAll('.moment')];
+  const shots = moments.map((m) => { const c = m.querySelector('.scr').cloneNode(true); c.removeAttribute('data-slot'); c.querySelector('figcaption')?.remove(); stage.append(c); return c; });
+  const pills = moments.map((m) => { const b = document.createElement('a'); b.className = 'pin__tab'; b.href = '#' + m.id; b.tabIndex = -1; b.textContent = m.querySelector('h3').dataset.tab; tabs.append(b); return b; });
+  const set = (i) => { moments.forEach((m, k) => m.classList.toggle('is-on', k === i)); shots.forEach((s, k) => s.classList.toggle('is-on', k === i)); pills.forEach((p, k) => p.classList.toggle('is-on', k === i)); };
+  set(0);
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) set(moments.indexOf(e.target)); }), { rootMargin: '-45% 0px -45% 0px' });
+  moments.forEach((m) => io.observe(m));
+  pin.classList.add('is-pinned');
+})();
+/* The garden switcher */
+(() => {
+  const tabs = [...document.querySelectorAll('.seg [role="tab"]')]; if (!tabs.length) return;
+  const show = (t, focus) => { tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; }); if (focus) t.focus(); };
+  tabs.forEach((t, i) => { t.addEventListener('click', () => show(t)); t.addEventListener('keydown', (e) => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length], true); } }); });
+  show(tabs[0]);
+})();
+/* The start day: the free days counted from the day they begin */
+(() => {
+  const out = document.querySelector('.pick__out'); if (!out) return;
+  const fmt = (d) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const startOf = (v) => { const d = new Date(); d.setHours(12, 0, 0, 0); const want = v === 'sat' ? 6 : v === 'mon' ? 1 : null; if (want !== null) { d.setDate(d.getDate() + (((want - d.getDay()) + 7) % 7 || 7)); } return d; };
+  const show = () => { const v = document.querySelector('input[name="start"]:checked').value; const s = startOf(v), e = new Date(s); e.setDate(e.getDate() + 14); out.innerHTML = fmt(s) + ' 起免费,到 <mark>' + fmt(e) + '</mark>,之后每月 £4。'; };
+  document.querySelectorAll('input[name="start"]').forEach((r) => r.addEventListener('change', show)); show();
+  const go = document.querySelector('[data-start]'), note = document.querySelector('.start__note');
+  go?.addEventListener('click', () => { note.textContent = '尚未接入:应用上线后,免费试用会从这里开始。'; });
+})();
+</script>
+</body>
+</html>

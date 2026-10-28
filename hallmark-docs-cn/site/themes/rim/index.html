@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northstar：为地球上任意地点预订一次卫星过境成像</title>
+<meta name="description" content="Northstar 为地球上任意地点排期卫星成像，并在 6 小时内交付。服务保险、农业与研究。">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a class="nav__mark" href="#top" aria-label="Northstar，回到顶部">Northstar</a>
+    <nav class="nav__links" aria-label="本页导航">
+      <a href="#uses">使用场景</a>
+      <a href="#clock">交付</a>
+      <a href="#order">订单</a>
+    </nav>
+    <a class="btn" href="#schedule">预约成像</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <figure class="photo hero__field" data-slot="hero" data-alt="你自己的成像：一次过境中对某地正下方垂直拍摄的照片">
+      <img src="photos/mackenzie-river-outflow-1920.jpg" width="1920" height="1718" alt="从正上方俯瞰，河口泥沙在海上旋开" style="object-position: 50% 42%" fetchpriority="high" decoding="async">
+      <div class="strip" data-keep>
+        <div class="container strip__in">
+          <div><span class="label">地点</span><span class="measure">69.4012° N, 134.1937° W</span></div>
+          <div><span class="label">成像时间</span><span class="measure">2026 年 10 月 6 日 10:51 UTC</span></div>
+          <div><span class="label">交付时间</span><span class="measure">2026 年 10 月 6 日 16:07 UTC</span></div>
+        </div>
+      </div>
+    </figure>
+    <div class="container hero__base">
+      <h1 id="hero-h">为你的地点预订一次过境。</h1>
+      <div class="hero__aside">
+        <p class="lead">地球上任意地点，成像后 6 小时内交付。</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#schedule">预约成像</a>
+          <a class="btn" href="#order">看一张订单</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reach" aria-labelledby="reach-h">
+    <div class="container">
+      <div class="grid head">
+        <h2 id="reach-h">卫星经过的地方皆可预约</h2>
+        <p class="lead">任何纬度，任何经度，同一只钟。</p>
+      </div>
+      <dl class="figs">
+        <div><dt>纬度，从极到极</dt><dd class="measure">180°</dd></div>
+        <div><dt>经度，绕满一圈</dt><dd class="measure">360°</dd></div>
+        <div><dt>从过境到交付，至多</dt><dd class="measure">6<small>小时</small></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="uses" id="uses" aria-labelledby="uses-h">
+    <div class="container">
+      <div class="grid head">
+        <h2 id="uses-h">为一次理赔、一片农田、一项研究</h2>
+        <p class="lead">说出地点，和那个要紧的日子。</p>
+      </div>
+      <figure class="photo uses__wide ticks" data-slot="uses" data-alt="你自己的成像：某处承保财产的正下方俯拍">
+        <img src="photos/solar-power-nieder-olm-p1090617-1920.jpg" width="1920" height="1440" alt="从空中俯瞰：一片田野间的农舍，谷仓屋顶铺着太阳能板" style="object-position: 50% 58%" loading="lazy" decoding="async">
+      </figure>
+      <dl class="uses__rows">
+        <div><dt>保险公司</dt><dd>风暴来临前的屋顶，以及风暴过后同样的屋顶。</dd></div>
+        <div><dt>农户</dt><dd>某块田，在它需要查看的那一天。</dd></div>
+        <div><dt>研究者</dt><dd>一块样地，在方法设定的日期上。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="clock" id="clock" aria-labelledby="clock-h">
+    <div class="container">
+      <div class="grid head">
+        <h2 id="clock-h">时钟从过境那一刻启动</h2>
+        <p class="lead">就是本页顶部那张成像背后的订单。</p>
+      </div>
+      <div class="timeline" role="img" aria-label="2026 年 10 月 6 日一张示例订单的示意图：10:51 UTC 过境，16:07 UTC 交付，窗口在 16:51 UTC 关闭">
+        <svg class="timeline__svg" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="timeline__band" x="206" y="342" width="666" height="10"/>
+          <line class="timeline__axis" x1="0" y1="352" x2="1000" y2="352" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__grid" x1="0" y1="352" x2="0" y2="364" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__grid" x1="333.3" y1="352" x2="333.3" y2="364" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__grid" x1="666.7" y1="352" x2="666.7" y2="364" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__grid" x1="1000" y1="352" x2="1000" y2="364" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__pin timeline__pin--pass" x1="206" y1="0" x2="206" y2="352" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__pin timeline__pin--done" x1="791" y1="220" x2="791" y2="352" vector-effect="non-scaling-stroke"/>
+          <line class="timeline__pin timeline__pin--end" x1="872" y1="96" x2="872" y2="352" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="event event--pass" style="left: 20.6%"><span class="label">过境</span><span class="event__time measure">10:51<small>UTC</small></span><span class="event__line">卫星飞越目标地点。</span></div>
+        <div class="event event--done" style="left: 79.1%"><span class="label">交付</span><span class="event__time measure">16:07<small>UTC</small></span><span class="event__line">成像落入订单。</span></div>
+        <div class="event event--end" style="left: 87.2%"><span class="label">窗口关闭</span><span class="event__time measure">16:51<small>UTC</small></span><span class="event__line">过境后 6 小时。</span></div>
+        <span class="tick tick--first measure" style="left: 0">09:00 UTC</span>
+        <span class="tick measure" style="left: 33.333%">12:00 UTC</span>
+        <span class="tick measure" style="left: 66.667%">15:00 UTC</span>
+        <span class="tick tick--last measure" style="left: 100%">18:00 UTC</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="order" id="order" aria-labelledby="order-h">
+    <div class="container">
+      <div class="grid head">
+        <h2 id="order-h">每一次过境都标明交付时刻</h2>
+        <p class="lead">先选定地点，再从它接下来的过境里挑一次。</p>
+      </div>
+      <figure class="screen ticks" data-kind="product" data-slot="demo-order" data-alt="Northstar 的下单界面：一处地点、它接下来的过境，以及最晚交付时间">
+        <div class="screen__top">
+          <span class="screen__title">新建订单</span>
+          <span class="label">订单 NS-0142</span>
+        </div>
+        <div class="screen__grid">
+          <div class="screen__site">
+            <div class="fields">
+              <div class="field"><span class="label">地点（十进制度）</span><span class="field__box measure">38.7290, -9.4730</span></div>
+              <div class="field"><span class="label">面积</span><span class="field__box measure">4.0 km²</span></div>
+            </div>
+            <div class="preview">
+              <img src="photos/aerial-view-a-coastline-of-hailing-island-yangjiang-city-1920.jpg" width="1920" height="1440" alt="示例地点预览：从空中俯瞰一块多岩海岸，订单区域已框出" style="object-position: 40% 50%" loading="lazy">
+              <span class="preview__box" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="screen__passes">
+            <fieldset class="passes">
+              <legend class="label">此地点接下来的过境</legend>
+              <label class="pass"><input type="radio" name="pass" value="0" checked><span class="pass__when"><b class="measure">2026 年 10 月 13 日 10:42 UTC</b></span><span class="pass__by measure">16:42 UTC 前交付</span></label>
+              <label class="pass"><input type="radio" name="pass" value="1"><span class="pass__when"><b class="measure">2026 年 10 月 14 日 10:18 UTC</b></span><span class="pass__by measure">16:18 UTC 前交付</span></label>
+              <label class="pass"><input type="radio" name="pass" value="2"><span class="pass__when"><b class="measure">2026 年 10 月 15 日 09:55 UTC</b></span><span class="pass__by measure">15:55 UTC 前交付</span></label>
+            </fieldset>
+            <div class="summary" aria-live="polite">
+              <div><span class="label">过境</span><span class="measure" data-pass>2026 年 10 月 13 日 10:42 UTC</span></div>
+              <div><span class="label">最晚交付</span><span class="measure" data-by>2026 年 10 月 13 日 16:42 UTC</span></div>
+              <a class="btn btn--primary" href="#schedule">预约这次过境</a>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="schedule">
+  <div class="container grid">
+    <div class="foot__head">
+      <h2>说出地点，和那个日子</h2>
+      <p class="lead">本页所有时间均为 UTC。</p>
+    </div>
+    <form class="form" data-endpoint="" novalidate>
+      <div class="form__row">
+        <label>地点（十进制度）<input name="site" type="text" inputmode="decimal" autocomplete="off" placeholder="38.7290, -9.4730" required pattern="^\s*-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*$"></label>
+        <label>过境日期（UTC）<input name="day" type="date" required></label>
+      </div>
+      <label>交付邮箱<input name="email" type="email" autocomplete="email" required></label>
+      <div class="form__act">
+        <button class="btn btn--primary" type="submit">预约成像</button>
+      </div>
+      <p class="form__help" aria-live="polite"></p>
+    </form>
+  </div>
+  <div class="container foot__base">
+    <nav class="foot__links" aria-label="页脚">
+      <a href="#uses">使用场景</a>
+      <a href="#clock">交付</a>
+      <a href="#order">订单</a>
+    </nav>
+    <p class="foot__legal">Northstar，地球上任意地点的卫星成像。</p>
+    <p class="foot__credit" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Mackenzie_River_Outflow.jpg">Operational Land Imager on the Landsat 8 satellite</a>（public domain）、<a href="https://commons.wikimedia.org/wiki/File:Solar_power,_Nieder-Olm_(P1090617).jpg">Matti Blume</a>（CC&nbsp;BY-SA&nbsp;4.0）、<a href="https://commons.wikimedia.org/wiki/File:Aerial_View,_A_coastline_of_Hailing_Island,_Yangjiang_City.jpg">YikyuenG</a>（CC&nbsp;BY-SA&nbsp;4.0），均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+const passes = [['2026 年 10 月 13 日 10:42 UTC', '2026 年 10 月 13 日 16:42 UTC'], ['2026 年 10 月 14 日 10:18 UTC', '2026 年 10 月 14 日 16:18 UTC'], ['2026 年 10 月 15 日 09:55 UTC', '2026 年 10 月 15 日 15:55 UTC']];
+document.querySelectorAll('.passes input').forEach((r) => r.addEventListener('change', () => {
+  const [p, by] = passes[Number(r.value)];
+  document.querySelector('[data-pass]').textContent = p;
+  document.querySelector('[data-by]').textContent = by;
+}));
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('.form__help');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('input')].filter((i) => !i.checkValidity());
+    form.querySelectorAll('input').forEach((i) => i.toggleAttribute('aria-invalid', bad.includes(i)));
+    if (bad.length) {
+      const i = bad[0];
+      help.textContent = i.name === 'site' ? '请按十进制度的纬度、经度填写地点，如 38.7290, -9.4730。' : i.name === 'day' ? '请选择过境日期。' : '这个邮箱看起来不完整。请写成 name@example.com。';
+      i.focus(); return;
+    }
+    if (!form.dataset.endpoint) { help.textContent = '什么都没有发送：预约功能尚未接通。'; return; }
+  });
+});
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

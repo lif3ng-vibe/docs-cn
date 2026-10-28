@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hallmark README（中文版）——给编码智能体的设计品味</title>
+<meta name="description" content="Hallmark 官方 README 的完整中文版：一个让 Claude Code、Codex、Cursor 与 OpenCode 生成界面告别 AI 味的设计 skill。">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --paper: #fcfbf8; --ink: #16150f; --ink-2: #4a483f; --line: #e3e0d6; --accent: #c23c17; --mono: "Geist Mono", ui-monospace, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: Geist, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; font-size: 16px; line-height: 1.75; }
+  .skip { position: absolute; left: -9999px; }
+  .skip:focus { left: 16px; top: 16px; background: var(--paper); padding: 8px 12px; }
+  .nav { border-bottom: 1px solid var(--line); background: var(--paper); }
+  .nav__in { max-width: 860px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: flex; align-items: baseline; gap: 6px; text-decoration: none; color: var(--ink); font-weight: 600; }
+  .brand__slash { color: var(--accent); font-family: Fraunces, serif; }
+  .nav__links { display: flex; gap: 16px; font-size: 14px; }
+  .nav__links a { color: var(--ink-2); text-decoration: none; }
+  .nav__links a:hover { color: var(--ink); }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 20px 64px; }
+  .prose h1 { font-family: Fraunces, "Songti SC", SimSun, serif; font-size: 40px; line-height: 1.2; margin: 0 0 8px; font-weight: 500; }
+  .prose h2 { font-family: Fraunces, "Songti SC", SimSun, serif; font-size: 26px; margin: 48px 0 12px; font-weight: 500; }
+  .prose p, .prose li { color: var(--ink); }
+  .prose .tagline { color: var(--ink-2); font-size: 14px; margin: 0 0 4px; }
+  .prose code { font-family: var(--mono); font-size: 0.86em; background: #f1efe7; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+  .prose pre { background: var(--ink); color: #f5f3ea; border-radius: 10px; padding: 14px 18px; overflow-x: auto; }
+  .prose pre code { background: none; border: 0; color: inherit; padding: 0; font-size: 13px; }
+  .prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .prose blockquote { margin: 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--accent); color: var(--ink-2); }
+  .prose table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+  .prose th, .prose td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  .prose th { background: #f4f2ea; font-weight: 600; }
+  .prose img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); display: block; margin: 24px auto; }
+  .theme-table img { border-radius: 8px; margin: 0; }
+  .theme-table a { text-decoration: none; }
+  .theme-table b { display: block; margin-top: 6px; }
+  .theme-table sub { color: var(--ink-2); }
+  .foot { border-top: 1px solid var(--line); }
+  .foot__in { max-width: 860px; margin: 0 auto; padding: 24px 20px 48px; color: var(--ink-2); font-size: 14px; }
+  .foot__in a { color: var(--accent); }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="nav__in">
+    <a class="brand" href="../"><span class="brand__slash">/</span><span>hallmark</span></a>
+    <nav class="nav__links" aria-label="页面导航">
+      <a href="../">主页</a>
+      <a href="https://github.com/Nutlope/hallmark">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<article class="prose">
+  <p class="tagline">本文是 <a href="https://github.com/Nutlope/hallmark">Nutlope/hallmark</a> 官方 README 的完整中文翻译（快照 2026-10-28，非官方译本，以英文原文为准）。</p>
+  <h1>Hallmark</h1>
+
+  <p><strong>一个面向 Claude Code、Codex、Cursor 与 OpenCode 的设计 skill，拒绝让界面看起来像 AI 生成的。</strong></p>
+
+  <p><a href="https://www.usehallmark.com">usehallmark.com</a> &nbsp;·&nbsp; 五十个主题 &nbsp;·&nbsp; 支持定制 &nbsp;·&nbsp; 指名即做重设计与审计</p>
+
+  <p>由 Together AI 出品。</p>
+
+  <img src="../OG-hallmark.png" alt="Hallmark，终结 AI 味的设计 skill" width="1200" height="630">
+
+  <p>Hallmark 守住一条硬底线，然后就不碍事。它从五十种材质的主题目录里发三张牌，围绕访客来的目的搭建页面，再在真实浏览器里对着那些一眼机造的破绽 lint 结果：每个标题上方那行眉题、加字距的大写标签、标题里那个孤零零的彩色词、满页空框或满页照片、对不准屏幕的 hero、每页结尾的邮件订阅框、说了谢谢却什么都没发出去的表单。最后一票在新会话评审手里。</p>
+
+  <p>关卡分层级。<strong>底线（Floor）</strong>绝不允许上线（对比度、焦点、减弱动效、编造的事实、坏掉的手机布局）。<strong>惯性（Reflex）</strong>关卡是模型总会掉进去的默认坑；一次构建若有正当理由，可以在记录在案的前提下推翻其中一条。<strong>收尾（Finish）</strong>检查是手艺细节，永远不拦上线。</p>
+
+  <h2>v2 新增</h2>
+
+  <ul>
+    <li><strong>五十个主题。</strong>每个主题都是一种材质（纸、字体、颜色、表面，带自己的组件与质感），配一张成品页的照片，构建就在其中排出它自己的页面。</li>
+    <li><strong>从差事出发。</strong>预约页面管预约，商店管卖货，简报管订阅：行动按钮待在它的品类该在的位置，页面也在它那里收尾。</li>
+    <li><strong>定制。</strong>要一张定制页，Hallmark 就只凭你的提示词设计，遵守同一套规则与检查。</li>
+    <li><strong>你真实的产品。</strong>给它一个 URL、一个开发服务器或一个应用，它自己去截屏。</li>
+    <li><strong>真实照片。</strong>755 张开放许可照片，按拍摄对象挑选，并在页面上署名。</li>
+    <li><strong>重设计与审计。</strong><code>/hallmark redesign &lt;path&gt;</code> 重建页面并保留内容与接线；<code>/hallmark audit &lt;path&gt;</code> 只报告不动手。</li>
+  </ul>
+
+  <h2>主题</h2>
+
+  <table class="theme-table">
+    <tr>
+      <td width="20%"><a href="../themes/dusk/"><img src="../assets/themes/dusk.webp" alt="Dusk 主题：Closewise，银行对账" /></a></td>
+      <td width="20%"><a href="../themes/cobalt/"><img src="../assets/themes/cobalt.webp" alt="Cobalt 主题：Relay，一个 webhook API" /></a></td>
+      <td width="20%"><a href="../themes/studio/"><img src="../assets/themes/studio.webp" alt="Studio 主题：Field Office，一间品牌识别工作室" /></a></td>
+      <td width="20%"><a href="../themes/atelier/"><img src="../assets/themes/atelier.webp" alt="Atelier 主题：Maison Orla，一间香水工作室" /></a></td>
+      <td width="20%"><a href="../themes/ribbon/"><img src="../assets/themes/ribbon.webp" alt="Ribbon 主题：Lull，一个助眠声音应用" /></a></td>
+    </tr>
+    <tr>
+      <td><b>Dusk</b><br/><sub>Closewise，银行对账</sub></td>
+      <td><b>Cobalt</b><br/><sub>Relay，一个 webhook API</sub></td>
+      <td><b>Studio</b><br/><sub>Field Office，一间品牌识别工作室</sub></td>
+      <td><b>Atelier</b><br/><sub>Maison Orla，一间香水工作室</sub></td>
+      <td><b>Ribbon</b><br/><sub>Lull，一个助眠声音应用</sub></td>
+    </tr>
+    <tr>
+      <td width="20%"><a href="../themes/furrow/"><img src="../assets/themes/furrow.webp" alt="Furrow 主题：Fieldbook，农场账目" /></a></td>
+      <td width="20%"><a href="../themes/dose/"><img src="../assets/themes/dose.webp" alt="Dose 主题：Tandem，一个家庭用药应用" /></a></td>
+      <td width="20%"><a href="../themes/refract/"><img src="../assets/themes/refract.webp" alt="Refract 主题：Bellwater Lido，一座露天泳池" /></a></td>
+      <td width="20%"><a href="../themes/vantage/"><img src="../assets/themes/vantage.webp" alt="Vantage 主题：Swath，工地扫描" /></a></td>
+      <td width="20%"><a href="../themes/hedgerow/"><img src="../assets/themes/hedgerow.webp" alt="Hedgerow 主题：Five Mile Gin，一家酿酒厂" /></a></td>
+    </tr>
+    <tr>
+      <td><b>Furrow</b><br/><sub>Fieldbook，农场账目</sub></td>
+      <td><b>Dose</b><br/><sub>Tandem，一个家庭用药应用</sub></td>
+      <td><b>Refract</b><br/><sub>Bellwater Lido，一座露天泳池</sub></td>
+      <td><b>Vantage</b><br/><sub>Swath，工地扫描</sub></td>
+      <td><b>Hedgerow</b><br/><sub>Five Mile Gin，一家酿酒厂</sub></td>
+    </tr>
+  </table>
+
+  <p>五十个里的十个。主题是一种材质，不是一份图纸：它从不说页面里放什么、按什么顺序放，所以同一主题下的两句提示词会得到两张不同的页面。每个主题是 <a href="https://github.com/Nutlope/hallmark/tree/main/skills/hallmark/references/themes">references/themes/</a> 里一个至多 8 KB 的文件，旁边配一张图；一次构建只读一个。全部主题见 <a href="https://www.usehallmark.com">usehallmark.com</a>。</p>
+
+  <h2>定制</h2>
+
+  <p>说一声 <strong>custom</strong>，Hallmark 就放下主题：没有方案、没有组件、没有配色配方，只剩底线、关卡，和 <a href="https://github.com/Nutlope/hallmark/blob/main/skills/hallmark/references/direction.md">direction.md</a> 里的一条短指令——找到只属于这位客户的那一个想法，让它带着整页跑。</p>
+
+  <h2>一次构建怎么跑</h2>
+
+  <ol>
+    <li>Pre-flight 读取项目（字体、色板、框架、一份已锁定的 <code>design.md</code>），并只问一次素材：照片、截图、真实数字。什么都不编造。</li>
+    <li><code>scripts/theme.mjs deal</code> 挑出三张贴合提示词且无不良记录的主题；<code>draw</code> 按页面的差事发牌它的骨架。</li>
+    <li>hero 先单独建好、渲染并在页面其余部分尚不存在时冷眼评审。</li>
+    <li><code>scripts/sloplint.mjs --render</code> 在八种宽度下检查页面，然后一个子代理带着全新的视角评审。</li>
+  </ol>
+
+  <p>每一页都是自包含的 HTML 与 CSS，在首个 CSS 注释里盖章记录它做过的决定。</p>
+
+  <h2>重设计</h2>
+
+  <p>Hallmark 从不主动在已有设计上开工，除非你指名道姓：</p>
+
+  <pre><code>/hallmark redesign ./src/app
+/hallmark audit ./index.html</code></pre>
+
+  <p>完整重设计保留内容与接线，换掉系统与布局；说一句 <em>keep the layout</em> 就改成重定样式，说 <em>polish</em> 就只修那些破绽。<code>sloplint --before</code> 先记录每一条链接、字段、处理器和标题，<code>sloplint --kept</code> 会在少了一条时判重设计失败，交付物是前后并排的对照。</p>
+
+  <h2>安装</h2>
+
+  <pre><code>npx skills add nutlope/hallmark -g</code></pre>
+
+  <p>带 <code>-g</code> 装给所有项目；不带就只装进当前项目。需要 Node 18 或更高版本。浏览器检查（<code>sloplint --render</code>、截图）还需要 <code>npm i -g puppeteer-core</code> 和 Chrome；没有它们，静态检查照常可跑。</p>
+
+  <table>
+    <thead>
+      <tr><th>Harness</th><th>安装位置</th><th>调用方式</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Claude Code</td><td><code>~/.claude/skills/hallmark</code></td><td><code>/hallmark &lt;prompt&gt;</code>，或直接描述一次新构建</td></tr>
+      <tr><td>Codex CLI</td><td><code>~/.agents/skills/hallmark</code></td><td><code>$hallmark &lt;prompt&gt;</code>，或直接描述一次新构建</td></tr>
+      <tr><td>Cursor</td><td>自己找到上面装好的副本</td><td><code>/hallmark &lt;prompt&gt;</code>，或直接描述一次新构建</td></tr>
+      <tr><td>OpenCode</td><td>自己找到上面装好的副本</td><td><code>/hallmark &lt;prompt&gt;</code>，或直接描述一次新构建</td></tr>
+    </tbody>
+  </table>
+
+  <ul>
+    <li><strong>只装一个 harness：</strong><code>npx skills add nutlope/hallmark -g --agent claude-code</code>（或 <code>codex</code>、<code>opencode</code>、<code>cursor</code>、<code>github-copilot</code>）。</li>
+    <li><strong>作为 Claude Code 插件：</strong><code>/plugin marketplace add nutlope/hallmark</code>，然后 <code>/plugin install hallmark@hallmark</code>（以 <code>/hallmark:hallmark</code> 调用）。</li>
+    <li><strong>从克隆安装：</strong><code>node skills/hallmark/scripts/install.mjs</code> 会在复制前校验每一个主题与参考文件；<code>install-hook.mjs</code> 给 Claude Code 加一个编辑时的底线检查。</li>
+    <li><strong>lint 任何页面：</strong><code>node skills/hallmark/scripts/sloplint.mjs &lt;file-or-dir&gt; --render</code>。</li>
+    <li><strong>如果它没有自己接手，</strong>点名它：<em>use hallmark to build ...</em>。</li>
+  </ul>
+
+  <h2>许可证</h2>
+
+  <p>MIT。随便用，随便 fork，随便上线。</p>
+
+  <p>照片库（<code>skills/hallmark/scripts/photos.json</code>）只登记托管在 Wikimedia Commons 上的照片，本身不含任何图片文件。每张照片保留各自的许可（CC0、公有领域、CC BY 或 CC BY-SA），Hallmark 在每一页用到的地方都署名。它不使用图库网站（Unsplash、Pexels、Pixabay）——那些条款禁止 AI 工具挑选它们的图片。</p>
+</article>
+</main>
+
+<footer class="foot">
+  <div class="foot__in">
+    <p>这是非官方中文翻译，原文以 <a href="https://github.com/Nutlope/hallmark/blob/main/README.md">GitHub 上的英文 README</a> 为准。快照日期 2026-10-28（上游 commit 6033bab）。· <a href="../">返回主页</a></p>
+  </div>
+</footer>
+</body>
+</html>

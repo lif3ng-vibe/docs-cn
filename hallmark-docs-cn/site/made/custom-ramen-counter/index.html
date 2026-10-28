@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灯一直亮着的 ramen 吧台</title>
+<meta name="description" content="深夜营业的 ramen 吧台：面对汤锅坐下，在整条街都睡着的时候吃上一碗。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700&family=Hepta+Slab:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<header class="container nav">
+  <a class="wordmark" href="#main" aria-label="ramen，回到顶部">ramen</a>
+  <ul class="nav__links">
+    <li class="nav__more"><a href="#counter">吧台</a></li>
+    <li class="nav__more"><a href="#bowl">一碗面</a></li>
+    <li><a href="#find">找到我们</a></li>
+  </ul>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="hero__night">
+      <div class="container">
+        <h1 id="hero-head">别家厨房打烊之后，来一碗 ramen。</h1>
+      </div>
+    </div>
+    <div class="hero__lit">
+      <div class="container hero__litin">
+        <figure class="hero__band" data-slot="hero" data-alt="夜里从吧台凳看到的厨房：厨师、汤锅、摞起的碗">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Making_of_chinese_noodles_5166105.jpg/1920px-Making_of_chinese_noodles_5166105.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Making_of_chinese_noodles_5166105.jpg/960px-Making_of_chinese_noodles_5166105.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Making_of_chinese_noodles_5166105.jpg/1280px-Making_of_chinese_noodles_5166105.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Making_of_chinese_noodles_5166105.jpg/1920px-Making_of_chinese_noodles_5166105.jpg 1920w" sizes="(min-width: 1440px) 1312px, 100vw" width="4608" height="3456" alt="两位厨师在小面馆厨房里忙碌，身后是汤锅和摞起的碗" fetchpriority="high">
+        </figure>
+        <div class="hero__foot">
+          <p>给还没睡的人，留一张吧台凳。</p>
+          <a class="btn" href="#find">找到这家店</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lamp counter" id="counter" aria-labelledby="counter-head">
+    <div class="container counter__in">
+      <div class="counter__text">
+        <h2 id="counter-head">每张凳子都面对汤锅。</h2>
+        <p>隔着吧台点单，一碗面直接从台上递过来——给刚下班的厨师、下夜班的护士，和走得最晚的人。趁热吃完，再把凳子让给还在等的人。</p>
+      </div>
+      <figure class="counter__photo" data-slot="cook" data-alt="深夜营业时从吧台凳看到的：守着汤锅的师傅">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Dalian_Liaoning_China_Noodlemaker-01.jpg/960px-Dalian_Liaoning_China_Noodlemaker-01.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Dalian_Liaoning_China_Noodlemaker-01.jpg/960px-Dalian_Liaoning_China_Noodlemaker-01.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Dalian_Liaoning_China_Noodlemaker-01.jpg/1280px-Dalian_Liaoning_China_Noodlemaker-01.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Dalian_Liaoning_China_Noodlemaker-01.jpg/1920px-Dalian_Liaoning_China_Noodlemaker-01.jpg 1920w" sizes="(min-width: 60rem) 45vw, 100vw" width="2506" height="3759" alt="戴白帽的师傅在撒了粉的钢制台面上手工抻面" loading="lazy" style="object-position: 50% 30%">
+      </figure>
+    </div>
+  </section>
+
+  <section class="bowl" id="bowl" aria-labelledby="bowl-head">
+    <div class="container">
+      <div class="bowl__head">
+        <h2 id="bowl-head">一碗面，自上而下。</h2>
+        <p>先倒调味汁，最后铺配料。</p>
+      </div>
+      <ol class="strata">
+        <li class="stratum stratum--1" data-reveal style="--i: 0"><h3>配料</h3><p>最后铺上，最先吃掉。</p></li>
+        <li class="stratum stratum--2 stratum--thin" data-reveal style="--i: 1"><h3>香油</h3><p>薄薄一层油脂，把香气送到你面前。</p></li>
+        <li class="stratum stratum--3" data-reveal style="--i: 2"><h3>面条</h3><p>从沸水中捞起，趁还有嚼劲时折进碗里。</p></li>
+        <li class="stratum stratum--4" data-reveal style="--i: 3"><h3>汤底</h3><p>最厚的一层，滚烫地浇在调味汁上。</p></li>
+        <li class="stratum stratum--5 stratum--thin" data-reveal style="--i: 4"><h3>调味汁</h3><p>沉在碗底的调味，给整碗面定咸淡。</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="container find" id="find" aria-labelledby="find-head">
+    <div class="find__text">
+      <h2 id="find-head">等街上安静下来，再来。</h2>
+      <dl class="find__facts">
+        <div><dt>地址</dt><dd><span class="fill" data-fill="address">地址待确认</span></dd></div>
+        <div><dt>营业时间</dt><dd>营业到很晚。<span class="fill" data-fill="hours">具体时间待确认</span></dd></div>
+      </dl>
+    </div>
+    <figure class="find__photo" data-slot="counter" data-alt="空着的吧台和凳子，在吧台灯下">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Barhocker_%28fcm%29.jpg/960px-Barhocker_%28fcm%29.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Barhocker_%28fcm%29.jpg/960px-Barhocker_%28fcm%29.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Barhocker_%28fcm%29.jpg/1280px-Barhocker_%28fcm%29.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Barhocker_%28fcm%29.jpg/1920px-Barhocker_%28fcm%29.jpg 1920w" sizes="(min-width: 60rem) 45vw, 100vw" width="1465" height="1865" alt="木制吧台前的一排曲木凳" loading="lazy" style="object-position: 50% 40%">
+    </figure>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__in">
+    <a class="wordmark" href="#main" aria-label="ramen，回到顶部">ramen</a>
+    <ul class="footer__links">
+      <li><a href="#counter">吧台</a></li>
+      <li><a href="#bowl">一碗面</a></li>
+      <li><a href="#find">找到我们</a></li>
+    </ul>
+    <p class="footer__credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Making_of_chinese_noodles_5166105.jpg">Ermell</a> (CC0), <a href="https://commons.wikimedia.org/wiki/File:Barhocker_(fcm).jpg">Frank C. Müller, Baden-Baden</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Dalian_Liaoning_China_Noodlemaker-01.jpg">CEphoto, Uwe Aranas</a> (CC BY-SA 4.0)，均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+} else { document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

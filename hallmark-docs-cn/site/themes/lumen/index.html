@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>quarry——预留 GPU 上的开放模型</title>
+<meta name="description" content="Quarry 在预留 GPU 上运行开放模型，每百万 token 固定价格，没有冷启动。">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="bar__pill">
+    <a class="bar__mark" href="#top">quarry</a>
+    <nav class="bar__links" aria-label="章节">
+      <a href="#warm">控制台</a>
+      <a href="#rate">价格</a>
+      <a href="#key">一个请求</a>
+    </nav>
+    <a class="btn btn--primary btn--sm" href="#key">获取 API key</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="container hero__in">
+      <figure class="diagram well blueprint hero__field" aria-label="一个请求走两条路径的示意图：缩容到零，以及 Quarry 的预留">
+        <div class="track track--slow">
+          <p class="track__name">缩容到零</p>
+          <ol class="track__nodes">
+            <li>请求</li>
+            <li>找一台空闲 GPU</li>
+            <li>加载权重</li>
+            <li>预热</li>
+            <li class="track__end">首个 token</li>
+          </ol>
+        </div>
+        <div class="track track--fast">
+          <p class="track__name">quarry，预留</p>
+          <ol class="track__nodes">
+            <li>请求</li>
+            <li class="track__skip" aria-label="无需等待：模型已加载在你的 GPU 上"><span>已在你的 GPU 上加载完毕</span></li>
+            <li class="track__end">首个 token</li>
+          </ol>
+        </div>
+        <figcaption><span>缩容到零对比预留：</span>每个方框都是请求要等待的一步。预留路径只有两步。</figcaption>
+      </figure>
+      <div class="hero__foot">
+        <h1 id="hero-title">模型在<span class="nb"><span class="verb">等待</span>，</span>而不是你。</h1>
+        <div class="hero__side">
+          <p class="lead">开放模型跑在预留 GPU 上，每百万 token 一个固定价。</p>
+          <div class="actions">
+            <a class="btn btn--primary" href="#key">获取 API key</a>
+            <a class="btn btn--secondary" href="#warm">查看控制台</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="warm" id="warm" aria-labelledby="warm-title">
+    <div class="container warm__grid">
+      <div class="warm__text">
+        <h2 id="warm-title">每一次调用，都早已预热。</h2>
+        <p class="lead">每个部署都把模型常驻在自己的预留 GPU 上，首个请求的响应与第一百个并无二致。</p>
+      </div>
+      <div class="console" data-slot="console" data-kind="product" data-alt="Quarry 控制台：一个部署及其模型、预留 GPU 与实时请求">
+        <div class="console__bar">
+          <span class="readout">example-project / 部署</span>
+          <span class="console__live"><span class="live-dot" aria-hidden="true"></span>实时</span>
+        </div>
+        <div class="console__body">
+          <ul class="console__list" aria-label="部署列表">
+            <li class="is-on"><b>support-bot</b><span class="readout">已预热</span></li>
+            <li><b>search-rerank</b><span class="readout">已预热</span></li>
+            <li><b>draft-writer</b><span class="readout">已预热</span></li>
+            <li class="console__new"><span>新建部署</span></li>
+          </ul>
+          <div class="console__main">
+            <div class="console__head">
+              <p class="console__name">support-bot</p>
+              <span class="state"><span class="live-dot" aria-hidden="true"></span>已预热</span>
+            </div>
+            <dl class="readouts">
+              <div><dt>模型</dt><dd>open-model-70b</dd></div>
+              <div><dt>GPU</dt><dd>预留 4 张</dd></div>
+              <div><dt>冷启动</dt><dd class="is-brass">0 s</dd></div>
+              <div><dt>价格</dt><dd>每百万 token 固定</dd></div>
+            </dl>
+            <div class="stream" aria-label="由预热部署应答的请求">
+              <p class="stream__q"><span>提示词</span>我的订单到哪儿了？</p>
+              <p class="stream__a" data-stream>包裹今早已发出，物流追踪链接就在你的收件箱里。</p>
+            </div>
+            <table class="log">
+              <caption class="visually-hidden">support-bot 最近请求（示例）</caption>
+              <thead><tr><th scope="col">时间</th><th scope="col">输入 token</th><th scope="col">输出 token</th><th scope="col">状态</th></tr></thead>
+              <tbody>
+                <tr><td>09:41:07</td><td>212</td><td>58</td><td>200</td></tr>
+                <tr><td>09:41:03</td><td>188</td><td>41</td><td>200</td></tr>
+                <tr><td>09:40:52</td><td>304</td><td>96</td><td>200</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rate" id="rate" aria-labelledby="rate-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="rate-title">凌晨 3 点，价格纹丝不动。</h2>
+        <p class="lead">流量有起有落，每百万 token 的价格不会变。</p>
+      </div>
+      <div class="bento">
+        <figure class="tile tile--chart well blueprint" aria-label="示例一天的图表：流量有起有落，价格线保持水平">
+          <div class="chart__plot" data-day></div>
+          <div class="chart__axis readout" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+          <figcaption><span class="legend"><span class="key key--load"></span>某一天的流量示例</span><span class="legend"><span class="key key--rate"></span>你的每百万 token 价格</span></figcaption>
+        </figure>
+        <div class="tile tile--fig well">
+          <p class="tile__label readout">冷启动</p>
+          <p class="tile__fig">0<span class="tile__unit">s</span></p>
+          <p class="tile__line">权重在调用间隙保持常驻，任何请求都不必等 GPU。</p>
+        </div>
+        <div class="tile tile--fig well">
+          <p class="tile__label readout">每百万 token 价格</p>
+          <p class="tile__fig">固定</p>
+          <p class="tile__line">每个 token 都是同一个价，任凭流量怎么起伏。</p>
+        </div>
+        <figure class="tile tile--photo">
+          <div class="aisle__photo" data-slot="aisle" data-alt="Quarry 预留 GPU 所在的机架">
+            <img src="photos/virginia-tech-data-center-1920.jpg" width="1920" height="1440" loading="lazy" decoding="async" style="object-position: 50% 58%"
+                 alt="数据中心白色天花板下，黑色服务器机架之间的长通道">
+          </div>
+          <figcaption>预留不共享：GPU 上只常驻你的模型，没有别人的。</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="request" id="key" aria-labelledby="req-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="req-title">一个请求，纯 https。</h2>
+        <p class="lead">直接发到你自己的预热部署。无需安装任何客户端库。</p>
+      </div>
+      <div class="code well">
+        <div class="code__tabs" role="tablist" aria-label="语言">
+          <button role="tab" aria-selected="true" aria-controls="c-curl" id="t-curl">curl</button>
+          <button role="tab" aria-selected="false" aria-controls="c-py" id="t-py" tabindex="-1">python</button>
+          <button role="tab" aria-selected="false" aria-controls="c-js" id="t-js" tabindex="-1">javascript</button>
+          <button class="copy" type="button" data-copy aria-label="复制请求示例"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.25" y="5.25" width="8" height="8" rx="2"/><path d="M10.75 5.25V4.5a1.75 1.75 0 0 0-1.75-1.75H4.5A1.75 1.75 0 0 0 2.75 4.5V9a1.75 1.75 0 0 0 1.75 1.75h.75"/></svg></button>
+        </div>
+        <div class="code__body">
+<pre role="tabpanel" id="c-curl" aria-labelledby="t-curl" tabindex="0"><code>curl https://api.example.com/v1/generate \
+  -H <s>"Authorization: Bearer $QUARRY_API_KEY"</s> \
+  -d <s>'{ "deployment": "support-bot",
+        "prompt": "Where is my order?" }'</s></code></pre>
+<pre role="tabpanel" id="c-py" aria-labelledby="t-py" tabindex="0" hidden><code><i>import</i> os, requests
+
+r = requests.post(
+    <s>"https://api.example.com/v1/generate"</s>,
+    headers={<s>"Authorization"</s>: <s>f"Bearer {os.environ['QUARRY_API_KEY']}"</s>},
+    json={<s>"deployment"</s>: <s>"support-bot"</s>, <s>"prompt"</s>: <s>"Where is my order?"</s>},
+)
+print(r.json()[<s>"output"</s>])</code></pre>
+<pre role="tabpanel" id="c-js" aria-labelledby="t-js" tabindex="0" hidden><code><i>const</i> r = <i>await</i> fetch(<s>"https://api.example.com/v1/generate"</s>, {
+  method: <s>"POST"</s>,
+  headers: { Authorization: <s>`Bearer ${process.env.QUARRY_API_KEY}`</s> },
+  body: JSON.stringify({ deployment: <s>"support-bot"</s>, prompt: <s>"Where is my order?"</s> }),
+});
+console.log((<i>await</i> r.json()).output);</code></pre>
+          <div class="code__out">
+            <p class="code__label">响应</p>
+<pre><code>{ <s>"output"</s>: <s>"It shipped this morning; the tracking
+             link is in your inbox."</s>,
+  <s>"usage"</s>: { <s>"input_tokens"</s>: 212, <s>"output_tokens"</s>: 58 } }</code></pre>
+            <dl class="code__status"><div><dt>状态</dt><dd>200</dd></div><div><dt>部署</dt><dd>已预热</dd></div><div><dt>冷启动</dt><dd>0 s</dd></div></dl>
+          </div>
+        </div>
+      </div>
+      <div class="request__go">
+        <a class="btn btn--primary" href="#key" data-needs-url="signup">获取 API key</a>
+        <a class="btn btn--secondary" href="#top">回到路径</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__in">
+    <p class="foot__mark">quarry</p>
+    <p class="foot__line">面向开放模型的推理 API：预留 GPU，每百万 token 固定价格。</p>
+    <nav aria-label="页脚"><a href="#top">路径</a><a href="#warm">控制台</a><a href="#rate">价格</a><a href="#key">一个请求</a></nav>
+    <p class="foot__legal">© 2026 quarry</p>
+    <p class="foot__credits" data-credits>Photograph: <a href="https://commons.wikimedia.org/wiki/File:Virginia_Tech_-_data_center.jpg">Christopher Bowns</a> (CC BY-SA 2.0), via Wikimedia Commons.</p>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script src="page.js"></script>
+</body>
+</html>

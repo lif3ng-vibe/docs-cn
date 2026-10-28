@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>上门修车，修在你家门口</title>
+<meta name="description" content="修车师傅上门，就在你家门口修好车：说说车怎么了，再预约一次上门。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a class="wordmark" href="#main" aria-label="上门修车，首页">上门修车</a>
+    <a class="btn btn--quiet" href="#book">预约上门</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container hero__body">
+      <h1 id="hero-title">我们在你家门口修车。</h1>
+      <p class="hero__lede">说说车怎么了，师傅就上门。</p>
+    </div>
+  </section>
+    <div class="lane" id="lane">
+      <div class="container lane__inner">
+        <fieldset class="chips" data-symptom-group>
+          <legend>车怎么了？</legend>
+          <div class="chips__row">
+            <input type="radio" name="symptom-hero" id="h-clicks" value="clicks" checked><label for="h-clicks">一踩踏板就咔咔响</label>
+            <input type="radio" name="symptom-hero" id="h-brakes" value="brakes"><label for="h-brakes">刹车尖叫或发软</label>
+            <input type="radio" name="symptom-hero" id="h-gears" value="gears"><label for="h-gears">变速跳齿</label>
+            <input type="radio" name="symptom-hero" id="h-flats" value="flats"><label for="h-flats">又没气了</label>
+            <input type="radio" name="symptom-hero" id="h-years" value="years"><label for="h-years">好几年没骑了</label>
+          </div>
+        </fieldset>
+        <a class="btn" href="#book" data-carry>派师傅上门</a>
+      </div>
+    </div>
+  <figure class="hero__photo" data-slot="hero" data-alt="师傅在顾客家门口修车，支架支在人行道上">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg/1920px-Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg/960px-Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg/1280px-Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg/1920px-Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg 1920w" sizes="100vw" width="2858" height="1801" alt="一辆旧黑色自行车靠在石墙上" fetchpriority="high">
+    </figure>
+  <section class="fix" id="fix" aria-labelledby="fix-title">
+    <div class="container">
+      <h2 id="fix-title">先听你说，再看我们查什么</h2>
+      <div class="panels">
+        <div class="panel" id="p-clicks">
+          <p class="said">“我一踩踏板就咔咔响。”</p>
+          <div class="panel__answer">
+          <h3>通常是踏板、曲柄或链条的问题。</h3>
+          <dl class="checks">
+            <div><dt>踏板</dt><dd>螺纹拧紧，轴承转动顺滑。</dd></div>
+            <div><dt>曲柄螺栓</dt><dd>按规定扭矩上紧，曲柄不再吱嘎作响。</dd></div>
+            <div><dt>链条</dt><dd>清洗、上油并测量磨损。</dd></div>
+            <div><dt>中轴</dt><dd>检查旷量与磨响。</dd></div>
+          </dl>
+          </div>
+        </div>
+        <div class="panel" id="p-brakes">
+          <p class="said">“刹车会尖叫，或捏起来发软。”</p>
+          <div class="panel__answer">
+          <h3>刹车片、线缆，以及它们咬合的地方。</h3>
+          <dl class="checks">
+            <div><dt>刹车片</dt><dd>磨损或釉化的刹车片换新。</dd></div>
+            <div><dt>线缆或油管</dt><dd>调整张力，或给油压系统换油排气。</dd></div>
+            <div><dt>车圈与碟盘</dt><dd>清洁并校正，让刹车片均匀咬合。</dd></div>
+            <div><dt>刹把</dt><dd>在碰到把横之前就足够紧实。</dd></div>
+          </dl>
+          </div>
+        </div>
+        <div class="panel" id="p-gears">
+          <p class="said">“变速跳齿。”</p>
+          <div class="panel__answer">
+          <h3>线缆张力、尾钩，或链条磨损。</h3>
+          <dl class="checks">
+            <div><dt>变速定位</dt><dd>每响一声，精准落在一个齿片上。</dd></div>
+            <div><dt>尾钩</dt><dd>磕弯了就校正回来。</dd></div>
+            <div><dt>链条与飞轮</dt><dd>逐一测量，这对磨损件会打滑。</dd></div>
+            <div><dt>变速线</dt><dd>起毛或发涩的线缆换新。</dd></div>
+          </dl>
+          </div>
+        </div>
+        <div class="panel" id="p-flats">
+          <p class="said">“又没气了。”</p>
+          <div class="panel__answer">
+          <h3>揪出一切漏气的根源。</h3>
+          <dl class="checks">
+            <div><dt>外胎</dt><dd>搜寻玻璃、尖刺与铁丝。</dd></div>
+            <div><dt>胎垫</dt><dd>盖住每一个辐条孔。</dd></div>
+            <div><dt>内胎与气嘴</dt><dd>补胎或换新，并检查气嘴。</dd></div>
+            <div><dt>胎压</dt><dd>按你和轮胎的情况调定。</dd></div>
+          </dl>
+          </div>
+        </div>
+        <div class="panel" id="p-years">
+          <p class="said">“好几年没骑了。”</p>
+          <div class="panel__answer">
+          <h3>重新上路前做一次全面检查。</h3>
+          <dl class="checks">
+            <div><dt>轮胎</dt><dd>老化的橡胶与内胎换新。</dd></div>
+            <div><dt>刹车</dt><dd>锈死的部件活动开，刹车片调好。</dd></div>
+            <div><dt>链条与变速</dt><dd>除锈，让每个挡位都能顺畅换挡。</dd></div>
+            <div><dt>螺栓</dt><dd>每一颗都检查并拧紧。</dd></div>
+          </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ride container" aria-labelledby="ride-title">
+    <div class="ride__grid">
+      <figure class="photo" data-slot="ride" data-alt="顾客修好车，从自家门口骑走">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg/1280px-Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg/960px-Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg/1280px-Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg/1920px-Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_%283296897865%29.jpg 1920w" sizes="(min-width: 60rem) 55vw, 100vw" width="2945" height="1875" alt="一位家长骑着货运自行车带着孩子走在雪后的街道上" style="object-position: 40% 60%" loading="lazy">
+      </figure>
+      <div class="ride__text">
+        <h2 id="ride-title">在你自己家门口，重归安静。</h2>
+        <p class="intro">不用车尾架，也不用把车推去车行再推回来。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="book" id="book" aria-labelledby="book-title">
+    <div class="container book__grid">
+      <div class="book__head">
+        <h2 id="book-title">你家门口就是车间。</h2>
+        <p class="intro">支架和工具我们自带。告诉我们你的车，再挑个日子。</p>
+        <p class="area">我们目前覆盖 <span class="fill" data-fill="area">服务区域待确认</span>。</p>
+      </div>
+      <form class="form" data-endpoint="" novalidate>
+        <div class="field field--wide">
+          <label for="f-symptom">车怎么了？</label>
+          <select id="f-symptom" name="symptom" required>
+            <option value="">请选择</option>
+            <option value="clicks">一踩踏板就咔咔响</option>
+            <option value="brakes">刹车尖叫或发软</option>
+            <option value="gears">变速跳齿</option>
+            <option value="flats">又没气了</option>
+            <option value="years">好几年没骑了</option>
+            <option value="other">其他问题</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-bike">你的车</label>
+          <input id="f-bike" name="bike" type="text" autocomplete="off" placeholder="蓝色通勤车、儿童车、电助力车">
+        </div>
+        <div class="field field--wide">
+          <label for="f-address">街道地址</label>
+          <input id="f-address" name="address" type="text" autocomplete="street-address" required>
+        </div>
+        <div class="field">
+          <label for="f-day">方便的日期</label>
+          <input id="f-day" name="day" type="date">
+        </div>
+        <div class="field">
+          <label for="f-name">你的名字</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="f-phone">电话</label>
+          <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required>
+        </div>
+        <div class="form__foot">
+          <button class="btn" type="submit">派师傅上门</button>
+          <p class="form__help" id="form-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__row">
+      <div class="footer__brand">
+        <a class="wordmark" href="#main" aria-label="上门修车，回到顶部">上门修车</a>
+        <p>在你家门口修车。</p>
+      </div>
+      <nav aria-label="页脚导航">
+        <ul>
+          <li><a href="#fix">我们检查什么</a></li>
+          <li><a href="#book">派师傅上门</a></li>
+        </ul>
+      </nav>
+    </div>
+    <p class="credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg">DeFacto</a> (CC BY-SA 4.0, Wikimedia Commons), <a href="https://commons.wikimedia.org/wiki/File:Christiania_Winter_-_Cycling_in_Winter_in_Copenhagen_(3296897865).jpg">Mikael Colville-Andersen from Copenhagen, Denmark</a> (CC0, Wikimedia Commons)</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const panels = [...document.querySelectorAll('.panel')];
+  const chips = [...document.querySelectorAll('input[name="symptom-hero"]')];
+  const select = document.getElementById('f-symptom');
+  const set = (key, form) => {
+    panels.forEach((p) => { p.hidden = p.id !== 'p-' + key; });
+    chips.forEach((c) => { c.checked = c.value === key; });
+    if (select && form) select.value = key;
+  };
+  set((chips.find((c) => c.checked) || chips[0]).value, false);
+  chips.forEach((c) => c.addEventListener('change', () => set(c.value, true)));
+  if (select) select.addEventListener('change', () => { if (chips.some((c) => c.value === select.value)) set(select.value, false); });
+  document.querySelectorAll('[data-carry]').forEach((a) => a.addEventListener('click', () => {
+    const c = chips.find((x) => x.checked);
+    if (c && select && !select.value) select.value = c.value;
+  }));
+
+  document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+    const help = form.querySelector('[aria-live]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fields = [...form.querySelectorAll('input, select')];
+      fields.forEach((f) => f.toggleAttribute('aria-invalid', !f.checkValidity()));
+      const bad = fields.find((f) => !f.checkValidity());
+      if (bad) {
+        const label = form.querySelector('label[for="' + bad.id + '"]').textContent;
+        bad.setAttribute('aria-describedby', help.id);
+        help.textContent = '“' + label + '”未填写。填好它，师傅才能找到你。';
+        bad.focus();
+        return;
+      }
+      if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：此表单尚未接入后端。'; return; }
+      fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+        .then((r) => { help.textContent = r.ok ? '请求已发送。' : '没有发送成功。请稍后再试。'; })
+        .catch(() => { help.textContent = '没有发送成功。请稍后再试。'; });
+    });
+  });
+})();
+</script>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

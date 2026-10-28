@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calder Valley 半程马拉松，4 月 19 日周日</title>
+<meta name="description" content="Calder Valley 半程马拉松：4 月 19 日周日开跑，全程 13.1 英里，名额 1,800 个，芯片计时，每个分段成绩实时发布。报名费 £34。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@800&family=Albert+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="bar__mark" href="#top" aria-label="Calder Valley 半程马拉松，回到顶部">Calder Valley Half</a>
+    <form class="bar__find" role="search" action="#live" data-find>
+      <label class="visually-hidden" for="find">按号码布号或姓氏查找选手</label>
+      <input id="find" name="runner" type="search" placeholder="查找选手：号码布号或姓氏" autocomplete="off" enterkeyhint="search">
+    </form>
+    <nav class="bar__links" aria-label="页面区块">
+      <a href="#pace">配速</a>
+      <a href="#enter">报名</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <figure class="hero__photo" data-slot="hero" data-alt="比赛日清晨从后方平视拍到的 Calder Valley 赛道大部队">
+    <img src="photos/human-running-gait-terminal-swing-to-heel-strike-runner-with-1920.jpg" width="1920" height="1260" alt="跑者穿着压缩袜与竞速鞋在公路上大步奔跑的双腿" style="object-position: 50% 70%" fetchpriority="high">
+  </figure>
+  <div class="hero__scrim" aria-hidden="true"></div>
+  <div class="container hero__in">
+    <h1 id="hero-head">跑过<br>Calder Valley</h1>
+    <p class="lead hero__lead">4 月 19 日，周日。芯片计时，每个分段成绩实时发布。</p>
+    <div class="hero__acts">
+      <a class="btn btn--primary" href="#enter">£34 报名</a>
+      <a class="btn btn--ghost" href="#live">追踪一名选手</a>
+    </div>
+  </div>
+</section>
+
+<section class="race" id="race" aria-labelledby="race-head">
+  <div class="container">
+    <h2 id="race-head" class="visually-hidden">四个数字看这场比赛</h2>
+    <dl class="figs">
+      <div><dt>英里</dt><dd>13.1</dd></div>
+      <div><dt>公里</dt><dd>21.1</dd></div>
+      <div><dt>名额</dt><dd>1,800</dd></div>
+      <div><dt>报名费</dt><dd>£34</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="timing" id="timing" aria-labelledby="timing-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="timing-head">你的表，从踏上计时毯那刻开始</h2>
+      <p class="lead">芯片计时，按芯片读到你的顺序。</p>
+    </div>
+    <ol class="stages">
+      <li><h3>佩戴芯片</h3><p>它计的是你的时间，不是前方人群的时间。</p></li>
+      <li><h3>起点计时毯</h3><p>踏过它的瞬间，你的表开始走。</p></li>
+      <li class="stages__live"><h3>分段成绩，实时</h3><p>每跑完一段，成绩随即发布。</p></li>
+      <li><h3>终点计时毯</h3><p>跨过它的瞬间，计时停止。</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="valley" id="valley" aria-labelledby="valley-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="valley-head">山谷里的一个周日</h2>
+      <p class="lead">赛道穿行于西约克郡的同名山谷。</p>
+    </div>
+    <figure class="valley__photo" data-slot="valley" data-alt="赛道公路爬升穿过 Calder Valley，广角">
+      <img src="photos/2014-track-on-fremington-edge-1920.jpg" width="1920" height="1440" alt="沙土小径穿过石楠荒野，经过一棵被风吹弯的孤树，谷地在下方" style="object-position: 50% 62%" loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<section class="pace" id="pace" aria-labelledby="pace-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="pace-head">每个英里，都按你的配速</h2>
+      <p class="lead">按你想要的成绩，给出每英里分段。</p>
+    </div>
+    <div class="planner" data-planner>
+      <div class="planner__time">
+        <label class="planner__label" for="finish">完赛时间</label>
+        <output class="fig planner__out" for="finish" id="finish-out">2:00:00</output>
+        <p class="planner__pace">每英里 <span class="fig" data-pace-mile>9:09</span>，每公里 <span class="fig" data-pace-km>5:41</span></p>
+      </div>
+      <div class="planner__range">
+        <input type="range" id="finish" name="finish" min="65" max="210" step="1" value="120" aria-valuetext="2 小时" aria-describedby="finish-ends">
+        <p class="planner__ends" id="finish-ends"><span class="fig">1:05</span><span class="fig">3:30</span></p>
+      </div>
+      <ol class="splits" aria-label="每英里的累计用时">
+        <li><span>第 1 英里</span><span class="fig" data-mile="1">9:09</span></li>
+        <li><span>第 2 英里</span><span class="fig" data-mile="2">18:18</span></li>
+        <li><span>第 3 英里</span><span class="fig" data-mile="3">27:28</span></li>
+        <li><span>第 4 英里</span><span class="fig" data-mile="4">36:37</span></li>
+        <li><span>第 5 英里</span><span class="fig" data-mile="5">45:46</span></li>
+        <li><span>第 6 英里</span><span class="fig" data-mile="6">54:55</span></li>
+        <li><span>第 7 英里</span><span class="fig" data-mile="7">1:04:05</span></li>
+        <li><span>第 8 英里</span><span class="fig" data-mile="8">1:13:14</span></li>
+        <li><span>第 9 英里</span><span class="fig" data-mile="9">1:22:23</span></li>
+        <li><span>第 10 英里</span><span class="fig" data-mile="10">1:31:32</span></li>
+        <li><span>第 11 英里</span><span class="fig" data-mile="11">1:40:41</span></li>
+        <li><span>第 12 英里</span><span class="fig" data-mile="12">1:49:51</span></li>
+        <li><span>第 13 英里</span><span class="fig" data-mile="13">1:59:00</span></li>
+        <li class="splits__finish"><span>终点，13.1</span><span class="fig" data-mile="finish">2:00:00</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="live" id="live" aria-labelledby="live-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="live-head">实时追踪 1,800 人中的任何一位</h2>
+      <p class="lead">输入号码布号或姓氏搜索。</p>
+    </div>
+    <div class="tracker" data-slot="tracker" data-alt="比赛日清晨的实时成绩页，正在追踪一名选手">
+      <div class="tracker__top">
+        <form class="tracker__find" role="search" data-endpoint="" data-tracker novalidate>
+          <label class="visually-hidden" for="runner">号码布号或姓氏</label>
+          <input id="runner" name="runner" type="search" value="1042" autocomplete="off" enterkeyhint="search" aria-describedby="runner-help">
+          <button class="btn btn--secondary btn--s" type="submit">查找</button>
+          <p class="tracker__help" id="runner-help" aria-live="polite"></p>
+        </form>
+        <p class="tracker__status" role="status">比赛中，20 秒前更新</p>
+      </div>
+      <div class="tracker__who">
+        <h3>示例选手</h3>
+        <p>号码布 <span class="fig">1042</span></p>
+      </div>
+      <dl class="tracker__figs">
+        <div><dt>累计用时</dt><dd class="fig">1:02:14</dd></div>
+        <div><dt>第 7 英里分段</dt><dd class="fig">8:41</dd></div>
+        <div><dt>平均每英里</dt><dd class="fig">8:53</dd></div>
+        <div class="tracker__proj"><dt>按当前配速预计</dt><dd class="fig">1:56:33</dd></div>
+      </dl>
+      <div class="course">
+        <p class="course__label">第 <span class="fig">7</span> / <span class="fig">13.1</span> 英里</p>
+        <div class="course__bar" role="img" aria-label="赛道进度：13.1 英里中已跑第 7 英里"><span class="course__done"></span></div>
+        <p class="course__ends" aria-hidden="true"><span>起点</span><span class="fig">5</span><span class="fig">10</span><span class="fig">13.1</span></p>
+      </div>
+      <table class="tracker__splits">
+        <caption class="visually-hidden">号码布 1042 的最新分段</caption>
+        <thead><tr><th scope="col">英里</th><th scope="col">分段</th><th scope="col">累计</th></tr></thead>
+        <tbody>
+          <tr><td class="fig">3</td><td class="fig">8:55</td><td class="fig">26:48</td></tr>
+          <tr><td class="fig">4</td><td class="fig">9:02</td><td class="fig">35:50</td></tr>
+          <tr><td class="fig">5</td><td class="fig">8:58</td><td class="fig">44:48</td></tr>
+          <tr><td class="fig">6</td><td class="fig">8:45</td><td class="fig">53:33</td></tr>
+          <tr class="is-latest"><td class="fig">7</td><td class="fig">8:41</td><td class="fig">1:02:14</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="enter" id="enter" aria-labelledby="enter-head">
+  <div class="container grid">
+    <figure class="enter__photo" data-slot="enter" data-alt="破晓时分 Calder Valley 山顶的跑者剪影">
+      <img src="photos/jogging-20210116-161032-1920.jpg" width="1920" height="1080" alt="浅色天空下，山脊上一名孤身跑者的剪影" style="object-position: 64% 50%" loading="lazy">
+    </figure>
+    <div class="enter__text">
+      <h2 id="enter-head">£34 报名</h2>
+      <p class="lead">1,800 个名额，报满即止。</p>
+    <form class="entry" data-endpoint="" novalidate>
+      <div class="entry__field">
+        <label for="name">姓名</label>
+        <input id="name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="entry__field">
+        <label for="email">邮箱地址</label>
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+      </div>
+      <div class="entry__field entry__field--wide">
+        <label for="target">预计完赛时间（选填）</label>
+        <select id="target" name="target">
+          <option value="">还不确定</option>
+          <option>1:30 以内</option>
+          <option>1:30 到 2:00</option>
+          <option>2:00 到 2:30</option>
+          <option>2:30 以上</option>
+        </select>
+      </div>
+      <div class="entry__go">
+        <button class="btn btn--primary" type="submit">占一个名额</button>
+        <p class="entry__help" id="entry-help" aria-live="polite"></p>
+      </div>
+    </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="foot__line">起点计时毯见。</p>
+    <div class="foot__row">
+      <nav class="foot__links" aria-label="页脚">
+        <a href="#timing">计时</a>
+        <a href="#pace">配速规划</a>
+        <a href="#live">追踪选手</a>
+        <a href="#enter">报名</a>
+      </nav>
+      <p class="foot__legal">Calder Valley Half Marathon</p>
+    </div>
+    <p class="foot__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Human_running_gait_-_terminal_swing_to_heel_strike_(runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon).jpg">Petar Milošević</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Jogging_20210116_161032.jpg">Ka23 13</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:2014_Track_on_Fremington_Edge.jpg">Kreuzschnabel</a>（CC BY-SA 3.0），均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const HALF = 13.1094, KM = 21.0975;
+  const fmt = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
+  const planner = document.querySelector('[data-planner]');
+  if (planner) {
+    const range = planner.querySelector('#finish'), out = planner.querySelector('#finish-out');
+    const update = () => {
+      const t = Number(range.value) * 60, pace = t / HALF;
+      out.textContent = fmt(t);
+      const h = Math.floor(range.value / 60), m = range.value % 60;
+      range.setAttribute('aria-valuetext', `${h} 小时${m ? ` ${m} 分` : ''}`);
+      planner.querySelector('[data-pace-mile]').textContent = fmt(pace);
+      planner.querySelector('[data-pace-km]').textContent = fmt(t / KM);
+      planner.querySelectorAll('[data-mile]').forEach((el) => { const n = el.dataset.mile; el.textContent = fmt(n === 'finish' ? t : Number(n) * pace); });
+    };
+    range.addEventListener('input', update);
+  }
+  const tracker = document.querySelector('[data-tracker]'), runner = document.querySelector('#runner');
+  const find = document.querySelector('[data-find]');
+  if (find && runner) find.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = find.querySelector('input').value.trim();
+    if (q) runner.value = q;
+    document.querySelector('#live').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    runner.focus({ preventScroll: true });
+  });
+  if (tracker) tracker.addEventListener('submit', (e) => {
+    e.preventDefault();
+    tracker.querySelector('[aria-live]').textContent = '实时成绩尚未接入：此面板展示的是一名示例选手。';
+  });
+  document.querySelectorAll('form.entry[data-endpoint]').forEach((form) => {
+    const help = form.querySelector('[aria-live]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const bad = [...form.querySelectorAll('input[required]')].find((i) => !i.checkValidity());
+      form.querySelectorAll('input').forEach((i) => i.toggleAttribute('aria-invalid', !i.checkValidity()));
+      if (bad) { bad.setAttribute('aria-describedby', help.id); help.textContent = bad.type === 'email' ? '邮箱地址看起来不完整。请写成 name@example.com。' : '请填写完整姓名，成绩册上将照此显示。'; bad.focus(); return; }
+      if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：报名尚未接入后端。'; return; }
+      fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+        .then((r) => { help.textContent = r.ok ? '报名已收到。' : '没有发送成功。请稍后再试。'; })
+        .catch(() => { help.textContent = '没有发送成功。请稍后再试。'; });
+    });
+  });
+})();
+</script>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Col Blanc，莱孔塔米讷的滑雪学校</title>
+<meta name="description" content="Col Blanc 是莱孔塔米讷的一所小型滑雪学校：成人组与儿童组团课，每天 9 点开课，按周预订。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="float">
+  <div class="float__bar">
+    <a class="float__mark" href="#top" aria-label="Col Blanc，回到页首">Col Blanc</a>
+    <nav class="float__links" aria-label="页面分区">
+      <a href="#groups">班组</a>
+      <a href="#steps">预订方式</a>
+    </nav>
+    <a class="btn btn--line btn--s" href="#book">预订一周</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <figure class="hero__photo" data-slot="hero" data-alt="Col Blanc 的班组跟着教练，穿过莱孔塔米讷上方洒满阳光的雪道">
+    <img src="photos/maestrodisciclaviereinsegnando-1920.jpg" width="1920" height="1433" fetchpriority="high" decoding="async" alt="滑雪班排成一列跟在教练身后，在蓝天下穿过洒满阳光的雪道">
+  </figure>
+  <div class="container hero__base">
+    <h1 id="hero-head">九点，<br>上雪道。</h1>
+    <div class="hero__aside">
+      <p class="lead">莱孔塔米讷的成人组与儿童组团课，按周预订。</p>
+      <div class="hero__acts">
+        <a class="btn btn--primary" href="#book">预订一周</a>
+        <a class="btn btn--line" href="#groups">看看班组</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="board" aria-labelledby="board-head">
+  <div class="container">
+    <h2 id="board-head">小学校，早开课。</h2>
+    <dl class="board__row">
+      <div><dt>教练，全校上下</dt><dd class="fig">6</dd></div>
+      <div><dt>班组，成人与儿童</dt><dd class="fig">2</dd></div>
+      <div><dt>第一节课，每天</dt><dd class="fig">9:00</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="groups" id="groups" aria-labelledby="groups-head">
+  <div class="container grid">
+    <figure class="groups__photo" data-slot="groups" data-alt="Col Blanc 的教练在压好的雪道上刻滑转弯">
+      <img src="photos/ski-resort-soelden-p1032614-1920.jpg" width="1920" height="1440" loading="lazy" alt="一名黑衣滑雪者在宽阔的压雪道上刻滑转弯，雪雾飞扬，俯拍视角">
+    </figure>
+    <div class="groups__text">
+      <h2 id="groups-head">两个班组，挑一个适合你的。</h2>
+      <p class="lead">大人跟大人一起滑，孩子跟孩子一起滑。</p>
+      <ul class="groups__list">
+        <li>
+          <h3>成人组</h3>
+          <p>水平：<span class="fill" data-fill="adult-levels">待确认</span></p>
+          <a href="#book" data-group="adult-count">预订成人周</a>
+        </li>
+        <li>
+          <h3>儿童组</h3>
+          <p>年龄：<span class="fill" data-fill="child-ages">待确认</span></p>
+          <a href="#book" data-group="child-count">预订儿童周</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="shout" aria-labelledby="shout-head">
+  <div class="container shout__in">
+    <h2 id="shout-head">订一周，<br>天天滑。</h2>
+    <p class="shout__line">一次预订，覆盖整周的课。</p>
+  </div>
+</section>
+
+<section class="steps" id="steps" aria-labelledby="steps-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="steps-head">三步，上第一课。</h2>
+      <p class="lead">从选定那一周到划出第一个弯。</p>
+    </div>
+    <ol class="steps__list">
+      <li><h3>选定那一周</h3><p>选出你住在莱孔塔米讷的那一周。</p></li>
+      <li><h3>数一数滑雪的人</h3><p>成人与儿童，各自进各自的班组。</p></li>
+      <li><h3>与教练见面</h3><p>六位教练之一，在你那周的头一个早晨。</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="book" id="book" aria-labelledby="book-head">
+  <div class="container grid">
+    <div class="book__main">
+      <div class="book__text">
+        <h2 id="book-head">预订一周</h2>
+        <p class="lead">先定周，再说谁来滑雪。</p>
+      </div>
+      <form class="book__form" data-endpoint="" novalidate>
+        <div class="field field--wide">
+          <label for="week">起始日期</label>
+          <input id="week" name="week" type="date" required>
+        </div>
+        <div class="field">
+          <span class="field__label" id="adults-label">成人</span>
+          <div class="stepper" role="group" aria-labelledby="adults-label">
+            <button type="button" class="stepper__btn" data-step="-1" aria-label="成人减一">&minus;</button>
+            <input id="adult-count" name="adult_count" type="number" inputmode="numeric" min="0" value="2" aria-labelledby="adults-label">
+            <button type="button" class="stepper__btn" data-step="1" aria-label="成人加一">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="children-label">儿童</span>
+          <div class="stepper" role="group" aria-labelledby="children-label">
+            <button type="button" class="stepper__btn" data-step="-1" aria-label="儿童减一">&minus;</button>
+            <input id="child-count" name="child_count" type="number" inputmode="numeric" min="0" value="0" aria-labelledby="children-label">
+            <button type="button" class="stepper__btn" data-step="1" aria-label="儿童加一">+</button>
+          </div>
+        </div>
+        <div class="field field--wide">
+          <label for="mail">电子邮箱</label>
+          <input id="mail" name="email" type="email" autocomplete="email" inputmode="email" required>
+        </div>
+        <div class="book__go field--wide">
+          <button class="btn btn--primary" type="submit">预约这一周</button>
+          <p class="book__help" id="book-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+    <figure class="book__photo" data-slot="book" data-alt="Col Blanc 集合点外，新雪中竖立的滑雪板">
+      <img src="photos/snow-covered-skis-kosciuszko-national-park-1920.jpg" width="1920" height="1281" loading="lazy" alt="一副副滑雪板与雪杖竖立在厚重的新雪中，头顶枝头积雪">
+    </figure>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container foot__in">
+    <p class="foot__mark">Col Blanc</p>
+    <p class="foot__colophon">莱孔塔米讷的一所小型滑雪学校，开设成人组与儿童组团课。</p>
+    <nav class="foot__links" aria-label="页脚">
+      <a href="#groups">班组</a>
+      <a href="#steps">预订方式</a>
+      <a href="#book">预订一周</a>
+    </nav>
+    <p class="foot__legal">联系方式：<span class="fill" data-fill="contact">电话与邮箱即将公布</span></p>
+    <p class="foot__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Maestrodisciclaviereinsegnando.jpg">Jilloau</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Ski_resort,_Soelden_(P1032614).jpg">Matti Blume</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Snow_Covered_Skis,_Kosciuszko_National_Park.jpg">Artefotograf</a>（CC BY-SA 4.0），来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  document.querySelectorAll('.stepper').forEach((s) => {
+    const input = s.querySelector('input');
+    s.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => {
+      input.value = Math.max(Number(input.min || 0), (Number(input.value) || 0) + Number(b.dataset.step));
+    }));
+  });
+  document.querySelectorAll('[data-group]').forEach((a) => a.addEventListener('click', () => {
+    const field = document.getElementById(a.dataset.group);
+    if (field && Number(field.value) < 1) field.value = 1;
+  }));
+  document.querySelectorAll('form.book__form[data-endpoint]').forEach((form) => {
+    const help = form.querySelector('[aria-live]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fields = [...form.querySelectorAll('input[required]')];
+      fields.forEach((i) => i.toggleAttribute('aria-invalid', !i.checkValidity()));
+      const bad = fields.find((i) => !i.checkValidity());
+      const people = Number(form.elements.adult_count.value) + Number(form.elements.child_count.value);
+      if (bad) { bad.setAttribute('aria-describedby', help.id); help.textContent = bad.type === 'email' ? '这个邮箱地址似乎不完整，请按 name@example.com 的格式填写。' : '先选好你要的那一周，再提交。'; bad.focus(); return; }
+      if (people < 1) { help.textContent = '请至少加一名成人或儿童。'; form.elements.adult_count.focus(); return; }
+      if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：预订功能尚未接入。'; return; }
+      fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+        .then((r) => { help.textContent = r.ok ? '已收到你的申请。' : '没有提交成功，请稍后再试。'; })
+        .catch(() => { help.textContent = '没有提交成功，请稍后再试。'; });
+    });
+  });
+})();
+</script>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

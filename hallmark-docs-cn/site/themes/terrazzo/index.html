@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample Room，伦敦的材质图书馆</title>
+<meta name="description" content="Sample Room 是伦敦的一座图书馆，建筑师可在此借阅 2,600 种表面的实物样本：石材、木材、水磨石与陶瓷。参观需预约。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=Onest:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="container bar">
+    <a class="bar__mark" href="#top" aria-label="Sample Room，首页">Sample Room</a>
+    <form class="find" role="search" action="#catalogue">
+      <label class="visually-hidden" for="find-q">搜索目录</label>
+      <input id="find-q" name="q" type="search" placeholder="搜索目录：橡木、大理石、釉面" autocomplete="off">
+      <button class="btn btn--secondary find__go" type="submit">查找</button>
+    </form>
+    <a class="btn btn--primary bar__act" href="#visit">预约参观</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="container">
+      <ul class="hero__set" aria-label="每个类别各一种表面">
+        <li><figure class="card hero__card">
+          <div class="card__pic" data-slot="hero-stone" data-alt="馆藏石材样本，平视特写">
+            <img src="photos/red-marble-quarry-cava-buscada-erto-e-casso-pordenone-friuli-1920.jpg" width="1920" height="1440" fetchpriority="high" style="object-position: 40% 70%" alt="玫瑰红大理石的锯切面，带浅色条纹层理">
+          </div>
+          <figcaption class="card__cap"><span>石材</span><span class="code">ST-0412</span></figcaption>
+        </figure></li>
+        <li><figure class="card hero__card">
+          <div class="card__pic pic--zoom" data-slot="hero-timber" data-alt="馆藏木材样本，平视特写">
+            <img src="photos/fichte-dreischichtplatte-2009-1920.jpg" width="1920" height="1112" fetchpriority="high" style="object-position: 46% 56%" alt="三层云杉板的切边，层理横向延展">
+          </div>
+          <figcaption class="card__cap"><span>木材</span><span class="code">TI-0207</span></figcaption>
+        </figure></li>
+        <li><figure class="card hero__card">
+          <div class="card__pic pic--panel" data-slot="hero-terrazzo" data-alt="馆藏水磨石样本，平视特写">
+            <img src="photos/vitoria-adurza-iturritxu-bt-03-1920.jpg" width="1920" height="1099" fetchpriority="high" style="object-position: 50% 40%" alt="浅色基底密布细碎石屑，横贯一道接缝">
+          </div>
+          <figcaption class="card__cap"><span>水磨石</span><span class="code">TZ-0104</span></figcaption>
+        </figure></li>
+        <li><figure class="card hero__card">
+          <div class="card__pic" data-slot="hero-ceramic" data-alt="馆藏陶瓷样本，平视特写">
+            <img src="photos/travessa-couto-fernandes-60-centro-s-o-lu-s-2025-6016-pcorr--1920.jpg" width="1920" height="1919" fetchpriority="high" style="object-position: 50% 50%" alt="青花釉面砖，饰有连续的花卉图案">
+          </div>
+          <figcaption class="card__cap"><span>陶瓷</span><span class="code">CE-0710</span></figcaption>
+        </figure></li>
+      </ul>
+      <div class="hero__text">
+        <h1 id="hero-head">写进图纸之前，先把石材借到手上</h1>
+        <div class="hero__side">
+          <p class="lead">一座面向建筑师的伦敦图书馆，收藏石材、木材、水磨石与陶瓷样本。</p>
+          <div class="acts">
+            <a class="btn btn--primary" href="#visit">预约参观</a>
+            <a class="btn btn--secondary" href="#catalogue">查看目录</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="count band--ink" aria-labelledby="count-head">
+    <div class="container count__grid">
+      <h2 id="count-head" class="count__fig"><span class="visually-hidden">馆藏共 </span>2,600<span class="count__unit"> 种表面</span></h2>
+      <div class="count__side">
+        <p class="lead">实物样本就摆在架上，可以带回工作室。</p>
+        <ul class="families">
+          <li><span class="code">ST</span>石材</li>
+          <li><span class="code">TI</span>木材</li>
+          <li><span class="code">TZ</span>水磨石</li>
+          <li><span class="code">CE</span>陶瓷</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="close" aria-labelledby="close-head">
+    <div class="container">
+      <div class="head">
+        <h2 id="close-head">每一种表面，都近在眼前</h2>
+        <p class="lead">纹理、脉络与接缝，就照它摆上你桌面时的样子。</p>
+      </div>
+      <figure class="card close__wide">
+        <div class="card__pic" data-slot="close-wide" data-alt="馆藏宽幅石材样本，平视，脉络横贯画面">
+          <img src="photos/marble-top-1920.jpg" width="1920" height="2560" loading="lazy" style="object-position: 50% 40%" alt="白色大理石，灰金色脉络斜向延展">
+        </div>
+        <figcaption class="card__cap"><span>白色大理石，细磨</span><span class="code">ST-0538</span></figcaption>
+      </figure>
+      <div class="close__pair">
+        <figure class="card">
+          <div class="card__pic" data-slot="close-a" data-alt="馆藏石材样本，平视特写">
+            <img src="photos/stone-wall-old-farm-dordogne-1920.jpg" width="1920" height="1265" loading="lazy" style="object-position: 50% 55%" alt="燧石敲碎面与浅色卵石以石灰浆密砌">
+          </div>
+          <figcaption class="card__cap"><span>燧石，石灰砌筑</span><span class="code">ST-0611</span></figcaption>
+        </figure>
+        <figure class="card">
+          <div class="card__pic" data-slot="close-b" data-alt="馆藏陶瓷样本，平视特写">
+            <img src="photos/old-brickwork-red-brick-1920.jpg" width="1920" height="1276" loading="lazy" style="object-position: 50% 50%" alt="风化红砖，以厚石灰砂浆砌筑">
+          </div>
+          <figcaption class="card__cap"><span>红砖，手工制</span><span class="code">CE-0733</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="catalogue" id="catalogue" aria-labelledby="cat-head">
+    <div class="container">
+      <div class="head">
+        <h2 id="cat-head">按编号排列的目录</h2>
+        <p class="lead">这里只列出一架；其余表面都在馆内。</p>
+      </div>
+      <fieldset class="cells" aria-controls="spec">
+        <legend class="visually-hidden">选择一个类别</legend>
+        <input type="radio" name="fam" id="f-all" value="" checked><label for="f-all">全部</label>
+        <input type="radio" name="fam" id="f-stone" value="Stone"><label for="f-stone">石材</label>
+        <input type="radio" name="fam" id="f-timber" value="Timber"><label for="f-timber">木材</label>
+        <input type="radio" name="fam" id="f-terrazzo" value="Terrazzo"><label for="f-terrazzo">水磨石</label>
+        <input type="radio" name="fam" id="f-ceramic" value="Ceramic"><label for="f-ceramic">陶瓷</label>
+      </fieldset>
+      <div class="spec-wrap">
+        <table class="spec" id="spec">
+          <thead><tr><th scope="col">编号</th><th scope="col">表面</th><th scope="col">类别</th><th scope="col">表面处理</th><th scope="col" class="r">样本尺寸（mm）</th></tr></thead>
+          <tbody>
+            <tr data-fam="Stone"><td class="code">ST-0412</td><th scope="row">红大理石</th><td>石材</td><td>锯切面</td><td class="r code">300 × 300</td></tr>
+            <tr data-fam="Stone"><td class="code">ST-0538</td><th scope="row">白大理石</th><td>石材</td><td>细磨</td><td class="r code">300 × 300</td></tr>
+            <tr data-fam="Stone"><td class="code">ST-0611</td><th scope="row">石灰燧石</th><td>石材</td><td>敲制</td><td class="r code">400 × 300</td></tr>
+            <tr data-fam="Timber"><td class="code">TI-0207</td><th scope="row">云杉，三层板</th><td>木材</td><td>砂光</td><td class="r code">300 × 150</td></tr>
+            <tr data-fam="Timber"><td class="code">TI-0315</td><th scope="row">橡木，径切</th><td>木材</td><td>油饰</td><td class="r code">300 × 150</td></tr>
+            <tr data-fam="Terrazzo"><td class="code">TZ-0104</td><th scope="row">浅色基底，细石屑</th><td>水磨石</td><td>抛光</td><td class="r code">300 × 300</td></tr>
+            <tr data-fam="Terrazzo"><td class="code">TZ-0122</td><th scope="row">混合石屑，粗颗粒</th><td>水磨石</td><td>细磨</td><td class="r code">300 × 300</td></tr>
+            <tr data-fam="Ceramic"><td class="code">CE-0710</td><th scope="row">青花砖</th><td>陶瓷</td><td>施釉</td><td class="r code">150 × 150</td></tr>
+            <tr data-fam="Ceramic"><td class="code">CE-0733</td><th scope="row">红砖</th><td>陶瓷</td><td>手工制</td><td class="r code">215 × 65</td></tr>
+          </tbody>
+        </table>
+        <p class="spec__empty" id="spec-empty" role="status" hidden>这一架没有匹配的结果。预约时告诉我们，馆内藏有全部 2,600 种。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="borrow" id="borrow" aria-labelledby="borrow-head">
+    <div class="container borrow__grid">
+      <figure class="card borrow__pic">
+        <div class="card__pic" data-slot="borrow" data-alt="样本摊在馆内的桌面上，随时可借">
+          <img src="photos/zellige-loose-tile-shapes-1920.jpg" width="1920" height="1285" loading="lazy" style="object-position: 50% 50%" alt="散置的陶土与釉面砖碎片，米白、酒红与蓝色">
+        </div>
+        <figcaption class="card__cap"><span>釉面散件</span><span class="code">CE-0741</span></figcaption>
+      </figure>
+      <div class="borrow__text">
+        <h2 id="borrow-head">预约、借阅、归还</h2>
+        <ol class="steps">
+          <li><span class="steps__n" aria-hidden="true">1</span><div><h3>预约参观</h3><p>选好日期和想看的类别。</p></div></li>
+          <li><span class="steps__n" aria-hidden="true">2</span><div><h3>借阅</h3><p>把样本带回你的桌面与图纸旁。</p></div></li>
+          <li><span class="steps__n" aria-hidden="true">3</span><div><h3>归还</h3><p>样本回到架上，等待下一家事务所。</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="visit" id="visit" aria-labelledby="visit-head">
+    <div class="container visit__grid">
+      <div class="visit__text">
+        <h2 id="visit-head">在伦敦亲手挑选样本</h2>
+        <p class="lead">参观需预约。告诉我们日期和想看的类别。</p>
+      </div>
+      <form class="card visit__form" data-endpoint="" novalidate>
+        <div class="form__row">
+          <div class="field"><label for="f-name">您的姓名</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
+          <div class="field"><label for="f-practice">事务所</label><input id="f-practice" name="practice" type="text" autocomplete="organization"></div>
+        </div>
+        <div class="form__row">
+          <div class="field"><label for="f-email">邮箱</label><input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required></div>
+          <div class="field"><label for="f-day">日期</label><input id="f-day" name="day" type="date" required></div>
+        </div>
+        <fieldset class="cells cells--form">
+          <legend>想看的类别</legend>
+          <input type="checkbox" name="families" id="c-stone" value="stone"><label for="c-stone">石材</label>
+          <input type="checkbox" name="families" id="c-timber" value="timber"><label for="c-timber">木材</label>
+          <input type="checkbox" name="families" id="c-terrazzo" value="terrazzo"><label for="c-terrazzo">水磨石</label>
+          <input type="checkbox" name="families" id="c-ceramic" value="ceramic"><label for="c-ceramic">陶瓷</label>
+        </fieldset>
+        <div class="form__end">
+          <button class="btn btn--primary" type="submit">申请参观</button>
+          <p class="form__help" id="form-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="foot__mark">Sample Room</p>
+    <div class="foot__row">
+      <nav class="foot__links" aria-label="页脚">
+        <a href="#catalogue">目录</a>
+        <a href="#borrow">借阅</a>
+        <a href="#visit">预约参观</a>
+      </nav>
+      <p class="foot__place">伦敦，参观需预约</p>
+    </div>
+    <p class="foot__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Red_marble_quarry_Cava_Buscada_-_Erto_e_Casso,_Pordenone,_Friuli-Venezia_Giulia,_Italy_-_2021-09-27.jpg">Mænsard vokser</a>, CC&nbsp;BY-SA&nbsp;4.0; <a href="https://commons.wikimedia.org/wiki/File:Fichte_Dreischichtplatte_2009.jpg">Elke Wetzig (elya)</a>, CC&nbsp;BY-SA&nbsp;3.0; <a href="https://commons.wikimedia.org/wiki/File:Vitoria_-_Adurza_-_Iturritxu_-BT-_03.jpg">Basotxerri</a>, CC&nbsp;BY-SA&nbsp;4.0; <a href="https://commons.wikimedia.org/wiki/File:Travessa_Couto_Fernandes_60_Centro_S%C3%A3o_Lu%C3%ADs_2025-6016_(pcorr,_crop).jpg">Prburley, derivative work by Aristeas</a>, CC&nbsp;BY&nbsp;4.0; <a href="https://commons.wikimedia.org/wiki/File:Marble_Top.jpg">Ambadyanands</a>, CC0; <a href="https://commons.wikimedia.org/wiki/File:Stone_wall_old_farm_Dordogne.jpg">Jebulon</a>, CC0; <a href="https://commons.wikimedia.org/wiki/File:Old_brickwork._Red_brick.jpg">Dmitry Makeev</a>, CC&nbsp;BY-SA&nbsp;3.0; <a href="https://commons.wikimedia.org/wiki/File:Zellige_loose_tile_shapes.jpg">Jadcooper</a>, CC&nbsp;BY-SA&nbsp;4.0，均来自 Wikimedia Commons。&copy; 2026 Sample Room。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const rows = [...document.querySelectorAll('#spec tbody tr')];
+  const empty = document.getElementById('spec-empty');
+  const q = document.getElementById('find-q');
+  const apply = () => {
+    const fam = document.querySelector('input[name="fam"]:checked').value;
+    const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    rows.forEach((r) => { const t = r.textContent.toLowerCase(); const ok = (!fam || r.dataset.fam === fam) && words.every((w) => t.includes(w)); r.hidden = !ok; if (ok) shown++; });
+    empty.hidden = shown > 0;
+  };
+  document.querySelectorAll('input[name="fam"]').forEach((i) => i.addEventListener('change', apply));
+  q.addEventListener('input', apply);
+  q.form.addEventListener('submit', (e) => { e.preventDefault(); document.getElementById('f-all').checked = true; apply(); document.getElementById('catalogue').scrollIntoView(); });
+})();
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fields = [...form.querySelectorAll('input[required]')];
+    fields.forEach((i) => i.toggleAttribute('aria-invalid', !i.checkValidity()));
+    const bad = fields.find((i) => !i.checkValidity());
+    if (bad) {
+      bad.setAttribute('aria-describedby', help.id);
+      help.textContent = bad.type === 'email' ? '这个邮箱地址似乎不完整。请写成 name@example.com。' : bad.type === 'date' ? '请选择想要参观的日期。' : '请填写姓名，让我们知道谁来参观。';
+      bad.focus();
+      return;
+    }
+    if (!form.dataset.endpoint) { help.textContent = '尚未发送：此表单还未接入后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '您的申请已送达。' : '发送失败。请稍后再试。'; })
+      .catch(() => { help.textContent = '发送失败。请稍后再试。'; });
+  });
+});
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+</script>
+</body>
+</html>

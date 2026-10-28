@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Off Register：利斯的孔版印刷，每张 40 便士起</title>
+<meta name="description" content="Off Register 是利斯（Leith）的一家孔版印刷工作室：双色印刷每张 40 便士起，设工作室开放日，周日还有 zine 摊。">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header>
+  <div class="banner grained">
+    <div class="container banner__inner">
+      <a href="#sundays">每个周日，zine 摊都会摆出来。</a>
+    </div>
+  </div>
+  <div class="bar">
+    <div class="container bar__inner">
+      <a class="wordmark" href="#main" aria-label="Off Register，首页">Off Register</a>
+      <nav aria-label="主导航">
+        <ul class="bar__links">
+          <li><a href="#passes">印品</a></li>
+          <li><a href="#price">价格</a></li>
+          <li><a href="#open-days">开放日</a></li>
+          <li><a href="#sundays">zine</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-head"><span class="misreg" data-text="两">两</span>种颜色，套印差着一丝。</h1>
+        <p class="lead">利斯的一家孔版印刷工作室：<span class="keep">双色</span>印刷每张 40 便士起。</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#price">测算印量价格</a>
+          <a class="btn btn--secondary" href="#open-days">来参加开放日</a>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <figure class="photo grained" data-slot="hero" data-alt="工作室滚筒刚印出的双色成品，纸页在工作台上扇形摊开">
+          <img src="photos/oscal-2017-silkscreen-printed-materials-29-1920.jpg" width="2400" height="1600" fetchpriority="high" alt="铰链压印架上抬起一个印框，下方是一张新印好的纸" style="object-position: 40% 50%">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="passes" class="passes" aria-labelledby="passes-head">
+    <div class="container">
+      <div class="head-row">
+        <h2 id="passes-head">一张纸，两遍走纸</h2>
+        <p class="lead">每种颜色各有一只滚筒。当第二遍落在第一遍上，第三种颜色便免费印了出来。</p>
+      </div>
+      <ol class="plates">
+        <li class="plate">
+          <div class="plate__sheet" aria-hidden="true">
+            <span class="plate__type">周日<br>的<br>zine 摊</span>
+          </div>
+          <h3>第一层</h3>
+          <p>蓝色滚筒印下文字。</p>
+        </li>
+        <li class="plate">
+          <div class="plate__sheet" aria-hidden="true">
+            <span class="plate__disc"></span>
+          </div>
+          <h3>第二层</h3>
+          <p>粉色滚筒铺满底色。</p>
+        </li>
+        <li class="plate">
+          <div class="plate__sheet grained" aria-hidden="true">
+            <span class="plate__type">周日<br>的<br>zine 摊</span>
+            <span class="plate__disc plate__disc--over"></span>
+          </div>
+          <h3>这张纸</h3>
+          <p>两色相交处，便成了紫。</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="price" class="price grained" aria-labelledby="price-head">
+    <div class="container price__grid">
+      <div class="price__text">
+        <h2 id="price-head">测算印量价格</h2>
+        <p class="lead">每张纸上两种颜色，印多少由你定。</p>
+        <dl class="price__facts">
+          <div><dt>颜色</dt><dd>两色，各配一只滚筒</dd></div>
+          <div><dt>稿件</dt><dd>两层，每种颜色一层</dd></div>
+          <div><dt>费率</dt><dd>每印张 40 便士起</dd></div>
+        </dl>
+      </div>
+      <form class="calc" data-endpoint="" aria-labelledby="price-head" onsubmit="return false">
+        <label class="calc__label" for="sheets">张数</label>
+        <div class="calc__row">
+          <button class="calc__step" type="button" data-step="-50" aria-label="减少 50 张">−</button>
+          <input id="sheets" name="sheets" type="number" inputmode="numeric" min="1" max="5000" step="1" value="100">
+          <button class="calc__step" type="button" data-step="50" aria-label="增加 50 张">+</button>
+        </div>
+        <p class="calc__label" id="total-label">你的印量，低至</p>
+        <output class="calc__total num" for="sheets" aria-labelledby="total-label" aria-live="polite">£40.00</output>
+        <p class="calc__note">这只是底价，不是正式报价：工作室看过稿件后会确认最终价格。</p>
+        <a class="btn btn--primary" href="#visit">把稿件带来</a>
+      </form>
+    </div>
+  </section>
+
+  <section id="open-days" class="open" aria-labelledby="open-head">
+    <div class="container">
+      <div class="head-row">
+        <h2 id="open-head">工作室开放日</h2>
+        <p class="lead">门开着，滚筒在转。来亲眼看一批印张走完全程。</p>
+      </div>
+      <figure class="photo open__wide grained" data-slot="open" data-alt="Off Register 的开放日：房间、滚筒，以及钉在墙上的印品">
+        <img src="photos/studio-andrea-marescalchi-1920.jpg" width="4554" height="3036" loading="lazy" alt="一间刷白的画室，墙上钉着一排大幅印品" style="object-position: 50% 58%">
+      </figure>
+      <div class="open__foot">
+        <p class="open__next">下次开放日：<span class="fill" data-fill="open-day">日期待公布</span></p>
+        <a class="btn btn--secondary" href="#visit">找到工作室</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="sundays" class="sundays grained" aria-labelledby="sundays-head">
+    <span class="sundays__disc" aria-hidden="true"></span>
+    <div class="container sundays__grid">
+      <h2 id="sundays-head" class="sundays__line">每个周日，zine 摊都会摆出来。</h2>
+      <div class="sundays__foot">
+        <p>就摆在利斯工作室的桌上。</p>
+        <a class="btn btn--primary" href="#visit">找到工作室</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="visit" class="colophon">
+  <div class="container">
+    <p class="colophon__mark" aria-hidden="true">Off Register</p>
+    <div class="colophon__body">
+      <p class="colophon__text">利斯的一家孔版印刷工作室，双色印刷每张 40 便士起，地址：<span class="fill" data-fill="address">街道地址待公布</span>。</p>
+      <ul class="colophon__links">
+        <li><a href="#passes">印品</a></li>
+        <li><a href="#price">价格</a></li>
+        <li><a href="#open-days">开放日</a></li>
+        <li><a href="#sundays">zine</a></li>
+      </ul>
+    </div>
+    <p class="colophon__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:OSCAL_2017_silkscreen_printed_materials_29.jpg">Manolis Angelakis</a>（CC BY 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Studio_Andrea_Marescalchi.jpg">Andrea Marescalchi</a>（CC BY-SA 4.0），来自 Wikimedia Commons。</p>
+    <p class="colophon__legal">© 2026 Off Register，利斯</p>
+  </div>
+</footer>
+
+<script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+(() => {
+  const input = document.getElementById('sheets'); const out = document.querySelector('.calc__total');
+  if (!input || !out) return;
+  const fmt = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+  const render = () => { const n = Math.max(1, Math.min(5000, Math.round(Number(input.value) || 0))); out.textContent = fmt.format(n * 0.4); out.toggleAttribute('data-long', out.textContent.length > 7); };
+  input.addEventListener('input', render);
+  document.querySelectorAll('.calc__step').forEach((b) => b.addEventListener('click', () => { const n = Math.max(1, Math.min(5000, (Number(input.value) || 0) + Number(b.dataset.step))); input.value = n; render(); }));
+  render();
+})();
+</script>
+</body>
+</html>

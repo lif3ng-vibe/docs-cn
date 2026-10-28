@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wren Weaving:亚麻与羊毛,按米定制织造</title>
+<meta name="description" content="Wren Weaving 是苏格兰边境的一家双织机工作室,为室内设计师按米定制织造亚麻与羊毛面料,每米 £64 起。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Hanken+Grotesk:wght@400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="slab">
+  <div class="container slab__in">
+    <a class="slab__mark" href="#top" aria-label="Wren Weaving,回首页">Wren Weaving</a>
+    <nav class="slab__nav" aria-label="主导航">
+      <a href="#cloth">面料</a>
+      <a href="#weeks">交期</a>
+      <a class="btn btn--sm" href="#order">开始下单</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-head">
+    <figure class="hero__fig" data-slot="hero" data-alt="窗光里的一台织机,经轴上绕着经线">
+      <img src="photos/nabburg-freilandmuseum-kolbeckhof-webstuhl-20190823-rm-11533-1920.jpg" width="1920" height="1440" sizes="100vw" fetchpriority="high"
+             alt="木织机的经轴,绕满伸向钢筘的亚麻线" style="object-position: 50% 60%">
+    </figure>
+    <div class="container hero__in">
+      <div class="hero__text">
+        <h1 id="hero-head">亚麻与羊毛,按米织造</h1>
+        <p class="lead">在苏格兰边境的两台织机上按订单织造。</p>
+        <div class="acts">
+          <a class="btn" href="#order">开始下单</a>
+          <a class="link link--light" href="#cloth">看看面料</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="spec" id="cloth" aria-labelledby="spec-head">
+    <div class="container spec__grid">
+      <div class="spec__head">
+        <h2 id="spec-head">面料,一表看懂</h2>
+        <p class="lead">每一段布,都在你下单之后才织。</p>
+      </div>
+      <dl class="spec__rows">
+        <div><dt>纤维</dt><dd>亚麻或羊毛</dd></div>
+        <div><dt>织造</dt><dd>按单织造,织好后从织轴裁下</dd></div>
+        <div><dt>售卖</dt><dd>按米出售,长度随你需要</dd></div>
+        <div class="spec__price"><dt>价格</dt><dd><span class="spec__fig">£64</span><span class="spec__unit">每米起</span></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="close-up" aria-labelledby="close-head">
+    <div class="container">
+      <div class="head-split">
+        <h2 id="close-head">近得能数清每一根纱线</h2>
+        <p class="lead">窗光下的织纹,本来的样子。</p>
+      </div>
+      <figure class="close-up__fig">
+        <div class="photo" data-slot="weave" data-alt="你的面料,近景,在窗光下">
+          <img src="photos/jeansfabric-1920.jpg" width="1920" height="2930" sizes="(min-width: 90rem) 1312px, 100vw" loading="lazy"
+             alt="靛蓝与白色相间的斜纹织纹,近景,铺满整个画面" style="object-position: 50% 50%">
+        </div>
+        <figcaption>窗光下的斜纹,近景。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="weeks" id="weeks" aria-labelledby="weeks-head">
+    <div class="container">
+      <div class="head-split">
+        <h2 id="weeks-head">从织轴到家门,六到八周</h2>
+        <p class="lead">从订单抵达工作室的那天算起。</p>
+      </div>
+      <figure class="scale" aria-labelledby="scale-cap">
+        <div class="scale__axis" aria-hidden="true">
+          <span class="scale__lab">下单后第几周</span>
+          <div class="scale__ticks"><span style="--i: 0">0</span><span style="--i: 1">1</span><span style="--i: 2">2</span><span style="--i: 3">3</span><span style="--i: 4">4</span><span style="--i: 5">5</span><span style="--i: 6">6</span><span style="--i: 7">7</span><span style="--i: 8">8</span></div>
+        </div>
+        <ol class="scale__rows">
+          <li><h3>你的订单</h3><div class="scale__track"><i class="scale__mark" style="--a: 0"></i></div></li>
+          <li><h3>整经、织造与后整理</h3><div class="scale__track"><i class="scale__bar" style="--a: 0; --b: 6"></i></div></li>
+          <li><h3>面料送达</h3><div class="scale__track"><i class="scale__bar scale__bar--in" style="--a: 6; --b: 8"></i></div></li>
+        </ol>
+        <figcaption id="scale-cap" class="visually-hidden">订单在第 0 周下;面料在织机上完成整经、织造与后整理,第 6 周到第 8 周之间送达。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="cut" aria-labelledby="cut-head">
+    <div class="container cut__grid">
+      <figure class="cut__fig">
+        <div class="photo" data-slot="cut" data-alt="你的面料在裁台上,按米量好">
+          <img src="photos/tailor-s-shop-werkstatt-2-1920.jpg" width="1920" height="1284" sizes="(min-width: 60rem) 56vw, 100vw" loading="lazy"
+             alt="旧木桌上的裁缝剪、卷尺与一叠折好的布料" style="object-position: 45% 50%">
+        </div>
+      </figure>
+      <div class="cut__text">
+        <h2 id="cut-head">按你订购的米数裁剪</h2>
+        <p class="lead">告诉我们用在哪间房、要多少米。我们织好,从织轴裁下,寄给你。</p>
+        <a class="link" href="#order">算一算价格</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="order" id="order" aria-labelledby="order-head">
+    <div class="container order__grid">
+      <div class="order__text">
+        <h2 id="order-head">开始下单</h2>
+        <p class="lead">面料、米数,以及它要去的房间。</p>
+        <dl class="sum" aria-live="polite">
+          <div><dt>米数</dt><dd class="num" id="sum-m">12</dd></div>
+          <div><dt>每米起</dt><dd class="num">£64</dd></div>
+          <div class="sum__total"><dt>起价</dt><dd id="sum-t">£768</dd></div>
+        </dl>
+      </div>
+      <form class="order__form" data-endpoint="" novalidate>
+        <fieldset class="seg">
+          <legend>面料</legend>
+          <div class="seg__opts">
+            <input type="radio" name="cloth" id="cl-linen" value="linen" checked><label for="cl-linen">亚麻</label>
+            <input type="radio" name="cloth" id="cl-wool" value="wool"><label for="cl-wool">羊毛</label>
+          </div>
+        </fieldset>
+        <div class="field">
+          <label for="f-metres">米数</label>
+          <div class="stepper">
+            <button class="stepper__btn" type="button" data-step="-1" aria-label="减少一米"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="square" fill="none"/></svg></button>
+            <input id="f-metres" name="metres" type="number" inputmode="numeric" min="1" max="200" value="12" required>
+            <button class="stepper__btn" type="button" data-step="1" aria-label="增加一米"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="square" fill="none"/></svg></button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-room">用在哪间房</label>
+          <input id="f-room" name="room" type="text" autocomplete="off">
+        </div>
+        <div class="form__row">
+          <div class="field">
+            <label for="f-name">你的名字</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="f-email">邮箱</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required>
+          </div>
+        </div>
+        <div class="form__end">
+          <button class="btn btn--ecru" type="submit">提交订单</button>
+          <p class="form__help" id="form-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="colophon">
+  <div class="container colophon__grid">
+    <p class="colophon__mark">Wren Weaving</p>
+    <p class="colophon__text">亚麻与羊毛,在苏格兰边境按米定制织造。工作室地址:<span class="fill" data-fill="address">待公布</span>。摄影： <a href="https://commons.wikimedia.org/wiki/File:Nabburg_Freilandmuseum_Kolbeckhof_Webstuhl-20190823-RM-115330.jpg">Ermell</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Jeansfabric.jpg">Thegreenj</a> (CC BY-SA 3.0), <a href="https://commons.wikimedia.org/wiki/File:Tailor%C2%B4s_shop_-_Werkstatt_2.jpg">Wolfgang Sauber</a> (CC BY-SA 3.0), via Wikimedia Commons.</p>
+    <nav class="colophon__links" aria-label="页脚">
+      <a class="link" href="#cloth">面料</a>
+      <a class="link" href="#weeks">交期</a>
+      <a class="link" href="#order">开始下单</a>
+    </nav>
+    <p class="colophon__legal">&copy; 2026 Wren Weaving</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const metres = document.getElementById('f-metres');
+  const m1 = document.getElementById('sum-m');
+  const tot = document.getElementById('sum-t');
+  const fmt = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 });
+  const update = () => {
+    const m = Math.max(1, Math.min(200, Math.round(Number(metres.value) || 1)));
+    m1.textContent = m;
+    tot.textContent = fmt.format(m * 64);
+  };
+  metres.addEventListener('input', update);
+  document.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => {
+    metres.value = Math.max(1, Math.min(200, (Number(metres.value) || 0) + Number(b.dataset.step)));
+    update();
+  }));
+  update();
+})();
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('#form-help');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fields = [...form.querySelectorAll('input[required]')];
+    fields.forEach((i) => i.toggleAttribute('aria-invalid', !i.checkValidity()));
+    const bad = fields.find((i) => !i.checkValidity());
+    if (bad) {
+      bad.setAttribute('aria-describedby', help.id);
+      help.textContent = bad.type === 'email' ? '地址看起来不完整。请按 name@example.com 的格式填写。' : bad.type === 'number' ? '米数请填整数,至少为 1。' : '请留下你的名字,我们才知道订单是谁的。';
+      bad.focus();
+      return;
+    }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容:这个表单尚未接入。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '你的订单已送达工作室。' : '没有成功。请稍后再试。'; })
+      .catch(() => { help.textContent = '没有成功。请稍后再试。'; });
+  });
+});
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

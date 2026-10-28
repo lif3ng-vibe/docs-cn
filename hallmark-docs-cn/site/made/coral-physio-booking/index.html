@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kneedle：物理治疗师的预约、诊疗记录与发票</title>
+<meta name="description" content="Kneedle 是为独立执业的物理治疗师打造的预约与诊疗记录应用：在线预约、提醒、诊疗记录与发票，集成在同一本日程里。">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="container nav__row">
+    <a class="wordmark" href="#top" aria-label="Kneedle，首页">Kneedle</a>
+    <nav class="nav__links" aria-label="主导航">
+      <a href="#jobs">工作方式</a>
+      <a class="btn btn--quiet btn--small" href="#start">设置你的日程</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1>下一位患者来之前，记录已经写完。</h1>
+        <p class="lead">为独立执业的物理治疗师准备：在线预约、提醒、诊疗记录与发票。</p>
+        <div class="actions">
+          <a class="btn" href="#start">设置你的日程</a>
+          <a class="btn btn--quiet" href="#notes">看一份记录</a>
+        </div>
+      </div>
+
+      <figure class="app lifted" data-slot="hero" data-alt="Kneedle 日程中某个门诊日的视图，当前患者的诊疗记录已打开" role="img" aria-label="10 月 16 日（周四）的 Kneedle 日程：左侧列着六条预约，右侧打开着 M. Hughes 的诊疗记录（ACL 康复第 8 次），并已由此生成发票草稿。">
+        <div class="app__bar">
+          <span class="app__mark">Kneedle</span>
+          <span class="app__tabs"><span class="tab is-on">日程</span><span class="tab">患者</span><span class="tab">发票</span></span>
+          <span class="app__date">10 月 16 日（周四）</span>
+          <span class="ui-btn ui-btn--ink">新建预约</span>
+        </div>
+        <div class="app__body">
+          <ol class="day">
+            <li class="appt"><span class="fig">09:00</span><span class="appt__who">R. Achebe<small>踝扭伤，第 3 周</small></span><span class="status status--done">已完成</span></li>
+            <li class="appt is-open"><span class="fig">09:45</span><span class="appt__who">M. Hughes<small>ACL 康复，第 8 次</small></span><span class="status status--now">治疗中</span></li>
+            <li class="appt"><span class="fig">10:30</span><span class="appt__who">S. Patel<small>腰部，首诊</small></span><span class="status">在线预约</span></li>
+            <li class="appt"><span class="fig">11:15</span><span class="appt__who">J. Moreno<small>肩部复诊</small></span><span class="status">已提醒</span></li>
+            <li class="appt appt--gap"><span class="fig">12:00</span><span class="appt__who">午餐<small>不开放预约</small></span></li>
+            <li class="appt"><span class="fig">13:30</span><span class="appt__who">T. Brennan<small>跑步膝</small></span><span class="status status--late">未支付</span></li>
+            <li class="appt"><span class="fig">14:15</span><span class="appt__who">L. Fontaine<small>髋部，术后</small></span><span class="status">在线预约</span></li>
+            <li class="appt appt--gap"><span class="fig">15:00</span><span class="appt__who">空闲<small>在你的预约页面上开放</small></span></li>
+            <li class="appt"><span class="fig">15:45</span><span class="appt__who">K. Osei<small>颈部与上背</small></span><span class="status">已提醒</span></li>
+          </ol>
+          <div class="note">
+            <div class="note__head">
+              <p class="note__who">M. Hughes</p>
+              <p class="note__what">ACL 康复，第 8 / 12 次</p>
+            </div>
+            <div class="note__fields">
+            <div class="note__field">
+              <p class="note__label">主观</p>
+              <p class="note__text">上下楼梯已无痛。晨起有些僵硬，十分钟后缓解。恢复每周骑两次车。<span class="caret" aria-hidden="true"></span></p>
+            </div>
+            <div class="note__field">
+              <p class="note__label">客观</p>
+              <dl class="measures">
+                <div><dt>膝关节屈曲</dt><dd><span class="fig">118°</span><small>此前 <span class="fig">112°</span></small></dd></div>
+                <div><dt>膝关节伸展</dt><dd><span class="fig">0°</span><small>此前 <span class="fig">−3°</span></small></dd></div>
+                <div><dt>单腿下蹲</dt><dd><span class="fig">60°</span><small>此前 <span class="fig">45°</span></small></dd></div>
+                <div><dt>疼痛</dt><dd><span class="fig">2/10</span><small>此前 <span class="fig">4/10</span></small></dd></div>
+              </dl>
+            </div>
+            <div class="note__field">
+              <p class="note__label">计划</p>
+              <p class="note__text">进阶到侧向跳。七天后复评。</p>
+            </div>
+            <div class="note__field">
+              <p class="note__label">回家练习</p>
+              <ul class="homework"><li>台阶下踏<span class="fig">3×10</span></li><li>臀桥<span class="fig">3×12</span></li></ul>
+            </div>
+            </div>
+            <div class="note__foot">
+              <span>发票 <span class="fig">0418</span> 已生成草稿</span>
+              <span class="fig note__amount">£55.00</span>
+              <span class="ui-btn ui-btn--ink">完成并发送</span>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="jobs" id="jobs">
+    <div class="container jobs__grid">
+      <div class="jobs__head">
+        <h2>四件事，一本日程</h2>
+        <p class="lead">从第一笔预约到最后一笔收款。</p>
+      </div>
+      <ul class="rows">
+        <li><h3>在线预约</h3><p>患者在你的接诊时段里，用手机挑一个空闲时间。</p></li>
+        <li><h3>提醒</h3><p>前一天发一条短信，九点钟的诊床不再空等。</p></li>
+        <li><h3>诊疗记录</h3><p>角度与疼痛评分，在诊室里当场写完。</p></li>
+        <li><h3>发票</h3><p>记录写完，发票草稿就绪。</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="seen" id="patients">
+    <div class="container">
+      <div class="head">
+        <h2>患者看到什么</h2>
+        <p class="lead">你的接诊时段出现在他们手机上，前一天再收到一条提醒短信。</p>
+      </div>
+      <div class="bento">
+        <article class="tile tile--lead">
+          <div class="booker" data-slot="booking" data-alt="患者在手机或电脑上看到的 Kneedle 预约页" role="img" aria-label="Example Physio 的预约页：顶部是一周日期，选中了 21 日（周二），显示当天空闲时间，已选 10:30 预约 45 分钟的首诊评估。">
+            <div class="booker__top">
+              <p class="booker__name">Example Physio</p>
+              <p class="booker__type">首诊评估，45 分钟</p>
+            </div>
+            <ol class="week">
+              <li><span>周一</span><b class="fig">20</b></li>
+              <li class="is-on"><span>周二</span><b class="fig">21</b></li>
+              <li><span>周三</span><b class="fig">22</b></li>
+              <li><span>周四</span><b class="fig">23</b></li>
+              <li class="is-off"><span>周五</span><b class="fig">24</b></li>
+            </ol>
+            <ul class="slots">
+              <li class="fig">08:15</li><li class="fig">09:00</li><li class="fig is-on">10:30</li><li class="fig">13:30</li><li class="fig">16:00</li><li class="fig">17:15</li>
+            </ul>
+            <div class="booker__foot">
+              <span>10 月 21 日（周二），10:30</span>
+              <span class="ui-btn ui-btn--ink">预约这个时间</span>
+            </div>
+          </div>
+          <div class="tile__text">
+            <h3>按你的时段开放的预约页</h3>
+            <p>只放出你开放的时段，患者之间留出你需要的间隔。</p>
+          </div>
+        </article>
+
+        <article class="tile tile--photo">
+          <figure class="photo photo--fill" data-slot="photo-runner" data-alt="你的患者重返运动：跑步、骑车或比赛">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg/1280px-Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg/960px-Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg/1280px-Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg/1920px-Human_running_gait_-_terminal_swing_to_heel_strike_%28runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon%29.jpg 1920w" sizes="(min-width: 60rem) 36vw, 100vw" width="4512" height="2960" alt="跑者在公路上迈步的双腿，穿长袜与比赛鞋" style="object-position: 40% 60%" loading="lazy">
+          </figure>
+          <p class="caption">下班后预约，赶在周末跑步之前。</p>
+        </article>
+
+        <article class="tile tile--photo">
+          <figure class="photo photo--fill" data-slot="photo-phone" data-alt="患者在手机上阅读预约提醒">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg/1280px-Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg/960px-Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg/1280px-Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg/1920px-Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg 1920w" sizes="(min-width: 60rem) 36vw, 100vw" width="6016" height="4016" alt="一只手举着手机，桌上摊着笔记本与电脑" style="object-position: 60% 45%" loading="lazy">
+          </figure>
+          <p class="caption">在两件事的间隙里确认了预约。</p>
+        </article>
+
+        <article class="tile tile--sms">
+          <div class="thread" data-slot="reminder" data-alt="Kneedle 账号发出的提醒短信，患者收到的样子" role="img" aria-label="一条短信对话：Example Physio 发出 10:30（周二）的提醒，患者回复 C 确认，Kneedle 回以确认。">
+            <p class="thread__from">Example Physio</p>
+            <p class="thread__time">周六 <span class="fig">23:41</span></p>
+            <p class="bubble">已预约：10 月 21 日（周二），<span class="fig">10:30</span>，首诊评估。</p>
+            <p class="thread__time">周一 <span class="fig">10:30</span></p>
+            <p class="bubble">你好 Sam，明天 10:30 治疗。请穿短裤。回复 C 确认，回复 X 取消。</p>
+            <p class="bubble bubble--them">C</p>
+            <p class="bubble">谢谢 Sam，到时见。</p>
+            <p class="thread__time thread__time--end">已读</p>
+            <p class="thread__meta">已在你的日程中确认</p>
+          </div>
+          <div class="tile__text">
+            <h3>会被回复的提醒</h3>
+            <p>对方取消，时段立即在预约页上重新开放。</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes" id="notes">
+    <div class="container split">
+      <figure class="photo photo--square" data-slot="photo-session" data-alt="你自己诊室里的治疗：患者正在训练，你的双手与设备">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Close-up_Hand_holding_dumbbell_in_gym.jpg/1280px-Close-up_Hand_holding_dumbbell_in_gym.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Close-up_Hand_holding_dumbbell_in_gym.jpg/960px-Close-up_Hand_holding_dumbbell_in_gym.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Close-up_Hand_holding_dumbbell_in_gym.jpg/1280px-Close-up_Hand_holding_dumbbell_in_gym.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Close-up_Hand_holding_dumbbell_in_gym.jpg/1920px-Close-up_Hand_holding_dumbbell_in_gym.jpg 1920w" sizes="(min-width: 60rem) 40vw, 100vw" width="4016" height="6016" alt="一只手握着哑铃，旁边是举重凳" style="object-position: 40% 100%" loading="lazy">
+      </figure>
+      <div class="split__text">
+        <h2>趁着训练间隙把记录写完</h2>
+        <p class="lead">记录跟着患者的训练同步填写，而不是晚上九点还在补。</p>
+        <dl class="facts">
+          <div><dt>按部位分类的模板</dt><dd>膝、肩、背与踝，各配相应的检查项。</dd></div>
+          <div><dt>上次就诊对照</dt><dd>上周的角度就摆在今天旁边。</dd></div>
+          <div><dt>完成后锁定</dt><dd>已签署的记录只能追加，不能更改。</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="paid" id="invoices">
+    <div class="container">
+      <div class="head head--split">
+        <h2>谁已付款</h2>
+        <p class="lead">每张发票都出自一份写完的记录，并附支付链接。</p>
+      </div>
+      <div class="ledger" data-slot="invoices" data-alt="Kneedle 一周的发票列表" role="region" aria-label="示例发票列表">
+        <table>
+          <caption class="visually-hidden">一周的示例发票及其状态</caption>
+          <thead>
+            <tr><th scope="col">发票</th><th scope="col">患者</th><th scope="col">项目</th><th scope="col">日期</th><th scope="col" class="r">金额</th><th scope="col">状态</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="fig">0418</td><th scope="row">M. Hughes</th><td>ACL 康复，第 8 次</td><td class="fig">10 月 16 日</td><td class="fig r">£55.00</td><td><span class="status">已发送</span></td></tr>
+            <tr><td class="fig">0417</td><th scope="row">R. Achebe</th><td>踝扭伤，第 3 周</td><td class="fig">10 月 16 日</td><td class="fig r">£55.00</td><td><span class="status status--done">已支付</span></td></tr>
+            <tr><td class="fig">0416</td><th scope="row">T. Brennan</th><td>跑步膝</td><td class="fig">10 月 14 日</td><td class="fig r">£55.00</td><td><span class="status status--late">已提醒两次</span></td></tr>
+            <tr><td class="fig">0415</td><th scope="row">S. Patel</th><td>首诊评估</td><td class="fig">10 月 13 日</td><td class="fig r">£65.00</td><td><span class="status status--done">已支付</span></td></tr>
+            <tr><td class="fig">0414</td><th scope="row">J. Moreno</th><td>肩部复诊</td><td class="fig">10 月 10 日</td><td class="fig r">£55.00</td><td><span class="status status--done">保险公司已付</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="start" id="start">
+    <div class="container start__grid">
+      <div>
+        <h2>打开下周的日程</h2>
+        <p class="lead">今晚设好接诊时段，明天就发出你的预约页。</p>
+      </div>
+      <form class="signup" data-endpoint="" novalidate>
+        <label for="email">你的工作邮箱</label>
+        <div class="signup__row">
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+          <button class="btn" type="submit">设置你的日程</button>
+        </div>
+        <p class="signup__help" id="email-help" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__grid">
+    <p class="wordmark wordmark--foot">Kneedle</p>
+    <div class="foot__body">
+      <p class="foot__colophon">Kneedle 为独立开诊室的物理治疗师管理日程、记录与发票。所示姓名与数字均为示例。</p>
+      <p class="foot__links"><a href="#jobs">工作方式</a> <a href="#patients">预约与提醒</a> <a href="#notes">诊疗记录</a> <a href="#invoices">发票</a></p>
+      <p class="foot__credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Human_running_gait_-_terminal_swing_to_heel_strike_(runner_with_Asics_Metaspeed_Edge_Paris_-_2024_Ljubljana_Marathon).jpg">Petar Milošević</a>（CC BY-SA 4.0，Wikimedia Commons），<a href="https://commons.wikimedia.org/wiki/File:Young_businesswoman_holding_her_smartphone_in_the_home_office.jpg">Shixart1985</a>（CC BY 2.0，Wikimedia Commons），<a href="https://commons.wikimedia.org/wiki/File:Close-up_Hand_holding_dumbbell_in_gym.jpg">Nenad Stojkovic</a>（CC BY 2.0，Wikimedia Commons）。</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const input = form.querySelector('input'), help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ok = input.checkValidity();
+    input.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '邮箱地址看起来不完整，请写成 name@example.com 的形式。'; input.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '尚未发送：此表单还未接入后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '日程链接已发送至 ' + input.value.trim() + '。' : '发送没有成功，请稍后再试。'; })
+      .catch(() => { help.textContent = '发送没有成功，请稍后再试。'; });
+  });
+});
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cold Comfort 辣酱：烟熏辣椒与血橙</title>
+<meta name="description" content="Cold Comfort 是一款用烟熏辣椒与血橙制成的辣酱，分三种辣度，150ml 瓶装，每瓶 £9。首批共 1,200 瓶。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Golos+Text:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="mast">
+  <div class="container mast__in">
+    <nav class="mast__side" aria-label="关于这款辣酱">
+      <a href="#label">瓶标</a>
+      <a href="#inside">里面有什么</a>
+    </nav>
+    <a class="mast__mark" href="#top" aria-label="Cold Comfort，回到顶部">Cold Comfort</a>
+    <nav class="mast__side mast__side--end" aria-label="购买">
+      <a href="#batch">首批</a>
+      <a href="#order">订购</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">辣酱。<br>冷的安慰。</h1>
+      <p class="lead">烟熏辣椒与血橙，分三种辣度装瓶。</p>
+      <div class="hero__acts">
+        <a class="btn btn--primary" href="#order">订购一瓶</a>
+        <a class="btn" href="#inside">看看里面有什么</a>
+      </div>
+    </div>
+    <div class="hero__pin">
+      <figure class="hero__photo photo" data-slot="hero" data-alt="一瓶 Cold Comfort，摆在制成它的烟熏辣椒与切开的血橙之间">
+        <img src="photos/vitorjubini-mercadodavilarubim-vitoria-es-39182859020-square-1920.jpg" width="1920" height="1920" fetchpriority="high" style="object-position: 50% 45%" alt="新鲜的小米辣堆在一只蓝碗四周">
+      </figure>
+      <p class="hero__tag">每瓶 £9</p>
+    </div>
+  </div>
+</section>
+
+<section class="label" id="label" aria-labelledby="label-head">
+  <div class="container">
+    <h2 id="label-head">读读瓶标。</h2>
+    <dl class="figs">
+      <div><dt>一瓶容量</dt><dd class="fig">150<span>ml</span></dd></div>
+      <div><dt>单价</dt><dd class="fig">£9</dd></div>
+      <div><dt>辣度</dt><dd class="fig">3</dd></div>
+      <div><dt>首批瓶数</dt><dd class="fig">1,200</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="inside" id="inside" aria-labelledby="inside-head">
+  <div class="container">
+    <div class="ask">
+      <h2 id="inside-head">烟熏与血橙。</h2>
+      <p class="lead">烟熏辣椒出醇厚，血橙出锋利。</p>
+    </div>
+    <div class="pair">
+      <div class="pin pair__a">
+        <figure class="photo" data-slot="smoked" data-alt="制成 Cold Comfort 的烟熏辣椒，特写">
+          <img src="photos/dried-chillies-2-1920.jpg" width="1920" height="1280" loading="lazy" style="object-position: 50% 50%" alt="深深一堆干红辣椒，特写">
+        </figure>
+        <p class="flag flag--cherry">烟熏辣椒</p>
+      </div>
+      <div class="pin pair__b">
+        <figure class="photo" data-slot="orange" data-alt="切开的血橙，特写">
+          <img src="photos/blood-orange-slice-1920.jpg" width="1920" height="1001" loading="lazy" style="object-position: 42% 50%" alt="一瓣血橙，果肉深红">
+        </figure>
+        <p class="flag flag--navy">血橙</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="heats" id="heats" aria-labelledby="heats-head">
+  <div class="container">
+    <div class="ask">
+      <h2 id="heats-head">选好你的辣度。</h2>
+      <p class="lead">选一瓶，或三瓶排排站。</p>
+    </div>
+    <form class="order" id="order" data-endpoint="" novalidate aria-label="订购 Cold Comfort">
+      <fieldset class="heat3">
+        <legend class="visually-hidden">选一个辣度</legend>
+        <input type="radio" name="heat" id="heat-1" value="1">
+        <label class="hrow" for="heat-1"><span class="hrow__name">辣度 1</span><span class="hrow__line">配煎蛋。</span></label>
+        <input type="radio" name="heat" id="heat-2" value="2" checked>
+        <label class="hrow" for="heat-2"><span class="hrow__name">辣度 2</span><span class="hrow__line">配其余一切。</span></label>
+        <input type="radio" name="heat" id="heat-3" value="3">
+        <label class="hrow" for="heat-3"><span class="hrow__name">辣度 3</span><span class="hrow__line">为收藏而生。</span></label>
+      </fieldset>
+      <div class="order__row">
+        <div class="qty">
+          <span class="qty__label" id="qty-label">瓶数，150ml</span>
+          <div class="qty__box" role="group" aria-labelledby="qty-label">
+            <button type="button" class="qty__btn" data-step="-1" aria-label="减少一瓶">&minus;</button>
+            <input id="bottles" name="bottles" type="number" inputmode="numeric" min="1" value="1" aria-labelledby="qty-label">
+            <button type="button" class="qty__btn" data-step="1" aria-label="增加一瓶">+</button>
+          </div>
+        </div>
+        <p class="order__total"><span>合计</span> <b class="fig" data-total>£9</b></p>
+        <button class="btn btn--primary order__buy" type="submit" data-buy>订购 1 瓶，£9</button>
+      </div>
+      <p class="order__help" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<section class="asked" id="asked" aria-labelledby="asked-head">
+  <div class="container asked__grid">
+    <h2 id="asked-head">收藏家问答。</h2>
+    <dl class="qa">
+      <div><dt>它会不会毁了我的煎蛋？</dt><dd>它只会让煎蛋更好。买两瓶：一瓶摆架子，一瓶配煎蛋。</dd></div>
+      <div><dt>哪一瓶用来摆架子？</dt><dd>辣度 3。它就是为收藏而生。</dd></div>
+      <div><dt>三种都能要吗？</dt><dd>当然。排成一排，最辣的收尾。</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="batch" id="batch" aria-labelledby="batch-head">
+  <div class="container batch__in">
+    <h2 id="batch-head">到第 1,200 瓶会发生什么？</h2>
+    <p class="batch__answer">首批就售罄了。</p>
+    <div class="batch__foot">
+      <p class="lead">收藏家们，你们懂规矩。</p>
+      <a class="btn btn--primary" href="#order">立即订购</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="run" data-loop>
+    <p class="visually-hidden">辣酱。冷的安慰。</p>
+    <div class="run__track" aria-hidden="true">
+      <span>辣酱。冷的安慰。</span><span>辣酱。冷的安慰。</span><span>辣酱。冷的安慰。</span><span>辣酱。冷的安慰。</span>
+    </div>
+    <div class="container run__ctl"><button class="btn btn--s" type="button" data-loop-toggle>暂停</button></div>
+  </div>
+  <div class="container foot__row">
+    <nav class="foot__links" aria-label="页脚导航">
+      <a href="#label">瓶标</a>
+      <a href="#inside">里面有什么</a>
+      <a href="#heats">辣度</a>
+      <a href="#batch">首批</a>
+      <a href="#order">订购</a>
+    </nav>
+    <p class="foot__legal">Cold Comfort 辣酱，首批</p>
+    <p class="foot__credit" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:VitorJubini_MercadoDaVilaRubim_Vitoria_ES_(39182859020)_(square_crop).jpg">MTur Destinos</a> <span>（Public domain）</span>、<a href="https://commons.wikimedia.org/wiki/File:Dried_chillies_2.jpg">Richard Mortel</a> <span>（<abbr>CC BY 2.0</abbr>）</span>、<a href="https://commons.wikimedia.org/wiki/File:Blood_orange_slice.jpg">Rhododendrites</a> <span>（<abbr>CC BY-SA 4.0</abbr>）</span>，均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const order = document.querySelector('form.order');
+  if (order) {
+    const qty = order.querySelector('#bottles'), total = order.querySelector('[data-total]'), buy = order.querySelector('[data-buy]');
+    const sync = () => {
+      const n = Math.max(1, Math.round(Number(qty.value) || 1)); qty.value = n;
+      total.textContent = `£${9 * n}`;
+      buy.textContent = `订购 ${n} 瓶，£${9 * n}`;
+    };
+    order.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => { qty.value = (Number(qty.value) || 1) + Number(b.dataset.step); sync(); }));
+    qty.addEventListener('input', sync);
+    const help = order.querySelector('.order__help');
+    order.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!order.dataset.endpoint) { help.textContent = '什么都没有发送：订购尚未接入。'; return; }
+      fetch(order.dataset.endpoint, { method: 'POST', body: new FormData(order) })
+        .then((r) => { if (!r.ok) help.textContent = '发送未成功，请稍后再试一次。'; })
+        .catch(() => { help.textContent = '发送未成功，请稍后再试一次。'; });
+    });
+  }
+  document.querySelectorAll('[data-loop]').forEach((el) => {
+    const btn = el.querySelector('[data-loop-toggle]');
+    const s = { seen: false, hover: false, focus: false, held: matchMedia('(prefers-reduced-motion: reduce)').matches };
+    const sync = () => { el.classList.toggle('is-running', s.seen && !s.hover && !s.focus && !s.held); btn.textContent = s.held ? '继续' : '暂停'; };
+    btn.addEventListener('click', () => { s.held = !s.held; sync(); });
+    [['pointerenter', 'hover', true], ['pointerleave', 'hover', false], ['focusin', 'focus', true], ['focusout', 'focus', false]].forEach(([t, k, v]) => el.addEventListener(t, () => { s[k] = v; sync(); }));
+    new IntersectionObserver(([e]) => { s.seen = e.isIntersecting; sync(); }).observe(el);
+  });
+})();
+</script>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Right to Repair Coalition：卖零件，公开维修手册</title>
+  <meta name="description" content="向每一家电子设备厂商提出的五项要求，先从两条说起：卖出零件、公开手册。请在 3 月 12 日表决前，把你的名字签上请愿书。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+
+  <header class="slab">
+    <div class="container slab__in">
+      <a class="wordmark" href="#top" aria-label="Right to Repair Coalition，回到顶部">Right to Repair Coalition</a>
+      <nav class="slab__nav" aria-label="章节">
+        <a class="slab__link" href="#demands">五项要求</a>
+        <a class="slab__link" href="#vote">表决</a>
+        <a class="btn btn--primary btn--sm" href="#sign" data-focus="p-name">签上你的名字</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-head">
+      <div class="container hero__in">
+        <h1 class="display hero__head" id="hero-head"><span class="reveal" style="--i: 0">卖出零件。</span><span class="reveal" style="--i: 1">公开维修<span class="hot">手册</span>。</span></h1>
+        <form class="pledge" id="sign" data-endpoint="" novalidate>
+          <h2 class="visually-hidden">签署请愿书</h2>
+          <p class="pledge__line">
+            <span aria-hidden="true">我，</span>
+            <label class="visually-hidden" for="p-name">你的名字</label>
+            <input class="pledge__name" id="p-name" name="name" type="text" autocomplete="name" required placeholder="你的名字"><span aria-hidden="true">，支持这五项要求。</span>
+          </p>
+          <div class="pledge__field">
+            <label for="p-email">电子邮箱</label>
+            <div class="pledge__row">
+              <input class="pledge__email" id="p-email" name="email" type="email" inputmode="email" autocomplete="email" required>
+              <button class="btn btn--sign" type="submit">签上我的名字</button>
+            </div>
+            <p class="pledge__help" id="pledge-help" aria-live="polite">请愿书将在 3 月 12 日交付表决。</p>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="demands" id="demands" aria-labelledby="demands-head">
+      <div class="container">
+        <div class="demands__head">
+          <h2 id="demands-head">五项要求。</h2>
+          <p class="lead">提给每一家制造我们所用机器的公司。</p>
+        </div>
+        <ol class="record">
+          <li class="record__row">
+            <span class="record__no" aria-hidden="true">1</span>
+            <h3 class="record__head">卖出零件。</h3>
+            <p class="record__line">为人们已经拥有的机器提供零件。</p>
+          </li>
+          <li class="record__row">
+            <span class="record__no" aria-hidden="true">2</span>
+            <h3 class="record__head">公开维修手册。</h3>
+            <p class="record__line">教你如何拆开它们、修好它们的那份说明。</p>
+          </li>
+          <li class="record__row record__row--open">
+            <span class="record__no" aria-hidden="true">3 至 5</span>
+            <p class="record__line"><span class="fill" data-fill="demands-3-5">第三、四、五项要求，照联盟的原话列出</span></p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="creed" aria-labelledby="creed-head">
+      <div class="container">
+        <h2 class="display creed__head" id="creed-head"><span>没有零件。</span><span>没有手册。</span><span>就没有维修。</span></h2>
+      </div>
+    </section>
+
+    <section class="board" aria-labelledby="board-head">
+      <div class="container board__head">
+        <h2 id="board-head">把它拆开</h2>
+        <p class="lead">一个零件加一份手册，就能把一块死板变回一台能用的机器。</p>
+      </div>
+      <figure class="photo board__photo" data-slot="board" data-alt="你自己拍的、等待零件的设备照片：拆开的手机、空着插座的电路板、一工作台的备件">
+        <img src="photos/canoscan-5600f-main-pcb-top-view-1920.jpg" width="1920" height="1401" loading="lazy" decoding="async" style="object-position: 46% 52%"
+             alt="一块扫描仪电路板的俯视平铺图，芯片与电容排成行">
+      </figure>
+    </section>
+
+    <section class="vote" id="vote" aria-labelledby="vote-head">
+      <div class="container">
+        <h2 class="display vote__date" id="vote-head"><span>3 月 12 日</span></h2>
+        <ol class="timeline">
+          <li class="is-now"><p class="timeline__when">在那之前</p><p class="timeline__what">每个名字都会写上请愿书。</p></li>
+          <li><p class="timeline__when">3 月 12 日</p><p class="timeline__what">请愿书交付表决。</p></li>
+        </ol>
+        <div class="vote__acts">
+          <a class="btn btn--primary" href="#sign" data-focus="p-name">签上你的名字</a>
+          <button class="btn btn--secondary" type="button" data-copy>复制链接，转发出去</button>
+        </div>
+        <p class="vote__help" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mast">
+    <div class="container">
+      <p class="display mast__name" aria-hidden="true"><span>Right to Repair Coalition</span></p>
+      <div class="mast__row">
+        <nav class="mast__links" aria-label="页脚">
+          <a href="#demands">五项要求</a>
+          <a href="#vote">表决，3 月 12 日</a>
+          <a href="#sign">签上你的名字</a>
+        </nav>
+        <small>© 2026 Right to Repair Coalition</small>
+      </div>
+      <p class="mast__credits" data-credits>Photograph: <a href="https://commons.wikimedia.org/wiki/File:CanoScan_5600F_main_PCB_top_view.jpg">Mister rf</a> (CC BY-SA 4.0), via Wikimedia Commons.</p>
+    </div>
+  </footer>
+
+  <script>
+document.querySelectorAll('[data-focus]').forEach((a) => a.addEventListener('click', () => { const t = document.getElementById(a.dataset.focus); if (t) setTimeout(() => t.focus({ preventScroll: true }), 300); }));
+document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
+  const out = b.closest('.container').querySelector('.vote__help');
+  try { await navigator.clipboard.writeText(location.href.split('#')[0]); out.textContent = '链接已复制，转给手机坏了的人吧。'; }
+  catch { out.textContent = '请复制这个地址：' + location.href.split('#')[0]; }
+}));
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('input[required]')].find((i) => !i.checkValidity());
+    form.querySelectorAll('input[required]').forEach((i) => i.toggleAttribute('aria-invalid', !i.checkValidity()));
+    if (bad) { bad.setAttribute('aria-describedby', help.id); help.textContent = bad.type === 'email' ? '这个地址看起来不完整。请写成 name@example.com 的格式。' : '请先在横线上写下你的名字。'; bad.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '什么都没有发送：这个表单尚未接入请愿。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '你的名字已经写上请愿书。' : '发送未成功，请稍后再试一次。'; })
+      .catch(() => { help.textContent = '发送未成功，请稍后再试一次。'; });
+  });
+});
+  </script>
+  <script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Closewise：每晚把银行账户与账簿逐一对平</title>
+<meta name="description" content="Closewise 每晚把每个银行账户与你的账簿核对一遍，在月末前标出每一笔不符，适合 3 到 30 人的财务团队。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600&family=Wix+Madefor+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="scene.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav" data-nav>
+  <div class="container nav__in">
+    <a class="wordmark" href="#top" aria-label="Closewise，首页"><span class="wordmark__dot" aria-hidden="true"></span>Closewise</a>
+    <nav class="nav__links" aria-label="主菜单">
+      <a href="#matching">对账</a>
+      <a href="#mornings">清晨</a>
+      <a href="#october">十月</a>
+    </nav>
+    <div class="nav__end">
+      <a class="nav__login" href="#walkthrough">登录</a>
+      <a class="btn btn--sm" href="#walkthrough">预约演示导览</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="hero__ground" aria-hidden="true">
+    <img class="photo hero__photo" src="photos/fog.jpg" width="1920" height="1254" alt="" fetchpriority="high">
+    <div class="hero__scrim"></div>
+  </div>
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <h1 id="hero-head">月末，早已对平。</h1>
+      <p class="lead">你睡觉的时候，Closewise 把每个银行账户与账簿核对一遍。</p>
+      <form class="join" data-endpoint="" aria-label="预约演示导览" novalidate>
+        <label class="visually-hidden" for="hero-email">工作邮箱</label>
+        <input id="hero-email" name="email" type="email" autocomplete="email" placeholder="工作邮箱" required>
+        <button class="btn" type="submit">预约演示导览</button>
+      </form>
+      <p class="hero__fine">适合 3 到 30 人的财务团队。</p>
+    </div>
+
+    <div class="glass run" data-slot="hero" data-alt="昨晚的运行：每个账户都已核对，一笔刷卡付款仍开放，附差额">
+      <div class="run__head">
+        <div>
+          <p class="run__title">昨晚的运行</p>
+          <p class="run__meta">10 月 14 日 周三，<span class="num">02:14</span> 完成</p>
+        </div>
+        <p class="chip"><span class="chip__dot" aria-hidden="true"></span><span class="num" data-count="1286">1,286</span> 行已对上</p>
+      </div>
+      <ul class="accts" aria-label="昨晚核对的账户，示例">
+        <li class="acct" style="--d:0"><span class="acct__mark" aria-hidden="true">O</span><span class="acct__name">运营账户<span class="acct__sub"><span class="num">412</span> 行</span></span><span class="acct__state is-ok">已对上</span><span class="acct__bal num">184,220<span class="c">.18</span></span></li>
+        <li class="acct" style="--d:1"><span class="acct__mark" aria-hidden="true">P</span><span class="acct__name">工资账户<span class="acct__sub"><span class="num">38</span> 行</span></span><span class="acct__state is-ok">已对上</span><span class="acct__bal num">62,400<span class="c">.00</span></span></li>
+        <li class="acct is-open" style="--d:2"><span class="acct__mark" aria-hidden="true">C</span><span class="acct__name">刷卡账户<span class="acct__sub"><span class="num">129</span> 行</span></span><span class="acct__state">1 笔未平</span><span class="acct__bal num">8,915<span class="c">.42</span></span></li>
+        <li class="acct" style="--d:3"><span class="acct__mark" aria-hidden="true">S</span><span class="acct__name">备付账户<span class="acct__sub"><span class="num">2</span> 行</span></span><span class="acct__state is-ok">已对上</span><span class="acct__bal num">250,000<span class="c">.00</span></span></li>
+        <li class="acct" style="--d:4"><span class="acct__mark" aria-hidden="true">E</span><span class="acct__name">欧元账户<span class="acct__sub"><span class="num">17</span> 行</span></span><span class="acct__state is-ok">已对上</span><span class="acct__bal num">€41,380<span class="c">.90</span></span></li>
+      </ul>
+      <a class="run__flag" href="#matching">
+        <span class="run__flag-dot" aria-hidden="true"></span>
+        <span>Example Hosting，<span class="num">1,200<span class="c">.00</span></span> 对账簿中的 <span class="num">1,020<span class="c">.00</span></span></span>
+        <span class="run__flag-go">查看</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="sec tour" id="matching" aria-labelledby="tour-head">
+  <div class="container tour__grid">
+    <div class="tour__text">
+      <h2 id="tour-head">清晨即已对平。</h2>
+      <p class="lead">每晚四个作业，跑遍每个账户。</p>
+      <div class="tabs" role="tablist" aria-label="每晚运行什么" data-tabs>
+        <button class="tab" role="tab" type="button" id="t-match" aria-selected="true" aria-controls="p-match"><span class="tab__name">对账</span><span class="tab__line"><span>每条银行流水按金额、日期和摘要对上账簿分录。</span></span></button>
+        <button class="tab" role="tab" type="button" id="t-flag" aria-selected="false" aria-controls="p-flag" tabindex="-1"><span class="tab__name">标记</span><span class="tab__line"><span>对不上的流水，把两边和差额一起摆出来。</span></span></button>
+        <button class="tab" role="tab" type="button" id="t-rule" aria-selected="false" aria-controls="p-rule" tabindex="-1"><span class="tab__name">规则</span><span class="tab__line"><span>手续费或批量只需教它一次，剩下的它自己入账。</span></span></button>
+        <button class="tab" role="tab" type="button" id="t-close" aria-selected="false" aria-controls="p-close" tabindex="-1"><span class="tab__name">关账</span><span class="tab__line"><span>每个账户，都核对到昨晚。</span></span></button>
+      </div>
+    </div>
+
+    <div class="tour__stage">
+      <div class="glass pane" role="tabpanel" id="p-match" aria-labelledby="t-match" tabindex="0">
+        <div class="pane__head"><p class="pane__title">刷卡账户，10 月 13 日</p><p class="pane__meta"><span class="num">6</span>/<span class="num">7</span> 已对上</p></div>
+        <table class="pairs">
+          <caption class="visually-hidden">银行流水与账簿分录，示例</caption>
+          <thead><tr><th scope="col">银行流水</th><th scope="col" class="r">金额</th><th scope="col"><span class="visually-hidden">状态</span></th><th scope="col">账簿分录</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Example Client</th><td class="num r">3,200<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>发票 2041</td></tr>
+            <tr><th scope="row">Example Payroll</th><td class="num r">−8,450<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>工资，10 月</td></tr>
+            <tr class="is-open"><th scope="row">Example Hosting</th><td class="num r">−1,200<span class="c">.00</span></td><td class="gap" aria-label="对不上"></td><td>托管费，10 月 <span class="num">−1,020<span class="c">.00</span></span></td></tr>
+            <tr><th scope="row">Example Bank</th><td class="num r">−12<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>银行手续费</td></tr>
+            <tr><th scope="row">Example Client Co</th><td class="num r">900<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>发票 2043</td></tr>
+            <tr><th scope="row">Example Insurance</th><td class="num r">−300<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>保险，10 月</td></tr>
+            <tr><th scope="row">Example Supplies</th><td class="num r">−64<span class="c">.00</span></td><td class="tick" aria-label="已对上"></td><td>办公用品</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="glass pane" role="tabpanel" id="p-flag" aria-labelledby="t-flag" tabindex="0" hidden>
+        <div class="pane__head"><p class="pane__title">10 月 14 日标记</p><p class="pane__meta">等你处理</p></div>
+        <div class="sides">
+          <div class="side"><p class="side__label">银行</p><p class="side__name">Example Hosting</p><p class="side__meta">刷卡付款，10 月 13 日</p><p class="side__fig num">1,200<span class="c">.00</span></p></div>
+          <div class="side"><p class="side__label">账簿</p><p class="side__name">托管费，10 月</p><p class="side__meta">10 月 13 日入账</p><p class="side__fig num">1,020<span class="c">.00</span></p></div>
+        </div>
+        <div class="diff"><p>差额</p><p class="diff__fig num">180<span class="c">.00</span></p></div>
+        <div class="pane__acts"><button class="btn btn--sm" type="button">将 180.00 作为手续费入账</button><button class="btn btn--ghost btn--sm" type="button">写条备注</button></div>
+      </div>
+
+      <div class="glass pane" role="tabpanel" id="p-rule" aria-labelledby="t-rule" tabindex="0" hidden>
+        <div class="pane__head"><p class="pane__title">规则</p><p class="pane__meta"><span class="num">3</span> 条开启，本月用了 <span class="num">214</span> 次</p></div>
+        <ul class="rules">
+          <li><span class="rule__text">低于 <span class="num">25<span class="c">.00</span></span> 的刷卡手续费计入银行手续费</span><span class="switch is-on" role="img" aria-label="开"></span></li>
+          <li><span class="rule__text">工资批量按摘要对账</span><span class="switch is-on" role="img" aria-label="开"></span></li>
+          <li><span class="rule__text">欧元转账在 <span class="num">0<span class="c">.50</span></span> 以内即对上</span><span class="switch is-on" role="img" aria-label="开"></span></li>
+          <li><span class="rule__text">退款与其原扣款配对</span><span class="switch" role="img" aria-label="关"></span></li>
+        </ul>
+      </div>
+
+      <div class="glass pane" role="tabpanel" id="p-close" aria-labelledby="t-close" tabindex="0" hidden>
+        <div class="pane__head"><p class="pane__title">10 月关账</p><p class="pane__meta">已核对到 10 月 <span class="num">29</span> 日</p></div>
+        <ul class="close">
+          <li><span>运营账户</span><span class="bar" style="--p:100%"></span><span class="num">29/29</span></li>
+          <li><span>工资账户</span><span class="bar" style="--p:100%"></span><span class="num">29/29</span></li>
+          <li class="is-open"><span>刷卡账户</span><span class="bar" style="--p:93%"></span><span class="num">27/29</span></li>
+          <li><span>备付账户</span><span class="bar" style="--p:100%"></span><span class="num">29/29</span></li>
+          <li><span>欧元账户</span><span class="bar" style="--p:100%"></span><span class="num">29/29</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec mornings" id="mornings" aria-labelledby="morn-head">
+  <div class="container">
+    <div class="sec__head">
+      <h2 id="morn-head">你的清晨只需两分钟。</h2>
+      <p class="lead">七点一条简报，只剩需要人来处理的流水。</p>
+    </div>
+    <div class="wells">
+      <figure class="well">
+        <div class="well__stage">
+          <div class="note" data-slot="note" data-alt="你七点的简报：夜里对上了什么，以及留下的那一笔">
+            <div class="note__head"><span class="note__from"><span class="wordmark__dot" aria-hidden="true"></span>Closewise</span><span class="note__time num">07:00</span></div>
+            <p class="note__title">夜里：<span class="num">1,286</span> 笔已对上，<span class="num">1</span> 笔未平</p>
+            <p class="note__body">刷卡账户有一笔付款与账簿相差 <span class="num">180<span class="c">.00</span></span>。</p>
+            <p class="note__link">打开这条标记</p>
+          </div>
+        </div>
+        <figcaption><span class="well__title">七点的简报</span>夜里对上的，和没对上的。</figcaption>
+      </figure>
+      <figure class="well">
+        <div class="well__stage">
+          <div class="hand" data-slot="assign" data-alt="把一条标记连同备注和截止日期交给同事">
+            <p class="hand__title">Example Hosting <span class="num">180<span class="c">.00</span></span></p>
+            <div class="hand__row"><span class="who" aria-hidden="true">AM</span><span><b>已指派给 Alex</b><span class="hand__meta">31 日前完成</span></span></div>
+            <p class="hand__msg">“看起来像年度加购项。能查一下这张发票吗？”</p>
+            <div class="hand__acts"><span class="pill pill--on">已指派</span><span class="pill">标记已清掉</span></div>
+          </div>
+        </div>
+        <figcaption><span class="well__title">交到对的人手里</span>标记带着备注，跟着清掉它的人走。</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="sec month" id="october" aria-labelledby="month-head">
+  <div class="container">
+    <div class="sec__head">
+      <h2 id="month-head">十月，一晚一晚。</h2>
+      <p class="lead">每晚都跑了。标记 3 次，还有 1 笔未平。</p>
+    </div>
+    <div class="month__stage"><div class="glass strip" role="img" aria-label="10 月运行，示例：跑了 29 晚，3 日、14 日和 22 日有标记，14 日那笔仍未平，30 日和 31 日还没跑">
+      <span class="night" style="--h:85%" data-tip="10 月 1 日：468 行"><i></i><b class="num">1</b></span>
+      <span class="night" style="--h:94%" data-tip="10 月 2 日：533 行"><i></i><b class="num">2</b></span>
+      <span class="night is-flag" style="--h:38%" data-tip="10 月 3 日：139 行，标记 24.00 已清掉"><i></i><b class="num">3</b></span>
+      <span class="night" style="--h:38%" data-tip="10 月 4 日：143 行"><i></i><b class="num">4</b></span>
+      <span class="night" style="--h:95%" data-tip="10 月 5 日：538 行"><i></i><b class="num">5</b></span>
+      <span class="night" style="--h:92%" data-tip="10 月 6 日：522 行"><i></i><b class="num">6</b></span>
+      <span class="night" style="--h:100%" data-tip="10 月 7 日：575 行"><i></i><b class="num">7</b></span>
+      <span class="night" style="--h:87%" data-tip="10 月 8 日：486 行"><i></i><b class="num">8</b></span>
+      <span class="night" style="--h:88%" data-tip="10 月 9 日：489 行"><i></i><b class="num">9</b></span>
+      <span class="night" style="--h:38%" data-tip="10 月 10 日：142 行"><i></i><b class="num">10</b></span>
+      <span class="night" style="--h:34%" data-tip="10 月 11 日：111 行"><i></i><b class="num">11</b></span>
+      <span class="night" style="--h:88%" data-tip="10 月 12 日：492 行"><i></i><b class="num">12</b></span>
+      <span class="night" style="--h:96%" data-tip="10 月 13 日：548 行"><i></i><b class="num">13</b></span>
+      <span class="night is-flag is-open" style="--h:84%" data-tip="10 月 14 日：464 行，标记 180.00 未平"><i></i><b class="num">14</b></span>
+      <span class="night" style="--h:95%" data-tip="10 月 15 日：539 行"><i></i><b class="num">15</b></span>
+      <span class="night" style="--h:91%" data-tip="10 月 16 日：512 行"><i></i><b class="num">16</b></span>
+      <span class="night" style="--h:34%" data-tip="10 月 17 日：114 行"><i></i><b class="num">17</b></span>
+      <span class="night" style="--h:36%" data-tip="10 月 18 日：124 行"><i></i><b class="num">18</b></span>
+      <span class="night" style="--h:95%" data-tip="10 月 19 日：542 行"><i></i><b class="num">19</b></span>
+      <span class="night" style="--h:99%" data-tip="10 月 20 日：566 行"><i></i><b class="num">20</b></span>
+      <span class="night" style="--h:90%" data-tip="10 月 21 日：505 行"><i></i><b class="num">21</b></span>
+      <span class="night is-flag" style="--h:90%" data-tip="10 月 22 日：505 行，标记 90.00 已清掉"><i></i><b class="num">22</b></span>
+      <span class="night" style="--h:97%" data-tip="10 月 23 日：554 行"><i></i><b class="num">23</b></span>
+      <span class="night" style="--h:33%" data-tip="10 月 24 日：102 行"><i></i><b class="num">24</b></span>
+      <span class="night" style="--h:34%" data-tip="10 月 25 日：111 行"><i></i><b class="num">25</b></span>
+      <span class="night" style="--h:87%" data-tip="10 月 26 日：484 行"><i></i><b class="num">26</b></span>
+      <span class="night" style="--h:99%" data-tip="10 月 27 日：567 行"><i></i><b class="num">27</b></span>
+      <span class="night" style="--h:99%" data-tip="10 月 28 日：571 行"><i></i><b class="num">28</b></span>
+      <span class="night is-last" style="--h:89%" data-tip="10 月 29 日：496 行，昨晚"><i></i><b class="num">29</b></span>
+      <span class="night is-next" style="--h:100%" data-tip="10 月 30 日：今晚"><i></i><b class="num">30</b></span>
+      <span class="night is-next" style="--h:100%" data-tip="10 月 31 日：月末"><i></i><b class="num">31</b></span>
+    </div></div>
+    <dl class="tally">
+      <div><dt>已对上行数</dt><dd class="num">11,942</dd></div>
+      <div><dt>标记次数</dt><dd class="num">3</dd></div>
+      <div><dt>仍未平</dt><dd class="num is-open">180<span class="c">.00</span></dd></div>
+      <div><dt>距关账天数</dt><dd class="num">2</dd></div>
+    </dl>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot" id="walkthrough">
+  <section class="close-band" aria-labelledby="book-head">
+    <img class="photo close-band__photo" src="photos/estuary.jpg" width="1920" height="1280" alt="黄昏时分平静的河口，小船泊在缆位上，天空一片琥珀色" loading="lazy">
+    <div class="close-band__scrim" aria-hidden="true"></div>
+    <div class="container close-band__in">
+      <div class="glass book">
+        <h2 id="book-head">从容关上十月。</h2>
+        <p class="lead">一个月的演示导览，从第一次运行到关账。</p>
+        <form class="join join--dark" data-endpoint="" aria-labelledby="book-head" novalidate>
+          <label class="visually-hidden" for="book-email">工作邮箱</label>
+          <input id="book-email" name="email" type="email" autocomplete="email" placeholder="工作邮箱" required>
+          <button class="btn" type="submit">预约演示导览</button>
+        </form>
+      </div>
+    </div>
+  </section>
+  <div class="container foot__base">
+    <p class="wordmark"><span class="wordmark__dot" aria-hidden="true"></span>Closewise</p>
+    <nav class="foot__links" aria-label="页脚"><a href="#top">昨晚</a><a href="#matching">对账</a><a href="#mornings">清晨</a><a href="#october">十月</a><a href="#walkthrough">演示导览</a></nav>
+    <p class="foot__legal">&copy; 2026 Closewise</p>
+    <p class="foot__credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Vallee-brouillard.jpg">Thomas Bresson</a> (CC BY 3.0), <a href="https://commons.wikimedia.org/wiki/File:Conwy_Estuary_at_dusk_-_geograph.org.uk_-_4556293.jpg">Matt Harrop</a> (CC BY-SA 2.0), Wikimedia Commons.</p>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

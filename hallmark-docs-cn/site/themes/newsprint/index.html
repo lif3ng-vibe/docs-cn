@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Lantern：Hebden Bridge 新闻，每周一封邮件</title>
+  <meta name="description" content="The Lantern 是一份面向 Hebden Bridge 的每周本地新闻通讯，4,800 位订阅者免费阅读，由选择每月 5 英镑支持它的读者买单。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@700&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body id="top">
+  <a class="skip" href="#main">跳到正文</a>
+
+  <header class="folio">
+    <div class="container">
+      <div class="folio__bar">
+        <a class="wordmark" href="#top" aria-label="The Lantern，首页">The Lantern</a>
+        <p class="folio__dateline">Hebden Bridge，每周，经邮件送达</p>
+        <nav class="folio__links" aria-label="页面">
+          <a href="#edition">本期内容</a>
+          <a href="#who-pays">谁在买单</a>
+          <a class="btn btn--primary btn--sm" href="#subscribe">免费订阅</a>
+        </nav>
+      </div>
+      <hr class="rule--double">
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-head">
+      <div class="container hero__sheet">
+        <h1 id="hero-head">Hebden Bridge 的一周。</h1>
+        <hr class="rule--double hero__rule">
+        <div class="hero__col">
+          <p class="hero__deck">本地新闻装进一封邮件，免费阅读，由读者支持。</p>
+          <nav class="hero__inside" aria-label="每期栏目">
+            <p>每期栏目</p>
+            <ul>
+              <li><a href="#edition" data-tab="t-plan">规划</a></li>
+              <li><a href="#edition" data-tab="t-council">镇议会</a></li>
+              <li><a href="#edition" data-tab="t-on">活动一览</a></li>
+              <li><a href="#edition" data-tab="t-letters">读者来信</a></li>
+            </ul>
+          </nav>
+          <div class="hero__box">
+            <form class="signup signup--box" id="subscribe" data-endpoint="" novalidate>
+              <h2 class="hero__ask">每周准时送达。</h2>
+              <label for="s-email">你的邮箱地址</label>
+              <input id="s-email" name="email" type="email" inputmode="email" autocomplete="email" required>
+              <button class="btn btn--primary btn--block" type="submit">免费订阅</button>
+              <p class="signup__help" id="s-help" aria-live="polite"></p>
+            </form>
+            <p class="hero__terms">加入 4,800 位读者。默认免费，除非你选择支持。</p>
+          </div>
+        </div>
+        <figure class="hero__lead">
+          <div class="photo hero__photo" data-slot="lead" data-alt="你自己拍的 Hebden Bridge 头图照片：山谷里的小镇、雨中的街道、运河；黑白">
+            <img src="photos/hebden-bridge-53190059068-1920.jpg" width="2407" height="3009"
+                 alt="一条窄船泊在运河上，背后是高大的石砌磨坊" style="object-position: 50% 58%" fetchpriority="high">
+          </div>
+          <figcaption>Hebden Bridge：运河上的窄船，磨坊之下。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="edition" id="edition" aria-labelledby="edition-head">
+      <div class="container">
+        <div class="edition__head">
+          <h2 id="edition-head">一期样刊。</h2>
+          <p class="lead">每周四个栏目。任选一个。</p>
+        </div>
+        <div class="switch" data-switch>
+          <div class="tabs" role="tablist" aria-label="本期栏目">
+            <button role="tab" id="t-plan" aria-controls="p-plan" aria-selected="true">规划</button>
+            <button role="tab" id="t-council" aria-controls="p-council" aria-selected="false" tabindex="-1">镇议会</button>
+            <button role="tab" id="t-on" aria-controls="p-on" aria-selected="false" tabindex="-1">活动一览</button>
+            <button role="tab" id="t-letters" aria-controls="p-letters" aria-selected="false" tabindex="-1">读者来信</button>
+          </div>
+
+          <section class="panel" role="tabpanel" id="p-plan" aria-labelledby="t-plan">
+            <div class="panel__intro">
+              <h3 class="panel__name">规划</h3>
+              <p>每一份申请，以及去哪里提意见。</p>
+            </div>
+            <ol class="items">
+              <li class="items__lead"><h4>老磨坊楼面上的公寓</h4><p>方案是什么，以及如何表达你的意见。</p></li>
+              <li><h4>一栋排屋的后扩建</h4><a href="#subscribe">阅读方案</a></li>
+              <li><h4>保护区里的一扇老虎窗</h4><a href="#subscribe">阅读方案</a></li>
+              <li><h4>河边要移除的一棵树</h4><a href="#subscribe">阅读方案</a></li>
+            </ol>
+          </section>
+
+          <section class="panel" role="tabpanel" id="p-council" aria-labelledby="t-council">
+            <div class="panel__intro">
+              <h3 class="panel__name">镇议会</h3>
+              <p>议定了什么，接下来又有什么。</p>
+            </div>
+            <ol class="items">
+              <li class="items__lead"><h4>会议议定了什么</h4><p>每项表决一行带过，其余看会议记录。</p></li>
+              <li><h4>下一场议程，逐项列出</h4><a href="#subscribe">阅读议程</a></li>
+              <li><h4>一位读者的问题，有了回应</h4><a href="#subscribe">阅读回应</a></li>
+            </ol>
+          </section>
+
+          <section class="panel" role="tabpanel" id="p-on" aria-labelledby="t-on">
+            <div class="panel__intro">
+              <h3 class="panel__name">活动一览</h3>
+              <p>周末活动单，从市政厅到酒馆。</p>
+            </div>
+            <div class="days">
+              <div><h4>周五</h4><ul><li>电影之夜</li><li>酒馆里的现场音乐</li></ul></div>
+              <div><h4>周六</h4><ul><li>集市</li><li>从车站走上来的徒步</li><li>问答之夜</li></ul></div>
+              <div><h4>周日</h4><ul><li>图书馆的一场讲座</li><li>礼拜堂里的合唱</li></ul></div>
+            </div>
+          </section>
+
+          <section class="panel" role="tabpanel" id="p-letters" aria-labelledby="t-letters">
+            <div class="panel__intro">
+              <h3 class="panel__name">读者来信</h3>
+              <p>读者直接回信，回应上一期内容。</p>
+            </div>
+            <ol class="items">
+              <li class="items__lead"><h4>关于磨坊公寓</h4><p>磨坊的邻居谈停车、采光与河流。</p></li>
+              <li><h4>关于集市日的交通</h4><a href="#subscribe">阅读来信</a></li>
+              <li><h4>关于图书馆的开放时间</h4><a href="#subscribe">阅读来信</a></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="street" aria-labelledby="street-head">
+      <div class="container">
+        <div class="street__head">
+          <h2 id="street-head">用双脚跑出来的报道。</h2>
+          <p class="lead">雨、排队和灯柱上的告示：小镇怎样生活，这一周就怎样记录。</p>
+        </div>
+        <figure class="street__wide">
+          <div class="photo" data-slot="street" data-alt="你自己拍的 Hebden Bridge 平日街景：人们的背影；黑白">
+            <img src="photos/english-queue-flickr-gagilas-1920.jpg" width="3224" height="2102" loading="lazy"
+                 alt="湿漉漉的街道上，人们撑着伞在路口等待" style="object-position: 50% 55%">
+          </div>
+          <figcaption>雨中，在路口等待。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="front" id="who-pays" aria-labelledby="front-head">
+      <div class="container">
+        <div class="front__sheet">
+          <hr class="rule--double">
+          <h2 id="front-head">谁在为 The Lantern 买单。</h2>
+          <p class="front__dateline">Hebden Bridge</p>
+          <div class="cols">
+            <p class="dropcap">The Lantern 每周走进 Hebden Bridge 的 4,800 个收件箱，没有人需要付费阅读。</p>
+            <p>报道这座小镇的成本，由选择每月 £5 支持它的读者承担。</p>
+            <p>不付费的读者收到同一封邮件，同一天送达。</p>
+          </div>
+          <dl class="score">
+            <div><dt>位订阅者，每周</dt><dd>4,800</dd></div>
+            <div><dt>阅读每一期的价格</dt><dd>£0</dd></div>
+            <div><dt>每个月，来自选择支持的人</dt><dd>£5</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="notice" id="support" aria-labelledby="notice-head">
+      <div class="container notice__grid">
+        <div class="notice__text">
+          <h2 id="notice-head">免费读，或者让它亮着。</h2>
+          <p class="lead">无论哪种，同一封邮件，同一天到。</p>
+        </div>
+        <form class="offer" data-endpoint="" novalidate>
+          <fieldset class="offer__choice">
+            <legend class="visually-hidden">你的订阅方式</legend>
+            <input type="radio" name="plan" id="o-free" value="free" checked data-label="免费订阅" data-done="下一期将发送到 {email}。">
+            <label for="o-free"><span class="offer__fig">免费</span><span class="offer__line">完整一期，每周送达。</span></label>
+            <input type="radio" name="plan" id="o-support" value="support" data-label="以每月 £5 支持它" data-done="我们会发邮件到 {email}，为你设置每月 5 英镑的支持。">
+            <label for="o-support"><span class="offer__fig">£5 <small>每月</small></span><span class="offer__line">同一封邮件，报道有了着落。</span></label>
+          </fieldset>
+          <label class="offer__label" for="p-email">你的邮箱地址</label>
+          <div class="offer__row">
+            <input id="p-email" name="email" type="email" inputmode="email" autocomplete="email" required>
+            <button class="btn btn--paper" type="submit" data-offer-btn>免费订阅</button>
+          </div>
+          <p class="signup__help" id="p-help" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="imprint">
+    <div class="container">
+      <div class="imprint__grid">
+        <p class="imprint__name">The Lantern</p>
+        <p class="imprint__line">一份写给 Hebden Bridge 的每周本地新闻邮件，免费阅读，由读者支持。</p>
+        <nav class="imprint__links" aria-label="页脚">
+          <a href="#subscribe">免费订阅</a>
+          <a href="#support">支持它</a>
+          <a href="#edition">本期内容</a>
+        </nav>
+      </div>
+      <p class="imprint__credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Hebden_Bridge_-_53190059068.jpg">Tim Green</a> (CC BY 2.0), <a href="https://commons.wikimedia.org/wiki/File:English_queue_-_Flickr_-_gagilas.jpg">Petras Gagilas</a> (CC BY-SA 2.0), both via Wikimedia Commons. © 2026 The Lantern.</p>
+    </div>
+  </footer>
+
+  <script>
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+
+/* the edition's parts: tabs move with the arrow keys; without script every part shows in order */
+document.querySelectorAll('[data-switch]').forEach((sw) => {
+  const tabs = [...sw.querySelectorAll('[role="tab"]')];
+  const show = (t, focus) => {
+    tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; });
+    if (focus) t.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t));
+    t.addEventListener('keydown', (e) => {
+      const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length], true); }
+      if (e.key === 'Home') { e.preventDefault(); show(tabs[0], true); }
+      if (e.key === 'End') { e.preventDefault(); show(tabs[tabs.length - 1], true); }
+    });
+  });
+  show(tabs[0]);
+  document.querySelectorAll('[data-tab]').forEach((a) => a.addEventListener('click', () => { const t = document.getElementById(a.dataset.tab); if (t) show(t); }));
+});
+
+/* the close: the button names the choice */
+document.querySelectorAll('.offer').forEach((f) => {
+  const btn = f.querySelector('[data-offer-btn]');
+  f.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener('change', () => { btn.textContent = r.dataset.label; f.dataset.done = r.dataset.done; }));
+  f.dataset.done = f.querySelector('input[name="plan"]:checked').dataset.done;
+});
+
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const input = form.querySelector('input[type="email"]'), help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ok = input.checkValidity();
+    input.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '这个地址看起来不完整。请写成 name@example.com 的格式。'; input.focus(); return; }
+    input.removeAttribute('aria-describedby');
+    if (!form.dataset.endpoint) { help.textContent = '什么都没有发送：这个表单尚未接入邮件列表。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? (form.dataset.done || '下一期将发送到 {email}。').replace('{email}', input.value.trim()) : '发送未成功，请稍后再试一次。'; })
+      .catch(() => { help.textContent = '发送未成功，请稍后再试一次。'; });
+  });
+});
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reelcut，把长访谈剪成带字幕的短片</title>
+<meta name="description" content="Reelcut 为小型视频团队把长访谈剪成适合社交平台的带字幕短片。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@100,400;100,500;125,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<div class="banner">
+  <div class="container banner__in">
+    <p>你硬盘里那段长访谈，够剪出一周的帖子。</p>
+    <a href="#start">拿你的试试</a>
+  </div>
+</div>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="wordmark" href="#main" aria-label="Reelcut，首页">Reelcut</a>
+    <nav aria-label="主导航">
+      <ul class="bar__links">
+        <li><a href="#steps">剪辑方式</a></li>
+        <li><a href="#captions">字幕</a></li>
+        <li><a href="#questions">常见问题</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn--secondary btn--small" href="#start">剪一支访谈</a>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero__in">
+    <div class="hero__text settle">
+      <h1 id="hero-title">一支访谈，一周的短片。</h1>
+      <p class="lead">Reelcut 把长访谈剪成适合社交平台的带字幕短片。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#start">剪一支访谈</a>
+        <a class="btn btn--secondary" href="#steps">看看怎么剪</a>
+      </div>
+    </div>
+
+    <div class="app" data-slot="hero" data-alt="Reelcut 的项目界面：一条长访谈放在时间线上，从中剪出三支短片">
+      <div class="app__top">
+        <span class="app__title">创始人访谈，完整素材</span>
+        <span class="app__meta">示例工作室</span>
+      </div>
+      <div class="app__source">
+        <div class="app__row">
+          <span>源素材</span>
+          <span class="num">58:14</span>
+        </div>
+        <div class="track" role="img" aria-label="一条 58 分钟的语音时间线，标出了三个片段">
+          <svg class="track__wave" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20 L0.0 18.9 L2.5 18.9 L5.0 18.9 L7.5 13.8 L10.0 8.4 L12.5 9.5 L15.0 12.3 L17.5 7.9 L20.0 12.9 L22.5 9.5 L25.0 13.7 L27.5 14.1 L30.0 11.4 L32.5 7.9 L35.0 15.1 L37.5 14.2 L40.0 10.0 L42.5 6.5 L45.0 9.6 L47.5 10.8 L50.0 4.5 L52.5 13.2 L55.0 4.8 L57.5 10.4 L60.0 12.0 L62.5 12.8 L65.0 11.7 L67.5 7.7 L70.0 15.2 L72.5 12.6 L75.0 13.4 L77.5 17.3 L80.0 16.7 L82.5 18.6 L85.0 18.6 L87.5 18.6 L90.0 17.1 L92.5 18.9 L95.0 18.9 L97.5 18.9 L100.0 17.2 L102.5 18.0 L105.0 12.6 L107.5 13.2 L110.0 17.5 L112.5 14.3 L115.0 15.1 L117.5 12.1 L120.0 14.0 L122.5 18.6 L125.0 12.6 L127.5 18.6 L130.0 18.6 L132.5 15.1 L135.0 18.6 L137.5 16.5 L140.0 18.6 L142.5 12.6 L145.0 10.3 L147.5 10.8 L150.0 6.5 L152.5 11.0 L155.0 6.3 L157.5 6.7 L160.0 6.5 L162.5 7.7 L165.0 4.2 L167.5 3.7 L170.0 9.1 L172.5 7.9 L175.0 14.6 L177.5 8.9 L180.0 9.9 L182.5 6.7 L185.0 18.9 L187.5 18.9 L190.0 18.9 L192.5 8.9 L195.0 14.8 L197.5 10.0 L200.0 12.6 L202.5 12.9 L205.0 13.6 L207.5 7.0 L210.0 14.0 L212.5 13.8 L215.0 13.5 L217.5 10.1 L220.0 18.6 L222.5 16.9 L225.0 17.1 L227.5 14.7 L230.0 16.0 L232.5 15.9 L235.0 18.6 L237.5 18.6 L240.0 18.6 L242.5 14.2 L245.0 12.7 L247.5 18.6 L250.0 18.6 L252.5 17.8 L255.0 17.4 L257.5 14.8 L260.0 13.9 L262.5 17.4 L265.0 18.6 L267.5 16.8 L270.0 17.7 L272.5 16.1 L275.0 12.4 L277.5 18.9 L280.0 18.9 L282.5 18.9 L285.0 13.2 L287.5 18.3 L290.0 8.6 L292.5 8.5 L295.0 6.2 L297.5 5.8 L300.0 8.9 L302.5 8.2 L305.0 10.7 L307.5 5.4 L310.0 11.4 L312.5 11.8 L315.0 11.2 L317.5 12.4 L320.0 11.5 L322.5 15.1 L325.0 16.3 L327.5 15.3 L330.0 16.0 L332.5 13.4 L335.0 16.5 L337.5 7.8 L340.0 9.9 L342.5 14.1 L345.0 12.7 L347.5 11.5 L350.0 11.4 L352.5 14.1 L355.0 7.5 L357.5 6.9 L360.0 13.2 L362.5 14.3 L365.0 18.6 L367.5 18.6 L370.0 18.9 L372.5 18.9 L375.0 18.9 L377.5 18.6 L380.0 18.6 L382.5 15.2 L385.0 18.6 L387.5 18.6 L390.0 17.2 L392.5 18.6 L395.0 15.6 L397.5 10.4 L400.0 11.0 L402.5 12.3 L405.0 16.5 L407.5 15.6 L410.0 17.9 L412.5 12.3 L415.0 15.1 L417.5 13.0 L420.0 17.7 L422.5 18.6 L425.0 12.7 L427.5 10.4 L430.0 11.0 L432.5 10.4 L435.0 9.1 L437.5 8.6 L440.0 12.4 L442.5 8.4 L445.0 9.0 L447.5 11.5 L450.0 11.1 L452.5 8.5 L455.0 9.0 L457.5 5.2 L460.0 3.3 L462.5 18.9 L465.0 18.9 L467.5 18.9 L470.0 6.9 L472.5 13.4 L475.0 15.2 L477.5 15.4 L480.0 15.6 L482.5 15.3 L485.0 10.8 L487.5 7.7 L490.0 7.9 L492.5 11.2 L495.0 9.4 L497.5 8.2 L500.0 15.7 L502.5 10.7 L505.0 9.2 L507.5 11.6 L510.0 13.1 L512.5 17.1 L515.0 18.6 L517.5 16.1 L520.0 18.6 L522.5 17.2 L525.0 15.6 L527.5 18.6 L530.0 18.6 L532.5 14.4 L535.0 15.6 L537.5 18.6 L540.0 18.6 L542.5 18.5 L545.0 10.3 L547.5 10.7 L550.0 17.0 L552.5 10.3 L555.0 18.9 L557.5 18.9 L560.0 18.9 L562.5 14.2 L565.0 18.6 L567.5 18.6 L570.0 10.3 L572.5 13.1 L575.0 13.7 L577.5 8.8 L580.0 12.6 L582.5 7.1 L585.0 6.4 L587.5 11.3 L590.0 9.9 L592.5 8.8 L595.0 8.8 L597.5 5.3 L600.0 8.7 L600.0 31.3 L597.5 34.7 L595.0 31.2 L592.5 31.2 L590.0 30.1 L587.5 28.7 L585.0 33.6 L582.5 32.9 L580.0 27.4 L577.5 31.2 L575.0 26.3 L572.5 26.9 L570.0 29.7 L567.5 21.4 L565.0 21.4 L562.5 25.8 L560.0 21.1 L557.5 21.1 L555.0 21.1 L552.5 29.7 L550.0 23.0 L547.5 29.3 L545.0 29.7 L542.5 21.5 L540.0 21.4 L537.5 21.4 L535.0 24.4 L532.5 25.6 L530.0 21.4 L527.5 21.4 L525.0 24.4 L522.5 22.8 L520.0 21.4 L517.5 23.9 L515.0 21.4 L512.5 22.9 L510.0 26.9 L507.5 28.4 L505.0 30.8 L502.5 29.3 L500.0 24.3 L497.5 31.8 L495.0 30.6 L492.5 28.8 L490.0 32.1 L487.5 32.3 L485.0 29.2 L482.5 24.7 L480.0 24.4 L477.5 24.6 L475.0 24.8 L472.5 26.6 L470.0 33.1 L467.5 21.1 L465.0 21.1 L462.5 21.1 L460.0 36.7 L457.5 34.8 L455.0 31.0 L452.5 31.5 L450.0 28.9 L447.5 28.5 L445.0 31.0 L442.5 31.6 L440.0 27.6 L437.5 31.4 L435.0 30.9 L432.5 29.6 L430.0 29.0 L427.5 29.6 L425.0 27.3 L422.5 21.4 L420.0 22.3 L417.5 27.0 L415.0 24.9 L412.5 27.7 L410.0 22.1 L407.5 24.4 L405.0 23.5 L402.5 27.7 L400.0 29.0 L397.5 29.6 L395.0 24.4 L392.5 21.4 L390.0 22.8 L387.5 21.4 L385.0 21.4 L382.5 24.8 L380.0 21.4 L377.5 21.4 L375.0 21.1 L372.5 21.1 L370.0 21.1 L367.5 21.4 L365.0 21.4 L362.5 25.7 L360.0 26.8 L357.5 33.1 L355.0 32.5 L352.5 25.9 L350.0 28.6 L347.5 28.5 L345.0 27.3 L342.5 25.9 L340.0 30.1 L337.5 32.2 L335.0 23.5 L332.5 26.6 L330.0 24.0 L327.5 24.7 L325.0 23.7 L322.5 24.9 L320.0 28.5 L317.5 27.6 L315.0 28.8 L312.5 28.2 L310.0 28.6 L307.5 34.6 L305.0 29.3 L302.5 31.8 L300.0 31.1 L297.5 34.2 L295.0 33.8 L292.5 31.5 L290.0 31.4 L287.5 21.7 L285.0 26.8 L282.5 21.1 L280.0 21.1 L277.5 21.1 L275.0 27.6 L272.5 23.9 L270.0 22.3 L267.5 23.2 L265.0 21.4 L262.5 22.6 L260.0 26.1 L257.5 25.2 L255.0 22.6 L252.5 22.2 L250.0 21.4 L247.5 21.4 L245.0 27.3 L242.5 25.8 L240.0 21.4 L237.5 21.4 L235.0 21.4 L232.5 24.1 L230.0 24.0 L227.5 25.3 L225.0 22.9 L222.5 23.1 L220.0 21.4 L217.5 29.9 L215.0 26.5 L212.5 26.2 L210.0 26.0 L207.5 33.0 L205.0 26.4 L202.5 27.1 L200.0 27.4 L197.5 30.0 L195.0 25.2 L192.5 31.1 L190.0 21.1 L187.5 21.1 L185.0 21.1 L182.5 33.3 L180.0 30.1 L177.5 31.1 L175.0 25.4 L172.5 32.1 L170.0 30.9 L167.5 36.3 L165.0 35.8 L162.5 32.3 L160.0 33.5 L157.5 33.3 L155.0 33.7 L152.5 29.0 L150.0 33.5 L147.5 29.2 L145.0 29.7 L142.5 27.4 L140.0 21.4 L137.5 23.5 L135.0 21.4 L132.5 24.9 L130.0 21.4 L127.5 21.4 L125.0 27.4 L122.5 21.4 L120.0 26.0 L117.5 27.9 L115.0 24.9 L112.5 25.7 L110.0 22.5 L107.5 26.8 L105.0 27.4 L102.5 22.0 L100.0 22.8 L97.5 21.1 L95.0 21.1 L92.5 21.1 L90.0 22.9 L87.5 21.4 L85.0 21.4 L82.5 21.4 L80.0 23.3 L77.5 22.7 L75.0 26.6 L72.5 27.4 L70.0 24.8 L67.5 32.3 L65.0 28.3 L62.5 27.2 L60.0 28.0 L57.5 29.6 L55.0 35.2 L52.5 26.8 L50.0 35.5 L47.5 29.2 L45.0 30.4 L42.5 33.5 L40.0 30.0 L37.5 25.8 L35.0 24.9 L32.5 32.1 L30.0 28.6 L27.5 25.9 L25.0 26.3 L22.5 30.5 L20.0 27.1 L17.5 32.1 L15.0 27.7 L12.5 30.5 L10.0 31.6 L7.5 26.2 L5.0 21.1 L2.5 21.1 L0.0 21.1 Z"/></svg>
+          <span class="track__cut" style="--at: 12%; --len: 3%"><i>1</i></span>
+          <span class="track__cut is-on" style="--at: 41%; --len: 4%"><i>2</i></span>
+          <span class="track__cut" style="--at: 77%; --len: 2.5%"><i>3</i></span>
+        </div>
+        <div class="track__scale num" aria-hidden="true"><span>0:00</span><span>15:00</span><span>30:00</span><span>45:00</span><span>58:14</span></div>
+      </div>
+      <ol class="clips">
+        <li class="clip">
+          <figure class="clip__frame" data-slot="clip-1" data-alt="第一支短片的竖屏画面">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Shure_SM7.jpg/960px-Shure_SM7.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Shure_SM7.jpg/960px-Shure_SM7.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Shure_SM7.jpg/1280px-Shure_SM7.jpg 1280w" sizes="(min-width: 60rem) 14vw, 30vw" width="3024" height="4032" alt="" fetchpriority="high" style="object-position: 50% 45%">
+            <p class="cap" data-keep>我们差点<b>没敢</b>发布。</p>
+          </figure>
+          <p class="clip__meta"><span>短片 1</span><span class="num">0:38</span></p>
+        </li>
+        <li class="clip is-on">
+          <figure class="clip__frame" data-slot="clip-2" data-alt="第二支短片的竖屏画面">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/960px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/960px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/1280px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg 1280w" sizes="(min-width: 60rem) 14vw, 30vw" width="4032" height="6048" alt="" fetchpriority="high" style="object-position: 50% 40%">
+            <p class="cap" data-keep>于是我们<b>停止招聘</b>了一年。</p>
+          </figure>
+          <p class="clip__meta"><span>短片 2</span><span class="num">0:51</span></p>
+        </li>
+        <li class="clip">
+          <figure class="clip__frame" data-slot="clip-3" data-alt="第三支短片的竖屏画面">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg/960px-Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg/960px-Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg/1280px-Neumann_U87_Condenser_Microphone_-_Studio_A%2C_In_Your_Ear_Studios.jpg 1280w" sizes="(min-width: 60rem) 14vw, 30vw" width="5184" height="3456" alt="" fetchpriority="high" style="object-position: 46% 50%">
+            <p class="cap" data-keep>去问那个真正在<b>用</b>它的人。</p>
+          </figure>
+          <p class="clip__meta"><span>短片 3</span><span class="num">0:29</span></p>
+        </li>
+      </ol>
+      <div class="app__foot">
+        <span>3 支短片，已加字幕，9:16</span>
+        <span class="app__btn">全部导出</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="steps" id="steps" aria-labelledby="steps-title">
+  <div class="container split split--5-7">
+    <div>
+      <h2 id="steps-title">从完整素材到发布短片</h2>
+      <p class="lead">你拍一个小时，Reelcut 读懂每一个字。</p>
+      <ol class="steps__list">
+        <li>
+          <h3>导入完整素材</h3>
+          <p>直接从存储卡或硬盘导入，多长都行。</p>
+        </li>
+        <li>
+          <h3>阅读它标记的时刻</h3>
+          <p>它会把素材转写成文字，并标出能独立成段的句子。</p>
+        </li>
+        <li>
+          <h3>修剪、加字幕、导出</h3>
+          <p>按词微调剪切点，然后导出所有尺寸。</p>
+        </li>
+      </ol>
+    </div>
+
+    <div class="well transcript" data-slot="transcript" data-alt="Reelcut 的转写视图，其中一段被标记">
+      <figure class="transcript__frame" data-slot="take-frame" data-alt="你自己访谈的横幅画面，停在标记时刻">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/1280px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/960px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/1280px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg/1920px-Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg 1920w" sizes="(min-width: 60rem) 50vw, 100vw" width="4032" height="6048" alt="" loading="lazy" style="object-position: 50% 30%">
+        <span class="transcript__tc num" data-keep>12:08</span>
+      </figure>
+      <div class="transcript__head">
+        <span>转写文稿</span>
+        <span class="num">12:02 至 13:10</span>
+      </div>
+      <div class="line"><span class="line__t num">12:02</span><span class="line__who">主持人</span><p>资金吃紧时，最先改变的是什么？</p></div>
+      <div class="line is-marked">
+        <span class="line__t num">12:08</span><span class="line__who">嘉宾</span>
+        <p>说实话？我们停止招聘了一年。每人都干两份活，产品反而因此变好了。</p>
+      </div>
+      <div class="line"><span class="line__t num">12:59</span><span class="line__who">主持人</span><p>有人离职吗？</p></div>
+      <div class="transcript__foot">
+        <span>标记时刻，0:51</span>
+        <span class="app__btn">生成短片</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="captions" id="captions" aria-labelledby="captions-title">
+  <div class="container split split--4-8">
+    <div class="split__text">
+      <h2 id="captions-title">字幕取自转写文稿</h2>
+      <p class="lead">信息流里都是静音播放，文字撑起整支短片。</p>
+      <ul class="facts">
+        <li>逐词对齐时间，取自转写文稿</li>
+        <li>你的字体与配色，一次保存</li>
+      </ul>
+    </div>
+
+    <div class="well studio">
+      <figure class="studio__frame" data-slot="caption-frame" data-alt="你自己一支短片的竖屏画面，说话人入镜">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Farjad_jolani_Cinematographer.jpg/960px-Farjad_jolani_Cinematographer.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Farjad_jolani_Cinematographer.jpg/960px-Farjad_jolani_Cinematographer.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Farjad_jolani_Cinematographer.jpg/1280px-Farjad_jolani_Cinematographer.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Farjad_jolani_Cinematographer.jpg/1920px-Farjad_jolani_Cinematographer.jpg 1920w" sizes="(min-width: 60rem) 24vw, 80vw" width="4623" height="3332" alt="" loading="lazy" style="object-position: 72% 42%">
+        <p class="cap cap--big" data-keep>每人都干了<b>两份</b>活。</p>
+      </figure>
+      <form class="studio__panel" aria-label="字幕样式">
+        <fieldset class="seg">
+          <legend>样式</legend>
+          <input type="radio" name="cs" id="cs-word" value="word" checked><label for="cs-word">逐词高亮</label>
+          <input type="radio" name="cs" id="cs-box" value="box"><label for="cs-box">加框字幕</label>
+          <input type="radio" name="cs" id="cs-plain" value="plain"><label for="cs-plain">无框字幕</label>
+        </fieldset>
+        <fieldset class="seg">
+          <legend>位置</legend>
+          <input type="radio" name="cp" id="cp-low" value="low" checked><label for="cp-low">靠下</label>
+          <input type="radio" name="cp" id="cp-mid" value="mid"><label for="cp-mid">居中</label>
+        </fieldset>
+        <dl class="studio__specs">
+          <div><dt>每行字数</dt><dd class="num">最多 4 个词</dd></div>
+          <div><dt>时间对齐</dt><dd>取自转写文稿</dd></div>
+        </dl>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="shapes" aria-labelledby="shapes-title">
+  <div class="container">
+    <div class="headsplit">
+      <h2 id="shapes-title">一次剪辑，适配所有形状</h2>
+      <p class="lead">形状切换时，Reelcut 始终把主体留在画面里。</p>
+    </div>
+    <div class="ratios">
+      <figure class="ratio ratio--tall">
+        <div class="ratio__frame" data-slot="ratio-tall" data-alt="你的短片，9:16 版">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/960px-Rob_Bourdon_HQ.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/960px-Rob_Bourdon_HQ.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/1280px-Rob_Bourdon_HQ.jpg 1280w" sizes="(min-width: 60rem) 16vw, 40vw" width="3888" height="2588" alt="" loading="lazy" style="object-position: 50% 45%">
+        </div>
+        <figcaption><span class="num">9:16</span> Reels、Shorts、TikTok</figcaption>
+      </figure>
+      <figure class="ratio ratio--square">
+        <div class="ratio__frame" data-slot="ratio-square" data-alt="你的短片，1:1 版">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/960px-Rob_Bourdon_HQ.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/960px-Rob_Bourdon_HQ.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/1280px-Rob_Bourdon_HQ.jpg 1280w" sizes="(min-width: 60rem) 20vw, 50vw" width="3888" height="2588" alt="" loading="lazy" style="object-position: 50% 45%">
+        </div>
+        <figcaption><span class="num">1:1</span> 信息流帖子</figcaption>
+      </figure>
+      <figure class="ratio ratio--wide">
+        <div class="ratio__frame" data-slot="ratio-wide" data-alt="你的短片，16:9 版">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/1280px-Rob_Bourdon_HQ.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/960px-Rob_Bourdon_HQ.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/1280px-Rob_Bourdon_HQ.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Rob_Bourdon_HQ.jpg/1920px-Rob_Bourdon_HQ.jpg 1920w" sizes="(min-width: 60rem) 45vw, 100vw" width="3888" height="2588" alt="昏暗舞台上的鼓手，背后打光" loading="lazy" style="object-position: 50% 45%">
+        </div>
+        <figcaption><span class="num">16:9</span> YouTube、LinkedIn</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="review" aria-labelledby="review-title">
+  <div class="container split split--6-6">
+    <div class="split__text">
+      <h2 id="review-title">批注钉在字词上</h2>
+            <dl class="facts facts--dl">
+        <div><dt>批注到词</dt><dd>评论精确钉在那一行。</dd></div>
+        <div><dt>一次审批</dt><dd>未经签核，绝不导出。</dd></div>
+      </dl>
+    </div>
+    <div class="well notes" data-slot="review" data-alt="Reelcut 的审阅视图：一支短片，评论钉在字词上">
+      <div class="transcript__head"><span>短片 2，审阅</span><span>2 条批注</span></div>
+      <p class="notes__quote">“于是我们停止<mark>招聘</mark>了一年，产品反而变得<mark class="b">更好</mark>。”</p>
+      <ul class="notes__list">
+        <li>
+          <span class="notes__who">制片人</span>
+          <p>从“招聘”起句，那口气拖得太长。</p>
+          <span class="notes__t num">0:02</span>
+        </li>
+        <li>
+          <span class="notes__who">客户</span>
+          <p>在“更好”收尾。</p>
+          <span class="notes__t num">0:47</span>
+        </li>
+      </ul>
+      <div class="transcript__foot">
+        <span>等待一次审批</span>
+        <span class="app__btn">批准短片</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="questions" aria-labelledby="faq-title">
+  <div class="container faq__in">
+    <h2 id="faq-title">寄出素材之前</h2>
+    <div class="faq__rows">
+      <details>
+        <summary><h3>它替我们发布吗？</h3></summary>
+        <p>不。它导出成品文件，发布仍在你惯常的平台。</p>
+      </details>
+      <details>
+        <summary><h3>剪切点可以调吗？</h3></summary>
+        <p>每个剪切点都归你。可以按词挪动，也可以标出它漏掉的时刻。</p>
+      </details>
+      <details>
+        <summary><h3>两台相机怎么办？</h3></summary>
+        <p>两个机位都导入，Reelcut 会切到正在说话的人。</p>
+      </details>
+      <details>
+        <summary><h3>素材归谁保管？</h3></summary>
+        <p>归你。删掉项目，文件随之一并删除。</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="start" id="start" aria-labelledby="start-title">
+  <div class="container split split--5-7">
+    <div class="split__text">
+      <h2 id="start-title">把你最长的访谈发给我们</h2>
+      <p class="lead">短片会通过邮件寄回。</p>
+    </div>
+    <form class="well signup" data-endpoint="" novalidate>
+      <div class="field">
+        <label for="file">文件链接</label>
+        <input id="file" name="file" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/interview.mov" required>
+      </div>
+      <div class="field">
+        <label for="email">你的邮箱</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+      <button class="btn btn--primary" type="submit">剪我的访谈</button>
+      <p class="signup__help" id="signup-help" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container foot__in">
+    <p class="foot__mark">Reelcut</p>
+    <p class="foot__colophon">为拍得长、发得短的小型视频团队而做。<a href="#start">寄一支访谈来</a>。</p>
+    <p class="foot__credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Shure_SM7.jpg">The Midnite Wolf</a>（CC0）、<a href="https://commons.wikimedia.org/wiki/File:Close_up_view_of_a_microphone_set_up_in_a_recording_studio.jpg">Shixart1985</a>（CC BY 2.0）、<a href="https://commons.wikimedia.org/wiki/File:Neumann_U87_Condenser_Microphone_-_Studio_A,_In_Your_Ear_Studios.jpg">Will Fisher</a>（CC BY-SA 2.0）、<a href="https://commons.wikimedia.org/wiki/File:Farjad_jolani_Cinematographer.jpg">DarkRavenCore</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Rob_Bourdon_HQ.jpg">Rickard Laurin</a>（CC BY-SA 3.0），均来自 Wikimedia Commons。</p>
+    <p class="foot__legal">© 2026 Reelcut</p>
+  </div>
+</footer>
+
+<script>
+(() => { const bar = document.querySelector('.bar'); let last = scrollY, ticking = false;
+  addEventListener('scroll', () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { const y = scrollY; bar.classList.toggle('is-up', y > last && y > 400 && !bar.contains(document.activeElement)); last = y; ticking = false; }); }, { passive: true }); })();
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bad = [...form.querySelectorAll('input')].find((i) => { const ok = i.checkValidity(); i.toggleAttribute('aria-invalid', !ok); return !ok; });
+    if (bad) { bad.setAttribute('aria-describedby', help.id); help.textContent = bad.type === 'email' ? '邮箱地址看起来不完整。请按 name@example.com 的格式填写。' : '请粘贴文件完整链接，以 https 开头。'; bad.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：此表单尚未接入后台。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '已收到。短片会发送到 ' + form.email.value.trim() + '。' : '发送未成功。请稍后再试。'; })
+      .catch(() => { help.textContent = '发送未成功。请稍后再试。'; });
+  });
+});
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

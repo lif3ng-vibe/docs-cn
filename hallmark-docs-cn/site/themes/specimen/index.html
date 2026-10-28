@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halyard——为长阅读而生的衬线体</title>
+<meta name="description" content="Halyard 是一款八个字重、配套意大利体的衬线字族，为书籍与长阅读而造。桌面授权 £290。">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到字样正文</a>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="bar__mark" href="#top">Halyard</a>
+    <nav class="bar__links" aria-label="页面区块">
+      <a href="#tester">试排</a>
+      <a href="#glyphs">字形</a>
+      <a href="#sizes">字号</a>
+    </nav>
+    <a class="btn btn--primary btn--sm" href="#licence">购买，£290</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero__poster" aria-hidden="true">
+      <div class="metrics">
+        <span class="metric metric--cap" data-name="大写字高"></span>
+        <span class="metric metric--x" data-name="x 字高"></span>
+        <span class="metric metric--base" data-name="基线"></span>
+        <span class="metric metric--desc" data-name="下伸部"></span>
+      </div>
+      <div class="hero__word" data-word>Halyard</div>
+    </div>
+    <div class="container hero__foot">
+      <h1 id="hero-title">属于第十二章，而非封面。</h1>
+      <div class="hero__side">
+        <p class="lead">八个字重，各配意大利体，为书籍与长阅读而绘。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#licence">购买全字族，£290</a>
+          <a class="btn btn--secondary" href="#tester">排一句你自己的</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tester" id="tester" aria-labelledby="tester-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="tester-title">排一句你自己的。</h2>
+        <p class="lead">随便输入一段文字，再试试字号、字重和意大利体。</p>
+      </div>
+      <div class="tester__panel">
+        <div class="tester__ctl" role="group" aria-label="试排控件">
+          <label class="slider"><span>字号 <b data-out="size">88</b>&nbsp;px</span><input type="range" min="18" max="160" value="88" data-ctl="size"></label>
+          <label class="slider"><span>字重 <b data-out="weight">400</b></span><input type="range" min="400" max="900" step="10" value="400" data-ctl="weight"></label>
+          <div class="seg" role="group" aria-label="样式">
+            <button type="button" aria-pressed="true" data-style="normal">正体</button>
+            <button type="button" aria-pressed="false" data-style="italic">意大利体</button>
+          </div>
+        </div>
+        <p class="tester__text" contenteditable="true" spellcheck="false" data-tester aria-label="可编辑的示例文字">她走到码头时，潮水已经退去一个钟头。</p>
+      </div>
+      <p class="note">在 Halyard 的字体文件到位之前，页面由 Bodoni Moda 代演。</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="pair-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="pair-title">为书的正中而造。</h2>
+        <p class="lead">读者已经安顿下来，字体必须隐去自身。</p>
+      </div>
+      <div class="pair__grid">
+        <figure class="pair__col">
+          <figcaption>正体</figcaption>
+          <p class="pair__text">船身倾在泥滩上，像睡熟的人。</p>
+        </figure>
+        <figure class="pair__col">
+          <figcaption>意大利体</figcaption>
+          <p class="pair__text pair__text--i">船身倾在泥滩上，像睡熟的人。</p>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="glyphs" id="glyphs" aria-labelledby="glyphs-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="glyphs-title">从 A 到 &amp; 符号。</h2>
+        <p class="lead">一本书用得上的字母、数字与符号，都在这里。</p>
+      </div>
+      <div class="glyphs__grid">
+        <figure class="lead-glyph">
+          <span class="lead-glyph__g" aria-hidden="true">&amp;</span>
+          <figcaption><span>&amp; 符号</span><span class="code">U+0026</span></figcaption>
+        </figure>
+        <ul class="chars" role="list" aria-label="字符集">
+          <li>A</li>
+          <li>B</li>
+          <li>C</li>
+          <li>D</li>
+          <li>E</li>
+          <li>F</li>
+          <li>G</li>
+          <li>H</li>
+          <li>I</li>
+          <li>J</li>
+          <li>K</li>
+          <li>L</li>
+          <li>M</li>
+          <li>N</li>
+          <li>O</li>
+          <li>P</li>
+          <li>Q</li>
+          <li>R</li>
+          <li>S</li>
+          <li>T</li>
+          <li>U</li>
+          <li>V</li>
+          <li>W</li>
+          <li>X</li>
+          <li>Y</li>
+          <li>Z</li>
+          <li>a</li>
+          <li>b</li>
+          <li>c</li>
+          <li>d</li>
+          <li>e</li>
+          <li>f</li>
+          <li>g</li>
+          <li>h</li>
+          <li>i</li>
+          <li>j</li>
+          <li>k</li>
+          <li>l</li>
+          <li>m</li>
+          <li>n</li>
+          <li>o</li>
+          <li>p</li>
+          <li>q</li>
+          <li>r</li>
+          <li>s</li>
+          <li>t</li>
+          <li>u</li>
+          <li>v</li>
+          <li>w</li>
+          <li>x</li>
+          <li>y</li>
+          <li>z</li>
+          <li>0</li>
+          <li>1</li>
+          <li>2</li>
+          <li>3</li>
+          <li>4</li>
+          <li>5</li>
+          <li>6</li>
+          <li>7</li>
+          <li>8</li>
+          <li>9</li>
+          <li>?</li>
+          <li>!</li>
+          <li>@</li>
+          <li>£</li>
+          <li class="is-lead">&amp;</li>
+          <li>.</li>
+          <li>,</li>
+          <li>;</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sizes" id="sizes" aria-labelledby="sizes-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="sizes-title">一句话，八种字号。</h2>
+        <p class="lead">从章节开篇，一路小到脚注。</p>
+      </div>
+      <ol class="fall" role="list">
+        <li><span class="fall__px">120 px</span><p style="--fs: 120px">低潮</p></li>
+        <li><span class="fall__px">96 px</span><p style="--fs: 96px">低潮，盛夏</p></li>
+        <li><span class="fall__px">72 px</span><p style="--fs: 72px">船身倾在泥滩上</p></li>
+        <li><span class="fall__px">48 px</span><p style="--fs: 48px">船身倾在泥滩上，像睡熟的人</p></li>
+        <li><span class="fall__px">32 px</span><p style="--fs: 32px">她沿港堤走，数着一枚枚铁系环。</p></li>
+        <li><span class="fall__px">24 px</span><p style="--fs: 24px">她沿港堤走，数着一枚枚铁系环。</p></li>
+        <li><span class="fall__px">16 px</span><p style="--fs: 16px">她沿港堤走，数着一枚枚铁系环。</p></li>
+        <li><span class="fall__px">12 px</span><p style="--fs: 12px">她沿港堤走，数着一枚枚铁系环。</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="room" aria-labelledby="room-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="room-title">为长时间的阅读。</h2>
+        <p class="lead">与一本书相处数小时，而不是在封面上停留几秒。</p>
+      </div>
+      <figure class="photo room__photo">
+        <div class="room__frame" data-slot="photo-1" data-alt="一间阅读 Halyard 的房间或书桌">
+          <img src="photos/salle-de-lecture-bibliotheque-sainte-genevieve-n03-1920.jpg" width="4288" height="2848" loading="lazy" sizes="(min-width: 90rem) 1312px, 100vw"
+               alt="一座拱顶长阅读室，成排的木质书桌、绿色的灯与整墙的书籍" style="object-position: 50% 62%">
+        </div>
+        <figcaption>巴黎圣热内维耶芙图书馆的阅读室，以墨色印在燕麦色纸面上。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="licence" id="licence" aria-labelledby="licence-title">
+    <div class="container licence__grid">
+      <div class="licence__buy">
+        <h2 id="licence-title">一份授权，覆盖整个字族。</h2>
+        <p class="licence__price"><span class="licence__cur">&pound;</span>290</p>
+        <a class="btn btn--primary" href="#top">购买全字族，£290</a>
+      </div>
+      <dl class="terms">
+        <div><dt>字重</dt><dd>八个</dd></div>
+        <div><dt>意大利体</dt><dd>每个字重各一</dd></div>
+        <div><dt>样式总数</dt><dd class="terms__fig">16</dd></div>
+        <div><dt>授权类型</dt><dd>桌面</dd></div>
+        <div><dt>适用场景</dt><dd>书籍与长阅读</dd></div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer class="colophon">
+  <div class="container colophon__grid">
+    <p class="colophon__mark">Halyard</p>
+    <p class="colophon__text">Halyard 是一款八个字重、配套意大利体的衬线字族，为书籍与长阅读而造。本页以 Bodoni Moda 代演 Halyard，注释文字使用 Geist。</p>
+    <nav class="colophon__links" aria-label="页脚"><a href="#tester">试排</a><a href="#glyphs">字形</a><a href="#sizes">字号</a><a href="#licence">授权</a></nav>
+    <p class="colophon__legal">&copy; 2026 Halyard。<span data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Salle_de_lecture_Bibliotheque_Sainte-Genevieve_n03.jpg">Marie-Lan Nguyen</a>（CC BY 2.0 fr），来自 Wikimedia Commons。</span></p>
+  </div>
+</footer>
+
+<script src="page.js"></script>
+</body>
+</html>

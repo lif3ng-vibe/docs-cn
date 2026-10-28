@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Afterimage：过夜渲染农场，按帧计费</title>
+<meta name="description" content="为自由 3D 艺术家准备的渲染农场。今晚提交任务，清晨收齐每一帧，每帧 4p 起计。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@100,400;100,500;125,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <div class="container nav__in">
+    <a class="wordmark" href="#top" aria-label="Afterimage，首页">Afterimage</a>
+    <div class="nav__end">
+      <a class="nav__link" href="#night">这一夜</a>
+      <a class="nav__link" href="#price">价格</a>
+      <a class="btn btn--secondary btn--nav" href="#price">提交任务</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top" aria-labelledby="hero-head">
+  <div class="container hero__grid">
+    <div class="hero__text settle">
+      <h1 id="hero-head">每一帧，清晨前完成。</h1>
+      <p class="lead">为自由 3D 艺术家准备的过夜渲染农场，按帧计费。</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#price">提交今晚的任务</a>
+        <a class="btn btn--secondary" href="#night">看一夜的渲染</a>
+      </div>
+    </div>
+
+    <div class="hero__visual" data-kind="product">
+      <div class="app" data-slot="hero" data-alt="今晚的渲染队列：正在渲染的任务、当前帧、已完成的帧与排队中的任务">
+        <div class="app__bar">
+          <span class="app__mark">Afterimage</span>
+          <span class="app__tabs"><span class="app__tab is-on">今晚</span><span class="app__tab">已完成</span></span>
+          <span class="app__state">1 个渲染中，2 个排队</span>
+        </div>
+        <div class="app__job">
+          <figure class="frame">
+            <img class="frame__img" src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="示例帧：一条弧形白色隧道，沿一侧墙面打光，空无一人" fetchpriority="high">
+            <figcaption class="frame__tag">第 183 帧，渲染中</figcaption>
+          </figure>
+          <dl class="facts">
+            <div><dt>场景</dt><dd>Tunnel, v12</dd></div>
+            <div><dt>帧数</dt><dd class="num">1 到 240</dd></div>
+            <div><dt>尺寸</dt><dd class="num">3840 × 2160</dd></div>
+            <div><dt>单价</dt><dd class="num">每帧 4p</dd></div>
+            <div><dt>预计完成</dt><dd class="num">约 05:50</dd></div>
+          </dl>
+        </div>
+        <div class="app__progress">
+          <div class="meter" role="progressbar" aria-label="已渲染帧数" aria-valuemin="0" aria-valuemax="240" aria-valuenow="182"><span class="meter__fill"></span></div>
+          <span class="num">240 帧已完成 182</span><span class="num app__cost">已花费 £7.28</span>
+        </div>
+        <ol class="strip" aria-label="第 177 到 182 帧，已完成">
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+          <li><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt=""></li>
+        </ol>
+        <table class="queue">
+          <caption class="visually-hidden">今晚排队中的任务</caption>
+          <tbody>
+            <tr><th scope="row">Lobby, turntable</th><td class="num">120 帧</td><td>排队中</td><td class="num">£4.80 起</td></tr>
+            <tr><th scope="row">Foyer, still</th><td class="num">1 帧</td><td>排队中</td><td class="num">4p</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="rate" aria-labelledby="rate-head">
+  <div class="container rate__grid">
+    <p class="rate__fig fig" aria-hidden="true">4p</p>
+    <div class="rate__text">
+      <h2 id="rate-head">一帧 4p。</h2>
+      <p class="lead">数一数镜头有多少帧，账单在发送之前就已确定。</p>
+    </div>
+  </div>
+</section>
+
+<section class="night" id="night" aria-labelledby="night-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="night-head">发送完就去睡。</h2>
+      <p class="lead">一个示例镜头，240 帧，一夜跑完。</p>
+    </div>
+    <ol class="steps" data-kind="product">
+      <li class="step">
+        <div class="step__text"><h3>傍晚</h3><p>发送场景，开跑之前先看到价格。</p></div>
+        <div class="app app--step" data-slot="night-1" data-alt="任务发送后：场景、帧数与开跑前的价格">
+          <div class="job__head"><span class="job__name">Tunnel, v12</span><span class="chip">排队中</span></div>
+          <div class="frame frame--wait"><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="隧道镜头的示例首帧" loading="lazy"><span class="frame__tag">第 1 帧，等待中</span></div>
+          <dl class="facts facts--pad">
+            <div><dt>帧数</dt><dd class="num">1 到 240</dd></div>
+            <div><dt>价格</dt><dd class="num">£9.60 起</dd></div>
+          </dl>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__text"><h3>深夜</h3><p>渲染农场在你熟睡时逐帧作业。</p></div>
+        <div class="app app--step" data-slot="night-2" data-alt="渲染到一半的任务：每小时完成的帧数与已花费金额">
+          <div class="job__head"><span class="job__name">Tunnel, v12</span><span class="chip chip--on">渲染中</span></div>
+          <div class="hours" role="img" aria-label="示例每小时完成的帧数：10、20、34 和 32">
+            <span class="hours__label">每小时帧数</span>
+            <div class="hours__bars">
+              <span style="--v: 10"><b class="num">10</b><i>23:00</i></span>
+              <span style="--v: 20"><b class="num">20</b><i>00:00</i></span>
+              <span style="--v: 34"><b class="num">34</b><i>01:00</i></span>
+              <span style="--v: 32"><b class="num">32</b><i>02:00</i></span>
+            </div>
+          </div>
+          <div class="app__progress app__progress--low">
+            <div class="meter" role="progressbar" aria-label="已渲染帧数" aria-valuemin="0" aria-valuemax="240" aria-valuenow="96"><span class="meter__fill meter__fill--96"></span></div>
+            <span class="num">240 帧已完成 96</span>
+          </div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__text"><h3>清晨</h3><p>每一帧都已回来，随时可取。</p></div>
+        <div class="app app--step" data-slot="night-3" data-alt="完成的任务：帧的缩印表、帧数与费用">
+          <div class="job__head"><span class="job__name">Tunnel, v12</span><span class="chip">已完成</span></div>
+          <ol class="sheet" aria-label="缩印表，示例第 1 到 240 帧">
+            <li><span class="sheet__img"><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="" loading="lazy"></span><span class="num">1</span></li>
+            <li><span class="sheet__img"><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="" loading="lazy"></span><span class="num">60</span></li>
+            <li><span class="sheet__img"><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="" loading="lazy"></span><span class="num">120</span></li>
+            <li><span class="sheet__img"><img src="photos/kings-cross-subway-tunnel-pipette-1920.jpg" width="1920" height="1074" alt="" loading="lazy"></span><span class="num">180</span></li>
+          </ol>
+          <div class="job__foot"><span class="num">240 帧，£9.60</span><span class="btnlike">下载</span></div>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="morning" aria-labelledby="morning-head">
+  <div class="container">
+    <div class="split-head">
+      <h2 id="morning-head">早餐时已备好。</h2>
+      <p class="lead">在农场把镜头预览一遍，再把帧带回家。</p>
+    </div>
+    <div class="app app--player" data-kind="product" data-slot="morning" data-alt="播放器中完成的镜头，停在最后一帧">
+      <div class="player__view"><img src="photos/symmetric-view-of-the-staircase-at-the-fullerton-hotel-singa-1920.jpg" width="1920" height="1080" alt="大堂转台镜头的示例末帧：带双跑楼梯的酒店大堂" loading="lazy"><span class="frame__tag">Lobby, turntable：第 120 帧，共 120 帧</span></div>
+      <div class="player__bar">
+        <span class="btnlike">播放</span>
+        <div class="scrub" aria-hidden="true"><span class="scrub__fill"></span></div>
+        <span class="num">24 fps</span>
+        <span class="num">120 帧，£4.80</span>
+        <span class="btnlike">下载帧</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why" aria-labelledby="why-head">
+  <div class="container why__grid">
+    <h2 id="why-head">把活儿交给夜晚。</h2>
+    <dl class="rows">
+      <div><dt>你的机器重新属于你</dt><dd>渲染交给农场，工作站空出来做下一个镜头。</dd></div>
+      <div><dt>账单就是数数</dt><dd>帧数乘以单价，不用估算机器时数。</dd></div>
+      <div><dt>截止时间就是清晨</dt><dd>晚上发出，白天开始之前帧就回来了。</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="price" id="price" aria-labelledby="price-head">
+  <div class="container price__grid">
+    <div class="price__head">
+      <h2 id="price-head">给今晚的镜头报价。</h2>
+      <p class="lead">帧数乘 4p，发送之前就算清楚。</p>
+    </div>
+
+    <form class="calc" data-endpoint="" novalidate>
+      <fieldset class="seg">
+        <legend>从这里起步</legend>
+        <div class="seg__row">
+          <input type="radio" name="preset" id="p-still" value="still"><label for="p-still">一张静帧</label>
+          <input type="radio" name="preset" id="p-ten" value="ten" checked><label for="p-ten">十秒</label>
+          <input type="radio" name="preset" id="p-two" value="two"><label for="p-two">两分钟</label>
+        </div>
+      </fieldset>
+      <div class="calc__fields">
+        <div class="field"><label for="len">时长（秒）</label><input class="input" id="len" name="length" type="number" inputmode="numeric" min="0" max="3600" step="1" value="10"></div>
+        <div class="field"><label for="fps">帧率</label><div class="select"><select class="input" id="fps" name="fps"><option value="24" selected>24 fps</option><option value="25">25 fps</option><option value="30">30 fps</option></select></div></div>
+      </div>
+      <output class="calc__out" for="len fps" aria-live="polite"><span class="calc__frames num" data-frames>240 帧</span><span class="calc__price fig" data-price>£9.60</span></output>
+      <div class="calc__send">
+        <label for="email">你的账户邮箱</label>
+        <div class="calc__row"><input class="input" id="email" name="email" type="email" autocomplete="email" required><button class="btn btn--primary" type="submit">提交今晚的任务</button></div>
+        <p class="calc__help" id="email-help" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="foot__say">晚安。</p>
+    <div class="foot__row">
+      <nav class="foot__links" aria-label="页脚">
+        <a href="#night">这一夜</a>
+        <a href="#price">价格</a>
+      </nav>
+      <p class="foot__legal">Afterimage，为自由 3D 艺术家准备的渲染农场。</p>
+    </div>
+    <p class="foot__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Kings_Cross_Subway_Tunnel_%22Pipette%22.jpg">Colin</a> (CC&nbsp;BY-SA&nbsp;4.0), <a href="https://commons.wikimedia.org/wiki/File:Symmetric_view_of_the_staircase_at_The_Fullerton_Hotel_Singapore.jpg">Basile Morin</a> (CC&nbsp;BY-SA&nbsp;4.0)，来自 Wikimedia Commons.</p>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+(function () {
+  var form = document.querySelector('.calc');
+  if (!form) return;
+  var len = form.querySelector('#len'), fps = form.querySelector('#fps');
+  var outF = form.querySelector('[data-frames]'), outP = form.querySelector('[data-price]');
+  var presets = { still: [0, 24], ten: [10, 24], two: [120, 25] };
+  function money(frames) { var p = frames * 4; return p < 100 ? p + 'p' : '£' + (p / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function update() {
+    var s = Math.max(0, Math.min(3600, Number(len.value) || 0));
+    var frames = s === 0 ? 1 : Math.round(s * Number(fps.value));
+    outF.textContent = frames.toLocaleString('en-GB') + ' 帧，价格从';
+    outP.textContent = money(frames);
+  }
+  form.querySelectorAll('input[name="preset"]').forEach(function (r) {
+    r.addEventListener('change', function () { var v = presets[r.value]; len.value = v[0]; fps.value = String(v[1]); update(); });
+  });
+  [len, fps].forEach(function (el) { el.addEventListener('input', function () { form.querySelectorAll('input[name="preset"]').forEach(function (r) { r.checked = false; }); update(); }); });
+  update();
+  var email = form.querySelector('#email'), help = form.querySelector('#email-help');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var ok = email.checkValidity();
+    email.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { email.setAttribute('aria-describedby', help.id); help.textContent = '这个地址看起来不完整。请写成 name@example.com 的格式。'; email.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '什么都没有发送：这个表单尚未接入。'; return; }
+  });
+})();
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

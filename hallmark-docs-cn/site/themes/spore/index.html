@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night Cellar：五点后的自然酒，周四至周日</title>
+<meta name="description" content="Night Cellar 是一家自然酒吧兼小店，酒单常备 140 款酒，周四至周日自下午 5 点起营业，每月一场品鉴会，每位 25 英镑。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="nav">
+  <nav class="nav__pill" aria-label="主导航">
+    <a class="wordmark" href="#top" aria-label="Night Cellar，回到首页">Night Cellar</a>
+    <ul class="nav__links" role="list">
+      <li><a href="#shelf">酒架</a></li>
+      <li><a href="#tastings">品鉴会</a></li>
+      <li><a href="#find">找到我们</a></li>
+    </ul>
+    <a class="nav__door" href="#find" id="door"><span id="door-text">周四至周日营业</span></a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-title">五点之后的自然酒。</h1>
+        <p class="lead">自然酒吧兼小店，周四至周日，下午 5 点起营业。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#find">找到我们</a>
+          <a class="btn btn--secondary" href="#shelf">看看酒架</a>
+        </div>
+      </div>
+      <figure class="photo hero__photo" data-slot="hero" data-alt="五点后在吧台倒出的一瓶酒">
+        <img src="photos/pouring-wine-into-a-decanter-1920.jpg" width="3872" height="2592" fetchpriority="high" alt="昏暗光线下，酒从瓶中注入玻璃醒酒器" style="object-position: 46% 50%">
+      </figure>
+    </div>
+  </section>
+
+  <section class="shelf" id="shelf" aria-labelledby="shelf-title">
+    <div class="container shelf__head">
+      <h2 id="shelf-title" class="shelf__title"><span class="figure shelf__figure">140</span><span class="shelf__unit">款酒列于酒单</span></h2>
+      <p class="lead shelf__line">只做自然酒，按风格摆上酒架。</p>
+    </div>
+    <ul class="rail" tabindex="0" aria-label="酒架，按风格排列" role="list">
+      <li class="label grained"><h3>微泡自然酒</h3><p class="label__second">pétillant naturel</p><p class="label__line">早早装瓶，气泡自来。</p></li>
+      <li class="label grained"><h3>带皮浸渍</h3><p class="label__second">橙酒</p><p class="label__line">白葡萄带着皮发酵。</p></li>
+      <li class="label grained"><h3>清爽白</h3><p class="label__second">压榨后直接装瓶</p><p class="label__line">明亮干净，适合第一杯。</p></li>
+      <li class="label grained"><h3>桃红</h3><p class="label__second">带皮浸一夜</p><p class="label__line">浅而干，打烊前售罄。</p></li>
+      <li class="label grained"><h3>轻盈红</h3><p class="label__second">微凉侍酒</p><p class="label__line">多汁，从冰箱里取出就倒。</p></li>
+      <li class="label grained"><h3>醇厚红</h3><p class="label__second">留给深夜时段</p><p class="label__line">果味更深，适合慢慢喝的一杯。</p></li>
+    </ul>
+  </section>
+
+  <section class="racks" aria-labelledby="racks-title">
+    <figure class="photo racks__photo" data-slot="photo-1" data-alt="店内酒架上陈列的酒单用酒">
+      <img src="photos/schramsberg-vineyards-july-2019-7579-7580-1920.jpg" width="6244" height="3903" loading="lazy" sizes="100vw" alt="酒窖长通道两侧的酒架，酒瓶瓶口朝下码放" style="object-position: 50% 58%">
+    </figure>
+    <div class="racks__over">
+      <div class="container">
+        <h2 id="racks-title" class="statement">在这儿开一瓶，或带回家。</h2>
+      </div>
+    </div>
+  </section>
+
+  <section class="tastings" id="tastings" aria-labelledby="tastings-title">
+    <div class="container">
+      <div class="tastings__well grained">
+        <p class="price"><span class="price__figure figure">£25</span><span class="price__unit">每月品鉴会一位</span></p>
+        <div class="tastings__text">
+          <h2 id="tastings-title">品鉴会，一月一次。</h2>
+          <p class="tastings__next">下次品鉴会：<span class="fill" data-fill="date">日期待公布</span></p>
+          <form class="signup" data-endpoint="" novalidate>
+            <label for="email">留下你的邮箱，好通知你日期</label>
+            <div class="signup__row">
+              <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+              <button class="btn btn--secondary" type="submit">把日期发给我</button>
+            </div>
+            <p class="signup__help" id="email-help" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="find grained" id="find" aria-labelledby="find-title">
+    <div class="container">
+      <div class="find__head">
+        <div class="find__text">
+          <h2 id="find-title">找到我们。</h2>
+          <p class="find__where"><span class="fill" data-fill="address">地址待公布</span></p>
+          <p class="find__note">小店与吧台同时开放。</p>
+        </div>
+        <figure class="photo find__photo" data-slot="photo-2" data-alt="入夜后的吧台，蜡烛已点亮">
+          <img src="photos/paris-a-waiter-lighting-candles-in-a-bar-3418-1920.jpg" width="4368" height="2912" loading="lazy" sizes="(max-width: 60rem) 100vw, 55vw" alt="深色吧台上点着一排红玻璃蜡烛" style="object-position: 40% 66%">
+        </figure>
+      </div>
+      <ol class="week" role="list" aria-label="营业日">
+        <li data-day="1" class="is-closed"><span class="week__day">周一</span><span class="week__time">休息</span></li>
+        <li data-day="2" class="is-closed"><span class="week__day">周二</span><span class="week__time">休息</span></li>
+        <li data-day="3" class="is-closed"><span class="week__day">周三</span><span class="week__time">休息</span></li>
+        <li data-day="4"><span class="week__day">周四</span><span class="week__time"><small>自</small>下午 5 点</span></li>
+        <li data-day="5"><span class="week__day">周五</span><span class="week__time"><small>自</small>下午 5 点</span></li>
+        <li data-day="6"><span class="week__day">周六</span><span class="week__time"><small>自</small>下午 5 点</span></li>
+        <li data-day="0"><span class="week__day">周日</span><span class="week__time"><small>自</small>下午 5 点</span></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <p class="footer__line">自然酒，入夜之后。</p>
+      <ul class="footer__links" role="list">
+        <li><a href="#shelf">酒架</a></li>
+        <li><a href="#tastings">品鉴会</a></li>
+        <li><a href="#find">找到我们</a></li>
+      </ul>
+    </div>
+    <p class="footer__mast" aria-hidden="true">Night Cellar</p>
+    <div class="footer__base">
+      <p class="legal">&copy; 2026 Night Cellar</p>
+      <p class="credits" data-credits>摄影：<a href="https://commons.wikimedia.org/wiki/File:Pouring_wine_into_a_decanter.jpg">suksim</a> <span>（CC BY 2.0）</span>、<a href="https://commons.wikimedia.org/wiki/File:Schramsberg_Vineyards,_July_2019-7579%2B7580.jpg">Frank Schulenburg</a> <span>（CC BY-SA 4.0）</span>、<a href="https://commons.wikimedia.org/wiki/File:Paris_-_A_waiter_lighting_candles_in_a_bar_-_3418.jpg">Jorge Royan</a> <span>（CC BY-SA 3.0）</span>，来自 Wikimedia Commons。</p>
+    </div>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script>
+  (() => {
+    const day = new Date().getDay();
+    const open = [4, 5, 6, 0].includes(day);
+    const door = document.getElementById('door-text');
+    if (door) { door.textContent = open ? '今晚 5 点起营业' : '周四 5 点开门'; door.parentElement.classList.toggle('is-open', open); }
+    const cell = document.querySelector(`.week li[data-day="${day}"]`);
+    if (cell) { cell.classList.add('is-today'); cell.setAttribute('aria-current', 'date'); cell.insertAdjacentHTML('afterbegin', `<span class="chip">${open ? '今晚' : '今天'}</span>`); }
+    document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+      const input = form.querySelector('input'), help = form.querySelector('[aria-live]');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const ok = input.checkValidity();
+        input.toggleAttribute('aria-invalid', !ok);
+        if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '邮箱地址看起来不完整。请写成 name@example.com。'; input.focus(); return; }
+        if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：该表单尚未接入后端。'; return; }
+        fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+          .then((r) => { help.textContent = r.ok ? '日期将发送至 ' + input.value.trim() + '。' : '没有发送成功。请稍后再试。'; })
+          .catch(() => { help.textContent = '没有发送成功。请稍后再试。'; });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inlet：静坐十分钟，然后去过一天</title>
+<meta name="description" content="Inlet 是一款冥想应用，它替你数息，并随着你学会独自静坐而一步步退后。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,300&family=Figtree:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="masthead" data-masthead>
+  <p class="banner"><a href="#sit">就在这里试坐一次，无需注册账号</a></p>
+  <nav class="bar container" aria-label="主导航">
+    <a class="wordmark" href="#top" aria-label="Inlet，首页">Inlet</a>
+    <ul class="bar__links">
+      <li><a href="#how">一次静坐的流程</a></li>
+      <li><a href="#sits">静坐场景</a></li>
+      <li><a class="bar__get" href="#get">获取应用</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="container split split--hero">
+      <div class="hero__text">
+        <h1>静坐十分钟，然后去过一天。</h1>
+        <p class="lead">Inlet 替你数息，随着你的进步，人声提示一步步退后。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#get">获取 Inlet</a>
+          <a class="btn" href="#how">一次静坐的流程</a>
+        </div>
+      </div>
+
+      <div class="well timer" id="sit" data-slot="hero" data-kind="product" data-alt="Inlet 的静坐界面，随时可以开始一次十分钟静坐">
+        <div class="timer__head">
+          <h2 class="well__title">今晨</h2>
+          <p class="chip" role="status" data-status>就绪</p>
+        </div>
+        <fieldset class="seg">
+          <legend>时长</legend>
+          <input type="radio" name="len" id="len3" value="3"><label for="len3">3 分钟</label>
+          <input type="radio" name="len" id="len10" value="10" checked><label for="len10">10 分钟</label>
+          <input type="radio" name="len" id="len20" value="20"><label for="len20">20 分钟</label>
+        </fieldset>
+        <p class="timer__clock num" data-clock>10:00</p>
+        <p class="timer__breath" data-breath>吸气 4 拍，呼气 6 拍</p>
+        <div class="row">
+          <label for="voice">人声</label>
+          <output class="row__value num" for="voice" data-voice-out>60</output>
+          <input class="fader" type="range" id="voice" name="voice" min="0" max="100" value="60" style="--level: 60%">
+        </div>
+        <div class="row row--switch">
+          <label for="bell">结束时响铃 <small>一声低鸣</small></label>
+          <input class="switch" type="checkbox" role="switch" id="bell" name="bell" checked>
+        </div>
+        <button class="btn btn--soft timer__go" type="button" data-go>开始</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--l" id="how">
+    <div class="container split split--even">
+      <div class="split__text">
+        <h2>一次静坐，从开始到铃声</h2>
+        <ol class="steps">
+          <li><h3>选一个时长</h3><p>3、10 或 20 分钟。没有别的要设置。</p></li>
+          <li><h3>跟着计数</h3><p>吸气 4 拍，呼气 6 拍，直到呼吸自己稳住。</p></li>
+          <li><h3>等那一声铃</h3><p>只有一声低鸣。结束后没有连续打卡，也没有分数。</p></li>
+        </ol>
+      </div>
+      <div class="well after" data-slot="demo-2" data-kind="product" data-alt="铃声之后的 Inlet 界面，带着明天的提醒">
+        <h3 class="well__title">铃声之后</h3>
+        <p class="after__figure num">10<span> 分钟静坐</span></p>
+        <dl class="list">
+          <div><dt>呼吸</dt><dd>吸 4，呼 6</dd></div>
+          <div><dt>人声</dt><dd>只在开始与结束时</dd></div>
+          <div><dt>下次静坐</dt><dd>明天 7:30</dd></div>
+        </dl>
+        <div class="row row--switch">
+          <label for="remind">提醒我</label>
+          <input class="switch" type="checkbox" role="switch" id="remind" name="remind" checked>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split split--photo">
+      <div class="split__text">
+        <h2>就地静坐</h2>
+        <p class="lead">火车上、办公桌前、床沿边。</p>
+      </div>
+      <figure class="photo" data-slot="photo-1" data-alt="一个可以用 Inlet 静坐的安静角落：一扇窗、一条长椅、晨光里的卧室">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG/1280px-Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG/960px-Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG/1280px-Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG/1920px-Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG 1920w" sizes="(min-width: 60rem) 56vw, 100vw" width="5958" height="2979" alt="晨雾在一排山丘下的山谷间流动" style="object-position: 50% 55%" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section class="section section--s paper-2">
+    <div class="container split split--compare">
+      <div class="split__text">
+        <h2>人声逐渐退后</h2>
+        <p class="lead">第一周它每分钟都在说话。到第四周，只剩铃声。</p>
+      </div>
+      <div class="compare">
+        <div class="well cues" data-slot="demo-3" data-kind="product" data-alt="第一周一次十分钟静坐的 Inlet 提示列表">
+          <h3 class="well__title">第一周</h3>
+          <ol class="cues__list">
+            <li><span class="num">0:00</span>安顿下来</li>
+            <li><span class="num">1:00</span>找到呼吸</li>
+            <li><span class="num">4:00</span>从一重新数起</li>
+            <li><span class="num">7:00</span>放松肩膀</li>
+            <li><span class="num">9:30</span>慢慢回神</li>
+          </ol>
+        </div>
+        <div class="well cues" data-slot="demo-4" data-kind="product" data-alt="第四周一次十分钟静坐的 Inlet 提示列表">
+          <h3 class="well__title">第四周</h3>
+          <ol class="cues__list">
+            <li><span class="num">0:00</span>安顿下来</li>
+            <li class="cues__quiet"><span class="num">0:30</span>静默</li>
+            <li><span class="num">10:00</span>铃声</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--l" id="sits">
+    <div class="container split split--rows">
+      <div class="split__text">
+        <h2>为一天的间隙而设的静坐</h2>
+        <p class="lead">每一种就是一个时长加一句提示，随时可以开始。</p>
+      </div>
+      <ul class="sits">
+        <li><div><h3>工作前</h3><p>咖啡渐凉，手机扣在桌上。</p></div><p class="sits__min num">10</p></li>
+        <li><div><h3>艰难通话前</h3><p>用三分钟放慢你的语速。</p></div><p class="sits__min num">3</p></li>
+        <li><div><h3>午餐后</h3><p>睁着眼，在办公桌前。</p></div><p class="sits__min num">5</p></li>
+        <li><div><h3>熄灯后</h3><p>人声在中途渐渐淡出。</p></div><p class="sits__min num">20</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="get">
+    <div class="container split split--form">
+      <div class="split__text">
+        <h2>把 Inlet 发到你的手机</h2>
+        <p class="lead">一封邮件，附上下载链接。</p>
+      <form class="signup" data-endpoint="" novalidate>
+        <label for="email">邮箱地址</label>
+        <div class="signup__row">
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+          <button class="btn btn--primary" type="submit">发送链接</button>
+        </div>
+        <p class="signup__help" id="email-help" aria-live="polite"></p>
+      </form>
+      </div>
+      <figure class="photo photo--close" data-slot="photo-2" data-alt="一个安静的低光角落：静水、一扇窗、黎明时空无一人的房间">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg/1280px-Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg/960px-Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg/1280px-Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg/1920px-Langweerderwielen_%28Langwarder_Wielen%29_in_de_mist._01-04-2026._%28d.j.b.%29_08.jpg 1920w" sizes="(min-width: 60rem) 45vw, 100vw" width="4229" height="3172" alt="金色芦苇倒映在雾天空下的静水中" style="object-position: 30% 50%" loading="lazy">
+      </figure>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <p class="footer__sign">静坐愉快，<br>Inlet 团队</p>
+    <div class="footer__meta">
+      <p><time datetime="2026-10">2026 年 10 月</time></p>
+      <ul class="footer__links">
+        <li><a href="#how">一次静坐的流程</a></li>
+        <li><a href="#sits">静坐场景</a></li>
+        <li><a href="#get">获取应用</a></li>
+      </ul>
+      <p class="footer__small" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Blassenstein_Erlauftal_mit_Nebel_02_Panorama.JPG">Uoaei1</a>（CC BY-SA 3.0，Wikimedia Commons），<a href="https://commons.wikimedia.org/wiki/File:Langweerderwielen_(Langwarder_Wielen)_in_de_mist._01-04-2026._(d.j.b.)_08.jpg">Dominicus Johannes Bergsma</a>（CC BY-SA 4.0，Wikimedia Commons）</p>
+      <p class="footer__small">&copy; 2026 Inlet</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const head = document.querySelector('[data-masthead]');
+  let ticking = false;
+  addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { head.classList.toggle('is-tucked', scrollY > 48); ticking = false; });
+  }, { passive: true });
+
+  const clock = document.querySelector('[data-clock]'), breath = document.querySelector('[data-breath]');
+  const status = document.querySelector('[data-status]'), go = document.querySelector('[data-go]');
+  const fmt = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  let left = 600, timer = null, t = 0;
+  const lengthNow = () => Number(document.querySelector('input[name="len"]:checked').value) * 60;
+  const stop = (label) => { clearInterval(timer); timer = null; go.textContent = '开始'; status.textContent = label; breath.textContent = '吸气 4 拍，呼气 6 拍'; };
+  document.querySelectorAll('input[name="len"]').forEach((r) => r.addEventListener('change', () => { stop('就绪'); left = lengthNow(); clock.textContent = fmt(left); }));
+  go.addEventListener('click', () => {
+    if (timer) { stop('已暂停'); return; }
+    if (left <= 0) left = lengthNow();
+    go.textContent = '暂停'; status.textContent = '静坐中';
+    timer = setInterval(() => {
+      left -= 1; t = (t + 1) % 10;
+      clock.textContent = fmt(left);
+      breath.textContent = t < 4 ? '吸气' : '呼气';
+      if (left <= 0) { stop(document.getElementById('bell').checked ? '铃声响了' : '完成'); left = lengthNow(); clock.textContent = fmt(left); }
+    }, 1000);
+  });
+
+  const voice = document.getElementById('voice'), out = document.querySelector('[data-voice-out]');
+  voice.addEventListener('input', () => { out.textContent = voice.value; voice.style.setProperty('--level', voice.value + '%'); });
+
+  document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+    const input = form.querySelector('input'), help = form.querySelector('[aria-live]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const ok = input.checkValidity();
+      input.toggleAttribute('aria-invalid', !ok);
+      if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '邮箱地址看起来不完整。请按 name@example.com 的格式填写。'; input.focus(); return; }
+      if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：此表单尚未接入后端。'; return; }
+      fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+        .then((r) => { help.textContent = r.ok ? '链接正在发往 ' + input.value.trim() + '。' : '发送失败，请稍后再试。'; })
+        .catch(() => { help.textContent = '发送失败，请稍后再试。'; });
+    });
+  });
+})();
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

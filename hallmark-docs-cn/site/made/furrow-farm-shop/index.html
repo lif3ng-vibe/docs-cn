@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Long Acre Farm Shop，什罗普郡</title>
+<meta name="description" content="什罗普郡的 Long Acre 农场商店：每周从田间直供的蔬菜箱、肉铺柜台，以及周末营业的咖啡馆。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@600&family=Red+Hat+Text:wght@400;500&family=Red+Hat+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header>
+  <div class="banner">
+    <div class="container">
+      <a href="#cafe">咖啡馆周六、周日营业。</a>
+    </div>
+  </div>
+  <nav class="bar" aria-label="主导航">
+    <div class="container">
+      <a class="wordmark" href="#main" aria-label="Long Acre Farm Shop，首页">Long Acre <span>Farm Shop</span></a>
+      <ul class="links">
+        <li><a href="#box">蔬菜箱</a></li>
+        <li><a href="#counter">肉铺</a></li>
+        <li><a href="#cafe">咖啡馆</a></li>
+        <li><a href="#find">找到我们</a></li>
+      </ul>
+      <div class="bar__end">
+        <a class="btn btn--sm" href="#order">订一箱蔬菜</a>
+        <details class="menu">
+          <summary class="btn btn--sm">菜单</summary>
+          <ul>
+            <li><a href="#box">蔬菜箱</a></li>
+            <li><a href="#counter">肉铺</a></li>
+            <li><a href="#cafe">咖啡馆</a></li>
+            <li><a href="#find">找到我们</a></li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <figure class="hero__photo" data-slot="hero" data-alt="农场自己的田地，宽广，在最平常的日光下：蔬菜箱所来自的土地">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/2014_Fields_Swaledale_Gunnerside.jpg/1920px-2014_Fields_Swaledale_Gunnerside.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/2014_Fields_Swaledale_Gunnerside.jpg/960px-2014_Fields_Swaledale_Gunnerside.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/2014_Fields_Swaledale_Gunnerside.jpg/1280px-2014_Fields_Swaledale_Gunnerside.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/2014_Fields_Swaledale_Gunnerside.jpg/1920px-2014_Fields_Swaledale_Gunnerside.jpg 1920w, https://upload.wikimedia.org/wikipedia/commons/f/f9/2014_Fields_Swaledale_Gunnerside.jpg 4608w" sizes="100vw" width="4608" height="3456" alt="干石墙分隔的绿色田野，还有田间的石砌谷仓" fetchpriority="high">
+    </figure>
+    <div class="container">
+      <div class="sheet hero__sheet">
+        <h1 id="hero-title">一个什罗普郡农场，供出一周的食物。</h1>
+        <p class="lead">每周蔬菜箱、肉铺柜台，还有周末营业的咖啡馆。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#order">订一箱蔬菜</a>
+          <a class="btn" href="#find">找到商店</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gap-l" id="box" aria-labelledby="box-title">
+    <div class="container">
+      <div class="head head--split">
+        <h2 id="box-title">1. 田里长什么，箱里装什么</h2>
+        <p class="lead">每周的菜箱装的都是当周采收的作物，在农场里采收、装箱。</p>
+      </div>
+      <figure class="photo photo--wide" data-slot="box-1" data-alt="本周蔬菜刚从田里运到，打包台上码着板条箱">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg/1280px-Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg/960px-Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg/1280px-Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg/1920px-Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg 1920w" sizes="(min-width: 90rem) 1312px, 100vw" width="4746" height="3565" alt="菜摊上一箱箱绿叶菜、番茄和西葫芦" loading="lazy" style="object-position: 30% 78%">
+      </figure>
+      <div class="pair pair--8-4">
+        <figure class="photo" data-slot="box-2" data-alt="天气里的田地或场院：一扇门、一片庄稼、一个潮湿的清晨">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg/1280px-D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg/960px-D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg/1280px-D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg/1920px-D%C3%BClmen%2C_B%C3%B6rnste%2C_Tropfen_am_Gatter_--_2020_--_3592.jpg 1920w" sizes="(min-width: 60rem) 60vw, 100vw" width="6627" height="4418" alt="绿色农场栅门的横杆上挂着雨滴，背后是田野" loading="lazy" style="object-position: 50% 30%">
+        </figure>
+        <figure class="photo" data-slot="box-3" data-alt="俯瞰一只装满的蔬菜箱，打包完毕、整装待发">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Apples_in_basket_2018_G1.jpg/1280px-Apples_in_basket_2018_G1.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Apples_in_basket_2018_G1.jpg/960px-Apples_in_basket_2018_G1.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Apples_in_basket_2018_G1.jpg/1280px-Apples_in_basket_2018_G1.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Apples_in_basket_2018_G1.jpg/1920px-Apples_in_basket_2018_G1.jpg 1920w" sizes="(min-width: 60rem) 30vw, 100vw" width="4600" height="4000" alt="草地上放着一只堆满红苹果的柳条篮" loading="lazy" style="object-position: 50% 55%">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gap-m" aria-labelledby="year-title">
+    <div class="container rows-wrap">
+      <div class="head">
+        <h2 id="year-title">一年四季的菜箱</h2>
+        <p class="lead">大致的田野轮转，一季一季看。</p>
+      </div>
+      <ol class="rows" role="list">
+        <li><h3>春季</h3><span class="num">3 月至 5 月</span><p>芦笋、春甘蓝、樱桃萝卜、新土豆</p></li>
+        <li><h3>夏季</h3><span class="num">6 月至 8 月</span><p>蚕豆、西葫芦、番茄、沙拉叶菜</p></li>
+        <li><h3>秋季</h3><span class="num">9 月至 11 月</span><p>南瓜、甜菜根、苹果、主茬土豆</p></li>
+        <li><h3>冬季</h3><span class="num">12 月至 2 月</span><p>韭葱、羽衣甘蓝、欧防风、芜菁甘蓝、球芽甘蓝</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section gap-l" id="counter" aria-labelledby="counter-title">
+    <div class="container">
+      <div class="head head--split">
+        <h2 id="counter-title">2. 肉铺当着你的面现切</h2>
+        <p class="lead">在柜台报上部位、厚度和分量。</p>
+      </div>
+      <div class="bento">
+        <figure class="photo tile tile--a" data-slot="counter-1" data-alt="肉铺柜台本身：砧板、刀具，与当天的切件">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg/1280px-Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg/960px-Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg/1280px-Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg/1920px-Steelport_6-Inch_Chef_Knife_%282026%29-104A6580.jpg 1920w" sizes="(min-width: 60rem) 60vw, 100vw" width="5147" height="3676" alt="端纹砧板上放着一把刀，旁边是干葱与迷迭香" loading="lazy" style="object-position: 50% 55%">
+        </figure>
+        <div class="tile tile--well tile--b">
+          <h3>柜台上有</h3>
+          <dl class="cuts">
+            <div><dt>牛肉</dt><dd>牛排、烤肉大块、肉馅</dd></div>
+            <div><dt>羊肉</dt><dd>羊腿、羊排、羊肩</dd></div>
+            <div><dt>猪肉</dt><dd>香肠、培根、五花肉</dd></div>
+          </dl>
+        </div>
+        <div class="tile tile--well tile--c">
+          <div class="tile__text">
+            <h3>卷好、扎紧或绞碎</h3>
+            <p>烤肉大块在砧板上卷好扎紧，肉馅当着你的面现绞。</p>
+          </div>
+          <a class="text-link" href="#find">找到柜台</a>
+        </div>
+        <figure class="photo tile tile--d" data-slot="counter-2" data-alt="农场自养的牛羊，在平常天气里放牧于田间">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cow_on_Pupers.jpg/1280px-Cow_on_Pupers.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cow_on_Pupers.jpg/960px-Cow_on_Pupers.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cow_on_Pupers.jpg/1280px-Cow_on_Pupers.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Cow_on_Pupers.jpg/1920px-Cow_on_Pupers.jpg 1920w" sizes="(min-width: 60rem) 60vw, 100vw" width="3464" height="2528" alt="一头毛发蓬乱的高地牛站在深草中" loading="lazy" style="object-position: 55% 40%">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gap-l" id="cafe" aria-labelledby="cafe-title">
+    <div class="container">
+      <div class="statement">
+        <h2 id="cafe-title" class="display-s">3. 咖啡馆用店里的食材下厨。</h2>
+        <p class="lead">周末早餐、午餐与蛋糕，用当周的蔬菜和柜台的肉制作。营业时间<span class="fill" data-fill="cafe-hours">待确认</span>。</p>
+      </div>
+      <div class="pair pair--7-5">
+        <figure class="photo" data-slot="cafe-1" data-alt="咖啡馆的一份早餐，用农场的鸡蛋、蔬菜或培根烹制">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Two_fried_eggs.jpg/1280px-Two_fried_eggs.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Two_fried_eggs.jpg/960px-Two_fried_eggs.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Two_fried_eggs.jpg/1280px-Two_fried_eggs.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Two_fried_eggs.jpg/1920px-Two_fried_eggs.jpg 1920w" sizes="(min-width: 60rem) 55vw, 100vw" width="2047" height="1570" alt="铁锅里两个撒了黑胡椒的煎蛋" loading="lazy" style="object-position: 50% 50%">
+        </figure>
+        <figure class="photo" data-slot="cafe-2" data-alt="咖啡馆柜台边或窗边的一杯咖啡">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/A_cup_of_coffee_in_Mohk.jpg/1280px-A_cup_of_coffee_in_Mohk.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/A_cup_of_coffee_in_Mohk.jpg/960px-A_cup_of_coffee_in_Mohk.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/A_cup_of_coffee_in_Mohk.jpg/1280px-A_cup_of_coffee_in_Mohk.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/A_cup_of_coffee_in_Mohk.jpg/1920px-A_cup_of_coffee_in_Mohk.jpg 1920w" sizes="(min-width: 60rem) 40vw, 100vw" width="4000" height="3000" alt="一杯撒了可可粉的卡布奇诺，旁边配着一块饼干" loading="lazy" style="object-position: 40% 45%">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="order" aria-labelledby="order-title">
+    <div class="container band__grid">
+      <div class="band__head">
+        <h2 id="order-title">来自 Long Acre 的一周蔬菜</h2>
+        <p class="lead">留下邮箱和邮编，我们会回信介绍你附近的菜箱。</p>
+      </div>
+      <form class="order sheet" data-endpoint="" novalidate>
+        <div class="field">
+          <label for="email">邮箱地址</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+        </div>
+        <div class="field">
+          <label for="postcode">邮编</label>
+          <input id="postcode" name="postcode" type="text" autocomplete="postal-code" autocapitalize="characters" required class="num">
+        </div>
+        <button class="btn btn--primary" type="submit">咨询菜箱</button>
+        <p class="order__help" id="order-help" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="footer" id="find">
+  <div class="container">
+    <p class="footer__mark">Long Acre Farm Shop</p>
+    <div class="footer__cols">
+      <div>
+        <p class="footer__head">蔬菜箱</p>
+        <ul><li><a href="#order">订一箱蔬菜</a></li><li><a href="#year-title">一年四季</a></li></ul>
+      </div>
+      <div>
+        <p class="footer__head">肉铺</p>
+        <ul><li><a href="#counter">肉铺柜台</a></li></ul>
+      </div>
+      <div>
+        <p class="footer__head">咖啡馆</p>
+        <ul><li><a href="#cafe">咖啡馆</a></li></ul>
+      </div>
+      <div>
+        <p class="footer__head">找到我们</p>
+        <address><span class="fill" data-fill="address">地址待确认</span><br>什罗普郡<br><span class="fill" data-fill="phone">电话待确认</span></address>
+      </div>
+    </div>
+    <p class="credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:2014_Fields_Swaledale_Gunnerside.jpg">Kreuzschnabel</a>（CC BY-SA 3.0）、<a href="https://commons.wikimedia.org/wiki/File:Matin_ensoleill%C3%A9_au_march%C3%A9_de_la_Terrasse.jpg">Touam (Hervé Agnoux)</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Apples_in_basket_2018_G1.jpg">George Chernilevsky</a>（public domain）、<a href="https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_B%C3%B6rnste,_Tropfen_am_Gatter_--_2020_--_3592.jpg">Dietmar Rabich</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Steelport_6-Inch_Chef_Knife_(2026)-104A6580.jpg">Frank Schulenburg</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:Cow_on_Pupers.jpg">Nilfanion</a>（CC BY-SA 3.0）、<a href="https://commons.wikimedia.org/wiki/File:Two_fried_eggs.jpg">Balise42</a>（CC BY-SA 4.0）、<a href="https://commons.wikimedia.org/wiki/File:A_cup_of_coffee_in_Mohk.jpg">Peachyeung316</a>（CC BY-SA 4.0），均来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fields = [...form.querySelectorAll('input')];
+    fields.forEach((f) => f.toggleAttribute('aria-invalid', !f.checkValidity()));
+    const bad = fields.find((f) => !f.checkValidity());
+    if (bad) { bad.setAttribute('aria-describedby', help.id); help.textContent = bad.type === 'email' ? '这个地址看起来不完整。请按 name@example.com 的格式填写。' : '请填写邮编，好让我们知道菜箱要送到哪里。'; bad.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：这个表单尚未接入后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '谢谢。我们会写信到 ' + fields[0].value.trim() + '，聊聊你附近的菜箱。' : '没有发送成功。请稍后再试一次。'; })
+      .catch(() => { help.textContent = '没有发送成功。请稍后再试一次。'; });
+  });
+});
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

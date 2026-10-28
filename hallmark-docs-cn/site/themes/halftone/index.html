@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pop Fizz：柠檬姜味汽水，12 罐 £14</title>
+<meta name="description" content="Pop Fizz 是一款柠檬姜味汽水，330ml 罐装，每罐 39 卡路里，整箱 12 罐售价 £14。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Chivo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="slab">
+  <div class="container slab__inner">
+    <a class="slab__mark" href="#main" aria-label="Pop Fizz，首页">Pop Fizz</a>
+    <nav aria-label="主导航" class="slab__nav">
+      <a href="#label">罐身标签</a>
+      <a href="#inside">里面有什么</a>
+    </nav>
+    <a class="btn btn--slab" href="#box">买一箱</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-head">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-head">冰罐里的柠檬与姜。</h1>
+        <p class="lead">一款柠檬姜味汽水：330ml 罐装，每罐 39 卡。</p>
+        <div class="hero__actions">
+          <a class="btn" href="#box">£14 买 12 罐</a>
+          <a class="line" href="#inside">里面有什么</a>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <figure class="photo" data-slot="hero" data-alt="Pop Fizz 易拉罐冰凉挂珠，旁边放着一颗切开的柠檬，日光明亮">
+          <img src="photos/zitronenscheiben-2025-7302-1920.jpg" width="1920" height="1280" fetchpriority="high" style="object-position: 30% 50%" alt="两片薄柠檬片背光而立，每一瓣果肉都在发光">
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="poster" aria-labelledby="poster-head">
+    <div class="container poster__grid">
+      <p class="poster__fig" aria-hidden="true">39</p>
+      <div class="poster__text">
+        <h2 id="poster-head">330ml 一罐的卡路里</h2>
+        <p class="lead">柠檬给酸劲，姜给热意，其余都是气泡。</p>
+      </div>
+      <figure class="poster__shot">
+        <div class="photo" data-slot="lemon" data-alt="一颗切开的柠檬，特写，明亮">
+          <img src="photos/lemon-whole-and-split-1920.jpg" width="1920" height="1280" loading="lazy" decoding="async" style="object-position: 78% 50%" alt="一颗对半切开的柠檬，浅色果肉朝向光线">
+        </div>
+        <figcaption class="caption">一颗柠檬，拦腰切开。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="label" class="label" aria-labelledby="label-head">
+    <div class="container label__grid">
+      <div class="label__head">
+        <h2 id="label-head">读一读罐背</h2>
+        <p class="lead">标签上的每一句话，都排到你能读清的字号。</p>
+      </div>
+      <dl class="panel">
+        <div><dt>口味</dt><dd>柠檬与姜</dd></div>
+        <div><dt>罐型</dt><dd>330ml</dd></div>
+        <div><dt>卡路里</dt><dd>每罐 39</dd></div>
+        <div><dt>箱装</dt><dd>12 罐</dd></div>
+        <div><dt>价格</dt><dd>每箱 £14</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="inside" class="inside" aria-labelledby="inside-head">
+    <div class="container">
+      <div class="ruled head-row">
+        <h2 id="inside-head">姜的热意，冰的气泡</h2>
+        <p class="lead">柠檬之外，还加了两样。</p>
+      </div>
+      <div class="inside__pair">
+        <figure>
+          <div class="photo" data-slot="ginger" data-alt="一块鲜姜，负责热意">
+            <img src="photos/ginger-root-1920.jpg" width="1920" height="1276" loading="lazy" decoding="async" style="object-position: 50% 50%" alt="一块疙瘩累累的鲜姜根">
+          </div>
+          <figcaption class="caption">姜，带来热意。</figcaption>
+        </figure>
+        <figure>
+          <div class="photo" data-slot="fizz" data-alt="Pop Fizz 倒在冰上，气泡在杯中升起">
+            <img src="photos/lemon-series-3047083562-1920.jpg" width="1920" height="1280" loading="lazy" decoding="async" style="object-position: 35% 50%" alt="两片柠檬悬浮在气泡水中，细泡密布">
+          </div>
+          <figcaption class="caption">每一罐里，都是气泡。</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="box" class="box screen" aria-labelledby="box-head">
+    <div class="container box__grid">
+      <div class="box__head">
+        <h2 id="box-head">一箱十二罐</h2>
+        <p class="lead">选好箱数，价格按每箱 £14 累计。</p>
+      </div>
+      <form class="order" data-endpoint="" novalidate aria-labelledby="box-head">
+        <p class="order__label" id="boxes-label">箱数</p>
+        <div class="stepper" role="group" aria-labelledby="boxes-label">
+          <button type="button" data-step="-1" aria-label="减一箱">&minus;</button>
+          <output id="boxes" aria-live="polite">1</output>
+          <button type="button" data-step="1" aria-label="加一箱">+</button>
+        </div>
+        <p class="order__total"><span id="cans">12</span> 罐，<span id="total">£14</span></p>
+        <div><button class="btn btn--ink" type="submit" id="buy">买 1 箱，£14</button></div>
+        <p class="order__note" id="order-note" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="close">
+  <div class="container">
+    <p class="close__line">柠檬、姜和满满的气泡。</p>
+    <div class="close__row">
+      <nav aria-label="页脚" class="close__links">
+        <a href="#label">罐身标签</a>
+        <a href="#inside">里面有什么</a>
+        <a href="#box">买一箱</a>
+      </nav>
+      <p class="close__note">© 2026 Pop Fizz</p>
+    </div>
+    <p class="close__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Zitronenscheiben_--_2025_--_7302.jpg">Dietmar Rabich</a> <span>(<abbr>CC BY-SA 4.0</abbr>)</span>, <a href="https://commons.wikimedia.org/wiki/File:Lemon_-_whole_and_split.jpg">Ivar Leidus</a> <span>(<abbr>CC BY-SA 4.0</abbr>)</span>, <a href="https://commons.wikimedia.org/wiki/File:Ginger_Root.jpg">Sanjay Acharya</a> <span>(<abbr>CC BY-SA 4.0</abbr>)</span> and <a href="https://commons.wikimedia.org/wiki/File:Lemon_Series_(3047083562).jpg">THOR</a> <span>(<abbr>CC BY 2.0</abbr>)</span>, all，来自 Wikimedia Commons。</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const form = document.querySelector('.order');
+  if (!form) return;
+  const out = form.querySelector('#boxes'), cans = form.querySelector('#cans'), total = form.querySelector('#total'), buy = form.querySelector('#buy'), note = form.querySelector('#order-note');
+  const minus = form.querySelector('[data-step="-1"]');
+  let n = 1;
+  const draw = () => {
+    out.textContent = String(n);
+    cans.textContent = String(n * 12);
+    total.textContent = '£' + String(n * 14);
+    buy.textContent = '买 ' + n + ' 箱，£' + (n * 14);
+    minus.disabled = n === 1;
+  };
+  form.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => { n = Math.min(10, Math.max(1, n + Number(b.dataset.step))); note.textContent = ''; draw(); }));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.dataset.endpoint) { note.textContent = '没有下单：商店尚未接入。'; return; }
+  });
+  draw();
+})();
+window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });
+</script>
+</body>
+</html>

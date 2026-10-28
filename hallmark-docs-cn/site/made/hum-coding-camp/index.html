@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop，让孩子们做出真东西的编程夏令营</title>
+<meta name="description" content="为期一周的少儿编程夏令营：孩子做出一个游戏、一个聊天机器人、一个网页和一台机器人，周五演示给你看。">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=chillax@500,600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="slab">
+  <div class="container slab__row">
+    <a class="wordmark" href="#main" aria-label="Loop，首页">Loop</a>
+    <nav class="slab__links" aria-label="主导航">
+      <a href="#week">一周安排</a>
+      <a href="#letter">写给家长</a>
+      <a href="#tracks">方向</a>
+    </nav>
+    <a class="slab__action" href="#signup">预留名额</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1>到周五，你的孩子就能写出真正的代码。</h1>
+        <p class="lead">为期一周的夏令营，孩子们做出游戏、聊天机器人，还有会动的机器人。</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#signup">预留名额</a>
+          <a class="btn btn--secondary" href="#week">看一周安排</a>
+        </div>
+      </div>
+
+      <figure class="editor" data-slot="hero" data-kind="product" data-alt="小营员的第一个程序在营会笔记本上运行，屏幕截图">
+        <div class="editor__bar">
+          <span class="editor__file">monday.py</span>
+          <fieldset class="names">
+            <legend class="visually-hidden">营员姓名</legend>
+            <input type="radio" name="camper" id="n1" value="Ada" checked><label for="n1">Ada</label>
+            <input type="radio" name="camper" id="n2" value="Sam"><label for="n2">Sam</label>
+            <input type="radio" name="camper" id="n3" value="Noor"><label for="n3">Noor</label>
+          </fieldset>
+        </div>
+        <pre class="editor__code" aria-label="Python 程序"><code><span class="ln">1</span><span class="k">camper</span> = <mark class="str" data-name>"Ada"</mark>
+<span class="ln">2</span><span class="k">week</span> = [<span class="str">"a maze game"</span>, <span class="str">"a chat bot"</span>,
+<span class="ln">3</span>        <span class="str">"a web page"</span>, <span class="str">"a robot"</span>]
+<span class="ln">4</span>
+<span class="ln">5</span><span class="kw">for</span> thing <span class="kw">in</span> week:
+<span class="ln">6</span>    <span class="fn">print</span>(camper, <span class="str">"built"</span>, thing)</code></pre>
+        <div class="editor__out" role="status" aria-live="polite">
+          <span class="editor__label">输出</span>
+          <ol class="editor__lines">
+            <li><span data-out>Ada</span> 做出了一个迷宫游戏</li>
+            <li><span data-out>Ada</span> 做出了一个聊天机器人</li>
+            <li><span data-out>Ada</span> 做出了一个网页</li>
+            <li><span data-out>Ada</span> 做出了一台机器人</li>
+          </ol>
+          <span class="editor__done">运行用时 0.1s</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="week" id="week">
+    <div class="container">
+      <div class="head-split">
+        <h2>五天，五件做出来的东西</h2>
+        <p class="lead">每一天都以一段能跑起来的东西收尾。</p>
+      </div>
+      <table class="days">
+        <thead><tr><th scope="col">星期</th><th scope="col">做出的作品</th><th scope="col">学到的知识</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">星期一</th><td>一个迷宫游戏</td><td>循环与方向键</td></tr>
+          <tr><th scope="row">星期二</th><td>一个会接话的聊天机器人</td><td>变量与 if</td></tr>
+          <tr><th scope="row">星期三</th><td>自己的网页</td><td>HTML 与配色</td></tr>
+          <tr><th scope="row">星期四</th><td>一台会循线的机器人</td><td>传感器与接线</td></tr>
+          <tr><th scope="row">星期五</th><td>给家人的一场演示</td><td>展示自己的作品</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="letter" id="letter">
+    <div class="container letter__grid">
+      <div class="letter__text">
+        <h2>亲爱的家长：</h2>
+        <p>在这里没人要坐着听课。每天早上我们只讲一个想法，然后你的孩子用一整天把它做出来。</p>
+        <p>不打分。周五他们会给你展示做出来的东西，然后把它带回家。</p>
+        <p class="letter__sign">Loop 团队</p>
+      </div>
+      <figure class="letter__fig">
+        <div class="photo" data-slot="photo-1" data-alt="一位营员在周四给机器人接线，画面里只有手和零件，没有脸">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Soldering_a_0805.jpg/1280px-Soldering_a_0805.jpg" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Soldering_a_0805.jpg/960px-Soldering_a_0805.jpg 960w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Soldering_a_0805.jpg/1280px-Soldering_a_0805.jpg 1280w, https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Soldering_a_0805.jpg/1920px-Soldering_a_0805.jpg 1920w" sizes="(min-width: 60rem) 45vw, 100vw" width="4064" height="2704" alt="手指用镊子把一个微小元件放到绿色电路板上" style="object-position: 45% 45%" loading="lazy">
+        </div>
+        <figcaption class="caption">周四是接线日。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="day">
+    <div class="container">
+      <div class="head-split">
+        <h2>一天一个想法，然后动手做</h2>
+        <p class="lead">每天都是同样的三步。</p>
+      </div>
+      <ol class="steps">
+        <li class="well step" data-reveal style="--i:0">
+          <h3>我们讲一个想法</h3>
+          <p>十分钟，一个新词，然后就上手敲键盘。</p>
+          <code class="frag"><mark>for</mark> thing in week:</code>
+        </li>
+        <li class="well step" data-reveal style="--i:1">
+          <h3>他们把它跑起来</h3>
+          <p>两人一组，每张小桌都有一位辅导员。</p>
+          <div class="frag frag--bar" role="img" aria-label="搭建进度，已完成大半"><span class="bar" data-reveal-bar></span></div>
+        </li>
+        <li class="well step" data-reveal style="--i:2">
+          <h3>他们演示给朋友看</h3>
+          <p>每天以一场两分钟的演示收尾。</p>
+          <span class="frag chip">跑起来了</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="tracks" id="tracks">
+    <div class="container">
+      <div class="tracks__field">
+        <h2>选一个他们想做的方向</h2>
+        <fieldset class="seg">
+          <legend class="visually-hidden">方向</legend>
+          <input type="radio" name="track" id="t1" value="games" checked><label for="t1">游戏</label>
+          <input type="radio" name="track" id="t2" value="robots"><label for="t2">机器人</label>
+          <input type="radio" name="track" id="t3" value="web"><label for="t3">网页</label>
+        </fieldset>
+        <p class="tracks__result" aria-live="polite">在游戏方向，他们会带着<mark data-track>一款在家里也能玩的迷宫游戏</mark>。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="signup" id="signup">
+    <div class="container signup__grid">
+      <div class="signup__head">
+        <h2>为夏天留一个名额</h2>
+        <dl class="facts">
+          <div><dt>时间</dt><dd><span class="fill" data-fill="dates">日期待公布</span></dd></div>
+          <div><dt>地点</dt><dd><span class="fill" data-fill="place">场地待公布</span></dd></div>
+          <div><dt>费用</dt><dd><span class="fill" data-fill="price">价格待公布</span></dd></div>
+        </dl>
+      </div>
+      <form class="form" data-endpoint="" novalidate>
+        <div class="field">
+          <label for="email">你的邮箱</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="age">孩子的年龄</label>
+          <input id="age" name="age" type="number" inputmode="numeric" min="5" max="18">
+        </div>
+        <button class="btn btn--primary" type="submit">留一个名额</button>
+        <p class="form__help" id="form-help" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="foot__line">周一见。</p>
+    <nav class="foot__links" aria-label="页脚">
+      <a href="#week">一周安排</a>
+      <a href="#letter">写给家长</a>
+      <a href="#tracks">方向</a>
+      <a href="#signup">预留名额</a>
+    </nav>
+    <p class="foot__small" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Soldering_a_0805.jpg">Aisart</a>（CC BY-SA 3.0, Wikimedia Commons）</p>
+    <p class="foot__small">Loop 少儿编程夏令营</p>
+  </div>
+</footer>
+
+<script>
+const names = document.querySelectorAll('input[name="camper"]');
+names.forEach((r) => r.addEventListener('change', () => {
+  document.querySelector('[data-name]').textContent = '"' + r.value + '"';
+  document.querySelectorAll('[data-out]').forEach((s) => { s.textContent = r.value; });
+}));
+const tracks = { games: ['游戏', '一款在家里也能玩的迷宫游戏'], robots: ['机器人', '一台会循线的机器人'], web: ['网页', '一个拥有自己网址的网页'] };
+document.querySelectorAll('input[name="track"]').forEach((r) => r.addEventListener('change', () => {
+  const [t, what] = tracks[r.value];
+  const p = document.querySelector('.tracks__result');
+  p.firstChild.textContent = '在' + t + '方向，他们会带着';
+  p.querySelector('[data-track]').textContent = what;
+}));
+document.querySelectorAll('form[data-endpoint]').forEach((form) => {
+  const input = form.querySelector('input[type="email"]'), help = form.querySelector('[aria-live]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ok = input.checkValidity();
+    input.toggleAttribute('aria-invalid', !ok);
+    if (!ok) { input.setAttribute('aria-describedby', help.id); help.textContent = '这个地址看起来不完整。请按 name@example.com 的格式填写。'; input.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容：这个表单尚未接入后端。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) })
+      .then((r) => { help.textContent = r.ok ? '谢谢。我们会写信到 ' + input.value.trim() + '。' : '没有发送成功。请稍后再试一次。'; })
+      .catch(() => { help.textContent = '没有发送成功。请稍后再试一次。'; });
+  });
+});
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
+document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

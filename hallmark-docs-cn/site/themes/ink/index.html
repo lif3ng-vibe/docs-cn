@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barton Road Library of Things:410 件可借物品</title>
+<meta name="description" content="巴顿路上的社区工具与设备租借图书馆:410 件物品,年费 £15,每周六 10 点到 2 点开放。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="bar">
+  <div class="container bar__in">
+    <a class="wordmark" href="#top" aria-label="Barton Road Library of Things,回首页">Barton Road Library of Things</a>
+    <div class="bar__end">
+      <span class="tag tag--neutral" id="state" role="status">周六开放,10 点到 2 点</span>
+      <a class="bar__link" href="#first">第一次来访</a>
+      <a class="btn btn--primary btn--sm" href="#join">加入</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-h">巴顿路上有 410 件物品可借。</h1>
+        <p class="lead">工具与设备,借给整条街。</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#join">每年 £15 即可加入</a>
+          <a class="btn" href="#first">你的第一个周六</a>
+        </div>
+      </div>
+      <div class="shelf" aria-label="架子上的物品">
+        <div class="find">
+          <label for="find">找一件物品</label>
+          <input id="find" type="search" autocomplete="off" spellcheck="false" placeholder="电钻、梯子、帐篷">
+        </div>
+        <table class="items" id="things">
+          <caption class="visually-hidden">架上一部分物品的样例,以及各自是否可借</caption>
+          <tbody>
+            <tr class="item" data-words="hand tool set tools hammer pliers screwdriver spanner tester 手工工具 锤子 钳子 扳手 螺丝刀"><th scope="row">手工工具组</th><td>锤子、钳子、扳手。</td><td><span class="tag tag--in">可借</span></td></tr>
+            <tr class="item" data-words="drill hammer drill masonry bits 电钻 钻头 冲击钻"><th scope="row">电钻与钻头</th><td>配有砖用钻头。</td><td><span class="tag tag--in">可借</span></td></tr>
+            <tr class="item" data-words="ladder step ladder extension gutter 梯子"><th scope="row">梯子</th><td>够到二层楼。</td><td><span class="tag tag--out">已借出</span></td></tr>
+            <tr class="item" data-words="tent camping dome 帐篷 露营"><th scope="row">双人帐篷</th><td>圆顶帐,睡得下两人。</td><td><span class="tag tag--out">已借出</span></td></tr>
+            <tr class="item" data-words="bicycle bike cycle 自行车 单车"><th scope="row">自行车</th><td>趁你的车在修理时用。</td><td><span class="tag tag--in">可借</span></td></tr>
+            <tr class="item" data-words="paint brushes decorating brush walls 油漆刷 刷子"><th scope="row">油漆刷</th><td>平头与圆头。</td><td><span class="tag tag--in">可借</span></td></tr>
+          </tbody>
+        </table>
+        <p class="things__none" id="none" hidden>清单上没有叫这个的。周六来柜台问问。</p>
+        <p class="shelf__note">这里只是样例,全部 410 件的清单在柜台。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="first" id="first" aria-labelledby="first-h">
+    <div class="container">
+      <div class="head-split">
+        <h2 id="first-h">你的第一个周六</h2>
+        <p class="lead">从大门到你自家大门,只需四步。</p>
+      </div>
+      <div class="pin">
+        <div class="pin__stage" aria-hidden="true">
+          <figure class="pin__shot photo is-on" data-shot="1" data-slot="first-door" data-alt="周六早晨图书馆自己的架子">
+            <img src="photos/various-tools-hanging-on-a-pegboard-in-a-workshop-setting-wi-1920.jpg" width="1920" height="1282" loading="lazy" style="object-position: 55% 50%" alt="">
+          </figure>
+          <figure class="pin__shot photo" data-shot="2" data-slot="first-desk" data-alt="图书馆自己的手工工具组,摊在柜台上">
+            <img src="photos/diy-means-choosing-the-right-tool-for-the-purpose-a-watchmak-1920.jpg" width="1920" height="1280" loading="lazy" alt="">
+          </figure>
+          <figure class="pin__shot photo" data-shot="3" data-slot="first-in" data-alt="一件被标为可借的物品,准备跟你回家">
+            <img src="photos/ladder-in-gyumri-1920.jpg" width="1920" height="2896" loading="lazy" style="object-position: 50% 22%" alt="">
+          </figure>
+          <figure class="pin__shot photo" data-shot="4" data-slot="first-back" data-alt="图书馆自己的自行车,靠在巴顿路的墙边">
+            <img src="photos/raleigh-lady-s-loop-frame-bicycle-1930s-1920.jpg" width="1920" height="1210" loading="lazy" style="object-position: 50% 60%" alt="">
+          </figure>
+        </div>
+        <ol class="pin__steps">
+          <li data-step="1"><h3>10 点到 2 点之间来</h3><p>巴顿路上的大门每周六开放。</p></li>
+          <li data-step="2"><h3>在柜台办理加入</h3><p>一份会籍覆盖全年和架子上的每一件物品。</p></li>
+          <li data-step="3"><h3>把"可借"的带回家</h3><p>凡是标着"可借"的物品,当天就能跟你回家。</p></li>
+          <li data-step="4"><h3>周六送回来</h3><p>它会直接回到架子上,等着下一位邻居。</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="say" aria-label="为什么做这件事">
+    <div class="container">
+      <p class="say__line">一年只需要用两次的东西,属于整条街。</p>
+    </div>
+  </section>
+
+  <section class="days" id="days" aria-labelledby="days-h">
+    <div class="container days__grid">
+      <div class="days__head">
+        <h2 id="days-h">每周六,10 点到 2 点</h2>
+        <p class="lead">地点在巴顿路的图书馆,<span class="fill" data-fill="address">门牌号待公布</span>。</p>
+      </div>
+      <ol class="days__list" id="saturdays">
+        <li><span class="days__date">本周六</span><span class="tag tag--neutral">10 点到 2 点</span></li>
+        <li><span class="days__date">下周六</span><span class="tag tag--neutral">10 点到 2 点</span></li>
+        <li><span class="days__date">两周后</span><span class="tag tag--neutral">10 点到 2 点</span></li>
+        <li><span class="days__date">三周后</span><span class="tag tag--neutral">10 点到 2 点</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="join-band" id="join" aria-labelledby="join-h">
+    <div class="container join-band__grid">
+      <div class="join-band__head">
+        <h2 id="join-h">£15 覆盖一整年</h2>
+        <p class="lead">留下你的名字,周六你的会员卡就会在柜台上等你。</p>
+      </div>
+      <div class="card" aria-hidden="true">
+        <p class="card__org">Barton Road Library of Things</p>
+        <p class="card__name" id="card-name">你的名字</p>
+        <div class="card__foot"><span>一年期会员</span><span class="tag tag--in">有效</span></div>
+      </div>
+      <form class="join" data-endpoint="" novalidate>
+        <div class="f">
+          <label for="j-name">你的名字</label>
+          <input id="j-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="f">
+          <label for="j-email">邮箱</label>
+          <input id="j-email" name="email" type="email" autocomplete="email" inputmode="email" required>
+        </div>
+        <div class="join__go">
+          <button class="btn btn--primary" type="submit">成为会员</button>
+          <p class="join__help" id="join-help" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__grid">
+    <p class="foot__colophon"><strong>Barton Road Library of Things</strong>(巴顿路物件图书馆)是巴顿路上的一家社区工具与设备租借图书馆,每周六 10 点到 2 点开放。会费每年 £15。</p>
+    <nav class="foot__links" aria-label="本页">
+      <a href="#top">有什么可借</a>
+      <a href="#first">第一次来访</a>
+      <a href="#days">周六开放</a>
+      <a href="#join">加入</a>
+    </nav>
+    <p class="foot__credit" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Various_tools_hanging_on_a_pegboard_in_a_workshop_setting_with_natural_light_filtering_in.jpg">Shixart1985</a>, CC&nbsp;BY&nbsp;2.0; <a href="https://commons.wikimedia.org/wiki/File:DIY_means_choosing_the_right_tool_for_the_purpose_-_a_watchmaker%27s_nightmare.jpg">Franz van Duns</a>, CC&nbsp;BY-SA&nbsp;4.0; <a href="https://commons.wikimedia.org/wiki/File:Ladder_in_Gyumri.jpg">Araqangaraq</a>, CC&nbsp;BY-SA&nbsp;4.0; <a href="https://commons.wikimedia.org/wiki/File:Raleigh_lady%27s_loop_frame_bicycle_1930s.jpg">DeFacto</a>, CC&nbsp;BY-SA&nbsp;4.0, all，来自 Wikimedia Commons。 © 2026</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // the live sign: read the London clock
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+  const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday);
+  const mins = Number(parts.hour) * 60 + Number(parts.minute);
+  const open = dow === 6 && mins >= 600 && mins < 840;
+  const state = document.getElementById('state');
+  state.classList.remove('tag--neutral');
+  state.classList.add(open ? 'tag--in' : 'tag--out');
+  state.textContent = open ? '现在开放,到 2 点' : dow === 6 && mins < 600 ? '今天 10 点开放' : dow === 5 ? '已闭馆,明天 10 点开放' : '已闭馆,周六 10 点开放';
+
+  // the next four Saturdays, counted from today in London
+  const today = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+  let ahead = (6 - dow + 7) % 7;
+  if (dow === 6 && mins >= 840) ahead = 7;
+  const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const list = document.getElementById('saturdays');
+  list.innerHTML = [0, 1, 2, 3].map((i) => {
+    const days = ahead + 7 * i;
+    const d = new Date(today.getTime() + days * 86400000);
+    const when = days === 0 ? (open ? '现在开放' : '今天') : days === 1 ? '明天' : `${days} 天后`;
+    const cls = days === 0 && open ? 'tag--in' : i === 0 ? 'tag--on' : 'tag--out';
+    return `<li><span class="days__date">${fmt.format(d)}</span><span class="tag ${cls}">${when}</span></li>`;
+  }).join('');
+
+  // the shelf filters as you type
+  const find = document.getElementById('find');
+  const things = [...document.querySelectorAll('.item')];
+  const none = document.getElementById('none');
+  find.addEventListener('input', () => {
+    const q = find.value.trim().toLowerCase();
+    let shown = 0;
+    things.forEach((t) => { const hit = !q || t.dataset.words.includes(q); t.hidden = !hit; if (hit) shown++; });
+    none.hidden = shown > 0;
+  });
+
+  // your first Saturday: the picture follows the step in view
+  const shots = [...document.querySelectorAll('.pin__shot')];
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { const n = e.target.dataset.step; shots.forEach((s) => s.classList.toggle('is-on', s.dataset.shot === n)); document.querySelectorAll('.pin__steps li').forEach((l) => l.classList.toggle('is-on', l === e.target)); } }), { rootMargin: '-45% 0px -45% 0px' });
+  document.querySelectorAll('.pin__steps li').forEach((l) => io.observe(l));
+
+  // the card takes the name as it is typed
+  const cardName = document.getElementById('card-name');
+  document.getElementById('j-name').addEventListener('input', (e) => { cardName.textContent = e.target.value.trim() || '你的名字'; });
+
+  // the join form posts nowhere yet
+  const form = document.querySelector('.join');
+  const help = document.getElementById('join-help');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fields = [...form.querySelectorAll('input')];
+    fields.forEach((i) => i.removeAttribute('aria-invalid'));
+    const bad = fields.find((i) => !i.checkValidity());
+    if (bad) { bad.setAttribute('aria-invalid', 'true'); bad.setAttribute('aria-describedby', 'join-help'); help.textContent = bad.type === 'email' ? '邮箱看起来不完整。请按 name@example.com 的格式填写。' : '请写下你的名字,柜台才知道是谁加入了。'; bad.focus(); return; }
+    if (!form.dataset.endpoint) { help.textContent = '没有发送任何内容:这个表单尚未接入。'; return; }
+    fetch(form.dataset.endpoint, { method: 'POST', body: new FormData(form) }).then((r) => { help.textContent = r.ok ? '你的会员卡周六会在柜台上等你。' : '没有成功。请稍后再试。'; }).catch(() => { help.textContent = '没有成功。请稍后再试。'; });
+  });
+})();
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

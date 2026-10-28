@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ours：两个人的预算</title>
+<meta name="description" content="给情侣的预算工具：共同账单放在中间，你的我的各归两侧，按你们商量好的方式分摊。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@700&family=Onest:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="hero" id="top">
+  <nav class="nav container" aria-label="主导航">
+    <ul class="nav__links">
+      <li><a href="#month">这个月</a></li>
+      <li><a href="#splits">分摊</a></li>
+      <li><a href="#saving">储蓄</a></li>
+    </ul>
+    <details class="nav__menu">
+      <summary>菜单</summary>
+      <ul>
+        <li><a href="#month">这个月</a></li>
+        <li><a href="#splits">分摊</a></li>
+        <li><a href="#saving">储蓄</a></li>
+      </ul>
+    </details>
+    <a class="wordmark" href="#top" aria-label="Ours，首页">Ours</a>
+    <a class="btn btn--quiet nav__action" href="#start">开一份预算</a>
+  </nav>
+
+  <div class="hero__body container" id="main">
+    <h1 class="hero__head"><span class="hero__you">你的，</span><span class="hero__me">我的，</span><span class="hero__ours">还有房租。</span></h1>
+    <div class="hero__pair">
+      <p class="hero__lede">一份预算供两个人用，也容得下各自独享的花销。</p>
+      <a class="btn" href="#start">一起开一份预算</a>
+    </div>
+
+  </div>
+
+  <div class="bill" data-slot="rent" data-kind="product" data-alt="应用内共同账单截图，由两个人分摊">
+    <p class="bill__name">本月房租 <span class="num">$2,000</span><br><span class="bill__hint">拖动分隔线，按你们的方式分摊</span></p>
+    <div class="bill__you"><span>你付</span> <b class="num" data-out="you">$1,000</b></div>
+    <div class="bill__me"><span>我付</span> <b class="num" data-out="me">$1,000</b></div>
+    <input class="bill__range" type="range" min="30" max="70" step="5" value="50" aria-label="你承担的房租比例（百分比）" aria-valuetext="你付 50%">
+  </div>
+</header>
+
+<main>
+  <section class="month container" id="month" aria-labelledby="month-h">
+    <div class="head">
+      <h2 id="month-h">同一个月，两边的视角。</h2>
+      <p>共同账单放在中间。你的和我的留在两侧。</p>
+    </div>
+    <div class="app" data-slot="month" data-kind="product" data-alt="月视图截图：你的花销、共同账单与对方的花销并排展示">
+      <div class="app__bar">
+        <span class="app__month">十月</span>
+        <span class="app__sum">本月共同支出 <b class="num">$2,750</b></span>
+      </div>
+      <div class="app__cols">
+        <div class="col col--you">
+          <p class="col__name">你的</p>
+          <ul class="col__list">
+            <li><span>健身房</span> <span class="num">$40</span></li>
+            <li><span>书</span> <span class="num">$25</span></li>
+            <li><span>咖啡</span> <span class="num">$30</span></li>
+          </ul>
+          <p class="col__foot"><span>已花</span> <b class="num">$95</b></p>
+        </div>
+        <div class="col col--ours">
+          <p class="col__name">共同</p>
+          <ul class="col__list col__list--split">
+            <li style="--s: 60"><span>房租</span> <span class="num">$2,000</span><i aria-hidden="true"></i><small>你 $1,200</small><small>我 $800</small></li>
+            <li style="--s: 50"><span>食品杂货</span> <span class="num">$600</span><i aria-hidden="true"></i><small>你 $300</small><small>我 $300</small></li>
+            <li style="--s: 50"><span>电费</span> <span class="num">$90</span><i aria-hidden="true"></i><small>你 $45</small><small>我 $45</small></li>
+            <li style="--s: 50"><span>网费</span> <span class="num">$60</span><i aria-hidden="true"></i><small>你 $30</small><small>我 $30</small></li>
+          </ul>
+        </div>
+        <div class="col col--me">
+          <p class="col__name">我的</p>
+          <ul class="col__list">
+            <li><span>攀岩</span> <span class="num">$55</span></li>
+            <li><span>唱片</span> <span class="num">$30</span></li>
+            <li><span>理发</span> <span class="num">$35</span></li>
+          </ul>
+          <p class="col__foot"><span>已花</span> <b class="num">$120</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="splits" id="splits" aria-labelledby="splits-h">
+    <div class="container splits__in">
+      <div class="head">
+        <h2 id="splits-h">按收入分摊房租。</h2>
+        <p>也可以对半，或全归其中一方。</p>
+      </div>
+      <ul class="rules" aria-label="分摊示例：你的份额对比我的份额">
+        <li style="--s: 50"><p><b>食品杂货</b>对半分</p><div class="rule__bar"><span class="num">50%</span><span class="num">50%</span></div></li>
+        <li style="--s: 60"><p><b>房租</b>按各自收入分</p><div class="rule__bar"><span class="num">60%</span><span class="num">40%</span></div></li>
+        <li style="--s: 100"><p><b>你姐妹的生日</b>全归你</p><div class="rule__bar rule__bar--whole"><span class="num">100%</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="private" id="private" aria-labelledby="private-h">
+    <div class="pair">
+      <div class="pair__half pair__half--you">
+        <h2 id="private-h">你的咖啡是你自己的事。</h2>
+        <figure class="pair__fig">
+          <div class="phone" data-slot="your-view" data-kind="product" data-alt="你自己的账本截图，每笔花销一一列出">
+            <p class="phone__title">你本月花销</p>
+            <ul class="col__list">
+              <li><span>健身房</span> <span class="num">$40</span></li>
+              <li><span>书</span> <span class="num">$25</span></li>
+              <li><span>咖啡</span> <span class="num">$30</span></li>
+            </ul>
+            <p class="phone__left"><span>剩余</span> <b class="num">$175</b></p>
+          </div>
+          <figcaption>你看到的</figcaption>
+        </figure>
+      </div>
+      <div class="pair__half pair__half--me">
+        <p class="pair__lede">对方只看到你剩多少，永远看不到你买了什么。</p>
+        <figure class="pair__fig">
+          <div class="phone phone--closed" data-slot="their-view" data-kind="product" data-alt="对方屏幕截图，只显示你的剩余总额">
+            <p class="phone__title">你本月花销</p>
+            <p class="phone__big num">$175 <span>剩余</span></p>
+            <p class="phone__note">细节由你决定要不要分享。</p>
+          </div>
+          <figcaption>对方看到的</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="saving" id="saving" aria-labelledby="saving-h" style="--a: 33.3; --b: 22.2">
+    <div class="saving__head">
+      <h2 id="saving-h">一张沙发，两份薪水。</h2>
+      <p>中间的空隙，就是要一起攒下的钱。</p>
+      <p class="saving__togo">还差 <b class="num">$800</b>，共 <span class="num">$1,800</span></p>
+    </div>
+    <div class="saving__you"><p>你出 <b class="num">$600</b></p></div>
+    <div class="saving__gap" aria-hidden="true"></div>
+    <div class="saving__me"><p>我出 <b class="num">$400</b></p></div>
+  </section>
+
+  <section class="start" id="start" aria-labelledby="start-h">
+    <div class="start__half start__half--you">
+      <h2 id="start-h">先从你那一半开始。</h2>
+      <a class="btn" href="#start">一起开一份预算</a>
+    </div>
+    <div class="start__half start__half--me">
+      <p class="start__them">再邀请对方建自己的那一半。</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot container">
+  <a class="wordmark" href="#top" aria-label="Ours，回到顶部">Ours</a>
+  <ul class="foot__links">
+    <li><a href="#month">这个月</a></li>
+    <li><a href="#splits">分摊</a></li>
+    <li><a href="#private">隐私</a></li>
+    <li><a href="#saving">储蓄</a></li>
+  </ul>
+  <p class="foot__line">一份预算，给共同分担部分开销的两个人。</p>
+</footer>
+
+<script>
+(() => {
+  const hero = document.querySelector('.hero');
+  const bill = document.querySelector('.bill');
+  const range = document.querySelector('.bill__range');
+  if (!hero || !bill || !range) return;
+  const total = 2000;
+  const fmt = (n) => '$' + Math.round(n).toLocaleString('en-US');
+  const place = () => {
+    const v = Number(range.value);
+    hero.style.setProperty('--seam', v + '%');
+    bill.querySelector('[data-out="you"]').textContent = fmt(total * v / 100);
+    bill.querySelector('[data-out="me"]').textContent = fmt(total * (100 - v) / 100);
+    range.setAttribute('aria-valuetext', '你付 ' + v + '%，' + fmt(total * v / 100));
+  };
+  range.addEventListener('input', place);
+  place();
+})();
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>

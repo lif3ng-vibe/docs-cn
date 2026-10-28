@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>burrow：dotfiles 同步到每一台机器，走 SSH</title>
+<meta name="description" content="burrow 是一个开源命令行工具，通过 SSH 在多台机器之间同步你的 dotfiles。单个二进制文件，无需服务器，MIT 许可。">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到安装</a>
+
+<header class="status">
+  <nav class="status__in" aria-label="分区导航">
+    <a class="status__session" href="#top">burrow</a>
+    <a class="status__win" href="#sync"><span aria-hidden="true">1</span> 同步</a>
+    <a class="status__win" href="#commands"><span aria-hidden="true">2</span> 命令</a>
+    <a class="status__win" href="#diff"><span aria-hidden="true">3</span> 差异</a>
+    <a class="status__win" href="#install"><span aria-hidden="true">4</span> 安装</a>
+    <span class="status__fill" aria-hidden="true"></span>
+    <span class="status__meta">MIT</span>
+    <a class="status__src" href="#source">源码</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-title">你的 dotfiles，就在每一台机器上。</h1>
+        <p class="lead">一个二进制文件，走 SSH 同步。无需服务器，无需账号。</p>
+        <div class="get" data-tabs>
+          <div class="get__tabs" role="tablist" aria-label="安装方式">
+            <button role="tab" aria-selected="true" aria-controls="get-brew" id="tab-brew">brew</button>
+            <button role="tab" aria-selected="false" aria-controls="get-cargo" id="tab-cargo" tabindex="-1">cargo</button>
+            <button role="tab" aria-selected="false" aria-controls="get-curl" id="tab-curl" tabindex="-1">curl</button>
+          </div>
+          <div class="get__line" role="tabpanel" id="get-brew" aria-labelledby="tab-brew"><code><span class="p" aria-hidden="true">$</span> brew install burrow</code><button class="copy" type="button" data-copy="brew install burrow" aria-label="复制 brew 命令"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></div>
+          <div class="get__line" role="tabpanel" id="get-cargo" aria-labelledby="tab-cargo" hidden><code><span class="p" aria-hidden="true">$</span> cargo install burrow</code><button class="copy" type="button" data-copy="cargo install burrow" aria-label="复制 cargo 命令"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></div>
+          <div class="get__line" role="tabpanel" id="get-curl" aria-labelledby="tab-curl" hidden><code><span class="p" aria-hidden="true">$</span> curl -fsSL <span class="fill" data-fill="script-url">script-url</span> | sh</code><button class="copy" type="button" disabled aria-label="脚本 URL 设置好后即可复制"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></div>
+        </div>
+        <p class="hero__meta">MIT 许可 <span aria-hidden="true">/</span> 单个二进制文件 <span aria-hidden="true">/</span> 纯 SSH</p>
+      </div>
+      <div class="hare art" data-art="hare" aria-hidden="true">
+        <canvas class="art__canvas"></canvas>
+        <pre class="art__still">
+                                                                         -====-
+                                                      =======:          **=---====
+                                                     *=:    :--=-      +*    :: :=+=
+                                                    =+   :      -==-   *-    :++- :++
+                                                    -+ -+++-:::   :++- *-     -**-::+#
+                                                     *-****=:  ::  :*+=#      :=#*=::=#
+                                                     *+####*+-      =#**      -*+#+---**
+                                                     +%#####*+-      *%==- :  =##+*=--=*:
+                                                     -@###**#*+-    :=##==+++=*#%+=+=--*=
+                                                      @%*#*+***+-:  -=*%#-=%%###%#+++--+*
+                                                      #%=++*++++==-  =*%%+:-#%%%%%*===-+*
+                                                      =@---=+==++=-: -*#%#=:-*%%%%*=-==+#
+                                                       %+  :-===------=#%%*- -*%#%#+=-=+#:
+                                                       *#    -=------:-*%%%+:--*%%#+=--+*-
+                                                        @-    -==---:--+#%%*---=#%#+=--=#-
+                                                        *%     -=-:-:--=*%%%+---=#*+---=#=
+                                                         %+     -=-:-::=*%%%*----**+----*=
+                                                         -@=     =+=   -+#%%#+---=*+-::-*+
+                                                          =@+    :-*#+- :+%@%+---=+=-:-=*+
+                                                           -%*   :-=**#+ -#%#=----+=:---++
+                                                             #%+: -==-*%+ +%#==---+=:::-++
+                                                              -%%##*+-=*#- #%+--::==:  :+=            :
+                                                                -*#%#=-*#* +@#+=: =*- ::+-
+                                                                    -*+*+*- #**+--+%#==+#*           :
+                                                                     -%++=+:*%++---=##==-*=          -     :
+                                                                      *%=+==+***-:--=++***++=-:      :   :
+                                                                       %*====+***=-:- =+*=-+***+*+=--:  ::
+                                                                       =@===++*+++- :+*##+==+*#*+*%%#*++-
+                                                                        ##==+++*===--=#%#*%@@%##*+-+**##*-
+                                                                        -%==+++==+=++=+*+#%+----==+*+-=+*#+-
+                                                                        =%%==++++=+***+=-*# **--*-+@@+:-=+**+:
+                                                                      -*@@@+-=+*+-+++++--#@=+*-=*- #@#*+-==+*#+
+                                                                       =%@#=======+====-:=#%+=+=-==+%%@%*++==*#*-  :
+                                                                      =#@@*-:-===+=-=+==- -++=---===*%%%%##*=+*##+-
+                                                                      =#@%=:===++--=++++==++===+==-: =##%#%#*+++=*#+::::
+                                                                      +@@+:=+-====+++**--**#**#**+==-:+###**+**++**##-
+                                                                     +@@#- =+=++==++**=+=+*#*##***++-:=**+=+*##%#+++##-:
+                                                                     *@@*=--++*+=+--+**%*+*######*+=:-=+==+++**#%-  +#
+                                                                     *@@*=-=-=+=**+++=+*++++**##**++--++==-=++++#%+=+-::
+                                                                     =%@#----:=+*##*****+++++******+=+*=-=-====++*#@#--
+                                                                    :=#%*--:-=---=++*##*#####****+++*###++*++++++*#%*=-:
+                                                                    :#@*::--=---:::=-=+*******##***##########**#%###+--:::
+                                                                   -#@+-:::-=++=++*+=*++=+++++*+=+++*%%#%%#*###%#*=-=-::
+                                                               =*#*%@#=  :=*+*+=++**+*+==++==++++++##*++++=-====*=+- --::
+                                                            :=#@%%=+##=-: ++==++#*++--=+*+====++**#@%- : -  - =-+===  ::  :
+                                                          =##**##+- --==- =======-=*+*+**=+++++++*#@%=:- -  - ::-=-=-   :   :
+                                                        =%@*++=*+==-  =*++-+***=+=+#**+==+#++*++**#@@+=: -   : : =--=-
+                                                       -#@*=+-:----=+-:-**+#**+*#*--+**==##++****##@@*+      :   -= :=:
+                                                     :+%@+=- : =---=*++==*+==*+*+===**==**+++****##@@%=::    :    -- :-
+                                                   =*#%@*=: -=--=-=+=++++*+==+**++#**+:+#*+=+****##@@%=:           -   -
+                                                :=#@#*#+:=: -==-++==-=-+++#+**+=-+***+-+#**==+*#*##%@%+-           ::   :
+                                              -###%*=+= - :=--=-+======+==******+**#*=+*+*+**+**###%@@+:            -
+                                            =*%%***=--=-==-:====--===+-=++++#*#****==***+=-+#**##%%%@@#=-            :
+                                        :=*#%%%+=+=  -=+-----==---====+===+++#****==*#*++*=++++##%%%@@*-
+                                      :+**#*=+=  ++  +=:-::-=-++=+==+==-=+==+***##+****+#*++*++*#%%%@@%+-
+                                    -+**+*+ ==-  --=-:*+  -=+=**++*==--====+++*+#*#+*#***+=*#*+*##%%@@%+-
+                                  :*%#*##+ -+--  -=+=--====+*+=+*+=-+-:====*+=++*##*#*##++**=+#**#%%@@@#-
+                                 +%%+-*+=- +=: : :=+=- -+*++=**++++=----======+++********##++++##%%%%@@*=
+                               +#@#==+= ---+=-=-:--==+=*+++**#***+=-::=-===+====++***#*##+******#%%%@@@#-
+                             +%##+--++=--:-=====::=++*+++=++**+*=---=--:-=+++=-=+***#**#*+***+**#%@@@@@#-
+                           :###+*-=====-  -++:==-+*=*#++*+*++**+===*+-==--=*++-=+**##*##*+*+=++**#@@%@@@+-
+                          =%*+===-=+-   -=:=- +++*++=**++**=**+-**+=-=+- ==+*+-++*##*##****+==+**#%%%@@%+-:
+                        :*%+=+-=::-==---*=+*+=*+=+*+=+**+++*#+==*==--+= =++=+++++**#*#***#*=*++###%%%@@#=
+                       -##++#=  :=:++=-:-+*+++**+++**+++**+*==*+---++==-==+==+++++**#*****=+#***##@%%@@*-
+                      +%#=+*---- =:=++=--++**+++*+*##*==+*++=*#+:+++-==+--===++++*******++++**+*#%%%%@@*-
+                     *#*-:=:= *==- -+*====+**#+*++*+*+#*=+**++*--+*+-+=--==-+++++*#**#*+=*++++**#%%%@@#+-
+                    ##=:-*-=:=*== : -=+++=++*+**+=+*+*#*==*#*++==-+++=====--++++******++**+++**#%%%%@@#-:
+                  -##=-=*=--:=*= ++==-+*+++==++**+**+***+++*+*+*+==+=-++-= ==*********++++=++**#%%%@@*+=
+                 =#%*--++---: =-=*=++==++=*++++++++**+++**+*=**#*+-==+===-:=+********++=+*=+**#%%%@@#=:
+                +%%#----+-  -+=-*=-=+--=====+++**=+**++*###*=##**+=+=+===--=+***+**++=+-+*+**#%%%@@%+
+               *#+*=:  -===+**=-==+=-=+**+++==++++*#*******#*+**#**+==+====+++*+++++=++++**##%%%@@%*=:
+              +%+== -:========- -**=**==++++++**#****##*****#*+*##*+++++==++=+++++===++++*#%%%%@@#+=-:
+             =#+- ===-*+- --=====-=*#****+*******+***#*###*+#%***#****+++++==+=+++==++++*#%%%@@@%+:
+            :%*-:==+=-=+-:-=++=*+++++***++++++++++++*****###*##**###****+++====++=+++++*#%%%@@%%#+:
+            ##+-+*=-  ++-=:-+*#*+#*-+*=====--=------===++**##*##*####*****++=====+++++*%%%%@@@*=-:
+           *%*+-=+=-::=+===-=+++**+===--=======+++=+==--=++**#########*****+++===++++*%%%%@@%*=
+          =%**- =+=+- -+=**=++=++-:--==-=+==++=*++*****++==+**#%%%#********+*++=-=+=+#%%#%@#+-
+          **=+=--=    *#+++**==-===-----=+=--=+++**#####*#*+=*##%%%##*++++*++++=-=+=*%#**%%+:
+         -%==--+ :==*-=*++*=:-====-----==++++=***###########*+*#%%%%#*++++++++++=-=+#*++##=:
+         *#=== - -**+-++++- =-----=====*+++*#***#*#####%%####*+*#%%%%#++*+++++++=--+#+=+#*
+        :%*+-+:=+:+*--=-+= ====-=++=++*+++=+#*#*#*##*###%##%##**#%%%%#*+*+++++++===+%+=+#+
+        +#+=:-+**----+=*= :=-===+*+**+++*+************####%####*##%%##**##+++++=+==+%+=+#+
+        #*+=+===+- =**=---++++*+++=+*++=+#********++**####%%%###########%%*+++++===+%*++%+
+       -#****=-- =-=+:-=++++++===*++=+***++*****+*+*#*####%%%##########%@%#+++==++=+#*++%*
+       +%%+=+ --=+=+-=++*++=-=+++++=++***+****++=*******##%%%#########%@@##*++===++=*#++##
+       =%*--+:--=++-=*+=+=-+=++===+*#++++****+=*****+***##%%%%######%%@@@*+%*+=====++#++*%:
+       +##+:=+===+*+++=:-==++:-=+#*+++****++=++**+*++++**#%%%%#####%%@@@#*+*#++===+++#*+*%-
+      :-#*=--=- =++==--==+- =+***++*+**#*++******++====+*#%@%%####%%@@%#*--+%*++=+=++*#+*%+
+        *#+---==:--:-==++=-+*+++********++******++=====+*#%%%%#%%%%@@@#-----#%*+++=++*#**%+
+        +#=-::=+= :=+=:*+====+*******++=+**++*+++==--=-=*%%%%%%%#%%@@@*=    *@#++=+++****#*
+        =*=---=-:==+- +*--=+++**++*+++=+**+*+++==-- ---+#%%%%@%##%%@@@+:   :+@%+++++++***##
+         +#=:-=: -=-:=+=--+*++=+++++==+*++++===--- --:=#%%%%@@%##%@@@#+:    -#@#++++++****#-
+         =#+- -===- =*-:++=++=+++*++=++**+++++=-- :::+#%#%%@@@%#%@@@%=-      +@%*+=++++*+*%-
+          #*+=:--=+-== =*+=++++++===+*+**+*+++===::-+###%%%@@%%%%@@#+-       +@@**=++++**+%=
+          =#+=----=-==-=+-=*++++=-++**+++++++=+==:-+*###%%@@%#%%@%#=         -#@#*-+++++*+#+
+           =*--=-=--=+++=-*=+++==+**++=++========-+***#%%@@%#%@@@*-:         :*@#*=+++++**##
+    :+*###*+*+-----==+===++=++--+*+==++==------==++**#%%@@%%%@@@*-            =%%#+=**+++**#
+   -*%@@@@@#===-=--=-======++--+++==++==+==- --==*+*#%%@%%%%@%#+=             =%@#***++++**#:
+   -*@@@@@%*- :=-:----==+===--+++=+*+====-::--==***#%%@%%%@%#+-               :%@#*++*+++**%-
+   -+#@@@@%#+- :-----====+---++=+++++-=------=+***#%%@%%%@%*+-                -#@#*++*+++####
+    =#@@@@@%#*=  -=-=++-===+=++=+++==----=--=+***#%%@%%@%#*-                   +@%+++**++*#*%#
+     +%@@@@%%#*=: :=+=-==-=+++=++=-== --=--=+##*#%%%@@%#*=----==++++****=---   :%%+=++**+**%+#*
+     -*@@@@@%##*+-  ==-=--+==+++=--:- ----++*##*#%%%#%%###%%%%@@@@%%%%#####**#*  *%+++**+++*#*%*
+      -=*%@@@%###*+- :-=-====+=---:::----++**+*+******#######**++==+===+++=++*@%  +*=****=++#%#@%*+*#+
+        -#@@@@%#***+=---=========--=++==-=++++=+++++++++++*+++++==+++=--+*+++++#@+ +++**+++*++++*%+=*@#
+        -==+*#@@@%**+====-===+++===++++===++++=+===++=+*+++====+++*++**=-=+**++*#%+=*======++-=++##+=+%%+
+            :-***##*+=--::-:-+===+====+++++++==+========-----===+==+****=-+***=-+=--+--==++**=-++*##*+**#
+                                 :  :-:::: :                     ------  :---:  :       ----: :------
+</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="figs" aria-labelledby="figs-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="figs-title">刻意保持小巧。</h2>
+        <p class="lead">它需要的一切，你的机器上本来就有。</p>
+      </div>
+      <dl class="figs__row">
+        <div><dt><span aria-hidden="true"># </span>服务器</dt><dd class="figure">0</dd></div>
+        <div><dt><span aria-hidden="true"># </span>二进制文件</dt><dd class="figure">1</dd></div>
+        <div><dt><span aria-hidden="true"># </span>种安装方式</dt><dd class="figure">3</dd></div>
+        <div><dt><span aria-hidden="true"># </span>许可证</dt><dd class="figure figure--word">MIT</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sync" id="sync" aria-labelledby="sync-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="sync-title">一次同步，覆盖每台主机。</h2>
+        <p class="lead">每台主机都通过 SSH 直连，中间不留任何东西。</p>
+      </div>
+      <div class="sync__grid">
+        <div class="session" role="img" aria-label="一段终端会话：burrow 添加三个路径，然后同步到 desk、pi 和 work，全部完成">
+<pre class="session__out" data-session>
+<span class="ln"><span class="p">~ $</span> <b data-type>burrow add ~/.zshrc ~/.gitconfig ~/.config/nvim</b></span>
+<span class="ln m">跟踪 3 个路径</span>
+<span class="ln"> </span>
+<span class="ln"><span class="p">~ $</span> <b data-type>burrow sync desk pi work</b></span>
+<span class="ln" data-host="desk">desk   ssh   3 个文件   <i>完成</i></span>
+<span class="ln" data-host="pi">pi     ssh   3 个文件   <i>完成</i></span>
+<span class="ln" data-host="work">work   ssh   3 个文件   <i>完成</i></span>
+<span class="ln"> </span>
+<span class="ln"><span class="p">~ $</span> <span class="caret"></span></span>
+</pre>
+        </div>
+        <div class="map" aria-hidden="true">
+<pre class="map__out">
+                 <span data-node="desk">+----------------+</span>
+         <span data-path="desk">+--ssh--</span><span data-node="desk">| desk           |</span>
+         <span data-path="desk">|</span>       <span data-node="desk">+----------------+</span>
+<span class="map__home">+------+</span> <span data-path="desk">|</span>       <span data-node="pi">+----------------+</span>
+<span class="map__home">|laptop|</span><span data-path="all">-+</span><span data-path="pi">--ssh--</span><span data-node="pi">| pi             |</span>
+<span class="map__home">+------+</span> <span data-path="work">|</span>       <span data-node="pi">+----------------+</span>
+         <span data-path="work">|</span>       <span data-node="work">+----------------+</span>
+         <span data-path="work">+--ssh--</span><span data-node="work">| work           |</span>
+                 <span data-node="work">+----------------+</span>
+</pre>
+          <p class="map__note">无需服务器</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="commands" id="commands" aria-labelledby="commands-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="commands-title">三条命令。</h2>
+        <p class="lead">这就是整个工具。</p>
+      </div>
+      <dl class="cmds">
+        <div><dt><span class="p" aria-hidden="true">$</span> burrow add <span class="arg">&lt;path&gt;</span></dt><dd>跟踪一个文件或文件夹。</dd></div>
+        <div><dt><span class="p" aria-hidden="true">$</span> burrow sync <span class="arg">&lt;host&gt;…</span></dt><dd>把跟踪的内容通过 SSH 复制到每台主机。</dd></div>
+        <div><dt><span class="p" aria-hidden="true">$</span> burrow status</dt><dd>上次同步的结果，逐台主机列出。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="diff" id="diff" aria-labelledby="diff-title">
+    <div class="container">
+      <div class="head">
+        <h2 id="diff-title">你可以删掉的东西。</h2>
+        <p class="lead">中间没有服务器，同步间隙也就没有需要一直跑着的东西。</p>
+      </div>
+      <figure class="diff__file" aria-label="一份 dotfiles 同步方案的 diff：删去中间的服务器与它的维护成本；加上你现成的 SSH、单个二进制文件与 MIT 许可">
+        <figcaption class="diff__head"><span>--- a/sync-setup</span><span>+++ b/sync-setup</span></figcaption>
+        <ol class="diff__lines">
+          <li class="hunk"><span>@@ 你的 dotfiles 如何流动 @@</span></li>
+          <li class="del"><span>中间的一台服务器</span></li>
+          <li class="del"><span>同步间隙还要一直运行的东西</span></li>
+          <li class="add"><span>你现成的 SSH</span></li>
+          <li class="add"><span>单个二进制文件</span></li>
+          <li class="add"><span>MIT 许可下的源码</span></li>
+        </ol>
+      </figure>
+    </div>
+  </section>
+
+  <section class="install" id="install" aria-labelledby="install-title">
+    <div class="container install__grid">
+      <div class="head head--stack">
+        <h2 id="install-title">按你顺手的方式安装。</h2>
+        <p class="lead">然后在第一个开始想念的文件上运行 <code>burrow add</code>。</p>
+      </div>
+      <ul class="ways">
+        <li><span class="ways__k">Homebrew</span><code><span class="p" aria-hidden="true">$</span> brew install burrow</code><button class="copy" type="button" data-copy="brew install burrow" aria-label="复制 Homebrew 命令"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></li>
+        <li><span class="ways__k">Cargo</span><code><span class="p" aria-hidden="true">$</span> cargo install burrow</code><button class="copy" type="button" data-copy="cargo install burrow" aria-label="复制 Cargo 命令"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></li>
+        <li><span class="ways__k">脚本</span><code><span class="p" aria-hidden="true">$</span> curl -fsSL <span class="fill" data-fill="script-url">script-url</span> | sh</code><button class="copy" type="button" disabled aria-label="脚本 URL 设置好后即可复制"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V2.5h8.5V11H11M2.5 5h8.5v8.5H2.5z" fill="none" stroke="currentColor" stroke-width="1.25"/></svg></button></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="source">
+  <div class="container">
+<div class="foot__mark art" data-art="mark" aria-hidden="true"><canvas class="art__canvas"></canvas><pre class="art__still">  :::::::::
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#
+ -@@@@@@@@@#     -=+***++=:                 ::::::::::           :::::::::                 :::::::::       -=+****+=-                :::::::::       -=+****+=-                    :=++*****+=-                :::::::                          ::::::::
+ -@@@@@@@@@#  :*%@@@@@@@@@@%*-              @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+  :+%@@@@@@@@@@@@%+            #@@@@@@@@@=  -*%@@@@@@@@@@@@%=             :+#%@@@@@@@@@@@@@%*=           +@@@@@@@%                        -@@@@@@@@
+ -@@@@@@@@@# *@@@@@@@@@@@@@@@@#:            @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+ *@@@@@@@@@@@@@@@@#            #@@@@@@@@@= #@@@@@@@@@@@@@@@@#           -#@@@@@@@@@@@@@@@@@@@@@*:        -@@@@@@@@:                       *@@@@@@@#
+ -@@@@@@@@@%#@@@@@@@@@@@@@@@@@@@=           @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@*%@@@@@@@@@@@@@@@@@#            #@@@@@@@@@*%@@@@@@@@@@@@@@@@@*          #@@@@@@@@@@@@@@@@@@@@@@@@@+        %@@@@@@@+                       %@@@@@@@+
+ -@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=          @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@@@@@@@@@@@@@@@@@@@@#            #@@@@@@@@@@@@@@@@@@@@@@@@@@@@*        -%@@@@@@@@@@@@%%%@@@@@@@@@@@@#       +@@@@@@@#                      :@@@@@@@@
+ -@@@@@@@@@@@@@*-   -+%@@@@@@@@@@@          @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@@@@@%*=-:    :-=*%@#            #@@@@@@@@@@@@@%*=-:    :-=*%@#       -@@@@@@@@@@@+-     -*@@@@@@@@@@%      -@@@@@@@@                      +@@@@@@@#
+ -@@@@@@@@@@@#         +@@@@@@@@@@*         @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@@@%=              -=            #@@@@@@@@@@@%=              -=       %@@@@@@@@@#          -%@@@@@@@@@*      %@@@@@@@-      ########=      #@@@@@@@+
+ -@@@@@@@@@@%           *@@@@@@@@@@         @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@@#                              #@@@@@@@@@@*                        +@@@@@@@@@%            -@@@@@@@@@@-     +@@@@@@@*     -@@@@@@@@%      @@@@@@@@
+ -@@@@@@@@@@=            @@@@@@@@@@=        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@@                               #@@@@@@@@@%                         %@@@@@@@@@-             *@@@@@@@@@*     -@@@@@@@%     #@@@@@@@@@-    =@@@@@@@#
+ -@@@@@@@@@@             #@@@@@@@@@+        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@*                               #@@@@@@@@@*                        :@@@@@@@@@%              -@@@@@@@@@%      %@@@@@@@:    @@@@@@@@@@*    *@@@@@@@+
+ -@@@@@@@@@%             +@@@@@@@@@*        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@+                        =@@@@@@@@@#               @@@@@@@@@@      +@@@@@@@+   +@@@@@@@@@@@    %@@@@@@@
+ -@@@@@@@@@#             +@@@@@@@@@*        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                        =@@@@@@@@@#               @@@@@@@@@@      -@@@@@@@#   %@@@@%*@@@@@=  -@@@@@@@#
+ -@@@@@@@@@%             *@@@@@@@@@*        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                        -@@@@@@@@@%              :@@@@@@@@@%       %@@@@@@@  -@@@@@* @@@@@#  +@@@@@@@=
+ -@@@@@@@@@@             #@@@@@@@@@=        @@@@@@@@@@          =@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                         @@@@@@@@@@              =@@@@@@@@@#       +@@@@@@@= #@@@@@- *@@@@@- #@@@@@@@
+ -@@@@@@@@@@+           -@@@@@@@@@@:        @@@@@@@@@@:         *@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                         #@@@@@@@@@*             %@@@@@@@@@+       -@@@@@@@* @@@@@#  -@@@@@* @@@@@@@#
+ -@@@@@@@@@@@-          %@@@@@@@@@%         %@@@@@@@@@=        :@@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                         -@@@@@@@@@@=           *@@@@@@@@@%         %@@@@@@#+@@@@@=   #@@@@%=@@@@@@@=
+ -@@@@@@@@@@@@+       -%@@@@@@@@@@=         #@@@@@@@@@@-      -%@@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                          *@@@@@@@@@@*        -#@@@@@@@@@@=         +@@@@@@@@@@@@%    =@@@@@@@@@@@@@
+ -@@@@@@@@@@@@@%*+++*%@@@@@@@@@@@#          =@@@@@@@@@@@#+++*#@@@@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                           #@@@@@@@@@@@#*+++*%@@@@@@@@@@@+          :@@@@@@@@@@@@+     %@@@@@@@@@@@#
+ -@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#            %@@@@@@@@@@@@@@@@@@@@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                            +@@@@@@@@@@@@@@@@@@@@@@@@@@@=            %@@@@@@@@@@@      +@@@@@@@@@@@=
+ -@@@@@@@@@#=@@@@@@@@@@@@@@@@@@*              %@@@@@@@@@@@@@@@@#=@@@@@@@@@#               *@@@@@@@@@+                               #@@@@@@@@@=                             -#@@@@@@@@@@@@@@@@@@@@@@@*              +@@@@@@@@@@*       @@@@@@@@@@@
+ -@@@@@@@@@% :*@@@@@@@@@@@@@@#-                *@@@@@@@@@@@@@@* =@@@@@@@@@#               #@@@@@@@@@+                               #@@@@@@@@@=                               -*%@@@@@@@@@@@@@@@@@%+:               :@@@@@@@@@@:       *@@@@@@@@@#
+ :*********=    +#%@@@@@%%*+:                    +#%@@@@@@%*=   -*********=               =*********-                               =*********-                                  -+*#%@@@@@@@%#*=:                   +********+        :*********-
+                     ::                               ::                                                                                                                                :::</pre></div>
+    <div class="foot__base">
+      <p>burrow <span aria-hidden="true">/</span> MIT 许可</p>
+      <nav aria-label="Footer">
+        <a href="#install">安装</a>
+        <a href="#commands">命令</a>
+        <a href="#source" data-fill="repo-url">源码</a>
+      </nav>
+      <p class="foot__note">这只野兔是一幅生成图，用页面自身的字形印成。</p>
+    </div>
+  </div>
+</footer>
+
+<script src="art.js"></script>
+<script src="page.js"></script>
+</body>
+</html>

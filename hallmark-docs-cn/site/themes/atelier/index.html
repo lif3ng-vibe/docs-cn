@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maison Orla：根特的香水工作室</title>
+<meta name="description" content="Maison Orla 在根特制作四款香气，每款每批 300 瓶。周二至周六凭预约到访。">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=sentient@300,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<div class="air" aria-hidden="true"><canvas class="air__field" data-air></canvas></div>
+
+<header class="mast">
+  <div class="container mast__in">
+    <nav class="mast__start" aria-label="栏目">
+      <ul>
+        <li><a href="#four">四款香气</a></li>
+        <li><a href="#room">房间</a></li>
+      </ul>
+    </nav>
+    <a class="wordmark" href="#top" aria-label="Maison Orla，回到顶部">Maison Orla</a>
+    <a class="btn btn--nav mast__end" href="#visit">预约到访</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" aria-labelledby="hero-title" data-air-zone>
+    <div class="container hero__grid">
+      <div class="hero__text">
+        <h1 id="hero-title">四款香气，制于根特。</h1>
+        <p class="lead">每款每批 300 瓶，凭预约品闻。</p>
+        <div class="actions">
+          <a class="btn" href="#visit">预约到访</a>
+          <p class="actions__days">周二至周六</p>
+        </div>
+      </div>
+
+      <div class="hero__art">
+        <figure class="hero__print">
+          <div class="photo hero__photo" data-slot="hero" data-alt="四瓶之一，置于石材或石膏上，浸在工作室的日光里">
+            <img src="photos/perfume-glass-bottle-1920.jpg" width="1920" height="1440" fetchpriority="high" style="object-position: 49% 62%"
+                 alt="浅色木架上一只带黑色瓶盖的罗纹玻璃香水瓶，背靠石灰刷过的墙">
+          </div>
+          <figcaption class="edition">
+            <span class="edition__no" aria-hidden="true"><span class="edition__blank"></span>/300</span>
+            <span class="visually-hidden">一批 300 瓶中的一瓶。</span>
+            <span class="edition__by">Maison Orla，根特</span>
+          </figcaption>
+        </figure>
+
+        <div class="fan" data-plume=".blotter__stain" data-plume-r="360" role="group" aria-label="试香纸上的四款香气；选一款，让空气染上它的味道">
+          <button class="blotter" type="button" data-scent="1" aria-pressed="false" style="--i: 0">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">1 号</span>犬蔷薇</span></span>
+          </button>
+          <button class="blotter" type="button" data-scent="2" aria-pressed="false" style="--i: 1">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">2 号</span>迷迭香</span></span>
+          </button>
+          <button class="blotter" type="button" data-scent="3" aria-pressed="false" style="--i: 2">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">3 号</span>丁香</span></span>
+          </button>
+          <button class="blotter" type="button" data-scent="4" aria-pressed="false" style="--i: 3">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">4 号</span>尤加利</span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="four" id="four" aria-labelledby="four-title" data-air-zone>
+    <div class="container">
+      <div class="head-split">
+        <h2 id="four-title">四款香气</h2>
+        <p class="lead">一款香气一批。到访时可并排逐一品闻。</p>
+      </div>
+      <div class="switch" data-switch>
+        <div class="rack" data-plume="[aria-selected=&quot;true&quot;] .blotter__stain" data-plume-end="bottom" data-plume-r="240" data-plume-s="0.8" role="tablist" aria-label="四款香气">
+          <button class="blotter blotter--tall" role="tab" id="t1" data-scent="1" aria-controls="s1" aria-selected="true">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">1 号</span>犬蔷薇</span></span>
+          </button>
+          <button class="blotter blotter--tall" role="tab" id="t2" data-scent="2" aria-controls="s2" aria-selected="false" tabindex="-1">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">2 号</span>迷迭香</span></span>
+          </button>
+          <button class="blotter blotter--tall" role="tab" id="t3" data-scent="3" aria-controls="s3" aria-selected="false" tabindex="-1">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">3 号</span>丁香</span></span>
+          </button>
+          <button class="blotter blotter--tall" role="tab" id="t4" data-scent="4" aria-controls="s4" aria-selected="false" tabindex="-1">
+            <span class="blotter__paper"><span class="blotter__stain"></span><span class="blotter__name"><span class="blotter__no">4 号</span>尤加利</span></span>
+          </button>
+        </div>
+
+        <div class="scent" role="tabpanel" id="s1" aria-labelledby="t1">
+          <figure class="photo scent__photo" data-slot="scent-1" data-alt="第一款香气，或它的原料，在日光下">
+            <img src="photos/rosa-canina-focus-stacked-20220522-rm-123334-1920.jpg" width="1920" height="1440" loading="lazy" decoding="async" style="object-position: 50% 45%"
+                 alt="一朵淡粉色犬蔷薇，金色花蕊，衬在深绿的底色上">
+          </figure>
+          <div class="scent__text">
+            <p class="scent__no">1 号</p>
+            <h3>犬蔷薇</h3>
+            <p>花瓣与青茎，安静克制。</p>
+            <a class="textlink" href="#visit">到访试闻</a>
+          </div>
+        </div>
+
+        <div class="scent" role="tabpanel" id="s2" aria-labelledby="t2">
+          <figure class="photo scent__photo" data-slot="scent-2" data-alt="第二款香气，或它的原料，在日光下">
+            <img src="photos/rosemary-oil-in-a-bottle-and-rosemary-herb-1920.jpg" width="1920" height="1280" loading="lazy" decoding="async" style="object-position: 50% 60%"
+                 alt="木桌上迷迭香枝间的一只无标签琥珀色滴管瓶">
+          </figure>
+          <div class="scent__text">
+            <p class="scent__no">2 号</p>
+            <h3>迷迭香</h3>
+            <p>揉碎的香草，带一点木质。</p>
+            <a class="textlink" href="#visit">到访试闻</a>
+          </div>
+        </div>
+
+        <div class="scent" role="tabpanel" id="s3" aria-labelledby="t3">
+          <figure class="photo scent__photo" data-slot="scent-3" data-alt="第三款香气，或它的原料，在日光下">
+            <img src="photos/gewuerze-004-2024-08-10-1920.jpg" width="1920" height="1295" loading="lazy" decoding="async" style="object-position: 50% 50%"
+                 alt="八角、肉桂棒与丁香散落在白色底面上">
+          </figure>
+          <div class="scent__text">
+            <p class="scent__no">3 号</p>
+            <h3>丁香</h3>
+            <p>丁香与肉桂皮，干爽而温暖。</p>
+            <a class="textlink" href="#visit">到访试闻</a>
+          </div>
+        </div>
+
+        <div class="scent" role="tabpanel" id="s4" aria-labelledby="t4">
+          <figure class="photo scent__photo" data-slot="scent-4" data-alt="第四款香气，或它的原料，在日光下">
+            <img src="photos/eucalypt-oils-1-1920.jpg" width="1920" height="1440" loading="lazy" decoding="async" style="object-position: 50% 58%"
+                 alt="白色工作台上成排的高玻璃圆筒，盛着琥珀色与金色的油">
+          </figure>
+          <div class="scent__text">
+            <p class="scent__no">4 号</p>
+            <h3>尤加利</h3>
+            <p>清凉的叶片，覆在琥珀色的油上。</p>
+            <a class="textlink" href="#visit">到访试闻</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="entry" aria-labelledby="entry-title">
+    <div class="container entry__grid">
+      <h2 id="entry-title" class="visually-hidden">一批香气如何制成</h2>
+      <p class="statement">一次只做三百瓶，卖给愿意慢慢挑选香气的人。</p>
+      <div class="entry__foot">
+        <p class="edition edition--line" aria-hidden="true"><span class="edition__no"><span class="edition__blank"></span>/300</span><span class="edition__by">一批，一香</span></p>
+        <p class="dropcap">一批，就是一款香气的一次制作，批内每一瓶都相同。下一款香气，要等工作台清空之后才开始。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="room" id="room" aria-labelledby="room-title">
+    <div class="container room__grid">
+      <figure class="room__photo">
+        <div class="photo room__slot" data-slot="room" data-alt="日光下的工作室房间，到访者在此与四款香气相处">
+          <img src="photos/lobby-lounge-of-amantaka-suite-amantaka-luxury-resort-hotel--1920.jpg" width="1920" height="1280" loading="lazy" decoding="async" style="object-position: 62% 66%"
+               alt="安静的房间，一张柚木卧榻、一把藤制扶手椅和高大的百叶门">
+        </div>
+        <figcaption class="label"><b>房间</b>根特，工作室内</figcaption>
+      </figure>
+      <div class="room__text">
+        <h2 id="room-title">一间留给选择的房间</h2>
+        <p class="lead">凭预约到访，选香时整个房间只属于你。</p>
+        <ol class="steps">
+          <li><h3>选一个日子</h3><p>周二至周六任选一天。</p></li>
+          <li><h3>收到回复</h3><p>回复中会写明时间与街道。</p></li>
+          <li><h3>闻遍四款</h3><p>并排而列，身后没有人在等待。</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="visit" id="visit" aria-labelledby="visit-title" data-air-zone>
+    <div class="container visit__grid">
+      <div class="visit__info">
+        <h2 id="visit-title">预约到访</h2>
+        <p class="lead">周二至周六，凭预约。街道地址会随回复告知。</p>
+        <table class="timetable">
+          <caption class="visually-hidden">开放日</caption>
+          <tbody>
+            <tr class="off"><th scope="row">周一</th><td>不开放</td></tr>
+            <tr data-row="Tuesday"><th scope="row">周二</th><td>凭预约</td></tr>
+            <tr data-row="Wednesday"><th scope="row">周三</th><td>凭预约</td></tr>
+            <tr data-row="Thursday"><th scope="row">周四</th><td>凭预约</td></tr>
+            <tr data-row="Friday"><th scope="row">周五</th><td>凭预约</td></tr>
+            <tr data-row="Saturday"><th scope="row">周六</th><td>凭预约</td></tr>
+            <tr class="off"><th scope="row">周日</th><td>不开放</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="invite">
+        <div class="invite__strips" data-plume=".blotter__stain" data-plume-r="260" data-plume-s="0.85" aria-hidden="true">
+          <span class="blotter blotter--strip" data-scent="1" style="--i: 0"><span class="blotter__paper"><span class="blotter__stain"></span></span></span>
+          <span class="blotter blotter--strip" data-scent="2" style="--i: 1"><span class="blotter__paper"><span class="blotter__stain"></span></span></span>
+          <span class="blotter blotter--strip" data-scent="3" style="--i: 2"><span class="blotter__paper"><span class="blotter__stain"></span></span></span>
+          <span class="blotter blotter--strip" data-scent="4" style="--i: 3"><span class="blotter__paper"><span class="blotter__stain"></span></span></span>
+        </div>
+        <form class="card" data-endpoint="" novalidate aria-labelledby="card-title">
+          <p class="card__house">Maison Orla</p>
+          <p class="card__title" id="card-title">与四款香气共度一小时</p>
+
+          <fieldset class="days">
+            <legend>日期</legend>
+            <div class="days__row">
+              <input type="radio" name="day" id="day-tuesday" value="Tuesday" checked><label for="day-tuesday">周二<span class="visually-hidden"></span></label>
+              <input type="radio" name="day" id="day-wednesday" value="Wednesday"><label for="day-wednesday">周三<span class="visually-hidden"></span></label>
+              <input type="radio" name="day" id="day-thursday" value="Thursday"><label for="day-thursday">周四<span class="visually-hidden"></span></label>
+              <input type="radio" name="day" id="day-friday" value="Friday"><label for="day-friday">周五<span class="visually-hidden"></span></label>
+              <input type="radio" name="day" id="day-saturday" value="Saturday"><label for="day-saturday">周六<span class="visually-hidden"></span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="hours">
+            <legend>时段 <span class="hours__note">示例时段</span></legend>
+            <div class="hours__row">
+              <input type="radio" name="hour" id="h-1030" value="10:30"><label for="h-1030">10:30</label>
+              <input type="radio" name="hour" id="h-1200" value="12:00"><label for="h-1200">12:00</label>
+              <input type="radio" name="hour" id="h-1400" value="14:00" checked><label for="h-1400">14:00</label>
+              <input type="radio" name="hour" id="h-1530" value="15:30"><label for="h-1530">15:30</label>
+              <input type="radio" name="hour" id="h-1700" value="17:00"><label for="h-1700">17:00</label>
+            </div>
+          </fieldset>
+
+          <div class="lines">
+            <div class="line">
+              <label for="name">姓名</label>
+              <input id="name" name="name" type="text" autocomplete="name" required aria-required="true">
+            </div>
+            <div class="line">
+              <label for="email">邮箱</label>
+              <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required aria-required="true">
+            </div>
+            <div class="line">
+              <label for="note">备注</label>
+              <input id="note" name="note" type="text" autocomplete="off" aria-describedby="note-hint"><span class="line__hint" id="note-hint">可填可不填</span>
+            </div>
+          </div>
+
+          <div class="send">
+            <button class="btn" type="submit"><span>申请 <span data-day-out>周二</span> <span data-hour-out>14:00</span></span></button>
+            <p class="help" id="form-help" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container foot__in">
+    <p class="foot__line">四款香气，与从容挑选它们的时间。</p>
+    <div class="foot__base">
+      <p class="foot__name">Maison Orla<br><span>香水工作室，根特</span></p>
+      <nav aria-label="页脚">
+        <ul>
+          <li><a href="#four">四款香气</a></li>
+          <li><a href="#room">房间</a></li>
+          <li><a href="#visit">预约到访</a></li>
+        </ul>
+      </nav>
+      <p class="legal">© 2026 Maison Orla</p>
+    </div>
+    <p class="credits" data-credits>摄影： <a href="https://commons.wikimedia.org/wiki/File:Perfume_glass_bottle.jpg">Santeri Viinamäki</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Rosa_canina_focus_stacked-20220522-RM-123334.jpg">Ermell</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Rosemary_Oil_in_a_bottle_and_rosemary_herb.jpg">formulatehealth</a> (CC BY 2.0), <a href="https://commons.wikimedia.org/wiki/File:Gewuerze_004_2024_08_10.jpg">Friedrich Haag</a> (CC BY-SA 4.0), <a href="https://commons.wikimedia.org/wiki/File:Eucalypt_oils_1.jpg">Mx. Granger</a> (CC0), <a href="https://commons.wikimedia.org/wiki/File:Lobby_lounge_of_Amantaka_Suite_Amantaka_luxury_Resort_%26_Hotel_Luang_Prabang_Laos.jpg">Basile Morin</a> (CC BY-SA 4.0), all via Wikimedia Commons.</p>
+  </div>
+</footer>
+
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] > img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+<script src="air.js"></script>
+<script src="page.js"></script>
+</body>
+</html>
