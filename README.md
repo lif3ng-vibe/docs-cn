@@ -25,7 +25,7 @@
 | LiteLLM | `litellm-docs-cn/` | https://docs.litellm.ai/docs | https://github.com/BerriAI/litellm-docs（独立官方文档仓库 MIT，快照 `main@f8aa00d0` 2026-10-09；一期 715 文件） | 2026-10-26 |
 | Coolify | `coolify-docs-cn/` | https://coolify.io/docs | https://github.com/coollabsio/coolify-docs（官方文档仓库 Apache-2.0，快照 `main@2026-10-24`；一期 317 页人工内容） | 2026-10-27 |
 | Hallmark | `hallmark-docs-cn/` | https://www.usehallmark.com/ | https://github.com/Nutlope/hallmark（MIT，快照 `main@6033bab`；73 页全量 + README 完整译文） | 2026-10-28 |
-| AI Hero | `aihero-docs-cn/` | https://www.aihero.dev/ | 闭源站（线上 HTML+资产快照 2026-10-30；flight 同步汉化，208 页） | 2026-10-30 |
+| AI Hero | `aihero-docs-cn/` | https://www.aihero.dev/ | 闭源站（线上 HTML+资产快照 2026-10-30；flight 同步汉化，209 页） | 2026-10-30 |
 | Agent Skills | `agent-skills-docs-cn/` | https://skills.addy.ie/ | https://github.com/addyosmani/agent-skills（站点工程：[skills.addy.ie](https://github.com/addyosmani/skills.addy.ie)） | 2026-10-08 |
 | e2e | `tester-army-e2e-docs-cn/` | https://e2e.tester.army/docs | https://github.com/tester-army/e2e（快照 `main` @ 2026-10-07） | 2026-10-08 |
 | Claude-Mem | `claude-mem-docs-cn/` | https://docs.claude-mem.ai/ | https://github.com/thedotmack/claude-mem（快照 `71ddd11`，Mintlify 源在其 docs/public/） | 2026-10-08 |
@@ -119,7 +119,7 @@ docs-cn/
 ├── litellm-docs-cn/                    # LiteLLM 官方文档中文镜像（Docusaurus 3.8 原班工具链，一期 715 文件）
 ├── coolify-docs-cn/                    # Coolify 官方文档中文镜像（fumadocs + TanStack Start，一期 317 页）
 ├── hallmark-docs-cn/                   # Hallmark 官网中文镜像（纯静态 HTML 原班无构建，73 页 + README 译文）
-├── aihero-docs-cn/                     # AI Hero 官网中文镜像（闭源 Next.js HTML+flight 同步汉化，208 页）
+├── aihero-docs-cn/                     # AI Hero 官网中文镜像（闭源 Next.js HTML+flight 同步汉化，209 页）
 ├── agent-skills-docs-cn/               # Agent Skills 官方站中文版（原版 Astro 5 营销/教程站，36 页）
 ├── tester-army-e2e-docs-cn/            # e2e 中文文档（Mintlify 原班 + export 导出，52 篇 MDX）
 ├── claude-mem-docs-cn/                 # Claude-Mem 中文文档（Mintlify 原班构建，49 篇 + export+prefix 部署链）
