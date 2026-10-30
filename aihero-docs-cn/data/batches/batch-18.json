@@ -1,0 +1,14 @@
+{
+ "id": 18,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary/afk",
+  "ai-coding-dictionary/model",
+  "ai-coding-dictionary/progressive-disclosure",
+  "ai-coding-dictionary/filesystem",
+  "ai-coding-dictionary/sycophancy",
+  "ai-coding-dictionary/vibe-coding",
+  "ai-coding-dictionary/attention-degradation",
+  "ai-coding-dictionary/prefix-cache"
+ ]
+}

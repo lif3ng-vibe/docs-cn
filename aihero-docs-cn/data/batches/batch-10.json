@@ -1,0 +1,14 @@
+{
+ "id": 10,
+ "group": "ai-sdk",
+ "pages": [
+  "agents-with-vercel-ai-sdk",
+  "vercel-ai-sdk",
+  "vercel-ai-sdk-tutorial",
+  "tool-calls-with-vercel-ai-sdk",
+  "vercel-ai-sdk-messages-array",
+  "describe-images-with-vercel-ai-sdk",
+  "create-embeddings-with-vercel-ai-sdk",
+  "structured-outputs-with-vercel-ai-sdk"
+ ]
+}

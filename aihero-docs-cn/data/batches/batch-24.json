@@ -1,0 +1,14 @@
+{
+ "id": 24,
+ "group": "skills",
+ "pages": [
+  "skills-wayfinder",
+  "skills-triage",
+  "skills-setup-matt-pocock-skills",
+  "skills-domain-modeling",
+  "skills-codebase-design",
+  "skills-implement",
+  "skills-teach",
+  "skills-tdd"
+ ]
+}

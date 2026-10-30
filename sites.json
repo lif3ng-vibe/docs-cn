@@ -365,5 +365,21 @@
       "stack": "纯静态 HTML（原班无构建）",
       "snap": "main@6033bab 2026-10-28"
     }
+  },
+  {
+    "name": "AI Hero",
+    "slug": "aihero",
+    "desc": "Matt Pocock 的 AI 工程学习平台中文镜像——LLM 基础、Claude Code、MCP、Vercel AI SDK 全站文章、AI 编码词典与技能讲解；视频与报名支付指回原站。",
+    "tags": [
+      "ai-agent",
+      "learning"
+    ],
+    "orig": "https://www.aihero.dev/",
+    "repo": "https://www.aihero.dev/",
+    "meta": {
+      "pages": "208 页",
+      "stack": "Next.js HTML 镜像（flight 同步汉化）",
+      "snap": "2026-10-30"
+    }
   }
 ]

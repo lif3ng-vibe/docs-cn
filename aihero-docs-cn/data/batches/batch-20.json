@@ -1,0 +1,14 @@
+{
+ "id": 20,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary/autocompact",
+  "ai-coding-dictionary/output-tokens",
+  "ai-coding-dictionary/training",
+  "ai-coding-dictionary/ticket",
+  "ai-coding-dictionary/human-review",
+  "ai-coding-dictionary/design-concept",
+  "ai-coding-dictionary/knowledge-cutoff",
+  "ai-coding-dictionary/parametric-knowledge"
+ ]
+}

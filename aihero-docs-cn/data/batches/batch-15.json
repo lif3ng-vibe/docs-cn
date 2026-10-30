@@ -1,0 +1,14 @@
+{
+ "id": 15,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary/permission-request",
+  "ai-coding-dictionary/tool-call",
+  "ai-coding-dictionary/context-window",
+  "ai-coding-dictionary/sandbox",
+  "ai-coding-dictionary/agents-md",
+  "ai-coding-dictionary/context-pointer",
+  "ai-coding-dictionary/effort",
+  "ai-coding-dictionary/environment"
+ ]
+}

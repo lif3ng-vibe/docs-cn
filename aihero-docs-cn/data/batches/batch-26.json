@@ -1,0 +1,14 @@
+{
+ "id": 26,
+ "group": "skills",
+ "pages": [
+  "skills-to-questionnaire",
+  "skills-changelog-v13-implement-spec-pr-retro-and-glossary-md",
+  "skills-to-tickets",
+  "skills",
+  "skills-pr",
+  "skills-writing-for-agents",
+  "skills-prototype",
+  "skills-handoff"
+ ]
+}

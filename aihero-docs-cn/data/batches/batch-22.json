@@ -1,0 +1,14 @@
+{
+ "id": 22,
+ "group": "sandcastle",
+ "pages": [
+  "sandcastle/cli-commands",
+  "sandcastle/api",
+  "sandcastle/prompts",
+  "sandcastle/sandbox-providers",
+  "sandcastle/how-it-works",
+  "sandcastle/configuration",
+  "sandcastle",
+  "sandcastle/custom-sandbox-providers"
+ ]
+}

@@ -558,6 +558,21 @@ jobs:
         run: |
           mv site ../_site/hallmark
 
+      # aihero 是闭源 Next.js 站的 HTML 镜像：site/ 已在本地完成译文回填
+      # （正文/属性/meta/flight 四层）与 /docs-cn/aihero/ 前缀改写，无构建直接 Collect。
+      - name: Restore aihero-docs-cn dist
+        id: dist-aihero
+        uses: actions/cache@v4
+        with:
+          path: _site/aihero
+          key: dist-aihero-${{ hashFiles('aihero-docs-cn/site/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Collect aihero-docs-cn
+        if: steps.dist-aihero.outputs.cache-hit != 'true'
+        working-directory: aihero-docs-cn
+        run: |
+          mv site ../_site/aihero
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -598,6 +613,7 @@ jobs:
             echo '| litellm | ${{ steps.dist-litellm.outputs.cache-hit == 'true' }} |'
           echo '| coolify | ${{ steps.dist-coolify.outputs.cache-hit == 'true' }} |'
           echo '| hallmark | ${{ steps.dist-hallmark.outputs.cache-hit == 'true' }} |'
+          echo '| aihero | ${{ steps.dist-aihero.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

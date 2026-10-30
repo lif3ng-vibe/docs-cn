@@ -1,0 +1,13 @@
+{
+ "id": "batch-r1",
+ "pages": [
+  "sandcastle",
+  "sandcastle/api",
+  "sandcastle/cli-commands",
+  "sandcastle/configuration",
+  "sandcastle/custom-sandbox-providers",
+  "sandcastle/how-it-works",
+  "sandcastle/prompts",
+  "sandcastle/sandbox-providers"
+ ]
+}

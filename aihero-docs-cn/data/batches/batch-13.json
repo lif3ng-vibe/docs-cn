@@ -1,0 +1,14 @@
+{
+ "id": 13,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary",
+  "ai-coding-dictionary/model-provider-request",
+  "ai-coding-dictionary/inference",
+  "ai-coding-dictionary/stateful",
+  "ai-coding-dictionary/contextual-knowledge",
+  "ai-coding-dictionary/permission-mode",
+  "ai-coding-dictionary/cache-tokens",
+  "ai-coding-dictionary/software-factory"
+ ]
+}

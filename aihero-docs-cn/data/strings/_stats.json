@@ -1,0 +1,1042 @@
+{
+  "2025-the-year-building-with-gen-ais-gets-boring~d53hd": {
+    "texts": 154,
+    "attrs": 26,
+    "meta": 2
+  },
+  "5-agent-skills-i-use-every-day": {
+    "texts": 231,
+    "attrs": 35,
+    "meta": 2
+  },
+  "a-complete-guide-to-agents-md": {
+    "texts": 337,
+    "attrs": 28,
+    "meta": 2
+  },
+  "about": {
+    "texts": 9,
+    "attrs": 0,
+    "meta": 2
+  },
+  "agents-with-vercel-ai-sdk": {
+    "texts": 217,
+    "attrs": 28,
+    "meta": 2
+  },
+  "ai-coding-dictionary/afk": {
+    "texts": 160,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/agent": {
+    "texts": 157,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/agent-mode": {
+    "texts": 165,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/agents-md": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/ai": {
+    "texts": 165,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/attention-budget": {
+    "texts": 151,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/attention-degradation": {
+    "texts": 158,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/attention-relationship": {
+    "texts": 169,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/autocompact": {
+    "texts": 155,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/automated-check": {
+    "texts": 117,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/automated-review": {
+    "texts": 156,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/ax": {
+    "texts": 166,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/cache-tokens": {
+    "texts": 174,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/clearing": {
+    "texts": 157,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/compaction": {
+    "texts": 162,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/context": {
+    "texts": 162,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/context-pointer": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/context-window": {
+    "texts": 168,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/contextual-knowledge": {
+    "texts": 176,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/dark-factory": {
+    "texts": 149,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/design-concept": {
+    "texts": 152,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/dx": {
+    "texts": 148,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/effort": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/environment": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/filesystem": {
+    "texts": 159,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/grilling": {
+    "texts": 151,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/hallucination": {
+    "texts": 171,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/handoff": {
+    "texts": 170,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/handoff-artifact": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/harness": {
+    "texts": 170,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/human-in-the-loop": {
+    "texts": 157,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/human-review": {
+    "texts": 153,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary": {
+    "texts": 280,
+    "attrs": 23,
+    "meta": 3
+  },
+  "ai-coding-dictionary/inference": {
+    "texts": 179,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/input-tokens": {
+    "texts": 170,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/knowledge-cutoff": {
+    "texts": 152,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/mcp": {
+    "texts": 162,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/memory-system": {
+    "texts": 167,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/model": {
+    "texts": 160,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/model-provider": {
+    "texts": 164,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/model-provider-request": {
+    "texts": 187,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/next-token-prediction": {
+    "texts": 166,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/non-determinism": {
+    "texts": 157,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/output-tokens": {
+    "texts": 155,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/parameters": {
+    "texts": 163,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/parametric-knowledge": {
+    "texts": 152,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/permission-mode": {
+    "texts": 176,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/permission-request": {
+    "texts": 169,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/prefix-cache": {
+    "texts": 158,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/primary-source": {
+    "texts": 148,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/progressive-disclosure": {
+    "texts": 160,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/prototyping": {
+    "texts": 142,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/sandbox": {
+    "texts": 168,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/secondary-source": {
+    "texts": 161,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/session": {
+    "texts": 162,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/skill": {
+    "texts": 173,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/smart-zone": {
+    "texts": 165,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/software-factory": {
+    "texts": 174,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/spec": {
+    "texts": 163,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/stateful": {
+    "texts": 179,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/stateless": {
+    "texts": 161,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/subagent": {
+    "texts": 158,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/sycophancy": {
+    "texts": 159,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/system-prompt": {
+    "texts": 156,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/ticket": {
+    "texts": 154,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/token": {
+    "texts": 157,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/tool": {
+    "texts": 173,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/tool-call": {
+    "texts": 169,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/tool-result": {
+    "texts": 174,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/training": {
+    "texts": 155,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/turn": {
+    "texts": 148,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-coding-dictionary/vibe-coding": {
+    "texts": 159,
+    "attrs": 24,
+    "meta": 3
+  },
+  "ai-engineer-roadmap": {
+    "texts": 164,
+    "attrs": 23,
+    "meta": 2
+  },
+  "anthropics-new-model-context-protocol-in-2-minutes~hc0tx": {
+    "texts": 134,
+    "attrs": 24,
+    "meta": 2
+  },
+  "building-effective-agents": {
+    "texts": 169,
+    "attrs": 26,
+    "meta": 2
+  },
+  "burn-through-your-backlog-with-my-triage-skill": {
+    "texts": 327,
+    "attrs": 34,
+    "meta": 2
+  },
+  "connect-claude-code-to-github": {
+    "texts": 100,
+    "attrs": 27,
+    "meta": 2
+  },
+  "courses": {
+    "texts": 93,
+    "attrs": 25,
+    "meta": 2
+  },
+  "create-embeddings-with-vercel-ai-sdk": {
+    "texts": 141,
+    "attrs": 27,
+    "meta": 2
+  },
+  "creating-the-perfect-claude-code-status-line": {
+    "texts": 198,
+    "attrs": 27,
+    "meta": 2
+  },
+  "describe-images-with-vercel-ai-sdk": {
+    "texts": 140,
+    "attrs": 27,
+    "meta": 2
+  },
+  "developers": {
+    "texts": 9,
+    "attrs": 0,
+    "meta": 2
+  },
+  "essential-ai-coding-feedback-loops-for-type-script-projects": {
+    "texts": 197,
+    "attrs": 27,
+    "meta": 2
+  },
+  "evalite-an-early-preview": {
+    "texts": 139,
+    "attrs": 24,
+    "meta": 2
+  },
+  "evalite-v1-preview": {
+    "texts": 250,
+    "attrs": 26,
+    "meta": 2
+  },
+  "faq": {
+    "texts": 77,
+    "attrs": 8,
+    "meta": 2
+  },
+  "generate-arrays-with-vercel-ai-sdk": {
+    "texts": 123,
+    "attrs": 27,
+    "meta": 2
+  },
+  "generate-enums-with-vercel-ai-sdk": {
+    "texts": 119,
+    "attrs": 27,
+    "meta": 2
+  },
+  "generate-text-with-vercel-ai-sdk": {
+    "texts": 124,
+    "attrs": 27,
+    "meta": 2
+  },
+  "getting-started-with-ralph": {
+    "texts": 289,
+    "attrs": 28,
+    "meta": 2
+  },
+  "google-agents-whitepaper-review": {
+    "texts": 180,
+    "attrs": 26,
+    "meta": 2
+  },
+  "grill-with-docs": {
+    "texts": 277,
+    "attrs": 35,
+    "meta": 2
+  },
+  "heres-how-to-stream-claude-code-with-afk-ralph": {
+    "texts": 230,
+    "attrs": 27,
+    "meta": 2
+  },
+  "how-does-the-model-context-protocol-work": {
+    "texts": 203,
+    "attrs": 26,
+    "meta": 2
+  },
+  "how-to-choose-an-llm": {
+    "texts": 240,
+    "attrs": 26,
+    "meta": 2
+  },
+  "how-to-improve-your-llm-powered-app": {
+    "texts": 391,
+    "attrs": 28,
+    "meta": 2
+  },
+  "how-to-kill-the-bloat-in-claude-codes-system-prompt": {
+    "texts": 249,
+    "attrs": 26,
+    "meta": 1
+  },
+  "how-to-make-codebases-ai-agents-love": {
+    "texts": 180,
+    "attrs": 27,
+    "meta": 2
+  },
+  "how-to-use-claude-code-hooks-to-enforce-the-right-cli": {
+    "texts": 225,
+    "attrs": 27,
+    "meta": 2
+  },
+  "implementing-anthropics-think-tool-in-typescript": {
+    "texts": 187,
+    "attrs": 26,
+    "meta": 2
+  },
+  "learn": {
+    "texts": 133,
+    "attrs": 24,
+    "meta": 2
+  },
+  "learn-anything-with-my-teach-skill": {
+    "texts": 208,
+    "attrs": 29,
+    "meta": 2
+  },
+  "llm-fundamentals": {
+    "texts": 156,
+    "attrs": 23,
+    "meta": 2
+  },
+  "logging-a-huge-mcp-footgun": {
+    "texts": 170,
+    "attrs": 27,
+    "meta": 2
+  },
+  "mcp-server-from-a-single-typescript-file": {
+    "texts": 188,
+    "attrs": 27,
+    "meta": 2
+  },
+  "messages-system-prompts-and-reasoning-tokens": {
+    "texts": 167,
+    "attrs": 31,
+    "meta": 2
+  },
+  "model-context-protocol-tutorial": {
+    "texts": 172,
+    "attrs": 23,
+    "meta": 2
+  },
+  "my-7-phases-of-ai-development": {
+    "texts": 244,
+    "attrs": 26,
+    "meta": 2
+  },
+  "my-agents-md-file-for-building-plans-you-actually-read": {
+    "texts": 178,
+    "attrs": 29,
+    "meta": 2
+  },
+  "my-claude-code-cohort-a-teaser": {
+    "texts": 192,
+    "attrs": 27,
+    "meta": 2
+  },
+  "my-grill-me-skill-has-gone-viral": {
+    "texts": 185,
+    "attrs": 29,
+    "meta": 2
+  },
+  "never-run-claude-init": {
+    "texts": 236,
+    "attrs": 30,
+    "meta": 2
+  },
+  "newsletter": {
+    "texts": 45,
+    "attrs": 20,
+    "meta": 2
+  },
+  "personal-software-is-insane-in-the-age-of-ai-u2hx2": {
+    "texts": 149,
+    "attrs": 26,
+    "meta": 2
+  },
+  "plan-mode-introduction": {
+    "texts": 238,
+    "attrs": 27,
+    "meta": 2
+  },
+  "publish-your-mcp-server-to-npm": {
+    "texts": 208,
+    "attrs": 28,
+    "meta": 2
+  },
+  "real-world-feature-build-with-claude-code": {
+    "texts": 138,
+    "attrs": 26,
+    "meta": 2
+  },
+  "sandcastle/api": {
+    "texts": 215,
+    "attrs": 24,
+    "meta": 3
+  },
+  "sandcastle/cli-commands": {
+    "texts": 328,
+    "attrs": 24,
+    "meta": 3
+  },
+  "sandcastle/configuration": {
+    "texts": 133,
+    "attrs": 24,
+    "meta": 3
+  },
+  "sandcastle/custom-sandbox-providers": {
+    "texts": 124,
+    "attrs": 24,
+    "meta": 3
+  },
+  "sandcastle/getting-started": {
+    "texts": 102,
+    "attrs": 24,
+    "meta": 3
+  },
+  "sandcastle/how-it-works": {
+    "texts": 148,
+    "attrs": 22,
+    "meta": 3
+  },
+  "sandcastle": {
+    "texts": 127,
+    "attrs": 19,
+    "meta": 3
+  },
+  "sandcastle/prompts": {
+    "texts": 202,
+    "attrs": 25,
+    "meta": 3
+  },
+  "sandcastle/sandbox-providers": {
+    "texts": 159,
+    "attrs": 23,
+    "meta": 3
+  },
+  "securing-your-ai-app-with-guardrails": {
+    "texts": 167,
+    "attrs": 26,
+    "meta": 2
+  },
+  "skill-test-driven-development-claude-code": {
+    "texts": 240,
+    "attrs": 28,
+    "meta": 2
+  },
+  "skills": {
+    "texts": 275,
+    "attrs": 42,
+    "meta": 2
+  },
+  "skills/skills-changelog-handoff-prototype-review-and-writing": {
+    "texts": 165,
+    "attrs": 23,
+    "meta": 2
+  },
+  "skills/skills-changelog-ubiquitous-language-grill-with-docs": {
+    "texts": 243,
+    "attrs": 23,
+    "meta": 2
+  },
+  "skills/skills-changelog-v1-1-wayfinder-to-spec-to-tickets-grilling-improvements": {
+    "texts": 308,
+    "attrs": 25,
+    "meta": 2
+  },
+  "skills/skills-changelog-v1-announcement": {
+    "texts": 223,
+    "attrs": 24,
+    "meta": 2
+  },
+  "skills/skills-changelog-v12-wait-what-writing-for-agents-claude-code-plugin-and-more": {
+    "texts": 244,
+    "attrs": 25,
+    "meta": 2
+  },
+  "skills/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md": {
+    "texts": 235,
+    "attrs": 22,
+    "meta": 2
+  },
+  "skills/subscribe": {
+    "texts": 90,
+    "attrs": 24,
+    "meta": 2
+  },
+  "skills-ask-matt": {
+    "texts": 313,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-catalog": {
+    "texts": 211,
+    "attrs": 30,
+    "meta": 2
+  },
+  "skills-changelog-ubiquitous-language-grill-with-docs": {
+    "texts": 271,
+    "attrs": 27,
+    "meta": 2
+  },
+  "skills-changelog-v13-implement-spec-pr-retro-and-glossary-md": {
+    "texts": 290,
+    "attrs": 26,
+    "meta": 2
+  },
+  "skills-code-review": {
+    "texts": 311,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-codebase-design": {
+    "texts": 349,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-diagnosing-bugs": {
+    "texts": 316,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-domain-modeling": {
+    "texts": 348,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-grill-me": {
+    "texts": 274,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-grill-with-docs": {
+    "texts": 300,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-grilling": {
+    "texts": 297,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-handoff": {
+    "texts": 268,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-implement": {
+    "texts": 332,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-implement-spec": {
+    "texts": 298,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-improve-codebase-architecture": {
+    "texts": 315,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-pr": {
+    "texts": 276,
+    "attrs": 39,
+    "meta": 2
+  },
+  "skills-prototype": {
+    "texts": 269,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-research": {
+    "texts": 275,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-resolving-merge-conflicts": {
+    "texts": 216,
+    "attrs": 33,
+    "meta": 2
+  },
+  "skills-retro": {
+    "texts": 296,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-setup-matt-pocock-skills": {
+    "texts": 351,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-tdd": {
+    "texts": 322,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-teach": {
+    "texts": 324,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-to-questionnaire": {
+    "texts": 294,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-to-spec": {
+    "texts": 258,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-to-tickets": {
+    "texts": 300,
+    "attrs": 41,
+    "meta": 2
+  },
+  "skills-triage": {
+    "texts": 361,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-wait-what": {
+    "texts": 252,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-wayfinder": {
+    "texts": 364,
+    "attrs": 40,
+    "meta": 2
+  },
+  "skills-wizard": {
+    "texts": 263,
+    "attrs": 39,
+    "meta": 2
+  },
+  "skills-writing-for-agents": {
+    "texts": 273,
+    "attrs": 40,
+    "meta": 2
+  },
+  "storm-generate-high-quality-articles-based-on-real-research": {
+    "texts": 80,
+    "attrs": 26,
+    "meta": 2
+  },
+  "streaming-in-next-question-suggestions-with-the-ai-sdk": {
+    "texts": 181,
+    "attrs": 26,
+    "meta": 2
+  },
+  "streaming-objects-with-vercel-ai-sdk": {
+    "texts": 139,
+    "attrs": 27,
+    "meta": 2
+  },
+  "streaming-text-with-vercel-ai-sdk": {
+    "texts": 127,
+    "attrs": 27,
+    "meta": 2
+  },
+  "structured-data-from-pdfs-with-vercel-ai-sdk": {
+    "texts": 127,
+    "attrs": 27,
+    "meta": 2
+  },
+  "structured-outputs-with-vercel-ai-sdk": {
+    "texts": 131,
+    "attrs": 27,
+    "meta": 2
+  },
+  "swap-ai-models-with-vercel-ai-sdk": {
+    "texts": 111,
+    "attrs": 27,
+    "meta": 2
+  },
+  "system-prompts-with-vercel-ai-sdk": {
+    "texts": 114,
+    "attrs": 27,
+    "meta": 2
+  },
+  "the-ai-engineer-mindset": {
+    "texts": 126,
+    "attrs": 26,
+    "meta": 2
+  },
+  "the-problem-with-mcp-stateful-server": {
+    "texts": 145,
+    "attrs": 27,
+    "meta": 2
+  },
+  "the-prompt-report": {
+    "texts": 162,
+    "attrs": 26,
+    "meta": 2
+  },
+  "things-people-get-wrong-with-grill-me-and-grill-with-docs": {
+    "texts": 265,
+    "attrs": 34,
+    "meta": 2
+  },
+  "this-hook-stops-claude-code-running-dangerous-git-commands": {
+    "texts": 216,
+    "attrs": 27,
+    "meta": 2
+  },
+  "three-types-of-evals": {
+    "texts": 150,
+    "attrs": 25,
+    "meta": 2
+  },
+  "tips-for-ai-coding-with-ralph-wiggum": {
+    "texts": 497,
+    "attrs": 28,
+    "meta": 2
+  },
+  "tool-calls-with-vercel-ai-sdk": {
+    "texts": 170,
+    "attrs": 27,
+    "meta": 2
+  },
+  "tracer-bullets": {
+    "texts": 198,
+    "attrs": 27,
+    "meta": 2
+  },
+  "use-local-models-with-vercel-ai-sdk": {
+    "texts": 115,
+    "attrs": 27,
+    "meta": 2
+  },
+  "using-mcp-prompts": {
+    "texts": 130,
+    "attrs": 29,
+    "meta": 2
+  },
+  "vercel-ai-sdk": {
+    "texts": 197,
+    "attrs": 26,
+    "meta": 2
+  },
+  "vercel-ai-sdk-messages-array": {
+    "texts": 161,
+    "attrs": 27,
+    "meta": 2
+  },
+  "vercel-ai-sdk-tutorial": {
+    "texts": 188,
+    "attrs": 24,
+    "meta": 2
+  },
+  "ways-ai-coding-has-rewired-my-brain": {
+    "texts": 193,
+    "attrs": 26,
+    "meta": 2
+  },
+  "what-are-evals": {
+    "texts": 217,
+    "attrs": 27,
+    "meta": 2
+  },
+  "what-are-llms-used-for": {
+    "texts": 157,
+    "attrs": 27,
+    "meta": 2
+  },
+  "what-are-tokens": {
+    "texts": 131,
+    "attrs": 33,
+    "meta": 2
+  },
+  "what-are-tools": {
+    "texts": 124,
+    "attrs": 30,
+    "meta": 2
+  },
+  "what-is-an-agent": {
+    "texts": 99,
+    "attrs": 31,
+    "meta": 2
+  },
+  "what-is-an-ai-engineer": {
+    "texts": 161,
+    "attrs": 26,
+    "meta": 2
+  },
+  "what-is-an-llm": {
+    "texts": 157,
+    "attrs": 27,
+    "meta": 2
+  },
+  "what-is-the-ai-sdk": {
+    "texts": 140,
+    "attrs": 27,
+    "meta": 2
+  },
+  "what-is-the-context-window": {
+    "texts": 157,
+    "attrs": 31,
+    "meta": 2
+  },
+  "why-the-anthropic-ralph-plugin-sucks": {
+    "texts": 196,
+    "attrs": 29,
+    "meta": 2
+  },
+  "workshops/ai-coding-crash-course": {
+    "texts": 177,
+    "attrs": 18,
+    "meta": 2
+  },
+  "workshops/ai-sdk-v6-crash-course/generating-objects-via-output~dkm2k": {
+    "texts": 157,
+    "attrs": 21,
+    "meta": 2
+  },
+  "workshops/ai-sdk-v6-crash-course": {
+    "texts": 225,
+    "attrs": 18,
+    "meta": 2
+  }
+}

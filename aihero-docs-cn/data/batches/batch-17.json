@@ -1,0 +1,14 @@
+{
+ "id": 17,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary/parameters",
+  "ai-coding-dictionary/spec",
+  "ai-coding-dictionary/compaction",
+  "ai-coding-dictionary/context",
+  "ai-coding-dictionary/mcp",
+  "ai-coding-dictionary/session",
+  "ai-coding-dictionary/secondary-source",
+  "ai-coding-dictionary/stateless"
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "id": 25,
+ "group": "skills",
+ "pages": [
+  "skills-improve-codebase-architecture",
+  "skills-ask-matt",
+  "skills-code-review",
+  "skills-diagnosing-bugs",
+  "skills-implement-spec",
+  "skills-grilling",
+  "skills-grill-with-docs",
+  "skills-retro"
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "id": 2,
+ "group": "posts",
+ "pages": [
+  "skills/skills-changelog-v12-wait-what-writing-for-agents-claude-code-plugin-and-more",
+  "my-7-phases-of-ai-development",
+  "how-to-choose-an-llm",
+  "skill-test-driven-development-claude-code",
+  "how-to-kill-the-bloat-in-claude-codes-system-prompt",
+  "skills/skills-changelog-ubiquitous-language-grill-with-docs",
+  "plan-mode-introduction",
+  "skills/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md"
+ ]
+}

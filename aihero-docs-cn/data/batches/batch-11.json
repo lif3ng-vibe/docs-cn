@@ -1,0 +1,14 @@
+{
+ "id": 11,
+ "group": "ai-sdk",
+ "pages": [
+  "generate-arrays-with-vercel-ai-sdk",
+  "structured-data-from-pdfs-with-vercel-ai-sdk",
+  "generate-text-with-vercel-ai-sdk",
+  "streaming-objects-with-vercel-ai-sdk",
+  "streaming-text-with-vercel-ai-sdk",
+  "generate-enums-with-vercel-ai-sdk",
+  "use-local-models-with-vercel-ai-sdk",
+  "system-prompts-with-vercel-ai-sdk"
+ ]
+}

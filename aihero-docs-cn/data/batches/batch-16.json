@@ -1,0 +1,14 @@
+{
+ "id": 16,
+ "group": "dict",
+ "pages": [
+  "ai-coding-dictionary/handoff-artifact",
+  "ai-coding-dictionary/memory-system",
+  "ai-coding-dictionary/ax",
+  "ai-coding-dictionary/next-token-prediction",
+  "ai-coding-dictionary/agent-mode",
+  "ai-coding-dictionary/ai",
+  "ai-coding-dictionary/smart-zone",
+  "ai-coding-dictionary/model-provider"
+ ]
+}

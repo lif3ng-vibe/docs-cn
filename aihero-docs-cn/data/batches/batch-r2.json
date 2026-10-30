@@ -1,0 +1,13 @@
+{
+ "id": "batch-r2",
+ "pages": [
+  "skills-tdd",
+  "skills-grill-me",
+  "skills-grill-with-docs",
+  "skills-grilling",
+  "skills-handoff",
+  "skills-retro",
+  "skills-pr",
+  "skills-prototype"
+ ]
+}
