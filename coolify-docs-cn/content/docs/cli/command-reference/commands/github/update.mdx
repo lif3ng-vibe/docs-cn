@@ -1,40 +1,40 @@
 ---
 title: "Update"
-description: "Update an existing GitHub App integration. Provide the app UUID (numeric ID also accepted) and the fields you want to update."
+description: "更新现有 GitHub App 集成。提供应用 UUID（也接受数字 ID）以及要更新的字段。"
 ---
 
 # Update
 
-Update an existing GitHub App integration. Provide the app UUID (numeric ID also accepted) and the fields you want to update.
+更新现有 GitHub App 集成。提供应用 UUID（也接受数字 ID）以及要更新的字段。
 
-## Usage
+## 用法
 
 ```sh
 coolify github update <app_uuid>
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--api-url` | `string` | No | — | GitHub API URL |
-| `--app-id` | `integer` | No | `0` | GitHub App ID |
-| `--client-id` | `string` | No | — | GitHub OAuth Client ID |
-| `--client-secret` | `string` | No | — | GitHub OAuth Client Secret |
-| `--custom-port` | `integer` | No | `0` | Custom port for SSH |
-| `--custom-user` | `string` | No | — | Custom user for SSH |
-| `--html-url` | `string` | No | — | GitHub HTML URL |
-| `--installation-id` | `integer` | No | `0` | GitHub Installation ID |
-| `--name` | `string` | No | — | GitHub App name |
-| `--organization` | `string` | No | — | GitHub organization |
-| `--private-key-uuid` | `string` | No | — | UUID of private key |
-| `--system-wide` | `boolean` | No | `false` | Is this app system-wide |
-| `--webhook-secret` | `string` | No | — | GitHub Webhook Secret |
+| `--api-url` | `string` | 否 | — | GitHub API URL |
+| `--app-id` | `integer` | 否 | `0` | GitHub App ID |
+| `--client-id` | `string` | 否 | — | GitHub OAuth 客户端 ID |
+| `--client-secret` | `string` | 否 | — | GitHub OAuth 客户端密钥 |
+| `--custom-port` | `integer` | 否 | `0` | SSH 自定义端口 |
+| `--custom-user` | `string` | 否 | — | SSH 自定义用户 |
+| `--html-url` | `string` | 否 | — | GitHub HTML URL |
+| `--installation-id` | `integer` | 否 | `0` | GitHub 安装 ID |
+| `--name` | `string` | 否 | — | GitHub App 名称 |
+| `--organization` | `string` | 否 | — | GitHub 组织 |
+| `--private-key-uuid` | `string` | 否 | — | 私钥的 UUID |
+| `--system-wide` | `boolean` | 否 | `false` | 该应用是否系统级 |
+| `--webhook-secret` | `string` | 否 | — | GitHub webhook 密钥 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify github update --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

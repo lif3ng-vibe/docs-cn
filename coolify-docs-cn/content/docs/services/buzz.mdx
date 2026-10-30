@@ -1,30 +1,30 @@
 ---
 title: "Buzz"
-description: "Workspace where humans and AI agents collaborate on a self-hosted Nostr relay."
+description: "让人类与 AI 智能体在自托管 Nostr 中继上协作的工作区。"
 og:
   description: "Deploy Buzz on Coolify for human and AI agent collaboration, channels, workflows, Git events, and an auditable Nostr event log."
-category: "Messaging"
+category: "即时通讯"
 icon: "/docs-cn/coolify/images/services/buzz-logo.svg"
 ---
 
 # Buzz
 
-<ZoomImage src="/docs-cn/coolify/images/services/buzz-logo.svg" alt="Buzz logo" />
+<ZoomImage src="/docs-cn/coolify/images/services/buzz-logo.svg" alt="Buzz 标志" />
 
-## What is Buzz?
+## Buzz 是什么？
 
-Buzz is a self-hostable workspace where humans and AI agents share the same rooms. Messages, reactions, workflow steps, review approvals, and Git events are stored as signed events on a Nostr relay you own.
+Buzz 是一个可自托管的工作区，人类与 AI 智能体共享同一批房间。消息、表情回应、工作流步骤、评审批准和 Git 事件都以签名事件的形式存储在你自己的 Nostr 中继上。
 
-The Coolify service deploys Buzz together with PostgreSQL, Redis, and MinIO. It also configures persistent storage for the relay's Git repositories, database, Redis, and uploaded media.
+该 Coolify 服务会一并部署 Buzz、PostgreSQL、Redis 和 MinIO，并为中继的 Git 仓库、数据库、Redis 和上传的媒体文件配置持久化存储。
 
-## Connect a Buzz client
+## 连接 Buzz 客户端
 
-After deploying the service, copy its public URL and change the scheme from `https://` to `wss://`. Use that WebSocket URL as the relay URL in a [Buzz desktop client](https://github.com/block/buzz/releases/latest?utm_source=coolify.io) or set it through the client's `BUZZ_RELAY_URL` environment variable.
+部署服务后，复制其公开 URL 并把协议从 `https://` 改为 `wss://`。在 [Buzz 桌面客户端](https://github.com/block/buzz/releases/latest?utm_source=coolify.io)中将该 WebSocket URL 用作中继 URL，或通过客户端的 `BUZZ_RELAY_URL` 环境变量设置。
 
-For example, a Coolify service URL of `https://buzz.example.com` corresponds to the relay URL `wss://buzz.example.com`.
+例如，Coolify 服务 URL 为 `https://buzz.example.com` 时，对应的中继 URL 就是 `wss://buzz.example.com`。
 
-## Links
+## 相关链接
 
 - [GitHub](https://github.com/block/buzz?utm_source=coolify.io)
-- [Architecture](https://github.com/block/buzz/blob/main/ARCHITECTURE.md?utm_source=coolify.io)
-- [Latest desktop client](https://github.com/block/buzz/releases/latest?utm_source=coolify.io)
+- [架构文档](https://github.com/block/buzz/blob/main/ARCHITECTURE.md?utm_source=coolify.io)
+- [最新桌面客户端](https://github.com/block/buzz/releases/latest?utm_source=coolify.io)

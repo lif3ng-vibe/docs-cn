@@ -1,65 +1,65 @@
 ---
 title: "NextCloud"
-description: "A safe home for all your data."
+description: "为你的所有数据提供一个安全的家。"
 og:
   description: "Deploy Nextcloud on Coolify for self-hosted cloud storage, file sync, calendar, contacts, office collaboration, and Google Drive alternative."
-category: "Storage"
+category: "存储"
 icon: "/docs-cn/coolify/images/services/nextcloud-logo.svg"
 disabled: true
 ---
 
-<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+<Callout type="error" title="该服务暂时停用">
 
-This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+由于 PHP 安全漏洞 **CVE-2026-109618** 和 **CVE-2026-109619**，该服务的一键模板已在 Coolify 中暂时停用。在修复后的容器镜像验证完成之前，暂时无法从服务目录进行新部署。
 
-See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+请参阅 [PHP 安全公告](/knowledge-base/php-security-advisory-2026)了解现有部署的处理建议，并关注[模板停用 PR](https://github.com/coollabsio/coolify/pull/12268) 以获取详情与最新进展。
 
 </Callout>
 
 <ZoomImage src="https://nextcloud.com/c/uploads/2022/11/logo_nextcloud_white.svg" alt="NextCloud" />
 
-## What is NextCloud?
+## NextCloud 是什么？
 
-NextCloud is an open-source productivity platform that provides a secure and private alternative to popular cloud storage services like Google Drive and Dropbox. It allows you to store, sync, and share files, photos, and videos across multiple devices, and offers features like file versioning, password-protected sharing, and collaboration tools.
+NextCloud 是一个开源生产力平台，可作为 Google Drive 和 Dropbox 等流行云存储服务的安全私密替代方案。它可以让你在多台设备间存储、同步和共享文件、照片与视频，并提供文件版本管理、密码保护共享和协作工具等功能。
 
-## Deployment Variants
+## 部署变体
 
-Nextcloud is available in four deployment configurations in Coolify:
+在 Coolify 中，Nextcloud 提供四种部署配置：
 
-### Nextcloud (Default)
-- **Database:** SQLite (embedded)
-- **Use case:** Simple deployments, testing, or personal file storage
-- **Components:** Single Nextcloud container with built-in SQLite database
+### Nextcloud（默认）
+- **数据库：**SQLite（内嵌）
+- **适用场景：**简单部署、测试或个人文件存储
+- **组件：**单个 Nextcloud 容器，内置 SQLite 数据库
 
-### Nextcloud with PostgreSQL
-- **Database:** PostgreSQL
-- **Use case:** Production deployments requiring better performance and scalability
-- **Components:**
-  - Nextcloud container
-  - PostgreSQL container
-  - Automatic database configuration and health checks
+### 使用 PostgreSQL 的 Nextcloud
+- **数据库：**PostgreSQL
+- **适用场景：**对性能和可扩展性要求更高的生产部署
+- **组件：**
+  - Nextcloud 容器
+  - PostgreSQL 容器
+  - 自动完成数据库配置与健康检查
 
-### Nextcloud with MySQL
-- **Database:** MySQL
-- **Use case:** Production deployments with MySQL preference
-- **Components:**
-  - Nextcloud container
-  - MySQL container
-  - Automatic database configuration and health checks
+### 使用 MySQL 的 Nextcloud
+- **数据库：**MySQL
+- **适用场景：**偏好使用 MySQL 的生产部署
+- **组件：**
+  - Nextcloud 容器
+  - MySQL 容器
+  - 自动完成数据库配置与健康检查
 
-### Nextcloud with MariaDB
-- **Database:** MariaDB
-- **Use case:** Production deployments with MariaDB preference (recommended for most users)
-- **Components:**
-  - Nextcloud container
-  - MariaDB container
-  - Automatic database configuration and health checks
+### 使用 MariaDB 的 Nextcloud
+- **数据库：**MariaDB
+- **适用场景：**偏好使用 MariaDB 的生产部署（推荐大多数用户使用）
+- **组件：**
+  - Nextcloud 容器
+  - MariaDB 容器
+  - 自动完成数据库配置与健康检查
 
-## Screenshots
+## 截图
 
-<ZoomImage src="https://raw.githubusercontent.com/nextcloud/screenshots/master/nextcloud-hub-files-25-preview.png" alt="NextCloud preview" />
+<ZoomImage src="https://raw.githubusercontent.com/nextcloud/screenshots/master/nextcloud-hub-files-25-preview.png" alt="NextCloud 预览" />
 
-## Links
+## 相关链接
 
-- [The official website](https://nextcloud.com/)
+- [官方网站](https://nextcloud.com/)
 - [GitHub](https://github.com/nextcloud/server)

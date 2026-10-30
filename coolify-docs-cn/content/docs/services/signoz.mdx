@@ -1,9 +1,9 @@
 ---
 title: SigNoz
-description: "Open source observability platform native to OpenTelemetry with logs, traces, and metrics."
+description: "原生支持 OpenTelemetry 的开源可观测性平台，集日志、追踪与指标于一体。"
 og:
   description: "An observability platform native to OpenTelemetry with logs, traces and metrics."
-category: "Monitoring"
+category: "监控"
 icon: "/docs-cn/coolify/images/services/signoz-logo.svg"
 ---
 
@@ -11,42 +11,42 @@ icon: "/docs-cn/coolify/images/services/signoz-logo.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/signoz-logo.svg" alt="SigNoz logo" />
 
-## What is SigNoz
+## SigNoz 是什么
 
-SigNoz is an open source observability platform native to OpenTelemetry with logs, traces and metrics.
+SigNoz 是一个原生支持 OpenTelemetry 的开源可观测性平台，集日志、追踪与指标于一体。
 
-## Configuring SigNoz
+## 配置 SigNoz
 
-The following steps will guide you through the configuration of SigNoz once you have created the service in Coolify.
+在 Coolify 中创建服务后，按照以下步骤完成 SigNoz 的配置。
 
-### URLs configuration
+### URL 配置
 
-SigNoz being a whole observability platform, multiple ports need to be exposed for it to work.
-The first one is the URL of the UI. You can find it in the "Service URL" field of the Signoz service, for example: `https://signoz.example.com:8080`
+SigNoz 是一整套可观测性平台，需要暴露多个端口才能正常工作。
+第一个是 UI 的 URL，你可以在 SigNoz 服务的"Service URL"字段中找到它，例如：`https://signoz.example.com:8080`
 
-Then, you need to expose the Otel Collector, a service which is responsible for receiving traces, metrics and logs from your applications and services.
-It supports many different formats such as GRPC, HTTP formats, Prometheus metrics, and [many logs formats](https://signoz.io/docs/userguide/logs/) (FluentBit/FluentD, syslogs, logs from cloud services, ...).
+接下来，你需要暴露 Otel Collector——这个服务负责从你的应用与服务接收追踪、指标和日志。
+它支持多种格式，例如 GRPC、HTTP 格式、Prometheus 指标，以及[多种日志格式](https://signoz.io/docs/userguide/logs/)（FluentBit/FluentD、syslog、云服务日志等）。
 
-A different port is exposed for each receiver and we need to expose the relevant port for each receiver.
-You have two strategies to do so:
-- Configuring a different URL for each receiver.
-- Directly exposing the ports to the host and the outside world.
+每个接收器（receiver）都会暴露不同的端口，我们需要为每个接收器暴露对应的端口。
+有两种策略可供选择：
+- 为每个接收器配置不同的 URL。
+- 直接把端口暴露给宿主机和外部网络。
 
-Which option you prefer depends on your security needs and how you structure your domains.
+选哪种取决于你的安全需求和域名组织方式。
 
-#### One subdomain per receiver
+#### 每个接收器一个子域名
 
-This solution only requires you to map your subdomain to the Otel Collector service. We will cover the two default receivers, the HTTP and GRPC receivers.
+这种方案只需要你把子域名映射到 Otel Collector 服务。下面以两个默认接收器——HTTP 和 GRPC 接收器为例。
 
-1. Make sure your subdomains have been registered and point to your server, such as `https://signoz-grpc.example.com` and `https://signoz-http.example.com`.
-2. Open the "Otel Collector" service settings.
-3. Add your domains with the format `https://<subdomain>.example.com:<port in container>`, separated by commas. For example: `https://signoz-grpc.example.com:4317,https://signoz-http.example.com:4318`
+1. 确保你的子域名已注册并指向你的服务器，例如 `https://signoz-grpc.example.com` 和 `https://signoz-http.example.com`。
+2. 打开"Otel Collector"服务的设置。
+3. 按照 `https://<子域名>.example.com:<容器内端口>` 的格式添加你的域名，用逗号分隔。例如：`https://signoz-grpc.example.com:4317,https://signoz-http.example.com:4318`
 
-If you want to expose additional ports / receivers, simply add a new address to the list.
+如果你想暴露更多端口/接收器，只需向列表中追加新地址即可。
 
-#### Exposing the ports on the host
+#### 在宿主机上暴露端口
 
-If you prefer to use a single domain for all receivers, you can edit the Docker Compose to directly expose the ports on the otel-collector container:
+如果你更希望所有接收器共用一个域名，可以编辑 Docker Compose，直接在 otel-collector 容器上暴露端口：
 
 ```yaml
 services:
@@ -62,45 +62,45 @@ otel-collector:
   # ...
 ```
 
-You can now append the port to your service URL to send data to receiver: `https://signoz.example.com:4318`
+现在，在你的服务 URL 后面加上端口即可向接收器发送数据：`https://signoz.example.com:4318`
 
-### Enabling SMTP emailing
+### 启用 SMTP 邮件发送
 
-SigNoz uses emailing for two things: inviting users and to [send alerts](https://signoz.io/docs/alerts/).
+SigNoz 在两个场景下会使用邮件：邀请用户和[发送告警](https://signoz.io/docs/alerts/)。
 
-#### SigNoz emails
+#### SigNoz 邮件
 
-To enable SMTP emailing (including inviting new team members), you need to set the following variables from the Environment Variables tab of your Coolify service:
+要启用 SMTP 邮件发送（包括邀请新团队成员），需要在 Coolify 服务的环境变量标签页中设置以下变量：
 
-- `SIGNOZ_EMAILING_ENABLED` enables emailing capabilities in SigNoz.
-- `SIGNOZ_EMAILING_SMTP_ADDRESS` is the address of the SMTP server to use, in the format `host:port`.
-- `SIGNOZ_EMAILING_SMTP_FROM` is the email address to use in the From field.
-- `SIGNOZ_EMAILING_SMTP_AUTH_USERNAME` and `SIGNOZ_EMAILING_SMTP_AUTH_PASSWORD` are used to authenticate with the SMTP server.
+- `SIGNOZ_EMAILING_ENABLED` 启用 SigNoz 的邮件发送能力。
+- `SIGNOZ_EMAILING_SMTP_ADDRESS` 是要使用的 SMTP 服务器地址，格式为 `host:port`。
+- `SIGNOZ_EMAILING_SMTP_FROM` 是发件人（From）字段使用的邮箱地址。
+- `SIGNOZ_EMAILING_SMTP_AUTH_USERNAME` 和 `SIGNOZ_EMAILING_SMTP_AUTH_PASSWORD` 用于向 SMTP 服务器做身份验证。
 
-More environment variables are [available to use](https://signoz.io/docs/manage/administrator-guide/configuration/smtp-email-invitations/) to authenticate via Identity / Secret or use TLS instead of SmartTLS. Read [Passing environment variables not included in the template](/applications/configuration/environment-variables#添加变量) to learn how to add them.
+还有[更多环境变量](https://signoz.io/docs/manage/administrator-guide/configuration/smtp-email-invitations/)可用于以 Identity / Secret 方式验证，或使用 TLS 代替 SmartTLS。阅读[添加模板中未包含的环境变量](/applications/configuration/environment-variables#添加变量)了解添加方法。
 
-#### Alert Manager emails
+#### Alert Manager 邮件
 
-Email alerts can only be sent if an SMTP server is configured specifically for the alert manager. The global SMTP configuration and the Alert Manager configuration use different environment variables.
+只有专门为 Alert Manager 配置了 SMTP 服务器，才能发送邮件告警。全局 SMTP 配置与 Alert Manager 配置使用的是不同的环境变量。
 
-**Note**: SigNoz has a current known issue preventing email alerting configuration from being saved. You can track the progress of this [issue in their bug tracker](https://github.com/SigNoz/signoz/issues/8478).
+**注意**：SigNoz 目前存在一个已知问题，会导致邮件告警配置无法保存。你可以在[他们的 bug 追踪器中跟进这个问题](https://github.com/SigNoz/signoz/issues/8478)。
 
-To enable email alerts, you need to set the following variables from the Environment Variables tab of your Coolify service:
+要启用邮件告警，需要在 Coolify 服务的环境变量标签页中设置以下变量：
 
-- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__SMARTHOST` is the address of the SMTP server to use, in the format `host:port`.
-- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__FROM` is the email address to use in the From field.
-- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__AUTH__USERNAME` and `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__AUTH__PASSWORD` are used to authenticate with the SMTP server.
+- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__SMARTHOST` 是要使用的 SMTP 服务器地址，格式为 `host:port`。
+- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__FROM` 是发件人（From）字段使用的邮箱地址。
+- `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__AUTH__USERNAME` 和 `SIGNOZ_ALERTMANAGER_SIGNOZ_GLOBAL_SMTP__AUTH__PASSWORD` 用于向 SMTP 服务器做身份验证。
 
-More environment variables are [available to use](https://signoz.io/docs/manage/administrator-guide/configuration/alertmanager/) to authenticate via Identity / Secret or use TLS instead of SmartTLS. Read [Defining environment variables](/applications/builds/docker-compose#环境变量) to learn how to add them.
+还有[更多环境变量](https://signoz.io/docs/manage/administrator-guide/configuration/alertmanager/)可用于以 Identity / Secret 方式验证，或使用 TLS 代替 SmartTLS。阅读[定义环境变量](/applications/builds/docker-compose#环境变量)了解添加方法。
 
 
-## Permission issue while using non root user
+## 使用非 root 用户时的权限问题
 
-The issue is mostly due to Coolify re-apply its user' ownership & chmod to the files mounted in the container. 
+这个问题大多源于 Coolify 会对其挂载进容器的文件重新套用用户属主与 chmod。
 
-The solution here would be to make the files readable by everyone. Open a terminal on your server, go to `/data/coolify/services/<SERVICE ID>/` clickhouse and run the command `chmod o+r *`. This should allow Clickhouse to access the files as needed.
+解决办法是让这些文件对所有用户可读。在服务器上打开终端，进入 `/data/coolify/services/<SERVICE ID>/` 下的 clickhouse 目录，执行命令 `chmod o+r *`。这样 ClickHouse 就能按需访问这些文件了。
 
-## Links
+## 相关链接
 
-- [Official Documentation](https://signoz.io/docs/introduction/)
-- [OpenTelemetry Documentation](https://opentelemetry.io/)
+- [官方文档](https://signoz.io/docs/introduction/)
+- [OpenTelemetry 文档](https://opentelemetry.io/)

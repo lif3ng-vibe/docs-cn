@@ -1,9 +1,9 @@
 ---
 title: "ElectricSQL"
-description: "Sync shape-based subsets of your Postgres data over HTTP"
+description: "通过 HTTP 同步 Postgres 数据中基于 shape 定义的子集"
 og:
   description: "Sync shape-based subsets of your Postgres data over HTTP."
-category: "Database"
+category: "数据库"
 icon: "/docs-cn/coolify/images/services/electricsql.svg"
 ---
 
@@ -11,23 +11,23 @@ icon: "/docs-cn/coolify/images/services/electricsql.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/electricsql.svg" alt="/ dashboard" />
 
-## What is ElectricSQL?
+## ElectricSQL 是什么？
 
-ElectricSQL allows developers to build fast, modern, collaborative apps without changing their stack
+ElectricSQL 让开发者无需更改技术栈，就能构建快速、现代的协作型应用。
 
-## Notes on deployment
+## 部署注意事项
 
-When creating the postgresql database, make sure to enable logical replication: adding `wal_level = logical` to your postgresql config should do it.
+创建 PostgreSQL 数据库时，务必启用逻辑复制：在 PostgreSQL 配置中加入 `wal_level = logical` 即可实现。
 
-## Environment Variables
+## 环境变量
 
-- SERVICE_URL_ELECTRIC_3000: exposes port 3000 of electricsql: this is where your clients would connect
-- DATABASE_URL: url of the postgresql database (with logical replication enabled)
-- ELECTRIC_SECRET: secret electricsql will use to authenticate requests (more info [here](https://electric-sql.com/docs/guides/security#api-token))
-- ELECTRIC_STORAGE_DIR: electric needs to store some data, cache etc. This is where it'll go
-- ELECTRIC_USAGE_REPORTING: allows configuration of anonymous usage data reporting back to [https://electric-sql.com](https://electric-sql.com)
+- SERVICE_URL_ELECTRIC_3000：暴露 electricsql 的 3000 端口，你的客户端将连接到这里
+- DATABASE_URL：PostgreSQL 数据库的 URL（需已启用逻辑复制）
+- ELECTRIC_SECRET：electricsql 用于验证请求的密钥（更多信息见[这里](https://electric-sql.com/docs/guides/security#api-token)）
+- ELECTRIC_STORAGE_DIR：electric 需要存储一些数据和缓存等内容，这些内容会放在这里
+- ELECTRIC_USAGE_REPORTING：用于配置是否向 [https://electric-sql.com](https://electric-sql.com) 回传匿名使用数据
 
-## Links
+## 相关链接
 
-- [Official documentation](https://electric-sql.com/docs)
+- [官方文档](https://electric-sql.com/docs)
 - [GitHub](https://github.com/electric-sql/electric?utm_source=coolify.io)

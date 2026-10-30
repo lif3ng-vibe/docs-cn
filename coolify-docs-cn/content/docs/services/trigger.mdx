@@ -1,38 +1,38 @@
 ---
 title: "Trigger"
-description: "Open-source workflow automation tool."
+description: "开源工作流自动化工具。"
 og:
   description: "Automate workflows on Coolify with Trigger.dev for background jobs, scheduled tasks, webhooks, and event-driven workflow automation."
-category: "Automation"
+category: "自动化"
 icon: "/docs-cn/coolify/images/services/trigger-logo.png"
 ---
 
 <ZoomImage src="/docs-cn/coolify/images/services/trigger.webp" alt="Trigger" />
 
-## What is Trigger?
+## Trigger 是什么？
 
-Trigger is an open source Background Jobs framework for TypeScript.
+Trigger 是一个面向 TypeScript 的开源后台任务（Background Jobs）框架。
 
-## Deployment Variants
+## 部署变体
 
-Trigger.dev is available in two deployment configurations in Coolify:
+Trigger.dev 在 Coolify 中提供两种部署配置：
 
-### Trigger.dev (Default)
-- **Database:** Built-in PostgreSQL
-- **Use case:** Standard deployments with managed database
-- **Components:**
-  - Trigger.dev container
-  - Built-in PostgreSQL container
-  - Automatic database configuration and health checks
+### Trigger.dev（默认）
+- **数据库：** 内置 PostgreSQL
+- **适用场景：** 使用托管数据库的标准部署
+- **组件：**
+  - Trigger.dev 容器
+  - 内置 PostgreSQL 容器
+  - 自动完成数据库配置与健康检查
 
-### Trigger.dev with External Database
-- **Database:** External (user-provided)
-- **Use case:** Advanced deployments with existing database infrastructure or custom database configurations
-- **Components:**
-  - Trigger.dev container
-  - Requires `DATABASE_URL` environment variable pointing to your external database
+### Trigger.dev（外接数据库）
+- **数据库：** 外部（由用户提供）
+- **适用场景：** 已有数据库基础设施或需要自定义数据库配置的高级部署
+- **组件：**
+  - Trigger.dev 容器
+  - 需要 `DATABASE_URL` 环境变量指向你的外部数据库
 
-## Links
+## 相关链接
 
-- [Official Website](https://trigger.dev)
+- [官方网站](https://trigger.dev)
 - [GitHub](https://github.com/triggerdotdev/trigger.dev)

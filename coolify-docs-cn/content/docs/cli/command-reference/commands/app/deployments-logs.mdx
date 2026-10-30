@@ -1,30 +1,30 @@
 ---
 title: "Deployments logs"
-description: "Get deployment logs for an application"
+description: "获取应用的部署日志"
 ---
 
 # Deployments logs
 
-Get deployment logs for an application
+获取应用的部署日志
 
-## Usage
+## 用法
 
 ```sh
 coolify app deployments logs <app-uuid> [deployment-uuid]
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--debuglogs` | `boolean` | No | `false` | Show debug logs (includes hidden commands and internal operations) |
-| `--follow (-f)` | `boolean` | No | `false` | Follow log output (like tail -f) |
-| `--lines (-n)` | `integer` | No | `0` | Number of log lines to display (0 = all) |
+| `--debuglogs` | `boolean` | 否 | `false` | 显示调试日志（包括隐藏命令和内部操作） |
+| `--follow (-f)` | `boolean` | 否 | `false` | 跟随日志输出（类似 tail -f） |
+| `--lines (-n)` | `integer` | 否 | `0` | 要显示的日志行数（0 表示全部） |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify app deployments logs --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

@@ -1,9 +1,9 @@
 ---
 title: "Terraria Server"
-description: "Docker multi-arch image for Terraria game server."
+description: "Terraria 游戏服务器的 Docker 多架构镜像。"
 og:
   description: "Host your own Terraria game server on Coolify for multiplayer adventures, world creation, and customizable gameplay."
-category: "Gaming"
+category: "游戏"
 icon: "/docs-cn/coolify/images/services/terraria.svg"
 ---
 
@@ -11,24 +11,24 @@ icon: "/docs-cn/coolify/images/services/terraria.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/terraria.svg" alt="Terraria Server" />
 
-## What is Terraria?
+## Terraria 是什么？
 
-Terraria is a 2D sandbox adventure game where you can dig, fight, explore, and build in a vast, procedurally generated world. Players can battle enemies, discover treasures, craft weapons and armor, and build structures in various biomes.
+Terraria 是一款 2D 沙盒冒险游戏，你可以在广阔的程序生成世界里挖掘、战斗、探索和建造。玩家可以与敌人作战、寻获宝藏、打造武器与护甲，并在各种生物群系中建造建筑。
 
-## Environment Variables
+## 环境变量
 
-| Name       | Description                                                                                                                                                                                                         | Required | Default Value          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------- |
-| AUTOCREATE | Creates a world if none is found in the path specified by -world. World size is specified by: 1(small), 2(medium), and 3(large).                                                                                    | yes      | 2                      |
-| WORLDNAME  | Sets the name of the world when using -autocreate.                                                                                                                                                                  | yes      | world1                 |
-| DIFFICULTY | Sets world difficulty when using autocreate. Options: 0(normal), 1(expert), 2(master), 3(journey)                                                                                                                   | yes      | 1                      |
-| MAXPLAYERS | The maximum number of players allowed                                                                                                                                                                               | yes      | 8                      |
-| PASSWORD   | Set a password for the server                                                                                                                                                                                       | yes      | mypassword             |
-| MOTD       | Set the server motto of the day text.                                                                                                                                                                               | yes      | Welcome to the server! |
-| LANGUAGE   | Sets the server language from its language code. Available codes: en/US = English de/DE = German it/IT = Italian fr/FR = French es/ES = Spanish ru/RU = Russian zh/Hans = Chinese pt/BR = Portuguese pl/PL = Polish | yes      | en/US                  |
-| SECURE     | Option to prevent cheats. (1: no cheats or 0: cheats allowed)                                                                                                                                                       | yes      | 1                      |
+| 名称 | 说明 | 必填 | 默认值 |
+| --- | --- | --- | --- |
+| AUTOCREATE | 若在 -world 指定的路径下找不到世界，则自动创建一个。世界大小由该值指定：1（小）、2（中）、3（大）。 | 是 | 2 |
+| WORLDNAME | 使用 -autocreate 时设置世界的名称。 | 是 | world1 |
+| DIFFICULTY | 使用 autocreate 时设置世界难度。可选值：0（普通）、1（专家）、2（大师）、3（旅程） | 是 | 1 |
+| MAXPLAYERS | 允许的最大玩家数量 | 是 | 8 |
+| PASSWORD | 为服务器设置密码 | 是 | mypassword |
+| MOTD | 设置服务器的每日格言文本。 | 是 | Welcome to the server! |
+| LANGUAGE | 通过语言代码设置服务器语言。可用代码：en/US = 英语 de/DE = 德语 it/IT = 意大利语 fr/FR = 法语 es/ES = 西班牙语 ru/RU = 俄语 zh/Hans = 中文 pt/BR = 葡萄牙语 pl/PL = 波兰语 | 是 | en/US |
+| SECURE | 防作弊选项。（1：禁止作弊；0：允许作弊） | 是 | 1 |
 
-## Links
+## 相关链接
 
-- [Official Website](https://www.terraria.org/?utm_source=coolify.io)
+- [官方网站](https://www.terraria.org/?utm_source=coolify.io)
 - [GitHub](https://github.com/hexlo/terraria-server-docker?utm_source=coolify.io)

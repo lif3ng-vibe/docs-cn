@@ -1,58 +1,58 @@
 ---
 title: Bitcoin Core
-description: "Bitcoin Core full node software."
+description: "Bitcoin Core 全节点软件。"
 og:
   description: "Run Bitcoin Core full node on Coolify for decentralized cryptocurrency network participation, wallet management, and blockchain validation."
-category: "Crypto"
+category: "加密货币"
 icon: "/docs-cn/coolify/images/services/bitcoin.svg"
 ---
 
 # Bitcoin Core
 
-<ZoomImage src="/docs-cn/coolify/images/services/bitcoin.svg" alt="Bitcoin Core dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/bitcoin.svg" alt="Bitcoin Core 仪表盘" />
 
-## What is Bitcoin Core
+## Bitcoin Core 是什么
 
-A self-hosted Bitcoin Core full node.
+自托管的 Bitcoin Core 全节点。
 
-## Public Node vs. Private Use
+## 公共节点与私有用途
 
-By default, Coolify’s Bitcoin Core service is configured for private/internal use. This means it is intended for connecting wallets or apps from the same server or private network, and **does not accept inbound P2P connections from the public internet**. This is a security-conscious default to help reduce the attack surface, especially for new users.
+默认情况下，Coolify 的 Bitcoin Core 服务按私有/内部用途配置，供同一服务器或私有网络内的钱包或应用连接，**不接受来自公共互联网的入站 P2P 连接**。这是一个注重安全的默认设置，有助于减少攻击面，对新手尤为友好。
 
-### How to Run a Public Node
+### 如何运行公共节点
 
-If you want your Bitcoin node to be a fully public peer (accepting inbound connections from other nodes):
+如果你想让 Bitcoin 节点成为完全公开的对等节点（接受来自其他节点的入站连接）：
 
-1. **Expose the P2P port in your Compose file:**  
-   Add the following under your `bitcoin-core` service:   
+1. **在 Compose 文件中暴露 P2P 端口**：  
+   在 `bitcoin-core` 服务下添加以下内容：   
     ```text
     ports:
     - "8333:8333"
     ```
 
-2. **Open port 8333 in your server’s firewall:**  
-- On Ubuntu with UFW:
+2. **在服务器防火墙上开放 8333 端口**：  
+- Ubuntu（使用 UFW）：
   ```bash
   sudo ufw allow 8333/tcp
   ```
-- On CentOS with firewalld:
+- CentOS（使用 firewalld）：
   ```bash
   sudo firewall-cmd --add-port=8333/tcp --permanent
   sudo firewall-cmd --reload
   ```
-- For cloud servers, update your provider’s security group or firewall rules to allow inbound TCP on port 8333.
+- 对于云服务器，请更新服务商的安全组或防火墙规则，允许 8333 端口的入站 TCP 流量。
 
-### Considerations
+### 注意事项
 
-- **Default Behavior:**  
-Without the `ports` section, your node will not accept inbound P2P connections, but can still make outbound connections and fully sync the blockchain.
-- **Security:**  
-Not exposing 8333 by default helps protect users who may not understand the implications of running a public Bitcoin node.
-- **Advanced Users:**  
-If you understand the risks and want to contribute more fully to the Bitcoin network, follow the steps above to run a public node.    
+- **默认行为**：  
+没有 `ports` 配置时，节点不会接受入站 P2P 连接，但仍可发起出站连接并完整同步区块链。
+- **安全性**：  
+默认不暴露 8333 端口，可以保护那些可能不了解运行公共 Bitcoin 节点所涉影响的用户。
+- **高级用户**：  
+如果你了解相关风险，并希望为 Bitcoin 网络做出更多贡献，可按上述步骤运行公共节点。    
 
-## Links
+## 相关链接
 
-- [Official Documentation](https://hub.docker.com/r/ruimarinho/bitcoin-core/?utm_source=coolify.io)
+- [官方文档](https://hub.docker.com/r/ruimarinho/bitcoin-core/?utm_source=coolify.io)
 
   

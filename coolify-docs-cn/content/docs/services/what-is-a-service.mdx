@@ -1,87 +1,87 @@
 ---
 title: What is a service
-description: Understand Docker Compose Services, one-click templates, and user-defined stacks in Coolify.
+description: 了解 Coolify 中的 Docker Compose 服务、一键模板与用户自定义堆栈。
 ---
 
 import { Box2, BranchUp, Settings } from 'reicon-react';
 
 # What is a service
 
-A Service is a Docker Compose stack that Coolify stores and deploys as one resource. The stack can contain one container or several connected application, database, worker, proxy, and supporting containers.
+服务（Service）是一个由 Coolify 作为单一资源存储和部署的 Docker Compose 堆栈。堆栈可以只包含一个容器，也可以包含多个相互连接的应用、数据库、worker、代理与辅助容器。
 
-Services are not connected to a Git source. Coolify stores the Compose definition with the resource and uses that saved definition for future deployments.
+服务不连接 Git 源。Coolify 将 Compose 定义与资源一起存储，并在后续部署中使用这份保存的定义。
 
-## Choose a Service type
+## 选择服务类型
 
-| Service type | Compose definition | Best suited for |
+| 服务类型 | Compose 定义 | 最适合 |
 | :--- | :--- | :--- |
-| One-click Service | Copied from Coolify's service-template library when the resource is created. | Software that you want to deploy from a ready-made stack. |
-| User-defined Service | Pasted into **Docker Compose Empty** and stored by Coolify. | Your own multi-container stack or software without a one-click template. |
+| 一键服务 | 创建资源时从 Coolify 服务模板库复制。 | 想用现成堆栈部署的软件。 |
+| 用户自定义服务 | 粘贴到 **Docker Compose Empty** 并由 Coolify 存储。 | 你自己的多容器堆栈，或没有一键模板的软件。 |
 
-Both paths create the same Coolify resource type and use the same configuration and lifecycle controls after creation.
+两种路径创建的是同一种 Coolify 资源类型，创建后使用相同的配置与生命周期控制。
 
-## What a Service includes
+## 服务包含什么
 
-| Part | Purpose |
+| 组成部分 | 作用 |
 | :--- | :--- |
-| Compose definition | Describes images, commands, environment references, dependencies, health checks, networks, and storage. |
-| Service components | Represents each detected Compose service as an application or database component in the Coolify interface. |
-| Generated configuration | Adds container names, labels, networks, domains, environment values, and storage details required by the deployment. |
-| Operations | Provides deployment output, container logs, terminal access, scheduled tasks, webhooks, cloning, moving, and deletion. |
+| Compose 定义 | 描述镜像、命令、环境引用、依赖、健康检查、网络与存储。 |
+| 服务组件 | 把解析到的每个 Compose 服务表示为 Coolify 界面中的应用或数据库组件。 |
+| 生成的配置 | 补充部署所需的容器名、标签、网络、域名、环境变量值与存储细节。 |
+| 运维操作 | 提供部署输出、容器日志、终端访问、计划任务、webhook、克隆、迁移与删除。 |
 
-Coolify identifies common database images when it parses the definition. Other entries appear as application components. You can open a component's **Settings** to review its image, domain or public database access, status behavior, and advanced options.
+Coolify 在解析定义时会识别常见的数据库镜像，其余条目以应用组件的形式呈现。你可以打开组件的 **Settings**（设置）查看它的镜像、域名或公共数据库访问、状态行为与高级选项。
 
-## Services and Applications
+## 服务与应用
 
-Use an [Application](/applications) when Coolify should deploy from a Git repository, a Dockerfile entered without Git, or one existing Docker image. A Git-based Application can also use a Compose file stored in its repository.
+如果希望 Coolify 从 Git 仓库部署、直接填入 Dockerfile 而不走 Git，或者使用一个现成的 Docker 镜像，请使用[应用](/applications)。基于 Git 的应用也可以使用其仓库中存放的 Compose 文件。
 
-Use a Service when the Compose definition should live in Coolify rather than a Git repository. A Service does not provide branch deployments, pull-request previews, or source webhooks.
+如果希望 Compose 定义保存在 Coolify 里而不是 Git 仓库中，请使用服务。服务不提供分支部署、pull-request 预览或源 webhook。
 
-## Services and standalone Databases
+## 服务与独立数据库
 
-Use a [standalone Database](/databases) when you want Coolify to create an engine-specific resource with generated credentials, a default data volume, connection URLs, health settings, and supported database backup controls.
+如果希望 Coolify 创建引擎专属的资源（带生成的凭据、默认数据卷、连接 URL、健康设置和支持的数据库备份控制），请使用[独立数据库](/databases)。
 
-Use a Service when the database is part of a larger Compose topology, the engine is not available as a standalone Database, or the stack requires supporting containers. A database component inside a Service can expose component settings and backups when Coolify recognizes the image, but it remains part of the Service stack.
+如果数据库是更大 Compose 拓扑的一部分、该引擎没有独立数据库形态，或堆栈需要辅助容器，就使用服务。Coolify 识别镜像时，服务内的数据库组件可以暴露组件设置与备份，但它始终是服务堆栈的一部分。
 
-## What one-click does and does not mean
+## 「一键」意味着什么、不意味着什么
 
-One-click means that Coolify provides the initial Compose definition and generated values. It does not make the software a managed service.
+一键意味着 Coolify 提供初始 Compose 定义与生成的取值，它不会把软件变成托管服务。
 
-You remain responsible for:
+以下事项仍由你负责：
 
-- choosing and maintaining image versions
-- reviewing release notes before an upgrade
-- configuring the software after deployment
-- protecting credentials and public endpoints
-- backing up and testing recovery for persistent data
-- monitoring the server and every required container
+- 选择并维护镜像版本
+- 升级前阅读 release notes
+- 部署后完成软件配置
+- 保护凭据与公共端点
+- 备份持久化数据并演练恢复
+- 监控服务器与每个必需的容器
 
-<Callout type="warning" title="Persistent storage is not a backup">
+<Callout type="warning" title="持久化存储不等于备份">
 
-A Docker volume or bind mount can survive normal container recreation, but it does not protect against deletion, corruption, disk failure, or server loss. Back up each stateful component with a method that can be restored and tested.
+Docker 卷或 bind mount 可以在容器正常重建后幸存，但无法抵御删除、损坏、磁盘故障或服务器丢失。请为每个有状态的组件选择可恢复、可演练的备份方式。
 
 </Callout>
 
-## Continue learning
+## 继续了解
 
 <CoolNextSteps
   cards={[
     {
-      title: 'How Services work',
+      title: '服务的工作原理',
       href: '/services/how-services-work',
-      description: 'Follow how Coolify parses and deploys a Compose stack.',
+      description: '了解 Coolify 如何解析并部署一个 Compose 堆栈。',
       icon: Box2,
     },
     {
-      title: 'Browse Services',
+      title: '浏览服务',
       href: '/services/overview',
-      description: 'Find an available one-click template and its individual guide.',
+      description: '找到可用的一键模板及其单独的指南。',
       icon: BranchUp,
     },
     {
-      title: 'Configure a Service',
+      title: '配置服务',
       href: '/services/configuration/overview',
-      description: 'Review stack, component, variable, and storage settings.',
+      description: '查看堆栈、组件、变量与存储设置。',
       icon: Settings,
     },
   ]}

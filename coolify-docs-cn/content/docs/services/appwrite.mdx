@@ -1,9 +1,9 @@
 ---
 title: Appwrite
-description: "A backend-as-a-service platform that simplifies the web & mobile app development."
+description: "简化 Web 与移动应用开发的后端即服务（BaaS）平台。"
 og:
   description: "Deploy Appwrite BaaS on Coolify for authentication, databases, storage, serverless functions, and real-time APIs for web and mobile apps."
-category: "Development"
+category: "开发工具"
 icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 # compose:
 #   services:
@@ -83,11 +83,13 @@ icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 #         - _APP_STORAGE_BACKBLAZE_BUCKET=${_APP_STORAGE_BACKBLAZE_BUCKET}
 #         - _APP_STORAGE_LINODE_ACCESS_KEY=${_APP_STORAGE_LINODE_ACCESS_KEY}
 #         - _APP_STORAGE_LINODE_SECRET=${_APP_STORAGE_LINODE_SECRET}
-#         - _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
 #         - _APP_STORAGE_LINODE_BUCKET=${_APP_STORAGE_LINODE_BUCKET}
 #         - _APP_STORAGE_WASABI_ACCESS_KEY=${_APP_STORAGE_WASABI_ACCESS_KEY}
 #         - _APP_STORAGE_WASABI_SECRET=${_APP_STORAGE_WASABI_SECRET}
-#         - _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
 #         - _APP_STORAGE_WASABI_BUCKET=${_APP_STORAGE_WASABI_BUCKET}
 #         - _APP_FUNCTIONS_SIZE_LIMIT=${_APP_FUNCTIONS_SIZE_LIMIT:-30000000}
 #         - _APP_FUNCTIONS_TIMEOUT=${_APP_FUNCTIONS_TIMEOUT:-900}
@@ -246,11 +248,13 @@ icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 #         - _APP_STORAGE_BACKBLAZE_BUCKET=${_APP_STORAGE_BACKBLAZE_BUCKET}
 #         - _APP_STORAGE_LINODE_ACCESS_KEY=${_APP_STORAGE_LINODE_ACCESS_KEY}
 #         - _APP_STORAGE_LINODE_SECRET=${_APP_STORAGE_LINODE_SECRET}
-#         - _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
 #         - _APP_STORAGE_LINODE_BUCKET=${_APP_STORAGE_LINODE_BUCKET}
 #         - _APP_STORAGE_WASABI_ACCESS_KEY=${_APP_STORAGE_WASABI_ACCESS_KEY}
 #         - _APP_STORAGE_WASABI_SECRET=${_APP_STORAGE_WASABI_SECRET}
-#         - _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
 #         - _APP_STORAGE_WASABI_BUCKET=${_APP_STORAGE_WASABI_BUCKET}
 #         - _APP_LOGGING_CONFIG=${_APP_LOGGING_CONFIG}
 #         - _APP_EXECUTOR_SECRET=$SERVICE_PASSWORD_64_APPWRITE
@@ -337,11 +341,13 @@ icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 #         - _APP_STORAGE_BACKBLAZE_BUCKET=${_APP_STORAGE_BACKBLAZE_BUCKET}
 #         - _APP_STORAGE_LINODE_ACCESS_KEY=${_APP_STORAGE_LINODE_ACCESS_KEY}
 #         - _APP_STORAGE_LINODE_SECRET=${_APP_STORAGE_LINODE_SECRET}
-#         - _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
 #         - _APP_STORAGE_LINODE_BUCKET=${_APP_STORAGE_LINODE_BUCKET}
 #         - _APP_STORAGE_WASABI_ACCESS_KEY=${_APP_STORAGE_WASABI_ACCESS_KEY}
 #         - _APP_STORAGE_WASABI_SECRET=${_APP_STORAGE_WASABI_SECRET}
-#         - _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
 #         - _APP_STORAGE_WASABI_BUCKET=${_APP_STORAGE_WASABI_BUCKET}
 #     appwrite-worker-certificates:
 #       image: appwrite/appwrite:1.6.0
@@ -475,11 +481,13 @@ icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 #         - _APP_STORAGE_BACKBLAZE_BUCKET=${_APP_STORAGE_BACKBLAZE_BUCKET}
 #         - _APP_STORAGE_LINODE_ACCESS_KEY=${_APP_STORAGE_LINODE_ACCESS_KEY}
 #         - _APP_STORAGE_LINODE_SECRET=${_APP_STORAGE_LINODE_SECRET}
-#         - _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_LINODE_REGION=${_APP_STORAGE_LINODE_REGION:-eu-central-1}
 #         - _APP_STORAGE_LINODE_BUCKET=${_APP_STORAGE_LINODE_BUCKET}
 #         - _APP_STORAGE_WASABI_ACCESS_KEY=${_APP_STORAGE_WASABI_ACCESS_KEY}
 #         - _APP_STORAGE_WASABI_SECRET=${_APP_STORAGE_WASABI_SECRET}
-#         - _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
+#         - >-
+#           _APP_STORAGE_WASABI_REGION=${_APP_STORAGE_WASABI_REGION:-eu-central-1}
 #         - _APP_STORAGE_WASABI_BUCKET=${_APP_STORAGE_WASABI_BUCKET}
 #     appwrite-worker-migrations:
 #       image: appwrite/appwrite:1.6.0
@@ -739,11 +747,11 @@ icon: "/docs-cn/coolify/images/services/appwrite-logo.svg"
 disabled: true
 ---
 
-<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+<Callout type="error" title="服务暂时停用">
 
-This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+由于 PHP 安全漏洞 **CVE-2026-109618** 与 **CVE-2026-109619**，该服务的一键模板已在 Coolify 中暂时停用。在修复后的容器镜像完成验证之前，无法从服务目录进行新的部署。
 
-See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+已有部署的处理建议请参阅 [PHP 安全公告](/knowledge-base/php-security-advisory-2026)，详情与后续进展请查看[模板停用 PR](https://github.com/coollabsio/coolify/pull/12268)。
 
 </Callout>
 
@@ -751,14 +759,13 @@ See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for 
 
 <ZoomImage src="https://raw.githubusercontent.com/appwrite/appwrite/main/public/images/banner.png" alt="Appwrite" />
 
-## What is Appwrite?
+## Appwrite 是什么？
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
+Appwrite 是面向 Web、移动、原生或后端应用的端到端后端服务器，以一组 Docker 微服务的形式打包交付。它抽象掉了从零构建现代后端 API 所需的复杂性与重复劳动，让你更快地构建安全的应用。
 
-Using Appwrite, you can easily integrate your app with user authentication and multiple sign-in methods, a database for storing and querying users and team data, storage and
-file management, image manipulation, Cloud Functions, and [more services](https://appwrite.io/docs?utm_source=coolify.io).
+借助 Appwrite，你可以轻松为应用集成用户身份验证与多种登录方式、存储和查询用户与团队数据的数据库、存储与文件管理、图像处理、Cloud Functions 以及[更多服务](https://appwrite.io/docs?utm_source=coolify.io)。
 
-## Links
+## 相关链接
 
-- [The official website](https://appwrite.io?utm_source=coolify.io)
+- [官方网站](https://appwrite.io?utm_source=coolify.io)
 - [GitHub](https://github.com/appwrite/appwrite?utm_source=coolify.io)

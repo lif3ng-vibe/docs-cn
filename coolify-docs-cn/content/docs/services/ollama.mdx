@@ -1,50 +1,50 @@
 ---
 title: "Ollama"
-description: "A lightweight and efficient server for running large language models (LLMs) on your local machine or in the cloud."
+description: "一个轻量高效的服务器，用于在本地机器或云端运行大语言模型（LLM）。"
 og:
   description: "Run Ollama on Coolify for local LLM hosting supporting Llama, Mistral, Gemma, and custom models with REST API for AI applications."
 category: "AI"
 icon: "/docs-cn/coolify/images/services/ollama-logo.svg"
 ---
 
-<ZoomImage src="/docs-cn/coolify/images/services/ollama-logo.svg" alt="Ollama logo" />
+<ZoomImage src="/docs-cn/coolify/images/services/ollama-logo.svg" alt="Ollama 标志" />
 
-## What is Ollama?
+## Ollama 是什么？
 
-Ollama is a lightweight and efficient server for running large language models (LLMs) on your local machine or in the cloud.
+Ollama 是一个轻量高效的服务器，用于在本地机器或云端运行大语言模型（LLM）。
 
-It includes OpenWebUI, a web-based interface for interacting with the models.
+它还内置了 OpenWebUI——一个用于与模型交互的 Web 界面。
 
-## Screenshots
+## 界面截图
 
-<ZoomImage src="/docs-cn/coolify/images/services/ollama.gif" alt="Ollama dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/ollama.gif" alt="Ollama 仪表盘" />
 
-## Run Ollama with an NVIDIA GPU
+## 使用 NVIDIA GPU 运行 Ollama
 
-To accelerate model inference with an NVIDIA GPU, prepare the host and enable GPU passthrough in the Compose configuration.
+要使用 NVIDIA GPU 加速模型推理，需要先准备好宿主机，并在 Compose 配置中启用 GPU 透传。
 
-1. **Hardware requirements**
-   - A server with an NVIDIA GPU (tested with an RTX 3060 12 GB)
-   - At least 32 GB RAM recommended
-   - Enough disk space for the models you plan to run
+1. **硬件要求**
+   - 一台配备 NVIDIA GPU 的服务器（已在 RTX 3060 12 GB 上测试）
+   - 建议内存至少 32 GB
+   - 为计划运行的模型准备足够的磁盘空间
 
-2. **Host software setup**
-   - Install the NVIDIA drivers
-   - Install the NVIDIA Container Toolkit
-   - Configure Docker to use the NVIDIA runtime
+2. **宿主机软件配置**
+   - 安装 NVIDIA 驱动
+   - 安装 NVIDIA Container Toolkit
+   - 配置 Docker 使用 NVIDIA 运行时
 
-3. **Coolify configuration**
-   - Deploy Ollama with the one-click installer
-   - Edit the Compose configuration to add GPU support (a `deploy.resources.reservations.devices` entry with the `nvidia` driver)
-   - Add any environment variables your models need for GPU acceleration
+3. **Coolify 配置**
+   - 使用一键安装器部署 Ollama
+   - 编辑 Compose 配置以添加 GPU 支持（添加一个带 `nvidia` 驱动的 `deploy.resources.reservations.devices` 条目）
+   - 添加模型进行 GPU 加速所需的环境变量
 
-4. **Model management**
-   - Pull and manage your preferred models
-   - Monitor GPU usage and adjust model parameters as needed
+4. **模型管理**
+   - 拉取并管理你需要的模型
+   - 监控 GPU 使用情况，并按需调整模型参数
 
-For a full step-by-step walkthrough, see this [community guide](https://geek.sg/blog/how-i-self-hosted-llama-32-with-coolify-on-my-home-server-a-step-by-step-guide?ref=coolify.io).
+完整的分步教程请参阅这篇[社区指南](https://geek.sg/blog/how-i-self-hosted-llama-32-with-coolify-on-my-home-server-a-step-by-step-guide?ref=coolify.io)。
 
-## Links
+## 相关链接
 
-- [The official website](https://ollama.com/?utm_source=coolify.io)
+- [官方网站](https://ollama.com/?utm_source=coolify.io)
 - [GitHub](https://github.com/ollama/ollama?utm_source=coolify.io)

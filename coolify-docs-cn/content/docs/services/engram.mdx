@@ -1,6 +1,6 @@
 ---
 title: Engram
-description: "Persistent memory sync server for AI coding agents (MCP)."
+description: "面向 AI 编程代理（MCP）的持久化记忆同步服务器。"
 og:
   description: "Deploy Engram on Coolify: a self-hosted sync server that replicates persistent memory for AI coding agents across machines over MCP, backed by PostgreSQL."
 category: "AI"
@@ -9,20 +9,20 @@ icon: "/docs-cn/coolify/images/services/engram-logo.png"
 
 # Engram
 
-## What is Engram?
+## Engram 是什么？
 
-Engram is a persistent memory system for AI coding agents. It is an agent-agnostic Go binary that records decisions, conventions, bug fixes, and discoveries, then exposes them back to agents through an MCP server, an HTTP API, a CLI, and a terminal UI. Locally it keeps memories in SQLite with full-text search, so context survives across sessions instead of being lost when a conversation ends.
+Engram 是一套面向 AI 编程代理的持久化记忆系统。它是一个与具体代理无关的 Go 二进制程序，会记录决策、约定、缺陷修复和新发现，再通过 MCP 服务器、HTTP API、CLI 和终端界面把这些记忆提供给代理。在本地，它将记忆保存在支持全文检索的 SQLite 中，让上下文得以跨会话延续，而不是随着对话结束而丢失。
 
-This one-click template deploys Engram Cloud, the opt-in replication server that runs `engram cloud serve`. Local Engram installs sync their project memory to it, which makes the same memories available across several machines or shared between teammates. The template runs the server together with a PostgreSQL container that stores the replicated data.
+这个一键模板部署的是 Engram Cloud，即运行 `engram cloud serve` 的可选复制服务器。本地的 Engram 实例会把项目记忆同步到它上面，从而让相同的记忆在多台机器之间可用，或在团队成员之间共享。该模板在运行服务器的同时还会运行一个 PostgreSQL 容器，用于存储复制过来的数据。
 
-The server serves both the dashboard and the API on the same port. Coolify generates the API token, the dashboard admin token, and the JWT signing secret automatically at deploy time, so the stack boots authenticated without manual configuration.
+服务器在同一端口上同时提供仪表盘和 API。Coolify 会在部署时自动生成 API 令牌、仪表盘管理员令牌以及 JWT 签名密钥，因此整套服务启动时即已具备认证，无需手动配置。
 
-<Callout type="info" title="Project allowlist">
-`ENGRAM_CLOUD_ALLOWED_PROJECTS` defaults to `*`, which accepts any project name while access stays gated by the generated API token. Set it to a comma-separated list to restrict the server to specific projects.
+<Callout type="info" title="项目白名单">
+`ENGRAM_CLOUD_ALLOWED_PROJECTS` 默认为 `*`，即接受任何项目名称，同时访问仍由自动生成的 API 令牌把关。将它设置为逗号分隔的列表，即可把服务器限制为只服务特定项目。
 </Callout>
 
-## Links
+## 相关链接
 
 - [GitHub](https://github.com/Gentleman-Programming/engram?utm_source=coolify.io)
-- [Documentation](https://github.com/Gentleman-Programming/engram/blob/main/DOCS.md?utm_source=coolify.io)
-- [Engram Cloud docs](https://github.com/Gentleman-Programming/engram/blob/main/docs/engram-cloud/README.md?utm_source=coolify.io)
+- [文档](https://github.com/Gentleman-Programming/engram/blob/main/DOCS.md?utm_source=coolify.io)
+- [Engram Cloud 文档](https://github.com/Gentleman-Programming/engram/blob/main/docs/engram-cloud/README.md?utm_source=coolify.io)

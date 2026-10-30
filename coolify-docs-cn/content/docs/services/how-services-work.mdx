@@ -1,109 +1,109 @@
 ---
-title: How Services Work
-description: Follow how Coolify turns a one-click template or Docker Compose definition into a running Service stack.
+title: 服务的工作原理
+description: 了解 Coolify 如何把一键模板或 Docker Compose 定义变成一套运行中的服务（Service）堆栈。
 ---
 
 import { Box2, BranchUp, Settings } from 'reicon-react';
 
-# How Services work
+# 服务的工作原理
 
-Coolify combines a Service definition in the control plane with a Docker Compose project on one connected server.
+Coolify 将控制平面中的服务（Service）定义与一台已连接服务器上的 Docker Compose 项目结合在一起。
 
-The Service definition stores the raw Compose YAML, generated environment values, selected destination, component settings, and operational configuration. Docker stores the images, networks, containers, and persistent volumes used by the running stack.
+服务定义保存着原始的 Compose YAML、生成的环境变量值、所选的目标（Destination）、组件设置和运维配置。Docker 则保存运行中堆栈所用的镜像、网络、容器和持久化卷。
 
-## From creation to a running Service
+## 从创建到服务运行
 
-1. You select a one-click template or **Docker Compose Empty** in a project and environment.
-2. Coolify stores the selected template or pasted Compose definition on the new Service resource.
-3. Coolify parses each Compose service, identifies common database images, creates component records, and generates referenced values such as domains and credentials.
-4. You review the stack, required variables, domains, and storage under **Configuration**.
-5. When you select **Deploy**, Coolify saves a generated `.env` file and deployable `docker-compose.yml` in the Service configuration directory on the selected server.
-6. Coolify pulls the configured images, creates the resource network when required, and runs `docker compose up` with the saved project name and configuration.
-7. Docker starts the component containers and runs health checks defined by the images or Compose definition.
-8. The Coolify proxy routes configured domains to the appropriate application components.
+1. 你在某个项目和环境里选择一个一键模板或 **Docker Compose Empty（空 Docker Compose）**。
+2. Coolify 把选中的模板或粘贴的 Compose 定义存储到新的 Service 资源上。
+3. Coolify 解析每个 Compose 服务，识别常见的数据库镜像，创建组件记录，并生成域名、凭据等被引用的值。
+4. 你在 **Configuration（配置）**下审阅堆栈、必需变量、域名和存储。
+5. 当你选择 **Deploy（部署）**时，Coolify 会把生成的 `.env` 文件和可部署的 `docker-compose.yml` 保存到所选服务器上的 Service 配置目录中。
+6. Coolify 拉取配置的镜像，在需要时创建资源网络，并使用保存的项目名和配置运行 `docker compose up`。
+7. Docker 启动各组件容器，并执行镜像或 Compose 定义中声明的健康检查。
+8. Coolify 代理把配置的域名路由到相应的应用组件。
 
-## Raw and deployable Compose
+## 源定义与可部署 Compose
 
-The **Source Compose** is the definition stored on the Service. It is the copy you edit.
+**Source Compose（源 Compose 定义）**是保存在 Service 上的定义，也就是你编辑的那份副本。
 
-The **Deployable Compose** is the generated definition Coolify sends to Docker Compose. It can include normalized volume names, container names, labels, networks, environment references, and proxy configuration.
+**Deployable Compose（可部署 Compose 定义）**是 Coolify 生成的、交给 Docker Compose 执行的定义。它可能包含规范化后的卷名、容器名、标签、网络、环境变量引用以及代理配置。
 
-Do not copy generated names back into the source definition unless the stack genuinely requires them. Review both views from **Configuration > General > Edit Compose File**.
+除非堆栈确实需要，否则不要把生成出来的名称复制回源定义。可以在 **配置 > 常规 > 编辑 Compose 文件**中同时查看这两个视图。
 
-## Components belong to one stack
+## 组件从属于一个堆栈
 
-Coolify shows each parsed Compose service as a component card under **Configuration > General**:
+Coolify 会把每个解析出的 Compose 服务显示为 **Configuration（配置）> General（常规）**下的组件卡片：
 
-- application components can have domains and proxy behavior
-- database components can have public proxy settings and supported backup controls
-- every component can show its image and container status
+- 应用组件可以配置域名和代理行为
+- 数据库组件可以配置公开代理设置和受支持的备份控制
+- 每个组件都能查看其镜像与容器状态
 
-The Service status aggregates its non-excluded components. An optional or one-time component can be excluded from the aggregate status from its **Advanced** settings.
+Service 的状态由其未被排除的组件聚合而来。可选组件或一次性组件可以在其 **Advanced（高级）**设置中排除出聚合状态。
 
-A component can be restarted separately, but **Deploy**, **Restart**, **Stop**, and **Pull Latest Images & Restart** act on the Service stack.
+单个组件可以单独重启，但 **Deploy（部署）**、**Restart（重启）**、**Stop（停止）**和 **Pull Latest Images & Restart（拉取最新镜像并重启）**作用于整个 Service 堆栈。
 
-## Networking
+## 网络
 
-Coolify creates a resource-specific Docker network for the Service. Components in the same Compose definition communicate by Compose service name and internal port.
+Coolify 会为 Service 创建一个资源专属的 Docker 网络。同一 Compose 定义中的组件通过 Compose 服务名和内部端口互相通信。
 
-Coolify creates a shared Docker network named `coolify` on each connected server. Enable **Connect To Predefined Network** when the stack must privately communicate with resources on its predefined network, which is `coolify` for the default destination. Other Docker networks remain isolated, and the `coolify` network does not extend across servers.
+Coolify 会在每台已连接服务器上创建一个名为 `coolify` 的共享 Docker 网络。当堆栈需要与预定义网络上的资源私密通信时，启用 **Connect To Predefined Network（连接到预定义网络）**——对默认目标（Destination）而言该网络即 `coolify`。其他 Docker 网络保持隔离，且 `coolify` 网络不会跨服务器延伸。
 
-Use a domain for public HTTP traffic. Publish a host port only when an external client requires direct TCP or UDP access.
+公开的 HTTP 流量请使用域名。只有当外部客户端需要直接的 TCP 或 UDP 访问时才发布主机端口。
 
-Read [Service networking](/services/configuration/networking) for same-stack connections, the `coolify` network, other Docker networks, cross-server paths, domains, and published ports.
+同堆栈连接、`coolify` 网络、其他 Docker 网络、跨服务器路径、域名与发布端口等更多内容，请阅读[服务网络](/services/configuration/networking)。
 
-## Configuration changes and redeployment
+## 配置变更与重新部署
 
-Saving a value updates the Service definition. Changes that affect container configuration do not necessarily change a running container immediately.
+保存一个值会更新 Service 定义。但影响容器配置的更改不一定会立即改变正在运行的容器。
 
-Deploy or restart the Service after changing:
+更改以下内容后，需要部署或重启 Service：
 
-- the Compose definition or an image reference
-- environment variables
-- domains, ports, proxy behavior, or networks
-- persistent storage
-- component logging or status settings
+- Compose 定义或镜像引用
+- 环境变量
+- 域名、端口、代理行为或网络
+- 持久化存储
+- 组件日志或状态设置
 
-**Restart** recreates the stack without first pulling newer images. **Pull Latest Images & Restart** pulls the image tags stored in the current Compose definition, then recreates the stack.
+**Restart（重启）**会重建堆栈，但不会先拉取更新的镜像。**Pull Latest Images & Restart（拉取最新镜像并重启）**会先拉取当前 Compose 定义中所存镜像标签的镜像，然后重建堆栈。
 
-<Callout type="info" title="Template updates do not replace an existing Service">
+<Callout type="info" title="模板更新不会替换已有的 Service">
 
-Coolify can refresh the template catalog used to create new resources. An existing one-click Service keeps its saved Compose definition. Review the upstream release and edit the Service definition when an upgrade requires new Compose settings, migrations, or image tags.
+Coolify 可以刷新用于创建新资源的模板目录。已存在的一键 Service 会保留其保存的 Compose 定义。当升级需要新的 Compose 设置、数据迁移或镜像标签时，请查看上游发布说明并手动编辑 Service 定义。
 
 </Callout>
 
-## Persistent data
+## 持久化数据
 
-Containers are replaceable. Store required data in volumes, directories, file mounts, or external services declared by the Compose definition.
+容器是可替换的。请把需要保留的数据存放在卷、目录、文件挂载或 Compose 定义中声明的外部服务里。
 
-Parsed mounts appear under **Configuration > Persistent Storages** for the component that uses them. For a Service, change Compose-owned mount definitions in **Edit Compose File**, not in the read-only storage view.
+解析出的挂载会显示在使用它们的组件的 **Configuration（配置）> Persistent Storages（持久化存储）**下。对于 Service，Compose 拥有的挂载定义请在**编辑 Compose 文件**中修改，而不是在只读的存储视图里。
 
-## Control plane and Service server
+## 控制平面与 Service 服务器
 
-The Coolify instance stores configuration and coordinates operations. The connected server stores the Service configuration directory and runs its Docker resources.
+Coolify 实例负责存储配置和协调操作。已连接的服务器保存 Service 配置目录并运行其 Docker 资源。
 
-Already-running containers can continue operating while the Coolify control plane is unavailable, as long as Docker, the server, its networks, the proxy, and the containers remain healthy. New Coolify operations require the control plane to be available.
+只要 Docker、服务器、其网络、代理和容器保持健康，已经运行中的容器可以在 Coolify 控制平面不可用时继续运转。但新的 Coolify 操作需要控制平面可用。
 
-## Continue learning
+## 继续了解
 
 <CoolNextSteps
   cards={[
     {
       title: 'Docker Compose',
       href: '/services/configuration/docker-compose',
-      description: 'Edit the source definition and understand generated values.',
+      description: '编辑源定义，理解生成的值。',
       icon: BranchUp,
     },
     {
-      title: 'Configure a Service',
+      title: '配置服务',
       href: '/services/configuration/overview',
-      description: 'Find every stack and component configuration page.',
+      description: '找到所有堆栈与组件配置页面。',
       icon: Settings,
     },
     {
-      title: 'Operate Services',
+      title: '运维服务',
       href: '/services/operations/overview',
-      description: 'Use lifecycle actions, logs, terminal access, and maintenance controls.',
+      description: '使用生命周期操作、日志、终端访问和维护控制。',
       icon: Box2,
     },
   ]}

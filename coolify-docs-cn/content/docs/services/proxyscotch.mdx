@@ -1,40 +1,40 @@
 ---
 title: Proxyscotch
-description: "Tiny open-source CORS proxy made by Hoppscotch."
+description: "Hoppscotch 出品的小巧开源 CORS 代理。"
 og:
   description: "Run your own CORS proxy on Coolify. Works both standalone & with Hoppscotch"
-category: "Development"
+category: "开发工具"
 icon: "/docs-cn/coolify/images/services/proxyscotch.png"
 ---
 
 # Proxyscotch
 
-<ZoomImage src="/docs-cn/coolify/images/services/proxyscotch.png" alt="Proxyscotch (hoppscotch) logo" />
+<ZoomImage src="/docs-cn/coolify/images/services/proxyscotch.png" alt="Proxyscotch (hoppscotch) 标志" />
 
-## What is Proxyscotch
+## Proxyscotch 是什么
 
-Tiny open-source CORS proxy made by Hoppscotch.
-> Works well with Hoppscotch, but can be used standalone as well.
+Hoppscotch 出品的小巧开源 CORS 代理。
+> 与 Hoppscotch 搭配使用效果最佳，也可以独立使用。
 
 
-## Setup Instructions
-> This is only needed for when setting up Proxyscotch for a selfhosted instance of Hoppscotch.
+## 设置说明
+> 只有在为自托管的 Hoppscotch 实例配置 Proxyscotch 时才需要这一步。
 
-If you secure your proxy server ***(recommended & enabled by default)*** you will need to set some ENV vars for your Hoppscotch instance.
+如果你为代理服务器启用了安全保护（***推荐且默认开启***），就需要为 Hoppscotch 实例设置一些环境变量。
 
-##### After you've set up your Proxyscotch instance:
+##### Proxyscotch 实例设置完成后：
 
-- Go and find the token that Coolify generated for you.
-- In the settings for your Hoppscotch instance on coolify, go to **Environment Variables**
-- Add a new variable called `VITE_PROXYSCOTCH_ACCESS_TOKEN` and set it to the token you found before.
-- Restart the Hoppscotch instance.
+- 找到 Coolify 为你生成的令牌。
+- 在 Coolify 中 Hoppscotch 实例的设置里，进入 **Environment Variables**（环境变量）
+- 新增一个名为 `VITE_PROXYSCOTCH_ACCESS_TOKEN` 的变量，将其值设置为刚才找到的令牌。
+- 重启 Hoppscotch 实例。
 
-- Once it restarts, load the webui & navigate to **Settings > Interceptors**. - Then scroll down to **Proxy**
-- Set the proxy URL to the URL of your Proxyscotch instance
-> You might have to enable the Proxy via the switch in the dashboard first before you can modify the URL.
+- 重启完成后，打开 Web UI 并进入 **设置 > 拦截器（Interceptors）**。- 然后向下滚动到 **Proxy**（代理）
+- 将代理 URL 设置为你的 Proxyscotch 实例的 URL
+> 你可能需要先通过仪表盘中的开关启用代理，然后才能修改 URL。
 
-You should now have Hoppscotch set-up & working with your own CORS proxy!
+现在，Hoppscotch 应该已经配置好并与你自己的 CORS 代理正常协作了！
 
-## Links
+## 相关链接
 
-- [Official Documentation](https://github.com/hoppscotch/proxyscotch?utm_source=coolify.io)
+- [官方文档](https://github.com/hoppscotch/proxyscotch?utm_source=coolify.io)

@@ -1,37 +1,37 @@
 ---
 title: Keycloak
-description: "Open-source identity and access management solution."
+description: "开源身份与访问管理解决方案。"
 og:
   description: "Deploy Keycloak on Coolify for identity and access management with SSO, OAuth2, SAML, user federation, and centralized authentication."
-category: "Security"
+category: "安全"
 icon: "/docs-cn/coolify/images/services/keycloak-logo.svg"
 ---
 
 # Keycloak
 
-<ZoomImage src="/docs-cn/coolify/images/services/keycloak-logo.svg" alt="Keycloak dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/keycloak-logo.svg" alt="Keycloak 仪表盘" />
 
-## What is Keycloak
+## Keycloak 是什么
 
-Keycloak is an open-source Identity and Access Management tool.
+Keycloak 是一款开源的身份与访问管理（Identity and Access Management）工具。
 
-## Deployment Variants
+## 部署变体
 
-Keycloak is available in two deployment configurations in Coolify:
+Coolify 中提供两种 Keycloak 部署配置：
 
-### Keycloak (Default)
-- **Database:** Embedded H2 (development)
-- **Use case:** Development, testing, or evaluation purposes
-- **Components:** Single Keycloak container with built-in H2 database
+### Keycloak（默认）
+- **数据库：** 内嵌 H2（开发用）
+- **适用场景：** 开发、测试或评估用途
+- **组件：** 单个 Keycloak 容器，内置 H2 数据库
 
 ### Keycloak with PostgreSQL
-- **Database:** PostgreSQL
-- **Use case:** Production deployments requiring reliability, performance, and data persistence
-- **Components:**
-  - Keycloak container
-  - PostgreSQL container
-  - Automatic database configuration and health checks
+- **数据库：** PostgreSQL
+- **适用场景：** 对可靠性、性能和数据持久化有要求的生产部署
+- **组件：**
+  - Keycloak 容器
+  - PostgreSQL 容器
+  - 自动完成数据库配置并执行健康检查
 
-## Links
+## 相关链接
 
-- [Official Documentation](https://www.keycloak.org?utm_source=coolify.io)
+- [官方文档](https://www.keycloak.org?utm_source=coolify.io)

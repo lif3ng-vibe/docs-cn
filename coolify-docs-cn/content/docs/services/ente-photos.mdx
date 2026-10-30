@@ -1,9 +1,9 @@
 ---
 title: "Ente"
-description: "A fully open-source, end-to-end encrypted platform for you to store data in the cloud without needing to trust the service provider."
+description: "一个完全开源的端到端加密平台，让你可以把数据存到云端，而无需信任服务提供商。"
 og:
   description: "Here you can find the documentation for hosting Ente with Coolify."
-category: "Productivity"
+category: "效率"
 icon: "/docs-cn/coolify/images/services/ente-logo.webp"
 ---
 
@@ -11,21 +11,21 @@ icon: "/docs-cn/coolify/images/services/ente-logo.webp"
 
 <ZoomImage src="/docs-cn/coolify/images/services/ente-logo.webp" alt="Ente" />
 
-## What is Ente?
+## Ente 是什么？
 
-Ente is a service that provides a fully open-source, end-to-end encrypted platform for you to store your data in the cloud without needing to trust the service provider. On top of the platform, Ente has built two apps so far: Ente Photos (an alternative to Apple and Google Photos) and Ente Auth (a 2FA alternative to the deprecated Authy).
+Ente 提供了一个完全开源的端到端加密平台，让你可以把数据存到云端，而无需信任服务提供商。在该平台之上，Ente 目前已推出两款应用：Ente Photos（Apple 和 Google Photos 的替代品）和 Ente Auth（2FA 验证器，可替代已停止维护的 Authy）。
 
-Learn more at [help.ente.io](https://help.ente.io/).
+了解更多请访问 [help.ente.io](https://help.ente.io/)。
 
-## Configuring Object Store
+## 配置对象存储
 
-- Once you have selected your service. You will need to set up of some environment variables for your S3 bucket or substitute like MinIO.
+- 选择好服务后，你需要为 S3 存储桶或 MinIO 等替代品设置一些环境变量。
 
-### 1. Remote S3 bucket
+### 1. 远程 S3 存储桶
 
-- For AWS S3 you can create a bucket and allow access via IAM Roles/User Permissions. Which will generate an access key and secret key for your S3 Bucket.
+- 对于 AWS S3，你可以创建一个存储桶，并通过 IAM 角色/用户权限授予访问权。这会为你的 S3 存储桶生成访问密钥（access key）和秘密密钥（secret key）。
 
-- For the S3 bucket, apply the following CORS policy for proper access control from the museum service.
+- 为 S3 存储桶应用以下 CORS 策略，以便 museum 服务正确进行访问控制。
 
 ```json
 [
@@ -39,15 +39,15 @@ Learn more at [help.ente.io](https://help.ente.io/).
 ]
 ```
 
-- Fill the credentials like `endpoint`, `region`, `bucket`, `access key`, `secret key`.
+- 填入 `endpoint`、`region`、`bucket`、`access key`、`secret key` 等凭据信息。
 
-- Deploy the Service and you are good to go.
+- 部署服务后即可开始使用。
 
-### 2. Coolify minio bucket.
+### 2. Coolify 的 MinIO 存储桶
 
-- Minio is expected to be exposed over HTTPS and needs SSL/TLS, so make sure your proxies are setup properly. Here is a useful [link](https://selfhostschool.com/minio-self-hosted-s3-storage-guide/) for set up and configuration.
+- MinIO 需要通过 HTTPS 对外暴露，依赖 SSL/TLS，因此请确保代理配置正确。这里有一份关于安装与配置的实用[教程](https://selfhostschool.com/minio-self-hosted-s3-storage-guide/)。
 
-- Once you have deployed the Minio service from Coolify you can login to the service from the console URL and use the same username and password as set in the environment variables user the API URL for backend or shell based usecases.
+- 从 Coolify 部署 MinIO 服务后，你可以通过控制台 URL 登录该服务，使用与环境变量中设置相同的用户名和密码；后端或 shell 场景则使用 API URL。
 
 ```bash
 # Set Alias
@@ -57,49 +57,49 @@ mc alias set <alias> <API_ENDPOINT> <ACCESS_KEY> <SECRET_KEY>
 minio/mc ls myminio
 ```
 
-- Once logged in, create a bucket for your use in Ente.
+- 登录后，创建一个供 Ente 使用的存储桶。
 
-- The default region for Minio is `us-east-1`, so you can use the same.
+- MinIO 的默认区域（region）为 `us-east-1`，直接使用它即可。
 
-- Use the API endpoint as bucket endpoint for Ente config.
+- 在 Ente 配置中，将 API 端点用作存储桶端点。
 
-**Note**: Additional details are available [here](https://help.ente.io/self-hosting/administration/object-storage).
+**注意**：更多细节请参见[这里](https://help.ente.io/self-hosting/administration/object-storage)。
 
-## Environment Variables
+## 环境变量
 
-| Variable Name                         | Service  | Description                                                                                 | Default Value      | Required | Prefilled |
+| 变量名                                | 服务     | 说明                                                                                        | 默认值             | 必填 | 预填      |
 | ------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ------------------ | -------- | --------- |
-| `SERVICE_URL_MUSEUM_8080`             | museum   | URL for the museum service on port 8080                                                     | -                  | Yes      | Yes       |
-| `ENTE_HTTP_USE_TLS`                   | museum   | Enable/disable TLS for HTTP connections                                                     | `false`            | No       | Yes       |
-| `SERVICE_URL_WEB_3002`                | museum   | URL for the web albums service                                                              | -                  | Yes      | Yes       |
-| `SERVICE_URL_WEB_3004`                | museum   | URL for the web cast service                                                                | -                  | Yes      | Yes       |
-| `SERVICE_URL_WEB_3001`                | museum   | URL for the web accounts service                                                            | -                  | Yes      | Yes       |
-| `ENTE_DB_HOST`                        | museum   | PostgreSQL database host                                                                    | `postgres`         | No       | Yes       |
-| `ENTE_DB_PORT`                        | museum   | PostgreSQL database port                                                                    | `5432`             | No       | Yes       |
-| `ENTE_DB_NAME`                        | museum   | PostgreSQL database name                                                                    | `ente_db`          | No       | Yes       |
-| `SERVICE_USER_POSTGRES`               | museum   | PostgreSQL database username                                                                | `pguser`           | No       | Yes       |
-| `SERVICE_PASSWORD_POSTGRES`           | museum   | PostgreSQL database password                                                                | -                  | Yes      | Yes       |
-| `SERVICE_REALBASE64_ENCRYPTION`       | museum   | Base64 encoded encryption key                                                               | -                  | Yes      | Yes       |
-| `SERVICE_REALBASE64_64_HASH`          | museum   | Base64 encoded hash key                                                                     | -                  | Yes      | Yes       |
-| `SERVICE_REALBASE64_JWT`              | museum   | Base64 encoded JWT secret                                                                   | -                  | Yes      | Yes       |
-| `ENTE_INTERNAL_ADMIN`                 | museum   | Internal admin user ID                                                                      | `1580559962386438` | No       | Yes       |
-| `ENTE_INTERNAL_DISABLE_REGISTRATION`  | museum   | Disable user registration                                                                   | `false`            | No       | Yes       |
-| `PRIMARY_STORAGE_ARE_LOCAL_BUCKETS`   | museum   | Use local buckets for primary storage (false unless you are connecting to bucket over http) | `false`            | No       | Yes       |
-| `PRIMARY_STORAGE_USE_PATH_STYLE_URLS` | museum   | Use path-style URLs for storage                                                             | `true`             | No       | Yes       |
-| `S3_STORAGE_KEY`                      | museum   | S3 storage access key                                                                       | -                  | Yes      | No        |
-| `S3_STORAGE_SECRET`                   | museum   | S3 storage secret key                                                                       | -                  | Yes      | No        |
-| `S3_STORAGE_ENDPOINT`                 | museum   | S3 storage endpoint URL                                                                     | -                  | Yes      | No        |
-| `S3_STORAGE_REGION`                   | museum   | S3 storage region                                                                           | `us-east-1`        | No       | Yes       |
-| `S3_STORAGE_BUCKET`                   | museum   | S3 storage bucket name                                                                      | -                  | Yes      | No        |
-| `SERVICE_URL_WEB_3000`                | web      | URL for the main web service                                                                | -                  | Yes      | Yes       |
-| `SERVICE_URL_MUSEUM`                  | web      | URL for the museum service                                                                  | -                  | Yes      | Yes       |
-| `SERVICE_URL_WEB_3002`                | web      | URL for the albums service                                                                  | -                  | Yes      | Yes       |
-| `SERVICE_USER_POSTGRES`               | postgres | PostgreSQL username                                                                         | `pguser`           | No       | Yes       |
-| `SERVICE_PASSWORD_POSTGRES`           | postgres | PostgreSQL password                                                                         | -                  | Yes      | Yes       |
-| `SERVICE_DB_NAME`                     | postgres | PostgreSQL database name                                                                    | `ente_db`          | No       | Yes       |
+| `SERVICE_URL_MUSEUM_8080`             | museum   | museum 服务在 8080 端口上的 URL                                                             | -                  | 是       | 是        |
+| `ENTE_HTTP_USE_TLS`                   | museum   | 启用/禁用 HTTP 连接的 TLS                                                                   | `false`            | 否       | 是        |
+| `SERVICE_URL_WEB_3002`                | museum   | Web 相册服务的 URL                                                                          | -                  | 是       | 是        |
+| `SERVICE_URL_WEB_3004`                | museum   | Web 投屏（cast）服务的 URL                                                                  | -                  | 是       | 是        |
+| `SERVICE_URL_WEB_3001`                | museum   | Web 账户服务的 URL                                                                          | -                  | 是       | 是        |
+| `ENTE_DB_HOST`                        | museum   | PostgreSQL 数据库主机                                                                       | `postgres`         | 否       | 是        |
+| `ENTE_DB_PORT`                        | museum   | PostgreSQL 数据库端口                                                                       | `5432`             | 否       | 是        |
+| `ENTE_DB_NAME`                        | museum   | PostgreSQL 数据库名称                                                                       | `ente_db`          | 否       | 是        |
+| `SERVICE_USER_POSTGRES`               | museum   | PostgreSQL 数据库用户名                                                                     | `pguser`           | 否       | 是        |
+| `SERVICE_PASSWORD_POSTGRES`           | museum   | PostgreSQL 数据库密码                                                                       | -                  | 是       | 是        |
+| `SERVICE_REALBASE64_ENCRYPTION`       | museum   | Base64 编码的加密密钥                                                                       | -                  | 是       | 是        |
+| `SERVICE_REALBASE64_64_HASH`          | museum   | Base64 编码的哈希密钥                                                                       | -                  | 是       | 是        |
+| `SERVICE_REALBASE64_JWT`              | museum   | Base64 编码的 JWT 密钥                                                                      | -                  | 是       | 是        |
+| `ENTE_INTERNAL_ADMIN`                 | museum   | 内部管理员用户 ID                                                                           | `1580559962386438` | 否       | 是        |
+| `ENTE_INTERNAL_DISABLE_REGISTRATION`  | museum   | 禁用用户注册                                                                                | `false`            | 否       | 是        |
+| `PRIMARY_STORAGE_ARE_LOCAL_BUCKETS`   | museum   | 主存储使用本地存储桶（除非通过 http 连接存储桶，否则为 false）                              | `false`            | 否       | 是        |
+| `PRIMARY_STORAGE_USE_PATH_STYLE_URLS` | museum   | 存储使用 path-style URL                                                                     | `true`             | 否       | 是        |
+| `S3_STORAGE_KEY`                      | museum   | S3 存储访问密钥                                                                             | -                  | 是       | 否        |
+| `S3_STORAGE_SECRET`                   | museum   | S3 存储秘密密钥                                                                             | -                  | 是       | 否        |
+| `S3_STORAGE_ENDPOINT`                 | museum   | S3 存储端点 URL                                                                             | -                  | 是       | 否        |
+| `S3_STORAGE_REGION`                   | museum   | S3 存储区域                                                                                 | `us-east-1`        | 否       | 是        |
+| `S3_STORAGE_BUCKET`                   | museum   | S3 存储桶名称                                                                               | -                  | 是       | 否        |
+| `SERVICE_URL_WEB_3000`                | web      | 主 Web 服务的 URL                                                                           | -                  | 是       | 是        |
+| `SERVICE_URL_MUSEUM`                  | web      | museum 服务的 URL                                                                           | -                  | 是       | 是        |
+| `SERVICE_URL_WEB_3002`                | web      | 相册服务的 URL                                                                              | -                  | 是       | 是        |
+| `SERVICE_USER_POSTGRES`               | postgres | PostgreSQL 用户名                                                                           | `pguser`           | 否       | 是        |
+| `SERVICE_PASSWORD_POSTGRES`           | postgres | PostgreSQL 密码                                                                             | -                  | 是       | 是        |
+| `SERVICE_DB_NAME`                     | postgres | PostgreSQL 数据库名称                                                                       | `ente_db`          | 否       | 是        |
 
-## Links
+## 相关链接
 
-- [The official website](https://ente.io?utm_source=coolify.io)
-- [Documentation](https://help.ente.io?utm_source=coolify.io)
+- [官方网站](https://ente.io?utm_source=coolify.io)
+- [文档](https://help.ente.io?utm_source=coolify.io)
 - [GitHub](https://github.com/ente-io/ente?utm_source=coolify.io)

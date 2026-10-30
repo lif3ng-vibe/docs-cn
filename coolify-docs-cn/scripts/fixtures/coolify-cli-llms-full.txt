@@ -194,3127 +194,3127 @@ Description: Coolify CLI
 Parameters:
   - name: --context
     type: string
-    description: Use specific context by name
+    description: 按名称使用指定上下文
     required: false
   - name: --debug
     type: boolean
-    description: Debug mode
+    description: 调试模式
     required: false
     default: false
   - name: --format
     type: string
-    description: Format output (table|json|pretty)
+    description: 输出格式（table|json|pretty）
     required: false
     default: table
   - name: --show-sensitive (-s)
     type: boolean
-    description: Show sensitive information
+    description: 显示敏感信息
     required: false
     default: false
   - name: --token
     type: string
-    description: Token for authentication (override context token)
+    description: 用于认证的令牌（覆盖上下文令牌）
     required: false
 
 Command: coolify app clone <uuid>
-Description: Clone an application to a destination
+Description: 将应用克隆到目标
 Parameters:
   - name: --clone-volumes
     type: boolean
-    description: Clone volume data
+    description: 克隆卷数据
     required: false
     default: false
   - name: --destination
     type: string
-    description: Destination UUID
+    description: 目标 UUID
     required: false
   - name: --name
     type: string
-    description: Optional new name
+    description: 可选的新名称
     required: false
 
 Command: coolify app create deploy-key
-Description: Create an application from a private repository using SSH deploy key
+Description: 使用 SSH 部署密钥从私有仓库创建应用
 Parameters:
   - name: --base-directory
     type: string
-    description: Base directory for the application
+    description: 应用的基础目录
     required: false
   - name: --build-command
     type: string
-    description: Custom build command
+    description: 自定义构建命令
     required: false
   - name: --build-pack
     type: string
-    description: Build pack: nixpacks, static, dockerfile, dockercompose (required)
+    description: 构建包：nixpacks、static、dockerfile、dockercompose（必填）
     required: true
   - name: --compose-domain
     type: stringArray
-    description: Docker Compose service domain in <service>=<url>[,<url>] format (repeatable)
+    description: Docker Compose 服务域名，格式为 <service>=<url>[,<url>]（可重复）
     required: false
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domain(s) for the application
+    description: 应用的域名
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --git-branch
     type: string
-    description: Git branch (required)
+    description: Git 分支（必填）
     required: true
   - name: --git-commit-sha
     type: string
-    description: Specific commit SHA to deploy
+    description: 要部署的具体提交 SHA
     required: false
   - name: --git-repository
     type: string
-    description: Git repository SSH URL, e.g., 'git@github.com:owner/repo.git' (required)
+    description: Git 仓库 SSH URL，如 'git@github.com:owner/repo.git'（必填）
     required: true
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health checks
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --install-command
     type: string
-    description: Custom install command
+    description: 自定义安装命令
     required: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports, e.g., '3000' or '3000,8080' (required)
+    description: 暴露端口，如 '3000' 或 '3000,8080'（必填）
     required: true
   - name: --ports-mappings
     type: string
-    description: Port mappings (host:container)
+    description: 端口映射（host:container）
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --private-key-uuid
     type: string
-    description: Private key UUID (required)
+    description: 私钥 UUID（必填）
     required: true
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --publish-directory
     type: string
-    description: Publish directory for static builds
+    description: 静态构建的发布目录
     required: false
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --start-command
     type: string
-    description: Custom start command
+    description: 自定义启动命令
     required: false
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --tag
     type: stringArray
-    description: Tag to assign to the application (repeatable)
+    description: 要分配给应用的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Tags to assign to the application
+    description: 要分配给应用的标签
     required: false
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify app create dockerfile
-Description: Create an application from a custom Dockerfile
+Description: 从自定义 Dockerfile 创建应用
 Parameters:
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --dockerfile
     type: string
-    description: Dockerfile content (required)
+    description: Dockerfile 内容（必填）
     required: true
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domain(s) for the application
+    description: 应用的域名
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health checks
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports, e.g., '3000' or '3000,8080'
+    description: 暴露端口，如 '3000' 或 '3000,8080'
     required: false
   - name: --ports-mappings
     type: string
-    description: Port mappings (host:container)
+    description: 端口映射（host:container）
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --tag
     type: stringArray
-    description: Tag to assign to the application (repeatable)
+    description: 要分配给应用的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Tags to assign to the application
+    description: 要分配给应用的标签
     required: false
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify app create dockerimage
-Description: Create an application from a pre-built Docker image
+Description: 从预构建的 Docker 镜像创建应用
 Parameters:
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --docker-registry-image-name
     type: string
-    description: Docker image name from registry (required)
+    description: 来自镜像仓库的 Docker 镜像名称（必填）
     required: true
   - name: --docker-registry-image-tag
     type: string
-    description: Docker image tag (defaults to 'latest')
+    description: Docker 镜像标签（默认为 'latest'）
     required: false
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domain(s) for the application
+    description: 应用的域名
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health checks
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports, e.g., '80' or '80,443' (required)
+    description: 暴露端口，如 '80' 或 '80,443'（必填）
     required: true
   - name: --ports-mappings
     type: string
-    description: Port mappings (host:container)
+    description: 端口映射（host:container）
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --tag
     type: stringArray
-    description: Tag to assign to the application (repeatable)
+    description: 要分配给应用的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Tags to assign to the application
+    description: 要分配给应用的标签
     required: false
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify app create github
-Description: Create an application from a private repository using GitHub App
+Description: 使用 GitHub App 从私有仓库创建应用
 Parameters:
   - name: --base-directory
     type: string
-    description: Base directory for the application
+    description: 应用的基础目录
     required: false
   - name: --build-command
     type: string
-    description: Custom build command
+    description: 自定义构建命令
     required: false
   - name: --build-pack
     type: string
-    description: Build pack: nixpacks, static, dockerfile, dockercompose (required)
+    description: 构建包：nixpacks、static、dockerfile、dockercompose（必填）
     required: true
   - name: --compose-domain
     type: stringArray
-    description: Docker Compose service domain in <service>=<url>[,<url>] format (repeatable)
+    description: Docker Compose 服务域名，格式为 <service>=<url>[,<url>]（可重复）
     required: false
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domain(s) for the application
+    description: 应用的域名
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --git-branch
     type: string
-    description: Git branch (required)
+    description: Git 分支（必填）
     required: true
   - name: --git-commit-sha
     type: string
-    description: Specific commit SHA to deploy
+    description: 要部署的具体提交 SHA
     required: false
   - name: --git-repository
     type: string
-    description: Git repository in format 'owner/repo' (required)
+    description: Git 仓库，格式为 'owner/repo'（必填）
     required: true
   - name: --github-app-uuid
     type: string
-    description: GitHub App UUID (required)
+    description: GitHub App UUID（必填）
     required: true
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health checks
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --install-command
     type: string
-    description: Custom install command
+    description: 自定义安装命令
     required: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports, e.g., '3000' or '3000,8080' (required)
+    description: 暴露端口，如 '3000' 或 '3000,8080'（必填）
     required: true
   - name: --ports-mappings
     type: string
-    description: Port mappings (host:container)
+    description: 端口映射（host:container）
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --publish-directory
     type: string
-    description: Publish directory for static builds
+    description: 静态构建的发布目录
     required: false
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --start-command
     type: string
-    description: Custom start command
+    description: 自定义启动命令
     required: false
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --tag
     type: stringArray
-    description: Tag to assign to the application (repeatable)
+    description: 要分配给应用的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Tags to assign to the application
+    description: 要分配给应用的标签
     required: false
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify app create public
-Description: Create an application from a public git repository
+Description: 从公开 git 仓库创建应用
 Parameters:
   - name: --base-directory
     type: string
-    description: Base directory for the application
+    description: 应用的基础目录
     required: false
   - name: --build-command
     type: string
-    description: Custom build command
+    description: 自定义构建命令
     required: false
   - name: --build-pack
     type: string
-    description: Build pack: nixpacks, static, dockerfile, dockercompose (required)
+    description: 构建包：nixpacks、static、dockerfile、dockercompose（必填）
     required: true
   - name: --compose-domain
     type: stringArray
-    description: Docker Compose service domain in <service>=<url>[,<url>] format (repeatable)
+    description: Docker Compose 服务域名，格式为 <service>=<url>[,<url>]（可重复）
     required: false
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domain(s) for the application
+    description: 应用的域名
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --git-branch
     type: string
-    description: Git branch (required)
+    description: Git 分支（必填）
     required: true
   - name: --git-commit-sha
     type: string
-    description: Specific commit SHA to deploy
+    description: 要部署的具体提交 SHA
     required: false
   - name: --git-repository
     type: string
-    description: Git repository URL (required)
+    description: Git 仓库 URL（必填）
     required: true
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health checks
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --install-command
     type: string
-    description: Custom install command
+    description: 自定义安装命令
     required: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports, e.g., '3000' or '3000,8080' (required)
+    description: 暴露端口，如 '3000' 或 '3000,8080'（必填）
     required: true
   - name: --ports-mappings
     type: string
-    description: Port mappings (host:container)
+    description: 端口映射（host:container）
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --publish-directory
     type: string
-    description: Publish directory for static builds
+    description: 静态构建的发布目录
     required: false
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --start-command
     type: string
-    description: Custom start command
+    description: 自定义启动命令
     required: false
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --tag
     type: stringArray
-    description: Tag to assign to the application (repeatable)
+    description: 要分配给应用的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Tags to assign to the application
+    description: 要分配给应用的标签
     required: false
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify app delete <uuid>
-Description: Delete an application. This action cannot be undone.
+Description: 删除应用。此操作无法撤销。
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify app deployments list <app-uuid>
-Description: Retrieve a list of all deployments for a specific application.
+Description: 获取指定应用所有部署的列表。
 Parameters: (None)
 
 Command: coolify app deployments logs <app-uuid> [deployment-uuid]
-Description: Get deployment logs for an application
+Description: 获取应用的部署日志
 Parameters:
   - name: --debuglogs
     type: boolean
-    description: Show debug logs (includes hidden commands and internal operations)
+    description: 显示调试日志（包括隐藏命令和内部操作）
     required: false
     default: false
   - name: --follow (-f)
     type: boolean
-    description: Follow log output (like tail -f)
+    description: 跟随日志输出（类似 tail -f）
     required: false
     default: false
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to display (0 = all)
+    description: 要显示的日志行数（0 表示全部）
     required: false
     default: 0
 
 Command: coolify app destinations add <uuid>
-Description: Attach a destination
+Description: 附加目标
 Parameters:
   - name: --destination
     type: string
-    description: Destination UUID
+    description: 目标 UUID
     required: false
 
 Command: coolify app destinations list <uuid>
-Description: List application destinations
+Description: 列出应用的目标
 Parameters: (None)
 
 Command: coolify app destinations remove <uuid> <destination_uuid>
-Description: Detach a destination
+Description: 分离目标
 Parameters: (None)
 
 Command: coolify app env create <app_uuid>
-Description: Create a new environment variable for a specific application. Use --key and --value flags to specify the variable.
+Description: 为指定应用创建新环境变量。使用 --key 和 --value 标志指定变量。
 Parameters:
   - name: --build-time
     type: boolean
-    description: Available at build time (default: true)
+    description: 构建时可用（默认：true）
     required: false
     default: true
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal (don't interpolate variables)
+    description: 将值视为字面量（不插值变量）
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --key
     type: string
-    description: Environment variable key (required)
+    description: 环境变量键名（必填）
     required: true
   - name: --preview
     type: boolean
-    description: Available in preview deployments
+    description: 在预览部署中可用
     required: false
     default: false
   - name: --runtime
     type: boolean
-    description: Available at runtime (default: true)
+    description: 运行时可用（默认：true）
     required: false
     default: true
   - name: --value
     type: string
-    description: Environment variable value (required)
+    description: 环境变量值（必填）
     required: true
 
 Command: coolify app env delete <app_uuid> <env_uuid>
-Description: Delete an environment variable from an application. First UUID is the application, second is the specific environment variable to delete.
+Description: 从应用中删除环境变量。第一个 UUID 是应用，第二个是要删除的具体环境变量。
 Parameters:
   - name: --force
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify app env get <app_uuid> <env_uuid_or_key>
-Description: Get detailed information about a specific environment variable by UUID or key name.
+Description: 通过 UUID 或键名获取指定环境变量的详细信息。
 Parameters: (None)
 
 Command: coolify app env list <app_uuid>
-Description: List all environment variables for an application
+Description: 列出应用的所有环境变量
 Parameters:
   - name: --all
     type: boolean
-    description: Show all environment variables (non-preview first, then preview)
+    description: 显示所有环境变量（先非预览，后预览）
     required: false
     default: false
   - name: --preview
     type: boolean
-    description: Show preview environment variables instead of regular ones
+    description: 显示预览环境变量而非常规环境变量
     required: false
     default: false
 
 Command: coolify app env sync <app_uuid>
-Description: Sync environment variables from a .env file
+Description: 从 .env 文件同步环境变量
 Parameters:
   - name: --build-time
     type: boolean
-    description: Make all variables available at build time (default: true)
+    description: 使所有变量在构建时可用（默认：true）
     required: false
     default: true
   - name: --file (-f)
     type: string
-    description: Path to .env file (required)
+    description: .env 文件路径（必填）
     required: true
   - name: --is-literal
     type: boolean
-    description: Treat all values as literal (don't interpolate variables)
+    description: 将所有值视为字面量（不插值变量）
     required: false
     default: false
   - name: --preview
     type: boolean
-    description: Make all variables available in preview deployments
+    description: 使所有变量在预览部署中可用
     required: false
     default: false
   - name: --runtime
     type: boolean
-    description: Make all variables available at runtime (default: true)
+    description: 使所有变量在运行时可用（默认：true）
     required: false
     default: true
 
 Command: coolify app env update <app_uuid> <env_uuid_or_key>
-Description: Update an existing environment variable. Identify it by UUID or key name.
+Description: 更新现有环境变量。通过 UUID 或键名标识。
 Parameters:
   - name: --build-time
     type: boolean
-    description: Available at build time (default: true)
+    description: 构建时可用（默认：true）
     required: false
     default: true
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --key
     type: string
-    description: New environment variable key (rename)
+    description: 新环境变量键名（重命名）
     required: false
   - name: --preview
     type: boolean
-    description: Available in preview deployments
+    description: 在预览部署中可用
     required: false
     default: false
   - name: --runtime
     type: boolean
-    description: Available at runtime (default: true)
+    description: 运行时可用（默认：true）
     required: false
     default: true
   - name: --value
     type: string
-    description: New environment variable value (required)
+    description: 新环境变量值（必填）
     required: true
 
 Command: coolify app execute-task <app_uuid> <task_uuid>
-Description: Execute a scheduled task now
+Description: 立即执行计划任务
 Parameters: (None)
 
 Command: coolify app get <uuid>
-Description: Retrieve detailed information about a specific application.
+Description: 获取指定应用的详细信息。
 Parameters: (None)
 
 Command: coolify app list
-Description: List all applications in Coolify.
+Description: 列出 Coolify 中的所有应用。
 Parameters: (None)
 
 Command: coolify app logs <uuid>
-Description: Get application logs
+Description: 获取应用日志
 Parameters:
   - name: --follow (-f)
     type: boolean
-    description: Follow log output (like tail -f)
+    description: 跟随日志输出（类似 tail -f）
     required: false
     default: false
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve
+    description: 要获取的日志行数
     required: false
     default: 100
   - name: --service
     type: string
-    description: Docker Compose service name (selects one container in multi-service apps)
+    description: Docker Compose 服务名称（在多服务应用中选择一个容器）
     required: false
   - name: --show-timestamps
     type: boolean
-    description: Show timestamps in log output
+    description: 日志输出中显示时间戳
     required: false
     default: false
 
 Command: coolify app move <uuid>
-Description: Move an application to another environment
+Description: 将应用移动到其他环境
 Parameters:
   - name: --environment-uuid
     type: string
-    description: Target environment UUID (required)
+    description: 目标环境 UUID（必填）
     required: true
 
 Command: coolify app previews create <app_uuid> <pr_id>
-Description: Open or redeploy a preview deployment
+Description: 打开或重新部署预览部署
 Parameters:
   - name: --commit
     type: string
-    description: Commit SHA to deploy (required for Bitbucket)
+    description: 要部署的提交 SHA（Bitbucket 必填）
     required: false
   - name: --docker-tag
     type: string
-    description: Docker image tag (Docker Image applications only)
+    description: Docker 镜像标签（仅 Docker 镜像应用）
     required: false
   - name: --force
     type: boolean
-    description: Rebuild without cache
+    description: 不使用缓存重建
     required: false
     default: false
   - name: --git-type
     type: string
-    description: Git provider of the pull request: github, gitlab, gitea, or bitbucket
+    description: 拉取请求的 Git 提供商：github、gitlab、gitea 或 bitbucket
     required: false
   - name: --no-deploy
     type: boolean
-    description: Only create the preview, do not queue a deployment
+    description: 仅创建预览，不排队部署
     required: false
     default: false
   - name: --url
     type: string
-    description: Pull request URL
+    description: 拉取请求 URL
     required: false
 
 Command: coolify app previews delete <app_uuid> <pr_id>
-Description: Delete a preview deployment for an application. First argument is the application UUID, second is the pull request ID.
+Description: 删除应用的预览部署。第一个参数是应用 UUID，第二个是拉取请求 ID。
 Parameters:
   - name: --force
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify app previews get <app_uuid> <pr_id>
-Description: Get a preview deployment of an application by pull request ID.
+Description: 按拉取请求 ID 获取应用的预览部署。
 Parameters: (None)
 
 Command: coolify app previews list <app_uuid>
-Description: List the preview deployments of an application, newest pull request first.
+Description: 列出应用的预览部署，最新的拉取请求排在前面。
 Parameters: (None)
 
 Command: coolify app previews logs <app_uuid> <pr_id>
-Description: Get preview deployment logs
+Description: 获取预览部署日志
 Parameters:
   - name: --follow (-f)
     type: boolean
-    description: Follow log output (like tail -f)
+    description: 跟随日志输出（类似 tail -f）
     required: false
     default: false
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve (-1 for all)
+    description: 要获取的日志行数（-1 表示全部）
     required: false
     default: 100
   - name: --service
     type: string
-    description: Docker Compose service name (selects one container in multi-service apps)
+    description: Docker Compose 服务名称（在多服务应用中选择一个容器）
     required: false
   - name: --show-timestamps
     type: boolean
-    description: Show timestamps in log output
+    description: 日志输出中显示时间戳
     required: false
     default: false
 
 Command: coolify app previews update <app_uuid> <pr_id>
-Description: Update the domains of a preview deployment
+Description: 更新预览部署的域名
 Parameters:
   - name: --compose-domain
     type: stringArray
-    description: Docker Compose service domain in <service>=<url>[,<url>] format (repeatable)
+    description: Docker Compose 服务域名，格式为 <service>=<url>[,<url>]（可重复）
     required: false
   - name: --domains
     type: string
-    description: Domains (comma-separated)
+    description: 域名（逗号分隔）
     required: false
   - name: --force-domain-override
     type: boolean
-    description: Save the domains even when another resource uses them
+    description: 即使其他资源正在使用这些域名也保存
     required: false
     default: false
 
 Command: coolify app restart <uuid>
-Description: Restart a running application.
+Description: 重启运行中的应用。
 Parameters: (None)
 
 Command: coolify app rollback images <uuid>
-Description: List rollback images
+Description: 列出可用于回滚的镜像
 Parameters: (None)
 
 Command: coolify app rollback run <uuid>
-Description: Rollback application to a commit
+Description: 将应用回滚到某个提交
 Parameters:
   - name: --commit
     type: string
-    description: Git commit SHA
+    description: Git 提交 SHA
     required: false
 
 Command: coolify app run-storage-backup <uuid> <storage_uuid>
-Description: Run volume backup schedule now
+Description: 立即运行卷备份计划
 Parameters: (None)
 
 Command: coolify app secret-manager set <app_uuid>
-Description: Set the secret manager source of an application
+Description: 设置应用的密钥管理器来源
 Parameters:
   - name: --integration-token
     type: string
-    description: UUID of the secret manager integration token (required)
+    description: 密钥管理器集成令牌的 UUID（必填）
     required: true
   - name: --settings
     type: string
-    description: Provider settings as a JSON object
+    description: 以 JSON 对象表示的提供商设置
     required: false
 
 Command: coolify app start <uuid>
-Description: Start an application (initiates a deployment).
+Description: 启动应用（发起一次部署）。
 Parameters:
   - name: --force
     type: boolean
-    description: Force rebuild
+    description: 强制重建
     required: false
     default: false
   - name: --instant-deploy
     type: boolean
-    description: Instant deploy (skip queuing)
+    description: 立即部署（跳过排队）
     required: false
     default: false
 
 Command: coolify app stop <uuid>
-Description: Stop a running application.
+Description: 停止运行中的应用。
 Parameters: (None)
 
 Command: coolify app storage create <app_uuid>
-Description: Create a storage for an application
+Description: 为应用创建存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --fs-path
     type: string
-    description: Host directory path (file only, required when --is-directory is set)
+    description: 宿主机目录路径（仅 file，设置 --is-directory 时必填）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --is-directory
     type: boolean
-    description: Whether this is a directory mount (file only)
+    description: 是否为目录挂载（仅 file）
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container (required)
+    description: 容器内挂载路径（必填）
     required: true
   - name: --name
     type: string
-    description: Volume name (persistent only)
+    description: 卷名称（仅 persistent）
     required: false
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
 
 Command: coolify app storage delete <app_uuid> <storage_uuid>
-Description: Delete a storage from an application
+Description: 从应用中删除存储
 Parameters: (None)
 
 Command: coolify app storage delete-backup <app_uuid> <storage_uuid>
-Description: Delete storage volume backup schedule
+Description: 删除存储卷备份计划
 Parameters: (None)
 
 Command: coolify app storage list <app_uuid>
-Description: List all persistent volumes and file storages for a specific application.
+Description: 列出指定应用的所有持久化卷和文件存储。
 Parameters: (None)
 
 Command: coolify app storage run-backup <app_uuid> <storage_uuid>
-Description: Run storage volume backup now
+Description: 立即运行存储卷备份
 Parameters: (None)
 
 Command: coolify app storage set-backup <app_uuid> <storage_uuid>
-Description: Create or replace storage volume backup schedule
+Description: 创建或替换存储卷备份计划
 Parameters:
   - name: --disable-local-backup
     type: boolean
-    description: Disable local backup retention
+    description: 禁用本地备份保留
     required: false
     default: false
   - name: --enabled
     type: boolean
-    description: Enable the schedule
+    description: 启用该计划
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron frequency (required)
+    description: cron 频率（必填）
     required: true
   - name: --retention-amount-locally
     type: integer
-    description: Local retention count
+    description: 本地保留数量
     required: false
     default: 7
   - name: --retention-amount-s3
     type: integer
-    description: S3 retention count
+    description: S3 保留数量
     required: false
     default: 7
   - name: --retention-days-locally
     type: integer
-    description: Local retention days
+    description: 本地保留天数
     required: false
     default: 0
   - name: --retention-days-s3
     type: integer
-    description: S3 retention days
+    description: S3 保留天数
     required: false
     default: 0
   - name: --retention-max-storage-locally
     type: float64
-    description: Local max storage
+    description: 本地最大存储空间
     required: false
     default: 0
   - name: --retention-max-storage-s3
     type: float64
-    description: S3 max storage
+    description: S3 最大存储空间
     required: false
     default: 0
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID when --save-s3 is set
+    description: 设置 --save-s3 时使用的 S3 存储 UUID
     required: false
   - name: --save-s3
     type: boolean
-    description: Also save backups to S3
+    description: 同时将备份保存到 S3
     required: false
     default: false
   - name: --stop-during-backup
     type: boolean
-    description: Stop resource during backup
+    description: 备份期间停止资源
     required: false
     default: false
   - name: --timeout
     type: integer
-    description: Backup timeout seconds
+    description: 备份超时秒数
     required: false
     default: 3600
 
 Command: coolify app storage update <app_uuid>
-Description: Update a storage for an application
+Description: 更新应用的存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --id
     type: integer
-    description: Storage ID (deprecated, use --uuid instead)
+    description: 存储 ID（已弃用，请改用 --uuid）
     required: false
     default: 0
   - name: --is-preview-suffix-enabled
     type: boolean
-    description: Enable preview suffix for this storage
+    description: 为该存储启用预览后缀
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container
+    description: 容器内挂载路径
     required: false
   - name: --name
     type: string
-    description: Storage name (persistent only)
+    description: 存储名称（仅 persistent）
     required: false
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
   - name: --uuid
     type: string
-    description: Storage UUID (required, use 'storage list' to find)
+    description: 存储 UUID（必填，可用 'storage list' 查找）
     required: false
 
 Command: coolify app tag add <application-uuid> <name>
-Description: Add an application tag
+Description: 添加应用标签
 Parameters: (None)
 
 Command: coolify app tag list <application-uuid>
-Description: List application tags
+Description: 列出应用标签
 Parameters: (None)
 
 Command: coolify app tag remove <application-uuid> <tag-uuid>
-Description: Remove an application tag
+Description: 移除应用标签
 Parameters: (None)
 
 Command: coolify app task create <app_uuid>
-Description: Create a scheduled task for an application
+Description: 为应用创建计划任务
 Parameters:
   - name: --command
     type: string
-    description: Command to run (required)
+    description: 要运行的命令（必填）
     required: true
   - name: --container
     type: string
-    description: Container name to run the command in
+    description: 要在其中运行命令的容器名称
     required: false
   - name: --enabled
     type: boolean
-    description: Whether the task is enabled
+    description: 任务是否启用
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron expression or frequency (required)
+    description: cron 表达式或频率（必填）
     required: true
   - name: --name
     type: string
-    description: Task name (required)
+    description: 任务名称（必填）
     required: true
   - name: --timeout
     type: integer
-    description: Timeout in seconds
+    description: 超时时间（秒）
     required: false
     default: 300
 
 Command: coolify app task delete <app_uuid> <task_uuid>
-Description: Delete an application scheduled task
+Description: 删除应用计划任务
 Parameters: (None)
 
 Command: coolify app task execute <app_uuid> <task_uuid>
-Description: Execute an application scheduled task now
+Description: 立即执行应用计划任务
 Parameters: (None)
 
 Command: coolify app task executions <app_uuid> <task_uuid>
-Description: List executions for an application scheduled task
+Description: 列出应用计划任务的执行记录
 Parameters: (None)
 
 Command: coolify app task list <app_uuid>
-Description: List scheduled tasks for an application
+Description: 列出应用的计划任务
 Parameters: (None)
 
 Command: coolify app task update <app_uuid> <task_uuid>
-Description: Update an application scheduled task
+Description: 更新应用计划任务
 Parameters:
   - name: --command
     type: string
-    description: Command to run
+    description: 要运行的命令
     required: false
   - name: --container
     type: string
-    description: Container name to run the command in
+    description: 要在其中运行命令的容器名称
     required: false
   - name: --enabled
     type: boolean
-    description: Whether the task is enabled
+    description: 任务是否启用
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron expression or frequency
+    description: cron 表达式或频率
     required: false
   - name: --name
     type: string
-    description: Task name
+    description: 任务名称
     required: false
   - name: --timeout
     type: integer
-    description: Timeout in seconds
+    description: 超时时间（秒）
     required: false
     default: 300
 
 Command: coolify app update <uuid>
-Description: Update application configuration
+Description: 更新应用配置
 Parameters:
   - name: --base-directory
     type: string
-    description: Base directory
+    description: 基础目录
     required: false
   - name: --build-command
     type: string
-    description: Build command
+    description: 构建命令
     required: false
   - name: --compose-domain
     type: stringArray
-    description: Docker Compose service domain in <service>=<url>[,<url>] format (repeatable)
+    description: Docker Compose 服务域名，格式为 <service>=<url>[,<url>]（可重复）
     required: false
   - name: --custom-internal-name
     type: string
-    description: Custom internal hostname
+    description: 自定义内部主机名
     required: false
   - name: --description
     type: string
-    description: Application description
+    description: 应用描述
     required: false
   - name: --disable-build-cache
     type: boolean
-    description: Disable the build cache
+    description: 禁用构建缓存
     required: false
     default: false
   - name: --docker-image
     type: string
-    description: Docker image name
+    description: Docker 镜像名称
     required: false
   - name: --docker-images-to-keep
     type: integer
-    description: Number of Docker images to retain
+    description: 保留的 Docker 镜像数量
     required: false
     default: 0
   - name: --docker-tag
     type: string
-    description: Docker image tag
+    description: Docker 镜像标签
     required: false
   - name: --dockerfile
     type: string
-    description: Dockerfile content
+    description: Dockerfile 内容
     required: false
   - name: --dockerfile-target-build
     type: string
-    description: Dockerfile target build stage
+    description: Dockerfile 目标构建阶段
     required: false
   - name: --domains
     type: string
-    description: Domains (comma-separated)
+    description: 域名（逗号分隔）
     required: false
   - name: --git-branch
     type: string
-    description: Git branch
+    description: Git 分支
     required: false
   - name: --git-repository
     type: string
-    description: Git repository URL
+    description: Git 仓库 URL
     required: false
   - name: --gpu-count
     type: string
-    description: GPU count
+    description: GPU 数量
     required: false
   - name: --gpu-device-ids
     type: string
-    description: GPU device IDs
+    description: GPU 设备 ID
     required: false
   - name: --gpu-driver
     type: string
-    description: GPU driver
+    description: GPU 驱动
     required: false
   - name: --gpu-options
     type: string
-    description: GPU options
+    description: GPU 选项
     required: false
   - name: --health-check-enabled
     type: boolean
-    description: Enable health check
+    description: 启用健康检查
     required: false
     default: false
   - name: --health-check-path
     type: string
-    description: Health check path
+    description: 健康检查路径
     required: false
   - name: --include-source-commit-in-build
     type: boolean
-    description: Include the source commit in the build
+    description: 构建中包含源提交
     required: false
     default: false
   - name: --inject-build-args-to-dockerfile
     type: boolean
-    description: Inject build arguments into the Dockerfile
+    description: 向 Dockerfile 注入构建参数
     required: false
     default: false
   - name: --install-command
     type: string
-    description: Install command
+    description: 安装命令
     required: false
   - name: --is-consistent-container-name-enabled
     type: boolean
-    description: Use consistent container names
+    description: 使用一致的容器名称
     required: false
     default: false
   - name: --is-env-sorting-enabled
     type: boolean
-    description: Sort environment variables
+    description: 排序环境变量
     required: false
     default: false
   - name: --is-git-lfs-enabled
     type: boolean
-    description: Enable Git LFS
+    description: 启用 Git LFS
     required: false
     default: false
   - name: --is-git-shallow-clone-enabled
     type: boolean
-    description: Use a shallow Git clone
+    description: 使用 Git 浅克隆
     required: false
     default: false
   - name: --is-git-submodules-enabled
     type: boolean
-    description: Clone Git submodules
+    description: 克隆 Git 子模块
     required: false
     default: false
   - name: --is-gpu-enabled
     type: boolean
-    description: Enable GPU
+    description: 启用 GPU
     required: false
     default: false
   - name: --is-gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --is-log-drain-enabled
     type: boolean
-    description: Enable application log drain
+    description: 启用应用日志外发
     required: false
     default: false
   - name: --is-pr-deployments-public-enabled
     type: boolean
-    description: Make pull request deployments public
+    description: 将拉取请求部署设为公开
     required: false
     default: false
   - name: --is-preview-deployments-enabled
     type: boolean
-    description: Enable preview deployments
+    description: 启用预览部署
     required: false
     default: false
   - name: --is-raw-compose-deployment-enabled
     type: boolean
-    description: Deploy the raw Docker Compose definition
+    description: 部署原始 Docker Compose 定义
     required: false
     default: false
   - name: --is-stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --max-restart-count
     type: integer
-    description: Maximum container restart count
+    description: 容器最大重启次数
     required: false
     default: 0
   - name: --name
     type: string
-    description: Application name
+    description: 应用名称
     required: false
   - name: --ports-exposes
     type: string
-    description: Exposed ports
+    description: 暴露端口
     required: false
   - name: --ports-mappings
     type: string
-    description: Port mappings
+    description: 端口映射
     required: false
   - name: --preview-url-template
     type: string
-    description: Preview URL template
+    description: 预览 URL 模板
     required: false
   - name: --publish-directory
     type: string
-    description: Publish directory
+    description: 发布目录
     required: false
   - name: --start-command
     type: string
-    description: Start command
+    description: 启动命令
     required: false
   - name: --stop-grace-period
     type: integer
-    description: Container stop grace period in seconds
+    description: 容器停止宽限期（秒）
     required: false
     default: 0
   - name: --use-build-secrets
     type: boolean
-    description: Use Docker Build Secrets for build-time variables
+    description: 构建期变量使用 Docker Build Secrets
     required: false
     default: false
 
 Command: coolify audit list
-Description: List audit events, newest first
+Description: 列出审计事件，最新优先
 Parameters:
   - name: --action
     type: string
-    description: Filter by action, e.g. created, updated, deleted (all = every action)
+    description: 按操作过滤，如 created、updated、deleted（all 表示所有操作）
     required: false
   - name: --page
     type: integer
-    description: Page number
+    description: 页码
     required: false
     default: 1
   - name: --per-page
     type: integer
-    description: Events per page (1-100)
+    description: 每页事件数（1-100）
     required: false
     default: 25
   - name: --search
     type: string
-    description: Search text
+    description: 搜索文本
     required: false
   - name: --source
     type: string
-    description: Filter by source: all, ui, api, mcp, webhook, system, scheduler
+    description: 按来源过滤：all、ui、api、mcp、webhook、system、scheduler
     required: false
 
 Command: coolify cloud-init create
-Description: Create a cloud-init script
+Description: 创建 cloud-init 脚本
 Parameters:
   - name: --name
     type: string
-    description: Script name
+    description: 脚本名称
     required: false
   - name: --script
     type: string
-    description: Script contents
+    description: 脚本内容
     required: false
   - name: --script-file
     type: string
-    description: Read script contents from file
+    description: 从文件读取脚本内容
     required: false
 
 Command: coolify cloud-init delete <uuid>
-Description: Delete a cloud-init script
+Description: 删除 cloud-init 脚本
 Parameters: (None)
 
 Command: coolify cloud-init get <uuid>
-Description: Get a cloud-init script
+Description: 获取 cloud-init 脚本
 Parameters: (None)
 
 Command: coolify cloud-init list
-Description: List cloud-init scripts
+Description: 列出 cloud-init 脚本
 Parameters: (None)
 
 Command: coolify cloud-init update <uuid>
-Description: Update a cloud-init script
+Description: 更新 cloud-init 脚本
 Parameters:
   - name: --name
     type: string
-    description: Script name
+    description: 脚本名称
     required: false
   - name: --script
     type: string
-    description: Script contents
+    description: 脚本内容
     required: false
   - name: --script-file
     type: string
-    description: Read script contents from file
+    description: 从文件读取脚本内容
     required: false
 
 Command: coolify cloud-token create
-Description: Create a cloud provider token
+Description: 创建云服务商令牌
 Parameters:
   - name: --name
     type: string
-    description: Friendly token name
+    description: 令牌友好名称
     required: false
   - name: --provider
     type: string
-    description: Cloud provider: hetzner, digitalocean, vultr, or hostinger
+    description: 云服务商：hetzner、digitalocean、vultr 或 hostinger
     required: false
   - name: --provider-token
     type: string
-    description: Provider API token (sensitive; never included in output)
+    description: 提供商 API 令牌（敏感；不会包含在输出中）
     required: false
 
 Command: coolify cloud-token delete <uuid>
-Description: Delete a cloud provider token
+Description: 删除云服务商令牌
 Parameters: (None)
 
 Command: coolify cloud-token get <uuid>
-Description: Show a cloud provider token
+Description: 显示云服务商令牌
 Parameters: (None)
 
 Command: coolify cloud-token list
-Description: List cloud provider tokens
+Description: 列出云服务商令牌
 Parameters: (None)
 
 Command: coolify cloud-token update <uuid>
-Description: Rename a cloud provider token
+Description: 重命名云服务商令牌
 Parameters:
   - name: --name
     type: string
-    description: New friendly token name
+    description: 新的令牌友好名称
     required: false
 
 Command: coolify cloud-token validate <uuid>
-Description: Validate a cloud provider token
+Description: 验证云服务商令牌
 Parameters: (None)
 
 Command: coolify completion <shell>
-Description: Output shell completion code for the specified shell
+Description: 输出指定 shell 的自动补全代码
 Parameters: (None)
 
 Command: coolify config
-Description: Display the path to the Coolify CLI configuration file
+Description: 显示 Coolify CLI 配置文件的路径
 Parameters: (None)
 
 Command: coolify context add <context_name> <url> <token>
-Description: Add a new context
+Description: 添加新上下文
 Parameters:
   - name: --default (-d)
     type: boolean
-    description: Set as default context
+    description: 设为默认上下文
     required: false
     default: false
   - name: --force (-f)
     type: boolean
-    description: Force overwrite if context already exists
+    description: 上下文已存在时强制覆盖
     required: false
     default: false
 
 Command: coolify context delete <context_name>
-Description: Delete a context
+Description: 删除上下文
 Parameters: (None)
 
 Command: coolify context get <context_name>
-Description: Get details of a specific context
+Description: 获取指定上下文的详情
 Parameters: (None)
 
 Command: coolify context list
-Description: List all configured contexts
+Description: 列出所有已配置的上下文
 Parameters: (None)
 
 Command: coolify context set-default <context_name>
-Description: Set a context as the default
+Description: 将上下文设为默认
 Parameters: (None)
 
 Command: coolify context set-token <context_name> <token>
-Description: Update the API token for a context
+Description: 更新上下文的 API 令牌
 Parameters: (None)
 
 Command: coolify context update <context_name>
-Description: Update a context's properties (name, URL, token)
+Description: 更新上下文属性（名称、URL、令牌）
 Parameters:
   - name: --name (-n)
     type: string
-    description: New name for the context
+    description: 上下文的新名称
     required: false
   - name: --token (-t)
     type: string
-    description: New token for the context
+    description: 上下文的新令牌
     required: false
   - name: --url (-u)
     type: string
-    description: New URL for the context
+    description: 上下文的新 URL
     required: false
 
 Command: coolify context use <context_name>
-Description: Switch to a different context (set as default)
+Description: 切换到其他上下文（设为默认）
 Parameters: (None)
 
 Command: coolify context verify
-Description: Verify current context connection and authentication
+Description: 验证当前上下文的连接与认证
 Parameters: (None)
 
 Command: coolify context version
-Description: Get current context's Coolify version
+Description: 获取当前上下文的 Coolify 版本
 Parameters: (None)
 
 Command: coolify database backup create <database_uuid>
-Description: Create a new scheduled backup configuration
+Description: 创建新的定时备份配置
 Parameters:
   - name: --databases-to-backup
     type: string
-    description: Comma-separated list of databases to backup
+    description: 要备份的数据库列表（逗号分隔）
     required: false
   - name: --disable-local-backup
     type: boolean
-    description: Disable local backup storage
+    description: 禁用本地备份存储
     required: false
     default: false
   - name: --dump-all
     type: boolean
-    description: Dump all databases
+    description: 转储所有数据库
     required: false
     default: false
   - name: --enabled
     type: boolean
-    description: Enable backup schedule
+    description: 启用备份计划
     required: false
     default: false
   - name: --frequency
     type: string
-    description: Backup frequency (cron expression, e.g., '0 0 * * *' for daily)
+    description: 备份频率（cron 表达式，如每天为 '0 0 * * *'）
     required: false
   - name: --retention-amount-locally
     type: integer
-    description: Number of backups to retain locally
+    description: 本地保留的备份数量
     required: false
     default: 0
   - name: --retention-amount-s3
     type: integer
-    description: Number of backups to retain in S3
+    description: S3 中保留的备份数量
     required: false
     default: 0
   - name: --retention-days-locally
     type: integer
-    description: Days to retain backups locally
+    description: 备份本地保留天数
     required: false
     default: 0
   - name: --retention-days-s3
     type: integer
-    description: Days to retain backups in S3
+    description: 备份在 S3 的保留天数
     required: false
     default: 0
   - name: --retention-max-storage-locally
     type: float64
-    description: Max storage for local backups (GB)
+    description: 本地备份的最大存储空间（GB）
     required: false
     default: 0
   - name: --retention-max-storage-s3
     type: float64
-    description: Max storage for S3 backups (GB)
+    description: S3 备份的最大存储空间（GB）
     required: false
     default: 0
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID
+    description: S3 存储 UUID
     required: false
   - name: --save-s3
     type: boolean
-    description: Save backups to S3
+    description: 将备份保存到 S3
     required: false
     default: false
   - name: --timeout
     type: integer
-    description: Backup timeout in seconds
+    description: 备份超时时间（秒）
     required: false
     default: 0
 
 Command: coolify database backup delete <database_uuid> <backup_uuid>
-Description: Delete a backup configuration and optionally all its executions from S3. First UUID is the database, second is the specific backup configuration.
+Description: 删除备份配置，可选从 S3 删除其全部执行记录。第一个 UUID 是数据库，第二个是具体的备份配置。
 Parameters:
   - name: --delete-s3
     type: boolean
-    description: Delete backup files from S3
+    description: 从 S3 删除备份文件
     required: false
     default: false
 
 Command: coolify database backup delete-execution <database_uuid> <backup_uuid> <execution_uuid>
-Description: Delete a specific backup execution and optionally from S3. First UUID is the database, second is the backup configuration, third is the specific execution.
+Description: 删除指定的备份执行记录，可选同时从 S3 删除。第一个 UUID 是数据库，第二个是备份配置，第三个是具体的执行记录。
 Parameters:
   - name: --delete-s3
     type: boolean
-    description: Delete backup file from S3
+    description: 从 S3 删除备份文件
     required: false
     default: false
 
 Command: coolify database backup executions <database_uuid> <backup_uuid>
-Description: List all executions for a backup configuration. First UUID is the database, second is the specific backup configuration.
+Description: 列出某个备份配置的所有执行记录。第一个 UUID 是数据库，第二个是具体的备份配置。
 Parameters: (None)
 
 Command: coolify database backup list <database_uuid>
-Description: List all backup configurations for a specific database.
+Description: 列出指定数据库的所有备份配置。
 Parameters: (None)
 
 Command: coolify database backup trigger <database_uuid> <backup_uuid>
-Description: Trigger an immediate backup for a specific backup configuration. First UUID is the database, second is the specific backup configuration to trigger.
+Description: 为指定备份配置立即触发一次备份。第一个 UUID 是数据库，第二个是要触发的具体备份配置。
 Parameters: (None)
 
 Command: coolify database backup update <database_uuid> <backup_uuid>
-Description: Update a backup configuration settings (frequency, retention, S3, etc.). First UUID is the database, second is the specific backup configuration.
+Description: 更新备份配置设置（频率、保留策略、S3 等）。第一个 UUID 是数据库，第二个是具体的备份配置。
 Parameters:
   - name: --databases-to-backup
     type: string
-    description: Comma-separated list of databases to backup
+    description: 要备份的数据库列表（逗号分隔）
     required: false
   - name: --dump-all
     type: boolean
-    description: Dump all databases
+    description: 转储所有数据库
     required: false
     default: false
   - name: --enabled
     type: boolean
-    description: Enable or disable backup
+    description: 启用或禁用备份
     required: false
     default: false
   - name: --frequency
     type: string
-    description: Backup frequency (cron expression)
+    description: 备份频率（cron 表达式）
     required: false
   - name: --retention-amount-locally
     type: integer
-    description: Number of backups to retain locally
+    description: 本地保留的备份数量
     required: false
     default: 0
   - name: --retention-amount-s3
     type: integer
-    description: Number of backups to retain in S3
+    description: S3 中保留的备份数量
     required: false
     default: 0
   - name: --retention-days-locally
     type: integer
-    description: Days to retain backups locally
+    description: 备份本地保留天数
     required: false
     default: 0
   - name: --retention-days-s3
     type: integer
-    description: Days to retain backups in S3
+    description: 备份在 S3 的保留天数
     required: false
     default: 0
   - name: --retention-max-storage-locally
     type: float64
-    description: Max storage for local backups (GB)
+    description: 本地备份的最大存储空间（GB）
     required: false
     default: 0
   - name: --retention-max-storage-s3
     type: float64
-    description: Max storage for S3 backups (GB)
+    description: S3 备份的最大存储空间（GB）
     required: false
     default: 0
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID
+    description: S3 存储 UUID
     required: false
   - name: --save-s3
     type: boolean
-    description: Save backups to S3
+    description: 将备份保存到 S3
     required: false
     default: false
 
 Command: coolify database clone <uuid>
-Description: Clone a database to a destination
+Description: 将数据库克隆到目标
 Parameters:
   - name: --clone-volumes
     type: boolean
-    description: Clone volume data
+    description: 克隆卷数据
     required: false
     default: false
   - name: --destination
     type: string
-    description: Destination UUID
+    description: 目标 UUID
     required: false
   - name: --name
     type: string
-    description: Optional new name
+    description: 可选的新名称
     required: false
 
 Command: coolify database create <type>
-Description: Create a new database
+Description: 创建新数据库
 Parameters:
   - name: --clickhouse-admin-password
     type: string
-    description: Clickhouse admin password
+    description: Clickhouse 管理员密码
     required: false
   - name: --clickhouse-admin-user
     type: string
-    description: Clickhouse admin user
+    description: Clickhouse 管理员用户
     required: false
   - name: --description
     type: string
-    description: Database description
+    description: 数据库描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --dragonfly-password
     type: string
-    description: Dragonfly password
+    description: Dragonfly 密码
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --image
     type: string
-    description: Docker image
+    description: Docker 镜像
     required: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --is-public
     type: boolean
-    description: Make database publicly accessible
+    description: 将数据库设为公开访问
     required: false
     default: false
   - name: --keydb-password
     type: string
-    description: KeyDB password
+    description: KeyDB 密码
     required: false
   - name: --limits-cpus
     type: string
-    description: CPU limit (e.g., '0.5', '2')
+    description: CPU 限制（如 '0.5'、'2'）
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit (e.g., '512m', '2g')
+    description: 内存限制（如 '512m'、'2g'）
     required: false
   - name: --mariadb-database
     type: string
-    description: MariaDB database name
+    description: MariaDB 数据库名称
     required: false
   - name: --mariadb-password
     type: string
-    description: MariaDB password
+    description: MariaDB 密码
     required: false
   - name: --mariadb-root-password
     type: string
-    description: MariaDB root password
+    description: MariaDB root 密码
     required: false
   - name: --mariadb-user
     type: string
-    description: MariaDB user
+    description: MariaDB 用户
     required: false
   - name: --mongo-database
     type: string
-    description: MongoDB database name
+    description: MongoDB 数据库名称
     required: false
   - name: --mongo-root-password
     type: string
-    description: MongoDB root password
+    description: MongoDB root 密码
     required: false
   - name: --mongo-root-username
     type: string
-    description: MongoDB root username
+    description: MongoDB root 用户名
     required: false
   - name: --mysql-database
     type: string
-    description: MySQL database name
+    description: MySQL 数据库名称
     required: false
   - name: --mysql-password
     type: string
-    description: MySQL password
+    description: MySQL 密码
     required: false
   - name: --mysql-root-password
     type: string
-    description: MySQL root password
+    description: MySQL root 密码
     required: false
   - name: --mysql-user
     type: string
-    description: MySQL user
+    description: MySQL 用户
     required: false
   - name: --name
     type: string
-    description: Database name
+    description: 数据库名称
     required: false
   - name: --postgres-db
     type: string
-    description: PostgreSQL database name
+    description: PostgreSQL 数据库名称
     required: false
   - name: --postgres-password
     type: string
-    description: PostgreSQL password
+    description: PostgreSQL 密码
     required: false
   - name: --postgres-user
     type: string
-    description: PostgreSQL user
+    description: PostgreSQL 用户
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --public-port
     type: integer
-    description: Public port
+    description: 公网端口
     required: false
     default: 0
   - name: --redis-password
     type: string
-    description: Redis password
+    description: Redis 密码
     required: false
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --sqlite-databases
     type: string
-    description: SQLite: comma-separated database file names (e.g. 'app.db,cache.db')
+    description: SQLite：逗号分隔的数据库文件名（如 'app.db,cache.db'）
     required: false
   - name: --tag
     type: stringArray
-    description: Tag to assign (repeatable)
+    description: 要分配的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Comma-separated tags to assign
+    description: 要分配的逗号分隔标签
     required: false
 
 Command: coolify database delete <uuid>
-Description: Delete a database and optionally clean up its configurations, volumes, and networks.
+Description: 删除数据库，可选清理其配置、卷和网络。
 Parameters:
   - name: --delete-configurations
     type: boolean
-    description: Delete configurations
+    description: 删除配置
     required: false
     default: true
   - name: --delete-connected-networks
     type: boolean
-    description: Delete connected networks
+    description: 删除已连接的网络
     required: false
     default: true
   - name: --delete-volumes
     type: boolean
-    description: Delete volumes
+    description: 删除卷
     required: false
     default: true
   - name: --docker-cleanup
     type: boolean
-    description: Run docker cleanup
+    description: 运行 Docker 清理
     required: false
     default: true
 
 Command: coolify database env create <database_uuid>
-Description: Create a new environment variable for a specific database. Use --key and --value flags to specify the variable.
+Description: 为指定数据库创建新环境变量。使用 --key 和 --value 标志指定变量。
 Parameters:
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal (don't interpolate variables)
+    description: 将值视为字面量（不插值变量）
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --is-shown-once
     type: boolean
-    description: Only show value once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --key
     type: string
-    description: Environment variable key (required)
+    description: 环境变量键名（必填）
     required: true
   - name: --value
     type: string
-    description: Environment variable value (required)
+    description: 环境变量值（必填）
     required: true
 
 Command: coolify database env delete <database_uuid> <env_uuid>
-Description: Delete an environment variable from a database. First UUID is the database, second is the specific environment variable to delete.
+Description: 从数据库中删除环境变量。第一个 UUID 是数据库，第二个是要删除的具体环境变量。
 Parameters:
   - name: --force
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify database env get <database_uuid> <env_uuid_or_key>
-Description: Get detailed information about a specific environment variable. First UUID is the database, second is the environment variable UUID or key name.
+Description: 获取指定环境变量的详细信息。第一个 UUID 是数据库，第二个是环境变量的 UUID 或键名。
 Parameters: (None)
 
 Command: coolify database env list <database_uuid>
-Description: List all environment variables for a specific database.
+Description: 列出指定数据库的所有环境变量。
 Parameters: (None)
 
 Command: coolify database env sync <database_uuid>
-Description: Sync environment variables from a .env file
+Description: 从 .env 文件同步环境变量
 Parameters:
   - name: --file (-f)
     type: string
-    description: Path to .env file (required)
+    description: .env 文件路径（必填）
     required: true
   - name: --is-literal
     type: boolean
-    description: Treat all values as literal (don't interpolate variables)
+    description: 将所有值视为字面量（不插值变量）
     required: false
     default: false
 
 Command: coolify database env update <database_uuid> <env_uuid_or_key>
-Description: Update an existing environment variable. Identify it by UUID or key name.
+Description: 更新现有环境变量。通过 UUID 或键名标识。
 Parameters:
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --is-shown-once
     type: boolean
-    description: Only show value once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --key
     type: string
-    description: New environment variable key (rename)
+    description: 新环境变量键名（重命名）
     required: false
   - name: --value
     type: string
-    description: New environment variable value (required)
+    description: 新环境变量值（必填）
     required: true
 
 Command: coolify database get <uuid>
-Description: Get detailed information about a specific database by UUID.
+Description: 通过 UUID 获取指定数据库的详细信息。
 Parameters: (None)
 
 Command: coolify database import start <database_uuid>
-Description: Start an import into the database
+Description: 开始导入到数据库
 Parameters:
   - name: --dump-all
     type: boolean
-    description: The backup contains all databases
+    description: 备份包含所有数据库
     required: false
     default: false
   - name: --file
     type: string
-    description: Local backup file to upload and import
+    description: 要上传并导入的本地备份文件
     required: false
   - name: --keep-owners
     type: boolean
-    description: PostgreSQL: restore object owners and privileges from a single-database archive
+    description: PostgreSQL：从单数据库归档恢复对象所有者和权限
     required: false
     default: false
   - name: --poll-interval
     type: duration
-    description: Status polling interval when --wait is set
+    description: 设置 --wait 时的状态轮询间隔
     required: false
     default: 3s
   - name: --replace-existing
     type: boolean
-    description: PostgreSQL: drop matching objects before restoring a single-database archive
+    description: PostgreSQL：恢复单数据库归档前先删除匹配的对象
     required: false
     default: false
   - name: --restore-mysql-users
     type: boolean
-    description: MySQL/MariaDB all-databases backups: also restore users, passwords and privileges
+    description: MySQL/MariaDB 全库备份：同时恢复用户、密码和权限
     required: false
     default: false
   - name: --s3-path
     type: string
-    description: Path of the backup in the S3 storage
+    description: 备份在 S3 存储中的路径
     required: false
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID to import from (requires --s3-path)
+    description: 用于导入的 S3 存储 UUID（需要 --s3-path）
     required: false
   - name: --server-path
     type: string
-    description: Absolute path of the backup on the database's server
+    description: 备份在数据库服务器上的绝对路径
     required: false
   - name: --sqlite-database
     type: string
-    description: SQLite: database file to restore into (e.g. app.db)
+    description: SQLite：要恢复到的数据库文件（如 app.db）
     required: false
   - name: --upload-id
     type: string
-    description: ID of a previously uploaded backup file
+    description: 之前上传的备份文件 ID
     required: false
   - name: --wait
     type: boolean
-    description: Wait until the import finishes; exits non-zero if it fails
+    description: 等待导入完成；失败时以非零状态退出
     required: false
     default: false
 
 Command: coolify database import status <database_uuid> <activity_id>
-Description: Show the status of an import
+Description: 显示导入状态
 Parameters:
   - name: --poll-interval
     type: duration
-    description: Status polling interval when --wait is set
+    description: 设置 --wait 时的状态轮询间隔
     required: false
     default: 3s
   - name: --wait
     type: boolean
-    description: Wait until the import finishes; exits non-zero if it fails
+    description: 等待导入完成；失败时以非零状态退出
     required: false
     default: false
 
 Command: coolify database import upload <database_uuid> <file>
-Description: Upload a local backup file (max 10 GiB) in chunks. Prints the upload ID to pass to 'start --upload-id'.
+Description: 分块上传本地备份文件（最大 10 GiB）。输出上传 ID，供 'start --upload-id' 使用。
 Parameters: (None)
 
 Command: coolify database list
-Description: List all databases in Coolify.
+Description: 列出 Coolify 中的所有数据库。
 Parameters: (None)
 
 Command: coolify database logs <uuid>
-Description: Get database logs
+Description: 获取数据库日志
 Parameters:
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve
+    description: 要获取的日志行数
     required: false
     default: 100
   - name: --show-timestamps
     type: boolean
-    description: Include timestamps in logs
+    description: 日志中包含时间戳
     required: false
     default: false
 
 Command: coolify database move <uuid>
-Description: Move a database to another environment
+Description: 将数据库移动到其他环境
 Parameters:
   - name: --environment-uuid
     type: string
-    description: Target environment UUID (required)
+    description: 目标环境 UUID（必填）
     required: true
 
 Command: coolify database restart <uuid>
-Description: Restart a database by UUID.
+Description: 通过 UUID 重启数据库。
 Parameters: (None)
 
 Command: coolify database run-storage-backup <uuid> <storage_uuid>
-Description: Run a volume backup schedule now
+Description: 立即运行卷备份计划
 Parameters: (None)
 
 Command: coolify database start <uuid>
-Description: Start a database by UUID.
+Description: 通过 UUID 启动数据库。
 Parameters: (None)
 
 Command: coolify database stop <uuid>
-Description: Stop a database by UUID.
+Description: 通过 UUID 停止数据库。
 Parameters: (None)
 
 Command: coolify database storage create <db_uuid>
-Description: Create a storage for a database
+Description: 为数据库创建存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --fs-path
     type: string
-    description: Host directory path (file only, required when --is-directory is set)
+    description: 宿主机目录路径（仅 file，设置 --is-directory 时必填）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --is-directory
     type: boolean
-    description: Whether this is a directory mount (file only)
+    description: 是否为目录挂载（仅 file）
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container (required)
+    description: 容器内挂载路径（必填）
     required: true
   - name: --name
     type: string
-    description: Volume name (persistent only)
+    description: 卷名称（仅 persistent）
     required: false
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
 
 Command: coolify database storage delete <db_uuid> <storage_uuid>
-Description: Delete a storage from a database
+Description: 从数据库中删除存储
 Parameters: (None)
 
 Command: coolify database storage delete-backup <db_uuid> <storage_uuid>
-Description: Delete database storage volume backup schedule
+Description: 删除数据库存储卷备份计划
 Parameters: (None)
 
 Command: coolify database storage list <db_uuid>
-Description: List all persistent volumes and file storages for a specific database.
+Description: 列出指定数据库的所有持久化卷和文件存储。
 Parameters: (None)
 
 Command: coolify database storage run-backup <db_uuid> <storage_uuid>
-Description: Run database storage volume backup now
+Description: 立即运行数据库存储卷备份
 Parameters: (None)
 
 Command: coolify database storage set-backup <db_uuid> <storage_uuid>
-Description: Create or replace database storage volume backup schedule
+Description: 创建或替换数据库存储卷备份计划
 Parameters:
   - name: --disable-local-backup
     type: boolean
-    description: Disable local backup retention
+    description: 禁用本地备份保留
     required: false
     default: false
   - name: --enabled
     type: boolean
-    description: Enable the schedule
+    description: 启用该计划
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron frequency (required)
+    description: cron 频率（必填）
     required: true
   - name: --retention-amount-locally
     type: integer
-    description: Local retention count
+    description: 本地保留数量
     required: false
     default: 7
   - name: --retention-amount-s3
     type: integer
-    description: S3 retention count
+    description: S3 保留数量
     required: false
     default: 7
   - name: --retention-days-locally
     type: integer
-    description: Local retention days
+    description: 本地保留天数
     required: false
     default: 0
   - name: --retention-days-s3
     type: integer
-    description: S3 retention days
+    description: S3 保留天数
     required: false
     default: 0
   - name: --retention-max-storage-locally
     type: float64
-    description: Local max storage
+    description: 本地最大存储空间
     required: false
     default: 0
   - name: --retention-max-storage-s3
     type: float64
-    description: S3 max storage
+    description: S3 最大存储空间
     required: false
     default: 0
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID when --save-s3 is set
+    description: 设置 --save-s3 时使用的 S3 存储 UUID
     required: false
   - name: --save-s3
     type: boolean
-    description: Also save backups to S3
+    description: 同时将备份保存到 S3
     required: false
     default: false
   - name: --stop-during-backup
     type: boolean
-    description: Stop resource during backup
+    description: 备份期间停止资源
     required: false
     default: false
   - name: --timeout
     type: integer
-    description: Backup timeout seconds
+    description: 备份超时秒数
     required: false
     default: 3600
 
 Command: coolify database storage update <db_uuid>
-Description: Update a storage for a database
+Description: 更新数据库的存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --id
     type: integer
-    description: Storage ID (deprecated, use --uuid instead)
+    description: 存储 ID（已弃用，请改用 --uuid）
     required: false
     default: 0
   - name: --is-preview-suffix-enabled
     type: boolean
-    description: Enable preview suffix for this storage
+    description: 为该存储启用预览后缀
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container
+    description: 容器内挂载路径
     required: false
   - name: --name
     type: string
-    description: Storage name (persistent only)
+    description: 存储名称（仅 persistent）
     required: false
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
   - name: --uuid
     type: string
-    description: Storage UUID (required, use 'storage list' to find)
+    description: 存储 UUID（必填，可用 'storage list' 查找）
     required: false
 
 Command: coolify database tag add <database-uuid> <name>
-Description: Add a database tag
+Description: 添加数据库标签
 Parameters: (None)
 
 Command: coolify database tag list <database-uuid>
-Description: List database tags
+Description: 列出数据库标签
 Parameters: (None)
 
 Command: coolify database tag remove <database-uuid> <tag-uuid>
-Description: Remove a database tag
+Description: 移除数据库标签
 Parameters: (None)
 
 Command: coolify database update <uuid>
-Description: Update a database's configuration by UUID.
+Description: 通过 UUID 更新数据库配置。
 Parameters:
   - name: --description
     type: string
-    description: Database description
+    description: 数据库描述
     required: false
   - name: --image
     type: string
-    description: Docker image
+    description: Docker 镜像
     required: false
   - name: --is-public
     type: boolean
-    description: Make database publicly accessible
+    description: 将数据库设为公开访问
     required: false
     default: false
   - name: --limits-cpus
     type: string
-    description: CPU limit
+    description: CPU 限制
     required: false
   - name: --limits-memory
     type: string
-    description: Memory limit
+    description: 内存限制
     required: false
   - name: --name
     type: string
-    description: Database name
+    description: 数据库名称
     required: false
   - name: --public-port
     type: integer
-    description: Public port
+    description: 公网端口
     required: false
     default: 0
   - name: --sqlite-databases
     type: string
-    description: Comma-separated SQLite database file names (SQLite only)
+    description: 逗号分隔的 SQLite 数据库文件名（仅 SQLite）
     required: false
 
 Command: coolify deploy batch <name1,name2,...>
-Description: Deploy multiple resources by name
+Description: 按名称部署多个资源
 Parameters:
   - name: --docker-tag
     type: string
-    description: Docker image tag override for the deployment
+    description: 本次部署覆盖的 Docker 镜像标签
     required: false
   - name: --force
     type: boolean
-    description: Force deployment
+    description: 强制部署
     required: false
     default: false
   - name: --pull-request-id
     type: integer
-    description: Pull request ID for preview deployments
+    description: 预览部署的拉取请求 ID
     required: false
     default: 0
 
 Command: coolify deploy cancel <uuid>
-Description: Cancel an in-progress deployment. This will stop the deployment process and clean up any temporary resources.
+Description: 取消进行中的部署。此操作会停止部署过程并清理所有临时资源。
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify deploy get <uuid>
-Description: Get detailed information about a specific deployment by its UUID.
+Description: 通过 UUID 获取指定部署的详细信息。
 Parameters: (None)
 
 Command: coolify deploy list
-Description: List all currently running deployments across all resources.
+Description: 列出所有资源当前正在进行的部署。
 Parameters: (None)
 
 Command: coolify deploy name <resource_name>
-Description: Deploy by resource name
+Description: 按资源名称部署
 Parameters:
   - name: --docker-tag
     type: string
-    description: Docker image tag override for the deployment
+    description: 本次部署覆盖的 Docker 镜像标签
     required: false
   - name: --force
     type: boolean
-    description: Force deployment
+    description: 强制部署
     required: false
     default: false
   - name: --pull-request-id
     type: integer
-    description: Pull request ID for preview deployments
+    description: 预览部署的拉取请求 ID
     required: false
     default: 0
 
 Command: coolify deploy uuid <uuid>
-Description: Deploy by uuid
+Description: 按 UUID 部署
 Parameters:
   - name: --docker-tag
     type: string
-    description: Docker image tag override for the deployment
+    description: 本次部署覆盖的 Docker 镜像标签
     required: false
   - name: --force
     type: boolean
-    description: Force deployment
+    description: 强制部署
     required: false
     default: false
   - name: --pull-request-id
     type: integer
-    description: Pull request ID for preview deployments
+    description: 预览部署的拉取请求 ID
     required: false
     default: 0
 
 Command: coolify destination create
-Description: Create a destination for a server
+Description: 为服务器创建目标
 Parameters:
   - name: --name
     type: string
-    description: Destination name (defaults on the server)
+    description: 目标名称（默认使用服务器上的）
     required: false
   - name: --network
     type: string
-    description: Docker network name (required)
+    description: Docker 网络名称（必填）
     required: true
   - name: --server
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --type
     type: string
-    description: Destination type: standalone or swarm
+    description: 目标类型：standalone 或 swarm
     required: false
 
 Command: coolify destination delete <uuid>
-Description: Delete an unused destination
+Description: 删除未使用的目标
 Parameters: (None)
 
 Command: coolify destination get <uuid>
-Description: Get a destination
+Description: 获取目标
 Parameters: (None)
 
 Command: coolify destination list
-Description: List destinations
+Description: 列出目标
 Parameters:
   - name: --server
     type: string
-    description: Only destinations belonging to this server UUID
+    description: 仅限属于该服务器 UUID 的目标
     required: false
 
 Command: coolify destination update <uuid>
-Description: Rename a destination
+Description: 重命名目标
 Parameters:
   - name: --name
     type: string
-    description: New destination name
+    description: 新目标名称
     required: false
 
 Command: coolify github branches <app_uuid> <owner/repo>
-Description: List branches for a repository
+Description: 列出仓库的分支
 Parameters: (None)
 
 Command: coolify github create
-Description: Create a GitHub App integration
+Description: 创建 GitHub App 集成
 Parameters:
   - name: --api-url
     type: string
-    description: GitHub API URL (derived from --html-url when omitted)
+    description: GitHub API URL（省略时由 --html-url 推导）
     required: false
   - name: --app-id
     type: integer
-    description: GitHub App ID (required)
+    description: GitHub App ID（必填）
     required: true
     default: 0
   - name: --client-id
     type: string
-    description: GitHub OAuth Client ID (required)
+    description: GitHub OAuth 客户端 ID（必填）
     required: true
   - name: --client-secret
     type: string
-    description: GitHub OAuth Client Secret (required)
+    description: GitHub OAuth 客户端密钥（必填）
     required: true
   - name: --custom-port
     type: integer
-    description: Custom port for SSH (default: 22)
+    description: SSH 自定义端口（默认：22）
     required: false
     default: 0
   - name: --custom-user
     type: string
-    description: Custom user for SSH (default: git)
+    description: SSH 自定义用户（默认：git）
     required: false
   - name: --html-url
     type: string
-    description: GitHub HTML URL (required, e.g., https://github.com)
+    description: GitHub HTML URL（必填，如 https://github.com）
     required: true
   - name: --installation-id
     type: integer
-    description: GitHub Installation ID (required)
+    description: GitHub 安装 ID（必填）
     required: true
     default: 0
   - name: --name
     type: string
-    description: GitHub App name (required)
+    description: GitHub App 名称（必填）
     required: true
   - name: --organization
     type: string
-    description: GitHub organization
+    description: GitHub 组织
     required: false
   - name: --private-key-uuid
     type: string
-    description: UUID of existing private key (required)
+    description: 现有私钥的 UUID（必填）
     required: true
   - name: --system-wide
     type: boolean
-    description: Is this app system-wide (cloud only)
+    description: 该应用是否系统级（仅云实例）
     required: false
     default: false
   - name: --webhook-secret
     type: string
-    description: GitHub Webhook Secret
+    description: GitHub webhook 密钥
     required: false
 
 Command: coolify github delete <app_uuid>
-Description: Delete a GitHub App integration. Accepts the app UUID (numeric ID also accepted). The app must not be used by any applications.
+Description: 删除 GitHub App 集成。接受应用 UUID（也接受数字 ID）。该应用不得被任何应用使用。
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify github get <app_uuid>
-Description: Get detailed information about a specific GitHub App integration. Accepts the app UUID (numeric ID also accepted).
+Description: 获取指定 GitHub App 集成的详细信息。接受应用 UUID（也接受数字 ID）。
 Parameters: (None)
 
 Command: coolify github list
-Description: List all GitHub App integrations configured in Coolify.
+Description: 列出 Coolify 中配置的所有 GitHub App 集成。
 Parameters: (None)
 
 Command: coolify github repos <app_uuid>
-Description: List all repositories that are accessible by the specified GitHub App. Accepts the app UUID (numeric ID also accepted).
+Description: 列出指定 GitHub App 可访问的所有仓库。接受应用 UUID（也接受数字 ID）。
 Parameters: (None)
 
 Command: coolify github update <app_uuid>
-Description: Update an existing GitHub App integration. Provide the app UUID (numeric ID also accepted) and the fields you want to update.
+Description: 更新现有 GitHub App 集成。提供应用 UUID（也接受数字 ID）以及要更新的字段。
 Parameters:
   - name: --api-url
     type: string
@@ -3327,20 +3327,20 @@ Parameters:
     default: 0
   - name: --client-id
     type: string
-    description: GitHub OAuth Client ID
+    description: GitHub OAuth 客户端 ID
     required: false
   - name: --client-secret
     type: string
-    description: GitHub OAuth Client Secret
+    description: GitHub OAuth 客户端密钥
     required: false
   - name: --custom-port
     type: integer
-    description: Custom port for SSH
+    description: SSH 自定义端口
     required: false
     default: 0
   - name: --custom-user
     type: string
-    description: Custom user for SSH
+    description: SSH 自定义用户
     required: false
   - name: --html-url
     type: string
@@ -3348,100 +3348,100 @@ Parameters:
     required: false
   - name: --installation-id
     type: integer
-    description: GitHub Installation ID
+    description: GitHub 安装 ID
     required: false
     default: 0
   - name: --name
     type: string
-    description: GitHub App name
+    description: GitHub App 名称
     required: false
   - name: --organization
     type: string
-    description: GitHub organization
+    description: GitHub 组织
     required: false
   - name: --private-key-uuid
     type: string
-    description: UUID of private key
+    description: 私钥的 UUID
     required: false
   - name: --system-wide
     type: boolean
-    description: Is this app system-wide
+    description: 该应用是否系统级
     required: false
     default: false
   - name: --webhook-secret
     type: string
-    description: GitHub Webhook Secret
+    description: GitHub webhook 密钥
     required: false
 
 Command: coolify gitlab create
-Description: Create a GitLab App integration
+Description: 创建 GitLab App 集成
 Parameters:
   - name: --api-url
     type: string
-    description: GitLab API URL (defaults to {html-url}/api/v4)
+    description: GitLab API URL（默认为 {html-url}/api/v4）
     required: false
   - name: --client-id
     type: string
-    description: GitLab OAuth Application ID
+    description: GitLab OAuth 应用 ID
     required: false
   - name: --client-secret
     type: string
-    description: GitLab OAuth Application Secret
+    description: GitLab OAuth 应用密钥
     required: false
   - name: --custom-port
     type: integer
-    description: Custom SSH port (default: 22)
+    description: 自定义 SSH 端口（默认：22）
     required: false
     default: 0
   - name: --custom-user
     type: string
-    description: Custom SSH user (default: git)
+    description: 自定义 SSH 用户（默认：git）
     required: false
   - name: --group-name
     type: string
-    description: Optional comma-separated group filter
+    description: 可选的逗号分隔分组过滤器
     required: false
   - name: --html-url
     type: string
-    description: GitLab instance URL (required, e.g. https://gitlab.com)
+    description: GitLab 实例 URL（必填，如 https://gitlab.com）
     required: true
   - name: --name
     type: string
-    description: GitLab App name (required)
+    description: GitLab App 名称（必填）
     required: true
   - name: --redirect-uri
     type: string
-    description: OAuth redirect URI registered in GitLab
+    description: 在 GitLab 注册的 OAuth 重定向 URI
     required: false
   - name: --system-wide
     type: boolean
-    description: Make this app system-wide (non-cloud instances only)
+    description: 将该应用设为系统级（仅非云实例）
     required: false
     default: false
   - name: --webhook-token
     type: string
-    description: Webhook secret token (auto-generated when omitted)
+    description: webhook 密钥令牌（省略时自动生成）
     required: false
 
 Command: coolify gitlab delete <app_id_or_uuid>
-Description: Delete a GitLab App integration. The app must not be used by any applications.
+Description: 删除 GitLab App 集成。该应用不得被任何应用使用。
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify gitlab get <app_id_or_uuid>
-Description: Get detailed information about a specific GitLab App integration.
+Description: 获取指定 GitLab App 集成的详细信息。
 Parameters: (None)
 
 Command: coolify gitlab list
-Description: List all GitLab App integrations configured in Coolify for the current team (includes system-wide sources).
+Description: 列出当前团队在 Coolify 中配置的所有 GitLab App 集成（包括系统级来源）。
 Parameters: (None)
 
 Command: coolify gitlab update <app_id_or_uuid>
-Description: Update an existing GitLab App integration. Provide the app ID or UUID and the fields you want to update.
+Description: 更新现有 GitLab App 集成。提供应用 ID 或 UUID 以及要更新的字段。
 Parameters:
   - name: --api-url
     type: string
@@ -3449,2034 +3449,2034 @@ Parameters:
     required: false
   - name: --client-id
     type: string
-    description: GitLab OAuth Application ID
+    description: GitLab OAuth 应用 ID
     required: false
   - name: --client-secret
     type: string
-    description: GitLab OAuth Application Secret
+    description: GitLab OAuth 应用密钥
     required: false
   - name: --custom-port
     type: integer
-    description: Custom SSH port
+    description: 自定义 SSH 端口
     required: false
     default: 0
   - name: --custom-user
     type: string
-    description: Custom SSH user
+    description: 自定义 SSH 用户
     required: false
   - name: --group-name
     type: string
-    description: Optional comma-separated group filter
+    description: 可选的逗号分隔分组过滤器
     required: false
   - name: --html-url
     type: string
-    description: GitLab instance URL
+    description: GitLab 实例 URL
     required: false
   - name: --name
     type: string
-    description: GitLab App name
+    description: GitLab App 名称
     required: false
   - name: --redirect-uri
     type: string
-    description: OAuth redirect URI
+    description: OAuth 重定向 URI
     required: false
   - name: --system-wide
     type: boolean
-    description: Is this app system-wide
+    description: 该应用是否系统级
     required: false
     default: false
   - name: --webhook-token
     type: string
-    description: Webhook secret token
+    description: webhook 密钥令牌
     required: false
 
 Command: coolify integration-token create
-Description: Create and validate a secret manager integration token
+Description: 创建并验证密钥管理器集成令牌
 Parameters:
   - name: --metadata
     type: string
-    description: Provider metadata as a JSON object (required for infisical and vault)
+    description: 以 JSON 对象表示的提供商元数据（infisical 和 vault 必填）
     required: false
   - name: --name
     type: string
-    description: Friendly token name (required)
+    description: 令牌友好名称（必填）
     required: true
   - name: --provider
     type: string
-    description: Secret manager provider: doppler, infisical, vault (required)
+    description: 密钥管理器提供商：doppler、infisical、vault（必填）
     required: true
   - name: --provider-token-stdin
     type: boolean
-    description: Read the provider token from stdin
+    description: 从 stdin 读取提供商令牌
     required: false
     default: false
 
 Command: coolify mcp disable
-Description: Disable the Coolify MCP server (API: POST /mcp/disable). Requires a root team API token.
+Description: 停用 Coolify MCP 服务器（API：POST /mcp/disable）。需要根团队 API 令牌。
 Parameters: (None)
 
 Command: coolify mcp enable
-Description: Enable the Coolify MCP server (API: POST /mcp/enable). Requires a root team API token.
+Description: 启用 Coolify MCP 服务器（API：POST /mcp/enable）。需要根团队 API 令牌。
 Parameters: (None)
 
 Command: coolify notification get <channel>
-Description: Channels: email, discord, slack, telegram, pushover, webhook
+Description: 通知渠道：email、discord、slack、telegram、pushover、webhook
 Parameters: (None)
 
 Command: coolify notification update <channel>
-Description: Pass settings as JSON via --json. Example: coolify notification update webhook --json '{"webhook_enabled":true}'
+Description: 通过 --json 以 JSON 传入设置。示例：coolify notification update webhook --json '{"webhook_enabled":true}'
 Parameters:
   - name: --json
     type: string
-    description: JSON object of fields to update
+    description: 要更新字段的 JSON 对象
     required: false
 
 Command: coolify private-key add <key_name> <private_key_or_file>
-Description: Add a private key
+Description: 添加私钥
 Parameters:
   - name: --description
     type: string
-    description: Private key description
+    description: 私钥描述
     required: false
 
 Command: coolify private-key get <uuid>
-Description: Get a private key by UUID
+Description: 按 UUID 获取私钥
 Parameters: (None)
 
 Command: coolify private-key list
-Description: List all private keys
+Description: 列出所有私钥
 Parameters: (None)
 
 Command: coolify private-key remove <uuid>
-Description: Remove a private key
+Description: 移除私钥
 Parameters: (None)
 
 Command: coolify private-key update <uuid>
-Description: Update a private key
+Description: 更新私钥
 Parameters:
   - name: --description
     type: string
-    description: Private key description
+    description: 私钥描述
     required: false
   - name: --name
     type: string
-    description: Private key name
+    description: 私钥名称
     required: false
   - name: --private-key
     type: string
-    description: Private key content or path to key file (required)
+    description: 私钥内容或密钥文件路径（必填）
     required: true
 
 Command: coolify project create
-Description: Create a new project
+Description: 创建新项目
 Parameters:
   - name: --description
     type: string
-    description: Project description
+    description: 项目描述
     required: false
   - name: --name
     type: string
-    description: Project name (required)
+    description: 项目名称（必填）
     required: true
 
 Command: coolify project delete <uuid>
-Description: Delete a project
+Description: 删除项目
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify project environments create <project_uuid>
-Description: Create an environment in a project
+Description: 在项目中创建环境
 Parameters:
   - name: --name
     type: string
-    description: Environment name (required)
+    description: 环境名称（必填）
     required: true
 
 Command: coolify project environments delete <project_uuid> <environment>
-Description: Delete a project environment
+Description: 删除项目环境
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify project environments get <project_uuid> <environment>
-Description: Get an environment and its resources
+Description: 获取环境及其资源
 Parameters: (None)
 
 Command: coolify project environments list <project_uuid>
-Description: List environments in a project
+Description: 列出项目中的环境
 Parameters: (None)
 
 Command: coolify project environments update <project_uuid> <environment>
-Description: Update a project environment
+Description: 更新项目环境
 Parameters:
   - name: --description
     type: string
-    description: Environment description
+    description: 环境描述
     required: false
   - name: --name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
 
 Command: coolify project get <uuid>
-Description: Get a project by uuid
+Description: 按 UUID 获取项目
 Parameters: (None)
 
 Command: coolify project list
-Description: List all projects
+Description: 列出所有项目
 Parameters: (None)
 
 Command: coolify project update <uuid>
-Description: Update a project
+Description: 更新项目
 Parameters:
   - name: --description
     type: string
-    description: Project description
+    description: 项目描述
     required: false
   - name: --name
     type: string
-    description: Project name
+    description: 项目名称
     required: false
 
 Command: coolify project update-environment <project_uuid> <environment>
-Description: Update a project environment. Prefer: coolify project environments update
+Description: 更新项目环境。推荐使用：coolify project environments update
 Parameters:
   - name: --description
     type: string
-    description: Environment description
+    description: 环境描述
     required: false
   - name: --name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
 
 Command: coolify resource list
-Description: List all resources
+Description: 列出所有资源
 Parameters: (None)
 
 Command: coolify s3 create
-Description: Create an S3 storage
+Description: 创建 S3 存储
 Parameters:
   - name: --bucket
     type: string
-    description: Bucket name
+    description: 存储桶名称
     required: false
   - name: --description
     type: string
-    description: Description
+    description: 描述
     required: false
   - name: --endpoint
     type: string
-    description: S3 endpoint URL
+    description: S3 端点 URL
     required: false
   - name: --key
     type: string
-    description: Access key
+    description: 访问密钥
     required: false
   - name: --name
     type: string
-    description: Storage name
+    description: 存储名称
     required: false
   - name: --region
     type: string
-    description: Region
+    description: 区域
     required: false
   - name: --secret
     type: string
-    description: Secret key
+    description: 密钥
     required: false
   - name: --usable
     type: boolean
-    description: Mark storage as usable
+    description: 将存储标记为可用
     required: false
     default: true
 
 Command: coolify s3 delete <uuid>
-Description: Delete an S3 storage
+Description: 删除 S3 存储
 Parameters: (None)
 
 Command: coolify s3 get <uuid>
-Description: Get an S3 storage
+Description: 获取 S3 存储
 Parameters: (None)
 
 Command: coolify s3 list
-Description: List S3 storages
+Description: 列出 S3 存储
 Parameters: (None)
 
 Command: coolify s3 update <uuid>
-Description: Update an S3 storage
+Description: 更新 S3 存储
 Parameters:
   - name: --bucket
     type: string
-    description: Bucket name
+    description: 存储桶名称
     required: false
   - name: --description
     type: string
-    description: Description
+    description: 描述
     required: false
   - name: --endpoint
     type: string
-    description: S3 endpoint URL
+    description: S3 端点 URL
     required: false
   - name: --key
     type: string
-    description: Access key
+    description: 访问密钥
     required: false
   - name: --name
     type: string
-    description: Storage name
+    description: 存储名称
     required: false
   - name: --region
     type: string
-    description: Region
+    description: 区域
     required: false
   - name: --secret
     type: string
-    description: Secret key
+    description: 密钥
     required: false
   - name: --usable
     type: boolean
-    description: Mark storage as usable
+    description: 将存储标记为可用
     required: false
     default: true
 
 Command: coolify s3 validate <uuid>
-Description: Validate S3 connection
+Description: 验证 S3 连接
 Parameters: (None)
 
 Command: coolify server add <server_name> <ip_address> <private_key_uuid>
-Description: Add a server
+Description: 添加服务器
 Parameters:
   - name: --port (-p)
     type: integer
-    description: Port
+    description: 端口
     required: false
     default: 22
   - name: --server-role
     type: string
-    description: Server role (deployment|build|both): 'deployment' requires another usable build server
+    description: 服务器角色（deployment|build|both）：'deployment' 需要另一台可用的构建服务器
     required: false
   - name: --user (-u)
     type: string
-    description: User
+    description: 用户
     required: false
     default: root
   - name: --validate
     type: boolean
-    description: Validate the server
+    description: 验证服务器
     required: false
     default: false
 
 Command: coolify server cloudflare-tunnel disable <server_uuid>
-Description: Disable Cloudflare tunnel flag
+Description: 停用 Cloudflare tunnel 开关
 Parameters: (None)
 
 Command: coolify server cloudflare-tunnel enable <server_uuid>
-Description: Enable Cloudflare tunnel flag
+Description: 启用 Cloudflare tunnel 开关
 Parameters: (None)
 
 Command: coolify server cloudflare-tunnel get <server_uuid>
-Description: Get Cloudflare tunnel state
+Description: 获取 Cloudflare tunnel 状态
 Parameters: (None)
 
 Command: coolify server cloudflare-tunnel update <server_uuid>
-Description: Set Cloudflare tunnel enabled state
+Description: 设置 Cloudflare tunnel 的启用状态
 Parameters:
   - name: --enabled
     type: boolean
-    description: Enable (true) or disable (false) Cloudflare tunnel
+    description: 启用（true）或禁用（false）Cloudflare tunnel
     required: true
     default: false
 
 Command: coolify server destinations create <server_uuid>
-Description: Create a server destination
+Description: 创建服务器目标
 Parameters:
   - name: --name
     type: string
-    description: Destination name
+    description: 目标名称
     required: false
   - name: --network
     type: string
-    description: Docker network name (required)
+    description: Docker 网络名称（必填）
     required: true
   - name: --type
     type: string
-    description: Destination type: standalone or swarm
+    description: 目标类型：standalone 或 swarm
     required: false
 
 Command: coolify server destinations list <server_uuid>
-Description: List server destinations
+Description: 列出服务器的目标
 Parameters: (None)
 
 Command: coolify server digitalocean create
-Description: Create a DigitalOcean server
+Description: 创建 DigitalOcean 服务器
 Parameters:
   - name: --cloud-init
     type: string
-    description: Cloud-init YAML
+    description: cloud-init YAML
     required: false
   - name: --cloud-token
     type: string
-    description: Cloud provider token UUID
+    description: 云服务商令牌 UUID
     required: false
   - name: --enable-ipv6
     type: boolean
-    description: Enable public IPv6
+    description: 启用公网 IPv6
     required: false
     default: true
   - name: --image
     type: string
-    description: DigitalOcean image ID or slug
+    description: DigitalOcean 镜像 ID 或 slug
     required: false
   - name: --monitoring
     type: boolean
-    description: Enable DigitalOcean monitoring
+    description: 启用 DigitalOcean 监控
     required: false
     default: true
   - name: --name
     type: string
-    description: Server name
+    description: 服务器名称
     required: false
   - name: --private-key
     type: string
-    description: Coolify private key UUID
+    description: Coolify 私钥 UUID
     required: false
   - name: --region
     type: string
-    description: DigitalOcean region
+    description: DigitalOcean 区域
     required: false
   - name: --size
     type: string
-    description: DigitalOcean size
+    description: DigitalOcean 实例规格
     required: false
   - name: --ssh-key-ids
     type: intSlice
-    description: Additional DigitalOcean SSH key IDs
+    description: 附加的 DigitalOcean SSH 密钥 ID
     required: false
   - name: --validate
     type: boolean
-    description: Validate after creation
+    description: 创建后验证
     required: false
     default: false
 
 Command: coolify server digitalocean images <cloud_token_uuid>
-Description: List DigitalOcean images
+Description: 列出 DigitalOcean 镜像
 Parameters: (None)
 
 Command: coolify server digitalocean regions <cloud_token_uuid>
-Description: List DigitalOcean regions
+Description: 列出 DigitalOcean 区域
 Parameters: (None)
 
 Command: coolify server digitalocean sizes <cloud_token_uuid>
-Description: List DigitalOcean sizes
+Description: 列出 DigitalOcean 实例规格
 Parameters: (None)
 
 Command: coolify server digitalocean ssh-keys <cloud_token_uuid>
-Description: List DigitalOcean SSH keys
+Description: 列出 DigitalOcean SSH 密钥
 Parameters: (None)
 
 Command: coolify server docker-cleanup executions <server_uuid>
-Description: List docker cleanup executions
+Description: 列出 Docker 清理执行记录
 Parameters: (None)
 
 Command: coolify server docker-cleanup get <server_uuid>
-Description: Get docker cleanup settings
+Description: 获取 Docker 清理设置
 Parameters: (None)
 
 Command: coolify server docker-cleanup run <server_uuid>
-Description: Run docker cleanup now
+Description: 立即运行 Docker 清理
 Parameters: (None)
 
 Command: coolify server docker-cleanup update <server_uuid>
-Description: Update docker cleanup settings
+Description: 更新 Docker 清理设置
 Parameters:
   - name: --delete-unused-networks
     type: boolean
-    description: Delete unused networks
+    description: 删除未使用的网络
     required: false
     default: false
   - name: --delete-unused-volumes
     type: boolean
-    description: Delete unused volumes
+    description: 删除未使用的卷
     required: false
     default: false
   - name: --disable-image-retention
     type: boolean
-    description: Disable application image retention
+    description: 禁用应用镜像保留
     required: false
     default: false
   - name: --force
     type: boolean
-    description: Force cleanup
+    description: 强制清理
     required: false
     default: false
   - name: --frequency
     type: string
-    description: Cron frequency
+    description: cron 频率
     required: false
   - name: --threshold
     type: integer
-    description: Disk usage threshold percent
+    description: 磁盘使用率阈值（百分比）
     required: false
     default: 0
 
 Command: coolify server domains <uuid>
-Description: Get server domains by uuid
+Description: 按 UUID 获取服务器域名
 Parameters: (None)
 
 Command: coolify server get <uuid>
-Description: Get server details by uuid
+Description: 按 UUID 获取服务器详情
 Parameters:
   - name: --resources
     type: boolean
-    description: Show the resources deployed on the server instead of the server details
+    description: 显示部署在服务器上的资源而非服务器详情
     required: false
     default: false
 
 Command: coolify server hetzner create
-Description: Create a Hetzner server
+Description: 创建 Hetzner 服务器
 Parameters:
   - name: --cloud-init
     type: string
-    description: Cloud-init YAML
+    description: cloud-init YAML
     required: false
   - name: --cloud-token
     type: string
-    description: Cloud provider token UUID
+    description: 云服务商令牌 UUID
     required: false
   - name: --enable-backups
     type: boolean
-    description: Enable Hetzner backups
+    description: 启用 Hetzner 备份
     required: false
     default: false
   - name: --enable-ipv4
     type: boolean
-    description: Enable public IPv4
+    description: 启用公网 IPv4
     required: false
     default: true
   - name: --enable-ipv6
     type: boolean
-    description: Enable public IPv6
+    description: 启用公网 IPv6
     required: false
     default: true
   - name: --firewall-ids
     type: intSlice
-    description: Hetzner firewall IDs
+    description: Hetzner 防火墙 ID
     required: false
   - name: --image
     type: integer
-    description: Hetzner image ID
+    description: Hetzner 镜像 ID
     required: false
     default: 0
   - name: --location
     type: string
-    description: Hetzner location name
+    description: Hetzner 机房位置名称
     required: false
   - name: --name
     type: string
-    description: Server name (auto-generated if omitted)
+    description: 服务器名称（省略时自动生成）
     required: false
   - name: --network-ids
     type: intSlice
-    description: Hetzner network IDs
+    description: Hetzner 网络 ID
     required: false
   - name: --private-key
     type: string
-    description: Coolify private key UUID
+    description: Coolify 私钥 UUID
     required: false
   - name: --server-type
     type: string
-    description: Hetzner server type
+    description: Hetzner 服务器类型
     required: false
   - name: --ssh-key-ids
     type: intSlice
-    description: Additional Hetzner SSH key IDs
+    description: 附加的 Hetzner SSH 密钥 ID
     required: false
   - name: --validate
     type: boolean
-    description: Validate after creation
+    description: 创建后验证
     required: false
     default: false
 
 Command: coolify server hetzner firewalls <cloud_token_uuid>
-Description: List Hetzner firewalls
+Description: 列出 Hetzner 防火墙
 Parameters: (None)
 
 Command: coolify server hetzner images <cloud_token_uuid>
-Description: List Hetzner images
+Description: 列出 Hetzner 镜像
 Parameters: (None)
 
 Command: coolify server hetzner locations <cloud_token_uuid>
-Description: List Hetzner locations
+Description: 列出 Hetzner 机房位置
 Parameters: (None)
 
 Command: coolify server hetzner networks <cloud_token_uuid>
-Description: List Hetzner networks
+Description: 列出 Hetzner 网络
 Parameters: (None)
 
 Command: coolify server hetzner server-types <cloud_token_uuid>
-Description: List Hetzner server types
+Description: 列出 Hetzner 服务器类型
 Parameters: (None)
 
 Command: coolify server hetzner ssh-keys <cloud_token_uuid>
-Description: List Hetzner SSH keys
+Description: 列出 Hetzner SSH 密钥
 Parameters: (None)
 
 Command: coolify server hostinger catalog <cloud_token_uuid>
-Description: List Hostinger VPS plans and prices (item IDs for create)
+Description: 列出 Hostinger VPS 套餐与价格（条目 ID 用于创建）
 Parameters: (None)
 
 Command: coolify server hostinger create
-Description: Purchase a Hostinger VPS and add it as a server (paid)
+Description: 购买 Hostinger VPS 并添加为服务器（付费）
 Parameters:
   - name: --cloud-token
     type: string
-    description: Cloud provider token UUID
+    description: 云服务商令牌 UUID
     required: false
   - name: --data-center-id
     type: integer
-    description: Hostinger data center ID
+    description: Hostinger 数据中心 ID
     required: false
     default: 0
   - name: --enable-backups
     type: boolean
-    description: Enable weekly Hostinger backups (extra cost; off by default)
+    description: 启用 Hostinger 每周备份（额外收费；默认关闭）
     required: false
     default: false
   - name: --force (-f)
     type: boolean
-    description: Skip the purchase confirmation prompt
+    description: 跳过购买确认提示
     required: false
     default: false
   - name: --item-id
     type: string
-    description: Hostinger catalog price ID (plan + billing period, e.g. hostingercom-vps-kvm1-usd-1m)
+    description: Hostinger 目录价格 ID（套餐 + 计费周期，如 hostingercom-vps-kvm1-usd-1m）
     required: false
   - name: --name
     type: string
-    description: Server name (auto-generated if omitted)
+    description: 服务器名称（省略时自动生成）
     required: false
   - name: --post-install-script-id
     type: integer
-    description: Hostinger post-install script ID
+    description: Hostinger 安装后脚本 ID
     required: false
     default: 0
   - name: --private-key
     type: string
-    description: Coolify private key UUID
+    description: Coolify 私钥 UUID
     required: false
   - name: --ssh-key-ids
     type: intSlice
-    description: Additional Hostinger SSH key IDs
+    description: 附加的 Hostinger SSH 密钥 ID
     required: false
   - name: --template-id
     type: integer
-    description: Hostinger OS template ID
+    description: Hostinger 操作系统模板 ID
     required: false
     default: 0
   - name: --validate
     type: boolean
-    description: Validate after creation
+    description: 创建后验证
     required: false
     default: false
 
 Command: coolify server hostinger data-centers <cloud_token_uuid>
-Description: List Hostinger data centers
+Description: 列出 Hostinger 数据中心
 Parameters: (None)
 
 Command: coolify server hostinger post-install-scripts <cloud_token_uuid>
-Description: List Hostinger post-install scripts
+Description: 列出 Hostinger 安装后脚本
 Parameters: (None)
 
 Command: coolify server hostinger ssh-keys <cloud_token_uuid>
-Description: List Hostinger SSH keys
+Description: 列出 Hostinger SSH 密钥
 Parameters: (None)
 
 Command: coolify server hostinger templates <cloud_token_uuid>
-Description: List Hostinger OS templates
+Description: 列出 Hostinger 操作系统模板
 Parameters: (None)
 
 Command: coolify server list
-Description: List all servers
+Description: 列出所有服务器
 Parameters: (None)
 
 Command: coolify server log-drains get <server_uuid>
-Description: Get log drain settings
+Description: 获取日志外发设置
 Parameters: (None)
 
 Command: coolify server log-drains update <server_uuid>
-Description: Update log drain settings via JSON
+Description: 通过 JSON 更新日志外发设置
 Parameters:
   - name: --json
     type: string
-    description: JSON fields to patch
+    description: 要补丁更新的 JSON 字段
     required: false
 
 Command: coolify server proxy get <server_uuid>
-Description: Get proxy settings
+Description: 获取代理设置
 Parameters: (None)
 
 Command: coolify server proxy restart <server_uuid>
-Description: Restart proxy
+Description: 重启代理
 Parameters: (None)
 
 Command: coolify server proxy set-config <server_uuid>
-Description: Save raw proxy configuration
+Description: 保存原始代理配置
 Parameters:
   - name: --configuration
     type: string
-    description: Raw proxy configuration
+    description: 原始代理配置
     required: false
   - name: --configuration-file
     type: string
-    description: Read configuration from file
+    description: 从文件读取配置
     required: false
 
 Command: coolify server proxy update <server_uuid>
-Description: Update proxy settings
+Description: 更新代理设置
 Parameters:
   - name: --generate-exact-labels
     type: boolean
-    description: Generate exact labels
+    description: 生成精确标签
     required: false
     default: false
   - name: --proxy-type
     type: string
-    description: Proxy type (e.g. TRAEFIK)
+    description: 代理类型（如 TRAEFIK）
     required: false
   - name: --redirect-enabled
     type: boolean
-    description: Enable proxy redirect
+    description: 启用代理重定向
     required: false
     default: true
   - name: --redirect-url
     type: string
-    description: Redirect URL
+    description: 重定向 URL
     required: false
 
 Command: coolify server registry check <server_uuid> <registry>
-Description: Check that the saved registry login of a server still works
+Description: 检查服务器已保存的镜像仓库登录是否仍然有效
 Parameters: (None)
 
 Command: coolify server registry list <server_uuid>
-Description: List registry logins of a server
+Description: 列出服务器的镜像仓库登录信息
 Parameters: (None)
 
 Command: coolify server registry login <server_uuid> [<server_uuid>...]
-Description: Log in to a Docker registry on one or more servers
+Description: 在一台或多台服务器上登录 Docker 镜像仓库
 Parameters:
   - name: --password-stdin
     type: boolean
-    description: Read the password or access token from stdin
+    description: 从 stdin 读取密码或访问令牌
     required: false
     default: false
   - name: --registry
     type: string
-    description: Registry host, optionally with a port (e.g. ghcr.io, registry.example.com:5000, docker.io for Docker Hub) (required)
+    description: 镜像仓库主机，可带端口（如 ghcr.io、registry.example.com:5000，Docker Hub 为 docker.io）（必填）
     required: true
   - name: --username (-u)
     type: string
-    description: Registry username (required)
+    description: 镜像仓库用户名（必填）
     required: true
 
 Command: coolify server registry logout <server_uuid> <registry>
-Description: Log out from a Docker registry on a server
+Description: 在服务器上退出 Docker 镜像仓库登录
 Parameters:
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify server remove <uuid>
-Description: Remove a server
+Description: 移除服务器
 Parameters:
   - name: --delete-from-provider
     type: boolean
-    description: Also delete the server from its cloud provider (Hetzner, Vultr or DigitalOcean). This cannot be undone
+    description: 同时从云服务商（Hetzner、Vultr 或 DigitalOcean）删除该服务器。此操作无法撤销
     required: false
     default: false
   - name: --force
     type: boolean
-    description: Also delete all resources on the server
+    description: 同时删除服务器上的所有资源
     required: false
     default: false
 
 Command: coolify server sentinel get <server_uuid>
-Description: Get Sentinel settings
+Description: 获取 Sentinel 设置
 Parameters: (None)
 
 Command: coolify server sentinel update <server_uuid>
-Description: Update Sentinel settings via JSON
+Description: 通过 JSON 更新 Sentinel 设置
 Parameters:
   - name: --json
     type: string
-    description: JSON fields to patch
+    description: 要补丁更新的 JSON 字段
     required: false
 
 Command: coolify server update <uuid>
-Description: Update a server
+Description: 更新服务器
 Parameters:
   - name: --concurrent-builds
     type: integer
-    description: Max concurrent builds
+    description: 最大并发构建数
     required: false
     default: 0
   - name: --connection-timeout
     type: integer
-    description: SSH connection timeout in seconds
+    description: SSH 连接超时时间（秒）
     required: false
     default: 0
   - name: --deployment-queue-limit
     type: integer
-    description: Deployment queue limit
+    description: 部署队列上限
     required: false
     default: 0
   - name: --description
     type: string
-    description: Server description
+    description: 服务器描述
     required: false
   - name: --disk-usage-check-frequency
     type: string
-    description: Disk usage check frequency (cron)
+    description: 磁盘使用率检查频率（cron）
     required: false
   - name: --disk-usage-notification-threshold
     type: integer
-    description: Disk usage notification threshold percent
+    description: 磁盘使用率通知阈值（百分比）
     required: false
     default: 0
   - name: --dynamic-timeout
     type: integer
-    description: Dynamic timeout
+    description: 动态超时
     required: false
     default: 0
   - name: --instant-validate
     type: boolean
-    description: Validate server after update
+    description: 更新后验证服务器
     required: false
     default: false
   - name: --ip
     type: string
-    description: Server IP address
+    description: 服务器 IP 地址
     required: false
   - name: --is-build-server
     type: boolean
-    description: Deprecated: use --server-role build (true) or --server-role both (false)
+    description: 已弃用：请使用 --server-role build（true）或 --server-role both（false）
     required: false
     default: false
   - name: --is-terminal-enabled
     type: boolean
-    description: Enable terminal access
+    description: 启用终端访问
     required: false
     default: false
   - name: --name
     type: string
-    description: Server name
+    description: 服务器名称
     required: false
   - name: --port
     type: integer
-    description: SSH port
+    description: SSH 端口
     required: false
     default: 22
   - name: --private-key-uuid
     type: string
-    description: Private key UUID
+    description: 私钥 UUID
     required: false
   - name: --proxy-type
     type: string
-    description: Proxy type (e.g. TRAEFIK, CADDY, NGINX)
+    description: 代理类型（如 TRAEFIK、CADDY、NGINX）
     required: false
   - name: --server-role
     type: string
-    description: Server role (deployment|build|both): 'deployment' requires another usable build server
+    description: 服务器角色（deployment|build|both）：'deployment' 需要另一台可用的构建服务器
     required: false
   - name: --user
     type: string
-    description: SSH user
+    description: SSH 用户
     required: false
 
 Command: coolify server validate <uuid>
-Description: Validate a server
+Description: 验证服务器
 Parameters:
   - name: --install
     type: boolean
-    description: Install missing prerequisites and Docker (may restart Docker)
+    description: 安装缺失的前置依赖和 Docker（可能重启 Docker）
     required: false
     default: false
 
 Command: coolify server vultr create
-Description: Create a Vultr server
+Description: 创建 Vultr 服务器
 Parameters:
   - name: --cloud-init
     type: string
-    description: Cloud-init YAML
+    description: cloud-init YAML
     required: false
   - name: --cloud-token
     type: string
-    description: Cloud provider token UUID
+    description: 云服务商令牌 UUID
     required: false
   - name: --disable-public-ipv4
     type: boolean
-    description: Disable public IPv4
+    description: 禁用公网 IPv4
     required: false
     default: false
   - name: --enable-ipv6
     type: boolean
-    description: Enable public IPv6
+    description: 启用公网 IPv6
     required: false
     default: true
   - name: --name
     type: string
-    description: Server name
+    description: 服务器名称
     required: false
   - name: --os-id
     type: integer
-    description: Vultr operating system ID
+    description: Vultr 操作系统 ID
     required: false
     default: 0
   - name: --plan
     type: string
-    description: Vultr plan
+    description: Vultr 套餐
     required: false
   - name: --private-key
     type: string
-    description: Coolify private key UUID
+    description: Coolify 私钥 UUID
     required: false
   - name: --region
     type: string
-    description: Vultr region
+    description: Vultr 区域
     required: false
   - name: --ssh-key-ids
     type: stringSlice
-    description: Additional Vultr SSH key IDs
+    description: 附加的 Vultr SSH 密钥 ID
     required: false
   - name: --validate
     type: boolean
-    description: Validate after creation
+    description: 创建后验证
     required: false
     default: false
 
 Command: coolify server vultr os <cloud_token_uuid>
-Description: List Vultr operating systems
+Description: 列出 Vultr 操作系统
 Parameters: (None)
 
 Command: coolify server vultr plans <cloud_token_uuid>
-Description: List Vultr plans
+Description: 列出 Vultr 套餐
 Parameters: (None)
 
 Command: coolify server vultr regions <cloud_token_uuid>
-Description: List Vultr regions
+Description: 列出 Vultr 区域
 Parameters: (None)
 
 Command: coolify server vultr ssh-keys <cloud_token_uuid>
-Description: List Vultr SSH keys
+Description: 列出 Vultr SSH 密钥
 Parameters: (None)
 
 Command: coolify service application get <service-uuid> <application-uuid>
-Description: Get an application in a service
+Description: 获取服务中的应用
 Parameters: (None)
 
 Command: coolify service application list <service-uuid>
-Description: List applications in a service
+Description: 列出服务中的应用
 Parameters: (None)
 
 Command: coolify service application logs <service-uuid> <application-uuid>
-Description: Get logs for an application in a service
+Description: 获取服务中应用的日志
 Parameters:
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve
+    description: 要获取的日志行数
     required: false
     default: 100
 
 Command: coolify service application restart <service-uuid> <application-uuid>
-Description: Restart an application in a service
+Description: 重启服务中的应用
 Parameters: (None)
 
 Command: coolify service application start <service-uuid> <application-uuid>
-Description: Start or redeploy an application in a service
+Description: 启动或重新部署服务中的应用
 Parameters:
   - name: --force
     type: boolean
-    description: Rebuild the application
+    description: 重建应用
     required: false
     default: false
   - name: --latest
     type: boolean
-    description: Pull the latest image
+    description: 拉取最新镜像
     required: false
     default: false
 
 Command: coolify service application stop <service-uuid> <application-uuid>
-Description: Stop an application in a service
+Description: 停止服务中的应用
 Parameters: (None)
 
 Command: coolify service application update <service-uuid> <application-uuid>
-Description: Update an application in a service
+Description: 更新服务中的应用
 Parameters:
   - name: --description
     type: string
-    description: Description
+    description: 描述
     required: false
   - name: --exclude-from-status
     type: boolean
-    description: Exclude from service status
+    description: 从服务状态中排除
     required: false
     default: false
   - name: --force-domain-override
     type: boolean
-    description: Allow conflicting or duplicate domains
+    description: 允许冲突或重复的域名
     required: false
     default: false
   - name: --gzip-enabled
     type: boolean
-    description: Enable gzip compression
+    description: 启用 gzip 压缩
     required: false
     default: false
   - name: --human-name
     type: string
-    description: Human-readable name
+    description: 人类可读的名称
     required: false
   - name: --image
     type: string
-    description: Container image
+    description: 容器镜像
     required: false
   - name: --log-drain-enabled
     type: boolean
-    description: Enable log drain
+    description: 启用日志外发
     required: false
     default: false
   - name: --stripprefix-enabled
     type: boolean
-    description: Enable path prefix stripping
+    description: 启用路径前缀剥离
     required: false
     default: false
   - name: --url
     type: string
-    description: Comma-separated public URLs
+    description: 逗号分隔的公开 URL
     required: false
 
 Command: coolify service clone <uuid>
-Description: Clone a service to a destination
+Description: 将服务克隆到目标
 Parameters:
   - name: --clone-volumes
     type: boolean
-    description: Clone volume data
+    description: 克隆卷数据
     required: false
     default: false
   - name: --destination
     type: string
-    description: Destination UUID
+    description: 目标 UUID
     required: false
   - name: --name
     type: string
-    description: Optional new name
+    description: 可选的新名称
     required: false
 
 Command: coolify service create <type>
-Description: Create a new one-click service
+Description: 创建新的一键服务
 Parameters:
   - name: --description
     type: string
-    description: Service description
+    description: 服务描述
     required: false
   - name: --destination-uuid
     type: string
-    description: Destination UUID if server has multiple destinations
+    description: 服务器有多个目标时的目标 UUID
     required: false
   - name: --docker-compose
     type: string
-    description: Custom Docker Compose content (for advanced customization)
+    description: 自定义 Docker Compose 内容（用于高级定制）
     required: false
   - name: --environment-name
     type: string
-    description: Environment name
+    description: 环境名称
     required: false
   - name: --environment-uuid
     type: string
-    description: Environment UUID
+    description: 环境 UUID
     required: false
   - name: --instant-deploy
     type: boolean
-    description: Deploy immediately after creation
+    description: 创建后立即部署
     required: false
     default: false
   - name: --list-types
     type: boolean
-    description: List all available service types
+    description: 列出所有可用的服务类型
     required: false
     default: false
   - name: --name
     type: string
-    description: Service name
+    description: 服务名称
     required: false
   - name: --project-uuid
     type: string
-    description: Project UUID (required)
+    description: 项目 UUID（必填）
     required: true
   - name: --server-uuid
     type: string
-    description: Server UUID (required)
+    description: 服务器 UUID（必填）
     required: true
   - name: --tag
     type: stringArray
-    description: Tag to assign (repeatable)
+    description: 要分配的标签（可重复）
     required: false
   - name: --tags
     type: stringSlice
-    description: Comma-separated tags to assign
+    description: 要分配的逗号分隔标签
     required: false
 
 Command: coolify service database get <service-uuid> <database-uuid>
-Description: Get a database in a service
+Description: 获取服务中的数据库
 Parameters: (None)
 
 Command: coolify service database import start <service_uuid> <database_uuid>
-Description: Start an import into the database
+Description: 开始导入到数据库
 Parameters:
   - name: --dump-all
     type: boolean
-    description: The backup contains all databases
+    description: 备份包含所有数据库
     required: false
     default: false
   - name: --file
     type: string
-    description: Local backup file to upload and import
+    description: 要上传并导入的本地备份文件
     required: false
   - name: --keep-owners
     type: boolean
-    description: PostgreSQL: restore object owners and privileges from a single-database archive
+    description: PostgreSQL：从单数据库归档恢复对象所有者和权限
     required: false
     default: false
   - name: --poll-interval
     type: duration
-    description: Status polling interval when --wait is set
+    description: 设置 --wait 时的状态轮询间隔
     required: false
     default: 3s
   - name: --replace-existing
     type: boolean
-    description: PostgreSQL: drop matching objects before restoring a single-database archive
+    description: PostgreSQL：恢复单数据库归档前先删除匹配的对象
     required: false
     default: false
   - name: --restore-mysql-users
     type: boolean
-    description: MySQL/MariaDB all-databases backups: also restore users, passwords and privileges
+    description: MySQL/MariaDB 全库备份：同时恢复用户、密码和权限
     required: false
     default: false
   - name: --s3-path
     type: string
-    description: Path of the backup in the S3 storage
+    description: 备份在 S3 存储中的路径
     required: false
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID to import from (requires --s3-path)
+    description: 用于导入的 S3 存储 UUID（需要 --s3-path）
     required: false
   - name: --server-path
     type: string
-    description: Absolute path of the backup on the database's server
+    description: 备份在数据库服务器上的绝对路径
     required: false
   - name: --sqlite-database
     type: string
-    description: SQLite: database file to restore into (e.g. app.db)
+    description: SQLite：要恢复到的数据库文件（如 app.db）
     required: false
   - name: --upload-id
     type: string
-    description: ID of a previously uploaded backup file
+    description: 之前上传的备份文件 ID
     required: false
   - name: --wait
     type: boolean
-    description: Wait until the import finishes; exits non-zero if it fails
+    description: 等待导入完成；失败时以非零状态退出
     required: false
     default: false
 
 Command: coolify service database import status <service_uuid> <database_uuid> <activity_id>
-Description: Show the status of an import
+Description: 显示导入状态
 Parameters:
   - name: --poll-interval
     type: duration
-    description: Status polling interval when --wait is set
+    description: 设置 --wait 时的状态轮询间隔
     required: false
     default: 3s
   - name: --wait
     type: boolean
-    description: Wait until the import finishes; exits non-zero if it fails
+    description: 等待导入完成；失败时以非零状态退出
     required: false
     default: false
 
 Command: coolify service database import upload <service_uuid> <database_uuid> <file>
-Description: Upload a local backup file (max 10 GiB) in chunks. Prints the upload ID to pass to 'start --upload-id'.
+Description: 分块上传本地备份文件（最大 10 GiB）。输出上传 ID，供 'start --upload-id' 使用。
 Parameters: (None)
 
 Command: coolify service database list <service-uuid>
-Description: List databases in a service
+Description: 列出服务中的数据库
 Parameters: (None)
 
 Command: coolify service database logs <service-uuid> <database-uuid>
-Description: Get logs for a database in a service
+Description: 获取服务中数据库的日志
 Parameters:
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve
+    description: 要获取的日志行数
     required: false
     default: 100
 
 Command: coolify service database restart <service-uuid> <database-uuid>
-Description: Restart a database in a service
+Description: 重启服务中的数据库
 Parameters: (None)
 
 Command: coolify service database start <service-uuid> <database-uuid>
-Description: Start or redeploy a database in a service
+Description: 启动或重新部署服务中的数据库
 Parameters:
   - name: --force
     type: boolean
-    description: Rebuild the database container
+    description: 重建数据库容器
     required: false
     default: false
   - name: --latest
     type: boolean
-    description: Pull the latest image
+    description: 拉取最新镜像
     required: false
     default: false
 
 Command: coolify service database stop <service-uuid> <database-uuid>
-Description: Stop a database in a service
+Description: 停止服务中的数据库
 Parameters: (None)
 
 Command: coolify service database update <service-uuid> <database-uuid>
-Description: Update a database in a service
+Description: 更新服务中的数据库
 Parameters:
   - name: --description
     type: string
-    description: Description
+    description: 描述
     required: false
   - name: --exclude-from-status
     type: boolean
-    description: Exclude from service status
+    description: 从服务状态中排除
     required: false
     default: false
   - name: --human-name
     type: string
-    description: Human-readable name
+    description: 人类可读的名称
     required: false
   - name: --image
     type: string
-    description: Container image
+    description: 容器镜像
     required: false
   - name: --log-drain-enabled
     type: boolean
-    description: Enable log drain
+    description: 启用日志外发
     required: false
     default: false
   - name: --public
     type: boolean
-    description: Expose the database publicly
+    description: 将数据库公开暴露
     required: false
     default: false
   - name: --public-port
     type: integer
-    description: Public database port
+    description: 数据库公网端口
     required: false
     default: 0
   - name: --public-port-timeout
     type: integer
-    description: Public proxy timeout in seconds
+    description: 公网代理超时时间（秒）
     required: false
     default: 0
 
 Command: coolify service delete <uuid>
-Description: Delete a service and optionally clean up its configurations, volumes, and networks.
+Description: 删除服务，可选清理其配置、卷和网络。
 Parameters:
   - name: --delete-configurations
     type: boolean
-    description: Delete configurations
+    description: 删除配置
     required: false
     default: true
   - name: --delete-connected-networks
     type: boolean
-    description: Delete connected networks
+    description: 删除已连接的网络
     required: false
     default: true
   - name: --delete-volumes
     type: boolean
-    description: Delete volumes
+    description: 删除卷
     required: false
     default: true
   - name: --docker-cleanup
     type: boolean
-    description: Run docker cleanup
+    description: 运行 Docker 清理
     required: false
     default: true
   - name: --force (-f)
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify service env create <service_uuid>
-Description: Create a new environment variable for a specific service. Use --key and --value flags to specify the variable.
+Description: 为指定服务创建新环境变量。使用 --key 和 --value 标志指定变量。
 Parameters:
   - name: --build-time
     type: boolean
-    description: Available at build time (default: true)
+    description: 构建时可用（默认：true）
     required: false
     default: true
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal (don't interpolate variables)
+    description: 将值视为字面量（不插值变量）
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --key
     type: string
-    description: Environment variable key (required)
+    description: 环境变量键名（必填）
     required: true
   - name: --runtime
     type: boolean
-    description: Available at runtime (default: true)
+    description: 运行时可用（默认：true）
     required: false
     default: true
   - name: --value
     type: string
-    description: Environment variable value (required)
+    description: 环境变量值（必填）
     required: true
 
 Command: coolify service env delete <service_uuid> <env_uuid>
-Description: Delete an environment variable from a service. First UUID is the service, second is the specific environment variable to delete.
+Description: 从服务中删除环境变量。第一个 UUID 是服务，第二个是要删除的具体环境变量。
 Parameters:
   - name: --force
     type: boolean
-    description: Skip confirmation prompt
+    description: 跳过确认提示
     required: false
     default: false
 
 Command: coolify service env get <service_uuid> <env_uuid_or_key>
-Description: Get detailed information about a specific environment variable. First UUID is the service, second is the environment variable UUID or key name.
+Description: 获取指定环境变量的详细信息。第一个 UUID 是服务，第二个是环境变量的 UUID 或键名。
 Parameters: (None)
 
 Command: coolify service env list <service_uuid>
-Description: List all environment variables for a specific service.
+Description: 列出指定服务的所有环境变量。
 Parameters: (None)
 
 Command: coolify service env sync <service_uuid>
-Description: Sync environment variables from a .env file
+Description: 从 .env 文件同步环境变量
 Parameters:
   - name: --build-time
     type: boolean
-    description: Make all variables available at build time (default: true)
+    description: 使所有变量在构建时可用（默认：true）
     required: false
     default: true
   - name: --file (-f)
     type: string
-    description: Path to .env file (required)
+    description: .env 文件路径（必填）
     required: true
   - name: --is-literal
     type: boolean
-    description: Treat all values as literal (don't interpolate variables)
+    description: 将所有值视为字面量（不插值变量）
     required: false
     default: false
   - name: --runtime
     type: boolean
-    description: Make all variables available at runtime (default: true)
+    description: 使所有变量在运行时可用（默认：true）
     required: false
     default: true
 
 Command: coolify service env update <service_uuid> <env_uuid_or_key>
-Description: Update an existing environment variable. Identify it by UUID or key name.
+Description: 更新现有环境变量。通过 UUID 或键名标识。
 Parameters:
   - name: --build-time
     type: boolean
-    description: Available at build time (default: true)
+    description: 构建时可用（默认：true）
     required: false
     default: true
   - name: --comment
     type: string
-    description: Comment for the environment variable
+    description: 环境变量的备注
     required: false
   - name: --is-literal
     type: boolean
-    description: Treat value as literal (don't interpolate variables)
+    description: 将值视为字面量（不插值变量）
     required: false
     default: false
   - name: --is-multiline
     type: boolean
-    description: Value is multiline
+    description: 值为多行
     required: false
     default: false
   - name: --key
     type: string
-    description: New environment variable key (rename)
+    description: 新环境变量键名（重命名）
     required: false
   - name: --runtime
     type: boolean
-    description: Available at runtime (default: true)
+    description: 运行时可用（默认：true）
     required: false
     default: true
   - name: --value
     type: string
-    description: New environment variable value (required)
+    description: 新环境变量值（必填）
     required: true
 
 Command: coolify service execute-task <service_uuid> <task_uuid>
-Description: Execute a service scheduled task now
+Description: 立即执行服务计划任务
 Parameters: (None)
 
 Command: coolify service get <uuid>
-Description: Get detailed information about a specific service.
+Description: 获取指定服务的详细信息。
 Parameters: (None)
 
 Command: coolify service list
-Description: List all services in Coolify.
+Description: 列出 Coolify 中的所有服务。
 Parameters: (None)
 
 Command: coolify service logs <uuid>
-Description: Get logs for a service sub-resource
+Description: 获取服务子资源的日志
 Parameters:
   - name: --lines (-n)
     type: integer
-    description: Number of log lines to retrieve
+    description: 要获取的日志行数
     required: false
     default: 100
   - name: --show-timestamps
     type: boolean
-    description: Include timestamps in logs
+    description: 日志中包含时间戳
     required: false
     default: false
   - name: --sub-service-name
     type: string
-    description: Sub-service name from the service applications or databases list (required)
+    description: 服务应用或数据库列表中的子服务名称（必填）
     required: true
 
 Command: coolify service move <uuid>
-Description: Move a service to another environment
+Description: 将服务移动到其他环境
 Parameters:
   - name: --environment-uuid
     type: string
-    description: Target environment UUID (required)
+    description: 目标环境 UUID（必填）
     required: true
 
 Command: coolify service restart <uuid>
-Description: Restart a service (restart all containers).
+Description: 重启服务（重启所有容器）。
 Parameters: (None)
 
 Command: coolify service run-storage-backup <uuid> <storage_uuid>
-Description: Run a service volume backup schedule now
+Description: 立即运行服务卷备份计划
 Parameters: (None)
 
 Command: coolify service start <uuid>
-Description: Start a service (deploy all containers).
+Description: 启动服务（部署所有容器）。
 Parameters: (None)
 
 Command: coolify service stop <uuid>
-Description: Stop a service (stop all containers).
+Description: 停止服务（停止所有容器）。
 Parameters: (None)
 
 Command: coolify service storage create <service_uuid>
-Description: Create a storage for a service
+Description: 为服务创建存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --fs-path
     type: string
-    description: Host directory path (file only, required when --is-directory is set)
+    description: 宿主机目录路径（仅 file，设置 --is-directory 时必填）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --is-directory
     type: boolean
-    description: Whether this is a directory mount (file only)
+    description: 是否为目录挂载（仅 file）
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container (required)
+    description: 容器内挂载路径（必填）
     required: true
   - name: --name
     type: string
-    description: Volume name (persistent only)
+    description: 卷名称（仅 persistent）
     required: false
   - name: --resource-uuid
     type: string
-    description: UUID of the service sub-resource (required)
+    description: 服务子资源的 UUID（必填）
     required: true
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
 
 Command: coolify service storage delete <service_uuid> <storage_uuid>
-Description: Delete a storage from a service
+Description: 从服务中删除存储
 Parameters: (None)
 
 Command: coolify service storage delete-backup <service_uuid> <storage_uuid>
-Description: Delete service storage volume backup schedule
+Description: 删除服务存储卷备份计划
 Parameters: (None)
 
 Command: coolify service storage list <service_uuid>
-Description: List all persistent volumes and file storages for a specific service.
+Description: 列出指定服务的所有持久化卷和文件存储。
 Parameters: (None)
 
 Command: coolify service storage run-backup <service_uuid> <storage_uuid>
-Description: Run service storage volume backup now
+Description: 立即运行服务存储卷备份
 Parameters: (None)
 
 Command: coolify service storage set-backup <service_uuid> <storage_uuid>
-Description: Create or replace service storage volume backup schedule
+Description: 创建或替换服务存储卷备份计划
 Parameters:
   - name: --disable-local-backup
     type: boolean
-    description: Disable local backup retention
+    description: 禁用本地备份保留
     required: false
     default: false
   - name: --enabled
     type: boolean
-    description: Enable the schedule
+    description: 启用该计划
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron frequency (required)
+    description: cron 频率（必填）
     required: true
   - name: --retention-amount-locally
     type: integer
-    description: Local retention count
+    description: 本地保留数量
     required: false
     default: 7
   - name: --retention-amount-s3
     type: integer
-    description: S3 retention count
+    description: S3 保留数量
     required: false
     default: 7
   - name: --retention-days-locally
     type: integer
-    description: Local retention days
+    description: 本地保留天数
     required: false
     default: 0
   - name: --retention-days-s3
     type: integer
-    description: S3 retention days
+    description: S3 保留天数
     required: false
     default: 0
   - name: --retention-max-storage-locally
     type: float64
-    description: Local max storage
+    description: 本地最大存储空间
     required: false
     default: 0
   - name: --retention-max-storage-s3
     type: float64
-    description: S3 max storage
+    description: S3 最大存储空间
     required: false
     default: 0
   - name: --s3-storage-uuid
     type: string
-    description: S3 storage UUID when --save-s3 is set
+    description: 设置 --save-s3 时使用的 S3 存储 UUID
     required: false
   - name: --save-s3
     type: boolean
-    description: Also save backups to S3
+    description: 同时将备份保存到 S3
     required: false
     default: false
   - name: --stop-during-backup
     type: boolean
-    description: Stop resource during backup
+    description: 备份期间停止资源
     required: false
     default: false
   - name: --timeout
     type: integer
-    description: Backup timeout seconds
+    description: 备份超时秒数
     required: false
     default: 3600
 
 Command: coolify service storage update <service_uuid>
-Description: Update a storage for a service
+Description: 更新服务的存储
 Parameters:
   - name: --content
     type: string
-    description: File content (file only)
+    description: 文件内容（仅 file）
     required: false
   - name: --host-path
     type: string
-    description: Host path (persistent only)
+    description: 宿主机路径（仅 persistent）
     required: false
   - name: --id
     type: integer
-    description: Storage ID (deprecated, use --uuid instead)
+    description: 存储 ID（已弃用，请改用 --uuid）
     required: false
     default: 0
   - name: --is-preview-suffix-enabled
     type: boolean
-    description: Enable preview suffix for this storage
+    description: 为该存储启用预览后缀
     required: false
     default: false
   - name: --mount-path
     type: string
-    description: Mount path inside the container
+    description: 容器内挂载路径
     required: false
   - name: --name
     type: string
-    description: Storage name (persistent only)
+    description: 存储名称（仅 persistent）
     required: false
   - name: --type
     type: string
-    description: Storage type: 'persistent' or 'file' (required)
+    description: 存储类型：'persistent' 或 'file'（必填）
     required: true
   - name: --uuid
     type: string
-    description: Storage UUID (required, use 'storage list' to find)
+    description: 存储 UUID（必填，可用 'storage list' 查找）
     required: false
 
 Command: coolify service tag add <service-uuid> <name>
-Description: Add a service tag
+Description: 添加服务标签
 Parameters: (None)
 
 Command: coolify service tag list <service-uuid>
-Description: List service tags
+Description: 列出服务标签
 Parameters: (None)
 
 Command: coolify service tag remove <service-uuid> <tag-uuid>
-Description: Remove a service tag
+Description: 移除服务标签
 Parameters: (None)
 
 Command: coolify service task create <service_uuid>
-Description: Create a scheduled task for a service
+Description: 为服务创建计划任务
 Parameters:
   - name: --command
     type: string
-    description: Command to run (required)
+    description: 要运行的命令（必填）
     required: true
   - name: --container
     type: string
-    description: Container name to run the command in
+    description: 要在其中运行命令的容器名称
     required: false
   - name: --enabled
     type: boolean
-    description: Whether the task is enabled
+    description: 任务是否启用
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron expression or frequency (required)
+    description: cron 表达式或频率（必填）
     required: true
   - name: --name
     type: string
-    description: Task name (required)
+    description: 任务名称（必填）
     required: true
   - name: --timeout
     type: integer
-    description: Timeout in seconds
+    description: 超时时间（秒）
     required: false
     default: 300
 
 Command: coolify service task delete <service_uuid> <task_uuid>
-Description: Delete a service scheduled task
+Description: 删除服务计划任务
 Parameters: (None)
 
 Command: coolify service task execute <service_uuid> <task_uuid>
-Description: Execute a service scheduled task now
+Description: 立即执行服务计划任务
 Parameters: (None)
 
 Command: coolify service task executions <service_uuid> <task_uuid>
-Description: List executions for a service scheduled task
+Description: 列出服务计划任务的执行记录
 Parameters: (None)
 
 Command: coolify service task list <service_uuid>
-Description: List scheduled tasks for a service
+Description: 列出服务的计划任务
 Parameters: (None)
 
 Command: coolify service task update <service_uuid> <task_uuid>
-Description: Update a service scheduled task
+Description: 更新服务计划任务
 Parameters:
   - name: --command
     type: string
-    description: Command to run
+    description: 要运行的命令
     required: false
   - name: --container
     type: string
-    description: Container name to run the command in
+    description: 要在其中运行命令的容器名称
     required: false
   - name: --enabled
     type: boolean
-    description: Whether the task is enabled
+    description: 任务是否启用
     required: false
     default: true
   - name: --frequency
     type: string
-    description: Cron expression or frequency
+    description: cron 表达式或频率
     required: false
   - name: --name
     type: string
-    description: Task name
+    description: 任务名称
     required: false
   - name: --timeout
     type: integer
-    description: Timeout in seconds
+    description: 超时时间（秒）
     required: false
     default: 300
 
 Command: coolify settings email get
-Description: Get instance email settings
+Description: 获取实例邮件设置
 Parameters: (None)
 
 Command: coolify settings email update
-Description: Pass settings as JSON via --json. Requires write:sensitive. Example: coolify settings email update --json '{"smtp_ehlo_domain":"coolify.example.com"}'
+Description: 通过 --json 以 JSON 传入设置。需要 write:sensitive 权限。示例：coolify settings email update --json '{"smtp_ehlo_domain":"coolify.example.com"}'
 Parameters:
   - name: --json
     type: string
-    description: JSON object of fields to update
+    description: 要更新字段的 JSON 对象
     required: false
 
 Command: coolify shared-env environment create <project_uuid> <environment>
-Description: Create environment shared env
+Description: 创建环境共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env environment delete <project_uuid> <environment> <id>
-Description: Delete environment shared env
+Description: 删除环境共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env environment list <project_uuid> <environment>
-Description: List environment shared envs
+Description: 列出环境共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env environment update <project_uuid> <environment> <id>
-Description: Update environment shared env
+Description: 更新环境共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env project create <project_uuid>
-Description: Create project shared env
+Description: 创建项目共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env project delete <project_uuid> <id>
-Description: Delete project shared env
+Description: 删除项目共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env project list <project_uuid>
-Description: List project shared envs
+Description: 列出项目共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env project update <project_uuid> <id>
-Description: Update project shared env
+Description: 更新项目共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env server create <server_uuid>
-Description: Create server shared env
+Description: 创建服务器共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env server delete <server_uuid> <id>
-Description: Delete server shared env
+Description: 删除服务器共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env server list <server_uuid>
-Description: List server shared envs
+Description: 列出服务器共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env server update <server_uuid> <id>
-Description: Update server shared env
+Description: 更新服务器共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env team create
-Description: Create team shared env
+Description: 创建团队共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify shared-env team delete <id>
-Description: Delete team shared env
+Description: 删除团队共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env team list
-Description: List team shared envs
+Description: 列出团队共享环境变量
 Parameters: (None)
 
 Command: coolify shared-env team update <id>
-Description: Update team shared env
+Description: 更新团队共享环境变量
 Parameters:
   - name: --comment
     type: string
-    description: Comment
+    description: 备注
     required: false
   - name: --key
     type: string
-    description: Variable key
+    description: 变量键名
     required: false
   - name: --literal
     type: boolean
-    description: Treat value as literal
+    description: 将值视为字面量
     required: false
     default: false
   - name: --multiline
     type: boolean
-    description: Multiline value
+    description: 多行值
     required: false
     default: false
   - name: --shown-once
     type: boolean
-    description: Show value only once
+    description: 仅显示一次值
     required: false
     default: false
   - name: --value
     type: string
-    description: Variable value
+    description: 变量值
     required: false
 
 Command: coolify tag create
-Description: Create a team tag
+Description: 创建团队标签
 Parameters:
   - name: --name
     type: string
-    description: Tag name
+    description: 标签名称
     required: false
 
 Command: coolify tag delete <uuid>
-Description: Delete a team tag
+Description: 删除团队标签
 Parameters: (None)
 
 Command: coolify tag list
-Description: List all team tags
+Description: 列出所有团队标签
 Parameters: (None)
 
 Command: coolify tag update <uuid>
-Description: Rename a team tag
+Description: 重命名团队标签
 Parameters:
   - name: --name
     type: string
-    description: New tag name
+    description: 新标签名称
     required: false
 
 Command: coolify teams current
-Description: Get details of the team associated with the authentication token (API: GET /team).
+Description: 获取与认证令牌关联的团队详情（API：GET /team）。
 Parameters: (None)
 
 Command: coolify teams get <team_id>
-Description: Get detailed information about a specific team by its ID.
+Description: 按 ID 获取指定团队的详细信息。
 Parameters: (None)
 
 Command: coolify teams list
-Description: List all teams you have access to.
+Description: 列出你有权访问的所有团队。
 Parameters: (None)
 
 Command: coolify teams members list [team_id]
-Description: List members of a specific team by ID, or list members of the current team if no ID is provided.
+Description: 按 ID 列出指定团队的成员；未提供 ID 时列出当前团队的成员。
 Parameters: (None)
 
 Command: coolify teams update
-Description: Update settings of the team bound to the API token
+Description: 更新 API 令牌所绑定团队的设置
 Parameters:
   - name: --build-server-fallback
     type: boolean
-    description: Allow deployments to fall back to the deployment server when no build server is usable (required)
+    description: 允许在没有可用构建服务器时回退到部署服务器（必填）
     required: true
     default: false
 
 Command: coolify update
-Description: Update Coolify CLI
+Description: 更新 Coolify CLI
 Parameters: (None)
 
 Command: coolify version
-Description: Current Coolify CLI version
+Description: 当前 Coolify CLI 版本
 Parameters: (None)
 

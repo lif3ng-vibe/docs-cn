@@ -153,7 +153,7 @@ function renderPage({ command, description, parameters, group }) {
     '',
     escapeMdxText(description),
     '',
-    '## Usage',
+    '## 用法',
     '',
     '```sh',
     command,
@@ -163,13 +163,13 @@ function renderPage({ command, description, parameters, group }) {
   if (parameters.length > 0) {
     page.push(
       '',
-      '## Options',
+      '## 选项',
       '',
-      '| Option | Type | Required | Default | Description |',
+      '| 选项 | 类型 | 必填 | 默认值 | 说明 |',
       '| :--- | :--- | :---: | :--- | :--- |',
     )
     for (const parameter of parameters) {
-      const required = parameter.required === 'true' ? 'Yes' : 'No'
+      const required = parameter.required === 'true' ? '是' : '否'
       const defaultValue = parameter.default ? `\`${escapeCell(parameter.default)}\`` : '—'
       page.push(
         `| \`${escapeCell(parameter.name)}\` | \`${escapeCell(parameter.type)}\` | ${required} | ${defaultValue} | ${escapeCell(parameter.description)} |`,
@@ -180,13 +180,13 @@ function renderPage({ command, description, parameters, group }) {
   const helpCommand = command.split(/\s+(?=[<[])/, 1)[0]
   page.push(
     '',
-    '## Get current help',
+    '## 查看当前帮助',
     '',
     '```sh',
     `${helpCommand} --help`,
     '```',
     '',
-    'The installed CLI help reflects the exact options available in your CLI version.',
+    '已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。',
     '',
   )
   return page.join('\n')
@@ -236,7 +236,7 @@ async function generate(source) {
     const items = groups.get(group)
     return items.length === 1 ? items[0].slug : group
   })
-  await writeFile(path.join(output, 'meta.json'), `${JSON.stringify({ title: 'Commands', pages }, null, 2)}\n`)
+  await writeFile(path.join(output, 'meta.json'), `${JSON.stringify({ title: '命令', pages }, null, 2)}\n`)
 
   console.log(`Generated ${records.length} command pages in ${groups.size} groups.`)
 }

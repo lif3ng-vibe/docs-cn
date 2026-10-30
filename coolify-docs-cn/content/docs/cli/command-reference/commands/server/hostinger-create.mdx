@@ -1,38 +1,38 @@
 ---
 title: "Hostinger create"
-description: "Purchase a Hostinger VPS and add it as a server (paid)"
+description: "购买 Hostinger VPS 并添加为服务器（付费）"
 ---
 
 # Hostinger create
 
-Purchase a Hostinger VPS and add it as a server (paid)
+购买 Hostinger VPS 并添加为服务器（付费）
 
-## Usage
+## 用法
 
 ```sh
 coolify server hostinger create
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--cloud-token` | `string` | No | — | Cloud provider token UUID |
-| `--data-center-id` | `integer` | No | `0` | Hostinger data center ID |
-| `--enable-backups` | `boolean` | No | `false` | Enable weekly Hostinger backups (extra cost; off by default) |
-| `--force (-f)` | `boolean` | No | `false` | Skip the purchase confirmation prompt |
-| `--item-id` | `string` | No | — | Hostinger catalog price ID (plan + billing period, e.g. hostingercom-vps-kvm1-usd-1m) |
-| `--name` | `string` | No | — | Server name (auto-generated if omitted) |
-| `--post-install-script-id` | `integer` | No | `0` | Hostinger post-install script ID |
-| `--private-key` | `string` | No | — | Coolify private key UUID |
-| `--ssh-key-ids` | `intSlice` | No | — | Additional Hostinger SSH key IDs |
-| `--template-id` | `integer` | No | `0` | Hostinger OS template ID |
-| `--validate` | `boolean` | No | `false` | Validate after creation |
+| `--cloud-token` | `string` | 否 | — | 云服务商令牌 UUID |
+| `--data-center-id` | `integer` | 否 | `0` | Hostinger 数据中心 ID |
+| `--enable-backups` | `boolean` | 否 | `false` | 启用 Hostinger 每周备份（额外收费；默认关闭） |
+| `--force (-f)` | `boolean` | 否 | `false` | 跳过购买确认提示 |
+| `--item-id` | `string` | 否 | — | Hostinger 目录价格 ID（套餐 + 计费周期，如 hostingercom-vps-kvm1-usd-1m） |
+| `--name` | `string` | 否 | — | 服务器名称（省略时自动生成） |
+| `--post-install-script-id` | `integer` | 否 | `0` | Hostinger 安装后脚本 ID |
+| `--private-key` | `string` | 否 | — | Coolify 私钥 UUID |
+| `--ssh-key-ids` | `intSlice` | 否 | — | 附加的 Hostinger SSH 密钥 ID |
+| `--template-id` | `integer` | 否 | `0` | Hostinger 操作系统模板 ID |
+| `--validate` | `boolean` | 否 | `false` | 创建后验证 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify server hostinger create --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

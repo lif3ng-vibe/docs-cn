@@ -1,76 +1,76 @@
 ---
 title: Pocket ID
-description: "A simple OIDC provider for passwordless authentication with passkeys."
+description: "一个简单的 OIDC 提供商，支持基于通行密钥（passkey）的无密码认证。"
 og:
   description: "Deploy Pocket ID on Coolify for simple OIDC provider with passwordless passkey authentication across your self-hosted services."
-category: "Security"
+category: "安全"
 icon: "/docs-cn/coolify/images/services/pocketid-logo.webp"
 ---
 
 # Pocket ID
 
-<ZoomImage src="/docs-cn/coolify/images/services/pocket-id_screenshot.webp" alt="Pocket ID Banner" />
+<ZoomImage src="/docs-cn/coolify/images/services/pocket-id_screenshot.webp" alt="Pocket ID 横幅" />
 
-## What is Pocket ID?
+## Pocket ID 是什么？
 
-Pocket ID is a simple OIDC provider for passwordless authentication using [passkeys](https://www.passkeys.io/). It's designed to be straightforward and easy-to-use. It exclusively supports passkey authentication, allowing you to use hardware security keys like Yubikey for secure sign-ins across your self-hosted services.
+Pocket ID 是一个简单的 OIDC 提供商，使用[通行密钥](https://www.passkeys.io/)（passkey）实现无密码认证。它的设计理念就是直接、易用。它只支持通行密钥认证，让你可以使用 Yubikey 等硬件安全密钥，在各个自托管服务之间安全登录。
 
-## Deployment Variants
+## 部署变体
 
-Pocket ID is available in two deployment configurations in Coolify:
+Pocket ID 在 Coolify 中提供两种部署配置：
 
-### Pocket ID (Default)
-- **Database:** SQLite (embedded)
-- **Use case:** Simple deployments, testing, or personal authentication server
-- **Components:** Single Pocket ID container with built-in SQLite database
+### Pocket ID（默认）
+- **数据库**：SQLite（内嵌）
+- **适用场景**：简单部署、测试或个人认证服务器
+- **组件**：单个 Pocket ID 容器，内置 SQLite 数据库
 
-### Pocket ID with PostgreSQL
-- **Database:** PostgreSQL
-- **Use case:** Production deployments requiring better performance and data reliability
-- **Components:**
-  - Pocket ID container
-  - PostgreSQL container
-  - Automatic database configuration and health checks
+### Pocket ID（PostgreSQL）
+- **数据库**：PostgreSQL
+- **适用场景**：对性能和数据可靠性要求更高的生产部署
+- **组件**：
+  - Pocket ID 容器
+  - PostgreSQL 容器
+  - 自动完成数据库配置与健康检查
 
-## Features
+## 功能特性
 
-- **Passwordless Authentication**: Uses passkeys instead of passwords for better security
-- **OIDC Provider**: Integrates with applications that support OpenID Connect
-- **Simple Setup**: Easy to install and configure compared to complex alternatives
-- **Wide Compatibility**: Works with [various services](https://pocket-id.org/docs/client-examples?utm_source=coolify.io) like Nextcloud, GitLab, and more
-- **Passkey Support**: Full support for hardware security keys like Yubikey
-- **Self-Hosted**: Maintain complete control over your authentication infrastructure
+- **无密码认证**：使用通行密钥代替密码，安全性更高
+- **OIDC 提供商**：可与支持 OpenID Connect 的应用集成
+- **设置简单**：相比复杂的同类方案，安装和配置更轻松
+- **兼容性广**：可与 Nextcloud、GitLab 等[多种服务](https://pocket-id.org/docs/client-examples?utm_source=coolify.io)配合使用
+- **通行密钥支持**：完整支持 Yubikey 等硬件安全密钥
+- **自托管**：完全掌控你的认证基础设施
 
-## Getting Started
+## 快速开始
 
-Once deployed, you can sign in with the admin account at:
+部署完成后，你可以使用管理员账号在以下地址登录：
 
 ```
 https://<your-app-url>/setup
 ```
 
-Follow the Pocket ID setup wizard to configure your instance and create your first passkey.
+按照 Pocket ID 的设置向导配置实例，并创建你的第一个通行密钥。
 
-## Demo
+## 演示
 
-To see Pocket ID in action, visit the [live demo](https://demo.pocket-id.org/).
+想看看 Pocket ID 的实际效果，可以访问[在线演示](https://demo.pocket-id.org/)。
 
 
 <Callout type="info">
 
-This demo is not affiliated with Coolify.
+该演示与 Coolify 无关。
 
 </Callout>
 
 
-## Links
+## 相关链接
 
-- [Official Website](https://pocket-id.org?utm_source=coolify.io)
-- [Documentation](https://pocket-id.org/docs/introduction?utm_source=coolify.io)
-- [Installation Guide](https://pocket-id.org/docs/setup/installation?utm_source=coolify.io)
+- [官方网站](https://pocket-id.org?utm_source=coolify.io)
+- [文档](https://pocket-id.org/docs/introduction?utm_source=coolify.io)
+- [安装指南](https://pocket-id.org/docs/setup/installation?utm_source=coolify.io)
 - [GitHub](https://github.com/pocket-id/pocket-id?utm_source=coolify.io)
 
-## Additional Resources
+## 更多资源
 
-- [Proxy Services Guide](https://pocket-id.org/docs/guides/proxy-services?utm_source=coolify.io)
-- [Client Examples](https://pocket-id.org/docs/client-examples?utm_source=coolify.io)
+- [代理服务指南](https://pocket-id.org/docs/guides/proxy-services?utm_source=coolify.io)
+- [客户端示例](https://pocket-id.org/docs/client-examples?utm_source=coolify.io)

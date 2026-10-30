@@ -3,7 +3,7 @@
 非官方中文镜像：将 [Coolify 官方文档](https://coolify.io/docs)（源码 [coollabsio/coolify-docs](https://github.com/coollabsio/coolify-docs)）汉化为纯中文单语站。
 
 - **上游快照**：`coollabsio/coolify-docs@main`（2026-10-24），上游许可证 Apache-2.0，本镜像同样以 Apache-2.0 发布
-- **一期范围**：人工内容 317 页全部汉化（产品介绍、core、applications、databases、API、MCP、integrations、troubleshoot、contribute、CLI 指南）；`services/`（344 页服务目录）与 `cli/command-reference/commands/`（约 305 页命令参考）为上游生成器产物，保留英文待二期
+- **范围**：全站 954 页汉化——一期人工内容 317 页（产品介绍、core、applications、databases、API、MCP、integrations、troubleshoot、contribute、CLI 指南）+ 二期 services 344 页（服务目录，41 个分类已中文化）与 CLI 命令参考 299 页（生成器模板与 llms-full 数据源双语料中文化，构建可重现）
 - **UI 壳层**：导航、搜索、TOC、页脚提示、404 页均已中文化；第三方广告位（Carbon）已禁用
 - **术语表**：见 [GLOSSARY.md](GLOSSARY.md)；各页标题翻译对照见 `.anchor-maps/`（页内锚点已按 github-slugger 规则重算）
 

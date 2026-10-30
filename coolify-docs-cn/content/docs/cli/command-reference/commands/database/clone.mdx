@@ -1,30 +1,30 @@
 ---
 title: "Clone"
-description: "Clone a database to a destination"
+description: "将数据库克隆到目标"
 ---
 
 # Clone
 
-Clone a database to a destination
+将数据库克隆到目标
 
-## Usage
+## 用法
 
 ```sh
 coolify database clone <uuid>
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--clone-volumes` | `boolean` | No | `false` | Clone volume data |
-| `--destination` | `string` | No | — | Destination UUID |
-| `--name` | `string` | No | — | Optional new name |
+| `--clone-volumes` | `boolean` | 否 | `false` | 克隆卷数据 |
+| `--destination` | `string` | 否 | — | 目标 UUID |
+| `--name` | `string` | 否 | — | 可选的新名称 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify database clone --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

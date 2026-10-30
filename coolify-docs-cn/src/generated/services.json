@@ -3,302 +3,301 @@
     "name": "9Router",
     "slug": "9router",
     "icon": "/docs-cn/coolify/images/services/9router.svg",
-    "description": "AI coding gateway that routes requests from coding tools to multiple LLM providers.",
+    "description": "AI 编程网关，将来自编程工具的请求路由到多个 LLM 提供商。",
     "category": "AI"
   },
   {
     "name": "ActivePieces",
     "slug": "activepieces",
     "icon": "/docs-cn/coolify/images/services/activepieces-logo.png",
-    "description": "Open source no-code business automation.",
-    "category": "Automation"
+    "description": "开源的无代码业务自动化工具。",
+    "category": "自动化"
   },
   {
     "name": "Actual Budget",
     "slug": "actualbudget",
     "icon": "/docs-cn/coolify/images/services/actualbudget-logo.webp",
-    "description": "A local-first personal finance tool based on zero-based budgeting.",
-    "category": "Finance"
+    "description": "基于零基预算理念的本地优先个人理财工具。",
+    "category": "金融"
   },
   {
     "name": "Affine",
     "slug": "affine",
     "icon": "/docs-cn/coolify/images/services/affine-logo.svg",
-    "description": "Open-source knowledge base and workspace combining docs, whiteboards, and databases.",
-    "category": "Productivity"
+    "description": "融合文档、白板与数据库的开源知识库与工作区。",
+    "category": "效率"
   },
   {
     "name": "Alexandrie",
     "slug": "alexandrie",
     "icon": "/docs-cn/coolify/images/services/alexandrie-logo.svg",
-    "description": "Markdown note-taking app focused on performance, local data, and knowledge graph navigation.",
-    "category": "Productivity"
+    "description": "注重性能、本地数据与知识图谱导航的 Markdown 笔记应用。",
+    "category": "效率"
   },
   {
     "name": "AnythingLLM",
     "slug": "anythingllm",
     "icon": "/docs-cn/coolify/images/services/anythingllm-logo.svg",
-    "description": "An open-source LLM client that empowers developers to build and scale workflows quickly.",
+    "description": "帮助开发者快速构建并扩展工作流的开源 LLM 客户端。",
     "category": "AI"
   },
   {
     "name": "AppFlowy",
     "slug": "appflowy",
     "icon": "/docs-cn/coolify/images/services/appflowy.svg",
-    "description": "Open-source alternative to Notion with workspaces for docs, wikis, and project management.",
-    "category": "Productivity"
+    "description": "Notion 的开源替代品，提供面向文档、Wiki 与项目管理的工作区。",
+    "category": "效率"
   },
   {
     "name": "Apprise API",
     "slug": "apprise-api",
     "icon": "/docs-cn/coolify/images/services/appriseapi-logo.png",
-    "description": "RESTful API for Apprise notification library.",
-    "category": "Development"
+    "description": "Apprise 通知库的 RESTful API。",
+    "category": "开发工具"
   },
   {
     "name": "Appsmith",
     "slug": "appsmith",
     "icon": "/docs-cn/coolify/images/services/appsmith-logo.svg",
-    "description": "A low-code application platform for building internal tools.",
-    "category": "Development"
+    "description": "用于构建内部工具的低代码应用平台。",
+    "category": "开发工具"
   },
   {
     "name": "Appwrite",
     "slug": "appwrite",
     "icon": "/docs-cn/coolify/images/services/appwrite-logo.svg",
-    "description": "A backend-as-a-service platform that simplifies the web & mobile app development.",
-    "category": "Development",
+    "description": "简化 Web 与移动应用开发的后端即服务（BaaS）平台。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "Argilla",
     "slug": "argilla",
     "icon": "/docs-cn/coolify/images/services/argilla-logo.svg",
-    "description": "An open-source platform for building, training, and evaluating conversational AI models.",
+    "description": "用于构建、训练和评估对话式 AI 模型的开源平台。",
     "category": "AI"
   },
   {
     "name": "Audiobookshelf",
     "slug": "audiobookshelf",
     "icon": "/docs-cn/coolify/images/services/audiobookshelf-logo.svg",
-    "description": "Self-hosted audiobook and podcast server.",
-    "category": "Media"
+    "description": "自托管有声书与播客服务器。",
+    "category": "媒体"
   },
   {
     "name": "Authentik",
     "slug": "authentik",
     "icon": "/docs-cn/coolify/images/services/authentik-logo.png",
-    "description": "An open-source Identity Provider, focused on flexibility and versatility.",
-    "category": "Security"
+    "description": "注重灵活性与多样性的开源身份提供方（Identity Provider）。",
+    "category": "安全"
   },
   {
     "name": "Autobase",
     "slug": "autobase",
     "icon": "/docs-cn/coolify/images/services/autobase-logo.svg",
-    "description": "Open-source alternative to cloud-managed databases for PostgreSQL (self-hosted DBaaS).",
-    "category": "Database"
+    "description": "PostgreSQL 云托管数据库的开源替代方案（自托管 DBaaS）。",
+    "category": "数据库"
   },
   {
     "name": "Azimutt",
     "slug": "azimutt",
     "icon": "/docs-cn/coolify/images/services/azimutt.png",
-    "description": "Database schema design, exploration, documentation, and analysis tool.",
-    "category": "Productivity",
+    "description": "数据库模式设计、探索、文档化与分析工具。",
+    "category": "效率",
     "disabled": true
   },
   {
     "name": "BabyBuddy",
     "slug": "babybuddy",
     "icon": "/docs-cn/coolify/images/services/babybuddy-logo.png",
-    "description": "It helps parents track their baby's daily activities, growth, and health with ease.",
-    "category": "Health",
+    "description": "帮助父母轻松记录宝宝的日常活动、成长与健康。",
+    "category": "健康",
     "disabled": true
   },
   {
     "name": "BentoPDF",
     "slug": "bento-pdf",
     "icon": "/docs-cn/coolify/images/services/bento-pdf.png",
-    "description": "Process PDFs entirely in your browser. No uploads. No servers. Complete privacy.",
-    "category": "Productivity"
+    "description": "完全在浏览器中处理 PDF。无需上传。无需服务器。隐私无虞。",
+    "category": "效率"
   },
   {
     "name": "Beszel",
     "slug": "beszel",
     "icon": "/docs-cn/coolify/images/services/beszel-logo.webp",
-    "description": "Lightweight server monitoring hub with historical data, docker stats, and alerts.",
-    "category": "Monitoring"
+    "description": "轻量级服务器监控中心，提供历史数据、Docker 统计与告警。",
+    "category": "监控"
   },
   {
     "name": "Bitcoin Core",
     "slug": "bitcoin-core",
     "icon": "/docs-cn/coolify/images/services/bitcoin.svg",
-    "description": "Bitcoin Core full node software.",
-    "category": "Crypto"
+    "description": "Bitcoin Core 全节点软件。",
+    "category": "加密货币"
   },
   {
     "name": "Bluesky PDS",
     "slug": "bluesky-pds",
     "icon": "/docs-cn/coolify/images/services/bluesky-logo.svg",
-    "description": "Bluesky PDS (Personal Data Server) for decentralized social networking.",
-    "category": "Social Media"
+    "description": "用于去中心化社交网络的 Bluesky PDS（Personal Data Server，个人数据服务器）。",
+    "category": "社交媒体"
   },
   {
     "name": "Booklore",
     "slug": "booklore",
     "icon": "/docs-cn/coolify/images/services/booklore-logo.svg",
-    "description": "Open-source library management system for your digital book collection.",
-    "category": "Media",
-    "disabled": true
+    "description": "管理你数字藏书的开源图书管理系统。",
+    "category": "媒体"
   },
   {
     "name": "Bookstack",
     "slug": "bookstack",
     "icon": "/docs-cn/coolify/images/services/bookstack-logo.png",
-    "description": "Self-hosted wiki-style documentation platform.",
-    "category": "Documentation",
+    "description": "自托管的 Wiki 风格文档平台。",
+    "category": "文档",
     "disabled": true
   },
   {
     "name": "Browserless",
     "slug": "browserless",
     "icon": "/docs-cn/coolify/images/services/browserless-logo.svg",
-    "description": "Headless Chrome as a service.",
-    "category": "Development"
+    "description": "以服务形式提供的无头 Chrome。",
+    "category": "开发工具"
   },
   {
     "name": "BudgE",
     "slug": "budge",
     "icon": "/docs-cn/coolify/images/services/budge-logo.png",
-    "description": "A budgeting personal finance app.",
-    "category": "Finance",
+    "description": "一款预算管理个人理财应用。",
+    "category": "金融",
     "disabled": true
   },
   {
     "name": "Budibase",
     "slug": "budibase",
     "icon": "/docs-cn/coolify/images/services/budibase-logo.svg",
-    "description": "Low-code platform for building internal tools and business apps.",
-    "category": "Development"
+    "description": "用于构建内部工具和业务应用的低代码平台。",
+    "category": "开发工具"
   },
   {
     "name": "Bugsink",
     "slug": "bugsink",
     "icon": "/docs-cn/coolify/images/services/bugsink-logo.webp",
-    "description": "Self-hosted Error Tracking",
-    "category": "Development"
+    "description": "自托管的错误跟踪（Error Tracking）服务。",
+    "category": "开发工具"
   },
   {
     "name": "Bulwark",
     "slug": "bulwark",
     "icon": "/docs-cn/coolify/images/services/bulwark.svg",
-    "description": "Modern webmail client for Stalwart Mail Server built on the JMAP protocol.",
-    "category": "Email"
+    "description": "基于 JMAP 协议、为 Stalwart Mail Server 打造的现代网页邮箱客户端。",
+    "category": "邮件"
   },
   {
     "name": "Buzz",
     "slug": "buzz",
     "icon": "/docs-cn/coolify/images/services/buzz-logo.svg",
-    "description": "Workspace where humans and AI agents collaborate on a self-hosted Nostr relay.",
-    "category": "Messaging"
+    "description": "让人类与 AI 智能体在自托管 Nostr 中继上协作的工作区。",
+    "category": "即时通讯"
   },
   {
     "name": "Calcom",
     "slug": "calcom",
     "icon": "/docs-cn/coolify/images/services/calcom-logo.svg",
-    "description": "Open-source Calendly alternative for scheduling meetings.",
-    "category": "Productivity",
+    "description": "用于安排会议的开源 Calendly 替代品。",
+    "category": "效率",
     "disabled": true
   },
   {
     "name": "Calibre Web",
     "slug": "calibre-web",
     "icon": "/docs-cn/coolify/images/services/calibreweb-logo.svg",
-    "description": "Web app for browsing, reading and downloading eBooks from a Calibre database.",
-    "category": "Media"
+    "description": "用于浏览、阅读和下载 Calibre 数据库中电子书的 Web 应用。",
+    "category": "媒体"
   },
   {
     "name": "Calibre Web Automated with Downloader",
     "slug": "calibre-web-automated-with-downloader",
     "icon": "/docs-cn/coolify/images/services/calibre-web-automated-with-downloader.png",
-    "description": "Intuitive web interface for searching and requesting book downloads with Calibre-Web-Automated.",
-    "category": "Media"
+    "description": "与 Calibre-Web-Automated 配套的直观网页界面，用于搜索和请求下载图书。",
+    "category": "媒体"
   },
   {
     "name": "Cap",
     "slug": "cap",
     "icon": "/docs-cn/coolify/images/services/cap.svg",
-    "description": "Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
-    "category": "Media"
+    "description": "Cap 是 Loom 的开源替代品。轻量、强大、跨平台，几秒内即可录制并分享。",
+    "category": "媒体"
   },
   {
     "name": "Cap (CAPTCHA)",
     "slug": "cap-captcha",
     "icon": "/docs-cn/coolify/images/services/cap-captcha.png",
-    "description": "The self-hosted CAPTCHA for the modern web.",
-    "category": "Security"
+    "description": "面向现代 Web 的自托管 CAPTCHA 方案。",
+    "category": "安全"
   },
   {
     "name": "Castopod",
     "slug": "castopod",
     "icon": "/docs-cn/coolify/images/services/castopod-logo.svg",
-    "description": "Open-source podcast hosting platform.",
-    "category": "Media",
+    "description": "开源播客托管平台。",
+    "category": "媒体",
     "disabled": true
   },
   {
     "name": "Celld",
     "slug": "celld",
     "icon": "/docs-cn/coolify/images/services/deno-kv.svg",
-    "description": "Self-hosted, distributed Durable Objects powered by Deno.",
-    "category": "Development"
+    "description": "基于 Deno 的自托管分布式 Durable Objects。",
+    "category": "开发工具"
   },
   {
     "name": "Change Detection",
     "slug": "changedetection",
     "icon": "/docs-cn/coolify/images/services/changedetection-logo.png",
-    "description": "Website change detection monitor and notifications.",
-    "category": "Monitoring"
+    "description": "网站内容变化监测与通知工具。",
+    "category": "监控"
   },
   {
     "name": "Chaskiq",
     "slug": "chaskiq",
     "icon": "/docs-cn/coolify/images/services/chaskiq-logo.png",
-    "description": "Open source customer engagement platform.",
-    "category": "Business"
+    "description": "开源客户互动平台。",
+    "category": "商业"
   },
   {
     "name": "Chatwoot",
     "slug": "chatwoot",
     "icon": "/docs-cn/coolify/images/services/chatwoot-logo.svg",
-    "description": "Open-source customer engagement suite.",
-    "category": "Business"
+    "description": "开源客户互动套件。",
+    "category": "商业"
   },
   {
     "name": "Checkmate",
     "slug": "checkmate",
     "icon": "/docs-cn/coolify/images/services/checkmate-logo.png",
-    "description": "Website monitoring and uptime service.",
-    "category": "Monitoring"
+    "description": "网站监控与在线率监测服务。",
+    "category": "监控"
   },
   {
     "name": "Chibisafe",
     "slug": "chibisafe",
     "icon": "/docs-cn/coolify/images/services/chibisafe-logo.svg",
-    "description": "A beautiful and performant vault to save all your files in the cloud.",
-    "category": "File Management"
+    "description": "美观又高效的云端的存储仓库,存放你的所有文件。",
+    "category": "文件管理"
   },
   {
     "name": "Chroma",
     "slug": "chroma",
     "icon": "/docs-cn/coolify/images/services/chroma-logo.svg",
-    "description": "Open-source, AI-native vector database for building applications with embeddings.",
+    "description": "面向 AI 原生应用的开源向量数据库,专为 embedding 应用打造。",
     "category": "AI"
   },
   {
     "name": "ClassicPress",
     "slug": "classicpress",
     "icon": "/docs-cn/coolify/images/services/classicpress-logo.svg",
-    "description": "A business-focused CMS with a strong community.",
+    "description": "面向企业建站、社区活跃的 CMS。",
     "category": "CMS",
     "disabled": true
   },
@@ -306,35 +305,35 @@
     "name": "Cloudbeaver",
     "slug": "cloudbeaver",
     "icon": "/docs-cn/coolify/images/services/cloudbeaver-logo.png",
-    "description": "Universal database tool with web interface.",
-    "category": "Development"
+    "description": "带 Web 界面的通用数据库工具。",
+    "category": "开发工具"
   },
   {
     "name": "Cloudflare DDNS",
     "slug": "cloudflare-ddns",
     "icon": "/docs-cn/coolify/images/services/cloudflare-ddns.svg",
-    "description": "Cloudflare DNS updater for dynamic public IP addresses.",
-    "category": "Automation"
+    "description": "面向动态公网 IP 的 Cloudflare DNS 更新工具。",
+    "category": "自动化"
   },
   {
     "name": "Cloudflared",
     "slug": "cloudflared",
     "icon": "/docs-cn/coolify/images/services/cloudflared-logo.svg",
-    "description": "Cloudflare Tunnel client.",
-    "category": "Networking"
+    "description": "Cloudflare Tunnel 客户端。",
+    "category": "网络"
   },
   {
     "name": "Cloudreve",
     "slug": "cloudreve",
     "icon": "/docs-cn/coolify/images/services/cloudreve-logo.svg",
-    "description": "A self-hosted file management and sharing system.",
-    "category": "Storage"
+    "description": "自托管的文件管理与分享系统。",
+    "category": "存储"
   },
   {
     "name": "Cockpit",
     "slug": "cockpit",
     "icon": "/docs-cn/coolify/images/services/cockpit-logo.svg",
-    "description": "Headless CMS with REST & GraphQL APIs.",
+    "description": "提供 REST 与 GraphQL API 的无头 CMS。",
     "category": "CMS",
     "disabled": true
   },
@@ -342,86 +341,85 @@
     "name": "Code Server",
     "slug": "code-server",
     "icon": "/docs-cn/coolify/images/services/codeserver-logo.svg",
-    "description": "Run VS Code on any machine anywhere and access it in the browser.",
-    "category": "Development"
+    "description": "在任何机器上运行 VS Code,随时随地通过浏览器访问。",
+    "category": "开发工具"
   },
   {
     "name": "Coder",
     "slug": "coder",
     "icon": "/docs-cn/coolify/images/services/coder.svg",
-    "description": "Platform for creating and managing development environments on your own infrastructure.",
-    "category": "Development",
+    "description": "在自有基础设施上创建和管理开发环境的平台。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "CodiMD",
     "slug": "codimd",
     "icon": "/docs-cn/coolify/images/services/codimd-logo.png",
-    "description": "Realtime collaborative markdown notes on all platforms.",
-    "category": "Productivity"
+    "description": "跨平台的实时协作 Markdown 笔记工具。",
+    "category": "效率"
   },
   {
     "name": "Convertx",
     "slug": "convertx",
     "icon": "/docs-cn/coolify/images/services/convertx-logo.png",
-    "description": "File conversion service supporting multiple formats.",
-    "category": "Utilities"
+    "description": "支持多种格式的文件转换服务。",
+    "category": "实用工具"
   },
   {
     "name": "Convex",
     "slug": "convex",
     "icon": "/docs-cn/coolify/images/services/convex-logo.svg",
-    "description": "Backend platform for web developers.",
-    "category": "Development"
+    "description": "面向 Web 开发者的后端平台。",
+    "category": "开发工具"
   },
   {
     "name": "Cryptgeon",
     "slug": "cryptgeon",
     "icon": "/docs-cn/coolify/images/services/cryptgeon-logo.png",
-    "description": "Secure note sharing service with self-destructing messages.",
-    "category": "Security"
+    "description": "支持阅后即焚消息的安全笔记分享服务。",
+    "category": "安全"
   },
   {
     "name": "Cyberchef",
     "slug": "cyberchef",
     "icon": "/docs-cn/coolify/images/services/cyberchef-logo.jpeg",
-    "description": "Data analysis and manipulation tool for cybersecurity.",
-    "category": "Security"
+    "description": "面向网络安全的数据分析与处理工具。",
+    "category": "安全"
   },
   {
     "name": "Dashboard",
     "slug": "dashboard",
     "icon": "",
-    "description": "A simple dashboard for your server.",
-    "category": "Administration",
-    "disabled": true
+    "description": "一个简洁的服务器仪表盘。",
+    "category": "运维管理"
   },
   {
     "name": "Dashy",
     "slug": "dashy",
     "icon": "/docs-cn/coolify/images/services/dashy-logo.png",
-    "description": "Customizable homepage dashboard for self-hosted services.",
-    "category": "Administration"
+    "description": "可定制的自托管服务主页仪表盘。",
+    "category": "运维管理"
   },
   {
     "name": "Databasus",
     "slug": "databasus",
     "icon": "/docs-cn/coolify/images/services/databasus-logo.svg",
-    "description": "A free, open source and self-hosted tool to backup PostgreSQL, MySQL and MongoDB with multiple storage backends.",
-    "category": "Backup"
+    "description": "免费开源的自托管数据库备份工具,支持多种存储后端备份 PostgreSQL、MySQL 和 MongoDB。",
+    "category": "备份"
   },
   {
     "name": "Denokv",
     "slug": "denokv",
     "icon": "/docs-cn/coolify/images/services/denolookingup-logo.svg",
-    "description": "Deno's built-in key-value database service.",
-    "category": "Development"
+    "description": "Deno 内建的键值数据库服务。",
+    "category": "开发工具"
   },
   {
     "name": "Dify",
     "slug": "dify",
     "icon": "/docs-cn/coolify/images/services/dify.png",
-    "description": "Open-source platform for building LLM applications with workflows, retrieval-augmented generation, and AI agents.",
+    "description": "开源 LLM 应用开发平台,支持工作流、检索增强生成与 AI 智能体。",
     "category": "AI",
     "disabled": true
   },
@@ -429,86 +427,86 @@
     "name": "Directus",
     "slug": "directus",
     "icon": "/docs-cn/coolify/images/services/directus-logo.svg",
-    "description": "An open-source headless CMS and API for custom databases.",
+    "description": "面向自定义数据库的开源无头 CMS 与 API。",
     "category": "CMS"
   },
   {
     "name": "Diun",
     "slug": "diun",
     "icon": "/docs-cn/coolify/images/services/diun-logo.svg",
-    "description": "Docker Image Update Notifier.",
-    "category": "Monitoring"
+    "description": "Docker 镜像更新通知器。",
+    "category": "监控"
   },
   {
     "name": "Docker Registry",
     "slug": "docker-registry",
     "icon": "/docs-cn/coolify/images/services/docker-registry-logo.png",
-    "description": "A Docker registry to store and manage your Docker images.",
-    "category": "Development"
+    "description": "用于存储和管理 Docker 镜像的镜像仓库。",
+    "category": "开发工具"
   },
   {
     "name": "Docling",
     "slug": "docling",
     "icon": "/docs-cn/coolify/images/services/docling.png",
-    "description": "Document processing service that converts PDFs, office documents, images, and HTML to Markdown, JSON, and other formats.",
+    "description": "文档处理服务,可将 PDF、办公文档、图片和 HTML 转换为 Markdown、JSON 等格式。",
     "category": "AI"
   },
   {
     "name": "Docmost",
     "slug": "docmost",
     "icon": "/docs-cn/coolify/images/services/docmost-logo.png",
-    "description": "Open-source document collaboration platform.",
-    "category": "Documentation"
+    "description": "开源文档协作平台。",
+    "category": "文档"
   },
   {
     "name": "Documenso",
     "slug": "documenso",
     "icon": "/docs-cn/coolify/images/services/documenso-logo.png",
-    "description": "Open-source DocuSign alternative for document signing.",
-    "category": "Business"
+    "description": "开源 DocuSign 替代品,用于文档签署。",
+    "category": "商业"
   },
   {
     "name": "Docuseal",
     "slug": "docuseal",
     "icon": "/docs-cn/coolify/images/services/docuseal-logo.png",
-    "description": "Open source DocuSign alternative.",
-    "category": "Business"
+    "description": "开源 DocuSign 替代品。",
+    "category": "商业"
   },
   {
     "name": "DokuWiki",
     "slug": "dokuwiki",
     "icon": "/docs-cn/coolify/images/services/dokuwiki-logo.png",
-    "description": "A simple to use and highly versatile Open Source wiki software that doesn't require a database.",
-    "category": "Documentation",
+    "description": "简单易用、高度灵活的开源 Wiki 软件,无需数据库。",
+    "category": "文档",
     "disabled": true
   },
   {
     "name": "Dolibarr",
     "slug": "dolibarr",
     "icon": "/docs-cn/coolify/images/services/dolibarr.png",
-    "description": "Open-source ERP and CRM software.",
-    "category": "Business",
+    "description": "开源 ERP 与 CRM 软件。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Dozzle",
     "slug": "dozzle",
     "icon": "/docs-cn/coolify/images/services/dozzle-logo.svg",
-    "description": "Realtime log viewer for docker containers.",
-    "category": "Development"
+    "description": "面向 Docker 容器的实时日志查看器。",
+    "category": "开发工具"
   },
   {
     "name": "Drizzle Gateway",
     "slug": "drizzle-gateway",
     "icon": "/docs-cn/coolify/images/services/drizzle-logo.jpeg",
-    "description": "Drizzle Studio for exploring SQL databases.",
-    "category": "Development"
+    "description": "用于探索 SQL 数据库的 Drizzle Studio。",
+    "category": "开发工具"
   },
   {
     "name": "Drupal",
     "slug": "drupal",
     "icon": "/docs-cn/coolify/images/services/drupal-logo.svg",
-    "description": "Open-source content management system.",
+    "description": "开源内容管理系统。",
     "category": "CMS",
     "disabled": true
   },
@@ -516,208 +514,208 @@
     "name": "Duplicati",
     "slug": "duplicati",
     "icon": "/docs-cn/coolify/images/services/duplicati-logo.webp",
-    "description": "A free backup client that securely stores encrypted, incremental, compressed backups on cloud storage services and remote file servers.",
-    "category": "Backup"
+    "description": "一款免费备份客户端，可将加密、增量、压缩的备份安全地存储到云存储服务和远程文件服务器上。",
+    "category": "备份"
   },
   {
     "name": "Easyappointments",
     "slug": "easyappointments",
     "icon": "/docs-cn/coolify/images/services/easyappointments-logo.png",
-    "description": "Open-source appointment scheduler.",
-    "category": "Business",
+    "description": "开源预约排程系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "EdgeDB",
     "slug": "edgedb",
     "icon": "/docs-cn/coolify/images/services/edgedb.svg",
-    "description": "Database built on PostgreSQL with a relational query engine and an object-oriented data model.",
-    "category": "Database",
+    "description": "基于 PostgreSQL 构建的数据库，配备关系型查询引擎与面向对象的数据模型。",
+    "category": "数据库",
     "disabled": true
   },
   {
     "name": "Elasticsearch",
     "slug": "elasticsearch",
     "icon": "/docs-cn/coolify/images/services/elasticsearch-logo.svg",
-    "description": "Free and Open Source, Distributed, RESTful Search Engine.",
-    "category": "Search"
+    "description": "免费开源的分布式 RESTful 搜索引擎。",
+    "category": "搜索"
   },
   {
     "name": "ElectricSQL",
     "slug": "electricsql",
     "icon": "/docs-cn/coolify/images/services/electricsql.svg",
-    "description": "Sync shape-based subsets of your Postgres data over HTTP",
-    "category": "Database"
+    "description": "通过 HTTP 同步 Postgres 数据中基于 shape 定义的子集",
+    "category": "数据库"
   },
   {
     "name": "Emby",
     "slug": "emby",
     "icon": "/docs-cn/coolify/images/services/emby-logo.png",
-    "description": "A media server to organize, play, and stream audio and video to a variety of devices.",
-    "category": "Media"
+    "description": "一款媒体服务器，可整理、播放音视频，并将其串流到多种设备。",
+    "category": "媒体"
   },
   {
     "name": "Emby Stat",
     "slug": "embystat",
     "icon": "/docs-cn/coolify/images/services/embystat-logo.png",
-    "description": "A simple and easy-to-use Emby statistics dashboard.",
-    "category": "Media"
+    "description": "简洁易用的 Emby 统计仪表盘。",
+    "category": "媒体"
   },
   {
     "name": "EMQX Enterprise",
     "slug": "emqx-enterprise",
     "icon": "/docs-cn/coolify/images/services/emqx-enterprise.svg",
-    "description": "Scalable, distributed MQTT messaging platform for IoT.",
-    "category": "IoT"
+    "description": "面向物联网的可扩展分布式 MQTT 消息平台。",
+    "category": "物联网"
   },
   {
     "name": "Engram",
     "slug": "engram",
     "icon": "/docs-cn/coolify/images/services/engram-logo.png",
-    "description": "Persistent memory sync server for AI coding agents (MCP).",
+    "description": "面向 AI 编程代理（MCP）的持久化记忆同步服务器。",
     "category": "AI"
   },
   {
     "name": "Ente",
     "slug": "ente-photos",
     "icon": "/docs-cn/coolify/images/services/ente-logo.webp",
-    "description": "A fully open-source, end-to-end encrypted platform for you to store data in the cloud without needing to trust the service provider.",
-    "category": "Productivity"
+    "description": "一个完全开源的端到端加密平台，让你可以把数据存到云端，而无需信任服务提供商。",
+    "category": "效率"
   },
   {
     "name": "ESPHome",
     "slug": "esphome",
     "icon": "/docs-cn/coolify/images/services/esphome-logo.svg",
-    "description": "Open-source firmware framework for WiFi-enabled microcontrollers.",
-    "category": "IoT"
+    "description": "面向支持 WiFi 的微控制器的开源固件框架。",
+    "category": "物联网"
   },
   {
     "name": "EspoCRM",
     "slug": "espocrm",
     "icon": "/docs-cn/coolify/images/services/espocrm.svg",
-    "description": "A free and open-source CRM platform.",
-    "category": "Business",
+    "description": "免费开源的 CRM 平台。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Evolution API",
     "slug": "evolution-api",
     "icon": "/docs-cn/coolify/images/services/evolution-api-logo.svg",
-    "description": "WhatsApp API service for automation.",
-    "category": "Automation"
+    "description": "用于自动化的 WhatsApp API 服务。",
+    "category": "自动化"
   },
   {
     "name": "Excalidraw",
     "slug": "excalidraw",
     "icon": "/docs-cn/coolify/images/services/excalidraw-logo.svg",
-    "description": "Virtual whiteboard for sketching hand-drawn like diagrams.",
-    "category": "Productivity"
+    "description": "用于绘制手绘风图示的虚拟白板。",
+    "category": "效率"
   },
   {
     "name": "Executor",
     "slug": "executor",
     "icon": "/docs-cn/coolify/images/services/executor.png",
-    "description": "Self-hosted server for AI agent integrations and code execution.",
-    "category": "Development"
+    "description": "用于 AI 代理集成与代码执行的自托管服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Faraday",
     "slug": "faraday",
     "icon": "/docs-cn/coolify/images/services/faraday-logo.png",
-    "description": "Collaborative penetration testing and vulnerability management platform.",
-    "category": "Security"
+    "description": "协作式渗透测试与漏洞管理平台。",
+    "category": "安全"
   },
   {
     "name": "Fider",
     "slug": "fider",
     "icon": "/docs-cn/coolify/images/services/fider-logo.svg",
-    "description": "An open platform to collect and organize customer feedback.",
-    "category": "Business"
+    "description": "收集并整理客户反馈的开放平台。",
+    "category": "商业"
   },
   {
     "name": "Filebrowser",
     "slug": "filebrowser",
     "icon": "/docs-cn/coolify/images/services/filebrowser-logo.svg",
-    "description": "A file manager for the web.",
-    "category": "File Management"
+    "description": "基于 Web 的文件管理器。",
+    "category": "文件管理"
   },
   {
     "name": "FileFlows",
     "slug": "fileflows",
     "icon": "/docs-cn/coolify/images/services/fileflows-logo.svg",
-    "description": "A automatic file processing service.",
-    "category": "File Management"
+    "description": "自动化文件处理服务。",
+    "category": "文件管理"
   },
   {
     "name": "Firefly III",
     "slug": "firefly",
     "icon": "/docs-cn/coolify/images/services/firefly-iii-logo.svg",
-    "description": "A personal finances manager.",
-    "category": "Finance",
+    "description": "个人财务管理工具。",
+    "category": "金融",
     "disabled": true
   },
   {
     "name": "Firefox",
     "slug": "firefox",
     "icon": "/docs-cn/coolify/images/services/firefox-logo.png",
-    "description": "Firefox browser in a container.",
-    "category": "Browser"
+    "description": "运行在容器中的 Firefox 浏览器。",
+    "category": "浏览器"
   },
   {
     "name": "Fizzy",
     "slug": "fizzy",
     "icon": "/docs-cn/coolify/images/services/fizzy-logo.png",
-    "description": "Kanban tracking tool for issues and ideas by 37signals.",
-    "category": "Project Management"
+    "description": "37signals 出品的看板式问题与想法追踪工具。",
+    "category": "项目管理"
   },
   {
     "name": "Flipt",
     "slug": "flipt",
     "icon": "/docs-cn/coolify/images/services/flipt-logo.svg",
-    "description": "Open-source feature flag management platform.",
-    "category": "Development"
+    "description": "开源功能开关管理平台。",
+    "category": "开发工具"
   },
   {
     "name": "Flowise",
     "slug": "flowise",
     "icon": "/docs-cn/coolify/images/services/flowise-logo.svg",
-    "description": "Drag & drop UI to build your customized LLM flow.",
+    "description": "通过拖放界面构建自定义 LLM 流程。",
     "category": "AI"
   },
   {
     "name": "Forgejo",
     "slug": "forgejo",
     "icon": "/docs-cn/coolify/images/services/forgejo-logo.svg",
-    "description": "A self-hosted Git service fork of Gitea.",
-    "category": "Development"
+    "description": "Gitea 的自托管 Git 服务分支。",
+    "category": "开发工具"
   },
   {
     "name": "Formbricks",
     "slug": "formbricks",
     "icon": "/docs-cn/coolify/images/services/formbricks-logo.png",
-    "description": "A form builder for static sites.",
-    "category": "Development"
+    "description": "面向静态网站的表单构建工具。",
+    "category": "开发工具"
   },
   {
     "name": "Foundryvtt",
     "slug": "foundryvtt",
     "icon": "/docs-cn/coolify/images/services/foundryvtt-logo.png",
-    "description": "Virtual tabletop for tabletop role-playing games.",
-    "category": "Gaming"
+    "description": "桌面角色扮演游戏用的虚拟跑团桌面。",
+    "category": "游戏"
   },
   {
     "name": "Freescout",
     "slug": "freescout",
     "icon": "/docs-cn/coolify/images/services/freescout-logo.png",
-    "description": "Help desk and customer support application.",
-    "category": "Business",
+    "description": "工单帮助台与客户支持应用。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Freshrss",
     "slug": "freshrss",
     "icon": "/docs-cn/coolify/images/services/FreshRSS-logo.png",
-    "description": "Free, self-hostable RSS feed aggregator.",
+    "description": "免费、可自托管的 RSS 订阅源聚合器。",
     "category": "RSS",
     "disabled": true
   },
@@ -725,128 +723,128 @@
     "name": "Garage",
     "slug": "garage",
     "icon": "/docs-cn/coolify/images/services/garage-logo.svg",
-    "description": "S3-compatible distributed object storage service designed for self-hosting.",
-    "category": "Storage"
+    "description": "为自托管而设计的 S3 兼容分布式对象存储服务。",
+    "category": "存储"
   },
   {
     "name": "Ghost",
     "slug": "ghost",
     "icon": "/docs-cn/coolify/images/services/ghost-logo.svg",
-    "description": "A professional publishing platform.",
+    "description": "专业的出版发布平台。",
     "category": "CMS"
   },
   {
     "name": "Gitea",
     "slug": "gitea",
     "icon": "/docs-cn/coolify/images/services/gitea-logo.svg",
-    "description": "A painless self-hosted Git service.",
-    "category": "Development"
+    "description": "一款轻松省心的自托管 Git 服务。",
+    "category": "开发工具"
   },
   {
     "name": "GitHub Runner",
     "slug": "github-runner",
     "icon": "/docs-cn/coolify/images/services/githubrunner-logo.png",
-    "description": "A GitHub Actions runner for Docker.",
-    "category": "Development"
+    "description": "面向 Docker 的 GitHub Actions 运行器。",
+    "category": "开发工具"
   },
   {
     "name": "GitLab",
     "slug": "gitlab",
     "icon": "/docs-cn/coolify/images/services/gitlab-logo.svg",
-    "description": "DevOps lifecycle tool.",
-    "category": "Development"
+    "description": "DevOps 生命周期管理工具。",
+    "category": "开发工具"
   },
   {
     "name": "Glance",
     "slug": "glance",
     "icon": "/docs-cn/coolify/images/services/glance-logo.png",
-    "description": "All-in-one Home Server Dashboard.",
-    "category": "Administration"
+    "description": "一体化家庭服务器仪表盘。",
+    "category": "运维管理"
   },
   {
     "name": "Glances",
     "slug": "glances",
     "icon": "/docs-cn/coolify/images/services/glances-logo.png",
-    "description": "Cross-platform system monitoring tool.",
-    "category": "Monitoring"
+    "description": "跨平台系统监控工具。",
+    "category": "监控"
   },
   {
     "name": "Glitchtip",
     "slug": "glitchtip",
     "icon": "/docs-cn/coolify/images/services/glitchtip-logo.png",
-    "description": "An open-source error tracking tool.",
-    "category": "Development"
+    "description": "开源错误跟踪工具。",
+    "category": "开发工具"
   },
   {
     "name": "GLPI (Gestionnaire Libre de Parc Informatique)",
     "slug": "glpi",
     "icon": "/docs-cn/coolify/images/services/glpi-logo.svg",
-    "description": "Free, open-source IT Service Management platform for asset management, helpdesk, and service desk operations.",
-    "category": "Business",
+    "description": "免费开源的 IT 服务管理平台，涵盖资产管理、服务台与帮助台运营。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "GoatCounter",
     "slug": "goatcounter",
     "icon": "/docs-cn/coolify/images/services/goatcounter.svg",
-    "description": "Web analytics platform offering easy to use and meaningful privacy-friendly web analytics.",
-    "category": "Analytics"
+    "description": "网页分析平台，提供简单易用且有意义的隐私友好型网站分析。",
+    "category": "分析"
   },
   {
     "name": "Gotenberg",
     "slug": "gotenberg",
     "icon": "/docs-cn/coolify/images/services/gotenberg-logo.png",
-    "description": "A Docker-powered stateless API for PDF files.",
-    "category": "Development"
+    "description": "由 Docker 驱动的无状态 PDF 文件 API。",
+    "category": "开发工具"
   },
   {
     "name": "Gotify",
     "slug": "gotify",
     "icon": "/docs-cn/coolify/images/services/gotify-logo.svg",
-    "description": "Open-source push notifications for web and mobile apps.",
-    "category": "Notifications"
+    "description": "面向 Web 与移动应用的开源推送通知服务。",
+    "category": "通知"
   },
   {
     "name": "GoWa",
     "slug": "gowa",
     "icon": "/docs-cn/coolify/images/services/gowa-logo.svg",
-    "description": "Golang WhatsApp - Built with Go for efficient memory use.",
-    "category": "Communication"
+    "description": "Golang WhatsApp——使用 Go 构建，内存占用更高效。",
+    "category": "沟通协作"
   },
   {
     "name": "Grafana",
     "slug": "grafana",
     "icon": "/docs-cn/coolify/images/services/grafana-logo.svg",
-    "description": "The open platform for beautiful analytics and monitoring.",
-    "category": "Monitoring"
+    "description": "打造精美分析与监控的开源平台。",
+    "category": "监控"
   },
   {
     "name": "Gramps Web",
     "slug": "gramps-web",
     "icon": "/docs-cn/coolify/images/services/grampsweb-logo.svg",
-    "description": "The free, open-source genealogy system.",
-    "category": "Family"
+    "description": "免费开源的家谱（族谱）系统。",
+    "category": "家庭"
   },
   {
     "name": "Grimmory",
     "slug": "grimmory",
     "icon": "/docs-cn/coolify/images/services/grimmory.svg",
-    "description": "A self-hosted ebook library manager and reader, successor to Booklore.",
-    "category": "Media"
+    "description": "自托管电子书库管理与阅读器，Booklore 的后继之作。",
+    "category": "媒体"
   },
   {
     "name": "Grist",
     "slug": "grist",
     "icon": "/docs-cn/coolify/images/services/grist-logo.svg",
-    "description": "Modern relational spreadsheet combining flexibility and database robustness.",
-    "category": "Productivity"
+    "description": "兼顾灵活性跟数据库可靠性的现代关系型电子表格。",
+    "category": "效率"
   },
   {
     "name": "Grocy",
     "slug": "grocy",
     "icon": "/docs-cn/coolify/images/services/grocy-logo.svg",
-    "description": "A self-hosted groceries & household management solution for your home.",
-    "category": "Home",
+    "description": "为你的家庭打造的自托管食品杂货与家务管理方案。",
+    "category": "智能家居",
     "disabled": true
   },
   {
@@ -854,185 +852,184 @@
     "slug": "vault",
     "icon": "/docs-cn/coolify/images/services/vault-logo.svg",
     "description": "Secret management service for securely storing secrets and controlling access to them.",
-    "category": "Security"
+    "category": "安全"
   },
   {
     "name": "Hatchet",
     "slug": "hatchet",
     "icon": "/docs-cn/coolify/images/services/hatchet-logo.svg",
-    "description": "Platform for running background tasks and durable workflows built on Postgres.",
-    "category": "Development"
+    "description": "基于 Postgres 构建的后台任务与持久化工作流运行平台。",
+    "category": "开发工具"
   },
   {
     "name": "Healthchecks",
     "slug": "healthchecks",
     "icon": "/docs-cn/coolify/images/services/healthchecks.webp",
-    "description": "Open-source cron job and background task monitoring service.",
-    "category": "Monitoring"
+    "description": "开源的 cron 任务与后台任务监控服务。",
+    "category": "监控"
   },
   {
     "name": "Heimdall",
     "slug": "heimdall",
     "icon": "/docs-cn/coolify/images/services/heimdall-logo.svg",
     "description": "An elegant solution to organize all your web applications.",
-    "category": "Administration",
+    "category": "运维管理",
     "disabled": true
   },
   {
     "name": "Hermes Agent",
     "slug": "hermes-agent",
     "icon": "/docs-cn/coolify/images/services/hermes-agent-logo.png",
-    "description": "Autonomous AI agent from Nous Research with persistent memory, scheduling, and a web interface. Available as a two-container WebUI stack or a single-container dashboard.",
+    "description": "来自 Nous Research 的自主 AI 代理，具备持久记忆、计划任务与 Web 界面。提供双容器 WebUI 套件或单容器 Dashboard 两种形态。",
     "category": "AI"
   },
   {
     "name": "Heyform",
     "slug": "heyform",
     "icon": "/docs-cn/coolify/images/services/heyform-logo.svg",
-    "description": "Open-source form builder for conversational forms.",
-    "category": "Development"
+    "description": "开源表单构建器，打造对话式表单。",
+    "category": "开发工具"
   },
   {
     "name": "Hoarder",
     "slug": "hoarder",
     "icon": "/docs-cn/coolify/images/services/hoarder-logo.png",
-    "description": "Self-hosted bookmark manager with AI-powered tagging.",
-    "category": "Bookmarks",
-    "disabled": true
+    "description": "带 AI 自动打标签的自托管书签管理器。",
+    "category": "书签"
   },
   {
     "name": "Homarr",
     "slug": "homarr",
     "icon": "/docs-cn/coolify/images/services/homarr-logo.svg",
-    "description": "Customizable browser homepage and dashboard.",
-    "category": "Administration"
+    "description": "可自定义的浏览器主页与仪表盘。",
+    "category": "运维管理"
   },
   {
     "name": "Home Assistant",
     "slug": "home-assistant",
     "icon": "/docs-cn/coolify/images/services/homeassistant-logo.svg",
-    "description": "Open-source home automation platform focused on local control and privacy.",
-    "category": "Home"
+    "description": "专注本地控制与隐私的开源家庭自动化平台。",
+    "category": "智能家居"
   },
   {
     "name": "Homebox",
     "slug": "homebox",
     "icon": "/docs-cn/coolify/images/services/homebox-logo.svg",
-    "description": "Inventory and organization system built for the Home User.",
-    "category": "Home"
+    "description": "专为家庭用户打造的物品清单与整理系统。",
+    "category": "智能家居"
   },
   {
     "name": "Homepage",
     "slug": "homepage",
     "icon": "/docs-cn/coolify/images/services/homepage-logo.png",
-    "description": "A modern homepage for your server.",
-    "category": "Administration"
+    "description": "为你的服务器准备的现代化主页。",
+    "category": "运维管理"
   },
   {
     "name": "Honcho",
     "slug": "honcho",
     "icon": "/docs-cn/coolify/images/services/honcho.svg",
-    "description": "Memory and reasoning tools for building personalized AI agents with stateful conversations.",
+    "description": "为构建具备有状态对话的个性化 AI 代理提供记忆与推理工具。",
     "category": "AI"
   },
   {
     "name": "Hoppscotch",
     "slug": "hoppscotch",
     "icon": "/docs-cn/coolify/images/services/hoppscotch-logo.png",
-    "description": "Open-source API development ecosystem.",
-    "category": "Development"
+    "description": "开源 API 开发生态。",
+    "category": "开发工具"
   },
   {
     "name": "Huly",
     "slug": "huly",
     "icon": "/docs-cn/coolify/images/services/huly-logo.svg",
-    "description": "Open-source platform for project management and team collaboration.",
-    "category": "Project Management",
+    "description": "开源的项目管理与团队协作平台。",
+    "category": "项目管理",
     "disabled": true
   },
   {
     "name": "Imgcompress",
     "slug": "imgcompress",
     "icon": "/docs-cn/coolify/images/services/imgcompress-logo.webp",
-    "description": "Image tool for compression, format conversion, and AI background removal",
-    "category": "Media"
+    "description": "集图片压缩、格式转换与 AI 抠图（背景移除）于一体的图片工具",
+    "category": "媒体"
   },
   {
     "name": "Immich",
     "slug": "immich",
     "icon": "/docs-cn/coolify/images/services/immich-logo.svg",
-    "description": "Self-hosted photo and video backup solution.",
-    "category": "Media"
+    "description": "自托管照片与视频备份方案。",
+    "category": "媒体"
   },
   {
     "name": "Infisical",
     "slug": "infisical",
     "icon": "/docs-cn/coolify/images/services/infisical-logo.svg",
-    "description": "Open source secret management platform.",
-    "category": "Security"
+    "description": "开源机密（Secret）管理平台。",
+    "category": "安全"
   },
   {
     "name": "InfluxDB",
     "slug": "influxdb",
     "icon": "/docs-cn/coolify/images/services/influxdb.svg",
-    "description": "Open-source time series database for metrics, events, and IoT data.",
-    "category": "Database"
+    "description": "面向指标、事件与物联网数据的开源时序数据库。",
+    "category": "数据库"
   },
   {
     "name": "Inngest",
     "slug": "inngest",
     "icon": "/docs-cn/coolify/images/services/inngest-logo.svg",
-    "description": "Durable workflow engine for background jobs, queues, and event-driven systems.",
-    "category": "Automation"
+    "description": "面向后台任务、队列与事件驱动系统的持久化工作流引擎。",
+    "category": "自动化"
   },
   {
     "name": "Invoice Ninja",
     "slug": "invoice-ninja",
     "icon": "/docs-cn/coolify/images/services/invoiceninja-logo.png",
-    "description": "Invoice management system.",
-    "category": "Business",
+    "description": "发票管理系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "It Tools",
     "slug": "it-tools",
     "icon": "/docs-cn/coolify/images/services/ittools-logo.svg",
-    "description": "Collection of handy online tools for developers.",
-    "category": "Development"
+    "description": "为开发者准备的实用在线工具合集。",
+    "category": "开发工具"
   },
   {
     "name": "Jean",
     "slug": "jean",
     "icon": "/docs-cn/coolify/images/services/jean.png",
-    "description": "Open-source desktop and server client for orchestrating AI coding agents.",
-    "category": "Development"
+    "description": "用于编排 AI 编程代理的开源桌面与服务器客户端。",
+    "category": "开发工具"
   },
   {
     "name": "Jellyfin",
     "slug": "jellyfin",
     "icon": "/docs-cn/coolify/images/services/jellyfin-logo.svg",
-    "description": "The Free Software Media System.",
-    "category": "Media"
+    "description": "自由软件媒体系统（The Free Software Media System）。",
+    "category": "媒体"
   },
   {
     "name": "Jenkins",
     "slug": "jenkins",
     "icon": "/docs-cn/coolify/images/services/jenkins-logo.svg",
-    "description": "Open-source automation server.",
-    "category": "Development"
+    "description": "开源自动化服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Jitsi Meet",
     "slug": "jitsi",
     "icon": "/docs-cn/coolify/images/services/jitsi.svg",
-    "description": "Open-source video conferencing platform for self-hosted meetings.",
-    "category": "Communication"
+    "description": "面向自托管会议的开源视频会议平台。",
+    "category": "沟通协作"
   },
   {
     "name": "Joomla",
     "slug": "joomla",
     "icon": "/docs-cn/coolify/images/services/Joomla-Logo.svg",
-    "description": "Open-source content management system.",
+    "description": "开源内容管理系统。",
     "category": "CMS",
     "disabled": true
   },
@@ -1040,906 +1037,897 @@
     "name": "Joplin",
     "slug": "joplin",
     "icon": "/docs-cn/coolify/images/services/joplin-logo.png",
-    "description": "Open-source note taking and to-do application.",
-    "category": "Productivity"
+    "description": "开源笔记与待办事项应用。",
+    "category": "效率"
   },
   {
     "name": "Jupyter Notebook Python",
     "slug": "jupyter-notebook-python",
     "icon": "/docs-cn/coolify/images/services/jupyternotebook-logo.svg",
-    "description": "Interactive computing environment for Python.",
-    "category": "Development"
+    "description": "Python 交互式计算环境。",
+    "category": "开发工具"
   },
   {
     "name": "KaraKeep",
     "slug": "karakeep",
     "icon": "/docs-cn/coolify/images/services/karakeep-logo.svg",
-    "description": "Self-hostable bookmark-everything app with AI-based automatic tagging.",
-    "category": "Productivity"
+    "description": "可自托管的全能书签应用，支持基于 AI 的自动打标签。",
+    "category": "效率"
   },
   {
     "name": "Keycloak",
     "slug": "keycloak",
     "icon": "/docs-cn/coolify/images/services/keycloak-logo.svg",
-    "description": "Open-source identity and access management solution.",
-    "category": "Security"
+    "description": "开源身份与访问管理解决方案。",
+    "category": "安全"
   },
   {
     "name": "Kimai",
     "slug": "kimai",
     "icon": "/docs-cn/coolify/images/services/kimai-logo.svg",
-    "description": "An open-source time-tracking solution for teams of all sizes.",
-    "category": "Business",
+    "description": "面向各种规模团队的开源工时跟踪解决方案。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Kuzzle",
     "slug": "kuzzle",
     "icon": "/docs-cn/coolify/images/services/kuzzle-logo.png",
-    "description": "A powerful backend that enables you to build modern apps faster.",
-    "category": "Development"
+    "description": "一个强大的后端框架，帮你更快构建现代应用。",
+    "category": "开发工具"
   },
   {
     "name": "Label Studio",
     "slug": "labelstudio",
     "icon": "/docs-cn/coolify/images/services/labelstudio-logo.png",
-    "description": "Open source data labeling platform.",
+    "description": "开源数据标注平台。",
     "category": "AI"
   },
   {
     "name": "Langflow",
     "slug": "langflow",
     "icon": "/docs-cn/coolify/images/services/langflow.svg",
-    "description": "Open source Python-based framework for building AI applications.",
+    "description": "基于 Python 的开源 AI 应用构建框架。",
     "category": "AI"
   },
   {
     "name": "Langfuse",
     "slug": "langfuse",
     "icon": "/docs-cn/coolify/images/services/langfuse-logo.svg",
-    "description": "Open source LLM engineering platform.",
+    "description": "开源 LLM 工程平台。",
     "category": "AI"
   },
   {
     "name": "Leantime",
     "slug": "leantime",
     "icon": "/docs-cn/coolify/images/services/leantime-logo.svg",
-    "description": "Lean project management system for innovators.",
-    "category": "Project Management",
+    "description": "面向创新者的精益项目管理系统。",
+    "category": "项目管理",
     "disabled": true
   },
   {
     "name": "LibreChat",
     "slug": "librechat",
     "icon": "/docs-cn/coolify/images/services/librechat-logo.svg",
-    "description": "Self-hosted, powerful, and privacy-focused chat UI for multiple AI models.",
+    "description": "可自托管、功能强大且注重隐私的多模型 AI 聊天界面。",
     "category": "AI"
   },
   {
     "name": "Libreoffice",
     "slug": "libreoffice",
     "icon": "/docs-cn/coolify/images/services/libreoffice-logo.svg",
-    "description": "Free and open-source office suite.",
-    "category": "Productivity"
+    "description": "免费开源的办公套件。",
+    "category": "效率"
   },
   {
     "name": "Librespeed",
     "slug": "librespeed",
     "icon": "/docs-cn/coolify/images/services/librespeed.png",
-    "description": "Deploy Librespeed on Coolify for self-hosted lightweight speed test.",
-    "category": "Networking",
+    "description": "在 Coolify 上部署 Librespeed，搭建自托管的轻量级测速服务。",
+    "category": "网络",
     "disabled": true
   },
   {
     "name": "Libretranslate",
     "slug": "libretranslate",
     "icon": "/docs-cn/coolify/images/services/libretranslate-logo.svg",
-    "description": "Free and open-source machine translation API.",
+    "description": "免费开源的机器翻译 API。",
     "category": "AI"
   },
   {
     "name": "Lidarr",
     "slug": "lidarr",
     "icon": "/docs-cn/coolify/images/services/lidarr-logo.svg",
-    "description": "Music collection manager for Usenet and BitTorrent users.",
-    "category": "Media"
+    "description": "面向 Usenet 和 BitTorrent 用户的音乐收藏管理工具。",
+    "category": "媒体"
   },
   {
     "name": "LimeSurvey",
     "slug": "limesurvey",
     "icon": "/docs-cn/coolify/images/services/limesurvey-logo.svg",
-    "description": "The most popular FOSS online survey tool on the web.",
-    "category": "Business",
+    "description": "网上最受欢迎的自由开源在线调查工具。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Linkding",
     "slug": "linkding",
     "icon": "/docs-cn/coolify/images/services/linkding-logo.svg",
-    "description": "A self-hosted bookmark manager designed to be minimal, fast, and easy to set up.",
-    "category": "Bookmarks"
+    "description": "一款主打极简、快速、易于上手的自托管书签管理器。",
+    "category": "书签"
   },
   {
     "name": "Linkwarden",
     "slug": "linkwarden",
     "icon": "/docs-cn/coolify/images/services/linkwarden.svg",
-    "description": "Collaborative bookmark manager for collecting, organizing, and preserving web pages.",
-    "category": "Bookmarks"
+    "description": "支持协作的书签管理器，用于收集、整理和长久保存网页。",
+    "category": "书签"
   },
   {
     "name": "Listmonk",
     "slug": "listmonk",
     "icon": "/docs-cn/coolify/images/services/listmonk-logo.svg",
-    "description": "Self-hosted newsletter and mailing list manager.",
-    "category": "Marketing"
+    "description": "自托管的新闻通讯与邮件列表管理工具。",
+    "category": "营销"
   },
   {
     "name": "Litellm",
     "slug": "litellm",
     "icon": "/docs-cn/coolify/images/services/litellm-logo.svg",
-    "description": "Open source LLM Gateway to manage authentication, loadbalancing, and spend tracking across 100+ LLMs. All in the OpenAI format.",
+    "description": "开源 LLM 网关，以 OpenAI 格式统一管理 100 多个 LLM 的身份验证、负载均衡与开销追踪。",
     "category": "AI"
   },
   {
     "name": "Litequeen",
     "slug": "litequeen",
     "icon": "/docs-cn/coolify/images/services/litequeen-logo.svg",
-    "description": "Lightweight service management platform.",
-    "category": "Administration",
-    "disabled": true
+    "description": "轻量级服务管理平台。",
+    "category": "运维管理"
   },
   {
     "name": "LobeChat",
     "slug": "lobe-chat",
     "icon": "/docs-cn/coolify/images/services/lobechat-logo.webp",
-    "description": "Open-source, modern AI chat framework with multi-provider support and knowledge base management.",
+    "description": "开源的现代 AI 聊天框架，支持多家服务商与知识库管理。",
     "category": "AI"
   },
   {
     "name": "Logto",
     "slug": "logto",
     "icon": "/docs-cn/coolify/images/services/logto-logo.png",
-    "description": "Logto is an Auth0 alternative designed for modern apps and SaaS products.",
-    "category": "Security"
+    "description": "Logto 是一款专为现代应用和 SaaS 产品打造的 Auth0 替代方案。",
+    "category": "安全"
   },
   {
     "name": "Lowcoder",
     "slug": "lowcoder",
     "icon": "/docs-cn/coolify/images/services/lowcoder-logo.svg",
-    "description": "Open-source low-code platform for building internal tools.",
-    "category": "Development"
+    "description": "用于构建内部工具的开源低代码平台。",
+    "category": "开发工具"
   },
   {
     "name": "macOS",
     "slug": "macos",
     "icon": "/docs-cn/coolify/images/services/macos.svg",
-    "description": "Run macOS in a containerized environment using the Dockur macOS project.",
-    "category": "Utilities",
+    "description": "借助 Dockur macOS 项目在容器化环境中运行 macOS。",
+    "category": "实用工具",
     "disabled": true
   },
   {
     "name": "Mage AI",
     "slug": "mage-ai",
     "icon": "/docs-cn/coolify/images/services/mage-ai.svg",
-    "description": "Build, run, and manage data pipelines for integrating and transforming data.",
-    "category": "Automation"
+    "description": "构建、运行和管理数据管道，完成数据集成与转换。",
+    "category": "自动化"
   },
   {
     "name": "Mailpit",
     "slug": "mailpit",
     "icon": "/docs-cn/coolify/images/services/mailpit-logo.svg",
-    "description": "Self-hosted email and SMTP testing tool.",
-    "category": "Development"
+    "description": "自托管的邮件与 SMTP 测试工具。",
+    "category": "开发工具"
   },
   {
     "name": "Marimo",
     "slug": "marimo",
     "icon": "/docs-cn/coolify/images/services/marimo-logo.svg",
-    "description": "Open-source reactive notebook for Python.",
-    "category": "Development"
+    "description": "开源的 Python 响应式笔记本。",
+    "category": "开发工具"
   },
   {
     "name": "Martin",
     "slug": "martin",
     "icon": "/docs-cn/coolify/images/services/martin.png",
-    "description": "PostGIS vector tile server.",
-    "category": "Development"
+    "description": "PostGIS 矢量瓦片服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Matrix",
     "slug": "matrix",
     "icon": "/docs-cn/coolify/images/services/matrix-logo.svg",
-    "description": "Chat securely with your family, friends, community.",
-    "category": "Communication"
+    "description": "与家人、朋友、社区安全地聊天。",
+    "category": "沟通协作"
   },
   {
     "name": "Mattermost",
     "slug": "mattermost",
     "icon": "/docs-cn/coolify/images/services/mattermost-logo.svg",
-    "description": "Open-source messaging platform for teams.",
-    "category": "Communication"
+    "description": "面向团队的开源消息平台。",
+    "category": "沟通协作"
   },
   {
     "name": "Mautic",
     "slug": "mautic",
     "icon": "/docs-cn/coolify/images/services/mautic-logo.svg",
-    "description": "Open-source marketing automation platform.",
-    "category": "Marketing",
-    "disabled": true
+    "description": "开源营销自动化平台。",
+    "category": "营销"
   },
   {
     "name": "Maybe",
     "slug": "maybe",
     "icon": "/docs-cn/coolify/images/services/maybe-logo.svg",
-    "description": "Personal finance and wealth management application.",
-    "category": "Finance",
-    "disabled": true
+    "description": "个人财务与理财管理应用。",
+    "category": "金融"
   },
   {
     "name": "Mealie",
     "slug": "mealie",
     "icon": "/docs-cn/coolify/images/services/mealie-logo.png",
-    "description": "Self-hosted recipe manager and meal planner.",
-    "category": "Home"
+    "description": "自托管菜谱管理与膳食规划工具。",
+    "category": "智能家居"
   },
   {
     "name": "Mediawiki",
     "slug": "mediawiki",
     "icon": "/docs-cn/coolify/images/services/mediawiki-logo.svg",
-    "description": "A free and open-source wiki software package.",
-    "category": "Documentation",
+    "description": "一款免费开源的 Wiki 软件。",
+    "category": "文档",
     "disabled": true
   },
   {
     "name": "Meilisearch",
     "slug": "meilisearch",
     "icon": "/docs-cn/coolify/images/services/meilisearch-logo.svg",
-    "description": "A powerful, fast, open-source, easy to use, and deploy search engine.",
-    "category": "Search"
+    "description": "强大、快速、开源且易于使用和部署的搜索引擎。",
+    "category": "搜索"
   },
   {
     "name": "Memos",
     "slug": "memos",
     "icon": "/docs-cn/coolify/images/services/memos-logo.png",
-    "description": "Open-source, self-hosted memo hub with knowledge management.",
-    "category": "Productivity"
+    "description": "开源、自托管的备忘录中心，支持知识管理。",
+    "category": "效率"
   },
   {
     "name": "Metabase",
     "slug": "metabase",
     "icon": "/docs-cn/coolify/images/services/metabase-logo.svg",
-    "description": "The simplest, fastest way to share data and analytics inside your company.",
-    "category": "Analytics"
+    "description": "在公司内部共享数据与分析结果的最简单、最快捷方式。",
+    "category": "分析"
   },
   {
     "name": "MetaMCP",
     "slug": "metamcp",
     "icon": "/docs-cn/coolify/images/services/metamcp.png",
-    "description": "MCP Aggregator, Orchestrator, Middleware, Gateway in one application.",
+    "description": "一个应用集 MCP 聚合器、编排器、中间件与网关于一体。",
     "category": "AI"
   },
   {
     "name": "Metube",
     "slug": "metube",
     "icon": "/docs-cn/coolify/images/services/metube-logo.png",
-    "description": "A self-hosted video sharing platform.",
-    "category": "Media"
+    "description": "自托管的视频下载分享平台。",
+    "category": "媒体"
   },
   {
     "name": "Mindsdb",
     "slug": "mindsdb",
     "icon": "/docs-cn/coolify/images/services/mindsdb.svg",
-    "description": "Machine learning platform that brings AI to databases.",
+    "description": "把 AI 带入数据库的机器学习平台。",
     "category": "AI"
   },
   {
     "name": "Minecraft",
     "slug": "minecraft",
     "icon": "/docs-cn/coolify/images/services/minecraft-logo.svg",
-    "description": "Minecraft game server.",
-    "category": "Gaming"
+    "description": "Minecraft 游戏服务器。",
+    "category": "游戏"
   },
   {
     "name": "Miniflux",
     "slug": "miniflux",
     "icon": "/docs-cn/coolify/images/services/miniflux.svg",
-    "description": "Minimalist and opinionated feed reader.",
+    "description": "极简而理念鲜明的订阅源阅读器。",
     "category": "RSS"
   },
   {
     "name": "MinIO",
     "slug": "minio-community-edition",
     "icon": "/docs-cn/coolify/images/services/minio-logo.svg",
-    "description": "A high-performance, distributed object storage system.",
-    "category": "Storage",
-    "disabled": true
+    "description": "高性能的分布式对象存储系统。",
+    "category": "存储"
   },
   {
     "name": "MinIO",
     "slug": "minio",
     "icon": "/docs-cn/coolify/images/services/minio-logo.svg",
-    "description": "A high-performance, distributed object storage system.",
-    "category": "Storage",
-    "disabled": true
+    "description": "高性能的分布式对象存储系统。",
+    "category": "存储"
   },
   {
     "name": "Mixpost",
     "slug": "mixpost",
     "icon": "/docs-cn/coolify/images/services/mixpost-logo.svg",
-    "description": "Self-hosted social media management software (Buffer alternative).",
-    "category": "Social Media",
+    "description": "自托管的社交媒体管理软件（Buffer 替代品）。",
+    "category": "社交媒体",
     "disabled": true
   },
   {
     "name": "Moodle",
     "slug": "moodle",
     "icon": "/docs-cn/coolify/images/services/moodle-logo.png",
-    "description": "Open-source learning platform.",
-    "category": "Education",
+    "description": "开源学习平台。",
+    "category": "教育",
     "disabled": true
   },
   {
     "name": "Mosquitto",
     "slug": "mosquitto",
     "icon": "/docs-cn/coolify/images/services/mosquitto-logo.svg",
-    "description": "Open-source MQTT broker.",
-    "category": "IoT"
+    "description": "开源 MQTT 消息代理。",
+    "category": "物联网"
   },
   {
     "name": "N8N",
     "slug": "n8n",
     "icon": "/docs-cn/coolify/images/services/n8n-logo.png",
-    "description": "Workflow automation tool.",
-    "category": "Automation"
+    "description": "工作流自动化工具。",
+    "category": "自动化"
   },
   {
     "name": "Navidrome",
     "slug": "navidrome",
     "icon": "/docs-cn/coolify/images/services/navidrome-logo.svg",
-    "description": "Modern music server and streamer compatible with Subsonic/Airsonic.",
-    "category": "Media"
+    "description": "兼容 Subsonic/Airsonic 的现代音乐服务器与流媒体服务。",
+    "category": "媒体"
   },
   {
     "name": "Neon Ws Proxy",
     "slug": "neon-ws-proxy",
     "icon": "/docs-cn/coolify/images/services/neon-logo.svg",
-    "description": "WebSocket proxy for Neon database.",
-    "category": "Development"
+    "description": "Neon 数据库的 WebSocket 代理。",
+    "category": "开发工具"
   },
   {
     "name": "Netbird-Client",
     "slug": "netbird-client",
     "icon": "/docs-cn/coolify/images/services/netbird-logo.png",
-    "description": "Connect your devices into a secure WireGuard-based mesh network.",
-    "category": "Networking"
+    "description": "将你的设备接入基于 WireGuard 的安全 Mesh 网络。",
+    "category": "网络"
   },
   {
     "name": "NewAPI",
     "slug": "newapi",
     "icon": "/docs-cn/coolify/images/services/newapi-logo.png",
-    "description": "The next-generation LLM gateway and AI asset management system supports multiple languages.",
+    "description": "新一代 LLM 网关与 AI 资产管理系统，支持多种语言。",
     "category": "AI"
   },
   {
     "name": "Newt-Pangolin",
     "slug": "newt-pangolin",
     "icon": "/docs-cn/coolify/images/services/pangolin_newt.svg",
-    "description": "User space WireGuard tunnel client and TCP/UDP proxy for securely exposing private resources.",
-    "category": "Networking"
+    "description": "纯用户态的 WireGuard 隧道客户端与 TCP/UDP 代理，用于安全地暴露私有资源。",
+    "category": "网络"
   },
   {
     "name": "Next Image Transformation",
     "slug": "next-image-transformation",
     "icon": "/docs-cn/coolify/images/services/next-image-transformation-logo.svg",
-    "description": "Image transformation service for Next.js.",
-    "category": "Development"
+    "description": "面向 Next.js 的图片转换服务。",
+    "category": "开发工具"
   },
   {
     "name": "NextCloud",
     "slug": "nextcloud",
     "icon": "/docs-cn/coolify/images/services/nextcloud-logo.svg",
-    "description": "A safe home for all your data.",
-    "category": "Storage",
+    "description": "为你的所有数据提供一个安全的家。",
+    "category": "存储",
     "disabled": true
   },
   {
     "name": "Nitropage",
     "slug": "nitropage",
     "icon": "/docs-cn/coolify/images/services/nitropage-logo.svg",
-    "description": "Nitropage is an extensible, drag-and-drop website builder based on SolidStart, completely free and open source.",
-    "category": "Development"
+    "description": "Nitropage 是一个基于 SolidStart 的可扩展拖放式网站构建器，完全免费开源。",
+    "category": "开发工具"
   },
   {
     "name": "NocoBase",
     "slug": "nocobase",
     "icon": "/docs-cn/coolify/images/services/nocobase-logo.png",
-    "description": "The most extensible AI-powered no-code platform with total control and infinite extensibility.",
-    "category": "Development"
+    "description": "扩展性最强的 AI 无代码平台，完全掌控，无限扩展。",
+    "category": "开发工具"
   },
   {
     "name": "NocoDB",
     "slug": "nocodb",
     "icon": "/docs-cn/coolify/images/services/nocodb-logo.svg",
-    "description": "Open Source Airtable Alternative.",
-    "category": "Database"
+    "description": "开源的 Airtable 替代品。",
+    "category": "数据库"
   },
   {
     "name": "Nodebb",
     "slug": "nodebb",
     "icon": "/docs-cn/coolify/images/services/nodebb-logo.svg",
-    "description": "Node.js based forum software.",
-    "category": "Forum"
+    "description": "基于 Node.js 的论坛软件。",
+    "category": "论坛"
   },
   {
     "name": "Ntfy",
     "slug": "ntfy",
     "icon": "/docs-cn/coolify/images/services/ntfy-logo.svg",
-    "description": "Simple HTTP-based pub-sub notification service.",
-    "category": "Notifications"
+    "description": "简单易用的基于 HTTP 的发布/订阅通知服务。",
+    "category": "通知"
   },
   {
     "name": "Observium",
     "slug": "observium",
     "icon": "/docs-cn/coolify/images/services/observium-logo.webp",
-    "description": "Low-maintenance auto-discovering network monitoring platform.",
-    "category": "Monitoring",
+    "description": "省心易维护、可自动发现的网络监控平台。",
+    "category": "监控",
     "disabled": true
   },
   {
     "name": "Obsidian",
     "slug": "obsidian",
     "icon": "/docs-cn/coolify/images/services/obsidian-logo.svg",
-    "description": "A note-taking app that lets you create, link, and organize your notes with hundreds of plugins and themes.",
-    "category": "Productivity"
+    "description": "一款笔记应用，可通过数百款插件和主题来创建、链接并整理你的笔记。",
+    "category": "效率"
   },
   {
     "name": "Obsidian LiveSync",
     "slug": "obsidian-livesync",
     "icon": "/docs-cn/coolify/images/services/obsidian-livesync.svg",
-    "description": "Self-hosted sync backend for the Obsidian LiveSync plugin using CouchDB.",
-    "category": "Storage"
+    "description": "基于 CouchDB 的自托管同步后端，供 Obsidian LiveSync 插件使用。",
+    "category": "存储"
   },
   {
     "name": "Odoo",
     "slug": "odoo",
     "icon": "/docs-cn/coolify/images/services/odoo-logo.svg",
-    "description": "Open source ERP and CRM.",
-    "category": "Business"
+    "description": "开源的 ERP 与 CRM 软件。",
+    "category": "商业"
   },
   {
     "name": "Ollama",
     "slug": "ollama",
     "icon": "/docs-cn/coolify/images/services/ollama-logo.svg",
-    "description": "A lightweight and efficient server for running large language models (LLMs) on your local machine or in the cloud.",
+    "description": "一个轻量高效的服务器，用于在本地机器或云端运行大语言模型（LLM）。",
     "category": "AI"
   },
   {
     "name": "Once Campfire",
     "slug": "once-campfire",
     "icon": "/docs-cn/coolify/images/services/oncecampfire-logo.png",
-    "description": "Web-based chat application.",
-    "category": "Communication"
+    "description": "基于 Web 的聊天应用。",
+    "category": "沟通协作"
   },
   {
     "name": "Onedev",
     "slug": "onedev",
     "icon": "/docs-cn/coolify/images/services/onedev-logo.svg",
-    "description": "Self-hosted Git server with integrated CI/CD and kanban.",
-    "category": "Development"
+    "description": "内置 CI/CD 与看板的自托管 Git 服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Onetime Secret",
     "slug": "onetimesecret",
     "icon": "/docs-cn/coolify/images/services/onetimesecret.svg",
-    "description": "Share secrets securely with self-destructing links that can only be viewed once.",
-    "category": "Security"
+    "description": "通过阅后即焚、仅可查看一次的链接安全分享机密信息。",
+    "category": "安全"
   },
   {
     "name": "Open Archiver",
     "slug": "open-archiver",
     "icon": "/docs-cn/coolify/images/services/openarchiver-logo.svg",
-    "description": "Self-hosted, open-source email archiving solution with full-text search.",
-    "category": "Email"
+    "description": "支持全文检索的自托管开源邮件归档解决方案。",
+    "category": "邮件"
   },
   {
     "name": "Open Webui",
     "slug": "open-webui",
     "icon": "/docs-cn/coolify/images/services/openwebui-logo.svg",
-    "description": "User-friendly WebUI for LLMs, formerly Ollama WebUI.",
+    "description": "对用户友好的 LLM WebUI，前身为 Ollama WebUI。",
     "category": "AI"
   },
   {
     "name": "OpenBlocks",
     "slug": "openblocks",
     "icon": "/docs-cn/coolify/images/services/openblocks-logo.svg",
-    "description": "Open-source low code platform.",
-    "category": "Development",
-    "disabled": true
+    "description": "开源低代码平台。",
+    "category": "开发工具"
   },
   {
     "name": "OpenClaw",
     "slug": "openclaw",
     "icon": "/docs-cn/coolify/images/services/openclaw-logo.svg",
-    "description": "AI-powered coding assistant with multi-provider support and browser automation.",
+    "description": "支持多 AI 供应商与浏览器自动化的 AI 编程助手。",
     "category": "AI"
   },
   {
     "name": "OpenObserve",
     "slug": "openobserve",
     "icon": "/docs-cn/coolify/images/services/openobserve-logo.svg",
-    "description": "Observability platform for logs, metrics, traces, RUM, and session replays.",
-    "category": "Monitoring"
+    "description": "覆盖日志、指标、链路追踪、真实用户监控（RUM）与会话回放的可观测性平台。",
+    "category": "监控"
   },
   {
     "name": "OpenPanel",
     "slug": "openpanel",
     "icon": "/docs-cn/coolify/images/services/openpanel-logo.svg",
-    "description": "Open source alternative to Mixpanel and Plausible for product analytics.",
-    "category": "Analytics"
+    "description": "Mixpanel 与 Plausible 的开源产品分析替代方案。",
+    "category": "分析"
   },
   {
     "name": "OpenWA",
     "slug": "openwa",
     "icon": "/docs-cn/coolify/images/services/openwa.png",
-    "description": "Open-source, self-hosted WhatsApp API gateway with a bundled dashboard.",
-    "category": "Messaging"
+    "description": "开源自托管的 WhatsApp API 网关，附带内置仪表盘。",
+    "category": "即时通讯"
   },
   {
     "name": "OpnForm",
     "slug": "opnform",
     "icon": "/docs-cn/coolify/images/services/opnform.svg",
-    "description": "Open-source form builder that lets you create beautiful forms and share them anywhere.",
-    "category": "Development",
+    "description": "开源表单构建工具，让你创建精美的表单并随处分享。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "OrangeHRM",
     "slug": "orangehrm",
     "icon": "/docs-cn/coolify/images/services/orangehrm-logo.svg",
-    "description": "Free HR management system for businesses.",
-    "category": "Business",
+    "description": "面向企业的免费人力资源管理系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Organizr",
     "slug": "organizr",
     "icon": "/docs-cn/coolify/images/services/organizr-logo.png",
-    "description": "Homepage organizer for your server services.",
-    "category": "Administration",
+    "description": "帮你统一组织服务器各类服务的主页导航器。",
+    "category": "运维管理",
     "disabled": true
   },
   {
     "name": "Osticket",
     "slug": "osticket",
     "icon": "/docs-cn/coolify/images/services/osticket-logo.png",
-    "description": "Open-source help desk ticketing system.",
-    "category": "Business",
+    "description": "开源的工单客服系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Outline",
     "slug": "getoutline",
     "icon": "/docs-cn/coolify/images/services/getoutline-logo.jpeg",
-    "description": "Open-source collaboration tool.",
-    "category": "Productivity"
+    "description": "开源协作工具。",
+    "category": "效率"
   },
   {
     "name": "Overseerr",
     "slug": "overseerr",
     "icon": "/docs-cn/coolify/images/services/overseerr-logo.svg",
-    "description": "A request management and media discovery tool built to work with your existing Plex ecosystem.",
-    "category": "Media"
+    "description": "请求管理与媒体发现工具，专为与你现有的 Plex 生态协同工作而打造。",
+    "category": "媒体"
   },
   {
     "name": "Owncloud",
     "slug": "owncloud",
     "icon": "/docs-cn/coolify/images/services/owncloud-logo.svg",
-    "description": "File synchronization and sharing platform.",
-    "category": "Storage",
+    "description": "文件同步与共享平台。",
+    "category": "存储",
     "disabled": true
   },
   {
     "name": "Pairdrop",
     "slug": "pairdrop",
     "icon": "/docs-cn/coolify/images/services/pairdrop-logo.png",
-    "description": "Local file sharing in your browser.",
-    "category": "File Sharing"
+    "description": "在浏览器中完成本地文件共享。",
+    "category": "文件共享"
   },
   {
     "name": "Palworld",
     "slug": "palworld",
     "icon": "/docs-cn/coolify/images/services/palworld-logo.svg",
-    "description": "Dedicated server for Palworld multiplayer survival game with creature collection and base building.",
-    "category": "Gaming"
+    "description": "Palworld 多人生存游戏专用服务器，支持宠物收集与基地建造。",
+    "category": "游戏"
   },
   {
     "name": "Paperless",
     "slug": "paperless",
     "icon": "/docs-cn/coolify/images/services/paperless-logo.png",
-    "description": "Document management system that transforms physical documents into searchable online archives.",
-    "category": "Documentation"
+    "description": "将纸质文档转化为可检索在线归档的文档管理系统。",
+    "category": "文档"
   },
   {
     "name": "Passbolt",
     "slug": "passbolt",
     "icon": "/docs-cn/coolify/images/services/passbolt-logo.svg",
-    "description": "Open source password manager for teams.",
-    "category": "Security",
+    "description": "面向团队的开源密码管理器。",
+    "category": "安全",
     "disabled": true
   },
   {
     "name": "Paymenter",
     "slug": "paymenter",
     "icon": "/docs-cn/coolify/images/services/paymenter-logo.svg",
-    "description": "Open-Source Billing, Built for Hosting Providers.",
-    "category": "Business",
+    "description": "为主机托管商打造的开源计费系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "PeerTube",
     "slug": "peertube",
     "icon": "/docs-cn/coolify/images/services/peertube-logo.svg",
-    "description": "Free, open-source, decentralized video hosting platform.",
-    "category": "Media"
+    "description": "自由、开源的去中心化视频托管平台。",
+    "category": "媒体"
   },
   {
     "name": "Penpot",
     "slug": "penpot",
     "icon": "/docs-cn/coolify/images/services/penpot-logo.svg",
-    "description": "Open Source design & prototyping platform.",
-    "category": "Design"
+    "description": "开源的设计与原型平台。",
+    "category": "设计"
   },
   {
     "name": "Peppermint",
     "slug": "peppermint",
     "icon": "/docs-cn/coolify/images/services/peppermint.png",
-    "description": "Open-source help desk and ticket management system for support teams.",
-    "category": "Business",
+    "description": "面向支持团队的开源客服工单管理系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "PG Back Web",
     "slug": "pgbackweb",
     "icon": "/docs-cn/coolify/images/services/pgbackweb-logo.png",
-    "description": "Effortless PostgreSQL backups with a user-friendly web interface.",
-    "category": "Database"
+    "description": "通过友好易用的 Web 界面轻松完成 PostgreSQL 备份。",
+    "category": "数据库"
   },
   {
     "name": "pgAdmin",
     "slug": "pgadmin",
     "icon": "/docs-cn/coolify/images/services/pgadmin-logo.svg",
-    "description": "A web-based database management tool for administering your PostgreSQL databases through a user-friendly interface.",
-    "category": "Development"
+    "description": "基于 Web 的数据库管理工具，通过友好易用的界面管理你的 PostgreSQL 数据库。",
+    "category": "开发工具"
   },
   {
     "name": "phpMyAdmin",
     "slug": "phpmyadmin",
     "icon": "/docs-cn/coolify/images/services/phpmyadmin-logo.svg",
-    "description": "MySQL database management tool.",
-    "category": "Development",
+    "description": "MySQL 数据库管理工具。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "Pi-hole",
     "slug": "pi-hole",
     "icon": "/docs-cn/coolify/images/services/pihole-logo.svg",
-    "description": "Network-wide ad blocker that acts as a DNS sinkhole.",
-    "category": "Security"
+    "description": "全网络广告拦截器，充当 DNS 沉坑。",
+    "category": "安全"
   },
   {
     "name": "PingvinShare",
     "slug": "pingvinshare",
     "icon": "/docs-cn/coolify/images/services/pingvinshare-logo.svg",
-    "description": "Self-hosted file sharing platform that combines lightness and beauty.",
-    "category": "File Sharing",
-    "disabled": true
+    "description": "轻巧又美观的自托管文件共享平台。",
+    "category": "文件共享"
   },
   {
     "name": "Plane",
     "slug": "plane",
     "icon": "/docs-cn/coolify/images/services/plane-logo.svg",
-    "description": "Open source project planning tool.",
-    "category": "Project Management"
+    "description": "开源项目规划工具。",
+    "category": "项目管理"
   },
   {
     "name": "Plausible Analytics",
     "slug": "plausible",
     "icon": "/docs-cn/coolify/images/services/plausible-logo.svg",
-    "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
-    "category": "Analytics",
-    "disabled": true
+    "description": "轻量级开源网站分析工具，不使用 Cookie，优先保护用户隐私。",
+    "category": "分析"
   },
   {
     "name": "Plex",
     "slug": "plex",
     "icon": "/docs-cn/coolify/images/services/plex-logo.svg",
-    "description": "Media server software.",
-    "category": "Media"
+    "description": "媒体服务器软件。",
+    "category": "媒体"
   },
   {
     "name": "Plunk",
     "slug": "plunk",
     "icon": "/docs-cn/coolify/images/services/plunk-logo.svg",
-    "description": "Self-hosted email marketing platform.",
-    "category": "Marketing"
+    "description": "自托管电子邮件营销平台。",
+    "category": "营销"
   },
   {
     "name": "Pocket ID",
     "slug": "pocket-id",
     "icon": "/docs-cn/coolify/images/services/pocketid-logo.webp",
-    "description": "A simple OIDC provider for passwordless authentication with passkeys.",
-    "category": "Security"
+    "description": "一个简单的 OIDC 提供商，支持基于通行密钥（passkey）的无密码认证。",
+    "category": "安全"
   },
   {
     "name": "PocketBase",
     "slug": "pocketbase",
     "icon": "/docs-cn/coolify/images/services/pocketbase-logo.svg",
-    "description": "Open Source backend for your next SaaS and Mobile app.",
-    "category": "Development"
+    "description": "为你的下一个 SaaS 和移动应用准备的开源后端。",
+    "category": "开发工具"
   },
   {
     "name": "Portabase",
     "slug": "portabase",
     "icon": "/docs-cn/coolify/images/services/portabase.svg",
-    "description": "Open-source platform for automated database backups, secure storage, and on-demand recovery.",
-    "category": "Backup"
+    "description": "开源平台，提供自动化数据库备份、安全存储与按需恢复。",
+    "category": "备份"
   },
   {
     "name": "Portainer",
     "slug": "portainer",
     "icon": "/docs-cn/coolify/images/services/portainer-logo.png",
-    "description": "Container management platform.",
-    "category": "Development"
+    "description": "容器管理平台。",
+    "category": "开发工具"
   },
   {
     "name": "PostHog",
     "slug": "posthog",
     "icon": "/docs-cn/coolify/images/services/posthog-logo.svg",
-    "description": "Open source product analytics.",
-    "category": "Analytics",
-    "disabled": true
+    "description": "开源产品分析工具。",
+    "category": "分析"
   },
   {
     "name": "Postiz",
     "slug": "postiz",
     "icon": "/docs-cn/coolify/images/services/postiz-logo.png",
-    "description": "Social media scheduling and analytics tool.",
-    "category": "Social Media"
+    "description": "社交媒体定时发布与分析工具。",
+    "category": "社交媒体"
   },
   {
     "name": "Prefect",
     "slug": "prefect",
     "icon": "/docs-cn/coolify/images/services/prefect-logo.png",
-    "description": "Open source workflow management platform.",
-    "category": "Development"
+    "description": "开源工作流管理平台。",
+    "category": "开发工具"
   },
   {
     "name": "Privatebin",
     "slug": "privatebin",
     "icon": "/docs-cn/coolify/images/services/privatebin-logo.svg",
-    "description": "Minimalist, open-source online pastebin.",
-    "category": "Development",
+    "description": "极简的开源在线 pastebin（文本粘贴服务）。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "Prowlarr",
     "slug": "prowlarr",
     "icon": "/docs-cn/coolify/images/services/prowlarr-logo.svg",
-    "description": "A free and open source BitTorrent client.",
-    "category": "Media"
+    "description": "一款免费开源的 BitTorrent 客户端。",
+    "category": "媒体"
   },
   {
     "name": "Proxyscotch",
     "slug": "proxyscotch",
     "icon": "/docs-cn/coolify/images/services/proxyscotch.png",
-    "description": "Tiny open-source CORS proxy made by Hoppscotch.",
-    "category": "Development"
+    "description": "Hoppscotch 出品的小巧开源 CORS 代理。",
+    "category": "开发工具"
   },
   {
     "name": "Pterodactyl Panel",
     "slug": "pterodactyl",
     "icon": "/docs-cn/coolify/images/services/pterodactyl-logo.png",
-    "description": "Game server management panel with Wings daemon for hosting Minecraft, CS:GO, ARK and more.",
-    "category": "Gaming",
+    "description": "游戏服务器管理面板，搭配 Wings 守护进程，可托管 Minecraft、CS:GO、ARK 等游戏。",
+    "category": "游戏",
     "disabled": true
   },
   {
     "name": "Pydio Cells",
     "slug": "pydio-cells",
     "icon": "/docs-cn/coolify/images/services/pydio.webp",
-    "description": "File sharing platform for organizations.",
-    "category": "File Sharing"
+    "description": "面向组织的文件共享平台。",
+    "category": "文件共享"
   },
   {
     "name": "Qbittorrent",
     "slug": "qbittorrent",
     "icon": "/docs-cn/coolify/images/services/qbittorrent-logo.svg",
-    "description": "Free and open-source BitTorrent client.",
-    "category": "Media"
+    "description": "免费开源的 BitTorrent 客户端。",
+    "category": "媒体"
   },
   {
     "name": "Qdrant",
     "slug": "qdrant",
     "icon": "/docs-cn/coolify/images/services/qdrant-logo.svg",
-    "description": "Open source, AI-native vector database.",
+    "description": "开源的 AI 原生向量数据库。",
     "category": "AI"
   },
   {
     "name": "RabbitMQ",
     "slug": "rabbitmq",
     "icon": "/docs-cn/coolify/images/services/rabbitmq-logo.svg",
-    "description": "Open source message broker.",
-    "category": "Development"
+    "description": "开源消息代理。",
+    "category": "开发工具"
   },
   {
     "name": "Radarr",
     "slug": "radarr",
     "icon": "/docs-cn/coolify/images/services/radarr-logo.svg",
-    "description": "A Media server software.",
-    "category": "Media"
+    "description": "一款媒体服务器软件。",
+    "category": "媒体"
   },
   {
     "name": "Rallly",
     "slug": "rallly",
     "icon": "/docs-cn/coolify/images/services/rallly-logo.svg",
-    "description": "Open-source meeting scheduling tool.",
-    "category": "Productivity"
+    "description": "开源会议排期工具。",
+    "category": "效率"
   },
   {
     "name": "Reactive Resume",
     "slug": "reactive-resume",
     "icon": "/docs-cn/coolify/images/services/rxresume-logo.svg",
-    "description": "A free and open source resume builder.",
-    "category": "Productivity"
+    "description": "免费开源的简历制作工具。",
+    "category": "效率"
   },
   {
     "name": "Readeck",
     "slug": "readeck",
     "icon": "/docs-cn/coolify/images/services/readeck-logo.svg",
     "description": "Web article reader and bookmark manager.",
-    "category": "Productivity"
+    "category": "效率"
   },
   {
     "name": "Redis Insight",
     "slug": "redis-insight",
     "icon": "/docs-cn/coolify/images/services/redisinsight-logo.png",
     "description": "Official Redis GUI that lets you do both GUI- and CLI-based interactions in a fully-featured desktop GUI client.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Redlib",
     "slug": "redlib",
     "icon": "/docs-cn/coolify/images/services/redlib-logo.svg",
     "description": "Private front-end for Reddit.",
-    "category": "Social Media"
+    "category": "社交媒体"
   },
   {
     "name": "Redmine",
     "slug": "redmine",
     "icon": "/docs-cn/coolify/images/services/redmine-logo.svg",
     "description": "Flexible project management web application.",
-    "category": "Project Management"
+    "category": "项目管理"
   },
   {
     "name": "Rivet Engine",
     "slug": "rivet-engine",
     "icon": "/docs-cn/coolify/images/services/rivet-logo.svg",
     "description": "Backend engine for running stateful actors at scale with automatic scaling and distributed state management.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Rocket.Chat",
     "slug": "rocketchat",
     "icon": "/docs-cn/coolify/images/services/rocketchat-logo.svg",
     "description": "Open source team chat software.",
-    "category": "Communication"
+    "category": "沟通协作"
   },
   {
     "name": "RustFS",
     "slug": "rustfs",
     "icon": "/docs-cn/coolify/images/services/rustfs.png",
     "description": "Distributed object storage system built with Rust and compatible with Amazon S3 APIs.",
-    "category": "Storage",
+    "category": "存储",
     "disabled": true
   },
   {
@@ -1947,347 +1935,347 @@
     "slug": "rybbit",
     "icon": "/docs-cn/coolify/images/services/rybbit.svg",
     "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
-    "category": "Analytics"
+    "category": "分析"
   },
   {
     "name": "Ryot",
     "slug": "ryot",
     "icon": "/docs-cn/coolify/images/services/ryot-logo.svg",
     "description": "Self-hosted platform for tracking various facets of your life.",
-    "category": "Productivity"
+    "category": "效率"
   },
   {
     "name": "Satisfactory",
     "slug": "satisfactory",
     "icon": "/docs-cn/coolify/images/services/satisfactory-logo.png",
-    "description": "Game server for Satisfactory open-world factory building game with a dash of exploration and combat.",
-    "category": "Gaming"
+    "description": "Satisfactory 开放世界工厂建造游戏（兼具探索与战斗元素）的游戏服务器。",
+    "category": "游戏"
   },
   {
     "name": "Seafile",
     "slug": "seafile",
     "icon": "/docs-cn/coolify/images/services/seafile-logo.svg",
-    "description": "High-performance file syncing and sharing with knowledge management features.",
-    "category": "Storage"
+    "description": "高性能文件同步与共享，并带有知识管理功能。",
+    "category": "存储"
   },
   {
     "name": "SearXNG",
     "slug": "searxng",
     "icon": "/docs-cn/coolify/images/services/searxng-logo.svg",
-    "description": "Open source search engine.",
-    "category": "Search"
+    "description": "开源搜索引擎。",
+    "category": "搜索"
   },
   {
     "name": "SeaweedFS",
     "slug": "seaweedfs",
     "icon": "/docs-cn/coolify/images/services/seaweedfs-logo.svg",
-    "description": "Simple and highly scalable distributed file system compatible with S3.",
-    "category": "Storage"
+    "description": "简单且高度可扩展、兼容 S3 的分布式文件系统。",
+    "category": "存储"
   },
   {
     "name": "Sequin",
     "slug": "sequin",
     "icon": "/docs-cn/coolify/images/services/sequin-logo.svg",
-    "description": "The fastest Postgres change data capture.",
-    "category": "Analytics"
+    "description": "最快速的 Postgres 变更数据捕获工具。",
+    "category": "分析"
   },
   {
     "name": "Sessy",
     "slug": "sessy",
     "icon": "/docs-cn/coolify/images/services/sessy-logo.svg",
-    "description": "Email observability platform for monitoring Amazon SES deliveries, bounces, and more.",
-    "category": "Email"
+    "description": "用于监控 Amazon SES 投递、退信等情况的邮件可观测性平台。",
+    "category": "邮件"
   },
   {
     "name": "SFTPGo",
     "slug": "sftpgo",
     "icon": "/docs-cn/coolify/images/services/sftpgo-logo.png",
-    "description": "Event-driven SFTP, FTP/S, HTTP/S and WebDAV server.",
-    "category": "File Management"
+    "description": "事件驱动的 SFTP、FTP/S、HTTP/S 与 WebDAV 服务器。",
+    "category": "文件管理"
   },
   {
     "name": "Shlink",
     "slug": "shlink",
     "icon": "/docs-cn/coolify/images/services/shlink-logo.svg",
-    "description": "The open source URL shortener.",
-    "category": "Development",
+    "description": "开源 URL 短链接服务。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "SigNoz",
     "slug": "signoz",
     "icon": "/docs-cn/coolify/images/services/signoz-logo.svg",
-    "description": "Open source observability platform native to OpenTelemetry with logs, traces, and metrics.",
-    "category": "Monitoring"
+    "description": "原生支持 OpenTelemetry 的开源可观测性平台，集日志、追踪与指标于一体。",
+    "category": "监控"
   },
   {
     "name": "SilverBullet",
     "slug": "silverbullet",
     "icon": "/docs-cn/coolify/images/services/silverbullet.png",
-    "description": "An open source personal productivity platform built on Markdown.",
-    "category": "Productivity"
+    "description": "基于 Markdown 构建的开源个人效率平台。",
+    "category": "效率"
   },
   {
     "name": "Siyuan",
     "slug": "siyuan",
     "icon": "/docs-cn/coolify/images/services/siyuan.svg",
-    "description": "A privacy-first, self-hosted, fully open source personal knowledge management software, written in typescript and golang.",
-    "category": "Productivity"
+    "description": "一款隐私优先、可自托管、完全开源的个人知识管理软件，使用 TypeScript 和 Golang 编写。",
+    "category": "效率"
   },
   {
     "name": "Slash",
     "slug": "slash",
     "icon": "/docs-cn/coolify/images/services/slash-logo.svg",
-    "description": "Open-source, self-hosted links and notes manager.",
-    "category": "Productivity"
+    "description": "开源、可自托管的链接与笔记管理器。",
+    "category": "效率"
   },
   {
     "name": "Snapdrop",
     "slug": "snapdrop",
     "icon": "/docs-cn/coolify/images/services/snapdrop-logo.png",
-    "description": "Local file sharing in your browser.",
-    "category": "File Sharing",
+    "description": "在浏览器中进行本地文件共享。",
+    "category": "文件共享",
     "disabled": true
   },
   {
     "name": "Snipe-IT",
     "slug": "snipe-it",
     "icon": "/docs-cn/coolify/images/services/snipe-it-logo.webp",
-    "description": "A free open source IT asset/license management system.",
-    "category": "Business",
+    "description": "免费开源的 IT 资产/许可证管理系统。",
+    "category": "商业",
     "disabled": true
   },
   {
     "name": "Soju",
     "slug": "soju",
     "icon": "/docs-cn/coolify/images/services/soju-logo.svg",
-    "description": "User-friendly IRC bouncer with modern features.",
-    "category": "Communication"
+    "description": "易用且具备现代特性的 IRC bouncer。",
+    "category": "沟通协作"
   },
   {
     "name": "Soketi",
     "slug": "soketi",
     "icon": "/docs-cn/coolify/images/services/soketi-logo.jpeg",
-    "description": "Open-source WebSocket server.",
-    "category": "Development"
+    "description": "开源 WebSocket 服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Soketi App Manager",
     "slug": "soketi-app-manager",
     "icon": "/docs-cn/coolify/images/services/soketi-app-manager-logo.svg",
-    "description": "Manage Soketi apps with application configuration and WebSocket server administration interface.",
-    "category": "Development",
+    "description": "通过应用配置与 WebSocket 服务器管理界面来管理 Soketi 应用。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "SonarQube",
     "slug": "sonarqube",
     "icon": "/docs-cn/coolify/images/services/sonarqube-logo.svg",
-    "description": "Code analysis platform for finding code quality and security issues.",
-    "category": "Development",
+    "description": "用于发现代码质量与安全问题的代码分析平台。",
+    "category": "开发工具",
     "disabled": true
   },
   {
     "name": "Sonarr",
     "slug": "sonarr",
     "icon": "/docs-cn/coolify/images/services/sonarr-logo.svg",
-    "description": "A internet PVR for Usenet and Torrents.",
-    "category": "Media"
+    "description": "面向 Usenet 与 Torrent 的网络 PVR。",
+    "category": "媒体"
   },
   {
     "name": "Sonatype Nexus",
     "slug": "nexus",
     "icon": "/docs-cn/coolify/images/services/nexus-logo.png",
-    "description": "A repository manager that allows you to store, manage, and distribute your software artifacts.",
-    "category": "Development"
+    "description": "仓库管理器，用于存储、管理和分发你的软件构件（artifact）。",
+    "category": "开发工具"
   },
   {
     "name": "Spacebot",
     "slug": "spacebot",
     "icon": "/docs-cn/coolify/images/services/spacebot.png",
-    "description": "AI agent system with specialized processes for thinking, working, and remembering.",
+    "description": "具备思考、工作与记忆专职进程的 AI 智能体系统。",
     "category": "AI"
   },
   {
     "name": "SparkyFitness",
     "slug": "sparkyfitness",
     "icon": "/docs-cn/coolify/images/services/sparkyfitness.webp",
-    "description": "A comprehensive fitness app that helps users track nutrition, exercise, and body metrics.",
-    "category": "Health"
+    "description": "功能全面的健身应用，帮助用户跟踪营养、运动与身体指标。",
+    "category": "健康"
   },
   {
     "name": "Stalwart",
     "slug": "stalwart",
     "icon": "/docs-cn/coolify/images/services/stalwart-logo.svg",
-    "description": "All-in-one mail server with SMTP, IMAP, POP3, JMAP, Sieve, built-in anti-spam, and a web admin interface.",
-    "category": "Email"
+    "description": "集 SMTP、IMAP、POP3、JMAP、Sieve、内置反垃圾邮件与网页管理界面于一体的全能邮件服务器。",
+    "category": "邮件"
   },
   {
     "name": "Statusnook",
     "slug": "statusnook",
     "icon": "/docs-cn/coolify/images/services/statusnook-logo.svg",
-    "description": "A status page system for your website.",
-    "category": "Monitoring"
+    "description": "为你的网站提供状态页系统。",
+    "category": "监控"
   },
   {
     "name": "Stirling PDF",
     "slug": "stirling-pdf",
     "icon": "/docs-cn/coolify/images/services/stirling-pdf-logo.png",
-    "description": "Powerful PDF manipulation tool.",
-    "category": "Documentation"
+    "description": "功能强大的 PDF 处理工具。",
+    "category": "文档"
   },
   {
     "name": "Strapi",
     "slug": "strapi",
     "icon": "/docs-cn/coolify/images/services/strapi-logo.svg",
-    "description": "Open-source headless CMS.",
+    "description": "开源 Headless CMS。",
     "category": "CMS"
   },
   {
     "name": "Supabase",
     "slug": "supabase",
     "icon": "/docs-cn/coolify/images/services/supabase-logo.svg",
-    "description": "Open source Firebase alternative.",
-    "category": "Development"
+    "description": "开源的 Firebase 替代品。",
+    "category": "开发工具"
   },
   {
     "name": "Superset",
     "slug": "superset",
     "icon": "/docs-cn/coolify/images/services/superset-logo.svg",
-    "description": "Open-source data visualization and exploration platform.",
-    "category": "Analytics"
+    "description": "开源的数据可视化与数据探索平台。",
+    "category": "分析"
   },
   {
     "name": "Supertokens",
     "slug": "supertokens",
     "icon": "/docs-cn/coolify/images/services/supertokens-logo.svg",
-    "description": "Open-source authentication solution.",
-    "category": "Security"
+    "description": "开源身份验证方案。",
+    "category": "安全"
   },
   {
     "name": "Sure",
     "slug": "sure",
     "icon": "/docs-cn/coolify/images/services/sure.png",
-    "description": "An all-in-one personal finance platform.",
-    "category": "Finance"
+    "description": "一站式个人财务管理平台。",
+    "category": "金融"
   },
   {
     "name": "Swetrix",
     "slug": "swetrix",
     "icon": "/docs-cn/coolify/images/services/swetrix.svg",
-    "description": "Privacy-friendly and cookieless European web analytics alternative to Google Analytics.",
-    "category": "Analytics"
+    "description": "注重隐私、无 Cookie 的欧洲网站分析服务，Google Analytics 替代品。",
+    "category": "分析"
   },
   {
     "name": "Syncthing",
     "slug": "syncthing",
     "icon": "/docs-cn/coolify/images/services/syncthing-logo.svg",
     "description": "Open Source Continuous File Synchronization.",
-    "category": "File Management"
+    "category": "文件管理"
   },
   {
     "name": "Tailscale Client",
     "slug": "tailscale-client",
     "icon": "/docs-cn/coolify/images/services/tailscale-logo.svg",
     "description": "Zero-config WireGuard VPN client for secure mesh networking and encrypted connections.",
-    "category": "Networking"
+    "category": "网络"
   },
   {
     "name": "Teable",
     "slug": "teable",
     "icon": "/docs-cn/coolify/images/services/teable-logo.png",
     "description": "No-code database built on PostgreSQL.",
-    "category": "Database"
+    "category": "数据库"
   },
   {
     "name": "Termix",
     "slug": "termix",
     "icon": "/docs-cn/coolify/images/services/termix-logo.svg",
     "description": "Self-hosted application for managing SSH connections and remote desktops.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Terraria Server",
     "slug": "terraria-server",
     "icon": "/docs-cn/coolify/images/services/terraria.svg",
-    "description": "Docker multi-arch image for Terraria game server.",
-    "category": "Gaming"
+    "description": "Terraria 游戏服务器的 Docker 多架构镜像。",
+    "category": "游戏"
   },
   {
     "name": "Tolgee",
     "slug": "tolgee",
     "icon": "/docs-cn/coolify/images/services/tolgee-logo.svg",
-    "description": "Open source localization platform.",
-    "category": "Development"
+    "description": "开源本地化平台。",
+    "category": "开发工具"
   },
   {
     "name": "Traccar",
     "slug": "traccar",
     "icon": "/docs-cn/coolify/images/services/traccar-logo.png",
-    "description": "Open-source GPS tracking platform.",
-    "category": "IoT"
+    "description": "开源 GPS 追踪平台。",
+    "category": "物联网"
   },
   {
     "name": "TrailBase",
     "slug": "trailbase",
     "icon": "/docs-cn/coolify/images/services/trailbase-logo.svg",
-    "description": "Blazingly fast Rust/SQLite/Wasmtime app server with type-safe APIs.",
-    "category": "Development"
+    "description": "基于 Rust/SQLite/Wasmtime、提供类型安全 API 的极快应用服务器。",
+    "category": "开发工具"
   },
   {
     "name": "Transmission",
     "slug": "transmission",
     "icon": "/docs-cn/coolify/images/services/transmission-logo.svg",
-    "description": "Fast, easy, and free BitTorrent client.",
-    "category": "Media"
+    "description": "快速、易用且免费的 BitTorrent 客户端。",
+    "category": "媒体"
   },
   {
     "name": "Trigger",
     "slug": "trigger",
     "icon": "/docs-cn/coolify/images/services/trigger-logo.png",
-    "description": "Open-source workflow automation tool.",
-    "category": "Automation"
+    "description": "开源工作流自动化工具。",
+    "category": "自动化"
   },
   {
     "name": "TriliumNext",
     "slug": "triliumnext",
     "icon": "/docs-cn/coolify/images/services/triliumnext-logo.svg",
-    "description": "Build your personal knowledge base with TriliumNext Notes.",
-    "category": "Productivity"
+    "description": "用 TriliumNext Notes 构建你的个人知识库。",
+    "category": "效率"
   },
   {
     "name": "Twenty",
     "slug": "twenty",
     "icon": "/docs-cn/coolify/images/services/twenty-logo.svg",
-    "description": "Open-source CRM designed to fit your unique business needs.",
-    "category": "Business"
+    "description": "为你的独特业务需求而设计的开源 CRM。",
+    "category": "商业"
   },
   {
     "name": "Typesense",
     "slug": "typesense",
     "icon": "/docs-cn/coolify/images/services/typesense-logo.png",
-    "description": "Open source alternative to Algolia and easier-to-use alternative to ElasticSearch.",
-    "category": "Search"
+    "description": "Algolia 的开源替代品，也是比 ElasticSearch 更易用的选择。",
+    "category": "搜索"
   },
   {
     "name": "Umami",
     "slug": "umami",
     "icon": "/docs-cn/coolify/images/services/umami-logo.svg",
     "description": "A lightweight, open-source web analytics tool that prioritizes user privacy by not using cookies.",
-    "category": "Analytics"
+    "category": "分析"
   },
   {
     "name": "Unleash",
     "slug": "unleash",
     "icon": "/docs-cn/coolify/images/services/unleash.svg",
     "description": "Open-source feature management platform.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Unstructured",
     "slug": "unstructured",
     "icon": "/docs-cn/coolify/images/services/unstructured-logo.png",
-    "description": "Open-source platform and tools to ingest and process unstructured documents for Retrieval Augmented Generation (RAG) and model fine-tuning.",
+    "description": "为检索增强生成（RAG）与模型微调摄取和处理非结构化文档的开源平台与工具。",
     "category": "AI"
   },
   {
@@ -2295,42 +2283,42 @@
     "slug": "uptime-kuma",
     "icon": "/docs-cn/coolify/images/services/uptime-kuma-logo.svg",
     "description": "A fancy self-hosted monitoring tool.",
-    "category": "Monitoring"
+    "category": "监控"
   },
   {
     "name": "Usesend",
     "slug": "usesend",
     "icon": "/docs-cn/coolify/images/services/usesend-logo.svg",
     "description": "Open-source email recall service.",
-    "category": "Email"
+    "category": "邮件"
   },
   {
     "name": "Vaultwarden",
     "slug": "vaultwarden",
     "icon": "/docs-cn/coolify/images/services/vaultwarden-logo.svg",
     "description": "Unofficial Bitwarden compatible server.",
-    "category": "Security"
+    "category": "安全"
   },
   {
     "name": "Vert",
     "slug": "vert",
     "icon": "/docs-cn/coolify/images/services/vert-logo.png",
     "description": "Self-hosted file converter.",
-    "category": "Utilities"
+    "category": "实用工具"
   },
   {
     "name": "Vikunja",
     "slug": "vikunja",
     "icon": "/docs-cn/coolify/images/services/vikunja-logo.svg",
     "description": "The open-source to-do app.",
-    "category": "Productivity"
+    "category": "效率"
   },
   {
     "name": "Vvveb",
     "slug": "vvveb",
     "icon": "/docs-cn/coolify/images/services/vvveb-logo.png",
     "description": "Powerful website builder with drag and drop functionality.",
-    "category": "Development",
+    "category": "开发工具",
     "disabled": true
   },
   {
@@ -2338,13 +2326,13 @@
     "slug": "wakapi",
     "icon": "/docs-cn/coolify/images/services/wakapi-logo.svg",
     "description": "Open-source coding activity tracker.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Weaviate",
     "slug": "weaviate",
     "icon": "/docs-cn/coolify/images/services/weaviate-logo.webp",
-    "description": "Open source, AI-native vector database.",
+    "description": "开源的 AI 原生向量数据库。",
     "category": "AI"
   },
   {
@@ -2352,35 +2340,35 @@
     "slug": "web-check",
     "icon": "/docs-cn/coolify/images/services/webcheck-logo.png",
     "description": "All-in-one website analysis tool.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Weblate",
     "slug": "weblate",
     "icon": "/docs-cn/coolify/images/services/weblate-logo.webp",
     "description": "Web-based translation tool.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Whoogle",
     "slug": "whoogle",
     "icon": "/docs-cn/coolify/images/services/whoogle-logo.png",
     "description": "Self-hosted, ad-free, privacy-respecting metasearch engine.",
-    "category": "Search"
+    "category": "搜索"
   },
   {
     "name": "Wikijs",
     "slug": "wikijs",
     "icon": "/docs-cn/coolify/images/services/wikijs-logo.svg",
     "description": "Modern and powerful wiki software built on Node.js.",
-    "category": "Documentation"
+    "category": "文档"
   },
   {
     "name": "Windmill",
     "slug": "windmill",
     "icon": "/docs-cn/coolify/images/services/windmill-logo.svg",
     "description": "Open-source developer platform.",
-    "category": "Development",
+    "category": "开发工具",
     "disabled": true
   },
   {
@@ -2388,7 +2376,7 @@
     "slug": "windows",
     "icon": "/docs-cn/coolify/images/services/windows.svg",
     "description": "Run Windows in a containerized environment using the Dockur Windows project.",
-    "category": "Utilities",
+    "category": "实用工具",
     "disabled": true
   },
   {
@@ -2396,14 +2384,14 @@
     "slug": "wings",
     "icon": "/docs-cn/coolify/images/services/pterodactyl-logo.png",
     "description": "Pterodactyl server control daemon for standalone game server node deployments.",
-    "category": "Gaming"
+    "category": "游戏"
   },
   {
     "name": "Wireguard Easy",
     "slug": "wireguard-easy",
     "icon": "/docs-cn/coolify/images/services/wireguardeasy-logo.svg",
     "description": "Easy-to-use WireGuard VPN server.",
-    "category": "Security"
+    "category": "安全"
   },
   {
     "name": "WordPress",
@@ -2418,7 +2406,7 @@
     "slug": "yamtrack",
     "icon": "/docs-cn/coolify/images/services/yamtrack-logo.svg",
     "description": "Self-hosted music scrobble database.",
-    "category": "Media"
+    "category": "媒体"
   },
   {
     "name": "Zep",
@@ -2433,13 +2421,13 @@
     "slug": "zero",
     "icon": "/docs-cn/coolify/images/services/zero.svg",
     "description": "Query-driven sync engine for TypeScript apps backed by Postgres.",
-    "category": "Development"
+    "category": "开发工具"
   },
   {
     "name": "Zipline",
     "slug": "zipline",
     "icon": "/docs-cn/coolify/images/services/zipline-logo.png",
     "description": "Next generation ShareX / File upload server",
-    "category": "File Management"
+    "category": "文件管理"
   }
 ]

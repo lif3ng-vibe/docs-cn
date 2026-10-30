@@ -1,84 +1,84 @@
 ---
-title: Services
-description: Understand, deploy, configure, and operate Docker Compose services with Coolify.
+title: 服务
+description: 用 Coolify 理解、部署、配置和运维 Docker Compose 服务。
 ---
 
 import { Box2, BranchUp, Settings } from 'reicon-react';
 
-# Services
+# 服务
 
-Coolify deploys a Service as a Docker Compose stack on one connected server and network destination. Start from a ready-made one-click template, or select **Docker Compose Empty** and provide your own Compose definition.
+Coolify 把一个服务（Service）作为 Docker Compose 堆栈部署到一台已连接服务器和网络目标（Destination）上。你可以从现成的一键模板起步，也可以选择 **Docker Compose Empty（空 Docker Compose）**并提交自己的 Compose 定义。
 
-Each Service can contain several application and database containers. Coolify parses the Compose definition, creates controls for the detected components, generates required values, configures domains and storage, and runs the stack with Docker Compose.
+每个 Service 可以包含多个应用和数据库容器。Coolify 会解析 Compose 定义，为识别到的组件生成控制项、生成必需的值、配置域名和存储，并用 Docker Compose 运行整套堆栈。
 
-<Callout type="info" title="Choose the right resource type">
+<Callout type="info" title="选对资源类型">
 
-Use an [Application](/applications) when the deployment should follow source code in a Git repository or use one existing Docker image. Use a [standalone Database](/databases) when you need Coolify's engine-specific database defaults. Use a Service for a multi-container stack or a Compose definition stored directly in Coolify.
+如果部署应当跟随 Git 仓库中的源码，或只是使用一个现成的 Docker 镜像，请用[应用（Application）](/applications)。如果你需要 Coolify 针对特定数据库引擎的默认配置，请用[独立数据库（Database）](/databases)。多容器堆栈，或想把 Compose 定义直接存在 Coolify 里时，请用 Service。
 
 </Callout>
 
-## Find the right section
+## 找到合适的章节
 
-| If you want to | Start here |
+| 如果你想 | 从这里开始 |
 | :--- | :--- |
-| Learn what a Service contains and when to use one | [What is a service](/services/what-is-a-service) |
-| Follow the path from a template or Compose definition to running containers | [How services work](/services/how-services-work) |
-| Browse ready-made templates | [One-click service catalog](/services/overview) |
-| Configure the stack, its components, domains, variables, and storage | [Configuration](/services/configuration/overview) |
-| Edit and understand the stored Compose definition | [Docker Compose](/services/configuration/docker-compose) |
-| Inspect logs, update images, schedule commands, clone, move, or delete a Service | [Operations](/services/operations/overview) |
+| 了解 Service 包含什么、何时使用 | [什么是服务](/services/what-is-a-service) |
+| 跟随从模板或 Compose 定义到运行容器的完整路径 | [服务的工作原理](/services/how-services-work) |
+| 浏览现成模板 | [一键服务目录](/services/overview) |
+| 配置堆栈、组件、域名、变量和存储 | [配置](/services/configuration/overview) |
+| 编辑并理解保存的 Compose 定义 | [Docker Compose](/services/configuration/docker-compose) |
+| 查看日志、更新镜像、安排命令、克隆、迁移或删除 Service | [运维](/services/operations/overview) |
 
-## Deploy a Service
+## 部署一个服务
 
-1. Open a project and environment, then select **Create New Resource**.
-2. Select a one-click Service, or select **Docker Compose Empty**.
-3. Choose the server and network destination where the stack should run.
-4. For **Docker Compose Empty**, paste the Compose definition and save it.
-5. Review **Configuration > General**, **Environment Variables**, and **Persistent Storages**.
-6. Fill every required environment variable, then select **Deploy**.
-7. Follow the deployment output and verify every required component is running and healthy.
+1. 打开一个项目和环境，然后选择 **Create New Resource（新建资源）**。
+2. 选择一个一键 Service，或选择 **Docker Compose Empty（空 Docker Compose）**。
+3. 选择堆栈要运行的服务器和网络目标（Destination）。
+4. 对于 **Docker Compose Empty（空 Docker Compose）**，粘贴 Compose 定义并保存。
+5. 审阅 **配置 > 常规**、**环境变量**和**持久化存储**。
+6. 填写所有必需的环境变量，然后选择 **Deploy（部署）**。
+7. 跟随部署输出，确认每个必需组件都在运行且健康。
 
-For a complete first deployment, follow [Deploy your first service](/deploy-your-first-service).
+想完整走一遍首次部署，请跟随[部署你的第一个服务](/deploy-your-first-service)。
 
-## Understand one-click Services
+## 理解一键服务
 
-A one-click Service starts from a Compose template maintained in Coolify's service library. Coolify copies the template into the new resource and generates its initial values.
+一键 Service 从 Coolify 服务库维护的 Compose 模板起步。Coolify 会把模板复制到新资源并生成初始值。
 
-The deployed Service keeps its own Compose definition. Later library changes do not rewrite that definition. **Pull Latest Images & Restart** pulls images for the tags currently saved in the Service; it does not replace the stored template with a newer version.
+部署后的 Service 保留自己的 Compose 定义。之后服务库的变更不会重写这份定义。**Pull Latest Images & Restart（拉取最新镜像并重启）**只会按 Service 中当前保存的标签拉取镜像；它不会用新版本的模板替换已存储的模板。
 
-Open the [searchable catalog](/services/overview) to find a Service, then read its individual guide for service-specific setup, credentials, or limitations.
+打开[可搜索的目录](/services/overview)找到某个 Service，然后阅读它的专属指南了解特定服务的设置、凭据或限制。
 
-## Service resource navigation
+## Service 资源导航
 
-| Area | Use it to | Guide |
+| 区域 | 用途 | 指南 |
 | :--- | :--- | :--- |
-| **Configuration** | Change the stack, components, variables, storage, automation, and organization. | [Configuration overview](/services/configuration/overview) |
-| **Logs** | Read stdout and stderr from the Service's containers. | [Operate services](/services/operations/overview) |
-| **Terminal** | Open a shell in a selected running container when terminal access is allowed. | [Operate services](/services/operations/overview) |
-| **Scheduled Tasks** | Run a recurring command inside one component container. | [Scheduled tasks](/services/operations/scheduled-tasks) |
-| **Resource Operations** | Clone the Service to another destination or move it between projects and environments. | [Clone or move a Service](/services/operations/resource-operations) |
-| **Danger Zone** | Permanently delete the Service and choose which related Docker resources to remove. | [Delete a Service](/services/operations/danger-zone) |
+| **Configuration（配置）** | 修改堆栈、组件、变量、存储、自动化和组织方式。 | [配置概览](/services/configuration/overview) |
+| **Logs（日志）** | 查看 Service 各容器的 stdout 和 stderr 输出。 | [运维服务](/services/operations/overview) |
+| **Terminal（终端）** | 在允许终端访问时，进入选定运行容器的 shell。 | [运维服务](/services/operations/overview) |
+| **Scheduled Tasks（计划任务）** | 在某个组件容器内运行周期性命令。 | [计划任务](/services/operations/scheduled-tasks) |
+| **Resource Operations（资源操作）** | 把 Service 克隆到另一个目标（Destination），或在项目与环境之间迁移。 | [克隆或迁移服务](/services/operations/resource-operations) |
+| **Danger Zone（危险区）** | 永久删除 Service，并选择要一并移除的相关 Docker 资源。 | [删除服务](/services/operations/danger-zone) |
 
-## Continue with Services
+## 继续了解服务
 
 <CoolNextSteps
   cards={[
     {
-      title: 'Understand Services',
+      title: '理解服务',
       href: '/services/what-is-a-service',
-      description: 'Learn how a Service differs from an Application or standalone Database.',
+      description: '了解 Service 与应用（Application）、独立数据库（Database）的区别。',
       icon: Box2,
     },
     {
-      title: 'Browse one-click Services',
+      title: '浏览一键服务',
       href: '/services/overview',
-      description: 'Search the templates available for new Service resources.',
+      description: '搜索可用于新建 Service 资源的模板。',
       icon: BranchUp,
     },
     {
-      title: 'Configure a Service',
+      title: '配置服务',
       href: '/services/configuration/overview',
-      description: 'Find stack, component, variable, storage, and operation settings.',
+      description: '查找堆栈、组件、变量、存储与运维设置。',
       icon: Settings,
     },
   ]}

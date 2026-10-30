@@ -1,9 +1,9 @@
 ---
 title: "Elasticsearch"
-description: "Free and Open Source, Distributed, RESTful Search Engine."
+description: "免费开源的分布式 RESTful 搜索引擎。"
 og:
   description: "Here you can find the documentation for hosting Elasticsearch with Coolify."
-category: "Search"
+category: "搜索"
 icon: "/docs-cn/coolify/images/services/elasticsearch-logo.svg"
 ---
 
@@ -11,59 +11,59 @@ icon: "/docs-cn/coolify/images/services/elasticsearch-logo.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/elasticsearch-logo.svg" alt="ElasticSearch" />
 
-## What is Elasticsearch?
+## Elasticsearch 是什么？
 
-Elasticsearch is an open-source search and analytics engine designed for fast, scalable data retrieval—ideal for handling large volumes of both structured and unstructured data.
+Elasticsearch 是一款开源的搜索与分析引擎，专为快速、可扩展的数据检索而设计，非常适合处理海量结构化与非结构化数据。
 
-## How to Deploy Elasticsearch on Coolify
+## 如何在 Coolify 上部署 Elasticsearch
 
-There are two ways to deploy Elasticsearch on Coolify:
+在 Coolify 上部署 Elasticsearch 有两种方式：
 
-- **Elasticsearch as a standalone service** (no GUI)
-- **Elasticsearch with Kibana** (GUI)
-
----
-
-## Elasticsearch as a Standalone Service
-
-1. Create a new resource on Coolify and select **Elasticsearch with Kibana** from the service list.
-2. Click the **Deploy** button to pull the Docker images and start the containers.
-3. Once the `Elasticsearch` service shows as healthy, you can access it via its assigned domain.
-   > ⚠️ Note: This version does not include a GUI—you’ll need to interact with it via CLI tools or APIs.
+- **Elasticsearch 独立部署**（无图形界面）
+- **Elasticsearch 搭配 Kibana**（图形界面）
 
 ---
 
-## Deploy Elasticsearch with Kibana
+## Elasticsearch 独立部署
 
-1. Create a new resource on Coolify and select **Elasticsearch with Kibana** from the service list.
-2. Click the **Deploy** button to pull the Docker images and start the containers.
-3. Once the `Elasticsearch` service is running and the `Kibana Token Generator` shows an **exited** status:
-   - Open the logs of the `Kibana Token Generator` service.
-   - Copy the **Service Token** from the logs.
-   - Paste the token into the `ELASTICSEARCH_SERVICEACCOUNTTOKEN` environment variable.
-   - Restart the service (click the **Restart** button).
-4. After both `Elasticsearch` and `Kibana` services are running healthy, visit the domain assigned to the service.
-   - You’ll be presented with the Elastic login page.
-   - **Username:** `elastic`  
-     **Password:** value of the `SERVICE_PASSWORD_ELASTICSEARCH` environment variable.
-
-If any of the above steps are unclear, you can refer to [this Pull Request](https://github.com/coollabsio/coolify/pull/6470), which includes a video walkthrough of the entire deployment process.
+1. 在 Coolify 上新建一个资源，并从服务列表中选择 **Elasticsearch with Kibana**。
+2. 点击 **Deploy（部署）** 按钮，拉取 Docker 镜像并启动容器。
+3. 待 `Elasticsearch` 服务显示为健康状态后，即可通过分配给它的域名访问。
+   > ⚠️ 注意：此版本不包含图形界面——你需要通过 CLI 工具或 API 与之交互。
 
 ---
 
-### Notes for Elasticsearch with Kibana
+## 部署 Elasticsearch with Kibana
 
-1. It can take over **2 minutes** for all services to fully start (depending on your server’s performance).
-2. The JVM heap size is set to **512MB** by default to prevent Elasticsearch from exhausting server memory.
-   > To increase this value, modify the environment variable:  
-   > `ES_JAVA_OPTS=-Xms512m -Xmx512m` in the Docker Compose file.
-3. The `Kibana Token Generator` service is designed to **run once and then exit**. This is expected behavior and does not impact the health of the Elastic or Kibana services.
-4. Clustering is **disabled by default** via the `discovery.type=single-node` environment variable.
-   > Update this setting if clustering is required.
+1. 在 Coolify 上新建一个资源，并从服务列表中选择 **Elasticsearch with Kibana**。
+2. 点击 **Deploy（部署）** 按钮，拉取 Docker 镜像并启动容器。
+3. 待 `Elasticsearch` 服务开始运行、且 `Kibana Token Generator` 显示 **exited**（已退出）状态后：
+   - 打开 `Kibana Token Generator` 服务的日志。
+   - 从日志中复制 **Service Token**（服务令牌）。
+   - 将令牌粘贴到 `ELASTICSEARCH_SERVICEACCOUNTTOKEN` 环境变量中。
+   - 重启服务（点击 **Restart（重启）** 按钮）。
+4. 待 `Elasticsearch` 和 `Kibana` 两个服务都健康运行后，访问分配给该服务的域名。
+   - 你会看到 Elastic 的登录页面。
+   - **用户名：** `elastic`  
+     **密码：** `SERVICE_PASSWORD_ELASTICSEARCH` 环境变量的值。
+
+如果以上步骤有不清楚的地方，可以参考[这个 Pull Request](https://github.com/coollabsio/coolify/pull/6470)，其中包含整个部署过程的视频演示。
 
 ---
 
-## Useful Links
+### Elasticsearch with Kibana 注意事项
 
-- [Official Website](https://www.elastic.co/?utm_source=coolify.io)
-- [Official Documentation](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-kibana-with-docker?utm_source=coolify.io)
+1. 所有服务完全启动可能需要 **2 分钟**以上（取决于服务器性能）。
+2. JVM 堆大小默认设为 **512MB**，以防止 Elasticsearch 耗尽服务器内存。
+   > 如需调大该值，请修改 Docker Compose 文件中的环境变量：  
+   > `ES_JAVA_OPTS=-Xms512m -Xmx512m`。
+3. `Kibana Token Generator` 服务的设计就是**运行一次后即退出**。这是预期行为，不会影响 Elastic 或 Kibana 服务的健康状态。
+4. 通过 `discovery.type=single-node` 环境变量，集群功能**默认处于禁用状态**。
+   > 如果需要集群功能，请修改此项设置。
+
+---
+
+## 相关链接
+
+- [官方网站](https://www.elastic.co/?utm_source=coolify.io)
+- [官方文档](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-kibana-with-docker?utm_source=coolify.io)

@@ -1,28 +1,28 @@
 ---
 title: "Backup delete"
-description: "Delete a backup configuration and optionally all its executions from S3. First UUID is the database, second is the specific backup configuration."
+description: "删除备份配置，可选从 S3 删除其全部执行记录。第一个 UUID 是数据库，第二个是具体的备份配置。"
 ---
 
 # Backup delete
 
-Delete a backup configuration and optionally all its executions from S3. First UUID is the database, second is the specific backup configuration.
+删除备份配置，可选从 S3 删除其全部执行记录。第一个 UUID 是数据库，第二个是具体的备份配置。
 
-## Usage
+## 用法
 
 ```sh
 coolify database backup delete <database_uuid> <backup_uuid>
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--delete-s3` | `boolean` | No | `false` | Delete backup files from S3 |
+| `--delete-s3` | `boolean` | 否 | `false` | 从 S3 删除备份文件 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify database backup delete --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

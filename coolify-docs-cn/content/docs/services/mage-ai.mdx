@@ -1,45 +1,41 @@
 ---
 title: "Mage AI"
-description: "Build, run, and manage data pipelines for integrating and transforming data."
+description: "构建、运行和管理数据管道，完成数据集成与转换。"
 og:
   description: "Build, run, and manage data pipelines for integrating and transforming data."
-category: "Automation"
+category: "自动化"
 icon: "/docs-cn/coolify/images/services/mage-ai.svg"
 ---
 
-<ZoomImage src="/docs-cn/coolify/images/services/mage-ai.svg" alt="Mage AI Dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/mage-ai.svg" alt="Mage AI 仪表盘" />
 
-## What is Mage AI?
+## Mage AI 是什么？
 
-Mage AI (Mage OSS) is a self-hosted development environment designed to help
-teams create production-grade data pipelines with confidence.
+Mage AI（Mage OSS）是一个自托管的开发环境，旨在帮助团队有把握地构建生产级数据管道。
 
-Ideal for automating ETL tasks, architecting data flow, or orchestrating
-transformations — all in a fast, notebook-style interface powered by modular
-code.
+无论是自动化 ETL 任务、设计数据流，还是编排数据转换，它都能胜任——一切都在由模块化代码驱动的快速笔记本式界面中完成。
 
-## Default Credentials
+## 默认凭据
 
-On a fresh deployment, you can log in with the following details:
+全新部署后，你可以使用以下信息登录：
 
 ```
 USERNAME: admin@admin.com
 PASSWORD: admin
 ```
 
-## Issue with Older CPUs
+## 旧款 CPU 的问题
 
-Mage AI requires modern CPU features to be available. On older
-devices, you may see the error:
+Mage AI 依赖现代 CPU 特性。在较老的设备上，你可能会看到如下错误：
 
 ```
 The following required CPU features were not detected:
   sse4.2, popcnt, avx, avx2, fma, bmi1, bmi2, lzcnt, pclmulqdq
 ```
 
-For more details, refer to the [following issue](https://github.com/pola-rs/polars/issues/15404).
+更多细节请参阅[这个 issue](https://github.com/pola-rs/polars/issues/15404)。
 
-## Links
+## 相关链接
 
-- [Official website](https://mage.ai/?utm_source=coolify.io)
+- [官方网站](https://mage.ai/?utm_source=coolify.io)
 - [GitHub](https://github.com/mage-ai/mage-ai?utm_source=coolify.io)

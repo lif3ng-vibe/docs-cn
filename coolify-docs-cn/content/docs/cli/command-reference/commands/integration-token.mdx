@@ -1,31 +1,31 @@
 ---
 title: "Create"
-description: "Create and validate a secret manager integration token"
+description: "创建并验证密钥管理器集成令牌"
 ---
 
 # Create
 
-Create and validate a secret manager integration token
+创建并验证密钥管理器集成令牌
 
-## Usage
+## 用法
 
 ```sh
 coolify integration-token create
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--metadata` | `string` | No | — | Provider metadata as a JSON object (required for infisical and vault) |
-| `--name` | `string` | Yes | — | Friendly token name (required) |
-| `--provider` | `string` | Yes | — | Secret manager provider: doppler, infisical, vault (required) |
-| `--provider-token-stdin` | `boolean` | No | `false` | Read the provider token from stdin |
+| `--metadata` | `string` | 否 | — | 以 JSON 对象表示的提供商元数据（infisical 和 vault 必填） |
+| `--name` | `string` | 是 | — | 令牌友好名称（必填） |
+| `--provider` | `string` | 是 | — | 密钥管理器提供商：doppler、infisical、vault（必填） |
+| `--provider-token-stdin` | `boolean` | 否 | `false` | 从 stdin 读取提供商令牌 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify integration-token create --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

@@ -1,46 +1,46 @@
 ---
 title: "Paymenter"
-description: "Open-Source Billing, Built for Hosting Providers."
+description: "为主机托管商打造的开源计费系统。"
 og:
   description: "Host Paymenter billing on Coolify for web hosting invoicing, client management, automated provisioning, and service provider administration."
-category: "Business"
+category: "商业"
 icon: "/docs-cn/coolify/images/services/paymenter-logo.svg"
 disabled: true
 ---
 
-<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+<Callout type="error" title="服务暂时停用">
 
-This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+由于 PHP 安全漏洞 **CVE-2026-109618** 和 **CVE-2026-109619**，该服务的一键模板已在 Coolify 中暂时停用。在修复后的容器镜像完成验证之前，暂时无法从服务目录进行新部署。
 
-See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+关于现有部署的处理建议，请参阅 [PHP 安全公告](/knowledge-base/php-security-advisory-2026)；详情与最新进展请见[模板停用 PR](https://github.com/coollabsio/coolify/pull/12268)。
 
 </Callout>
 
-<ZoomImage src="/docs-cn/coolify/images/services/paymenter-logo.svg" alt="Paymenter dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/paymenter-logo.svg" alt="Paymenter 仪表盘" />
 
-## What is Paymenter?
+## Paymenter 是什么？
 
-Paymenter is an open-source billing platform tailored for hosting companies. It simplifies the management of hosting services, providing a seamless experience for both providers and customers. Built on modern web technologies, Paymenter offers a flexible and robust solution for your hosting business needs.
+Paymenter 是一个专为主机托管公司打造的开源计费平台。它简化了托管服务的管理工作，为服务商和客户双方都带来顺畅的体验。Paymenter 基于现代 Web 技术构建，能够为你的托管业务提供灵活而稳健的解决方案。
 
-## How to configure Paymenter with Coolify
+## 如何在 Coolify 中配置 Paymenter
 
-1. Create a new resource using the **Paymenter** service.
-2. Start the resource.
-3. Set the correct app URL via the terminal:
+1. 使用 **Paymenter** 服务创建一个新资源。
+2. 启动该资源。
+3. 通过终端设置正确的应用 URL：
 
-Select the Paymenter container and run the following command:
+选择 Paymenter 容器并运行以下命令：
 
 ```bash
 php artisan app:init
 ```
 
-4. Create the first admin user:
+4. 创建第一个管理员用户：
    ```bash
    php artisan app:user:create
    ```
 
-## Links
+## 相关链接
 
-- [The official website](https://paymenter.org/)
+- [官方网站](https://paymenter.org/)
 - [GitHub](https://github.com/Paymenter/Paymenter)
-- [Demo](https://demo.paymenter.org/)
+- [在线演示](https://demo.paymenter.org/)

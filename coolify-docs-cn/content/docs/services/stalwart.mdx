@@ -1,9 +1,9 @@
 ---
 title: "Stalwart"
-description: "All-in-one mail server with SMTP, IMAP, POP3, JMAP, Sieve, built-in anti-spam, and a web admin interface."
+description: "集 SMTP、IMAP、POP3、JMAP、Sieve、内置反垃圾邮件与网页管理界面于一体的全能邮件服务器。"
 og:
   description: "Deploy Stalwart mail server on Coolify for a complete email solution with SMTP, IMAP, POP3, JMAP, built-in spam filtering, DKIM signing, and web administration."
-category: "Email"
+category: "邮件"
 icon: "/docs-cn/coolify/images/services/stalwart-logo.svg"
 ---
 
@@ -11,77 +11,77 @@ icon: "/docs-cn/coolify/images/services/stalwart-logo.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/stalwart-logo.svg" alt="Stalwart logo" />
 
-## What is Stalwart
+## Stalwart 是什么
 
-Stalwart is an all-in-one mail and collaboration server written in Rust. It replaces the traditional stack of separate components (MTA, IMAP server, spam filter, calendar server) with a single platform that supports SMTP, IMAP, POP3, JMAP, CalDAV, CardDAV, and WebDAV.
+Stalwart 是一个用 Rust 编写的一体化邮件与协作服务器。它以单一平台取代了传统的多组件堆栈（MTA、IMAP 服务器、垃圾邮件过滤器、日历服务器），支持 SMTP、IMAP、POP3、JMAP、CalDAV、CardDAV 和 WebDAV。
 
-## Configuring Stalwart
+## 配置 Stalwart
 
-The following steps will guide you through the configuration of Stalwart once you have created the service in Coolify.
+在 Coolify 中创建服务后，按照以下步骤完成 Stalwart 的配置。
 
-### Initial setup
+### 初始设置
 
-1. Coolify auto-generates a service URL for the admin interface (from `SERVICE_URL_STALWART_8080`). You can access the admin panel immediately. However, for sending and receiving email you will need your own domain — see the DNS records section below.
-2. Open `/admin` on the service URL and log in with username `admin`. On first start, Stalwart runs in bootstrap mode and prints a temporary administrator password to the container logs (it is only shown once). To retrieve it:
-   - Open the **Logs** of the Stalwart service in Coolify, or
-   - SSH into your server and run `docker logs <container-name>`.
+1. Coolify 会为管理界面自动生成一个服务 URL（来自 `SERVICE_URL_STALWART_8080`），你可以立即访问管理面板。不过，要收发邮件就需要你自己的域名——参见下方的 DNS 记录一节。
+2. 在服务 URL 下打开 `/admin`，用用户名 `admin` 登录。首次启动时，Stalwart 以引导模式运行，并会向容器日志输出一个临时管理员密码（只显示一次）。获取方法：
+   - 在 Coolify 中打开 Stalwart 服务的**日志**，或
+   - 通过 SSH 登录服务器并运行 `docker logs <container-name>`。
 
-   To use a fixed password instead, add `STALWART_RECOVERY_ADMIN=admin:<your-password>` to the service environment variables before the first deployment. Remove it once setup is complete.
-3. Follow the setup wizard to add your domain and create your first mailbox.
-4. Create additional mailboxes under **Accounts** > **Mailboxes**.
+   如果想改用固定密码，可以在首次部署前向服务环境变量添加 `STALWART_RECOVERY_ADMIN=admin:<your-password>`，设置完成后移除即可。
+3. 按照设置向导添加你的域名，并创建第一个邮箱。
+4. 在 **Accounts**（账户）> **Mailboxes**（邮箱）下创建更多邮箱。
 
-### DNS records
+### DNS 记录
 
-For Stalwart to send and receive email, configure these DNS records at your domain registrar:
+要让 Stalwart 收发邮件，请在你的域名注册商处配置以下 DNS 记录：
 
-| Record | Type | Value |
+| 记录 | 类型 | 值 |
 |--------|------|-------|
-| MX | MX | `mail.yourdomain.com` (priority 10) |
+| MX | MX | `mail.yourdomain.com`（优先级 10） |
 | SPF | TXT | `v=spf1 mx ~all` |
-| DKIM | TXT | Generated in Stalwart under **Settings** > **MTA** > **DKIM** |
+| DKIM | TXT | 在 Stalwart 的 **Settings**（设置）> **MTA** > **DKIM** 中生成 |
 | DMARC | TXT | `v=DMARC1; p=quarantine; rua=mailto:admin@yourdomain.com` |
 
-For PTR (reverse DNS), set it through your VPS provider's control panel so your server's IP resolves to your mail server hostname. See your provider's guide:
+PTR（反向 DNS）需要通过 VPS 提供商的控制面板设置，让你的服务器 IP 反向解析到邮件服务器主机名。参见服务商指南：
 
-- [Hetzner: Reverse DNS](https://docs.hetzner.com/de/networking/dns/technical-concepts/architecture/#reverse-dns-rdns)
-- [Contabo: How to set Reverse DNS](https://contabo.com/blog/contabo-dns-rdns-management-setup-guide/)
+- [Hetzner：反向 DNS](https://docs.hetzner.com/de/networking/dns/technical-concepts/architecture/#reverse-dns-rdns)
+- [Contabo：如何设置反向 DNS](https://contabo.com/blog/contabo-dns-rdns-management-setup-guide/)
 
-### Troubleshooting
+### 故障排除
 
-If you get a **502 Bad Gateway** error when accessing the admin interface, Stalwart is likely rate-limiting your reverse proxy (Traefik). Since Traefik proxies many connections through a single IP, it can trigger Stalwart's port scanning protection.
+访问管理界面时如果出现 **502 Bad Gateway** 错误，很可能是 Stalwart 对你的反向代理（Traefik）做了限速。由于 Traefik 会通过同一个 IP 转发大量连接，可能触发 Stalwart 的端口扫描防护。
 
-#### Find your reverse proxy network
+#### 找到你的反向代理网络
 
-SSH into your server or use the Coolify terminal and run:
+通过 SSH 登录服务器，或使用 Coolify 终端，运行：
 
 ```bash
 docker inspect coolify-proxy | grep -A 5 "Networks"
 ```
 
-Look for `IPv4Address` in the output. If it shows `10.0.1.6/24`, your network is `10.0.1.0/24`.
+在输出中找到 `IPv4Address`。如果显示的是 `10.0.1.6/24`，那么你的网络就是 `10.0.1.0/24`。
 
-#### Recover access
+#### 恢复访问
 
-If you are already locked out:
+如果你已经被锁在外面：
 
-1. Add `STALWART_RECOVERY_MODE=1` and `STALWART_RECOVERY_ADMIN=admin:<your-password>` to your environment variables and redeploy. Remove both once you have regained access.
-2. Go to **Settings** > **Security** > **Blocked IPs** and remove the blocked IP.
+1. 在环境变量中添加 `STALWART_RECOVERY_MODE=1` 和 `STALWART_RECOVERY_ADMIN=admin:<your-password>`，然后重新部署。恢复访问后把两者都移除。
+2. 前往 **Settings**（设置）> **Security**（安全）> **Blocked IPs**（被封禁的 IP），删除被封禁的 IP。
 
-<ZoomImage src="/docs-cn/coolify/images/services/stalwart-blocked-ips.webp" alt="Stalwart blocked IPs page" />
+<ZoomImage src="/docs-cn/coolify/images/services/stalwart-blocked-ips.webp" alt="Stalwart 被封禁 IP 页面" />
 
-#### Whitelist your reverse proxy network
+#### 将反向代理网络加入白名单
 
-1. Go to **Security** > **IP Allowlist** in the Stalwart admin panel.
-2. Add your Traefik network (e.g., `10.0.1.0/24`). Alternatively, add `10.0.0.0/8` to trust all Docker networks.
-3. Set the reason to whatever you want (e.g. Traefik reverse proxy).
+1. 在 Stalwart 管理面板中前往 **Security**（安全）> **IP Allowlist**（IP 白名单）。
+2. 添加你的 Traefik 网络（例如 `10.0.1.0/24`）。也可以添加 `10.0.0.0/8` 以信任所有 Docker 网络。
+3. 原因（reason）随意填写（例如 Traefik reverse proxy）。
 
-<ZoomImage src="/docs-cn/coolify/images/services/stalwart-allowed-ips.webp" alt="Stalwart allowed IPs page" />
+<ZoomImage src="/docs-cn/coolify/images/services/stalwart-allowed-ips.webp" alt="Stalwart 白名单 IP 页面" />
 
-4. Go to **Settings** > **Network** > **Services** > **HTTP** > **General** and enable **Obtain remote IP from Forwarded header**.
+4. 前往 **Settings**（设置）> **Network**（网络）> **Services**（服务）> **HTTP** > **General**（常规），启用 **Obtain remote IP from Forwarded header**（从 Forwarded 头获取远程 IP）。
 
-<ZoomImage src="/docs-cn/coolify/images/services/stalwart-forwarded-header.webp" alt="Stalwart forwarded header setting" />
+<ZoomImage src="/docs-cn/coolify/images/services/stalwart-forwarded-header.webp" alt="Stalwart Forwarded 头设置" />
 
-## Links
+## 相关链接
 
 - [GitHub](https://github.com/stalwartlabs/stalwart?utm_source=coolify.io)
-- [Documentation](https://stalw.art/docs/install/platform/docker?utm_source=coolify.io)
+- [文档](https://stalw.art/docs/install/platform/docker?utm_source=coolify.io)

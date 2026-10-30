@@ -1,47 +1,47 @@
 ---
 title: "Grafana"
-description: "The open platform for beautiful analytics and monitoring."
+description: "打造精美分析与监控的开源平台。"
 og:
-  description: "Deploy Grafana on Coolify for data visualization, monitoring dashboards, alerting, and metric analysis from multiple data sources and databases."
-category: "Monitoring"
+  description: "在 Coolify 上部署 Grafana，实现数据可视化、监控仪表盘、告警，以及对多种数据源和数据库的指标分析。"
+category: "监控"
 icon: "/docs-cn/coolify/images/services/grafana-logo.svg"
 ---
 
 <ZoomImage src="https://github.com/grafana/grafana/raw/main/docs/logo-horizontal.png#gh-light-mode-only" alt="Grafana" />
 
-## What is Grafana?
+## Grafana 是什么？
 
-The open and composable observability and data visualization platform. Visualize metrics, logs, and traces from multiple sources like Prometheus, Loki, Elasticsearch, InfluxDB, Postgres and many more.
+一套开放、可组合的可观测性与数据可视化平台。可视化来自 Prometheus、Loki、Elasticsearch、InfluxDB、Postgres 等多种数据源的指标、日志和链路追踪。
 
-## Deployment Variants
+## 部署变体
 
-Grafana is available in two deployment configurations in Coolify:
+Grafana 在 Coolify 中提供两种部署配置：
 
-### Grafana (Default)
-- **Database:** Embedded (SQLite)
-- **Use case:** Simple monitoring setups, testing, or temporary dashboards
-- **Components:** Single Grafana container with built-in database
+### Grafana（默认）
+- **数据库：**内嵌（SQLite）
+- **适用场景：**简单的监控环境、测试或临时仪表盘
+- **组成：**单个 Grafana 容器，内置数据库
 
 ### Grafana with PostgreSQL
-- **Database:** PostgreSQL
-- **Use case:** Production deployments requiring persistent data storage, high availability, and better performance
-- **Components:**
-  - Grafana container
-  - PostgreSQL 16 container
-  - Automatic database configuration and health checks
+- **数据库：**PostgreSQL
+- **适用场景：**需要持久化数据存储、高可用性与更佳性能的生产部署
+- **组成：**
+  - Grafana 容器
+  - PostgreSQL 16 容器
+  - 自动完成数据库配置与健康检查
 
-## Features
+## 功能特性
 
-Grafana allows you to query, visualize, alert on and understand your metrics no matter where they are stored. Create, explore, and share dashboards with your team and foster a data-driven culture:
+Grafana 让你无论指标存放在哪里，都能查询、可视化、告警并深入理解它们。与团队一起创建、探索和分享仪表盘，培养数据驱动的文化：
 
-- **Visualizations:** Fast and flexible client side graphs with a multitude of options. Panel plugins offer many different ways to visualize metrics and logs.
-- **Dynamic Dashboards:** Create dynamic & reusable dashboards with template variables that appear as dropdowns at the top of the dashboard.
-- **Explore Metrics:** Explore your data through ad-hoc queries and dynamic drilldown. Split view and compare different time ranges, queries and data sources side by side.
-- **Explore Logs:** Experience the magic of switching from metrics to logs with preserved label filters. Quickly search through all your logs or streaming them live.
-- **Alerting:** Visually define alert rules for your most important metrics. Grafana will continuously evaluate and send notifications to systems like Slack, PagerDuty, VictorOps, OpsGenie.
-- **Mixed Data Sources:** Mix different data sources in the same graph! You can specify a data source on a per-query basis. This works for even custom datasources.
+- **可视化：**快速灵活的客户端图表，选项丰富。面板插件提供多种不同的指标与日志可视化方式。
+- **动态仪表盘：**借助模板变量创建动态且可复用的仪表盘，模板变量会以下拉框形式出现在仪表盘顶部。
+- **指标探索（Explore Metrics）：**通过临时查询和动态下钻探索数据。支持分屏视图，并排对比不同时间范围、查询和数据源。
+- **日志探索（Explore Logs）：**体验在保留标签筛选条件的情况下从指标切换到日志的魔力。可快速搜索所有日志，也可实时流式查看。
+- **告警：**以可视化方式为最重要的指标定义告警规则。Grafana 会持续评估，并把通知发送到 Slack、PagerDuty、VictorOps、OpsGenie 等系统。
+- **混合数据源：**在同一个图表中混用不同数据源！你可以按查询粒度指定数据源，甚至对自定义数据源也同样适用。
 
-## Links
+## 相关链接
 
-- [The official website](https://grafana.com/)
+- [官方网站](https://grafana.com/)
 - [GitHub](https://github.com/grafana/grafana)

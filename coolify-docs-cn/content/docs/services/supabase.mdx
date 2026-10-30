@@ -1,50 +1,50 @@
 ---
 title: "Supabase"
-description: "Open source Firebase alternative."
+description: "开源的 Firebase 替代品。"
 og:
   description: "Deploy Supabase on Coolify as open-source Firebase alternative with Postgres database, authentication, storage, and real-time subscriptions."
-category: "Development"
+category: "开发工具"
 icon: "/docs-cn/coolify/images/services/supabase-logo.svg"
 ---
 
 <ZoomImage src="https://user-images.githubusercontent.com/8291514/213727225-56186826-bee8-43b5-9b15-86e839d89393.png#gh-dark-mode-only" alt="Supabase" />
 
-## What is Supabase?
+## Supabase 是什么？
 
-The open source Firebase alternative.
+开源的 Firebase 替代品。
 
-## Screenshots
+## 截图
 
-<ZoomImage src="/docs-cn/coolify/images/services/supabase-selfhost.webp" alt="Supabase dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/supabase-selfhost.webp" alt="Supabase 仪表盘" />
 
-## Notes
+## 说明
 
-You can find your anonymous key in the **Environment Variables** area under **SERVICE_SUPABASEANON_KEY**.
+你可以在**环境变量**区域找到匿名密钥（anon key），对应 **SERVICE_SUPABASEANON_KEY**。
 
-## Public Port Access
+## 公开端口访问
 
 
-<Callout type="warn" title="NOTE:">
+<Callout type="warn" title="注意：">
 
-There is a bug with making database publicly accessible. This bug will be fixed soon. In the meantime, you can use the following workaround:
+数据库公开访问目前存在一个 bug，很快会修复。在此期间，你可以使用以下变通方法：
 
 </Callout>
 
 
-Set **Supabase Db** to public
+把 **Supabase Db** 设为公开（public）
 
-<ZoomImage src="/docs-cn/coolify/images/services/supabase-db-fix.webp" alt="Supabase dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/supabase-db-fix.webp" alt="Supabase 仪表盘" />
 
-Then
+然后
 
-Go to the **General** tab then **Edit Compose File**
+进入 **General**（常规）标签页，再点 **Edit Compose File**（编辑 Compose 文件）
 
-Then add this line:
+然后添加这一行：
 ```yaml
 ports:
       - ${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}
 ```
-To
+到
 
 ```yaml
 supabase-db:
@@ -61,25 +61,25 @@ supabase-db:
     - ${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}
 ```
 
-And Restart
+然后重启
 
-> NOTE if you are changing the port to a different port altogether to update the POSTGRES_PORT in the Environment Variables
+> 注意：如果你把端口整个换成了一个新端口，请同步更新环境变量中的 POSTGRES_PORT
 
-## Opening ports with ufw-docker
+## 使用 ufw-docker 开放端口
 
-Finally, to allow external access to the PostgreSQL port in a Docker setup, you need to open the port in the firewall using the command:
+最后，要让外部访问 Docker 环境中的 PostgreSQL 端口，你需要用以下命令在防火墙中开放该端口：
 
 ```bash
 ufw route allow proto tcp from any to any port 5432
 ```
 
-This rule ensures traffic can reach your PostgreSQL database through the Docker network. For more information, read the docs from [ufw-docker](https://github.com/chaifeng/ufw-docker).
+这条规则确保流量可以经由 Docker 网络到达你的 PostgreSQL 数据库。更多信息请阅读 [ufw-docker](https://github.com/chaifeng/ufw-docker) 的文档。
 
-### Using Hetzner's firewall UI
+### 使用 Hetzner 的防火墙 UI
 
-If your server is hosted on Hetzner, you may not need ufw-docker. Instead, you can open the relevant database port (e.g., 5432) directly using [Hetzner's firewall UI](https://docs.hetzner.com/cloud/firewalls/overview).
+如果你的服务器托管在 Hetzner 上，可能无需 ufw-docker。你可以直接使用 [Hetzner 的防火墙 UI](https://docs.hetzner.com/cloud/firewalls/overview) 开放相关数据库端口（例如 5432）。
 
-## Links
+## 相关链接
 
-- [Official Website](https://supabase.io)
+- [官方网站](https://supabase.io)
 - [GitHub](https://github.com/supabase/supabase)

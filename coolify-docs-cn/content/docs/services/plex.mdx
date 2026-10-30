@@ -1,34 +1,34 @@
 ---
 title: "Plex"
-description: "Media server software."
+description: "媒体服务器软件。"
 og:
   description: "Stream media on Coolify with Plex server for movies, TV shows, music, photos with transcoding, mobile apps, and live TV DVR support."
-category: "Media"
+category: "媒体"
 icon: "/docs-cn/coolify/images/services/plex-logo.svg"
 ---
 
-<ZoomImage src="/docs-cn/coolify/images/services/plex-logo.svg" alt="Plex dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/plex-logo.svg" alt="Plex 仪表盘" />
 
-## What is Plex?
+## Plex 是什么？
 
-Available on almost any device, Plex is the first-and-only streaming platform to offer free ad-supported movies, shows, and live TV together.
+Plex 几乎可以在任何设备上使用，也是唯一一个将免费广告支持的电影、剧集与直播电视集于一身的流媒体平台。
 
-## Installation
+## 安装
 
-1. Create the service within Coolify.
-2. BEFORE starting the service, set the `PLEX_CLAIM` variable. You can get a claim token here: https://plex.tv/claim
-3. If your device supports it, enable hardware transcoding by uncommenting this section in the compose file:
+1. 在 Coolify 中创建该服务。
+2. 在启动服务之前，先设置 `PLEX_CLAIM` 变量。你可以在这里获取 claim 令牌：https://plex.tv/claim
+3. 如果你的设备支持，可以在 compose 文件中取消以下部分的注释来启用硬件转码：
 
 ```yaml
 #devices:
 # - "/dev/dri:/dev/dri"
 ```
 
-## Screenshots
+## 截图
 
-<ZoomImage src="/docs-cn/coolify/images/services/plex.webp" alt="Plex dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/plex.webp" alt="Plex 仪表盘" />
 
-## Links
+## 相关链接
 
-- [The official website](https://www.plex.tv/)
+- [官方网站](https://www.plex.tv/)
 - [GitHub](https://github.com/plexinc/pms-docker)

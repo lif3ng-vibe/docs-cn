@@ -1,40 +1,40 @@
 ---
 title: "Mediawiki"
-description: "A free and open-source wiki software package."
+description: "一款免费开源的 Wiki 软件。"
 og:
   description: "Run MediaWiki on Coolify for Wikipedia-style documentation, knowledge bases, collaborative editing, and structured wiki content management."
-category: "Documentation"
+category: "文档"
 icon: "/docs-cn/coolify/images/services/mediawiki-logo.svg"
 disabled: true
 ---
 
-<Callout type="error" title="SERVICE TEMPORARILY DISABLED">
+<Callout type="error" title="该服务暂时停用">
 
-This service's one-click templates are temporarily disabled in Coolify because of the PHP security vulnerabilities **CVE-2026-109618** and **CVE-2026-109619**. New deployments from the service catalog are unavailable while patched container images are verified.
+由于 PHP 安全漏洞 **CVE-2026-109618** 和 **CVE-2026-109619**，该服务的一键模板已在 Coolify 中暂时停用。在修复后的容器镜像验证完成之前，暂时无法从服务目录进行新部署。
 
-See the [PHP security advisory](/knowledge-base/php-security-advisory-2026) for guidance on existing deployments and [the template disablement PR](https://github.com/coollabsio/coolify/pull/12268) for details and updates.
+请参阅 [PHP 安全公告](/knowledge-base/php-security-advisory-2026)了解现有部署的处理建议，并关注[模板停用 PR](https://github.com/coollabsio/coolify/pull/12268) 以获取详情与最新进展。
 
 </Callout>
 
 <ZoomImage src="https://www.mediawiki.org/static/images/icons/mediawikiwiki.svg" alt="Mediawiki" />
 
-## What is Mediawiki?
+## Mediawiki 是什么？
 
-Free and open source collaborative space for managing and sharing knowledge.
+一个用于管理和分享知识的免费开源协作空间。
 
-## Installation Steps
+## 安装步骤
 
-1. Comment out the shared volume for LocalSettings in your configuration.
-2. Start the container.
-3. Go to `http(s)://your-domain` to access the MediaWiki installation wizard.
-4. Configure MediaWiki according to your needs through the wizard.
-5. Download the generated `LocalSettings.php` file.
-6. Stop the container.
-7. Move the downloaded `LocalSettings.php` file to the specified file mount path on your server.
-8. Uncomment the shared volume configuration to mount the `LocalSettings.php` file to the specified file mount path on your server.
-9. Restart the container.
+1. 在配置中注释掉 LocalSettings 的共享卷（volume）。
+2. 启动容器。
+3. 访问 `http(s)://your-domain`，进入 MediaWiki 安装向导。
+4. 按照向导根据你的需求配置 MediaWiki。
+5. 下载生成的 `LocalSettings.php` 文件。
+6. 停止容器。
+7. 将下载的 `LocalSettings.php` 文件移动到服务器上指定的文件挂载路径。
+8. 取消共享卷配置的注释，把 `LocalSettings.php` 文件挂载到服务器上指定的文件挂载路径。
+9. 重启容器。
 
-## Links
+## 相关链接
 
-- [The official website](https://www.mediawiki.org/wiki/MediaWiki)
+- [官方网站](https://www.mediawiki.org/wiki/MediaWiki)
 - [GitHub](https://github.com/wikimedia/mediawiki)

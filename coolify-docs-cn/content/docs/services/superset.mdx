@@ -1,9 +1,9 @@
 ---
 title: "Superset"
-description: "Open-source data visualization and exploration platform."
+description: "开源的数据可视化与数据探索平台。"
 og:
   description: "Deploy Superset on Coolify for modern data exploration, interactive dashboards, SQL editor, and business intelligence visualization."
-category: "Analytics"
+category: "分析"
 icon: "/docs-cn/coolify/images/services/superset-logo.svg"
 ---
 
@@ -11,27 +11,27 @@ icon: "/docs-cn/coolify/images/services/superset-logo.svg"
 
 <ZoomImage src="/docs-cn/coolify/images/services/superset-logo.svg" alt="Superset logo" />
 
-## What is Superset?
+## Superset 是什么？
 
-Superset is a modern data exploration and data visualization platform. Superset can replace or augment proprietary business intelligence tools for many teams. Superset integrates well with a variety of data sources.
+Superset 是一个现代化的数据探索与数据可视化平台。对许多团队而言，Superset 可以替代或增强专有的商业智能工具。Superset 能与多种数据源良好集成。
 
-## Variants
+## 变体
 
-- **Superset with PostgreSQL:** Includes PostgreSQL and Redis.
+- **Superset with PostgreSQL：** 包含 PostgreSQL 和 Redis。
 
-## Unofficial Docker Image
+## 非官方 Docker 镜像
 
-Superset [does not support the use of Docker Compose in production](https://superset.apache.org/admin-docs/installation/docker-compose/). Coolify's Superset template uses a [third-party, unofficial Docker image created by amancevice](https://github.com/amancevice/docker-superset).
+Superset [不支持在生产环境中使用 Docker Compose](https://superset.apache.org/admin-docs/installation/docker-compose/)。Coolify 的 Superset 模板使用的是 [amancevice 制作的第三方非官方 Docker 镜像](https://github.com/amancevice/docker-superset)。
 
-## Usage
+## 使用方法
 
-### Initial Setup
+### 初始设置
 
-After deploying the template, you will need to initialise the database and create your admin user. This can be done as follows:
+部署模板后，你需要初始化数据库并创建管理员用户。操作如下：
 
-1. Open a terminal session to the Superset Docker container.
+1. 打开一个连接到 Superset Docker 容器的终端会话。
 
-2. Run one of the commands below, noting the `-` symbol:
+2. 运行下面的命令之一，注意 `-` 符号：
 
    ```bash
    # Basic initialisation
@@ -41,26 +41,26 @@ After deploying the template, you will need to initialise the database and creat
    superset-demo
    ```
 
-   The source code for these scripts is available [here](https://github.com/amancevice/docker-superset/tree/main/bin).
+   这些脚本的源码可在[这里](https://github.com/amancevice/docker-superset/tree/main/bin)查看。
 
-3. Follow the prompts to complete the setup.
+3. 按照提示完成设置。
 
-You can find the video instructions for this process in [Coolify's GitHub repository's pull request #4891](https://github.com/coollabsio/coolify/pull/4891).
+你可以在 [Coolify GitHub 仓库的 pull request #4891](https://github.com/coollabsio/coolify/pull/4891) 中找到这一过程的视频演示。
 
-### Connecting to Other Databases on the Coolify Network
+### 连接 Coolify 网络上的其他数据库
 
-To connect to databases hosted on Coolify but external to the Superset service template, enable [Connect To Predefined Network](/applications/builds/docker-compose#connect-to-predefined-networks). Use the database's internal hostname and port for the connection.
+要连接托管在 Coolify 上、但在 Superset 服务模板之外的数据库，请启用 [Connect To Predefined Network](/applications/builds/docker-compose#connect-to-predefined-networks)（连接到预定义网络），并使用数据库的内部主机名和端口进行连接。
 
-For network isolation, you can [create a separate destination](/core/networking/destinations/create) and deploy Superset and the databases it needs to that destination. You still need to enable **Connect To Predefined Network** for Superset: service stacks use their own network by default. Containers on the shared network use generated names, so verify the database hostname rather than assuming a generic name such as `postgres`.
+为了实现网络隔离，你可以[创建一个独立的目标（Destination）](/core/networking/destinations/create)，把 Superset 和它需要的数据库都部署到该目标上。即便如此，你仍需为 Superset 启用 **Connect To Predefined Network**（连接到预定义网络）：服务栈默认使用自己的网络。共享网络上的容器使用自动生成的名称，因此请核实数据库的实际主机名，不要想当然地使用 `postgres` 这类通用名称。
 
-### Configuring Superset
+### 配置 Superset
 
-Please refer to the [official documentation](https://superset.apache.org/docs/configuration/configuring-superset) for how you can tweak your `superset_config.py`.
+如何调整 `superset_config.py`，请参阅[官方文档](https://superset.apache.org/docs/configuration/configuring-superset)。
 
-This Python configuration file can be edited from the service's **Persistent Storages** page. Read [File Mounts](/core/persistent-storage/storage-mounts/file-mounts) for the file editing and size limits.
+这个 Python 配置文件可以在服务的 **Persistent Storages**（持久化存储）页面中编辑。文件编辑方式与大小限制请阅读 [File Mounts](/core/persistent-storage/storage-mounts/file-mounts)。
 
-## Links
+## 相关链接
 
-- [Official Website](https://superset.apache.org)
+- [官方网站](https://superset.apache.org)
 - [GitHub](https://github.com/apache/superset)
-- [Unofficial Docker Image](https://github.com/amancevice/docker-superset)
+- [非官方 Docker 镜像](https://github.com/amancevice/docker-superset)

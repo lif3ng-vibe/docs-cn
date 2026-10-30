@@ -54,22 +54,22 @@ function renderServicesPage(services, categoryOrder) {
   }
 
   return `---
-title: All Services
-description: Complete directory of one-click services in Coolify including AI, analytics, databases, CMS, monitoring, and more.
+title: 全部服务
+description: Coolify 一键服务完整目录，涵盖 AI、分析、数据库、CMS、监控等各类应用。
 layout: doc
 ---
 
-# All Services
+# 全部服务
 
-Complete directory of all one-click services available in Coolify, organized by category.
+Coolify 全部一键服务的完整目录，按分类整理。
 
 ${sections.join('\n').trimEnd()}
 
 ---
 
-Looking for a searchable interface? Visit our [interactive services search](/services/overview) page.
+想用可搜索的界面？访问我们的[交互式服务搜索](/services/overview)页面。
 
-To request a new service, please check our [contribution guide](https://github.com/coollabsio/coolify/blob/v4.x/CONTRIBUTING.md).
+想申请新增服务，请查看我们的[贡献指南](https://github.com/coollabsio/coolify/blob/v4.x/CONTRIBUTING.md)。
 `
 }
 

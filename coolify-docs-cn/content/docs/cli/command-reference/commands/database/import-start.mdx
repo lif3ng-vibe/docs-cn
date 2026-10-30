@@ -1,39 +1,39 @@
 ---
 title: "Import start"
-description: "Start an import into the database"
+description: "开始导入到数据库"
 ---
 
 # Import start
 
-Start an import into the database
+开始导入到数据库
 
-## Usage
+## 用法
 
 ```sh
 coolify database import start <database_uuid>
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--dump-all` | `boolean` | No | `false` | The backup contains all databases |
-| `--file` | `string` | No | — | Local backup file to upload and import |
-| `--keep-owners` | `boolean` | No | `false` | PostgreSQL: restore object owners and privileges from a single-database archive |
-| `--poll-interval` | `duration` | No | `3s` | Status polling interval when --wait is set |
-| `--replace-existing` | `boolean` | No | `false` | PostgreSQL: drop matching objects before restoring a single-database archive |
-| `--restore-mysql-users` | `boolean` | No | `false` | MySQL/MariaDB all-databases backups: also restore users, passwords and privileges |
-| `--s3-path` | `string` | No | — | Path of the backup in the S3 storage |
-| `--s3-storage-uuid` | `string` | No | — | S3 storage UUID to import from (requires --s3-path) |
-| `--server-path` | `string` | No | — | Absolute path of the backup on the database's server |
-| `--sqlite-database` | `string` | No | — | SQLite: database file to restore into (e.g. app.db) |
-| `--upload-id` | `string` | No | — | ID of a previously uploaded backup file |
-| `--wait` | `boolean` | No | `false` | Wait until the import finishes; exits non-zero if it fails |
+| `--dump-all` | `boolean` | 否 | `false` | 备份包含所有数据库 |
+| `--file` | `string` | 否 | — | 要上传并导入的本地备份文件 |
+| `--keep-owners` | `boolean` | 否 | `false` | PostgreSQL：从单数据库归档恢复对象所有者和权限 |
+| `--poll-interval` | `duration` | 否 | `3s` | 设置 --wait 时的状态轮询间隔 |
+| `--replace-existing` | `boolean` | 否 | `false` | PostgreSQL：恢复单数据库归档前先删除匹配的对象 |
+| `--restore-mysql-users` | `boolean` | 否 | `false` | MySQL/MariaDB 全库备份：同时恢复用户、密码和权限 |
+| `--s3-path` | `string` | 否 | — | 备份在 S3 存储中的路径 |
+| `--s3-storage-uuid` | `string` | 否 | — | 用于导入的 S3 存储 UUID（需要 --s3-path） |
+| `--server-path` | `string` | 否 | — | 备份在数据库服务器上的绝对路径 |
+| `--sqlite-database` | `string` | 否 | — | SQLite：要恢复到的数据库文件（如 app.db） |
+| `--upload-id` | `string` | 否 | — | 之前上传的备份文件 ID |
+| `--wait` | `boolean` | 否 | `false` | 等待导入完成；失败时以非零状态退出 |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify database import start --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

@@ -1,38 +1,38 @@
 ---
 title: "Create"
-description: "Create a GitLab App integration"
+description: "创建 GitLab App 集成"
 ---
 
 # Create
 
-Create a GitLab App integration
+创建 GitLab App 集成
 
-## Usage
+## 用法
 
 ```sh
 coolify gitlab create
 ```
 
-## Options
+## 选项
 
-| Option | Type | Required | Default | Description |
+| 选项 | 类型 | 必填 | 默认值 | 说明 |
 | :--- | :--- | :---: | :--- | :--- |
-| `--api-url` | `string` | No | — | GitLab API URL (defaults to &#123;html-url&#125;/api/v4) |
-| `--client-id` | `string` | No | — | GitLab OAuth Application ID |
-| `--client-secret` | `string` | No | — | GitLab OAuth Application Secret |
-| `--custom-port` | `integer` | No | `0` | Custom SSH port (default: 22) |
-| `--custom-user` | `string` | No | — | Custom SSH user (default: git) |
-| `--group-name` | `string` | No | — | Optional comma-separated group filter |
-| `--html-url` | `string` | Yes | — | GitLab instance URL (required, e.g. https://gitlab.com) |
-| `--name` | `string` | Yes | — | GitLab App name (required) |
-| `--redirect-uri` | `string` | No | — | OAuth redirect URI registered in GitLab |
-| `--system-wide` | `boolean` | No | `false` | Make this app system-wide (non-cloud instances only) |
-| `--webhook-token` | `string` | No | — | Webhook secret token (auto-generated when omitted) |
+| `--api-url` | `string` | 否 | — | GitLab API URL（默认为 &#123;html-url&#125;/api/v4） |
+| `--client-id` | `string` | 否 | — | GitLab OAuth 应用 ID |
+| `--client-secret` | `string` | 否 | — | GitLab OAuth 应用密钥 |
+| `--custom-port` | `integer` | 否 | `0` | 自定义 SSH 端口（默认：22） |
+| `--custom-user` | `string` | 否 | — | 自定义 SSH 用户（默认：git） |
+| `--group-name` | `string` | 否 | — | 可选的逗号分隔分组过滤器 |
+| `--html-url` | `string` | 是 | — | GitLab 实例 URL（必填，如 https://gitlab.com） |
+| `--name` | `string` | 是 | — | GitLab App 名称（必填） |
+| `--redirect-uri` | `string` | 否 | — | 在 GitLab 注册的 OAuth 重定向 URI |
+| `--system-wide` | `boolean` | 否 | `false` | 将该应用设为系统级（仅非云实例） |
+| `--webhook-token` | `string` | 否 | — | webhook 密钥令牌（省略时自动生成） |
 
-## Get current help
+## 查看当前帮助
 
 ```sh
 coolify gitlab create --help
 ```
 
-The installed CLI help reflects the exact options available in your CLI version.
+已安装 CLI 的帮助信息会反映你的 CLI 版本实际支持的选项。

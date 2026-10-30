@@ -1,87 +1,83 @@
 ---
 title: "Matrix"
-description: "Chat securely with your family, friends, community."
+description: "与家人、朋友、社区安全地聊天。"
 og:
   description: "Run Matrix Synapse server on Coolify for decentralized chat, end-to-end encryption, federation, and secure real-time communication platform."
-category: "Communication"
+category: "沟通协作"
 icon: "/docs-cn/coolify/images/services/matrix-logo.svg"
 ---
 
 # Matrix (Synapse)
 
-<ZoomImage src="/docs-cn/coolify/images/services/matrix-logo.svg" alt="Matrix dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/matrix-logo.svg" alt="Matrix 仪表盘" />
 
-## What is Matrix?
+## Matrix 是什么？
 
-Matrix is an open-source, decentralized communication protocol that enables secure, real-time communication. It provides end-to-end encrypted messaging, voice and video calls, file sharing, and room-based conversations. Matrix serves as an excellent alternative to proprietary platforms like Slack or Discord, offering federation capabilities that allow different Matrix servers to communicate with each other.
+Matrix 是一个开源的去中心化通信协议，支持安全、实时的通信。它提供端到端加密的消息、语音与视频通话、文件共享，以及基于房间（room）的会话。作为 Slack、Discord 等专有平台的优秀替代品，Matrix 还具备联邦（federation）能力，让不同的 Matrix 服务器之间可以互相通信。
 
-## What is Synapse?
+## Synapse 是什么？
 
-Synapse is a [Matrix homeserver](https://matrix.org/ecosystem/servers/) written in Python/Twisted, [developed and maintained](https://github.com/element-hq/synapse) by the team [Element](https://element.io/), creators of Matrix.
+Synapse 是一个用 Python/Twisted 编写的 [Matrix 主服务器（homeserver）](https://matrix.org/ecosystem/servers/)，由 Matrix 的创造者 [Element](https://element.io/) 团队[开发并维护](https://github.com/element-hq/synapse)。
 
-## Deployment Variants
+## 部署变体
 
-Synapse Matrix server is available in two deployment configurations in Coolify:
+在 Coolify 中，Synapse Matrix 服务器提供两种部署配置：
 
-### Synapse with SQlite
+### 使用 SQLite 的 Synapse
 
-- **Database:** SQLite (embedded)
-- **Use case:** Simple deployments, testing, or personal Matrix hosting
-- **Components:** Single Synapse container with built-in SQLite database
+- **数据库：**SQLite（内嵌）
+- **适用场景：**简单部署、测试或个人 Matrix 托管
+- **组件：**单个 Synapse 容器，内置 SQLite 数据库
 
-### Synapse with PostgreSQL (recommended)
+### 使用 PostgreSQL 的 Synapse（推荐）
 
-- **Database:** PostgreSQL
-- **Use case:** Production deployments requiring better performance and scalability
-- **Components:**
-  - Synapse container
-  - PostgreSQL container
-  - Automatic database configuration and health checks
+- **数据库：**PostgreSQL
+- **适用场景：**对性能和可扩展性要求更高的生产部署
+- **组件：**
+  - Synapse 容器
+  - PostgreSQL 容器
+  - 自动完成数据库配置与健康检查
 
-## Installation Steps
+## 安装步骤
 
-For all deployment variants the installation steps are the same.
+所有部署变体的安装步骤都相同。
 
-### Matrix domain setup (important)
+### Matrix 域名设置（重要）
 
-Matrix uses a value called the **server name** to generate user IDs and room
-aliases.
+Matrix 使用一个名为**服务器名称**（server name）的值来生成用户 ID 和房间别名。
 
-- Server name `example.org` results in:
+- 服务器名称设为 `example.org` 时会得到：
   - `@user:example.org`
   - `#room:example.org`
 
-The Matrix server itself can run on a different domain, for example
-`matrix.example.org`.
+Matrix 服务器本身可以运行在另一个域名上，例如 `matrix.example.org`。
 
-### Recommended setup
+### 推荐设置
 
-- Matrix server name: `example.org`
-- Matrix Synapse server service domain: `matrix.example.org`
+- Matrix 服务器名称：`example.org`
+- Matrix Synapse 服务器服务域名：`matrix.example.org`
 
-This allows users and rooms to use `:example.org` while hosting Synapse on a
-subdomain.
+这样，用户和房间可以使用 `:example.org` 后缀，同时把 Synapse 托管在子域名上。
 
-### Coolify configuration
+### Coolify 配置
 
-#### Domains
+#### 域名
 
-In the service configuration, set the domain to `matrix.example.org:8008`
+在服务配置中，将域名设置为 `matrix.example.org:8008`
 
-#### Environment variables
+#### 环境变量
 
-Set the following environment variable:
+设置以下环境变量：
 
 - `SYNAPSE_SERVER_NAME=example.org`
 
-### Delegation (required)
+### 委派（必需）
 
-Because Synapse runs on `matrix.example.org` but identifies as `example.org`,
-[delegation](https://element-hq.github.io/synapse/latest/delegate.html) is required.
+由于 Synapse 运行在 `matrix.example.org` 上，但对外标识为 `example.org`，因此需要进行[委派（delegation）](https://element-hq.github.io/synapse/latest/delegate.html)。
 
-On `https://example.org`, serve the following files:
+在 `https://example.org` 上提供以下文件：
 
-- `/.well-known/matrix/client` for server delegation
+- `/.well-known/matrix/client`，用于服务器委派
 
 ```json
 {
@@ -91,7 +87,7 @@ On `https://example.org`, serve the following files:
 }
 ```
 
-- `/.well-known/matrix/server` for Federation discovery
+- `/.well-known/matrix/server`，用于联邦（Federation）发现
 
 ```json
 {
@@ -99,9 +95,9 @@ On `https://example.org`, serve the following files:
 }
 ```
 
-## Links
+## 相关链接
 
-- [The official website](https://matrix.org?utm_source=coolify.io)
+- [官方网站](https://matrix.org?utm_source=coolify.io)
 - [GitHub](https://github.com/matrix-org/synapse?utm_source=coolify.io)
-- [Docker image](https://hub.docker.com/r/matrixdotorg/synapse?utm_source=coolify.io)
+- [Docker 镜像](https://hub.docker.com/r/matrixdotorg/synapse?utm_source=coolify.io)
 - [Matrix Federation Tester](https://federationtester.matrix.org?utm_source=coolify.io)

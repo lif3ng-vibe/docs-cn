@@ -1,8 +1,8 @@
 ---
 title: "Hermes Agent"
-description: "Autonomous AI agent from Nous Research with persistent memory, scheduling, and a web interface. Available as a two-container WebUI stack or a single-container dashboard."
+description: "来自 Nous Research 的自主 AI 代理，具备持久记忆、计划任务与 Web 界面。提供双容器 WebUI 套件或单容器 Dashboard 两种形态。"
 og:
-  description: "Self-host Hermes Agent on Coolify - Nous Research's autonomous AI agent runtime with persistent memory, a kanban task board, cron scheduling, Firecrawl web search, 20+ messaging platform integrations, and an extensible plugin and skill system. Two deployment options: the full WebUI stack or the single-container dashboard build."
+  description: "在 Coolify 上自托管 Hermes Agent——Nous Research 出品的自主 AI 代理运行时，具备持久记忆、看板任务板、cron 计划任务、Firecrawl 网络搜索、20 多个消息平台集成，以及可扩展的插件与技能系统。两种部署选项：完整 WebUI 套件或单容器 Dashboard 版本。"
 category: "AI"
 icon: "/docs-cn/coolify/images/services/hermes-agent-logo.png"
 ---
@@ -11,213 +11,213 @@ icon: "/docs-cn/coolify/images/services/hermes-agent-logo.png"
 
 <ZoomImage src="/docs-cn/coolify/images/services/hermes-agent-logo.png" alt="Hermes Agent" />
 
-## What is Hermes Agent?
+## Hermes Agent 是什么？
 
-Hermes Agent is an open-source autonomous AI agent runtime built by [Nous Research](https://nousresearch.com?utm_source=coolify.io). It runs persistently as a gateway process - always available to receive messages, execute scheduled tasks, and reason over its accumulated memory and task history.
+Hermes Agent 是由 [Nous Research](https://nousresearch.com?utm_source=coolify.io) 打造的开源自主 AI 代理运行时。它以网关进程的形式常驻运行——随时待命接收消息、执行计划任务，并基于积累的记忆与任务历史进行推理。
 
-Unlike stateless chat interfaces, Hermes Agent retains a persistent world model: memory is stored and searchable across sessions, tasks are tracked on a built-in kanban board, and cron jobs fire on schedule regardless of whether a browser is open. It connects to 20+ messaging platforms (Telegram, Discord, Slack, Teams, and more) through a unified gateway, integrates with 60+ built-in tools, and supports Model Context Protocol (MCP) for extending capabilities further.
+与无状态的聊天界面不同，Hermes Agent 维护着一个持久的"世界模型"：记忆跨会话存储且可检索，任务在内置看板上跟踪，cron 任务无论浏览器是否打开都会准点触发。它通过统一的网关连接 20 多个消息平台（Telegram、Discord、Slack、Teams 等），集成 60 多个内置工具，并支持 Model Context Protocol（MCP）以进一步扩展能力。
 
-Hermes Agent works with any major LLM provider - OpenRouter, Anthropic, OpenAI, or Google. Nous Portal subscribers can use `hermes setup --portal` for one-shot authentication that also opts into the Tool Gateway. At least one provider API key is required.
+Hermes Agent 可搭配任何主流 LLM 提供商使用——OpenRouter、Anthropic、OpenAI 或 Google。Nous Portal 订阅用户可以使用 `hermes setup --portal` 一步完成认证，同时开通 Tool Gateway。至少需要一个提供商的 API 密钥。
 
-Coolify offers two deployment templates suited to different use cases. See [Deployment Variants](#deployment-variants) below to choose the right one.
+Coolify 提供两套适用于不同场景的部署模板。请查看下方的[部署变体](#部署变体)选择合适的一套。
 
-## Deploy on Coolify
+## 在 Coolify 上部署
 
-Both templates use the same `nousresearch/hermes-agent` image and store all agent state in persistent volumes. The difference is how the web interface is delivered: as a separate companion container (WebUI), or built into the agent process itself (Dashboard).
+两套模板使用相同的 `nousresearch/hermes-agent` 镜像，并把所有代理状态存储在持久化卷中。区别在于 Web 界面的提供方式：由独立的配套容器提供（WebUI），还是内置于代理进程本身（Dashboard）。
 
 <Callout type="info">
-Neither template exposes the raw gateway port externally. Coolify's reverse proxy routes only the web interface port - 8787 for the WebUI variant, 9119 for the Dashboard variant. The gateway process itself is inaccessible from outside the Docker network.
+两套模板都不会把原始网关端口暴露到外部。Coolify 的反向代理只路由 Web 界面端口——WebUI 变体为 8787，Dashboard 变体为 9119。网关进程本身从 Docker 网络外部无法访问。
 </Callout>
 
-### Hermes Agent (with WebUI)
+### Hermes Agent（with WebUI）
 
-Deploys two containers:
+部署两个容器：
 
-| Container | Image | Purpose |
+| 容器 | 镜像 | 用途 |
 |---|---|---|
-| `hermes-agent` | `nousresearch/hermes-agent` | Gateway process and agent runtime |
-| `hermes-webui` | `ghcr.io/nesquena/hermes-webui` | Web chat interface (port 8787) |
+| `hermes-agent` | `nousresearch/hermes-agent` | 网关进程与代理运行时 |
+| `hermes-webui` | `ghcr.io/nesquena/hermes-webui` | Web 聊天界面（端口 8787） |
 
-Coolify auto-generates the following - no manual configuration needed:
-- `SERVICE_USER_HERMESWEBUI` - WebUI login username
-- `SERVICE_PASSWORD_HERMESWEBUI` - WebUI login password
-- `SERVICE_URL_HERMESWEBUI_8787` - Public URL for the chat interface
+Coolify 会自动生成以下内容——无需手动配置：
+- `SERVICE_USER_HERMESWEBUI` - WebUI 登录用户名
+- `SERVICE_PASSWORD_HERMESWEBUI` - WebUI 登录密码
+- `SERVICE_URL_HERMESWEBUI_8787` - 聊天界面的公开 URL
 
-Uses four named volumes: `hermes-home`, `hermes-skills`, `hermes-agent-src`, `hermes-workspace`. The WebUI shares the `hermes-home` and `hermes-workspace` volumes with the agent for direct access to memory and the workspace directory.
+使用四个命名卷：`hermes-home`、`hermes-skills`、`hermes-agent-src`、`hermes-workspace`。WebUI 与代理共享 `hermes-home` 和 `hermes-workspace` 两个卷，以便直接访问记忆和工作区目录。
 
-### Hermes Agent (Dashboard)
+### Hermes Agent（Dashboard）
 
-Deploys a single container with the built-in dashboard activated:
+部署单个容器，并启用内置仪表盘：
 
-| Container | Image | Purpose |
+| 容器 | 镜像 | 用途 |
 |---|---|---|
-| `hermes-agent` | `nousresearch/hermes-agent` | Agent runtime + built-in dashboard (port 9119) |
+| `hermes-agent` | `nousresearch/hermes-agent` | 代理运行时 + 内置仪表盘（端口 9119） |
 
-Coolify auto-generates the following - no manual configuration needed:
-- `SERVICE_USER_HERMESAGENT` - Dashboard login username
-- `SERVICE_PASSWORD_HERMESAGENT` - Dashboard login password
-- `SERVICE_BASE64_64_HERMESAGENT` - Session signing secret (64-character random string)
-- `SERVICE_URL_HERMESAGENT_9119` - Public URL for the dashboard
+Coolify 会自动生成以下内容——无需手动配置：
+- `SERVICE_USER_HERMESAGENT` - Dashboard 登录用户名
+- `SERVICE_PASSWORD_HERMESAGENT` - Dashboard 登录密码
+- `SERVICE_BASE64_64_HERMESAGENT` - 会话签名密钥（64 位随机字符串）
+- `SERVICE_URL_HERMESAGENT_9119` - 仪表盘的公开 URL
 
-Uses a single named volume (`hermes-home`) that covers all persistent state: agent config, API keys, auth tokens, memory, kanban board, profiles, cron jobs, logs, hooks, plans, skins, skills, workspace files, SSH keys, and pip-installed packages.
+使用单个命名卷（`hermes-home`）承载全部持久化状态：代理配置、API 密钥、认证令牌、记忆、看板、配置档案、cron 任务、日志、hooks、计划、skins、技能、工作区文件、SSH 密钥以及 pip 安装的软件包。
 
-## Deployment Variants
+## 部署变体
 
-| | Hermes Agent (with WebUI) | Hermes Agent (Dashboard) |
+| | Hermes Agent（with WebUI） | Hermes Agent（Dashboard） |
 |---|---|---|
-| **Containers** | 2 (agent + webui) | 1 |
-| **Web interface** | hermes-webui (separate image) | Built-in dashboard |
-| **Port** | 8787 | 9119 |
-| **Volumes** | 4 | 1 |
-| **Min agent version** | Any | v0.16.0+ |
+| **容器数** | 2（agent + webui） | 1 |
+| **Web 界面** | hermes-webui（独立镜像） | 内置仪表盘 |
+| **端口** | 8787 | 9119 |
+| **卷** | 4 | 1 |
+| **最低代理版本** | 不限 | v0.16.0+ |
 
-**Choose Hermes Agent (with WebUI)** when you want a dedicated web chat interface. The `hermes-webui` container provides a chat-first experience and releases independently from the agent, so you can update the UI without touching the agent process.
+如果你想要一个专门的 Web 聊天界面，请**选择 Hermes Agent（with WebUI）**。`hermes-webui` 容器提供聊天优先的体验，并且独立于代理发布版本，因此你可以在不触碰代理进程的情况下更新 UI。
 
-**Choose Hermes Agent (Dashboard)** when you want the simplest possible deployment, or when running the agent that manages your Coolify setup. All state is in one volume, there are no inter-container dependencies to manage, and the dashboard surfaces memory, the task board, cron jobs, and installed skills in one place. This is the recommended option for self-hosting Hermes as a Coolify automation agent.
+如果你想要尽可能简单的部署，或者要运行管理你 Coolify 环境的代理，请**选择 Hermes Agent（Dashboard）**。所有状态都存放在一个卷中，没有需要维护的容器间依赖，仪表盘还能把记忆、任务板、cron 任务和已安装技能集中在一处呈现。若要把 Hermes 自托管为 Coolify 自动化代理，推荐此选项。
 
-## Environment Variables
+## 环境变量
 
-### LLM Providers
+### LLM 提供商
 
-At least one provider key is required for the agent to function. The agent selects the active provider from your config at runtime.
+代理要正常工作，至少需要一个提供商密钥。代理会在运行时从你的配置中选择当前使用的提供商。
 
-| Variable | Default | Description |
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `OPENROUTER_API_KEY` | *(empty)* | [OpenRouter](https://openrouter.ai?utm_source=coolify.io) - single key access to hundreds of models. Recommended if you want to switch models without redeploying. |
-| `ANTHROPIC_API_KEY` | *(empty)* | API key from [console.anthropic.com](https://console.anthropic.com?utm_source=coolify.io). |
-| `OPENAI_API_KEY` | *(empty)* | API key from [platform.openai.com](https://platform.openai.com?utm_source=coolify.io). |
-| `GOOGLE_API_KEY` | *(empty)* | API key for Google Gemini models. |
+| `OPENROUTER_API_KEY` | *（空）* | [OpenRouter](https://openrouter.ai?utm_source=coolify.io) - 一把密钥访问数百个模型。如果你想在不停机重新部署的情况下切换模型，推荐使用。 |
+| `ANTHROPIC_API_KEY` | *（空）* | 来自 [console.anthropic.com](https://console.anthropic.com?utm_source=coolify.io) 的 API 密钥。 |
+| `OPENAI_API_KEY` | *（空）* | 来自 [platform.openai.com](https://platform.openai.com?utm_source=coolify.io) 的 API 密钥。 |
+| `GOOGLE_API_KEY` | *（空）* | Google Gemini 模型的 API 密钥。 |
 
-### Web Search (Optional)
+### 网络搜索（可选）
 
-| Variable | Default | Description |
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `FIRECRAWL_API_KEY` | *(empty)* | Enables web search and full-page extraction via the `web` tool. Free tier: 500 pages/month at [firecrawl.dev](https://firecrawl.dev?utm_source=coolify.io). Leave blank to disable. |
-| `FIRECRAWL_API_URL` | `https://api.firecrawl.dev` | Override to point at your self-hosted Firecrawl instance. Requires `HERMES_ALLOW_PRIVATE_URLS=true` if the instance is on a Docker-internal or Tailscale address. |
+| `FIRECRAWL_API_KEY` | *（空）* | 通过 `web` 工具启用网络搜索与整页内容提取。免费额度：[firecrawl.dev](https://firecrawl.dev?utm_source=coolify.io) 每月 500 页。留空则禁用。 |
+| `FIRECRAWL_API_URL` | `https://api.firecrawl.dev` | 如需指向你自托管的 Firecrawl 实例可覆盖此值。若实例位于 Docker 内部或 Tailscale 地址，需要设置 `HERMES_ALLOW_PRIVATE_URLS=true`。 |
 
-### Agent Behavior
+### 代理行为
 
-| Variable | Default | Description |
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `HERMES_ENABLE_PROJECT_PLUGINS` | `true` | Loads plugins from the `plugins/` subdirectory inside the data volume. Set to `false` to disable auto-loading. |
-| `HERMES_ALLOW_PRIVATE_URLS` | `false` | Allows the agent to fetch Docker-internal URLs and Tailscale addresses (e.g., a self-hosted Firecrawl or a local Ollama instance). Set to `false` to restrict to public URLs only. |
-| `HERMES_REDACT_SECRETS` | `true` | Prevents API keys and secrets from appearing in logs and tool output. Recommended: leave enabled. |
-| `GATEWAY_ALLOW_ALL_USERS` | `true` | Allows any user to message the gateway. Safe for personal deployments where the gateway port is not mapped externally. If you connect messaging platforms (Telegram, Slack, Discord), set to `false` and configure per-platform allowed-user lists instead (e.g., `TELEGRAM_ALLOWED_USER_IDS`). |
-| `HERMES_UID` / `HERMES_GID` | `1000` | The UID/GID the agent drops to after chowning the volume on first start. Matches Coolify's default host UID so volume-mounted files have sensible ownership. |
+| `HERMES_ENABLE_PROJECT_PLUGINS` | `true` | 从数据卷内的 `plugins/` 子目录加载插件。设为 `false` 可禁用自动加载。 |
+| `HERMES_ALLOW_PRIVATE_URLS` | `false` | 允许代理抓取 Docker 内部 URL 和 Tailscale 地址（例如自托管的 Firecrawl 或本地 Ollama 实例）。设为 `false` 则仅允许公开 URL。 |
+| `HERMES_REDACT_SECRETS` | `true` | 防止 API 密钥和机密信息出现在日志与工具输出中。建议保持启用。 |
+| `GATEWAY_ALLOW_ALL_USERS` | `true` | 允许任何用户向网关发消息。在网关端口未映射到外部的个人部署中是安全的。如果你要接入消息平台（Telegram、Slack、Discord），请设为 `false`，改用各平台自己的允许用户列表配置（例如 `TELEGRAM_ALLOWED_USER_IDS`）。 |
+| `HERMES_UID` / `HERMES_GID` | `1000` | 代理首次启动时对卷执行 chown 后切换到的 UID/GID。与 Coolify 默认的主机 UID 一致，使卷内挂载文件的属主合理。 |
 
-### WebUI Variant - Additional Variables
+### WebUI 变体——额外变量
 
-| Variable | Default | Description |
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `HERMES_OPTIONAL_SKILLS` | *(empty)* | Comma-separated list of official skills to auto-install on first run (e.g., `official/communication/one-three-one-rule`). Leave blank to skip. |
-| `SERVICE_USER_HERMESWEBUI` | *(auto-generated)* | WebUI login username. Find it in the **Environment Variables** tab after deploying. |
-| `SERVICE_PASSWORD_HERMESWEBUI` | *(auto-generated)* | WebUI login password. Find it in the **Environment Variables** tab after deploying. |
+| `HERMES_OPTIONAL_SKILLS` | *（空）* | 首次运行时自动安装的官方技能列表，逗号分隔（例如 `official/communication/one-three-one-rule`）。留空则跳过。 |
+| `SERVICE_USER_HERMESWEBUI` | *（自动生成）* | WebUI 登录用户名。部署后可在**环境变量**标签页中找到。 |
+| `SERVICE_PASSWORD_HERMESWEBUI` | *（自动生成）* | WebUI 登录密码。部署后可在**环境变量**标签页中找到。 |
 
-### Dashboard Variant - Additional Variables
+### Dashboard 变体——额外变量
 
-| Variable | Default | Description |
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| `HERMES_DASHBOARD` | `1` | Activates the built-in dashboard. Do not change this value. |
-| `HERMES_DASHBOARD_HOST` | `0.0.0.0` | Dashboard bind address. Binding to `0.0.0.0` is correct - Coolify's reverse proxy handles TLS termination and the auth gate protects the endpoint. |
-| `HERMES_DASHBOARD_PORT` | `9119` | Dashboard listen port. |
-| `SERVICE_USER_HERMESAGENT` | *(auto-generated)* | Dashboard login username. Find it in the **Environment Variables** tab after deploying. |
-| `SERVICE_PASSWORD_HERMESAGENT` | *(auto-generated)* | Dashboard login password. Find it in the **Environment Variables** tab after deploying. |
-| `SERVICE_BASE64_64_HERMESAGENT` | *(auto-generated)* | Session signing secret. Managed by Coolify - do not set this manually. |
+| `HERMES_DASHBOARD` | `1` | 启用内置仪表盘。请勿修改此值。 |
+| `HERMES_DASHBOARD_HOST` | `0.0.0.0` | 仪表盘绑定地址。绑定 `0.0.0.0` 是正确的——TLS 终结由 Coolify 的反向代理处理，认证门槛会保护该端点。 |
+| `HERMES_DASHBOARD_PORT` | `9119` | 仪表盘监听端口。 |
+| `SERVICE_USER_HERMESAGENT` | *（自动生成）* | Dashboard 登录用户名。部署后可在**环境变量**标签页中找到。 |
+| `SERVICE_PASSWORD_HERMESAGENT` | *（自动生成）* | Dashboard 登录密码。部署后可在**环境变量**标签页中找到。 |
+| `SERVICE_BASE64_64_HERMESAGENT` | *（自动生成）* | 会话签名密钥。由 Coolify 管理——请勿手动设置。 |
 
 <Callout type="danger">
-Do not add `HERMES_DASHBOARD_INSECURE=1` to the environment. That flag disables all dashboard authentication regardless of the credentials above. It is a break-glass override and has no place in an internet-facing deployment.
+不要在环境中添加 `HERMES_DASHBOARD_INSECURE=1`。该开关会禁用仪表盘的全部认证，使上述凭据全部失效。它是应急兜底开关，绝不应出现在面向互联网的部署中。
 </Callout>
 
-## What to do after deploying
+## 部署后要做什么
 
-Coolify deploys the containers, but the agent still needs a one-time configuration step before it can respond to messages. You run this from the container terminal in Coolify.
+Coolify 会把容器部署起来，但在响应消息之前，代理还需要一次性的配置步骤。这一步需要在 Coolify 的容器终端里完成。
 
 <Callout type="info">
-For the WebUI variant, open the terminal for the **`hermes-agent`** container - not `hermes-webui`. For the Dashboard variant, open the terminal for the single `hermes-agent` container.
+WebUI 变体请打开 **`hermes-agent`** 容器的终端——而不是 `hermes-webui`。Dashboard 变体则打开唯一的 `hermes-agent` 容器的终端。
 </Callout>
 
-### Step 1 - Open the web interface
+### 第 1 步 - 打开 Web 界面
 
-Click **Open** in Coolify to open the interface. For the WebUI variant this is the hermes-webui chat interface on port 8787; for the Dashboard variant it is the built-in dashboard on port 9119.
+在 Coolify 中点击 **Open** 打开界面。WebUI 变体打开的是 8787 端口上的 hermes-webui 聊天界面；Dashboard 变体打开的是 9119 端口上的内置仪表盘。
 
-Log in with the auto-generated credentials from the **Environment Variables** tab:
-- WebUI: `SERVICE_USER_HERMESWEBUI` and `SERVICE_PASSWORD_HERMESWEBUI`
-- Dashboard: `SERVICE_USER_HERMESAGENT` and `SERVICE_PASSWORD_HERMESAGENT`
+使用**环境变量**标签页中自动生成的凭据登录：
+- WebUI：`SERVICE_USER_HERMESWEBUI` 和 `SERVICE_PASSWORD_HERMESWEBUI`
+- Dashboard：`SERVICE_USER_HERMESAGENT` 和 `SERVICE_PASSWORD_HERMESAGENT`
 
-### Step 2 - Run the setup wizard
+### 第 2 步 - 运行设置向导
 
-Open a terminal into the `hermes-agent` container from Coolify's **Terminal** tab and run:
+从 Coolify 的 **Terminal** 标签页进入 `hermes-agent` 容器的终端并运行：
 
 ```bash
 hermes setup
 ```
 
-The wizard walks you through selecting an LLM provider and model, configuring optional tools, and setting up messaging platform integrations. This is the recommended starting point for every fresh deploy.
+向导会引导你选择 LLM 提供商与模型、配置可选工具，以及设置消息平台集成。这是每次全新部署的推荐起点。
 
 <Callout type="warn">
-**OpenRouter model format:** If you use OpenRouter, models must be specified as `provider/model-name` (e.g., `anthropic/claude-sonnet-4-5`, `moonshotai/kimi-k2.6`). Using a bare model name causes HTTP 404 errors from OpenRouter.
+**OpenRouter 模型格式：**如果你使用 OpenRouter，模型必须写成 `provider/model-name` 形式（例如 `anthropic/claude-sonnet-4-5`、`moonshotai/kimi-k2.6`）。使用不带前缀的裸模型名会导致 OpenRouter 返回 HTTP 404 错误。
 </Callout>
 
-If you are a Nous Portal subscriber, you can skip the individual provider prompts entirely:
+如果你是 Nous Portal 订阅用户，可以完全跳过逐个提供商的提问：
 
 ```bash
 hermes setup --portal
 ```
 
-This authenticates via OAuth, sets Nous as the inference provider, and opts into the Tool Gateway in a single step.
+这条命令一步完成 OAuth 认证、将 Nous 设为推理提供商，并开通 Tool Gateway。
 
-After any setup command, **restart the `hermes-agent` container** - the gateway reads `config.yaml` only at startup.
+运行任何 setup 命令之后，请**重启 `hermes-agent` 容器**——网关只在启动时读取 `config.yaml`。
 
-### Step 3 - Run the doctor check
+### 第 3 步 - 运行 doctor 检查
 
 ```bash
 hermes doctor --fix
 ```
 
-This auto-repairs common configuration issues. Two warnings are expected in a Docker environment and can be ignored:
-- *"Add ~/.local/bin to your PATH"* - the symlink is created but the PATH fix does not persist across container restarts. The `hermes` command still works.
-- *"Run hermes setup to configure missing API keys"* - fires if any optional tool keys (EXA, Tavily) are unset. If Firecrawl is configured, web search is fully functional.
+它会自动修复常见的配置问题。在 Docker 环境中会出现两条预期内的警告，可以忽略：
+- *"Add ~/.local/bin to your PATH"* - 符号链接已创建，但 PATH 修改在容器重启后不会保留。`hermes` 命令仍可正常使用。
+- *"Run hermes setup to configure missing API keys"* - 只要任何可选工具的密钥（EXA、Tavily）未设置就会出现。如果已配置 Firecrawl，网络搜索功能完全可用。
 
-### Step 4 - Enable Firecrawl web search (optional)
+### 第 4 步 - 启用 Firecrawl 网络搜索（可选）
 
-Firecrawl gives Hermes the ability to search the web and extract full page content from URLs, including JavaScript-rendered pages. Without it, the `web` tool is unavailable.
+Firecrawl 让 Hermes 能够搜索网络并从 URL 提取完整页面内容，包括由 JavaScript 渲染的页面。没有它，`web` 工具不可用。
 
-1. Sign up at [firecrawl.dev](https://firecrawl.dev?utm_source=coolify.io) - the free tier includes 500 pages/month.
-2. Add `FIRECRAWL_API_KEY` to the **Environment Variables** tab in Coolify and redeploy, or configure it interactively from the terminal:
+1. 在 [firecrawl.dev](https://firecrawl.dev?utm_source=coolify.io) 注册——免费额度为每月 500 页。
+2. 在 Coolify 的**环境变量**标签页中添加 `FIRECRAWL_API_KEY` 并重新部署，或者在终端中交互式配置：
    ```bash
    hermes setup tools
    ```
 
-To use a self-hosted Firecrawl instance on your Docker network, set `FIRECRAWL_API_URL` to `http://<service-name>:3002` and ensure `HERMES_ALLOW_PRIVATE_URLS=true`.
+要使用 Docker 网络内自托管的 Firecrawl 实例，请将 `FIRECRAWL_API_URL` 设为 `http://<service-name>:3002`，并确保 `HERMES_ALLOW_PRIVATE_URLS=true`。
 
-### Step 5 - Connect a messaging platform (optional)
+### 第 5 步 - 接入消息平台（可选）
 
-Hermes connects to Telegram, Discord, Slack, Microsoft Teams, and more. To configure any messaging integration, run the gateway setup wizard from the container terminal:
+Hermes 可连接 Telegram、Discord、Slack、Microsoft Teams 等平台。要配置任何消息集成，请在容器终端中运行网关设置向导：
 
 ```bash
 hermes gateway setup
 ```
 
-The wizard prompts you for the platform-specific credentials and configures the integration. For Telegram specifically, you will need:
+向导会提示你输入对应平台的凭据并完成集成配置。以 Telegram 为例，你需要：
 
-1. A bot token from **@BotFather** on Telegram - send `/newbot`, follow the prompts, copy the token.
-2. Your Telegram user ID from **@userinfobot** - send any message to it and it returns a plain number like `987654321`.
+1. 一个来自 Telegram 上 **@BotFather** 的机器人令牌 - 发送 `/newbot`，按提示操作，复制令牌。
+2. 你在 **@userinfobot** 查询的 Telegram 用户 ID - 给它发任意消息，它会返回一个纯数字，例如 `987654321`。
 
-After running `hermes gateway setup`, add your user ID restriction to Coolify's **Environment Variables** tab:
+运行 `hermes gateway setup` 之后，把你用户 ID 的限制配置加到 Coolify 的**环境变量**标签页：
 
-| Variable | Value |
+| 变量 | 值 |
 |---|---|
-| `TELEGRAM_ALLOWED_USER_IDS` | Your user ID (e.g., `987654321`) - restricts the bot to authorized users |
+| `TELEGRAM_ALLOWED_USER_IDS` | 你的用户 ID（例如 `987654321`） - 将机器人限制为仅授权用户可用 |
 
-Then redeploy. Your Telegram bot token is stored in the persistent volume by the setup wizard - it does not need to go in Coolify's environment variables.
+然后重新部署。你的 Telegram 机器人令牌会由设置向导存入持久化卷——无需放进 Coolify 的环境变量。
 
 <Callout type="warn">
-Telegram webhooks require a publicly accessible HTTPS URL. If your Coolify server is on a private network (e.g., Tailscale-only), use Tailscale Funnel (`tailscale funnel 8787` for WebUI, `tailscale funnel 9119` for Dashboard) or a Cloudflare Tunnel to expose it.
+Telegram webhook 需要一个可公开访问的 HTTPS URL。如果你的 Coolify 服务器位于私有网络（例如仅 Tailscale），请用 Tailscale Funnel（WebUI 用 `tailscale funnel 8787`，Dashboard 用 `tailscale funnel 9119`）或 Cloudflare Tunnel 将其暴露出去。
 </Callout>
 
-## Plugins
+## 插件
 
-Hermes ships with opt-in bundled plugins. Nothing loads until you explicitly enable it. Manage plugins from the container terminal:
+Hermes 自带可选的内置插件。在你显式启用之前，什么都不会加载。在容器终端中管理插件：
 
 ```bash
 hermes plugins         # interactive UI - toggle with SPACE, confirm with ENTER
@@ -226,105 +226,105 @@ hermes plugins enable <plugin-name>
 hermes plugins disable <plugin-name>
 ```
 
-Notable bundled plugins:
+值得关注的内置插件：
 
-| Plugin | What it does |
+| 插件 | 功能 |
 |---|---|
-| `disk-cleanup` | Auto-tracks ephemeral files (test scripts, temp outputs) and removes them at session end. Adds `/disk-cleanup` slash command for manual control. Recommended for all deployments. |
-| `security-guidance` | Pattern-matches dangerous code patterns during file writes and surfaces a guidance note. |
-| `hermes-achievements` | Steam-style collectible badges generated from session history. |
-| `kanban/dashboard` | Kanban board UI tab for multi-agent task management (Dashboard variant). |
-| `observability/langfuse` | Traces turns and LLM calls to a Langfuse observability instance. |
+| `disk-cleanup` | 自动跟踪临时文件（测试脚本、临时输出）并在会话结束时清理。新增 `/disk-cleanup` 斜杠命令供手动控制。推荐所有部署启用。 |
+| `security-guidance` | 在文件写入时对危险代码模式做匹配，并给出提示说明。 |
+| `hermes-achievements` | 根据会话历史生成的 Steam 风格收集徽章。 |
+| `kanban/dashboard` | 用于多代理任务管理的看板 UI 标签页（Dashboard 变体）。 |
+| `observability/langfuse` | 将对话轮次和 LLM 调用追踪到 Langfuse 可观测性实例。 |
 
-Enable disk-cleanup:
+启用 disk-cleanup：
 
 ```bash
 hermes plugins enable disk-cleanup
 ```
 
-Plugin settings are written to the persistent volume and survive container restarts.
+插件设置会写入持久化卷，容器重启后依然有效。
 
-## Persistent Memory (optional)
+## 持久记忆（可选）
 
-Hermes supports external memory providers that build a cross-session user model and inject it at the start of each conversation. Several providers are available: Honcho, mem0, Hindsight, and others. Configure any provider from the terminal:
+Hermes 支持外部记忆提供商，可以构建跨会话的用户模型，并在每次对话开始时注入。可选的提供商包括 Honcho、mem0、Hindsight 等。在终端中配置任意提供商：
 
 ```bash
 hermes memory setup    # interactive provider selection and configuration
 hermes memory status   # show active provider and connection status
 ```
 
-See the [memory providers documentation](https://hermes-agent.nousresearch.com/docs?utm_source=coolify.io) for provider-specific setup guides.
+各提供商的具体配置指南请参阅[记忆提供商文档](https://hermes-agent.nousresearch.com/docs?utm_source=coolify.io)。
 
-## Troubleshooting
+## 故障排查
 
-**The agent starts but never responds to messages**
-The agent requires `hermes setup` to be run at least once to configure an LLM provider and model. Open a terminal in the `hermes-agent` container and run `hermes setup`. Restart the container after completing the wizard.
+**代理启动了，但从不响应消息**
+代理至少要运行一次 `hermes setup` 来配置 LLM 提供商和模型。请打开 `hermes-agent` 容器的终端并运行 `hermes setup`，完成向导后重启容器。
 
-**HTTP 404 errors from OpenRouter**
-The model name is in the wrong format. OpenRouter requires `provider/model-name` (e.g., `anthropic/claude-sonnet-4-5`, `moonshotai/kimi-k2.6`). Run `hermes model` in the container terminal to update the model selection, then restart.
+**OpenRouter 返回 HTTP 404 错误**
+模型名格式不对。OpenRouter 要求 `provider/model-name` 形式（例如 `anthropic/claude-sonnet-4-5`、`moonshotai/kimi-k2.6`）。在容器终端运行 `hermes model` 更新模型选择，然后重启。
 
-**`config.yaml` changes not persisting / "Permission denied" errors**
-Coolify's container terminal opens a root shell. If you run `hermes` commands without the agent being accessible as the correct user, config files may be written as root and become unreadable by the agent process. Run this to fix ownership, then restart:
+**`config.yaml` 修改不生效 / 出现 "Permission denied" 错误**
+Coolify 的容器终端打开的是 root shell。如果你在代理无法以正确用户访问的情况下运行 `hermes` 命令，配置文件可能被以 root 身份写入，导致代理进程无法读取。运行以下命令修复属主，然后重启：
 ```bash
 chown -R 1000:1000 /home/hermes/.hermes   # WebUI variant
 # or
 chown -R 1000:1000 /opt/data              # Dashboard variant
 ```
 
-**API keys returning 401 after setting them in Coolify**
-A stale `.env` file on the volume may be overriding Coolify's environment variables. Check for and remove stale values:
+**在 Coolify 中设置 API 密钥后仍然返回 401**
+卷上残留的旧 `.env` 文件可能覆盖了 Coolify 注入的环境变量。检查并移除残留值：
 ```bash
 cat /home/hermes/.hermes/.env    # WebUI variant
 # or
 cat /opt/data/.env               # Dashboard variant
 ```
-Remove any API key lines that conflict with what Coolify is injecting.
+删除所有与 Coolify 注入内容冲突的 API 密钥行。
 
-**The `hermes-webui` container exits immediately (WebUI variant)**
-The webui depends on `hermes-agent` passing its healthcheck (verifying the agent home directory exists). On first boot this takes 10-30 seconds. Docker restarts it automatically - this is normal. If it keeps failing, check the `hermes-agent` logs for startup errors.
+**`hermes-webui` 容器立即退出（WebUI 变体）**
+webui 依赖 `hermes-agent` 通过健康检查（确认代理主目录存在）。首次启动时这需要 10-30 秒。Docker 会自动重启它——这是正常现象。如果持续失败，请查看 `hermes-agent` 的日志寻找启动错误。
 
-**Dashboard login fails / 401 errors (Dashboard variant)**
-Retrieve your credentials from the **Environment Variables** tab - `SERVICE_USER_HERMESAGENT` and `SERVICE_PASSWORD_HERMESAGENT`. If `SERVICE_BASE64_64_HERMESAGENT` is missing or was deleted, let Coolify regenerate it and redeploy.
+**Dashboard 登录失败 / 401 错误（Dashboard 变体）**
+请从**环境变量**标签页取回凭据——`SERVICE_USER_HERMESAGENT` 和 `SERVICE_PASSWORD_HERMESAGENT`。如果 `SERVICE_BASE64_64_HERMESAGENT` 缺失或被删除，让 Coolify 重新生成并重新部署。
 
-**CSP violation warnings in logs when using Cloudflare Tunnel (WebUI variant)**
-Cloudflare Tunnel injects an analytics beacon script that the hermes-webui Content Security Policy blocks. This is harmless - `disposition: report` means the interface is still fully functional - but the logs fill up. To stop it, disable Cloudflare Web Analytics injection for the Hermes WebUI hostname in your Cloudflare Zero Trust dashboard under **Networks - Tunnels - [your tunnel] - Additional application settings**.
+**使用 Cloudflare Tunnel 时日志中出现 CSP 违规警告（WebUI 变体）**
+Cloudflare Tunnel 会注入一个分析信标脚本，被 hermes-webui 的内容安全策略（CSP）拦截。这是无害的——`disposition: report` 意味着界面功能完全正常——但会刷屏日志。要消除它，请在 Cloudflare Zero Trust 控制台的 **Networks - Tunnels - [你的隧道] - Additional application settings** 中，为 Hermes WebUI 的主机名禁用 Cloudflare Web Analytics 注入。
 
-**Compression threshold warning in logs**
-Open `/home/hermes/.hermes/config.yaml` (or `/opt/data/config.yaml` for the Dashboard variant) in the container terminal and add:
+**日志中出现压缩阈值警告**
+在容器终端中打开 `/home/hermes/.hermes/config.yaml`（Dashboard 变体为 `/opt/data/config.yaml`）并添加：
 ```yaml
 compression:
   threshold: 0.20
 ```
-Restart the container.
+然后重启容器。
 
-**"Skills Hub not initialized" warning**
-Run once to initialize:
+**"Skills Hub not initialized" 警告**
+运行一次以完成初始化：
 ```bash
 hermes skills list
 ```
 
-**The "Open" button in Coolify leads to an error page**
-The **Open** button resolves to the first exposed URL. For the WebUI variant that is port 8787; for the Dashboard variant it is port 9119. Wait for the healthcheck on that port's container to pass, then refresh.
+**Coolify 中的 "Open" 按钮跳转到错误页面**
+**Open** 按钮指向第一个暴露的 URL。WebUI 变体是 8787 端口；Dashboard 变体是 9119 端口。等该端口所在容器的健康检查通过后再刷新。
 
-**Firecrawl requests fail with connection errors**
-If pointing `FIRECRAWL_API_URL` at a self-hosted Firecrawl on a Docker-internal hostname or Tailscale address, ensure `HERMES_ALLOW_PRIVATE_URLS=true` is set.
+**Firecrawl 请求出现连接错误**
+如果 `FIRECRAWL_API_URL` 指向 Docker 内部主机名或 Tailscale 地址上的自托管 Firecrawl，请确保已设置 `HERMES_ALLOW_PRIVATE_URLS=true`。
 
-## Key Files (inside the container)
+## 关键文件（容器内）
 
-| Path (WebUI variant) | Path (Dashboard variant) | Purpose |
+| 路径（WebUI 变体） | 路径（Dashboard 变体） | 用途 |
 |---|---|---|
-| `/home/hermes/.hermes/config.yaml` | `/opt/data/config.yaml` | Main config - model, provider, settings |
-| `/home/hermes/.hermes/.env` | `/opt/data/.env` | Legacy env overrides - can shadow Coolify env vars |
-| `/home/hermes/.hermes/wiki/` | `/opt/data/wiki/` | Agent knowledge base (markdown files) |
-| `/home/hermes/.hermes/honcho.json` | `/opt/data/honcho.json` | Memory provider config (created by `hermes memory setup`) |
+| `/home/hermes/.hermes/config.yaml` | `/opt/data/config.yaml` | 主配置 - 模型、提供商、设置 |
+| `/home/hermes/.hermes/.env` | `/opt/data/.env` | 旧式环境变量覆盖文件 - 可能遮蔽 Coolify 的环境变量 |
+| `/home/hermes/.hermes/wiki/` | `/opt/data/wiki/` | 代理知识库（Markdown 文件） |
+| `/home/hermes/.hermes/honcho.json` | `/opt/data/honcho.json` | 记忆提供商配置（由 `hermes memory setup` 创建） |
 
-Config changes require a container restart to take effect.
+修改配置后需要重启容器才能生效。
 
-## Links
+## 相关链接
 
 - [GitHub - Hermes Agent](https://github.com/NousResearch/hermes-agent?utm_source=coolify.io)
 - [GitHub - Hermes WebUI](https://github.com/nesquena/hermes-webui?utm_source=coolify.io)
-- [Documentation](https://hermes-agent.nousresearch.com/docs?utm_source=coolify.io)
+- [文档](https://hermes-agent.nousresearch.com/docs?utm_source=coolify.io)
 - [Nous Research](https://nousresearch.com?utm_source=coolify.io)
 - [Firecrawl](https://firecrawl.dev?utm_source=coolify.io)
 - [OpenRouter](https://openrouter.ai?utm_source=coolify.io)

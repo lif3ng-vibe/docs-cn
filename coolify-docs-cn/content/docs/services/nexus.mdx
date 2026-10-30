@@ -1,42 +1,42 @@
 ---
 title: "Sonatype Nexus"
-description: "A repository manager that allows you to store, manage, and distribute your software artifacts."
+description: "仓库管理器，用于存储、管理和分发你的软件构件（artifact）。"
 og:
   description: "Run Nexus Repository on Coolify for artifact management, Docker registry, npm, Maven, PyPI package hosting, and DevOps dependency storage."
-category: "Development"
+category: "开发工具"
 icon: "/docs-cn/coolify/images/services/nexus-logo.png"
 ---
 
-<ZoomImage src="/docs-cn/coolify/images/services/nexus0.webp" alt="Nexus dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/nexus0.webp" alt="Nexus 仪表盘" />
 
-## What is Sonatype Nexus
+## Sonatype Nexus 是什么？
 
-Sonatype Nexus is a repository manager that allows you to store, manage, and distribute your software artifacts. It supports multiple package formats including Maven, npm, Docker, PyPI, and more.
+Sonatype Nexus 是一个仓库管理器，可让你存储、管理和分发软件构件（artifact）。它支持 Maven、npm、Docker、PyPI 等多种包格式。
 
-## Versions Available
+## 可用版本
 
-Coolify offers two versions of Nexus:
+Coolify 提供 Nexus 的两个版本：
 
-- **Nexus (Standard)**: The official x86_64 architecture version
-- **Nexus ARM**: Community Edition for ARM64 architecture, maintained and synced with the official repository
+- **Nexus（标准版）**：官方 x86_64 架构版本
+- **Nexus ARM**：面向 ARM64 架构的社区版，持续维护并与官方仓库同步
 
-## Setup
+## 安装设置
 
-- The setup relies on starting as default user "admin" with password "admin123".
-- Once the service is running, login with the default credentials and change the password.
-- After that, delete `NEXUS_SECURITY_RANDOMPASSWORD=false` line from the compose file and restart the service to apply the changes.
+- 安装过程依赖以默认用户 "admin" 和密码 "admin123" 启动。
+- 服务启动后，使用默认凭据登录并修改密码。
+- 然后从 compose 文件中删除 `NEXUS_SECURITY_RANDOMPASSWORD=false` 这一行，并重启服务以使更改生效。
 
-Minimum requirements:
+最低配置要求：
 
 - 4 vCPU
 - 3 GB RAM
 
-## Screenshots
+## 截图
 
-<ZoomImage src="/docs-cn/coolify/images/services/nexus1.webp" alt="Nexus dashboard" />
-<ZoomImage src="/docs-cn/coolify/images/services/nexus2.webp" alt="Nexus dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/nexus1.webp" alt="Nexus 仪表盘" />
+<ZoomImage src="/docs-cn/coolify/images/services/nexus2.webp" alt="Nexus 仪表盘" />
 
-## Links
+## 相关链接
 
-- [The official website](https://help.sonatype.com/en/sonatype-nexus-repository.html?utm_source=coolify.io)
+- [官方网站](https://help.sonatype.com/en/sonatype-nexus-repository.html?utm_source=coolify.io)
 - [GitHub](https://github.com/sonatype/docker-nexus3?utm_source=coolify.io)

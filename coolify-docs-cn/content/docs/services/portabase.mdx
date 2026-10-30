@@ -1,61 +1,61 @@
 ---
 title: "Portabase"
-description: "Open-source platform for automated database backups, secure storage, and on-demand recovery."
+description: "开源平台，提供自动化数据库备份、安全存储与按需恢复。"
 og:
   description: "Secure your data with Portabase, an open-source backup and recovery platform."
-category: "Backup"
+category: "备份"
 icon: "/docs-cn/coolify/images/services/portabase.svg"
 ---
 
 # Portabase
 
-<ZoomImage src="/docs-cn/coolify/images/services/portabase.svg" alt="Portabase logo" />
+<ZoomImage src="/docs-cn/coolify/images/services/portabase.svg" alt="Portabase 标志" />
 
-## What is Portabase?
+## Portabase 是什么？
 
-Portabase is a free, open-source, self-hosted backup and recovery platform designed to simplify data protection across your infrastructure.
+Portabase 是一个免费、开源的自托管备份与恢复平台，旨在简化整个基础设施的数据保护工作。
 
-With a centralized dashboard and lightweight agents, Portabase allows you to automate backups, manage retention policies, securely store your data, and restore databases on demand.
+借助集中式仪表盘和轻量级 Agent，Portabase 让你可以自动化备份、管理保留策略、安全存储数据，并按需恢复数据库。
 
-It supports multiple database engines, storage providers, and deployment environments, making it suitable for both personal projects and production infrastructures.
+它支持多种数据库引擎、存储服务商和部署环境，无论是个人项目还是生产基础设施都适用。
 
-<Callout type="info" title="Agent setup required">
+<Callout type="info" title="需要配置 Agent">
 
-    Portabase uses agents to connect to your data sources and perform backup and restore operations. After deploying the dashboard, you must configure at least one agent.
+    Portabase 使用 Agent 连接你的数据源，并执行备份与恢复操作。部署仪表盘后，你至少需要配置一个 Agent。
 
-    Follow the [Agent setup documentation](https://portabase.io/docs/agent/setup?utm_source=coolify.io) to get started.
+    按照 [Agent 配置文档](https://portabase.io/docs/agent/setup?utm_source=coolify.io)开始使用。
 
 </Callout>
 
-## Screenshots
+## 截图
 
-<ZoomImage src="/docs-cn/coolify/images/services/portabase-screenshot.png" alt="Portabase dashboard" />
+<ZoomImage src="/docs-cn/coolify/images/services/portabase-screenshot.png" alt="Portabase 仪表盘" />
 
-## Supported data sources
+## 支持的数据源
 
 - MySQL
 - MariaDB
 - PostgreSQL
-- MongoDB (self-hosted and MongoDB Atlas)
+- MongoDB（自托管与 MongoDB Atlas）
 - Redis / Valkey
 - SQLite
 - Firebird
-- Microsoft SQL Server (on-premises and Azure SQL Database)
-- Docker volumes
+- Microsoft SQL Server（本地部署与 Azure SQL Database）
+- Docker 卷
 
-## Features
+## 功能特性
 
-- **Centralized management:** Manage multiple agents, data sources, backup jobs, and storage destinations from a single web dashboard.
-- **Automated backups:** Schedule recurring backups with configurable retention policies, including GFS rotation.
-- **Multiple storage backends:** Store backups locally or on external storage providers, including S3-compatible storage, Azure Blob Storage, SFTP.
-- **Encryption:** Protect backup data with encryption and secure credential management.
-- **On-demand recovery:** Restore data sources directly from the dashboard.
-- **Monitoring and alerts:** Review detailed logs, and receive notifications through Slack, Discord, Telegram, Gotify, email, webhooks, and other providers.
-- **Access control:** Secure access with OIDC, OAuth2, and Two-Factor Authentication (2FA).
-- **API and integrations:** Automate operations through the REST API, command-line interface (CLI), and MCP server.
+- **集中管理**：在一个 Web 仪表盘中管理多个 Agent、数据源、备份任务与存储目标。
+- **自动备份**：按计划定期执行备份，保留策略可配置，包括 GFS 轮换。
+- **多种存储后端**：备份可保存在本地，或存放在外部存储服务上，包括 S3 兼容存储、Azure Blob Storage、SFTP。
+- **加密**：通过加密与安全的凭据管理保护备份数据。
+- **按需恢复**：直接在仪表盘中恢复数据源。
+- **监控与告警**：查看详细日志，并通过 Slack、Discord、Telegram、Gotify、电子邮件、webhook 等渠道接收通知。
+- **访问控制**：通过 OIDC、OAuth2 和双因素认证（2FA）保障访问安全。
+- **API 与集成**：通过 REST API、命令行界面（CLI）和 MCP 服务器实现操作自动化。
 
-## Links
+## 相关链接
 
-- [The official website](https://portabase.io/?utm_source=coolify.io)
-- [Documentation](https://portabase.io/docs?utm_source=coolify.io)
+- [官方网站](https://portabase.io/?utm_source=coolify.io)
+- [文档](https://portabase.io/docs?utm_source=coolify.io)
 - [GitHub](https://github.com/portabase/portabase?utm_source=coolify.io)

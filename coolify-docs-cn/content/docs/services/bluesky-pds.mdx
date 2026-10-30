@@ -1,61 +1,61 @@
 ---
 title: "Bluesky PDS"
-description: "Bluesky PDS (Personal Data Server) for decentralized social networking."
+description: "用于去中心化社交网络的 Bluesky PDS（Personal Data Server，个人数据服务器）。"
 og:
   description: "Host a Bluesky Personal Data Server with Coolify"
-category: "Social Media"
+category: "社交媒体"
 icon: "/docs-cn/coolify/images/services/bluesky-logo.svg"
 ---
 
 # Bluesky PDS
 
-<ZoomImage src="/docs-cn/coolify/images/services/bluesky-logo.svg" alt="Bluesky logo" />
+<ZoomImage src="/docs-cn/coolify/images/services/bluesky-logo.svg" alt="Bluesky 标志" />
 
-## What is a Bluesky PDS?
+## Bluesky PDS 是什么？
 
-Bluesky PDS (Personal Data Server) is a self-hosted data server that stores your data in the AT Protocol network. It allows you to control your own social media data and identity while still participating in the AT Protocol network. The PDS handles user accounts, posts, followers, and other social data in a decentralized manner.
+Bluesky PDS（Personal Data Server，个人数据服务器）是一台自托管数据服务器，将你的数据存储在 AT Protocol 网络中。它让你在继续参与 AT Protocol 网络的同时，掌控自己的社交媒体数据与身份。PDS 以去中心化的方式处理用户账户、帖子、关注者以及其他社交数据。
 
-## Setting a domain with https if already not set
+## 为尚未配置域名的情况设置 HTTPS 域名
 
-Pdsadmin requires you to have https in your Bluesky PDS, make sure you have set a domain with https in the Coolify UI and check the environment variables so it matches it.
+Pdsadmin 要求你的 Bluesky PDS 启用 HTTPS。请确保已在 Coolify UI 中设置了带 HTTPS 的域名，并检查环境变量与之保持一致。
 
-## Creating an account in your PDS
+## 在你的 PDS 中创建账户
 
-To create an account and start using your PDS, you can use the following pdsadmin commands in the Terminal tab of the Coolify UI:
+要创建账户并开始使用你的 PDS，可以在 Coolify UI 的 Terminal 标签页中使用以下 pdsadmin 命令：
 
 ```bash
 pdsadmin create-invite-code
 ```
 
-or
+或者
 
 ```bash
 pdsadmin account create <email> <handle>
 ```
 
-To check for other available commands in pdsadmin, you can simply run `pdsadmin`
+要查看 pdsadmin 的其他可用命令，直接运行 `pdsadmin` 即可。
 
-## Setting up mail
+## 配置邮件
 
-Mailing is important for a Bluesky PDS, it's needed to confirm email, and other things!
+邮件功能对 Bluesky PDS 很重要，确认邮箱等操作都离不开它！
 
-You need to edit 2 environment variables in the Coolify UI, head to the Environment Variables tab and look for the `PDS_EMAIL_FROM_ADDRESS`, what you need to fill here is pretty much self explanatory, is the email address that's going to be used when sending an email, for example: `user@domain.com`
+你需要在 Coolify UI 中编辑两个环境变量。前往 Environment Variables 标签页，找到 `PDS_EMAIL_FROM_ADDRESS`，这里要填的内容基本一目了然：发送邮件时使用的邮箱地址，例如 `user@domain.com`。
 
-The next environment variable is `PDS_EMAIL_SMTP_URL`, this one is not very self explanatory, but here's how to fill it:
+另一个环境变量是 `PDS_EMAIL_SMTP_URL`，它就没那么直观了，填写方法如下：
 
-There are many ways to fill this variable, here are some examples:
+这个变量有多种填法，这里举几个例子：
 
-`smtps://user%40example.com:password@mail.example.com:465` (SMTP with SSL)
+`smtps://user%40example.com:password@mail.example.com:465`（启用 SSL 的 SMTP）
 
-`smtp://user%40example.com:password@mail.example.com:587` (SMTP without SSL)
+`smtp://user%40example.com:password@mail.example.com:587`（不启用 SSL 的 SMTP）
 
-`smtps://resend:<your Resend api key>@smtp.resend.com:465` (Resend)
+`smtps://resend:<your Resend api key>@smtp.resend.com:465`（Resend）
 
-You might need to URL-encode your username and password for the Mail Setup to work.
+为了让邮件配置正常工作，你可能需要对用户名和密码进行 URL 编码。
 
-And that's it, your PDS should be ready for you to use, it will work like any other PDS!
+大功告成，你的 PDS 已可投入使用，用起来和其他 PDS 没有任何区别！
 
-## Links
+## 相关链接
 
-- [The official website](https://blueskyweb.xyz?utm_source=coolify.io)
+- [官方网站](https://blueskyweb.xyz?utm_source=coolify.io)
 - [GitHub](https://github.com/bluesky-social/pds?utm_source=coolify.io)

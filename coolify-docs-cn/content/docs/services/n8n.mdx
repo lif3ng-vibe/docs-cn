@@ -1,52 +1,52 @@
 ---
 title: "N8N"
-description: "Workflow automation tool."
+description: "工作流自动化工具。"
 og:
   description: "Build workflows on Coolify with n8n automation platform connecting 400+ apps, APIs, databases for no-code/low-code task automation and integration."
-category: "Automation"
+category: "自动化"
 icon: "/docs-cn/coolify/images/services/n8n-logo.png"
 ---
 
 <ZoomImage src="https://user-images.githubusercontent.com/65276001/173571060-9f2f6d7b-bac0-43b6-bdb2-001da9694058.png" alt="N8N" />
 
-## What is N8N?
+## N8N 是什么？
 
-N8N is an open-source workflow automation tool that allows you to connect different applications and services together. It is an open-source alternative to tools like Zapier or Make.
+N8N 是一个开源的工作流自动化工具，可以让你把不同的应用和服务连接起来。它是 Zapier、Make 等工具的开源替代品。
 
-## Deployment Variants
+## 部署变体
 
-N8N is available in three deployment configurations in Coolify:
+在 Coolify 中，N8N 提供三种部署配置：
 
-### n8n (Default)
-- **Database:** SQLite (embedded)
-- **Use case:** Simple deployments, testing, or low-volume workflows
-- **Components:** Single n8n container with built-in SQLite database
+### n8n（默认）
+- **数据库：**SQLite（内嵌）
+- **适用场景：**简单部署、测试或低流量工作流
+- **组件：**单个 n8n 容器，内置 SQLite 数据库
 
-### n8n with PostgreSQL
-- **Database:** PostgreSQL (external)
-- **Use case:** Production deployments requiring better performance, scalability, and data persistence
-- **Components:**
-  - n8n container
-  - PostgreSQL 16 container
-  - Automatic database configuration and health checks
+### 使用 PostgreSQL 的 n8n
+- **数据库：**PostgreSQL（外部）
+- **适用场景：**对性能、可扩展性和数据持久性要求更高的生产部署
+- **组件：**
+  - n8n 容器
+  - PostgreSQL 16 容器
+  - 自动完成数据库配置与健康检查
 
-### n8n with PostgreSQL and Worker
-- **Database:** PostgreSQL + Redis
-- **Use case:** High-volume production deployments with queue-based execution and parallel workflow processing
-- **Components:**
-  - n8n main container
-  - n8n-worker container for distributed execution
-  - PostgreSQL 16 container
-  - Redis container for queue management
-  - Automatic database configuration and health checks
+### 使用 PostgreSQL 和 Worker 的 n8n
+- **数据库：**PostgreSQL + Redis
+- **适用场景：**需要基于队列执行和并行工作流处理的大规模生产部署
+- **组件：**
+  - n8n 主容器
+  - 用于分布式执行的 n8n-worker 容器
+  - PostgreSQL 16 容器
+  - 用于队列管理的 Redis 容器
+  - 自动完成数据库配置与健康检查
 
-## Screenshots
+## 截图
 
-<ZoomImage src="https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-screenshot.png" alt="N8N Preview" />
+<ZoomImage src="https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-screenshot.png" alt="N8N 预览" />
 
-### Extending n8n with custom dependencies
+### 使用自定义依赖扩展 n8n
 
-To extend n8n with custom dependencies, you can add them following the example below to your Dockerfile:
+要为 n8n 添加自定义依赖，可以按照下面的示例将其添加到你的 Dockerfile 中：
 
 ```dockerfile
 ...
@@ -54,7 +54,7 @@ RUN apk add --no-cache ffmpeg
 ...
 ```
 
-### Example Dockerfile
+### Dockerfile 示例
 
 ```dockerfile
 FROM n8nio/n8n:latest
@@ -81,7 +81,7 @@ ENV WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
 USER node
 ```
 
-## Links
+## 相关链接
 
-- [The official website](https://n8n.io/)
+- [官方网站](https://n8n.io/)
 - [GitHub](https://github.com/n8n-io/n8n)

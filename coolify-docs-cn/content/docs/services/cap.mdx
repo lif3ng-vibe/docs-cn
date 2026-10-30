@@ -1,75 +1,75 @@
 ---
 title: "Cap"
-description: "Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds."
+description: "Cap 是 Loom 的开源替代品。轻量、强大、跨平台，几秒内即可录制并分享。"
 og:
   description: "Here you can find the documentation for hosting Cap with Coolify."
-category: "Media"
+category: "媒体"
 icon: "/docs-cn/coolify/images/services/cap.svg"
 ---
 
 <ZoomImage src="/docs-cn/coolify/images/services/cap.svg" />
 
-## What is Cap?
+## Cap 是什么？
 
-Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.
+Cap 是 Loom 的开源替代品。轻量、强大、跨平台，几秒内即可录制并分享。
 
-## How to self-host
+## 如何自托管
 
-There are two storage options: you can store the video data on a remote storage service like S3 or R2, or you can choose the less recommended option of storing it directly on the local VPS (or another VPS) via a MinIO service.
+有两种存储方案：可以把视频数据存到 S3 或 R2 等远程存储服务上；也可以选择不太推荐的方式，通过 MinIO 服务直接存储在本地 VPS（或另一台 VPS）上。
 
-### Option 1: Remote S3-compatible storage (AWS S3, Cloudflare R2, etc.)
+### 方案一：远程 S3 兼容存储（AWS S3、Cloudflare R2 等）
 
-Set these environment variables:
+设置以下环境变量：
 
-- `CAP_AWS_ACCESS_KEY`: Your S3/R2 access key
-- `CAP_AWS_SECRET_KEY`: Your S3/R2 secret key
-- `CAP_AWS_BUCKET`: Your S3/R2 bucket name
-- `CAP_AWS_REGION`: Your S3/R2 region (e.g., us-east-1, auto for R2)
-- `CAP_AWS_ENDPOINT`: Your S3/R2 endpoint URL
-- `S3_PUBLIC_ENDPOINT`: Public endpoint for your bucket (same as CAP_AWS_ENDPOINT for most cases)
-- `S3_INTERNAL_ENDPOINT`: Internal endpoint (same as CAP_AWS_ENDPOINT for most cases)
-- `S3_PATH_STYLE`: true for R2/most S3-compatible, false for AWS S3 virtual-hosted style
+- `CAP_AWS_ACCESS_KEY`：你的 S3/R2 访问密钥
+- `CAP_AWS_SECRET_KEY`：你的 S3/R2 私有密钥
+- `CAP_AWS_BUCKET`：你的 S3/R2 存储桶名称
+- `CAP_AWS_REGION`：你的 S3/R2 区域（例如 us-east-1，R2 填 auto）
+- `CAP_AWS_ENDPOINT`：你的 S3/R2 端点 URL
+- `S3_PUBLIC_ENDPOINT`：存储桶的公开端点（多数情况下与 CAP_AWS_ENDPOINT 相同）
+- `S3_INTERNAL_ENDPOINT`：内部端点（多数情况下与 CAP_AWS_ENDPOINT 相同）
+- `S3_PATH_STYLE`：R2 及多数 S3 兼容服务填 true，AWS S3 虚拟主机式填 false
 
-### Option 2: Local MinIO storage
+### 方案二：本地 MinIO 存储
 
-Deploy MinIO as a separate service in the same network and set:
+在同一网络中将 MinIO 部署为独立服务，并设置：
 
-- `CAP_AWS_ACCESS_KEY`: MinIO root user
-- `CAP_AWS_SECRET_KEY`: MinIO root password
-- `CAP_AWS_BUCKET`: Your bucket name (e.g., capso)
-- `CAP_AWS_REGION`: us-east-1 (or any region)
-- `CAP_AWS_ENDPOINT`: http://minio:9000 (internal MinIO endpoint)
-- `S3_PUBLIC_ENDPOINT`: http://your-minio-domain:9000 (public MinIO endpoint)
-- `S3_INTERNAL_ENDPOINT`: http://minio:9000 (internal MinIO endpoint)
-- `S3_PATH_STYLE`: true
+- `CAP_AWS_ACCESS_KEY`：MinIO root 用户
+- `CAP_AWS_SECRET_KEY`：MinIO root 密码
+- `CAP_AWS_BUCKET`：你的存储桶名称（例如 capso）
+- `CAP_AWS_REGION`：us-east-1（或任意区域）
+- `CAP_AWS_ENDPOINT`：http://minio:9000（MinIO 内部端点）
+- `S3_PUBLIC_ENDPOINT`：http://your-minio-domain:9000（MinIO 公开端点）
+- `S3_INTERNAL_ENDPOINT`：http://minio:9000（MinIO 内部端点）
+- `S3_PATH_STYLE`：true
 
-## Email Login Links
+## 邮箱登录链接
 
-If the `RESEND_API_KEY` and `RESEND_FROM_DOMAIN` environment variables are not set, login links will be written to the server logs. To send login links via email, you'll need to configure [Resend](https://resend.com):
+如果未设置 `RESEND_API_KEY` 和 `RESEND_FROM_DOMAIN` 环境变量，登录链接将被写入服务器日志。要通过邮件发送登录链接，你需要配置 [Resend](https://resend.com)：
 
-1. Create an account at [Resend](https://resend.com)
-2. Connect a domain and set it as `RESEND_FROM_DOMAIN`
-3. Generate an API key and set it as `RESEND_API_KEY`
+1. 在 [Resend](https://resend.com) 注册账户
+2. 绑定一个域名并将其设为 `RESEND_FROM_DOMAIN`
+3. 生成 API 密钥并将其设为 `RESEND_API_KEY`
 
-## How to unlock limits (organization seats and recordings)
+## 如何解除限制（组织席位与录制数量）
 
 
-1. Open the terminal of the MySQL service
-2. Connect to the database: `mysql -u root -p planetscale` and use the `MYSQL_ROOT_PASSWORD` when prompted
-3. Run the SQL command below, replacing `your-user-id` with your actual user ID
+1. 打开 MySQL 服务的终端
+2. 连接数据库：`mysql -u root -p planetscale`，提示时输入 `MYSQL_ROOT_PASSWORD`
+3. 运行下面的 SQL 命令，把 `your-user-id` 替换为你的实际用户 ID
     ```sql
     UPDATE users SET inviteQuota = 100, stripeSubscriptionId = '12345', subscriptionStatus = 'active' WHERE id = 'your-user-id';
     ```
-4. You can verify the changes by running the following command:
+4. 可以运行以下命令验证更改：
     ```sql
     SELECT * FROM users WHERE id = 'your-user-id';
     ```
 
-## Screenshots
+## 截图
 
 <ZoomImage src="/docs-cn/coolify/images/services/cap-app.webp" />
 
-## Links
+## 相关链接
 
-- [The official website ›](https://cap.so/)
+- [官方网站 ›](https://cap.so/)
 - [GitHub ›](https://github.com/CapSoftware/Cap)
