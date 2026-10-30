@@ -138,7 +138,7 @@ const FLIGHT_RX = /self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)/g;
 // ---------- URL ----------
 const PAYWALL_PATHS = /^\/(login|cohorts\/|products\/|confirm|check-your-email|thanks|welcome|team\/|progress|subscribe)/;
 // 运行时端点：镜像无法提供 → 指回原站
-const RUNTIME_PATHS = /^\/(api\/|mcp|oauth|rss\.xml|[^\/]+\/rss\.xml|sitemap\.md|llms\.txt|skills\.md|sitemap\.xml)/;
+const RUNTIME_PATHS = /^\/(api\/|mcp|oauth|rss\.xml|[^\/]+\/rss\.xml|sitemap\.md|llms\.txt|skills\.md|sitemap\.xml|s\/)/;
 
 function decodeNextImageUrl(val) {
   try {
