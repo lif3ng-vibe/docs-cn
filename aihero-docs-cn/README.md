@@ -2,7 +2,7 @@
 
 非官方汉化镜像：[AI Hero](https://www.aihero.dev/)（Matt Pocock 的 AI 工程学习平台）整站中文版。
 
-- **上游快照**：https://www.aihero.dev/ ，2026-10-30 抓取（sitemap 205 页 + 补充 app 页，共 209 页）
+- **上游快照**：https://www.aihero.dev/ ，2026-10-30 抓取（sitemap 205 页 + 补充 app 页，共 210 页）
 - **镜像形态**：上游为闭源 Next.js 站（无公开源码仓库）→ 按「HTML 镜像 + flight 数据同步汉化」路线：抓取渲染后 HTML 与全部静态资产（~420 个），译文回填正文文本/属性/meta/RSC flight payload 四层，保留原站全部界面交互与布局样式
 - **部署路径**：`/docs-cn/aihero/`（`site/` 目录即最终产物，CI 直接 Collect，无构建）
 

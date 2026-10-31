@@ -5280,6 +5280,24 @@
   ],
   "untranslatedCount": 53
  },
+ "workshops/ai-sdk-v6-crash-course/generating-objects-via-output~dkm2k/solution": {
+  "htmlHits": 113,
+  "attrHits": 25,
+  "flightHits": 79,
+  "pruned": [
+   "Next lesson",
+   "Up Next"
+  ],
+  "untranslated": [
+   "AI",
+   "Hero",
+   "sitemap.md",
+   "llms.txt",
+   "skills.md",
+   "rss.xml"
+  ],
+  "untranslatedCount": 6
+ },
  "workshops/ai-sdk-v6-crash-course": {
   "htmlHits": 284,
   "attrHits": 45,

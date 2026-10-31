@@ -286,6 +286,10 @@ for (const page of pages) {
     return nv === v ? w : ` content="${nv}"`;
   });
   out = out.replace(/\simagesizes="[^"]*"/g, '');
+  // 目录部署带尾斜杠会改变相对链接解析层级（原站无尾斜杠）：
+  // 课时页侧栏的相对解法链接改写为镜像根绝对路径（Mintlify 镜像坑 #14 同款）
+  out = out.replace(/href="generating-objects-via-output~dkm2k\/solution"/g,
+    `href="${P}/workshops/ai-sdk-v6-crash-course/generating-objects-via-output~dkm2k/solution"`);
 
   // --- 7. flight URL 前缀（含转义/未转义两种形态；带防双前缀守卫） ---
   out = out.replace(/(?<!\/docs-cn\/aihero)\/_next\//g, `${P}/_next/`);
