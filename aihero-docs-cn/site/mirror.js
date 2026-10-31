@@ -13,8 +13,8 @@
 
   // ---------- 1) 内链 → 整页跳转 ----------
   function normalize(href) {
+    if (href.indexOf(P + '/') === 0 || href === P) return href; // 已带前缀：原样（必须先于 '/' 分支，否则双前缀）
     if (href.charAt(0) === '/') return P + href;
-    if (href.indexOf(P + '/') === 0 || href === P) return href;
     return P + '/' + href.replace(/^\.\//, '');
   }
   document.addEventListener('click', function (e) {
