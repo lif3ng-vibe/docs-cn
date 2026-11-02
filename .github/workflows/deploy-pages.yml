@@ -139,15 +139,33 @@ jobs:
           mv dist ../_site/pi
 
       # ollama 是 Mintlify 站（docs.ollama.com，源码 ollama/ollama@main docs/）。
-      # 云端渲染偶发「坏轮」（flight 流式数据损坏→水合装配失败→内容区塌陷，且无
-      # 产物级判据可检），故改用「本地选定健康产物直接入库、CI 纯拷贝」的部署形
-      # 态（同 tailscale/aihero 产物入库先例）：产物在 ollama-docs-cn/dist/（已含
-      # prefix/搜索/字体/图标等全部后处理），更新流程=本地 bash rebuild.sh+浏览器
-      # 验证后提交 dist/。
-      - name: Deploy ollama-docs-cn from repo
+      # CI build（export=调云渲染）。已知坑：云渲染偶发「坏轮」（flight 数据损坏
+      # →水合装配失败→内容区塌陷），且坏轮无产物级判据；cache key 绑 run_number
+      # 让每次部署都强制重新 export（新轮次），线上装配判据（Playwright mainW）
+      # 验证，坏轮就重触发部署再抽一轮。
+      - name: Restore ollama-docs-cn dist
+        id: dist-ollama
+        uses: actions/cache@v4
+        with:
+          path: _site/ollama
+          key: dist-ollama-${{ github.run_number }}
+
+      - name: Build ollama-docs-cn
+        if: steps.dist-ollama.outputs.cache-hit != 'true'
+        working-directory: ollama-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/ollama
+          DOCS_SITE_URL: https://lif3ng-vibe.github.io
         run: |
-          mkdir -p _site
-          cp -r ollama-docs-cn/dist _site/ollama
+          npm ci
+          rm -rf dist
+          npx mintlify export --disable-openapi
+          mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
+          rm -f export.zip
+          npx pagefind --site dist --force-language zh
+          node scripts/inject-theme.mjs
+          node scripts/prefix-dist.mjs
+          mv dist ../_site/ollama
 
       # ai-sdk 是 pnpm monorepo（geistdocs/fumadocs + Next.js 16 静态导出）。
       # 无需 sed：basePath 写死在其 next.config.ts 与 geistdocs config，内链/
