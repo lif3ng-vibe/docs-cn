@@ -90,18 +90,20 @@ let pages = 0, injected = 0;
     else if (e.name === 'index.html') {
       pages++;
       const html = readFileSync(p, 'utf8');
-      // 幂等（顺序无关）：theme link 在 prefix 后会带 BASE 前缀，两种形态任一存在即已注入
-      const already =
-        html.includes(MARK) || html.includes(`<link rel="stylesheet" href="${BASE}/theme.css" />`);
       let out = html;
-      if (!already) {
-        if (!html.includes('</head>')) throw new Error(`</head> 未找到: ${p}`);
+      // 各注入项独立判定、各自幂等（Mintlify 渲染服务可能自带 theme.css link——
+      // 不重复注入也不能因它就整页短路，搜索弹层/字体仍要加）
+      const hasThemeLink =
+        out.includes('<link rel="stylesheet" href="/theme.css"') ||
+        out.includes(`<link rel="stylesheet" href="${BASE}/theme.css"`);
+      if (!hasThemeLink) {
+        if (!out.includes('</head>')) throw new Error(`</head> 未找到: ${p}`);
         out = out.replace('</head>', `${MARK}</head>`);
         injected++;
-      }
+      } else { out = html; }
       // Mintlify 的 markdown 视图 alternate 声明指向 <page>.md——导出产物无此文件，剥掉防 404（幂等）
       out = out.replace(/<link rel="alternate" type="text\/markdown"[^>]*\/?>/g, '');
-      // 汉化站语义：<html lang> 改 zh-CN（pagefind 亦按此选 CJK 字符级索引，幂等）
+      // 汉化站语义：<html lang> 改 zh-CN（健康产物下实测无害，pagefind 按 zh 索引）
       out = out.replace(/(<html[^>]*?)lang="en"/, '$1lang="zh-CN"');
       if (!out.includes('id="pf-overlay"')) {
         if (!out.includes('</body>')) throw new Error(`</body> 未找到: ${p}`);

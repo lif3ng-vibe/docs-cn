@@ -12,7 +12,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "mintlify": "^4.2.992"
+    "mintlify": "4.2.994"
   },
   "devDependencies": {
     "pagefind": "^1.5.2"
