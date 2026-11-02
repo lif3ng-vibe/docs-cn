@@ -52,6 +52,7 @@ jobs:
             pi-docs-cn/package-lock.json
             openshell-docs-cn/package-lock.json
             ollama-docs-cn/package-lock.json
+            lightpanda-docs-cn/package-lock.json
 
       - name: Prepare _site
         run: mkdir -p _site
@@ -605,6 +606,26 @@ jobs:
         run: |
           mv site ../_site/aihero
 
+      # lightpanda 是 Nextra 4.6 + Next 15 静态导出站（上游 lightpanda-io/docs@main e45234d）：
+      # basePath 写死在 redirects.mjs（/docs-cn/lightpanda），无需 env、无需 sed——
+      # Nextra 渲染层对 MDX 内链自动加 basePath（本地产物已验证，sed 反而双重前缀）；
+      # 钉 zod@4.0.16（zod 4.1+ 的 nonoptional 校验挂 NextraHead 预渲染），见其 package.json overrides。
+      # postbuild 自动跑 pagefind 索引与重定向桩页生成。
+      - name: Restore lightpanda-docs-cn dist
+        id: dist-lightpanda
+        uses: actions/cache@v4
+        with:
+          path: _site/lightpanda
+          key: dist-lightpanda-${{ hashFiles('lightpanda-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build lightpanda-docs-cn
+        if: steps.dist-lightpanda.outputs.cache-hit != 'true'
+        working-directory: lightpanda-docs-cn
+        run: |
+          npm ci
+          npm run build
+          mv out ../_site/lightpanda
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -646,6 +667,7 @@ jobs:
           echo '| coolify | ${{ steps.dist-coolify.outputs.cache-hit == 'true' }} |'
           echo '| hallmark | ${{ steps.dist-hallmark.outputs.cache-hit == 'true' }} |'
           echo '| aihero | ${{ steps.dist-aihero.outputs.cache-hit == 'true' }} |'
+          echo '| lightpanda | ${{ steps.dist-lightpanda.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

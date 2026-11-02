@@ -416,5 +416,22 @@
       "stack": "Mintlify 原班工具链（匿名 export 静态导出汉化）",
       "snap": "main@c1db5f9 2026-11-02"
     }
+  },
+  {
+    "name": "Lightpanda",
+    "slug": "lightpanda",
+    "desc": "Lightpanda 官方文档中文镜像——用 Zig 从零编写的 AI 原生无头浏览器（10 倍速、10 倍省内存）：一行命令安装与 Docker、CDP/WebDriver/MCP 三协议接入（Puppeteer、Playwright、Selenium、Chromedp）、PandaScript 与 Lightpanda Agent、Cloud 服务与限额计费、浏览器工具/MCP 工具/CLI/Python SDK 参考；50 页全量汉化（含 3 个上游生成页快照）。",
+    "tags": [
+      "ai-agent",
+      "sdk-api",
+      "ai-app-dev"
+    ],
+    "orig": "https://lightpanda.io/docs/",
+    "repo": "https://github.com/lightpanda-io/browser",
+    "meta": {
+      "pages": "50 页",
+      "stack": "Nextra 4 + Next 15 原班构建（私有共享包本地桩实现）",
+      "snap": "main@e45234d 2026-10-26"
+    }
   }
 ]
