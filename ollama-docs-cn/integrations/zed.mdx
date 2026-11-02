@@ -1,0 +1,38 @@
+---
+title: "Zed"
+---
+
+## 安装
+
+安装 [Zed](https://zed.dev/download)。
+
+## 配合 Ollama 使用
+
+1. 在 Zed 中，点击右下角的**星形图标**，然后选择 **Configure**。
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/zed-settings.png" 
+    alt="Zed star icon in bottom right corner"
+    width="50%"
+  />
+</div>
+
+2. 在 **LLM Providers** 下，选择 **Ollama**
+3. 确认 **Host URL** 为 `http://localhost:11434`，然后点击 **Connect**
+4. 连接成功后，在 **Ollama** 下选择一个模型
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/zed-ollama-dropdown.png" 
+    alt="Zed star icon in bottom right corner"
+    width="50%"
+  />
+</div>
+
+## 连接到 ollama.com
+1. 在 **ollama.com** 上创建 [API 密钥](https://ollama.com/settings/keys)
+2. 在 Zed 中，打开**星形图标** → **Configure**
+3. 在 **LLM Providers** 下，选择 **Ollama**
+4. 将 **API URL** 设置为 `https://ollama.com`
+

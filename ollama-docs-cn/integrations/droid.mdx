@@ -1,0 +1,91 @@
+---
+title: "Droid"
+---
+
+
+## 安装
+
+安装 [Droid CLI](https://factory.ai/)：
+
+```bash
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+<Note>Droid 需要较大的上下文窗口。建议使用至少 64k tokens 的上下文窗口。更多信息见[上下文长度](/context-length)。</Note>
+
+## 配合 Ollama 使用
+
+### 快速设置
+
+```bash
+ollama launch droid
+```
+
+不启动、只进行配置：
+
+```shell
+ollama launch droid --config
+```
+
+### 手动设置
+
+在 `~/.factory/config.json` 中添加本地配置块：
+
+```json
+{
+  "custom_models": [
+    {
+      "model_display_name": "qwen3-coder [Ollama]",
+      "model": "qwen3-coder",
+      "base_url": "http://localhost:11434/v1/",
+      "api_key": "not-needed",
+      "provider": "generic-chat-completion-api",
+      "max_tokens": 32000 
+    }
+  ]
+}
+```
+
+
+## 云端模型
+
+以下示例为 Droid 配置 `qwen3-coder`。
+
+在 `~/.factory/config.json` 中添加云端配置块：
+
+```json
+{
+  "custom_models": [
+    {
+      "model_display_name": "qwen3-coder [Ollama's cloud]",
+      "model": "qwen3-coder:480b-cloud",
+      "base_url": "http://localhost:11434/v1/",
+      "api_key": "not-needed",
+      "provider": "generic-chat-completion-api",
+      "max_tokens": 128000
+    }
+  ]
+}
+```
+
+## 连接到 ollama.com
+
+1. 在 ollama.com 上创建 [API 密钥](https://ollama.com/settings/keys)，并将其导出为 `OLLAMA_API_KEY`。
+2. 在 `~/.factory/config.json` 中添加云端配置块：
+
+   ```json
+   {
+     "custom_models": [
+       {
+         "model_display_name": "qwen3-coder [Ollama's cloud]",
+         "model": "qwen3-coder:480b",
+         "base_url": "https://ollama.com/v1/",
+         "api_key": "OLLAMA_API_KEY",
+         "provider": "generic-chat-completion-api",
+         "max_tokens": 128000
+       }
+     ]
+   }
+   ```
+
+在新终端中运行 `droid`，加载新设置。

@@ -1,0 +1,145 @@
+---
+title: "OpenCode"
+---
+
+[OpenCode](https://opencode.ai) 是一个在终端中运行的开源编码代理，它能读取你的项目、编辑文件并运行命令。
+
+Ollama 会将 OpenCode 配置为使用本地与云端模型。
+
+## 快速开始
+
+使用 Ollama 启动 OpenCode：
+
+```shell
+ollama launch opencode
+```
+
+## 能力
+
+<div className="capability-list capability-list-full">
+  <div className="capability-list-grid">
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="comment" /></div>
+      <div>
+        <div className="capability-list-heading">对话</div>
+        <div className="capability-list-copy">就代码仓库或任务提问</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="terminal" /></div>
+      <div>
+        <div className="capability-list-heading">命令行</div>
+        <div className="capability-list-copy">从你的工作目录运行命令</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="code" /></div>
+      <div>
+        <div className="capability-list-heading">文件编辑</div>
+        <div className="capability-list-copy">读取并编辑项目中的文件</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="users" /></div>
+      <div>
+        <div className="capability-list-heading">子代理</div>
+        <div className="capability-list-copy">将工作拆分到多个任务</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="file-text" /></div>
+      <div>
+        <div className="capability-list-heading">网页抓取</div>
+        <div className="capability-list-copy">抓取并总结网页</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="image" /></div>
+      <div>
+        <div className="capability-list-heading">视觉</div>
+        <div className="capability-list-copy">发送图片和截图</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+## 模型
+
+选择一个具备足够上下文、能容纳你代码库的模型。
+
+<CardGroup cols={2}>
+  <Card title="云端模型" icon="cloud" href="https://ollama.com/search?c=cloud">
+    无需下载即可使用更大的模型。
+  </Card>
+
+  <Card title="本地模型" icon="hard-drive" href="https://ollama.com/search?c=tools">
+    选择模型并设置 64k 以上的上下文窗口。
+  </Card>
+</CardGroup>
+
+<Note>OpenCode 需要 64k 或更高的上下文长度。更多信息见[上下文长度](/context-length)。</Note>
+
+## 手动设置
+
+<p className="manual-step-title">1. 安装 OpenCode</p>
+
+<CodeGroup>
+
+```shell macOS / Linux
+curl -fsSL https://opencode.ai/install | bash
+```
+
+```powershell Windows
+npm install -g opencode-ai
+```
+
+</CodeGroup>
+
+<p className="manual-step-title">2. 将 Ollama 配置为提供商</p>
+
+在 `opencode.json` 中添加一个 Ollama 提供商：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen3.5": {
+          "name": "qwen3.5"
+        }
+      }
+    }
+  }
+}
+```
+
+<p className="manual-step-title">3. 运行 OpenCode</p>
+
+```shell
+opencode
+```
+
+要在不启动交互式会话的情况下为 OpenCode 配置 Ollama：
+
+```shell
+ollama launch opencode --config
+```
+
+### 配置优先级
+
+`ollama launch opencode` 会以内联配置启动 OpenCode，用于所选的 Ollama 模型。它不会覆盖 `~/.config/opencode/opencode.json`；已有的 OpenCode 设置仍然生效。
+
+仅在 `opencode.json` 中定义的模型不会出现在 `ollama launch` 的模型选择器中。
+
+参见 OpenCode 的[配置优先级](https://opencode.ai/docs/config/#precedence-order)。

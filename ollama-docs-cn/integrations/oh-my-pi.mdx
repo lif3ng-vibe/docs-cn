@@ -1,0 +1,35 @@
+---
+title: "Oh My Pi"
+---
+
+Oh My Pi（OMP）是一个内置 IDE 式工具的终端编码代理。它将聊天、项目上下文、结构化代码编辑、语言服务器支持、调试工具、浏览器访问、插件和子代理整合在同一个终端工作流中。
+
+Ollama 可以将 OMP 配置为使用 Ollama 作为模型提供商，并启动交互式会话。
+
+![Oh My Pi with Ollama](http://files.ollama.com/omp.png)
+
+## 快速设置
+
+```bash
+ollama launch omp
+```
+
+这会将 Ollama 配置为提供商，设置网页搜索工具，并启动 OMP。
+
+### 直接用模型运行
+
+```shell
+ollama launch omp --model <model>
+```
+
+## 插件
+
+OMP 支持通过插件获得额外的工具和能力。通过 Ollama 启动 OMP 时，Ollama 网页搜索插件会自动管理。
+
+## 手动设置
+
+从 [omp.sh](https://omp.sh) 安装 OMP，然后运行：
+
+```bash
+ollama launch omp --config
+```

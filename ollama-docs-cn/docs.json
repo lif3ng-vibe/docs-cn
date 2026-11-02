@@ -1,0 +1,271 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Ollama",
+  "colors": {
+    "primary": "#000",
+    "light": "#b5b5b5",
+    "dark": "#000"
+  },
+  "favicon": "/images/favicon.png",
+  "logo": {
+    "light": "/images/logo.png",
+    "dark": "/images/logo-dark.png",
+    "href": "https://ollama.com"
+  },
+  "theme": "maple",
+  "background": {
+    "color": {
+      "light": "#ffffff",
+      "dark": "#000000"
+    }
+  },
+  "fonts": {
+    "family": "system-ui",
+    "heading": {
+      "family": "system-ui"
+    },
+    "body": {
+      "family": "system-ui"
+    }
+  },
+  "styling": {
+    "codeblocks": "system"
+  },
+  "contextual": {
+    "options": [
+      "copy"
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "登录",
+        "href": "https://ollama.com/signin"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "下载",
+      "href": "https://ollama.com/download"
+    }
+  },
+  "api": {
+    "playground": {
+      "display": "simple"
+    },
+    "examples": {
+      "languages": [
+        "curl"
+      ]
+    }
+  },
+  "redirects": [
+    {
+      "source": "/development.md",
+      "destination": "/development"
+    },
+    {
+      "source": "/api/openai-compatibility.mdx",
+      "destination": "/api/openai-compatibility"
+    },
+    {
+      "source": "/gpu.mdx",
+      "destination": "/gpu"
+    },
+    {
+      "source": "/integrations/vscode.mdx",
+      "destination": "/integrations/vscode"
+    },
+    {
+      "source": "/troubleshooting.mdx",
+      "destination": "/troubleshooting"
+    },
+    {
+      "source": "/openai",
+      "destination": "/api/openai-compatibility"
+    },
+    {
+      "source": "/api/openai",
+      "destination": "/api/openai-compatibility"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/introduction"
+    },
+    {
+      "source": "/integrations/clawdbot",
+      "destination": "/integrations/openclaw"
+    },
+    {
+      "source": "/integrations/codex-app",
+      "destination": "/integrations/chatgpt"
+    },
+    {
+      "source": "/integrations/codex-app.mdx",
+      "destination": "/integrations/chatgpt"
+    },
+    {
+      "source": "/integrations/poolside",
+      "destination": "/integrations/pool"
+    }
+  ],
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "指南",
+        "groups": [
+          {
+            "group": "快速开始",
+            "pages": [
+              "index",
+              "quickstart",
+              "/cloud"
+            ]
+          },
+          {
+            "group": "能力",
+            "pages": [
+              "/capabilities/streaming",
+              "/capabilities/thinking",
+              "/capabilities/structured-outputs",
+              "/capabilities/decision",
+              "/capabilities/vision",
+              "/capabilities/embeddings",
+              "/capabilities/speech",
+              "/capabilities/tool-calling",
+              "/capabilities/web-search"
+            ]
+          },
+          {
+            "group": "更多信息",
+            "pages": [
+              "/cli",
+              "/modelfile",
+              "/context-length",
+              "/linux",
+              "/macos",
+              "/windows",
+              "/docker",
+              "/import",
+              "/faq",
+              "/gpu",
+              "/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "集成",
+        "groups": [
+          {
+            "group": "集成",
+            "pages": [
+              "/integrations/index"
+            ]
+          },
+          {
+            "group": "助手",
+            "expanded": true,
+            "pages": [
+              "/integrations/claude-desktop",
+              "/integrations/openclaw",
+              "/integrations/hermes",
+              "/integrations/hermes-desktop"
+            ]
+          },
+          {
+            "group": "编码",
+            "expanded": true,
+            "pages": [
+              "/integrations/claude-code",
+              "/integrations/opencode",
+              "/integrations/deepseek-harness",
+              "/integrations/cline-cli",
+              "/integrations/codex",
+              "/integrations/chatgpt",
+              "/integrations/copilot-cli",
+              "/integrations/droid",
+              "/integrations/goose",
+              "/integrations/oh-my-pi",
+              "/integrations/pi",
+              "/integrations/pool"
+            ]
+          },
+          {
+            "group": "IDE 与编辑器",
+            "expanded": true,
+            "pages": [
+              "/integrations/vscode",
+              "/integrations/cline",
+              "/integrations/jetbrains",
+              "/integrations/roo-code",
+              "/integrations/xcode",
+              "/integrations/zed"
+            ]
+          },
+          {
+            "group": "聊天与 RAG",
+            "pages": [
+              "/integrations/onyx"
+            ]
+          },
+          {
+            "group": "自动化",
+            "pages": [
+              "/integrations/n8n"
+            ]
+          },
+          {
+            "group": "笔记本",
+            "pages": [
+              "/integrations/marimo"
+            ]
+          },
+          {
+            "group": "助手沙箱",
+            "pages": [
+              "/integrations/nemoclaw"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API 参考",
+        "groups": [
+          {
+            "group": "API 参考",
+            "pages": [
+              "/api/introduction",
+              "/api/authentication",
+              "/api/streaming",
+              "/api/usage",
+              "/api/errors",
+              "/api/openai-compatibility",
+              "/api/anthropic-compatibility"
+            ]
+          },
+          {
+            "group": "端点",
+            "pages": [
+              "/api/generate",
+              "/api/chat",
+              "/api/embed",
+              "/v1/systemone",
+              "/api/tags",
+              "/api/ps",
+              "/api/show",
+              "/api/create",
+              "/api/copy",
+              "/api/pull",
+              "/api/push",
+              "/api/delete",
+              "/api/version",
+              "/api/cloud-usage",
+              "/api/balance"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

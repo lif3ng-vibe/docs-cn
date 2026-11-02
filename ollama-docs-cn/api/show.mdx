@@ -1,0 +1,65 @@
+---
+title: "查看模型详情"
+sidebarTitle: "POST /api/show"
+---
+
+**POST** `/api/show`
+
+## 请求示例
+
+<CodeGroup>
+```bash 默认
+curl http://localhost:11434/api/show -d '{
+  "model": "gemma4"
+}'
+```
+```bash 详细输出
+curl http://localhost:11434/api/show -d '{
+  "model": "gemma4",
+  "verbose": true
+}'
+```
+```bash 思考控制
+curl http://localhost:11434/api/show -d '{
+  "model": "gpt-oss"
+}'
+```
+```bash 思考控制
+curl http://localhost:11434/api/show -d '{
+  "model": "gpt-oss"
+}'
+```
+</CodeGroup>
+
+## 请求体
+
+**`ShowRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 要查看的模型名称 |
+| `verbose` | `boolean` | 否 | 为 true 时，响应中包含较大的详细字段。 |
+
+## 响应
+
+### 200
+
+模型信息
+
+**`ShowResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `thinking` | `Thinking` | 否 | — |
+| `parameters` | `string` | 否 | 序列化为文本的模型参数设置 |
+| `license` | `string` | 否 | 模型的许可证 |
+| `modified_at` | `string` | 否 | 最后修改时间戳（ISO 8601 格式） |
+| `details` | `object` | 否 | 模型概要信息 |
+| `template` | `string` | 否 | 模型渲染提示词所用的模板 |
+| `renderer` | `string` | 否 | 模型实际生效的聊天渲染器（别名已解析），如已设置 |
+| `parser` | `string` | 否 | 模型上配置的输出解析器，如已设置 |
+| `template_source` | `string` | 否 | 聊天提示词的实际来源；为 `renderer_parser`、`renderer`、`parser`（运行 Go 渲染器，打包的模板不生效）、`harmony`、`go_template`、`gguf_chat_template`（运行器渲染 GGUF 内嵌的 jinja）或 `none` 之一 |
+| `capabilities` | `array<string>` | 否 | 支持的特性列表 |
+| `model_info` | `object` | 否 | 额外的模型元数据 |
+
+

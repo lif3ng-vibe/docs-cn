@@ -1,0 +1,35 @@
+---
+title: "流式输出"
+---
+
+部分 API 端点默认以流式返回响应，例如 `/api/generate`。这类响应采用换行分隔的 JSON 格式（即 `application/x-ndjson` 内容类型）。例如：
+
+```json
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.097767Z","response":"That","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.109172Z","response":"'","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.121485Z","response":"s","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.132802Z","response":" a","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.143931Z","response":" fantastic","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.155176Z","response":" question","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.166576Z","response":"!","done":true, "done_reason": "stop"}
+```
+
+## 禁用流式输出
+
+对于任何支持流式输出的端点，都可以在请求体中传入 `{"stream": false}` 来禁用流式输出。此时响应将改用 `application/json` 格式返回：
+
+```json
+{"model":"gemma4","created_at":"2025-10-26T17:15:24.166576Z","response":"That's a fantastic question!","done":true}
+```
+
+## 流式与非流式的使用场景
+
+**流式输出（默认）**：
+  - 实时生成响应
+  - 更低的感知延迟
+  - 更适合长文本生成
+
+**非流式**：
+  - 处理更简单
+  - 更适合短响应或结构化输出
+  - 在某些应用中更易处理

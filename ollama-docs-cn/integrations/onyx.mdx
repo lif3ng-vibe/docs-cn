@@ -1,0 +1,63 @@
+---
+title: "Onyx"
+---
+
+## 概览
+[Onyx](http://onyx.app/) 是一个可自托管的聊天界面，能够集成所有 Ollama 模型。功能包括：
+- 创建自定义代理（Agent）
+- 网页搜索
+- 深度研究（Deep Research）
+- 对上传文档和已连接应用进行 RAG（检索增强生成）
+- 连接 Google Drive、Email、Slack 等应用
+- 支持 MCP 和 OpenAPI Actions
+- 图片生成
+- 用户/群组管理、RBAC、SSO 等
+
+Onyx 既可面向单个用户部署，也可面向大型组织部署。
+
+## 安装 Onyx
+
+按照[快速入门指南](https://docs.onyx.app/deployment/getting_started/quickstart)部署 Onyx。
+
+<Info>
+资源配额/扩容文档见[此处](https://docs.onyx.app/deployment/getting_started/resourcing)。
+</Info>
+
+## 配合 Ollama 使用 
+
+1. 登录你的 Onyx 部署（先创建一个账号）。
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/onyx-login.png" 
+    alt="Onyx Login Page"
+    width="75%"
+  />
+</div>
+2. 在设置过程中选择 `Ollama` 作为 LLM 提供商。
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/onyx-ollama-llm.png" 
+    alt="Onyx Set Up Form"
+    width="75%"
+  />
+</div>
+3. 填入你的 **Ollama API URL** 并选择你的模型。
+<Note>如果你在 Docker 中运行 Onyx，要访问你电脑的本地网络，请使用 `http://host.docker.internal` 而不是 `http://127.0.0.1`。</Note>
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/onyx-ollama-form.png" 
+    alt="Selecting Ollama Models"
+    width="75%"
+  />
+</div>
+
+你也可以在设置流程中把 Onyx Cloud 连接到 Ollama 云端。
+
+## 发送第一条查询
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/onyx-query.png" 
+    alt="Onyx Query Example"
+    width="75%"
+  />
+</div>

@@ -1,0 +1,37 @@
+---
+title: "Cline"
+---
+
+## 安装
+
+在你的 IDE 中安装 [Cline](https://docs.cline.bot/getting-started/installing-cline)。
+
+
+## 配合 Ollama 使用
+
+1. 打开 Cline 设置 > `API Configuration`，将 `API Provider` 设为 `Ollama`
+2. 在 `Model` 下选择一个模型，或直接输入（如 `qwen3`）
+3. 在 `Context Window` 下将上下文窗口更新为至少 32K tokens
+
+<Note>编程场景请使用至少 32K tokens 的[上下文窗口](/context-length)。</Note>
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/cline-settings.png" 
+    alt="Cline settings configuration showing API Provider set to Ollama"
+    width="50%"
+  />
+</div>
+
+
+    
+## 连接到 ollama.com
+1. 在 ollama.com 上创建 [API 密钥](https://ollama.com/settings/keys)
+2. 点击 `Use custom base URL` 并将其设置为 `https://ollama.com`
+3. 输入你的 **Ollama API 密钥**
+4. 从列表中选择一个模型
+
+
+### 模型
+
+选择一个支持工具调用的[云端模型](https://ollama.com/search?c=cloud)。

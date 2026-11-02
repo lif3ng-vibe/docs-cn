@@ -1,0 +1,100 @@
+---
+title: "Windows"
+---
+
+Ollama 以原生 Windows 应用的形式运行，包括对 NVIDIA 和 AMD Radeon GPU 的支持。
+安装 Ollama for Windows 后，Ollama 会在后台运行，
+`ollama` 命令行工具可以在 `cmd`、`powershell` 或你喜欢的终端应用中使用。与往常一样，Ollama [API](/api) 将在
+`http://localhost:11434` 上提供服务。
+
+## 系统要求
+
+- Windows 10 22H2 或更新版本，家庭版或专业版
+- NVIDIA 显卡需要 551.61 或更新版本的驱动
+- AMD ROCm v7 / 支持 HIP7 的驱动栈（用于 ROCm 加速），或支持 Vulkan 的 AMD Radeon 驱动（用于 Vulkan 加速）
+
+Ollama 使用 Unicode 字符显示进度，在 Windows 10 的一些旧终端字体下可能显示为未知方块。如果遇到这种情况，请尝试更改终端字体设置。
+
+<Note>
+  部分 RDNA2 / Radeon RX 6000 系统（包括 RX 6800 级别的显卡）在当前的 Windows AMD 驱动上可能无法
+  暴露 ROCm v7。Vulkan 默认启用，是这些系统推荐的回退方案。如果混合 iGPU/dGPU
+  系统选择了不稳定的 Vulkan iGPU，请将 `GGML_VK_VISIBLE_DEVICES` 设置为
+  独立显卡的索引。
+</Note>
+
+## 文件系统要求
+
+安装 Ollama 不需要管理员权限，默认安装在你的主目录中。二进制安装至少需要 4GB 空间。安装 Ollama 后，你还需要额外的空间来存储大语言模型，其大小可能达数十至数百 GB。如果你的主目录空间不足，可以更改二进制文件的安装位置以及模型的存储位置。
+
+### 更改安装位置
+
+要将 Ollama 应用安装到主目录以外的位置，请在启动安装程序时加上以下标志
+
+```powershell
+OllamaSetup.exe /DIR="d:\some\location"
+```
+
+### 更改模型存储位置
+
+要让 Ollama 将下载的模型存到主目录以外的位置，请在你的用户账户中设置环境变量 `OLLAMA_MODELS`。
+
+1. 打开"设置"（Windows 11）或"控制面板"（Windows 10），搜索"环境变量"。
+
+2. 点击"编辑账户的环境变量"。
+
+3. 为你的用户账户编辑或新建 `OLLAMA_MODELS` 变量，指向你希望存放模型的位置。
+
+4. 点击"确定"/"应用"保存。
+
+如果 Ollama 已经在运行，请退出托盘应用，然后从"开始"菜单重新启动，或在保存环境变量后新开一个终端。
+
+## API 访问
+
+下面是一个从 `powershell` 访问 API 的简单示例
+
+```powershell
+(Invoke-WebRequest -method POST -Body '{"model":"llama3.2", "prompt":"Why is the sky blue?", "stream": false}' -uri http://localhost:11434/api/generate ).Content | ConvertFrom-json
+```
+
+## 故障排查
+
+Windows 上的 Ollama 将文件存放在多个位置。按下 `<Ctrl>+R` 并输入以下命令，即可在资源管理器窗口中查看：
+
+- `explorer %LOCALAPPDATA%\Ollama` 存放日志和已下载的更新
+  - _app.log_ 存放 GUI 应用最近的日志
+  - _server.log_ 存放最近的服务器日志
+  - _upgrade.log_ 存放升级过程的日志输出
+- `explorer %LOCALAPPDATA%\Programs\Ollama` 存放二进制文件（安装程序会将其加入你的用户 PATH）
+- `explorer %HOMEPATH%\.ollama` 存放模型与配置
+- `explorer %TEMP%` 在一个或多个 `ollama*` 目录中存放临时可执行文件
+
+## 卸载
+
+Ollama Windows 安装程序会注册一个卸载程序。在 Windows 设置的"应用和功能"中即可卸载 Ollama。
+
+<Note>
+  如果你[更改过 OLLAMA_MODELS 的位置](#更改模型存储位置)，安装程序不会删除你已下载的模型
+</Note>
+
+## 独立 CLI
+
+在 Windows 上安装 Ollama 最简单的方式是使用 `OllamaSetup.exe`
+安装程序。它安装在你的账户下，不需要管理员权限。
+我们会定期更新 Ollama 以支持最新模型，该安装程序可以
+帮你保持更新。
+
+如果你想把 Ollama 作为服务安装或集成，可以使用独立的
+`ollama-windows-amd64.zip` 压缩包，其中只包含 Ollama CLI
+和 NVIDIA 所需的 GPU 库依赖。根据你的硬件，可能还需要
+下载并解压额外的包到同一目录：
+
+- **AMD GPU**：`ollama-windows-amd64-rocm.zip`
+- **MLX (CUDA)**：`ollama-windows-amd64-mlx.zip`
+
+这样可以将 Ollama 嵌入现有应用，或
+通过 `ollama serve` 配合 [NSSM](https://nssm.cc/) 等工具
+将其作为系统服务运行。
+
+<Note>
+  如果你是从旧版本升级，应先移除旧的目录。
+</Note>

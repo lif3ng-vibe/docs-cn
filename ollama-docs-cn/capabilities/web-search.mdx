@@ -1,0 +1,360 @@
+---
+title: "网页搜索"
+---
+
+Ollama 的网页搜索 API 可以用最新信息增强模型，减少幻觉并提升准确性。
+
+网页搜索以 REST API 的形式提供，Python 和 JavaScript 库中还有更深入的工具集成。这也让 OpenAI 的 gpt-oss 等模型能够执行长时间运行的研究任务。
+
+## 身份验证
+
+要访问 Ollama 的网页搜索 API，请创建一个 [API 密钥](https://ollama.com/settings/keys)。需要一个免费的 Ollama 账户。
+
+## 网页搜索 API
+
+对单个查询执行网页搜索并返回相关结果。
+
+### 请求
+
+`POST https://ollama.com/api/web_search`
+
+- `query`（字符串，必需）：搜索查询字符串
+- `max_results`（整数，可选）：返回的最大结果数（默认 5，最大 10）
+
+### 响应
+
+返回一个包含以下字段的对象：
+
+- `results`（数组）：搜索结果对象数组，每个对象包含：
+  - `title`（字符串）：网页标题
+  - `url`（字符串）：网页 URL
+  - `content`（字符串）：网页中相关的内容片段
+
+### 示例
+
+<Note>
+  请确保已设置 OLLAMA_API_KEY，否则必须在 Authorization 请求头中传入密钥。
+</Note>
+
+#### cURL 请求
+
+```bash
+curl https://ollama.com/api/web_search \
+  --header "Authorization: Bearer $OLLAMA_API_KEY" \
+	-d '{
+	  "query":"what is ollama?"
+	}'
+```
+
+**响应**
+
+```json
+{
+  "results": [
+    {
+      "title": "Ollama",
+      "url": "https://ollama.com/",
+      "content": "Cloud models are now available..."
+    },
+    {
+      "title": "What is Ollama? Introduction to the AI model management tool",
+      "url": "https://www.hostinger.com/tutorials/what-is-ollama",
+      "content": "Ariffud M. 6min Read..."
+    },
+    {
+      "title": "Ollama Explained: Transforming AI Accessibility and Language ...",
+      "url": "https://www.geeksforgeeks.org/artificial-intelligence/ollama-explained-transforming-ai-accessibility-and-language-processing/",
+      "content": "Data Science Data Science Projects Data Analysis..."
+    }
+  ]
+}
+```
+
+#### Python 库
+
+```python
+import ollama
+response = ollama.web_search("What is Ollama?")
+print(response)
+```
+
+**示例输出**
+
+```python
+
+results = [
+    {
+        "title": "Ollama",
+        "url": "https://ollama.com/",
+        "content": "Cloud models are now available in Ollama..."
+    },
+    {
+        "title": "What is Ollama? Features, Pricing, and Use Cases - Walturn",
+        "url": "https://www.walturn.com/insights/what-is-ollama-features-pricing-and-use-cases",
+        "content": "Our services..."
+    },
+    {
+        "title": "Complete Ollama Guide: Installation, Usage & Code Examples",
+        "url": "https://collabnix.com/complete-ollama-guide-installation-usage-code-examples",
+        "content": "Join our Discord Server..."
+    }
+]
+
+```
+
+更多 Ollama [Python 示例](https://github.com/ollama/ollama-python/blob/main/examples/web-search.py)
+
+#### JavaScript 库
+
+```tsx
+import { Ollama } from "ollama";
+
+const client = new Ollama();
+const results = await client.webSearch("what is ollama?");
+console.log(JSON.stringify(results, null, 2));
+```
+
+**示例输出**
+
+```json
+{
+  "results": [
+    {
+      "title": "Ollama",
+      "url": "https://ollama.com/",
+      "content": "Cloud models are now available..."
+    },
+    {
+      "title": "What is Ollama? Introduction to the AI model management tool",
+      "url": "https://www.hostinger.com/tutorials/what-is-ollama",
+      "content": "Ollama is an open-source tool..."
+    },
+    {
+      "title": "Ollama Explained: Transforming AI Accessibility and Language Processing",
+      "url": "https://www.geeksforgeeks.org/artificial-intelligence/ollama-explained-transforming-ai-accessibility-and-language-processing/",
+      "content": "Ollama is a groundbreaking..."
+    }
+  ]
+}
+```
+
+更多 Ollama [JavaScript 示例](https://github.com/ollama/ollama-js/blob/main/examples/websearch/websearch-tools.ts)
+
+## 网页抓取 API
+
+按 URL 抓取单个网页并返回其内容。
+
+### 请求
+
+`POST https://ollama.com/api/web_fetch`
+
+- `url`（字符串，必需）：要抓取的 URL
+
+### 响应
+
+返回一个包含以下字段的对象：
+
+- `title`（字符串）：网页标题
+- `content`（字符串）：网页的主要内容
+- `links`（数组）：页面上找到的链接数组
+
+### 示例
+
+#### cURL 请求
+
+```python
+curl --request POST \
+  --url https://ollama.com/api/web_fetch \
+  --header "Authorization: Bearer $OLLAMA_API_KEY" \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "url": "ollama.com"
+  }'
+```
+
+**响应**
+
+```json
+{
+  "title": "Ollama",
+  "content": "[Cloud models](https://ollama.com/blog/cloud-models) are now available in Ollama...",
+  "links": [
+    "http://ollama.com/",
+    "http://ollama.com/models",
+    "https://github.com/ollama/ollama"
+  ]
+
+```
+
+#### Python SDK
+
+```python
+from ollama import web_fetch
+
+result = web_fetch('https://ollama.com')
+print(result)
+```
+
+**结果**
+
+```python
+WebFetchResponse(
+    title='Ollama',
+    content='[Cloud models](https://ollama.com/blog/cloud-models) are now available in Ollama\n\n**Chat & build
+with open models**\n\n[Download](https://ollama.com/download) [Explore
+models](https://ollama.com/models)\n\nAvailable for macOS, Windows, and Linux',
+    links=['https://ollama.com/', 'https://ollama.com/models', 'https://github.com/ollama/ollama']
+)
+```
+
+#### JavaScript SDK
+
+```tsx
+import { Ollama } from "ollama";
+
+const client = new Ollama();
+const fetchResult = await client.webFetch("https://ollama.com");
+console.log(JSON.stringify(fetchResult, null, 2));
+```
+
+**结果**
+
+```json
+{
+  "title": "Ollama",
+  "content": "[Cloud models](https://ollama.com/blog/cloud-models) are now available in Ollama...",
+  "links": [
+    "https://ollama.com/",
+    "https://ollama.com/models",
+    "https://github.com/ollama/ollama"
+  ]
+}
+```
+
+## 构建搜索代理
+
+将 Ollama 的网页搜索 API 作为工具，构建一个迷你搜索代理。
+
+本示例使用阿里巴巴的 Qwen 3 4B 参数模型。
+
+```bash
+ollama pull qwen3:4b
+```
+
+```python
+from ollama import chat, web_fetch, web_search
+
+available_tools = {'web_search': web_search, 'web_fetch': web_fetch}
+
+messages = [{'role': 'user', 'content': "what is ollama's new engine"}]
+
+while True:
+  response = chat(
+    model='qwen3:4b',
+    messages=messages,
+    tools=[web_search, web_fetch],
+    think=True
+    )
+  if response.message.thinking:
+    print('Thinking: ', response.message.thinking)
+  if response.message.content:
+    print('Content: ', response.message.content)
+  messages.append(response.message)
+  if response.message.tool_calls:
+    print('Tool calls: ', response.message.tool_calls)
+    for tool_call in response.message.tool_calls:
+      function_to_call = available_tools.get(tool_call.function.name)
+      if function_to_call:
+        args = tool_call.function.arguments
+        result = function_to_call(**args)
+        print('Result: ', str(result)[:200]+'...')
+        # 为适配有限的上下文长度，对结果做了截断
+        messages.append({'role': 'tool', 'content': str(result)[:2000 * 4], 'tool_name': tool_call.function.name})
+      else:
+        messages.append({'role': 'tool', 'content': f'Tool {tool_call.function.name} not found', 'tool_name': tool_call.function.name})
+  else:
+    break
+```
+
+**结果**
+
+```
+Thinking:  Okay, the user is asking about Ollama's new engine. I need to figure out what they're referring to. Ollama is a company that develops large language models, so maybe they've released a new model or an updated version of their existing engine....
+
+Tool calls:  [ToolCall(function=Function(name='web_search', arguments={'max_results': 3, 'query': 'Ollama new engine'}))]
+Result:  results=[WebSearchResult(content='# New model scheduling\n\n## September 23, 2025\n\nOllama now includes a significantly improved model scheduling system. Ahead of running a model, Ollama's new engine
+
+Thinking:  Okay, the user asked about Ollama's new engine. Let me look at the search results.
+
+First result is from September 23, 2025, talking about new model scheduling. It mentions improved memory management, reduced crashes, better GPU utilization, and multi-GPU performance. Examples show speed improvements and accurate memory reporting. Supported models include gemma3, llama4, qwen3, etc...
+
+Content:  Ollama has introduced two key updates to its engine, both released in 2025:
+
+1. **Enhanced Model Scheduling (September 23, 2025)**
+   - **Precision Memory Management**: Exact memory allocation reduces out-of-memory crashes and optimizes GPU utilization.
+   - **Performance Gains**: Examples show significant speed improvements (e.g., 85.54 tokens/s vs 52.02 tokens/s) and full GPU layer utilization.
+   - **Multi-GPU Support**: Improved efficiency across multiple GPUs, with accurate memory reporting via tools like `nvidia-smi`.
+   - **Supported Models**: Includes `gemma3`, `llama4`, `qwen3`, `mistral-small3.2`, and more.
+
+2. **Multimodal Engine (May 15, 2025)**
+   - **Vision Support**: First-class support for vision models, including `llama4:scout` (109B parameters), `gemma3`, `qwen2.5vl`, and `mistral-small3.1`.
+   - **Multimodal Tasks**: Examples include identifying animals in multiple images, answering location-based questions from videos, and document scanning.
+
+These updates highlight Ollama's focus on efficiency, performance, and expanded capabilities for both text and vision tasks.
+```
+
+### 上下文长度与代理
+
+网页搜索结果可能返回数千 token。建议将模型的上下文长度增加到至少约 32000 token。搜索代理在满上下文长度下工作效果最佳。[Ollama 云端模型](https://docs.ollama.com/cloud)以满上下文长度运行。
+
+## MCP 服务器
+
+通过 [Python MCP 服务器](https://github.com/ollama/ollama-python/blob/main/examples/web-search-mcp.py)，你可以在任何 MCP 客户端中启用网页搜索。
+
+### Cline
+
+使用 MCP 服务器配置，即可轻松将 Ollama 的网页搜索集成到 Cline。
+
+`Manage MCP Servers` > `Configure MCP Servers` > 添加以下配置：
+
+```json
+{
+  "mcpServers": {
+    "web_search_and_fetch": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "path/to/web-search-mcp.py"],
+      "env": { "OLLAMA_API_KEY": "your_api_key_here" }
+    }
+  }
+}
+```
+
+![Cline MCP Configuration](/images/cline-mcp.png)
+
+### Codex
+
+Ollama 与 OpenAI 的 Codex 工具配合良好。
+
+将以下配置添加到 `~/.codex/config.toml`
+
+```python
+[mcp_servers.web_search]
+command = "uv"
+args = ["run", "path/to/web-search-mcp.py"]
+env = { "OLLAMA_API_KEY" = "your_api_key_here" }
+```
+
+![Codex MCP Configuration](/images/codex-mcp.png)
+
+### Goose
+
+Ollama 可以通过 Goose 的 MCP 功能与其集成。
+
+![Goose MCP Configuration 1](/images/goose-mcp-1.png)
+
+![Goose MCP Configuration 2](/images/goose-mcp-2.png)
+
+### 其他集成
+
+通过直接集成 Ollama 的 API、Python / JavaScript 库、OpenAI 兼容 API 以及 MCP 服务器集成，Ollama 可以集成到大多数现有工具中。

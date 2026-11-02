@@ -1,0 +1,25 @@
+---
+title: "Roo Code"
+---
+
+
+## 安装
+
+从 VS Code Marketplace 安装 [Roo Code](https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline)。
+
+## 配合 Ollama 使用
+
+1. 在 VS Code 中打开 Roo Code，点击 Roo Code 窗口右上角的**齿轮图标**，打开 **Provider Settings**
+2. 将 `API Provider` 设为 `Ollama`
+3. （可选）如果你的 Ollama 实例在远程运行，更新 `Base URL`。默认值为 `http://localhost:11434`
+4. 输入有效的 `Model ID`（例如 `qwen3` 或 `qwen3-coder:480b-cloud`。全部支持的模型见[此处](https://ollama.com/search)）
+5. 将 `Context Window` 调整为至少 32K tokens，以应对编程任务
+
+<Note>编程工具需要较大的上下文窗口。建议使用至少 32K tokens 的上下文窗口。更多信息见[上下文长度](/context-length)。</Note>
+
+## 连接到 ollama.com
+
+1. 在 ollama.com 上创建 [API 密钥](https://ollama.com/settings/keys)
+2. 启用 `Use custom base URL` 并将其设置为 `https://ollama.com`
+3. 输入你的 **Ollama API 密钥**
+4. 从列表中选择一个模型

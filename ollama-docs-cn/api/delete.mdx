@@ -1,0 +1,29 @@
+---
+title: "删除模型"
+sidebarTitle: "DELETE /api/delete"
+---
+
+**DELETE** `/api/delete`
+
+## 请求示例
+
+```bash 删除模型
+curl -X DELETE http://localhost:11434/api/delete -d '{
+  "model": "gemma4"
+}'
+```
+
+## 请求体
+
+**`DeleteRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 要删除的模型名称 |
+
+## 响应
+
+### 200
+
+模型删除成功
+

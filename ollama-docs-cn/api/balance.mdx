@@ -1,0 +1,78 @@
+---
+title: "余额"
+sidebarTitle: /api/balance
+openapi: /openapi.yaml GET /api/balance
+---
+
+<RequestExample>
+
+```shell 请求
+curl https://ollama.com/api/balance \
+  -H "Authorization: Bearer $OLLAMA_API_KEY"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 响应
+{
+  "included": {
+    "balance_usd": 72.5,
+    "allowance_usd": 100,
+    "period": {
+      "from": "2026-09-15T09:30:00Z",
+      "until": "2026-10-15T09:30:00Z"
+    }
+  },
+  "purchased": {
+    "balance_usd": 25
+  }
+}
+```
+
+</ResponseExample>
+
+该端点不接受查询参数。用量历史请参阅[云端用量](/api/cloud-usage)。
+
+## 余额构成
+
+内含额度的周期遵循你所在套餐的每月重置安排（年付订阅亦然）。周期时间戳采用 UTC，`from` 为包含边界，`until` 为不包含边界。
+
+已购余额仅包含未过期的额度。
+
+<Accordion title="旧版套餐">
+
+带会话与每周限制的旧版套餐会在 `included` 中返回 `session` 与 `weekly`：
+
+```json
+{
+  "included": {
+    "session": {
+      "remaining_percent": 75,
+      "resets_at": "2026-10-01T07:00:00Z"
+    },
+    "weekly": {
+      "remaining_percent": 40,
+      "resets_at": "2026-10-05T00:00:00Z"
+    }
+  },
+  "purchased": {
+    "balance_usd": 25
+  }
+}
+```
+
+`remaining_percent` 取值范围为 `0` 到 `100`；`75` 表示剩余 75%。`resets_at` 为下次重置时间（UTC）。
+
+</Accordion>
+
+## 速率限制
+
+该端点允许每个用户每分钟 10 次请求，所有 API 密钥与设备共享该配额。建议每分钟轮询一次。`429` 响应会包含 `Retry-After` 响应头，指示重试前需等待的秒数。
+
+## 团队
+
+所有团队成员共享相同的内含余额与已购余额。
+
+## 参考

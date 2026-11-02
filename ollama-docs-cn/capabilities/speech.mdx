@@ -1,0 +1,128 @@
+---
+title: "语音"
+description: "用文本转语音模型将文本朗读出来。"
+---
+
+语音模型可以把文本朗读出来。Ollama 会在音频生成的同时流式输出，因此不必等整段文本读完就能开始播放。
+
+## 准备工作
+
+启动 [Ollama](/quickstart) v0.40.9 或更新版本，然后下载 [Phonon](https://ollama.com/library/phonon)：
+
+```shell setup.sh
+ollama pull phonon
+```
+
+Phonon 使用 Gradium 的 31M 英文检查点，并自带 Gradium 的英文音色，如 `Zoey`、`Easton` 和 `Freya`。不指定音色时，它会用检查点自带的音色 `default` 朗读。`ollama show phonon` 会列出所有音色。音色名称不区分大小写，带不带重音符号均可。
+
+## 从终端朗读
+
+`ollama run` 会通过你电脑的扬声器播放音频：
+
+```shell examples.sh
+# 朗读一段文本
+ollama run phonon "Hello from Ollama."
+
+# 选择一个音色
+ollama run phonon --voice Zoey "Hi, this is Zoey."
+
+# 朗读来自其他程序的文本
+echo "Text from another program works too." | ollama run phonon
+
+# 朗读聊天模型的回答
+ollama run gemma4 --hidethinking "Tell me a fun fact about owls in two sentences." | ollama run phonon
+```
+
+管道传入的文本一到就开始朗读，因此聊天模型的回答在前一两句生成后就会开始播放。
+
+不带任何文本运行 `ollama run phonon`，即可在 `>>>` 提示符下逐行输入。每按一次 Enter 就会朗读一行。按 Ctrl+C 可停止朗读，输入 `/bye` 或按 Ctrl+D 退出。
+
+音频通过系统内置播放器播放：macOS 上是 `afplay`，Linux 上按安装情况使用 `paplay`、`pw-play`、`aplay` 或 `ffplay` 中的第一个，Windows 上是 PowerShell。
+
+### 将音频保存到文件
+
+当输出被重定向时，`ollama run` 会写入 WAV 文件而不是播放。这在没有扬声器的服务器上同样可用：
+
+```shell
+ollama run phonon "Save this to a file." > speech.wav
+```
+
+要听到远程服务器的输出，可以在你自己的电脑上运行 `ollama` 并指向该服务器。音频会在命令运行的地方播放：
+
+```shell
+OLLAMA_HOST=my-server:11434 ollama run phonon "Hello from the server."
+```
+
+## 用 API 生成语音
+
+使用 OpenAI 兼容的 `/v1/audio/speech` 端点：
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    curl http://localhost:11434/v1/audio/speech \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "phonon",
+        "input": "Hello from Ollama.",
+        "voice": "default"
+      }' --output speech.wav
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+
+    with client.audio.speech.with_streaming_response.create(
+        model="phonon",
+        voice="default",
+        input="Hello from Ollama.",
+        response_format="wav",
+    ) as response:
+        response.stream_to_file("speech.wav")
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import fs from 'node:fs'
+    import OpenAI from 'openai'
+
+    const openai = new OpenAI({ baseURL: 'http://localhost:11434/v1', apiKey: 'ollama' })
+
+    const response = await openai.audio.speech.create({
+      model: 'phonon',
+      voice: 'default',
+      input: 'Hello from Ollama.',
+      response_format: 'wav',
+    })
+    fs.writeFileSync('speech.wav', Buffer.from(await response.arrayBuffer()))
+    ```
+  </Tab>
+</Tabs>
+
+响应会在音频生成的同时流式传输，因此你可以立即开始播放：
+
+```shell
+curl -sN http://localhost:11434/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"model": "phonon", "input": "Playback starts while the rest is still being generated."}' \
+  | ffplay -nodisp -autoexit -loglevel error -
+```
+
+### 音频格式
+
+| `response_format` | 输出 |
+| --- | --- |
+| `wav`（默认） | WAV 文件：16 位、单声道、24 kHz。头部在总长度未知时先行写入，因此其大小字段为最大值。 |
+| `pcm` | 原始 16 位小端采样，单声道、24 kHz，无头部。 |
+
+### 限制
+
+- 每次请求的 `input` 最多 4,096 字符。更长的文本，`ollama run` 会自动按段落和句子边界为你切分。
+- 价格、数字、符号、电子邮件地址和 URL 会在朗读前被展开拼写，因此 `$4.59` 会读作 "4 dollars and 59 cents"。时间和数字格式的日期按书写原样朗读，因此请把日期写完整（写 `October 23`，而不是 `10/23`）以获得自然的朗读效果。表情符号、项目符号以及 `*`、`#` 等 markdown 标记会被跳过。
+- 模型不支持的选项（如其他格式、语速或 `instructions`）会返回 `400` 错误，而不是被忽略。未知音色会返回一个列出可用音色的 `400` 错误。
+- 语音模型只能生成语音：对它们发起 chat、completion 或嵌入请求都会返回 `400` 错误。
+
+`ollama show phonon` 和 `/api/show` 会将模型能力列为 `speech`，并列出其音色（`/api/show` 中的 `voices`）。所有支持的字段见 [OpenAI 兼容性](/api/openai-compatibility)。

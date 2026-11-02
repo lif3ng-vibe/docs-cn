@@ -1,0 +1,122 @@
+---
+title: "回答结构化问题"
+sidebarTitle: "POST /v1/systemone"
+---
+
+**POST** `/v1/systemone`
+
+使用 System One 模型在本地或 Ollama 云端回答选择、是/否与打分问题。需要 Ollama v0.35.0 或更高版本，云端模型需要 v0.40.5 或更高版本。示例请参阅[决策指南](/capabilities/decision)。
+
+## 请求示例
+
+```bash
+curl http://localhost:11434/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "nimble",
+    "state": "Our checkout has returned 500 errors since 9am.",
+    "questions": {
+      "label": {
+        "type": "choice",
+        "instructions": "Which label fits this ticket?",
+        "criteria": {
+          "billing": "Payments and refunds",
+          "bug": "Software errors",
+          "account": "Login and account access"
+        }
+      }
+    }
+  }'
+```
+
+## 请求体
+
+**`SystemOneRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 为 System One 训练的模型，例如 nimble；Ollama 云端则为 clef:cloud。 |
+| `state` | `SystemOneContent` | 是 | — |
+| `images` | `array<string>` | 否 | 所有问题共享的 Base64 编码图片，按请求顺序排列。需要具备视觉能力的模型（如 Clef）。支持音频输入的模型还可在此接受 WAV 片段。不支持 URL 和 data URL。 |
+| `questions` | `object` | 是 | 关于共享状态的命名问题。答案不会传给后续问题。云端模型接受的名称最长 100 个 ASCII 字母、数字、`_`、`.` 或 `-`。 |
+| `keep_alive` | `` | 否 | 请求完成后模型保持加载的时长，可用时长字符串（如 5m）或秒数表示。0 表示请求后卸载；负值表示保持加载。默认为服务器的 keep-alive 设置（未配置时为 5m）。 |
+
+## 响应
+
+### 200
+
+所有问题的回答与 token 用量。示例中的概率与置信度四舍五入到四位小数；结果与用量会随模型和服务器配置而变化。
+
+**`SystemOneResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 请求中的模型名称。 |
+| `answers` | `object` | 是 | 以请求中的问题名称为键的回答。 |
+| `usage` | `object` | 是 | — |
+
+### 400
+
+请求无效、模型或运行器不受支持，或渲染后的提示词超出已加载上下文或云端模型的 token 上限。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 401
+
+请求云端模型时未登录，或 API 密钥无效。通过本地服务器请求时，响应会包含 `signin_url`。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 402
+
+免费套餐不包含该云端模型。请添加用量额度或升级套餐。支付失败时也返回此状态。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 404
+
+未找到模型。发起请求前请先下载本地模型。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 413
+
+本地请求的文本与 schema 超过 64 KiB，或请求超过 32 MiB；或云端请求超过 13 MiB 或模型的上下文窗口。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 500
+
+模型加载、渲染或打分失败。
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+- 仅返回一个 JSON 响应；不支持流式输出、视频、工具与生成控制。
+- 本地请求的文本与 schema（不含图片）必须不超过 64 KiB，整个请求（含 base64 与 JSON）不超过 32 MiB。完整输入必须能装进已加载的上下文窗口。Nimble 与 Tev 还需要两个 token 位置用于打分。输入不会被截断。
+- 云端模型需要付费套餐或已购[用量额度](https://ollama.com/pricing)。云端请求最多接受 64 个问题，名称最长 100 个 ASCII 字母、数字、`_`、`.` 或 `-`；最多 4 张图片，每张不超过 4 MiB 和 16 百万像素，总计不超过 8 MiB。请求必须不超过 13 MiB，且输入必须装进模型 65,536 token 的上下文窗口。
+
+

@@ -1,0 +1,46 @@
+---
+title: "拉取模型"
+sidebarTitle: "POST /api/pull"
+---
+
+**POST** `/api/pull`
+
+## 请求示例
+
+<CodeGroup>
+```bash 默认
+curl http://localhost:11434/api/pull -d '{
+  "model": "gemma4"
+}'
+```
+```bash 非流式
+curl http://localhost:11434/api/pull -d '{
+  "model": "gemma4",
+  "stream": false
+}'
+```
+</CodeGroup>
+
+## 请求体
+
+**`PullRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 要下载的模型名称 |
+| `insecure` | `boolean` | 否 | 允许通过不安全的连接下载 |
+| `stream` | `boolean` | 否 | 以流式返回进度更新 |
+
+## 响应
+
+### 200
+
+拉取状态更新。
+
+**`StatusResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `status` | `string` | 否 | 当前状态消息 |
+
+

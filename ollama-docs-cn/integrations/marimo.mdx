@@ -1,0 +1,73 @@
+---
+title: "marimo"
+---
+
+## 安装
+
+安装 [marimo](https://marimo.io)。可以使用 `pip` 或 `uv`。你
+也可以用 `uv` 为 marimo 创建一个沙箱环境，运行：
+
+```
+uvx marimo edit --sandbox notebook.py
+```
+
+## 配合 Ollama 使用
+
+1. 在 marimo 中，进入用户设置并切换到 AI 标签页。在这里
+你可以找到 Ollama 并将其配置为 AI 提供商。本地使用时，
+通常把基础 URL 指向 `http://localhost:11434/v1`。
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/marimo-settings.png" 
+    alt="Ollama settings in marimo"
+    width="50%"
+  />
+</div>
+
+2. AI 提供商设置完成后，你可以开启/关闭想要使用的特定 AI 模型。 
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/marimo-models.png" 
+    alt="Selecting an Ollama model"
+    width="50%"
+  />
+</div>
+
+3. 你也可以滚动到底部，通过那里的界面把模型添加到可用模型列表中。 
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/marimo-add-model.png" 
+    alt="Adding a new Ollama model"
+    width="50%"
+  />
+</div>
+
+4. 配置完成后，你就可以在 marimo 的 AI 聊天中使用 Ollama 了。
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/marimo-chat.png" 
+    alt="Configure code completion"
+    width="50%"
+  />
+</div>
+
+4. 此外，你还可以在 marimo 中将 Ollama 用于**内联代码补全**。这可以在 "AI Features" 标签页中配置。 
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/marimo-code-completion.png" 
+    alt="Configure code completion"
+    width="50%"
+  />
+</div>
+
+
+## 连接到 ollama.com
+
+1. 使用 `ollama signin` 登录 Ollama 云端
+2. 在 ollama 模型设置中添加一个 ollama 托管的模型，如 `gpt-oss:120b`。
+3. 现在你就可以在 marimo 中使用这个模型了！

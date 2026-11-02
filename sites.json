@@ -399,5 +399,22 @@
       "stack": "Next.js 16 + fumadocs",
       "snap": "2026-10-30"
     }
+  },
+  {
+    "name": "Ollama",
+    "slug": "ollama",
+    "desc": "Ollama 官方文档中文镜像——本地/云端大模型运行平台：快速开始、九大能力（流式、思考、结构化输出、工具调用、视觉、嵌入、语音、网页搜索）与 27 个集成页（Claude Code、ChatGPT、Codex、Cline 等）、完整 API 参考；72 页全量汉化，端点参考页由 OpenAPI 规范生成。",
+    "tags": [
+      "cli-tool",
+      "ai-app-dev",
+      "sdk-api"
+    ],
+    "orig": "https://docs.ollama.com",
+    "repo": "https://github.com/ollama/ollama",
+    "meta": {
+      "pages": "72 页",
+      "stack": "Mintlify 原班工具链（匿名 export 静态导出汉化）",
+      "snap": "main@c1db5f9 2026-11-02"
+    }
   }
 ]

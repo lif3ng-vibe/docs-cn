@@ -1,0 +1,28 @@
+---
+title: "获取版本"
+sidebarTitle: "GET /api/version"
+---
+
+**GET** `/api/version`
+
+获取 Ollama 的版本
+
+## 请求示例
+
+```bash 默认
+curl http://localhost:11434/api/version
+```
+
+## 响应
+
+### 200
+
+版本信息
+
+**`VersionResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `version` | `string` | 否 | Ollama 的版本 |
+
+

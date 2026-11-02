@@ -1,0 +1,46 @@
+---
+title: "推送模型"
+sidebarTitle: "POST /api/push"
+---
+
+**POST** `/api/push`
+
+## 请求示例
+
+<CodeGroup>
+```bash 推送模型
+curl http://localhost:11434/api/push -d '{
+  "model": "my-username/my-model"
+}'
+```
+```bash 非流式
+curl http://localhost:11434/api/push -d '{
+  "model": "my-username/my-model",
+  "stream": false
+}'
+```
+</CodeGroup>
+
+## 请求体
+
+**`PushRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 要发布的模型名称 |
+| `insecure` | `boolean` | 否 | 允许通过不安全的连接发布 |
+| `stream` | `boolean` | 否 | 以流式返回进度更新 |
+
+## 响应
+
+### 200
+
+推送状态更新。
+
+**`StatusResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `status` | `string` | 否 | 当前状态消息 |
+
+

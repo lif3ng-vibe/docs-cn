@@ -1,0 +1,119 @@
+---
+title: "嵌入"
+description: "生成文本嵌入，用于语义搜索、检索和 RAG。"
+---
+
+嵌入将文本转换为数值向量，你可以把它们存入向量数据库、用余弦相似度搜索，或在 RAG 管线中使用。向量长度取决于模型（通常为 384–1024 维）。
+
+## 生成嵌入
+
+<Tabs>
+  <Tab title="CLI">
+    直接在命令行生成嵌入：
+
+    ```shell
+    ollama run embeddinggemma "Hello world"
+    ```
+
+    也可以通过管道输入文本来生成嵌入：
+
+    ```shell
+    echo "Hello world" | ollama run embeddinggemma
+    ```
+
+    输出是一个 JSON 数组。
+
+  </Tab>
+  <Tab title="cURL">
+    ```shell
+    curl -X POST http://localhost:11434/api/embed \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "embeddinggemma",
+        "input": "The quick brown fox jumps over the lazy dog."
+      }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    import ollama
+
+    single = ollama.embed(
+      model='embeddinggemma',
+      input='The quick brown fox jumps over the lazy dog.'
+    )
+    print(len(single['embeddings'][0]))  # 向量长度
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    const single = await ollama.embed({
+      model: 'embeddinggemma',
+      input: 'The quick brown fox jumps over the lazy dog.',
+    })
+    console.log(single.embeddings[0].length) // 向量长度
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  `/api/embed` 端点返回 L2 归一化（单位长度）向量。
+</Note>
+
+## 批量生成嵌入
+
+向 `input` 传入字符串数组。
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    curl -X POST http://localhost:11434/api/embed \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "embeddinggemma",
+        "input": [
+          "First sentence",
+          "Second sentence",
+          "Third sentence"
+        ]
+      }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    import ollama
+
+    batch = ollama.embed(
+      model='embeddinggemma',
+      input=[
+        'The quick brown fox jumps over the lazy dog.',
+        'The five boxing wizards jump quickly.',
+        'Jackdaws love my big sphinx of quartz.',
+      ]
+    )
+    print(len(batch['embeddings']))  # 向量数量
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    const batch = await ollama.embed({
+      model: 'embeddinggemma',
+      input: [
+        'The quick brown fox jumps over the lazy dog.',
+        'The five boxing wizards jump quickly.',
+        'Jackdaws love my big sphinx of quartz.',
+      ],
+    })
+    console.log(batch.embeddings.length) // 向量数量
+    ```
+  </Tab>
+</Tabs>
+
+## 技巧
+
+- 大多数语义搜索场景使用余弦相似度。
+- 索引和查询应使用同一个嵌入模型。

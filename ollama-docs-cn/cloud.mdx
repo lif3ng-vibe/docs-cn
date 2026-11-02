@@ -1,0 +1,92 @@
+---
+title: "云端"
+sidebarTitle: "云端"
+---
+
+在你的应用或终端中运行 Ollama 云端的模型。无需下载模型或应用。
+
+## API 密钥
+
+创建一个 [API 密钥](https://ollama.com/settings/keys)，然后在 Bash 或 Zsh 中设置：
+
+```shell
+export OLLAMA_API_KEY="your_api_key"
+```
+
+在同一个终端发送请求：
+
+```shell
+curl https://ollama.com/api/chat \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ],
+    "stream": false
+  }'
+```
+
+从 `message.content` 读取回答。不要把 API 密钥放进浏览器代码或版本控制。
+
+你也可以使用 [OpenAI](/api/openai-compatibility) 或 [Anthropic](/api/anthropic-compatibility) 客户端，两者各自只支持原 API 的一个子集，且无需安装 Ollama。
+
+## Ollama 应用或 CLI
+
+[下载 Ollama](https://ollama.com/download)。打开应用，或运行：
+
+```shell
+ollama
+```
+
+按照设置提示操作并登录，即可使用云端模型。
+
+在 macOS 上，打开 **Apps** 并连接 Claude 或 ChatGPT。对于编码代理，运行对应的启动命令：
+
+<CodeGroup>
+
+```shell Claude Code
+ollama launch claude
+```
+
+```shell Codex CLI
+ollama launch codex
+```
+
+```shell OpenCode
+ollama launch opencode
+```
+
+</CodeGroup>
+
+更多集成方式，请打开 Ollama 应用，或在终端运行 `ollama`。
+
+Ollama 会为相连的应用处理登录。安装设置参见[快速开始](/quickstart)。
+
+## 模型
+
+浏览[云端模型](https://ollama.com/search?c=cloud)，或通过 API 列出它们：
+
+```shell
+curl https://ollama.com/api/tags
+```
+
+向 ollama.com 发送 API 请求时，请使用该列表返回的名称（如 `gemma4:31b`）；在 Ollama 应用或 CLI 中则使用 `gemma4:cloud`。云端模型无需下载。
+
+## 用量
+
+查看你的[用量](https://ollama.com/settings/usage)，或对比各[套餐](https://ollama.com/pricing)。
+
+## 模型退役
+
+[用量设置](https://ollama.com/settings)页会展示你近期用过的模型即将退役的时间。请在退役日期前切换到其他模型。已下载的本地模型不受影响。
+
+## 数据处理
+
+Ollama 会处理云端提示词与响应来完成你的请求，但不会将其用于训练模型。详情请阅读[隐私政策](https://ollama.com/privacy)。
+
+只想使用本地模型的话，可以[禁用云端功能](/faq#如何禁用-ollama-的云端功能)。

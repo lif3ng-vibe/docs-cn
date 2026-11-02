@@ -1,0 +1,49 @@
+---
+title: "Goose"
+---
+
+## Goose Desktop
+
+安装 [Goose](https://goose-docs.ai/docs/getting-started/installation/) Desktop。
+
+### 配合 Ollama 使用
+1. 在 Goose 中，打开 **Settings** → **Configure Provider**。  
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/goose-settings.png" 
+    alt="Goose settings Panel"
+    width="75%"
+  />
+</div>
+2. 找到 **Ollama**，点击 **Configure** 
+3. 确认 **API Host** 为 `http://localhost:11434`，然后点击 Submit
+
+
+### 连接到 ollama.com
+
+1. 在 ollama.com 上创建 [API 密钥](https://ollama.com/settings/keys)，并保存到你的 `.env` 中 
+2. 在 Goose 中，将 **API Host** 设置为 `https://ollama.com`
+
+
+## Goose CLI
+
+安装 [Goose](https://goose-docs.ai/docs/getting-started/installation/) CLI
+
+### 配合 Ollama 使用
+1. 运行 `goose configure`
+2. 选择 **Configure Providers**，然后选择 **Ollama**
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/goose-cli.png" 
+    alt="Goose CLI"
+    width="50%"
+  />
+</div>
+3. 输入模型名称（如 `qwen3`）
+
+### 连接到 ollama.com
+
+1. 在 ollama.com 上创建 [API 密钥](https://ollama.com/settings/keys)，并保存到你的 `.env` 中 
+2. 运行 `goose configure`
+3. 选择 **Configure Providers**，然后选择 **Ollama**
+4. 将 **OLLAMA_HOST** 更新为 `https://ollama.com`

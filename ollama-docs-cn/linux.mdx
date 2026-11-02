@@ -1,0 +1,196 @@
+---
+title: "Linux"
+---
+
+## 安装
+
+要安装 Ollama，运行以下命令：
+
+```shell
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+## 手动安装
+
+<Note>
+  如果你是从旧版本升级，应先用 `sudo rm -rf /usr/lib/ollama` 移除旧的库文件。
+</Note>
+
+下载并解压安装包：
+
+```shell
+curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst \
+    | sudo tar x -C /usr
+```
+
+启动 Ollama：
+
+```shell
+ollama serve
+```
+
+在另一个终端中，验证 Ollama 是否已在运行：
+
+```shell
+ollama -v
+```
+
+### AMD GPU 安装
+
+如果你使用 AMD GPU，还需下载并解压额外的 ROCm 包：
+
+```shell
+curl -fsSL https://ollama.com/download/ollama-linux-amd64-rocm.tar.zst \
+    | sudo tar x -C /usr
+```
+
+### ARM64 安装
+
+下载并解压 ARM64 专用安装包：
+
+```shell
+curl -fsSL https://ollama.com/download/ollama-linux-arm64.tar.zst \
+    | sudo tar x -C /usr
+```
+
+### 将 Ollama 添加为启动服务（推荐）
+
+为 Ollama 创建用户和用户组：
+
+```shell
+sudo useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
+sudo usermod -a -G ollama $(whoami)
+```
+
+在 `/etc/systemd/system/ollama.service` 创建服务文件：
+
+```ini
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=$PATH"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+然后启动服务：
+
+```shell
+sudo systemctl daemon-reload
+sudo systemctl enable ollama
+```
+
+### 安装 CUDA 驱动（可选）
+
+[下载并安装](https://developer.nvidia.com/cuda-downloads) CUDA。
+
+运行以下命令验证驱动是否已安装，该命令应输出你的 GPU 详细信息：
+
+```shell
+nvidia-smi
+```
+
+### 安装 AMD ROCm 驱动（可选）
+
+[下载并安装](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html) ROCm v7。
+
+### 启动 Ollama
+
+启动 Ollama 并确认其正在运行：
+
+```shell
+sudo systemctl start ollama
+sudo systemctl status ollama
+```
+
+<Note>
+  虽然 AMD 已将 `amdgpu` 驱动贡献到官方 Linux 内核源码中，但该版本较旧，可能不支持全部 ROCm 特性。我们建议从
+  https://www.amd.com/en/support/download/linux-drivers.html 安装最新驱动，以获得对 Radeon
+  GPU 的最佳支持。
+</Note>
+
+## 自定义
+
+要自定义 Ollama 的安装，可以编辑 systemd 服务文件或环境变量，运行：
+
+```shell
+sudo systemctl edit ollama
+```
+
+也可以在 `/etc/systemd/system/ollama.service.d/override.conf` 手动创建覆盖文件：
+
+```ini
+[Service]
+Environment="OLLAMA_DEBUG=1"
+```
+
+## 更新
+
+再次运行安装脚本即可更新 Ollama：
+
+```shell
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+或者重新下载 Ollama：
+
+```shell
+curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst \
+    | sudo tar x -C /usr
+```
+
+## 安装特定版本
+
+在安装脚本中配合 `OLLAMA_VERSION` 环境变量，即可安装特定版本的 Ollama，包括预发布版本。版本号可在[发布页面](https://github.com/ollama/ollama/releases)查看。
+
+例如：
+
+```shell
+curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+```
+
+## 查看日志
+
+要查看以启动服务方式运行的 Ollama 的日志，运行：
+
+```shell
+journalctl -e -u ollama
+```
+
+## 卸载
+
+移除 ollama 服务：
+
+```shell
+sudo systemctl stop ollama
+sudo systemctl disable ollama
+sudo rm /etc/systemd/system/ollama.service
+```
+
+从 lib 目录（`/usr/local/lib`、`/usr/lib` 或 `/lib`）移除 ollama 库文件：
+
+```shell
+sudo rm -r $(which ollama | tr 'bin' 'lib')
+```
+
+从 bin 目录（`/usr/local/bin`、`/usr/bin` 或 `/bin`）移除 ollama 二进制文件：
+
+```shell
+sudo rm $(which ollama)
+```
+
+移除已下载的模型以及 Ollama 服务的用户和用户组：
+
+```shell
+sudo userdel ollama
+sudo groupdel ollama
+sudo rm -r /usr/share/ollama
+```

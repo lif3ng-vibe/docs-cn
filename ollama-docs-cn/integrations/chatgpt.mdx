@@ -1,0 +1,39 @@
+---
+title: "ChatGPT Desktop"
+description: "在 ChatGPT Desktop 中使用 Ollama 模型。"
+---
+
+ChatGPT Desktop 内置 Codex——OpenAI 的桌面编码代理。Ollama 会在 Codex 的模型选择器中，把兼容的本地与云端模型添加到 ChatGPT 原生模型旁边。
+
+## 前提条件
+
+- Ollama v0.34.0 或更新版本
+
+如果尚未安装 ChatGPT，Ollama 会在设置过程中提示下载。
+
+## 连接 ChatGPT
+
+1. 打开 Ollama 桌面应用，选择 **Apps**。
+2. 将 **ChatGPT (Desktop)** 开关切换为开启。
+3. 按照设置提示操作。如果 ChatGPT 已经打开，Ollama 会请求重启它，之后新模型才会出现。
+4. 打开 ChatGPT 桌面应用，使用 Codex 模式。
+
+## 选择模型
+
+打开 Ollama **Settings**，选择 **Apps**，然后选择 ChatGPT。最多选择五个兼容的本地或云端模型并保存更改。当模型更改需要重启时，Ollama 会请求重启 ChatGPT。
+
+## 断开 ChatGPT
+
+打开 Ollama **Apps**，关闭 ChatGPT。Ollama 会恢复 ChatGPT 的连接设置和常用配置文件。如果 ChatGPT 正在运行，Ollama 会请求重启它，使更改生效。
+
+## Codex 行为与限制
+
+- 只有使用 Ollama 模型发出的请求才会走 Ollama。ChatGPT 原生模型继续使用其常规提供商。
+- Ollama 模型仅用于 Codex 模式。普通对话和语音继续使用其常规 ChatGPT 连接。
+- 会话由 Codex 管理。Ollama 只在 Codex 请求时负责路由模型请求和压缩（compaction），不会存储 ChatGPT 会话。
+- 使用 Ollama 模型时，网页搜索会使用 Ollama 的网页搜索服务。该功能需要登录 Ollama，且每次响应最多调用三次。
+
+## 相关集成
+
+- 在终端中使用 [Codex CLI](/integrations/codex)。
+- 从 [Claude Desktop](/integrations/claude-desktop) 连接其他桌面应用。

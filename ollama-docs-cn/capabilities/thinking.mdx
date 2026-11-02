@@ -1,0 +1,164 @@
+---
+title: "思考"
+---
+
+支持思考的模型会输出一个 `thinking` 字段，把推理过程与最终答案分开。
+
+你可以利用这项能力审查模型的步骤、在界面上动态展示模型的*思考*过程，或者在只需要最终回答时完全隐藏推理轨迹。
+
+查看[支持思考的模型完整列表](https://ollama.com/search?c=thinking)。
+
+## 发现模型的思考控制选项
+
+思考控制选项因模型而异。使用 `/api/show` 可以发现模型支持的取值以及 Ollama 默认使用的值：
+
+```shell
+curl http://localhost:11434/api/show -d '{
+  "model": "gpt-oss"
+}'
+```
+
+响应中包含一个顶层的 `thinking` 对象：
+
+```json
+{
+  "thinking": {
+    "values": ["low", "medium", "high"],
+    "default": "medium"
+  }
+}
+```
+
+- `values` 可以包含布尔值（`true` 或 `false`），表示开/关控制；也可以包含模型自定义的字符串，表示具名档位。
+- `default` 在未设置 `think` 时使用。
+- `values: [false]` 表示该模型不支持思考。
+- 如果省略了 `thinking`，说明该模型没有思考元数据。模型仍可能基于其既有行为进行思考。
+
+## 在 API 调用中启用思考
+
+在 chat 或 generate 请求中设置 `think` 字段：
+
+- `true`：请求输出思考内容。
+- `false`：请求不输出思考内容（若模型允许）。
+- `null`：使用模型默认值。
+- 字符串：从 `thinking.values` 中选择一个受支持的档位。请使用 `/api/show` 返回的确切值。不支持数字。
+
+如果模型从 `/api/show` 元数据解析具名档位，Ollama 会精确应用受支持的名称；不受支持的名称则使用模型默认值。
+
+推理输出与答案使用不同的字段。Chat 返回 `message.thinking` 和 `message.content`；Generate 返回 `thinking` 和 `response`。
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    curl http://localhost:11434/api/chat -d '{
+      "model": "qwen3",
+      "messages": [{
+        "role": "user",
+        "content": "How many letter r are in strawberry?"
+      }],
+      "think": true,
+      "stream": false
+    }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from ollama import chat
+
+    response = chat(
+      model='qwen3',
+      messages=[{'role': 'user', 'content': 'How many letter r are in strawberry?'}],
+      think=True,
+      stream=False,
+    )
+
+    print('Thinking:\n', response.message.thinking)
+    print('Answer:\n', response.message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    const response = await ollama.chat({
+      model: 'deepseek-r1',
+      messages: [{ role: 'user', content: 'How many letter r are in strawberry?' }],
+      think: true,
+      stream: false,
+    })
+
+    console.log('Thinking:\n', response.message.thinking)
+    console.log('Answer:\n', response.message.content)
+    ```
+  </Tab>
+</Tabs>
+
+## 流式输出推理轨迹
+
+思考流会在答案 token 之前交错输出推理 token。检测到第一个 `thinking` 数据块时即可渲染"思考"区块，等 `message.content` 到达后再切换到最终回复。
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    from ollama import chat
+
+    stream = chat(
+      model='qwen3',
+      messages=[{'role': 'user', 'content': 'What is 17 × 23?'}],
+      think=True,
+      stream=True,
+    )
+
+    in_thinking = False
+
+    for chunk in stream:
+      if chunk.message.thinking and not in_thinking:
+        in_thinking = True
+        print('Thinking:\n', end='')
+
+      if chunk.message.thinking:
+        print(chunk.message.thinking, end='')
+      elif chunk.message.content:
+        if in_thinking:
+          print('\n\nAnswer:\n', end='')
+          in_thinking = False
+        print(chunk.message.content, end='')
+
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    async function main() {
+      const stream = await ollama.chat({
+        model: 'qwen3',
+        messages: [{ role: 'user', content: 'What is 17 × 23?' }],
+        think: true,
+        stream: true,
+      })
+
+      let inThinking = false
+
+      for await (const chunk of stream) {
+        if (chunk.message.thinking && !inThinking) {
+          inThinking = true
+          process.stdout.write('Thinking:\n')
+        }
+
+        if (chunk.message.thinking) {
+          process.stdout.write(chunk.message.thinking)
+        } else if (chunk.message.content) {
+          if (inThinking) {
+            process.stdout.write('\n\nAnswer:\n')
+            inThinking = false
+          }
+          process.stdout.write(chunk.message.content)
+        }
+      }
+    }
+
+    main()
+    ```
+  </Tab>
+</Tabs>

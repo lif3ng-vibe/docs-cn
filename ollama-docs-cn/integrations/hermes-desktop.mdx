@@ -1,0 +1,38 @@
+---
+title: "Hermes Desktop"
+---
+
+Hermes Desktop 是 Nous Research 出品的原生 AI 助手应用。它为 Hermes Agent 提供桌面聊天界面。Hermes Agent 是一个可以配合模型工作、运行工具、管理项目、使用记忆与技能并连接消息网关的 AI 代理。
+
+![Hermes Desktop with Ollama](http://files.ollama.com/hermes-agent.png)
+
+## 快速开始
+
+```bash
+ollama launch hermes-desktop
+```
+
+Ollama 会自动处理设置流程：
+
+1. **安装** — 如果尚未安装 Hermes，Ollama 会提示安装 Hermes 命令行代理。首次启动桌面端时，Hermes 会构建其打包的桌面应用。
+2. **模型** — 从选择器中挑选模型
+3. **配置** — Ollama 将 Hermes Desktop 配置为使用你选定的 Ollama 模型
+4. **启动** — Ollama 打开 Hermes Desktop
+
+## 直接用模型运行
+
+```bash
+ollama launch hermes-desktop --model <model>
+```
+
+之后再次运行 `ollama launch hermes-desktop` 即可切换模型。
+
+## 直接安装 Hermes Desktop
+
+在 macOS 和 Windows 上，Hermes Desktop 安装程序是推荐的上游安装途径。它会同时安装桌面应用和 Hermes Agent。如果你偏好命令行，`ollama launch hermes-desktop` 仍是明确的 Ollama 托管途径，且与 CLI 使用相同的 Hermes 配置、会话、技能和记忆。
+
+强制 Hermes 重新构建其打包的桌面应用：
+
+```bash
+ollama launch hermes-desktop -- --force-build
+```

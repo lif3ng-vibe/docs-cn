@@ -1,0 +1,79 @@
+---
+title: "OpenClaw"
+---
+
+OpenClaw 是一个运行在你自己设备上的个人 AI 助手。它通过一个集中式网关，把消息服务（WhatsApp、Telegram、Slack、Discord、iMessage 等）桥接到 AI 编码代理。
+
+## 快速开始
+
+```bash
+ollama launch openclaw
+```
+
+Ollama 会自动处理一切：
+
+1. **安装** — 如果尚未安装 OpenClaw，Ollama 会提示通过 npm 安装
+2. **安全** — 首次启动时会出现一条安全提示，说明工具访问的风险
+3. **模型** — 从选择器中挑选模型（支持的本地与云端模型见[此处](https://ollama.com/search)）
+4. **引导** — Ollama 会配置提供商、安装网关守护进程、把你选的模型设为主模型，并启用 OpenClaw 内置的 Ollama 网页搜索
+5. **网关** — 在后台启动并打开 OpenClaw TUI
+
+<Note>OpenClaw 需要较大的上下文窗口。使用本地模型时，建议至少 64k tokens 的上下文窗口。更多信息见[上下文长度](/context-length)。</Note>
+
+<Note>OpenClaw 此前名为 Clawdbot。`ollama launch clawdbot` 仍可作为别名使用。</Note>
+
+## 网页搜索与抓取
+
+OpenClaw 内置了 Ollama `web_search` 提供商，让本地或云端 Ollama 环境通过所配置的 Ollama 主机搜索网页。
+
+```bash
+ollama launch openclaw
+```
+
+通过 Ollama 启动 OpenClaw 时，Ollama 网页搜索会自动启用。手动配置：
+
+```bash
+openclaw configure --section web
+```
+
+<Note>本地模型使用 Ollama 网页搜索需要先运行 `ollama signin`。</Note>
+
+## 不启动直接配置
+
+要在不启动网关和 TUI 的情况下更换模型：
+
+```bash
+ollama launch openclaw --config
+```
+
+直接使用指定模型：
+
+```bash
+ollama launch openclaw --model kimi-k2.5:cloud
+```
+
+如果网关已在运行，它会自动重启以加载新模型。
+
+## 免交互（无头）模式
+
+以免交互方式运行 OpenClaw，用于 Docker、CI/CD 或脚本：
+
+```bash
+ollama launch openclaw --model kimi-k2.5:cloud --yes
+```
+
+`--yes` 标志会自动拉取模型、跳过选择器，且必须指定 `--model`。
+
+## 连接消息应用
+
+```bash
+openclaw configure --section channels
+```
+
+将 WhatsApp、Telegram、Slack、Discord 或 iMessage 连接起来，随时随地与你的本地模型对话。
+
+## 停止网关
+
+```bash
+openclaw gateway stop
+```

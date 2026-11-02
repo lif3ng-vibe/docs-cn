@@ -1,0 +1,197 @@
+---
+title: "结构化输出"
+---
+
+<Note>
+  Ollama 云端目前不支持结构化输出。
+</Note>
+
+结构化输出让你可以对模型响应强制套用 JSON schema，从而可靠地提取结构化数据、描述图像，或让每次回复都保持一致。
+
+## 生成结构化 JSON
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+      "model": "gpt-oss",
+      "messages": [{"role": "user", "content": "Tell me about Canada in one line"}],
+      "stream": false,
+      "format": "json"
+    }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from ollama import chat
+
+    response = chat(
+      model='gpt-oss',
+      messages=[{'role': 'user', 'content': 'Tell me about Canada.'}],
+      format='json'
+    )
+    print(response.message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    const response = await ollama.chat({
+      model: 'gpt-oss',
+      messages: [{ role: 'user', content: 'Tell me about Canada.' }],
+      format: 'json'
+    })
+    console.log(response.message.content)
+    ```
+  </Tab>
+</Tabs>
+
+## 用 schema 生成结构化 JSON
+
+向 `format` 字段提供一个 JSON schema。
+
+<Note>
+  建议同时在提示词中以字符串形式传入 JSON schema，帮助模型锚定响应格式。
+</Note>
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+      "model": "gpt-oss",
+      "messages": [{"role": "user", "content": "Tell me about Canada."}],
+      "stream": false,
+      "format": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "capital": {"type": "string"},
+          "languages": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "required": ["name", "capital", "languages"]
+      }
+    }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    使用 Pydantic 模型，把 `model_json_schema()` 传给 `format`，然后校验响应：
+
+    ```python
+    from ollama import chat
+    from pydantic import BaseModel
+
+    class Country(BaseModel):
+      name: str
+      capital: str
+      languages: list[str]
+
+    response = chat(
+      model='gpt-oss',
+      messages=[{'role': 'user', 'content': 'Tell me about Canada.'}],
+      format=Country.model_json_schema(),
+    )
+
+    country = Country.model_validate_json(response.message.content)
+    print(country)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    用 `z.toJSONSchema()` 序列化 Zod schema，再解析结构化响应：
+
+    ```javascript
+    import ollama from 'ollama'
+    import * as z from 'zod'
+
+    const Country = z.object({
+      name: z.string(),
+      capital: z.string(),
+      languages: z.array(z.string()),
+    })
+
+    const response = await ollama.chat({
+      model: 'gpt-oss',
+      messages: [{ role: 'user', content: 'Tell me about Canada.' }],
+      format: z.toJSONSchema(Country),
+    })
+
+    const country = Country.parse(JSON.parse(response.message.content))
+    console.log(country)
+    ```
+  </Tab>
+</Tabs>
+
+## 示例：提取结构化数据
+
+先定义你希望返回的对象，再让模型填充字段：
+
+```python
+from ollama import chat
+from pydantic import BaseModel
+
+class Pet(BaseModel):
+  name: str
+  animal: str
+  age: int
+  color: str | None
+  favorite_toy: str | None
+
+class PetList(BaseModel):
+  pets: list[Pet]
+
+response = chat(
+  model='gpt-oss',
+  messages=[{'role': 'user', 'content': 'I have two cats named Luna and Loki...'}],
+  format=PetList.model_json_schema(),
+)
+
+pets = PetList.model_validate_json(response.message.content)
+print(pets)
+```
+
+## 示例：视觉与结构化输出
+
+视觉模型接受同样的 `format` 参数，可以对图像进行确定性的描述：
+
+```python
+from ollama import chat
+from pydantic import BaseModel
+from typing import Literal, Optional
+
+class Object(BaseModel):
+  name: str
+  confidence: float
+  attributes: str
+
+class ImageDescription(BaseModel):
+  summary: str
+  objects: list[Object]
+  scene: str
+  colors: list[str]
+  time_of_day: Literal['Morning', 'Afternoon', 'Evening', 'Night']
+  setting: Literal['Indoor', 'Outdoor', 'Unknown']
+  text_content: Optional[str] = None
+
+response = chat(
+  model='gemma4',
+  messages=[{
+    'role': 'user',
+    'content': 'Describe this photo and list the objects you detect.',
+    'images': ['path/to/image.jpg'],
+  }],
+  format=ImageDescription.model_json_schema(),
+  options={'temperature': 0},
+)
+
+image_description = ImageDescription.model_validate_json(response.message.content)
+print(image_description)
+```
+
+## 获得可靠结构化输出的技巧
+
+- 用 Pydantic（Python）或 Zod（JavaScript）定义 schema，以便复用于校验。
+- 调低温度（如设为 `0`）可获得更确定性的补全。
+- 结构化输出也可通过 OpenAI 兼容 API 的 `response_format` 使用

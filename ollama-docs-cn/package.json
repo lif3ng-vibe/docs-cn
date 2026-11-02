@@ -1,0 +1,20 @@
+{
+  "name": "ollama-docs-cn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ollama 文档中文镜像（非官方），源：https://docs.ollama.com 上游快照 ollama/ollama@c1db5f9ef203b2e946161bf4c6bd4f2ec7f123b3 (docs/)",
+  "scripts": {
+    "dev": "mintlify dev",
+    "export": "mintlify export --disable-openapi",
+    "validate": "mintlify validate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mintlify": "^4.2.992"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2"
+  }
+}

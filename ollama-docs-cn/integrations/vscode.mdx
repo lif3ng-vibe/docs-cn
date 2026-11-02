@@ -1,0 +1,58 @@
+---
+title: "VS Code"
+---
+
+使用 [Ollama 扩展](https://marketplace.visualstudio.com/items?itemName=Ollama.ollama)在 VS Code Chat 中使用 Ollama 模型。
+
+## 要求
+
+- [Visual Studio Code 1.127 或更新版本](https://code.visualstudio.com/download)
+- 已安装并正在运行 Ollama
+- Ollama 中至少有一个可用的本地或云端模型
+
+较早的 VS Code 版本无法可靠地取消来自语言模型提供商的请求。
+
+云端模型登录和更丰富的模型元数据功能建议使用 Ollama 0.17.6 或更新版本。较旧版本可能仍可配合本地模型使用。
+
+## 安装扩展
+
+1. 从 VS Code Marketplace 安装 [Ollama 扩展](https://marketplace.visualstudio.com/items?itemName=Ollama.ollama)。
+2. 在 VS Code 中打开 Chat。
+3. 打开聊天输入框下方的模型选择器。
+4. 从 **Ollama** 分区中选择一个模型。
+
+扩展默认从 `http://127.0.0.1:11434` 发现模型。
+
+## 添加模型
+
+拉取一个本地模型：
+
+```shell
+ollama pull qwen3.6
+```
+
+使用云端模型，先拉取再登录：
+
+```shell
+ollama pull kimi-k2.6:cloud
+ollama signin
+```
+
+本地模型无需登录。
+
+## 上下文长度
+
+即使 Ollama 在运行时分配了较小的上下文，VS Code 也可能显示模型支持的最大上下文长度。
+
+对于本地模型，打开 Ollama **Settings**，将上下文长度设置为至少 64k，重新加载 VS Code 窗口，然后重新发送你的提示词。更多信息见[上下文长度](/context-length)。
+
+## 故障排除
+
+如果 Ollama 模型没有出现在模型选择器中：
+
+1. 确保 Ollama 正在运行。
+2. 运行 `ollama list`，确认有可用模型。
+3. 从 Command Palette 运行 **Ollama: Refresh Models**。
+4. 运行 **Ollama: Diagnose Models**，并查看 **Ollama** 输出通道。
+
+如果云端模型要求你登录，运行 `ollama signin`。

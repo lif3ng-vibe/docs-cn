@@ -1,0 +1,174 @@
+---
+title: "CLI 参考"
+---
+
+### 运行模型
+
+```
+ollama run gemma4
+```
+
+### 启动集成
+
+```
+ollama launch
+```
+
+配置并启动外部应用来使用 Ollama 模型。它提供一种交互方式，完成设置并开启与受支持应用的集成。
+
+#### 支持的集成
+
+- **OpenCode**——开源编码助手
+- **Claude Code**——Anthropic 的代理式编码工具
+- **Codex**——OpenAI 的编码助手
+- **VS Code**——内置 AI 聊天的 Microsoft IDE
+- **Droid**——Factory 的 AI 编码代理
+
+#### 示例
+
+以交互方式启动集成：
+
+```
+ollama launch
+```
+
+启动指定的集成：
+
+```
+ollama launch claude
+```
+
+使用指定模型启动：
+
+```
+ollama launch claude --model qwen3.5
+```
+
+只做配置而不启动：
+
+```
+ollama launch droid --config
+```
+
+#### 多行输入
+
+多行输入可以用 `"""` 包裹文本：
+
+```
+>>> """Hello,
+... world!
+... """
+I'm a basic program that prints the famous "Hello, world!" message to the console.
+```
+
+#### 多模态模型
+
+```
+ollama run gemma4 "What's in this image? /Users/jmorgan/Desktop/smile.png"
+```
+
+### 生成嵌入
+
+```
+ollama run embeddinggemma "Hello world"
+```
+
+输出是一个 JSON 数组：
+
+```
+echo "Hello world" | ollama run nomic-embed-text
+```
+
+### 询问决策模型
+
+```
+ollama run nimble --ask "Is a refund being requested?" < ticket.txt
+
+ollama run nimble --ask "Which team should handle this?" \
+  --choice billing="Payments and refunds" \
+  --choice technical="Software problems" < ticket.txt
+
+ollama run nimble --ask "How urgent is this?" \
+  --level "Routine" \
+  --level "Soon" \
+  --level "Immediate" < ticket.txt
+```
+
+状态内容通过管道传入，或跟在模型名之后，格式为文本或 JSON。每条 `--ask` 问题会得到 yes 或 no 的回答，除非在其后给出待选标签（`--choice`）或用于打分的等级（`--level`）。参见[决策](/capabilities/decision#从终端提问)。
+
+### 与语音模型对话
+
+```
+ollama run phonon "Hello from Ollama."
+
+ollama run phonon --voice Zoey "Hi, this is Zoey."
+
+ollama run phonon "Save this to a file." > speech.wav
+```
+
+音频会通过扬声器播放；当输出被重定向时，则写成 WAV 文件。不带文本运行时，你输入的每一行都会被朗读出来。参见[语音](/capabilities/speech#从终端朗读)。
+
+### 下载模型
+
+```
+ollama pull gemma4
+```
+
+### 删除模型
+
+```
+ollama rm gemma4
+```
+
+### 列出模型
+
+```
+ollama ls
+```
+
+### 登录 Ollama
+
+```
+ollama signin
+```
+
+### 退出登录 Ollama
+
+```
+ollama signout
+```
+
+### 创建自定义模型
+
+首先，创建一个 `Modelfile`
+
+```
+FROM gemma4
+SYSTEM """You are a happy cat."""
+```
+
+然后运行 `ollama create`：
+
+```
+ollama create -f Modelfile
+```
+
+### 列出运行中的模型
+
+```
+ollama ps
+```
+
+### 停止运行中的模型
+
+```
+ollama stop gemma4
+```
+
+### 启动 Ollama
+
+```
+ollama serve
+```
+
+要查看可设置的环境变量列表，请运行 `ollama serve --help`

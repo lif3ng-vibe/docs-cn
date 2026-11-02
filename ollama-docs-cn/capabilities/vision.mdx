@@ -1,0 +1,84 @@
+---
+title: "视觉"
+---
+
+视觉模型在接受文本的同时还能接受图片，让模型可以描述、分类它所看到的内容，并回答相关问题。
+
+## 快速开始
+
+```shell
+ollama run gemma4 ./image.png what is in this image?
+```
+
+
+## 通过 Ollama 的 API 使用
+提供一个 `images` 数组。SDK 接受文件路径、URL 或原始字节数据，而 REST API 需要 base64 编码的图片数据。
+
+
+<Tabs>
+  <Tab title="cURL">
+    ```shell
+    # 1. 下载一张示例图片
+    curl -L -o test.jpg "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg"
+
+    # 2. 编码图片
+    IMG=$(base64 < test.jpg | tr -d '\n')
+
+    # 3. 发送给 Ollama
+    curl -X POST http://localhost:11434/api/chat \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "gemma4",
+        "messages": [{
+        "role": "user",
+        "content": "What is in this image?",
+        "images": ["'"$IMG"'"]
+        }],
+        "stream": false
+    }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from ollama import chat
+    # from pathlib import Path
+
+    # 传入图片的路径
+    path = input('Please enter the path to the image: ')
+
+    # 也可以传入 base64 编码的图片数据
+    # img = base64.b64encode(Path(path).read_bytes()).decode()
+    # 或原始字节数据
+    # img = Path(path).read_bytes()
+
+    response = chat(
+      model='gemma4',
+      messages=[
+        {
+          'role': 'user',
+          'content': 'What is in this image? Be concise.',
+          'images': [path],
+        }
+      ],
+    )
+
+    print(response.message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import ollama from 'ollama'
+
+    const imagePath = '/absolute/path/to/image.jpg'
+    const response = await ollama.chat({
+      model: 'gemma4',
+      messages: [
+        { role: 'user', content: 'What is in this image?', images: [imagePath] }
+      ],
+      stream: false,
+    })
+
+    console.log(response.message.content)
+    ```
+  </Tab>
+</Tabs>

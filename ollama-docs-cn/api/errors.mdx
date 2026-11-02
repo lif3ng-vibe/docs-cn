@@ -1,0 +1,36 @@
+---
+title: "错误"
+---
+
+## 状态码
+
+端点会根据请求的成功或失败，在 HTTP 状态行中返回相应的 HTTP 状态码（例如 `HTTP/1.1 200 OK` 或 `HTTP/1.1 400 Bad Request`）。常见状态码如下：
+
+- `200`：成功
+- `400`：错误请求（Bad Request，缺少参数、JSON 无效等）
+- `404`：未找到（Not Found，模型不存在等）
+- `429`：请求过多（Too Many Requests，例如超出速率限制）
+- `500`：服务器内部错误（Internal Server Error）
+- `502`：网关错误（Bad Gateway，例如无法连接到云端模型）
+
+## 错误消息
+
+错误以 `application/json` 格式返回，结构如下，错误消息位于 `error` 属性中：
+
+```json
+{
+  "error": "the model failed to generate a response"
+}
+```
+
+## 流式输出期间发生的错误
+
+如果在流式输出过程中发生错误，错误会以 `application/x-ndjson` 格式作为一个带有 `error` 属性的对象返回。由于响应已经开始，响应的状态码不会再改变。
+
+```json
+{"model":"gemma4","created_at":"2025-10-26T17:21:21.196249Z","response":" Yes","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:21:21.207235Z","response":".","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:21:21.219166Z","response":"I","done":false}
+{"model":"gemma4","created_at":"2025-10-26T17:21:21.231094Z","response":"can","done":false}
+{"error":"an error was encountered while running the model"}
+```

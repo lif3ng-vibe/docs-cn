@@ -1,0 +1,209 @@
+---
+title: "Claude Code"
+---
+
+[Claude Code](https://code.claude.com/docs/en/overview) 可以阅读你的代码库、编辑文件并运行命令。
+
+Ollama 通过其 Anthropic 兼容 API 将 Claude Code 连接到本地与云端模型。
+
+## 快速开始
+
+使用 Ollama 启动 Claude Code：
+
+```shell
+ollama launch claude
+```
+
+## 能力
+
+<div className="capability-list capability-list-full">
+  <div className="capability-list-grid">
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="comment" /></div>
+      <div>
+        <div className="capability-list-heading">对话</div>
+        <div className="capability-list-copy">就代码仓库或任务提问</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="terminal" /></div>
+      <div>
+        <div className="capability-list-heading">命令行</div>
+        <div className="capability-list-copy">通过 Claude Code 的权限流程运行命令</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="code" /></div>
+      <div>
+        <div className="capability-list-heading">工具调用</div>
+        <div className="capability-list-copy">在兼容模型上使用工具</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="file-pen" /></div>
+      <div>
+        <div className="capability-list-heading">文件编辑</div>
+        <div className="capability-list-copy">读取并编辑项目中的文件</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="users" /></div>
+      <div>
+        <div className="capability-list-heading">子代理</div>
+        <div className="capability-list-copy">将工作拆分到多个任务</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="globe" /></div>
+      <div>
+        <div className="capability-list-heading">网页搜索</div>
+        <div className="capability-list-copy">通过 Ollama 搜索网页</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="file-text" /></div>
+      <div>
+        <div className="capability-list-heading">网页抓取</div>
+        <div className="capability-list-copy">抓取并总结网页</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="image" /></div>
+      <div>
+        <div className="capability-list-heading">视觉</div>
+        <div className="capability-list-copy">发送图片和截图</div>
+      </div>
+    </div>
+
+    <div className="capability-list-item">
+      <div className="capability-list-icon"><Icon icon="brain" /></div>
+      <div>
+        <div className="capability-list-heading">思考</div>
+        <div className="capability-list-copy">在兼容模型上使用思考控制</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+## 模型
+
+选择一个具备足够上下文、能容纳你代码库的模型。
+
+<CardGroup cols={2}>
+  <Card title="云端模型" icon="cloud" href="https://ollama.com/search?c=cloud">
+    无需下载即可使用更大的模型。
+  </Card>
+
+  <Card title="本地模型" icon="hard-drive" href="https://ollama.com/search?c=tools">
+    选择模型并设置 64k 以上的上下文窗口。
+  </Card>
+</CardGroup>
+
+<Note>对于较大的代码仓库，请将[上下文长度](/context-length)设置为 64k 或更高。</Note>
+
+## 更多功能
+
+### 免交互运行
+
+在脚本、Docker 或 CI 中使用 `--yes`：
+
+```shell
+ollama launch claude --model gemma4:cloud --yes -- -p "how does this repository work?"
+```
+
+`--yes` 标志会跳过选择器，并在需要时拉取模型，且必须配合 `--model` 使用。`--` 之后的参数会直接传给 Claude Code。
+
+### 网页搜索
+
+在 Claude Code 中使用 Ollama 的网页搜索 API。
+
+设置与用法见[网页搜索](/capabilities/web-search)。
+
+### 使用 `/loop` 定时任务
+
+在 Claude Code 中使用 `/loop`，按计划运行提示词或斜杠命令：
+
+```text
+/loop <interval> <prompt or /command>
+```
+
+示例：
+
+```text
+/loop 30m Check my open PRs and summarize their status
+/loop 1h Research the latest AI news and summarize key developments
+/loop 15m Check for new GitHub issues and triage by priority
+```
+
+### Telegram
+
+将 Telegram 机器人连接到你的 Claude Code 会话。安装 [Telegram 插件](https://github.com/anthropics/claude-plugins-official)，用 [@BotFather](https://t.me/BotFather) 创建一个机器人，然后启动 Claude Code：
+
+```shell
+ollama launch claude -- --channels plugin:telegram@claude-plugins-official
+```
+
+Claude Code 会在大多数操作上请求权限。要让机器人自主工作，可以配置[权限规则](https://code.claude.com/docs/en/permissions)，或在隔离环境中传入 `--dangerously-skip-permissions`。
+
+设置说明见该[插件 README](https://github.com/anthropics/claude-plugins-official/tree/main/external_plugins/telegram)。
+
+## 直接连接 Ollama 云端
+
+安装 Claude Code，然后将你的 [API 密钥](/quickstart#构建应用)设置到 `OLLAMA_API_KEY` 中。无需安装 Ollama。
+
+在 Bash 或 Zsh 中运行：
+
+```shell
+ANTHROPIC_BASE_URL=https://ollama.com \
+ANTHROPIC_AUTH_TOKEN="$OLLAMA_API_KEY" \
+ANTHROPIC_API_KEY="" \
+claude --model glm-5.3-flash
+```
+
+使用 `ANTHROPIC_AUTH_TOKEN` 进行 Bearer 认证。Claude 的设置可以覆盖 shell 变量。请更新这些设置中的基础 URL 或凭据，然后运行 `/status` 检查连接。
+
+选择支持工具的[云端模型](https://ollama.com/search?c=cloud)。基本对话和文件编辑在兼容模型上可用。托管的 WebSearch 与高级工具控制尚不完全受支持。参见 [Anthropic 兼容性](/api/anthropic-compatibility)。
+
+## 手动设置
+
+<p className="manual-step-title">1. 安装 Claude Code</p>
+
+<CodeGroup>
+
+```shell macOS / Linux
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+```powershell Windows
+irm https://claude.ai/install.ps1 | iex
+```
+
+</CodeGroup>
+
+<p className="manual-step-title">2. 设置环境变量</p>
+
+```shell
+export ANTHROPIC_AUTH_TOKEN=ollama
+export ANTHROPIC_API_KEY=""
+export ANTHROPIC_BASE_URL=http://localhost:11434
+```
+
+<p className="manual-step-title">3. 运行 Claude Code</p>
+
+```shell
+claude --model qwen3.5
+```
+
+或者内联环境变量运行：
+
+```shell
+ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_BASE_URL=http://localhost:11434 ANTHROPIC_API_KEY="" claude --model kimi-k2.7-code:cloud
+```

@@ -1,0 +1,28 @@
+---
+title: "列出模型"
+sidebarTitle: "GET /api/tags"
+---
+
+**GET** `/api/tags`
+
+获取模型列表及其详情
+
+## 请求示例
+
+```bash 列出模型
+curl http://localhost:11434/api/tags
+```
+
+## 响应
+
+### 200
+
+列出可用模型
+
+**`ListResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `models` | `array<ModelSummary>` | 否 | — |
+
+

@@ -1,0 +1,249 @@
+---
+title: "决策"
+description: "对文本分类、估计是/否概率，并按有序标准打分。"
+---
+
+使用 System One 对文本分类、回答是/否问题，或按评分标准为文本打分。
+
+查看[决策模型完整列表](https://ollama.com/search?c=decision)。
+
+## 准备工作
+
+启动 [Ollama](/quickstart) v0.35.0 或更新版本，然后下载 [Nimble](https://ollama.com/library/nimble)：
+
+```shell setup.sh
+ollama pull nimble
+```
+
+Nimble、Tev1、[Clef](https://ollama.com/library/clef) 和 [Clef Flash](https://ollama.com/library/clef-flash) 都是决策模型。Clef 系列模型还能评判图片，且需要 v0.35.1 或更新版本。
+
+本地请求不需要 API 密钥。
+
+## 从终端提问
+
+`ollama run` 会回答关于一个状态（state）的问题：状态可以是文本或 JSON，通过管道传入或跟在模型名之后。每条问题用 `--ask` 提出。默认以是或否作答，除非在其后给出待选标签（`--choice`）或用于打分的等级（`--level`）。
+
+```shell examples.sh
+# 询问一个是/否问题
+ollama run nimble --ask "Is a refund being requested?" < ticket.txt
+
+# 选择一个标签
+ollama run nimble --ask "Which team should handle this?" \
+  --choice billing="Payments and refunds" \
+  --choice technical="Software problems" < ticket.txt
+
+# 按量表打分，从最低档到最高档
+ollama run nimble --ask "How urgent is this?" \
+  --level "Routine" \
+  --level "Soon" \
+  --level "Immediate" < ticket.txt
+
+# 一次询问多个问题
+ollama run nimble --ask "Is a refund being requested?" \
+  --ask "Which team should handle this?" \
+  --choice billing="Payments and refunds" \
+  --choice technical="Software problems" \
+  --ask "How urgent is this?" \
+  --level "Routine" \
+  --level "Soon" \
+  --level "Immediate" < ticket.txt
+
+# 用 JSON 文件作为状态，并用反引号引用其字段
+ollama run nimble --ask 'Is a refund being requested in `body`?' < ticket.json
+
+# 用 Clef 评判图片
+ollama run clef ./receipt.png --ask "Is this a restaurant receipt?"
+
+# 输出完整响应
+ollama run nimble --ask "Is a refund being requested?" --format json < ticket.txt
+```
+
+每条答案单独占一行。是/否答案会显示可能性更高的答案及其概率；标签会显示其概率；打分会显示最可能的档位、其概率以及在量表上的得分：
+
+```text
+Is a refund being requested?    yes      97%
+Which team should handle this?  billing  91%
+How urgent is this?             Soon     64%  1.2 / 2
+```
+
+不带状态时，`ollama run nimble` 会打开交互式提示。你的第一条消息就是状态，之后的每一行都是关于该状态的是/否问题，因此可以一次粘贴多条；`/clear` 重新开始。使用 `--ask` 时，每条消息都是一个新状态，模型会对它回答那些问题。
+
+## 选择标签
+
+把你的输入放入 `state`，并在 `criteria` 中描述可能的答案：
+
+```shell choice.sh
+curl http://localhost:11434/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "nimble",
+    "state": "Our checkout has returned 500 errors since 9am.",
+    "questions": {
+      "label": {
+        "type": "choice",
+        "instructions": "Which label fits this ticket?",
+        "criteria": {
+          "billing": "Payments and refunds",
+          "bug": "Software errors",
+          "account": "Login and account access"
+        }
+      }
+    }
+  }'
+```
+
+响应示例：
+
+```json
+{
+  "model": "nimble",
+  "answers": {
+    "label": {
+      "type": "choice",
+      "choice": "bug",
+      "probabilities": {"billing": 0.0125, "bug": 0.9781, "account": 0.0093},
+      "confidence": 0.8906
+    }
+  },
+  "usage": {"input_tokens": 174, "output_tokens": 1}
+}
+```
+
+## 评判图片
+
+[Clef](https://ollama.com/library/clef) 和 [Clef Flash](https://ollama.com/library/clef-flash) 会在读取状态的同时读取图片。通过 `images` 传入 base64 编码的 PNG、JPEG 或 WebP 文件；所有问题共享这些图片，顺序与请求中一致。不支持 URL 和 data URL。`state` 仍然是必需的——它承载决策所需的上下文。
+
+```shell image.sh
+curl http://localhost:11434/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "clef-flash",
+    "state": "A user took this screenshot and wants to know what it shows.",
+    "images": ["<base64-encoded image>"],
+    "questions": {
+      "has_ollama": {
+        "type": "noul",
+        "instructions": "Does this image contain Ollama?"
+      },
+      "app": {
+        "type": "choice",
+        "instructions": "Which application is shown in this screenshot?",
+        "criteria": {
+          "vscode": "Visual Studio Code",
+          "terminal": "A terminal emulator",
+          "browser": "A web browser",
+          "other": "A different application"
+        }
+      }
+    }
+  }'
+```
+
+响应示例：
+
+```json
+{
+  "model": "clef-flash",
+  "answers": {
+    "has_ollama": {"type": "noul", "noul": 0.959},
+    "app": {
+      "type": "choice",
+      "choice": "vscode",
+      "probabilities": {"vscode": 0.966, "other": 0.017, "browser": 0.010, "terminal": 0.007},
+      "confidence": 0.868
+    }
+  },
+  "usage": {"input_tokens": 677, "output_tokens": 0}
+}
+```
+
+## 使用云端模型
+
+使用付费套餐或已购买[用量额度](https://ollama.com/pricing)时，[Clef](https://ollama.com/library/clef) 也可以在 [Ollama 云端](/cloud)运行。在模型名后加 `:cloud`，即可通过一台已登录 ollama.com 的本地 Ollama 服务器（v0.40.5 或更新版本）发送请求：
+
+```shell cloud.sh
+curl http://localhost:11434/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "clef:cloud",
+    "state": "Our checkout has returned 500 errors since 9am.",
+    "questions": {
+      "urgent": {
+        "type": "noul",
+        "instructions": "Does this ticket need attention within the hour?"
+      }
+    }
+  }'
+```
+
+也可以使用 [API 密钥](https://ollama.com/settings/keys)直接调用 ollama.com：
+
+```shell cloud-direct.sh
+curl https://ollama.com/v1/systemone \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "clef",
+    "state": "Our checkout has returned 500 errors since 9am.",
+    "questions": {
+      "urgent": {
+        "type": "noul",
+        "instructions": "Does this ticket need attention within the hour?"
+      }
+    }
+  }'
+```
+
+云端请求最多接受 64 个问题，问题名最多 100 个 ASCII 字母、数字、`_`、`.` 或 `-`；最多接受 4 张图片，每张不超过 4 MiB、1600 万像素，总计不超过 8 MiB。输入受模型 65,536 token 上下文窗口限制，超长输入会被拒绝。用量按输入 token 以[公示价格](https://ollama.com/pricing)计费。
+
+## 问题类型
+
+| 类型 | 评判标准 | 结果 |
+| --- | --- | --- |
+| `choice` | 2–26 个带说明的具名选项 | 最可能的选项及各选项的概率 |
+| `noul` | `"false"` 和 `"true"` 各自的说明 | `true` 的概率，取值 0 到 1 |
+| `score` | 2–10 条说明，从最低到最高排列 | 从 0 起算的各档位的概率加权平均值 |
+
+对于下面的紧急程度评判标准：
+
+```text
+score = 0 × P(Routine) + 1 × P(Soon) + 2 × P(Immediate)
+```
+
+对于 `choice` 和 `score`，`confidence` 衡量模型对某一答案相对其他答案的倾向强度，取值 0 到 1。数值较高并不能保证答案正确。
+
+## 提问多个问题
+
+在同一个请求中组合多种问题类型。这里两个问题使用同一张工单：
+
+```shell multiple.sh
+curl http://localhost:11434/v1/systemone \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "nimble",
+    "state": {"ticket": "I was charged twice. Please refund the extra payment."},
+    "questions": {
+      "refund": {
+        "type": "noul",
+        "instructions": "Is the customer requesting a refund?",
+        "criteria": {
+          "false": "No refund is requested",
+          "true": "The customer requests a refund"
+        }
+      },
+      "urgency": {
+        "type": "score",
+        "instructions": "How urgently does this ticket need a response?",
+        "criteria": [
+          "Routine: no time pressure",
+          "Soon: a customer is inconvenienced",
+          "Immediate: a critical service is unavailable"
+        ]
+      }
+    }
+  }'
+```
+
+这将返回退款概率 `0.9989`，以及 0–2 量表上（四舍五入后）的紧急程度得分 `0.8308`。实际结果可能因模型与配置而异。
+
+请求字段、限制、错误与 token 用量参见 [API 参考](/api/systemone)。

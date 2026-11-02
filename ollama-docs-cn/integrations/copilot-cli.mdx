@@ -1,0 +1,82 @@
+---
+title: "Copilot CLI"
+---
+
+GitHub Copilot CLI 是 GitHub 面向终端的 AI 编码代理。它能理解你的代码库、进行编辑、运行命令，帮助你更快地构建软件。
+
+开放模型可以通过 Ollama 在 Copilot CLI 中使用，例如 `qwen3.5`、`glm-5.3:cloud`、`kimi-k3:cloud`。全部支持的模型见[此处](https://ollama.com/search)。
+
+## 安装
+
+安装 [Copilot CLI](https://github.com/features/copilot/cli/)：
+
+<CodeGroup>
+
+```shell macOS / Linux (Homebrew)
+brew install copilot-cli
+```
+
+```shell npm (all platforms)
+npm install -g @github/copilot
+```
+
+```shell macOS / Linux (script)
+curl -fsSL https://gh.io/copilot-install | bash
+```
+
+```powershell Windows (WinGet)
+winget install GitHub.Copilot
+```
+
+</CodeGroup>
+
+## 配合 Ollama 使用
+
+### 快速设置
+
+```shell
+ollama launch copilot
+```
+
+### 直接用模型运行
+
+```shell
+ollama launch copilot --model kimi-k2.5:cloud
+```
+
+## 免交互（无头）模式
+
+以免交互方式运行 Copilot CLI，用于 Docker、CI/CD 或脚本：
+
+```shell
+ollama launch copilot --model kimi-k2.5:cloud --yes -- -p "how does this repository work?"
+```
+
+`--yes` 标志会自动拉取模型、跳过选择器，且必须指定 `--model`。`--` 之后的参数会直接传给 Copilot CLI。
+
+## 手动设置
+
+Copilot CLI 通过环境变量使用 OpenAI 兼容 API 连接 Ollama。
+
+1. 设置环境变量：
+
+```shell
+export COPILOT_PROVIDER_BASE_URL=http://localhost:11434/v1
+export COPILOT_PROVIDER_API_KEY=
+export COPILOT_PROVIDER_WIRE_API=responses
+export COPILOT_MODEL=qwen3.5
+```
+
+1. 运行 Copilot CLI：
+
+```shell
+copilot
+```
+
+或者内联环境变量运行：
+
+```shell
+COPILOT_PROVIDER_BASE_URL=http://localhost:11434/v1 COPILOT_PROVIDER_API_KEY= COPILOT_PROVIDER_WIRE_API=responses COPILOT_MODEL=glm-5:cloud copilot
+```
+
+**注意**：Copilot 需要较大的上下文窗口。建议至少 64k tokens。如何在 Ollama 中调整上下文长度见[上下文长度文档](/context-length)。

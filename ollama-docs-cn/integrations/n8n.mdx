@@ -1,0 +1,67 @@
+---
+title: "n8n"
+---
+
+## 安装
+
+安装 [n8n](https://docs.n8n.io/choose-n8n/)。
+
+## 本地使用 Ollama
+
+1. 在右上角，点击下拉菜单并选择 **Create Credential**
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/n8n-credential-creation.png" 
+    alt="Create a n8n Credential"
+    width="75%"
+  />
+</div>
+
+2. 在 **Add new credential** 下选择 **Ollama**
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/n8n-ollama-form.png" 
+    alt="Select Ollama under Credential"
+    width="75%"
+  />
+</div>
+3. 如果是本地运行，确认 Base URL 设置为 `http://localhost:11434`；如果是通过 docker 运行，则设置为 `http://host.docker.internal:11434`，然后点击 **Save**
+
+<Note> 
+在不使用 Docker Desktop 的环境中（即 Linux 服务器安装），`host.docker.internal` 不会被自动添加。 
+
+在 docker 中运行 n8n 时加上 `--add-host=host.docker.internal:host-gateway` 
+
+或在 docker compose 文件中添加以下内容：
+
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+</Note>
+
+你应该会看到 `Connection tested successfully` 消息。
+
+4. 创建新工作流时，选择 **Add a first step** 并选择一个 **Ollama 节点** 
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/n8n-chat-node.png" 
+    alt="Add a first step with Ollama node"
+    width="75%"
+  />
+</div>
+5. 选择你想要的模型（如 `qwen3-coder`） 
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/n8n-models.png" 
+    alt="Set up Ollama credentials"
+    width="75%"
+  />
+</div>
+
+## 连接到 ollama.com
+1. 在 **ollama.com** 上创建 [API 密钥](https://ollama.com/settings/keys)。  
+2. 在 n8n 中，点击 **Create Credential** 并选择 **Ollama**
+4. 将 **API URL** 设置为 `https://ollama.com`
+5. 输入你的 **API 密钥**，然后点击 **Save**
+

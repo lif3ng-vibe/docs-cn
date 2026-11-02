@@ -1,0 +1,42 @@
+---
+title: "Claude Desktop"
+description: "在 macOS 的 Claude 中使用 Ollama 模型。"
+---
+
+
+## 前提条件
+
+- [Ollama](https://ollama.com/download/)。即将支持 Windows。
+- 如需使用本地模型，请在设置前先[下载](/quickstart#在本地运行模型)。
+- 如需使用云端模型，请登录 Ollama 并启用云端模型。部分模型需要[付费方案](https://ollama.com/pricing)。
+
+如果尚未安装 Claude，Ollama 会在设置过程中提示下载。
+
+## 设置 Claude
+
+1. 打开 Ollama，选择 **Apps**。
+2. 连接 **Claude**。
+3. 按照设置提示安装 Claude（如有需要），并在收到提示时重启它。
+
+## 切换模型
+
+打开 Ollama **Settings → Apps**。选择你的模型，然后选择 **Restart Claude**。多个选项可以使用同一个模型。
+
+## 支持的功能
+
+- **子代理** — 将大型任务拆分给多个代理
+- **网页搜索** — 默认通过 [Ollama 网页搜索](/capabilities/web-search)支持
+- **Cowork** — 使用 Claude Cowork 完成高难度任务
+- **Auto 模式** — 让代理在做出更改前自行判断何时先询问
+
+## 断开 Claude
+
+打开 Ollama **Apps**，断开 Claude。Ollama 会恢复 Claude 之前的设置。收到提示时重启 Claude。
+
+你也可以在终端中恢复 Claude：
+
+```shell
+ollama launch claude-desktop --restore
+```
+
+在 Claude 处于连接状态时退出 Ollama，同样会恢复 Claude 的常用配置。

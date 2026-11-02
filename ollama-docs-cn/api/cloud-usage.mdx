@@ -1,0 +1,269 @@
+---
+title: "云端用量"
+sidebarTitle: /api/usage
+openapi: /openapi.yaml GET /api/usage
+---
+
+<RequestExample>
+
+```shell 请求
+curl 'https://ollama.com/api/usage?range=24h' \
+  -H "Authorization: Bearer $OLLAMA_API_KEY"
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 响应（省略 22 个空时间桶）
+{
+  "range": "24h",
+  "scope": "self",
+  "granularity": "hour",
+  "from": "2026-09-30T02:00:00Z",
+  "until": "2026-10-01T02:30:00Z",
+  "totals": {
+    "request_count": 15,
+    "usage_usd": 0.01718,
+    "input_tokens": 106000,
+    "cached_input_tokens": 46000,
+    "output_tokens": 13600
+  },
+  "buckets": [
+    {
+      "from": "2026-09-30T12:00:00Z",
+      "until": "2026-09-30T13:00:00Z",
+      "request_count": 4,
+      "usage_usd": 0.0052,
+      "input_tokens": 24000,
+      "cached_input_tokens": 0,
+      "output_tokens": 3200
+    },
+    {
+      "from": "2026-10-01T00:00:00Z",
+      "until": "2026-10-01T01:00:00Z",
+      "request_count": 8,
+      "usage_usd": 0.0088,
+      "input_tokens": 64000,
+      "cached_input_tokens": 40000,
+      "output_tokens": 8000
+    },
+    {
+      "from": "2026-10-01T02:00:00Z",
+      "until": "2026-10-01T02:30:00Z",
+      "partial": true,
+      "request_count": 3,
+      "usage_usd": 0.00318,
+      "input_tokens": 18000,
+      "cached_input_tokens": 6000,
+      "output_tokens": 2400
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+新的用量数据可能需要一段时间才会出现。
+
+剩余内含额度与已购额度请使用[余额](/api/balance)。
+
+不受支持或重复的查询参数会返回 `400`。错误遵循 Ollama 的 [JSON 错误格式](/api/errors#错误消息)。
+
+## 时间范围
+
+| 范围 | 起始时间 | 时间桶粒度 | 时间桶数 |
+| ----- | ------------------------------------------------- | ----------- | ------- |
+| `24h` | 当前 UTC 小时起点之前 24 小时 | 小时 | 25 |
+| `7d`  | 七天前的 00:00（UTC） | 天 | 8 |
+| `30d` | 三十天前的 00:00（UTC） | 天 | 31 |
+
+每个范围的结束时间都是请求发出时刻。例如在 10 月 1 日 02:30 UTC，`24h` 从 9 月 30 日 02:00 UTC 开始，返回 24 个完整的小时时间桶，再加当前的 02:00–02:30 时间桶。`7d` 与 `30d` 范围分别返回七个和三十个完整的自然日，再加大截至今日的部分。
+
+时间桶按时间先后排列，没有请求记录的小时或天也会以零值呈现。最后一个时间桶覆盖当前小时或当天，并带有 `partial: true`。
+
+所有时间戳均为 UTC。每个 `from` 为包含边界，每个 `until` 为不包含边界。
+
+## 用量总计与时间桶
+
+`totals` 汇总整个范围内的用量，`buckets` 将用量按小时或天拆分。
+
+`granularity` 自动设置：`24h` 为 `hour`，`7d` 与 `30d` 为 `day`。顶层的 `from` 与 `until` 描述整个范围；每个时间桶有自己的边界。
+
+`partial` 表示该小时或当天是否尚未结束，而不是是否已记录全部用量。
+
+## 按模型细分
+
+添加 `group_by=model` 可按模型查看用量：
+
+```shell
+curl 'https://ollama.com/api/usage?range=7d&group_by=model' \
+  -H "Authorization: Bearer $OLLAMA_API_KEY"
+```
+
+响应会在 `totals` 和每个时间桶中都包含 `groups`。
+
+```json 响应摘录
+{
+  "totals": {
+    "groups": [
+      {
+        "model": "glm-5.3-flash",
+        "request_count": 12,
+        "usage_usd": 0.0132
+      }
+    ]
+  },
+  "buckets": [
+    {
+      "from": "2026-09-30T00:00:00Z",
+      "until": "2026-10-01T00:00:00Z",
+      "groups": [
+        {
+          "model": "glm-5.3-flash",
+          "request_count": 6,
+          "usage_usd": 0.0066
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Accordion title="多模型与多时间桶示例">
+
+```json 响应（省略 6 个空时间桶）
+{
+  "range": "7d",
+  "scope": "self",
+  "granularity": "day",
+  "group_by": "model",
+  "from": "2026-09-24T00:00:00Z",
+  "until": "2026-10-01T02:30:00Z",
+  "totals": {
+    "request_count": 16,
+    "usage_usd": 0.0268,
+    "input_tokens": 116000,
+    "cached_input_tokens": 60000,
+    "output_tokens": 15000,
+    "groups": [
+      {
+        "model": "glm-5.3-flash",
+        "request_count": 12,
+        "usage_usd": 0.0132,
+        "input_tokens": 96000,
+        "cached_input_tokens": 60000,
+        "output_tokens": 12000
+      },
+      {
+        "model": "glm-5.3",
+        "request_count": 2,
+        "usage_usd": 0.01,
+        "input_tokens": 4000,
+        "cached_input_tokens": 0,
+        "output_tokens": 1000
+      },
+      {
+        "model": "gpt-oss:120b",
+        "request_count": 2,
+        "usage_usd": 0.0036,
+        "input_tokens": 16000,
+        "cached_input_tokens": 0,
+        "output_tokens": 2000
+      }
+    ]
+  },
+  "buckets": [
+    {
+      "from": "2026-09-30T00:00:00Z",
+      "until": "2026-10-01T00:00:00Z",
+      "request_count": 8,
+      "usage_usd": 0.0166,
+      "input_tokens": 52000,
+      "cached_input_tokens": 30000,
+      "output_tokens": 7000,
+      "groups": [
+        {
+          "model": "glm-5.3-flash",
+          "request_count": 6,
+          "usage_usd": 0.0066,
+          "input_tokens": 48000,
+          "cached_input_tokens": 30000,
+          "output_tokens": 6000
+        },
+        {
+          "model": "glm-5.3",
+          "request_count": 2,
+          "usage_usd": 0.01,
+          "input_tokens": 4000,
+          "cached_input_tokens": 0,
+          "output_tokens": 1000
+        }
+      ]
+    },
+    {
+      "from": "2026-10-01T00:00:00Z",
+      "until": "2026-10-01T02:30:00Z",
+      "partial": true,
+      "request_count": 8,
+      "usage_usd": 0.0102,
+      "input_tokens": 64000,
+      "cached_input_tokens": 30000,
+      "output_tokens": 8000,
+      "groups": [
+        {
+          "model": "glm-5.3-flash",
+          "request_count": 6,
+          "usage_usd": 0.0066,
+          "input_tokens": 48000,
+          "cached_input_tokens": 30000,
+          "output_tokens": 6000
+        },
+        {
+          "model": "gpt-oss:120b",
+          "request_count": 2,
+          "usage_usd": 0.0036,
+          "input_tokens": 16000,
+          "cached_input_tokens": 0,
+          "output_tokens": 2000
+        }
+      ]
+    }
+  ]
+}
+```
+
+</Accordion>
+
+目前 `groups` 下最多显示 10 个分组，按整个范围内的 `usage_usd` 总额排序。
+
+每个时间桶采用相同的选取与排序。某时间桶内没有请求的分组会被省略；空时间桶的 `groups` 为 `[]`。
+
+其余分组会合并到 `remainder` 中，为空时省略。总计始终包含全部用量。
+
+<Accordion title="旧版套餐">
+
+如果用量包含来自旧版套餐的请求，则只有请求次数可用。若范围内包含旧版请求，分组会改按请求次数而非费用排序。
+
+</Accordion>
+
+## 速率限制
+
+该端点允许每个用户每分钟 10 次请求，所有 API 密钥与设备共享该配额。建议每分钟轮询一次。`429` 响应会包含 `Retry-After` 响应头，指示重试前需等待的秒数。
+
+## 团队用量
+
+默认情况下，每个人都只能看到自己的用量（`scope=self`）。
+
+团队管理员可使用 `scope=team` 查看整个团队的用量：
+
+```shell
+curl 'https://ollama.com/api/usage?range=7d&scope=team' \
+  -H "Authorization: Bearer $OLLAMA_API_KEY"
+```
+
+## 即将推出
+
+我们计划增加自定义时间范围、按 API 密钥细分的用量，以及供团队管理员使用的按团队成员细分。
+
+## 参考

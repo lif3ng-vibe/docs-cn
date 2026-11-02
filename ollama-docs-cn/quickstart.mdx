@@ -1,0 +1,301 @@
+---
+title: "快速开始"
+---
+
+在[桌面应用](#连接桌面应用)和[编码代理](#使用编码代理)中使用 Ollama，或使用 API 密钥[构建应用](#构建应用)。
+
+## 开始使用
+
+[下载 Ollama](https://ollama.com/download)，支持 macOS、Windows 或 Linux。打开应用，或从终端开始：
+
+```shell
+ollama
+```
+
+按照设置提示操作。登录后即可使用云端模型，或选择本地模型。
+
+## 连接桌面应用
+
+在 macOS 上，打开 Ollama 并选择 **Apps**。连接 **Claude** 或 **ChatGPT (Desktop)**。按照提示安装或重启相应应用。
+
+在 **Settings → Apps** 中选择你要用的 Ollama 模型。
+
+- [Claude Desktop](/integrations/claude-desktop)——在 Claude 中使用 Ollama 模型。
+- [ChatGPT Desktop](/integrations/chatgpt)——在 Codex 模式下使用 Ollama 模型。普通聊天和语音仍使用你原有的 ChatGPT 连接。
+
+## 使用编码代理
+
+在你的项目目录下启动代理：
+
+<Tabs>
+  <Tab title="Claude Code">
+
+```shell
+ollama launch claude
+```
+
+如有需要，Ollama 会提示安装 Claude Code。详情参见 [Claude Code](/integrations/claude-code)。
+
+  </Tab>
+  <Tab title="Codex CLI">
+
+先[安装 Codex CLI](/integrations/codex#安装)，然后启动：
+
+```shell
+ollama launch codex
+```
+
+设置说明参见 [Codex CLI](/integrations/codex)。
+
+  </Tab>
+  <Tab title="OpenCode">
+
+```shell
+ollama launch opencode
+```
+
+如有需要，Ollama 会提示安装 OpenCode。详情参见 [OpenCode](/integrations/opencode)。
+
+  </Tab>
+</Tabs>
+
+在提示时选择一个模型，然后试试：
+
+```text
+Explain how this repository is organized.
+```
+
+更多工具参见[集成](/integrations)。要用 API 密钥让代理直连，参见 [Claude Code](/integrations/claude-code#connect-directly-to-ollama-cloud)。
+
+## 构建应用
+
+使用 API 密钥调用云端模型，或不用密钥在本地运行模型。云端请求不需要安装 Ollama。
+
+### 1. 创建 API 密钥
+
+本地模型可跳过此步，在[发送请求](#2-发送请求)下选择 **Local**。
+
+云端模型需先登录或创建账户，然后创建一个 [API 密钥](https://ollama.com/settings/keys)。
+
+在终端中设置你的密钥：
+
+<CodeGroup>
+
+```shell macOS / Linux
+export OLLAMA_API_KEY="your_api_key"
+```
+
+```powershell Windows
+$env:OLLAMA_API_KEY = "your_api_key"
+```
+
+</CodeGroup>
+
+请将密钥保存在你应用的服务器上，不要放进浏览器代码或版本控制。
+
+### 2. 发送请求
+
+向 Ollama 发出你的第一个请求
+
+<Tabs>
+  <Tab title="Cloud">
+
+以下示例使用 `gemma4:31b` [云端模型](https://ollama.com/search?c=cloud)。
+
+<Tabs>
+  <Tab title="Ollama API">
+
+```shell
+curl https://ollama.com/api/chat \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ],
+    "stream": false
+  }'
+```
+
+从 `message.content` 读取回答。参见 [Ollama 的 API 与库](/api/introduction)。
+
+  </Tab>
+  <Tab title="OpenAI Chat Completions">
+
+```shell
+curl https://ollama.com/v1/chat/completions \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ]
+  }'
+```
+
+从 `choices[0].message.content` 读取回答。客户端设置与支持的功能参见 [OpenAI 兼容性](/api/openai-compatibility)。
+
+  </Tab>
+  <Tab title="OpenAI Responses">
+
+```shell
+curl https://ollama.com/v1/responses \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "input": "Say hello in one sentence."
+  }'
+```
+
+从 `output` 中读取 `output_text` 内容块。OpenAI Python 客户端将该文本暴露为 `response.output_text`。
+
+Responses 请求是无状态的：每次请求都需包含对话历史。不支持 `previous_response_id` 和 `conversation`。参见 [Responses 兼容性](/api/openai-compatibility#responses-api)。
+
+  </Tab>
+  <Tab title="Anthropic Messages">
+
+```shell
+curl https://ollama.com/v1/messages \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "gemma4:31b",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ]
+  }'
+```
+
+从 `content` 读取文本块。直接云端请求使用 bearer 认证。客户端设置与支持的功能参见 [Anthropic 兼容性](/api/anthropic-compatibility)。
+
+  </Tab>
+</Tabs>
+
+OpenAI 与 Anthropic 兼容层各自只覆盖原 API 的一个子集。模型与用量限制参见[云端](/cloud)。
+
+  </Tab>
+  <Tab title="Local">
+
+在你的电脑上运行 [Gemma 4 E2B](https://ollama.com/library/gemma4:e2b)。无需 API 密钥。
+
+<Note>
+模型下载大小约 7.2 GB。建议准备 8 GB 可用显存（VRAM），Mac 上为统一内存。更大的上下文窗口需要更多内存。显存不足时，Ollama 可以改用系统 RAM，但响应可能变慢。
+</Note>
+
+[下载 Ollama](https://ollama.com/download) 并打开应用。在 Linux 上，如果服务器尚未运行，用 `ollama serve` 启动它。
+
+下载模型：
+
+```shell
+ollama pull gemma4:e2b
+```
+
+向本地服务器发送请求：
+
+<Tabs>
+  <Tab title="Ollama API">
+
+```shell
+curl http://localhost:11434/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:e2b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ],
+    "stream": false
+  }'
+```
+
+  </Tab>
+  <Tab title="OpenAI Chat Completions">
+
+```shell
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:e2b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ]
+  }'
+```
+
+从 `choices[0].message.content` 读取回答。客户端设置与支持的功能参见 [OpenAI 兼容性](/api/openai-compatibility)。
+
+  </Tab>
+  <Tab title="OpenAI Responses">
+
+```shell
+curl http://localhost:11434/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:e2b",
+    "input": "Say hello in one sentence."
+  }'
+```
+
+从 `output` 中读取 `output_text` 内容块。OpenAI Python 客户端将该文本暴露为 `response.output_text`。
+
+Responses 请求是无状态的：每次请求都需包含对话历史。不支持 `previous_response_id` 和 `conversation`。参见 [Responses 兼容性](/api/openai-compatibility#responses-api)。
+
+  </Tab>
+  <Tab title="Anthropic Messages">
+
+```shell
+curl http://localhost:11434/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "gemma4:e2b",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ]
+  }'
+```
+
+从 `content` 读取文本块。客户端设置与支持的功能参见 [Anthropic 兼容性](/api/anthropic-compatibility)。
+
+  </Tab>
+</Tabs>
+
+  </Tab>
+</Tabs>
+
+## 在本地运行模型
+
+[下载 Ollama](https://ollama.com/download)，然后运行：
+
+```shell
+ollama run gemma4:e2b
+```
+
+Ollama 会下载模型并在你的电脑上开启对话。输入 `/bye` 退出。
+
+## 下一步
+
+添加[工具调用](/capabilities/tool-calling)、[流式响应](/capabilities/streaming)，或浏览[更多模型](https://ollama.com/search)。

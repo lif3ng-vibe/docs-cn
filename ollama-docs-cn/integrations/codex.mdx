@@ -1,0 +1,89 @@
+---
+title: "Codex CLI"
+---
+
+
+## 安装
+
+安装 [Codex CLI](https://developers.openai.com/codex/cli/)。ChatGPT 桌面应用见 [ChatGPT Desktop](/integrations/chatgpt)。
+
+```
+npm install -g @openai/codex
+```
+
+## 配合 Ollama 使用
+
+<Note>Codex 请使用至少 64k tokens 的上下文窗口。</Note>
+
+### 快速设置
+
+```
+ollama launch codex
+```
+
+通过 `ollama launch codex` 启动时，Ollama 会刷新模型目录，并为该会话使用专用的 Codex 配置文件。
+
+在 Codex 中输入 `/model`，即可在不重启的情况下切换你已安装的、支持工具的 Ollama 模型。启动时的模型保持选中，且每个模型都保留自己的上下文窗口、视觉与思考设置。启动前先用 `ollama pull <model>` 拉取更多模型，它们就会出现在选择器中。
+
+不启动、只进行配置：
+
+```shell
+ollama launch codex --config
+```
+
+移除 Ollama 启动配置文件和生成的模型目录：
+
+```shell
+ollama launch codex --restore
+```
+
+### 手动设置
+
+要让 `codex` 配合 Ollama 使用，加上 `--oss` 标志：
+
+```
+codex --oss
+```
+
+使用指定模型，传入 `-m` 标志：
+
+```
+codex --oss -m gpt-oss:120b
+```
+
+使用云端模型：
+
+```
+codex --oss -m gpt-oss:120b-cloud
+```
+
+### 基于配置文件的设置
+
+要进行持久化的 Codex CLI 配置，创建 `~/.codex/ollama-launch.config.toml`：
+
+```toml
+model = "gpt-oss:120b"
+model_provider = "ollama-launch"
+model_catalog_json = "/Users/you/.codex/model.json"
+
+[model_providers.ollama-launch]
+name = "Ollama"
+base_url = "http://localhost:11434/v1/"
+wire_api = "responses"
+```
+
+然后运行：
+
+```
+codex --profile ollama-launch
+```
+
+## 通过本地 Ollama 网页搜索
+
+通过 Ollama 配置文件发出的 Codex 网页搜索请求，无论本地还是云端模型，都由 Ollama 执行。使用 `ollama signin` 登录即可使用网页搜索服务。
+
+为 Codex 会话禁用网页搜索：
+
+```shell
+codex --profile ollama-launch -c 'web_search="disabled"'
+```

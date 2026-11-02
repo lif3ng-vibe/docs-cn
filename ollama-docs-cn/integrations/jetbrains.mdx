@@ -1,0 +1,47 @@
+---
+title: "JetBrains"
+---
+
+<Note>本示例使用 **IntelliJ**；同样的步骤也适用于其他 JetBrains IDE（如 PyCharm）。</Note>
+
+## 安装
+
+安装 [IntelliJ](https://www.jetbrains.com/idea/)。
+
+## 配合 Ollama 使用
+
+<Note>
+  要使用 **Ollama**，你需要一份 [JetBrains AI 订阅](https://www.jetbrains.com/ai-ides/buy/?section=personal&billing=yearly)。
+</Note>
+
+1. 在 IntelliJ 中，点击右侧边栏中的**聊天图标**
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/intellij-chat-sidebar.png" 
+    alt="Intellij Sidebar Chat"
+    width="50%"
+  />
+</div>
+
+2. 在侧边栏中选择**当前模型**，然后点击 **Set up Local Models**
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/intellij-current-model.png" 
+    alt="Intellij model bottom right corner"
+    width="50%"
+  />
+</div>
+
+3. 在 **Third Party AI Providers** 下，选择 **Ollama**  
+4. 确认 **Host URL** 为 `http://localhost:11434`，然后点击 **Ok**  
+5. 连接成功后，在 **Local models by Ollama** 下选择一个模型
+
+<div style={{ display: 'flex', justifyContent: 'center' }}>
+  <img 
+    src="/images/intellij-local-models.png" 
+    alt="Zed star icon in bottom right corner"
+    width="50%"
+  />
+</div>

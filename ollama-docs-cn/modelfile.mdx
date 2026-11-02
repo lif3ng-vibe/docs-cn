@@ -1,0 +1,249 @@
+---
+title: "Modelfile 参考"
+---
+
+Modelfile 是使用 Ollama 创建和分享自定义模型的蓝图。
+
+## 目录
+
+- [格式](#格式)
+- [示例](#示例)
+- [指令](#指令)
+  - [FROM（必需）](#from-必需)
+    - [从现有模型构建](#从现有模型构建)
+    - [从 Safetensors 模型构建](#从-safetensors-模型构建)
+    - [从 GGUF 模型构建](#从-gguf-模型构建)
+  - [PARAMETER](#parameter)
+    - [有效参数与取值](#有效参数与取值)
+  - [TEMPLATE](#template)
+    - [模板变量](#模板变量)
+  - [SYSTEM](#system)
+  - [LICENSE](#license)
+  - [MESSAGE](#message)
+  - [CAPABILITY](#capability)
+- [注意事项](#注意事项)
+
+## 格式
+
+`Modelfile` 的格式：
+
+```
+# 注释
+INSTRUCTION arguments
+```
+
+| 指令                                | 说明                                                           |
+| ----------------------------------- | -------------------------------------------------------------- |
+| [`FROM`](#from-必需)（必需）    | 定义要使用的基础模型。                                         |
+| [`PARAMETER`](#parameter)           | 设置 Ollama 运行模型时使用的参数。                             |
+| [`TEMPLATE`](#template)             | 发送给模型的完整提示词模板。                                   |
+| [`SYSTEM`](#system)                 | 指定将设置到模板中的系统消息。                                 |
+| [`LICENSE`](#license)               | 指定法律许可协议。                                             |
+| [`MESSAGE`](#message)               | 指定消息历史。                                                 |
+| [`REQUIRES`](#requires)             | 指定模型所需的 Ollama 最低版本。                               |
+| [`CAPABILITY`](#capability)         | 声明一项额外的模型能力。                                       |
+
+## 示例
+
+### 基础 `Modelfile`
+
+一个创建 mario 蓝图的 `Modelfile` 示例：
+
+```
+FROM llama3.2
+# 将 temperature 设为 1（越高越有创造性，越低越连贯）
+PARAMETER temperature 1
+# 将上下文窗口大小设为 4096，控制 LLM 生成下一个 token 时可用作上下文的 token 数量
+PARAMETER num_ctx 4096
+
+# 设置自定义系统提示词，指定聊天助手的行为
+SYSTEM You are Mario from super mario bros, acting as an assistant.
+```
+
+使用方法：
+
+1. 将其保存为文件（如 `Modelfile`）
+2. `ollama create choose-a-model-name -f <location of the file e.g. ./Modelfile>`
+3. `ollama run choose-a-model-name`
+4. 开始使用模型！
+
+要查看某个模型的 Modelfile，可使用 `ollama show --modelfile` 命令。
+
+```shell
+ollama show --modelfile llama3.2
+```
+
+```
+# 由 "ollama show" 生成的 Modelfile
+# 要基于此 Modelfile 构建新的 Modelfile，请将 FROM 行替换为：
+# FROM llama3.2:latest
+FROM /Users/pdevine/.ollama/models/blobs/sha256-00e1317cbf74d901080d7100f57580ba8dd8de57203072dc6f668324ba545f29
+TEMPLATE """{{ if .System }}<|start_header_id|>system<|end_header_id|>
+
+{{ .System }}<|eot_id|>{{ end }}{{ if .Prompt }}<|start_header_id|>user<|end_header_id|>
+
+{{ .Prompt }}<|eot_id|>{{ end }}<|start_header_id|>assistant<|end_header_id|>
+
+{{ .Response }}<|eot_id|>"""
+PARAMETER stop "<|start_header_id|>"
+PARAMETER stop "<|end_header_id|>"
+PARAMETER stop "<|eot_id|>"
+PARAMETER stop "<|reserved_special_token"
+```
+
+## 指令
+
+### FROM（必需）
+
+`FROM` 指令定义创建模型时要使用的基础模型。
+
+```
+FROM <model name>:<tag>
+```
+
+#### 从现有模型构建
+
+```
+FROM llama3.2
+```
+
+<Card title="模型库" href="https://ollama.com/library">
+  浏览可用模型
+</Card>
+
+#### 从 Safetensors 模型构建
+
+```
+FROM <model directory>
+```
+
+模型目录中应包含受支持架构的 Safetensors 权重。
+
+#### 从 GGUF 模型构建
+
+```
+FROM ./ollama-model.gguf
+```
+
+GGUF 文件的位置应使用绝对路径指定，或使用相对于 `Modelfile` 所在位置的路径。
+
+对于分片的 GGUF 模型，请保留原始的分片文件名，并使用能匹配所有分片的通配符。也可以用多条 `FROM` 指令分别列出各分片。
+
+```
+FROM ./model-*.gguf
+```
+
+### PARAMETER
+
+`PARAMETER` 指令定义运行模型时可以设置的参数。
+
+```
+PARAMETER <parameter> <parametervalue>
+```
+
+#### 有效参数与取值
+
+| Parameter      | Description                                                                                                                                                                                                                                                                                                                                                                     | Value Type | Example Usage        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------- |
+| num_ctx        | 设置用于生成下一个 token 的上下文窗口大小。（默认：2048）                                                                                                                                                                                                                                                                                                                        | int        | num_ctx 4096         |
+| repeat_last_n  | 设置模型向前回看多少内容以避免重复。（默认：64，0 = 禁用，-1 = num_ctx）                                                                                                                                                                                                                                                                                                         | int        | repeat_last_n 64     |
+| repeat_penalty | 设置对重复内容的惩罚强度。较高的值（如 1.5）对重复的惩罚更强，较低的值（如 0.9）则更宽容。（默认：1.0，禁用）                                                                                                                                                                                                                                                                     | float      | repeat_penalty 1.1   |
+| temperature    | 模型的温度。提高温度会让模型的回答更有创造性。（默认：0.8）                                                                                                                                                                                                                                                                                                                       | float      | temperature 0.7      |
+| seed           | 设置生成时使用的随机数种子。设为特定数字可让模型对相同的提示词生成相同的文本。（默认：0）                                                                                                                                                                                                                                                                                         | int        | seed 42              |
+| stop           | 设置要使用的停止序列。当出现该模式时，LLM 会停止生成文本并返回。在 Modelfile 中指定多个独立的 `stop` 参数即可设置多个停止模式。                                                                                                                                                                                                                                                    | string     | stop "AI assistant:" |
+| num_predict    | 生成文本时要预测的最大 token 数。（默认：-1，无限生成）                                                                                                                                                                                                                                                                                                                           | int        | num_predict 42       |
+| draft_num_predict | 有草稿模型（draft model）可用时，每步要预测的推测性草稿 token 最大数量。独立草稿模型默认为 4；内嵌 MTP 张量则需要设置此参数。设为 0 可禁用推测式草稿。                                                                                                                                                                                                                           | int        | draft_num_predict 4  |
+| top_k          | 降低生成无意义内容的概率。较高的值（如 100）会带来更多样的回答，较低的值（如 10）则更保守。（默认：40）                                                                                                                                                                                                                                                                            | int        | top_k 40             |
+| top_p          | 与 top-k 配合工作。较高的值（如 0.95）会带来更多样的文本，较低的值（如 0.5）会生成更聚焦、更保守的文本。（默认：0.9）                                                                                                                                                                                                                                                              | float      | top_p 0.9            |
+| min_p          | top_p 的替代方案，旨在兼顾质量与多样性。该参数 p 表示一个 token 被纳入考虑所需的最小概率（相对于最可能 token 的概率）。例如，当 p=0.05 且最可能 token 的概率为 0.9 时，值低于 0.045 的 logits 会被过滤掉。（默认：0.0）                                                                                                                                                             | float      | min_p 0.05           |
+
+### TEMPLATE
+
+`TEMPLATE` 定义要传入模型的完整提示词模板。它可以（可选地）包含系统消息、用户消息以及模型的响应。注意：语法可能因模型而异。模板使用 Go [模板语法](https://pkg.go.dev/text/template)。
+
+#### 模板变量
+
+| Variable          | Description                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `{{ .System }}`   | 用于指定自定义行为的系统消息。                                                                 |
+| `{{ .Prompt }}`   | 用户的提示词消息。                                                                             |
+| `{{ .Response }}` | 模型的响应。生成响应时，此变量之后的文本会被省略。                                             |
+
+```
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
+```
+
+### SYSTEM
+
+`SYSTEM` 指令指定模板中要使用的系统消息（如适用）。
+
+```
+SYSTEM """<system message>"""
+```
+
+### LICENSE
+
+`LICENSE` 指令允许你指定本 Modelfile 所用模型在共享或分发时遵循的法律许可协议。
+
+```
+LICENSE """
+<license text>
+"""
+```
+
+### MESSAGE
+
+`MESSAGE` 指令允许你为模型指定回复时使用的消息历史。通过多条 MESSAGE 指令构建一段对话，可以引导模型以类似的方式作答。
+
+```
+MESSAGE <role> <message>
+```
+
+#### 有效角色
+
+| Role      | Description                                                  |
+| --------- | ------------------------------------------------------------ |
+| system    | 为模型提供 SYSTEM 消息的另一种方式。                          |
+| user      | 用户可能提出的问题示例消息。                                  |
+| assistant | 模型应如何回答的示例消息。                                    |
+
+#### 对话示例
+
+```
+MESSAGE user Is Toronto in Canada?
+MESSAGE assistant yes
+MESSAGE user Is Sacramento in Canada?
+MESSAGE assistant no
+MESSAGE user Is Ontario in Canada?
+MESSAGE assistant yes
+```
+
+### CAPABILITY
+
+为 GGUF 或 MLX 模型添加一项能力，且不会移除继承或推断出的能力。重复该指令可添加多项。仅当权重是针对 System One 决策提示词训练的，才声明 `decision`：
+
+```
+CAPABILITY decision
+```
+
+### REQUIRES
+
+`REQUIRES` 指令允许你指定模型所需的 Ollama 最低版本。
+
+```
+REQUIRES <version>
+```
+
+版本应为有效的 Ollama 版本（如 0.14.0）。
+
+## 注意事项
+
+- **`Modelfile` 不区分大小写**。示例中使用大写指令，是为了更容易与参数区分开。
+- 指令可以按任意顺序排列。示例中把 `FROM` 指令放在最前面，是为了便于阅读。
+
+[1]: https://ollama.com/library

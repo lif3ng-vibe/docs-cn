@@ -1,0 +1,169 @@
+---
+title: "硬件支持"
+---
+
+## Nvidia
+Ollama 支持 compute capability 5.0+ 且驱动版本 550 及更新的 Nvidia GPU。
+compute capability 5.0 到 6.2 的 Nvidia GPU 需要版本 570 或更新的驱动。
+
+查看你的显卡是否受支持，请检查 compute compatibility：
+[https://developer.nvidia.com/cuda-gpus](https://developer.nvidia.com/cuda-gpus)
+
+| Compute Capability | Family              | Cards                                                                                                                          |
+| ------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 12.1               | NVIDIA              | `GB10 (DGX Spark)`                                                                                                             |
+| 12.0               | GeForce RTX 50xx    | `RTX 5060` `RTX 5060 Ti` `RTX 5070` `RTX 5070 Ti` `RTX 5080` `RTX 5090`                                                        |
+|                    | NVIDIA Professional | `RTX PRO 4000 Blackwell` `RTX PRO 4500 Blackwell` `RTX PRO 5000 Blackwell` `RTX PRO 6000 Blackwell`                            |
+| 9.0                | NVIDIA              | `H200` `H100`                                                                                                                  |
+| 8.9                | GeForce RTX 40xx    | `RTX 4090` `RTX 4080 SUPER` `RTX 4080` `RTX 4070 Ti SUPER` `RTX 4070 Ti` `RTX 4070 SUPER` `RTX 4070` `RTX 4060 Ti` `RTX 4060`  |
+|                    | NVIDIA Professional | `L4` `L40` `RTX 6000`                                                                                                          |
+| 8.6                | GeForce RTX 30xx    | `RTX 3090 Ti` `RTX 3090` `RTX 3080 Ti` `RTX 3080` `RTX 3070 Ti` `RTX 3070` `RTX 3060 Ti` `RTX 3060` `RTX 3050 Ti` `RTX 3050`   |
+|                    | NVIDIA Professional | `A40` `RTX A6000` `RTX A5000` `RTX A4000` `RTX A3000` `RTX A2000` `A10` `A16` `A2`                                             |
+| 8.0                | NVIDIA              | `A100` `A30`                                                                                                                   |
+| 7.5                | GeForce GTX/RTX     | `GTX 1650 Ti` `TITAN RTX` `RTX 2080 Ti` `RTX 2080` `RTX 2070` `RTX 2060`                                                       |
+|                    | NVIDIA Professional | `T4` `RTX 5000` `RTX 4000` `RTX 3000` `T2000` `T1200` `T1000` `T600` `T500`                                                    |
+|                    | Quadro              | `RTX 8000` `RTX 6000` `RTX 5000` `RTX 4000`                                                                                    |
+| 7.0                | NVIDIA              | `TITAN V` `V100` `Quadro GV100`                                                                                                |
+| 6.1                | NVIDIA TITAN        | `TITAN Xp` `TITAN X`                                                                                                           |
+|                    | GeForce GTX         | `GTX 1080 Ti` `GTX 1080` `GTX 1070 Ti` `GTX 1070` `GTX 1060` `GTX 1050 Ti` `GTX 1050`                                          |
+|                    | Quadro              | `P6000` `P5200` `P4200` `P3200` `P5000` `P4000` `P3000` `P2200` `P2000` `P1000` `P620` `P600` `P500` `P520`                    |
+|                    | Tesla               | `P40` `P4`                                                                                                                     |
+| 6.0                | NVIDIA              | `Tesla P100` `Quadro GP100`                                                                                                    |
+| 5.2                | GeForce GTX         | `GTX TITAN X` `GTX 980 Ti` `GTX 980` `GTX 970` `GTX 960` `GTX 950`                                                             |
+|                    | Quadro              | `M6000 24GB` `M6000` `M5000` `M5500M` `M4000` `M2200` `M2000` `M620`                                                           |
+|                    | Tesla               | `M60` `M40`                                                                                                                    |
+| 5.0                | GeForce GTX         | `GTX 750 Ti` `GTX 750` `NVS 810`                                                                                               |
+|                    | Quadro              | `K2200` `K1200` `K620` `M1200` `M520` `M5000M` `M4000M` `M3000M` `M2000M` `M1000M` `K620M` `M600M` `M500M`                     |
+
+要在本地构建以支持更旧的 GPU，参见[开发文档](./development.md)。
+
+### GPU 选择
+
+如果你的系统中有多块 NVIDIA GPU，想限制 Ollama 只使用其中一部分，可以将 `CUDA_VISIBLE_DEVICES` 设置为逗号分隔的 GPU 列表。
+可以使用数字 ID，但顺序可能会有变化，因此 UUID 更可靠。
+运行 `nvidia-smi -L` 可以查看各 GPU 的 UUID。如果你想
+忽略 GPU 并强制使用 CPU，可以给一个无效的 GPU ID（如 "-1"）。
+
+### Linux 休眠恢复
+
+在 Linux 上，经过一次挂起/恢复循环后，Ollama 有时会无法发现
+你的 NVIDIA GPU，从而回退到 CPU 上运行。可以通过重新加载 NVIDIA UVM 驱动来规避这个
+驱动缺陷：`sudo rmmod nvidia_uvm &&
+sudo modprobe nvidia_uvm`
+
+## AMD Radeon
+
+Ollama 通过 ROCm 库支持以下 AMD GPU：
+
+> **注意：**
+> 更多 AMD GPU 的支持由 Vulkan 库提供——见下文。
+
+
+### Linux 支持
+
+Ollama 在 Linux 上需要 AMD ROCm v7 驱动。你可以使用
+[AMD 的 ROCm 文档](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/)中的 `amdgpu-install` 工具来
+安装或升级。
+
+| Family         | Cards and accelerators                                                                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AMD Radeon RX  | `9070 XT` `9070 GRE` `9070` `9060 XT` `9060 XT LP` `9060` `7900 XTX` `7900 XT` `7900 GRE` `7800 XT` `7700 XT` `7700` `7600 XT` `7600` `6950 XT` `6900 XTX` `6900XT` `6800 XT` `6800` |
+| AMD Radeon AI PRO | `R9700` `R9600D`                                                                                                                                            |
+| AMD Radeon PRO | `W7900` `W7800` `W7700` `W7600` `W7500` `W6900X` `W6800X Duo` `W6800X` `W6800` `V620`                                                                        |
+| AMD Ryzen AI   | `Ryzen AI Max+ 395` `Ryzen AI Max 390` `Ryzen AI Max 385` `Ryzen AI 9 HX 475` `Ryzen AI 9 HX 470` `Ryzen AI 9 465` `Ryzen AI 9 HX 375` `Ryzen AI 9 HX 370` `Ryzen AI 9 365` |
+| AMD Instinct   | `MI350X` `MI300X` `MI300A` `MI250X` `MI250` `MI210` `MI100`                                                                                                   |
+
+### Windows 支持
+
+Ollama 在 Windows 上需要 AMD ROCm v7 / 支持 HIP7 的驱动栈。
+
+| Family         | Cards and accelerators                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| AMD Radeon RX  | `7900 XTX` `7900 XT` `7900 GRE` `7800 XT` `7700 XT` `7600 XT` `7600`  |
+| AMD Radeon PRO | `W7900` `W7800` `W7700` `W7600` `W7500`                                |
+
+### Linux 上的覆盖设置
+
+Ollama 使用的 AMD ROCm 库并不支持所有 AMD GPU。某些
+情况下，你可以强制系统尝试使用一个相近的 LLVM target。例如，Radeon RX 5400 是 `gfx1034`（也写作 10.3.4），
+但 ROCm 目前不支持该 target。最接近的受支持 target
+是 `gfx1030`。你可以将环境变量 `HSA_OVERRIDE_GFX_VERSION` 设为
+`x.y.z` 格式。举例来说，要强制系统在 RX 5400 上运行，你
+需要在服务器上设置环境变量 `HSA_OVERRIDE_GFX_VERSION="10.3.0"`。如果你的 AMD GPU 不受支持，可以参考下方
+受支持类型的列表进行试验。
+
+如果你有多块 GFX 版本不同的 GPU，可以在环境变量后追加数字设备
+编号来分别设置。例如，
+`HSA_OVERRIDE_GFX_VERSION_0=10.3.0` 和 `HSA_OVERRIDE_GFX_VERSION_1=11.0.0`。
+
+目前，Linux 上已知受支持的 GPU 类型对应以下 LLVM target。
+下表列出了映射到这些 LLVM target 的一些示例 GPU：
+| **LLVM Target** | **示例 GPU** |
+|-----------------|---------------------|
+| gfx908 | Radeon Instinct MI100 |
+| gfx90a | Radeon Instinct MI210/MI250 |
+| gfx942 | Radeon Instinct MI300X/MI300A |
+| gfx950 | Radeon Instinct MI350X |
+| gfx1030 | Radeon PRO V620 |
+| gfx1100 | Radeon PRO W7900 |
+| gfx1101 | Radeon PRO W7700 |
+| gfx1102 | Radeon RX 7600 |
+| gfx1150 | Ryzen AI 9 HX 375 |
+| gfx1151 | Ryzen AI Max+ 395 |
+| gfx1200 | Radeon RX 9070 |
+| gfx1201 | Radeon RX 9070 XT |
+
+如需更多帮助，可以在 [Discord](https://discord.gg/ollama) 上联系我们，或提交
+[issue](https://github.com/ollama/ollama/issues)。
+
+### GPU 选择
+
+如果你的系统中有多块 AMD GPU，想限制 Ollama 只使用其中
+一部分，可以将 `ROCR_VISIBLE_DEVICES` 设置为逗号分隔的 GPU 列表。
+可以使用 `rocminfo` 查看设备列表。如果你想忽略 GPU
+并强制使用 CPU，可以给一个无效的 GPU ID（如 "-1"）。在可用时，请使用
+`Uuid` 而非数字值来唯一标识设备。
+
+### 容器权限
+
+在某些 Linux 发行版上，SELinux 可能会阻止容器
+访问 AMD GPU 设备。你可以在宿主机上运行
+`sudo setsebool container_use_devices=1` 来允许容器使用设备。
+
+## Metal（Apple GPU）
+
+Ollama 通过 Metal API 在 Apple 设备上支持 GPU 加速。
+
+
+## Vulkan GPU 支持
+
+Windows 和 Linux 上的更多 GPU 支持通过
+[Vulkan](https://www.vulkan.org/) 提供。后端安装后 Vulkan 默认启用。在 Windows 上，大多数 GPU 厂商的驱动
+都自带 Vulkan 支持，无需额外的设置步骤。大多数 Linux
+发行版需要安装额外组件，而且你可能在 Mesa 与 GPU 厂商专属包之间
+有多种 Vulkan 驱动可选
+
+- Linux Intel GPU 说明 - https://dgpu-docs.intel.com/driver/client/overview.html
+- Linux AMD GPU 说明 - https://amdgpu-install.readthedocs.io/en/latest/install-script.html#specifying-a-vulkan-implementation
+
+对于某些 Linux 发行版上的 AMD GPU，你可能需要将 `ollama` 用户加入 `render` 用户组。
+
+Ollama 调度器利用 GPU 库上报的可用显存数据来
+做出最优的调度决策。Vulkan 需要额外的能力或
+以 root 身份运行才能暴露这些可用显存数据。如果既没有 root 权限也没有该
+能力，Ollama 将使用模型的近似大小
+来尽力做出调度决策。
+
+```bash
+sudo setcap cap_perfmon+ep /usr/local/bin/ollama
+```
+
+### GPU 选择
+
+要选择特定的 Vulkan GPU，可以按照 [FAQ](faq#如何配置-ollama-服务器) 中的说明，将 Ollama 服务器上的环境变量
+`GGML_VK_VISIBLE_DEVICES` 设置为一个或多个数字 ID。如果你
+在使用基于 Vulkan 的 GPU 时遇到任何问题，可以通过设置 `OLLAMA_VULKAN=0` 或 `GGML_VK_VISIBLE_DEVICES=-1` 禁用所有 Vulkan GPU。
+
+在 Vulkan iGPU 不稳定的混合 iGPU/dGPU 系统上，保持 Vulkan
+启用，并将 `GGML_VK_VISIBLE_DEVICES` 设置为独立显卡的索引。例如，当 `Vulkan1` 是独立
+GPU 时，使用 `GGML_VK_VISIBLE_DEVICES=1`。

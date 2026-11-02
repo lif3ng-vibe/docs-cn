@@ -1,0 +1,57 @@
+---
+title: "NemoClaw"
+---
+
+NemoClaw 是 NVIDIA 为 [OpenClaw](/integrations/openclaw) 打造的开源安全防护栈。它使用 NVIDIA OpenShell 运行时包裹 OpenClaw，为 AI 代理提供内核级沙箱、网络策略控制和审计追踪。 
+
+## 快速开始
+
+拉取一个模型（全部支持的模型见[此处](https://ollama.com/search)）：
+
+```bash
+ollama pull nemotron-3-nano:30b
+```
+
+运行安装程序：
+
+```bash
+curl -fsSL https://www.nvidia.com/nemoclaw.sh | \
+  NEMOCLAW_NON_INTERACTIVE=1 \
+  NEMOCLAW_PROVIDER=ollama \
+  NEMOCLAW_MODEL=nemotron-3-nano:30b \
+  bash
+```
+
+连接到你的沙箱：
+
+```bash
+nemoclaw my-assistant connect
+```
+
+打开 TUI：
+
+```bash
+openclaw tui
+```
+
+<Note>NemoClaw 对 Ollama 的支持目前仍是实验性的。</Note>
+
+## 平台支持
+
+| 平台 | 运行时 | 状态 |
+|----------|---------|--------|
+| Linux（Ubuntu 22.04+） | Docker | 主要支持 |
+| macOS（Apple Silicon） | Colima 或 Docker Desktop | 支持 |
+| Windows | WSL2 + Docker Desktop | 支持 |
+
+Windows 上不支持 CMD 和 PowerShell——必须使用 WSL2。
+
+<Note>安装程序运行前，Ollama 必须已安装并处于运行状态。在 WSL2 或容器内运行时，请确保沙箱能访问到 Ollama（如 `OLLAMA_HOST=0.0.0.0`）。</Note>
+
+## 系统要求
+
+- CPU：至少 4 vCPU
+- 内存：至少 8 GB（推荐 16 GB）
+- 磁盘：20 GB 可用空间（本地模型推荐 40 GB）
+- Node.js 20+ 与 npm 10+
+- 容器运行时（推荐 Docker）

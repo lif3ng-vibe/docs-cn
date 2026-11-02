@@ -1,0 +1,50 @@
+---
+title: "DeepSeek Harness"
+---
+
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 是一个开源编码代理。
+
+<Note>DeepSeek Harness 目前处于开发者预览阶段。其上游配置可能在版本之间发生变化。</Note>
+
+## 设置
+
+```shell
+ollama launch dsh
+```
+
+如有需要，Ollama 会安装 `@deepseek-ai/dsh`。选择模型：
+
+```shell
+ollama launch dsh --model qwen3.8
+ollama launch dsh --model deepseek-v4-flash:cloud
+```
+
+不启动、只进行配置：
+
+```shell
+ollama launch dsh --config
+```
+
+## 网页搜索
+
+网页搜索会自动启用。它需要能够访问 Ollama 云端，且模型支持工具调用。如有需要，运行 `ollama signin`。
+
+## 配置
+
+Ollama 将其设置存储在 `~/.ollama/launch/dsh/settings.yaml`。这些设置最后加载，用于设定模型、提供商和网页搜索连接。重复启动会保留该文件中的其他设置。Ollama 不会改动 `~/.dsh/settings.yaml`、配置文件（profile）、会话或凭据。
+
+启动会拒绝额外的 `--patch` 参数。其他 Harness 参数放在 `--` 之后传递：
+
+```shell
+ollama launch dsh -- --port 3081
+```
+
+## 手动安装
+
+DeepSeek Harness 需要 Node.js。手动安装：
+
+```shell
+npm install -g @deepseek-ai/dsh@latest
+```
+
+然后运行 `ollama launch dsh`。在 Windows 上，请安装适用于 Windows 的 Node.js。

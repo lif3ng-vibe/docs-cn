@@ -1,0 +1,73 @@
+---
+title: "生成嵌入"
+sidebarTitle: "POST /api/embed"
+---
+
+**POST** `/api/embed`
+
+创建表示输入文本的向量嵌入
+
+## 请求示例
+
+<CodeGroup>
+```bash 默认
+curl http://localhost:11434/api/embed -d '{
+  "model": "embeddinggemma",
+  "input": "Why is the sky blue?"
+}'
+```
+```bash 多输入
+curl http://localhost:11434/api/embed -d '{
+  "model": "embeddinggemma",
+  "input": [
+    "Why is the sky blue?",
+    "Why is the grass green?"
+  ]
+}'
+```
+```bash 截断
+curl http://localhost:11434/api/embed -d '{
+  "model": "embeddinggemma",
+  "input": "Generate embeddings for this text",
+  "truncate": true
+}'
+```
+```bash 维度
+curl http://localhost:11434/api/embed -d '{
+  "model": "embeddinggemma",
+  "input": "Generate embeddings for this text",
+  "dimensions": 128
+}'
+```
+</CodeGroup>
+
+## 请求体
+
+**`EmbedRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 模型名称 |
+| `input` | `` | 是 | 要生成嵌入的文本或文本数组 |
+| `truncate` | `boolean` | 否 | 为 true 时，截断超出上下文窗口的输入；为 false 时，返回错误。 |
+| `dimensions` | `integer` | 否 | 要生成的嵌入维度数量 |
+| `keep_alive` | `string` | 否 | 模型 keep-alive 时长 |
+| `options` | `ModelOptions` | 否 | — |
+
+## 响应
+
+### 200
+
+输入文本的向量嵌入
+
+**`EmbedResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 否 | 生成这些嵌入的模型 |
+| `embeddings` | `array<array<number>>` | 否 | 向量嵌入数组 |
+| `total_duration` | `integer` | 否 | 生成所花费的总时间（纳秒） |
+| `load_duration` | `integer` | 否 | 加载时间（纳秒） |
+| `prompt_eval_count` | `integer` | 否 | 为生成嵌入而处理的输入 token 数量 |
+
+

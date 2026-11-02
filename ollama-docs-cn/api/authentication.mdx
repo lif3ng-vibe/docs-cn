@@ -1,0 +1,57 @@
+---
+title: "身份验证"
+---
+
+`http://localhost:11434` 上的本地 API 无需身份验证。
+
+要使用云端模型、发布模型或下载私有模型，请登录 Ollama。若要直接通过 API 访问 ollama.com，请使用 API 密钥。
+
+## API 密钥
+
+在 `https://ollama.com/api` 和 `https://ollama.com/v1` 进行直接云端推理需要 API 密钥，无需安装 Ollama 或本地服务器。
+
+创建 [API 密钥](https://ollama.com/settings/keys)，然后在终端中设置：
+
+```shell
+export OLLAMA_API_KEY="your_api_key"
+```
+
+请在 `Authorization: Bearer` 请求头中使用该 API 密钥。这也适用于托管的 Anthropic 兼容 `/v1/messages` 端点；仅使用 `x-api-key` 不受支持。
+
+```shell
+curl https://ollama.com/api/chat \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "messages": [{"role": "user", "content": "Why is the sky blue?"}],
+    "stream": false
+  }'
+```
+
+API 密钥不会过期。可在 [API 密钥设置](https://ollama.com/settings/keys)中吊销密钥。
+
+请勿将密钥放在浏览器端代码或版本控制中。shell 配置与兼容性示例请参阅 [API 快速开始](/quickstart#构建应用)。
+
+## 登录
+
+在终端中登录：
+
+```
+ollama signin
+```
+
+之后 Ollama 会自动为你的云端请求完成身份验证：
+
+```
+ollama run gpt-oss:120b-cloud
+```
+
+通过本地 API 同样有效：
+
+```shell
+curl http://localhost:11434/api/generate -d '{
+  "model": "gpt-oss:120b-cloud",
+  "prompt": "Why is the sky blue?"
+}'
+```

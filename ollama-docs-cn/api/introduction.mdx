@@ -1,0 +1,57 @@
+---
+title: "简介"
+---
+
+使用 Ollama 的 API 构建基于云端模型或本地模型的应用。
+
+## 快速开始
+
+使用 [API 密钥](https://ollama.com/settings/keys)调用云端模型，无需安装 Ollama。从 [API 快速开始](/quickstart#构建应用)入手。
+
+要在自己的电脑上运行模型，请[安装 Ollama 并运行本地模型](/quickstart#在本地运行模型)。
+
+## 基础 URL
+
+| API | 直接云端访问 | 本地 Ollama 服务器 |
+| --- | --- | --- |
+| Ollama | `https://ollama.com/api` | `http://localhost:11434/api` |
+| OpenAI 兼容 | `https://ollama.com/v1` | `http://localhost:11434/v1` |
+| Anthropic 客户端基础 URL | `https://ollama.com` | `http://localhost:11434` |
+
+Anthropic 客户端会在其基础 URL 后追加 `/v1/messages`。
+
+云端请求需要 API 密钥，本地请求则不需要。要通过本地服务器使用云端模型，请[登录 Ollama](/api/authentication#登录)。
+
+创建或删除模型需要本地 Ollama 服务器。关于受支持的 API 特性，请参阅 [OpenAI 兼容性](/api/openai-compatibility)与 [Anthropic 兼容性](/api/anthropic-compatibility)。
+
+## Ollama API 示例
+
+将 `OLLAMA_API_KEY` 设置为你的 [API 密钥](https://ollama.com/settings/keys)，然后调用一个云端模型：
+
+```shell
+curl https://ollama.com/api/chat \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma4:31b",
+    "messages": [{"role": "user", "content": "Why is the sky blue?"}],
+    "stream": false
+  }'
+```
+
+从 `message.content` 中读取回答。若要进行本地推理，请使用 `http://localhost:11434/api/chat` 并指定已下载的模型，同时省略授权请求头。
+
+## 软件库
+
+Ollama 官方软件库既可搭配本地服务器使用，也可搭配托管 API 使用：
+
+- [Python](https://github.com/ollama/ollama-python)
+- [JavaScript](https://github.com/ollama/ollama-js)
+
+若要直接访问云端，请将主机地址设置为 `https://ollama.com`，并在 `Authorization: Bearer` 请求头中提供你的 API 密钥。
+
+浏览[社区软件库](https://github.com/ollama/ollama?tab=readme-ov-file#libraries--sdks)。
+
+## 版本管理
+
+Ollama 的 API 没有严格的版本划分，但预期会保持稳定并向下兼容。弃用（deprecation）情况很少见，如有变更会在[发布说明](https://github.com/ollama/ollama/releases)中公告。

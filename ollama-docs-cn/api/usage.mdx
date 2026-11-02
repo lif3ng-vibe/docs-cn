@@ -1,0 +1,38 @@
+---
+title: "用量指标"
+---
+
+Ollama 的 API 响应包含可用于衡量性能与模型用量的指标：
+
+* `total_duration`：生成整个响应所花费的时间
+* `load_duration`：加载模型所花费的时间
+* `prompt_eval_count`：提示词中包含的输入 token 数量
+* `prompt_eval_cached_count`：从缓存读取的提示词 token 数量
+* `prompt_eval_duration`：评估未缓存提示词 token 所花费的时间
+* `eval_count`：生成的输出 token 数量
+* `eval_duration`：生成输出 token 所花费的时间
+
+所有时间值均以纳秒为单位。
+
+## 响应示例
+
+对于返回用量指标的端点，响应体会包含这些用量字段。例如，对 `/api/generate` 发起的非流式调用可能返回如下响应：
+
+```json
+{
+  "model": "gemma4",
+  "created_at": "2025-10-17T23:14:07.414671Z",
+  "response": "Hello! How can I help you today?",
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 174560334,
+  "load_duration": 101397084,
+  "prompt_eval_count": 11,
+  "prompt_eval_cached_count": 8,
+  "prompt_eval_duration": 13074791,
+  "eval_count": 18,
+  "eval_duration": 52479709
+}
+```
+
+对于返回**流式响应**的端点，用量字段包含在最后一个分块中，此时 `done` 为 `true`。

@@ -1,0 +1,144 @@
+---
+title: "故障排查"
+description: "如何排查使用 Ollama 时遇到的问题"
+---
+
+有时 Ollama 的表现可能不如预期。弄清楚发生了什么，最好的办法之一就是查看日志。在 **Mac** 上，运行以下命令找到日志：
+
+```shell
+cat ~/.ollama/logs/server.log
+```
+
+在带 systemd 的 **Linux** 系统上，使用以下命令查看日志：
+
+```shell
+journalctl -u ollama --no-pager --follow --pager-end
+```
+
+在**容器**中运行 Ollama 时，日志会输出到容器的 stdout/stderr：
+
+```shell
+docker logs <container-name>
+```
+
+（用 `docker ps` 找到容器名称）
+
+如果在终端中手动运行 `ollama serve`，日志会直接显示在该终端上。
+
+在 **Windows** 上运行 Ollama 时，日志存放在几个不同的位置。按下 `<cmd>+R` 并输入以下命令，即可在资源管理器窗口中查看：
+
+- `explorer %LOCALAPPDATA%\Ollama` 查看日志。最近的服务器日志在 `server.log` 中，更早的日志在 `server-#.log` 中
+- `explorer %LOCALAPPDATA%\Programs\Ollama` 浏览二进制文件（安装程序会将其加入你的用户 PATH）
+- `explorer %HOMEPATH%\.ollama` 浏览模型与配置的存放位置
+- `explorer %TEMP%` 临时可执行文件存放在一个或多个 `ollama*` 目录中
+
+要启用额外的调试日志来帮助排查问题，请先**从托盘菜单退出正在运行的应用**，然后在 powershell 终端中执行
+
+```powershell
+$env:OLLAMA_DEBUG="1"
+& "ollama app.exe"
+```
+
+加入 [Discord](https://discord.gg/ollama) 可以获得解读日志方面的帮助。
+
+## LLM 库
+
+Ollama 内置了多个针对不同 GPU 和 CPU 向量特性编译的 LLM 库。Ollama 会根据你系统的能力尝试挑选最优的一个。如果自动检测结果有问题，或者你遇到其他问题（例如 GPU 崩溃），可以通过强制指定某个 LLM 库来规避。`cpu_avx2` 性能最好，其次是 `cpu_avx`，最慢但兼容性最好的是 `cpu`。macOS 下的 Rosetta 模拟可以配合 `cpu` 库工作。
+
+在服务器日志中，你会看到类似下面这样的消息（随版本有所不同）：
+
+```
+Dynamic LLM libraries [rocm_v6 cpu cpu_avx cpu_avx2 cuda_v11 rocm_v5]
+```
+
+**实验性 LLM 库覆盖**
+
+你可以将 OLLAMA_LLM_LIBRARY 设置为任意可用的 LLM 库，绕过自动检测。例如，如果你有一块 CUDA 显卡，但想强制使用带 AVX2 向量支持的 CPU LLM 库，请使用：
+
+```shell
+OLLAMA_LLM_LIBRARY="cpu_avx2" ollama serve
+```
+
+你可以用以下命令查看你的 CPU 支持哪些特性。
+
+```shell
+cat /proc/cpuinfo| grep flags | head -1
+```
+
+## 在 Linux 上安装旧版本或预发布版本
+
+如果你在 Linux 上遇到问题想安装旧版本，或者想在正式发布前试用预发布版本，可以告诉安装脚本要安装哪个版本。
+
+```shell
+curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+```
+
+## Linux tmp noexec
+
+如果你的系统在 Ollama 存放临时可执行文件的位置配置了 "noexec" 标志，可以将 OLLAMA_TMPDIR 设置为 ollama 运行用户可写的位置来指定备用目录。例如 OLLAMA_TMPDIR=/usr/share/ollama/
+
+## Linux Docker
+
+如果 Ollama 最初在 Docker 容器中能正常使用 GPU，但一段时间后切换到 CPU 运行，且服务器日志报告 GPU 发现失败，可以通过在 Docker 中禁用 systemd cgroup 管理来解决。编辑宿主机上的 `/etc/docker/daemon.json`，在 docker 配置中添加 `"exec-opts": ["native.cgroupdriver=cgroupfs"]`。
+
+## NVIDIA GPU 发现
+
+Ollama 启动时会盘点系统中存在的 GPU，以确定兼容性及可用显存大小。有时这一发现过程可能找不到你的 GPU。一般来说，使用最新驱动效果最好。
+
+### Linux NVIDIA 故障排查
+
+如果你使用容器运行 Ollama，请先按照 [Docker](./docker) 文档的说明设置好容器运行时。
+
+有时 Ollama 初始化 GPU 会遇到困难。查看服务器日志时，它会表现为各种错误代码，如 "3"（未初始化）、"46"（设备不可用）、"100"（无设备）、"999"（未知）等。以下排查方法可能有助于解决问题
+
+- 如果你在使用容器，容器运行时是否正常？试试 `docker run --gpus all ubuntu nvidia-smi`——如果这条命令不能工作，Ollama 也无法看到你的 NVIDIA GPU。
+- uvm 驱动是否已加载？`sudo nvidia-modprobe -u`
+- 尝试重新加载 nvidia_uvm 驱动——先 `sudo rmmod nvidia_uvm`，再 `sudo modprobe nvidia_uvm`
+- 尝试重启
+- 确保你运行的是最新的 nvidia 驱动
+
+如果这些方法都解决不了问题，请收集更多信息并提交 issue：
+
+- 设置 `CUDA_ERROR_LEVEL=50` 再试一次，以获得更多诊断日志
+- 检查 dmesg 中的报错 `sudo dmesg | grep -i nvrm` 和 `sudo dmesg | grep -i nvidia`
+
+## AMD GPU 发现
+
+在 Linux 上，AMD GPU 访问通常需要 `video` 和/或 `render` 用户组成员身份才能访问 `/dev/kfd` 设备。如果权限没有配置正确，Ollama 会检测到这一点并在服务器日志中报告错误。
+
+在容器中运行时，在某些 Linux 发行版和容器运行时上，ollama 进程可能无法访问 GPU。在宿主机上使用 `ls -lnd /dev/kfd /dev/dri /dev/dri/*` 确定你系统上的**数字**组 ID，并向容器传入额外的 `--group-add ...` 参数，使其可以访问所需设备。例如，在以下输出 `crw-rw---- 1 0  44 226,   0 Sep 16 16:55 /dev/dri/card0` 中，组 ID 列是 `44`。
+
+如果你在让 Ollama 正确发现或使用 GPU 进行推理时遇到问题，以下方法可能有助于定位故障。
+
+- `AMD_LOG_LEVEL=3` 开启 AMD HIP/ROCm 库的 info 级日志。这有助于显示更详细的错误代码，帮助排查问题
+- `OLLAMA_DEBUG=1` GPU 发现期间会报告额外信息
+- 检查 dmesg 中来自 amdgpu 或 kfd 驱动的报错 `sudo dmesg | grep -i amdgpu` 和 `sudo dmesg | grep -i kfd`
+
+### AMD 驱动版本不匹配
+
+如果你的 AMD GPU 在 Linux 上未被检测到，且服务器日志包含类似以下消息：
+
+```
+msg="failure during GPU discovery" ... error="failed to finish discovery before timeout"
+msg="bootstrap discovery took" duration=30s ...
+```
+
+这通常意味着系统的 AMD GPU 驱动太旧。Ollama 内绑定的
+ROCm 7 Linux 库需要兼容的 ROCm 7 内核驱动。如果
+系统运行的是旧驱动（ROCm 6.x 或更早），GPU 初始化
+会在设备发现阶段卡住并最终超时，导致 Ollama
+回退到 CPU。
+
+要解决此问题，请使用 [AMD 的 ROCm 文档](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/)中的 `amdgpu-install`
+工具升级到 ROCm v7 驱动。
+升级后，重启系统并重新启动 Ollama。
+
+## 多块 AMD GPU
+
+如果在 Linux 上跨多块 AMD GPU 加载模型时遇到乱码输出，请参阅以下指南。
+
+- https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/install/installrad/native_linux/mgpu.html#mgpu-known-issues-and-limitations
+
+## Windows 终端错误
+
+旧版本的 Windows 10（如 21H1）存在一个已知缺陷：标准终端程序无法正确显示控制字符。这会导致屏幕上出现一长串类似 `←[?25h←[?25l` 的字符，有时还会报 `The parameter is incorrect` 错误。要解决此问题，请更新到 Win 10 22H1 或更新版本。

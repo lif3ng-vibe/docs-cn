@@ -1,0 +1,44 @@
+---
+title: "macOS"
+---
+
+## 系统要求
+
+* macOS Sonoma（v14）或更高版本
+* Apple M 系列芯片（支持 CPU 与 GPU）或 x86（仅 CPU）
+
+
+## 文件系统要求
+
+推荐的安装方式是挂载 `ollama.dmg`，然后将 Ollama 应用拖入系统级的 `Applications` 文件夹。启动时，Ollama 应用会检查 `ollama` CLI 是否存在于你的 PATH 中；如果未检测到，会请求授权在 `/usr/local/bin` 创建链接。
+
+安装 Ollama 后，你还需要额外的空间来存储大语言模型，其大小可能达数十至数百 GB。如果你的主目录空间不足，可以更改编译二进制文件的安装位置以及模型的存储位置。
+
+### 更改安装位置
+
+要将 Ollama 应用安装到 `Applications` 以外的位置，请把 Ollama 应用放到目标位置，并确保 CLI `Ollama.app/Contents/Resources/ollama` 或指向该 CLI 的符号链接能在你的 PATH 中找到。首次启动时，请拒绝"Move to Applications?"请求。
+
+
+## 故障排查
+
+macOS 上的 Ollama 将文件存放在以下几个位置。
+- `~/.ollama` 存放模型与配置
+- `~/.ollama/logs` 存放日志
+    - *app.log* 存放 GUI 应用最近的日志
+    - *server.log* 存放最近的服务器日志
+- `<install location>/Ollama.app/Contents/Resources/ollama` 是 CLI 二进制文件
+
+## 卸载
+
+要将 Ollama 从系统中彻底移除，请删除以下文件和文件夹：
+
+```
+sudo rm -rf /Applications/Ollama.app
+sudo rm /usr/local/bin/ollama
+rm -rf "~/Library/Application Support/Ollama"
+rm -rf "~/Library/Saved Application State/com.electron.ollama.savedState"
+rm -rf ~/Library/Caches/com.electron.ollama/
+rm -rf ~/Library/Caches/ollama
+rm -rf ~/Library/WebKit/com.electron.ollama
+rm -rf ~/.ollama
+```

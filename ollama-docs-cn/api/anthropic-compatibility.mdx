@@ -1,0 +1,403 @@
+---
+title: "Anthropic 兼容性"
+---
+
+将 Anthropic 客户端及 Claude Code 等工具连接到 Ollama。Ollama 支持 [Anthropic Messages API](https://platform.claude.com/docs/en/api/http/messages/create) 的一个子集。
+
+## 直接云端访问
+
+在 `OLLAMA_API_KEY` 中设置你的 [API 密钥](https://ollama.com/settings/keys)。无需安装 Ollama。
+
+```shell
+export OLLAMA_API_KEY="your_api_key"
+```
+
+使用 Bearer 认证发送请求：
+
+```shell
+curl https://ollama.com/v1/messages \
+  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "gemma4:31b",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in one sentence."
+      }
+    ]
+  }'
+```
+
+从 `content` 中读取文本块。云端端点要求 `Authorization: Bearer`；不接受仅使用 `x-api-key`。
+
+兼容的模型支持消息、流式输出和函数调用。工具选择（tool-choice）控制、延迟工具（deferred tools）与托管网页搜索尚未完整支持。
+
+## 本地服务器用法
+
+以下示例连接到你的本地 Ollama 服务器。API 密钥可使用占位值 `ollama`。要通过该服务器使用云端模型，请[登录 Ollama](/api/authentication#登录)。
+
+### 环境变量
+
+要在期望 Anthropic API 的工具（如 Claude Code）中使用 Ollama，请设置以下环境变量：
+
+```shell
+export ANTHROPIC_AUTH_TOKEN=ollama  # required but ignored
+export ANTHROPIC_BASE_URL=http://localhost:11434
+```
+
+### `/v1/messages` 简单示例
+
+<CodeGroup dropdown>
+
+```python basic.py
+import anthropic
+
+client = anthropic.Anthropic(
+    base_url='http://localhost:11434',
+    api_key='ollama',  # required but ignored
+)
+
+message = client.messages.create(
+    model='qwen3-coder',
+    max_tokens=1024,
+    messages=[
+        {'role': 'user', 'content': 'Hello, how are you?'}
+    ]
+)
+print(message.content[0].text)
+```
+
+```javascript basic.js
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  baseURL: "http://localhost:11434",
+  apiKey: "ollama", // required but ignored
+});
+
+const message = await anthropic.messages.create({
+  model: "qwen3-coder",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Hello, how are you?" }],
+});
+
+console.log(message.content[0].text);
+```
+
+```shell basic.sh
+curl -X POST http://localhost:11434/v1/messages \
+-H "Content-Type: application/json" \
+-H "x-api-key: ollama" \
+-H "anthropic-version: 2023-06-01" \
+-d '{
+  "model": "qwen3-coder",
+  "max_tokens": 1024,
+  "messages": [{ "role": "user", "content": "Hello, how are you?" }]
+}'
+```
+
+</CodeGroup>
+
+### 流式输出示例
+
+<CodeGroup dropdown>
+
+```python streaming.py
+import anthropic
+
+client = anthropic.Anthropic(
+    base_url='http://localhost:11434',
+    api_key='ollama',
+)
+
+with client.messages.stream(
+    model='qwen3-coder',
+    max_tokens=1024,
+    messages=[{'role': 'user', 'content': 'Count from 1 to 10'}]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end='', flush=True)
+```
+
+```javascript streaming.js
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  baseURL: "http://localhost:11434",
+  apiKey: "ollama",
+});
+
+const stream = await anthropic.messages.stream({
+  model: "qwen3-coder",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Count from 1 to 10" }],
+});
+
+for await (const event of stream) {
+  if (
+    event.type === "content_block_delta" &&
+    event.delta.type === "text_delta"
+  ) {
+    process.stdout.write(event.delta.text);
+  }
+}
+```
+
+```shell streaming.sh
+curl -X POST http://localhost:11434/v1/messages \
+-H "Content-Type: application/json" \
+-d '{
+  "model": "qwen3-coder",
+  "max_tokens": 1024,
+  "stream": true,
+  "messages": [{ "role": "user", "content": "Count from 1 to 10" }]
+}'
+```
+
+</CodeGroup>
+
+### 工具调用示例
+
+<CodeGroup dropdown>
+
+```python tools.py
+import anthropic
+
+client = anthropic.Anthropic(
+    base_url='http://localhost:11434',
+    api_key='ollama',
+)
+
+message = client.messages.create(
+    model='qwen3-coder',
+    max_tokens=1024,
+    tools=[
+        {
+            'name': 'get_weather',
+            'description': 'Get the current weather in a location',
+            'input_schema': {
+                'type': 'object',
+                'properties': {
+                    'location': {
+                        'type': 'string',
+                        'description': 'The city and state, e.g. San Francisco, CA'
+                    }
+                },
+                'required': ['location']
+            }
+        }
+    ],
+    messages=[{'role': 'user', 'content': "What's the weather in San Francisco?"}]
+)
+
+for block in message.content:
+    if block.type == 'tool_use':
+        print(f'Tool: {block.name}')
+        print(f'Input: {block.input}')
+```
+
+```javascript tools.js
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({
+  baseURL: "http://localhost:11434",
+  apiKey: "ollama",
+});
+
+const message = await anthropic.messages.create({
+  model: "qwen3-coder",
+  max_tokens: 1024,
+  tools: [
+    {
+      name: "get_weather",
+      description: "Get the current weather in a location",
+      input_schema: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The city and state, e.g. San Francisco, CA",
+          },
+        },
+        required: ["location"],
+      },
+    },
+  ],
+  messages: [{ role: "user", content: "What's the weather in San Francisco?" }],
+});
+
+for (const block of message.content) {
+  if (block.type === "tool_use") {
+    console.log("Tool:", block.name);
+    console.log("Input:", block.input);
+  }
+}
+```
+
+```shell tools.sh
+curl -X POST http://localhost:11434/v1/messages \
+-H "Content-Type: application/json" \
+-d '{
+  "model": "qwen3-coder",
+  "max_tokens": 1024,
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Get the current weather in a location",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The city and state"
+          }
+        },
+        "required": ["location"]
+      }
+    }
+  ],
+  "messages": [{ "role": "user", "content": "What is the weather in San Francisco?" }]
+}'
+```
+
+</CodeGroup>
+
+## 在 Claude Code 中使用
+
+Ollama Launch 与[直连云端配置](/integrations/claude-code#connect-directly-to-ollama-cloud)请参阅 [Claude Code 指南](/integrations/claude-code)。
+
+## 端点
+
+### `/v1/messages`
+
+#### 支持的特性
+
+- [x] 消息
+- [x] 流式输出
+- [x] 系统提示词
+- [x] 多轮对话
+- [x] 视觉（图片）
+- [x] 工具调用（function calling）
+- [x] 工具结果
+- [x] 思考/扩展思考
+
+#### 支持的请求字段
+
+- [x] `model`
+- [x] `max_tokens`
+- [x] `messages`
+  - [x] 文本 `content`
+  - [x] 图片 `content`（base64）
+  - [x] 内容块数组
+  - [x] `tool_use` 块
+  - [x] `tool_result` 块
+  - [x] `thinking` 块
+- [x] `system`（字符串或数组）
+- [x] `stream`
+- [x] `temperature`
+- [x] `top_p`
+- [x] `top_k`
+- [x] `stop_sequences`
+- [x] `tools`
+- [x] `thinking`
+- [x] `output_config`
+  - [x] `effort`（模型自定义名称）
+- [ ] `tool_choice`
+- [ ] `metadata`
+
+#### 支持的响应字段
+
+- [x] `id`
+- [x] `type`
+- [x] `role`
+- [x] `model`
+- [x] `content`（text、tool_use、thinking 块）
+- [x] `stop_reason`（end_turn、max_tokens、tool_use）
+- [x] `usage`（input_tokens、output_tokens）
+
+#### 流式事件
+
+- [x] `message_start`
+- [x] `content_block_start`
+- [x] `content_block_delta` (text_delta, input_json_delta, thinking_delta)
+- [x] `content_block_stop`
+- [x] `message_delta`
+- [x] `message_stop`
+- [x] `ping`
+- [x] `error`
+
+使用 `/api/show` 可查询模型支持的思考取值及默认值。`thinking.type: "enabled"` 与 `"disabled"` 作为显式的开/关控制。当模型使用其元数据来解析命名档位时，受支持的 `output_config.effort` 名称会精确生效，不受支持的名称则回退到模型默认值。没有元数据的模型保持现有兼容行为：去除首尾空格并将档位名转为小写，且将 `"xhigh"` 映射为 `"high"`。
+
+## 模型
+
+Ollama 同时支持本地模型与云端模型。当前支持的模型见[此处](https://ollama.com/search)。
+
+### 本地模型
+
+使用前先拉取本地模型：
+
+```shell
+ollama pull qwen3-coder
+```
+
+### 云端模型
+
+浏览[云端模型目录](https://ollama.com/search?c=cloud)。通过已登录的 Ollama 服务器，可直接使用 `gemma4:cloud` 这类云端名称而无需单独拉取。直接云端请求则使用托管标识符，例如 `gemma4:31b`。
+
+### 本地服务器上的默认模型名
+
+对于依赖 `claude-3-5-sonnet` 等默认 Anthropic 模型名的工具，可使用 `ollama cp` 复制一个现有模型名：
+
+```shell
+ollama cp qwen3-coder claude-3-5-sonnet
+```
+
+之后即可在 `model` 字段中指定这个新模型名：
+
+```shell
+curl http://localhost:11434/v1/messages \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "claude-3-5-sonnet",
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "user",
+                "content": "Hello!"
+            }
+        ]
+    }'
+```
+
+## 与 Anthropic API 的差异
+
+### 行为差异
+
+- 本地服务器不校验 API 密钥。直接云端推理需要有效的 Bearer 令牌。
+- 托管端点会拒绝早于 `2023-06-01` 的 `anthropic-version` 值。请求中请使用 `2023-06-01`。
+- token 计数是基于底层模型分词器的近似值
+
+### 不支持的功能
+
+以下 Anthropic API 特性目前不受支持：
+
+| 特性 | 说明 |
+|---------|-------------|
+| `/v1/messages/count_tokens` | token 计数端点 |
+| `tool_choice` | 强制使用特定工具或禁用工具 |
+| `metadata` | 请求元数据（user_id） |
+| 提示词缓存 | 用于缓存前缀的 `cache_control` 块 |
+| 批处理 API | `/v1/messages/batches`，用于异步批量处理 |
+| 引用 | `citations` 内容块 |
+| PDF 支持 | 包含 PDF 文件的 `document` 内容块 |
+| 服务器推送错误 | 流式输出期间的 `error` 事件（错误以 HTTP 状态码返回） |
+
+### 部分支持
+
+| 特性 | 状态 |
+|---------|--------|
+| 图片内容 | 支持 Base64 图片；不支持 URL 图片 |
+| 扩展思考 | 基本支持；接受 `budget_tokens` 但不强制执行 |

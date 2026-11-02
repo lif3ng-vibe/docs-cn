@@ -1,0 +1,66 @@
+/*
+ * theme-search.css —— Pagefind 搜索弹层（拦截 Mintlify 死搜索后的替代 UI）
+ * 黑白中性两套，与 Ollama 原站主题同源。
+ */
+
+#pf-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+}
+#pf-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+}
+#pf-panel {
+  position: absolute;
+  top: 9vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(660px, 92vw);
+  max-height: 78vh;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid rgb(0 0 0 / 0.18);
+  border-radius: 0.5rem;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 0.25);
+}
+html.dark #pf-panel {
+  background: #171717;
+  border-color: rgb(255 255 255 / 0.2);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 0.6);
+}
+
+/* PagefindUI 品牌变量对齐主题 */
+#pf-search {
+  --pagefind-ui-scale: 0.92;
+  --pagefind-ui-primary: #000000;
+  --pagefind-ui-text: #171717;
+  --pagefind-ui-background: transparent;
+  --pagefind-ui-border: rgb(0 0 0 / 0.18);
+  --pagefind-ui-tag: #f5f5f5;
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 0.375rem;
+  --pagefind-ui-font: system-ui, -apple-system, 'Segoe UI', Roboto,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  padding: 1rem 1.1rem 1.2rem;
+}
+html.dark #pf-search {
+  --pagefind-ui-primary: #ffffff;
+  --pagefind-ui-text: #f5f5f5;
+  --pagefind-ui-border: rgb(255 255 255 / 0.2);
+  --pagefind-ui-tag: #262626;
+}
+
+/* 结果条目：标题加粗、摘要在下、链接不带下划线 */
+#pf-search .pagefind-ui__result {
+  padding-block: 0.55rem;
+}
+#pf-search .pagefind-ui__result-link {
+  font-weight: 600;
+}
+#pf-search .pagefind-ui__result-excerpt {
+  font-size: 0.88em;
+  opacity: 0.85;
+}

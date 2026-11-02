@@ -1,0 +1,58 @@
+---
+title: "复制模型"
+sidebarTitle: "POST /api/copy"
+---
+
+**POST** `/api/copy`
+
+## 请求示例
+
+```bash 复制模型为新名称
+curl http://localhost:11434/api/copy -d '{
+  "source": "gemma4",
+  "destination": "gemma4-backup"
+}'
+```
+
+## 请求体
+
+**`CopyRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `source` | `string` | 是 | 要复制的现有模型名称 |
+| `destination` | `string` | 是 | 要创建的新模型名称 |
+
+## 响应
+
+### 200
+
+模型复制成功
+
+**`StatusResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `status` | `string` | 否 | 当前状态消息 |
+
+### 400
+
+无法复制模型
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+### 404
+
+未找到源模型
+
+**`ErrorResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `error` | `string` | 否 | 描述错误原因的错误消息 |
+
+

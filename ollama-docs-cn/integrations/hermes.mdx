@@ -1,0 +1,100 @@
+---
+title: "Hermes Agent"
+---
+
+Hermes Agent 是由 Nous Research 构建的自我改进 AI 代理。它具备自动技能创建、跨会话记忆，并默认内置 70 多个技能。 
+
+![Hermes Agent with Ollama](/images/hermes.png)
+
+## 快速开始
+
+```bash
+ollama launch hermes
+```
+
+Ollama 会自动处理一切：
+
+1. **安装** — 如果尚未安装 Hermes，Ollama 会提示安装 Hermes 命令行代理
+2. **模型** — 从选择器中挑选模型（本地或云端）。当前支持的模型见[此处](https://ollama.com/search)。
+3. **引导** — Ollama 会配置 Ollama 提供商，把 Hermes 指向 `http://127.0.0.1:11434/v1`，并将你选的模型设为主模型
+4. **网关** — 可选择连接消息平台（Telegram、Discord、Slack、WhatsApp、Signal、Email），并启动 Hermes 聊天
+
+## 连接消息应用
+
+将 Telegram、Discord、Slack、WhatsApp、Signal 或 Email 连接起来，随时随地与你的模型对话：
+
+```bash
+hermes gateway setup
+```
+
+## 重新配置
+
+之后可以使用 Hermes 的模型选择器更换提供商或模型：
+
+```bash
+hermes model
+```
+
+## 手动设置
+
+如果你更想使用 Hermes 自己的向导而不是 `ollama launch hermes`，可以直接安装：
+
+```bash
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+```
+
+Hermes 会自动启动设置向导。选择 **Quick setup**：
+
+```
+How would you like to set up Hermes?
+
+ →  Quick setup — provider, model & messaging (recommended)
+    Full setup — configure everything
+```
+
+### 连接到 Ollama
+
+1. 选择 **More providers...**
+2. 选择 **Custom endpoint (enter URL manually)**
+3. 将 API 基础 URL 设为 Ollama 的 OpenAI 兼容端点：
+
+   ```
+   API base URL [e.g. https://api.example.com/v1]: http://127.0.0.1:11434/v1
+   ```
+
+4. API 密钥留空即可（本地 Ollama 无需密钥）：
+
+   ```
+   API key [optional]:
+   ```
+
+5. Hermes 会自动检测已下载的模型，确认你想用的那个：
+
+   ```
+   Verified endpoint via http://127.0.0.1:11434/v1/models (1 model(s) visible)
+     Detected model: kimi-k2.5:cloud
+     Use this model? [Y/n]:
+   ```
+
+6. 上下文长度留空即可自动检测：
+
+   ```
+   Context length in tokens [leave blank for auto-detect]:
+   ```
+
+### 连接消息平台
+
+设置过程中可以选择连接消息平台：
+
+```
+Connect a messaging platform? (Telegram, Discord, etc.)
+
+ →  Set up messaging now (recommended)
+    Skip — set up later with 'hermes gateway setup'
+```
+
+### 启动
+
+```
+Launch hermes chat now? [Y/n]: Y
+```

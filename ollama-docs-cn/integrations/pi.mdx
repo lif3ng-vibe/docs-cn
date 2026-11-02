@@ -1,0 +1,109 @@
+---
+title: "Pi"
+---
+
+Pi 是一个极简且可扩展的编码代理。
+
+## 快速设置
+
+```bash
+ollama launch pi
+```
+
+这会在需要时安装 Pi，将 Ollama 配置为提供商（包括网页工具），并进入交互式会话。
+
+不启动、只进行配置：
+
+```shell
+ollama launch pi --config
+```
+
+### 直接用模型运行
+
+```shell
+ollama launch pi --model qwen3.5:cloud
+```
+
+云端模型也可在 [ollama.com](https://ollama.com/search?c=cloud) 使用。
+
+## 扩展 
+
+Pi 自带四个核心工具：`read`、`write`、`edit` 和 `bash`。所有其他能力都通过其扩展系统添加。
+
+通过 `/skill:name` 命令调用的按需能力包。  
+
+从 npm 或 git 安装：
+
+```bash
+pi install npm:@foo/some-tools
+pi install git:github.com/user/repo@v1
+```
+
+全部软件包见 [pi.dev](https://pi.dev/packages) 
+
+### 网页搜索
+
+Pi 可以通过 `@ollama/pi-web-search` 软件包使用网页搜索和抓取工具。
+
+通过 Ollama 启动 Pi 时，软件包的安装/更新会自动管理。
+手动安装：
+
+```bash
+pi install npm:@ollama/pi-web-search
+```
+
+### 使用 `pi-autoresearch` 自动研究
+
+[pi-autoresearch](https://github.com/davebcn87/pi-autoresearch) 为 Pi 带来自主的实验循环。它受 Karpathy 的 autoresearch 启发，可以把任何可度量的指标变成优化目标：测试速度、打包体积、构建时间、模型训练损失、Lighthouse 分数。
+
+```bash
+pi install https://github.com/davebcn87/pi-autoresearch
+```
+
+告诉 Pi 你要优化什么。它会运行实验、逐一进行基准测试、保留改进、回退退化，然后不断重复——全程自主进行。内置的仪表板会记录每次运行，并通过置信度评分来区分真实收益与基准测试噪声。
+
+```bash
+/autoresearch optimize unit test runtime
+```
+
+每个被保留的实验都会自动提交，每个失败的实验都会被回退。完成后，Pi 可以把改进整理到独立的分支中，便于干净地审查与合并。
+
+## 手动设置
+
+### 安装
+
+安装 [Pi](https://github.com/earendil-works/pi)：
+
+```bash
+npm install -g @earendil-works/pi-coding-agent
+```
+
+
+
+在 `~/.pi/agent/models.json` 中添加配置块：
+
+```json
+{
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "models": [
+        {
+          "id": "qwen3-coder"
+        }
+      ]
+    }
+  }
+}
+```
+
+更新 `~/.pi/agent/settings.json` 以设置默认提供商：
+
+```json
+{
+  "defaultProvider": "ollama",
+  "defaultModel": "qwen3-coder"
+}
+```

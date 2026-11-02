@@ -1,0 +1,70 @@
+---
+title: "创建模型"
+sidebarTitle: "POST /api/create"
+---
+
+**POST** `/api/create`
+
+## 请求示例
+
+<CodeGroup>
+```bash 默认
+curl http://localhost:11434/api/create -d '{
+  "from": "gemma4",
+  "model": "alpaca",
+  "system": "You are Alpaca, a helpful AI assistant. You only answer with Emojis."
+}'
+```
+```bash 从现有模型创建
+curl http://localhost:11434/api/create -d '{
+  "model": "ollama",
+  "from": "gemma4",
+  "system": "You are Ollama the llama."
+}'
+```
+```bash 从 GGUF 创建
+curl http://localhost:11434/api/create -d '{
+  "model": "my-gguf-model",
+  "files": {
+    "model.gguf": "sha256:432f310a77f4650a88d0fd59ecdd7cebed8d684bafea53cbff0473542964f0c3"
+  }
+}'
+```
+</CodeGroup>
+
+## 请求体
+
+**`CreateRequest`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `model` | `string` | 是 | 要创建的模型名称 |
+| `from` | `string` | 否 | 用于创建的现有模型 |
+| `template` | `string` | 否 | 模型使用的提示词模板 |
+| `renderer` | `string` | 否 | 模型渲染器（renderer）的名称 |
+| `parser` | `string` | 否 | 模型解析器（parser）的名称 |
+| `files` | `object` | 否 | 源文件名到其 SHA-256 摘要的映射。分片 GGUF 模型必须以原始分片文件名包含每个分片。 |
+| `draft_files` | `object` | 否 | 草稿（draft）源文件名到其 SHA-256 摘要的映射 |
+| `license` | `` | 否 | 模型的许可证字符串或许可证列表 |
+| `system` | `string` | 否 | 要嵌入模型的系统提示词 |
+| `parameters` | `object` | 否 | 模型的键值参数 |
+| `messages` | `array<ChatMessage>` | 否 | 模型使用的消息历史 |
+| `quantize` | `string` | 否 | 导入时应用的量化级别（例如 `nvfp4`） |
+| `draft_quantize` | `string` | 否 | 导入时应用到草稿权重的量化级别 |
+| `requires` | `string` | 否 | 模型要求的最低 Ollama 版本 |
+| `capabilities` | `array<string>` | 否 | 要添加的能力，不会移除继承或推断出的能力（例如兼容的决策模型可用 `decision`） |
+| `stream` | `boolean` | 否 | 以流式返回状态更新 |
+
+## 响应
+
+### 200
+
+创建状态更新的流
+
+**`StatusResponse`** 属性：
+
+| 属性 | 类型 | 必填 | 描述 |
+| --- | --- | --- | --- |
+| `status` | `string` | 否 | 当前状态消息 |
+
+
