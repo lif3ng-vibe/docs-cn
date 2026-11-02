@@ -1,0 +1,4 @@
+/* Stub of @lightpanda/common/styles/generics.css.
+   The original is private; upstream imports it from src/app/globals.css via a relative path.
+   Content-based utility classes are already provided by `@import "tailwindcss"`,
+   so we only keep a minimal set of shared base rules here. */

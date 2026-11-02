@@ -1,0 +1,13 @@
+{
+  "name": "@lightpanda/common",
+  "version": "0.0.0-local",
+  "private": true,
+  "description": "Local stub for the private @lightpanda/common package (interface-compatible reimplementation; visual assets extracted from the live site).",
+  "exports": {
+    "./data/siteDetails": "./src/data/siteDetails.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./styles/variables.css": "./src/styles/variables.css",
+    "./styles/generics.css": "./src/styles/generics.css"
+  }
+}

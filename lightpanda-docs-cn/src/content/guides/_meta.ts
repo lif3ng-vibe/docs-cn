@@ -1,0 +1,14 @@
+import type { MetaRecord } from 'nextra'
+
+const meta: MetaRecord = {
+  'lightpanda-agent-tutorial': 'Use Lightpanda Agent',
+  'retrieve-an-html-webpage': 'Retrieve an HTML webpage',
+  'configure-a-proxy': 'Use a proxy',
+  'markdown-axtree': 'Get Markdown and AX Tree',
+  'interact-with-a-webpage': 'Interact with a webpage',
+  'use-python': 'Use the Python SDK',
+  'use-stagehand': 'Use Stagehand',
+  'use-hermes': 'Use Hermes Agent',
+}
+
+export default meta

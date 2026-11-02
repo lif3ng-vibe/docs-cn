@@ -1,0 +1,35 @@
+name: Lightpanda Docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  NODE_VERSION: "20.19.0"
+
+jobs:
+  # Lint job
+  lint:
+    name: Lint (Next / Biome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node @ ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: 2.5.11
+      - name: Lint
+        run: biome ci . --diagnostic-level=error

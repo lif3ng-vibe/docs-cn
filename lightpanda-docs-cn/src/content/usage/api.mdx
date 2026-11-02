@@ -1,0 +1,26 @@
+---
+title: API
+description: Use HTTP API calls to get Lightpanda's results directly.
+---
+
+# HTTP API
+
+## Connect
+
+Lightpanda Cloud provides an HTTP API to easily retrieve results from Lightpanda without the burden of writing and running a CDP script.
+
+See [Getting started on Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) to create an account, generate your token, and pick the URL for your region.
+
+## Fetch a URL
+
+The API lets you fetch a URL and retrieve the rendered page in HTML or markdown format. Find the full list of parameters and the response format in the [HTTP API reference](/reference/http-api).
+
+For example, to fetch a page as markdown:
+
+```sh copy
+$ curl -XPOST \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  https://euwest.cloud.lightpanda.io/api/fetch \
+  --data '{"url":"https://example.com", "output_format":"markdown"}'
+```

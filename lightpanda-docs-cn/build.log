@@ -1,0 +1,170 @@
+
+> lightpanda-docs-cn@1.0.0 build
+> next build
+
+ ⚠ Specified "redirects" will not automatically work with "output: export". See more info here: https://nextjs.org/docs/messages/export-no-custom-routes
+   ▲ Next.js 15.5.28
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\benchmarks.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\local-vs-cloud.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\commands.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\what-is-lightpanda.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\index.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\architecture-overview.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\configure-a-proxy.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\markdown-axtree.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\interact-with-a-webpage.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-hermes.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\lightpanda-agent-tutorial.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\retrieve-an-html-webpage.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-stagehand.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-python.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\getting-started.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\limits-and-billing.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\playground.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\browser-tools.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\http-api.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\mcp-tools.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\pandascript.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\python.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\puppeteer-playwright-clients.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\skill.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\build-from-sources.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\one-liner.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\package-managers.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\nightly-builds.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\docker.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\system-requirements.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\index.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\common-options.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\serve.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\fetch.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\api.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\pandascript.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\bidi\selenium.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\bidi\puppeteer.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\chromedp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\playwright.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\puppeteer.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\index.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\benchmarks.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\local-vs-cloud.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\architecture-overview.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\core-concepts\what-is-lightpanda.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\lightpanda-agent-tutorial.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\configure-a-proxy.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\interact-with-a-webpage.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\markdown-axtree.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\retrieve-an-html-webpage.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-hermes.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-python.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\guides\use-stagehand.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\puppeteer-playwright-clients.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\quickstarts\skill.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\browser-tools.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\mcp-tools.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\http-api.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\pandascript.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\python.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\playground.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\limits-and-billing.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-on-lightpanda-cloud\getting-started.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\commands.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\api.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\pandascript.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\agent.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\common-options.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\fetch.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\index.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\mcp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\build-from-sources.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\reference\cli\serve.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\docker.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\one-liner.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\nightly-builds.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\system-requirements.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\run-locally\installation\package-managers.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\bidi\selenium.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\bidi\puppeteer.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\playwright.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\puppeteer.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\content\usage\cdp\chromedp.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\generated\browser-tools.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\generated\agent-commands.mdx
+- [33mwarn[0m [nextra] Failed to get the last modified timestamp from Git for the file lightpanda-docs-cn\src\generated\mcp-tools.mdx
+Client network socket disconnected before secure TLS connection was established
+
+Retrying 1/3...
+ ✓ Compiled successfully in 24.6s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/50) ...
+   Generating static pages (12/50) 
+   Generating static pages (24/50) 
+   Generating static pages (37/50) 
+ ✓ Generating static pages (50/50)
+   Finalizing page optimization ...
+   Collecting build traces ...
+ ⚠ rewrites, redirects, and headers are not applied when exporting your application, detected (redirects). See more info here: https://nextjs.org/docs/messages/export-no-custom-routes
+   Exporting (0/2) ...
+ ✓ Exporting (2/2)
+
+Route (app)                                    Size  First Load JS
+┌ ○ /_not-found                               123 B         103 kB
+└ ● /[[...mdxPath]]                           281 B         190 kB
+    ├ /core-concepts/architecture-overview
+    ├ /core-concepts/benchmarks
+    ├ /core-concepts/local-vs-cloud
+    └ [+44 more paths]
++ First Load JS shared by all                103 kB
+  ├ chunks/255-02a2c9f8edd3485b.js          46.7 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js     54.2 kB
+  └ other shared chunks (total)             2.02 kB
+
+
+○  (Static)  prerendered as static content
+●  (SSG)     prerendered as static HTML (uses generateStaticParams)
+
+
+> lightpanda-docs-cn@1.0.0 postbuild
+> pagefind --site ./out --output-path ./out/_pagefind && node scripts/generate-redirects.mjs
+
+
+Running Pagefind v1.6.0 (Extended)
+Running from: "C:\\Users\\lif3n\\src\\docs\\lightpanda-docs-cn"
+Source:       "out"
+Output:       "out/_pagefind"
+
+[Walking source directory]
+Found 48 files matching **/*.{html}
+
+[Parsing files]
+Found a data-pagefind-body element on the site.
+↳ Ignoring pages without this tag.
+
+[Reading languages]
+Discovered 1 language: en
+
+[Building search indexes]
+Total: 
+  Indexed 1 language
+  Indexed 48 pages
+  Indexed 4097 words
+  Indexed 0 filters
+  Indexed 0 sorts
+
+Finished in 10.584 seconds
+Generated 25 redirect stub page(s) in C:\Users\lif3n\src\docs\lightpanda-docs-cn\out

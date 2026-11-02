@@ -1,0 +1,121 @@
+---
+title: Commands
+description: Overview of the Lightpanda CLI commands to fetch, serve, run MCP or agent mode locally.
+---
+
+import { Tabs } from 'nextra/components'
+
+# Commands
+
+## Fetch
+
+Fetch one or more URLs and dump the rendered result to stdout. Each URL is loaded in its own page, with JavaScript executed, so you get the final DOM rather than the raw server response.
+
+```sh copy
+lightpanda fetch --obey-robots --log-level info --dump html https://demo-browser.lightpanda.io/campfire-commerce/
+```
+```sh
+$time=1785335542796 $scope=frame $level=info $msg="navigate" url=https://demo-browser.lightpanda.io/campfire-commerce/ method=GET reason=address_bar body=false req_id=1 type=root
+$time=1785335543068 $scope=browser $level=info $msg="executing script" src=https://demo-browser.lightpanda.io/campfire-commerce/script.js kind=javascript cacheable=true
+$time=1785335543139 $scope=http $level=info $msg="request complete" source=xhr url=https://demo-browser.lightpanda.io/campfire-commerce/json/product.json status=200 len=4770
+$time=1785335543140 $scope=http $level=info $msg="request complete" source=fetch url=https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json status=200 len=1615
+<!DOCTYPE html>
+...
+```
+
+Choose the output format with `--dump` and control how long the page runs with the `--wait-*` options. Find all options in the [fetch command reference](/reference/cli/fetch#options).
+
+## Serve
+
+Start Lightpanda as a server for automation clients. By default it speaks [CDP](https://chromedevtools.github.io/devtools-protocol/) (Chrome DevTools Protocol). Pass `--protocol webdriver` to speak WebDriver instead: [classic](https://w3c.github.io/webdriver/) over HTTP, and [BiDi](https://w3c.github.io/webdriver-bidi/) over WebSocket. Pass `--protocol cdp --protocol webdriver` to serve CDP and WebDriver on the same port.
+
+```sh copy
+lightpanda serve --obey-robots
+```
+```sh
+$time=1785335600862 $scope=app $level=note $msg="server running" address=127.0.0.1:9222
+```
+
+Find all options in the [serve command reference](/reference/cli/serve#options).
+
+**Connect a CDP client** once the server is running:
+
+- [Puppeteer](/usage/cdp/puppeteer)
+- [Playwright](/usage/cdp/playwright)
+- [Chromedp](/usage/cdp/chromedp)
+
+**Connect a WebDriver client**, after adding `--protocol webdriver`:
+
+- [Puppeteer](/usage/bidi/puppeteer)
+- [Selenium](/usage/bidi/selenium)
+
+## MCP
+
+Start Lightpanda as a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server over stdio to control it with LLMs.
+
+```sh copy
+lightpanda mcp
+```
+
+Find all options in the [mcp command reference](/reference/cli/mcp#options) and the available tools in the [MCP tools reference](/reference/mcp-tools).
+
+**Connect a MCP client** once the server is running, using [your preferred LLM](/usage/mcp#connect-an-ai-agent). Find details about the [MCP usage](/usage/mcp).
+
+## Agent
+
+Start Lightpanda as an interactive AI agent that can browse the web.
+
+```sh copy
+lightpanda agent
+```
+
+The agent auto-detects an API key from your environment and opens a REPL where you type instructions in natural language. You can also run a single task and exit with `--task "..."`, or replay a saved script without any LLM call with `lightpanda run script.js`.
+
+Find all options in the [agent command reference](/reference/cli/agent#options).
+
+## Run
+
+Run a saved [PandaScript](/usage/pandascript) (a `.js` automation script), then exit. No LLM calls, no API key needed.
+
+```sh copy
+lightpanda run script.js
+```
+
+Produce a script to replay with `lightpanda agent --task "..." --save script.js`, or with `/save` from the agent REPL.
+
+Find all options in the [run command reference](/reference/cli#run).
+
+See [Agent](/usage/agent) and [PandaScript](/usage/pandascript) usage for more details.
+
+## Shell completion
+
+`lightpanda completion <bash | fish | zsh>` prints a completion script for commands, flags and their values. Run `echo $SHELL` to see which shell you use, then save the script where your shell loads completions from:
+
+<Tabs items={['bash', 'fish', 'zsh']}>
+  <Tabs.Tab>
+Requires the [bash-completion](https://github.com/scop/bash-completion) package.
+
+```sh copy
+mkdir -p ~/.local/share/bash-completion/completions
+lightpanda completion bash > ~/.local/share/bash-completion/completions/lightpanda
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+mkdir -p ~/.config/fish/completions
+lightpanda completion fish > ~/.config/fish/completions/lightpanda.fish
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+mkdir -p ~/.zfunc
+lightpanda completion zsh > ~/.zfunc/_lightpanda
+```
+
+Then add `fpath=(~/.zfunc $fpath)` before `compinit` in your `~/.zshrc`.
+  </Tabs.Tab>
+</Tabs>
+
+Open a new shell, then press <kbd>Tab</kbd> after `lightpanda` to complete commands, after `--` to complete flags, or after a flag like `--dump` to complete its values.
+
+Regenerate the script after updating Lightpanda to pick up new commands and flags.

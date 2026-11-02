@@ -1,0 +1,35 @@
+---
+title: MCP tools
+description: Reference of the tools and resources exposed by the Lightpanda MCP server.
+---
+
+import McpTools from '../../generated/mcp-tools.mdx'
+
+# MCP tools
+
+The Lightpanda MCP server exposes these tools and resources, started with [`lightpanda mcp`](/reference/cli/mcp). See [how to use MCP](/usage/mcp) for practical documentation.
+
+Each browser tool below links to its full description and arguments in the [browser tools reference](/reference/browser-tools); the MCP server, the agent and scripts share the same tools. The Hints column carries the tool's MCP annotations, and **page state** marks the tools that return `structuredContent`.
+
+## Calling a tool
+
+Every call goes through the MCP `tools/call` method, with `name` and `arguments` populated from the tools below.
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"fill","arguments":{"selector":"#search","value":"lightpanda"}}}
+```
+```json
+{"result":{"content":[{"type":"text","text":"Filled element (selector: #search) with \"lightpanda\". Page url: https://example.com, HTTP 200 OK, title: Example Domain"}],
+ "structuredContent":{"url":"https://example.com","httpStatus":200,"title":"Example Domain"},"isError":false}}
+```
+
+The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`.
+
+**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated successfully. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
+
+The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
+
+`goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
+
+<McpTools />

@@ -116,6 +116,26 @@ if (existsSync(fontDir)) {
     fontCount++;
   }
 }
+
+// 匿名导出不含 _mintlify/export-assets/（fontawesome 图标、google fonts css，
+// 线上由 CDN 供给）——从本地入库副本 _mintlify-assets/ 补齐，防图标 404。
+const mintAssets = join(ROOT, '_mintlify-assets');
+let assetCount = 0;
+if (existsSync(mintAssets)) {
+  (function copyAssets(src, rel) {
+    for (const f of readdirSync(src, { withFileTypes: true })) {
+      const s = join(src, f.name);
+      const r = rel ? `${rel}/${f.name}` : f.name;
+      if (f.isDirectory()) copyAssets(s, r);
+      else {
+        const d = join(DIST, '_mintlify', 'export-assets', r);
+        mkdirSync(join(d, '..'), { recursive: true });
+        copyFileSync(s, d);
+        assetCount++;
+      }
+    }
+  })(mintAssets, '');
+}
 writeFileSync(join(DIST, 'theme.css'), readFileSync(join(ROOT, 'theme-src', 'theme.css')));
 writeFileSync(join(DIST, 'theme-search.css'), readFileSync(join(ROOT, 'theme-src', 'theme-search.css')));
 
@@ -150,5 +170,5 @@ writeFileSync(
   `# Ollama 中文文档（非官方镜像）\n\n> Ollama 官方文档中文镜像，源 https://docs.ollama.com 。本文件为 LLM 友好的站点索引。\n\n## 文档\n\n${lines.join('\n')}\n`,
 );
 
-console.log(`[theme] 页面 ${pages}，注入 ${injected}，theme.css + 搜索弹层 + ${fontCount} 字体就位；sitemap.xml ${pagesMeta.length} URL + llms.txt 已生成`);
+console.log(`[theme] 页面 ${pages}，注入 ${injected}，theme.css + 搜索弹层 + ${fontCount} 字体 + ${assetCount} mint 资产就位；sitemap.xml ${pagesMeta.length} URL + llms.txt 已生成`);
 if (!existsSync(join(DIST, 'theme.css'))) throw new Error('theme.css 未落盘');

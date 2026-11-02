@@ -1,0 +1,46 @@
+---
+title: Puppeteer (BiDi)
+description: Use Lightpanda with Puppeteer over the WebDriver BiDi protocol instead of CDP.
+---
+import { Callout } from 'nextra/components'
+
+# Puppeteer (BiDi)
+
+Use Lightpanda with [Puppeteer](https://pptr.dev/) over [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) instead of the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP). Puppeteer's public API is the same either way; only the connection changes.
+
+More examples in [demo/puppeteer/bidi](https://github.com/lightpanda-io/demo/tree/main/puppeteer/bidi).
+
+<Callout type="warning">
+  BiDi support is new and doesn't cover the full spec yet. Puppeteer helpers that run in an isolated sandbox, such as `page.title()`, `page.waitForSelector()`, `page.click(selector)` and `page.type()`, fail with `sandboxes are not supported`: use `page.evaluate()` and `page.waitForFunction()` instead. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
+</Callout>
+
+Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
+
+```sh copy
+lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
+```
+
+Connect Puppeteer to the `/session` path with `protocol: 'webDriverBiDi'`:
+
+```js copy
+'use strict'
+
+import puppeteer from 'puppeteer-core'
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'ws://127.0.0.1:9222/session',
+  protocol: 'webDriverBiDi',
+})
+
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+await page.goto('https://wikipedia.com/', { waitUntil: 'load' })
+
+const title = await page.evaluate(() => document.title)
+console.log(title)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```

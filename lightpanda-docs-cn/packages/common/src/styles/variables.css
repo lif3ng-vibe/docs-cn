@@ -1,0 +1,15 @@
+/* Stub of @lightpanda/common/styles/variables.css — values extracted from the live site's compiled CSS. */
+:root {
+  --background: #1c1c1c;
+  --background-opacity: #1c1c1c94;
+  --foreground: #f6f5ec;
+  --primary: #6cc7e2;
+  --primary-foreground: #1c1c1c;
+  --secondary: #007eaa;
+  --secondary-foreground: #dadada;
+  --primary-accent: #0b3861;
+  --foreground-accent: grey;
+  --hero-background: #1c1c1c;
+  --katie-blue: #00a6dd;
+  --lime-green: #6ceb92;
+}

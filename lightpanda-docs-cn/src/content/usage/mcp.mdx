@@ -1,0 +1,207 @@
+---
+title: MCP
+description: Use Lightpanda via the Model Context Protocol, locally or on the cloud.
+---
+import { Callout, Tabs } from 'nextra/components'
+
+# MCP
+
+Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to control the browser from AI applications.
+
+## Connect the MCP server
+
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Run Lightpanda as an MCP server on your own machine. Your AI application reaches it in one of two ways, and both expose the same tools.
+
+### stdio (default)
+
+The server reads JSON-RPC from stdin and writes replies to stdout, one message per line. This is what MCP hosts use: they spawn the binary and write to those streams directly.
+
+```sh copy
+lightpanda mcp
+```
+
+Nothing is printed on start: the server waits for input. Type one message per line and each reply prints back. The page stays loaded between calls, so the second one needs no `url`:
+
+```json copy
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"goto","arguments":{"url":"https://example.com"}}}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"markdown","arguments":{}}}
+```
+
+### HTTP transport
+
+Pass `--port` to serve MCP over HTTP instead of stdio, with an independent browsing session per client. Add `--host 0.0.0.0` to accept connections from outside the machine:
+
+```sh copy
+lightpanda mcp --port 8000
+```
+
+Clients send JSON-RPC to `/mcp` in a POST request:
+
+```sh copy
+# Initialize
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize",
+        "params":{"protocolVersion":"2024-11-05","capabilities":{},
+                  "clientInfo":{"name":"curl-test","version":"1.0"}}}'
+
+# Extract markdown
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
+        "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}'
+```
+
+Calls with no `Mcp-Session-Id` header use the always-present `default` session, which is what the two calls above do. An `initialize` call creates a new session and returns its id in that header; send that id back on later calls to stay in it. Find the session model and the `session_new`, `session_list` and `session_close` tools in the [MCP tools reference](/reference/mcp-tools#session).
+
+Find all options in the [mcp command reference](/reference/cli/mcp).
+
+### Debugging
+
+Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
+
+```sh copy
+lightpanda mcp --log-level info --log-format pretty
+
+# Or pipe logs to a file
+lightpanda mcp --log-level info 2>lightpanda.log
+```
+
+Use `--log-level debug` for the most verbose output. Keep `warn` in production.
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Callout type="info" emoji="ℹ️">
+This is still a work in progress version. The cloud version does not support all tools.
+</Callout>
+
+Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+
+- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
+- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+
+Pass your API token either as a `token` query parameter or in an `Authorization: Bearer TOKEN` header:
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Connect an AI agent
+
+See the [MCP quickstart](/quickstarts/mcp) for connecting Claude Desktop, Cursor, or Windsurf, locally or through Lightpanda Cloud. For robots.txt compliance, add `--obey-robots` to the `args` array in your host's MCP server config.
+
+## Tools and resources
+
+The server exposes tools to navigate, read, extract data from and interact with web pages, plus two read-only page resources. Find the complete list in the [MCP tools reference](/reference/mcp-tools).
+
+### `markdown`
+
+Extract the current page's content as clean, token-efficient markdown.
+
+```json copy
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}
+```
+
+<details>
+<summary>Response example</summary>
+
+```json
+{"result":{"content":[{"type":"text","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}],"isError":false}}
+```
+
+</details>
+
+> Using `markdown` with an inline `url` is the most efficient single-call pattern: it navigates and extracts in one request.
+
+### `evaluate`
+
+Execute arbitrary JavaScript in the page context and return the result as a string.
+
+```json copy
+{"jsonrpc":"2.0","id":3,"method":"tools/call",
+ "params":{"name":"evaluate","arguments":{
+   "script":"lp.title = document.title",
+   "url":"https://example.com"}}}
+```
+
+```json
+{"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
+```
+
+Assigning to `globalThis.lp` here, instead of a local variable, carries the value forward: `lp` lives in the Lightpanda session, not the page, so it's still there in a later `evaluate` call, even after navigating away (a plain JS variable would be gone):
+
+```json copy
+{"jsonrpc":"2.0","id":4,"method":"tools/call",
+ "params":{"name":"evaluate","arguments":{"script":"lp.title"}}}
+```
+
+```json
+{"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
+```
+
+### `search`
+
+`search` queries a search API and returns the results as a numbered markdown list of `{title, url, snippet}`. It doesn't load a page, so open a result with `goto`.
+
+```json copy
+{"jsonrpc":"2.0","id":6,"method":"tools/call",
+ "params":{"name":"search","arguments":{"query":"lightpanda browser"}}}
+```
+
+> An API key is optional. Without one, search uses Keenable's keyless public endpoint (rate-limited per client IP). Set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY` in the server's environment to route through that provider.
+
+### Resources
+
+Three read-only resources are available via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't, so an MCP host can fetch it up front to teach its own LLM how to write PandaScript before ever touching the browser.
+
+| URI | MIME type | Description |
+|-|-|-|
+| `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
+| `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page (identical output to the `markdown` tool) |
+| `mcp://skill/pandascript` | `text/markdown` | The PandaScript skill documentation |
+
+```json copy
+{"jsonrpc":"2.0","id":4,"method":"resources/read",
+ "params":{"uri":"mcp://page/html"}}
+```
+
+```json copy
+{"jsonrpc":"2.0","id":5,"method":"resources/read",
+ "params":{"uri":"mcp://page/markdown"}}
+```
+
+<details>
+<summary>Response example</summary>
+
+```json
+{"result":{"contents":[{"uri":"mcp://page/markdown","mimeType":"text/markdown","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}]}}
+```
+
+</details>
+
+> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
+
+## Example prompts
+
+Once connected to an AI agent, you prompt the agent in natural language and it decides which tool to call. For example:
+
+- "Go to example.com and summarize the page" reaches for `goto`, then `markdown`.
+- "What links are on this page?" reaches for `links`.
+- "Fill in the search box with 'lightpanda' and submit" reaches for `fill`, then `press`.
+
+Which tool the agent picks depends on the model and its own reasoning, not a fixed mapping: the pairings above are illustrative, not guaranteed.
+
+## Known behaviors
+
+### `goto` doesn't fail on an HTTP error page or a timeout
+
+A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
+
+- **A timeout** doesn't fail: `"Navigation started (HTTP 200 OK) but the page did not finish loading before the timeout."`
+- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level, but the result carries the status: `"Navigated successfully. HTTP 404 Not Found."` in the text, and `httpStatus` in `structuredContent`. Check it before reading the page as content.
+

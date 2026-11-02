@@ -62,6 +62,19 @@ function reJs(s) {
   const variants = [
     ['\\"assetPrefix\\":\\"', '\\"assetPrefix\\":\\"' + P], // RSC 字符串内转引号形态
     ['"assetPrefix":""', '"assetPrefix":"' + P + '"'],
+    // 新版渲染客户端（mint 0.0.3794，Vite 形态）的水合基址字段：
+    // 客户端路由用 basePath+pagePath 拼内部 URL，发现与地址栏不一致就
+    // replaceState 规范化 → 子路径部署时整站被弹回站点根（404 之源）
+    ['\\"basePath\\":\\"', '\\"basePath\\":\\"' + P],
+    ['"basePath":""', '"basePath":"' + P + '"'],
+    ['\\"mountPath\\":\\"', '\\"mountPath\\":\\"' + P],
+    ['"mountPath":""', '"mountPath":"' + P + '"'],
+    // JS chunk / 内嵌串里的 /_mintlify/ 路径常量（懒加载 chunk 基址、
+    // search-index.json、export-assets 图标基址、assistant 端点）。
+    // 已前缀串不含 "/_mintlify/ 子串（引号后是目录名），不会二次前缀。
+    ['`/_mintlify/', '`' + P + '/_mintlify/'],
+    ['"/_mintlify/', '"' + P + '/_mintlify/'],
+    ['\\"/_mintlify/', '\\"' + P + '/_mintlify/'],
   ];
   for (const [from, to] of variants) {
     const n = out.split(from).length - 1;
