@@ -381,5 +381,23 @@
       "stack": "Next.js HTML 镜像（flight 同步汉化）",
       "snap": "2026-10-30"
     }
+  },
+  {
+    "name": "CopilotKit 文档",
+    "slug": "https://lif3ng.github.io/copilotkit-docs-cn",
+    "desc": "CopilotKit 官方文档全站中文镜像——4435 页静态导出（22 个智能体框架集成、React/Vue/Angular/React Native 前端参考、完整 API 文档与教程），Next.js 16 + fumadocs，独立仓库 Pages 部署。",
+    "tags": [
+      "ai-agent",
+      "multi-agent",
+      "sdk-api",
+      "docs-engineering"
+    ],
+    "orig": "https://docs.copilotkit.ai/",
+    "repo": "https://github.com/CopilotKit/CopilotKit",
+    "meta": {
+      "pages": "4435 页",
+      "stack": "Next.js 16 + fumadocs",
+      "snap": "2026-10-30"
+    }
   }
 ]

@@ -154,7 +154,7 @@ const cards = sites
 		const meta = metaLine(s);
 		return `
 				<article class="item" id="s-${s.slug}" data-tags="${(s.tags || []).join(',')}">
-					<a class="row" href="${s.slug}/" target="_blank" rel="noopener">
+					<a class="row" href="${/^https?:/.test(s.slug) ? s.slug : `${s.slug}/`}" target="_blank" rel="noopener">
 						<div class="row-main">
 							<h2 class="name">${s.name}</h2>
 							<p class="desc">${s.desc}</p>
