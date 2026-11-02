@@ -1,13 +1,13 @@
 ---
 title: MCP
-description: Starts an MCP (Model Context Protocol) server over stdio or HTTP.
+description: 基于 stdio 或 HTTP 启动 MCP（Model Context Protocol）服务器。
 ---
 
 # MCP
 
-Start Lightpanda as a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. Defaults to stdio; pass `--port` to serve over HTTP with an independent browsing session per client. See [how to run the MCP server](/run-locally/commands#mcp) for practical documentation.
+将 Lightpanda 作为 [Model Context Protocol](https://modelcontextprotocol.io)（MCP）服务器启动。默认走 stdio；传入 `--port` 则改走 HTTP，并为每个客户端提供独立的浏览会话。实战用法见[如何运行 MCP 服务器](/run-locally/commands#mcp)。
 
-## Options
+## 选项
 
 ```console
 usage: lightpanda mcp [OPTIONS] [COMMON_OPTIONS]
@@ -27,6 +27,6 @@ options:
           Defaults to stdio (no HTTP server).
 ```
 
-The command also accepts the [common options](/reference/cli/common-options).
+该命令也接受[通用选项](/reference/cli/common-options)。
 
-Find the available tools in the [MCP tools reference](/reference/mcp-tools).
+可用工具见 [MCP 工具参考](/reference/mcp-tools)。

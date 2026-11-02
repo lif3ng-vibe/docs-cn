@@ -1,49 +1,49 @@
 ---
-title: When to Use Local vs Cloud
-description: Decide when to run Lightpanda locally or on Lightpanda Cloud, and compare CDP, MCP, agent, HTTP API, proxy, and telemetry coverage across both.
+title: 本地与 Cloud 的选择
+description: 判断何时在本地运行 Lightpanda、何时使用 Lightpanda Cloud，并对比两种模式下 CDP、MCP、agent、HTTP API、代理与遥测的支持情况。
 ---
 
 import { Callout } from 'nextra/components'
 
-# When to use local vs cloud
+# 本地与 Cloud 的选择
 
-Lightpanda runs the same engine two ways. You can run the binary yourself, on your own machine or infrastructure, or connect to Lightpanda Cloud and let a remote browser do the work. The engine is identical. What differs is where the browser runs, which interfaces you can reach, and who sees the traffic.
+Lightpanda 用两种方式运行同一套引擎。你可以自己在自己的机器或基础设施上运行二进制，也可以连接 Lightpanda Cloud，让远程浏览器代劳。引擎完全相同，不同的是浏览器跑在哪里、你能用哪些接口，以及流量被谁看到。
 
-## Choose local or cloud
+## 选本地还是 Cloud
 
-**Run local when** you want full control and want nothing to leave your machine. The binary runs on your hardware, so pages you visit and data you extract stay in your infrastructure. Local gives you every interface:
+**想完全掌控、任何东西都不离开本机时，选本地**。二进制跑在你自己的硬件上，你访问的页面与提取的数据都留在你的基础设施内。本地提供全部接口：
 
-- The [CDP](/run-locally/commands#serve) or the [WebDriver BiDi](/usage/bidi/selenium) server
-- The [MCP server](/usage/mcp), with all tools
-- The built-in [AI agent](/usage/agent)
+- [CDP 服务器](/run-locally/commands#serve-命令)或 [WebDriver BiDi](/usage/bidi/selenium) 服务器
+- [MCP 服务器](/usage/mcp)，包含全部工具
+- 内置的 [AI agent](/usage/agent)
 
-You manage the process, the scaling, and the network egress yourself.
+进程、扩缩容、网络出口都由你自己管理。
 
-**Use the cloud when** you do not want to run or scale browsers. You sign up, get a token, and connect a remote browser with no process to manage and no host to keep alive. Lightpanda Cloud runs the browser on its servers and adds the parts a hosted service needs: a [console](https://console.lightpanda.io) to manage your account and tokens and review recent sessions, usage-based plans with concurrency and monthly limits, a managed proxy pool that helps when a target blocks datacenter IPs, and an [HTTP API](/usage/api) that returns a page's HTML or Markdown from a single request with no CDP script. Because requests run on Lightpanda's servers, your target URLs and the fetched content pass through Lightpanda's infrastructure.
+**不想自己运行和扩展浏览器时，用 Cloud**。注册账号、拿到 token，连接远程浏览器即可，没有进程要管，也没有主机要维护。Lightpanda Cloud 在它的服务器上运行浏览器，并补齐了托管服务所需的部分：用于管理账号与 token、查看近期会话的[控制台](https://console.lightpanda.io)；按用量计费、带并发与每月限额的套餐；在目标网站封禁数据中心 IP 时能派上用场的托管代理池；以及单次请求即可返回页面 HTML 或 Markdown、无需 CDP 脚本的 [HTTP API](/usage/api)。由于请求在 Lightpanda 的服务器上运行，你的目标 URL 和抓取到的内容都会经过 Lightpanda 的基础设施。
 
-## Confidentiality and telemetry
+## 机密性与遥测
 
-The main difference is where your traffic goes.
+最关键的区别在于你的流量流向哪里。
 
-Running local, the browser runs on your machine. The pages you load, their content, and your cookies never reach Lightpanda. They only reach the sites you visit, and the proxy if you configure one. The binary does send anonymous usage telemetry to `telemetry.lightpanda.io`: whether a navigation used TLS, the kind of context (page, iframe, popup), and, for the agent, the LLM provider and model name. It never includes the URLs you visit or the page content. Telemetry is off in debug builds, and you can disable it in any build by setting the `LIGHTPANDA_DISABLE_TELEMETRY` environment variable. See [telemetry](/run-locally/installation/nightly-builds#telemetry).
+本地运行时，浏览器跑在你自己的机器上。你加载的页面、页面内容和你的 cookie 永远不会到达 Lightpanda，只会到达你访问的网站，以及你配置的代理（如果有的话）。二进制确实会向 `telemetry.lightpanda.io` 发送匿名使用遥测：某次导航是否用了 TLS、上下文类型（页面、iframe、弹窗），对 agent 还包括 LLM 供应商与模型名称。其中绝不包含你访问的 URL 或页面内容。调试构建中遥测默认关闭，任何构建都可以通过设置 `LIGHTPANDA_DISABLE_TELEMETRY` 环境变量禁用。详见[遥测](/run-locally/installation/nightly-builds#遥测)。
 
-Running on the cloud, the browser runs on Lightpanda's servers, so your target URLs and the pages they return pass through Lightpanda's infrastructure. You can review your recent sessions in the [dashboard](https://console.lightpanda.io). If your workload cannot leave your own environment, run local.
+跑在 Cloud 上时，浏览器运行在 Lightpanda 的服务器上，你的目标 URL 与返回的页面都会经过 Lightpanda 的基础设施。你可以在[仪表盘](https://console.lightpanda.io)查看近期会话。如果工作负载不能离开你自己的环境，请选本地。
 
-## Feature coverage
+## 功能覆盖
 
-This table shows which interfaces and features you can reach in each mode. Coverage is still expanding, so the cloud does not yet match local on every interface.
+下表展示每种模式下可用的接口与功能。覆盖范围仍在扩大，Cloud 尚未在所有接口上与本地对齐。
 
 <Callout type="info">
-Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE with a subset of the tools available locally.
+Cloud 的覆盖仍在建设中。Cloud 通过 SSE 暴露 MCP 服务器，工具是本地可用工具的一个子集。
 </Callout>
 
-| Interface / feature | Local | Cloud |
+| 接口 / 功能 | 本地 | Cloud |
 | --- | --- | --- |
-| [CDP server](/run-locally/commands#serve) (`serve`) | Yes | Yes |
-| [MCP server](/usage/mcp) | Yes, all tools | Partial, subset of tools |
-| [AI agent](/usage/agent) | Yes | No |
-| [`fetch` command](/run-locally/commands#fetch) | Yes | No |
-| [HTTP API](/usage/api) | No | Yes |
-| [Proxies](/guides/configure-a-proxy) | Yes, your own proxy | Yes, shared pool with country selection, or your own |
+| [CDP 服务器](/run-locally/commands#serve-命令)（`serve`） | 是 | 是 |
+| [MCP 服务器](/usage/mcp) | 是，全部工具 | 部分，工具子集 |
+| [AI agent](/usage/agent) | 是 | 否 |
+| [`fetch` 命令](/run-locally/commands#fetch-命令) | 是 | 否 |
+| [HTTP API](/usage/api) | 否 | 是 |
+| [代理](/guides/configure-a-proxy) | 是，你自己的代理 | 是，可选国家的共享池，或你自己的 |
 
-For CDP, both modes speak the same protocol: the same [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) scripts run against a local endpoint or a cloud endpoint with your token. The [HTTP API](/usage/api) is the cloud counterpart to the local [`fetch`](/run-locally/commands#fetch) command: both return one-shot HTML or Markdown with no CDP script. See [Getting started](/run-on-lightpanda-cloud/getting-started) to connect to the cloud.
+CDP 方面，两种模式说的是同一个协议：同一批 [Puppeteer](/usage/cdp/puppeteer)、[Playwright](/usage/cdp/playwright)、[chromedp](/usage/cdp/chromedp) 脚本，既可连本地端点，也可带 token 连 Cloud 端点。[HTTP API](/usage/api) 是本地 [`fetch`](/run-locally/commands#fetch-命令) 命令在 Cloud 上的对应物：两者都是一次性返回 HTML 或 Markdown，无需 CDP 脚本。如何连接 Cloud，见[入门](/run-on-lightpanda-cloud/getting-started)。

@@ -1,13 +1,11 @@
 ---
-title: Nightly builds
-description: Install Lightpanda manually from the latest nightly builds.
+title: Nightly 构建
+description: 从最新的 Nightly 构建手动安装 Lightpanda。
 ---
 
-# Nightly builds
+# Nightly 构建
 
-The latest binary can be downloaded from the [nightly
-builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
-Linux and MacOS.
+Linux 与 macOS 的最新二进制文件可从 [Nightly 构建](https://github.com/lightpanda-io/browser/releases/tag/nightly)下载。
 
 ### Linux x86_64
 ```bash copy
@@ -23,20 +21,20 @@ curl -L -o lightpanda \
   chmod a+x ./lightpanda
 ```
 
-### MacOS aarch64
+### macOS aarch64
 ```sh copy
 curl -L -o lightpanda \
   https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && \
   chmod a+x ./lightpanda
 ```
 
-### MacOS x86_64
+### macOS x86_64
 ```sh copy
 curl -L -o lightpanda \
   https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-macos && \
   chmod a+x ./lightpanda
 ```
 
-## Telemetry
+## 遥测
 
-By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+默认情况下，Lightpanda 会收集并发送使用遥测数据。设置环境变量 `LIGHTPANDA_DISABLE_TELEMETRY=true` 即可关闭。Lightpanda 的隐私政策见：[https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy)。

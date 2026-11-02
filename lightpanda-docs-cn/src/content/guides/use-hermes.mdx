@@ -1,37 +1,59 @@
 ---
-title: Use Hermes Agent
-description: Run Hermes Agent with Lightpanda as the browser backend.
+title: 使用 Hermes Agent
+description: 以 Lightpanda 为浏览器后端运行 Hermes Agent。
 ---
 
 import { Callout } from 'nextra/components'
 
-# Use Hermes Agent
+# 使用 Hermes Agent
 
-[Hermes Agent](https://hermes-agent.nousresearch.com) is an open source autonomous agent built by [Nous Research](https://nousresearch.com). It runs autonomously for long stretches, builds persistent memory, spawns subagents in parallel, and reaches you on Telegram, Discord, Slack, and other platforms while working on a remote VM.
+[Hermes Agent](https://hermes-agent.nousresearch.com) 是由
+[Nous Research](https://nousresearch.com) 打造的开源自主 Agent。它能
+长时间自主运行、构建持久记忆、并行派生子 Agent，并在远程 VM 上工作
+的同时通过 Telegram、Discord、Slack 等平台与你保持联系。
 
-Hermes has two browser drivers, and Lightpanda plugs into both:
+Hermes 有两个浏览器驱动，Lightpanda 对两者都适用：
 
-- **Browser Use mode** — the default since August 2026. The agent gets a single `browser_exec` tool that runs Python against a browser over CDP through the [Browser Use CLI](https://github.com/browser-use/browser-use).
-- **Built-in browser tools** (`browser_navigate`, `browser_snapshot`, …) — the older driver, which reaches browsers through [agent-browser](https://github.com/vercel-labs/agent-browser).
+- **Browser Use 模式**——2026 年 8 月起的默认模式。Agent 会得到一个
+  `browser_exec` 工具，通过
+  [Browser Use CLI](https://github.com/browser-use/browser-use) 经 CDP
+  对浏览器运行 Python。
+- **内置浏览器工具**（`browser_navigate`、`browser_snapshot` 等）——
+  较旧的驱动，通过
+  [agent-browser](https://github.com/vercel-labs/agent-browser) 访问
+  浏览器。
 
-Pick the section below that matches your driver. The setting is the same (`browser.engine: lightpanda`), what differs is what else has to be true for Hermes to honour it.
+请根据你的驱动选择下面对应章节。两者设置相同
+（`browser.engine: lightpanda`），区别在于还需要满足哪些条件，Hermes
+才会真正采纳它。
 
-## Prerequisites
+## 前置条件
 
-- Hermes Agent `v0.21.0` or later (`hermes update`, then `hermes --version`)
-- Lightpanda installed and on your `PATH` — check with `which lightpanda`
+- Hermes Agent `v0.21.0` 或更高版本（先 `hermes update`，再
+  `hermes --version`）
+- 已安装 Lightpanda 且位于 `PATH` 中——可用 `which lightpanda` 检查
 
-If you don't have Lightpanda yet, follow the [installation guide](/run-locally/installation/one-liner). Hermes and agent-browser also look in `~/.lightpanda/lightpanda` and `~/.local/bin/lightpanda`.
+如果你还没有安装 Lightpanda，请参照
+[安装指南](/run-locally/installation/one-liner)。Hermes 和
+agent-browser 也会在 `~/.lightpanda/lightpanda` 与
+`~/.local/bin/lightpanda` 中查找。
 
 <Callout type="warning">
-  For the **built-in tools** path, use Lightpanda **0.3.7** until agent-browser ships its launcher fix: nightly builds from 2026-08-27 onward reject the `--timeout` flag agent-browser still passes at launch, so Lightpanda never starts and every action silently falls back to Chrome. Browser Use mode is not affected.
+  走**内置工具**路线时，在 agent-browser 发布其启动器修复之前请使用
+  Lightpanda **0.3.7**：2026-08-27 起的 Nightly 构建会拒绝
+  agent-browser 启动时仍会传入的 `--timeout` flag，导致 Lightpanda
+  无法启动，所有操作都静默回退到 Chrome。Browser Use 模式不受影响。
 </Callout>
 
-## Option A — Browser Use mode (the Hermes default)
+## 方案 A——Browser Use 模式（Hermes 默认）
 
-Since Hermes `v0.21.0`, Browser Use mode honours `browser.engine: lightpanda` natively: Hermes starts `lightpanda serve` itself, one process per session, and hands its endpoint to the Browser Use CLI for every `browser_exec` call.
+从 Hermes `v0.21.0` 起，Browser Use 模式原生支持
+`browser.engine: lightpanda`：Hermes 会自己启动 `lightpanda serve`
+（每个会话一个进程），并在每次 `browser_exec` 调用时把端点交给
+Browser Use CLI。
 
-Either pick **Lightpanda** in `hermes tools` → Browser Automation, or set it in `~/.hermes/config.yaml`:
+既可以在 `hermes tools` → Browser Automation 中选择 **Lightpanda**，
+也可以在 `~/.hermes/config.yaml` 中设置：
 
 ```yaml
 browser:
@@ -39,15 +61,24 @@ browser:
   engine: lightpanda
 ```
 
-`cloud_provider: local` matters: `browser.engine` is the lowest-precedence browser setting in Hermes. It is ignored whenever a cloud provider is active — and on a setup that never picked a browser, any `BROWSERBASE_API_KEY`, `BROWSER_USE_API_KEY` or Nous subscription browser in `~/.hermes/.env` selects one automatically. A `browser.cdp_url` / `/browser connect` override takes precedence too. Since `v0.21.0`, `/browser status` and `hermes doctor` tell you when the engine is set but shadowed, and by what.
+`cloud_provider: local` 很关键：`browser.engine` 在 Hermes 的浏览器
+设置中优先级最低。只要某个云服务商处于激活状态，它就会被忽略——而且
+在一个从未选择过浏览器的环境里，`~/.hermes/.env` 中任何
+`BROWSERBASE_API_KEY`、`BROWSER_USE_API_KEY` 或 Nous 订阅浏览器都会
+自动选一个云服务商。`browser.cdp_url` / `/browser connect` 覆盖项的
+优先级同样更高。从 `v0.21.0` 起，`/browser status` 和 `hermes doctor`
+会在引擎已设置但被遮蔽时明确告诉你，以及被什么遮蔽。
 
 <Callout type="info">
-  Lightpanda holds one page per CDP connection: the first `new_tab(url)` works, a second one fails with `TargetAlreadyLoaded`. Hermes tells the agent to navigate with `goto_url(url)` after the first `new_tab`, and `capture_screenshot()` is unavailable — Lightpanda has no graphical renderer.
+  Lightpanda 每条 CDP 连接只持有一个页面：第一次 `new_tab(url)` 可以
+  成功，第二次会报 `TargetAlreadyLoaded` 错误。Hermes 会指示 Agent 在
+  第一次 `new_tab` 之后用 `goto_url(url)` 导航；`capture_screenshot()`
+  不可用——Lightpanda 没有图形渲染器。
 </Callout>
 
-## Option B — Built-in browser tools
+## 方案 B——内置浏览器工具
 
-Switch Hermes off Browser Use mode and select Lightpanda as the local engine:
+把 Hermes 切出 Browser Use 模式，并选择 Lightpanda 作为本地引擎：
 
 ```yaml
 # ~/.hermes/config.yaml
@@ -57,29 +88,42 @@ browser:
   engine: lightpanda
 ```
 
-(`/browser use off` inside Hermes writes `backend: "off"` for you.)
+（在 Hermes 内执行 `/browser use off` 会替你写入 `backend: "off"`。）
 
-The same precedence rules as Option A apply (`cloud_provider: local`, no CDP override), plus one more: Camoufox (`CAMOFOX_URL`) also wins over `browser.engine` on this path.
+方案 A 的优先级规则同样适用（`cloud_provider: local`、无 CDP 覆盖），
+另外还有一条：在这条路线上，Camoufox（`CAMOFOX_URL`）同样优先于
+`browser.engine`。
 
-Hermes drives Lightpanda through `agent-browser --engine lightpanda` over CDP, the same way it drives local Chrome, with automatic Chrome fallback: Lightpanda handles navigate, snapshot, click, type, scroll, back, press and eval; screenshots, `browser_vision`, PDF generation, file uploads and anything that errors on Lightpanda are retried on Chrome.
+Hermes 通过 `agent-browser --engine lightpanda` 经 CDP 驱动
+Lightpanda，与驱动本地 Chrome 的方式相同，并带自动 Chrome 回退：
+导航、快照、点击、输入、滚动、后退、按键和 eval 由 Lightpanda 处理；
+截图、`browser_vision`、PDF 生成、文件上传以及任何在 Lightpanda 上
+出错的操作都会在 Chrome 上重试。
 
 <Callout type="warning">
-  Before `v0.21.0`, on Ubuntu 23.10+, in Docker, or as root, Hermes injected Chromium sandbox flags (`--no-sandbox`) for every engine, and agent-browser rejects them under Lightpanda (`Custom Chrome arguments (--args) are not supported with Lightpanda`), so every action failed over to Chrome. Setting `AGENT_BROWSER_ARGS` yourself does not help; run `hermes update`.
+  在 `v0.21.0` 之前，在 Ubuntu 23.10+、Docker 中或以 root 身份运行时，
+  Hermes 会为所有引擎注入 Chromium 沙箱 flag（`--no-sandbox`），而
+  agent-browser 在 Lightpanda 下会拒绝它们（报错
+  `Custom Chrome arguments (--args) are not supported with Lightpanda`），
+  于是所有操作都回退到 Chrome。自己设置 `AGENT_BROWSER_ARGS` 无济于事；
+  请运行 `hermes update`。
 </Callout>
 
-## Verify the configuration
+## 验证配置
 
-Start Hermes and run `/browser status`.
+启动 Hermes 并运行 `/browser status`。
 
-Option A shows the engine and the binary Hermes will spawn:
+方案 A 会显示引擎以及 Hermes 将启动的二进制文件：
 
 ```
 Engine: Lightpanda — Browser Use mode: Hermes spawns `lightpanda serve` per session
 ```
 
-If it instead reports `browser.engine is 'lightpanda' but it is NOT in use: …`, the message names what is shadowing it (a cloud provider, a CDP override, …); see the troubleshooting list below.
+如果它报告的是 `browser.engine is 'lightpanda' but it is NOT in use: …`，
+消息中会指明是什么在遮蔽它（某个云服务商、某个 CDP 覆盖等）；参见
+下方排障清单。
 
-Option B shows the engine:
+方案 B 会显示引擎：
 
 ```
 🌐 Browser: local Lightpanda (agent-browser --engine lightpanda)
@@ -87,26 +131,35 @@ Option B shows the engine:
    Automatic Chromium fallback for screenshots and failed commands
 ```
 
-Then try a prompt that involves browsing:
+然后试一个涉及浏览的提示：
 
 ```
 Visit https://news.ycombinator.com and list the top 5 story titles.
 ```
 
-To prove the engine rather than trust the status line, ask the agent for `navigator.userAgent`: Lightpanda reports `Lightpanda/1.0`.
+要证实引擎确实生效而不只是相信状态行，可以让 Agent 输出
+`navigator.userAgent`：Lightpanda 会报告 `Lightpanda/1.0`。
 
-## Troubleshooting: Hermes uses Chrome even though I set the engine
+## 排障：明明设置了引擎，Hermes 却用 Chrome
 
-Check, in this order:
+按以下顺序排查：
 
-1. **Is Hermes up to date?** Browser Use mode only reads `browser.engine` from `v0.21.0`; run `hermes update`. From there, `/browser status` and `hermes doctor` say outright when the engine is shadowed.
-2. **Is a cloud provider selected?** `browser.cloud_provider` in `config.yaml`, or a cloud API key / Nous subscription browser on a never-configured setup. Set `cloud_provider: local`.
-3. **Is a CDP override active?** `browser.cdp_url` or a previous `/browser connect` (undo with `/browser disconnect`).
-4. **Is Camoufox selected?** Unset `CAMOFOX_URL`.
-5. **Linux sandbox flags** on Hermes older than `v0.21.0` (Option B, see the warning above).
-6. **Nightly `--timeout` rejection** (Option B, see Prerequisites): run `lightpanda serve --timeout 1` by hand; `FATAL app : unknown argument` means agent-browser cannot launch this build.
+1. **Hermes 是最新版吗？** Browser Use 模式从 `v0.21.0` 起才读取
+   `browser.engine`；请运行 `hermes update`。从该版本起，
+   `/browser status` 和 `hermes doctor` 会在引擎被遮蔽时直言不讳。
+2. **是否选中了云服务商？** `config.yaml` 中的
+   `browser.cloud_provider`，或在从未配置过的环境中某个云 API key /
+   Nous 订阅浏览器。请设置 `cloud_provider: local`。
+3. **是否有 CDP 覆盖生效？** `browser.cdp_url` 或之前执行过的
+   `/browser connect`（用 `/browser disconnect` 撤销）。
+4. **是否选中了 Camoufox？** 取消设置 `CAMOFOX_URL`。
+5. **Linux 沙箱 flag**，见于 `v0.21.0` 之前的 Hermes（方案 B，见上文
+   警告）。
+6. **Nightly 构建拒绝 `--timeout`**（方案 B，见前置条件）：手动运行
+   `lightpanda serve --timeout 1`；出现
+   `FATAL app : unknown argument` 即表示 agent-browser 无法启动该构建。
 
-## Further reading
+## 延伸阅读
 
-- [Hermes browser documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/browser#lightpanda-local-engine)
-- [Lightpanda installation guide](/run-locally/installation/one-liner)
+- [Hermes 浏览器文档](https://hermes-agent.nousresearch.com/docs/user-guide/features/browser#lightpanda-local-engine)
+- [Lightpanda 安装指南](/run-locally/installation/one-liner)

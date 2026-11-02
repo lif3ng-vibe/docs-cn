@@ -1,26 +1,25 @@
 ---
-title: Build from sources
-description: Lightpanda is written with Zig@0.14.0. You will have to install it with the right version in order to build the project.
+title: 从源码构建
+description: Lightpanda 使用 Zig@0.14.0 编写。构建本项目需要安装对应版本的 Zig。
 ---
 
 import { Callout } from 'nextra/components'
 
-# Build from sources
+# 从源码构建
 
-## Prerequisites
+## 前置条件
 
-Lightpanda is written with [Zig](https://ziglang.org/) `0.14.0`. You will have to
-install it with the right version in order to build the project.
+Lightpanda 使用 [Zig](https://ziglang.org/) `0.14.0` 编写。构建本项目需要安装对应版本的 Zig。
 
-You need also to install [Rust](https://rust-lang.org/tools/install/) for building deps.
+还需要安装 [Rust](https://rust-lang.org/tools/install/)，用于构建依赖。
 
-Lightpanda also depends on
-[zig-js-runtime](https://github.com/lightpanda-io/zig-js-runtime/) (with v8),
-[Libcurl](https://curl.se/libcurl/) and [html5ever](https://github.com/servo/html5ever).
+Lightpanda 还依赖
+[zig-js-runtime](https://github.com/lightpanda-io/zig-js-runtime/)（含 v8）、
+[Libcurl](https://curl.se/libcurl/) 与 [html5ever](https://github.com/servo/html5ever)。
 
-To be able to build the v8 engine for zig-js-runtime, you have to install some libs:
+为了给 zig-js-runtime 构建 v8 引擎，需要先安装一些库：
 
-**For Debian/Ubuntu based Linux:**
+**基于 Debian/Ubuntu 的 Linux**：
 
 ```bash copy
 sudo apt install xz-utils ca-certificates \
@@ -28,48 +27,43 @@ sudo apt install xz-utils ca-certificates \
         clang make curl git
 ```
 
-**For MacOS, you need [Xcode](https://developer.apple.com/xcode/) and the following pacakges from homebrew:**
+**macOS 需要安装 [Xcode](https://developer.apple.com/xcode/) 以及 homebrew 中的以下包**：
 
 ```bash copy
 brew install cmake
 ```
 
-## Build and run
+## 构建与运行
 
-You can build the entire browser with `make build` or `make build-dev` for debug
-env.
+可以用 `make build` 构建整个浏览器，调试环境则用 `make build-dev`。
 
-But you can directly use the zig command to run in debug mode:
+也可以直接使用 zig 命令以调试模式运行：
 
 ```bash copy
 zig build run
 ```
 
 <Callout type="info" emoji="ℹ️">
-    The build will download and build V8. It can takes a lot of time, more than
-    1 hour.
-    You can save this part by donwloading manually a
-    [pre-built](https://github.com/lightpanda-io/zig-v8-fork/releases version)
-    and use the `-Dprebuilt_v8_path=` option.
+    构建过程会下载并编译 V8，可能耗时很长，超过 1 小时。
+    你可以手动下载一份[预构建版本](https://github.com/lightpanda-io/zig-v8-fork/releases)来省去这一步，并使用 `-Dprebuilt_v8_path=` 选项。
 </Callout>
 
-### Embed v8 snapshot
+### 内嵌 v8 快照
 
-Lighpanda uses v8 snapshot. By default, it is created on startup but you can
-embed it by using the following commands:
+Lightpanda 使用 v8 快照。默认情况下快照在启动时创建，但你可以用以下命令将其内嵌：
 
-Generate the snapshot.
+生成快照。
 ```bash copy
 zig build snapshot_creator -- src/snapshot.bin
 ```
 
-Build using the snapshot binary.
+使用快照二进制文件构建。
 ```bash copy
 zig build -Dsnapshot_path=../../snapshot.bin
 ```
 
-See [#1279](https://github.com/lightpanda-io/browser/pull/1279) for more details.
+更多细节见 [#1279](https://github.com/lightpanda-io/browser/pull/1279)。
 
-## Telemetry
+## 遥测
 
-By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+默认情况下，Lightpanda 会收集并发送使用遥测数据。设置环境变量 `LIGHTPANDA_DISABLE_TELEMETRY=true` 即可关闭。Lightpanda 的隐私政策见：[https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy)。

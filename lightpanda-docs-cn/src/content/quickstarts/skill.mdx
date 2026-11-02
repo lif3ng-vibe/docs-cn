@@ -1,37 +1,37 @@
 ---
 title: Skill
-description: Add the Lightpanda skill to your coding agent so it knows how to browse, extract data, and automate the web.
+description: 把 Lightpanda skill 装进你的编码 Agent，让它懂得如何浏览网页、提取数据、自动化操作 Web。
 ---
 import { Callout, Steps, Tabs } from 'nextra/components'
 
 # Skill
 
-The Lightpanda skill teaches a coding agent how to use Lightpanda: which interface fits a task, and how to call it. Add it once, then describe what you want in plain language instead of looking up commands.
+Lightpanda skill 教会编码 Agent 如何使用 Lightpanda：哪种接口适合哪类任务、该怎么调用。装一次之后，用大白话描述你想要什么就行，不用再去查命令。
 
-See the source: [lightpanda-io/agent-skill](https://github.com/lightpanda-io/agent-skill).
+源码见：[lightpanda-io/agent-skill](https://github.com/lightpanda-io/agent-skill)。
 
-## Prerequisites
+## 前置条件
 
-- A coding agent that supports skills, such as Claude Code, Cursor, or Windsurf. See the full list at [skills.sh](https://skills.sh).
+- 一个支持 skills 的编码 Agent，如 Claude Code、Cursor 或 Windsurf。完整列表见 [skills.sh](https://skills.sh)。
 
-## Steps
+## 步骤
 
 <Steps>
 
-### Install the skill
+### 安装 Skill
 
 <Tabs items={['skills.sh', 'Claude Code plugin', 'Manual']} className="-mb-4">
   <Tabs.Tab>
-Needs [Node.js](https://nodejs.org/en/download):
+需要 [Node.js](https://nodejs.org/en/download)：
 
 ```sh copy
 npx skills add lightpanda-io/agent-skill
 ```
 
-It asks which skills to add and which agent to target. Pick `lightpanda`, plus `pandascript` if you plan to save reproducible scripts.
+它会询问要添加哪些 skill、面向哪个 agent。选 `lightpanda`，如果打算保存可复现的脚本，再加上 `pandascript`。
   </Tabs.Tab>
   <Tabs.Tab>
-Installs the skill and wires in the MCP server:
+安装 skill 并接好 MCP 服务器：
 
 ```sh copy
 /plugin marketplace add lightpanda-io/agent-skill
@@ -39,54 +39,54 @@ Installs the skill and wires in the MCP server:
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-Clone the repo into your agent's skills directory. For Claude Code:
+把仓库克隆到你 agent 的 skills 目录。以 Claude Code 为例：
 
 ```sh copy
 git clone https://github.com/lightpanda-io/agent-skill ~/.claude/skills/lightpanda
 ln -s ~/.claude/skills/lightpanda/pandascript ~/.claude/skills/pandascript
 ```
 
-The second line adds the `pandascript` skill for replay scripts. Keep the whole directory: the skill runs the bundled `scripts/install.sh`. For other agents, check their docs for the skills directory.
+第二行为回放脚本添加 `pandascript` skill。请保留整个目录：该 skill 会运行自带的 `scripts/install.sh`。其他 agent 请查阅各自的文档找 skills 目录。
   </Tabs.Tab>
 </Tabs>
 
-### Install Lightpanda
+### 安装 Lightpanda
 
-Ask your agent:
+让你的 agent 执行：
 
 ```text copy
 Install lightpanda for me.
 ```
 
-The skill knows the install script, the package-manager options for your platform, and the common quirks, so it runs the right command without you looking anything up.
+这个 skill 知道安装脚本、你所在平台的包管理器选项以及各种常见的坑，所以它会直接跑对命令，无需你查任何东西。
 
 <Callout type="info" emoji="ℹ️">
-Prefer to do it yourself? Run the [one-liner](/run-locally/installation/one-liner):
+想自己动手？运行[一行命令安装](/run-locally/installation/one-liner)：
 
 ```sh copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+其他方式：[Windows 上的 WSL2](/run-locally/installation/one-liner#windows--wsl2)、[Docker](/run-locally/installation/docker)、[包管理器](/run-locally/installation/package-managers)。
 </Callout>
 
-### Try it
+### 试一试
 
-[quotes.toscrape.com](https://quotes.toscrape.com) is a public scraping-practice site built by Zyte: a fictional quotes catalog whose search page filters by author and tag through an AJAX form. Ask your agent:
+[quotes.toscrape.com](https://quotes.toscrape.com) 是 Zyte 搭建的公开抓取练习站：一个虚构的名言目录，其搜索页通过 AJAX 表单按作者和标签筛选。让你的 agent 执行：
 
 ```text copy
 Go to quotes.toscrape.com/search.aspx and find which tags Albert Einstein's quotes are filed under, then give me his inspirational one.
 ```
 
-This needs real interaction (select an author, wait for the tag list to reload, select a tag, submit), not a plain fetch. Which interface handles it depends on what's set up: the MCP server if it's connected, otherwise the skill falls back to running `lightpanda agent --task "..."` itself.
+这需要真实的交互（选作者、等标签列表重新加载、选标签、提交），而不是简单的获取。由哪个接口来处理取决于你的配置：连着 MCP 服务器就走 MCP，否则 skill 会退回自己运行 `lightpanda agent --task "..."`。
 
-Or ask it to check an existing project instead:
+也可以让它检查一个现有项目：
 
 ```text copy
 I have an existing Playwright project. Check whether my tests would work with Lightpanda instead of Chrome, and flag anything that wouldn't.
 ```
 
-The skill knows the differences that matter when swapping in Lightpanda. For example, Lightpanda has no graphical rendering, so tests that rely on screenshots or visual layout won't carry over, and Playwright connects to a running Lightpanda with `connectOverCDP` instead of launching its own Chromium.
+换成 Lightpanda 时有哪些关键差异，这个 skill 心里有数。比如 Lightpanda 没有图形渲染，依赖截图或视觉布局的测试迁移不过去；Playwright 要用 `connectOverCDP` 连接运行中的 Lightpanda，而不是自己启动 Chromium。
 
 </Steps>

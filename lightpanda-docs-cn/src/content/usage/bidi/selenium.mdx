@@ -1,24 +1,35 @@
 ---
-title: Selenium (WebDriver)
-description: Use Lightpanda with Selenium over classic WebDriver or WebDriver BiDi, in JavaScript or Python.
+title: Selenium
+description: 配合 Selenium 使用 Lightpanda，走经典 WebDriver 或 WebDriver BiDi，支持 JavaScript 或 Python。
 ---
 import { Tabs, Callout } from 'nextra/components'
 
-# Selenium (WebDriver)
+# Selenium（WebDriver）
 
-Use Lightpanda with [Selenium](https://www.selenium.dev/) over [classic WebDriver](https://w3c.github.io/webdriver/) (HTTP) or [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) (WebSocket). A session created the normal Selenium way can be driven with classic commands (`driver.get()`, `find_element()`, `click()`, `send_keys()`, `execute_script()`, ...), and also over BiDi when it asks for the `webSocketUrl` capability.
+配合 [Selenium](https://www.selenium.dev/) 使用 Lightpanda，可走
+[经典 WebDriver](https://w3c.github.io/webdriver/)（HTTP）或
+[WebDriver BiDi](https://w3c.github.io/webdriver-bidi/)（WebSocket）。
+以常规 Selenium 方式创建的会话，既可以用经典命令驱动（`driver.get()`、
+`find_element()`、`click()`、`send_keys()`、`execute_script()` 等），
+也可以在请求 `webSocketUrl` 能力时改走 BiDi。
 
 <Callout type="warning">
-  WebDriver support, classic and BiDi, is new and doesn't cover the full specs yet. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
+  WebDriver 支持（经典与 BiDi）尚新，还未覆盖完整规范。如果脚本需要的
+  命令尚缺，欢迎
+  [提交 issue](https://github.com/lightpanda-io/browser/issues)。
 </Callout>
 
-Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
+启用 `webdriver` 协议启动 Lightpanda（全部选项见
+[serve 命令参考](/reference/cli/serve#选项)）：
 
 ```sh copy
 lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
 ```
 
-This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true` (`browserName` can be any value; Lightpanda reports itself back regardless). Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...).
+本示例通过 BiDi 驱动浏览器：把 `webSocketUrl` 能力设为 `true` 来请求
+一个 BiDi 会话（`browserName` 可以是任意值；无论如何 Lightpanda 都会
+报告自己的身份）。不设置时，会话使用经典 WebDriver 命令
+（`driver.get()`、`findElement()` 等）。
 
 <Tabs items={['JavaScript', 'Python']} className="-mb-4">
   <Tabs.Tab id="javascript" className="m-0">

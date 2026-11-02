@@ -1,43 +1,41 @@
 ---
-title: Use Lightpanda Agent
-description: Use Lightpanda Agent to create a reproducible JavaScript browser script.
+title: 使用 Lightpanda Agent
+description: 使用 Lightpanda Agent 创建可复现的 JavaScript 浏览器脚本。
 ---
 
-# Use Lightpanda Agent
+# 使用 Lightpanda Agent
 
-This tutorial will walk you through how to use Lightpanda Agent to create a
-reproducible JavaScript browser script.
+本教程将带你了解如何使用 Lightpanda Agent 创建可复现的
+JavaScript 浏览器脚本。
 
-Find all flags and REPL commands in the [agent command reference](/reference/cli/agent).
+所有 flag 与 REPL 命令请查阅 [agent 命令参考](/reference/cli/agent)。
 
 ---
 
 <video controls>
   <source src="https://cdn.lightpanda.io/website/assets/images/docs/hn-karma-story.mp4" type="video/mp4" />
-  Download the <a href="https://cdn.lightpanda.io/website/assets/images/docs/hn-karma-story.mp4">video</a>
+  下载<a href="https://cdn.lightpanda.io/website/assets/images/docs/hn-karma-story.mp4">视频</a>
 </video>
 
-## Prerequisites
+## 前置条件
 
-- Lightpanda installed and on your `PATH`.
-- A Hacker News account.
-- An LLM API key for the natural-language sections (Anthropic, OpenAI,
-  Gemini, Hugging Face or a local Ollama). Recorded `.js` PandaScripts need no key.
+- 已安装 Lightpanda，且其位于你的 `PATH` 中。
+- 一个 Hacker News 账号。
+- 自然语言章节所需的 LLM API key（Anthropic、OpenAI、
+  Gemini、Hugging Face 或本地 Ollama）。录制生成的 `.js` PandaScript 无需 key。
 
-Export your HN credentials as `LP_*` env vars. The `LP_` prefix
-matters for security: Lightpanda only resolves these placeholders
-inside its own subprocess (so your password never reaches the LLM),
-and the `getEnv` tool refuses any variable that doesn't start with
-`LP_` (so the LLM can't read your other secrets).
+将你的 HN 凭据导出为 `LP_*` 环境变量。`LP_` 前缀关乎安全：
+Lightpanda 只会在自己的子进程内解析这些占位符（因此你的密码
+永远不会传给 LLM），并且 `getEnv` 工具会拒绝任何不以
+`LP_` 开头的变量（因此 LLM 无法读取你的其他机密）。
 
 ```sh copy
 export LP_HN_USERNAME="your-hn-handle"
 export LP_HN_PASSWORD="your-hn-password"
 ```
 
-Check the variables are set. If one is missing, `/fill` will silently
-type the literal `$LP_HN_USERNAME` into the form rather than your
-username:
+检查这些变量是否已设置。如果缺少某个变量，`/fill` 会静默地
+把字面量 `$LP_HN_USERNAME` 输入到表单里，而不是你的用户名：
 
 ```sh copy
 lightpanda agent --no-llm
@@ -46,47 +44,44 @@ lightpanda agent --no-llm
 > /getEnv LP_HN_USERNAME
 ```
 
-## 1. Start the REPL
+## 1. 启动 REPL
 
 ```sh copy
 lightpanda agent
 ```
 
-The startup banner shows whether natural language is available;
-`/model` prints the resolved model. REPL history lives in `.lp-history`
-in the working directory.
+启动横幅会显示自然语言功能是否可用；`/model` 会打印解析后的
+模型。REPL 历史保存在工作目录下的 `.lp-history` 中。
 
 ```console
-> /help            # list every browser tool
-> /help goto       # JSON schema for one tool
+> /help            # 列出所有浏览器工具
+> /help goto       # 查看单个工具的 JSON schema
 > /quit
 ```
 
-No API key? `lightpanda agent --no-llm` runs the slash-commands-only
-REPL.
+没有 API key？`lightpanda agent --no-llm` 会运行仅支持斜杠命令的
+REPL。
 
-## 2. Run a single task
+## 2. 运行单个任务
 
-Before doing anything complicated, run a one-shot task to check
-everything works:
+在做复杂操作之前，先运行一个一次性任务，确认一切正常：
 
 ```sh copy
 lightpanda agent --task "what is the top story on news.ycombinator.com?"
 ```
 
-`--task` runs one user turn, prints the answer on stdout, exits.
-Tool calls and progress go to stderr, so redirecting gives you a
-clean answer:
+`--task` 只运行一轮用户输入，把答案打印到 stdout 后退出。
+工具调用与进度信息走 stderr，因此重定向即可得到干净的答案：
 
 ```sh copy
 lightpanda agent --task "top story on news.ycombinator.com?" > out.txt
 ```
 
-Use `-a <path>` (repeatable) to attach local files.
+使用 `-a <path>`（可重复）附加本地文件。
 
-## 3. Log in to Hacker News
+## 3. 登录 Hacker News
 
-Paste these into the REPL in order:
+按顺序把这些命令粘贴进 REPL：
 
 ```console
 > /goto https://news.ycombinator.com/login
@@ -96,38 +91,36 @@ Paste these into the REPL in order:
 > /waitForSelector '#logout'
 ```
 
-A few things worth knowing:
+几点值得注意：
 
-- **Slash commands only.** `click '#foo'` is forwarded to the LLM;
-  only `/click '#foo'` runs as a command. TAB completes tool names.
-- **`/waitForSelector '#logout'` is both a sync point and an
-  assertion.** It blocks until HN's logged-in DOM renders. If the
-  credentials are wrong (or the website throws a captcha, or the layout
-  changes), the command times out at the line where the failure
-  actually happened. Use this pattern after every state-changing
-  action.
-- **Selectors are CSS only.** The click-family tools (`/click`,
-  `/fill`, `/hover`, `/selectOption`, `/setChecked`) accept CSS
-  only. Backend node IDs are invalidated by any DOM mutation and
-  can't be serialized into recordings.
+- **仅支持斜杠命令**。`click '#foo'` 会被转发给 LLM；
+  只有 `/click '#foo'` 会作为命令执行。TAB 可补全工具名。
+- **`/waitForSelector '#logout'` 既是同步点也是断言**。它会阻塞，
+  直到 HN 登录后的 DOM 渲染完成。如果凭据有误（或网站弹出
+  验证码，或页面布局变化），命令会在失败真正发生的那一行
+  超时。每个改变状态的操作之后都请使用这一模式。
+- **选择器仅限 CSS**。click 系列工具（`/click`、`/fill`、
+  `/hover`、`/selectOption`、`/setChecked`）只接受 CSS。
+  后端 node ID 会因任何 DOM 变更而失效，也无法序列化进
+  录制脚本。
 
-Confirm the login worked:
+确认登录成功：
 
 ```console
 > /extract '{"karma": "#karma"}'
 {"karma":"42"}
 ```
 
-`/extract` takes a JSON schema and prints one JSON object to stdout.
-Schema grammar:
+`/extract` 接受一个 JSON schema，并向 stdout 打印一个 JSON 对象。
+schema 语法：
 
-- `"<sel>"`: text of the first match.
-- `["<sel>"]`: text of every match.
-- `{"selector": "<sel>", "attr": "<name>"}`: attribute of the first match.
-- `[{"selector": "<sel>", "fields": {…}}]`: array of records, with
-  each `fields` entry resolved relative to the matched element.
+- `"<sel>"`：第一个匹配项的文本。
+- `["<sel>"]`：所有匹配项的文本。
+- `{"selector": "<sel>", "attr": "<name>"}`：第一个匹配项的属性。
+- `[{"selector": "<sel>", "fields": {…}}]`：记录数组，其中每个
+  `fields` 条目都相对于所匹配元素进行解析。
 
-Now go to the front page and pull the story list:
+现在前往首页并抓取帖子列表：
 
 ```console
 > /goto https://news.ycombinator.com
@@ -145,38 +138,35 @@ Now go to the front page and pull the story list:
 '''
 ```
 
-Triple-quoted values let a schema span multiple lines.
+三引号包裹的值允许 schema 跨多行。
 
-### How we got those selectors
+### 这些选择器是怎么来的
 
-Skip this if you're happy treating them as given.
+如果你愿意直接照用，可以跳过本节。
 
-`/tree` prints the semantic tree. On the login page you'll see two
-forms (login and signup) with unlabeled textboxes, which means
-`/findElement role=textbox name=username` returns nothing.
+`/tree` 会打印语义树。在登录页你会看到两个表单（登录和注册），
+其中的文本框没有标签，这意味着 `/findElement role=textbox name=username`
+不会返回任何结果。
 
-`/detectForms` reads the HTML directly and surfaces each form's
-`action` plus each input's `name`. The first form has `action: "login"`
-and fields named `acct` and `pw`, which gives us the form-scoped
-selector (`form[action="login"] input[name="acct"]`) that won't
-collide with signup.
+`/detectForms` 直接读取 HTML，并列出每个表单的 `action` 以及
+每个输入框的 `name`。第一个表单的 `action` 为 `"login"`，
+字段名为 `acct` 和 `pw`，由此我们得到表单作用域内的选择器
+（`form[action="login"] input[name="acct"]`），不会与注册表单冲突。
 
-`/nodeDetails backendNodeId=<n>` is the alternative: it returns a
-ready-to-use CSS selector for any node ID from `/tree`.
+`/nodeDetails backendNodeId=<n>` 是另一种方式：它会为 `/tree`
+输出中的任意节点 ID 返回一个可直接使用的 CSS 选择器。
 
-## 4. Save the session as a script
+## 4. 将会话保存为脚本
 
-Retype the login plus front-page sequence in a single REPL session,
-then:
+在同一个 REPL 会话中重新输入登录加首页的完整序列，然后执行：
 
 ```console
 > /save hn_login.js
 > /quit
 ```
 
-In `--no-llm` mode, `/save` transcribes the session deterministically.
-With an LLM, it synthesizes an idiomatic script. The result is
-JavaScript:
+在 `--no-llm` 模式下，`/save` 会确定性地转录会话。在有 LLM 的
+情况下，它会综合生成一段符合习惯的脚本。结果为 JavaScript：
 
 ```js copy
 const page = new Page();
@@ -189,29 +179,27 @@ await page.goto("https://news.ycombinator.com");
 return page.extract({ topStories: [{ selector: ".athing", fields: { rank: ".rank", title: ".titleline > a", url: { selector: ".titleline > a", attr: "href" } } }] });
 ```
 
-Only state-mutating commands are recorded; read-only ones (`/tree`,
-`/markdown`) are dropped. `/extract` is recorded because it shapes
-what the script returns.
+只有改变状态的命令会被记录；只读命令（`/tree`、`/markdown`）
+会被丢弃。`/extract` 会被记录，因为它决定了脚本的返回内容。
 
-## 5. Replay the script without an LLM
+## 5. 不依赖 LLM 重放脚本
 
 ```sh copy
 lightpanda agent hn_login.js
 ```
 
-No `--provider`, no API key, no token spend. Whatever the script
-`return`s is printed automatically as JSON. Because the saved script
-ends with `return page.extract(...)`, you get clean JSON on stdout:
+无需 `--provider`、无需 API key、不消耗 token。脚本 `return`
+的内容会自动以 JSON 打印。由于保存的脚本以
+`return page.extract(...)` 结尾，stdout 上得到的就是干净的 JSON：
 
 ```sh copy
 lightpanda agent hn_login.js > stories.json
 ```
 
-From inside the REPL, `/load hn_login.js` runs the same script against
-the current session.
+在 REPL 内部，`/load hn_login.js` 会针对当前会话运行同一个脚本。
 
-To reshape the output, assign the result and end with `return <value>`
-(what you return is what prints):
+要调整输出形态，请把结果赋给变量并以 `return <value>` 结尾
+（返回什么就打印什么）：
 
 ```js copy
 const page = new Page();
@@ -231,16 +219,16 @@ const topStories = page.extract({
 return topStories;
 ```
 
-## 6. Add your own JavaScript logic
+## 6. 添加你自己的 JavaScript 逻辑
 
-Agent scripts run in a separate JavaScript context from the page. No
-`window`, `document`, DOM API, `require`, or `process`. Browser
-interaction happens through the `Page` object: `new Page()` makes a
-page, `await page.goto(url)` navigates it, and every other primitive is
-a synchronous method on it.
+Agent 脚本运行在与页面隔离的独立 JavaScript 上下文中。没有
+`window`、`document`、DOM API、`require` 或 `process`。浏览器
+交互通过 `Page` 对象完成：`new Page()` 创建页面，
+`await page.goto(url)` 进行导航，其余所有原语都是它身上的
+同步方法。
 
-Use `page.extract(...)` to move page data into local logic, then
-process it with normal JavaScript:
+用 `page.extract(...)` 把页面数据取回本地逻辑，再用普通
+JavaScript 处理：
 
 ```js copy
 const page = new Page();
@@ -261,15 +249,15 @@ const topStories = page.extract({
 return topStories.map((s) => ({ rank: s.rank, title: s.title, url: s.url }));
 ```
 
-Use `page.evaluate(...)` only when you intentionally want a string to
-run in the page's JavaScript context. Page evaluate cannot see agent
-variables or call agent primitives.
+只有当你有意让一段字符串在页面的 JavaScript 上下文中运行时，
+才使用 `page.evaluate(...)`。页面 evaluate 无法看到 Agent 变量，
+也无法调用 Agent 原语。
 
-## 7. Use Lightpanda from another agent (MCP)
+## 7. 从其他 Agent 使用 Lightpanda（MCP）
 
-If you're driving Lightpanda from a different agent (Claude Code, a
-custom MCP client, your own harness), use `lightpanda mcp` instead.
-The calling agent supplies the LLM, so Lightpanda needs no API key.
+如果你是从另一个 Agent（Claude Code、自定义 MCP 客户端、
+你自己的 harness）驱动 Lightpanda，请改用 `lightpanda mcp`。
+调用方 Agent 自带 LLM，因此 Lightpanda 不需要 API key。
 
 ```json copy
 {
@@ -282,8 +270,8 @@ The calling agent supplies the LLM, so Lightpanda needs no API key.
 }
 ```
 
-Drive the browser with the usual tools (`goto`, `fill`, `click`,
-`waitForSelector`), then hand back a script with the `save` tool:
+用常用工具（`goto`、`fill`、`click`、`waitForSelector`）驱动
+浏览器，然后用 `save` 工具交回一段脚本：
 
 ```json
 {
@@ -295,16 +283,14 @@ Drive the browser with the usual tools (`goto`, `fill`, `click`,
 }
 ```
 
-The path must be relative and free of `..`. Literal `LP_*` values are
-scrubbed back to placeholders before the file is written. The output
-runs unmodified:
+路径必须是相对路径且不含 `..`。写入文件之前，字面量
+`LP_*` 值会被清洗回占位符。产物可直接原样运行：
 
 ```sh copy
 lightpanda agent hn_login.js
 ```
 
-## Further reading
+## 延伸阅读
 
-- [Agent](/usage/agent): full documentation reference,
-- [PandaScript](/usage/pandascript): runtime, primitives,
-  return values.
+- [Agent](/usage/agent)：完整文档参考，
+- [PandaScript](/usage/pandascript)：运行时、原语与返回值。

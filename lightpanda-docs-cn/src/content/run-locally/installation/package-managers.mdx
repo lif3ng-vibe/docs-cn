@@ -1,34 +1,33 @@
 ---
-title: Package managers
-description: Install Lightpanda using Homebrew, Arch AUR, or Debian/Ubuntu packages.
+title: 包管理器
+description: 使用 Homebrew、Arch AUR 或 Debian/Ubuntu 软件包安装 Lightpanda。
 ---
 
-# Package managers
+# 包管理器
 
 ## Homebrew
 
-Install the last nightly using Homebrew.
+使用 Homebrew 安装最新的 Nightly 版本。
 
 ```sh copy
 brew install lightpanda-io/browser/lightpanda
 ```
 
-## Arch Linux User Repository
+## Arch Linux 用户仓库
 
 ```sh copy
 yay -S lightpanda-bin
 ```
 
-You can alternatively use the last nightly version with:
+也可以改用最新的 Nightly 版本：
 ```sh copy
 yay -S lightpanda-nightly-bin
 ```
 
 ## Debian/Ubuntu
 
-Starting `0.3.0`, a `.deb` is available with each [tagged
-release](https://github.com/lightpanda-io/browser/releases).
+从 `0.3.0` 开始，每个[带标签的发布版本](https://github.com/lightpanda-io/browser/releases)都会附有 `.deb` 包。
 
-## Telemetry
+## 遥测
 
-By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+默认情况下，Lightpanda 会收集并发送使用遥测数据。设置环境变量 `LIGHTPANDA_DISABLE_TELEMETRY=true` 即可关闭。Lightpanda 的隐私政策见：[https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy)。

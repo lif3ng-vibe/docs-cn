@@ -1,58 +1,65 @@
 ---
-title: Use a proxy
-description: Configure a proxy for Lightpanda, with the --http-proxy option when running locally, or with a shared proxy or your own on Lightpanda Cloud.
+title: 使用代理
+description: 为 Lightpanda 配置代理：本地运行时用 --http-proxy 选项，Lightpanda Cloud 上则可用共享代理或自己的代理。
 ---
 import { Tabs } from 'nextra/components'
 
-# Use a proxy
+# 使用代理
 
-Lightpanda supports using your own proxy, both locally and on Lightpanda Cloud. On Lightpanda Cloud, you can also use a shared proxy we provide instead.
+Lightpanda 支持使用你自己的代理，本地与 Lightpanda Cloud 皆可。
+在 Lightpanda Cloud 上，你也可以改用我们提供的共享代理。
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
-## Use a proxy locally
+## 在本地使用代理
 
-To use a proxy, start Lightpanda from the command line with `--http-proxy` followed by an HTTP or HTTPS proxy address. All outgoing requests go through the proxy, regardless of the protocol your client uses to connect to Lightpanda.
+要使用代理，请从命令行启动 Lightpanda，并在 `--http-proxy` 后跟
+一个 HTTP 或 HTTPS 代理地址。所有出站请求都会经过该代理，无论
+客户端用什么协议连接 Lightpanda。
 
-The examples below use `serve`, but `fetch`, `mcp`, and `agent` accept these options too.
+以下示例使用 `serve`，但 `fetch`、`mcp` 和 `agent` 同样接受这些选项。
 
 ```sh copy
 lightpanda serve --http-proxy http://127.0.0.1:3000
 ```
 
-### Authenticate with basic auth
+### 使用 basic auth 认证
 
-Add [basic auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic) credentials to the proxy address with the `username:password@` format.
+以 `username:password@` 格式把
+[basic auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic)
+凭据附在代理地址上。
 
 ```sh copy
 lightpanda serve --http-proxy 'http://me:my-password@127.0.0.1:3000'
 ```
 
-### Authenticate with a bearer token
+### 使用 bearer token 认证
 
-`--proxy-bearer-token` authenticates with [bearer auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer). It adds a `Proxy-Authorization` header to all outgoing requests.
+`--proxy-bearer-token` 使用
+[bearer auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
+认证。它会为所有出站请求添加 `Proxy-Authorization` 请求头。
 
 ```sh copy
 lightpanda serve --http-proxy 'http://127.0.0.1:3000' --proxy-bearer-token 'MY-TOKEN'
 ```
 
-### Authenticate from your script
+### 在脚本中认证
 
-You can also pass the proxy credentials from your Puppeteer or Playwright script instead of the command line.
+你也可以不通过命令行，而是在 Puppeteer 或 Playwright 脚本中传入
+代理凭据。
 
-Selenium can't do this, because Lightpanda does not support proxy authentication over WebDriver BiDi. Put the credentials in the `--http-proxy` URL instead.
+Selenium 做不到这一点，因为 Lightpanda 不支持通过 WebDriver BiDi
+进行代理认证。请改为把凭据放进 `--http-proxy` 的 URL 中。
 
 <Tabs items={['Puppeteer', 'Playwright']}>
   <Tabs.Tab>
-With Puppeteer, you have to configure the proxy address when starting
-Lightpanda.
+使用 Puppeteer 时，必须在启动 Lightpanda 时配置代理地址。
 
 ```sh copy
 lightpanda serve --http-proxy 'http://127.0.0.1:3000'
 ```
 
-Then you can call `page.authenticate` function to inject your authentication
-from your script.
+然后即可调用 `page.authenticate` 函数，从脚本中注入认证信息。
 
 ```javascript copy
 const page = await context.newPage();
@@ -64,11 +71,11 @@ await page.authenticate({
 });
 ```
 
-You can find the full example in our
-[demo repository](https://github.com/lightpanda-io/demo/blob/main/puppeteer/proxy_auth.js).
+完整示例见我们的
+[示例仓库](https://github.com/lightpanda-io/demo/blob/main/puppeteer/proxy_auth.js)。
   </Tabs.Tab>
   <Tabs.Tab>
-With Playwright, configure the proxy when creating the browser's context.
+使用 Playwright 时，在创建浏览器的 context 时配置代理。
 
 ```javascript copy
 const context = await browser.newContext({
@@ -82,37 +89,45 @@ const context = await browser.newContext({
 
 const page = await context.newPage();
 ```
-You can find the full example in our
-[demo repository](https://github.com/lightpanda-io/demo/blob/main/playwright/proxy_auth.js).
+完整示例见我们的
+[示例仓库](https://github.com/lightpanda-io/demo/blob/main/playwright/proxy_auth.js)。
   </Tabs.Tab>
 </Tabs>
   </Tabs.Tab>
   <Tabs.Tab>
-## Use a proxy on Lightpanda Cloud
+## 在 Lightpanda Cloud 上使用代理
 
-Add the `proxy` query parameter to the [connection URL](/run-on-lightpanda-cloud/getting-started#connect-your-cdp-client-to-lightpanda-cloud) to route the session through a proxy. You have two options: use a shared proxy, or add your own.
+在[连接 URL](/run-on-lightpanda-cloud/getting-started#将-cdp-客户端连接到-lightpanda-cloud) 中加上
+`proxy` 查询参数，即可让会话经由代理。你有两个选择：使用共享代理，
+或添加自己的代理。
 
-### Use a shared proxy
+### 使用共享代理
 
-Every account can use two shared proxies.
+每个账号都可以使用两种共享代理。
 
-- `fast_dc`: the default. A single shared datacenter IP, optimized for speed. Each region has its own, so the IP depends on the endpoint you connect to.
-- `datacenter`: a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
+- `fast_dc`：默认选项。单一共享数据中心 IP，为速度优化。每个区域
+  各有一个，因此 IP 取决于你连接的端点。
+- `datacenter`：自动轮换的共享数据中心 IP 池。接受可选的
+  `country` 参数（两位国家代码）以定向到特定国家。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
-Omit `proxy` and the session uses `fast_dc`. [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+省略 `proxy` 时，会话默认使用 `fast_dc`。如需更多代理选项，请
+[联系我们](mailto:hello@lightpanda.io)。
 
-### Use your own proxy
+### 使用你自己的代理
 
-Add your proxy on the [proxies page](https://console.lightpanda.io/proxies) in the console, then pass its identifier as the `proxy` parameter. The console generates the identifier and shows it on the proxy's card. It is not the name you gave the proxy.
+在控制台的[代理页面](https://console.lightpanda.io/proxies)添加你的代理，然后将其标识符作为
+`proxy` 参数传入。标识符由控制台生成，显示在该代理的卡片上，
+并不是你给代理起的名字。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=xK4mP2qR&token=TOKEN
 ```
 
-The kind you set on the proxy, datacenter or residential, is a label. It does not change how the session connects.
+你在代理上设置的类型（datacenter 或 residential）只是一个标签，
+不会改变会话的连接方式。
   </Tabs.Tab>
 </Tabs>

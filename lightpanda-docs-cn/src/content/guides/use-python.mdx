@@ -1,20 +1,25 @@
 ---
-title: Use the Python SDK
-description: Learn how to scrape a JavaScript-rendered webpage and extract structured data with the Lightpanda Python package.
+title: 使用 Python SDK
+description: 了解如何使用 Lightpanda Python 包抓取 JavaScript 渲染的网页，并提取结构化数据。
 ---
 import { Callout, Tabs } from 'nextra/components'
 
-# Use the Lightpanda Python SDK
+# 使用 Lightpanda Python SDK
 
-In this guide, you'll scrape a JavaScript-rendered page with the [`lightpanda` Python package](https://pypi.org/project/lightpanda/) and extract structured data from it with `page.extract`.
+在本指南中，你将使用
+[`lightpanda` Python 包](https://pypi.org/project/lightpanda/)抓取一个由
+JavaScript 渲染的页面，并用 `page.extract` 从中提取结构化数据。
 
-The package bundles the Lightpanda browser binary, so there's no client to wire up and no separate browser download, unlike driving Lightpanda from [Playwright](/usage/cdp/playwright) or [Selenium](/usage/bidi/selenium). It also uses [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
+该包内置 Lightpanda 浏览器二进制文件，无需对接额外客户端，也无需单独
+下载浏览器，这一点与通过 [Playwright](/usage/cdp/playwright) 或
+[Selenium](/usage/bidi/selenium) 驱动 Lightpanda 不同。完成同样的抓取
+任务，它的内存占用也比 [Selenium + Chrome 组合低一个数量级](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py)。
 
-## Prerequisites
+## 前置条件
 
-You'll need Python 3.10 or newer.
+你需要 Python 3.10 或更新版本。
 
-Install the [`lightpanda` package](https://pypi.org/project/lightpanda/) from PyPI.
+从 PyPI 安装 [`lightpanda` 包](https://pypi.org/project/lightpanda/)。
 
 <Tabs items={['pip', 'uv']} className="-mb-4">
   <Tabs.Tab id="pip" className="m-0">
@@ -29,9 +34,9 @@ uv add lightpanda
   </Tabs.Tab>
 </Tabs>
 
-## Create scrape.py
+## 创建 scrape.py
 
-Create a `scrape.py` file. Import `Browser` and open a session:
+创建 `scrape.py` 文件，导入 `Browser` 并打开一个会话：
 
 ```python copy
 from lightpanda import Browser
@@ -40,11 +45,15 @@ with Browser() as browser, browser.new_session() as page:
     pass
 ```
 
-`Browser()` starts the bundled Lightpanda binary and stops it when the `with` block exits.
+`Browser()` 会启动内置的 Lightpanda 二进制文件，并在 `with` 块退出时
+将其停止。
 
-## Navigate and extract
+## 导航并提取
 
-Use `page.goto` to load [quotes.toscrape.com/js](https://quotes.toscrape.com/js/), a page whose quotes are rendered by client-side JavaScript. Then call `page.extract` with a schema describing the fields to pull from each `.quote` element:
+使用 `page.goto` 加载
+[quotes.toscrape.com/js](https://quotes.toscrape.com/js/)——一个由客户端
+JavaScript 渲染名言的页面。然后用一个 schema 描述要从每个 `.quote`
+元素中提取的字段，并调用 `page.extract`：
 
 ```python copy
 SCHEMA = {
@@ -61,11 +70,13 @@ data = page.extract(schema=SCHEMA)
 print(data["quotes"])
 ```
 
-`extract` returns each `.quote` element as a record, with `tags` resolved to a list of every `.tag` inside it. A plain `requests.get` on this page returns zero quotes because the DOM is only built after the page's JavaScript runs.
+`extract` 会把每个 `.quote` 元素作为一条记录返回，其中 `tags` 解析为
+该元素内所有 `.tag` 的列表。对这个页面直接用 `requests.get` 会得到零条
+名言，因为 DOM 只有在页面 JavaScript 执行之后才会构建。
 
-## Full script
+## 完整脚本
 
-Follow the site's own "Next" link to collect every page instead of just the first:
+顺着站点自己的"Next"链接收集所有页面，而不只是第一页：
 
 ```python copy
 from collections import Counter
@@ -96,7 +107,7 @@ with Browser() as browser, browser.new_session() as page:
     print("Top tags:", tags.most_common(5))
 ```
 
-## Run it
+## 运行
 
 <Tabs items={['pip', 'uv']} className="-mb-4">
   <Tabs.Tab id="pip" className="m-0">
@@ -117,11 +128,17 @@ $ python scrape.py
 Top tags: [('love', 14), ('inspirational', 13), ('life', 13), ('humor', 12), ('books', 11)]
 ```
 
-## Scrape concurrently with asyncio
+## 使用 asyncio 并发抓取
 
-Use `AsyncBrowser` instead of `Browser` when you want to scrape many pages at once instead of one after another, or when your code already runs inside an async application (a web server built with FastAPI, for example) where a blocking call would freeze everything else it's doing. Every method becomes awaitable; `AsyncBrowser` itself runs each call on the browser's own thread pool, so it never blocks your event loop.
+当你想一次抓取多个页面而不是逐个抓取，或者你的代码本身运行在异步
+应用中（例如用 FastAPI 搭建的 Web 服务器），一次阻塞调用会卡住其中
+其他事务时，请用 `AsyncBrowser` 代替 `Browser`。此时每个方法都变为
+可 await；`AsyncBrowser` 会把每次调用放到浏览器自己的线程池上执行，
+因此绝不会阻塞你的事件循环。
 
-Since the site's ten pages are numbered, fetch all of them at once with `asyncio.gather` instead of following the pagination link one page at a time. `browser.session()` opens a session scoped to one task and closes it when that task ends:
+该站的十个页面按编号排列，因此可以用 `asyncio.gather` 一次性获取
+全部，而不必顺着分页链接逐页抓取。`browser.session()` 会打开一个
+限定在单个任务范围内的会话，并在该任务结束时关闭它：
 
 ```python copy
 import asyncio
@@ -161,14 +178,19 @@ asyncio.run(main())
 ```
 
 <Callout type="info" emoji="ℹ️">
-  Every browser action is a `Session` method, typed and documented in your IDE, with the action and its arguments in snake_case (`wait_for_selector`, `backend_node_id`).
+  每个浏览器操作都是 `Session` 的一个方法，在 IDE 中带类型标注与
+  文档，操作名与参数均为 snake_case（`wait_for_selector`、
+  `backend_node_id`）。
 </Callout>
 
-Find every method's signature and docstring in the [Python SDK reference](/reference/python).
+所有方法的签名与 docstring 见 [Python SDK 参考](/reference/python)。
 
-## Replay a saved script
+## 重放已保存的脚本
 
-If you already have a PandaScript, a `.js` file recorded by [Lightpanda Agent](/guides/lightpanda-agent-tutorial) or the MCP `save` tool, replay it from Python with `run_script`, no LLM call needed:
+如果你已有 PandaScript——由
+[Lightpanda Agent](/guides/lightpanda-agent-tutorial) 或 MCP `save`
+工具录制的 `.js` 文件——可以用 `run_script` 从 Python 中重放它，无需
+调用 LLM：
 
 ```python copy
 from lightpanda import run_script
@@ -177,37 +199,39 @@ output = run_script("scrape.js")
 print(output)
 ```
 
-`run_script` shells out to `lightpanda run <script>` and returns its stdout; a non-zero exit raises `ScriptError`. `run_script_async` is the awaitable variant.
+`run_script` 会在底层执行 `lightpanda run <script>` 并返回其 stdout；
+非零退出码会抛出 `ScriptError`。`run_script_async` 是可 await 的变体。
 
-## Respect robots.txt
+## 遵守 robots.txt
 
-The browser can enforce `robots.txt` for you (off by default). To enable it, pass browser flags through `args=` on any entry point:
+浏览器可以替你执行 `robots.txt`（默认关闭）。要启用它，请在任意入口
+通过 `args=` 传入浏览器 flag：
 
-With `Browser` (or `AsyncBrowser`):
+使用 `Browser`（或 `AsyncBrowser`）时：
 
 ```python copy
 Browser(args=["--obey-robots"])
 ```
 
-With `run_script`:
+使用 `run_script` 时：
 
 ```python copy
 run_script("scrape.js", args=["--obey-robots"])
 ```
 
-A request the site disallows then fails rather than being sent: a `Session`
-call raises `ToolError`, and `run_script` raises `ScriptError`.
+被站点禁止的请求将直接失败而不被发送：`Session` 调用会抛出
+`ToolError`，`run_script` 会抛出 `ScriptError`。
 
-The same flag works on [`CDPServer`](/reference/python#cdpserver) and
-[`WebDriverServer`](/reference/python#webdriverserver), where a blocked request surfaces
-as a navigation error in Playwright or Selenium rather than as a Python
-exception.
+同样的 flag 也适用于
+[`CDPServer`](/reference/python#cdpserver) 和
+[`WebDriverServer`](/reference/python#webdriverserver)，在这两者上，
+被拦截的请求会以 Playwright 或 Selenium 的导航错误形式出现，而不是
+Python 异常。
 
 <Callout type="warning" emoji="⚠️">
-  The rule applies to **every** request, not just the page you asked for.
-  Plenty of sites disallow the directory their own assets live in, so a page
-  you are allowed to fetch can load with its scripts and styles blocked, and
-  render blank or empty. That is `robots.txt` being honoured, not a failure.
-  If a page comes back strangely empty under `--obey-robots`, read the site's
-  `robots.txt` before assuming something is broken.
+  该规则适用于**每一个**请求，而不只是你请求的那个页面。不少站点
+  禁用了自家资源所在的目录，因此一个允许抓取的页面，其脚本和样式
+  可能被拦截，最终渲染成空白。这是 `robots.txt` 得到遵守的表现，
+  不是故障。在 `--obey-robots` 下如果某个页面返回异常空白，请先读
+  一读该站的 `robots.txt`，再下结论说哪里坏了。
 </Callout>

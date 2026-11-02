@@ -1,88 +1,102 @@
 ---
 title: MCP
-description: Use Lightpanda via the Model Context Protocol, locally or on the cloud.
+description: 通过 Model Context Protocol 在本地或云端使用 Lightpanda。
 ---
 import { Callout, Tabs } from 'nextra/components'
 
 # MCP
 
-Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to control the browser from AI applications.
+通过 [Model Context Protocol](https://modelcontextprotocol.io)（MCP）使用
+Lightpanda，从 AI 应用中控制浏览器。
 
-## Connect the MCP server
+## 连接 MCP 服务器
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
-Run Lightpanda as an MCP server on your own machine. Your AI application reaches it in one of two ways, and both expose the same tools.
+在你的机器上把 Lightpanda 作为 MCP 服务器运行。AI 应用可以通过两种
+方式访问它，两者暴露相同的工具。
 
-### stdio (default)
+### stdio（默认）
 
-The server reads JSON-RPC from stdin and writes replies to stdout, one message per line. This is what MCP hosts use: they spawn the binary and write to those streams directly.
+服务器从 stdin 读取 JSON-RPC，把应答写入 stdout，每行一条消息。这是
+MCP 宿主使用的方式：它们启动二进制文件并直接写入这些流。
 
 ```sh copy
 lightpanda mcp
 ```
 
-Nothing is printed on start: the server waits for input. Type one message per line and each reply prints back. The page stays loaded between calls, so the second one needs no `url`:
+启动时不打印任何内容：服务器在等待输入。每行输入一条消息，每条应答会
+打印回来。页面在多次调用之间保持加载状态，因此第二次调用无需 `url`：
 
 ```json copy
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"goto","arguments":{"url":"https://example.com"}}}
 {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"markdown","arguments":{}}}
 ```
 
-### HTTP transport
+### HTTP 传输
 
-Pass `--port` to serve MCP over HTTP instead of stdio, with an independent browsing session per client. Add `--host 0.0.0.0` to accept connections from outside the machine:
+传入 `--port` 即可通过 HTTP 而非 stdio 提供 MCP，每个客户端拥有独立的
+浏览会话。加上 `--host 0.0.0.0` 可接受来自机器外部的连接：
 
 ```sh copy
 lightpanda mcp --port 8000
 ```
 
-Clients send JSON-RPC to `/mcp` in a POST request:
+客户端通过 POST 请求向 `/mcp` 发送 JSON-RPC：
 
 ```sh copy
-# Initialize
+# 初始化
 curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize",
         "params":{"protocolVersion":"2024-11-05","capabilities":{},
                   "clientInfo":{"name":"curl-test","version":"1.0"}}}'
 
-# Extract markdown
+# 提取 markdown
 curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
         "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}'
 ```
 
-Calls with no `Mcp-Session-Id` header use the always-present `default` session, which is what the two calls above do. An `initialize` call creates a new session and returns its id in that header; send that id back on later calls to stay in it. Find the session model and the `session_new`, `session_list` and `session_close` tools in the [MCP tools reference](/reference/mcp-tools#session).
+不带 `Mcp-Session-Id` 请求头的调用会使用始终存在的 `default` 会话，上面
+的两个调用正是如此。一次 `initialize` 调用会创建新会话并在该请求头中
+返回其 id；后续调用带上该 id 即可留在同一会话中。会话模型与
+`session_new`、`session_list`、`session_close` 工具见
+[MCP 工具参考](/reference/mcp-tools#session)。
 
-Find all options in the [mcp command reference](/reference/cli/mcp).
+全部选项见 [mcp 命令参考](/reference/cli/mcp)。
 
-### Debugging
+### 调试
 
-Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
+Lightpanda 默认 `--log-level warn`。设为 `info` 会显示 HTTP 请求、导航
+事件、资源加载和 robots.txt 抓取。所有日志都走 **stderr**，绝不会干扰
+stdout。
 
 ```sh copy
 lightpanda mcp --log-level info --log-format pretty
 
-# Or pipe logs to a file
+# 或把日志重定向到文件
 lightpanda mcp --log-level info 2>lightpanda.log
 ```
 
-Use `--log-level debug` for the most verbose output. Keep `warn` in production.
+需要最详细的输出时用 `--log-level debug`。生产环境请保持 `warn`。
 
   </Tabs.Tab>
   <Tabs.Tab>
 <Callout type="info" emoji="ℹ️">
-This is still a work in progress version. The cloud version does not support all tools.
+该版本仍在开发中。Cloud 版本暂不支持所有工具。
 </Callout>
 
-Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+Lightpanda Cloud 通过
+[SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse)
+暴露 MCP 服务器。连接离你最近的端点：
 
-- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
-- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+- `https://euwest.cloud.lightpanda.io/mcp/sse`（欧洲西部）
+- `https://uswest.cloud.lightpanda.io/mcp/sse`（美国西部）
 
-Pass your API token either as a `token` query parameter or in an `Authorization: Bearer TOKEN` header:
+API token 既可以作为 `token` 查询参数传入，也可以放在
+`Authorization: Bearer TOKEN` 请求头中：
 
 ```text copy
 https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
@@ -90,17 +104,20 @@ https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
   </Tabs.Tab>
 </Tabs>
 
-## Connect an AI agent
+## 接入 AI Agent
 
-See the [MCP quickstart](/quickstarts/mcp) for connecting Claude Desktop, Cursor, or Windsurf, locally or through Lightpanda Cloud. For robots.txt compliance, add `--obey-robots` to the `args` array in your host's MCP server config.
+连接 Claude Desktop、Cursor 或 Windsurf（本地或经 Lightpanda Cloud）
+请参见 [MCP 快速上手](/quickstarts/mcp)。若要遵守 robots.txt，请在
+宿主的 MCP 服务器配置的 `args` 数组中加上 `--obey-robots`。
 
-## Tools and resources
+## 工具与资源
 
-The server exposes tools to navigate, read, extract data from and interact with web pages, plus two read-only page resources. Find the complete list in the [MCP tools reference](/reference/mcp-tools).
+服务器暴露的工具可用于导航、读取、提取网页数据以及与网页交互，另有
+两个只读页面资源。完整列表见 [MCP 工具参考](/reference/mcp-tools)。
 
 ### `markdown`
 
-Extract the current page's content as clean, token-efficient markdown.
+把当前页面的内容提取为干净、省 token 的 markdown。
 
 ```json copy
 {"jsonrpc":"2.0","id":2,"method":"tools/call",
@@ -108,7 +125,7 @@ Extract the current page's content as clean, token-efficient markdown.
 ```
 
 <details>
-<summary>Response example</summary>
+<summary>响应示例</summary>
 
 ```json
 {"result":{"content":[{"type":"text","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}],"isError":false}}
@@ -116,11 +133,12 @@ Extract the current page's content as clean, token-efficient markdown.
 
 </details>
 
-> Using `markdown` with an inline `url` is the most efficient single-call pattern: it navigates and extracts in one request.
+> 让 `markdown` 携带内联 `url` 是效率最高的单次调用模式：一次请求即可
+> 完成导航与提取。
 
 ### `evaluate`
 
-Execute arbitrary JavaScript in the page context and return the result as a string.
+在页面上下文中执行任意 JavaScript，并以字符串形式返回结果。
 
 ```json copy
 {"jsonrpc":"2.0","id":3,"method":"tools/call",
@@ -133,7 +151,9 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 {"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
 ```
 
-Assigning to `globalThis.lp` here, instead of a local variable, carries the value forward: `lp` lives in the Lightpanda session, not the page, so it's still there in a later `evaluate` call, even after navigating away (a plain JS variable would be gone):
+这里把值赋给 `globalThis.lp` 而不是局部变量，可以让值跨调用留存：
+`lp` 存在于 Lightpanda 会话中而非页面里，因此后续的 `evaluate` 调用
+仍能取到它，即使已经导航离开（普通 JS 变量早就没了）：
 
 ```json copy
 {"jsonrpc":"2.0","id":4,"method":"tools/call",
@@ -146,24 +166,31 @@ Assigning to `globalThis.lp` here, instead of a local variable, carries the valu
 
 ### `search`
 
-`search` queries a search API and returns the results as a numbered markdown list of `{title, url, snippet}`. It doesn't load a page, so open a result with `goto`.
+`search` 查询一个搜索 API，并把结果以编号 markdown 列表的形式返回，
+每项为 `{title, url, snippet}`。它不加载页面，因此要用 `goto` 打开
+某个结果。
 
 ```json copy
 {"jsonrpc":"2.0","id":6,"method":"tools/call",
  "params":{"name":"search","arguments":{"query":"lightpanda browser"}}}
 ```
 
-> An API key is optional. Without one, search uses Keenable's keyless public endpoint (rate-limited per client IP). Set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY` in the server's environment to route through that provider.
+> API key 是可选的。不设置时，search 会使用 Keenable 的免密公开端点
+> （按客户端 IP 限流）。在服务器的环境中设置 `BRAVE_API_KEY`、
+> `TAVILY_API_KEY`、`EXA_API_KEY` 或 `KEENABLE_API_KEY` 即可改走对应
+> 服务商。
 
-### Resources
+### 资源
 
-Three read-only resources are available via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't, so an MCP host can fetch it up front to teach its own LLM how to write PandaScript before ever touching the browser.
+有三个只读资源可通过 `resources/read` 获取。两个页面资源需要已加载的
+页面；`mcp://skill/pandascript` 不需要，因此 MCP 宿主可以提前获取它，
+在真正触碰浏览器之前先教会自己的 LLM 如何编写 PandaScript。
 
-| URI | MIME type | Description |
+| URI | MIME 类型 | 说明 |
 |-|-|-|
-| `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
-| `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page (identical output to the `markdown` tool) |
-| `mcp://skill/pandascript` | `text/markdown` | The PandaScript skill documentation |
+| `mcp://page/html` | `text/html` | 当前页面序列化后的 HTML DOM |
+| `mcp://page/markdown` | `text/markdown` | 当前页面省 token 的 markdown 表示（与 `markdown` 工具输出一致） |
+| `mcp://skill/pandascript` | `text/markdown` | PandaScript Skill 文档 |
 
 ```json copy
 {"jsonrpc":"2.0","id":4,"method":"resources/read",
@@ -176,7 +203,7 @@ Three read-only resources are available via `resources/read`. The two page resou
 ```
 
 <details>
-<summary>Response example</summary>
+<summary>响应示例</summary>
 
 ```json
 {"result":{"contents":[{"uri":"mcp://page/markdown","mimeType":"text/markdown","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}]}}
@@ -184,24 +211,33 @@ Three read-only resources are available via `resources/read`. The two page resou
 
 </details>
 
-> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
+> `markdown` 工具与 `mcp://page/markdown` 资源返回相同内容。区别在于
+> 由谁发起：**工具**由 Agent 在其工作流中调用；**资源**由宿主应用
+> 读取（例如在后台展示页面状态的 IDE）。
 
-## Example prompts
+## 提示示例
 
-Once connected to an AI agent, you prompt the agent in natural language and it decides which tool to call. For example:
+接入 AI Agent 后，你用自然语言向 Agent 下达提示，由它决定调用哪个
+工具。例如：
 
-- "Go to example.com and summarize the page" reaches for `goto`, then `markdown`.
-- "What links are on this page?" reaches for `links`.
-- "Fill in the search box with 'lightpanda' and submit" reaches for `fill`, then `press`.
+- "去 example.com 并总结这个页面"会用到 `goto`，然后是 `markdown`。
+- "这个页面上有哪些链接？"会用到 `links`。
+- "在搜索框里填入 'lightpanda' 并提交"会用到 `fill`，然后是 `press`。
 
-Which tool the agent picks depends on the model and its own reasoning, not a fixed mapping: the pairings above are illustrative, not guaranteed.
+Agent 选用哪个工具取决于模型及其自身推理，而非固定映射：上面的配对
+只是示意，并非保证。
 
-## Known behaviors
+## 已知行为
 
-### `goto` doesn't fail on an HTTP error page or a timeout
+### `goto` 在 HTTP 错误页或超时时不会失败
 
-A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
+真正的导航失败（DNS 解析失败、连接被拒等）会让 `goto` 直接返回错误：
+`"navigation failed: CouldntResolveHost"`（`isError: true`）。但有两种
+情况仍会报告成功：
 
-- **A timeout** doesn't fail: `"Navigation started (HTTP 200 OK) but the page did not finish loading before the timeout."`
-- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level, but the result carries the status: `"Navigated successfully. HTTP 404 Not Found."` in the text, and `httpStatus` in `structuredContent`. Check it before reading the page as content.
-
+- **超时**不算失败：
+  `"Navigation started (HTTP 200 OK) but the page did not finish loading before the timeout."`
+- **HTTP 错误页**（404、500 等）在网络层面仍算导航成功，但结果会带上
+  状态：文本中为 `"Navigated successfully. HTTP 404 Not Found."`，
+  `structuredContent` 中有 `httpStatus`。把页面当内容读取之前请先
+  检查它。

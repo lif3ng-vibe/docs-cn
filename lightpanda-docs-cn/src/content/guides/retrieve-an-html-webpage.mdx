@@ -1,20 +1,23 @@
 ---
-title: Retrieve an HTML webpage
-description: Learn how to navigate to a webpage and extract data using Puppeteer or Playwright with Lightpanda.
+title: 获取 HTML 网页
+description: 了解如何使用 Puppeteer 或 Playwright 配合 Lightpanda 导航到网页并提取数据。
 ---
 import { Callout, Tabs } from 'nextra/components'
 
-# Retrieve an HTML webpage
+# 获取 HTML 网页
 
-In this guide, you'll connect a CDP client to Lightpanda and extract all reference links from a [Wikipedia page](https://en.wikipedia.org/wiki/Web_browser).
+在本指南中，你将把一个 Chrome DevTools 协议（CDP）客户端连接到
+Lightpanda，并从 [Wikipedia 页面](https://en.wikipedia.org/wiki/Web_browser)中提取所有参考文献链接。
 
-Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda executes JavaScript and runs query selectors directly in the browser — making it suitable for dynamic pages.
+与只能获取原始 HTML 的 [curl](https://curl.se/) 不同，Lightpanda 能在
+浏览器内直接执行 JavaScript 并运行 query selector，因此适合处理动态页面。
 
-## Prerequisites
+## 前置条件
 
-You'll need [Node.js](https://nodejs.org/en/download) installed on your computer. 
+你需要在电脑上安装 [Node.js](https://nodejs.org/en/download)。
 
-Create a `hn-scraper` directory and initialize a new Node.js project. You can accept all the default values in the npm init prompts. 
+创建一个 `hn-scraper` 目录并初始化一个新的 Node.js 项目。`npm init`
+的提示一路接受默认值即可。
 
 ```sh copy
 mkdir hn-scraper && \
@@ -22,10 +25,13 @@ mkdir hn-scraper && \
   npm init
 ```
 
-Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm packages.
+安装 `lightpanda` 包，以及
+[`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *或*
+[`playwright-core`](https://www.npmjs.com/package/playwright-core) npm 包。
 
 <Callout type="info" emoji="">
-  Unlike `puppeteer` and `playwright`, `puppeteer-core` and `playwright-core` don't download a Chromium browser.
+  与 `puppeteer` 和 `playwright` 不同，`puppeteer-core` 和
+  `playwright-core` 不会下载 Chromium 浏览器。
 </Callout>
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
@@ -41,11 +47,12 @@ npm install --save playwright-core @lightpanda/browser
   </Tabs.Tab>
 </Tabs>
 
-This guide uses a local Lightpanda instance — see [installation](/run-locally/installation/one-liner) for setup details. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
+本指南使用本地 Lightpanda 实例——安装细节见[安装文档](/run-locally/installation/one-liner)。代码稍作调整即可连接
+[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started)。
 
-## Create index.js
+## 创建 index.js
 
-Create an `index.js` file. Import the packages, configure the connection, and set up the browser lifecycle:
+创建 `index.js` 文件，导入相关包、配置连接并设置浏览器生命周期：
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
@@ -124,9 +131,10 @@ const playwrightopts = {
   </Tabs.Tab>
 </Tabs>
 
-## Navigate and extract
+## 导航并提取
 
-Use `page.goto` to navigate to the Wikipedia page, then run a query selector to extract all external reference links:
+使用 `page.goto` 导航到 Wikipedia 页面，然后运行 query selector
+提取所有外部参考文献链接：
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
@@ -161,7 +169,7 @@ Use `page.goto` to navigate to the Wikipedia page, then run a query selector to 
   </Tabs.Tab>
 </Tabs>
 
-## Full script
+## 完整脚本
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
@@ -264,7 +272,7 @@ const playwrightopts = {
   </Tabs.Tab>
 </Tabs>
 
-## Run it
+## 运行
 
 ```sh copy
 node index.js

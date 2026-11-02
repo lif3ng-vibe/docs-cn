@@ -1,15 +1,15 @@
 ---
 title: Agent
-description: Starts an interactive AI agent that can browse the web
+description: 启动一个能浏览网页的交互式 AI Agent
 ---
 
 import AgentCommands from '../../../generated/agent-commands.mdx'
 
 # Agent
 
-Start Lightpanda as an interactive AI agent that can browse the web. See [how to run the agent](/run-locally/commands#agent) for practical documentation.
+将 Lightpanda 作为一个能浏览网页的交互式 AI Agent 启动。实战用法见[如何运行 Agent](/run-locally/commands#agent)。
 
-## Options
+## 选项
 
 ```console
 usage: lightpanda agent [SCRIPT] [OPTIONS] [COMMON_OPTIONS]
@@ -122,11 +122,11 @@ Options:
                         benchmarks harness).
 ```
 
-The provider, model, effort, and verbosity you choose in the REPL are remembered per-directory in `.lp-agent.zon` and reused on the next run.
+你在 REPL 中选择的 provider、model、effort 与 verbosity 会按目录记忆在 `.lp-agent.zon` 中，下次运行时复用。
 
-API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, `MISTRAL_API_KEY`, or `OPENROUTER_API_KEY`. Any other OpenAI-compatible server is used through `OPENAI_BASE_URL` + `OPENAI_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key.
+API key 从环境中读取：`ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GOOGLE_API_KEY`/`GEMINI_API_KEY`、`HF_TOKEN`、`AI_GATEWAY_API_KEY`、`MISTRAL_API_KEY` 或 `OPENROUTER_API_KEY`。其他 OpenAI 兼容服务器通过 `OPENAI_BASE_URL` + `OPENAI_API_KEY` 使用。本地服务器（Ollama、llama.cpp）不需要 API key。
 
-## Examples
+## 示例
 
 ```sh
 lightpanda agent                                (auto-detects API key from env)
@@ -138,12 +138,12 @@ lightpanda agent --no-llm                       (basic slash-command-only REPL)
 lightpanda agent --task "..." --save out.js     (synthesize a replayable script)
 ```
 
-The command also accepts the [common options](/reference/cli/common-options).
+该命令也接受[通用选项](/reference/cli/common-options)。
 
-## REPL commands
+## REPL 命令
 
-Inside the REPL, slash commands work alongside natural-language input.
+在 REPL 内，斜杠命令与自然语言输入可同时使用。
 
 <AgentCommands />
 
-**Search engine.** An API key is optional. By default (`auto` mode) search uses Keenable's keyless public endpoint, rate-limited per client IP. To route through a specific provider, set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY`; `auto` tries Brave, Tavily, Exa, then Keenable in that order, using whichever keys are set.
+**搜索引擎**。API key 是可选的。默认（`auto` 模式）下搜索使用 Keenable 的免 key 公共端点（按客户端 IP 限流）。要走特定供应商，请设置 `BRAVE_API_KEY`、`TAVILY_API_KEY`、`EXA_API_KEY` 或 `KEENABLE_API_KEY`；`auto` 会按 Brave、Tavily、Exa、Keenable 的顺序尝试，使用其中已设置 key 的那一个。

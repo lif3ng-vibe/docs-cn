@@ -1,50 +1,50 @@
 ---
-title: PandaScript Reference
-description: Primitives, calling conventions, extraction schema and errors of the PandaScript runtime.
+title: PandaScript
+description: PandaScript 运行时的原语、调用约定、提取 schema 与错误。
 ---
 
-# PandaScript Reference
+# PandaScript 参考
 
-A PandaScript is a plain JavaScript automation script that Lightpanda runs directly, with no LLM call. Learn the execution model and see complete examples in the [PandaScript usage page](/usage/pandascript).
+PandaScript 是一种普通的 JavaScript 自动化脚本，由 Lightpanda 直接运行，不调用 LLM。执行模型与完整示例见 [PandaScript 用法页](/usage/pandascript)。
 
 ```sh copy
 lightpanda run <my_script>.js
 ```
 
-The script context installs two globals, `Page` and [`console`](#console), and nothing else from the browser toolset. A script creates a page with `new Page()`, then calls every primitive below as a method on that page. Every `timeout` is in milliseconds.
+脚本上下文只安装 `Page` 和 [`console`](#console) 这两个全局对象，浏览器工具集的其余内容一概不可用。脚本用 `new Page()` 创建页面，然后把下面的每个原语（primitive）作为该页面的方法来调用。所有 `timeout` 均以毫秒为单位。
 
-## Navigation
+## 导航
 
-| Primitive | Arguments | Returns | Comment |
+| 原语 | 参数 | 返回值 | 说明 |
 |-----------|-----------|---------|---------|
-| `page.goto` | `goto(url[, { timeout = 10000, waitUntil = "load" }])` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#waiting): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
-| `page.close` | `close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
+| `page.goto` | `goto(url[, { timeout = 10000, waitUntil = "load" }])` | 被调用时的同一个 page 对象 | 在达到 `waitUntil` 状态时兑现。`waitUntil` 接受与 [`waitForState`](#等待) 相同的状态：`load`（默认值，快速快照，会跳过由加载后 JavaScript 渲染的内容）、`domcontentloaded`、`networkalmostidle`、`networkidle` 或 `done`。 |
+| `page.close` | `close()` | 无 | 使句柄失效，之后对它的调用都会失败。页面本身会在下一次 `goto` 或脚本结束时被回收。 |
 
-## Reading the page
+## 读取页面
 
-`evaluate` runs a JavaScript string inside the page, where `window` and `document` exist, and `extract` resolves its schema selectors there too. That code runs in the page, so it cannot see the variables of your agent script. `screenshot` doesn't run any page JavaScript; it renders the same computed layout `extract` and markdown read as a PNG instead of text.
+`evaluate` 在页面内部运行一段 JavaScript 字符串，那里存在 `window` 和 `document`，`extract` 也在那里解析 schema 选择器。这段代码运行在页面里，因此看不到你的 agent 脚本中的变量。`screenshot` 不运行任何页面 JavaScript；它把与 `extract` 和 Markdown 读取相同的计算后布局渲染成 PNG，而不是文本。
 
-| Primitive | Arguments | Returns | Comment |
+| 原语 | 参数 | 返回值 | 说明 |
 |-----------|-----------|---------|---------|
-| `page.extract` | `extract(schema)` or `extract({ schema })` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
-| `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
-| `page.screenshot` | `screenshot({ path, selector?, fullPage?, strip?, url?, timeout? })`, never positional | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `pass \`path\`: this client cannot display an inline image`. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). `strip` is an object of element groups to omit: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
+| `page.extract` | `extract(schema)` 或 `extract({ schema })` | 由 schema 决定形状的对象或数组 | schema 形式[见下文](#提取-schema)。 |
+| `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | 页面值转成的字符串，若为对象或数组则 JSON 编码 | `url` 会在运行脚本前先导航，`timeout` 限制的是那次导航而非脚本本身。 |
+| `page.screenshot` | `screenshot({ path, selector?, fullPage?, strip?, url?, timeout? })`，不支持位置参数 | `Saved <width>x<height> PNG to <path>` | 脚本中 `path` 为必填：脚本无法内联显示图片，因此省略它会抛出 `pass \`path\`: this client cannot display an inline image`。把页面或某个限定范围的节点渲染为 PNG：是 Lightpanda 计算出的文本布局，而非像素级精确渲染（不含图片、字体或 CSS 颜色）。`strip` 是一个指定要省略元素组的对象：`js`、`css`、`ui`、`invisible`、`shell`、`clutter`。 |
 
-### Extraction schema
+### 提取 schema
 
-`page.extract(...)` takes a schema object mapping output field names to CSS-selector specs. The schema forms are:
+`page.extract(...)` 接受一个 schema 对象，把输出字段名映射到 CSS 选择器规则。schema 的形式有：
 
-| Schema value | Meaning | Comment |
+| schema 值 | 含义 | 说明 |
 |--------------|---------|---------|
-| `"<selector>"` | Text of the first matching element, or `null` | |
-| `""` | Text of the element currently matched | Only inside a `fields` block |
-| `["<selector>"]` | Text of all matching elements | Only the first element is read, so `["a", "b"]` extracts `"a"` and silently drops `"b"` |
-| `{ selector: "<selector>", attr: "<name>" }` | Attribute from the first match | `href` and `src` resolve to absolute URLs |
-| `[{ selector: "<selector>", attr: "<name>" }]` | Attribute from all matches | |
-| `[{ selector: "<selector>", fields: { ... } }]` | Array of records, with fields resolved relative to each matched element | Fields accept any shape above, so arrays nest for per-item sub-lists |
-| `[{ selector: "<selector>", limit: N }]` | At most `N` matches | Object-array form only, the `["<selector>"]` shorthand has no equivalent |
+| `"<selector>"` | 首个匹配元素的文本，或 `null` | |
+| `""` | 当前匹配元素的文本 | 仅在 `fields` 块内 |
+| `["<selector>"]` | 所有匹配元素的文本 | 实际只读取第一个元素，因此 `["a", "b"]` 会提取 `"a"` 并静默丢弃 `"b"` |
+| `{ selector: "<selector>", attr: "<name>" }` | 首个匹配元素的属性 | `href` 和 `src` 会解析为绝对 URL |
+| `[{ selector: "<selector>", attr: "<name>" }]` | 所有匹配元素的属性 | |
+| `[{ selector: "<selector>", fields: { ... } }]` | 记录数组，字段相对于每个匹配元素解析 | 字段可用上表任意形式，因此数组可嵌套，为每项再取子列表 |
+| `[{ selector: "<selector>", limit: N }]` | 最多 `N` 个匹配 | 仅对象数组形式支持，`["<selector>"]` 简写没有等价写法 |
 
-**Passing the schema.** These three calls are equivalent:
+**传递 schema**。以下三种调用等价：
 
 ```js copy
 page.extract({ title: "h1" });
@@ -52,93 +52,93 @@ page.extract({ schema: { title: "h1" } });
 page.extract('{ "title": "h1" }');
 ```
 
-The object form accepts only the `schema` key, so the REPL's `save` option is rejected in scripts.
+对象形式只接受 `schema` 键，因此 REPL 的 `save` 选项在脚本中会被拒绝。
 
-**What you get back.** Every extracted value is a string (trimmed text or a raw attribute) or `null`; parse numbers yourself. The result mirrors the top-level schema:
+**返回内容**。每个提取到的值都是字符串（去空白后的文本或原始属性值）或 `null`；数字需要你自己解析。结果与顶层 schema 对应：
 
-| Schema | Result |
+| schema | 结果 |
 |--------|--------|
-| An object, `{ title: "h1" }` | An object keyed by your fields, even with a single field |
-| A bare array, `[{ selector: "a" }]` | The array itself |
-| An array field matching nothing | `[]` |
-| Every field in the schema missing | Throws `no schema selector matched any element` |
+| 对象，如 `{ title: "h1" }` | 以你的字段为键的对象，即使只有一个字段 |
+| 裸数组，如 `[{ selector: "a" }]` | 数组本身 |
+| 未匹配到任何元素的数组字段 | `[]` |
+| schema 中所有字段都未匹配 | 抛出 `no schema selector matched any element` |
 
-## Interaction
+## 交互
 
-Every interaction below reports the page URL, HTTP status and title reached after the action, so a script can tell whether it triggered a navigation, and whether it landed on an error page. A `click` returns, in full:
+下面的每个交互操作都会报告操作后到达的页面 URL、HTTP 状态与标题，脚本因此能判断自己是否触发了导航、是否落在了错误页上。一次 `click` 的完整返回如下：
 
 ```
 Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200 OK, title: Dashboard
 ```
 
-| Primitive | Arguments | Returns |
+| 原语 | 参数 | 返回值 |
 |-----------|-----------|---------|
-| `page.click` | `click(selector)` or `click({ selector })` | `Clicked element (<target>)` |
-| `page.fill` | `fill(selector, value)` or `fill({ selector, value })` | `Filled element (<target>) with "<value>"` |
-| `page.hover` | `hover(selector)` or `hover({ selector })` | `Hovered element (<target>)` |
-| `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
-| `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
-| `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
-| `page.scroll` | `scroll({ selector?, x?, y? })`, never positional. `selector` scrolls that element's scroll container (its nearest scrollable ancestor if it isn't one) instead of the window; an omitted axis keeps its current offset | `Scrolled window to x: <x>, y: <y>`, `Scrolled element (<target>) to ...`, or `Scrolled scroll container (<container>) of element (<target>) to ...` |
+| `page.click` | `click(selector)` 或 `click({ selector })` | `Clicked element (<target>)` |
+| `page.fill` | `fill(selector, value)` 或 `fill({ selector, value })` | `Filled element (<target>) with "<value>"` |
+| `page.hover` | `hover(selector)` 或 `hover({ selector })` | `Hovered element (<target>)` |
+| `page.press` | `press(selector, key)` 或 `press({ key[, selector] })` | `Pressed key '<key>'` |
+| `page.selectOption` | `selectOption(selector, value)` 或 `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
+| `page.setChecked` | `setChecked(selector[, checked = true])` 或 `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` 或 `to unchecked` |
+| `page.scroll` | `scroll({ selector?, x?, y? })`，不支持位置参数。传入 `selector` 时滚动该元素的滚动容器（若它自身不可滚动，则取其最近的可滚动祖先）而非窗口；省略某个轴则该轴保持当前偏移 | `Scrolled window to x: <x>, y: <y>`、`Scrolled element (<target>) to ...` 或 `Scrolled scroll container (<container>) of element (<target>) to ...` |
 
-## Waiting
+## 等待
 
-| Primitive | Arguments | Returns | Comment |
+| 原语 | 参数 | 返回值 | 说明 |
 |-----------|-----------|---------|---------|
-| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | `Element found. backendNodeId: <id>` | `timeout` defaults to 5000ms once the page has reached `load`, or 15000ms (the navigation budget plus 5000) if it hasn't yet. A script cannot act on that ID, since every primitive takes a CSS selector. |
-| `page.waitForScript` | `waitForScript(script[, { timeout }])` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
-| `page.waitForState` | `waitForState(state[, { timeout = 5000 }])` | `Page reached <state>.` | Takes one of the states below. |
+| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | `Element found. backendNodeId: <id>` | 页面已到达 `load` 后 `timeout` 默认 5000ms，尚未到达则为 15000ms（导航预算加 5000）。脚本无法使用该 ID，因为每个原语都只接受 CSS 选择器。 |
+| `page.waitForScript` | `waitForScript(script[, { timeout }])` | `Script returned truthy.` | 默认 `timeout` 规则与 `waitForSelector` 相同。在页面上下文中反复求值该脚本，直到其返回真值。 |
+| `page.waitForState` | `waitForState(state[, { timeout = 5000 }])` | `Page reached <state>.` | 接受下列状态之一。 |
 
-The states `waitForState` accepts:
+`waitForState` 接受的状态：
 
-| `state` | Resolves when |
+| `state` | 何时兑现 |
 |---------|---------------|
-| `"load"` | The `load` event fires: the frame and all its subresources, including async scripts, have finished loading. |
-| `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
-| `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
-| `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
-| `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
+| `"load"` | `load` 事件触发：frame 及其全部子资源（包括异步脚本）都已加载完成。 |
+| `"domcontentloaded"` | HTML 已解析完毕，deferred 脚本已执行。子资源（图片、样式表、异步脚本）可能仍在加载。 |
+| `"networkalmostidle"` | 在途请求连续 500 ms 内不超过 2 个。 |
+| `"networkidle"` | 在途请求连续 500 ms 内为 0 个。 |
+| `"done"` | 页面完全空闲：没有待执行的 JavaScript 任务，也没有网络活动。即使请求的状态永远达不到，每次 `waitForState` 调用最终也会以此状态兑现。 |
 
 ## Console
 
-`console` is the second and last global. It carries five methods, split across the two output streams:
+`console` 是第二个也是最后一个全局对象。它有五个方法，分属两条输出流：
 
-| Methods | Write to |
+| 方法 | 写入 |
 |---------|----------|
 | `console.log`, `console.info`, `console.debug` | stdout |
 | `console.warn`, `console.error` | stderr |
 
-They print for you to read. A script's own output is whatever it `return`s from the top level, which is where objects and arrays get JSON-formatted.
+它们打印出来是给你看的。脚本自身的输出是从顶层 `return` 的值，对象与数组正是在这里被 JSON 格式化。
 
-## Calling conventions
+## 调用约定
 
-**Positional and options arguments.** Each primitive takes its leading arguments positionally, with an optional trailing options object for the rest:
+**位置参数与选项对象**。每个原语的前导参数按位置传入，其余参数可放在一个可选的末尾选项对象里：
 
-- Mix a positional with an options object: `waitForSelector("#row", { timeout: 2000 })`.
-- Or pass one object with everything: `waitForSelector({ selector: "#row", timeout: 2000 })`. This is equivalent, and it's the shape `/save` records into saved scripts.
-- An option can never be passed as a bare positional: `waitForSelector("#row", 2000)` is an error.
-- A `null` positional omits that argument: `press(null, "Enter")` presses on `document.activeElement` (the focused element, or `<body>` when nothing is focused).
-- Setting the same field both positionally and in the options object is an error: `goto(url, { url: ... })` throws `invalid arguments`.
-- Arguments must be JSON-serializable. `undefined`, functions, and symbols throw `invalid arguments`; a cyclic object throws V8's own `TypeError: Converting circular structure to JSON` instead, since it fails before Lightpanda's own check runs.
+- 位置参数与选项对象混用：`waitForSelector("#row", { timeout: 2000 })`。
+- 或者把所有参数放进一个对象：`waitForSelector({ selector: "#row", timeout: 2000 })`。两者等价，且 `/save` 记录到已保存脚本中的正是这种形式。
+- 选项永远不能作为裸位置参数传入：`waitForSelector("#row", 2000)` 是错误。
+- 位置参数传 `null` 表示省略该参数：`press(null, "Enter")` 会对 `document.activeElement`（当前聚焦的元素，若无聚焦元素则为 `<body>`）按键。
+- 同一字段既按位置传入又出现在选项对象中是错误：`goto(url, { url: ... })` 会抛出 `invalid arguments`。
+- 参数必须可 JSON 序列化。`undefined`、函数与 symbol 会抛出 `invalid arguments`；循环引用的对象则会抛出 V8 自己的 `TypeError: Converting circular structure to JSON`，因为它在 Lightpanda 自身的检查运行之前就已失败。
 
-**Selectors, not node IDs.** Script primitives address elements by CSS selector only. `tree`, `findElement`, and `nodeDetails` hand out `backendNodeId`s but aren't installed in the script context, and a raw node ID wouldn't survive replay anyway. When you're exploring in the REPL and have a `backendNodeId` (the leading number on a `/tree` line, or a `/findElement` hit), run `/nodeDetails backendNodeId=<id>` to get a durable CSS `selector`, then paste that into your script.
+**用选择器，不用节点 ID**。脚本原语只能用 CSS 选择器定位元素。`tree`、`findElement` 与 `nodeDetails` 会发放 `backendNodeId`，但它们并未安装在脚本上下文中，况且裸节点 ID 也无法在回放中存续。在 REPL 中探索时若拿到一个 `backendNodeId`（`/tree` 行首的数字，或 `/findElement` 的命中结果），可运行 `/nodeDetails backendNodeId=<id>` 获得一个稳定的 CSS `selector`，再把它粘贴进脚本。
 
-**Secrets via `$LP_*` placeholders.** String arguments can contain `$LP_*` placeholders, resolved inside the Lightpanda process. This keeps credentials out of recorded scripts and LLM prompts. Recordings scrub resolved `LP_*` values back to placeholders.
+**用 `$LP_*` 占位符传递密钥**。字符串参数可以包含 `$LP_*` 占位符，由 Lightpanda 进程内部解析。这样凭据就不会进入录制的脚本和 LLM 提示词。录制时会把已解析的 `LP_*` 值擦洗回占位符。
 
-## Errors
+## 错误
 
-Primitive failures throw JavaScript exceptions. The complete list:
+原语失败会抛出 JavaScript 异常。完整清单如下：
 
-| Error | Meaning |
+| 错误 | 含义 |
 |-------|---------|
-| `Page must be called with new` | `Page(...)` was called without `new`. Use `new Page()`. |
-| `extract is not defined` (or `click`, `fill`, ...) | Primitives are methods on the page object, not globals. Use `page.extract(...)`, not a bare `extract(...)`. |
-| `page is not navigated or has been closed` | A method ran on a fresh `new Page()`, or on a closed page, before `await page.goto(url)`. |
-| `page handle is no longer valid` | A re-`goto` on the same page object that failed or timed out: the old frame is torn down before the new navigation's outcome is known, so a rejected re-navigation leaves the handle bound to a removed frame. A **successful** re-goto rebinds the same object to the new frame and keeps working; sibling pages from other `new Page()` calls are unaffected either way. |
-| `ReferenceError: document is not defined` | You tried to use browser DOM APIs in the agent context. Use `extract(...)` or page `evaluate(...)`. |
-| `ReferenceError: require is not defined` | Agent scripts are not Node.js scripts. |
-| `no page loaded - run page.goto(url) first` | A page-dependent primitive ran before navigation. |
-| `invalid arguments` | A primitive received the wrong number or shape of arguments, or a value that stringifies to `undefined` (like a bare function or symbol). A cyclic object throws a different, native error instead. |
-| `extract: no schema selector matched any element` | Every field in the schema missed. Fix the selectors; an empty page section yields `null`/`[]` per field, not this error. |
-| `navigation timed out` | `goto` did not finish loading before its timeout. Also `navigation failed`, `navigation cancelled`, and `navigation abandoned` for the other navigation outcomes. |
-| `<tool> failed: <ZigErrorName>` | Fallback for any other tool failure, e.g. `click failed: NodeNotFound` when a selector matches nothing. |
+| `Page must be called with new` | 调用 `Page(...)` 时没有加 `new`。请使用 `new Page()`。 |
+| `extract is not defined`（或 `click`、`fill` 等） | 原语是 page 对象上的方法，不是全局函数。请用 `page.extract(...)`，而不是裸的 `extract(...)`。 |
+| `page is not navigated or has been closed` | 在 `await page.goto(url)` 之前，就对新建的 `new Page()` 或已关闭的页面调用了方法。 |
+| `page handle is no longer valid` | 对同一个 page 对象再次 `goto` 且失败或超时：旧 frame 会在新导航结果揭晓前被拆除，因此被拒绝的二次导航会让句柄仍绑定在已移除的 frame 上。**成功**的二次 goto 会把同一个对象重新绑定到新 frame 并继续工作；来自其他 `new Page()` 调用的兄弟页面无论哪种情况都不受影响。 |
+| `ReferenceError: document is not defined` | 你在 agent 上下文中使用了浏览器 DOM API。请改用 `extract(...)` 或页面的 `evaluate(...)`。 |
+| `ReferenceError: require is not defined` | Agent 脚本不是 Node.js 脚本。 |
+| `no page loaded - run page.goto(url) first` | 在导航之前就运行了依赖页面的原语。 |
+| `invalid arguments` | 原语收到的参数数量或形状不对，或某个值序列化后是 `undefined`（如裸函数或 symbol）。循环引用的对象抛出的则是另一个原生错误。 |
+| `extract: no schema selector matched any element` | schema 中的每个字段都没匹配到。请修正选择器；页面上某个区域为空时各字段得到的是 `null`/`[]`，而不是这个错误。 |
+| `navigation timed out` | `goto` 未能在超时前完成加载。其他导航结果对应 `navigation failed`、`navigation cancelled` 与 `navigation abandoned`。 |
+| `<tool> failed: <ZigErrorName>` | 其他工具失败的兜底，例如选择器没有匹配到任何元素时的 `click failed: NodeNotFound`。 |

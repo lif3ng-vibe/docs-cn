@@ -1,12 +1,12 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  index: 'Overview',
-  fetch: 'Fetch',
-  serve: 'CDP server',
+  index: '总览',
+  fetch: 'fetch 命令',
+  serve: 'CDP 服务器',
   mcp: 'MCP',
   agent: 'Agent',
-  'common-options': 'Common options',
+  'common-options': '通用选项',
 }
 
 export default meta

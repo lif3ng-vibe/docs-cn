@@ -1,71 +1,69 @@
 ---
 title: PandaScript
-description: Built-in automation script for Lightpanda
+description: Lightpanda 内置的自动化脚本
 ---
 
 # PandaScript
 
-A PandaScript is a web automation script that can be run directly by Lightpanda browser.
+PandaScript 是一种可以由 Lightpanda 浏览器直接运行的网页自动化脚本。
 
-No environment to set up like NodeJS or Python, no Puppeteer/Playwright to write, no CDP serialization cost, no LLM required: just vanilla Javascript with a small set of native primitives.
+无需像 NodeJS 或 Python 那样搭建环境，无需编写 Puppeteer/Playwright
+代码，没有 CDP 序列化开销，也不需要 LLM：只需原生 JavaScript 加一小
+组原语（primitive）。
 
-Use normal JavaScript variables, functions, loops, objects, arrays, `JSON.parse`, `JSON.stringify`, and other standard ECMAScript built-ins.
+可以使用普通的 JavaScript 变量、函数、循环、对象、数组、`JSON.parse`、
+`JSON.stringify` 及其他标准 ECMAScript 内置能力。
 
-It's reproducible, deterministic and token-free (no LLM required).
+它可复现、确定性且零 token 消耗（无需 LLM）。
 
-To run a PandaScript:
+运行一个 PandaScript：
 
 ```sh copy
 lightpanda run <my_script>.js
 ```
 
-## Runtime Environment
+## 运行时环境
 
-Agent scripts run in their own V8 context. That context is separate from the
-web page's JavaScript context.
+Agent 脚本运行在自己的 V8 上下文中，该上下文与网页的 JavaScript 上下文
+相互独立。
 
-- It is not the browser page environment. There is no `window`, `document`,
-  DOM, `localStorage`, `navigator`, or page global state in the agent script.
-  Read page data with `page.extract(...)`, or explicitly run page JavaScript
-  with `page.evaluate(...)` when that is the right tool.
-- It is not Node.js. There is no `require`, `process`, `fs`, `path`, npm
-  package loading, command-line argument API, or Node network/filesystem API.
-- Page scripts cannot see agent variables or Lightpanda primitives. Agent
-  scripts cannot directly see page variables.
-- `page.evaluate(...)` runs JavaScript in the page context, distinct from the
-  agent context's own native `eval`. It is not a global; it's a method on the
-  page object.
-- Agent variables persist for the lifetime of one script run, across
-  navigations and primitive calls. A later `lightpanda run script.js` starts
-  with a fresh agent context.
-- `goto` is the one asynchronous primitive: always `await page.goto(...)`.
-  Every other page method (`extract`, `evaluate`, `click`, `fill`, and the
-  rest) is synchronous and blocking. The script body runs inside an async
-  wrapper, so top-level `await` is allowed, unlike a plain classic script.
-- Tool failures throw JavaScript `Error` exceptions and stop execution unless
-  you catch them.
-- The script's output is whatever it `return`s from the top level (objects
-  and arrays printed as JSON; other values coerced). End a script with
-  `return page.extract({ ... });` or `return results;`. A bare trailing expression
-  is not printed. `console.log(...)` is for extra or debug output and does
-  not JSON-format objects.
+- 它不是浏览器页面环境。Agent 脚本中没有 `window`、`document`、DOM、
+  `localStorage`、`navigator` 或页面全局状态。读取页面数据用
+  `page.extract(...)`；当页面 JavaScript 确实是合适的工具时，再显式
+  使用 `page.evaluate(...)`。
+- 它不是 Node.js。没有 `require`、`process`、`fs`、`path`、npm 包
+  加载、命令行参数 API，也没有 Node 的网络/文件系统 API。
+- 页面脚本看不到 Agent 变量或 Lightpanda 原语。Agent 脚本也无法直接
+  看到页面变量。
+- `page.evaluate(...)` 在页面上下文中运行 JavaScript，与 Agent 上下文
+  自身的原生 `eval` 不同。它不是全局函数，而是 page 对象上的方法。
+- Agent 变量在一次脚本运行的生命周期内持续存在，可跨导航与原语调用。
+  之后再执行 `lightpanda run script.js` 会从全新的 Agent 上下文开始。
+- `goto` 是唯一异步的原语：务必 `await page.goto(...)`。其余所有页面
+  方法（`extract`、`evaluate`、`click`、`fill` 等）都是同步阻塞的。
+  脚本主体运行在 async 包装器内，因此允许顶层 `await`，这与普通经典
+  脚本不同。
+- 工具失败会抛出 JavaScript `Error` 异常并停止执行，除非你捕获它们。
+- 脚本的输出就是它从顶层 `return` 的内容（对象和数组以 JSON 打印；
+  其他值被强制转换）。脚本以 `return page.extract({ ... });` 或
+  `return results;` 结尾。裸的尾随表达式不会被打印。`console.log(...)`
+  用于额外或调试输出，不会对对象做 JSON 格式化。
 
-The agent context includes a small `console` object, split across the two
-output streams. Find every method in the
-[PandaScript reference](/reference/pandascript#console).
+Agent 上下文包含一个小的 `console` 对象，输出分流到两条流上。全部方法
+见 [PandaScript 参考](/reference/pandascript#console)。
 
 ```js
 console.log("printed to stdout");
 console.error("printed to stderr");
 ```
 
-## Values And Return Types
+## 值与返回类型
 
-Most primitives return the browser tool's result text as a JavaScript string.
-`page.extract(...)` is the exception: it returns extracted data as a normal
-JavaScript value, so local script logic can use it directly. The result mirrors
-your schema: an object schema returns an object keyed by your fields (even with
-a single field), and a bare array schema returns an array:
+大多数原语把浏览器工具的结果文本作为 JavaScript 字符串返回。
+`page.extract(...)` 是例外：它把提取到的数据作为普通 JavaScript 值
+返回，本地脚本逻辑可以直接使用。结果与你的 schema 一一对应：对象
+schema 返回以你的字段为键的对象（即使只有一个字段），裸数组 schema
+返回数组：
 
 ```js copy
 const page = new Page();
@@ -86,7 +84,7 @@ const data = page.extract({
 return data; // printed automatically as JSON
 ```
 
-Destructure when a single field is all you need:
+只需要单个字段时，可以解构：
 
 ```js copy
 const { stories } = page.extract({
@@ -105,23 +103,23 @@ for (const story of stories) {
 }
 ```
 
-`page.evaluate(...)` still returns the page evaluate tool result text. When it
-returns an object or array, that text is JSON.
+`page.evaluate(...)` 返回的仍是 page evaluate 工具的结果文本。当它
+返回对象或数组时，该文本就是 JSON。
 
-Primitive arguments must be JSON-serializable. Strings, numbers, booleans,
-arrays, plain objects, and `null` work. Find what the other values throw in the
-[PandaScript reference](/reference/pandascript#calling-conventions).
+原语参数必须可 JSON 序列化。字符串、数字、布尔值、数组、普通对象和
+`null` 都可以。其他值会抛出什么见
+[PandaScript 参考](/reference/pandascript#调用约定)。
 
-## Installed Primitives
+## 已安装的原语
 
-Only recorded browser primitives are installed globally: `new Page()`, then
-`goto`, `extract`, `evaluate`, `screenshot`, the interaction methods and the
-`waitFor*` methods as methods on the page. Find the full table, the calling
-conventions and the timeouts in the [PandaScript reference](/reference/pandascript).
+只有会被录制的浏览器原语才会全局安装：先 `new Page()`，然后 `goto`、
+`extract`、`evaluate`、`screenshot`，交互方法与 `waitFor*` 方法作为
+page 对象的方法。完整表格、调用约定与超时见
+[PandaScript 参考](/reference/pandascript)。
 
-## Navigation
+## 导航
 
-Use `goto(...)` to navigate to an URL:
+用 `goto(...)` 导航到一个 URL：
 
 ```js copy
 const page = new Page();
@@ -133,17 +131,16 @@ await page.goto({
 });
 ```
 
-The call resolves to the same page object (`await page.goto(url) === page`)
-once it reaches `waitUntil` (`load` by default), and rejects if navigation
-fails or times out (`"navigation timed out"`). Pass `waitUntil: "networkidle"`
-(or another state) to wait past `load` directly, or follow with
-`waitForState(...)` / `waitForSelector(...)` when completeness matters.
+一旦达到 `waitUntil`（默认 `load`），该调用就会 resolve 为同一个
+page 对象（`await page.goto(url) === page`）；导航失败或超时
+（`"navigation timed out"`）则 reject。传入
+`waitUntil: "networkidle"`（或其他状态）可以直接等待到 `load` 之后，
+或者在完整性重要时接上 `waitForState(...)` / `waitForSelector(...)`。
 
-## Structured Extraction
+## 结构化提取
 
-Use `page.extract(...)` to read data from the current page without writing page-side
-JavaScript. This is the preferred bridge from page content into local agent
-logic.
+用 `page.extract(...)` 从当前页面读取数据，而无需编写页面侧
+JavaScript。这是从页面内容进入本地 Agent 逻辑的首选桥梁。
 
 ```js copy
 const result = page.extract({
@@ -159,32 +156,31 @@ const result = page.extract({
 });
 ```
 
-Find every schema form in the
-[PandaScript reference](/reference/pandascript#extraction-schema).
+所有 schema 形式见
+[PandaScript 参考](/reference/pandascript#提取-schema)。
 
-Every value is a string (trimmed text or a raw attribute) or `null`; parse
-numbers in script logic. An array field that matches nothing yields `[]`
-without complaint (a page with zero comments is a valid result), but if
-*every* field in the schema misses, `page.extract(...)` throws
-`no schema selector matched any element`; treat that as "my selectors are
-wrong", not "the page is empty".
+每个值都是字符串（去除首尾空白的文本或原始属性值）或 `null`；数字请
+在脚本逻辑中自行解析。匹配不到任何内容的数组字段会毫无怨言地给出
+`[]`（零条评论的页面也是合法结果），但如果 schema 中*每一个*字段都
+没匹配到，`page.extract(...)` 会抛出
+`no schema selector matched any element`；请把它理解为"我的选择器
+写错了"，而不是"页面是空的"。
 
-`page.extract(...)` reads only the current page. For list-to-detail scraping:
-capture the list, then loop in the script (`goto` each row's URL and `extract`
-the detail). The local agent context keeps the data across navigations, so the
-assembly happens in plain JavaScript. See the [complete
-example](#complete-example) below.
+`page.extract(...)` 只读取当前页面。列表转详情的抓取方式是：先抓
+列表，然后在脚本中循环（`goto` 每行的 URL 并 `extract` 详情）。本地
+Agent 上下文会跨导航保留数据，因此组装工作在普通 JavaScript 中完成。
+完整示例见下文[完整示例](#完整示例)。
 
-Use local variables to keep extracted data available to later script logic:
+用局部变量把提取到的数据留给后续脚本逻辑使用：
 
 ```js copy
 const data = page.extract({ title: "title" });
 ```
 
-## Page JavaScript
+## 页面 JavaScript
 
-`page.evaluate(...)` is the explicit escape hatch into the current page's JavaScript
-context. Its script string runs where `window` and `document` exist.
+`page.evaluate(...)` 是进入当前页面 JavaScript 上下文的显式逃生通道。
+它的脚本字符串运行在 `window` 和 `document` 存在的地方。
 
 ```js copy
 await page.goto("https://example.com");
@@ -193,7 +189,7 @@ const title = page.evaluate("document.title");
 console.log(title);
 ```
 
-Keep the boundary clear:
+把边界划清楚：
 
 ```js copy
 const selector = "h1";
@@ -205,22 +201,22 @@ const data = page.extract({ heading: selector });
 page.evaluate("document.querySelector(selector).textContent");
 ```
 
-`page.evaluate(...)` cannot call `page.goto`, `page.extract`, or other agent
-primitives. Agent scripts cannot access `document` directly. If you need page
-DOM data, prefer `page.extract(...)`; use `page.evaluate(...)` only for page
-behavior that extraction cannot express.
+`page.evaluate(...)` 不能调用 `page.goto`、`page.extract` 或其他
+Agent 原语。Agent 脚本无法直接访问 `document`。需要页面 DOM 数据时，
+优先用 `page.extract(...)`；只有提取无法表达的页面行为才用
+`page.evaluate(...)`。
 
-`page.waitForScript(...)` also evaluates in the page context, repeatedly, until the
-expression is truthy or the timeout expires:
+`page.waitForScript(...)` 同样在页面上下文中求值，会反复执行，直到
+表达式为真值或超时：
 
 ```js copy
 page.waitForScript("document.querySelectorAll('.row').length >= 5");
 ```
 
-## Interaction Primitives
+## 交互原语
 
-The action primitives operate on the current page. Most take one object whose
-fields match the browser tool schema:
+操作原语作用于当前页面。大多数接受一个对象，其字段与浏览器工具
+schema 一致：
 
 ```js copy
 page.click({ selector: "a.login" });
@@ -239,21 +235,21 @@ page.scroll({ y: 600 });
 page.scroll();
 ```
 
-`setChecked` defaults `checked` to `true` when the field is omitted
-(`setChecked("#chk")` checks the box). `press`'s leading positional is the
-optional `selector`, not `key`: a bare `press("Enter")` binds `"Enter"` to
-`selector` and fails. Press on the document (not necessarily the focused
-element) with `press({ key: "Enter" })` or `press(null, "Enter")`; target an
-element with `press("#search", "Enter")` or
-`press({ key: "Enter", selector: "#search" })`.
+省略 `checked` 字段时，`setChecked` 默认为 `true`
+（`setChecked("#chk")` 会勾选该框）。`press` 的第一个位置参数是可选的
+`selector`，而不是 `key`：直接写 `press("Enter")` 会把 `"Enter"` 绑定
+到 `selector` 上并失败。用 `press({ key: "Enter" })` 或
+`press(null, "Enter")` 在文档上按键（不一定是焦点元素）；用
+`press("#search", "Enter")` 或
+`press({ key: "Enter", selector: "#search" })` 定位到某个元素。
 
-`$LP_*` placeholders in string arguments are resolved inside the Lightpanda
-process. This keeps credentials out of recorded scripts and LLM prompts. In
-recordings, resolved `LP_*` values are scrubbed back to placeholders.
+字符串参数中的 `$LP_*` 占位符会在 Lightpanda 进程内解析。这样凭据就
+不会进入录制的脚本和 LLM 提示。在录制中，已解析的 `LP_*` 值会被清洗
+回占位符。
 
-## Error Handling
+## 错误处理
 
-Primitive failures throw JavaScript exceptions:
+原语失败会抛出 JavaScript 异常：
 
 ```js copy
 try {
@@ -264,24 +260,22 @@ try {
 }
 ```
 
-Common failures:
+常见失败：
 
-| Error | Meaning |
+| 错误 | 含义 |
 |-------|---------|
-| `ReferenceError: document is not defined` | You tried to use browser DOM APIs in the agent context. Use `page.extract(...)` or `page.evaluate(...)`. |
-| `ReferenceError: require is not defined` | Agent scripts are not Node.js scripts. |
-| `no page loaded - run page.goto(url) first` | A page-dependent primitive ran before navigation. |
-| `invalid arguments` | A primitive received the wrong number or shape of arguments, or a non-JSON-serializable value. |
-| `extract: no schema selector matched any element` | Every field in the schema missed. Fix the selectors; an empty page section yields `null`/`[]` per field, not this error. |
+| `ReferenceError: document is not defined` | 你试图在 Agent 上下文中使用浏览器 DOM API。请改用 `page.extract(...)` 或 `page.evaluate(...)`。 |
+| `ReferenceError: require is not defined` | Agent 脚本不是 Node.js 脚本。 |
+| `no page loaded - run page.goto(url) first` | 依赖页面的原语在导航之前被调用。 |
+| `invalid arguments` | 原语收到的参数数量或形态不对，或包含了不可 JSON 序列化的值。 |
+| `extract: no schema selector matched any element` | schema 中每个字段都没匹配到。请修复选择器；页面区块为空时各字段会得到 `null`/`[]`，而不是这个错误。 |
 
-Find the complete list in the
-[PandaScript reference](/reference/pandascript#errors).
+完整列表见 [PandaScript 参考](/reference/pandascript#错误)。
 
-## Complete Example
+## 完整示例
 
-This script opens Hacker News, extracts five stories, visits each comments
-page, and prints one JSON object. The looping and object assembly happen in
-the local agent script, not in the page.
+这个脚本打开 Hacker News，提取五条帖子，逐个访问评论页，最后打印一个
+JSON 对象。循环与对象组装都发生在本地 Agent 脚本中，而不是页面里。
 
 ```js copy
 const HN = "https://news.ycombinator.com";

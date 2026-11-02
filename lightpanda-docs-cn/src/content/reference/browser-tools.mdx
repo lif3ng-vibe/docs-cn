@@ -1,14 +1,14 @@
 ---
-title: Browser tools
-description: Reference of every Lightpanda browser tool, shared by the MCP server, the agent and scripts, generated from the browser's tool registry.
+title: 浏览器工具
+description: Lightpanda 全部浏览器工具的参考，由 MCP 服务器、Agent 与脚本共用，内容从浏览器的工具注册表生成。
 ---
 
 import BrowserTools from '../../generated/browser-tools.mdx'
 
-# Browser tools
+# 浏览器工具
 
-Lightpanda exposes one set of browser tools through these interfaces: the [MCP server](/reference/mcp-tools) serves them over `tools/call`, the [agent](/reference/cli/agent#repl-commands) calls them for the model and as slash commands, and [PandaScript](/reference/pandascript) records them as `page` methods. This page lists each tool with its arguments as the browser declares them.
+Lightpanda 通过以下几套接口暴露同一组浏览器工具：[MCP 服务器](/reference/mcp-tools)通过 `tools/call` 提供它们，[Agent](/reference/cli/agent#repl-命令) 代模型调用并以斜杠命令的形式暴露它们，[PandaScript](/reference/pandascript) 则把它们记录为 `page` 方法。本页按浏览器声明的形式列出每个工具及其参数。
 
-Tools that target an element take a `selector` or a `backendNodeId`. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links` or `findElement` call.
+以元素为目标的工具接受 `selector` 或 `backendNodeId`。为了保证可复现性，推荐使用 `selector`；两个都传时也以 `selector` 为准。`backendNodeId` 的值来自此前的一次 `tree`、`links` 或 `findElement` 调用。
 
 <BrowserTools />

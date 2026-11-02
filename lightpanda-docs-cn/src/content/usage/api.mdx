@@ -1,21 +1,25 @@
 ---
-title: API
-description: Use HTTP API calls to get Lightpanda's results directly.
+title: HTTP API
+description: 通过 HTTP API 调用直接获取 Lightpanda 的结果。
 ---
 
 # HTTP API
 
-## Connect
+## 连接
 
-Lightpanda Cloud provides an HTTP API to easily retrieve results from Lightpanda without the burden of writing and running a CDP script.
+Lightpanda Cloud 提供 HTTP API，让你无需编写和运行 CDP 脚本，就能
+轻松获取 Lightpanda 的结果。
 
-See [Getting started on Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) to create an account, generate your token, and pick the URL for your region.
+参见
+[Lightpanda Cloud 入门](/run-on-lightpanda-cloud/getting-started)，
+创建账号、生成 token，并选择你所在区域的 URL。
 
-## Fetch a URL
+## 获取 URL
 
-The API lets you fetch a URL and retrieve the rendered page in HTML or markdown format. Find the full list of parameters and the response format in the [HTTP API reference](/reference/http-api).
+该 API 让你获取一个 URL，并以 HTML 或 markdown 格式取回渲染后的页面。
+完整的参数列表与响应格式见 [HTTP API 参考](/reference/http-api)。
 
-For example, to fetch a page as markdown:
+例如，以 markdown 格式获取一个页面：
 
 ```sh copy
 $ curl -XPOST \

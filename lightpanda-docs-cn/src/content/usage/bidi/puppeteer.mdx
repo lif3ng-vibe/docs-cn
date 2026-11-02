@@ -1,26 +1,36 @@
 ---
-title: Puppeteer (BiDi)
-description: Use Lightpanda with Puppeteer over the WebDriver BiDi protocol instead of CDP.
+title: Puppeteer
+description: 让 Puppeteer 改用 WebDriver BiDi 协议（而非 CDP）连接 Lightpanda。
 ---
 import { Callout } from 'nextra/components'
 
-# Puppeteer (BiDi)
+# Puppeteer（BiDi）
 
-Use Lightpanda with [Puppeteer](https://pptr.dev/) over [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) instead of the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP). Puppeteer's public API is the same either way; only the connection changes.
+配合 [Puppeteer](https://pptr.dev/) 使用 Lightpanda，走
+[WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) 而非
+Chrome DevTools 协议（CDP）。无论哪种方式，Puppeteer 的公开 API
+完全相同，改变的只是连接方式。
 
-More examples in [demo/puppeteer/bidi](https://github.com/lightpanda-io/demo/tree/main/puppeteer/bidi).
+更多示例见
+[demo/puppeteer/bidi](https://github.com/lightpanda-io/demo/tree/main/puppeteer/bidi)。
 
 <Callout type="warning">
-  BiDi support is new and doesn't cover the full spec yet. Puppeteer helpers that run in an isolated sandbox, such as `page.title()`, `page.waitForSelector()`, `page.click(selector)` and `page.type()`, fail with `sandboxes are not supported`: use `page.evaluate()` and `page.waitForFunction()` instead. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
+  BiDi 支持尚新，还未覆盖完整规范。在隔离沙箱中运行的 Puppeteer
+  辅助方法，例如 `page.title()`、`page.waitForSelector()`、
+  `page.click(selector)` 和 `page.type()`，会报
+  `sandboxes are not supported` 错误：请改用 `page.evaluate()` 和
+  `page.waitForFunction()`。如果脚本需要的命令尚缺，欢迎
+  [提交 issue](https://github.com/lightpanda-io/browser/issues)。
 </Callout>
 
-Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
+启用 `webdriver` 协议启动 Lightpanda（全部选项见
+[serve 命令参考](/reference/cli/serve#选项)）：
 
 ```sh copy
 lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
 ```
 
-Connect Puppeteer to the `/session` path with `protocol: 'webDriverBiDi'`:
+用 `protocol: 'webDriverBiDi'` 把 Puppeteer 连接到 `/session` 路径：
 
 ```js copy
 'use strict'

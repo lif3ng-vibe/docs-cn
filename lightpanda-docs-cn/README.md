@@ -1,104 +1,43 @@
-<span id="readme-top"></span>
+# lightpanda-docs-cn
 
-<!-- PROJECT LOGO -->
-<div align="center">
-  <p align="center">
-    <a href="https://lightpanda.io"><img src="https://cdn.lightpanda.io/assets/images/logo/lpd-logo.png" alt="Logo" height=170></a>
-  </p>
+Lightpanda 文档站的中文镜像（非官方翻译）。Lightpanda 是用 Zig 编写的、面向 AI 与自动化场景的高性能无头浏览器（headless browser）。
 
-<h1 align="center">Lightpanda Browser | Documentation</h1>
+- 原站：<https://lightpanda.io/docs/>
+- 上游仓库：<https://github.com/lightpanda-io/docs>（Apache-2.0）
+- 快照：上游 `main` 分支 commit `e45234d8e0f3c871a9939578308acac3ae50b34b`（2026-10-26）
+- 部署地址：<https://lif3ng-vibe.github.io/docs-cn/lightpanda/>
 
-<p align="center"><a href="https://lightpanda.io/">lightpanda.io</a></p>
+## 这是什么
 
-<div align="center">
+对上游文档的一次性快照汉化：保留原站 Nextra 4 + Next.js 15 工程与视觉，全部正文、侧边栏、UI 文案中文化，构建为纯中文静态站点。上游更新后如需同步，以快照 commit 为基线手动 diff。
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/lightpanda_io)](https://twitter.com/lightpanda_io)
-[![GitHub stars](https://img.shields.io/github/stars/lightpanda-io/browser)](https://github.com/lightpanda-io/browser)
+## 本地运行
 
-</div>
+```bash
+npm install
+npm run dev     # http://localhost:1414/docs-cn/lightpanda/
+```
 
-<br />
-</div>
+要求 Node ≥ 20.19。
 
-<!-- ABOUT THE PROJECT -->
+## 构建与产物
 
-## About The Project
+```bash
+npm run build   # next build（静态导出到 out/）+ pagefind 索引 + 重定向桩页
+```
 
-Lightpanda is the open-source browser made for headless usage:
+产物在 `out/`，部署时以子路径 `/docs-cn/lightpanda/` 访问（`redirects.mjs` 中的 `basePath` 已指向该前缀）。
 
-- Javascript execution
-- Support of Web APIs (partial, WIP)
-- Compatible with Playwright, Puppeteer through CDP (WIP)
+## 与上游的差异（汉化改造点）
 
-Fast web automation for AI agents, LLM training, scraping and testing:
+- **`@lightpanda/common` 为本地桩实现**（`packages/common/`）：上游该包是私有 monorepo 内部包（npm 上不存在，仓库外工作区引用）。桩包提供接口等价实现——`Logo`/`SocialIcons` 的 SVG 从线上渲染 HTML 提取，`siteDetails`/`Favicon`/`DNSPrefetch`/`Providers`/`Version` 按线上行为重建，`variables.css` 变量取自线上编译产物。
+- **`basePath`**：上游 `/docs` → 本镜像 `/docs-cn/lightpanda`（`redirects.mjs`）。
+- **补依赖**：上游 `package.json` 漏提交 `cssnano`（`postcss.config.mjs` 生产条件依赖，靠其私有工作区传递安装），此处显式声明。
+- **钉 `zod@4.0.16`**：zod ≥4.1 对 Nextra 4.6.1 的 `Head` 组件 props 校验会以 "expected nonoptional" 失败，构建期预渲染报错，需按 overrides 锁回旧版。
+- **`build` script** 去掉了 `NODE_ENV='production'` 前缀（Windows cmd 不兼容；`next build` 默认即 production）。
+- **锚点回修脚本**：`scripts/fix-anchors.mjs` 依据 `.anchor-maps/` 的标题映射表回写全站跨页/本页锚点链接。
+- `src/generated/` 三个生成页（上游 CI 由浏览器源码 `zig build docs` 生成）按快照内容直接翻译，上游更新时会重新生成覆盖。
 
-- Ultra-low memory footprint (16x less than Chrome)
-- Exceptionally fast execution (9x faster than Chrome)
-- Instant startup
+## 许可
 
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/execution-time-v2.svg">
-](https://github.com/lightpanda-io/demo)
-&emsp;
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/memory-frame-v2.svg">
-](https://github.com/lightpanda-io/demo)
-</div>
-
-_chromedp requesting 933 real web pages over the network on a AWS EC2 m5.large instance.
-See [benchmark details](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md#crawler-benchmark)._
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- GETTING STARTED -->
-
-## Getting Started
-
-This package depends on the website's main repository. It can not be run standalone (for the moment).
-
-The project has been created using [Nextra](https://nextra.site) and its documentation is [available here](https://nextra.site/docs)
-
-<!-- USAGE EXAMPLES -->
-
-## Usage
-
-### Sections
-
-> `content/*/<doc>.mdx` is a markdown & JSX file that will create a subpage
-
-- can contain any React components ([see here for Nextra's built-in])(https://nextra.site/docs/built-ins)
-- can contain Markdown, internal/external links ([more info])(https://nextra.site/docs/guide/markdown)
-
-> `components/lightpanda/*/<comp>.tsx` can be used to create custom React components
-
-> `_meta.ts` is a Nextra dedicated file which allows you to
-
-- define navbar links
-- name and sort pages in the sidebar (just by using the object keys' orders)
-
-_For more information, please refer to the [Documentation](https://lightpanda.io/docs)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTRIBUTING -->
-
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feat/update-documentation`)
-3. Commit your Changes (`git commit -m 'feat: update documentation'`)
-4. Push to the Branch (`git push origin feature/update-documentation`)
-5. Open a Pull Request
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- LICENSE -->
-
-## License
-
-Distributed under the AGPL-3.0. See `LICENSE` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+上游文档内容遵循 Apache-2.0（见 [LICENSE](LICENSE)）。本镜像为非官方翻译，版权归原作者；译文与上游的商标、Logo 等品牌资产归 Lightpanda 团队所有，此处引用仅用于文档汉化展示。

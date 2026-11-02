@@ -1,31 +1,31 @@
 ---
 title: HTTP API
-description: Reference of the Lightpanda Cloud HTTP API endpoints.
+description: Lightpanda Cloud HTTP API 端点参考。
 ---
 
 # HTTP API
 
-Fetch a URL and retrieve the rendered page. See [how to use the HTTP API](/usage/api) for practical documentation.
+抓取 URL 并获取渲染后的页面。实战用法参见 [HTTP API 的使用方法](/usage/api)。
 
-## Fetch a URL
+## 抓取 URL
 
-The `POST /api/fetch` endpoint returns a JSON message containing the page's content.
+`POST /api/fetch` 端点返回包含页面内容的 JSON 消息。
 
-### Request
+### 请求
 
-The request requires a bearer authorization header with your token and the `Content-Type: application/json` header.
+请求需要携带带有你的 token 的 Bearer 鉴权头，以及 `Content-Type: application/json` 头。
 
-The endpoint accepts the following parameters:
+该端点接受以下参数：
 
-| Parameter | Type | Required | Default | Description |
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|
-| `url` | string | Yes | — | The URL to fetch. |
-| `output_format` | `html` \| `markdown` | No | `html` | — |
-| `wait_ms` | uint | No | `5000` | Time to wait before retrieving the page, in milliseconds. `0` also falls back to the default; it doesn't mean "don't wait". |
-| `wait_event` | `DOMContentLoaded` \| `load` \| `networkAlmostIdle` \| `networkIdle` | No | `networkIdle` | Event to wait for before retrieving the page. |
-| `raw` | bool | No | `false` | If true, the raw HTML or markdown is returned directly, without the JSON wrapper, with `Content-Type: text/html` or `text/plain` respectively. |
-| `proxy_name` | string | No | `fast_dc` | — |
-| `country` | string | No | — | Two-letter country code, case-insensitive. Only used with the `datacenter` proxy. |
+| `url` | string | 是 | — | 要抓取的 URL。 |
+| `output_format` | `html` \| `markdown` | 否 | `html` | — |
+| `wait_ms` | uint | 否 | `5000` | 获取页面前等待的时长，单位为毫秒。`0` 也会回退到默认值；并不表示“不等待”。 |
+| `wait_event` | `DOMContentLoaded` \| `load` \| `networkAlmostIdle` \| `networkIdle` | 否 | `networkIdle` | 获取页面前需要等待的事件。 |
+| `raw` | bool | 否 | `false` | 为 true 时，直接返回原始 HTML 或 Markdown，不带 JSON 包装，`Content-Type` 分别为 `text/html` 或 `text/plain`。 |
+| `proxy_name` | string | 否 | `fast_dc` | — |
+| `country` | string | 否 | — | 两位字母的国家代码，大小写不敏感。仅在 `datacenter` 代理下使用。 |
 
 ```sh copy
 curl -XPOST \
@@ -41,15 +41,15 @@ curl -XPOST \
   }'
 ```
 
-### Response
+### 响应
 
-If the request sets `raw` to `false`, a JSON response is returned.
+若请求中 `raw` 为 `false`，则返回 JSON 响应。
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |---|---|---|
-| `data` | string | The page's content, in the format specified by the `output_format` parameter. |
-| `status` | int | The response status code. |
-| `headers` | object, optional | The HTTP headers returned by the server. |
+| `data` | string | 页面内容，格式由 `output_format` 参数指定。 |
+| `status` | int | 响应状态码。 |
+| `headers` | object, optional | 服务器返回的 HTTP 头。 |
 
 ```json copy
 {

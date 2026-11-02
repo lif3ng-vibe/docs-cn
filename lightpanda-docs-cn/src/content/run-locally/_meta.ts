@@ -2,12 +2,12 @@ import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
   installation: {
-    title: 'Installation',
+    title: '安装',
     theme: {
       collapsed: false,
     },
   },
-  commands: 'Commands',
+  commands: '命令',
 }
 
 export default meta

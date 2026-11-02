@@ -8,8 +8,8 @@ const meta: MetaRecord = {
     },
   },
   'http-api': 'HTTP API',
-  'browser-tools': 'Browser tools',
-  'mcp-tools': 'MCP tools',
+  'browser-tools': '浏览器工具',
+  'mcp-tools': 'MCP 工具',
   pandascript: 'PandaScript',
   python: 'Python SDK',
 }

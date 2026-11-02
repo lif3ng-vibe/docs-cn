@@ -1,17 +1,17 @@
 ---
 title: Playground
-description: Write and run browser automation scripts from the Lightpanda Cloud console, with Puppeteer and Playwright preinstalled and no local setup.
+description: 在 Lightpanda Cloud 控制台里编写并运行浏览器自动化脚本，预装 Puppeteer 与 Playwright，本地无需任何配置。
 ---
 
 import { Tabs, Callout } from 'nextra/components'
 
 # Playground
 
-The playground is a [code editor](https://console.lightpanda.io/playground/scripts) in the console that runs your automation scripts on Lightpanda Cloud.
+Playground 是控制台里的一个[代码编辑器](https://console.lightpanda.io/playground/scripts)，在 Lightpanda Cloud 上运行你的自动化脚本。
 
-## Write and run a script
+## 编写并运行脚本
 
-Your script reaches the browser through `CDP_WS_URL`, an environment variable the playground sets for you:
+脚本通过 `CDP_WS_URL` 访问浏览器——这是 Playground 替你设置好的环境变量：
 
 <Tabs items={['Playwright', 'Puppeteer']}>
   <Tabs.Tab>
@@ -58,50 +58,50 @@ await browser.disconnect();
   </Tabs.Tab>
 </Tabs>
 
-## What CDP_WS_URL contains
+## CDP_WS_URL 里有什么
 
-You do not need to hard-code a token in your script. `CDP_WS_URL` holds the WebSocket address your client uses to reach the browser over the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP), assembled from the choices in the Default variables panel:
+你不需要在脚本里硬编码 token。`CDP_WS_URL` 存的是你的客户端经由 Chrome DevTools 协议（CDP）访问浏览器所用的 WebSocket 地址，由 Default variables 面板中的选项拼装而成：
 
-| Default variable | Values | What it controls |
+| 默认变量 | 取值 | 控制什么 |
 | --- | --- | --- |
-| Region | `euwest`, `uswest` | Which region serves the browser |
-| Token | one of your active tokens | Which token the run authenticates with |
-| Browser | `lightpanda`, `chrome` | Which browser runs. Chrome is for debugging, not production traffic |
-| Proxy | one of your proxies, or none | The outbound IP the browser uses |
+| Region | `euwest`、`uswest` | 由哪个区域提供浏览器服务 |
+| Token | 你的某个有效 token | 本次运行用哪个 token 鉴权 |
+| Browser | `lightpanda`、`chrome` | 运行哪个浏览器。Chrome 仅用于调试，不适用于生产流量 |
+| Proxy | 你的某个代理，或不使用 | 浏览器使用的出口 IP |
 
-Pass `process.env.CDP_WS_URL` to whichever client you use.
+把你所用的客户端连到 `process.env.CDP_WS_URL` 即可。
 
 <Callout type="info">
-`console.log(process.env.CDP_WS_URL)` prints `***`, not the URL. The URL carries an access token created for the run, and run output is stored in the console, so the playground masks the URL wherever it appears in output.
+`console.log(process.env.CDP_WS_URL)` 打印的是 `***`，不是 URL。该 URL 携带为本次运行创建的访问 token，而运行输出会保存在控制台里，因此 Playground 会把输出中出现的 URL 全部打码。
 </Callout>
 
-## What the runtime provides
+## 运行时提供什么
 
-Scripts run in an isolated container. Both CDP clients are preinstalled at fixed versions, so there is no install step:
+脚本运行在一个隔离容器中。两个 CDP 客户端都按固定版本预装，无需安装步骤：
 
-| Package | Version |
+| 包 | 版本 |
 | --- | --- |
 | `playwright-core` | 1.50.0 |
 | `puppeteer-core` | 24.0.0 |
 
-The rest of the environment is fixed too:
+环境的其余部分也是固定的：
 
-- **Language.** JavaScript and TypeScript both run through [tsx](https://tsx.is/), so `import` syntax and top-level `await` work in either without configuration.
-- **Packages.** You cannot install anything beyond the two clients above.
-- **Filesystem.** Read-only, apart from a writable `/tmp`.
+- **语言**。JavaScript 和 TypeScript 都通过 [tsx](https://tsx.is/) 运行，因此两者无需配置即可使用 `import` 语法和顶层 `await`。
+- **包**。除上述两个客户端外，无法安装任何其他东西。
+- **文件系统**。只读，仅 `/tmp` 可写。
 
-Every run is capped:
+每次运行都有上限：
 
-| Limit | Value |
+| 限额 | 数值 |
 | --- | --- |
-| Run time | 5 minutes |
-| Memory | 256 MB |
-| CPU | 1 core |
-| Output captured | 256 KB |
-| Processes | 64 |
+| 运行时长 | 5 分钟 |
+| 内存 | 256 MB |
+| CPU | 1 核 |
+| 捕获的输出 | 256 KB |
+| 进程数 | 64 |
 
-A run that reaches 5 minutes stops and reports `timeout running program`. Output beyond 256 KB is dropped, and the run is flagged as truncated.
+达到 5 分钟的运行会被终止并报 `timeout running program`。超过 256 KB 的输出会被丢弃，该运行会被标记为截断。
 
-These caps apply to the script process. The browser session driven by the script also counts toward your [plan limits](/run-on-lightpanda-cloud/limits-and-billing).
+这些上限作用于脚本进程。脚本驱动的浏览器会话同样计入你的[套餐限额](/run-on-lightpanda-cloud/limits-and-billing)。
 
-The [Runs page](https://console.lightpanda.io/playground/script-runs) shows your run history and output for the past 30 days.
+[Runs 页面](https://console.lightpanda.io/playground/script-runs)展示过去 30 天的运行历史与输出。

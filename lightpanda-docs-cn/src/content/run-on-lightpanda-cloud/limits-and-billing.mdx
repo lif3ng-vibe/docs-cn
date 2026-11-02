@@ -1,38 +1,38 @@
 ---
-title: Limits and billing
-description: Understand how Lightpanda Cloud bills browser time, and what happens when you reach a plan limit.
+title: 限额与计费
+description: 了解 Lightpanda Cloud 如何按浏览器时间计费，以及触达套餐限额时会发生什么。
 ---
 
 import { Callout } from 'nextra/components'
 
-# Limits and billing
+# 限额与计费
 
-Lightpanda Cloud bills by browser time. You start on the free plan, and you can upgrade when you need more hours or more concurrency.
+Lightpanda Cloud 按浏览器时间计费。你从免费套餐开始，需要更多时长或更高并发时可以升级。
 
-## Plans
+## 套餐
 
-- **Explorer** is free, with a browser-hour pool and concurrency limit sized for testing, and community support on Discord.
-- **Builder** is for production workloads: a larger monthly pool of browser hours and concurrent sessions, billed at a per-hour rate once you go over the included hours, plus email and Slack support.
-- **Enterprise** is custom volume, concurrency, and support, with an SLA. For high-volume needs, on-premise, or a private cloud, [contact us](mailto:hello@lightpanda.io).
+- **Explorer** 免费，提供面向测试规模设计的浏览器时长池与并发上限，支持渠道为 Discord 社区。
+- **Builder** 面向生产工作负载：更大的每月浏览器时长池与并发会话额度，超出包含时长后按小时费率计费，另提供邮件与 Slack 支持。
+- **Enterprise** 提供定制的用量、并发与支持，附 SLA。需要大用量、本地部署或私有云，请[联系我们](mailto:hello@lightpanda.io)。
 
 <Callout type="info">
-For current prices, hour pools, and concurrency limits, see the [pricing page](https://lightpanda.io/pricing).
+最新价格、时长池与并发上限见[定价页面](https://lightpanda.io/pricing)。
 </Callout>
 
-Upgrade, download invoices, or cancel from the [billing page](https://console.lightpanda.io/account/subscription-billing) in the console, which opens the Stripe customer portal.
+升级、下载发票或取消订阅都在控制台的[账单页面](https://console.lightpanda.io/account/subscription-billing)操作，它会打开 Stripe 客户门户。
 
-## How usage is measured
+## 用量如何计算
 
-**Browser hours** are the total time your sessions stay open, metered by the second and summed over your billing period, so short sessions cost little. This is the number that counts against your monthly pool and, on paid plans, drives the overage rate.
+**浏览器时长**（browser hours）是会话保持打开的总时长，按秒计量、在整个计费周期内累加，因此短会话几乎不花钱。计入每月池的就是这个数字，付费套餐的超额费用也由它按每小时费率算出。
 
-**Concurrent sessions** are the sessions open at one instant. This limit is about parallelism, not total volume: a plan's concurrency cap still lets you run many sessions a day, as long as no more than that cap overlap at once.
+**并发会话**（concurrent sessions）是同一瞬间打开的会话数。这个限制关乎并行度，而非总量：只要同一时刻重叠的会话数不超过上限，套餐的并发上限并不妨碍你一天跑很多会话。
 
-Both limits apply regardless of how you open a session: over CDP, MCP, the HTTP API, or from the playground.
+无论你以哪种方式打开会话——CDP、MCP、HTTP API 还是从 Playground——这两项限制同样适用。
 
-## When you reach a limit
+## 触达限额时
 
-If you open more sessions than your concurrency limit allows, the extra sessions are rejected with HTTP `429 Too Many Requests`. Retry once a running session ends, or upgrade for more concurrency.
+如果你打开的会话数超过并发上限，多出的会话会被拒绝，返回 HTTP `429 Too Many Requests`。等某个运行中的会话结束后重试，或升级以获得更高并发。
 
-When you use up your monthly browser hours, the behavior depends on your plan. The free plan stops until its monthly pool resets. Paid plans keep running and bill the overage at your plan's per-hour rate.
+每月浏览器时长用完后，行为取决于你的套餐。免费套餐会暂停，直到当月池重置；付费套餐继续运行，超出部分按所在套餐的每小时费率计费。
 
-Some limits do not depend on your plan. A CDP connection closes after 15 minutes, whatever your pool has left, so split long jobs across sessions. An MCP session closes after 5 minutes without a request, so an active one keeps running.
+有些限额与套餐无关。CDP 连接 15 分钟后就会关闭，无论你的池里还剩多少时长，因此要把长任务拆分到多个会话。MCP 会话在 5 分钟没有请求后关闭，保持活跃则可一直运行。

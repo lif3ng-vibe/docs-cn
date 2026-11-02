@@ -1,24 +1,28 @@
 ---
 title: Puppeteer
-description: Use Lightpanda with Puppeteer via CDP, locally or on the cloud.
+description: 通过 CDP 在本地或云端配合 Puppeteer 使用 Lightpanda。
 ---
 import { Tabs } from 'nextra/components'
 
 # Puppeteer
 
-Use Lightpanda with [Puppeteer](https://pptr.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
+通过 Chrome DevTools 协议（CDP）配合
+[Puppeteer](https://pptr.dev/) 使用 Lightpanda。
 
-More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+更多示例见
+[demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer)。
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
-Start Lightpanda as a local CDP server (find all options in the [serve command reference](/reference/cli/serve#options)):
+把 Lightpanda 作为本地 CDP 服务器启动（全部选项见
+[serve 命令参考](/reference/cli/serve#选项)）：
 
 ```sh copy
 lightpanda serve --host 127.0.0.1 --port 9222
 ```
 
-Connect Puppeteer using `browserWSEndpoint` — the WebSocket URL Puppeteer uses to attach to an already-running browser instead of launching one itself:
+使用 `browserWSEndpoint` 连接 Puppeteer——它是 Puppeteer 用来附加到
+已在运行的浏览器的 WebSocket URL，而不是自己再启动一个浏览器：
 
 ```js copy
 'use strict'
@@ -43,7 +47,8 @@ await browser.disconnect()
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-Set your API token and connect to the cloud endpoint. The connection uses `wss://` (WebSocket over TLS) instead of the local `ws://`:
+设置你的 API token 并连接云端端点。连接使用 `wss://`（基于 TLS 的
+WebSocket）而非本地的 `ws://`：
 
 ```sh copy
 export LPD_TOKEN="your token here"
@@ -67,37 +72,45 @@ await context.close()
 await browser.disconnect()
 ```
 
-In the [playground](/run-on-lightpanda-cloud/playground), the console builds this URL for you and exposes it as `CDP_WS_URL`. Pass `process.env.CDP_WS_URL` to `browserWSEndpoint` there, since `LPD_TOKEN` does not exist in that runtime.
+在 [Playground](/run-on-lightpanda-cloud/playground) 中，控制台会替你
+构建好这个 URL 并以 `CDP_WS_URL` 暴露。在该运行时中请把
+`process.env.CDP_WS_URL` 传给 `browserWSEndpoint`，因为那里不存在
+`LPD_TOKEN`。
 
-## Cloud options
+## Cloud 选项
 
-### Endpoints
+### 端点
 
-Connect to the region nearest to you:
+连接离你最近的区域：
 
-- `wss://euwest.cloud.lightpanda.io/ws` (Europe West)
-- `wss://uswest.cloud.lightpanda.io/ws` (US West)
+- `wss://euwest.cloud.lightpanda.io/ws`（欧洲西部）
+- `wss://uswest.cloud.lightpanda.io/ws`（美国西部）
 
-### Browser
+### 浏览器
 
-By default the cloud runs [Lightpanda](https://github.com/lightpanda-io/browser). Use `browser=chrome` to request a Google Chrome instance instead, or `browser=lightpanda` to explicitly force Lightpanda.
+默认情况下 Cloud 运行
+[Lightpanda](https://github.com/lightpanda-io/browser)。用
+`browser=chrome` 可改为请求 Google Chrome 实例，或用
+`browser=lightpanda` 显式强制使用 Lightpanda。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 ```
 
-### Proxies
+### 代理
 
-The `proxy` parameter controls the outbound IP the cloud browser uses when fetching pages — useful for geo-targeting or avoiding rate limits.
+`proxy` 参数控制 Cloud 浏览器抓取页面时使用的出口 IP——可用于地理
+定向或避开限流。
 
-**fast_dc** — default. A single shared datacenter IP, optimized for speed.
+**fast_dc**——默认。单一共享数据中心 IP，为速度优化。
 
-**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
+**datacenter**——自动轮换的共享数据中心 IP 池。接受可选的 `country`
+参数（两位国家代码）以定向到特定国家。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
-[Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+如需更多代理选项，请[联系我们](mailto:hello@lightpanda.io)。
   </Tabs.Tab>
 </Tabs>

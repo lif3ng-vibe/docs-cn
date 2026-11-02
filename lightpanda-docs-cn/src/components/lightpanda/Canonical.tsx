@@ -11,7 +11,10 @@ export const Canonical = () => {
     if (nextraConfig.normalizePagesResult) {
       /* Old school way because Next's Head component was not working */
       const { activeIndex, activePath } = nextraConfig.normalizePagesResult
-      const href = `${siteDetails.siteUrl}/docs${activePath[activeIndex]?.route}`
+      // route 已含镜像 basePath，剥掉后拼回原站 /docs 路径，canonical 指向原站权威页
+      const route = activePath[activeIndex]?.route ?? ''
+      const docsPath = route.replace(/^\/docs-cn\/lightpanda/, '')
+      const href = `${siteDetails.siteUrl}/docs${docsPath}`
       const ogTitle = document.createElement('link')
 
       ogTitle.setAttribute('rel', 'canonical')

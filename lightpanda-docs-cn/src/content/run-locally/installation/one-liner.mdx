@@ -1,33 +1,32 @@
 ---
-title: One-liner
-description: Install Lightpanda with a single command on Linux or MacOS.
+title: 一行命令安装
+description: 在 Linux 或 macOS 上用一条命令安装 Lightpanda。
 ---
 import { Callout } from 'nextra/components'
 
-# One-liner
+# 一行命令安装
 
-For Linux or MacOSx users, you can install Lightpanda with following command.
-For Windows, take a look at the [dedicated section](#windows--wsl2).
+Linux 或 macOS 用户可以用以下命令安装 Lightpanda。
+Windows 用户请查看[专门章节](#windows--wsl2)。
 
 ```bash copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash
 ```
 
 <Callout type="info" emoji="ℹ️">
-`curl`, `jq` and `sha256sum` are required to install Lightpanda with the
-one-liner installer.
+使用一行命令安装器安装 Lightpanda，需要已备好 `curl`、`jq` 与 `sha256sum`。
 </Callout>
 
-The installer puts the binary at `~/.local/bin/lightpanda` (override the directory with the `LIGHTPANDA_DIR` environment variable). If that directory isn't already on your `PATH`, the installer warns you and `lightpanda` won't be found until you add it:
+安装器会把二进制文件放到 `~/.local/bin/lightpanda`（可通过环境变量 `LIGHTPANDA_DIR` 覆盖该目录）。如果该目录尚未加入 `PATH`，安装器会给出警告，且在你手动添加之前找不到 `lightpanda`：
 
 ```bash copy
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Add that line to your shell profile (`~/.bashrc`, `~/.zshrc`, ...) to make it permanent.
+把这一行加入你的 shell 配置文件（`~/.bashrc`、`~/.zshrc` 等）即可永久生效。
 
-By default the installer installs the last nightly build.
-But you can pick a specific release:
+默认情况下，安装器会安装最新的 Nightly 构建。
+你也可以指定某个发布版本：
 
 ```bash copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "1.0.0"
@@ -35,20 +34,20 @@ curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "1.0.0"
 
 ## Windows + WSL2
 
-The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
-Install & open WSL + Ubuntu from an **administrator** shell:
+Lightpanda 浏览器可以在 Windows 的 WSL（Windows Subsystem for Linux）中运行。如果尚未安装过 WSL，请按以下步骤操作（更多信息见：[MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)）。
+在**管理员** shell 中安装并打开 WSL + Ubuntu：
   1. `wsl --install`
-  2. -- restart --
+  2. 重启
   3. `wsl --install -d Ubuntu`
   4. `wsl`
 
-Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.
-Inside WSL install the Lightpanda browser:
+WSL 和 Linux 发行版装好之后，浏览器即可按与 Linux 相同的方式安装。
+在 WSL 内安装 Lightpanda 浏览器：
 ```bash copy
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
 chmod a+x ./lightpanda
 ```
 
-## Telemetry
+## 遥测
 
-By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+默认情况下，Lightpanda 会收集并发送使用遥测数据。设置环境变量 `LIGHTPANDA_DISABLE_TELEMETRY=true` 即可关闭。Lightpanda 的隐私政策见：[https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy)。

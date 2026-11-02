@@ -1,28 +1,29 @@
 ---
-title: Use Stagehand
-description: Here is how to use Stagehand framwork with the Lightpanda browser.
+title: 使用 Stagehand
+description: 介绍如何在 Lightpanda 浏览器上使用 Stagehand 框架。
 ---
 import { Callout } from 'nextra/components'
 
-# Use Stagehand with Lightpanda
+# 将 Stagehand 与 Lightpanda 搭配使用
 
-[Stagehand](https://www.stagehand.dev/) is a popular, [open
-source](https://github.com/browserbase/stagehand) AI Browser Automation
-Framework.
+[Stagehand](https://www.stagehand.dev/) 是一个广受欢迎的
+[开源](https://github.com/browserbase/stagehand) AI 浏览器自动化框架。
 
-With Stagehand you can use natural language and code to control browser.
+借助 Stagehand，你可以用自然语言和代码来控制浏览器。
 
-Since Lightpanda supports [Accessibilty
-tree](https://github.com/lightpanda-io/browser/pull/1308), you can use it
-instead of Chrome with your Stagehand script.
+由于 Lightpanda 支持
+[无障碍树（accessibility tree）](https://github.com/lightpanda-io/browser/pull/1308)，你可以在
+Stagehand 脚本中用它替代 Chrome。
 
 <Callout type="info" emoji="ℹ️">
-  This guide uses **CDP locally**. Lightpanda is started as a local process via the `@lightpanda/browser` npm package. For cloud usage, see the [Usage / CDP](/usage/cdp/puppeteer) section.
+  本指南使用**本地 CDP**。Lightpanda 通过 `@lightpanda/browser` npm 包
+  作为本地进程启动。Cloud 用法见
+  [用法 / CDP](/usage/cdp/puppeteer)章节。
 </Callout>
 
-## Install the Lightanda and Stagehand dependencies
+## 安装 Lightpanda 与 Stagehand 依赖
 
-If not set, create a new npm project and install Stagehand depencies.
+如果尚未初始化，先创建一个新的 npm 项目，然后安装 Stagehand 依赖。
 
 ```sh copy
 npm init
@@ -32,15 +33,14 @@ npm init
 npm install @browserbasehq/stagehand@3 @lightpanda/browser
 ```
 
-Stay on the Stagehand 3.x line. Stagehand 4 moved its DOM work into a Chrome
-extension that `localBrowser.connect()` loads through the CDP `Extensions`
-domain, which Lightpanda does not implement, so 4.x cannot connect. The API in
-this guide is the 3.x one.
+请停留在 Stagehand 3.x 版本线。Stagehand 4 把 DOM 相关工作移入了一个
+Chrome 扩展，而 `localBrowser.connect()` 要通过 CDP 的 `Extensions` 域
+加载该扩展——Lightpanda 并未实现这个域，因此 4.x 无法连接。本指南
+使用的是 3.x 的 API。
 
-## Write your Stagehand script with Lightpanda
+## 结合 Lightpanda 编写 Stagehand 脚本
 
-Now you can create your Stagehand's. script to connectm by editing `index.js`
-file.
+现在，编辑 `index.js` 文件，编写连接 Lightpanda 的 Stagehand 脚本。
 
 ```javascript copy
 'use strict'
@@ -93,19 +93,17 @@ const stagehandopts = {
 })();
 ```
 
-## Run your script
+## 运行脚本
 
-Before running you script, make sure you have a valid Anthropic api key
-exported into the env var `ANTHROPIC_API_KEY`.
-You can also use [another
-model](https://docs.stagehand.dev/v3/configuration/models) supported by
-Stagehand.
+运行脚本之前，请确保已把有效的 Anthropic API key 导出到环境变量
+`ANTHROPIC_API_KEY`。你也可以使用 Stagehand 支持的
+[其他模型](https://docs.stagehand.dev/v3/configuration/models)。
 
 ```sh copy
 node index.js
 ```
 
-You should see in the following logs:
+你应当看到如下日志：
 ```sh
 === Sandy
 ```

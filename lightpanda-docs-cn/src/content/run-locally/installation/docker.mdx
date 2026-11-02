@@ -1,15 +1,13 @@
 ---
 title: Docker
-description: Install Lightpanda using the official Docker image.
+description: 使用官方 Docker 镜像安装 Lightpanda。
 ---
 
 # Docker
 
-Lightpanda provides [official Docker
-images](https://hub.docker.com/r/lightpanda/browser) for both Linux amd64 and
-arm64 architectures.
+Lightpanda 为 Linux amd64 与 arm64 两种架构提供[官方 Docker 镜像](https://hub.docker.com/r/lightpanda/browser)。
 
-The following command fetches the Docker image and starts a new container exposing Lightpanda's CDP server on port `9222`.
+以下命令会拉取 Docker 镜像并启动一个新容器，把 Lightpanda 的 CDP 服务器暴露在端口 `9222` 上。
 
 ```sh copy
 docker run -d --name lightpanda -p 127.0.0.1:9222:9222 lightpanda/browser:latest

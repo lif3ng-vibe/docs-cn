@@ -1,32 +1,32 @@
 ---
-title: What Is Lightpanda?
-description: Learn what Lightpanda is, why it's built from scratch instead of forking Chrome, and how it fits into your browser automation stack.
+title: Lightpanda 是什么？
+description: 了解 Lightpanda 是什么、为何从零构建而不 fork Chrome，以及它如何融入你的浏览器自动化技术栈。
 ---
 
-# What is Lightpanda?
+# Lightpanda 是什么？
 
-Lightpanda is an AI-native headless browser built from scratch for automation and AI agents: crawling, scraping, testing, and running agents that need to interact with dynamic web pages. It is not a fork of Chromium, Blink, or WebKit: it is a new browser, written in Zig. The project started after its founders spent years running large-scale web crawls on headless Chrome and hit its cost and reliability limits.
+Lightpanda 是一款 AI 原生（AI-native）的无头浏览器，从零开始为自动化与 AI Agent 而构建：适用于爬取、网页抓取、测试，以及运行需要与动态网页交互的 Agent。它不是 Chromium、Blink 或 WebKit 的 fork，而是一款用 Zig 编写的全新浏览器。创始人早年用无头 Chrome 跑大规模网页爬取，屡屡撞上成本与可靠性的天花板，这个项目由此而生。
 
-## The problem with Chrome for automation
+## Chrome 做自动化的痛点
 
-Most browser automation today runs on headless Chrome, through tools like Puppeteer or Playwright. Headless Chrome still computes graphical output, even though nothing renders it to a screen. Running hundreds or thousands of instances is heavy on RAM and CPU, and instances need frequent restarts to stay stable. That overhead exists because Chrome was built for a human sitting in front of a monitor, not for a script driving it at scale.
+如今的浏览器自动化大多借助 Puppeteer、Playwright 之类的工具跑在无头 Chrome 上。无头 Chrome 依然要计算图形输出，哪怕没有任何东西把它渲染到屏幕上。同时跑成百上千个实例对内存和 CPU 的压力很大，而且实例还得频繁重启才能保持稳定。这些开销的根源在于：Chrome 是为坐在显示器前的人类设计的，而不是为大规模驱动它的脚本设计的。
 
-Puppeteer and Playwright talk to Chrome over CDP, the Chrome DevTools Protocol, and its bias runs deeper than rendering. CDP can query and mutate the DOM directly, but it has no DOM-level command for user interaction. To click an element, for example, a client has to look up its rendered pixel coordinates, move a virtual mouse there, and dispatch a click event: three round trips and a rendering dependency for what is conceptually one action. CDP was designed for a human debugging a browser visually, not for a script that already knows which DOM node it wants to act on. See [CDP under the hood](https://lightpanda.io/blog/posts/cdp-under-the-hood) for more on where this breaks down in practice.
+Puppeteer 和 Playwright 通过 Chrome DevTools 协议（CDP）与 Chrome 通信，而 CDP 的局限远不止渲染。CDP 能直接查询和修改 DOM，却没有任何 DOM 级别的用户交互命令。举个例子，要点击一个元素，客户端得先查出它渲染后的像素坐标，再把虚拟鼠标移过去，然后派发 click 事件——概念上明明是一个动作，却要三次往返，还依赖渲染结果。CDP 是为人类在可视化环境下调试浏览器而设计的，而不是为早已知道自己要操作哪个 DOM 节点的脚本设计的。这些设计在实践中如何失灵，参阅 [CDP under the hood](https://lightpanda.io/blog/posts/cdp-under-the-hood)。
 
-## How Lightpanda solves it
+## Lightpanda 如何解决
 
-Lightpanda drops the graphical rendering engine entirely and rebuilds the rest around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around [9x faster execution and 16x less peak memory](/core-concepts/benchmarks) than headless Chrome.
+Lightpanda 彻底砍掉图形渲染引擎，围绕自动化重新构建其余部分：JavaScript 执行、DOM，以及脚本所需的各类 Web API。最终效果是比无头 Chrome [执行速度快约 9 倍、峰值内存占用少 16 倍](/core-concepts/benchmarks)。
 
-Lightpanda meets you at the interface you already use:
+Lightpanda 从你已经在用的接口接入：
 
-- **CDP or WebDriver BiDi**: [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/), and [Chromedp](https://github.com/chromedp/chromedp) connect over CDP the same way they connect to Chrome. [Selenium](/usage/bidi/selenium) drives it over the W3C WebDriver BiDi standard instead, and so does [Puppeteer](/usage/bidi/puppeteer). Point the client at Lightpanda's endpoint and keep your existing scripts.
-- **MCP**: control the browser from AI applications over the [Model Context Protocol](https://modelcontextprotocol.io).
-- **HTTP API**: retrieve results directly over HTTP, without writing or running a CDP script.
+- **CDP 或 WebDriver BiDi**：[Puppeteer](https://pptr.dev/)、[Playwright](https://playwright.dev/) 和 [Chromedp](https://github.com/chromedp/chromedp) 通过 CDP 连接 Lightpanda，与连接 Chrome 的方式完全相同。[Selenium](/usage/bidi/selenium) 则通过 W3C WebDriver BiDi 标准驱动它，[Puppeteer](/usage/bidi/puppeteer) 也支持这条路。把客户端指向 Lightpanda 的端点，现有脚本原样保留。
+- **MCP**：AI 应用通过 [Model Context Protocol](https://modelcontextprotocol.io) 控制浏览器。
+- **HTTP API**：直接通过 HTTP 获取结果，无需编写或运行 CDP 脚本。
 
-Beyond these, Lightpanda ships `lightpanda agent`, which runs in the same process as the browser instead of talking to it over CDP. Describe a task in plain English or with slash commands, and it drives the browser directly. You can export the result as PandaScript, a plain JavaScript replay that runs with no LLM and no API key at runtime.
+除此之外，Lightpanda 还内置 `lightpanda agent`，它运行在浏览器同进程内，而不是隔着 CDP 对话。用自然语言或斜杠命令描述任务，它就会直接驱动浏览器。结果可以导出为 PandaScript——一段纯 JavaScript 回放脚本，运行时既不需要 LLM，也不需要 API key。
 
-See [Architecture overview](/core-concepts/architecture-overview) for how it's put together.
+它内部是如何组装的，参阅[架构总览](/core-concepts/architecture-overview)。
 
-## Local or cloud
+## 本地还是 Cloud
 
-You can run Lightpanda yourself or connect to Lightpanda Cloud and skip managing the browser process. See [When to use local vs cloud](/core-concepts/local-vs-cloud) to pick.
+你可以自己运行 Lightpanda，也可以连接 Lightpanda Cloud，免去管理浏览器进程的麻烦。如何选择，参阅[本地与 Cloud 的选择](/core-concepts/local-vs-cloud)。

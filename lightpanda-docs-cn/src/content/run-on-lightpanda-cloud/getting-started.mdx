@@ -1,48 +1,48 @@
 ---
-title: Getting started
-description: Start using remote browsers easily with Lightpanda Cloud.
+title: 入门
+description: 用 Lightpanda Cloud 轻松开始使用远程浏览器。
 ---
 import { Tabs, Callout } from 'nextra/components'
 
-# Getting started
+# 入门
 
-Lightpanda Cloud runs the browser for you. With no process to install or keep alive, an API token is all you need to drive it over CDP, MCP, or the HTTP API.
+Lightpanda Cloud 替你运行浏览器。无需安装或保活任何进程，只要一个 API token，就能通过 CDP、MCP 或 HTTP API 驱动它。
 
-## Create an account and token
+## 创建账号与 token
 
-Sign up at [console.lightpanda.io/signup](https://console.lightpanda.io/signup). We'll email you a link to generate your API token.
+在 [console.lightpanda.io/signup](https://console.lightpanda.io/signup) 注册。我们会给你发送一封邮件，里面是生成 API token 的链接。
 
 <Callout type="warning">
-Your token is shown once, when you generate it. Save it somewhere safe. If you lose it, generate a new one from the console.
+token 只在生成时显示一次。请把它存到安全的地方。丢了的话，在控制台重新生成一个。
 </Callout>
 
-## Connect your CDP client to Lightpanda Cloud
+## 将 CDP 客户端连接到 Lightpanda Cloud
 
 <Callout type="info">
-To generate a ready-to-use snippet, you can use the [script generator](https://console.lightpanda.io/tools/script-generator) in the console.
+想生成开箱即用的代码片段，可以用控制台里的[脚本生成器](https://console.lightpanda.io/tools/script-generator)。
 </Callout>
 
-Connect to the region nearest your script. The snippets below all use `euwest`:
+连接离你的脚本最近的区域。下面的片段都使用 `euwest`：
 
-- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
-- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+- `wss://euwest.cloud.lightpanda.io/ws`（欧洲西部）
+- `wss://uswest.cloud.lightpanda.io/ws`（美国西部）
 
 <Tabs items={['CDP URL', 'Puppeteer', 'Playwright', 'Chromedp']}>
   <Tabs.Tab>
-The raw endpoint every CDP client connects to:
+所有 CDP 客户端连接的原始端点：
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?token=YOUR_TOKEN&browser=lightpanda
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-We recommend storing your token in an environment variable rather than hard-coding it in your script:
+建议把 token 存在环境变量里，而不是硬编码进脚本：
 
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
 
-Then connect Puppeteer:
+然后连接 Puppeteer：
 
 ```js copy
 import puppeteer from 'puppeteer-core';
@@ -52,16 +52,16 @@ const browser = await puppeteer.connect({
 });
 ```
 
-See the [Puppeteer page](/usage/cdp/puppeteer) for a complete script.
+完整脚本见 [Puppeteer 页面](/usage/cdp/puppeteer)。
   </Tabs.Tab>
   <Tabs.Tab>
-We recommend storing your token in an environment variable rather than hard-coding it in your script:
+建议把 token 存在环境变量里，而不是硬编码进脚本：
 
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
 
-Then connect Playwright:
+然后连接 Playwright：
 
 ```js copy
 import { chromium } from 'playwright-core';
@@ -71,16 +71,16 @@ const browser = await chromium.connectOverCDP(
 );
 ```
 
-See the [Playwright page](/usage/cdp/playwright) for a complete script.
+完整脚本见 [Playwright 页面](/usage/cdp/playwright)。
   </Tabs.Tab>
   <Tabs.Tab>
-We recommend storing your token in an environment variable rather than hard-coding it in your script:
+建议把 token 存在环境变量里，而不是硬编码进脚本：
 
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
 
-Then connect Chromedp:
+然后连接 Chromedp：
 
 ```go copy
 ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
@@ -89,22 +89,22 @@ ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
 defer cancel()
 ```
 
-See the [Chromedp page](/usage/cdp/chromedp) for a complete script.
+完整脚本见 [Chromedp 页面](/usage/cdp/chromedp)。
   </Tabs.Tab>
 </Tabs>
 
-For troubleshooting, your recent sessions and their logs are on the [sessions page](https://console.lightpanda.io/sessions) in the console.
+排查问题时，近期的会话及其日志在控制台的[会话页面](https://console.lightpanda.io/sessions)。
 
-### Connection options
+### 连接选项
 
-The cloud serves Lightpanda by default. For debugging, append `browser=chrome` to run Google Chrome instead, since Chrome isn't intended for production traffic. Append `browser=lightpanda` to force Lightpanda explicitly.
+Cloud 默认提供 Lightpanda。调试时可以在 URL 后附加 `browser=chrome`，改跑 Google Chrome——但 Chrome 并不适用于生产流量。显式加 `browser=lightpanda` 可强制使用 Lightpanda。
 
-The same URL takes a [`proxy` parameter](/guides/configure-a-proxy#use-a-proxy-on-lightpanda-cloud) to route the session through a shared proxy, or through one you added on the [proxies page](https://console.lightpanda.io/proxies) in the console.
+同一个 URL 还接受 [`proxy` 参数](/guides/configure-a-proxy#在-lightpanda-cloud-上使用代理)，让会话走共享代理，或走你在控制台[代理页面](https://console.lightpanda.io/proxies)添加的自有代理。
 
-## Other features: playground, HTTP API and MCP
+## 其他功能：Playground、HTTP API 与 MCP
 
-The cloud also exposes:
+Cloud 还提供：
 
-- a **[playground](/run-on-lightpanda-cloud/playground)** to write and run a script from the console, with no local setup at all.
-- an **[HTTP API](/usage/api)** to fetch a page's HTML or Markdown in a single request, with no CDP script.
-- an **[MCP](/usage/mcp)** server to drive the browser from AI applications over the Model Context Protocol.
+- **[Playground](/run-on-lightpanda-cloud/playground)**：直接在控制台里编写并运行脚本，本地完全无需配置。
+- **[HTTP API](/usage/api)**：单次请求即可获取页面的 HTML 或 Markdown，无需 CDP 脚本。
+- **[MCP](/usage/mcp)** 服务器：让 AI 应用通过 Model Context Protocol 驱动浏览器。

@@ -16,7 +16,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const params = await props.params
   const { metadata } = await importPage(params.mdxPath)
 
-  const title = `${metadata.title} - Documentation | ${siteDetails.siteName}`
+  const title = `${metadata.title} - Lightpanda 文档`
   const description = metadata.description ?? siteDetails.metadata.description
   const url = `${siteDetails.siteUrl}/docs/${(metadata.filePath as string).replace('.mdx', '').replace('src/content/', '')}`
 

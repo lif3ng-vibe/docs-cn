@@ -1,64 +1,68 @@
 ---
-title: Markdown and AXTree
-description: Convert any web page to clean, token-efficient Markdown and Accessibility tree directly from the browser, after JavaScript execution.
+title: 获取 Markdown 与无障碍树
+description: 在 JavaScript 执行之后，直接从浏览器内把任意网页转换为干净、省 token 的 Markdown 与无障碍树（accessibility tree）。
 ---
 import { Tabs } from 'nextra/components'
 import { Callout } from 'nextra/components'
 
-# Markdown and AXTree
+# 获取 Markdown 与无障碍树
 
-Lightpanda outputs web page content as Markdown and Accessibility tree directly from its browser engine, after JavaScript execution. No external HTML-to-Markdown converter needed.
+Lightpanda 在 JavaScript 执行完毕后，直接从浏览器引擎输出 Markdown
+与无障碍树（accessibility tree）形式的页面内容，无需外部 HTML 转
+Markdown 工具。
 
 <Callout type="info" emoji="ℹ️">
-  This guide covers **three local approaches**: CLI, CDP, and MCP. For cloud usage, see the [Usage](/usage/cdp/puppeteer) section.
+  本指南介绍**三种本地方式**：CLI、CDP 和 MCP。Cloud 用法见
+  [用法](/usage/cdp/puppeteer)章节。
 </Callout>
 
-## Overview
+## 总览
 
-Three ways to get Markdown and Accessibility tree from any web page:
+从任意网页获取 Markdown 与无障碍树的三种途径：
 
-| Pathway | Best for | How |
+| 途径 | 适合场景 | 方式 |
 |---|---|---|
-| **CLI** `fetch --dump markdown` | Scripts, pipelines, quick extraction | Single command, stdout |
-| **CDP** `LP.getMarkdown` | Puppeteer/Playwright automation | Programmatic, after page interactions |
-| **MCP** server | AI agent / LLM tool integration | Model Context Protocol over stdio |
+| **CLI** `fetch --dump markdown` | 脚本、流水线、快速提取 | 单条命令，输出到 stdout |
+| **CDP** `LP.getMarkdown` | Puppeteer/Playwright 自动化 | 编程调用，可在页面交互之后 |
+| **MCP** 服务器 | AI agent / LLM 工具集成 | 基于 stdio 的 Model Context Protocol |
 
-## CLI: `fetch --dump`
+## CLI：`fetch --dump`
 
-The `fetch` command fetches a URL, executes JavaScript, and dumps the result to stdout. Runs standalone with no browser session or CDP connection needed.
+`fetch` 命令获取一个 URL、执行 JavaScript，并把结果转储到 stdout。
+可独立运行，无需浏览器会话或 CDP 连接。
 
-### Syntax
+### 语法
 
 ```sh
 lightpanda fetch --dump <format> [options] <URL>
 
-# Formats:
-#   html                Full rendered HTML (post-JS)
+# 格式：
+#   html                完整渲染后的 HTML（JS 执行后）
 #   markdown            CommonMark markdown
-#   semantic_tree       JSON accessibility tree
-#   semantic_tree_text  Human-readable accessibility tree
+#   semantic_tree       JSON 格式的无障碍树
+#   semantic_tree_text  人类可读的无障碍树
 ```
 
-### Output formats
+### 输出格式
 
-![Output format comparison: HTML vs Markdown vs Semantic Tree for example.com](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-formats.png)
-*The same page (example.com) in three output formats. Markdown strips all non-semantic markup for a smaller representation.*
+![输出格式对比：example.com 的 HTML、Markdown 与语义树](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-formats.png)
+*同一页面（example.com）的三种输出格式。Markdown 剔除所有非语义标记，得到更小的表示。*
 
-| Format | Description | Best for |
+| 格式 | 说明 | 适合场景 |
 |---|---|---|
-| `html` | Full post-JS DOM as HTML | Archiving, diffing, debugging |
-| `markdown` | CommonMark markdown (links, headings, lists, tables) | AI/LLM context, summarization |
-| `semantic_tree` | Full accessibility tree as structured JSON | Accessibility audits, structured parsing |
-| `semantic_tree_text` | Indented human-readable accessibility tree | Quick accessibility review, debugging |
+| `html` | JS 执行后的完整 DOM，以 HTML 呈现 | 归档、diff、调试 |
+| `markdown` | CommonMark markdown（链接、标题、列表、表格） | AI/LLM 上下文、摘要 |
+| `semantic_tree` | 结构化 JSON 形式的完整无障碍树 | 无障碍审计、结构化解析 |
+| `semantic_tree_text` | 缩进排版、人类可读的无障碍树 | 快速无障碍检查、调试 |
 
-### Basic example
+### 基本示例
 
 ```sh copy
 lightpanda fetch --dump markdown https://example.com
 ```
 
 <details>
-<summary>Example output</summary>
+<summary>示例输出</summary>
 
 ```markdown
 # Example Domain
@@ -70,60 +74,60 @@ This domain is for use in documentation examples without needing permission. Avo
 
 </details>
 
-### `--with-frames` flag
+### `--with-frames` 选项
 
-Includes rendered iframe content in the output. Without it, iframe content is excluded.
+在输出中包含渲染后的 iframe 内容。不加该选项时，iframe 内容会被排除。
 
 ```sh copy
-# Without iframe content (default)
+# 不含 iframe 内容（默认）
 lightpanda fetch --dump markdown https://example.com
 
-# With iframe content included
+# 包含 iframe 内容
 lightpanda fetch --dump markdown --with-frames https://example.com
 ```
 
-On pages without iframes, output is identical either way.
+在没有 iframe 的页面上，两种方式输出完全一致。
 
-### `--strip-mode` flag
+### `--strip-mode` 选项
 
-Removes groups of tags from the output. Values can be combined with commas:
+从输出中移除若干组标签。多个取值可用逗号组合：
 
 ```sh copy
-# Remove JavaScript and CSS from output
+# 从输出中移除 JavaScript 和 CSS
 lightpanda fetch --dump html --strip-mode js,css https://example.com
 
-# Keep only the main content, reader-mode style
+# 只保留主要内容，阅读模式风格
 lightpanda fetch --dump html --strip-mode clutter https://example.com
 ```
 
-Find all options in the [fetch command reference](/reference/cli/fetch#options).
+全部选项见 [fetch 命令参考](/reference/cli/fetch#选项)。
 
-### Semantic tree output
+### 语义树输出
 
-The `semantic_tree` format returns the page's accessibility tree as structured JSON:
+`semantic_tree` 格式以结构化 JSON 返回页面的无障碍树：
 
 ```sh copy
 lightpanda fetch --dump semantic_tree https://example.com
 ```
 
-Each node includes:
+每个节点包含：
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |---|---|---|
-| `nodeId` | string | Unique node identifier |
-| `backendDOMNodeId` | integer | Backend DOM node ID |
-| `nodeName` | string | HTML element name (e.g., `h1`, `p`, `a`, `text`) |
-| `xpath` | string | XPath to the node |
-| `nodeType` | integer | DOM node type (1 = element, 3 = text, 9 = document) |
-| `isInteractive` | boolean | Whether the element is interactive |
-| `role` | string | ARIA role (e.g., `heading`, `paragraph`, `link`, `none`) |
-| `name` | string | Computed accessible name |
-| `nodeValue` | string | Text content (for text nodes) |
-| `attributes` | object | HTML attributes (e.g., `href`, `lang`) |
-| `children` | array | Child nodes |
+| `nodeId` | string | 节点的唯一标识符 |
+| `backendDOMNodeId` | integer | 后端 DOM 节点 ID |
+| `nodeName` | string | HTML 元素名（如 `h1`、`p`、`a`、`text`） |
+| `xpath` | string | 节点的 XPath |
+| `nodeType` | integer | DOM 节点类型（1 = 元素，3 = 文本，9 = 文档） |
+| `isInteractive` | boolean | 该元素是否可交互 |
+| `role` | string | ARIA 角色（如 `heading`、`paragraph`、`link`、`none`） |
+| `name` | string | 计算得到的无障碍名称 |
+| `nodeValue` | string | 文本内容（文本节点） |
+| `attributes` | object | HTML 属性（如 `href`、`lang`） |
+| `children` | array | 子节点 |
 
 <details>
-<summary>Example output (first two levels)</summary>
+<summary>示例输出（前两层）</summary>
 
 ```json
 {
@@ -148,14 +152,14 @@ Each node includes:
 
 </details>
 
-The `semantic_tree_text` format outputs the same data in a compact readable form:
+`semantic_tree_text` 格式以紧凑可读的形式输出相同数据：
 
 ```sh copy
 lightpanda fetch --dump semantic_tree_text https://example.com
 ```
 
 <details>
-<summary>Example output</summary>
+<summary>示例输出</summary>
 
 ```
 [1] RootWebArea: Example Domain
@@ -168,30 +172,36 @@ lightpanda fetch --dump semantic_tree_text https://example.com
 
 </details>
 
-> The CLI `semantic_tree` and the CDP `Accessibility.getFullAXTree` return different JSON schemas. The CLI uses flat field names (`role`, `name` as strings); CDP uses typed objects (e.g., `role: { type: "role", value: "heading" }`). See [CDP: Accessibility tree](#cdp-accessibility-tree) for the CDP schema.
+> CLI 的 `semantic_tree` 与 CDP 的 `Accessibility.getFullAXTree` 返回不同的
+> JSON schema。CLI 使用扁平字段名（`role`、`name` 为字符串）；CDP 使用带
+> 类型的对象（如 `role: { type: "role", value: "heading" }`）。CDP schema 见
+> [CDP：无障碍树](#cdp无障碍树)。
 
 ---
 
-## CDP: `LP.getMarkdown`
+## CDP：`LP.getMarkdown`
 
-In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint with a custom **LP domain**. `LP.getMarkdown` converts the current page's live DOM to Markdown.
+在服务器模式（`lightpanda serve`）下，Lightpanda 暴露一个 WebSocket
+CDP 端点，其中带有自定义的 **LP 域**。`LP.getMarkdown` 会把当前页面的
+实时 DOM 转换为 Markdown。
 
-Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
+`--dump markdown` 是从零处理一个 URL，而 `LP.getMarkdown` 则在调用时
+转换 DOM。你可以先点击、填表或等待动态内容，再调用它来捕获当前状态。
 
-### Starting the CDP server
+### 启动 CDP 服务器
 
 ```sh copy
-# Start CDP server (default: ws://127.0.0.1:9222)
+# 启动 CDP 服务器（默认：ws://127.0.0.1:9222）
 lightpanda serve
 
-# Custom host and port
+# 自定义 host 与端口
 lightpanda serve --host 0.0.0.0 --port 9333
 
-# Verify it's running
+# 验证是否已在运行
 curl http://127.0.0.1:9222/json/version
 ```
 
-### Using `LP.getMarkdown`
+### 使用 `LP.getMarkdown`
 
 <Tabs items={['Puppeteer', 'Playwright']} className="-mb-4">
   <Tabs.Tab id="Playwright" className="m-0">
@@ -241,15 +251,18 @@ await browser.disconnect();
   </Tabs.Tab>
 </Tabs>
 
-> `LP.getMarkdown` works the same way locally or on [Lightpanda Cloud](https://console.lightpanda.io/signup).
+> `LP.getMarkdown` 在本地与
+> [Lightpanda Cloud](https://console.lightpanda.io/signup) 上工作方式相同。
 
-> `LP.getMarkdown` supports converting a sub-portion of the page by targeting specific DOM nodes, useful for skipping headers, footers, and sidebars.
+> `LP.getMarkdown` 支持通过指定 DOM 节点只转换页面的局部，适合跳过
+> 页眉、页脚和侧边栏。
 
-## CDP: Accessibility tree
+## CDP：无障碍树
 
-Lightpanda supports the standard CDP `Accessibility.getFullAXTree` command, returning the complete accessibility tree as a structured array of nodes, compatible with Chrome's CDP implementation.
+Lightpanda 支持标准的 CDP `Accessibility.getFullAXTree` 命令，以结构化
+节点数组返回完整的无障碍树，与 Chrome 的 CDP 实现兼容。
 
-### Usage with Puppeteer
+### 在 Puppeteer 中的用法
 
 ```javascript copy
 const client = await page.createCDPSession();
@@ -259,7 +272,7 @@ console.log(JSON.stringify(result.nodes, null, 2));
 console.log(`Total nodes: ${result.nodes.length}`);
 ```
 
-### Usage with Playwright
+### 在 Playwright 中的用法
 
 ```javascript copy
 const client = await page.context().newCDPSession(page);
@@ -267,10 +280,10 @@ const result = await client.send('Accessibility.getFullAXTree', {});
 console.log(JSON.stringify(result.nodes, null, 2));
 ```
 
-### AX node structure
+### AX 节点结构
 
 <details>
-<summary>Example node shape</summary>
+<summary>示例节点结构</summary>
 
 ```json
 {
@@ -293,45 +306,48 @@ console.log(JSON.stringify(result.nodes, null, 2));
 
 </details>
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |---|---|---|
-| `nodeId` | integer | Unique node identifier |
-| `backendDOMNodeId` | integer | Backend DOM node ID |
-| `role` | object | `{ type: "role", value: "<role>" }` - ARIA role |
-| `ignored` | boolean | Whether the node is ignored for accessibility |
-| `ignoredReasons` | array | Why the node is ignored (if applicable) |
+| `nodeId` | integer | 节点的唯一标识符 |
+| `backendDOMNodeId` | integer | 后端 DOM 节点 ID |
+| `role` | object | `{ type: "role", value: "<role>" }` —— ARIA 角色 |
+| `ignored` | boolean | 该节点在无障碍计算中是否被忽略 |
+| `ignoredReasons` | array | 节点被忽略的原因（如适用） |
 | `name` | object | `{ type: "computedString", value: "<name>", sources: [...] }` |
-| `properties` | array | ARIA properties (e.g., `level`, `url`, `focusable`) |
-| `parentId` | integer | Parent node ID |
-| `childIds` | array | Child node IDs |
+| `properties` | array | ARIA 属性（如 `level`、`url`、`focusable`） |
+| `parentId` | integer | 父节点 ID |
+| `childIds` | array | 子节点 ID 列表 |
 
-For `example.com`, the CDP accessibility tree contains **12 nodes**.
+对于 `example.com`，CDP 无障碍树包含 **12 个节点**。
 
 ---
 
-## MCP server
+## MCP 服务器
 
-Lightpanda includes a built-in MCP (Model Context Protocol) server for direct integration with AI tools and LLM frameworks.
+Lightpanda 内置 MCP（Model Context Protocol）服务器，可直接与 AI 工具
+及 LLM 框架集成。
 
 ```sh copy
 lightpanda mcp
 ```
 
-The MCP server exposes `markdown` and `semantic_tree` tools.
+MCP 服务器暴露 `markdown` 和 `semantic_tree` 两个工具。
 
-| Name | Description |
+| 名称 | 说明 |
 |-|-|
-| markdown | Get the page content in markdown format. If a url is provided, it navigates to that url first. |
-| semantic_tree | Get the page content as a simplified semantic DOM tree for AI reasoning. If a url is provided, it navigates to that url first. |
+| markdown | 以 markdown 格式获取页面内容。若提供 url，会先导航到该 url。 |
+| semantic_tree | 以简化的语义 DOM 树形式获取页面内容，便于 AI 推理。若提供 url，会先导航到该 url。 |
 
-> For full MCP server documentation — tools, resources, handshake protocol, agent configuration, and HTTP transport — see the [MCP server guide](/usage/mcp) and the [MCP tools reference](/reference/mcp-tools).
+> MCP 服务器的完整文档——工具、资源、握手协议、agent 配置与 HTTP
+> 传输——见 [MCP 服务器指南](/usage/mcp)与
+> [MCP 工具参考](/reference/mcp-tools)。
 
-## References
+## 参考链接
 
-- [Native Markdown Output in Lightpanda](https://lightpanda.io/blog/posts/native-markdown-output)
-- [Playwright markdown demo](https://github.com/lightpanda-io/demo/blob/main/playwright/markdown.js)
-- [Puppeteer markdown demo](https://github.com/lightpanda-io/demo/blob/main/puppeteer/markdown.js)
-- [Playwright AX tree demo](https://github.com/lightpanda-io/demo/blob/main/playwright/axtree.js)
-- [Puppeteer AX tree demo](https://github.com/lightpanda-io/demo/blob/main/puppeteer/axtree.js)
-- [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
-- [Cloudflare: Markdown for Agents](https://blog.cloudflare.com/markdown-for-agents/)
+- [Lightpanda 原生 Markdown 输出](https://lightpanda.io/blog/posts/native-markdown-output)
+- [Playwright markdown 示例](https://github.com/lightpanda-io/demo/blob/main/playwright/markdown.js)
+- [Puppeteer markdown 示例](https://github.com/lightpanda-io/demo/blob/main/puppeteer/markdown.js)
+- [Playwright AX tree 示例](https://github.com/lightpanda-io/demo/blob/main/playwright/axtree.js)
+- [Puppeteer AX tree 示例](https://github.com/lightpanda-io/demo/blob/main/puppeteer/axtree.js)
+- [Lightpanda 发布版本](https://github.com/lightpanda-io/browser/releases)
+- [Cloudflare：面向 Agent 的 Markdown](https://blog.cloudflare.com/markdown-for-agents/)

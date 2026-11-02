@@ -27,7 +27,7 @@ export default async function RootLayout({
 }>) {
   const pageMap = await getPageMap()
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="zh-CN" dir="ltr" suppressHydrationWarning>
       <NextraHead
         backgroundColor={{
           dark: '#1c1c1c',
@@ -43,15 +43,15 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
           :root {
-            --main-font: ${firaSans.style.fontFamily}, sans-serif;
-            --code-font: ${firaCode.style.fontFamily}, sans-serif;
+            --main-font: ${firaSans.style.fontFamily}, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            --code-font: ${firaCode.style.fontFamily}, ui-monospace, 'PingFang SC', 'Microsoft YaHei', monospace;
           }
         `,
           }}
         />
         <Favicon />
         <DNSPrefetch />
-        <link rel="alternate" type="text/markdown" href="/llms.txt" />
+        <link rel="alternate" type="text/markdown" href="/docs-cn/lightpanda/llms.txt" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -1,19 +1,19 @@
 ---
-title: MCP tools
-description: Reference of the tools and resources exposed by the Lightpanda MCP server.
+title: MCP 工具
+description: Lightpanda MCP 服务器所暴露工具与资源的参考。
 ---
 
 import McpTools from '../../generated/mcp-tools.mdx'
 
-# MCP tools
+# MCP 工具
 
-The Lightpanda MCP server exposes these tools and resources, started with [`lightpanda mcp`](/reference/cli/mcp). See [how to use MCP](/usage/mcp) for practical documentation.
+Lightpanda MCP 服务器暴露以下工具与资源，通过 [`lightpanda mcp`](/reference/cli/mcp) 启动。实战用法参见 [MCP 的使用方法](/usage/mcp)。
 
-Each browser tool below links to its full description and arguments in the [browser tools reference](/reference/browser-tools); the MCP server, the agent and scripts share the same tools. The Hints column carries the tool's MCP annotations, and **page state** marks the tools that return `structuredContent`.
+下面每个浏览器工具都链接到[浏览器工具参考](/reference/browser-tools)中的完整描述与参数；MCP 服务器、Agent 与脚本共用同一批工具。Hints 列是该工具的 MCP 标注（annotations），**page state** 标记返回 `structuredContent` 的工具。
 
-## Calling a tool
+## 调用工具
 
-Every call goes through the MCP `tools/call` method, with `name` and `arguments` populated from the tools below.
+每次调用都通过 MCP 的 `tools/call` 方法进行，`name` 与 `arguments` 取自下方的工具清单。
 
 ```json
 {"jsonrpc":"2.0","id":2,"method":"tools/call",
@@ -24,12 +24,12 @@ Every call goes through the MCP `tools/call` method, with `name` and `arguments`
  "structuredContent":{"url":"https://example.com","httpStatus":200,"title":"Example Domain"},"isError":false}}
 ```
 
-The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`.
+返回结果形如 `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`。
 
-**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated successfully. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
+**页面状态**（page state）。`goto` 及作用于页面的工具（`click`、`fill`、`scroll`、`hover`、`press`、`selectOption`、`setChecked`）会在文本末尾附上 `Page url: <url>, HTTP <status>, title: <title>`；`goto` 则报告 `Navigated successfully. HTTP <status>.` 状态码为 4xx 或 5xx 意味着页面是错误页，而非目标内容。
 
-The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
+这些工具还会返回带 `url`、`httpStatus` 与 `title` 的 `structuredContent`，由各工具在 `tools/list` 中的 `outputSchema` 声明。只有 `url` 始终存在；在收到任何响应之前没有 `httpStatus`。
 
-`goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
+`goto` 在真正的导航失败时会直接返回错误（如 `navigation failed: CouldntResolveHost`）；超时则报告 `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."`（见[已知行为](/usage/mcp#已知行为)）。
 
 <McpTools />

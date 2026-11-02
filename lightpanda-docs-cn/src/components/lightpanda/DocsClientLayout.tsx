@@ -24,7 +24,7 @@ export const DocsClientLayout = ({ children, pageMap }: DocsClientLayoutProps) =
         docsRepositoryBase={siteDetails.docsRepositoryBase}
         footer={<Footer />}
         feedback={{
-          content: 'Question? Send us feedback',
+          content: '有问题？反馈给我们',
         }}
         toc={{
           extraContent: (

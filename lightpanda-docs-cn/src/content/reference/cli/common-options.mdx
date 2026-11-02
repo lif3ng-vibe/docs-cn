@@ -1,13 +1,13 @@
 ---
-title: Common Options
-description: Options shared by every Lightpanda CLI command.
+title: 通用选项
+description: 所有 Lightpanda CLI 命令共享的选项。
 ---
 
-# Common Options
+# 通用选项
 
-Every Lightpanda command ([fetch](/reference/cli/fetch), [serve](/reference/cli/serve), [mcp](/reference/cli/mcp), [agent](/reference/cli/agent), [run](/reference/cli#run)) accepts the following options in addition to its own.
+每个 Lightpanda 命令（[fetch](/reference/cli/fetch)、[serve](/reference/cli/serve)、[mcp](/reference/cli/mcp)、[agent](/reference/cli/agent)、[run](/reference/cli#run)）除自己的选项外，还接受以下选项。
 
-## Options
+## 选项
 
 ```console
 common options:
@@ -203,10 +203,10 @@ common options:
           Defaults to 8.
 ```
 
-**Deprecated options.** Still accepted, but no longer shown in `--help`:
+**已弃用的选项**。仍可接受，但不再显示在 `--help` 中：
 
-- **`--disable-subframes`**: subframes are now disabled by default, use `--load-resources iframe` to enable.
-- **`--disable-workers`**: workers are now disabled by default, use `--load-resources worker` to enable.
-- **`--enable-external-stylesheets`**: use `--load-resources stylesheet` to enable.
-- **`--experimental-features cors`**: CORS checks are now enforced by default; this value is still accepted but ignored. Use `--disable-features cors` to skip them.
-- **`--log-filter-scopes`**: use `--log-filter` instead.
+- **`--disable-subframes`**：子 frame 现已默认禁用，用 `--load-resources iframe` 启用。
+- **`--disable-workers`**：worker 现已默认禁用，用 `--load-resources worker` 启用。
+- **`--enable-external-stylesheets`**：用 `--load-resources stylesheet` 启用。
+- **`--experimental-features cors`**：CORS 检查现已默认强制执行；该值仍被接受但会被忽略。要跳过它们，用 `--disable-features cors`。
+- **`--log-filter-scopes`**：改用 `--log-filter`。

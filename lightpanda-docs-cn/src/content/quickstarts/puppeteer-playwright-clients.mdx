@@ -1,31 +1,31 @@
 ---
-title: Puppeteer, Playwright & other client libraries
-description: Connect Puppeteer, Playwright, Chromedp, or Selenium to Lightpanda and extract JavaScript-rendered content in under 10 minutes.
+title: Puppeteer、Playwright 及其他客户端库
+description: 把 Puppeteer、Playwright、Chromedp 或 Selenium 连上 Lightpanda，10 分钟内读取 JavaScript 渲染的内容。
 ---
 import { Callout, Steps, Tabs } from 'nextra/components'
 
-# Puppeteer, Playwright & other client libraries
+# Puppeteer、Playwright 及其他客户端库
 
-Connect Puppeteer, Playwright, Chromedp, or Selenium to Lightpanda in under 10 minutes, and read content that only exists once a page's JavaScript runs. Get the same automation you already know, running faster and lighter than Chrome.
+10 分钟内把 Puppeteer、Playwright、Chromedp 或 Selenium 连上 Lightpanda，读到那些要等页面 JavaScript 跑起来才存在的内容。你已经熟悉的自动化原样保留，还比 Chrome 更快、更轻。
 
-## Steps
+## 步骤
 
 <Steps>
 
-### Install Lightpanda
+### 安装 Lightpanda
 
 ```sh copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+其他方式：[Windows 上的 WSL2](/run-locally/installation/one-liner#windows--wsl2)、[Docker](/run-locally/installation/docker)、[包管理器](/run-locally/installation/package-managers)。
 
-### Install your client library
+### 安装你的客户端库
 
 <Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
   <Tabs.Tab>
-Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+需要 [Node.js](https://nodejs.org/en/download)。在一个新的项目目录里：
 
 ```sh copy
 npm init -y
@@ -36,7 +36,7 @@ npm install --save puppeteer-core
   <Tabs.Tab>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="install-playwright-js" className="m-0">
-Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+需要 [Node.js](https://nodejs.org/en/download)。在一个新的项目目录里：
 
 ```sh copy
 npm init -y
@@ -45,7 +45,7 @@ npm install --save playwright-core
 ```
   </Tabs.Tab>
   <Tabs.Tab id="install-playwright-py" className="m-0">
-Needs [Python](https://www.python.org/downloads/):
+需要 [Python](https://www.python.org/downloads/)：
 
 ```sh copy
 pip install playwright
@@ -54,7 +54,7 @@ pip install playwright
 </Tabs>
   </Tabs.Tab>
   <Tabs.Tab>
-Needs [Go](https://go.dev/doc/install). In a new project directory:
+需要 [Go](https://go.dev/doc/install)。在一个新的项目目录里：
 
 ```sh copy
 go mod init quickstart
@@ -63,11 +63,11 @@ go get github.com/chromedp/chromedp
   </Tabs.Tab>
   <Tabs.Tab>
 <Callout type="warning">
-  WebDriver support, classic and BiDi, is new and doesn't cover the full specs yet. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
+  WebDriver 支持（classic 与 BiDi）尚新，还没有覆盖全部规范。如果你的脚本所需的命令缺失，欢迎[提 issue](https://github.com/lightpanda-io/browser/issues)。
 </Callout>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="install-selenium-js" className="m-0">
-Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+需要 [Node.js](https://nodejs.org/en/download)。在一个新的项目目录里：
 
 ```sh copy
 npm init -y
@@ -76,7 +76,7 @@ npm install selenium-webdriver
 ```
   </Tabs.Tab>
   <Tabs.Tab id="install-selenium-py" className="m-0">
-Needs [Python](https://www.python.org/downloads/):
+需要 [Python](https://www.python.org/downloads/)：
 
 ```sh copy
 pip install selenium
@@ -86,7 +86,7 @@ pip install selenium
   </Tabs.Tab>
 </Tabs>
 
-### Start Lightpanda
+### 启动 Lightpanda
 
 <Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
   <Tabs.Tab>
@@ -105,7 +105,7 @@ lightpanda serve
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-Selenium needs the `webdriver` protocol enabled:
+Selenium 需要启用 `webdriver` 协议：
 
 ```sh copy
 lightpanda serve --protocol webdriver
@@ -113,19 +113,19 @@ lightpanda serve --protocol webdriver
   </Tabs.Tab>
 </Tabs>
 
-Lightpanda listens on `127.0.0.1:9222` by default, the address the script connects to. Find every `serve` flag, including host/port binding, CDP connection limits, and logging, in the [serve reference](/reference/cli/serve#options).
+Lightpanda 默认监听 `127.0.0.1:9222`，也就是脚本要连接的地址。`serve` 的全部参数——主机/端口绑定、CDP 连接数限制、日志等——见 [serve 参考](/reference/cli/serve#选项)。
 
 <Callout type="info" emoji="ℹ️">
-  Respect `robots.txt` and avoid high-frequency requests against small sites. Pass `--obey-robots` to have Lightpanda follow `robots.txt` for you.
+  请尊重 `robots.txt`，避免对小站点发起高频请求。传入 `--obey-robots` 可让 Lightpanda 自动遵循 `robots.txt`。
 </Callout>
 
-### Connect and read JS-rendered content
+### 连接并读取 JS 渲染的内容
 
-The script opens [quotes.toscrape.com/js](https://quotes.toscrape.com/js/) and prints the first quote. The quotes are rendered by JavaScript, so a plain HTTP fetch returns an empty list: Lightpanda runs that JavaScript before your script reads the page.
+脚本会打开 [quotes.toscrape.com/js](https://quotes.toscrape.com/js/) 并打印第一条名言。这些名言由 JavaScript 渲染，纯 HTTP 获取只会拿到空列表：Lightpanda 会先执行那段 JavaScript，你的脚本再读取页面。
 
 <Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
   <Tabs.Tab>
-Save as `index.js`:
+保存为 `index.js`：
 
 ```js copy
 'use strict'
@@ -149,12 +149,12 @@ await context.close()
 await browser.disconnect()
 ```
 
-Find more [Puppeteer options](/usage/cdp/puppeteer).
+更多 [Puppeteer 选项](/usage/cdp/puppeteer)。
   </Tabs.Tab>
   <Tabs.Tab>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="connect-playwright-js" className="m-0">
-Save as `index.js`:
+保存为 `index.js`：
 
 ```js copy
 import { chromium } from 'playwright-core';
@@ -175,7 +175,7 @@ await browser.close();
 ```
   </Tabs.Tab>
   <Tabs.Tab id="connect-playwright-py" className="m-0">
-Save as `script.py`:
+保存为 `script.py`：
 
 ```python copy
 from playwright.sync_api import sync_playwright
@@ -197,10 +197,10 @@ with sync_playwright() as p:
   </Tabs.Tab>
 </Tabs>
 
-Find more [Playwright options](/usage/cdp/playwright).
+更多 [Playwright 选项](/usage/cdp/playwright)。
   </Tabs.Tab>
   <Tabs.Tab>
-Save as `main.go`:
+保存为 `main.go`：
 
 ```go copy
 package main
@@ -233,12 +233,12 @@ func main() {
 }
 ```
 
-Find more [Chromedp options](/usage/cdp/chromedp).
+更多 [Chromedp 选项](/usage/cdp/chromedp)。
   </Tabs.Tab>
   <Tabs.Tab>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="connect-selenium-js" className="m-0">
-This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true`. Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...). Save as `index.js`:
+本示例通过 BiDi 驱动浏览器：把 `webSocketUrl` capability 设为 `true` 来请求 BiDi 会话。不设的话，会话会走 classic WebDriver 命令（`driver.get()`、`findElement()` 等）。保存为 `index.js`：
 
 ```js copy
 'use strict'
@@ -274,7 +274,7 @@ await driver.quit()
 ```
   </Tabs.Tab>
   <Tabs.Tab id="connect-selenium-py" className="m-0">
-This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `True`. Without it, the session uses classic WebDriver commands (`driver.get()`, `find_element()`, ...). Save as `script.py`:
+本示例通过 BiDi 驱动浏览器：把 `webSocketUrl` capability 设为 `True` 来请求 BiDi 会话。不设的话，会话会走 classic WebDriver 命令（`driver.get()`、`find_element()` 等）。保存为 `script.py`：
 
 ```python copy
 import os
@@ -308,11 +308,11 @@ os._exit(0)
   </Tabs.Tab>
 </Tabs>
 
-Find more [Selenium options](/usage/bidi/selenium).
+更多 [Selenium 选项](/usage/bidi/selenium)。
   </Tabs.Tab>
 </Tabs>
 
-### Run it
+### 运行
 
 <Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
   <Tabs.Tab>
@@ -355,13 +355,13 @@ python script.py
   </Tabs.Tab>
 </Tabs>
 
-You should see the first quote printed to your terminal. For more complex examples, like filling a form and waiting for dynamic results, see [Interact with a webpage](/guides/interact-with-a-webpage).
+你应当能看到第一条名言打印在终端里。更复杂的例子——比如填写表单并等待动态结果——见[与网页交互](/guides/interact-with-a-webpage)。
 
 </Steps>
 
-## Go to production
+## 走向生产环境
 
-Switch to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) by exporting your token and connecting over `wss://` instead of `ws://`:
+切换到 [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started)：导出你的 token，并把连接从 `ws://` 换成 `wss://`：
 
 ```sh copy
 export LPD_TOKEN="your token here"
@@ -400,6 +400,6 @@ func main() {
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-BiDi is local only for now: Lightpanda Cloud doesn't expose a BiDi endpoint yet, so Selenium has no cloud option here.
+BiDi 目前仅限本地：Lightpanda Cloud 尚未暴露 BiDi 端点，所以 Selenium 在这里没有 Cloud 选项。
   </Tabs.Tab>
 </Tabs>

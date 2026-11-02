@@ -1,0 +1,111 @@
+# Lightpanda 文档（中文镜像）
+
+> 专为机器而非人类打造的无头浏览器。Zig 原生，比 Chrome 无头模式快 10 倍、省 10 倍内存。
+
+## Lightpanda 是什么？
+
+Lightpanda 是用 Zig 编写的无头浏览器引擎，专为网页自动化、网页抓取与 AI Agent 而生。它不是现有浏览器的分支或补丁——从零开始为无渲染开销的无头运行而设计。
+
+## 核心能力
+
+- 浏览器自动化任务比 Chrome 无头模式**快 10 倍**
+- 借助 zigdom（自研 Zig DOM 实现）比 Chrome **省 10 倍内存**
+- **即时启动**——冷启动低于 100ms，可完整嵌入
+- **CDP 兼容**——原生支持 Chrome DevTools 协议（CDP）
+- **Playwright 与 Puppeteer 互通**——通过 `chromium.connectOverCDP()` 或 `puppeteer.connect()` 连接
+- **JavaScript 执行**——V8 引擎，完整支持 Web API
+- **请求拦截**——通过 CDP 暂停、修改、模拟或阻断 HTTP 请求
+- **多客户端**——单进程处理多个并发 CDP 连接
+- **robots.txt 支持**——可选开启，负责任地抓取
+- **Cloud 服务**——`cloud.lightpanda.io` 托管服务，同时提供 Lightpanda 与 Chrome 后端
+
+## 快速开始
+
+```javascript
+// 将 Playwright 连接到 Lightpanda
+const browser = await chromium.connectOverCDP('ws://localhost:9222');
+const page = await browser.newPage();
+await page.goto('https://example.com');
+```
+
+```javascript
+// 将 Puppeteer 连接到 Lightpanda Cloud
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'wss://cloud.lightpanda.io/ws?token=YOUR_TOKEN',
+});
+```
+
+## 架构
+
+- **语言：** Zig（系统编程）+ V8（JavaScript）
+- **DOM：** 自研 Zig DOM 实现（zigdom），替代 LibDOM
+- **网络：** libcurl（HTTP/TLS）
+- **协议：** Chrome DevTools 协议（CDP），基于 WebSocket
+- **部署：** 单二进制、单进程、多线程
+
+> 本文件是 https://lightpanda.io/llms.txt 的中文镜像版，内容为一次性快照（快照日期见项目 README），中文文档见下方清单。
+
+## 文档（46 页）
+
+- [简介](https://lif3ng-vibe.github.io/docs-cn/lightpanda/)
+- [架构总览](https://lif3ng-vibe.github.io/docs-cn/lightpanda/core-concepts/architecture-overview)
+- [基准测试](https://lif3ng-vibe.github.io/docs-cn/lightpanda/core-concepts/benchmarks)
+- [本地与 Cloud 的选择](https://lif3ng-vibe.github.io/docs-cn/lightpanda/core-concepts/local-vs-cloud)
+- [Lightpanda 是什么？](https://lif3ng-vibe.github.io/docs-cn/lightpanda/core-concepts/what-is-lightpanda)
+- [使用代理](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/configure-a-proxy)
+- [与网页交互](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/interact-with-a-webpage)
+- [使用 Lightpanda Agent](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/lightpanda-agent-tutorial)
+- [获取 Markdown 与无障碍树](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/markdown-axtree)
+- [获取 HTML 网页](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/retrieve-an-html-webpage)
+- [使用 Hermes Agent](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/use-hermes)
+- [使用 Python SDK](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/use-python)
+- [使用 Stagehand](https://lif3ng-vibe.github.io/docs-cn/lightpanda/guides/use-stagehand)
+- [Agent](https://lif3ng-vibe.github.io/docs-cn/lightpanda/quickstarts/agent)
+- [MCP](https://lif3ng-vibe.github.io/docs-cn/lightpanda/quickstarts/mcp)
+- [Puppeteer、Playwright 及其他客户端库](https://lif3ng-vibe.github.io/docs-cn/lightpanda/quickstarts/puppeteer-playwright-clients)
+- [Skill](https://lif3ng-vibe.github.io/docs-cn/lightpanda/quickstarts/skill)
+- [CLI 参考](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli)
+- [Agent](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli/agent)
+- [通用选项](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli/common-options)
+- [fetch 命令](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli/fetch)
+- [MCP](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli/mcp)
+- [CDP 服务器](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/cli/serve)
+- [HTTP API](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/http-api)
+- [MCP 工具](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/mcp-tools)
+- [PandaScript 参考](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/pandascript)
+- [Python SDK](https://lif3ng-vibe.github.io/docs-cn/lightpanda/reference/python)
+- [命令](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/commands)
+- [从源码构建](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/build-from-sources)
+- [Docker](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/docker)
+- [Nightly 构建](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/nightly-builds)
+- [一行命令安装](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/one-liner)
+- [包管理器](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/package-managers)
+- [系统要求](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-locally/installation/system-requirements)
+- [入门](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-on-lightpanda-cloud/getting-started)
+- [限额与计费](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-on-lightpanda-cloud/limits-and-billing)
+- [Playground](https://lif3ng-vibe.github.io/docs-cn/lightpanda/run-on-lightpanda-cloud/playground)
+- [Agent](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/agent)
+- [API](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/api)
+- [Puppeteer (BiDi)](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/bidi/puppeteer)
+- [Selenium (WebDriver)](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/bidi/selenium)
+- [Chromedp](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/cdp/chromedp)
+- [Playwright](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/cdp/playwright)
+- [Puppeteer](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/cdp/puppeteer)
+- [MCP](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/mcp)
+- [PandaScript](https://lif3ng-vibe.github.io/docs-cn/lightpanda/usage/pandascript)
+
+> 英文原站完整文档内容见 [https://lightpanda.io/docs/llms-full.txt](https://lightpanda.io/docs/llms-full.txt)
+
+## 链接
+
+- [官网](https://lightpanda.io)
+- [文档（原站）](https://lightpanda.io/docs)
+- [博客](https://lightpanda.io/blog)
+- [GitHub](https://github.com/lightpanda-io/browser)
+- [npm 包](https://www.npmjs.com/package/@lightpanda/browser)
+- [Discord](https://discord.gg/K63XeymfB5)
+- [Cloud 控制台](https://console.lightpanda.io)
+
+## 团队
+
+由 Francis Bouvier（CEO）、Katie Brown（COO）与 Pierre Tachoire（CTO）创立。获 Pre-seed 轮融资，ISAI 领投，天使投资人来自 Mistral、Hugging Face 与 Dust。

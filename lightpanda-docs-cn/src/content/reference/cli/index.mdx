@@ -1,36 +1,36 @@
 ---
-title: CLI Reference
-description: Reference of the Lightpanda command-line interface.
+title: 总览
+description: Lightpanda 命令行界面参考。
 ---
 
-# CLI Reference
+# CLI 参考
 
-Lightpanda ships as a single binary. You call it with a command name, followed by the command's arguments:
+Lightpanda 以单个二进制文件发布。调用时先给出命令名，再跟上该命令的参数：
 
 ```sh
 lightpanda <command> [arguments]
 ```
 
-The available commands are:
+可用命令如下：
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| [`agent`](/reference/cli/agent) | Starts an interactive AI agent that can browse the web |
-| [`completion`](#completion) | Prints a shell completion script (bash, fish, zsh) |
-| [`fetch`](/reference/cli/fetch) | Fetches the specified URL |
-| [`help`](#help) | Displays this message |
-| [`mcp`](/reference/cli/mcp) | Starts an MCP (Model Context Protocol) server (stdio or HTTP) |
-| [`run`](#run) | Runs a saved script (no LLM), then exits |
-| [`serve`](/reference/cli/serve) | Starts a WebSocket CDP server |
-| [`version`](#version) | Displays the version of lightpanda |
+| [`agent`](/reference/cli/agent) | 启动一个能浏览网页的交互式 AI Agent |
+| [`completion`](#completion) | 打印 shell 补全脚本（bash、fish、zsh） |
+| [`fetch`](/reference/cli/fetch) | 抓取指定的 URL |
+| [`help`](#help) | 显示这条帮助信息 |
+| [`mcp`](/reference/cli/mcp) | 启动 MCP（Model Context Protocol）服务器（stdio 或 HTTP） |
+| [`run`](#run) | 运行已保存的脚本（无 LLM），然后退出 |
+| [`serve`](/reference/cli/serve) | 启动 WebSocket CDP 服务器 |
+| [`version`](#version) | 显示 lightpanda 的版本 |
 
-Use `lightpanda help <command>` for more information about a command.
+用 `lightpanda help <command>` 查看某个命令的更多信息。
 
-Every command also accepts a shared set of [common options](/reference/cli/common-options).
+每个命令还接受一组共享的[通用选项](/reference/cli/common-options)。
 
 ## completion
 
-Print a shell completion script for commands, flags and their values to stdout. See [how to install shell completion](/run-locally/commands#shell-completion).
+把针对命令、flag 及其取值的 shell 补全脚本打印到 stdout。安装方法见[如何安装 shell 补全](/run-locally/commands#shell-自动补全)。
 
 ```sh copy
 lightpanda completion fish > ~/.config/fish/completions/lightpanda.fish
@@ -51,7 +51,7 @@ Examples:
 
 ## help
 
-Show the command list above, or `lightpanda help <command>` for one command's own reference. `--help` and `-h` work too, at the top level or after any command.
+显示上面的命令清单；`lightpanda help <command>` 则显示单个命令自己的参考。`--help` 与 `-h` 也可用，在顶层或任何命令之后都行。
 
 ```sh copy
 lightpanda help [command]
@@ -59,7 +59,7 @@ lightpanda help [command]
 
 ## run
 
-Run a saved script, then exit. No LLM calls, no API key needed. See [how to run a saved script](/run-locally/commands#run).
+运行已保存的脚本，然后退出。不调用 LLM，也不需要 API key。见[如何运行已保存的脚本](/run-locally/commands#run-命令)。
 
 ```sh copy
 lightpanda run script.js
@@ -82,13 +82,13 @@ Arguments:
           same way you would a shell script.
 ```
 
-The command also accepts the [common options](/reference/cli/common-options).
+该命令也接受[通用选项](/reference/cli/common-options)。
 
-Find the script format in the [PandaScript reference](/reference/pandascript).
+脚本格式见 [PandaScript 参考](/reference/pandascript)。
 
 ## version
 
-Displays the version of lightpanda.
+显示 lightpanda 的版本。
 
 ```sh copy
 lightpanda version

@@ -1,24 +1,28 @@
 ---
 title: Playwright
-description: Use Lightpanda with Playwright via CDP, locally or on the cloud.
+description: 通过 CDP 在本地或云端配合 Playwright 使用 Lightpanda。
 ---
 import { Tabs } from 'nextra/components'
 
 # Playwright
 
-Use Lightpanda with [Playwright](https://playwright.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP), in JavaScript or Python.
+通过 Chrome DevTools 协议（CDP）配合
+[Playwright](https://playwright.dev/) 使用 Lightpanda，支持 JavaScript
+或 Python。
 
-More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright) (JavaScript).
+更多示例见
+[demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright)（JavaScript）。
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
-Start Lightpanda as a local CDP server (find all options in the [serve command reference](/reference/cli/serve#options)):
+把 Lightpanda 作为本地 CDP 服务器启动（全部选项见
+[serve 命令参考](/reference/cli/serve#选项)）：
 
 ```sh copy
 lightpanda serve --host 127.0.0.1 --port 9222
 ```
 
-Connect Playwright:
+连接 Playwright：
 
 <Tabs items={['JavaScript', 'Python']} className="-mb-4">
   <Tabs.Tab id="javascript" className="m-0">
@@ -41,7 +45,7 @@ await browser.close();
 ```
   </Tabs.Tab>
   <Tabs.Tab id="python" className="m-0">
-Install the [`playwright` package](https://pypi.org/project/playwright/):
+安装 [`playwright` 包](https://pypi.org/project/playwright/)：
 
 ```sh copy
 pip install playwright
@@ -68,7 +72,8 @@ with sync_playwright() as p:
 </Tabs>
   </Tabs.Tab>
   <Tabs.Tab>
-Set your API token and connect to the cloud endpoint. The connection uses `wss://` (WebSocket over TLS) instead of the local `ws://`:
+设置你的 API token 并连接云端端点。连接使用 `wss://`（基于 TLS 的
+WebSocket）而非本地的 `ws://`：
 
 ```sh copy
 export LPD_TOKEN="your token here"
@@ -113,37 +118,44 @@ with sync_playwright() as p:
   </Tabs.Tab>
 </Tabs>
 
-In the [playground](/run-on-lightpanda-cloud/playground), the console builds this URL for you and exposes it as `CDP_WS_URL`. Use `process.env.CDP_WS_URL` (JavaScript) or `os.environ["CDP_WS_URL"]` (Python) there, since `LPD_TOKEN` does not exist in that runtime.
+在 [Playground](/run-on-lightpanda-cloud/playground) 中，控制台会替你
+构建好这个 URL 并以 `CDP_WS_URL` 暴露。在该运行时中请使用
+`process.env.CDP_WS_URL`（JavaScript）或 `os.environ["CDP_WS_URL"]`
+（Python），因为那里不存在 `LPD_TOKEN`。
 
-## Cloud options
+## Cloud 选项
 
-### Endpoints
+### 端点
 
-Depending on your location, connect using:
-- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
-- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+根据你的位置，使用以下端点连接：
+- `wss://euwest.cloud.lightpanda.io/ws`（欧洲西部）
+- `wss://uswest.cloud.lightpanda.io/ws`（美国西部）
 
-### Browser
+### 浏览器
 
-By default the cloud serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
-Use `browser=chrome` to select Google Chrome, or `browser=lightpanda` to force Lightpanda.
+默认情况下 Cloud 提供
+[Lightpanda 浏览器](https://github.com/lightpanda-io/browser)。
+用 `browser=chrome` 可选择 Google Chrome，或用 `browser=lightpanda`
+强制使用 Lightpanda。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 ```
 
-### Proxies
+### 代理
 
-The `proxy` parameter controls the outbound IP the cloud browser uses when fetching pages — useful for geo-targeting or avoiding rate limits.
+`proxy` 参数控制 Cloud 浏览器抓取页面时使用的出口 IP——可用于地理
+定向或避开限流。
 
-**fast_dc** — default. A single shared datacenter IP, optimized for speed.
+**fast_dc**——默认。单一共享数据中心 IP，为速度优化。
 
-**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
+**datacenter**——自动轮换的共享数据中心 IP 池。接受可选的 `country`
+参数（两位国家代码）以定向到特定国家。
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
-[Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+如需更多代理选项，请[联系我们](mailto:hello@lightpanda.io)。
   </Tabs.Tab>
 </Tabs>

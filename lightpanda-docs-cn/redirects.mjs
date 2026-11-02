@@ -14,15 +14,15 @@ export const redirects = {
   '/reference/python-api': '/reference/python',
   '/quickstart': '/quickstarts/puppeteer-playwright-clients',
   '/quickstart/installation-and-setup':
-    '/quickstarts/puppeteer-playwright-clients#install-your-client-library',
+    '/quickstarts/puppeteer-playwright-clients#安装你的客户端库',
   '/quickstart/your-first-test':
-    '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
+    '/quickstarts/puppeteer-playwright-clients#连接并读取-js-渲染的内容',
   '/quickstart/build-your-first-extraction-script':
-    '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
+    '/quickstarts/puppeteer-playwright-clients#连接并读取-js-渲染的内容',
   '/quickstart/go-to-production-with-lightpanda-cloud':
-    '/quickstarts/puppeteer-playwright-clients#go-to-production',
+    '/quickstarts/puppeteer-playwright-clients#走向生产环境',
   '/open-source/installation': '/run-locally/installation/one-liner',
-  '/open-source/usage': '/run-locally/commands#serve',
+  '/open-source/usage': '/run-locally/commands#serve-命令',
   '/open-source/systems-requirements': '/run-locally/installation/system-requirements',
   '/open-source/guides/build-from-sources': '/run-locally/installation/build-from-sources',
   '/open-source/guides/configure-a-proxy': '/guides/configure-a-proxy',
@@ -35,8 +35,8 @@ export const redirects = {
   '/cloud-offer/tools/cdp': '/usage/cdp/puppeteer',
   '/cloud-offer/tools/mcp': '/usage/mcp',
   '/cloud-offer/tools/api': '/usage/api',
-  '/run-locally/commands/fetch': '/run-locally/commands#fetch',
-  '/run-locally/commands/serve': '/run-locally/commands#serve',
+  '/run-locally/commands/fetch': '/run-locally/commands#fetch-命令',
+  '/run-locally/commands/serve': '/run-locally/commands#serve-命令',
   '/run-locally/commands/mcp': '/run-locally/commands#mcp',
   '/run-locally/commands/agent': '/run-locally/commands#agent',
 }

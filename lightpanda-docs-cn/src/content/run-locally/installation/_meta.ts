@@ -1,12 +1,12 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  'one-liner': 'One-liner',
+  'one-liner': '一行命令安装',
   docker: 'Docker',
-  'package-managers': 'Package manager',
-  'nightly-builds': 'Nightly builds',
-  'system-requirements': 'System requirements',
-  'build-from-sources': 'Build from sources',
+  'package-managers': '包管理器',
+  'nightly-builds': 'Nightly 构建',
+  'system-requirements': '系统要求',
+  'build-from-sources': '从源码构建',
 }
 
 export default meta

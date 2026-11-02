@@ -1,47 +1,47 @@
 ---
 title: MCP
-description: Connect an AI agent to Lightpanda over the Model Context Protocol and drive a real form on a live page.
+description: 通过 Model Context Protocol 把 AI agent 连上 Lightpanda，在真实页面上操作一个真实的表单。
 ---
 import { Callout, Steps } from 'nextra/components'
 
 # MCP
 
-Lightpanda's [MCP](https://modelcontextprotocol.io) server exposes browser tools, like navigate, read, click, fill, and extract, to any AI application that speaks the Model Context Protocol. Connect it once, then prompt your agent in plain language.
+Lightpanda 的 [MCP](https://modelcontextprotocol.io) 服务器把浏览器工具——导航、读取、点击、填写、提取等——暴露给任何说 Model Context Protocol 的 AI 应用。接一次，之后用自然语言给 agent 下提示词就行。
 
-## Prerequisites
+## 前置条件
 
-- An MCP host: Claude Desktop, Cursor, Windsurf, or a custom client.
+- 一个 MCP 宿主：Claude Desktop、Cursor、Windsurf 或自定义客户端。
 
-## Steps
+## 步骤
 
 <Steps>
 
-### Install Lightpanda
+### 安装 Lightpanda
 
 ```sh copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+其他方式：[Windows 上的 WSL2](/run-locally/installation/one-liner#windows--wsl2)、[Docker](/run-locally/installation/docker)、[包管理器](/run-locally/installation/package-managers)。
 
-### Connect your AI agent
+### 连接你的 AI agent
 
-Your MCP host starts `lightpanda mcp` itself and talks to it over stdin and stdout, so it needs the full path to the binary. Print it with:
+你的 MCP 宿主会自行启动 `lightpanda mcp`，并通过 stdin/stdout 与之通信，因此需要二进制的完整路径。用下面的命令打印：
 
 ```sh copy
 command -v lightpanda
 ```
 
-A bare `lightpanda` may not work here: your MCP host starts it outside your terminal, so it doesn't see the `PATH` you set during install.
+直接写 `lightpanda` 在这里可能不奏效：MCP 宿主在你的终端之外启动它，看不到你安装时设置的 `PATH`。
 
-Open your host's MCP configuration:
+打开宿主的 MCP 配置：
 
-- **Claude Desktop:** Settings > Developer > Edit Config (opens `claude_desktop_config.json`)
-- **Cursor:** `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for all projects
-- **Windsurf:** `~/.codeium/windsurf/mcp_config.json`
+- **Claude Desktop**：Settings > Developer > Edit Config（会打开 `claude_desktop_config.json`）
+- **Cursor**：项目内的 `.cursor/mcp.json`，或全局的 `~/.cursor/mcp.json`
+- **Windsurf**：`~/.codeium/windsurf/mcp_config.json`
 
-Add Lightpanda, replacing `/path/to/lightpanda` with the path you printed:
+添加 Lightpanda，把 `/path/to/lightpanda` 换成刚才打印出来的路径：
 
 ```json copy
 {
@@ -55,26 +55,26 @@ Add Lightpanda, replacing `/path/to/lightpanda` with the path you printed:
 ```
 
 <Callout type="info" emoji="ℹ️">
-  Respect `robots.txt` and avoid high-frequency requests against small sites. Add `--obey-robots` to `args` to have Lightpanda follow `robots.txt` for you.
+  请尊重 `robots.txt`，避免对小站点发起高频请求。在 `args` 里加上 `--obey-robots` 可让 Lightpanda 自动遵循 `robots.txt`。
 </Callout>
 
-### Try it
+### 试一试
 
-[quotes.toscrape.com](https://quotes.toscrape.com) is a public scraping-practice site built by Zyte: a fictional quotes catalog whose search page filters by author and tag through an AJAX form.
+[quotes.toscrape.com](https://quotes.toscrape.com) 是 Zyte 搭建的公开抓取练习站：一个虚构的名言目录，其搜索页通过 AJAX 表单按作者和标签筛选。
 
-Prompt your agent:
+给你的 agent 下这样的提示词：
 
 ```text copy
 Go to quotes.toscrape.com/search.aspx and find which tags Albert Einstein's quotes are filed under, then give me his inspirational one.
 ```
 
-The agent chains tool calls to answer it: `goto` the search page, `detectForms` to find the author and tag dropdowns, `selectOption` the author (which reloads the tag list for that author), `selectOption` the tag, `click` search, `waitForState` for the results to load, then `extract` the quote.
+agent 会把工具调用串成一条链来回答：用 `goto` 打开搜索页，用 `detectForms` 找到作者和标签下拉框，用 `selectOption` 选作者（这会为该作者重新加载标签列表），再 `selectOption` 选标签，`click` 点击搜索，`waitForState` 等结果加载，最后 `extract` 提取名言。
 
 </Steps>
 
-## Go to production
+## 走向生产环境
 
-[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you through [mcp-remote](https://www.npmjs.com/package/mcp-remote), the bridge MCP hosts that only support stdio need to reach a remote server:
+[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) 通过 [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) 暴露同一个 MCP 服务器，无需安装或保活任何进程。借助 [mcp-remote](https://www.npmjs.com/package/mcp-remote)——只支持 stdio 的 MCP 宿主连远程服务器所需的桥接——把宿主指向离你最近的端点：
 
 ```json copy
 {
@@ -91,4 +91,4 @@ The agent chains tool calls to answer it: `goto` the search page, `detectForms` 
 }
 ```
 
-Find more [MCP options](/usage/mcp) and every tool in the [MCP tools reference](/reference/mcp-tools).
+更多 [MCP 选项](/usage/mcp)与全部工具见 [MCP 工具参考](/reference/mcp-tools)。

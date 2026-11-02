@@ -1,15 +1,15 @@
 ---
-title: Commands
-description: Overview of the Lightpanda CLI commands to fetch, serve, run MCP or agent mode locally.
+title: 命令
+description: Lightpanda CLI 各命令总览：本地抓取、启动服务器、运行 MCP 或 Agent 模式。
 ---
 
 import { Tabs } from 'nextra/components'
 
-# Commands
+# 命令
 
-## Fetch
+## fetch 命令
 
-Fetch one or more URLs and dump the rendered result to stdout. Each URL is loaded in its own page, with JavaScript executed, so you get the final DOM rather than the raw server response.
+抓取一个或多个 URL，并把渲染后的结果输出到 stdout。每个 URL 都会在独立页面中加载并执行 JavaScript，因此你拿到的是最终 DOM，而不是服务器的原始响应。
 
 ```sh copy
 lightpanda fetch --obey-robots --log-level info --dump html https://demo-browser.lightpanda.io/campfire-commerce/
@@ -23,11 +23,11 @@ $time=1785335543140 $scope=http $level=info $msg="request complete" source=fetch
 ...
 ```
 
-Choose the output format with `--dump` and control how long the page runs with the `--wait-*` options. Find all options in the [fetch command reference](/reference/cli/fetch#options).
+用 `--dump` 选择输出格式，用 `--wait-*` 系列选项控制页面运行时长。全部选项见 [fetch 命令参考](/reference/cli/fetch#选项)。
 
-## Serve
+## serve 命令
 
-Start Lightpanda as a server for automation clients. By default it speaks [CDP](https://chromedevtools.github.io/devtools-protocol/) (Chrome DevTools Protocol). Pass `--protocol webdriver` to speak WebDriver instead: [classic](https://w3c.github.io/webdriver/) over HTTP, and [BiDi](https://w3c.github.io/webdriver-bidi/) over WebSocket. Pass `--protocol cdp --protocol webdriver` to serve CDP and WebDriver on the same port.
+将 Lightpanda 作为服务器启动，供自动化客户端连接。默认使用 [CDP](https://chromedevtools.github.io/devtools-protocol/)（Chrome DevTools 协议，CDP）；传入 `--protocol webdriver` 则改用 WebDriver：HTTP 上的[经典协议](https://w3c.github.io/webdriver/)，以及 WebSocket 上的 [BiDi](https://w3c.github.io/webdriver-bidi/)。传入 `--protocol cdp --protocol webdriver` 可在同一端口上同时提供 CDP 与 WebDriver 服务。
 
 ```sh copy
 lightpanda serve --obey-robots
@@ -36,64 +36,64 @@ lightpanda serve --obey-robots
 $time=1785335600862 $scope=app $level=note $msg="server running" address=127.0.0.1:9222
 ```
 
-Find all options in the [serve command reference](/reference/cli/serve#options).
+全部选项见 [serve 命令参考](/reference/cli/serve#选项)。
 
-**Connect a CDP client** once the server is running:
+服务器启动后，**连接 CDP 客户端**：
 
 - [Puppeteer](/usage/cdp/puppeteer)
 - [Playwright](/usage/cdp/playwright)
 - [Chromedp](/usage/cdp/chromedp)
 
-**Connect a WebDriver client**, after adding `--protocol webdriver`:
+添加 `--protocol webdriver` 后，**连接 WebDriver 客户端**：
 
 - [Puppeteer](/usage/bidi/puppeteer)
 - [Selenium](/usage/bidi/selenium)
 
 ## MCP
 
-Start Lightpanda as a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server over stdio to control it with LLMs.
+将 Lightpanda 作为基于 stdio 的 [Model Context Protocol](https://modelcontextprotocol.io)（MCP）服务器启动，用 LLM 来控制它。
 
 ```sh copy
 lightpanda mcp
 ```
 
-Find all options in the [mcp command reference](/reference/cli/mcp#options) and the available tools in the [MCP tools reference](/reference/mcp-tools).
+全部选项见 [mcp 命令参考](/reference/cli/mcp#选项)，可用工具见 [MCP 工具参考](/reference/mcp-tools)。
 
-**Connect a MCP client** once the server is running, using [your preferred LLM](/usage/mcp#connect-an-ai-agent). Find details about the [MCP usage](/usage/mcp).
+服务器启动后，**连接 MCP 客户端**，使用[你偏好的 LLM](/usage/mcp#接入-ai-agent)。详情见 [MCP 用法](/usage/mcp)。
 
 ## Agent
 
-Start Lightpanda as an interactive AI agent that can browse the web.
+将 Lightpanda 作为一个能浏览网页的交互式 AI Agent 启动。
 
 ```sh copy
 lightpanda agent
 ```
 
-The agent auto-detects an API key from your environment and opens a REPL where you type instructions in natural language. You can also run a single task and exit with `--task "..."`, or replay a saved script without any LLM call with `lightpanda run script.js`.
+Agent 会自动从环境中检测 API key，并打开一个 REPL，你可以在其中用自然语言输入指令。也可以用 `--task "..."` 执行单个任务后退出，或者用 `lightpanda run script.js` 回放已保存的脚本，全程不调用任何 LLM。
 
-Find all options in the [agent command reference](/reference/cli/agent#options).
+全部选项见 [agent 命令参考](/reference/cli/agent#选项)。
 
-## Run
+## run 命令
 
-Run a saved [PandaScript](/usage/pandascript) (a `.js` automation script), then exit. No LLM calls, no API key needed.
+运行已保存的 [PandaScript](/usage/pandascript)（`.js` 自动化脚本），然后退出。不调用 LLM，也不需要 API key。
 
 ```sh copy
 lightpanda run script.js
 ```
 
-Produce a script to replay with `lightpanda agent --task "..." --save script.js`, or with `/save` from the agent REPL.
+用 `lightpanda agent --task "..." --save script.js`，或在 Agent REPL 中输入 `/save`，即可生成可供回放的脚本。
 
-Find all options in the [run command reference](/reference/cli#run).
+全部选项见 [run 命令参考](/reference/cli#run)。
 
-See [Agent](/usage/agent) and [PandaScript](/usage/pandascript) usage for more details.
+更多细节参见 [Agent](/usage/agent) 与 [PandaScript](/usage/pandascript) 用法。
 
-## Shell completion
+## Shell 自动补全
 
-`lightpanda completion <bash | fish | zsh>` prints a completion script for commands, flags and their values. Run `echo $SHELL` to see which shell you use, then save the script where your shell loads completions from:
+`lightpanda completion <bash | fish | zsh>` 会打印一份针对命令、flag 及其取值的补全脚本。运行 `echo $SHELL` 查看你使用的 shell，然后把脚本保存到该 shell 加载补全的位置：
 
 <Tabs items={['bash', 'fish', 'zsh']}>
   <Tabs.Tab>
-Requires the [bash-completion](https://github.com/scop/bash-completion) package.
+需要安装 [bash-completion](https://github.com/scop/bash-completion) 包。
 
 ```sh copy
 mkdir -p ~/.local/share/bash-completion/completions
@@ -112,10 +112,10 @@ mkdir -p ~/.zfunc
 lightpanda completion zsh > ~/.zfunc/_lightpanda
 ```
 
-Then add `fpath=(~/.zfunc $fpath)` before `compinit` in your `~/.zshrc`.
+然后在 `~/.zshrc` 中、`compinit` 之前添加 `fpath=(~/.zfunc $fpath)`。
   </Tabs.Tab>
 </Tabs>
 
-Open a new shell, then press <kbd>Tab</kbd> after `lightpanda` to complete commands, after `--` to complete flags, or after a flag like `--dump` to complete its values.
+打开一个新的 shell，然后在 `lightpanda` 之后按 <kbd>Tab</kbd> 补全命令，在 `--` 之后补全 flag，或在 `--dump` 这类 flag 之后补全其取值。
 
-Regenerate the script after updating Lightpanda to pick up new commands and flags.
+更新 Lightpanda 后请重新生成脚本，以纳入新命令和 flag。

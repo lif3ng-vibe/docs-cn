@@ -1,174 +1,161 @@
 ---
 title: Agent
-description: Lightpanda agent lets you drive a headless browser by talking to it.
+description: Lightpanda agent 让你可以通过与它对话来驱动无头浏览器。
 ---
 
 # Agent
 
-`lightpanda agent` lets you drive a headless browser by talking to it.
+`lightpanda agent` 让你可以通过与它对话来驱动无头浏览器。
 
-You tell it where to go and what to extract, in plain English or with slash
-commands, and it controls a real browser to do the work. Think of it as a
-robot you're directing to use the web, more than a chatbot you're having a
-conversation with.
+你用自然语言或斜杠命令告诉它去哪里、提取什么，它会控制一个真实浏览器
+去完成工作。把它想象成一个听你指挥去使用网页的机器人，而不是一个陪你
+聊天的聊天机器人。
 
-Every session starts by navigating to a page, either by
-saying so ("go to this website") or by typing `/goto <url>`. There's
-no window to look at; the browser runs in headless mode and you see its output
-(extracted data, the agent's answer) in your terminal.
+每个会话都从导航到某个页面开始，可以说一句话（"去这个网站"），也可以
+输入 `/goto <url>`。没有窗口可看；浏览器以无头模式运行，你会在终端里
+看到它的输出（提取的数据、Agent 的回答）。
 
-The agent stacks three layers:
+Agent 由三层堆叠而成：
 
-1. **The browser** Loads webpages, runs JavaScript and handles the DOM.
-   It's the same engine that powers Lightpanda CDP server.
-2. **The runtime** A small set of native tools that lets you drive the browser:
-   `goto`, `click`, `fill`, `extract`, `evaluate`, `search`, and more.
-   Each is available as a command (`/goto`, `/click`, ...).
-3. **An LLM** Reads your natural language request and decides which tools to
-   call. It's optional; the agent can also run without it.
+1. **浏览器** 负责加载网页、执行 JavaScript 并处理 DOM。它与 Lightpanda
+   CDP 服务器所用的是同一个引擎。
+2. **运行时** 一小组原生工具，让你可以驱动浏览器：`goto`、`click`、
+   `fill`、`extract`、`evaluate`、`search` 等。每个工具都有对应的命令
+   （`/goto`、`/click` 等）。
+3. **LLM** 读取你的自然语言请求，决定调用哪些工具。它是可选的；没有它
+   Agent 也能运行。
 
-## Quickstart
+## 快速上手
 
-See the [Agent quickstart](/quickstarts/agent) to set an API key, launch the REPL, and save a session as a reusable [PandaScript](/usage/pandascript).
+参见 [Agent 快速上手](/quickstarts/agent)，了解如何设置 API key、启动
+REPL，以及把会话保存为可复用的 [PandaScript](/usage/pandascript)。
 
 ## LLM
 
-### Providers and API keys
+### 服务商与 API key
 
-The agent needs an LLM to interpret natural language. Set the relevant
-provider's API key as an environment variable, pass `--provider` explicitly,
-or set `/provider` on the REPL. See the [full list of providers, flags, and
-API key env vars](/reference/cli/agent#options).
+Agent 需要 LLM 来解读自然语言。把相应服务商的 API key 设为环境变量、
+显式传入 `--provider`，或在 REPL 中设置 `/provider`。服务商、flag 与
+API key 环境变量的完整列表见[此处](/reference/cli/agent#选项)。
 
-Without an explicit choice, the agent resolves a provider in this order:
+未显式指定时，Agent 按以下顺序确定服务商：
 
-1. **Remembered** - whatever you last selected with `/provider`,
-   persisted per-directory in `.lp-agent.zon`, as long as its key is still
-   set.
-2. **Auto-detected** - the first API key found in the environment, checked
-   in a fixed priority order. With several keys set on the REPL, you'll be
-   prompted to pick.
-3. **Local** - if no cloud key is set, the agent probes for a running
-   Ollama or llama.cpp server and uses it if a model is loaded. Local
-   servers need no key and are never auto-detected, so select them
-   explicitly with `--provider ollama` / `--provider llama_cpp`. You can
-   change the server URL with the `--base-url` CLI option.
-4. **No provider at all** - with `--no-llm`, the agent falls back to the
-   basic REPL (slash commands only); natural language and LLM-driven
-   commands (`/login`, `/logout`) won't work.
+1. **记忆**——你上次用 `/provider` 选择的那个，按目录持久化在
+   `.lp-agent.zon` 中，前提是其 key 仍然设置。
+2. **自动探测**——在环境中找到的第一个 API key，按固定的优先级顺序
+   检查。如果在 REPL 上设置了多个 key，会提示你选择。
+3. **本地**——如果没有设置云端 key，Agent 会探测正在运行的 Ollama 或
+   llama.cpp 服务器，并在有模型加载时使用它。本地服务器无需 key，也
+   永远不会被自动探测，因此请用 `--provider ollama` /
+   `--provider llama_cpp` 显式选择。可以用 `--base-url` CLI 选项修改
+   服务器 URL。
+4. **完全没有服务商**——使用 `--no-llm` 时，Agent 回退到基础 REPL
+   （仅斜杠命令）；自然语言与 LLM 驱动的命令（`/login`、`/logout`）
+   将无法使用。
 
-Set `HF_BILL_TO` to an organization name to bill Hugging Face requests to it
-rather than to your personal account.
+把 `HF_BILL_TO` 设为某个组织名，即可将 Hugging Face 请求计入该组织，
+而不是你的个人账号。
 
-### Models
+### 模型
 
-Set the model with the CLI option `--model` or the REPL command `/model`;
-otherwise the agent uses the last one persisted in `.lp-agent.zon` or a
-sensible per-provider default. `--list-models` (CLI) or TAB-completing
-`/model` (REPL) prints the available models.
+用 CLI 选项 `--model` 或 REPL 命令 `/model` 设置模型；否则 Agent 会
+使用 `.lp-agent.zon` 中上次持久化的模型，或该服务商的合理默认值。
+`--list-models`（CLI）或在 REPL 中用 TAB 补全 `/model` 会列出可用模型。
 
-`--effort <level>` / `/effort` sets the per-turn reasoning budget for
-thinking models. Higher effort can mean fewer tool calls per task, since the
-model plans better, so it's a real tradeoff rather than a pure slowdown —
-the REPL defaults to `low` so turns stay snappy, while `--task` defaults to
-`medium`. See the [full resolution order and per-provider
-defaults](/reference/cli/agent#options).
+`--effort <level>` / `/effort` 为思考型模型设定每轮的推理预算。更高的
+effort 可能意味着每个任务的工具调用更少，因为模型规划得更好，所以这是
+一个真实的权衡，而不只是单纯的变慢——REPL 默认 `low` 以保持每轮响应
+轻快，而 `--task` 默认 `medium`。完整的解析顺序与各服务商默认值见
+[此处](/reference/cli/agent#选项)。
 
-`--system-prompt` swaps in your own system prompt.
+`--system-prompt` 可换用你自己的 system prompt。
 
-## Commands
+## 命令
 
-The REPL uses a small slash-command language for browser actions. Each line
-you type at the prompt is either a command, a `#` comment, a blank
-line, or (when an LLM is configured) a natural-language prompt.
+REPL 用一小组斜杠命令语言来执行浏览器操作。你在提示符下输入的每一行，
+要么是命令，要么是 `#` 注释、空行，要么（在配置了 LLM 时）是一段
+自然语言提示。
 
-`/help` lists all available commands, `/help <command>` for details.
+`/help` 列出所有可用命令，`/help <command>` 查看详情。
 
-commands accept:
+命令接受：
 
-- A single positional value, when the tool has exactly one required field.
-  `/goto 'https://example.com'`. The value can itself be quoted JSON when
-  that's what the field takes: `/extract '{"karma":"#karma"}'` passes the
-  string to extract's one required field, `schema`.
-- `key=value` pairs. Values may be bare or quoted; strings with whitespace
-  must be quoted. `/fill selector='#email' value='user@x.com'`. A positional
-  and `key=value` pairs can be mixed, but the positional must come first:
-  `/extract '{"karma":"#karma"}' save=me`.
-- A raw `{json}` blob, handed straight to the tool.
-  `/findElement {"role":"button"}`.
+- 单个位置参数值，当工具恰好只有一个必填字段时。如
+  `/goto 'https://example.com'`。当该字段本身接收 JSON 时，值也可以是
+  带引号的 JSON：`/extract '{"karma":"#karma"}'` 会把该字符串传给
+  extract 唯一的必填字段 `schema`。
+- `key=value` 键值对。值可以是裸值或带引号；含空白字符的字符串必须
+  加引号。如 `/fill selector='#email' value='user@x.com'`。位置参数与
+  `key=value` 可以混用，但位置参数必须在前：
+  `/extract '{"karma":"#karma"}' save=me`。
+- 原始 `{json}` 块，直接交给工具。如 `/findElement {"role":"button"}`。
 
-Tools whose selector is optional (`/click`, `/hover`, `/findElement`) take
-no positional and must use `key=value` form: `/click selector='a.login'`.
+selector 为可选的工具（`/click`、`/hover`、`/findElement`）不接受位置
+参数，必须使用 `key=value` 形式：`/click selector='a.login'`。
 
-Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
-`"""…"""` for values that mix quote styles or span multiple lines. Paste a
-multi-line command and the REPL keeps the whole paste as one input; typed
-line by line, Enter submits at each newline.
+引号处理是内容感知的：`'…'`、`"…"`，以及三引号 `'''…'''` /
+`"""…"""` 适用于混合引号风格或跨多行的值。粘贴多行命令时，REPL 会把
+整次粘贴作为一条输入；逐行输入时，每按一次 Enter 就提交一行。
 
-### Extracting data
+### 提取数据
 
-`/extract` takes a JSON schema where each value tells the extractor what to
-lift off the page: the same schema `page.extract` uses in
-[PandaScript](/reference/pandascript#extraction-schema). The result is
-printed to stdout as a single JSON object.
+`/extract` 接受一个 JSON schema，其中每个值都告诉提取器从页面上取什么：
+与 [PandaScript](/reference/pandascript#提取-schema) 中
+`page.extract` 使用的是同一套 schema。结果以单个 JSON 对象的形式打印到
+stdout。
 
-A selector that matches nothing yields a null or empty field, not an error.
-That's deliberate, but it means a stale selector fails quietly. If a run
-comes back with blanks where you expected data, suspect the selectors or a
-missing wait before you suspect the page.
+匹配不到任何内容的选择器会产生 null 或空字段，而不是报错。这是有意
+为之，但也意味着过时的选择器会悄悄失败。如果一次运行在你期望有数据的
+地方返回空白，请先怀疑选择器或缺少等待，再怀疑页面本身。
 
-The schema is parsed in Zig before the page-side walker runs, so malformed
-schemas are rejected up front with a plain `Error: InvalidParams` rather
-than a V8 stack trace.
+schema 在页面侧遍历器运行之前先在 Zig 中解析，因此格式错误的 schema
+会在一开始就被拒绝，得到简单的 `Error: InvalidParams`，而不是一长串
+V8 堆栈。
 
-### Web search
+### 网页搜索
 
-Set the backend the agent's web search runs against with the CLI option
-`--search-engine` or the REPL command `/searchEngine`: `auto` (the default),
-`brave`, `tavily`, `exa`, or `keenable`.
-The choice is saved per-directory in `.lp-agent.zon`.
+用 CLI 选项 `--search-engine` 或 REPL 命令 `/searchEngine` 设置 Agent
+网页搜索所用的后端：`auto`（默认）、`brave`、`tavily`、`exa` 或
+`keenable`。该选择按目录保存在 `.lp-agent.zon` 中。
 
-An API key is optional. `auto` falls back to Keenable's keyless public
-endpoint (rate-limited per client IP), so search works with no setup.
-Setting `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or
-`KEENABLE_API_KEY` routes `auto` through that provider instead. See the
-[command reference](/reference/cli/agent#repl-commands) for the resolution
-order.
+API key 是可选的。`auto` 会回退到 Keenable 的免密公开端点（按客户端
+IP 限流），因此无需任何配置即可搜索。设置 `BRAVE_API_KEY`、
+`TAVILY_API_KEY`、`EXA_API_KEY` 或 `KEENABLE_API_KEY` 后，`auto` 会
+改走对应服务商。解析顺序见[命令参考](/reference/cli/agent#repl-命令)。
 
-### Meta commands
+### 元命令
 
-Meta commands don't drive the browser, they control the REPL itself:
-`/help`, `/provider`, `/model`, `/effort`, `/verbosity`, `/usage`, `/save`,
-`/load`, `/clear`, `/reset`, `/quit`. See the [full command
-list](/reference/cli/agent#repl-commands) for what each one does. They're
-never recorded into saved scripts.
+元命令不驱动浏览器，而是控制 REPL 本身：`/help`、`/provider`、
+`/model`、`/effort`、`/verbosity`、`/usage`、`/save`、`/load`、
+`/clear`、`/reset`、`/quit`。各命令的作用见
+[完整命令列表](/reference/cli/agent#repl-命令)。它们永远不会被
+记录进保存的脚本。
 
-`/save` writes the session to a [PandaScript](/usage/pandascript).
+`/save` 把会话写入一个 [PandaScript](/usage/pandascript)。
 
-Use `/clear` when you want to test a new prompt against the current
-page without losing your login or cookies. Use `/reset` when you need
-a completely clean browser (no cookies, no current page, no storage).
+想在当前页面上测试新提示、又不想丢失登录态或 Cookie 时，用 `/clear`。
+需要一个完全干净的浏览器（无 Cookie、无当前页面、无存储）时，用
+`/reset`。
 
-### LLM-driven commands
+### LLM 驱动的命令
 
-Three commands trigger an LLM turn rather than a direct tool call:
-`/login`, `/logout`, and `/acceptCookies`. See the [full command
-list](/reference/cli/agent#repl-commands) for what each one does. All three
-require an LLM — `--no-llm` rejects them.
+有三个命令会触发一轮 LLM 处理，而不是直接的工具调用：`/login`、
+`/logout` 和 `/acceptCookies`。各命令的作用见
+[完整命令列表](/reference/cli/agent#repl-命令)。三者都需要
+LLM——`--no-llm` 会拒绝它们。
 
-## REPL features
+## REPL 特性
 
-- **Ghost hints.** There's no separate status line; guidance renders as dim
-  ghost text after the cursor and disappears as you type over it. It
-  previews the rest of the first matching command name, the argument shape
-  of the tool you're typing (`/evaluate ` shows
-  `<script> [url=…] [timeout=…] [save=…]`), and contextual nudges like
-  "press Ctrl-D again to exit".
-- **JS mode (`!`).** Type `!` on an empty prompt to toggle a scratchpad
-  where the whole line runs as page-side JavaScript, same context as
-  `/evaluate` so `document` and `window` are in scope. The prompt switches
-  to `!` with a "JS mode - esc to exit" ghost hint. Handy for poking at
-  a page without wrapping every line in `/evaluate`:
+- **幽灵提示（ghost hints）。** 没有独立的状态行；提示以暗淡的幽灵
+  文字渲染在光标之后，随着你的输入覆盖它而消失。它会预览第一个匹配
+  命令名的剩余部分、你正在输入的工具的参数形态（`/evaluate ` 会显示
+  `<script> [url=…] [timeout=…] [save=…]`），以及"再按一次 Ctrl-D
+  退出"之类的上下文提示。
+- **JS 模式（`!`）。** 在空提示符下输入 `!` 可切换到一个草稿模式，
+  整行都会作为页面侧 JavaScript 运行，与 `/evaluate` 处于同一上下文，
+  因此 `document` 和 `window` 都在作用域内。提示符会切换为 `!`，并带
+  "JS mode - esc to exit"的幽灵提示。想随手试探页面又不想每行都包一层
+  `/evaluate` 时非常方便：
 
   ```console
   ❯ !
@@ -178,37 +165,35 @@ require an LLM — `--no-llm` rejects them.
   30
   ```
 
-  `$LP_*` refs are still resolved at execution, console output is echoed
-  back, and `Esc` exits. JS-mode lines are not recorded.
-- **Tab completion** (case-insensitive). Cycles through `/<tool>` and meta
-  commands. The dim gray suffix shown after the cursor is the first
-  match.
-- **Persistent history.** Stored in `.lp-history` in the working directory.
-- **Stdout vs stderr.** The final assistant answer and data-producing slash
-  commands (`/extract`, `/evaluate`, `/markdown`, `/tree`, ...) write to
-  stdout. Tool calls, progress, and errors go to stderr. So
-  `lightpanda agent --task ... > out.txt` captures a clean answer.
+  `$LP_*` 引用在执行时仍会被解析，console 输出会回显，`Esc` 退出。
+  JS 模式下的行不会被记录。
+- **Tab 补全**（不区分大小写）。在 `/<tool>` 与元命令之间循环。光标后
+  显示的暗灰色后缀就是第一个匹配项。
+- **持久化历史。** 保存在工作目录的 `.lp-history` 中。
+- **stdout 与 stderr。** 助手的最终回答与产出数据的斜杠命令
+  （`/extract`、`/evaluate`、`/markdown`、`/tree` 等）写入 stdout。
+  工具调用、进度与错误走 stderr。因此
+  `lightpanda agent --task ... > out.txt` 能捕获到干净的答案。
 
-## One-shot mode (`--task`)
+## 一次性模式（`--task`）
 
 ```sh copy
 lightpanda agent --provider gemini \
   --task "what is the top story on news.ycombinator.com?"
 ```
 
-`--task` runs a single user turn, prints the final answer to stdout, and
-exits. On a TTY a spinner on stderr shows the tool currently running while
-the agent works; raise `--verbosity` for the full `[tool/result]` trace. It
-conflicts with the positional script argument.
+`--task` 只运行一轮用户输入，把最终答案打印到 stdout 后退出。在 TTY
+上，Agent 工作期间 stderr 上会有一个转圈动画，显示当前正在运行的工具；
+调高 `--verbosity` 可看到完整的 `[tool/result]` 轨迹。它与位置参数
+形式的脚本参数互斥。
 
-Combine with `-a <path>` / `--attach <path>` (repeatable) to feed
-local files to providers that accept attachments. For example, a list of
-items to look up, or a document to cross-check against a live page:
+可与 `-a <path>` / `--attach <path>`（可重复）组合，把本地文件喂给
+支持附件的服务商。例如一份待查询的条目清单，或一份要对照实时页面
+核验的文档：
 
 ```sh copy
 lightpanda agent -a invoice.pdf \
   --task "open shop.example.com/orders/1042 and check the order total matches the attached invoice"
 ```
 
-See the [full flag reference](/reference/cli/agent#options) for supported
-file types and size limits.
+支持的文件类型与大小限制见 [flag 完整参考](/reference/cli/agent#选项)。
