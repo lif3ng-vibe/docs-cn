@@ -1,6 +1,6 @@
 codegraph-main/
 node_modules/
-dist/
+/dist/
 .astro/
 orca-docs-cn-content/
 orca-main/

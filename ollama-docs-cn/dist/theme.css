@@ -1,0 +1,15 @@
+/*
+ * theme.css —— Ollama 中文镜像的全局微调（黑白主题，跟随原站设计）
+ * 主要补 CJK 字体 fallback：导出产物的字体栈只有西文 system-ui，
+ * 中文回退交给这里统一指定，避免各平台缺字/宋体兜底。
+ */
+body,
+h1, h2, h3, h4, h5, h6,
+button, input, select, textarea,
+code, pre, kbd, samp {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+code, pre, kbd, samp {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+}
