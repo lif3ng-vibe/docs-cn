@@ -1,0 +1,51 @@
+---
+title: "快速开始"
+description: "安装 Handy、首次启动,并完成你的第一次转写。"
+order: 1
+---
+
+import OfficialDownload from '../../components/OfficialDownload.astro';
+import PlatformPermissions from '../../components/PlatformPermissions.tsx';
+import PlatformShortcuts from '../../components/PlatformShortcuts.tsx';
+import DefaultShortcut from '../../components/DefaultShortcut.tsx';
+
+## 下载与安装
+
+<OfficialDownload />
+
+## 首次启动
+
+<PlatformPermissions client:load />
+
+### 选择模型
+
+首次启动时,Handy 会让你选择一个要下载的语音转文字(speech-to-text)模型。所有模型都完全在你的设备上运行。
+
+- **Parakeet V3** 推荐用于英语和欧洲语言,在各类机器上通常都非常快,而且非常准确。
+- **Whisper** 的多语言支持最好,覆盖 99+ 种语言。想要转写质量与速度的良好平衡就选 Medium;机器性能较弱就用 Small。
+- **Cohere Transcribe** 推荐用于追求最高质量的英语转写。它比 Parakeet 更大、更慢,因此最适合配备较强 GPU 的机器。
+
+完整模型列表与支持语言请见[模型页面](/docs-cn/handy/docs/models)。
+
+模型下载完成后,Handy 就准备就绪了。你会在系统托盘 / 菜单栏中看到它的图标。
+
+## 你的第一次转写
+
+1. 点击进入任意文本输入框(浏览器、编辑器、聊天应用,任何能打字的地方)
+2. 按下默认快捷键(<DefaultShortcut client:load />)开始录音
+3. 自然地说话
+4. 再按一次快捷键结束;如果使用按住说话(push-to-talk)模式,松开按键即可
+5. 你说的话就会出现在文本框中
+
+就是这么简单。Handy 在本地转写你的语音,并把结果粘贴到光标所在之处。
+
+## 快捷键
+
+<PlatformShortcuts client:load />
+
+## 后续步骤
+
+- 配置[常规设置](/docs-cn/handy/docs/general),例如麦克风与提示音
+- 了解[模型选择](/docs-cn/handy/docs/models),为你的语言和速度需求挑选合适的模型
+- 探索[高级设置](/docs-cn/handy/docs/advanced),例如悬浮层、静音检测与自定义词
+- 设置[后处理](/docs-cn/handy/docs/post-processing),用 AI 清理或重新组织你的文本

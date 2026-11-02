@@ -1,0 +1,117 @@
+---
+title: "后处理"
+description: "使用 AI 服务商和自定义提示词来清理、重排或转换你的转写结果。"
+order: 7
+alpha: true
+---
+
+import DocImage from '../../components/DocImage.astro';
+
+## 概述
+
+后处理（post-processing）让你在转写结果被粘贴之前，先过一遍 AI 语言模型。它可以修正语法、重排文本格式、翻译、插入标点，或施加任何你想要的自定义转换。
+
+<DocImage src="/docs/handy-post.png" alt="Handy Post-Processing Settings" />
+
+## 启用后处理
+
+后处理藏在实验性功能开关后面：
+
+1. 进入**设置（Settings）> 高级（Advanced）> 实验性功能（Experimental Features）**
+2. 向下滚动并启用**后处理（Post Processing）**
+3. 设置侧边栏会出现一个新的**后处理**分区
+4. 配置服务商、输入 API key、选择模型并编写提示词（prompt）
+
+## 服务商
+
+Handy 支持多家 AI 服务商用于后处理：
+
+### 云端服务商
+
+| 服务商 | 说明 |
+|----------|-------|
+| **OpenAI** | 推荐 GPT-4o-mini |
+| **Anthropic** | 推荐 Claude Haiku |
+| **OpenRouter** | 一个 API key 即可访问大量模型 |
+| **Groq** | 推理速度非常快 |
+| **Cerebras** | 推理速度快 |
+| **Z.AI** | 推荐 GLM-4.5-Air |
+
+### 设备端
+
+| 服务商 | 要求 |
+|----------|-------------|
+| **Apple Intelligence** | 搭载 Apple Silicon 的 macOS，macOS 26+ |
+
+### 自定义端点
+
+| 服务商 | 说明 |
+|----------|-------|
+| **Custom** | 任何 OpenAI 兼容的 API 端点——本地 LLM 就用这个 |
+
+## 专用快捷键
+
+后处理有自己专用的键盘快捷键，与普通转写快捷键相互独立。只有这个快捷键会触发后处理；普通转写快捷键始终给你原始输出。你可以在后处理设置分区中自定义它。
+
+## 自定义提示词
+
+你可以编写自定义提示词，告诉 AI 如何处理你的文本。使用 `${output}` 模板变量来引用转写结果。
+
+### 提示词示例
+
+**修正语法与标点：**
+```
+Fix any grammar or punctuation errors in the following text,
+but don't change the meaning or tone: ${output}
+```
+
+**转换为要点列表：**
+```
+Convert the following text into concise bullet points: ${output}
+```
+
+**翻译成西班牙语：**
+```
+Translate the following English text to Spanish: ${output}
+```
+
+**把口述标点转换为符号：**
+```
+Convert spoken punctuation words to their symbols (e.g., "period" to ".",
+"comma" to ",", "new line" to a line break). Don't change anything else: ${output}
+```
+
+## `${output}` 模板
+
+提示词中的 `${output}` 变量会在发送给 AI 之前被替换为原始转写结果。这样你可以把转写文本放在提示词的任意位置。
+
+## 本地 LLM 配置
+
+你可以使用任何提供 OpenAI 兼容 API 的本地 LLM 服务。
+
+### LM Studio
+
+1. 安装并启动 [LM Studio](https://lmstudio.ai)
+2. 加载一个模型并启动本地服务
+3. 在 Handy 中把服务商设为 **Custom**
+4. 把 Base URL 设为 `http://localhost:1234/v1`
+5. 选择你的模型并编写提示词
+
+> 关于使用 LM Studio 搭建本地后处理模型的详细分步指南（包括模型配置与推理参数设置），参见 [How to Post-Process Your Handy Speech-to-Text Transcripts Locally with LM Studio](https://kritrim.xyz/posts/3/3handypostprocess/)。
+
+## 推荐模型
+
+如果你用的是云端服务商，建议挑一个相对聪明的模型。大多数 OpenAI、Claude 和 Gemini 模型都能胜任。如果你用的是 OpenRouter，尽量选择参数量大于 20B 的模型。
+
+本地模型方面，Qwen3 8B 及以上规模的效果就相当不错了。8B 以上的大多数模型应该都能用，但别指望它们永远完美，你可能需要调整自己的提示词。
+
+## 局限性
+
+- **增加延迟**——后处理需要在转写完成后额外经历一次 API 往返（或本地推理耗时）
+- **云端服务商需要联网**——离线时后处理会失败（转写本身仍然可用）
+- **小模型可能不听指令**——低于 3B 参数的模型经常忽略提示词或给出不可靠的结果
+- **思考/推理模型**——带思维链推理的模型可能会在结果里输出推理标签
+
+## 社区提示词
+
+前往 [Discussion #715](https://github.com/cjpais/handy/discussions/715)，那里有用户分享的语法修正、标点插入、格式化等各类提示词。

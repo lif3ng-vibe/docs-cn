@@ -1,0 +1,82 @@
+---
+title: "CLI"
+description: "命令行标志、信号控制、脚本调用与窗口管理器集成。"
+order: 9
+---
+
+## 概述
+
+CLI 主要面向 **Linux 用户**，尤其是使用平铺窗口管理器（tiling window manager）或 Wayland 合成器的用户——在这些环境下，全局快捷键不一定原生可用。在 macOS 和 Windows 上，GUI 已经包办一切，通常用不到命令行。
+
+Handy 支持带标志（flag）从命令行启动，以定制其行为。这对脚本、自动化和窗口管理器集成很有用。
+
+## 命令行标志
+
+```bash
+handy [OPTIONS]
+```
+
+| 标志 | 说明 |
+|------|-------------|
+| `--start-hidden` | 启动时隐藏主窗口 |
+| `--no-tray` | 禁用系统托盘图标 |
+| `--toggle-transcription` | 在运行中的实例上切换转写的开/关 |
+| `--toggle-post-process` | 切换"带后处理的转写"的开/关 |
+| `--cancel` | 取消运行中实例的当前操作 |
+| `--debug` | 启用调试模式并输出详细日志 |
+
+`--toggle-transcription` 和 `--toggle-post-process` 会与已经在运行的 Handy 实例通信。如果 Handy 正在录音，它会停下来并转写；如果处于空闲状态，则开始录音。把这两个标志绑定到窗口管理器快捷键上会非常方便。
+
+## 信号控制
+
+在 macOS 和 Linux 上，你还可以用 Unix 信号控制运行中的 Handy 实例：
+
+| 信号 | 作用 |
+|--------|--------|
+| `SIGUSR2` | 切换转写（开始/停止录音） |
+| `SIGUSR1` | 切换带后处理的转写（仅 macOS） |
+
+```bash
+# Toggle transcription
+pkill -USR2 -x handy
+```
+
+**在 Linux 上不要发送 `SIGUSR1`**：Handy 在该平台上已不再监听它——WebKitGTK 在内部占用了这个信号，发送它可能导致应用崩溃。请改用 `handy --toggle-post-process`，并移除现有的 `pkill -USR1` 绑定。
+
+在 Wayland 上，Handy 自己的快捷键往往只在它的窗口位于前台时才生效，此时可以把 `handy --toggle-transcription` 绑定到桌面环境或合成器的快捷键上。参见 [Linux 设置](/docs-cn/handy/docs/linux)。
+
+## 脚本调用
+
+你可以在脚本中使用 Handy 来获取语音转文字（speech-to-text）输出。这在自动化工作流中尤其有用。
+
+## 窗口管理器集成
+
+Handy 与平铺窗口管理器和自定义键位配置配合良好。使用 CLI 标志或信号，即可从合成器控制 Handy。
+
+### Hyprland
+
+```bash
+# Using CLI flags
+bind = $mainMod SHIFT, period, exec, handy --toggle-transcription
+
+# Using signals
+bind = $mainMod SHIFT, period, exec, pkill -USR2 -x handy
+```
+
+### sway / i3
+
+```bash
+# Using CLI flags
+bindsym $mod+Shift+period exec handy --toggle-transcription
+
+# Using signals
+bindsym $mod+Shift+period exec pkill -USR2 -x handy
+```
+
+### GNOME（Wayland）
+
+Wayland 上的 GNOME 不支持第三方应用的全局快捷键。请改为添加自定义快捷键：
+
+1. 打开 **设置 > 键盘 > 查看并自定义快捷键（View and Customize Shortcuts）> 自定义快捷键（Custom Shortcuts）**
+2. 添加一个新快捷键，命令填 `handy --toggle-transcription`
+3. 指定你喜欢的按键组合

@@ -1,0 +1,136 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Separator from "../components/Separator.astro";
+import SponsorLogo from "../components/SponsorLogo.astro";
+---
+
+<style>
+    p {
+        margin-bottom: 0;
+    }
+</style>
+
+<MainLayout
+    title="Handy"
+    description="Handy——一款跨平台的开源语音转文字应用"
+    showHero={true}
+    heroTitle="对着任意文本框开口即写"
+    heroSubtitle="免费开源的语音转文字应用"
+>
+    <div class="flex flex-col items-center gap-12">
+        <a href="https://handy.computer/download" target="_blank" rel="noopener noreferrer" aria-label="前往官方页面下载 Handy" class="flex flex-col items-center justify-center text-base sm:text-xl leading-tight px-6 py-2.5 sm:py-2 rounded-lg bg-handy-pink !text-handy-dark-pink hover:bg-handy-light-pink">
+            <span>下载 Handy</span>
+            <span class="mt-0.5 flex items-center text-[11px] sm:text-xs font-medium text-handy-dark-pink/65">前往官方页面获取最新版本</span>
+        </a>
+        <div class="flex flex-col items-center gap-4">
+            <video
+                width="640"
+                height="360"
+                class="rounded-2xl bg-black ring-1 ring-handy-text/10"
+                controls
+                playsinline
+                aria-label="Handy 语音转文字演示视频"
+                aria-describedby="video-transcript"
+            >
+                <source src="/docs-cn/handy/handy-video.mp4" type="video/mp4" />
+                <source src="/docs-cn/handy/handy-video.webm" type="video/webm" />
+                <track
+                    kind="captions"
+                    src="/docs-cn/handy/handy-video.vtt"
+                    srclang="en"
+                    label="英文字幕"
+                    default
+                />
+                <p>
+                    你的浏览器不支持 HTML 视频，也可以选择<a
+                        href="/docs-cn/handy/handy-video.webm">视频下载</a
+                    >。
+                </p>
+            </video>
+
+            <div id="video-transcript" class="sr-only">
+                <h3>视频文字稿</h3>
+                <p>
+                    大家好，我是 CJ，来给你展示 Handy——一款可以在你自己的电脑上运行的开源语音转文字应用。按下快捷键、说话、松开，Handy 就会把你说的话粘贴进你正在输入的文本框。
+                </p>
+                <p>
+                    再看看 Handy 的设置菜单，非常简单。默认启用按住说话（push-to-talk）模式：按住快捷键说话、松开即转写；也可以关掉它，改成按下开始、再按一次停止并转写。快捷键也可以随时改成你习惯的组合。
+                </p>
+                <p>
+                    现在它绑定在 Ctrl-Z 上。关掉按住说话后，一按 Ctrl-Z，看我 Mac 屏幕右上角，那个小小的转写图标就亮了；再按一次就停止并转写音频。这里没有可粘贴的目标，所以它什么也没做。
+                </p>
+                <p>放松坐好，让 Handy 助你一「手」之力。</p>
+            </div>
+        </div>
+        <Separator />
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 md:gap-12 gap-4">
+            <div class="space-y-1">
+                <h2>免费</h2>
+                <p>
+                    无障碍工具应该人人可用，而不是被付费墙拦住。
+                </p>
+            </div>
+            <div class="space-y-1">
+                <h2>开源</h2>
+                <p>
+                    我们一起走得更远：为自己扩展 Handy，也为更大的共同体贡献力量。
+                </p>
+            </div>
+            <div class="space-y-1">
+                <h2>隐私</h2>
+                <p>
+                    你的声音留在你的电脑上：无需把音频送上云端，照样拿到转写结果。
+                </p>
+            </div>
+            <div class="space-y-1">
+                <h2>简单</h2>
+                <p>
+                    一个工具只做一件事：把你说的话转写出来，放进文本框。
+                </p>
+            </div>
+        </div>
+        <Separator />
+        <div class="w-full flex flex-col items-center gap-4">
+            <div class="text-center flex flex-col">
+                <h1>赞助商</h1>
+                <p class="text-handy-text/70 -mt-2 !mb-0 italic">
+                    Handy 有一些<b>了不起的</b>赞助商，帮助它保持免费与开源
+                </p>
+            </div>
+            <div class="my-2 flex flex-wrap justify-center gap-5 sm:my-8 md:mb-4">
+                <SponsorLogo
+                    name="Wordcab"
+                    href="https://wordcab.com"
+                    imageSrc="/sponsor-images/wordcab.png"
+                />
+                <SponsorLogo
+                    name="Epicenter"
+                    href="https://github.com/epicenter-so/epicenter"
+                    imageSrc="/sponsor-images/epicenter.png"
+                />
+                <SponsorLogo
+                    name="Bolt AI"
+                    href="https://boltai.com?utm_source=handy"
+                    imageSrc="/sponsor-images/boltai.jpg"
+                />
+                <SponsorLogo
+                    name="Canty Digital"
+                    href="https://cantydigital.com.au/"
+                    imageSrc="/sponsor-images/cantydigital.png"
+                />
+            </div>
+            <p class="text-handy-text/70 text-center !mb-0 italic">
+                想赞助 Handy？欢迎<a
+                    href="https://donate.stripe.com/6oU4gz8762g9790c8Vffy0j"
+                    target="_blank">直接捐赠</a
+                >、使用 <a
+                    href="https://github.com/sponsors/cjpais"
+                    target="_blank">GitHub Sponsors</a
+                >，或写信给 <a
+                    href="mailto:contact@handy.computer"
+                    >contact@handy.computer</a
+                >
+            </p>
+        </div>
+    </div>
+</MainLayout>

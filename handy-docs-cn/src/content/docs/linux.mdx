@@ -1,0 +1,72 @@
+---
+title: "Linux 设置"
+description: "让快捷键和粘贴在 Linux 的 X11 与 Wayland 上正常工作。"
+order: 1.5
+---
+
+Handy 可以在 Linux 上运行,但快捷键和粘贴能否在其他应用中生效,取决于你所用的桌面环境。大多数环境只需下面步骤中的一两步。
+
+首先,确认你使用的是哪种显示服务(display server):
+
+```bash
+echo $XDG_SESSION_TYPE
+```
+
+它会输出 `x11` 或 `wayland`。
+
+## 1. 配置快捷键
+
+**在 X11 上**,Handy 自带的快捷键在所有应用中都能用,直接跳到[第 2 步](#2-配置粘贴)。
+
+**在 Wayland 上**,应用无法监听其他应用中的按键,因此 Handy 的快捷键可能只在 Handy 窗口位于前台时才生效。这时可以在桌面环境的设置里添加一个快捷键来运行以下命令:
+
+```bash
+handy --toggle-transcription
+```
+
+按一次开始录音,再按一次停止。如果你用的是 AppImage,把 `handy` 替换为 AppImage 文件的完整路径。
+
+- **GNOME**:设置 > 键盘 > 查看并自定义快捷键 > 自定义快捷键,然后点 **+**
+- **KDE Plasma**:系统设置 > 键盘 > 快捷键 > 添加新条目 > 命令或脚本
+- **Hyprland**:`bind = SUPER, period, exec, handy --toggle-transcription`
+- **Sway / i3**:`bindsym $mod+period exec handy --toggle-transcription`
+
+桌面快捷键只能切换录音状态,因此按住说话(push-to-talk)的方式在这里行不通。如果你需要在 Wayland 上按住说话,请参考 [Ubuntu GNOME Wayland 指南](https://github.com/cjpais/Handy/tree/main/docs/troubleshooting/ubuntu-26-04-gnome-wayland)。
+
+在 Ubuntu 上,`Ctrl+Space` 还可用于切换输入法。如果默认快捷键没有反应,请换一个。
+
+## 2. 配置粘贴
+
+Handy 需要一个小工具才能向其他应用输入文字。请根据你的环境安装对应工具:
+
+| 你的环境 | 需安装 |
+|------------|---------|
+| X11 | `xdotool` |
+| GNOME 或 KDE 上的 Wayland | `ydotool` 和 `wl-clipboard` |
+| 其他环境(Sway、Hyprland 等)的 Wayland | `wtype` 和 `wl-clipboard` |
+
+`ydotool` 还需要其后台服务处于运行状态,并且你的用户已加入 `input` 组。
+
+> **操作前须知**:加入 `input` 组后,你运行的任何应用都能读取你输入的内容并代替你打字,而不只是 ydotool。如果你不想接受这一点,请跳过下面的命令,并在 **设置 > 高级** 中把 **粘贴方式**(Paste Method)设为 **无**(None)。这样 Handy 会把每次转写复制到剪贴板,由你自己用 Ctrl+V 粘贴。
+
+在 Ubuntu 上:
+
+```bash
+sudo apt install ydotool wl-clipboard
+sudo usermod -aG input "$USER"
+systemctl --user enable --now ydotool
+```
+
+注销并重新登录,然后把光标放到文本输入框中运行 `ydotool type hello`,验证是否生效。如果提示无法连接到 socket,请参考[这个修复](https://github.com/cjpais/Handy/issues/1549)。
+
+在 **设置 > 高级** 中把 **打字工具**(Typing Tool)保持为 **自动**(Auto),Handy 会为你选择已安装的工具。
+
+## 3. 如果文本输出不对
+
+如果大写字母丢失,或者非美式键盘上输出的字母不对,请在 **设置 > 高级** 中把 **粘贴方式**(Paste Method)设为 **Clipboard (Ctrl+V)**。在终端里则使用 **Ctrl+Shift+V**。
+
+如果文本出现在错误的窗口,请把 **悬浮层位置**(Overlay Position)设为 **无**(None)。
+
+## 还是卡住了？
+
+请参阅[故障排除](/docs-cn/handy/docs/troubleshooting),或在 [Discord](https://discord.gg/WVBeWsNXK4) 上提问。

@@ -1,0 +1,21 @@
+---
+// 中文镜像站不承载安装包分发：下载引导统一指向官方下载页。
+const OFFICIAL_DOWNLOAD = "https://handy.computer/download";
+---
+
+<div class="not-prose my-4 rounded-xl border border-handy-text/8 bg-handy-text/[0.02] p-4 sm:p-5">
+    <p class="!mb-3 text-sm leading-relaxed">
+        安装包请在
+        <a
+            href={OFFICIAL_DOWNLOAD}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-handy-pink !text-handy-dark-pink hover:bg-handy-light-pink text-sm font-semibold !no-underline mx-1"
+        >官方下载页</a
+        >
+        获取 Windows、macOS、Linux 全平台的最新版本，再回到本页继续安装配置。
+    </p>
+    <p class="!mb-0 text-xs text-handy-text/50">
+        也可通过包管理器安装：macOS 用 <code class="text-xs bg-handy-text/5 px-1.5 py-0.5 rounded font-mono">brew install --cask handy</code>，Windows 用 <code class="text-xs bg-handy-text/5 px-1.5 py-0.5 rounded font-mono">winget install cjpais.Handy</code>（均为社区维护）。
+    </p>
+</div>

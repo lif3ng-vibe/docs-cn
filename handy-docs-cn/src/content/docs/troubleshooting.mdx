@@ -1,0 +1,188 @@
+---
+title: "故障排查"
+description: "按症状分类的常见问题、平台专属说明与解决办法。"
+order: 10
+---
+
+## 调试模式
+
+开启调试模式可以查看详细日志。如何开启以及去哪里找日志文件，见[调试](/docs-cn/handy/docs/debug)页面。
+
+## 常见问题
+
+### Handy 完全不能转写
+
+- 检查系统层面没有把麦克风静音
+- 确认已下载模型（检查**设置（Settings）> 模型（Models）**）
+- 在**设置 > 通用**（General）里换一个麦克风试试
+- 开启调试模式并检查日志中的错误
+
+### macOS 上快捷键失效（Secure Input）
+
+macOS 有一个名为**安全输入**（Secure Input）的系统机制，用于保护密码输入框之类的界面。它生效期间，macOS 会停止向 Handy 送达部分按键事件。
+如果你的快捷键包含普通按键（如 Option+Space）却突然不再触发，而纯修饰键快捷键（如单独的 `fn`）仍然有效，多半就是安全输入导致的。新版 Handy 能检测到这种情况：在设置里显示警告横幅（尽可能指出相关进程），并自动把受影响的快捷键切换到备用方案，让它们继续工作。
+
+常见原因与解决办法：
+
+1. **终端或 iTerm2**——在终端（或 iTerm2）的应用菜单里关闭"安全键盘输入"（Secure Keyboard Entry）
+2. **密码管理器**——退出或更新它们；已知某些版本的 1Password 和 KeePassXC 在后台运行时会占用安全输入
+3. **`loginwindow` 卡住，或某个应用退出时没有释放它**——按 <kbd>Ctrl</kbd>+<kbd>Cmd</kbd>+<kbd>Q</kbd> 锁屏，然后**通过键入密码**（不要用触控 ID）重新登录。如果还不行，就完整注销再登录
+
+要亲自查看哪个进程占用了安全输入，可以运行：
+
+```bash
+ioreg -l -w 0 | grep -o 'kCGSSessionSecureInputPID"=[0-9]*' | grep -o '[0-9]*' | head -1 | xargs ps -o pid,comm -p
+```
+
+注意，macOS 对此只是尽力报告——列出的进程未必是真正的占用者，如果占用者已退出，结果也可能为空。Handy 的调试窗口（<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd>）里还有一个**键盘诊断**（Keyboard Diagnostic）工具，可以检查按键事件到底有没有到达 Handy。
+
+只有当你的某个快捷键确实受到影响时，Handy 才会显示警告横幅。安全输入生效期间有以下几点限制：
+
+- 使用 `fn` 键搭配普通按键的快捷键（如 `fn`+`End`）无法被备用方案覆盖，在安全输入解除前不会生效——Handy 会在警告横幅中列出它们
+- 带侧向修饰键的快捷键（如 Right Option+Space）在备用方案生效期间会暂时响应**任意一侧**——横幅会专门说明这一点
+- 纯修饰键快捷键（单独的 `fn`、单独的左 Ctrl 等）不受影响，在安全输入期间照常工作，所以如果你经常遇到这个问题，它们是按住说话（push-to-talk）的好选择
+- 安全输入解除前无法录制新快捷键，因为 Handy 看不到你按下的键
+
+### 文本没有被粘贴
+
+- 开始转写前，确保光标已经在文本框中
+- 在**设置 > 高级**（Advanced）中换一种粘贴方式（见[粘贴方式](/docs-cn/handy/docs/paste-methods)）
+- 在 macOS 上，确保 Handy 已获得辅助功能权限（**系统设置 > 隐私与安全性 > 辅助功能**）
+- 在 Linux 上，检查你的打字工具配置（见[粘贴方式 > 打字工具](/docs-cn/handy/docs/paste-methods#打字工具linux)）
+- 在 Windows 上，在[高级 > 实验性功能](/docs-cn/handy/docs/advanced#实验性功能)里把**键盘实现**（Keyboard Implementation）切换为 **Tauri Global Shortcut**，同时尝试以管理员身份运行 Handy
+- 尝试在[调试](/docs-cn/handy/docs/debug#粘贴延迟)设置中调大粘贴延迟
+
+### 粘贴的是错误的文本
+
+如果 Handy 粘贴的是你之前的剪贴板内容而不是转写结果，请在[调试](/docs-cn/handy/docs/debug#粘贴延迟)设置中调大粘贴延迟。默认 60ms，建议尝试 100-200ms。
+
+### 转写速度慢
+
+- 换用更小的模型（Moonshine Tiny 或 Whisper Small）
+- 确认正在使用 GPU 加速（可在调试日志中看到）
+- 关闭其他占用 GPU 的应用
+- 在[高级](/docs-cn/handy/docs/advanced#卸载模型)设置中配置模型卸载超时
+
+### 检测不到麦克风
+
+- 检查系统音频设置，确认麦克风被识别
+- 把麦克风拔掉重插
+- 使用**设置 > 通用**中麦克风下拉框旁的刷新按钮
+- 在 Linux 上，检查 PulseAudio 或 PipeWire 是否在运行
+
+### Whisper 崩溃
+
+Whisper 模型在某些硬件配置上可能崩溃，尤其是较旧的 CPU 和部分 Windows/Linux 系统。如果 Whisper 崩溃：
+
+1. **改用 Parakeet V3**——它是最稳定的模型，也是英语场景的推荐选择
+2. 换更小的 Whisper 模型（用 Small 而不是 Medium 或 Large）
+3. 更新你的 GPU 驱动（需要支持 Vulkan）
+4. 用 `--debug` 运行以收集崩溃细节，便于提交 bug 报告
+
+### vulkan-1.dll not found（Windows）
+
+更新你的 GPU 驱动（NVIDIA、AMD 或 Intel）。GPU 加速需要 Vulkan。如果你的显卡太老、不支持 Vulkan，Handy 可能无法在你的系统上运行。
+
+- **NVIDIA**：从 [nvidia.com/drivers](https://www.nvidia.com/drivers) 下载
+- **AMD**：从 [amd.com/en/support](https://www.amd.com/en/support) 下载
+- **Intel**：从 [intel.com/content/www/us/en/download-center](https://www.intel.com/content/www/us/en/download-center/home.html) 下载
+
+### 非 QWERTY 键盘出现乱码文本
+
+如果你在使用 AZERTY、QWERTZ 或其他非美式键盘布局时，Handy 输出了乱码，很可能是用了直接输入（Direct Input）粘贴方式。请切换到基于剪贴板的粘贴方式。详见[粘贴方式](/docs-cn/handy/docs/paste-methods#非-qwerty-键盘出现乱码文本)。
+
+### Linux 下窗口空白
+
+在某些 Linux 系统上，Handy 可能因 WebKit 的 DMA-BUF 渲染问题而显示空白窗口。新版 Handy 已自动设置 `WEBKIT_DISABLE_DMABUF_RENDERER=1`。如果你用的是旧版本，请手动设置该环境变量：
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 handy
+```
+
+### AppImage GLIBC 错误（Linux）
+
+AppImage 需要 GLIBC 2.38+。Ubuntu 22.04 自带 GLIBC 2.35，不兼容。解决办法：
+- 改用 `.deb` 包而不是 AppImage
+- 升级到 Ubuntu 24.04+ 或其他带 GLIBC 2.38+ 的发行版
+
+### Linux 下悬浮层抢占焦点
+
+在某些 Linux 桌面环境中，Handy 的悬浮层（overlay）会把焦点从目标窗口抢走，导致无法粘贴。在**设置 > 高级**里把**悬浮层位置**（Overlay Position）设为 **None**。参见[高级 > 悬浮层位置](/docs-cn/handy/docs/advanced#悬浮层位置)。
+
+### Wayland 悬浮层不显示
+
+Wayland 悬浮层需要 `gtk-layer-shell` 作为运行时依赖：
+
+- **Debian/Ubuntu**：`sudo apt install libgtk-layer-shell0`
+- **Arch**：`sudo pacman -S gtk-layer-shell`
+- **Fedora**：`sudo dnf install gtk4-layer-shell`
+
+注意：在 KDE Wayland 上，会跳过 gtk-layer-shell 的初始化，以避免悬浮层问题。
+
+### 模型下载失败
+
+如果模型下载中途失败且无法重新下载：
+
+1. 进入**关于 > 应用数据目录（About > App Data Directory）**
+2. 打开 `models/` 文件夹
+3. 删除所有下载了一半的文件
+4. 重启 Handy 再试一次
+
+### 跳过初始化设置界面
+
+如果你卡在首次设置界面，可以通过手动编辑 Handy 的设置来跳过它：
+
+1. 完全关闭 Handy。
+2. 打开 Handy 的应用数据目录：
+   - **Windows**：`%APPDATA%\com.pais.handy\`
+   - **macOS**：`~/Library/Application Support/com.pais.handy/`
+   - **Linux**：`~/.config/com.pais.handy/`
+3. 找到设置文件（`settings.json`）并设置：
+   ```json
+   "onboarding_completed": true
+   ```
+4. 保存文件，重新启动 Handy。
+
+这样即可跳过设置界面，正常访问各项设置。
+
+## 各平台注意事项
+
+### macOS
+
+- Handy 需要**辅助功能**和**麦克风**权限
+- 如果 Handy 无法粘贴，在**系统设置 > 隐私与安全性 > 辅助功能**中重新添加它
+- 会自动启用 Metal GPU 加速
+- 通过 Homebrew 安装：`brew install --cask handy`
+
+### Windows
+
+- 遇到权限问题时，以管理员身份运行安装程序
+- GPU 加速需要 Vulkan 驱动
+- 确保你的音频驱动是最新的
+- 如果 Handy 无法向以管理员身份运行的应用粘贴，请也以管理员身份运行 Handy。
+- 如果粘贴问题依旧，在[高级 > 实验性功能](/docs-cn/handy/docs/advanced#实验性功能)里把**键盘实现**切换为 **Tauri Global Shortcut**。
+- 向终端（CMD、PowerShell）粘贴时，使用 Shift+Insert 粘贴方式
+- 通过 winget 安装：`winget install cjpais.Handy`
+
+### Linux
+
+- AppImage 需要 FUSE（Ubuntu/Debian 上执行 `sudo apt install libfuse2`）
+- Wayland 用户需要配置[打字工具](/docs-cn/handy/docs/paste-methods#打字工具linux)才能粘贴
+- X11 通常开箱即用
+- GPU 加速需要 Vulkan 驱动（可用 `vulkan-tools` 验证）
+- 用[信号或 CLI 标志](/docs-cn/handy/docs/cli#信号控制)从脚本/窗口管理器控制 Handy
+- 如果悬浮层抢走目标窗口的焦点，把它设为 None
+
+## 已知问题
+
+- **Whisper 在特定硬件上不稳定**——Whisper 模型可能在较旧的 CPU 或特定 GPU 配置上崩溃。可用 Parakeet V3 作为稳定的替代。
+- **Linux 上历史记录的音频回放**——部分 Linux 配置下，回放历史记录（history）中的音频可能不工作。
+
+## 寻求帮助
+
+如果仍然没有解决：
+
+- 加入 [Discord](https://discord.gg/WVBeWsNXK4)，在支持频道提问
+- 应用本身的 bug 到 [GitHub](https://github.com/cjpais/Handy) 提 issue
+- 文档问题到[文档仓库](https://github.com/cjpais/handy.computer)提 issue
+- 发邮件至 [contact@handy.computer](mailto:contact@handy.computer)

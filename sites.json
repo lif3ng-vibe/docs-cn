@@ -433,5 +433,20 @@
       "stack": "Nextra 4 + Next 15 原班构建（私有共享包本地桩实现）",
       "snap": "main@e45234d 2026-10-26"
     }
+  },
+  {
+    "name": "Handy",
+    "slug": "handy",
+    "desc": "Handy 官方文档站中文镜像——免费开源、完全本地运行的跨平台语音转文字工具。覆盖快速开始、模型选择（Whisper/Parakeet 等 7 系模型对比）、通用/高级设置、粘贴方式、后处理、Linux 配置、CLI、故障排查与 FAQ 等 13 篇文档；含落地页与 About/Buttons/Privacy 页。下载相关引导统一指向官方下载页。",
+    "tags": [
+      "ai-app-dev"
+    ],
+    "orig": "https://handy.computer/docs",
+    "repo": "https://github.com/cjpais/handy.computer",
+    "meta": {
+      "pages": "18 页",
+      "stack": "Astro 5.8 + React + Tailwind 4 原班构建（下载引导指官方）",
+      "snap": "main@6e48765b 2026-10-24"
+    }
   }
 ]

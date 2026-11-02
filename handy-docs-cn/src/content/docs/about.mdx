@@ -1,0 +1,45 @@
+---
+title: "关于"
+description: "应用语言、版本信息、数据目录，以及如何支持 Handy 的开发。"
+order: 12
+---
+
+import DocImage from '../../components/DocImage.astro';
+import DonateButton from '../../components/DonateButton';
+
+关于（About）标签页展示应用信息与常用链接。可以从 Handy 设置窗口的侧边栏进入。
+
+<DocImage src="/docs/handy-about.png" alt="Handy About Settings" />
+
+## 应用语言
+
+更改 Handy 界面的语言。这与转写语言相互独立，转写语言在[模型](/docs-cn/handy/docs/models)中配置。
+
+## 版本
+
+显示你机器上当前安装的 Handy 版本。
+
+## 目录
+
+- **应用数据目录（App Data Directory）**——Handy 存放配置、模型和录音的位置
+- **日志目录（Log Directory）**——Handy 写入日志文件的位置
+
+点击即可在文件管理器中打开。各平台的默认路径见[调试 > 查找日志](/docs-cn/handy/docs/debug#查找日志)。
+
+## 支持开发
+
+Handy 是由社区构建的自由开源软件，目前由一位开发者（[CJ](https://cjpais.com)）维护。如果 Handy 对你有用，请考虑支持它的开发。每一份贡献都会带来切实的帮助，让 Handy 能继续对所有人免费。
+
+<div class="pb-4">
+<DonateButton variant="docs" client:load />
+</div>
+
+你也可以通过 [GitHub Sponsors](https://github.com/sponsors/cjpais) 支持开发，或发邮件至 [contact@handy.computer](mailto:contact@handy.computer) 洽谈赞助。长期的大额赞助者可以在网站和 GitHub README 上获得 logo 与链接展示。
+
+## 源代码
+
+Handy 是完全开源的。你可以在 [GitHub](https://github.com/cjpais/handy) 浏览代码、报告问题或参与贡献。
+
+## 致谢
+
+Handy 建立在众多优秀的开源项目之上，包括 [Whisper](https://github.com/openai/whisper) 等让本地转写成为可能的语音识别模型。

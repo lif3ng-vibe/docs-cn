@@ -53,6 +53,7 @@ jobs:
             openshell-docs-cn/package-lock.json
             ollama-docs-cn/package-lock.json
             lightpanda-docs-cn/package-lock.json
+            handy-docs-cn/package-lock.json
 
       - name: Prepare _site
         run: mkdir -p _site
@@ -624,6 +625,24 @@ jobs:
           npm run build
           mv out ../_site/lightpanda
 
+      # handy 是 Astro 5.8 静态站（上游 cjpais/handy.computer@main 6e48765b）：
+      # base=/docs-cn/handy 写死在 astro.config.mjs，authored 内链已在源码加前缀，
+      # 无需 env、无需 sed；下载页未收录，下载引导统一指官方下载页。
+      - name: Restore handy-docs-cn dist
+        id: dist-handy
+        uses: actions/cache@v4
+        with:
+          path: _site/handy
+          key: dist-handy-${{ hashFiles('handy-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build handy-docs-cn
+        if: steps.dist-handy.outputs.cache-hit != 'true'
+        working-directory: handy-docs-cn
+        run: |
+          npm ci
+          npm run build
+          mv dist ../_site/handy
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -666,6 +685,7 @@ jobs:
           echo '| hallmark | ${{ steps.dist-hallmark.outputs.cache-hit == 'true' }} |'
           echo '| aihero | ${{ steps.dist-aihero.outputs.cache-hit == 'true' }} |'
           echo '| lightpanda | ${{ steps.dist-lightpanda.outputs.cache-hit == 'true' }} |'
+          echo '| handy | ${{ steps.dist-handy.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

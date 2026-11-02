@@ -1,0 +1,108 @@
+---
+title: "调试"
+description: "启用调试菜单，调整日志、粘贴延迟、提示音主题及其他高级诊断项。"
+order: 8
+---
+
+调试菜单包含隐藏在主界面之外的高级诊断与调校设置。这些设置对排查问题或微调 Handy 的行为很有用。
+
+## 启用调试菜单
+
+用键盘快捷键打开调试菜单：
+
+- **macOS**：`Cmd + Shift + D`
+- **Windows/Linux**：`Ctrl + Shift + D`
+
+打开后，设置侧边栏会出现一个**调试**（Debug）标签页。它会一直保持可见，直到你完全关闭并重新打开 Handy。
+
+在 Linux 上，你也可以从命令行启用调试模式（见 [CLI](/docs-cn/handy/docs/cli)）：
+
+```bash
+handy --debug
+```
+
+## 调试设置
+
+### 日志级别
+
+设置日志的详细程度。级别越高，日志越详细，在报告 bug 或诊断问题时很有用。
+
+- **Error**——只记录错误
+- **Warn**——错误和警告
+- **Info**——常规信息
+- **Debug**——详细的调试信息（调试模式开启时的默认级别）
+- **Trace**——最大详细程度
+
+### 检查更新
+
+控制 Handy 是否自动检查新版本。默认开启。
+
+### 提示音主题
+
+选择录音开始与结束提示音（audio feedback）的主题。不同主题提供不同的声音提示，你可以通过开始和停止一次录音来试听。
+
+**自定义提示音**
+
+你也可以用自定义音频文件作为开始与结束提示音：
+
+1. 把你的自定义音频文件命名为 `custom_start.wav` 和 `custom_stop.wav`。
+2. 将它们直接放进 Handy 的[应用数据目录](#应用数据目录)：
+   - **macOS**：`~/Library/Application Support/com.pais.handy/`
+   - **Windows**：`%APPDATA%/com.pais.handy/`
+   - **Linux**：`~/.local/share/com.pais.handy/`
+3. 打开调试菜单（`Ctrl + Shift + D` 或 `Cmd + Shift + D`），在**提示音主题**（Sound Theme）下拉菜单中选择 **Custom**。
+
+*注意：如果下拉菜单里没有出现"Custom"选项，请在放入音频文件后重启 Handy。*
+
+### 词纠错阈值
+
+控制自定义词纠正应用的激进程度。这是一个 0.0 到 1.0 的灵敏度滑块（默认：0.18）。
+
+- **值越小**——匹配越严格（只纠正非常接近的匹配）
+- **值越大**——匹配越激进（纠正更多词，但可能产生误匹配）
+
+它与[高级](/docs-cn/handy/docs/advanced#自定义词)设置中的自定义词（Custom Words）列表配合工作。
+
+### 粘贴延迟
+
+Handy 把文本复制到剪贴板与发送粘贴按键之间的延迟（毫秒）。默认为 60ms。
+
+如果 Handy 粘贴了错误的文本（例如粘贴的是你之前的剪贴板内容而不是转写结果），请调大这个值。建议尝试 100-200ms，上限为 200ms。
+
+### 常开麦克风
+
+让麦克风始终保持活跃，以加快录音响应。关闭时（默认），Handy 只在你按下快捷键后才激活麦克风，这会带来一点小延迟。
+
+### 合盖麦克风
+
+在笔记本电脑上，指定合盖（clamshell mode）时使用哪个麦克风。如果你外接显示器，并希望合上笔记本后 Handy 自动切换到外接麦克风，这个设置会很有用。
+
+### 取消快捷键
+
+设置一个用于取消当前录音的键盘快捷键。这是按下 Escape 之外的另一种取消方式。
+
+**该设置在 Linux 上不可用**，原因是动态快捷键注册不稳定。
+
+开启按住说话（push-to-talk）时此设置不可用，因为松开按键本身就会停止录音。
+
+## 查找日志
+
+Handy 把日志存储在磁盘上。你可以从以下位置找到日志目录：
+
+- 设置中的**关于**（About）页面（查找"Log Directory"一项）
+- 调试菜单里也会显示该目录路径
+
+典型日志位置：
+- **macOS**：`~/Library/Logs/com.pais.handy/`
+- **Windows**：`%APPDATA%/com.pais.handy/logs/`
+- **Linux**：`~/.local/share/com.pais.handy/logs/`
+
+## 应用数据目录
+
+Handy 把配置、模型和录音存储在应用数据目录（app data directory）中：
+
+- **macOS**：`~/Library/Application Support/com.pais.handy/`
+- **Windows**：`%APPDATA%/com.pais.handy/`
+- **Linux**：`~/.local/share/com.pais.handy/`
+
+你可以从设置中的**关于**页面打开该目录。模型位于 `models/` 子目录，录音位于 `recordings/` 子目录。

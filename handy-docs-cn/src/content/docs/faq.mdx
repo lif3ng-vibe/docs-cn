@@ -1,0 +1,196 @@
+---
+title: "常见问题（FAQ）"
+description: "关于 Handy 的常见问题，按主题分类。"
+order: 11
+---
+
+## 一般问题
+
+**问：macOS 登录项里的"Christopher Pais"是什么？**
+
+那是开发者的名字（CJ Pais）。Handy 是用个人 Apple 开发者账号签名的，所以 macOS 在"登录项与扩展"里显示的是开发者名字而不是"Handy"。这只是显示上的差异，属正常现象。
+
+**问：给 Windows 更新签名的"YNYNG LLC"是什么？**
+
+YNYNG LLC 是开发者用于 Windows 代码签名的商业实体。由 YNYNG LLC 签名的更新都是正规的 Handy 更新。
+
+**问：Handy 会向云端发送任何数据吗？**
+
+不会。所有语音转文字（speech-to-text）转写都在你的设备本地完成。唯一的网络请求是下载模型和检查更新。如果你启用了后处理并使用云端 AI 服务商，转写内容会发送到该服务商的 API。
+
+**问：Handy 能转写系统音频吗（视频通话、YouTube 等）？**
+
+目前不能。Handy 只转写麦克风输入。
+
+**问：Handy 支持实时字幕吗？**
+
+暂不支持。Handy 先录一段，再转写。实时流式转写是计划中的功能。
+
+**问：Handy 把数据存在哪里？**
+
+完整路径列表见[调试 > 应用数据目录](/docs-cn/handy/docs/debug#应用数据目录)。你也可以在设置的**关于**（About）页面找到它。
+
+**问：如何校验发布签名？**
+
+Handy 的发布产物使用 Tauri 更新器的签名格式。
+
+要手动校验下载的产物：从 [`src-tauri/tauri.conf.json`](https://github.com/cjpais/Handy/blob/main/src-tauri/tauri.conf.json) 解码出 `pubkey`，把下载的 `.sig` 文件按 base64 解码，然后用 `minisign` 校验产物。
+
+完整的分步说明见主仓库：
+https://github.com/cjpais/Handy#verify-release-signatures
+
+**问：登录时 Handy 能自动启动吗？**
+
+可以。在**设置 > 高级**（Settings > Advanced）里启用**开机自启（Launch on Startup）**。也可以启用**启动时隐藏（Start Hidden）**，让启动后直接进入系统托盘。参见[高级](/docs-cn/handy/docs/advanced#开机自启)。
+
+**问：如何更改界面语言？**
+
+Handy 支持 18+ 种语言（英语、西班牙语、法语、德语、日语、中文、韩语、阿拉伯语、土耳其语、捷克语、葡萄牙语、乌克兰语、俄语、意大利语、波兰语、越南语等，并支持 RTL）。在**关于**页面更改语言。
+
+---
+
+## 模型与转写
+
+**问：英语应该用哪个模型？**
+
+大多数英语用户推荐 **Parakeet V3**。它快、准、最稳定。如果你追求极致准确度且硬件够强，试试 Whisper Medium 或 Large。硬件很弱的话，试试 Moonshine。完整列表见[模型](/docs-cn/handy/docs/models)。
+
+**问：为什么 Parakeet 把数字写成单词而不是数字？**
+
+这是 Parakeet 模型的行为。它会输出"one hundred twenty three"而不是"123"。如果你需要数字输出，请换用 Whisper 模型，或者用[后处理](/docs-cn/handy/docs/post-processing)把单词转换成数字。
+
+**问：选择 Whisper 时它崩溃了，怎么办？**
+
+解决办法见[故障排查 > Whisper 崩溃](/docs-cn/handy/docs/troubleshooting#whisper-崩溃)。
+
+**问：可以说"period""comma"或"new line"来插入标点吗？**
+
+不能直接做到。语音转文字模型原生不支持语音指令标点。你可以用[后处理](/docs-cn/handy/docs/post-processing)配一条自定义提示词，把口述的标点词转换为符号。用户在 [Discussion #715](https://github.com/cjpais/handy/discussions/715) 分享过这类提示词。
+
+**问：为什么 Parakeet 把我的非英语语音翻译成英语？**
+
+Parakeet 主要是英语模型。检测到非英语语音时，它可能输出英语或乱码。非英语语言请使用 Whisper、SenseVoice 或 GigaAM 模型。语言支持详情见[模型](/docs-cn/handy/docs/models)。
+
+**问：Whisper 总在结尾加"thank you"或"bye bye"**
+
+这是已知的 Whisper 幻觉（hallucination），在短录音或结尾静音时尤其常见。Handy 会自动过滤常见的幻觉产物。如果问题依旧，尽量让录音简短，或改用没有这个问题的 Parakeet。
+
+**问：我的长录音（超过 5 分钟）失败或没有输出**
+
+当前的 STT 模型对超长音频处理不好。为获得最佳效果，请把录音控制在 3-5 分钟以内。
+
+**问：模型下载失败后无法重新下载**
+
+见[故障排查 > 模型下载失败](/docs-cn/handy/docs/troubleshooting#模型下载失败)。
+
+**问：不用 Handy 时如何释放显存（VRAM）？**
+
+在**设置 > 高级**里配置模型卸载超时。也可以右键系统托盘图标选择**卸载模型（Unload Model）**。参见[高级 > 卸载模型](/docs-cn/handy/docs/advanced#卸载模型)。
+
+**问：能加载自定义 Whisper 模型吗？**
+
+可以，属于实验性功能。把 Whisper 兼容的 `.bin` 模型文件放进模型目录，Handy 就能发现它。详情见[模型](/docs-cn/handy/docs/models#自定义模型)。
+
+---
+
+## 粘贴与输出
+
+**问：有哪些粘贴方式？**
+
+Handy 支持 6 种粘贴方式。每种方式的详情与适用场景见[粘贴方式](/docs-cn/handy/docs/paste-methods)页面。
+
+**问：使用非英语键盘布局（AZERTY、QWERTZ 等）时 Handy 粘贴出乱码**
+
+这是使用直接输入（Direct Input）粘贴方式导致的。请切换到基于剪贴板的方式。见[粘贴方式](/docs-cn/handy/docs/paste-methods#非-qwerty-键盘出现乱码文本)。
+
+**问：Handy 无法粘贴进我的终端 / Windows Terminal**
+
+Windows 终端试试 **Shift+Insert** 粘贴方式，Linux 终端试试 **Ctrl+Shift+V**。见[粘贴方式](/docs-cn/handy/docs/paste-methods#我该用哪种方式)。
+
+**问：怎么打开调试菜单 / 某个设置在哪里？**
+
+用 `Cmd+Shift+D`（macOS）或 `Ctrl+Shift+D`（Windows/Linux）打开调试菜单。完整的调试设置列表见[调试](/docs-cn/handy/docs/debug)页面。
+
+---
+
+## 键盘快捷键
+
+**问：可以用纯修饰键快捷键吗（比如只按 Ctrl+Shift）？**
+
+可以。快捷键可以设置为纯修饰键（modifier key）组合。在 macOS 上，Fn/Globe 键也可以作为修饰键，但外接键盘有一个注意事项——见下一个问题。
+
+**问：我的快捷键在 Mac 内置键盘上有效，在外接键盘上无效**
+
+如果快捷键包含 `Fn`（或 Globe），这是正常现象。`Fn` 不在标准 USB HID 键盘规范之内，macOS 只能从 Apple 键盘收到它。第三方键盘对 `Fn` 的处理完全在自己的固件里完成（用于切换顶行是媒体键还是功能键），从不会把它发送给电脑——所以 Handy 收不到任何事件，这也是为什么表现为快捷键无声无息而不是报错。
+
+如果你只用 Apple 键盘，`Fn` 快捷键仍然是好选择。要让一个快捷键在任何键盘上都可用，请用标准修饰键（`Ctrl`、`Option`、`Shift`、`Command`）或普通按键来组合。如果你的快捷键不含 `Fn`，请转看[快捷键在 macOS 上失效（安全输入）](/docs-cn/handy/docs/troubleshooting#macos-上快捷键失效secure-input)。
+
+**问：悬浮层上的 (x) 按钮把我的录音丢掉了！**
+
+(x) 按钮会取消录音并丢弃所有音频，它不是"停止并转写"。要停止录音并拿到转写结果，请再按一次快捷键。
+
+---
+
+## 后处理
+
+**问：怎么设置后处理？**
+
+在**设置 > 高级 > 实验性功能**（Experimental Features）里启用，然后打开**后处理**（Post Processing）开关。侧边栏会出现一个新的后处理（Post Process）分区。完整设置流程见[后处理](/docs-cn/handy/docs/post-processing)指南。
+
+**问：如何确认后处理真的在工作？**
+
+查看日志（见[调试 > 查找日志](/docs-cn/handy/docs/debug#查找日志)）。你应该能看到对服务商的 API 调用。后处理期间，悬浮层也会显示"Processing..."状态。
+
+**问：后处理能用本地 LLM 吗？**
+
+可以。LM Studio 及其他本地服务商的分步说明见[后处理 > 本地 LLM 配置](/docs-cn/handy/docs/post-processing#本地-llm-配置)。
+
+**问：哪里能找到好用的后处理提示词？**
+
+前往 [Discussion #715](https://github.com/cjpais/handy/discussions/715)，那里有用户分享的语法修正、标点插入、格式化等各类提示词。
+
+---
+
+## macOS
+
+**问：能用 Homebrew 安装 Handy 吗？**
+
+可以：`brew install --cask handy`。注意这是社区维护的 cask，不是 Handy 开发者官方维护，可能落后于最新版本。
+
+---
+
+## Windows
+
+**问：能用 winget 安装 Handy 吗？**
+
+可以：`winget install cjpais.Handy`。注意这是社区维护的包，不是 Handy 开发者官方维护，可能落后于最新版本。
+
+**问：提示"vulkan-1.dll not found"错误**
+更新你的 GPU 驱动。详情见[故障排查](/docs-cn/handy/docs/troubleshooting#vulkan-1dll-not-foundwindows)，或者考虑使用自带 Vulkan 的 winget 包。
+
+**问：Handy 无法向以管理员身份运行的应用粘贴**
+请也以管理员身份运行 Handy。Windows 会阻止非提权进程向提权窗口发送输入。
+
+---
+
+## Linux
+
+**问：Ubuntu 22.04 上 AppImage 报 GLIBC 错误**
+AppImage 需要 GLIBC 2.38+。请改用 `.deb` 包，或升级到 Ubuntu 24.04+。见[故障排查](/docs-cn/handy/docs/troubleshooting#appimage-glibc-错误linux)。
+
+**问：悬浮层抢占焦点，导致无法粘贴**
+在**设置 > 高级**里把**悬浮层位置**（Overlay Position）设为 **None**。参见[高级 > 悬浮层位置](/docs-cn/handy/docs/advanced#悬浮层位置)。
+
+**问：Linux 上该用哪种粘贴/打字方式？**
+各合成器的具体推荐见[粘贴方式 > 打字工具](/docs-cn/handy/docs/paste-methods#打字工具linux)。
+
+**问：如何从窗口管理器或脚本控制 Handy？**
+使用 Unix 信号或 CLI 标志。示例与窗口管理器配置见 [CLI](/docs-cn/handy/docs/cli#信号控制)。
+
+**问：在公司代理/防火墙后面无法下载模型**
+可以手动下载模型并放进模型目录：
+1. 打开**关于**页面找到应用数据目录
+2. 进入（或创建）`models/` 文件夹
+3. 手动下载模型的 `.bin` 文件（从 HuggingFace 或下载链接获取）
+4. 把 `.bin` 文件直接放进 `models/` 目录
+5. 重启 Handy
