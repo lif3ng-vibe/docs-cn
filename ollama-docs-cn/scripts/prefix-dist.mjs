@@ -69,12 +69,9 @@ function reJs(s) {
     ['"basePath":""', '"basePath":"' + P + '"'],
     ['\\"mountPath\\":\\"', '\\"mountPath\\":\\"' + P],
     ['"mountPath":""', '"mountPath":"' + P + '"'],
-    // JS chunk / 内嵌串里的 /_mintlify/ 路径常量（懒加载 chunk 基址、
-    // search-index.json、export-assets 图标基址、assistant 端点）。
-    // 已前缀串不含 "/_mintlify/ 子串（引号后是目录名），不会二次前缀。
-    ['`/_mintlify/', '`' + P + '/_mintlify/'],
-    ['"/_mintlify/', '"' + P + '/_mintlify/'],
-    ['\\"/_mintlify/', '\\"' + P + '/_mintlify/'],
+    // 注意：chunk 里的 `/_mintlify/export-assets`、`/_mintlify/search-index.json`
+    // 等路径常量【不要】加前缀——运行时消费会叠加水合 basePath（已带 P），
+    // 再改常量就双前缀（/docs-cn/ollama/docs-cn/ollama/…，aihero 同款坑）。
   ];
   for (const [from, to] of variants) {
     const n = out.split(from).length - 1;
@@ -174,6 +171,19 @@ function reMintAssets(html) {
 }
 
 /**
+ * HTML 属性内转义形态的 CSS url（inline style 的 mask-image 引
+ * fontawesome/export-assets 图标）：url(&quot;/_mintlify/…&quot;) 按站点根
+ * 解析，需加前缀。只出现在属性/style 文本（payload 内是 \" 形态，由
+ * basePath 机制处理），加 P 不会二次前缀（已前缀串无此子串）。
+ */
+function reQuotAssets(html) {
+  return html.replace(/(&quot;\/_mintlify\/)/g, (full, a) => {
+    changed++;
+    return `&quot;${P}${a}`;
+  });
+}
+
+/**
  * Mintlify 无 site 配置时导出的 canonical/og:url 是 https://local./<path>
  * 占位域（HTML 属性与内嵌 payload 转义形态各一处）。改写为部署站 URL。
  */
@@ -193,7 +203,7 @@ function walk(dir) {
       const src = readFileSync(p, 'utf8');
       let out = src;
       // 顺序敏感：reRelLinks/reRelAssets 要在 reAttr 之前吃原始相对路径
-      if (e.name.endsWith('.html')) out = reLocalUrl(reMintAssets(reFlight(reJs(reRelAssets(reAttr(reRelLinks(reSrcset(src))))))));
+      if (e.name.endsWith('.html')) out = reLocalUrl(reQuotAssets(reMintAssets(reFlight(reJs(reRelAssets(reAttr(reRelLinks(reSrcset(src)))))))));
       else out = reJs(out);
       if (out !== src) writeFileSync(p, out);
     }
