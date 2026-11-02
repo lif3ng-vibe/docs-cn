@@ -17,10 +17,11 @@ function* htmlFiles(d) {
   }
 }
 
-const idsByPage = new Map() // 页面路径（/ 开头，无 .html）→ Set(id)
+const idsByPage = new Map() // 页面路径（/ 开头，去 index 与尾斜杠）→ Set(id)
 for (const f of htmlFiles(OUT)) {
   const rel = path.relative(OUT, f).replace(/\\/g, '/').replace(/\.html$/, '')
-  const page = rel === 'index' ? '/' : '/' + rel
+  const collapsed = rel === 'index' ? '' : rel.replace(/\/index$/, '')
+  const page = '/' + collapsed
   const html = fs.readFileSync(f, 'utf8')
   const ids = new Set()
   for (const m of html.matchAll(/id="([^"]+)"/g)) ids.add(m[1])
@@ -31,16 +32,16 @@ for (const f of htmlFiles(OUT)) {
 const WHITELIST = new Set([
   '/404', // not-found 页无 nextra skip-nav 锚点（上游同样如此）
 ])
-const WHITELIST_LINK = new Set(['/docs-cn/lightpanda/reference/mcp-tools#session']) // 上游 usage/mcp 链接到 mcp-tools 不存在的锚点
+const WHITELIST_LINK = new Set(['/docs-cn/lightpanda/reference/mcp-tools#session', '/docs-cn/lightpanda/reference/mcp-tools/#session']) // 上游 usage/mcp 链接到 mcp-tools 不存在的锚点
 
 let bad = 0
 for (const [page] of idsByPage) {
   if (WHITELIST.has(page)) continue
-  const f = page === '/' ? path.join(OUT, 'index.html') : path.join(OUT, page + '.html')
+  const f = page === '/' ? path.join(OUT, 'index.html') : path.join(OUT, page, 'index.html')
   const html = fs.readFileSync(f, 'utf8')
   // 跨页锚点：href="/docs-cn/lightpanda/xxx#frag"；本页：href="#frag"
   for (const m of html.matchAll(/href="(\/docs-cn\/lightpanda\/[^"#]*)#([^"]+)"/g)) {
-    const target = m[1].slice(BASE.length) || '/'
+    const target = (m[1].slice(BASE.length) || '/').replace(/\/+$/, '') || '/'
     const frag = decodeURIComponent(m[2])
     if (WHITELIST_LINK.has(m[1] + '#' + frag)) continue
     const ids = idsByPage.get(target)

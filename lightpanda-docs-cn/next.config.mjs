@@ -7,6 +7,9 @@ export default withNextra({
   basePath,
   transpilePackages: ['@lightpanda/common'],
   outputFileTracingRoot: import.meta.dirname,
+  // 目录式产物（x/index.html）：与上游原站 URL 尾斜杠形态一致，
+  // GitHub Pages 目录部署下 /x/ 可直出（文件式 x.html 会 404）
+  trailingSlash: true,
   output: 'export',
   images: { unoptimized: true },
   // Note: redirects() is honored only by the Node server (next dev / next
