@@ -14,8 +14,11 @@ export function rehypeBaseLinks(base) {
 
   function rawHtml(value) {
     return value.replace(
-      /(\s(?:src|srcset|href)=(["']))\/(?!\/)/gu,
-      (match, lead, quote) => `${lead}${quote}${prefix}/`,
+      /(\s(?:src|srcset|href)=(["']))([^"'>]*)/gu,
+      (match, lead, quote, path) =>
+        !path.startsWith('/') || path.startsWith('//') || path.startsWith(`${prefix}/`)
+          ? match
+          : `${lead}${prefix}${path}`,
     );
   }
 
