@@ -1,0 +1,1794 @@
+"""Shared infrastructure for demo recording scripts."""
+
+import json
+import os
+import platform
+import re
+import shlex
+import shutil
+import subprocess
+import tempfile
+import urllib.request
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from .themes import PALETTES, THEMES, format_theme_for_vhs
+
+REAL_HOME = Path.home()
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+DEPS_DIR = Path(__file__).parent.parent / ".deps"  # Downloaded dependencies
+
+# External dependency URLs
+_GCS_BUCKET = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
+_ZELLIJ_PLUGIN_URL = "https://github.com/Cynary/zellij-tab-name/releases/download/v0.4.1/zellij-tab-name.wasm"
+_VHS_FORK_REPO = "https://github.com/max-sixty/vhs.git"
+_VHS_FORK_BRANCH = "keypress-overlay"
+
+# The demo repo's origin claims a GitHub URL, and `url.<bare>.pushInsteadOf`
+# sends every push to the local bare repo beside it. `git remote get-url origin`
+# reports the URL below, which is what wt's CI detection parses for an
+# owner/repo before it will call `gh` at all — a bare filesystem path doesn't
+# parse, so a path remote leaves the CI column empty and the picker's `pr` and
+# `comments` tabs permanently unavailable. Only push is rewritten: plain
+# `get-url` applies `insteadOf` but not `pushInsteadOf`, so rewriting fetch too
+# would hand wt the local path again. Nothing in the demos fetches from origin
+# (only `wt switch pr:`/`mr:` do, and no tape uses them), and
+# `worktrunk.default-branch` is seeded so default-branch detection never falls
+# through to `git ls-remote` — so no demo command reaches the network.
+DEMO_ORIGIN_URL = "https://github.com/acme/demo.git"
+
+# What `Repository::project_identifier` derives from the URL above. Keys the
+# approvals file, so it must track `DEMO_ORIGIN_URL`.
+DEMO_PROJECT_ID = "github.com/acme/demo"
+
+
+def _detect_platform() -> str:
+    """Detect platform for Claude Code binary download."""
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+
+    if system == "darwin":
+        os_name = "darwin"
+    elif system == "linux":
+        os_name = "linux"
+    else:
+        raise RuntimeError(f"Unsupported OS: {system}")
+
+    if machine in ("x86_64", "amd64"):
+        arch = "x64"
+    elif machine in ("arm64", "aarch64"):
+        arch = "arm64"
+    else:
+        raise RuntimeError(f"Unsupported architecture: {machine}")
+
+    # Check for musl on Linux x64
+    if os_name == "linux" and arch == "x64":
+        try:
+            result = subprocess.run(
+                ["ldd", "--version"], capture_output=True, text=True, check=False
+            )
+            if "musl" in result.stderr.lower() or "musl" in result.stdout.lower():
+                return "linux-x64-musl"
+        except FileNotFoundError:
+            pass
+
+    return f"{os_name}-{arch}"
+
+
+def _download_file(url: str, dest: Path) -> None:
+    """Download a file from URL to destination (parallel-safe).
+
+    Uses PID-unique temp file to avoid races when multiple processes download
+    simultaneously. Only moves to dest if dest doesn't exist at move time.
+    """
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading {dest.name}...")
+    temp = dest.with_suffix(f".{os.getpid()}.tmp")
+    try:
+        urllib.request.urlretrieve(url, temp)
+        # Only move if dest doesn't exist (another process may have finished first)
+        if not dest.exists():
+            temp.rename(dest)
+    finally:
+        temp.unlink(missing_ok=True)
+
+
+def _ensure_claude_binary() -> Path:
+    """Ensure Claude Code binary is downloaded, return path."""
+    claude_binary = DEPS_DIR / "claude"
+    if claude_binary.exists():
+        return claude_binary
+
+    plat = _detect_platform()
+    print(f"Fetching Claude Code for {plat}...")
+
+    # Get stable version
+    with urllib.request.urlopen(f"{_GCS_BUCKET}/stable") as resp:
+        version = resp.read().decode().strip()
+    print(f"Claude Code version: {version}")
+
+    # Download binary
+    _download_file(f"{_GCS_BUCKET}/{version}/{plat}/claude", claude_binary)
+    claude_binary.chmod(0o755)
+
+    # Verify
+    result = subprocess.run(
+        [str(claude_binary), "--version"], capture_output=True, text=True, check=False
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Claude binary downloaded but --version failed: {result.stderr or result.stdout}"
+        )
+
+    print(f"✓ Claude Code {version} ready")
+    return claude_binary
+
+
+def claude_auth_available() -> bool:
+    """Return whether a Claude demo can authenticate without interactive login."""
+    if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get(
+        "CLAUDE_CODE_OAUTH_TOKEN"
+    ):
+        return True
+    if platform.system() != "Darwin":
+        return False
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="wt-claude-auth-") as auth_dir:
+            auth_home = Path(auth_dir)
+            _forward_macos_keychains(auth_home)
+            result = subprocess.run(
+                [str(_ensure_claude_binary()), "auth", "status", "--json"],
+                env=_isolated_claude_env(auth_home),
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+            )
+        if result.returncode != 0:
+            return False
+        return bool(json.loads(result.stdout).get("loggedIn"))
+    except (
+        OSError,
+        RuntimeError,
+        subprocess.TimeoutExpired,
+        json.JSONDecodeError,
+    ):
+        return False
+
+
+def _forward_macos_keychains(home: Path) -> None:
+    """Make the user's Keychain search list visible from an isolated HOME."""
+    if (
+        platform.system() != "Darwin"
+        or os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
+    ):
+        return
+
+    real_home_env = {**os.environ, "HOME": str(REAL_HOME)}
+    result = subprocess.run(
+        ["security", "list-keychains", "-d", "user"],
+        env=real_home_env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to read the macOS Keychain search list: {result.stderr}"
+        )
+
+    # `security` has no structured output for the search list. Its output is a
+    # shell-like sequence of quoted paths, one per line.
+    keychains = [path for path in shlex.split(result.stdout) if Path(path).exists()]
+    if not keychains:
+        raise RuntimeError("The macOS user Keychain search list is empty")
+
+    (home / "Library" / "Preferences").mkdir(parents=True, exist_ok=True)
+    run(
+        ["security", "list-keychains", "-d", "user", "-s", *keychains],
+        env=_isolated_claude_env(home),
+    )
+
+
+def recorder_env() -> dict[str, str]:
+    """The recorder's environment without the calling Claude Code session's state.
+
+    A build started from inside Claude Code inherits that session's ``CLAUDE*``
+    variables, and a demo's Claude Code reads them as its own: the inherited
+    child-session marker, for one, makes it warn that transcript saving is off.
+    Only ``CLAUDE_CODE_OAUTH_TOKEN``, the documented way to authenticate demos,
+    passes through.
+    """
+    return {
+        name: value
+        for name, value in os.environ.items()
+        if not name.startswith("CLAUDE") or name == "CLAUDE_CODE_OAUTH_TOKEN"
+    }
+
+
+def _isolated_claude_env(home: Path) -> dict[str, str]:
+    """Build an environment whose Claude state stays under an isolated HOME."""
+    env = recorder_env()
+    env["HOME"] = str(home)
+    env["XDG_CONFIG_HOME"] = str(home / ".config")
+    return env
+
+
+def _ensure_zellij_plugin() -> Path:
+    """Ensure Zellij tab-name plugin is downloaded, return path."""
+    plugin_path = DEPS_DIR / "zellij-tab-name.wasm"
+    if plugin_path.exists():
+        return plugin_path
+
+    _download_file(_ZELLIJ_PLUGIN_URL, plugin_path)
+    print("✓ Zellij plugin ready")
+    return plugin_path
+
+
+# A source marker for the newest fork commit the tapes depend on, as
+# (file, substring). Name the latest one: the branch is linear, so a clone that
+# has it has the ones before it too.
+#
+# `ensure_vhs_binary` reuses an existing clone and an existing binary without
+# pulling, so a clone made before that commit keeps building a VHS the tapes
+# have outgrown — one that drops the Alt modifier, turning a tape's `Alt+p`
+# into a literal "p" typed at whatever has focus; one that times the keystroke
+# overlay from the first keypress rather than from the video, which slides
+# every key a fixed distance away from what it did; or one that records a
+# modifier as a keystroke of its own, so `Alt+"8"` reads as a spent ⌥ followed
+# by an unrelated 8. Each records a wrong GIF with no error from VHS, the
+# build, or the recording, which is why this checks rather than trusting the
+# clone.
+_VHS_FORK_MARKER = ("keystroke.go", "heldModifiers")
+
+
+def _require_current_vhs_fork(vhs_dir: Path) -> None:
+    """Fail when the VHS clone predates the fork commit the tapes need."""
+    source_name, marker = _VHS_FORK_MARKER
+    source = vhs_dir / source_name
+    if source.exists() and marker in source.read_text():
+        return
+    raise RuntimeError(
+        f"The VHS fork clone at {vhs_dir} predates the {marker} fix, so a tape's "
+        f"keystroke overlay would not match what the screen does.\n"
+        f"Update and rebuild it:\n"
+        f"  git -C {vhs_dir} pull && rm -f {vhs_dir / 'vhs'}"
+    )
+
+
+def ensure_vhs_binary() -> Path:
+    """Ensure VHS binary is cloned and built, return path.
+
+    Uses a custom VHS fork with keystroke overlay support.
+    Requires Go to be installed.
+    """
+    vhs_dir = DEPS_DIR / "vhs"
+    vhs_binary = vhs_dir / "vhs"
+
+    if vhs_binary.exists():
+        _require_current_vhs_fork(vhs_dir)
+        return vhs_binary
+
+    # Check Go is available
+    if not shutil.which("go"):
+        raise RuntimeError(
+            "Go is required to build VHS. Install from https://go.dev/dl/"
+        )
+
+    # Clone if needed
+    if not vhs_dir.exists():
+        print("Cloning VHS fork...")
+        DEPS_DIR.mkdir(parents=True, exist_ok=True)
+        result = subprocess.run(
+            ["git", "clone", "-b", _VHS_FORK_BRANCH, "--depth=1", _VHS_FORK_REPO, str(vhs_dir)],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to clone VHS fork: {result.stderr}")
+
+    # Build
+    print("Building VHS...")
+    result = subprocess.run(
+        ["go", "build", "-o", "vhs", "."],
+        cwd=vhs_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Failed to build VHS: {result.stderr}")
+
+    # Verify
+    result = subprocess.run(
+        [str(vhs_binary), "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"VHS built but --version failed: {result.stderr}")
+
+    _require_current_vhs_fork(vhs_dir)
+    print("✓ VHS ready")
+    return vhs_binary
+
+
+# Shared content for demos
+VALIDATION_RS = """//! Input validation utilities.
+
+/// Validates that a number is positive.
+pub fn is_positive(n: i32) -> bool {
+    n > 0
+}
+
+/// Validates that a string is not empty.
+pub fn is_non_empty(s: &str) -> bool {
+    !s.trim().is_empty()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_positive() {
+        assert!(is_positive(1));
+        assert!(!is_positive(0));
+        assert!(!is_positive(-1));
+    }
+}
+"""
+
+
+@dataclass
+class DemoEnv:
+    """Isolated demo environment with its own repo and home directory."""
+
+    name: str
+    out_dir: Path
+    theme: str
+    repo_name: str = "worktrunk"
+
+    @property
+    def root(self) -> Path:
+        return self.out_dir / f".demo-{self.name}"
+
+    @property
+    def home(self) -> Path:
+        return self.root
+
+    @property
+    def work_base(self) -> Path:
+        return self.home / "w"
+
+    @property
+    def repo(self) -> Path:
+        return self.work_base / self.repo_name
+
+    @property
+    def bare_remote(self) -> Path:
+        return self.root / "remote.git"
+
+    @property
+    def starship_config(self) -> Path:
+        return self.out_dir / "starship.toml"
+
+
+def run(cmd, cwd=None, env=None, check=True, capture=False):
+    """Run a command."""
+    result = subprocess.run(
+        cmd, cwd=cwd, env=env, check=check, capture_output=capture, text=True
+    )
+    return result.stdout if capture else None
+
+
+def git(args, cwd=None, env=None):
+    """Run git command."""
+    run(["git"] + args, cwd=cwd, env=env)
+
+
+def render_tape(template_path: Path, replacements: dict, repo_root: Path) -> str | None:
+    """Render a VHS tape template with Source inlining and variable substitutions.
+
+    Args:
+        template_path: Path to the .tape template file
+        replacements: Dict of {{VAR}} -> value replacements
+        repo_root: Root of the repository (for resolving Source paths)
+
+    Returns:
+        Rendered tape content, or None if template doesn't exist
+    """
+    if not template_path.exists():
+        print(f"Warning: {template_path} not found, skipping VHS recording")
+        return None
+
+    rendered = template_path.read_text()
+
+    # Inline Source directives (VHS doesn't support them, we handle it)
+    def inline_source(match):
+        source_path = repo_root / match.group(1).strip().strip('"')
+        return source_path.read_text()
+
+    rendered = re.sub(r"^Source\s+(.+)$", inline_source, rendered, flags=re.MULTILINE)
+
+    # Apply template variable replacements
+    for key, value in replacements.items():
+        rendered = rendered.replace(f"{{{{{key}}}}}", str(value))
+    return rendered
+
+
+def record_vhs(
+    tape_path: Path, vhs_binary: str = "vhs", expected_output: Path = None
+):
+    """Record a demo GIF using VHS."""
+    env = recorder_env()
+    # GIF assets include ANSI styling independent of the recorder's shell.
+    env.pop("NO_COLOR", None)
+    env["CLICOLOR_FORCE"] = "1"
+    run([vhs_binary, str(tape_path)], check=True, env=env)
+
+    if expected_output and not expected_output.exists():
+        raise RuntimeError(
+            f"VHS exited 0 but {expected_output.name} was not created. "
+            "Check ffmpeg output above — likely missing libass support."
+        )
+
+
+def build_wt(repo_root: Path):
+    """Build the wt binary."""
+    print("Building wt binary...")
+    run(["cargo", "build", "--quiet"], cwd=repo_root)
+
+
+# The demo's open PRs on the mocked forge, one row per branch.
+#
+# `delay` is how long that branch's `gh pr list` waits before answering. wt runs
+# one call per branch concurrently, so staggering the delays is what the picker
+# and `wt list --full` show as CI status streaming in: cells land one at a time
+# behind the frame that already painted from local git. Keep the largest under
+# the tape's post-command sleep — `wt list` can't finish until every call
+# returns, even though it renders progressively.
+#
+# `checks` is `statusCheckRollup`; `review` is `reviewDecision` (None for a PR
+# with no reviews). Comment ages are hours before the recording, so the pane's
+# relative times read naturally. A branch absent here has no PR; DEMO_BRANCH_CI
+# below covers branch CI without one.
+DEMO_PRS = [
+    {
+        "number": 1,
+        "branch": "alpha",
+        "title": "Add utility functions module",
+        "body": "Adds `src/utils.rs` with path normalization and project-root "
+        "discovery, plus the string helpers the config loader needs.",
+        "author": "dbenson",
+        "checks": [("COMPLETED", "SUCCESS")],
+        "review": "APPROVED",
+        "delay": 0.3,
+        # Bodies are written for the picker's preview pane, which is about half
+        # the terminal — roughly 65 columns at `SIZE_DOCS_PICKER`. Short
+        # sentences and short code lines keep the wrap from shredding them, and
+        # the thread runs a little past one screen so ctrl-d has somewhere to go.
+        "comments": [
+            (
+                "dbenson",
+                28,
+                "Opening this for review. The path helpers are lifted out "
+                "of the config loader as-is — no behaviour change intended.",
+            ),
+            (
+                "rmurthy",
+                26,
+                "`normalize_path` pops `..` without resolving "
+                "symlinks, so it can land somewhere the kernel "
+                "wouldn't. Worth saying so in the doc comment.",
+            ),
+            (
+                "dbenson",
+                22,
+                "That's the documented difference from "
+                "`fs::canonicalize` — we never touch the "
+                "filesystem, so we can't know. Spelled it out:\n\n"
+                "```rust\n"
+                "/// Purely lexical: `..` pops the\n"
+                "/// previous component without\n"
+                "/// resolving symlinks.\n"
+                "```",
+            ),
+            (
+                "rmurthy",
+                20,
+                "Reads well. One more: `find_project_root` walks "
+                "all the way to `/` when the path is outside any "
+                "project. That's a lot of `stat` for a miss.",
+            ),
+            (
+                "dbenson",
+                18,
+                "Measured it: a miss from a nested path is about forty "
+                "`stat` calls here. Fine on a warm cache, less so on a "
+                "network mount.",
+            ),
+            (
+                "rmurthy",
+                14,
+                "A network mount is exactly where I'd expect it to bite. "
+                "Worth a ceiling — the first directory we can't read is "
+                "as good a one as any.",
+            ),
+            (
+                "dbenson",
+                6,
+                "Bounded it at the filesystem root, or the first "
+                "directory we can't read. There's a test that "
+                "runs it from `/tmp` now.",
+            ),
+            (
+                "rmurthy",
+                4,
+                "Last thing and then I'm happy: `join_relative` "
+                "takes `&str` while everything around it takes "
+                "`impl AsRef<Path>`.",
+            ),
+            (
+                "dbenson",
+                2,
+                "Fixed. Every helper in the module takes "
+                "`impl AsRef<Path>` now.",
+            ),
+            (
+                "rmurthy",
+                1,
+                "Approving. Let's land this before the config "
+                "loader change, so that one can drop its own copy "
+                "of the helpers.",
+            ),
+        ],
+    },
+    {
+        "number": 2,
+        "branch": "beta",
+        "title": "Cache resolved config per project",
+        "body": "Keeps the parsed config behind a `OnceCell` so a command "
+        "that reads it twice doesn't parse twice.",
+        "author": "dbenson",
+        "checks": [("IN_PROGRESS", None)],
+        "review": "REVIEW_REQUIRED",
+        "delay": 0.8,
+        "comments": [
+            (
+                "rmurthy",
+                3,
+                "Does this need invalidation? A long-lived process would "
+                "hold a stale config across an edit.",
+            ),
+        ],
+    },
+    {
+        "number": 4,
+        "branch": "api",
+        "title": "Add the /health endpoint",
+        "body": "Returns build metadata and the database's round-trip time.",
+        "author": "dbenson",
+        "checks": [("COMPLETED", "FAILURE")],
+        "review": None,
+        "delay": 1.2,
+        "comments": [
+            (
+                "ci-bot",
+                1,
+                "`test (linux)` failed: `acme::tests::test_add_zeros` "
+                "panicked at `assert_eq!(add(0, 0), 0)`.",
+            ),
+        ],
+    },
+    {
+        "number": 5,
+        "branch": "auth",
+        "title": "Rotate session tokens on privilege change",
+        "body": "Issues a fresh token whenever a session's role changes, so a "
+        "downgraded session can't keep its old claims.",
+        "author": "rmurthy",
+        "checks": [("COMPLETED", "SUCCESS")],
+        "review": "CHANGES_REQUESTED",
+        "delay": 1.6,
+        "comments": [
+            (
+                "dbenson",
+                5,
+                "The rotation drops the old token immediately, which logs "
+                "out every other tab. Can we keep it valid for a grace "
+                "period?",
+            ),
+        ],
+    },
+    {
+        "number": 6,
+        "branch": "billing",
+        "title": "Format currency by locale",
+        "body": "Replaces the hand-rolled formatter with the locale-aware one.",
+        "author": "dbenson",
+        "checks": [("COMPLETED", "SUCCESS")],
+        "review": None,
+        "delay": 1.0,
+        "comments": [],
+    },
+]
+
+# Branches whose CI comes from the check-runs API rather than a PR — the bare
+# `#` in the CI column. `main` has pushed commits and passing checks but no open
+# PR. Branches listed in neither this nor DEMO_PRS show no CI at all, which is
+# what `hooks` (no remote) demonstrates.
+DEMO_BRANCH_CI = {
+    "main": [("completed", "success")],
+    "cache": [("completed", "success")],
+    "release": [("completed", "failure")],
+    "search": [("completed", "success")],
+    "retry": [("completed", "failure")],
+}
+
+
+def _iso_hours_ago(now: datetime, hours: int) -> str:
+    """RFC 3339 timestamp `hours` before `now`, as the forge reports one.
+
+    `now` must be UTC-aware: the forge stamps comments in UTC, and the picker
+    renders them as an age against the clock. A naive local time with a `Z`
+    suffix would shift every age by the recorder's UTC offset.
+    """
+    return (now - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _rev_parse(repo: Path, rev: str) -> str | None:
+    """Resolve `rev` in `repo`, or None when it doesn't exist."""
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--verify", "--quiet", rev],
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip() or None
+
+
+def write_gh_mock_data(env: DemoEnv) -> None:
+    """Write the mocked forge's responses for this demo environment.
+
+    Runs after the branches exist: the check-runs responses are keyed by commit
+    SHA, and a PR's `headRefOid` is its pushed tip, so a branch with unpushed
+    commits reports the stale-head marker a real PR would. `prepare_demo_repo`
+    calls it once the shared branches are in place; a setup that adds more
+    branches calls it again, which rewrites every file from the current state.
+
+    Each file's first line is the delay the mock waits before answering; see
+    DEMO_PRS and `fixtures/gh-mock.sh`.
+    """
+    mock_dir = env.home / ".local" / "share" / "gh-mock"
+    for sub in ("head", "view", "sha"):
+        (mock_dir / sub).mkdir(parents=True, exist_ok=True)
+
+    def write(rel: str, delay: float, payload) -> None:
+        (mock_dir / rel).write_text(f"{delay}\n{json.dumps(payload)}\n")
+
+    now = datetime.now(timezone.utc)
+
+    for pr in DEMO_PRS:
+        branch = pr["branch"]
+        # The pushed tip when there is one, so unpushed local commits read as a
+        # stale PR head; a branch created during the recording has neither yet.
+        head = _rev_parse(env.repo, f"origin/{branch}") or _rev_parse(
+            env.repo, branch
+        )
+        comments = [
+            {
+                "author": {"login": author},
+                "body": body,
+                "createdAt": _iso_hours_ago(now, hours),
+            }
+            for author, hours, body in pr["comments"]
+        ]
+        newest = min((hours for _, hours, _ in pr["comments"]), default=1)
+        entry = {
+            "number": pr["number"],
+            "title": pr["title"],
+            "body": pr["body"],
+            "author": {"login": pr["author"]},
+            "comments": comments,
+            "headRefOid": head,
+            "mergeStateStatus": "CLEAN",
+            "statusCheckRollup": [
+                {"status": status, "conclusion": conclusion}
+                for status, conclusion in pr["checks"]
+            ],
+            "url": f"https://github.com/acme/demo/pull/{pr['number']}",
+            "headRepositoryOwner": {"login": "acme"},
+            "reviewDecision": pr["review"],
+            "isDraft": False,
+            "updatedAt": _iso_hours_ago(now, newest),
+        }
+        # `/` -> `_` matches `sanitize` in fixtures/gh-mock.sh.
+        write(f"head/{branch.replace('/', '_')}", pr["delay"], [entry])
+        # The comments tab's own fetch, for a row whose CI call hasn't primed
+        # the cache yet — which the delays above make the common case.
+        write(f"view/{pr['number']}", pr["delay"], {"comments": comments})
+
+    for branch, checks in DEMO_BRANCH_CI.items():
+        sha = _rev_parse(env.repo, branch)
+        if sha is None:
+            continue
+        write(
+            f"sha/{sha}",
+            0.5,
+            [{"status": status, "conclusion": conclusion} for status, conclusion in checks],
+        )
+
+
+def commit_dated(repo: Path, message: str, offset: str, env_extra: dict = None):
+    """Commit with a date offset like '7d' or '2H'."""
+    now = datetime.now()
+    if offset.endswith("d"):
+        delta = timedelta(days=int(offset[:-1]))
+    elif offset.endswith("H"):
+        delta = timedelta(hours=int(offset[:-1]))
+    else:
+        raise ValueError(f"Unknown offset format: {offset}")
+
+    date_str = (now - delta).strftime("%Y-%m-%dT%H:%M:%S")
+    env = os.environ.copy()
+    env["GIT_AUTHOR_DATE"] = date_str
+    env["GIT_COMMITTER_DATE"] = date_str
+    env["SKIP_DEMO_HOOK"] = "1"
+    if env_extra:
+        env.update(env_extra)
+    git(["-C", str(repo), "commit", "-qm", message], env=env)
+
+
+def prepare_base_repo(env: DemoEnv, repo_root: Path):
+    """Set up the base demo repository with Rust project.
+
+    Creates:
+    - Git repo with initial commit
+    - Rust project (Cargo.toml, lib.rs, Cargo.lock)
+    - Mock gh CLI for CI status
+    - bat wrapper for syntax highlighting
+    - User config directory
+
+    Demos should call this first, then add their own:
+    - Project hooks config (.config/wt.toml)
+    - Branches and worktrees
+    - Additional mock CLIs
+    - Approved commands in user config
+    """
+    # Clean previous (exist_ok=True handles cases where rmtree silently fails,
+    # e.g., stale processes holding files open)
+    shutil.rmtree(env.root, ignore_errors=True)
+
+    env.root.mkdir(parents=True, exist_ok=True)
+    env.work_base.mkdir(parents=True, exist_ok=True)
+    env.repo.mkdir(parents=True, exist_ok=True)
+
+    # Init bare remote
+    run(["git", "init", "--bare", "-q", str(env.bare_remote)])
+
+    # Init main repo
+    git(["-C", str(env.repo), "init", "-q"])
+    git(["-C", str(env.repo), "config", "user.name", "Worktrunk Demo"])
+    git(["-C", str(env.repo), "config", "user.email", "demo@example.com"])
+    git(["-C", str(env.repo), "config", "commit.gpgsign", "false"])
+    # Suppress wt hints in demo output (hints are stored in git config)
+    git(["-C", str(env.repo), "config", "worktrunk.hints.worktree-path", "true"])
+
+    # Initial commit
+    (env.repo / "README.md").write_text("# Acme App\n\nA demo application.\n")
+    git(["-C", str(env.repo), "add", "README.md"])
+    commit_dated(env.repo, "Initial commit", "7d")
+    git(["-C", str(env.repo), "branch", "-m", "main"])
+    # Claim a GitHub origin, push to the local bare repo (see DEMO_ORIGIN_URL).
+    git(["-C", str(env.repo), "remote", "add", "origin", DEMO_ORIGIN_URL])
+    git([
+        "-C",
+        str(env.repo),
+        "config",
+        f"url.{env.bare_remote}.pushInsteadOf",
+        DEMO_ORIGIN_URL,
+    ])
+    # Seed the default branch so detection never reaches `git ls-remote`, whose
+    # fetch URL is the unreachable github.com one.
+    git(["-C", str(env.repo), "config", "worktrunk.default-branch", "main"])
+    git(["-C", str(env.repo), "push", "-u", "origin", "main", "-q"])
+
+    # Rust project
+    (env.repo / "Cargo.toml").write_text(
+        '[package]\nname = "acme"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n'
+    )
+    (env.repo / "src").mkdir()
+    shutil.copy(FIXTURES_DIR / "lib.rs", env.repo / "src" / "lib.rs")
+    (env.repo / ".gitignore").write_text("/target\n")
+    git(["-C", str(env.repo), "add", ".gitignore", "Cargo.toml", "src/"])
+    commit_dated(env.repo, "Add Rust project with tests", "6d")
+
+    # Build to create Cargo.lock
+    run(["cargo", "build", "--release", "-q"], cwd=env.repo, check=False)
+    git(["-C", str(env.repo), "add", "Cargo.lock"])
+    commit_dated(env.repo, "Add Cargo.lock", "6d")
+    git(["-C", str(env.repo), "push", "-q"])
+
+    # Mock CLI tools
+    bin_dir = env.home / ".local" / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+
+    # bat wrapper for syntax highlighting (alias cat to bat for toml files)
+    bat_wrapper = bin_dir / "cat"
+    bat_wrapper.write_text("""#!/bin/bash
+# Use bat for syntax highlighting if file is toml
+if [[ "$1" == *.toml ]]; then
+    exec bat --style=plain --paging=never "$@"
+else
+    exec /bin/cat "$@"
+fi
+""")
+    bat_wrapper.chmod(0o755)
+
+    # Build wt binary
+    build_wt(repo_root)
+
+    # Install fish completions (needed for tab completion in demos)
+    # Note: Demos using tab completion also need to source the completions
+    # in the tape's hidden section (VHS doesn't trigger fish's lazy loading)
+    wt_bin = repo_root / "target" / "debug" / "wt"
+    install_env = os.environ.copy()
+    install_env["HOME"] = str(env.home)
+    run([str(wt_bin), "config", "shell", "install", "fish", "--yes"], env=install_env)
+
+    # Fish syntax highlighting colors — use ANSI names so the VHS terminal
+    # theme controls the actual rendered RGB values (light vs dark).
+    # Two mechanisms: fish_variables for --shell/--snapshot mode (fish reads at
+    # startup), colors.fish for VHS recordings (VHS applies Env HOME after fish
+    # starts, so fish_variables from the demo home isn't read).
+    fish_config_dir = env.home / ".config" / "fish"
+    fish_config_dir.mkdir(parents=True, exist_ok=True)
+    color_vars = {
+        "fish_color_autosuggestion": "brblack",
+        "fish_color_command": "yellow",  # amber — matches website .cmd color
+        "fish_color_comment": "brblack",
+        "fish_color_end": "normal",
+        "fish_color_error": "red",
+        "fish_color_escape": "cyan",
+        "fish_color_keyword": "yellow",
+        "fish_color_normal": "normal",
+        "fish_color_operator": "normal",
+        "fish_color_param": "normal",
+        "fish_color_quote": "green",
+        "fish_color_redirection": "normal",
+    }
+
+    # fish_variables file (for --shell and --snapshot modes)
+    lines = [
+        "# This file contains fish universal variable definitions.",
+        "# VERSION: 3.0",
+    ]
+    lines.extend(f"SETUVAR {k}:{v}" for k, v in color_vars.items())
+    lines.extend([
+        "SETUVAR fish_color_cancel:\\x2d\\x2dreverse",
+        "SETUVAR fish_color_search_match:\\x2d\\x2dbackground\\x3d111",
+        "SETUVAR fish_color_selection:\\x2d\\x2dbackground\\x3dbrblack",
+        "SETUVAR fish_color_valid_path:\\x2d\\x2dunderline",
+        "SETUVAR fish_greeting:",
+    ])
+    (fish_config_dir / "fish_variables").write_text("\n".join(lines) + "\n")
+
+    # colors.fish script (sourced in VHS tape hidden section)
+    color_lines = [f"set -g {k} {v}" for k, v in color_vars.items()]
+    (fish_config_dir / "colors.fish").write_text("\n".join(color_lines) + "\n")
+
+    # User config directory (demos add their own config.toml)
+    config_dir = env.home / ".config" / "worktrunk"
+    config_dir.mkdir(parents=True)
+
+    # Project config directory
+    (env.repo / ".config").mkdir(exist_ok=True)
+
+
+def setup_claude_code_config(
+    env: DemoEnv,
+    worktree_paths: list[str],
+    allowed_tools: list[str] = None,
+) -> None:
+    """Set up Claude Code configuration to skip first-run dialogs.
+
+    Args:
+        env: Demo environment
+        worktree_paths: List of worktree paths to pre-approve for trust
+        allowed_tools: List of tools to pre-approve (default: none, Claude will ask)
+    """
+    api_key_suffix = (
+        os.environ.get("ANTHROPIC_API_KEY", "")[-20:]
+        if os.environ.get("ANTHROPIC_API_KEY")
+        else ""
+    )
+
+    # Build projects config - pre-approve trust for all worktree paths
+    # Use resolved paths to handle macOS symlinks (/var -> /private/var)
+    projects_config = {}
+    for path in worktree_paths:
+        resolved_path = str(Path(path).resolve())
+        projects_config[resolved_path] = {
+            "allowedTools": [],
+            "hasTrustDialogAccepted": True,
+        }
+
+    claude_json = env.home / ".claude.json"
+    claude_json.write_text(
+        json.dumps(
+            {
+                "numStartups": 100,
+                "installMethod": "global",
+                "theme": env.theme,
+                "firstStartTime": "2025-01-01T00:00:00.000Z",
+                "hasCompletedOnboarding": True,
+                "hasCompletedClaudeInChromeOnboarding": True,
+                "claudeInChromeDefaultEnabled": False,
+                "sonnet45MigrationComplete": True,
+                "opus45MigrationComplete": True,
+                "thinkingMigrationComplete": True,
+                "hasShownOpus45Notice": {},
+                "hasShownOpus46Notice": {},
+                "opusProMigrationComplete": True,
+                "opus46FeedSeenCount": 100,
+                "unpinFable5LaunchEffort": True,
+                "sonnet1m45MigrationComplete": True,
+                "lastReleaseNotesSeen": "99.0.0",
+                "lastOnboardingVersion": "99.0.0",
+                "announcementImpressions": {
+                    "fable-5-promo-2": 100,
+                    "fable-5-promo-2-2": 100,
+                    "fable-5-promo-2-3": 100,
+                    "fable-5-promo-2-4-max": 100,
+                    "opus-5-launch": 100,
+                },
+                "oauthAccount": {
+                    "displayName": "wt",
+                    "emailAddress": "demo@example.com",
+                },
+                "customApiKeyResponses": {
+                    "approved": [api_key_suffix] if api_key_suffix else [],
+                    "rejected": [],
+                },
+                "officialMarketplaceAutoInstalled": True,
+                "effortCalloutDismissed": True,
+                "lspRecommendationDisabled": True,
+                "passesUpsellSeenCount": 100,
+                "passesLastSeenRemaining": 999,
+                "hasVisitedPasses": True,
+                "tipsHistory": {
+                    "new-user-warmup": 100,
+                    "terminal-setup": 100,
+                    "theme-command": 100,
+                    "fast-mode-2026-02-01": 100,
+                    "adaptive-thinking-2026-01-28": 100,
+                    "prompt-caching-scope-2026-01-05": 100,
+                    "plan-mode-for-complex-tasks": 100,
+                    "memory-command": 100,
+                    "todo-list": 100,
+                    "stickers-command": 100,
+                    "status-line": 100,
+                    "custom-commands": 100,
+                    "custom-agents": 100,
+                    "permissions": 100,
+                    "git-worktrees": 100,
+                    "guest-passes": 100,
+                },
+                "projects": projects_config,
+            },
+            indent=2,
+        )
+    )
+
+    # Copy claude binary (downloaded automatically if missing)
+    # Claude Code detects native install by checking if ~/.local/bin/claude exists
+    local_bin = env.home / ".local" / "bin"
+    local_bin.mkdir(parents=True, exist_ok=True)
+    claude_binary = _ensure_claude_binary()
+    shutil.copy(claude_binary, local_bin / "claude")
+
+    # Claude settings.json
+    claude_dir = env.home / ".claude"
+    claude_dir.mkdir(exist_ok=True)
+    settings = {
+        "permissions": {"allow": allowed_tools or [], "deny": [], "ask": []},
+        "model": "claude-opus-4-6",
+        # Accounts in the Remote Control rollout otherwise start it, which
+        # prints a live claude.ai session URL into the GIF.
+        "remoteControlAtStartup": False,
+        "statusLine": {
+            "type": "command",
+            "command": "wt list statusline --format=claude-code",
+        },
+    }
+    (claude_dir / "settings.json").write_text(json.dumps(settings, indent=2))
+    _forward_macos_keychains(env.home)
+
+
+def setup_zellij_config(env: DemoEnv, default_cwd: str = None) -> None:
+    """Set up Zellij configuration for demo recording.
+
+    Creates config with the site palette for the recording's theme, minimal
+    keybinds, and tab-rename plugin. Plugin is downloaded automatically if
+    missing.
+
+    Args:
+        env: Demo environment
+        default_cwd: Optional default working directory for new panes
+    """
+    palette = PALETTES[env.theme]
+    zellij_config_dir = env.home / ".config" / "zellij"
+    zellij_config_dir.mkdir(parents=True, exist_ok=True)
+    zellij_plugins_dir = zellij_config_dir / "plugins"
+    zellij_plugins_dir.mkdir(exist_ok=True)
+
+    # Copy Zellij plugin (downloaded automatically if missing)
+    plugin_path = _ensure_zellij_plugin()
+    shutil.copy(plugin_path, zellij_plugins_dir / "zellij-tab-name.wasm")
+
+    default_cwd_line = f'default_cwd "{default_cwd}"' if default_cwd else ""
+
+    # Pre-populate Zellij permissions cache to avoid permission dialog
+    # On macOS, cache is at $HOME/Library/Caches/org.Zellij-Contributors.Zellij/
+    # On Linux, it would be at $HOME/.cache/zellij/
+    plugin_dest = zellij_plugins_dir / "zellij-tab-name.wasm"
+    if platform.system() == "Darwin":
+        zellij_cache_dir = env.home / "Library" / "Caches" / "org.Zellij-Contributors.Zellij"
+    else:
+        zellij_cache_dir = env.home / ".cache" / "zellij"
+    zellij_cache_dir.mkdir(parents=True, exist_ok=True)
+    permissions_file = zellij_cache_dir / "permissions.kdl"
+    permissions_file.write_text(f'''"{plugin_dest}" {{
+    ReadApplicationState
+    ChangeApplicationState
+}}
+''')
+
+    zellij_config = zellij_config_dir / "config.kdl"
+    zellij_config.write_text(f"""// Demo Zellij config
+default_shell "fish"
+{default_cwd_line}
+pane_frames false
+show_startup_tips false
+show_release_notes false
+theme "worktrunk"
+
+// Load the tab-name plugin
+load_plugins {{
+    "file:{zellij_plugins_dir}/zellij-tab-name.wasm"
+}}
+
+themes {{
+    worktrunk {{
+        fg "{palette['--wt-ink']}"
+        bg "{palette['--wt-paper']}"
+        black "{palette['--wt-paper-soft']}"
+        red "{palette['--wt-terminal-red']}"
+        green "{palette['--wt-terminal-green']}"
+        yellow "{palette['--wt-terminal-yellow']}"
+        blue "{palette['--wt-terminal-blue']}"
+        magenta "{palette['--wt-terminal-magenta']}"
+        cyan "{palette['--wt-terminal-cyan']}"
+        white "{palette['--wt-ink-muted']}"
+        orange "{palette['--wt-copper']}"
+    }}
+}}
+
+keybinds clear-defaults=true {{
+    normal {{
+        bind "Ctrl Space" {{ SwitchToMode "tmux"; }}
+    }}
+    tmux {{
+        bind "o" {{ SwitchToMode "pane"; }}
+        bind "p" {{ SwitchToMode "pane"; }}
+        bind "t" {{ SwitchToMode "tab"; }}
+        bind "q" {{ Quit; }}
+    }}
+    tab {{
+        bind "n" {{ NewTab; SwitchToMode "Normal"; }}
+        bind "h" "Left" {{ GoToPreviousTab; SwitchToMode "Normal"; }}
+        bind "l" "Right" {{ GoToNextTab; SwitchToMode "Normal"; }}
+        bind "1" {{ GoToTab 1; SwitchToMode "Normal"; }}
+        bind "2" {{ GoToTab 2; SwitchToMode "Normal"; }}
+        bind "3" {{ GoToTab 3; SwitchToMode "Normal"; }}
+        bind "4" {{ GoToTab 4; SwitchToMode "Normal"; }}
+    }}
+    pane {{
+        bind "n" {{ NewPane; SwitchToMode "Normal"; }}
+    }}
+    shared_except "locked" {{
+        bind "Ctrl t" {{ NewTab; }}
+        bind "Ctrl n" {{ NewPane; }}
+    }}
+    shared_except "normal" {{
+        bind "Ctrl Space" "Ctrl c" {{ SwitchToMode "normal"; }}
+        bind "Esc" {{ SwitchToMode "normal"; }}
+    }}
+}}
+""")
+
+
+def setup_fish_config(env: DemoEnv, wsl_create: bool = False) -> None:
+    """Set up Fish shell configuration for demo recording.
+
+    Creates config with wsl abbreviation, starship, wt shell integration,
+    Zellij tab auto-rename, and completion pre-loading.
+
+    Note: Completion files are installed by prepare_base_repo(). This function
+    creates config.fish that sources them (needed because VHS doesn't trigger
+    fish's lazy completion loading reliably).
+
+    Args:
+        env: Demo environment
+        wsl_create: If True, wsl abbreviation includes --create flag
+    """
+    fish_config_dir = env.home / ".config" / "fish"
+    fish_config_dir.mkdir(parents=True, exist_ok=True)
+
+    wsl_cmd = (
+        "wt switch --execute=claude --create"
+        if wsl_create
+        else "wt switch --execute=claude"
+    )
+
+    fish_config = fish_config_dir / "config.fish"
+    fish_config.write_text(f"""# Demo fish config
+# wsl abbreviation: switch to worktree and launch Claude
+abbr --add wsl '{wsl_cmd}'
+# New Zellij tabs start new fish processes, so disable suggestions here rather
+# than only in the tape's initial shell.
+set -g fish_autosuggestion_enabled 0
+starship init fish | source
+# Pre-load wt completions (VHS doesn't trigger lazy loading reliably)
+source ~/.config/fish/completions/wt.fish 2>/dev/null
+
+# Disable cursor blinking for VHS recording
+set fish_cursor_default block
+# Send escape sequences to disable cursor blink
+printf '\\e[?12l'  # Disable cursor blink mode
+printf '\\e[2 q'   # Set steady block cursor (non-blinking)
+
+# Auto-rename Zellij tabs based on git branch (for demo)
+function __zellij_tab_rename --on-variable PWD
+    if set -q ZELLIJ
+        # Get git branch name, fallback to directory basename
+        set -l branch (git rev-parse --abbrev-ref HEAD 2>/dev/null)
+        if test -n "$branch"
+            zellij action rename-tab $branch
+        end
+    end
+end
+""")
+
+
+def setup_mock_clis(env: DemoEnv) -> None:
+    """Set up comprehensive mock CLIs for all demo scenarios.
+
+    Creates mocks for: npm, docker, flyctl, llm, cargo.
+    Each mock handles all cases - demos just use the branches they need.
+    """
+    bin_dir = env.home / ".local" / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+
+    # npm mock - handles install, build, dev (with optional port)
+    npm_mock = bin_dir / "npm"
+    npm_mock.write_text("""#!/bin/bash
+if [[ "$1" == "install" ]]; then
+    echo "added 847 packages in 3.2s"
+elif [[ "$1" == "run" && "$2" == "build" ]]; then
+    echo "vite v5.4.2 building for production..."
+    echo "✓ 142 modules transformed"
+    echo "dist/index.js  45.2 kB │ gzip: 14.8 kB"
+elif [[ "$1" == "run" && "$2" == "dev" ]]; then
+    # Extract port from args if provided (e.g., npm run dev -- --port 3001)
+    port=3000
+    for arg in "$@"; do
+        if [[ "$prev" == "--port" ]]; then
+            port="$arg"
+        fi
+        prev="$arg"
+    done
+    echo ""
+    echo "  VITE v5.4.2  ready in 342 ms"
+    echo ""
+    echo "  ➜  Local:   http://localhost:$port/"
+    echo "  ➜  Network: http://192.168.1.42:$port/"
+fi
+""")
+    npm_mock.chmod(0o755)
+
+    # docker mock - handles compose up
+    docker_mock = bin_dir / "docker"
+    docker_mock.write_text("""#!/bin/bash
+if [[ "$1" == "compose" && "$2" == "up" ]]; then
+    echo "[+] Running 1/1"
+    echo " ✔ Container postgres  Started"
+fi
+""")
+    docker_mock.chmod(0o755)
+
+    # flyctl mock - handles scale
+    flyctl_mock = bin_dir / "flyctl"
+    flyctl_mock.write_text("""#!/bin/bash
+if [[ "$1" == "scale" ]]; then
+    echo "Scaling app to 0 machines"
+fi
+""")
+    flyctl_mock.chmod(0o755)
+
+    # llm mock — the command every demo's `[commit.generation]` points at.
+    llm_mock = bin_dir / "llm"
+    shutil.copy(FIXTURES_DIR / "llm-mock.sh", llm_mock)
+    llm_mock.chmod(0o755)
+
+    # cargo mock - handles nextest run
+    cargo_mock = bin_dir / "cargo"
+    cargo_mock.write_text(r"""#!/bin/bash
+if [[ "$1" == "nextest" && "$2" == "run" ]]; then
+    sleep 0.3
+    echo "    Finished \`test\` profile [unoptimized + debuginfo] target(s) in 0.02s"
+    echo "    Starting 2 tests across 1 binary"
+    echo "        PASS [   0.001s] acme::tests::test_add"
+    echo "        PASS [   0.001s] acme::tests::test_add_zeros"
+    echo "------------"
+    echo "     Summary [   0.002s] 2 tests run: 2 passed, 0 skipped"
+fi
+""")
+    cargo_mock.chmod(0o755)
+
+
+def prepare_demo_repo(env: DemoEnv, repo_root: Path, hooks_config: str = None):
+    """Set up a full demo repository with varied branches.
+
+    Creates a rich repo for great `wt list` output:
+    - Git repo with Rust project
+    - Mock CLIs (npm, docker, flyctl, llm, cargo, gh)
+    - bat wrapper for syntax highlighting
+    - Extra branches without worktrees (docs/readme, spike/search)
+    - alpha: large diff, unpushed commits, behind main
+    - beta: staged changes, behind main
+    - hooks: no remote, staged+unstaged changes
+
+    Args:
+        env: Demo environment
+        repo_root: Path to worktrunk repo for building wt
+        hooks_config: Optional project hooks (.config/wt.toml) content.
+                      If None, uses default pre-merge hook.
+
+    After calling this, main is at the latest commit and worktrees exist for
+    alpha, beta, hooks. Demos can then add their own config.
+    """
+    # Base setup: git repo, Rust project, bat wrapper, wt binary
+    prepare_base_repo(env, repo_root)
+
+    # Set up all mock CLIs - demos use what they need
+    setup_mock_clis(env)
+
+    # Project hooks
+    if hooks_config is None:
+        hooks_config = '[pre-merge]\ntest = "cargo nextest run"\n'
+    (env.repo / ".config" / "wt.toml").write_text(hooks_config)
+    (env.repo / "AGENTS.md").write_text("# Acme App\n\nRust project. Run `cargo test` for tests.\n")
+    git(["-C", str(env.repo), "add", ".config/wt.toml", "AGENTS.md"])
+    commit_dated(env.repo, "Add project hooks", "5d")
+    git(["-C", str(env.repo), "push", "-q"])
+
+    # Mock gh CLI. Its responses are written by `write_gh_mock_data` at the end
+    # of this function, once the branches it keys off exist.
+    bin_dir = env.home / ".local" / "bin"
+    gh_mock = bin_dir / "gh"
+    shutil.copy(FIXTURES_DIR / "gh-mock.sh", gh_mock)
+    gh_mock.chmod(0o755)
+
+    # Extra branches without worktrees (for --branches view)
+    git(["-C", str(env.repo), "branch", "docs/readme"])
+    git(["-C", str(env.repo), "branch", "spike/search"])
+
+    # Create beta first (from current main, so it will be behind after main commit)
+    _create_branch_beta(env)
+
+    # Commit to main so beta is behind
+    readme = env.repo / "README.md"
+    readme.write_text(
+        readme.read_text() + "\n## Development\n\nSee CONTRIBUTING.md for guidelines.\n"
+    )
+    (env.repo / "notes.md").write_text("# Notes\n")
+    git(["-C", str(env.repo), "add", "README.md", "notes.md"])
+    commit_dated(env.repo, "docs: add development section", "1d")
+    git(["-C", str(env.repo), "push", "-q"])
+
+    # Create alpha and hooks after the main commit (so they're only ahead, not diverged)
+    _create_branch_alpha(env)
+    _create_branch_hooks(env)
+
+    write_gh_mock_data(env)
+
+
+def _create_branch_alpha(env: DemoEnv):
+    """Create alpha branch with large diff and unpushed commits."""
+    branch = "alpha"
+    path = env.work_base / f"acme.{branch}"
+
+    git(["-C", str(env.repo), "checkout", "-q", "-b", branch, "main"])
+
+    # Initial README changes
+    (env.repo / "README.md").write_text("""# Acme App
+
+A demo application for showcasing worktrunk features.
+
+## Features
+
+- Fast worktree switching
+- Integrated merge workflow
+- Pre-merge test hooks
+- LLM commit messages
+
+## Getting Started
+
+Run `wt list` to see all worktrees.
+""")
+    git(["-C", str(env.repo), "add", "README.md"])
+    commit_dated(env.repo, "docs: expand README", "3d")
+
+    # More commits
+    readme = env.repo / "README.md"
+    readme.write_text(readme.read_text() + "\n## Contributing\n\nPRs welcome!\n")
+    git(["-C", str(env.repo), "add", "README.md"])
+    commit_dated(env.repo, "docs: add contributing section", "3d")
+
+    readme.write_text(readme.read_text() + "\n## License\n\nMIT\n")
+    git(["-C", str(env.repo), "add", "README.md"])
+    commit_dated(env.repo, "docs: add license", "3d")
+
+    # Add utils module with substantial content
+    shutil.copy(FIXTURES_DIR / "alpha-utils.rs", env.repo / "src" / "utils.rs")
+    # Update lib.rs to include the module
+    lib_rs = env.repo / "src" / "lib.rs"
+    lib_content = lib_rs.read_text()
+    lib_rs.write_text("pub mod utils;\n\n" + lib_content)
+    git(["-C", str(env.repo), "add", "src/utils.rs", "src/lib.rs"])
+    commit_dated(env.repo, "feat: add utility functions module", "3d")
+
+    git(["-C", str(env.repo), "push", "-u", "origin", branch, "-q"])
+    git(["-C", str(env.repo), "checkout", "-q", "main"])
+    git(["-C", str(env.repo), "worktree", "add", "-q", str(path), branch])
+
+    # Unpushed commit
+    readme = path / "README.md"
+    readme.write_text(readme.read_text() + "## FAQ\n\n")
+    git(["-C", str(path), "add", "README.md"])
+    commit_dated(path, "docs: add FAQ section", "3d")
+
+    # Working tree changes - large diff using shared fixture
+    shutil.copy(FIXTURES_DIR / "alpha-readme.md", path / "README.md")
+    (path / "scratch.rs").write_text("// scratch\n")
+
+
+def _create_branch_beta(env: DemoEnv):
+    """Create beta branch with staged changes and remote tracking."""
+    branch = "beta"
+    path = env.work_base / f"acme.{branch}"
+
+    git(["-C", str(env.repo), "checkout", "-q", "-b", branch, "main"])
+    git(["-C", str(env.repo), "push", "-u", "origin", branch, "-q"])
+    git(["-C", str(env.repo), "checkout", "-q", "main"])
+    git(["-C", str(env.repo), "worktree", "add", "-q", str(path), branch])
+
+    # Staged new file
+    (path / "notes.txt").write_text("# TODO\n- Add caching\n")
+    git(["-C", str(path), "add", "notes.txt"])
+
+
+def _create_branch_hooks(env: DemoEnv):
+    """Create hooks branch with refactored lib.rs, no remote."""
+    branch = "hooks"
+    path = env.work_base / f"acme.{branch}"
+
+    git(["-C", str(env.repo), "checkout", "-q", "-b", branch, "main"])
+    shutil.copy(FIXTURES_DIR / "lib-hooks.rs", env.repo / "src" / "lib.rs")
+    git(["-C", str(env.repo), "add", "src/lib.rs"])
+    commit_dated(env.repo, "feat: add math operations, consolidate tests", "2H")
+
+    # No push - no upstream
+    git(["-C", str(env.repo), "checkout", "-q", "main"])
+    git(["-C", str(env.repo), "worktree", "add", "-q", str(path), branch])
+
+    # Staged then modified
+    lib_rs = path / "src" / "lib.rs"
+    lib_rs.write_text(lib_rs.read_text() + "// Division coming soon\n")
+    git(["-C", str(path), "add", "src/lib.rs"])
+    lib_rs.write_text(lib_rs.read_text() + "// TODO: add division\n")
+
+
+# =============================================================================
+# Demo recording infrastructure
+# =============================================================================
+
+
+def check_dependencies(commands: list[str]):
+    """Check that required commands are available, exit if not."""
+    for cmd in commands:
+        if not shutil.which(cmd):
+            raise SystemExit(f"Missing dependency: {cmd}")
+
+
+def _ffmpeg_draws_subtitles(ffmpeg: str) -> bool:
+    """Whether this ffmpeg was built with libass, i.e. has the `ass` filter."""
+    result = subprocess.run([ffmpeg, "-filters"], capture_output=True, text=True)
+    return " ass " in result.stdout
+
+
+def check_ffmpeg_libass():
+    """Put an ffmpeg that can draw subtitles on PATH, for the keystroke overlay.
+
+    Homebrew ships two builds: `ffmpeg` is the one linked onto PATH and is
+    built without libass, while `ffmpeg-full` carries it and stays unlinked —
+    so installing ffmpeg at any point silently takes the overlay away again.
+    VHS shells out to plain `ffmpeg`, so when the linked build can't draw
+    subtitles this puts the full one in front of it for the rest of the build.
+
+    Worth doing rather than telling the user to fix their PATH: the failure
+    lands at the very end of a recording, as an ffmpeg filter-graph parse
+    error naming the subtitle file, minutes after the work that produced it.
+    """
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg and _ffmpeg_draws_subtitles(ffmpeg):
+        return
+
+    # Ask brew only where there is one: `subprocess.run` on a missing program
+    # raises rather than returning non-zero, which would replace the message
+    # below with a traceback on any box without Homebrew.
+    if shutil.which("brew"):
+        full = subprocess.run(
+            ["brew", "--prefix", "ffmpeg-full"], capture_output=True, text=True
+        )
+        candidate = (
+            Path(full.stdout.strip()) / "bin" / "ffmpeg" if full.returncode == 0 else None
+        )
+        if candidate and candidate.exists() and _ffmpeg_draws_subtitles(str(candidate)):
+            os.environ["PATH"] = f"{candidate.parent}{os.pathsep}{os.environ['PATH']}"
+            return
+
+    raise SystemExit(
+        "No ffmpeg with libass support (required for the keystroke overlay).\n"
+        "Install with: brew install ffmpeg-full"
+    )
+
+
+def write_starship_config(path: Path, theme: str) -> None:
+    """Write the starship fixture plus its ``site`` palette for ``theme``."""
+    palette = PALETTES[theme]
+    path.write_text(f"""{(FIXTURES_DIR / "starship.toml").read_text()}
+[palettes.site]
+craft = "{palette['--wt-craft']}"
+muted = "{palette['--wt-ink-muted']}"
+red = "{palette['--wt-terminal-red']}"
+""")
+
+
+def setup_demo_output(env: DemoEnv) -> None:
+    """Set up demo output directory and write the starship config."""
+    env.out_dir.mkdir(parents=True, exist_ok=True)
+    write_starship_config(env.starship_config, env.theme)
+
+
+def record_text(
+    demo_env: DemoEnv,
+    tape_path: Path,
+    output_txt: Path,
+    replacements: dict,
+    repo_root: Path,
+    vhs_binary: str = "vhs",
+) -> None:
+    """Record text output by rendering tape via VHS.
+
+    Uses VHS with .txt output to capture authentic shell session including
+    real prompts and command output.
+
+    Args:
+        demo_env: Demo environment
+        tape_path: Path to VHS tape file
+        output_txt: Path to write text output
+        replacements: Template variable replacements
+        repo_root: Root of the repository (for resolving Source paths)
+        vhs_binary: VHS binary to use
+
+    Raises:
+        subprocess.CalledProcessError: If VHS fails
+        RuntimeError: If VHS succeeds but output file not created
+    """
+
+    # Render tape with variable substitution
+    rendered = render_tape(tape_path, replacements, repo_root)
+    if not rendered:
+        raise RuntimeError(f"Failed to render tape: {tape_path}")
+
+    # Modify for text output
+    temp_txt = (demo_env.out_dir / ".text-output.txt").resolve()
+    rendered = re.sub(
+        r'^Output\s+"[^"]+"', f'Output "{temp_txt}"', rendered, flags=re.MULTILINE
+    )
+    rendered = re.sub(r"^Set Width .*$", "Set Width 120", rendered, flags=re.MULTILINE)
+    rendered = re.sub(
+        r"^Set Height .*$", "Set Height 120", rendered, flags=re.MULTILINE
+    )
+    for setting in ["FontSize", "Theme", "Padding"]:
+        rendered = re.sub(rf"^Set {setting} .*$\n?", "", rendered, flags=re.MULTILINE)
+
+    # Write and run
+    tape_rendered = (demo_env.out_dir / ".text-rendered.tape").resolve()
+    tape_rendered.write_text(rendered)
+    try:
+        run(
+            [vhs_binary, str(tape_rendered)],
+            check=True,
+            env=_isolated_claude_env(demo_env.home),
+        )
+    finally:
+        tape_rendered.unlink(missing_ok=True)
+
+    if not temp_txt.exists():
+        raise RuntimeError(f"VHS succeeded but output file not created: {temp_txt}")
+    shutil.copy(temp_txt, output_txt)
+    temp_txt.unlink()
+
+
+def extract_commands_from_tape(
+    tape_path: Path, repo_root: Path, command_prefixes: tuple[str, ...] = ("wt", "git")
+) -> list[str]:
+    """Extract shell commands from a VHS tape file.
+
+    Parses the tape looking for Type "command" followed by Enter patterns,
+    filtering to commands that start with specified prefixes (default: wt, git).
+
+    Only extracts commands executed after a Show directive (visible part of
+    demo). A command may be typed while hidden to make a complete command the
+    first frame, provided its Enter occurs after Show. Skips commands executed
+    in Hide blocks.
+
+    Args:
+        tape_path: Path to the .tape template file
+        repo_root: Root of the repository (for resolving Source paths)
+        command_prefixes: Tuple of command prefixes to extract (default: wt, git)
+
+    Returns:
+        List of commands in order they appear in the tape
+    """
+    # Render tape with dummy replacements to inline Source directives
+    rendered = render_tape(tape_path, {}, repo_root)
+    if not rendered:
+        return []
+
+    commands = []
+    in_visible_section = False
+    pending_command = None
+    lines = rendered.split("\n")
+    for raw_line in lines:
+        line = raw_line.strip()
+
+        # Track visibility
+        if line == "Show":
+            in_visible_section = True
+            continue
+        elif line == "Hide":
+            in_visible_section = False
+            continue
+
+        if line.startswith("Type "):
+            match = re.match(r'Type\s+["\'](.+)["\']', line)
+            if match:
+                pending_command = match.group(1)
+            continue
+
+        if line == "Enter":
+            if (
+                in_visible_section
+                and pending_command
+                and any(
+                    pending_command.startswith(prefix) for prefix in command_prefixes
+                )
+            ):
+                commands.append(pending_command)
+            pending_command = None
+            continue
+
+        if line and not line.startswith(("#", "Sleep ")):
+            # Interactive editing or completion means the literal Type text is
+            # not the command that Enter will execute. Snapshot mode cannot
+            # replay those terminal interactions faithfully.
+            pending_command = None
+
+    return commands
+
+
+def record_snapshot(
+    demo_env: "DemoEnv",
+    tape_path: Path,
+    output_snap: Path,
+    repo_root: Path,
+) -> None:
+    """Record command output snapshot for regression testing.
+
+    Extracts commands from the tape and runs them in a fish shell with full
+    shell integration (just like the GIF demos). The snapshot format is:
+
+        $ wt list
+        <output>
+
+        $ wt switch alpha
+        <output>
+
+    This captures semantic output (what commands produce) rather than visual
+    rendering (how it looks in a terminal). Small diffs are expected when
+    output formats change; the goal is catching unexpected regressions like
+    new hints or warnings creeping in.
+
+    Args:
+        demo_env: Demo environment with repo and home paths
+        tape_path: Path to the .tape template file
+        output_snap: Path to write snapshot output
+        repo_root: Root of the repository
+
+    Raises:
+        RuntimeError: If no commands found in tape
+    """
+    commands = extract_commands_from_tape(tape_path, repo_root)
+    if not commands:
+        raise RuntimeError(f"No snapshotable commands found in {tape_path.name}")
+
+    # Build environment matching the GIF demos
+    env = _isolated_claude_env(demo_env.home)
+    env.update(
+        {
+            "PATH": f"{repo_root / 'target' / 'debug'}:{demo_env.home / '.local' / 'bin'}:{os.environ.get('PATH', '')}",
+            "TERM": "xterm-256color",
+            "LANG": "en_US.UTF-8",
+            "LC_ALL": "en_US.UTF-8",
+            "GIT_PAGER": "",  # Plain text output, no delta formatting
+            # Pin what the snapshot's shape depends on. The commands run without
+            # a terminal, so `wt` falls back to `COLUMNS` for width and drops
+            # color; both would otherwise come from whatever shell invoked the
+            # build, and a snapshot that reflows with the recorder's window
+            # can't show that a hint crept in.
+            "COLUMNS": "80",
+            "CLICOLOR_FORCE": "1",
+        }
+    )
+    env.pop("NO_COLOR", None)
+
+    # Generate a fish script that:
+    # 1. Initializes shell integration (like shared-commands.tape)
+    # 2. Runs each command, printing "$ cmd" before and blank line after
+    script_lines = [
+        "# Initialize shell integration",
+        "wt config shell init fish | source",
+        "source ~/.config/fish/completions/wt.fish",
+        f"cd {demo_env.repo}",
+        "",
+    ]
+
+    for i, cmd in enumerate(commands):
+        # Echo the command prompt, run command (merging stderr)
+        script_lines.append(f"echo '$ {cmd}'")
+        script_lines.append(f"{cmd} 2>&1")
+        # Blank line between commands (not after last)
+        if i < len(commands) - 1:
+            script_lines.append("echo ''")
+
+    script_content = "\n".join(script_lines)
+    script_path = demo_env.out_dir / ".snapshot-script.fish"
+    script_path.write_text(script_content)
+
+    # Run the script in fish
+    result = subprocess.run(
+        ["fish", str(script_path)],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    # Combine stdout and stderr
+    output = (result.stdout + result.stderr).rstrip()
+
+    # Normalize temp paths to stable placeholder
+    temp_path = str(demo_env.out_dir)
+    temp_path_real = str(demo_env.out_dir.resolve())
+    output = output.replace(temp_path_real, "<DEMO_DIR>")
+    output = output.replace(temp_path, "<DEMO_DIR>")
+
+    # Write snapshot
+    output_snap.parent.mkdir(parents=True, exist_ok=True)
+    output_snap.write_text(output + "\n")
+
+
+@dataclass
+class DemoSize:
+    """Canvas and font size for demo recording."""
+
+    width: int
+    height: int
+    fontsize: int
+
+
+# Predefined sizes for different contexts
+SIZE_SOCIAL = DemoSize(width=1200, height=700, fontsize=26)  # Big text for mobile
+SIZE_DOCS = DemoSize(width=1600, height=900, fontsize=24)  # More content for docs
+SIZE_DOCS_MOBILE = DemoSize(width=576, height=432, fontsize=20)
+
+# The picker demo trades text size for terminal size, on the same canvas as the
+# rest: 139x34 rather than 102x25. It is the one demo whose subject is a table
+# and a preview pane side by side, and the columns it loses first are the ones
+# worth watching — at 102 columns the CI status and the branch summary fall off
+# the right edge, and the preview pane is too short to page a diff through.
+SIZE_DOCS_PICKER = DemoSize(width=1600, height=900, fontsize=18)
+
+
+def build_tape_replacements(demo_env: DemoEnv, repo_root: Path) -> dict:
+    """Build template variable replacements for tape rendering.
+
+    Used by both GIF recording and text recording to ensure consistency.
+    All paths are resolved to absolute paths for VHS compatibility.
+
+    Tapes use Source directives for shared content:
+    - Source shared-setup.tape: VHS Set directives (at top, before Output)
+    - Source shared-commands.tape: Env vars and shell setup (after Require)
+    """
+    return {
+        "DEMO_REPO": demo_env.repo.resolve(),
+        "DEMO_HOME": demo_env.home.resolve(),
+        "REAL_HOME": REAL_HOME,
+        "STARSHIP_CONFIG": demo_env.starship_config.resolve(),
+        "TARGET_DEBUG": (repo_root / "target" / "debug").resolve(),
+        "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", ""),
+        "CLAUDE_CODE_OAUTH_TOKEN": os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", ""),
+        "GIT_PAGER": "",  # Overridden by record_theme
+    }
+
+
+def record_theme(
+    demo_env: "DemoEnv",
+    tape_template: Path,
+    output_gif: Path,
+    repo_root: Path,
+    vhs_binary: str = "vhs",
+    size: DemoSize = None,
+):
+    """Record one demo GIF in a prepared environment, in the environment's theme.
+
+    Args:
+        demo_env: Prepared demo environment for this theme
+        tape_template: Path to the .tape template file
+        output_gif: Output GIF path
+        repo_root: Path to worktrunk repo root (for target/debug)
+        vhs_binary: VHS binary to use (default "vhs", can be path to custom build)
+        size: Canvas and font size (default SIZE_DOCS)
+    """
+    if size is None:
+        size = SIZE_DOCS
+
+    tape_rendered = demo_env.out_dir / ".rendered.tape"
+    delta_flags = "delta --paging=never"
+    if demo_env.theme == "light":
+        delta_flags += " --light"
+    replacements = {
+        **build_tape_replacements(demo_env, repo_root),
+        "OUTPUT_GIF": output_gif,
+        "THEME": format_theme_for_vhs(THEMES[demo_env.theme]),
+        "WIDTH": size.width,
+        "HEIGHT": size.height,
+        "FONTSIZE": size.fontsize,
+        "GIT_PAGER": delta_flags,
+    }
+
+    rendered = render_tape(tape_template, replacements, repo_root)
+    if not rendered:
+        return
+
+    tape_rendered.write_text(rendered)
+    print(f"\nRecording {demo_env.theme} GIF...")
+    record_vhs(tape_rendered, vhs_binary, expected_output=output_gif)
+    tape_rendered.unlink(missing_ok=True)
+    print(f"GIF saved to {output_gif}")

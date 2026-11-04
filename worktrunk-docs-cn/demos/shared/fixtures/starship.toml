@@ -1,0 +1,39 @@
+format = "$directory$character"
+# setup_demo_output appends [palettes.site] with the site's colors for the
+# recording's theme.
+palette = "site"
+
+[directory]
+style = "bold fg:craft"
+truncation_length = 3
+truncate_to_repo = true
+home_symbol = "~"
+
+[git_branch]
+style = "fg:muted"
+symbol = " "
+format = " [$symbol$branch]($style)"
+
+[git_status]
+style = "fg:red"
+format = " [$all_status$ahead_behind]($style)"
+conflicted = "⇕"
+ahead = "⇡"
+behind = "⇣"
+staged = "+"
+modified = "!"
+untracked = "?"
+
+[cmd_duration]
+min_time = 500
+# Keep duration but drop the timer icon to reduce prompt noise.
+format = " [$duration]($style)"
+style = "fg:muted"
+
+[character]
+success_symbol = "[❯](fg:craft)"
+error_symbol = "[❯](fg:red)"
+vicmd_symbol = "[❮](fg:craft)"
+
+[time]
+disabled = true

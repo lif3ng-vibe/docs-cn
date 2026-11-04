@@ -448,5 +448,21 @@
       "stack": "Astro 5.8 + React + Tailwind 4 原班构建（下载引导指官方）",
       "snap": "main@6e48765b 2026-10-24"
     }
+  },
+  {
+    "name": "Worktrunk",
+    "slug": "worktrunk",
+    "desc": "Worktrunk 官方文档站中文镜像——面向并行 AI agent 工作流的 Git worktree 管理 CLI（wt）：一条命令创建/切换/合并/清理 worktree。覆盖核心命令（switch/list/merge/remove/config/step/hook）与子命令参考、Shell 集成与调试、Claude Code/Codex/OpenCode 等 agent 集成、LLM 提交信息、扩展（钩子/别名/自定义子命令）、技巧与模式、FAQ 与代码签名策略；15 篇文档 18 页全量汉化，保留终端快照渲染与演示 GIF。",
+    "tags": [
+      "ai-agent",
+      "cli-tool"
+    ],
+    "orig": "https://worktrunk.dev/",
+    "repo": "https://github.com/max-sixty/worktrunk",
+    "meta": {
+      "pages": "18 页",
+      "stack": "Astro 7.4 + Starlight 0.42 原班构建（base-links 插件免 sed，Node ≥22.23.4）",
+      "snap": "main@5bdb832 2026-11-04"
+    }
   }
 ]

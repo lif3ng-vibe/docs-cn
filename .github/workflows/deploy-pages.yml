@@ -54,6 +54,7 @@ jobs:
             ollama-docs-cn/package-lock.json
             lightpanda-docs-cn/package-lock.json
             handy-docs-cn/package-lock.json
+            worktrunk-docs-cn/package-lock.json
 
       - name: Prepare _site
         run: mkdir -p _site
@@ -625,6 +626,30 @@ jobs:
           npm run build
           mv dist ../_site/handy
 
+      # worktrunk 是 Astro 7.4 + Starlight 0.42 站：Astro 7 要求 Node >=22.23.4，
+      # runner 默认版本可能偏旧，用 setup-node 钉 22 最新。正文与 raw HTML 的
+      # base 前缀由站内 rehype 插件（base-links）构建期处理，CI 不做 sed。
+      - name: Restore worktrunk-docs-cn dist
+        id: dist-worktrunk
+        uses: actions/cache@v4
+        with:
+          path: _site/worktrunk
+          key: dist-worktrunk-${{ hashFiles('worktrunk-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Setup Node for worktrunk-docs-cn
+        if: steps.dist-worktrunk.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build worktrunk-docs-cn
+        if: steps.dist-worktrunk.outputs.cache-hit != 'true'
+        working-directory: worktrunk-docs-cn
+        run: |
+          npm ci
+          npm run build
+          mv dist ../_site/worktrunk
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -668,6 +693,7 @@ jobs:
           echo '| aihero | ${{ steps.dist-aihero.outputs.cache-hit == 'true' }} |'
           echo '| lightpanda | ${{ steps.dist-lightpanda.outputs.cache-hit == 'true' }} |'
           echo '| handy | ${{ steps.dist-handy.outputs.cache-hit == 'true' }} |'
+          echo '| worktrunk | ${{ steps.dist-worktrunk.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3
