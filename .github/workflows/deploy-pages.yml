@@ -650,6 +650,26 @@ jobs:
           npm run build
           mv dist ../_site/worktrunk
 
+      # gstack 是自建 Starlight 站（上游无 web 文档，README 链接面 35 页）：
+      # 正文内链/图片的前缀由顶层 markdown rehype 的 base-links 插件构建期处理，CI 不做 sed
+      - name: Restore gstack-docs-cn dist
+        id: dist-gstack
+        uses: actions/cache@v4
+        with:
+          path: _site/gstack
+          key: dist-gstack-${{ hashFiles('gstack-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+
+      - name: Build gstack-docs-cn
+        if: steps.dist-gstack.outputs.cache-hit != 'true'
+        working-directory: gstack-docs-cn
+        env:
+          DOCS_SITE: https://lif3ng-vibe.github.io
+          DOCS_BASE: /docs-cn/gstack/
+        run: |
+          npm ci
+          npm run build
+          mv dist ../_site/gstack
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -694,6 +714,7 @@ jobs:
           echo '| lightpanda | ${{ steps.dist-lightpanda.outputs.cache-hit == 'true' }} |'
           echo '| handy | ${{ steps.dist-handy.outputs.cache-hit == 'true' }} |'
           echo '| worktrunk | ${{ steps.dist-worktrunk.outputs.cache-hit == 'true' }} |'
+          echo '| gstack | ${{ steps.dist-gstack.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

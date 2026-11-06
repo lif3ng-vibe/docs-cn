@@ -1,0 +1,8 @@
+/* CJK 字体回退：插在拉丁字体之后，中文不缺字、西文视觉不变 */
+:root {
+  --sl-font-system: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+    sans-serif;
+  --sl-font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas,
+    'PingFang SC', 'Microsoft YaHei', monospace;
+}

@@ -464,5 +464,22 @@
       "stack": "Astro 7.4 + Starlight 0.42 原班构建（base-links 插件免 sed，Node ≥22.23.4）",
       "snap": "main@5bdb832 2026-11-04"
     }
+  },
+  {
+    "name": "gstack",
+    "slug": "gstack",
+    "desc": "gstack 中文文档（非官方翻译）——Garry Tan（YC 总裁）开源的 Claude Code 虚拟工程团队技能集：CEO/设计/工程经理/评审/QA/安全/发布全套 slash command。上游无 web 文档站，本站按 README 链接面自建 Starlight 组织其 README + docs/ 共 35 页：安装与多 Agent 宿主（Codex/Cursor/OpenCode 等 13 个）、技能深度指南、浏览器双引擎（Aside 优先）、GBrain 持久记忆、Captain 编队与合并列车、工厂计分卡、troubleshooting 排查手册（501 条目全量）。",
+    "tags": [
+      "ai-agent",
+      "skills",
+      "cli-tool"
+    ],
+    "orig": "https://github.com/garrytan/gstack",
+    "repo": "https://github.com/garrytan/gstack",
+    "meta": {
+      "pages": "35 页",
+      "stack": "Starlight 自建站（上游无文档站工程；base-links 顶层 rehype 免 sed）",
+      "snap": "main@eaf1701 2026-11-06"
+    }
   }
 ]

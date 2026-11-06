@@ -1,0 +1,21 @@
+{
+  "name": "gstack-docs-cn",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "gstack 中文文档（非官方翻译）— 源 garrytan/gstack README + docs/（上游无 web 文档站，本站按 README 链接面自建组织）",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/starlight": "^0.42.4",
+    "astro": "^7.2.10"
+  },
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  }
+}

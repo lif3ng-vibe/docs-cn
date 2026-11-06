@@ -35,6 +35,7 @@
 | Lightpanda | `lightpanda-docs-cn/` | https://lightpanda.io/docs/ | https://github.com/lightpanda-io/docs（快照 `main@e45234d`；50 页全量，私有共享包 @lightpanda/common 本地桩实现，Nextra 原班构建） | 2026-11-02 |
 | Handy | `handy-docs-cn/` | https://handy.computer/docs | https://github.com/cjpais/handy.computer（快照 `main@6e48765b`；13 篇文档+落地页等 18 页全量，Astro 5.8 原班构建；下载引导统一指官方下载页，非官方中文镜像） | 2026-11-02 |
 | Worktrunk | `worktrunk-docs-cn/` | https://worktrunk.dev/ | https://github.com/max-sixty/worktrunk（快照 `main@5bdb832`，docs/ 工程整拷；15 篇文档 18 页全量，Astro 7.4 + Starlight 0.42 原班构建，base-links 插件免 sed，演示 GIF 自 worktrunk-assets 抓取，非官方中文镜像） | 2026-11-04 |
+| gstack | `gstack-docs-cn/` | https://github.com/garrytan/gstack（上游无 web 文档站） | https://github.com/garrytan/gstack（快照 `main@eaf1701`，README 链接面 35 页自建 Starlight 0.42 站；base-links 挂 Astro 顶层 markdown rehype 免 sed；非官方中文翻译） | 2026-11-06 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
@@ -134,6 +135,7 @@ docs-cn/
 ├── lightpanda-docs-cn/                 # Lightpanda 中文文档（Nextra 4 + Next 15 原班构建，50 页，私有包本地桩实现）
 ├── handy-docs-cn/                      # Handy 中文文档（Astro 5.8 + React + Tailwind 4 原班构建，18 页；下载引导指官方）
 ├── worktrunk-docs-cn/                  # Worktrunk 中文文档（Astro 7.4 + Starlight 0.42 原班构建，18 页；base-links 插件免 sed）
+├── gstack-docs-cn/                     # gstack 中文文档（自建 Starlight 0.42 站，35 页；base-links 挂顶层 markdown rehype 免 sed）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -212,6 +214,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Lightpanda：https://lif3ng-vibe.github.io/docs-cn/lightpanda/
 - Handy：https://lif3ng-vibe.github.io/docs-cn/handy/
 - Worktrunk：https://lif3ng-vibe.github.io/docs-cn/worktrunk/
+- gstack：https://lif3ng-vibe.github.io/docs-cn/gstack/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 
