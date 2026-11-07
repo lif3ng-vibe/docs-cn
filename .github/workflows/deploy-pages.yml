@@ -678,6 +678,9 @@ jobs:
           cp index.html _site/
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
+          # 工件体积分布（deploy 连续超时后加——1.5GB 贴着 Pages 上限）
+          du -sm _site/* | sort -rn | head -15 || true
+          du -sm _site | tail -1
 
       - name: Build summary
         if: always()
