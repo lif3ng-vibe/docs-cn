@@ -27,6 +27,11 @@ pre.mermaid svg {
   height: auto;
 }
 
+/* mermaid 中文版图源容器：bootstrap 吸收前进站时短暂隐藏 */
+pre.mermaid-zh {
+  display: none;
+}
+
 /* mermaid 渲染后的 figure 包装：图随内容宽度展示，右上角悬浮操作条 */
 .mermaid-figure {
   position: relative;
@@ -46,6 +51,9 @@ pre.mermaid svg {
   top: 0.4rem;
   right: 0.5rem;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 0.3rem;
   opacity: 0.45;
   transition: opacity 0.15s;
@@ -55,17 +63,35 @@ pre.mermaid svg {
   opacity: 1;
 }
 .mermaid-bar button {
-  width: 1.6rem;
-  height: 1.6rem;
-  display: grid;
-  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 6px;
   background: var(--sl-color-gray-7, var(--sl-color-black));
   color: var(--sl-color-text-1);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 1;
+  vertical-align: middle;
   cursor: pointer;
+}
+.mermaid-bar button svg {
+  display: block;
+}
+.mermaid-zh-label {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+.mermaid-bar button.active {
+  border-color: var(--sl-color-accent-600);
+  color: var(--sl-color-accent-600);
 }
 .mermaid-bar button:hover {
   border-color: var(--sl-color-accent-600);

@@ -14,51 +14,96 @@ const DOCS_BASE = (process.env.DOCS_BASE || '/').replace(/\/+$/, '') || '/';
 // 明暗主题切换时重渲染。
 const MERMAID_INIT = `
 (function () {
-  var lastSources = [];
-  function renderAll() {
-    var nodes = document.querySelectorAll('pre.mermaid:not([data-processed])');
-    if (!nodes.length) return;
-    var list = Array.prototype.slice.call(nodes);
-    list.forEach(function (n) { if (!n.dataset.src) n.dataset.src = n.textContent; });
-    lastSources = list.map(function (n) { return n.dataset.src; });
-    var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
-    window.mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });
-    window.mermaid.run({ nodes: list }).then(postProcess).catch(function () {});
+  var ICON_PLUS = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 1v8M1 5h8"/></svg>';
+  var ICON_OPEN = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 8l6-6M3.5 2H8v4.5"/></svg>';
+
+  function themeName() {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
   }
-  // 渲染产物包装：figure + 操作条（放大 / 新窗口打开 SVG）
-  function postProcess() {
-    document.querySelectorAll('figure.mermaid-figure > svg').forEach(function (svg) {
-      if (svg.closest('.mermaid-lightbox')) return;
-      wrapFigure(svg);
-    });
-    document.querySelectorAll('main svg[id^="mermaid-"]').forEach(function (svg) {
-      if (svg.parentElement.classList.contains('mermaid-figure')) return;
-      wrapFigure(svg);
+  var pending = null;
+  function scheduleRender() {
+    if (pending) return;
+    pending = requestAnimationFrame(function () { pending = null; renderAll(); });
+  }
+
+  // 把 markdown 产出的 pre.mermaid（与紧随的隐藏 pre.mermaid-zh）聚拢进 figure 容器
+  function bootstrap() {
+    document.querySelectorAll('pre.mermaid').forEach(function (pre) {
+      if (pre.closest('figure.mermaid-figure')) return;
+      var fig = document.createElement('figure');
+      fig.className = 'mermaid-figure';
+      fig.dataset.lang = 'en';
+      fig.dataset.mermaidEn = pre.textContent;
+      var zh = pre.nextElementSibling;
+      if (zh && zh.classList.contains('mermaid-zh')) {
+        fig.dataset.mermaidZh = zh.textContent;
+        zh.remove();
+      }
+      pre.replaceWith(fig);
+      fig.appendChild(buildBar(fig));
+      pre.removeAttribute('hidden');
+      fig.appendChild(pre);
     });
   }
-  function wrapFigure(svg) {
-    var fig = document.createElement('figure');
-    fig.className = 'mermaid-figure';
+
+  function buildBar(fig) {
     var bar = document.createElement('div');
     bar.className = 'mermaid-bar';
-    bar.innerHTML = '<button type="button" data-act="zoom" title="放大查看（滚轮缩放）">＋</button>' +
-      '<button type="button" data-act="open" title="新窗口打开 SVG">↗</button>';
-    svg.replaceWith(fig);
-    fig.appendChild(bar);
-    fig.appendChild(svg);
-    svg.removeAttribute('max-width');
+    function btn(act, title, inner) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.act = act;
+      b.title = title;
+      b.innerHTML = inner;
+      bar.appendChild(b);
+      return b;
+    }
+    btn('zoom', '放大查看（滚轮缩放）', ICON_PLUS);
+    if (fig.dataset.mermaidZh) btn('zh', '查看中文版流程图', '<span class="mermaid-zh-label">中</span>');
+    btn('open', '新窗口打开 SVG', ICON_OPEN);
     bar.addEventListener('click', function (e) {
-      var act = e.target && e.target.dataset ? e.target.dataset.act : '';
-      if (act === 'zoom') openLightbox(svg);
-      if (act === 'open') openInNewWindow(svg);
+      var b = e.target.closest && e.target.closest('button');
+      if (!b) return;
+      var svg = fig.querySelector('svg[id^="mermaid-"]');
+      if (b.dataset.act === 'zoom' && svg) openLightbox(svg);
+      else if (b.dataset.act === 'open' && svg) openInNewWindow(svg);
+      else if (b.dataset.act === 'zh') toggleLang(fig);
     });
-    svg.style.cursor = 'zoom-in';
-    svg.addEventListener('click', function () { openLightbox(svg); });
+    return bar;
   }
+
+  function toggleLang(fig) {
+    fig.dataset.lang = fig.dataset.lang === 'zh' ? 'en' : 'zh';
+    var b = fig.querySelector('[data-act="zh"]');
+    if (b) b.classList.toggle('active', fig.dataset.lang === 'zh');
+    rerenderFigure(fig);
+    scheduleRender();
+  }
+
+  function rerenderFigure(fig) {
+    var src = fig.dataset.lang === 'zh' ? fig.dataset.mermaidZh : fig.dataset.mermaidEn;
+    if (!src) return;
+    // 清掉旧 svg 与 pre（mermaid.run 会把 svg 插进 pre 内部，结构不定），
+    // 再插一枚全新 pre 作 figure 直接子节点，保证 renderAll 的选择器永远命中
+    fig.querySelectorAll('svg[id^="mermaid-"], pre.mermaid').forEach(function (n) { n.remove(); });
+    var pre = document.createElement('pre');
+    pre.className = 'mermaid';
+    pre.textContent = src;
+    fig.appendChild(pre);
+  }
+
+  function renderAll() {
+    var nodes = document.querySelectorAll('figure.mermaid-figure > pre.mermaid:not([data-processed])');
+    if (!nodes.length) return;
+    var list = Array.prototype.slice.call(nodes);
+    window.mermaid.initialize({ startOnLoad: false, theme: themeName(), securityLevel: 'loose' });
+    window.mermaid.run({ nodes: list }).catch(function () {});
+  }
+
   function serializeSvg(svg) {
     var clone = svg.cloneNode(true);
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    if (!clone.getAttribute('width') && clone.viewBox.baseVal) {
+    if (clone.viewBox && clone.viewBox.baseVal) {
       clone.setAttribute('width', clone.viewBox.baseVal.width);
       clone.setAttribute('height', clone.viewBox.baseVal.height);
     }
@@ -89,7 +134,7 @@ const MERMAID_INIT = `
     var close = document.createElement('button');
     close.className = 'mermaid-lb-close';
     close.type = 'button';
-    close.textContent = '×';
+    close.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l8 8M10 2l-8 8"/></svg>';
     lb.appendChild(body);
     lb.appendChild(close);
     document.body.appendChild(lb);
@@ -100,7 +145,7 @@ const MERMAID_INIT = `
       scale = Math.min(5, Math.max(0.2, scale * (e.deltaY < 0 ? 1.12 : 0.89)));
       apply();
     }, { passive: false });
-    lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
+    lb.addEventListener('click', function (e) { if (e.target === lb || e.target === body) closeLightbox(); });
     close.addEventListener('click', closeLightbox);
     document.addEventListener('keydown', escClose);
   }
@@ -109,27 +154,24 @@ const MERMAID_INIT = `
     document.removeEventListener('keydown', escClose);
     document.querySelectorAll('.mermaid-lightbox').forEach(function (n) { n.remove(); });
   }
-  var pending = false;
-  function scheduleRender() {
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(function () { pending = false; renderAll(); });
-  }
+  // 委托：点击图本体（非操作条）也开放大层
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var svg = t.closest && t.closest('svg[id^="mermaid-"]');
+    if (!svg || svg.closest('.mermaid-lightbox')) return;
+    if (svg.closest('figure.mermaid-figure')) openLightbox(svg);
+  });
+
   function init() {
     if (!document.querySelector('pre.mermaid')) return;
     var s = document.createElement('script');
     s.src = '${DOCS_BASE}/vendor/mermaid.min.js'.replace('//', '/');
     s.onload = function () {
-      renderAll();
-      // Starlight 主题切换（html[data-theme]）→ svg 换回源码 pre 再重渲染。
-      // svg 不携带 dataset，源码按渲染顺序存于 lastSources
+      bootstrap();      // 先聚拢 figure（含中文源吸收），再渲染
+      scheduleRender();
+      // Starlight 主题切换（html[data-theme]）→ 每个 figure 按当前语言重渲染
       new MutationObserver(function () {
-        document.querySelectorAll('figure.mermaid-figure svg[id^="mermaid-"]').forEach(function (svg, i) {
-          var pre = document.createElement('pre');
-          pre.className = 'mermaid';
-          pre.dataset.src = lastSources[i] || '';
-          if (pre.dataset.src) svg.closest('figure.mermaid-figure').replaceWith(pre);
-        });
+        document.querySelectorAll('figure.mermaid-figure').forEach(rerenderFigure);
         scheduleRender();
       }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     };

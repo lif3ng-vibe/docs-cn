@@ -78,6 +78,21 @@ flowchart LR
   T -.->|flake records| F[Daily flaky pass]
 ```
 
+```mermaid-zh
+flowchart LR
+  G[Garry（人类所有者）] -->|一个词的回复| C[Captain 队长]
+  C <-->|发现与优先级| P[同级 Captain]
+  C -->|简报| L1[车道：用 /autoplan 规划]
+  C -->|简报| L2[车道：建造]
+  C -->|简报| L3[车道：修复波]
+  L1 -->|大白话计划 + 推荐| C
+  L2 -->|/ship 回执、head 上的 READY| C
+  L3 -->|READY| C
+  C -->|列车：一道门禁，至多 5 个 PR| T[(门禁)]
+  T -->|绿| M[(main)]
+  T -.->|不稳定记录| F[每日不稳定修复]
+```
+
 **Captain、编队与车道。** Captain 是一条长期运行的 Capy 线程，掌管一个仓库的
 流程。它拉起编队线程（车道），每条车道有自己的机器和分支、文件各有其名，因此
 任何两条车道都不会改同一个文件。Captain 的 Drive 存放编队契约（`CREW.md`）、

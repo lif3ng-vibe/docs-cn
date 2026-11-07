@@ -28,6 +28,24 @@ flowchart LR
   M -.->|/retro Step 7.5| S[Factory scorecard]
 ```
 
+```mermaid-zh
+flowchart LR
+  P[人] -->|大白话请求与一个词的回复| C[Captain 线程]
+  C -->|简报与叫号| L1[编队线程：分支 A]
+  C --> L2[编队线程：分支 B]
+  C --> L3[编队线程：分支 C]
+  L1 -->|/ship、带 SHIP_RECEIPT 的 READY 块| C
+  L2 --> C
+  L3 --> C
+  C -->|train build：一道门禁覆盖至多 5 个 PR| G[(门禁工作流)]
+  G -->|GREEN 或 RED（附不稳定记录）| C
+  C -->|槽位：打戳、核验、合并、核验| M[(main)]
+  M -->|周一与周四、72 小时下限| R[稳定发布：打标、说明、stable]
+  G -.->|flake-records 工件| F[每日不稳定修复]
+  M -.->|免费套件重试| F
+  M -.->|/retro 第 7.5 步| S[工厂计分卡]
+```
+
 ## 第 0 天：安装
 
 ### 1. 用户级 gstack 技能（Capy）
