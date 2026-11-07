@@ -14,13 +14,16 @@ const DOCS_BASE = (process.env.DOCS_BASE || '/').replace(/\/+$/, '') || '/';
 // 明暗主题切换时重渲染。
 const MERMAID_INIT = `
 (function () {
+  var lastSources = [];
   function renderAll() {
     var nodes = document.querySelectorAll('pre.mermaid:not([data-processed])');
     if (!nodes.length) return;
-    nodes.forEach(function (n) { if (!n.dataset.src) n.dataset.src = n.textContent; });
+    var list = Array.prototype.slice.call(nodes);
+    list.forEach(function (n) { if (!n.dataset.src) n.dataset.src = n.textContent; });
+    lastSources = list.map(function (n) { return n.dataset.src; });
     var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
     window.mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });
-    window.mermaid.run({ nodes: nodes });
+    window.mermaid.run({ nodes: list });
   }
   var pending = false;
   function scheduleRender() {
@@ -28,23 +31,31 @@ const MERMAID_INIT = `
     pending = true;
     requestAnimationFrame(function () { pending = false; renderAll(); });
   }
-  if (document.querySelector('pre.mermaid')) {
+  function init() {
+    if (!document.querySelector('pre.mermaid')) return;
     var s = document.createElement('script');
     s.src = '${DOCS_BASE}/vendor/mermaid.min.js'.replace('//', '/');
     s.onload = function () {
       renderAll();
-      // Starlight 主题切换（html[data-theme]）→ svg 换回源码 pre 再重渲染
+      // Starlight 主题切换（html[data-theme]）→ svg 换回源码 pre 再重渲染。
+      // svg 不携带 dataset，源码按渲染顺序存于 lastSources
       new MutationObserver(function () {
-        document.querySelectorAll('svg[id^="mermaid-"]').forEach(function (svg) {
+        document.querySelectorAll('svg[id^="mermaid-"]').forEach(function (svg, i) {
           var pre = document.createElement('pre');
           pre.className = 'mermaid';
-          pre.dataset.src = svg.dataset.src || '';
+          pre.dataset.src = lastSources[i] || '';
           if (pre.dataset.src) svg.replaceWith(pre);
         });
         scheduleRender();
       }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     };
     document.head.appendChild(s);
+  }
+  // head 内联脚本执行时 body 尚未解析，必须等 DOM 就绪
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
 `;
