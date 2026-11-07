@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/tester-army-e2e
-          key: dist-tester-army-e2e-${{ hashFiles('tester-army-e2e-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-tester-army-e2e-${{ hashFiles('tester-army-e2e-docs-cn/**') }}
 
       - name: Build tester-army-e2e-docs-cn
         if: steps.dist-tester-army-e2e.outputs.cache-hit != 'true'
@@ -96,7 +96,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/claude-mem
-          key: dist-claude-mem-${{ hashFiles('claude-mem-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-claude-mem-${{ hashFiles('claude-mem-docs-cn/**') }}
 
       - name: Build claude-mem-docs-cn
         if: steps.dist-claude-mem.outputs.cache-hit != 'true'
@@ -122,7 +122,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/pi
-          key: dist-pi-${{ hashFiles('pi-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-pi-${{ hashFiles('pi-docs-cn/**') }}
 
       - name: Build pi-docs-cn
         if: steps.dist-pi.outputs.cache-hit != 'true'
@@ -161,7 +161,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/ai-sdk
-          key: dist-ai-sdk-${{ hashFiles('ai-sdk-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-ai-sdk-${{ hashFiles('ai-sdk-docs-cn/**') }}
 
       - name: Build ai-sdk-docs-cn
         if: steps.dist-ai-sdk.outputs.cache-hit != 'true'
@@ -179,7 +179,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/codegraph
-          key: dist-codegraph-${{ hashFiles('codegraph-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-codegraph-${{ hashFiles('codegraph-docs-cn/**') }}
 
       - name: Build codegraph-docs-cn
         if: steps.dist-codegraph.outputs.cache-hit != 'true'
@@ -199,7 +199,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/orca
-          key: dist-orca-${{ hashFiles('orca-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-orca-${{ hashFiles('orca-docs-cn/**') }}
 
       - name: Build orca-docs-cn
         if: steps.dist-orca.outputs.cache-hit != 'true'
@@ -217,7 +217,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/mattpocock-skills
-          key: dist-mattpocock-skills-${{ hashFiles('mattpocock-skills-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-mattpocock-skills-${{ hashFiles('mattpocock-skills-docs-cn/**') }}
 
       - name: Build mattpocock-skills-docs-cn
         if: steps.dist-mattpocock-skills.outputs.cache-hit != 'true'
@@ -238,7 +238,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/agency-agents-en
-          key: dist-agency-agents-en-${{ hashFiles('agency-agents-docs-en/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-agency-agents-en-${{ hashFiles('agency-agents-docs-en/**') }}
 
       - name: Build agency-agents-docs-en
         if: steps.dist-agency-agents-en.outputs.cache-hit != 'true'
@@ -258,7 +258,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/agency-agents
-          key: dist-agency-agents-${{ hashFiles('agency-agents-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-agency-agents-${{ hashFiles('agency-agents-docs-cn/**') }}
 
       - name: Build agency-agents-docs-cn
         if: steps.dist-agency-agents.outputs.cache-hit != 'true'
@@ -278,7 +278,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/ai-coding-dictionary
-          key: dist-ai-coding-dictionary-${{ hashFiles('ai-coding-dictionary-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-ai-coding-dictionary-${{ hashFiles('ai-coding-dictionary-docs-cn/**') }}
 
       - name: Build ai-coding-dictionary-docs-cn
         if: steps.dist-ai-coding-dictionary.outputs.cache-hit != 'true'
@@ -296,7 +296,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/ai-memory
-          key: dist-ai-memory-${{ hashFiles('ai-memory-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-ai-memory-${{ hashFiles('ai-memory-docs-cn/**') }}
 
       - name: Build ai-memory-docs-cn
         if: steps.dist-ai-memory.outputs.cache-hit != 'true'
@@ -314,7 +314,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/ai-memory-en
-          key: dist-ai-memory-en-${{ hashFiles('ai-memory-docs-en/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-ai-memory-en-${{ hashFiles('ai-memory-docs-en/**') }}
 
       - name: Build ai-memory-docs-en
         if: steps.dist-ai-memory-en.outputs.cache-hit != 'true'
@@ -334,7 +334,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/openrig
-          key: dist-openrig-${{ hashFiles('openrig-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-openrig-${{ hashFiles('openrig-docs-cn/**') }}
 
       - name: Build openrig-docs-cn
         if: steps.dist-openrig.outputs.cache-hit != 'true'
@@ -357,7 +357,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/openshell
-          key: dist-openshell-${{ hashFiles('openshell-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-openshell-${{ hashFiles('openshell-docs-cn/**') }}
 
       - name: Build openshell-docs-cn
         if: steps.dist-openshell.outputs.cache-hit != 'true'
@@ -376,7 +376,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/openrig-en
-          key: dist-openrig-en-${{ hashFiles('openrig-docs-en/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-openrig-en-${{ hashFiles('openrig-docs-en/**') }}
 
       - name: Build openrig-docs-en
         if: steps.dist-openrig-en.outputs.cache-hit != 'true'
@@ -397,7 +397,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/nimbus
-          key: dist-nimbus-${{ hashFiles('nimbus-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-nimbus-${{ hashFiles('nimbus-docs-cn/**') }}
 
       - name: Build nimbus-docs-cn
         if: steps.dist-nimbus.outputs.cache-hit != 'true'
@@ -420,7 +420,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/openship
-          key: dist-openship-${{ hashFiles('openship-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-openship-${{ hashFiles('openship-docs-cn/**') }}
 
       - name: Build openship-docs-cn
         if: steps.dist-openship.outputs.cache-hit != 'true'
@@ -443,7 +443,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/agent-skills
-          key: dist-agent-skills-${{ hashFiles('agent-skills-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-agent-skills-${{ hashFiles('agent-skills-docs-cn/**') }}
 
       - name: Build agent-skills-docs-cn
         if: steps.dist-agent-skills.outputs.cache-hit != 'true'
@@ -460,7 +460,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/tailscale
-          key: dist-tailscale-${{ hashFiles('tailscale-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-tailscale-${{ hashFiles('tailscale-docs-cn/**') }}
 
       - name: Build tailscale-docs-cn
         if: steps.dist-tailscale.outputs.cache-hit != 'true'
@@ -484,7 +484,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/litellm
-          key: dist-litellm-${{ hashFiles('litellm-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-litellm-${{ hashFiles('litellm-docs-cn/**') }}
 
       - name: Build litellm-docs-cn
         if: steps.dist-litellm.outputs.cache-hit != 'true'
@@ -506,7 +506,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/coolify
-          key: dist-coolify-${{ hashFiles('coolify-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-coolify-${{ hashFiles('coolify-docs-cn/**') }}
 
       - name: Build coolify-docs-cn
         if: steps.dist-coolify.outputs.cache-hit != 'true'
@@ -532,7 +532,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/impeccable
-          key: dist-impeccable-${{ hashFiles('impeccable-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-impeccable-${{ hashFiles('impeccable-docs-cn/**') }}
 
       - name: Build impeccable-docs-cn
         if: steps.dist-impeccable.outputs.cache-hit != 'true'
@@ -550,7 +550,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/impeccable-mirror
-          key: dist-impeccable-mirror-${{ hashFiles('impeccable-mirror-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-impeccable-mirror-${{ hashFiles('impeccable-mirror-cn/**') }}
 
       - name: Collect impeccable-mirror-cn
         if: steps.dist-impeccable-mirror.outputs.cache-hit != 'true'
@@ -565,7 +565,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/hallmark
-          key: dist-hallmark-${{ hashFiles('hallmark-docs-cn/site/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-hallmark-${{ hashFiles('hallmark-docs-cn/site/**') }}
 
       - name: Collect hallmark-docs-cn
         if: steps.dist-hallmark.outputs.cache-hit != 'true'
@@ -580,7 +580,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/aihero
-          key: dist-aihero-${{ hashFiles('aihero-docs-cn/site/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-aihero-${{ hashFiles('aihero-docs-cn/site/**') }}
 
       - name: Collect aihero-docs-cn
         if: steps.dist-aihero.outputs.cache-hit != 'true'
@@ -598,7 +598,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/lightpanda
-          key: dist-lightpanda-${{ hashFiles('lightpanda-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-lightpanda-${{ hashFiles('lightpanda-docs-cn/**') }}
 
       - name: Build lightpanda-docs-cn
         if: steps.dist-lightpanda.outputs.cache-hit != 'true'
@@ -616,7 +616,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/handy
-          key: dist-handy-${{ hashFiles('handy-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-handy-${{ hashFiles('handy-docs-cn/**') }}
 
       - name: Build handy-docs-cn
         if: steps.dist-handy.outputs.cache-hit != 'true'
@@ -634,7 +634,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/worktrunk
-          key: dist-worktrunk-${{ hashFiles('worktrunk-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-worktrunk-${{ hashFiles('worktrunk-docs-cn/**') }}
 
       - name: Setup Node for worktrunk-docs-cn
         if: steps.dist-worktrunk.outputs.cache-hit != 'true'
@@ -657,7 +657,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _site/gstack
-          key: dist-gstack-${{ hashFiles('gstack-docs-cn/**', '.github/workflows/deploy-pages.yml') }}
+          key: dist-gstack-${{ hashFiles('gstack-docs-cn/**') }}
 
       - name: Build gstack-docs-cn
         if: steps.dist-gstack.outputs.cache-hit != 'true'
