@@ -100,6 +100,16 @@ if (badTags.length) {
 	);
 }
 
+// 分仓分组（docs-cn 拆库 2026-11-07）：条目可选 group，缺省 = hub（本仓
+// Pages 直建）；"docs-cn-N" = 站点内容仍在本仓维护，但构建部署迁到分仓
+// lif3ng-vibe/docs-cn-N（其 Pages URL /docs-cn-N/<slug>/，hub 的
+// dispatch job 指名触发）。入口页只展示 hub 组；迁出站另生成 redirects/
+// <slug>.html 旧链接兜底桩（CI 拷到 _site/<slug>/index.html）。
+const HUB_GROUP = 'hub';
+const groupOf = (s) => s.group || HUB_GROUP;
+const hubSites = sites.filter((s) => groupOf(s) === HUB_GROUP);
+const migratedSites = sites.filter((s) => groupOf(s) !== HUB_GROUP);
+
 // formkit/auto-animate（vendor 自 @formkit/auto-animate@0.10.0，升级就换文件重跑）：
 // 包只发 ESM 构建，这里构建时剥掉末尾 export 把 autoAnimate 挂到 globalThis，
 // 内联进页面（保持单文件零外部请求）。fail-fast：导出形态变了就报错。
@@ -149,7 +159,7 @@ function metaLine(s) {
 	return [m.pages, m.stack, m.snap ? `快照 ${m.snap}` : ''].filter(Boolean).join(' · ');
 }
 
-const cards = sites
+const cards = hubSites
 	.map((s) => {
 		const meta = metaLine(s);
 		return `
@@ -246,8 +256,8 @@ function fill(text, vars, file) {
 	}
 }
 
-// 页脚：收录数 + 最新快照年月（各站 meta.snap 取最大，YYYY-MM）
-const lastSnap = sites
+// 页脚：收录数 + 最新快照年月（hub 组各站 meta.snap 取最大，YYYY-MM）
+const lastSnap = hubSites
 	.map((s) => (s.meta && s.meta.snap) || '')
 	.sort()
 	.pop();
@@ -274,7 +284,7 @@ const html = fill(
 		TAG_LANG_RADIOS: tagLangRadios,
 		SEARCH_MODE_RADIOS: searchModeRadios,
 		SHOW_CHECKS: showChecks,
-		SITE_COUNT: String(sites.length),
+		SITE_COUNT: String(hubSites.length),
 		LAST_SNAP: lastSnap ? lastSnap.slice(0, 7) : '',
 	},
 	'template.html'
@@ -290,6 +300,31 @@ const html = fill(
 	}
 }
 
+// 迁出站旧链接兜底桩：redirects/<slug>.html（入库文件，如同 index.html），
+// CI Assemble 拷到 _site/<slug>/index.html——旧地址 /docs-cn/<slug>/ 即刻 302。
+const redirectDir = path.join(__dirname, '..', 'redirects');
+for (const s of migratedSites) {
+	const target = `/${groupOf(s)}/${s.slug}/`;
+	fs.mkdirSync(redirectDir, { recursive: true });
+	fs.writeFileSync(
+		path.join(redirectDir, `${s.slug}.html`),
+		[
+			'<!DOCTYPE html>',
+			'<meta charset="utf-8">',
+			`<title>${s.name} 中文文档（已迁移）</title>`,
+			`<link rel="canonical" href="${target}">`,
+			`<meta http-equiv="refresh" content="0; url=${target}">`,
+			`<script>location.replace("${target}")</script>`,
+			`<a href="${target}">进入文档</a>`,
+		].join(''),
+		'utf8'
+	);
+}
+
 const out = path.join(__dirname, '..', 'index.html');
 fs.writeFileSync(out, html, 'utf8');
-console.log('generated ' + out + ' with ' + sites.length + ' site(s)');
+console.log(
+	`generated ${out} with ${hubSites.length} site(s) (+${migratedSites.length} migrated: ${migratedSites
+		.map((s) => s.slug)
+		.join(', ')})`
+);

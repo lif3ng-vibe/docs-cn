@@ -151,29 +151,6 @@ jobs:
           mkdir -p _site
           cp -r ollama-docs-cn/dist _site/ollama
 
-      # ai-sdk 是 pnpm monorepo（geistdocs/fumadocs + Next.js 16 静态导出）。
-      # 无需 sed：basePath 写死在其 next.config.ts 与 geistdocs config，内链/
-      # canonical/sitemap 构建期自动带 /docs-cn/ai-sdk 前缀（已本地验证产物）；
-      # 搜索是构建期静态索引，无需服务端。产物 out/ 在 apps/docs/ 根层，
-      # postprocess 脚本负责折叠 root-param 目录与板块根跳转桩。
-      - name: Restore ai-sdk-docs-cn dist
-        id: dist-ai-sdk
-        uses: actions/cache@v4
-        with:
-          path: _site/ai-sdk
-          key: dist-ai-sdk-${{ hashFiles('ai-sdk-docs-cn/**') }}
-
-      - name: Build ai-sdk-docs-cn
-        if: steps.dist-ai-sdk.outputs.cache-hit != 'true'
-        working-directory: ai-sdk-docs-cn
-        env:
-          NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: https://lif3ng-vibe.github.io/docs-cn/ai-sdk
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
-          pnpm --filter ai-sdk-docs build
-          mv apps/docs/out ../_site/ai-sdk
-
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph
         uses: actions/cache@v4
@@ -453,77 +430,6 @@ jobs:
           npm run build
           mv dist ../_site/agent-skills
 
-          # tailscale-docs-cn 是标准 Starlight + npm（700 篇正文 md）：正文内链为根绝对路径
-      # （](/docs/… 内联与 [id]: /docs/… 引用式两种形态），CI sed v2 统一补 base 前缀。
-      - name: Restore tailscale-docs-cn dist
-        id: dist-tailscale
-        uses: actions/cache@v4
-        with:
-          path: _site/tailscale
-          key: dist-tailscale-${{ hashFiles('tailscale-docs-cn/**') }}
-
-      - name: Build tailscale-docs-cn
-        if: steps.dist-tailscale.outputs.cache-hit != 'true'
-        working-directory: tailscale-docs-cn
-        env:
-          DOCS_SITE: https://lif3ng-vibe.github.io
-          DOCS_BASE: /docs-cn/tailscale/
-        run: |
-          find src/content/docs -name '*.md' -exec sed -E -i 's@(\]\(|\]: )/@\1/docs-cn/tailscale/@g' {} +
-          npm ci
-          npm run build
-          mv dist ../_site/tailscale
-          # 正文树保留 /docs 段与上游 URL 1:1（对照配对），站点根放一个跳转页
-          printf '<!DOCTYPE html><meta charset="utf-8"><title>Tailscale 中文文档</title><script>location.replace("./docs/")</script><a href="./docs/">进入文档</a>' > ../_site/tailscale/index.html
-
-      # litellm 是标准 Docusaurus 3.8（一期 715 文件 + 截图库按引用裁剪）：baseUrl/url
-      # 走 DOCS_BASE（Docusaurus 要求尾斜杠）/DOCS_SITE env，内链由 Docusaurus 自带
-      # base 前缀处理，无 CI sed；大构建需显式堆上限（上游同款 6G）。
-      - name: Restore litellm-docs-cn dist
-        id: dist-litellm
-        uses: actions/cache@v4
-        with:
-          path: _site/litellm
-          key: dist-litellm-${{ hashFiles('litellm-docs-cn/**') }}
-
-      - name: Build litellm-docs-cn
-        if: steps.dist-litellm.outputs.cache-hit != 'true'
-        working-directory: litellm-docs-cn
-        env:
-          DOCS_SITE: https://lif3ng-vibe.github.io
-          DOCS_BASE: /docs-cn/litellm/
-          NODE_OPTIONS: --max-old-space-size=6144
-        run: |
-          npm ci
-          npm run build
-          mv build ../_site/litellm
-
-      # coolify-docs-cn 是 fumadocs + TanStack Start 站（上游快照 main@2026-10-24）：
-      # bun 工具链；CLI 命令参考构建时默认远程拉取，改用仓库内快照（COOLIFY_CLI_CATALOG_FILE）；
-      # VITE_SITE_URL 指镜像站使 sitemap 自洽；OG 卡片需 CJK 字体（fonts-noto-cjk）。
-      - name: Restore coolify-docs-cn dist
-        id: dist-coolify
-        uses: actions/cache@v4
-        with:
-          path: _site/coolify
-          key: dist-coolify-${{ hashFiles('coolify-docs-cn/**') }}
-
-      - name: Build coolify-docs-cn
-        if: steps.dist-coolify.outputs.cache-hit != 'true'
-        working-directory: coolify-docs-cn
-        env:
-          COOLIFY_CLI_CATALOG_FILE: scripts/fixtures/coolify-cli-llms-full.txt
-          VITE_SITE_URL: https://lif3ng-vibe.github.io
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
-          curl -fsSL https://bun.sh/install | bash
-          export BUN_INSTALL="$HOME/.bun"
-          export PATH="$BUN_INSTALL/bin:$PATH"
-          bun install --frozen-lockfile
-          bun run build
-          mkdir -p ../_site/coolify
-          mv .output/public/* ../_site/coolify/
-
       # impeccable-docs-cn 是 Astro 源码重建站（上游快照 main@b5ec969c）：
       # authored 链接已由 tools/add-base.mjs 源码级前缀化，astro.config.mjs 带
       # base=/docs-cn/impeccable；npm build 会自动先跑 prebuild（counts/detector/API JSON）。
@@ -541,22 +447,6 @@ jobs:
           npm ci
           npm run build
           mv build ../_site/impeccable
-
-      # impeccable-mirror-cn 是线上构建产物镜像（无构建系统）：
-      # 站内根相对链接已由 tools/rewrite-base.mjs 改写为 /docs-cn/impeccable-mirror/ 前缀，
-      # 直接搬 site/ 即可。
-      - name: Restore impeccable-mirror-cn dist
-        id: dist-impeccable-mirror
-        uses: actions/cache@v4
-        with:
-          path: _site/impeccable-mirror
-          key: dist-impeccable-mirror-${{ hashFiles('impeccable-mirror-cn/**') }}
-
-      - name: Collect impeccable-mirror-cn
-        if: steps.dist-impeccable-mirror.outputs.cache-hit != 'true'
-        working-directory: impeccable-mirror-cn
-        run: |
-          mv site ../_site/impeccable-mirror
 
       # hallmark 是纯静态站（上游原班无构建），全站相对路径引用，
       # 子路径部署零改造，直接搬 site/ 即可。
@@ -676,6 +566,14 @@ jobs:
           # 各站点产物已由上方构建步骤（或缓存恢复）直接落到 _site/<slug>/
           node scripts/gen-index.cjs
           cp index.html _site/
+          # 分仓迁出站的旧链接兜底桩（gen-index 生成 redirects/<slug>.html）
+          if [ -d redirects ]; then
+            for stub in redirects/*.html; do
+              slug=$(basename "$stub" .html)
+              mkdir -p "_site/$slug"
+              cp "$stub" "_site/$slug/index.html"
+            done
+          fi
           # GitHub Pages 需要 .nojekyll 避免下划线开头的 _astro 等目录被忽略
           touch _site/.nojekyll
           # 工件体积分布（deploy 连续超时后加——1.5GB 贴着 Pages 上限）
@@ -693,7 +591,6 @@ jobs:
             echo '| tester-army-e2e | ${{ steps.dist-tester-army-e2e.outputs.cache-hit == 'true' }} |'
             echo '| claude-mem | ${{ steps.dist-claude-mem.outputs.cache-hit == 'true' }} |'
             echo '| pi | ${{ steps.dist-pi.outputs.cache-hit == 'true' }} |'
-            echo '| ai-sdk | ${{ steps.dist-ai-sdk.outputs.cache-hit == 'true' }} |'
             echo '| codegraph | ${{ steps.dist-codegraph.outputs.cache-hit == 'true' }} |'
             echo '| orca | ${{ steps.dist-orca.outputs.cache-hit == 'true' }} |'
             echo '| mattpocock-skills | ${{ steps.dist-mattpocock-skills.outputs.cache-hit == 'true' }} |'
@@ -708,10 +605,6 @@ jobs:
             echo '| openship | ${{ steps.dist-openship.outputs.cache-hit == 'true' }} |'
             echo '| agent-skills | ${{ steps.dist-agent-skills.outputs.cache-hit == 'true' }} |'
             echo '| impeccable | ${{ steps.dist-impeccable.outputs.cache-hit == 'true' }} |'
-            echo '| impeccable-mirror | ${{ steps.dist-impeccable-mirror.outputs.cache-hit == 'true' }} |'
-            echo '| tailscale | ${{ steps.dist-tailscale.outputs.cache-hit == 'true' }} |'
-            echo '| litellm | ${{ steps.dist-litellm.outputs.cache-hit == 'true' }} |'
-          echo '| coolify | ${{ steps.dist-coolify.outputs.cache-hit == 'true' }} |'
           echo '| hallmark | ${{ steps.dist-hallmark.outputs.cache-hit == 'true' }} |'
           echo '| aihero | ${{ steps.dist-aihero.outputs.cache-hit == 'true' }} |'
           echo '| lightpanda | ${{ steps.dist-lightpanda.outputs.cache-hit == 'true' }} |'
@@ -733,3 +626,33 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # hub 部署成功后指名触发各分仓构建：sibling 只放通用 CI（无内容），构建时
+  # checkout 本仓 @inputs.ref 按分仓定档分站构建。依赖 fine-grained PAT
+  # （secret DOCS_DISPATCH_TOKEN，scope=docs-cn-1/-2 的 Actions: Read and write、
+  # Contents: Read）；secret 未配置时本 job 各 step 自动跳过（空转不挡道）。
+  dispatch-siblings:
+    needs: deploy
+    if: needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+    strategy:
+      matrix:
+        include:
+          - repo: docs-cn-1
+            sites: tailscale,coolify
+          - repo: docs-cn-2
+            sites: ai-sdk,litellm,impeccable-mirror
+    steps:
+      - name: Trigger sibling deploy
+        if: env.GH_TOKEN != ''
+        run: |
+          gh workflow run deploy-pages.yml -R lif3ng-vibe/${{ matrix.repo }} -f sites=${{ matrix.sites }} -f ref=master
+
+      - name: Suggest PAT setup when secret missing
+        if: env.GH_TOKEN == ''
+        run: |
+          echo "🟡 DOCS_DISPATCH_TOKEN 未配置——分仓 lif3ng-vibe/${{ matrix.repo }} 本轮未触发。" >> "$GITHUB_STEP_SUMMARY"
+          echo "   配置方法：fine-grained PAT（勾 docs-cn-1/docs-cn-2，Actions: Read and write + Contents: Read）后 " >> "$GITHUB_STEP_SUMMARY"
+          echo "   gh secret set DOCS_DISPATCH_TOKEN --repo lif3ng-vibe/docs-cn" >> "$GITHUB_STEP_SUMMARY"

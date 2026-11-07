@@ -232,7 +232,8 @@
       "pages": "540 页",
       "stack": "geistdocs + Next.js 16",
       "snap": "2026-10-09"
-    }
+    },
+    "group": "docs-cn-2"
   },
   {
     "name": "Pi",
@@ -282,7 +283,8 @@
       "pages": "700 页",
       "stack": "Starlight",
       "snap": "2026-10-25"
-    }
+    },
+    "group": "docs-cn-1"
   },
   {
     "name": "Impeccable",
@@ -314,7 +316,8 @@
       "pages": "49 页",
       "stack": "构建产物镜像",
       "snap": "2026-10-25"
-    }
+    },
+    "group": "docs-cn-2"
   },
   {
     "name": "LiteLLM",
@@ -331,7 +334,8 @@
       "pages": "715+ 文件",
       "stack": "Docusaurus 3.8",
       "snap": "2026-10-26"
-    }
+    },
+    "group": "docs-cn-2"
   },
   {
     "name": "Coolify",
@@ -347,7 +351,8 @@
       "pages": "317 页（一期人工内容）",
       "stack": "fumadocs + TanStack Start",
       "snap": "main@2026-10-24"
-    }
+    },
+    "group": "docs-cn-1"
   },
   {
     "name": "Hallmark",
