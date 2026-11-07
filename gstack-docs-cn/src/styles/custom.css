@@ -6,3 +6,22 @@
   --sl-font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas,
     'PingFang SC', 'Microsoft YaHei', monospace;
 }
+
+/* mermaid 图容器：加载中显示原始源码占位（低对比度），渲染后被 svg 原地替换 */
+pre.mermaid {
+  text-align: center;
+  font-family: var(--sl-font-mono);
+  font-size: 0.8125rem;
+  color: var(--sl-color-gray-4);
+  background: transparent;
+  border: 1px dashed var(--sl-color-gray-5);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem auto;
+  max-width: fit-content;
+}
+pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}

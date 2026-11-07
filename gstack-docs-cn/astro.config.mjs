@@ -3,10 +3,51 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 
 import { rehypeBaseLinks } from './src/plugins/base-links.mjs';
+import { rehypeMermaidBlocks } from './src/plugins/rehype-mermaid-blocks.mjs';
 
 // hub Pages 部署注入（无 env 时本地开发走根路径）
 const DOCS_SITE = process.env.DOCS_SITE || 'http://localhost:4321';
 const DOCS_BASE = (process.env.DOCS_BASE || '/').replace(/\/+$/, '') || '/';
+
+// mermaid 客户端渲染：页面有 pre.mermaid 才按需加载自托管单文件
+// （public/vendor/mermaid.min.js，不走 CDN——国内访问不稳），Starlight
+// 明暗主题切换时重渲染。
+const MERMAID_INIT = `
+(function () {
+  function renderAll() {
+    var nodes = document.querySelectorAll('pre.mermaid:not([data-processed])');
+    if (!nodes.length) return;
+    nodes.forEach(function (n) { if (!n.dataset.src) n.dataset.src = n.textContent; });
+    var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
+    window.mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });
+    window.mermaid.run({ nodes: nodes });
+  }
+  var pending = false;
+  function scheduleRender() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function () { pending = false; renderAll(); });
+  }
+  if (document.querySelector('pre.mermaid')) {
+    var s = document.createElement('script');
+    s.src = '${DOCS_BASE}/vendor/mermaid.min.js'.replace('//', '/');
+    s.onload = function () {
+      renderAll();
+      // Starlight 主题切换（html[data-theme]）→ svg 换回源码 pre 再重渲染
+      new MutationObserver(function () {
+        document.querySelectorAll('svg[id^="mermaid-"]').forEach(function (svg) {
+          var pre = document.createElement('pre');
+          pre.className = 'mermaid';
+          pre.dataset.src = svg.dataset.src || '';
+          if (pre.dataset.src) svg.replaceWith(pre);
+        });
+        scheduleRender();
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    };
+    document.head.appendChild(s);
+  }
+})();
+`;
 
 export default defineConfig({
   site: DOCS_SITE,
@@ -17,12 +58,14 @@ export default defineConfig({
   // 站内 /slug/ 绝对链接与 raw HTML 资源在构建期统一加 base 前缀（CI 免 sed）。
   // Astro 顶层 markdown rehype 作用于所有内容渲染（含 Starlight 页面）；
   // Starlight 0.42.4 的 markdown.processor 在本版本组合上未生效，故不用 worktrunk 的写法。
+  // rehypeMermaidBlocks 依赖"用户 rehype 先于 syntaxHighlight 运行"的管线顺序。
   markdown: {
-    rehypePlugins: [[rehypeBaseLinks, DOCS_BASE]],
+    rehypePlugins: [rehypeMermaidBlocks, [rehypeBaseLinks, DOCS_BASE]],
   },
   integrations: [
     starlight({
       title: 'gstack',
+      head: [{ tag: 'script', attrs: { isInline: true }, content: MERMAID_INIT }],
       description:
         'gstack 中文文档（非官方翻译）：Garry Tan 开源的 Claude Code 虚拟工程团队——CEO、设计、工程经理、评审、QA、安全与发布的全套 slash command 技能集。',
       // 单语言中文：必须 root + lang（写 'zh' 会强制 /zh/ URL 前缀导致 slug 失配）
