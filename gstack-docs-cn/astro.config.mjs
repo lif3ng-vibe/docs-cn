@@ -23,7 +23,91 @@ const MERMAID_INIT = `
     lastSources = list.map(function (n) { return n.dataset.src; });
     var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
     window.mermaid.initialize({ startOnLoad: false, theme: theme, securityLevel: 'loose' });
-    window.mermaid.run({ nodes: list });
+    window.mermaid.run({ nodes: list }).then(postProcess).catch(function () {});
+  }
+  // 渲染产物包装：figure + 操作条（放大 / 新窗口打开 SVG）
+  function postProcess() {
+    document.querySelectorAll('figure.mermaid-figure > svg').forEach(function (svg) {
+      if (svg.closest('.mermaid-lightbox')) return;
+      wrapFigure(svg);
+    });
+    document.querySelectorAll('main svg[id^="mermaid-"]').forEach(function (svg) {
+      if (svg.parentElement.classList.contains('mermaid-figure')) return;
+      wrapFigure(svg);
+    });
+  }
+  function wrapFigure(svg) {
+    var fig = document.createElement('figure');
+    fig.className = 'mermaid-figure';
+    var bar = document.createElement('div');
+    bar.className = 'mermaid-bar';
+    bar.innerHTML = '<button type="button" data-act="zoom" title="放大查看（滚轮缩放）">＋</button>' +
+      '<button type="button" data-act="open" title="新窗口打开 SVG">↗</button>';
+    svg.replaceWith(fig);
+    fig.appendChild(bar);
+    fig.appendChild(svg);
+    svg.removeAttribute('max-width');
+    bar.addEventListener('click', function (e) {
+      var act = e.target && e.target.dataset ? e.target.dataset.act : '';
+      if (act === 'zoom') openLightbox(svg);
+      if (act === 'open') openInNewWindow(svg);
+    });
+    svg.style.cursor = 'zoom-in';
+    svg.addEventListener('click', function () { openLightbox(svg); });
+  }
+  function serializeSvg(svg) {
+    var clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    if (!clone.getAttribute('width') && clone.viewBox.baseVal) {
+      clone.setAttribute('width', clone.viewBox.baseVal.width);
+      clone.setAttribute('height', clone.viewBox.baseVal.height);
+    }
+    clone.style.maxWidth = 'none';
+    return clone;
+  }
+  function openInNewWindow(svg) {
+    var src = new XMLSerializer().serializeToString(serializeSvg(svg));
+    var url = URL.createObjectURL(new Blob([src], { type: 'image/svg+xml' }));
+    var w = window.open(url, '_blank');
+    // 兜底：弹窗被拦时退回下载
+    if (!w) {
+      var a = document.createElement('a');
+      a.href = url; a.download = 'mermaid.svg'; a.click();
+    }
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+  function openLightbox(svg) {
+    closeLightbox();
+    var lb = document.createElement('div');
+    lb.className = 'mermaid-lightbox';
+    var body = document.createElement('div');
+    body.className = 'mermaid-lb-body';
+    var clone = serializeSvg(svg);
+    clone.style.transform = 'scale(1)';
+    clone.style.transformOrigin = '0 0';
+    body.appendChild(clone);
+    var close = document.createElement('button');
+    close.className = 'mermaid-lb-close';
+    close.type = 'button';
+    close.textContent = '×';
+    lb.appendChild(body);
+    lb.appendChild(close);
+    document.body.appendChild(lb);
+    var scale = 1;
+    function apply() { clone.style.transform = 'scale(' + scale + ')'; }
+    body.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      scale = Math.min(5, Math.max(0.2, scale * (e.deltaY < 0 ? 1.12 : 0.89)));
+      apply();
+    }, { passive: false });
+    lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
+    close.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', escClose);
+  }
+  function escClose(e) { if (e.key === 'Escape') closeLightbox(); }
+  function closeLightbox() {
+    document.removeEventListener('keydown', escClose);
+    document.querySelectorAll('.mermaid-lightbox').forEach(function (n) { n.remove(); });
   }
   var pending = false;
   function scheduleRender() {
@@ -40,11 +124,11 @@ const MERMAID_INIT = `
       // Starlight 主题切换（html[data-theme]）→ svg 换回源码 pre 再重渲染。
       // svg 不携带 dataset，源码按渲染顺序存于 lastSources
       new MutationObserver(function () {
-        document.querySelectorAll('svg[id^="mermaid-"]').forEach(function (svg, i) {
+        document.querySelectorAll('figure.mermaid-figure svg[id^="mermaid-"]').forEach(function (svg, i) {
           var pre = document.createElement('pre');
           pre.className = 'mermaid';
           pre.dataset.src = lastSources[i] || '';
-          if (pre.dataset.src) svg.replaceWith(pre);
+          if (pre.dataset.src) svg.closest('figure.mermaid-figure').replaceWith(pre);
         });
         scheduleRender();
       }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

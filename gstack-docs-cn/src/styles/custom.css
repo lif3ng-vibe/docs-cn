@@ -19,9 +19,91 @@ pre.mermaid {
   padding: 1rem;
   overflow-x: auto;
   margin: 1.5rem auto;
-  max-width: fit-content;
+  /* 占满正文宽度渲染（mermaid useMaxWidth 按容器取宽）；渲染后由 figure 包装替换 */
+  max-width: 100%;
 }
 pre.mermaid svg {
   max-width: 100%;
   height: auto;
+}
+
+/* mermaid 渲染后的 figure 包装：图随内容宽度展示，右上角悬浮操作条 */
+.mermaid-figure {
+  position: relative;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  border: 1px solid var(--sl-color-gray-6);
+  border-radius: 8px;
+  text-align: center;
+}
+.mermaid-figure svg {
+  max-width: 100%;
+  height: auto;
+  cursor: zoom-in;
+}
+.mermaid-bar {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+.mermaid-figure:hover .mermaid-bar,
+.mermaid-bar:focus-within {
+  opacity: 1;
+}
+.mermaid-bar button {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 6px;
+  background: var(--sl-color-gray-7, var(--sl-color-black));
+  color: var(--sl-color-text-1);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.mermaid-bar button:hover {
+  border-color: var(--sl-color-accent-600);
+}
+
+/* mermaid 放大查看层：全屏、滚轮缩放、可滚动平移（固定深色遮罩，两主题通用） */
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(23 23 26 / 88%);
+  display: flex;
+}
+.mermaid-lb-body {
+  flex: 1;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  cursor: grab;
+}
+.mermaid-lb-body svg {
+  max-width: none;
+  max-height: none;
+}
+.mermaid-lb-close {
+  position: fixed;
+  top: 0.8rem;
+  right: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 8px;
+  background: var(--sl-color-gray-7, var(--sl-color-black));
+  color: var(--sl-color-text-1);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
 }
