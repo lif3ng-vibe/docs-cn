@@ -1,0 +1,420 @@
+---
+title: 应用与窗口命令
+navTitle: 应用与窗口
+description: launch、close-app、list-apps、list-windows、focus-window、resize-window、move-window、minimize、maximize 与 restore 的参考文档。
+---
+
+这些命令启动和停止应用，并管理其窗口。`--app` 接受 `list-apps` 输出的名称。当应用有多个窗口时，`list-windows` 给出的窗口 id 就是最精确的选择器。
+
+窗口命令（`resize-window`、`move-window`、`minimize`、`maximize`、`restore`）用同一种方式确定目标：
+
+- `--window-id` 直接选中该窗口。`--app` 可以缩小查找范围，但不是必需的。
+- 只给 `--app` 时，先选中应用，再从其窗口中选一个：只有一个窗口就选它，否则先看可见窗口，再看唯一获得焦点的那个，再看可访问窗口。若无法唯一确定，命令报 `AMBIGUOUS_TARGET` 失败。
+- 两个 flag 都不给时，目标是当前获得焦点的窗口。
+
+`close-app` 与这五条窗口命令会返回 [OperationReport](/desktop/json-output#operationreport)：读 `disposition.delivery` 就知道实际证明到了什么程度。类似 `APP_NOT_FOUND` 和 `WINDOW_NOT_FOUND` 这类查找失败会带上 `not_delivered`，因此只要修正名称或 id 就可以安全重试。本页的示例都是 Linux 上 GNOME 应用的真实输出。
+
+## launch
+
+启动应用，或附着到一个已运行的实例，待其进程运行起来后返回。进程在运行和窗口可见是两个独立的事实，因此只有应用本来就有窗口时，结果里才会出现 `window`。
+
+```bash
+agent-desktop launch <APP> [--timeout MS] [--arg VALUE]... [--env KEY=VALUE]... [--cwd PATH] \
+                           [--no-attach] [--activate] [--cdp [PORT]]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>APP</code></td><td>必填</td><td>应用名称、bundle ID 或路径。可接受的写法因平台而异。</td></tr>
+    <tr><td><code>--timeout MS</code></td><td><code>30000</code></td><td>整个启动过程的时间上限。</td></tr>
+    <tr><td><code>--arg VALUE</code></td><td>无</td><td>传给应用的命令行参数。可重复，保持顺序。若值以连字符开头，写成 <code>--arg=-x</code>。</td></tr>
+    <tr><td><code>--env KEY=VALUE</code></td><td>无</td><td>为被启动的进程设置环境变量。可重复。重复键报 <code>INVALID_ARGS</code>。</td></tr>
+    <tr><td><code>--cwd PATH</code></td><td>无</td><td>被启动进程的工作目录。</td></tr>
+    <tr><td><code>--no-attach</code></td><td>关闭</td><td>始终启动新实例，而不是附着到已运行的实例。</td></tr>
+    <tr><td><code>--activate</code></td><td>关闭</td><td>把应用带到前台使其呈现窗口，并在 <code>--timeout</code> 内等待窗口出现。此操作会抢占前台。</td></tr>
+    <tr><td><code>--cdp [PORT]</code></td><td>关闭</td><td>启动时开启仅绑定回环地址的 Chrome DevTools Protocol 端点，并验证其可应答。省略 <code>PORT</code> 或传 <code>0</code>，则自动挑选空闲端口。</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop launch gtk3-demo
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "launch",
+  "data": {
+    "app": "gtk3-demo",
+    "pid": 21766,
+    "process_instance": "6d91df60:120710",
+    "window": {
+      "accessible": true,
+      "app_name": "gtk3-demo",
+      "bounds": { "height": 656.0, "width": 810.0, "x": 630.0, "y": 0.0 },
+      "id": "w-1.105-org-a11y-atspi-accessible-48",
+      "is_focused": true,
+      "minimized": false,
+      "pid": 21766,
+      "process_instance": "6d91df60:120710",
+      "title": "Application Class",
+      "visible": true
+    }
+  }
+}
+```
+
+当 `--cdp` 验证通过时，结果还会带上 `cdp`；检测到 Chromium 或 Electron 应用时会带 `renderer: "chromium"`；有时还会带 `suggestion`。缺少 `window` 不代表失败。使用 `--cdp` 时，`data.cdp` 保存 `http_endpoint`、`port`、`product` 和 `websocket_url`，可供 agent-browser 这类 CDP 客户端使用；[Chromium 与 Electron 应用](/desktop/guides/chromium-and-electron)详细介绍了交接流程。
+
+`launch` 特有的错误：
+
+<table>
+  <thead>
+    <tr><th>代码与详情</th><th>原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>APP_NOT_FOUND</code></td><td>名称无法解析到一个应用。</td></tr>
+    <tr><td><code>AMBIGUOUS_TARGET</code></td><td>有多个运行中的实例都匹配。</td></tr>
+    <tr><td><code>APP_UNRESPONSIVE</code></td><td>进程在显示窗口之前就退出了。</td></tr>
+    <tr><td><code>ACTION_FAILED</code>、<code>details.kind: cdp_requires_fresh_launch</code></td><td>对已在运行的应用使用 <code>--cdp</code>。<code>launch</code> 不会替你退出运行中的应用；先运行 <code>close-app</code>，再重新启动。</td></tr>
+    <tr><td><code>INVALID_ARGS</code>、<code>details.kind: cdp_port_in_use</code> 或 <code>cdp_switch_conflict</code></td><td>指定端口已被占用，或某个 <code>--arg</code> 设置了由 <code>--cdp</code> 接管的远程调试开关。</td></tr>
+    <tr><td><code>ACTION_FAILED</code>、<code>details.kind: cdp_endpoint_unavailable</code></td><td>应用已启动，但没有任何经验证的 DevTools 端点应答。应用仍保持运行。</td></tr>
+  </tbody>
+</table>
+
+平台限制：可接受的 `APP` 写法因操作系统而异。参见 [macOS](/desktop/platforms/macos#应用命名)、[Windows](/desktop/platforms/windows#应用命名) 和 [Linux](/desktop/platforms/linux#应用命名)。
+
+## close-app
+
+退出应用及其全部窗口，只有在确认进程已消失后才算成功。没有命令可以关闭单个窗口：请直接点击那个窗口的关闭按钮。
+
+```bash
+agent-desktop close-app <APP> [--force]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>APP</code></td><td>必填</td><td>应用名称，即 <code>list-apps</code> 输出的名称。</td></tr>
+    <tr><td><code>--force</code></td><td>关闭</td><td>直接终止进程，而不是优雅退出。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "close-app",
+  "data": {
+    "action": "close-app",
+    "app": "gtk3-demo",
+    "details": { "evidence": "process_instance_exited" },
+    "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+    "method": "graceful",
+    "steps": [
+      { "label": "terminate_request", "mechanism": "semantic_api", "outcome": "succeeded" },
+      { "label": "process_exit", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }
+    ],
+    "target": {
+      "kind": "app",
+      "name": "gtk3-demo",
+      "process": { "instance": "6d91df60:120710", "pid": 21766 }
+    }
+  }
+}
+```
+
+`method` 为 `graceful` 或 `force`。如果应用早已退出，报告为 `not_delivered`，并带 `details.evidence: "process_instance_not_running"`。`close-app` 特有的错误：
+
+- `APP_NOT_FOUND` 表示没有运行中的应用匹配，`AMBIGUOUS_TARGET` 表示多个实例共用该名称。
+- `INVALID_ARGS` 表示目标是受保护的系统进程，无论是否加 `--force` 都如此。
+- 保存提示会让应用保持打开。用 `snapshot --surface sheet` 读取该提示，回答后再次关闭。
+
+平台限制：Linux 上优雅关闭需要 X11 客户端，且受保护进程因操作系统而异。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。
+
+## list-apps
+
+列出正在运行的 GUI 应用。
+
+```bash
+agent-desktop list-apps [--app NAME] [--timeout-ms MS]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>全部应用</td><td>按名称过滤，不区分大小写。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>清单扫描的截止时间。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "list-apps",
+  "data": {
+    "apps": [
+      {
+        "bundle_id": "org.gnome.Calculator",
+        "name": "gnome-calculator",
+        "pid": 8255,
+        "presentation": "foreground",
+        "process_instance": "6d91df60:28340"
+      }
+    ]
+  }
+}
+```
+
+`presentation` 为 `foreground` 表示拥有普通窗口的应用，为 `background` 表示没有 Dock 或任务栏条目的应用。当平台未能在时限内读取全部进程时，结果会附加 `complete: false` 和一个 `skipped` 数组：此时应把缺失的应用视为未知，而不视为不存在。
+
+`--app` 接受 `list-apps` 的名称；Linux 还接受 desktop-entry 名称。参见 [Linux](/desktop/platforms/linux#应用命名)。
+
+## list-windows
+
+列出窗口。`data` 就是数组本身。
+
+```bash
+agent-desktop list-windows [--app NAME] [--timeout-ms MS]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>全部应用</td><td>按精确名称（不区分大小写）过滤到单个应用。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>清单扫描的截止时间。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "list-windows",
+  "data": [
+    {
+      "accessible": true,
+      "app_name": "gnome-calculator",
+      "bounds": { "height": 616.0, "width": 370.0, "x": 535.0, "y": 142.0 },
+      "id": "w-1.11-org-gnome-Calculator-a11y-948fd89a_9bda_453b_9c10_4a9e9eed3feb",
+      "is_focused": false,
+      "minimized": false,
+      "pid": 8255,
+      "process_instance": "6d91df60:28340",
+      "title": "Calculator",
+      "visible": true
+    }
+  ]
+}
+```
+
+`accessible: false` 表示语义命令无法触达该窗口；但它仍然接受截图和坐标输入。错误：`APP_NOT_FOUND` 表示未知的 `--app`，`APP_UNRESPONSIVE` 表示应用已停止响应，`TIMEOUT` 表示繁忙的应用让所有窗口都无应答。超时不等于空列表。
+
+## focus-window
+
+把窗口带到前台，只有当操作系统连续两次读取都报告该窗口获得焦点时才算成功。
+
+```bash
+agent-desktop focus-window [--window-id ID] [--app NAME] [--title TEXT]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td><code>list-windows</code> 中的窗口 id。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>无</td><td>应用名称。</td></tr>
+    <tr><td><code>--title TEXT</code></td><td>无</td><td>窗口标题，部分匹配。可与 <code>--app</code> 组合以缩小范围。</td></tr>
+  </tbody>
+</table>
+
+至少要传一个 flag；全都不传时命令报 `INVALID_ARGS` 失败。`data.focused` 是此后持有焦点的窗口，字段与 `list-windows` 条目相同。当某个模态对话框持有焦点时，`focused` 就是那个对话框，因此在操作前先读一下 `focused.title`。
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "focus-window",
+  "data": {
+    "focused": {
+      "app_name": "gedit",
+      "id": "w-1.10-org-a11y-atspi-accessible-162",
+      "is_focused": true,
+      "title": "Untitled Document 1 - gedit"
+    }
+  }
+}
+```
+
+上面这个示例只保留了四个字段。错误：`WINDOW_NOT_FOUND` 表示没有任何匹配，`AMBIGUOUS_TARGET` 表示仍有多个窗口匹配，`ACTION_FAILED` 表示操作系统始终未报告该窗口获得焦点。命令会抢占前台，但不需要 `--headed`。
+
+平台限制：Linux 需要 X11。参见 [Linux](/desktop/platforms/linux) 和 [Windows](/desktop/platforms/windows)。
+
+## resize-window
+
+设置窗口的宽度和高度。
+
+```bash
+agent-desktop resize-window --width PX --height PX [--app NAME] [--window-id ID]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--width PX</code>、<code>--height PX</code></td><td>必填</td><td>新的窗口尺寸。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的应用</td><td>应用名称。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td><code>list-windows</code> 中的窗口 id。</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop resize-window --app gedit --width 800 --height 600
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "resize-window",
+  "data": {
+    "action": "resize-window",
+    "details": {
+      "observed": {
+        "height": 600, "hidden": false, "maximized_horizontal": false,
+        "maximized_vertical": false, "width": 800, "x": 0, "y": 0
+      },
+      "tolerance": 2.0,
+      "units": "pixels",
+      "verification_scope": "window_size"
+    },
+    "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+    "height": 600.0,
+    "steps": [{ "label": "window_resize", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }],
+    "target": {
+      "id": "w-1.10-org-a11y-atspi-accessible-162",
+      "kind": "window",
+      "process": { "instance": "6d91df60:28341", "pid": 8261 },
+      "title": "Untitled Document 1 - gedit"
+    },
+    "width": 800.0
+  }
+}
+```
+
+`delivered_verified` 表示适配器在 `details.tolerance` 范围内回读了尺寸。`details.observed` 是 Linux 附加的返回字段。错误：`INVALID_ARGS` 表示尺寸非有限数或超出范围，`STALE_REF` 表示窗口标识在写入前发生了变化，`ACTION_FAILED` 表示窗口管理器截断或忽略了请求。写入失败后，先读取边界再重试。
+
+平台限制：容差因操作系统而异；Linux 上窗口控制使用 X11 客户端，因此会拒绝 Wayland 原生窗口。参见 [Linux](/desktop/platforms/linux)。
+
+## move-window
+
+把窗口移动到屏幕坐标。
+
+```bash
+agent-desktop move-window --x=X --y=Y [--app NAME] [--window-id ID]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--x X</code>、<code>--y Y</code></td><td>必填</td><td>新位置。负值用 <code>=</code> 书写，如 <code>--x=-100</code>。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的应用</td><td>应用名称。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td><code>list-windows</code> 中的窗口 id。</td></tr>
+  </tbody>
+</table>
+
+结果的形状与 [`resize-window`](#resize-window) 相同，只是步骤标签为 `window_move`，请求字段为 `x` 和 `y`，且 `details.verification_scope: "window_position"`。错误与平台限制同 `resize-window`。
+
+## minimize
+
+最小化一个窗口。
+
+```bash
+agent-desktop minimize [--app NAME] [--window-id ID]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的应用</td><td>应用名称。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td><code>list-windows</code> 中的窗口 id。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "minimize",
+  "data": {
+    "action": "minimize",
+    "details": { "verification_scope": "window_minimized_state" },
+    "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+    "steps": [{ "label": "window_minimize", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }],
+    "target": {
+      "id": "w-1.10-org-a11y-atspi-accessible-162",
+      "kind": "window",
+      "process": { "instance": "6d91df60:28341", "pid": 8261 },
+      "title": "Untitled Document 1 - gedit"
+    }
+  }
+}
+```
+
+被最小化的窗口会把自己的元素报告为离屏，因此对它的引用操作会失败，直到你 [`restore`](#restore) 它。窗口管理器可能忽略在还原后约 250 ms 内发出的最小化请求，因此重试前先读取窗口状态。平台限制与 `resize-window` 相同。
+
+## maximize
+
+最大化窗口（macOS 上则是缩放窗口）。Flag 与 [`minimize`](#minimize) 相同。步骤标签为 `window_maximize`，验证通过的报告标注 `details.verification_scope: "window_maximized_state"`。
+
+```bash
+agent-desktop maximize [--app NAME] [--window-id ID]
+```
+
+## restore
+
+还原被最小化或最大化的窗口。Flag 与 [`minimize`](#minimize) 相同。
+
+```bash
+agent-desktop restore [--app NAME] [--window-id ID]
+```
+
+`restore` 的各种情形没有单一的回读方式，因此成功报告为 `delivered_unverified`：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "restore",
+  "data": {
+    "action": "restore",
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "window_restore", "mechanism": "semantic_api", "outcome": "succeeded" }],
+    "target": {
+      "id": "w-1.10-org-a11y-atspi-accessible-162",
+      "kind": "window",
+      "process": { "instance": "6d91df60:28341", "pid": 8261 },
+      "title": "Untitled Document 1 - gedit"
+    }
+  }
+}
+```
+
+之后用 `list-windows` 检查窗口。平台限制与 `resize-window` 相同。

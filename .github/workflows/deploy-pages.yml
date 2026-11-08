@@ -560,6 +560,27 @@ jobs:
           npm run build
           mv dist ../_site/gstack
 
+      # agent-desktop 是 geistdocs 2.14（fumadocs + Next.js 16 静态导出）pnpm monorepo
+      # （上游 vercel-labs/agent-desktop@main b43ac4f6）：basePath /docs-cn/agent-desktop
+      # 写死在 next.config.mjs / lib/base-path.ts，链接前缀构建期处理，CI 不加 env、不加 sed；
+      # geistdocs 补丁在 patches/（pnpm patch 自动应用），build 末含 postprocess（折叠 out/cn、
+      # 根跳转桩、资产/搜索索引前缀兜底）。搜索为构建期静态索引。
+      - name: Restore agent-desktop-docs-cn dist
+        id: dist-agent-desktop
+        uses: actions/cache@v4
+        with:
+          path: _site/agent-desktop
+          key: dist-agent-desktop-${{ hashFiles('agent-desktop-docs-cn/**') }}
+
+      - name: Build agent-desktop-docs-cn
+        if: steps.dist-agent-desktop.outputs.cache-hit != 'true'
+        working-directory: agent-desktop-docs-cn
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm --filter agent-desktop build
+          mv apps/docs/out ../_site/agent-desktop
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -611,6 +632,7 @@ jobs:
           echo '| handy | ${{ steps.dist-handy.outputs.cache-hit == 'true' }} |'
           echo '| worktrunk | ${{ steps.dist-worktrunk.outputs.cache-hit == 'true' }} |'
           echo '| gstack | ${{ steps.dist-gstack.outputs.cache-hit == 'true' }} |'
+          echo '| agent-desktop | ${{ steps.dist-agent-desktop.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

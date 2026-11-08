@@ -1,0 +1,347 @@
+---
+title: 骨架与下钻
+navTitle: 骨架与下钻
+description: 两遍读取一个密集应用。先拍浅层骨架，按引用下钻一个区域，变化后重新下钻，搜索同样以此方式限定范围。
+---
+
+密集型应用，例如 Electron 客户端或 IDE，可能暴露成千上万个无障碍节点。对它做完整快照很慢、消耗大量 token，还可能在完成前就耗尽预算。骨架（skeleton）快照只读顶部几层，然后你用 `snapshot --root` 下钻真正需要的那一个区域，这样你读取和操作的引用只覆盖该区域而不是整个窗口。只有 macOS 能让下钻少读窗口内容。macOS 之外，下钻会对窗口做一次完整读取来重新识别其根节点，详见[下钻一个区域](#下钻一个区域)。
+
+## 循环
+
+<Diagram name="snapshot-loop" title="骨架、下钻、操作、验证" aspectRatio="720 / 464" />
+
+1. `snapshot --skeleton -i --compact` 把窗口读到第 3 层。被裁断的容器带 `children_count`，下钻目标带 `ref_id`。
+2. 选一个同时有 `children_count` 和 `ref_id` 的节点。
+3. `snapshot --root <ref> -i --compact` 读取该区域，把它的引用加进同一份快照。
+4. 用下钻得到的引用执行操作，例如 `click` 或 `set-value`。见[交互命令](/desktop/commands/interaction)。
+5. 用同一个下钻引用跑 `wait` 或 `get` 来验证，或者用同一个 `snapshot --root` 重读该区域。如果操作结果在 `data.surfaces` 里列出了菜单、弹层或警告框，接着读取那个[表面](/desktop/surfaces)。
+6. 如果还有别的区域要处理，继续下钻。如果布局变了，或根引用本身是 `STALE_REF`，重拍一个骨架。
+
+`-i` 只保留可交互节点，因此一行的静态文本会被丢弃。要分清重复按钮属于哪一行，用 `--root` 下钻那一行的容器并去掉 `-i`，再把按钮与旁边的标签对上。
+
+两个捷径可以跳过循环：小应用只需 `snapshot -i`，目标已知只需 `find`。见[何时跳过骨架](#何时跳过骨架)。
+
+## 拍一个骨架
+
+```bash
+agent-desktop snapshot --app gnome-calculator --skeleton -i --compact
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gnome-calculator",
+    "complete": true,
+    "ref_count": 2,
+    "snapshot_id": "s2txcl95uvubmn",
+    "window": {
+      "id": "w-1.11-org-gnome-Calculator-a11y-948fd89a_9bda_453b_9c10_4a9e9eed3feb",
+      "title": "Calculator"
+    },
+    "tree": {
+      "role": "window",
+      "name": "Calculator",
+      "native_id": { "kind": "ax_identifier", "value": "MathWindow" },
+      "children": [
+        {
+          "children_count": 2,
+          "native_id": { "kind": "ax_identifier", "value": "___object_3___" },
+          "ref_id": "@s2txcl95uvubmn:e1",
+          "role": "group"
+        },
+        {
+          "children_count": 1,
+          "native_id": { "kind": "ax_identifier", "value": "headerbar" },
+          "ref_id": "@s2txcl95uvubmn:e2",
+          "role": "group"
+        }
+      ]
+    }
+  }
+}
+```
+
+上面的树省略了窗口与两个下钻目标之间的未命名包装 group。计算器主区是 `e1`，标题栏是 `e2`。
+
+`--skeleton` 改变两件事：
+
+- **深度被压到 3。** 实际深度取 `--max-depth` 与 3 中较小者，因此光秃的 `--skeleton` 读三层。深度按语义层计：GTK 和 web 包装层会让输出嵌套得比三层 JSON 更深。
+- **被裁断的容器带 `children_count`。** 处于深度边界的容器不列出子节点，只报告它没展开的直接子节点数量。
+
+前三层里的可交互元素拿到普通引用。`children_count` 出现在任何被深度限制裁断的节点上，不限于 `--skeleton`；并且在 `-i` 下，agent-desktop 会把被裁断的保留在输出里，即便它没有引用。
+
+## 找到下钻目标
+
+下钻目标是同时拥有 `ref_id` 与 `children_count` 的节点。哪个节点带上它们，取决于被裁断的容器后续能否被识别：
+
+1. **容器可拿引用。** 可交互角色或主操作让它拿到普通引用，这个引用就是下钻目标。
+2. **容器不可拿引用但有身份。** 如果它有名称、描述、带类型的 native id，或面积不为零的 bounds，它就拿到自己的下钻引用，如上文的 `e1` 和 `e2`。它的可用动作不会被存储，所以只用于下钻，不可作为操作目标。
+3. **容器没有可用身份。** 目标上移到最近一个符合规则 1 或 2 的祖先。一个祖先引用覆盖其下所有未识别的被裁断容器。窗口根永远不是目标。
+4. **同一路径上有多个候选。** 取最深的那个。
+
+实践上，就钻那个同时有 `children_count` 和 `ref_id` 的节点。只有 `children_count` 没有 `ref_id` 的被裁断容器，由持有引用的某个祖先覆盖。若没有祖先符合条件，提高 `--max-depth` 或用 `find` 够到它下面的内容。
+
+## 下钻一个区域
+
+```bash
+agent-desktop snapshot --root @s2txcl95uvubmn:e1 -i --compact
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gnome-calculator",
+    "complete": true,
+    "ref_count": 33,
+    "snapshot_id": "s2txcl95uvubmn",
+    "tree": {
+      "role": "group",
+      "native_id": { "kind": "ax_identifier", "value": "___object_3___" },
+      "children": [
+        {
+          "available_actions": ["RightClick", "SetValue", "TypeText", "SetFocus"],
+          "native_id": { "kind": "ax_identifier", "value": "source_view" },
+          "ref_id": "@s2txcl95uvubmn:e6",
+          "role": "textfield"
+        },
+        {
+          "available_actions": ["Click", "SetFocus"],
+          "description": "Clear Display [Escape]",
+          "name": "C",
+          "native_id": { "kind": "ax_identifier", "value": "calc_clear_button" },
+          "ref_id": "@s2txcl95uvubmn:e8",
+          "role": "button"
+        },
+        {
+          "available_actions": ["Click", "SetFocus"],
+          "name": "7",
+          "native_id": { "kind": "ax_identifier", "value": "calc_7_button" },
+          "ref_id": "@s2txcl95uvubmn:e11",
+          "role": "button"
+        }
+      ]
+    }
+  }
+}
+```
+
+上面的树裁剪到显示屏和下钻找到的 31 个按钮与字段（`e3` 到 `e33`）中的两个。`--root` 接受来自先前快照、`find` 或下钻的带限定引用。随后命令会：
+
+1. 加载该引用的快照与它的 `RefEntry`。
+2. 严格对照活动 UI 解析该条目，规则与任何[引用操作](/desktop/snapshots-and-refs#如何解析)相同。
+3. 读取该元素的子树直到 `--max-depth`（默认 10）。不使用 `--app` 和 `--window-id`，因为引用本身已写明它的窗口；`--skeleton` 不生效。
+4. 为子树分配引用并写入同一份快照，所以 `snapshot_id` 不变。
+
+macOS 之外，下钻会对窗口做一次完整读取来重新识别其根，并把新引用计入同一次读取，因此下钻引用的解析规则与骨架的完全一致。
+
+结果的根就是被下钻的元素，`ref_count` 是整个快照的计数：2 个骨架引用加 31 个下钻引用。新引用顺延快照的计数器，这就是本次下钻从 `e3` 开始的原因。被下钻的那个引用保持有效。
+
+## 变化后重新下钻
+
+操作之后再跑一次同样的 `--root` 即可重读该区域。重新下钻替换该区域的引用，其他引用一律不动。
+
+<Diagram name="redrill-refs" title="一次重新下钻替换一个区域的引用" aspectRatio="720 / 400" />
+
+1. 之前：快照 `s2txcl95uvubmn` 持有骨架引用 `e1`、`e2`，以及下钻 `e1` 得到的 `e3` 到 `e33`。
+2. 你点击 `e11`（`7` 按钮），然后再次运行 `snapshot --root @s2txcl95uvubmn:e1`。
+3. 重新下钻删除上次下钻 `e1` 创建的引用：`e3` 到 `e33`。保留 `e1` 本身以及其子树外的每个引用，这里是 `e2`。
+4. 新读取分配 `e34` 到 `e64`。计数器顺延，编号永不复用。
+5. 之后：旧的 `e3` 到 `e33` 返回 `STALE_REF`，而 `e1`、`e2` 和来自其他下钻区域的引用仍然可解析。`ref_count` 保持 33。
+
+重新下钻删除的内容：该根的早前下钻创建的引用、同一窗口内位于根之下的完整快照引用，以及区域内嵌套下钻的引用。其他区域、其他窗口以及被下钻的根本身的引用全部幸存。
+
+```bash
+agent-desktop get @s2txcl95uvubmn:e2 --property role   # 区域之外: 仍可解析
+agent-desktop get @s2txcl95uvubmn:e11                  # 区域之内: 已被替换
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "get",
+  "data": { "property": "role", "ref": "@s2txcl95uvubmn:e2", "value": "group" }
+}
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "get",
+  "error": {
+    "code": "STALE_REF",
+    "message": "@s2txcl95uvubmn:e11 not found in current RefMap",
+    "recovery": {
+      "strategy": "refresh_snapshot_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": true
+    },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+第二个信封省略了 `suggestion`。
+
+## 下钻拒绝的情形
+
+下钻会改动已保存的快照，因此它拒绝任何可能让快照处于半更新状态的情况。
+
+<table>
+  <thead>
+    <tr><th>情形</th><th>结果</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--root</code> 搭配 <code>--surface</code></td><td><code>INVALID_ARGS</code>,"--root cannot be combined with --surface"。引用本身就带着捕获时的表面。显式 <code>--surface window</code>（默认值）是允许的。</td></tr>
+    <tr><td><code>--root</code> 搭配 <code>--wait-for</code> 或 <code>--wait-for-gone</code></td><td><code>INVALID_ARGS</code>,"--root cannot be combined with --wait-for or --wait-for-gone"。不带 <code>--root</code> 跑 <code>snapshot</code>,或去掉等待 flag。</td></tr>
+    <tr><td>区域读取不完整或超过期限</td><td><code>TIMEOUT</code>。读取发生在任何写入之前,因此已保存的快照原封不动。</td></tr>
+    <tr><td>根引用不在其快照里,或没有活动元素匹配它</td><td><code>STALE_REF</code>。快照缺失则为 <code>SNAPSHOT_NOT_FOUND</code>。</td></tr>
+    <tr><td>引用的源窗口已消失</td><td><code>WINDOW_NOT_FOUND</code>。什么都不保存。</td></tr>
+  </tbody>
+</table>
+
+下钻要么全成要么不作数。它替换既有快照内的引用，而一次部分读取无法为它删掉的子节点重新分配引用，因此区域读取不完整时以 `TIMEOUT` 失败，而不是返回部分树。提高 `--timeout-ms`、降低 `--max-depth`，或从更深的引用下钻更小的区域。
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "snapshot",
+  "error": {
+    "code": "TIMEOUT",
+    "message": "Operation exceeded its deadline",
+    "suggestion": "The target application may be busy or unresponsive",
+    "recovery": {
+      "strategy": "inspect_state_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": true,
+      "retry_after_ms": 250
+    },
+    "details": { "elapsed_ms": 1, "kind": "deadline", "timeout_ms": 1 },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+上述命令是 `snapshot --root @s2txcl95uvubmn:e1 --timeout-ms 1`。完整性规则只作用于下钻自己对区域的读取，因此下钻一个来自部分快照的引用是允许的。
+
+## 限定搜索范围
+
+`find` 接受同样的两种范围，不必读取就能搜索一个区域：
+
+```bash
+agent-desktop find --root @s2txcl95uvubmn:e1 --role button --name C --exact --first
+agent-desktop find --app gtk3-widget-factory --surface menu --name "Dark Theme" --exact --first
+```
+
+- `find --root <ref>` 严格解析引用，然后只搜索该元素的子树。不需要 `--app`。
+- `find --surface <kind>` 搜索一个覆盖层而不是窗口。见[表面](/desktop/surfaces)。
+
+两者不能组合。`find --root <ref> --surface menu` 返回 `INVALID_ARGS`，"--root cannot be combined with --surface"，建议不带 `--root` 跑 `find --surface`，或去掉 `--surface`。
+
+有匹配结果的 `find` 会保存一份自己的新快照，其引用由返回的 `data.snapshot_id` 限定：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "find",
+  "data": {
+    "match": {
+      "interactive": true,
+      "name": "C",
+      "path": ["group", "group", "group", "group", "group", "group"],
+      "ref_id": "@s3ufwq4n1uswjj:e1",
+      "role": "button",
+      "states": [],
+      "value": null
+    },
+    "snapshot_id": "s3ufwq4n1uswjj"
+  }
+}
+```
+
+它不改动你搜索所用根引用的快照。`find --count` 不保存任何东西。预算耗尽的搜索以 `TIMEOUT` 失败，不返回部分匹配。过滤器清单见[命令参考](/desktop/commands/observation#find)。
+
+## 用 max-depth 控制深度
+
+`--max-depth` 限制 `snapshot` 读取的层数。默认 10，最大接受值为 50：
+
+```json
+{
+  "code": "INVALID_ARGS",
+  "message": "max depth 60 exceeds the supported maximum of 50",
+  "suggestion": "Use a max depth of 50 or less, or drill into a subtree with snapshot --root <ref>"
+}
+```
+
+深度按有意义的层计。`--skeleton` 下深度取 `--max-depth` 与 3 中较小者。对下钻而言，`--max-depth` 是被下钻元素之下的深度，因此要超过 10 层就从接近边界的节点下钻。这正是那些 `children_count` 标记的用途。
+
+## 何时跳过骨架
+
+- **小应用。** 可交互元素少于约 50 个时，一次完整的 `snapshot -i --compact` 比两遍读取更划算。GNOME Calculator 有 40 个引用，就在这个范围内；它出现在上文只是因为它的树小到足以展示。
+- **目标已知。** 知道角色或确切名称时，`find --role --name --exact` 一条命令就能拿到引用。
+- **一个表面。** 不要把 `--skeleton` 与 `--surface menu`、`sheet`、`alert` 或 `popover` 搭配。表面本身就是一棵小而聚焦的树。命令不会拒绝这种组合，但只是多跑一遍而已。
+
+## 部分观察
+
+预算耗尽的完整快照仍然成功，并返回它看到的内容：
+
+```bash
+agent-desktop snapshot --app gtk3-widget-factory -i --compact --timeout-ms 50
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gtk3-widget-factory",
+    "complete": false,
+    "truncated": true,
+    "nodes_observed": 73,
+    "ref_count": 27,
+    "snapshot_id": "s2ck1chz8ypcwk",
+    "tree": { "role": "window", "subtree_truncated": true, "children": [] }
+  }
+}
+```
+
+上面的 `tree` 为排版被清空；真实结果持有已读取的节点，且每个子树被裁断的节点都带 `subtree_truncated`。
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>complete</code></td><td>每个快照都有。<code>false</code> 表示树不完整。</td></tr>
+    <tr><td><code>truncated</code>, <code>nodes_observed</code></td><td>当 <code>complete</code> 为 <code>false</code> 时附加。<code>nodes_observed</code> 统计已读取的节点数。</td></tr>
+    <tr><td><code>subtree_truncated: true</code></td><td>出现在每个子树被预算裁断的节点上,因此你可以从根一路走到每个边界。</td></tr>
+    <tr><td><code>children_count</code></td><td>由深度裁断设置。被预算裁断的节点可能不带计数,所以以 <code>subtree_truncated</code> 为准。</td></tr>
+  </tbody>
+</table>
+
+判断依据是 `complete`，不是等一个 `TIMEOUT`。只有完整快照才可能部分；下钻永远不可能。要补完一棵部分树，提高 `--timeout-ms` 或下钻需要的区域。同一窗口用 `--timeout-ms 150` 读取返回的就是完整树。
+
+冷启动的 Chromium 或 Electron 应用可能要 10 到 25 秒才暴露其 web 树。如果新快照回来很薄，提高 `--timeout-ms` 再拍一次。
+
+## 超时
+
+<table>
+  <thead>
+    <tr><th>命令</th><th><code>--timeout-ms</code> 默认值</th><th>到期时</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>snapshot</code></td><td>3000</td><td>一棵带 <code>complete: false</code> 的部分树。</td></tr>
+    <tr><td><code>snapshot --root</code></td><td>3000,由解析根与读取它共享</td><td><code>TIMEOUT</code>。什么都不保存。</td></tr>
+    <tr><td><code>find</code></td><td>5000</td><td><code>TIMEOUT</code>,无部分匹配。</td></tr>
+  </tbody>
+</table>

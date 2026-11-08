@@ -1,0 +1,120 @@
+---
+title: 错误与恢复
+navTitle: 错误与恢复
+description: 错误对象、全部 16 个错误码、投递与重试 disposition、恢复策略,以及何时重试是安全的。
+---
+
+失败的命令打印一个 `ok: false` 的信封并以退出码 `1`（解析错误为 `2`）退出。分支判断依据 `error.code` 与 `error.disposition`，永远不要依据 `message` 或 `suggestion`，它们的措辞可能变化。在重试或换一个动作之前，先读 `error.disposition.retry`。
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "click",
+  "error": {
+    "code": "SNAPSHOT_NOT_FOUND",
+    "message": "Snapshot 's3tufs86hddhyl' not found",
+    "suggestion": "Re-run a snapshot and retry with a ref from the returned snapshot (CLI: snapshot, then use the printed @<snapshot_id>:eN ref; ...)",
+    "recovery": {
+      "strategy": "refresh_snapshot_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": true
+    },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+## 错误对象
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>出现时机</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>code</code></td><td>always</td><td>以下 16 个错误码之一。</td></tr>
+    <tr><td><code>message</code></td><td>always</td><td>人类可读的文本。不是稳定接口。</td></tr>
+    <tr><td><code>disposition</code></td><td>always</td><td>失败对投递与重试的判断。见 <a href="#disposition">Disposition</a>。</td></tr>
+    <tr><td><code>suggestion</code></td><td>当有值时</td><td>给人或智能体的提示。执行其中提到的命令前先核实。</td></tr>
+    <tr><td><code>recovery</code></td><td>仅当重试安全</td><td>已声明的恢复计划。见 <a href="#恢复策略">恢复策略</a>。</td></tr>
+    <tr><td><code>platform_detail</code></td><td>当有值时</td><td>原生平台自己的错误文本。</td></tr>
+    <tr><td><code>details</code></td><td>当有值时</td><td>结构化上下文。许多错误码靠 <code>details.kind</code> 标明原因,例如 <code>actionability_timeout</code>、<code>focus_verification</code>、<code>surface_absent</code>、<code>wait_timeout</code>、<code>session_ended</code> 或 <code>post_action_verification</code>。</td></tr>
+  </tbody>
+</table>
+
+## 错误码
+
+<table>
+  <thead>
+    <tr><th>错误码</th><th>含义</th><th>怎么办</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>PERM_DENIED</code></td><td>缺少必需的操作系统权限,例如辅助功能或屏幕录制。</td><td>运行 <code>agent-desktop permissions</code> 并授予。见 <a href="/desktop/platforms/macos">macOS</a>、<a href="/desktop/platforms/windows">Windows</a> 与 <a href="/desktop/platforms/linux">Linux</a> 页面。</td></tr>
+    <tr><td><code>ELEMENT_NOT_FOUND</code></td><td>没有元素匹配该引用或查询,或请求的表面不存在。</td><td>读 <code>details.kind</code> 与 <code>details.surface</code>。菜单缺席就先打开菜单;否则在刷新引用前先查一下 UI。</td></tr>
+    <tr><td><code>APP_NOT_FOUND</code></td><td>不存在匹配的应用进程。</td><td>用 <code>list-apps</code> 核对名称。若没在运行就 <code>launch</code>。</td></tr>
+    <tr><td><code>ACTION_FAILED</code></td><td>操作被拒绝或被阻挡,或者其观察到的结果与请求矛盾。</td><td>读 <code>details</code> 与 <code>disposition.retry</code>。它从不带 <code>recovery</code>。</td></tr>
+    <tr><td><code>ACTION_NOT_SUPPORTED</code></td><td>目标,或当前平台对这种输入,不暴露请求的操作。</td><td>换一个命令或元素。原样重复会同样失败。</td></tr>
+    <tr><td><code>STALE_REF</code></td><td>引用不再匹配任何活动元素。</td><td>重新拍快照并使用新引用。见<a href="/desktop/snapshots-and-refs">快照与引用</a>。</td></tr>
+    <tr><td><code>AMBIGUOUS_TARGET</code></td><td>多个活动元素、窗口或应用实例匹配,或引用在捕获时不唯一,命令拒绝猜测。</td><td>重新拍快照。当匹配的是不同元素时,用 <code>find</code>、<code>--root</code> 或 <code>--window-id</code> 收窄目标;macOS 之外同貌双元没有引用路径。它从不带 <code>recovery</code>。</td></tr>
+    <tr><td><code>WINDOW_NOT_FOUND</code></td><td>请求的窗口不存在,包括匹配不到任何窗口的 <code>--window-id</code> 或已关闭的 shell 表面。</td><td>运行 <code>list-windows --app &lt;name&gt;</code> 并使用它报告的 id。</td></tr>
+    <tr><td><code>PLATFORM_NOT_SUPPORTED</code></td><td>此平台的适配器没实现该方法。当前操作系统没有的表面类型是 <code>INVALID_ARGS</code>。</td><td>换一个思路。平台页面列出各操作系统支持的内容。</td></tr>
+    <tr><td><code>TIMEOUT</code></td><td>等待超期,目标始终不可操作,或读取在期限内一直不完整。</td><td>读 <code>details.kind</code>。仅当 <code>disposition.retry</code> 为 <code>safe</code> 时才重试。</td></tr>
+    <tr><td><code>INVALID_ARGS</code></td><td>参数非法。光秃的 <code>@eN</code> 引用和已结束的会话也返回它。</td><td>修好输入。原样重复同样的参数会同样失败。</td></tr>
+    <tr><td><code>NOTIFICATION_NOT_FOUND</code></td><td>通知索引或身份不再匹配。</td><td>重新运行 <code>list-notifications</code>。</td></tr>
+    <tr><td><code>SNAPSHOT_NOT_FOUND</code></td><td>快照 id 缺失、被修剪,或属于另一个<a href="/desktop/sessions">会话</a>命名空间。</td><td>在你要执行操作的同一会话作用域内拍快照,再使用其引用。</td></tr>
+    <tr><td><code>POLICY_DENIED</code></td><td>无头模式阻止了一条物理或有头路径。</td><td>不要为了绕过它而切换模式。见<a href="/desktop/guides/headed-mode">有头模式</a>。</td></tr>
+    <tr><td><code>APP_UNRESPONSIVE</code></td><td>应用停止响应。</td><td>等待,重新拍快照,然后仅当 <code>disposition.retry</code> 为 <code>safe</code> 时重试。</td></tr>
+    <tr><td><code>INTERNAL</code></td><td>意外错误。</td><td>读 <code>message</code>。仅当 <code>disposition.retry</code> 为 <code>safe</code> 时重试一次。</td></tr>
+  </tbody>
+</table>
+
+对 `ELEMENT_NOT_FOUND`，要读 `details.kind`、`details.surface` 与 `details.complete`。macOS 上 `kind: "surface_absent"` 且 `complete: true` 的查找，已确认请求的表面缺席。`menubar` 缺席可能意味着应用不暴露菜单栏。对 `surface: "menu"` 先打开应用菜单：存在时先快照 `menubar`，不带 `--headed` 点击其菜单栏条目，再快照 `--surface menu`。缺 `complete`、`complete: false`、一次超时或一次不完整读取都是未知。如果该命令紧跟在一条 `disposition.retry: unsafe` 的操作之后，执行下一个操作前先检查当前 UI；不要因为快照失败就重复那个操作。
+
+macOS 上 `details.kind: "focus_verification"` 的 `TIMEOUT` 表示在有界焦点回读结束前，应用从未报告过 `AXFrontmost`，或目标窗口从未报告过 `AXMain`。`details.physical_delivery_started: false` 表示目标输入尚未开始；它并不表示先前的焦点或抬窗请求从未派发。读一下 `disposition`，它仍可能是 `delivered_unverified`。
+
+## disposition
+
+`disposition` 说明输入是否抵达了应用，并由此判断重复执行命令是否安全。每个错误都带它。作用于目标的命令在成功时也带，即 `data.disposition`。
+
+<table>
+  <thead>
+    <tr><th><code>delivery</code></th><th><code>retry</code></th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>not_delivered</code></td><td><code>safe</code></td><td>输入从未抵达应用。重复命令不可能重复效果。</td></tr>
+    <tr><td><code>delivery_uncertain</code></td><td><code>unsafe</code></td><td>输入可能已落地,但哪一边都证明不了。</td></tr>
+    <tr><td><code>delivered_unverified</code></td><td><code>unsafe</code></td><td>输入已派发,效果未确认。</td></tr>
+    <tr><td><code>delivered_verified</code></td><td><code>unsafe</code></td><td>输入已派发且效果已回读。重复执行会应用两次。</td></tr>
+    <tr><td><code>unknown</code></td><td><code>unknown</code></td><td>命令对投递什么都没确定,例如一个可能已经落地的操作上的 <code>TIMEOUT</code>。</td></tr>
+  </tbody>
+</table>
+
+`retry` 由 `delivery` 推出：只有 `not_delivered` 是 `safe`，`unknown` 保持 `unknown`，其余一律 `unsafe`。不可能送达任何东西的拒绝都会盖 `not_delivered` 章：参数错误、派发前的失败，以及 `snapshot` 或 `find` 这类只读命令的任何错误。
+
+**只有当 `disposition.retry` 为 `safe` 时才重试或换动作。** 当它是 `unsafe` 或 `unknown` 时，先观察：拍快照、用 `get` 或 `is` 读元素，或检查应用，再依据所见决定。重复的 `click` 可能提交两次，重复的 `toggle` 会把自己撤销掉。
+
+## 恢复策略
+
+`recovery` 只在 `disposition.retry` 为 `safe`、该错误码有已声明的计划、且适配器没有用 `details.retryable: false` 标记失败不可重试时出现。它含 `strategy`、`retryable`、`requires_fresh_snapshot`，以及对两个错误码还有 `retry_after_ms`。
+
+<table>
+  <thead>
+    <tr><th><code>strategy</code></th><th>错误码</th><th>调用方怎么做</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>refresh_snapshot_then_retry_original</code></td><td><code>STALE_REF</code>, <code>SNAPSHOT_NOT_FOUND</code></td><td>重新拍快照（或 <code>find</code>）,定位同一元素,再用新的带限定引用重跑原命令。</td></tr>
+    <tr><td><code>inspect_state_then_retry_original</code></td><td><code>TIMEOUT</code>、<code>APP_UNRESPONSIVE</code>,以及 <code>details.process_state</code> 为 <code>exited</code> 时的 <code>STALE_REF</code></td><td>先检查应用（<code>list-apps</code>、一次快照或一个 <code>wait</code>）,若给了 <code>retry_after_ms</code> 就等一下,然后重跑原命令。对已退出的进程,先重新启动应用并拍一份新快照。</td></tr>
+    <tr><td><code>request_explicit_policy_then_retry_original</code></td><td><code>POLICY_DENIED</code></td><td>只有在有人显式选择了命令所需的策略之后才重试,例如确实打算物理输入时用 <code>--headed</code>。永远不要为了闯过这个错误而自行切到有头模式。</td></tr>
+  </tbody>
+</table>
+
+`STALE_REF` 只有在 `details.process_state` 为 `exited` 时才用 `inspect_state_then_retry_original`，否则用 `refresh_snapshot_then_retry_original`。其余错误码，例如 `ACTION_FAILED`、`INVALID_ARGS` 或 `AMBIGUOUS_TARGET`，从不带 `recovery`。照“怎么办”列执行。
+
+`retry_after_ms` 只为 `TIMEOUT` 与 `APP_UNRESPONSIVE` 设置（本版本为 250 ms）。`details.retryable` 是适配器自己的判断：`false` 表示等待改变不了结果，应换一条路走，并且即便该错误码本可携带 `recovery`，它也会压掉它。
+
+## 决定是否重试
+
+1. 读 `error.code`。对 `INVALID_ARGS`、`ACTION_NOT_SUPPORTED`、`PLATFORM_NOT_SUPPORTED` 或 `PERM_DENIED`，改输入或改环境。重试没有用。
+2. 读 `error.disposition.retry`。如果是 `unsafe` 或 `unknown`，先观察应用再动作。
+3. 如果是 `safe` 且 `recovery` 存在，照策略执行。
+4. 如果是 `safe` 且 `recovery` 缺席，按错误码表修好原因，然后重复命令，例如换用 `find` 给出的新引用。

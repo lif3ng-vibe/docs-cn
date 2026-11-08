@@ -1,0 +1,107 @@
+---
+title: 构建与链接
+navTitle: 构建与链接
+description: 从发布包获取 libagent_desktop_ffi 或从源码构建，找到头文件，把 C 程序链接到它，并完成 ABI 握手。
+---
+
+使用发布包里的预编译压缩包，或用 `release-ffi` profile 从源码构建库。
+
+## 预编译压缩包
+
+每个 GitHub 发布都附带用于 macOS arm64 与 x86_64、Linux x64 与 arm64（glibc）以及 Windows x64 与 ARM64 的 `agent-desktop-ffi-v<version>-<target>.tar.gz`（Windows 上为 `.zip`）。每个压缩包包含：
+
+<table>
+  <thead>
+    <tr><th>路径</th><th>内容</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>lib/</code></td><td>库和必须留在库旁的辅助程序：macOS 上是 <code>agent-desktop-macos-helper</code>，Linux 上是 <code>agent-desktop-linux-clipboard-owner</code>。Windows 上还有供 MSVC 使用的导入库 <code>agent_desktop_ffi.dll.lib</code>。</td></tr>
+    <tr><td><code>include/agent_desktop.h</code></td><td>生成的 C 头文件</td></tr>
+  </tbody>
+</table>
+
+发布中的 `checksums.txt` 可排查损坏；用 `gh attestation verify <file> --repo vercel-labs/agent-desktop` 验证来源。
+
+## 从源码构建
+
+```bash
+cargo build --profile release-ffi -p agent-desktop-ffi    # writes target/release-ffi/libagent_desktop_ffi.so on Linux
+```
+
+输出位于 `target/release-ffi/`：macOS 上是 `libagent_desktop_ffi.dylib`，Linux 上是 `libagent_desktop_ffi.so`，Windows 上是 `agent_desktop_ffi.dll`。`release-ffi` profile 保留 `panic = "unwind"`，因此每个入口都能捕获 panic 并以 `AD_RESULT_ERR_INTERNAL` 上报。工作区的 `release` profile 使用 `panic = "abort"`，因此 `cargo build --release` 产出的库一旦 panic 就会中止宿主进程。不要拿它发布。
+
+从源码构建时同样需要平台辅助程序位于库旁；参见[安装](/desktop/installation#从源码构建)。
+
+## 头文件
+
+`crates/ffi/include/agent_desktop.h` 由 cbindgen 生成；不要手工编辑它。当 Rust ABI 或 `crates/ffi/cbindgen.toml` 变化时，用 `scripts/update-ffi-header.sh` 重新生成，CI 对漂移会直接失败。头文件以 C11 的 `_Static_assert` 守卫结尾，固定每个按尺寸固定的结构体的大小与字段偏移；定义 `AGENT_DESKTOP_ABI_ASSERTS` 可跳过它们。
+
+## 链接并运行一个程序
+
+这个程序检查 ABI、对一个应用做快照，并打印信封：
+
+```c
+#include <stdio.h>
+#include "agent_desktop.h"
+
+int main(int argc, char **argv) {
+    const char *app = argc > 1 ? argv[1] : NULL;   /* NULL reads the focused window */
+
+    if (ad_init(AD_ABI_VERSION_MAJOR) != AD_RESULT_OK) {
+        fprintf(stderr, "ABI mismatch: %s\n", ad_last_error_message());
+        return 1;
+    }
+
+    AdAdapter *adapter = ad_adapter_create();
+    if (!adapter) {
+        fprintf(stderr, "adapter_create failed: %s\n", ad_last_error_message());
+        return 1;
+    }
+
+    char *json = NULL;
+    AdResult rc = ad_snapshot(adapter, app, AD_SNAPSHOT_SURFACE_WINDOW,
+                              3, true, true, &json);   /* max_depth, interactive_only, compact */
+    if (json) {                      /* an ok:true or ok:false envelope: free either */
+        printf("%s\n", json);
+        ad_free_string(json);
+    } else {
+        fprintf(stderr, "snapshot failed (%d): %s\n", (int)rc, ad_last_error_message());
+    }
+
+    ad_adapter_destroy(adapter);
+    return rc == AD_RESULT_OK ? 0 : 1;
+}
+```
+
+在 Linux 或 macOS 上，从仓库根目录编译并运行它：
+
+```bash
+cc -std=c11 -I crates/ffi/include main.c \
+   -L target/release-ffi -lagent_desktop_ffi \
+   -Wl,-rpath,"$PWD/target/release-ffi" \
+   -o snapshot_demo
+./snapshot_demo gnome-calculator
+```
+
+在 Linux 上对 GNOME Calculator，它打印出了这个信封（此处省略了窗口元数据与 `tree`）：
+
+```json
+{"version":"2.6","ok":true,"command":"snapshot","data":{"app":"gnome-calculator","complete":true,"ref_count":2,"snapshot_id":"s18ekeexjf5trb","window":{"id":"...","title":"..."},"tree":{"...":"..."}}}```
+
+macOS 的 install name 是 `@rpath/libagent_desktop_ffi.dylib`，因此链接该库的程序需要一个指向其目录的 rpath；`dlopen` 与 `ctypes` 的调用方按路径加载，什么都不需要。在 Windows 上，MSVC 程序链接 `agent_desktop_ffi.dll.lib`，运行时加载 DLL。在 Linux 上，程序必须运行在用户的图形会话内才能看到应用；参见 [Linux](/desktop/platforms/linux)。
+
+## 校验结构体尺寸
+
+结构体布局可能与 C 不同的语言，例如 Python 的 `ctypes` 或 Go 的 `cgo`，必须在把每个按尺寸固定的结构体传给库之前先校验尺寸。每个结构体都有一个 `AD_*_SIZE` 宏和一个返回 Rust 侧编译出尺寸的运行时 getter：`AdAction`（`ad_action_size`）、`AdActionResult`、`AdActionStep`、`AdDisplayInfo`、`AdDragParams`、`AdElementState`、`AdExactRefEntry`、`AdExactSurfaceInfo`、`AdExactWindowInfo`、`AdRefEntry` 与 `AdWaitArgs`，各配一个 `ad_<name>_size()` getter。
+
+调用方分配的每个结构体都要先零初始化再设置字段，并把版本化结构体的 `version` 和 `size` 字段设为头文件中的常量。
+
+## 冒烟测试
+
+`tests/ffi-python/smoke.py` 是非 C 宿主的参考实现，只使用 Python 标准库。它检查 ABI 版本、尺寸 getter、`ad_version`，以及 create、snapshot、free、destroy 循环：
+
+```bash
+python3 tests/ffi-python/smoke.py target/release-ffi/libagent_desktop_ffi.so crates/ffi/include/agent_desktop.h
+```
+
+在 Linux 测试桌面上它以 `All legs passed.` 结束。

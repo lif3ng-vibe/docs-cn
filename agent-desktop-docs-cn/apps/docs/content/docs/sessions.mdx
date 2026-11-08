@@ -1,0 +1,108 @@
+---
+title: 会话
+navTitle: 会话
+description: 会话（session）是磁盘上存放快照与追踪记录的命名空间。如何启动、选择与结束一个会话，agent id 如何工作，以及会话与追踪记录、光标覆盖层的关系。
+---
+
+会话（session）是 state root 下的一个目录，拥有一组快照引用映射，以及在追踪开启时的一份追踪记录（trace）。当多个运行或多个智能体共用一台机器、且各自需要独立的快照，或者你想记录某次运行做过的一切时，就用它。没有会话时，所有命令共用一个全局命名空间。
+
+## 会话拥有什么
+
+`session start` 在 [state root](/desktop/configuration#目录布局) 下创建 `sessions/<session-id>/`，内含一个 `session.json` 清单、自己的 `snapshots/` 命名空间，以及在追踪开启时的一个 `trace/` 目录。会话 id 形如 `run-<unix-ms>-<pid>-<counter>`。自己传的 `--session` id 必须由 1 到 64 个字母、数字、`-` 或 `_` 组成。
+
+## 启动、列出、结束与清理
+
+```bash
+agent-desktop session start --name docs-example   # 创建会话并打印其 id
+agent-desktop session list                        # 清单,最老的在前
+agent-desktop session end <session-id>            # 封存清单
+agent-desktop session gc --ended                  # 删除未被使用的已结束会话
+```
+
+`session start` 返回 id 以及激活它的那行命令：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "session",
+  "data": {
+    "activation": {
+      "environment": "AGENT_DESKTOP_SESSION",
+      "value": "run-1793352720537-17009-0"
+    },
+    "artifacts": "events",
+    "created_at": 1793352720537,
+    "name": "docs-example",
+    "next": "export AGENT_DESKTOP_SESSION=run-1793352720537-17009-0",
+    "session_id": "run-1793352720537-17009-0",
+    "trace": "on"
+  }
+}
+```
+
+`session list` 返回 `data.sessions`，每个清单一个对象，带 `session_id`、`name`、`created_at`、`ended_at`（会话开启期间为 `null`）、`trace` 和 `artifacts`。`session end` 返回 `session_id` 和 `ended_at`，对已结束的会话再跑一次也没问题。`session gc` 返回 `data.removed`，即它删除的 id。
+
+结束会话会封存清单并停止其追踪。此后，解析到该已结束会话的其他命令都以 `INVALID_ARGS` 和 `details.kind: "session_ended"` 失败，`version` 和 `skills` 除外：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "snapshot",
+  "error": {
+    "code": "INVALID_ARGS",
+    "message": "Session 'run-1793352720537-17009-0' has ended",
+    "suggestion": "Unset AGENT_DESKTOP_SESSION and omit --session, then run the command or start a new session",
+    "details": { "kind": "session_ended", "session_id": "run-1793352720537-17009-0" },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+`session gc` 删除没有被任何东西使用的已结束会话；其保留规则见 [`session`](/desktop/commands/system#session)。
+
+## 选择会话
+
+命令按此顺序选定会话：
+
+<table>
+  <thead>
+    <tr><th>顺序</th><th>来源</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>--session &lt;id&gt;</code></td><td>优先于环境变量。</td></tr>
+    <tr><td>2</td><td><code>AGENT_DESKTOP_SESSION</code></td><td>空值即 <code>INVALID_ARGS</code>。</td></tr>
+    <tr><td>3</td><td>无</td><td>全局命名空间,直接存在 state root 里。</td></tr>
+  </tbody>
+</table>
+
+不含 1 到 64 个字母、数字、`-` 或 `_` 之一的 id 以 `INVALID_ARGS` 失败。没有清单的 `--session <id>` 仍然可以作为快照命名空间工作，但不写追踪记录。
+
+`session start` 不会为后续命令激活会话。每条命令都是独立进程，所以要么每条都传 id，要么在 shell 里 export 一次：
+
+```bash
+export AGENT_DESKTOP_SESSION=$(agent-desktop session start --name docs-example | jq -r '.data.session_id')
+agent-desktop snapshot --app gnome-calculator -i   # 在会话内运行
+agent-desktop session end "$AGENT_DESKTOP_SESSION"
+```
+
+不带 id 的 `session end` 结束由 `--session` 或 `AGENT_DESKTOP_SESSION` 选定的会话。在 Windows 上，`data.next` 打印 PowerShell 形式（`$env:AGENT_DESKTOP_SESSION = '...'`）；引号规则见 [Windows](/desktop/platforms/windows)。
+
+## 快照命名空间
+
+会话同时是一个快照命名空间。会话内拍的快照保存在该会话目录之下，且每次查找都限定在所选命名空间内。带限定的引用如 `@s8f3k2p9:e1` 内嵌其快照 id，但该 id 不是跨会话句柄。换一个 `--session`（或不带）去执行那个引用会以 `SNAPSHOT_NOT_FOUND` 失败。拍快照和执行它的引用要在同一个会话作用域之下。
+
+多个智能体可以共享一个会话 id。每个都应只执行来自自己快照的引用，因为会话只维护一个最新快照指针。引用映射的保留与修剪见[快照与引用](/desktop/snapshots-and-refs)。
+
+## 智能体身份
+
+`--agent-id <id>`（或 `AGENT_DESKTOP_AGENT_ID`）命名运行该命令的 harness 子智能体。flag 优先于变量。id 由 1 到 64 个字母、数字、`-` 或 `_` 组成，非法 id 以 `INVALID_ARGS` 失败。它以会话为作用域。
+
+身份只在一种模式下起作用：以 `session start --cursor --multi-agent` 启动的会话。在那里，`click`、`type` 这类桌面操作要求提供 agent id，缺失则以 `INVALID_ARGS` 失败。观察、剪贴板与会话命令不需要。每个不同的 id 拥有自己的光标，复用的 id 复用其光标。无头操作在获取交互租约之前先移动自己的光标，因此多个智能体的光标可以同时移动，而它们的操作依次排队。绘制同一光标的命令从其移动到点击生效全程排队，因此共享光标从不会在展示另一条命令的目标时点击。快照仍按会话共享。
+
+## 会话、追踪记录与光标覆盖层
+
+新会话默认记录追踪记录：清单带 `trace: "on"`，命令在会话结束前不断向 `trace/` 追加段。`--no-trace` 创建一个不写追踪记录的命名空间。`--screenshots` 还会保存操作前后的截图和引用映射副本，其中可能包含隐私屏幕内容。读取与导出追踪记录见[追踪记录](/desktop/guides/traces)。
+
+光标覆盖层每个会话配置一次，可以用 `session start --cursor` 或 `cursor-overlay enable`，操作命令会继承它。呈现设置、按智能体配置与平台支持见 [`cursor-overlay`](/desktop/commands/system#cursor-overlay)。

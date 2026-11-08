@@ -1,0 +1,91 @@
+---
+title: 键盘命令
+navTitle: 键盘
+description: press、key-down 与 key-up 的参考文档。press 发送按键组合；按住输入类命令在所有平台上都按 fail closed 拒绝。
+---
+
+`press` 是唯一真正投递按键的命令。`key-down` 和 `key-up` 是保留名：它们只校验参数，然后拒绝。要往字段里插入文本，用 [`type`](/desktop/commands/interaction#type) 或 [`set-value`](/desktop/commands/interaction#set-value)。
+
+## press
+
+把按键组合发送到获得焦点的窗口，或发送到某个应用。
+
+```bash
+agent-desktop press COMBO [--app NAME] [--window-id ID] [--force]
+agent-desktop press ctrl+shift+z
+agent-desktop press return --app gnome-calculator
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>COMBO</code></td><td>必填</td><td>用 <code>+</code> 连接的按键。最后一段是键，前面的段是修饰键。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的窗口</td><td>把按键发给该应用。配合 <code>--headed</code> 时，先聚焦它的窗口。同名的多个实例返回 <code>AMBIGUOUS_TARGET</code>。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td>定向到拥有该窗口的实例。</td></tr>
+    <tr><td><code>--force</code></td><td>关闭</td><td>发送平台视为危险而拦截的组合键，例如退出或锁屏快捷键。</td></tr>
+  </tbody>
+</table>
+
+组合会被转为小写并去掉空格，因此 `Ctrl + A` 即 `ctrl+a`。修饰键有 `meta`（别名 `cmd`、`command`、`super`、`win`：macOS 上是 Command，Windows 上是 Windows 键，Linux 上是 Super）、`ctrl`（`control`）、`alt`（`option`）和 `shift`。单个大写字母自动加 Shift。到处都有效的键名有 `return`、`escape`、`tab`、`space`、`delete`、`up`、`down`、`left`、`right`，以及 `f1` 到 `f12`。复制在 macOS 上是 `cmd+c`，其他平台是 `ctrl+c`。
+
+按键属于物理键盘输入，未限定范围的 `press` 不需要 `--headed`。结果总是 `delivered_unverified`，因为按键已投递并不能证明这个快捷键做了什么：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "press",
+  "data": {
+    "action": "press",
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "XTEST.press_key", "mechanism": "physical_synthetic", "outcome": "succeeded", "verified": false }]
+  }
+}
+```
+
+步骤标签标明了平台机制；上面这个是 Linux X11。配合[操作后的等待 flag](/desktop/configuration#操作后等待-flag)时，press 的报告会移到 `data.after_action` 下。
+
+`press` 特有的错误：
+
+- `INVALID_ARGS`：空的组合、未知的修饰键或未知的键（`Unknown key name 'foo'`）。什么都不发送。
+- `POLICY_DENIED`：平台拦截了该组合。处置为 `not_delivered`。只有在确实有意图时才传 `--force`。
+- `ACTION_FAILED` 且 `details.cause: "frame_not_active"`：对窗口不活动的应用做无头的限定范围按键。什么都不发送。把窗口带到前台，或者在允许变更焦点时传 `--headed`。
+- `TIMEOUT` 且 `details.kind: "wait_timeout"`：`--wait-for` 选择器始终没有匹配。按键已经投递出去了，所以不要盲目重复这次 press。
+
+平台限制：各平台有自己的键名、被拦截的组合与限定范围按键规则。参见 [macOS](/desktop/platforms/macos#按键与通知)、[Windows](/desktop/platforms/windows#按键) 和 [Linux](/desktop/platforms/linux)。
+
+## key-down
+
+按住一个键的保留名。它从不发送输入。
+
+```bash
+agent-desktop key-down COMBO [--force]
+```
+
+按住的键需要一个能保证其释放的进程，而 agent-desktop 的每条命令都是短命进程。因此在所有平台上、无论有头还是无头，命令都会先解析组合（不合法报 `INVALID_ARGS`），再做被拦截组合检查（除非 `--force`，否则报 `POLICY_DENIED`），然后拒绝：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "key-down",
+  "error": {
+    "code": "ACTION_NOT_SUPPORTED",
+    "message": "key-down is unavailable in stateless mode",
+    "suggestion": "Use the atomic press command; held input requires a daemon-owned transaction that can guarantee release",
+    "disposition": { "delivery": "unknown", "retry": "unknown" }
+  }
+}
+```
+
+什么都不发送，而且命令每次都以同样的方式失败。整组和弦请用 [`press`](#press) 发送，例如 `press shift+tab`。
+
+## key-up
+
+释放按住的键的保留名。它走与 [`key-down`](#key-down) 相同的流程，以 `ACTION_NOT_SUPPORTED` 结束（`key-up is unavailable in stateless mode`）。
+
+```bash
+agent-desktop key-up COMBO [--force]
+```

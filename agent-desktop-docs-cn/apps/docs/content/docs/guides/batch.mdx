@@ -1,0 +1,70 @@
+---
+title: 批量执行命令
+navTitle: 批量
+description: 用 batch 在一个进程里按顺序运行多条 agent-desktop 命令。何时批量化、非原子语义、首条条目运行前的校验,以及如何读取结果。
+---
+
+`batch` 在一个进程里按顺序运行一个由多条命令组成的 JSON 数组。它不是事务。用它省掉已知序列上的进程启动开销，以及把一个操作与 `wait --event` 配对，好让等待基线在操作运行前就被读取。输入格式、限制与输出字段见 [`batch` 参考](/desktop/commands/batch)。
+
+## 何时使用 batch
+
+适合批量化的：
+
+- 一个操作后接 `wait --event`，例如会打开窗口的 click 或 launch。见[无 sleep 的等待](/desktop/guides/waiting#等待你的操作引发的事件)。
+- 在你已持有的引用上执行固定序列，且步骤之间不需要读任何东西。
+
+不要批量化的：
+
+- 下一条命令依赖上一条输出的步骤。观察、操作与验证各自都需要一次读取；见[观察—操作—验证循环](/desktop/guides/observe-act-verify)。
+- 需要用到更早条目才会创建的引用的步骤。batch 在第一条条目运行前就完成校验，因此它无法引用其内部某条 `snapshot` 条目产生的引用。
+
+## 弄清什么先运行
+
+在任何条目运行之前，agent-desktop 检查每一条：JSON、命令名、参数、引用语法，以及各命令所需权限。一次失败拒绝整个 batch，什么都不会运行：
+
+```json
+{
+  "code": "INVALID_ARGS",
+  "message": "Batch entry 0 ('click') failed validation: Invalid ref_id '@e1': expected @<snapshot_id>:e<N>",
+  "details": { "batch_command": "click", "batch_index": 0 },
+  "disposition": { "delivery": "not_delivered", "retry": "safe" }
+}
+```
+
+这个检查碰不到真实桌面。引用是否仍可解析、无头物理操作是否被拒绝，都在条目运行时才判定。
+
+## 逐条读取结果
+
+即使有条目失败，batch 也返回 `ok: true` 与退出码 `0`，所以每条都要读它的 `ok`。这个 batch 点击了计算器的 C 按钮，然后点一个不存在的引用，再点一次 C，带 `--stop-on-error`（字段有删节）：
+
+```json
+{
+  "results": [
+    { "index": 0, "ok": true, "execution": "completed", "data": { "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" } } },
+    {
+      "index": 1, "ok": false, "execution": "completed",
+      "error": {
+        "code": "STALE_REF",
+        "message": "@s3sl23kzkoxzvb:e999 not found in current RefMap",
+        "disposition": { "delivery": "not_delivered", "retry": "safe" }
+      }
+    }
+  ],
+  "total_entries": 3,
+  "completed_entries": 2,
+  "not_started_entries": 1,
+  "stopped": { "index": 1, "reason": "stop_on_error" }
+}
+```
+
+每个条目保留自己的 disposition，batch 从不重试条目。逐条应用常规规则：只有 `retry` 为 `safe` 才重试。
+
+## 控制失败行为
+
+- **默认。** 失败条目不停止 batch。后面的条目照常运行，因此失败之后的操作可能作用在你没预料到的 UI 上。
+- **`--stop-on-error`。** 首个失败条目之后 batch 立即停住并报告 `stopped`。凡是前一步失败后继续走会出错的序列，都用它。
+- **`--timeout-ms`。** 默认 60000 ms 覆盖整个 batch，包括其中的等待。到期时下一条条目按 `not_started` 报告，原因 `deadline`。
+
+## 在 batch 中使用引用
+
+`args` 里的引用必须是带限定的，且来自 batch 之前、在同一 `--session` 下拍的快照或 `find`。更早的条目改了 UI，后面的引用就可能过期，该条目以 `STALE_REF` 失败。把批量化引用操作局限在单个操作不会重建的控件上。见[快照与引用](/desktop/snapshots-and-refs#ui-变化后重新读取)。

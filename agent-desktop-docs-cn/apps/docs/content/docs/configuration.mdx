@@ -1,0 +1,108 @@
+---
+title: 配置
+navTitle: 配置
+description: 全局 flag、操作后等待 flag、环境变量,以及 agent-desktop 存放快照、会话与追踪记录的 state root。
+---
+
+agent-desktop 没有配置文件。行为来自每条命令上的全局 flag、少量环境变量，以及存放快照、会话与追踪记录的 state root 目录。
+
+## 全局 flag
+
+全局 flag 放在命令名之前或之后都行，因此 `agent-desktop --headed click REF` 与 `agent-desktop click REF --headed` 等价。`agent-desktop --help` 会列出它们。
+
+<table>
+  <thead>
+    <tr><th>flag</th><th>默认</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--headed</code></td><td>off</td><td>对自然输入命令优先物理投递,并允许焦点与光标副作用。默认是严格的无头语义投递。见<a href="/desktop/guides/headed-mode">有头模式</a>。</td></tr>
+    <tr><td><code>--session ID</code></td><td>none</td><td>选择快照命名空间与追踪记录。覆盖 <code>AGENT_DESKTOP_SESSION</code>。见<a href="/desktop/sessions">会话</a>。</td></tr>
+    <tr><td><code>--agent-id ID</code></td><td>none</td><td>会话内的子智能体 id。覆盖 <code>AGENT_DESKTOP_AGENT_ID</code>。多智能体会话中的桌面操作必需它。</td></tr>
+    <tr><td><code>--trace PATH</code></td><td>off</td><td>把追踪事件以 JSONL 追加到该文件,而不是会话的追踪记录。见<a href="/desktop/guides/traces">追踪记录</a>。</td></tr>
+    <tr><td><code>--trace-strict</code></td><td>off</td><td>追踪初始化或操作前写入失败时直接失败。需要 <code>--trace</code> 或开启追踪的会话。</td></tr>
+    <tr><td><code>--wait-for SELECTOR</code>, <code>-w</code></td><td>none</td><td>命令之后轮询,直到某个元素匹配。见<a href="#操作后等待-flag">操作后等待 flag</a>。</td></tr>
+    <tr><td><code>--wait-for-gone SELECTOR</code></td><td>none</td><td>命令之后轮询,直到没有元素匹配。</td></tr>
+    <tr><td><code>--wait-timeout MS</code></td><td><code>30000</code></td><td>上面两个 flag 的最长等待。</td></tr>
+    <tr><td><code>--verbose</code>, <code>-v</code></td><td>off</td><td>把调试日志写到 stderr。stdout 保持为一行 JSON 信封。</td></tr>
+    <tr><td><code>--debug</code>, <code>--screenshot PATH.html</code></td><td>off</td><td>为 <code>snapshot</code> 或 <code>click</code> 写一份可视化调试 HTML 文件。两者必须同时给。见<a href="/desktop/guides/traces#make-a-visual-debug-file">追踪记录</a>。</td></tr>
+    <tr><td><code>--help</code>, <code>-h</code>; <code>--version</code>, <code>-V</code></td><td></td><td>以文本打印帮助或版本号。<code>version</code> 命令以 JSON 打印。</td></tr>
+  </tbody>
+</table>
+
+## 操作后等待 flag
+
+`--wait-for`、`--wait-for-gone` 和 `--wait-timeout` 让命令等待 UI 呈现其效果。命令先跑；然后 flag 轮询无障碍树，直到选择器满足或超时结束。[无 sleep 的等待](/desktop/guides/waiting)把它们与 [`wait`](/desktop/commands/wait) 命令做了对比。
+
+**选择器。** `role:text`，在第一个 `:` 处拆分。`button` 按角色匹配，`:Saved` 按文本匹配，`button:Save` 两者都匹配。文本是对元素名称、值或描述的不区分大小写子串匹配。空选择器在命令运行前返回 `INVALID_ARGS`。
+
+**接受这些 flag 的命令。** `snapshot`、`press`、`hover`、`drag`，以及所有引用操作（`click`、`double-click`、`triple-click`、`right-click`、`type`、`set-value`、`clear`、`focus`、`select`、`toggle`、`check`、`uncheck`、`expand`、`collapse`、`scroll`、`scroll-to`）。其他一切命令返回 `INVALID_ARGS`。`snapshot --root` 不能与它们组合，`batch` 条目也从不继承它们。
+
+**轮询哪个宿主。** 对 `snapshot`，是所选表面的宿主。对引用操作，是原始进程。应用拥有的引用观察其源表面；macOS 的 `menu` 或 `menubar` 引用通过其应用观察，不需要文档窗口。窗口拥有的引用观察原本钉住的窗口，即便引用来自 `sheet`、`alert`、`popover`、`focused` 或窗口拥有的 `menu`（如 Linux 菜单）。等待读取的是整个窗口，因此父级里别处的选择器可能让 `--wait-for` 提前满足，或让 `--wait-for-gone` 无法成功。在 Linux 上，GTK3 上下文菜单和 Chromium 弹出窗可能暴露在该窗口树之外，因此 gone 等待无法确证被观察范围之外的弹出窗已被关闭。要观察覆盖层本身，另跑一条带目标 `--surface` 与等待选择器的 `snapshot`。对 `press`，是 `--app` 或 `--window-id` 指定的窗口，否则焦点窗口。对 `drag`，是目标窗口，或在 `--wait-for-scope from` 时是源窗口。
+
+**结果。**
+
+- `--wait-for` 成功时返回快照数据（`snapshot_id`、`ref_count`、`tree` 等）加 `elapsed_ms` 与 `matched_selector`。对操作而言，操作自身的报告移到 `data.after_action` 之下。
+- `--wait-for-gone` 成功时返回 `matched_selector`、`gone: true`、`target_absent: true` 与 `elapsed_ms`，操作报告在 `after_action` 之下。
+- 超期时命令以 `TIMEOUT` 失败，带 `details.kind: "wait_timeout"`、`details.selector` 与 `details.timeout_ms`。操作之后，`details.after_action` 保存其报告，错误保留操作自身的投递 disposition，因此一次超时不会让该操作变得可安全重复。
+- 若引用操作返回 `delivery_uncertain`，`error.details.post_action_observation` 记录来自原始进程及其应用拥有的源表面或钉住窗口的只读证据。它的[字段与取值](/desktop/json-output#操作后观察)不会改动原始错误或 unsafe 重试处置。等待单独用 `--wait-timeout`，与操作超时分开关。
+- 带 `details.kind: "window_without_accessibility_element"` 的临时 `ACTION_NOT_SUPPORTED` 错误会在等待轮询期间被重试。对 `--wait-for-gone`，该错误不算缺席；只有当一次完整选择器读取找不到匹配、或应用/窗口查找确认目标已消失时，等待才算成功。
+
+```bash
+agent-desktop click @s8f3k2p9:e5 --wait-for ":Saved" --wait-timeout 5000
+agent-desktop click @s8f3k2p9:e5 --wait-for-gone "progressindicator"
+agent-desktop snapshot --app gnome-calculator -w "button:7"
+```
+
+## 环境变量
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AGENT_DESKTOP_HOME</code></td><td>搬迁 <a href="#state-root">state root</a>。必须是绝对路径。</td></tr>
+    <tr><td><code>AGENT_DESKTOP_SESSION</code></td><td>未传 <code>--session</code> 时使用的会话 id。<code>session start</code> 会打印设置它的那行命令。空值是 <code>INVALID_ARGS</code>。</td></tr>
+    <tr><td><code>AGENT_DESKTOP_AGENT_ID</code></td><td>未传 <code>--agent-id</code> 时使用的子智能体 id。</td></tr>
+    <tr><td><code>AGENT_DESKTOP_MACOS_HELPER_PATH</code></td><td>仅 macOS。打包的 <code>agent-desktop-macos-helper</code> 的绝对路径。npm 启动器会设置它。</td></tr>
+    <tr><td><code>RUST_LOG</code></td><td>stderr 日志的过滤级别。合法值将替换默认级别。</td></tr>
+  </tbody>
+</table>
+
+非法值返回带 `not_delivered` 的 `INVALID_ARGS`，什么都不执行。在 PowerShell 中，用 `$env:AGENT_DESKTOP_HOME = "$env:TEMP\ad-scratch"` 设置变量。在 Linux 上，适配器还会读取桌面会话的 `DISPLAY`、`WAYLAND_DISPLAY`、`XDG_RUNTIME_DIR` 和 `DBUS_SESSION_BUS_ADDRESS`；见 [Linux](/desktop/platforms/linux)。
+
+## state root
+
+agent-desktop 把状态保存在一个目录之下：默认是家目录中的 `.agent-desktop`。`agent-desktop status` 以 `state_root` 报告解析后的路径。`AGENT_DESKTOP_HOME` 替换默认值：
+
+- 必须是绝对路径。若已存在，必须是你拥有的目录且不是符号链接。
+- 不必已存在；首次使用时创建，macOS 与 Linux 上权限模式为 `0700`。
+
+在 macOS 与 Linux 上，state root 必须保持私有。组可写或其他用户可读的 root 会让向其写入的命令以 `INTERNAL` 失败，报 "private file parent is accessible by group or other users"。对它跑 `chmod 700`，或让 agent-desktop 自行创建。每次运行一个全新 root 可以隔离引用：
+
+```bash
+export AGENT_DESKTOP_HOME="$(mktemp -d)"   # 绝对且私有
+agent-desktop status                       # data.state_root 显示该路径
+```
+
+### 目录布局
+
+```text
+~/.agent-desktop/                     state root
+  latest_snapshot_id                  全局命名空间里最新的快照
+  snapshots/
+    s8f3k2p9/refmap.json              每个快照一份引用映射
+  tmp/                                会话之外的剪贴板图片
+  sessions/
+    run-1793352720537-17009-0/        每个会话一个目录
+      session.json                    清单
+      latest_snapshot_id
+      snapshots/s8f3k2p9/refmap.json  该会话自己的命名空间
+      trace/                          JSONL 段,每个进程一段
+      clipboard/                      会话内的剪贴板图片
+```
+
+- **快照。** 每个快照写 `snapshots/<id>/refmap.json`。大小与保留限制见[引用存在哪里](/desktop/snapshots-and-refs#引用存在哪里)。
+- **会话。** `session start` 创建 `sessions/<id>/` 及其自己的 `snapshots/`，因此一个会话的引用对另一个不可见。`session gc` 连同其追踪记录一起删除已结束会话。见[会话](/desktop/sessions)。
+- **追踪记录。** 开启追踪的会话在 `trace/` 下按进程写一个 JSONL 段，`--screenshots` 下另有 `screens/` 与 `refmaps/`。见[追踪记录](/desktop/guides/traces)。
+
+跨进程交互锁放在 state root 之外（macOS 与 Linux 上在 `/tmp` 之下），因此同一用户的每个智能体无论 `AGENT_DESKTOP_HOME` 是什么都共享它。你自行指定的文件，例如 `--trace` 路径或截图路径，也在它之外。

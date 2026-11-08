@@ -1,0 +1,139 @@
+---
+title: Linux
+navTitle: Linux
+description: agent-desktop 在 Linux 上的要求、无障碍总线、X11 与 Wayland 上的各命令能力、应用命名、表面与故障排查。
+---
+
+agent-desktop 通过 D-Bus 上的 AT-SPI 读取 Linux 应用。操作循环节、引用、JSON 信封、会话与追踪记录在所有平台上保持一致，因此本页只讲 Linux 上不同的部分。GNOME 是实测桌面；X11 与 Wayland 会话都能工作，但在输入、捕获与窗口控制上有差异。本页示例运行在 X11 会话上（Xvfb 配 openbox 窗口管理器，无 GNOME Shell），因此 shell 表面与通知未实际演练。
+
+## 系统要求
+
+- Ubuntu 24.04 或更高版本，x86_64 或 aarch64，glibc 下限 2.35。其他发行版需要带修复的 `at-spi2-core` 桥（提交 `dc0dc33`）；Ubuntu 22.04 的桥在 `Action.GetActions` 上会中止。
+- 必须有已登录用户的图形会话、正在运行的 AT-SPI 总线（`at-spi2-core`）和一个窗口管理器。要在该会话内的 shell 中运行 agent-desktop：会话总线、display 与运行时目录都来自其环境。TTY 登录、缺少这些变量的 SSH shell、没有总线的容器或其他用户的会话都看不到任何应用。
+- X11 按键需要 XTEST，Wayland 按键需要 GNOME Mutter RemoteDesktop。Wayland 剪贴板需要 `wl-clipboard`。
+- 在 X11 上，`clipboard-set` 需要 `agent-desktop-linux-clipboard-owner` 位于二进制文件旁边。npm 安装与发布压缩包自带它；从源码构建时用 `cargo build --release -p agent-desktop-linux --bins` 编译。
+- 私有的状态根目录。组可写或全局可读的 `~/.agent-desktop` 会让往该处写入的命令以 `INTERNAL` 失败。对它执行 `chmod 700`，或者让 agent-desktop 自行创建。
+
+## 检查无障碍总线
+
+Linux 没有针对无障碍的授权对话框；总线是否应答决定一切。先运行 `status`：
+
+```bash
+agent-desktop status
+```
+
+```json
+{
+  "permissions": {
+    "accessibility": { "state": "granted" },
+    "automation": { "state": "not_required" },
+    "screen_recording": { "state": "not_required" }
+  },
+  "platform": "linux",
+  "supported_surfaces": ["window", "sheet", "alert", "menu"]
+}
+```
+
+<table>
+  <thead>
+    <tr><th>状态</th><th><code>status</code> 与 <code>list-apps</code> 的表现</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>有应答，健康</td><td><code>accessibility</code> 为 <code>granted</code>，<code>supported_surfaces</code> 列出表面，<code>list-apps</code> 有行返回</td><td>正常</td></tr>
+    <tr><td>有应答，为空</td><td><code>granted</code>，但 <code>list-apps</code> 没有任何行返回</td><td>总线在运行但尚无应用注册。启动一个应用，或重启一个在总线之前启动的应用</td></tr>
+    <tr><td>不可用</td><td><code>denied</code> 并带 suggestion，<code>supported_surfaces</code> 为空，命令以 <code>PLATFORM_NOT_SUPPORTED</code> 失败</td><td>无法连到会话总线或无障碍总线</td></tr>
+  </tbody>
+</table>
+
+总线不可用有四种常见原因，每种都把原始 D-Bus 错误写在 `platform_detail` 里：
+
+- **没有会话总线。** 在桌面会话内运行，或用 `dbus-run-session -- COMMAND` 起一个。
+- **未安装 AT-SPI。** 安装 `at-spi2-core`。Flatpak 加 `--talk-name=org.a11y.Bus`；snap 连接 `desktop-legacy` 或 `unity7`。
+- **启动器无法启动。** 读 `systemctl --user status at-spi-dbus-bus.service`。
+- **套接字消失。** 重启 `at-spi-dbus-bus.service`，或者注销后重新登录。
+
+判断健康状态用 `status`，不要用 `busctl`：冷启动的会话中 `org.a11y.Bus` 在首次使用之前没有属主。不要重启不是你启动的总线，因为共享主机上的其他客户端依赖它。
+
+## 无头模式下的能力
+
+引用操作是语义 AT-SPI 调用，从不移动指针，也从不改变活动窗口。在 X11 上配合 `--headed`，`click`、`right-click` 和 `type` 会先尝试物理输入，只在遇到 `not_delivered` 拒绝后才回退到语义操作。参见[有头模式](/desktop/guides/headed-mode)。
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>无头可用</th><th>需要 <code>--headed</code></th><th>按 fail closed 拒绝或不支持</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>观察与表面</td><td>X11 与 Wayland 上的 <code>snapshot</code>、<code>find</code>、<code>get</code>、<code>is</code>、<code>list-surfaces</code></td><td></td><td></td></tr>
+    <tr><td>引用操作</td><td><code>click</code>、<code>right-click</code>、<code>type</code>、<code>set-value</code>、<code>clear</code>、<code>select</code>、<code>toggle</code>、<code>check</code>、<code>uncheck</code>、<code>expand</code>、<code>collapse</code>、<code>scroll-to</code>，前提是元素暴露了对应的 AT-SPI 能力</td><td><code>focus</code>；向终端文本节点 <code>type</code>；部分 Qt 与 libadwaita 组合框的 <code>select</code></td><td>没有语义路径的元素会拒绝，且绝不回退到物理输入</td></tr>
+    <tr><td>滚轮滚动</td><td></td><td><code>scroll</code>、<code>mouse-wheel</code>，仅限 X11</td><td>无头的 <code>scroll</code>：<code>POLICY_DENIED</code></td></tr>
+    <tr><td>指针手势</td><td></td><td><code>double-click</code>、<code>triple-click</code>、<code>hover</code>、<code>drag</code>、<code>mouse-click</code>、<code>mouse-move</code>，仅限 X11</td><td>Wayland：<code>ACTION_NOT_SUPPORTED</code>，原因为 <code>wayland_session</code></td></tr>
+    <tr><td>键盘</td><td>X11 与 Mutter Wayland 上的 <code>press</code>。限定范围的无头 <code>press</code> 要求目标窗口已处于活动状态</td><td>对后台应用的限定范围 <code>press</code>（X11）</td><td>不加 <code>--force</code> 的被拦截组合键，如 <code>alt+f4</code></td></tr>
+    <tr><td>按住输入</td><td></td><td></td><td><code>key-down</code>、<code>key-up</code>、<code>mouse-down</code>、<code>mouse-up</code></td></tr>
+    <tr><td>应用与窗口</td><td>X11 与 Wayland 上的 <code>launch</code>、<code>list-apps</code>、<code>list-windows</code>；X11 上的窗口控制与优雅 <code>close-app</code></td><td></td><td>Wayland 上的 <code>focus-window</code> 与窗口控制：<code>ACTION_NOT_SUPPORTED</code></td></tr>
+    <tr><td>捕获</td><td><code>screenshot</code>、<code>list-displays</code></td><td></td><td>合成窗口管理器（GNOME）下的 X11：整屏与 <code>--screen</code> 截取返回 <code>PLATFORM_NOT_SUPPORTED</code>（<code>details.reason: "compositing"</code>）；改截单个窗口。Wayland：首次使用时需 portal 授权，且窗口目标为 <code>PLATFORM_NOT_SUPPORTED</code></td></tr>
+    <tr><td>剪贴板</td><td><code>clipboard-get</code>、<code>clipboard-set</code>、<code>clipboard-clear</code>（文本、图片、文件列表）</td><td></td><td>缺少辅助程序或 <code>wl-clipboard</code>：<code>PLATFORM_NOT_SUPPORTED</code></td></tr>
+    <tr><td>等待</td><td>全部模式；GNOME 上的 <code>--notification</code></td><td></td><td></td></tr>
+    <tr><td>通知</td><td><code>list-notifications</code>，即使列表关闭也可</td><td>X11 上的一切清除与操作</td><td>仅限 GNOME Shell；否则 <code>PLATFORM_NOT_SUPPORTED</code></td></tr>
+    <tr><td>Shell 表面</td><td>有 StatusNotifierWatcher 时的 <code>snapshot --surface system-tray</code></td><td><code>open-system-surface</code> 支持 <code>action-center</code>，以及有 StatusNotifierWatcher 时的 <code>system-tray</code></td><td><code>quick-settings</code>、<code>taskbar</code>、<code>start-menu</code> 与 <code>system-tray-overflow</code> 均拒绝</td></tr>
+    <tr><td>系统</td><td><code>status</code>、<code>permissions</code>、<code>version</code>、<code>batch</code>、<code>skills</code>、<code>session</code>、<code>trace</code>、<code>cursor-overlay</code></td><td></td><td>Wayland：浮层设置保存时 <code>rendered: false</code></td></tr>
+  </tbody>
+</table>
+
+## 应用命名
+
+`--app` 接受 `list-apps` 输出的名称，例如 `gnome-calculator`，或由经验证的可执行文件支撑的 desktop-entry 名称或 id，例如 `Files`。它绝不匹配窗口标题。
+
+```json
+{ "bundle_id": "org.gnome.Calculator", "name": "gnome-calculator", "pid": 8255, "presentation": "foreground", "process_instance": "6d91df60:28340" }
+```
+
+`list-windows --app` 是精确且不区分大小写的匹配；`list-apps --app` 还匹配子串。窗口 id 是 `w-1.11-org-gnome-Calculator-a11y-...` 这类不透明字符串，在窗口所属进程存活期间有效。同一应用的多个实例共用一个名称：用 `--window-id` 选定一个。`launch` 接受绝对路径、desktop id、裸命令或 desktop entry 名称。
+
+## 表面
+
+`supported_surfaces` 列出 `window`、`sheet`、`alert` 和 `menu`，外加该会话能解析的 GNOME Shell 类型。执行打开操作之后，读 `data.surfaces`。GTK popover 异步出现，因此若它没出现，先执行 `wait --menu` 再断定打开失败。基于 list 的 GTK4 下拉框属于窗口树的一部分，不是菜单表面。参见[表面](/desktop/surfaces)。
+
+## Chromium、Qt 与 Electron
+
+只有工具包在无障碍总线上注册之后，应用才会出现在 `list-apps` 中。
+
+<table>
+  <thead>
+    <tr><th>应用</th><th>需要</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>GTK3、GTK4</td><td>无。总线之前启动的应用永不注册：重启它</td></tr>
+    <tr><td>Qt</td><td>其环境中有 <code>QT_ACCESSIBILITY=1</code></td></tr>
+    <tr><td>Chromium 浏览器</td><td><code>--force-renderer-accessibility</code>；在没有设置守护进程的裸会话中，还要在 <code>launch</code> 上加 <code>--env ACCESSIBILITY_ENABLED=1</code></td></tr>
+    <tr><td>Electron</td><td>无需 flag。在 <code>chrome-sandbox</code> 未设置 setuid 的地方加 <code>--no-sandbox</code></td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop launch google-chrome --arg=--force-renderer-accessibility
+```
+
+想改用 agent-browser 驱动 web 内容，就用 `--cdp` 启动应用；参见[Chromium 与 Electron 应用](/desktop/guides/chromium-and-electron)。GTK 应用嵌套很深，带着无名 `group` 包装层，`-i --compact` 会留下它们；绕开它们去读，或者让骨架找到可下钻的目标。Electron 原生对话框不在 AT-SPI 树上。
+
+## 故障排查
+
+<table>
+  <thead>
+    <tr><th>症状</th><th>原因</th><th>解决办法</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>supported_surfaces</code> 为空，或关于 AT-SPI 总线的 <code>PLATFORM_NOT_SUPPORTED</code></td><td>会话总线或无障碍总线不可达</td><td>在桌面会话内运行；参见上面的四种原因</td></tr>
+    <tr><td><code>list-apps</code> 或 <code>snapshot</code> 返回 <code>ACTION_NOT_SUPPORTED</code>，报 “The native window type of accessibility frame owned by pid N could not be proven”</td><td>没有窗口管理器在运行，因此无法把窗口匹配到其 X11 客户端</td><td>在真实桌面会话内运行，或启动一个窗口管理器</td></tr>
+    <tr><td>应用在运行但 <code>--app</code> 找不到它</td><td>应用不在总线上，或名称不对</td><td>用 <code>list-apps</code> 的名称，并参见工具包表</td></tr>
+    <tr><td>窗口出现了但 <code>snapshot</code> 内容很少</td><td>内容尚未就绪</td><td>先 <code>wait --window</code>，再 <code>wait --text</code>，并调大 <code>--timeout-ms</code></td></tr>
+    <tr><td>限定范围的 <code>press</code> 报 <code>ACTION_FAILED</code>，原因为 <code>frame_not_active</code></td><td>目标窗口不活动，且不允许改变焦点</td><td>把窗口带到前台，或在允许改变焦点时传 <code>--headed</code></td></tr>
+    <tr><td><code>ACTION_FAILED</code>，原因为 <code>blocked_by_modal_dialog</code></td><td>模态对话框或 popover 挡住了窗口</td><td>用 <code>snapshot --surface</code> 读取它，回答或关闭</td></tr>
+    <tr><td><code>focus</code> 报 <code>ACTION_FAILED</code>，原因为 <code>grab_focus_rejected</code></td><td>GTK4 应用拒绝 <code>Component.GrabFocus</code></td><td>用 <code>focus-window</code> 聚焦它的窗口</td></tr>
+    <tr><td>对同一个 GTK4 按钮快速连续两次 <code>click</code> 只生效一次</td><td>GTK4 把间隔小于约 250 ms 的两次点击当成一次</td><td>在两次点击之间等待效果显现</td></tr>
+    <tr><td><code>--menu-closed</code> 立即返回</td><td>菜单从未打开过</td><td>先等待 <code>--menu</code></td></tr>
+    <tr><td><code>screenshot</code> 返回 <code>ACTION_FAILED</code> 且 <code>details.reason: "covered"</code></td><td>非合成窗口管理器无法截取被遮挡的窗口</td><td>用 <code>focus-window</code> 把它带上前台；在非合成窗口管理器上，用 <code>--screen 0</code> 截取整屏</td></tr>
+    <tr><td><code>INTERNAL</code>，报 “private file parent is accessible by group or other users”</td><td>状态根目录不是私有的</td><td>对该目录 <code>chmod 700</code></td></tr>
+  </tbody>
+</table>
+
+更多情形见 `agent-desktop skills get linux troubleshooting`。

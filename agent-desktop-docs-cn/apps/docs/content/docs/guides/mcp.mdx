@@ -1,0 +1,66 @@
+---
+title: Using agent-desktop over MCP
+navTitle: MCP
+description: 通过 stdio 把每条 agent-desktop 命令作为一个 MCP 工具暴露出来。工具如何映射到命令、全局 flag 如何生效,以及工具返回什么。
+---
+
+`agent-desktop mcp` 通过 stdio 运行一个 Model Context Protocol 服务器。每条命令都是一个工具，因此 MCP 客户端无需额外配置即可获得与 CLI 相同的表面积。
+
+## 连接客户端
+
+把服务器加进客户端的 MCP 配置：
+
+```json
+{
+  "mcpServers": {
+    "agent-desktop": { "command": "agent-desktop", "args": ["mcp"] }
+  }
+}
+```
+
+服务器同时说无状态的 `2026-07-28` 协议与 `2025-11-25` 及更早版本的 `initialize` 握手。
+
+## 工具如何映射到命令
+
+每个工具对应一条命令，命名规则是 `desktop_` 加上把连字符换成下划线的命令名。子命令同样拼接：
+
+| 命令 | 工具 |
+|---|---|
+| `snapshot` | `desktop_snapshot` |
+| `list-windows` | `desktop_list_windows` |
+| `session start` | `desktop_session_start` |
+| `skills get` | `desktop_skills_get` |
+
+工具的参数就是其命令的参数，连字符换成下划线：`snapshot --app Finder -i` 就是带 `{ "app": "Finder", "interactive_only": true }` 的 `desktop_snapshot`。位置参数同样用其名字，例如 `click` 的 `ref_id`。null 参数等同缺省。
+
+工具列表直接取自 CLI 自己的命令定义，因此永远与已安装的二进制匹配。
+
+## 全局 flag 一次生效
+
+给 `mcp` 的全局 flag 作用于每次调用：
+
+```bash
+agent-desktop mcp --session s1 --headed
+```
+
+服务器环境里的 `AGENT_DESKTOP_SESSION`、`AGENT_DESKTOP_AGENT_ID` 与 `AGENT_DESKTOP_HOME` 也以同样方式生效。
+
+工具不能传全局 flag。需要会话的命令（如 `trace` 与 `cursor-overlay`）只在服务器拥有会话时可用，仅限有头的命令需要 `mcp --headed`，而 `--wait-for` 无法按调用传入。
+
+## 读取结果
+
+工具把命令的 JSON 信封作为 `structuredContent` 返回，并以文本形式返回同一份 JSON。信封 `ok` 为 `false` 时 `isError` 为 `true`，因此读取 `error.code` 与 `error.disposition` 的方式与 CLI 完全一致。不带输出路径的 `screenshot` 会把 PNG 作为图像块返回，而不是 base64 文本。
+
+未知参数返回一个工具错误，其中列出可接受的参数；类型错误的值返回一个指明该参数名的错误，模型据此可修正调用。
+
+## 从技能入手
+
+调用 `desktop_skills_get`，带 `{ "name": "desktop" }` 拿观察—操作循环，带 `{ "name": "platform" }` 拿你操作系统上的差异。服务器的 instructions 也把客户端指向这里。
+
+## 安全性
+
+服务器没有添加任何 CLI 本来做不到的事。工具参数不带 shell 地变成 CLI 参数。值永远作为值传递，绝不当成 flag。工具不能设置 `--session` 或 `--headed` 之类的全局 flag；只有服务器自己的命令行能。
+
+工具仍然拥有 CLI 的完整触及范围：它能操作无障碍树暴露的任何应用，且 `desktop_launch` 能用任意参数启动 `PATH` 上的任何程序。把这台服务器当作已登录用户的一个 shell 对待。保持客户端对操作的确认开启，并记住从屏幕读到的文本是喂给模型的不可信输入。
+
+服务器最多同时跑 8 个工具调用，更多的请求以工具错误回应。消息超过 4 MiB 一律拒绝。`notifications/cancelled` 会停掉调用且不给响应。尚未开始的调用永远不再开始。运行中的调用先收到 `SIGTERM`，好让它释放按住的任何按键或按钮，若 3 秒后仍在运行则被杀掉；在 Windows 上是立即杀掉。

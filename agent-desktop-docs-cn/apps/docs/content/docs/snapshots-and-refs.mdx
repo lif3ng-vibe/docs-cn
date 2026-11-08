@@ -1,0 +1,205 @@
+---
+title: 快照与引用
+navTitle: 快照与引用
+description: 快照里有什么、引用（ref）如何分配与存储，以及一个引用如何解析回活动元素或走向过期。
+---
+
+快照是对应用无障碍树的一次观察。窗口拥有的表面（surface）读取一个窗口；macOS 的 `menu` 与 `menubar` 表面属于应用本身，不需要文档窗口。agent-desktop 连同引用映射一起保存这次观察，并给每个可操作元素一个引用（ref），供后续命令使用。
+
+```bash
+agent-desktop snapshot --app gnome-calculator -i --compact
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gnome-calculator",
+    "complete": true,
+    "ref_count": 40,
+    "snapshot_id": "s26u7pv9qta5g4",
+    "window": {
+      "id": "w-1.11-org-gnome-Calculator-a11y-948fd89a_9bda_453b_9c10_4a9e9eed3feb",
+      "title": "Calculator"
+    },
+    "tree": {
+      "role": "window",
+      "name": "Calculator",
+      "native_id": { "kind": "ax_identifier", "value": "MathWindow" },
+      "children": [
+        {
+          "available_actions": ["Click", "SetFocus"],
+          "description": "Clear Display [Escape]",
+          "name": "C",
+          "native_id": { "kind": "ax_identifier", "value": "calc_clear_button" },
+          "ref_id": "@s26u7pv9qta5g4:e6",
+          "role": "button"
+        }
+      ]
+    }
+  }
+}
+```
+
+上面的树裁剪到只剩一个按钮。真实的树把它嵌套在多个未命名 `group` 节点之下。
+
+## 快照里有什么
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>data.app</code>, <code>data.window</code></td><td>应用,以及（在窗口拥有的观察里）被读取的窗口（<code>id</code>、<code>title</code>）。macOS 上应用拥有的菜单表面,以及没有窗口的后台应用的进程级快照,会省略 <code>data.window</code>。</td></tr>
+    <tr><td><code>data.snapshot_id</code></td><td>已保存快照的 id。它是每个引用的组成部分。</td></tr>
+    <tr><td><code>data.ref_count</code></td><td>快照持有的引用数量。一次 <code>--root</code> 下钻之后统计的是整个快照,而不只是下钻区域。</td></tr>
+    <tr><td><code>data.complete</code></td><td>每个快照都有。<code>false</code> 表示观察超出了预算。见<a href="/desktop/skeleton-and-drill-down#partial-observations">部分观察</a>。</td></tr>
+    <tr><td><code>data.truncated</code>, <code>data.nodes_observed</code></td><td>仅当 <code>complete</code> 为 <code>false</code> 时出现。</td></tr>
+    <tr><td><code>data.identity_unproven</code></td><td>仅当快照需要完整读取一遍窗口来证明其引用、而这次读取失败或被截断时,才会出现且为 <code>true</code>。树仍然是所呈现的那棵,但在 Windows 和 Linux 上,以及 macOS 上无可寻址元素的情形,这些引用会以 <code>identity_not_unique</code> 失败。用更大的 <code>--timeout-ms</code> 重拍快照。</td></tr>
+    <tr><td><code>data.tree</code></td><td>根节点。每个节点嵌套自己的 <code>children</code>。</td></tr>
+  </tbody>
+</table>
+
+节点始终带 `role`，并在存在时带 `ref_id`、`name`、`value`、`description`、`native_id`、`states`、`available_actions`、`children_count`、`subtree_truncated` 和 `children`。空字段被省略。`bounds` 只在 `--include-bounds` 时出现：
+
+```json
+{
+  "available_actions": ["Click", "SetFocus"],
+  "bounds": { "height": 44.0, "width": 64.0, "x": 554.0, "y": 555.0 },
+  "name": "7",
+  "native_id": { "kind": "ax_identifier", "value": "calc_7_button" },
+  "ref_id": "@s2jqig9fk9u6gz:e9",
+  "role": "button"
+}
+```
+
+`children_count` 与 `subtree_truncated` 标记树被裁断的位置；[骨架与下钻](/desktop/skeleton-and-drill-down)专门解释这两者。有三个 flag 能缩小树，完整 flag 清单见[命令参考](/desktop/commands/observation#snapshot)：
+
+- `-i`（`--interactive-only`）丢弃没有引用的叶子。保留通向引用的节点，以及标了 `children_count` 的节点。静态文本没有引用，因此一行的标签会被丢弃：要看清重复按钮属于哪一行，用 `--root` 下钻该行的容器并去掉 `-i`。
+- `--compact` 折叠没有名称、值、描述、id、状态或动作的单子节点包装层。
+- `--max-depth` 限制深度。默认 10，最大 50。
+
+## 选择窗口
+
+对窗口拥有的表面，`snapshot` 和 `find` 读取一个窗口。不带 `--app` 时使用焦点所在窗口，`WINDOW_NOT_FOUND` 表示没有。带 `--app` 且不带 `--window-id` 时，agent-desktop 按下面的顺序收窄该应用的窗口，在恰好剩一个的那一步停下：
+
+1. 应用只有一个窗口就用它。
+2. 只保留可见窗口。
+3. 只保留有焦点的窗口。
+4. 只保留可访问的窗口。
+
+若仍剩多个窗口，命令以 `AMBIGUOUS_TARGET` 失败，`details.candidates` 列出其中最多 10 个。运行 `list-windows --app <name>` 并传 `--window-id`。
+
+在 macOS 上，`menu` 与 `menubar` 表面是应用拥有的，没有文档窗口也能观察。如果传了 `--window-id`，它用来选择拥有该表面的应用；返回的快照仍是应用拥有的，并省略 `data.window`。
+
+## 引用（refs）
+
+引用是一个内含快照 id 的元素 id：
+
+```text
+@<snapshot_id>:eN        # 例如 @s26u7pv9qta5g4:e6
+```
+
+每条命令只接受这个带快照限定的形式。光秃的 `@e6` 以 `INVALID_ARGS` 失败；`@eN` 只是已保存引用映射内部的键，agent-desktop 从不把它打印到输出里。因为每个引用都写着自己的快照，就算你依次读几个应用或窗口，它也始终指向自己的那份快照。
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "click",
+  "error": {
+    "code": "INVALID_ARGS",
+    "message": "Invalid ref_id '@e1': expected @<snapshot_id>:e<N>",
+    "suggestion": "Use the snapshot-qualified ref that snapshot prints, for example @s8f3k2p9:e1. A bare @eN ref is not accepted.",
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+### 哪些元素会拿到引用
+
+引用按文档顺序深度优先分配，从 `e1` 向上递增，因此父节点先于子节点拿到编号。计数器属于快照，后续下钻继续用同一个计数器而不是重新编号。
+
+只要满足任一条件，元素就拿到引用：
+
+- 它的角色是可交互的：`button`、`cell`、`checkbox`、`colorwell`、`combobox`、`dockitem`、`incrementor`、`link`、`listbox`、`menubutton`、`menuitem`、`option`、`radiobutton`、`slider`、`switch`、`tab`、`textfield` 或 `treeitem`。
+- 它宣传了一个主操作。`scrollarea`（Scroll）和 `disclosure`（Expand 与 Collapse）就是因此入选的，因为 `scroll`、`expand`、`collapse` 需要引用作为目标。在上面的例子里，计算器的历史面板就是一个带引用的 `scrollarea`。
+
+`SetFocus`、`RightClick` 和 `ScrollTo` 单独出现不算数。web 运行时几乎在每个节点上都宣传它们，若计入它们，每个惰性容器都会有引用，撑爆[引用映射的大小上限](#引用存在哪里)。静态文本与惰性容器留在树上但没有引用。`find` 以 `"ref_id": null` 的上下文匹配返回它们。
+
+被骨架裁断的容器也可以拿到引用作为下钻目标。见[找到下钻目标](/desktop/skeleton-and-drill-down#找到下钻目标)。
+
+## 引用存储了什么
+
+每个引用映射到一个 `RefEntry`：再次找到同一元素所需的证据。引用映射存的是证据，不是活动对象。
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>字段</th><th>用途</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Process</td><td><code>pid</code>, <code>process_instance</code></td><td>拒绝进程已退出或 pid 被复用的引用。</td></tr>
+    <tr><td>Identity</td><td><code>retained_object</code>, <code>role</code>, <code>name</code>, <code>value</code>, <code>description</code>, <code>native_id</code>, <code>unique_at_capture</code></td><td>重新识别元素。<code>retained_object</code> 是元素自身的无障碍地址,在 macOS 上记录。<code>unique_at_capture</code> 记录该条目在其快照捕获的整个窗口里,是否是唯一拥有这一角色与这些稳定字段的元素。骨架、限深度或下钻式捕获都计入整个窗口,因此浅层呈现与完整呈现证明的是同一件事。对 <code>textfield</code>、<code>checkbox</code>、<code>slider</code> 这类值会随使用变化的角色,控件的 <code>value</code> 永远不算身份项。</td></tr>
+    <tr><td>Geometry</td><td><code>bounds</code>, <code>bounds_hash</code>, <code>bounds_space</code></td><td>不是身份项。<code>get --property bounds</code> 在活动读取不可用时回落到它们;重新识别从不比较它们。</td></tr>
+    <tr><td>Capabilities</td><td><code>states</code>, <code>available_actions</code></td><td>元素在快照时刻提供的能力。</td></tr>
+    <tr><td>Source</td><td><code>source_app</code>, <code>source_window_id</code>, <code>source_window_title</code>, <code>source_window_bounds_hash</code>, <code>source_surface</code></td><td>把引用绑定到其窗口与表面。</td></tr>
+    <tr><td>Scope</td><td><code>path</code>, <code>root_ref</code>, <code>path_is_absolute</code></td><td>元素在捕获时刻的子索引位置,以及是哪次下钻创建了该引用。</td></tr>
+  </tbody>
+</table>
+
+## 引用如何解析
+
+任何命令都不会复用快照里的活动句柄。每条接受引用的命令，包括 `click`、`get`、`is`、`snapshot --root` 与 `find --root`，都先用存储的证据重新识别元素。
+
+<Diagram name="ref-resolution" title="引用如何解析,以及何时过期" aspectRatio="720 / 650" />
+
+1. 命令把 `@s26u7pv9qta5g4:e6` 解析成快照 id 和键 `@e6`。光秃或畸形的引用以 `INVALID_ARGS` 失败。
+2. `RefStore` 从所选会话的命名空间加载 `snapshots/s26u7pv9qta5g4/refmap.json`。找不到快照以 `SNAPSHOT_NOT_FOUND` 失败。
+3. 引用映射查找 `@e6` 并返回其 `RefEntry`。键不存在以 `STALE_REF` 失败。
+4. 如果条目携带元素自身地址，`resolve_element_strict` 会把这个地址还原成那个确切的元素。若元素还活着且其进程、角色与记录的 id 仍然匹配，命令直接作用于它。否则该引用为 `STALE_REF`，`details.kind: retained_object_stale`。不做任何搜索，引用绝不会落在相似元素上。
+5. 如果条目没有地址，就由 `unique_at_capture` 决定。捕获时不唯一的引用在任何活动读取之前就以 `AMBIGUOUS_TARGET` 失败，`details.kind: identity_not_unique`。
+6. 捕获时唯一的引用，会在活动窗口上按角色、native id、名称与描述重新计数。计数覆盖整个窗口——这正是捕获时证明引用唯一的范围。恰好一个匹配：命令作用于它。零个：`STALE_REF`，`details.kind: saved_ref_absent`。两个及以上：`AMBIGUOUS_TARGET`，`details.kind: saved_ref_ambiguous`。某个字段活动读取答不上来则计数不可证，此时返回 `TIMEOUT` 且 `details.kind: resolution_identity_unknown`，而不是给出匹配。
+7. 碰到 `STALE_REF` 或 `AMBIGUOUS_TARGET` 后，取一次全新的观察并改用新引用。
+
+在 macOS 上，引用携带元素自身地址，因此同貌双元各自保有自己的引用。当拿不到地址时，macOS 遵循下方规则。Windows 与 Linux 的引用不携带地址，因此捕获时若不是唯一匹配其角色与稳定字段的元素，该引用会被拒绝。
+
+比对的只有身份字段，别的什么都不算：角色、native id、名称与描述。控件值是易变的，永远不计；bounds 也永远不计，因此存储的矩形或路径无法在两个候选之间做选择。通不过这些检查的引用会被拒绝，而不是被猜测。
+
+<table>
+  <thead>
+    <tr><th>错误</th><th>含义</th><th>怎么办</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>STALE_REF</code></td><td>该键不在快照的引用映射里,没有活动元素匹配存储的身份（<code>details.kind: saved_ref_absent</code>）,或者引用所指元素已消失（<code>retained_object_stale</code>）。UI 变了、窗口关了,或者一次重新下钻替换了引用。</td><td>重新拍快照,或重新下钻该区域,然后使用新引用。没有任何东西被发送给应用。</td></tr>
+    <tr><td><code>AMBIGUOUS_TARGET</code></td><td>两个活动元素匹配存储的身份（<code>saved_ref_ambiguous</code>）,引用在捕获时未被证明唯一（<code>identity_not_unique</code>）,或多个窗口匹配同一个 <code>--app</code>。</td><td>多个窗口时,指明窗口。捕获时未证明唯一的引用,来自同貌双元,或来自一个在快照超时内无法整窗读出的窗口;只有后者能靠新快照（更大的 <code>--timeout-ms</code>）修复。macOS 之外,同貌双元根本无法用引用区分,且每次快照都会再次拒绝它们:只有显式坐标点击 <code>agent-desktop --headed mouse-click --xy X,Y</code> 能二选一。它会抢前台,且在 Linux Wayland 会话上不可用。</td></tr>
+    <tr><td><code>SNAPSHOT_NOT_FOUND</code></td><td>没有已保存快照拥有该 id:它被修剪了、属于另一个<a href="/desktop/sessions">会话</a>,或者 state root 不同。</td><td>在与使用该引用的命令相同的 <code>--session</code> 与 state root 下,重新拍一个快照。</td></tr>
+  </tbody>
+</table>
+
+重新下钻后的完整 `STALE_REF` 信封见[骨架与下钻](/desktop/skeleton-and-drill-down#变化后重新下钻)，每个错误码及其重试规则见[错误与恢复](/desktop/errors-and-recovery)。
+
+## UI 变化后重新读取
+
+引用只描述一次观察。凡是可能改变树的操作之后都要重新读取，并且只用最近一次区域读取得到的引用：
+
+- `snapshot` 返回新的快照 id 与新的引用映射。
+- `find` 有匹配结果时也会保存一份新快照，其 `data.snapshot_id` 限定它返回的引用。
+- `snapshot --root` 在既有快照内重新读取一个区域。见[骨架与下钻](/desktop/skeleton-and-drill-down#变化后重新下钻)。
+
+旧快照在被修剪之前留在磁盘上，其中元素仍匹配的引用还能继续解析。不要依赖这一点：UI 变化之后，旧引用可能失败，也可能匹配上一个不再是你所指的元素。
+
+## 引用存在哪里
+
+`RefStore` 在 [state root](/desktop/configuration#state-root) 下按 `snapshots/<snapshot_id>/refmap.json` 为每个快照保存一个文件。在[会话](/desktop/sessions)内，同样的布局位于 `sessions/<session_id>/` 之下，且查找永不搜索其他会话的快照。
+
+<table>
+  <thead>
+    <tr><th>限制</th><th>数值</th><th>后果</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>单个引用映射大小</td><td>1 MB（1,048,576 字节）</td><td>写入以 <code>INTERNAL</code> 失败。用 <code>--skeleton</code>、<code>--max-depth</code>、<code>--root</code> 或更窄的 <code>find</code> 收紧观察范围。</td></tr>
+    <tr><td>每命名空间可保存快照数</td><td>128</td><td>一次保存把数量推过 128 时,删掉最老的直到剩 96 个。刚写入的快照永远不会被删。</td></tr>
+  </tbody>
+</table>

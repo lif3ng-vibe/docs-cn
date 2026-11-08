@@ -1,0 +1,61 @@
+---
+title: 滚动命令
+navTitle: 滚动
+description: scroll 与 scroll-to 的参考文档，用来移动滚动区域或把元素滚动进可视区域。
+---
+
+这两条命令都对限定引用操作，并共享交互命令的[结果形态](/desktop/commands/interaction#结果形态)、[等待预算](/desktop/commands/interaction#等待预算)与[共有错误](/desktop/commands/interaction#引用命令共有的错误)。`scrollarea` 元素会获得引用，以便 `scroll` 能定位它们。
+
+## scroll
+
+把一个滚动区域沿某一方向滚动若干单位。
+
+```bash
+agent-desktop scroll <REF> [--direction up|down|left|right] [--amount N] [--timeout-ms MS]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>REF</code></td><td>必填</td><td>滚动区域的限定引用。</td></tr>
+    <tr><td><code>--direction</code></td><td><code>down</code></td><td><code>up</code>、<code>down</code>、<code>left</code> 或 <code>right</code>。</td></tr>
+    <tr><td><code>--amount N</code></td><td><code>3</code></td><td>滚动单位数。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>等待预算。</td></tr>
+  </tbody>
+</table>
+
+macOS 和 Windows 上 `scroll` 无头时走原生无障碍路径。在 Linux 上，`scroll` 是物理滚轮事件，因此无头时在发送任何东西之前即被拒绝：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "scroll",
+  "error": {
+    "code": "POLICY_DENIED",
+    "message": "Physical pointer input is disabled by the current interaction policy",
+    "recovery": {
+      "strategy": "request_explicit_policy_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": false
+    },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+已投递的滚动通常为 `delivered_unverified`。在对原本离屏的元素操作之前，先取一份新的快照，因为滚动会改变位置，一次重复的滚动会把视图再次移动。对没有滚动操作的画布或自定义表面，用 [`mouse-wheel`](/desktop/commands/mouse#mouse-wheel)。
+
+平台限制：Linux 需要 `--headed` 与 X11。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。
+
+## scroll-to
+
+把元素带入可视区域。成功意味着重读时发现该元素可见。
+
+```bash
+agent-desktop scroll-to <REF> [--timeout-ms MS]
+```
+
+大多数引用操作本来会先把目标滚动进可视区域，因此主要在读取元素或操作其相邻元素之前想让它露出来时才需要 `scroll-to`。没有引用的元素无法被定位：用 `scroll` 滚动它的容器。当元素的边界无法读取时，可见性检查永远不会通过，命令以 `TIMEOUT` 结束（`details.kind: "actionability_timeout"`，`stable` 检查读到 `live bounds unavailable`）。在 Windows 上，没有可滚动祖先的元素报 `ACTION_FAILED` 并带 `details.kind: "scroll_into_view_unsupported"`。

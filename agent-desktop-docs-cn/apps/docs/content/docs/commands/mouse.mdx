@@ -1,0 +1,190 @@
+---
+title: 鼠标命令
+navTitle: 鼠标
+description: hover、drag、mouse-move、mouse-click、mouse-down、mouse-up 与 mouse-wheel 的参考文档。移动光标需要 --headed，按住按钮类命令按 fail closed 拒绝。
+---
+
+每条鼠标命令都会移动真实光标，因此每条都需要全局 `--headed` flag。不加它时命令返回 `POLICY_DENIED`，处置为 `not_delivered`，什么都不发送：
+
+```json
+{
+  "code": "POLICY_DENIED",
+  "message": "hover moves the cursor and is disabled in headless mode",
+  "recovery": { "strategy": "request_explicit_policy_then_retry_original", "retryable": true, "requires_fresh_snapshot": false },
+  "disposition": { "delivery": "not_delivered", "retry": "safe" }
+}
+```
+
+加这个 flag 之前请先读[有头模式](/desktop/guides/headed-mode)。坐标为绝对屏幕点，写作 `x,y`；负值用 `=` 书写，以免 shell 把它当成 flag（`--xy=-100,50`）。原始坐标不带窗口标识，也绝不聚焦应用；引用目标会先精确聚焦所属窗口。指针命令返回以 `pointer` 为目标的 [OperationReport](/desktop/json-output#operationreport)。示例为 Linux X11 的真实输出。
+
+## hover
+
+把光标移到元素中心或某个点上。
+
+```bash
+agent-desktop --headed hover @s8f3k2p9:e5
+agent-desktop --headed hover --xy 640,400
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>REF</code></td><td>无</td><td>限定引用。优先于 <code>--xy</code>。</td></tr>
+    <tr><td><code>--xy X,Y</code></td><td>无</td><td>绝对坐标。<code>REF</code> 与 <code>--xy</code> 二者必选其一。</td></tr>
+    <tr><td><code>--duration MS</code></td><td>无</td><td>保留。正值会被拒绝；先执行 <code>hover</code>，再执行 <code>wait MS</code>。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>引用解析并变为可操作的预算。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "hover",
+  "data": {
+    "action": "mouse-move",
+    "details": { "delivered_events": 1 },
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "pointer_move", "mechanism": "physical_synthetic", "outcome": "succeeded" }],
+    "target": { "kind": "pointer", "point": { "x": 640.0, "y": 400.0 } },
+    "x": 640.0,
+    "y": 400.0
+  }
+}
+```
+
+对引用操作，光标在通过可见性、稳定性与命中测试检查后移到实时边界的中心。macOS 上会回读位置，结果为 `delivered_verified`。错误：`INVALID_ARGS` 对应缺少目标或坐标非法；Linux Wayland 上报 `ACTION_NOT_SUPPORTED`，原因为 `wayland_session`；`ACTION_FAILED` 表示另一个元素遮挡了目标；引用错误 `STALE_REF`、`AMBIGUOUS_TARGET` 与 `SNAPSHOT_NOT_FOUND`。
+
+## drag
+
+在一点按下，移动到另一点，再释放。
+
+```bash
+agent-desktop --headed drag --from @s8f3k2p9:e1 --to @s8f3k2p9:e5
+agent-desktop --headed drag --from-xy 100,200 --to-xy 400,500 --drop-delay 800
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--from REF</code>、<code>--from-xy X,Y</code></td><td>必填，二选一</td><td>起点元素或点。</td></tr>
+    <tr><td><code>--to REF</code>、<code>--to-xy X,Y</code></td><td>必填，二选一</td><td>终点元素或点。两种形式可以混用。</td></tr>
+    <tr><td><code>--duration MS</code></td><td>平台默认</td><td>移动时长，最多 60000。</td></tr>
+    <tr><td><code>--drop-delay MS</code></td><td><code>500</code>（Linux 上 <code>150</code>）</td><td>在终点上方悬停的时间，让放置目标被激活。最多 10000。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>整个手势的预算。<code>--duration</code> 加 <code>--drop-delay</code> 必须小于它。</td></tr>
+    <tr><td><code>--wait-for-scope to|from</code></td><td><code>to</code></td><td>操作后的 <code>--wait-for</code> 轮询哪个端点的窗口。</td></tr>
+  </tbody>
+</table>
+
+目标应用绝不会先被聚焦，因为把它带到前台可能挡住源端。报告描述的是这个手势（`target.kind: "drag"` 带 `from` 和 `to`），而不是它的结果，因此用新的快照验证被移动的条目。原生跨应用拖放可能忽略合成事件。错误：`INVALID_ARGS` 对应缺少端点或时长与 `--timeout-ms` 不匹配，`TIMEOUT` 表示准备阶段耗尽了预算，以及 [`hover`](#hover) 中列出的那些错误。
+
+## mouse-move
+
+把光标移到绝对坐标。
+
+```bash
+agent-desktop --headed mouse-move --xy 700,450
+```
+
+报告与 [`hover`](#hover) 的示例相同。macOS 上会回读位置（`details.verification_scope: "pointer_position"`）。
+
+## mouse-click
+
+在绝对坐标处点击。
+
+```bash
+agent-desktop --headed mouse-click --xy 500,300 [--button left|right|middle] [--count N] [--modifiers NAME]...
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--xy X,Y</code></td><td>必填</td><td>绝对坐标。</td></tr>
+    <tr><td><code>--button</code></td><td><code>left</code></td><td><code>left</code>、<code>right</code> 或 <code>middle</code>。</td></tr>
+    <tr><td><code>--count N</code></td><td><code>1</code></td><td>点击次数，1 到 100。双击用 2，三击用 3。</td></tr>
+    <tr><td><code>--modifiers NAME</code></td><td>无</td><td>点击期间按住的修饰键：<code>shift</code>、<code>meta</code>、<code>ctrl</code>、<code>alt</code>。多个修饰键就重复该 flag。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "mouse-click",
+  "data": {
+    "action": "mouse-click",
+    "count": 1,
+    "details": { "delivered_events": 3 },
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "pointer_click", "mechanism": "physical_synthetic", "outcome": "succeeded" }],
+    "target": { "kind": "pointer", "point": { "x": 1300.0, "y": 880.0 } },
+    "x": 1300.0,
+    "y": 880.0
+  }
+}
+```
+
+`target.point` 是点击的派发位置；它不能证明哪个应用接收到了。在用从快照读到的边界点击之前，先检查 `get --property bounds` 及其 `live` 标志。
+
+## mouse-down
+
+按下并按住一个按钮的保留名。它从不发送输入。
+
+```bash
+agent-desktop --headed mouse-down --xy 500,300 [--button NAME] [--modifiers NAME]...
+```
+
+第一个失败的检查决定错误：参数非法是 `INVALID_ARGS`；无头是 `POLICY_DENIED`（`not_delivered`）；Linux Wayland 是 `ACTION_NOT_SUPPORTED`，原因为 `wayland_session`；其他情况下，即使加 `--headed` 也以 `ACTION_NOT_SUPPORTED` 结束（`mouse-down is unavailable in stateless mode`），处置为 `unknown`，未发送任何事件。请用 [`mouse-click`](#mouse-click) 或 [`drag`](#drag)。
+
+## mouse-up
+
+释放按住按钮的保留名。它通过与 [`mouse-down`](#mouse-down) 相同的检查按 fail closed 拒绝。
+
+```bash
+agent-desktop --headed mouse-up --xy 500,300
+```
+
+## mouse-wheel
+
+在绝对坐标处滚动鼠标滚轮。用于没有无障碍滚动操作的画布和自定义表面；对有引用的滚动区域，用 [`scroll`](/desktop/commands/scroll#scroll)。
+
+```bash
+agent-desktop --headed mouse-wheel --x 700 --y 400 --dy -2
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--x X</code>、<code>--y Y</code></td><td>必填</td><td>绝对坐标。</td></tr>
+    <tr><td><code>--dy LINES</code></td><td><code>--dx</code> 为 0 时为 <code>-3</code>，否则 0</td><td>垂直行数。正值向上滚，负值向下滚。</td></tr>
+    <tr><td><code>--dx LINES</code></td><td><code>0</code></td><td>水平行数。正值向右滚。</td></tr>
+    <tr><td><code>--modifiers NAME</code></td><td>无</td><td>滚动期间按住的修饰键；可重复。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "mouse-wheel",
+  "data": {
+    "action": "mouse-wheel",
+    "details": { "delivered_events": 5 },
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "dx": 0.0,
+    "dy": -2.0,
+    "steps": [{ "label": "pointer_wheel", "mechanism": "physical_synthetic", "outcome": "succeeded" }],
+    "target": { "kind": "pointer", "point": { "x": 700.0, "y": 400.0 } }
+  }
+}
+```
+
+全部鼠标命令的平台限制：Linux 需要 X11。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。

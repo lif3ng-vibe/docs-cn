@@ -1,0 +1,90 @@
+---
+title: 有头模式
+navTitle: 有头模式
+description: 无头引用操作默认做什么、--headed flag 授权什么、哪些命令需要它,以及如何不靠条件反射切模式来处理 POLICY_DENIED。
+---
+
+agent-desktop 默认以无头方式运行引用操作。全局 `--headed` flag 是一项使用物理输入的许可：拿焦点、移动真实光标、合成按键与指针事件。
+
+## 无头操作做什么
+
+无头引用操作调用应用的无障碍动作。它不拿焦点、不动光标、不合成按键、不碰剪贴板，因此在有人正在使用桌面时运行也是安全的。当无障碍 API 做不了你请求的事，该操作以结构化错误失败收场，例如 `ACTION_NOT_SUPPORTED` 或 `POLICY_DENIED`。它从不静默切换到物理输入。
+
+结果会显示哪条机制在跑：在 `data.steps` 里，`semantic_api` 是一次无障碍调用，`physical_synthetic` 是合成输入。
+
+## --headed 授权什么
+
+`--headed` 授权操作所声明的焦点与光标副作用：
+
+- 对引用而言，core 在有头指针输入前先聚焦确切源窗口，并在投递前验证目标点。进程拥有的引用没有窗口可聚焦，但物理输入仍然需要一个经验证的点。
+- 在 macOS 上，点击原生菜单栏条目走 `AXPress`；它无头可用，并且在 `--headed` 下也不移动指针。当目标提供 `AXShowMenu` 时，无头 `right-click` 可以用它。- 原始坐标（`--xy`）不携带窗口身份，因此从不聚焦任何东西。
+- 它适用于 [batch](/desktop/guides/batch) 的每一条条目。
+- 它是许可物理输入，不是强制。每个平台按操作自行决定走物理还是语义路径，而 `check`、`set-value` 与 `expand` 在任何平台上即使 `--headed` 也保持语义路径。
+- 它不解除其他防护。被拦截的按键组合仍需 `--force`，无法投递物理输入的平台（例如 Wayland 上的指针输入）仍然拒绝。
+
+```bash
+agent-desktop --headed double-click @s8f3k2p9:e3    # 一个物理手势
+```
+
+物理输入得不到操作系统的确认，因此物理结果通常是 `delivered_unverified`。用一次读取确认效果，如同[观察—操作—验证循环](/desktop/guides/observe-act-verify)那样。
+
+## 哪些命令需要 --headed
+
+所有平台：`triple-click`、`hover`、`drag`、`mouse-move`、`mouse-click` 与 `mouse-wheel`。`double-click` 也要，macOS 上元素提供 `AXOpen` 时除外。`key-down`、`key-up`、`mouse-down` 与 `mouse-up` 在两种模式下都不投递输入；见[键盘](/desktop/commands/keyboard#key-down)与[鼠标](/desktop/commands/mouse#mouse-down)参考。
+
+取决于操作系统：
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>macOS</th><th>Windows</th><th>Linux</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>right-click</code></td><td>无头</td><td><code>--headed</code></td><td>无头,元素有上下文菜单动作时</td></tr>
+    <tr><td><code>type</code></td><td>无头</td><td><code>--headed</code></td><td>无头,打入终端文本节点除外</td></tr>
+    <tr><td><code>focus</code></td><td>无头</td><td><code>--headed</code></td><td><code>--headed</code></td></tr>
+    <tr><td><code>scroll</code></td><td>无头</td><td>无头</td><td><code>--headed</code>,仅 X11</td></tr>
+    <tr><td>列出通知</td><td>表面打开期间无头</td><td>表面打开期间无头</td><td>无头</td></tr>
+    <tr><td>通知变更操作</td><td><code>--headed</code></td><td><code>--headed</code></td><td><code>--headed</code>,仅 X11</td></tr>
+    <tr><td><code>open-system-surface</code></td><td>无头</td><td><code>--headed</code></td><td><code>--headed</code></td></tr>
+  </tbody>
+</table>
+
+`press` 是键盘输入，不带对象的按键不需要 `--headed`；带对象的按键有平台规则。各平台页有完整能力表：[macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows)、[Linux](/desktop/platforms/linux)。
+
+## 处理 POLICY_DENIED
+
+`POLICY_DENIED` 表示交互策略拦截了一条物理或焦点路径。什么都没被投递，因此处置是 `not_delivered`。这是不带 `--headed` 的 `hover`：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "hover",
+  "error": {
+    "code": "POLICY_DENIED",
+    "message": "hover moves the cursor and is disabled in headless mode",
+    "recovery": {
+      "strategy": "request_explicit_policy_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": false
+    },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+重试之前先向用户取得一个显式决定。有些 `POLICY_DENIED` 错误需要的不是 `--headed`：被拦截的按键组合需要 `--force`，而 `error.details.checks` 里 `supported_action` 检查失败意味着元素不提供该动作的任何途径。
+
+<Callout title="不要为了从失败中恢复而切到有头模式">
+  只有当任务确实需要物理输入且用户允许时才用 `--headed`。不要在无头操作失败之后再补上它。
+</Callout>
+
+无头失败通常意味着语义路径缺失或 UI 变了。有头重试会移动用户的光标或抢焦点来绕过它，而且如果第一次尝试可能已投递，重试会执行两次。应该这样：
+
+1. 读 `error.code`、`error.disposition` 与 `error.details`。
+2. 修原因：重新拍快照、跑 `wait --element REF --predicate actionable`，或改用语义命令（`type` 换成 `set-value`，`click` 换成 `check`）。
+3. 若该步骤本质上是物理的（例如 drag 或 hover）且用户允许，起初就用 `--headed` 跑这一步。
+
+## 看清操作落在哪里
+
+智能体光标覆盖层在每个操作落地处画出光标、涟漪与元素高亮。它只是呈现，从不改变操作行为。每个会话启用一次：`session start --cursor` 或 `cursor-overlay enable`；有头命令在派发真实输入时会暂时隐藏它。见 [`cursor-overlay`](/desktop/commands/system#cursor-overlay)。

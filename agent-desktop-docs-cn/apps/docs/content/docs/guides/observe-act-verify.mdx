@@ -1,0 +1,84 @@
+---
+title: 观察—操作—验证循环
+navTitle: 观察—操作—验证
+description: 对一个桌面应用运行观察—操作—验证（observe, act, verify）循环。选取最小观察、对带限定的引用执行操作,并通过再次读取应用来确认效果。
+---
+
+循环不是 agent-desktop 在跑，而是你的智能体在跑，一次一条命令。`ok: true` 不代表操作生效，所以每一步都以一次读取收尾。
+
+第一步之前先跑 `agent-desktop status`。如果缺权限或 `supported_surfaces` 为空，先用你所在操作系统的页面修好它：[macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 或 [Linux](/desktop/platforms/linux)。
+
+## 观察
+
+读取包含你目标的最小 UI 部分。更大的读取耗时耗 token，其引用也过期得更快。
+
+<table>
+  <thead>
+    <tr><th>你知道什么</th><th>运行什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>知道元素的角色和确切名称</td><td><code>find --app APP --role button --name Save --exact --first</code></td></tr>
+    <tr><td>什么都不知道,但应用很小</td><td><code>snapshot --app APP -i --compact</code></td></tr>
+    <tr><td>什么都不知道,且应用密集（Electron,或可交互元素超过约 50 个）</td><td>先 <code>snapshot --skeleton</code>,再对一个区域 <code>snapshot --root REF</code></td></tr>
+    <tr><td>菜单、弹层、警告框或弹出框已打开</td><td><code>snapshot --surface KIND</code>,永远不要带 <code>--skeleton</code></td></tr>
+  </tbody>
+</table>
+
+[骨架与下钻](/desktop/skeleton-and-drill-down)解释密集应用那一行，[表面](/desktop/surfaces)解释最后一行。每个引用都要与打印出的完全一致，任何 UI 变化之后重读该区域；见[快照与引用](/desktop/snapshots-and-refs)。
+
+## 操作
+
+运行匹配你意图的命令：
+
+```bash
+agent-desktop click @s8f3k2p9:e12              # 激活一个控件
+agent-desktop set-value @s8f3k2p9:e3 "hello"   # 替换字段的值
+agent-desktop check @s8f3k2p9:e6               # 幂等,与 toggle 不同
+```
+
+优先用语义化、幂等的命令：`set-value` 而非 `type`，`check` 和 `uncheck` 而非 `toggle`，组合框用 `select`。它们在无头下运行、重读元素，并在元素已处于请求状态时报告 `not_delivered`。每个引用操作还会等待其目标最多 5000 ms 变得可操作，因此你几乎不需要在它之前跑 `wait`。hover、drag 与 double-click 这类物理手势需要 `--headed`；先读[有头模式](/desktop/guides/headed-mode)。flag 清单见[交互命令](/desktop/commands/interaction)。
+
+## 验证
+
+`ok: true` 表示命令返回了已投递或本就满足的结果，不代表应用做了你想要的事。读 `data.disposition.delivery`：
+
+<table>
+  <thead>
+    <tr><th>投递结果</th><th>证明了什么</th><th>怎么办</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>delivered_verified</code></td><td>适配器回读了它指名的后置条件,例如勾选状态或字段值。对值而言,它不证明应用已提交它们。</td><td>用一次独立读取确认文档层面的效果。</td></tr>
+    <tr><td><code>delivered_unverified</code></td><td>派发已完成。效果未确认。</td><td>再次操作前先读取应用。</td></tr>
+    <tr><td><code>not_delivered</code></td><td>没有发送任何东西,因为操作本就满足。</td><td>若你本期待变化,读取一下状态。</td></tr>
+  </tbody>
+</table>
+
+然后，用能回答问题的最小读取再读一次应用：
+
+```bash
+agent-desktop is @s8f3k2p9:e6 --property checked                       # 一个状态
+agent-desktop wait --element @s8f3k2p9:e3 --predicate value --value 7   # 一个异步更新的值
+agent-desktop snapshot --root @s8f3k2p9:e2 -i --compact                 # 发生变化的区域
+```
+
+应用异步更新：紧跟点击之后的读取仍可能显示旧状态，所以优先用 `wait` 而不是单次读取。如果结果在 `data.surfaces` 里有 `menu`、`sheet` 或 `alert`，应用正在等待该覆盖层；先观察它 `snapshot --surface`，再看其背后的窗口。见[无 sleep 的等待](/desktop/guides/waiting)。
+
+## 从失败中恢复
+
+分支判断依据 `error.code` 与 `error.disposition`，永远不要依据消息文本。`STALE_REF` 与 `SNAPSHOT_NOT_FOUND` 意味着再观察一次并使用新引用；`AMBIGUOUS_TARGET` 意味着用 `find --exact` 或 `--root` 收窄目标；`POLICY_DENIED` 意味着先读[有头模式](/desktop/guides/headed-mode)再说别的。只有当 `disposition.retry` 为 `safe` 时才重试或换动作；否则先读取活动状态。每个错误码及其恢复见[错误与恢复](/desktop/errors-and-recovery)。
+
+## 完整示例
+
+这次运行在 Linux 上按一个 Calculator 按钮，验证显示屏，然后清除。每一步的输出见[快速开始](/desktop/quick-start)。
+
+```bash
+agent-desktop find --app gnome-calculator --role button --name 7 --exact --first     # 7 按钮的引用
+agent-desktop find --app gnome-calculator --role textfield --first                   # 显示屏的引用
+agent-desktop click @s3jjre8xzrvo2l:e1                                               # act
+agent-desktop wait --element @s3sxeejcz18ky3:e1 --predicate value --value 7           # verify
+agent-desktop find --app gnome-calculator --role button --name C --exact --first     # 然后用 C 清除
+```
+
+1. 每条 `find` 在 `data.match` 里返回一个匹配；其 `ref_id` 指向 `find` 保存的快照。使用你自己的输出里的引用。
+2. `click` 返回 `delivered_unverified`：无障碍调用已返回，但不证明按钮完成了工作。
+3. `wait` 就是验证。它超时的话，再次点击前先读 `details.last_observed` 与 `data.surfaces`，因为再来一次点击可能输入出 `77`。

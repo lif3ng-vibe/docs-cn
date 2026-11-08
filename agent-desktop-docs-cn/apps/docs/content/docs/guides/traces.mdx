@@ -1,0 +1,109 @@
+---
+title: 追踪记录
+navTitle: 追踪记录
+description: 用会话追踪记录或 --trace 记录 agent-desktop 做了什么,用 trace show 与 trace export 读取时间线,并在不泄露隐私数据的前提下捕获可视化调试文件。
+---
+
+追踪记录（trace）是一份只追加的 JSONL 记录，记载 agent-desktop 做过什么：每条命令、其结果与耗时，以及它保存的每个快照。用来调试一次运行，或审计一个智能体做过的事。记录方式有两种：[会话](/desktop/sessions)，它还支持把追踪记录读回来；以及 `--trace PATH`，只写一个文件。
+
+## 在会话中记录一次运行
+
+会话默认记录追踪记录。`session start` 不会为后续命令激活会话，所以要 export 它的 id：
+
+```bash
+export AGENT_DESKTOP_SESSION="$(agent-desktop session start --name trace-demo | jq -er '.data.session_id')"
+agent-desktop snapshot --app gnome-calculator -i --compact
+agent-desktop status                                  # session_id 已设置,tracing 为 true
+```
+
+每个执行命令的进程都在 `<state root>/sessions/<id>/trace/` 下写自己的段，命名为 `<pid>-<process start>.jsonl`，以一行 `trace.meta` 开头。`session start --no-trace` 创建不带追踪记录的会话。PowerShell 上 `export` 的等价写法见 [Windows](/desktop/platforms/windows#使用-powershell)。
+
+## 读取时间线
+
+`trace show` 把所有段合并成一条有序时间线，且不需要任何操作系统权限：
+
+```bash
+agent-desktop trace show --limit 20                   # 最后 20 个事件
+agent-desktop trace show --event command.             # 只看 command.start 与 command.end
+agent-desktop trace show --limit 0 | jq -r '.data.events[] | select(.event == "command.end") | [.command, .ok, .duration_ms] | @tsv'
+```
+
+以下是上面会话中的三个真实事件：
+
+```json
+[
+  { "command": "snapshot", "duration_ms": 109, "event": "command.end", "ok": true, "segment": "23161-1793353372418", "seq": 3, "session_id": "run-1793353372413-23159-0", "ts_ms": 1793353372528, "writer_pid": 23161, "writer_proc_start_ms": 1793353372418 },
+  { "event": "trace.meta", "os": "linux", "pid": 23176, "proc_start_ms": 1793353372533, "schema": 1, "segment": "23176-1793353372531", "seq": 0, "session_id": "run-1793353372413-23159-0", "ts_ms": 1793353372533, "version": "1.0.1", "writer_pid": 23176, "writer_proc_start_ms": 1793353372533 },
+  { "command": "trace", "event": "command.start", "segment": "23176-1793353372531", "seq": 1, "session_id": "run-1793353372413-23159-0", "ts_ms": 1793353372534, "writer_pid": 23176, "writer_proc_start_ms": 1793353372533 }
+]
+```
+
+`trace export` 写出一个自包含的 HTML 查看器，默认是会话目录里的 `trace-<session>.html`：
+
+```bash
+agent-desktop trace export --out /tmp/run.html
+```
+
+两者都要求一个活动会话，且只读会话段，不读 `--trace PATH` 文件。flag 与结果字段见 [`trace` 参考](/desktop/commands/system#trace)。
+
+### 事件名称
+
+<table>
+  <thead>
+    <tr><th>事件</th><th>写入时机</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>trace.meta</code></td><td>一个段打开。携带 <code>schema</code>、版本、<code>os</code> 与写入者 pid。</td></tr>
+    <tr><td><code>command.start</code>, <code>command.end</code></td><td>一条命令开始与结束。<code>command.end</code> 带 <code>ok</code>、<code>duration_ms</code>,失败时还有 <code>code</code>。</td></tr>
+    <tr><td><code>snapshot.saved</code>, <code>snapshot.root.saved</code></td><td>一个快照或一次下钻被保存。</td></tr>
+    <tr><td><code>locator.resolve</code></td><td>一次 <code>find</code> 完成搜索。</td></tr>
+    <tr><td><code>ref.resolve.ok</code>, <code>ref.resolve.error</code></td><td>一个引用操作重新识别其目标,或识别失败。</td></tr>
+    <tr><td><code>actionability.check.ok</code>, <code>actionability.check.error</code></td><td>派发前检查通过或失败。</td></tr>
+    <tr><td><code>action.artifacts</code></td><td>开启截图的会话捕获或跳过了前后图像。</td></tr>
+  </tbody>
+</table>
+
+可能还会出现其他事件与字段；不认识的一律忽略。
+
+## 追踪到单个文件
+
+`--trace PATH` 把事件追加到一个文件，且不需要会话：
+
+```bash
+agent-desktop --trace /tmp/run.jsonl find --app gnome-calculator --role button --name 7 --exact --count
+jq -c 'select(.event == "command.end")' /tmp/run.jsonl
+```
+
+文件以私有权限创建。`--trace` 生效期间，会话的追踪目录什么都不会收到。除非加了 `--trace-strict`，追踪写入失败不会让命令失败。
+
+## 在会话中截屏
+
+`session start --screenshots` 为每个引用操作保存目标窗口的前后 PNG，以及每份引用映射的副本，放在会话的 `trace/screens/` 与 `trace/refmaps/` 之下。`trace export` 会把图像嵌入。图像拍不出来时，`action.artifacts` 事件会记录原因。截屏要求追踪开启，且在 macOS 上需要屏幕录制权限。
+
+一个会话的录制预算是 32 MiB、100,000 个事件、4,096 个目录条目。预算花完后，已有事件仍可读，新事件被丢弃；要继续记录就开一个新会话。
+
+## 生成可视化调试文件
+
+可视化调试写出一个 HTML 文件，把窗口截图与带标签的元素 bounds 配对：
+
+```bash
+agent-desktop --debug --screenshot /tmp/calc-debug.html snapshot --app gnome-calculator -i
+agent-desktop --debug --screenshot /tmp/click-debug.html click @s8f3k2p9:e12
+```
+
+- `--debug` 要求给出 `--screenshot PATH.html`,即一个以 `.html` 结尾的新文件。它以仅所有者权限创建。
+- 支持 `snapshot`（仅窗口表面）与 `click`。
+- 结果多出 `data.debug`,带 `path` 与 `format`。窗口无法捕获时,命令仍然成功,`data.debug.warning` 说明原因;在 openbox 测试桌面上它写的是 "No X11 window of the window manager matches this window"。
+- 一次点击的前后图像是两次独立观察,并不证明该点击已投递。
+
+## 保持隐私数据私密
+
+<Callout title="追踪记录与调试文件包含桌面内容">
+  快照树、窗口标题、剪贴板读取、通知、截图和命令结果，都包含你让 agent-desktop 检查的内容。把这些文件当作私密文件对待。
+</Callout>
+
+- 追踪记录的行会把敏感字段，例如 `text`、`value`、`name`、`title`、`url`、`label`、`description` 与 `password`，替换为 `{ "redacted": true }`。命令名、应用名、引用与快照 id、错误码和耗时保持可读。
+- 会话截图、嵌入了截图的导出 HTML，以及可视化调试文件不做脱敏。
+- 把这些文件，连同调用方智能体的对话记录，都挡在公开仓库与 issue 报告之外。
+
+`session end` 封存会话，`session gc --ended` 连同追踪记录一起移除已结束会话。

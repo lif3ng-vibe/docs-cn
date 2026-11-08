@@ -1,0 +1,133 @@
+---
+title: 安装
+navTitle: 安装
+description: 用 npm、pnpm、Yarn、Bun 或 Homebrew 安装 agent-desktop，或从发布归档或源码安装，并在 macOS、Windows 或 Linux 上验证安装。
+---
+
+用 npm、pnpm、Yarn 或 Bun 全局安装 `agent-desktop` npm 包。它需要 Node 18 或更高版本，可在 macOS、Windows 和 Linux 上运行。
+
+```bash
+npm install -g agent-desktop     # 或: pnpm add -g, yarn global add, bun add -g
+agent-desktop version            # 确认命令可解析
+```
+
+不带 `-g` 时，命令会落在 `./node_modules/.bin` 而不是 PATH 上。用 `npx agent-desktop` 运行，或者全局安装。
+
+## 包里有什么
+
+该包内置六个目标平台的原生 CLI 可执行文件，外加各平台所需的辅助程序：
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>目标</th><th>随 CLI 附带的辅助程序</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>macOS</td><td>arm64, x64</td><td><code>agent-desktop-macos-helper</code></td></tr>
+    <tr><td>Linux (glibc)</td><td>x64, arm64</td><td><code>agent-desktop-linux-clipboard-owner</code></td></tr>
+    <tr><td>Windows</td><td>x64, arm64</td><td>无</td></tr>
+  </tbody>
+</table>
+
+[C 库](/desktop/ffi)不在 npm 包里，它随每个 release 以独立归档交付。
+
+## 发布归档
+
+想绕过 JavaScript 启动器直接得到原生可执行文件，就从 [GitHub Releases](https://github.com/vercel-labs/agent-desktop/releases) 下载对应操作系统与架构的归档。把可执行文件和它的辅助程序一起解压到 PATH 上的某个目录。升级时，用同一 release 中的两个文件替换它们。
+
+校验和用于发现损坏。来源用构建证明（attestation）验证：
+
+```bash
+gh attestation verify <downloaded-archive> --repo vercel-labs/agent-desktop
+```
+
+## 安装脚本被拦截
+
+该包的 `postinstall` 脚本把 Node 启动器替换为指向原生二进制的链接。如果包管理器拦截了安装脚本，运行的就是 Node 启动器。它能用，但每次调用都先启动 Node，会多花 100 ms 以上。启动器会向 stderr 打印一条一次性提示，附带解决办法。放行脚本并重装：
+
+```bash
+npm install -g agent-desktop --allow-scripts=agent-desktop
+```
+
+## Homebrew
+
+在 macOS 和 Linux 上，从 Homebrew 的默认目录安装。Homebrew 从打了 tag 的源码构建，并把平台辅助程序装在 CLI 旁边。
+
+```bash
+brew install agent-desktop     # macOS 和 Linux
+brew upgrade agent-desktop     # 新版本会在每次 GitHub release 后陆续上线
+```
+
+## Scoop 与旧安装
+
+没有 Scoop 包。自定义 Homebrew tap 和 Scoop bucket 已在 1.0.1 中移除（见[更新日志](/desktop/changelog)）。旧 tap 或 bucket 安装会钉死在当时的版本上，并可能遮蔽 npm 或 Homebrew 的命令。查一下实际运行的是哪个可执行文件，再用当初安装它的包管理器卸载旧的：
+
+```bash
+command -v agent-desktop     # macOS 和 Linux; PowerShell 里用: Get-Command agent-desktop
+```
+
+## 从源码构建
+
+你需要 `rust-toolchain.toml` 钉住的 Rust 工具链（1.89.0，`rustup` 会在首次使用时自动安装），以及一套 C 工具链：macOS 上是 Xcode 命令行工具，Windows 上是 MSVC 构建工具，Linux 上是 `build-essential`。
+
+```bash
+git clone https://github.com/vercel-labs/agent-desktop && cd agent-desktop
+cargo build --release -p agent-desktop      # 写入 target/release/agent-desktop
+```
+
+为你所在平台构建辅助程序并与 CLI 放在一起。平台 crate 只能在自己的操作系统上编译：
+
+```bash
+cargo build --release -p agent-desktop-macos --bin agent-desktop-macos-helper    # macOS
+cargo build --release -p agent-desktop-linux --bins                              # Linux
+```
+
+## 验证安装
+
+```bash
+agent-desktop version
+agent-desktop status
+```
+
+`version` 打印 CLI 版本、架构和操作系统：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "version",
+  "data": { "os": "linux", "target": "x86_64", "version": "1.0.1" }
+}
+```
+
+`status` 报告平台、权限状态、当前操作系统能读取的表面（surface），以及 [state root](/desktop/configuration#state-root)：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "status",
+  "data": {
+    "permissions": {
+      "accessibility": { "state": "granted" },
+      "automation": { "state": "not_required" },
+      "screen_recording": { "state": "not_required" }
+    },
+    "platform": "linux",
+    "ref_count": null,
+    "session_id": null,
+    "snapshot_id": null,
+    "state_root": "/home/user/.agent-desktop",
+    "supported_surfaces": ["window", "sheet", "alert", "menu"],
+    "tracing": false,
+    "version": "1.0.1"
+  }
+}
+```
+
+## 授予权限
+
+- **macOS:** 用 `agent-desktop permissions --guide` 授予辅助功能权限。参见 [macOS](/desktop/platforms/macos)。
+- **Windows:** 与终端完整性级别相同的应用无需授权。参见 [Windows](/desktop/platforms/windows)。
+- **Linux:** 在用户图形会话内运行并确保 AT-SPI bus 正在运行，然后检查 `agent-desktop status`。`supported_surfaces` 为空说明 bus 没有响应。参见 [Linux](/desktop/platforms/linux)。
+
+接下来运行[快速开始](/desktop/quick-start)。

@@ -1,0 +1,279 @@
+---
+title: 观察命令
+navTitle: 观察
+description: snapshot、find、get、is、screenshot、list-displays、list-surfaces 与 open-system-surface 的参考文档。
+---
+
+观察命令读取 UI 状态。除 `open-system-surface` 外，它们都不会改变 UI，其错误携带 `not_delivered`，因为并没有向应用发送任何东西。
+
+各 flag 背后的概念在[骨架与下钻](/desktop/skeleton-and-drill-down)（`--skeleton`、`--root`、`--max-depth`、部分观察、超时、范围搜索）、[快照与引用](/desktop/snapshots-and-refs)（引用、`-i`、`--compact`、`--include-bounds`、窗口选择）与[表面](/desktop/surfaces)中说明。
+
+## snapshot
+
+把应用的无障碍树捕获为 JSON。窗口所有的表面从窗口读取；在 macOS 上，`menu` 和 `menubar` 由应用所有，不需要文档窗口。交互元素会获得后续命令可接受的限定引用。
+
+```bash
+agent-desktop snapshot [--app NAME] [--window-id ID] [-i] [--compact] [--skeleton] \
+                       [--root REF] [--surface KIND] [--max-depth N] [--include-bounds] \
+                       [--timeout-ms MS] [--force-electron-a11y]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的应用或窗口</td><td>要读取的应用。所选表面决定是否必须有窗口。参见<a href="/desktop/snapshots-and-refs#choose-the-window">选择窗口</a>。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td>按 id 从 <code>list-windows</code> 读取一个窗口。对 macOS 的 <code>menu</code> 和 <code>menubar</code>，它选中的是所属应用。</td></tr>
+    <tr><td><code>-i</code>、<code>--interactive-only</code></td><td>关闭</td><td>丢弃没有引用的叶子节点。参见<a href="/desktop/snapshots-and-refs#what-a-snapshot-contains">快照包含什么</a>。</td></tr>
+    <tr><td><code>--compact</code></td><td>关闭</td><td>压缩只有一个无名子节点的包装层。</td></tr>
+    <tr><td><code>--include-bounds</code></td><td>关闭</td><td>为每个节点加上 <code>bounds</code>。</td></tr>
+    <tr><td><code>--skeleton</code></td><td>关闭</td><td>把深度上限压到 3，并用 <code>children_count</code> 标记被截断的容器。参见<a href="/desktop/skeleton-and-drill-down#take-a-skeleton">取一份骨架</a>。</td></tr>
+    <tr><td><code>--root REF</code></td><td>无</td><td>下钻进某个引用的子树，并替换该区域的引用。不能与 <code>--surface</code> 或 <code>--wait-for</code> 组合。参见<a href="/desktop/skeleton-and-drill-down#drill-into-a-region">下钻某个区域</a>。</td></tr>
+    <tr><td><code>--max-depth N</code></td><td><code>10</code></td><td>最大深度，上限 50。参见<a href="/desktop/skeleton-and-drill-down#depth-with-max-depth">用 max-depth 控制深度</a>。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>3000</code></td><td>观察截止时间。完整快照超时后仍成功返回，并带 <code>complete: false</code>。参见<a href="/desktop/skeleton-and-drill-down#partial-observations">部分观察</a>。</td></tr>
+    <tr><td><code>--surface KIND</code></td><td><code>window</code></td><td>读取所选的 UI 表面。在 macOS 上，<code>menu</code> 和 <code>menubar</code> 由应用所有。参见<a href="/desktop/surfaces#surface-kinds">表面类型</a>。</td></tr>
+    <tr><td><code>--force-electron-a11y</code></td><td>关闭</td><td>假定 Chromium 渲染器的无障碍能力已被强制开启，从而跳过激活引导。</td></tr>
+  </tbody>
+</table>
+
+`data` 携带 `app`、`snapshot_id`、`ref_count`、`complete` 和 `tree`。窗口所有的快照还带 `window`；macOS 应用所有的 `menu` 与 `menubar` 快照、以及无窗口的后台应用的进程所有快照则省略它。[快照与引用](/desktop/snapshots-and-refs)展示了窗口所有形态的样子。配合操作后的 `--wait-for`（[配置](/desktop/configuration#操作后等待-flag)）使用时，成功的快照还会附带 `elapsed_ms` 和 `matched_selector`。
+
+`snapshot` 特有的错误：`INVALID_ARGS` 对应 `--root` 与 `--surface` 或 `--wait-for` 同用、裸引用、`--max-depth` 超过 50，或者平台另有可用表面却给了不支持的 `--surface`；`PLATFORM_NOT_SUPPORTED` 表示适配器不支持任何表面；`WINDOW_NOT_FOUND` 表示窗口所有表面没有窗口；`APP_NOT_FOUND` 表示应用所有表面没有匹配的应用；`AMBIGUOUS_TARGET` 表示窗口查找命中了多个候选窗口；`ELEMENT_NOT_FOUND` 表示 macOS 应用所有的菜单表面不存在；`--root` 下钻则可能报 `STALE_REF`、`SNAPSHOT_NOT_FOUND` 或 `TIMEOUT`。参见[下钻会拒绝什么](/desktop/skeleton-and-drill-down#下钻拒绝的情形)。
+平台限制：支持的表面与 Chromium 就绪时间因操作系统而异。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。
+
+## find
+
+按角色、名称、值、文本、描述、native id 或状态搜索，返回可以操作的引用。当你知道目标是什么时用它。
+
+```bash
+agent-desktop find [--app NAME] [--window-id ID] [--role ROLE] [--name TEXT] [--value TEXT] \
+                   [--text TEXT] [--description TEXT] [--native-id ID] [--exact] \
+                   [--state TOKEN[=BOOL]]... [--root REF] [--surface KIND] [--timeout-ms MS] \
+                   [--count | --first | --last | --nth N | --limit N]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code>、<code>--window-id ID</code></td><td>获得焦点的应用或窗口</td><td>搜索哪个所有者，规则与 <code>snapshot</code> 相同。</td></tr>
+    <tr><td><code>--role ROLE</code></td><td>无</td><td>无障碍角色，不区分大小写。<code>textarea</code>、<code>textbox</code> 与 <code>searchfield</code> 都归并为 <code>textfield</code>。</td></tr>
+    <tr><td><code>--name TEXT</code></td><td>无</td><td>无障碍名称。除非加 <code>--exact</code>，否则为模糊匹配。</td></tr>
+    <tr><td><code>--value TEXT</code></td><td>无</td><td>当前值。无名称的元素把自身内容放在这里。</td></tr>
+    <tr><td><code>--text TEXT</code></td><td>无</td><td>匹配名称、值或描述中的文本。也匹配子树中包含该文本的祖先节点；要匹配节点本身请用 <code>--name</code>。</td></tr>
+    <tr><td><code>--description TEXT</code></td><td>无</td><td>无障碍描述。</td></tr>
+    <tr><td><code>--native-id ID</code></td><td>无</td><td>原生自动化 id，例如 <code>AXIdentifier</code> 或 AutomationId。</td></tr>
+    <tr><td><code>--exact</code></td><td>关闭</td><td>不区分大小写的全等比较，替代模糊匹配。</td></tr>
+    <tr><td><code>--state TOKEN[=BOOL]</code></td><td>无</td><td>按状态过滤，可重复。裸 token 表示 true。token 有：<code>focused</code>、<code>disabled</code>、<code>secure</code>、<code>expanded</code>、<code>checked</code>、<code>selected</code>、<code>hidden</code>、<code>busy</code>、<code>modal</code>、<code>required</code>、<code>indeterminate</code>、<code>pressed</code>、<code>readonly</code>、<code>offscreen</code>、<code>invalid</code>、<code>multiselectable</code>、<code>haspopup</code>。</td></tr>
+    <tr><td><code>--root REF</code></td><td>无</td><td>在某个引用的子树内搜索。参见<a href="/desktop/skeleton-and-drill-down#scope-a-search">限定搜索范围</a>。</td></tr>
+    <tr><td><code>--surface KIND</code></td><td><code>window</code></td><td>搜索某个浮层。不能与 <code>--root</code> 组合。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code></td><td>遍历截止时间。</td></tr>
+    <tr><td><code>--count</code></td><td>关闭</td><td>只返回匹配数量。</td></tr>
+    <tr><td><code>--first</code>、<code>--last</code>、<code>--nth N</code></td><td>关闭</td><td>返回一个匹配：第一个、最后一个，或零基索引 <code>N</code>。</td></tr>
+    <tr><td><code>--limit N</code></td><td><code>50</code></td><td>最多返回 <code>N</code> 个匹配。<code>0</code> 返回全部。在修改操作前用 <code>--limit 2</code> 确认匹配是唯一的。</td></tr>
+  </tbody>
+</table>
+
+`--count`、`--first`、`--last`、`--nth` 与 `--limit` 互斥。结果形态与匹配字段见 [JSON 输出](/desktop/json-output#find-的结果)。
+
+```bash
+agent-desktop find --app gnome-calculator --role button --name 7 --exact --first
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "find",
+  "data": {
+    "match": {
+      "interactive": true,
+      "name": "7",
+      "path": ["window:Calculator", "group", "group", "group", "group", "group", "group", "group", "group", "group", "group", "group"],
+      "ref_id": "@s3jjre8xzrvo2l:e1",
+      "role": "button",
+      "states": [],
+      "value": null
+    },
+    "snapshot_id": "s3jjre8xzrvo2l"
+  }
+}
+```
+
+当 `--role` 过滤器没有命中时，`roles_present` 会列出被搜索树中存在的角色，从而区分写错的角色名和空屏幕。`find` 特有的错误：`INVALID_ARGS` 对应互相冲突的塑形 flag、`--root` 与 `--surface` 同用，或未知的 `--state` token；`TIMEOUT` 且 `details.kind: "locator_incomplete"` 表示遍历超出了预算，这并不意味着应用挂起。调大 `--timeout-ms` 或缩小搜索范围即可。
+
+## get
+
+读取引用的一项属性。
+
+```bash
+agent-desktop get <REF> [--property text|value|title|bounds|role|states]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>REF</code></td><td>必填</td><td>限定引用。</td></tr>
+    <tr><td><code>--property</code></td><td><code>text</code></td><td><code>text</code> 是人眼读到的东西：对 <code>textfield</code>、<code>combobox</code>、<code>listbox</code>、<code>datefield</code> 和 <code>timefield</code> 是其值，对其余角色是其名称，两者互为回退。<code>value</code> 是原始值。<code>title</code> 是无障碍名称。<code>bounds</code>、<code>role</code> 与 <code>states</code> 与其字面含义一致。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "get",
+  "data": { "property": "value", "ref": "@s30sxlstqzdq8x:e19", "value": "entry" }
+}
+```
+
+`text`、`value`、`bounds` 和 `states` 在适配器力所能及时读取实时状态，否则回退为快照保存的值；缺失的值为 `null`。只有 `bounds` 会在 `data.live` 里报告是否为实时读取。当 `live` 为 `false` 时，该矩形来自快照，可能已过期，因此把边界传给 `mouse-click` 之前先确认。
+
+`get` 特有的错误：`INVALID_ARGS` 对应裸引用或未知属性，以及引用错误 `SNAPSHOT_NOT_FOUND`、`STALE_REF` 和 `AMBIGUOUS_TARGET`。参见[快照与引用](/desktop/snapshots-and-refs#引用如何解析)。
+
+## is
+
+检查引用的一项布尔状态。
+
+```bash
+agent-desktop is <REF> [--property visible|enabled|checked|focused|expanded|selected]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>REF</code></td><td>必填</td><td>限定引用。</td></tr>
+    <tr><td><code>--property</code></td><td><code>visible</code></td><td>要测试的状态。</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop is @s30sxlstqzdq8x:e45 --property enabled
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "is",
+  "data": { "applicable": true, "property": "enabled", "ref": "@s30sxlstqzdq8x:e45", "result": false }
+}
+```
+
+`applicable: false` 表示该属性不适用或无法读取，此时 `result: false` 意味着未知，而不是已禁用或未勾选。错误与 [`get`](#get) 相同。
+
+## screenshot
+
+把应用窗口或显示器捕获为 PNG。截图是给你看的证据，而不是操作成功的证明。
+
+```bash
+agent-desktop screenshot [PATH] [--app NAME] [--window-id ID] [--screen N]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>PATH</code></td><td>无</td><td>把图片保存到该文件。不传时，图片以 base64 编码放在 <code>data.data</code> 中返回。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>无</td><td>截取该应用的窗口。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td>按 id 截取一个窗口。</td></tr>
+    <tr><td><code>--screen N</code></td><td>无</td><td>截取 <code>list-displays</code> 中索引为 <code>N</code> 的显示器，<code>0</code> 是主显示器。不能与 <code>--app</code> 或 <code>--window-id</code> 组合。</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop screenshot --screen 0 screen.png
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "screenshot",
+  "data": { "format": "png", "height": 900, "path": "/tmp/screen.png", "scale_factor": 1.0, "width": 1440 }
+}
+```
+
+`screenshot` 特有的错误：没有屏幕录制权限报 `PERM_DENIED`；`INVALID_ARGS` 对应 `--screen` 与窗口选择器同用、索引越界或 `PATH` 不可写；`WINDOW_NOT_FOUND` 或 `APP_NOT_FOUND` 表示目标未知。在 Linux 上，非合成窗口管理器中被遮挡的窗口报 `ACTION_FAILED` 且 `details.reason: "covered"`，合成窗口管理器下整屏截取返回 `PLATFORM_NOT_SUPPORTED`。
+
+平台限制：macOS 需要“屏幕录制”权限，Wayland 需要通过 portal 授权。参见 [macOS](/desktop/platforms/macos) 和 [Linux](/desktop/platforms/linux)。
+
+## list-displays
+
+列出已连接的显示器，主显示器在前。它不接受任何 flag。
+
+```bash
+agent-desktop list-displays
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "list-displays",
+  "data": [
+    { "bounds": { "height": 900.0, "width": 1440.0, "x": 0.0, "y": 0.0 }, "id": "screen", "is_primary": true, "scale": 1.0 }
+  ]
+}
+```
+
+配合 `screenshot --screen` 时使用数组索引，而不是 `id`。
+
+## list-surfaces
+
+列出应用当前呈现的浮层：即 `snapshot --surface` 和 `find --surface` 接受的那些值。
+
+```bash
+agent-desktop list-surfaces [--app NAME]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>获得焦点的应用</td><td>要检查的应用。</td></tr>
+  </tbody>
+</table>
+
+`data` 是 `pid` 与 `surfaces`，后者每项含 `id`、`type`，以及在已知时的 `title`、`item_count` 和 `unclassified`。[表面](/desktop/surfaces#列出当前打开的表面)给出示例并解释 `unclassified`。错误：`APP_NOT_FOUND`；`AMBIGUOUS_TARGET` 表示多个实例匹配；以及 `TIMEOUT`。
+
+## open-system-surface
+
+唤起一个 OS shell 表面（例如“开始”菜单或操作中心），并返回其呈现的窗口。若该表面已在屏幕上，则直接返回，不会再次唤起。
+
+```bash
+agent-desktop --headed open-system-surface --surface KIND
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--surface KIND</code></td><td>必填</td><td>shell 表面：<code>start-menu</code>、<code>taskbar</code>、<code>system-tray</code>、<code>system-tray-overflow</code>、<code>action-center</code>、<code>dock</code> 或 <code>menu-bar-extras</code>。<code>dock</code> 和 <code>menu-bar-extras</code> 是 macOS 上的类型。</td></tr>
+  </tbody>
+</table>
+
+`data` 是 `surface`，在 Windows 和 Linux 上还有 `window`，字段与 [`list-windows`](/desktop/commands/app-window#list-windows) 的条目相同。在 macOS 上没有窗口拥有该表面，因此 `data` 只是 `{"surface": "dock"}`，省去 `window`。这个形态来自该命令的单元测试：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "open-system-surface",
+  "data": {
+    "surface": "action-center",
+    "window": { "app_name": "ShellExperienceHost.exe", "id": "w-4242", "is_focused": true, "pid": 99, "title": "Action center" }
+  }
+}
+```
+
+该命令会抢占前台，因此在 Windows 和 Linux 上无头模式会在唤起任何东西之前以 `POLICY_DENIED` 拒绝它；请传 `--headed`。操作系统没有暴露的类型返回 `INVALID_ARGS`，`suggestion` 给出可用的类型，`platform_detail`（若存在）给出替代类型。在 macOS 上，`dock` 和 `menu-bar-extras` 始终在屏幕上，因此命令立即返回它们，且无需 `--headed` 即可在无头模式下运行；打开控制中心或通知中心的方式是点击其 `menu-bar-extras` 条目。Windows 和 Linux 上哪些类型可以打开，见各自平台页。

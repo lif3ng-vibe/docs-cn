@@ -1,0 +1,105 @@
+---
+title: 等待，不用 sleep
+navTitle: 等待
+description: 不用固定 sleep 等待桌面应用到达某个状态。在操作后等待 flag 与 wait 命令之间做选择,并读懂一次超时。
+---
+
+固定 sleep 要么浪费时间，要么跟应用赛跑。agent-desktop 提供两种轮询条件的等待：操作后的 `--wait-for` flag，在你已经在跑的命令内部等待；以及 `wait` 命令，独立等待。所有 flag 都在 [`wait` 参考](/desktop/commands/wait)与[操作后等待 flag](/desktop/configuration#操作后等待-flag)里。
+
+## 选一种等待方式
+
+<table>
+  <thead>
+    <tr><th>你在等什么</th><th>用什么</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>操作之后某个控件或文本出现</td><td>在操作上加 <code>--wait-for "role:text"</code></td></tr>
+    <tr><td>操作之后某个控件消失,例如转圈</td><td>在操作上加 <code>--wait-for-gone "role"</code></td></tr>
+    <tr><td>某个元素达到某个值或变为就绪</td><td><code>wait --element REF --predicate value</code> 或 <code>actionable</code></td></tr>
+    <tr><td>一个新窗口或对话框</td><td><code>wait --window TITLE --app APP</code></td></tr>
+    <tr><td>应用中任意位置的文本</td><td><code>wait --text TEXT --app APP</code></td></tr>
+    <tr><td>一个菜单打开或关闭</td><td><code>wait --menu</code>, <code>wait --menu-closed</code></td></tr>
+    <tr><td>你的操作引发的窗口或应用生命周期变化</td><td><code>wait --event KIND</code>,与操作放进同一个 batch</td></tr>
+    <tr><td>一条新通知</td><td><code>wait --notification</code></td></tr>
+    <tr><td>没有可观察的东西</td><td><code>wait MS</code>,万不得已再用的兜底</td></tr>
+  </tbody>
+</table>
+
+## 在操作内部等待
+
+`--wait-for` 轮询引用的原始进程直到选择器匹配，然后返回一份新快照，操作自身的报告放在 `after_action` 下，你可以立即对新的引用执行操作。应用拥有的引用保留其源表面。窗口拥有的引用保持钉在其原窗口，包括从弹层、警告框、弹出框、焦点视图或窗口拥有的 Linux 菜单捕获的引用：
+
+```bash
+agent-desktop click @s8f3k2p9:e5 --wait-for "button:Done" --wait-timeout 10000
+agent-desktop click @s8f3k2p9:e5 --wait-for-gone "progressindicator"
+```
+
+等待超时的场合，操作已经跑完了：错误把操作的投递结果保留在 `error.disposition`，报告放在 `details.after_action`。重试操作前先读取应用。
+
+## 等待一个元素
+
+手里有引用、需要等它满足某个条件时，用 `wait --element`。[快速开始](/desktop/quick-start#5-验证)的验证步骤等计算器显示屏读出 `7`，距点击 286 ms：
+
+```bash
+agent-desktop wait --element @s2txcl95uvubmn:e6 --predicate value --value 7 --timeout 5000
+```
+
+在仍在加载的字段上打字前，先 `--predicate actionable --action type`。普通点击之前几乎不需要等待：引用操作本身就会等目标可操作。
+
+## 先等窗口，再等内容
+
+窗口可以早于其内容存在。先等窗口，再等内容：
+
+```bash
+agent-desktop wait --window "Save As" --app gedit --timeout 10000
+agent-desktop wait --text "Save" --app gedit --timeout 10000
+```
+
+`--window` 匹配包含你文本的标题。如果应用同时开着文档和对话框，`wait --text` 在检查任何文本之前就返回 `AMBIGUOUS_TARGET`；先用 `--window` 按标题等那个对话框，再用 `snapshot --surface sheet` 或 `--window-id` 读取它。
+
+## 等待你的操作引发的事件
+
+`wait --event` 把等待开始时拍的基线与新鲜读取做差，因此在你操作之后才启动的独立 `wait` 可能错过变化。把操作和等待放进同一个 [batch](/desktop/guides/batch)，它会在操作运行前取基线：
+
+```bash
+agent-desktop batch '[
+  {"command":"launch","args":{"app":"gtk3-demo"}},
+  {"command":"wait","args":{"event":"window-opened","app":"gtk3-demo","timeout":10000}}
+]' --stop-on-error
+```
+
+在 Linux 上，它在 launch 之后 144 ms 返回了新窗口；结果见 [`wait` 参考](/desktop/commands/wait#事件)。拼错的 `--app` 会让 `app-terminated` 之类的关闭事件立即返回 `target_unresolved: true`，所以先用 `list-apps` 核对名称。
+
+## 等待一个菜单
+
+打开菜单、等待它，然后把它当表面读取：
+
+```bash
+agent-desktop click @s2qfke45s1966h:e1                                       # Menu 按钮
+agent-desktop wait --menu --app gtk3-widget-factory --timeout 5000
+agent-desktop snapshot --app gtk3-widget-factory --surface menu -i --compact
+```
+
+选完条目或关掉菜单后，`wait --menu-closed --app gtk3-widget-factory` 确认它已消失。先等 `--menu` 再等 `--menu-closed`：在 Linux 上，对一个从未打开过的菜单跑 `--menu-closed` 会立刻为真。见[表面](/desktop/surfaces)。
+
+## 设置超时
+
+<table>
+  <thead>
+    <tr><th>等待</th><th>flag</th><th>默认</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>除 <code>wait MS</code> 外所有形态的 <code>wait</code></td><td><code>--timeout</code></td><td>30000 ms</td></tr>
+    <tr><td><code>--wait-for</code>, <code>--wait-for-gone</code></td><td><code>--wait-timeout</code></td><td>30000 ms</td></tr>
+    <tr><td>引用操作前的 auto-wait</td><td><code>--timeout-ms</code></td><td>5000 ms</td></tr>
+    <tr><td>整个 <code>batch</code>,含其中的等待</td><td><code>--timeout-ms</code></td><td>60000 ms</td></tr>
+  </tbody>
+</table>
+
+`wait` 用 `--timeout`；其他命令用 `--timeout-ms`。
+
+## 读懂一次超时
+
+等待产生的 `TIMEOUT` 在 `details.last_observed` 里说明等待最后一次看到了什么。超时的 `wait --window "Save As"` 报告了它找到的唯一窗口 `Untitled Document 1 - gedit`，这告诉你对话框压根没打开，而不是标题写错了。用它来分辨标题写错、`--app` 写错和应用加载慢。各模式的字段见 [`wait` 参考](/desktop/commands/wait#错误)。
+
+在 macOS 与 Windows 上，无头的 `wait --notification` 只能看到已打开的通知表面；见 [macOS](/desktop/platforms/macos) 与 [Windows](/desktop/platforms/windows)。

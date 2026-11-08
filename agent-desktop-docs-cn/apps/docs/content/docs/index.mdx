@@ -1,0 +1,71 @@
+---
+title: agent-desktop
+navTitle: 简介
+description: 一个 CLI 与 C 库，让 AI 智能体通过操作系统无障碍树（accessibility tree）读取并操作 macOS、Windows 和 Linux 上的桌面应用。
+---
+
+agent-desktop 读取桌面应用的无障碍树（accessibility tree）并以 JSON 返回。智能体可操作的每个元素都会拿到一个引用（ref）。智能体对引用执行操作，再次读取 UI 检查结果，然后循环往复。它以 CLI 和 C 库两种形态交付，支持 macOS、Windows 和 Linux。
+
+```bash
+npm install -g agent-desktop        # macOS、Windows 和 Linux
+agent-desktop status                # 平台、权限、支持的表面（surface）
+agent-desktop skills get desktop    # 你的智能体应最先加载的指南
+```
+
+## agent-desktop 是什么、不是什么
+
+- **一个供智能体调用的工具。** 它不是智能体。观察—操作—验证（observe, act, verify）循环存在于调用它的智能体或脚本中。
+- **内部没有模型。** 它从不内嵌 LLM，没有 GUI，也没有交互式提示符。每条命令打印一个 JSON 信封然后退出。
+- **只面向桌面应用。** 它不自动化网页；网页请用 [agent-browser](https://agent-browser.dev)。对于你启动的 Chromium 或 Electron 应用中的 web 内容，agent-desktop 会打开一个 DevTools 端口供 agent-browser 连接。参见 [Chromium 与 Electron 应用](/desktop/guides/chromium-and-electron)。
+- **受限于应用所暴露的内容。** 它读取无障碍树，不做像素比对，因此看不到任何不发布无障碍树的 UI。
+
+## 四条命令看清这个循环
+
+智能体先绘制应用的地图，下钻到需要的区域，对引用执行操作，再检查结果。
+
+```bash
+agent-desktop snapshot --app gnome-calculator --skeleton -i --compact         # 1. map: 绘制浅层骨架（skeleton）
+agent-desktop snapshot --root @s2txcl95uvubmn:e1 -i --compact                 # 2. drill: 下钻展开一个区域
+agent-desktop click @s2txcl95uvubmn:e11                                       # 3. act: 按下 7 按钮
+agent-desktop wait --element @s2txcl95uvubmn:e6 --predicate value --value 7   # 4. verify: 验证显示为 7
+```
+
+引用携带产生它的快照 id（`@s2txcl95uvubmn:e11`）。[快照与引用](/desktop/snapshots-and-refs)定义了它们，[骨架与下钻](/desktop/skeleton-and-drill-down)解释前两条命令。操作成功并不代表 UI 真的变了，所以循环以一次读取收尾。[快速开始](/desktop/quick-start)带着输出完整跑一遍这些命令。
+
+## 工作原理
+
+<Diagram name="architecture" title="agent-desktop 架构" aspectRatio="720 / 672" />
+
+同一条链路的文字版，从调用方到应用：
+
+1. 调用方智能体：你的代码或 LLM 循环。它运行一条命令并读取打印出的 JSON 信封。
+2. `agent-desktop` CLI，或在你进程内调用时使用的 [C 库](/desktop/ffi)。
+3. `agent-desktop-core`：各命令、`RefStore` 与快照构建。Core 定义 `PlatformAdapter` trait 以及所有共享类型。
+4. `PlatformAdapter`，core 触达操作系统的唯一途径。
+5. 一个平台 crate：`agent-desktop-macos`、`agent-desktop-windows` 或 `agent-desktop-linux`。
+6. 操作系统无障碍 API：macOS 上的 AX API、Windows 上的 UI Automation、Linux 上的 AT-SPI。
+7. 应用本身，通过该 API 暴露自己的 UI。
+
+Core 从不导入平台 crate，平台 crate 之间也互不导入。只有 CLI 和 C 库把某个平台 crate 接入 core，且各自在编译期选定，因此一个二进制只驱动它构建时所面向的操作系统。
+
+## 平台支持
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>要求</th><th>无障碍 API</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><a href="/desktop/platforms/macos">macOS</a></td><td>macOS 13 或更高，Intel 或 Apple Silicon。需为运行 agent-desktop 的应用授予辅助功能权限。</td><td>AX API</td></tr>
+    <tr><td><a href="/desktop/platforms/windows">Windows</a></td><td>Windows 10 1809 或更高，或 Windows Server 2019 或更高，x64 或 ARM64，运行在已登录用户的交互式桌面中。</td><td>UI Automation</td></tr>
+    <tr><td><a href="/desktop/platforms/linux">Linux</a></td><td>Ubuntu 24.04 或更高，x86_64 或 aarch64（glibc 2.35 下限），运行在用户图形会话中且 AT-SPI bus 已在运行。</td><td>AT-SPI</td></tr>
+  </tbody>
+</table>
+
+CLI 在所有平台上拥有相同的 60 个命令名。其中四个（`key-down`、`key-up`、`mouse-down`、`mouse-up`）在任何地方都以失败收场（fail closed）。每个平台页面列出哪些在无头（headless）下可用、哪些需要 `--headed`、哪些直接拒绝。
+
+## 下一步
+
+- [安装](/desktop/installation)：安装 CLI、验证并授予权限。
+- [快速开始](/desktop/quick-start)：对一个真实应用完整跑一遍。
+- [技能](/desktop/skills)：智能体行动前应读取的指南。
+- [命令](/desktop/commands)：全部 60 个命令。

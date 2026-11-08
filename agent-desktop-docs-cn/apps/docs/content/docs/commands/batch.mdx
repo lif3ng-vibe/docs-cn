@@ -1,0 +1,116 @@
+---
+title: batch
+navTitle: 批量
+description: batch 命令的参考文档，涵盖输入格式、上限、校验、遇错即停行为、哪些命令被拒绝，以及输出形态。
+---
+
+`batch` 在一个进程内按顺序运行一个 JSON 命令数组。它有边界、顺序执行且非原子：某个条目失败不会撤销之前的条目。什么时候该用 batch，见[批量执行命令](/desktop/guides/batch)。
+
+## batch
+
+```bash
+agent-desktop batch JSON [--stop-on-error] [--timeout-ms MS]
+agent-desktop batch '[{"command":"version"},{"command":"wait","args":{"ms":100}}]' --stop-on-error
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>JSON</code></td><td>必填</td><td>由条目组成的 JSON 数组。</td></tr>
+    <tr><td><code>--stop-on-error</code></td><td>关闭</td><td>在第一个失败的条目后停止。不指定时，后续条目仍会运行。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>60000</code></td><td>整个 batch 的墙钟预算，最多 86400000。各条目自己的截止时间都不会超过剩余预算。</td></tr>
+  </tbody>
+</table>
+
+### 条目格式
+
+<table>
+  <thead>
+    <tr><th>键名</th><th>必填</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>command</code></td><td>是</td><td>命令名，例如 <code>click</code> 或 <code>wait</code>。</td></tr>
+    <tr><td><code>args</code></td><td>否</td><td>该命令的参数。无参数命令可省略。</td></tr>
+    <tr><td><code>session</code></td><td>否</td><td>该条目使用的会话 id。不指定时，条目使用 batch 自身的会话。</td></tr>
+  </tbody>
+</table>
+
+`args` 的键名就是 CLI flag 名，连字符换成下划线（`window_id`、`timeout_ms`）。位置参数以其占位符的小写命名（`ref_id`、`text`、`combo`、`app`）。可重复的 flag 用数组。`wait` 用平铺键：`ms`、`element`、`predicate`、`value`、`action`、`window`、`text`、`count`、`menu`、`menu_closed`、`notification`、`event`、`window_id`、`app`、`timeout`。`skills`、`session` 和 `trace` 把子命令放在 `action` 里，如 `{"command":"session","args":{"action":"list"}}`。任何位置出现未知键都会被拒绝。
+
+`--headed` 与 agent id 作用于每个条目。全局 `--wait-for` 则不：在需要等待的位置放一个 `wait` 条目即可。
+
+### 上限
+
+<table>
+  <thead>
+    <tr><th>上限</th><th>数值</th><th>超出时</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>输入体积</td><td>1 MiB</td><td>解析前报 <code>INVALID_ARGS</code>。</td></tr>
+    <tr><td>条目数</td><td>64</td><td><code>INVALID_ARGS</code>。</td></tr>
+    <tr><td>输出体积</td><td>4 MiB</td><td>越过上限的那个条目变成一条 <code>INVALID_ARGS</code> 条目，带 <code>details.result_omitted: true</code>，batch 以 <code>stopped.reason: "output_limit"</code> 停止。</td></tr>
+  </tbody>
+</table>
+
+### 首个条目运行前的校验
+
+整份数组在任何条目运行之前先检查，一个坏条目就会整体拒绝，什么都不运行：
+
+- JSON 必须能解析，且每个条目都要能按其命令的参数解码。
+- 每个条目都会执行与直接调用相同的预检：引用语法（裸 `@e1` 被拒绝）、flag 组合（例如 `snapshot --root` 搭配 `--surface`），以及通知身份 flag。
+- 每个条目需要其命令所需的权限；缺一项就为整个 batch 返回 `PERM_DENIED`。
+- 在多智能体会话中，每条会修改状态的桌面条目都需要 agent id。
+- `batch`（`Batch commands cannot be nested`）和 `cursor-overlay` 在 batch 内被拒绝。
+
+拒绝信息在 `details.batch_index` 和 `details.batch_command` 中指明该条目，处置为 `not_delivered`。需要真实桌面才能做的检查，例如过期引用或无头物理命令，会在该条目运行时发生，并表现为该条目自己的错误。
+
+### 执行与输出
+
+各条目经与 CLI 相同的调度逐个运行，因此每个条目的 `data` 或 `error` 就是直接调用会返回的内容。不会重试任何东西。即便有条目失败，batch 本身也返回 `ok: true` 与退出码 `0`，因此要读每个条目的 `ok`。
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "batch",
+  "data": {
+    "completed_entries": 2,
+    "elapsed_ms": 100,
+    "limits": { "max_entries": 64, "max_input_bytes": 1048576, "max_output_bytes": 4194304 },
+    "not_started_entries": 0,
+    "results": [
+      { "command": "version", "data": { "os": "linux", "target": "x86_64", "version": "1.0.1" }, "execution": "completed", "index": 0, "ok": true, "version": "2.6" },
+      { "command": "wait", "data": { "waited_ms": 100 }, "execution": "completed", "index": 1, "ok": true, "version": "2.6" }
+    ],
+    "semantics": {
+      "atomic": false,
+      "batch_retries": false,
+      "command_retry_contracts": "preserved",
+      "error_disposition": "error.disposition",
+      "order": "sequential",
+      "successful_action_disposition": "data.disposition"
+    },
+    "timeout_ms": 60000,
+    "total_entries": 2
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>results[]</code></td><td>每个条目一个信封，带 <code>index</code> 与 <code>execution</code>（<code>completed</code> 或 <code>not_started</code>）。<code>not_started</code> 条目带 <code>not_started_reason</code> 和一个 <code>not_delivered</code> 错误。</td></tr>
+    <tr><td><code>total_entries</code>、<code>completed_entries</code>、<code>not_started_entries</code></td><td>计数。停止之后的条目计入 <code>not_started_entries</code>，但没有对应的行。</td></tr>
+    <tr><td><code>stopped</code></td><td>batch 提前结束时出现：<code>reason</code> 为 <code>stop_on_error</code>、<code>deadline</code>、<code>output_limit</code> 或 <code>pre_action_baseline_failed</code>，并带 <code>index</code>。</td></tr>
+  </tbody>
+</table>
+
+- **截止时间。** 每个条目运行前 batch 检查 `--timeout-ms`。若已过期，该条目为 `not_started`，原因为 `deadline`，batch 停止。
+- **事件等待。** 当带 `event` 的 `wait` 条目紧跟另一个条目时，batch 会在前一个条目运行之前就捕获事件基线。若捕获失败，前一个条目不会启动（`pre_action_baseline_failed`）。
+- **会话。** 启动前其会话已结束的条目为 `not_started`，原因为 `session_ended`。
+
+写数组时，`args` 里的引用必须已经存在。batch 内的 `snapshot` 条目会创建后续条目无法指名的引用，因此把快照放到单独一次调用里。

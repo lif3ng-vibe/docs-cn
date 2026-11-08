@@ -1,0 +1,102 @@
+---
+title: macOS
+navTitle: macOS
+description: agent-desktop 在 macOS 上的要求、权限、各命令能力、应用命名、表面与故障排查。
+---
+
+agent-desktop 通过 Accessibility (AX) API 读取 macOS 应用。操作循环节、引用、JSON 信封、会话与追踪记录在所有平台上保持一致，因此本页只讲 macOS 上不同的部分。本文所述的 macOS 行为已对照 macOS 适配器、其测试与 macOS 技能文档（`agent-desktop skills get macos`）核验，并非为撰写本文而实际运行。
+
+## 系统要求
+
+- macOS 13 或更高版本，Intel 或 Apple Silicon。
+- 为启动 agent-desktop 的应用授予无障碍权限，例如 Terminal、iTerm2、VS Code 或你的智能体的宿主应用。如果系统设置单独列出了 `agent-desktop` 二进制文件，也一并授予。
+- 屏幕录制权限，仅用于 `screenshot` 与 `session start --screenshots`。
+- 针对 System Events 的自动化权限，仅在某个命令报告其缺失时需要，例如打开通知中心。
+
+## 授予与检查权限
+
+授权属于启动 agent-desktop 的应用，而不是 shell。另一个终端或 IDE 需要单独授权。
+
+1. 运行 `agent-desktop permissions`。它不会弹出提示。
+2. 若某权限为 `denied`，运行 `agent-desktop permissions --guide`。它会打开系统设置并定位到缺失的权限，面板上会显示该添加哪个应用，然后立即返回，`data.guide` 为 `started`、`already_running` 或 `not_needed`。
+3. 若指引无法运行，请打开**系统设置 > 隐私与安全性 > 辅助功能**，添加启动它的应用并打开开关。
+4. 再次运行 `agent-desktop permissions` 并确认 `granted`。应用无需重启。
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "permissions",
+  "data": {
+    "accessibility": { "state": "granted" },
+    "automation": { "state": "unknown" },
+    "screen_recording": { "state": "granted" }
+  }
+}
+```
+
+在 macOS 真正需要弹提示之前，`automation` 保持 `unknown`。`permissions --request` 是唯一会弹提示的路径，它覆盖 Automation；`--guide` 覆盖 Accessibility 与 Screen Recording。在 tmux 或 SSH 下没有启动应用，因此要手动添加启动了 tmux 的终端应用。
+
+## 无头模式下的能力
+
+引用操作默认无头可用。在 `--headed` 下，`click`、`right-click`、`type`、`clear` 和 `scroll` 会优先走物理路径——但应用原生菜单栏层级中条目的点击除外：agent-desktop 会激活所属应用并调用 `AXPress`，而不移动光标。无头时对这些菜单项的点击直接调用 `AXPress`，不激活应用。当条目提供 `AXShowMenu` 时，`right-click` 无头即可使用。在 `--headed` 下，right-click、double-click 和 triple-click 可以通过聚焦应用来支持无窗口的原生菜单项，并保留指针验证。`hover` 和 `drag` 仍然要求引用的源窗口存在，没有源窗口时以 `ACTION_NOT_SUPPORTED` 失败。其他针对引用的指针操作会精确聚焦所属窗口，并在投递前验证命中目标。窗口承载的 popup 即使快照是应用所有的，也会使用其实际所属窗口。`expand`、`collapse`、`set-value`、`select`、`toggle`、`check`、`uncheck`、`focus` 和 `scroll-to` 恒走语义路径。参见[有头模式](/desktop/guides/headed-mode)。
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>无头可用</th><th>需要 <code>--headed</code></th><th>按 fail closed 拒绝或不支持</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>观察</td><td><code>snapshot</code>、<code>find</code>、<code>get</code>、<code>is</code>、<code>list-surfaces</code>、<code>list-displays</code></td><td></td><td></td></tr>
+    <tr><td>捕获</td><td><code>screenshot</code>，需屏幕录制权限</td><td></td><td></td></tr>
+    <tr><td>引用操作</td><td><code>click</code>、<code>right-click</code>、<code>type</code>、<code>clear</code>、<code>scroll</code>、<code>expand</code>、<code>collapse</code>、<code>set-value</code>、<code>select</code>、<code>toggle</code>、<code>check</code>、<code>uncheck</code>、<code>focus</code>、<code>scroll-to</code></td><td>均不需要</td><td></td></tr>
+    <tr><td>多击与指针</td><td>元素提供 <code>AXOpen</code> 时的 <code>double-click</code></td><td><code>double-click</code>、<code>triple-click</code>、<code>hover</code>、<code>drag</code>、<code>mouse-move</code>、<code>mouse-click</code>、<code>mouse-wheel</code></td><td>无头：<code>POLICY_DENIED</code></td></tr>
+    <tr><td>键盘</td><td><code>press</code>，始终为物理键盘输入；它从不执行菜单项，因此请改用 <code>click</code> 点击菜单项</td><td></td><td>退出类快捷键如 <code>cmd+q</code>：不加 <code>--force</code> 时 <code>POLICY_DENIED</code></td></tr>
+    <tr><td>按住输入</td><td></td><td></td><td><code>key-down</code>、<code>key-up</code>、<code>mouse-down</code>、<code>mouse-up</code></td></tr>
+    <tr><td>应用与窗口</td><td><code>launch</code>、<code>close-app</code>、<code>list-apps</code>、<code>list-windows</code>、<code>focus-window</code>、<code>resize-window</code>、<code>move-window</code>、<code>minimize</code>、<code>maximize</code>、<code>restore</code></td><td></td><td></td></tr>
+    <tr><td>剪贴板</td><td><code>clipboard-get</code>、<code>clipboard-set</code>（会回读：<code>delivered_verified</code>）、<code>clipboard-clear</code></td><td></td><td></td></tr>
+    <tr><td>等待</td><td>全部模式。已打开的通知中心时 <code>wait --notification</code> 才能看到通知</td><td></td><td></td></tr>
+    <tr><td>通知</td><td>通知中心打开时的 <code>list-notifications</code></td><td>通知中心关闭时的列出，以及一切清除与操作</td><td>通知中心关闭时无头列出：<code>POLICY_DENIED</code></td></tr>
+    <tr><td>Shell 表面</td><td><code>open-system-surface</code> 支持 <code>dock</code> 与 <code>menu-bar-extras</code>，因其常驻屏幕而立即返回</td><td></td><td><code>start-menu</code>、<code>taskbar</code>、<code>system-tray</code>、<code>system-tray-overflow</code>、<code>action-center</code>：<code>INVALID_ARGS</code></td></tr>
+    <tr><td>系统</td><td><code>status</code>、<code>permissions</code>、<code>version</code>、<code>batch</code>、<code>skills</code>、<code>session</code>、<code>cursor-overlay</code>、<code>trace</code></td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+请以观察为准来判断投递。AX 返回码不能证明效果：应用可以从一个什么都不做的操作上返回成功，因此要用 `get`、`is` 或快照重读。
+
+## 应用命名
+
+`--app` 接受 `list-apps` 输出的显示名称，例如 `"System Settings"` 或 `"TextEdit"`。当没有运行中应用是那个显示名时，它还会匹配 bundle ID 或可执行文件名，例如用 `ControlCenter` 匹配控制中心。`launch` 也接受 bundle ID，例如 `com.apple.TextEdit`。`w-4521` 这类窗口 id 在窗口存续期间有效；用 `list-windows` 找到它们。
+
+## 表面
+
+`supported_surfaces` 列出 `window`、`focused`、`menu`、`menubar`、`sheet`、`popover`、`alert`、`dock` 和 `menu-bar-extras`。用 `--surface menubar` 读取应用的 File、Edit、View 菜单。用 `--surface menu-bar-extras` 读取状态栏条目：不加 `--app` 时读取 Wi-Fi、电池、时钟等系统条目；加 `--app` 时读取该应用自己的条目。用 `--surface dock` 读取 Dock。这些 shell 表面可通过 `open-system-surface` 无头访问。没有窗口的后台应用（例如菜单栏应用或控制中心）可以通过其进程读取。这适用于 `window`、`menubar` 和 `menu-bar-extras`，不适用于 `focused`；一个尚未显示过窗口的普通应用返回 `WINDOW_NOT_FOUND`。在 menu、sheet、alert 或 popover 打开期间，窗口树中它身后的引用是错误的目标。参见[表面](/desktop/surfaces)。
+
+## 按键与通知
+
+- 主修饰键是 `cmd`：`press cmd+c`。标点键可以按符号或按名称使用（`comma`、`period`、`slash`）。
+- `cmd+q`、`cmd+shift+q`、`cmd+alt+esc`、`ctrl+cmd+q` 与 `cmd+shift+delete` 在不加 `--force` 时返回 `POLICY_DENIED`。要退出应用，用 `close-app`。
+- `press cmd+s --app "TextEdit"` 把按键发给单个应用而不聚焦它。
+- agent-desktop 打开通知中心后，会将其关闭并恢复之前的焦点。单条清除或操作请传 `--expected-app` 和 `--expected-title`，因为堆栈会变。对于在你能列出之前就消失的横幅通知，用 `wait --notification --app "App"`。
+
+## Chromium 与 Electron
+
+agent-desktop 在需要时会在 Chromium 渲染器中开启 web 无障碍。对内容密集的运行中应用，先取一份骨架再用 `--root` 下钻。对可以全新启动的 Electron 应用的 web 内容，`launch "App" --cdp` 会为 agent-browser 打开一个 DevTools 端点。参见[Chromium 与 Electron 应用](/desktop/guides/chromium-and-electron)。
+
+## 故障排查
+
+<table>
+  <thead>
+    <tr><th>症状</th><th>原因</th><th>解决办法</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>PERM_DENIED</code>，或 <code>permissions</code> 显示 <code>denied</code></td><td>启动应用没有辅助功能权限，或 <code>screenshot</code> 缺少屏幕录制权限</td><td>按上面的授权步骤操作</td></tr>
+    <tr><td>节点很少或没有引用</td><td>自绘 UI，或 Chromium 渲染器仍在就绪中</td><td>检查权限、去掉 <code>-i</code>、调大 <code>--timeout-ms</code>，并运行 <code>list-surfaces</code> 以防内容在 sheet 里</td></tr>
+    <tr><td><code>complete: false</code> 或快照很慢</td><td>过深的树耗尽了预算</td><td>改用 <code>find</code>，或骨架加 <code>--root</code>。参见<a href="/desktop/skeleton-and-drill-down">骨架与下钻</a></td></tr>
+    <tr><td><code>right-click</code> 后 <code>APP_UNRESPONSIVE</code> 且 <code>retry: unsafe</code></td><td><code>AXShowMenu</code> 在菜单打开后进入了模态菜单跟踪</td><td>不要重试。运行 <code>snapshot --surface menu</code>；对组合框或菜单按钮，用 <code>select</code></td></tr>
+    <tr><td><code>select</code> 无法确认选择</td><td>它需要从关到开的菜单变化，而菜单本来就是打开的</td><td>先关掉已打开的菜单，再重新运行 <code>select</code></td></tr>
+    <tr><td><code>WINDOW_NOT_FOUND</code></td><td>窗口所有表面没有打开的窗口</td><td>用 <code>--activate</code> 执行 <code>launch "App"</code>，然后 <code>list-windows --app "App"</code></td></tr>
+    <tr><td>快捷键没有任何反应</td><td>在 macOS 使用 <code>cmd</code> 的地方用了 <code>ctrl</code>，或按键发进了另一个应用</td><td>改用 <code>cmd+...</code>，或用 <code>--app</code> 限定范围</td></tr>
+  </tbody>
+</table>
+
+更多情形见 `agent-desktop skills get macos troubleshooting`。

@@ -1,0 +1,107 @@
+---
+title: 所有权、线程与错误
+navTitle: 所有权、线程与错误
+description: C 库返回的每个指针由谁释放、哪些线程可以调用，以及如何解读失败。
+---
+
+## 所有权
+
+库交给你的每个指针都是 Rust 分配的，因此 C 的 `free()` 不能释放它。每个指针都有一个配套的 free 函数。借出的指针，例如 `ad_last_error_*` 字符串和 `*_list_get` 返回的条目，永远不会被释放。
+
+<table>
+  <thead>
+    <tr><th>分配者</th><th>释放方式</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>JSON 入口（<code>ad_snapshot</code>、<code>ad_execute_by_ref</code>、<code>ad_execute_by_ref_timeout</code>、<code>ad_wait</code>、<code>ad_status</code>、<code>ad_version</code>、<code>ad_trace_show</code>、<code>ad_trace_export</code>）</td><td><code>ad_free_string(out)</code></td></tr>
+    <tr><td><code>ad_get_clipboard</code>、<code>ad_get</code>（可能写入 null）</td><td><code>ad_free_string(text)</code></td></tr>
+    <tr><td><code>ad_adapter_create</code>、<code>ad_adapter_create_with_session</code></td><td><code>ad_adapter_destroy(adapter)</code></td></tr>
+    <tr><td><code>ad_list_apps</code></td><td><code>ad_app_list_free(list)</code></td></tr>
+    <tr><td><code>ad_list_displays</code></td><td><code>ad_display_list_free(list)</code></td></tr>
+    <tr><td><code>ad_list_windows_exact</code></td><td><code>ad_exact_window_list_free(list)</code></td></tr>
+    <tr><td><code>ad_list_surfaces_exact</code></td><td><code>ad_exact_surface_list_free(list)</code></td></tr>
+    <tr><td><code>ad_list_notifications</code></td><td><code>ad_notification_list_free(list)</code></td></tr>
+    <tr><td><code>ad_dismiss_all_notifications</code></td><td><code>ad_dismiss_all_notifications_free(dismissed, failed)</code></td></tr>
+    <tr><td><code>ad_launch_app_exact</code>（窗口结构体内的字符串）</td><td><code>ad_release_exact_window_fields(&amp;out)</code></td></tr>
+    <tr><td><code>ad_get_tree_exact</code></td><td><code>ad_free_tree(&amp;out)</code></td></tr>
+    <tr><td><code>ad_find_exact</code>（原生句柄）</td><td><code>ad_free_handle(adapter, &amp;handle)</code></td></tr>
+    <tr><td><code>ad_execute_action</code>、<code>ad_execute_action_with_policy</code>、<code>ad_notification_action</code></td><td><code>ad_free_action_result(&amp;out)</code></td></tr>
+    <tr><td><code>ad_screenshot</code>、<code>ad_screenshot_window_exact</code></td><td><code>ad_image_buffer_free(buf)</code></td></tr>
+  </tbody>
+</table>
+
+- 每个 free 函数都接受 null 且不产生任何效果。
+- 对同一个列表句柄或图片缓冲区释放两次是未定义行为。释放之后把指针置为 `NULL`。
+- `ad_free_handle` 会把句柄清零，因此对同一个结构体第二次调用是空操作。在销毁产生句柄的适配器之前先释放句柄。
+- 结构体内部的字符串归结构体的所有者所有。不要一个个单独释放它们。
+- 每个可失败的函数都会在校验任何东西之前先把 out 参数清零，因此在失败后调用配对的 free 函数是安全的。
+- `ad_resolve_element_exact` 与 `ad_execute_ref_action_exact_with_policy` 不分配任何东西。它们以 `AD_RESULT_ERR_ACTION_NOT_SUPPORTED` 失败，并把 out 参数留作 null 或清零。
+
+## 线程
+
+各入口可以从任意宿主线程调用。原生句柄是例外：句柄要在同一线程、用产生它的适配器完成解析、使用与释放；其他任何做法都返回 `AD_RESULT_ERR_INVALID_ARGS`。要跨线程传递目标，请传限定引用并使用 `ad_execute_by_ref`。
+
+<table>
+  <thead>
+    <tr><th>并发调用</th><th>契约</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>读与读</td><td>两者并发运行。</td></tr>
+    <tr><td>读与修改</td><td>读不等待，且可能与修改重叠；其结果是某一时间点的观察。</td></tr>
+    <tr><td>修改与修改</td><td>对于同一 OS 用户，同一时刻只有一个交互锁持有者在运行。抢不到锁的等待者会返回一个结构化的超时。</td></tr>
+  </tbody>
+</table>
+
+快照、搜索、清单、截图、剪贴板读取、status 与 trace 读取属于观察。引用操作、原生句柄操作、输入合成、剪贴板写入、应用与窗口变更、通知操作属于修改。锁与 CLI 共享，因此同一用户的修改在各线程与各进程之间串行化。它限定在单条命令之内，不是事务：观察与后续操作之间 UI 仍可能变化。
+
+- `ad_adapter_destroy` 会吊销适配器。已在途的调用会跑完；此后开始的调用返回 `AD_RESULT_ERR_INVALID_ARGS`。
+- `ad_wait` 对其调用线程的阻塞至多为 `scope.timeout_ms`。
+- `ad_set_log_callback` 的回调可能在调用任意 `ad_*` 函数的线程上并发执行，且在注销后仍可能短促触发。让它在进程存活期间保持有效，且绝不让它跨越 C ABI 展开（unwind）。
+- 语言运行时的全局锁给不了线程亲和性：把原生句柄放进线程封闭的对象里，或者改用引用。
+- 在 macOS 上，`ad_check_permissions` 报告的是宿主可执行文件（`python3`、`node`、你的应用）的辅助功能授权，而不是库的。
+
+## 错误
+
+失败的 `AdResult` 函数返回负数错误码，并填充调用线程的末次错误槽。在下一次可能失败的调用之前先读它。
+
+```c
+AdExactWindowInfo win = {0};
+AdResult rc = ad_launch_app_exact(adapter, "gnome-calculator", 5000, &win);
+if (rc != AD_RESULT_OK) {
+    const char *msg = ad_last_error_message();
+    const char *sug = ad_last_error_suggestion();   /* may be NULL */
+    fprintf(stderr, "launch failed (%d): %s\n", (int)rc, msg ? msg : "(no message)");
+    if (sug) fprintf(stderr, "  suggestion: %s\n", sug);
+    return -1;
+}
+ad_release_exact_window_fields(&win);
+```
+
+<table>
+  <thead>
+    <tr><th>访问器</th><th>返回</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ad_last_error_code()</code></td><td>上次失败的错误码，或 <code>AD_RESULT_OK</code></td></tr>
+    <tr><td><code>ad_last_error_message()</code></td><td>描述，或 null</td></tr>
+    <tr><td><code>ad_last_error_suggestion()</code></td><td>恢复提示，或 null</td></tr>
+    <tr><td><code>ad_last_error_platform_detail()</code></td><td>OS 诊断信息，或 null</td></tr>
+    <tr><td><code>ad_last_error_details()</code></td><td>结构化 JSON，或 null。它可能包含用户屏幕上的文本，因此不要写进共享日志。</td></tr>
+    <tr><td><code>ad_last_error_delivery_semantics(&amp;sem)</code></td><td>写入上次失败的投递与重试值；没有记录时两者均为 <code>UNKNOWN</code>。</td></tr>
+  </tbody>
+</table>
+
+这些字符串在同一线程后续的成功调用中保持有效；只有下一次失败的调用才会替换它们，行为类似 POSIX 的 `errno`。该槽是线程本地的。只有重试处置为 `AD_RETRY_DISPOSITION_SAFE` 时才重试，详见[错误与恢复](/desktop/errors-and-recovery#disposition)。
+
+`AdResult` 错误码与 CLI 的[错误码](/desktop/errors-and-recovery#错误码)一一对应：从 `AD_RESULT_ERR_PERM_DENIED`（-1）到 `AD_RESULT_ERR_APP_UNRESPONSIVE`（-16）。完整列表见 [API 页](/desktop/ffi/api#枚举)。列表之外的任何负值都按未知错误处理，因为可能追加新码。
+
+### JSON 入口的两种失败方式
+
+JSON 入口有两种失败方式，因此先检查 `*out` 再决定是否释放：
+
+- **参数或基础设施故障**（null 适配器、非法 UTF-8、非法枚举值）：`*out` 为 null，不分配任何东西，只有末次错误槽记录它。
+- **命令失败**（应用未找到、`STALE_REF`、`TIMEOUT`）：`*out` 持有一个 `"ok": false` 信封，用 `ad_free_string` 释放它。末次错误槽同样被设置。
+
+### 引用、枚举与 panic
+
+接受引用的函数只接受 `@<snapshot_id>:e<N>` 形态。裸引用或格式错误的引用在派发之前返回 `AD_RESULT_ERR_INVALID_ARGS`；快照缺失返回 `AD_RESULT_ERR_SNAPSHOT_NOT_FOUND`；引用缺失返回 `AD_RESULT_ERR_STALE_REF`。每个 `int32_t` 枚举字段都会校验，因此越界值返回 `AD_RESULT_ERR_INVALID_ARGS` 而不是未定义行为。每个入口都会捕获 panic 并以 `AD_RESULT_ERR_INTERNAL` 上报，但仅限以 `release-ffi` profile 构建的库；参见[构建与链接](/desktop/ffi/build-and-link#从源码构建)。

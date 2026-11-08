@@ -1,0 +1,10 @@
+{
+  "name": "agent-desktop-docs-cn",
+  "version": "0.0.0",
+  "private": true,
+  "description": "简体中文镜像：agent-desktop 文档（agent-browser.dev）的汉化翻译与构建工程（上游 vercel-labs/agent-desktop main，Apache-2.0）",
+  "packageManager": "pnpm@11.1.3",
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

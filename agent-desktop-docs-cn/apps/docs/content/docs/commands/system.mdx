@@ -1,0 +1,207 @@
+---
+title: 系统命令
+navTitle: 系统
+description: status、permissions、version、skills、session、cursor-overlay 与 trace 的参考文档。
+---
+
+这些命令报告适配器与 OS 状态、管理会话及其追踪记录、并配置光标浮层。它们都不对应用操作。示例为 Linux 的真实输出。
+
+## status
+
+显示适配器健康状况、平台、权限、活动快照与当前会话。它不接受任何 flag。
+
+```bash
+agent-desktop status
+```
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>platform</code>、<code>version</code></td><td>操作系统与 agent-desktop 版本。</td></tr>
+    <tr><td><code>permissions</code></td><td><a href="#permissions"><code>permissions</code></a> 返回的那个对象。</td></tr>
+    <tr><td><code>snapshot_id</code>、<code>ref_count</code></td><td>所选命名空间中最近的一份快照，或 <code>null</code>。</td></tr>
+    <tr><td><code>session_id</code>、<code>tracing</code></td><td>当前会话（或 <code>null</code>），以及是否挂载了追踪记录写入器。</td></tr>
+    <tr><td><code>artifacts</code></td><td><code>events</code> 或 <code>full</code>，仅在活动会话下出现。</td></tr>
+    <tr><td><code>supported_surfaces</code></td><td>该适配器能读取的表面类型。为空表示无障碍服务没有应答。参见<a href="/desktop/surfaces">表面</a>。</td></tr>
+    <tr><td><code>state_root</code></td><td>解析出的<a href="/desktop/configuration#state-root">状态根目录</a>。</td></tr>
+  </tbody>
+</table>
+
+[安装](/desktop/installation#验证安装)展示了完整的结果。无障碍服务缺失不会让 `status` 失败；它表现为一个被拒绝的权限和空的 `supported_surfaces`。非法的 `AGENT_DESKTOP_HOME` 或 `AGENT_DESKTOP_SESSION` 返回 `INVALID_ARGS`。
+
+## permissions
+
+报告 agent-desktop 所需的 OS 权限状态。
+
+```bash
+agent-desktop permissions [--request] [--guide]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--request</code></td><td>关闭</td><td>请 OS 弹出缺失权限的授权提示，借助一个有界的辅助助手执行，因此卡住的提示不会挂住命令。这是唯一会触发提示的路径。</td></tr>
+    <tr><td><code>--guide</code></td><td>关闭</td><td>仅限 macOS。打开系统设置并配合屏幕指引，随即返回不等待。<code>data.guide</code> 为 <code>started</code>、<code>already_running</code> 或 <code>not_needed</code>。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "permissions",
+  "data": {
+    "accessibility": { "state": "granted" },
+    "automation": { "state": "not_required" },
+    "screen_recording": { "state": "not_required" }
+  }
+}
+```
+
+每个状态为 `granted`、`denied`（带 `suggestion`）、`not_required` 或 `unknown`。在 Windows 和 Linux 上，`--guide` 返回 `PLATFORM_NOT_SUPPORTED`。
+
+## version
+
+输出版本号、CPU 架构与操作系统。它不接受任何 flag。
+
+```json
+{ "version": "2.6", "ok": true, "command": "version", "data": { "os": "linux", "target": "x86_64", "version": "1.0.1" } }
+```
+
+信封的 `version` 是 JSON 契约版本；`data.version` 是发布版本。
+
+## skills
+
+输出编译进二进制文件的技能指南。用法、名称与引用见[技能](/desktop/skills)。
+
+```bash
+agent-desktop skills [list]
+agent-desktop skills get NAME [REFERENCE] [--full]
+agent-desktop skills path
+```
+
+## session
+
+创建、列出、结束和清理会话。什么是会话、命令如何选择会话，见[会话](/desktop/sessions)。
+
+```bash
+agent-desktop session start [--name LABEL] [--no-trace] [--screenshots] [--cursor [--multi-agent]]
+agent-desktop session end [ID]
+agent-desktop session list
+agent-desktop session gc [--older-than SECONDS] [--ended]
+```
+
+<table>
+  <thead>
+    <tr><th>子命令与 flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>start --name LABEL</code></td><td>无</td><td>1 到 128 字节的标签。</td></tr>
+    <tr><td><code>start --no-trace</code></td><td>关闭</td><td>创建会话但不记录追踪。</td></tr>
+    <tr><td><code>start --screenshots</code></td><td>关闭</td><td>捕获操作前后的截图与 refmap 副本。不做脱敏。需要开启追踪。</td></tr>
+    <tr><td><code>start --cursor</code></td><td>关闭</td><td>以默认样式启用光标浮层。</td></tr>
+    <tr><td><code>start --multi-agent</code></td><td>关闭</td><td>给每个 harness 子智能体分配它自己的光标。需要 <code>--cursor</code>；此后桌面操作需要 agent id。</td></tr>
+    <tr><td><code>end [ID]</code></td><td>当前会话</td><td>封存 manifest；对已结束的会话再次运行也算成功。同时停掉会话中的每个光标浮层。</td></tr>
+    <tr><td><code>gc --older-than SECONDS</code></td><td>无</td><td>只移除早于该时长的会话；不指定 <code>--ended</code> 时，从未结束的会话一旦过期也算在内。</td></tr>
+    <tr><td><code>gc --ended</code></td><td>关闭</td><td>移除已结束的会话，即使它们最近五分钟内写过数据。</td></tr>
+  </tbody>
+</table>
+
+`start` 返回 `session_id`、`name`、`trace`、`artifacts`、`created_at`、`next`（导出 id 的 shell 行）与 `activation`；[会话](/desktop/sessions#启动-列出-结束与清理)展示了完整结果。`end` 返回 `session_id` 与 `ended_at`，`list` 返回 `data.sessions`，`gc` 返回 `data.removed`。`--screenshots` 搭配 `--no-trace` 是 `INVALID_ARGS`，`--multi-agent` 缺 `--cursor` 是解析错误。
+
+## cursor-overlay
+
+为会话配置仅供演示的光标浮层。该浮层会绘制智能体光标、点击涟漪和元素高亮，且从不改变任何操作的行为。在 macOS 和 Windows 上，`type` 或 `set-value` 落下之后，它还会在字段的插入点绘制一个插入符，并在移动插入点的 `press` 之后移动它。它要求活动会话，且不能在 [batch](/desktop/commands/batch) 内运行。
+
+```bash
+agent-desktop --session "$AGENT_DESKTOP_SESSION" cursor-overlay enable [STYLE FLAGS]
+agent-desktop --session "$AGENT_DESKTOP_SESSION" cursor-overlay disable
+```
+
+<table>
+  <thead>
+    <tr><th><code>enable</code> flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--multi-agent</code></td><td>关闭</td><td>要求桌面操作携带 agent id。与 <code>--agent-id</code> 同用会被拒绝。</td></tr>
+    <tr><td><code>--label TEXT</code>、<code>--max-words N</code></td><td>无、<code>6</code></td><td>光标旁的意图文本，限 1 到 12 个词，绘成按文本尺寸适配的黑色胶囊。</td></tr>
+    <tr><td><code>--accent HEX</code></td><td><code>#4299FF</code></td><td>光标本体、涟漪、元素轮廓与插入符的颜色。</td></tr>
+    <tr><td><code>--fill HEX</code>、<code>--rim HEX</code></td><td>取 accent 色、<code>#111318</code></td><td>光标本体与轮廓颜色。<code>--fill</code> 用于设置不同于 accent 的本体颜色。</td></tr>
+    <tr><td><code>--size N</code></td><td><code>1.0</code></td><td>尺寸倍数，0.5 到 4.0。</td></tr>
+    <tr><td><code>--no-ripple</code>、<code>--no-highlight</code></td><td>关闭</td><td>关闭点击涟漪或元素轮廓。</td></tr>
+    <tr><td><code>--image PATH</code>、<code>--hotspot X,Y</code></td><td>内置箭头</td><td>用一张 PNG（最大 2 MiB，每边不超过 1024 像素）及其点击点绘制光标。</td></tr>
+    <tr><td><code>--pointer-image PATH</code>、<code>--pointer-hotspot X,Y</code></td><td>无</td><td>悬停在可按压控件上显示的 PNG，及其点击点。</td></tr>
+    <tr><td><code>--travel-ms MIN,MAX</code></td><td><code>90,320</code></td><td>从短移动到长移动的飞行时间区间。</td></tr>
+    <tr><td><code>--bow N</code>、<code>--overshoot N</code>、<code>--tremor PX</code></td><td><code>1</code>、<code>0.035</code>、<code>1.1</code></td><td>路径弯曲度（0 到 3）、过冲比例（0 到 0.15）以及抖动量，单位为点（0 到 4）。</td></tr>
+    <tr><td><code>--dwell-ms N</code></td><td><code>0</code></td><td>操作前停留在目标上的时长，0 到 300。飞行时间上限加停留不得超过 700 ms。</td></tr>
+    <tr><td><code>--motion-seed N</code></td><td>无</td><td>以确定性的方式改变每次移动。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "cursor-overlay",
+  "data": {
+    "activation": { "environment": "AGENT_DESKTOP_SESSION", "value": "run-1793353372413-23159-0" },
+    "cursor_overlay": {
+      "enabled": true,
+      "max_words": 6,
+      "style": { "accent": "#4299FF", "highlight": true, "rim": "#111318", "ripple": true, "size": 1.0 }
+    },
+    "next": "export AGENT_DESKTOP_SESSION=run-1793353372413-23159-0",
+    "rendered": true,
+    "session_id": "run-1793353372413-23159-0"
+  }
+}
+```
+
+`rendered: false` 表示设置已保存但什么也没画出来，Linux Wayland 上就是这样。配合 `--agent-id` 时，`enable` 把样式保存为该智能体的配置档。`disable` 停掉会话中的每个光标；若无法确认清理完成，设置仍被保存，错误的处置为 `delivery_uncertain`。有头操作与浮层如何交互，见[有头模式](/desktop/guides/headed-mode#看清操作落在哪里)。
+
+## trace
+
+读取活动会话合并后的追踪记录时间线。两个子命令都要求活动会话，且不需要任何 OS 权限。录制与隐私见[追踪记录](/desktop/guides/traces)。
+
+```bash
+agent-desktop --session "$AGENT_DESKTOP_SESSION" trace show [--limit N] [--event PREFIX]
+agent-desktop --session "$AGENT_DESKTOP_SESSION" trace export [--out PATH] [--limit N]
+```
+
+<table>
+  <thead>
+    <tr><th>子命令与 flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>show --limit N</code></td><td><code>500</code></td><td>返回最后 N 条合并事件。<code>0</code> 返回全部。</td></tr>
+    <tr><td><code>show --event PREFIX</code></td><td>无</td><td>只保留名称以该前缀开头的事件，先过滤、后按上限截取。</td></tr>
+    <tr><td><code>export --out PATH</code></td><td>会话目录下的 <code>trace-SESSION.html</code></td><td>自包含 HTML 查看器的输出路径。</td></tr>
+    <tr><td><code>export --limit N</code></td><td><code>5000</code></td><td>嵌入最后 N 条事件。<code>0</code> 嵌入全部。</td></tr>
+  </tbody>
+</table>
+
+`show` 返回 `session_id`、`segments`、`total_events`、`returned_events`、`truncated` 和 `events`，加 `--event` 时还有 `matched_events`，跳过行时有 `warnings`。`export` 返回：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "trace",
+  "data": {
+    "bytes": 26611,
+    "event_count": 9,
+    "path": "/tmp/run.html",
+    "returned_events": 9,
+    "screenshots_embedded": 0,
+    "screenshots_skipped": 0,
+    "total_events": 9,
+    "truncated": false
+  }
+}
+```
+
+没有活动会话，或会话什么都没记录，两者都返回 `INVALID_ARGS`。

@@ -1,0 +1,138 @@
+---
+title: 快速开始
+navTitle: 快速开始
+description: 对一个真实的桌面应用运行观察—操作—验证（observe, act, verify）循环。检查安装、绘制应用地图、下钻一个区域、点击一个引用并验证结果。
+---
+
+这次运行在 Linux 上驱动 GNOME Calculator：检查安装、绘制应用地图、下钻一个区域、按下一个按钮、确认显示已变化，再把应用恢复原样。下面的输出都是真实输出，仅在标注处有删减。
+
+在图形会话中启动 GNOME Calculator，并在同一会话的终端里运行命令。在 macOS 或 Windows 上,改用 `list-apps` 打印出的应用名（例如 `"Calculator"`），引用（ref）也会不同。在 PowerShell 中,所有引用都要加引号（`'@s2txcl95uvubmn:e1'`）；参见 [Windows](/desktop/platforms/windows#使用-powershell)。
+
+## 1. 检查安装
+
+```bash
+agent-desktop status                 # 权限、supported_surfaces、state_root
+agent-desktop skills get platform    # 当前操作系统的指南,在 data.content 里
+```
+
+`data.permissions.accessibility.state` 应为 `granted`，`data.supported_surfaces` 不应为空。智能体在第一次操作前会先加载平台技能；参见 [技能](/desktop/skills)。
+
+## 2. 绘制应用地图
+
+骨架（skeleton）快照读取三层，并用 `children_count` 标记每个被裁断的分支：
+
+```bash
+agent-desktop snapshot --app gnome-calculator --skeleton -i --compact
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gnome-calculator",
+    "complete": true,
+    "ref_count": 2,
+    "snapshot_id": "s2txcl95uvubmn",
+    "tree": {
+      "role": "window",
+      "name": "Calculator",
+      "children": [
+        { "children_count": 2, "ref_id": "@s2txcl95uvubmn:e1", "role": "group" },
+        { "children_count": 1, "ref_id": "@s2txcl95uvubmn:e2", "role": "group" }
+      ]
+    }
+  }
+}
+```
+
+这棵树做了裁剪：包装性 group 和 `native_id` 字段已被移除。`e1` 是计算器主体，`e2` 是标题栏。每个引用都携带自己的快照 id；传给后续命令时必须与打印出的完全一致。
+
+## 3. 下钻一个区域
+
+```bash
+agent-desktop snapshot --root @s2txcl95uvubmn:e1 -i --compact
+```
+
+这次下钻读取 `e1` 的子树，并向同一快照追加 31 个引用（`e3` 到 `e33`）。其中两个：
+
+```json
+[
+  { "ref_id": "@s2txcl95uvubmn:e6", "role": "textfield", "available_actions": ["RightClick", "SetValue", "TypeText", "SetFocus"] },
+  { "ref_id": "@s2txcl95uvubmn:e11", "role": "button", "name": "7", "available_actions": ["Click", "SetFocus"] }
+]
+```
+
+`e6` 是显示屏，`e11` 是 7 按钮。下钻目标与重新下钻的机制见[骨架与下钻](/desktop/skeleton-and-drill-down)。
+
+## 4. 对引用执行操作
+
+```bash
+agent-desktop click @s2txcl95uvubmn:e11
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "click",
+  "data": {
+    "action": "click",
+    "details": {
+      "auto_wait": {
+        "lease_contention_count": 0,
+        "lease_hold_ms": 114,
+        "read_only_preflight_attempts": 1,
+        "read_only_resolve_attempts": 1
+      }
+    },
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "Action.DoAction", "mechanism": "semantic_api", "outcome": "succeeded" }],
+    "surfaces": [
+      { "id": "w-1.11-org-gnome-Calculator-a11y-948fd89a_9bda_453b_9c10_4a9e9eed3feb", "title": "Calculator", "type": "window" }
+    ]
+  }
+}
+```
+
+这次点击走的是无障碍 API（`semantic_api`），没有移动光标。`delivered_unverified` 表示指令已派发但尚无任何东西确认其效果，`retry: unsafe` 表示重按一次可能把 7 按下两次。参见 [JSON 输出](/desktop/json-output#操作结果与-disposition)。
+
+## 5. 验证
+
+应用异步更新显示，所以要等待取值，而不是只读一次或睡一觉：
+
+```bash
+agent-desktop wait --element @s2txcl95uvubmn:e6 --predicate value --value 7 --timeout 5000
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "wait",
+  "data": {
+    "elapsed_ms": 286,
+    "found": true,
+    "observed": { "expected_chars": 1, "matched": true, "value_chars": 1, "value_present": true },
+    "predicate": "value",
+    "ref": "@s2txcl95uvubmn:e6"
+  }
+}
+```
+
+此时 `get @s2txcl95uvubmn:e6 --property value` 返回 `"7"`。点击后立刻读取仍可能显示旧值，这正是验证步骤要等待的原因。参见[无 sleep 的等待](/desktop/guides/waiting)。
+
+## 6. 恢复状态
+
+按下 **C**（同一次下钻中的 `e8`），让应用恢复到你发现它时的样子：
+
+```bash
+agent-desktop click @s2txcl95uvubmn:e8
+```
+
+## 下一步
+
+- [观察—操作—验证循环](/desktop/guides/observe-act-verify)：把循环当作实践。
+- [错误与恢复](/desktop/errors-and-recovery)：引用过期或有歧义时怎么办。
+- [命令](/desktop/commands)：全部命令与 flag。

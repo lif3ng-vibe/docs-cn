@@ -1,0 +1,174 @@
+---
+title: wait
+navTitle: 等待
+description: wait 命令的参考文档，涵盖全部模式、元素判定条件、事件类型、超时及其默认值，以及超时错误的详情。
+---
+
+`wait` 会阻塞到条件成立为止，因此你不需要定死时长的 sleep。每次调用只用一种模式。什么时候该用 `wait`、什么时候该用操作后的 `--wait-for` flag，见[不用 sleep 的等待](/desktop/guides/waiting)；那些 flag 见[配置](/desktop/configuration#操作后等待-flag)。示例为 Linux 的真实输出。
+
+## wait
+
+```bash
+agent-desktop wait MS
+agent-desktop wait --element REF [--predicate NAME] [--value TEXT] [--action NAME]
+agent-desktop wait --window TITLE [--app NAME]
+agent-desktop wait --text TEXT [--count N] [--app NAME]
+agent-desktop wait --menu [--app NAME]
+agent-desktop wait --menu-closed [--app NAME]
+agent-desktop wait --notification [--text TEXT] [--app NAME]
+agent-desktop wait --event KIND [--app NAME] [--window TITLE] [--window-id ID]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>MS</code></td><td>无</td><td>暂停这么多毫秒。</td></tr>
+    <tr><td><code>--element REF</code></td><td>无</td><td>等待该限定引用背后的元素满足 <code>--predicate</code> 为止。</td></tr>
+    <tr><td><code>--predicate NAME</code></td><td><code>exists</code></td><td><code>exists</code>、<code>enabled</code>、<code>visible</code>、<code>actionable</code> 或 <code>value</code>。要求 <code>--element</code>。</td></tr>
+    <tr><td><code>--value TEXT</code></td><td>无</td><td><code>--predicate value</code> 的期望值。仅在那种模式下必填，其余模式会拒绝。</td></tr>
+    <tr><td><code>--action NAME</code></td><td><code>click</code></td><td>用于 <code>--predicate actionable</code>：<code>click</code>、<code>type</code>、<code>set-value</code> 或 <code>clear</code>。</td></tr>
+    <tr><td><code>--window TITLE</code></td><td>无</td><td>等待出现标题包含此文本的窗口。搭配 <code>--event</code> 时，改为把事件限定到精确标题。</td></tr>
+    <tr><td><code>--text TEXT</code></td><td>无</td><td>等待该文本出现在应用的树中。搭配 <code>--notification</code> 时，改为过滤通知文本。</td></tr>
+    <tr><td><code>--count N</code></td><td>无</td><td>用于 <code>--text</code>：等到恰好有 N 个节点匹配。</td></tr>
+    <tr><td><code>--menu</code>、<code>--menu-closed</code></td><td>关闭</td><td>等待菜单表面打开，或被关闭。</td></tr>
+    <tr><td><code>--notification</code></td><td>关闭</td><td>等待新通知到达。</td></tr>
+    <tr><td><code>--event KIND</code></td><td>无</td><td>等待生命周期信号：<code>window-opened</code>、<code>window-closed</code>、<code>app-launched</code>、<code>app-terminated</code>、<code>focus-changed</code>、<code>surface-appeared</code> 或 <code>surface-dismissed</code>。</td></tr>
+    <tr><td><code>--window-id ID</code></td><td>无</td><td>把 <code>window-opened</code>、<code>window-closed</code> 或 <code>focus-changed</code> 限定为一个窗口。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>无</td><td>把窗口、文本、菜单、通知或事件等待限定到一个应用。元素等待与时间等待会忽略它。</td></tr>
+    <tr><td><code>--timeout MS</code></td><td><code>30000</code></td><td>除 <code>MS</code> 外所有模式的超时，最多 86400000。</td></tr>
+  </tbody>
+</table>
+
+混用两种模式的 flag，或什么模式都不给，返回 `INVALID_ARGS`。等待大约每 100 ms 轮询一次，平台发出变化信号时会提前唤醒。`wait` 从不改变应用，因此失败的等待不会留下任何半途生效的东西；成功的 `--text` 等待会保存一份快照。
+
+### 时间
+
+`wait MS` 睡眠并返回 `{ "waited_ms": MS }`。只在没有可观察的信号能标明就绪时，用它把两个操作隔开。
+
+### 元素
+
+`--element REF` 轮询引用背后的实时元素，直到判定条件成立。引用本身标明其所属快照，因此不需要 `--app`。下面等待计算器显示屏读出 `7`：
+
+```bash
+agent-desktop wait --element @s2txcl95uvubmn:e6 --predicate value --value 7 --timeout 5000
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "wait",
+  "data": {
+    "elapsed_ms": 286,
+    "found": true,
+    "observed": { "expected_chars": 1, "matched": true, "value_chars": 1, "value_present": true },
+    "predicate": "value",
+    "ref": "@s2txcl95uvubmn:e6"
+  }
+}
+```
+
+`observed` 取决于判定条件：`exists` 对应空；`enabled` 或 `visible` 带 `applicable`；`actionable` 带 `checks`；或上面的值计数字段——这些计数绝不会回显值本身。`actionable` 会执行该操作本来会跑的那些检查；输入前用 `--action type`，因为可编辑性检查只在编辑类操作下运行。暂时无法解析的引用会持续重试到超时为止。
+
+### 窗口
+
+`--window TITLE` 等待出现标题包含 `TITLE` 的任意窗口，无论是否获得焦点。
+
+```bash
+agent-desktop wait --window Calculator --app gnome-calculator --timeout 3000
+```
+
+结果为 `{ "elapsed_ms", "found": true, "window": WINDOW }`，其中 `WINDOW` 的字段与 `list-windows` 的返回一致。
+
+### 文本
+
+`--text TEXT` 每次轮询都对应用的窗口做快照，并以不区分大小写的子串方式在节点名称、值和描述中查找该文本。
+
+```bash
+agent-desktop wait --text Calculator --app gnome-calculator --timeout 3000
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "wait",
+  "data": { "elapsed_ms": 112, "found": true, "ref": null, "role": "window", "snapshot_id": "s2uiek94hz3vms", "text": "Calculator" }
+}
+```
+
+`ref` 和 `role` 描述第一个匹配，节点没有引用时 `ref` 为 `null`。等待保存了它的快照，因此 `snapshot_id` 是新鲜的，可以像任何快照一样使用。当应用有多个符合条件的窗口时（例如一份文档和它的保存对话框），等待会先返回 `AMBIGUOUS_TARGET` 而不去检查任何文本：改用 `--window` 等待对话框。
+
+### 菜单
+
+`--menu` 等待菜单表面打开，`--menu-closed` 等待其消失。两者都返回 `{ "elapsed_ms", "found": true }`。在 Linux 上，对从未打开过的菜单执行 `--menu-closed` 会立即返回 true，因此先等待 `--menu`。
+
+### 通知
+
+`--notification` 在启动时对通知列表取一份基线，然后返回第一条不在基线里的通知。`--text` 和 `--app` 决定哪些通知计入。结果为 `{ "condition": "notification", "matched": true, "notification": {...}, "elapsed_ms" }`。macOS 与 Windows 上的无头限制见[通知命令](/desktop/commands/notifications)页。
+
+### 事件
+
+`--event KIND` 把启动时取的基线与新的读取比较，返回第一个匹配的变化，因此无需事先准备窗口 id 或标题。把引发事件的操作和这个等待放进同一个 [batch](/desktop/commands/batch)：batch 会在操作运行之前先捕获基线。下面这条等待的是上一个条目启动的应用的窗口：
+
+```json
+{
+  "command": "wait",
+  "data": {
+    "elapsed_ms": 144,
+    "event": {
+      "app": "gtk3-demo",
+      "kind": "window_opened",
+      "pid": 23270,
+      "title": "Application Class",
+      "window_id": "w-1.167-org-a11y-atspi-accessible-44"
+    },
+    "found": true
+  },
+  "execution": "completed",
+  "index": 1,
+  "ok": true,
+  "version": "2.6"
+}
+```
+
+`event.kind` 使用 snake_case。表面事件附加 `surface` 并要求 `--app`；`--window` 和 `--window-id` 只作用于三种窗口类事件。
+
+`--app` 只在启动时解析一次，落在一个进程上。没有任何应用匹配时，`app-launched`、`window-opened` 和 `surface-appeared` 会持续轮询，因此可以在应用启动上抢跑。`app-terminated`、`window-closed` 和 `surface-dismissed` 立即返回 `found: true` 与 `target_unresolved: true`——拼错的 `--app` 也会造成同样的现象。`focus-changed` 返回 `APP_NOT_FOUND`。
+
+### 错误
+
+超时的等待返回 `TIMEOUT`，带 `details.kind: "wait_timeout"`、`details.predicate`、`details.timeout_ms`，以及等待最后一次看到的状态：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "wait",
+  "error": {
+    "code": "TIMEOUT",
+    "message": "Window title (7 chars) not found within 1000ms",
+    "recovery": {
+      "strategy": "inspect_state_then_retry_original",
+      "retryable": true,
+      "requires_fresh_snapshot": true,
+      "retry_after_ms": 250
+    },
+    "details": {
+      "app": "gedit",
+      "kind": "wait_timeout",
+      "last_observed": { "count": 1, "titles": ["Untitled Document 1 - gedit"], "truncated": false },
+      "predicate": "window",
+      "timeout_ms": 1000,
+      "title": "Save As"
+    },
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+元素等待附带 `ref` 与 `last_observed`；文本等待附带 `text_chars` 与 `expected_count` 但不带文本本身；事件等待附带 `baseline_counts`；任何模式都可能附带 `last_error`。其他错误：`INVALID_ARGS` 对应错误的模式组合或裸引用，`--element` 对应引用错误，`APP_UNRESPONSIVE` 表示应用停止应答，以及 `PERM_DENIED`。
+
+平台限制：参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。

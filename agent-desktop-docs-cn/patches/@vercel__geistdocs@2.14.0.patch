@@ -1,0 +1,120 @@
+diff --git a/dist/internal/feedback-action.js b/dist/internal/feedback-action.js
+index 8f9d52561fdf50cba3d1556512b23a6755e159b8..8af3e17b8e446d43539cf9dbf211b5219be007c5 100644
+--- a/dist/internal/feedback-action.js
++++ b/dist/internal/feedback-action.js
+@@ -1,72 +1,4 @@
+-"use server";
+-import { headers } from "next/headers";
+-import { CHAT_FEEDBACK_URL_LIMIT, formatChatMessageFeedbackNote, normalizeChatMessageFeedback, } from "./chat/message-feedback";
+-const emotions = [
+-    { name: "cry", emoji: "😭" },
+-    { name: "sad", emoji: "😕" },
+-    { name: "happy", emoji: "🙂" },
+-    { name: "amazed", emoji: "🤩" },
+-];
+-const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+-const baseUrl = `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+-const postFeedback = async ({ emotion, maxUrlLength, note, siteId, thumbs, url, }) => {
+-    const endpoint = new URL("/feedback", "https://geistdocs.com/feedback");
+-    const headersList = await headers();
+-    try {
+-        const response = await fetch(endpoint, {
+-            method: "POST",
+-            headers: {
+-                "Content-Type": "application/json",
+-            },
+-            body: JSON.stringify({
+-                note,
+-                url: new URL(url, baseUrl).toString().slice(0, maxUrlLength),
+-                emotion,
+-                thumbs,
+-                ua: headersList.get("user-agent") ?? undefined,
+-                ip: headersList.get("x-real-ip") || headersList.get("x-forwarded-for"),
+-                label: siteId,
+-            }),
+-        });
+-        if (!response.ok) {
+-            console.error("Feedback submission failed:", response.status);
+-            return { success: false };
+-        }
+-        return { success: true };
+-    }
+-    catch (error) {
+-        console.error("Feedback submission error:", error);
+-        return { success: false };
+-    }
+-};
+-export const sendFeedback = async ({ url, feedback, siteId, }) => {
+-    const emoji = emotions.find((emotion) => emotion.name === feedback.emotion)?.emoji;
+-    return await postFeedback({
+-        emotion: emoji,
+-        note: feedback.message,
+-        siteId,
+-        url,
+-    });
+-};
+-/**
+- * Send a thumbs up or down on an Ask AI answer to the central feedback
+- * service. The note starts with `[Ask AI]` and carries the question,
+- * the sources shown, and the answer; `url` is the page the reader was on and
+- * `thumbs` is the vote.
+- */
+-export const sendChatMessageFeedback = async ({ feedback, siteId, }) => {
+-    // Server actions accept any input, so re-validate and re-cap here.
+-    const normalized = normalizeChatMessageFeedback(feedback);
+-    if (!normalized) {
+-        return { success: false };
+-    }
+-    // The service labels `thumbs` votes; it only maps the four page-feedback
+-    // emoji in `emotion`, so the vote emoji goes in the note instead.
+-    return await postFeedback({
+-        maxUrlLength: CHAT_FEEDBACK_URL_LIMIT,
+-        note: formatChatMessageFeedbackNote(normalized),
+-        siteId: typeof siteId === "string" ? siteId : undefined,
+-        thumbs: normalized.vote,
+-        url: normalized.pageUrl,
+-    });
+-};
++// 中文静态导出镜像补丁：feedback 的 "use server" 与 output:'export' 不兼容，
++// config.feedback.enabled=false 已关闭反馈功能，这里直接桩掉两个动作。
++export const sendFeedback = async () => ({ success: false });
++export const sendChatMessageFeedback = async () => ({ success: false });
+diff --git a/dist/internal/search.js b/dist/internal/search.js
+index ed8e832b33300267d068c9c958dc6f6451dc518c..7e6ccd995a9d4e1a94b7f79379577ed205aeb5c7 100644
+--- a/dist/internal/search.js
++++ b/dist/internal/search.js
+@@ -6,6 +6,8 @@ import { SearchDialog as FumadocsSearchDialog, SearchDialogClose, SearchDialogCo
+ import { useI18n } from "fumadocs-ui/contexts/i18n";
+ import { useState } from "react";
+ import { getPublicPath } from "../config";
++import { createTokenizer as createTokenizerMandarin } from "@orama/tokenizers/mandarin";
++import { create as createOrama } from "@orama/orama";
+ export const GeistdocsSearchDialog = ({ allowClear = false, basePath, onTagChange, tag, tags, ...props }) => {
+     const { locale } = useI18n();
+     const hasTags = tags !== undefined && tags.length > 0;
+@@ -19,10 +21,12 @@ export const GeistdocsSearchDialog = ({ allowClear = false, basePath, onTagChang
+         setSelected(value);
+     });
+     const { search, setSearch, query } = useDocsSearch({
+-        type: "fetch",
++        type: "static",
+         locale,
+         tag: hasTags ? selected : tag,
+-        api: getPublicPath("/api/search", basePath),
++        from: getPublicPath("/api/search", basePath),
++        initOrama: (l) =>
++            createOrama({ schema: { _: "string" }, ...(l === "cn" ? { components: { tokenizer: createTokenizerMandarin() } } : { language: l }) }),
+     });
+     return (_jsxs(FumadocsSearchDialog, { isLoading: query.isLoading, onSearchChange: setSearch, search: search, ...props, children: [_jsx(SearchDialogOverlay, { className: "bg-background-100/80 backdrop-blur-none" }), _jsxs(SearchDialogContent, { className: "w-[640px] max-w-[calc(100vw-1rem)] border-none shadow-[var(--ds-shadow-modal)]", "data-geistdocs-command-modal": true, onEscapeKeyDown: () => props.onOpenChange(false), children: [_jsxs(SearchDialogHeader, { children: [_jsx(SearchDialogIcon, {}), _jsx(SearchDialogInput, {}), _jsx(SearchDialogClose, {})] }), _jsx(SearchDialogList, { "aria-label": "Search results", Item: (itemProps) => (_jsx(SearchDialogListItem, { ...itemProps, role: "option" })), items: query.data === "empty" ? null : query.data, role: "listbox" }), hasTags ? (_jsx(SearchDialogFooter, { children: _jsx(TagsList, { allowClear: allowClear, onTagChange: (value) => {
+                                 setSelected(value);
+diff --git a/dist/routes/search.js b/dist/routes/search.js
+index d479b70d529badfefdf3160896b205db33e207c8..3b89386976808f30e85270b222976621a5f6ea32 100644
+--- a/dist/routes/search.js
++++ b/dist/routes/search.js
+@@ -108,5 +108,5 @@ export const createSearchRoute = ({ config, filterPage, source, sources, }) => {
+         i18n,
+         indexes: getIndexes,
+         localeMap,
+-    }).GET;
++    }).staticGET;
+ };

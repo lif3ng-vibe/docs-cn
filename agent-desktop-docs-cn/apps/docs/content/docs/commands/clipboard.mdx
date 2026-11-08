@@ -1,0 +1,109 @@
+---
+title: 剪贴板命令
+navTitle: 剪贴板
+description: clipboard-get、clipboard-set 与 clipboard-clear 的参考文档，包括文本、图片与文件列表格式以及结果形态。
+---
+
+剪贴板命令读写系统剪贴板。它们不需要无障碍权限，也不需要 `--headed`。示例为 Linux X11 的真实输出。
+
+## clipboard-get
+
+把剪贴板读成文本、图片或文件列表。
+
+```bash
+agent-desktop clipboard-get [--format text|auto|image|file-urls] [--out PATH]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--format</code></td><td><code>text</code></td><td><code>text</code>、<code>auto</code>（先文件引用，再图片，再文本）、<code>image</code> 或 <code>file-urls</code>。</td></tr>
+    <tr><td><code>--out PATH</code></td><td>状态根目录下的一个私有文件</td><td>图片内容的写入位置。不传时，图片落到当前会话的 <code>clipboard/</code> 目录，或<a href="/desktop/configuration#state-root">状态根目录</a>下的 <code>tmp/</code>。</td></tr>
+  </tbody>
+</table>
+
+```json
+{ "version": "2.6", "ok": true, "command": "clipboard-get", "data": { "text": "hello from agent-desktop", "type": "text" } }
+```
+
+图片结果为 `{ "type": "image", "path", "width", "height" }`，文件列表为 `{ "type": "file_urls", "file_urls": [...] }`。图片字节绝不会被内联。当剪贴板中没有请求形式的内容时，命令仍然成功：
+
+```json
+{ "version": "2.6", "ok": true, "command": "clipboard-get", "data": { "found": false, "type": "text" } }
+```
+
+读取 `text` 之前先检查 `found`。错误：`INVALID_ARGS` 对应未知格式或不可写的 `--out`；`PLATFORM_NOT_SUPPORTED` 表示平台上缺少所需的辅助组件。
+
+## clipboard-set
+
+写入文本、PNG 图片或文件路径列表。
+
+```bash
+agent-desktop clipboard-set TEXT
+printf '%s' 'Hello' | agent-desktop clipboard-set --stdin
+agent-desktop clipboard-set --image /tmp/a.png
+agent-desktop clipboard-set --file-url /tmp/a.txt --file-url /tmp/b.txt
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>TEXT</code></td><td>空文本</td><td>要写入的文本。</td></tr>
+    <tr><td><code>--stdin</code></td><td>无</td><td>从管道或重定向文件读取，最多 128 KiB。终端直接输入会被拒绝。不能与 <code>TEXT</code>、<code>--image</code> 或 <code>--file-url</code> 组合。</td></tr>
+    <tr><td><code>--image PATH</code></td><td>无</td><td>一个普通的 PNG 文件，最大 64 MiB。</td></tr>
+    <tr><td><code>--file-url PATH</code></td><td>无</td><td>作为文件引用写入的文件路径。可重复。每个路径都必须存在。</td></tr>
+  </tbody>
+</table>
+
+使用 `--stdin` 时，命令会等到输入结束。空输入与所有换行都会保留，包括末尾换行；用 `printf '%s'` 可避免多出末尾换行。输入必须是合法 UTF-8 且不含 NUL 字节（`\0`）。
+
+`--stdin` 让文本不进入进程参数。batch 走 JSON 的 `text` 字段，这会把文本放进进程参数；涉密步骤请拆成独立的 `--stdin` 命令。若想把文本 `--stdin` 当字符串复制，用 `agent-desktop clipboard-set -- --stdin`。
+
+不用 `--stdin` 时，一次调用只写入一种表示形式：`--file-url` 优先于 `--image`，后者优先于 `TEXT`。结果是一份 [OperationReport](/desktop/json-output#operationreport)，外加写入的 `type`：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "clipboard-set",
+  "data": {
+    "action": "clipboard-set",
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "clipboard_write", "mechanism": "semantic_api", "outcome": "succeeded" }],
+    "target": { "kind": "clipboard" },
+    "type": "text"
+  }
+}
+```
+
+macOS 会回读内容并报告 `delivered_verified`；Windows 和 Linux 报告 `delivered_unverified`，因此请用 `clipboard-get` 确认。在 Linux X11 上，一个辅助进程（`agent-desktop-linux-clipboard-owner`）会在命令结束后持续供给内容；若它不在二进制文件旁边，命令返回 `PLATFORM_NOT_SUPPORTED`。错误：`INVALID_ARGS` 对应非法的 `--image` 或缺失的 `--file-url` 路径；`TIMEOUT` 带 `lock_timeout` 表示另一个智能体持有输入锁。
+
+## clipboard-clear
+
+清空剪贴板。它不接受任何参数。
+
+```bash
+agent-desktop clipboard-clear
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "clipboard-clear",
+  "data": {
+    "action": "clipboard-clear",
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "clipboard_write", "mechanism": "semantic_api", "outcome": "succeeded" }],
+    "target": { "kind": "clipboard" }
+  }
+}
+```
+
+用 `clipboard-get` 确认，此后它会返回 `found: false`。
+
+平台限制：Wayland 需要 `wl-clipboard`。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。

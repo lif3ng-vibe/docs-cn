@@ -1,0 +1,104 @@
+---
+title: Windows
+navTitle: Windows
+description: agent-desktop 在 Windows 上的要求、权限与提权、各命令能力、应用命名、表面、PowerShell 注意事项与故障排查。
+---
+
+agent-desktop 通过 UI Automation (UIA) 读取 Windows 应用。操作循环节、引用、JSON 信封、会话与追踪记录在所有平台上保持一致，因此本页只讲 Windows 上不同的部分。本文所述的 Windows 行为已对照 Windows 适配器、其测试与 Windows 技能文档（`agent-desktop skills get windows`）核验，并非为撰写本文而实际运行。其他地方的示例是 POSIX shell；PowerShell 的写法见[使用 PowerShell](#使用-powershell)。
+
+## 系统要求
+
+- Windows 10 1809 或更高版本，或 Windows Server 2019 或更高版本，x64 或 ARM64。
+- 必须是已登录用户的交互式桌面会话。会话 0（服务和 SYSTEM 任务）、Server Core、安全桌面（UAC 提示与登录屏幕）、锁定的桌面以及其他用户的会话均不受支持。
+- 二进制文件未签名。SmartScreen 可能对浏览器下载发出警告，杀毒软件可能隔离它，全新安装的 Windows 11 上的 Smart App Control 会阻止它。
+
+## 权限与提权
+
+Windows 没有针对 UI Automation 的授权对话框；访问由完整性级别控制。
+
+- 与你终端同完整性级别的应用无需授权。UIA 能应答时 `permissions` 报告 `accessibility: granted`，且 `automation: not_required`。`permissions --guide` 返回 `PLATFORM_NOT_SUPPORTED`。
+- 以管理员身份运行的应用只能被读取，无法从较低完整性级别的终端驱动它，因为用户界面特权隔离（UIPI）会阻断输入。agent-desktop 在发送任何东西之前会比较进程令牌，返回 `PERM_DENIED`，并在 `platform_detail` 中带 `E_ACCESSDENIED`。请从一个提升到相同级别的终端运行 agent-desktop。
+- 提权与未提权的运行不能共享同一个状态根目录；第二个会以 `INTERNAL` 失败，报 “private file parent is owned by a foreign principal”。给提权运行单独指定一个 `AGENT_DESKTOP_HOME`。
+
+## 无头模式下的能力
+
+引用操作无论无头还是 `--headed`，走的都是语义 UIA 调用——物理输入或抢占焦点的那几条除外。参见[有头模式](/desktop/guides/headed-mode)。
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>无头可用</th><th>需要 <code>--headed</code></th><th>按 fail closed 拒绝或不支持</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>观察与捕获</td><td><code>snapshot</code>、<code>find</code>、<code>get</code>、<code>is</code>、<code>screenshot</code>、<code>list-surfaces</code>、<code>list-displays</code></td><td></td><td></td></tr>
+    <tr><td>引用操作</td><td><code>click</code>、<code>set-value</code>、<code>clear</code>、<code>select</code>、<code>toggle</code>、<code>check</code>、<code>uncheck</code>、<code>expand</code>、<code>collapse</code>、<code>scroll</code>、<code>scroll-to</code></td><td><code>right-click</code>、<code>type</code>、<code>focus</code></td><td>无头的 <code>right-click</code> 与 <code>type</code>：<code>POLICY_DENIED</code>。想无头写文本请用 <code>set-value</code></td></tr>
+    <tr><td>多击与指针</td><td></td><td><code>double-click</code>、<code>triple-click</code>、<code>hover</code>、<code>drag</code>、<code>mouse-click</code>、<code>mouse-move</code>、<code>mouse-wheel</code></td><td>无头：<code>POLICY_DENIED</code></td></tr>
+    <tr><td>键盘</td><td><code>press</code></td><td>对非前台应用的限定范围 <code>press --app</code></td><td>不加 <code>--force</code> 的被拦截快捷键</td></tr>
+    <tr><td>按住输入</td><td></td><td></td><td><code>key-down</code>、<code>key-up</code>、<code>mouse-down</code>、<code>mouse-up</code></td></tr>
+    <tr><td>应用与窗口</td><td><code>launch</code>、<code>close-app</code>、<code>list-windows</code>、<code>list-apps</code>、<code>focus-window</code>、<code>resize-window</code>、<code>move-window</code>、<code>minimize</code>、<code>maximize</code>、<code>restore</code></td><td></td><td>对 <code>explorer.exe</code> 与其他受保护映像的 <code>close-app</code>：<code>INVALID_ARGS</code></td></tr>
+    <tr><td>剪贴板</td><td><code>clipboard-get</code>、<code>clipboard-set</code>、<code>clipboard-clear</code>（文本与图片）</td><td></td><td></td></tr>
+    <tr><td>等待</td><td>除操作中心关闭时的通知等待外的全部模式</td><td>操作中心关闭时的 <code>--notification</code></td><td></td></tr>
+    <tr><td>通知</td><td>操作中心打开时的 <code>list-notifications</code></td><td>操作中心关闭时的列出，以及一切清除与操作</td><td>操作中心关闭时无头调用：<code>POLICY_DENIED</code></td></tr>
+    <tr><td>Shell 表面</td><td>对已存在的表面执行 <code>snapshot --surface KIND</code></td><td><code>open-system-surface</code> 支持 <code>start-menu</code>、<code>taskbar</code>、<code>system-tray</code>、<code>system-tray-overflow</code>、<code>action-center</code></td><td><code>quick-settings</code>：<code>INVALID_ARGS</code>，并指明改用 <code>action-center</code></td></tr>
+    <tr><td>系统</td><td><code>status</code>、<code>permissions</code>、<code>version</code>、<code>batch</code>、<code>skills</code>、<code>session</code>、<code>cursor-overlay</code>、<code>trace</code></td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+## 应用命名
+
+- `launch` 接受绝对路径，或 System32 与 Windows 目录下的裸名称，`.exe` 可省可不省（`notepad` 或 `notepad.exe`）。它不解析 “Google Chrome” 这类显示名。
+- 对运行中的应用，把 `list-apps` 输出的名称传给 `--app`，例如 `notepad.exe`。
+- 窗口 id 是 `w-` 后接窗口句柄。寄宿的（UWP）应用通过其 `ApplicationFrameHost` 框架报告。
+- 被其他窗口挡住的应用仍可驱动。被最小化的则不行：每个元素都报告 `offscreen`。请运行 `restore --app IMAGE` 再重新快照，而不是 `focus-window`——后者会抢走用户的前台。
+
+## 表面
+
+`supported_surfaces` 列出 `window`、`focused`、`sheet`（Chromium 模态框）、`menu`，以及 shell 类型 `start-menu`、`taskbar`、`system-tray`、`system-tray-overflow` 和 `action-center`。没有 `menubar` 表面。`snapshot --surface KIND` 无需 `--app` 也无需 `--headed` 就能读取 shell 表面；对已关闭的表面返回 `WINDOW_NOT_FOUND`，其 `suggestion` 指明可用 `open-system-surface`。`menu` 检测覆盖传统 Win32、WPF 以及 Chromium 或 Electron 菜单，但不覆盖 WinUI 3 或 MSIX 宿主，因此在那种环境下“没有菜单”应理解为“未检测到”。参见[表面](/desktop/surfaces)。
+
+## 使用 PowerShell
+
+PowerShell 把裸 `@token` 读成它的展开（splatting）运算符，在 agent-desktop 看到之前就把参数吃掉了。每个引用都要加引号：
+
+```powershell
+agent-desktop set-value '@s8f3k2p9:e1' "hello"
+$env:AGENT_DESKTOP_HOME = "$env:TEMP\ad-scratch"
+$start = agent-desktop session start | ConvertFrom-Json
+$env:AGENT_DESKTOP_SESSION = $start.data.session_id
+```
+
+用 `$env:NAME = 'value'` 代替 `export`，用 `| ConvertFrom-Json` 代替 `jq`。不加引号的引用会以 `INVALID_ARGS` 失败。`cmd.exe` 和 bash 不需要引号。
+
+## 按键
+
+- `cmd` 与 `meta` 都是 Windows 键，因此 `meta+c` 是一条 shell 快捷键。复制请写 `ctrl+c`。
+- `alt+f4`、`win+l`、`win+d`、`alt+tab`、`win+r`、`win+x`、`win+e`、`ctrl+shift+esc` 及其超集在不加 `--force` 时被拒绝。`ctrl+alt+delete` 完全无法合成。
+- `type` 是按键合成，需要 `--headed`；无头时用 `set-value`。
+- `press --app` 写入的是前台输入队列，无法针对某个后台进程。
+
+## Chromium 与 Electron
+
+Chromium 138 及更高版本无需任何 flag 就会暴露完整的 UIA 树，但第一次读取会启动渲染器的无障碍树构建，只返回树的一小部分。冷启动需要 10 到 25 秒才能就绪。
+
+- 给 `snapshot` 传更长的 `--timeout-ms`，而不是断定树为空。
+- 一个已就绪的树若边界节点带 `children_count` 且没有控件，这是深度效应所致：用 `snapshot --root` 对边界下钻。
+- 对可以全新启动的应用的 web 内容，`launch --cdp` 会为 agent-browser 打开 DevTools 端口；参见[Chromium 与 Electron 应用](/desktop/guides/chromium-and-electron)。
+- 在自动化对等类（automation peer）尚未存在之前读取的 WPF 窗口可能绑定一个空的通用提供器。几秒后再取一份新快照。
+
+## 故障排查
+
+<table>
+  <thead>
+    <tr><th>症状</th><th>原因</th><th>解决办法</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Chromium 或 Electron 应用返回的节点远少于它实际显示的</td><td>首次读取发生在渲染器就绪之前</td><td><code>snapshot --timeout-ms 30000</code></td></tr>
+    <tr><td><code>PERM_DENIED</code> 带 <code>E_ACCESSDENIED</code></td><td>目标运行在更高的完整性级别</td><td>从提升到与目标相同级别的终端运行</td></tr>
+    <tr><td>PowerShell 中引用报 <code>INVALID_ARGS</code></td><td>未加引号的 <code>@</code> 引用被当作 splatting 吃掉了</td><td>用单引号括起引用</td></tr>
+    <tr><td><code>open-system-surface</code> 或通知命令返回 <code>POLICY_DENIED</code></td><td>命令唤起的 shell 部件会抢占前台</td><td>传 <code>--headed</code>，或先自己打开该表面</td></tr>
+    <tr><td>发着 toast 通知时 <code>wait --notification</code> 超时</td><td>操作中心只在打开时才暂存 toast</td><td>保持操作中心打开，或在打开时用 <code>list-notifications</code> 确认</td></tr>
+    <tr><td>寄宿应用被读成 <code>ApplicationFrameHost</code></td><td>应用已被挂起</td><td>激活应用使其恢复运行，再列一次</td></tr>
+    <tr><td>二进制文件无法启动</td><td>SmartScreen、杀毒软件隔离，或 Smart App Control</td><td>选择<strong>更多信息</strong>，然后<strong>仍要运行</strong>；隔离文件先核对 SHA-256 校验和再恢复</td></tr>
+    <tr><td>有头模式下坐标在缩放显示器上落点偏移</td><td>宿主进程锁定了不兼容的 DPI 感知</td><td>从普通终端运行，并优先用引用而非 <code>--xy</code></td></tr>
+  </tbody>
+</table>
+
+更多情形见 `agent-desktop skills get windows troubleshooting`。

@@ -1,0 +1,247 @@
+---
+title: JSON 输出
+navTitle: JSON 输出
+description: 每条 agent-desktop 命令打印的响应信封、其省略规则、OperationReport 结构、find 结果、退出码,以及从 2.1 到 2.6 的契约版本。
+---
+
+每条命令在标准输出上恰好打印一行一个 JSON 信封。只有 `--help`、`--version` 和光秃的 `agent-desktop` 打印文本。契约版本是 `2.6`。日志输出走标准错误，因此解析器可以把标准输出当单个 JSON 值读。
+
+## 信封
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "click",
+  "data": {
+    "action": "click",
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" }
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>类型</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>version</code></td><td>string</td><td>契约版本。当前为 <code>"2.6"</code>。</td></tr>
+    <tr><td><code>ok</code></td><td>boolean</td><td>命令返回结果则为 <code>true</code>,返回错误则为 <code>false</code>。</td></tr>
+    <tr><td><code>command</code></td><td>string</td><td>命令名,例如 <code>click</code> 或 <code>session</code>。</td></tr>
+    <tr><td><code>data</code></td><td>object</td><td>结果。仅在 <code>ok</code> 为 <code>true</code> 时出现。</td></tr>
+    <tr><td><code>error</code></td><td>object</td><td>失败信息。仅在 <code>ok</code> 为 <code>false</code> 时出现。其字段见<a href="/desktop/errors-and-recovery">错误与恢复</a>。</td></tr>
+  </tbody>
+</table>
+
+错误信封有 `error` 而无 `data`：
+
+```json
+{
+  "version": "2.6",
+  "ok": false,
+  "command": "click",
+  "error": {
+    "code": "INVALID_ARGS",
+    "message": "Invalid ref_id '@e1': expected @<snapshot_id>:e<N>",
+    "suggestion": "Use the snapshot-qualified ref that snapshot prints, for example @s8f3k2p9:e1. A bare @eN ref is not accepted.",
+    "disposition": { "delivery": "not_delivered", "retry": "safe" }
+  }
+}
+```
+
+`ok: true` 表示命令返回了已投递或本就满足的结果，并不表示应用层面的效果已发生。要读结果或再观察一次来验证。见[观察—操作—验证循环](/desktop/guides/observe-act-verify)。
+
+## 省略规则
+
+- 类型化字段为 `None` 会被省略，空数组同样。没有建议的错误不带 `suggestion` 键，没有子节点的节点不带 `children` 键。
+- 快照节点 bounds 只在传了 `--include-bounds` 时出现。
+- 有些命令手工构造 `data`，对缺失值写 `null` 或 `[]`。`session list` 对开启中的会话写 `"ended_at": null`，`find` 的匹配写 `"value": null` 和 `"states": []`。把缺失键、`null` 与空数组同等对待。
+- 忽略你不认识的键。新的可选字段可以在不改版本号的情况下出现。
+- 快照 `data.window` 在窗口拥有该观察时出现。在 macOS 上，应用拥有的 `menu` 与 `menubar` 快照会省略它。
+
+## 应用拥有的快照
+
+在 macOS 上，`menu` 与 `menubar` 快照归属应用，因此 `data.app` 标识宿主而 `data.window` 缺席。当 `--window-id` 选定要观察的应用，或 `--root` 下钻该表面的引用时，这条规则不变。窗口拥有的快照保留 `data.window`。
+
+## 数据放在哪里
+
+`ref_count` 和 `tree` 位于 `data` 内部，从不在顶层。这份 GNOME Calculator 的窗口拥有快照省略为只剩一个分支：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "snapshot",
+  "data": {
+    "app": "gnome-calculator",
+    "complete": true,
+    "ref_count": 7,
+    "snapshot_id": "s1vylk49fulgx4",
+    "window": { "id": "w-calculator", "title": "Calculator" },
+    "tree": {
+      "role": "window",
+      "name": "Calculator",
+      "children": [
+        {
+          "available_actions": ["Click", "SetFocus"],
+          "name": "Undo",
+          "native_id": { "kind": "ax_identifier", "value": "undo_button" },
+          "ref_id": "@s1vylk49fulgx4:e3",
+          "role": "button",
+          "states": ["disabled"]
+        }
+      ]
+    }
+  }
+}
+```
+
+预算耗尽的快照仍返回 `ok: true`，带 `"complete": false`、`"truncated": true`、`nodes_observed`，且每个被裁断节点带 `"subtree_truncated": true`。把树当完整树之前先读 `data.complete`。节点字段见[快照与引用](/desktop/snapshots-and-refs)，部分观察见[骨架与下钻](/desktop/skeleton-and-drill-down#部分观察)。
+
+## 操作结果与 disposition
+
+`click`、`type`、`toggle` 这类引用操作返回 `data.action` 与 `data.disposition`，还可能附加 `steps`（尝试过的每个机制）、`post_state`、`surfaces`（操作落定后打开的表面）和 `details`。`disposition` 有两个字段，`delivery` 与 `retry`；成功时 `delivery` 为 `delivered_verified`、`delivered_unverified` 或 `not_delivered`（本就满足）。每个值证明了什么、何时重试安全，见[错误与恢复](/desktop/errors-and-recovery#disposition)。
+
+### 操作后观察
+
+当引用操作以 `delivery_uncertain` 加操作后等待选择器返回时，`error.details.post_action_observation` 记录对原始进程的一次只读观察。应用拥有的引用保留其源表面。窗口拥有的引用观察其原本钉住的窗口，包括从 `sheet`、`alert`、`popover`、`focused` 或窗口拥有的 `menu`（如 Linux 菜单）捕获的引用。这样即便覆盖层已关闭也能被观察到，而不会把父窗口当作缺席。操作从不重复执行，其原始错误与 unsafe 重试处置保持不变。即使 `expected_state_observed` 也不能证明是操作造成了该状态。观察用 `--wait-timeout`，与操作超时分开计。
+
+<table>
+  <thead><tr><th>字段</th><th>含义</th></tr></thead>
+  <tbody>
+    <tr><td><code>kind</code></td><td>恒为 <code>post_action_observation</code>。</td></tr>
+    <tr><td><code>selector, expected</code></td><td>请求的选择器,以及 <code>present</code> 或 <code>absent</code>。</td></tr>
+    <tr><td><code>surface</code></td><td>被观察的作用域:应用拥有的源表面,或窗口拥有引用的 <code>window</code>。</td></tr>
+    <tr><td><code>process_identity</code></td><td>原始 <code>pid</code> 与 <code>process_instance</code>;<code>identity_unavailable</code> 时实例可为 null。</td></tr>
+    <tr><td><code>elapsed_ms</code></td><td>操作返回后用于观察的时间。</td></tr>
+    <tr><td><code>source_window_id</code></td><td>原始窗口 ID,当引用有时。</td></tr>
+    <tr><td><code>selector_matches</code></td><td>观察到的选择器结果,当可用时;确认缺席需要一次完整读取。</td></tr>
+    <tr><td><code>process_state</code></td><td>最后一次观察到的 <code>unresponsive</code>、<code>exited</code> 或 <code>crashed</code> 状态。从不发出 <code>running</code>。</td></tr>
+    <tr><td><code>last_observation_error</code></td><td>最近一次观察错误的 <code>code</code> 与 <code>message</code>,当可用时。</td></tr>
+    <tr><td><code>outcome</code></td><td>下列取值之一。</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <thead><tr><th>outcome</th><th>含义</th></tr></thead>
+  <tbody>
+    <tr><td><code>expected_state_observed</code></td><td>观察到了期望的选择器状态,或者对缺席等待而言,原始窗口或表面被确认缺席。</td></tr>
+    <tr><td><code>process_exited</code></td><td>原始进程已退出;这不证明操作的效果。</td></tr>
+    <tr><td><code>process_crashed</code></td><td>平台报告原始进程崩溃。</td></tr>
+    <tr><td><code>owner_unavailable</code></td><td>原始表面宿主持续不可用,且未经确认的进程退出。</td></tr>
+    <tr><td><code>observation_failed</code></td><td>一个终局读取错误终止了观察;检查 <code>last_observation_error</code>。</td></tr>
+    <tr><td><code>timed_out</code></td><td>等待预算耗尽仍未观察到期望状态,包括瞬时读取错误持续到最后一轮轮询的情形。<code>last_observation_error</code> 可能保存着最近一次错误。</td></tr>
+    <tr><td><code>identity_unavailable</code></td><td>引用没有可用的进程代数,观察被跳过。</td></tr>
+  </tbody>
+</table>
+
+## OperationReport
+
+13 个命令把适配器自己的报告作为 `data` 返回：`mouse-click`、`mouse-move`、`mouse-wheel`、`hover`、`drag`、`clipboard-set`、`clipboard-clear`、`close-app`、`move-window`、`resize-window`、`minimize`、`maximize` 和 `restore`。报告由操作结果字段（`action`、`disposition`，以及存在时的 `steps`、`post_state`、`surfaces` 或 `details`）加一个 `target` 组成。命令再把回显的请求字段加进去，例如 `drag` 的 `from` 与 `to`，且不覆盖报告已有的任何字段。
+
+```json
+{
+  "action": "drag",
+  "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+  "steps": [ { "label": "pointer_drag", "outcome": "succeeded", "mechanism": "physical_synthetic" } ],
+  "target": { "kind": "drag", "from": { "x": 10, "y": 20 }, "to": { "x": 80, "y": 20 } },
+  "from": { "x": 10, "y": 20 },
+  "to": { "x": 80, "y": 20 }
+}
+```
+
+<table>
+  <thead>
+    <tr><th><code>target.kind</code></th><th>字段</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>window</code></td><td><code>id</code>, <code>title</code>, <code>process</code></td></tr>
+    <tr><td><code>app</code></td><td><code>name</code>, <code>process</code></td></tr>
+    <tr><td><code>pointer</code></td><td><code>point</code></td></tr>
+    <tr><td><code>drag</code></td><td><code>from</code>, <code>to</code></td></tr>
+    <tr><td><code>clipboard</code></td><td>无</td></tr>
+  </tbody>
+</table>
+
+适配器填入它已验证并真正使用的身份。pointer 目标只是它派发输入的坐标，并不证明哪个应用收到了输入。`x`、`y`、`count`、`width`、`app` 之类请求字段只是回显你的请求，不是观察到的状态。window 报告在 `details.verification_scope` 中写明其回读项（`window_size`、`window_position`、`window_minimized_state` 或 `window_maximized_state`）。没有 `clicked`、`moved`、`closed` 之类的 flag，因为每个成功调用都带的 flag 什么都证明不了。
+
+已投递操作之后的 `--wait-for` 失败，会把操作自身的投递结果保留在 `error.disposition`，并把报告放在 `error.details.after_action`。
+
+## find 的结果
+
+`find` 依据结果整形 flag 返回三种形态之一。flag 清单见 [`find`](/desktop/commands/observation#find)。
+
+<table>
+  <thead>
+    <tr><th>flag</th><th><code>data</code></th></tr>
+  </thead>
+  <tbody>
+    <tr><td>无,或 <code>--limit N</code></td><td><code>matches</code>, <code>total_matches</code>, <code>truncated</code></td></tr>
+    <tr><td><code>--first</code>, <code>--last</code>, <code>--nth N</code></td><td><code>match</code>（一个对象,无匹配时为 <code>null</code>）</td></tr>
+    <tr><td><code>--count</code></td><td><code>count</code></td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "find",
+  "data": {
+    "match": {
+      "interactive": true,
+      "name": "7",
+      "path": ["window:Calculator", "group", "group", "group"],
+      "ref_id": "@s3jjre8xzrvo2l:e1",
+      "role": "button",
+      "states": [],
+      "value": null
+    },
+    "snapshot_id": "s3jjre8xzrvo2l"
+  }
+}
+```
+
+每个匹配带 `ref_id`、`role`、`name`、`value`、`states`、`interactive` 和 `path`（上例已裁剪）。赢得引用的匹配有带限定的 `ref_id`，此时响应还会包含持有它的 `snapshot_id`。没有引用的匹配是上下文匹配：其 `ref_id` 为 `null`，并在平台报告时带 `bounds`，让你知道它在哪里。没有可访问名称的元素省略 `name`，其内容留在 `value`。带 `--role` 的查询一无所获时，`roles_present` 列出搜索确实见过的角色。
+
+## 退出码
+
+<table>
+  <thead>
+    <tr><th>代码</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>0</code></td><td>成功,帮助或版本显示也是。</td></tr>
+    <tr><td><code>1</code></td><td>结构化错误。信封打印在标准输出上,带 <code>ok: false</code>。</td></tr>
+    <tr><td><code>2</code></td><td>命令行解析错误。仍会打印信封,带 <code>INVALID_ARGS</code>。</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-desktop click @e1   # 光秃引用: INVALID_ARGS 信封
+echo $?                   # 1
+agent-desktop click       # 缺参数: INVALID_ARGS 信封
+echo $?                   # 2
+```
+
+解析器接受但命令拒绝的参数，例如光秃的 `@e1`，退出码 `1`。退出码 `2` 只用于解析器读不了的参数。
+
+## 契约版本
+
+解析之前先检查 `version`。当你的解析器在支持更老的契约版本时，套用下面的迁移规则。
+
+<table>
+  <thead>
+    <tr><th>版本</th><th>变化</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2.1</td><td><code>error.retry_command</code> 字符串被移除,无别名。错误携带结构化的 <code>error.recovery</code> 对象与 <code>error.disposition</code>。只在 <code>disposition.retry</code> 为 <code>safe</code> 时才选择恢复策略,并且永远不要执行老信封里的命令字符串。</td></tr>
+    <tr><td>2.2</td><td>预算耗尽的快照返回 <code>ok: true</code> 加 <code>complete: false</code>、已观察的树、<code>truncated</code>、<code>nodes_observed</code>,以及裁断节点上的 <code>subtree_truncated</code>,而不是 <code>TIMEOUT</code> 错误。快照数据始终带 <code>complete</code>。<code>--root</code> 下钻对不完整观察仍然返回 <code>TIMEOUT</code>。</td></tr>
+    <tr><td>2.3</td><td><code>launch</code> 返回 <code>app</code>、<code>pid</code>、<code>process_instance</code> 和可选的 <code>window</code>,而不是光秃的窗口对象。没显示窗口的应用是 <code>ok: true</code> 且省略 <code>window</code>,而不是 <code>WINDOW_NOT_FOUND</code>。</td></tr>
+    <tr><td>2.4</td><td>有状态引用操作（<code>set-value</code>、<code>type</code>、<code>clear</code>、<code>check</code>、<code>uncheck</code>、<code>toggle</code>、<code>expand</code>、<code>collapse</code>）在一次投递尝试后回读状态,并拒绝观察到的矛盾。回读失败保留适配器的错误码并加 <code>details.kind: "post_action_verification"</code>。证据缺失仍是成功的 <code>delivered_unverified</code> 加 <code>details.verification_scope: "unavailable"</code>。</td></tr>
+    <tr><td>2.5</td><td>对 13 个 <a href="#operationreport">OperationReport</a> 命令属破坏性变更。成功 flag <code>clicked</code>、<code>moved</code>、<code>scrolled</code>、<code>hovered</code>、<code>dragged</code>、<code>resized</code>、<code>minimized</code>、<code>maximized</code>、<code>restored</code>、<code>closed</code>、<code>cleared</code>、<code>requested</code>（<code>close-app</code>）以及 <code>clipboard-set</code> 内层的 <code>ok</code> 全部移除。<code>data</code> 就是带 <code>disposition</code>、<code>steps</code> 与 <code>target</code> 的适配器报告。</td></tr>
+    <tr><td>2.6</td><td>在 Windows 与 Linux 上,以及 macOS 上没有 native 地址的元素,一个引用只有在完整窗口读取证明其角色与稳定字段在捕获时唯一、且现在恰有一个活动元素匹配时才解析。捕获时不唯一的身份以 <code>details.kind: "identity_not_unique"</code> 失败;后续出现的同貌双元以 <code>details.kind: "saved_ref_ambiguous"</code> 失败。无法证明身份的快照可以带 <code>data.identity_unproven</code>。在 macOS 上,应用拥有的 <code>menu</code> 与 <code>menubar</code> 快照省略 <code>data.window</code>;<code>data.app</code> 标识宿主,<code>--window-id</code> 选定该应用。</td></tr>
+  </tbody>
+</table>
+
+C 库的 JSON 函数返回同样的信封。见 [C 库概览](/desktop/ffi)。

@@ -1,0 +1,143 @@
+---
+title: 技能
+navTitle: 技能
+description: 用 skills 命令加载 agent-desktop 的技能。它们编译进二进制，因此始终与已安装版本匹配。
+---
+
+agent-desktop 自带面向 AI 智能体撰写的指南：观察—操作—验证（observe, act, verify）循环、重试规则，以及各操作系统上的差异。它们编译进二进制，因此智能体读到的指令永远与它运行的版本匹配。`skills` 命令会打印这些指南。它不需要权限，也不需要桌面会话。
+
+## 引导（bootstrap）一个智能体
+
+在第一次操作前运行这三条命令：
+
+```bash
+agent-desktop status                  # 平台、权限、支持的表面
+agent-desktop skills get desktop      # 循环、引用、验证与重试规则
+agent-desktop skills get platform     # 二进制所跑操作系统上的差异点
+```
+
+想让它自动化，可以把引导步骤写进你的智能体指令文件（`AGENTS.md` 或等价物）：
+
+```markdown
+Use `agent-desktop` to see and operate desktop apps. Before the first use, run
+`agent-desktop skills get desktop` and `agent-desktop skills get platform`, and follow them.
+```
+
+## skills 命令
+
+每种形式都打印 JSON 信封。技能的 Markdown 在 `data.content` 里。
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>agent-desktop skills</code></td><td>列出技能，与 <code>skills list</code> 相同</td></tr>
+    <tr><td><code>agent-desktop skills list</code></td><td>列出所有内置技能及其别名与参考文件</td></tr>
+    <tr><td><code>agent-desktop skills get &lt;name&gt;</code></td><td>打印某个技能的主指南</td></tr>
+    <tr><td><code>agent-desktop skills get &lt;name&gt; &lt;reference&gt;</code></td><td>打印该技能的某个参考文件</td></tr>
+    <tr><td><code>agent-desktop skills get &lt;name&gt; --full</code></td><td>打印主指南及其后所有参考文件,每个参考文件以一行 <code>--- references/&lt;file&gt;.md ---</code> 开头</td></tr>
+    <tr><td><code>agent-desktop skills path</code></td><td>报告技能已内嵌,并列出可用名称</td></tr>
+  </tbody>
+</table>
+
+`--full` 是该命令唯一的 flag，传了参考文件时不生效。想把技能读成纯 Markdown，提取 `data.content` 即可：
+
+```bash
+agent-desktop skills get desktop | jq -r '.data.content'
+```
+
+`skills path` 确认磁盘上没有技能目录：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "skills",
+  "data": {
+    "available": ["agent-desktop", "agent-desktop-macos", "agent-desktop-windows", "agent-desktop-linux", "agent-desktop-ffi", "jev-desktop"],
+    "location": "embedded",
+    "note": "Skills are compiled into this binary and are always version-matched. Run `agent-desktop skills get <name>` to print a skill, or redirect into a file to extract a copy."
+  }
+}
+```
+
+## 可用技能
+
+`<name>` 接受规范名或别名。
+
+<table>
+  <thead>
+    <tr><th>名称</th><th>别名</th><th>覆盖内容</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>agent-desktop</code></td><td><code>desktop</code></td><td>面向所有操作系统的核心指南:快照与引用循环、验证与重试规则,以及何时打开哪份参考文件。最先加载它。</td></tr>
+    <tr><td><code>agent-desktop-macos</code></td><td><code>macos</code></td><td>macOS 上的差异:权限、通知中心、故障排查。</td></tr>
+    <tr><td><code>agent-desktop-windows</code></td><td><code>windows</code></td><td>Windows 上的差异:PowerShell 引号、提权、shell 表面、Chromium 与 Electron、故障排查。</td></tr>
+    <tr><td><code>agent-desktop-linux</code></td><td><code>linux</code></td><td>Linux 上的差异:AT-SPI bus、X11 与 Wayland、窗口生命周期、截屏与剪贴板、shell 与通知、故障排查。</td></tr>
+    <tr><td><code>agent-desktop-ffi</code></td><td><code>ffi</code></td><td>通过<a href="/desktop/ffi">C 库</a>嵌入 agent-desktop:构建与链接、错误、所有权、线程。</td></tr>
+    <tr><td><code>jev-desktop</code></td><td><code>jev</code></td><td>一个可选辅助工具,能从自然语言目标驱动应用。它需要仓库克隆和 API key,不是原生 CLI 的一部分。</td></tr>
+  </tbody>
+</table>
+
+`platform` 会解析为二进制所跑操作系统对应的技能。`skills list` 用 `platform` 和 `current` 标记平台技能；这是 Linux 机器上看到的 Linux 条目：
+
+```json
+{
+  "aliases": ["linux", "agent-desktop-linux"],
+  "current": true,
+  "name": "agent-desktop-linux",
+  "platform": "linux",
+  "references": [
+    "references/bus-and-permissions.md",
+    "references/display-servers-and-input.md",
+    "references/windows-and-lifecycle.md",
+    "references/capture-and-clipboard.md",
+    "references/shell-tray-and-notifications.md",
+    "references/troubleshooting.md"
+  ]
+}
+```
+
+未知名称返回 `INVALID_ARGS` 并列出所有别名：
+
+```json
+{
+  "code": "INVALID_ARGS",
+  "message": "Unknown skill 'nope'. Known: desktop, agent-desktop, macos, agent-desktop-macos, windows, agent-desktop-windows, linux, agent-desktop-linux, ffi, agent-desktop-ffi, jev, jev-desktop"
+}
+```
+
+## 参考文件
+
+按需加载参考文件。可以用路径（`references/workflows.md`）、文件名（`workflows.md`）或不含扩展名的词干（`workflows`）指定：
+
+```bash
+agent-desktop skills get desktop workflows
+agent-desktop skills get linux troubleshooting
+```
+
+<table>
+  <thead>
+    <tr><th>技能</th><th>参考文件</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>desktop</code></td><td><code>commands-observation</code>, <code>commands-interaction</code>, <code>commands-system</code>, <code>workflows</code></td></tr>
+    <tr><td><code>macos</code></td><td><code>troubleshooting</code></td></tr>
+    <tr><td><code>windows</code></td><td><code>permissions-and-elevation</code>, <code>chromium-and-electron</code>, <code>troubleshooting</code>, <code>shell-and-overlay</code></td></tr>
+    <tr><td><code>linux</code></td><td><code>bus-and-permissions</code>, <code>display-servers-and-input</code>, <code>windows-and-lifecycle</code>, <code>capture-and-clipboard</code>, <code>shell-tray-and-notifications</code>, <code>troubleshooting</code></td></tr>
+    <tr><td><code>ffi</code></td><td><code>build-and-link</code>, <code>error-handling</code>, <code>ownership</code>, <code>threading</code></td></tr>
+  </tbody>
+</table>
+
+未知参考文件返回 `INVALID_ARGS` 并列出可用的那些。
+
+## 在智能体 harness 中安装技能
+
+支持技能的 harness 也可以用 `npx skills add` 安装静态副本：
+
+```bash
+npx skills add https://github.com/vercel-labs/agent-desktop --skill agent-desktop
+```
+
+你也可以加 `--skill agent-desktop-ffi`，或你的操作系统对应的平台技能（`agent-desktop-macos`、`agent-desktop-windows` 或 `agent-desktop-linux`）。安装的静态副本在你升级 CLI 后可能过期，所以优先用 `agent-desktop skills get`，它永远与你运行的二进制匹配。

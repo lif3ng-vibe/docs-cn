@@ -1,0 +1,447 @@
+---
+title: 更新日志
+navTitle: 更新日志
+description: agent-desktop 的发布历史,来自 GitHub releases 与 CHANGELOG.md。
+---
+
+agent-desktop 的全部发布，新的在前。同一历史也见 [CHANGELOG.md](https://github.com/vercel-labs/agent-desktop/blob/main/CHANGELOG.md) 与 [GitHub Releases](https://github.com/vercel-labs/agent-desktop/releases)。
+
+## [1.0.1](https://github.com/vercel-labs/agent-desktop/compare/v1.0.0...v1.0.1) (2026-10-27)
+
+### Bug 修复
+
+* 从技能中移除 `version` 行。1.0.0 里它还写着 0.11.1; 版本号由 `agent-desktop version` 上报。
+* main 分支上 Cargo workspace 版本变化时,自动发布 npm 与 GitHub release。
+* 移除自定义 Homebrew tap、Scoop bucket 及其 package-update pull request。
+
+## [1.0.0](https://github.com/vercel-labs/agent-desktop/compare/v0.11.1...v1.0.0) (2026-10-27)
+
+### 正式发布
+
+* 新增 Linux 支持: CLI、C 库与 npm 包现在经由 AT-SPI 运行于 x86_64 与 aarch64 Linux（glibc 2.35 或更高）。
+* 集成后的 macOS、Windows、Linux CLI 与 C 库以 1.0.0 发布。
+* npm 安装中捆绑原生 CLI 可执行文件与平台辅助程序,包括禁用了生命周期脚本的安装。
+* 通过手动 release 工作流校验发布归档、校验和与构建出处。
+
+## [0.10.1](https://github.com/vercel-labs/agent-desktop/compare/v0.10.0...v0.10.1) (2026-10-18)
+
+### Bug 修复
+
+* **windows:** 让 launch 可以接受不带 .exe 的裸名称 ([#276](https://github.com/vercel-labs/agent-desktop/issues/276)) ([483427e](https://github.com/vercel-labs/agent-desktop/commit/483427eb84821a9d0ebc79eb56dd689c04cb15be))
+
+## [0.10.0](https://github.com/vercel-labs/agent-desktop/compare/v0.9.4...v0.10.0) (2026-10-18)
+
+### ⚠ 破坏性变更
+
+* 本次发布携带以下契约变更。
+    - C ABI 主版本号为 5。每个都有 `*_exact` 替代者的旧入口被移除: ad_list_surfaces, ad_surface_list_count,
+      ad_surface_list_get, ad_surface_list_free, ad_list_windows,
+      ad_window_list_count, ad_window_list_get, ad_window_list_free,
+      ad_launch_app, ad_release_window_fields, ad_get_tree, ad_find, ad_is,
+      ad_focus_window, ad_window_op, ad_resolve_element and
+      ad_execute_ref_action_with_policy, 连同 AdSurfaceList 与 AdWindowList
+      句柄。AdScreenshotKind 失去 WINDOW（FULL_SCREEN 仍为 2,1 被拒绝）; AdScreenshotTarget 失去 pid; AdExactSurfaceInfo 为版本 2,
+      48 字节,带尾部的 unclassified 字段; ad_execute_by_ref 与 ad_execute_by_ref_timeout 的 snapshot_id 参数以及
+      AdWaitPredicate.snapshot_id 字段被移除,因此 AdWaitPredicate 为 40
+      字节,AdWaitArgs 为 104。使用方必须基于重新生成的头文件重新构建。
+    - 所有接受引用的 CLI 命令、wait
+      --element、snapshot --root、find --root、drag --from/--to、batch 条目
+      与 FFI 都移除了裸 @eN 引用输入。只接受带快照限定的 @&lt;snapshot_id>:eN,
+      裸引用以 INVALID_ARGS 失败。只用于限定裸引用的 --snapshot flag
+      已从所有命令移除,携带 snapshot 或 snapshot_id 字段的 batch
+      条目会被当作未知字段拒绝。
+    - get --property text 不再返回与 --property value 相同的值。
+      它对 textfield、combobox、listbox、datefield 与
+      timefield 优先取 value,回退到可访问名称;其余角色优先
+      可访问名称,回退到 value。空白字符串按缺席处理。想要
+      之前的答案,请显式请求 --property value。
+    - kind 为 PermissionDenied 的 io 错误回答 PERM_DENIED 而非
+      INTERNAL,在 CLI 信封与 FFI 信封、返回码和
+      last error 中均是如此。
+    - 元素已消失的引用操作不再以 TIMEOUT 结束。不可重试的
+      解析失败立即回答;可重试的继续轮询,若之后没有任何一次解析成功,
+      该操作在期限处回答记录下来的 STALE_REF 或 AMBIGUOUS_TARGET。
+
+### 新特性
+
+* 支持 x64 与 ARM64 上的 Windows 10 1809+ 与 Windows Server 2019+ ([483a31d](https://github.com/vercel-labs/agent-desktop/commit/483a31d036175f54c34ce1fbd2cea762560ab78c))
+
+## [0.9.4](https://github.com/vercel-labs/agent-desktop/compare/v0.9.3...v0.9.4) (2026-09-23)
+
+### Bug 修复
+
+* 同步 0.9.3 release 的 cargo lock ([#217](https://github.com/vercel-labs/agent-desktop/issues/217)) ([8c1502e](https://github.com/vercel-labs/agent-desktop/commit/8c1502e43c6c78fe856980f0bb7b3585f877d347))
+
+## [0.9.3](https://github.com/vercel-labs/agent-desktop/compare/v0.9.2...v0.9.3) (2026-09-22)
+
+### Bug 修复
+
+* 加固原生无障碍定位与投递 ([#210](https://github.com/vercel-labs/agent-desktop/issues/210)) ([882c4c4](https://github.com/vercel-labs/agent-desktop/commit/882c4c4695c0db7d75b83f2655ece178591deb6c))
+
+## [0.9.2](https://github.com/vercel-labs/agent-desktop/compare/v0.9.1...v0.9.2) (2026-09-17)
+
+### Bug 修复
+
+* 让无头桌面操作报告实际发生的事情,并新增 jev-desktop ([#206](https://github.com/vercel-labs/agent-desktop/issues/206)) ([0691eba](https://github.com/vercel-labs/agent-desktop/commit/0691eba25f6a7082b197bc73ad5daa0e3315c976))
+
+## [0.9.1](https://github.com/vercel-labs/agent-desktop/compare/v0.9.0...v0.9.1) (2026-09-13)
+
+### Bug 修复
+
+* 修复 inspector 关闭测试在预期 reset 上失败的问题 ([22cad9e](https://github.com/vercel-labs/agent-desktop/commit/22cad9ec21136562ed191a8cfb827dc22378c554))
+* **drag:** `--wait-for` 默认限定到放置目标,可用 `--wait-for-scope from|to` 调整 ([cefc80a](https://github.com/vercel-labs/agent-desktop/commit/cefc80a89c95b21061573e366e3832bff6baa231))
+* 继承的期限到期时保留 `wait_timeout` 信封 ([07913a7](https://github.com/vercel-labs/agent-desktop/commit/07913a7cdb85d79e1708063fd398c9f8571894e9))
+* 防止 `wait --count` 在不完整快照上误报 ([319e9c6](https://github.com/vercel-labs/agent-desktop/commit/319e9c6c2e7c175fdec42d19b2f1614b9238a909))
+* 在 trace key 脱敏中按缩写边界切分 ([3042e0c](https://github.com/vercel-labs/agent-desktop/commit/3042e0c7a823508fd5417584f0459d428832c8a0))
+* **cursor:** 将 `agent_id` 标记限定在多智能体模式下 ([58612ea](https://github.com/vercel-labs/agent-desktop/commit/58612eac673a45634e00a651872da043297e68d3))
+* 在 wait 基线预捕获之前跳过已结束会话的 batch 条目 ([899ce27](https://github.com/vercel-labs/agent-desktop/commit/899ce2702a68716a7704b7403050dd7f54161208))
+* 为键盘与剪贴板操作恢复光标覆盖层生命周期 ([c827cf9](https://github.com/vercel-labs/agent-desktop/commit/c827cf96560629265ea34451a1a66fe839adab8f))
+* 覆盖层隐藏时清除已记忆的光标落点 ([6adff7a](https://github.com/vercel-labs/agent-desktop/commit/6adff7af0f50344924f8e8874be72ded1b72a8b3))
+* 拒绝 `file_url_to_path` 中按百分号编码的 NUL ([de5df38](https://github.com/vercel-labs/agent-desktop/commit/de5df38ede3d45ed7e4d438e732724972351dbe4))
+
+## [0.9.0](https://github.com/vercel-labs/agent-desktop/compare/v0.8.5...v0.9.0) (2026-09-12)
+
+### ⚠ 破坏性变更
+
+* 响应信封升级到 2.4。有状态引用操作现在可以为观察到的后置条件矛盾返回 ACTION_FAILED,且 ActionResult::from_execution 只接受 action 与 steps。
+
+### 新特性
+
+* 对照新鲜的平台状态验证有状态引用操作 ([9bc91bc](https://github.com/vercel-labs/agent-desktop/commit/9bc91bc0ab53139d85e5c10a0ae0b3c3b4bc18b9))
+
+### Bug 修复
+
+* 加固调试查看器的图片接收端,并为不稳定的测试期限解钉 ([fca24f2](https://github.com/vercel-labs/agent-desktop/commit/fca24f2b0259bac83ff17a490052e1f2a9a9496f))
+* 把未读 expand 状态报告为 unverified 而不是 failed ([a7131c2](https://github.com/vercel-labs/agent-desktop/commit/a7131c241cce06687b15c53386fd7787d8fbfd72))
+
+## [0.8.5](https://github.com/vercel-labs/agent-desktop/compare/v0.8.4...v0.8.5) (2026-09-06)
+
+### 新特性
+
+* 将多智能体光标与 core 及 macOS 优化合并 ([#171](https://github.com/vercel-labs/agent-desktop/issues/171)) ([922bb7d](https://github.com/vercel-labs/agent-desktop/commit/922bb7d5b59f2cc8cfaad9896c81fb8fed545bec))
+
+## [0.8.4](https://github.com/vercel-labs/agent-desktop/compare/v0.8.3...v0.8.4) (2026-08-28)
+
+### 新特性
+
+* 重建智能体光标覆盖层,并修复看得见却不可操作的元素 ([#145](https://github.com/vercel-labs/agent-desktop/issues/145)) ([5ec2504](https://github.com/vercel-labs/agent-desktop/commit/5ec2504bec0e9face5a69ef25c58bb1273772f2f))
+
+## [0.8.3](https://github.com/vercel-labs/agent-desktop/compare/v0.8.2...v0.8.3) (2026-08-22)
+
+### 新特性
+
+* 加固原生自动化并新增光标覆盖层 ([#137](https://github.com/vercel-labs/agent-desktop/issues/137)) ([25a0087](https://github.com/vercel-labs/agent-desktop/commit/25a00877726d324c0ee64d84c8d989a5808a66d6))
+
+## [0.8.2](https://github.com/vercel-labs/agent-desktop/compare/v0.8.1...v0.8.2) (2026-08-20)
+
+### 新特性
+
+* 用 AGENT_DESKTOP_HOME 搬迁 state root ([#135](https://github.com/vercel-labs/agent-desktop/issues/135)) ([a336b01](https://github.com/vercel-labs/agent-desktop/commit/a336b01e728893f379918b40157ab25f1c41fa80))
+
+## [0.8.1](https://github.com/vercel-labs/agent-desktop/compare/v0.8.0...v0.8.1) (2026-08-14)
+
+### 新特性
+
+* 让 launch --cdp 经由经验证的 DevTools 端点驱动 Chromium 应用 ([#129](https://github.com/vercel-labs/agent-desktop/issues/129)) ([366d348](https://github.com/vercel-labs/agent-desktop/commit/366d34803992d0595f31b19c8347bf7b26f5f277))
+
+## [0.8.0](https://github.com/vercel-labs/agent-desktop/compare/v0.7.0...v0.8.0) (2026-08-13)
+
+### ⚠ 破坏性变更
+
+* 响应信封版本为 2.3。launch 返回 \{ app, pid, process_instance, window? \} 而不是光秃的窗口对象,且不显示窗口的应用是 ok:true 并省略 window,而不是 WINDOW_NOT_FOUND。C ABI 不变:它仍写入一个窗口,并在没有时报告 WINDOW_NOT_FOUND。
+
+### 新特性
+
+* 以观察决定 macOS 投递方式,并让 launch 不再等待无因事件 ([#125](https://github.com/vercel-labs/agent-desktop/issues/125)) ([298f1ff](https://github.com/vercel-labs/agent-desktop/commit/298f1ff21530958d765adf3834cdadccd4816a7a))
+
+## [0.7.0](https://github.com/vercel-labs/agent-desktop/compare/v0.6.0...v0.7.0) (2026-08-02)
+
+### ⚠ 破坏性变更
+
+* ENVELOPE_VERSION 现为 2.2。`data.complete` 出现在每个成功的快照上,预算耗尽的快照返回 `ok: true` 加 `complete: false`,而此前返回 TIMEOUT 错误。曾依赖 TIMEOUT 判断树过大的调用方应改为读取 `complete`。
+
+### Bug 修复
+
+* 返回已观察的树,并让浅层遍历不再要求 renderer 激活 ([#117](https://github.com/vercel-labs/agent-desktop/issues/117)) ([32175e4](https://github.com/vercel-labs/agent-desktop/commit/32175e44c553b350c90c311560ac4d341be71632))
+
+## [0.6.0](https://github.com/vercel-labs/agent-desktop/compare/v0.5.0...v0.6.0) (2026-07-26)
+
+### ⚠ 破坏性变更
+
+* Windows 上的私有工件不再通过经 ACL 加固的句柄写入。这层加固守护的是 refmap、trace 与 session 文件,但在该平台上没有任何命令能产生它们,而它也从未被真正执行过。它将在 Phase 2.1 回归,在 Windows 上构建并依托一条真正运行它的 CI lane,约束条件记录在 `docs/solutions/best-practices/never-ship-platform-code-that-ci-cannot-execute.md`。
+
+### 重构
+
+* 从 core 移除投机性的 Win32 私有文件层,新增真实的 Windows/Linux 测试 lane ([#106](https://github.com/vercel-labs/agent-desktop/issues/106)) ([8ad66b8](https://github.com/vercel-labs/agent-desktop/commit/8ad66b8f2115704eed56e59e2709c4eddf3cffac))
+  * 从 `agent-desktop-core` 删除 1,062 行 Windows 专属的 `unsafe` Win32 文件 I/O,并去掉 `windows-sys` 依赖; Windows 现在与所有其他非 unix 目标一样,走可移植的 `std::fs` 路径
+  * 这是结构性修复而非降级:`std::fs::OpenOptions` 默认把 `share_mode` 设为 `FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE`,恰是被删代码遗漏、也是其 sharing-violation 失败根源的那个 flag
+  * `cargo test` 现在在 windows-latest 与 ubuntu-latest 上运行,core 中每个平台条件分支都随每个 PR 真正执行,而不只是被编译
+
+### Bug 修复
+
+* 新平台 lane 暴露了四个仅在 macOS 跑测试时不可抵达的既有缺陷:
+  * trace 文件以 append-only 打开,而 `trace.rs` 锁住该句柄;Windows 的 `LockFileEx` 拒绝 append-only 句柄,所以所有 trace 写入都以 `Access is denied` 失败
+  * `refs_lock` 测试把锁文件直接放进了 `/tmp`,而它属于 root 且全局可写,私有父目录检查正确地拒绝了它们
+  * 一个 trace 测试把原始路径内插进 JSON 字符串字面量,导致 Windows 路径产生非法转义,事件被静默丢弃而非跳过
+  * 默认的 `SystemOps::permission_report` 返回 `Denied`,导致 CLI 预检在适配器只是未实现的 Windows 与 Linux 上报告 `PERM_DENIED`;它现在报告 `Unknown` 并如实上抛 `PLATFORM_NOT_SUPPORTED`,FFI 上同样如此
+* 钉住的工具链补上了 `clippy` 与 `rustfmt`,此前 `profile = "minimal"` 漏掉了它们
+
+## [0.5.0](https://github.com/vercel-labs/agent-desktop/compare/v0.4.7...v0.5.0) (2026-07-20)
+
+### ⚠ 破坏性变更
+
+* 全新默认开启的 auto-wait 改变了此前所有未被触碰的引用操作调用时序（有界默认 5000 ms;`--timeout-ms 0` 恢复单发）。`ENVELOPE_VERSION` 现为 `2.1`（新增 `APP_UNRESPONSIVE` 错误码及错误详情中的进程状态）。FFI ABI 主版本为 `3`（仅追加的结构体演进;`wait --event` 有意不通过 FFI 暴露）。旧的字符串剪贴板 API 被移除,改为类型化内容。在守护进程持有的按住输入出现之前,`key-down`/`key-up` 以失败收场。`close-app` 会验证进程终止,osascript 回退路径被移除。`--text` 匹配是子树包含:`find --text X --first` 返回最外层匹配容器。
+
+### 新特性
+
+* 实现 Playwright 级的基础契约 ([3f32272](https://github.com/vercel-labs/agent-desktop/commit/3f322728b44548d2e22f4ee6ef4e6853af4e4550))
+  * 默认开启的 auto-wait:每个引用操作在派发前等待可操作性（可见、启用、稳定、无遮挡）,且有界预算约束
+  * 存活 `find` locator 加可序列化 `LocatorQuery`,以及如实反映的 `is --property visible`
+  * 三态 `hit_test` 遮挡门控与元素操作前的 core `scroll_into_view`
+  * `list-displays` 与带每屏缩放系数的如实 `--screen`;`native_id` 身份脊柱;window-id 优先解析
+  * 带 `APP_UN-responsive` 错误码（信封 `2.1`）的 `ProcessState` 分类;类型化 `ActionStep` 投递层级
+  * `LaunchOptions`（`--arg`/`--env`/`--cwd`/`--no-attach`）;经 `wait --event` 的基线差分桌面信号
+  * 类型化剪贴板（`Text`/`Image`/`FileUrls`）;鼠标修饰键组合与 `mouse-wheel` 原语
+  * 能力超 trait 拆分 `PlatformAdapter` 并配 `not_supported()` 默认实现,Windows 与 Linux 由此继承契约
+
+## [0.4.7](https://github.com/vercel-labs/agent-desktop/compare/v0.4.6...v0.4.7) (2026-07-02)
+
+### 新特性
+
+* 新增 trace 查看器与回放工件 ([e3e1872](https://github.com/vercel-labs/agent-desktop/commit/e3e1872ff3088f03f3e50e65ebc9e2b068a17b5f))
+
+## [0.4.6](https://github.com/vercel-labs/agent-desktop/compare/v0.4.5...v0.4.6) (2026-07-02)
+
+### 新特性
+
+* 让会话成为一等追踪容器 ([35fa914](https://github.com/vercel-labs/agent-desktop/commit/35fa914b52bb0dffb0e630f9d9085789c3f81542))
+
+## [0.4.5](https://github.com/vercel-labs/agent-desktop/compare/v0.4.4...v0.4.5) (2026-06-30)
+
+### 新特性
+
+* 新增 --wait-for 选择器轮询 flag ([#86](https://github.com/vercel-labs/agent-desktop/issues/86)) ([ce23278](https://github.com/vercel-labs/agent-desktop/commit/ce232787b50270d6f590e11bd2b16c7354de623d))
+
+## [0.4.4](https://github.com/vercel-labs/agent-desktop/compare/v0.4.3...v0.4.4) (2026-06-29)
+
+### 新特性
+
+* **macos,core:** 以调用方可控的护栏加固适配器与 core 基础 ([#82](https://github.com/vercel-labs/agent-desktop/issues/82)) ([94ce6c5](https://github.com/vercel-labs/agent-desktop/commit/94ce6c551fff4ffd2afc44ab6a9f655b4486da11))
+
+## [0.4.3](https://github.com/vercel-labs/agent-desktop/compare/v0.4.2...v0.4.3) (2026-06-28)
+
+### Bug 修复
+
+* **macos:** 加固 retained_handle 空值防护,抵御仅在 release 构建出现的 CFRetain(null) ([#80](https://github.com/vercel-labs/agent-desktop/issues/80)) ([a708fa0](https://github.com/vercel-labs/agent-desktop/commit/a708fa03326a03dbc82acc7e41bd3ec262a05248))
+
+## [0.4.2](https://github.com/vercel-labs/agent-desktop/compare/v0.4.1...v0.4.2) (2026-06-27)
+
+### 新特性
+
+* **ffi:** Phase B 与 C:Python 冒烟 harness、一致性门控与 build.rs 代码生成 ([#77](https://github.com/vercel-labs/agent-desktop/issues/77)) ([9023f33](https://github.com/vercel-labs/agent-desktop/commit/9023f331b3981a41414ea0f92e2e5120a212e357))
+
+## [0.4.1](https://github.com/vercel-labs/agent-desktop/compare/v0.4.0...v0.4.1) (2026-06-26)
+
+### 新特性
+
+* 完成 FFI C-ABI 表面（Phase A）:加载期 ABI 握手、会话作用域适配器、JSON 信封命令入口（version, status, snapshot, wait, execute-by-ref）、可选追踪日志回调,以及统一的错误信封契约 ([#67](https://github.com/vercel-labs/agent-desktop/issues/67))
+
+## [0.4.0](https://github.com/vercel-labs/agent-desktop/compare/v0.3.1...v0.4.0) (2026-06-24)
+
+### ⚠ 破坏性变更
+
+* version 命令不再接受 --json;它始终输出标准 JSON 信封。
+
+### 重构
+
+* 过度设计清理 ([#64](https://github.com/vercel-labs/agent-desktop/issues/64)) ([dbb2be6](https://github.com/vercel-labs/agent-desktop/commit/dbb2be639ecc1f979031818259f587f951086b3c))
+
+## [0.3.1](https://github.com/vercel-labs/agent-desktop/compare/v0.3.0...v0.3.1) (2026-06-21)
+
+### Bug 修复
+
+* 加固 macOS 过期引用解析 ([#62](https://github.com/vercel-labs/agent-desktop/issues/62)) ([9f144c2](https://github.com/vercel-labs/agent-desktop/commit/9f144c2cafe3ba0ade479c1b87ecac6cd88adcef))
+
+## [0.3.0](https://github.com/vercel-labs/agent-desktop/compare/v0.2.3...v0.3.0) (2026-06-20)
+
+### ⚠ 破坏性变更
+
+* **ffi:** `AD_POLICY_KIND_PHYSICAL` 更名为 `AD_POLICY_KIND_HEADED`（枚举值 `2` 不变）。
+* **ffi:** `AdRefEntry` 与 `AdDragParams` 追加可靠性元数据;C ABI 使用方必须零初始化,并用 `AD_REF_ENTRY_SIZE`、`AD_DRAG_PARAMS_SIZE` 与 `ad_*_size()` 访问器校验。
+* `close-app` 的优雅响应现在返回 `{ "method": "graceful", "requested": true }`,而不在应用退出前就声称 `closed: true`。
+
+### 新特性
+
+* 增加接近 Playwright 水准的引用可靠性,包括严格延迟解析、会话作用域快照、确定性的过期/歧义目标处理,以及骨架下钻保留 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+* 增加 Playwright 式有头/无头交互策略:无障碍优先派发保持默认,`--headed` 只在需要时启用聚焦的物理回退 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+* 新增可重试等待判定条件、带密钥脱敏的 JSONL 追踪记录、更丰富的可操作性报告,以及经由同一 resolver/actionability/dispatch 阶梯的 CLI/FFI 共享执行 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+
+### Bug 修复
+
+* 加固 macOS 引用操作,覆盖焦点/抬窗、disclosure 展开、scroll、drag、数值 set-value、菜单检测、过期引用恢复、受保护进程错误与 close-app 确认 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+* 对不安全回退歧义与过期引用以失败收场,包括防符号链接的 refstore/latest-snapshot 读取与受期限约束的 resolver 工作 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+
+### 性能
+
+* 减少重复的活动可操作性读取,并增加受期限约束的 resolver 行为,E2E 套件中加入大型应用快照与逐命令 CLI 墙钟门控 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+
+### 测试
+
+* 为无头/有头引用操作、会话、快照、追踪记录、等待、骨架下钻、菜单、表面、drag、expand/collapse 与性能检查新增真实应用 E2E 覆盖 ([#54](https://github.com/vercel-labs/agent-desktop/pull/54))。
+
+## [0.2.3](https://github.com/vercel-labs/agent-desktop/compare/v0.2.2...v0.2.3) (2026-06-06)
+
+### Bug 修复
+
+* 加固 macOS AX 窗口回退 ([3b266fd](https://github.com/vercel-labs/agent-desktop/commit/3b266fdf040bf83438f69a400b032fd12b8715c6))
+* 修复全屏 AX 树获取返回 ref_count: 0 的问题 ([a52b7c7](https://github.com/vercel-labs/agent-desktop/commit/a52b7c704a4d13fdc0d6b72f4080bb0fc118be64))
+
+## [0.2.2](https://github.com/vercel-labs/agent-desktop/compare/v0.2.1...v0.2.2) (2026-06-02)
+
+### Bug 修复
+
+* **macos:** 用类型 ID 检查守护 CFArray 强转（修复 Mail.app 崩溃） ([#50](https://github.com/vercel-labs/agent-desktop/issues/50)) ([c02cb5e](https://github.com/vercel-labs/agent-desktop/commit/c02cb5ecb7314f053d63937437e5f5ba48de3209))
+
+## [0.2.1](https://github.com/vercel-labs/agent-desktop/compare/v0.2.0...v0.2.1) (2026-05-23)
+
+### Bug 修复
+
+* 稳定化空无障碍身份的引用 ([1fb5a7d](https://github.com/vercel-labs/agent-desktop/commit/1fb5a7d51eb798100b4d597c755fee1161e298bf))
+
+## [0.2.0](https://github.com/vercel-labs/agent-desktop/compare/v0.1.14...v0.2.0) (2026-05-20)
+
+### ⚠ 破坏性变更
+
+* 当目标应用在链式期限之前不响应时,链式执行期限现在返回 TIMEOUT 而不是 ACTION_FAILED。
+
+### 重构
+
+* 统一命令执行契约 ([1291a9c](https://github.com/vercel-labs/agent-desktop/commit/1291a9cdbf0566424d38da1eab397d6d4091c06c))
+
+## [0.1.14](https://github.com/vercel-labs/agent-desktop/compare/v0.1.13...v0.1.14) (2026-05-04)
+
+### 新特性
+
+* 捆绑技能文档,并为 AI 智能体重构 --help ([#36](https://github.com/vercel-labs/agent-desktop/issues/36)) ([b04d6f9](https://github.com/vercel-labs/agent-desktop/commit/b04d6f97317af67648890d2d3b5ead0d27c466c9))
+
+## [0.1.13](https://github.com/vercel-labs/agent-desktop/compare/v0.1.12...v0.1.13) (2026-04-17)
+
+### 新特性
+
+* **ffi:** 发布 C-ABI cdylib,含评审修复与发布管线 ([#26](https://github.com/vercel-labs/agent-desktop/issues/26)) ([3cffbd6](https://github.com/vercel-labs/agent-desktop/commit/3cffbd67f6b27f42001643bef9fd2530cb7f9003))
+
+## [0.1.12](https://github.com/vercel-labs/agent-desktop/compare/v0.1.11...v0.1.12) (2026-04-16)
+
+### 新特性
+
+* 渐进式骨架遍历与按引用下钻 ([#20](https://github.com/vercel-labs/agent-desktop/issues/20)) ([c17f2fa](https://github.com/vercel-labs/agent-desktop/commit/c17f2fae7abbbe2c914a050fa9e9be5fca9c6af0))
+
+## [0.1.11](https://github.com/vercel-labs/agent-desktop/compare/v0.1.10...v0.1.11) (2026-03-03)
+
+### Bug 修复
+
+* 在所有成功路径上都显示技能安装提示 ([39b2bc6](https://github.com/vercel-labs/agent-desktop/commit/39b2bc63480890f7ed417b2c040eecf80c4628a0))
+
+## [0.1.10](https://github.com/vercel-labs/agent-desktop/compare/v0.1.9...v0.1.10) (2026-03-03)
+
+### Bug 修复
+
+* 修复 CI 中技能发布的鉴权 ([208af12](https://github.com/vercel-labs/agent-desktop/commit/208af12459fea2255e1c80b8cdc9ac420316d769))
+
+## [0.1.9](https://github.com/vercel-labs/agent-desktop/compare/v0.1.8...v0.1.9) (2026-03-03)
+
+### 新特性
+
+* 可扩展的技能架构与发布自动化 ([#14](https://github.com/vercel-labs/agent-desktop/issues/14)) ([9766520](https://github.com/vercel-labs/agent-desktop/commit/97665203a464e605bc9b156ec90029c5909399be))
+
+## [0.1.8](https://github.com/vercel-labs/agent-desktop/compare/v0.1.7...v0.1.8) (2026-03-01)
+
+### 新特性
+
+* 为无障碍树遍历增加 Electron/web 应用兼容性 ([a19c1b5](https://github.com/vercel-labs/agent-desktop/commit/a19c1b5132d3b71c5de58886ba51357ffc9bd1e8))
+* 实现 --compact flag 折叠单子节点未命名节点 ([4a300c8](https://github.com/vercel-labs/agent-desktop/commit/4a300c8cb054462ca95fb5160e89e8fce661ec3b))
+
+## [0.1.7](https://github.com/vercel-labs/agent-desktop/compare/v0.1.6...v0.1.7) (2026-02-28)
+
+### 新特性
+
+* 新增通知命令类型、适配器 trait 与 CLI 接线 ([c5b05ba](https://github.com/vercel-labs/agent-desktop/commit/c5b05bab600aafa36c642f21837c44583b36459c))
+* 新增通知管理命令（macOS） ([b1fd368](https://github.com/vercel-labs/agent-desktop/commit/b1fd368f195640642adf011b75cca6ecb9e5acc3))
+* **macos:** 新增 NC 会话 RAII 守护与通知适配器接线 ([0d55c21](https://github.com/vercel-labs/agent-desktop/commit/0d55c21de0f0ea6ea08ccb836e5527c9da513620))
+* **macos:** 实现 dismiss 与通知操作命令 ([53d697d](https://github.com/vercel-labs/agent-desktop/commit/53d697d52248c3fa06797787b1eb549ac2766533))
+* **macos:** 经 AX 树遍历实现通知列表 ([53549a3](https://github.com/vercel-labs/agent-desktop/commit/53549a384eec67572ee05c31621b8b4174425ab3))
+
+### Bug 修复
+
+* **macos:** 从 dismiss 操作列表移除 AXPress ([27ef4f3](https://github.com/vercel-labs/agent-desktop/commit/27ef4f34c038c26f5852bf1f6026762a98d0df0a))
+* **macos:** 通知中心交互后恢复最前台应用 ([3881bc8](https://github.com/vercel-labs/agent-desktop/commit/3881bc82bdb5a4bb7689f1e1e2237bb745e60c21))
+* **macos:** 用 pgrep 与异步 osascript 管理 NC 生命周期 ([9797585](https://github.com/vercel-labs/agent-desktop/commit/979758538fca0145e9245641fb03a0769eed68de))
+
+## [0.1.6](https://github.com/vercel-labs/agent-desktop/compare/v0.1.5...v0.1.6) (2026-02-24)
+
+### Bug 修复
+
+* 处理引用映射中的空 bounds,并改进侧边栏点击解析 ([d4197e8](https://github.com/vercel-labs/agent-desktop/commit/d4197e8f6f6700f2f672d3e1e436ecf24cf82e01))
+
+## [0.1.5](https://github.com/vercel-labs/agent-desktop/compare/v0.1.4...v0.1.5) (2026-02-23)
+
+### 新特性
+
+* 为 set-value、clear、focus、scroll-to、type 增加回退链与操作后状态提示 ([11f8da0](https://github.com/vercel-labs/agent-desktop/commit/11f8da06e84ed67b0e26dbc1946f7a7542e89dcd))
+* 在所有层增加结构化 verbose 日志 ([c7316e8](https://github.com/vercel-labs/agent-desktop/commit/c7316e8b5160ab0e6ba554bcd502d4c47adf8b1a))
+
+### Bug 修复
+
+* 在 drag 释放前加入驻留时间,以便识别放置目标 ([2a52d62](https://github.com/vercel-labs/agent-desktop/commit/2a52d62106699b36f62f9af83895f2264b80efb1))
+
+## [0.1.4](https://github.com/vercel-labs/agent-desktop/compare/v0.1.3...v0.1.4) (2026-02-23)
+
+### 新特性
+
+* 新增面向通用 AI 智能体支持的 agent-desktop 技能 ([ef45135](https://github.com/vercel-labs/agent-desktop/commit/ef45135087d09a7e065f65d9a0558d1e710cb8bf))
+* 新增用于 agent-desktop 自动化的 Claude Code 技能 ([ad91cd3](https://github.com/vercel-labs/agent-desktop/commit/ad91cd32cf2de1c1c8dcda4c0dcae37f0022b4c6))
+
+## [0.1.3](https://github.com/vercel-labs/agent-desktop/compare/v0.1.2...v0.1.3) (2026-02-23)
+
+### Bug 修复
+
+* 修正 GitHub Release 下载 URL 并简化 tag 格式 ([8f66a93](https://github.com/vercel-labs/agent-desktop/commit/8f66a9346e02a751a83ac02313dcec2d9c81bde8))
+* 把 README 和 CHANGELOG 收进 npm 包 ([084fc8c](https://github.com/vercel-labs/agent-desktop/commit/084fc8c960527c0d0654028794ec3c4fd2d970c4))
+
+### 性能
+
+* postinstall 中的二进制下载改用 curl ([ebafb71](https://github.com/vercel-labs/agent-desktop/commit/ebafb71603f5f2b32af8ac5bf6c88df3d6012f70))
+
+## [0.1.2](https://github.com/vercel-labs/agent-desktop/compare/agent-desktop-v0.1.1...agent-desktop-v0.1.2) (2026-02-23)
+
+### Bug 修复
+
+* 两个构建目标均改用 macos-latest ([91c7677](https://github.com/vercel-labs/agent-desktop/commit/91c76777cb7ee864b45e14d123c79c08f0c2d5b9))
+
+## [0.1.1](https://github.com/vercel-labs/agent-desktop/compare/agent-desktop-v0.1.0...agent-desktop-v0.1.1) (2026-02-23)
+
+### 新特性
+
+* 10 步 scroll 链、焦点防护、增强 click 链与 bounds 修复 ([595ccb6](https://github.com/vercel-labs/agent-desktop/commit/595ccb6cc45554351ea3e30b95e4ca47bdf4e16b))
+* 新增 19 个命令、AX 优先改写与 LOC 合规 ([d3f7e03](https://github.com/vercel-labs/agent-desktop/commit/d3f7e03c67832c652a6125f61fbb7ab2f0801939))
+* 新增 19 个命令、AX 优先改写与 LOC 合规 ([eca04e8](https://github.com/vercel-labs/agent-desktop/commit/eca04e839288b121f6f41c6de525a8396d10654c))
+* 新增 GitHub Releases 与 npm 分发的发布自动化 ([18fc50c](https://github.com/vercel-labs/agent-desktop/commit/18fc50cca51f2ed10b6dfb5576602b6ce344bc95))
+* 为快照中的 splitter 列增加结构提示 ([48f8470](https://github.com/vercel-labs/agent-desktop/commit/48f8470948b4f636dfa6f4489e4cb6d9f520722c))
+* AX 优先右键链与内联上下文菜单捕获 ([cddc5d3](https://github.com/vercel-labs/agent-desktop/commit/cddc5d3547f058a78f8b398fa982e39a1fcbf6b1))
+* Phase 1 基础:workspace 脚手架、core 引擎、macOS 适配器与 31 个命令 ([a346f24](https://github.com/vercel-labs/agent-desktop/commit/a346f242c25dfad1c849e6d50f9ab25a42b462d9))
+* 智能 AX 优先 click 链与 macOS crate 重构 ([4616c8f](https://github.com/vercel-labs/agent-desktop/commit/4616c8f65f974505b0eedb5485c865d3b905342b))
+* 面向表面的快照、菜单等待与 list-surfaces 命令 ([39178b2](https://github.com/vercel-labs/agent-desktop/commit/39178b291602d192de97aa0150c261db1dcc7ca6))
+
+### Bug 修复
+
+* 新增 menubar 表面,修复 press --app 崩溃与修饰键映射 ([a231962](https://github.com/vercel-labs/agent-desktop/commit/a2319623b4d1d2b6b2f6e1a4ab9a8b8cbbfd02eb))
+* 处理代码评审发现的问题（double-free、CF 泄漏、注入） ([2f495ff](https://github.com/vercel-labs/agent-desktop/commit/2f495ffb69be67f3136b076534e078cc31b005c2))
+* 错误码对齐规范（APP_NOT_FOUND、PERM_DENIED）并新增 -i 缩写 ([6dc567a](https://github.com/vercel-labs/agent-desktop/commit/6dc567a4aedff15cf82a82601089cb0b87da4e26))
+* 祖先路径环检测与 CGEvent 点击回退 ([198d7d7](https://github.com/vercel-labs/agent-desktop/commit/198d7d7d27167044a448b6616fa5c9c0554321bf))
+* 经 AXMenuBarItem.AXSelected 检测打开的菜单,而非 AXMenus 属性 ([7f0d610](https://github.com/vercel-labs/agent-desktop/commit/7f0d6103d16969a0abfa84a62b6819dbd0d1cc8e))
+* 让全部 30 个命令在 macOS 上端到端可用 ([1d98ab8](https://github.com/vercel-labs/agent-desktop/commit/1d98ab828ce5bcb39e212548ae2f2a052e67aac9))
+* 从激活链移除 AXShowDefaultUI,修复子节点遍历 ([74242f5](https://github.com/vercel-labs/agent-desktop/commit/74242f5040af9c46c98a3f5232dc7567538c28e1))
+* 处理 Phase 1 审计的全部 47 条代码评审发现 ([218503a](https://github.com/vercel-labs/agent-desktop/commit/218503a7ebacacd4fbc6b388a6cf5e3bb86af039))
+* right-click 使用 AXShowMenu;上下文菜单经焦点元素检测 ([2c9aee3](https://github.com/vercel-labs/agent-desktop/commit/2c9aee397912d6a903d9ef1e26c786697383ae95))
+* 压制 BatchCommand 反序列化结构体的 dead_code lint ([608d4aa](https://github.com/vercel-labs/agent-desktop/commit/608d4aaaa195b95626f17aa4bbca2d69609f14cc))
+* workspace 版本号跳变时使用简单 release 策略 ([0ab78dd](https://github.com/vercel-labs/agent-desktop/commit/0ab78dde0e1ff702db6c8b667784fa456245b26b))

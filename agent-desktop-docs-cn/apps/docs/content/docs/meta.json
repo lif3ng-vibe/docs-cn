@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "index",
+    "installation",
+    "quick-start",
+    "skills",
+    "---核心概念---",
+    "snapshots-and-refs",
+    "skeleton-and-drill-down",
+    "surfaces",
+    "sessions",
+    "json-output",
+    "errors-and-recovery",
+    "---参考---",
+    "...commands",
+    "configuration",
+    "---指南---",
+    "...guides",
+    "---平台---",
+    "...platforms",
+    "---C 库---",
+    "...ffi",
+    "---",
+    "changelog"
+  ]
+}

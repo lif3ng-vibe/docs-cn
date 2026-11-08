@@ -1,0 +1,44 @@
+---
+title: C 库
+navTitle: 概览
+description: 通过 libagent_desktop_ffi 在进程内调用 agent-desktop——同一套核心与平台适配器之上的 C ABI。
+---
+
+C 库把 agent-desktop 暴露为共享库：macOS 上是 `libagent_desktop_ffi.dylib`，Linux 上是 `libagent_desktop_ffi.so`，Windows 上是 `agent_desktop_ffi.dll`。你的程序调用 `ad_*` 函数，而不是为每条命令启动一次 CLI。任何有 C FFI 的语言都能加载它；`tests/ffi-python/smoke.py` 是经过测试的参考实现。头文件位于 `crates/ffi/include/agent_desktop.h`。
+
+## 与 CLI 的关系
+
+库和 CLI 运行同一个核心、同一个平台适配器；`agent-desktop` 二进制与 `agent-desktop-ffi` crate 是把平台适配器接到核心上的仅有两个位置。
+
+- **同一信封。** 以命令为底座的函数把 CLI 的 JSON 信封作为拥有的字符串返回。参见 [JSON 输出](/desktop/json-output)。
+- **同一引用。** `ad_snapshot` 在同一个[状态根目录](/desktop/configuration#state-root)下写入 refmap，并返回限定引用，`ad_execute_by_ref` 会严格解析它们。裸 `@e5` 返回 `AD_RESULT_ERR_INVALID_ARGS`。
+- **同一安全规则。** 引用操作跑与 CLI 相同的解析、可操作性检查和交互策略，修改类操作还拿同一个跨进程输入锁，因此同一用户的 CLI 与库调用会串行化。
+- **同一会话。** `ad_adapter_create_with_session` 会像 `--session` 一样把 refmap 限定到一个[会话](/desktop/sessions)。
+
+## 两个层次
+
+<table>
+  <thead>
+    <tr><th>层次</th><th>函数</th><th>适用场景</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>JSON 入口</td><td><code>ad_snapshot</code>、<code>ad_execute_by_ref</code>、<code>ad_execute_by_ref_timeout</code>、<code>ad_wait</code>、<code>ad_status</code>、<code>ad_version</code>、<code>ad_trace_show</code>、<code>ad_trace_export</code></td><td>你在跑观察—操作—验证（observe, act, verify）：解析信封并把引用传回去。</td></tr>
+    <tr><td>基于结构体的精确 API</td><td><code>ad_list_windows_exact</code>、<code>ad_launch_app_exact</code>、<code>ad_find_exact</code>、<code>ad_get_tree_exact</code>，以及其余 <code>*_exact</code> 家族，另加剪贴板、鼠标、显示器、通知与截图调用</td><td>你需要不经 JSON 的类型化结果。它们在版本化、按尺寸固定的结构体中携带进程代际证据。</td></tr>
+  </tbody>
+</table>
+
+## 库不暴露什么
+
+- `ad_snapshot` 读取 `surface` 选定的所有者。在 macOS 上，`menu` 和 `menubar` 由应用所有，不需要文档窗口；窗口所有的快照包含 `data.window`。ABI 没有 window id、骨架模式或 `--root` 下钻；那些请用 CLI。
+- `ad_wait` 不暴露 `wait --event` 或 `--window-id`。
+- 库不带技能。用 CLI 的 `agent-desktop skills get ffi` 读取 FFI 指南。
+
+## ABI 版本
+
+本头文件中 `AD_ABI_VERSION_MAJOR` 为 7。当移除符号或符号以不兼容方式变化时（结构体布局变化，或一个原本成功的调用开始失败），主版本号递增。ABI 7 使 `ad_execute_ref_action_exact_with_policy` 与 `ad_resolve_element_exact` 按 fail closed 返回 `AD_RESULT_ERR_ACTION_NOT_SUPPORTED`。新增函数和新结果码属于增量变更。加载库后调用一次 `ad_init(AD_ABI_VERSION_MAJOR)`：版本不匹配返回 `AD_RESULT_ERR_INVALID_ARGS`，并且此后不应再调用任何其他函数。
+
+## 下一步
+
+- [构建与链接](/desktop/ffi/build-and-link)：构建库、链接它，并运行一个最小程序。
+- [API](/desktop/ffi/api)：全部函数、结构体与枚举，按领域分组。
+- [所有权、线程与错误](/desktop/ffi/ownership-and-threading)：谁释放什么、哪些线程可以调用，以及如何解读失败。

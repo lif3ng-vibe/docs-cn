@@ -1,0 +1,100 @@
+---
+title: 通知命令
+navTitle: 通知
+description: 操作系统通知表面上 list-notifications、dismiss-notification、dismiss-all-notifications 与 notification-action 的参考文档。
+---
+
+这些命令驱动 OS 通知表面：macOS 的通知中心、Windows 的操作中心，以及 Linux 上的 GNOME Shell 消息列表。命令名、参数与 JSON 字段在各处完全一致。标题与正文按原样返回且不做脱敏，因此请把它们当作敏感内容对待。
+
+- **列出**是只读的。Linux 上不加 `--headed` 就能列出，即便列表是关闭的。在 macOS 和 Windows 上，无头调用只在表面已经打开时才可用；否则返回 `POLICY_DENIED`，而 `--headed` 可能会打开该表面。
+- **修改类**（`dismiss-notification`、`dismiss-all-notifications`、`notification-action`）始终需要 `--headed`，因为它们会打开并聚焦通知表面。
+- **身份守卫。** 通知在两次列出之间会重新排序，因此 `dismiss-notification` 和 `notification-action` 需要传入从同一次 `list-notifications` 结果复制的 `--expected-app` 或 `--expected-title`。若 `INDEX` 处的行已不再匹配，则不执行任何按压，命令返回 `NOTIFICATION_NOT_FOUND`。
+
+要阻塞等待一条新通知到达，用 [`wait --notification`](/desktop/commands/wait#通知)。本页的 JSON 示例由命令代码与测试构造而来；其他示例所在的 Linux 会话没有通知服务，故无法实际演练通知：
+
+```json
+{
+  "code": "PLATFORM_NOT_SUPPORTED",
+  "message": "No notification service is running in this session",
+  "details": { "daemon": "absent", "detail": "no service owns org.freedesktop.Notifications" }
+}
+```
+
+## list-notifications
+
+列出 OS 表面上的通知。
+
+```bash
+agent-desktop list-notifications [--app NAME] [--text TEXT] [--limit N]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--app NAME</code></td><td>全部应用</td><td>只列出该应用的通知，忽略大小写。</td></tr>
+    <tr><td><code>--text TEXT</code></td><td>无</td><td>只列出包含该文本的通知。</td></tr>
+    <tr><td><code>--limit N</code></td><td>无上限</td><td>返回数量的上限。</td></tr>
+  </tbody>
+</table>
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "list-notifications",
+  "data": {
+    "count": 1,
+    "notifications": [
+      { "index": 1, "app_name": "Calendar", "title": "Standup in 10 minutes", "body": "Room 4", "actions": ["Snooze", "Open"] }
+    ]
+  }
+}
+```
+
+`index` 从 1 起计数，且按未过滤的列表计数，因此过滤后的结果可以从大于 1 的索引开始。`body` 和 `actions` 为空时省略。错误：macOS 或 Windows 上表面关闭时报 `POLICY_DENIED`；没有通知服务时报 `PLATFORM_NOT_SUPPORTED`（Linux 上指由 GNOME Shell 以外的进程持有）。
+
+## dismiss-notification
+
+按索引清除一条通知。
+
+```bash
+agent-desktop --headed dismiss-notification INDEX --expected-app NAME
+agent-desktop --headed dismiss-notification 2 --expected-title "Standup in 10 minutes"
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>INDEX</code></td><td>必填</td><td>来自 <code>list-notifications</code> 的 1 基索引。</td></tr>
+    <tr><td><code>--expected-app APP</code>、<code>--expected-title TITLE</code></td><td>至少一个</td><td><code>INDEX</code> 处的通知必须具备的应用名或标题。</td></tr>
+    <tr><td><code>--app NAME</code></td><td>无</td><td>要求通知必须来自该应用。</td></tr>
+  </tbody>
+</table>
+
+`data.dismissed` 是被移除的通知，形态与 `list-notifications` 的行相同。错误：没有任何 `--expected-*` flag 报 `INVALID_ARGS`；没有 `--headed` 报 `POLICY_DENIED`；该行已不再匹配报 `NOTIFICATION_NOT_FOUND`。
+
+## dismiss-all-notifications
+
+清除全部通知，或仅清除某个应用的通知。
+
+```bash
+agent-desktop --headed dismiss-all-notifications [--app NAME]
+```
+
+`data.dismissed_count` 计数被移除的通知。当有些通知无法关闭时，会附加 `data.failures` 与 `data.failed_count`。
+
+## notification-action
+
+按下一个通知上指定名称的操作按钮。
+
+```bash
+agent-desktop --headed notification-action INDEX ACTION --expected-app NAME
+```
+
+`ACTION` 是通知 `actions` 里的一个名称。结果是一份操作报告，通常为 `delivered_unverified`：请在应用里确认效果。错误：同 `dismiss-notification`，外加通知上没有该名称按钮时的 `ACTION_NOT_SUPPORTED`。
+
+平台限制：Linux 上仅限 GNOME Shell，修改类操作需要 X11；参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。

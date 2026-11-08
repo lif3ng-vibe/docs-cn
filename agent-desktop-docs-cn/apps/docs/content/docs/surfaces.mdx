@@ -1,0 +1,164 @@
+---
+title: 表面
+navTitle: 表面
+description: 用 --surface、list-surfaces 与 open-system-surface，把菜单、弹层、警告框、弹出框和操作系统 shell 区域从窗口或应用中独立出来观察。
+---
+
+表面（surface）是指可以从窗口或应用的完整无障碍树中独立观察的一层 UI：一个打开的菜单、一张弹层（sheet）、一个弹出框（popover）、一个警告框（alert），或任务栏这类操作系统 shell 区域。覆盖层打开时，其背后窗口的引用是错误的目标，所以要读取覆盖层本身。
+
+```bash
+agent-desktop snapshot --app gtk3-widget-factory --surface menu -i --compact
+agent-desktop find --app gtk3-widget-factory --surface menu --name "Dark Theme" --exact --first
+```
+
+## 表面类型
+
+`--surface` 在 `snapshot` 和 `find` 上接受这些值。默认为 `window`。带连字符的名称也接受下划线写法，例如 `system_tray`。
+
+<table>
+  <thead>
+    <tr><th>分组</th><th>类型</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>应用或窗口及其分层</td><td><code>window</code>, <code>focused</code>, <code>menu</code>, <code>menubar</code>, <code>sheet</code>, <code>popover</code>, <code>alert</code></td></tr>
+    <tr><td>操作系统 shell</td><td><code>desktop</code>, <code>taskbar</code>, <code>system-tray</code>, <code>system-tray-overflow</code>, <code>quick-settings</code>, <code>notification-center</code>, <code>toolbar</code>, <code>dock</code>, <code>spotlight</code>, <code>menu-bar-extras</code>, <code>start-menu</code>, <code>action-center</code></td></tr>
+  </tbody>
+</table>
+
+每个平台只支持其中一部分：
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>支持的表面</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>macOS</td><td><code>window</code>, <code>focused</code>, <code>menu</code>, <code>menubar</code>, <code>sheet</code>, <code>popover</code>, <code>alert</code>, <code>dock</code>, <code>menu-bar-extras</code></td></tr>
+    <tr><td>Windows</td><td><code>window</code>, <code>focused</code>, <code>sheet</code>, <code>menu</code>, <code>start-menu</code>, <code>taskbar</code>, <code>system-tray</code>, <code>system-tray-overflow</code>, <code>action-center</code></td></tr>
+    <tr><td>Linux</td><td><code>window</code>, <code>sheet</code>, <code>alert</code>, <code>menu</code>,再加会话能解析的 GNOME Shell 类型</td></tr>
+  </tbody>
+</table>
+
+各类型的限制见平台页面：[macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows)、[Linux](/desktop/platforms/linux)。
+
+## 查看支持项
+
+`status` 报告当前机器与会话的 `supported_surfaces`。在无 GNOME Shell 的 Linux X11 会话上：
+
+```json
+{ "supported_surfaces": ["window", "sheet", "alert", "menu"] }
+```
+
+请求某个表面之前先读它。当前操作系统没有的类型以 `INVALID_ARGS` 失败，`details.supported_surfaces` 带支持清单，`details.requested_surface` 带你的请求。在 Linux 上，`supported_surfaces` 为空表示无障碍 bus 没有应答，而不是桌面为空。
+
+## 知道表面何时打开
+
+你很少需要轮询表面。`click`、`double-click`、`right-click`、`triple-click`、`expand`、`select` 和 `press` 会在 `data.surfaces` 里报告操作后打开的表面。这是点击 GTK Widget Factory 中 **Menu** 按钮的结果：
+
+```json
+{
+  "surfaces": [
+    { "id": "w-1.9-org-a11y-atspi-accessible-229", "type": "window" },
+    { "id": "w-1.9-org-a11y-atspi-accessible-229", "item_count": 4, "type": "menu" }
+  ]
+}
+```
+
+出现 `menu`、`sheet` 或 `alert` 条目意味着应用正在等待该覆盖层。下一步用 `snapshot --surface` 或 `find --surface` 观察它。什么都没打开或读取失败时省略该字段。
+
+## 拍快照或搜索一个表面
+
+```bash
+agent-desktop snapshot --app gtk3-widget-factory --surface menu -i --compact
+```
+
+这份菜单快照有 6 个引用，不含背后窗口的任何内容：
+
+```json
+[
+  { "ref_id": "@s2n10v3haasex6:e1", "role": "button", "name": "Get Busy" },
+  { "ref_id": "@s2n10v3haasex6:e2", "role": "checkbox", "name": "Dark Theme" },
+  { "ref_id": "@s2n10v3haasex6:e3", "role": "checkbox", "name": "Slide Pages" },
+  { "ref_id": "@s2n10v3haasex6:e4", "role": "button", "name": "Inspector" },
+  { "ref_id": "@s2n10v3haasex6:e5", "role": "button", "name": "Keyboard Shortcuts" },
+  { "ref_id": "@s2n10v3haasex6:e6", "role": "button", "name": "About Widget Factory" }
+]
+```
+
+要够到单个条目，`find --surface` 比整个 dump 更省：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "find",
+  "data": {
+    "match": {
+      "interactive": true,
+      "name": "Dark Theme",
+      "path": ["group", "group", "group", "group", "group", "group"],
+      "ref_id": "@svj2992hf8d2k:e1",
+      "role": "checkbox",
+      "states": [],
+      "value": null
+    },
+    "snapshot_id": "svj2992hf8d2k"
+  }
+}
+```
+
+agent-desktop 如何选定一个宿主，取决于类型与平台：
+
+- `sheet`、`popover` 和 `alert`：按顺序遍历应用的可访问窗口,先有焦点后可见,第一个呈现出该表面的胜出。不带 `--app` 时取最前台进程。
+- `sheet`、`popover` 和 `alert`：按顺序遍历应用的可访问窗口,先有焦点后可见,第一个呈现出该表面的胜出。不带 `--app` 时取最前台进程。
+- 在 macOS 上，`menu` 与 `menubar` 为应用拥有，不需要文档窗口。传 `--window-id` 会选中拥有该表面的应用。快照数据含 `app` 且省略 `window`。一次完整查找在没有任何打开的菜单或菜单栏时返回 `ELEMENT_NOT_FOUND`，带 `details.kind: "surface_absent"` 和 `details.complete: true`。要读一个应用菜单：存在时先快照 `menubar`，不带 `--headed` 点击其条目，再快照 `--surface menu`。菜单栏缺失也可能意味着应用根本没有暴露它。
+- 在 `menu`、`menubar` 和 `focused` 归窗口拥有的实现上，任意一个应用窗口都能标识进程，因此多个打开的窗口不会产生歧义。
+- 在 macOS 上，`window`、`menubar` 和 `menu-bar-extras` 可以通过进程读取一个没有窗口的后台应用。结果省略 `window`。尚未显示过窗口的常规应用返回 `WINDOW_NOT_FOUND`；`focused` 则要求有焦点窗口。
+- shell 类型不需要 `--app`，因为没有任何应用拥有它。在 macOS 上，`menu-bar-extras` 加 `--app` 读取的是该应用自己的状态条目。
+- 对窗口拥有的表面，`--window-id` 把读取钉到那个窗口。
+
+结果中缺 `complete`、`complete: false`、一次超时或一次不完整的无障碍读取，都会让菜单是否缺席处于未知状态。在 `retry: unsafe` 的投递之后，执行下一个操作前先检查当前 UI。
+一个没有打开的表面会返回错误。在 Linux 上，关闭的菜单返回 `ELEMENT_NOT_FOUND`：
+
+```json
+{
+  "code": "ELEMENT_NOT_FOUND",
+  "message": "The window does not present an open menu",
+  "suggestion": "Open the menu first, then snapshot the menu surface"
+}
+```
+
+关闭的 shell 表面返回 `WINDOW_NOT_FOUND`。`--surface` 不能与 `--root` 组合，因为引用本来就带着捕获时的表面。不要对表面用 `--skeleton`：它本来就又小又聚焦。见[骨架与下钻](/desktop/skeleton-and-drill-down#何时跳过骨架)。
+
+## 列出当前打开的表面
+
+```bash
+agent-desktop list-surfaces --app gtk3-widget-factory
+```
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "list-surfaces",
+  "data": {
+    "pid": 8258,
+    "surfaces": [
+      { "id": "w-1.9-org-a11y-atspi-accessible-229", "type": "window" },
+      { "id": "w-1.9-org-a11y-atspi-accessible-229", "item_count": 4, "type": "menu" }
+    ]
+  }
+}
+```
+
+`list-surfaces` 返回应用此刻呈现的覆盖层，也就是 `snapshot --surface` 对该应用接受的那几种类型。shell 表面属于操作系统，永远不会出现在这里。当检查无法读取某个窗口（常常因为应用忙）时，条目可能带 `"unclassified": ["sheet"]` 或 `["menu"]`。把缺失的条目当未知处理，而不是当不存在。
+
+## 打开操作系统 shell 表面
+
+`open-system-surface` 会唤起一个 shell 表面。在 Windows 和 Linux 上它返回所呈现的窗口，格式为 `list-windows` 使用的 `w-<id>`。在 macOS 上只返回 `{"surface": "dock"}`，因为这些表面不为任何窗口所有：
+
+```bash
+agent-desktop --headed open-system-surface --surface action-center
+agent-desktop snapshot --surface action-center -i --compact
+```
+
+它会抢占前台，因此在 Windows 和 Linux 上无头模式以 `POLICY_DENIED` 拒绝它，需传 `--headed`（见[有头模式](/desktop/guides/headed-mode)）。已经呈现的表面会直接返回而不再唤起。操作系统不暴露的类型返回 `INVALID_ARGS`，suggestion 或 `platform_detail` 会指明替代类型。在 macOS 上，`dock` 与 `menu-bar-extras` 常驻屏幕，因此该命令不带 `--headed`、在无头模式下也能立即返回它们；控制中心或通知中心要通过点击其 `menu-bar-extras` 条目来打开。Windows 和 Linux 上哪些类型可打开，见各自平台页。

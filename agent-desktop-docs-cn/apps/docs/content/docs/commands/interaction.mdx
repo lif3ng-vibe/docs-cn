@@ -1,0 +1,349 @@
+---
+title: 交互命令
+navTitle: 交互
+description: click、double-click、triple-click、right-click、type、set-value、clear、focus、select、toggle、check、uncheck、expand 与 collapse 的参考文档。
+---
+
+这里的每条命令都对单个元素操作。传入 [`snapshot`](/desktop/commands/observation#snapshot) 或 [`find`](/desktop/commands/observation#find) 生成的限定引用，例如 `@s8f3k2p9:e1`；裸引用 `@e1` 会被 `INVALID_ARGS` 拒绝。
+
+默认情况下这些命令以无头方式运行：即不抢占焦点、不移动光标、不合成按键、不使用剪贴板的语义无障碍调用。若语义路径不存在，操作按 fail closed 处理。全局 `--headed` flag 允许物理输入与焦点变更；参见[有头模式](/desktop/guides/headed-mode)。本页示例是 Linux 上 GNOME Calculator 与 GTK Widget Factory 的真实输出。
+
+## 结果形态
+
+每条成功的引用操作都在 `data` 里返回一份操作报告。这是对计算器按钮的一次 `click`：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "click",
+  "data": {
+    "action": "click",
+    "details": {
+      "auto_wait": {
+        "lease_contention_count": 0,
+        "lease_hold_ms": 114,
+        "read_only_preflight_attempts": 1,
+        "read_only_resolve_attempts": 1
+      }
+    },
+    "disposition": { "delivery": "delivered_unverified", "retry": "unsafe" },
+    "steps": [{ "label": "Action.DoAction", "mechanism": "semantic_api", "outcome": "succeeded" }],
+    "surfaces": [
+      { "id": "w-1.11-org-gnome-Calculator-a11y-948fd89a_9bda_453b_9c10_4a9e9eed3feb", "title": "Calculator", "type": "window" }
+    ]
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr><th>字段</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>action</code></td><td>执行的命令。</td></tr>
+    <tr><td><code>disposition</code></td><td><code>delivery</code> 与 <code>retry</code>。只有 <code>retry</code> 为 <code>safe</code> 时才可以重复操作。参见<a href="/desktop/errors-and-recovery#disposition">处置</a>。</td></tr>
+    <tr><td><code>steps</code></td><td>尝试过的机制：<code>label</code>、<code>outcome</code>（<code>attempted</code>、<code>skipped</code> 或 <code>succeeded</code>）、<code>mechanism</code>（<code>semantic_api</code> 或 <code>physical_synthetic</code>），以及该步骤回读过效果时的 <code>verified</code>。</td></tr>
+    <tr><td><code>post_state</code></td><td>操作后的元素状态，只有会回读的命令才有。</td></tr>
+    <tr><td><code>surfaces</code></td><td>操作尘埃落定后仍打开的窗口与浮层。只有 <code>click</code>、<code>double-click</code>、<code>triple-click</code>、<code>right-click</code>、<code>expand</code>、<code>select</code> 和 <code>press</code> 会报告。出现 <code>menu</code>、<code>sheet</code> 或 <code>alert</code> 说明应用正在等待它被处理。参见<a href="/desktop/surfaces#know-when-a-surface-opened">表面</a>。</td></tr>
+    <tr><td><code>details</code></td><td><code>auto_wait</code> 计数器，以及下文提到的验证字段。本页后面的示例省去 <code>auto_wait</code>。</td></tr>
+  </tbody>
+</table>
+
+当目标已处于请求的状态时，什么都不发送，报告为 `not_delivered`，且可以安全重复。
+
+`set-value`、`clear`、`type`、`check`、`uncheck`、`toggle`、`expand` 和 `collapse` 执行后会重读该元素：
+
+- 状态一致时返回 `delivered_verified`，带 `post_state` 与 `details.verification_scope`：`check`、`uncheck`、`toggle`、`expand` 和 `collapse` 是 `element_state`；`set-value`、`clear` 和 `type` 是 `element_value` 并带 `application_commit: "not_verified"`。验证通过的值证明元素确实持有它，但不证明应用已经提交了它。
+- 读到与期望矛盾的可读状态时返回 `ACTION_FAILED`，带 `details.kind: "post_action_verification"`、实际观察到的 `post_state`，以及 `details.after_action` 下的报告。操作本身已生效，因此请读 `post_state` 而不是重试。
+- 结果不可读时仍算成功，返回 `delivered_unverified`，带 `details.verification_scope: "unavailable"` 和一个 `verification_reason`：`insufficient_evidence`、`secure_field` 或 `postcondition_mismatch`。
+
+## 等待预算
+
+本页的每条命令都接受 `--timeout-ms MS`（默认 `5000`；`type` 每字符额外加 30 ms），这是解析引用和等待元素变得可操作的预算。核心部分会轮询瞬态检查（`visible`、`stable`、`enabled`，指针投递时还有 `receives_events`）直到通过。终态检查（`supported_action`、`policy`、`editable`）无法靠等待解决，会立即失败。`--timeout-ms 0` 表示只尝试一次、不轮询。
+
+失败的检查列表出现在 `error.details.checks`，每项带 `status`（`pass`、`fail` 或 `unknown`）和 `reason`。这是无 `--headed` 时对文本输入框的 `double-click`：
+
+```json
+{
+  "code": "POLICY_DENIED",
+  "message": "Target is not actionable: supported_action (semantic gesture is unavailable and physical fallback is denied)",
+  "details": {
+    "actionable": false,
+    "checks": [
+      { "check": "visible", "status": "pass" },
+      { "check": "stable", "stability": { "samples": 1, "span_ms": 0 }, "status": "pass" },
+      { "check": "enabled", "status": "pass" },
+      { "check": "supported_action", "reason": "semantic gesture is unavailable and physical fallback is denied", "status": "fail" },
+      { "check": "policy", "status": "pass" }
+    ]
+  },
+  "disposition": { "delivery": "not_delivered", "retry": "safe" }
+}
+```
+
+当另一个元素遮挡目标时，`receives_events` 失败并带 `occluder`（`role`、`name`、`bounds`）。想单独等待就绪，可用 [`wait --element REF --predicate actionable`](/desktop/commands/wait#wait)。
+
+## 引用命令共有的错误
+
+<table>
+  <thead>
+    <tr><th>代码</th><th>原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>INVALID_ARGS</code></td><td>裸引用或格式错误的引用，或命令拒绝的参数。</td></tr>
+    <tr><td><code>SNAPSHOT_NOT_FOUND</code></td><td>拥有该引用的快照缺失或已被清理。</td></tr>
+    <tr><td><code>STALE_REF</code></td><td>没有任何存活元素匹配引用保存的标识。</td></tr>
+    <tr><td><code>AMBIGUOUS_TARGET</code></td><td>多个存活元素匹配。引用操作从不猜。</td></tr>
+    <tr><td><code>ACTION_NOT_SUPPORTED</code></td><td>元素没有暴露该操作。</td></tr>
+    <tr><td><code>POLICY_DENIED</code></td><td>需要物理路径或占用焦点的路径，而无头策略拒绝了它。</td></tr>
+    <tr><td><code>TIMEOUT</code>、<code>details.kind: actionability_timeout</code></td><td>目标在 <code>--timeout-ms</code> 内始终未变得可操作。<code>details.last_report</code> 指出失败的检查。</td></tr>
+    <tr><td><code>ACTION_FAILED</code></td><td>操作被拒绝、被阻塞，或与回读结果矛盾。</td></tr>
+    <tr><td><code>APP_UNRESPONSIVE</code></td><td>应用停止响应。</td></tr>
+    <tr><td><code>PERM_DENIED</code></td><td>未授予无障碍权限。</td></tr>
+  </tbody>
+</table>
+
+各代码的含义与何时重试见[错误与恢复](/desktop/errors-and-recovery)。
+
+## click
+
+以元素的主操作激活它，例如按压或调用。
+
+```bash
+agent-desktop click <REF> [--timeout-ms MS]
+```
+
+结果即[结果形态](#结果形态)中那份。点击通常以 `delivered_unverified` 结束，因为已投递的激活不能证明应用据此行动了：请通过读取 UI 验证，并检查 `data.surfaces`。
+
+平台限制：无头时到处走语义路径；macOS 与 Linux 上加 `--headed` 会先尝试物理输入。参见 [macOS](/desktop/platforms/macos)、[Windows](/desktop/platforms/windows) 和 [Linux](/desktop/platforms/linux)。
+
+## double-click
+
+双击元素。这是物理手势，因此除非元素暴露语义打开操作，否则需要 `--headed`。
+
+```bash
+agent-desktop --headed double-click <REF> [--timeout-ms MS]
+```
+
+没有 `--headed` 且无语义路径时，返回 `POLICY_DENIED`（参见[等待预算](#等待预算)）。若要用原始坐标，用 `--headed mouse-click --xy X,Y --count 2`（[`mouse-click`](/desktop/commands/mouse#mouse-click)）。
+
+平台限制：macOS 无头时会尝试 `AXOpen`；Windows 和 Linux 需要 `--headed`，且 Linux 需要 X11。参见 [Linux](/desktop/platforms/linux)。
+
+## triple-click
+
+三击元素，例如用来选中一行文本。参数与错误同 [`double-click`](#double-click)。若要用原始坐标，用 `--headed mouse-click --xy X,Y --count 3`。
+
+```bash
+agent-desktop --headed triple-click <REF> [--timeout-ms MS]
+```
+
+## right-click
+
+打开元素的上下文菜单。之后 `data.surfaces` 会列出打开的 `menu`；用 `snapshot --surface menu` 读取它。组合框和菜单按钮请改用 [`select`](#select)。
+
+```bash
+agent-desktop right-click <REF> [--timeout-ms MS]
+```
+
+无头投递要求元素本身带上下文菜单操作。在缺少该操作的 GTK 输入框上，会返回 `POLICY_DENIED` 且 `supported_action` 失败。在 macOS 上，模态菜单打开后 right-click 可能返回 `APP_UNRESPONSIVE` 并带不安全的处置：重试前先看一眼。
+
+平台限制：Windows 始终需要 `--headed`。参见 [Windows](/desktop/platforms/windows)。
+
+## type
+
+把文本插入文本目标的插入点，然后回读该字段。
+
+```bash
+agent-desktop type <REF> <TEXT> [--timeout-ms MS] [--interval-ms MS]
+agent-desktop type <REF> --stdin [--timeout-ms MS] [--interval-ms MS]
+```
+
+<table>
+  <thead>
+    <tr><th>Flag 或参数</th><th>默认值</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>TEXT</code></td><td>除 <code>--stdin</code> 外必填</td><td>文本，最多 10,000 字节。以连字符开头的值也会被接受。</td></tr>
+    <tr><td><code>--timeout-ms MS</code></td><td><code>5000</code> 加每字符 <code>30</code></td><td>覆盖解析、可操作性与投递全程。显式给的值优先生效。配合 <code>--interval-ms</code> 时，它作用于每个按键，<code>0</code> 表示每个按键只尝试一次。</td></tr>
+    <tr><td><code>--interval-ms MS</code></td><td>关闭</td><td>不用一次性插入，而是每 <code>MS</code> 毫秒敲一个键，范围 1 到 2000。</td></tr>
+  </tbody>
+</table>
+
+配合 `--stdin` 在 `type` 或 `set-value` 上可从管道或重定向文件读入文本。终端直接输入会被拒绝。请把示例引用替换成你快照里的引用：
+
+```bash
+printf '%s' 'hello' | agent-desktop type @s8f3k2p9:e2 --stdin
+```
+
+操作超时在输入结束后才开始计时，因此不会限制这段等待。空输入与所有换行都会保留，包括末尾换行；用 `printf '%s'` 可避免多出末尾换行。输入必须是合法 UTF-8 且不含 NUL 字节（`\0`）。上限：`type` 为 10,000 字节，`set-value` 为 128 KiB。
+
+`--stdin` 和命令行值只能二选一。若想把文本 `--stdin` 当字符串输入，把它放到 `--` 之后：`agent-desktop type @s8f3k2p9:e2 -- --stdin`。batch 走 JSON 的 `text` 或 `value` 字段，这会把文本放进进程参数；涉密步骤请拆成独立的 `--stdin` 命令。
+
+`--stdin` 让文本不进入进程参数，并在 JSON 结果中省略观察到的 `value` 字段，包括 `post_state.value`。其他应用文本与截图产物不会被脱敏。
+
+`type` 是插入，不是替换。先 `set-value hello`，再对同一输入框 `type ' world'`，得到下面这个结果，因为插入点在开头：
+
+```json
+{
+  "action": "type",
+  "details": { "application_commit": "not_verified", "verification_scope": "element_value" },
+  "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+  "post_state": { "enabled": true, "role": "textfield", "value": " worldhello" },
+  "steps": [{ "label": "EditableText.InsertText", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }]
+}
+```
+
+`--interval-ms` 让文本在一条命令内以稳定节奏键入。一次按键指一个字符连同与之组合的结合符、emoji 修饰符和连体字符，CR LF 算一次。第一个按键按完整的引用操作执行，有头时还会聚焦目标窗口。其余按键投向同一元素，每个按键只在其投递期间持有交互租约，因此其他智能体可以在按键之间插入操作。有头按键只在该目标的进程与焦点元素未变时才会发出，所以丢失焦点的连续输入会以错误停止。结果附加 `keystrokes` 与 `interval_ms`，其 `post_state` 读取的是最后一次按键之后的字段。只有当这次读取显示完整文本时才保持 `delivered_verified`；否则为 `delivered_unverified`，`verification_reason` 为 `postcondition_mismatch`、`insufficient_evidence`（只输入了部分文本）或 `final_read_failed`（且没有 `post_state`）。`--wait-for` 条件只在最后一次按键之后等待一次。第一个按键之后失败时，报告带 `details.typed_keystrokes` 和 `details.keystrokes`，处置为 `delivered_unverified`，因为已有部分文本落进去。
+
+```bash
+agent-desktop type @s8f3k2p9:e2 "hello world" --interval-ms 60
+```
+
+要整字段设置内容，用 [`set-value`](#set-value)。按键投递后回读到其他文本时返回 `delivered_unverified`，带 `verification_reason: "postcondition_mismatch"`；再次写入前先用 `get` 读一下字段。
+
+平台限制：Windows 需要 `--headed`，无头时返回 `POLICY_DENIED`；在该平台请用 `set-value`。参见 [Windows](/desktop/platforms/windows)。
+
+## set-value
+
+通过无障碍取值路径直接写入值：文本框、文本区和滑块。
+
+```bash
+agent-desktop set-value <REF> <VALUE> [--timeout-ms MS]
+agent-desktop set-value <REF> --stdin [--timeout-ms MS]
+```
+
+管道文本请用 `--stdin`，规则见上文 [type](#type) 一节。
+
+```json
+{
+  "action": "set-value",
+  "details": { "application_commit": "not_verified", "verification_scope": "element_value" },
+  "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+  "post_state": { "enabled": true, "role": "textfield", "value": "hello" },
+  "steps": [{ "label": "EditableText.SetTextContents", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }]
+}
+```
+
+对滑块操作时步骤是 `Value.CurrentValue`，`post_state.value` 即新位置。应用会重新格式化的值会被读成矛盾并返回 `ACTION_FAILED`。不暴露取值写入的元素返回 `ACTION_NOT_SUPPORTED`；对表格单元格，先激活它，再对出现的编辑器操作。对安全字段写入以 `delivered_unverified` 结束，带 `verification_reason: "secure_field"`。
+
+## clear
+
+清空一个文本目标，并期望回读为空值。结果与 `set-value` 相同，只是 `post_state.value: ""`。
+
+```bash
+agent-desktop clear <REF> [--timeout-ms MS]
+```
+
+## focus
+
+给元素设置键盘焦点，但不点击它。
+
+```bash
+agent-desktop --headed focus <REF> [--timeout-ms MS]
+```
+
+移动焦点可能改变前台，因此无头时在 Windows 和 Linux 上返回 `POLICY_DENIED`：
+
+```json
+{
+  "code": "POLICY_DENIED",
+  "message": "Focusing an element moves the keyboard focus of the application",
+  "details": { "foreground_effect": true },
+  "disposition": { "delivery": "not_delivered", "retry": "safe" }
+}
+```
+
+在 Linux 上，GTK4 应用会以 `grab_focus_rejected` 原因拒绝调用；对它的窗口请用 [`focus-window`](/desktop/commands/app-window#focus-window)。
+
+## select
+
+在列表、下拉框或组合框中按显示文本选中一项。
+
+```bash
+agent-desktop select <REF> <VALUE> [--timeout-ms MS]
+```
+
+```bash
+agent-desktop select @s30sxlstqzdq8x:e21 Middle
+```
+
+```json
+{
+  "action": "select",
+  "details": {},
+  "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+  "steps": [{ "label": "Action.DoAction", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }],
+  "surfaces": [{ "id": "w-1.9-org-a11y-atspi-accessible-229", "type": "window" }]
+}
+```
+
+若控件已显示该值，什么都不发送。无障碍名称就是其当前值的组合框，在值变化时会获得新标识，因此旧引用此后返回 `STALE_REF`：下一次操作前重新找一遍该控件。
+
+平台限制：macOS 上要先关掉任何已打开的菜单。Linux 上，Qt 组合框拒绝无头操作并带 `details.kind: pointer_required`，GTK4 列表拒绝时带 `selection_index_unproven`。参见各平台页。
+
+## toggle
+
+翻转复选框或开关。优先用幂等的 [`check`](#check) 和 [`uncheck`](#uncheck)；只有想要与当前状态相反的结果时才用 `toggle`。
+
+```bash
+agent-desktop toggle <REF> [--timeout-ms MS]
+```
+
+回读要求 checked 状态确实发生了变化，`post_state.states` 展示结果。状态不可读或不确定时返回 `ACTION_FAILED`，不可勾选的角色返回 `ACTION_NOT_SUPPORTED`。
+
+## check
+
+把复选框或开关置为选中。已经选中的元素不会发送任何东西。
+
+```bash
+agent-desktop check <REF> [--timeout-ms MS]
+```
+
+```json
+{
+  "action": "check",
+  "details": { "verification_scope": "element_state" },
+  "disposition": { "delivery": "delivered_verified", "retry": "unsafe" },
+  "post_state": { "enabled": true, "role": "checkbox", "states": ["checked"] },
+  "steps": [{ "label": "Action.DoAction", "mechanism": "semantic_api", "outcome": "succeeded", "verified": true }]
+}
+```
+
+对同一个复选框再跑一次，步骤被跳过：
+
+```json
+{
+  "action": "check",
+  "details": { "verification_scope": "element_state" },
+  "disposition": { "delivery": "not_delivered", "retry": "safe" },
+  "post_state": { "enabled": true, "role": "checkbox", "states": ["checked"] },
+  "steps": [{ "label": "Action.DoAction", "mechanism": "semantic_api", "outcome": "skipped", "verified": true }]
+}
+```
+
+错误与 [`toggle`](#toggle) 相同。在 Linux 上，对同一个 GTK4 按钮、间隔小于约 250 ms 的两次点击可能只生效一次。
+
+## uncheck
+
+把复选框或开关置为未选中，幂等。结果与 `check` 相同，只是 `post_state.states` 中没有 `checked`。
+
+```bash
+agent-desktop uncheck <REF> [--timeout-ms MS]
+```
+
+## expand
+
+展开折叠三角、树形节点或手风琴，并验证元素读出为展开状态（`post_state.states` 含 `expanded`）。`data.surfaces` 可能列出本次展开打开的菜单或 popover。不可展开的元素返回 `ACTION_NOT_SUPPORTED`。
+
+```bash
+agent-desktop expand <REF> [--timeout-ms MS]
+```
+
+## collapse
+
+折叠折叠三角、树形节点或手风琴，并验证 `expanded` 已消失。错误与 [`expand`](#expand) 相同。
+
+```bash
+agent-desktop collapse <REF> [--timeout-ms MS]
+```

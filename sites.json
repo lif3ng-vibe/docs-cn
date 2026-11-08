@@ -486,5 +486,18 @@
       "stack": "Starlight 自建站（上游无文档站工程；base-links 顶层 rehype 免 sed）",
       "snap": "main@eaf1701 2026-11-06"
     }
+  },
+  {
+    "name": "agent-desktop",
+    "slug": "agent-desktop",
+    "desc": "agent-desktop 中文文档（非官方翻译）——Vercel 开源的桌面自动化 CLI 与 C 库：让 AI 智能体读取 macOS/Windows/Linux 原生应用的无障碍树，以快照—下钻—操作—验证循环安全地操作桌面 UI，支持引用追踪、骨架视图、批量、追踪记录与 FFI 嵌入。",
+    "tags": ["ai-agent", "cli-tool", "sdk-api"],
+    "orig": "https://agent-browser.dev/desktop",
+    "repo": "https://github.com/vercel-labs/agent-desktop",
+    "meta": {
+      "pages": "38 页",
+      "stack": "geistdocs (Next.js 16 静态导出)",
+      "snap": "2026-11-05"
+    }
   }
 ]

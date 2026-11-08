@@ -1,0 +1,4 @@
+{
+  "title": "命令",
+  "pages": ["index", "app-window", "observation", "interaction", "scroll", "keyboard", "mouse", "notifications", "clipboard", "wait", "system", "batch"]
+}

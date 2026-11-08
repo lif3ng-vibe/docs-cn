@@ -1,0 +1,102 @@
+---
+title: Chromium 与 Electron 应用
+navTitle: Chromium 与 Electron
+description: 经由 agent-desktop 打开的 DevTools 端口，用 agent-browser 驱动 Chromium 或 Electron 应用的 web 内容,同时把原生 UI 留给 agent-desktop。
+---
+
+agent-desktop 通过操作系统的无障碍树读取每个应用，这条路对 Chromium 与 Electron 应用同样有效。但它们的 web 内容可能非常密集且遍历很慢。对一个可以重新启动的应用，`launch --cdp` 会以一个仅回环的 Chrome DevTools Protocol（CDP）端口启动它，[agent-browser](https://agent-browser.dev) 连上该端口来驱动 web 内容。agent-desktop 自己从不讲 CDP；它只是打开并验证端口，同时保留原生 UI。
+
+<table>
+  <thead>
+    <tr><th>应用的哪部分</th><th>用什么驱动</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>web 内容:应用内的页面、面板、编辑器、表单</td><td>agent-browser,走 CDP 端口</td></tr>
+    <tr><td>原生菜单栏、文件对话框与弹层、窗口管理、通知、截屏</td><td>agent-desktop</td></tr>
+    <tr><td>已在运行的应用,或不是你启动的应用</td><td>只能 agent-desktop。端口只存在于由它启动的进程上</td></tr>
+  </tbody>
+</table>
+
+## 1. 带 DevTools 端口启动应用
+
+```bash
+agent-desktop launch chrome --cdp --env ACCESSIBILITY_ENABLED=1 \
+  --arg=--force-renderer-accessibility --arg=--user-data-dir=/tmp/chrome-profile
+```
+
+`--cdp` 会加上远程调试开关，等端点应答，并在 `data.cdp` 里返回它。像本例一样省略端口让操作系统挑一个空闲的，或者自己指定（`--cdp 9229`）。`--env` 与 `--force-renderer-accessibility` 参数是给 Linux 用的——那里的 Chromium 只有被要求时才加入无障碍 bus，加了这些参数 agent-desktop 才能继续看到原生 UI；见 [Linux](/desktop/platforms/linux#chromium-qt-与-electron)。Electron 应用不需要额外参数。
+
+这是 Linux 上的 Google Chrome，suggestion 与 window 对象有删节：
+
+```json
+{
+  "version": "2.6",
+  "ok": true,
+  "command": "launch",
+  "data": {
+    "app": "chrome",
+    "cdp": {
+      "http_endpoint": "http://127.0.0.1:44297",
+      "port": 44297,
+      "product": "Chrome/156.0.8078.79",
+      "websocket_url": "ws://127.0.0.1:44297/devtools/browser/4a28a252-c7ea-4288-9985-50e34fc49b8f"
+    },
+    "pid": 11342,
+    "process_instance": "1e1c1e2e:168278",
+    "renderer": "chromium",
+    "suggestion": "Next: run `agent-browser connect 44297` (preferred; `agent-browser skills get electron` has the guide) or connect any CDP client such as Playwright or Puppeteer. ...",
+    "window": { "id": "w-1.10-org-a11y-atspi-accessible-1", "title": "Untitled - Google Chrome" }
+  }
+}
+```
+
+传 `list-apps` 打印的应用名（`chrome`、`Slack`、`Obsidian`）。agent-desktop 对已在运行的应用拒绝 `--cdp`，因为运行中的进程没有端口，而退出它会丢掉用户的状态。它按这个名字查找运行中的应用，因此 Linux 上 `google-chrome` 这样的启动器别名会跳过检查，转而以启动超时收场。
+
+## 2. 把 agent-browser 连到端口上
+
+```bash
+agent-browser connect 44297      # data.cdp.port 给出的端口
+agent-browser snapshot -i
+# - heading "Settings" [level=1, ref=e1]
+# - textbox "Name" [ref=e3]
+# - button "Save" [ref=e2]
+agent-browser fill @e3 "Ada"
+agent-browser click @e2
+```
+
+从这里开始，web 内容遵循 agent-browser 自己的快照、引用与操作循环；见 [agent-browser](https://agent-browser.dev) 与 `agent-browser skills get electron`。Playwright、Puppeteer 和其他 CDP 客户端可以改用 `data.cdp.websocket_url`。不要手写裸 CDP 或调用应用内部 API。
+
+## 3. 原生 UI 交给 agent-desktop
+
+窗口框架、菜单和对话框不在 web 内容里，所以它们留在 agent-desktop，同一次运行之内：
+
+```bash
+agent-desktop find --app chrome --role button --name Reload --first
+agent-desktop find --app chrome --role textfield --first          # 地址栏
+```
+
+对着上面的会话，第二条 `find` 返回了地址栏 `"name": "Address and search bar"`，其值是 agent-browser 打开的页面。web 内容弹出的原生文件对话框或弹层用 `snapshot --surface` 处理；见[表面](/desktop/surfaces)。
+
+## 4. 关闭应用
+
+```bash
+agent-desktop close-app chrome
+```
+
+`close-app` 终结进程，连同端口一起；上面的运行返回了 `delivered_verified` 加 `details.evidence: "process_instance_exited"`，端点随之停止应答。端口开着的时候，同一用户的任何本地进程都能控制应用的 web 内容，所以只在需要的步骤上请求 `--cdp`。
+
+## --cdp 失败时
+
+<table>
+  <thead>
+    <tr><th>错误</th><th>原因</th><th>怎么办</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ACTION_FAILED</code>, <code>details.kind: cdp_requires_fresh_launch</code></td><td>应用已在运行。<code>details.pids</code> 列出它,什么都没被启动（<code>not_delivered</code>）。</td><td>运行 <code>close-app</code>,确认退出后带 <code>--cdp</code> 重新启动,或者继续用无障碍路径驱动运行中的应用。</td></tr>
+    <tr><td><code>ACTION_FAILED</code>, <code>details.kind: cdp_endpoint_unavailable</code></td><td>应用启动了,但期限内没有任何 DevTools 端点应答。应用继续运行（<code>delivered_unverified</code>）。</td><td>改走无障碍路径,或 <code>close-app</code> 后检查应用名与参数。</td></tr>
+    <tr><td><code>INVALID_ARGS</code>, <code>details.kind: cdp_port_in_use</code></td><td>你指定的端口已被占用。</td><td>换一个端口,或省略它。</td></tr>
+    <tr><td><code>INVALID_ARGS</code>, <code>details.kind: cdp_switch_conflict</code></td><td>某个 <code>--arg</code> 设置了 <code>--remote-debugging-*</code> 或 <code>--remote-allow-origins</code>,而它们归 <code>--cdp</code> 管。</td><td>去掉那个 <code>--arg</code>。</td></tr>
+  </tbody>
+</table>
+
+flag 清单见 [`launch` 参考](/desktop/commands/app-window#launch)。对无法重启的密集应用，改用骨架绘制地图并下钻一个区域；见[骨架与下钻](/desktop/skeleton-and-drill-down)。
