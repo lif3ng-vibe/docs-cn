@@ -1,0 +1,58 @@
+---
+title: "选择器"
+navTitle: "选择器"
+---
+
+## 引用（ref，推荐）
+
+引用（ref）基于快照提供确定性的元素选择，最适合 AI 智能体。
+
+```bash
+# 1. 获取带引用（ref）的快照
+agent-browser snapshot
+# 输出：
+# - heading "Example Domain" [ref=e1] [level=1]
+# - button "Submit" [ref=e2]
+# - textbox "Email" [ref=e3]
+# - link "Learn more" [ref=e4]
+
+# 2. 使用引用（ref）交互
+agent-browser click @e2                   # 点击按钮
+agent-browser fill @e3 "test@example.com" # 填写文本框
+agent-browser get text @e1                # 获取标题文本
+agent-browser hover @e4                   # 悬停在链接上
+```
+
+### 为什么用引用（ref）？
+
+- **确定性** - 引用精确指向快照中的具体元素
+- **快速** - 无需重新查询 DOM
+- **对 AI 友好** - LLM 能可靠地解析并使用引用（ref）
+
+## CSS 选择器
+
+```bash
+agent-browser click "#id"
+agent-browser click ".class"
+agent-browser click "div > button"
+agent-browser click "[data-testid='submit']"
+```
+
+## 文本与 XPath
+
+```bash
+agent-browser click "text=Submit"
+agent-browser click "xpath=//button[@type='submit']"
+```
+
+## 语义定位器
+
+按角色、标签或其他语义属性查找元素：
+
+```bash
+agent-browser find role button click --name "Submit"
+agent-browser find role heading text --name "Skills"     # 隐式角色可用：<h2>=heading、<ul>=list、顶层 <header>=banner
+agent-browser find label "Email" fill "test@test.com"
+agent-browser find placeholder "Search..." fill "query"
+agent-browser find testid "submit-btn" click
+```

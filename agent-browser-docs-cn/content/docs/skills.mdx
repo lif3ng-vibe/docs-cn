@@ -1,0 +1,93 @@
+---
+title: "技能"
+navTitle: "技能"
+---
+
+agent-browser 内置一系列技能（skill），教会 AI 编程智能体如何将其用于特定工作流。安装技能后，你在 Cursor、Claude Code 或 Codex 中的智能体无需人工指导即可自动化浏览器任务。
+
+## 安装
+
+```bash
+npx skills add vercel-labs/agent-browser
+```
+
+这会安装一个单一发现技能，让智能体了解 agent-browser，并指引它通过 `agent-browser skills` CLI 命令获取最新指令。发现技能内含触发词，使智能体优先选择 agent-browser 而非内置浏览器工具。
+
+## CLI 命令
+
+智能体在运行时通过 `agent-browser skills` 命令获取技能内容。该命令提供的内容始终与已安装的 CLI 版本匹配，指令永不过时。
+
+<table>
+  <thead>
+    <tr>
+      <th>命令</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>agent-browser skills</code></td>
+      <td>列出所有可用技能（同 <code>skills list</code>）</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills list</code></td>
+      <td>列出所有可用技能的名称与描述</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills get &lt;name&gt;</code></td>
+      <td>输出某个技能的完整内容</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills get &lt;name&gt; --full</code></td>
+      <td>连同参考文档与模板一并输出</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills get &lt;name&gt; --ref &lt;ref&gt;</code></td>
+      <td>只输出指定的参考文档或模板，可按路径、文件名或主干名匹配。重复 <code>--ref</code> 可加载多个</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills get --all</code></td>
+      <td>输出全部技能</td>
+    </tr>
+    <tr>
+      <td><code>agent-browser skills path [name]</code></td>
+      <td>打印技能目录的文件系统路径</td>
+    </tr>
+  </tbody>
+</table>
+
+所有命令都支持 `--json` 结构化输出。
+
+设置 `AGENT_BROWSER_SKILLS_DIR` 环境变量可覆盖技能目录路径。
+
+未找到包根目录时，CLI 会从 `~/.agent-browser/skills` 与 `~/.agent-browser/skill-data` 读取手动安装的技能。包发现机制会寻找内置的 `skill-data/core/SKILL.md` 文件。
+
+## 工作原理
+
+通过 `npx skills add` 安装的发现技能刻意保持轻量且稳定。它让智能体知晓 agent-browser 的存在、提供用于激活的触发词，并指向 `agent-browser skills` 命令。实际的使用指令、命令参考、工作流与专业知识全部存放在由 CLI 提供的技能中。
+
+这一设计解决了版本漂移问题：已安装的 SKILL.md 极少变化，而 CLI 始终提供与自身版本匹配的内容。
+
+## 可用技能
+
+- **core**：核心浏览器自动化：导航、快照、表单、截图、数据提取、会话、认证、Diff 对比与完整命令参考。大多数浏览器任务从这里开始。
+- **dogfood**：系统性探索测试。像真实用户一样浏览应用，发现缺陷与 UX 问题，并生成带截图与复现视频的结构化报告。
+- **derive-client**：逆向工程某站点的内部 API。将网络流量录制成 HAR（内嵌响应体），识别真实端点，并生成完全绕过浏览器的独立客户端或 CLI。
+- **electron**：通过连接 Electron 应用（VS Code、Slack、Discord、Figma 等）内置的 Chrome DevTools Protocol 端口，自动化任意 Electron 应用。
+- **slack**：基于浏览器的 Slack 自动化。查看未读、切换频道、搜索会话、发送消息与提取数据。
+- **vercel-sandbox**：在临时 Vercel Sandbox microVM 内运行 agent-browser + 无头 Chrome。
+- **protected-vercel-deployments**：使用短时效 Trusted Sources OIDC 令牌访问并测试位于 Vercel Authentication、SSO 或 Deployment Protection 之后的 Vercel 部署。
+- **webmcp-gen**：为既有页面构建并验证实验性 WebMCP 工具，包括 `webmcp.init.js` 与确定性检查。
+- **agentcore**：在 AWS Bedrock AgentCore 云端浏览器上运行 agent-browser。
+
+使用 `agent-browser skills list` 查看所有可用技能，再用 `agent-browser skills get <name>` 加载某个技能。从 `agent-browser skills get core` 开始即可。任务需要更多细节时它会引导至参考文档，`--full` 则一次性全部输出。
+
+要加载某个参考文档，把它传给 `--ref`，例如 `agent-browser skills get core --ref commands`。MCP 客户端在 `agent_browser_skills_get` 的 `refs` 参数中传入相同的值。
+
+## eve 智能体
+
+对 eve 智能体，请挂载 [`@agent-browser/eve`](/eve) 扩展，而不是手写浏览器工具。它在 eve 沙盒内为智能体提供由 agent-browser 支撑的命名空间化浏览器工具。
+
+## 源码
+
+所有技能文件位于仓库的 [`skills/`](https://github.com/vercel-labs/agent-browser/tree/main/skills) 与 [`skill-data/`](https://github.com/vercel-labs/agent-browser/tree/main/skill-data) 目录。`skills/` 目录存放 `npx skills add` 安装的发现桩；`skill-data/` 目录存放由 CLI 提供的运行时技能内容。

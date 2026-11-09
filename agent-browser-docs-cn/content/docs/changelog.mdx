@@ -1,0 +1,1810 @@
+---
+title: "更新日志"
+navTitle: "更新日志"
+---
+
+## v0.41.2
+
+<p className="text-[#888] text-sm">2026 年 11 月 3 日</p>
+
+### 新功能
+
+- 新增**定向技能引用**（targeted skill references）：`skills get <name> --ref <ref>` 与 MCP `agent_browser_skills_get` 工具的 `refs` 参数支持一次只加载一份参考文档或模板 (#2310)
+- 新增 **Chrome 安全警告**：当更新的稳定版本列出 CVE 修复时显示警告，但不阻塞命令。设置 `AGENT_BROWSER_NO_VERSION_CHECK=1` 可跳过该检查 (#2309)
+
+### 问题修复
+
+- 修复命令省略或更改超时设置引发**会话重启**的问题：现在保留已打开的页面，并在等待时复用运行中守护进程的默认超时 (#2288)
+- 修复**裸 `open` 命令**丢弃已配置的配置文件（profile）与浏览器参数、并以临时配置文件重新启动 Chrome 的问题 (#2287)
+- 修复环境变量中设置了启动选项时 **browserless 命令**仍启动浏览器的问题 (#2309)
+- 修复 **Windows 主目录检测**以遵循 `USERPROFILE`，并保持 MCP 工具目录的行尾一致，以通过 Windows 测试 (#2305)
+
+### 改进
+
+- 精简**核心智能体技能**，把详细指引转入参考文档，并指示每条命令都传入 `--session` (#2303, #2312)
+
+### 文档
+
+- 精简 **README**，把详细指引移到文档站，并修正源码构建说明 (#2302)
+
+---
+
+## v0.41.1
+
+<p className="text-[#888] text-sm">2026 年 10 月 30 日</p>
+
+### 问题修复
+
+- 修复 **cookie 属性**：`cookies set` 现在遵循 `--http-only` 与 `--same-site`，保留既有别名，并拒绝未知参数 (#2256)
+- 修复**页面错误清除**：`errors --clear` 现在会移除已捕获的错误 (#2253)
+- 修复 **MCP 选择器等待**：纯整数选择器现在返回错误，而不是变成限时等待 (#2254)
+- 修复**插件错误脱敏**：敏感操作会省略不支持的协议值 (#2255)
+- 修复**非法 limit 处理**：溢出的空闲超时与非法的输出限制现在产生警告，而不是溢出或被静默忽略 (#2250, #2258)
+- 从安装的智能体技能中移除**未固定版本的 npx 执行权限** (#2249)
+
+### 文档
+
+- 记录了在 Vercel Sandbox 中复用单个服务器进程的 **stdin MCP 连接** (#2248)
+- 为文档站配置了**桌面文档路由**与桌面 sitemap (#2278)
+
+---
+
+## v0.41.0
+
+<p className="text-[#888] text-sm">2026 年 10 月 28 日</p>
+
+### 破坏性变更
+
+- **`@agent-browser/eve` 的工具现在来自 MCP 工具目录**。该扩展暴露 CLI 的 MCP 工具，而非 21 个手写工具，因此工具名与输入发生变化：`navigate` 改为 `open`，`evaluate` 改为 `eval`，`press_key` 改为 `press`，`select_option` 改为 `select`，`set_checked` 改为 `check` 与 `uncheck`，`get` 改为 `get_text`、`get_url` 及其他 `get_*` 工具，`tabs` 改为 `tab_*` 系列工具，`wait_for` 改为 `wait_*` 系列工具。同样的命名适用于 `@agent-browser/eve/tools` 覆盖。沙盒需要 agent-browser 0.41，扩展默认会安装该版本 (#2241)
+
+### 新功能
+
+- 新增 **`agent-browser mcp call <tool> '<json>'`**：无需 stdio 会话即可运行单个 MCP 工具，并把结果连同 agent-browser 版本以 JSON 打印，适合无法在工具调用之间保持进程开启的运行时 (#2238)
+- 新增 **`@agent-browser/sandbox/mcp-tools.json`**：包含全部 MCP 工具的标题、描述、输入 schema、注解与 profile，由 CLI 生成并经测试校验 (#2240)
+
+### 改进
+
+- **`@agent-browser/eve` 现在将每个工具作为独立的短生命周期进程运行**，因此没有 `agent-browser` 进程会比一次工具调用存活更久。28 个 `core` 工具会列给模型，其余 14 个为延迟加载，通过 `eve__search` 查找，使列出的工具上下文保持原有大小 (#2241)
+
+### 问题修复
+
+- **MCP 工具参数不能再设置全局 flag**。CLI 会在参数的任意位置读取全局 flag，因此选择器或 `extraArgs` 条目之类的值可能自带 `--allowed-domains` 并覆盖服务器或调用方的允许列表。现在此类工具调用会被拒绝 (#2238)
+
+---
+
+## v0.40.0
+
+<p className="text-[#888] text-sm">2026 年 10 月 27 日</p>
+
+### 破坏性变更
+
+- **`@agent-browser/eve` 现在要求 eve 0.84.0 或更高版本**。eve 0.84.0 拒绝由更早版本构建的扩展，因此扩展现在以它构建。运行旧版 eve 的应用应留在 `@agent-browser/eve@0.39` (#2226)
+
+### 新功能
+
+- 新增**每个 Vercel Sandbox 一个 MCP 服务器**：`@agent-browser/sandbox/vercel` 中的 `startAgentBrowserMcp` 会在 Sandbox stdin 上保持单个 `agent-browser mcp` 运行；`connectAgentBrowserMcp` 面向任何暴露 stdin 与 stdout 流的运行时 (#2228)
+- 为 `batch` 新增 **`--omit-command`**、为 MCP batch 工具新增 `omitCommand`，用从 0 开始的索引替代 JSON 输出中重复出现的原始命令数组 (#2216)
+
+### 问题修复
+
+- 修复 **`state load` 与启动时的存储恢复**向页面脚本暴露已保存 token、以及在重定向后把一个源的存储写入另一个源的问题；存储现在仅在页面处于保存时的源上时才通过 DevTools 写入，被跳过的源会被报告 (#2212)
+- 修复 **`<session>.config` 文件**在守护进程退出后堆积于 socket 目录的问题 (#2128)
+- 修复**被模拟的跨域响应**无法通过 CORS 的问题：`network route --body` 现在接受 `--allow-origin <origin>`（MCP `network_route` 工具同样支持），用于应答预检请求并向该源发送 CORS 头；未设置内容类型时，JSON 主体以 `application/json` 发送 (#2229)
+- 修复 **Windows 会话**中已死守护进程可能一直占用被固定标签页、以及不同 socket 目录中的同名会话可能连到彼此守护进程的问题 (#2223)
+
+---
+
+## v0.39.4
+
+<p className="text-[#888] text-sm">2026 年 10 月 26 日</p>
+
+### 问题修复
+
+- 修复 **`wait --download`** 在等待开始前下载即已完成时超时的问题，现在会把文件移动到请求的路径 (#2027)
+- 修复使用 **`--allowed-domains` 启动**时在嵌入跨域 iframe 的页面上报 "Cannot find default execution context" 失败的问题 (#2116)
+- 修复高 DPI 显示器上**整页截图**尺寸为页面两倍、且页面位于左上四分之一处的问题 (#2125)
+- 修复**选择器截图**在元素位于首屏之外、滚动后或 iframe 内部时为空白的问题 (#2126)
+- 修复**失去响应的标签页**永久性破坏会话的问题：卡死的标签页现在以 `page_wedged` 报错；在已启动的浏览器中，第二次超时后会替换该标签页 (#2100)
+- 修复 **`--pin-tab`**：其他会话无法再通过 `tab <targetId>` 夺走被固定的标签页 (#2135)
+
+---
+
+## v0.39.3
+
+<p className="text-[#888] text-sm">2026 年 10 月 25 日</p>
+
+### 问题修复
+
+- 修复**认证加密密钥**在配置的密钥或既有密钥文件无效时被覆盖的问题，保住了对已保存凭据的访问 (#2178)
+- 修复**项目配置信任**：自动发现的文件不能再设置可执行文件路径、浏览器参数或插件；`plugin add` 现在默认写入用户配置 (#2180)
+- 修复 **MCP 访问限制**：工具参数不能覆盖服务器的网络、文件、策略或主机访问设置 (#2181)
+- 修复 **inspect WebSocket 来源校验**：浏览器连接必须来自本地 Chrome DevTools 来源 (#2182)
+- 修复**过期进程清理**：守护进程重启、`close --all` 与仪表盘关停现在会在发送信号前核对进程身份 (#2183)
+- 修复**复制的 Chrome 配置文件**：其保存的首选项将副本标记为已正常关闭，避免反复出现崩溃恢复提示，同时保留已保存的标签页 (#2189)
+- 修复**仪表盘聊天会话**：命令保持在所属线程的会话中，后台轮次仍附着于该会话，已关闭的会话会停止其聊天 (#2190)
+- 修复 **Windows 输出捕获**：分离的守护进程与仪表盘不再保持 CLI 的输出管道开启，MCP 输出排空在子进程退出后有上限 (#2160)
+
+### 改进
+
+- 改进 **CDP 启动附加**：`connect` 与 `--cdp` 现在为仍在拒绝连接的调试端口最多等待两秒 (#2159)
+
+---
+
+## v0.39.2
+
+<p className="text-[#888] text-sm">2026 年 10 月 22 日</p>
+
+### 问题修复
+
+- 修复 CDP 事件接收器处理滞后时**已暂停的网络请求**丢失的问题，防止请求一直停滞 (#2110)
+- 修复**域名过滤重定向**：主文档重定向到被阻止的主机时，`open` 现在会报错 (#2114)
+- 修复 **eve 兼容性**，适配当前的工具契约与沙盒执行模型 (#2157)
+- 修复**浏览器启动参数**：flag 值中的逗号与负坐标在 `--args` 与 `AGENT_BROWSER_ARGS` 中得到保留 (#2141)
+- 修复 **MCP 参数校验**：未声明的键现在返回错误，而不是静默选择默认行为 (#2175)
+- 修复**单击与双击的定位**：隐藏、禁用与视口外的元素现在返回错误，而不是报告成功 (#2173)
+- 修复 **CDP 附加持久化**：后续命令保留已附加的浏览器 (#2155)
+- 修复**过期元素引用**：歧义恢复失败时不再选中其他元素 (#2145)
+- 修复相关 CDP 事件同批到达时的**目标与会话失效**问题 (#2176)
+- 修复**策略加载失败**：无法读取或非法的策略文件现在拒绝操作，而不是在没有策略的情况下继续 (#2179)
+
+### 测试
+
+- 使**原生 E2E 测试夹具**不再依赖线上网站，并安装引擎验证所需的 Obscura 二进制文件 (#2113)
+
+---
+
+## v0.39.1
+
+<p className="text-[#888] text-sm">2026 年 10 月 13 日</p>
+
+### 问题修复
+
+- 修复**守护进程响应丢失后重复执行命令**的问题：任何请求字节发出后，变更类与启动类命令都不再重试。CLI JSON 与 MCP 响应会报告 `outcome_unknown`，让调用方可在重试前检查结果；只读命令与发送前的失败保留原有重试 (#2085)
+
+---
+
+## v0.39.0
+
+<p className="text-[#888] text-sm">2026 年 10 月 7 日</p>
+
+### 新功能
+
+- 新增实验性 **Obscura 引擎**（`--engine obscura`）：与 Chrome 一样在本地启动和清理，带启动超时上限并支持 CLI/MCP。Obscura 仍存在无障碍与渲染方面的缺口，选用前请先阅读引擎页面 (#1876)
+- 新增 **CLI HTTPS 请求的私有 CA 信任**，使 `read`、`install`、`upgrade` 与 `doctor` 在 TLS 检测环境下正常工作。`--ca-cert` 现在在所有平台上对它们生效，新增的 `--use-system-ca` 使用操作系统信任库，`SSL_CERT_FILE` 作为兜底。证书校验始终保持开启 (#2006)
+
+### 问题修复
+
+- 修复**选择器范围的快照**（`snapshot -s`）：被忽略包装器下的元素不再被打印两次，所选自定义元素的 shadow root 内容不再丢失 (#2043)
+- 修复 **`--auto-connect`**：在 Chrome 144+ 显示远程调试提示期间最多等待 30 秒，不再反复弹出提示或报 "No running Chrome instance found" 失败 (#2026)
+- 修复**长命令期间守护进程的响应能力**：命令持有状态锁时，守护进程仍继续接受连接（包括 `close`），该窗口内发送的 SIGTERM 不再丢失 (#2059)
+
+### 文档
+
+- 将**文档站**迁移到 Geistdocs (#1887)
+
+---
+
+## v0.38.2
+
+<p className="text-[#888] text-sm">2026 年 10 月 1 日</p>
+
+### 问题修复
+
+- 修复**认证保险库登录**：存在隐藏重复控件时选取可用控件，并将凭据输入绑定到所选字段，被替换的字段或被转移的焦点会在提交前被拒绝 (#2014)
+- 修复**聊天模式**：允许 `webmcp`、`skills` 等顶层浏览器命令，使模型使用页面的 WebMCP 工具而非退回 `eval` (#2015)
+- 修复 **Kernel 配置文件**：`KERNEL_PROFILE_NAME` 会话现在将 profile 作为对象发送，而不是报 400 失败；并新增 `KERNEL_PROFILE_SAVE_CHANGES` 用于选择将改动保存回去 (#2004)
+- 修复 **Chrome 启动后冻结**：在浏览器整个生命周期内持续排空其 stderr，写满的日志管道不再阻塞浏览器 (#2003)
+- 修复 **Browser Use**：切换到 Cloud V4，以有界超时创建、附加到并停止同一个浏览器 (#1879)
+- 修复 **Vercel Sandbox 共享内存检测**：测量 `/dev/shm` 容量，低于 256 MiB 时附加 `--disable-dev-shm-usage`，Chrome 不再因挂载点容量不足而终止渲染器 (#1890)
+
+### 改进
+
+- 将 **eve 集成**从 eve 0.47.3 升级到 0.57.0，eve 0.50 及以后的应用可再次构建 (#1945)
+
+### 文档
+
+- 更新**拼接图（contact sheet）示例**，加入 loading-flash 演示输出 (#1871)
+
+---
+
+## v0.38.1
+
+<p className="text-[#888] text-sm">2026 年 9 月 16 日</p>
+
+### 问题修复
+
+- 修复**录制中的光标与鼠标移动时序**，使拖拽与定时鼠标移动期间光标渲染与页面内容保持同步 (#1869)
+
+### 文档
+
+- 在 README 中加入 Vercel Labs 产品与项目状态徽章 (#1868)
+
+---
+
+## v0.38.0
+
+<p className="text-[#888] text-sm">2026 年 9 月 16 日</p>
+
+### 新功能
+
+- 新增**条件截图**：`screenshot --if-changed` 跳过无变化的截图，`--threshold <0-1>` 容忍小幅像素差异。截图历史按标签页与截图模式分别记录，无变化的截图省略图片路径以节省 token (#1813)
+- 新增**自动快照增量**：`snapshot --delta` 先返回完整基线，随后返回无变化修订或紧凑的结构变化。使用 `--full` 刷新基线 (#1811)
+- 新增**持久快照引用**（ref），让 DOM 元素在同文档变化后仍然存活。被替换的元素以及发生导航的页面或 iframe 会使其引用失效，且不回收标识符 (#1812)
+- 新增**拟人指针移动**：会话级 `--input-mode`、点击与拖拽逐操作的 `--human`，以及可复现的曲线 `mouse move` 路径 (#1810)
+- 新增**录制呈现工具**：`--cursor` 渲染带动画的指针与点击涟漪，`--contact-sheet` 保存带时间戳的 PNG 视觉变化摘要 (#1807, #1808)
+- 新增**有状态的认证保险库登录**：`auth login --no-navigate` 在校验登录页来源与凭据 URL 一致后，填写已准备好的登录页 (#1771)
+- 新增随普通浏览器响应返回的 **WebMCP 目录更新**：初始发现与目录变化时显示简洁且内容有界的摘要，完整 schema 仍需主动开启 (#1842)
+
+### 改进
+
+- 改进**录制帧时序**：在重绘之间保持最新的 Chrome 帧，使输出时长遵循请求的帧率 (#1806)
+
+### 问题修复
+
+- 修复 **CDP 传输恢复与关停**：畸形的传输消息不再搁浅无关命令，初始化失败会干净地断开 (#1739)
+- 修复**下拉框标签匹配**：按可见标签选择选项时规范化空白字符，包括不间断空格 (#1736)
+
+### 文档
+
+- 阐明**可靠的浏览器等待策略**：推荐使用页面专属的选择器、文本、URL 或 JavaScript 条件，把 `networkidle` 留给已知会安静下来的页面 (#1834)
+
+---
+
+## v0.37.1
+
+<p className="text-[#888] text-sm">2026 年 9 月 8 日</p>
+
+### 问题修复
+
+- 修复 **Windows 无头 Chrome 的桌面残留**：将自有的无头 Chrome 隔离到私有桌面，并确保守护进程退出或被强制终止时清理其进程树。有头与外部连接的浏览器保持原有桌面行为 (#1498, #1820)
+
+---
+
+## v0.37.0
+
+<p className="text-[#888] text-sm">2026 年 9 月 7 日</p>
+
+### 新功能
+
+- 新增**更高质量的视频录制**：`record start` 与 `record restart` 现在默认以 30 fps 捕获当前活动页面，支持 `--fps 1-60`，改用 `Page.startScreencast` 获得更平滑的动态，并保持真实时钟时序。WebM 与 MP4 输出已写入文档，`doctor` 会报告 ffmpeg 录制依赖 (#1763, #1776, #1778)
+- 新增 **WebMCP 可用性输出**：导航响应会通告页面何时暴露允许的 WebMCP 工具，CLI、JSON 与 MCP 客户端均包含可用性元数据 (#1760)
+- 新增**新标签页的会话设置继承**。通过 `tab new` 或页面点击打开的标签页，会在首次导航前继承活动会话的请求头、凭据、用户代理、语言环境、时区、地理位置、离线模式、路由、配色方案与初始化脚本 (#1777)
+
+### 问题修复
+
+- 修复**录制启动校验**：缺少 ffmpeg、无扩展名的输出路径与非法录制选项会在浏览器或录制状态改变前失败。失败的替换保留当前录制片段（take），ffmpeg 错误现在包含有用的诊断信息 (#1778)
+- 修复**录制中的导航状态**：录制期间的 URL 导航现在会像普通导航一样清除过期的元素引用、frame 范围与页面 WebMCP 状态 (#1776)
+
+---
+
+## v0.36.0
+
+<p className="text-[#888] text-sm">2026 年 9 月 1 日</p>
+
+### 新功能
+
+- 新增实验性 **WebMCP 支持**，可发现并调用当前页面提供的工具，包括感知 frame 的工具选择、分离式结果、取消、有界的元数据与输出处理，以及可选开启的 MCP 工具 profile。WebMCP 对本地管理的 Chrome 默认启用，可用 `--no-webmcp` 或 `AGENT_BROWSER_NO_WEBMCP` 关闭。
+- 新增 **WebMCP 生成技能**，帮助智能体在记录安全约束、确定性检查与回退行为的同时，把既有页面工作流暴露为经过校验的页面工具。
+
+### 改进
+
+- 将 **eve 集成**更新到 0.47.3，兼容下限提升到 0.39.1。
+- 更新了项目各 lockfile 中的 **brace-expansion 依赖解析**。
+
+### 问题修复
+
+- 移除过期的 **Lightpanda 会话超时**参数，使启动使用当前支持的服务器选项。
+
+---
+
+## v0.35.2
+
+<p className="text-[#888] text-sm">2026 年 8 月 31 日</p>
+
+### 安全
+
+- 加固**仪表盘来源校验与反向代理访问**：强制同源来源核验，抵御 DNS 重绑定、表单/请求头走私以及跨域请求。反向代理来源现在需要精确的 HTTPS 允许列表与生成的 token 认证，同时继续支持无 token 的 IPv4 与 IPv6 环回访问。仪表盘选项严格校验，CLI 与 MCP 生命周期行为对齐 (#1738)
+
+### 问题修复
+
+- 修复**带查询串的根远程 CDP WebSocket URL**：在查询串前插入必需的斜杠，同时保留编码后的查询串 (#1735)
+
+---
+
+## v0.35.1
+
+<p className="text-[#888] text-sm">2026 年 8 月 26 日</p>
+
+### 问题修复
+
+- 修复 **Windows ARM64 启动器选择**：存在原生 ARM64 可执行文件时优先使用，否则通过 Windows 模拟回退到已发布的 x64 可执行文件 (#1725)
+- 修复**流 URL 跟踪**：整文档导航、History API 导航与片段导航均发出活动主框架 URL 更新，活动标签页切换后正确重绑，并忽略子框架或后台标签页的导航 (#1682)
+- 修复**快照 Diff 的元素引用**：每次 Diff 重置引用编号，URL 导航间引用失效，Diff 失败时保留先前的引用 (#1719)
+
+### 改进
+
+- 将 **Rust 依赖**更新到 `rustls-webpki` 0.103.13 与 `quinn-proto` 0.11.17 (#1723, #1720)
+
+---
+
+## v0.35.0
+
+<p className="text-[#888] text-sm">2026 年 8 月 24 日</p>
+
+### 新功能
+
+- 新增 **Linux 上本地启动 Chromium 的私有代理 CA 信任**。使用 `--ca-cert <path>`、`AGENT_BROWSER_CA_CERT` 或配置与 MCP 中的 `caCert`，把 PEM 包或 DER 证书导入隔离的 NSS 信任库，且不关闭主机名、有效期或无关签发机构的校验。生效的 CA 在运行中的会话内跨命令保留，等价的证书内容会复用 Chromium，`--no-ca-cert` 显式清除保留的信任。不支持的启动模式与冲突的 CA 选项返回可操作的错误 (#1669)
+
+### 改进
+
+- 新增内置的**受保护 Vercel 部署技能**，引导智能体完成短生命周期的 Trusted Sources OIDC 认证、经授权的自动化豁免，以及面向仅仪表盘配置的显式人工交接 (#1705)
+
+---
+
+## v0.34.0
+
+<p className="text-[#888] text-sm">2026 年 8 月 10 日</p>
+
+### 新功能
+
+- 新增**共享 Chrome 会话的持久会话-标签页绑定**。通过 `--cdp` 或 `--auto-connect` 连接的命名会话现在跨命令与守护进程重启记住其 CDP 目标，CDP 目标 id 可直接用作标签页引用。用 `--pin-tab` 启动每个会话可使绑定严格化：外部关闭的标签页返回稳定的 `tab_gone` 错误，而不是悄悄收编相邻标签页。JSON 输出包含 `data.targetId` 与可选的净化 `data.lastUrl`；batch 在 `result` 下暴露同样的恢复数据 (#1589)
+
+### 改进
+
+- 新增**远程 Agent Browser 提供商指南**，涵盖 Vercel 认证、一次性与稳定会话、自定义 VCR 镜像、快照与实时查看 URL (#1648)
+
+### 问题修复
+
+- 修复**并行会话共享一个 Chrome 时互相劫持标签页**的问题。事件发现的目标不再抢占被固定会话的活动标签页，重新附加会恢复持久化的目标而不是选择索引 0，初步与既有守护进程的 `--cdp` 与 `--auto-connect` 路径保留显式的固定开启与关闭。智能体技能指引现在要求第一条命令前使用命名 `--session` (#1589)
+- 修复 **`agent-browser doctor` 在 Chrome 版本检测时挂起**的问题。Windows 从可执行文件资源表读取版本，不再启动 Chrome；其他平台为版本子进程加上截止时间、kill 与回收，继承的输出句柄不再永久阻塞或留下孤儿浏览器 (#1641)
+
+---
+
+## v0.33.2
+
+<p className="text-[#888] text-sm">2026 年 7 月 31 日</p>
+
+### 新功能
+
+- 为流服务器新增**输入优先级与逐客户端投递设置**：每个 WebSocket 连接现在拆分为读取任务与写入循环，点击与按键无需排在帧写入之后即可派发给浏览器。新增逐客户端 `{"type":"config","maxFps":N}` 上限（1 到 120，`0` 为不限），以及可选开启的 ack 节流 `{"type":"config","pacing":"ack"}`（配合 `{"type":"ack","seq":N}`），保持一帧在途，卡住的客户端不会排空积压。两项设置也可在连接 URL 上声明（`?pacing=ack&maxFps=10`），这是覆盖开帧的唯一方式。每帧现在都携带单调递增的 `seq` (#1594)
+- 新增**可配置的流编码**：帧此前硬编码为会话视口下的 jpeg 质量 80，帧率是唯一的带宽调节手段。`AGENT_BROWSER_STREAM_QUALITY`、`AGENT_BROWSER_STREAM_MAX_WIDTH` 与 `AGENT_BROWSER_STREAM_MAX_HEIGHT` 由每个守护进程读取一次，不减帧即可削减字节：在 1280x720 的繁忙页面上，质量 20 把一帧从 54 KB 降到 25 KB，质量 20 加 640x360 降到 9 KB，两种情况下帧率均不变。宽度与高度默认为会话视口，只有两者都设置时才会缩小更大的视口 (#1626)
+
+### 行为变更
+
+- **帧投递现在是最新者胜**。流服务器只保留最新一帧并在发送时读取，前一帧仍在写入期间产生的帧会被跳过。假设能从 WebSocket 收到每一帧的客户端现在收到的帧会变少。本仓库内没有以该方式消费流的地方——`record` 通过 CDP 捕获，仪表盘只是查看器——因此这只影响外部消费者 (#1594)
+- **`metadata.timestamp` 现在携带真实值**。它此前恒为 0，因为 CDP 以浮点秒发送捕获时间，而代码按整数读取。现在它是 epoch 毫秒，客户端可据此测量正在绘制的帧有多旧。把 0 当作未知的客户端不受影响 (#1594)
+
+### 问题修复
+
+- 修复**流上的键盘输入**，此前的三种文档写法全都不工作：缺失的 `key`、`code` 或 `text` 会以显式 null 到达 CDP，导致整条命令被拒，因此每次按键释放与每个不可打印键都被静默丢弃，仪表盘自己的载荷也不例外 (#1594)
+- 修复**鼠标移动之后的点击延迟**：输入派发此前要等 Chrome 回复才读下一条消息，导致每次点击落后于排队的鼠标移动一个往返。300 个事件的连续操作后，点击会迟到 2471ms；现在 6ms 内落地 (#1627)
+- 修复 **`stream disable`** 在慢客户端的输入读取器仍在运行时就返回的问题 (#1594)
+
+---
+
+## v0.33.1
+
+<p className="text-[#888] text-sm">2026 年 7 月 28 日</p>
+
+### 行为变更
+
+- 守护进程现在默认带 **1 小时空闲超时**：一小时没有命令或仪表盘输入后，它会保存配置的恢复状态、关闭浏览器并退出，未经 `close` 就终止的集成不再无限泄漏守护进程及其 Chrome 进程树。没有 `--restore` 或其他恢复键的会话在关停时丢弃临时浏览器状态与打开的标签页。设置 `AGENT_BROWSER_IDLE_TIMEOUT_MS=0` 可恢复旧的始终保留行为，或设为其他值进行调节。仪表盘的鼠标、键盘与触摸输入会重置计时器。该默认值从不关闭有头浏览器（包括 Safari 与 iOS WebDriver 会话），也不关闭可能被人直接使用的用户附加浏览器。提供商所有的云浏览器仍可被清理，显式配置的超时和以前一样适用于所有浏览器 (#1605)
+
+### 问题修复
+
+- 修复**标签页恢复与选择**：通过在 CDP 连接时选择活跃渲染器、在切换或关闭后复活标签页、把被对话框阻塞的标签页视为活跃、在操作被拒时保留引用，并在 CLI、JSON 与 MCP 输出中呈现恢复状态，避免守护进程在 Memory Saver 丢弃的标签页上挂起 (#1543)
+- 修复 **a11y 选择器错误**：非法 CSS 选择器现在干净地报错，不再在文本与 JSON 输出中暴露原始浏览器求值堆栈 (#1604)
+
+---
+
+## v0.33.0
+
+<p className="text-[#888] text-sm">2026 年 7 月 23 日</p>
+
+### 新功能
+
+- 新增 **axe-core 无障碍审计**：`agent-browser a11y [url]`，支持 WCAG 标签过滤、选择器范围、感知 iframe 的文本与 JSON 结果、内嵌的离线且 CSP 安全的审计引擎，以及对应的 MCP 工具 (#1596)
+
+---
+
+## v0.32.4
+
+<p className="text-[#888] text-sm">2026 年 7 月 22 日</p>
+
+### 问题修复
+
+- 修复 **find role**：通过无障碍树匹配隐式 ARIA 角色与浏览器计算出的可访问名称，`<h2>`（heading）、`<ul>`（list）等语义元素得以解析；名称匹配为不区分大小写的子串匹配，与 Playwright 的 `getByRole` 一致 (#1552)
+- 修复**元素未找到错误**：保留定位器细节（选择器、角色、名称或索引），不再把每次未命中压成一条泛化消息，并使 `find` 宣告的操作与派发器实际接受的操作集保持一致 (#1553)
+
+---
+
+## v0.32.3
+
+<p className="text-[#888] text-sm">2026 年 7 月 19 日</p>
+
+### 新功能
+
+- 新增 **HAR 响应体捕获**：默认内嵌文本响应体，CLI 与 MCP 各处均支持可配置的 `all`、`text` 与 `none` 内容模式 (#1578)
+- 新增 **derive-client 技能**，记录浏览器流量并从 HAR 请求与响应数据生成可复用的 API 客户端 (#1578)
+
+---
+
+## v0.32.2
+
+<p className="text-[#888] text-sm">2026 年 7 月 17 日</p>
+
+### 改进
+
+- 更新 **eve 扩展打包**以适配 eve 0.25.1：采用新的 source 与 dist 扩展 manifest 格式，把 eve 示例更新到稳定的 AI SDK 版本，并使扩展测试与 eve 的 scoped 配置注册表保持一致 (#1570)
+
+---
+
+## v0.32.1
+
+<p className="text-[#888] text-sm">2026 年 7 月 16 日</p>
+
+### 改进
+
+- 放宽 `@agent-browser/eve` 的 **eve 兼容性**：接受 eve 0.23 及未来主版本，不再出现 peer 解析警告 (#1563)
+
+### 文档
+
+- 统一 **eve 品牌写法**：文档、示例、各包 README 与发布说明中统一使用小写样式 (#1557)
+
+---
+
+## v0.32.0
+
+<p className="text-[#888] text-sm">2026 年 7 月 15 日</p>
+
+### 新功能
+
+- **eve 扩展** - 新增 `@agent-browser/eve`，一个挂载 agent-browser 工具集的 eve 扩展，附带命名空间化的浏览器工具、沙盒引导助手、文档、示例、CI 与发布打包 (#1547)
+
+### 安全
+
+- 加固**域名允许列表**：封锁 WebRTC 绕过，把网络约束应用于各种启动模式、worker、弹窗、恢复状态与复用的守护进程会话，拒绝不安全的启动参数，并增加 Chrome 回归测试覆盖 (#1546)
+
+### 问题修复
+
+- 修复**已完成页面的等待**：当前文档已就绪时，load 与 DOMContentLoaded 等待立即完成，同时加入结构化的 eve 等待超时处理与针对性覆盖 (#1554)
+
+---
+
+## v0.31.2
+
+<p className="text-[#888] text-sm">2026 年 7 月 13 日</p>
+
+### 新功能
+
+- **WebGPU 启动预设** - 在 CLI、配置、环境变量与 MCP 各处新增 `--webgpu`：macOS 与 Windows 使用硬件后端，Linux 使用软件 Vulkan，无显示器的有头会话自动启用 Xvfb，并提供 `doctor --webgpu` 渲染与截图探针 (#1529)
+
+### 改进
+
+- 新增浏览器保持打开期间的周期性**恢复状态自动保存**：手动关闭浏览器窗口后仍保留近期状态，并在遵循恢复保存策略的同时捕获后台页面变化。间隔可通过 `AGENT_BROWSER_AUTOSAVE_INTERVAL_MS` 配置 (#1509)
+
+---
+
+## v0.31.1
+
+<p className="text-[#888] text-sm">2026 年 6 月 26 日</p>
+
+### 问题修复
+
+- 修复 **React 渲染器**：改为选取 react-dom 渲染器而非硬编码渲染器 id 1，后者导致无法在 Next.js 16.3 Turbopack 上读取空树 (#1491)
+
+---
+
+## v0.31.0
+
+<p className="text-[#888] text-sm">2026 年 6 月 25 日</p>
+
+### 新功能
+
+- **恢复（restore）工作流** - 新增 `--restore`、`--restore-save`、恢复校验 flag、worktree 作用域的 `session id`、`session info` 与 `--namespace`，使智能体运行无需手动管理状态文件，即可使用稳定、隔离、自动恢复的浏览器状态 (#1486)
+
+### 改进
+
+- 加固**会话生命周期处理**：显式的守护进程与浏览器兼容性检查、生命周期状态输出、MCP 对恢复选项的支持，以及更安全的自动保存行为（避免在恢复失败或校验失败后覆盖完好的状态）(#1486)
+
+### 问题修复
+
+- 修复**恢复生命周期的边界情况**：在浏览器存活时切换恢复键、守护进程配置启动竞态、启动模式校验，以及显式加载状态后清除恢复失败标记 (#1486)
+
+---
+
+## v0.30.1
+
+<p className="text-[#888] text-sm">2026 年 6 月 24 日</p>
+
+### 问题修复
+
+- 修复 **URL 等待**：`wait --url` 与 `waitforurl` 现在针对完整活动 URL 遵循 `**/dashboard` 等 glob 模式 (#1483)
+
+---
+
+## v0.30.0
+
+<p className="text-[#888] text-sm">2026 年 6 月 24 日</p>
+
+### 新功能
+
+- **read 命令** - 新增 `agent-browser read [url]` 及配套 MCP 工具，用于面向智能体的文本提取。URL 读取优先 Markdown，尝试 `.md` 与邻近的 `llms.txt` 文档，支持大纲、过滤器、raw 与 JSON 输出、请求头，以及域名/输出防护；省略 URL 时读取渲染后的活动标签页 DOM 及当前浏览器状态 (#1480)
+
+---
+
+## v0.29.1
+
+<p className="text-[#888] text-sm">2026 年 6 月 20 日</p>
+
+### 改进
+
+- 将**沙盒系统依赖安装**设为默认：eve 与 Vercel 沙盒助手会安装 Chromium 必需的库，除非显式禁用，使沙盒首次运行设置更简单 (#1469)
+
+---
+
+## v0.29.0
+
+<p className="text-[#888] text-sm">2026 年 6 月 20 日</p>
+
+### 新功能
+
+- **沙盒包** - 新增 `@agent-browser/sandbox`，包含共享、eve 与 Vercel Sandbox 助手、示例项目与文档，用于在托管沙盒环境中运行 agent-browser (#1465)
+
+### 改进
+
+- 更新**沙盒发布流程**：新包与 CLI 发布保持版本同步，并从正确的 workspace 路径发布 (#1465)
+- 重排 README、文档站、示例与技能中的**文档文本**，使 Markdown 与 MDX 在编辑器和渲染器中自然换行 (#1466)
+
+---
+
+## v0.28.0
+
+<p className="text-[#888] text-sm">2026 年 6 月 16 日</p>
+
+### 新功能
+
+- **MCP 服务器** - 新增 `agent-browser mcp`，一个 stdio Model Context Protocol 服务器，带类型化工具、分页发现、协议协商与启动工具 profile。默认 `core` profile 保持上下文精简，`--tools all` 暴露与 CLI 完全对等的能力，并支持 `core,network,react` 等组合 profile (#1454)
+- **插件系统** - 通过 `agent-browser.plugin.v1` stdio 协议新增进程外插件支持，包括 `plugin add/list/show/run`、manifest 发现、npm 与 GitHub 引用、凭据提供方、浏览器提供商插件、启动修改器、自定义命令能力、配置与环境变量注册表支持，以及按能力划分的策略门控 (#1452)
+
+### 基础设施
+
+- 为 CLI 技能、MCP core 与 MCP 完整 profile 新增**上下文占用评估覆盖**，并加入 MCP 对等测试，保持工具行为与 CLI 一致 (#1454)
+
+---
+
+## v0.27.3
+
+<p className="text-[#888] text-sm">2026 年 6 月 12 日</p>
+
+### 问题修复
+
+- 修复 **Windows ARM64 安装**：postinstall 时回退到 Windows x64 二进制，避免因未发布原生 ARM64 产物而下载失败 (#1269)
+
+---
+
+## v0.27.2
+
+<p className="text-[#888] text-sm">2026 年 6 月 10 日</p>
+
+### 问题修复
+
+- 修复**点击可靠性**：解析坐标前先把视口外元素滚动进视野、及时处理 JavaScript 对话框、在打开对话框的点击后恢复鼠标状态，并在派发输入前检测覆盖层对点击的拦截 (#1432, #1434)
+- 修复**框架范围的选择器与等待**：CSS 选择器操作与 `wait` 现在遵循所选 iframe（包括跨进程 iframe），并换算点击坐标 (#1432)
+- 修复**等待超时处理**：使用文档所述的 25s 默认值，`--timeout` 在各等待变体中均生效，长等待获得合适的客户端读取预算 (#1432)
+- 修复**面向智能体的表单命令**：`find label` 匹配 `aria-label` 与 `aria-labelledby`，无匹配选项时 `select` 报错，`type` 解析 `--clear` 与 `--delay` 而不是把它们敲成文本 (#1432)
+
+### 改进
+
+- 通过移除无条件的守护进程稳定等待休眠、并在发现过期守护进程 socket 时重试一次，将**热态 CLI 命令延迟**从约 150ms 降到约 1ms (#1432)
+- 将**守护进程重生与重试**处理扩展到 batch 命令，使批量操作能从初始存活检查之后的守护进程退出中恢复 (#1432)
+
+### 基础设施
+
+- 用 zigbuild 将 **GNU Linux 发布产物**钉定在 glibc 2.28，为更新的 GLIBC 符号添加发布防护，并使 Docker 发布助手与钉定目标一致 (#1417)
+
+---
+
+## v0.27.1
+
+<p className="text-[#888] text-sm">2026 年 6 月 1 日</p>
+
+### 改进
+
+- 改进 **`vitals` 命令**的输出格式，提升可读性 (#1404)
+
+### 文档
+
+- 在文档中呈现 agent-browser 的功能覆盖情况 (#1403)
+
+---
+
+## v0.27.0
+
+<p className="text-[#888] text-sm">2026 年 5 月 7 日</p>
+
+### 新功能
+
+- **React 内省** - 一流的 React DevTools 集成，新增 `react tree`、`react inspect <fiberId>`、`react renders start|stop` 与 `react suspense` 命令：完整的组件树可见性、逐 fiber 的 props/hooks/state 检查、带挂载/重渲染计数与变化细节的渲染分析，以及带根因分组和建议的 Suspense 边界分类。React DevTools hook 以 vendor 方式内置（MIT）并嵌入二进制，零运行时依赖 (#1257)
+- **Web Vitals** - 新增 `vitals [url]` 命令，报告任意页面的 Core Web Vitals（LCP、CLS、TTFB、FCP、INP）及 React 水合阶段 (#1257)
+- **SPA 导航** - 新增 `pushstate <url>` 命令，无需整页加载即可进行客户端 SPA 导航 (#1257)
+- **初始化脚本与 feature flag** - 新增 `--init-script <path>` flag（可重复；环境变量 `AGENT_BROWSER_INIT_SCRIPTS`），在首次导航前注册脚本；新增 `--enable <feature>` flag（可重复；环境变量 `AGENT_BROWSER_ENABLE`），用于 `react-devtools` 等内置初始化脚本 (#1257)
+- **网络路由资源类型过滤** - `network route` 现在接受 `--resource-type <csv>`，按 CDP 资源类型过滤被拦截的请求 (#1257)
+- **cURL cookie 导入** - `cookies set --curl <file>` 自动检测 JSON、cURL 与 Cookie 头格式，批量导入 cookie (#1257)
+- **仪表盘代理支持** - 可观测性仪表盘现在可通过同源代理在代理来源后工作，支持部署在反向代理与基于路径的路由之后 (#1111)
+
+### 问题修复
+
+- 修复 **`doctor` 命令**在同一进程中被多次调用时生成重复检查 id 的问题 (#1330)
+
+### 基础设施
+
+- npm 发布切换为通过 GitHub Actions OIDC 的 **trusted publishing**，不再需要手动管理的 npm token (#1273)
+
+---
+
+## v0.26.0
+
+<p className="text-[#888] text-sm">2026 年 4 月 16 日</p>
+
+### 新功能
+
+- **`doctor` 命令** - 新增 `agent-browser doctor`，对安装做一次性诊断。检查环境、Chrome、运行中的守护进程、配置文件、安全、提供商与网络连通性；每次运行自动清理过期的守护进程 sidecar 文件；并执行实时的无头启动测试。支持 `--offline` 跳过网络探测、`--quick` 跳过启动测试、`--fix` 进行可选修复（安装缺失的 Chrome、关闭版本不匹配的守护进程、清理过期状态文件），以及 `--json` 结构化输出 (#1254)
+- **稳定的标签页 id 与标签** - 标签页现在拥有 `t1`、`t2`、`t3` 这样的稳定字符串 id，不会因其他标签页关闭或弹窗出现而漂移。可通过 `tab new --label <name> [<url>]` 创建带易记标签的标签页，且在所有接受标签页引用的地方，标签与 `t<N>` id 可互换使用（`tab <id|label>`、`tab close <id|label>`）。纯整数输入会被拒绝并给出教学性错误，防止智能体把稳定句柄误当成位置索引 (#892, #1249, #1250)
+- **`core` 技能** - 将内置 `agent-browser` 技能更名为 `core`，并把约 40 行的发现桩替换为约 420 行的使用指南，涵盖核心的「快照-引用-操作」循环、读取、交互、等待、常见工作流、故障排除与全局 flag。`agent-browser skills get core` 现在返回智能体可直接使用的内容；`--full` 附加参考文档与模板。新增 `hidden:` frontmatter flag，使原 `agent-browser` 桩仍可被 `npx skills add` 发现，又不污染 `skills list` (#1253)
+- **配置文件的 JSON Schema** - 新增 `agent-browser.schema.json`，以类型和描述说明每个配置选项；在 `agent-browser.json` 或 `~/.agent-browser/config.json` 中通过 `$schema` 引用即可获得 IDE 自动补全与校验。该 schema 由文档站在 `https://agent-browser.dev/schema.json` 提供 (#1242, #1248)
+
+### 问题修复
+
+- 修复 **`--state` / `AGENT_BROWSER_STATE`** 启动时并未真正加载已保存浏览器状态（cookie 与 localStorage）的问题。自原生 Rust 重写以来，该 flag 已完整接入解析、环境传播与校验，但加载步骤一直没接上。存储状态现在在启动后于全部四条路径加载：显式启动、auto-connect、提供商与本地 Chrome (#1241)
+
+### 文档
+
+- `--help` 输出现在先显示 **skills** 部分，使智能体在核心命令列表之前先发现 `skills get core`（权威使用指南）(#1251)
+
+---
+
+## v0.25.5
+
+<p className="text-[#888] text-sm">2026 年 4 月 16 日</p>
+
+### 问题修复
+
+- 修复 **`--auto-connect` CDP 发现**优先使用 HTTP 端点发现而非 DevToolsActivePort websocket 路径（在某些环境下会失败）的问题。CLI 现在先从 DevToolsActivePort 读取 websocket 路径，仅在失败时回退到 HTTP 发现 (#1218)
+- 修复**录制上下文视口**不继承活动视口尺寸的问题，该问题导致录制使用默认分辨率而非配置的视口 (#1208)
+- 修复 **`get box` 与 `get styles`** 在文本模式下不打印数据的问题 (#1231, #1233)
+- 修复关闭或移除靠前标签页时**活动页面被切换**的问题。之前聚焦的页面现在会被正确保留 (#1220)
+
+---
+
+## v0.25.4
+
+<p className="text-[#888] text-sm">2026 年 4 月 12 日</p>
+
+### 新功能
+
+- **`skills` 命令** - 新增 `agent-browser skills` 命令，用于发现和安装智能体技能，并内置评估支持，可针对真实浏览器会话测试技能 (#1225, #1227)
+
+### 问题修复
+
+- 修复**自定义视口尺寸**未用于流式帧元数据与图像分辨率的问题 (#1033)
+- 修复 **`--ignore-https-errors`** 未重新应用于录制上下文、导致屏幕录制期间出现 TLS 错误的问题 (#1178)
+- 修复 auth 技能文档中的**选项编号重复** (#1161)
+
+### 文档
+
+- 文档站页头现在**动态获取** GitHub star 数 (#1202)
+
+---
+
+## v0.25.3
+
+<p className="text-[#888] text-sm">2026 年 4 月 7 日</p>
+
+### 问题修复
+
+- 修复**快照引用中缺失隐藏的单选/复选输入**的问题：当 `<label>` 包裹 `display:none` 的 `<input type="radio">` 或 `<input type="checkbox">` 时，Chrome 会把这些输入完全排除在无障碍树之外，导致 AI 智能体无法通过引用识别单选按钮与复选框。现在会在光标交互扫描期间检测元素内的隐藏输入，并把它们的父节点提升为正确的角色，带上正确的名称与勾选状态 (#1085)
+
+### 文档
+
+- 为文档站添加**可点击的标题锚点**，方便直接链接到任意小节 (#1175)
+
+---
+
+## v0.25.2
+
+<p className="text-[#888] text-sm">2026 年 4 月 6 日</p>
+
+### 问题修复
+
+- 修复 **Linux 上 Chrome 空闲约 10s 后被杀**的问题：原因是 `PR_SET_PDEATHSIG` 跟踪的是启动 Chrome 的阻塞线程而非守护进程本身。当 Tokio 回收该空闲线程时，内核会向 Chrome 发送 SIGKILL，即使守护进程还活着 (#1157, #1173)
+
+---
+
+## v0.25.1
+
+<p className="text-[#888] text-sm">2026 年 4 月 6 日</p>
+
+### 改进
+
+- **内嵌仪表盘** - 可观测性仪表盘现在用 `rust-embed` 直接打包进 CLI 二进制，不再需要 `dashboard install`。安装 agent-browser 后仪表盘立即可用 (#1169)
+
+---
+
+## v0.25.0
+
+<p className="text-[#888] text-sm">2026 年 4 月 6 日</p>
+
+### 新功能
+
+- **AI 聊天命令** - 新增 `chat` 命令，用于 AI 驱动的浏览器自动化。支持单次模式（`chat "open google.com"`）与交互式 REPL。AI 智能体可通过工具调用执行任意 agent-browser 命令。需要 `AI_GATEWAY_API_KEY`。通过 `--model` 或 `AI_GATEWAY_MODEL` 配置模型 (#1160, #1163)
+- **仪表盘 AI 聊天** - 可观测性仪表盘现在内置 AI 聊天界面，可在实时会话视图旁以对话方式控制浏览器 (#1160, #1163)
+- **`snapshot --urls`** - 新增 `-u`/`--urls` flag，在快照输出中包含链接元素的 href URL，智能体无需额外查询即可直达链接目标 (#1160)
+- **batch 参数模式** - `batch` 命令除从 stdin 读取外，现在还接受内联参数形式的命令，简化单次调用的多命令工作流 (#1160)
+
+### 问题修复
+
+- 修复 **`getByRole`** 匹配错误元素（例如 `<link>` 样式表元素而非 `<a>` 锚点）的问题：重写实现，改用 CDP 无障碍树并基于引用解析元素，而非 CSS 选择器 (#1145)
+- 修复 **`upload` 命令**不支持用无障碍树引用（`@eN`）选择文件上传元素的问题 (#1156)
+- 修复 **`AGENT_BROWSER_DEFAULT_TIMEOUT`** 未应用于 `wait` 命令的问题。该环境变量现在传播到所有等待变体（`wait`、`wait --url`、`wait --text`、`wait --load`、`wait --fn`、`wait --download`）(#1153)
+- 修复**仪表盘下载**的错误处理，改进重试逻辑，使仪表盘安装更可靠 (#1154)
+
+---
+
+## v0.24.1
+
+<p className="text-[#888] text-sm">2026 年 4 月 4 日</p>
+
+### 新功能
+
+- **Chrome 配置文件登录状态复用** - `--profile <name>` 现在会解析 Chrome 配置文件名（如 `Default`、`Profile 1`），并把该配置文件复制到临时目录以复用登录状态、cookie 与扩展，而不修改原文件。新增 `profiles` 命令列出可用的 Chrome 配置文件，支持 `--json` (#1131)
+
+### 问题修复
+
+- 修复 **`--ignore-https-errors`** 未把 `--ignore-certificate-errors` 作为 Chrome 启动 flag 传入的问题，该问题导致 `ERR_SSL_PROTOCOL_ERROR` 等 TLS 错误在网络层就被拒绝，CDP 来不及介入 (#1132)
+- 修复守护进程退出时的**Chrome 孤儿进程**问题：Chrome 现在在自己的进程组中启动，关停时杀死整个组。在 Linux 上，`PR_SET_PDEATHSIG` 确保即使守护进程被 OOM 杀掉，Chrome 也会被终止 (#1137)
+- 修复连接真实浏览器会话时 **Chrome 144+ 上的 CDP 附加挂起**问题：附加后因等待调试器而暂停的目标，现在会用 `Runtime.runIfWaitingForDebugger` 恢复 (#1133)
+- 修复**升级后的过期守护进程**静默复用旧守护进程（CDP 行为已损坏）的问题。守护进程现在会写 `.version` sidecar 文件，并在版本不匹配时自动重启 (#1134)
+- 修复**过期守护进程/socket 恢复**中 `close --all` 无法清理僵尸守护进程与过期文件的问题。现在会强杀不可达的守护进程，并移除孤儿的 socket/pid 文件 (#1136)
+- 修复**空闲超时**不生效的问题：睡眠 future 在每次 select 循环迭代中被重建，导致截止时间永远无法到达 (#1110)
+- 修复连续启动命令之间启动选项变化（例如向 `config.json` 添加扩展）时**浏览器不重新启动**的问题 (#996)
+- 修复 **`auto_launch()`** 不遵循云提供商的 `AGENT_BROWSER_PROVIDER` 的问题，该问题导致非启动命令回退到本地 Chrome，而非通过提供商 API 连接 (#1126)
+- 修复高流量下 **HAR 捕获遗漏 API 请求**的问题：CDP 广播缓冲从 256 个事件提高到 4096，排空间隔从 500ms 缩短到 100ms，并在跨域 iframe 中启用网络跟踪 (#1135)
+
+---
+
+## v0.24.0
+
+<p className="text-[#888] text-sm">2026 年 4 月 2 日</p>
+
+### 新功能
+
+- **AWS Bedrock AgentCore 提供商** - 新增 AWS Bedrock AgentCore 作为云浏览器提供商。用 `--provider agentcore` 或 `AGENT_BROWSER_PROVIDER=agentcore` 连接。认证采用轻量级手动 SigV4 签名，支持完整的 AWS 凭据提供链（环境变量、AWS CLI、SSO、IAM 角色）。通过 `AGENTCORE_REGION`、`AGENTCORE_PROFILE_ID` 与 `AGENTCORE_BROWSER_ID` 环境变量配置。启动响应中返回会话 ID 与 Live View URL (#397)
+
+### 文档
+
+- 在文档站、README 选项表、SKILL.md 与仪表盘提供商图标中加入 AgentCore 提供商页面 (#1120)
+
+---
+
+## v0.23.4
+
+<p className="text-[#888] text-sm">2026 年 3 月 31 日</p>
+
+### 问题修复
+
+- 修复 **Linux 上守护进程挂起**的问题：SIGCHLD 处理器中的 `waitpid(-1)` 竞态会窃取 Rust `Child` 句柄的退出状态，使守护进程陷入损坏状态。现已用既有排空间隔的定向崩溃检测取代全局信号处理器 (#1098)
+
+---
+
+## v0.23.3
+
+<p className="text-[#888] text-sm">2026 年 3 月 30 日</p>
+
+### 问题修复
+
+- 修复**拖放**不工作的问题：拖拽期间的 `mouseMoved` 事件缺少 `buttons` 位掩码，浏览器看到 `event.buttons === 0`，永远不会触发 `dragstart`/`dragover`/`drop` (#1087)
+
+---
+
+## v0.23.2
+
+<p className="text-[#888] text-sm">2026 年 3 月 30 日</p>
+
+### 新功能
+
+- **仪表盘会话创建** - 现在可以直接从仪表盘 UI 创建会话。新建会话对话框为本地引擎（Chrome、Lightpanda）与云提供商（Browserbase、Browserless、Browser Use、Kernel）提供统一的选择器网格，带异步创建、加载状态与错误显示 (#1092)
+- **仪表盘提供商图标** - 会话侧边栏现在为每个会话显示提供商或引擎图标，便于识别会话使用的后端 (#1092)
+
+### 问题修复
+
+- 修复 **Browser Use** 提供商经由中间 API 调用而非直接 WSS 连接、导致连接失败的问题 (#1092)
+- 修复 **Browserbase** 提供商未发送显式 JSON 主体与 `Content-Type` 头、导致会话创建失败的问题 (#1092)
+- 修复**提供商导航**挂起的问题：`wait_for_lifecycle` 等待的是远程提供商可能不会发出的页面加载事件。使用 `--provider` 导航现在自动设置 `waitUntil=none` (#1092)
+- 修复**远程 CDP 连接**超时的问题：云提供商的 CDP 连接超时从 10s 提高到 25s (#1092)
+- 修复从仪表盘创建会话时提供商连接失败后**僵尸守护进程**未被清理的问题 (#1092)
+
+---
+
+## v0.23.1
+
+<p className="text-[#888] text-sm">2026 年 3 月 30 日</p>
+
+### 新功能
+
+- **alert 与 beforeunload 对话框自动关闭** - JavaScript `alert()` 与 `beforeunload` 对话框现在会被自动接受，防止智能体无限阻塞。`confirm` 与 `prompt` 对话框仍需显式的 `dialog accept/dismiss` 命令。可用 `--no-auto-dialog` flag 或 `AGENT_BROWSER_NO_AUTO_DIALOG` 环境变量禁用 (#1075)
+- **Puppeteer 浏览器缓存回退** - Chrome 发现现在会搜索 `~/.cache/puppeteer/chrome/`（或 `PUPPETEER_CACHE_DIR`）中的 Chrome 二进制，已装有 Puppeteer 的用户无需单独安装即可使用 agent-browser (#1088)
+- **控制台输出改进** - 对象的 `console.log` 现在显示真实的对象预览（如 `{userId: "abc", count: 42}`）而非 `"Object"`。JSON 输出包含原始 `args` 数组，便于程序化访问 (#1040)
+
+### 问题修复
+
+- 修复**同文档导航**（如 SPA hash 路由）永久挂起的问题：`wait_for_lifecycle` 等待的 `Page.loadEventFired` 在同文档导航中永远不会触发 (#1059)
+- 修复 **save_state** 只捕获当前源的 cookie 与 localStorage、静默丢弃跨域数据（如 SSO/CAS 认证 cookie）的问题。现在使用 `Network.getAllCookies` 并从所有访问过的源收集 localStorage (#1064)
+- 修复使用 `--cdp` 模式时**外部打开的标签页**不出现在 `tab list` 的问题。用户或其他 CDP 客户端打开的标签页现在会被检测与跟踪 (#1042)
+- 修复**仪表盘服务器**不重启就无法加载已安装文件的问题。`dashboard install` 现在对运行中的服务器立即生效 (#1066)
+- 修复 **Windows Chrome 解压**失败的问题：zip 路径规范化用了正斜杠，而解压代码期望反斜杠 (#1088)
+
+---
+
+## v0.23.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 27 日</p>
+
+### 新功能
+
+- **可观测性仪表盘** - 新增本地 Web UI（`dashboard`），显示所有会话的实时浏览器视口、命令活动流、控制台输出、网络请求、存储与扩展。通过 `dashboard start`、`dashboard stop` 与 `dashboard install` 管理。仪表盘作为独立后台进程运行，所有会话自动向它推流 (#1034)
+
+```bash
+agent-browser dashboard install
+agent-browser dashboard start
+agent-browser open example.com    # 会话会出现在仪表盘中
+agent-browser dashboard stop
+```
+
+- **运行时流管理** - 新增 `stream enable`、`stream disable` 与 `stream status` 命令，在运行时控制 WebSocket 流式输出。流式输出现在默认始终启用；`AGENT_BROWSER_STREAM_PORT` 用于覆盖端口而不是开关功能 (#951)
+- **关闭所有会话** - 新增 `close --all` flag，一次关闭所有活动浏览器会话
+
+### 问题修复
+
+- 修复 **Lightpanda 引擎**兼容性 (#1050)
+- 修复 **Windows 守护进程 TCP 绑定**在 Hyper-V 保留端口时失败的问题：回退到 OS 分配的端口并写入 `.port` 文件 (#1041)
+- 修复 **Windows 仪表盘中继**使用 Unix socket 而非 TCP 的问题 (#1038)
+- 修复**单选/复选元素**被从紧凑快照树中丢弃的问题：`ref=` 检查要求前导 `[`，而这类元素没有 (#1008)
+
+---
+
+## v0.22.3
+
+<p className="text-[#888] text-sm">2026 年 3 月 25 日</p>
+
+### 问题修复
+
+- **在录制上下文重新应用下载行为** - 修复录制上下文中下载被静默丢弃的问题：启动时设置的 `Browser.setDownloadBehavior` 只应用于默认上下文。现在创建新录制上下文时会重新应用下载行为 (#1019)
+- **回收僵尸 Chrome 进程并快速检测崩溃以自动重启** - 在尝试 CDP 连接检查前加入非阻塞的进程退出检查。Chrome 已崩溃或退出时可避免 3 秒的 CDP 超时，从而更快检测并自动重启浏览器 (#1023)
+- **键盘 `type` 改走文本输入通道** - 修复键盘 `type` 子操作，使其正确经过文本输入处理器，并新增使用 `Input.insertText` 的 `insertText` 子操作 (#1014)
+- **处理 `console` 命令的 `--clear` flag** - 修复 `console` 命令，使其接受并处理 `clear` 参数，允许清除控制台事件历史 (#1015)
+
+---
+
+## v0.22.2
+
+<p className="text-[#888] text-sm">2026 年 3 月 24 日</p>
+
+### 新功能
+
+- **对话框状态命令** - 新增 `dialog status` 命令，检查当前是否有打开的 JavaScript 对话框 (#999)
+- **对话框警告字段** - 有 JavaScript 对话框待处理时，命令响应现在包含 `warning` 字段，指明对话框类型与消息 (#999)
+
+### 改进
+
+- **标准代理环境变量** - 代理设置现在自动回退到标准环境变量（`HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY` 及其小写变体），并遵循 `NO_PROXY`/`no_proxy` 旁路规则 (#1000)
+- **`--with-deps` 的字体包** - 在 Linux（Debian、RPM 与 yum 系发行版）上用 `--with-deps` 安装时现在包含 CJK 与 emoji 字体包，避免渲染国际化内容时缺字 (#1002)
+
+### 问题修复
+
+- 修复 `state show` 因 JSON 字段名不匹配而总是报 "Missing 'path' parameter" 失败的问题 (#994)
+- 修复 `console` 命令因响应中 JSON 字段名不匹配而只返回 `Done` 的问题 (#986)
+- 修复下载期间因 `sessionId` 不匹配而丢弃浏览器域 CDP 事件的问题 (#998)
+- 修复代理认证：凭据改经 CDP `Fetch.authRequired` 事件处理，而非内联传递 (#1000)
+
+---
+
+## v0.22.1
+
+<p className="text-[#888] text-sm">2026 年 3 月 24 日</p>
+
+### 问题修复
+
+- 修复使用 `press` 时**修饰键组合**（如 `Control+a`、`Shift+Enter`、`Control+Shift+a`）未被正确处理的问题。修饰键现在被解析并以 CDP 修饰键位掩码转发，而不是当作键名的一部分 (#980)
+- 修复 `--cdp` HTTP URL（如 `http://host:9222?mode=Hello`）的**查询参数被丢弃**的问题。查询串现在被保留并转发到远程 CDP 端点 (#982)
+
+---
+
+## v0.22.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 23 日</p>
+
+### 新功能
+
+- **跨域 iframe 支持** - 通过 `Target.setAutoAttach` 新增对跨域 iframe 内快照与交互的支持 (#949)
+- **网络请求详情与过滤** - 新增 `network request <requestId>` 命令查看完整的请求/响应详情，并为 `network requests` 新增过滤选项：`--type`（如 `xhr,fetch`）、`--method`（如 `POST`）与 `--status`（如 `2xx`、`400-499`）(#935)
+
+```bash
+agent-browser network requests --type xhr,fetch --method POST
+agent-browser network request <requestId>
+```
+
+### 改进
+
+- **快照可用性** - 过滤快照输出中的语义噪声，降低 AI 认知负担；光标交互元素现在默认包含，`-C` flag 不再必要 (#968)
+- **upgrade 命令** - 提升 upgrade 命令中安装方式检测的健壮性 (#960)
+- **目标跟踪** - 增强目标跟踪与页面信息处理，使浏览器会话管理更可靠 (#969)
+
+### 问题修复
+
+- 修复**视口尺寸**在流式状态消息与屏幕投屏中上报错误的问题 (#952)
+- 修复 **`find` 命令**的 `--exact`、`--name` 等 flag 在配合填充操作使用时泄漏进填充值的问题 (#955)
+- 修复**状态命令**在未提供 `session_name` 时错误启动守护进程的问题 (#677, #964)
+- 修复守护进程已在运行时 **auto-connect** 仍触发的问题，防止重复连接 (#971)
+- 修复**回车键按下**不工作的问题：为 `keyDown` 事件添加文本字段 (#972)
+- 修复 **download 命令**：正确处理绝对路径并正确点击目标元素 (#970)
+
+### 破坏性变更
+
+- `snapshot` 的 `-C` / `--cursor` flag 已弃用；光标交互元素现在默认包含，该 flag 不再有额外效果 (#968)
+
+---
+
+## v0.21.4
+
+<p className="text-[#888] text-sm">2026 年 3 月 20 日</p>
+
+### 问题修复
+
+- **auth 登录就绪** - `agent-browser auth login` 现在以 `load` 导航、等待可用的登录表单选择器，并采用分阶段的用户名检测（先定向 email/username 选择器，再宽泛回退到文本输入框）。这减少了 SPA 时序失败，避免误匹配无关文本框，并防止在持续有后台请求的页面上 `networkidle` 挂起。
+
+---
+
+## v0.21.3
+
+<p className="text-[#888] text-sm">2026 年 3 月 20 日</p>
+
+### 问题修复
+
+- **远程浏览器的 WebSocket 保活** - 加入 WebSocket Ping 帧与 TCP `SO_KEEPALIVE`，防止 CDP 连接在空闲期间被中间代理静默断开 (#936)
+- **XPath 选择器支持** - 修复元素解析，正确处理 `xpath=` 选择器前缀 (#908)
+
+### 性能
+
+- **相同快照的快速路径** - 快照与自身比较时短路 Myers diff 算法，避免重试与循环负载中不必要的计算 (#922)
+
+---
+
+## v0.21.2
+
+<p className="text-[#888] text-sm">2026 年 3 月 18 日</p>
+
+### 问题修复
+
+- **快照文本内容去重** - 修复页面快照中出现重复文本内容的问题 (#909)
+- **原生鼠标拖拽状态** - 修复原始原生鼠标拖拽状态在 `down`、`move` 与 `up` 事件之间未被正确跟踪的问题 (#872)
+- **Chrome 无头启动失败** - 修复 Chrome 无头模式下由 `--enable-unsafe-swiftshader` flag 引起的浏览器启动失败 (#915)
+- **源范围 `--headers` 的持久化** - 恢复通过 `--headers` 设置的源范围请求头在各导航命令间的正确持久化 (#894)
+- **WebSocket 域名过滤器中的相对 URL** - 修复 WebSocket 域名过滤器脚本对相对 URL 的处理 (#624)
+
+---
+
+## v0.21.1
+
+<p className="text-[#888] text-sm">2026 年 3 月 18 日</p>
+
+### 新功能
+
+- **HAR 1.2 网络捕获** - 新增以 HAR 1.2 格式捕获并导出网络流量的命令，包括来自 Chrome DevTools Protocol 事件的精确请求/响应计时、请求头、主体大小与资源类型 (#864)
+- **内置 `upgrade` 命令** - 新增 `agent-browser upgrade` 自更新 CLI；自动检测安装方式（npm、Homebrew 或 Cargo）并运行相应的更新命令 (#898)
+
+```bash
+agent-browser upgrade
+```
+
+---
+
+## v0.21.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 17 日</p>
+
+### 新命令
+
+- **`batch`** -- 在单次调用中执行多条命令。向 stdin 管道传入字符串数组组成的 JSON 数组，按顺序接收结果。支持 `--bail` 在首个错误时停止，以及 `--json` 结构化输出。
+
+```bash
+echo '[["open","example.com"],["snapshot"]]' | agent-browser batch --json
+```
+
+- **`network har start/stop`** -- 以 HAR 1.2 格式捕获并导出网络流量。
+
+```bash
+agent-browser network har start
+# ……与页面交互……
+agent-browser network har stop ./trace.har
+```
+
+### 新功能
+
+- **iframe 支持** -- CLI 交互与快照现在会深入 iframe 内容，支持跨框架页面自动化。
+- **`--idle-timeout` flag** -- 一段时间不活动后自动关闭守护进程。接受 `10s`、`3m`、`1h` 等友好格式或原始毫秒值。也可用 `AGENT_BROWSER_IDLE_TIMEOUT_MS`。
+- **快照中的光标交互元素** -- 光标交互元素现在直接嵌入快照树，提供更丰富的上下文。
+- **Brave 浏览器 auto-connect** -- 在 macOS、Linux 与 Windows 上自动发现 Brave 浏览器用于 CDP 连接。
+- **linux-musl（Alpine）构建** -- 面向 linux-musl 的预构建二进制，覆盖 x64 与 arm64，原生支持 Alpine Linux 及其他基于 musl 的发行版。
+- **CDP 发现的 WebSocket 回退** -- 当基于 HTTP 的 CDP 端点发现失败时，CLI 现在自动回退到 WebSocket 连接。
+
+### 改进
+
+- **`--full`/`-f` 重构为命令级 flag** -- 从全局 flag 改为逐命令 flag，作用域更清晰。
+- **增强 Chrome 启动** -- 新增 `--user-data-dir` 支持与可配置的启动超时，浏览器启动更可靠。Chrome 现在会在瞬时启动失败时最多重试 3 次。
+- **连续的 `--auto-connect` 命令** -- 多个连续的 auto-connect 命令不再需要完整重启浏览器；外部连接会被正确识别并复用。
+- **批量 CDP 调用** -- `snapshot -C` 与 `screenshot --annotate` 现在批量执行 CDP 调用，而不是逐元素顺序往返，避免高延迟 WSS 连接上的超时。
+
+### 问题修复
+
+- 移除 WebSocket 消息/帧大小限制，修复远程 CDP（WSS）快照与截图挂起
+- 修复 Material Design `check`/`uncheck` 对基于覆盖层的控件回退到 JS `.click()` 的问题
+- 修复 `type` 命令丢失标点字符的问题
+- 保持 StreamServer 实例存活，修复 WebSocket 流式输出
+- 从 auto-connect 发现中过滤 Chrome 内部目标（`chrome://`、`devtools://`）
+- 修复 `snapshot --selector` 作用域限定到匹配元素子树的问题
+- 修复缓存页面网络空闲检测过早返回的问题
+- 修复 Chrome 启动期间 stderr 管道断裂导致守护进程 panic 的问题
+- 修复广播 channel 滞后被误判为流关闭的问题
+- 修复 PID 命名空间隔离（如 `unshare`）下的守护进程存活检测
+- 修复 Ubuntu 依赖安装误删系统软件包的问题
+
+---
+
+## v0.20.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 13 日</p>
+
+### 完全原生 Rust
+
+agent-browser 现已 100% 原生 Rust。Node.js/Playwright 守护进程已被完全移除——运行守护进程不再需要 Node.js 运行时或 Playwright 依赖。Rust 原生守护进程现在是唯一实现。
+
+<table>
+  <thead>
+    <tr>
+      <th>指标</th>
+      <th>Node.js</th>
+      <th>Rust</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>冷启动</td>
+      <td>1002ms</td>
+      <td>617ms</td>
+      <td>快 1.6 倍</td>
+    </tr>
+    <tr>
+      <td>守护进程内存</td>
+      <td>143 MB</td>
+      <td>8 MB</td>
+      <td>少 18 倍</td>
+    </tr>
+    <tr>
+      <td>安装体积</td>
+      <td>710 MB</td>
+      <td>7 MB</td>
+      <td>小 99 倍</td>
+    </tr>
+  </tbody>
+</table>
+
+```bash
+npm install -g agent-browser      # 7 MB 安装体积
+agent-browser install              # 下载 Chrome
+agent-browser open example.com
+agent-browser snapshot
+```
+
+### 改进
+
+- **基准测试** -- 新增基准测试套件，从冷启动、热启动、内存与安装体积对比原生与 Node.js 守护进程性能。
+- **加固 Chromium 安装器** -- 修复 Chrome for Testing 安装器中的 zip 路径遍历漏洞。
+
+### 问题修复
+
+- 修复 CLI 中 `--headed false` flag 不生效的问题
+- 修复 `to_ai_friendly_error` 中 "not found" 错误模式误捕获非元素错误的问题
+- 修复 storage 本地键查找的解析与文本输出
+- 修复 release 二进制下 Lightpanda 引擎的启动
+- 加固 Lightpanda 启动超时
+
+---
+
+## v0.19.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 13 日</p>
+
+### 新功能
+
+- **Browserless.io 提供商** -- 新增 browserless.io 作为浏览器提供商，Node.js 与原生守护进程路径均支持。用 `--provider browserless` flag 或 `AGENT_BROWSER_PROVIDER=browserless` 环境变量连接远程 Browserless 实例。
+
+```bash
+export BROWSERLESS_API_KEY="your-api-key"
+agent-browser --provider browserless open example.com
+agent-browser --provider browserless screenshot ./page.png
+```
+
+- **`clipboard` 命令** -- 读写浏览器剪贴板。支持 `read`、`write`、`copy`（模拟 Ctrl+C）与 `paste`（模拟 Ctrl+V）操作。
+
+```bash
+agent-browser clipboard read
+agent-browser clipboard write "Hello, World!"
+agent-browser clipboard copy
+agent-browser clipboard paste
+```
+
+- **截图输出配置** -- 新增用于持久化截图设置的全局 flag：`--screenshot-dir`、`--screenshot-quality` 与 `--screenshot-format`。也可用环境变量 `AGENT_BROWSER_SCREENSHOT_DIR`、`AGENT_BROWSER_SCREENSHOT_QUALITY` 与 `AGENT_BROWSER_SCREENSHOT_FORMAT`。
+
+```bash
+agent-browser screenshot --screenshot-dir ./shots
+agent-browser screenshot --screenshot-format jpeg --screenshot-quality 80
+```
+
+### 问题修复
+
+- 修复 `wait --text` 在原生守护进程路径下不工作的问题
+- 修复 `BrowserManager.navigate()` 与包入口
+- 修复扩展未从 `config.json` 加载的问题
+- 修复页面加载时的滚动
+- 修复 HTML 获取：选择器操作改用 `browser.getLocator()`
+
+---
+
+## v0.18.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 12 日</p>
+
+### 新功能
+
+- **`inspect` 命令** -- 为活动页面打开 Chrome DevTools：启动本地代理服务器，把 DevTools 前端转发到浏览器的 CDP WebSocket。DevTools 打开期间智能体命令仍可继续使用。
+
+```bash
+agent-browser open example.com
+agent-browser inspect          # 在你的浏览器中打开 DevTools
+agent-browser click "Submit"   # DevTools 打开时命令仍可用
+```
+
+- **`get cdp-url` 子命令** -- 获取活动页面的 Chrome DevTools Protocol WebSocket URL，便于连接外部调试工具。
+
+```bash
+agent-browser get cdp-url
+```
+
+- **截图标注** -- `--annotate` flag 在截图中为交互元素叠加编号标签。
+
+### 改进
+
+- **KERNEL_API_KEY 现为可选** -- 外部凭据注入不再要求设置 `KERNEL_API_KEY`，在预配置环境中使用 Kernel 更轻松。
+- **简化 Browserbase** -- 移除 `BROWSERBASE_PROJECT_ID` 要求，减少 Browserbase 用户的设置摩擦。
+
+### 问题修复
+
+- 修复 Browserbase API 使用错误端点释放会话的问题
+- 修复 CDP 连接路径使用硬编码 10s 超时而非可配置默认超时的问题
+- 用 `toWellFormed()` 净化孤立 Unicode 代理项，修复其引发的错误
+- 修复 IPv6 优先系统上 CDP 连接失败的问题
+- 修复录制不继承当前视口设置的问题
+
+---
+
+## v0.17.1
+
+<p className="text-[#888] text-sm">2026 年 3 月 9 日</p>
+
+### 改进
+
+- **视口缩放因子** -- viewport 命令通过可选 `scale` 参数支持设备缩放因子（Retina 显示器）。
+- **Webview 目标支持** -- 新增 webview 目标类型支持，改善 Electron 应用兼容性。页面列表现在包含目标类型信息。
+
+---
+
+## v0.17.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 8 日</p>
+
+### 新功能
+
+- **Lightpanda 浏览器引擎支持** -- 新增 `--engine <name>` flag 选择浏览器引擎（默认 `chrome`，或 `lightpanda`），隐含 `--native` 模式。可通过 `AGENT_BROWSER_ENGINE` 环境变量配置。
+
+```bash
+agent-browser --engine lightpanda open example.com
+```
+
+- **dialog dismiss 命令** -- dialog 命令解析新增对 `dismiss` 子命令的支持。
+
+### 改进
+
+- **守护进程启动错误报告** -- 守护进程启动错误现在直接呈现，而不是显示晦涩的超时消息。
+- **CDP 端口发现** -- 用 `reqwest` 取代手写 HTTP 客户端，CDP 端口发现更可靠。
+- **Chrome 扩展** -- 存在扩展时强制有头模式，扩展现在能正确加载。
+- **抑制 Google 翻译栏** -- 在原生无头模式下抑制 Google 翻译栏，避免干扰。
+- **认证 cookie 持久化** -- 原生模式下浏览器关闭时现在会持久化认证 cookie。
+
+### 问题修复
+
+- 修复原生 auth login 因加密格式不兼容而失败的问题。
+
+### 性能
+
+- 在 CLI 代码库中加入基准测试。
+
+---
+
+## v0.16.0
+
+<p className="text-[#888] text-sm">2026 年 3 月 3 日</p>
+
+### 新功能
+
+- **原生 Rust 守护进程**（实验性）。纯 Rust 守护进程，通过 Chrome DevTools Protocol（CDP）直接与 Chrome 通信，彻底消除 Node.js 与 Playwright 依赖。用 `--native`、`AGENT_BROWSER_NATIVE=1` 或配置文件中的 `"native": true` 启用。支持 150+ 命令，与默认 Node.js 守护进程完全对等。
+
+```bash
+# 通过 flag
+agent-browser --native open example.com
+
+# 通过环境变量
+export AGENT_BROWSER_NATIVE=1
+agent-browser open example.com
+```
+
+或添加到 `agent-browser.json`：
+
+```json
+{"native": true}
+```
+
+### 架构
+
+<table>
+  <thead>
+    <tr><th></th><th>默认（Node.js）</th><th>原生（<code>--native</code>）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>运行时</strong></td><td>Node.js + Playwright</td><td>纯 Rust 二进制</td></tr>
+    <tr><td><strong>协议</strong></td><td>Playwright 协议</td><td>直接 CDP / WebDriver</td></tr>
+    <tr><td><strong>安装体积</strong></td><td>更大（Node.js + npm 依赖）</td><td>更小（单一二进制）</td></tr>
+    <tr><td><strong>浏览器支持</strong></td><td>Chromium、Firefox、WebKit</td><td>Chromium、Safari（经 WebDriver）</td></tr>
+    <tr><td><strong>稳定性</strong></td><td>稳定</td><td>实验性</td></tr>
+  </tbody>
+</table>
+
+### 支持范围
+
+所有核心命令均可在原生模式下工作：导航、交互（click、fill、type、press、hover、scroll、drag）、观察（snapshot、screenshot、eval）、状态管理（cookies、storage、state save/load）、标签页、模拟（viewport、device、timezone、locale、geolocation）、流式输出、Diff 对比、录制与性能分析。
+
+原生守护进程还包含 WebDriver 后端，支持 Safari 与 iOS。
+
+### 已知限制
+
+- 尚不支持 Firefox 与 WebKit（仅 Chromium 与 Safari）
+- 不提供 Playwright trace 格式（使用 Chrome 内置追踪）
+- 不提供 HAR 导出
+- 网络路由拦截使用 CDP Fetch 域而非 Playwright 的 route API
+- 原生与 Node.js 守护进程共用同一会话 socket。切换模式前请先执行 `agent-browser close`。
+
+完整细节见[原生模式](/native-mode)页面。
+
+---
+
+## v0.15.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 25 日</p>
+
+### 新功能
+
+- **认证保险库**（auth vault）-- 在本地存储凭据（始终 AES-256-GCM 加密）并按名称引用。LLM 永远看不到密码。命令：`auth save`、`auth login`、`auth list`、`auth show`、`auth delete`。密码可经 stdin 管道传入（`--password-stdin`），避免暴露在 shell 历史中。
+- **内容边界标记** -- `--content-boundaries` 用带每进程 CSPRNG nonce 的结构化分隔符包裹来自页面的输出，让 LLM 能区分可信的工具输出与不可信的页面内容。`--json` 模式下会注入带 `nonce` 与 `origin` 字段的 `_boundary` 对象。
+- **域名允许列表** -- `--allowed-domains` 把导航、子资源请求、WebSocket 连接与 EventSource 流限制在可信域内。支持精确匹配与通配符前缀模式（如 `*.example.com`）。
+- **操作策略**（action policy）-- `--action-policy` 用静态 JSON 策略文件对操作进行门控，覆盖 13 个操作类别的 `allow`/`deny` 列表。认证保险库操作不受策略强制约束。
+- **操作确认**（confirmation）-- `--confirm-actions` 要求对敏感操作类别显式批准。新增供编排器使用的 `confirm` 与 `deny` 命令。`--confirm-interactive` 启用人在环路的终端提示（stdin 不是 TTY 时自动拒绝）。待处理的确认 60 秒后自动拒绝。
+- **输出长度限制** -- `--max-output` 截断过大的页面输出，防止 LLM 上下文被淹没。
+- **`--download-path` 选项** -- 通过 flag、`AGENT_BROWSER_DOWNLOAD_PATH` 环境变量或 `downloadPath` 配置键设置默认下载目录。未设置时，下载会进入临时目录，并在浏览器关闭时删除。
+- **scroll 的 `--selector` flag** -- 在特定容器元素内滚动而非整页：`agent-browser scroll down 500 --selector "div.scroll-container"`
+
+```bash
+# 认证保险库
+echo "pass" | agent-browser auth save github --url https://github.com/login --username user --password-stdin
+agent-browser auth login github
+
+# 安全 flag
+agent-browser --content-boundaries --allowed-domains "example.com,*.example.com" --max-output 50000 open https://example.com
+
+# 下载路径
+agent-browser --download-path ./downloads open https://example.com
+
+# 在容器内滚动
+agent-browser scroll down 500 --selector "div.content"
+```
+
+### 环境变量
+
+新增六个用于安全配置的环境变量：`AGENT_BROWSER_CONTENT_BOUNDARIES`、`AGENT_BROWSER_MAX_OUTPUT`、`AGENT_BROWSER_ALLOWED_DOMAINS`、`AGENT_BROWSER_ACTION_POLICY`、`AGENT_BROWSER_CONFIRM_ACTIONS`、`AGENT_BROWSER_CONFIRM_INTERACTIVE`。
+
+---
+
+## v0.14.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 23 日</p>
+
+### 新功能
+
+- **`keyboard` 命令** -- 无需选择器即可在当前聚焦元素上真实按键输入、插入文本与按下快捷键（`keyboard type`、`keyboard inserttext`）。
+- **`--color-scheme` flag** -- 通过 flag 或 `AGENT_BROWSER_COLOR_SCHEME` 环境变量，跨浏览器会话持久化深色/浅色模式偏好。
+
+```bash
+agent-browser keyboard type "Hello world"
+agent-browser keyboard inserttext "pasted text"
+agent-browser --color-scheme dark open https://example.com
+```
+
+### 问题修复
+
+- 通过带背压感知的 socket 写入与命令序列化修复 IPC EAGAIN 错误（os error 35/11），并把默认 Playwright 超时降到 25s（可通过 `AGENT_BROWSER_DEFAULT_TIMEOUT` 配置）。
+- 修复远程调试（CDP）重连。
+- 修复无浏览器运行时 state load 失败的问题。
+- 修复未通过 CLI 显式传入 `--annotate` flag 时仍出现警告的问题。
+
+---
+
+## v0.13.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 20 日</p>
+
+### 新功能
+
+- **Diff 命令** -- 在页面状态之间比较快照、截图与 URL。可针对基线图像运行视觉像素 Diff，以可自定义深度与选择器比较无障碍树快照，并排 Diff 两个 URL（可选截图比较）。
+
+```bash
+agent-browser diff snapshot
+agent-browser diff screenshot --baseline before.png
+agent-browser diff url https://staging.example.com https://prod.example.com
+```
+
+---
+
+## v0.12.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 18 日</p>
+
+### 新功能
+
+- **标注截图** -- `--annotate` flag 在交互元素上叠加编号标签，并打印每个标签到元素引用的图例。多模态 AI 模型既能推理视觉布局，又能用同一批 `@eN` 引用进行后续交互。也可通过 `AGENT_BROWSER_ANNOTATE` 环境变量设置。
+
+```bash
+agent-browser screenshot --annotate
+```
+
+---
+
+## v0.11.1
+
+<p className="text-[#888] text-sm">2026 年 2 月 18 日</p>
+
+### 文档
+
+- 在 README、CLI 帮助输出、文档与技能文件中补充了 `&&` 命令链的说明。
+
+---
+
+## v0.11.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 17 日</p>
+
+### 新功能
+
+- **配置文件支持** -- 自动从用户目录（`~/.agent-browser/config.json`）与项目目录（`./agent-browser.json`）加载，并按优先级合并。
+- **性能分析器命令** -- 用 `profiler start` 与 `profiler stop` 进行 Chrome DevTools 性能分析。
+- **浏览器扩展加载** -- `--extension` flag 加载浏览器扩展。
+- **存储状态管理** -- `state save` 与 `state load` 命令持久化认证状态。
+- **iOS 设备模拟** -- `--device` flag 进行设备模拟。
+- **增强 click** -- click 命令新增 `--new-tab` 选项。
+- **增强 find** -- 更多操作与过滤选项。
+- **CDP WebSocket URL** -- `--cdp` 现在接受 WebSocket URL 与端口。
+
+---
+
+## v0.10.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 13 日</p>
+
+### 新功能
+
+- **会话持久化** - 用 `--session-name` flag 在浏览器重启间自动保存/恢复 cookie 与 localStorage
+- **加密状态** - 可选的 AES-256-GCM 加密，用于保存的会话状态数据
+- **状态管理命令** - 新增列出、查看、重命名、清空与清理会话状态文件的命令
+- **点击开新标签页** - click 命令新增 `--new-tab` 选项，在新标签页中打开链接
+
+```bash
+# 持久化会话状态
+agent-browser --session-name myapp open https://example.com
+
+# 管理已保存的状态
+agent-browser state list
+agent-browser state show myapp
+agent-browser state clear myapp
+```
+
+---
+
+## v0.9.4
+
+<p className="text-[#888] text-sm">2026 年 2 月 13 日</p>
+
+### 问题修复
+
+- 修复 Rust CLI 中的全部 Clippy lint 警告
+
+---
+
+## v0.9.3
+
+<p className="text-[#888] text-sm">2026 年 2 月 12 日</p>
+
+### 改进
+
+- CLI 浏览器启动选项支持自定义可执行文件路径
+- 文档站 UI 改进，包括新的基于 sheet 界面的聊天组件
+
+---
+
+## v0.9.2
+
+<p className="text-[#888] text-sm">2026 年 2 月 10 日</p>
+
+### 改进
+
+- 文档站迁移到 MDX，改善内容编写体验
+- 新增 AI 驱动的文档聊天功能
+- 在 README 中为 macOS 用户补充 Homebrew 安装说明
+
+---
+
+## v0.9.1
+
+<p className="text-[#888] text-sm">2026 年 2 月 5 日</p>
+
+### 新功能
+
+- **`--allow-file-access` flag** - 传入允许 JavaScript 访问本地文件的 Chromium flag，从而打开并交互本地 `file://` URL（PDF、HTML 文件）
+- **快照的 `-C`/`--cursor` flag** - 包含光标交互元素，如带 onclick 处理器或 `cursor:pointer` 样式的 div
+
+```bash
+agent-browser --allow-file-access open file:///path/to/document.pdf
+agent-browser snapshot -C
+```
+
+---
+
+## v0.9.0
+
+<p className="text-[#888] text-sm">2026 年 2 月 3 日</p>
+
+### 新功能
+
+- **iOS 模拟器支持** - 经 Appium 进行移动版 Safari 测试，支持真机与模拟器
+
+```bash
+# 列出可用的 iOS 模拟器
+agent-browser device list
+
+# 在 iOS 设备上启动
+agent-browser -p ios --device "iPhone 16 Pro" open https://example.com
+
+# 触摸交互
+agent-browser tap @e1
+agent-browser swipe up
+```
+
+---
+
+## v0.8.10
+
+<p className="text-[#888] text-sm">2026 年 2 月 2 日</p>
+
+### 改进
+
+- 为 eval 命令新增 `--stdin` flag，从 stdin 读取 JavaScript，多行脚本可用 heredoc
+- 修复 postinstall 脚本未运行时 macOS/Linux 上的二进制权限问题
+
+---
+
+## v0.8.9
+
+<p className="text-[#888] text-sm">2026 年 2 月 2 日</p>
+
+### 改进
+
+- 为 eval 命令新增 `--stdin` flag，从 stdin 读取 JavaScript
+
+---
+
+## v0.8.8
+
+<p className="text-[#888] text-sm">2026 年 2 月 2 日</p>
+
+### 改进
+
+- eval 命令新增 `-b`/`--base64` flag 支持 base64 编码，避免 shell 转义问题
+- 更新文档，补充 AI 智能体设置说明
+
+---
+
+## v0.8.7
+
+<p className="text-[#888] text-sm">2026 年 2 月 2 日</p>
+
+### 问题修复
+
+- 修复使用持久配置文件时浏览器启动选项未正确传递的问题
+- 为 socket 路径长度限制与目录写权限添加预检
+- 改进错误处理，浏览器启动失败时以失败状态正确退出
+
+---
+
+## v0.8.6
+
+<p className="text-[#888] text-sm">2026 年 1 月 31 日</p>
+
+### 问题修复
+
+- 针对瞬时错误加入自动重试逻辑，提升守护进程连接可靠性
+- CLI 现在会在启动新守护进程前清理过期的 socket 与 PID 文件
+
+---
+
+## v0.8.5
+
+<p className="text-[#888] text-sm">2026 年 1 月 29 日</p>
+
+### 问题修复
+
+- 修复版本同步：发布时自动随 Cargo.toml 更新 Cargo.lock
+- 使 npm 包中的 CLI 二进制可执行
+
+---
+
+## v0.8.4
+
+<p className="text-[#888] text-sm">2026 年 1 月 27 日</p>
+
+### 问题修复
+
+- 通过解析可执行文件路径中的符号链接，修复经 AI 智能体运行时报 "Daemon not found" 错误的问题
+
+---
+
+## v0.8.3
+
+<p className="text-[#888] text-sm">2026 年 1 月 27 日</p>
+
+### 改进
+
+- 用跨平台 Node.js 包装器取代基于 shell 的 CLI 包装，使 Windows 上支持 npx
+- 新增 postinstall 逻辑，在全局安装时修补 npm bin 入口，实现零开销的原生二进制调用
+- 新增 CI 测试，验证各平台的全局安装
+
+---
+
+## v0.8.2
+
+<p className="text-[#888] text-sm">2026 年 1 月 26 日</p>
+
+### 问题修复
+
+- 修复 Windows CMD 包装器：直接使用原生二进制而非经 Node.js 中转
+- CI 安装命令加入重试逻辑，应对浏览器安装的瞬时失败
+
+---
+
+## v0.8.1
+
+<p className="text-[#888] text-sm">2026 年 1 月 26 日</p>
+
+### 改进
+
+- 改进发布流程：校验二进制文件大小，并确保 npm install 后二进制可执行
+- 文档站更新了新的移动端导航系统
+
+---
+
+## v0.8.0
+
+<p className="text-[#888] text-sm">2026 年 1 月 26 日</p>
+
+### 新功能
+
+- **Kernel 云浏览器提供商** - 连接 Kernel（kernel.sh）获得远程浏览器基础设施，带隐身模式与持久配置文件
+
+```bash
+# 通过 -p flag
+agent-browser -p kernel open https://example.com
+
+# 通过环境变量
+export AGENT_BROWSER_PROVIDER=kernel
+export KERNEL_API_KEY=your-api-key
+agent-browser open https://example.com
+
+# 使用持久配置文件
+export KERNEL_PROFILE_NAME=my-profile
+agent-browser open https://example.com
+```
+
+- **忽略 HTTPS 证书错误** - 新增 flag，用于自签名证书与开发环境
+
+```bash
+agent-browser --ignore-https-errors open https://localhost:3000
+```
+
+- **增强 cookie 管理** - `cookies set` 命令扩展了额外 flag，可在页面加载前设置 cookie
+
+```bash
+agent-browser cookies set session_id "abc123" --url https://app.example.com --httpOnly --secure
+agent-browser cookies set token "xyz" --domain .example.com --path /api --expires 1735689600
+```
+
+### 问题修复
+
+- 修复 tab list 命令无法识别经点击或 `target="_blank"` 链接打开的新页面的问题
+- 修复 `check` 命令无限挂起的问题
+- 修复 `set device` 未应用 deviceScaleFactor 的问题——HiDPI 截图现在正常
+- 修复 v0.7.6 中 state load 与配置文件持久化不工作的问题
+- 未提供路径时，截图现在保存到临时目录
+
+### 安全
+
+- 守护进程与流服务器现在拒绝跨域连接
+
+---
+
+## v0.7.1
+
+<p className="text-[#888] text-sm">2026 年 1 月 23 日</p>
+
+### 问题修复
+
+- **修复原生二进制分发** - npm 包现在包含所有平台（Linux x64/arm64、macOS x64/arm64、Windows x64）的原生二进制。此前发布流程在构建二进制之前就发布到 npm，导致安装时报 "No binary found" 错误。
+
+---
+
+## v0.7.0
+
+<p className="text-[#888] text-sm">2026 年 1 月 23 日</p>
+
+### 新功能
+
+- **云浏览器提供商** - 连接 Browserbase 或 Browser Use 获得远程浏览器基础设施
+
+```bash
+# 通过 -p flag（推荐）
+agent-browser -p browserbase open https://example.com
+agent-browser -p browseruse open https://example.com
+
+# 通过环境变量
+export AGENT_BROWSER_PROVIDER=browserbase
+agent-browser open https://example.com
+```
+
+- **持久浏览器配置文件** - 跨浏览器重启存储 cookie、localStorage 与登录会话
+
+```bash
+agent-browser --profile ~/.myapp-profile open myapp.com
+# 登录状态跨重启保留
+```
+
+- **远程 CDP WebSocket URL** - 经 WebSocket 连接远程浏览器服务
+
+```bash
+agent-browser --cdp "wss://browser-service.com/cdp?token=..." snapshot
+```
+
+- **`download` 命令** - 触发下载并等待完成
+
+```bash
+agent-browser download @e1 ./file.pdf
+agent-browser wait --download ./output.zip --timeout 30000
+```
+
+- **浏览器启动配置** - 细粒度控制浏览器启动
+
+```bash
+agent-browser --args "--disable-gpu,--no-sandbox" open example.com
+agent-browser --user-agent "Custom UA" open example.com
+agent-browser --proxy-bypass "localhost,*.internal" open example.com
+```
+
+- **增强技能** - 面向 Claude Code 的层级结构，带参考文档与模板
+
+### 问题修复
+
+- screenshot 命令现在支持引用，并改进了错误消息
+- `connect` 命令支持 WebSocket URL
+- 修复 socket 文件位置（使用 `~/.agent-browser` 而非 TMPDIR）
+- 修复 Windows 二进制路径（.exe 扩展名）
+- state load 与基于路径的操作现在显示正确的输出消息
+
+### 文档
+
+- 补充 Claude Code marketplace 插件安装说明
+- 更新技能文档，加入参考文档与模板
+- 改进错误文档
+
+---
+
+## v0.6.0
+
+<p className="text-[#888] text-sm">2026 年 1 月 18 日</p>
+
+### 新功能
+
+- **视频录制** - 用 Playwright 原生录制把浏览器会话录成 WebM
+
+```bash
+agent-browser record start ./demo.webm
+agent-browser click @e1
+agent-browser record stop
+```
+
+- **`connect` 命令** - 经 CDP 连接浏览器，并为后续命令保持连接
+
+```bash
+agent-browser connect 9222
+agent-browser snapshot  # connect 之后无需 --cdp
+```
+
+- **`--proxy` flag** - 配置浏览器代理，可选认证
+
+```bash
+agent-browser --proxy http://user:pass@proxy.com:8080 open example.com
+```
+
+- **`get styles` 命令** - 提取元素的计算样式
+
+```bash
+agent-browser get styles "button"
+```
+
+- **Claude marketplace 插件** - 新增 `.claude-plugin/marketplace.json` 用于 Claude Code 集成
+- **增强网络输出** - `network requests` 现在显示方法、URL 与资源类型
+- **`--version` flag** - 显示 CLI 版本
+
+### 问题修复
+
+- 修复 Windows 守护进程启动与端口计算
+- 支持新版 Ubuntu（24.04+）的 `libasound2t64`
+- 防止空 URL 标签页上的 CDP 超时
+- 未提供路径时以 base64 输出截图
+- `get value` 命令解析引用
+- `tab new` 命令支持 URL 参数
+- 允许 `about:`、`data:` 与 `file:` URL 方案
+- 通过尝试连接检测过期的 unix socket
+- 遵循 `AGENT_BROWSER_HEADED` 环境变量
+- 处理 SIGPIPE，防止管道到 `head`/`tail` 时 panic
+- 修复 screenshot 命令的 null 路径校验
+
+### 协议对齐
+
+以下变更使 CLI 与守护进程协议保持一致：
+
+- `select` 命令现在使用 `values` 字段（支持多选）
+- `frame main` 使用 `mainframe` 操作
+- `mouse wheel` 使用 `wheel` 操作
+- `set media` 使用 `emulatemedia` 操作
+- 控制台输出使用 `messages` 字段
+
+### 文档
+
+- 扩充 SKILL.md，加入完整的命令参考
+- 更新 README，加入新命令与选项
+- 更新 CDP 模式文档，加入 `connect` 工作流

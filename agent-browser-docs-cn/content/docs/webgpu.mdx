@@ -1,0 +1,121 @@
+---
+title: "WebGPU"
+navTitle: "WebGPU"
+---
+
+用无头 Chrome 对 WebGPU 页面截图和录屏——包括 three.js `WebGPURenderer`、Babylon.js 或原生 WebGPU。
+
+无头 Chrome 默认不开放 WebGPU。不做设置时它会静默失败：页面加载成功，截图命令也成功，但画布是黑的。`--webgpu` flag 启用一个让 WebGPU 正常工作的启动预设，包括在没有 GPU 的容器与 CI 中。
+
+## 快速开始
+
+```bash
+agent-browser --webgpu open https://my-webgpu-app.example.com
+agent-browser screenshot app.png
+```
+
+也可以用环境变量 `AGENT_BROWSER_WEBGPU`，或在 `~/.agent-browser/config.json` 或经 `--config` 加载的文件中设 `"webgpu": true`。
+
+## 预设做了什么
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>应用的 flag</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>所有平台</td><td><code>--enable-unsafe-webgpu</code>（WebGPU 默认在无头与 GPU 黑名单环境中被隐藏）</td></tr>
+    <tr><td>Linux</td><td><code>--enable-features=Vulkan --use-angle=vulkan --use-vulkan=swiftshader --use-webgpu-adapter=swiftshader --disable-vulkan-surface</code>——经 SwiftShader 软件 Vulkan 运行 WebGPU；无需 GPU</td></tr>
+  </tbody>
+</table>
+
+macOS 使用硬件 Metal 后端，Windows 使用 D3D——两者都无需额外安装。
+
+## 平台支持
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>WebGPU 渲染（无头）</th><th>WebGPU 画布截图</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>macOS</td><td>正常</td><td>无头下可用</td></tr>
+    <tr><td>Windows</td><td>正常（硬件 D3D）</td><td>无头截图为黑色——请在已登录的桌面环境中使用 <code>--headed</code></td></tr>
+    <tr><td>Linux</td><td>正常（SwiftShader Vulkan）</td><td>上游不支持无头截图——加 <code>--headed</code>（自动启动虚拟显示）</td></tr>
+  </tbody>
+</table>
+
+Windows/Linux 的截图缺口是无头 Chrome 的上游限制：即使渲染正常（可通过像素回读验证），WebGPU 画布的*呈现*（presentation）也永远到不了无头合成器。目前没有已知的 flag 组合能修复它。
+
+在 Linux 上，即使在无显示器的服务器与容器中也只需要 `--headed`：当未设置 `DISPLAY` 且安装了 Xvfb（`apt-get install -y xvfb`）时，agent-browser 会为浏览器启动一个私有虚拟显示，并随其一起销毁（`AGENT_BROWSER_NO_XVFB=1` 可退出该行为）：
+
+```bash
+agent-browser --webgpu --headed open https://my-webgpu-app.example.com
+agent-browser screenshot app.png   # 真实 WebGPU 像素，无需显示硬件
+```
+
+在 Windows 上，有头会话必须运行在已登录的桌面会话中——从 ssh 或服务上下文启动是不够的（用 `schtasks /IT` 把启动安排在交互式桌面上，之后就可以从任何地方驱动该会话）。
+
+## 用 doctor 验证
+
+```bash
+agent-browser doctor --webgpu
+```
+
+探针会用该预设启动一个临时会话（scratch session），并对两个阶段分别做像素检查——WebGPU 失败就是静默的黑色，只有像素断言能说明问题：
+
+1. **render**——请求适配器（冷启动返回 null 时会重试），通过真实渲染通道把离屏纹理清成红色，并回读缓冲区。报告正在使用的适配器。
+2. **screenshot**——解码一张正在呈现的画布的实际截图，端到端验证捕获路径。
+
+```
+WebGPU probe
+  pass  WebGPU rendered and read back pixels in 1.61s (nvidia ampere)
+  fail  WebGPU renders, but headless screenshots miss the canvas (expected red, got rgb(0,0,0)); this is a known headless Chrome limitation on this platform
+        fix: run WebGPU sessions with --headed on a logged-in desktop for screenshots
+```
+
+在 macOS 上两项检查都能在无头下通过；在 Windows/Linux 上，第二项检查会告诉你该平台何时需要 `--headed` 才能截图。运行 `agent-browser doctor --webgpu --headed` 可验证该路径本身——在无显示器的 Linux 上，探针会启动自己的 Xvfb，两项检查都应通过。
+
+## Linux、容器与 CI
+
+SwiftShader Vulkan 路径需要系统 Vulkan 加载器与 Mesa ICD。缺少它们时 `requestAdapter()` 会返回 `null`：
+
+```bash
+apt-get install -y libvulkan1 mesa-vulkan-drivers
+```
+
+容器配方（仅截图路径需要 xvfb）：
+
+```dockerfile
+FROM node:22-bookworm-slim
+RUN apt-get update && apt-get install -y \
+    ca-certificates libvulkan1 mesa-vulkan-drivers xvfb xauth \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install -g agent-browser \
+    && agent-browser install
+```
+
+不需要真实 GPU 或 `/dev/dri`。若在驱动正常的 Linux 机器上想优先使用硬件 Vulkan，请同时覆盖 Vulkan 驱动与适配器——预设固定了 `--use-vulkan=swiftshader`，只覆盖适配器的话枚举到的仍是 SwiftShader（用户参数优先于预设）：
+
+```bash
+agent-browser --webgpu --args "--use-vulkan=native,--use-webgpu-adapter=default" open ...
+```
+
+## 常见坑
+
+**仅安全上下文**。`navigator.gpu` 只存在于安全上下文中：`https://`、`http://localhost` 与 `file://` 符合条件；普通 `http://` 局域网地址则不行，无论加什么 flag。
+
+**不要过早截图**。WebGPU 应用异步初始化——three.js `WebGPURenderer` 在第一帧之前要等待异步 `init()`。在页面 `load` 时截图会得到空白画布且不报错。请等待应用自身的就绪信号，或让渲染循环跑上几帧：
+
+```bash
+agent-browser eval "new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))"
+agent-browser screenshot app.png
+```
+
+**three.js 会静默回退**。当没有可用的 WebGPU 适配器时，`WebGPURenderer` 会无报错地切换到 WebGL2 后端。要查看页面实际拿到的是什么：
+
+```bash
+agent-browser eval "document.querySelector('canvas').getContext('webgpu') ? 'webgpu' : 'webgl-fallback'"
+```
+
+**自定义像素回读：避免画布快照**。`drawImage(webgpuCanvas, ...)` 依赖呈现时序，在某些平台上即使渲染正常也会读到透明黑。请渲染到离屏纹理，再用 `copyTextureToBuffer` + `mapAsync` 回读——在每个平台上都是确定性的（doctor 探针就是这样验证渲染的）。
+
+**SwiftShader 是 CPU 光栅化器**。简单场景渲染良好；重场景只有个位数 FPS。截图时这通常无关紧要，但要流畅录制复杂场景的视频，请使用硬件（macOS/Windows，或配备真实 Vulkan 驱动并加 `--use-vulkan=native,--use-webgpu-adapter=default` 的 Linux）。

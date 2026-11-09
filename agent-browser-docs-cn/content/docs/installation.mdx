@@ -1,0 +1,205 @@
+---
+title: "安装"
+navTitle: "安装"
+---
+
+## 全局安装（推荐）
+
+安装原生 Rust 二进制，性能最佳：
+
+```bash
+npm install -g agent-browser
+agent-browser install  # 从 Chrome for Testing 下载 Chrome（首次）
+```
+
+这是最快的选项——命令直接经由原生 Rust CLI 执行，解析开销低于 1 毫秒。
+
+在低于 13 的 macOS 版本上，`agent-browser install` 会在下载 Chrome for Testing 之前停止，并打印升级 macOS 或手动安装 Chrome 的说明。请通过**系统设置 > 通用 > 软件更新**将 macOS 升级到 13 或更高版本，或从 [Google Chrome 下载页](https://www.google.com/chrome/)安装 Chrome。这项检查仅在运行 `agent-browser install` 时生效；上面的包安装命令不受影响。若 `sw_vers -productVersion` 不可用、报错退出、未返回版本号或返回格式异常的版本号，`agent-browser install` 会报告检测错误，并在发起网络请求前停止。
+
+## 快速开始（免安装）
+
+```bash
+npx agent-browser install   # 下载 Chrome（仅首次）
+npx agent-browser open example.com
+```
+
+## 项目安装（本地依赖）
+
+适合希望在 `package.json` 中固定版本的项目：
+
+```bash
+npm install agent-browser
+npx agent-browser install  # 下载 Chrome（首次）
+```
+
+之后通过 `npx` 或 `package.json` 脚本使用。
+
+## Homebrew（macOS）
+
+```bash
+brew install agent-browser
+agent-browser install  # 下载 Chrome（首次）
+```
+
+## Cargo（Rust）
+
+```bash
+cargo install agent-browser
+agent-browser install  # 下载 Chrome（首次）
+```
+
+从源码编译（约 2-3 分钟）。需要 Node.js 24+、pnpm 11+ 与 Rust 工具链（[rustup.rs](https://rustup.rs)）。
+
+## 从源码构建
+
+```bash
+git clone https://github.com/vercel-labs/agent-browser
+cd agent-browser
+pnpm install
+pnpm build:source
+pnpm link --global
+agent-browser install
+```
+
+## Windows 浏览器会话
+
+无头 Chrome 运行在一个私有的 Windows 桌面上。这能避免隐藏的浏览器窗口在桌面上留下可见的矩形残影，包括受影响的 Chrome 150 构建在内。它对内置与自定义 Chrome 可执行文件以及会话中后续创建的窗口都有效。自动化、截图与 GPU 渲染仍通过 CDP 进行。
+
+使用 `--headed` 可在交互式桌面上显示 Chrome。带扩展的会话同样使用交互式桌面。agent-browser 拥有它启动的 Chrome 进程：当其守护进程退出或被强制结束时，Windows 会终止整棵 Chrome 进程树。通过 `--cdp` 或 `--auto-connect` 接入的浏览器仍归外部所有。
+
+## Linux 依赖
+
+在 Linux 上安装系统依赖：
+
+```bash
+agent-browser install --with-deps
+```
+
+如果包管理器无法安装全部所需的浏览器库，该命令会以非零状态码退出。
+
+以 root 运行时，此命令直接调用检测到的包管理器。非 root 用户则通过 `sudo` 执行。如果你不是 root 且 `sudo` 不可用，它会提示需要 root 权限或 `sudo`。
+
+## 更新
+
+升级到最新版本：
+
+```bash
+agent-browser upgrade
+```
+
+它会检测你的安装方式（npm、Homebrew 或 Cargo）并自动执行相应的更新命令。成功时显示版本变化，已是最新版本时也会告知你。
+
+## doctor 诊断
+
+`doctor` 诊断你的安装并自动清理过期的守护进程文件。无论何时出现意外故障，或升级之后，都可以运行它：
+
+```bash
+agent-browser doctor                     # 完整诊断
+agent-browser doctor --offline --quick   # 仅本地，最快（约 <1s）
+agent-browser doctor --fix               # 同时执行破坏性修复
+agent-browser doctor --webgpu            # 同时执行真实 WebGPU 渲染探针
+agent-browser doctor --json              # 结构化输出
+```
+
+它检查：
+
+<table>
+<thead>
+<tr><th>类别</th><th>检查内容</th></tr>
+</thead>
+<tbody>
+<tr><td>环境</td><td>CLI 版本、平台、主目录、状态与 socket 目录、磁盘剩余空间</td></tr>
+<tr><td>Chrome</td><td>Chrome 安装路径与版本、缓存目录、Puppeteer 回退、user-data 目录与配置文件（profile）数量、可选的 <code>lightpanda</code> 引擎</td></tr>
+<tr><td>守护进程</td><td>各会话的运行中守护进程、过期的 <code>.sock</code> / <code>.pid</code> / <code>.version</code> / <code>.stream</code> 文件（自动清理）、与 CLI 的版本不匹配、仪表盘进程存活状态</td></tr>
+<tr><td>配置</td><td><code>~/.agent-browser/config.json</code>、<code>./agent-browser.json</code>，以及 <code>AGENT_BROWSER_CONFIG</code> 指向的文件能否解析为合法 JSON</td></tr>
+<tr><td>安全</td><td>加密密钥环境变量或 <code>~/.agent-browser/.encryption-key</code>（unix 上权限为 0600）、状态文件数量与存在时长对照 <code>AGENT_BROWSER_STATE_EXPIRE_DAYS</code>、操作策略（action policy）文件</td></tr>
+<tr><td>提供商</td><td>Browserless、Browserbase、Browser Use、Kernel、AgentCore（AWS 凭证）、Appium（用于 <code>--provider ios</code>）的环境变量，以及用于 chat 的 <code>AI_GATEWAY_API_KEY</code></td></tr>
+<tr><td>网络</td><td>Chrome for Testing CDN、AI Gateway（如已配置）及当前所选提供商端点的可达性（<code>--offline</code> 下跳过）</td></tr>
+<tr><td>启动测试</td><td>创建一个临时会话，启动无头 Chrome，导航到 <code>about:blank</code> 后关闭。测量实际耗时（<code>--quick</code> 下跳过）</td></tr>
+<tr><td>WebGPU 探针</td><td>通过 <code>--webgpu</code> 启用：以 <a href="../webgpu/">WebGPU 预设</a>创建临时会话，经真实 WebGPU pass 渲染，并对离屏回读与解码后的截图做像素校验。加 <code>--headed</code> 可验证有头/Xvfb 截图路径</td></tr>
+</tbody>
+</table>
+
+过期的伴生文件始终会被清理。破坏性操作需通过 `--fix` 显式启用：
+
+<table>
+<thead>
+<tr><th>检查项</th><th><code>--fix</code> 的行为</th></tr>
+</thead>
+<tbody>
+<tr><td>Chrome 缺失</td><td>运行 <code>agent-browser install</code></td></tr>
+<tr><td>版本不匹配的守护进程</td><td>向每个守护进程发送 <code>close</code> 并清理文件</td></tr>
+<tr><td>过旧的状态文件</td><td>删除早于 <code>AGENT_BROWSER_STATE_EXPIRE_DAYS</code>（默认 30 天）的状态文件</td></tr>
+<tr><td>加密密钥缺失</td><td>在 <code>~/.agent-browser/.encryption-key</code> 生成新密钥（unix 上权限 0600）；绝不覆盖已有密钥</td></tr>
+</tbody>
+</table>
+
+全部检查通过时退出码为 `0`（有警告没关系），任何一项失败则为 `1`。
+
+## 自定义浏览器
+
+使用自定义浏览器可执行文件替代内置 Chromium：
+
+- **Serverless** - 使用 `@sparticuz/chromium`（约 50MB，对比约 684MB）
+- **系统浏览器** - 使用已安装的 Chrome
+- **自定义构建** - 使用修改过的浏览器构建
+
+```bash
+# 通过 flag
+agent-browser --executable-path /path/to/chromium open example.com
+
+# 通过环境变量
+AGENT_BROWSER_EXECUTABLE_PATH=/path/to/chromium agent-browser open example.com
+```
+
+### Serverless 示例
+
+使用 `@sparticuz/chromium` 或类似方式获取 Chromium 可执行文件路径，再通过 `--executable-path` 或 `AGENT_BROWSER_EXECUTABLE_PATH` 传入。
+
+例如，在 AWS Lambda 处理函数中：
+
+```typescript
+import chromium from "@sparticuz/chromium";
+import { execSync } from "child_process";
+
+export async function handler() {
+  const executablePath = await chromium.executablePath();
+  const result = execSync(
+    `AGENT_BROWSER_EXECUTABLE_PATH=${executablePath} agent-browser open https://example.com && agent-browser snapshot -i --json`,
+    { encoding: "utf-8" }
+  );
+  return JSON.parse(result);
+}
+```
+
+## AI 智能体配置
+
+agent-browser 开箱即用，兼容任何 AI 智能体。要获得更丰富的上下文：
+
+### AI 编程助手（推荐）
+
+为你的 AI 编程助手安装技能：
+
+```bash
+npx skills add vercel-labs/agent-browser
+```
+
+适用于 Claude Code、Codex、Cursor、Gemini CLI、GitHub Copilot、Goose、OpenCode 与 Windsurf。技能从仓库获取并自动保持最新。
+
+> **切勿**从 `node_modules` 复制 `SKILL.md`——随着新功能加入它会过时。请始终使用 `npx skills add`，或引用仓库中的版本。
+
+### AGENTS.md / CLAUDE.md
+
+将以下内容加入你的指令文件：
+
+```markdown
+## Browser Automation
+
+Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+
+Core workflow:
+1. `agent-browser open <url>` - Navigate to page
+2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+4. Re-snapshot after page changes
+```

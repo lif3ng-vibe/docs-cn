@@ -1,0 +1,68 @@
+---
+title: "agent-browser"
+navTitle: "简介"
+---
+
+为 AI 智能体设计的浏览器自动化 CLI。紧凑的文本输出最大限度减少上下文占用。100% 原生 Rust 实现。
+
+```bash
+npm install -g agent-browser      # 全平台
+brew install agent-browser        # macOS
+agent-browser install             # 下载 Chrome（首次使用）
+
+# 或免安装直接试用
+npx agent-browser open example.com
+```
+
+## 特性
+
+- **智能体优先**：紧凑的文本输出比 JSON 消耗更少 token，专为 AI 上下文效率设计
+- **基于引用**（ref）：快照返回带引用（ref）的无障碍树，元素选择具有确定性
+- **功能完备**：50+ 命令覆盖导航、表单、截图、网络、存储、文件、标签页、框架（frame）与调试
+- **过程可观测**：内置[视频录制](/recording)、[流式输出](/streaming)、[调试](/debugging)、[性能分析器](/profiler)与 [Diff 对比](/diffing)工具
+- **现代应用**：[网络拦截](/network)、[React 与 Web Vitals](/react)、[初始化脚本](/init-scripts)、[Next.js + Vercel](/next)与 [eve 扩展](/eve)工作流均有一流文档
+- **有状态**：[会话](/sessions)、配置文件（profile）、认证状态、Cookie、存储、代理与安全控制，支撑长时间运行的智能体
+- **跨平台**：macOS、Linux、Windows 原生二进制
+
+## 兼容工具
+
+Claude Code、Cursor、GitHub Copilot、OpenAI Codex、Google Gemini、opencode，以及任何能执行 shell 命令的智能体。
+
+## 示例
+
+```bash
+# 导航并获取快照
+agent-browser open example.com
+agent-browser snapshot -i
+
+# 输出：
+# - heading "Example Domain" [ref=e1]
+# - link "More information..." [ref=e2]
+
+# 使用引用（ref）交互
+agent-browser click @e2
+agent-browser screenshot page.png
+agent-browser close
+```
+
+## 为什么用引用（ref）？
+
+`snapshot` 命令返回一棵紧凑的无障碍树，其中每个元素都有形如 `@e1`、`@e2` 的唯一引用（ref）。这带来：
+
+- **上下文高效**：文本输出约消耗 200-400 token，完整 DOM 则需约 3000-5000
+- **确定性**：引用精确指向快照中的具体元素
+- **快速**：无需重新查询 DOM
+- **对 AI 友好**：LLM 天然擅长解析文本输出
+
+## 架构
+
+客户端-守护进程架构，追求最优性能：
+
+1. **Rust CLI**：解析命令，与守护进程通信
+2. **原生守护进程**：纯 Rust 守护进程，直接使用 CDP，通过 Chrome DevTools Protocol 管理 Chrome
+
+守护进程自动启动并在命令之间常驻。默认情况下，若一小时没有命令或仪表盘输入，它会保存已配置的恢复（restore）状态、关闭其无头浏览器并退出。若未指定 `--restore` 或其他恢复键，关闭时会丢弃临时浏览器状态和已打开的标签页。有头浏览器、Safari 与 iOS WebDriver 会话以及用户手动接入的浏览器不受默认超时限制；提供商所有的云端浏览器则不在此列。可使用 `--idle-timeout <time>` 或 `AGENT_BROWSER_IDLE_TIMEOUT_MS` 调整超时，设为 `0` 则禁用。
+
+## 平台
+
+为 macOS（ARM64、x64）、Linux（ARM64、x64）与 Windows（x64）提供原生 Rust 二进制。

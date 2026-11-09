@@ -1,0 +1,81 @@
+---
+title: "eve 扩展"
+navTitle: "eve 扩展"
+---
+
+`@agent-browser/eve` 将完整的 agent-browser 工具集挂载到 [eve](https://eve.dev) 智能体中。这些工具在智能体沙盒内运行 `agent-browser`，因此浏览器进程、下载、截图与状态都不会进入 Next.js 运行时。
+
+## 安装
+
+```bash
+pnpm add @agent-browser/eve
+```
+
+`eve` 是 peer dependency，应已存在于 eve 应用中。下文展示的沙盒预装辅助函数与扩展同包发布，无需额外安装。
+
+## 挂载
+
+在 `agent/extensions/` 下创建扩展挂载点。文件名即工具命名空间。
+
+```ts
+// agent/extensions/browser.ts
+import browser from "@agent-browser/eve";
+
+export default browser({
+  allowedDomains: ["example.com", "*.example.com"],
+  maxOutputChars: 50000,
+});
+```
+
+智能体将获得命名空间化的工具，例如 `browser__open`、`browser__snapshot`、`browser__click`、`browser__fill`、`browser__find`、`browser__screenshot`、`browser__console` 与 `browser__network_requests`。
+
+## 沙盒引导
+
+扩展可在首次使用工具时安装 `agent-browser`、Chromium 及所需的 Linux 库。生产环境请在 eve 沙盒模板中预装，使会话热启动。
+
+```ts
+// agent/sandbox.ts
+import { agentBrowserRevalidationKey, installAgentBrowser } from "@agent-browser/eve/sandbox";
+import { defineSandbox } from "eve/sandbox";
+import { vercel } from "eve/sandbox/vercel";
+
+export default defineSandbox({
+  backend: vercel({ resources: { vcpus: 2 } }),
+  revalidationKey: () => agentBrowserRevalidationKey(),
+  async bootstrap({ use }) {
+    const sandbox = await use();
+    await installAgentBrowser(sandbox);
+  },
+});
+```
+
+## 配置
+
+常用选项：
+
+- `allowedDomains` 限制导航与子资源访问范围。
+- `contentBoundaries` 在页面输出外包一层边界标记。
+- `maxOutputChars` 截断过大的页面输出。
+- `inlineScreenshots` 将截图内嵌为 data URL，供能渲染的渠道使用。
+- `autoInstall`、`installSpec`、`installBrowser` 与 `installSystemDependencies` 控制首次使用时的安装。
+- `session` 与 `sessionPrefix` 控制浏览器会话命名。
+- `binary` 指向沙盒内的 `agent-browser` 可执行文件。
+- `proxy` 配置浏览器代理。
+
+## 智能体工作流
+
+让智能体先导航、再快照，然后基于快照中的引用（ref）操作。快照引用如 `[ref=e12]` 会成为交互工具可用的 `@e12` 选择器。
+
+```text
+Inspect https://example.com and summarize what is visible.
+```
+
+阅读文章或文档时优先使用 `browser__read`。操作应用时，先 `browser__snapshot` 再交互，页面变化后重新快照。
+
+## 安全
+
+Cookie、存储与已保存认证状态的相关命令被扩展刻意屏蔽，因为它们可能向模型暴露凭据材料。需要禁用某个工具、添加审批要求或提供应用专属的受控工具时，请使用标准的 eve 扩展覆盖机制。
+
+## 示例
+
+完整示例见 [`examples/eve`](https://github.com/vercel-labs/agent-browser/tree/main/examples/eve)，这是一个挂载了该扩展的 Next.js eve 应用。

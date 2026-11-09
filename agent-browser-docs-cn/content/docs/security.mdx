@@ -1,0 +1,352 @@
+---
+title: "安全"
+navTitle: "安全"
+---
+
+agent-browser 内置多项安全特性，用于防范凭据泄露、经不可信页面内容实施的提示词注入，以及未经授权的浏览器操作。
+
+导航、操作与输出控制均为可选开启（opt-in）。默认情况下，agent-browser 不会对导航、操作或输出施加任何限制。自动发现的项目配置过滤默认生效；参见「项目配置信任」一节。
+
+## 项目配置信任
+
+自动发现的 `./agent-browser.json` 仅接受 `headed`、`json`、`debug`、`userAgent`、`hideScrollbars`、`annotate`、`colorScheme`、`maxOutput`、`screenshotQuality`、`screenshotFormat` 与 `idleTimeout`。其余运行时键——包括 `extensions`、`initScripts` 以及状态、信任、策略、会话、连接和路径设置——会被忽略并给出警告。`$schema` 元数据键则被静默忽略。请将高级设置放入 `~/.agent-browser/config.json`，或用 `--config` 或 `AGENT_BROWSER_CONFIG` 加载受信任的文件。显式指定配置会取代默认发现流程，且只加载该文件。详见[配置](/configuration)。
+
+## 浏览器版本检查
+
+当某条命令驱动 Chrome、Chromium 或 HeadlessChrome 浏览器时，agent-browser 会读取浏览器版本，并与 [Chrome Releases 博客](https://chromereleases.googleblog.com/)上 Stable Channel Update for Desktop 帖子中的版本比对。如果浏览器落后于当前 Stable 版本，且其后的 Stable 版本修复过 CVE，命令响应中就会包含一条 `warning`，带 CVE 数量及最多三个编号。更新浏览器即可清除该警告，或运行 `agent-browser install` 安装 agent-browser 自带的 Chrome。
+
+每个浏览器版本在每个会话中只提示一次该警告，且它绝不会阻塞命令。如果在几秒内无法访问该博客，或后续版本未列出任何 CVE，则不显示任何内容。该请求使用 agent-browser 内置的根证书，因此要求自定义 CA 的代理会将其拦截，警告也就不会出现。云提供商的会话不做检查；上报产品不是 Chrome、Chromium 或 HeadlessChrome 的浏览器同样不检查。设置 `AGENT_BROWSER_NO_VERSION_CHECK=1` 可关闭该检查及其请求。
+
+## 威胁模型
+
+这些特性旨在缓解基于 LLM 的智能体驱动浏览器时面临的以下威胁：
+
+- **凭据泄露**——认证保险库（auth vault）中存储的密码绝不会进入 LLM 上下文。CLI 在本地处理保险库操作；凭据不会经过守护进程的 IPC 通道。
+- **插件访问机密**：凭据提供商插件在独立进程中运行，只会收到结构化的凭据解析请求。浏览器自动化、策略检查以及对脱敏敏感的输出处理仍保留在 agent-browser 核心中。
+- **经页面内容的提示词注入**——恶意页面可以嵌入看似工具输出或系统指令的文本。内容边界标记（`--content-boundaries`）让编排器能够区分可信的工具输出与不可信的页面内容。
+- **未经授权的导航 / 数据外泄**——被攻陷或被操纵的智能体可能导航到攻击者控制的域名以外泄数据。域名允许列表（`--allowed-domains`）会拦截指向未允许域名的导航、子资源请求、WebSocket 连接、EventSource 流以及 `sendBeacon` 调用。在受支持的 Chromium 会话中，它还会禁用 WebRTC 对等连接，使 STUN、TURN 及相关 DNS 流量无法绕过 HTTP 拦截。
+- **未经授权的破坏性操作**——操作策略（action policy，`--action-policy`）与确认门控（`--confirm-actions`）可防止智能体在未经明确批准的情况下执行危险操作（eval、下载、上传）。
+- **上下文淹没**——大量页面输出可能撑爆 LLM 的上下文窗口。输出截断（`--max-output`）会为来自页面的内容设定大小上限。
+
+### 已知局限
+
+- **WebSocket/EventSource 拦截属于尽力而为**。它通过初始化脚本覆盖浏览器构造函数实现。如果允许了 `eval` 操作类别，页面脚本理论上可以恢复原始构造函数。要获得最大保护，请通过 `--action-policy` 拒绝 `eval`。
+- **云提供商上的域名过滤存在时序问题**。云提供商在本地 Chrome 进程之外运行，因此在 agent-browser 连接之前由提供商侧启动行为加载的资源无法被追溯拦截。当允许列表生效时，agent-browser 会拒绝预先存在的浏览器附加（attach）模式、Chrome 配置文件（profile）、直连页面的提供商插件、恢复/状态重放，以及原生启动 Chrome 参数。
+- **域名允许列表不是操作系统防火墙**。本地启动的 Chrome 除了拦截页面 JavaScript 中的 `RTCPeerConnection` 外，还会禁用未经代理的 WebRTC UDP。若需要浏览器进程以下的边界，请将允许列表与主机、容器或网络出口管控结合使用。
+- **预先存在的附加模式、配置文件、已保存状态和启动参数不支持域名允许列表**。agent-browser 会拒绝 `--allowed-domains` 与 `--cdp`、`--auto-connect`、`--profile`、`--restore`、`--state`、`state load`，以及选择配置文件、恢复会话或打开启动页面的原生 Chrome 参数的组合，因为页面或已保存的源（origin）可能在 agent-browser 验证隔离之前就已运行。
+- **iOS、Safari 和直连页面的提供商插件不支持域名允许列表**。agent-browser 会拒绝在这些提供商上使用 `--allowed-domains`，因为它们的自动化后端无法安装 Chromium 网络控制，也无法实施等效的 WebRTC 隔离。
+- **内容边界是纵深防御**。它依赖 LLM 和编排器尊重这些结构性标记。足够强的对抗性页面可能尝试模仿边界格式，但按进程生成的 CSPRNG 随机数（nonce）使其难以预测。
+- **插件是本地可执行文件**。只从你信任的维护者那里安装凭据插件。agent-browser 会限制发送给插件的数据并支持策略门控，但不会对任意本地可执行文件做沙盒隔离。
+- **插件配置不是密钥存储**。不要把保险库令牌或密码放进插件命令参数。请使用厂商自身的登录/会话机制，或 agent-browser 配置之外的环境。
+- **确认超时**。待处理的确认（confirmation）会在 60 秒后自动拒绝。编排器必须在该时间窗口内响应。
+- **非 TTY 自动拒绝**。当设置了 `--confirm-interactive` 但 stdin 不是终端（例如管道输入）时，操作会被自动拒绝，以防在非交互环境下发生误批准。
+
+## 认证保险库
+
+在本地存储凭据，并按名称引用。LLM 永远看不到密码。
+
+```bash
+# 保存凭据（若设置了 AGENT_BROWSER_ENCRYPTION_KEY 则加密存储）
+# 推荐：通过 stdin 管道传入密码，避免泄露到 shell 历史 / 进程列表
+echo "pass" | agent-browser auth save github --url https://github.com/login --username user --password-stdin
+
+# 或直接传参（会显示警告）
+agent-browser auth save github --url https://github.com/login --username user --password pass
+
+# 使用已保存的凭据登录
+agent-browser auth login github
+
+# 列出已保存的配置文件（仅名称和 URL，不含机密）
+agent-browser auth list
+
+# 查看配置文件元数据
+agent-browser auth show github
+
+# 删除配置文件
+agent-browser auth delete github
+```
+
+`auth login` 会按布局尺寸、计算后的可见性与不透明度，以及禁用/只读状态来过滤匹配的控件，自定义 CSS 选择器（selector）也不例外。如果选中的凭据字段在输入前被替换或转移了焦点，命令会直接失败而不提交。
+
+`auth login` 以 `load` 生命周期事件完成导航，然后等待表单选择器出现再填写/点击。这让延迟渲染的 SPA 登录页更可靠，同时避免在存在长驻后台请求的页面上因 `networkidle` 而挂起。
+
+如果登录表单依赖于页面内点击、质询通过、同意弹窗关闭或其他准备步骤所建立的状态，请使用 `--no-navigate` 保留当前文档：
+
+```bash
+agent-browser open https://example.com/
+agent-browser click "a[href='/login']"
+agent-browser auth login work --no-navigate
+```
+
+免导航模式要求已存在一个活动的顶层 HTTP(S) 页面。在填充任一凭据之前，它会按协议、主机和有效端口比较页面源与生效的凭据 URL，并在每次携带凭据的填充前重新校验。路径、查询串和片段可以不同。该 flag 只抑制初始导航；选择器等待、填充、提交点击以及提交触发的导航仍然有效。命令级 `--url` 优先于配置文件或提供商的 URL 元数据，并成为源约束。
+
+自动检测失败时可以指定自定义选择器：
+
+```bash
+agent-browser auth save myapp \
+  --url https://app.example.com/login \
+  --username user --password pass \
+  --username-selector "#email" \
+  --password-selector "#password" \
+  --submit-selector "button.login"
+```
+
+配置文件存储在 `~/.agent-browser/auth/`，始终使用 AES-256-GCM 加密。如果未设置 `AGENT_BROWSER_ENCRYPTION_KEY`，首次使用时会在 `~/.agent-browser/.encryption-key` 自动生成密钥。请备份该文件，或显式设置该环境变量，以便迁移。
+
+无论 Unix（`chmod 600`/`700`）还是 Windows（用 `icacls` 限定为当前用户），文件权限都会强制收紧，以防其他用户读取加密密钥或认证配置文件。
+
+### 插件
+
+插件通过 `agent-browser.plugin.v1` stdio JSON 协议在独立进程中运行。可在 `~/.agent-browser/config.json` 中配置，设置 `AGENT_BROWSER_PLUGINS`，或用 `--config` 加载受信任的文件。自动发现的 `./agent-browser.json` 会忽略 `plugins` 并给出警告；显式加载的文件则会取代默认的配置发现。
+
+插件编写协议与实现示例见[插件](/plugins)。使用 `agent-browser plugin add <ref>` 可自动创建插件配置。
+
+```json
+{
+  "plugins": [
+    {
+      "name": "vault",
+      "command": "agent-browser-plugin-vault",
+      "capabilities": ["credential.read"]
+    },
+    {
+      "name": "cloud-browser",
+      "command": "agent-browser-plugin-cloud-browser",
+      "capabilities": ["browser.provider"]
+    },
+    {
+      "name": "stealth",
+      "command": "agent-browser-plugin-stealth",
+      "capabilities": ["launch.mutate"]
+    },
+    {
+      "name": "captcha",
+      "command": "agent-browser-plugin-captcha",
+      "capabilities": ["command.run", "captcha.solve"]
+    }
+  ]
+}
+```
+
+查看已配置的插件：
+
+```bash
+agent-browser plugin list
+agent-browser plugin show vault
+```
+
+用插件登录：
+
+```bash
+agent-browser auth login my-app --credential-provider vault --item "My App"
+agent-browser auth login my-app --credential-provider vault --item "My App" --no-navigate --url https://identity.example.com/login
+```
+
+将插件用作浏览器提供商：
+
+```bash
+agent-browser --provider cloud-browser open https://example.com
+```
+
+使用通用插件命令：
+
+```bash
+agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"...","url":"https://example.com"}'
+```
+
+凭据插件接收 `credential.resolve`，返回用户名、密码，以及可选的 URL 或选择器元数据。浏览器提供商插件接收 `browser.launch`，返回 CDP WebSocket URL。启动变更插件接收 `launch.mutate`，可在 Chrome 启动前追加本地启动参数、扩展或初始化脚本源码。通用命令插件接收传给 `plugin run` 的请求类型。
+
+`plugin run` 用于 `command.run` 和自定义能力（capability）。核心能力与协议请求类型走各自的专用命令路径，这样凭据、浏览器提供商和启动变更访问就始终处于正常策略门控之内。
+
+agent-browser 将浏览器自动化、对脱敏敏感的输出和策略执行保留在核心中。凭据插件的机密不会出现在命令参数、仪表盘事件或正常命令输出里。
+
+用能力操作对插件访问进行门控：
+
+```bash
+agent-browser --confirm-actions plugin:vault:credential.read auth login my-app --credential-provider vault --item "My App"
+agent-browser --confirm-actions plugin:cloud-browser:browser.provider --provider cloud-browser open https://example.com
+agent-browser --confirm-actions plugin:stealth:launch.mutate open https://example.com
+```
+
+## 内容边界标记
+
+启用 `--content-boundaries` 后，所有来自页面的输出都会包裹在结构性标记中，使 LLM 能够区分工具输出与不可信的页面内容：
+
+```
+--- AGENT_BROWSER_PAGE_CONTENT nonce=a1b2c3d4 origin=https://example.com ---
+[snapshot / text / html / eval output here]
+--- END_AGENT_BROWSER_PAGE_CONTENT nonce=a1b2c3d4 ---
+```
+
+nonce 是每次 CLI 进程调用生成的随机值，使可能试图伪造边界的页面内容无法预测它。
+
+通过 flag 或环境变量启用：
+
+```bash
+agent-browser --content-boundaries snapshot
+# 或
+export AGENT_BROWSER_CONTENT_BOUNDARIES=1
+```
+
+受影响的输出类型：`snapshot`、`get text`、`get html`、`eval`、`console`。
+
+在 `--json` 模式下，边界元数据会以 `_boundary` 对象的形式注入 JSON 响应，其中包含 `nonce` 与 `origin` 字段，便于编排器以程序化方式验证来源：
+
+```json
+{
+  "success": true,
+  "data": { "snapshot": "...", "origin": "https://example.com" },
+  "_boundary": { "nonce": "a1b2c3d4e5f6...", "origin": "https://example.com" }
+}
+```
+
+## 域名允许列表
+
+限制浏览器可交互的域名，防范基于重定向的攻击和数据外泄：
+
+```bash
+agent-browser --allowed-domains "example.com,*.example.com,github.com" open https://example.com
+# 或
+export AGENT_BROWSER_ALLOWED_DOMAINS="example.com,*.example.com"
+```
+
+支持精确匹配（`github.com`）和通配符前缀（`*.example.com`，同时也匹配裸域名 `example.com`）。指向未允许域名的页面导航与子资源请求（脚本、图片、fetch、XHR 等）都会被拦截。WebSocket 与 EventSource 连接通过构造函数级别的补丁拦截，`sendBeacon` 对被拦截目标返回 `false`。专用 worker 与共享 worker 由引导包装器防护；如果页面 CSP 禁止该包装器，worker 会按失败处理（fail closed），而不是在没有允许列表防护的情况下运行。允许列表生效期间，受支持的 Chromium 会话会彻底禁用 WebRTC 对等连接，因为 STUN、TURN 和 DNS 流量不经过 CDP Fetch 拦截。本地启动的 Chrome 还会启用 `disable_non_proxied_udp` 作为第二层防护。预先存在的 CDP 会话、自动连接、Chrome 配置文件、直连页面的提供商插件、agent-browser 恢复或状态文件重放、选择配置文件/恢复会话/打开启动页面的原生 Chrome 参数，以及 iOS 和 Safari 都会拒绝此选项，因为 agent-browser 无法在页面脚本运行前安装等效隔离。data URI 和 blob 等非 http(s) 子资源仍被允许。请求被拦截时，命令会返回错误。
+
+> **注意**：WebSocket 与 EventSource 拦截属于尽力而为，因为它靠初始化脚本覆盖浏览器构造函数。如果允许了 `eval` 操作类别，页面脚本理论上可以恢复原始构造函数。WebRTC 的替换以不可配置（non-configurable）构造函数的形式安装，Chrome 的 UDP 策略则为本地启动提供纵深防御。要获得最大保护，请通过 `--action-policy` 拒绝 `eval` 类别，并在使用 `--allowed-domains` 时强制执行操作系统出口策略。
+
+允许列表、操作策略与确认类别会随会话持久化。它们存储在 socket 目录下仅属主可访问的 `<session>.settings` 文件中，守护进程重启后会重新应用，因此崩溃、空闲超时（idle timeout）过期或 `kill` 都不会让下一条命令失去隔离。新值会覆盖已存储的值，成功的 `close` 会删除该文件（`close --all` 也会按各自存储的策略关闭守护进程已消失的会话）。相对的策略路径会以绝对路径存储。被拒绝或处于待确认状态的 `close`，以及守护进程为升级或变更选项而重启 CLI 的情形，都会保留该文件。如果该文件不可读、损坏，或（在 Unix 上）可被其他用户访问，守护进程会拒绝启动并打印文件名；运行 `agent-browser --session <name> close` 即可清除。已存储的允许列表生效期间，`--state` 与 `state load` 始终被拒绝。
+
+配置文件：
+
+```json
+{
+  "allowedDomains": ["example.com", "*.example.com", "github.com"]
+}
+```
+
+> **CDN 与第三方资源**：域名过滤器会拦截所有指向未允许域名的子资源请求（脚本、样式表、图片、字体、fetch/XHR）。大多数网站都会从 CDN 域名加载资源。请把它们加入允许列表，否则页面会加载失败。例如：
+>
+> ```bash
+> --allowed-domains "myapp.com,*.myapp.com,cdn.jsdelivr.net,fonts.googleapis.com,fonts.gstatic.com"
+> ```
+
+## 操作策略
+
+使用静态策略文件对操作进行门控。策略由守护进程强制执行——被拒绝的操作会立即失败。
+
+```bash
+agent-browser --action-policy ./policy.json open https://example.com
+# 或
+export AGENT_BROWSER_ACTION_POLICY=./policy.json
+```
+
+策略示例（默认放行，仅拒绝特定类别）：
+
+```json
+{
+  "default": "allow",
+  "deny": ["eval", "download", "upload"]
+}
+```
+
+策略示例（严格限制）：
+
+```json
+{
+  "default": "deny",
+  "allow": ["navigate", "snapshot", "click", "scroll", "wait", "get"]
+}
+```
+
+策略文件缺失或无效会阻塞所有命令，直至修复（`close --all` 仍可关闭守护进程）；空的 `allow` 列表会回退到 `default`。
+
+<table>
+  <thead>
+    <tr><th>类别</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>navigate</code></td><td>open, back, forward, reload, tab new</td></tr>
+    <tr><td><code>click</code></td><td>click, dblclick, tap</td></tr>
+    <tr><td><code>fill</code></td><td>fill, type, keyboard type/inserttext, select, check, uncheck</td></tr>
+    <tr><td><code>eval</code></td><td>eval, evalhandle, addscript, addinitscript, addstyle, expose, setcontent</td></tr>
+    <tr><td><code>download</code></td><td>download, waitfordownload</td></tr>
+    <tr><td><code>upload</code></td><td>upload</td></tr>
+    <tr><td><code>snapshot</code></td><td>snapshot, screenshot, pdf, diff</td></tr>
+    <tr><td><code>scroll</code></td><td>scroll, scrollintoview</td></tr>
+    <tr><td><code>wait</code></td><td>wait, waitforurl, waitforloadstate, waitforfunction</td></tr>
+    <tr><td><code>read</code></td><td>read</td></tr>
+    <tr><td><code>get</code></td><td>get text/html/url/title, count, isvisible, getbyrole, getbytext, getbylabel, etc.</td></tr>
+    <tr><td><code>interact</code></td><td>hover, focus, drag, press, keydown, keyup, mousemove, dispatch</td></tr>
+    <tr><td><code>network</code></td><td>network route/unroute, requests, har start/stop</td></tr>
+    <tr><td><code>state</code></td><td>state save/load, cookies set, storage set</td></tr>
+  </tbody>
+</table>
+
+认证保险库操作可将机密排除在正常命令输出与 LLM 上下文之外。域名允许列表的限制同样适用于 `auth login` 的导航。基于插件的登录还会暴露能力操作 `plugin:<name>:credential.read`，供策略与确认门控使用。
+
+## 操作确认
+
+对于需要明确批准的操作，使用 `--confirm-actions` 指定需要确认的类别：
+
+```bash
+# 编排器模式：返回 confirmation_required 响应
+agent-browser --confirm-actions eval,download eval "document.title"
+
+# 然后批准或拒绝：
+agent-browser confirm c_8f3a1234
+agent-browser deny c_8f3a1234
+```
+
+交互式（人机协同，human-in-the-loop）确认：
+
+```bash
+agent-browser --confirm-actions eval,download --confirm-interactive eval "document.title"
+# 提示：Allow? [y/N]
+```
+
+待处理的确认会在 60 秒后自动拒绝。
+
+> **非 TTY 行为**：当设置了 `--confirm-interactive` 但 stdin 不是 TTY（例如管道输入或在自动化流水线中运行）时，操作会被自动拒绝。这可以防止在非交互环境下发生误批准。
+
+## 输出长度限制
+
+通过截断超大的页面输出来防止上下文淹没：
+
+```bash
+agent-browser --max-output 50000 get text body
+# 或
+export AGENT_BROWSER_MAX_OUTPUT=50000
+```
+
+受影响的输出类型：`snapshot`、`get text`、`get html`、`eval`、`console`。
+
+## 环境变量
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AGENT_BROWSER_CONTENT_BOUNDARIES</code></td><td>将页面输出包裹在边界标记中</td></tr>
+    <tr><td><code>AGENT_BROWSER_MAX_OUTPUT</code></td><td>页面输出的最大字符数</td></tr>
+    <tr><td><code>AGENT_BROWSER_ALLOWED_DOMAINS</code></td><td>逗号分隔的允许域名模式；需要一个全新可控的浏览器上下文，且不带 profile/会话启动参数、恢复/状态重放或直连页面的提供商插件</td></tr>
+    <tr><td><code>AGENT_BROWSER_ACTION_POLICY</code></td><td>操作策略 JSON 文件路径</td></tr>
+    <tr><td><code>AGENT_BROWSER_CONFIRM_ACTIONS</code></td><td>逗号分隔的需要确认的操作类别</td></tr>
+    <tr><td><code>AGENT_BROWSER_CONFIRM_INTERACTIVE</code></td><td>启用交互式确认提示</td></tr>
+    <tr><td><code>AGENT_BROWSER_ENCRYPTION_KEY</code></td><td>AES-256-GCM 加密用的 64 位十六进制密钥（认证保险库 + 会话）</td></tr>
+    <tr><td><code>AGENT_BROWSER_PLUGINS</code></td><td>JSON 插件注册表覆盖</td></tr>
+  </tbody>
+</table>
+
+## 推荐配置
+
+面向生产环境的 AI 智能体部署：
+
+```json
+{
+  "contentBoundaries": true,
+  "maxOutput": 50000,
+  "allowedDomains": ["your-app.com", "*.your-app.com"],
+  "actionPolicy": "./policy.json"
+}
+```

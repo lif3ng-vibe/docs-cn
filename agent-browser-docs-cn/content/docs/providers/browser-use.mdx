@@ -1,0 +1,57 @@
+---
+title: "Browser Use"
+navTitle: "Browser Use"
+---
+
+[Browser Use](https://browser-use.com) 是一个面向 AI 智能体的开源浏览器自动化项目，在 GitHub 上拥有[超过 10 万 star](https://github.com/browser-use/browser-use)，并提供托管的 Cloud 浏览器服务。在没有本地浏览器的环境（如 serverless 与 CI 环境）中运行 agent-browser 时，Browser Use Cloud 很有用。
+
+## 设置
+
+```bash
+export BROWSER_USE_API_KEY="your-api-key"
+agent-browser -p browseruse open https://example.com
+```
+
+或在 CI/脚本中使用环境变量：
+
+```bash
+export AGENT_BROWSER_PROVIDER=browseruse
+export BROWSER_USE_API_KEY="your-api-key"
+agent-browser open https://example.com
+```
+
+`-p` flag 优先于 `AGENT_BROWSER_PROVIDER`。
+
+## 浏览器设置
+
+<table>
+  <thead>
+    <tr><th>环境变量</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>BROWSER_USE_PROFILE_ID</code></td><td>用于持久化 cookie 与登录状态的 Profile UUID</td></tr>
+    <tr><td><code>BROWSER_USE_PROXY_COUNTRY</code></td><td>托管代理的国家/地区，设为 <code>none</code>/<code>direct</code> 可禁用代理</td></tr>
+    <tr><td><code>BROWSER_USE_ENABLE_RECORDING</code></td><td>录制 Cloud 浏览器会话</td></tr>
+  </tbody>
+</table>
+
+```bash
+export BROWSER_USE_PROFILE_ID="your-profile-uuid"
+export BROWSER_USE_PROXY_COUNTRY="de"
+export BROWSER_USE_ENABLE_RECORDING="true"
+agent-browser -p browseruse open https://example.com
+```
+
+启用后，agent-browser 会创建 Browser Use Cloud V4 会话并连接其 CDP 端点。Browser Use 的设置阶段限时 18 秒；若超时，最多再花 4 秒清理。设置阶段内，创建最多等待 10 秒，CDP 附加最多 8 秒；每个停止请求最多等待 4 秒。导航及其他页面命令保持原有超时。如果创建在返回浏览器 id 之前失败，结果未知；重试前请先检查 Browser Use Cloud 仪表盘，因为浏览器可能已被创建。
+
+Cloud 浏览器在命令之间保持活跃。任务结束后请运行 `agent-browser close`。守护进程退出时也会尝试清理（包括默认的一小时空闲超时）；停止失败可能使 Cloud 浏览器继续运行。
+
+## 关闭与恢复
+
+如果停止操作持续返回 404，请在 Browser Use Cloud 中核实浏览器状态。确认已停止后，换一个新的 `--session` 名称继续；agent-browser 不会把 404 当作停止成功的证明。
+
+只有 Browser Use 确认浏览器已停止后，`close` 才会成功。停止失败时，`close` 返回错误并保留会话 id，因此再次运行 `agent-browser close` 会重试同一浏览器，且在挂起的浏览器释放之前，新启动会被阻止。
+
+如果守护进程在停止成功之前退出，请到 Browser Use Cloud 仪表盘手动停止浏览器。
+
+从 [Browser Use Cloud 仪表盘](https://cloud.browser-use.com/settings?tab=api-keys)获取 API key。

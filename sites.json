@@ -499,5 +499,18 @@
       "stack": "geistdocs (Next.js 16 静态导出)",
       "snap": "2026-11-05"
     }
+  },
+  {
+    "name": "agent-browser",
+    "slug": "agent-browser",
+    "desc": "agent-browser 中文文档（非官方翻译）——Vercel 开源的 AI 浏览器自动化 CLI：快照—下钻—操作—验证循环驱动真实浏览器，紧凑文本输出节省 token，50+ 命令覆盖导航/表单/截图/网络/存储/标签页，支持无头/有头、CDP、会话与视频录制。",
+    "tags": ["ai-agent", "cli-tool", "sdk-api"],
+    "orig": "https://agent-browser.dev",
+    "repo": "https://github.com/vercel-labs/agent-browser",
+    "meta": {
+      "pages": "38 页 + 首页",
+      "stack": "geistdocs (Next.js 16 静态导出)",
+      "snap": "2026-11-08"
+    }
   }
 ]

@@ -1,0 +1,96 @@
+---
+title: "快速开始"
+navTitle: "快速开始"
+---
+
+## 核心工作流
+
+每次浏览器自动化都遵循这个模式：
+
+```bash
+# 1. 导航
+agent-browser open example.com
+
+# 2. 快照获取元素引用（ref）
+agent-browser snapshot -i
+# 输出：
+# @e1 [heading] "Example Domain"
+# @e2 [link] "More information..."
+
+# 3. 使用引用（ref）交互
+agent-browser click @e2
+
+# 4. 页面变化后重新快照
+agent-browser snapshot -i
+```
+
+## 常用命令
+
+```bash
+agent-browser open example.com
+agent-browser snapshot -i                # 获取带引用（ref）的交互元素
+agent-browser click @e2                  # 按引用（ref）点击
+agent-browser fill @e3 "test@example.com" # 按引用（ref）填写输入框
+agent-browser get text @e1               # 获取文本内容
+agent-browser screenshot                 # 保存到临时目录
+agent-browser screenshot page.png        # 保存到指定路径
+agent-browser close
+```
+
+## 传统选择器
+
+也支持 CSS 选择器与语义定位器：
+
+```bash
+agent-browser click "#submit"
+agent-browser fill "#email" "test@example.com"
+agent-browser find role button click --name "Submit"
+```
+
+## 有头模式
+
+调试时显示浏览器窗口：
+
+```bash
+agent-browser open example.com --headed
+```
+
+## 等待内容
+
+```bash
+agent-browser wait @e1                   # 等待元素
+agent-browser wait --text "Welcome"      # 等待预期文本
+agent-browser wait --url "**/dashboard"  # 等待 URL 匹配模式
+agent-browser wait --fn "window.appReady === true" # 等待 JS 条件
+agent-browser wait --load domcontentloaded # 等待 DOM 生命周期事件
+```
+
+页面变化后，优先选择能代表你所需要结果的条件。只有当生命周期事件本身就是里程碑时才使用 `load` 或 `domcontentloaded`。`networkidle` 对已知会安静下来的页面仍然可用，但 SSE、WebSocket、轮询与长轮询可能让它永远无法满足。
+
+## 命令链接
+
+在单次 shell 调用中用 `&&` 串联命令。浏览器通过后台守护进程保持运行，因此串联既安全又高效：
+
+```bash
+# 一次调用完成打开、等待与快照
+agent-browser open example.com && agent-browser wait --load domcontentloaded && agent-browser snapshot -i
+
+# 串联多个交互
+agent-browser fill @e1 "user@example.com" && agent-browser fill @e2 "pass" && agent-browser click @e3
+
+# 导航并截图
+agent-browser open example.com && agent-browser wait --load load && agent-browser screenshot page.png
+```
+
+不需要中间输出时使用 `&&`。需要先解析输出时（例如先快照发现引用再交互）则分开执行命令。
+
+## JSON 输出
+
+供脚本中做程序化解析：
+
+```bash
+agent-browser snapshot --json
+agent-browser get text @e1 --json
+```
+
+注意：默认文本输出更紧凑，更适合 AI 智能体。

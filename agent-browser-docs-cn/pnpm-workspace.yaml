@@ -1,0 +1,21 @@
+packages:
+  - '.'
+
+fetchTimeout: 600000
+
+# 沿用上游策略：只安装发布满 2 天的版本，避免踩刚发布的坏版本
+minimumReleaseAge: 2880
+
+# 沿用上游对 next 16.3.4 的补丁（Vary header set→append）
+patchedDependencies:
+  '@vercel/geistdocs@2.7.5': patches/@vercel__geistdocs@2.7.5.patch
+  next@16.3.4: patches/next@16.3.4.patch
+
+# 沿用上游：这几个原生依赖禁跑构建脚本（docs 构建不依赖它们的 native 产物）
+allowBuilds:
+  esbuild: false
+  '@mongodb-js/zstd': false
+  msw: false
+  node-liblzma: false
+  sharp: false
+  unrs-resolver: false

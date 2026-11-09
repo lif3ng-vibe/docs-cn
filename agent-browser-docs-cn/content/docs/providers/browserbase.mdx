@@ -1,0 +1,27 @@
+---
+title: "Browserbase"
+navTitle: "Browserbase"
+---
+
+[Browserbase](https://browserbase.com) 提供远程浏览器基础设施，让智能体浏览代理的部署更轻松。在无法使用本地浏览器的环境中运行 agent-browser 时使用它。
+
+## 设置
+
+```bash
+export BROWSERBASE_API_KEY="your-api-key"
+agent-browser -p browserbase open https://example.com
+```
+
+或在 CI/脚本中使用环境变量：
+
+```bash
+export AGENT_BROWSER_PROVIDER=browserbase
+export BROWSERBASE_API_KEY="your-api-key"
+agent-browser open https://example.com
+```
+
+`-p` flag 优先于 `AGENT_BROWSER_PROVIDER`。
+
+启用后，agent-browser 会连接 Browserbase 会话，而不是启动本地浏览器。所有命令的工作方式完全相同。
+
+从 [Browserbase 仪表盘](https://browserbase.com/overview)获取 API key。

@@ -1,0 +1,92 @@
+---
+title: "AgentCore"
+navTitle: "AgentCore"
+---
+
+[AWS Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/) 提供带 SigV4 认证的云浏览器会话。在 AWS 环境中运行 agent-browser，或需要由 AWS 基础设施支撑的托管云浏览器时使用它。
+
+## 设置
+
+凭据自动从以下来源解析：
+
+1. 环境变量（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`）
+2. AWS CLI（`aws configure export-credentials`），支持 SSO、配置文件、IAM 角色等
+
+```bash
+agent-browser -p agentcore open https://example.com
+```
+
+或在 CI/脚本中使用环境变量：
+
+```bash
+export AGENT_BROWSER_PROVIDER=agentcore
+agent-browser open https://example.com
+```
+
+`-p` flag 优先于 `AGENT_BROWSER_PROVIDER`。
+
+## 配置
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AGENTCORE_REGION</code></td><td>AgentCore 端点的 AWS 区域</td><td><code>us-east-1</code></td></tr>
+    <tr><td><code>AGENTCORE_BROWSER_ID</code></td><td>浏览器标识符</td><td><code>aws.browser.v1</code></td></tr>
+    <tr><td><code>AGENTCORE_PROFILE_ID</code></td><td>用于持久状态（cookie、localStorage）的浏览器配置文件</td><td>（无）</td></tr>
+    <tr><td><code>AGENTCORE_SESSION_TIMEOUT</code></td><td>会话超时（秒）</td><td><code>3600</code></td></tr>
+    <tr><td><code>AWS_PROFILE</code></td><td>用于凭据解析的 AWS CLI 配置文件</td><td><code>default</code></td></tr>
+    <tr><td><code>AWS_ACCESS_KEY_ID</code></td><td>AWS 访问密钥（在 AWS CLI 回退之前检查）</td><td>（无）</td></tr>
+    <tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td>AWS 私有密钥</td><td>（无）</td></tr>
+    <tr><td><code>AWS_SESSION_TOKEN</code></td><td>临时会话令牌（用于 STS/SSO 凭据）</td><td>（无）</td></tr>
+  </tbody>
+</table>
+
+## 浏览器配置文件
+
+用 `AGENTCORE_PROFILE_ID` 跨会话持久化浏览器状态（cookie、localStorage）：
+
+```bash
+AGENTCORE_PROFILE_ID=my-profile agent-browser -p agentcore open https://example.com
+```
+
+设置配置文件后，AgentCore 会在会话之间自动存储并恢复浏览器状态。
+
+## Live View
+
+会话启动时，AgentCore 会向 stderr 打印 Live View URL：
+
+```
+Session: abc123-def456
+Live View: https://us-east-1.console.aws.amazon.com/bedrock-agentcore/browser/aws.browser.v1/session/abc123-def456#
+```
+
+在浏览器中打开该 URL，即可从 AWS 控制台实时观看智能体会话。
+
+## 凭据解析
+
+AgentCore 采用轻量级手动 SigV4 签名（不依赖 AWS SDK）。凭据按以下顺序解析：
+
+1. **环境变量**（`AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY`，可选 `AWS_SESSION_TOKEN`）
+2. **AWS CLI**（`aws configure export-credentials --format env`），支持 SSO、IAM 角色、凭据文件与配置文件
+
+使用 SSO 时，先运行 `aws sso login` 再启动 agent-browser。设置 `AWS_PROFILE` 可选择特定的命名配置文件。
+
+## 示例
+
+```bash
+# 基本用法（凭据经 AWS CLI 自动解析）
+agent-browser -p agentcore open https://example.com
+
+# 使用浏览器配置文件持久化登录状态
+AGENTCORE_PROFILE_ID=my-profile agent-browser -p agentcore open https://x.com/home
+
+# 显式指定区域
+AGENTCORE_REGION=eu-west-1 agent-browser -p agentcore open https://example.com
+
+# 使用 SSO 配置文件
+AWS_PROFILE=my-sso-profile agent-browser -p agentcore open https://example.com
+```
+
+启用后，agent-browser 会连接 AgentCore 云浏览器会话，而不是启动本地浏览器。所有命令的工作方式完全相同。

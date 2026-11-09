@@ -1,0 +1,94 @@
+---
+title: "远程 Agent Browser"
+navTitle: "远程 Agent Browser"
+---
+
+[Remote Agent Browser](https://github.com/vercel-labs/remote-agent-browser) 在隔离的 [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) 中运行 agent-browser。当 TypeScript 应用需要按需创建浏览器、又不想管理本地 Chrome 进程时使用它。
+
+Remote Agent Browser 是一个库，而不是 agent-browser 的 `-p` 提供商。在你的应用中导入它，并用返回的客户端运行 agent-browser 命令。
+
+## 设置
+
+```bash
+pnpm add remote-agent-browser
+```
+
+在 Vercel 上通过 `VERCEL_OIDC_TOKEN` 自动认证。本地开发时，先关联一个 Vercel 项目并拉取其环境：
+
+```bash
+vercel link
+vercel env pull .env.local
+```
+
+## 创建浏览器
+
+```ts
+import { AgentBrowser } from "remote-agent-browser";
+
+const browser = await AgentBrowser.create();
+
+try {
+  await browser.exec("open", {
+    args: ["https://example.com"],
+  });
+
+  const snapshot = await browser.exec("snapshot");
+  console.log(snapshot.stdout);
+} finally {
+  await browser.close();
+}
+```
+
+通过同一客户端发出的命令共享同一页面、cookie、标签页与元素引用。工作完成后请务必关闭一次性客户端。
+
+## 稳定浏览器会话
+
+当浏览器身份需要跨进程存活时，使用稳定 ID：
+
+```ts
+const browser = AgentBrowser.session({
+  id: `chat:${chatId}`,
+});
+
+const stopKeepalive = browser.keepalive();
+
+try {
+  await browser.exec("open", {
+    args: ["https://example.com"],
+  });
+} finally {
+  stopKeepalive();
+}
+```
+
+第一条命令会找到或创建该命名的 Sandbox。之后使用同一 ID 的进程可以附加到它。如果过期 Sandbox 恢复运行，Chromium 会全新启动，内存中的页面状态被重置。
+
+## 自定义浏览器镜像
+
+默认镜像是 `remote-agent-browser:latest`。传入 Vercel Container Registry 的仓库、tag、digest 或完整引用即可使用自定义镜像：
+
+```ts
+const browser = await AgentBrowser.create({
+  image: "vcr.vercel.com/my-team/my-project/my-browser:v1",
+});
+```
+
+也可以设置 `REMOTE_AGENT_BROWSER_IMAGE`，为所有客户端配置镜像。
+
+## 选项
+
+<table>
+  <thead>
+    <tr><th>选项</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>image</code></td><td>包含 agent-browser 与 Chromium 的 Vercel Container Registry 镜像</td><td><code>remote-agent-browser:latest</code></td></tr>
+    <tr><td><code>timeoutMs</code></td><td>Sandbox 真实时钟超时（毫秒）</td><td><code>600000</code></td></tr>
+    <tr><td><code>vcpus</code></td><td>Sandbox 的 vCPU 数量</td><td><code>2</code></td></tr>
+    <tr><td><code>env</code></td><td>为 Sandbox 中命令附加的环境变量</td><td><code>{}</code></td></tr>
+    <tr><td><code>args</code></td><td>应用到每条命令的全局 agent-browser CLI 参数</td><td><code>[]</code></td></tr>
+    <tr><td><code>proxy</code></td><td>浏览器客户端的代理 URL 或代理配置</td><td>（无）</td></tr>
+  </tbody>
+</table>
+
+文件传输、代理配置、类型化 JSON 输出、保活与稳定会话的示例请见 [Remote Agent Browser 仓库](https://github.com/vercel-labs/remote-agent-browser)。

@@ -1,0 +1,96 @@
+---
+title: "Lightpanda"
+navTitle: "Lightpanda"
+---
+
+[Lightpanda](https://lightpanda.io/) 是一个用 Zig 从零构建、面向机器的无头浏览器引擎。它即时启动，内存占用比 Chrome 低 10 倍，执行速度快 10 倍。
+
+agent-browser 以与管理 Chrome 相同的方式管理 Lightpanda——启动进程、经 CDP 连接、再将其关闭。所有下游命令（snapshot、click、fill、screenshot 等）都走同一条 CDP 协议路径。
+
+## 安装
+
+在配合 agent-browser 使用之前，先安装 Lightpanda 二进制：
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>命令</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>macOS（Apple Silicon）</td>
+      <td><code>curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && chmod a+x ./lightpanda</code></td>
+    </tr>
+    <tr>
+      <td>Linux（x86_64）</td>
+      <td><code>curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && chmod a+x ./lightpanda</code></td>
+    </tr>
+  </tbody>
+</table>
+
+把二进制移动到 `PATH` 中的某个位置（如 `/usr/local/bin/lightpanda` 或 `~/.local/bin/lightpanda`）。
+
+更多选项见 [Lightpanda 安装文档](https://lightpanda.io/docs/open-source/installation)。
+
+## 用法
+
+用 `--engine` flag 选择 Lightpanda：
+
+```bash
+agent-browser --engine lightpanda open example.com
+agent-browser --engine lightpanda snapshot
+agent-browser --engine lightpanda screenshot
+```
+
+或通过环境变量将其设为默认：
+
+```bash
+export AGENT_BROWSER_ENGINE=lightpanda
+agent-browser open example.com
+```
+
+或写在 `~/.agent-browser/config.json` 或经 `--config` 加载的文件中：
+
+```json
+{
+  "engine": "lightpanda"
+}
+```
+
+## 自定义二进制路径
+
+如果 `lightpanda` 二进制不在 `PATH` 中，使用 `--executable-path`：
+
+```bash
+agent-browser --engine lightpanda --executable-path /path/to/lightpanda open example.com
+```
+
+## 与 Chrome 的差异
+
+Lightpanda 是专为无头场景打造的引擎，部分 Chrome 专属功能不可用：
+
+<table>
+  <thead>
+    <tr><th>功能</th><th>状态</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>扩展（<code>--extension</code>）</td><td>不支持</td></tr>
+    <tr><td>持久配置文件（<code>--profile</code>）</td><td>不支持</td></tr>
+    <tr><td>存储状态（<code>--state</code>）</td><td>不支持</td></tr>
+    <tr><td>文件访问（<code>--allow-file-access</code>）</td><td>不支持</td></tr>
+    <tr><td>有头模式（<code>--headed</code>）</td><td>不适用（仅无头）</td></tr>
+    <tr><td>截图</td><td>取决于 Lightpanda 的 CDP 支持</td></tr>
+  </tbody>
+</table>
+
+把 `--engine lightpanda` 与不支持的 flag 组合使用时，agent-browser 会返回明确的错误。
+
+## 何时使用 Lightpanda
+
+Lightpanda 适合：
+
+- 快速的网页抓取与数据提取
+- 对速度与低内存敏感的 AI 智能体工作流
+- 资源受限的 CI/CD 环境
+- 大规模并行自动化
+
+需要完整浏览器保真度、扩展或持久配置文件时，请使用 Chrome。

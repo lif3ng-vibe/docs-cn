@@ -1,0 +1,421 @@
+---
+title: "插件"
+navTitle: "插件"
+---
+
+插件让 agent-browser 与外部工具集成，而无需把这些工具塞进核心。插件是一个本地可执行文件：从 stdin 读取一个 JSON 请求，向 stdout 写出一个 JSON 响应。
+
+插件适用于：由保险库（vault）支撑的登录、自定义浏览器提供商、本地启动定制，以及验证码（CAPTCHA）求解这类领域专用命令。
+
+## 何时编写插件
+
+当集成需要厂商 SDK、本地 CLI、凭据、付费 API，或不应成为 agent-browser 依赖的行为时，就写插件。
+
+适合做成插件的场景：
+
+- 从外部保险库解析登录凭据
+- 通过托管提供商启动浏览器并返回 CDP WebSocket URL
+- 附加本地 Chrome 启动参数、扩展或初始化脚本
+- 运行命名空间化命令，如 `captcha.solve`
+
+浏览器自动化本身留在 agent-browser 中。插件应当提供数据或启动配置，然后交回 agent-browser 继续驱动浏览器。
+
+## 适合做成插件的方向
+
+以下是插件作者的好起点：
+
+- **新型云端浏览器提供商**：托管浏览器平台是 `browser.provider` 的良好样板。既有的内置实现可以留在核心以保持兼容，但新提供商通常应从插件做起。
+- **保险库集成**：密码管理器、机密存储与企业 SSO 辅助工具适合 `credential.read`。本地加密认证保险库（auth vault）留在核心，而厂商专有的保险库访问放进插件。
+- **隐身与反检测**：这类技术变化很快，放进核心有风险。它们适合通过 `launch.mutate` 插件追加启动参数、扩展、初始化脚本或 User-Agent 覆盖。
+- **验证码求解器**：验证码集成涉及第三方 API、凭据、策略考量与厂商快速迭代，天然属于插件领地。可用 `command.run` 或 `captcha.solve` 这类自定义能力（capability）。
+- **厂商专有的认证辅助**：面向特定应用、IdP 或企业流程的登录辅助应放在核心之外，除非它们演化为通用的浏览器自动化原语。
+
+## 添加别人写好的插件
+
+用 `plugin add` 加上包名或仓库名：
+
+```bash
+agent-browser plugin add agent-browser-plugin-captcha
+agent-browser plugin add @company/agent-browser-plugin-vault --name vault
+agent-browser plugin add org/agent-browser-plugin-cloud-browser
+```
+
+agent-browser 依据引用形式选择来源：
+
+<table>
+  <thead>
+    <tr><th>引用形式</th><th>来源</th><th>示例</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>name</code></td><td>npm 包</td><td><code>agent-browser-plugin-captcha</code></td></tr>
+    <tr><td><code>@scope/name</code></td><td>带 scope 的 npm 包</td><td><code>@company/agent-browser-plugin-vault</code></td></tr>
+    <tr><td><code>owner/repo</code></td><td>GitHub 仓库</td><td><code>org/agent-browser-plugin-cloud-browser</code></td></tr>
+  </tbody>
+</table>
+
+`plugin add` 默认写入 `~/.agent-browser/config.json`。加 `--project` 则写入 `./agent-browser.json`（仅与 `--config` 配合使用）。
+
+添加过程中，agent-browser 会运行该包一次并请求 `plugin.manifest`。插件清单（manifest）声明插件名与能力。如果插件尚不支持清单，可按插件 README 给出的能力手动指定：
+
+```bash
+agent-browser plugin add agent-browser-plugin-captcha --capability command.run --capability captcha.solve --no-manifest
+```
+
+确认插件已配置：
+
+```bash
+agent-browser plugin list
+agent-browser plugin show captcha
+```
+
+然后通过其能力对应的命令路径使用它：
+
+```bash
+agent-browser auth login my-app --credential-provider vault --item "My App"
+agent-browser auth login my-app --credential-provider vault --item "My App" --no-navigate --url https://identity.example.com/login
+agent-browser --provider cloud-browser open https://example.com
+agent-browser open https://example.com
+agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"abc","url":"https://example.com"}'
+```
+
+`launch.mutate` 插件会在 `agent-browser open` 等本地启动时自动运行。
+
+凭据解析、浏览器启动与清理、启动变更出错时，诊断信息会略去插件响应中的错误文本与不支持的协议取值。清单发现与 `plugin run` 保留详细错误。插件仍是受信任的本地可执行文件；这种脱敏并不构成对它们的沙盒隔离。
+
+## 配置插件
+
+`plugin add` 会替你生成配置。你也可以手动编辑 `plugins` 数组：
+
+```json
+{
+  "plugins": [
+    {
+      "name": "vault",
+      "command": "agent-browser-plugin-vault",
+      "args": [],
+      "capabilities": ["credential.read"]
+    },
+    {
+      "name": "captcha",
+      "command": "agent-browser-plugin-captcha",
+      "capabilities": ["command.run", "captcha.solve"]
+    }
+  ]
+}
+```
+
+查看注册表：
+
+```bash
+agent-browser plugin list
+agent-browser plugin show vault
+```
+
+`AGENT_BROWSER_PLUGINS` 可用一个相同结构的 JSON 数组取代配置发现。
+
+不要把 API 令牌、保险库令牌或密码放进插件 `args`。请使用厂商自己的 CLI 登录、钥匙串、环境变量或会话机制，并置于 agent-browser 配置之外。
+
+## 协议
+
+agent-browser 启动该可执行文件，把下面的信封写入 stdin，等待 stdout，并将其解析为 JSON：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "type": "credential.resolve",
+  "capability": "credential.read",
+  "request": {}
+}
+```
+
+每个成功响应都必须包含相同的协议标识和 `success: true`：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "success": true,
+  "data": {}
+}
+```
+
+只有 stdout 会被解析。不要向 stdout 写任何日志。核心集成场景下 agent-browser 会屏蔽插件的 stderr，因此开发时请写文件或使用你自己的调试模式。
+
+核心集成会在用户可见的错误中略去插件提供的错误文本，以降低意外泄露机密的风险。通用的 `plugin run` 保留插件错误文本，因为它是面向开发者的命令。
+
+## 插件清单
+
+支持 `plugin.manifest`，用户即可免手动输入能力直接添加你的插件：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "type": "plugin.manifest",
+  "capability": "plugin.manifest",
+  "request": {}
+}
+```
+
+返回插件名与能力：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "success": true,
+  "manifest": {
+    "name": "captcha",
+    "capabilities": ["command.run", "captcha.solve"],
+    "description": "Solve CAPTCHA challenges through Example CAPTCHA"
+  }
+}
+```
+
+有清单时，用户只需运行：
+
+```bash
+agent-browser plugin add agent-browser-plugin-captcha
+```
+
+没有清单时，用户必须在添加时传 `--capability` flag。
+
+## 能力
+
+<table>
+  <thead>
+    <tr><th>能力</th><th>请求类型</th><th>用户调用方式</th><th>响应字段</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>credential.read</code></td><td><code>credential.resolve</code></td><td><code>auth login --credential-provider &lt;name&gt;</code></td><td><code>credential</code></td></tr>
+    <tr><td><code>browser.provider</code></td><td><code>browser.launch</code>、<code>browser.close</code></td><td><code>--provider &lt;name&gt;</code></td><td><code>browser</code></td></tr>
+    <tr><td><code>launch.mutate</code></td><td><code>launch.mutate</code></td><td>任意本地启动</td><td><code>launch</code></td></tr>
+    <tr><td><code>command.run</code></td><td>自定义请求类型</td><td><code>plugin run &lt;name&gt; &lt;type&gt;</code></td><td><code>data</code></td></tr>
+  </tbody>
+</table>
+
+插件可以声明 `captcha.solve` 这类自定义能力。`plugin run` 能调用 `command.run` 与自定义能力，但不能直接调用核心能力或协议请求类型。`credential.read`、`browser.provider` 与 `launch.mutate` 请使用各自的专用命令路径。
+
+## 最小插件
+
+这个插件实现 `captcha.solve` 并返回一个假令牌：
+
+```js
+#!/usr/bin/env node
+
+const chunks = [];
+for await (const chunk of process.stdin) {
+  chunks.push(chunk);
+}
+
+const input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+
+function reply(body) {
+  process.stdout.write(
+    JSON.stringify({
+      protocol: "agent-browser.plugin.v1",
+      success: true,
+      ...body,
+    })
+  );
+}
+
+if (input.protocol !== "agent-browser.plugin.v1") {
+  process.stdout.write(
+    JSON.stringify({
+      protocol: "agent-browser.plugin.v1",
+      success: false,
+      error: "unsupported protocol",
+    })
+  );
+  process.exit(0);
+}
+
+if (input.type === "plugin.manifest") {
+  reply({
+    manifest: {
+      name: "captcha",
+      capabilities: ["command.run", "captcha.solve"],
+      description: "Example CAPTCHA plugin",
+    },
+  });
+  process.exit(0);
+}
+
+if (input.type === "captcha.solve") {
+  reply({
+    data: {
+      token: "example-token",
+      siteKey: input.request.siteKey,
+      url: input.request.url,
+    },
+  });
+  process.exit(0);
+}
+
+process.stdout.write(
+  JSON.stringify({
+    protocol: "agent-browser.plugin.v1",
+    success: false,
+    error: `unsupported request type: ${input.type}`,
+  })
+);
+```
+
+赋予可执行权限并配置：
+
+```bash
+chmod +x ./agent-browser-plugin-captcha
+```
+
+```json
+{
+  "plugins": [
+    {
+      "name": "captcha",
+      "command": "./agent-browser-plugin-captcha",
+      "capabilities": ["command.run", "captcha.solve"]
+    }
+  ]
+}
+```
+
+运行它：
+
+```bash
+agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"abc","url":"https://example.com"}'
+```
+
+## 凭据插件
+
+凭据插件收到的请求：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "type": "credential.resolve",
+  "capability": "credential.read",
+  "request": {
+    "profileName": "my-app",
+    "itemRef": "My App",
+    "url": "https://app.example.com/login"
+  }
+}
+```
+
+返回 `credential`：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "success": true,
+  "credential": {
+    "username": "alice@example.com",
+    "password": "secret",
+    "url": "https://app.example.com/login",
+    "usernameSelector": "#username",
+    "passwordSelector": "#password",
+    "submitSelector": "input[type=submit]"
+  }
+}
+```
+
+用它登录一次：
+
+```bash
+agent-browser auth login my-app --credential-provider vault --item "My App"
+```
+
+对于需要先经有状态的页面内步骤才能到达登录表单的场景，加 `--no-navigate`。当前活动的顶层页面必须与生效的凭据 URL 具有相同的协议、主机与有效端口。命令级 `--url` 会覆盖提供商的 URL 元数据，在不导航的情况下提供这个预期源。提供商密钥始终不会出现在生成的进程参数与常规输出中：
+
+```bash
+agent-browser auth login my-app --credential-provider vault --item "My App" --no-navigate --url https://identity.example.com/login
+```
+
+对接外部保险库时，优先在插件内调用厂商 CLI 并复用它已有的本地会话。不要把保险库令牌写进 `agent-browser.json`。
+
+## 浏览器提供商插件
+
+浏览器提供商插件收到 `browser.launch`，返回一个 CDP URL：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "success": true,
+  "browser": {
+    "cdpUrl": "ws://127.0.0.1:9222/devtools/browser/session",
+    "directPage": false,
+    "metadata": {
+      "sessionId": "provider-session-id"
+    },
+    "cleanup": {
+      "sessionId": "provider-session-id"
+    }
+  }
+}
+```
+
+之后用户通过插件名启动：
+
+```bash
+agent-browser --provider cloud-browser open https://example.com
+```
+
+如果返回了 `cleanup` 且随后连接失败，agent-browser 稍后会把它作为 `browser.close` 的请求体原样发回。
+
+## 启动变更插件
+
+启动变更（launch mutator）插件在 Chrome 启动前收到本地启动选项，可以追加参数、扩展、初始化脚本或 User-Agent：
+
+```json
+{
+  "protocol": "agent-browser.plugin.v1",
+  "success": true,
+  "launch": {
+    "args": ["--disable-blink-features=AutomationControlled"],
+    "extensions": ["/absolute/path/to/extension"],
+    "initScripts": [
+      "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });"
+    ],
+    "userAgent": "my-agent/1.0"
+  }
+}
+```
+
+用 `launch.mutate` 配置它，然后使用任意本地启动命令：
+
+```bash
+agent-browser open https://example.com
+```
+
+CDP 连接与远端浏览器提供商不会触发启动变更插件，因为那些浏览器早已在本地启动路径之外运行。
+
+## 策略与确认
+
+插件访问以能力为粒度暴露为策略动作：
+
+```bash
+agent-browser --confirm-actions plugin:vault:credential.read auth login my-app --credential-provider vault --item "My App"
+agent-browser --confirm-actions plugin:cloud-browser:browser.provider --provider cloud-browser open https://example.com
+agent-browser --confirm-actions plugin:stealth:launch.mutate open https://example.com
+```
+
+动作字符串格式为 `plugin:<name>:<capability>`。
+
+## 打包指南
+
+npm 包请暴露一个不向 stdout 输出必需日志的 `bin` 命令：
+
+```json
+{
+  "name": "agent-browser-plugin-example",
+  "bin": {
+    "agent-browser-plugin-example": "./bin/plugin.js"
+  }
+}
+```
+
+保持插件小巧而明确：
+
+- 只声明它真正支持的能力
+- 从 stdin 恰好读取一个请求
+- 向 stdout 恰好写出一个 JSON 响应
+- 不要把机密放进命令行参数
+- 导航、选择器、截图、状态与策略交给 agent-browser 处理

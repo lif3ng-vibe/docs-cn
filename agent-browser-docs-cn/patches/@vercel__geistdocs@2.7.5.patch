@@ -1,0 +1,201 @@
+diff --git a/dist/controls.js b/dist/controls.js
+index b1b2db3280596d70c44d87023d8f036c06cff88d..0301231e4b2870fed56e5d7d8cd6414a6bfe12f6 100644
+--- a/dist/controls.js
++++ b/dist/controls.js
+@@ -15,7 +15,7 @@ export const SearchButton = ({ className, onClick }) => {
+     return (_jsxs("button", { className: cn("flex h-8 cursor-pointer items-center justify-between rounded-md border-0 bg-background-100 py-0 pr-1.5 pl-3.5 font-normal font-sans text-gray-1000 text-sm shadow-[0_0_0_1px_var(--ds-gray-400)] outline-none hover:bg-gray-100 focus-visible:shadow-focus-ring", className), onClick: () => {
+             setOpenSearch(true);
+             onClick?.();
+-        }, type: "button", children: [_jsx("span", { className: "pr-6", children: "Search\u2026" }), _jsx(Kbd, { className: "inline-flex items-center justify-center rounded", small: true, children: "\u2318K" })] }));
++        }, type: "button", children: [_jsx("span", { className: "pr-6", children: "搜索…" }), _jsx(Kbd, { className: "inline-flex items-center justify-center rounded", small: true, children: "\u2318K" })] }));
+ };
+ export const ThemeToggle = () => {
+     const { resolvedTheme, setTheme } = useTheme();
+diff --git a/dist/internal/feedback-action.js b/dist/internal/feedback-action.js
+index d4ea08f8f72f22a084dc8b14dffd62f8b91d6304..1653522e2cf18238c7c94f877f70424e21e73cea 100644
+--- a/dist/internal/feedback-action.js
++++ b/dist/internal/feedback-action.js
+@@ -1,40 +1,3 @@
+-"use server";
+-import { headers } from "next/headers";
+-const emotions = [
+-    { name: "cry", emoji: "😭" },
+-    { name: "sad", emoji: "😕" },
+-    { name: "happy", emoji: "🙂" },
+-    { name: "amazed", emoji: "🤩" },
+-];
+-const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+-const baseUrl = `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+-export const sendFeedback = async ({ url, feedback, siteId, }) => {
+-    const emoji = emotions.find((emotion) => emotion.name === feedback.emotion)?.emoji;
+-    const endpoint = new URL("/feedback", "https://geistdocs.com/feedback");
+-    const headersList = await headers();
+-    try {
+-        const response = await fetch(endpoint, {
+-            method: "POST",
+-            headers: {
+-                "Content-Type": "application/json",
+-            },
+-            body: JSON.stringify({
+-                note: feedback.message,
+-                url: new URL(url, baseUrl).toString(),
+-                emotion: emoji,
+-                ua: headersList.get("user-agent") ?? undefined,
+-                ip: headersList.get("x-real-ip") || headersList.get("x-forwarded-for"),
+-                label: siteId,
+-            }),
+-        });
+-        if (!response.ok) {
+-            console.error("Feedback submission failed:", response.status);
+-            return { success: false };
+-        }
+-        return { success: true };
+-    }
+-    catch (error) {
+-        console.error("Feedback submission error:", error);
+-        return { success: false };
+-    }
+-};
++// 中文静态导出镜像补丁：feedback 的 "use server" 与 output:'export' 不兼容，
++// config.feedback.enabled=false 已关闭反馈功能，这里直接桩掉。
++export const sendFeedback = async () => ({ success: false });
+diff --git a/dist/internal/page-actions-client.js b/dist/internal/page-actions-client.js
+index 52536707a6cf38804339861430e8aaa1f26b89e5..8d8afa142e16d07f5a461522c180eae12e76d40d 100644
+--- a/dist/internal/page-actions-client.js
++++ b/dist/internal/page-actions-client.js
+@@ -111,18 +111,18 @@ const getPageQuery = (href, origin) => {
+ const ScrollTopAction = () => (_jsxs("button", { className: actionClassName, onClick: () => {
+         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+         window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+-    }, type: "button", children: [_jsx(IconArrowCircleUp, { className: "size-3.5" }), _jsx("span", { children: "Scroll to top" })] }));
++    }, type: "button", children: [_jsx(IconArrowCircleUp, { className: "size-3.5" }), _jsx("span", { children: "回到顶部" })] }));
+ const PageActionMenuItemContent = ({ description, icon, title, }) => (_jsxs("span", { className: "grid w-full grid-cols-[20px_minmax(0,1fr)] items-center gap-3 text-left", children: [_jsx("span", { className: "flex size-5 items-center justify-center text-gray-900", children: icon }), _jsxs("span", { className: "flex min-w-0 flex-col items-start gap-0.5", children: [_jsx("span", { className: "text-gray-1000 text-label-14", children: title }), _jsx("span", { className: "text-copy-13 text-gray-900", children: description })] })] }));
+ const OpenInProviderItems = ({ providers, query, }) => providers.map((provider) => (_jsx(DropdownMenuItem, { asChild: true, children: _jsxs("a", { className: "flex items-center gap-2 text-label-14", href: provider.getHref(query), rel: "noopener noreferrer", target: "_blank", children: [_jsx("span", { className: "flex-1", translate: "no", children: provider.label }), _jsx(IconExternal, { className: "size-4 shrink-0" })] }) }, provider.id)));
+ const ProviderMenuView = ({ backRef, onBack, providers, query, }) => (_jsxs(_Fragment, { children: [_jsxs(DropdownMenuItem, { className: "text-label-14", onSelect: (event) => {
+                 event.preventDefault();
+                 onBack();
+-            }, ref: backRef, children: [_jsx(IconChevronLeft, { className: "size-4" }), _jsx("span", { children: "Back to page actions" })] }), _jsx(DropdownMenuSeparator, {}), _jsx(OpenInProviderItems, { providers: providers, query: query })] }));
++            }, ref: backRef, children: [_jsx(IconChevronLeft, { className: "size-4" }), _jsx("span", { children: "返回页面操作" })] }), _jsx(DropdownMenuSeparator, {}), _jsx(OpenInProviderItems, { providers: providers, query: query })] }));
+ const PageActionsMainMenu = ({ askAIEnabled, copyEnabled, editSourceEnabled, editSourceUrl, handleCopy, isMobile, onAskAI, onShowProviders, onViewMarkdown, openInChatEnabled, openInChatRef, otherProviders, query, v0Provider, }) => {
+-    return (_jsxs(_Fragment, { children: [copyEnabled ? (_jsxs(_Fragment, { children: [_jsx(DropdownMenuItem, { asChild: true, className: "h-auto w-full p-2", children: _jsx("button", { onClick: handleCopy, type: "button", children: _jsx(PageActionMenuItemContent, { description: "Copy page as Markdown for LLMs", icon: _jsx(IconCopy, { className: "size-4" }), title: "Copy page" }) }) }), _jsx(DropdownMenuItem, { asChild: true, className: "h-auto w-full p-2", children: _jsx("button", { onClick: onViewMarkdown, type: "button", children: _jsx(PageActionMenuItemContent, { description: "Open this page as plain text", icon: _jsx(IconAcronymMarkdown, { "aria-hidden": "true", className: "size-4" }), title: "View as Markdown" }) }) })] })) : null, openInChatEnabled ? (_jsxs(_Fragment, { children: [_jsx(DropdownMenuItem, { asChild: true, className: "h-auto p-2", children: _jsx("a", { href: v0Provider.getHref(query), rel: "noopener noreferrer", target: "_blank", children: _jsx(PageActionMenuItemContent, { description: "Ask v0 to help apply this page", icon: _jsx(LogoIconV0, { "aria-hidden": "true", size: 16 }), title: v0Provider.label }) }) }), isMobile ? (_jsxs(DropdownMenuItem, { className: "h-auto p-2", onSelect: (event) => {
++    return (_jsxs(_Fragment, { children: [copyEnabled ? (_jsxs(_Fragment, { children: [_jsx(DropdownMenuItem, { asChild: true, className: "h-auto w-full p-2", children: _jsx("button", { onClick: handleCopy, type: "button", children: _jsx(PageActionMenuItemContent, { description: "Copy page as Markdown for LLMs", icon: _jsx(IconCopy, { className: "size-4" }), title: "复制本页" }) }) }), _jsx(DropdownMenuItem, { asChild: true, className: "h-auto w-full p-2", children: _jsx("button", { onClick: onViewMarkdown, type: "button", children: _jsx(PageActionMenuItemContent, { description: "Open this page as plain text", icon: _jsx(IconAcronymMarkdown, { "aria-hidden": "true", className: "size-4" }), title: "查看 Markdown" }) }) })] })) : null, openInChatEnabled ? (_jsxs(_Fragment, { children: [_jsx(DropdownMenuItem, { asChild: true, className: "h-auto p-2", children: _jsx("a", { href: v0Provider.getHref(query), rel: "noopener noreferrer", target: "_blank", children: _jsx(PageActionMenuItemContent, { description: "Ask v0 to help apply this page", icon: _jsx(LogoIconV0, { "aria-hidden": "true", size: 16 }), title: v0Provider.label }) }) }), isMobile ? (_jsxs(DropdownMenuItem, { className: "h-auto p-2", onSelect: (event) => {
+                             event.preventDefault();
+                             onShowProviders();
+-                        }, ref: openInChatRef, children: [_jsx(PageActionMenuItemContent, { description: "Use this page in another AI chat", icon: _jsx(IconExternal, { className: "size-4" }), title: "Open in another chat" }), _jsx(IconChevronRight, { className: "size-4" })] })) : (_jsxs(DropdownMenuSub, { children: [_jsx(DropdownMenuSubTrigger, { className: "h-auto p-2", children: _jsx(PageActionMenuItemContent, { description: "Use this page in another AI chat", icon: _jsx(IconExternal, { className: "size-4" }), title: "Open in another chat" }) }), _jsx(DropdownMenuSubContent, { className: "w-52", sideOffset: 12, children: _jsx(OpenInProviderItems, { providers: otherProviders, query: query }) })] }))] })) : null, askAIEnabled ? (_jsx(DropdownMenuItem, { className: "h-auto p-2", onSelect: onAskAI, children: _jsx(PageActionMenuItemContent, { description: "Chat with this page as context", icon: _jsx(IconMessage, { className: "size-4" }), title: "Ask AI about this page" }) })) : null, editSourceEnabled ? (_jsx(DropdownMenuItem, { asChild: true, className: "h-auto p-2", children: _jsx("a", { href: editSourceUrl, rel: "noopener noreferrer", target: "_blank", children: _jsx(PageActionMenuItemContent, { description: "Suggest changes to this page", icon: _jsx(LogoIconGithub, { "aria-hidden": "true", size: 16 }), title: "Edit this page on GitHub" }) }) })) : null] }));
++                        }, ref: openInChatRef, children: [_jsx(PageActionMenuItemContent, { description: "Use this page in another AI chat", icon: _jsx(IconExternal, { className: "size-4" }), title: "Open in another chat" }), _jsx(IconChevronRight, { className: "size-4" })] })) : (_jsxs(DropdownMenuSub, { children: [_jsx(DropdownMenuSubTrigger, { className: "h-auto p-2", children: _jsx(PageActionMenuItemContent, { description: "Use this page in another AI chat", icon: _jsx(IconExternal, { className: "size-4" }), title: "Open in another chat" }) }), _jsx(DropdownMenuSubContent, { className: "w-52", sideOffset: 12, children: _jsx(OpenInProviderItems, { providers: otherProviders, query: query }) })] }))] })) : null, askAIEnabled ? (_jsx(DropdownMenuItem, { className: "h-auto p-2", onSelect: onAskAI, children: _jsx(PageActionMenuItemContent, { description: "Chat with this page as context", icon: _jsx(IconMessage, { className: "size-4" }), title: "Ask AI about this page" }) })) : null, editSourceEnabled ? (_jsx(DropdownMenuItem, { asChild: true, className: "h-auto p-2", children: _jsx("a", { href: editSourceUrl, rel: "noopener noreferrer", target: "_blank", children: _jsx(PageActionMenuItemContent, { description: "Suggest changes to this page", icon: _jsx(LogoIconGithub, { "aria-hidden": "true", size: 16 }), title: "在 GitHub 上编辑此页" }) }) })) : null] }));
+ };
+ const FeedbackAction = ({ siteId }) => {
+     const isMobile = useIsMobile();
+@@ -175,20 +175,20 @@ const FeedbackAction = ({ siteId }) => {
+ // page description.
+ const InlinePageActions = ({ askAIEnabled, checked, copyEnabled, onAskAI, onCopy, onPrefetchMarkdown, onViewMarkdown, }) => {
+     const CopyStateIcon = checked ? IconCheck : IconCopy;
+-    let copyLabel = "Copy for LLM";
++    let copyLabel = "复制给 LLM";
+     if (checked) {
+-        copyLabel = "Copied";
++        copyLabel = "已复制";
+     }
+-    return (_jsxs("div", { className: "flex items-center gap-3 border-b pb-3 text-label-12", children: [copyEnabled ? (_jsxs(_Fragment, { children: [_jsxs("button", { className: inlineActionClassName, onClick: onCopy, onFocus: onPrefetchMarkdown, onPointerEnter: onPrefetchMarkdown, type: "button", children: [_jsx(CopyStateIcon, {}), _jsx("span", { children: copyLabel })] }), _jsx("span", { "aria-hidden": "true", className: "h-4 w-px shrink-0 bg-gray-alpha-400 max-sm:hidden" }), _jsxs("button", { className: cn(inlineActionClassName, "max-sm:hidden"), onClick: onViewMarkdown, type: "button", children: [_jsx(IconAcronymMarkdown, { "aria-hidden": "true" }), _jsx("span", { children: "View Markdown" })] })] })) : null, copyEnabled && askAIEnabled ? (_jsx("span", { "aria-hidden": "true", className: "h-4 w-px shrink-0 bg-gray-alpha-400" })) : null, askAIEnabled ? (_jsxs("button", { className: inlineActionClassName, onClick: onAskAI, type: "button", children: [_jsx(IconMessage, {}), _jsx("span", { children: "Ask AI about this page" })] })) : null] }));
++    return (_jsxs("div", { className: "flex items-center gap-3 border-b pb-3 text-label-12", children: [copyEnabled ? (_jsxs(_Fragment, { children: [_jsxs("button", { className: inlineActionClassName, onClick: onCopy, onFocus: onPrefetchMarkdown, onPointerEnter: onPrefetchMarkdown, type: "button", children: [_jsx(CopyStateIcon, {}), _jsx("span", { children: copyLabel })] }), _jsx("span", { "aria-hidden": "true", className: "h-4 w-px shrink-0 bg-gray-alpha-400 max-sm:hidden" }), _jsxs("button", { className: cn(inlineActionClassName, "max-sm:hidden"), onClick: onViewMarkdown, type: "button", children: [_jsx(IconAcronymMarkdown, { "aria-hidden": "true" }), _jsx("span", { children: "查看 Markdown" })] })] })) : null, copyEnabled && askAIEnabled ? (_jsx("span", { "aria-hidden": "true", className: "h-4 w-px shrink-0 bg-gray-alpha-400" })) : null, askAIEnabled ? (_jsxs("button", { className: inlineActionClassName, onClick: onAskAI, type: "button", children: [_jsx(IconMessage, {}), _jsx("span", { children: "Ask AI about this page" })] })) : null] }));
+ };
+ // The desktop action control: a compact copy button plus an actions dropdown,
+ // aligned beside the page title.
+ const DesktopPageActions = ({ askAIEnabled, checked, copyEnabled, editSourceEnabled, editSourceUrl, isMobile, menuView, onAskAI, onCopy, onPrefetchMarkdown, onViewMarkdown, openInChatEnabled, openInChatRef, otherProviders, providersBackRef, query, setMenuView, v0Provider, }) => {
+-    return (_jsxs("div", { className: "inline-flex shrink-0 overflow-hidden rounded-md border border-gray-400 bg-background-100", children: [copyEnabled ? (_jsxs("button", { "aria-label": "Copy page", className: "inline-flex h-8 touch-manipulation items-center gap-1.5 whitespace-nowrap px-3 font-medium text-sm transition-colors hover:bg-gray-100 hover:text-gray-1000 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-gray-600/50", onClick: onCopy, onFocus: onPrefetchMarkdown, onPointerEnter: onPrefetchMarkdown, type: "button", children: [_jsxs("span", { className: "relative size-4", children: [_jsx(IconCopy, { className: cn("absolute inset-0 size-4 transition-[transform,opacity] duration-200", checked ? "scale-75 opacity-0" : "scale-100 opacity-100") }), _jsx(IconCheck, { className: cn("absolute inset-0 size-4 transition-[transform,opacity] duration-200", checked ? "scale-100 opacity-100" : "scale-75 opacity-0") })] }), _jsx("span", { children: "Copy page" })] })) : null, _jsxs(DropdownMenu, { onOpenChange: (open) => {
++    return (_jsxs("div", { className: "inline-flex shrink-0 overflow-hidden rounded-md border border-gray-400 bg-background-100", children: [copyEnabled ? (_jsxs("button", { "aria-label": "复制本页", className: "inline-flex h-8 touch-manipulation items-center gap-1.5 whitespace-nowrap px-3 font-medium text-sm transition-colors hover:bg-gray-100 hover:text-gray-1000 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-gray-600/50", onClick: onCopy, onFocus: onPrefetchMarkdown, onPointerEnter: onPrefetchMarkdown, type: "button", children: [_jsxs("span", { className: "relative size-4", children: [_jsx(IconCopy, { className: cn("absolute inset-0 size-4 transition-[transform,opacity] duration-200", checked ? "scale-75 opacity-0" : "scale-100 opacity-100") }), _jsx(IconCheck, { className: cn("absolute inset-0 size-4 transition-[transform,opacity] duration-200", checked ? "scale-100 opacity-100" : "scale-75 opacity-0") })] }), _jsx("span", { children: "复制本页" })] })) : null, _jsxs(DropdownMenu, { onOpenChange: (open) => {
+                     if (!open) {
+                         setMenuView("main");
+                     }
+-                }, children: [_jsx(DropdownMenuTrigger, { asChild: true, children: _jsxs("button", { "aria-label": copyEnabled ? "Open page actions" : "Page actions", className: "inline-flex h-8 touch-manipulation items-center justify-center gap-1.5 border-gray-400 border-l px-2 transition-colors hover:text-gray-1000 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-gray-600/50 data-[state=closed]:bg-transparent data-[state=open]:bg-gray-100 data-[state=closed]:hover:bg-gray-100", type: "button", children: [copyEnabled ? null : _jsx("span", { children: "Page actions" }), _jsx(IconChevronDown, { className: "size-4" })] }) }), _jsx(DropdownMenuContent, { align: "end", className: "w-80 max-w-[calc(100vw-1rem)]", sideOffset: 8, children: isMobile && menuView === "providers" ? (_jsx(ProviderMenuView, { backRef: providersBackRef, onBack: () => {
++                }, children: [_jsx(DropdownMenuTrigger, { asChild: true, children: _jsxs("button", { "aria-label": copyEnabled ? "打开页面操作" : "页面操作", className: "inline-flex h-8 touch-manipulation items-center justify-center gap-1.5 border-gray-400 border-l px-2 transition-colors hover:text-gray-1000 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-gray-600/50 data-[state=closed]:bg-transparent data-[state=open]:bg-gray-100 data-[state=closed]:hover:bg-gray-100", type: "button", children: [copyEnabled ? null : _jsx("span", { children: "页面操作" }), _jsx(IconChevronDown, { className: "size-4" })] }) }), _jsx(DropdownMenuContent, { align: "end", className: "w-80 max-w-[calc(100vw-1rem)]", sideOffset: 8, children: isMobile && menuView === "providers" ? (_jsx(ProviderMenuView, { backRef: providersBackRef, onBack: () => {
+                                 setMenuView("main");
+                                 requestAnimationFrame(() => openInChatRef.current?.focus());
+                             }, providers: otherProviders, query: query })) : (_jsx(PageActionsMainMenu, { askAIEnabled: askAIEnabled, copyEnabled: copyEnabled, editSourceEnabled: editSourceEnabled, editSourceUrl: editSourceUrl, handleCopy: onCopy, isMobile: isMobile, onAskAI: onAskAI, onShowProviders: () => {
+@@ -239,7 +239,7 @@ export const GeistdocsPageActions = ({ config, page, only, }) => {
+     // Desktop variant aligns beside the title (self-end); the mobile variant is
+     // rendered below the description and left-aligned.
+     const rootClassName = only === "mobile" ? "@min-[961px]:hidden" : "self-end @max-[960px]:hidden";
+-    return (_jsxs("div", { className: rootClassName, onFocusCapture: preloadChat, onPointerEnter: preloadChat, children: [showDesktop ? (_jsx(DesktopPageActions, { askAIEnabled: askAIEnabled, checked: checked, copyEnabled: copyEnabled, editSourceEnabled: editSourceEnabled, editSourceUrl: editSourceUrl, isMobile: isMobile, menuView: menuView, onAskAI: onAskAI, onCopy: handleCopy, onPrefetchMarkdown: prefetchMarkdown, onViewMarkdown: handleViewMarkdown, openInChatEnabled: openInChatEnabled, openInChatRef: openInChatRef, otherProviders: otherProviders, providersBackRef: providersBackRef, query: query, setMenuView: setMenuView, v0Provider: v0Provider })) : null, showMobile && (copyEnabled || askAIEnabled) ? (_jsx(InlinePageActions, { askAIEnabled: askAIEnabled, checked: checked, copyEnabled: copyEnabled, onAskAI: onAskAI, onCopy: handleCopy, onPrefetchMarkdown: prefetchMarkdown, onViewMarkdown: handleViewMarkdown })) : null, _jsx("span", { "aria-live": "polite", className: "sr-only", children: checked ? "Page copied" : "" })] }));
++    return (_jsxs("div", { className: rootClassName, onFocusCapture: preloadChat, onPointerEnter: preloadChat, children: [showDesktop ? (_jsx(DesktopPageActions, { askAIEnabled: askAIEnabled, checked: checked, copyEnabled: copyEnabled, editSourceEnabled: editSourceEnabled, editSourceUrl: editSourceUrl, isMobile: isMobile, menuView: menuView, onAskAI: onAskAI, onCopy: handleCopy, onPrefetchMarkdown: prefetchMarkdown, onViewMarkdown: handleViewMarkdown, openInChatEnabled: openInChatEnabled, openInChatRef: openInChatRef, otherProviders: otherProviders, providersBackRef: providersBackRef, query: query, setMenuView: setMenuView, v0Provider: v0Provider })) : null, showMobile && (copyEnabled || askAIEnabled) ? (_jsx(InlinePageActions, { askAIEnabled: askAIEnabled, checked: checked, copyEnabled: copyEnabled, onAskAI: onAskAI, onCopy: handleCopy, onPrefetchMarkdown: prefetchMarkdown, onViewMarkdown: handleViewMarkdown })) : null, _jsx("span", { "aria-live": "polite", className: "sr-only", children: checked ? "页面已复制" : "" })] }));
+ };
+ export const GeistdocsTableOfContentsActions = ({ config, extraActions, }) => {
+     const actions = [];
+diff --git a/dist/internal/page-footer.js b/dist/internal/page-footer.js
+index 168912326bf0a2d86e8c60c2d983ecf9d6dd9826..2b477f8c436f211900595d9f6b7c191a1ed48379 100644
+--- a/dist/internal/page-footer.js
++++ b/dist/internal/page-footer.js
+@@ -32,5 +32,5 @@ export const PageFooter = ({ previous, next }) => {
+     if (!(previous || next)) {
+         return null;
+     }
+-    return (_jsxs("div", { className: "mt-8 grid grid-cols-2 gap-4 border-gray-alpha-400 border-t pt-6", children: [previous ? (_jsxs(Link, { className: "group grid w-fit grid-cols-[auto_1fr] items-center gap-x-1.5 gap-y-1 text-gray-1000", href: previous.url, prefetch: true, children: [_jsx("span", { className: cn(LABEL_CLASSES, "col-start-2"), children: "Previous" }), _jsx(IconChevronRight, { className: cn(CHEVRON_CLASSES, "col-start-1 rotate-180"), size: 16 }), _jsx("span", { className: cn(TITLE_CLASSES, "col-start-2"), children: previous.name })] })) : (_jsx("div", {})), next ? (_jsxs(Link, { className: "group grid w-fit grid-cols-[1fr_auto] items-center gap-x-1.5 gap-y-1 justify-self-end text-right text-gray-1000", href: next.url, prefetch: true, children: [_jsx("span", { className: cn(LABEL_CLASSES, "col-start-1"), children: "Next" }), _jsx("span", { className: cn(TITLE_CLASSES, "col-start-1"), children: next.name }), _jsx(IconChevronRight, { className: cn(CHEVRON_CLASSES, "col-start-2"), size: 16 })] })) : null] }));
++    return (_jsxs("div", { className: "mt-8 grid grid-cols-2 gap-4 border-gray-alpha-400 border-t pt-6", children: [previous ? (_jsxs(Link, { className: "group grid w-fit grid-cols-[auto_1fr] items-center gap-x-1.5 gap-y-1 text-gray-1000", href: previous.url, prefetch: true, children: [_jsx("span", { className: cn(LABEL_CLASSES, "col-start-2"), children: "上一页" }), _jsx(IconChevronRight, { className: cn(CHEVRON_CLASSES, "col-start-1 rotate-180"), size: 16 }), _jsx("span", { className: cn(TITLE_CLASSES, "col-start-2"), children: previous.name })] })) : (_jsx("div", {})), next ? (_jsxs(Link, { className: "group grid w-fit grid-cols-[1fr_auto] items-center gap-x-1.5 gap-y-1 justify-self-end text-right text-gray-1000", href: next.url, prefetch: true, children: [_jsx("span", { className: cn(LABEL_CLASSES, "col-start-1"), children: "下一页" }), _jsx("span", { className: cn(TITLE_CLASSES, "col-start-1"), children: next.name }), _jsx(IconChevronRight, { className: cn(CHEVRON_CLASSES, "col-start-2"), size: 16 })] })) : null] }));
+ };
+diff --git a/dist/internal/search.js b/dist/internal/search.js
+index ed8e832b33300267d068c9c958dc6f6451dc518c..7e6ccd995a9d4e1a94b7f79379577ed205aeb5c7 100644
+--- a/dist/internal/search.js
++++ b/dist/internal/search.js
+@@ -6,6 +6,8 @@ import { SearchDialog as FumadocsSearchDialog, SearchDialogClose, SearchDialogCo
+ import { useI18n } from "fumadocs-ui/contexts/i18n";
+ import { useState } from "react";
+ import { getPublicPath } from "../config";
++import { createTokenizer as createTokenizerMandarin } from "@orama/tokenizers/mandarin";
++import { create as createOrama } from "@orama/orama";
+ export const GeistdocsSearchDialog = ({ allowClear = false, basePath, onTagChange, tag, tags, ...props }) => {
+     const { locale } = useI18n();
+     const hasTags = tags !== undefined && tags.length > 0;
+@@ -19,10 +21,12 @@ export const GeistdocsSearchDialog = ({ allowClear = false, basePath, onTagChang
+         setSelected(value);
+     });
+     const { search, setSearch, query } = useDocsSearch({
+-        type: "fetch",
++        type: "static",
+         locale,
+         tag: hasTags ? selected : tag,
+-        api: getPublicPath("/api/search", basePath),
++        from: getPublicPath("/api/search", basePath),
++        initOrama: (l) =>
++            createOrama({ schema: { _: "string" }, ...(l === "cn" ? { components: { tokenizer: createTokenizerMandarin() } } : { language: l }) }),
+     });
+     return (_jsxs(FumadocsSearchDialog, { isLoading: query.isLoading, onSearchChange: setSearch, search: search, ...props, children: [_jsx(SearchDialogOverlay, { className: "bg-background-100/80 backdrop-blur-none" }), _jsxs(SearchDialogContent, { className: "w-[640px] max-w-[calc(100vw-1rem)] border-none shadow-[var(--ds-shadow-modal)]", "data-geistdocs-command-modal": true, onEscapeKeyDown: () => props.onOpenChange(false), children: [_jsxs(SearchDialogHeader, { children: [_jsx(SearchDialogIcon, {}), _jsx(SearchDialogInput, {}), _jsx(SearchDialogClose, {})] }), _jsx(SearchDialogList, { "aria-label": "Search results", Item: (itemProps) => (_jsx(SearchDialogListItem, { ...itemProps, role: "option" })), items: query.data === "empty" ? null : query.data, role: "listbox" }), hasTags ? (_jsx(SearchDialogFooter, { children: _jsx(TagsList, { allowClear: allowClear, onTagChange: (value) => {
+                                 setSelected(value);
+diff --git a/dist/internal/table-of-contents.js b/dist/internal/table-of-contents.js
+index 03f099baa69a2939017b5d8528e71fba4d554193..2d6879e6ff42bef825f825ba848222cb0ba1c643 100644
+--- a/dist/internal/table-of-contents.js
++++ b/dist/internal/table-of-contents.js
+@@ -2,4 +2,4 @@
+ import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
+ import { TOCScrollArea } from "fumadocs-ui/components/toc/index";
+ import { TOCItems } from "./toc-items";
+-export const GeistdocsTableOfContents = ({ footer, header, toc, }) => (_jsx("aside", { "aria-label": "Page navigation", className: "sticky top-(--fd-docs-row-1) hidden h-[calc(var(--fd-docs-height)-var(--fd-docs-row-1))] w-(--fd-toc-width) flex-col pt-14 pr-4 pb-2 [grid-area:toc] xl:flex", id: "nd-toc", children: _jsxs("nav", { "aria-label": "On this page", className: "ml-0.5 flex min-h-0 flex-1 flex-col", children: [header, toc.length > 0 ? (_jsxs(_Fragment, { children: [_jsx("p", { className: "mb-2 font-medium text-gray-1000 text-sm", children: "On this page" }), _jsx(TOCScrollArea, { className: "geistdocs-toc-scroll", children: _jsx(TOCItems, {}) })] })) : null, footer] }) }));
++export const GeistdocsTableOfContents = ({ footer, header, toc, }) => (_jsx("aside", { "aria-label": "Page navigation", className: "sticky top-(--fd-docs-row-1) hidden h-[calc(var(--fd-docs-height)-var(--fd-docs-row-1))] w-(--fd-toc-width) flex-col pt-14 pr-4 pb-2 [grid-area:toc] xl:flex", id: "nd-toc", children: _jsxs("nav", { "aria-label": "本页内容", className: "ml-0.5 flex min-h-0 flex-1 flex-col", children: [header, toc.length > 0 ? (_jsxs(_Fragment, { children: [_jsx("p", { className: "mb-2 font-medium text-gray-1000 text-sm", children: "本页内容" }), _jsx(TOCScrollArea, { className: "geistdocs-toc-scroll", children: _jsx(TOCItems, {}) })] })) : null, footer] }) }));
+diff --git a/dist/mobile-docs-bar.js b/dist/mobile-docs-bar.js
+index 5b905c82b9b9bf0f7023edb3930c1386d8eccae6..5a2ab16cf2a798d0b4319e65f798797f861de99b 100644
+--- a/dist/mobile-docs-bar.js
++++ b/dist/mobile-docs-bar.js
+@@ -21,7 +21,7 @@ export const MobileDocsBar = ({ toc }) => {
+     const [tocOpen, setTocOpen] = useState(false);
+     const activeAnchors = useActiveAnchors();
+     const hasToc = Boolean(toc && toc.length > 0);
+-    return (_jsxs(_Fragment, { children: [_jsx("div", { className: "sticky top-16 z-30 -mx-6 -mt-6 mb-6 flex @min-[961px]:hidden h-[54px] items-center border-b bg-background-200 px-6", "data-mobile-docs-bar": true, children: _jsxs("button", { "aria-expanded": sidebarOpen, "aria-haspopup": "dialog", className: "-ml-2 flex min-h-8 touch-manipulation items-center gap-3 rounded-md px-2 text-gray-1000 text-label-16 transition-colors hover:bg-gray-alpha-100 focus-visible:shadow-[var(--ds-focus-ring)] focus-visible:outline-none active:bg-gray-alpha-300 motion-reduce:transition-none", onClick: () => setSidebarOpen(true), type: "button", children: [_jsx(IconMenuAlt, { size: 16 }), "Menu"] }) }), hasToc ? (_jsx("div", { className: "pointer-events-none sticky top-[calc(4rem+70px)] z-30 -mb-12 flex @min-[961px]:hidden justify-end", children: _jsxs(Popover, { onOpenChange: setTocOpen, open: tocOpen, children: [_jsx(PopoverTrigger, { asChild: true, children: _jsx("button", { "aria-label": "Table of contents", className: "pointer-events-auto flex size-8 touch-manipulation items-center justify-center rounded-md bg-background-100 text-gray-900 shadow-[var(--ds-shadow-border)] transition-colors hover:border-gray-alpha-500 hover:text-gray-1000 focus-visible:shadow-[var(--ds-focus-ring)] focus-visible:outline-none active:border-gray-alpha-600 data-[state=open]:border-gray-alpha-600 data-[state=open]:text-gray-1000 motion-reduce:transition-none", "data-mobile-toc-trigger": true, type: "button", children: _jsx(IconFileText, { size: 16 }) }) }), _jsx(PopoverContent, { align: "end", className: "w-64 overflow-hidden p-0", "data-geistdocs-mobile-toc": true, sideOffset: 8, children: _jsxs("div", { className: "max-h-[min(50vh,20rem)] overflow-y-auto overscroll-contain p-4", children: [_jsx("p", { className: "mb-2 font-medium text-gray-1000 text-xs uppercase tracking-wider", children: "On this page" }), _jsx("nav", { className: "flex flex-col", children: toc?.map((item) => {
++    return (_jsxs(_Fragment, { children: [_jsx("div", { className: "sticky top-16 z-30 -mx-6 -mt-6 mb-6 flex @min-[961px]:hidden h-[54px] items-center border-b bg-background-200 px-6", "data-mobile-docs-bar": true, children: _jsxs("button", { "aria-expanded": sidebarOpen, "aria-haspopup": "dialog", className: "-ml-2 flex min-h-8 touch-manipulation items-center gap-3 rounded-md px-2 text-gray-1000 text-label-16 transition-colors hover:bg-gray-alpha-100 focus-visible:shadow-[var(--ds-focus-ring)] focus-visible:outline-none active:bg-gray-alpha-300 motion-reduce:transition-none", onClick: () => setSidebarOpen(true), type: "button", children: [_jsx(IconMenuAlt, { size: 16 }), "菜单"] }) }), hasToc ? (_jsx("div", { className: "pointer-events-none sticky top-[calc(4rem+70px)] z-30 -mb-12 flex @min-[961px]:hidden justify-end", children: _jsxs(Popover, { onOpenChange: setTocOpen, open: tocOpen, children: [_jsx(PopoverTrigger, { asChild: true, children: _jsx("button", { "aria-label": "Table of contents", className: "pointer-events-auto flex size-8 touch-manipulation items-center justify-center rounded-md bg-background-100 text-gray-900 shadow-[var(--ds-shadow-border)] transition-colors hover:border-gray-alpha-500 hover:text-gray-1000 focus-visible:shadow-[var(--ds-focus-ring)] focus-visible:outline-none active:border-gray-alpha-600 data-[state=open]:border-gray-alpha-600 data-[state=open]:text-gray-1000 motion-reduce:transition-none", "data-mobile-toc-trigger": true, type: "button", children: _jsx(IconFileText, { size: 16 }) }) }), _jsx(PopoverContent, { align: "end", className: "w-64 overflow-hidden p-0", "data-geistdocs-mobile-toc": true, sideOffset: 8, children: _jsxs("div", { className: "max-h-[min(50vh,20rem)] overflow-y-auto overscroll-contain p-4", children: [_jsx("p", { className: "mb-2 font-medium text-gray-1000 text-xs uppercase tracking-wider", children: "本页内容" }), _jsx("nav", { className: "flex flex-col", children: toc?.map((item) => {
+                                             const id = item.url.slice(1);
+                                             const active = activeAnchors.includes(id);
+                                             return (_jsx("a", { className: "wrap-anywhere block py-1.5 text-gray-900 text-sm transition-colors first:pt-0 last:pb-0 hover:text-fd-accent-foreground focus-visible:shadow-[var(--ds-focus-ring)] focus-visible:outline-none data-[active=true]:text-fd-primary motion-reduce:transition-none", "data-active": active ? "true" : undefined, href: item.url, onClick: () => setTocOpen(false), style: {
+diff --git a/dist/routes/search.js b/dist/routes/search.js
+index d479b70d529badfefdf3160896b205db33e207c8..6d9e815a37cf944114cd8cb370698d822e416868 100644
+--- a/dist/routes/search.js
++++ b/dist/routes/search.js
+@@ -107,6 +107,9 @@ export const createSearchRoute = ({ config, filterPage, source, sources, }) => {
+     return createI18nSearchAPI("advanced", {
+         i18n,
+         indexes: getIndexes,
+-        localeMap,
+-    }).GET;
++        localeMap: {
++            ...localeMap,
++            cn: { tokenizer: createTokenizerMandarin() },
++        },
++    }).staticGET;
+ };

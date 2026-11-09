@@ -1,0 +1,102 @@
+---
+title: "代理"
+navTitle: "代理"
+---
+
+在企业网络、地区测试、抓取基础设施等场景中使用代理，让流量经由受控的出口点路由。
+
+## CLI flag
+
+```bash
+agent-browser --proxy "http://proxy.example.com:8080" open https://example.com
+agent-browser --proxy "http://user:pass@proxy.example.com:8080" open https://example.com
+agent-browser --proxy "http://proxy.example.com:8080" --proxy-bypass "localhost,*.internal.com" open https://example.com
+agent-browser --proxy "http://proxy.example.com:8080" --ca-cert /etc/ssl/certs/proxy-ca.pem open https://example.com
+agent-browser --use-system-ca read https://example.com
+```
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--proxy &lt;url&gt;</code></td><td>代理服务器 URL，可附带凭据</td></tr>
+    <tr><td><code>--proxy-bypass &lt;hosts&gt;</code></td><td>应绕过代理的主机</td></tr>
+    <tr><td><code>--ca-cert &lt;path&gt;</code></td><td>为 CLI 自身的 HTTPS 请求，以及 Linux 上本地启动的 Chromium 浏览器，信任某个 CA 证书或 PEM 捆绑包</td></tr>
+    <tr><td><code>--use-system-ca</code></td><td>为 CLI 自身的 HTTPS 请求使用操作系统信任库</td></tr>
+    <tr><td><code>--no-ca-cert</code></td><td>清除当前浏览器会话保留的 CA 信任</td></tr>
+  </tbody>
+</table>
+
+## 环境变量
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AGENT_BROWSER_PROXY</code></td><td>agent-browser 代理 URL</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_BYPASS</code></td><td>agent-browser 代理绕过列表</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_USERNAME</code></td><td>凭据单独提供时的代理用户名</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_PASSWORD</code></td><td>凭据单独提供时的代理密码</td></tr>
+    <tr><td><code>AGENT_BROWSER_CA_CERT</code></td><td>CLI 请求与 Linux 上本地启动的 Chromium 所用的 CA 证书或 PEM 捆绑包路径</td></tr>
+    <tr><td><code>AGENT_BROWSER_USE_SYSTEM_CA</code></td><td>CLI 请求使用操作系统信任库</td></tr>
+    <tr><td><code>SSL_CERT_FILE</code></td><td>未配置 CA 时 CLI 请求的回退 CA 文件</td></tr>
+    <tr><td><code>HTTP_PROXY</code> / <code>HTTPS_PROXY</code></td><td>标准代理环境变量，作为回退</td></tr>
+    <tr><td><code>ALL_PROXY</code></td><td>SOCKS 或全流量代理回退</td></tr>
+    <tr><td><code>NO_PROXY</code></td><td>标准代理绕过回退</td></tr>
+  </tbody>
+</table>
+
+`AGENT_BROWSER_PROXY` 优先于标准代理变量。CLI 也接受嵌在代理 URL 中的凭据，并在把启动选项传给守护进程前将其分离出来。
+
+嵌在代理 URL 中的凭据会做一次百分号解码。请对用户名或密码中的保留字符编码：`p@ss` 写作 `p%40ss`，字面百分号写作 `%25`。`+` 保持字面 `+` 不变。若解码后的字节不是有效 UTF-8，整段凭据按原样保留。
+
+启动 Chrome 时，agent-browser 接受带尾斜杠的代理 URL。MCP 服务器使用与 CLI 相同的环境变量与配置项；请在那里设置代理，因为 MCP 工具不接受代理参数。
+
+## HTTPS 拦截证书
+
+### CLI 请求
+
+`read`、`install`、`upgrade` 与 `doctor` 会发起自己的 HTTPS 请求，默认信任内置的 Mozilla 根证书。在所有平台上，`--ca-cert` 会把该 CA 加入这些请求，`--use-system-ca` 则切换到操作系统信任库——MDM 或企业镜像部署的 CA 已在其中。`SSL_CERT_FILE` 用作回退 CA 文件，不可用时会被忽略并给出警告。这两个选项都不会关闭证书或主机名校验。对 `read` 而言，命令行上给出的选择对该会话一直生效直到 `close`，包括守护进程重启之后；`--no-ca-cert` 或 `--use-system-ca false` 可将其关闭。`read` 绝不会因这些选项而启动或重启浏览器。它们也尚不改变 agent-browser 经 `--cdp`、`--auto-connect` 或提供商连接远程浏览器的方式。
+
+### 浏览器
+
+在 Linux 上，`--ca-cert` 会把每个证书导入一个仅由该会话启动的 Chromium 进程使用的私有 NSS 数据库。常规的主机名与有效期校验仍然启用。后续命令省略该 flag 时仍保留该信任。换一个证书或使用 `--no-ca-cert` 会重启 Chromium，但不会重启守护进程。相同的证书内容即使从不同路径提供，也会复用当前浏览器。`agent-browser install --with-deps` 会安装所需的 `certutil`；否则请在 Debian/Ubuntu 上安装 `libnss3-tools`，在 RPM 系 Linux 上安装 `nss-tools`。
+
+对浏览器命令，该选项不能与 `--profile`、`--cdp`、`--auto-connect`、提供商、Lightpanda 或 `--ignore-https-errors` 组合。macOS 与 Windows 不支持浏览器级信任，因为 Chromium 在这两个系统上已经使用操作系统信任库。
+
+## SOCKS 代理
+
+```bash
+export ALL_PROXY="socks5://proxy.example.com:1080"
+agent-browser open https://example.com
+
+export ALL_PROXY="socks5://user:pass@proxy.example.com:1080"
+agent-browser open https://example.com
+```
+
+## 绕过本地流量
+
+```bash
+export AGENT_BROWSER_PROXY="http://proxy.example.com:8080"
+export AGENT_BROWSER_PROXY_BYPASS="localhost,127.0.0.1,*.internal.com"
+
+agent-browser open https://external.example.com
+agent-browser open http://localhost:3000
+```
+
+## 验证路由
+
+```bash
+agent-browser open https://httpbin.org/ip
+agent-browser get text body
+```
+
+响应应显示代理出口地址，而不是本机的直连网络地址。
+
+## 安全提示
+
+- 代理凭据请优先使用环境变量或密钥存储。
+- 不要提交代理用户名、密码或会话 URL。
+- HAR 导出与网络日志可能包含经代理认证的请求。

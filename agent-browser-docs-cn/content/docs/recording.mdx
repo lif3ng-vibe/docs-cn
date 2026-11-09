@@ -1,0 +1,170 @@
+---
+title: "视频录制"
+navTitle: "视频录制"
+---
+
+使用 `record` 把浏览器自动化过程录制成 WebM 或 MP4 视频，用于调试、CI 佐证、产品演示或复现报告。
+
+## 前置要求
+
+录制会把帧通过管道送给 `ffmpeg`，它必须位于 `PATH` 上并带有 `libvpx` 与 `libx264` 编码器（Homebrew 与 Debian/Ubuntu 的默认构建都同时包含）：
+
+```bash
+brew install ffmpeg        # macOS
+sudo apt install ffmpeg    # Debian/Ubuntu
+agent-browser doctor       # 在 "Recording" 下报告 ffmpeg 及其编码器
+```
+
+支持的格式是 `.webm`（经 libvpx 的 VP8）与 `.mp4`（经 libx264 的 H.264）。其他扩展名会按原样交给 ffmpeg 并使用 H.264 视频，因此只要 ffmpeg 认识该容器，`.mkv` 或 `.mov` 也能用。无扩展名的路径会在录制开始前被拒绝，因为 ffmpeg 将无从选择容器。agent-browser 的其他功能都不需要 ffmpeg。
+
+## 基本流程
+
+```bash
+agent-browser open https://example.com
+agent-browser record start ./demo.webm
+agent-browser snapshot -i
+agent-browser click @e1
+
+agent-browser record stop
+```
+
+会话启动后，`record start` 也可以立即导航：
+
+```bash
+agent-browser open
+agent-browser record start ./demo.webm https://example.com
+```
+
+`record start` 原样录制当前活动页面。不带 URL 时不会导航或替换任何内容：录制器附加到你已经打开的标签页上，因此捕获从已注水（hydrated）的页面开始，而不是从冷导航的 `load` 时刻开始。带 URL 时，活动标签页先导航过去，页面加载完成后开始录制。不会创建额外的标签页或浏览器上下文。
+
+要在单独的标签页中录制，请先打开一个：
+
+```bash
+agent-browser tab new https://example.com
+agent-browser record start ./demo.webm
+```
+
+## 可见光标
+
+Chrome 录制通常不包含原生指针。加上 `--cursor` 可获得随页面渲染的动画指针与点击涟漪，让拖拽在每一帧捕获中都保持同步。这个临时覆盖层不响应交互、不会出现在无障碍快照中，并在录制停止时移除。录制期间的截图会包含它：
+
+```bash
+agent-browser record start ./walkthrough.webm --cursor
+```
+
+## 拼接图
+
+加上 `--contact-sheet` 可生成带时间戳、高亮变化区域的 PNG 拼接图（contact sheet）。
+
+```bash
+agent-browser record start ./checkout.webm --contact-sheet
+
+# 至少 2% 像素变化时才选入一帧
+agent-browser record start ./checkout.webm --contact-sheet-threshold 0.02
+```
+
+阈值接受 `0` 到 `1`，默认 `0.05`，并隐含 `--contact-sheet`。拼接图最多包含 100 帧。
+
+![带时间戳与高亮变化区域的拼接图示例](/recording/contact-sheet-example.png)
+
+## 帧率
+
+录制默认每秒捕获 30 帧，足以让滚动、悬停状态与 CSS 过渡呈现为连贯动作而非幻灯片。可用 `--fps` 修改：
+
+```bash
+# 60 fps 适合动作密集的短片
+agent-browser record start ./scroll.webm --fps 60
+
+# 10 fps 适合长时间浸泡测试，文件体积比流畅度更重要
+agent-browser record start ./soak.webm --fps 10
+```
+
+<table>
+  <thead>
+    <tr><th>帧率</th><th>适用场景</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>60</td><td>拖拽交互、动画与滚动打磨，以及任何单帧即证据的场景。最适合短片。</td></tr>
+    <tr><td>30（默认）</td><td>其余一切：流程、CI 佐证、演示。</td></tr>
+    <tr><td>1 到 15</td><td>长时间会话，视频是时间线而非动作研究。</td></tr>
+  </tbody>
+</table>
+
+有效帧率为 1 到 60。重绘之间会保持最新的 Chrome 帧，因此文件时长与真实时间一致。
+
+`record stop` 会报告写入文件的 `frames` 数与从 Chrome 收到的去重 `capturedFrames` 数。
+
+## 命令
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>record start &lt;path.webm|path.mp4&gt; [url] [--fps &lt;n&gt;] [--cursor] [--contact-sheet]</code></td><td>开始录制活动页面；带 URL 时先导航活动标签页</td></tr>
+    <tr><td><code>record stop</code></td><td>停止当前录制并保存文件</td></tr>
+    <tr><td><code>record restart &lt;path.webm|path.mp4&gt; [url] [--fps &lt;n&gt;] [--cursor] [--contact-sheet]</code></td><td>停止当前录制并立即开始新录制</td></tr>
+  </tbody>
+</table>
+
+## CI 佐证
+
+```bash
+#!/bin/bash
+set -e
+
+cleanup() {
+  agent-browser record stop 2>/dev/null || true
+  agent-browser close 2>/dev/null || true
+}
+trap cleanup EXIT
+
+agent-browser open https://app.example.com/login
+agent-browser record start "./artifacts/login-flow.webm"
+agent-browser snapshot -i
+agent-browser fill @e1 "demo@example.com"
+agent-browser fill @e2 "password"
+agent-browser click @e3
+agent-browser wait --url "**/dashboard"
+```
+
+当浏览器故障难以仅凭文本输出排查时，把录制保留为 CI 工件。
+
+## 面向人观看的演示
+
+当视频是给人看的时候，加一些短暂等待：
+
+```bash
+agent-browser open https://shop.example.com
+agent-browser record start ./checkout.webm
+agent-browser wait 500
+agent-browser click @e4
+agent-browser wait 500
+agent-browser screenshot ./screenshots/cart.png
+agent-browser record stop
+```
+
+截图与视频配合得很好：截图捕捉精确的静止状态，视频则呈现时序、过渡和意外的覆盖层。
+
+## 输出格式
+
+<table>
+  <thead>
+    <tr><th>属性</th><th>值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>容器</td><td>WebM（<code>.webm</code>，经 libvpx 的 VP8）或 MP4（<code>.mp4</code>，经 libx264 的 H.264），按扩展名选择；其他扩展名会得到 H.264，容器由 ffmpeg 对应映射</td></tr>
+    <tr><td>编码器</td><td><code>PATH</code> 上的 ffmpeg</td></tr>
+    <tr><td>帧率</td><td>默认 30 fps，<code>--fps</code> 可设 1 到 60</td></tr>
+    <tr><td>视口</td><td>沿用活动浏览器的视口设置</td></tr>
+    <tr><td>状态</td><td>原地录制活动页面，含其会话与页内状态</td></tr>
+  </tbody>
+</table>
+
+## 局限
+
+- 录制会给自动化带来开销，帧率越高开销越大。
+- 长时间录制可能占用大量磁盘空间；60 fps 的码率约为 30 fps 的两倍。
+- 每秒的去重帧数受页面重绘频率限制，因此渲染低于 60 fps 的页面录制出来也低于 60 fps。
+- 若需要文件完整落盘，请在关闭会话前执行 `record stop`。
+- 某些受限的无头环境可能有编解码器或 GPU 限制。未编译 libvpx 或 libx264 的 ffmpeg 无法写出对应格式；`agent-browser doctor` 会报告存在哪些编码器。

@@ -1,0 +1,106 @@
+---
+title: "性能分析器"
+navTitle: "性能分析器"
+---
+
+在浏览器自动化过程中捕获 Chrome DevTools 性能分析（profile）。用性能分析诊断智能体工作流中的页面加载缓慢、昂贵的 JavaScript、布局抖动等性能瓶颈。
+
+## 基本用法
+
+```bash
+# 开始性能分析
+agent-browser profiler start
+
+# 执行操作
+agent-browser navigate https://example.com
+agent-browser click "#button"
+
+# 停止并保存性能分析
+agent-browser profiler stop ./trace.json
+```
+
+输出的 JSON 文件可加载到 Chrome DevTools、Perfetto UI 或任何接受 Chrome Trace Event 格式的工具。
+
+## 命令
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>profiler start</code></td><td>开始录制性能分析</td></tr>
+    <tr><td><code>profiler start --categories &lt;list&gt;</code></td><td>以自定义追踪（trace）类别启动</td></tr>
+    <tr><td><code>profiler stop [path]</code></td><td>停止性能分析并保存到文件</td></tr>
+  </tbody>
+</table>
+
+## 追踪类别
+
+`--categories` flag 接受逗号分隔的 Chrome 追踪类别列表。
+
+```bash
+agent-browser profiler start --categories "devtools.timeline,v8.execute,blink.user_timing"
+```
+
+默认类别包括 `devtools.timeline`、`v8.execute`、`blink`、`blink.user_timing`、`latencyInfo`、`renderer.scheduler`、`toplevel`，以及若干用于详细 CPU 分析与调用栈分析的 `disabled-by-default-*` 类别。
+
+### 常用类别
+
+<table>
+  <thead>
+    <tr><th>类别</th><th>捕获内容</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>devtools.timeline</code></td><td>标准 DevTools 性能事件</td></tr>
+    <tr><td><code>v8.execute</code></td><td>运行 JavaScript 的耗时</td></tr>
+    <tr><td><code>blink</code></td><td>渲染器事件（布局、绘制、样式）</td></tr>
+    <tr><td><code>blink.user_timing</code></td><td><code>performance.mark()</code> 与 <code>performance.measure()</code> 调用</td></tr>
+    <tr><td><code>latencyInfo</code></td><td>输入到显示的延迟</td></tr>
+    <tr><td><code>disabled-by-default-v8.cpu_profiler</code></td><td>基于采样的 JS CPU 分析</td></tr>
+  </tbody>
+</table>
+
+## 输出格式
+
+输出是 Chrome Trace Event 格式的 JSON 文件：
+
+```json
+{
+  "traceEvents": [
+    {
+      "cat": "devtools.timeline",
+      "name": "RunTask",
+      "ph": "X",
+      "ts": 12345,
+      "dur": 100,
+      "pid": 1,
+      "tid": 1
+    }
+  ],
+  "metadata": {
+    "clock-domain": "LINUX_CLOCK_MONOTONIC"
+  }
+}
+```
+
+`metadata.clock-domain` 字段反映宿主平台（Linux 或 macOS）。在 Windows 上该字段省略。
+
+## 查看性能分析
+
+- **Chrome DevTools**——Performance 面板 > Load profile
+- **Perfetto**——https://ui.perfetto.dev/（拖入 JSON 文件即可）
+- **Trace Viewer**——任意 Chromium 浏览器中的 `chrome://tracing`
+
+## 使用场景
+
+- **页面加载分析**——对导航做性能分析，找出慢资源、长任务或布局偏移
+- **交互分析**——度量点击、表单填写等用户交互的开销
+- **CI 回归检查**——每次构建捕获性能分析，随时间对比追踪数据
+- **智能体工作流优化**——找出智能体流程中开销最大的步骤
+
+## 局限
+
+- 仅适用于基于 Chromium 的浏览器（Chrome、Edge）。不支持 Firefox 或 WebKit。
+- 性能分析期间追踪数据会在内存中累积（上限 500 万事件）。覆盖关注区域后请及时停止分析。
+- 停止时的数据收集有 30 秒超时。若浏览器无响应，stop 命令可能失败。
+- 未提供输出路径时，性能分析会保存到 agent-browser 临时目录下自动生成的路径。

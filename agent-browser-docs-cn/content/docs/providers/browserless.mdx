@@ -1,0 +1,42 @@
+---
+title: "Browserless"
+navTitle: "Browserless"
+---
+
+[Browserless](https://browserless.io) 提供带 Sessions API 的云浏览器基础设施。在没有本地浏览器的环境中运行 agent-browser 时使用它。
+
+## 设置
+
+```bash
+export BROWSERLESS_API_KEY="your-api-token"
+agent-browser -p browserless open https://example.com
+```
+
+或在 CI/脚本中使用环境变量：
+
+```bash
+export AGENT_BROWSER_PROVIDER=browserless
+export BROWSERLESS_API_KEY="your-api-token"
+agent-browser open https://example.com
+```
+
+`-p` flag 优先于 `AGENT_BROWSER_PROVIDER`。
+
+## 配置
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>BROWSERLESS_API_KEY</code></td><td>API 令牌（必需）</td><td></td></tr>
+    <tr><td><code>BROWSERLESS_API_URL</code></td><td>API 基础 URL（用于自定义区域或自托管）</td><td><code>https://production-sfo.browserless.io</code></td></tr>
+    <tr><td><code>BROWSERLESS_BROWSER_TYPE</code></td><td>使用的浏览器类型（<code>chromium</code> 或 <code>chrome</code>）</td><td><code>chromium</code></td></tr>
+    <tr><td><code>BROWSERLESS_TTL</code></td><td>会话 TTL（毫秒）</td><td><code>300000</code></td></tr>
+    <tr><td><code>BROWSERLESS_STEALTH</code></td><td>启用隐身模式</td><td><code>true</code></td></tr>
+  </tbody>
+</table>
+
+启用后，agent-browser 会连接 Browserless 云会话，而不是启动本地浏览器。所有命令的工作方式完全相同。
+
+从 [Browserless 仪表盘](https://browserless.io)获取 API 令牌。

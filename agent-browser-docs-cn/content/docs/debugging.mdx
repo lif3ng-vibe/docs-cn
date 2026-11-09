@@ -1,0 +1,96 @@
+---
+title: "调试"
+navTitle: "调试"
+---
+
+使用调试命令在自动化过程中检查浏览器日志、页面错误、JavaScript 对话框、Chrome DevTools 追踪、高亮元素以及实时 DevTools 前端。
+
+## 控制台与页面错误
+
+```bash
+agent-browser console
+agent-browser console --json
+agent-browser console --clear
+
+agent-browser errors
+agent-browser errors --clear
+```
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>console</code></td><td>显示浏览器控制台消息</td></tr>
+    <tr><td><code>console --json</code></td><td>显示结构化控制台输出，含原始 CDP 参数</td></tr>
+    <tr><td><code>console --clear</code></td><td>清空 agent-browser 捕获的控制台日志</td></tr>
+    <tr><td><code>errors</code></td><td>显示捕获的页面错误与未捕获的 JavaScript 异常</td></tr>
+    <tr><td><code>errors --clear</code></td><td>清空捕获的页面错误日志</td></tr>
+  </tbody>
+</table>
+
+当对象预览或原始 CDP 参数对自动诊断脚本有意义时，使用 `console --json`。智能体只需了解页面输出了什么时，使用默认文本输出。
+
+## JavaScript 对话框
+
+```bash
+agent-browser dialog status
+agent-browser dialog accept
+agent-browser dialog accept "prompt text"
+agent-browser dialog dismiss
+```
+
+默认情况下，`alert` 与 `beforeunload` 对话框会被自动接受，以免阻塞智能体。`confirm` 与 `prompt` 对话框仍需显式处理。使用 `--no-auto-dialog` 或 `AGENT_BROWSER_NO_AUTO_DIALOG=1` 可禁用自动处理。
+
+当对话框待处理时，命令响应会包含带对话框类型与消息的 `warning` 字段，智能体可据此用 `dialog accept` 或 `dialog dismiss` 恢复。
+
+## DevTools 与可视化检查
+
+```bash
+agent-browser highlight @e4
+agent-browser highlight "#submit"
+agent-browser inspect
+```
+
+`highlight` 在实时页面上凸显某个元素，在有头运行或通过流式输出/仪表盘查看会话时很有用。`inspect` 通过本地代理为活动页面打开 Chrome DevTools，同时守护进程继续接受 agent-browser 命令。
+
+## Chrome 追踪捕获
+
+```bash
+agent-browser trace start
+
+agent-browser open https://example.com
+agent-browser click @e3
+
+agent-browser trace stop ./trace.json
+```
+
+`trace start` 开始 Chrome DevTools 追踪。`trace stop [path]` 结束追踪并保存 Chrome Trace Event JSON 文件。未提供路径时，agent-browser 会在其临时目录下写入自动生成的追踪文件。
+
+想要精选的性能类别与事件计数时，使用[性能分析器](/profiler)。需要面向底层调试的通用 Chrome 追踪时，使用原始追踪。
+
+## 超时
+
+点击、填写、等待等标准操作默认 25 秒超时。CLI 会至少等 30 秒等守护进程的回复，因此守护进程会先报告自己的超时错误，CLI 才放弃 socket。设置 `AGENT_BROWSER_DEFAULT_TIMEOUT`（毫秒）可更改默认值：
+
+```bash
+export AGENT_BROWSER_DEFAULT_TIMEOUT=45000
+```
+
+等待命令会按自身预算延长 CLI 的读取超时。其他命令保持 30 秒下限，因此超过 30000 的值可能让一个慢操作活过 CLI 的读取时限。`snapshot`、`url`、`get text` 等只读命令会自动重试。会改变页面或启动浏览器的命令在守护进程收到后不会被重发，因为它可能已经执行；此时以错误码 `outcome_unknown` 失败。
+
+当命令因页面停止响应而超时（例如脚本卡在 `while(true){}`），会以错误码 `page_wedged` 失败。若浏览器由 agent-browser 启动且下一条命令也超时，agent-browser 会用空白标签页替换卡住的标签页，导航之后后续命令即可恢复工作。中途恢复的页面保留其标签页。使用 `--cdp` 或 `--auto-connect` 时，标签页属于你自己的浏览器，会保持原样。操作策略拒绝 `tab_new` 或 `tab_close`、或要求对它们确认时，标签页同样保持原样。
+
+## 相关工具
+
+<table>
+  <thead>
+    <tr><th>需求</th><th>使用</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>性能分析</td><td><a href="../profiler/">性能分析器</a></td></tr>
+    <tr><td>已保存的视频工件</td><td><a href="../recording/">视频录制</a></td></tr>
+    <tr><td>实时浏览器流</td><td><a href="../streaming/">流式输出</a></td></tr>
+    <tr><td>安装与环境诊断</td><td><a href="../installation/#doctor-诊断">doctor 诊断</a></td></tr>
+  </tbody>
+</table>

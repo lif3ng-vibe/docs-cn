@@ -1,0 +1,134 @@
+---
+title: "快照"
+navTitle: "快照"
+---
+
+`snapshot` 命令返回一棵紧凑的无障碍树（accessibility tree），其中带有用于元素交互的引用（ref）。
+
+## 选项
+
+过滤输出以减小体积：
+
+紧凑快照（`-c`）保留可见文本、状态文本及其直接祖先节点，并移除空的兄弟分支。交互快照（`-i`）过滤掉非交互内容。MCP 快照默认为交互模式；设置 `interactive: false` 可保留可见文本与状态文本。
+
+```bash
+agent-browser snapshot                    # 完整无障碍树
+agent-browser snapshot -i                 # 仅交互元素（推荐）
+agent-browser snapshot -c                 # 紧凑格式（移除空元素）
+agent-browser snapshot -d 3               # 限制深度为 3 层
+agent-browser snapshot -s "#main"         # 限定到 CSS 选择器
+agent-browser snapshot -i -c -d 5         # 组合使用选项
+```
+
+<table>
+  <thead>
+    <tr><th>选项</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>-i, --interactive</code></td><td>仅交互元素（按钮、链接、输入框）</td></tr>
+    <tr><td><code>-u, --urls</code></td><td>为链接元素附带 href URL</td></tr>
+    <tr><td><code>-c, --compact</code></td><td>移除空的结构元素</td></tr>
+    <tr><td><code>-d, --depth</code></td><td>限制树深度</td></tr>
+    <tr><td><code>-s, --selector</code></td><td>限定到 CSS 选择器</td></tr>
+  </tbody>
+</table>
+
+## 输出格式
+
+默认文本输出紧凑且对 AI 友好：
+
+```bash
+agent-browser snapshot -i
+# Output:
+# @e1 [heading] "Example Domain" [level=1]
+# @e2 [button] "Submit"
+# @e3 [input type="email"] placeholder="Email"
+# @e4 [link] "Learn more"
+```
+
+## 使用引用
+
+快照中的引用可直接用于命令：
+
+```bash
+agent-browser click @e2      # 点击 Submit 按钮
+agent-browser fill @e3 "a@b.com"  # 填写邮箱输入框
+agent-browser get text @e1        # 获取标题文本
+```
+
+## 引用生命周期
+
+存活的 DOM 元素在多次快照与同文档更新之间保持其引用不变。元素被替换，或其所在页面/iframe 发生导航，都会使其引用失效，但 ID 不会被回收复用。虚拟无障碍节点的引用只在所在快照内有效。交互后应重新快照以观察变化，导航后则务必如此：
+
+```bash
+agent-browser click @e4      # 导航到新页面
+agent-browser snapshot -i    # 获取新引用
+agent-browser click @e8      # 使用新快照中的引用
+```
+
+只要 DOM 节点还存在，引用就一直指向它。若节点已被替换，agent-browser 会回退到唯一具有相同角色和名称的元素——前提是该引用在其快照中是唯一的。当重复元素导致匹配有歧义时，操作会直接失败而不执行。请再次运行 `snapshot` 并使用新引用。
+
+## 带标注截图
+
+若要在文本快照之外获得视觉上下文，可用 `screenshot --annotate` 在交互元素上叠加编号标签。每个标签 `[N]` 对应引用 `@eN`：
+
+在原生模式（native mode）下，带标注截图目前仅支持基于 CDP 的浏览器路径（Chromium/Lightpanda）。Safari/WebDriver 后端尚不支持 `--annotate`。
+
+```bash
+agent-browser screenshot --annotate ./page.png
+# -> Screenshot saved to ./page.png
+#    [1] @e1 button "Submit"
+#    [2] @e2 link "Home"
+#    [3] @e3 textbox "Email"
+agent-browser click @e2
+```
+
+无头 Chromium 截图会隐藏原生滚动条以保证图像输出一致。启动时传入 `--hide-scrollbars false` 可保留原生滚动条。
+
+带标注截图还会缓存引用，因此可以立即与元素交互。当文本快照不足以应对无标签图标、canvas 内容或视觉布局验证时，这很有用。
+
+## iframe
+
+展示型 iframe 在快照与失效引用恢复中使用相同的 `Iframe` 角色。
+
+快照会自动检测并内联 iframe 内容。主框架中的每个 `Iframe` 节点都会被解析，其子无障碍树直接并入其下。分配给 iframe 内元素的引用带有框架（frame）上下文，因此无需先切换框架即可交互。
+
+```bash
+agent-browser snapshot -i
+# @e1 [heading] "Checkout"
+# @e2 [Iframe] "payment-frame"
+#   @e3 [input] "Card number"
+#   @e4 [button] "Pay"
+
+agent-browser fill @e3 "4111111111111111"
+agent-browser click @e4
+```
+
+只展开一层 iframe 嵌套。阻止无障碍树访问的跨源 iframe 与空 iframe 会被静默省略。
+
+若要将快照限定到单个 iframe，请先切换进去：
+
+```bash
+agent-browser frame @e2
+agent-browser snapshot -i       # 仅该 iframe 内的元素
+agent-browser frame main        # 返回主框架
+```
+
+## 最佳实践
+
+1. 使用 `-i` 把输出缩减为可操作元素
+2. 页面变化后重新快照以获取更新的引用
+3. 用 `-s` 限定到特定页面区域
+4. 在复杂页面上用 `-d` 限制深度
+5. 需要在引用之外获得视觉上下文时，使用 `screenshot --annotate`
+
+## JSON 输出
+
+供脚本做程序化解析：
+
+```bash
+agent-browser snapshot --json
+# {"success":true,"data":{"snapshot":"...","refs":{"e1":{"role":"heading","name":"Title"},...}}}
+```
+
+注意：JSON 比文本输出消耗更多 token。AI 智能体应优先使用默认文本格式。

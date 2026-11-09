@@ -1,0 +1,115 @@
+---
+title: "Chrome"
+navTitle: "Chrome"
+---
+
+Chrome（及 Chromium）是默认浏览器引擎。agent-browser 通过 Chrome DevTools Protocol（CDP）自动发现、启动并管理 Chrome 进程。
+
+## 二进制发现
+
+未提供 `--executable-path` 时，agent-browser 先检查用 `agent-browser install` 下载的 Chrome，再按以下顺序搜索各平台位置：
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>检查的位置</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>macOS</td>
+      <td>
+        <code>/Applications/Google Chrome.app</code>,
+        <code>/Applications/Google Chrome Canary.app</code>,
+        <code>/Applications/Chromium.app</code>,
+        <code>/Applications/Brave Browser.app</code>,
+        <code>~/Applications</code> 中的同名应用,
+        Puppeteer 缓存（<code>~/.cache/puppeteer/chrome/</code> 或 <code>PUPPETEER_CACHE_DIR</code>）,
+        Playwright 缓存（<code>~/.cache/ms-playwright</code> 或 <code>PLAYWRIGHT_BROWSERS_PATH</code>）
+      </td>
+    </tr>
+    <tr>
+      <td>Linux</td>
+      <td>
+        PATH 中的 <code>google-chrome</code>,
+        <code>google-chrome-stable</code>,
+        <code>chromium-browser</code>,
+        <code>chromium</code>,
+        Puppeteer 缓存（<code>~/.cache/puppeteer/chrome/</code> 或 <code>PUPPETEER_CACHE_DIR</code>）,
+        Chrome for Testing 缓存
+      </td>
+    </tr>
+    <tr>
+      <td>Windows</td>
+      <td>
+        <code>%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe</code>,
+        <code>C:\Program Files\Google\Chrome\Application\chrome.exe</code>,
+        <code>C:\Program Files (x86)\...\chrome.exe</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+如果找不到 Chrome，运行 `agent-browser install` 从 Chrome for Testing 下载。
+
+## 用法
+
+Chrome 是默认引擎——无需 `--engine` flag：
+
+```bash
+agent-browser open example.com
+```
+
+显式指定时：
+
+```bash
+agent-browser --engine chrome open example.com
+```
+
+## 自定义二进制
+
+用 `--executable-path` 指向任何基于 Chromium 的浏览器：
+
+```bash
+agent-browser --executable-path /path/to/chromium open example.com
+```
+
+或通过环境变量：
+
+```bash
+export AGENT_BROWSER_EXECUTABLE_PATH=/path/to/chromium
+agent-browser open example.com
+```
+
+## Chrome 专属功能
+
+以下功能仅 Chrome 可用：
+
+<table>
+  <thead>
+    <tr><th>功能</th><th>Flag</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>浏览器扩展</td><td><code>--extension &lt;path&gt;</code></td></tr>
+    <tr><td>持久配置文件（profile）</td><td><code>--profile &lt;path&gt;</code>（设置 Chrome 的 <code>--user-data-dir</code>）</td></tr>
+    <tr><td>存储状态</td><td><code>--state &lt;path&gt;</code></td></tr>
+    <tr><td>file URL 访问</td><td><code>--allow-file-access</code></td></tr>
+    <tr><td>无头截图滚动条</td><td><code>--hide-scrollbars false</code> 保持原生滚动条可见</td></tr>
+    <tr><td>有头模式</td><td><code>--headed</code></td></tr>
+    <tr><td>自定义启动参数</td><td><code>--args &lt;args&gt;</code></td></tr>
+  </tbody>
+</table>
+
+## 容器与 CI
+
+在 Docker、CI 运行器或其他沙盒环境中，可能需要禁用 Chrome 的用户命名空间沙盒：
+
+```bash
+agent-browser --args "--no-sandbox" open example.com
+```
+
+agent-browser 检测到容器环境（Docker、Podman、以 root 运行）时会自动添加 `--no-sandbox`。
+
+参数之间用换行分隔，或在下一个 flag 前用逗号分隔。值内部的逗号会留在该 flag 中，因此列表值的 Chrome flag 也能正常工作：
+
+```bash
+agent-browser --args "--disable-features=Translate,HttpsUpgrades,--no-sandbox" open example.com
+```

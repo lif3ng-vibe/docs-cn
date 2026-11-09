@@ -1,0 +1,119 @@
+---
+title: "Obscura（实验性）"
+navTitle: "Obscura"
+---
+
+该适配器不修复上游引擎的 bug，也不意味着与 Chrome 完全对等。选择 Obscura 前请先阅读下面的限制。
+
+[Obscura](https://github.com/h4ckf0r0day/obscura) 是一个用 Rust 编写的无头浏览器引擎。它通过 V8 运行真实 JavaScript，支持 Chrome DevTools Protocol，面向网页抓取与 AI 智能体自动化。
+
+agent-browser 以与管理 Chrome 相同的方式管理 Obscura：启动 `obscura serve` 进程、经 CDP 连接、完成后将其关闭。所有下游命令（snapshot、click、fill、screenshot 等）都走同一条 CDP 路径。
+
+## 安装
+
+在配合 agent-browser 使用之前，先安装 Obscura 二进制：
+
+<table>
+  <thead>
+    <tr><th>平台</th><th>命令</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Linux（x86_64）</td>
+      <td><code>curl -LO https://github.com/h4ckf0r0day/obscura/releases/latest/download/obscura-x86_64-linux.tar.gz && tar xzf obscura-x86_64-linux.tar.gz</code></td>
+    </tr>
+    <tr>
+      <td>macOS（Apple Silicon）</td>
+      <td><code>curl -LO https://github.com/h4ckf0r0day/obscura/releases/latest/download/obscura-aarch64-macos.tar.gz && tar xzf obscura-aarch64-macos.tar.gz</code></td>
+    </tr>
+  </tbody>
+</table>
+
+把二进制移动到 `PATH` 中的某个位置（如 `/usr/local/bin/obscura` 或 `~/.local/bin/obscura`）。
+
+更多安装选项（包括 Docker 与从源码构建）见 [Obscura README](https://github.com/h4ckf0r0day/obscura)。
+
+## 用法
+
+用 `--engine` flag 选择 Obscura：
+
+```bash
+agent-browser --engine obscura open example.com
+agent-browser --engine obscura snapshot
+agent-browser --engine obscura screenshot
+```
+
+或通过环境变量将其设为默认：
+
+```bash
+export AGENT_BROWSER_ENGINE=obscura
+agent-browser open example.com
+```
+
+或写在 `~/.agent-browser/config.json` 或经 `--config` 加载的文件中：
+
+```json
+{
+  "engine": "obscura"
+}
+```
+
+## 自定义二进制路径
+
+如果 `obscura` 二进制不在 `PATH` 中，使用 `--executable-path`：
+
+```bash
+agent-browser --engine obscura --executable-path /path/to/obscura open example.com
+```
+
+## 隐身模式
+
+Obscura 提供可选的隐身模式，呈现隐私优先且一致的浏览器指纹，并拦截已知跟踪器。为 Obscura 引擎启用它需设置 `AGENT_BROWSER_OBSCURA_STEALTH`：
+
+```bash
+AGENT_BROWSER_OBSCURA_STEALTH=1 agent-browser --engine obscura open example.com
+```
+
+设置后，agent-browser 会带 `--stealth` 启动 `obscura serve`。接受的值为 `1`、`true`、`yes` 与 `on`。隐身默认关闭，且需要构建时带隐身支持的 Obscura；禁用它并不意味着与 Chrome 对等。
+
+## 与 Chrome 的差异
+
+Obscura 是专为无头场景打造的引擎，部分 Chrome 专属功能不可用：
+
+<table>
+  <thead>
+    <tr><th>功能</th><th>状态</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>扩展（<code>--extension</code>）</td><td>不支持</td></tr>
+    <tr><td>持久配置文件（<code>--profile</code>）</td><td>不支持</td></tr>
+    <tr><td>存储状态（<code>--state</code>）</td><td>不支持</td></tr>
+    <tr><td>文件访问（<code>--allow-file-access</code>）</td><td>不支持</td></tr>
+    <tr><td>有头模式（<code>--headed</code>）</td><td>不适用（仅无头）</td></tr>
+    <tr><td>代理旁路（<code>--proxy-bypass</code>、配置或环境变量）</td><td>拒绝，即使未设置代理</td></tr>
+    <tr><td>WebGPU、自定义 CA 证书、Chrome 参数</td><td>不支持</td></tr>
+  </tbody>
+</table>
+
+把 `--engine obscura` 与不支持的 flag 组合使用时，agent-browser 会返回明确的错误。
+
+## 何时使用 Obscura
+
+可评估的潜在用途包括：
+
+- 需要执行真实 JavaScript 的网页抓取与数据提取
+- 需要轻量 CDP 目标的 AI 智能体工作流
+- 倾向于单一自包含二进制的 CI/CD 环境
+- 需要隐私优先且一致浏览器指纹的环境（Obscura 提供可选隐身模式）
+
+需要完整浏览器保真度、扩展或持久配置文件时，请使用 Chrome。
+
+## 实验性 Obscura 提供商
+
+使用 `--engine obscura --executable-path /path/to/obscura` 启动本地 Obscura 二进制。该提供商为实验性。Obscura v0.2.2 存在已知的无障碍命名、隐藏元素、iframe 与截图保真度缺口；CDP 连接成功也不代表与 Chrome 对等。在针对目标页面验证之前，依赖这些功能的工作流请使用 Chrome。
+
+本地开发页面要求在会话启动前在环境中设置 `OBSCURA_ALLOW_PRIVATE_NETWORK=1`。更改引擎启动设置时，请关闭并重新启动命名会话。隐身支持取决于 Obscura 二进制的构建方式。不受支持的选项（包括 `--webgpu`、`--ca-cert`、`--args` 与 `--proxy-bypass`）会被拒绝。来自 `proxyBypass` 配置、`AGENT_BROWSER_PROXY_BYPASS`、`NO_PROXY` 或 `no_proxy` 的代理旁路规则同样会被拒绝，即使未设置代理。仅在不需要旁路时才移除这些设置；否则请使用 Chrome。显式 `--engine obscura` 启动会校验当前调用解析出的旁路设置，即使已存在守护进程也是如此；清除这些设置后不会复用过期的守护进程环境值。启动发现与 CDP 初始化各有 10 秒截止时间，初始化失败时会进行有界的连接清理。
+
+MCP 工具使用同一提供商：在 MCP 服务器的环境中设置 `AGENT_BROWSER_EXECUTABLE_PATH` 并传入 `extraArgs: ["--engine", "obscura"]`，因为 `--executable-path` 在 `extraArgs` 中会被拒绝。无需单独的引擎专属 MCP 工具，因为工具都委托给权威的 CLI 解析器。
+
+源码构建测试请见 [Obscura 适配器贡献者指南](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md#obscura-adapter)。

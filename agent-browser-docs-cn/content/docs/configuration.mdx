@@ -1,0 +1,353 @@
+---
+title: "配置"
+navTitle: "配置"
+---
+
+创建 `./agent-browser.json` 即可设置持久化的项目默认值，免去在每条命令上重复传 flag。
+
+## 配置文件位置
+
+agent-browser 会检查两个位置，并按优先级合并：
+
+<table>
+  <thead>
+    <tr><th>优先级</th><th>位置</th><th>作用域</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1（最低）</td><td><code>~/.agent-browser/config.json</code></td><td>用户级默认值</td></tr>
+    <tr><td>2</td><td><code>./agent-browser.json</code></td><td>白名单内的项目默认值</td></tr>
+    <tr><td>3</td><td><code>AGENT_BROWSER_*</code> 环境变量</td><td>覆盖配置值</td></tr>
+    <tr><td>4（最高）</td><td>CLI flag</td><td>覆盖一切</td></tr>
+  </tbody>
+</table>
+
+允许的项目级取值覆盖用户级取值；环境变量覆盖两者；CLI flag 永远优先。自动发现的 `./agent-browser.json` 只接受 `headed`、`json`、`debug`、`userAgent`、`hideScrollbars`、`annotate`、`colorScheme`、`maxOutput`、`screenshotQuality`、`screenshotFormat` 与 `idleTimeout`。其他运行时键——包括 `extensions`、`initScripts`、状态、信任、策略、会话、连接及路径设置——会被忽略并给出警告。`$schema` 元数据键会被静默忽略。高级设置请放入 `~/.agent-browser/config.json`，或通过 `--config` / `AGENT_BROWSER_CONFIG` 加载受信任的文件。
+
+使用 `--config <path>` 或 `AGENT_BROWSER_CONFIG` 环境变量可以只加载某个受信任的配置文件，替代默认发现。环境变量与 CLI flag 依然覆盖其中的取值：
+
+```bash
+agent-browser --config ./ci-config.json open example.com
+AGENT_BROWSER_CONFIG=./ci-config.json agent-browser open example.com
+```
+
+## 配置示例
+
+```json
+{
+  "headed": true,
+  "userAgent": "my-agent/1.0",
+  "hideScrollbars": false,
+  "colorScheme": "dark",
+  "maxOutput": 50000,
+  "screenshotQuality": 80,
+  "screenshotFormat": "png",
+  "idleTimeout": "30m"
+}
+```
+
+提供有 [JSON Schema](https://agent-browser.dev/schema.json)，可用于 IDE 自动补全与校验。在配置文件中加一个 `$schema` 键即可启用：
+
+```json
+{
+  "$schema": "https://agent-browser.dev/schema.json",
+  "headed": true
+}
+```
+
+## 全部选项
+
+全局选项可在受信任的配置文件中用对应的 camelCase 键名设置。命令级 flag（如 `screenshot --full`）仍作为命令参数使用。自动发现的项目配置只接受上列的键。
+
+<table>
+  <thead>
+    <tr><th>配置键</th><th>CLI Flag</th><th>类型</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>headed</code></td><td><code>--headed</code></td><td>boolean</td></tr>
+    <tr><td><code>json</code></td><td><code>--json</code></td><td>boolean</td></tr>
+    <tr><td><code>debug</code></td><td><code>--debug</code></td><td>boolean</td></tr>
+    <tr><td><code>session</code></td><td><code>--session</code></td><td>string</td></tr>
+    <tr><td><code>restore</code></td><td><code>--restore</code></td><td>string</td></tr>
+    <tr><td><code>restoreSave</code></td><td><code>--restore-save</code></td><td>string</td></tr>
+    <tr><td><code>restoreCheckUrl</code></td><td><code>--restore-check-url</code></td><td>string</td></tr>
+    <tr><td><code>restoreCheckText</code></td><td><code>--restore-check-text</code></td><td>string</td></tr>
+    <tr><td><code>restoreCheckFn</code></td><td><code>--restore-check-fn</code></td><td>string</td></tr>
+    <tr><td><code>namespace</code></td><td><code>--namespace</code></td><td>string</td></tr>
+    <tr><td><code>sessionName</code></td><td><code>--session-name</code></td><td>string，旧版恢复（restore）键</td></tr>
+    <tr><td><code>executablePath</code></td><td><code>--executable-path</code></td><td>string</td></tr>
+    <tr><td><code>extensions</code></td><td><code>--extension</code></td><td>string[]</td></tr>
+    <tr><td><code>initScripts</code></td><td><code>--init-script</code></td><td>string[]</td></tr>
+    <tr><td><code>enable</code></td><td><code>--enable</code></td><td>string[]</td></tr>
+    <tr><td><code>profile</code></td><td><code>--profile</code></td><td>string</td></tr>
+    <tr><td><code>state</code></td><td><code>--state</code></td><td>string</td></tr>
+    <tr><td><code>proxy</code></td><td><code>--proxy</code></td><td>string</td></tr>
+    <tr><td><code>proxyBypass</code></td><td><code>--proxy-bypass</code></td><td>string</td></tr>
+    <tr><td><code>args</code></td><td><code>--args</code></td><td>string</td></tr>
+    <tr><td><code>userAgent</code></td><td><code>--user-agent</code></td><td>string</td></tr>
+    <tr><td><code>provider</code></td><td><code>-p, --provider</code></td><td>string</td></tr>
+    <tr><td><code>device</code></td><td><code>--device</code></td><td>string</td></tr>
+    <tr><td><code>hideScrollbars</code></td><td><code>--hide-scrollbars</code></td><td>boolean</td></tr>
+    <tr><td><code>webgpu</code></td><td><code>--webgpu</code></td><td>boolean</td></tr>
+    <tr><td><code>noWebmcp</code></td><td><code>--no-webmcp</code> 或 <code>AGENT_BROWSER_NO_WEBMCP</code></td><td>boolean</td></tr>
+    <tr><td><code>ignoreHttpsErrors</code></td><td><code>--ignore-https-errors</code></td><td>boolean</td></tr>
+    <tr><td><code>caCert</code></td><td><code>--ca-cert</code></td><td>string</td></tr>
+    <tr><td><code>clearCaCert</code></td><td><code>--no-ca-cert</code></td><td>boolean</td></tr>
+    <tr><td><code>useSystemCa</code></td><td><code>--use-system-ca</code></td><td>boolean</td></tr>
+    <tr><td><code>allowFileAccess</code></td><td><code>--allow-file-access</code></td><td>boolean</td></tr>
+    <tr><td><code>cdp</code></td><td><code>--cdp</code></td><td>string</td></tr>
+    <tr><td><code>autoConnect</code></td><td><code>--auto-connect</code></td><td>boolean</td></tr>
+    <tr><td><code>pinTab</code></td><td><code>--pin-tab</code></td><td>boolean</td></tr>
+    <tr><td><code>annotate</code></td><td><code>--annotate</code></td><td>boolean</td></tr>
+    <tr><td><code>colorScheme</code></td><td><code>--color-scheme</code></td><td>string（<code>dark</code>、<code>light</code>、<code>no-preference</code>）</td></tr>
+    <tr><td><code>downloadPath</code></td><td><code>--download-path</code></td><td>string</td></tr>
+    <tr><td><code>contentBoundaries</code></td><td><code>--content-boundaries</code></td><td>boolean</td></tr>
+    <tr><td><code>maxOutput</code></td><td><code>--max-output</code></td><td>number</td></tr>
+    <tr><td><code>allowedDomains</code></td><td><code>--allowed-domains</code></td><td>string[]；同时在受支持的 Chromium 会话中禁用 WebRTC，并要求一个全新的可控浏览器上下文——不能带 profile/会话启动参数、恢复（restore）/状态重放或直接页面型提供商插件</td></tr>
+    <tr><td><code>capture</code></td><td><code>--capture</code></td><td>string[]；仅支持 <code>flow</code>。属于启动设置：将其传给未开启捕获的运行中会话时，会开启捕获并重新启动浏览器。项目配置中忽略</td></tr>
+    <tr><td><code>actionPolicy</code></td><td><code>--action-policy</code></td><td>string</td></tr>
+    <tr><td><code>confirmActions</code></td><td><code>--confirm-actions</code></td><td>string</td></tr>
+    <tr><td><code>confirmInteractive</code></td><td><code>--confirm-interactive</code></td><td>boolean</td></tr>
+    <tr><td><code>engine</code></td><td><code>--engine</code></td><td>string（<code>chrome</code>、<code>lightpanda</code>、<code>obscura</code>）</td></tr>
+    <tr><td><code>screenshotDir</code></td><td><code>--screenshot-dir</code></td><td>string</td></tr>
+    <tr><td><code>screenshotQuality</code></td><td><code>--screenshot-quality</code></td><td>number（0-100）</td></tr>
+    <tr><td><code>screenshotFormat</code></td><td><code>--screenshot-format</code></td><td>string（<code>png</code>、<code>jpeg</code>）</td></tr>
+    <tr><td><code>idleTimeout</code></td><td><code>--idle-timeout</code></td><td>string（<code>10s</code>、<code>3m</code>、<code>1h</code> 或原始毫秒数）；默认 <code>1h</code>，<code>0</code> 禁用空闲关闭</td></tr>
+    <tr><td><code>noAutoDialog</code></td><td><code>--no-auto-dialog</code></td><td>boolean</td></tr>
+    <tr><td><code>model</code></td><td><code>--model</code></td><td>string</td></tr>
+    <tr><td><code>headers</code></td><td><code>--headers</code></td><td>string（JSON）</td></tr>
+    <tr><td><code>plugins</code></td><td>（仅限配置文件）</td><td>plugin config[]</td></tr>
+  </tbody>
+</table>
+
+无法换算为毫秒的过大取值会产生警告并被忽略。
+
+## 常见配置
+
+以下示例使用的设置不在项目配置白名单内。请保存到 `~/.agent-browser/config.json`，或用 `--config` 显式加载该文件。
+
+### 本地开发
+
+```json
+{
+  "headed": true,
+  "profile": "./browser-data"
+}
+```
+
+### 代理之后
+
+```json
+{
+  "proxy": "http://proxy.corp.example.com:8080",
+  "proxyBypass": "localhost,*.internal.com",
+  "caCert": "/etc/ssl/certs/proxy-ca.crt"
+}
+```
+
+在 Linux 上，`caCert` 会将给定的 CA 证书或 PEM 捆绑包导入一个独立的 NSS 数据库，供本地启动的 Chromium 使用。主机名校验、有效期校验及其他无关 CA 的校验仍然启用。后续命令省略该设置时，导入的 CA 继续生效。设置不同的证书内容或 `clearCaCert: true` 会重新启动 Chromium，而无需重启守护进程。`agent-browser install --with-deps` 会安装所需的 `certutil`；否则请在 Debian/Ubuntu 上安装 `libnss3-tools`，或在 RPM 系 Linux 上安装 `nss-tools`。浏览器信任不支持 Chrome 配置文件（profile）、CDP attach、提供商、Lightpanda、macOS 或 Windows。
+
+`caCert` 与 `useSystemCa` 同样作用于 CLI 自身在各平台上的 HTTPS 请求。`read`、`install`、`upgrade` 与 `doctor` 会发起各自的 HTTPS 请求，默认信任内置的 Mozilla 根证书。在所有平台上，`--ca-cert` 会把该 CA 加入这些请求，`--use-system-ca` 则让它们改用操作系统信任库——后者已包含由 MDM 或企业镜像部署的 CA。`SSL_CERT_FILE` 作为回退 CA 文件使用，不可用时会被忽略并给出警告。这两个选项都不会关闭证书或主机名校验。对 `read` 而言，命令行上给定的选择在会话内持续生效直到 `close`，包括守护进程重启之后；`--no-ca-cert` 或 `--use-system-ca false` 可将其关闭。`read` 绝不会因这些选项而启动或重启浏览器。它们目前也不会改变 agent-browser 经 `--cdp`、`--auto-connect` 或提供商连接远端浏览器的方式。
+
+拿不到 CA 证书时，可以退而忽略所有证书错误，这样安全性较低：
+
+```json
+{
+  "proxy": "http://proxy.corp.example.com:8080",
+  "proxyBypass": "localhost,*.internal.com",
+  "ignoreHttpsErrors": true
+}
+```
+
+### CI / Devcontainer
+
+```json
+{
+  "args": "--no-sandbox,--disable-gpu",
+  "ignoreHttpsErrors": true
+}
+```
+
+请把这些设置放进 `~/.agent-browser/config.json` 或用 `--config` 加载的文件；自动发现的 `./agent-browser.json` 会忽略 `args` 并给出警告。
+
+### iOS 测试
+
+```json
+{
+  "provider": "ios",
+  "device": "iPhone 16 Pro"
+}
+```
+
+### AI 智能体安全
+
+```json
+{
+  "contentBoundaries": true,
+  "maxOutput": 50000,
+  "allowedDomains": ["your-app.com", "*.your-app.com"],
+  "actionPolicy": "./policy.json"
+}
+```
+
+## 覆盖布尔选项
+
+布尔 flag 可接受可选的 `true`/`false` 取值来覆盖配置：
+
+```bash
+agent-browser --headed false open example.com
+```
+
+裸 flag 等价于传 `true`：
+
+```bash
+agent-browser --headed open example.com       # 等同于 --headed true
+agent-browser --headed true open example.com  # 显式指定
+```
+
+这适用于 `--headed`、`--debug`、`--json`、`--ignore-https-errors`、`--allow-file-access`、`--hide-scrollbars`、`--auto-connect`、`--annotate`、`--content-boundaries`、`--confirm-interactive`、`--no-auto-dialog` 等布尔 flag。
+
+## 扩展
+
+自动发现的项目配置会忽略 `extensions` 并给出警告。请把扩展路径放进用户配置或显式加载的配置，或设置 `AGENT_BROWSER_EXTENSIONS`，或传 `--extension`。
+
+## 插件
+
+在用户配置或用 `--config` 加载的文件中，通过 `plugins` 数组配置外部插件：
+
+插件作者协议与实现示例见[插件](/plugins)页。使用 `agent-browser plugin add <ref>` 可自动生成这份配置；它默认写入 `~/.agent-browser/config.json`，加 `--project` 则写入 `./agent-browser.json`（仅与 `--config` 配合使用）。
+
+```json
+{
+  "plugins": [
+    {
+      "name": "vault",
+      "command": "agent-browser-plugin-vault",
+      "args": [],
+      "capabilities": ["credential.read"]
+    },
+    {
+      "name": "cloud-browser",
+      "command": "agent-browser-plugin-cloud-browser",
+      "capabilities": ["browser.provider"]
+    },
+    {
+      "name": "stealth",
+      "command": "agent-browser-plugin-stealth",
+      "capabilities": ["launch.mutate"]
+    },
+    {
+      "name": "captcha",
+      "command": "agent-browser-plugin-captcha",
+      "capabilities": ["command.run", "captcha.solve"]
+    }
+  ]
+}
+```
+
+自动发现的 `./agent-browser.json` 会忽略 `plugins` 并给出警告。要使用项目文件中的插件条目，请用 `--config` 加载它；该文件将替代默认发现。`AGENT_BROWSER_PLUGINS` 可用一个相同结构的 JSON 数组取代配置发现。
+
+不要把保险库令牌或密码放进插件命令参数。请使用保险库厂商自己的登录/会话机制，或 agent-browser 配置之外的环境变量。
+
+```bash
+agent-browser plugin list
+agent-browser auth login my-app --credential-provider vault --item "My App"
+agent-browser --provider cloud-browser open https://example.com
+agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"...","url":"https://example.com"}'
+```
+
+`plugin run` 用于 `command.run` 与自定义能力（capability）。核心能力与协议请求类型走各自的专用命令路径。
+
+## 环境变量
+
+以下环境变量配置额外的守护进程与运行时行为：
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AGENT_BROWSER_CONFIG</code></td><td>显式配置文件的路径。</td><td>(default discovery)</td></tr>
+    <tr><td><code>AGENT_BROWSER_SESSION</code></td><td>隔离的浏览器会话名。</td><td><code>default</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_AUTO_CONNECT</code></td><td>自动发现并连接运行中的 Chrome 实例。<code>0</code>、<code>false</code>、<code>no</code> 或空值表示关闭。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ALLOW_FILE_ACCESS</code></td><td>允许 <code>file://</code> URL 访问本地文件。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_EXECUTABLE_PATH</code></td><td>自定义浏览器可执行文件路径。</td><td>(auto-discover)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROFILE</code></td><td>Chrome 配置文件（profile）名或持久化 profile 目录。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_STATE</code></td><td>启动时加载的存储状态文件。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY</code></td><td>代理 URL。优先于标准代理变量。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_BYPASS</code></td><td>代理绕过主机列表。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_USERNAME</code></td><td>凭据单独提供时的代理用户名。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROXY_PASSWORD</code></td><td>凭据单独提供时的代理密码。</td><td>(none)</td></tr>
+    <tr><td><code>HTTP_PROXY</code> / <code>HTTPS_PROXY</code> / <code>ALL_PROXY</code></td><td>标准代理回退变量。</td><td>(none)</td></tr>
+    <tr><td><code>NO_PROXY</code></td><td>标准代理绕过回退。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ARGS</code></td><td>浏览器启动参数，以换行分隔，或在下一个 flag 之前以逗号分隔。值内部的逗号会保留。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_USER_AGENT</code></td><td>自定义 User-Agent 字符串。</td><td>(browser default)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PROVIDER</code></td><td>浏览器提供商，如 <code>ios</code>、<code>browserbase</code>、<code>kernel</code>、<code>browseruse</code>、<code>browserless</code>、<code>agentcore</code>，或已配置的 <code>browser.provider</code> 插件名。</td><td>(local browser)</td></tr>
+    <tr><td><code>AGENT_BROWSER_HIDE_SCROLLBARS</code></td><td>在无头 Chromium 截图中隐藏原生滚动条。</td><td><code>true</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_COLOR_SCHEME</code></td><td>配色方案偏好（<code>dark</code>、<code>light</code>、<code>no-preference</code>）。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_DOWNLOAD_PATH</code></td><td>浏览器下载的默认目录。</td><td>(temp directory)</td></tr>
+    <tr><td><code>AGENT_BROWSER_DEFAULT_TIMEOUT</code></td><td>默认超时（毫秒）。请保持在 30000 以下以避免 IPC 超时。</td><td><code>25000</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_NAMESPACE</code></td><td>守护进程 socket 与恢复状态目录的命名空间。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_RESTORE</code></td><td>自动保存/加载状态的持久化键。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_RESTORE_SAVE</code></td><td>恢复保存策略：<code>auto</code>、<code>always</code> 或 <code>never</code>。</td><td><code>auto</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_AUTOSAVE_INTERVAL_MS</code></td><td>浏览器打开期间，周期性会话自动保存之间的最小毫秒数。<code>0</code> 表示仅在 close 时保存。</td><td><code>30000</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_RESTORE_CHECK_URL</code></td><td>恢复的状态必须匹配的 URL 模式。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_RESTORE_CHECK_TEXT</code></td><td>恢复的状态必须包含的页面文本。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_RESTORE_CHECK_FN</code></td><td>恢复的状态必须满足的 JavaScript 表达式。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_SESSION_NAME</code></td><td>旧版自动保存/加载状态的持久化名。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_STATE_EXPIRE_DAYS</code></td><td>自动删除超过 N 天的已保存会话状态。</td><td><code>30</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_ENCRYPTION_KEY</code></td><td>用于 AES-256-GCM 会话加密的 64 位十六进制密钥。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_EXTENSIONS</code></td><td>以逗号分隔的浏览器扩展路径。扩展在有头与无头模式下均可使用。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_INIT_SCRIPTS</code></td><td>以逗号分隔的页面初始化脚本路径。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ENABLE</code></td><td>以逗号分隔的内置初始化脚本特性，如 <code>react-devtools</code>。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_HEADED</code></td><td>显示浏览器窗口而非无头运行（<code>1</code> 启用）。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_WEBGPU</code></td><td>启用 WebGPU；Linux 上使用 SwiftShader 软件 Vulkan，无需 GPU（<code>1</code> 启用）。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_NO_XVFB</code></td><td>在无显示器的 Linux 主机上，禁用有头模式的自动 Xvfb 虚拟显示（<code>1</code> 禁用）。</td><td>(auto-Xvfb enabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_NO_VERSION_CHECK</code></td><td>跳过 Chrome 过期检查。该检查在每个会话内按浏览器版本各抓取一次 Chrome Releases 博客（<code>1</code> 禁用）。</td><td>(check enabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CLEAR_CA_CERT</code></td><td>清除运行中浏览器会话保留的 CA 信任。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_USE_SYSTEM_CA</code></td><td>CLI 自身的 HTTPS 请求使用操作系统信任库（<code>1</code> 启用）。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_JSON</code></td><td>默认使用 JSON 输出。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ANNOTATE</code></td><td>默认启用带标注截图。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CDP</code></td><td>将守护进程连接到 CDP 端口或 WebSocket URL。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CDP_HEADERS</code></td><td>在 CDP 发现与 WebSocket 握手时发送的头部 JSON 对象，如 <code>Authorization</code>。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_STREAM_PORT</code></td><td>覆盖 WebSocket 流式输出端口。默认使用 OS 分配的端口。设置它可绑定到特定端口（如 <code>9223</code>）。</td><td>OS-assigned</td></tr>
+    <tr><td><code>AGENT_BROWSER_DASHBOARD_ALLOWED_ORIGINS</code></td><td>以逗号分隔的精确 HTTPS 源列表，供反向代理的仪表盘使用。每一项都必须合法，否则仪表盘启动失败。未设置时只接受回环源。回环访问无需外部仪表盘令牌。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_STREAM_QUALITY</code></td><td>流式帧的 JPEG 质量，0 到 100。调低可省带宽：在繁忙页面上，质量 20 的字节数约为默认值的一半。</td><td><code>80</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_STREAM_MAX_WIDTH</code></td><td>限制编码帧的像素宽度。只截取帧本身，不改动页面尺寸，因此指针坐标不受影响。</td><td>the viewport</td></tr>
+    <tr><td><code>AGENT_BROWSER_STREAM_MAX_HEIGHT</code></td><td>限制编码帧的像素高度。</td><td>the viewport</td></tr>
+    <tr><td><code>AGENT_BROWSER_IDLE_TIMEOUT_MS</code></td><td>无命令或仪表盘输入 N 毫秒后自动关闭守护进程。设 <code>0</code> 禁用。有头浏览器、Safari 与 iOS WebDriver 会话及用户接入的浏览器不受默认值约束。提供商所有的云端浏览器会被清理，显式取值则对所有浏览器生效。</td><td><code>3600000</code>（1 小时）</td></tr>
+    <tr><td><code>AGENT_BROWSER_IOS_DEVICE</code></td><td><code>ios</code> 提供商的默认 iOS 设备名。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_IOS_UDID</code></td><td><code>ios</code> 提供商的默认 iOS 设备 UDID。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_DEBUG</code></td><td>启用调试输出（<code>1</code> 启用）。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CONTENT_BOUNDARIES</code></td><td>为页面输出包裹边界标记，保障 LLM 安全。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_MAX_OUTPUT</code></td><td>页面输出的最大字符数（超出截断）。</td><td>(unlimited)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ALLOWED_DOMAINS</code></td><td>以逗号分隔的允许域名模式（如 <code>example.com,*.example.com</code>）。要求一个全新的可控浏览器上下文——不能带 profile/会话启动参数、恢复（restore）/状态重放或直接页面型提供商插件。</td><td>(unrestricted)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ACTION_POLICY</code></td><td>操作策略（action policy）JSON 文件路径。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CONFIRM_ACTIONS</code></td><td>以逗号分隔、需要确认（confirmation）的操作类别。</td><td>(none)</td></tr>
+    <tr><td><code>AGENT_BROWSER_CONFIRM_INTERACTIVE</code></td><td>启用交互式确认提示（stdin 不是 TTY 时自动拒绝）。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_ENGINE</code></td><td>使用的浏览器引擎：<code>chrome</code>（默认）、<code>lightpanda</code>、<code>obscura</code>（实验性）。</td><td><code>chrome</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_NO_AUTO_DIALOG</code></td><td>禁用 <code>alert</code>/<code>beforeunload</code> 对话框的自动关闭。</td><td>(disabled)</td></tr>
+    <tr><td><code>AGENT_BROWSER_PLUGINS</code></td><td>JSON 插件注册表，替代配置发现。</td><td>(config discovery)</td></tr>
+    <tr><td><code>AGENT_BROWSER_SCREENSHOT_DIR</code></td><td>默认截图输出目录。</td><td>(temp directory)</td></tr>
+    <tr><td><code>AGENT_BROWSER_SCREENSHOT_QUALITY</code></td><td>JPEG 截图质量，0 到 100。</td><td>(format default)</td></tr>
+    <tr><td><code>AGENT_BROWSER_SCREENSHOT_FORMAT</code></td><td>截图格式：<code>png</code> 或 <code>jpeg</code>。</td><td><code>png</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_SOCKET_DIR</code></td><td>守护进程 socket 文件的高级覆盖项。</td><td>runtime dir or <code>~/.agent-browser</code></td></tr>
+    <tr><td><code>AGENT_BROWSER_SKILLS_DIR</code></td><td>覆盖 <code>agent-browser skills</code> 使用的目录。</td><td>bundled skills</td></tr>
+    <tr><td><code>AGENT_BROWSER_COLOR</code></td><td>为真值时启用 CLI 彩色输出。</td><td>(disabled)</td></tr>
+    <tr><td><code>NO_COLOR</code></td><td>存在时禁用彩色输出。</td><td>(not set)</td></tr>
+    <tr><td><code>AI_GATEWAY_URL</code></td><td>Vercel AI Gateway 基础 URL。</td><td><code>https://ai-gateway.vercel.sh</code></td></tr>
+    <tr><td><code>AI_GATEWAY_API_KEY</code></td><td>Vercel AI Gateway 的 API 密钥。启用 AI 聊天所必需。</td><td>(none)</td></tr>
+    <tr><td><code>AI_GATEWAY_MODEL</code></td><td>仪表盘聊天的默认 AI 模型。</td><td><code>openai/gpt-6-luna-fast</code></td></tr>
+  </tbody>
+</table>
+
+非法的 `--max-output` 与 `AGENT_BROWSER_MAX_OUTPUT` 取值会产生警告，并保持现有输出上限不变。
+
+## 错误处理
+
+- **自动发现的配置文件**（`~/.agent-browser/config.json`、`./agent-browser.json`）缺失时静默忽略。
+- **`--config <path>`** 指向缺失或格式非法的文件时报错退出。
+- 自动发现文件中的**非法 JSON** 会向 stderr 打印警告，并在无该文件的情况下继续。
+- 自动发现的项目配置中的**不支持的键**会被忽略并给出警告。
+- 用户配置或显式加载配置中的**未知键**为保持向前兼容而静默忽略。
+
+使用了高级键的既有项目配置，必须把这些设置迁到用户配置，或用 `--config` 显式加载。

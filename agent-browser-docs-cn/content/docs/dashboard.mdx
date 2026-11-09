@@ -1,0 +1,169 @@
+---
+title: "可观测性仪表盘"
+navTitle: "仪表盘"
+---
+
+通过本地 Web 仪表盘（dashboard）实时监控 agent-browser 会话，查看浏览器视口实时画面与命令活动流。
+
+## 用法
+
+仪表盘内置于二进制文件中，无需单独安装。启动服务器并打开任意会话：
+
+```bash
+agent-browser dashboard start
+agent-browser open example.com
+```
+
+然后在浏览器中打开 `http://localhost:4848` 即可看到实时仪表盘。若通过反向代理或端口转发暴露仪表盘，请在启动服务器时显式允许其浏览器 HTTPS 源（origin）：
+
+```bash
+agent-browser dashboard start --allowed-origins https://dashboard.example.com
+```
+
+所有会话都会自动流向仪表盘。本地回环源在 IPv4 与 IPv6 上自动放行，无需访问令牌。对经反向代理的仪表盘，用 `--allowed-origins` 或 `AGENT_BROWSER_DASHBOARD_ALLOWED_ORIGINS` 传入逗号分隔的精确源列表；这样仪表盘就能拒绝跨源请求与 DNS 重绑定攻击。每个配置的源都必须有效，自定义端口必须是 1 到 65535 的整数。未知选项、缺失值、无效端口与畸形源都会直接失败，服务器不会启动。命令只会为外部源打印带私密令牌的访问 URL。打开对应 URL 一次以建立浏览器会话，并且不要分享它。其不可猜测的令牌保留在初始 URL 片段中，随后浏览器会把它存入一个 Secure、绑定主机、同站（same-site）的 Cookie，用于仪表盘 API 与流请求。本地访问请直接打开 `http://localhost:<port>`；外部令牌绝不会写入回环 Cookie。请将反向代理配置为从日志中抹除 Cookie。浏览器停留在仪表盘源上，服务器在内部代理各会话的标签页、状态与流流量，因此会话端口无需暴露。重复启动只有在这些设置一致时才会复用仪表盘；更改端口或允许源之前请先停止它。
+
+### 自定义流端口
+
+默认情况下，每个会话的 WebSocket 流服务器绑定到操作系统分配的端口。要使用特定端口，请设置 `AGENT_BROWSER_STREAM_PORT` 环境变量：
+
+```bash
+AGENT_BROWSER_STREAM_PORT=9223 agent-browser open example.com
+```
+
+也可以用运行时命令控制运行中会话的流式输出：
+
+```bash
+agent-browser stream enable --port 9223
+agent-browser stream status
+agent-browser stream disable
+```
+
+## 仪表盘功能
+
+仪表盘是一个单页 Web 应用，包含以下区域：
+
+<table>
+  <thead>
+    <tr>
+      <th>区域</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>实时视口</strong></td>
+      <td>来自浏览器的实时 JPEG 帧，渲染到 canvas 元素</td>
+    </tr>
+    <tr>
+      <td><strong>活动流</strong></td>
+      <td>按时间排列的命令、结果与控制台消息流，可展开详情</td>
+    </tr>
+    <tr>
+      <td><strong>会话创建</strong></td>
+      <td>在仪表盘中用本地引擎（Chrome、Lightpanda）或云提供商（AgentCore、Browserbase、Browserless、Browser Use、Kernel）创建新会话</td>
+    </tr>
+    <tr>
+      <td><strong>状态栏</strong></td>
+      <td>连接状态、视口尺寸与 WebSocket 端点</td>
+    </tr>
+  </tbody>
+</table>
+
+## WebSocket 协议
+
+仪表盘连接与[流式输出](/streaming)相同的 WebSocket 端点，并增加了用于可观测性的消息类型：
+
+### 命令事件
+
+命令开始执行时发送：
+
+```json
+{
+  "type": "command",
+  "action": "click",
+  "id": "r123",
+  "params": { "selector": "@e5" },
+  "timestamp": 1711367000000
+}
+```
+
+### 结果事件
+
+命令完成时发送：
+
+```json
+{
+  "type": "result",
+  "id": "r123",
+  "action": "click",
+  "success": true,
+  "data": {},
+  "duration_ms": 45,
+  "timestamp": 1711367000045
+}
+```
+
+### 控制台事件
+
+浏览器向控制台输出日志时发送：
+
+```json
+{
+  "type": "console",
+  "level": "log",
+  "text": "Page loaded",
+  "args": [{"type": "string", "value": "Page loaded"}],
+  "timestamp": 1711367000100
+}
+```
+
+`args` 数组包含原始的 CDP `Runtime.consoleAPICalled` 参数，便于程序化访问。对象参数带有预览数据（例如 `{userId: "abc", count: 42}`，而非 `"Object"`）。
+
+这些是在[流式输出](/streaming)页面已记录的 `frame`、`status` 与 `error` 消息类型之外的补充。
+
+## 架构
+
+仪表盘是 Next.js 静态导出（`output: 'export'`）产物，输出纯 HTML、CSS 和 JS。它位于 monorepo 的 `packages/dashboard/`，构建命令：
+
+```bash
+pnpm build:dashboard
+```
+
+仪表盘在编译时通过 `rust-embed` 嵌入 CLI 二进制文件。普通 HTTP 请求提供内嵌的仪表盘资源与同源 API 路由。会话专属的标签页、状态与流 WebSocket 流量经仪表盘服务器代理到仅监听回环地址的会话端口。
+
+## AI 聊天
+
+仪表盘内置一个可选的 AI 聊天面板，由 [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) 驱动。启用后，右栏会在 Activity、Console、Network、Storage 和 Extensions 旁边出现一个 **Chat** 标签页。
+
+### 设置
+
+Chat 标签页始终可见。设置 API 密钥即可启用回复：
+
+```bash
+export AI_GATEWAY_API_KEY=gw_your_key_here
+agent-browser dashboard start
+```
+
+可选：覆盖网关 URL 或模型：
+
+```bash
+export AI_GATEWAY_URL=https://ai-gateway.vercel.sh   # 这是默认值
+export AI_GATEWAY_MODEL=openai/gpt-4o-mini           # 默认：openai/gpt-6-luna-fast
+```
+
+### 工作原理
+
+Rust 服务器把来自仪表盘的聊天请求代理到 Vercel AI Gateway，并按 Vercel AI SDK 的 UI Message Stream 协议把响应流式传回。仪表盘前端使用 `@ai-sdk/react` 的 `useChat` 与 `DefaultChatTransport`。
+
+聊天每次工具调用执行一条 agent-browser 命令。引号内参数中的 `;` 或 `&&` 会保留为文本，因此 JSON 参数可以包含它们。聊天可以用 `skills get <name>` 加载内置技能，也能使用页面 WebMCP 工具：先用 `webmcp list <tool> --frame <frame-id> --json` 获取工具的输入 schema，再用相同的 `--frame` 调用 `webmcp invoke`。聊天在选定的会话中运行，不能创建或切换会话；需要新会话请使用仪表盘中的 New Session。聊天命令除 `--json` 与 `--annotate` 外不能设置全局 flag。
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>AI_GATEWAY_URL</code></td><td>Vercel AI Gateway 基础 URL。</td><td><code>https://ai-gateway.vercel.sh</code></td></tr>
+    <tr><td><code>AI_GATEWAY_API_KEY</code></td><td>AI Gateway 的 API 密钥。启用 AI 聊天回复必需。</td><td>（无）</td></tr>
+    <tr><td><code>AI_GATEWAY_MODEL</code></td><td>聊天请求的默认 AI 模型。</td><td><code>openai/gpt-6-luna-fast</code></td></tr>
+  </tbody>
+</table>

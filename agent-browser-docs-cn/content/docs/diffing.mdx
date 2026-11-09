@@ -1,0 +1,180 @@
+---
+title: "Diff 对比"
+navTitle: "Diff 对比"
+---
+import { DiffDemo } from "@/components/diff-demo"
+
+
+对比页面状态以检测变化——可通过无障碍树（accessibility tree）快照做结构对比、通过像素比较做视觉对比，或在两个不同 URL 之间对比。
+
+<DiffDemo />
+
+## 命令
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>diff snapshot</code></td><td>将当前快照与会话中的上一个快照对比</td></tr>
+    <tr><td><code>diff snapshot --baseline &lt;file&gt;</code></td><td>将当前快照与已保存的文件对比</td></tr>
+    <tr><td><code>diff screenshot --baseline &lt;file&gt;</code></td><td>与基线图像做像素级视觉对比</td></tr>
+    <tr><td><code>diff url &lt;url1&gt; &lt;url2&gt;</code></td><td>对比两个页面（快照 + 可选截图）</td></tr>
+  </tbody>
+</table>
+
+## 快照对比
+
+使用行级文本对比（diff）比较两个时间点之间的无障碍树。
+
+```bash
+# 与本会话中最近一次快照对比
+agent-browser diff snapshot
+
+# 与已保存的基线文件对比
+agent-browser diff snapshot --baseline before.txt
+
+# 限定到页面的特定部分
+agent-browser diff snapshot --selector "#main" --compact
+```
+
+不指定 `--baseline` 时，命令会自动与当前会话中最近一次快照对比。这是智能体验证某个操作是否达到预期效果的主要用法。
+
+### 选项
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>-b, --baseline &lt;file&gt;</code></td><td>用于对比的已保存快照文件路径</td></tr>
+    <tr><td><code>-s, --selector &lt;sel&gt;</code></td><td>将当前快照限定到某个 CSS 选择器或 @ref</td></tr>
+    <tr><td><code>-c, --compact</code></td><td>使用紧凑快照格式</td></tr>
+    <tr><td><code>-d, --depth &lt;n&gt;</code></td><td>限制快照树深度</td></tr>
+  </tbody>
+</table>
+
+### 输出
+
+对比结果用 `+` 表示新增行、`-` 表示删除行，类似 unified diff 格式。摘要行显示新增、删除与未变更行的数量。
+
+```
+- button "Submit" [ref=e2]
++ button "Submit" [ref=e2] [disabled]
+  3 additions, 2 removals, 41 unchanged
+```
+
+## 截图对比
+
+在像素级将当前页面截图与基线图像对比，生成一张以红色高亮变化像素的对比图。
+
+```bash
+# 基本视觉对比
+agent-browser diff screenshot --baseline before.png
+
+# 将对比图保存到指定路径
+agent-browser diff screenshot --baseline before.png --output diff.png
+
+# 调整阈值并限定到元素
+agent-browser diff screenshot --baseline before.png --threshold 0.2 --selector "#hero"
+```
+
+### 选项
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>-b, --baseline &lt;file&gt;</code></td><td>用于对比的基线 PNG/JPEG 图像（必填）</td></tr>
+    <tr><td><code>-o, --output &lt;file&gt;</code></td><td>生成的对比图的保存路径（默认：临时目录）</td></tr>
+    <tr><td><code>-t, --threshold &lt;0-1&gt;</code></td><td>颜色距离阈值（默认 0.1）。越高越宽容</td></tr>
+    <tr><td><code>-s, --selector &lt;sel&gt;</code></td><td>将当前截图限定到某个元素</td></tr>
+    <tr><td><code>--full</code></td><td>截取整页截图</td></tr>
+  </tbody>
+</table>
+
+### 输出
+
+命令会报告对比图路径、差异像素数量及不匹配百分比。对比图中未变化的像素变暗，变化的像素显示为红色。
+
+若基线图像与当前图像尺寸不同，命令会报告尺寸不匹配，而不尝试像素比较。
+
+## URL 对比
+
+依次导航到两个页面并对比结果。
+
+```bash
+# 对比两个 URL（快照对比）
+agent-browser diff url https://staging.example.com https://prod.example.com
+
+# 附带视觉对比
+agent-browser diff url https://v1.example.com https://v2.example.com --screenshot
+
+# 整页截图对比
+agent-browser diff url https://v1.example.com https://v2.example.com --screenshot --full
+```
+
+命令先导航到第一个 URL 并捕获状态，再导航到第二个 URL 再次捕获。快照对比始终包含；截图对比需要 `--screenshot` flag。
+
+完成后浏览器停留在第二个 URL。
+
+### 选项
+
+<table>
+  <thead>
+    <tr><th>Flag</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--screenshot</code></td><td>同时执行视觉截图对比</td></tr>
+    <tr><td><code>--full</code></td><td>使用整页截图</td></tr>
+    <tr><td><code>--wait-until &lt;strategy&gt;</code></td><td>导航等待策略：<code>load</code>、<code>domcontentloaded</code>、<code>networkidle</code>（默认：<code>load</code>）</td></tr>
+    <tr><td><code>-s, --selector &lt;sel&gt;</code></td><td>将快照限定到某个 CSS 选择器或 @ref</td></tr>
+    <tr><td><code>-c, --compact</code></td><td>使用紧凑快照格式</td></tr>
+    <tr><td><code>-d, --depth &lt;n&gt;</code></td><td>限制快照树深度</td></tr>
+  </tbody>
+</table>
+
+`--wait-until` 选项只接受 `load`、`domcontentloaded` 与 `networkidle`，无法表达应用特定的条件。若页面需要按选择器、文本、URL 或 JavaScript 条件等待，请分别使用 `open` 与 `wait` 命令，然后对比捕获到的快照或截图，而不是用 `diff url`。`networkidle` 适用于安静页面，但 SSE、WebSocket、轮询与长轮询可能使其永远无法满足。
+
+## 使用场景
+
+### 验证智能体操作
+
+最常见的用法：确认某个操作（点击、填写、提交）让页面发生了预期变化。
+
+```bash
+agent-browser snapshot -i          # 截取仅含交互元素的快照（基线）
+agent-browser fill @e3 "test@example.com"
+agent-browser diff snapshot        # 将当前快照与基线对比
+```
+
+### 监控页面变化
+
+定期将页面与已保存的基线对比，检测更新。
+
+```bash
+# 保存基线
+agent-browser open https://example.com && agent-browser snapshot > baseline.txt
+
+# 之后检查变化
+agent-browser open https://example.com && agent-browser diff snapshot --baseline baseline.txt
+```
+
+### 视觉回归测试
+
+在部署前后对比截图，捕捉意外的视觉变化。
+
+```bash
+agent-browser open https://staging.example.com && agent-browser screenshot baseline.png
+# ……此间完成部署……
+agent-browser open https://staging.example.com && agent-browser diff screenshot --baseline baseline.png
+```
+
+### 环境对比
+
+对比预发布环境与生产环境，验证一致性。
+
+```bash
+agent-browser diff url https://staging.example.com https://prod.example.com --screenshot
+```

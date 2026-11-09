@@ -581,6 +581,27 @@ jobs:
           pnpm --filter agent-desktop build
           mv apps/docs/out ../_site/agent-desktop
 
+      # agent-browser 是 geistdocs 2.7.5（fumadocs + Next.js 16 静态导出）单包站点
+      # （上游 vercel-labs/agent-browser@main 4b0e9f01）：basePath /docs-cn/agent-browser
+      # 写死在工程配置、内链全带前缀，CI 不加 env、不加 sed；geistdocs 补丁在 patches/
+      # （pnpm patch 自动应用，含静态搜索 mandarin tokenizer），build 自带 fumadocs-mdx
+      # 与 postprocess（资产/搜索索引前缀兜底）。
+      - name: Restore agent-browser-docs-cn dist
+        id: dist-agent-browser
+        uses: actions/cache@v4
+        with:
+          path: _site/agent-browser
+          key: dist-agent-browser-${{ hashFiles('agent-browser-docs-cn/**') }}
+
+      - name: Build agent-browser-docs-cn
+        if: steps.dist-agent-browser.outputs.cache-hit != 'true'
+        working-directory: agent-browser-docs-cn
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+          mv out ../_site/agent-browser
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
@@ -633,6 +654,7 @@ jobs:
           echo '| worktrunk | ${{ steps.dist-worktrunk.outputs.cache-hit == 'true' }} |'
           echo '| gstack | ${{ steps.dist-gstack.outputs.cache-hit == 'true' }} |'
           echo '| agent-desktop | ${{ steps.dist-agent-desktop.outputs.cache-hit == 'true' }} |'
+          echo '| agent-browser | ${{ steps.dist-agent-browser.outputs.cache-hit == 'true' }} |'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3

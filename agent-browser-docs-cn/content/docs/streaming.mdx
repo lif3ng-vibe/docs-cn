@@ -1,0 +1,345 @@
+---
+title: "流式输出"
+navTitle: "流式输出"
+---
+
+通过 WebSocket 流式传输浏览器视口，实现实时预览，或进行"结对浏览"（pair browsing）——让人类与 AI 智能体并肩观看页面并同时操作。
+
+## 流式输出
+
+每个会话都会自动在操作系统分配的端口上启动一个 WebSocket 流服务器。该服务器推送视口帧，并接受输入事件（鼠标、键盘、触摸）。
+
+要绑定到特定端口，请设置 `AGENT_BROWSER_STREAM_PORT`：
+
+```bash
+AGENT_BROWSER_STREAM_PORT=9223 agent-browser open example.com
+```
+
+也可以在运行时管理流式输出：
+
+```bash
+agent-browser stream status            # 显示流式输出状态与绑定端口
+agent-browser stream enable --port 9223  # 在指定端口重新启用
+agent-browser stream disable           # 停止该会话的流式输出
+```
+
+`stream status` 返回启用状态、活动端口、浏览器连接状态，以及 screencast 是否处于活动状态。`stream disable` 会关闭服务器并删除该会话的 `.stream` 元数据文件。
+
+当你需要保存为 WebM 或 MP4 文件而非实时 WebSocket 流时，请使用[视频录制](/recording)。录制要求 `PATH` 上有 `ffmpeg`。
+
+## 运行时状态响应
+
+`agent-browser stream status --json` 返回如下数据：
+
+```json
+{
+  "enabled": true,
+  "port": 9223,
+  "connected": true,
+  "screencasting": true
+}
+```
+
+`connected` 表示守护进程当前是否已附加浏览器。`screencasting` 表示当前是否正在为流服务器生成帧。
+
+## 与 screencast 命令的关系
+
+`stream enable` 创建 WebSocket 服务器，并为该会话保持其可用。之后 WebSocket 客户端会自动触发实时帧投递。
+
+更底层的 `screencast_start` 与 `screencast_stop` 命令仍然直接控制显式 CDP screencast。当你只想要 screencast 而不需要 WebSocket 运行时服务器时，可以使用它们。
+
+## WebSocket 协议
+
+连接 `ws://localhost:9223` 即可接收帧并发送输入。
+
+帧编码按守护进程设置，通过 `AGENT_BROWSER_STREAM_QUALITY`（0 到 100）、`AGENT_BROWSER_STREAM_MAX_WIDTH` 与 `AGENT_BROWSER_STREAM_MAX_HEIGHT` 控制。实时流请求 jpeg 格式。显式的 `screencast_start` 会重新配置同一个底层 screencast，因此客户端可能在流中途看到格式变化。宽度与高度为帧设定上限，默认为会话视口尺寸。在 1280x720 的繁忙页面上，质量 80 约为每帧 54 KB，质量 20 约为 25 KB，而质量 20 加 640x360 约为 9 KB。
+
+浏览器客户端必须从 `localhost`、`127.0.0.1`、`::1` 或 `file://` 加载。其他源（origin）在升级握手时会收到 403，需要借助代理。
+
+### 帧消息
+
+服务器发送携带 base64 编码图像的帧消息：
+
+```json
+{
+  "type": "frame",
+  "seq": 41,
+  "data": "<base64-encoded-jpeg>",
+  "metadata": {
+    "deviceWidth": 1280,
+    "deviceHeight": 720,
+    "pageScaleFactor": 1,
+    "offsetTop": 0,
+    "scrollOffsetX": 0,
+    "scrollOffsetY": 0,
+    "timestamp": 1785038682238
+  }
+}
+```
+
+`seq` 是单调递增的帧 id。Ack 配速客户端回传的就是它；它跨浏览器重启持续递增，因此长存客户端永远不会看到 id 倒退。
+
+`metadata.timestamp` 是采集时刻的 Unix 纪元毫秒数。把它与帧绘制时的时钟对比，就能得到屏幕内容的"年龄"——在带宽受限的链路上，这是最值得关注的一个数。
+
+### URL 消息
+
+在 Chrome 上，服务器会针对活动标签页主框架（frame）中的整文档导航、History API 导航和片段导航发送 URL 更新：
+
+```json
+{
+  "type": "url",
+  "url": "https://example.com/dashboard#activity",
+  "timestamp": 1785038682238
+}
+```
+
+子框架或后台标签页内的导航不会发出 URL 消息，也不会替换活动标签页缓存的 URL。
+
+### 状态消息
+
+连接与 screencast 状态：
+
+```json
+{
+  "type": "status",
+  "connected": true,
+  "screencasting": true,
+  "viewportWidth": 1280,
+  "viewportHeight": 720
+}
+```
+
+### 帧投递
+
+帧投递遵循最新优先：服务器只保留最新的一帧，并在发送时才读取它，因此在一帧还在写出的过程中新生成的帧会被直接跳过而不是排队。应用永远不会积压。
+
+应用不会积压；但在默认的推送配速（push pacing）下，底层传输仍可能积压：已被 socket 接受的帧会按顺序投递，完全停止读取的客户端会把内核在写端阻塞前缓冲的内容全部收完。Ack 配速消除了这一窗口（见下文）。状态、控制台与标签页消息走单独的有序通道，因此不会像帧那样被更新的消息替换。但它们并非无条件可靠：落后太多的客户端可能从该通道掉队并丢失消息，所以请把控制台输出当作实时流，而不是审计日志。
+
+输入处理与帧投递相互独立。每条连接在独立任务中读取输入，因此即使一帧大画面正在写给慢速客户端，点击与按键也会立即派发给浏览器。事件不等浏览器回复就直接发出，因此在一串鼠标移动之后点击仍能保持响应，且顺序得到保留。
+
+### 客户端配置
+
+客户端可以随时发送 `config` 消息来限制自己的帧率：
+
+```json
+{
+  "type": "config",
+  "maxFps": 10
+}
+```
+
+`maxFps` 限制服务器每秒向该客户端发送多少帧（1 到 120）。设为 `0` 表示不限制（默认值）。每个客户端只控制自己的速率；其他已连接的客户端不受影响。
+
+### Ack 配速
+
+推送配速只要速率允许就把每一帧交给 socket，因此卡住的客户端仍要排空传输层缓冲的内容。若想改为一次只收一帧，可启用 Ack 配速（ack pacing）：
+
+```json
+{
+  "type": "config",
+  "pacing": "ack"
+}
+```
+
+此后服务器同一时刻最多保留一个在途帧，并等待客户端确认：
+
+```json
+{
+  "type": "ack",
+  "seq": 41
+}
+```
+
+每条 `frame` 消息都带有一个单调递增的 `seq`。渲染完成后，把该帧的 id 回传即可。在确认未返回期间，更新的帧会在服务器端彼此覆盖，永远不会到达 socket，因此卡住十秒再恢复的客户端收到的是当前页面，而不是十秒的历史。这与 Chrome 上游用 `Page.screencastFrameAck` 为自家 screencast 配速的方式一致。
+
+Ack 配速下同一时刻只有一个在途帧，因此速率等于一次帧传输加上一次确认往返。链路的带宽和时延都构成上限，而带宽时延积超过单帧大小的链路会因此利用不足。这份富余正是新鲜度保证的代价。
+
+Ack 配速只作用于单跳。若路径中有代理，请转发渲染端的 ack；在收到时自行生成的 ack 会让帧滞留在远端队列中。
+
+Ack 是累积的：确认较新的 id 即覆盖所有更早的 id，因此跳过某些 id 的客户端依然能解除投递阻塞。已启用 Ack 配速却不再发送确认的客户端只是不再收到帧，而状态、标签页、url 与控制台消息仍会继续送达。发送 `{"type":"config","pacing":"push"}` 即可回到默认模式。
+
+`pacing` 与 `maxFps` 相互独立、可以组合：pacing 限制在途数量，`maxFps` 限制速率。受限链路上的预览通常两者都要。
+
+`config` 消息无法作用于连接的第一帧，因为服务器在客户端连上的瞬间就会发送最近一帧。要让配速从第一帧就生效，请改在 URL 上声明：
+
+```
+ws://127.0.0.1:<port>/?pacing=ack&maxFps=10
+```
+
+后发的 `config` 消息仍然优先。URL 上无法识别或无法解析的值会被忽略，而不会导致连接失败。
+
+## 输入注入
+
+发送输入事件即可远程控制浏览器。鼠标、键盘与触摸输入会重置守护进程的空闲计时器，因此被持续操作的仪表盘或流式会话不会因默认超时被关闭。
+
+### 鼠标事件
+
+```json
+// 点击
+{
+  "type": "input_mouse",
+  "eventType": "mousePressed",
+  "x": 100,
+  "y": 200,
+  "button": "left",
+  "clickCount": 1
+}
+
+// 释放
+{
+  "type": "input_mouse",
+  "eventType": "mouseReleased",
+  "x": 100,
+  "y": 200,
+  "button": "left"
+}
+
+// 移动
+{
+  "type": "input_mouse",
+  "eventType": "mouseMoved",
+  "x": 150,
+  "y": 250
+}
+
+// 滚动
+{
+  "type": "input_mouse",
+  "eventType": "mouseWheel",
+  "x": 100,
+  "y": 200,
+  "deltaX": 0,
+  "deltaY": 100
+}
+```
+
+### 键盘事件
+
+```json
+// 按下按键
+{
+  "type": "input_keyboard",
+  "eventType": "keyDown",
+  "key": "Enter",
+  "code": "Enter"
+}
+
+// 松开按键
+{
+  "type": "input_keyboard",
+  "eventType": "keyUp",
+  "key": "Enter",
+  "code": "Enter"
+}
+
+// 输入字符
+{
+  "type": "input_keyboard",
+  "eventType": "char",
+  "text": "a"
+}
+
+// 带修饰键（1=Alt、2=Ctrl、4=Meta、8=Shift）
+{
+  "type": "input_keyboard",
+  "eventType": "keyDown",
+  "key": "c",
+  "code": "KeyC",
+  "modifiers": 2
+}
+```
+
+### 触摸事件
+
+```json
+// 触摸开始
+{
+  "type": "input_touch",
+  "eventType": "touchStart",
+  "touchPoints": [{ "x": 100, "y": 200 }]
+}
+
+// 触摸移动
+{
+  "type": "input_touch",
+  "eventType": "touchMove",
+  "touchPoints": [{ "x": 150, "y": 250 }]
+}
+
+// 触摸结束
+{
+  "type": "input_touch",
+  "eventType": "touchEnd",
+  "touchPoints": []
+}
+
+// 多点触控（双指缩放）
+{
+  "type": "input_touch",
+  "eventType": "touchStart",
+  "touchPoints": [
+    { "x": 100, "y": 200, "id": 0 },
+    { "x": 200, "y": 200, "id": 1 }
+  ]
+}
+```
+
+## 编程 API
+
+高级用法可直接通过 TypeScript API 控制流式输出：
+
+```typescript
+import { BrowserManager } from 'agent-browser';
+
+const browser = new BrowserManager();
+await browser.launch({ headless: true });
+await browser.navigate('https://example.com');
+
+// 启动 screencast 并带回调
+await browser.startScreencast((frame) => {
+  console.log('Frame:', frame.metadata.deviceWidth, 'x', frame.metadata.deviceHeight);
+  // frame.data 是 base64 编码的图像
+}, {
+  format: 'jpeg',  // 或 'png'
+  quality: 80,     // 0-100，仅 jpeg 有效
+  maxWidth: 1280,
+  maxHeight: 720,
+  everyNthFrame: 1
+});
+
+// 注入鼠标事件
+await browser.injectMouseEvent({
+  type: 'mousePressed',
+  x: 100,
+  y: 200,
+  button: 'left',
+  clickCount: 1
+});
+
+// 注入键盘事件
+await browser.injectKeyboardEvent({
+  type: 'keyDown',
+  key: 'Enter',
+  code: 'Enter'
+});
+
+// 注入触摸事件
+await browser.injectTouchEvent({
+  type: 'touchStart',
+  touchPoints: [{ x: 100, y: 200 }]
+});
+
+// 检查是否正在 screencast
+console.log('Active:', browser.isScreencasting());
+
+// 停止 screencast
+await browser.stopScreencast();
+```
+
+## 使用场景
+
+- **结对浏览**——人类实时观看并协助 AI 智能体
+- **远程预览**——在独立 UI 中查看浏览器输出
+- **录制**——捕获帧用于生成视频
+- **移动端测试**——注入触摸事件以模拟移动设备
+- **无障碍测试**——在自动化测试期间进行人工交互

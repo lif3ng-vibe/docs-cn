@@ -1,0 +1,45 @@
+---
+title: "Kernel"
+navTitle: "Kernel"
+---
+
+[Kernel](https://www.kernel.sh) 为 AI 智能体提供云浏览器基础设施，带隐身模式与持久配置文件等功能。
+
+## 设置
+
+```bash
+export KERNEL_API_KEY="your-api-key"
+agent-browser -p kernel open https://example.com
+```
+
+或在 CI/脚本中使用环境变量：
+
+```bash
+export AGENT_BROWSER_PROVIDER=kernel
+export KERNEL_API_KEY="your-api-key"
+agent-browser open https://example.com
+```
+
+`-p` flag 优先于 `AGENT_BROWSER_PROVIDER`。
+
+## 配置
+
+<table>
+  <thead>
+    <tr><th>变量</th><th>说明</th><th>默认值</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>KERNEL_API_KEY</code></td><td>API key（必需）</td><td></td></tr>
+    <tr><td><code>KERNEL_HEADLESS</code></td><td>以无头模式运行浏览器</td><td><code>true</code></td></tr>
+    <tr><td><code>KERNEL_STEALTH</code></td><td>启用隐身模式以规避机器人检测</td><td><code>false</code></td></tr>
+    <tr><td><code>KERNEL_TIMEOUT_SECONDS</code></td><td>会话超时（秒）</td><td><code>300</code></td></tr>
+    <tr><td><code>KERNEL_PROFILE_NAME</code></td><td>要加载的既有浏览器配置文件的名称</td><td>（无）</td></tr>
+    <tr><td><code>KERNEL_PROFILE_SAVE_CHANGES</code></td><td>把会话改动保存回配置文件</td><td><code>false</code></td></tr>
+  </tbody>
+</table>
+
+**配置文件持久化**：`KERNEL_PROFILE_NAME` 加载既有的 Kernel 配置文件（请先在 Kernel 中创建）。设置 `KERNEL_PROFILE_SAVE_CHANGES=true` 可在会话结束时把 cookie、登录状态与会话数据保存回配置文件。
+
+启用后，agent-browser 会连接 Kernel 云会话，而不是启动本地浏览器。所有命令的工作方式完全相同。
+
+从 [Kernel 仪表盘](https://dashboard.onkernel.com)获取 API key。

@@ -1,0 +1,272 @@
+---
+title: "网络拦截"
+navTitle: "网络拦截"
+---
+
+在浏览器自动化过程中使用网络命令拦截请求、模拟（mock）响应、检查流量并导出 HAR 文件。
+
+## 请求路由
+
+路由（route）会在匹配的请求发出之前生效。若需要影响首次页面加载，请在导航之前设置。
+
+```bash
+agent-browser open
+agent-browser network route "**/analytics/**" --abort
+agent-browser network route "**/api/users" --body '{"users":[]}'
+agent-browser navigate https://app.example.com
+```
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>network route &lt;url&gt;</code></td><td>拦截匹配的请求</td></tr>
+    <tr><td><code>network route &lt;url&gt; --abort</code></td><td>阻止匹配的请求</td></tr>
+    <tr><td><code>network route &lt;url&gt; --body &lt;json&gt;</code></td><td>用模拟响应体满足匹配的请求</td></tr>
+    <tr><td><code>network route &lt;url&gt; --body &lt;json&gt; --allow-origin &lt;origin&gt;</code></td><td>允许该源上的页面跨源读取该模拟响应</td></tr>
+    <tr><td><code>network route "*" --resource-type script --abort</code></td><td>只阻止特定资源类型</td></tr>
+    <tr><td><code>network unroute [url]</code></td><td>移除一条路由或全部路由</td></tr>
+  </tbody>
+</table>
+
+`--resource-type` 接受逗号分隔的资源类型，如 `script`、`image`、`font`、`xhr` 和 `fetch`。
+
+为与页面不同源的 URL 设置模拟（例如 `www.example.com` 上的页面调用 `api.example.com`）时，若不通过 `--allow-origin` 传入页面的源，请求会以网络错误失败。设置后，该模拟只对这个源应答 CORS 检查与预检请求。JSON 响应体以 `application/json` 发送。
+
+## 请求日志
+
+```bash
+agent-browser network requests
+agent-browser network requests --filter api
+agent-browser network requests --type xhr,fetch
+agent-browser network requests --method POST
+agent-browser network requests --status 2xx
+agent-browser network request <requestId>
+agent-browser network requests --clear
+```
+
+<table>
+  <thead>
+    <tr><th>筛选器</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--filter &lt;pattern&gt;</code></td><td>按 URL 子串或模式筛选</td></tr>
+    <tr><td><code>--type &lt;csv&gt;</code></td><td>按资源类型筛选</td></tr>
+    <tr><td><code>--method &lt;method&gt;</code></td><td>按 HTTP 方法筛选</td></tr>
+    <tr><td><code>--status &lt;status&gt;</code></td><td>按精确状态码、状态码族或区间筛选</td></tr>
+    <tr><td><code>--clear</code></td><td>清空已跟踪的请求日志</td></tr>
+  </tbody>
+</table>
+
+在 `network requests` 中找到请求 ID 后，可用 `network request <requestId>` 查看单个请求与响应的详情。
+
+## HAR 导出
+
+```bash
+agent-browser network har start
+
+agent-browser open https://app.example.com
+agent-browser click @e4
+
+agent-browser network har stop ./trace.har
+```
+
+如果 HAR 导出失败，录制与已捕获的请求仍然可用。修正目标路径后重试 `network har stop` 即可。
+
+文本类响应体（JSON、HTML、JavaScript、表单数据）默认会以 `content.text` 嵌入 HAR，并在浏览器仍将其保留在缓冲区时捕获，因此导航之后依然存在。`har start` 的 `--content` flag 控制这一行为：
+
+<table>
+  <thead>
+    <tr><th>模式</th><th>行为</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--content text</code></td><td>默认值。嵌入文本类响应体（JSON、XML、HTML、JS、表单数据），每个响应体最大 2&nbsp;MB。</td></tr>
+    <tr><td><code>--content all</code></td><td>嵌入所有响应体；二进制内容以 base64 编码并标记 <code>encoding: "base64"</code>。</td></tr>
+    <tr><td><code>--content none</code></td><td>仅保留大小与 MIME 类型，不含响应体。</td></tr>
+  </tbody>
+</table>
+
+HAR 文件包含请求头、响应头、Cookie、POST 数据和响应体。当页面使用 Cookie、bearer 令牌或 API 密钥时，请将其视为敏感文件。
+
+## SSR 与无 JavaScript 调试
+
+```bash
+agent-browser batch \
+  "open" \
+  "network route * --abort --resource-type script" \
+  "navigate http://localhost:3000" \
+  "snapshot -i"
+```
+
+用不带 URL 的 `open` 启动会让浏览器停留在 `about:blank`，让路由在第一次真正导航之前有时间注册。
+
+## 已保存的流程
+
+已保存的流程（flow）是实验性功能。用 `--capture flow` 打开会话，把一个浏览器任务做一遍，agent-browser 会记住它背后的请求。之后的运行通过 HTTP 直接发送这些请求，只返回任务所需的数据，而不再驱动页面。通过页面执行流程或重放录制的命令尚不属于该功能。
+
+```bash
+agent-browser --capture flow open "https://shop.example.com/search?q=kettle"
+agent-browser flow steps
+agent-browser flow save search
+agent-browser close
+
+agent-browser flow run search --param q="toaster" --fields title,price --limit 3
+```
+
+### 捕获
+
+`--capture flow` 是一项启动设置，与 `--allowed-domains` 类似。它会记录每条命令及其引发的请求，直到 `close`。将它传给一个没有启用它的运行中会话会重启浏览器（任何启动设置变更都会如此），捕获从那个页面开始。之后重复传或省略它的命令不会再触发重启。`flow` 是唯一支持的取值；其他取值会失败并列出支持的值。
+
+每条被录制的命令都会在其 JSON 响应中返回 `recorded: {seq}`。失败的命令仍以 `ok: false` 留在录制中，因为一次失败的点击可能仍发出了请求，但保存的文件只保留请求。若上次保存之后还有步骤，`close` 会报告 `unsaved: {steps: N}`。
+
+捕获占用录制器期间，`har start` 与 `har stop` 不可用。`har stop` 会失败并提示改用 `flow save`。
+
+### 步骤与保存
+
+`flow steps` 列出录制的步骤。
+
+<table>
+  <thead>
+    <tr><th>列</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>seq</code></td><td>步骤编号，与 <code>recorded.seq</code> 返回的相同</td></tr>
+    <tr><td><code>command</code></td><td>命令及其主要参数</td></tr>
+    <tr><td><code>url</code></td><td>命令执行后的页面 URL</td></tr>
+    <tr><td><code>requests</code></td><td>该命令引发的请求</td></tr>
+    <tr><td><code>ok</code></td><td>命令是否成功</td></tr>
+  </tbody>
+</table>
+
+`flow steps --json` 返回相同数据。
+
+```bash
+agent-browser flow save <name> [--from <seq>] [--to <seq>] [--param k=v]... [--output <id>] [--description <text>] [--timeout <ms>]
+```
+
+<table>
+  <thead>
+    <tr><th>选项</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--from</code></td><td>起始步骤编号。默认为上次保存之后的最后一次导航</td></tr>
+    <tr><td><code>--to</code></td><td>结束步骤。默认为最新一步</td></tr>
+    <tr><td><code>--param</code></td><td>你在任务中输入过的值，以便之后的运行可以修改它</td></tr>
+    <tr><td><code>--output</code></td><td>流程返回其响应的请求 id：可以是已保存流程中的 id（<code>s1r1</code>，在保存范围内编号），也可以是捕获 id <code>s&lt;step&gt;r&lt;n&gt;</code>（使用 <code>flow steps</code> 的步骤编号）。在两种形式中指向不同请求的 id 会被拒绝</td></tr>
+    <tr><td><code>--description</code></td><td>一行说明该流程做什么，显示在流程列表中</td></tr>
+  </tbody>
+</table>
+
+保存不会停止或重置捕获，因此一个会话可以保存多个流程。流程也可以从已打开的页面开始，比如你已登录的页面。
+
+`flow save` 会保留：
+
+- 第一方 JSON 响应
+- 服务端渲染页面嵌在 HTML 里的 JSON：`<script type="application/json">`、`__NEXT_DATA__`、JSON-LD 以及 `window.x = {...}` 状态
+
+它绝不会保存 Cookie、`authorization` 或令牌与 CSRF 头。每次运行都从当前活动会话读取 Cookie。
+
+保存之前，`flow save` 会等待保存范围内最后一步发起的、尚无响应的第一方请求，直到命令超时（`AGENT_BROWSER_DEFAULT_TIMEOUT` 或 `--timeout`）。更早步骤发起、却始终没有响应的请求会像长轮询那样活过它之后的步骤，不会被等待；最后一步发起的长轮询则等到超时为止。响应头到达后 500 ms 内响应体没有任何字节的响应（如长轮询）不会被等待（静默窗口与 `wait --load networkidle` 相同）。被排除的请求会报告为 `still loading at save`；当保存再无其他可保留内容时，错误信息中也会出现。
+
+保存报告会列出保留的请求、参数，以及无法转换为请求的步骤及原因。当录制停在登录表单时，报告也会说明。
+
+流程文件为 `version: 1`。含未知字段或其他版本的文件会加载失败并给出原因。
+
+### 参数
+
+用 `fill`、`type`、`keyboard type` 或 `inserttext` 输入的每个值，要么成为参数（param），要么被脱敏，步骤绝不会把它存为字面值。输入到普通字段的值会成为以该字段命名的参数，标记 `source: typed`；携带它的请求保留一个 `{{name}}` 占位符，文件不保存该值的副本，因此运行时必须传 `--param name=value`。保存时给出的 `--param` 为该值命名，并将其保留为录制时的示例。短于三个字符的值仍是参数，但不会在请求 URL 和响应体中替换，以免改写无关文本；机密字段无论长短一律脱敏。传入 `flow save --param name=value` 即可选择名称。`flow save` 也会自行发现参数：
+
+- 页面 URL 中、请求也一并发送的查询值，如 `?q=`（`source: query`）
+- 任务从更早响应的列表中选取的值，如从门店列表中选的 id（`source: response`）
+- 从更早响应的单一字段复制的值，如会话密钥，每次运行都从该响应填充
+
+### 脱敏
+
+输入到机密字段的值在 `flow steps` 中会被脱敏；保存的文件绝不会包含它。机密字段持有焦点时用 `press` 或 `keydown` 发送的按键会被归并为一个机密并以同样方式脱敏，`auth login` 从保险库填充的密码也被视为机密。只有单键或 Shift 加单键会并入该机密；粘贴组合键（`Control+v`、`Meta+v`、`Shift+Insert`）或向机密字段执行 `clipboard paste` 会脱敏整个步骤，字段值在粘贴完成后读取一次并整体视为机密，因此之后发送它的请求不会被保存。当页面不暴露可读值（contenteditable 字段、跨源框架）时，则改为丢弃标记到该粘贴步骤的请求。`clipboard write` 的文本会被脱敏并视为机密。不被录制的命令（如 `auth login`）不会把任何请求标记到步骤。携带该值的请求——无论原样、表单编码、百分号编码还是 JSON 转义——都会从流程中丢弃，报告会以方法和路径（不含查询串）指明它。当它是唯一请求时，`flow save` 以该名称失败；请填写非机密字段或使用声明的工具，以获得可复用的流程。agent-browser 读取的是字段本身（`keyboard type` 与 `inserttext` 则是聚焦的元素），而不只看命令，因此无标签字段也在覆盖范围内。字段在以下情况下为机密：
+
+<table>
+  <thead>
+    <tr><th>信号</th><th>匹配</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>type</code></td><td><code>password</code></td></tr>
+    <tr><td><code>autocomplete</code></td><td><code>current-password</code>、<code>new-password</code>、<code>one-time-code</code> 或任意 <code>cc-*</code> 令牌</td></tr>
+    <tr><td>名称、id、label、placeholder、aria-label 或选择器</td><td>包含 <code>pass</code>、<code>secret</code>、<code>token</code>、<code>otp</code>、<code>pin</code>、<code>cvv</code> 或 <code>card</code></td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-browser flow list   # 参数、录制的值、条目字段与已验证状态
+```
+
+### 运行
+
+```bash
+agent-browser flow run <name> [--param k=v]... [--where field=value] [--fields a,b.c] [--limit n]
+```
+
+`--where` 只保留字段包含该值的条目，不区分大小写。`--fields` 只返回这些字段。用它们可以把大响应挡在智能体的上下文之外。未知字段名会失败并列出有效字段。
+
+一次运行会按录制顺序、携带当前活动会话的 Cookie，通过 HTTP 直接发送每个请求；靠后的请求可以取用靠前响应中的值。
+
+无论 `--allowed-domains` 怎么设置，每个请求都必须停留在流程所属站点上。`flow save` 会按公共后缀列表（public suffix list）记录起始 URL 的基础域名，因此 `a.vercel.app` 不允许 `b.vercel.app`，运行会拒绝任何发往范围之外主机的请求或重定向。origin 目录与起始 URL 不符的流程会加载失败，并提示重新保存。
+
+直接请求只会发往公网地址：主机名解析时检查一次，每次重定向再检查一次，因此后来解析到回环、私有或链路本地地址（例如 `169.254.169.254`）的名称会被明确报错拒绝，什么也不发送。针对 `localhost` 或 `*.localhost` 录制的流程只对回环地址运行；针对本地 IP 地址录制的只对本地地址运行。针对浏览器直连（不经过代理）的其他名称录制的流程也是如此，只在该名称保存流程时仍解析到的本地地址上运行，例如 `lvh.me`、`.test` 开发域名或内网主机：所有地址都是回环时，`flow save` 写入 `"reach": "loopback"`，否则写入 `"reach": "local"`。本地流程绝不发送到链路本地或云元数据地址（`169.254.0.0/16`、`fe80::/10`、`fd00:ec2::254`、`100.100.100.200`）。当名称只解析到本地地址、但录制中没有到它们的直连（浏览器走了代理，或页面来自缓存）时，流程不会标记为本地，保存报告会在 `reachNote` 中说明原因。针对公网地址录制的流程会持续拒绝后来解析到本地地址的名称；没有 `reach` 字段的文件也会这样拒绝，并提示重新录制流程。来自 `HTTP_PROXY`、`HTTPS_PROXY` 或 `ALL_PROXY` 的代理按其配置使用，不限地址；经过它的请求由代理解析和检查，而不是 agent-browser。`NO_PROXY` 排除的目标直连，并与其他目标一样接受检查。解析器信任作为 `https://` 主机名的代理名，因此同名的直接目标会跳过该过滤。`http://` 代理的名称只在有请求经过它时才解析；若解析失败，请求以 `could not resolve proxy <host>` 失败，而 `NO_PROXY` 排除的目标不必等它即可运行。
+
+每个响应都会与录制的结构（shape）比对。若结构变了，运行以 `drifted` 失败，流程被标记为未验证，智能体继续在页面中操作并重新保存流程。错误信息会指出缺失的已录制键，以及列表出现在别处时的位置。主列表的路径随每个请求一并保存，因此嵌套得比结构更深的列表也会被检查。响应中缺失录制列表、或该处不再是列表，都算漂移——即使答案看起来是空的，因为漏检的漂移会返回一个悄悄出错的空答案。存在且为空的列表是空结果；仅缺少空列表计数的响应则保持原验证状态不变。
+
+某些响应会终止运行。除 `drifted` 外，它们不会把流程标记为未验证，运行自身也不会增加节流或重试。
+
+<table>
+  <thead>
+    <tr><th>响应</th><th>错误码</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>401 或 403</td><td><code>auth_expired</code></td><td>会话已登出或没有权限。在浏览器中重新登录后再运行</td></tr>
+    <tr><td>录制时带有凭据头的请求返回 401 或 403</td><td><code>credential_not_sendable</code></td><td>录制时发送了 <code>authorization</code> 或令牌、CSRF 头，而流程从不保存它们，因此运行无法发送该请求所需的内容，重新登录也无济于事。请用页面 UI 完成这项任务。文件中该请求标记为 <code>strippedAuth</code></td></tr>
+    <tr><td>携带录制的签名或时间戳头的请求返回 401 或 403</td><td><code>request_signed</code></td><td>名称含 <code>ts</code>、<code>timestamp</code>、<code>sig</code>、<code>signature</code>、<code>hmac</code> 或 <code>nonce</code> 的请求头，被录制到的值看起来是逐请求计算的：时间戳类名称为秒或毫秒级纪元值（带小数也行）或 ISO-8601 日期时间；签名类名称为 16 个以上十六进制字符，或 20 个以上且含数字的 base64 字符，或含此类部分的 <code>t=...,v1=...</code> 列表。由普通单词组成的值（<code>SignatureVersion2</code>、<code>RSASSA-PSS-SHA256</code>），或在流程两个及以上请求中录制到相同值的，属于静态值。它会过期，无法重放。请用页面完成这项任务。错误信息会指明这些请求头。名称相符但值为静态的请求头不算数：运行会报告 <code>auth_expired</code> 并指出该请求头</td></tr>
+    <tr><td>录制的键缺失或类型改变</td><td><code>drifted</code></td><td>响应不再具有录制的结构。流程被标记为未验证；请用页面完成这项任务并重新保存流程。存在且为空的列表不算漂移</td></tr>
+    <tr><td>429</td><td><code>rate_limited</code></td><td>站点正在对会话限流。站点返回 <code>Retry-After</code> 时，<code>data.retryAfter</code> 携带该值</td></tr>
+    <tr><td>写入没有收到应答</td><td><code>outcome_unknown</code></td><td>写入已发送但没有响应返回。它不会被再次发送；重跑前请先到站点确认</td></tr>
+    <tr><td>机器人质询页</td><td><code>blocked</code></td><td>站点返回的是质询而非数据。在 UI 中继续，或让用户通过质询</td></tr>
+  </tbody>
+</table>
+
+机器人质询只在 HTML 响应中识别，绝不在 JSON 中识别。写入只发送一次：若请求失败且没有应答，结果为 `outcome_unknown`，因为服务器可能已应用它，且绝不重试。写入绝不跟随重定向，包括 307 和 308：3xx 就是它的应答，运行随之停止。读取只跟随流程站点内的重定向。错误码在 JSON 响应的 `code` 字段，另有 `data.status`、`data.step` 与 `data.httpStatus`。
+
+### 写操作
+
+`flow save` 会在流程的 `writes` 中列出已保存请求里的每个写操作，各带 id、方法、URL 和种类。报告会打印它们。
+
+<table>
+  <thead>
+    <tr><th>种类</th><th>含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>explicit</code></td><td>GET、HEAD、OPTIONS 之外的任何请求，GraphQL 查询除外</td></tr>
+    <tr><td><code>suspected</code></td><td>路径中含完整段为 <code>logout</code>、<code>signout</code>、<code>unsubscribe</code>、<code>delete</code> 或 <code>remove</code> 的 GET。<code>/address</code> 不算匹配</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-browser flow run <name> --allow-write <all|id,id,...>
+```
+
+`--allow-write` 接受 `all` 或逗号分隔的写操作 id。一次运行只发送其输出所需请求中的写操作；`--allow-write` 未覆盖的写操作绝不会被静默发送：运行会以确认请求停下，`confirm` 一次批准一个写操作。每个写操作都是一个名为 `flow_write:<id>` 的策略操作，因此 `--action-policy` 可以拒绝它或要求确认，即使 `--allow-write` 已覆盖，`--confirm-actions flow_write:<id>` 仍会发起询问。
+
+当内容类型表明是表单，或响应体形如 `k=v&k=v` 时，无论内容类型是什么，都按表单读取。可能破坏请求头、纯文本体或 multipart 体结构的值（如换行符或 multipart 边界）会在发送任何内容之前被拒绝。值按其落点编码：URL 查询串或路径段、表单体，或 JSON 字符串。占位符一次填充完毕，因此包含占位符文本的值会作为数据插入。没有 `output` 的流程会发送每个请求，其中的每个写操作也像其他一样受门控。参数绝不填充 GraphQL 操作的文本，只填充 `variables` 与其他字段。文本中含占位符的操作算作写操作；对于值填充后变成写操作、却不在 `writes` 中的请求，运行会在发送任何内容之前拒绝它。
+
+### 发现
+
+在 `open`、`back`、`forward`、`reload` 或切换标签页之后，响应会每会话一次列出该站点已保存的流程，含参数、录制的值和条目字段。捕获中的会话只隐藏它自己保存的流程。当页面还声明了 WebMCP 工具时，它们排在前面，且有工具能覆盖任务时提示会推荐它。
+
+已保存的流程采用 WebMCP 工具的形态：名称、描述，以及由参数构成的 `inputSchema`。`flow list --json` 返回该形态，`webmcp list` 也会在其中列出已保存的流程，排在页面声明的工具之后。用 `flow run` 运行它们；`webmcp invoke` 只调用页面自己的工具。
+
+MCP 服务器在核心 profile 中暴露 `agent_browser_flow_list`、`agent_browser_flow_run`、`agent_browser_flow_steps` 与 `agent_browser_flow_save`。公共的 `capture` 参数会以 `--capture flow` 打开会话。
+
+### 存储
+
+流程保存在 `~/.agent-browser/flows/<origin>/<name>.json`。设置 `AGENT_BROWSER_FLOWS_DIR` 可使用其他目录。写入流程时，`<origin>` 会按主机名校验，因此不能包含路径。
+
+在 macOS 和 Linux 上，目录以模式 `0700` 创建，文件以 `0600` 创建。在 Windows 上，流程写在用户配置目录下并继承其每用户权限；agent-browser 不设置显式 ACL，因此用 `AGENT_BROWSER_FLOWS_DIR` 指定的目录的私密性取决于其所在位置。

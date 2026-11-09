@@ -1,0 +1,68 @@
+---
+title: "React 与 Web Vitals"
+navTitle: "React 与 Web Vitals"
+---
+
+agent-browser 可以检查 React 组件树、录制重复渲染、对 Suspense 边界分类、测量 Core Web Vitals 并执行 SPA 导航。
+
+## 启用 React 检查
+
+React 检查要求在页面 JavaScript 运行前安装 React DevTools hook：
+
+```bash
+agent-browser open --enable react-devtools http://localhost:3000
+agent-browser react tree
+```
+
+如果会话已有一个未装 hook 的浏览器，传入 `--enable react-devtools` 会让该会话装好 hook 后重新启动。
+
+`react tree` 在组件树可用时将其打印出来。如果响应只包含一个头部，说明没有收集到组件树。请确认页面使用了 React 且已挂载 React root。
+
+## React 命令
+
+<table>
+  <thead>
+    <tr><th>命令</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>react tree</code></td><td>打印带 fiber ID 的 React 组件树</td></tr>
+    <tr><td><code>react inspect &lt;fiberId&gt;</code></td><td>检查单个组件的 props、hooks、state 与源码</td></tr>
+    <tr><td><code>react renders start</code></td><td>开始录制组件渲染提交</td></tr>
+    <tr><td><code>react renders stop [--json]</code></td><td>停止录制并打印渲染概况</td></tr>
+    <tr><td><code>react suspense [--only-dynamic] [--json]</code></td><td>遍历 Suspense 边界并区分静态与动态边界</td></tr>
+  </tbody>
+</table>
+
+```bash
+agent-browser react tree
+agent-browser react inspect 42
+
+agent-browser react renders start
+agent-browser click @e3
+agent-browser react renders stop
+
+agent-browser react suspense --only-dynamic
+```
+
+## Web Vitals
+
+`vitals` 适用于任何站点。检测到 React profiling 构建时，还会报告 hydration 阶段。
+
+```bash
+agent-browser vitals
+agent-browser vitals https://example.com --json
+```
+
+默认情况下，`vitals` 打印的摘要与结构化的 `--json` 响应使用相同字段。报告的指标包括 LCP、CLS、TTFB、FCP、INP，以及可用时的 hydration 耗时。
+
+## SPA 导航
+
+`pushstate` 执行客户端导航，而不强制浏览器整体重载。在 Next.js 应用上，它会尝试使用 `window.next.router.push`，使 RSC 请求照常发出。其他框架则回退到 `history.pushState` 加导航事件。
+
+```bash
+agent-browser pushstate /dashboard
+agent-browser wait --url "**/dashboard"
+agent-browser snapshot -i
+```
+
+完整导航用 `open`，工作流需要 SPA 行为时用 `pushstate`。

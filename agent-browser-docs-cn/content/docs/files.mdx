@@ -1,0 +1,82 @@
+---
+title: "文件与剪贴板"
+navTitle: "文件与剪贴板"
+---
+
+agent-browser 可以上传文件、捕获下载、通过 `file://` URL 读取本地文件、写出 PDF 与截图，并操作浏览器剪贴板。
+
+## 上传文件
+
+```bash
+agent-browser snapshot -i
+agent-browser upload @e4 ./invoice.pdf
+agent-browser upload @e4 ./front.png ./back.png
+```
+
+选择器必须解析到文件输入框。多文件输入框可接受多个文件路径。
+
+## 下载
+
+```bash
+agent-browser download @e5 ./report.csv
+agent-browser wait --download ./archive.zip --timeout 30000
+```
+
+由特定元素触发下载时使用 `download`。由其他操作启动下载、需要等待完成时使用 `wait --download`。
+
+这两条命令都只会为 agent-browser 自己启动的浏览器保存到本地路径。在 `--cdp`、`--auto-connect` 或某个提供商之下，保存的文件名由远端决定，因此 `download` 与 `wait --download <path>` 会被拒绝。不带路径的 `wait --download` 仍会报告浏览器保存文件的位置。
+
+可为浏览器发起的下载设置默认下载目录：
+
+```bash
+agent-browser --download-path ./downloads open https://app.example.com
+```
+
+若不设置 `--download-path`，下载会进入一个临时目录，浏览器关闭时即被清理。
+
+## 截图与 PDF
+
+```bash
+agent-browser screenshot ./page.png
+agent-browser screenshot --full ./page-full.png
+agent-browser screenshot --if-changed
+agent-browser screenshot --threshold 0.01
+agent-browser screenshot --screenshot-format jpeg --screenshot-quality 80 ./page.jpg
+agent-browser pdf ./page.pdf
+```
+
+反复截图时优先使用 `--if-changed`：跳过未变化的图像是最省 token 的做法。历史记录按标签页与截图范围分别维护。首次截图返回路径；后续未变化的截图则省略路径。JSON 输出包含 `changed`、`revision` 与 `pixelChangeRatio`。`--threshold <0-1>` 隐含 `--if-changed`，将不高于该比例的变化视为未变化。
+
+截图默认值还可以通过以下方式配置：
+
+<table>
+  <thead>
+    <tr><th>设置项</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--screenshot-dir</code> / <code>AGENT_BROWSER_SCREENSHOT_DIR</code></td><td>默认截图输出目录</td></tr>
+    <tr><td><code>--screenshot-format</code> / <code>AGENT_BROWSER_SCREENSHOT_FORMAT</code></td><td><code>png</code> 或 <code>jpeg</code></td></tr>
+    <tr><td><code>--screenshot-quality</code> / <code>AGENT_BROWSER_SCREENSHOT_QUALITY</code></td><td>JPEG 质量，0 到 100</td></tr>
+  </tbody>
+</table>
+
+## 本地文件
+
+```bash
+agent-browser --allow-file-access open file:///Users/me/report.pdf
+agent-browser --allow-file-access open file:///path/to/page.html
+agent-browser screenshot ./local-file.png
+```
+
+`--allow-file-access` 仅适用于 Chromium。它允许 `file://` 页面加载并通过 `fetch`、XHR 等浏览器 API 访问其他本地文件。
+
+## 剪贴板
+
+```bash
+agent-browser clipboard read
+agent-browser clipboard write "Hello, world"
+agent-browser clipboard copy
+agent-browser clipboard paste
+```
+
+`copy` 与 `paste` 针对当前选区或聚焦元素模拟平台键盘快捷键。想直接设置剪贴板文本时请使用 `write`。

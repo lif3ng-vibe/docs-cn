@@ -1,0 +1,841 @@
+---
+title: "命令"
+navTitle: "命令"
+---
+
+## 核心
+
+未知命令以状态码 1 退出，请求命令帮助时同样如此。
+
+当顶层 Chrome/CDP `eval` 的结果是 JSON 无法表示的值时，纯文本输出会打印其精确的 JavaScript 字面量，包括 `NaN`、`Infinity`、`-Infinity`、`-0`、BigInt 字面量与 `undefined`。使用 `--json` 时，`data.result` 保持为 `null`，旁边的 `data.unserializable` 包含该字面量。MCP 文本输出会打印该字面量，结构化响应则在 `structuredContent.response.data.unserializable` 中暴露它。
+
+```bash
+agent-browser open                    # 启动浏览器（不导航）；停留在 about:blank
+agent-browser open <url>              # 启动并导航（别名：goto、navigate）
+agent-browser read [url]              # 抓取智能体可读文本，或读取已渲染的活动标签页 DOM
+agent-browser click <sel>             # 点击元素（--new-tab 在新标签页打开）
+agent-browser dblclick <sel>          # 双击
+agent-browser fill <sel> <text>       # 清空并填写
+agent-browser type <sel> <text>       # 在元素中输入
+agent-browser press <key>             # 按键（Enter、Tab、Control+a）（别名：key）
+agent-browser keyboard type <text>    # 在当前焦点处输入（无需选择器）
+agent-browser keyboard inserttext <text>  # 不触发按键事件地插入文本
+agent-browser keydown <key>           # 按住键
+agent-browser keyup <key>             # 释放键
+agent-browser hover <sel>             # 悬停在元素上
+agent-browser focus <sel>             # 聚焦元素
+agent-browser select <sel> <val>      # 按值或可见标签选择下拉项
+agent-browser check <sel>             # 勾选复选框
+agent-browser uncheck <sel>           # 取消勾选复选框
+agent-browser scroll <dir> [px]       # 滚动（up/down/left/right，--selector <sel>）
+agent-browser scrollintoview <sel>    # 将元素滚动到可视区
+agent-browser drag <src> <dst>        # 拖放
+agent-browser upload <sel> <files>    # 上传文件
+agent-browser screenshot [path]       # 截图（--full 截全页）
+agent-browser screenshot --annotate   # 带编号元素标注的截图
+agent-browser screenshot --if-changed # 推荐：跳过未变化的图像以节省 token
+agent-browser screenshot --threshold 0.01 # 忽略至多影响 1% 像素的变化
+agent-browser screenshot --screenshot-dir ./shots    # 保存到自定义目录
+agent-browser screenshot --screenshot-format jpeg --screenshot-quality 80
+agent-browser pdf <path>              # 将页面保存为 PDF
+agent-browser snapshot                # 带引用（ref）的无障碍树
+agent-browser eval <js>               # 运行 JavaScript
+agent-browser connect <port|url>      # 通过 CDP 连接浏览器
+agent-browser stream enable [--port <port>]  # 启动运行时 WebSocket 流式输出
+agent-browser webmcp list                     # 列出实验性页面工具
+agent-browser webmcp invoke <tool> --params @input.json
+agent-browser stream status           # 显示运行时流式输出状态与绑定端口
+agent-browser stream disable          # 停止运行时 WebSocket 流式输出
+agent-browser close                   # 关闭浏览器（别名：quit、exit）
+agent-browser close --all             # 关闭所有活动会话
+agent-browser mcp                     # 启动 MCP stdio 服务器
+agent-browser mcp call <tool> <json>  # 运行一个 MCP 工具并打印结果
+```
+
+对 `fill` 与 `type`，请把选项放在可选的 `--` 标记之前。标记之后的文本按字面处理，包括形似 flag 的值。例如，`agent-browser fill "#search" -- --json` 会填入 `--json`；`agent-browser --json type "#search" --clear --delay 10 -- --clear` 会先清空字段，再输入 `--clear`。MCP 的 `agent_browser_fill` 与 `agent_browser_type` 按字面传递键入的 `text` 值，因此不需要该标记。
+
+浏览器响应会在首次发现及目录变化时自动播报 WebMCP 工具。摘要只包含名称、简述、来源与 frame ID。选一个相关工具，先通过 `agent-browser webmcp list <tool> --frame <frame-id> --json` 获取完整 schema，再调用它。schema 与注解绝不会主动附带。未变化的目录与没有工具的页面不增加上下文。JSON 以 `data.webmcp` 暴露更新；CLI 与 MCP 文本包含同样的有界摘要。更新语义与安全性见 [WebMCP](/webmcp)。
+
+当其他元素覆盖了目标点击点时，点击会在派发前失败。错误会指明覆盖元素，例如 `covered by <div#consent-banner>`。请先关掉或处理该元素，重新快照，再重试原操作。当元素隐藏、禁用或不在视口内时，click 与 dblclick 会报错而非假装成功。`click --new-tab` 直接打开链接 URL，因此不适用这些检查。
+
+无头 Chromium 截图会隐藏原生滚动条，以保证图像输出一致。启动时传入 `--hide-scrollbars false` 可保留原生滚动条。
+
+## 获取信息
+
+```bash
+agent-browser get text <sel>          # 获取文本内容
+agent-browser get html <sel>          # 获取 innerHTML
+agent-browser get value <sel>         # 获取输入值
+agent-browser get attr <sel> <attr>   # 获取属性
+agent-browser get title               # 获取页面标题
+agent-browser get url                 # 获取当前 URL
+agent-browser get cdp-url             # 获取 CDP WebSocket URL
+agent-browser get count <sel>         # 统计匹配元素数量
+agent-browser get box <sel>           # 获取包围盒
+agent-browser get styles <sel>        # 获取计算样式
+```
+
+`get cdp-url` 报告已在运行的浏览器的 CDP WebSocket URL。它要求浏览器已在运行，绝不启动浏览器。只含 `get cdp-url` 命令的批量执行也会跳过浏览器启动；混合批量则可能为其他命令启动浏览器。
+
+## 读取智能体友好的文本
+
+```bash
+agent-browser read
+agent-browser read https://example.com/article
+agent-browser read https://example.com/article --filter overview
+agent-browser read https://example.com/article --outline
+agent-browser read https://docs.example.com --llms index --filter auth
+agent-browser read https://docs.example.com --llms full --filter auth
+agent-browser read example.com/article --require-md
+agent-browser read https://example.com/article --json
+```
+
+`read` 无需启动 Chrome 即可抓取 URL。省略 URL 时，读取当前浏览器会话中活动标签页已渲染的 DOM，包括浏览器认证状态与客户端更新。显式 URL 读取默认发送 `Accept: text/markdown`；首个响应不是 markdown 时会尝试在同一 URL 后追加 `.md`；再沿祖先路径向 `/` 逐级查找最近的 `llms.txt` 以匹配文档链接；有 markdown 或纯文本时打印之，否则回退到从 HTML 提取的可读文本。不带 URL 的 `--llms` 与 `--require-md` 使用活动标签页的 URL，因为它们依赖 HTTP 资源。`read` 不会读取 `llms-full.txt`，除非你明确要求。
+
+选项：`--raw` 不做 HTML 提取直接打印响应体；`--require-md` 在服务器不返回 `Content-Type: text/markdown` 时失败；`--outline` 打印单页的紧凑标题大纲；`--llms index` 打印紧凑的最近祖先 `llms.txt` 链接列表；`--llms full` 读取最近祖先的 `llms-full.txt`；`--filter <text>` 收窄页面小节、llms 链接/小节或大纲标题；`--timeout <ms>` 更改请求超时。`--allowed-domains`、`--content-boundaries`、`--max-output` 等全局防护同样适用于 read 的抓取与输出。
+
+## 检查状态
+
+```bash
+agent-browser is visible <sel>        # 检查是否可见
+agent-browser is enabled <sel>        # 检查是否启用
+agent-browser is checked <sel>        # 检查是否勾选
+```
+
+## 查找元素
+
+带动作的语义定位器（`click`、`fill`、`check`、`hover`、`text`）：
+
+```bash
+agent-browser find role <role> <action> [value]
+agent-browser find text <text> <action> [value]
+agent-browser find label <label> <action> [value]
+agent-browser find placeholder <ph> <action> [value]
+agent-browser find alt <text> <action> [value]
+agent-browser find title <text> <action> [value]
+agent-browser find testid <id> <action> [value]
+agent-browser find first <sel> <action> [value]
+agent-browser find last <sel> <action> [value]
+agent-browser find nth <n> <sel> <action> [value]
+```
+
+选项：
+
+- `--name <name>`：按无障碍名称过滤角色
+- `--exact`：精确且区分大小写的匹配。对 `role` 作用于无障碍名称，其默认为不区分大小写的子串匹配
+
+示例：
+
+```bash
+agent-browser find role button click --name "Submit"
+agent-browser find role heading text --name "Skills"     # 隐式角色可用：<h2>=heading、<ul>=list、顶层 <header>=banner
+agent-browser find label "Email" fill "test@test.com"
+agent-browser find alt "Logo" click
+agent-browser find first ".item" click
+agent-browser find last ".item" text
+agent-browser find nth 2 ".card" hover
+```
+
+## 等待
+
+```bash
+agent-browser wait <selector>         # 等待元素
+agent-browser wait <ms>               # 等待时间
+agent-browser wait --text "Welcome"   # 等待文本（子串匹配）
+agent-browser wait --url "**/dash"    # 等待 URL 模式
+agent-browser wait --load domcontentloaded # 等待 DOMContentLoaded
+agent-browser wait --load load        # 等待 load 事件
+agent-browser wait --load networkidle # 仅用于已知会安静下来的页面
+agent-browser wait --fn "condition"   # 等待 JS 条件
+agent-browser wait --download [path]  # 等待下载
+agent-browser wait --fn "!document.body.innerText.includes('Loading...')"  # 等待文本消失
+agent-browser wait "#spinner" --state hidden           # 等待元素消失
+```
+
+选择器等待中，`--state` 接受 `visible`、`hidden`、`attached` 或 `detached`，且不能与 URL、load、函数、文本、下载或毫秒等待模式组合。全局的认证状态 `--state <path>` 仍可放在 `wait` 之前，与其他命令一样。
+
+页面变化后，优先选择能代表你所需状态的选择器、文本、URL 或 JavaScript 条件。只在页面确定会安静下来时才用 `networkidle`，因为 SSE、WebSocket、轮询与长轮询可能让它永远无法满足。
+
+load 状态等待会耗尽全部超时预算（取自 `--timeout` 或 `AGENT_BROWSER_DEFAULT_TIMEOUT`），到期时返回错误。
+
+## 下载
+
+```bash
+agent-browser download <sel> <path>   # 点击元素触发下载
+agent-browser wait --download [path]  # 等待任意下载完成
+```
+
+`wait --download` 返回最早一个尚未被先前 wait 领取的下载，包括在该命令运行前就已完成的那个，因此它可以排在触发下载的命令之后。带 `[path]` 时文件会移动过去；不带时，输出的是浏览器保存的位置。保存到本地路径只适用于 agent-browser 自己启动的浏览器：在 `--cdp`、`--auto-connect` 或提供商之下，保存文件由远端命名，因此 `download` 与 `wait --download [path]` 会被拒绝。
+
+用 `--download-path <dir>`（或 `AGENT_BROWSER_DOWNLOAD_PATH` 环境变量）设置默认下载目录。不设置时，下载进入一个临时目录，浏览器关闭时删除。
+
+上传、下载、本地文件、截图、PDF 与剪贴板的工作流见[文件与剪贴板](/files)。
+
+## 鼠标
+
+```bash
+agent-browser mouse move <x> <y>      # 瞬时移动鼠标
+agent-browser mouse move 600 400 --duration 250 --steps 24
+agent-browser mouse move 600 400 --human --seed 42
+agent-browser mouse down [button]     # 按下按键
+agent-browser mouse up [button]       # 释放按键
+agent-browser mouse wheel <dy> [dx]   # 滚轮
+```
+
+滚轮在当前被跟踪的指针处滚动，指针初始位于 `0,0`。滚轮派发失败时，被跟踪的指针保持不变。
+
+鼠标坐标与滚轮增量接受有限小数；非法的传入值会被拒绝。对 `mouse wheel`，省略的 `dy` 与 `dx` 分别默认为 `100` 与 `0`，显式的 `0` 值会保留。
+
+要滚动别处，请先移动指针：
+
+```bash
+agent-browser mouse move 600 400
+agent-browser mouse wheel 100
+```
+
+对 `click`、`drag` 或 `mouse move` 使用 `--human`，可获得从当前光标位置出发的曲线缓动移动。对 `mouse move`，`--duration` 设定包含浏览器响应时间在内的目标总毫秒数，`--steps` 设定事件数，`--seed` 使路径可复现。浏览器缓慢时实际耗时仍可能超出请求的时长。
+
+## 剪贴板
+
+```bash
+agent-browser clipboard read                      # 读取剪贴板文本
+agent-browser clipboard write "Hello, World!"     # 写入剪贴板文本
+agent-browser clipboard copy                      # 复制当前选区（Ctrl+C）
+agent-browser clipboard paste                     # 从剪贴板粘贴（Ctrl+V）
+```
+
+剪贴板、上传、下载、本地文件、截图与 PDF 的工作流见[文件与剪贴板](/files)。
+
+## 设置
+
+```bash
+agent-browser set viewport <w> <h> [scale]  # 设置视口大小（scale 用于 retina，如 2）
+agent-browser set device <name>       # 模拟设备（"iPhone 14"）
+agent-browser set geo <lat> <lng>     # 设置地理位置
+agent-browser set offline [on|off]    # 切换离线模式
+agent-browser set headers <json>      # 额外 HTTP 头
+agent-browser set credentials <u> <p> # 当前及未来标签页的 HTTP basic 认证
+agent-browser set media [dark|light]  # 模拟配色方案（会话内持续）
+```
+
+视口缩放与地理位置坐标必须是有限数。
+
+用 `--color-scheme` 在所有命令间持久化深色/浅色模式：
+
+```bash
+agent-browser --color-scheme dark open https://example.com
+```
+
+## Cookie 与存储
+
+```bash
+agent-browser cookies                 # 获取全部 Cookie
+agent-browser cookies set <name> <val> # 设置 Cookie
+agent-browser cookies clear           # 清空 Cookie
+
+agent-browser storage local           # 获取全部 localStorage
+agent-browser storage local <key>     # 获取指定键
+agent-browser storage local set <k> <v>  # 设置值
+agent-browser storage local clear     # 清空全部
+
+agent-browser storage session         # sessionStorage 同理
+```
+
+读取最多接受一个键，设置要求一键一值，清空不接受操作数。裸键是单键读取的简写。
+
+Cookie 的操作有 `get`（默认）、`set`、`clear`；未知操作返回错误。Cookie 属性使用 kebab-case flag，如 `--http-only` 与 `--same-site`。旧式拼写 `--httpOnly` 与 `--sameSite` 仍被接受。设置单个 Cookie 时，未知 flag 与多余参数返回错误。
+
+```bash
+agent-browser cookies set session_id abc123 --http-only --same-site Strict
+```
+
+## 网络
+
+```bash
+agent-browser network route <url>              # 拦截请求
+agent-browser network route <url> --abort      # 屏蔽请求
+agent-browser network route <url> --body <json>  # 模拟（mock）响应
+agent-browser network route <url> --body <json> --allow-origin <origin>  # 模拟可读的跨域响应
+agent-browser network route '*' --abort --resource-type script  # 仅屏蔽脚本
+agent-browser network unroute [url]            # 移除路由
+agent-browser network requests                 # 查看已跟踪的请求
+agent-browser network requests --clear         # 清空请求日志
+agent-browser network requests --filter <pat>  # 按 URL 模式过滤
+agent-browser network requests --type xhr,fetch  # 按资源类型过滤
+agent-browser network requests --method POST   # 按 HTTP 方法过滤
+agent-browser network requests --status 2xx    # 按状态过滤（200、2xx、400-499）
+agent-browser network request <requestId>      # 查看完整请求/响应详情
+agent-browser network har start                # 开始 HAR 录制（内嵌文本响应体）
+agent-browser network har start --content all  # 内嵌全部响应体（二进制以 base64）
+agent-browser network har start --content none # 仅元数据，不含响应体
+agent-browser network har stop [output.har]    # 停止并保存 HAR（省略则存临时路径）
+```
+
+HAR 导出失败时，录制与已捕获的请求仍然可用。修正目标路径后重试 `network har stop` 即可。
+
+导航前路由、请求过滤、HAR 导出与 SSR/无 JavaScript 调试见[网络拦截](/network)。
+
+## 标签页与框架
+
+```bash
+agent-browser tab                              # 列出标签页（每行显示 tabId 与标签）
+agent-browser tab new [url]                    # 新建标签页
+agent-browser tab new --label docs [url]       # 新建带用户指定标签的标签页
+agent-browser tab <t<N>|label>                 # 按 id 或标签切换标签页
+agent-browser tab close [t<N>|label]           # 关闭标签页（默认为活动标签页）
+agent-browser window new                       # 打开新浏览器窗口
+agent-browser frame <sel>                      # 按 CSS 选择器切换到 iframe
+agent-browser frame @e3                        # 按元素引用（ref）切换到 iframe
+agent-browser frame main                       # 回到主框架
+```
+
+### 稳定的标签页 id 与标签
+
+标签页 id 是形如 `t1`、`t2`、`t3` 的稳定字符串。会话内绝不复用，因此即使其他标签页开关，`t2` 也始终指向同一个标签页。`t` 前缀与 `@e1` 元素引用的约定相呼应，但与位置序数不可互换——`agent-browser tab 2` 会报错并给出提示信息；请使用 `t2`。
+
+你也可以在创建标签页时指定一个好记的标签（`docs`、`app`、`admin`），并在任何接受 id 的地方使用它：
+
+```bash
+agent-browser tab new --label docs https://docs.example.com
+agent-browser tab docs          # 切换到 docs 标签页
+agent-browser snapshot          # 为 docs 填充引用（ref）
+agent-browser click @e3         # click 使用 docs 的引用
+agent-browser tab close docs    # 按标签关闭
+```
+
+标签绝不自动生成，导航时也绝不改写——智能体把标签页命名为 `docs` 后，该名称一直保留到标签页关闭。标签在会话内唯一；用已存在的标签再建一个标签页会报错。
+
+标签以字母开头，只能包含字母、数字、`-` 或 `_`，且不能使用保留的 `t<N>` 或 `T<N>` 标签页 id 形式。被拒绝的标签会保留当前标签页的引用（ref）与所选框架。
+
+通过 `tab new` 或 `click --new-tab` 打开的标签页，会在首个文档加载前继承会话的设置：User-Agent、`set headers`、`set credentials`、源级 `--headers`、初始化脚本、`route` 规则与模拟覆盖（配色方案、时区、语言环境、地理位置、离线）。关闭离线模式或将 headers 设为 `{}`，可恢复后续标签页的默认设置。
+
+`tab list --json` 还会报告每个标签页的 CDP `targetId`，且任何接受标签页引用的地方都接受 target id（`tab <targetId>`、`tab close <targetId>`）。与作为守护进程内计数器的 `t<N>` id 不同，target id 在守护进程重启后保持稳定。每个会话按 target id 绑定其活动标签页，守护进程重启后回到它；开启 `--pin-tab` 后绑定是严格的，被绑定的标签页关闭会产生 `tab_gone` 错误而非静默回退。JSON 错误包含 <code>code: "tab_gone"</code>、<code>data.targetId</code> 与可选的脱敏 <code>data.lastUrl</code>。批量输出在 <code>result</code> 下携带恢复对象。多会话工作流见 [CDP 模式](/cdp-mode)。
+
+引用（`@e1` 等）的作用域限于快照运行时的活动标签页，因此先切换标签页，再快照并交互：
+
+```bash
+agent-browser tab docs          # 先切换
+agent-browser snapshot          # docs 的引用
+agent-browser click @e3         # 使用 docs 的引用
+```
+
+### 被丢弃标签页的恢复
+
+浏览器为省内存会丢弃后台标签页，使其没有可驱动的渲染器。切换到被丢弃的标签页会重新激活它，这会重载页面并重置未保存的状态；切换结果会附加 `"revived": true`，让重载可见而非静默发生。页面被 JavaScript 对话框暂停的标签页是存活而非丢弃状态：切换不会动它，只会附加 `"dialogBlocked": true`。用 `dialog accept` 或 `dialog dismiss` 处理对话框后，标签页保留其状态。关闭活动标签页而落到被丢弃的后继标签页时，同样会以这种方式恢复它，并报告 `"activeTabRevived": true`。
+
+### 快照增量
+
+```bash
+agent-browser snapshot --delta
+agent-browser snapshot --delta --full
+```
+
+`snapshot --delta` 按标签页与选项组合返回 `full`、`unchanged` 或增量更新。URL 变化或大增量返回完整状态；`--full` 重置基线。将增量的 `changes` 应用于引用（ref）元数据、`treeChange` 应用于上一棵树：按换行拆分，把从零基 `startLine` 起的 `deleteCount` 行替换为 `lines`，再拼接回去。推进到 `revision` 之前，先将两者应用于 `baseRevision`。
+
+### iframe 支持
+
+快照期间自动检测 iframe。`Iframe` 节点会被解析，其内容内联展示在快照输出中 iframe 元素的下方。分配给 iframe 内部元素的引用（ref）携带框架上下文，因此 `click`、`fill` 等交互无需手动切换框架。
+
+```bash
+agent-browser snapshot -i
+# @e3 [Iframe] "payment-frame"
+#   @e4 [input] "Card number"
+#   @e5 [button] "Pay"
+
+# 直接使用引用交互——无需切换框架
+agent-browser fill @e4 "4111111111111111"
+agent-browser click @e5
+
+# 或切换框架上下文以获取限定范围的快照
+agent-browser frame @e3
+agent-browser snapshot -i             # 仅该 iframe 内部的元素
+agent-browser frame main              # 返回主框架
+```
+
+`frame` 命令接受元素引用（`@e3`）、CSS 选择器（`"#my-iframe"`）或框架名称/URL。
+
+## 对话框
+
+```bash
+agent-browser dialog accept [text]    # 接受对话框（可带 prompt 文本）
+agent-browser dialog dismiss          # 关闭对话框
+agent-browser dialog status           # 检查当前是否有打开的对话框
+```
+
+默认情况下，`alert` 与 `beforeunload` 对话框会被自动接受，绝不阻塞智能体。`confirm` 与 `prompt` 对话框仍需显式处理。用 `--no-auto-dialog`（或 `AGENT_BROWSER_NO_AUTO_DIALOG=1`）可禁用自动处理。
+
+当 JavaScript 对话框（`alert`、`confirm`、`prompt`）挂起时，所有命令响应都会包含带对话框类型与消息的 `warning` 字段。
+
+## 流式输出
+
+```bash
+agent-browser stream enable           # 在自动选择的端口上启动运行时 WebSocket 流式输出
+agent-browser stream enable --port 9223  # 绑定特定 localhost 端口
+agent-browser stream status           # 显示启用状态、端口、浏览器连接、屏幕直播
+agent-browser stream disable          # 停止运行时流式输出并删除 .stream 元数据文件
+```
+
+所有会话都会自动启用流式输出。这些命令用于查看状态、在特定端口上重新启用，或禁用流式输出。
+
+流式输出与基于文件的录制相互独立。需要保存 WebM 或 MP4 产物时请用[视频录制](/recording)。
+
+## 调试
+
+```bash
+agent-browser trace start             # 开始追踪记录（trace）
+agent-browser trace stop [path]       # 停止并保存 trace
+agent-browser profiler start          # 开始 Chrome DevTools 性能分析
+agent-browser profiler stop [path]    # 停止并保存 profile（.json）
+agent-browser record start <path>     # 开始视频录制（.webm/.mp4，30 fps；需 ffmpeg）
+agent-browser record start <path> --fps 60  # 以 60 fps 录制（--fps 接受 1-60）
+agent-browser record start <path> --cursor  # 附带动画鼠标指针
+agent-browser record start <path> --contact-sheet # 同时保存带时间戳的 PNG 拼接图（contact sheet）
+agent-browser record start <path> --contact-sheet-threshold 0.02 # 调整变化帧的挑选
+agent-browser record stop             # 停止并保存视频
+agent-browser record restart <path>   # 停止当前录制并开始新录制
+agent-browser console                 # 查看控制台消息
+agent-browser console --json          # 带 CDP 原始参数的 JSON 输出
+agent-browser console --clear         # 清空控制台日志
+agent-browser errors                  # 查看页面错误
+agent-browser errors --clear          # 清空错误日志
+agent-browser highlight <sel>         # 高亮元素
+agent-browser inspect                 # 为活动页面打开 Chrome DevTools
+```
+
+录制要求 `PATH` 中有 `ffmpeg`。控制台、错误、对话框、trace、高亮与 DevTools 工作流见[调试](/debugging)。录制要求与 `record` 工作流见[视频录制](/recording)，性能 profile 见[性能分析器](/profiler)。
+
+## 认证保险库
+
+```bash
+agent-browser auth save <name> [opts]    # 保存认证配置文件（profile）
+agent-browser auth login <name>          # 用已保存的凭据登录
+agent-browser auth login <name> --no-navigate
+                                          # 源校验后使用活动页面
+agent-browser auth login <name> --credential-provider <plugin> [--item <ref>] [--url <url>]
+                                          # 从插件解析凭据
+agent-browser auth login <name> --username-selector <s> --password-selector <s> [--submit-selector <s>]
+                                          # 为单次登录覆盖选择器
+agent-browser auth list                  # 列出已保存的 profile（仅名称与 URL）
+agent-browser auth show <name>           # 显示 profile 元数据（不含密码）
+agent-browser auth delete <name>         # 删除已保存的 profile
+agent-browser plugin add <ref>           # 从 npm 或 GitHub 添加插件
+agent-browser plugin list                # 列出已配置的插件
+agent-browser plugin show <name>         # 显示某个已配置的插件
+agent-browser plugin run <name> <type> --payload <json>
+                                          # 运行任意插件请求
+```
+
+保存选项：
+
+- `--url <url>`：登录页 URL（必填）
+- `--username <user>`：用户名（必填）
+- `--password <pass>`：密码（必填，除非用 `--password-stdin`）
+- `--password-stdin`：从 stdin 读取密码（推荐，避免进入 shell 历史）
+- `--username-selector <sel>`：用户名字段的自定义 CSS 选择器
+- `--password-selector <sel>`：密码字段的自定义 CSS 选择器
+- `--submit-selector <sel>`：提交按钮的自定义 CSS 选择器
+
+`auth login` 会按布局尺寸、计算的可见性与透明度、禁用/只读状态过滤匹配的控件，包括自定义 CSS 选择器。如果选中的凭据字段在输入前被替换或转移焦点，命令会失败且不提交。
+
+`auth login` 以 `load` 导航，然后等待用户名/密码/提交选择器出现后再交互。这提升了 SPA 登录页（字段在初始加载后才渲染）上的可靠性。
+
+在页面内点击、通过人机验证、关闭同意弹窗或其他必须延续到凭据输入的有状态步骤之后，使用 `--no-navigate`：
+
+```bash
+agent-browser open https://example.com/
+agent-browser click "a[href='/login']"
+agent-browser auth login work --no-navigate
+```
+
+该 flag 只抑制 auth-login 最初的导航。它要求已存在活动的顶层 HTTP(S) 页面，并按协议、主机与有效端口将该页面与生效的凭据 URL 比较。路径、查询与片段可以不同。等待、填写、点击提交以及提交触发的导航保持不变。命令级 `--url` 覆盖 profile 或提供商的 URL 元数据，作为预期源约束而非导航目标。
+
+插件登录选项：
+
+- `--credential-provider <plugin>`：从已配置的插件解析凭据
+- `--item <ref>`：提供商专属的保险库条目引用
+- `--url <url>`：登录 URL 覆盖
+- `--no-navigate`：先对照生效的凭据源校验活动的顶层页面，再使用它
+- `--username-selector <sel>`：本次登录的用户名选择器覆盖
+- `--password-selector <sel>`：本次登录的密码选择器覆盖
+- `--submit-selector <sel>`：本次登录的提交选择器覆盖
+
+凭据提供商插件经 `agent-browser.plugin.v1` stdio JSON 协议在进程外运行。它们把凭据返回给守护进程供单次登录使用，agent-browser 不会在本地保存这些凭据。
+
+其他插件能力使用同一协议：
+
+- `browser.provider`：用 `--provider <name>` 使用该插件，返回 CDP WebSocket URL
+- `launch.mutate`：在 Chrome 启动前追加本地启动参数、扩展或初始化脚本
+- `command.run`：通过 `agent-browser plugin run` 运行任意命名空间化请求
+
+`plugin run` 用于 `command.run` 与自定义能力。核心能力与协议请求类型走各自的专用命令路径。
+
+```bash
+echo "pass" | agent-browser auth save github --url https://github.com/login --username user --password-stdin
+agent-browser auth login github
+agent-browser plugin add agent-browser-plugin-vault --name vault
+agent-browser auth login my-app --credential-provider vault --item "My App"
+agent-browser auth login my-app --credential-provider vault --item "My App" --no-navigate --url https://identity.example.com/login
+agent-browser --provider cloud-browser open https://example.com
+agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"...","url":"https://example.com"}'
+agent-browser auth list
+```
+
+## 确认
+
+设置 `--confirm-actions` 后，特定操作类别会返回 `confirmation_required` 响应而非立即执行。用 `confirm` 或 `deny` 批准或拒绝操作。
+
+```bash
+agent-browser confirm <confirmation-id>  # 批准挂起的操作
+agent-browser deny <confirmation-id>     # 拒绝挂起的操作
+```
+
+挂起的确认 60 秒后自动拒绝。
+
+```bash
+agent-browser --confirm-actions eval,download eval "document.title"
+# 返回带 ID 的 confirmation_required
+agent-browser confirm c_8f3a1234
+```
+
+## 状态管理
+
+```bash
+agent-browser state save <path>       # 将认证状态保存到文件
+agent-browser state load <path>       # 从文件加载认证状态
+agent-browser state list              # 列出已保存的状态文件
+agent-browser state show <file>       # 显示状态摘要
+agent-browser state rename <old> <new> # 重命名状态文件
+agent-browser state clear [name]      # 清除会话名的状态
+agent-browser state clear --all       # 清除所有已保存状态
+agent-browser state clean --older-than <days>  # 删除旧状态
+```
+
+## 会话
+
+```bash
+agent-browser session                 # 显示当前会话名
+agent-browser session list            # 列出活动会话
+```
+
+会话名只接受 Unicode 字母与数字、连字符和下划线。例如 `café-東京_7` 合法，而 `my session` 因包含空格被拒绝。
+
+## Chrome 配置文件
+
+```bash
+agent-browser profiles               # 列出可用的 Chrome 配置文件（profile）
+agent-browser profiles --json        # 以 JSON 列出 profile
+agent-browser --profile Default open https://gmail.com  # 复用 profile 的登录状态
+```
+
+## 仪表盘
+
+```bash
+agent-browser dashboard [start]       # 启动仪表盘服务器（默认端口：4848）
+agent-browser dashboard start --port <n>  # 在特定端口启动
+agent-browser dashboard start --allowed-origins <origins> # 允许精确的 HTTPS 反向代理浏览器源
+agent-browser dashboard stop          # 停止仪表盘服务器
+```
+
+回环仪表盘源默认无需访问令牌即可接受。对反向代理或转发的 URL，请用 `--allowed-origins` 传入其精确的浏览器源，或设置 `AGENT_BROWSER_DASHBOARD_ALLOWED_ORIGINS`。每个配置的源都必须是合法的精确 HTTPS 源。端口必须是 1 到 65535 的整数。未知选项、缺失取值、非法端口与格式错误的源都会在不启动服务器的情况下失败。该命令只为外部源打印带私有令牌的访问 URL；打开匹配的 URL 一次以建立浏览器会话，且不要分享它。本地访问请打开常规的 `http://localhost:<port>` URL。浏览器停留在仪表盘源上；各会话的标签页、状态与流量在内部代理，因此无需暴露会话端口。更改端口或允许源之前，先停止运行中的仪表盘。
+
+## doctor 诊断
+
+诊断安装、自动清理过期的守护进程文件，并可选地修复常见问题。
+
+```bash
+agent-browser doctor                     # 完整诊断（环境、Chrome、守护进程、配置、提供商、网络、启动测试）
+agent-browser doctor --offline --quick   # 仅本地，最快
+agent-browser doctor --fix               # 同时执行破坏性修复（重装 Chrome、清除旧状态等）
+agent-browser doctor --webgpu            # 同时执行真实 WebGPU 渲染探针（见 WebGPU 页）
+agent-browser doctor --json              # 供智能体使用的结构化 JSON 输出
+```
+
+全部检查通过时退出码为 `0`（有警告没关系），任何一项失败则为 `1`。完整检查目录见[安装页](/installation#doctor-诊断)。
+
+## 聊天
+
+用自然语言经 AI 控制浏览器。`chat` 命令把指令翻译成 agent-browser 命令，执行它们，并流式输出 AI 响应。需要设置 `AI_GATEWAY_API_KEY`。
+
+```bash
+agent-browser chat "open google.com and search for cats"     # 单发指令
+agent-browser chat                                           # 交互式 REPL（输入 quit 退出）
+echo "summarize this page" | agent-browser chat              # 管道输入
+agent-browser -q chat "summarize this page"                  # 安静模式：仅文本，不显示工具调用
+agent-browser -v chat "fill in the login form"               # 详细模式：显示命令及其输出
+agent-browser --model openai/gpt-4o chat "take a screenshot" # 覆盖默认 AI 模型
+agent-browser --json chat "open example.com"                 # 结构化 JSON 输出
+```
+
+chat 专属选项：
+
+```bash
+--model <name>           # AI 模型（或 AI_GATEWAY_MODEL 环境变量，默认：anthropic/claude-sonnet-4.6）
+-v, --verbose            # 显示工具命令及其原始输出
+-q, --quiet              # 只显示 AI 文本响应（隐藏工具调用）
+```
+
+## 导航
+
+```bash
+agent-browser back                    # 后退
+agent-browser forward                 # 前进
+agent-browser reload                  # 重新加载页面
+agent-browser pushstate <url>         # SPA 客户端导航；自动检测 window.next.router.push，
+                                      # 回退到 history.pushState + popstate
+```
+
+## 导航前准备
+
+有些流程需要在首次导航*之前*配好路由、Cookie 或初始化脚本（SSR 调试、受保护源上的认证等）。不带 URL 的 `open` 会启动浏览器但停留在 `about:blank`，为预置状态留出空间。`batch` 让它一次 CLI 调用完成：
+
+```bash
+agent-browser batch \
+  "open" \
+  "network route * --abort --resource-type script" \
+  "cookies set --curl cookies.curl --domain localhost" \
+  "navigate http://localhost:3000/target"
+```
+
+## React / Web Vitals
+
+React 命令要求启动时带 `--enable react-devtools`（在页面 JS 运行前安装 React DevTools hook）。`vitals` 与 `pushstate` 适用于任何站点。
+
+```bash
+agent-browser open --enable react-devtools <url>   # 启动时装好 React hook
+agent-browser react tree                           # 完整组件树
+agent-browser react inspect <fiberId>              # 检查单个组件
+agent-browser react renders start                  # 开始 fiber 渲染录制
+agent-browser react renders stop [--json]          # 停止并打印渲染概况
+agent-browser react suspense [--only-dynamic] [--json]  # Suspense 边界 + 分类
+                                                         # --only-dynamic 隐藏 "static" 列表
+agent-browser vitals [url] [--json]                # LCP/CLS/TTFB/FCP/INP + hydration
+```
+
+`react tree` 在组件树可用时将其打印出来。如果响应只包含一个头部，说明没有收集到组件树。请确认页面使用了 React 且已挂载 React root。
+
+适用于任何 React 应用（Next.js、Remix、Vite+React、CRA、TanStack Start、React Native Web 等）。`vitals` 与 `pushstate` 与框架无关。
+
+完整的命令细节与示例见 [React 与 Web Vitals](/react)。
+
+## 无障碍审计
+
+对当前页面运行内置的 axe-core 审计，或先导航到某个 URL。内置的引擎无需 CDN 请求即可工作，并能在严格的页面 CSP 下运行。它跨页面的框架树运行私有的部分审计，不经页面消息传递就合并序列化结果，因此页面自带的 `window.axe` 值保持原样，iframe 内的违规也保留其框架选择器路径。无障碍审计需要 CDP 浏览器，Safari 与 iOS WebDriver 会话不可用。
+
+```bash
+agent-browser a11y                                 # 审计当前页面
+agent-browser a11y https://example.com             # 先导航再审计
+agent-browser a11y --tags wcag2a,wcag2aa           # 按 axe 规则标签过滤
+agent-browser a11y --selector "#main"              # 限定到某个子树
+agent-browser a11y https://example.com --json      # 结构化结果
+```
+
+默认输出列出违规与未完成的检查，附带影响级别、规则 ID、修复指引与失败节点路径。JSON 输出保留 axe 的 `target` 选择器路径数组，包括 shadow DOM 边界的嵌套数组与框架边界的多个条目。
+
+## 初始化脚本
+
+```bash
+agent-browser --init-script <path> open <url>  # 首次导航前注册（可重复）
+agent-browser removeinitscript <identifier>
+```
+
+启动时脚本、脚本移除、内置 React DevTools 与扩展见[初始化脚本与扩展](/init-scripts)。
+
+## 全局选项
+
+```bash
+--session <name>         # 隔离的浏览器会话
+--restore [name]         # 自动保存/恢复会话状态，默认取 --session
+--restore-save <policy>  # 恢复保存策略：auto、always、never
+--namespace <name>       # 隔离守护进程 socket 与恢复状态目录
+--profile <path>         # 持久化浏览器配置文件（profile）目录
+--state <path>           # 从 JSON 文件加载存储状态
+--headers <json>         # 限定到 URL 源的 HTTP 头
+--executable-path <path> # 自定义浏览器可执行文件
+--extension <path>       # 加载浏览器扩展（可重复）
+--init-script <path>     # 首次导航前注册页面初始化脚本（可重复）
+--enable <feature>       # 内置初始化脚本：react-devtools（可重复或逗号列表）
+--args <args>            # 浏览器启动参数（值内逗号会保留）
+--user-agent <ua>        # 自定义 User-Agent 字符串
+--proxy <url>            # 代理服务器 URL
+--proxy-bypass <hosts>   # 绕过代理的主机
+--ignore-https-errors    # 忽略 HTTPS 证书错误
+--ca-cert <path>         # 为 CLI 请求信任一个 CA，Linux 上也用于本地 Chromium
+--no-ca-cert             # 清除运行中会话保留的 CA 信任
+--use-system-ca          # CLI 请求使用 OS 信任库（read、install、upgrade、doctor）
+--allow-file-access      # 允许 file:// URL 访问本地文件（仅 Chromium）
+--hide-scrollbars <bool> # 无头 Chromium 截图中隐藏原生滚动条
+-p, --provider <name>    # 浏览器提供商或已配置的提供商插件
+--device <name>          # iOS 设备名（如 "iPhone 15 Pro"）
+--json                   # JSON 输出（供脚本使用）
+--annotate               # 带编号元素标注的截图
+--screenshot-dir <path>   # 默认截图输出目录（或 AGENT_BROWSER_SCREENSHOT_DIR）
+--screenshot-quality <n>  # JPEG 质量 0-100（或 AGENT_BROWSER_SCREENSHOT_QUALITY）
+--screenshot-format <fmt> # 格式：png（默认）、jpeg（或 AGENT_BROWSER_SCREENSHOT_FORMAT）
+--headed                 # 显示浏览器窗口（非无头）
+--webgpu                 # 启用 WebGPU（Linux 上为软件 Vulkan，无需 GPU）
+--no-webmcp              # 禁用默认的实验性 WebMCP Chrome 特性（或 AGENT_BROWSER_NO_WEBMCP 环境变量）
+--cdp <port|url>         # 经 CDP 连接；根 WebSocket 查询斜杠可省略
+--cdp-headers <json>     # --cdp 发现与 WebSocket 握手的头（或 AGENT_BROWSER_CDP_HEADERS 环境变量）
+--auto-connect           # 自动发现并连接运行中的 Chrome
+--no-auto-connect        # 将 --auto-connect 会话还原为本地启动（覆盖 AGENT_BROWSER_AUTO_CONNECT）
+--color-scheme <scheme>  # 配色方案：dark、light、no-preference
+--download-path <path>   # 默认下载目录
+--content-boundaries     # 为页面输出包裹边界标记，保障 LLM 安全
+--max-output <chars>     # 将页面输出截断到 N 个字符
+--allowed-domains <list> # 允许的域名；拒绝恢复/状态重放、profile/会话启动参数与直接页面型提供商
+--action-policy <path>   # 操作策略（action policy）JSON 文件路径
+--confirm-actions <list> # 需要确认（confirmation）的操作类别
+--confirm-interactive    # 交互式确认提示（stdin 不是 TTY 时自动拒绝）
+--engine <name>          # 浏览器引擎：chrome（默认）、lightpanda、obscura（实验性）
+--input-mode <mode>      # 指针移动：instant（默认）、smooth、human
+--idle-timeout <time>    # 空闲后自动关闭守护进程（默认 1h；0 禁用）
+--no-auto-dialog         # 禁用 alert 与 beforeunload 对话框的自动接受
+--model <name>           # chat 的 AI 模型（或 AI_GATEWAY_MODEL 环境变量）
+-v, --verbose            # 显示工具命令及其原始输出（chat）
+-q, --quiet              # 只显示 AI 文本响应（chat）
+--config <path>          # 使用自定义配置文件
+--debug                  # 调试输出
+--relaunch               # 即使没有设置变化也重新启动会话的浏览器
+```
+
+在 `batch` 中，`--relaunch` 只重新启动浏览器一次：由第一个能启动浏览器的命令携带它。从不启动浏览器的命令（如 `read`）、被策略拒绝或等待确认的命令会把它传递给下一个命令。
+
+配置文件与环境变量见[配置](/configuration)。代理服务器、绕过与凭据设置见[代理](/proxy)。
+
+## 批量执行
+
+在单次调用中执行多条命令。命令可以作为带引号的参数传入，也可以经 stdin 以 JSON 管道传入。
+
+```bash
+# 参数模式：每个带引号的参数是一条完整命令
+agent-browser batch "open https://example.com" "snapshot -i" "screenshot"
+
+# 加 --bail 在首个错误处停止
+agent-browser batch --bail "open https://example.com" "click @e1" "screenshot"
+
+# stdin 模式：以 JSON 管道传入命令
+echo '[
+  ["open", "https://example.com"],
+  ["snapshot", "-i"],
+  ["click", "@e1"],
+  ["screenshot", "result.png"]
+]' | agent-browser batch --json
+
+echo '[["fill", "#password", "secret"]]' | agent-browser batch --json --omit-command
+```
+
+<table>
+  <thead>
+    <tr><th>选项</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--bail</code></td><td>首个错误即停止（默认：继续执行全部命令）</td></tr>
+    <tr><td><code>--json</code></td><td>以 JSON 数组输出结果</td></tr>
+    <tr><td><code>--omit-command</code></td><td>配合 <code>--json</code>，把每个 <code>command</code> 数组替换为稳定的零基 <code>index</code> 字段</td></tr>
+  </tbody>
+</table>
+
+把 `--init-script`、`--enable` 等全局 flag 放在外层 batch 调用上。命令专属的选项与字面命令参数留在每个条目内。
+
+```bash
+agent-browser --enable react-devtools batch "open" "navigate data:text/html,<h1>hi</h1>"
+```
+
+使用 `--json --omit-command` 时，成功、失败或 `--bail` 的各行都带稳定的零基 `index` 字段；默认 JSON 输出保留 `command` 字段。它只移除命令数组，并不让输出对机密安全。错误与响应数据不变：`type` 会回显键入的文本，`get value`/`eval` 可能返回输入值。MCP 的 `agent_browser_batch` 工具接受 `omitCommand: true`。
+
+## MCP 服务器
+
+```bash
+agent-browser mcp
+agent-browser mcp --tools all
+agent-browser mcp --tools core,network,react
+agent-browser mcp call agent_browser_open '{"url":"https://example.com"}'
+agent-browser mcp --config /path/to/trusted-config.json
+agent-browser mcp call agent_browser_open '{"url":"https://example.com"}' --config /path/to/trusted-config.json
+echo '{"selector":"@e2"}' | agent-browser mcp call agent_browser_click -
+```
+
+经 stdio 启动 Model Context Protocol 服务器。MCP 客户端把它作为子进程启动，并在 stdin 与 stdout 上交换换行分隔的 JSON-RPC。服务器默认采用 MCP 协议 2025-11-25，并在初始化期间接受较旧的受支持客户端协议版本。带 schema 未声明参数的工具调用会以 invalid-params 错误失败，错误会指明未知键并列出该工具自身的参数。
+
+`mcp call` 无需 stdio 会话即可运行一个 MCP 工具，并把 `tools/call` 结果打印为 JSON，agent-browser 版本位于 `_meta.agentBrowserVersion`。工具参数以 JSON 对象传入，或用 `-` 从 stdin 读取。除非 `--tools` 把调用限制到某些 profile，所有工具都可用。退出码：成功为 0，工具报错为 1，未知工具或非法参数为 2。适合无法在工具调用之间保持 stdio 会话的运行时（如 serverless 智能体）使用。`AGENT_BROWSER_ALLOWED_DOMAINS` 等访问设置来自环境，与服务器一致。
+
+对运行 CLI 的工具调用，`structuredContent.response` 包含解析后的 CLI JSON。仅当输出无法解析为 JSON 时才包含 `stdout`；`exitCode` 与 `stderr` 始终包含。
+
+在 Vercel Sandbox 中，`startAgentBrowserMcp` 经沙盒命令的 stdin 运行服务器。见 [Next.js + Vercel](/next#mcp-server-over-stdin)。
+
+默认工具 profile 是 `core`，让日常浏览器自动化的 MCP 上下文保持精简。用 `--tools all` 获得完整的类型化 CLI 对等面，或用逗号组合 profile，如 `--tools core,network,react`。
+
+Profile：
+
+- `core` - 默认。导航、快照、交互、等待、读取、截图、JavaScript eval、close、标签页基础与 profile 发现
+- `network` - 网络路由、请求检查、HAR、头、凭据、离线
+- `state` - Cookie、存储、认证、已保存状态、会话、profile、技能
+- `debug` - 控制台/错误、trace、性能分析、录制、无障碍审计、剪贴板、插件、doctor、仪表盘、install、upgrade、chat、diff、batch、confirm/deny
+- `tabs` - 后退/前进/重载、标签页、窗口、框架、对话框
+- `react` - React tree/inspect/renders/suspense、vitals、pushstate
+- `mobile` - 视口/设备/地理位置/媒体、触摸、滑动、鼠标、键盘
+- `all` - 每个 MCP 工具，包括完整的类型化 CLI 对等面
+
+MCP 客户端配置示例：
+
+```json
+{
+  "mcpServers": {
+    "agent-browser": {
+      "command": "agent-browser",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+使用 `--tools all` 时，服务器跨 CLI 命令面暴露类型化工具，涵盖导航、快照、输入、等待、截图/PDF、get/is/find、鼠标、网络、存储、Cookie、标签页、窗口、框架、对话框、trace、录制、无障碍审计、剪贴板、认证、状态、iOS、diff、React、vitals、会话、技能、插件、doctor、仪表盘、install、upgrade、chat、eval 与 close。
+
+常用工具包括：
+
+- `agent_browser_tools_profiles`
+- `agent_browser_open`
+- `agent_browser_snapshot`
+- `agent_browser_click`
+- `agent_browser_fill`
+- `agent_browser_type`
+- `agent_browser_press`
+- `agent_browser_wait_for_selector`
+- `agent_browser_screenshot`
+- `agent_browser_get_url`
+- `agent_browser_eval`
+- `agent_browser_close`
+
+每个工具都有 `url`、`selector`、`text`、`key` 等类型化字段，因此 MCP 客户端展示有意义的审批提示而非原始命令数组。工具发现是分页的，并带只读/开放世界注解，现代 MCP 客户端可以渐进加载庞大的类型化面。
+
+每个工具还接受共享参数 `session`、`restore`、`allowedDomains`、`extraArgs`、`timeoutMs`、`namespace`、`restoreSave`、`restoreCheckUrl`、`restoreCheckText`、`restoreCheckFn`、`caCert`、`useSystemCa`、`clearCaCert`、`idleTimeout` 与 `relaunch`。工具的 schema 只列出对它通常重要的那些：`session` 出现在每个工具上，`restore` 与 `relaunch` 出现在 `open` 与 `tab_new` 上，`allowedDomains` 与 `extraArgs` 出现在 `open`、`tab_new` 与 `read` 上，`timeoutMs` 出现在会导航、等待或运行脚本的工具上。服务器的 `initialize` 指令描述了全部参数。`allowedDomains` 映射到 `--allowed-domains`，激活同样的 WebRTC 约束与启动模式限制，且当服务器已设置允许域名时会被拒绝。`idleTimeout` 映射到 `--idle-timeout`，接受 `30s`、`5m`、`1h` 或原始毫秒等取值，`0` 禁用空闲关闭。`relaunch: true` 映射到 `--relaunch`。`extraArgs` 携带逐命令选项与 `--engine` 等显示或模拟 flag；它不能设置 `--config` 或改变网络、文件、策略与主机访问的全局 flag。主机级选项请放进 MCP 服务器的环境或所选配置。
+
+默认情况下，工具调用使用与 CLI 相同的配置发现与环境变量。用工具参数中的 `session`，或设置 `AGENT_BROWSER_SESSION`，来隔离浏览器状态。
+
+向 `agent-browser mcp` 或 `agent-browser mcp call` 传 `--config <trusted-path>` 可选定一个受信任的配置文件。MCP 工具子进程只加载该文件，替代默认的用户/项目发现。请把必需的安全策略放进其中。环境变量与被接受的逐工具 CLI 参数保持正常优先级。
+
+## 命令链接
+
+在单次 shell 调用中用 `&&` 串联命令。浏览器通过后台守护进程保持运行，因此链接自然生效，且比分开调用更高效：
+
+```bash
+agent-browser open example.com && agent-browser wait --load domcontentloaded && agent-browser snapshot -i
+agent-browser fill @e1 "user@example.com" && agent-browser fill @e2 "pass" && agent-browser click @e3
+agent-browser open example.com && agent-browser wait --load load && agent-browser screenshot page.png
+```
+
+不需要读取中间输出时用 `&&`。需要先解析输出时（如先快照发现引用，再用这些引用交互）请分开执行命令。
+
+## 本地文件
+
+用 `file://` URL 打开本地文件（PDF、HTML）：
+
+```bash
+agent-browser --allow-file-access open file:///path/to/document.pdf
+agent-browser --allow-file-access open file:///path/to/page.html
+agent-browser screenshot output.png
+```
+
+`--allow-file-access` flag 允许 JavaScript 访问其他本地文件。仅限 Chromium。
+
+本地文件、上传、下载、截图、PDF 与剪贴板的工作流见[文件与剪贴板](/files)。

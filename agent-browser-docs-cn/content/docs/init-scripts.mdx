@@ -1,0 +1,69 @@
+---
+title: "初始化脚本与扩展"
+navTitle: "初始化脚本"
+---
+
+初始化脚本（init script）在页面 JavaScript 之前运行。用它们在首次导航前安装钩子、polyfill、埋点或测试辅助代码。
+
+## 启动时脚本
+
+```bash
+agent-browser --init-script ./instrumentation.js open https://example.com
+agent-browser --init-script ./a.js --init-script ./b.js open https://example.com
+```
+
+也可以用环境变量配置脚本：
+
+```bash
+export AGENT_BROWSER_INIT_SCRIPTS="./a.js,./b.js"
+agent-browser open https://example.com
+```
+
+启动时脚本在浏览器启动时应用。若守护进程已在运行，请先关闭它再更改启动时脚本选项。
+
+## 内置脚本
+
+```bash
+agent-browser --enable react-devtools open http://localhost:3000
+```
+
+`react-devtools` 是目前可用的内置功能。它会在应用代码运行前安装 React DevTools 钩子，`react tree`、`react inspect`、`react renders` 与 `react suspense` 都依赖它。
+
+<span id="runtime-scripts" />
+
+## 移除初始化脚本
+
+请用 `--init-script <path>` 在首次导航前注册脚本。不支持运行时注册。初始化脚本在此后所有文档中都会先于页面 JavaScript 运行，但不会改动已运行过的代码。
+
+```bash
+agent-browser removeinitscript <identifier>
+```
+
+初始化脚本的标识符在会话范围内有效。`removeinitscript` 会从所有注册了该脚本的开标签页中移除它，并阻止它被注入到未来的标签页。
+
+## 导航前准备
+
+对于需要在第一次真正导航前装好路由、Cookie 或脚本的流程，请不带 URL 启动浏览器：
+
+```bash
+agent-browser batch \
+  "open" \
+  "network route * --abort --resource-type script" \
+  "cookies set --curl cookies.curl --domain localhost" \
+  "navigate http://localhost:3000/target"
+```
+
+不带 URL 的 `open` 会让浏览器停在 `about:blank`，为目标页面加载前布置状态留出空间。
+
+## 扩展
+
+```bash
+agent-browser --extension ./extension open https://example.com
+agent-browser --extension ./a --extension ./b open https://example.com
+```
+
+扩展是启动时选项。它们需要本地基于 Chromium 的浏览器，不支持 CDP 连接、云提供商或 Lightpanda。
+
+## 安全
+
+初始化脚本与扩展在页面上下文中以高权限运行。请只从可信的本地路径加载脚本与扩展目录。
