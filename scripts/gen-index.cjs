@@ -103,12 +103,20 @@ if (badTags.length) {
 // 分仓分组（docs-cn 拆库 2026-11-07）：条目可选 group，缺省 = hub（本仓
 // Pages 直建）；"docs-cn-N" = 站点内容仍在本仓维护，但构建部署迁到分仓
 // lif3ng-vibe/docs-cn-N（其 Pages URL /docs-cn-N/<slug>/，hub 的
-// dispatch job 指名触发）。入口页只展示 hub 组；迁出站另生成 redirects/
-// <slug>.html 旧链接兜底桩（CI 拷到 _site/<slug>/index.html）。
+// dispatch job 指名触发）。入口页仍列全量站点（迁出站卡片直链分仓地址，
+// 目录单点不变）；迁出站另生成 redirects/<slug>.html 旧链接兜底桩
+// （CI 拷到 _site/<slug>/index.html）。
 const HUB_GROUP = 'hub';
 const groupOf = (s) => s.group || HUB_GROUP;
 const hubSites = sites.filter((s) => groupOf(s) === HUB_GROUP);
 const migratedSites = sites.filter((s) => groupOf(s) !== HUB_GROUP);
+// 卡片主链接：外链型 slug 原样；hub 组站相对 slug/（同站子路径）；
+// 迁出站绝对链到分仓 Pages。
+const siteHref = (s) => {
+	if (/^https?:/.test(s.slug)) return s.slug;
+	if (groupOf(s) === HUB_GROUP) return `${s.slug}/`;
+	return `https://lif3ng-vibe.github.io/${groupOf(s)}/${s.slug}/`;
+};
 
 // formkit/auto-animate（vendor 自 @formkit/auto-animate@0.10.0，升级就换文件重跑）：
 // 包只发 ESM 构建，这里构建时剥掉末尾 export 把 autoAnimate 挂到 globalThis，
@@ -159,12 +167,12 @@ function metaLine(s) {
 	return [m.pages, m.stack, m.snap ? `快照 ${m.snap}` : ''].filter(Boolean).join(' · ');
 }
 
-const cards = hubSites
+const cards = sites
 	.map((s) => {
 		const meta = metaLine(s);
 		return `
 				<article class="item" id="s-${s.slug}" data-tags="${(s.tags || []).join(',')}">
-					<a class="row" href="${/^https?:/.test(s.slug) ? s.slug : `${s.slug}/`}" target="_blank" rel="noopener">
+					<a class="row" href="${siteHref(s)}" target="_blank" rel="noopener">
 						<div class="row-main">
 							<h2 class="name">${s.name}</h2>
 							<p class="desc">${s.desc}</p>
@@ -256,8 +264,8 @@ function fill(text, vars, file) {
 	}
 }
 
-// 页脚：收录数 + 最新快照年月（hub 组各站 meta.snap 取最大，YYYY-MM）
-const lastSnap = hubSites
+// 页脚：收录数 + 最新快照年月（全部站点 meta.snap 取最大，YYYY-MM）
+const lastSnap = sites
 	.map((s) => (s.meta && s.meta.snap) || '')
 	.sort()
 	.pop();
@@ -284,7 +292,7 @@ const html = fill(
 		TAG_LANG_RADIOS: tagLangRadios,
 		SEARCH_MODE_RADIOS: searchModeRadios,
 		SHOW_CHECKS: showChecks,
-		SITE_COUNT: String(hubSites.length),
+		SITE_COUNT: String(sites.length),
 		LAST_SNAP: lastSnap ? lastSnap.slice(0, 7) : '',
 	},
 	'template.html'
