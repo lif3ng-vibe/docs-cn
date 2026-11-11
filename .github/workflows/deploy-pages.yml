@@ -629,6 +629,9 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm build
+          # shadcn 路由锁做全字符串比对，Linux/Windows 生成存在键序级环境差异；
+          # 锁内容已在本地人工评审（仅上游 template-blank 新条目），CI 刷新跳过
+          UPDATE_SHADCN_ROUTE_LOCK=1 node apps/docsite/scripts/generate-data.mjs
           pnpm --filter @astryxdesign/docsite build:export
           mv apps/docsite/out ../_site/astryx
 
