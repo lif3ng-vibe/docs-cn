@@ -38,6 +38,7 @@
 | gstack | `gstack-docs-cn/` | https://github.com/garrytan/gstack（上游无 web 文档站） | https://github.com/garrytan/gstack（快照 `main@eaf1701`，README 链接面 35 页自建 Starlight 0.42 站；base-links 挂 Astro 顶层 markdown rehype 免 sed；非官方中文翻译） | 2026-11-06 |
 | agent-desktop | `agent-desktop-docs-cn/` | https://agent-browser.dev/desktop | https://github.com/vercel-labs/agent-desktop（快照 `main@b43ac4f6`，apps/docs 工程整拷，geistdocs 2.14 + Next.js 16 静态导出原班构建，38 页全量；pnpm patch 桩 Server Action 与静态搜索，pnpm monorepo 免 sed；非官方中文镜像） | 2026-11-08 |
 | agent-browser | `agent-browser-docs-cn/` | https://agent-browser.dev | https://github.com/vercel-labs/agent-browser（快照 `main@4b0e9f01`，docs 工程整拷，geistdocs 2.7.5 + Next.js 16 静态导出原班构建，38 页 + 首页全量；pnpm patch 静态搜索 mandarin tokenizer，免 sed；非官方中文镜像） | 2026-11-08 |
+| astryx | `astryx-docs-cn/` | https://astryx.atmeta.com | https://github.com/meta/astryx（快照 `main@9624a0b`，pnpm monorepo 整拷，Next.js 16 + StyleX 原班构建，469 页全量：614 个 .doc.mjs 数据文档 + UI + 博客；静态导出 stub 交换 api/search 与 mcp，NEXT_PUBLIC_DOCS_TARGET=latest 消 Canary 横幅，Node 24；非官方中文镜像） | 2026-11-11 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
@@ -140,6 +141,7 @@ docs-cn/
 ├── gstack-docs-cn/                     # gstack 中文文档（自建 Starlight 0.42 站，35 页；base-links 挂顶层 markdown rehype 免 sed）
 ├── agent-desktop-docs-cn/              # agent-desktop 中文文档（geistdocs 2.14 + Next.js 16 静态导出，38 页；pnpm patch 桩 Server Action 与静态搜索）
 ├── agent-browser-docs-cn/              # agent-browser 中文文档（geistdocs 2.7.5 + Next.js 16 静态导出，38 页 + 首页；静态搜索 mandarin tokenizer 补丁）
+├── astryx-docs-cn/                     # Astryx 设计系统中文文档（Meta 开源；Next.js 16 + StyleX pnpm monorepo，469 页；.doc.mjs 数据驱动内容，静态导出 stub 交换）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -221,6 +223,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - gstack：https://lif3ng-vibe.github.io/docs-cn/gstack/
 - agent-desktop：https://lif3ng-vibe.github.io/docs-cn/agent-desktop/
 - agent-browser：https://lif3ng-vibe.github.io/docs-cn/agent-browser/
+- astryx：https://lif3ng-vibe.github.io/docs-cn/astryx/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

@@ -45,6 +45,7 @@ const TAGS = {
 	'cli-tool':          { en: 'CLI Tool',          zh: '命令行工具' },
 	'sdk-api':           { en: 'SDK & API',         zh: 'SDK 与 API' },
 	'networking':        { en: 'Networking',        zh: '网络与安全' },
+	'design-system':     { en: 'Design System',     zh: '设计系统' },
 	'unofficial-en':     { en: 'Unofficial EN',     zh: '非官方英文文档' },
 };
 

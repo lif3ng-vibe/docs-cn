@@ -602,6 +602,36 @@ jobs:
           pnpm build
           mv out ../_site/agent-browser
 
+      # astryx 是 Meta 的设计系统文档站（Next.js 16 + StyleX pnpm monorepo）
+      # （上游 meta/astryx@main 9624a0b）：内容在 614 个 .doc.mjs 数据文件里，
+      # 构建链 = 根 build 全 workspace 包 → docsite generate 数据管线 →
+      # build:export（DOCS_STATIC_EXPORT=1：output:export + basePath
+      # /docs-cn/astryx，api/search 与 mcp 走 stub 交换，robots/sitemap/llms/rss
+      # force-static；NEXT_PUBLIC_DOCS_TARGET=latest 消 Canary 横幅，内容管线仍
+      # canary=翻译 workspace）。Node 钉 24（.nvmrc 24.22.1，Next 16 要求）。
+      - name: Restore astryx-docs-cn dist
+        id: dist-astryx
+        uses: actions/cache@v4
+        with:
+          path: _site/astryx
+          key: dist-astryx-${{ hashFiles('astryx-docs-cn/**') }}
+
+      - name: Setup Node 24 for astryx
+        if: steps.dist-astryx.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Build astryx-docs-cn
+        if: steps.dist-astryx.outputs.cache-hit != 'true'
+        working-directory: astryx-docs-cn
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm --filter @astryxdesign/docsite build:export
+          mv apps/docsite/out ../_site/astryx
+
       - name: Assemble Pages artifact
         run: |
           # 入口页由 sites.json 生成（加新站点改 sites.json 即可）；
