@@ -4,31 +4,31 @@
 
 export const docs = {
   name: 'color',
-  title: 'Color',
+  title: '颜色',
   category: 'foundations',
   description:
-    'Semantic color tokens for surfaces, text, icons, borders, and status indicators.',
+    '用于表面、文字、图标、边框与状态指示的语义颜色令牌。',
   tokenCategory: 'color',
 
   sections: [
     {
-      title: 'Overview',
+      title: '概览',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Colors are semantic: tokens describe purpose, not appearance. Every color adapts automatically between light and dark modes via CSS light-dark(). Themes override the resolved values, so your code never references raw hex colors.',
+          text: '颜色是语义化的：令牌描述用途而非外观。每种颜色都通过 CSS light-dark() 在浅色与深色模式间自动适配。主题覆盖解析后的取值，因此你的代码从不引用裸十六进制颜色。',
         },
       ],
     },
     {
       id: 'surface-colors',
-      title: 'Color Tokens',
+      title: '颜色令牌',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Layered surface hierarchy: body → surface → card → popover. Each level sits visually above the previous one.',
+          text: '分层表面层级：body → surface → card → popover。每一层在视觉上都位于上一层之上。',
         },
         {
           type: 'token-ref',
@@ -39,17 +39,17 @@ export const docs = {
     },
     {
       id: 'usage',
-      title: 'Use color tokens in StyleX',
+      title: '在 StyleX 中使用颜色令牌',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Import the typed color tokens and use them in `stylex.create()`; they resolve to the active theme and color mode.',
+          text: '导入带类型的颜色令牌并在 `stylex.create()` 中使用；它们会解析到当前激活的主题与颜色模式。',
         },
         {
           type: 'code',
           lang: 'tsx',
-          label: 'Applying color tokens',
+          label: '应用颜色令牌',
           code: `import * as stylex from '@stylexjs/stylex';
 import {colorVars} from '@astryxdesign/core/theme/tokens.stylex';
 
@@ -67,25 +67,25 @@ const styles = stylex.create({
       ],
     },
     {
-      title: 'Best Practices',
+      title: '最佳实践',
   category: 'foundations',
       content: [
         {
           type: 'list',
           style: 'do',
           items: [
-            'Use semantic tokens (--color-text-primary) instead of raw hex values.',
-            'Rely on the surface hierarchy (body → surface → card → popover) for layering.',
-            'Use status colors (success, error, warning) only for their semantic meaning.',
+            '使用语义令牌（--color-text-primary），而非裸十六进制值。',
+            '依赖表面层级（body → surface → card → popover）表达层叠。',
+            '状态色（success、error、warning）只用于其语义含义。',
           ],
         },
         {
           type: 'list',
           style: 'dont',
           items: [
-            "Hardcode hex values, since they won't adapt to dark mode or custom themes.",
-            'Mix accent colors with status colors in the same context.',
-            'Use --color-on-accent on non-accent backgrounds.',
+            "硬编码十六进制值，因为它们无法适配深色模式或自定义主题。",
+            '在同一上下文中混用强调色与状态色。',
+            '在非强调色背景上使用 --color-on-accent。',
           ],
         },
       ],

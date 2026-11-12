@@ -4,31 +4,31 @@
 
 export const docs = {
   name: 'spacing',
-  title: 'Spacing',
+  title: '间距',
   category: 'foundations',
   description:
-    'Spacing scale tokens for padding, gap, and margin: the rhythmic foundation of design system layouts.',
+    '用于 padding、gap 与 margin 的间距刻度令牌：设计系统布局的节奏基础。',
   keywords: ['padding', 'margin', 'gap'],
   tokenCategory: 'spacing',
 
   sections: [
     {
-      title: 'Overview',
+      title: '概览',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'The design system uses a 4px base-unit spacing scale, written in rem so gaps and padding grow with the reader\'s browser font size the way text does: each step is 0.25rem, which is 4px at the default 16px root. Component gap props accept step values that map to these tokens. The scale provides fine-grained control at the small end (2px, 4px, 6px) and consistent rhythm at larger sizes (multiples of 4px).',
+          text: "设计系统使用 4px 基准单位的间距刻度，以 rem 书写，让间距与内边距像文字一样随读者的浏览器字号增长：每档 0.25rem，在默认 16px 根字号下即 4px。组件的 gap prop 接受映射到这些令牌的档位值。刻度在小尺寸端提供细粒度控制（2px、4px、6px），在更大尺寸上保持一致节奏（4px 的倍数）。",
         },
       ],
     },
     {
-      title: 'Scale',
+      title: '刻度',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Fifteen spacing tokens, from 0 to 3rem (0px to 48px at the default 16px root).',
+          text: '十五个间距令牌，从 0 到 3rem（默认 16px 根字号下为 0px 到 48px）。',
         },
         {
           type: 'token-ref',
@@ -38,17 +38,17 @@ export const docs = {
       ],
     },
     {
-      title: 'Usage',
+      title: '用法',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Stack, HStack, VStack, Grid, Toolbar, OverflowList, and ChatMessageList take a `gap` step: 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, or 10 (×4px). Carousel takes the steps from 0 to 4. For custom layouts, use the spacing tokens in StyleX.',
+          text: 'Stack、HStack、VStack、Grid、Toolbar、OverflowList 与 ChatMessageList 接受 `gap` 档位：0、0.5、1、1.5、2、3、4、5、6、8 或 10（×4px）。Carousel 接受 0 到 4 的档位。自定义布局则在 StyleX 中使用间距令牌。',
         },
         {
           type: 'code',
           lang: 'tsx',
-          label: 'Spacing via component props vs StyleX',
+          label: '组件 prop 间距与 StyleX 间距对比',
           code: `// Via component props (preferred)
 <Stack gap={4}>{/* 16px gap */}</Stack>
 
@@ -65,24 +65,24 @@ const styles = stylex.create({
       ],
     },
     {
-      title: 'Best Practices',
+      title: '最佳实践',
   category: 'foundations',
       content: [
         {
           type: 'list',
           style: 'do',
           items: [
-            'Use component gap props when available; they handle automatic spacing compensation.',
-            "Stick to the scale for consistency. If a value isn't on the scale, reconsider the design.",
-            'Use smaller steps (0.5–2) for tight internal spacing and larger steps (4–8) for section gaps.',
+            '有组件 gap prop 就用它；它会处理自动的间距补偿。',
+            "为保持一致而坚守刻度。若某个值不在刻度上，重新考虑设计。",
+            '紧凑的内部间距用小档（0.5–2），区块间隔用大档（4–8）。',
           ],
         },
         {
           type: 'list',
           style: 'dont',
           items: [
-            'Use arbitrary pixel values outside the scale.',
-            'Mix spacing tokens with raw px/rem values in the same component.',
+            '使用刻度之外的任意像素值。',
+            '在同一组件中混用间距令牌与裸 px/rem 值。',
           ],
         },
       ],

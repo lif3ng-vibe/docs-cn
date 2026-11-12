@@ -12,15 +12,15 @@
 
 export const docs = {
   name: 'styling-overview',
-  title: 'Styling overview',
+  title: '样式总览',
   category: 'guide',
   description:
-    'How to set up CSS — exact imports for three paths: plain, Tailwind, and StyleX for your own code — plus the stylesheet each Astryx package ships.',
+    '如何搭建 CSS——三条路径的确切导入：纯 CSS、Tailwind，以及用于你自己代码的 StyleX——外加每个 Astryx 包附带的样式表。',
   keywords: [
-    'styling',
+    '样式',
     'CSS',
-    'setup',
-    'imports',
+    '初始化',
+    '导入',
     'StyleX',
     'Tailwind',
     'astryx.css',
@@ -30,43 +30,43 @@ export const docs = {
   sections: [
     {
       id: 'pick-a-path',
-      title: 'Pick a path',
+      title: '选择路径',
       content: [
         {
           type: 'table',
-          headers: ['Path', 'Good for', 'Build step?'],
+          headers: ['路径', '适合', '需要构建步骤？'],
           rows: [
             [
-              'Plain CSS',
-              'Most apps. Style with className, xstyle, or any CSS library.',
-              'None.',
+              '纯 CSS',
+              '大多数应用。用 className、xstyle 或任意 CSS 库写样式。',
+              '不需要。',
             ],
             [
               'Tailwind',
-              'Apps on Tailwind v4. A CSS bridge maps utility classes to design tokens.',
-              "None beyond Tailwind's own.",
+              '使用 Tailwind v4 的应用。CSS 桥接把工具类映射到设计令牌。',
+              "除 Tailwind 自身外不需要。",
             ],
             [
-              'StyleX for your own code',
-              'Your own `stylex.create()` styles and swizzled (ejected) components. Astryx itself stays prebuilt.',
-              'Yes \u2014 a StyleX plugin for your own code.',
+              '为自己代码使用 StyleX',
+              '你自己的 `stylex.create()` 样式与 swizzle（弹出）的组件。Astryx 本身保持预构建。',
+              '需要——为你的代码加 StyleX 插件。',
             ],
           ],
         },
         {
           type: 'prose',
-          text: 'All three load the same prebuilt Astryx stylesheets, resolve to the same design tokens, and support theming and dark mode. None of them compiles Astryx package source. You can mix them in one app.',
+          text: '三条路径加载同样的 Astryx 预构建样式表、解析到同一组设计令牌，并都支持主题与深色模式。它们都不编译 Astryx 包源码。你可以在一个应用里混用。',
         },
       ],
     },
     {
       id: 'plain',
-      title: 'Plain CSS',
+      title: '纯 CSS',
       content: [
         {
           type: 'code',
           lang: 'bash',
-          label: 'Install',
+          label: '安装',
           code: '{@pm install @astryxdesign/core @stylexjs/stylex @astryxdesign/theme-neutral}',
         },
         {
@@ -79,7 +79,7 @@ export const docs = {
         },
         {
           type: 'prose',
-          text: "Done. Components work out of the box \u2014 style them with `className`, `xstyle`, or `style`. Swap `theme-neutral` for any theme package (`{@command theme list}` shows what's available).",
+          text: "搞定。组件开箱即用——用 `className`、`xstyle` 或 `style` 写样式。把 `theme-neutral` 换成任意主题包即可（`{@command theme list}` 查看可用项）。",
         },
       ],
     },
@@ -90,7 +90,7 @@ export const docs = {
         {
           type: 'code',
           lang: 'bash',
-          label: 'Install',
+          label: '安装',
           code: '{@pm install @astryxdesign/core @stylexjs/stylex @astryxdesign/theme-neutral}',
         },
         {
@@ -109,26 +109,26 @@ export const docs = {
         },
         {
           type: 'prose',
-          text: 'The `@layer` declaration is critical \u2014 without it, component styles outrank Tailwind utilities and `className` overrides stop working. The bridge (`tailwind-theme.css`) maps classes like `text-primary`, `bg-surface`, and `rounded-lg` to design tokens with no JS.',
+          text: '`@layer` 声明至关重要——没有它，组件样式会压过 Tailwind 工具类，`className` 覆盖会失效。桥接（`tailwind-theme.css`）把 `text-primary`、`bg-surface`、`rounded-lg` 这类类映射到设计令牌，无需 JS。',
         },
         {
           type: 'prose',
-          text: 'A project with Tailwind already set up needs a smaller change, which {@link generic:tailwind} shows. For Tailwind v3, see the layer workaround in {@link generic:migration-setup}.',
+          text: '已配置 Tailwind 的项目只需更小的改动，见 {@link generic:tailwind}。Tailwind v3 请看 {@link generic:migration-setup} 中的层权变通。',
         },
       ],
     },
     {
       id: 'stylex-own-code',
-      title: 'StyleX for your own code',
+      title: '为自己代码使用 StyleX',
       content: [
         {
           type: 'prose',
-          text: 'Only needed when you write your own StyleX (`stylex.create()`) or swizzle a component (`{@command swizzle <Component>}`), which copies its StyleX source into your app. The plain path already supports `xstyle` overrides \u2014 this path is for your own StyleX code. Some built-in page templates also use StyleX for layout; if you scaffold one and see "Unexpected stylex.create call at runtime", add the compiler plugin for your bundler below.',
+          text: '只有当你编写自己的 StyleX（`stylex.create()`）或 swizzle 组件（`{@command swizzle <Component>}`，把组件的 StyleX 源码复制进你的应用）时才需要。纯 CSS 路径已支持 `xstyle` 覆盖——这条路径是为你自己写的 StyleX 代码准备的。部分内置页面模板也用 StyleX 做布局；如果你脚手架生成了这种模板并看到 "Unexpected stylex.create call at runtime"，请按下面为你的打包器加上编译器插件。',
         },
         {
           type: 'code',
           lang: 'bash',
-          label: 'Install',
+          label: '安装',
           code: '{@pm install @astryxdesign/core @stylexjs/stylex @astryxdesign/theme-neutral}',
         },
         {
@@ -141,38 +141,38 @@ export const docs = {
         },
         {
           type: 'prose',
-          text: 'Keep `astryx.css`: Astryx component styles always come from the prebuilt stylesheets. Point the StyleX compiler at your own source only, never at `node_modules/@astryxdesign`. Add the plugin for your bundler:',
+          text: '保留 `astryx.css`：Astryx 组件样式永远来自预构建样式表。StyleX 编译器只指向你自己的源码，绝不指向 `node_modules/@astryxdesign`。为你的打包器添加插件：',
         },
         {
           type: 'table',
-          headers: ['Bundler', 'Plugin'],
+          headers: ['打包器', '插件'],
           rows: [
             ['Webpack', '@stylexjs/webpack-plugin'],
             ['Vite / Rollup', '@stylexjs/rollup-plugin'],
             [
-              'Babel (any)',
+              'Babel（任意）',
               '@stylexjs/babel-plugin + @stylexjs/postcss-plugin',
             ],
-            ['Next.js (keep next/font)', '@stylexswc/nextjs-plugin'],
+            ['Next.js（保留 next/font）', '@stylexswc/nextjs-plugin'],
           ],
         },
         {
           type: 'prose',
-          text: 'If a swizzled component fails at runtime with a `stylex.create` error, the app is missing a StyleX compiler: see the StyleX Build Setup section of {@link generic:tokens-and-setup}.',
+          text: '如果 swizzle 出的组件在运行时报 `stylex.create` 错误，说明应用缺少 StyleX 编译器：见 {@link generic:tokens-and-setup} 的 StyleX Build Setup 一节。',
         },
         {
           type: 'prose',
-          text: "`{@command swizzle <Component>}` writes an `astryx-swizzle.json` marker into an output folder it owns (one the copy creates, an empty one, or one it marked before); every module under that folder then compiles as Astryx source, so keep copies in a folder of their own, such as the default `components/astryx`. For a folder that already holds other files it writes no marker and says how to add one by hand. With `@astryxdesign/build`'s Babel, PostCSS and Vite integrations, or `withAstryx()` under webpack, a copy under that folder compiles into `astryx-base`, below `astryx-theme`, so theme component overrides reach it as they reach the package component. Under Turbopack, and with the stock StyleX plugins above, a copy's rules land in your own styles, above `astryx-theme`, and theme component overrides do not reach it.",
+          text: "`{@command swizzle <Component>}` 会把 `astryx-swizzle.json` 标记写入一个它拥有的输出文件夹（复制时新建的、空的，或它先前标记过的）；该文件夹下的所有模块随后都按 Astryx 源码编译，因此把副本放进专属文件夹，比如默认的 `components/astryx`。对已装有其他文件的文件夹，它不写标记，而是说明如何手动添加。使用 `@astryxdesign/build` 的 Babel、PostCSS 与 Vite 集成，或 webpack 下的 `withAstryx()` 时，该文件夹下的副本会编译进 `astryx-base`，位于 `astryx-theme` 之下，主题组件覆盖能像覆盖包组件一样到达它。在 Turbopack 下，以及使用上面的原生 StyleX 插件时，副本的规则落在你自己的样式里、位于 `astryx-theme` 之上，主题组件覆盖到不了它。",
         },
       ],
     },
     {
       id: 'other-packages',
-      title: 'Other Astryx packages',
+      title: '其他 Astryx 包',
       content: [
         {
           type: 'prose',
-          text: 'Every Astryx package whose components carry styles ships its own prebuilt stylesheet. Import it after `astryx.css` for each package you use. All of them place their rules in the same `astryx-base` layer, so your theme overrides win over every package.',
+          text: '凡是组件带样式的 Astryx 包都附带自己的预构建样式表。对每个用到的包，在 `astryx.css` 之后导入它。它们都把规则放进同一个 `astryx-base` 层，因此你的主题覆盖能压过每一个包。',
         },
         {
           type: 'code',
@@ -187,7 +187,7 @@ export const docs = {
         },
         {
           type: 'table',
-          headers: ['Package', 'Stylesheet'],
+          headers: ['包', '样式表'],
           rows: [
             ['@astryxdesign/core', '@astryxdesign/core/astryx.css'],
             ['@astryxdesign/richtext', '@astryxdesign/richtext/richtext.css'],
@@ -199,36 +199,36 @@ export const docs = {
     },
     {
       id: 'what-each-file-does',
-      title: 'What each import does',
+      title: '每个导入做什么',
       content: [
         {
           type: 'table',
-          headers: ['Import', 'Layer', 'Purpose'],
+          headers: ['导入', '层', '用途'],
           rows: [
             [
               'reset.css',
               'reset',
-              'Cross-browser reset (box-sizing, margins, color-scheme). Zero specificity via :where().',
+              '跨浏览器 reset（box-sizing、margin、color-scheme）。经 :where() 实现零优先级。',
             ],
             [
               'astryx.css',
               'astryx-base',
-              'Prebuilt component styles. Required on every path.',
+              '预构建组件样式。每条路径都必须。',
             ],
             [
               'richtext.css, lab.css, charts.css',
               'astryx-base',
-              'Prebuilt styles for each other Astryx package you use. Load after astryx.css.',
+              '你使用的其他 Astryx 包各自的预构建样式。在 astryx.css 之后加载。',
             ],
             [
               'theme.css',
               'astryx-theme',
-              'Design tokens (colors, spacing, radius, typography) as CSS custom properties. Swap the package for a different theme.',
+              '以 CSS 自定义属性形式出现的设计令牌（颜色、间距、圆角、排版）。换主题即换包。',
             ],
             [
               'tailwind-theme.css',
-              '\u2014',
-              'Tailwind v4 bridge. Maps utility classes to design tokens. Pure CSS, no JS. Tailwind path only.',
+              '—',
+              'Tailwind v4 桥接。把工具类映射到设计令牌。纯 CSS，无 JS。仅 Tailwind 路径。',
             ],
           ],
         },
@@ -236,16 +236,16 @@ export const docs = {
     },
     {
       id: 'further-reading',
-      title: 'Further reading',
+      title: '延伸阅读',
       content: [
         {
           type: 'list',
           style: 'unordered',
           items: [
-            '{@link namespace:styling} \u2014 xstyle, className, data-attribute selectors, design tokens in code.',
-            '{@link namespace:styling-libraries} \u2014 Tailwind bridge details, Panda, Chakra, MUI, CSS Modules, and non-CSS token resolution.',
-            '{@link generic:use-a-theme} \u2014 applying themes, dark mode, nested themes. {@link generic:author-a-theme} \u2014 defineTheme, overrides, production builds.',
-            '{@link namespace:migration} \u2014 cascade layer audit, Tailwind v3 coexistence, and foundation smoke test.',
+            '{@link namespace:styling}——xstyle、className、data 属性选择器、代码中的设计令牌。',
+            '{@link namespace:styling-libraries}——Tailwind 桥接细节、Panda、Chakra、MUI、CSS Modules 与非 CSS 令牌解析。',
+            '{@link generic:use-a-theme}——应用主题、深色模式、嵌套主题。{@link generic:author-a-theme}——defineTheme、覆盖、生产构建。',
+            '{@link namespace:migration}——级联层审计、Tailwind v3 共存与基础冒烟测试。',
           ],
         },
       ],

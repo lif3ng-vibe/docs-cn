@@ -4,30 +4,30 @@
 
 export const docs = {
   name: 'elevation',
-  title: 'Elevation',
+  title: '阴影层级',
   category: 'foundations',
   description:
-    'Shadow tokens for visual elevation and inset state rings.',
+    '用于视觉层级与内嵌状态环的阴影令牌。',
   tokenCategory: 'shadow',
 
   sections: [
     {
-      title: 'Overview',
+      title: '概览',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Elevation tokens create depth through box-shadow. Three levels (low, med, high) establish a visual hierarchy for floating elements. Inset shadows provide focus and selection rings for interactive components.',
+          text: '层级令牌通过 box-shadow 营造深度。三个级别（low、med、high）为浮动元素建立视觉层级。内嵌阴影为交互组件提供焦点环与选中环。',
         },
       ],
     },
     {
-      title: 'Elevation Scale',
+      title: '层级刻度',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Each level adds stronger offset and spread. Shadow color adapts to dark mode automatically via light-dark().',
+          text: '每个级别都有更强的偏移与扩散。阴影颜色通过 light-dark() 自动适配深色模式。',
         },
         {
           type: 'token-ref',
@@ -37,61 +37,61 @@ export const docs = {
       ],
     },
     {
-      title: 'Choosing a level',
+      title: '选择级别',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Pick the level by how far the surface sits from the page, not by how much shadow you want. Elevation encodes stacking order: a higher level means the surface is layered over more of the UI. Use exactly one level per surface, and only raise a surface above `none` when it actually sits above other content.',
+          text: '按表面离页面多远来选级别，而不是按你想要多少阴影。层级编码的是堆叠顺序：级别越高，表面在 UI 上层叠的内容越多。每个表面只用一个级别，且只有当表面确实位于其他内容之上时，才把它抬到 `none` 之上。',
         },
         {
           type: 'table',
-          headers: ['Level', 'When to use', 'Examples'],
+          headers: ['级别', '何时使用', '示例'],
           rows: [
             [
               'none',
-              'The component is flat and embedded in the surface; it is part of the page, not layered above it. This is the default for every surface except ChatComposer.',
-              'A Card in a grid, an inline Banner, a standard Button',
+              '组件扁平并嵌入表面之中；它是页面的一部分，而非层叠其上。这是除 ChatComposer 外所有表面的默认值。',
+              '网格中的 Card、内联 Banner、标准 Button',
             ],
             [
               'low',
-              'The component is in the normal page flow but should read as distinct from the background. Use for emphasis or to separate the component from the surface behind it; the component still sits on the page, it is not floating over other content.',
-              'A raised Card that needs emphasis, a ChatComposer',
+              '组件处于正常页面流中，但应与背景区分开。用于强调，或把组件与身后的表面分离；组件仍在页面上，并不悬浮于其他内容之上。',
+              '需要强调的凸起 Card、ChatComposer',
             ],
             [
               'med',
-              'The component sits over other content on the same page; it floats above nearby elements but not the whole screen.',
-              'A Popover, a floating Banner, a floating action Button',
+              '组件盖在同页的其他内容之上；它浮在邻近元素上方，但不覆盖整个屏幕。',
+              'Popover、浮动 Banner、浮动操作 Button',
             ],
             [
               'high',
-              'The component is placed over the entire UI; it is the topmost layer and typically has a backdrop or takes focus from everything else.',
-              'A modal Dialog, a full-screen overlay surface',
+              '组件覆盖整个 UI；它是最顶层，通常带有背板或从其余一切夺取焦点。',
+              '模态 Dialog、全屏覆盖表面',
             ],
           ],
         },
         {
           type: 'prose',
-          text: 'If two surfaces overlap, the one on top takes the higher level. If a surface does not overlap anything, it is `none` or `low`; never `med` or `high`.',
+          text: '若两个表面重叠，位于上方的取更高级别。若表面不与任何内容重叠，就是 `none` 或 `low`；绝不会是 `med` 或 `high`。',
         },
       ],
     },
     {
-      title: 'The elevation prop',
+      title: 'elevation prop',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Configurable surfaces expose a single `elevation` prop instead of asking consumers to hand-write a box-shadow. It takes the graded enum `none | low | med | high`, narrowed per component to the steps that surface needs: Card, ClickableCard, SelectableCard, Button, IconButton, ButtonGroup, ToggleButton, and Banner expose the full scale, while ChatComposer exposes only `none | low`. `none` is a flat literal (`box-shadow: none`); the other levels map to the `--shadow-*` tokens above, so a surface stays theme-agnostic.',
+          text: '可配置的表面只暴露一个 `elevation` prop，而不是让使用者手写 box-shadow。它接受分级枚举 `none | low | med | high`，并按组件收窄到该表面所需的档位：Card、ClickableCard、SelectableCard、Button、IconButton、ButtonGroup、ToggleButton 与 Banner 暴露完整刻度，而 ChatComposer 只暴露 `none | low`。`none` 是扁平字面量（`box-shadow: none`）；其余级别映射到上面的 `--shadow-*` 令牌，因此表面保持主题无关。',
         },
         {
           type: 'prose',
-          text: 'Prop defaults preserve current appearance: every surface defaults to `none` except ChatComposer, which defaults to `low` to keep its raised look. Set `elevation="none"` to flatten it; the flat composer draws a border with the same rest / hover / focus treatment as a text input.',
+          text: 'prop 默认值保持现有外观：除 ChatComposer 外每个表面默认 `none`，ChatComposer 默认 `low` 以保持其凸起外观。设置 `elevation="none"` 可将其压平；扁平的输入区会绘制边框，静止/悬停/焦点三种状态的处理与文本输入框一致。',
         },
         {
           type: 'code',
           lang: 'tsx',
-          label: 'Raising a surface with the elevation prop',
+          label: '用 elevation prop 抬升表面',
           code: `import {Plus} from 'lucide-react';
 
 // Flat by default; raise only when the surface needs to float.
@@ -105,22 +105,22 @@ export const docs = {
         },
         {
           type: 'prose',
-          text: 'Always float; no prop: intrinsic overlays (Dialog, Popover, Tooltip, Toast, HoverCard, DropdownMenu, and the components that compose them) bake their elevation in and never expose the prop. Flow content (inputs, Text, layout) is never elevated; input fields use inset rings, which are a separate concept from elevation.',
+          text: '始终浮动的表面没有 prop：固有浮层（Dialog、Popover、Tooltip、Toast、HoverCard、DropdownMenu 以及组合它们的组件）把层级写死在内部，从不暴露该 prop。流式内容（输入框、Text、布局）永不抬升；输入字段使用内嵌环，那是与层级相互独立的概念。',
         },
       ],
     },
     {
-      title: 'Usage',
+      title: '用法',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'When building a custom surface, read elevation from the token scale rather than a hand-rolled shadow; the same tokens the elevation prop resolves to.',
+          text: '构建自定义表面时，从令牌刻度读取层级，而不是手写阴影；也就是 elevation prop 解析到的那组令牌。',
         },
         {
           type: 'code',
           lang: 'tsx',
-          label: 'Applying elevation',
+          label: '应用层级',
           code: `import {shadowVars} from '@astryxdesign/core/theme/tokens.stylex';
 
 const styles = stylex.create({
@@ -138,26 +138,26 @@ const styles = stylex.create({
       ],
     },
     {
-      title: 'Best Practices',
+      title: '最佳实践',
   category: 'foundations',
       content: [
         {
           type: 'list',
           style: 'do',
           items: [
-            'Reach for the `elevation` prop on a configurable surface before writing any custom shadow.',
-            'Choose the level by how far the surface sits from the page: `none` when flat/embedded, `low` when in-flow but distinct, `med` when over page content, `high` when over the whole UI. See "Choosing a level".',
-            'Use inset shadows for input focus/selection states; they compose better than outlines.',
+            '在可配置表面上优先使用 `elevation` prop，再考虑手写任何自定义阴影。',
+            '按表面离页面的远近选级别：扁平/嵌入用 `none`，在流中但需区分用 `low`，盖住页面内容用 `med`，覆盖整个 UI 用 `high`。见“选择级别”。',
+            '输入焦点/选中状态用内嵌阴影；它们比 outline 组合性更好。',
           ],
         },
         {
           type: 'list',
           style: 'dont',
           items: [
-            'Hand-write a `box-shadow` in app code; set the `elevation` prop or read `shadowVars` instead.',
-            'Raise a surface that does not sit above other content; a non-overlapping surface is `none` or `low`, never `med` or `high`.',
-            'Stack multiple elevation levels on the same element.',
-            'Use elevation shadows for decorative borders. Use --color-border tokens instead.',
+            '在应用代码里手写 `box-shadow`；应设置 `elevation` prop 或读取 `shadowVars`。',
+            '抬升并不位于其他内容之上的表面；不重叠的表面是 `none` 或 `low`，绝不是 `med` 或 `high`。',
+            '在同一元素上堆叠多个层级。',
+            '用层级阴影做装饰性边框。应改用 --color-border 令牌。',
           ],
         },
       ],

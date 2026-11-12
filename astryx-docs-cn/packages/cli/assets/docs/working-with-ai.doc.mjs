@@ -4,52 +4,52 @@
 
 export const docs = {
   name: 'working-with-ai',
-  title: 'Working with AI',
+  title: '与 AI 协作',
   category: 'guide',
   description:
-    'How to set up AI coding tools to generate correct component code.',
-  keywords: ['claude', 'cursor', 'codex', 'copilot', 'agents', 'mcp'],
+    '如何配置 AI 编码工具，让它生成正确的组件代码。',
+  keywords: ['claude', 'cursor', 'codex', 'copilot', '智能体', 'mcp'],
 
   sections: [
     {
-      title: 'Overview',
+      title: '概览',
       content: [
         {
           type: 'prose',
-          text: 'The design system is built to be AI-friendly: consistent naming, predictable prop patterns, and a CLI that feeds structured documentation directly into AI context windows. But models still need the right context to avoid falling back to generic React patterns or inventing props.',
+          text: '本设计系统为 AI 而建：命名一致、prop 模式可预测，还有一个把结构化文档直接喂进 AI 上下文窗口的 CLI。但模型仍需要正确的上下文，否则会退回通用 React 模式或凭空发明 prop。',
         },
         {
           type: 'prose',
-          text: 'The CLI includes a built-in agent docs system that generates context files for your AI tool of choice. One command sets up everything your AI needs to write correct component code.',
+          text: 'CLI 内置了一套智能体（agent）文档系统，可为你选用的 AI 工具生成上下文文件。一条命令就能配齐 AI 编写正确组件代码所需的一切。',
         },
       ],
     },
     {
       id: 'quick-start',
-      title: 'Set up agent docs',
+      title: '配置智能体文档',
       content: [
         {
           type: 'prose',
-          text: 'Tell your AI to install the CLI and set itself up:',
+          text: '告诉你的 AI 安装 CLI 并自我配置：',
         },
         {
           type: 'code',
           lang: 'text',
-          label: 'Paste this into your AI',
+          label: '把这段粘贴给你的 AI',
           code: 'Install @astryxdesign/cli and run `astryx init --features agents` to set up your Astryx context. Read the generated file.',
         },
         {
           type: 'prose',
-          text: "That's it. The `init --features agents` command generates everything your AI needs (component index, behavioral rules, CLI reference, and package guidance from configured integrations) from the installed project. After a dependency bump, `{@command upgrade --from <old version>}` reports a stale block and adding `--apply` refreshes it.",
+          text: "就这样。`init --features agents` 命令从已安装项目生成 AI 需要的一切（组件索引、行为规则、CLI 参考以及来自已配置集成的包指引）。依赖升级之后，`{@command upgrade --from <old version>}` 会报告过期区块，加 `--apply` 即刷新。",
         },
         {
           type: 'prose',
-          text: "By default this writes the instructions to `AGENTS.md` (the tool-agnostic standard most agents read), in the project root: the nearest folder whose `package.json` declares an Astryx package, else the nearest with any `package.json`. The search stops at the repository root. In the home folder, or in a settings folder in it outside a project, init writes no agent docs: every folder of the home folder whose name starts with a dot (`~/.claude`, `~/.gemini`, `~/.codex`) is a settings folder, and such a folder itself never counts as a project, even with a `package.json`; a project below it with its own `package.json`, such as an agent worktree, is set up normally. Claude Code skips `AGENTS.md` when the project has a `CLAUDE.md` or `.claude/CLAUDE.md`, so init also writes them to that file, even when it imports `AGENTS.md`: Claude Code does not follow that import in a session started in a subfolder. When both files exist, root `CLAUDE.md` gets the copy and a copy in `.claude/CLAUDE.md` is removed, unless the project ignores `CLAUDE.md`, in which case a `.claude/CLAUDE.md` the project commits keeps a copy. Gemini CLI reads only `GEMINI.md`, so init adds a one-line import of `AGENTS.md` there, unless `GEMINI.md` already imports it. `upgrade` keeps the copies in sync. The block between the Astryx markers belongs to Astryx: init and `upgrade` write, refresh, and remove it whatever the project's ignore rules or generated markers say, and never change the text around it. To target a specific tool's file instead:",
+          text: "默认情况下，指令写入项目根目录的 `AGENTS.md`（大多数智能体都读的工具无关标准）；项目根指最近的、其 `package.json` 声明了 Astryx 包的文件夹，否则是最近的任何带 `package.json` 的文件夹。搜索在仓库根处停止。在主目录，或其中项目之外的设置文件夹里，init 不写智能体文档：主目录下所有以点开头的文件夹（`~/.claude`、`~/.gemini`、`~/.codex`）都是设置文件夹，这种文件夹本身永远不算项目，即使有 `package.json`；其下自带 `package.json` 的项目（如智能体工作树）照常配置。当项目已有 `CLAUDE.md` 或 `.claude/CLAUDE.md` 时，Claude Code 会跳过 `AGENTS.md`，因此 init 也会把内容写进该文件——即使它导入了 `AGENTS.md`：Claude Code 在子文件夹发起的会话里不会跟随那个导入。两个文件都存在时，根 `CLAUDE.md` 拿到副本，`.claude/CLAUDE.md` 中的副本会被移除；除非项目忽略 `CLAUDE.md`，此时项目提交的 `.claude/CLAUDE.md` 保留一份副本。Gemini CLI 只读 `GEMINI.md`，所以 init 会在那里加一行对 `AGENTS.md` 的导入，除非 `GEMINI.md` 已经导入它。`upgrade` 保持各副本同步。Astryx 标记之间的区块属于 Astryx：无论项目的忽略规则或生成的标记怎么说，init 与 `upgrade` 都会写入、刷新并移除它，且绝不改动它周围的文字。要改为针对特定工具的文件：",
         },
         {
           type: 'code',
           lang: 'bash',
-          label: 'Manual options',
+          label: '手动选项',
           code: `{@command init --features agents --agent claude}    # CLAUDE.md if present, else .claude/CLAUDE.md
 {@command init --features agents --agent cursor}    # .cursorrules if present, else AGENTS.md
 {@command init --features agents --agent codex}     # AGENTS.md (Copilot, Codex, etc.)
@@ -59,66 +59,66 @@ export const docs = {
         },
         {
           type: 'prose',
-          text: 'With `--agent all`, `GEMINI.md` keeps its one-line import of `AGENTS.md`. With `--agent claude` or `--agent all`, as by default, when `CLAUDE.md` gets the instructions, `.claude/CLAUDE.md` gets none and a copy already there is removed, unless the project ignores `CLAUDE.md`: a fresh clone does not have it, so a `.claude/CLAUDE.md` the project commits gets a copy too, with `--agent claude` and `--agent all` alike. `init --remove-agents` removes them at the project root and in the folder it runs in.',
+          text: "使用 `--agent all` 时，`GEMINI.md` 保留那行对 `AGENTS.md` 的导入。使用 `--agent claude` 或 `--agent all`（与默认相同）时，一旦 `CLAUDE.md` 拿到指令，`.claude/CLAUDE.md` 就不再有，已有的副本会被移除；除非项目忽略 `CLAUDE.md`：全新克隆没有它，因此项目提交的 `.claude/CLAUDE.md` 无论 `--agent claude` 还是 `--agent all` 都会拿到一份副本。`init --remove-agents` 会在项目根及运行所在文件夹移除它们。",
         },
         {
           type: 'prose',
-          text: "For agents that work outside any one project, your global install keeps one short Astryx skill, `~/.agents/skills/astryx/SKILL.md`, linked into the skill folders agent tools read, such as `~/.claude/skills/astryx`. It tells agents Astryx is there and when to use it; `{@command init --user}` writes it now or, with `--remove-agents`, turns it off. Inside a project, agents follow that project's own agent docs. See {@link generic:computer-agent-guide}.",
+          text: "对于在单个项目之外工作的智能体，你的全局安装保留一份简短的 Astryx 技能 `~/.agents/skills/astryx/SKILL.md`，链接进智能体工具读取的技能文件夹（如 `~/.claude/skills/astryx`）。它告诉智能体 Astryx 的存在与使用时机；`{@command init --user}` 现在就写入，加 `--remove-agents` 则关闭。项目之内，智能体遵循该项目自己的智能体文档。见 {@link generic:computer-agent-guide}。",
         },
       ],
     },
     {
-      title: 'What Gets Generated',
+      title: '生成什么',
       content: [
         {
           type: 'prose',
-          text: 'The generated context teaches your AI a 3-step workflow before writing any UI code:',
+          text: '生成的上下文教你的 AI 在写任何 UI 代码之前走三步工作流：',
         },
         {
           type: 'list',
           style: 'ordered',
           items: [
-            '`{@command build "<idea>"}`: get the page template to start from (always one: the closest match, or the app shell), two other templates, and the blocks and components for the parts it lacks',
-            '`{@command template <name> <path>}`: scaffold that template into the project, keep its frame and spacing, and replace its content',
-            '`{@command component <Name>}`: read props and examples for every component used',
+            '`{@command build "<idea>"}`：获取起步用的页面模板（始终一个：最接近的匹配，或应用外壳）、另外两个模板，以及缺失部分所需的区块与组件',
+            '`{@command template <name> <path>}`：把该模板脚手架进项目，保留其框架与间距，替换其内容',
+            '`{@command component <Name>}`：阅读所用每个组件的 prop 与示例',
           ],
         },
         {
           type: 'prose',
-          text: "It also includes rules that prevent common mistakes (start every page from a template, no raw divs, no style={{}}, use tokens not magic values), a CLI quick reference, and package-labeled integration guidance when a configured manifest declares `agentDocs`. After setup, you shouldn't need to manually correct your AI on these conventions; the agent docs handle it at the system level.",
+          text: "它还包含防止常见错误的规则（每个页面都从模板起步、不用裸 div、不用 style={{}}、用令牌而非魔法值）、CLI 速查表，以及配置清单声明 `agentDocs` 时的带包标签集成指引。配置完成后，你不应再需要在这些约定上手工纠正 AI；智能体文档会在系统层面处理。",
         },
       ],
     },
     {
-      title: 'Cursor Setup',
+      title: 'Cursor 配置',
       content: [
         {
           type: 'prose',
-          text: 'Cursor reads project rules from `.cursor/rules/`. To keep the Astryx context in a rule of its own, write it there. Give a path relative to the project root, such as `.cursor/rules/astryx.mdc`; an absolute path is refused.',
+          text: 'Cursor 从 `.cursor/rules/` 读取项目规则。要让 Astryx 上下文独占一条规则，就写在那里。给一个相对项目根的路径，例如 `.cursor/rules/astryx.mdc`；绝对路径会被拒绝。',
         },
         {
           type: 'code',
           lang: 'bash',
-          label: 'Install as a Cursor project rule',
+          label: '安装为 Cursor 项目规则',
           code: `{@command init --features agents --agent-docs-path .cursor/rules/astryx.mdc}`,
         },
         {
           type: 'prose',
-          text: 'Rerunning the same command rewrites only the Astryx block, so frontmatter you add above it (such as `alwaysApply: true`) stays.',
+          text: '重复运行同一命令只会重写 Astryx 区块，因此你在其上方添加的 frontmatter（如 `alwaysApply: true`）会保留。',
         },
       ],
     },
     {
-      title: 'Checking Your Setup',
+      title: '检查你的配置',
       content: [
         {
           type: 'prose',
-          text: 'Paste this into your AI before writing any component code. If your AI can\'t answer these questions, it\'ll know to install the agent docs first.',
+          text: "在编写任何组件代码之前，把这段粘贴给你的 AI。如果它答不上这些问题，它就知道要先安装智能体文档。",
         },
         {
           type: 'code',
           lang: 'text',
-          label: 'Paste this into your AI',
+          label: '把这段粘贴给你的 AI',
           code: `Before writing any Astryx code, check your knowledge:
 
 1. What is the correct import path for Button?
@@ -130,11 +130,11 @@ If you don't know all three, run \`astryx init --features agents\` to generate a
       ],
     },
     {
-      title: 'The astryx Pattern',
+      title: 'astryx 模式',
       content: [
         {
           type: 'prose',
-          text: 'AI agents frequently invoke the CLI with incorrect paths (e.g. node_modules/@astryxdesign/cli/bin/docs.mjs instead of astryx.mjs), leading to silent failures. Adding an npm script alias with the correct path eliminates this entirely.',
+          text: 'AI 智能体常用错误路径调用 CLI（例如 node_modules/@astryxdesign/cli/bin/docs.mjs 而不是 astryx.mjs），导致静默失败。加一个带正确路径的 npm 脚本别名可彻底消除。',
         },
         {
           type: 'code',
@@ -146,12 +146,12 @@ If you don't know all three, run \`astryx init --features agents\` to generate a
         },
         {
           type: 'prose',
-          text: 'With this alias, agents run `npm run astryx -- component --list` instead of guessing the binary path. The `--` separator is standard npm convention for passing flags to scripts.',
+          text: '有了这个别名，智能体运行 `npm run astryx -- component --list`，不再猜测二进制路径。`--` 分隔符是 npm 向脚本传标志的标准约定。',
         },
         {
           type: 'code',
           lang: 'bash',
-          label: 'Reliable CLI invocation',
+          label: '可靠的 CLI 调用',
           code: `npm run astryx -- component --list
 npm run astryx -- component Dialog --dense
 npm run astryx -- docs styling --full --detail brief
@@ -161,16 +161,16 @@ npm run astryx -- docs tokens --dense`,
     },
     {
       id: 'the-dense-flag',
-      title: 'Shorter output: --detail and --dense',
+      title: '更短的输出：--detail 与 --dense',
       content: [
         {
           type: 'prose',
-          text: 'For a shorter read, add `--detail brief` (one line per section) or `--detail compact`. `--dense` swaps in a shorter text where a doc ships one. Use them when pasting CLI output into a web-based AI tool like ChatGPT or Claude.',
+          text: '想读得更短，加 `--detail brief`（每节一行）或 `--detail compact`。`--dense` 在文档备有短版文本时换用它。把 CLI 输出粘贴进 ChatGPT 或 Claude 这类网页 AI 工具时用它们。',
         },
         {
           type: 'code',
           lang: 'bash',
-          label: 'Short output for pasting into AI conversations',
+          label: '适合粘贴进 AI 对话的短输出',
           code: `{@command docs styling --full --detail brief}
 {@command component Dialog --detail compact}
 {@command docs principles --dense}`,
@@ -178,19 +178,19 @@ npm run astryx -- docs tokens --dense`,
       ],
     },
     {
-      title: 'MCP Server',
+      title: 'MCP 服务器',
       content: [
         {
           type: 'prose',
-          text: 'Astryx ships a Model Context Protocol (MCP) server that any MCP-compatible AI tool can connect to. Instead of manually pasting CLI output, the AI can query the Astryx design system directly, searching for components, reading full documentation, and pulling code examples on demand.',
+          text: 'Astryx 附带一个 Model Context Protocol（MCP）服务器，任何兼容 MCP 的 AI 工具都能连接。AI 无需手动粘贴 CLI 输出，可以直接查询 Astryx 设计系统：搜索组件、阅读完整文档、按需拉取代码示例。',
         },
         {
           type: 'prose',
-          text: 'The MCP server exposes two tools: search(query) for discovering components, doc topics, and templates; and get(name) for retrieving full documentation with props, usage, and examples.',
+          text: 'MCP 服务器暴露两个工具：search(query) 用于发现组件、文档主题与模板；get(name) 用于获取含 prop、用法与示例的完整文档。',
         },
         {
           type: 'prose',
-          text: 'Add the server to your MCP config file. The entry is a remote HTTP server, and the exact shape differs per client, so use the snippet for the tool you run. An entry with an unrecognized transport is skipped with a warning rather than an error, which reads as a server that connects but exposes no tools.',
+          text: '把服务器加进你的 MCP 配置文件。该条目是一个远程 HTTP 服务器，具体形态因客户端而异，请选用你所运行工具的片段。无法识别的 transport 条目会被跳过并给一条警告而非报错，表现为一个连得上却不暴露任何工具的服务器。',
         },
         {
           type: 'code',
@@ -207,7 +207,7 @@ npm run astryx -- docs tokens --dense`,
         },
         {
           type: 'prose',
-          text: 'Claude Code can also write that entry from the terminal:',
+          text: 'Claude Code 也可以从终端直接写入该条目：',
         },
         {
           type: 'code',
@@ -217,7 +217,7 @@ npm run astryx -- docs tokens --dense`,
         {
           type: 'code',
           lang: 'json',
-          label: 'Cline (cline_mcp_settings.json) - type is streamableHttp',
+          label: 'Cline（cline_mcp_settings.json）——type 为 streamableHttp',
           code: `{
   "mcpServers": {
     "astryx": {
@@ -231,7 +231,7 @@ npm run astryx -- docs tokens --dense`,
           type: 'code',
           lang: 'json',
           label:
-            'Cursor (.cursor/mcp.json) - remote servers take no type field',
+            'Cursor（.cursor/mcp.json）——远程服务器不带 type 字段',
           code: `{
   "mcpServers": {
     "astryx": {
@@ -242,21 +242,21 @@ npm run astryx -- docs tokens --dense`,
         },
         {
           type: 'prose',
-          text: 'Claude Desktop is the exception: claude_desktop_config.json holds local stdio servers, so a remote server is added through Settings, then Connectors, then Add custom connector, pasting the URL above.',
+          text: 'Claude Desktop 是个例外：claude_desktop_config.json 只放本地 stdio 服务器，因此远程服务器要通过 Settings、Connectors、Add custom connector 添加，粘贴上面的 URL。',
         },
         {
           type: 'prose',
-          text: 'Once connected, your AI tool can search for components by natural language (e.g. "dropdown menu", "success message") and retrieve full documentation without any manual CLI invocation. The server uses the same keyword index from component docs, so search quality improves automatically as component documentation is updated.',
+          text: '连接后，你的 AI 工具可以用自然语言搜索组件（如 "dropdown menu"、"success message"），无需任何手动 CLI 调用即可获取完整文档。服务器使用与组件文档相同的关键词索引，因此组件文档更新时，搜索质量会自动提升。',
         },
       ],
     },
     {
       id: 'global-mode',
-      title: 'In global mode',
+      title: '全局模式下',
       content: [
         {
           type: 'prose',
-          text: "In global mode: your global install keeps one Astryx skill in your home folder, linked into the folders agent tools read, so agents outside any project know Astryx is there; inside a project, its own agent docs come first. See {@link namespace:global} and {@link generic:computer-agent-guide}.",
+          text: "全局模式下：你的全局安装会在主目录保留一份 Astryx 技能，链接进智能体工具读取的文件夹，让任何项目之外的智能体知道 Astryx 在场；项目之内，项目自己的智能体文档优先。见 {@link namespace:global} 与 {@link generic:computer-agent-guide}。",
         },
       ],
     },

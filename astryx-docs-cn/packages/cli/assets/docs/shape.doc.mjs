@@ -4,30 +4,30 @@
 
 export const docs = {
   name: 'shape',
-  title: 'Shape',
+  title: '形状',
   category: 'foundations',
   description:
-    'Border radius tokens for consistent component rounding, from sharp corners to full pills.',
+    '边框圆角令牌，让组件圆角保持一致——从直角到全圆药丸形。',
   tokenCategory: 'radius',
 
   sections: [
     {
-      title: 'Overview',
+      title: '概览',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'The radius scale uses a semantic naming system: inner → element → container → page. Each level fits a specific context. Themes can multiply the entire scale via a radius multiplier, with --radius-none and --radius-full as fixed anchors.',
+          text: '圆角刻度使用语义化命名体系：inner → element → container → page。每个级别对应特定场景。主题可以通过圆角倍率整体缩放刻度，--radius-none 与 --radius-full 是固定锚点。',
         },
       ],
     },
     {
-      title: 'Radius Scale',
+      title: '圆角刻度',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Seven radius tokens, from 0px to 9999px.',
+          text: '七个圆角令牌，从 0px 到 9999px。',
         },
         {
           type: 'token-ref',
@@ -37,17 +37,17 @@ export const docs = {
       ],
     },
     {
-      title: 'Concentric Radius',
+      title: '同心圆角',
   category: 'foundations',
       content: [
         {
           type: 'prose',
-          text: 'Inside a padded, rounded container, give nested elements a radius of outer radius minus padding so the curves stay concentric. Card does not do this for your content.',
+          text: '在有内边距的圆角容器里，给嵌套元素的圆角取外层圆角减内边距，让曲线保持同心。Card 不会替你的内容做这件事。',
         },
         {
           type: 'code',
           lang: 'css',
-          label: 'Concentric radius formula',
+          label: '同心圆角公式',
           code: `.inner {
   border-radius: max(0px, calc(var(--radius-container) - var(--spacing-4)));
 }`,
@@ -55,24 +55,24 @@ export const docs = {
       ],
     },
     {
-      title: 'Best Practices',
+      title: '最佳实践',
   category: 'foundations',
       content: [
         {
           type: 'list',
           style: 'do',
           items: [
-            'Use --radius-element for interactive controls (buttons, inputs, selectors).',
-            'Use --radius-container for content containers (cards, panels, dialogs).',
-            'Use --radius-full for pill shapes (badges, tags, avatar status dots).',
+            '交互控件（按钮、输入框、选择器）用 --radius-element。',
+            '内容容器（卡片、面板、对话框）用 --radius-container。',
+            '药丸形（徽章、标签、头像状态点）用 --radius-full。',
           ],
         },
         {
           type: 'list',
           style: 'dont',
           items: [
-            "Use --radius-page for small elements; it's meant for page-level containers.",
-            "Hardcode radius values; they won't scale with theme radius multipliers.",
+            "小元素用 --radius-page；它是给页面级容器用的。",
+            "硬编码圆角值；它们不会随主题圆角倍率缩放。",
           ],
         },
       ],
