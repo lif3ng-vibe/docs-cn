@@ -33,9 +33,6 @@ function rfc822(date: string): string {
   return Number.isNaN(d.getTime()) ? '' : d.toUTCString();
 }
 
-// Regenerated from the generated registry at build time; lets
-// `output: 'export'` materialize the feed.
-export const dynamic = 'force-static';
 
 export async function GET() {
   const feedUrl = abs('/rss.xml');

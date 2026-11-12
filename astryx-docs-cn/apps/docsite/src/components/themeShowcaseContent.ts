@@ -18,6 +18,12 @@ import type {
   InventoryRow,
 } from '../../../../packages/cli/assets/templates/pages/theme-showcase/page';
 
+// Hand-written asset URLs are root-absolute and bypass Next's basePath
+// auto-prefixing; wrap them so subpath-mounted builds (the GitHub Pages
+// mirror) resolve. __NEXT_ROUTER_BASEPATH inlines at build time.
+const B = process.env.__NEXT_ROUTER_BASEPATH ?? '';
+const img = (p: string) => `${B}${p}`;
+
 export interface ThemeShowcaseContent {
   images: Record<string, string>;
   products: ProductSpec[];
@@ -27,12 +33,12 @@ export interface ThemeShowcaseContent {
 
 // Matcha café — matcha-drink photos.
 const MATCHA_IMAGES: Record<string, string> = {
-  watch: '/images/matcha/preview-watch.png',
-  headphones: '/images/matcha/preview-headphones.png',
-  backpack: '/images/matcha/preview-backpack.png',
-  wallet: '/images/matcha/preview-wallet.png',
-  tumbler: '/images/matcha/preview-tumbler.png',
-  throw_: '/images/matcha/preview-throw.png',
+  watch: img('/images/matcha/preview-watch.png'),
+  headphones: img('/images/matcha/preview-headphones.png'),
+  backpack: img('/images/matcha/preview-backpack.png'),
+  wallet: img('/images/matcha/preview-wallet.png'),
+  tumbler: img('/images/matcha/preview-tumbler.png'),
+  throw_: img('/images/matcha/preview-throw.png'),
 };
 
 const MATCHA_CONTENT: ThemeShowcaseContent = {
@@ -130,12 +136,12 @@ const MATCHA_CONTENT: ThemeShowcaseContent = {
 // Butter bakery — butter/breakfast photos. Only five Butter assets exist, so
 // the croissant is reused for the sixth slot.
 const BUTTER_IMAGES: Record<string, string> = {
-  watch: '/images/butter/preview-watch.png',
-  headphones: '/images/butter/preview-headphones.png',
-  backpack: '/images/butter/preview-backpack.png',
-  wallet: '/images/butter/preview-wallet.png',
-  tumbler: '/images/butter/preview-tumbler.png',
-  throw_: '/images/butter/preview-throw.png',
+  watch: img('/images/butter/preview-watch.png'),
+  headphones: img('/images/butter/preview-headphones.png'),
+  backpack: img('/images/butter/preview-backpack.png'),
+  wallet: img('/images/butter/preview-wallet.png'),
+  tumbler: img('/images/butter/preview-tumbler.png'),
+  throw_: img('/images/butter/preview-throw.png'),
 };
 
 const BUTTER_CONTENT: ThemeShowcaseContent = {
@@ -232,12 +238,12 @@ const BUTTER_CONTENT: ThemeShowcaseContent = {
 
 // Stone homeware — stoneware photos on stone plinths.
 const STONE_IMAGES: Record<string, string> = {
-  watch: '/images/stone/preview-watch.png',
-  headphones: '/images/stone/preview-headphones.png',
-  backpack: '/images/stone/preview-backpack.png',
-  wallet: '/images/stone/preview-wallet.png',
-  tumbler: '/images/stone/preview-tumbler.png',
-  throw_: '/images/stone/preview-throw.png',
+  watch: img('/images/stone/preview-watch.png'),
+  headphones: img('/images/stone/preview-headphones.png'),
+  backpack: img('/images/stone/preview-backpack.png'),
+  wallet: img('/images/stone/preview-wallet.png'),
+  tumbler: img('/images/stone/preview-tumbler.png'),
+  throw_: img('/images/stone/preview-throw.png'),
 };
 
 const STONE_CONTENT: ThemeShowcaseContent = {
@@ -334,12 +340,12 @@ const STONE_CONTENT: ThemeShowcaseContent = {
 
 // Y2K trinkets — iridescent/holo objects.
 const Y2K_IMAGES: Record<string, string> = {
-  watch: '/images/y2k/preview-watch.png',
-  headphones: '/images/y2k/preview-headphones.png',
-  backpack: '/images/y2k/preview-backpack.png',
-  wallet: '/images/y2k/preview-wallet.png',
-  tumbler: '/images/y2k/preview-tumbler.png',
-  throw_: '/images/y2k/preview-throw.png',
+  watch: img('/images/y2k/preview-watch.png'),
+  headphones: img('/images/y2k/preview-headphones.png'),
+  backpack: img('/images/y2k/preview-backpack.png'),
+  wallet: img('/images/y2k/preview-wallet.png'),
+  tumbler: img('/images/y2k/preview-tumbler.png'),
+  throw_: img('/images/y2k/preview-throw.png'),
 };
 
 const Y2K_CONTENT: ThemeShowcaseContent = {
@@ -436,12 +442,12 @@ const Y2K_CONTENT: ThemeShowcaseContent = {
 
 // Gothic botanicals — moody single-stem floral photos.
 const GOTHIC_IMAGES: Record<string, string> = {
-  watch: '/images/gothic/preview-watch.png',
-  headphones: '/images/gothic/preview-headphones.png',
-  backpack: '/images/gothic/preview-backpack.png',
-  wallet: '/images/gothic/preview-wallet.png',
-  tumbler: '/images/gothic/preview-tumbler.png',
-  throw_: '/images/gothic/preview-throw.png',
+  watch: img('/images/gothic/preview-watch.png'),
+  headphones: img('/images/gothic/preview-headphones.png'),
+  backpack: img('/images/gothic/preview-backpack.png'),
+  wallet: img('/images/gothic/preview-wallet.png'),
+  tumbler: img('/images/gothic/preview-tumbler.png'),
+  throw_: img('/images/gothic/preview-throw.png'),
 };
 
 const GOTHIC_CONTENT: ThemeShowcaseContent = {

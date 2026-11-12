@@ -31,7 +31,10 @@ import type {HeroThemeContent} from './heroThemeContent';
 // One recurring member across every theme slide (the per-theme `member` copy is
 // intentionally not used here).
 const REWARD_MEMBER_NAME = 'Ami Pena';
-const REWARD_MEMBER_AVATAR = '/images/avatars/DATA-Ami-Pena.png';
+// Root-absolute asset URLs bypass Next's basePath auto-prefixing; wrap them
+// for the subpath-mounted mirror (__NEXT_ROUTER_BASEPATH inlines at build).
+const B = process.env.__NEXT_ROUTER_BASEPATH ?? '';
+const REWARD_MEMBER_AVATAR = `${B}/images/avatars/DATA-Ami-Pena.png`;
 
 const styles = stylex.create({
   // Desktop overlap stage: fixed, viewport-centered 1200px box (shared with the

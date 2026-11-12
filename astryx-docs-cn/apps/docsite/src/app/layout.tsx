@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     url: '/',
     images: [
       {
-        url: OG_IMAGE,
+        url: withBasePath(OG_IMAGE),
         width: 2400,
         height: 1260,
         alt: 'Astryx——Meta 开源的设计系统',
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [OG_IMAGE],
+    images: [withBasePath(OG_IMAGE)],
   },
 };
 

@@ -16,7 +16,6 @@ import type {MetadataRoute} from 'next';
 import {SITE_URL} from '../lib/siteConfig';
 
 // Pure build-time output; lets `output: 'export'` materialize robots.txt.
-export const dynamic = 'force-static';
 
 export default function robots(): MetadataRoute.Robots {
   return {

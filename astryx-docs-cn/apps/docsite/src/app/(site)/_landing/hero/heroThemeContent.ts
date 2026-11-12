@@ -18,6 +18,13 @@ import {themeObjects} from '@/generated/themeRegistry';
 import {astryxTheme} from '@/themes/astryx';
 import {BRAND_BLUE} from '@/constants';
 
+// Hand-written asset URLs are root-absolute and bypass Next's basePath
+// auto-prefixing; wrap them so subpath-mounted builds (the GitHub Pages
+// mirror) resolve. __NEXT_ROUTER_BASEPATH inlines at build time.
+const B = process.env.__NEXT_ROUTER_BASEPATH ?? '';
+const img = (p: string) => `${B}${p}`;
+
+
 // Sentinel for the docsite's local brand theme (not an @astryxdesign/theme-* package).
 const ASTRYX = 'astryx';
 
@@ -153,18 +160,18 @@ const CONTENT_BY_THEME: Record<string, HeroThemeContent> = {
   },
   '@astryxdesign/theme-butter': {
     product: {
-      image: '/images/butter/preview-watch.png',
+      image: img('/images/butter/preview-watch.png'),
       title: '黄油可颂',
       description: '层层起酥，每天清晨烤至金黄。',
       price: '$6',
     },
     feature: {
-      image: '/images/butter/preview-backpack.png',
+      image: img('/images/butter/preview-backpack.png'),
       title: '比利时华夫饼',
       price: '$8',
     },
     mini: {
-      image: '/images/butter/preview-headphones.png',
+      image: img('/images/butter/preview-headphones.png'),
       title: '松饼',
       description: '层层叠起，黄油慢慢融化。',
     },
@@ -174,18 +181,18 @@ const CONTENT_BY_THEME: Record<string, HeroThemeContent> = {
   },
   '@astryxdesign/theme-matcha': {
     product: {
-      image: '/images/matcha/preview-watch.png',
+      image: img('/images/matcha/preview-watch.png'),
       title: '抹茶',
       description: '石磨抹茶注入冷牛奶。',
       price: '$6',
     },
     feature: {
-      image: '/images/matcha/preview-headphones.png',
+      image: img('/images/matcha/preview-headphones.png'),
       title: '草莓抹茶',
       price: '$7',
     },
     mini: {
-      image: '/images/matcha/preview-tumbler.png',
+      image: img('/images/matcha/preview-tumbler.png'),
       title: '香芋抹茶',
       description: '香芋奶油抹茶。',
     },
@@ -200,18 +207,18 @@ const CONTENT_BY_THEME: Record<string, HeroThemeContent> = {
   },
   '@astryxdesign/theme-gothic': {
     product: {
-      image: '/images/gothic/preview-watch.png',
+      image: img('/images/gothic/preview-watch.png'),
       title: '刺芹',
       description: '一支干制刺芹，花头泛着冷冽金属光泽。',
       price: '$24',
     },
     feature: {
-      image: '/images/gothic/preview-headphones.png',
+      image: img('/images/gothic/preview-headphones.png'),
       title: '庭园玫瑰',
       price: '$18',
     },
     mini: {
-      image: '/images/gothic/preview-backpack.png',
+      image: img('/images/gothic/preview-backpack.png'),
       title: '花毛茛',
       description: '柔紫花瓣层层叠叠。',
     },
@@ -221,18 +228,18 @@ const CONTENT_BY_THEME: Record<string, HeroThemeContent> = {
   },
   '@astryxdesign/theme-y2k': {
     product: {
-      image: '/images/y2k/preview-watch.png',
+      image: img('/images/y2k/preview-watch.png'),
       title: '手机',
       description: '幻彩贝壳机，配彩虹屏。',
       price: '$18',
     },
     feature: {
-      image: '/images/y2k/preview-headphones.png',
+      image: img('/images/y2k/preview-headphones.png'),
       title: '发光星星套装',
       price: '$12',
     },
     mini: {
-      image: '/images/y2k/preview-backpack.png',
+      image: img('/images/y2k/preview-backpack.png'),
       title: '蝴蝶',
       description: '粉彩铬色闪亮贴饰。',
     },

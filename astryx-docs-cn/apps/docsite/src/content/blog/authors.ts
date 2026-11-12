@@ -1,4 +1,5 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
+import {withBasePath} from '../../lib/siteConfig';
 
 /**
  * @file authors.ts
@@ -45,7 +46,7 @@ export interface ResolvedAuthor extends Omit<AuthorProfile, 'avatar' | 'href'> {
 export const authors = {
   team: {
     name: 'Astryx team',
-    avatar: '/blog/authors/astryx-team.png',
+    avatar: withBasePath('/blog/authors/astryx-team.png'),
     href: 'https://github.com/meta/astryx',
   },
   cvkxx: {

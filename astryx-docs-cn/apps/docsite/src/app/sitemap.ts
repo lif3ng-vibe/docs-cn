@@ -19,9 +19,6 @@ import type {MetadataRoute} from 'next';
 import {cacheLife} from 'next/cache';
 import {SITE_URL} from '../lib/siteConfig';
 
-// Built from the generated registries at build time; lets `output: 'export'`
-// materialize sitemap.xml.
-export const dynamic = 'force-static';
 import {CHANGELOG_PAGE_TITLE} from '../lib/pageTitles';
 import {flattenComponentSidebarEntries} from '../components/componentSidebarData';
 import {docTopics} from '../generated/docsRegistry';

@@ -34,10 +34,20 @@ const stripUseCache = source =>
     .replace(/^(\s*)'use cache';(\s*$)/gm, '$1// [export build] use cache requires cacheComponents$2')
     .replace(/^(\s*)cacheLife\([^)]*\);(\s*$)/gm, '$1// [export build] cacheLife requires cacheComponents$2');
 
+// Generation-only routes need an explicit force-static under output:export,
+// while the canonical cacheComponents build rejects route segment config — so
+// the config is injected only in the export build, never committed to source.
+const addForceStatic = source =>
+  `${source}\n// [export build] injected: output export requires an explicit force-static on\n// generation-only routes; the canonical cacheComponents build rejects route\n// segment config instead.\nexport const dynamic = 'force-static';\n`;
+
 const TRANSFORMS = [
-  {live: path.join(APP, 'sitemap.ts'), apply: stripUseCache},
+  {live: path.join(APP, 'sitemap.ts'), apply: s => addForceStatic(stripUseCache(s))},
   {live: path.join(APP, '(site)', 'community', 'page.tsx'), apply: stripUseCache},
   {live: path.join(APP, '..', 'lib', 'copyrightYear.ts'), apply: stripUseCache},
+  {live: path.join(APP, 'robots.ts'), apply: addForceStatic},
+  {live: path.join(APP, 'llms.txt', 'route.ts'), apply: addForceStatic},
+  {live: path.join(APP, 'rss.xml', 'route.ts'), apply: addForceStatic},
+  {live: path.join(APP, 'blog', 'txt', '[slug]', 'route.ts'), apply: addForceStatic},
 ];
 
 const restore =

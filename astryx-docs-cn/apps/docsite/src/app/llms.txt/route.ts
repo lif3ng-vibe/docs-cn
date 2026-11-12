@@ -9,7 +9,6 @@
  */
 
 // Content is build-time-constant; lets `output: 'export'` materialize the file.
-export const dynamic = 'force-static';
 
 export function GET() {
   const body = `# Astryx

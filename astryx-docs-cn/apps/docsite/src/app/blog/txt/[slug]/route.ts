@@ -21,9 +21,6 @@ export function generateStaticParams() {
   return [...blogPosts, ...blogFixturePosts].map(p => ({slug: p.slug}));
 }
 
-// Fully determined by generateStaticParams + the generated registry; lets
-// `output: 'export'` materialize each post's plaintext variant.
-export const dynamic = 'force-static';
 
 export async function GET(
   _req: Request,

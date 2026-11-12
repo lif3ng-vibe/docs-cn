@@ -9,6 +9,7 @@
 import type {Metadata} from 'next';
 import {blogPosts, blogTypes} from '../../generated/blogRegistry';
 import {BlogIndex} from '../../components/blog/BlogIndex';
+import {withBasePath} from '../../lib/siteConfig';
 
 const BLOG_TITLE = 'Blog';
 const BLOG_DESCRIPTION =
@@ -26,13 +27,13 @@ export const metadata: Metadata = {
     title: `${BLOG_TITLE} · Astryx`,
     description: BLOG_DESCRIPTION,
     url: '/blog',
-    images: ['/images/Astryx-Banner.png'],
+    images: [withBasePath('/images/Astryx-Banner.png')],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${BLOG_TITLE} · Astryx`,
     description: BLOG_DESCRIPTION,
-    images: ['/images/Astryx-Banner.png'],
+    images: [withBasePath('/images/Astryx-Banner.png')],
   },
 };
 

@@ -23,6 +23,7 @@ import {AuthorByline} from './AuthorByline';
 import {BlogCoverArt} from './BlogCoverArt';
 import {ReleaseCoverArt} from './ReleaseCoverArt';
 import {parseReleaseVersion} from '../../lib/blog/release';
+import {withBasePath} from '../../lib/siteConfig';
 import css from './BlogCard.module.css';
 
 const styles = stylex.create({
@@ -86,7 +87,7 @@ export function BlogFeatureCard({
 
   const coverContent = post.coverImage ? (
     <img
-      src={post.coverImage}
+      src={withBasePath(post.coverImage)}
       alt={post.coverAlt ?? ''}
       {...stylex.props(styles.coverImg)}
     />
