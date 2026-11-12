@@ -75,7 +75,9 @@ export const PREVIEW_CONNECT = 'astryx-preview-connect';
 /** Preview -> playground, on the window: "I am the document you navigated to". */
 export const PREVIEW_HELLO = 'astryx-preview-hello';
 
-const PREVIEW_PATH = '/playground/preview';
+// The iframe URL is hand-built (Next does not rewrite it), so carry the
+// build's basePath for subpath-mounted deploys (the GitHub Pages mirror).
+const PREVIEW_PATH = `${process.env.__NEXT_ROUTER_BASEPATH ?? ''}/playground/preview`;
 const NONCE_PARAM = 'nonce';
 
 /** A fresh, unguessable nonce for one preview document generation. */

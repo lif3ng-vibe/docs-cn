@@ -17,7 +17,7 @@
  */
 
 import type {Metadata} from 'next';
-import {SITE_NAME} from './siteConfig';
+import {SITE_NAME, withBasePath} from './siteConfig';
 
 /** Branded launch banner that matches the root layout + blog fallback card. */
 const DEFAULT_OG_IMAGE =
@@ -56,13 +56,13 @@ export function pageMetadata({
       title: socialTitle,
       description,
       url: path,
-      images: [{url: image}],
+      images: [{url: withBasePath(image)}],
     },
     twitter: {
       card: 'summary_large_image',
       title: socialTitle,
       description,
-      images: [image],
+      images: [withBasePath(image)],
     },
   };
 }

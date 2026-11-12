@@ -23,6 +23,7 @@ import {useState} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {useThemeMode} from '../../app/providers';
 import {blogDarkImages, blogImageSizes} from '../../generated/blogRegistry';
+import {withBasePath} from '../../lib/siteConfig';
 
 const styles = stylex.create({
   image: {
@@ -126,10 +127,18 @@ export function MarkdownImage({src, alt}: {src: string; alt: string}) {
   const m = /^(.*)\.([a-zA-Z0-9]+)$/.exec(src);
   const candidate =
     m && !m[1].endsWith('.dark') ? `${m[1]}.dark.${m[2]}` : undefined;
+  // Derive the dark variant and size from the bare path (that's what the
+  // build-time manifests carry), then prefix basePath only for the DOM.
   const darkSrc =
     candidate != null && blogDarkImages.includes(candidate)
       ? candidate
       : undefined;
 
-  return <ThemedImage lightSrc={src} darkSrc={darkSrc} alt={alt} />;
+  return (
+    <ThemedImage
+      lightSrc={withBasePath(src)}
+      darkSrc={darkSrc != null ? withBasePath(darkSrc) : undefined}
+      alt={alt}
+    />
+  );
 }

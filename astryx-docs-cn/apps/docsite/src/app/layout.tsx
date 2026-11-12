@@ -21,6 +21,7 @@ import {
   SITE_NAME,
   SITE_TITLE,
   SITE_DESCRIPTION,
+  withBasePath,
 } from '../lib/siteConfig';
 
 // Note: the Astryx theme (src/themes/astryxTheme.ts) is Figtree-first.
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   icons: {
-    icon: '/favicon.svg',
+    icon: withBasePath('/favicon.svg'),
   },
   alternates: {
     types: {

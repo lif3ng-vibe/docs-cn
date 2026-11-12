@@ -32,6 +32,7 @@ import {NavSurfaceMode} from './NavSurfaceMode';
 import {TemplatesPreview} from '../_landing/TemplatesPreview';
 import {ThemesPreview} from '../_landing/ThemesPreview';
 import {pageMetadata} from '../../../lib/pageMetadata';
+import {withBasePath} from '../../../lib/siteConfig';
 import * as stylex from '@stylexjs/stylex';
 import {Card} from '@astryxdesign/core/Card';
 import {ClickableCard} from '@astryxdesign/core/ClickableCard';
@@ -472,7 +473,7 @@ function BlockCard({
         {hasImage && image && (
           <div {...stylex.props(styles.blockCardImage)}>
             <img
-              src={image.src}
+              src={withBasePath(image.src)}
               alt={image.alt}
               {...stylex.props(styles.blockCardImageImg)}
             />

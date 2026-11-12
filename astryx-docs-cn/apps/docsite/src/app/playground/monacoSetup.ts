@@ -28,8 +28,10 @@ import {
 } from './formatCode';
 
 // Self-host Monaco from public/monaco/vs — corpnet blocks the default CDN.
+// The AMD loader path is outside Next's basePath handling, so prefix it here
+// for subpath-mounted builds (the GitHub Pages mirror).
 if (typeof window !== 'undefined') {
-  loader.config({paths: {vs: '/monaco/vs'}});
+  loader.config({paths: {vs: `${process.env.__NEXT_ROUTER_BASEPATH ?? ''}/monaco/vs`}});
 }
 
 /** Monaco instance type — the full runtime object passed to onMount. */
@@ -109,7 +111,7 @@ export function configureMonaco(
   );
 
   // Load real type definitions from the pre-built JSON bundle
-  fetch('/playground-types.json')
+  fetch(`${process.env.__NEXT_ROUTER_BASEPATH ?? ''}/playground-types.json`)
     .then(r => r.json())
     .then((packages: Record<string, Record<string, string>>) => {
       const reactFiles = packages['react'] ?? {};

@@ -149,7 +149,9 @@ export default function PreviewPage() {
   // (this iframe has no AMD loader, so there's no define() conflict).
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = '/vendor/typescript.js';
+    // basePath is not applied to hand-built script URLs; prefix it for the
+    // subpath-mounted mirror.
+    script.src = `${process.env.__NEXT_ROUTER_BASEPATH ?? ''}/vendor/typescript.js`;
     const fail = () => setCompilerError('TypeScript compiler failed to load');
     script.onload = () => {
       const w = window as unknown as {ts?: typeof TS};
