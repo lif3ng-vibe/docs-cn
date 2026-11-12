@@ -77,6 +77,21 @@
         ],
         "createdAt": "2026-11-12T12:05:00.600Z",
         "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-11-12T12:32:41.545Z",
+        "reason": "Geist 是上游 herdr.dev 官方品牌字体（preload /live/fonts/Geist.ttf），非模板化选型；上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-12T12:32:41.546Z",
+        "reason": "字号层级为上游原站全局 CSS 既有体系（h1/h2/h3 阶梯由 /live/herdr-look.css 与 /_astro/*.css 定义）；上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
       }
     ]
   }
