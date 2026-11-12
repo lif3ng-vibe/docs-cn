@@ -1,0 +1,83 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "geist",
+        "createdAt": "2026-11-12T11:20:12.758Z",
+        "reason": "upstream brand font of mirrored herdr.dev site; translation task forbids CSS changes (上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）)"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "jbm",
+        "createdAt": "2026-11-12T11:20:13.090Z",
+        "reason": "upstream brand mono font of mirrored herdr.dev site; translation task forbids CSS changes (上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）)"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "C:\\Users\\lif3n\\src\\docs\\herdr-docs-cn\\site\\index.html"
+        ],
+        "createdAt": "2026-11-12T11:20:13.411Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "C:\\Users\\lif3n\\src\\docs\\herdr-docs-cn\\site\\index.html"
+        ],
+        "createdAt": "2026-11-12T11:20:13.739Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "C:\\Users\\lif3n\\src\\docs\\herdr-docs-cn\\site\\blog\\coding-agents-are-becoming-runtimes\\index.html"
+        ],
+        "createdAt": "2026-11-12T11:21:04.463Z",
+        "reason": "上游 herdr.dev 镜像站自有设计 token（--dim #5d6168 on #0e0f11，元信息/日期暗色文字，全站统一风格）；本任务为汉化翻译，红线规定 CSS 不动，非本次引入"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/blog/live-updates-without-killing-your-terminal-processes/index.html"
+        ],
+        "createdAt": "2026-11-12T11:37:06.907Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/blog/ten-agents-three-clients-95-percent-less-cpu/index.html"
+        ],
+        "createdAt": "2026-11-12T11:37:25.246Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/blog/herdr-raised-a-seed/index.html"
+        ],
+        "createdAt": "2026-11-12T11:52:00.000Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/privacy/index.html"
+        ],
+        "createdAt": "2026-11-12T12:05:00.600Z",
+        "reason": "上游 herdr.dev 原站汉化镜像复刻：翻译任务红线明确禁止改动该站的 CSS/DOM/img 逻辑，设计按上游原样保留（mirrored site, upstream design preserved verbatim）"
+      }
+    ]
+  }
+}

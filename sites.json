@@ -538,5 +538,22 @@
       "stack": "Next.js 16 + StyleX pnpm monorepo 静态导出",
       "snap": "2026-11-09（9624a0b）"
     }
+  },
+  {
+    "name": "Herdr",
+    "slug": "herdr",
+    "desc": "Herdr 官网中文镜像（非官方翻译）——为运行编码智能体而生的原生应用：窗口布局与 mod 由智能体改造，关掉窗口智能体照常干活；herdr-core 让智能体互相编排、跨机器存活。",
+    "tags": [
+      "ai-agent",
+      "multi-agent",
+      "cli-tool"
+    ],
+    "orig": "https://herdr.dev",
+    "repo": "https://github.com/herdrdev/herdr",
+    "meta": {
+      "pages": "912 页（15 官方页全译 + 888 画廊页模板汉化；TUI 官方自带中文不镜像）",
+      "stack": "闭源 Astro 静态站 → HTML 产物镜像汉化",
+      "snap": "2026-11-12"
+    }
   }
 ]

@@ -151,6 +151,14 @@ jobs:
           mkdir -p _site
           cp -r ollama-docs-cn/dist _site/ollama
 
+      # herdr 是闭源 Astro 静态站（herdr.dev，Cloudflare Pages，站点工程不在公开仓库）。
+      # HTML 产物镜像汉化：产物入库（site/ 资源引用已带 /docs-cn/herdr 前缀），
+      # CI 纯拷贝零构建（同 ollama/tailscale 先例）。TUI 官方自带中文不镜像，链接已改指官方 zh-cn 版。
+      - name: Deploy herdr-docs-cn from repo
+        run: |
+          mkdir -p _site
+          cp -r herdr-docs-cn/site _site/herdr
+
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph
         uses: actions/cache@v4

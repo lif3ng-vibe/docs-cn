@@ -1,0 +1,4 @@
+node_modules/
+upstream/
+data/asset-manifest.json
+*.log

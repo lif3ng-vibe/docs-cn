@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Board · Herdr 布局画廊</title><meta name="description" content="Agents as cards in four columns: Needs you, Working, Done and Idle. Click a card and its tab's live terminals fill the workspace below."><meta name="theme-color" content="#0e0f11"><link rel="canonical" href="https://herdr.dev/layouts/herdrdev/board/"><meta property="og:type" content="website"><meta property="og:site_name" content="Herdr"><meta property="og:title" content="Board · Herdr layouts"><meta property="og:description" content="Agents as cards in four columns: Needs you, Working, Done and Idle. Click a card and its tab's live terminals fill the workspace below."><meta property="og:image" content="https://herdr.dev/assets/og-herdr.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/docs-cn/herdr/favicon.ico" sizes="48x48"><link rel="preload" href="/docs-cn/herdr/live/fonts/Geist.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/docs-cn/herdr/live/fonts/JetBrainsMono-Variable.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/docs-cn/herdr/live/herdr-look.css"><link rel="alternate" type="text/markdown" title="RECIPE.md" href="https://raw.githubusercontent.com/herdrdev/herdr-layout-examples/main/board/RECIPE.md"><style>:root{--bg: #0e0f11;--fg: #f3f3f4;--mute: #8a8e96;--dim: #5d6168;--line: #1f2125;--card: #131416;--amber: #e8912a}*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}html{scrollbar-gutter:stable;background:var(--bg);color:var(--fg);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{max-width:1280px;margin:0 auto;padding:0 32px}.site-nav{position:relative;z-index:3;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.site-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}.site-nav .brand img{width:24px;height:24px;border-radius:6px}.site-nav .links{display:flex;gap:28px;font-size:14px;color:var(--mute)}.site-nav .links a:hover,.site-nav .links a.on{color:var(--fg)}.site-nav .right{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mute)}.site-nav .right a:not(.pill):hover{color:var(--fg)}.pill:hover{background:#fff}a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}.site-nav .right .tui{color:var(--dim)}@media(max-width:860px){.site-nav .right .tui{display:none}}.pill{height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;background:var(--fg);color:#0e0f11;font-weight:500;font-size:14px;border:none;cursor:pointer;font-family:inherit}.ram{display:block;aspect-ratio:874 / 884;background:currentColor;pointer-events:none;-webkit-mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);-webkit-mask-composite:source-in,source-in;mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);mask-composite:intersect,intersect}.site-foot{margin-top:120px;padding:56px 0 64px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;font-size:14px}.site-foot .me{display:flex;flex-direction:column;gap:14px;color:var(--dim)}.site-foot .me img{width:32px;height:32px;border-radius:8px}.site-foot .me b{color:var(--fg);font-weight:500}.site-foot h4{font-size:13px;font-weight:500;color:var(--fg);margin-bottom:14px}.site-foot ul{list-style:none;display:grid;gap:10px;color:var(--dim)}.site-foot ul a:hover{color:var(--fg)}.mono{font-family:JBM,ui-monospace,monospace}@media(max-width:860px){.site-nav .links{display:none}.site-foot{grid-template-columns:1fr 1fr}}
+.crumb:where(.astro-rewmdt44){display:inline-block;margin-top:40px;font-size:14px;color:var(--dim)}.crumb:where(.astro-rewmdt44):hover{color:var(--fg)}.dh:where(.astro-rewmdt44){padding:36px 0}.dh:where(.astro-rewmdt44) h1:where(.astro-rewmdt44){font-weight:560;font-size:clamp(44px,5.4vw,68px);line-height:1.02;letter-spacing:-.035em}.dh:where(.astro-rewmdt44) p:where(.astro-rewmdt44){margin-top:16px;font-size:18px;line-height:1.6;color:var(--mute);max-width:720px}.by:where(.astro-rewmdt44){margin-top:20px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--dim)}.by:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:22px;height:22px;border-radius:50%}.by:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--fg)}.badge:where(.astro-rewmdt44){font:12px JBM;color:var(--mute);border:1px solid #2b2e33;border-radius:5px;padding:2px 7px}.big:where(.astro-rewmdt44){border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #ffffff17,0 50px 120px -40px #000c}.big:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:100%;display:block}.add:where(.astro-rewmdt44){margin-top:24px;display:flex;align-items:center;gap:16px;padding:12px 12px 12px 18px;border:1px solid var(--line);border-radius:12px;background:#121315}.add:where(.astro-rewmdt44) .lbl:where(.astro-rewmdt44){font-size:13px;color:var(--dim);white-space:nowrap}.add:where(.astro-rewmdt44) code:where(.astro-rewmdt44){flex:1;font-size:15px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cols:where(.astro-rewmdt44){margin-top:72px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:72px;align-items:start}.file:where(.astro-rewmdt44){font-size:12px;color:var(--dim);padding-bottom:14px;margin-bottom:28px;border-bottom:1px solid var(--line)}.recipe:where(.astro-rewmdt44) h2{font-weight:560;font-size:26px;letter-spacing:-.02em;margin:44px 0 14px}.recipe:where(.astro-rewmdt44) h2:before{content:"## ";font:400 19px JBM;color:#3f4248}.recipe:where(.astro-rewmdt44) p,.recipe:where(.astro-rewmdt44) li{font-size:16.5px;line-height:1.7;color:var(--mute)}.recipe:where(.astro-rewmdt44) p+p{margin-top:12px}.recipe:where(.astro-rewmdt44) ul,.recipe:where(.astro-rewmdt44) ol{margin:12px 0 0 22px;display:grid;gap:6px}.recipe:where(.astro-rewmdt44) li::marker{color:#4a4d53}.recipe:where(.astro-rewmdt44) code{font:13.5px JBM;color:#d6d8dd;background:#18191c;border:1px solid var(--line);border-radius:5px;padding:1px 5px}.recipe:where(.astro-rewmdt44) pre{margin:18px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#121315!important;overflow-x:auto}.recipe:where(.astro-rewmdt44) pre code{background:none;border:none;padding:0;font-size:13.5px;line-height:1.7}.recipe:where(.astro-rewmdt44) strong{color:var(--fg);font-weight:500}.none:where(.astro-rewmdt44){color:var(--dim)}.side:where(.astro-rewmdt44){position:sticky;top:32px;display:grid;gap:16px}.box:where(.astro-rewmdt44){border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}.box:where(.astro-rewmdt44) .h:where(.astro-rewmdt44){font-size:13px;color:var(--dim);margin-bottom:10px}.tree:where(.astro-rewmdt44){list-style:none;font-size:12.5px;line-height:1.9;color:var(--mute);max-height:320px;overflow:auto}.tree:where(.astro-rewmdt44) .dir:where(.astro-rewmdt44){color:var(--fg)}.src:where(.astro-rewmdt44){display:inline-block;margin-top:12px;font-size:14px;color:var(--fg)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44){font-size:13.5px;line-height:1.6;color:var(--dim)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44)+p:where(.astro-rewmdt44){margin-top:10px}.note:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--mute);text-decoration:underline}@media(max-width:960px){.cols:where(.astro-rewmdt44){grid-template-columns:1fr}.side:where(.astro-rewmdt44){position:static}.add:where(.astro-rewmdt44){flex-wrap:wrap}}
+</style><script type="module" src="/docs-cn/herdr/_astro/page.B1D-nYk3.js"></script></head> <body> <div class="wrap"> <nav class="site-nav"> <a class="brand" href="/docs-cn/herdr/"><img src="/docs-cn/herdr/live/icons/herdr.png" alt="">Herdr</a> <div class="links"> <a href="/docs-cn/herdr/" class>App</a> <a href="/docs-cn/herdr/mobile/" class>移动端</a> <a href="/docs-cn/herdr/core/" class>Core</a> <a href="/docs-cn/herdr/gallery/" class="on">画廊</a> <a href="/docs-cn/herdr/guide/" class>指南</a> <a href="/docs-cn/herdr/blog/" class>博客</a> </div> <div class="right"><a href="https://herdr.dev/zh-cn/tui/docs/" class="tui">Herdr TUI ↗</a><a href="https://github.com/herdrdev">GitHub</a><a class="pill" href="/docs-cn/herdr/download/">下载</a></div> </nav>   <a class="crumb astro-rewmdt44" href="/docs-cn/herdr/gallery/">← 布局</a> <header class="dh astro-rewmdt44"> <div class="astro-rewmdt44"> <h1 class="astro-rewmdt44">Board</h1> <p class="astro-rewmdt44">Agents as cards in four columns: Needs you, Working, Done and Idle. Click a card and its tab&#39;s live terminals fill the workspace below.</p> <div class="by astro-rewmdt44"> <img src="https://github.com/herdrdev.png?size=48" alt="" class="astro-rewmdt44"> <a href="https://github.com/herdrdev" class="astro-rewmdt44">herdrdev</a> <span class="badge astro-rewmdt44">Example by Herdr</span>   </div> </div> </header> <figure class="big astro-rewmdt44"><img src="/docs-cn/herdr/live/layouts/board.jpg?v=ed4eda7" alt="Board layout" class="astro-rewmdt44"></figure><div class="add astro-rewmdt44"> <span class="lbl astro-rewmdt44">告诉你的智能体</span> <code class="mono astro-rewmdt44">先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/board</code> <button class="pill astro-rewmdt44" data-copy="先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/board">复制</button> </div> <div class="cols astro-rewmdt44"> <article class="recipe astro-rewmdt44"> <div class="file mono astro-rewmdt44">RECIPE.md</div> <p>This file is the brief: enough to build Board from an empty folder. The
+files next to it are one build of it. If they don’t work on your Herdr, or you
+want it different, build it again from here.</p>
+<h2 id="what-you-see">What you see</h2>
+<p>Three bands, top to bottom, filling the window (no title bar):</p>
+<ol>
+<li><strong>The header</strong>, 100px, white. The active space’s name (20px, semibold),
+a violet three-bar mark and “/ Agent board”. On the right, the number of
+agents and spaces. Underneath: Board, All spaces and All agents chips,
+with a green dot and “Live updates” on the right.</li>
+<li><strong>The board</strong>, 355px, pale gray (<code>#f6f7f9</code>). Four equal columns with
+16px gaps, each with a status dot, name, count and plus sign. Each column
+scrolls on its own. White cards are 86px high, with 7px corners and a
+3px status stripe. They show program icon and name, terminal address,
+tab name (13px, semibold), space name and time observed in that state.</li>
+<li><strong>The workspace</strong>, the remaining height, inset 14px vertically and 24px
+horizontally. A 34px white rail says “Live workspace”, “space / tab” and
+“TERMINALS”. Below, the active tab’s terminals have white backgrounds,
+7px corners, 12px gaps and 28px headers with program icons and status dots.</li>
+</ol>
+<p>Colors: ink <code>#252b37</code>, muted <code>#89909d</code>, borders <code>#e5e7ec</code>, violet
+<code>#7465db</code>. Text in Geist; terminal text is 13px.</p>
+<h2 id="how-it-behaves">How it behaves</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Status</th><th>Column and stripe</th><th>Count background</th></tr></thead><tbody><tr><td>blocked</td><td>Needs you, amber <code>#d79032</code></td><td><code>#fff5e4</code></td></tr><tr><td>working</td><td>Working, violet <code>#7465db</code></td><td><code>#efedfd</code></td></tr><tr><td>done</td><td>Done, green <code>#39a380</code></td><td><code>#e8f6ef</code></td></tr><tr><td>idle</td><td>Idle, gray <code>#99a0ad</code></td><td><code>#edf0f4</code></td></tr></tbody></table>
+<ul>
+<li>Cards cover all spaces. Status changes move them to the matching column
+and update its count. Hovering a card colors its border to match.</li>
+<li>Clicking a card selects its agent’s space and tab. The workspace and its
+rail follow, while the board still shows everyone.</li>
+<li>Ages read “&#x3C;1m observed”, then whole minutes. They refresh every 30s and
+restart when this board first sees a new status.</li>
+<li>The app’s next/previous agent keys follow column order, left to right.</li>
+</ul>
+<h2 id="built-from">Built from</h2>
+<ul>
+<li><strong>The layout</strong> (<code>layouts/board.json</code>): a root <code>column</code> with
+<code>titlebar: "none"</code>, <code>theme: "paper"</code> and its own colors. Two fixed
+<code>block</code>s hold the header and cards; a remaining-height <code>column</code> holds
+the workspace rail and <code>content: { tab: "active", pane: { … } }</code>.
+Pane borders are 1px, focused <code>#c8c1ef</code>; terminal padding is <code>[12, 10]</code>.</li>
+<li><strong>One mod</strong> (<code>mods/board/</code>), selected by <code>props().role</code>: <code>header</code>,
+<code>terminals</code> for the workspace rail, <code>pane</code>, or none for the board.
+<code>props().pane</code> finds each header’s terminal in <code>panes()</code>.</li>
+<li><strong>Data and commands:</strong> <code>agents()</code>, <code>spaces()</code>, <code>panes()</code>;
+<code>run("agent.focus", { terminal })</code> for cards and <code>setAgentOrder()</code> on
+board renders. A 30,000ms timer updates locally observed ages.</li>
+<li><strong>Art:</strong> program icons, respecting <code>program.tint</code>, and a layout preview
+SVG. <code>mod.json</code> uses <code>place: "none"</code>. No shipped mod or external program
+is needed for the board itself.</li>
+</ul>
+<h2 id="watch-out">Watch out</h2>
+<ul>
+<li>Board/filter chips and column plus signs do nothing. There is no dragging
+cards, creating tasks or filtering the board.</li>
+<li>Observed time is not the agent’s actual work duration. It starts locally
+and is lost when this copy restarts.</li>
+<li>The fixed-height board leaves only the rest of the window for terminals.</li>
+<li>The layout and mod bring their own palette rather than following the
+person’s colors throughout.</li>
+<li>If <code>board</code> is taken, rename the layout and mod references and the
+<code>mods/board/…</code> preview path before installing.</li>
+</ul>
+<h2 id="done-when">Done when</h2>
+<ul>
+<li>Every agent appears in the right column, and its count matches.</li>
+<li>Clicking a card shows its tab’s terminals and updates the workspace rail.</li>
+<li>A status change moves the card, and each column scrolls independently.</li>
+<li><code>herdr-app check mods/board</code> passes, and switching away and back works.</li>
+</ul> </article> <aside class="side astro-rewmdt44"> <div class="box astro-rewmdt44"> <div class="h astro-rewmdt44">文件</div> <ul class="tree mono astro-rewmdt44"> <li style="padding-left:0px" class=" astro-rewmdt44">RECIPE.md</li><li style="padding-left:0px" class="dir astro-rewmdt44">layouts/</li><li style="padding-left:14px" class=" astro-rewmdt44">board.json</li><li style="padding-left:0px" class="dir astro-rewmdt44">mods/</li><li style="padding-left:14px" class="dir astro-rewmdt44">board/</li><li style="padding-left:28px" class=" astro-rewmdt44">main.js</li><li style="padding-left:28px" class=" astro-rewmdt44">mod.json</li><li style="padding-left:28px" class=" astro-rewmdt44">preview.svg</li><li style="padding-left:0px" class=" astro-rewmdt44">preview.png</li> </ul> <a class="src astro-rewmdt44" href="https://github.com/herdrdev/herdr-layout-examples/tree/main/board">在 GitHub 查看 →</a> </div> <div class="box note astro-rewmdt44"> <p class="astro-rewmdt44">你的智能体在添加此布局前会先读其中每个文件。你现有的布局保持不变，可用 <span class="mono astro-rewmdt44">ctrl-shift-l</span> 在布局间切换。</p> <p class="astro-rewmdt44">布局未经 Herdr 审核。<a href="/docs-cn/herdr/cdn-cgi/l/email-protection#2e4d4f406e464b5c4a5c004a4b58115d5b4c444b4d5a137c4b5e415c5a0b1c1e424f57415b5a0b1c1e464b5c4a5c4a4b580b1c684c414f5c4a" class="astro-rewmdt44">举报此布局</a></p> </div> </aside> </div>  <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    document.querySelectorAll('[data-copy]').forEach((b) => b.onclick = async () => {
+      await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '已复制'; setTimeout(() => (b.textContent = '复制'), 1400);
+    });
+  </script>  <footer class="site-foot"> <div class="me"><img src="/docs-cn/herdr/live/icons/herdr.png" alt=""><span><b>Herdr</b><br>为你的智能体而生，由它们重塑。</span><span>开源，Apache 2.0</span></div> <div><h4>产品</h4><ul><li><a href="/docs-cn/herdr/download/">下载</a></li><li><a href="/docs-cn/herdr/mobile/">移动端</a></li><li><a href="/docs-cn/herdr/gallery/">画廊</a></li><li><a href="/docs-cn/herdr/core/">herdr-core</a></li></ul></div> <div><h4>学习</h4><ul><li><a href="/docs-cn/herdr/guide/">指南</a></li><li><a href="/docs-cn/herdr/blog/">博客</a></li><li><a href="https://herdr.dev/zh-cn/tui/docs/">Herdr TUI</a></li><li><a href="/docs-cn/herdr/privacy/">隐私</a></li></ul></div> <div><h4>社区</h4><ul><li><a href="https://github.com/herdrdev">GitHub</a></li><li><a href="https://discord.gg/PsgRfzmUDg">Discord</a></li><li><a href="https://x.com/herdrdev">X</a></li><li><a href="/docs-cn/herdr/cdn-cgi/l/email-protection#224a475b624a475046500c464754"><span class="__cf_email__" data-cfemail="761e130f361e1304120458121300">[email&#160;protected]</span></a></li></ul></div> </footer> </div> <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>

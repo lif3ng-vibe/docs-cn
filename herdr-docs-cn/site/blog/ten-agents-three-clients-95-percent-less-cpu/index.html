@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>十个智能体，三个客户端，CPU 降低 95% · Herdr</title><meta name="description" content="Herdr 不再播放侧边栏动画、绘制不可见的窗格，也不再在鼠标移动时重绘未变化的帧。最繁忙的会话获益最大。"><meta name="theme-color" content="#0e0f11"><link rel="canonical" href="https://herdr.dev/blog/ten-agents-three-clients-95-percent-less-cpu/"><meta property="og:type" content="article"><meta property="og:site_name" content="Herdr"><meta property="og:title" content="十个智能体，三个客户端，CPU 降低 95% · Herdr"><meta property="og:description" content="Herdr 不再播放侧边栏动画、绘制不可见的窗格，也不再在鼠标移动时重绘未变化的帧。最繁忙的会话获益最大。"><meta property="og:image" content="https://herdr.dev/assets/og-blog-frames-v1.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/docs-cn/herdr/favicon.ico" sizes="48x48"><link rel="preload" href="/docs-cn/herdr/live/fonts/Geist.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/docs-cn/herdr/live/fonts/JetBrainsMono-Variable.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/docs-cn/herdr/live/herdr-look.css"><style>:root{--bg: #0e0f11;--fg: #f3f3f4;--mute: #8a8e96;--dim: #5d6168;--line: #1f2125;--card: #131416;--amber: #e8912a}*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}html{scrollbar-gutter:stable;background:var(--bg);color:var(--fg);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{max-width:1280px;margin:0 auto;padding:0 32px}.site-nav{position:relative;z-index:3;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.site-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}.site-nav .brand img{width:24px;height:24px;border-radius:6px}.site-nav .links{display:flex;gap:28px;font-size:14px;color:var(--mute)}.site-nav .links a:hover,.site-nav .links a.on{color:var(--fg)}.site-nav .right{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mute)}.site-nav .right a:not(.pill):hover{color:var(--fg)}.pill:hover{background:#fff}a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}.site-nav .right .tui{color:var(--dim)}@media(max-width:860px){.site-nav .right .tui{display:none}}.pill{height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;background:var(--fg);color:#0e0f11;font-weight:500;font-size:14px;border:none;cursor:pointer;font-family:inherit}.ram{display:block;aspect-ratio:874 / 884;background:currentColor;pointer-events:none;-webkit-mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);-webkit-mask-composite:source-in,source-in;mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);mask-composite:intersect,intersect}.site-foot{margin-top:120px;padding:56px 0 64px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;font-size:14px}.site-foot .me{display:flex;flex-direction:column;gap:14px;color:var(--dim)}.site-foot .me img{width:32px;height:32px;border-radius:8px}.site-foot .me b{color:var(--fg);font-weight:500}.site-foot h4{font-size:13px;font-weight:500;color:var(--fg);margin-bottom:14px}.site-foot ul{list-style:none;display:grid;gap:10px;color:var(--dim)}.site-foot ul a:hover{color:var(--fg)}.mono{font-family:JBM,ui-monospace,monospace}@media(max-width:860px){.site-nav .links{display:none}.site-foot{grid-template-columns:1fr 1fr}}
+.article{display:grid;grid-template-columns:minmax(0,720px) 220px;gap:96px;justify-content:space-between;padding-top:72px}.article.solo{grid-template-columns:minmax(0,720px);justify-content:start}.article .meta{display:flex;gap:18px;font-size:14px;color:var(--dim);margin-bottom:28px}.article .meta a:hover{color:var(--fg)}.article h1{font-weight:560;font-size:clamp(38px,4.6vw,56px);line-height:1.06;letter-spacing:-.03em}.article .lede{margin-top:20px;font-size:20px;line-height:1.55;color:var(--mute)}.article .prose{margin-top:44px;padding-top:40px;border-top:1px solid var(--line)}.prose>*+*{margin-top:18px}.prose p,.prose li{font-size:17px;line-height:1.72;color:#b4b7bd}.prose h2{margin-top:56px;font-weight:560;font-size:28px;line-height:1.15;letter-spacing:-.02em;color:var(--fg);scroll-margin-top:32px}.prose h2:before{content:"## ";font:400 20px JBM,monospace;color:#3f4248}.prose h3{margin-top:36px;font-weight:560;font-size:20px;color:var(--fg)}.prose a{color:var(--fg);text-decoration:underline;text-decoration-color:#4a4d53;text-underline-offset:3px}.prose a:hover{text-decoration-color:var(--fg)}.prose strong{color:var(--fg);font-weight:500}.prose ul,.prose ol{padding-left:22px;display:grid;gap:8px}.prose li::marker{color:#4a4d53}.prose code{font:14.5px JBM,monospace;color:#d6d8dd;background:#18191c;border:1px solid var(--line);border-radius:5px;padding:1px 5px}.prose pre{padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#121315!important;overflow-x:auto}.prose pre code{background:none;border:none;padding:0;font-size:14px;line-height:1.7}.prose blockquote{border-left:2px solid #33363c;padding-left:18px}.prose img,.prose video{max-width:100%;border-radius:12px;box-shadow:0 0 0 1px var(--line)}.prose hr{border:none;border-top:1px solid var(--line);margin:40px 0}.prose table{width:100%;border-collapse:collapse;font-size:15px}.prose th,.prose td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);color:#b4b7bd}.prose th{color:var(--fg);font-weight:500}.author{margin-top:64px;padding-top:28px;border-top:1px solid var(--line);display:flex;gap:14px;align-items:center}.author img{border-radius:50%}.author b{display:block;font-weight:500}.author span{font-size:14px;color:var(--dim)}.author a:hover{color:var(--fg)}.sections{position:sticky;top:40px;align-self:start;display:grid;gap:2px;font-size:14px}.sections .h{font-size:12px;color:var(--dim);padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid var(--line)}.sections a{padding:6px 0;color:var(--dim);transition:color .2s}.sections a:hover,.sections a.on{color:var(--fg)}@media(max-width:960px){.article{grid-template-columns:1fr}.sections{display:none}}
+</style><script type="module" src="/docs-cn/herdr/_astro/page.B1D-nYk3.js"></script></head> <body> <div class="wrap"> <nav class="site-nav"> <a class="brand" href="/docs-cn/herdr/"><img src="/docs-cn/herdr/live/icons/herdr.png" alt="">Herdr</a> <div class="links"> <a href="/docs-cn/herdr/" class>App</a> <a href="/docs-cn/herdr/mobile/" class>移动端</a> <a href="/docs-cn/herdr/core/" class>Core</a> <a href="/docs-cn/herdr/gallery/" class>画廊</a> <a href="/docs-cn/herdr/guide/" class>指南</a> <a href="/docs-cn/herdr/blog/" class="on">博客</a> </div> <div class="right"><a href="https://herdr.dev/zh-cn/tui/docs/" class="tui">Herdr TUI ↗</a><a href="https://github.com/herdrdev">GitHub</a><a class="pill" href="/docs-cn/herdr/download/">下载</a></div> </nav>  <div class="article"> <article> <p class="meta"> <a href="/docs-cn/herdr/blog/">← 博客</a> <time datetime="2026-08-03T00:00:00.000Z">2026 年 8 月 3 日</time> </p> <h1>十个智能体，三个客户端，CPU 降低 95%</h1> <p class="lede">Herdr 不再播放侧边栏动画、绘制不可见的窗格，也不再在鼠标移动时重绘未变化的帧。最繁忙的会话获益最大。</p> <div class="prose"> <p>在以不必要的渲染为主的负载中，Herdr 服务器与其所有已连接客户端的总 CPU 占用下降了 89% 到 95%。渲染器仍以同样的速度运行——只是 Herdr 现在让它画的帧更少了。</p>
+<p>节省随会话规模增长。单个智能体配单个客户端时，总 CPU 占用下降了 91%；十个智能体在后台产出输出、再配三个客户端时，则下降了 95%。服务器每跳过一帧，每个客户端也就少了一帧要序列化、传输并应用。</p>
+<p>这三处改动都不是靠性能分析器（profiler）找到的。第一处始于一桩抱怨，并给了我们一条规则：动起来，就应该意味着有什么东西变了。</p>
+<h2 id="the-spinner-was-a-complaint-before-it-was-a-cost">转轮动画先是抱怨，然后才是开销</h2>
+<p>Herdr 的职责是告诉你哪个智能体需要你。你同时跑着五个、十个、二十个智能体，而侧边栏就是你判断该往哪看的依据。</p>
+<p>于是每个工作中的智能体都配了一个转轮动画（spinner）。这在当时看起来理所当然：动就意味着活着，一个正在思考的智能体就该看起来在思考。</p>
+<p>可跑上二十个智能体，就有二十个东西同时在动，说的全是同一件事，却没一个能告诉你"需要你的正是它"。工作区列表早已用彩色圆点承载状态，侧边栏不过是同一信息的嘈杂版本。用户告诉了我们，我们也认同。</p>
+<p>第一个修复把转轮的重绘隔离到状态矩形内：服务器不再每个节拍都重建窗格内容，而是复用客户端已保留的帧，打上更小的补丁再发送。我们已把转轮做到了近乎最便宜的程度，然后还是把它删掉了。这首先是一个设计决定，CPU 的节省只是副作用。</p>
+<figure class="pf">
+  <div class="pf-2">
+    <div class="pf-panel">
+      <div class="pf-label"><span>0.7.5</span><b>3 个转轮动画，8fps</b></div>
+      <div class="pf-row working"><span class="pf-mark pf-spin"><i>⠋</i><i>⠙</i><i>⠹</i><i>⠸</i></span><div><strong>herdr</strong><small>工作中</small></div></div>
+      <div class="pf-row working"><span class="pf-mark pf-spin"><i>⠋</i><i>⠙</i><i>⠹</i><i>⠸</i></span><div><strong>web-dashboard</strong><small>工作中</small></div></div>
+      <div class="pf-row blocked"><span class="pf-mark">◉</span><div><strong>llm-proxy</strong><small>被阻塞，需要你</small></div></div>
+      <div class="pf-row working"><span class="pf-mark pf-spin"><i>⠋</i><i>⠙</i><i>⠹</i><i>⠸</i></span><div><strong>data-pipeline</strong><small>工作中</small></div></div>
+      <div class="pf-row done"><span class="pf-mark">●</span><div><strong>docs</strong><small>已完成</small></div></div>
+    </div>
+    <div class="pf-panel">
+      <div class="pf-label"><span>0.8.0</span><b>一切静止</b></div>
+      <div class="pf-row working"><span class="pf-mark">●</span><div><strong>herdr</strong><small>工作中</small></div></div>
+      <div class="pf-row working"><span class="pf-mark">●</span><div><strong>web-dashboard</strong><small>工作中</small></div></div>
+      <div class="pf-row blocked"><span class="pf-mark">◉</span><div><strong>llm-proxy</strong><small>被阻塞，需要你</small></div></div>
+      <div class="pf-row working"><span class="pf-mark">●</span><div><strong>data-pipeline</strong><small>工作中</small></div></div>
+      <div class="pf-row done"><span class="pf-mark">●</span><div><strong>docs</strong><small>已完成</small></div></div>
+    </div>
+  </div>
+  <figcaption class="pf-cap">两个面板承载着同样的信息，但只有一个能让你不读文字就找到那个被阻塞的智能体。左边的面板此刻正在你的浏览器里播放动画——这正是全部论点所在。</figcaption>
+</figure>
+<p>工作状态现在是一个静态的彩色标记。进入状态时依然立即渲染，变化发生的那一刻仍会抓住你的目光；停留在状态中则不再调度任何动画。</p>
+<p>这处设计改动省下的 CPU 超出我们的预期。转轮靠定时器唤醒服务器，渲染状态表面，比较并准备帧，序列化后发给每个已连接客户端，再让每个客户端应用它。只要有任何智能体在工作，这一套就大约每秒发生八次，哪怕屏幕其余部分纹丝不动。</p>
+<p>删掉转轮，这一整条链路也随之消失：定时器、动画截止期限、扫描有没有哪个工作区含着工作中窗格的轮询、仅为动画而设的渲染原因，以及帧补丁。master 分支不再产生任何计划内的动画帧。屏幕上只有一个智能体工作、再无其他内容时，Linux 上的 CPU 占用从 1.467% 降到 0.133%，macOS 上从 3.280% 降到 0.265%。</p>
+<h2 id="the-same-rule-applied-to-output-you-cannot-see">同一条规则，用在你看不见的输出上</h2>
+<p>同一条规则也适用于没人看得见的窗格输出。</p>
+<p>窗格产生输出时，PTY 读取器会置起一个共享标记，表示有事发生。这样能高效合并唤醒，却丢掉了来源窗格的信息：等服务器取到标记时，已经分不清该窗格在不在屏幕上。后台智能体往一个没人查看的标签页里写入，仍会为每个已连接客户端产出帧。</p>
+<figure class="pf">
+  <div class="pf-2">
+    <div class="pf-panel">
+      <div class="pf-label"><span>0.7.5</span><b>一个窗格写入</b></div>
+      <div class="pf-flow">
+        <div class="pf-step"><b>置起脏标记</b><s>有东西变了，但不知道是什么</s></div>
+        <div class="pf-arrow">│</div>
+        <div class="pf-step"><b>渲染</b><s>无从排除，只能全画</s></div>
+        <div class="pf-arrow">│</div>
+        <div class="pf-step"><b>序列化、传输</b><s>每个已连接客户端各一次</s></div>
+        <div class="pf-arrow">│</div>
+        <div class="pf-step pf-cost"><b>3 个客户端各自应用一帧</b><s>而它们没有一个在显示那个标签页</s></div>
+      </div>
+    </div>
+    <div class="pf-panel">
+      <div class="pf-label"><span>0.8.0</span><b>一个窗格写入</b></div>
+      <div class="pf-flow">
+        <div class="pf-step"><b>request_pty(窗格 7)</b><s>来源被保留下来</s></div>
+        <div class="pf-arrow">│</div>
+        <div class="pf-step"><b>有没有客户端能看见窗格 7？</b><s>标签页、缩放、弹窗、直接连接</s></div>
+        <div class="pf-fork">
+          <div class="pf-step pf-stop"><em>├─ 否</em><b>到此为止</b><s>字节早已解析，未绘制任何内容</s></div>
+          <div class="pf-step"><em>└─ 是</em><b>照常渲染</b><s>可见的输出依然是可见的输出</s></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="pf-cap">渲染请求现在带有自己的来源。同一窗格的多次写入会合并为一条记录，而不同窗格的并发写入则各自保留身份。</figcaption>
+</figure>
+<p>跳过渲染不会丢输出。字节早已解析完毕，终端状态、回滚缓冲（scrollback）、光标、OSC 元数据和智能体检测都保持最新；切到那个标签页时，按当前状态渲染即可。在来源映射不明的情况下，Herdr 把窗格当作可见处理——因为跳错的代价是屏幕陈旧，而渲错的代价只是多花一点 CPU。</p>
+<h2 id="mouse-movement-should-not-redraw-an-unchanged-frame">鼠标移动不该重绘未变化的帧</h2>
+<p>过去每个鼠标事件都上报"视图变了"。指针在窗格上的移动会转发给窗格内的应用，但 Herdr 自己的帧在前后通常一模一样。以每秒 60 个移动事件计，这意味着每秒约 60 次服务器渲染加 60 帧客户端绘制——只为把同一幅画画上六十遍。</p>
+<p>Herdr 现在会追踪自己的哪些模式响应悬停：全局菜单、上下文菜单和导航器。在这些模式之外，单纯的移动不再触发任何重绘，事件仍像从前一样原样抵达窗格。</p>
+<p>基准测试对两端都做了计数。每一轮测量中，无论哪个版本，1,680 个移动数据包都全部发出，且全部 1,680 个都抵达了窗格。0.7.5 版为此每秒发出约 56 到 60 帧；master 分支一帧未发。Linux 上的 CPU 占用从 9.450% 降到 0.667%。</p>
+<h2 id="why-three-changes-became-ninety-percent">为什么三处改动省出了九成</h2>
+<p>跳过一次服务器渲染，也就同时跳过了帧的准备、序列化、传输，以及每个已连接客户端中的帧处理。</p>
+<p>客户端越多，节省成倍放大。十个静默工作窗格配一个客户端时改善了 78%；同样十个窗格配三个客户端时改善了 91%。</p>
+<figure class="pf">
+  <div class="pf-panel">
+    <div class="pf-label"><span>总 CPU 占用：服务器加所有已连接客户端</span><b>linux</b></div>
+    <div class="pf-bars">
+      <div class="pf-bar-row">
+        <div class="pf-bar-name">一个静默工作窗格</div>
+        <div class="pf-bar old"><span>0.7.5</span><i style="width:11.3%"></i><em>1.467%</em></div>
+        <div class="pf-bar new"><span>0.8.0</span><i style="width:1%"></i><em>0.133%</em></div>
+      </div>
+      <div class="pf-bar-row">
+        <div class="pf-bar-name">十个静默工作窗格，三个客户端</div>
+        <div class="pf-bar old"><span>0.7.5</span><i style="width:33.2%"></i><em>4.316%</em></div>
+        <div class="pf-bar new"><span>0.8.0</span><i style="width:3.1%"></i><em>0.400%</em></div>
+      </div>
+      <div class="pf-bar-row">
+        <div class="pf-bar-name">十个窗格，九个隐藏写入方，三个客户端</div>
+        <div class="pf-bar old"><span>0.7.5</span><i style="width:100%"></i><em>13.014%</em></div>
+        <div class="pf-bar new"><span>0.8.0</span><i style="width:4.7%"></i><em>0.617%</em></div>
+      </div>
+      <div class="pf-bar-row">
+        <div class="pf-bar-name">60Hz 被动鼠标移动</div>
+        <div class="pf-bar old"><span>0.7.5</span><i style="width:72.6%"></i><em>9.450%</em></div>
+        <div class="pf-bar new"><span>0.8.0</span><i style="width:5.1%"></i><em>0.667%</em></div>
+      </div>
+      <div class="pf-bar-row">
+        <div class="pf-bar-name">49 个隐藏写入方，60Hz</div>
+        <div class="pf-bar old"><span>0.7.5</span><i style="width:44.6%"></i><em>5.800%</em></div>
+        <div class="pf-bar new"><span>0.8.0</span><i style="width:34.1%"></i><em>4.433%</em></div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="pf-cap">macOS 呈现同样的形态：隐藏输出场景从 22.958% 降到 1.673%；49 个隐藏写入方以 60Hz 写入的场景从 14.857% 降到 13.498%。</figcaption>
+</figure>
+<p>在 0.7.5 上，给会话加入隐藏的后台输出，在 Linux 上要付出 8.7 个 CPU 点，macOS 上是 12.7。而在 master 分支上，同样的活动只花 0.2 和 0.6——大致就是读取并解析这些字节的价格，此外再无别的。</p>
+<h2 id="where-it-does-not-help">优化帮不上忙的地方</h2>
+<p>五十个窗格、其中四十九个以 60Hz 写入，约合每秒 2,940 次终端更新。每一次仍要从 PTY 读取并解析进终端状态，因为正是这一步保证了你切换过去时窗格内容是正确的。压制帧，压不掉终端仿真。</p>
+<p>这一场景在 Linux 上改善了 23.6%，macOS 上是 9.1%。在你正盯着看的窗格中以 60Hz 产生可见输出，Linux 上改善了 33.9%，macOS 上是 2.7%。空闲场景在两个版本上都贴着测量下限，根本不配拿到任何百分比。</p>
+<p>这次优化瞄准的是不必要的渲染。输出密集的场景依然由 PTY 读取和终端解析主导。</p>
+<h2 id="how-this-was-measured">测量方法</h2>
+<p>我们在独立的 Linux 和 macOS 机器上，把官方 0.7.5 发布二进制与带哈希的 master 构建作对比，每个操作系统各得到 54 个隔离观测。每轮运行都使用全新的命名会话、固定 86×47 终端中的真实已连接客户端、5 秒预热与 21 秒采样。文中数字均为 Herdr 服务器加上所有已连接客户端的总 CPU 占用。</p>
+<p>每个关键的 CPU 结果我们都配了一个行为计数器：侧边栏每秒的计划帧数、后台输出的隐藏来源跳过次数、鼠标移动的精确包送达计数。单独一个 CPU 数字可以有一打种解释；配上对应机制计数器的 CPU 数字，就没那么好辩驳了。</p>
+<p>这是已发布版本与 master 的对比，因此期间的其他变更与构建环境差异也包含在对比之内。性能分析器的证据与上述机制高度吻合，但并非每一个 CPU 点都能归到某一次提交上。</p>
+<p>这项工作始于用户抱怨侧边栏太闹腾，此外还有不少缺陷报告和性能报告，来自那些运行着远比我们的测试更离奇会话的用户。请继续反馈，也感谢每一位帮助 Herdr 变得更好的人。</p> </div> <aside class="author"> <img src="/docs-cn/herdr/assets/author-can.jpeg" width="44" height="44" alt="" loading="lazy"> <div><b>Can Celik</b><span>正在打造 Herdr · <a href="https://x.com/cancelik">X</a> · <a href="/docs-cn/herdr/cdn-cgi/l/email-protection#781b191638101d0a1c0a561c1d0e">Email</a></span></div> </aside> </article> <aside class="sections" aria-label="目录"> <div class="h mono">目录</div> <a href="#the-spinner-was-a-complaint-before-it-was-a-cost" data-section="the-spinner-was-a-complaint-before-it-was-a-cost">转轮动画先是抱怨，然后才是开销</a><a href="#the-same-rule-applied-to-output-you-cannot-see" data-section="the-same-rule-applied-to-output-you-cannot-see">同一条规则，用在你看不见的输出上</a><a href="#mouse-movement-should-not-redraw-an-unchanged-frame" data-section="mouse-movement-should-not-redraw-an-unchanged-frame">鼠标移动不该重绘未变化的帧</a><a href="#why-three-changes-became-ninety-percent" data-section="why-three-changes-became-ninety-percent">为什么三处改动省出了九成</a><a href="#where-it-does-not-help" data-section="where-it-does-not-help">优化帮不上忙的地方</a><a href="#how-this-was-measured" data-section="how-this-was-measured">测量方法</a> </aside> </div>  <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    (() => {
+      const links = [...document.querySelectorAll('[data-section]')];
+      if (!links.length) return;
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) links.forEach((l) => l.classList.toggle('on', l.dataset.section === e.target.id));
+      }, { rootMargin: '-20% 0px -70% 0px' });
+      document.querySelectorAll('.prose h2[id]').forEach((h) => io.observe(h));
+    })();
+  </script>  <footer class="site-foot"> <div class="me"><img src="/docs-cn/herdr/live/icons/herdr.png" alt=""><span><b>Herdr</b><br>为你的智能体而生，由它们重塑。</span><span>开源，Apache 2.0</span></div> <div><h4>产品</h4><ul><li><a href="/docs-cn/herdr/download/">下载</a></li><li><a href="/docs-cn/herdr/mobile/">移动端</a></li><li><a href="/docs-cn/herdr/gallery/">画廊</a></li><li><a href="/docs-cn/herdr/core/">herdr-core</a></li></ul></div> <div><h4>学习</h4><ul><li><a href="/docs-cn/herdr/guide/">指南</a></li><li><a href="/docs-cn/herdr/blog/">博客</a></li><li><a href="https://herdr.dev/zh-cn/tui/docs/">Herdr TUI</a></li><li><a href="/docs-cn/herdr/privacy/">隐私</a></li></ul></div> <div><h4>社区</h4><ul><li><a href="https://github.com/herdrdev">GitHub</a></li><li><a href="https://discord.gg/PsgRfzmUDg">Discord</a></li><li><a href="https://x.com/herdrdev">X</a></li><li><a href="/docs-cn/herdr/cdn-cgi/l/email-protection#86eee3ffc6eee3f4e2f4a8e2e3f0"><span class="__cf_email__" data-cfemail="9af2ffe3daf2ffe8fee8b4feffec">[email&#160;protected]</span></a></li></ul></div> </footer> </div> <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tmux prefix · Herdr mod 画廊</title><meta name="description" content="Ctrl+B, then a key: tmux-style shortcuts for Herdr tabs, panes and spaces. A small hint stays open while you decide. This is a piece you add to your current layout, not a whole window or a terminal multiplexer."><meta name="theme-color" content="#0e0f11"><link rel="canonical" href="https://herdr.dev/mods/herdrdev/tmux-prefix/"><meta property="og:type" content="website"><meta property="og:site_name" content="Herdr"><meta property="og:title" content="Tmux prefix · Herdr mods"><meta property="og:description" content="Ctrl+B, then a key: tmux-style shortcuts for Herdr tabs, panes and spaces. A small hint stays open while you decide. This is a piece you add to your current layout, not a whole window or a terminal multiplexer."><meta property="og:image" content="https://herdr.dev/assets/og-herdr.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/docs-cn/herdr/favicon.ico" sizes="48x48"><link rel="preload" href="/docs-cn/herdr/live/fonts/Geist.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/docs-cn/herdr/live/fonts/JetBrainsMono-Variable.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/docs-cn/herdr/live/herdr-look.css"><link rel="alternate" type="text/markdown" title="RECIPE.md" href="https://raw.githubusercontent.com/herdrdev/herdr-layout-examples/main/tmux-prefix/RECIPE.md"><style>:root{--bg: #0e0f11;--fg: #f3f3f4;--mute: #8a8e96;--dim: #5d6168;--line: #1f2125;--card: #131416;--amber: #e8912a}*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}html{scrollbar-gutter:stable;background:var(--bg);color:var(--fg);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{max-width:1280px;margin:0 auto;padding:0 32px}.site-nav{position:relative;z-index:3;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.site-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}.site-nav .brand img{width:24px;height:24px;border-radius:6px}.site-nav .links{display:flex;gap:28px;font-size:14px;color:var(--mute)}.site-nav .links a:hover,.site-nav .links a.on{color:var(--fg)}.site-nav .right{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mute)}.site-nav .right a:not(.pill):hover{color:var(--fg)}.pill:hover{background:#fff}a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}.site-nav .right .tui{color:var(--dim)}@media(max-width:860px){.site-nav .right .tui{display:none}}.pill{height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;background:var(--fg);color:#0e0f11;font-weight:500;font-size:14px;border:none;cursor:pointer;font-family:inherit}.ram{display:block;aspect-ratio:874 / 884;background:currentColor;pointer-events:none;-webkit-mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);-webkit-mask-composite:source-in,source-in;mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);mask-composite:intersect,intersect}.site-foot{margin-top:120px;padding:56px 0 64px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;font-size:14px}.site-foot .me{display:flex;flex-direction:column;gap:14px;color:var(--dim)}.site-foot .me img{width:32px;height:32px;border-radius:8px}.site-foot .me b{color:var(--fg);font-weight:500}.site-foot h4{font-size:13px;font-weight:500;color:var(--fg);margin-bottom:14px}.site-foot ul{list-style:none;display:grid;gap:10px;color:var(--dim)}.site-foot ul a:hover{color:var(--fg)}.mono{font-family:JBM,ui-monospace,monospace}@media(max-width:860px){.site-nav .links{display:none}.site-foot{grid-template-columns:1fr 1fr}}
+.crumb:where(.astro-hljk352o){display:inline-block;margin-top:40px;font-size:14px;color:var(--dim)}.crumb:where(.astro-hljk352o):hover{color:var(--fg)}.dh:where(.astro-hljk352o){padding:36px 0}.dh:where(.astro-hljk352o) h1:where(.astro-hljk352o){font-weight:560;font-size:clamp(44px,5.4vw,68px);line-height:1.02;letter-spacing:-.035em}.dh:where(.astro-hljk352o) p:where(.astro-hljk352o){margin-top:16px;font-size:18px;line-height:1.6;color:var(--mute);max-width:720px}.by:where(.astro-hljk352o){margin-top:20px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--dim)}.by:where(.astro-hljk352o) img:where(.astro-hljk352o){width:22px;height:22px;border-radius:50%}.by:where(.astro-hljk352o) a:where(.astro-hljk352o){color:var(--fg)}.badge:where(.astro-hljk352o){font:12px JBM;color:var(--mute);border:1px solid #2b2e33;border-radius:5px;padding:2px 7px}.big:where(.astro-hljk352o){border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #ffffff17,0 50px 120px -40px #000c}.big:where(.astro-hljk352o) img:where(.astro-hljk352o){width:100%;display:block}.add:where(.astro-hljk352o){margin-top:24px;display:flex;align-items:center;gap:16px;padding:12px 12px 12px 18px;border:1px solid var(--line);border-radius:12px;background:#121315}.add:where(.astro-hljk352o) .lbl:where(.astro-hljk352o){font-size:13px;color:var(--dim);white-space:nowrap}.add:where(.astro-hljk352o) code:where(.astro-hljk352o){flex:1;font-size:15px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cols:where(.astro-hljk352o){margin-top:72px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:72px;align-items:start}.file:where(.astro-hljk352o){font-size:12px;color:var(--dim);padding-bottom:14px;margin-bottom:28px;border-bottom:1px solid var(--line)}.recipe:where(.astro-hljk352o) h2{font-weight:560;font-size:26px;letter-spacing:-.02em;margin:44px 0 14px}.recipe:where(.astro-hljk352o) h2:before{content:"## ";font:400 19px JBM;color:#3f4248}.recipe:where(.astro-hljk352o) p,.recipe:where(.astro-hljk352o) li{font-size:16.5px;line-height:1.7;color:var(--mute)}.recipe:where(.astro-hljk352o) p+p{margin-top:12px}.recipe:where(.astro-hljk352o) ul,.recipe:where(.astro-hljk352o) ol{margin:12px 0 0 22px;display:grid;gap:6px}.recipe:where(.astro-hljk352o) li::marker{color:#4a4d53}.recipe:where(.astro-hljk352o) code{font:13.5px JBM;color:#d6d8dd;background:#18191c;border:1px solid var(--line);border-radius:5px;padding:1px 5px}.recipe:where(.astro-hljk352o) pre{margin:18px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#121315!important;overflow-x:auto}.recipe:where(.astro-hljk352o) pre code{background:none;border:none;padding:0;font-size:13.5px;line-height:1.7}.recipe:where(.astro-hljk352o) strong{color:var(--fg);font-weight:500}.none:where(.astro-hljk352o){color:var(--dim)}.side:where(.astro-hljk352o){position:sticky;top:32px;display:grid;gap:16px}.box:where(.astro-hljk352o){border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}.box:where(.astro-hljk352o) .h:where(.astro-hljk352o){font-size:13px;color:var(--dim);margin-bottom:10px}.tree:where(.astro-hljk352o){list-style:none;font-size:12.5px;line-height:1.9;color:var(--mute);max-height:320px;overflow:auto}.tree:where(.astro-hljk352o) .dir:where(.astro-hljk352o){color:var(--fg)}.src:where(.astro-hljk352o){display:inline-block;margin-top:12px;font-size:14px;color:var(--fg)}.note:where(.astro-hljk352o) p:where(.astro-hljk352o){font-size:13.5px;line-height:1.6;color:var(--dim)}.note:where(.astro-hljk352o) p:where(.astro-hljk352o)+p:where(.astro-hljk352o){margin-top:10px}.note:where(.astro-hljk352o) a:where(.astro-hljk352o){color:var(--mute);text-decoration:underline}@media(max-width:960px){.cols:where(.astro-hljk352o){grid-template-columns:1fr}.side:where(.astro-hljk352o){position:static}.add:where(.astro-hljk352o){flex-wrap:wrap}}
+</style><script type="module" src="/docs-cn/herdr/_astro/page.B1D-nYk3.js"></script></head> <body> <div class="wrap"> <nav class="site-nav"> <a class="brand" href="/docs-cn/herdr/"><img src="/docs-cn/herdr/live/icons/herdr.png" alt="">Herdr</a> <div class="links"> <a href="/docs-cn/herdr/" class>App</a> <a href="/docs-cn/herdr/mobile/" class>移动端</a> <a href="/docs-cn/herdr/core/" class>Core</a> <a href="/docs-cn/herdr/gallery/" class="on">画廊</a> <a href="/docs-cn/herdr/guide/" class>指南</a> <a href="/docs-cn/herdr/blog/" class>博客</a> </div> <div class="right"><a href="https://herdr.dev/zh-cn/tui/docs/" class="tui">Herdr TUI ↗</a><a href="https://github.com/herdrdev">GitHub</a><a class="pill" href="/docs-cn/herdr/download/">下载</a></div> </nav>   <a class="crumb astro-hljk352o" href="/docs-cn/herdr/gallery/?type=mods">← mods</a> <header class="dh astro-hljk352o"> <div class="astro-hljk352o"> <h1 class="astro-hljk352o">Tmux prefix</h1> <p class="astro-hljk352o">Ctrl+B, then a key: tmux-style shortcuts for Herdr tabs, panes and spaces. A small hint stays open while you decide. This is a piece you add to your current layout, not a whole window or a terminal multiplexer.</p> <div class="by astro-hljk352o"> <img src="https://github.com/herdrdev.png?size=48" alt="" class="astro-hljk352o"> <a href="https://github.com/herdrdev" class="astro-hljk352o">herdrdev</a> <span class="badge astro-hljk352o">Example by Herdr</span>   </div> </div> </header> <figure class="big astro-hljk352o"><img src="/docs-cn/herdr/live/mods/tmux-prefix.jpg?v=ed4eda7" alt="Tmux prefix mod" class="astro-hljk352o"></figure><div class="add astro-hljk352o"> <span class="lbl astro-hljk352o">告诉你的智能体</span> <code class="mono astro-hljk352o">先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个 mod：herdr.dev/mods/herdrdev/tmux-prefix</code> <button class="pill astro-hljk352o" data-copy="先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个 mod：herdr.dev/mods/herdrdev/tmux-prefix">复制</button> </div> <div class="cols astro-hljk352o"> <article class="recipe astro-hljk352o"> <div class="file mono astro-hljk352o">RECIPE.md</div> <p>This file is the brief: enough to build Tmux prefix from an empty folder. The files next to it are one build of it. If they don’t work on your Herdr, or you want it different, build it again from here.</p>
+<h2 id="what-you-see">What you see</h2>
+<ul>
+<li>A popup near the top of your window, 520px wide and 420px high, offset 64px from the top. Nothing is added to the layout itself.</li>
+<li>A heading, “Ctrl+B · waiting for a key”, with “Esc cancel · ^B send prefix” on the right. After a repeatable action the heading becomes “Repeat · 500 ms”.</li>
+<li>A scrollable list, 280px high, with the key on the left, its action in the middle and “repeat” on the right for actions you can repeat. The short list hides arrows and digits; <code>?</code> toggles the full list.</li>
+<li>A footer: “0–9 tabs (0 = 10) · arrows focus · ? all bindings”.</li>
+<li>Your theme’s popup background, foreground text, accent keys and muted hints. Text is 12px; the heading is semibold, with 14px padding around the popup and 8px gaps.</li>
+</ul>
+<h2 id="how-it-behaves">How it behaves</h2>
+<p>Ctrl+B opens the hint and waits without a timeout. The next key does this:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody><tr><td><code>c</code></td><td>New tab</td></tr><tr><td><code>%</code> / <code>"</code></td><td>Split right / down</td></tr><tr><td><code>x</code></td><td>Close the focused pane and end its terminal</td></tr><tr><td><code>n</code> / <code>p</code></td><td>Next / previous tab</td></tr><tr><td><code>1</code>–<code>9</code>, <code>0</code></td><td>Select tab 1–9, 10</td></tr><tr><td><code>h j k l</code> or arrows</td><td>Focus left / down / up / right; repeatable</td></tr><tr><td><code>J</code> / <code>K</code></td><td>Next / previous space; repeatable</td></tr><tr><td><code>z</code></td><td>Toggle pane zoom</td></tr><tr><td><code>d</code></td><td>Minimize the window, leaving programs running</td></tr><tr><td><code>?</code></td><td>Toggle the full binding list and wait without a timeout</td></tr><tr><td>Escape</td><td>Cancel</td></tr><tr><td>Ctrl+B</td><td>Send a literal Ctrl+B to the focused terminal</td></tr></tbody></table>
+<p>After a repeatable action, you have 500ms to repeat it without another prefix. Each repeat restarts the window: Ctrl+B, J, J, K moves two spaces forward, then one back. A different bound key runs its prefix action and closes the hint unless it is repeatable.</p>
+<p>An unbound key after the initial prefix just closes the hint. During the repeat window an unbound simple key goes to the now-focused terminal and closes the hint. Escape always cancels. Outside the hint, typing is untouched. There are no agent-status displays or animations.</p>
+<h2 id="built-from">Built from</h2>
+<ul>
+<li>
+<p><strong>One mod</strong>, <code>mods/tmux-prefix/</code>, with <code>main.js</code> and <code>mod.json</code>. The manifest has <code>place: "none"</code> and a top popup overlay, so there is no <code>layouts/</code> folder or layout change.</p>
+</li>
+<li>
+<p><strong>A <code>keys.json</code> snippet</strong> with three bindings, merged into the person’s existing keys rather than replacing them:</p>
+<pre class="astro-code github-dark-dimmed" style="background-color:#22272e;color:#adbac7; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#ADBAC7">{</span></span>
+<span class="line"><span style="color:#8DDB8C">  "global"</span><span style="color:#ADBAC7">: { </span><span style="color:#8DDB8C">"ctrl-b"</span><span style="color:#ADBAC7">: </span><span style="color:#96D0FF">"mod.open:tmux-prefix"</span><span style="color:#ADBAC7"> },</span></span>
+<span class="line"><span style="color:#8DDB8C">  "terminal"</span><span style="color:#ADBAC7">: { </span><span style="color:#8DDB8C">"ctrl-b"</span><span style="color:#ADBAC7">: </span><span style="color:#96D0FF">"mod.open:tmux-prefix"</span><span style="color:#ADBAC7"> },</span></span>
+<span class="line"><span style="color:#8DDB8C">  "mod:tmux-prefix"</span><span style="color:#ADBAC7">: { </span><span style="color:#8DDB8C">"ctrl-b"</span><span style="color:#ADBAC7">: </span><span style="color:#96D0FF">"tmux-prefix.send-prefix"</span><span style="color:#ADBAC7"> }</span></span>
+<span class="line"><span style="color:#ADBAC7">}</span></span></code></pre>
+<p>The global binding opens the popup outside a terminal; the terminal binding opens it while a terminal has focus. The mod-specific binding wins while the popup is focused, delivering a command through <code>nextCommand()</code> that sends a literal Ctrl+B instead of reopening the popup.</p>
+</li>
+<li>
+<p><strong>A focusable view</strong>, using <code>gpui-kit</code> and <code>gpui-base</code> for the list and <code>theme()</code> for its colors. It takes focus on open, handles raw key events and closes with <code>closeOverlay(props().overlay)</code>.</p>
+</li>
+<li>
+<p><strong>Commands:</strong> <code>tab.new</code>, <code>tab.next</code>, <code>tab.prev</code>, <code>tab.select</code> (one-based indices), <code>pane.split</code>, <code>pane.close</code>, <code>pane.go</code>, <code>pane.zoom</code>, <code>space.next</code>, <code>space.prev</code> and <code>window.minimize</code>, dispatched with <code>run()</code>.</p>
+</li>
+<li>
+<p><strong>Literal keys:</strong> <code>focused()?.terminal</code> finds the target and <code>hc(["keys", terminal, key])</code> sends through Herdr’s core, including remote terminal addresses. No external dependencies beyond Herdr and its core.</p>
+</li>
+<li>
+<p><strong>Repeats:</strong> <code>cx.timer.after</code> only after repeatable actions, with a generation counter to ignore old timers. <code>REPEAT_MS</code> and the <code>BINDINGS</code> array at the top of <code>main.js</code> are the customization points; each binding is <code>[key, label, command, args, repeatable]</code>.</p>
+</li>
+</ul>
+<h2 id="watch-out">Watch out</h2>
+<ul>
+<li>Ctrl+B is taken away from terminal programs, including tmux. Ctrl+B Ctrl+B reaches them. Preserve other key bindings and resolve conflicting <code>ctrl-b</code> entries in the active <code>layout:&#x3C;name></code> section. Existing app key bindings can win over raw key handling.</li>
+<li>Replay during repeats only supports ASCII letters (including uppercase), digits, spaces, unshifted ASCII punctuation, Enter, Tab, Backspace and arrows. Shifted symbols such as <code>!</code> or <code>+</code>, Unicode, modified shortcuts and composition aren’t replayed.</li>
+<li>Use <code>key_char</code> to distinguish <code>%</code>, <code>"</code>, <code>?</code> and uppercase J/K from their unshifted keys.</li>
+<li><code>d</code> minimizes; it is not tmux detach. There is no pane-resize binding because Herdr exposes no pane-resize command.</li>
+<li>The popup has fixed dimensions. Check it fits the person’s window.</li>
+<li>Follow the installed <code>herdr.d.ts</code> and <code>gpui-kit.d.ts</code>, never modify shipped mods, and disclose that this mod runs <code>hc</code> to send literal keys.</li>
+</ul>
+<h2 id="done-when">Done when</h2>
+<ul>
+<li><code>herdr-app check mods/tmux-prefix</code> passes with the matching Herdr binary and home.</li>
+<li>In an isolated home, Ctrl+B opens the hint and a long pause does not close it.</li>
+<li>New tab, both splits, tab selection, pane focus, zoom and minimize do what their labels say.</li>
+<li>J J K repeats move two spaces forward and one back; the hint closes 500ms after the last repeat.</li>
+<li><code>?</code> toggles the full list and stops the repeat timeout. Escape cancels without typing into the terminal.</li>
+<li>Ctrl+B Ctrl+B sends a literal prefix. An unbound simple key during repeats reaches the focused terminal, while one after the initial prefix only dismisses the hint.</li>
+<li>Normal typing and the person’s existing layout still work outside the popup.</li>
+</ul> </article> <aside class="side astro-hljk352o"> <div class="box astro-hljk352o"> <div class="h astro-hljk352o">文件</div> <ul class="tree mono astro-hljk352o"> <li style="padding-left:0px" class=" astro-hljk352o">RECIPE.md</li><li style="padding-left:0px" class=" astro-hljk352o">keys.json</li><li style="padding-left:0px" class="dir astro-hljk352o">mods/</li><li style="padding-left:14px" class="dir astro-hljk352o">tmux-prefix/</li><li style="padding-left:28px" class=" astro-hljk352o">main.js</li><li style="padding-left:28px" class=" astro-hljk352o">mod.json</li><li style="padding-left:0px" class=" astro-hljk352o">preview.png</li> </ul> <a class="src astro-hljk352o" href="https://github.com/herdrdev/herdr-layout-examples/tree/main/tmux-prefix">在 GitHub 查看 →</a> </div> <div class="box note astro-hljk352o"> <p class="astro-hljk352o">你的智能体在添加此 mod 前会先读其中每个文件。它会把这块加进你当前的布局，而不是新开一个窗口。添加前请检查它会运行什么、会改动哪些按键。</p> <p class="astro-hljk352o">mods 未经 Herdr 审核。 <a href="/docs-cn/herdr/cdn-cgi/l/email-protection#bad9dbd4fad2dfc8dec894dedfcc85c9cfd8d0dfd9ce87e8dfcad5c8ce9f888ad7d5de9f888ad2dfc8dec8dedfcc9f88fcced7cfc297cac8dfdcd3c2" class="astro-hljk352o">举报此 mod</a></p> </div> </aside> </div>  <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    document.querySelectorAll('[data-copy]').forEach((b) => b.onclick = async () => {
+      await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '已复制'; setTimeout(() => (b.textContent = '复制'), 1400);
+    });
+  </script>  <footer class="site-foot"> <div class="me"><img src="/docs-cn/herdr/live/icons/herdr.png" alt=""><span><b>Herdr</b><br>为你的智能体而生，由它们重塑。</span><span>开源，Apache 2.0</span></div> <div><h4>产品</h4><ul><li><a href="/docs-cn/herdr/download/">下载</a></li><li><a href="/docs-cn/herdr/mobile/">移动端</a></li><li><a href="/docs-cn/herdr/gallery/">画廊</a></li><li><a href="/docs-cn/herdr/core/">herdr-core</a></li></ul></div> <div><h4>学习</h4><ul><li><a href="/docs-cn/herdr/guide/">指南</a></li><li><a href="/docs-cn/herdr/blog/">博客</a></li><li><a href="https://herdr.dev/zh-cn/tui/docs/">Herdr TUI</a></li><li><a href="/docs-cn/herdr/privacy/">隐私</a></li></ul></div> <div><h4>社区</h4><ul><li><a href="https://github.com/herdrdev">GitHub</a></li><li><a href="https://discord.gg/PsgRfzmUDg">Discord</a></li><li><a href="https://x.com/herdrdev">X</a></li><li><a href="/docs-cn/herdr/cdn-cgi/l/email-protection#523a372b123a372036207c363724"><span class="__cf_email__" data-cfemail="8de5e8f4cde5e8ffe9ffa3e9e8fb">[email&#160;protected]</span></a></li></ul></div> </footer> </div> <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>

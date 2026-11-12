@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Chat · Herdr 布局画廊</title><meta name="description" content="Spaces look like channels and agents look like teammates posting updates. Open an agent's thread to see its tab's real terminals on the right."><meta name="theme-color" content="#0e0f11"><link rel="canonical" href="https://herdr.dev/layouts/herdrdev/chat/"><meta property="og:type" content="website"><meta property="og:site_name" content="Herdr"><meta property="og:title" content="Chat · Herdr layouts"><meta property="og:description" content="Spaces look like channels and agents look like teammates posting updates. Open an agent's thread to see its tab's real terminals on the right."><meta property="og:image" content="https://herdr.dev/assets/og-herdr.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/docs-cn/herdr/favicon.ico" sizes="48x48"><link rel="preload" href="/docs-cn/herdr/live/fonts/Geist.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/docs-cn/herdr/live/fonts/JetBrainsMono-Variable.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/docs-cn/herdr/live/herdr-look.css"><link rel="alternate" type="text/markdown" title="RECIPE.md" href="https://raw.githubusercontent.com/herdrdev/herdr-layout-examples/main/chat/RECIPE.md"><style>:root{--bg: #0e0f11;--fg: #f3f3f4;--mute: #8a8e96;--dim: #5d6168;--line: #1f2125;--card: #131416;--amber: #e8912a}*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}html{scrollbar-gutter:stable;background:var(--bg);color:var(--fg);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{max-width:1280px;margin:0 auto;padding:0 32px}.site-nav{position:relative;z-index:3;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.site-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}.site-nav .brand img{width:24px;height:24px;border-radius:6px}.site-nav .links{display:flex;gap:28px;font-size:14px;color:var(--mute)}.site-nav .links a:hover,.site-nav .links a.on{color:var(--fg)}.site-nav .right{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mute)}.site-nav .right a:not(.pill):hover{color:var(--fg)}.pill:hover{background:#fff}a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}.site-nav .right .tui{color:var(--dim)}@media(max-width:860px){.site-nav .right .tui{display:none}}.pill{height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;background:var(--fg);color:#0e0f11;font-weight:500;font-size:14px;border:none;cursor:pointer;font-family:inherit}.ram{display:block;aspect-ratio:874 / 884;background:currentColor;pointer-events:none;-webkit-mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);-webkit-mask-composite:source-in,source-in;mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);mask-composite:intersect,intersect}.site-foot{margin-top:120px;padding:56px 0 64px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;font-size:14px}.site-foot .me{display:flex;flex-direction:column;gap:14px;color:var(--dim)}.site-foot .me img{width:32px;height:32px;border-radius:8px}.site-foot .me b{color:var(--fg);font-weight:500}.site-foot h4{font-size:13px;font-weight:500;color:var(--fg);margin-bottom:14px}.site-foot ul{list-style:none;display:grid;gap:10px;color:var(--dim)}.site-foot ul a:hover{color:var(--fg)}.mono{font-family:JBM,ui-monospace,monospace}@media(max-width:860px){.site-nav .links{display:none}.site-foot{grid-template-columns:1fr 1fr}}
+.crumb:where(.astro-rewmdt44){display:inline-block;margin-top:40px;font-size:14px;color:var(--dim)}.crumb:where(.astro-rewmdt44):hover{color:var(--fg)}.dh:where(.astro-rewmdt44){padding:36px 0}.dh:where(.astro-rewmdt44) h1:where(.astro-rewmdt44){font-weight:560;font-size:clamp(44px,5.4vw,68px);line-height:1.02;letter-spacing:-.035em}.dh:where(.astro-rewmdt44) p:where(.astro-rewmdt44){margin-top:16px;font-size:18px;line-height:1.6;color:var(--mute);max-width:720px}.by:where(.astro-rewmdt44){margin-top:20px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--dim)}.by:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:22px;height:22px;border-radius:50%}.by:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--fg)}.badge:where(.astro-rewmdt44){font:12px JBM;color:var(--mute);border:1px solid #2b2e33;border-radius:5px;padding:2px 7px}.big:where(.astro-rewmdt44){border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #ffffff17,0 50px 120px -40px #000c}.big:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:100%;display:block}.add:where(.astro-rewmdt44){margin-top:24px;display:flex;align-items:center;gap:16px;padding:12px 12px 12px 18px;border:1px solid var(--line);border-radius:12px;background:#121315}.add:where(.astro-rewmdt44) .lbl:where(.astro-rewmdt44){font-size:13px;color:var(--dim);white-space:nowrap}.add:where(.astro-rewmdt44) code:where(.astro-rewmdt44){flex:1;font-size:15px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cols:where(.astro-rewmdt44){margin-top:72px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:72px;align-items:start}.file:where(.astro-rewmdt44){font-size:12px;color:var(--dim);padding-bottom:14px;margin-bottom:28px;border-bottom:1px solid var(--line)}.recipe:where(.astro-rewmdt44) h2{font-weight:560;font-size:26px;letter-spacing:-.02em;margin:44px 0 14px}.recipe:where(.astro-rewmdt44) h2:before{content:"## ";font:400 19px JBM;color:#3f4248}.recipe:where(.astro-rewmdt44) p,.recipe:where(.astro-rewmdt44) li{font-size:16.5px;line-height:1.7;color:var(--mute)}.recipe:where(.astro-rewmdt44) p+p{margin-top:12px}.recipe:where(.astro-rewmdt44) ul,.recipe:where(.astro-rewmdt44) ol{margin:12px 0 0 22px;display:grid;gap:6px}.recipe:where(.astro-rewmdt44) li::marker{color:#4a4d53}.recipe:where(.astro-rewmdt44) code{font:13.5px JBM;color:#d6d8dd;background:#18191c;border:1px solid var(--line);border-radius:5px;padding:1px 5px}.recipe:where(.astro-rewmdt44) pre{margin:18px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#121315!important;overflow-x:auto}.recipe:where(.astro-rewmdt44) pre code{background:none;border:none;padding:0;font-size:13.5px;line-height:1.7}.recipe:where(.astro-rewmdt44) strong{color:var(--fg);font-weight:500}.none:where(.astro-rewmdt44){color:var(--dim)}.side:where(.astro-rewmdt44){position:sticky;top:32px;display:grid;gap:16px}.box:where(.astro-rewmdt44){border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}.box:where(.astro-rewmdt44) .h:where(.astro-rewmdt44){font-size:13px;color:var(--dim);margin-bottom:10px}.tree:where(.astro-rewmdt44){list-style:none;font-size:12.5px;line-height:1.9;color:var(--mute);max-height:320px;overflow:auto}.tree:where(.astro-rewmdt44) .dir:where(.astro-rewmdt44){color:var(--fg)}.src:where(.astro-rewmdt44){display:inline-block;margin-top:12px;font-size:14px;color:var(--fg)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44){font-size:13.5px;line-height:1.6;color:var(--dim)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44)+p:where(.astro-rewmdt44){margin-top:10px}.note:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--mute);text-decoration:underline}@media(max-width:960px){.cols:where(.astro-rewmdt44){grid-template-columns:1fr}.side:where(.astro-rewmdt44){position:static}.add:where(.astro-rewmdt44){flex-wrap:wrap}}
+</style><script type="module" src="/docs-cn/herdr/_astro/page.B1D-nYk3.js"></script></head> <body> <div class="wrap"> <nav class="site-nav"> <a class="brand" href="/docs-cn/herdr/"><img src="/docs-cn/herdr/live/icons/herdr.png" alt="">Herdr</a> <div class="links"> <a href="/docs-cn/herdr/" class>App</a> <a href="/docs-cn/herdr/mobile/" class>移动端</a> <a href="/docs-cn/herdr/core/" class>Core</a> <a href="/docs-cn/herdr/gallery/" class="on">画廊</a> <a href="/docs-cn/herdr/guide/" class>指南</a> <a href="/docs-cn/herdr/blog/" class>博客</a> </div> <div class="right"><a href="https://herdr.dev/zh-cn/tui/docs/" class="tui">Herdr TUI ↗</a><a href="https://github.com/herdrdev">GitHub</a><a class="pill" href="/docs-cn/herdr/download/">下载</a></div> </nav>   <a class="crumb astro-rewmdt44" href="/docs-cn/herdr/gallery/">← 布局</a> <header class="dh astro-rewmdt44"> <div class="astro-rewmdt44"> <h1 class="astro-rewmdt44">Chat</h1> <p class="astro-rewmdt44">Spaces look like channels and agents look like teammates posting updates. Open an agent&#39;s thread to see its tab&#39;s real terminals on the right.</p> <div class="by astro-rewmdt44"> <img src="https://github.com/herdrdev.png?size=48" alt="" class="astro-rewmdt44"> <a href="https://github.com/herdrdev" class="astro-rewmdt44">herdrdev</a> <span class="badge astro-rewmdt44">Example by Herdr</span>   </div> </div> </header> <figure class="big astro-rewmdt44"><img src="/docs-cn/herdr/live/layouts/chat.jpg?v=ed4eda7" alt="Chat layout" class="astro-rewmdt44"></figure><div class="add astro-rewmdt44"> <span class="lbl astro-rewmdt44">告诉你的智能体</span> <code class="mono astro-rewmdt44">先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/chat</code> <button class="pill astro-rewmdt44" data-copy="先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/chat">复制</button> </div> <div class="cols astro-rewmdt44"> <article class="recipe astro-rewmdt44"> <div class="file mono astro-rewmdt44">RECIPE.md</div> <p>This file is the brief: enough to build Chat from an empty folder. The
+files next to it are one build of it. If they don’t work on your Herdr, or you
+want it different, build it again from here.</p>
+<h2 id="what-you-see">What you see</h2>
+<p>A 39px top bar over three columns, filling the window (no title bar):</p>
+<ol>
+<li><strong>The top bar</strong>, deep purple (<code>#22112b</code>): “herdr / team chat” on the
+left, a 540px search-shaped box in the middle and a small “CC” avatar.</li>
+<li><strong>The sidebar</strong>, 210px, purple (<code>#311b3b</code>). “Launch team” and a plus
+sign above All activity with a blocked-agent count. CHANNELS lists each
+space with a #; the active one has a lighter purple background
+(<code>#715180</code>). DIRECT MESSAGES lists all agents with a status dot,
+program name and tab name. The bottom says how many agents are connected.</li>
+<li><strong>The feed</strong>, 440px, white. A 65px heading names the active channel and
+member count. Below: a large #, channel name, welcome line and LIVE
+ACTIVITY divider. Each agent has a colored program avatar, program name,
+APP badge, clock time, status sentence and a thread link. The feed scrolls.
+A message-shaped box with formatting marks and Send sits at the bottom.</li>
+<li><strong>The thread</strong>, the remaining width. A 65px heading says “Thread”, the
+active tab’s name and “Live terminals”. Below are that tab’s terminals,
+pale purple (<code>#faf8fc</code>), separated by 5px gaps. Their 32px headers show
+a program icon, program name and status dot on <code>#eee8f1</code>.</li>
+</ol>
+<p>Colors: ink <code>#27232b</code>, muted <code>#817888</code>, lines <code>#e8e3ea</code>, sidebar muted
+<code>#b9a6c4</code>. Text in Geist; terminal text is 11px.</p>
+<h2 id="how-it-behaves">How it behaves</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Status</th><th>Feed sentence</th><th>Dot</th></tr></thead><tbody><tr><td>working</td><td>“Working on tab”</td><td>mint <code>#3cbd9b</code></td></tr><tr><td>blocked</td><td>“Needs you in tab”</td><td>yellow <code>#e6b755</code></td></tr><tr><td>done</td><td>“Finished tab”</td><td>gray-purple <code>#998ba1</code></td></tr><tr><td>idle</td><td>“Standing by in tab”</td><td>gray-purple <code>#998ba1</code></td></tr></tbody></table>
+<ul>
+<li>Clicking a channel selects its space. The feed shows only that space’s
+agents; direct messages continue to show everyone.</li>
+<li>Clicking a direct message or feed thread link selects that agent’s space
+and tab, opening its live terminals on the right.</li>
+<li>Blocked agents get a pale yellow link labeled “Open conversation”. Other
+links say “View live thread”. A blocked channel also gets a yellow dot.</li>
+<li>Each feed row is the agent’s current status, not a conversation history.
+Its clock time changes when a new agent update is first seen.</li>
+<li>The app’s next/previous agent keys follow the full agents list.</li>
+</ul>
+<h2 id="built-from">Built from</h2>
+<ul>
+<li><strong>The layout</strong> (<code>layouts/chat.json</code>): a root <code>column</code>, <code>titlebar: "none"</code>,
+<code>theme: "paper"</code> and purple color overrides. A top <code>block</code> sits above
+a non-resizable <code>row</code> of sidebar, feed and thread <code>column</code>. The latter
+holds a title block and <code>content: { tab: "active", pane: { … } }</code>.
+Pane corners are square, borders 1px (<code>#e6ddeb</code>, focused <code>#b99ac7</code>);
+terminal padding is <code>[8, 6]</code>.</li>
+<li><strong>One mod</strong> (<code>mods/chat/</code>), selected by <code>props().role</code>: <code>top</code>, <code>sidebar</code>,
+<code>feed</code>, <code>thread</code> or <code>pane</code>. The feed is also the fallback role.</li>
+<li><strong>Data and commands:</strong> <code>spaces()</code>, <code>agents()</code>, <code>panes()</code> and
+<code>props().pane</code>; <code>run("space.select", { id })</code> for channels,
+<code>run("agent.focus", { terminal })</code> for agents, and <code>setAgentOrder()</code>
+on sidebar renders.</li>
+<li><strong>Time and art:</strong> an in-memory map records local HH:MM when an agent’s
+<code>seq</code> changes. No timer or terminal transcript read. Program avatars use
+<code>program.tile</code>, icon, tint and color. <code>mod.json</code> uses <code>place: "none"</code>.
+No shipped mod, external CLI or chat server is needed.</li>
+</ul>
+<h2 id="watch-out">Watch out</h2>
+<ul>
+<li>Search, All activity, the sidebar plus, message box, formatting controls
+and Send do nothing. This layout does not send messages.</li>
+<li>“Launch team” and “CC” are fixed labels, not account data.</li>
+<li>Sidebar rows do not scroll; enough spaces or agents get clipped.</li>
+<li>Feed times are locally observed update times, not stored message times.</li>
+<li>The mod hardcodes its colors. If <code>chat</code> is taken, rename the layout and
+mod references before installing.</li>
+</ul>
+<h2 id="done-when">Done when</h2>
+<ul>
+<li>Channels list the spaces, and selecting one changes the feed’s members.</li>
+<li>Status changes update sentences and dots without adding message history.</li>
+<li>Direct messages and thread links open the right tab’s terminals.</li>
+<li><code>herdr-app check mods/chat</code> passes, and switching away and back works.</li>
+</ul> </article> <aside class="side astro-rewmdt44"> <div class="box astro-rewmdt44"> <div class="h astro-rewmdt44">文件</div> <ul class="tree mono astro-rewmdt44"> <li style="padding-left:0px" class=" astro-rewmdt44">RECIPE.md</li><li style="padding-left:0px" class="dir astro-rewmdt44">layouts/</li><li style="padding-left:14px" class=" astro-rewmdt44">chat.json</li><li style="padding-left:0px" class="dir astro-rewmdt44">mods/</li><li style="padding-left:14px" class="dir astro-rewmdt44">chat/</li><li style="padding-left:28px" class=" astro-rewmdt44">main.js</li><li style="padding-left:28px" class=" astro-rewmdt44">mod.json</li><li style="padding-left:0px" class=" astro-rewmdt44">preview.png</li> </ul> <a class="src astro-rewmdt44" href="https://github.com/herdrdev/herdr-layout-examples/tree/main/chat">在 GitHub 查看 →</a> </div> <div class="box note astro-rewmdt44"> <p class="astro-rewmdt44">你的智能体在添加此布局前会先读其中每个文件。你现有的布局保持不变，可用 <span class="mono astro-rewmdt44">ctrl-shift-l</span> 在布局间切换。</p> <p class="astro-rewmdt44">布局未经 Herdr 审核。<a href="/docs-cn/herdr/cdn-cgi/l/email-protection#ceadafa08ea6abbcaabce0aaabb8f1bdbbaca4abadbaf39cabbea1bcbaebfcfea2afb7a1bbbaebfcfea6abbcaabcaaabb8ebfc88ada6afba" class="astro-rewmdt44">举报此布局</a></p> </div> </aside> </div>  <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    document.querySelectorAll('[data-copy]').forEach((b) => b.onclick = async () => {
+      await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '已复制'; setTimeout(() => (b.textContent = '复制'), 1400);
+    });
+  </script>  <footer class="site-foot"> <div class="me"><img src="/docs-cn/herdr/live/icons/herdr.png" alt=""><span><b>Herdr</b><br>为你的智能体而生，由它们重塑。</span><span>开源，Apache 2.0</span></div> <div><h4>产品</h4><ul><li><a href="/docs-cn/herdr/download/">下载</a></li><li><a href="/docs-cn/herdr/mobile/">移动端</a></li><li><a href="/docs-cn/herdr/gallery/">画廊</a></li><li><a href="/docs-cn/herdr/core/">herdr-core</a></li></ul></div> <div><h4>学习</h4><ul><li><a href="/docs-cn/herdr/guide/">指南</a></li><li><a href="/docs-cn/herdr/blog/">博客</a></li><li><a href="https://herdr.dev/zh-cn/tui/docs/">Herdr TUI</a></li><li><a href="/docs-cn/herdr/privacy/">隐私</a></li></ul></div> <div><h4>社区</h4><ul><li><a href="https://github.com/herdrdev">GitHub</a></li><li><a href="https://discord.gg/PsgRfzmUDg">Discord</a></li><li><a href="https://x.com/herdrdev">X</a></li><li><a href="/docs-cn/herdr/cdn-cgi/l/email-protection#066e637f466e6374627428626370"><span class="__cf_email__" data-cfemail="d3bbb6aa93bbb6a1b7a1fdb7b6a5">[email&#160;protected]</span></a></li></ul></div> </footer> </div> <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>

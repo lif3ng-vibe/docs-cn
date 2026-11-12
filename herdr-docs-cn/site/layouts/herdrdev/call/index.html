@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Call · Herdr 布局画廊</title><meta name="description" content="A pretend team call with live terminals as shared screens. Agents in other tabs sit in the gallery; working ones speak, and blocked ones raise a hand."><meta name="theme-color" content="#0e0f11"><link rel="canonical" href="https://herdr.dev/layouts/herdrdev/call/"><meta property="og:type" content="website"><meta property="og:site_name" content="Herdr"><meta property="og:title" content="Call · Herdr layouts"><meta property="og:description" content="A pretend team call with live terminals as shared screens. Agents in other tabs sit in the gallery; working ones speak, and blocked ones raise a hand."><meta property="og:image" content="https://herdr.dev/assets/og-herdr.png"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/docs-cn/herdr/favicon.ico" sizes="48x48"><link rel="preload" href="/docs-cn/herdr/live/fonts/Geist.ttf" as="font" type="font/ttf" crossorigin><link rel="preload" href="/docs-cn/herdr/live/fonts/JetBrainsMono-Variable.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/docs-cn/herdr/live/herdr-look.css"><link rel="alternate" type="text/markdown" title="RECIPE.md" href="https://raw.githubusercontent.com/herdrdev/herdr-layout-examples/main/call/RECIPE.md"><style>:root{--bg: #0e0f11;--fg: #f3f3f4;--mute: #8a8e96;--dim: #5d6168;--line: #1f2125;--card: #131416;--amber: #e8912a}*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}html{scrollbar-gutter:stable;background:var(--bg);color:var(--fg);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{max-width:1280px;margin:0 auto;padding:0 32px}.site-nav{position:relative;z-index:3;height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.site-nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.01em}.site-nav .brand img{width:24px;height:24px;border-radius:6px}.site-nav .links{display:flex;gap:28px;font-size:14px;color:var(--mute)}.site-nav .links a:hover,.site-nav .links a.on{color:var(--fg)}.site-nav .right{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--mute)}.site-nav .right a:not(.pill):hover{color:var(--fg)}.pill:hover{background:#fff}a:focus:not(:focus-visible),button:focus:not(:focus-visible){outline:none}.site-nav .right .tui{color:var(--dim)}@media(max-width:860px){.site-nav .right .tui{display:none}}.pill{height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:999px;background:var(--fg);color:#0e0f11;font-weight:500;font-size:14px;border:none;cursor:pointer;font-family:inherit}.ram{display:block;aspect-ratio:874 / 884;background:currentColor;pointer-events:none;-webkit-mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);-webkit-mask-composite:source-in,source-in;mask:url(/live/icons/ram.svg) center / contain no-repeat,linear-gradient(to right,#000 55%,transparent 96%),linear-gradient(to bottom,#000 45%,transparent 92%);mask-composite:intersect,intersect}.site-foot{margin-top:120px;padding:56px 0 64px;border-top:1px solid var(--line);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;font-size:14px}.site-foot .me{display:flex;flex-direction:column;gap:14px;color:var(--dim)}.site-foot .me img{width:32px;height:32px;border-radius:8px}.site-foot .me b{color:var(--fg);font-weight:500}.site-foot h4{font-size:13px;font-weight:500;color:var(--fg);margin-bottom:14px}.site-foot ul{list-style:none;display:grid;gap:10px;color:var(--dim)}.site-foot ul a:hover{color:var(--fg)}.mono{font-family:JBM,ui-monospace,monospace}@media(max-width:860px){.site-nav .links{display:none}.site-foot{grid-template-columns:1fr 1fr}}
+.crumb:where(.astro-rewmdt44){display:inline-block;margin-top:40px;font-size:14px;color:var(--dim)}.crumb:where(.astro-rewmdt44):hover{color:var(--fg)}.dh:where(.astro-rewmdt44){padding:36px 0}.dh:where(.astro-rewmdt44) h1:where(.astro-rewmdt44){font-weight:560;font-size:clamp(44px,5.4vw,68px);line-height:1.02;letter-spacing:-.035em}.dh:where(.astro-rewmdt44) p:where(.astro-rewmdt44){margin-top:16px;font-size:18px;line-height:1.6;color:var(--mute);max-width:720px}.by:where(.astro-rewmdt44){margin-top:20px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--dim)}.by:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:22px;height:22px;border-radius:50%}.by:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--fg)}.badge:where(.astro-rewmdt44){font:12px JBM;color:var(--mute);border:1px solid #2b2e33;border-radius:5px;padding:2px 7px}.big:where(.astro-rewmdt44){border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px #ffffff17,0 50px 120px -40px #000c}.big:where(.astro-rewmdt44) img:where(.astro-rewmdt44){width:100%;display:block}.add:where(.astro-rewmdt44){margin-top:24px;display:flex;align-items:center;gap:16px;padding:12px 12px 12px 18px;border:1px solid var(--line);border-radius:12px;background:#121315}.add:where(.astro-rewmdt44) .lbl:where(.astro-rewmdt44){font-size:13px;color:var(--dim);white-space:nowrap}.add:where(.astro-rewmdt44) code:where(.astro-rewmdt44){flex:1;font-size:15px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cols:where(.astro-rewmdt44){margin-top:72px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:72px;align-items:start}.file:where(.astro-rewmdt44){font-size:12px;color:var(--dim);padding-bottom:14px;margin-bottom:28px;border-bottom:1px solid var(--line)}.recipe:where(.astro-rewmdt44) h2{font-weight:560;font-size:26px;letter-spacing:-.02em;margin:44px 0 14px}.recipe:where(.astro-rewmdt44) h2:before{content:"## ";font:400 19px JBM;color:#3f4248}.recipe:where(.astro-rewmdt44) p,.recipe:where(.astro-rewmdt44) li{font-size:16.5px;line-height:1.7;color:var(--mute)}.recipe:where(.astro-rewmdt44) p+p{margin-top:12px}.recipe:where(.astro-rewmdt44) ul,.recipe:where(.astro-rewmdt44) ol{margin:12px 0 0 22px;display:grid;gap:6px}.recipe:where(.astro-rewmdt44) li::marker{color:#4a4d53}.recipe:where(.astro-rewmdt44) code{font:13.5px JBM;color:#d6d8dd;background:#18191c;border:1px solid var(--line);border-radius:5px;padding:1px 5px}.recipe:where(.astro-rewmdt44) pre{margin:18px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#121315!important;overflow-x:auto}.recipe:where(.astro-rewmdt44) pre code{background:none;border:none;padding:0;font-size:13.5px;line-height:1.7}.recipe:where(.astro-rewmdt44) strong{color:var(--fg);font-weight:500}.none:where(.astro-rewmdt44){color:var(--dim)}.side:where(.astro-rewmdt44){position:sticky;top:32px;display:grid;gap:16px}.box:where(.astro-rewmdt44){border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}.box:where(.astro-rewmdt44) .h:where(.astro-rewmdt44){font-size:13px;color:var(--dim);margin-bottom:10px}.tree:where(.astro-rewmdt44){list-style:none;font-size:12.5px;line-height:1.9;color:var(--mute);max-height:320px;overflow:auto}.tree:where(.astro-rewmdt44) .dir:where(.astro-rewmdt44){color:var(--fg)}.src:where(.astro-rewmdt44){display:inline-block;margin-top:12px;font-size:14px;color:var(--fg)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44){font-size:13.5px;line-height:1.6;color:var(--dim)}.note:where(.astro-rewmdt44) p:where(.astro-rewmdt44)+p:where(.astro-rewmdt44){margin-top:10px}.note:where(.astro-rewmdt44) a:where(.astro-rewmdt44){color:var(--mute);text-decoration:underline}@media(max-width:960px){.cols:where(.astro-rewmdt44){grid-template-columns:1fr}.side:where(.astro-rewmdt44){position:static}.add:where(.astro-rewmdt44){flex-wrap:wrap}}
+</style><script type="module" src="/docs-cn/herdr/_astro/page.B1D-nYk3.js"></script></head> <body> <div class="wrap"> <nav class="site-nav"> <a class="brand" href="/docs-cn/herdr/"><img src="/docs-cn/herdr/live/icons/herdr.png" alt="">Herdr</a> <div class="links"> <a href="/docs-cn/herdr/" class>App</a> <a href="/docs-cn/herdr/mobile/" class>移动端</a> <a href="/docs-cn/herdr/core/" class>Core</a> <a href="/docs-cn/herdr/gallery/" class="on">画廊</a> <a href="/docs-cn/herdr/guide/" class>指南</a> <a href="/docs-cn/herdr/blog/" class>博客</a> </div> <div class="right"><a href="https://herdr.dev/zh-cn/tui/docs/" class="tui">Herdr TUI ↗</a><a href="https://github.com/herdrdev">GitHub</a><a class="pill" href="/docs-cn/herdr/download/">下载</a></div> </nav>   <a class="crumb astro-rewmdt44" href="/docs-cn/herdr/gallery/">← 布局</a> <header class="dh astro-rewmdt44"> <div class="astro-rewmdt44"> <h1 class="astro-rewmdt44">Call</h1> <p class="astro-rewmdt44">A pretend team call with live terminals as shared screens. Agents in other tabs sit in the gallery; working ones speak, and blocked ones raise a hand.</p> <div class="by astro-rewmdt44"> <img src="https://github.com/herdrdev.png?size=48" alt="" class="astro-rewmdt44"> <a href="https://github.com/herdrdev" class="astro-rewmdt44">herdrdev</a> <span class="badge astro-rewmdt44">Example by Herdr</span>   </div> </div> </header> <figure class="big astro-rewmdt44"><img src="/docs-cn/herdr/live/layouts/call.jpg?v=ed4eda7" alt="Call layout" class="astro-rewmdt44"></figure><div class="add astro-rewmdt44"> <span class="lbl astro-rewmdt44">告诉你的智能体</span> <code class="mono astro-rewmdt44">先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/call</code> <button class="pill astro-rewmdt44" data-copy="先读 ~/.config/herdr-app/AGENTS.md，再让智能体添加这个布局：herdr.dev/layouts/herdrdev/call">复制</button> </div> <div class="cols astro-rewmdt44"> <article class="recipe astro-rewmdt44"> <div class="file mono astro-rewmdt44">RECIPE.md</div> <p>This file is the brief: enough to build Call from an empty folder. The
+files next to it are one build of it. If they don’t work on your Herdr, or you
+want it different, build it again from here.</p>
+<h2 id="what-you-see">What you see</h2>
+<p>Four regions, top to bottom, filling the window (no title bar):</p>
+<ol>
+<li><strong>The meeting title</strong>, 65px. A green shield beside “space standup”
+(18px, semibold), with the active tab’s name underneath. On the right:
+an elapsed clock, “Gallery view” and an expand icon.</li>
+<li><strong>Shared screens</strong>, the remaining flexible height. The active tab’s
+real terminals, with 12px gaps, 10px corners and 2px gray borders
+(<code>#363940</code>), green when focused. Each has a 36px bottom label with a
+muted microphone, program name and speaking/screen-sharing pill.</li>
+<li><strong>The gallery</strong>, 215px, one row of equal-width participant cards with
+10px gaps. Each card has a muted microphone, a program icon (43px) in
+a colored 72px circle, status text, program name and “space / tab”.</li>
+<li><strong>The toolbar</strong>, 85px, dark gray (<code>#222429</code>). Unmute and Start video
+on the left; Participants with the real agent count, Chat, green Share
+screen, Record and Reactions in the middle; a red Leave button on the right.</li>
+</ol>
+<p>Colors: background <code>#191b1f</code>, gallery cards <code>#292c32</code>, terminal background
+<code>#202328</code>, text <code>#f4f5f7</code>, muted <code>#a9adb6</code>, green <code>#49d392</code>, Leave
+<code>#d9454d</code>. Text in Geist; terminal text is 13px.</p>
+<h2 id="how-it-behaves">How it behaves</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Status</th><th>画廊</th></tr></thead><tbody><tr><td>working</td><td>green border and “Speaking · working” in green</td></tr><tr><td>blocked</td><td>raised hand and “Needs you” above the avatar, “Needs you” below</td></tr><tr><td>done</td><td>“Finished”</td></tr><tr><td>idle</td><td>“Camera off”</td></tr></tbody></table>
+<ul>
+<li>The gallery shows agents outside the focused tab. Clicking a participant
+selects its space and tab, bringing its terminals into the shared screens
+and moving that tab’s agents out of the gallery.</li>
+<li>Working shared screens have a 3px green line above their bottom label and
+“Speaking · working”. Blocked screens say “Needs you”; others say
+“Screen shared”.</li>
+<li>The meeting clock counts minutes and seconds from when its title first
+starts, updating each second. The title and tab name follow selection.</li>
+<li>The app’s next/previous agent keys use all agents in their usual order,
+including those currently sharing screens.</li>
+</ul>
+<h2 id="built-from">Built from</h2>
+<ul>
+<li><strong>The layout</strong> (<code>layouts/call.json</code>): a root <code>column</code>, <code>titlebar: "none"</code>,
+<code>theme: "graphite"</code>, its own colors, and fixed top and toolbar <code>block</code>s.
+Between them, a <code>column</code> with padding <code>[8, 18]</code> and 12px gaps holds
+<code>content: { tab: "active", pane: { … } }</code> and the fixed gallery block.
+<code>pane.lone: true</code> frames a single terminal too; terminal padding is <code>[12, 10]</code>.</li>
+<li><strong>One mod</strong> (<code>mods/call/</code>), using <code>props().role</code>: <code>top</code>, <code>gallery</code>, <code>pane</code>
+or <code>toolbar</code> (also the default). Pane labels use <code>props().pane</code>.</li>
+<li><strong>Data:</strong> <code>spaces()</code> for title and tab, <code>panes()</code> for shared-screen labels,
+<code>agents()</code> for participants, <code>focused().tab</code> for the gallery exclusion.</li>
+<li><strong>Commands and time:</strong> <code>run("agent.focus", { terminal })</code> on participant
+clicks; <code>setAgentOrder()</code> in gallery renders. Only the <code>top</code> copy runs
+a 1,000ms clock timer.</li>
+<li><strong>Art:</strong> local outline SVGs for shield, clock, expand, microphone, video,
+people, chat, share, record, smile and hand; program icons respect tint.
+A preview SVG and <code>place: "none"</code> manifest accompany the mod. No shipped
+mod, external program or call service is needed.</li>
+</ul>
+<h2 id="watch-out">Watch out</h2>
+<ul>
+<li>This is not an audio or video client. Every toolbar control, including
+Participants and Leave, is decoration. Gallery view and expand do nothing.</li>
+<li>The muted microphones do not describe a real microphone’s state.</li>
+<li>Gallery cards share one row without scrolling. Many agents squeeze into
+the same space; the toolbar also needs a wide window.</li>
+<li>The layout and mod hardcode their dark palette.</li>
+<li>If <code>call</code> is taken, rename its layout/mod references and every
+<code>mods/call/…</code> asset path before installing.</li>
+</ul>
+<h2 id="done-when">Done when</h2>
+<ul>
+<li>Other tabs’ agents appear with the right status and real program icons.</li>
+<li>Clicking a participant shows its terminals and updates title and gallery.</li>
+<li>The clock advances, and working screen labels show the green speaking line.</li>
+<li><code>herdr-app check mods/call</code> passes, and switching away and back works.</li>
+</ul> </article> <aside class="side astro-rewmdt44"> <div class="box astro-rewmdt44"> <div class="h astro-rewmdt44">文件</div> <ul class="tree mono astro-rewmdt44"> <li style="padding-left:0px" class=" astro-rewmdt44">RECIPE.md</li><li style="padding-left:0px" class="dir astro-rewmdt44">layouts/</li><li style="padding-left:14px" class=" astro-rewmdt44">call.json</li><li style="padding-left:0px" class="dir astro-rewmdt44">mods/</li><li style="padding-left:14px" class="dir astro-rewmdt44">call/</li><li style="padding-left:28px" class=" astro-rewmdt44">chat.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">clock.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">expand.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">hand.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">main.js</li><li style="padding-left:28px" class=" astro-rewmdt44">mic-off.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">mod.json</li><li style="padding-left:28px" class=" astro-rewmdt44">people.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">preview.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">record.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">share.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">shield.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">smile.svg</li><li style="padding-left:28px" class=" astro-rewmdt44">video-off.svg</li><li style="padding-left:0px" class=" astro-rewmdt44">preview.png</li> </ul> <a class="src astro-rewmdt44" href="https://github.com/herdrdev/herdr-layout-examples/tree/main/call">在 GitHub 查看 →</a> </div> <div class="box note astro-rewmdt44"> <p class="astro-rewmdt44">你的智能体在添加此布局前会先读其中每个文件。你现有的布局保持不变，可用 <span class="mono astro-rewmdt44">ctrl-shift-l</span> 在布局间切换。</p> <p class="astro-rewmdt44">布局未经 Herdr 审核。<a href="/docs-cn/herdr/cdn-cgi/l/email-protection#8feceee1cfe7eafdebfda1ebeaf9b0fcfaede5eaecfbb2ddeaffe0fdfbaabdbfe3eef6e0fafbaabdbfe7eafdebfdebeaf9aabdc9eceee3e3" class="astro-rewmdt44">举报此布局</a></p> </div> </aside> </div>  <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    document.querySelectorAll('[data-copy]').forEach((b) => b.onclick = async () => {
+      await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '已复制'; setTimeout(() => (b.textContent = '复制'), 1400);
+    });
+  </script>  <footer class="site-foot"> <div class="me"><img src="/docs-cn/herdr/live/icons/herdr.png" alt=""><span><b>Herdr</b><br>为你的智能体而生，由它们重塑。</span><span>开源，Apache 2.0</span></div> <div><h4>产品</h4><ul><li><a href="/docs-cn/herdr/download/">下载</a></li><li><a href="/docs-cn/herdr/mobile/">移动端</a></li><li><a href="/docs-cn/herdr/gallery/">画廊</a></li><li><a href="/docs-cn/herdr/core/">herdr-core</a></li></ul></div> <div><h4>学习</h4><ul><li><a href="/docs-cn/herdr/guide/">指南</a></li><li><a href="/docs-cn/herdr/blog/">博客</a></li><li><a href="https://herdr.dev/zh-cn/tui/docs/">Herdr TUI</a></li><li><a href="/docs-cn/herdr/privacy/">隐私</a></li></ul></div> <div><h4>社区</h4><ul><li><a href="https://github.com/herdrdev">GitHub</a></li><li><a href="https://discord.gg/PsgRfzmUDg">Discord</a></li><li><a href="https://x.com/herdrdev">X</a></li><li><a href="/docs-cn/herdr/cdn-cgi/l/email-protection#a5cdc0dce5cdc0d7c1d78bc1c0d3"><span class="__cf_email__" data-cfemail="f79f928eb79f92859385d9939281">[email&#160;protected]</span></a></li></ul></div> </footer> </div> <script data-cfasync="false" src="/docs-cn/herdr/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>
