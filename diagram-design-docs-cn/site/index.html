@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagram Design：让你的设计师不再嫌弃的杂志级图表</title>
+<meta name="description" content="一项面向 Claude Code、Codex、Pi 及其他智能体宿主的技能，把大白话变成杂志级品质的图表。50 种类型，自包含 HTML + SVG，约 60 秒匹配你的网站品牌。不用 Figma，没有圆角框俗套。">
+<meta property="og:title" content="Diagram Design：让你的设计师不再嫌弃的杂志级图表">
+<meta property="og:description" content="面向 Claude Code、Codex、Pi 及其他智能体宿主的 50 种杂志级图表类型。自包含 HTML + SVG，约 60 秒完成品牌匹配。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://diagramdesign.dev">
+<meta property="og:image" content="https://diagramdesign.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Diagram Design：让你的设计师不再嫌弃的杂志级图表">
+<meta name="twitter:description" content="面向 Claude Code、Codex、Pi 及其他智能体宿主的 50 种杂志级图表类型。自包含 HTML + SVG，约 60 秒完成品牌匹配。">
+<meta name="twitter:image" content="https://diagramdesign.dev/og.png">
+<meta name="theme-color" content="#0b0b0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f5f3" media="(prefers-color-scheme: light)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>(function(){var m;try{m=localStorage.getItem("dd-mode");}catch(e){}if(m!=="light"&&m!=="dark"){m=window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-mode",m);})();</script>
+<style>
+:root,[data-mode=dark]{
+  --bg:#0b0b0b; --panel:#121212; --well:#0e0e0e;
+  --ink:#ededed; --muted:#a3a3a3; --soft:#999999;
+  --line:rgba(255,255,255,.14); --line-soft:rgba(255,255,255,.08); --line-faint:rgba(255,255,255,.035);
+  --accent:#f08a59; --accent-2:#f4a37b; --on-accent:#0b0b0b; --accent-wash:rgba(240,138,89,.12);
+  --scrim:rgba(11,11,11,.80); --scrim-2:rgba(6,6,6,.92); --hover:rgba(255,255,255,.05);
+  --plate:#f5f5f5; --plate-ink:#111111;
+  --sky:radial-gradient(ellipse 70% 55% at 28% -10%, rgba(255,255,255,.09), transparent 62%), radial-gradient(ellipse 50% 40% at 96% 28%, rgba(255,255,255,.04), transparent 70%), linear-gradient(180deg,#141414 0%,#0b0b0b 38%,#070707 100%);
+  color-scheme:dark;
+  --serif:"Instrument Serif",Georgia,"Times New Roman","Songti SC","SimSun",serif;
+  --sans:"Geist",system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,"PingFang SC","Microsoft YaHei",monospace;
+  --reg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'%3E%3Cpath d='M4.5 0v9M0 4.5h9' stroke='%23999999' stroke-width='.7' opacity='.7'/%3E%3C/svg%3E");
+}
+[data-mode=light]{
+  --bg:#f5f5f3; --panel:#ffffff; --well:#f2f2f0;
+  --ink:#111111; --muted:#4f4f4f; --soft:#5f5f5f;
+  --line:rgba(0,0,0,.14); --line-soft:rgba(0,0,0,.08); --line-faint:rgba(0,0,0,.045);
+  --accent:#bf4520; --accent-2:#a63a1a; --on-accent:#ffffff; --accent-wash:rgba(191,69,32,.08);
+  --scrim:rgba(250,250,249,.82); --scrim-2:rgba(240,240,238,.94); --hover:rgba(0,0,0,.04);
+  --plate:#ffffff; --plate-ink:#111111;
+  --sky:radial-gradient(ellipse 70% 60% at 28% -10%, #ffffff 0%, transparent 65%), linear-gradient(180deg,#fafaf9 0%,#f5f5f3 50%,#f1f1ef 100%);
+  color-scheme:light;
+  --reg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'%3E%3Cpath d='M4.5 0v9M0 4.5h9' stroke='%235f5f5f' stroke-width='.7' opacity='.7'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html{background-color:var(--bg);background-image:var(--sky);background-attachment:fixed}
+body{
+  font-family:var(--sans); color:var(--ink); background:transparent;
+  -webkit-font-smoothing:antialiased; line-height:1.55; overflow-x:hidden; position:relative;
+}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--line-faint) 1px,transparent 1px),linear-gradient(90deg,var(--line-faint) 1px,transparent 1px);
+  background-size:32px 32px;
+  -webkit-mask-image:radial-gradient(ellipse 95% 75% at 50% 15%,#000 35%,transparent 85%);mask-image:radial-gradient(ellipse 95% 75% at 50% 15%,#000 35%,transparent 85%)}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+::selection{background:var(--accent);color:var(--on-accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+.wrap{width:min(1180px,100% - 48px);margin-inline:auto}
+.mono{font-family:var(--mono)}
+
+/* ---------- registration ticks / plate frame ---------- */
+.plate{position:relative;border:1px solid var(--line)}
+.plate::before,.plate::after,.reg-b::before,.reg-b::after{content:"";position:absolute;width:9px;height:9px;background:var(--reg);background-repeat:no-repeat;pointer-events:none}
+.plate::before{top:-5px;left:-5px}
+.plate::after{bottom:-5px;right:-5px}
+.reg-b::before{top:-5px;right:-5px}
+.reg-b::after{bottom:-5px;left:-5px}
+
+/* ---------- dimension line ---------- */
+.dim{display:flex;align-items:center;gap:10px;color:var(--soft);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.dim::before,.dim::after{content:"";height:1px;background:var(--line);flex:1}
+.dim .cap-tick{position:relative}
+.dim.left::before{display:none}
+.dim.right::after{display:none}
+
+/* ---------- top bar ---------- */
+header.bar{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);
+  background:var(--scrim);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.bar-in{display:flex;align-items:center;gap:22px;padding:12px 0}
+.brand{display:flex;align-items:center;gap:11px}
+.brand .glyph{width:26px;height:26px;flex:none;color:var(--soft)}
+.brand>span{display:flex;flex-direction:column;justify-content:center;line-height:1.02}
+.brand b{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:.01em;line-height:1;white-space:nowrap}
+.brand .sub{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin-top:3px}
+nav.top{display:flex;gap:26px;margin-left:auto}
+nav.top a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);transition:color .2s}
+nav.top a:hover{color:var(--ink)}
+.stars{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);padding:6px 11px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.stars svg{width:13px;height:13px;fill:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border:1px solid var(--accent);color:var(--on-accent);background:var(--accent);transition:background .2s,transform .2s}
+.btn:hover{background:var(--accent-2);transform:translateY(-1px)}
+.btn svg{width:15px;height:15px;fill:currentColor}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--muted);background:var(--hover)}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 40px;position:relative}
+.titleblock{border:1px solid var(--line);display:inline-grid;grid-template-columns:auto auto auto;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:34px}
+.titleblock div{padding:7px 14px;border-right:1px solid var(--line)}
+.titleblock div:last-child{border-right:0}
+.titleblock b{display:block;color:var(--ink);font-size:11px;margin-top:3px;letter-spacing:.1em}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.7rem,6vw,5rem);line-height:.98;letter-spacing:-.01em;text-wrap:balance}
+h1 .em{color:var(--accent);font-style:italic}
+.lede{margin-top:22px;font-size:clamp(1.02rem,1.5vw,1.18rem);color:var(--muted);max-width:34ch}
+.lede b{color:var(--ink);font-weight:500}
+.hero-dim{margin:26px 0 4px;max-width:340px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+.proof{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:34px;padding-top:22px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--soft)}
+.proof .stamp{display:inline-flex;align-items:center;gap:8px;color:var(--muted)}
+.proof .dot{width:5px;height:5px;background:var(--accent);border-radius:50%;flex:none}
+
+/* video plate */
+.film{position:relative;background:var(--well);border:1px solid var(--line);padding:12px}
+.film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:var(--well)}
+.film .cap{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);padding:0 2px 10px}
+.film-open{position:relative;display:block;width:100%;padding:0;border:0;background:var(--well);cursor:pointer;line-height:0}
+.film-open img{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;display:block}
+.film-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);transition:background .25s}
+.film-open:hover .film-play{background:rgba(0,0,0,.06)}
+.film-play svg{position:relative;z-index:1;width:30px;height:30px;fill:var(--accent);margin-left:3px}
+.film-play::before{content:"";position:absolute;width:78px;height:78px;border:1px solid var(--accent);border-radius:50%;background:var(--scrim);transition:transform .25s}
+.film-open:hover .film-play::before{transform:scale(1.08)}
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:28px;background:var(--scrim-2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal[hidden]{display:none}
+.modal-frame{position:relative;width:min(1120px,94vw);background:var(--well);border:1px solid var(--line);padding:12px}
+.modal-frame video{width:100%;aspect-ratio:16/9;display:block;background:#000}
+.modal-close{position:absolute;top:22px;right:26px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--accent);border:0;cursor:pointer}
+.modal-close svg{width:18px;height:18px;stroke:var(--on-accent);fill:none;stroke-width:2}
+.modal-close:hover{background:var(--accent-2)}
+#imodal .modal-frame{width:min(1200px,94vw)}
+#imodal-img{width:100%;height:auto;max-height:82vh;object-fit:contain;display:block;background:var(--well)}
+.imodal-cap{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);padding:0 2px 10px}
+.imodal-cap .t{color:var(--muted)}
+
+
+/* ---------- mode toggle ---------- */
+.mode{display:inline-flex;border:1px solid var(--line);background:transparent;padding:0;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.mode span{padding:6px 9px}
+[data-mode=dark] .mode .d,[data-mode=light] .mode .l{background:var(--ink);color:var(--bg)}
+[data-mode=dark] .only-light,[data-mode=light] .only-dark{display:none!important}
+/* hero figure */
+.hero-fig{background:var(--panel);border:1px solid var(--line);padding:0}
+.hero-fig .cap{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft)}
+.hero-fig svg{display:block;width:100%;height:auto;padding:8px 6px 0}
+@media (max-width:640px){.hero-fig svg text[data-role=name]{font-size:26px}.hero-fig svg .sub,.hero-fig svg .foot{display:none}.hero-fig .cap span:last-child{display:none}}
+
+/* ---------- section chrome ---------- */
+section{padding:78px 0;position:relative;border-top:1px solid var(--line-soft)}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:40px}
+.sec-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,3.6vw,3rem);line-height:1;letter-spacing:-.01em}
+.sec-head .note{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);text-align:right;max-width:30ch}
+
+/* ---------- before / after ---------- */
+.ba{display:grid;grid-template-columns:1fr auto 1.25fr;gap:30px;align-items:center}
+.ba .fig{position:relative;cursor:pointer}
+.ba .fig:hover .plate{border-color:var(--accent)}
+.ba .fig:hover .lab .n{color:var(--accent)}
+.ba .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin-bottom:12px;display:flex;justify-content:space-between}
+.ba .lab .n{color:var(--muted)}
+.ba img{width:100%;height:auto;display:block;background:var(--plate)}
+.ba .fix .lab .n{color:var(--accent)}
+.ba .arrow{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:.14em}
+.ba .arrow svg{width:34px;height:34px;stroke:var(--accent);fill:none}
+.deltas{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:30px;padding-top:22px;border-top:1px solid var(--line-soft)}
+.deltas li{font-size:.95rem;color:var(--muted);line-height:1.5}
+.deltas b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+.quote{margin-top:44px;border-left:1px solid var(--accent);padding-left:26px;max-width:60ch}
+.quote p{font-family:var(--serif);font-style:italic;font-size:clamp(1.35rem,2.6vw,1.9rem);line-height:1.3;color:var(--ink)}
+.quote cite{display:block;margin-top:14px;font-family:var(--mono);font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+
+/* ---------- legend (what it is) ---------- */
+.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:0 56px}
+.spec{padding:22px 0;border-top:1px solid var(--line-soft)}
+.spec:nth-child(-n+2){border-top:0}
+.spec .g{width:34px;height:34px;flex:none;stroke:var(--muted);fill:none;stroke-width:1.2}
+.spec h3{font-family:var(--sans);font-weight:600;font-size:1.06rem;letter-spacing:-.005em}
+.spec p{color:var(--muted);font-size:.95rem;margin-top:5px;max-width:42ch}
+.spec .row{display:flex;gap:14px;align-items:center}
+
+/* ---------- gallery ---------- */
+.plates{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px}
+.pl{position:relative;display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--well);border:1px solid var(--line);padding:11px;cursor:pointer;transition:border-color .2s}
+.pl .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);padding:0 2px 9px}
+.pl .top .t{color:var(--muted)}
+.pl img{width:100%;height:100%;object-fit:contain;background:var(--plate);display:block}
+.pl:hover{border-color:var(--accent)}
+.pl:hover .top .t{color:var(--accent)}
+.pl-img{position:relative;display:block;aspect-ratio:16/10}
+.pl .d{display:block;padding:10px 2px 1px;color:var(--muted);font-size:.86rem;line-height:1.45}
+.zoom{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;pointer-events:none}
+.zoom em{display:inline-flex;align-items:center;gap:7px;font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--scrim);border:1px solid var(--accent);padding:8px 13px}
+.zoom svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:1.6}
+.pl:hover .zoom,.ba .fig:hover .zoom{opacity:1}
+
+/* ---------- axonometric feature ---------- */
+.axo{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.axo-item h3{font-family:var(--sans);font-weight:600;font-size:1.06rem;letter-spacing:-.005em;margin-top:16px}
+.axo-item p{color:var(--muted);font-size:.95rem;margin-top:6px;max-width:52ch}
+.axo-links{list-style:none;margin-top:12px;display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+.axo-links a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+.axo-links a:hover{color:var(--accent);border-color:var(--accent)}
+.axo-links .live a{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- install ---------- */
+.sheets{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.sheet{background:var(--panel);border:1px solid var(--line);min-width:0}
+.sheet.lead{border-color:var(--accent)}
+.sheet.lead .hd{color:var(--ink)}
+.sheet .hd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sheet .hd .n{margin-left:auto;color:var(--soft)}
+.sheet .hd .cp{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--line);padding:5px 10px;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.sheet .hd .cp:hover{border-color:var(--accent);color:var(--accent)}
+.sheet .hd .cp.done{border-color:var(--accent);color:var(--accent);background:var(--accent-wash)}
+.sheet .hd svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:1.4}
+.sheet pre{margin:0;padding:16px;overflow-x:auto;cursor:pointer}
+.sheet code{font-family:var(--mono);font-size:12.5px;line-height:1.85;color:var(--ink);white-space:pre}
+.sheet code .c{color:var(--soft)}
+.sheet code .p{color:var(--accent)}
+.sheet .ft{padding:12px 16px;border-top:1px solid var(--line-soft);font-size:.82rem;color:var(--soft)}
+.install-note{margin-top:26px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--soft)}
+.install-note b{color:var(--muted)}
+
+/* ---------- use ---------- */
+.use-grid{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
+.use-grid>*{min-width:0}
+.asks{list-style:none;display:flex;flex-direction:column;gap:16px}
+.asks li{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding-bottom:16px;border-bottom:1px solid var(--line-soft)}
+.asks .q{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:3px}
+.asks span.t{font-size:1.02rem;color:var(--ink)}
+.asks span.t em{font-style:normal;color:var(--soft);font-family:var(--mono);font-size:.85em}
+.tmpl{margin-top:26px}
+.tmpl pre{background:var(--panel);border:1px solid var(--line);padding:14px 16px;overflow-x:auto}
+.tmpl code{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.tmpl code .c{color:var(--soft)}
+.dogfood figcaption{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin-bottom:12px}
+.term{background:var(--well);border:1px solid var(--line)}
+.term-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft)}
+.term-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.term-body{margin:0;padding:16px 18px;overflow-x:auto}
+.term-body code{font-family:var(--mono);font-size:12.5px;line-height:1.95;color:var(--ink);white-space:pre}
+.term-body .p{color:var(--accent)}
+.term-body .c{color:var(--soft)}
+.term-body .ok{color:var(--accent)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:52px 0 60px;position:relative}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px}
+footer .by{font-family:var(--serif);font-size:1.5rem;line-height:1.3}
+footer .by a{color:var(--accent)}
+footer .m{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-top:8px}
+footer h4{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:16px}
+footer ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+footer ul a{color:var(--muted);font-size:.95rem;transition:color .2s}
+footer ul a:hover{color:var(--ink)}
+.stamp-block{display:flex;justify-content:space-between;align-items:end;margin-top:44px;padding-top:22px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);flex-wrap:wrap;gap:14px}
+
+/* ---------- reveal (one authored moment) ---------- */
+.rise{opacity:1;transform:none}
+body.anim .hero .rise{opacity:0;transform:translateY(16px)}
+body.anim .hero .rise.in{opacity:1;transform:none;transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+body.anim .draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1s ease-out}
+body.anim .draw.in{stroke-dashoffset:0}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:38px}
+  .use-grid{grid-template-columns:1fr;gap:40px}
+  .legend{grid-template-columns:1fr}
+  .spec:nth-child(2){border-top:1px solid var(--line-soft)}
+  .sheets{grid-template-columns:1fr}
+  .axo{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  nav.top{display:none}
+}
+@media (max-width:640px){
+  .wrap{width:min(1180px,100% - 32px)}
+  .plates{grid-template-columns:minmax(0,1fr)}
+  .ba{grid-template-columns:1fr;gap:22px}
+  .deltas{grid-template-columns:1fr;gap:16px}
+  .ba .arrow{flex-direction:row;transform:rotate(90deg);margin:2px auto}
+  .titleblock{grid-template-columns:1fr 1fr}
+  .titleblock div:nth-child(2){border-right:0}
+  .foot-grid{grid-template-columns:1fr}
+  .stars{display:none}
+  .bar-in>.btn.ghost{display:none}
+  .mode{margin-left:auto}
+  .proof{gap:8px 14px}
+  .film .cap{flex-direction:column;align-items:flex-start;gap:3px}
+}
+
+/* ---------- mobile: one idea per screen ---------- */
+.m-more{display:none}
+@media (max-width:640px){
+  section{padding:52px 0}
+  .hero{padding:32px 0 28px}
+  .titleblock,.hero-dim{display:none}
+  .lede{font-size:1.05rem}
+  .proof{margin-top:24px;padding-top:16px}
+  .proof .stamp:nth-child(3){display:none}
+  .sec-head{margin-bottom:24px}
+  .sec-head .note{text-align:left;max-width:none}
+  .deltas li{font-size:0;line-height:0}
+  .deltas li b{font-size:1rem;line-height:1.4;margin:0}
+  .deltas{gap:10px;margin-top:22px}
+  .quote{margin-top:30px;padding-left:18px}
+  .quote cite{display:none}
+  .spec p{display:none}
+  .spec{padding:14px 0}
+  .legend .spec:nth-child(n+5){display:none}
+  .axo-item p,.axo-links{display:none}
+  .plates{grid-template-columns:1fr 1fr;gap:10px}
+  .pl{padding:6px}
+  .pl .d,.pl .zoom{display:none}
+  .pl .top{flex-direction:column;gap:2px;font-size:9px;letter-spacing:.08em}
+  .pl .top .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plates:not(.open) .pl:nth-child(n+9){display:none}
+  .sheets:not(.open) .sheet:nth-child(n+3){display:none}
+  .sheet .ft{display:none}
+  .install-note{display:none}
+  .sheets.open~.install-note{display:block}
+  .tmpl,.asks li:nth-child(n+3){display:none}
+  .stamp-block{display:none}
+  .foot-grid{gap:26px}
+  .m-more{display:flex;align-items:center;justify-content:center;width:100%;margin-top:14px;padding:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+  .m-more[aria-expanded=true]{display:none}
+  .ba .arrow{transform:none;flex-direction:row;justify-content:center;gap:10px;margin:0}
+  .ba .arrow svg{transform:rotate(90deg);width:22px;height:22px}
+  .ba{gap:16px}
+  .dogfood{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  body.anim .hero .rise{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<!--
+  DIRECTION CONTRACT, diagramdesign.dev landing (Persuade)
+  THESIS: The page is a working drawing. The product's real diagrams sit as plates on a graphite (dark)
+    or drafting-paper (light) sheet; it refuses the purple-gradient AI-tool template.
+  OWN-WORLD: Two modes from one token set. Dark: #0b0b0b ground under a soft grey top light. Light: #f5f5f3
+    paper under a white top light. Grey hairlines, a faint 32px construction grid, dimension lines,
+    registration ticks, a title block. Instrument Serif display, Geist body, Geist Mono notation and code.
+    ONE tangerine focal: #f08a59 on dark, #bf4520 on light. No second hue.
+  STORY: A builder sees the skill draw itself, sees a real no-skill first pass beside the skill's redraw,
+    and installs.
+  FIRST VIEWPORT: title block; H1 "Editorial diagrams your designer won't hate." measured by a dimension
+    line; Fig. 01, the skill drawn by the skill as an exploded axonometric; one tangerine CTA.
+  FINISH: see DESIGN.md.
+-->
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#top" aria-label="Diagram Design 首页">
+      <svg class="glyph" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="24" height="24" stroke="currentColor" stroke-width="1"/>
+        <rect x="5.5" y="5.5" width="7" height="5" stroke="currentColor" stroke-width="1"/>
+        <rect x="14.5" y="15" width="6" height="5" style="fill:var(--accent-wash);stroke:var(--accent)" stroke-width="1"/>
+        <path d="M12.5 8h4.5v7" stroke="currentColor" stroke-width="1"/>
+      </svg>
+      <span><b>Diagram Design</b><span class="sub">diagramdesign.dev</span></span>
+    </a>
+    <nav class="top" aria-label="页面分区">
+      <a href="#what">是什么</a>
+      <a href="#install">安装</a>
+      <a href="#use">使用</a>
+      <a href="#gallery">画廊</a>
+    </nav>
+    <button class="mode" id="mode" type="button" aria-label="切换浅色模式"><span class="d">深色</span><span class="l">浅色</span></button>
+    <a class="stars" href="https://github.com/cathrynlavery/diagram-design" aria-label="GitHub star 数">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .6l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7L12 25.2 5.6 21.8l1.3-7.7L1.3 8.7 9 7.6z"/></svg>
+      <span id="starcount">17k+</span>
+    </a>
+    <a class="btn ghost" href="https://github.com/cathrynlavery/diagram-design">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.5-.3-5.2-1.3-5.2-5.6 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.3-2.7 5.3-5.2 5.6.4.3.8 1 .8 2.1v3.1c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero" style="border-top:0">
+  <div class="wrap">
+    <div class="titleblock rise">
+      <div>绘制<b>杂志级图表</b></div>
+      <div>运行于<b>Claude Code · Codex · Pi</b></div>
+      <div>产出<b>HTML + 内联 SVG</b></div>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1 class="rise">杂志级图表，<br>你的设计师<span class="em">不再嫌弃</span>。</h1>
+        <p class="lede rise"><b>50 种图表类型</b>，由你的编码智能体绘成自包含的 HTML&nbsp;+&nbsp;SVG，再花约一分钟匹配你自己网站的品牌。不用 Figma，没有圆角框俗套。</p>
+        <div class="hero-dim dim right rise" aria-hidden="true"><span>50 种类型 · 6 个智能体 · 0 构建步骤</span></div>
+        <div class="cta rise">
+          <a class="btn" href="#install">安装技能</a>
+          <a class="btn ghost" href="https://github.com/cathrynlavery/diagram-design">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.5-.3-5.2-1.3-5.2-5.6 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.3-2.7 5.3-5.2 5.6.4.3.8 1 .8 2.1v3.1c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+            在 GitHub 上查看
+          </a>
+        </div>
+        <div class="proof rise">
+          <span class="stamp"><span class="dot"></span>曾登顶 GitHub Trending</span>
+          <span class="stamp"><svg viewBox="0 0 24 24" width="12" height="12" style="fill:var(--accent)" aria-hidden="true"><path d="M12 .6l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7L12 25.2 5.6 21.8l1.3-7.7L1.3 8.7 9 7.6z"/></svg><span id="starcount2">17k+</span> star</span>
+          <span class="stamp">开源 · MIT</span>
+        </div>
+      </div>
+      <figure class="hero-fig plate reg-b rise">
+        <figcaption class="cap"><span>图 01 · 技能自绘自画像</span><span>分解轴测图</span></figcaption>
+        <svg class="only-dark" viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="hero-dark-title hero-dark-desc">
+        <title id="hero-dark-title">从一句话到一张成品图表</title>
+        <desc id="hero-dark-desc">diagram-design 技能工作原理的分解视图：底层是你的提示词，往上是 SKILL.md 从 50 种类型中选出一种，焦点层是带布局与密度规则的类型参考，再往上是你的风格令牌，顶端是一个单独的 HTML 与 SVG 文件。</desc>
+        <g data-exploded data-origin="200 396" data-gap="80">
+          <line data-role="trace" x1="84.69" y1="444" x2="84.69" y2="90" stroke="rgba(237,237,237,0.30)" stroke-width="0.8" stroke-dasharray="4,3"/>
+          <line data-role="trace" x1="315.31" y1="444" x2="315.31" y2="90" stroke="rgba(237,237,237,0.30)" stroke-width="0.8" stroke-dasharray="4,3"/>
+
+          <!-- 1 · Your prompt -->
+          <g data-part="prompt" data-name="Your prompt" data-rect="0 0 120 120 8" data-z="0" data-t="12" data-level="0">
+            <path data-role="silhouette" d="M 84.69 444 A 11.31 5.66 0 0 1 88 440 L 192 388 A 11.31 5.66 0 0 1 208 388 L 312 440 A 11.31 5.66 0 0 1 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 192 512 L 88 460 A 11.31 5.66 0 0 1 84.69 456 Z" fill="#1c1c1c"/>
+            <path d="M 192 388 A 11.31 5.66 0 0 1 208 388 L 312 440 A 11.31 5.66 0 0 1 312 448 L 208 500 A 11.31 5.66 0 0 1 192 500 L 88 448 A 11.31 5.66 0 0 1 88 440 Z" fill="rgba(237,237,237,0.08)"/>
+            <path d="M 200 501.66 A 11.31 5.66 0 0 0 208 500 L 312 448 A 11.31 5.66 0 0 0 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 200 513.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 84.69 444 A 11.31 5.66 0 0 0 88 448 L 192 500 A 11.31 5.66 0 0 0 208 500 L 312 448 A 11.31 5.66 0 0 0 315.31 444" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.8"/>
+            <path d="M 84.69 444 A 11.31 5.66 0 0 1 88 440 L 192 388 A 11.31 5.66 0 0 1 208 388 L 312 440 A 11.31 5.66 0 0 1 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 192 512 L 88 460 A 11.31 5.66 0 0 1 84.69 456 Z" fill="none" stroke="#ededed" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,384)">
+              <rect x="12" y="36" width="96" height="64" rx="6" fill="rgba(237,237,237,0.04)" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="22" y="48" width="64" height="4" fill="rgba(237,237,237,0.30)"/>
+              <rect x="22" y="58" width="40" height="4" fill="rgba(237,237,237,0.30)"/>
+              <rect x="65" y="56" width="2" height="8" fill="#ededed"/>
+            </g>
+            <path d="M 208 460 L 224 468 L 224 472 L 208 480 L 192 472 L 192 468 Z" fill="#1c1c1c"/>
+            <path d="M 208 460 L 224 468 L 208 476 L 192 468 Z" fill="rgba(237,237,237,0.85)"/>
+            <path d="M 208 476 L 224 468 L 224 472 L 208 480 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 208 460 L 224 468 L 224 472 L 208 480 L 192 472 L 192 468 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="450" x2="373" y2="450" stroke="rgba(237,237,237,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="450" r="2" fill="#ededed"/>
+              <text data-role="name" x="385" y="449" fill="#ededed" font-size="16" font-weight="600" font-family="'Geist', sans-serif">你的提示词</text>
+              <text class="sub" x="385" y="465" fill="#a3a3a3" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">“画一下我们的部署流程”</text>
+            </g>
+          </g>
+
+          <!-- 2 · SKILL.md -->
+          <g data-part="skill" data-name="SKILL.md" data-rect="0 0 120 120 8" data-z="92" data-t="10" data-level="1">
+            <path data-role="silhouette" d="M 84.69 354 A 11.31 5.66 0 0 1 88 350 L 192 298 A 11.31 5.66 0 0 1 208 298 L 312 350 A 11.31 5.66 0 0 1 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 192 420 L 88 368 A 11.31 5.66 0 0 1 84.69 364 Z" fill="#1c1c1c"/>
+            <path d="M 192 298 A 11.31 5.66 0 0 1 208 298 L 312 350 A 11.31 5.66 0 0 1 312 358 L 208 410 A 11.31 5.66 0 0 1 192 410 L 88 358 A 11.31 5.66 0 0 1 88 350 Z" fill="rgba(237,237,237,0.08)"/>
+            <path d="M 200 411.66 A 11.31 5.66 0 0 0 208 410 L 312 358 A 11.31 5.66 0 0 0 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 200 421.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 84.69 354 A 11.31 5.66 0 0 0 88 358 L 192 410 A 11.31 5.66 0 0 0 208 410 L 312 358 A 11.31 5.66 0 0 0 315.31 354" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.8"/>
+            <path d="M 84.69 354 A 11.31 5.66 0 0 1 88 350 L 192 298 A 11.31 5.66 0 0 1 208 298 L 312 350 A 11.31 5.66 0 0 1 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 192 420 L 88 368 A 11.31 5.66 0 0 1 84.69 364 Z" fill="none" stroke="#ededed" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,294)">
+              <path d="M55 13h10v10h-10Z M69 13h10v10h-10Z M83 13h10v10h-10Z M97 13h10v10h-10Z M41 27h10v10h-10Z M55 27h10v10h-10Z M69 27h10v10h-10Z M83 27h10v10h-10Z M97 27h10v10h-10Z M13 41h10v10h-10Z M27 41h10v10h-10Z M41 41h10v10h-10Z M55 41h10v10h-10Z M69 41h10v10h-10Z M83 41h10v10h-10Z M97 41h10v10h-10Z M13 55h10v10h-10Z M27 55h10v10h-10Z M41 55h10v10h-10Z M55 55h10v10h-10Z M69 55h10v10h-10Z M83 55h10v10h-10Z M97 55h10v10h-10Z M13 69h10v10h-10Z M27 69h10v10h-10Z M41 69h10v10h-10Z M55 69h10v10h-10Z M69 69h10v10h-10Z M83 69h10v10h-10Z M97 69h10v10h-10Z M13 83h10v10h-10Z M27 83h10v10h-10Z M41 83h10v10h-10Z M55 83h10v10h-10Z M83 83h10v10h-10Z M97 83h10v10h-10Z M13 97h10v10h-10Z M27 97h10v10h-10Z M41 97h10v10h-10Z M55 97h10v10h-10Z M69 97h10v10h-10Z M83 97h10v10h-10Z M97 97h10v10h-10Z" fill="rgba(237,237,237,0.14)"/>
+            </g>
+            <path d="M 186 365 L 196 370 L 196 375 L 186 380 L 176 375 L 176 370 Z" fill="#1c1c1c"/>
+            <path d="M 186 365 L 196 370 L 186 375 L 176 370 Z" fill="rgba(237,237,237,0.85)"/>
+            <path d="M 186 375 L 196 370 L 196 375 L 186 380 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 186 365 L 196 370 L 196 375 L 186 380 L 176 375 L 176 370 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="359" x2="373" y2="359" stroke="rgba(237,237,237,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="359" r="2" fill="#ededed"/>
+              <text data-role="name" x="385" y="358" fill="#ededed" font-size="16" font-weight="600" font-family="'Geist', sans-serif">SKILL.md</text>
+              <text class="sub" x="385" y="374" fill="#a3a3a3" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">从 50 种类型中选 1 种</text>
+            </g>
+          </g>
+
+          <!-- 3 · Type reference (focal) -->
+          <g data-part="typeref" data-name="Type reference" data-rect="0 0 120 120 8" data-z="182" data-t="14" data-level="2" data-focal>
+            <path data-role="silhouette" d="M 84.69 260 A 11.31 5.66 0 0 1 88 256 L 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 192 330 L 88 278 A 11.31 5.66 0 0 1 84.69 274 Z" fill="#1c1c1c"/>
+            <path d="M 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 312 264 L 208 316 A 11.31 5.66 0 0 1 192 316 L 88 264 A 11.31 5.66 0 0 1 88 256 Z" fill="rgba(240,138,89,0.18)"/>
+            <path d="M 200 317.66 A 11.31 5.66 0 0 0 208 316 L 312 264 A 11.31 5.66 0 0 0 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 200 331.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 84.69 260 A 11.31 5.66 0 0 0 88 264 L 192 316 A 11.31 5.66 0 0 0 208 316 L 312 264 A 11.31 5.66 0 0 0 315.31 260" fill="none" stroke="rgba(240,138,89,0.70)" stroke-width="0.8"/>
+            <path d="M 84.69 260 A 11.31 5.66 0 0 1 88 256 L 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 192 330 L 88 278 A 11.31 5.66 0 0 1 84.69 274 Z" fill="none" stroke="#f08a59" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,200)">
+              <rect x="12" y="12" width="96" height="96" rx="4" fill="none" stroke="rgba(240,138,89,0.70)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <path d="M12 44H108 M12 76H108 M44 12V108 M76 12V108" fill="none" stroke="rgba(240,138,89,0.45)" stroke-width="0.6" stroke-dasharray="3,3" vector-effect="non-scaling-stroke"/>
+              <rect x="52" y="20" width="16" height="16" rx="2" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="20" y="52" width="16" height="16" rx="2" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="84" y="52" width="16" height="16" rx="2" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="52" y="84" width="16" height="16" rx="2" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+            </g>
+            <path d="M 200 248 L 216 256 L 216 260 L 200 268 L 184 260 L 184 256 Z" fill="#f08a59"/>
+            <path d="M 184 256 L 200 264 L 200 268 L 184 260 Z" fill="rgba(0,0,0,0.15)"/>
+            <path d="M 200 264 L 216 256 L 216 260 L 200 268 Z" fill="rgba(0,0,0,0.35)"/>
+            <path d="M 200 248 L 216 256 L 216 260 L 200 268 L 184 260 L 184 256 Z" fill="none" stroke="#f08a59" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="267" x2="373" y2="267" stroke="rgba(240,138,89,0.60)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="267" r="2" fill="#f08a59"/>
+              <text data-role="name" x="385" y="266" fill="#ededed" font-size="16" font-weight="600" font-family="'Geist', sans-serif">类型参考</text>
+              <text class="sub" x="385" y="282" fill="#f08a59" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">布局与密度规则</text>
+            </g>
+          </g>
+
+          <!-- 4 · Style tokens -->
+          <g data-part="tokens" data-name="Style tokens" data-rect="0 0 120 120 8" data-z="276" data-t="10" data-level="3">
+            <path data-role="silhouette" d="M 84.69 170 A 11.31 5.66 0 0 1 88 166 L 192 114 A 11.31 5.66 0 0 1 208 114 L 312 166 A 11.31 5.66 0 0 1 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 192 236 L 88 184 A 11.31 5.66 0 0 1 84.69 180 Z" fill="#1c1c1c"/>
+            <path d="M 192 114 A 11.31 5.66 0 0 1 208 114 L 312 166 A 11.31 5.66 0 0 1 312 174 L 208 226 A 11.31 5.66 0 0 1 192 226 L 88 174 A 11.31 5.66 0 0 1 88 166 Z" fill="rgba(237,237,237,0.08)"/>
+            <path d="M 200 227.66 A 11.31 5.66 0 0 0 208 226 L 312 174 A 11.31 5.66 0 0 0 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 200 237.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 84.69 170 A 11.31 5.66 0 0 0 88 174 L 192 226 A 11.31 5.66 0 0 0 208 226 L 312 174 A 11.31 5.66 0 0 0 315.31 170" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.8"/>
+            <path d="M 84.69 170 A 11.31 5.66 0 0 1 88 166 L 192 114 A 11.31 5.66 0 0 1 208 114 L 312 166 A 11.31 5.66 0 0 1 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 192 236 L 88 184 A 11.31 5.66 0 0 1 84.69 180 Z" fill="none" stroke="#ededed" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,110)">
+              <rect x="22" y="88" width="48" height="6" fill="rgba(237,237,237,0.55)"/>
+              <rect x="22" y="98" width="66" height="3" fill="rgba(237,237,237,0.30)"/>
+              <rect x="22" y="105" width="58" height="2" fill="rgba(237,237,237,0.30)"/>
+            </g>
+            <!-- swatch pucks: ink, muted, soft, paper -->
+            <path d="M 150.69 154 A 11.31 5.66 0 0 1 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 150.69 159 Z" fill="#1c1c1c"/>
+            <ellipse cx="162" cy="154" rx="11.31" ry="5.66" fill="#ededed"/>
+            <path d="M 162 159.66 A 11.31 5.66 0 0 0 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 162 164.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 150.69 154 A 11.31 5.66 0 0 1 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 150.69 159 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 172.69 165 A 11.31 5.66 0 0 1 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 172.69 170 Z" fill="#1c1c1c"/>
+            <ellipse cx="184" cy="165" rx="11.31" ry="5.66" fill="rgba(237,237,237,0.62)"/>
+            <path d="M 184 170.66 A 11.31 5.66 0 0 0 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 184 175.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 172.69 165 A 11.31 5.66 0 0 1 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 172.69 170 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 194.69 176 A 11.31 5.66 0 0 1 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 194.69 181 Z" fill="#1c1c1c"/>
+            <ellipse cx="206" cy="176" rx="11.31" ry="5.66" fill="rgba(237,237,237,0.34)"/>
+            <path d="M 206 181.66 A 11.31 5.66 0 0 0 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 206 186.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 194.69 176 A 11.31 5.66 0 0 1 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 194.69 181 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 1 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 216.69 192 Z" fill="#1c1c1c"/>
+            <ellipse cx="228" cy="187" rx="11.31" ry="5.66" fill="rgba(237,237,237,0.08)"/>
+            <path d="M 228 192.66 A 11.31 5.66 0 0 0 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 228 197.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 0 228 192.66 A 11.31 5.66 0 0 0 239.31 187" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.5"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 1 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 216.69 192 Z" fill="none" stroke="#ededed" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="175" x2="373" y2="175" stroke="rgba(237,237,237,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="175" r="2" fill="#ededed"/>
+              <text data-role="name" x="385" y="174" fill="#ededed" font-size="16" font-weight="600" font-family="'Geist', sans-serif">风格令牌</text>
+              <text class="sub" x="385" y="190" fill="#a3a3a3" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">你的品牌，单一强调色</text>
+            </g>
+          </g>
+
+          <!-- 5 · HTML + SVG -->
+          <g data-part="html" data-name="HTML + SVG" data-rect="0 0 120 120 8" data-z="366" data-t="10" data-level="4">
+            <path data-role="silhouette" d="M 84.69 80 A 11.31 5.66 0 0 1 88 76 L 192 24 A 11.31 5.66 0 0 1 208 24 L 312 76 A 11.31 5.66 0 0 1 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 192 146 L 88 94 A 11.31 5.66 0 0 1 84.69 90 Z" fill="#1c1c1c"/>
+            <path d="M 192 24 A 11.31 5.66 0 0 1 208 24 L 312 76 A 11.31 5.66 0 0 1 312 84 L 208 136 A 11.31 5.66 0 0 1 192 136 L 88 84 A 11.31 5.66 0 0 1 88 76 Z" fill="rgba(237,237,237,0.08)"/>
+            <path d="M 200 137.66 A 11.31 5.66 0 0 0 208 136 L 312 84 A 11.31 5.66 0 0 0 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 200 147.66 Z" fill="rgba(0,0,0,0.45)"/>
+            <path d="M 84.69 80 A 11.31 5.66 0 0 0 88 84 L 192 136 A 11.31 5.66 0 0 0 208 136 L 312 84 A 11.31 5.66 0 0 0 315.31 80" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.8"/>
+            <path d="M 84.69 80 A 11.31 5.66 0 0 1 88 76 L 192 24 A 11.31 5.66 0 0 1 208 24 L 312 76 A 11.31 5.66 0 0 1 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 192 146 L 88 94 A 11.31 5.66 0 0 1 84.69 90 Z" fill="none" stroke="#ededed" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,20)">
+              <path d="M10 24V14A4 4 0 0 1 14 10H106A4 4 0 0 1 110 14V24Z" fill="rgba(237,237,237,0.08)"/>
+              <path d="M10 24H110" fill="none" stroke="rgba(237,237,237,0.55)" stroke-width="0.6" vector-effect="non-scaling-stroke"/>
+              <rect x="10" y="10" width="100" height="100" rx="4" fill="none" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <circle cx="19" cy="17" r="2.2" fill="rgba(237,237,237,0.45)"/>
+              <circle cx="27" cy="17" r="2.2" fill="rgba(237,237,237,0.45)"/>
+              <circle cx="35" cy="17" r="2.2" fill="rgba(237,237,237,0.45)"/>
+              <path d="M36 56V81A8 8 0 0 0 44 89H66 M84 56V80" fill="none" stroke="rgba(237,237,237,0.45)" stroke-width="0.6" vector-effect="non-scaling-stroke"/>
+              <rect x="24" y="38" width="24" height="18" rx="3" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="72" y="38" width="24" height="18" rx="3" fill="#1c1c1c" stroke="rgba(237,237,237,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="66" y="80" width="32" height="18" rx="3" fill="rgba(237,237,237,0.85)"/>
+            </g>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="85" x2="373" y2="85" stroke="rgba(237,237,237,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="85" r="2" fill="#ededed"/>
+              <text data-role="name" x="385" y="84" fill="#ededed" font-size="16" font-weight="600" font-family="'Geist', sans-serif">HTML + SVG</text>
+              <text class="sub" x="385" y="100" fill="#a3a3a3" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">一个文件，零构建步骤</text>
+            </g>
+          </g>
+        </g>
+
+        <line x1="40" y1="532" x2="600" y2="532" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <text class="foot" x="40" y="550" fill="#a3a3a3" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">图 01 · 分解轴测图</text>
+        <text class="foot" x="600" y="550" text-anchor="end" fill="#a3a3a3" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">5 层 · 1 强调色</text>
+      </svg>
+        <svg class="only-light" viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="hero-light-title hero-light-desc">
+        <title id="hero-light-title">从一句话到一张成品图表</title>
+        <desc id="hero-light-desc">diagram-design 技能工作原理的分解视图：底层是你的提示词，往上是 SKILL.md 从 50 种类型中选出一种，焦点层是带布局与密度规则的类型参考，再往上是你的风格令牌，顶端是一个单独的 HTML 与 SVG 文件。</desc>
+        <g data-exploded data-origin="200 396" data-gap="80">
+          <line data-role="trace" x1="84.69" y1="444" x2="84.69" y2="90" stroke="rgba(17,17,17,0.30)" stroke-width="0.8" stroke-dasharray="4,3"/>
+          <line data-role="trace" x1="315.31" y1="444" x2="315.31" y2="90" stroke="rgba(17,17,17,0.30)" stroke-width="0.8" stroke-dasharray="4,3"/>
+
+          <!-- 1 · Your prompt -->
+          <g data-part="prompt" data-name="Your prompt" data-rect="0 0 120 120 8" data-z="0" data-t="12" data-level="0">
+            <path data-role="silhouette" d="M 84.69 444 A 11.31 5.66 0 0 1 88 440 L 192 388 A 11.31 5.66 0 0 1 208 388 L 312 440 A 11.31 5.66 0 0 1 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 192 512 L 88 460 A 11.31 5.66 0 0 1 84.69 456 Z" fill="#ffffff"/>
+            <path d="M 84.69 444 A 11.31 5.66 0 0 0 88 448 L 192 500 A 11.31 5.66 0 0 0 200 501.66 L 200 513.66 A 11.31 5.66 0 0 1 192 512 L 88 460 A 11.31 5.66 0 0 1 84.69 456 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 200 501.66 A 11.31 5.66 0 0 0 208 500 L 312 448 A 11.31 5.66 0 0 0 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 200 513.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 84.69 444 A 11.31 5.66 0 0 0 88 448 L 192 500 A 11.31 5.66 0 0 0 208 500 L 312 448 A 11.31 5.66 0 0 0 315.31 444" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.8"/>
+            <path d="M 84.69 444 A 11.31 5.66 0 0 1 88 440 L 192 388 A 11.31 5.66 0 0 1 208 388 L 312 440 A 11.31 5.66 0 0 1 315.31 444 L 315.31 456 A 11.31 5.66 0 0 1 312 460 L 208 512 A 11.31 5.66 0 0 1 192 512 L 88 460 A 11.31 5.66 0 0 1 84.69 456 Z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,384)">
+              <rect x="12" y="36" width="96" height="64" rx="6" fill="rgba(17,17,17,0.04)" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="22" y="48" width="64" height="4" fill="rgba(17,17,17,0.30)"/>
+              <rect x="22" y="58" width="40" height="4" fill="rgba(17,17,17,0.30)"/>
+              <rect x="65" y="56" width="2" height="8" fill="#111111"/>
+            </g>
+            <path d="M 208 460 L 224 468 L 224 472 L 208 480 L 192 472 L 192 468 Z" fill="#ffffff"/>
+            <path d="M 208 460 L 224 468 L 208 476 L 192 468 Z" fill="rgba(17,17,17,0.85)"/>
+            <path d="M 192 468 L 208 476 L 208 480 L 192 472 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 208 476 L 224 468 L 224 472 L 208 480 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 208 460 L 224 468 L 224 472 L 208 480 L 192 472 L 192 468 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="450" x2="373" y2="450" stroke="rgba(17,17,17,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="450" r="2" fill="#111111"/>
+              <text data-role="name" x="385" y="449" fill="#111111" font-size="16" font-weight="600" font-family="'Geist', sans-serif">你的提示词</text>
+              <text class="sub" x="385" y="465" fill="#555555" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">“画一下我们的部署流程”</text>
+            </g>
+          </g>
+
+          <!-- 2 · SKILL.md -->
+          <g data-part="skill" data-name="SKILL.md" data-rect="0 0 120 120 8" data-z="92" data-t="10" data-level="1">
+            <path data-role="silhouette" d="M 84.69 354 A 11.31 5.66 0 0 1 88 350 L 192 298 A 11.31 5.66 0 0 1 208 298 L 312 350 A 11.31 5.66 0 0 1 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 192 420 L 88 368 A 11.31 5.66 0 0 1 84.69 364 Z" fill="#ffffff"/>
+            <path d="M 84.69 354 A 11.31 5.66 0 0 0 88 358 L 192 410 A 11.31 5.66 0 0 0 200 411.66 L 200 421.66 A 11.31 5.66 0 0 1 192 420 L 88 368 A 11.31 5.66 0 0 1 84.69 364 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 200 411.66 A 11.31 5.66 0 0 0 208 410 L 312 358 A 11.31 5.66 0 0 0 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 200 421.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 84.69 354 A 11.31 5.66 0 0 0 88 358 L 192 410 A 11.31 5.66 0 0 0 208 410 L 312 358 A 11.31 5.66 0 0 0 315.31 354" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.8"/>
+            <path d="M 84.69 354 A 11.31 5.66 0 0 1 88 350 L 192 298 A 11.31 5.66 0 0 1 208 298 L 312 350 A 11.31 5.66 0 0 1 315.31 354 L 315.31 364 A 11.31 5.66 0 0 1 312 368 L 208 420 A 11.31 5.66 0 0 1 192 420 L 88 368 A 11.31 5.66 0 0 1 84.69 364 Z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,294)">
+              <path d="M55 13h10v10h-10Z M69 13h10v10h-10Z M83 13h10v10h-10Z M97 13h10v10h-10Z M41 27h10v10h-10Z M55 27h10v10h-10Z M69 27h10v10h-10Z M83 27h10v10h-10Z M97 27h10v10h-10Z M13 41h10v10h-10Z M27 41h10v10h-10Z M41 41h10v10h-10Z M55 41h10v10h-10Z M69 41h10v10h-10Z M83 41h10v10h-10Z M97 41h10v10h-10Z M13 55h10v10h-10Z M27 55h10v10h-10Z M41 55h10v10h-10Z M55 55h10v10h-10Z M69 55h10v10h-10Z M83 55h10v10h-10Z M97 55h10v10h-10Z M13 69h10v10h-10Z M27 69h10v10h-10Z M41 69h10v10h-10Z M55 69h10v10h-10Z M69 69h10v10h-10Z M83 69h10v10h-10Z M97 69h10v10h-10Z M13 83h10v10h-10Z M27 83h10v10h-10Z M41 83h10v10h-10Z M55 83h10v10h-10Z M83 83h10v10h-10Z M97 83h10v10h-10Z M13 97h10v10h-10Z M27 97h10v10h-10Z M41 97h10v10h-10Z M55 97h10v10h-10Z M69 97h10v10h-10Z M83 97h10v10h-10Z M97 97h10v10h-10Z" fill="rgba(17,17,17,0.14)"/>
+            </g>
+            <path d="M 186 365 L 196 370 L 196 375 L 186 380 L 176 375 L 176 370 Z" fill="#ffffff"/>
+            <path d="M 186 365 L 196 370 L 186 375 L 176 370 Z" fill="rgba(17,17,17,0.85)"/>
+            <path d="M 176 370 L 186 375 L 186 380 L 176 375 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 186 375 L 196 370 L 196 375 L 186 380 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 186 365 L 196 370 L 196 375 L 186 380 L 176 375 L 176 370 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="359" x2="373" y2="359" stroke="rgba(17,17,17,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="359" r="2" fill="#111111"/>
+              <text data-role="name" x="385" y="358" fill="#111111" font-size="16" font-weight="600" font-family="'Geist', sans-serif">SKILL.md</text>
+              <text class="sub" x="385" y="374" fill="#555555" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">从 50 种类型中选 1 种</text>
+            </g>
+          </g>
+
+          <!-- 3 · Type reference (focal) -->
+          <g data-part="typeref" data-name="Type reference" data-rect="0 0 120 120 8" data-z="182" data-t="14" data-level="2" data-focal>
+            <path data-role="silhouette" d="M 84.69 260 A 11.31 5.66 0 0 1 88 256 L 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 192 330 L 88 278 A 11.31 5.66 0 0 1 84.69 274 Z" fill="#ffffff"/>
+            <path d="M 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 312 264 L 208 316 A 11.31 5.66 0 0 1 192 316 L 88 264 A 11.31 5.66 0 0 1 88 256 Z" fill="rgba(191,69,32,0.10)"/>
+            <path d="M 84.69 260 A 11.31 5.66 0 0 0 88 264 L 192 316 A 11.31 5.66 0 0 0 200 317.66 L 200 331.66 A 11.31 5.66 0 0 1 192 330 L 88 278 A 11.31 5.66 0 0 1 84.69 274 Z" fill="rgba(191,69,32,0.20)"/>
+            <path d="M 200 317.66 A 11.31 5.66 0 0 0 208 316 L 312 264 A 11.31 5.66 0 0 0 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 200 331.66 Z" fill="rgba(191,69,32,0.32)"/>
+            <path d="M 84.69 260 A 11.31 5.66 0 0 0 88 264 L 192 316 A 11.31 5.66 0 0 0 208 316 L 312 264 A 11.31 5.66 0 0 0 315.31 260" fill="none" stroke="rgba(191,69,32,0.70)" stroke-width="0.8"/>
+            <path d="M 84.69 260 A 11.31 5.66 0 0 1 88 256 L 192 204 A 11.31 5.66 0 0 1 208 204 L 312 256 A 11.31 5.66 0 0 1 315.31 260 L 315.31 274 A 11.31 5.66 0 0 1 312 278 L 208 330 A 11.31 5.66 0 0 1 192 330 L 88 278 A 11.31 5.66 0 0 1 84.69 274 Z" fill="none" stroke="#bf4520" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,200)">
+              <rect x="12" y="12" width="96" height="96" rx="4" fill="none" stroke="rgba(191,69,32,0.70)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <path d="M12 44H108 M12 76H108 M44 12V108 M76 12V108" fill="none" stroke="rgba(191,69,32,0.45)" stroke-width="0.6" stroke-dasharray="3,3" vector-effect="non-scaling-stroke"/>
+              <rect x="52" y="20" width="16" height="16" rx="2" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="20" y="52" width="16" height="16" rx="2" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="84" y="52" width="16" height="16" rx="2" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="52" y="84" width="16" height="16" rx="2" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+            </g>
+            <path d="M 200 248 L 216 256 L 216 260 L 200 268 L 184 260 L 184 256 Z" fill="#bf4520"/>
+            <path d="M 184 256 L 200 264 L 200 268 L 184 260 Z" fill="rgba(17,17,17,0.12)"/>
+            <path d="M 200 264 L 216 256 L 216 260 L 200 268 Z" fill="rgba(17,17,17,0.28)"/>
+            <path d="M 200 248 L 216 256 L 216 260 L 200 268 L 184 260 L 184 256 Z" fill="none" stroke="#bf4520" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="267" x2="373" y2="267" stroke="rgba(191,69,32,0.60)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="267" r="2" fill="#bf4520"/>
+              <text data-role="name" x="385" y="266" fill="#111111" font-size="16" font-weight="600" font-family="'Geist', sans-serif">类型参考</text>
+              <text class="sub" x="385" y="282" fill="#bf4520" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">布局与密度规则</text>
+            </g>
+          </g>
+
+          <!-- 4 · Style tokens -->
+          <g data-part="tokens" data-name="Style tokens" data-rect="0 0 120 120 8" data-z="276" data-t="10" data-level="3">
+            <path data-role="silhouette" d="M 84.69 170 A 11.31 5.66 0 0 1 88 166 L 192 114 A 11.31 5.66 0 0 1 208 114 L 312 166 A 11.31 5.66 0 0 1 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 192 236 L 88 184 A 11.31 5.66 0 0 1 84.69 180 Z" fill="#ffffff"/>
+            <path d="M 84.69 170 A 11.31 5.66 0 0 0 88 174 L 192 226 A 11.31 5.66 0 0 0 200 227.66 L 200 237.66 A 11.31 5.66 0 0 1 192 236 L 88 184 A 11.31 5.66 0 0 1 84.69 180 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 200 227.66 A 11.31 5.66 0 0 0 208 226 L 312 174 A 11.31 5.66 0 0 0 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 200 237.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 84.69 170 A 11.31 5.66 0 0 0 88 174 L 192 226 A 11.31 5.66 0 0 0 208 226 L 312 174 A 11.31 5.66 0 0 0 315.31 170" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.8"/>
+            <path d="M 84.69 170 A 11.31 5.66 0 0 1 88 166 L 192 114 A 11.31 5.66 0 0 1 208 114 L 312 166 A 11.31 5.66 0 0 1 315.31 170 L 315.31 180 A 11.31 5.66 0 0 1 312 184 L 208 236 A 11.31 5.66 0 0 1 192 236 L 88 184 A 11.31 5.66 0 0 1 84.69 180 Z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,110)">
+              <rect x="22" y="88" width="48" height="6" fill="rgba(17,17,17,0.55)"/>
+              <rect x="22" y="98" width="66" height="3" fill="rgba(17,17,17,0.30)"/>
+              <rect x="22" y="105" width="58" height="2" fill="rgba(17,17,17,0.30)"/>
+            </g>
+            <!-- swatch pucks: ink, muted, soft, paper -->
+            <path d="M 150.69 154 A 11.31 5.66 0 0 1 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 150.69 159 Z" fill="#ffffff"/>
+            <ellipse cx="162" cy="154" rx="11.31" ry="5.66" fill="#111111"/>
+            <path d="M 150.69 154 A 11.31 5.66 0 0 0 162 159.66 L 162 164.66 A 11.31 5.66 0 0 1 150.69 159 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 162 159.66 A 11.31 5.66 0 0 0 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 162 164.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 150.69 154 A 11.31 5.66 0 0 1 173.31 154 L 173.31 159 A 11.31 5.66 0 0 1 150.69 159 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 172.69 165 A 11.31 5.66 0 0 1 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 172.69 170 Z" fill="#ffffff"/>
+            <ellipse cx="184" cy="165" rx="11.31" ry="5.66" fill="rgba(17,17,17,0.62)"/>
+            <path d="M 172.69 165 A 11.31 5.66 0 0 0 184 170.66 L 184 175.66 A 11.31 5.66 0 0 1 172.69 170 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 184 170.66 A 11.31 5.66 0 0 0 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 184 175.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 172.69 165 A 11.31 5.66 0 0 1 195.31 165 L 195.31 170 A 11.31 5.66 0 0 1 172.69 170 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 194.69 176 A 11.31 5.66 0 0 1 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 194.69 181 Z" fill="#ffffff"/>
+            <ellipse cx="206" cy="176" rx="11.31" ry="5.66" fill="rgba(17,17,17,0.34)"/>
+            <path d="M 194.69 176 A 11.31 5.66 0 0 0 206 181.66 L 206 186.66 A 11.31 5.66 0 0 1 194.69 181 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 206 181.66 A 11.31 5.66 0 0 0 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 206 186.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 194.69 176 A 11.31 5.66 0 0 1 217.31 176 L 217.31 181 A 11.31 5.66 0 0 1 194.69 181 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 1 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 216.69 192 Z" fill="#ffffff"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 0 228 192.66 L 228 197.66 A 11.31 5.66 0 0 1 216.69 192 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 228 192.66 A 11.31 5.66 0 0 0 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 228 197.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 0 228 192.66 A 11.31 5.66 0 0 0 239.31 187" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.5"/>
+            <path d="M 216.69 187 A 11.31 5.66 0 0 1 239.31 187 L 239.31 192 A 11.31 5.66 0 0 1 216.69 192 Z" fill="none" stroke="#111111" stroke-width="0.8" stroke-linejoin="round"/>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="175" x2="373" y2="175" stroke="rgba(17,17,17,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="175" r="2" fill="#111111"/>
+              <text data-role="name" x="385" y="174" fill="#111111" font-size="16" font-weight="600" font-family="'Geist', sans-serif">风格令牌</text>
+              <text class="sub" x="385" y="190" fill="#555555" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">你的品牌，单一强调色</text>
+            </g>
+          </g>
+
+          <!-- 5 · HTML + SVG -->
+          <g data-part="html" data-name="HTML + SVG" data-rect="0 0 120 120 8" data-z="366" data-t="10" data-level="4">
+            <path data-role="silhouette" d="M 84.69 80 A 11.31 5.66 0 0 1 88 76 L 192 24 A 11.31 5.66 0 0 1 208 24 L 312 76 A 11.31 5.66 0 0 1 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 192 146 L 88 94 A 11.31 5.66 0 0 1 84.69 90 Z" fill="#ffffff"/>
+            <path d="M 84.69 80 A 11.31 5.66 0 0 0 88 84 L 192 136 A 11.31 5.66 0 0 0 200 137.66 L 200 147.66 A 11.31 5.66 0 0 1 192 146 L 88 94 A 11.31 5.66 0 0 1 84.69 90 Z" fill="rgba(17,17,17,0.07)"/>
+            <path d="M 200 137.66 A 11.31 5.66 0 0 0 208 136 L 312 84 A 11.31 5.66 0 0 0 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 200 147.66 Z" fill="rgba(17,17,17,0.15)"/>
+            <path d="M 84.69 80 A 11.31 5.66 0 0 0 88 84 L 192 136 A 11.31 5.66 0 0 0 208 136 L 312 84 A 11.31 5.66 0 0 0 315.31 80" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.8"/>
+            <path d="M 84.69 80 A 11.31 5.66 0 0 1 88 76 L 192 24 A 11.31 5.66 0 0 1 208 24 L 312 76 A 11.31 5.66 0 0 1 315.31 80 L 315.31 90 A 11.31 5.66 0 0 1 312 94 L 208 146 A 11.31 5.66 0 0 1 192 146 L 88 94 A 11.31 5.66 0 0 1 84.69 90 Z" fill="none" stroke="#111111" stroke-width="1.2" stroke-linejoin="round"/>
+            <g transform="matrix(1,0.5,-1,0.5,200,20)">
+              <path d="M10 24V14A4 4 0 0 1 14 10H106A4 4 0 0 1 110 14V24Z" fill="rgba(17,17,17,0.08)"/>
+              <path d="M10 24H110" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.6" vector-effect="non-scaling-stroke"/>
+              <rect x="10" y="10" width="100" height="100" rx="4" fill="none" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <circle cx="19" cy="17" r="2.2" fill="rgba(17,17,17,0.45)"/>
+              <circle cx="27" cy="17" r="2.2" fill="rgba(17,17,17,0.45)"/>
+              <circle cx="35" cy="17" r="2.2" fill="rgba(17,17,17,0.45)"/>
+              <path d="M36 56V81A8 8 0 0 0 44 89H66 M84 56V80" fill="none" stroke="rgba(17,17,17,0.45)" stroke-width="0.6" vector-effect="non-scaling-stroke"/>
+              <rect x="24" y="38" width="24" height="18" rx="3" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="72" y="38" width="24" height="18" rx="3" fill="#ffffff" stroke="rgba(17,17,17,0.55)" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+              <rect x="66" y="80" width="32" height="18" rx="3" fill="rgba(17,17,17,0.85)"/>
+            </g>
+            <g data-role="label">
+              <line data-role="leader" x1="321.31" y1="85" x2="373" y2="85" stroke="rgba(17,17,17,0.40)" stroke-width="0.8"/>
+              <circle cx="315.31" cy="85" r="2" fill="#111111"/>
+              <text data-role="name" x="385" y="84" fill="#111111" font-size="16" font-weight="600" font-family="'Geist', sans-serif">HTML + SVG</text>
+              <text class="sub" x="385" y="100" fill="#555555" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.08em">一个文件，零构建步骤</text>
+            </g>
+          </g>
+        </g>
+
+        <line x1="40" y1="532" x2="600" y2="532" stroke="rgba(17,17,17,0.12)" stroke-width="1"/>
+        <text class="foot" x="40" y="550" fill="#555555" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">图 01 · 分解轴测图</text>
+        <text class="foot" x="600" y="550" text-anchor="end" fill="#555555" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">5 层 · 1 强调色</text>
+      </svg>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMO ============ -->
+<section class="demo" style="border-top:0;padding-top:0">
+  <div class="wrap">
+    <figure class="film plate reg-b">
+      <figcaption class="cap"><span>图 00 · 技能实战</span><span>17 秒 · 无声</span></figcaption>
+      <video id="demo" muted loop playsinline preload="metadata" aria-label="演示：在智能体会话里输入一句提示词变成一张架构图，随后是改造前后对比，再是 44 种图表类型。" width="1920" height="1080"></video>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ BEFORE / AFTER ============ -->
+<section id="why">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">模型不缺内容，<br>缺的是品味。</h2>
+      <p class="note rise">同样的内容画两遍：先是 Claude 自己画，再是 Claude 带着本技能画。</p>
+    </div>
+    <div class="ba">
+      <div class="fig rise" data-full="assets/before.png" role="button" tabindex="0" aria-label="查看第一遍图表全尺寸">
+        <div class="lab"><span>图 02a</span><span class="n">第一遍 · 无技能</span></div>
+        <picture class="plate">
+          <source srcset="assets/before.webp" type="image/webp">
+          <img src="assets/before.png" alt="Claude 无技能时画的第一遍生命周期图：六张一模一样的白色卡片排成一行，带蓝色数字角标，下方一条深色横条写着 AI、治理与人工。" width="1600" height="389" loading="lazy">
+        </picture>
+        <span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span>
+      </div>
+      <div class="arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>重绘</span>
+      </div>
+      <div class="fig fix rise" data-full="assets/after-dark.png" data-full-light="assets/after-light.png" role="button" tabindex="0" aria-label="查看重绘图表全尺寸">
+        <div class="lab"><span>图 02b</span><span class="n">用技能重绘</span></div>
+        <picture class="plate reg-b only-dark">
+          <source srcset="assets/after-dark.webp" type="image/webp">
+          <img src="assets/after-dark.png" alt="用技能重绘的同一张生命周期图：从构想到运行与变更的六个阶段，每阶段带意图、护栏、结果三行，分诊是唯一高亮阶段，下方附运营模式条。" width="1600" height="915" loading="lazy">
+        </picture>
+        <picture class="plate reg-b only-light">
+          <source srcset="assets/after-light.webp" type="image/webp">
+          <img src="assets/after-light.png" alt="用技能重绘的同一张生命周期图：从构想到运行与变更的六个阶段，每阶段带意图、护栏、结果三行，分诊是唯一高亮阶段，下方附运营模式条。" width="1600" height="915" loading="lazy">
+        </picture>
+        <span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span>
+      </div>
+    </div>
+    <ul class="deltas rise">
+      <li><b>一个强调色，不是六个。</b>颜色只指向唯一重要的那个节点，别无其他。</li>
+      <li><b>真实的层级。</b>字重与分组承载语义，而非一道彩虹填充。</li>
+      <li><b>可读的结构。</b>每个阶段回答同样的三个问题：意图、护栏、结果。横着读完一行，整个系统尽收眼底。</li>
+    </ul>
+    <blockquote class="quote rise">
+      <p>“模型早已理解内容。它缺的是品味，于是我把品味写了下来。”</p>
+      <cite>Cathryn Lavery · 通用工具问的是“这个框放哪儿？”，它问的是“这个框配存在吗？”</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ============ WHAT IT IS (legend) ============ -->
+<section id="what">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">你能得到什么</h2>
+      <p class="note rise">它运行在你已经在用的智能体里。不用打开新工具，不用导出任何东西。</p>
+    </div>
+    <div class="legend">
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="4" width="10" height="7"/><rect x="19" y="4" width="10" height="7"/><rect x="3" y="21" width="10" height="7"/><rect x="19" y="21" width="10" height="7"/></svg><h3>50 种视觉类型</h3></div>
+        <p>架构图、桑基图、热力图、分解轴测图、数据库结构等等。每一种都是有自身规则的真实类型，而不是同一种框样式换 50 张皮。</p></div>
+      </div>
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16 16l11 11"/><path d="M8 11h6M11 8v6"/></svg><h3>约 60 秒品牌匹配</h3></div>
+        <p>把它指向你的网站。它读取你的配色与字体，并应用到它画的每一张图上。</p></div>
+      </div>
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="4" width="22" height="24"/><path d="M9 10h14M9 15h14M9 20h9"/></svg><h3>自包含 HTML + SVG</h3></div>
+        <p>一个文件。双击即开，离线可用。没有构建步骤、没有控制台、没有任何要托管的东西。</p></div>
+      </div>
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 8h9l3 3h8v13H6z"/><path d="M12 18l4 4 5-6"/></svg><h3>导入 draw.io、Mermaid 与 Excalidraw</h3></div>
+        <p>把它指向来源文件，它会按目标场合需要的尺寸、细节与受众<em>重绘</em>（而非转换）。</p></div>
+      </div>
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 16h6l3-8 6 16 3-8h6"/></svg><h3>可选的无障碍动效</h3></div>
+        <p>当动效有助于讲解时，图表可以动起来。默认保持静态。</p></div>
+      </div>
+      <div class="spec rise">
+        <div><div class="row"><svg class="g" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12"/><path d="M16 9v7l5 3"/></svg><h3>默认无障碍</h3></div>
+        <p>屏幕阅读器会读出每张图表的标题与描述，而不是一块空白矩形。</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AXONOMETRIC ============ -->
+<section id="axonometric">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">新增：两种轴测类型</h2>
+      <p class="note rise">一套 2:1 投影，两种用途。默认静态，附动画示例。</p>
+    </div>
+    <div class="axo">
+      <div class="axo-item rise">
+        <button class="pl rise" type="button" data-full="assets/gallery/exploded.png" aria-label="查看分解轴测图全尺寸"><span class="top"><span class="t">分解轴测图</span><span>图 04a</span></span><span class="pl-img"><picture><source srcset="assets/gallery/exploded.webp" type="image/webp"><img src="assets/gallery/exploded.png" alt="三层应用栈的分解视图：数据在底、逻辑居中、界面在顶，逻辑为焦点层。" width="2400" height="1336" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span></button>
+        <h3>分解轴测图</h3>
+        <p>把一个物体的各部分沿同一根轴拉开：拆解、开箱、装配顺序。每个部件间距相等，每个坐标都出自同一个投影函数。</p>
+        <ul class="axo-links">
+          <li><a href="examples/exploded.html">应用栈</a></li>
+          <li><a href="examples/exploded-phone.html">手机拆解</a></li>
+          <li><a href="examples/exploded-unboxing.html">开箱</a></li>
+          <li class="live"><a href="examples/exploded-phone-animated.html">手机（动画）</a></li>
+          <li class="live"><a href="examples/exploded-unboxing-animated.html">开箱（动画）</a></li>
+        </ul>
+      </div>
+      <div class="axo-item rise">
+        <button class="pl rise" type="button" data-full="assets/gallery/axonometric-plan.png" aria-label="查看轴测平面图全尺寸"><span class="top"><span class="t">轴测平面图</span><span>图 04b</span></span><span class="pl-img"><picture><source srcset="assets/gallery/axonometric-plan.webp" type="image/webp"><img src="assets/gallery/axonometric-plan.png" alt="一层办公室的轴测平面图：开放办公区、会议室、厨房、前台与电话亭，会议室为焦点房间。" width="2400" height="1078" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span></button>
+        <h3>轴测平面图</h3>
+        <p>从斜上方俯瞰的一层楼或一个园区：带家具的房间、按阶段标注的楼宇。墙体在桌面高度剖切，让所有房间在一个视图里一览无余。</p>
+        <ul class="axo-links">
+          <li><a href="examples/axonometric-plan.html">办公楼层</a></li>
+          <li><a href="examples/axonometric-plan-campus.html">园区</a></li>
+          <li class="live"><a href="examples/axonometric-plan-campus-animated.html">园区分期（动画）</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALLERY ============ -->
+<section id="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">五十种图表，一套体系</h2>
+      <a class="note rise" href="https://cathrynlavery.github.io/diagram-design/" style="color:var(--accent)">浏览线上画廊 →</a>
+    </div>
+    <div class="plates">
+      <button class="pl rise" type="button" data-full="assets/gallery/architecture.png" aria-label="查看架构图全尺寸"><span class="top"><span class="t">架构图</span><span>01 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/architecture.webp" type="image/webp"><img src="assets/gallery/architecture.png" alt="架构图：读者请求经 Cloudflare 到 Astro 源站、MDX 打包与内容 CMS。" width="2400" height="1154" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">一个系统快照中的组件与连接</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/architecture-delta.png" aria-label="查看架构差异图全尺寸"><span class="top"><span class="t">架构差异图</span><span>02 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/architecture-delta.webp" type="image/webp"><img src="assets/gallery/architecture-delta.png" alt="订单履约的架构差异：持久化订单队列取代遗留派发器，Orders API 从 v1 迁到 v2，前后快照之间列出七项组件与关系变更。" width="2400" height="1362" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">同步的前后拓扑之间的结构变化，附变更台账</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/it-state.png" aria-label="查看IT 现状图全尺寸"><span class="top"><span class="t">IT 现状图</span><span>03 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/it-state.webp" type="image/webp"><img src="assets/gallery/it-state.png" alt="三个区域展示采集、加工与分发，全程靠人工交接文件。" width="2400" height="1252" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按阶段或部门绘制的遗留 IT 全景；呈现改造前的现状</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/flowchart.png" aria-label="查看流程图全尺寸"><span class="top"><span class="t">流程图</span><span>04 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/flowchart.webp" type="image/webp"><img src="assets/gallery/flowchart.png" alt="流程图：一个新工作流何时保持人工、何时记为项目备忘、何时写成可复用的技能。" width="2400" height="1442" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">带分支的决策逻辑</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/sequence.png" aria-label="查看时序图全尺寸"><span class="top"><span class="t">时序图</span><span>05 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/sequence.webp" type="image/webp"><img src="assets/gallery/sequence.png" alt="时序图：一次冷缓存文章请求从读者与浏览器经 Cloudflare 到 Astro 源站与分析信标。" width="2400" height="1402" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">参与者之间按时间排序的消息</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/state.png" aria-label="查看状态机全尺寸"><span class="top"><span class="t">状态机</span><span>06 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/state.webp" type="image/webp"><img src="assets/gallery/state.png" alt="状态机：一篇文章从草稿经评审中、已发布到归档，含驳回与退回修改。" width="2400" height="1106" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">状态 + 迁移 + 守卫条件</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/er.png" aria-label="查看ER / 数据模型全尺寸"><span class="top"><span class="t">ER / 数据模型</span><span>07 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/er.webp" type="image/webp"><img src="assets/gallery/er.png" alt="实体关系图：作者撰写文章，文章关联标签与分类。" width="2400" height="1154" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">实体 + 字段 + 关系</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/timeline.png" aria-label="查看时间线全尺寸"><span class="top"><span class="t">时间线</span><span>08 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/timeline.webp" type="image/webp"><img src="assets/gallery/timeline.png" alt="时间线：从 2025 年 2 月第一篇文章到三个设计版本，再到 2026 年 4 月的图表技能。" width="2400" height="1010" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按时间定位的事件</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/swimlane.png" aria-label="查看泳道图全尺寸"><span class="top"><span class="t">泳道图</span><span>09 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/swimlane.webp" type="image/webp"><img src="assets/gallery/swimlane.png" alt="泳道图：一篇文章从 MDX 草稿经评审、编辑、批准、构建到 Cloudflare Pages 部署。" width="2400" height="1154" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">带交接的跨职能流程</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/quadrant.png" aria-label="查看四象限图全尺寸"><span class="top"><span class="t">四象限图</span><span>10 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/quadrant.webp" type="image/webp"><img src="assets/gallery/quadrant.png" alt="影响-工作量矩阵：八个内容项目分布于立即做、重大工程、速赢与不做四个象限。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">双轴定位 / 优先级排序</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/radar.png" aria-label="查看雷达图 / 蛛网图全尺寸"><span class="top"><span class="t">雷达图 / 蛛网图</span><span>11 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/radar.webp" type="image/webp"><img src="assets/gallery/radar.png" alt="雷达图：MinIO、Amazon S3、Ceph 与 Google Cloud Storage 在五项存储能力上的对比。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">多个实体在 3–5 项量化指标上的打分</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/polar.png" aria-label="查看极坐标图全尺寸"><span class="top"><span class="t">极坐标图</span><span>12 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/polar.webp" type="image/webp"><img src="assets/gallery/polar.png" alt="极坐标图：八个 UTC 时段的需求，0–100 百分比刻度，12:00–15:00 UTC 为峰值。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">一个量化序列跨循环类别；角度=类别，半径=数值</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/loop.png" aria-label="查看循环 / 飞轮全尺寸"><span class="top"><span class="t">循环 / 飞轮</span><span>13 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/loop.webp" type="image/webp"><img src="assets/gallery/loop.png" alt="六个站点从捕获顺时针经学习回到捕获。每个站点把共享状态写入中央记忆枢纽，「决策」是唯一高亮的人工审批关口。" width="2400" height="1570" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">自增强循环；末步滋养首步，中心枢纽累积状态</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/nested.png" aria-label="查看嵌套图全尺寸"><span class="top"><span class="t">嵌套图</span><span>14 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/nested.webp" type="image/webp"><img src="assets/gallery/nested.png" alt="嵌套图：项目级指引如何继承全局、仓库、业务与市场层的更广作用域。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">以包含 / 作用域表达的层级</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/tree.png" aria-label="查看树形图全尺寸"><span class="top"><span class="t">树形图</span><span>15 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/tree.webp" type="image/webp"><img src="assets/gallery/tree.png" alt="树形图：技能根节点分出设计、工程与研究三类及其叶技能。" width="2400" height="1154" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">父 → 子关系</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/org-chart.png" aria-label="查看组织架构图全尺寸"><span class="top"><span class="t">组织架构图</span><span>16 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/org-chart.webp" type="image/webp"><img src="assets/gallery/org-chart.png" alt="组织架构图：指挥中心把工作路由给专家智能体与升级负责人。" width="2360" height="1408" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">人 / 智能体 / 团队的归属、汇报、路由与升级</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/layers.png" aria-label="查看层叠图全尺寸"><span class="top"><span class="t">层叠图</span><span>17 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/layers.webp" type="image/webp"><img src="assets/gallery/layers.png" alt="层叠图：模型权重、SDK、提示词、智能体框架与 UI 表层，智能体框架为焦点层。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">层层堆叠的抽象级别</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/exploded.png" aria-label="查看分解轴测图全尺寸"><span class="top"><span class="t">分解轴测图</span><span>18 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/exploded.webp" type="image/webp"><img src="assets/gallery/exploded.png" alt="三层应用栈的分解视图：数据在底、逻辑居中、界面在顶，逻辑为焦点层。" width="2400" height="1336" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">把一个物体的各部分沿一根轴拉开：拆解、开箱、装配顺序</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/axonometric-plan.png" aria-label="查看轴测平面图全尺寸"><span class="top"><span class="t">轴测平面图</span><span>19 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/axonometric-plan.webp" type="image/webp"><img src="assets/gallery/axonometric-plan.png" alt="一层办公室的轴测平面图：开放办公区、会议室、厨房、前台与电话亭，会议室为焦点房间。" width="2400" height="1078" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">从斜上方俯瞰的一层楼或一个园区：带家具的房间、按阶段标注的楼宇</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/venn.png" aria-label="查看维恩图全尺寸"><span class="top"><span class="t">维恩图</span><span>20 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/venn.webp" type="image/webp"><img src="assets/gallery/venn.png" alt="维恩图：合意、可行与可持续三种产品特质交汇于「可发布」。" width="2400" height="1154" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">集合之间的重叠</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/pyramid.png" aria-label="查看金字塔 / 漏斗全尺寸"><span class="top"><span class="t">金字塔 / 漏斗</span><span>21 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/pyramid.webp" type="image/webp"><img src="assets/gallery/pyramid.png" alt="内容金字塔：短帖、随笔、长篇指南与旗舰书，按发布节奏与杠杆率排序。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">排名层级或转化流失</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/bar.png" aria-label="查看条形图全尺寸"><span class="top"><span class="t">条形图</span><span>22 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/bar.webp" type="image/webp"><img src="assets/gallery/bar.png" alt="条形图：S1–S8 各冲刺交付的故事点，S5 为历史峰值。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">跨类别的量化对比</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/waterfall.png" aria-label="查看瀑布图全尺寸"><span class="top"><span class="t">瀑布图</span><span>23 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/waterfall.webp" type="image/webp"><img src="assets/gallery/waterfall.png" alt="瀑布图：24 万美元月度云预算如何桥接到 23.6 万美元方案——人数增长、预留实例节省、新增 ML 负载与存储分层（最大单项节省）。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">由带符号的贡献值把期初总额桥接到期末总额（预算桥、人数增减）</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/treemap.png" aria-label="查看矩形树图全尺寸"><span class="top"><span class="t">矩形树图</span><span>24 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/treemap.webp" type="image/webp"><img src="assets/gallery/treemap.png" alt="2023 年中各大洲人口的矩形树图，格面积即人口；亚洲约占全球 59%，大洋洲不足 1% 小到无法标注。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">部分与整体的关系，相对大小本身就是叙事</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/heatmap.png" aria-label="查看热力图全尺寸"><span class="top"><span class="t">热力图</span><span>25 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/heatmap.webp" type="image/webp"><img src="assets/gallery/heatmap.png" alt="按服务与冲刺统计的 CI 失败率热力图。支付服务在冲刺 4 因一次部署回归飙到 47%，到冲刺 6 恢复到 4%。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">交叉表数据；以填充深浅编码每格数值</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/line.png" aria-label="查看折线图全尺寸"><span class="top"><span class="t">折线图</span><span>26 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/line.webp" type="image/webp"><img src="assets/gallery/line.png" alt="折线图：W1–W8 各周来自自然、直接与引荐渠道的注册量。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">时间上的连续趋势、恰两个状态之间的变化（斜率图）、每序列一个分布（山脊图）或多个快照间的排名流动（凹凸图）</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/gantt.png" aria-label="查看甘特图全尺寸"><span class="top"><span class="t">甘特图</span><span>27 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/gantt.webp" type="image/webp"><img src="assets/gallery/gantt.png" alt="甘特图：十二周的产品发布，从市场调研与访谈经设计评审、开发、beta 测试到上线。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">时间线上的任务与阶段</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/scatter.png" aria-label="查看散点图全尺寸"><span class="top"><span class="t">散点图</span><span>28 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/scatter.webp" type="image/webp"><img src="assets/gallery/scatter.png" alt="散点图：十二个工程团队的部署频率与交付周期，平台团队位居最优象限。" width="2400" height="1202" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">两个变量的相关性或分布；气泡图（三变量）与蜂群图（单变量、每项一点）变体</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/high-level.png" aria-label="查看总览架构全尺寸"><span class="top"><span class="t">总览架构</span><span>29 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/high-level.webp" type="image/webp"><img src="assets/gallery/high-level.png" alt="架构图：数据源经 Apache NiFi 与 MinIO 进入 Trino、数据建模与 Superset 看板，由 Airflow 编排。" width="2400" height="1298" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">容器集群上的端到端数据栈</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/process.png" aria-label="查看过程图全尺寸"><span class="top"><span class="t">过程图</span><span>30 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/process.webp" type="image/webp"><img src="assets/gallery/process.png" alt="过程图：一张订单从下单到关闭，先后由客户、客服、仓储与财务经手。" width="2240" height="920" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">多角色顺序流程，带数据交接</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/medallion.png" aria-label="查看Medallion 分层全尺寸"><span class="top"><span class="t">Medallion 分层</span><span>31 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/medallion.webp" type="image/webp"><img src="assets/gallery/medallion.png" alt="点击流事件与订单记录从原始层经匿名层、暂存层与聚合层，最后按生命周期归档。" width="2400" height="1266" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">多层数据存储，带质量等级与访问策略</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/data-flow.png" aria-label="查看数据流图全尺寸"><span class="top"><span class="t">数据流图</span><span>32 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/data-flow.webp" type="image/webp"><img src="assets/gallery/data-flow.png" alt="数据工程师采集并存储电商数据，数据科学家转换并分析，分析师发布看板。" width="2400" height="1176" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按角色划分的数据流：流水线每一步谁做什么</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/dp-integration.png" aria-label="查看数据平台集成全尺寸"><span class="top"><span class="t">数据平台集成</span><span>33 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/dp-integration.webp" type="image/webp"><img src="assets/gallery/dp-integration.png" alt="集成拓扑：CRM、POS 导出与事件流落入对象存储，供查询、笔记本、看板与合作方 API 使用。" width="2400" height="1330" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">数据平台的集成拓扑：来源 → 核心 → 消费方</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/dp-security-matrix.png" aria-label="查看数据平台安全矩阵全尺寸"><span class="top"><span class="t">数据平台安全矩阵</span><span>34 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/dp-security-matrix.webp" type="image/webp"><img src="assets/gallery/dp-security-matrix.png" alt="平台角色与组件的五乘五权限矩阵。" width="2400" height="888" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按角色 / 按组件的访问权限矩阵</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/sankey.png" aria-label="查看桑基图全尺寸"><span class="top"><span class="t">桑基图</span><span>35 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/sankey.webp" type="image/webp"><img src="assets/gallery/sankey.png" alt="桑基图：每月 12,000 分钟 CI 分入单测、E2E、构建与 lint，再汇入通过、失败与偶发失败，不稳定重跑路径是唯一高亮流量。" width="2400" height="1346" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">一个量在各阶段间分流与合流，带宽 = 数量</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/fishbone.png" aria-label="查看鱼骨图全尺寸"><span class="top"><span class="t">鱼骨图</span><span>36 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/fishbone.webp" type="image/webp"><img src="assets/gallery/fishbone.png" alt="鱼骨图：把一次结账延迟事故追到五类候选原因，数据类下缺失的数据库索引被确认为根因。" width="2640" height="1072" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按类别分组追溯一个结果的原因（根因分析）</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/wardley.png" aria-label="查看Wardley 地图全尺寸"><span class="top"><span class="t">Wardley 地图</span><span>37 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/wardley.webp" type="image/webp"><img src="assets/gallery/wardley.png" alt="Wardley 地图：AI 助手产品的价值链从用户侧需求到原始基础设施，对照从初创到通用化的演化轴，智能体编排正滑向产品带。" width="2400" height="1106" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">价值链对照演化阶段：什么自建、什么采购、什么正在变化</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/kanban.png" aria-label="查看看板全尺寸"><span class="top"><span class="t">看板</span><span>38 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/kanban.webp" type="image/webp"><img src="assets/gallery/kanban.png" alt="看板：平台团队在待办、进行中、评审与完成列的在制品，进行中已超 WIP 限制，一张受阻卡等待厂商维护窗口。" width="2400" height="946" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">按状态呈现的在制品，带 WIP 限制与受阻项</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/journey.png" aria-label="查看用户旅程图全尺寸"><span class="top"><span class="t">用户旅程图</span><span>39 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/journey.webp" type="image/webp"><img src="assets/gallery/journey.png" alt="新试用用户的五阶段旅程图：行动、触点与情绪曲线，在用量限制处触底，升级后回升。" width="2560" height="1110" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">一个人在体验各阶段做什么、感受如何</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/deployment.png" aria-label="查看部署图全尺寸"><span class="top"><span class="t">部署图</span><span>40 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/deployment.webp" type="image/webp"><img src="assets/gallery/deployment.png" alt="部署图：结账服务横跨边缘 CDN 区、运行入口与 API Pod 的生产 Kubernetes 区，以及主 Postgres 向备库复制的数据区。" width="2400" height="962" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">软件运行在哪：区域、主机、制品、副本、端口</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/dependency.png" aria-label="查看依赖图全尺寸"><span class="top"><span class="t">依赖图</span><span>41 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/dependency.webp" type="image/webp"><img src="assets/gallery/dependency.png" alt="TypeScript monorepo 的分层依赖图：shared-types 是扇入最高的包（四个依赖方），utils 到 shared-types 有一条反向边成环。" width="2400" height="1442" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">谁依赖谁，含树形图无法表达的扇入与环</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/uml-class.png" aria-label="查看UML 类图全尺寸"><span class="top"><span class="t">UML 类图</span><span>42 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/uml-class.webp" type="image/webp"><img src="assets/gallery/uml-class.png" alt="类图：Card 与 BankTransfer 实现 PaymentMethod 接口，PaymentService 依赖 PaymentMethod，Order 组合 OrderLine 并关联 Customer。" width="2480" height="1682" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">类及其操作、继承、组合（其他 UML 路线另见）</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/story-map.png" aria-label="查看用户故事地图全尺寸"><span class="top"><span class="t">用户故事地图</span><span>43 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/story-map.webp" type="image/webp"><img src="assets/gallery/story-map.png" alt="报表工具首版的用户故事地图：从找到数据到信任数据的四项叙事活动、其下的行走骨架步骤、按 MVP 切线分出的三个版本切片，行级权限故事被标为版本 2 风险最高的赌注。" width="2400" height="1258" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">叙事主干按版本切片，带切割线</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/db-schema.png" aria-label="查看数据库结构全尺寸"><span class="top"><span class="t">数据库结构</span><span>44 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/db-schema.webp" type="image/webp"><img src="assets/gallery/db-schema.png" alt="物理数据库结构图：五张电商表带列级外键、SQL 类型与约束标签，orders 到 order_items 有级联删除，另有 billing 结构分组。" width="2480" height="1288" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">物理表：SQL 类型、约束、索引、列级外键</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/service-blueprint.png" aria-label="查看服务蓝图全尺寸"><span class="top"><span class="t">服务蓝图</span><span>45 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/service-blueprint.webp" type="image/webp"><img src="assets/gallery/service-blueprint.png" alt="试用转付费路径的五阶段服务蓝图：可见线上方是顾客与前台动作，焦点是「触达限额」下的后台催缴任务超时。" width="2560" height="1442" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">各阶段中顾客做什么 vs 服务隐藏了什么</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/sbgn.png" aria-label="查看SBGN 图全尺寸"><span class="top"><span class="t">SBGN 图</span><span>46 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/sbgn.webp" type="image/webp"><img src="assets/gallery/sbgn.png" alt="胞质中的七种类胡萝卜素物种经六个过程裂解；β-胡萝卜素生成 B-10-apo 与 B-紫罗兰酮，隐黄素与玉米黄素汇入相同产物。" width="2400" height="1442" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">以物种 / 过程二部图表达的生物过程</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/requirement-traceability.png" aria-label="查看需求追溯图全尺寸"><span class="top"><span class="t">需求追溯图</span><span>47 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/requirement-traceability.webp" type="image/webp"><img src="assets/gallery/requirement-traceability.png" alt="三条示例需求从来源笔记追溯到设计元素与验证检查。最后一条没有关联验证，被醒目标为未闭环。" width="2400" height="1440" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">源需求、设计元素与测试以稳定 ID 相连</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/event-modeling.png" aria-label="查看事件建模图全尺寸"><span class="top"><span class="t">事件建模图</span><span>48 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/event-modeling.webp" type="image/webp"><img src="assets/gallery/event-modeling.png" alt="三个按时序排列的阶段，每个都有命令、产生的过去式事件与从事件投影出的读模型。" width="2400" height="1440" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">有序各阶段的命令、产生的事件与读模型</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/steps.png" aria-label="查看步骤图全尺寸"><span class="top"><span class="t">步骤图</span><span>49 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/steps.webp" type="image/webp"><img src="assets/gallery/steps.png" alt="五个等宽阶段从框定与研究经过焦点综合步骤，走向决策与发布。" width="2560" height="1442" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">简短的有序方法，带编号阶段、图标与简短说明</span></button>
+      <button class="pl rise" type="button" data-full="assets/gallery/unit-grid.png" aria-label="查看单元网格全尺寸"><span class="top"><span class="t">单元网格</span><span>50 / 50</span></span><span class="pl-img"><picture><source srcset="assets/gallery/unit-grid.webp" type="image/webp"><img src="assets/gallery/unit-grid.png" alt="十乘十的单元网格：64 项已完成的发布检查与 36 项待办，每格代表一项检查。" width="2076" height="810" loading="lazy"></picture><span class="zoom" aria-hidden="true"><em><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.5v6M7.5 10.5h6"/></svg>放大</em></span></span><span class="d">一个有边界的整体按 100 份等距离散单元计数</span></button>
+    </div>
+    <button class="m-more" type="button" data-more=".plates" aria-expanded="false">展示全部 50 种类型</button>
+  </div>
+</section>
+
+<!-- ============ INSTALL ============ -->
+<section id="install">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">安装</h2>
+      <p class="note rise">从第一张卡开始。点击任意卡片即可复制。</p>
+    </div>
+    <div class="sheets">
+      <div class="sheet lead rise" data-copy="npx skills add cathrynlavery/diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>任意智能体 · Cursor 等<button class="cp" type="button" aria-label="复制 npx skills 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 npx skills 安装命令"><code><span class="c"># 一条命令，适配所有技能宿主</span>
+<span class="p">npx</span> skills add cathrynlavery/diagram-design</code></pre>
+        <div class="ft">适用于 Cursor、Cline、Gemini CLI、Windsurf 等技能宿主。用 <b>npx skills update diagram-design</b> 更新。</div>
+      </div>
+      <div class="sheet rise" data-copy="/plugin marketplace add cathrynlavery/diagram-design&#10;/plugin install diagram-design@diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>Claude Code<button class="cp" type="button" aria-label="复制 Claude Code 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 Claude Code 安装命令"><code><span class="c"># 添加 + 安装</span>
+<span class="p">/plugin</span> marketplace add cathrynlavery/diagram-design
+<span class="p">/plugin</span> install diagram-design@diagram-design</code></pre>
+        <div class="ft">然后在 <b>/plugin → Marketplaces</b> 里开启一次自动更新。</div>
+      </div>
+      <div class="sheet rise" data-copy="codex plugin marketplace add cathrynlavery/diagram-design&#10;codex plugin add diagram-design@diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>Codex<button class="cp" type="button" aria-label="复制 Codex 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 Codex 安装命令"><code><span class="c"># 添加 + 安装</span>
+<span class="p">codex</span> plugin marketplace add cathrynlavery/diagram-design
+<span class="p">codex</span> plugin add diagram-design@diagram-design</code></pre>
+        <div class="ft">Codex 会在启动时刷新 Git 插件市场。</div>
+      </div>
+      <div class="sheet rise" data-copy="pi install https://github.com/cathrynlavery/diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>Pi<button class="cp" type="button" aria-label="复制 Pi 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 Pi 安装命令"><code><span class="c"># 从 GitHub 安装</span>
+<span class="p">pi</span> install https://github.com/cathrynlavery/diagram-design</code></pre>
+        <div class="ft">在已打开的 Pi 会话里运行 <b>/reload</b>。</div>
+      </div>
+      <div class="sheet rise" data-copy="copilot plugin marketplace add cathrynlavery/diagram-design&#10;copilot plugin install diagram-design@diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>GitHub Copilot<button class="cp" type="button" aria-label="复制 GitHub Copilot 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 GitHub Copilot 安装命令"><code><span class="c"># 添加 + 安装</span>
+<span class="p">copilot</span> plugin marketplace add cathrynlavery/diagram-design
+<span class="p">copilot</span> plugin install diagram-design@diagram-design</code></pre>
+        <div class="ft">用 <b>copilot skill list</b> 确认，然后直接开口要图。</div>
+      </div>
+      <div class="sheet rise" data-copy="droid plugin marketplace add https://github.com/cathrynlavery/diagram-design&#10;droid plugin install diagram-design@diagram-design --scope user">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>Factory Droid<button class="cp" type="button" aria-label="复制 Factory Droid 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 Factory Droid 安装命令"><code><span class="c"># 添加 + 安装</span>
+<span class="p">droid</span> plugin marketplace add https://github.com/cathrynlavery/diagram-design
+<span class="p">droid</span> plugin install diagram-design@diagram-design --scope user</code></pre>
+        <div class="ft">Droid 按 commit 跟踪更新。更新后请开启新会话。</div>
+      </div>
+      <div class="sheet rise" data-copy="git clone https://github.com/cathrynlavery/diagram-design.git&#10;qoder plugins install ./diagram-design">
+        <div class="hd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 10l3 2-3 2M13 14h4"/></svg>Qoder<button class="cp" type="button" aria-label="复制 Qoder 安装命令">复制</button></div>
+        <pre role="button" tabindex="0" aria-label="复制 Qoder 安装命令"><code><span class="c"># 克隆 + 安装</span>
+<span class="p">git</span> clone https://github.com/cathrynlavery/diagram-design.git
+<span class="p">qoder</span> plugins install ./diagram-design</code></pre>
+        <div class="ft">安装后开启新任务。Qoder IDE 走 ZIP 上传，见 README。</div>
+      </div>
+    </div>
+    <button class="m-more" type="button" data-more=".sheets" aria-expanded="false">Codex、Pi、Copilot、Droid、Qoder</button>
+    <p class="install-note rise">Kiro 和 OpenCode 直接使用 <b>skills/diagram-design</b> 目录，见 README。想要可编辑安装？<b>git clone</b> 本仓库并软链 <b>skills/diagram-design</b>。保存在 <b>~/.diagram-design/profiles/</b> 的配置档案更新后依然保留。</p>
+  </div>
+</section>
+
+<!-- ============ USE ============ -->
+<section id="use">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="rise">然后，开口要就行</h2>
+      <p class="note rise">一句话描述你想要什么。没有语法，没有配置。</p>
+    </div>
+    <div class="use-grid">
+      <div class="rise">
+        <ul class="asks">
+          <li><span class="q">&gt;_</span><span class="t">“给我的应用画一张<b>架构图</b>：前端、后端、数据库、Redis 缓存。”</span></li>
+          <li><span class="q">&gt;_</span><span class="t">“我要一张二季度项目的<b>四象限图</b>，按影响力对比工作量。”</span></li>
+          <li><span class="q">&gt;_</span><span class="t">“把 diagram-design <b>接入</b> <em>https://yoursite.com</em>”</span></li>
+          <li><span class="q">&gt;_</span><span class="t">“<b>重绘</b>这个 <em>.drawio</em> 文件，用在我的演示文稿里。”</span></li>
+        </ul>
+        <div class="tmpl">
+          <div class="dim left" style="margin-bottom:12px" aria-hidden="true"><span>或从模板开始</span></div>
+          <pre><code><span class="c"># 复制一份脚手架再修改</span>
+cp skills/diagram-design/assets/template.html my-diagram.html</code></pre>
+        </div>
+      </div>
+      <figure class="dogfood rise">
+        <figcaption>图 03 · 一轮对话<span>无语法 · 一个文件</span></figcaption>
+        <div class="term plate reg-b">
+          <div class="term-bar">智能体会话<span class="dot" aria-hidden="true"></span></div>
+          <pre class="term-body"><code><span class="p">&gt;</span> 给我的应用画一张架构图
+<span class="c">  读取你的品牌 · 选定类型：架构图</span>
+<span class="c">  先说明计划，再动笔</span>
+<span class="ok">写出</span> architecture.html<span class="c">  一个文件，离线可开</span></code></pre>
+        </div>
+      </figure>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<div class="modal" id="imodal" role="dialog" aria-modal="true" aria-label="图表，全尺寸" hidden>
+  <button class="modal-close" id="iclose" type="button" aria-label="关闭图片"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  <div class="modal-frame plate reg-b">
+    <div class="imodal-cap" id="imodal-cap"><span class="t"></span><span>按 Esc 或点击空白处关闭</span></div>
+    <img id="imodal-img" src="" alt="">
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <p class="by">由 <a href="https://littlemight.com?utm_source=diagramdesign.dev&utm_medium=site&utm_campaign=footer">Cathryn Lavery</a> 制作。</p>
+        <p class="m">杂志级图表，写成一项技能。</p>
+      </div>
+      <div>
+        <h4>项目</h4>
+        <ul>
+          <li><a href="https://github.com/cathrynlavery/diagram-design">GitHub 仓库</a></li>
+          <li><a href="https://cathrynlavery.github.io/diagram-design/">线上画廊</a></li>
+          <li><a href="https://github.com/cathrynlavery/diagram-design/blob/main/README.md">文档</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>别处</h4>
+        <ul>
+          <li><a href="https://x.com/cathrynlavery">X / @cathrynlavery</a></li>
+          <li><a href="https://littlemight.com?utm_source=diagramdesign.dev&utm_medium=site&utm_campaign=footer">littlemight.com</a></li>
+          <li><a href="https://nontechnical.dev">nontechnical.dev</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="stamp-block">
+      <span>Diagram Design · diagramdesign.dev</span>
+      <span>MIT © 2025 Cathryn Lavery</span>
+      <span>图页 1 / 1</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- one authored moment: reveal on enter ---- */
+  if(!reduce && 'IntersectionObserver' in window){
+    document.body.classList.add('anim');
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:0.14, rootMargin:'0px 0px -8% 0px'});
+    document.querySelectorAll('.hero .rise, .draw').forEach(function(el){ io.observe(el); });
+  }
+
+  /* ---- dark / light toggle ---- */
+  var modeBtn=document.getElementById('mode');
+  function syncMode(){ if(modeBtn) modeBtn.setAttribute('aria-pressed', document.documentElement.getAttribute('data-mode')==='light' ? 'true':'false'); }
+  if(modeBtn){ syncMode(); modeBtn.addEventListener('click', function(){ var m=document.documentElement.getAttribute('data-mode')==='light'?'dark':'light'; document.documentElement.setAttribute('data-mode',m); try{localStorage.setItem('dd-mode',m);}catch(e){} syncMode(); }); }
+
+  /* ---- mobile: expand gallery / other hosts ---- */
+  document.querySelectorAll('.m-more').forEach(function(b){ b.addEventListener('click', function(){ var t=b.parentNode.querySelector(b.getAttribute('data-more')); if(t){ t.classList.add('open'); } b.setAttribute('aria-expanded','true'); }); });
+
+  /* ---- demo video: one file per mode, no autoplay for reduced motion ---- */
+  var demo=document.getElementById('demo');
+  function setDemo(){ if(!demo) return; var m=document.documentElement.getAttribute('data-mode')==='light'?'light':'dark';
+    var src='assets/demo-'+m+'.mp4'; if(demo.getAttribute('src')===src) return;
+    demo.setAttribute('poster','assets/demo-'+m+'-poster.jpg'); demo.setAttribute('src',src);
+    if(reduce){ demo.controls=true; } else { var pr=demo.play(); if(pr&&pr.catch) pr.catch(function(){ demo.controls=true; }); } }
+  setDemo();
+  if(modeBtn) modeBtn.addEventListener('click', setDemo);
+
+  /* ---- modal focus management (shared) ---- */
+  var lastFocus = null;
+  function focusables(m){
+    return Array.prototype.slice.call(m.querySelectorAll('button,[href],video,[tabindex]:not([tabindex="-1"])'))
+      .filter(function(el){ return el.tagName==='VIDEO' || el.offsetParent!==null; });
+  }
+  function trap(m,e){
+    if(e.key!=='Tab') return;
+    var f=focusables(m); if(!f.length) return;
+    var first=f[0], last=f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  }
+  function showModal(m, focusEl){ lastFocus=document.activeElement; m.hidden=false; document.body.style.overflow='hidden'; if(focusEl) focusEl.focus(); }
+  function hideModal(m){ m.hidden=true; document.body.style.overflow=''; if(lastFocus && lastFocus.focus){ lastFocus.focus(); } lastFocus=null; }
+
+  /* ---- video: click the poster to open the full demo ---- */
+  var vopen=document.querySelector('.film-open'), vmodal=document.getElementById('vmodal'),
+      vvideo=document.getElementById('vmodal-video'), vclose=document.getElementById('vclose');
+  function openVideo(){ if(!vmodal) return; showModal(vmodal, vclose); try{ vvideo.currentTime=0; var pr=vvideo.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
+  function closeVideo(){ if(!vmodal) return; try{ vvideo.pause(); }catch(e){} hideModal(vmodal); }
+  if(vopen) vopen.addEventListener('click', openVideo);
+  if(vclose) vclose.addEventListener('click', closeVideo);
+  if(vmodal){ vmodal.addEventListener('click', function(e){ if(e.target===vmodal) closeVideo(); }); vmodal.addEventListener('keydown', function(e){ trap(vmodal,e); }); }
+
+  /* ---- image lightbox: any [data-full] opens full size (gallery plates + before/after) ---- */
+  var imodal=document.getElementById('imodal'), iimg=document.getElementById('imodal-img'),
+      icap=document.querySelector('#imodal-cap .t'), iclose=document.getElementById('iclose');
+  function openImg(src,label){ if(!imodal||!src) return; iimg.src=src; iimg.alt=(label||'图表')+'，全尺寸';
+    if(icap) icap.textContent=label||''; imodal.setAttribute('aria-label',(label||'图表')+'，全尺寸'); showModal(imodal, iclose); }
+  function closeImg(){ if(!imodal) return; hideModal(imodal); iimg.removeAttribute('src'); }
+  document.querySelectorAll('[data-full]').forEach(function(el){
+    el.addEventListener('click', function(){ var t=el.querySelector('.t')||el.querySelector('.n'); var light=document.documentElement.getAttribute('data-mode')==='light'&&el.getAttribute('data-full-light'); openImg(light||el.getAttribute('data-full'), t?t.textContent:''); });
+    if(el.tagName!=='BUTTON'){ el.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); el.click(); } }); }
+  });
+  if(iclose) iclose.addEventListener('click', closeImg);
+  if(imodal){ imodal.addEventListener('click', function(e){ if(e.target===imodal) closeImg(); }); imodal.addEventListener('keydown', function(e){ trap(imodal,e); }); }
+
+  /* ---- Escape closes whichever modal is open ---- */
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape') return;
+    if(vmodal && !vmodal.hidden) closeVideo();
+    else if(imodal && !imodal.hidden) closeImg();
+  });
+
+  /* ---- live star count, graceful fallback to the honest "17k+" baseline ---- */
+  function fmt(n){ return n>=1000 ? (n/1000).toFixed(n>=10000?0:1).replace('.0','')+'k' : String(n); }
+  try{
+    fetch('https://api.github.com/repos/cathrynlavery/diagram-design', {headers:{'Accept':'application/vnd.github+json'}})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.stargazers_count){ var s=fmt(d.stargazers_count);
+        var a=document.getElementById('starcount'), b=document.getElementById('starcount2');
+        if(a)a.textContent=s; if(b)b.textContent=s+''; } })
+      .catch(function(){});
+  }catch(e){}
+
+  /* ---- click-to-copy install commands ---- */
+  document.querySelectorAll('.sheet').forEach(function(sheet){
+    var txt = sheet.getAttribute('data-copy') || '';
+    var btn = sheet.querySelector('.cp'), pre = sheet.querySelector('pre');
+    function flash(){ if(!btn) return; if(!btn.getAttribute('data-label')) btn.setAttribute('data-label', btn.textContent); btn.textContent='已复制'; btn.classList.add('done'); setTimeout(function(){ btn.textContent=btn.getAttribute('data-label'); btn.classList.remove('done'); },1600); }
+    function fb(){ try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); flash(); }catch(e){} }
+    function doCopy(){ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(flash).catch(fb); } else { fb(); } }
+    if(btn) btn.addEventListener('click', doCopy);
+    if(pre){ pre.addEventListener('click', doCopy); pre.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); doCopy(); } }); }
+  });
+})();
+</script>
+</body>
+</html>

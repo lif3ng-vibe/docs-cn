@@ -159,6 +159,14 @@ jobs:
           mkdir -p _site
           cp -r herdr-docs-cn/site _site/herdr
 
+      # diagram-design 是闭源手写静态站（diagramdesign.dev，无框架无构建）。
+      # HTML 产物镜像汉化：产物入库（site/ 资源引用全相对路径，子路径零改写），
+      # CI 纯拷贝零构建（同 herdr/ollama 先例）。
+      - name: Deploy diagram-design-docs-cn from repo
+        run: |
+          mkdir -p _site
+          cp -r diagram-design-docs-cn/site _site/diagram-design
+
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph
         uses: actions/cache@v4

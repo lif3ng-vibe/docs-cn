@@ -555,5 +555,22 @@
       "stack": "闭源 Astro 静态站 → HTML 产物镜像汉化",
       "snap": "2026-11-12"
     }
+  },
+  {
+    "name": "Diagram Design",
+    "slug": "diagram-design",
+    "desc": "Diagram Design 官网中文镜像（非官方翻译）——一个智能体技能，把大白话变成杂志级品质的图表：50 种图表类型，自包含 HTML + SVG，约 60 秒匹配你的网站品牌；Claude Code、Codex、Pi 等宿主通用。",
+    "tags": [
+      "skills",
+      "diagrams",
+      "design-system"
+    ],
+    "orig": "https://diagramdesign.dev",
+    "repo": "https://github.com/cathrynlavery/diagram-design",
+    "meta": {
+      "pages": "9 页（首页 + 8 示例页全译；画廊 PNG 图内英文照用）",
+      "stack": "闭源手写静态站 → HTML 产物镜像汉化",
+      "snap": "2026-11-20"
+    }
   }
 ]
