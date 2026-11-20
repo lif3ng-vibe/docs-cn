@@ -568,7 +568,7 @@
     "orig": "https://diagramdesign.dev",
     "repo": "https://github.com/cathrynlavery/diagram-design",
     "meta": {
-      "pages": "245 页（官网 9 页全译 + 画廊 /gallery/ 236 页：导航层英中双语、235 张样张保留英文原版）",
+      "pages": "480 页（官网 9 页全译 + 画廊 /gallery/ 471 页：导航双语、235 张样张英文原版 + 235 张中文变体 EN/中文 切换默认中文）",
       "stack": "闭源手写静态站 → HTML 产物镜像汉化",
       "snap": "2026-11-20"
     }

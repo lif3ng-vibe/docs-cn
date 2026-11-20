@@ -247,6 +247,10 @@
         </h1>
         </div>
         <div class="header-actions">
+          <div class="tabs variants" id="lang-tabs" role="radiogroup" aria-label="图表语言">
+            <button class="tab" data-lang="en" type="button">EN</button>
+            <button class="tab active" data-lang="zh" type="button">中文</button>
+          </div>
           <a class="open-raw" href="icons.html" target="_blank" rel="noopener"
             >图标库 ↗</a
           >
@@ -558,13 +562,13 @@
     <main>
       <iframe
         id="preview"
-        src="example-architecture.html"
+        src="example-architecture-zh.html"
         title="预览"
       ></iframe>
     </main>
 
     <script>
-      const state = { type: "architecture", variant: "" };
+      const state = { type: "architecture", variant: "", lang: (() => { try { return localStorage.getItem("dd-gallery-lang") || "zh"; } catch { return "zh"; } })() };
       const iframe = document.getElementById("preview");
       const openRaw = document.getElementById("open-raw");
 
@@ -599,6 +603,14 @@
         document.getElementById("empty-results").hidden = visible.length > 0;
       }
       search.addEventListener("input", filterDiagrams);
+      document.querySelectorAll("#lang-tabs .tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          if (state.lang === tab.dataset.lang) return;
+          state.lang = tab.dataset.lang;
+          try { localStorage.setItem("dd-gallery-lang", state.lang); } catch {}
+          update();
+        });
+      });
       // Collapse on click, not pointerdown: hiding the catalog moves the preview
       // up, so collapsing mid-press would pull a control out from under the pointer
       // and its click would never fire.
@@ -650,7 +662,12 @@
             tab.tabIndex = active ? 0 : -1;
           });
         }
-        const src = `example-${state.type}${state.variant}.html`;
+        const src = `example-${state.type}${state.variant}${state.lang === "zh" ? "-zh" : ""}.html`;
+        document.querySelectorAll("#lang-tabs .tab").forEach((tab) => {
+          const on = tab.dataset.lang === state.lang;
+          tab.classList.toggle("active", on);
+          tab.setAttribute("aria-checked", String(on));
+        });
         iframe.src = src;
         openRaw.href = src;
         filterDiagrams();

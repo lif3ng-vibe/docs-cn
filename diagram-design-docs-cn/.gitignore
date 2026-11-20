@@ -1,3 +1,5 @@
 upstream/
 upstream-gallery/
 .shots/
+.zh-*.txt
+.zh-out-*.json

@@ -59,9 +59,32 @@ function apply(html, pairs, file) {
 }
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// ---------- 组装:upstream-gallery 全量拷贝 → index/icons 翻译 → example 原样 ----------
+// ---------- 中文变体词典(zh-merge.mjs 合并产物:core 定译 > 子代理批次) ----------
+const dict = JSON.parse(readFileSync(join(ROOT, 'tools', 'gallery-zh-dict.json'), 'utf8'));
+
+// ---------- 组装:upstream-gallery 全量拷贝 → index/icons 翻译 → example 原样 + -zh 变体 ----------
 rmSync(SITE, { recursive: true, force: true });
 cpSync(UP, SITE, { recursive: true });
+
+// 中文样张变体:example-X.html → example-X-zh.html(SVG text 按词典译;技术词无映射自然保留)
+let zhFiles = 0, zhText = 0;
+for (const f of readdirSync(UP).filter(f => f.startsWith('example-') && f.endsWith('.html'))) {
+  let h = readFileSync(join(UP, f), 'utf8');
+  let hit = 0;
+  h = h.replace(/<html lang="en">/, '<html lang="zh-CN">')
+    .replace("--font-sans:     'Geist', system-ui, sans-serif", "--font-sans:     'Geist', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif")
+    .replace("--font-serif:    'Instrument Serif', serif", "--font-serif:    'Instrument Serif', 'Songti SC', 'SimSun', serif")
+    .replace("--font-mono:     'Geist Mono', ui-monospace, monospace", "--font-mono:     'Geist Mono', ui-monospace, 'PingFang SC', 'Microsoft YaHei', monospace")
+    .replace(/<text([^>]*)>([^<]{1,150})<\/text>/g, (full, attrs, content) => {
+      const t = content.trim();
+      const zh = dict[t];
+      if (!zh) return full;
+      hit++;
+      return `<text${attrs}>${content.replace(t, zh)}</text>`;
+    });
+  if (hit) { writeFileSync(join(SITE, f.replace(/\.html$/, '-zh.html')), h); zhFiles++; zhText += hit; }
+}
+console.log(`zh variants: ${zhFiles} files, ${zhText} text nodes translated`);
 
 // index.html:UI + 按钮 + 当前名
 let idx = readFileSync(join(UP, 'index.html'), 'utf8');
@@ -71,6 +94,33 @@ for (const [en, zh] of Object.entries(NAMES)) buttonPairs.push([`</span>${en}\n`
 idx = apply(idx, [
   ['<html lang="en">', '<html lang="zh-CN">'],
   ['<title>Diagram Design · Gallery</title>', '<title>Diagram Design · 画廊</title>'],
+  // 顶部标题右侧 中/EN 切换(默认中文,localStorage 记忆;切换保持 type/variant)
+  ['<div class="header-actions">',
+   `<div class="header-actions">
+          <div class="tabs variants" id="lang-tabs" role="radiogroup" aria-label="图表语言">
+            <button class="tab" data-lang="en" type="button">EN</button>
+            <button class="tab active" data-lang="zh" type="button">中文</button>
+          </div>`],
+  ['const state = { type: "architecture", variant: "" };',
+   'const state = { type: "architecture", variant: "", lang: (() => { try { return localStorage.getItem("dd-gallery-lang") || "zh"; } catch { return "zh"; } })() };'],
+  ['src="example-architecture.html"', 'src="example-architecture-zh.html"'],
+  ['search.addEventListener("input", filterDiagrams);',
+   `search.addEventListener("input", filterDiagrams);
+      document.querySelectorAll("#lang-tabs .tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          if (state.lang === tab.dataset.lang) return;
+          state.lang = tab.dataset.lang;
+          try { localStorage.setItem("dd-gallery-lang", state.lang); } catch {}
+          update();
+        });
+      });`],
+  ['const src = `example-${state.type}${state.variant}.html`;',
+   `const src = \`example-\${state.type}\${state.variant}\${state.lang === "zh" ? "-zh" : ""}.html\`;
+        document.querySelectorAll("#lang-tabs .tab").forEach((tab) => {
+          const on = tab.dataset.lang === state.lang;
+          tab.classList.toggle("active", on);
+          tab.setAttribute("aria-checked", String(on));
+        });`],
   ['>· gallery</span', '>· 画廊</span'],
   ['>icon library ↗</a', '>图标库 ↗</a'],
   ['>open in new tab ↗</a', '>新标签页打开 ↗</a'],
