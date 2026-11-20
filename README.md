@@ -40,7 +40,7 @@
 | agent-browser | `agent-browser-docs-cn/` | https://agent-browser.dev | https://github.com/vercel-labs/agent-browser（快照 `main@4b0e9f01`，docs 工程整拷，geistdocs 2.7.5 + Next.js 16 静态导出原班构建，38 页 + 首页全量；pnpm patch 静态搜索 mandarin tokenizer，免 sed；非官方中文镜像） | 2026-11-08 |
 | astryx | `astryx-docs-cn/` | https://astryx.atmeta.com | https://github.com/meta/astryx（快照 `main@9624a0b`，pnpm monorepo 整拷，Next.js 16 + StyleX 原班构建，469 页全量：614 个 .doc.mjs 数据文档 + UI + 博客；静态导出 stub 交换 api/search 与 mcp，NEXT_PUBLIC_DOCS_TARGET=latest 消 Canary 横幅，Node 24；非官方中文镜像） | 2026-11-11 |
 | Herdr | `herdr-docs-cn/` | https://herdr.dev | 站点工程闭源（Cloudflare Pages，公开仓库仅 TUI 文档源码 https://github.com/herdrdev/herdr ；HTML 产物镜像汉化，912 页：15 官方页全译 + 888 画廊页模板汉化，社区卡片描述保留英文；TUI 官方自带中文不镜像、链接改指官方 zh-cn 版；非官方中文镜像） | 2026-11-12 |
-| Diagram Design | `diagram-design-docs-cn/` | https://diagramdesign.dev | https://github.com/cathrynlavery/diagram-design（站点工程闭源、纯手写静态站，公开仓库为技能本体；HTML 产物镜像汉化，9 页：首页全译含 hero SVG 与 50 张画廊卡 + 8 示例页全译，画廊 PNG 图内英文照用；资源全相对路径子路径零改写；非官方中文镜像） | 2026-11-20 |
+| Diagram Design | `diagram-design-docs-cn/` | https://diagramdesign.dev | https://github.com/cathrynlavery/diagram-design（站点工程闭源、纯手写静态站，公开仓库为技能本体；HTML 产物镜像汉化，245 页：官网 9 页全译 + 官方画廊 /gallery/ 236 页并入——导航层 89 类型按钮英中双语、235 张样张保留英文原版；资源全相对路径子路径零改写；非官方中文镜像） | 2026-11-20 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。

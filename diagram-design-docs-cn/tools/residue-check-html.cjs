@@ -4,7 +4,13 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const files = ['index.html', ...fs.readdirSync(path.join(ROOT, 'site', 'examples')).map(f => 'examples/' + f)];
+const files = [
+  'index.html',
+  ...fs.readdirSync(path.join(ROOT, 'site', 'examples')).map(f => 'examples/' + f),
+  // gallery 导航层:icons 入扫;index 的 89 个类型按钮是刻意的英中双语(必误报),
+  // 由 translate-gallery 的零 miss 机制兜底,不入扫;example-*.html 是原版样张,排除
+  'gallery/icons.html',
+];
 
 // 允许保留英文的词（小写匹配）
 const ALLOW = new Set(('diagram design diagramdesign.dev skill.md html svg npx plugin install marketplace add update skills ' +
@@ -13,7 +19,7 @@ const ALLOW = new Set(('diagram design diagramdesign.dev skill.md html svg npx p
   'cloudflare astro mdx cms redis minio s3 ceph trino superset airflow kubernetes postgresql typescript ' +
   'drawio mermaid excalidraw plantuml medallion wardley sbgn uml er ci e2e ml lint wip mvp pos crm pos api ' +
   'star trending utd dashboard beta zip git clone symlink profiles com dev http https www x.com littlemight nontechnical ' +
-  'fans follower').split(/\s+/));
+  'fans follower tabler simpleicons sql server currentcolor').split(/\s+/));
 
 const out = [];
 for (const rel of files) {
@@ -29,6 +35,8 @@ for (const rel of files) {
   // 提取文本节点（标签之间）
   const texts = html.split(/<[^>]+>/).map(s => s.trim()).filter(Boolean);
   for (const t of texts) {
+    // 图标来源署名行(Tabler/Simple Icons 及许可),版权署名保留英文
+    if (t.includes('github.com/tabler') || t.includes('github.com/simple-icons')) continue;
     const decoded = t.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#\d+;/g, ' ');
     // 找连续英文词序列
     const words = decoded.match(/[A-Za-z][A-Za-z'.-]*/g) || [];

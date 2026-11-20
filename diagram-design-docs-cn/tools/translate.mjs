@@ -235,8 +235,9 @@ const INDEX = [
   ['>Office floor</a>', '>办公楼层</a>'],
   ['>Campus</a>', '>园区</a>'],
   ['>Campus by phase, animated</a>', '>园区分期（动画）</a>'],
-  // gallery 头尾
+  // gallery 头尾(线上画廊链接改指镜像内链 gallery/)
   ['<h2 class="rise">Fifty diagrams, one system</h2>', '<h2 class="rise">五十种图表，一套体系</h2>'],
+  ['href="https://cathrynlavery.github.io/diagram-design/"', 'href="gallery/"'],
   ['Browse the live gallery →', '浏览线上画廊 →'],
   ['Show all 50 types', '展示全部 50 种类型'],
   // install
@@ -372,8 +373,10 @@ function apply(html, pairs, file) {
   return html;
 }
 
-// ---------- 产物组装：upstream 全量拷贝 → HTML 翻译 ----------
-rmSync(SITE, { recursive: true, force: true });
+// ---------- 产物组装：upstream 拷贝 → HTML 翻译 ----------
+// 只重建官网部分(index.html + examples/)，保留 site/gallery/(由 translate-gallery.mjs 管理)
+rmSync(join(SITE, 'examples'), { recursive: true, force: true });
+rmSync(join(SITE, 'index.html'), { force: true });
 cpSync(UP, SITE, { recursive: true });
 
 let html = readFileSync(join(UP, 'index.html'), 'utf8');
