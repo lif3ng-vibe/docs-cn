@@ -15,7 +15,7 @@
 - [ ] 批次 5：llms.txt + llms-full.txt
 - [x] 批次 6：index-modern.html（备选首页全量汉化：hero/侧栏/排序菜单/卡片模板/结果计数；残留扫描 CLEAN）
 - [x] 终检：4 个 HTML 残留扫描全 CLEAN；子路径冒烟 14 个 URL 全 200；CJK 渲染确认；无残留 ../../ 引用
-- [ ] 阶段 C：五处同步（sites.json / gen-index / deploy-pages.yml / README 三处 / commit）——进行中
+- [~] 阶段 C：五处同步完成 4.5/5——sites.json 第 36 条 / gen-index 31 站 / README 三处 已提交；deploy-pages.yml 构建段已改在工作树并存为 .translation-state/deploy-pages.yml.patch，**但推不上远端**（checkout PAT 403；App github.token 无 workflows 权限，GitHub 拒推 workflow 文件改动）——等用户处理（见 issue 回帖）
 
 ## 范围裁决记录
 
@@ -28,3 +28,16 @@
 ## 下一步
 
 批次 4：index.md + pricing.md
+
+## 交付
+
+- 部署：https://lif3ng-vibe.github.io/docs-cn/cli-anything/（人工合并 PR 后自动）
+- 全部批次完成：0 脚手架 / 1 index.html / 2 docs.html / 3 demos.html / 4 md×2 / 5 llms×2 / 6 index-modern / 终检 / 五处同步
+
+## 卡点（2026-11-25）
+
+push 报错：`refusing to allow a GitHub App to create or update workflow .github/workflows/deploy-pages.yml without workflows permission`
+- translate-on-issue.yml checkout 用 `secrets.DOCS_CN_PAT || github.token`，当前 DOCS_CN_PAT（lif3ng）push 403
+- 本 run 已把 extraheader 换成 App token（github.token）：contents:write 正常（此前 8 个 checkpoint 都推上了），但缺 workflows:write
+- 候选：a) 修/换 DOCS_CN_PAT（需 contents+workflows 写权限）后 /continue；b) 给 workflow 的 permissions 加 workflows:write（若用 App token）；c) 用户手工套用 patch
+- 工作树保留 yml 改动未提交；patch 文件已入库（.translation-state/deploy-pages.yml.patch）
