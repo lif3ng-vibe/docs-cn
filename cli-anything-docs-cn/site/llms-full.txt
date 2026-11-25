@@ -1,0 +1,123 @@
+# CLI-Anything 完整 Agent 上下文
+
+CLI-Anything 是一个对 Agent 友好的开源项目与 Web hub，用于发现、安装并驱动专为 AI Agent 构建的命令行界面。公开网站是 https://clianything.cc ，源码仓库是 https://github.com/HKUDS/CLI-Anything 。
+
+项目有三个相互关联的部分：
+
+1. CLI-Anything 框架：为 GUI 应用与软件工作流生成带状态 CLI harness 的系统。
+2. CLI-Anything Hub：`cli-hub` 包管理器，用于浏览、搜索、安装、更新、卸载并启动可用的 CLI。
+3. CLI 注册表：列出生成的 harness CLI 与精选公开第三方 CLI 的机器可读 JSON 文件。
+
+## 安装
+
+安装 hub 包：
+
+```bash
+pip install cli-anything-hub
+```
+
+安装 Agent 元技能：
+
+```bash
+npx skills add HKUDS/CLI-Anything --skill cli-hub-meta-skill -g -y
+```
+
+## 核心命令
+
+```bash
+cli-hub list
+cli-hub search <query>
+cli-hub info <name>
+cli-hub install <name>
+cli-hub uninstall <name>
+cli-hub update <name>
+cli-hub launch <name> [args...]
+```
+
+机器可读模式：
+
+```bash
+cli-hub list --json
+cli-hub search <query> --json
+```
+
+## Agent 使用模式
+
+1. 搜索工具：`cli-hub search image`、`cli-hub search browser`、`cli-hub search blender`，或其他面向任务的查询。
+2. 查看结果：`cli-hub info <name>`。
+3. 安装选定的 CLI：`cli-hub install <name>`。
+4. 经 hub 启动：`cli-hub launch <name> [args...]`，或直接调用已安装的入口点。
+5. 有 JSON 输出时优先使用 JSON。
+6. 在运行带外部副作用的工具前，先阅读该 CLI 专属的 SKILL.md 或文档。
+
+## 能力
+
+- 浏览生成式 harness CLI 与公开 CLI 的注册表。
+- 面向 Agent 的安装说明与入口点。
+- 面向 GUI 应用的带状态 CLI harness。
+- harness CLI 支持 REPL 与单次执行两种命令模式。
+- JSON 输出便于机器解析。
+- 支持 Agent 需要命令行操控 GUI 工具的本地软件工作流。
+- 提供新增 harness 与注册表条目的贡献流程。
+
+## 常见用例
+
+- 找到能让 AI Agent 操控 GUI 应用的 CLI。
+- 为图像编辑器、3D 应用、办公软件、图表工具、浏览器、音视频编辑器、开发者平台等工具安装 harness。
+- 给 AI 编码 Agent 一份可用 CLI 能力的权威注册表。
+- 为尚无 Agent 友好 CLI 的应用构建或贡献新 harness。
+- 把手工 GUI 工作流桥接成可复现的 CLI 命令。
+
+## 公开机器可读 URL
+
+- 首页：https://clianything.cc/
+- Markdown 首页：https://clianything.cc/index.md
+- 简版 LLM 上下文：https://clianything.cc/llms.txt
+- 完整 LLM 上下文：https://clianything.cc/llms-full.txt
+- 定价：https://clianything.cc/pricing.md
+- 站点地图：https://clianything.cc/sitemap.xml
+- 抓取策略：https://clianything.cc/robots.txt
+- harness 注册表：https://clianything.cc/registry.json
+- 公开 CLI 注册表：https://clianything.cc/public_registry.json
+- 注册表日期：https://clianything.cc/registry-dates.json
+- OpenAPI：https://clianything.cc/openapi.json
+- Agent 发现：https://clianything.cc/.well-known/agent.json
+- A2A agent card：https://clianything.cc/.well-known/agent-card.json
+- OpenAI 插件风格清单：https://clianything.cc/.well-known/ai-plugin.json
+- Agent Skills 索引：https://clianything.cc/.well-known/agent-skills/index.json
+- Agent Skills 产物：https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md
+
+## 注册表文件
+
+主注册表描述生成的 harness CLI：
+
+```text
+https://clianything.cc/registry.json
+```
+
+公开注册表描述公开与第三方 CLI：
+
+```text
+https://clianything.cc/public_registry.json
+```
+
+Agent 可以直接读取这些文件，找到 CLI 名称、描述、分类、安装命令、入口点、源码链接、文档链接、依赖与 SKILL.md 路径。
+
+## 约束与安全提示
+
+- 安装 CLI 可能运行 `pip`、`npm`、`uv`、`brew` 等包管理器命令或工具专属安装器。
+- harness CLI 可能要求真实的目标应用已安装。
+- 部分工作流需要桌面会话、本地文件、网络访问、API 凭据或用户批准。
+- Agent 应在安装前检查 `cli-hub info <name>`，并在执行破坏性或涉及凭据的操作前征询用户。
+- CLI-Anything 欢迎 AI Agent、搜索 Agent 与自动化 Agent 抓取。上述权威文件面向机器使用。
+
+## 贡献
+
+代码仓库：https://github.com/HKUDS/CLI-Anything
+贡献指南：https://github.com/HKUDS/CLI-Anything/blob/main/CONTRIBUTING.md
+PR 模板：https://github.com/HKUDS/CLI-Anything/blob/main/.github/PULL_REQUEST_TEMPLATE.md
+PyPI 包：https://pypi.org/project/cli-anything-hub/
+
+## 版权
+
+版权所有：HKUDS。第一作者：Yuhao Yang（yuhao.page）。

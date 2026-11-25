@@ -1,0 +1,63 @@
+# CLI-Anything Hub
+
+> CLI-Anything 是一个对 Agent 友好的开源项目，帮助 AI Agent 发现、安装并驱动面向 GUI 应用、开发工具、创意软件、Web API 与公共 SaaS 平台的命令行界面。
+
+官方站点：https://clianything.cc
+代码仓库：https://github.com/HKUDS/CLI-Anything
+PyPI 包：https://pypi.org/project/cli-anything-hub/
+安装 hub：`pip install cli-anything-hub`
+安装 Agent skill：`npx skills add HKUDS/CLI-Anything --skill cli-hub-meta-skill -g -y`
+
+## 本产品做什么
+
+- 维护一个由 Agent 原生 CLI harness 与公开 CLI 工具组成的注册表。
+- 让人和 Agent 用 `cli-hub` 浏览、搜索、查看、安装、更新、卸载并启动 CLI。
+- 把 GUI 与 API 驱动的软件工作流转换成可脚本化的命令行界面。
+- 提供支持 REPL 模式、单次执行命令、JSON 输出与本地项目状态的生成式 harness CLI。
+- 欢迎 AI Agent 与搜索 Agent 抓取。请使用下方列出的文件获取权威的机器可读上下文。
+
+## Agent 何时应使用 CLI-Anything
+
+- 当任务需要 AI 编码或自动化 Agent 操作桌面软件、创意工具、类浏览器工作流、本地应用或外部 CLI 时，使用它。
+- 用 `cli-hub search <query>` 按软件名称、分类或用例找到合适的 CLI。
+- 安装前用 `cli-hub info <name>` 查看入口点、依赖与安装命令。
+- 用 `cli-hub install <name>` 安装选定的 CLI。
+- 用 `cli-hub launch <name> [args...]` 或直接调用 CLI 入口点运行已安装的工具。
+- 优先使用各 harness CLI 的 `--json` 输出，便于 Agent 可靠解析。
+- 多工具工作流请使用**矩阵（matrix）**（基于能力的打包组合）：`cli-hub can "<task>"` 找能力，`cli-hub matrix preflight <name> --json` 检查可用性，再 `cli-hub matrix install <name> --capability <id>` 只安装任务需要的部分。
+
+## 工作流矩阵
+
+矩阵把整条工作流打包为能力 × 提供方（harness CLI、公开 CLI、Python 库、原生二进制与云 API）。浏览地址：https://clianything.cc/matrix.html。
+
+- 矩阵注册表（机器可读）：https://clianything.cc/matrix_registry.json ——能力、提供方、预检 `requires` 契约、配方与已知缺口。
+- 跨所有矩阵发现能力：`cli-hub can "<task>"`。
+- 安装前先预检（退出码 3 = 能力缺口）：`cli-hub matrix preflight <name> --json`。
+- 把安装范围限定到某个能力、配方或子集：`cli-hub matrix install <name> --capability <id>`（另有 `--recipe`、`--only`、`--dry-run`、`--resume`）。
+- 每个矩阵子命令都支持 `--json`。安装完成后，每个矩阵会渲染一份本地 SKILL.md，内含提供方选择规则。
+
+## 约束
+
+- 部分生成的 harness CLI 要求本地已安装对应的 GUI 应用或服务。
+- 端到端操作可能需要真实的后端应用、API key、桌面会话或用户授权。
+- `cli-hub` 本身只是注册表/包管理器界面；领域相关的控制界面由各个已安装的 CLI 提供。
+- 破坏性操作或带外部副作用的操作，应由调用方 Agent 按其安全策略向用户确认。
+
+## 机器可读资源
+
+- 完整上下文：https://clianything.cc/llms-full.txt
+- Markdown 首页：https://clianything.cc/index.md
+- 定价：https://clianything.cc/pricing.md
+- 注册表：https://clianything.cc/registry.json
+- 公开注册表：https://clianything.cc/public_registry.json
+- 矩阵注册表：https://clianything.cc/matrix_registry.json
+- 只读注册表资源的 OpenAPI 描述：https://clianything.cc/openapi.json
+- Agent 发现：https://clianything.cc/.well-known/agent.json
+- A2A agent card：https://clianything.cc/.well-known/agent-card.json
+- OpenAI 插件风格清单：https://clianything.cc/.well-known/ai-plugin.json
+- Agent Skills 索引：https://clianything.cc/.well-known/agent-skills/index.json
+- Agent Skills 产物：https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md
+
+## 版权
+
+版权所有：HKUDS。第一作者：Yuhao Yang（yuhao.page）。

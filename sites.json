@@ -572,5 +572,22 @@
       "stack": "闭源手写静态站 → HTML 产物镜像汉化",
       "snap": "2026-11-20"
     }
+  },
+  {
+    "name": "CLI-Anything Hub",
+    "slug": "cli-anything",
+    "desc": "CLI-Anything Hub 中文镜像（非官方翻译）——对 Agent 友好的 CLI 注册表与包管理器：让 AI Agent 发现、安装并驱动 GUI 应用、开发工具、创意软件、Web API 与公共 SaaS 平台；注册表浏览、基于能力的工作流矩阵（预检/按能力渐进安装）与真实演示一应俱全。",
+    "tags": [
+      "ai-agent",
+      "cli-tool",
+      "sdk-api"
+    ],
+    "orig": "https://clianything.cc/",
+    "repo": "https://github.com/HKUDS/CLI-Anything",
+    "meta": {
+      "pages": "8 个内容文件（index/docs/demos/index-modern 4 个 HTML 全译 + index/pricing.md + llms.txt/llms-full.txt；注册表 JSON 数据按上游不译）",
+      "stack": "手写静态站（上游仓库 docs/hub/）→ 静态镜像汉化",
+      "snap": "2026-11-25（34f5195）"
+    }
   }
 ]
