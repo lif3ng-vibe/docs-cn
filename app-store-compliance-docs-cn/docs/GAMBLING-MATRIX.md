@@ -1,42 +1,42 @@
-# Loot Box and Gambling Matrix by Country
+# 各国开箱（loot box）与博彩矩阵
 
-Random reward mechanics and real money gaming are regulated very differently per country, and a game that ships worldwide has to satisfy the strictest market it is sold in. This matrix captures the well documented positions per jurisdiction. Regulation in this area moves fast, so confirm the current law for any market before you rely on a row.
+随机奖励机制与真钱博彩（real-money gambling）在各国的监管差异极大，一款面向全球发行的游戏必须满足其所进入市场中最严格的那一个。本矩阵梳理了各司法辖区（jurisdiction）有据可查的立场。这一领域的监管变化很快，因此在依赖某一行结论之前，请先确认目标市场的现行法律。
 
-Two rules sit above the whole matrix.
+有两条规则高于整个矩阵。
 
-- Apple 3.1.1 and Google both require odds disclosure for any random reward, in every market. That is the baseline regardless of country.
-- Real money gambling must be licensed, geo restricted to licensed regions, and free to download.
+- Apple 3.1.1 与 Google 都要求在任何市场对所有随机奖励披露概率（odds disclosure）。无论在哪个国家，这都是底线。
+- 真钱博彩必须持有牌照（license）、按地理位置限制在持牌地区，并且可免费下载。
 
-## Loot box and paid random reward positions
+## 开箱（loot box）与付费随机奖励的监管立场
 
-| Country or region | Position on paid loot boxes | What you must do |
+| 国家/地区 | 对付费开箱（loot box）的立场 | 你必须做什么 |
 |---|---|---|
-| Belgium | Paid random items have been treated as gambling and effectively prohibited since the 2018 Gaming Commission ruling | Remove paid loot boxes for Belgium, or geo restrict |
-| Netherlands | Enforcement action since 2018, with later court rulings, tradeable random items the most exposed | Avoid tradeable paid random items, follow the current Kansspelautoriteit position |
-| China | Probability disclosure is mandatory under the MIIT rules, plus minor spending limits and real name and play time controls | Disclose exact drop rates in app, enforce minor protections |
-| South Korea | A probability disclosure law amending the Game Industry Promotion Act requires odds disclosure, with enforcement from 2025 | Disclose probabilities clearly, keep them accurate |
-| Japan | Complete gacha, kompu gacha, has been banned since 2012, and odds disclosure is handled through industry self regulation | No complete gacha mechanics, disclose odds per the industry codes |
-| United Kingdom | Loot boxes are not classified as gambling at present but are under active scrutiny, with industry self regulation and age controls | Follow the current industry guidance, do not sell paid random items to children |
-| Australia | Reforms require a mandatory minimum age rating for games with paid random items, and classification changes apply | Apply the required age rating, disclose odds |
-| Germany | The Interstate Treaty on Gambling and youth protection rules apply, with age rating through the USK | Age rate appropriately, follow youth protection |
-| United States | No single federal loot box law, but the FTC has scrutinized the practice and store odds disclosure rules apply | Disclose odds per the store rules, watch state level proposals |
+| 比利时 | 自 2018 年 Gaming Commission（博彩委员会）裁决以来，付费随机物品一直被视为博彩并被实际禁止 | 针对比利时移除付费开箱（loot box），或做地理位置限制 |
+| 荷兰 | 自 2018 年起持续有执法行动，其后另有法院裁决，可交易的随机物品风险最高 | 避免可交易的付费随机物品，遵循 Kansspelautoriteit（荷兰博彩管理局）的现行立场 |
+| 中国 | 依据工信部（MIIT）规定必须披露概率，另有未成年人消费限额以及实名制与游戏时长管控 | 在应用内披露确切掉落概率，落实未成年人保护 |
+| 韩国 | 修订《游戏产业振兴法》（Game Industry Promotion Act）的概率披露法要求披露概率，自 2025 年起执行 | 清晰披露概率，并保持准确 |
+| 日本 | complete gacha（即 kompu gacha，完全收集式 gacha）自 2012 年起被禁，概率披露则通过行业自律处理 | 不使用 complete gacha 机制，按行业规范披露概率 |
+| 英国 | 目前开箱（loot box）尚未被归类为博彩，但正受到密切关注，采取行业自律与年龄管控 | 遵循现行行业指引，不向儿童出售付费随机物品 |
+| 澳大利亚 | 改革要求含付费随机物品的游戏执行强制性最低年龄分级（age rating），分级规则变更已生效 | 执行所要求的年龄分级，披露概率 |
+| 德国 | 适用《州际博彩条约》（Interstate Treaty on Gambling）与青少年保护规则，年龄分级由 USK 负责 | 给出恰当的年龄分级，遵循青少年保护要求 |
+| 美国 | 没有单一的联邦开箱（loot box）法律，但 FTC 已审查过这一做法，且商店的概率披露规则适用 | 按商店规则披露概率，关注州一级的立法提案 |
 
-## Real money gambling and adjacent categories
+## 真钱博彩（real-money gambling）与相邻类别
 
-| Category | Treatment | What you must do |
+| 类别 | 监管处理 | 你必须做什么 |
 |---|---|---|
-| Real money casino and betting | Licensed and geo restricted per country, free to download | Hold the license per region, restrict to licensed regions, free download |
-| Brazil fixed-odds betting (sports & virtual) | Regulated by the Secretariat of Prizes and Bets (SPA); license required for distribution in Brazil (enforced since May 8, 2026) | Provide a valid SPA license in the App Review Information section, submit a new app version for verification, and set the age rating to A18. |
-| Social casino and simulated gambling | A distinct category from real money, with its own age rating, allowed more widely but still rated | Rate it correctly, no real money payout |
-| Sweepstakes and dual currency sweeps coins | Frequently treated as gambling depending on the prize and consideration | Get legal review per market, geo restrict where it counts as gambling |
-| Cash prize skill tournaments and daily fantasy | Often regulated as gambling or as a regulated contest per state or country | License or restrict per jurisdiction |
+| 真钱赌场与投注（betting） | 按各国规定持牌并做地理位置限制，可免费下载 | 在相应地区持有牌照，限制在持牌地区，免费下载 |
+| 巴西固定赔率投注（fixed-odds betting，体育与虚拟） | 由 Secretariat of Prizes and Bets（SPA，奖品与投注秘书处）监管；在巴西分发需要牌照（自 2026 年 5 月 8 日起强制执行） | 在 App Review Information 部分提供有效的 SPA 牌照，提交新的应用版本以完成核验，并将年龄分级设为 A18。 |
+| 社交赌场与模拟博彩（simulated gambling） | 与真钱博彩分属不同类别，有自身的年龄分级，允许范围更广但仍需分级 | 正确分级，不得提供真钱派奖 |
+| 抽奖（sweepstakes）与双货币 sweeps coins | 依奖品与对价（consideration）的不同，经常被认定为博彩 | 逐个市场做法律审查，在认定为博彩的地区做地理位置限制 |
+| 现金奖励技巧锦标赛与每日梦幻体育（daily fantasy） | 常按州或国家被作为博彩或受监管的竞赛来监管 | 按司法辖区持牌或做限制 |
 
-## How to use this
+## 如何使用本矩阵
 
-1. List the markets the game ships in.
-2. For each market, apply the strictest row that matches the mechanic.
-3. Disclose odds everywhere, because that is the store baseline in every market.
-4. Geo restrict any market where the mechanic is prohibited or unlicensed.
-5. Get a legal review for real money, sweepstakes, and cash prize formats. This matrix is a starting map, not legal advice.
+1. 列出游戏发行的所有市场。
+2. 对每个市场，套用与其机制匹配的最严格的那一行。
+3. 在所有地方披露概率，因为这是每个市场商店层面的底线。
+4. 对机制被禁止或未持牌的任何市场做地理位置限制。
+5. 对真钱博彩、抽奖（sweepstakes）与现金奖励形式做法律审查。本矩阵只是一张起始地图，不构成法律意见。
 
-Sources. National gaming regulators and the store gambling policies. Confirm the current position with the regulator for any market before you ship, because this area changes often.
+来源：各国博彩监管机构与商店博彩政策。发布之前，请向监管机构确认任何市场的现行立场，因为这一领域变化频繁。

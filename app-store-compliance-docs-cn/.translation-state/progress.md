@@ -38,8 +38,8 @@
 | 5 | EU-REGULATORY-2026 + GLOBAL-REGULATORY-2026 | 14,861 | ✅ 已提交（2 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——命中均为 URL slug 误报） |
 | 6 | PLATFORM-MECHANICS-2026 + ADVANCED-2026 + OPEN-SOURCE-PATTERNS | 9,389 | ✅ 已提交（3 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——余下命中均为政策名/机构名等专名） |
 | 7 | GAP-ANALYSIS-2026-09 + GAP-ANALYSIS-2026-11 + REGULATORY-GAP-REPORT-2026 + COMPETITIVE-GAP-ANALYSIS | 9,443 | ✅ 已提交（4 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——GAP-09 的证据原话引文按「逐字引文」有意保留英文） |
-| 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS + FAQ.md | 6,893 | 🔄 并行翻译中（OTHER-STORES、GAMBLING-MATRIX 已完成待随批提交；FLEET-SWEEP、RULING-REGISTER、CREDITS、FAQ.md 待开工） |
-| 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 part 文件后拼接） | 21,041 | ⬜ |
+| 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS + FAQ.md | 6,893 | ✅ 已提交（6 篇全译，含漏排的 FAQ；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留） |
+| 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 /tmp/asp-parts/ part 文件后拼接） | 21,041 | 🔄 段 1（1-400）翻译中 |
 | 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分 4 段并行译：1-105 / 106-223 / 224-900 / 898-1580 行，各段写 part 文件后拼接） | 27,855 | ⬜ |
 | 11 | 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜（llms.txt 已于批次 1 完成） |
 
@@ -58,7 +58,7 @@
 
 ## 下一步
 
-批次 8 收尾（待 FLEET-SWEEP、RULING-REGISTER、CREDITS、FAQ.md）→ 9 → 10 → 11 → 阶段 C
+批次 9（questions.md 4 段：1-400 翻译中；401-724 / 725-930 / 931-1325 待开工；拼装校验行数=1325）→ 10 → 11 → 阶段 C
 
 ## 环境备忘（CI 续跑用）
 

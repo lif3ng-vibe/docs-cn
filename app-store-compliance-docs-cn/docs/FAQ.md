@@ -1,271 +1,271 @@
-# Questions from X, answered
+# X 上的提问，逐一作答
 
-When the playbook spread on X in November 2026, about 300 people replied. These are the questions they asked about the tool itself, each answered in full here and as an accepted answer in the Q&A discussions, so you can reply with a correction or a follow-up.
+2026 年 11 月，这份实战手册（playbook）在 X 上传开时，约有 300 人回复。以下是他们围绕工具本身提出的问题，每个问题都在本文给出完整解答，也作为被采纳的答案收录在 Q&A 讨论区，方便你回复更正或继续追问。
 
-Questions about one person's own rejection were left to that person. The patterns behind them are covered in the last answers below.
+关于某个人自身拒审经历的问题，就留给他本人了。这些问题背后的共性规律在本文最后几条回答中有覆盖。
 
-## Is the App Store Compliance guard safe to install and run?
+## App Store Compliance 守卫（guard）安装运行安全吗？
 
-Fair question, and stars prove nothing. Check it yourself in a few minutes.
+这个问题问得在理，而且 Star 数说明不了什么。花几分钟自己验证即可。
 
-- The guard is one Bash file. It reads your project, uses temporary scan buffers that it removes, makes no network call, and never changes your app. If `~/.claude/hooks/hook-log.sh` exists, it loads that helper to log errors and overrides.
-- `scripts/install.sh` writes into `~/.claude` (or `$CLAUDE_CONFIG_DIR`). the hook, the skill folder, one command file, and a hook entry in `settings.json`. It backs up `settings.json` first as `settings.json.bak-<timestamp>`.
-- `bash scripts/install.sh install --dry-run` prints every change and writes nothing. `doctor` checks the install, `uninstall` removes it.
-- Neither the installer nor the guard calls curl or wget. `scripts/monitor.py` fetches Apple's public developer feed by default; pass `--mock`, `--simulate` or `--news-file` to stay offline. The Android, AI policy and privacy monitors fetch only with `--live`.
-- Want more isolation? Run it in a container or a VM.
+- 守卫是一个 Bash 文件。它读取你的项目，使用用完即删的临时扫描缓冲区，不发起任何网络调用，从不改动你的应用。如果 `~/.claude/hooks/hook-log.sh` 存在，它会加载这个辅助脚本来记录错误与覆盖情况。
+- `scripts/install.sh` 会写入 `~/.claude`（或 `$CLAUDE_CONFIG_DIR`）：钩子、技能文件夹、一个命令文件，以及 `settings.json` 中的一条钩子条目。它会先把 `settings.json` 备份为 `settings.json.bak-<timestamp>`。
+- `bash scripts/install.sh install --dry-run` 会打印每一处改动而不写入任何内容。`doctor` 用于检查安装，`uninstall` 用于移除安装。
+- 安装器和守卫都不会调用 curl 或 wget。`scripts/monitor.py` 默认会抓取 Apple 的公开开发者订阅源；传入 `--mock`、`--simulate` 或 `--news-file` 即可保持离线。Android、AI 政策与隐私监控器只有在传入 `--live` 时才会抓取。
+- 想要更强的隔离？把它放进容器或虚拟机里运行。
 
-Section 8 of `docs/WHAT-THE-SCAN-PROVES.md` lists what each script touches.
+`docs/WHAT-THE-SCAN-PROVES.md` 第 8 节列出了每个脚本会触碰的内容。
 
-Discussion. [#2344](https://github.com/mjmirza/app-store-compliance/discussions/2344)
+讨论：[#2344](https://github.com/mjmirza/app-store-compliance/discussions/2344)
 
-## Does it cover Google Play and Android, or only the App Store?
+## 它覆盖 Google Play 和 Android，还是只覆盖 App Store？
 
-Both stores. Of the 124 rejection patterns, 62 are Apple, 43 are Google Play, 13 apply to both, and 6 are web.
+两家商店都覆盖。124 个拒审模式（rejection pattern）中，62 个针对 Apple，43 个针对 Google Play，13 个两家通用，6 个针对 web。
 
-On an Android project the guard checks, among others.
-- Sensitive permissions. background location, all files access, SMS and call log, accessibility service, and photo and video access, each flagged so you can justify it. The guard cannot see your Play Console declarations.
-- Play Billing for digital goods, Billing Library below version 8, and donation links.
-- Target API level below the current floor, and 64-bit ABIs missing next to 32-bit ones.
-- Analytics or ad SDKs that mean your Data safety form needs a second look.
-- A debuggable release build, and a `specialUse` foreground service missing its subtype property.
+在 Android 项目上，守卫会检查以下方面（不止这些）。
+- 敏感权限：后台定位、所有文件访问、短信与通话记录、无障碍服务，以及照片与视频访问，每一项都会被标记出来，好让你说明保留它的理由。守卫看不到你在 Play Console 中填写的申报内容。
+- 数字商品的 Play Billing、低于版本 8 的 Billing Library，以及捐赠链接。
+- 目标 API 级别低于当前下限，以及有 32-bit ABI 却缺少 64-bit ABI。
+- 意味着你的数据安全（Data safety）表单需要再看一眼的分析类或广告类 SDK。
+- 可调试的 release 构建，以及缺少 subtype 属性的 `specialUse` 前台服务。
 
-What no scan can check. whether your Play screenshots match the build, and the 12 testers for 14 days rule for new personal accounts. Both are in `docs/GOOGLE-PLAY.md` and the pre-submission checklist.
+任何扫描都无法检查的：你的 Play 截图是否与构建一致，以及新个人账号"12 名测试员、持续 14 天"的规则。这两条都写在 `docs/GOOGLE-PLAY.md` 和提交前检查清单里。
 
-Discussion. [#2345](https://github.com/mjmirza/app-store-compliance/discussions/2345)
+讨论：[#2345](https://github.com/mjmirza/app-store-compliance/discussions/2345)
 
-## Does it check Mac App Store, watchOS, tvOS or visionOS apps?
+## 它检查 Mac App Store、watchOS、tvOS 或 visionOS 应用吗？
 
-Partly, and honestly less than iOS.
+部分覆盖，而且坦白说不如 iOS 覆盖得多。
 
-- The guard has no macOS, watchOS, tvOS or visionOS specific checks. Code shared with an iOS target is scanned the same way, and a watchOS-only or visionOS-only workspace is treated as iOS.
-- The Mac App Store rules from Guideline 2.4.5 (sandboxing, self-contained packaging, no auto launch, no root escalation, no downloading other code) are documented in `docs/BY-APP-TYPE.md` and `references/guidelines/by-app-type/macos-and-the-mac-app-store.md`, as a checklist you apply by hand.
-- Notarization for apps shipped outside the Mac App Store, and the visionOS, watchOS and tvOS specifics, are in `docs/PLATFORM-MECHANICS-2026.md`.
+- 守卫没有 macOS、watchOS、tvOS 或 visionOS 专属检查。与 iOS target 共享的代码会按同样方式扫描，仅含 watchOS 或仅含 visionOS 的 workspace 会被当作 iOS 处理。
+- 审核指南（guideline）2.4.5 中的 Mac App Store 规则（沙盒、自包含打包、不得自动启动、不得提权获取 root、不得下载其他代码）记录在 `docs/BY-APP-TYPE.md` 和 `references/guidelines/by-app-type/macos-and-the-mac-app-store.md` 中，作为需要你手工执行的一份检查清单。
+- 在 Mac App Store 之外分发的应用所需公证（notarization），以及 visionOS、watchOS 和 tvOS 的平台细节，都写在 `docs/PLATFORM-MECHANICS-2026.md` 里。
 
-If Mac checks matter to you, open an issue with the rejection you hit. Real cases decide what gets automated next.
+如果 Mac 检查对你很重要，请带着你遇到的拒审原因开一个 issue。真实案例决定了下一步把什么自动化。
 
-Discussion. [#2346](https://github.com/mjmirza/app-store-compliance/discussions/2346)
+讨论：[#2346](https://github.com/mjmirza/app-store-compliance/discussions/2346)
 
-## Does every finding cite the exact guideline number and the file and line?
+## 每条发现都会给出确切的审核指南编号和文件行号吗？
 
-File and line mostly yes, guideline number not on every finding yet.
+文件和行号大多有，审核指南编号还不是每条都有。
 
-- Each finding prints its severity, an ID, a title, and a fix line. Most checks also print `file. path:line`, the first place the risky code was found. Project-wide checks, such as a missing privacy policy URL, have no single line to point at.
-- Many IDs carry the guideline number, for example `APPLE-5.1.1-NO-ACCOUNT-DELETION`, and some fix lines quote it, such as Apple 5.1.1(v).
-- Every pattern in `data/rejection-patterns.json` has a `guideline` field, but the guard does not print it on the finding yet, and not every pattern maps to one numbered rule.
+- 每条发现都会打印严重级别、一个 ID、一个标题和一行修复方法。多数检查还会打印 `file. path:line`，即风险代码首次出现的位置。项目级检查（例如缺少隐私政策 URL）没有可指向的单一行。
+- 许多 ID 自带审核指南编号，例如 `APPLE-5.1.1-NO-ACCOUNT-DELETION`，部分修复方法行还会直接引用它，例如 Apple 5.1.1(v)。
+- `data/rejection-patterns.json` 中的每个模式都有 `guideline` 字段，但守卫尚未在发现中打印它，而且并非每个模式都对应某一条带编号的规则。
 
-Printing the guideline on every finding is a fair request and is on the list. Until then, look up the ID in `data/rejection-patterns.json` or the docs.
+在每条发现上打印审核指南编号是个合理的请求，已在计划清单上。在那之前，可以在 `data/rejection-patterns.json` 或文档中查找该 ID。
 
-Discussion. [#2347](https://github.com/mjmirza/app-store-compliance/discussions/2347)
+讨论：[#2347](https://github.com/mjmirza/app-store-compliance/discussions/2347)
 
-## Does it check the privacy policy and account data, or only the code?
+## 它检查隐私政策和账号数据，还是只检查代码？
 
-It covers the parts that leave a trace in the project, and asks you to confirm the rest.
+它覆盖会在项目中留下痕迹的部分，其余部分则请你自行确认。
 
-What the guard checks.
-- A privacy policy reference in the scanned source, for Apple and Google Play. Whether the link in the app opens and works is a manual check.
-- Account deletion inside the app when the app creates accounts, and a weak version of it (only a mailto link or a deactivate button).
-- A privacy manifest when required reason APIs are used, and its contents, with `scripts/validate-privacy-manifest.py`.
-- Tracking SDKs without App Tracking Transparency, and SDKs that mean your Apple privacy labels or Play Data safety form need review.
+守卫会检查的内容。
+- 被扫描源码中的隐私政策引用，Apple 和 Google Play 都覆盖。应用内链接能否打开并正常工作属于人工检查。
+- 当应用创建账号时，检查应用内账号删除（in-app account deletion）是否存在，以及它的弱化形态（只有一个 mailto 链接或一个停用按钮）。
+- 在使用需申报理由的 API 时是否存在隐私清单（privacy manifest）及其内容，由 `scripts/validate-privacy-manifest.py` 检查。
+- 使用跟踪类 SDK 却未接入应用跟踪透明度（ATT），以及意味着你的 Apple 隐私营养标签或 Play 数据安全表单需要复核的 SDK。
 
-What only you can confirm. that the policy text is accurate, that the privacy labels match what the app really sends, and that deletion works on a real device. Check the policy text with the pre-submission checklist. Since 2.5.0 the readiness file `.app-review-readiness.json` records the privacy labels against runtime and account deletion on a real device, and a check marked fail blocks the submit.
+只有你能确认的：政策文本是否准确、隐私营养标签是否与应用实际发送的内容一致，以及删除功能在真机上是否真的可用。政策文本用提交前检查清单核对。自 2.5.0 起，就绪文件 `.app-review-readiness.json` 会记录隐私营养标签与运行时的比对情况，以及真机上的账号删除情况，标记为 fail 的检查会阻止提交。
 
-Discussion. [#2348](https://github.com/mjmirza/app-store-compliance/discussions/2348)
+讨论：[#2348](https://github.com/mjmirza/app-store-compliance/discussions/2348)
 
-## Can the guard catch subtle design guideline violations?
+## 守卫能抓住隐蔽的设计类审核指南违规吗？
 
-Mostly the second kind, and here is the honest line.
+大部分属于第二类，这里就是那条坦白的界线。
 
-- Design checks it does run. Sign in with Apple offered next to other social logins, relay email handling, thin web wrappers (4.2), social login without a privacy-friendly option (4.8), and a set of accessibility checks. Live Activity spam is documented with a manual detection recipe, and the guard does not check it.
-- Some heuristics flag risks that are easy to miss, for example a button titled Allow before the permission prompt, HealthKit used in an app that also uses iCloud storage, or an iOS deployment target below 13. The HealthKit finding asks you to confirm by hand that no health data reaches iCloud (5.1.3(ii)).
-- What it cannot judge. layout, visual polish, whether screens look consistent, and iPad layout. Those need a person on a device.
+- 它确实运行的设计类检查：在其他社交登录旁边同时提供通过 Apple 登录（Sign in with Apple）、中继邮箱（relay email）处理、单薄网页壳（4.2）、没有隐私友好选项的社交登录（4.8），以及一组无障碍检查。Live Activity 刷屏记录了人工检测配方，守卫不会检查它。
+- 一些启发式规则会标记容易漏掉的风险，例如权限弹窗之前出现标题为 Allow 的按钮、应用同时使用 HealthKit 和 iCloud 存储，或 iOS deployment target 低于 13。HealthKit 发现会请你手工确认没有健康数据进入 iCloud（5.1.3(ii)）。
+- 它无法判断的：布局、视觉打磨、各屏幕观感是否一致，以及 iPad 布局。这些需要人上真机看。
 
-`docs/WHAT-THE-SCAN-PROVES.md` section 5 lists reported rejections and marks each as caught, partial, or not covered.
+`docs/WHAT-THE-SCAN-PROVES.md` 第 5 节列出了被报告的拒审，并把每一条标记为已捕获、部分覆盖或未覆盖。
 
-Discussion. [#2349](https://github.com/mjmirza/app-store-compliance/discussions/2349)
+讨论：[#2349](https://github.com/mjmirza/app-store-compliance/discussions/2349)
 
-## How many of the rules can a static scan actually check?
+## 静态扫描真正能检查多少条规则？
 
-That is exactly right, and the tool is built around saying so.
+你说得完全对，而这个工具正是围绕"承认这一点"构建的。
 
-- 113 of the 124 patterns have a detection recipe in `data/detection-recipes.json`. Some of the rest, such as device frames in a preview video or the Play 12-tester rule, cannot be seen in code at all. A few are checked by the guard directly, without a recipe.
-- Having a recipe does not mean the guard runs it. Some recipes are guidance for a person.
-- For what a scan cannot prove, 2.5.0 added `.app-review-readiness.json`. You record seven checks (demo account, live backend, review notes, screenshots of this build, deletion on a real device, privacy labels against runtime, a reachable purchase). A fail blocks, and with no file the report lists what it could not see.
-- A scan that could not run says NOT CHECKED instead of passing. Set `APP_STORE_GUARD_BLOCK_UNCHECKED=1` to make that block too, and `APP_STORE_GUARD_REQUIRE_READINESS=1` (or `"enforce": true` in the readiness file) to make an open readiness check block. Some unavailable checks, such as a missing manifest validator, stay warnings.
+- 124 个模式中有 113 个在 `data/detection-recipes.json` 里有检测配方。其余模式中，一些（例如预览视频里的设备外框，或 Play 的 12 名测试员规则）在代码里根本看不到。少数由守卫直接检查，不需要配方。
+- 有了配方不等于守卫会运行它。有些配方是给人看的操作指引。
+- 对于扫描无法证明的部分，2.5.0 新增了 `.app-review-readiness.json`。你记录七项检查（演示账号、可用的后端、审核备注、当前构建的截图、真机上的删除、隐私营养标签与运行时比对、一笔可触达的购买）。任何一项 fail 都会阻止提交；没有该文件时，报告会列出它看不到的内容。
+- 未能运行的扫描会报告 NOT CHECKED 而不是通过。设置 `APP_STORE_GUARD_BLOCK_UNCHECKED=1` 可让这种情况也阻止，设置 `APP_STORE_GUARD_REQUIRE_READINESS=1`（或在就绪文件中写 `"enforce": true`）可让未完成的就绪检查阻止提交。某些不可用的检查（例如缺少清单校验器）仍保持警告级别。
 
-The honesty you mention is the point. The tool reports what it could not verify instead of hiding it.
+你提到的那种坦诚正是要点。这个工具会报告它无法验证的内容，而不是把它们藏起来。
 
-Discussion. [#2350](https://github.com/mjmirza/app-store-compliance/discussions/2350)
+讨论：[#2350](https://github.com/mjmirza/app-store-compliance/discussions/2350)
 
-## Does it check different things depending on the type of app?
+## 它会依据应用类型检查不同的内容吗？
 
-There is no app type setting. Checks fire on what is in your code, so a game, a health app and a VPN get different findings.
+没有应用类型设置。检查依据你代码里的实际内容触发，所以游戏、健康应用和 VPN 会得到不同的发现。
 
-- Examples. loot boxes and gambling for games, HealthKit with iCloud for health apps, betting code, and organization registration for VPN, health and finance apps on Google Play.
-- `docs/BY-APP-TYPE.md` lists what reviewers expect for ten types. every app, subscriptions and in-app purchase, social and user content, kids, health, games, macOS, AI, crypto and finance, and VPN. Each has a longer guide in `references/guidelines/by-app-type/`.
+- 示例：游戏的开箱（loot box）与博彩、健康应用同时使用 HealthKit 与 iCloud、投注代码，以及 Google Play 上 VPN、健康和金融应用的组织注册要求。
+- `docs/BY-APP-TYPE.md` 列出了审核员对十种类型的期望：所有应用、订阅与应用内购买（In-App Purchase，IAP）、社交与用户生成内容（UGC）、儿童、健康、游戏、macOS、AI、加密货币与金融，以及 VPN。每类在 `references/guidelines/by-app-type/` 下都有更长的指南。
 
-How it runs. the guard reads your project, detects the platform and framework (native, Flutter, React Native, Expo, Ionic, Unity), runs the matching checks, and sorts the code findings by severity. As a hook it runs automatically before a submit command.
+运行方式：守卫读取你的项目，检测平台与框架（原生、Flutter、React Native、Expo、Ionic、Unity），运行匹配的检查，并按严重级别给代码发现排序。作为钩子时，它会在提交命令之前自动运行。
 
-Discussion. [#2351](https://github.com/mjmirza/app-store-compliance/discussions/2351)
+讨论：[#2351](https://github.com/mjmirza/app-store-compliance/discussions/2351)
 
-## Can it scan permissions requested inside third-party SDKs?
+## 它能扫描第三方 SDK 内部申请的权限吗？
 
-Partly.
+部分可以。
 
-- The guard finds known SDKs by name in scanned files (package.json, Gradle files, source imports) and flags the ones with known consequences, such as tracking SDKs that need App Tracking Transparency or SDKs that change your Data safety answers.
-- An SDK declared only in a Podfile is not detected.
-- The main source scan skips `Pods`, `node_modules` and vendored folders, and the guard does not fully audit transitive SDK permissions or each SDK's own privacy manifest. That is the vendor's job, but you are the one rejected if it is wrong.
-- To see which dependency added an Android permission, check the merged manifest. See the Q&A on which dependency added a sensitive permission to the merged manifest.
+- 守卫在扫描的文件中（package.json、Gradle 文件、源码 import）按名称找出已知 SDK，并标记那些有已知后果的 SDK，例如需要应用跟踪透明度（ATT）的跟踪类 SDK，或会改变你数据安全答复的 SDK。
+- 只在 Podfile 中声明的 SDK 检测不到。
+- 主源码扫描会跳过 `Pods`、`node_modules` 和 vendored 目录，守卫也不会完整审计传递依赖的 SDK 权限或每个 SDK 自带的隐私清单。那是供应商的职责，但一旦出错，被拒审的是你。
+- 要查看哪个依赖引入了某个 Android 权限，请检查合并后的清单（merged manifest）。参见"哪个依赖向合并清单里加了敏感权限"那条问答。
 
-Section 5 of `docs/WHAT-THE-SCAN-PROVES.md` rates SDK permissions as partial for this reason.
+正因如此，`docs/WHAT-THE-SCAN-PROVES.md` 第 5 节把 SDK 权限评为部分覆盖。
 
-Discussion. [#2352](https://github.com/mjmirza/app-store-compliance/discussions/2352)
+讨论：[#2352](https://github.com/mjmirza/app-store-compliance/discussions/2352)
 
-## Does the hook run before fastlane, or only when an AI agent submits?
+## 钩子会在 fastlane 之前运行，还是只在 AI agent 提交时运行？
 
-Only on commands your AI agent runs. A command you type in a terminal, or one your CI runs, never passes through the hook.
+只在你的 AI agent 运行的命令上触发。你在终端里输入的命令，或 CI 运行的命令，都不会经过这个钩子。
 
-- The hook matches submit-shaped commands the agent is about to run, such as `fastlane deliver`, `fastlane pilot`, `eas submit`, `xcrun altool`, `xcodebuild archive`, Gradle `bundleRelease`, and `flutter build ipa`.
-- For your own fastlane lane or CI, call the guard yourself before the upload, for example `sh("bash path/to/app-store-compliance-guard.sh .")` in a `before_all` block. It exits 2 on a critical finding, so the lane stops.
-- Exit codes. 0 clear, 2 blocked, 1 not checked when run by hand.
+- 钩子会匹配 agent 即将运行的提交类命令，例如 `fastlane deliver`、`fastlane pilot`、`eas submit`、`xcrun altool`、`xcodebuild archive`、Gradle `bundleRelease` 和 `flutter build ipa`。
+- 对于你自己的 fastlane lane 或 CI，请在上传前自行调用守卫，例如在 `before_all` 块中写 `sh("bash path/to/app-store-compliance-guard.sh .")`。出现严重（critical）发现时它以退出码 2 结束，lane 随即停止。
+- 退出码：0 为通过，2 为被阻止，1 为手动运行时未能检查。
 
-Section 7 of `docs/WHAT-THE-SCAN-PROVES.md` has the CI and fastlane recipe.
+`docs/WHAT-THE-SCAN-PROVES.md` 第 7 节给出了 CI 与 fastlane 的配方。
 
-Discussion. [#2353](https://github.com/mjmirza/app-store-compliance/discussions/2353)
+讨论：[#2353](https://github.com/mjmirza/app-store-compliance/discussions/2353)
 
-## Does it cover Huawei AppGallery and the Chinese Android stores?
+## 它覆盖 Huawei AppGallery 和中国 Android 商店吗？
 
-As documentation, not as automated checks.
+以文档形式覆盖，而不是自动化检查。
 
-- `docs/OTHER-STORES.md` covers Huawei AppGallery and the Chinese Android stores, including the MIIT app filing, the ICP filing, and how long ICP filing takes.
-- `docs/GLOBAL-REGULATORY-2026.md` tracks China deadlines, including Apple's new China mainland App Compliance declarations due by 31 January 2027 for existing apps.
-- The guard has no checks specific to the Chinese stores. You apply those gates by hand.
+- `docs/OTHER-STORES.md` 覆盖 Huawei AppGallery 和中国 Android 商店，包括 MIIT 应用备案、ICP 备案，以及 ICP 备案需要多长时间。
+- `docs/GLOBAL-REGULATORY-2026.md` 跟踪中国相关截止日期，包括 Apple 针对现有应用新设的中国大陆应用合规申报（App Compliance declarations），截止 2027 年 1 月 31 日。
+- 守卫没有针对中国商店的专属检查。这些关卡需要你手工执行。
 
-If you ship to these stores and can share a rejection reason, open an issue. That is how a manual gate becomes a check.
+如果你在这些商店上架并能分享拒审原因，请开一个 issue。人工关卡就是这样变成自动检查的。
 
-Discussion. [#2354](https://github.com/mjmirza/app-store-compliance/discussions/2354)
+讨论：[#2354](https://github.com/mjmirza/app-store-compliance/discussions/2354)
 
-## When Apple or Google change the rules, how fast does the playbook follow?
+## Apple 或 Google 修改规则后，这份实战手册多快跟进？
 
-It checks a dated snapshot, and tells you how old it is.
+它检查的是带日期的快照，并告诉你这份快照有多旧。
 
-- Every report opens with a `Rule pack.` line, the version and the oldest and newest date its sources were verified. Past 60 days it prints `Rule pack STALE`.
-- Every deadline in `data/regulatory-deadlines.json` records its source URL and the day it was verified, and its `source_note` says plainly when the source is secondary or the primary text was not read. `scripts/verify-citations.py` checks that cited pages respond and are not soft 404s, and reports blocked or failing pages for follow-up.
-- New rules have shipped within days. 2.5.0 added Apple's November developer emails, and 2.5.1 adds Apple's China mainland compliance declarations.
-- To update, run `git pull` in the repo, then the same install command again.
+- 每份报告开头都有一行 `Rule pack.`：版本号，以及其来源最早与最晚的核验日期。超过 60 天会打印 `Rule pack STALE`。
+- `data/regulatory-deadlines.json` 中的每个截止日期都记录了来源 URL 和核验日期；当来源属于二手来源或未读过一手原文时，`source_note` 会直说。`scripts/verify-citations.py` 会检查被引用页面能否访问、是否属于软 404，并把被屏蔽或失败的页面报告出来以便跟进。
+- 新规则曾在几天内跟进上线。2.5.0 收录了 Apple 11 月的开发者邮件，2.5.1 新增了 Apple 的中国大陆合规申报。
+- 更新方法：在仓库里运行 `git pull`，然后再执行一次同样的安装命令。
 
-There is no scheduled job that rewrites rules automatically, on purpose. Every change is read by a person first.
+刻意没有安排自动改写规则的定时任务。每一处改动都先由人阅读过。
 
-Discussion. [#2355](https://github.com/mjmirza/app-store-compliance/discussions/2355)
+讨论：[#2355](https://github.com/mjmirza/app-store-compliance/discussions/2355)
 
-## Has the guard been tested on real App Store submissions?
+## 守卫在真实的 App Store 提交上测试过吗？
 
-Honest answer. it is tested heavily as software, and the real-world evidence so far is reports, not a published study.
+诚实的回答：作为软件它经过了大量测试，但目前为止真实世界的证据是各方报告，还不是一项公开发表的研究。
 
-- The guard has regression tests covering many of its checks and the failure shapes people reported, and CI runs the suite on every pull request to main and every push to main.
-- `evals/gold-cases.json` scores the Fleet Sweep, Waiver Ledger and Ruling Register against fixed expected verdicts. Those are synthetic cases, not real apps.
-- People have reported first-try approvals after running it, and others reported rejections it would not have caught. Those reports shaped 2.5.0.
-- A clear result is not an approval. It means no critical risk was found. High and medium findings can still be listed.
+- 守卫有回归测试，覆盖它的许多检查以及人们报告过的失败形态；CI 会在每一个发往 main 的 pull request 和每一次推送到 main 时运行整套测试。
+- `evals/gold-cases.json` 依据固定的预期判定，给应用矩阵扫描（Fleet Sweep）、豁免台账（Waiver Ledger）与裁定登记簿（Ruling Register）打分。这些是合成案例，不是真实应用。
+- 有人报告运行后一次过审，也有人报告了它本抓不到的拒审。这些反馈塑造了 2.5.0。
+- 结果干净不等于过审。它只表示没有发现严重（critical）风险。高、中级别发现仍可能被列出。
 
-If you run it before a submission, please post the outcome either way. A published record of real results is the next thing worth building.
+如果你在提交前运行了它，无论结果如何都请发帖反馈。一份公开的真实结果记录是下一个值得建设的东西。
 
-Discussion. [#2356](https://github.com/mjmirza/app-store-compliance/discussions/2356)
+讨论：[#2356](https://github.com/mjmirza/app-store-compliance/discussions/2356)
 
-## How long does App Store review take, and can I get reviewed faster?
+## App Store 审核要多久？能加快审核吗？
 
-Apple says at least half of submissions are reviewed in under 24 hours and 90 percent in under 48 hours. Developers report anything from the same day to five weeks, longest for a first app and for the round after a rejection.
+Apple 表示，至少一半的提交能在 24 小时内审完，90% 在 48 小时内。开发者报告的实际耗时从当天到五周不等，首次上架的应用和拒审后的那一轮最久。
 
-What actually helps.
-- Do not resubmit while waiting. It can send you to the back of the queue.
-- For a critical bug fix, request an expedited review in App Store Connect with the steps to reproduce the bug.
-- Avoid the round after a rejection. A working demo account and clear review notes remove the most common reasons.
+真正有用的做法。
+- 等待期间不要重新提交。这可能让你排到队尾。
+- 对于严重的 bug 修复，可在 App Store Connect 中申请加急审核，并附上复现该 bug 的步骤。
+- 避免进入拒审后的下一轮。一个可用的演示账号和清晰的审核备注能消除最常见的原因。
 
-The tool cannot speed up the queue. It can make it less likely you join it twice. See also [#2230](https://github.com/mjmirza/app-store-compliance/discussions/2230).
+这个工具无法让队列变快，但能降低你排两次队的概率。另见 [#2230](https://github.com/mjmirza/app-store-compliance/discussions/2230)。
 
-Discussion. [#2357](https://github.com/mjmirza/app-store-compliance/discussions/2357)
+讨论：[#2357](https://github.com/mjmirza/app-store-compliance/discussions/2357)
 
-## What should App Review notes say so the reviewer actually uses them?
+## App Review 备注写什么，审核员才会真正用上？
 
-Reviewers have a few minutes per app, so notes that need reading fail. Notes that give steps work.
+审核员在每个应用上只有几分钟，需要通读的备注注定失败，给出步骤的备注才管用。
 
-- Lead with what to tap. a numbered path to each feature the reviewer must see, not a description of the feature.
-- A demo account that works on the release build, without 2FA, plus any code or hardware it needs.
-- A short screen recording of the non-obvious flow. It beats paragraphs, especially after a rejection.
-- Say what is unique and who it is for in two lines. That is the part that answers 4.3 questions.
+- 先写要点哪里：为审核员必须看到的每个功能提供一条带编号的路径，而不是对功能的描述。
+- 一个在 release 构建上可用的演示账号，不带 2FA，并附上所需的任何验证码或硬件。
+- 一段展示不明显流程的简短录屏。它胜过大段文字，尤其是在拒审之后。
+- 用两行说明应用有什么独特之处、面向谁。这正是能回应 4.3 问题的部分。
 
-The template is `templates/REVIEW-NOTES-TEMPLATE.md`, and the appeal steps are in `docs/MISTAKE-PATTERNS.md`. See also [#2232](https://github.com/mjmirza/app-store-compliance/discussions/2232).
+模板在 `templates/REVIEW-NOTES-TEMPLATE.md`，申诉步骤在 `docs/MISTAKE-PATTERNS.md`。另见 [#2232](https://github.com/mjmirza/app-store-compliance/discussions/2232)。
 
-Discussion. [#2358](https://github.com/mjmirza/app-store-compliance/discussions/2358)
+讨论：[#2358](https://github.com/mjmirza/app-store-compliance/discussions/2358)
 
-## After a rejection, should I change the binary, the listing, or the account?
+## 被拒审后，该改二进制、商店详情页，还是账号？
 
-Change the thing the rejection names, and nothing else at the same time.
+只改拒审理由点名的那个东西，其他什么都不要同时改。
 
-- Read the guideline number in the rejection. 2.3 is the listing (screenshots, description, metadata), 5.1 is privacy and data, 3.1 is payments, 4.x is the app itself. That tells you where to look.
-- Never resubmit unchanged. Fix it, or reply in Resolution Center if you think the reviewer misread the app, with steps and a screen recording.
-- On Google Play, when the rejection cites a Data safety mismatch or an SDK or permission, correct the form or remove the offending SDK or permission before you resubmit, rather than arguing.
-- Do not resubmit in parallel, and do not create a new account to get around a rejection. An account-level action can only be appealed, never worked around.
+- 看拒审里的审核指南编号：2.3 是商店详情页（截图、描述、元数据），5.1 是隐私与数据，3.1 是支付，4.x 是应用本身。这会告诉你该往哪里找问题。
+- 绝不要原样重新提交。修好它；如果你认为审核员误读了应用，则在 Resolution Center 回复，附上步骤和一段录屏。
+- 在 Google Play 上，当拒审指出数据安全表单不一致或某个 SDK、权限时，先更正表单或移除有问题的 SDK、权限再重新提交，而不是争辩。
+- 不要并行重新提交，也不要新建账号来绕过拒审。账号层面的处置只能申诉，无法变通绕过。
 
-The appeal playbook in `docs/MISTAKE-PATTERNS.md` has the steps for both stores.
+`docs/MISTAKE-PATTERNS.md` 中的申诉实战手册给出了两家商店的具体步骤。
 
-Discussion. [#2359](https://github.com/mjmirza/app-store-compliance/discussions/2359)
+讨论：[#2359](https://github.com/mjmirza/app-store-compliance/discussions/2359)
 
-## How do I show free trial text only to users still eligible for the intro offer?
+## 如何只向仍有资格享受介绍性优惠的用户显示"免费试用"文案？
 
-Check eligibility before the paywall renders, and only then say free trial.
+在付费墙渲染之前先检查资格，然后才显示"免费试用"字样。
 
-- StoreKit 2. `Product.SubscriptionInfo.isEligibleForIntroOffer`, or `isEligibleForIntroOffer(for:)` on the subscription group.
-- RevenueCat on iOS. `checkTrialOrIntroDiscountEligibility(product: package.storeProduct)`, and show trial wording only for `.eligible`.
-- An ineligible user sees the full price. Telling them free trial when they would be charged is a misleading pricing rejection under 3.1.2.
-- The billed amount must also be at least as prominent as any per-month breakdown.
+- StoreKit 2：使用 `Product.SubscriptionInfo.isEligibleForIntroOffer`，或订阅组上的 `isEligibleForIntroOffer(for:)`。
+- iOS 上的 RevenueCat：调用 `checkTrialOrIntroDiscountEligibility(product: package.storeProduct)`，仅对 `.eligible` 显示试用文案。
+- 无资格的用户看到的是全价。在他们实际会被收费的情况下却告诉他们"免费试用"，属于 3.1.2 下的误导性定价拒审。
+- 实际计费金额的醒目程度也必须不低于任何按月折算明细。
 
-The guard does not scan for this. It is a line in `docs/PRE-SUBMISSION-CHECKLIST.md` and guidance in `docs/WHAT-THE-SCAN-PROVES.md` section 5.
+守卫不扫描这一点。它是 `docs/PRE-SUBMISSION-CHECKLIST.md` 中的一条检查项，相关指引见 `docs/WHAT-THE-SCAN-PROVES.md` 第 5 节。
 
-Discussion. [#2360](https://github.com/mjmirza/app-store-compliance/discussions/2360)
+讨论：[#2360](https://github.com/mjmirza/app-store-compliance/discussions/2360)
 
-## Does it catch device frames in App Preview videos?
+## 它能抓住 App Preview 视频里的设备外框吗？
 
-It is documented, but no scan can check it, because the video is not in your code.
+它已被记录在案，但任何扫描都检查不了，因为视频不在你的代码里。
 
-- Pattern `APPLE-2.3.4-DEVICE-FRAMES-PREVIEW`. App Previews must show captured app footage only, without device frames, hands, or footage from outside the app.
-- It is listed in `docs/BY-APP-TYPE.md` and `references/rules/metadata.md`.
-- The pre-submission checklist names it directly next to the screenshot items, because developers reported exactly this rejection.
+- 模式 `APPLE-2.3.4-DEVICE-FRAMES-PREVIEW`：App Preview 必须只展示应用实际录制的画面，不得出现设备外框、手部，或应用之外的素材。
+- 它列在 `docs/BY-APP-TYPE.md` 和 `references/rules/metadata.md` 中。
+- 提交前检查清单把它直接列在截图条目旁边，因为开发者报告的正是这种拒审。
 
-Since 2.5.0, `screenshots_match_build` in `.app-review-readiness.json` is where you record that your screenshots and previews are current and clean.
+自 2.5.0 起，`.app-review-readiness.json` 中的 `screenshots_match_build` 就是你记录"截图与预览均为最新且干净"的地方。
 
-Discussion. [#2361](https://github.com/mjmirza/app-store-compliance/discussions/2361)
+讨论：[#2361](https://github.com/mjmirza/app-store-compliance/discussions/2361)
 
-## What does the OpenRoots ORA 2.3 license mean for me?
+## OpenRoots ORA 2.3 许可证对我意味着什么？
 
-In plain words, from the `LICENSE` pointer file.
+用大白话说，依据 `LICENSE` 这个指引文件。
 
-- Free and unconditional for any individual, nonprofit, school, or government body at any size, and for any company at or below USD 20,000,000 annual revenue.
-- Above that threshold, 0.5 percent of the amount by which attributable revenue exceeds the threshold, capped at USD 250,000 per year, self-reported quarterly.
-- AI training is not granted by either tier. It needs a separate licence.
+- 对任何个人、非营利组织、学校或政府机构（不限规模）免费且无条件；对年收入等于或低于 20,000,000 美元（USD）的任何公司同样免费无条件。
+- 超过该门槛时，按可归属收入（attributable revenue）超出门槛金额的 0.5% 收取，每年封顶 250,000 美元（USD），由公司按季度自行申报。
+- 两个层级都不授予 AI 训练权。那需要单独的许可。
 
-The canonical licence text, linked from `LICENSE`, is the one that applies. This summary is not legal advice.
+以 `LICENSE` 中链接的官方许可文本为准。本摘要不构成法律意见。
 
-Discussion. [#2362](https://github.com/mjmirza/app-store-compliance/discussions/2362)
+讨论：[#2362](https://github.com/mjmirza/app-store-compliance/discussions/2362)
 
-## What do people actually get rejected for, and would this have caught it?
+## 大家实际因什么被拒审？这个工具本可以抓住吗？
 
-From the rejections people described in the replies, the most common were.
+从人们在回复中描述的拒审来看，最常见的是。
 
-- Permission wording. an onboarding button saying Allow before the system prompt. Caught by `APPLE-5.1.1-PRE-PROMPT-ALLOW-BUTTON` since 2.5.0.
-- Missing permission purpose strings. Caught for the APIs the guard knows. Whether a purpose string is specific enough is a manual check.
-- A demo account that did not work, or a backend that was down during review. Not visible in code, so it goes in `.app-review-readiness.json`.
-- 4.3 spam or duplicate app. No scan can decide it. See [#2340](https://github.com/mjmirza/app-store-compliance/discussions/2340).
-- Device frames in a preview video, and screenshots from an older build. Manual items on the checklist.
+- 权限文案：系统弹窗出现之前，引导页按钮上写着 Allow。自 2.5.0 起由 `APPLE-5.1.1-PRE-PROMPT-ALLOW-BUTTON` 捕获。
+- 缺少权限用途说明（purpose string）：守卫认识的 API 能捕获。用途说明是否足够具体属于人工检查。
+- 演示账号不可用，或审核期间后端宕机。代码里看不出来，所以记录在 `.app-review-readiness.json` 中。
+- 4.3 垃圾应用（spam）或重复应用。任何扫描都无法判定。参见 [#2340](https://github.com/mjmirza/app-store-compliance/discussions/2340)。
+- 预览视频里的设备外框，以及来自旧构建的截图。都是检查清单上的人工项。
 
-Section 5 of `docs/WHAT-THE-SCAN-PROVES.md` maps each reported rejection to the check that catches it, or marks it as a gap. If yours is not there, reply with the guideline number.
+`docs/WHAT-THE-SCAN-PROVES.md` 第 5 节把每条被报告的拒审映射到捕获它的检查，或将其标记为缺口。如果你的情况不在其中，请回复审核指南编号。
 
-Discussion. [#2363](https://github.com/mjmirza/app-store-compliance/discussions/2363)
+讨论：[#2363](https://github.com/mjmirza/app-store-compliance/discussions/2363)
 
-## Which checks run first, and is there a rule that screenshots match the app one to one?
+## 哪些检查先运行？有没有"截图与应用一一对应"的规则？
 
-There is no single first rule. The guard runs every check and sorts the code findings by severity, critical first. Readiness findings follow in their own block.
+没有单独的最优先规则。守卫会运行所有检查，并按严重级别给代码发现排序，严重（critical）的排前面。就绪发现在其后的独立区块中列出。
 
-The order it scans in. it lists the project files, detects the platforms and framework, then runs the iOS, Android and web checks that apply.
+它的扫描顺序是：先列出项目文件，检测平台与框架，然后运行适用的 iOS、Android 和 web 检查。
 
-If by 1:1 you mean screenshots and the UI matching the real app exactly, that is a real review rule, and it is not something a code scan can see. It is a manual item. record it as `screenshots_match_build` in `.app-review-readiness.json`, where a fail blocks the submit.
+如果你说的 1:1 是指截图和 UI 与真实应用完全一致，那确实是一条真实的审核规则，但代码扫描看不见它。这是一个人工项：把它记录为 `.app-review-readiness.json` 中的 `screenshots_match_build`，标记为 fail 会阻止提交。
 
-Discussion. [#2367](https://github.com/mjmirza/app-store-compliance/discussions/2367)
+讨论：[#2367](https://github.com/mjmirza/app-store-compliance/discussions/2367)

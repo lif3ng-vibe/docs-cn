@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Begin Jekyll SEO tag v2.9.1 -->
-<title>Ruling Register | App Store Compliance Playbook</title>
+<title>裁决登记册（Ruling Register） | App Store Compliance Playbook</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Ruling Register" />
+<meta property="og:title" content="裁决登记册（Ruling Register）" />
 <meta name="author" content="Mirza Iqbal" />
 <meta property="og:locale" content="zh_CN" />
 <meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
@@ -18,14 +18,14 @@
 <meta property="og:site_name" content="App Store Compliance Playbook" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Ruling Register" />
+<meta name="twitter:title" content="裁决登记册（Ruling Register）" />
 <meta name="twitter:site" content="@MirzaJhanzaib" />
 <meta name="twitter:creator" content="@Mirza Iqbal" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Ruling Register","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/RULING-REGISTER.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"裁决登记册（Ruling Register）","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/RULING-REGISTER.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=dee3e59258fe813831435f34b279332a218cd08a">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=6743ea05eda9f334ca1885d77a858a50b80246db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -44,31 +44,31 @@
       <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
       
 
-      <p>A code scan cannot tell you that India wants your lending app on an RBI list, that Australia wants under-16s kept off your social feed, or that the EU wants a 24 hour vulnerability report. The Ruling Register holds those release requirements as data, says how strongly each one binds today, and says how it is proven, so a missing finding is never mistaken for a pass.</p>
+      <p>代码扫描无法告诉你：印度要求把你的借贷应用列入 RBI 名单，澳大利亚要求把 16 岁以下用户挡在你的社交信息流之外，欧盟要求提交一份 24 小时漏洞报告。裁决登记册（Ruling Register）把这些发布要求保存为数据，说明每一条在今天的约束力有多强、又该如何证明，这样，”没有发现”就永远不会被误当成”通过”。</p>
 
-<h2 id="what-you-get">What you get</h2>
+<h2 id="你能得到什么">你能得到什么</h2>
 
 <ul>
-  <li>Legal standing on every requirement. <code class="language-plaintext highlighter-rouge">in_force</code>, <code class="language-plaintext highlighter-rouge">in_force_later</code> (with the date it starts), <code class="language-plaintext highlighter-rouge">store_policy</code>, <code class="language-plaintext highlighter-rouge">proposed</code>, or <code class="language-plaintext highlighter-rouge">guidance</code>. Only verified law or store policy that is in force today can block a release. A proposed law or a guidance note never can.</li>
-  <li>How it is proven. <code class="language-plaintext highlighter-rouge">automated</code> (a check can see it), <code class="language-plaintext highlighter-rouge">owner_attested</code> (only you can confirm it), or <code class="language-plaintext highlighter-rouge">mixed</code> (both). An owner-attested requirement asks for your signed attestation, because a scan finding nothing proves nothing here.</li>
-  <li>A quoted source for every premise. Each source carries the URL, the date it was checked, a verbatim quote, and <code class="language-plaintext highlighter-rouge">supports</code>, which says whether it proves the obligation, the start date, or both. A rule blocks only when quoted sources cover the obligation and, if it has one, the start date. A source that could not be re-read is marked <code class="language-plaintext highlighter-rouge">unverified</code> with the reason, and a rule missing a quoted premise is listed as “confirm the source” and never blocks.</li>
-  <li>Applies only where it should. Each entry names its jurisdiction (an ISO country code, <code class="language-plaintext highlighter-rouge">EU</code>, or <code class="language-plaintext highlighter-rouge">GLOBAL</code>), an optional store, and the app features it covers (<code class="language-plaintext highlighter-rouge">lending</code>, <code class="language-plaintext highlighter-rouge">crypto</code>, <code class="language-plaintext highlighter-rouge">medical</code>, <code class="language-plaintext highlighter-rouge">generative_ai</code>, <code class="language-plaintext highlighter-rouge">personal_data</code>, <code class="language-plaintext highlighter-rouge">subscriptions</code>, <code class="language-plaintext highlighter-rouge">social</code>, <code class="language-plaintext highlighter-rouge">marketplace</code>, <code class="language-plaintext highlighter-rouge">children</code>). A rule with no features applies to every app in that place.</li>
-  <li>Built into Fleet Sweep. Every app declares its <code class="language-plaintext highlighter-rouge">platforms</code>, <code class="language-plaintext highlighter-rouge">regions</code> and <code class="language-plaintext highlighter-rouge">features</code>, and leaving one out is an error, because an unknown scope would silently drop rules. Any verified, in-force rule that applies and has no valid attestation makes the app <code class="language-plaintext highlighter-rouge">BLOCKED</code>.</li>
+  <li>每条要求的法律效力。<code class="language-plaintext highlighter-rouge">in_force</code>、<code class="language-plaintext highlighter-rouge">in_force_later</code>（附开始生效日期）、<code class="language-plaintext highlighter-rouge">store_policy</code>、<code class="language-plaintext highlighter-rouge">proposed</code> 或 <code class="language-plaintext highlighter-rouge">guidance</code>。只有经核实、且今日仍生效的法律或商店政策才能阻断一次发布；提案中的法律或指导说明则永远不能。</li>
+  <li>如何证明。<code class="language-plaintext highlighter-rouge">automated</code>（一次检查就能看到）、<code class="language-plaintext highlighter-rouge">owner_attested</code>（只有你自己能确认）或 <code class="language-plaintext highlighter-rouge">mixed</code>（两者兼有）。由所有者声明（owner-attested）的要求需要你签署一份声明（attestation），因为在这里，扫描一无所获证明不了任何事。</li>
+  <li>每条前提都配有引文来源。每个来源都带有 URL、核查日期、逐字引文，以及 <code class="language-plaintext highlighter-rouge">supports</code> 字段，说明它证明的是义务本身、开始日期，还是两者都证明。只有当引文来源覆盖了义务，并且（如果该规则设有开始日期）也覆盖了开始日期，规则才会阻断。无法重新读取的来源会被标记为 <code class="language-plaintext highlighter-rouge">unverified</code>（未经验证）并注明原因；缺少引文前提的规则会被列为”确认来源”，且永远不会阻断。</li>
+  <li>只在应当适用的地方生效。每个条目都写明其司法辖区（ISO 国家代码、<code class="language-plaintext highlighter-rouge">EU</code> 或 <code class="language-plaintext highlighter-rouge">GLOBAL</code>）、可选的商店，以及它覆盖的应用功能（<code class="language-plaintext highlighter-rouge">lending</code>、<code class="language-plaintext highlighter-rouge">crypto</code>、<code class="language-plaintext highlighter-rouge">medical</code>、<code class="language-plaintext highlighter-rouge">generative_ai</code>、<code class="language-plaintext highlighter-rouge">personal_data</code>、<code class="language-plaintext highlighter-rouge">subscriptions</code>、<code class="language-plaintext highlighter-rouge">social</code>、<code class="language-plaintext highlighter-rouge">marketplace</code>、<code class="language-plaintext highlighter-rouge">children</code>）。不带功能的规则适用于该地区的每一个应用。</li>
+  <li>内置于 Fleet Sweep。每个应用都要声明自己的 <code class="language-plaintext highlighter-rouge">platforms</code>、<code class="language-plaintext highlighter-rouge">regions</code> 和 <code class="language-plaintext highlighter-rouge">features</code>，漏掉任何一个都是错误，因为未知的作用域会悄悄丢掉规则。任何经核实、已生效、适用于该应用且没有有效声明的规则，都会把该应用标记为 <code class="language-plaintext highlighter-rouge">BLOCKED</code>。</li>
 </ul>
 
-<h2 id="from-install-to-first-answer">From install to first answer</h2>
+<h2 id="从安装到首次回答">从安装到首次回答</h2>
 
 <ol>
   <li>
-    <p>Ask what applies to an app.</p>
+    <p>询问一个应用适用哪些要求。</p>
 
     <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 scripts/ruling-register.py due <span class="nt">--regions</span> DE,AU,US <span class="nt">--stores</span> apple <span class="nt">--features</span> social,personal_data
 </code></pre></div>    </div>
 
-    <p>Each line says <code class="language-plaintext highlighter-rouge">BLOCKS</code>, <code class="language-plaintext highlighter-rouge">WATCH</code>, or <code class="language-plaintext highlighter-rouge">CONFIRM-SOURCE</code>, and whether it needs your attestation.</p>
+    <p>每一行都标明是 <code class="language-plaintext highlighter-rouge">BLOCKS</code>、<code class="language-plaintext highlighter-rouge">WATCH</code> 还是 <code class="language-plaintext highlighter-rouge">CONFIRM-SOURCE</code>，以及是否需要你的声明。</p>
   </li>
   <li>
-    <p>Add <code class="language-plaintext highlighter-rouge">regions</code>, <code class="language-plaintext highlighter-rouge">features</code> and, once you have checked a requirement, an attestation to the app in your fleet file.</p>
+    <p>在你的 fleet 文件中，为应用加上 <code class="language-plaintext highlighter-rouge">regions</code>、<code class="language-plaintext highlighter-rouge">features</code>，并在核查过某条要求之后，加上对应的声明。</p>
 
     <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"attestations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
   </span><span class="nl">"RR-AU-APP1-PRIVACY-POLICY"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -83,29 +83,29 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div>    </div>
 
-    <p>An attestation is accepted only when <code class="language-plaintext highlighter-rouge">outcome</code> is <code class="language-plaintext highlighter-rouge">compliant</code>, <code class="language-plaintext highlighter-rouge">revision</code> matches the rule’s current revision, <code class="language-plaintext highlighter-rouge">covers</code> lists every proof item id of the rule (including the automated ones, with the check result as evidence), and <code class="language-plaintext highlighter-rouge">regions</code> lists every country of yours the rule reaches. It cannot be dated in the future and expires after a year. Raise a rule’s <code class="language-plaintext highlighter-rouge">revision</code> when it changes, and every attestation for it has to be made again.</p>
+    <p>声明只有同时满足以下条件才会被接受：<code class="language-plaintext highlighter-rouge">outcome</code> 为 <code class="language-plaintext highlighter-rouge">compliant</code>；<code class="language-plaintext highlighter-rouge">revision</code> 与该规则当前的修订号（revision）一致；<code class="language-plaintext highlighter-rouge">covers</code> 列出该规则全部证明项的 id（包括 automated 类，并将检查结果作为证据）；<code class="language-plaintext highlighter-rouge">regions</code> 列出该规则波及的你的全部国家。声明的日期不能是未来日期，且一年后过期。某条规则发生变化时要提高它的 <code class="language-plaintext highlighter-rouge">revision</code>，此时它的每一条声明都必须重新作出。</p>
   </li>
   <li>
-    <p>Run Fleet Sweep. The register is read by default. Pass <code class="language-plaintext highlighter-rouge">--no-register</code> to leave it out.</p>
+    <p>运行 Fleet Sweep。默认会读取登记册；传入 <code class="language-plaintext highlighter-rouge">--no-register</code> 可将其排除。</p>
   </li>
 </ol>
 
-<h2 id="add-or-change-a-requirement">Add or change a requirement</h2>
+<h2 id="新增或修改一条要求">新增或修改一条要求</h2>
 
 <ol>
-  <li>Edit <code class="language-plaintext highlighter-rouge">data/ruling-register.json</code>. Give a new rule a new <code class="language-plaintext highlighter-rouge">RR-</code> id and <code class="language-plaintext highlighter-rouge">revision</code> 1. Never reuse an id for a different rule, and raise <code class="language-plaintext highlighter-rouge">revision</code> when an existing rule’s meaning changes.</li>
-  <li>Quote the primary source verbatim and record the date you read it. Never paste a URL you have not opened.</li>
-  <li>Run <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py validate</code> and fix every error.</li>
-  <li>To hand the register to another tool, run <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py export</code>. It writes <code class="language-plaintext highlighter-rouge">exports/ruling-register-v&lt;version&gt;.json</code>, stamped with the commit and the date.</li>
+  <li>编辑 <code class="language-plaintext highlighter-rouge">data/ruling-register.json</code>。新规则要分配新的 <code class="language-plaintext highlighter-rouge">RR-</code> 前缀 id 和 <code class="language-plaintext highlighter-rouge">revision</code> 1。绝不要把一个 id 复用给另一条规则；现有规则的含义发生变化时，要提高 <code class="language-plaintext highlighter-rouge">revision</code>。</li>
+  <li>逐字引用一手来源，并记录你读取它的日期。绝不要粘贴你从未打开过的 URL。</li>
+  <li>运行 <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py validate</code>，并修复每一个错误。</li>
+  <li>要把登记册交给其他工具使用，运行 <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py export</code>。它会写出 <code class="language-plaintext highlighter-rouge">exports/ruling-register-v&lt;version&gt;.json</code>，并盖上 commit 与日期的戳记。</li>
 </ol>
 
-<h2 id="how-the-results-are-measured">How the results are measured</h2>
+<h2 id="结果如何衡量">结果如何衡量</h2>
 
-<p><code class="language-plaintext highlighter-rouge">python3 scripts/eval-scorecard.py</code> scores Fleet Sweep, the Waiver Ledger and the Ruling Register against the gold scenarios in <code class="language-plaintext highlighter-rouge">evals/gold-cases.json</code>. Each case checks the verdict, the exit code, that the fleet and app verdicts agree, and which rule ids must and must not appear, so a change that keeps the verdict but loses the reason still fails. It prints the false passes (something unsafe called ready) and the false blocks per feature, and fails on any miss or any unknown category. The false-pass count must stay at zero.</p>
+<p><code class="language-plaintext highlighter-rouge">python3 scripts/eval-scorecard.py</code> 会对照 <code class="language-plaintext highlighter-rouge">evals/gold-cases.json</code> 中的黄金场景，为 Fleet Sweep、Waiver Ledger 和裁决登记册评分。每个用例都会检查裁决结果、退出码、fleet 级与应用级裁决是否一致，以及哪些规则 id 必须出现、哪些必须不出现，因此即使一次改动保住了裁决结果却丢掉了理由，也仍然会失败。它会按功能打印误通过（把不安全的东西称为 ready）与误阻断的数量，并且只要出现任何遗漏或任何未知类别就判为失败。误通过的数量必须保持为零。</p>
 
-<h2 id="the-first-entries">The first entries</h2>
+<h2 id="第一批条目">第一批条目</h2>
 
-<p>The first 14 entries came from an adversarial gap review of this playbook. Google Play lending in India and crypto in the EU, US medical device software and the DOJ data rule, China’s AI filing and labelling rules, Indonesia’s operator registration, the EU withdrawal function, DSA notice and action and CRA reporting, Vietnam’s account authentication, and Australia’s privacy policy, under-16 social media and Children’s Online Privacy Code rules. Every source was opened on 5 November 2026. The EU withdrawal entry is marked unverified because EUR-Lex refused automated reads that day. The Australian minimum-age obligation is quoted from the Act, but the Act sets its start date by ministerial instrument and the eSafety page carrying that date did not load, so that rule is flagged to confirm rather than blocking.</p>
+<p>第一批 14 个条目来自对本实战手册的一次对抗性差距审查。它们包括：Google Play 在印度的借贷要求与欧盟的加密资产要求、美国的医疗器械软件与 DOJ 数据规则、中国的人工智能备案与标注规则、印度尼西亚的运营商注册、欧盟的撤回功能、DSA 的通知与行动（notice and action）与 CRA 报告义务、越南的账户认证要求，以及澳大利亚的隐私政策、16 岁以下社交媒体与《儿童在线隐私准则》（Children’s Online Privacy Code）规则。所有来源均于 2026 年 11 月 5 日打开核查。欧盟撤回功能条目被标记为未经验证，因为当天 EUR-Lex 拒绝了自动读取。澳大利亚的最低年龄义务引用自该法案原文，但该法案通过部长级文件设定其开始日期，而承载该日期的 eSafety 页面当天未能加载，因此这条规则被标记为”确认来源”，而不是直接阻断。</p>
 
 
       
