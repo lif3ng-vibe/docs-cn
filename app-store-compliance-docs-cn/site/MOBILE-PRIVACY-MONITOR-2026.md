@@ -1,107 +1,107 @@
-# Mobile and Web Privacy Compliance Guide (2026)
+# 移动与 Web 隐私合规指南（2026）
 
-This playbook establishes the reference and automated validation framework to ensure compliance with modern privacy requirements across iOS, Android, and Web platforms. Use this guide to identify missing disclosures and implementation gaps before submitting your applications to their respective app stores or deploying to production.
-
----
-
-## 1. Apple Privacy Compliance
-
-Apple enforces highly strict, programmatic checks at build upload and review times. Failure to comply with any of these rules results in an automatic binary rejection or review block.
-
-### 1.1 Privacy Manifest (PrivacyInfo.xcprivacy)
-- **Rule:** Every app and third-party SDK must bundle a `PrivacyInfo.xcprivacy` manifest file detailing the types of data collected, tracking practices, and any usage of Required Reason APIs.
-- **Implementation Gap:** Missing the manifest entirely or failing to include declarations for embedded third-party SDKs that collect data or perform tracking. Each bundled framework or library must ship with its own signed privacy manifest.
-- **Verification:** Search for `PrivacyInfo.xcprivacy` files in the app bundle and verify that all collected data types are mapped correctly.
-
-### 1.2 Required Reason APIs
-- **Rule:** Apple designates specific APIs as Required Reason APIs, including system uptime, file timestamps, active keyboards, user defaults, and disk space. If your code or an embedded SDK calls these, you must declare the approved reason code in your privacy manifest.
-- **Implementation Gap:** Declaring an API without specifying an approved reason code, or using an unapproved API category, which triggers automatic App Store Connect build rejection.
-- **Verification:** Scan the codebase for symbols like `NSFileManager`, `UserDefaults`, `systemUptime`, or `ProcessInfo` and cross-reference with the `NSPrivacyAccessedAPITypes` array in your privacy manifest.
-
-### 1.3 App Tracking Transparency (ATT)
-- **Rule:** Before accessing the advertising identifier (IDFA) or tracking users across other apps/websites, you must show the App Tracking Transparency prompt and request permission.
-- **Implementation Gap:** Presenting third-party tracking or advertising SDKs (such as Facebook, AppsFlyer, Adjust, or Branch) without calling the ATT prompt or omitting `NSUserTrackingUsageDescription` from `Info.plist`.
-- **Verification:** Run static analysis to detect tracking SDK references and verify that `ATTrackingManager.requestTrackingAuthorization` is called before initialization.
-
-### 1.4 Privacy Nutrition Labels
-- **Rule:** Developers must complete the self-reported Privacy Nutrition Labels questionnaire in App Store Connect. The declared labels must align with actual data collection and tracking observed at runtime.
-- **Implementation Gap:** Failing to declare data collection types such as email address, phone number, location, or purchase history in the App Store Connect portal while the codebase actively transmits this information.
-- **Verification:** Audit all outgoing API request payloads and ensure that any personally identifiable information (PII) corresponds directly with the submitted nutrition labels.
+本实战手册（playbook）建立了参考与自动化验证框架，用于确保 iOS、Android 与 Web 平台符合现代隐私要求。在向各自的应用商店提交应用或部署到生产环境之前，请使用本指南识别缺失的披露与实现差距。
 
 ---
 
-## 2. Android Privacy Compliance
+## 1. Apple 隐私合规
 
-Google Play enforces a multi-tiered compliance policy, backed by automated static scanning and human verification, focusing heavily on user consent and runtime capability access.
+Apple 在构建上传和审核阶段执行极为严格的程序化检查。违反其中任何一条规则都会导致二进制文件被自动拒审或审核受阻。
 
-### 2.1 Data Safety
-- **Rule:** The Google Play Data Safety form requires developers to provide clear, granular declarations regarding what user data is collected, shared, and how it is secured (e.g., encryption in transit).
-- **Implementation Gap:** A discrepancy between the declared Data Safety form and actual runtime behavior, specifically around bundled analytics, advertising, or attribution SDKs that collect data silently.
-- **Verification:** Scan dependencies for known tracking or marketing libraries and verify that their collection practices match the Google Play Console declarations.
+### 1.1 隐私清单（PrivacyInfo.xcprivacy）
+- **规则**：每个应用和第三方 SDK 都必须打包 `PrivacyInfo.xcprivacy` 清单文件，详细说明所收集的数据类型、跟踪行为，以及任何 Required Reason APIs 的使用情况。
+- **实现差距**：完全缺失清单，或未为收集数据、执行跟踪的内嵌第三方 SDK 补充声明。每个打包的框架或库都必须随附自己的签名隐私清单。
+- **验证**：在应用包中搜索 `PrivacyInfo.xcprivacy` 文件，并核实所有收集的数据类型均已正确映射。
 
-### 2.2 User Data Policy
-- **Rule:** Personal and sensitive user data must be handled securely and require a prominent, explicit in-app disclosure followed by user consent before collection.
-- **Implementation Gap:** Accessing or transferring contacts, SMS, device accounts, or file systems without a prominent disclosure or before the user explicitly clicks an consent button.
-- **Verification:** Audit onboarding and authentication flows to confirm that privacy policies and disclosures are displayed prior to data collection.
+### 1.2 Required Reason APIs（必需理由 API）
+- **规则**：Apple 将特定 API 指定为 Required Reason APIs，包括系统运行时长、文件时间戳、活动键盘、用户默认设置和磁盘空间。如果你的代码或内嵌 SDK 调用了这些 API，必须在隐私清单中声明获批的理由代码。
+- **实现差距**：声明了 API 却未指定获批的理由代码，或使用了未获批准的 API 类别，这会触发 App Store Connect 的自动构建拒审。
+- **验证**：在代码库中扫描 `NSFileManager`、`UserDefaults`、`systemUptime` 或 `ProcessInfo` 等符号，并与隐私清单中的 `NSPrivacyAccessedAPITypes` 数组交叉比对。
 
-### 2.3 Advertising ID
-- **Rule:** Apps targeting Android 12 (API level 31) or higher that use the Google Play Services Advertising ID must declare the `com.google.android.gms.permission.AD_ID` permission in the manifest.
-- **Implementation Gap:** Declaring the advertising ID permission without providing a mechanism inside the app or the privacy policy to opt out of interest-based ads or request advertising ID reset/deletion.
-- **Verification:** Search for the `AD_ID` permission in `AndroidManifest.xml` and confirm that opt-out preferences are fully supported.
+### 1.3 应用跟踪透明度（App Tracking Transparency，ATT）
+- **规则**：在访问广告标识符（IDFA）或跨其他应用/网站跟踪用户之前，必须先展示应用跟踪透明度（ATT）弹窗并请求权限。
+- **实现差距**：接入了第三方跟踪或广告 SDK（如 Facebook、AppsFlyer、Adjust 或 Branch），却未调用 ATT 弹窗，或在 `Info.plist` 中遗漏 `NSUserTrackingUsageDescription`。
+- **验证**：运行静态分析以检测跟踪 SDK 引用，并核实 `ATTrackingManager.requestTrackingAuthorization` 在初始化之前被调用。
 
-### 2.4 Runtime Permissions
-- **Rule:** Sensitive permissions must be requested dynamically at runtime rather than assuming access is granted. The app should check, request, and gracefully handle permission denial.
-- **Implementation Gap:** Invoking system features (e.g., camera or contacts) without checking for permission, or failing to present an in-app rationale prior to the system dialog when requested a second time.
-- **Verification:** Trace calls to permission-checking methods and verify that rationales are shown when `shouldShowRequestPermissionRationale` returns true.
-
-### 2.5 Background Location
-- **Rule:** Google Play strictly restricts the use of `ACCESS_BACKGROUND_LOCATION`. It is permitted only if background location is essential to the core functionality of the application.
-- **Implementation Gap:** Requesting background location for features that could be accomplished with foreground access, or failing to present a highly visible, persistent prominent disclosure.
-- **Verification:** Ensure `ACCESS_BACKGROUND_LOCATION` is absent unless fully justified by a core use case, and verify the prominent disclosure UX.
-
-### 2.6 Health Permissions
-- **Rule:** Access to health, fitness, or wellness data (including APIs like Health Connect) requires extensive developer declarations, a prominent disclosure, and explicit user consent.
-- **Implementation Gap:** Integrating Health Connect SDKs or querying health permissions (such as steps or heart rate) without completing the Health Connect integration questionnaire in Google Play Console.
-- **Verification:** Locate health-related permissions in the manifest and ensure a specialized health privacy policy is accessible inside the app.
+### 1.4 隐私营养标签
+- **规则**：开发者必须在 App Store Connect 中完成自主申报的隐私营养标签问卷。所声明的标签必须与运行时实际观察到的数据收集和跟踪行为一致。
+- **实现差距**：代码库实际在传输电子邮件地址、电话号码、位置或购买历史等信息，却未在 App Store Connect 后台申报这些数据收集类型。
+- **验证**：审计所有外发的 API 请求载荷，确保任何个人身份信息（PII）都与已提交的营养标签直接对应。
 
 ---
 
-## 3. Web Privacy Compliance
+## 2. Android 隐私合规
 
-Web applications must adhere to international regulations like the General Data Protection Regulation (GDPR) and ePrivacy Directive. Static analysis of local storage, session storage, databases, cookies, and tracking tags is necessary to prevent compliance failures.
+Google Play 执行多层次的合规政策，并由自动化静态扫描与人工核验提供支撑，重点关注用户同意与运行时能力访问。
+
+### 2.1 数据安全（Data Safety）
+- **规则**：Google Play 数据安全（Data Safety）表单要求开发者就收集和共享哪些用户数据、以及如何保障其安全（例如传输中加密）作出清晰、细粒度的申报。
+- **实现差距**：申报的数据安全表单与实际运行时行为不一致，尤其是随应用打包的分析、广告或归因 SDK 静默收集数据的情况。
+- **验证**：扫描依赖项以发现已知的跟踪或营销库，并核实其收集行为与 Google Play Console 中的申报一致。
+
+### 2.2 用户数据政策
+- **规则**：个人和敏感用户数据必须得到安全处理，并且在收集之前需要先进行显著、明确的应用内披露，随后取得用户同意。
+- **实现差距**：在无显著披露的情况下、或在用户明确点击同意按钮之前，访问或传输通讯录、短信、设备账号或文件系统。
+- **验证**：审计新手引导与身份验证流程，确认隐私政策和披露内容在数据收集之前已展示。
+
+### 2.3 广告 ID（Advertising ID）
+- **规则**：以 Android 12（API 级别 31）或更高为目标且使用 Google Play Services 广告 ID 的应用，必须在清单中声明 `com.google.android.gms.permission.AD_ID` 权限。
+- **实现差距**：声明了广告 ID 权限，却未在应用内或隐私政策中提供选择退出基于兴趣的广告、或请求重置/删除广告 ID 的机制。
+- **验证**：在 `AndroidManifest.xml` 中搜索 `AD_ID` 权限，并确认选择退出偏好设置得到完整支持。
+
+### 2.4 运行时权限
+- **规则**：敏感权限必须在运行时动态请求，而不是默认已获得授权。应用应当检查并请求权限，同时妥善处理权限被拒绝的情况。
+- **实现差距**：未检查权限就调用系统能力（如相机或通讯录），或在第二次请求时未在系统弹窗之前展示应用内用途说明。
+- **验证**：追踪权限检查方法的调用，并核实当 `shouldShowRequestPermissionRationale` 返回 true 时会展示用途说明。
+
+### 2.5 后台定位
+- **规则**：Google Play 严格限制 `ACCESS_BACKGROUND_LOCATION` 的使用。仅当后台定位对应用的核心功能至关重要时才被允许。
+- **实现差距**：为原本用前台权限就能实现的功能请求后台定位，或未能展示高度醒目、持续显示的显著披露。
+- **验证**：确保除非有充分的核心使用场景作为依据，否则不出现 `ACCESS_BACKGROUND_LOCATION`，并核实显著披露的用户体验。
+
+### 2.6 健康权限
+- **规则**：访问健康、健身或养生数据（包括 Health Connect 等 API）需要开发者进行详尽申报、提供显著披露，并取得用户明确同意。
+- **实现差距**：集成了 Health Connect SDK 或查询健康权限（如步数或心率），却未在 Google Play Console 中完成 Health Connect 集成问卷。
+- **验证**：在清单中定位健康相关权限，并确保应用内可以访问专门的健康隐私政策。
+
+---
+
+## 3. Web 隐私合规
+
+Web 应用必须遵守《通用数据保护条例》（GDPR）和《ePrivacy Directive》等国际条例。为避免合规失败，有必要对本地存储、会话存储、数据库、Cookie 和跟踪标签进行静态分析。
 
 ### 3.1 GDPR
-- **Rule:** Under GDPR, processing personal data of EU residents requires a legal basis, most commonly explicit, freely-given opt-in consent. Users must also be provided with the "Right to be Forgotten" (data deletion) and data portability.
-- **Implementation Gap:** Processing or storing IP addresses, names, emails, or device identifiers without obtaining prior opt-in consent or lacking a functional data deletion request mechanism.
-- **Verification:** Confirm that GDPR consent gates are active for all data ingestion pipelines and that an explicit deletion request option is available to users.
+- **规则**：在 GDPR 之下，处理欧盟居民的个人数据需要有合法性基础，最常见的是明确且自愿作出的选择加入同意。还必须向用户提供“被遗忘权”（数据删除）与数据可携带权。
+- **实现差距**：未事先取得选择加入同意就处理或存储 IP 地址、姓名、电子邮件或设备标识符，或缺乏可用的数据删除请求机制。
+- **验证**：确认所有数据接入管道均已启用 GDPR 同意门控，且用户可以获得明确的删除请求选项。
 
-### 3.2 Cookie Consent
-- **Rule:** Non-essential cookies (such as analytics, tracking, or marketing cookies) must not be written or accessed before the user has given explicit consent via a Cookie Consent banner.
-- **Implementation Gap:** Injecting tracking cookies on initial page load before the user interacts with the consent banner, or failing to provide a preference manager.
-- **Verification:** Check that all analytical or marketing script tags are delayed or conditionally executed only after consent is recorded.
+### 3.2 Cookie 同意
+- **规则**：在用户通过 Cookie 同意横幅给予明确同意之前，不得写入或读取非必要 Cookie（如分析、跟踪或营销 Cookie）。
+- **实现差距**：在用户与同意横幅交互之前的首次页面加载时就注入跟踪 Cookie，或未提供偏好管理器。
+- **验证**：检查所有分析或营销脚本标签是否被延迟执行，或仅在记录同意之后才按条件执行。
 
-### 3.3 Local Storage
-- **Rule:** Sensitive personal data, session tokens, or authentication credentials should not be stored in unencrypted plain text within `localStorage`, as it is vulnerable to Cross-Site Scripting (XSS) attacks.
-- **Implementation Gap:** Writing JWT tokens, passwords, or user profile information directly to `localStorage` without encryption or proper lifecycle management.
-- **Verification:** Scan for `localStorage.setItem` calls and verify that sensitive keys are encrypted or moved to secure cookies (HttpOnly, Secure, SameSite).
+### 3.3 本地存储
+- **规则**：敏感个人数据、会话令牌或身份验证凭据不应以未加密的明文形式存入 `localStorage`，因为它容易受到跨站脚本（XSS）攻击。
+- **实现差距**：将 JWT 令牌、密码或用户资料信息直接写入 `localStorage`，既未加密也没有妥善的生命周期管理。
+- **验证**：扫描 `localStorage.setItem` 调用，并核实敏感键已被加密或迁移到安全的 Cookie（HttpOnly、Secure、SameSite）。
 
 ### 3.4 IndexedDB
-- **Rule:** Structured offline client-side data stored in `indexedDB` must respect user consent preferences, apply secure encryption for sensitive files, and provide absolute cleanup mechanisms.
-- **Implementation Gap:** Creating object stores containing personal health, financial, or tracking data without validation of consent, or leaving databases orphaned after user logout.
-- **Verification:** Review `indexedDB.open` calls and verify that database instances are wiped during account deletion or logout.
+- **规则**：存入 `indexedDB` 的结构化离线客户端数据必须尊重用户的同意偏好，对敏感文件应用安全加密，并提供彻底的清理机制。
+- **实现差距**：在未校验同意状态的情况下创建包含个人健康、财务或跟踪数据的对象仓库，或在用户退出登录后遗留下无人清理的数据库。
+- **验证**：审查 `indexedDB.open` 调用，并核实数据库实例会在账号删除或退出登录时被清空。
 
-### 3.5 Session Storage
-- **Rule:** Temporary sensitive details stored in `sessionStorage` must be limited, protected against unauthorized script access, and cleared immediately when the tab or window is closed.
-- **Implementation Gap:** Leaving exposed active session data in `sessionStorage` without security controls or validation, leading to potential session hijacking.
-- **Verification:** Scan for `sessionStorage.setItem` and ensure no highly sensitive data is left plain.
+### 3.5 会话存储
+- **规则**：存入 `sessionStorage` 的临时敏感信息必须加以限制、防范未授权的脚本访问，并在标签页或窗口关闭时立即清除。
+- **实现差距**：将暴露的活动会话数据留在 `sessionStorage` 中且缺乏安全控制或校验，可能导致会话劫持。
+- **验证**：扫描 `sessionStorage.setItem`，确保没有高度敏感数据以明文形式留存。
 
-### 3.6 Tracking Technologies
-- **Rule:** Third-party tracking scripts, tracking pixels, and analytics tags (e.g., Google Analytics, Facebook Pixel, Hotjar) must be explicitly managed, declared in the privacy policy, and disabled by default until consent is obtained.
-- **Implementation Gap:** Loading tracking scripts dynamically or statically via script tags on page load without checking the user's consent status.
-- **Verification:** Verify that analytics and pixel scripts are loaded conditionally based on cookie preferences.
+### 3.6 跟踪技术
+- **规则**：第三方跟踪脚本、跟踪像素和分析标签（如 Google Analytics、Facebook Pixel、Hotjar）必须被明确管理、在隐私政策中声明，并在取得同意之前默认禁用。
+- **实现差距**：在页面加载时通过脚本标签动态或静态加载跟踪脚本，却未检查用户的同意状态。
+- **验证**：核实分析与像素脚本会依据 Cookie 偏好按条件加载。
 
 ---
 
-## 4. Identifying Gaps and Verifying Compliance
+## 4. 识别差距与验证合规
 
-To integrate these requirements into your release workflows, the App Store Compliance Guard automatically scans source code for known privacy violation patterns. Every check maps to the strict guidelines established above, preventing costly rejections before your build leaves the developer machine.
+要将这些要求集成到你的发布流程中，App Store Compliance Guard 会自动扫描源代码中的已知隐私违规模式。每一项检查都对应上文确立的严格指南，在你的构建离开开发者机器之前就阻止代价高昂的拒审。

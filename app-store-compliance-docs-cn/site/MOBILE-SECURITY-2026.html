@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Begin Jekyll SEO tag v2.9.1 -->
-<title>Mobile Security Requirements and Best Practices (2026) | App Store Compliance Playbook</title>
+<title>移动安全要求与最佳实践（2026） | App Store Compliance Playbook</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Mobile Security Requirements and Best Practices (2026)" />
+<meta property="og:title" content="移动安全要求与最佳实践（2026）" />
 <meta name="author" content="Mirza Iqbal" />
 <meta property="og:locale" content="zh_CN" />
 <meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
@@ -18,14 +18,14 @@
 <meta property="og:site_name" content="App Store Compliance Playbook" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Mobile Security Requirements and Best Practices (2026)" />
+<meta name="twitter:title" content="移动安全要求与最佳实践（2026）" />
 <meta name="twitter:site" content="@MirzaJhanzaib" />
 <meta name="twitter:creator" content="@Mirza Iqbal" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Mobile Security Requirements and Best Practices (2026)","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"移动安全要求与最佳实践（2026）","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=cd21097d316b82ae1559eb00755aeff44e533733">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=50455e578883eb8fcbd98d5de9332b7c3e6a34bc">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -44,65 +44,65 @@
       <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
       
 
-      <p>This playbook establishes a rigorous, comprehensive security reference for mobile application development. It addresses the 17 core mobile security domains required to protect user data, prevent unauthorized access, and ensure compliance with platform policies and industry standards (e.g., OWASP MASVS).</p>
+      <p>本实战手册为移动应用开发建立了一套严格、全面的安全参考。它覆盖保护用户数据、防止未授权访问，以及确保符合平台政策与行业标准（如 OWASP MASVS）所需的 17 个核心移动安全领域。</p>
 
-<p>Each section provides a high-level review of the security domain, platform-specific mechanics (iOS and Android), concrete secure implementation recommendations, and rejection/compliance risks.</p>
-
-<hr />
-
-<h2 id="1-secure-storage">1. Secure Storage</h2>
-
-<h3 id="11-overview">1.1 Overview</h3>
-<p>Sensitive information (session tokens, passwords, personal data, API keys, private cryptographic keys) must never be stored in plaintext. Standard application sandbox structures—such as <code class="language-plaintext highlighter-rouge">UserDefaults</code> on iOS or standard <code class="language-plaintext highlighter-rouge">SharedPreferences</code> on Android—write content directly to XML or plist files in unencrypted formats, allowing easy retrieval on jailbroken/rooted devices, or via backup analysis.</p>
-
-<h3 id="12-platform-implementation--best-practices">1.2 Platform Implementation &amp; Best Practices</h3>
-
-<h4 id="ios-secure-storage">iOS: Secure Storage</h4>
-<ul>
-  <li><strong>Unsecure Options:</strong> <code class="language-plaintext highlighter-rouge">UserDefaults</code>, CoreData (without custom encryption), plain SQLite, or standard application documents/cache directories.</li>
-  <li><strong>Secure Option:</strong> Use the <strong>Keychain Services API</strong> for small pieces of data (tokens, credentials, keys). For larger databases, use SQLCipher to encrypt the local SQLite/CoreData database.</li>
-  <li><strong>Data Protection Class:</strong> When writing sensitive files directly to disk, use iOS Data Protection. Pass <code class="language-plaintext highlighter-rouge">Data.WritingOptions.completeFileProtection</code> to encrypt the file on disk, which remains encrypted when the device is locked.</li>
-</ul>
-
-<h4 id="android-secure-storage">Android: Secure Storage</h4>
-<ul>
-  <li><strong>Unsecure Options:</strong> Plain <code class="language-plaintext highlighter-rouge">SharedPreferences</code>, standard internal/external storage files, or standard SQLite databases.</li>
-  <li><strong>Secure Option:</strong> Use <strong>EncryptedSharedPreferences</strong> and <strong>EncryptedFile</strong> (from the Jetpack Security library), which automatically handle key management and encryption of storage components using AES-256 (for files) and AES-256-SIV (for keys/values).</li>
-  <li><strong>Database Encryption:</strong> If using SQLite or Room, encrypt the database with <strong>SQLCipher for Android</strong>, using a hardware-backed master key generated in the Android Keystore.</li>
-</ul>
+<p>每一节都会概览对应的安全领域，给出平台特定的机制（iOS 与 Android）、具体的安全实现建议，以及拒审/合规风险。</p>
 
 <hr />
 
-<h2 id="2-keychain-ios-specific">2. Keychain (iOS Specific)</h2>
+<h2 id="1-安全存储">1. 安全存储</h2>
 
-<h3 id="21-overview">2.1 Overview</h3>
-<p>The iOS Keychain provides a secure, hardware-accelerated enclave to store small, highly sensitive configuration and credential items. The items are encrypted and managed directly by the operating system, isolated from other applications.</p>
+<h3 id="11-概述">1.1 概述</h3>
+<p>敏感信息（会话令牌、密码、个人数据、API 密钥、私有加密密钥）绝不能以明文形式存储。标准的应用沙盒结构——例如 iOS 上的 <code class="language-plaintext highlighter-rouge">UserDefaults</code> 或 Android 上的标准 <code class="language-plaintext highlighter-rouge">SharedPreferences</code>——会以未加密格式把内容直接写入 XML 或 plist 文件，在越狱/root 设备上或通过备份分析即可轻松取回。</p>
 
-<h3 id="22-secure-implementation-recommendations">2.2 Secure Implementation Recommendations</h3>
+<h3 id="12-平台实现与最佳实践">1.2 平台实现与最佳实践</h3>
+
+<h4 id="ios安全存储">iOS：安全存储</h4>
 <ul>
-  <li><strong>Accessibility Attributes:</strong> Always specify the strict accessibility attribute (<code class="language-plaintext highlighter-rouge">kSecAttrAccessible</code>) when creating or updating Keychain items:
+  <li><strong>不安全选项</strong>：<code class="language-plaintext highlighter-rouge">UserDefaults</code>、CoreData（无自定义加密）、纯 SQLite，或标准的应用 documents/cache 目录。</li>
+  <li><strong>安全选项</strong>：小体积数据（令牌、凭据、密钥）使用 <strong>Keychain Services API</strong>。更大的数据库则使用 SQLCipher 加密本地 SQLite/CoreData 数据库。</li>
+  <li><strong>数据保护类</strong>（Data Protection Class）：把敏感文件直接写入磁盘时，请使用 iOS Data Protection。传入 <code class="language-plaintext highlighter-rouge">Data.WritingOptions.completeFileProtection</code> 即可加密磁盘上的文件，设备锁定期间文件保持加密状态。</li>
+</ul>
+
+<h4 id="android安全存储">Android：安全存储</h4>
+<ul>
+  <li><strong>不安全选项</strong>：明文 <code class="language-plaintext highlighter-rouge">SharedPreferences</code>、标准的内部/外部存储文件，或标准 SQLite 数据库。</li>
+  <li><strong>安全选项</strong>：使用 <strong>EncryptedSharedPreferences</strong> 与 <strong>EncryptedFile</strong>（来自 Jetpack Security 库），它们会自动处理密钥管理，并以 AES-256（文件）与 AES-256-SIV（键值）加密存储组件。</li>
+  <li><strong>数据库加密</strong>：若使用 SQLite 或 Room，请用 <strong>SQLCipher for Android</strong> 加密数据库，主密钥由 Android Keystore 生成并具备硬件背书。</li>
+</ul>
+
+<hr />
+
+<h2 id="2-keychainios-专属">2. Keychain（iOS 专属）</h2>
+
+<h3 id="21-概述">2.1 概述</h3>
+<p>iOS Keychain 提供一个安全的、硬件加速的隔离区，用于存放小体积、高敏感度的配置与凭据条目。这些条目由操作系统直接加密和管理，与其他应用相互隔离。</p>
+
+<h3 id="22-安全实现建议">2.2 安全实现建议</h3>
+<ul>
+  <li><strong>可访问性属性</strong>：创建或更新 Keychain 条目时，务必指定严格的可访问性属性（<code class="language-plaintext highlighter-rouge">kSecAttrAccessible</code>）：
     <ul>
-      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</code>: <strong>Highly Recommended</strong> for background tasks or push notification handlers. The data is available after the user unlocks the device once, and is not restored to another physical device via backups.</li>
-      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</code>: Use for foreground-only apps. The data is accessible only when the device is unlocked and is not backed up.</li>
-      <li><strong>Avoid:</strong> <code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAlways</code> (deprecated) and non-<code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code> classes if you want to prevent migration of the credentials to other physical devices during backups.</li>
+      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</code>：<strong>强烈推荐</strong>用于后台任务或推送通知处理。用户解锁设备一次后数据即可用，且不会通过备份恢复到其他物理设备。</li>
+      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</code>：适用于仅在前台运行的应用。数据仅在设备解锁时可访问，且不会被备份。</li>
+      <li><strong>避免使用</strong>：<code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAlways</code>（已弃用），以及非 <code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code> 的类（如果你希望防止凭据在备份时迁移到其他物理设备）。</li>
     </ul>
   </li>
-  <li><strong>Access Group Sharing:</strong> Limit Keychain sharing (<code class="language-plaintext highlighter-rouge">kSecAttrAccessGroup</code>) strictly to verified app suites from the same team using Keychain Sharing entitlements.</li>
-  <li><strong>Keychain Backups:</strong> Ensure the <code class="language-plaintext highlighter-rouge">kSecAttrSynchronizable</code> attribute is set to <code class="language-plaintext highlighter-rouge">false</code> (default) unless explicit iCloud Keychain synchronization is required.</li>
+  <li><strong>访问组共享</strong>：借助 Keychain Sharing entitlement，把 Keychain 共享（<code class="language-plaintext highlighter-rouge">kSecAttrAccessGroup</code>）严格限制在同一团队经过验证的应用套件内。</li>
+  <li><strong>Keychain 备份</strong>：除非确需 iCloud Keychain 同步，否则确保 <code class="language-plaintext highlighter-rouge">kSecAttrSynchronizable</code> 属性设为 <code class="language-plaintext highlighter-rouge">false</code>（默认值）。</li>
 </ul>
 
 <hr />
 
-<h2 id="3-android-keystore-android-specific">3. Android Keystore (Android Specific)</h2>
+<h2 id="3-android-keystoreandroid-专属">3. Android Keystore（Android 专属）</h2>
 
-<h3 id="31-overview">3.1 Overview</h3>
-<p>The Android Keystore system lets developers store cryptographic keys in a hardware-backed container (such as the Trusted Execution Environment (TEE) or StrongBox Security Chip), making them extremely difficult to extract from the device even if the operating system is compromised or rooted.</p>
+<h3 id="31-概述">3.1 概述</h3>
+<p>Android Keystore 系统允许开发者把加密密钥存放在具备硬件背书的容器中（如可信执行环境（TEE）或 StrongBox Security Chip），即使操作系统被攻破或被 root，密钥也极难从设备中提取。</p>
 
-<h3 id="32-secure-implementation-recommendations">3.2 Secure Implementation Recommendations</h3>
+<h3 id="32-安全实现建议">3.2 安全实现建议</h3>
 <ul>
-  <li><strong>Hardware Backing:</strong> Force the use of hardware-backed keys by checking <code class="language-plaintext highlighter-rouge">KeyInfo.isInsideSecureHardware()</code> after key generation. On devices supporting Android 9 (API 28) or higher, use <code class="language-plaintext highlighter-rouge">setIsStrongBoxBacked(true)</code> to enforce hardware protection using a dedicated HSM chip.</li>
-  <li><strong>Key Attestation:</strong> For high-security environments, use Key Attestation to mathematically prove to a backend server that the cryptographic key was created in hardware and has not been tampered with.</li>
-  <li><strong>Purpose and Encryption Modes:</strong> Strictly limit key capabilities during creation (e.g., allow ONLY decryption/encryption with specific padding schemes):
+  <li><strong>硬件背书</strong>：在密钥生成后检查 <code class="language-plaintext highlighter-rouge">KeyInfo.isInsideSecureHardware()</code>，强制使用具备硬件背书的密钥。在支持 Android 9（API 28）及以上的设备上，使用 <code class="language-plaintext highlighter-rouge">setIsStrongBoxBacked(true)</code> 借助专用 HSM 芯片强制硬件保护。</li>
+  <li><strong>密钥认证</strong>（Key Attestation）：在高安全环境中，使用 Key Attestation 向后端服务器以数学方式证明加密密钥确在硬件中创建且未被篡改。</li>
+  <li><strong>用途与加密模式</strong>：创建时严格限制密钥能力（例如仅允许使用特定填充方案的解密/加密）：
     <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">keyGenerator</span> <span class="p">=</span> <span class="nc">KeyGenerator</span><span class="p">.</span><span class="nf">getInstance</span><span class="p">(</span><span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">KEY_ALGORITHM_AES</span><span class="p">,</span> <span class="s">"AndroidKeyStore"</span><span class="p">)</span>
 <span class="n">keyGenerator</span><span class="p">.</span><span class="nf">init</span><span class="p">(</span>
     <span class="nc">KeyGenParameterSpec</span><span class="p">.</span><span class="nc">Builder</span><span class="p">(</span><span class="s">"MySecureKeyAlias"</span><span class="p">,</span> <span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">PURPOSE_ENCRYPT</span> <span class="n">or</span> <span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">PURPOSE_DECRYPT</span><span class="p">)</span>
@@ -117,45 +117,45 @@
 
 <hr />
 
-<h2 id="4-biometric-authentication">4. Biometric Authentication</h2>
+<h2 id="4-生物识别认证">4. 生物识别认证</h2>
 
-<h3 id="41-overview">4.1 Overview</h3>
-<p>Biometric authentication (FaceID, TouchID, Android BiometricPrompt) must verify user identity safely. A critical mistake is treating biometrics as an offline UI lock that merely flips a boolean flag (e.g., <code class="language-plaintext highlighter-rouge">isLoggedIn = true</code>) upon success. Attackers can bypass boolean returns using runtime instrumentation (e.g., Frida hooks on <code class="language-plaintext highlighter-rouge">LAContext</code> or <code class="language-plaintext highlighter-rouge">BiometricPrompt</code>).</p>
+<h3 id="41-概述">4.1 概述</h3>
+<p>生物识别认证（FaceID、TouchID、Android BiometricPrompt）必须安全地验证用户身份。一个致命错误是把生物识别当作离线 UI 锁——成功后仅仅翻转一个布尔标志（例如 <code class="language-plaintext highlighter-rouge">isLoggedIn = true</code>）。攻击者可利用运行时插桩（例如对 <code class="language-plaintext highlighter-rouge">LAContext</code> 或 <code class="language-plaintext highlighter-rouge">BiometricPrompt</code> 挂 Frida 钩子）绕过布尔返回值。</p>
 
-<h3 id="42-secure-implementation-recommendations">4.2 Secure Implementation Recommendations</h3>
+<h3 id="42-安全实现建议">4.2 安全实现建议</h3>
 <ul>
-  <li><strong>Crypto-Backed Biometrics:</strong> Rather than relying on simple success callbacks, require biometric authentication to unlock or authorize a cryptographic key stored in the Keychain or Keystore.</li>
-  <li><strong>iOS Implementation:</strong>
+  <li><strong>加密背书的生物识别</strong>：不要依赖简单的成功回调，而是要求通过生物识别认证来解锁或授权存储在 Keychain 或 Keystore 中的加密密钥。</li>
+  <li><strong>iOS 实现</strong>：
     <ul>
-      <li>Create Keychain item with <code class="language-plaintext highlighter-rouge">SecAccessControl</code> using <code class="language-plaintext highlighter-rouge">.biometryAny</code> or <code class="language-plaintext highlighter-rouge">.biometryCurrentSet</code>.</li>
-      <li>When accessing the item, the OS automatically prompts the user for FaceID/TouchID and releases the decrypted token ONLY if biometrics pass.</li>
-      <li><strong>Avoid</strong> simple offline <code class="language-plaintext highlighter-rouge">LAContext.evaluatePolicy</code> checks for session authorization unless paired with severe security constraints.</li>
+      <li>使用 <code class="language-plaintext highlighter-rouge">SecAccessControl</code> 并指定 <code class="language-plaintext highlighter-rouge">.biometryAny</code> 或 <code class="language-plaintext highlighter-rouge">.biometryCurrentSet</code> 创建 Keychain 条目。</li>
+      <li>访问该条目时，系统会自动提示用户进行 FaceID/TouchID 验证，只有生物识别通过才会释放解密后的令牌。</li>
+      <li><strong>避免</strong>仅用离线的 <code class="language-plaintext highlighter-rouge">LAContext.evaluatePolicy</code> 检查来做会话授权，除非配合严格的安全约束。</li>
     </ul>
   </li>
-  <li><strong>Android Implementation:</strong>
+  <li><strong>Android 实现</strong>：
     <ul>
-      <li>Pass an initialized <code class="language-plaintext highlighter-rouge">BiometricPrompt.CryptoObject</code> (wrapping a Cipher, Signature, or Mac associated with a Keystore key) to <code class="language-plaintext highlighter-rouge">biometricPrompt.authenticate()</code>.</li>
-      <li>The Keystore key must be configured with <code class="language-plaintext highlighter-rouge">.setUserAuthenticationRequired(true)</code> and <code class="language-plaintext highlighter-rouge">.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)</code>.</li>
-      <li>The key can only decrypt/sign if the user successfully passes strong biometric authentication.</li>
+      <li>将初始化好的 <code class="language-plaintext highlighter-rouge">BiometricPrompt.CryptoObject</code>（封装与 Keystore 密钥关联的 Cipher、Signature 或 Mac）传入 <code class="language-plaintext highlighter-rouge">biometricPrompt.authenticate()</code>。</li>
+      <li>Keystore 密钥必须配置 <code class="language-plaintext highlighter-rouge">.setUserAuthenticationRequired(true)</code> 与 <code class="language-plaintext highlighter-rouge">.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)</code>。</li>
+      <li>只有用户成功通过强生物识别认证，密钥才能解密/签名。</li>
     </ul>
   </li>
 </ul>
 
 <hr />
 
-<h2 id="5-certificate-pinning">5. Certificate Pinning</h2>
+<h2 id="5-证书固定certificate-pinning">5. 证书固定（Certificate Pinning）</h2>
 
-<h3 id="51-overview">5.1 Overview</h3>
-<p>Certificate Pinning (or public-key pinning) mitigates Man-in-the-Middle (MITM) attacks by ensuring the client connects strictly to a server presenting a pre-defined cryptographic public key. This prevents traffic interception even if an attacker installs a malicious root certificate on the user’s device (e.g., via corporate proxies, malware, or user-approved configuration profiles).</p>
+<h3 id="51-概述">5.1 概述</h3>
+<p>证书固定（Certificate Pinning，即公钥固定）通过确保客户端只连接出示预定加密公钥的服务器，来缓解中间人（MITM）攻击。即使攻击者在用户设备上安装了恶意根证书（例如通过企业代理、恶意软件或用户批准的配置描述文件），也能防止流量被截获。</p>
 
-<h3 id="52-secure-implementation-recommendations">5.2 Secure Implementation Recommendations</h3>
+<h3 id="52-安全实现建议">5.2 安全实现建议</h3>
 <ul>
-  <li><strong>Pin SPKI Hashes:</strong> Do not pin the leaf certificate itself (which changes frequently during standard certificate rotations, causing app outages). Instead, pin the <strong>Subject Public Key Info (SPKI)</strong> hash of the intermediate or leaf public key.</li>
-  <li><strong>Backup Pins:</strong> Always include at least one backup pin (representing a standby Certificate Authority or intermediate key) to prevent bricking the app if the primary certificate needs emergency replacement.</li>
-  <li><strong>Native Implementation:</strong>
+  <li><strong>固定 SPKI 哈希</strong>：不要固定叶子证书本身（标准证书轮换期间它频繁变更，会导致应用不可用），而应固定中间或叶子公钥的<strong>主题公钥信息</strong>（Subject Public Key Info，SPKI）哈希。</li>
+  <li><strong>备用固定项</strong>：务必至少包含一个备用固定项（代表备用的证书颁发机构或中间密钥），以免主证书需要紧急更换时应用直接“变砖”。</li>
+  <li><strong>原生实现</strong>：
     <ul>
-      <li><strong>iOS:</strong> Use declarative Network Session Pinning in <code class="language-plaintext highlighter-rouge">Info.plist</code> using the <code class="language-plaintext highlighter-rouge">NSPinnedDomains</code> key (supported natively since iOS 14). This operates safely inside the networking stack without manual delegation code.</li>
-      <li><strong>Android:</strong> Declare a Network Security Configuration file (<code class="language-plaintext highlighter-rouge">res/xml/network_security_config.xml</code>) and specify the pins within <code class="language-plaintext highlighter-rouge">&lt;pin-set&gt;</code> elements. The system automatically enforces pinning for any <code class="language-plaintext highlighter-rouge">HttpURLConnection</code> or OkHttp client:
+      <li><strong>iOS</strong>：在 <code class="language-plaintext highlighter-rouge">Info.plist</code> 中使用声明式的 Network Session Pinning，即 <code class="language-plaintext highlighter-rouge">NSPinnedDomains</code> 键（自 iOS 14 起原生支持）。它在网络栈内部安全生效，无需手写委托代码。</li>
+      <li><strong>Android</strong>：声明网络安全配置文件（<code class="language-plaintext highlighter-rouge">res/xml/network_security_config.xml</code>），并在 <code class="language-plaintext highlighter-rouge">&lt;pin-set&gt;</code> 元素中指定固定项。系统会对任何 <code class="language-plaintext highlighter-rouge">HttpURLConnection</code> 或 OkHttp 客户端自动强制执行固定：
         <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;network-security-config&gt;</span>
     <span class="nt">&lt;domain-config&gt;</span>
         <span class="nt">&lt;domain</span> <span class="na">includeSubdomains=</span><span class="s">"true"</span><span class="nt">&gt;</span>api.myproduction.com<span class="nt">&lt;/domain&gt;</span>
@@ -173,69 +173,69 @@
 
 <hr />
 
-<h2 id="6-jailbreak-detection-ios">6. Jailbreak Detection (iOS)</h2>
+<h2 id="6-越狱检测ios">6. 越狱检测（iOS）</h2>
 
-<h3 id="61-overview">6.1 Overview</h3>
-<p>A jailbroken iOS device bypasses critical platform sandboxing protections, allowing attackers to access private application data directories, hook runtime methods, and intercept secure communications.</p>
+<h3 id="61-概述">6.1 概述</h3>
+<p>越狱后的 iOS 设备绕过了关键的平台沙盒保护，使攻击者能够访问私有的应用数据目录、钩挂运行时方法并截获安全通信。</p>
 
-<h3 id="62-secure-implementation-recommendations">6.2 Secure Implementation Recommendations</h3>
+<h3 id="62-安全实现建议">6.2 安全实现建议</h3>
 <ul>
-  <li><strong>Multi-layered defense:</strong> Use multiple independent indicators to assess device compromise. Avoid single simple functions.</li>
-  <li><strong>Standard Checks:</strong>
+  <li><strong>多层防御</strong>：使用多个相互独立的指标来评估设备是否被攻破，避免只依赖单一简单函数。</li>
+  <li><strong>标准检查</strong>：
     <ol>
-      <li><strong>File Existence:</strong> Check for known jailbreak-related directories and binaries (e.g., <code class="language-plaintext highlighter-rouge">/Applications/Cydia.app</code>, <code class="language-plaintext highlighter-rouge">/Applications/Sileo.app</code>, <code class="language-plaintext highlighter-rouge">/Library/MobileSubstrate/MobileSubstrate.dylib</code>, <code class="language-plaintext highlighter-rouge">/bin/bash</code>, <code class="language-plaintext highlighter-rouge">/usr/sbin/sshd</code>, <code class="language-plaintext highlighter-rouge">/private/var/lib/apt</code>).</li>
-      <li><strong>Directory Permissions:</strong> Attempt to write a dummy file outside the app sandbox (e.g., to <code class="language-plaintext highlighter-rouge">/private/jailbreak.txt</code>). Standard apps will fail; jailbroken apps with root access may succeed.</li>
-      <li><strong>Symlink Analysis:</strong> Check if common directories like <code class="language-plaintext highlighter-rouge">/Library/Ringtones</code> or <code class="language-plaintext highlighter-rouge">/Applications</code> are symlinks, which jailbreak tools create to preserve disk space.</li>
-      <li><strong>Dynamic Linker (dyld) Inspection:</strong> Iterate over loaded dynamic libraries to detect hooks or injection libraries (e.g., <code class="language-plaintext highlighter-rouge">MobileSubstrate</code>, <code class="language-plaintext highlighter-rouge">Frida</code>).</li>
+      <li><strong>文件存在性</strong>：检查已知的越狱相关目录与二进制文件（例如 <code class="language-plaintext highlighter-rouge">/Applications/Cydia.app</code>、<code class="language-plaintext highlighter-rouge">/Applications/Sileo.app</code>、<code class="language-plaintext highlighter-rouge">/Library/MobileSubstrate/MobileSubstrate.dylib</code>、<code class="language-plaintext highlighter-rouge">/bin/bash</code>、<code class="language-plaintext highlighter-rouge">/usr/sbin/sshd</code>、<code class="language-plaintext highlighter-rouge">/private/var/lib/apt</code>）。</li>
+      <li><strong>目录权限</strong>：尝试在应用沙盒之外写入一个无用文件（例如 <code class="language-plaintext highlighter-rouge">/private/jailbreak.txt</code>）。标准应用会失败；具备 root 权限的越狱应用可能成功。</li>
+      <li><strong>符号链接分析</strong>：检查 <code class="language-plaintext highlighter-rouge">/Library/Ringtones</code>、<code class="language-plaintext highlighter-rouge">/Applications</code> 等常见目录是否为符号链接——越狱工具会创建符号链接以节省磁盘空间。</li>
+      <li><strong>动态链接器（dyld）检查</strong>：遍历已加载的动态库，检测钩子或注入库（例如 <code class="language-plaintext highlighter-rouge">MobileSubstrate</code>、<code class="language-plaintext highlighter-rouge">Frida</code>）。</li>
     </ol>
   </li>
-  <li><strong>Response:</strong> If jailbreaking is detected, wipe cached tokens and local databases, notify the backend, and safely terminate or gracefully degrade features.</li>
+  <li><strong>响应措施</strong>：一旦检测到越狱，清除缓存的令牌与本地数据库、通知后端，并安全终止或优雅降级相关功能。</li>
 </ul>
 
 <hr />
 
-<h2 id="7-root-detection-android">7. Root Detection (Android)</h2>
+<h2 id="7-root-检测android">7. Root 检测（Android）</h2>
 
-<h3 id="71-overview">7.1 Overview</h3>
-<p>An Android device with root access grants administrative control, which bypasses critical security policies, memory isolation, and filesystem sandbox controls.</p>
+<h3 id="71-概述">7.1 概述</h3>
+<p>取得 root 权限的 Android 设备拥有管理员控制权，会绕过关键的安全策略、内存隔离与文件系统沙盒控制。</p>
 
-<h3 id="72-secure-implementation-recommendations">7.2 Secure Implementation Recommendations</h3>
+<h3 id="72-安全实现建议">7.2 安全实现建议</h3>
 <ul>
-  <li><strong>Local Heuristics:</strong>
+  <li><strong>本地启发式检查</strong>：
     <ol>
-      <li><strong>Binary Search:</strong> Look for administrative binaries like <code class="language-plaintext highlighter-rouge">su</code>, <code class="language-plaintext highlighter-rouge">busybox</code>, or root-management tools across standard paths (<code class="language-plaintext highlighter-rouge">/system/bin/su</code>, <code class="language-plaintext highlighter-rouge">/system/xbin/su</code>, <code class="language-plaintext highlighter-rouge">/sbin/su</code>, <code class="language-plaintext highlighter-rouge">/system/sd/xbin/su</code>).</li>
-      <li><strong>Build Tags:</strong> Check <code class="language-plaintext highlighter-rouge">android.os.Build.TAGS</code> for <code class="language-plaintext highlighter-rouge">"test-keys"</code>, indicating a custom or rooted ROM build instead of a release-signed image.</li>
-      <li><strong>Superuser Apps:</strong> Inspect the package list for root management packages (e.g., <code class="language-plaintext highlighter-rouge">com.noshufou.android.su</code>, <code class="language-plaintext highlighter-rouge">eu.chainfire.supersu</code>, <code class="language-plaintext highlighter-rouge">com.topjohnwu.magisk</code>).</li>
+      <li><strong>二进制搜索</strong>：在标准路径（<code class="language-plaintext highlighter-rouge">/system/bin/su</code>、<code class="language-plaintext highlighter-rouge">/system/xbin/su</code>、<code class="language-plaintext highlighter-rouge">/sbin/su</code>、<code class="language-plaintext highlighter-rouge">/system/sd/xbin/su</code>）中查找 <code class="language-plaintext highlighter-rouge">su</code>、<code class="language-plaintext highlighter-rouge">busybox</code> 等管理类二进制文件或 root 管理工具。</li>
+      <li><strong>构建标签</strong>：检查 <code class="language-plaintext highlighter-rouge">android.os.Build.TAGS</code> 是否为 <code class="language-plaintext highlighter-rouge">"test-keys"</code>，它表明是自定义或已 root 的 ROM 构建，而非正式签名的镜像。</li>
+      <li><strong>超级用户应用</strong>：检查包列表中是否存在 root 管理包（例如 <code class="language-plaintext highlighter-rouge">com.noshufou.android.su</code>、<code class="language-plaintext highlighter-rouge">eu.chainfire.supersu</code>、<code class="language-plaintext highlighter-rouge">com.topjohnwu.magisk</code>）。</li>
     </ol>
   </li>
-  <li><strong>Hardware-Backed Attestation (Highly Recommended):</strong>
+  <li><strong>硬件背书认证</strong>（强烈推荐）：
     <ul>
-      <li>Standard local heuristics are easily bypassed using Magisk Hide or zygisk modules.</li>
-      <li>Rely on the <strong>Google Play Integrity API</strong>. Call the API from the device, forward the cryptographically signed verdict token to your backend server, and decrypt/verify it on the backend. This provides a hardware-backed verdict of device integrity and whether it runs on a certified Android build.</li>
+      <li>标准本地启发式检查很容易被 Magisk Hide 或 zygisk 模块绕过。</li>
+      <li>依赖 <strong>Google Play Integrity API</strong>：在设备端调用该 API，把经过加密签名的裁定令牌转发到你的后端服务器，并在后端解密/校验。这会给出具备硬件背书的设备完整性裁定，以及设备是否运行经过认证的 Android 构建。</li>
     </ul>
   </li>
 </ul>
 
 <hr />
 
-<h2 id="8-ssl-configuration">8. SSL Configuration</h2>
+<h2 id="8-ssl-配置">8. SSL 配置</h2>
 
-<h3 id="81-overview">8.1 Overview</h3>
-<p>Misconfigured Transport Layer Security (TLS) leaves mobile applications vulnerable to credential sniffing and traffic modification. Cleartext traffic (HTTP) must be completely disabled in production.</p>
+<h3 id="81-概述">8.1 概述</h3>
+<p>传输层安全（TLS）配置不当会让移动应用暴露于凭据嗅探与流量篡改之下。生产环境中必须完全禁用明文流量（HTTP）。</p>
 
-<h3 id="82-secure-implementation-recommendations">8.2 Secure Implementation Recommendations</h3>
+<h3 id="82-安全实现建议">8.2 安全实现建议</h3>
 <ul>
-  <li><strong>Enforce TLS 1.3 or 1.2 minimum:</strong> Disable backward compatibility with deprecated SSL v3, TLS 1.0, and TLS 1.1.</li>
-  <li><strong>iOS Implementation:</strong>
+  <li><strong>至少强制 TLS 1.3 或 1.2</strong>：禁用与已弃用的 SSL v3、TLS 1.0、TLS 1.1 的向后兼容。</li>
+  <li><strong>iOS 实现</strong>：
     <ul>
-      <li>Keep App Transport Security (ATS) enabled.</li>
-      <li><strong>Avoid</strong> setting <code class="language-plaintext highlighter-rouge">NSAllowsArbitraryLoads</code> to <code class="language-plaintext highlighter-rouge">true</code> in production <code class="language-plaintext highlighter-rouge">Info.plist</code>. If certain domains require HTTP exceptions, specify them explicitly under <code class="language-plaintext highlighter-rouge">NSExceptionDomains</code> with strict justifications.</li>
+      <li>保持 App Transport Security（ATS）处于启用状态。</li>
+      <li><strong>避免</strong>在生产 <code class="language-plaintext highlighter-rouge">Info.plist</code> 中把 <code class="language-plaintext highlighter-rouge">NSAllowsArbitraryLoads</code> 设为 <code class="language-plaintext highlighter-rouge">true</code>。若某些域名确需 HTTP 例外，请在 <code class="language-plaintext highlighter-rouge">NSExceptionDomains</code> 下明确列出并给出严格理由。</li>
     </ul>
   </li>
-  <li><strong>Android Implementation:</strong>
+  <li><strong>Android 实现</strong>：
     <ul>
-      <li>Define cleartext policies in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> via <code class="language-plaintext highlighter-rouge">android:usesCleartextTraffic="false"</code>.</li>
-      <li>Alternatively, enforce it globally in the Network Security Configuration:
+      <li>在 <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> 中通过 <code class="language-plaintext highlighter-rouge">android:usesCleartextTraffic="false"</code> 定义明文流量策略。</li>
+      <li>或者，在网络安全配置中全局强制执行：
         <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;network-security-config&gt;</span>
     <span class="nt">&lt;base-config</span> <span class="na">cleartextTrafficPermitted=</span><span class="s">"false"</span><span class="nt">&gt;</span>
         <span class="nt">&lt;trust-anchors&gt;</span>
@@ -251,16 +251,16 @@
 
 <hr />
 
-<h2 id="9-backup-rules">9. Backup Rules</h2>
+<h2 id="9-备份规则">9. 备份规则</h2>
 
-<h3 id="91-overview">9.1 Overview</h3>
-<p>By default, mobile operating systems include application sandboxed files in automated backups (iCloud backups on iOS, ADB / Google Drive backups on Android). This means sensitive data stored insecurely is automatically transferred to cloud drives or accessible via physical extraction.</p>
+<h3 id="91-概述">9.1 概述</h3>
+<p>默认情况下，移动操作系统会把应用沙盒内的文件纳入自动备份（iOS 的 iCloud 备份、Android 的 ADB / Google Drive 备份）。这意味着以不安全方式存储的敏感数据会被自动传输到云端硬盘，或可通过物理提取获取。</p>
 
-<h3 id="92-secure-implementation-recommendations">9.2 Secure Implementation Recommendations</h3>
+<h3 id="92-安全实现建议">9.2 安全实现建议</h3>
 <ul>
-  <li><strong>iOS Backup Exclusion:</strong>
+  <li><strong>iOS 备份排除</strong>：
     <ul>
-      <li>Exclude any sensitive database or local config file from automatic iCloud and iTunes backups by adding the <code class="language-plaintext highlighter-rouge">.isExcludedFromBackup</code> resource attribute to the file’s URL:
+      <li>通过给文件 URL 添加 <code class="language-plaintext highlighter-rouge">.isExcludedFromBackup</code> 资源属性，把任何敏感数据库或本地配置文件排除在自动 iCloud 与 iTunes 备份之外：
         <div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">var</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">fileURLWithPath</span><span class="p">:</span> <span class="n">path</span><span class="p">)</span>
 <span class="k">var</span> <span class="nv">values</span> <span class="o">=</span> <span class="kt">URLResourceValues</span><span class="p">()</span>
 <span class="n">values</span><span class="o">.</span><span class="n">isExcludedFromBackup</span> <span class="o">=</span> <span class="kc">true</span>
@@ -269,14 +269,14 @@
       </li>
     </ul>
   </li>
-  <li><strong>Android Backup Rules:</strong>
+  <li><strong>Android 备份规则</strong>：
     <ul>
-      <li><strong>Do not</strong> leave <code class="language-plaintext highlighter-rouge">android:allowBackup="true"</code> without defining tight filters. Backups allow extraction of private <code class="language-plaintext highlighter-rouge">/data/data/your.package/</code> files using simple <code class="language-plaintext highlighter-rouge">adb backup</code> commands.</li>
-      <li>For high-security applications, completely disable backup:
+      <li><strong>切勿</strong>在未定义严格过滤规则的情况下保留 <code class="language-plaintext highlighter-rouge">android:allowBackup="true"</code>。备份会让攻击者用简单的 <code class="language-plaintext highlighter-rouge">adb backup</code> 命令提取私有的 <code class="language-plaintext highlighter-rouge">/data/data/your.package/</code> 文件。</li>
+      <li>对高安全应用，应完全禁用备份：
         <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;application</span> <span class="na">android:allowBackup=</span><span class="s">"false"</span> <span class="err">...</span><span class="nt">&gt;</span>
 </code></pre></div>        </div>
       </li>
-      <li>If backup is required, strictly configure <code class="language-plaintext highlighter-rouge">android:dataExtractionRules</code> (Android 12+) and <code class="language-plaintext highlighter-rouge">android:fullBackupContent</code> (Android 11-) in the manifest to target safe folders and explicitly exclude databases, shared preferences holding tokens, and credential files:
+      <li>若确需备份，请在清单中严格配置 <code class="language-plaintext highlighter-rouge">android:dataExtractionRules</code>（Android 12+）与 <code class="language-plaintext highlighter-rouge">android:fullBackupContent</code>（Android 11 及以下），只指向安全目录，并明确排除数据库、存有令牌的 shared preferences 以及凭据文件：
         <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">&lt;!-- res/xml/data_extraction_rules.xml --&gt;</span>
 <span class="nt">&lt;data-extraction-rules&gt;</span>
     <span class="nt">&lt;cloud-backup&gt;</span>
@@ -296,43 +296,43 @@
 
 <hr />
 
-<h2 id="10-exported-activities-android-specific">10. Exported Activities (Android Specific)</h2>
+<h2 id="10-导出-activityandroid-专属">10. 导出 Activity（Android 专属）</h2>
 
-<h3 id="101-overview">10.1 Overview</h3>
-<p>Any activity declared in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> with <code class="language-plaintext highlighter-rouge">android:exported="true"</code> can be launched by any other application running on the device. Unintentionally exported activities expose internal business logic, allow authorization bypass, and can cause tapjacking or state manipulation.</p>
+<h3 id="101-概述">10.1 概述</h3>
+<p>在 <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> 中声明为 <code class="language-plaintext highlighter-rouge">android:exported="true"</code> 的任何 Activity 都能被设备上运行的其他应用启动。无意导出的 Activity 会暴露内部业务逻辑、造成授权绕过，还可能引发点击劫持（tapjacking）或状态篡改。</p>
 
-<h3 id="102-secure-implementation-recommendations">10.2 Secure Implementation Recommendations</h3>
+<h3 id="102-安全实现建议">10.2 安全实现建议</h3>
 <ul>
-  <li><strong>Strict Default:</strong> Set <code class="language-plaintext highlighter-rouge">android:exported="false"</code> for all internal activities.</li>
-  <li><strong>Enforcement since Android 12:</strong> Android 12 (API 31) requires every component (activity, service, receiver) that has intent filters to explicitly declare <code class="language-plaintext highlighter-rouge">android:exported</code>. If it lacks the tag, the app cannot be installed or submitted.</li>
-  <li><strong>Exported Component Protection:</strong>
+  <li><strong>严格默认值</strong>：为所有内部 Activity 设置 <code class="language-plaintext highlighter-rouge">android:exported="false"</code>。</li>
+  <li><strong>自 Android 12 起强制执行</strong>：Android 12（API 31）要求每个带 intent filter 的组件（activity、service、receiver）都必须显式声明 <code class="language-plaintext highlighter-rouge">android:exported</code>。缺少该标签时，应用将无法安装或提交。</li>
+  <li><strong>导出组件保护</strong>：
     <ul>
-      <li>If an activity must be exported (e.g., launching from the home screen or third-party launchers), protect it using custom permission limits:
+      <li>若某个 Activity 必须导出（例如从主屏幕或第三方启动器启动），请用自定义权限加以限制：
         <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MyExportedActivity"</span>
           <span class="na">android:exported=</span><span class="s">"true"</span>
           <span class="na">android:permission=</span><span class="s">"com.mycompany.myapp.PERMISSION_LAUNCH_ACTIVITY"</span><span class="nt">&gt;</span>
 </code></pre></div>        </div>
       </li>
-      <li>Ensure the permission uses <code class="language-plaintext highlighter-rouge">android:protectionLevel="signature"</code>, guaranteeing that only apps signed with your exact developer key can launch the activity.</li>
+      <li>确保该权限使用 <code class="language-plaintext highlighter-rouge">android:protectionLevel="signature"</code>，从而保证只有用你的开发者密钥签名的应用才能启动该 Activity。</li>
     </ul>
   </li>
 </ul>
 
 <hr />
 
-<h2 id="11-intent-filters-android-specific">11. Intent Filters (Android Specific)</h2>
+<h2 id="11-intent-filterandroid-专属">11. Intent Filter（Android 专属）</h2>
 
-<h3 id="111-overview">11.1 Overview</h3>
-<p>Intent filters define which implicit intents an application component can respond to. Registering intent filters automatically exports the component, potentially exposing it to untrusted third-party apps.</p>
+<h3 id="111-概述">11.1 概述</h3>
+<p>Intent filter 定义了应用组件可以响应哪些隐式 intent。注册 intent filter 会自动导出该组件，可能将其暴露给不受信任的第三方应用。</p>
 
-<h3 id="112-secure-implementation-recommendations">11.2 Secure Implementation Recommendations</h3>
+<h3 id="112-安全实现建议">11.2 安全实现建议</h3>
 <ul>
-  <li><strong>Intent Spoofing &amp; Hijacking Prevention:</strong> Validate the sender and verify incoming data within the receiving component before acting on it.
+  <li><strong>防范 Intent 欺骗与劫持</strong>：在接收组件内先校验发送方并验证传入数据，再进行处理。
     <ul>
-      <li>Use <code class="language-plaintext highlighter-rouge">getCallingActivity()</code> or <code class="language-plaintext highlighter-rouge">getCallingPackage()</code> to check if the caller matches a trusted package name and certificate.</li>
+      <li>使用 <code class="language-plaintext highlighter-rouge">getCallingActivity()</code> 或 <code class="language-plaintext highlighter-rouge">getCallingPackage()</code> 检查调用方是否匹配可信的包名与证书。</li>
     </ul>
   </li>
-  <li><strong>Secure Intent Dispatches:</strong> When launching an internal component, use explicit intents (specifying the exact target class or package) instead of implicit intents. This prevents malicious third-party apps on the same device from intercepting or “hijacking” the intent.
+  <li><strong>安全的 Intent 分发</strong>：启动内部组件时使用显式 intent（指明确切的目标类或包），而非隐式 intent。这可防止同一设备上的恶意第三方应用截获或“劫持”该 intent。
     <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">explicitIntent</span> <span class="p">=</span> <span class="nc">Intent</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="nc">TargetActivity</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">).</span><span class="nf">apply</span> <span class="p">{</span>
     <span class="nf">putExtra</span><span class="p">(</span><span class="s">"param"</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 <span class="p">}</span>
@@ -343,31 +343,31 @@
 
 <hr />
 
-<h2 id="12-deep-links">12. Deep Links</h2>
+<h2 id="12-深度链接deep-link">12. 深度链接（Deep Link）</h2>
 
-<h3 id="121-overview">12.1 Overview</h3>
-<p>Deep links let external sources invoke internal routes within the app. Standard deep links using custom URL schemes (e.g., <code class="language-plaintext highlighter-rouge">myapp://route</code>) are inherently insecure, as any other application on the device can register the exact same scheme and hijack the communication, potentially stealing auth tokens or parameters.</p>
+<h3 id="121-概述">12.1 概述</h3>
+<p>深度链接（Deep Link）让外部来源能够调用应用内部的路由。使用自定义 URL scheme 的标准深度链接（例如 <code class="language-plaintext highlighter-rouge">myapp://route</code>）天生不安全，因为设备上任何其他应用都可以注册完全相同的 scheme 并劫持通信，进而窃取认证令牌或参数。</p>
 
-<h3 id="122-secure-implementation-recommendations">12.2 Secure Implementation Recommendations</h3>
+<h3 id="122-安全实现建议">12.2 安全实现建议</h3>
 <ul>
-  <li><strong>Sanitize Input:</strong> Treat deep links as untrusted external inputs. Always sanitize, validate, and parse deep link parameters to prevent SQL injection, path traversal, or remote code execution.</li>
-  <li><strong>Do Not Transmit Secrets:</strong> Never include authentication tokens, session IDs, passwords, or transactional data in deep link URLs.</li>
-  <li><strong>Auth Token Exchange:</strong> If deep links are used for authentication (e.g., magic login links), pass a short-lived, single-use, cryptographically strong challenge token that is exchanged on the server using an explicit HTTPS request, never an active session token itself.</li>
+  <li><strong>净化输入</strong>：把深度链接视为不受信任的外部输入，始终对深度链接参数进行净化、验证和解析，以防 SQL 注入、路径穿越或远程代码执行。</li>
+  <li><strong>不要传输机密信息</strong>：切勿在深度链接 URL 中包含认证令牌、会话 ID、密码或交易数据。</li>
+  <li><strong>认证令牌交换</strong>：若深度链接用于认证（例如魔法登录链接），应传递短时效、一次性、密码学强度高的挑战令牌，并在服务器上通过显式 HTTPS 请求完成交换，绝不能传递处于活跃状态的会话令牌本身。</li>
 </ul>
 
 <hr />
 
-<h2 id="13-universal-links-ios-specific">13. Universal Links (iOS Specific)</h2>
+<h2 id="13-universal-linksios-专属">13. Universal Links（iOS 专属）</h2>
 
-<h3 id="131-overview">13.1 Overview</h3>
-<p>Universal Links are iOS’s secure deep-linking mechanism. Instead of custom URL schemes, they use standard HTTPS links (e.g., <code class="language-plaintext highlighter-rouge">https://mycompany.com/profile</code>). Because domain validation is performed against the website’s configuration, Universal Links cannot be hijacked or duplicated by other applications.</p>
+<h3 id="131-概述">13.1 概述</h3>
+<p>Universal Links 是 iOS 的安全深度链接机制。它不使用自定义 URL scheme，而是使用标准 HTTPS 链接（例如 <code class="language-plaintext highlighter-rouge">https://mycompany.com/profile</code>）。由于域名验证是针对网站配置进行的，其他应用无法劫持或仿冒 Universal Links。</p>
 
-<h3 id="132-secure-implementation-recommendations">13.2 Secure Implementation Recommendations</h3>
+<h3 id="132-安全实现建议">13.2 安全实现建议</h3>
 <ul>
-  <li><strong>AASA Configuration:</strong> Host a valid <strong>Apple App Site Association (AASA)</strong> file on your domain at <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/apple-app-site-association</code>.
+  <li><strong>AASA 配置</strong>：在你的域名上托管一份有效的 <strong>Apple App Site Association</strong>（AASA）文件，路径为 <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/apple-app-site-association</code>。
     <ul>
-      <li>Serve the file with <code class="language-plaintext highlighter-rouge">Content-Type: application/json</code> and no redirects.</li>
-      <li>The file specifies which app bundle IDs are authorized to handle specific URL paths:
+      <li>以 <code class="language-plaintext highlighter-rouge">Content-Type: application/json</code> 提供该文件，且不使用重定向。</li>
+      <li>该文件声明了哪些应用 bundle ID 有权处理特定 URL 路径：
         <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
   </span><span class="nl">"applinks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -384,19 +384,19 @@
       </li>
     </ul>
   </li>
-  <li><strong>Associated Domains Entitlement:</strong> Enable the “Associated Domains” capability in Xcode and add the domain in the format <code class="language-plaintext highlighter-rouge">applinks:yourdomain.com</code>.</li>
+  <li><strong>Associated Domains entitlement</strong>：在 Xcode 中启用 “Associated Domains” 能力，并按 <code class="language-plaintext highlighter-rouge">applinks:yourdomain.com</code> 的格式添加域名。</li>
 </ul>
 
 <hr />
 
-<h2 id="14-app-links-android-specific">14. App Links (Android Specific)</h2>
+<h2 id="14-app-linksandroid-专属">14. App Links（Android 专属）</h2>
 
-<h3 id="141-overview">14.1 Overview</h3>
-<p>Android App Links are standard HTTPS links that are configured to automatically launch the matching app directly, bypassing the platform “disambiguation dialog” by verifying domain ownership.</p>
+<h3 id="141-概述">14.1 概述</h3>
+<p>Android App Links 是标准 HTTPS 链接，通过验证域名所有权来跳过平台的“消歧对话框”，从而配置为直接自动启动匹配的应用。</p>
 
-<h3 id="142-secure-implementation-recommendations">14.2 Secure Implementation Recommendations</h3>
+<h3 id="142-安全实现建议">14.2 安全实现建议</h3>
 <ul>
-  <li><strong>AssetLinks Verification:</strong> Host the <strong>Digital Asset Links</strong> JSON file on your domain at <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/assetlinks.json</code>:
+  <li><strong>AssetLinks 验证</strong>：在你的域名上托管 <strong>Digital Asset Links</strong> JSON 文件，路径为 <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/assetlinks.json</code>：
     <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
   </span><span class="p">{</span><span class="w">
     </span><span class="nl">"relation"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"delegate_permission/common.handle_all_urls"</span><span class="p">],</span><span class="w">
@@ -409,7 +409,7 @@
 </span><span class="p">]</span><span class="w">
 </span></code></pre></div>    </div>
   </li>
-  <li><strong>Manifest Verification Tag:</strong> Add <code class="language-plaintext highlighter-rouge">android:autoVerify="true"</code> to the intent filter within <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> to instruct the operating system to verify the domain ownership on app installation:
+  <li><strong>清单验证标签</strong>：在 <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> 的 intent filter 中添加 <code class="language-plaintext highlighter-rouge">android:autoVerify="true"</code>，指示操作系统在应用安装时验证域名所有权：
     <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;intent-filter</span> <span class="na">android:autoVerify=</span><span class="s">"true"</span><span class="nt">&gt;</span>
     <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"android.intent.action.VIEW"</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
@@ -422,48 +422,48 @@
 
 <hr />
 
-<h2 id="15-authentication-flows">15. Authentication Flows</h2>
+<h2 id="15-认证流程">15. 认证流程</h2>
 
-<h3 id="151-overview">15.1 Overview</h3>
-<p>Mobile authentication flows must handle user credentials securely, prevent reverse engineering of backend secrets, and implement cryptographic challenges to prevent replay attacks.</p>
+<h3 id="151-概述">15.1 概述</h3>
+<p>移动认证流程必须安全地处理用户凭据、防止后端机密被逆向工程，并实现密码学挑战以防重放攻击。</p>
 
-<h3 id="152-secure-implementation-recommendations">15.2 Secure Implementation Recommendations</h3>
+<h3 id="152-安全实现建议">15.2 安全实现建议</h3>
 <ul>
-  <li><strong>OAuth 2.1 / OIDC with PKCE:</strong> Always use <strong>Proof Key for Code Exchange (PKCE)</strong> (RFC 7636) for mobile OAuth integration. PKCE eliminates the need to store client secrets inside the mobile app binary (where they can easily be extracted via reverse engineering) and protects the authorization code exchange against intercept attacks.</li>
-  <li><strong>Embedded vs. System Browser:</strong> Use secure system components (like <code class="language-plaintext highlighter-rouge">ASWebAuthenticationSession</code> on iOS and <strong>Custom Tabs</strong> on Android) for authentication screens. Avoid using embedded <code class="language-plaintext highlighter-rouge">WKWebView</code> or Android <code class="language-plaintext highlighter-rouge">WebView</code> components, which allow the hosting app to sniff or manipulate credentials and passwords entered by the user.</li>
+  <li><strong>OAuth 2.1 / OIDC 与 PKCE</strong>：移动端 OAuth 集成务必使用<strong>授权码交换证明密钥</strong>（Proof Key for Code Exchange，PKCE，RFC 7636）。PKCE 无需把客户端机密存进移动应用二进制文件（那里很容易被逆向工程提取），并能保护授权码交换免受拦截攻击。</li>
+  <li><strong>内嵌浏览器与系统浏览器</strong>：认证界面应使用安全的系统组件（如 iOS 的 <code class="language-plaintext highlighter-rouge">ASWebAuthenticationSession</code> 与 Android 的 <strong>Custom Tabs</strong>）。避免使用内嵌的 <code class="language-plaintext highlighter-rouge">WKWebView</code> 或 Android <code class="language-plaintext highlighter-rouge">WebView</code> 组件——它们会让宿主应用得以嗅探或篡改用户输入的凭据与密码。</li>
 </ul>
 
 <hr />
 
-<h2 id="16-session-handling">16. Session Handling</h2>
+<h2 id="16-会话处理">16. 会话处理</h2>
 
-<h3 id="161-overview">16.1 Overview</h3>
-<p>Session tokens must be securely generated, properly scoped, periodically rotated, and gracefully destroyed when no longer in use.</p>
+<h3 id="161-概述">16.1 概述</h3>
+<p>会话令牌必须安全生成、恰当限定作用范围、定期轮换，并在不再使用时被妥善销毁。</p>
 
-<h3 id="162-secure-implementation-recommendations">16.2 Secure Implementation Recommendations</h3>
+<h3 id="162-安全实现建议">16.2 安全实现建议</h3>
 <ul>
-  <li><strong>Server-Side Session Validation:</strong> The client must never make local assumptions about session validity. Every critical action must be authorized and validated on the server.</li>
-  <li><strong>Session Timeout &amp; Background Policy:</strong>
+  <li><strong>服务端会话校验</strong>：客户端绝不能对会话有效性做本地假设。每个关键操作都必须在服务器上授权并校验。</li>
+  <li><strong>会话超时与后台策略</strong>：
     <ul>
-      <li>Clear sensitive screen data and cached sessions when the app is backgrounded.</li>
-      <li>Blur the app’s snapshot (multitasking view) to prevent sensitive user information from leaking to screenshots.</li>
+      <li>应用退到后台时，清除敏感屏幕数据与缓存会话。</li>
+      <li>对应用快照（多任务视图）做模糊处理，防止敏感用户信息泄漏到截屏中。</li>
     </ul>
   </li>
-  <li><strong>Logout Integrity:</strong> When a user logs out, perform a complete session invalidation on the server-side, and simultaneously clear all local access/refresh tokens, cookies, and local database keys on the device.</li>
+  <li><strong>登出完整性</strong>：用户登出时，在服务端执行完整的会话失效处理，同时在设备上清除所有本地访问/刷新令牌、cookie 以及本地数据库密钥。</li>
 </ul>
 
 <hr />
 
-<h2 id="17-token-storage">17. Token Storage</h2>
+<h2 id="17-令牌存储">17. 令牌存储</h2>
 
-<h3 id="171-overview">17.1 Overview</h3>
-<p>Tokens (Access Tokens, Refresh Tokens, JWTs) are sensitive authorization credentials. If leaked, they allow full identity theft.</p>
+<h3 id="171-概述">17.1 概述</h3>
+<p>令牌（访问令牌、刷新令牌、JWT）是敏感的授权凭据，一旦泄露即可被用于完整的身份盗用。</p>
 
-<h3 id="172-secure-implementation-recommendations">17.2 Secure Implementation Recommendations</h3>
+<h3 id="172-安全实现建议">17.2 安全实现建议</h3>
 <ul>
-  <li><strong>No Disk Leakage:</strong> Never write tokens to regular files, unencrypted SQLite databases, standard logs, or console output (<code class="language-plaintext highlighter-rouge">NSLog</code>, <code class="language-plaintext highlighter-rouge">print</code>, <code class="language-plaintext highlighter-rouge">Log.d</code>).</li>
-  <li><strong>Secure Vaulting:</strong> Store tokens strictly inside the <strong>iOS Keychain</strong> or <strong>Android EncryptedSharedPreferences</strong> / Keystore-encrypted database.</li>
-  <li><strong>Refresh Token Isolation:</strong> Refresh tokens have long lifetimes and must be protected with additional security constraints (e.g., biometrics required or scoped to <code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code>). Access tokens should be short-lived (e.g., 15 minutes), with refresh tokens rotated on each use.</li>
+  <li><strong>不落盘泄露</strong>：切勿把令牌写入普通文件、未加密的 SQLite 数据库、标准日志或控制台输出（<code class="language-plaintext highlighter-rouge">NSLog</code>、<code class="language-plaintext highlighter-rouge">print</code>、<code class="language-plaintext highlighter-rouge">Log.d</code>）。</li>
+  <li><strong>安全保管</strong>：令牌只能严格存放在 <strong>iOS Keychain</strong> 或 <strong>Android EncryptedSharedPreferences</strong> / 经 Keystore 加密的数据库中。</li>
+  <li><strong>刷新令牌隔离</strong>：刷新令牌生命周期长，必须施以额外的安全约束（例如要求生物识别，或限定为 <code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code>）。访问令牌应短时效（例如 15 分钟），并在每次使用时轮换刷新令牌。</li>
 </ul>
 
 

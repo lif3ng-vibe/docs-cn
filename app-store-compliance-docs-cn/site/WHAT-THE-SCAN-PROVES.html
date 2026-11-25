@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Begin Jekyll SEO tag v2.9.1 -->
-<title>What the scan proves, and what it cannot | App Store Compliance Playbook</title>
+<title>扫描能证明什么，不能证明什么 | App Store Compliance Playbook</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="What the scan proves, and what it cannot" />
+<meta property="og:title" content="扫描能证明什么，不能证明什么" />
 <meta name="author" content="Mirza Iqbal" />
 <meta property="og:locale" content="zh_CN" />
 <meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
@@ -18,14 +18,14 @@
 <meta property="og:site_name" content="App Store Compliance Playbook" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="What the scan proves, and what it cannot" />
+<meta name="twitter:title" content="扫描能证明什么，不能证明什么" />
 <meta name="twitter:site" content="@MirzaJhanzaib" />
 <meta name="twitter:creator" content="@Mirza Iqbal" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"What the scan proves, and what it cannot","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"扫描能证明什么，不能证明什么","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=cd21097d316b82ae1559eb00755aeff44e533733">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=50455e578883eb8fcbd98d5de9332b7c3e6a34bc">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -46,64 +46,64 @@
 
       <!-- freshness: 60d -->
 
-<p>This page answers the questions developers asked most after the playbook spread on X in November 2026. About 300 replies were read and sorted by theme on 19 November 2026. Every answer points at a file in this repo, so you can check it rather than trust it.</p>
+<p>2026 年 11 月这本实战手册在 X 上传开之后，开发者问得最多的问题，本页逐一作答。2026 年 11 月 19 日，约 300 条回复被通读并按主题归类。每个答案都指向本仓库中的一个文件，你可以去核对，而不必凭空相信。</p>
 
-<h2 id="1-the-two-halves-of-being-ready">1. The two halves of being ready</h2>
+<h2 id="1-就绪的两半">1. 就绪的两半</h2>
 
-<p>A clean scan and a ready submission are different things. The guard reads your project. A reviewer reads your running build, your store listing, and your review notes. Most painful rejections live in the second half.</p>
+<p>扫描干净与提交就绪是两回事。守卫（the guard）读的是你的工程；审核员（reviewer）读的是你跑起来的构建、商店详情页（store listing）和审核说明（review notes）。最令人痛苦的拒审（rejection）大多出在后一半。</p>
 
 <table>
   <thead>
     <tr>
-      <th>Half</th>
-      <th>What it covers</th>
-      <th>How you prove it</th>
+      <th>哪一半</th>
+      <th>覆盖什么</th>
+      <th>如何证明</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Checked by the scan</td>
-      <td>Selected patterns in source code, missing purpose-string keys in Info.plist, the privacy manifest, AndroidManifest permissions, Gradle and Xcode build settings, SDK names in your dependencies, placeholder text, signs of non-store payment code. Whether a purpose string fits its feature is a manual check</td>
+      <td>扫描可查</td>
+      <td>源代码中的选定模式、Info.plist 中缺失的用途说明（purpose string）键、隐私清单（privacy manifest）、AndroidManifest 权限、Gradle 与 Xcode 构建设置、依赖中的 SDK 名称、占位文本、非商店支付代码的迹象。用途说明是否契合其功能属于人工检查</td>
       <td><code class="language-plaintext highlighter-rouge">bash agent-os/hooks/app-store-compliance-guard.sh "/path/to/app"</code></td>
     </tr>
     <tr>
-      <td>Only a person can prove</td>
-      <td>A demo account that signs in, a backend that is live and holds test data, review notes that say where each feature is, screenshots of this build for each device family you support, account deletion working on a real device, privacy labels that match real traffic, an in-app purchase the reviewer can reach</td>
-      <td><code class="language-plaintext highlighter-rouge">.app-review-readiness.json</code>, read by the same guard</td>
+      <td>只能由人证明</td>
+      <td>能登录的演示账号（demo account）、在线且存有测试数据的后端、说明每个功能位于何处的审核说明、你支持的每种设备家族上本构建的截图、在真机上可用的应用内账号删除、与真实流量相符的隐私营养标签、审核员能触达的应用内购买（In-App Purchase，IAP）</td>
+      <td><code class="language-plaintext highlighter-rouge">.app-review-readiness.json</code>，由同一个守卫读取</td>
     </tr>
   </tbody>
 </table>
 
-<p>Since version 2.5.0 the guard prints both halves on every run. With no readiness file it says plainly which checks it could not see. Copy <a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/app-review-readiness.json">the template</a> into your app folder, test each item on the release build, write <code class="language-plaintext highlighter-rouge">pass</code>, <code class="language-plaintext highlighter-rouge">fail</code>, <code class="language-plaintext highlighter-rouge">n/a</code>, or <code class="language-plaintext highlighter-rouge">todo</code>, and set <code class="language-plaintext highlighter-rouge">checked_on</code> to that day.</p>
+<p>自 2.5.0 版起，守卫每次运行都会把两半都打印出来。若没有就绪文件（readiness file），它会明说哪些检查它看不到。把<a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/app-review-readiness.json">模板</a>复制进你的应用文件夹，在发布构建上逐项验证，填写 <code class="language-plaintext highlighter-rouge">pass</code>、<code class="language-plaintext highlighter-rouge">fail</code>、<code class="language-plaintext highlighter-rouge">n/a</code> 或 <code class="language-plaintext highlighter-rouge">todo</code>，并把 <code class="language-plaintext highlighter-rouge">checked_on</code> 设为当天。</p>
 
 <ul>
-  <li>A check marked <code class="language-plaintext highlighter-rouge">fail</code> always blocks, so a broken demo login stops the submission the same way a missing purpose string does.</li>
-  <li>Set <code class="language-plaintext highlighter-rouge">"enforce": true</code> in the file, or <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_REQUIRE_READINESS=1</code>, and any check still <code class="language-plaintext highlighter-rouge">todo</code> blocks too. Use this in CI.</li>
-  <li>A readiness file that exists but cannot be read always blocks, whatever the settings, because a fail inside it cannot be seen. That covers broken JSON, a check value that is not plain text, a folder or broken link with the readiness file’s name, and a machine with no python3. A file saved as UTF-8 with a byte order mark, UTF-16, or UTF-32 is read normally.</li>
-  <li><code class="language-plaintext highlighter-rouge">n/a</code> counts only with a reason under <code class="language-plaintext highlighter-rouge">notes</code> for that check. The privacy labels check never accepts <code class="language-plaintext highlighter-rouge">n/a</code>, because every app has one.</li>
-  <li>A <code class="language-plaintext highlighter-rouge">checked_on</code> date older than 30 days, missing, or in the future is flagged, because a pass on last month’s build says nothing about this one.</li>
-  <li>In a monorepo each app is read on its own. The guard uses the nearest file above each app, up to the workspace root, and names the file it used. In a single app tree it reads only the file in the folder you scan. If another readiness file sits up to eight folders below it, outside node_modules, Pods, .pub-cache, and .git, the report names one as not read, so scan that app folder to use it. A repeated key in the file is reported, and a recorded fail among its values still counts.</li>
+  <li>标记为 <code class="language-plaintext highlighter-rouge">fail</code> 的检查总是阻断，因此一个坏掉的演示登录与一个缺失的用途说明一样，都会拦下这次提交。</li>
+  <li>在文件里设置 <code class="language-plaintext highlighter-rouge">"enforce": true</code>，或设置 <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_REQUIRE_READINESS=1</code>，则任何仍为 <code class="language-plaintext highlighter-rouge">todo</code> 的检查也会阻断。请在 CI 中使用这一招。</li>
+  <li>就绪文件存在却无法读取时，无论设置如何都会阻断，因为藏在里面的 fail 看不见。这包括 JSON 损坏、检查值不是纯文本、与就绪文件同名的文件夹或失效链接，以及没有 python3 的机器。以带字节顺序标记（BOM）的 UTF-8、UTF-16 或 UTF-32 保存的文件可以正常读取。</li>
+  <li><code class="language-plaintext highlighter-rouge">n/a</code> 只有在该检查的 <code class="language-plaintext highlighter-rouge">notes</code> 下写明原因时才作数。隐私营养标签检查从不接受 <code class="language-plaintext highlighter-rouge">n/a</code>，因为每个应用都有隐私营养标签。</li>
+  <li><code class="language-plaintext highlighter-rouge">checked_on</code> 日期超过 30 天、缺失或落在未来，都会被标记，因为上个月构建上的通过说明不了这一个构建的任何事。</li>
+  <li>在 monorepo 中，每个应用各自读取自己的文件。守卫会采用每个应用上方最近的就绪文件，直到工作区根目录为止，并报告它实际使用的那个文件。在单应用目录树中，它只读取你扫描的文件夹里的那一份。如果另一个就绪文件位于其下最多八层文件夹处（node_modules、Pods、.pub-cache 和 .git 之外），报告会把其中一个标为未读取，此时请扫描那个应用文件夹以启用它。文件中的重复键会被报告，取值中记录的 fail 仍然作数。</li>
 </ul>
 
-<p>The full manual walk is <a href="/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html">the pre-submission checklist</a>. For the review notes themselves, use <a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/REVIEW-NOTES-TEMPLATE.md">the review notes template</a>.</p>
+<p>完整的人工走查见<a href="/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html">提交前清单</a>。审核说明本身请使用<a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/REVIEW-NOTES-TEMPLATE.md">审核说明模板</a>。</p>
 
-<h2 id="2-how-current-are-the-rules">2. How current are the rules</h2>
+<h2 id="2-规则有多新">2. 规则有多新</h2>
 
-<p>A stale checklist gives false confidence, and several people said that is worse than none. So every report now opens with a line like this.</p>
+<p>一份过时的清单给人虚假的信心，好几位开发者表示这比没有清单更糟。因此现在每份报告都以这样一行开头。</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Rule pack. v2.5.0. Its 109 dated sources were verified between 2026-07-13 and 2026-11-21 (newest 0 days ago). The checks run against this dated snapshot, not the live guideline pages.
 Rule pack. 2 of 109 dated sources were last verified more than 60 days ago, so their rules may have changed since. Each one carries its date as verified_on in data/regulatory-deadlines.json.
 </code></pre></div></div>
 
 <ul>
-  <li>The checks are a snapshot, not a live read of Apple’s or Google’s pages. Each deadline in <a href="https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json">data/regulatory-deadlines.json</a> carries the <code class="language-plaintext highlighter-rouge">source_url</code> it was read from and the <code class="language-plaintext highlighter-rouge">verified_on</code> day.</li>
-  <li>The line shows the oldest and newest source date, and counts the sources older than the window, so one fresh record cannot hide old ones. When even the newest source is past 60 days, the guard prints <code class="language-plaintext highlighter-rouge">Rule pack STALE</code> and the command to update. Change the window with <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_STALE_DAYS</code>. If the date cannot be read or compared, it says freshness was not checked rather than staying quiet.</li>
-  <li>Sweeps run about every two months and are written up as gap analyses, the latest <a href="/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html">November 2026</a>. Between sweeps the monitors in <code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> watch Apple’s news feed and the Play policy pages.</li>
+  <li>这些检查是一份快照，不是对 Apple 或 Google 页面的实时读取。<a href="https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json">data/regulatory-deadlines.json</a> 中的每个截止日期都带有读取它所用的 <code class="language-plaintext highlighter-rouge">source_url</code> 和 <code class="language-plaintext highlighter-rouge">verified_on</code> 日期。</li>
+  <li>这一行会显示最旧与最新的来源日期，并统计超出时间窗的来源数量，因此一条新鲜的记录掩盖不了陈旧的记录。当连最新的来源也超过 60 天时，守卫会打印 <code class="language-plaintext highlighter-rouge">Rule pack STALE</code> 和更新命令。时间窗可用 <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_STALE_DAYS</code> 调整。若日期无法读取或比较，它会明说新鲜度未检查，而不是保持沉默。</li>
+  <li>巡检（sweep）约每两个月进行一次，并写成差距分析（gap analysis），最新一篇是 <a href="/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html">2026 年 11 月</a>。两次巡检之间，<code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> 中的监控脚本会盯住 Apple 的新闻源与 Play 政策页面。</li>
 </ul>
 
-<h2 id="3-both-stores-at-similar-depth">3. Both stores, at similar depth</h2>
+<h2 id="3-两大商店深度相近">3. 两大商店，深度相近</h2>
 
-<p>The playbook covers the Apple App Store and Google Play. People asked whether Play is an afterthought. It is not, as the counts below show (taken from this repo on 21 November 2026).</p>
+<p>这本实战手册同时覆盖 Apple App Store 与 Google Play。有人问 Play 是不是附属品。并不是，下面的数字可以说明（2026 年 11 月 21 日取自本仓库）。</p>
 
 <table>
   <thead>
@@ -111,24 +111,24 @@ Rule pack. 2 of 109 dated sources were last verified more than 60 days ago, so t
       <th> </th>
       <th>Apple</th>
       <th>Google Play</th>
-      <th>Both</th>
+      <th>两者共有</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Rejection patterns in <code class="language-plaintext highlighter-rouge">data/rejection-patterns.json</code></td>
+      <td><code class="language-plaintext highlighter-rouge">data/rejection-patterns.json</code> 中的拒审模式</td>
       <td>62</td>
       <td>43</td>
       <td>13</td>
     </tr>
     <tr>
-      <td>Distinct code checks in the guard</td>
+      <td>守卫中独立的代码检查</td>
       <td>34</td>
-      <td>38 (20 Play policy, 18 Android build)</td>
+      <td>38（20 项 Play 政策，18 项 Android 构建）</td>
       <td>5</td>
     </tr>
     <tr>
-      <td>Rule map</td>
+      <td>规则地图</td>
       <td><a href="/docs-cn/app-store-compliance/APPLE.html">APPLE.md</a></td>
       <td><a href="/docs-cn/app-store-compliance/GOOGLE-PLAY.html">GOOGLE-PLAY.md</a></td>
       <td><a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">MISTAKE-PATTERNS.md</a></td>
@@ -136,173 +136,173 @@ Rule pack. 2 of 109 dated sources were last verified more than 60 days ago, so t
   </tbody>
 </table>
 
-<p>On Play, the guard reads every <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> for sensitive permissions (background location, SMS and call log, all files, accessibility, photos and videos, foreground service special use), checks target SDK and 64-bit ABIs in Gradle, looks for Play Billing on digital goods, and flags analytics or ad SDKs so you verify the Data Safety form. A screenshot that does not match the build is a manual check on both stores.</p>
+<p>在 Play 上，守卫会读取每个 <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> 检查敏感权限（后台定位、短信与通话记录、所有文件、无障碍、照片与视频、前台服务特殊用途），在 Gradle 中核对目标 SDK 与 64 位 ABI，检查数字商品是否接入了 Play Billing，并标记分析或广告 SDK，以便你去核对数据安全（Data safety）表单。截图与构建不一致，在两个商店都属于人工检查项。</p>
 
-<p>The Mac App Store shares Apple’s guidelines and is covered where the code is shared. Notarization and Developer ID for apps outside the store are in <a href="/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html">PLATFORM-MECHANICS-2026.md</a>.</p>
+<p>Mac App Store 与 Apple 的审核指南共用一套规则，在代码共用的范围内被覆盖。商店外分发应用的公证（notarization）与 Developer ID 见 <a href="/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html">PLATFORM-MECHANICS-2026.md</a>。</p>
 
-<p>Not covered by the guard. the rules of Huawei AppGallery and the other Chinese Android stores, Samsung Galaxy Store, and the rest. Their review rules are summarised in <a href="/docs-cn/app-store-compliance/OTHER-STORES.html">OTHER-STORES.md</a> for reading, with no code checks behind them. A new personal Google Play account also needs a closed test with at least 12 testers for 14 days in a row before production. The guard cannot see Play Console, so that one is a checklist item.</p>
+<p>守卫未覆盖的范围：华为 AppGallery 及其他中国 Android 商店、Samsung Galaxy Store 等的规则。它们的审核规则汇总在 <a href="/docs-cn/app-store-compliance/OTHER-STORES.html">OTHER-STORES.md</a> 供阅读，背后没有代码检查。新的个人 Google Play 账号在进入正式版（production）前，还需要至少 12 名测试者连续 14 天的封闭测试。守卫看不到 Play Console，因此这一项只能作为清单事项。</p>
 
-<h2 id="4-guideline-43-spam-and-42-minimum-functionality-honestly">4. Guideline 4.3 spam and 4.2 minimum functionality, honestly</h2>
+<h2 id="4-guideline-43-垃圾应用与-42-最低功能要求坦率地说">4. Guideline 4.3 垃圾应用与 4.2 最低功能要求：坦率地说</h2>
 
-<p>Many replies asked about 4.3, often after eight or ten rejections. A static scan cannot decide 4.3. Apple judges it on whether your binary, metadata, and concept look like apps already in the store, including apps from other developers, and that store is not in your repo.</p>
+<p>许多回复都在问 4.3，而且往往是在被拒八到十次之后。静态扫描无法判定 4.3。Apple 判断的依据，是你的二进制文件、元数据和创意是否与商店里已有的应用（包括其他开发者的应用）相像，而那个商店并不在你的仓库里。</p>
 
-<p>What the playbook does for 4.3 and 4.2.</p>
+<p>针对 4.3 和 4.2，实战手册能做的事。</p>
 
 <ul>
-  <li>Flags a WebView, Capacitor, or Cordova shell with almost no native features (IONIC-4.2-THIN-WRAPPER). It is a heuristic, not a verdict.</li>
-  <li>Names the process causes behind 4.3 in <a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">MISTAKE-PATTERNS.md</a>. Many near identical apps from one account, template or reseller apps, duplicate bundle IDs for variations, and a low effort entry in a saturated niche.</li>
-  <li>Gives the reply that works in <a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html#申诉实战手册">the appeal playbook</a>. Do not resubmit blind. Answer App Review point by point in Resolution Center, say what is unique and who it is for, and attach a short screen recording of the feature that makes the difference.</li>
+  <li>标记几乎没有原生功能的 WebView、Capacitor 或 Cordova 壳应用（IONIC-4.2-THIN-WRAPPER）。这只是启发式判断，不是结论。</li>
+  <li>在 <a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">MISTAKE-PATTERNS.md</a> 中点出 4.3 背后的流程性成因：同一账号下大量近乎相同的应用、模板应用或转售应用、为应用变体复制 bundle ID，以及以低投入挤进已饱和的细分赛道。</li>
+  <li>在<a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html#申诉实战手册">申诉实战手册</a>里给出有效的答复方式。不要盲目重新提交。在 Resolution Center 中逐条回应 App Review，说明你的应用独特在哪里、面向谁，并附上一段展示关键差异功能的简短录屏。</li>
 </ul>
 
-<p>What it cannot do. Tell you that your concept is too close to someone else’s. Treat any tool that claims it can with suspicion.</p>
+<p>它做不到的事：告诉你你的创意与别人的过于接近。任何声称能做到这一点的工具都值得怀疑。</p>
 
-<h2 id="5-rejections-people-reported-and-whether-this-catches-them">5. Rejections people reported, and whether this catches them</h2>
+<h2 id="5-开发者报告的拒审以及本工具能否捕获">5. 开发者报告的拒审，以及本工具能否捕获</h2>
 
-<p>Taken from rejection reasons developers described in public replies in November 2026. They are the developers’ own accounts, not verified rejection letters. Where a reason was vague, the row says so.</p>
+<p>取自开发者 2026 年 11 月在公开回复中描述的拒审原因。它们是开发者自己的陈述，不是经过核实的拒审函。原因含糊的，表中如实注明。</p>
 
 <table>
   <thead>
     <tr>
-      <th>Reported reason</th>
-      <th>Caught by</th>
-      <th>Strength</th>
+      <th>报告的拒审原因</th>
+      <th>捕获手段</th>
+      <th>可靠程度</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Missing privacy manifest, purpose strings that did not match</td>
-      <td>Guard. APPLE-PRIVACY-MANIFEST-MISSING and APPLE-5.1.1-MISSING-USAGE-DESCRIPTION for a missing key, plus <code class="language-plaintext highlighter-rouge">scripts/validate-privacy-manifest.py</code>. Whether the wording fits the feature is not checked</td>
-      <td>Scan for missing keys, a person for the wording</td>
+      <td>缺失隐私清单、用途说明与实际不符</td>
+      <td>守卫。键缺失时报 APPLE-PRIVACY-MANIFEST-MISSING 和 APPLE-5.1.1-MISSING-USAGE-DESCRIPTION，另有 <code class="language-plaintext highlighter-rouge">scripts/validate-privacy-manifest.py</code>。措辞是否契合功能不在检查范围</td>
+      <td>缺键靠扫描，措辞靠人工</td>
     </tr>
     <tr>
-      <td>Onboarding button said “Allow permissions” before the location prompt, Apple wanted “Continue”</td>
-      <td>Guard. APPLE-5.1.1-PRE-PROMPT-ALLOW-BUTTON, new in 2.5.0, when the button and the permission request sit in the same file</td>
-      <td>Scan, medium, reported as possible</td>
+      <td>引导按钮在定位权限弹窗之前写着 “Allow permissions”，而 Apple 要求写成 “Continue”</td>
+      <td>守卫。2.5.0 新增的 APPLE-5.1.1-PRE-PROMPT-ALLOW-BUTTON，在按钮与权限请求位于同一文件时触发</td>
+      <td>扫描，中等强度，据报告可能捕获</td>
     </tr>
     <tr>
-      <td>Reviewer could not log in</td>
-      <td>Guard. APPLE-2.1-STAGING-BACKEND for a staging or localhost backend, plus <code class="language-plaintext highlighter-rouge">demo_account</code> in the readiness file</td>
-      <td>Scan flags part, a person proves the rest</td>
+      <td>审核员无法登录</td>
+      <td>守卫。后端为预发环境或 localhost 时报 APPLE-2.1-STAGING-BACKEND，另外还有就绪文件中的 <code class="language-plaintext highlighter-rouge">demo_account</code></td>
+      <td>扫描标记一部分，其余由人工证明</td>
     </tr>
     <tr>
-      <td>Reviewer could not find the in-app purchase</td>
-      <td><code class="language-plaintext highlighter-rouge">iap_reachable_by_reviewer</code> and <code class="language-plaintext highlighter-rouge">review_notes</code> in the readiness file</td>
-      <td>Person</td>
+      <td>审核员找不到应用内购买</td>
+      <td>就绪文件中的 <code class="language-plaintext highlighter-rouge">iap_reachable_by_reviewer</code> 与 <code class="language-plaintext highlighter-rouge">review_notes</code></td>
+      <td>人工</td>
     </tr>
     <tr>
-      <td>Five of six rejections were account information and the privacy policy</td>
-      <td>Guard. APPLE-5.1.1-MISSING-PRIVACY-POLICY and GOOGLE-MISSING-PRIVACY-POLICY, <code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> for the listing URL</td>
-      <td>Partial</td>
+      <td>六次拒审中有五次是账号信息与隐私政策</td>
+      <td>守卫。APPLE-5.1.1-MISSING-PRIVACY-POLICY 和 GOOGLE-MISSING-PRIVACY-POLICY，详情页 URL 由 <code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> 检查</td>
+      <td>部分覆盖</td>
     </tr>
     <tr>
-      <td>Naming Google Play or an Android API inside the iOS app</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> APPLE-2.3-CROSS-PLATFORM-REFERENCE on listing text. Strings inside the binary are not checked</td>
-      <td>Partial</td>
+      <td>在 iOS 应用内提到 Google Play 或某个 Android API</td>
+      <td><code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> 对详情页文本检查 APPLE-2.3-CROSS-PLATFORM-REFERENCE。二进制内的字符串不在检查范围</td>
+      <td>部分覆盖</td>
     </tr>
     <tr>
-      <td>AI-built web wrapper bounced under 4.2</td>
-      <td>Guard. IONIC-4.2-THIN-WRAPPER for WebView shells</td>
-      <td>Scan, heuristic</td>
+      <td>AI 生成的网页壳应用以 4.2 被拒</td>
+      <td>守卫。对 WebView 壳报 IONIC-4.2-THIN-WRAPPER</td>
+      <td>扫描，启发式</td>
     </tr>
     <tr>
-      <td>4.3(a) and 4.3(b) spam, duplicate app, saturated niche</td>
-      <td>Not decidable by a scan. See section 4</td>
-      <td>Guidance only</td>
+      <td>4.3(a) 与 4.3(b) 垃圾应用、重复应用、饱和细分赛道</td>
+      <td>扫描无法判定。见第 4 节</td>
+      <td>仅指导</td>
     </tr>
     <tr>
-      <td>UI not “1:1 and consistent across screens”</td>
-      <td>Not covered. The reason as reported is too vague to map to one guideline</td>
-      <td>None</td>
+      <td>UI 未做到”1:1 且各屏幕一致”</td>
+      <td>未覆盖。所报告的原因过于含糊，无法对应到某条审核指南</td>
+      <td>无</td>
     </tr>
     <tr>
-      <td>iPad layout and iPad screenshots</td>
-      <td><code class="language-plaintext highlighter-rouge">screenshots_match_build</code> in the readiness file. Layout on iPad is not scanned</td>
-      <td>Person</td>
+      <td>iPad 布局与 iPad 截图</td>
+      <td>就绪文件中的 <code class="language-plaintext highlighter-rouge">screenshots_match_build</code>。iPad 上的布局不做扫描</td>
+      <td>人工</td>
     </tr>
     <tr>
-      <td>Trial or intro offer text shown to an Apple ID that already used it</td>
-      <td>Not scanned. Check <code class="language-plaintext highlighter-rouge">Product.SubscriptionInfo.isEligibleForIntroOffer</code> (StoreKit 2) before you show trial wording, and state what is charged after the trial (3.1.2(a))</td>
-      <td>Guidance only</td>
+      <td>向已用过试用资格的 Apple ID 展示试用或介绍性优惠文案</td>
+      <td>不做扫描。展示试用文案前请检查 <code class="language-plaintext highlighter-rouge">Product.SubscriptionInfo.isEligibleForIntroOffer</code>（StoreKit 2），并说明试用期结束后收取什么费用（3.1.2(a)）</td>
+      <td>仅指导</td>
     </tr>
     <tr>
-      <td>Account deletion that let the account sign back in</td>
-      <td>Guard. APPLE-5.1.1-NO-ACCOUNT-DELETION and APPLE-ACCOUNT-DELETION-WEAK, plus <code class="language-plaintext highlighter-rouge">account_deletion_device_test</code> in the readiness file</td>
-      <td>Scan finds the flow, a person proves it works</td>
+      <td>删除账号后账号仍能重新登录</td>
+      <td>守卫。APPLE-5.1.1-NO-ACCOUNT-DELETION 和 APPLE-ACCOUNT-DELETION-WEAK，另外还有就绪文件中的 <code class="language-plaintext highlighter-rouge">account_deletion_device_test</code></td>
+      <td>扫描找到流程，人工证明其可用</td>
     </tr>
     <tr>
-      <td>Permissions pulled in by a third-party SDK</td>
-      <td>Guard. APPLE-5.1.2-MISSING-ATT for tracking SDKs, APPLE-PRIVACY-MANIFEST-MISSING for required reason SDKs, GOOGLE-DATASAFETY-MISMATCH for analytics and ad SDKs</td>
-      <td>Partial</td>
+      <td>第三方 SDK 带进来的权限</td>
+      <td>守卫。跟踪 SDK 报 APPLE-5.1.2-MISSING-ATT，需说明理由的 SDK 报 APPLE-PRIVACY-MANIFEST-MISSING，分析与广告 SDK 报 GOOGLE-DATASAFETY-MISMATCH</td>
+      <td>部分覆盖</td>
     </tr>
   </tbody>
 </table>
 
-<p>Rows marked None or Guidance only are the honest gaps. If you were rejected for one of them, <a href="https://github.com/mjmirza/app-store-compliance/issues">open an issue</a> with the guideline number from the letter and it becomes a check or a documented pattern.</p>
+<p>标注为”无”或”仅指导”的行就是诚实的空白。如果你因其中某项被拒，请带上拒审函中的指南编号<a href="https://github.com/mjmirza/app-store-compliance/issues">提交 issue</a>，它会变成一条检查或一个成文的模式。</p>
 
-<h2 id="6-a-clear-scan-is-not-an-approval">6. A clear scan is not an approval</h2>
+<h2 id="6-扫描干净不等于过审">6. 扫描干净不等于过审</h2>
 
-<p><code class="language-plaintext highlighter-rouge">CLEAR.</code> means no critical risk in what the scan can see. It does not mean Apple or Google will approve. Reviewers are people, and a submission can still be rejected on a judgment call. What the playbook saves is the extra round after a rejection you could have prevented, not the queue time itself.</p>
+<p><code class="language-plaintext highlighter-rouge">CLEAR.</code> 的含义是：扫描看得见的范围内没有关键风险。它不等于 Apple 或 Google 会批准。审核员也是人，提交仍可能因主观判断被拒。实战手册帮你省下的，是本可避免的拒审之后那一轮额外的返工，而不是排队时间本身。</p>
 
-<p>On queue time, Apple’s App Review page says at least 50 percent of submissions are reviewed in under 24 hours and 90 percent in under 48 hours (<a href="https://developer.apple.com/distribute/app-review/">Apple</a>). Developers in the replies saw anything from same day to five weeks, longest for new apps and for the round after a rejection. If a critical bug fix is stuck, Apple accepts expedited review requests with the steps to reproduce the bug.</p>
+<p>关于排队时间，Apple 的 App Review 页面称，至少 50% 的提交在 24 小时内完成审核，90% 在 48 小时内完成（<a href="https://developer.apple.com/distribute/app-review/">Apple</a>）。回复区的开发者经历的时间从当天到五周不等，新应用和被拒后的那一轮最久。如果关键的 bug 修复被卡住，Apple 接受附带 bug 复现步骤的加急审核申请。</p>
 
-<h2 id="7-when-the-guard-runs-and-what-its-exit-code-means">7. When the guard runs, and what its exit code means</h2>
+<h2 id="7-守卫何时运行退出码意味着什么">7. 守卫何时运行，退出码意味着什么</h2>
 
-<p>Run by hand, the report ends with a verdict, and the exit code matches it. A <code class="language-plaintext highlighter-rouge">Next.</code> line with the step to take can follow it.</p>
+<p>手动运行时，报告以一行判定收尾，退出码与判定一致。其后可能跟一行 <code class="language-plaintext highlighter-rouge">Next.</code>，写明下一步该做什么。</p>
 
 <table>
   <thead>
     <tr>
-      <th>Exit</th>
-      <th>Verdict line</th>
-      <th>Meaning</th>
+      <th>退出码</th>
+      <th>判定行</th>
+      <th>含义</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>0</td>
       <td><code class="language-plaintext highlighter-rouge">CLEAR.</code></td>
-      <td>No critical risk in what the scan can see. Not an approval</td>
+      <td>扫描可见范围内无关键风险。不等于过审</td>
     </tr>
     <tr>
       <td>2</td>
       <td><code class="language-plaintext highlighter-rouge">BLOCKED.</code></td>
-      <td>A critical risk in the code, or a manual check recorded as failed</td>
+      <td>代码中存在关键风险，或某项人工检查被记录为失败</td>
     </tr>
     <tr>
       <td>1</td>
       <td><code class="language-plaintext highlighter-rouge">NOT CHECKED.</code></td>
-      <td>No iOS or Android project was found, so nothing was proven. Treat it as a failure in CI, never as a pass</td>
+      <td>未找到 iOS 或 Android 工程，什么都没有被证明。在 CI 中按失败处理，绝不能当作通过</td>
     </tr>
   </tbody>
 </table>
 
-<p><code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK=1</code> turns a block into exit 0 with the line <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK set.</code>, and the run is logged. Use it only for a finding you have checked by hand.</p>
+<p><code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK=1</code> 会把阻断改为退出码 0，并打印一行 <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK set.</code>，同时记录本次运行。只对你已人工核实过的发现使用它。</p>
 
-<p>As a hook inside an AI coding tool, the guard runs only when that tool is about to run a submit command (fastlane, eas submit, xcrun altool, a Gradle release bundle, and the others in the README). Two things follow.</p>
+<p>作为 AI 编码工具中的钩子（hook），守卫只在该工具即将执行提交命令时运行（fastlane、eas submit、xcrun altool、Gradle release bundle，以及 README 中的其他命令）。由此有两点推论。</p>
 
 <ul>
-  <li>A <code class="language-plaintext highlighter-rouge">NOT CHECKED</code> result lets the command through by default, so a hook never blocks work in a folder that is not an app. Set <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_BLOCK_UNCHECKED=1</code> to block it instead.</li>
-  <li>A submit you start yourself in a terminal, or in CI, does not pass through the hook. Call the guard there too. In a CI step, run it against the app folder and stop on any exit code other than 0.</li>
+  <li><code class="language-plaintext highlighter-rouge">NOT CHECKED</code> 结果默认放行命令，因此钩子绝不会在非应用文件夹里挡住你的工作。若想改为阻断，设置 <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_BLOCK_UNCHECKED=1</code>。</li>
+  <li>你在终端或 CI 中自行发起的提交不经过钩子。这两处也要调用守卫。在 CI 步骤中，对应用文件夹运行它，并在退出码不为 0 时停止。</li>
 </ul>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash /path/to/app-store-compliance/agent-os/hooks/app-store-compliance-guard.sh "$PWD"
 </code></pre></div></div>
 
-<p>In Fastlane, the same command in a <code class="language-plaintext highlighter-rouge">before_all</code> block with <code class="language-plaintext highlighter-rouge">sh(...)</code> stops the lane, because <code class="language-plaintext highlighter-rouge">sh</code> fails on a non-zero exit.</p>
+<p>在 Fastlane 中，把同一条命令放进 <code class="language-plaintext highlighter-rouge">before_all</code> 块并用 <code class="language-plaintext highlighter-rouge">sh(...)</code> 执行，即可中止 lane，因为 <code class="language-plaintext highlighter-rouge">sh</code> 在非零退出时会失败。</p>
 
-<h2 id="8-is-it-safe-to-run">8. Is it safe to run</h2>
+<h2 id="8-运行它安全吗">8. 运行它安全吗</h2>
 
-<p>Read the scripts before you trust them, whatever the star count. Here is what to look for.</p>
+<p>无论 star 数多少，先读脚本再信任。以下是值得关注的地方。</p>
 
 <ul>
-  <li>The guard is one Bash file, <a href="https://github.com/mjmirza/app-store-compliance/blob/main/agent-os/hooks/app-store-compliance-guard.sh">agent-os/hooks/app-store-compliance-guard.sh</a>. It reads your project and writes only its own temporary files, which it deletes on exit. It never edits, moves, or deletes a file in your app.</li>
-  <li>The guard makes no network call. It runs <code class="language-plaintext highlighter-rouge">python3</code> only for local helpers in this repo (the deadline list, the readiness file, a manifest parser).</li>
-  <li>The monitors in <code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> do fetch Apple and Google pages, and only when you run them.</li>
-  <li><code class="language-plaintext highlighter-rouge">scripts/install.sh</code> writes to your AI tool’s config folder and backs up any settings file it changes. Run <code class="language-plaintext highlighter-rouge">bash scripts/install.sh --dry-run</code> first to see every write.</li>
-  <li>To be stricter, run the guard in a container or a throwaway VM with your project mounted read only.</li>
+  <li>守卫是单个 Bash 文件：<a href="https://github.com/mjmirza/app-store-compliance/blob/main/agent-os/hooks/app-store-compliance-guard.sh">agent-os/hooks/app-store-compliance-guard.sh</a>。它只读取你的工程，只写入自己的临时文件并在退出时删除，绝不编辑、移动或删除你应用中的任何文件。</li>
+  <li>守卫不发起任何网络调用。它只在运行本仓库中的本地辅助脚本时调用 <code class="language-plaintext highlighter-rouge">python3</code>（截止日期清单、就绪文件、清单解析器）。</li>
+  <li><code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> 中的监控脚本确实会抓取 Apple 与 Google 页面，而且只在你运行它们时才抓取。</li>
+  <li><code class="language-plaintext highlighter-rouge">scripts/install.sh</code> 会写入你的 AI 工具配置文件夹，并备份它改动过的每个设置文件。先运行 <code class="language-plaintext highlighter-rouge">bash scripts/install.sh --dry-run</code> 查看所有写入操作。</li>
+  <li>想更严格的话，可以在容器或一次性虚拟机中运行守卫，并把工程以只读方式挂载。</li>
 </ul>
 
-<p>Found a security issue in the scripts? Report it privately as described in <a href="https://github.com/mjmirza/app-store-compliance/blob/main/.github/SECURITY.md">SECURITY.md</a>.</p>
+<p>在脚本中发现了安全问题？请按 <a href="https://github.com/mjmirza/app-store-compliance/blob/main/.github/SECURITY.md">SECURITY.md</a> 中的说明私下报告。</p>
 
 
       

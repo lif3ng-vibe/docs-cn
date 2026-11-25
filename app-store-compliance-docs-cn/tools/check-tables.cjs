@@ -37,9 +37,15 @@ for (const f of files) {
     if (line.includes('<!-- keep -->')) continue;
     if (!line.trim().startsWith('|')) continue;
     for (const cell of line.split('|')) {
-      const c = cell.trim();
+      let c = cell.trim();
       if (c.length < 30) continue;
+      // 裸 URL / 链接列表单元格：URL 路径按红线原样保留，不算残留
+      if (/https?:\/\//.test(c) && !/[一-龥]/.test(c.replace(/https?:\/\/\S+/g, ''))) continue;
       if (/[一-龥]/.test(c)) continue;
+      // 反引号代码 token 列表：剥掉反引号后剩余文字很短的视为代码列表
+      const noCode = c.replace(/`[^`]*`/g, '').replace(/[,、;；()\s]/g, '');
+      if (noCode.length < 8) continue;
+      c = c.replace(/`/g, '');
       const letters = (c.match(/[A-Za-z]/g) || []).length;
       if (letters / c.length <= 0.6) continue;
       const words = c.match(/[A-Za-z]{2,}/g) || [];

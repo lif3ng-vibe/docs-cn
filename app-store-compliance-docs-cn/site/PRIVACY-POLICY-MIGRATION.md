@@ -1,220 +1,215 @@
 <!-- PRIVACY_POLICY_MONITOR_START -->
 
-> **Simulated output, not live announcements.** This file was generated from sample
-> announcements (the built-in set, the default, or a file passed with `--mock`). The titles,
-> publish dates, and descriptions below are examples that show the shape of a migration
-> report, not real publications. Only the linked official documentation URLs are real.
-> Re-run the monitor with `--live` against the real feeds before treating anything here
-> as an actual requirement.
+> **模拟输出，而非实时公告**。本文件由示例公告生成（内置集合、默认集合，或通过 `--mock` 传入的文件）。下文中的标题、发布日期与描述只是展示迁移报告形态的示例，并非真实发布内容。只有所链接的官方文档 URL 是真实的。在把这里的任何内容当作实际要求之前，请先用 `--live` 针对真实 feed 源重新运行监控。
 
-# Mobile and Web Privacy Requirements Migration & Requirements Report
+# 移动与 Web 隐私要求迁移与要求报告
 
-This report is continuously generated and updated by `scripts/monitor-privacy.py` to track privacy compliance areas.
+本报告由 `scripts/monitor-privacy.py` 持续生成并更新，用于跟踪各隐私合规领域。
 
-## Monitored Requirements Update Log
+## 受监控要求更新日志
 
-### 1. [Advertising ID] App Tracking Transparency Framework Reinforcement
-- **Published Date**: Wed, 17 Jun 2026 12:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/app-store/user-privacy-and-data-use](https://developer.apple.com/app-store/user-privacy-and-data-use)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Developers must display the App Tracking Transparency (ATT) prompt via ATTrackingManager and obtain user permission before collecting the advertising identifier (IDFA) or tracking users across other apps or websites.
+### 1. [广告 ID] 应用跟踪透明度（ATT）框架强化
+- **发布日期**：2026 年 6 月 17 日（周三）12:00:00 PDT
+- **官方资源**：[https://developer.apple.com/app-store/user-privacy-and-data-use](https://developer.apple.com/app-store/user-privacy-and-data-use)
+- **核验状态**：优先级 1（已核实）
+- **描述**：开发者必须通过 ATTrackingManager 展示应用跟踪透明度（App Tracking Transparency，ATT）提示，并在采集广告标识符（IDFA）或跨其他应用、网站跟踪用户之前取得用户许可。
 
-### 2. [Advertising ID] Google Play Advertising ID Policy and com.google.android.gms.permission.AD_ID
-- **Published Date**: Sun, 21 Jun 2026 16:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/6048248](https://support.google.com/googleplay/android-developer/answer/6048248)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Apps targeting Android 12 or higher that use the Google Play Services Advertising ID must declare the AD_ID permission in their manifest and provide user options to reset or delete the ID.
+### 2. [广告 ID] Google Play 广告 ID 政策与 com.google.android.gms.permission.AD_ID
+- **发布日期**：2026 年 6 月 21 日（周日）16:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/6048248](https://support.google.com/googleplay/android-developer/answer/6048248)
+- **核验状态**：优先级 1（已核实）
+- **描述**：面向 Android 12 或更高版本、且使用 Google Play Services 广告 ID 的应用，必须在 manifest 中声明 AD_ID 权限，并为用户提供重置或删除该 ID 的选项。
 
-### 3. [App Tracking Transparency] App Tracking Transparency Framework Reinforcement
-- **Published Date**: Wed, 17 Jun 2026 12:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/app-store/user-privacy-and-data-use](https://developer.apple.com/app-store/user-privacy-and-data-use)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Developers must display the App Tracking Transparency (ATT) prompt via ATTrackingManager and obtain user permission before collecting the advertising identifier (IDFA) or tracking users across other apps or websites.
+### 3. [应用跟踪透明度] 应用跟踪透明度（ATT）框架强化
+- **发布日期**：2026 年 6 月 17 日（周三）12:00:00 PDT
+- **官方资源**：[https://developer.apple.com/app-store/user-privacy-and-data-use](https://developer.apple.com/app-store/user-privacy-and-data-use)
+- **核验状态**：优先级 1（已核实）
+- **描述**：开发者必须通过 ATTrackingManager 展示应用跟踪透明度（App Tracking Transparency，ATT）提示，并在采集广告标识符（IDFA）或跨其他应用、网站跟踪用户之前取得用户许可。
 
-### 4. [Background location] Google Play Restriction on ACCESS_BACKGROUND_LOCATION Permission
-- **Published Date**: Tue, 23 Jun 2026 18:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/9799150](https://support.google.com/googleplay/android-developer/answer/9799150)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Google Play strictly limits background location access. Developers must justify that background location is crucial to the app's core feature, and provide a clear prominent disclosure to the user.
+### 4. [后台定位] Google Play 对 ACCESS_BACKGROUND_LOCATION 权限的限制
+- **发布日期**：2026 年 6 月 23 日（周二）18:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/9799150](https://support.google.com/googleplay/android-developer/answer/9799150)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Google Play 对后台定位访问施以严格限制。开发者必须证明后台定位对应用的核心功能至关重要，并向用户提供清晰醒目的披露。
 
-### 5. [Cookie consent] ePrivacy Directive Cookie Consent Banner Requirements
-- **Published Date**: Fri, 26 Jun 2026 21:00:00 PDT
-- **Official Resource**: [https://commission.europa.eu/cookies_en](https://commission.europa.eu/cookies_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Websites targeting EU users must present a compliant Cookie Consent banner that blocks non-essential cookies (such as marketing or analytics) until explicit, active consent is granted.
+### 5. [Cookie 同意] ePrivacy 指令的 Cookie 同意横幅要求
+- **发布日期**：2026 年 6 月 26 日（周五）21:00:00 PDT
+- **官方资源**：[https://commission.europa.eu/cookies_en](https://commission.europa.eu/cookies_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：面向欧盟用户的网站必须展示合规的 Cookie 同意横幅，在用户给出明确、主动的同意之前，拦截非必要 Cookie（如营销或分析类 Cookie）。
 
-### 6. [Data Safety] Google Play Store Data Safety Form Compliance Verification
-- **Published Date**: Fri, 19 Jun 2026 14:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/10787469](https://support.google.com/googleplay/android-developer/answer/10787469)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Google Play enforces strict validation of the Data Safety section. Submissions are dynamically scanned for compiled libraries and network activities to verify they align with the declared Data Safety form.
+### 6. [数据安全] Google Play 数据安全（Data Safety）表单合规校验
+- **发布日期**：2026 年 6 月 19 日（周五）14:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/10787469](https://support.google.com/googleplay/android-developer/answer/10787469)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Google Play 对数据安全部分执行严格校验。系统会动态扫描提交内容中的编译库与网络活动，以核验其与所声明的数据安全表单一致。
 
-### 7. [GDPR] European Union General Data Protection Regulation Enforcement Guidelines
-- **Published Date**: Thu, 25 Jun 2026 20:00:00 PDT
-- **Official Resource**: [https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en](https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: The EDPB issues guidance on valid GDPR consent. Processing EU residents' personal data requires explicit opt-in, clear information, data portability, and a functional right to be forgotten (data erasure).
+### 7. [GDPR] 欧盟《通用数据保护条例》（GDPR）执法指南
+- **发布日期**：2026 年 6 月 25 日（周四）20:00:00 PDT
+- **官方资源**：[https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en](https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：EDPB 就 GDPR 项下的有效同意发布指导意见。处理欧盟居民的个人数据需要明确的选择加入、清晰的信息告知、数据可携性，以及可实际行使的被遗忘权（数据删除）。
 
-### 8. [GDPR] Secure Client-Side Local Storage Guidelines under GDPR
-- **Published Date**: Sat, 27 Jun 2026 22:00:00 PDT
-- **Official Resource**: [https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Stashing unencrypted sensitive information, JWT tokens, or credentials in local web storage (localStorage) is highly discouraged. Stored data must respect user consent and remain protected from cross-site scripting (XSS) extraction.
+### 8. [GDPR] GDPR 下的客户端本地存储安全指南
+- **发布日期**：2026 年 6 月 27 日（周六）22:00:00 PDT
+- **官方资源**：[https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：强烈不建议把未加密的敏感信息、JWT token 或凭据存入浏览器本地存储（localStorage）。所存数据必须尊重用户同意，并保持防护以免被跨站脚本（XSS）窃取。
 
-### 9. [GDPR] Unverified Industry Blog Rumors on GDPR Fines
-- **Published Date**: Wed, 01 Jul 2026 11:00:00 PDT
-- **Official Resource**: [https://randomblogsite.com/gdpr-rumor](https://randomblogsite.com/gdpr-rumor)
-- **Verification Status**: Priority 4 (Unverified)
-- **Description**: A random industry blog claims GDPR rules are being changed next week to fine all websites without an immediate dark mode. This is an unverified blog post.
+### 9. [GDPR] 关于 GDPR 罚款的未经证实的行业博客传言
+- **发布日期**：2026 年 7 月 1 日（周三）11:00:00 PDT
+- **官方资源**：[https://randomblogsite.com/gdpr-rumor](https://randomblogsite.com/gdpr-rumor)
+- **核验状态**：优先级 4（未核实）
+- **描述**：某行业博客声称 GDPR 规则下周将被修改，要对所有未立即支持深色模式的网站处以罚款。这是一篇未经证实的博客文章。
 
-### 10. [Health permissions] Google Play Health Connect Integration and Fitness Permissions
-- **Published Date**: Wed, 24 Jun 2026 19:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/12253906](https://support.google.com/googleplay/android-developer/answer/12253906)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Accessing health or fitness data via Health Connect requires specialized developer declarations in the Play Console, a detailed health privacy policy, and prominent in-app disclosures.
+### 10. [健康权限] Google Play Health Connect 集成与健身权限
+- **发布日期**：2026 年 6 月 24 日（周三）19:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/12253906](https://support.google.com/googleplay/android-developer/answer/12253906)
+- **核验状态**：优先级 1（已核实）
+- **描述**：通过 Health Connect 访问健康或健身数据，需要在 Play Console 中完成专门的开发者声明、制定详细的健康隐私政策，并进行醒目的应用内披露。
 
-### 11. [IndexedDB] IndexedDB Structured Client-Side Databases and User Consent Control
-- **Published Date**: Sun, 28 Jun 2026 23:00:00 PDT
-- **Official Resource**: [https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Large-scale offline or structured data stored locally in browser IndexedDB instances must follow user privacy preferences, use encryption where sensitive data is involved, and perform cleanups upon logout.
+### 11. [IndexedDB] IndexedDB 结构化客户端数据库与用户同意控制
+- **发布日期**：2026 年 6 月 28 日（周日）23:00:00 PDT
+- **官方资源**：[https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：在浏览器 IndexedDB 实例中本地存放的大规模离线或结构化数据，必须遵循用户隐私偏好，涉及敏感数据时使用加密，并在登出时执行清理。
 
-### 12. [Local storage] Secure Client-Side Local Storage Guidelines under GDPR
-- **Published Date**: Sat, 27 Jun 2026 22:00:00 PDT
-- **Official Resource**: [https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Stashing unencrypted sensitive information, JWT tokens, or credentials in local web storage (localStorage) is highly discouraged. Stored data must respect user consent and remain protected from cross-site scripting (XSS) extraction.
+### 12. [本地存储] GDPR 下的客户端本地存储安全指南
+- **发布日期**：2026 年 6 月 27 日（周六）22:00:00 PDT
+- **官方资源**：[https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：强烈不建议把未加密的敏感信息、JWT token 或凭据存入浏览器本地存储（localStorage）。所存数据必须尊重用户同意，并保持防护以免被跨站脚本（XSS）窃取。
 
-### 13. [Privacy Manifest] Apple Mandatory Privacy Manifest Requirements for App Store Submissions
-- **Published Date**: Mon, 15 Jun 2026 10:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/support/privacy-manifest-files](https://developer.apple.com/support/privacy-manifest-files)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Apple enforces mandatory Privacy Manifests (PrivacyInfo.xcprivacy) for all newly submitted apps and third-party SDK updates. The manifest must accurately declare data collection, tracking domains, and required reason API usage.
+### 13. [隐私清单] Apple 对 App Store 提交的强制隐私清单要求
+- **发布日期**：2026 年 6 月 15 日（周一）10:00:00 PDT
+- **官方资源**：[https://developer.apple.com/support/privacy-manifest-files](https://developer.apple.com/support/privacy-manifest-files)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Apple 对所有新提交的应用和第三方 SDK 更新强制执行隐私清单（PrivacyInfo.xcprivacy）。清单必须准确声明数据采集、跟踪域名以及 required reason API（必需理由 API）的使用情况。
 
-### 14. [Privacy Manifest] Apple Stricter Required Reason API Usage Guidelines
-- **Published Date**: Tue, 16 Jun 2026 11:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: To prevent fingerprinting, Apple requires developers to specify approved reason codes in their Privacy Manifest if they access designated Required Reason APIs, such as UserDefaults, file timestamps, system uptime, and disk space.
+### 14. [隐私清单] Apple 更严格的 Required Reason API 使用指南
+- **发布日期**：2026 年 6 月 16 日（周二）11:00:00 PDT
+- **官方资源**：[https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api)
+- **核验状态**：优先级 1（已核实）
+- **描述**：为防范设备指纹，Apple 要求开发者在访问指定 Required Reason API（如 UserDefaults、文件时间戳、系统运行时长、磁盘空间）时，在隐私清单中注明经批准的原因代码。
 
-### 15. [Privacy Nutrition Labels] Apple App Store Privacy Nutrition Labels Questionnaire Update
-- **Published Date**: Thu, 18 Jun 2026 13:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/app-store/app-privacy-details](https://developer.apple.com/app-store/app-privacy-details)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Apple requires developers to complete the self-reported Privacy Nutrition Labels in App Store Connect. All declared data collection and usage practices must match actual in-app behaviors.
+### 15. [隐私营养标签] Apple App Store 隐私营养标签问卷更新
+- **发布日期**：2026 年 6 月 18 日（周四）13:00:00 PDT
+- **官方资源**：[https://developer.apple.com/app-store/app-privacy-details](https://developer.apple.com/app-store/app-privacy-details)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Apple 要求开发者在 App Store Connect 中填写自主申报的隐私营养标签（privacy nutrition label）。所有声明的数据采集与使用做法都必须与应用内实际行为一致。
 
-### 16. [Required Reason APIs] Apple Mandatory Privacy Manifest Requirements for App Store Submissions
-- **Published Date**: Mon, 15 Jun 2026 10:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/support/privacy-manifest-files](https://developer.apple.com/support/privacy-manifest-files)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Apple enforces mandatory Privacy Manifests (PrivacyInfo.xcprivacy) for all newly submitted apps and third-party SDK updates. The manifest must accurately declare data collection, tracking domains, and required reason API usage.
+### 16. [Required Reason APIs] Apple 对 App Store 提交的强制隐私清单要求
+- **发布日期**：2026 年 6 月 15 日（周一）10:00:00 PDT
+- **官方资源**：[https://developer.apple.com/support/privacy-manifest-files](https://developer.apple.com/support/privacy-manifest-files)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Apple 对所有新提交的应用和第三方 SDK 更新强制执行隐私清单（PrivacyInfo.xcprivacy）。清单必须准确声明数据采集、跟踪域名以及 required reason API 的使用情况。
 
-### 17. [Required Reason APIs] Apple Stricter Required Reason API Usage Guidelines
-- **Published Date**: Tue, 16 Jun 2026 11:00:00 PDT
-- **Official Resource**: [https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: To prevent fingerprinting, Apple requires developers to specify approved reason codes in their Privacy Manifest if they access designated Required Reason APIs, such as UserDefaults, file timestamps, system uptime, and disk space.
+### 17. [Required Reason APIs] Apple 更严格的 Required Reason API 使用指南
+- **发布日期**：2026 年 6 月 16 日（周二）11:00:00 PDT
+- **官方资源**：[https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api)
+- **核验状态**：优先级 1（已核实）
+- **描述**：为防范设备指纹，Apple 要求开发者在访问指定 Required Reason API（如 UserDefaults、文件时间戳、系统运行时长、磁盘空间）时，在隐私清单中注明经批准的原因代码。
 
-### 18. [Runtime permissions] Android Runtime Permission Model and Dynamic Checks
-- **Published Date**: Mon, 22 Jun 2026 17:00:00 PDT
-- **Official Resource**: [https://developer.android.com/guide/topics/permissions/overview](https://developer.android.com/guide/topics/permissions/overview)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Android runtime permissions must be requested dynamically when the app accesses sensitive capabilities like camera, contacts, or storage. Rationale must be explained before requesting the permission.
+### 18. [运行时权限] Android 运行时权限模型与动态检查
+- **发布日期**：2026 年 6 月 22 日（周一）17:00:00 PDT
+- **官方资源**：[https://developer.android.com/guide/topics/permissions/overview](https://developer.android.com/guide/topics/permissions/overview)
+- **核验状态**：优先级 1（已核实）
+- **描述**：当应用访问相机、通讯录或存储等敏感能力时，必须动态请求 Android 运行时权限；且在请求权限之前必须先说明理由。
 
-### 19. [Session storage] Temporary Browser Session Storage Security Recommendations
-- **Published Date**: Mon, 29 Jun 2026 09:00:00 PDT
-- **Official Resource**: [https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Data kept in sessionStorage must be handled securely, ensuring sensitive credentials are not exposed to untrusted scripts, and are thoroughly purged once the user closes the tab or logs out.
+### 19. [会话存储] 浏览器临时会话存储安全建议
+- **发布日期**：2026 年 6 月 29 日（周一）09:00:00 PDT
+- **官方资源**：[https://commission.europa.eu/law/law-topic/data-protection_en](https://commission.europa.eu/law/law-topic/data-protection_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：保存在 sessionStorage 中的数据必须得到安全处理，确保敏感凭据不会暴露给不受信任的脚本，并在用户关闭标签页或登出后被彻底清除。
 
-### 20. [Tracking technologies] Tracking Technologies, Scripts, and Invisible Pixels Consent Management
-- **Published Date**: Tue, 30 Jun 2026 10:00:00 PDT
-- **Official Resource**: [https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en](https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Third-party analytical scripts (Google Analytics, Facebook Pixel, Hotjar) must be explicitly controlled and completely disabled by default until the user accepts cookie or tracking preferences.
+### 20. [跟踪技术] 跟踪技术、脚本与不可见像素的同意管理
+- **发布日期**：2026 年 6 月 30 日（周二）10:00:00 PDT
+- **官方资源**：[https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en](https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en)
+- **核验状态**：优先级 1（已核实）
+- **描述**：第三方分析脚本（Google Analytics、Facebook Pixel、Hotjar）必须受到显式控制并默认完全禁用，直到用户接受 Cookie 或跟踪偏好设置。
 
-### 21. [User Data Policy] Google Play User Data Protection and Deletion Policy
-- **Published Date**: Sat, 20 Jun 2026 15:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/9899234](https://support.google.com/googleplay/android-developer/answer/9899234)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Google Play User Data policy requires prominent disclosures and explicit user consent before collecting any personal or sensitive data. Apps with in-app account creation must offer an in-app and web account deletion option.
+### 21. [用户数据政策] Google Play 用户数据保护与删除政策
+- **发布日期**：2026 年 6 月 20 日（周六）15:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/9899234](https://support.google.com/googleplay/android-developer/answer/9899234)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Google Play 用户数据政策要求在采集任何个人或敏感数据之前进行醒目披露并取得用户的明确同意。支持应用内创建账号的应用必须同时提供应用内与网页端的账号删除选项。
 
-### 22. [User Data Policy] Google Play Restriction on ACCESS_BACKGROUND_LOCATION Permission
-- **Published Date**: Tue, 23 Jun 2026 18:00:00 PDT
-- **Official Resource**: [https://support.google.com/googleplay/android-developer/answer/9799150](https://support.google.com/googleplay/android-developer/answer/9799150)
-- **Verification Status**: Priority 1 (Verified)
-- **Description**: Google Play strictly limits background location access. Developers must justify that background location is crucial to the app's core feature, and provide a clear prominent disclosure to the user.
+### 22. [用户数据政策] Google Play 对 ACCESS_BACKGROUND_LOCATION 权限的限制
+- **发布日期**：2026 年 6 月 23 日（周二）18:00:00 PDT
+- **官方资源**：[https://support.google.com/googleplay/android-developer/answer/9799150](https://support.google.com/googleplay/android-developer/answer/9799150)
+- **核验状态**：优先级 1（已核实）
+- **描述**：Google Play 对后台定位访问施以严格限制。开发者必须证明后台定位对应用的核心功能至关重要，并向用户提供清晰醒目的披露。
 
-## Automated Migration Recommendations & Implementation Tasks
+## 自动化迁移建议与实施任务
 
-### Tasks for Advertising ID
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Configure the AD_ID permission in AndroidManifest and handle user opt-outs.
+### 广告 ID 任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：在 AndroidManifest 中配置 AD_ID 权限，并处理用户的选择退出。
 
-### Tasks for App Tracking Transparency
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Prompt users via ATTrackingManager before fetching advertising IDs.
-- [ ] **Task 2**: Fill out NSUserTrackingUsageDescription in Info.plist.
+### 应用跟踪透明度任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：在获取广告 ID 之前，先通过 ATTrackingManager 向用户弹出提示。
+- [ ] **任务 2**：在 Info.plist 中填写 NSUserTrackingUsageDescription。
 
-### Tasks for Background location
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Ensure background location is backed by a prominent in-app disclosure view.
+### 后台定位任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：确保后台定位配有醒目的应用内披露视图。
 
-### Tasks for Cookie consent
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Deploy a cookie banner that halts non-essential cookie writes by default.
+### Cookie 同意任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：部署一个默认阻止非必要 Cookie 写入的 Cookie 横幅。
 
-### Tasks for Data Safety
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Conduct a dependency audit for Google Play Data Safety alignment.
+### 数据安全任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：开展依赖审计，以对齐 Google Play 数据安全表单。
 
-### Tasks for GDPR
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Provide opt-in controls and account deletion pathways for EU users.
+### GDPR 任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：为欧盟用户提供选择加入控制项与账号删除途径。
 
-### Tasks for GDPR (BLOCKED: Announcement source is unverified)
-- **Regulatory Status**: Suspended. Source is an unverified Priority 4/5 secondary source.
+### GDPR 任务（受阻：公告来源未经证实）
+- **监管状态**：已暂停。来源为未经核实的优先级 4/5 二级来源。
 
-### Tasks for Health permissions
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Complete specialized fitness declarations and publish health statements.
+### 健康权限任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：完成专门的健身数据声明，并发布健康说明。
 
-### Tasks for IndexedDB
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Safely wipe local database object stores upon user logout.
+### IndexedDB 任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：在用户登出时安全清空本地数据库的 object store。
 
-### Tasks for Local storage
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Encrypt any JWT tokens or user details kept in localStorage.
+### 本地存储任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：对保存在 localStorage 中的 JWT token 或用户信息进行加密。
 
-### Tasks for Privacy Manifest
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Create a PrivacyInfo.xcprivacy manifest at the root of the iOS target.
-- [ ] **Task 2**: List all collected data types and tracking practices in the manifest.
+### 隐私清单任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：在 iOS target 根目录创建 PrivacyInfo.xcprivacy 清单。
+- [ ] **任务 2**：在清单中列出所有采集的数据类型与跟踪行为。
 
-### Tasks for Privacy Nutrition Labels
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Verify App Store Connect nutrition disclosures against codebase PII transmission.
+### 隐私营养标签任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：对照代码库中的 PII 传输情况，核验 App Store Connect 的营养标签披露。
 
-### Tasks for Required Reason APIs
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Identify all required reason API references (e.g. UserDefaults).
-- [ ] **Task 2**: Map reason codes under NSPrivacyAccessedAPITypes.
+### Required Reason APIs 任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：识别所有 Required Reason API 引用（如 UserDefaults）。
+- [ ] **任务 2**：在 NSPrivacyAccessedAPITypes 下映射原因代码。
 
-### Tasks for Runtime permissions
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Ensure permissions are dynamically verified with clear user explanations.
+### 运行时权限任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：确保权限经过动态核验，并向用户提供清晰的解释。
 
-### Tasks for Session storage
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Secure temporary session tokens and clear session variables upon closing tabs.
+### 会话存储任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：保障临时会话 token 的安全，并在关闭标签页时清除会话变量。
 
-### Tasks for Tracking technologies
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Defer Google Analytics or Facebook Pixel scripts until consent is given.
+### 跟踪技术任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：在取得同意之前，延迟加载 Google Analytics 或 Facebook Pixel 脚本。
 
-### Tasks for User Data Policy
-- **Regulatory Impact**: High priority compliance area.
-- [ ] **Task 1**: Build clear in-app data deletion controls and set a public web deletion URL.
+### 用户数据政策任务
+- **监管影响**：高优先级合规领域。
+- [ ] **任务 1**：构建清晰的应用内数据删除控制项，并设置公开的网页删除 URL。
 
 <!-- PRIVACY_POLICY_MONITOR_END -->
