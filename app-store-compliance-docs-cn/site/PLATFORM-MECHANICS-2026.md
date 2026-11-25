@@ -1,244 +1,244 @@
-# Platform Mechanics Hard Rules (2026). Apple and Android
+# 平台机制硬性规则（2026）。Apple 与 Android
 
-This document covers the platform-mechanics and newer-policy gaps that sit alongside the legal layer ([EU-REGULATORY-2026.md](EU-REGULATORY-2026.md), [GLOBAL-REGULATORY-2026.md](GLOBAL-REGULATORY-2026.md)) and the base rejection maps. These are current, common, and blocking causes that the base playbook did not carry. Every item is dated and sourced. Several dates and versions move, so re-verify against the cited source before relying on a figure. Items that could not be confirmed against a primary source are labelled unverified in the last section.
+本文档覆盖平台机制与较新政策的缺口，它们与法律层（[EU-REGULATORY-2026.md](EU-REGULATORY-2026.md)、[GLOBAL-REGULATORY-2026.md](GLOBAL-REGULATORY-2026.md)）以及基础拒审映射并列。这些是基础实战手册未涵盖的、当前常见且会造成阻断的成因。每一项都标注了日期与来源。若干日期与版本会变动，因此在依赖某个数字前，请对照所引来源重新核实。无法对照一手来源确认的条目，在最后一节标注为未经验证（unverified）。
 
-## 1. Apple platform mechanics
+## 1. Apple 平台机制
 
-### 1.1 macOS notarization for distribution outside the Mac App Store (HARD)
+### 1.1 Mac App Store 之外分发时的 macOS 公证（硬性）
 
-An app distributed with a Developer ID (not through the Mac App Store) must be notarized or Gatekeeper blocks it. The four steps. build with every executable and dylib signed. sign with a Developer ID certificate plus a secure timestamp and the hardened runtime. submit with `xcrun notarytool` and wait for the ticket. staple with `xcrun stapler`. A bare executable cannot be notarized. it is wrapped in a ZIP, DMG, or PKG container first.
+通过 Developer ID 分发的应用（不经过 Mac App Store）必须经过公证（notarization），否则 Gatekeeper 会拦截它。四个步骤如下。构建时为每个可执行文件与 dylib 签名。用 Developer ID 证书签名，并加上安全时间戳与 hardened runtime。用 `xcrun notarytool` 提交并等待票据。用 `xcrun stapler` 钉扎（staple）票据。裸的可执行文件无法直接公证，必须先封装进 ZIP、DMG 或 PKG 容器。
 
-- The original Developer ID Certification Authority expires on 1 February 2027 and certificates it issued stop working that day. Create a replacement from the Developer ID Certification Authority (G2) and re-sign installer packages before then. [Apple](https://developer.apple.com/news/?id=w4atic4c)
-- Hardened runtime is a notarization prerequisite (enable the capability and declare the needed entitlements).
-- The signing form is `codesign --options runtime --timestamp -s "Developer ID Application: NAME (TEAMID)" <App>` (the `--options runtime` flag is the hardened runtime, `--timestamp` is the secure timestamp).
-- Submit `xcrun notarytool submit <container> --apple-id ... --team-id TEAMID --password <app-specific-password> --wait`, then `xcrun stapler staple <App>`.
-- What breaks. an app that is not stapled fails to launch on an offline Mac, because Gatekeeper cannot fetch the ticket. an app that is not notarized at all shows the "Apple cannot check it for malicious software" or "app is damaged" dialog and is blocked on stricter policies.
+- 原 Developer ID Certification Authority 将于 2027 年 2 月 1 日到期，由其签发的证书自当日起失效。请在此之前从 Developer ID Certification Authority（G2）创建替换证书，并对安装器安装包重新签名。[Apple](https://developer.apple.com/news/?id=w4atic4c)
+- hardened runtime 是公证的前提条件（启用该 capability 并声明所需的 entitlement）。
+- 签名形式为 `codesign --options runtime --timestamp -s "Developer ID Application: NAME (TEAMID)" <App>`（`--options runtime` 标志即 hardened runtime，`--timestamp` 即安全时间戳）。
+- 提交 `xcrun notarytool submit <container> --apple-id ... --team-id TEAMID --password <app-specific-password> --wait`，然后执行 `xcrun stapler staple <App>`。
+- 什么会出问题。未钉扎票据的应用在离线 Mac 上无法启动，因为 Gatekeeper 无法获取票据。完全未公证的应用会显示"Apple cannot check it for malicious software"或"app is damaged"对话框，并在更严格的策略下被拦截。
 
-Sources. [Apple notarizing macOS software](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution), [Apple Developer ID](https://developer.apple.com/developer-id/), [Apple customizing the notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+来源：[Apple 对 macOS 软件进行公证](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)、[Apple Developer ID](https://developer.apple.com/developer-id/)、[Apple 自定义公证工作流](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)。
 
-### 1.2 Guideline 4.2 minimum functionality and 4.3 spam or duplicate (HARD, top rejection bucket)
+### 1.2 Guideline 4.2 最小功能与 4.3 垃圾或重复应用（硬性，最主要的拒审类别）
 
-- 4.2 Minimum Functionality. an app includes features, content, and UI that lift it beyond a repackaged website. a thin web view or wrapper is rejected. web tech (WebView, React Native) is allowed only when the result feels native and has lasting value. Placeholder or incomplete content that reads as unfinished is rejected.
-- 4.3(a) Spam or duplicate. apps that provide the same feature set as other apps and only vary in content or language are treated as spam. Submitting multiple similar apps, or repackaging one app many times, triggers this.
-- 4.3(b) Copycat. cloning or imitating another developer's app.
-- June 2026 tightening. Apple strengthened 4.3 and named saturated categories (dating, flashlight, sound effects, wallpaper, simple timers, fortune telling). New submissions in these categories are not accepted unless they offer a materially different or improved experience, and Apple may remove existing apps in these categories that are not updated, improved, or attracting customers.
+- 4.2 最小功能（Minimum Functionality）。应用须包含使其超越"重打包网站"的功能、内容与 UI。单薄的网页视图或壳套（wrapper）会被拒审。网页技术（WebView、React Native）只有在最终成品具备原生质感与持久价值时才被允许。读起来像未完成的占位或残缺内容会被拒审。
+- 4.3(a) 垃圾或重复（Spam or duplicate）。与其他应用提供相同功能集、仅在内容或语言上不同的应用会被视为垃圾应用。提交多个相似应用，或将同一应用反复重打包，都会触发此条。
+- 4.3(b) 山寨（Copycat）。克隆或模仿其他开发者的应用。
+- 2026 年 6 月收紧。Apple 强化了 4.3，并点名了饱和品类（交友、手电筒、音效、壁纸、简易计时器、算命）。这些品类的新提交不再被接受，除非它们提供实质性不同或改进的体验；Apple 还可能下架这些品类中未更新、未改进或未吸引到用户的既有应用。
 
-Sources. [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), [Apple 8 June 2026 guideline update, 4.3(b) clarified with examples](https://developer.apple.com/news/?id=a233fmpw), [MacRumors on the 4.3 saturation tightening](https://www.macrumors.com/2026/06/09/app-store-guidelines-low-quality-apps/).
+来源：[Apple App Review Guidelines（审核指南）](https://developer.apple.com/app-store/review/guidelines/)、[Apple 2026 年 6 月 8 日审核指南更新：4.3(b) 以示例澄清](https://developer.apple.com/news/?id=a233fmpw)、[MacRumors 关于 4.3 饱和品类收紧的报道](https://www.macrumors.com/2026/06/09/app-store-guidelines-low-quality-apps/)。
 
-### 1.3 Reader apps, the External Link Account Entitlement (Guideline 3.1.3(a))
+### 1.3 阅读类应用与 External Link Account Entitlement（Guideline 3.1.3(a)）
 
-A reader app provides magazines, newspapers, books, audio, music, or video as its primary function. The optional External Link Account Entitlement lets it include one informational link to a developer-owned site to create or manage an account. Conditions to qualify. the eligible content is the primary function. sign-in to an externally-created account. access to previously purchased content when signed in. NO in-app purchase offered while the entitlement is used. no real-time person-to-person services (tutoring, medical, fitness). Link rules, all required. links to a site you own. opens the default browser in a new window, not a web view. https scheme with no query or extra URL parameters. no redirects. defined statically in Info.plist before submission. shown once per page with standard HTML styling. Entitlement identifier `com.apple.developer.storekit.external-link.account` (iOS 16 or later). earlier OS uses Apple's exact modal sheet.
+阅读类应用（reader app）指以杂志、报纸、图书、音频、音乐或视频为主要功能的应用。可选的 External Link Account Entitlement 允许其包含一个指向开发者自有网站的信息性链接，用于创建或管理账号。资格条件：合资格内容是应用的主要功能；可登录在外部创建的账号；登录后可访问此前购买的内容；使用该 entitlement 期间不得提供应用内购买（In-App Purchase，IAP）；不提供实时的人人对人服务（辅导、医疗、健身）。链接规则，全部为必须满足：链接指向你自有的网站；在默认浏览器的新窗口中打开，而非 web view；使用 https scheme，不带 query 或额外 URL 参数；无重定向；在提交前静态定义于 Info.plist；每页只展示一次，并使用标准 HTML 样式。entitlement 标识符为 `com.apple.developer.storekit.external-link.account`（iOS 16 或更高）。更早版本的系统则必须使用 Apple 的原样模态表单（modal sheet）。
 
-Source. [Apple reader apps](https://developer.apple.com/support/reader-apps/).
+来源：[Apple 阅读类应用（reader apps）](https://developer.apple.com/support/reader-apps/)。
 
-### 1.4 France ANSSI encryption declaration (beyond ITSAppUsesNonExemptEncryption)
+### 1.4 法国 ANSSI 加密申报（ITSAppUsesNonExemptEncryption 之外）
 
-Apple's export-compliance documentation matrix.
+Apple 的出口合规文档矩阵。
 
-| Encryption in use | Documentation required |
+| 所用加密 | 所需文档 |
 |---|---|
-| Apple OS crypto only | none in App Store Connect |
-| An industry-standard algorithm not provided by Apple's OS | upload a French encryption declaration in App Store Connect, if distributing in France |
-| A proprietary algorithm not accepted by IEEE, IETF, or ITU | upload both a US CCATS and the French encryption declaration |
+| 仅使用 Apple OS 自带加密 | App Store Connect 中无需任何文档 |
+| 使用 Apple OS 未提供的行业标准算法 | 若在法国分发，需在 App Store Connect 上传法国加密申报 |
+| 使用 IEEE、IETF 或 ITU 不接受的专有算法 | 需同时上传美国 CCATS 与法国加密申报 |
 
-The French declaration is required only when distributing on the French App Store, uploaded in App Store Connect, and the authority is ANSSI. Banking and Medical apps are exempt. `ITSAppUsesNonExemptEncryption` in Info.plist avoids re-answering the encryption question each submission. Note. the US annual self-classification report to BIS is an EAR obligation, not an App Store Connect field, so it is an external legal item to track, not a store check.
+只有当应用在法国 App Store 上分发时才需要法国申报，在 App Store Connect 中上传，主管机关为 ANSSI。银行（Banking）与医疗（Medical）类应用豁免。Info.plist 中的 `ITSAppUsesNonExemptEncryption` 可避免每次提交都重复回答加密问题。注意：向 BIS 提交的美国年度自分类报告属于 EAR 义务，不是 App Store Connect 的字段，因此它是需要跟踪的外部法律事项，而非商店检查项。
 
-Source. [Apple export compliance documentation for encryption](https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption/).
+来源：[Apple 加密出口合规文档](https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption/)。
 
-### 1.5 Content-rights declaration in App Store Connect (maps to Guideline 5.2)
+### 1.5 App Store Connect 中的内容版权声明（对应 Guideline 5.2）
 
-App Store Connect asks, before each submission, whether the app contains, shows, or accesses third-party content. If yes, the developer must hold the rights under the laws of each country the app is available in, and must be able to provide proof of rights to Apple (attach supporting documents in App Review notes). Source. [Apple App Information reference](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/).
+App Store Connect 在每次提交前会询问应用是否包含、展示或访问第三方内容。若是，开发者必须依据应用上架的每个国家/地区的法律持有相应权利，且必须能够向 Apple 提供权利证明（在 App Review 备注中附上佐证文件）。来源：[Apple App Information 参考](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/)。
 
-### 1.6 visionOS, watchOS, and tvOS submission specifics
+### 1.6 visionOS、watchOS 与 tvOS 提交细则
 
-- visionOS App Motion. if the app contains movement such as quick turns or sudden camera changes, indicate it in App Store Connect. the product page then shows a motion badge for motion-sensitive users.
-- visionOS Developer Capture. screenshots and previews use the Developer Capture feature in Reality Composer Pro, not a Control Center screen recording (which is foveated and low resolution).
-- SDK minimums, effective 28 April 2026. watchOS apps build with the watchOS 26 SDK, tvOS apps with the tvOS 26 SDK, all with Xcode 26, the same deadline as iOS 26 and visionOS 26.
-- SDK minimums, from April 2027. uploads must be built with the iOS 27, iPadOS 27, tvOS 27, visionOS 27, or watchOS 27 SDK or later. Apple has named the month and not the day, tracked as 1 April 2027 in the deadline data. macOS is not in Apple's list. Xcode 27 shipped as a Release Candidate on 9 September 2026.
-- App completeness (Guideline 2.1) and the privacy declarations apply to every platform, including watchOS and tvOS. Pull the exact per-device screenshot and asset dimensions live from the App Store Connect screenshot-spec page, as they change per device. The 9 September 2026 update added iPhone Duo (outer display 1398 x 2034, inner display 2007 x 2853), iPhone 18 Pro Max (1260 x 2736), iPhone 18 Pro (1179 x 2556), Apple Watch Ultra 4 (422 x 514), and Apple Watch Series 12 (416 x 496). Since 5 October 2026 App Store Connect accepts iPhone Duo screenshots, and from April 2027 they are required for any app using the iOS 27.1 SDK or later (deadline APPLE-IPHONE-DUO-SCREENSHOTS-REQ). Today the required iPhone size is at least one screenshot for iPhone with Dynamic Island (medium display), 1179 x 2556 or 1206 x 2622 portrait, plus at least one iPad 13 inch screenshot when the app supports iPadOS, and watch screenshots use one size across every localization.
+- visionOS App Motion。如果应用包含快速转身或镜头骤变之类的运动内容，需在 App Store Connect 中声明。产品页面随后会为对运动敏感的用户显示运动徽章。
+- visionOS Developer Capture。截图与预览须使用 Reality Composer Pro 中的 Developer Capture 功能，而非控制中心的屏幕录制（后者为注视点渲染且分辨率低）。
+- SDK 下限，自 2026 年 4 月 28 日起生效。watchOS 应用须以 watchOS 26 SDK 构建，tvOS 应用须以 tvOS 26 SDK 构建，全部使用 Xcode 26，与 iOS 26 和 visionOS 26 同一截止日期。
+- SDK 下限，自 2027 年 4 月起。上传必须以 iOS 27、iPadOS 27、tvOS 27、visionOS 27 或 watchOS 27 SDK 或更高版本构建。Apple 只给出月份而未给出日期，在截止日期数据中按 2027 年 4 月 1 日跟踪。macOS 不在 Apple 的清单中。Xcode 27 已于 2026 年 9 月 9 日以 Release Candidate 形式发布。
+- 应用完整性（Guideline 2.1）与隐私声明适用于所有平台，包括 watchOS 与 tvOS。各设备的确切截图与素材尺寸请从 App Store Connect 截图规范页面实时获取，因为它们随设备变化。2026 年 9 月 9 日的更新新增了 iPhone Duo（外屏 1398 x 2034，内屏 2007 x 2853）、iPhone 18 Pro Max（1260 x 2736）、iPhone 18 Pro（1179 x 2556）、Apple Watch Ultra 4（422 x 514）与 Apple Watch Series 12（416 x 496）。自 2026 年 10 月 5 日起 App Store Connect 接受 iPhone Duo 截图；自 2027 年 4 月起，任何使用 iOS 27.1 SDK 或更高版本的应用都必须提供（截止日期编号 APPLE-IPHONE-DUO-SCREENSHOTS-REQ）。当前必需的 iPhone 尺寸是：带 Dynamic Island 的 iPhone（中等显示屏）至少一张截图，1179 x 2556 或 1206 x 2622 竖屏；应用支持 iPadOS 时另需至少一张 13 英寸 iPad 截图；watch 截图在所有本地化中统一使用一种尺寸。
 
-Sources. [Apple submit visionOS apps](https://developer.apple.com/visionos/submit/), [Apple SDK minimums 28 April 2026](https://developer.apple.com/news/?id=ueeok6yw), [Apple submissions open for the 27 OS family, April 2027 SDK floor](https://developer.apple.com/news/?id=k1mtkt1k), [App Store Connect screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [App Store Connect release notes](https://developer.apple.com/help/app-store-connect/release-notes/).
+来源：[Apple 提交 visionOS 应用](https://developer.apple.com/visionos/submit/)、[Apple SDK 下限（2026 年 4 月 28 日）](https://developer.apple.com/news/?id=ueeok6yw)、[Apple 面向 27 系操作系统开放提交，2027 年 4 月 SDK 下限](https://developer.apple.com/news/?id=k1mtkt1k)、[App Store Connect 截图规范](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)、[App Store Connect 发布说明](https://developer.apple.com/help/app-store-connect/release-notes/)。
 
-### 1.7 In-App Events, Custom Product Pages, and the submission-concurrency limit
+### 1.7 In-App Events、Custom Product Pages 与提交并发上限
 
-- In-App Events. up to 10 live at a time, up to 15 approved per app, each reviewed as a submission item against the guidelines.
-- Custom Product Pages. up to 70 additional product-page versions, metadata reviewed independently of an app update and still bound by the guidelines.
-- Submission concurrency. a platform can have at most two submissions under review at once, one with an app version and one with items (events or custom product pages) that carry no version.
-- StoreKit External Purchase entitlements are region-gated. the `allowed-regions` entitlement array must match the entitlement Apple granted (EU, and South Korea for external purchase, plus the separate US external-link path). Check the presence and configuration of the entitlement, not the fee math, which is fluid.
+- In-App Events（App 内活动）。同一时间最多 10 个处于上线状态，每个应用最多 15 个通过审核；每一项都作为提交项按审核指南审核。
+- Custom Product Pages（自定义产品页）。最多 70 个额外的产品页版本，其元数据独立于应用更新进行审核，但仍受审核指南约束。
+- 提交并发。一个平台同一时间最多只能有两个处于审核中的提交：一个含应用版本，另一个含不带版本的条目（活动或自定义产品页）。
+- StoreKit External Purchase entitlement 按区域设限。`allowed-regions` entitlement 数组必须与 Apple 授予的 entitlement 一致（欧盟，以及外购（external purchase）场景下的韩国，另有单独的美国外链路径）。要核检的是 entitlement 的存在与配置，而不是费用数字——后者仍在变动。
 
-Sources. [Apple In-App Events](https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-in-app-event/), [Apple Custom Product Pages](https://developer.apple.com/app-store/custom-product-pages/), [Apple StoreKit external purchase](https://developer.apple.com/documentation/storekit/external-purchase).
+来源：[Apple In-App Events](https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-in-app-event/)、[Apple Custom Product Pages](https://developer.apple.com/app-store/custom-product-pages/)、[Apple StoreKit 外购（external purchase）](https://developer.apple.com/documentation/storekit/external-purchase)。
 
-### 1.8 iPhone Duo readiness (foldable iPhone, ships 23 October 2026)
+### 1.8 iPhone Duo 适配就绪（折叠屏 iPhone，2026 年 10 月 23 日发售）
 
-Deadline ID APPLE-IPHONE-DUO-LAUNCH, tracked in issue #724. iPhone Duo has a 5.4 inch outer display and a 7.6 inch inner display joined by a hinge, a front camera on each, and launches on iOS 27.1. Pre-orders open 16 October 2026 and it ships 23 October 2026. Apple does not require a Duo rebuild to stay on the store, but an app that ignores the form factor looks broken on it.
+截止日期编号 APPLE-IPHONE-DUO-LAUNCH，在 issue #724 中跟踪。iPhone Duo 配备 5.4 英寸外屏与 7.6 英寸内屏，两者由铰链连接，各有一枚前置摄像头，随 iOS 27.1 发布。预订于 2026 年 10 月 16 日开启，2026 年 10 月 23 日发售。Apple 不要求为留在商店而针对 Duo 重新构建，但无视这一形态的应用在它上面会显得排版错乱。
 
-- Build. Apps built with Xcode 26 or earlier run but do not extend under the status bar and camera. Build with Xcode 27.1 (beta from 18 September 2026) and the iOS 27.1 SDK, which ships the iPhone Duo simulator. Test the outer display, the inner display fully open, the inner display partially folded, and each rotation.
-- Resize, never assume a size. Use size classes (compact width on the outer display, regular width on the inner) and scene or container bounds. Apple says not to use `userInterfaceIdiom` or `UIInterfaceOrientation` for layout decisions, and not to size views from fixed iPhone dimensions or screen dimensions.
-- Reserved regions. The outer front camera always occludes content, the inner front camera does when active, and the folding region divides the inner display when partially open. System containers (split views, navigation stacks, sheets, alerts, context menus) adapt on their own. Custom views read `ReservedRegion` from the geometry proxy in SwiftUI or the view in UIKit and move content clear of them. `ArrangementView` (SwiftUI) and `UIArrangementViewController` (UIKit) lay out a primary and secondary view around the fold.
-- Vertical bars. On the outer display, and for trailing views on the inner display, the system presents navigation bars, toolbars, and tab bars vertically on the side. Only bars supplied through `NavigationStack`, `NavigationSplitView`, or a navigation controller get this. A hand-built `UIToolbar`, `UINavigationBar`, or `UITabBar` does not. A toolbar item with a title and no icon, or with a custom view, is never shown vertically, so give every item both an icon and a title.
-- Same function in every pose. Controls can move or overflow, but the same controls and content stay reachable whether the phone is open or closed. Games may lock orientation but must fill the display as the pose changes.
-- Camera apps. Opening, closing, or rotating the phone can move the app to the other display and flip which way the active camera faces. Choose cameras by the direction they face.
-- App Store assets. Screenshot specifications exist (outer 1398 x 2034, inner 2007 x 2853, both orientations). Since 5 October 2026 App Store Connect accepts iPhone Duo optimized apps and Duo screenshots, a product page with Duo screenshots shows a badge that the app is optimized for iPhone Duo, and a preview tool in App Store Connect shows how screenshots and metadata look on Duo. From April 2027 iPhone Duo screenshots are required for any app using the iOS 27.1 SDK or later (the screenshot specification page scopes the rule to that SDK), tracked as APPLE-IPHONE-DUO-SCREENSHOTS-REQ on 1 April 2027 because Apple has named the month only. No Duo-specific App Review guideline has been published, so none is enforced here. Re-check before claiming one.
+- 构建。用 Xcode 26 或更早版本构建的应用可以运行，但不会延伸到状态栏与摄像头之下。请用 Xcode 27.1（自 2026 年 9 月 18 日起提供 beta）与 iOS 27.1 SDK 构建，其中附带 iPhone Duo 模拟器。测试外屏、完全展开的内屏、部分折叠的内屏，以及每个旋转方向。
+- 自适应尺寸，绝不预设尺寸。使用 size class（外屏为 compact width，内屏为 regular width）与 scene 或容器边界。Apple 表示不要用 `userInterfaceIdiom` 或 `UIInterfaceOrientation` 做布局决策，也不要依据固定的 iPhone 尺寸或屏幕尺寸来设定视图大小。
+- 保留区域。外屏前置摄像头始终遮挡内容，内屏前置摄像头在启用时遮挡，折叠区域在部分展开时会分割内屏。系统容器（split view、导航栈、sheet、alert、上下文菜单）会自行适配。自定义视图在 SwiftUI 中从 geometry proxy、在 UIKit 中从视图读取 `ReservedRegion`，并把内容移出这些区域。`ArrangementView`（SwiftUI）与 `UIArrangementViewController`（UIKit）可围绕折叠区排布主、副两个视图。
+- 纵向栏。在外屏上，以及内屏的尾随（trailing）视图上，系统会把导航栏、工具栏与标签栏沿侧边纵向呈现。只有通过 `NavigationStack`、`NavigationSplitView` 或导航控制器提供的栏才会如此；手工构建的 `UIToolbar`、`UINavigationBar` 或 `UITabBar` 不会。既有标题又无图标、或使用自定义视图的工具栏项永远不会纵向显示，因此请为每一项同时提供图标与标题。
+- 每种姿态下功能一致。控件可以移动或溢出，但无论手机展开还是合上，同样的控件与内容都必须可达。游戏可以锁定方向，但随姿态变化必须填满显示屏。
+- 相机应用。开合或旋转手机可能把应用移到另一块屏幕，并改变当前启用摄像头的朝向。请按朝向选择摄像头。
+- App Store 素材。已有截图规范（外屏 1398 x 2034，内屏 2007 x 2853，两种方向均可）。自 2026 年 10 月 5 日起，App Store Connect 接受针对 iPhone Duo 优化的应用与 Duo 截图；带 Duo 截图的产品页会显示"已针对 iPhone Duo 优化"徽章；App Store Connect 中的预览工具可展示截图与元数据在 Duo 上的效果。自 2027 年 4 月起，任何使用 iOS 27.1 SDK 或更高版本的应用都必须提供 iPhone Duo 截图（截图规范页面把该规则限定于此 SDK），按 2027 年 4 月 1 日跟踪为 APPLE-IPHONE-DUO-SCREENSHOTS-REQ，因为 Apple 只给出月份。尚未发布任何针对 Duo 的 App Review 审核指南，因此本手册也不执行任何此类要求。在声称存在此类指南之前请先复核。
 
-Sources. [Apple Newsroom, iPhone Duo announcement](https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/), [Preparing your app for iPhone Duo](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [Designing for iPhone Duo (HIG)](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo), [Get ready for iPhone Duo](https://developer.apple.com/iphone-duo/), [Prepare and submit your apps for iPhone Duo, 5 October 2026](https://developer.apple.com/news/?id=kkphp5qo), [App Store Connect release notes](https://developer.apple.com/help/app-store-connect/release-notes/), [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications).
+来源：[Apple Newsroom：iPhone Duo 发布公告](https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/)、[让应用适配 iPhone Duo](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)、[为 iPhone Duo 而设计（HIG）](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo)、[为 iPhone Duo 做好准备](https://developer.apple.com/iphone-duo/)、[让应用为 iPhone Duo 做好准备并提交（2026 年 10 月 5 日）](https://developer.apple.com/news/?id=kkphp5qo)、[App Store Connect 发布说明](https://developer.apple.com/help/app-store-connect/release-notes/)、[截图规范](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)。
 
-## 2. Google Play and Android mechanics
+## 2. Google Play 与 Android 机制
 
-### 2.1 Android developer verification (identity, all Android apps including sideloaded)
+### 2.1 Android 开发者核验（身份，覆盖包括侧载在内的所有 Android 应用）
 
-A device-level service checks whether an installed app is registered to a verified developer identity, for all Android apps on certified devices, including sideloaded and alternative-store apps, not only Play Store apps. Timeline. verification opened to all developers in March 2026. the verifier service began auto-installing on devices in June 2026. registration by a verified developer becomes required to install or update apps on certified devices in Brazil, Indonesia, Singapore, and Thailand from 30 September 2026, with participating stores including Google Play, Samsung, Xiaomi, and others. global rollout follows in 2027. A student or hobbyist can use a limited distribution account to share to up to 20 devices without a government ID or fee. Consequence. after the deadline in a participating country, an app from an unverified developer cannot be installed or updated on certified devices through participating stores.
+一项设备级服务会检查已安装的应用是否登记在已核验的开发者身份之下，覆盖认证设备上的所有 Android 应用，包括侧载与第三方商店（marketplace）应用，而不只是 Play Store 应用。时间线：2026 年 3 月核验向所有开发者开放；2026 年 6 月核验服务开始在设备上自动安装；自 2026 年 9 月 30 日起，在巴西、印度尼西亚、新加坡与泰国的认证设备上安装或更新应用，必须由已核验开发者完成登记，参与商店包括 Google Play、Samsung、Xiaomi 等；2027 年起推向全球。学生或爱好者可使用受限分发账号向最多 20 台设备分享应用，无需政府证件，也无需付费。后果：在参与国家的截止日期之后，来自未核验开发者的应用将无法通过参与商店在认证设备上安装或更新。
 
-Sources. [Android developer verification](https://android-developers.googleblog.com/2026/06/android-developer-verification.html), [Android verification rolling out to all developers](https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html).
+来源：[Android 开发者核验](https://android-developers.googleblog.com/2026/06/android-developer-verification.html)、[Android 核验向所有开发者推开](https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html)。
 
-### 2.2 Foreground Service types, Android 14 (API 34) and later (HARD)
+### 2.2 前台服务类型，Android 14（API 34）及更高（硬性）
 
-An app targeting API 34 or later that runs a foreground service must declare `android:foregroundServiceType` in the manifest AND hold the matching `FOREGROUND_SERVICE_*` permission. a missing permission throws a runtime exception and the service cannot start. Separately, the Play Console requires a foreground-service-types declaration on the App content page for each type, including a description, the user impact if deferred, a demo video, and a mapped use case. a missing Play declaration is an update rejection under the Device and Network Abuse policy. Related. `USE_FULL_SCREEN_INTENT` on API 34 or later is auto-granted only for alarm and calling apps. all others declare it in Play Console or request it at runtime and degrade gracefully.
+以 API 34 或更高为目标平台且运行前台服务的应用，必须在 manifest 中声明 `android:foregroundServiceType`，并且持有对应的 `FOREGROUND_SERVICE_*` 权限。缺少权限会抛出运行时异常，服务无法启动。另外，Play Console 要求在 App content 页面为每种前台服务类型作出声明，包括描述、若延后处理对用户的影响、演示视频以及映射的用例。缺少 Play 声明会依据 Device and Network Abuse 政策造成更新拒审。相关：在 API 34 或更高上，`USE_FULL_SCREEN_INTENT` 仅对闹钟与通话类应用自动授予；其他应用要么在 Play Console 中声明，要么在运行时请求并做优雅降级。
 
-Sources. [Android FGS types required](https://developer.android.com/about/versions/14/changes/fgs-types-required), [Play Console FGS declaration](https://support.google.com/googleplay/android-developer/answer/13392821?hl=en).
+来源：[Android 强制要求 FGS 类型](https://developer.android.com/about/versions/14/changes/fgs-types-required)、[Play Console FGS 声明](https://support.google.com/googleplay/android-developer/answer/13392821?hl=en)。
 
-### 2.3 Play Integrity API and the SafetyNet retirement (HARD)
+### 2.3 Play Integrity API 与 SafetyNet 退役（硬性）
 
-SafetyNet Attestation is fully shut down (turndown completed 31 January 2025). all attestation and anti-abuse checks must use the Play Integrity API. An app that still calls `com.google.android.gms:play-services-safetynet` is calling a dead service. Verify the server checks the Play Integrity verdict with `requestHash` request-binding. Source. [Play Integrity API](https://developer.android.com/google/play/integrity).
+SafetyNet Attestation 已完全关闭（2025 年 1 月 31 日完成停用）。所有证明（attestation）与反滥用检查必须改用 Play Integrity API。仍在调用 `com.google.android.gms:play-services-safetynet` 的应用是在调用一个已停服的服务。请核验服务端使用 `requestHash` 请求绑定来校验 Play Integrity 判定结果。来源：[Play Integrity API](https://developer.android.com/google/play/integrity)。
 
-### 2.4 Play Billing Library minimum version (HARD)
+### 2.4 Play Billing Library 最低版本（硬性）
 
-By 31 August 2026, all new apps and updates to existing apps must use Play Billing Library version 8 or later (an extension is available on request until 1 November 2026). This is a publishing gate, not a runtime kill switch. an already-published version-7 binary keeps transacting, but no new release, including a security patch, can ship on version 7 after the gate. Version 9 shipped in May 2026, and there is no direct version-7-to-9 jump, so migrate to version 8 first. Verify the `com.android.billingclient:billing` dependency is at least version 8 before the deadline, and that an app selling digital goods actually uses Play Billing rather than a side payment flow. Source. [Android Play Billing deprecation FAQ](https://developer.android.com/google/play/billing/deprecation-faq).
+自 2026 年 8 月 31 日起，所有新应用与既有应用的更新都必须使用 Play Billing Library 版本 8 或更高（可申请延期至 2026 年 11 月 1 日）。这是一道发布闸门，不是运行时开关。已发布的版本 7 二进制包可以继续交易，但闸门生效后任何新版本——包括安全补丁——都不能再以版本 7 发布。版本 9 已于 2026 年 5 月发布，且不存在从版本 7 直接跳到版本 9 的升级路径，因此请先迁移到版本 8。请在截止日期前核验 `com.android.billingclient:billing` 依赖至少为版本 8，并核验售卖数字商品的应用确实使用 Play Billing，而非旁路支付流程。来源：[Android Play Billing 弃用 FAQ](https://developer.android.com/google/play/billing/deprecation-faq)。
 
-### 2.5 Target API level (annual bump, HARD)
+### 2.5 目标 API 级别（年度上调，硬性）
 
-New apps and updates must target Android 16 (API 36) or later from 31 August 2026 (Play Console extension to 1 November 2026), existing apps must target API 35 or later to stay visible to new users on newer devices, Wear OS and Automotive OS must target API 35 or later, TV and XR API 34 or later. Android 17 is API 37, released 16 June 2026, and its Play policy changes land 27 January 2027 (Wear OS, Android TV, and Automotive target API 34 or later), effective 31 August 2025 with an extension window. The 2026 bump to API 36 (Android 16) for new apps and updates, reported for 31 August 2026 with a version-35 minimum for existing apps, is consistent with Google's yearly release pattern but should be verified live on the target-sdk page before it is written as a fixed date. Verify `targetSdkVersion` is at least 35 today and plan for at least 36 by the 2026 deadline.
+自 2026 年 8 月 31 日起，新应用与更新必须以 Android 16（API 36）或更高为目标（Play Console 可延期至 2026 年 11 月 1 日）；既有应用必须以 API 35 或更高为目标，才能在新设备上对新用户保持可见；Wear OS 与 Automotive OS 必须以 API 35 或更高为目标；TV 与 XR 为 API 34 或更高。Android 17 即 API 37，于 2026 年 6 月 16 日发布，其 Play 政策变化于 2027 年 1 月 27 日落地（Wear OS、Android TV 与 Automotive 目标 API 34 或更高），自 2025 年 8 月 31 日起生效并设有延期窗口。2026 年对 API 36（Android 16）的上调——适用于新应用与更新，据报道为 2026 年 8 月 31 日，既有应用最低 API 35——与 Google 的年度发布规律一致，但在把它写为固定日期之前，应在 target-sdk 页面实时核验。请核验 `targetSdkVersion` 当前至少为 35，并计划在 2026 年截止日期前达到至少 36。
 
-Sources. [Android target SDK requirement](https://developer.android.com/google/play/requirements/target-sdk), [Play Console target API help](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en).
+来源：[Android 目标 SDK 要求](https://developer.android.com/google/play/requirements/target-sdk)、[Play Console 目标 API 帮助](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en)。
 
-### 2.6 Disruptive ads and unexpected full-screen interstitials (HARD)
+### 2.6 干扰性广告与意外出现的全屏插页广告（硬性）
 
-The Better Ads Experiences policy bans full-screen interstitials that appear unexpectedly (for example when a user is about to read an article or is mid-task), ads at the start of a content segment or before the app's loading screen, and full-screen interstitials that cannot be closed after 15 seconds (opt-in and rewarded ads excepted). Allowed. interstitials at a natural transition point (end of a game level or chapter), non-full-screen ads, and genuine opt-in or rewarded ads. Verify no interstitial fires at app launch or mid-task, every interstitial has a close control that works by 15 seconds, and ads do not overlay system controls or the app's own UI.
+Better Ads Experiences 政策禁止：意外出现的全屏插页广告（例如用户正要阅读文章或任务进行到一半时）、出现在内容段落开头或应用加载画面之前的广告，以及 15 秒后仍无法关闭的全屏插页广告（选择加入型与激励式广告除外）。允许：出现在自然过渡节点（游戏关卡或章节结束）的插页广告、非全屏广告，以及真正的选择加入型或激励式广告。请核验：应用启动时或任务中途不触发插页广告；每个插页广告都有 15 秒内可用的关闭控件；广告不遮挡系统控件或应用自身的 UI。
 
-Sources. [Play Console ads policy](https://support.google.com/googleplay/android-developer/answer/9857753?hl=en), [Play Better Ads Experiences](https://support.google.com/googleplay/android-developer/answer/12271244?hl=en).
+来源：[Play Console 广告政策](https://support.google.com/googleplay/android-developer/answer/9857753?hl=en)、[Play Better Ads Experiences 政策](https://support.google.com/googleplay/android-developer/answer/12271244?hl=en)。
 
-### 2.7 Health Connect and health-apps data policy
+### 2.7 Health Connect 与健康类应用数据政策
 
-A health app completes the Health Apps Declaration (the Health Connect declaration form enforcement began in March 2025). A January 2026 tightening added a medical-device labeling system, stricter Health Connect data justifications, and a ban on using age-restricted signals for health profiling. requesting sensitive Health Connect read permissions requires proving the data is necessary to the app's primary function. Existing health apps migrate to a verified Organization Account by 28 January 2026. an app without regulatory clearance shows the disclaimer that it is not a medical device. Verify the declaration is complete, each Health Connect permission has a core-function justification, the Organization Account is migrated, and the label or disclaimer is correct.
+健康类应用须完成 Health Apps Declaration（Health Connect 申报表自 2025 年 3 月起开始执行）。2026 年 1 月的收紧新增了医疗器械标签体系、更严格的 Health Connect 数据用途说明，以及禁止将年龄受限信号用于健康画像。申请敏感的 Health Connect 读取权限须证明该数据对应用的主要功能必不可少。既有健康类应用须在 2026 年 1 月 28 日前迁移到已核验的 Organization Account。未取得监管许可的应用须展示"本应用不是医疗器械"的免责声明。请核验：申报已完整填写；每个 Health Connect 权限都有核心功能用途说明；Organization Account 已完成迁移；标签或免责声明正确无误。
 
-Sources. [Play Console Health content and services](https://support.google.com/googleplay/android-developer/answer/16679511?hl=en), [Play Console Health Connect permissions](https://support.google.com/googleplay/android-developer/answer/12991134?hl=en).
+来源：[Play Console 健康内容与服务](https://support.google.com/googleplay/android-developer/answer/16679511?hl=en)、[Play Console Health Connect 权限](https://support.google.com/googleplay/android-developer/answer/12991134?hl=en)。
 
-### 2.8 Real-money games and Brazilian betting license (HARD)
+### 2.8 真金游戏（real-money games）与巴西博彩牌照（硬性）
 
-- **Google Real-Money Games**: Google historically allowed real-money games only where a government licensing regime exists. a 2024 pilot opened a program for real-money games not covered by an existing regime (first in India, Mexico, Brazil), then Google paused the expansion of new types citing the absence of a central approval authority in some regions. India moved toward a developer self-declaration model in mid-2025, status evolving. Verify a real-money-game app is in a supported country with an accepted license or a valid self-declaration, with the real-money-game declarations, age-gating, geo-restriction, and the correct service-fee model in place.
-- **Apple Brazilian Betting License (May 8, 2026)**: Following changes to Brazil's fixed-odds betting regulation, apps with fixed-odds betting (gambling) features can only be distributed on the App Store in Brazil with a valid fixed-odds betting license from the **Secretariat of Prizes and Bets (SPA)**.
-  - Answering "Yes" to the gambling question in the age rating questionnaire in App Store Connect will automatically set the app's Brazil age rating to **A18**.
-  - To trigger the license verification process, **a new app version must be submitted** for review; simply updating the App Review Information section in App Store Connect alone is insufficient and will not start the verification review.
-  - License information must be explicitly provided in the App Review Information section during the submission of the new version.
+- **Google 真金游戏（Real-Money Games）**：Google 历来只在存在政府牌照体系的地方允许真金游戏。2024 年的一项试点为未被既有体系覆盖的真金游戏开放了计划（首批为印度、墨西哥、巴西）；随后 Google 以部分地区缺乏中央审批机构为由暂停了新类型的扩展。印度在 2025 年年中转向开发者自我声明模式，状态仍在演变。请核验：真金游戏应用位于受支持的国家/地区，并持有被认可的牌照或有效的自我声明；真金游戏各项申报、年龄准入控制（age-gating）、地域限制以及正确的服务费模式均已就位。
+- **Apple 巴西博彩牌照（2026 年 5 月 8 日）**：随着巴西固定赔率博彩监管的变更，具有固定赔率博彩（gambling）功能的应用，只有在持有 **Secretariat of Prizes and Bets（SPA）** 颁发的有效固定赔率博彩牌照时，才能在巴西的 App Store 上分发。
+  - 在 App Store Connect 的年龄分级问卷中对博彩问题回答"是"，会自动把应用的巴西年龄分级设为 **A18**。
+  - 要触发牌照核验流程，必须**提交一个新的应用版本**进入审核；仅更新 App Store Connect 中的 App Review Information 部分并不足够，也不会启动核验审核。
+  - 在提交新版本时，必须在 App Review Information 部分明确提供牌照信息。
 
-Sources. [Google real-money games approach](https://android-developers.googleblog.com/2024/01/a-new-approach-to-real-money-games-on-google-play.html), [Google pauses RMG expansion (NEXT.io)](https://next.io/news/regulation/google-halts-rmg-expansion-on-play-store/), Apple Developer News, "Brazilian betting license requirement for App Store availability" (May 8, 2026).
+来源：[Google 真金游戏方案](https://android-developers.googleblog.com/2024/01/a-new-approach-to-real-money-games-on-google-play.html)、[Google 暂停真金游戏扩展（NEXT.io）](https://next.io/news/regulation/google-halts-rmg-expansion-on-play-store/)、Apple Developer News："Brazilian betting license requirement for App Store availability"（2026 年 5 月 8 日）。
 
-### 2.9 Media permissions, exact alarm, package visibility, and account-deletion URL
+### 2.9 媒体权限、精确闹钟、软件包可见性与账号删除 URL
 
-- Photo and Video permissions. only an app with a genuine broad-access need keeps `READ_MEDIA_IMAGES` or `READ_MEDIA_VIDEO`. one-time or limited use uses the Android Photo Picker. full compliance was mandatory from 28 May 2025, and a non-compliant app is subject to removal.
-- Account deletion. an app that allows in-app account creation provides both an in-app deletion path and a web-based deletion URL, both declared in the Data safety form. an unreachable deletion URL is a frequent rejection.
-- `QUERY_ALL_PACKAGES` (package visibility) and `SCHEDULE_EXACT_ALARM` or `USE_EXACT_ALARM` remain declaration-gated permissions that require a justification against an approved use case.
+- 照片与视频权限。只有确实需要广泛访问权的应用才能保留 `READ_MEDIA_IMAGES` 或 `READ_MEDIA_VIDEO`；一次性或有限使用应使用 Android Photo Picker。2025 年 5 月 28 日起必须完全合规，不合规的应用可能被下架。
+- 账号删除。允许在应用内创建账号的应用，必须同时提供应用内删除路径与基于网页的删除 URL，并在数据安全（Data safety）表单中声明两者。删除 URL 无法访问是常见的拒审原因。
+- `QUERY_ALL_PACKAGES`（软件包可见性）与 `SCHEDULE_EXACT_ALARM` 或 `USE_EXACT_ALARM` 仍属于须经声明放行的权限，需要对照获批用例给出用途说明。
 
-Sources. [Play Console Photo and Video permissions](https://support.google.com/googleplay/android-developer/answer/14115180?hl=en), [Play Console account deletion](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en).
+来源：[Play Console 照片与视频权限](https://support.google.com/googleplay/android-developer/answer/14115180?hl=en)、[Play Console 账号删除](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en)。
 
-## 3. Cross-cutting (both platforms)
+## 3. 跨领域事项（双平台）
 
-### 3.1 CSAM reporting for UGC apps (LEGAL)
+### 3.1 UGC 应用的 CSAM 举报义务（法律）
 
-- US, 18 U.S.C. 2258A. a provider that gains actual knowledge of an apparent child-sexual-abuse violation must report to the NCMEC CyberTipline as soon as reasonably possible. the provider is not required to affirmatively search, but must report on knowledge. The REPORT Act (signed 7 May 2024) raised penalties (first offense 600,000 to 850,000 dollars, pattern up to 1,000,000 dollars, scaling with provider size), expanded reportable conduct to child sex trafficking and enticement, and extended evidence preservation from 90 days to 1 year.
-- UK, the Online Safety Act 2023. in-scope user-to-user and search services carry illegal-harm duties including child sexual exploitation and abuse. the first illegal-content Codes took effect 17 March 2025, and the children's-access duties from 25 July 2025. penalty up to 18 million pounds or 10 percent of global revenue.
-- EU, the CSA Regulation is not yet a final permanent instrument (the mandatory-scanning push was dropped for voluntary detection, trilogues ongoing). the temporary derogation that permits voluntary scanning was reinstated to run to 2028. Do not hard-code an EU mandatory-scanning duty yet. track it as pending.
+- 美国，18 U.S.C. 2258A。实际知悉表面成立的儿童性虐待违规的服务提供者，必须在合理可行的前提下尽快向 NCMEC CyberTipline 举报。提供者没有被要求主动搜索，但知悉后必须举报。《REPORT 法案》（REPORT Act，2024 年 5 月 7 日签署）提高了处罚（首次违规 600,000 至 850,000 美元，惯犯最高 1,000,000 美元，按提供者规模递增），把可举报行为扩展到儿童性贩运与引诱，并把证据保存期限从 90 天延长到 1 年。
+- 英国，《2023 年在线安全法案》（Online Safety Act 2023）。范围内的用户对用户服务与搜索服务承担包括儿童性剥削与虐待在内的非法危害义务。首批非法内容准则（Codes）于 2025 年 3 月 17 日生效，儿童可及性义务自 2025 年 7 月 25 日起适用。处罚最高可达 1,800 万英镑或全球收入的 10%。
+- 欧盟，CSA Regulation 尚未成为最终的永久性法律文件（强制性扫描的推动已让位于自愿检测，三方会谈仍在进行）。允许自愿扫描的临时豁免已恢复，延至 2028 年。不要现在就把欧盟强制扫描义务硬编码进系统，应将其作为待定事项跟踪。
 
-Verify, for a US-facing UGC app. a documented escalation path to file a NCMEC report on actual knowledge, a 1-year preservation policy for the reported content, and a reporting mechanism. Sources. [18 U.S.C. 2258A](https://www.law.cornell.edu/uscode/text/18/2258A), [Ofcom illegal harms](https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/), [Council CSA Regulation position](https://www.consilium.europa.eu/en/press/press-releases/2025/11/26/child-sexual-abuse-council-reaches-position-on-law-protecting-children-from-online-abuse/).
+针对面向美国的 UGC 应用，请核验：实际知悉后提交 NCMEC 举报的成文升级路径；针对被举报内容的 1 年保存政策；以及举报机制。来源：[18 U.S.C. 2258A](https://www.law.cornell.edu/uscode/text/18/2258A)、[Ofcom 非法危害](https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/)、[欧盟理事会 CSA Regulation 立场](https://www.consilium.europa.eu/en/press/press-releases/2025/11/26/child-sexual-abuse-council-reaches-position-on-law-protecting-children-from-online-abuse/)。
 
-### 3.2 UGC minimum requirements and Child Safety Standards (STORE)
+### 3.2 UGC 最低要求与儿童安全标准（商店）
 
-- Apple Guideline 1.2. a UGC or social app has all four. a content filter, an in-app report mechanism with timely responses, the ability to block abusive users, and published developer contact info. Apps must remove reported content and eject the offending user within 24 hours of a report. a 6 February 2026 update states that random or anonymous chat apps are explicitly subject to 1.2.
-- Google Play UGC policy. an app with UGC requires terms acceptance before posting, defines and prohibits objectionable content, provides an in-app system to report and block objectionable content and users, and acts on reports.
-- Google Play Child Safety Standards, effective 19 March 2025 for the Social and Dating categories. five requirements. published CSAE standards on a globally reachable web page that names the app and developer with the link entered in Play Console, an in-app feedback mechanism, a CSAM response protocol, a named child-safety point of contact, and compliance with in-jurisdiction child-safety law. this applies regardless of whether the app actually has child users, and is a removal cause for the Social and Dating categories.
+- Apple Guideline 1.2。UGC 或社交类应用必须四项齐备：内容过滤器；能及时响应的应用内举报机制；屏蔽滥用用户的能力；公开发布的开发者联系信息。应用必须在收到举报后 24 小时内移除被举报内容并清退违规用户。2026 年 2 月 6 日的更新指出：随机或匿名聊天应用明确适用 1.2。
+- Google Play UGC 政策。含 UGC 的应用必须要求用户在发布前接受条款，定义并禁止不良内容，提供应用内举报与屏蔽不良内容及用户的系统，并对举报采取行动。
+- Google Play Child Safety Standards（儿童安全标准），自 2025 年 3 月 19 日起对社交与交友品类生效。五项要求：在全球可访问的网页上发布 CSAE 标准，页面须写明应用与开发者名称，并把链接填入 Play Console；应用内反馈机制；CSAM 响应协议；指定的儿童安全联系人；遵守所在司法辖区的儿童安全法律。无论应用是否实际拥有儿童用户均适用，对社交与交友品类而言这是下架事由。
 
-Sources. [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), [Google Play Child Safety Standards](https://support.google.com/googleplay/android-developer/answer/14747720?hl=en).
+来源：[Apple App Review Guidelines（审核指南）](https://developer.apple.com/app-store/review/guidelines/)、[Google Play Child Safety Standards（儿童安全标准）](https://support.google.com/googleplay/android-developer/answer/14747720?hl=en)。
 
-### 3.3 Accessibility as a store-review dimension
+### 3.3 无障碍作为商店审核维度
 
-Neither store hard-rejects for failing WCAG, so this is a medium store risk and a high legal risk (see 3.6 and the European Accessibility Act in the EU doc).
+两家商店都不会因未达 WCAG 而硬性拒审，因此这是中等商店风险与高法律风险（见 3.6 以及欧盟文档中的《欧洲无障碍法案》）。
 
-- Apple Accessibility Nutrition Labels, introduced 2025, appear on the product page and cover 9 features (VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, Audio Descriptions). they are voluntary now, and Apple states they will become required to submit over time. a claimed feature must let users complete all common tasks with it. Whether App Review acts on a misleading label under Guideline 2.3 (accurate metadata) is unverified, see [ACCESSIBILITY.md](ACCESSIBILITY.md) section 11.
-- Google Play provides tooling, not a gate. the Accessibility Scanner and TalkBack. checkable criteria include touch targets of at least 48dp, content descriptions on all interactive and graphical elements, and TalkBack-navigable controls.
+- Apple Accessibility Nutrition Labels（无障碍营养标签），2025 年推出，显示在产品页上，覆盖 9 项功能（VoiceOver、Voice Control、Larger Text、Dark Interface、Differentiate Without Color Alone、Sufficient Contrast、Reduced Motion、Captions、Audio Descriptions）。目前为自愿性质，Apple 表示随着时间推移将逐步成为提交时的必填项。声称支持的功能必须能让用户借其完成所有常见任务。App Review 是否会依据 Guideline 2.3（元数据准确性）对误导性标签采取行动，尚未经验证，见 [ACCESSIBILITY.md](ACCESSIBILITY.md) 第 11 节。
+- Google Play 提供的是工具，不是闸门：Accessibility Scanner 与 TalkBack。可检查的标准包括至少 48dp 的触控目标、所有交互与图形元素上的内容描述，以及可用 TalkBack 导航的控件。
 
-Verify. Apple Accessibility Nutrition Labels populated and not over-claimed, UIAccessibility labels and traits present, and on Android the 48dp targets, content descriptions, and a clean Accessibility Scanner run. Sources. [Apple Accessibility Nutrition Labels](https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/), [Android accessibility testing](https://developer.android.com/guide/topics/ui/accessibility/testing).
+请核验：Apple Accessibility Nutrition Labels 已填写且未过度声称；UIAccessibility 标签与 traits 齐备；Android 侧 48dp 触控目标、内容描述齐备，且 Accessibility Scanner 检查干净通过。来源：[Apple Accessibility Nutrition Labels](https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/)、[Android 无障碍测试](https://developer.android.com/guide/topics/ui/accessibility/testing)。
 
-### 3.4 Account and data deletion, the web URL (STORE, commonly missed)
+### 3.4 账号与数据删除的网页 URL（商店，常见遗漏）
 
-- Apple Guideline 5.1.1(v). an account-creating app lets users start account and associated-data deletion in-app (in force since 30 June 2022). a public web deletion or privacy-choices page is provided through the optional Privacy Choices URL in App Store Connect.
-- Google Play. an account-creating app provides both an in-app deletion path and a web-link resource for account and data deletion that works even after uninstall, both declared in the Data safety form. an invalid or unreachable deletion URL is a frequent rejection.
+- Apple Guideline 5.1.1(v)。允许创建账号的应用须让用户能在应用内发起账号及关联数据的删除（自 2022 年 6 月 30 日起生效）。公开的网页删除或隐私选择页面通过 App Store Connect 中可选的 Privacy Choices URL 提供。
+- Google Play。允许创建账号的应用必须同时提供应用内删除路径，以及一个在卸载后仍然可用的账号与数据删除网页链接资源，并在数据安全（Data safety）表单中声明两者。删除 URL 无效或无法访问是常见的拒审原因。
 
-Verify the in-app delete flow deletes data (not deactivate), and that a publicly reachable web deletion URL (returns 200, no login wall) is declared. Sources. [Apple offering account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/), [Google Play account deletion](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en).
+请核验：应用内删除流程是真正删除数据（而非停用）；已声明一个公开可达的网页删除 URL（返回 200，无登录墙）。来源：[Apple 在应用中提供账号删除](https://developer.apple.com/support/offering-account-deletion-in-your-app/)、[Google Play 账号删除](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en)。
 
-### 3.5 OFAC sanctions and embargoed-territory availability (LEGAL)
+### 3.5 OFAC 制裁与受禁地区可用性（法律）
 
-US sanctions prohibit providing goods or services to blocked persons and embargoed territories. Apple itself settled with OFAC for 466,912 dollars in 2019 for hosting a blocked developer's apps, and 2025 reporting found sanctioned-linked apps slipping into both stores, so the developer's own compliance still matters. Verify the developer or entity is not on the OFAC SDN list, and the app's country availability in App Store Connect and Play Console excludes the embargoed territories (Cuba, Iran, North Korea, and the sanctioned regions of Ukraine). Source. [TTP on sanctioned apps in the stores](https://www.techtransparencyproject.org/articles/u.s.-sanctioned-firms-find-opening-in-apple-and-google-app-stores).
+美国制裁禁止向被封锁人员与受禁地区提供商品或服务。Apple 自己就曾因托管被封锁开发者的应用而于 2019 年与 OFAC 以 466,912 美元和解；2025 年的报道发现与受制裁方关联的应用仍混入两家商店，因此开发者自身的合规仍然重要。请核验：开发者或实体不在 OFAC SDN 名单上；App Store Connect 与 Play Console 中应用的国家/地区可用性排除了受禁地区（古巴、伊朗、朝鲜以及乌克兰的受制裁地区）。来源：[TTP：商店中的受制裁应用](https://www.techtransparencyproject.org/articles/u.s.-sanctioned-firms-find-opening-in-apple-and-google-app-stores)。
 
-Syria is no longer a comprehensively embargoed territory, but it is not unrestricted either. The OFAC Syria sanctions program ended on 1 July 2025 under Executive Order 14312, OFAC then removed the Syrian Sanctions Regulations (31 CFR Part 542), and the State Department rescinded the state sponsor of terrorism designation effective 24 August 2026. Two controls remain. First, 15 CFR 746.9 still requires a Commerce license to export or reexport to Syria any item subject to the EAR, apart from EAR99 food and medicine, with listed license exceptions that include SPP for qualifying EAR99 items and CCD for qualifying consumer communications software. So before making an app available in Syria, document whether it is subject to the EAR, its classification, and the exception or license relied on. Published software can fall outside the EAR under 15 CFR 734.3(b)(3) and 734.7, but encryption needs its own analysis, and being in an app store does not by itself make an app published. Second, the list-based Assad accountability sanctions (31 CFR Part 569) still block designated persons and any entity they own 50 percent or more of, named or not, so screen counterparties and ownership, not only the developer's own name. Whether Apple or Google serve a Syria storefront is their own decision and separate from US law. Sources. [Executive Order 14312](https://www.govinfo.gov/content/pkg/DCPD-202500725/html/DCPD-202500725.htm), [15 CFR 746.9](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-746/section-746.9), [15 CFR 734.7](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-734/section-734.7), [31 CFR 569.406](https://www.ecfr.gov/current/title-31/subtitle-B/chapter-V/part-569/section-569.406), [OFAC FAQ 1220](https://ofac.treasury.gov/faqs/1220), [SST rescission, Federal Register 2026-17653](https://www.govinfo.gov/content/pkg/FR-2026-08-31/html/2026-17653.htm).
+叙利亚已不再是全面受禁地区，但也并非不受限制。根据 Executive Order 14312，OFAC 叙利亚制裁计划已于 2025 年 7 月 1 日结束；OFAC 随后移除了 Syrian Sanctions Regulations（31 CFR Part 542）；国务院对"支持恐怖主义国家"（state sponsor of terrorism）的认定自 2026 年 8 月 24 日起撤销。仍存两项管制。第一，15 CFR 746.9 仍要求：向叙利亚出口或再出口任何受 EAR 管辖的物项（EAR99 食品与药品除外）均需商务部许可证，其列明的许可例外包括适用于合资格 EAR99 物项的 SPP，以及适用于合资格消费级通信软件的 CCD。因此，在让应用于叙利亚可用之前，请留下成文记录，写明它是否受 EAR 管辖、其分类，以及所依据的例外或许可。已发布的软件可依 15 CFR 734.3(b)(3) 与 734.7 落在 EAR 之外，但加密需要单独分析，而且上架应用商店本身并不能使应用构成"已发布"。第二，基于名单的阿萨德问责制裁（31 CFR Part 569）仍封锁被指定人员及其持有 50% 或以上权益的任何实体（无论是否列名），因此要筛查交易对手与所有权结构，而不只是开发者自己的名称。Apple 或 Google 是否服务叙利亚店面是它们自己的决定，与美国法律相互独立。来源：[Executive Order 14312](https://www.govinfo.gov/content/pkg/DCPD-202500725/html/DCPD-202500725.htm)、[15 CFR 746.9](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-746/section-746.9)、[15 CFR 734.7](https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-734/section-734.7)、[31 CFR 569.406](https://www.ecfr.gov/current/title-31/subtitle-B/chapter-V/part-569/section-569.406)、[OFAC FAQ 1220](https://ofac.treasury.gov/faqs/1220)、[SST 认定撤销，Federal Register 2026-17653](https://www.govinfo.gov/content/pkg/FR-2026-08-31/html/2026-17653.htm)。
 
-### 3.6 ADA Title III accessibility litigation (LEGAL, US)
+### 3.6 ADA Title III 无障碍诉讼（法律，美国）
 
-Federal Title III web-accessibility suits rose about 27 percent in 2025, and mobile-app suits are a growing share, with WCAG 2.1 AA as the de facto court standard, though there is no DOJ Title III technical rule for private businesses. the DOJ Title II rule requires state and local government apps to meet WCAG 2.1 AA. an interim final rule (FR Doc. 2026-07663, effective 20 April 2026) moved the dates to 26 April 2027 for populations of 50,000 or more and 26 April 2028 for smaller entities, see [ACCESSIBILITY.md](ACCESSIBILITY.md) section 6. Flag WCAG 2.1 AA as a legal risk-mitigation item for US consumer apps, and a hard deadline for government or public-entity apps. Source. [ABA on Title III digital accessibility](https://businesslawtoday.org/2025/08/digital-accessibility-under-title-iii-of-the-ada/).
+2025 年，联邦 Title III 网页无障碍诉讼增长约 27%，移动应用诉讼占比不断上升；WCAG 2.1 AA 是事实上的法院标准，不过针对私营企业的 DOJ Title III 技术规则并不存在。DOJ Title II 规则要求州与地方政府应用达到 WCAG 2.1 AA。一项临时最终规则（FR Doc. 2026-07663，自 2026 年 4 月 20 日起生效）把日期调整为：人口 50,000 及以上的为 2027 年 4 月 26 日，更小实体为 2028 年 4 月 26 日，见 [ACCESSIBILITY.md](ACCESSIBILITY.md) 第 6 节。对美国消费类应用，请把 WCAG 2.1 AA 标记为法律风险缓释事项；对政府或公共实体应用，则视为硬性截止日期。来源：[ABA 关于 Title III 数字无障碍的讨论](https://businesslawtoday.org/2025/08/digital-accessibility-under-title-iii-of-the-ada/)。
 
-### 3.7 PSD2 SCA and PCI DSS for card payments outside store billing (LEGAL and contractual)
+### 3.7 商店计费之外的卡支付的 PSD2 SCA 与 PCI DSS（法律与合同）
 
-These apply only to legitimate non-store card payments for real-world goods and services. digital goods and subscriptions must still route through Apple in-app purchase or Google Play Billing.
+这些要求只适用于为现实商品与服务进行的合规非商店卡支付。数字商品与订阅仍必须经由 Apple 应用内购买（In-App Purchase，IAP）或 Google Play Billing。
 
-- PSD2 Strong Customer Authentication. an EU or UK remote card payment for real goods needs two of three factors (knowledge, possession, inherence), usually 3D Secure, with limited exemptions (low value, transaction-risk analysis). PSD3 is expected around 2026 to 2027, so monitor.
-- PCI DSS version 4.0.1 is the current standard, with all future-dated requirements mandatory from 31 March 2025. tokenization or Apple Pay or Google Pay keeps the app off the card number and reduces scope to roughly SAQ A. handling raw card data pulls in far heavier requirements.
+- PSD2 强客户认证（Strong Customer Authentication，SCA）。欧盟或英国的实物商品远程卡支付需要三种因素中的两种（知识、持有、固有），通常是 3D Secure，并有有限豁免（低价值、交易风险分析）。PSD3 预计在 2026 至 2027 年前后出台，需持续关注。
+- PCI DSS 版本 4.0.1 是现行标准，所有带未来生效日期的要求自 2025 年 3 月 31 日起强制执行。令牌化（tokenization）或 Apple Pay 或 Google Pay 可让应用不接触卡号，并把范围大致缩小到 SAQ A。处理原始卡数据则会引入沉重得多的要求。
 
-Verify. if the app takes EU or UK card payments for real goods, SCA and 3D Secure are implemented. if the app handles cards, no card number is stored, logged, or cached, entry goes to a tokenizing processor or a wallet, and the correct SAQ is identified. Sources. [Stripe SCA guide](https://stripe.com/guides/strong-customer-authentication), [PCI SSC SAQ bulletin for v4.0.1](https://www.pcisecuritystandards.org/wp-content/uploads/2024/10/SAQs_for_PCI_DSS_v4.0.1_Bulletin.pdf).
+请核验：若应用为实物商品接受欧盟或英国卡支付，SCA 与 3D Secure 已实现；若应用处理银行卡，则任何卡号都不被存储、记录或缓存，输入直接进入做令牌化的处理商或钱包，并已确定正确的 SAQ。来源：[Stripe SCA 指南](https://stripe.com/guides/strong-customer-authentication)、[PCI SSC v4.0.1 SAQ 公告](https://www.pcisecuritystandards.org/wp-content/uploads/2024/10/SAQs_for_PCI_DSS_v4.0.1_Bulletin.pdf)。
 
-## 4. Consolidated audit checklist (HARD gates)
+## 4. 汇总审计清单（硬性关卡）
 
-| Gate | Verify | Platform |
+| 关卡 | 核验 | 平台 |
 |---|---|---|
-| macOS notarization | Developer ID signed, hardened runtime, notarytool submitted, stapled | Apple (non-store macOS) |
-| 4.2 / 4.3 | Not a thin wrapper, not a duplicate or clone, not an un-differentiated saturated-category app | Apple |
-| Reader app entitlement | 3.1.3(a) conditions and link rules met, no IAP while used | Apple |
-| France encryption | French ANSSI declaration uploaded if non-exempt crypto and distributed in France | Apple |
-| Content rights | ASC third-party-content question answered, proof available | Apple |
-| visionOS App Motion | Declared, Developer Capture screenshots | Apple |
-| SDK 26 (all platforms) | Built with Xcode 26 and the platform-26 SDK by 28 April 2026 | Apple |
-| SDK 27 (all platforms except macOS) | Built with the platform-27 SDK from April 2027, exact day not yet published | Apple |
-| Developer verification | Verified before 30 Sep 2026 if distributing to Brazil, Indonesia, Singapore, Thailand | Android |
-| Foreground service types | Manifest type + matching permission + Play Console declaration with demo video | Android |
-| Play Integrity | No SafetyNet Attestation, verdict verified server-side | Android |
-| Play Billing v8+ | Billing Library at least version 8 before 31 Aug 2026 | Android |
-| Target API | targetSdkVersion at least 35 now, plan for 36 by Aug 2026 | Android |
-| Disruptive ads | No launch or mid-task interstitial, closable by 15 seconds | Android |
-| Health Connect | Declaration, core-function justification, org account, correct label | Android |
-| UGC controls | Report, block, filter, published contact, 24-hour remove-and-eject (Apple 1.2) | Both |
-| Child Safety Standards | Published CSAE URL, in-app report, response protocol, named contact (Social and Dating) | Google Play |
-| CSAM reporting | NCMEC CyberTipline path and 1-year preservation for a US UGC app | Legal |
-| Account and data deletion | In-app deletion plus a reachable web deletion URL, declared | Both |
-| Sanctions | Entity and owners not SDN-listed, availability excludes embargoed territories, export-control review before a Syria release | Legal |
-| Card payments | SCA and 3D Secure on EU or UK real-goods card flows, no PAN stored, correct PCI SAQ | Legal |
-| Accessibility labels | Apple Accessibility Nutrition Labels populated and not over-claimed | Apple |
+| macOS 公证 | Developer ID 签名、hardened runtime、notarytool 已提交、已钉扎票据 | Apple（非商店 macOS） |
+| 4.2 / 4.3 | 非单薄壳套，非重复或克隆应用，非无差异化的饱和品类应用 | Apple |
+| 阅读类应用 entitlement | 满足 3.1.3(a) 条件与链接规则，使用期间不提供 IAP | Apple |
+| 法国加密 | 若使用非豁免加密且在法国分发，已上传法国 ANSSI 申报 | Apple |
+| 内容版权 | ASC 第三方内容问题已作答，权利证明可用 | Apple |
+| visionOS App Motion | 已声明，使用 Developer Capture 截图 | Apple |
+| SDK 26（所有平台） | 2026 年 4 月 28 日前以 Xcode 26 与对应平台 26 SDK 构建 | Apple |
+| SDK 27（除 macOS 外所有平台） | 自 2027 年 4 月起以对应平台 27 SDK 构建，确切日期尚未公布 | Apple |
+| 开发者核验 | 若分发到巴西、印度尼西亚、新加坡、泰国，须在 2026 年 9 月 30 日前完成核验 | Android |
+| 前台服务类型 | manifest 类型 + 对应权限 + 含演示视频的 Play Console 声明 | Android |
+| Play Integrity | 不使用 SafetyNet Attestation，判定结果在服务端校验 | Android |
+| Play Billing v8+ | 2026 年 8 月 31 日前 Billing Library 至少为版本 8 | Android |
+| 目标 API | targetSdkVersion 当前至少 35，2026 年 8 月前计划到 36 | Android |
+| 干扰性广告 | 无启动或任务中途插页广告，15 秒内可关闭 | Android |
+| Health Connect | 申报、核心功能用途说明、组织账号、标签正确 | Android |
+| UGC 管控 | 举报、屏蔽、过滤、公开联系方式、24 小时移除并清退（Apple 1.2） | 双平台 |
+| Child Safety Standards | 已发布 CSAE URL、应用内举报、响应协议、指定联系人（社交与交友品类） | Google Play |
+| CSAM 举报 | 面向美国的 UGC 应用具备 NCMEC CyberTipline 路径与 1 年保存 | 法律 |
+| 账号与数据删除 | 应用内删除加可达的网页删除 URL，且已声明 | 双平台 |
+| 制裁 | 实体与所有者不在 SDN 名单，可用性排除受禁地区，叙利亚发布前完成出口管制审查 | 法律 |
+| 卡支付 | 欧盟或英国实物商品卡流程启用 SCA 与 3D Secure，不存储 PAN，确定正确的 PCI SAQ | 法律 |
+| 无障碍标签 | Apple Accessibility Nutrition Labels 已填写且未过度声称 | Apple |
 
-## 5. Sources and verification note
+## 5. 来源与核实说明
 
-Apple facts cite developer.apple.com. Android and Google Play facts cite developer.android.com and the Play Console help. legal facts cite the statute, the regulator, or the standards body. Where a government or Apple page rendered as a client-side app that resisted an automated read, the fact was cross-checked across reputable sources and is flagged here.
+Apple 相关事实引用 developer.apple.com；Android 与 Google Play 相关事实引用 developer.android.com 与 Play Console 帮助；法律相关事实引用法条、监管机构或标准组织。凡是政府或 Apple 页面渲染为客户端应用、无法自动读取的情形，相关事实已跨多家可信来源交叉核对，并在此处标记。
 
-### Source Trust Hierarchy
+### 来源可信度层级
 
-All sources used for establishing regulatory requirements must adhere to the following priority guidelines:
+用于确立监管要求的全部来源都必须遵守以下优先级准则：
 
-- Priority 1 (Primary Official): European Commission, EUR-Lex, Official Journal of the European Union, ENISA, EDPB, FTC, NIST, CISA, ICO, and official government publications.
-- Priority 2 (Highly Reputable News): Reuters, AP (Associated Press), Bloomberg.
-- Priority 3 (Academic): Academic papers and peer-reviewed journals.
-- Priority 4 (Industry): Industry blogs and vendor publications.
-- Priority 5 (Social & Unverified): LinkedIn, Reddit, Twitter, and AI generated summaries.
+- 优先级 1（一手官方来源）：European Commission、EUR-Lex、Official Journal of the European Union、ENISA、EDPB、FTC、NIST、CISA、ICO 及官方政府出版物。
+- 优先级 2（高可信新闻）：Reuters、AP（Associated Press）、Bloomberg。
+- 优先级 3（学术）：学术论文与同行评审期刊。
+- 优先级 4（行业）：行业博客与厂商出版物。
+- 优先级 5（社交与未经验证）：LinkedIn、Reddit、Twitter 以及 AI 生成的摘要。
 
-### Compliance Pull Request Rules
+### 合规 Pull Request 规则
 
-- Never trust secondary sources before official sources.
-- Never create compliance pull requests using Priority 4 or Priority 5 sources unless verified by a Priority 1 source. Any citation or claim sourced from Priority 4 or 5 must be traceably corroborated by an official publication from Priority 1.
+- 绝不在官方来源之前信任二手来源。
+- 绝不使用优先级 4 或优先级 5 来源创建合规 pull request，除非已由优先级 1 来源核验。凡引用或主张出自优先级 4 或 5，都必须能由优先级 1 的官方出版物可追溯地佐证。
 
-Marked unverified, confirm against the primary source before relying on a figure. the 2026 Android target API 36 date (widely reported, consistent with the annual release pattern, but the official target-sdk page still showed the 2025 text at fetch time). the exact `codesign`, `notarytool`, and `stapler` command strings (corroborated across sources, not copied from a rendered Apple page). the exact visionOS, watchOS, and tvOS per-device screenshot pixel dimensions (pull live from the App Store Connect screenshot page). the exact date Apple's Accessibility Nutrition Labels become mandatory (Apple says over time, no date published). the Google real-money-games India final rollout status. the EU CSA Regulation final form (in trilogue). the US BIS annual self-classification report specifics. and the PSD3 timing.
+以下各项标注为未经验证；在依赖其中数字前请先对照一手来源确认：2026 年 Android 目标 API 36 的日期（报道广泛，与年度发布规律一致，但抓取时官方 target-sdk 页面仍显示 2025 年文本）；`codesign`、`notarytool` 与 `stapler` 的确切命令串（已跨来源相互印证，并非复制自渲染后的 Apple 页面）；visionOS、watchOS 与 tvOS 各设备的确切截图像素尺寸（请从 App Store Connect 截图页面实时获取）；Apple Accessibility Nutrition Labels 变为强制的确切日期（Apple 只说"随时间推移"，未公布日期）；Google 真金游戏在印度的最终落地状态；欧盟 CSA Regulation 的最终形态（三方会谈中）；美国 BIS 年度自分类报告的具体细节；以及 PSD3 的时间表。
 
-Treat this document as HARD on the existence and direction of each obligation, and advisory on any specific number, version, or date until re-verified against the cited source.
+在对照所引来源重新核实之前，请把本文档视为：对每项义务的存在与方向是硬性的（HARD），对任何具体数字、版本或日期仅作建议（advisory）。
