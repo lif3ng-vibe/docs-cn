@@ -307,8 +307,8 @@ jobs:
             NEXT="检查下方日志末尾定位原因；处理后在评论 \`/continue\` 从断点续跑。"
           else
             LABEL="blocked"
-            REASON="产物校验/收尾失败（翻译进程正常退出，但项目目录或 sites.json 收录校验未过）"
-            NEXT="通常是阶段 C 五处同步没做完；处理后在评论 \`/continue\` 从断点续跑。"
+            REASON="翻译进程正常退出，但收尾阶段失败（产物校验 / 兜底提交 / PR 创建之一）"
+            NEXT="常见两种：① 交付物问题——\`/continue\` 从断点续跑修复；② 若日志见 GitHub Actions is not permitted to create or approve pull requests——仓库 Settings → Actions → General → Workflow permissions 取消勾选「Forbid GitHub Actions from creating or approving pull requests」后重跑，或本地 gh pr create 补建。看 run 日志定位。"
           fi
           {
             echo "翻译中断 ⛔ ${REASON}"
