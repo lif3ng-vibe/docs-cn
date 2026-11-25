@@ -284,3 +284,9 @@ jobs:
           } > fail-body.md
           gh issue comment "$ISSUE_NUMBER" --body-file fail-body.md
           gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL" || true
+
+      - name: 失败转红（回帖已发，job 状态要如实）
+        if: always() && env.CLAUDE_CODE != '' && env.CLAUDE_CODE != '0'
+        run: |
+          echo "::error::claude 退出码 $CLAUDE_CODE——失败详情与 /continue 指引见 issue #${ISSUE_NUMBER} 回帖"
+          exit 1
