@@ -43,6 +43,16 @@ body:
       description: monorepo 时填文档所在目录（如 site/ 或 docs/），站根仓库留空
     validations:
       required: false
+  - type: dropdown
+    id: deploy-mode
+    attributes:
+      label: 上线方式
+      description: 自动合并=翻译完成直接合入 master 并触发部署（无 PR，最快）；人工 review=交付 PR 等你确认后再合并
+      options:
+        - 自动合并上线
+        - 人工 review 后合并
+    validations:
+      required: false
   - type: textarea
     id: scope
     attributes:
