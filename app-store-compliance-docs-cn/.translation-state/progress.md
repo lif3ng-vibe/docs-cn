@@ -40,8 +40,8 @@
 | 7 | GAP-ANALYSIS-2026-09 + GAP-ANALYSIS-2026-11 + REGULATORY-GAP-REPORT-2026 + COMPETITIVE-GAP-ANALYSIS | 9,443 | ✅ 已提交（4 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——GAP-09 的证据原话引文按「逐字引文」有意保留英文） |
 | 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS + FAQ.md | 6,893 | ✅ 已提交（6 篇全译，含漏排的 FAQ；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留） |
 | 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 /tmp/asp-parts/ part 文件后拼接） | 21,041 | ✅ 已提交（拼装 1325 行与原文逐行对应；URL 集合 diff 零差异；列表数一致；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——命中均为引号内报错原文、法条引用、Sign in with Apple 等） |
-| 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分 4 段并行译：1-105 / 106-223 / 224-900 / 898-1580 行，各段写 part 文件后拼接） | 27,855 | ⬜ |
-| 11 | 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜（llms.txt 已于批次 1 完成） |
+| 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分 4 段并行译：1-105 / 106-223 / 224-897 / 898-1580 行，各段写 /tmp/asp-parts/ part 文件后拼接） | 27,855 | ✅ 已提交（拼装 1580 行逐行对应；113 个 `### ID:` 行原样保留；ISO 日期 token 集合 diff 零差异；URL 集合零差异；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留） |
+| 11 | 项目 README 校正（33→32 篇）+ 终检（残留/CJK 粗体/锚点/构建） | - | ⬜（llms.txt 已于批次 1 完成） |
 
 ## 阶段
 
@@ -58,7 +58,7 @@
 
 ## 下一步
 
-批次 10（REGULATORY-TIMELINE.md 4 段：1-105 翻译中；106-223 / 224-897 / 898-1580 待开工；拼装校验行数=1580）→ 11 → 阶段 C
+批次 11（README 校正 + 全站终检）→ 阶段 C（sites.json + gen-index、deploy-pages.yml 拷贝段、hub README 三处）→ 合并 origin/master → STATUS=done
 
 ## 上游疑点备忘（不阻断，已如实翻译）
 
