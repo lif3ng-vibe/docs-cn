@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Apple App Store 审核指南·拒审地图 | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Apple App Store 审核指南·拒审地图" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/APPLE.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/APPLE.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Apple App Store 审核指南·拒审地图" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Apple App Store 审核指南·拒审地图","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/APPLE.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>资料来源：Apple App Store 审核指南（developer.apple.com/app-store/review/guidelines）。排名为实证排序，来自 Apple 的 2024 App Store Transparency Report 与 2025 年执法报道。</p>
+
+<p>Apple 把所有规则归入五大板块：安全（Safety）、性能（Performance）、商业（Business）、设计（Design）、法律（Legal）。下表逐条列出会导致拒审的审核指南、它要求什么、具体哪些行为会触发拒审，以及如何规避。严重程度反映该规则实际引发拒审的频率，以及被拒后翻盘的难度。</p>
+
+<h2 id="现实排名拒审究竟来自哪里">现实排名（拒审究竟来自哪里）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>排名</th>
+      <th>领域</th>
+      <th>Guideline</th>
+      <th>高居榜首的原因</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>隐私不合规</td>
+      <td>5.1.1, 5.1.2</td>
+      <td>更新与新应用被拒的最大单一原因：隐私政策缺失、用途说明（purpose strings）含糊、没有应用内账号删除、数据共享未披露</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>应用完整性</td>
+      <td>2.1</td>
+      <td>崩溃、失效链接、占位内容、缺少演示账号、审核期间后端未上线。2024 年性能类拒审超过 120 万次</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>元数据不准确</td>
+      <td>2.3</td>
+      <td>隐藏功能、误导性截图、未说明的功能、关键词堆砌</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>应用内购买（In-App Purchase，IAP）</td>
+      <td>3.1.1</td>
+      <td>试图绕开 Apple 的应用内购买出售数字商品、缺少恢复购买、未披露概率</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>最低功能要求与垃圾应用</td>
+      <td>4.2, 4.3</td>
+      <td>重新包装的网站、功能单薄的应用、重复的 bundle ID、模板应用、饱和品类里的克隆应用</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>设计与登录</td>
+      <td>4.8</td>
+      <td>提供第三方登录，却没有同等的隐私保护替代方案</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>约每四次提交就有一次被拒。随着 Apple 收紧执法，并且（据行业报道）越来越多地以自动化方式承担部分审核工作，很大一部分拒审都倒在了隐私与稳定性上。请把这里的数字视为方向性参考（来自商店透明度报告），引用前请对照原始来源核实最新数字。</p>
+
+<h2 id="第-1-节安全safety">第 1 节：安全（Safety）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Guideline</th>
+      <th>要求</th>
+      <th>触发拒审的行为</th>
+      <th>规避方法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1.2 适用范围与行为准则（2026 年 10 月 16 日）</td>
+      <td>凡是用户可以创建、生成、上传或分享内容的应用——点名的包括社交媒体、用户生成内容（UGC）平台与 AI 内容创作应用——都必须落实四项 UGC 管控措施</td>
+      <td>未经同意的亲密影像（包括 AI 生成的影像）未阻止或未移除。未落实适当的防护措施，或在 Apple 通知后未整改违规内容，除应用被下架外，还可能构成对 Developer Code of Conduct 的违反</td>
+      <td>把 AI 图像或视频生成器当作 UGC 应用对待，封锁亲密与”脱衣”类生成能力，对每一条 Apple 通知都采取行动并留存整改记录。来源：<a href="https://developer.apple.com/news/?id=92th7e5i">Apple，2026 年 10 月 16 日</a>、<a href="https://developer.apple.com/news/?id=vvzx6cul">Apple，2026 年 10 月 16 日</a></td>
+    </tr>
+    <tr>
+      <td>1.2 UGC 升级条款（2026 年 6 月 8 日）</td>
+      <td>四项 UGC 管控措施之外，再加一条升级条款</td>
+      <td>严重或反复出现 UGC 问题，现在可直接作为把应用从 App Store 下架并踢出 Apple Developer Program 的依据。1.2.1(a) 创作者类应用必须按已验证或已申报的年龄对超龄内容设限</td>
+      <td>把第一次 UGC 拒审当作最后一次警告，为创作者内容加上基于年龄的门槛。来源：<a href="https://developer.apple.com/app-store/review/guidelines/">应用审核指南</a></td>
+    </tr>
+    <tr>
+      <td>1.1 不当内容</td>
+      <td>不得包含诽谤、歧视、暴力、色情或煽动性内容</td>
+      <td>刻薄恶意的内容、对伤害行为的写实描绘、色情内容、约炮或招嫖推广、虚假或戏弄性的功能。娱乐免责声明不能作为借口</td>
+      <td>上线真实、无可挑剔的功能，删除恶搞或虚假的实用类功能</td>
+    </tr>
+    <tr>
+      <td>1.2 用户生成内容（UGC）</td>
+      <td>任何含 UGC 的应用都必须提供内容过滤、举报、拉黑，以及公开的联系方式</td>
+      <td>没有内容过滤器、没有举报机制、无法拉黑骚扰用户、存在匿名或不当聊天</td>
+      <td>提交之前就做好内容审核、应用内举报、用户拉黑和联系方式</td>
+    </tr>
+    <tr>
+      <td>1.2.1 创作者内容</td>
+      <td>设置年龄限制，让未成年人无法接触到不适龄的创作者内容</td>
+      <td>创作者类应用没有任何年龄门槛机制</td>
+      <td>增加基于已验证或已申报年龄的年龄限制</td>
+    </tr>
+    <tr>
+      <td>1.3 儿童类别</td>
+      <td>不得有外部链接、不得有购买、不得使用 IDFA、不得有收集儿童数据的第三方广告或分析，且一切都要置于家长门（parental gate）之后</td>
+      <td>跳转外链、诱导购买、第三方分析或广告、违反儿童隐私法律</td>
+      <td>为所有出口和购买加家长门，移除收集儿童数据的第三方 SDK</td>
+    </tr>
+    <tr>
+      <td>1.4 人身伤害</td>
+      <td>医疗数据准确、健康声明经过验证、不得鼓励伤害行为</td>
+      <td>未经验证的健康测量声明、未经批准的药物剂量计算器、非执法机构来源的 DUI 临检点数据、危险的挑战活动</td>
+      <td>验证声明、引用批准文件，移除鼓励伤害的功能</td>
+    </tr>
+    <tr>
+      <td>1.5 开发者信息</td>
+      <td>提供便捷的应用内联系方式或支持 URL</td>
+      <td>联系方式缺失或过期</td>
+      <td>添加可用的支持 URL 和应用内联系方式</td>
+    </tr>
+    <tr>
+      <td>1.6 数据安全</td>
+      <td>对用户信息采取恰当的安全保护</td>
+      <td>未经授权的访问或披露，或保护措施薄弱</td>
+      <td>传输与静态存储均加密，并收紧第三方访问范围</td>
+    </tr>
+    <tr>
+      <td>1.7 举报犯罪活动</td>
+      <td>在有实际合作的地方引入当地执法部门</td>
+      <td>没有执法部门参与的举报犯罪功能</td>
+      <td>将功能限定在有执法合作的地区</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="第-2-节性能performance">第 2 节：性能（Performance）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Guideline</th>
+      <th>要求</th>
+      <th>触发拒审的行为</th>
+      <th>规避方法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2.3.6 社交媒体申报（2026 年 9 月）</td>
+      <td>回答应用是否包含社交媒体功能</td>
+      <td>自 2026 年 9 月起，不回答该问题就无法提交新版本、提交更新，也无法为替代市场公证。申报为社交媒体后，应用将归入 Time Allowance 类别，年龄分级最低 13+，且 13 岁以下用户需要使用 Declared Age Range API</td>
+      <td>在 App Store Connect 中回答（或通过 API 的 socialMedia 与 socialMediaAgeRestricted 属性回答），接受 13+ 分级，必要时采用 Declared Age Range。来源：<a href="https://developer.apple.com/news/?id=0d2gpmml">Apple，2026 年 6 月 8 日</a>、<a href="https://developer.apple.com/news/?id=tlur8uvi">Apple，2026 年 7 月 9 日</a></td>
+    </tr>
+    <tr>
+      <td>2.1 应用完整性</td>
+      <td>构建完整、稳定、可被完整审核</td>
+      <td>崩溃、bug、失效链接、占位或临时内容、未经测试的代码、账号功能缺少演示账号或演示模式、审核期间后端未上线、应用内购买不完整或不可见、未说明的不明显功能</td>
+      <td>在真机上测试、后端保持在线、提供演示凭据，并在 App Review Notes 中说明每一个不明显的功能和每一项应用内购买</td>
+    </tr>
+    <tr>
+      <td>2.2 Beta 测试</td>
+      <td>App Store 上不得出现演示、beta 或试用版</td>
+      <td>直接提交试用版或 beta，而不使用 TestFlight</td>
+      <td>所有预发布构建一律走 TestFlight</td>
+    </tr>
+    <tr>
+      <td>2.3.1 元数据准确</td>
+      <td>每个新功能都要在 Notes for Review 中具体说明，不得有误导性营销。隐藏与休眠功能已于 2026 年 10 月 16 日移入审核指南 2.5.19 条</td>
+      <td>虚假声明、虚假价格、Notes for Review 空泛套话、无法验证的声明（如号称 iOS 病毒扫描器）</td>
+      <td>撰写具体的 Notes for Review，只做能证明的声明</td>
+    </tr>
+    <tr>
+      <td>2.3.2 元数据中的 IAP</td>
+      <td>应用内购买须清晰标注，购买处理正确</td>
+      <td>描述或截图中未标注 IAP、购买完成流程损坏</td>
+      <td>在元数据中展示 IAP，正确实现交易完成逻辑</td>
+    </tr>
+    <tr>
+      <td>2.3.3 截图</td>
+      <td>截图应展示应用的实际使用画面</td>
+      <td>截图只有标题图、登录页或启动屏</td>
+      <td>抓取真实的应用内界面</td>
+    </tr>
+    <tr>
+      <td>2.3.6 年龄分级</td>
+      <td>年龄分级准确并附内容警告</td>
+      <td>分级不准确，电影、音乐、游戏缺少警告</td>
+      <td>如实回答年龄分级问卷</td>
+    </tr>
+    <tr>
+      <td>2.3.7 名称与关键词</td>
+      <td>应用名称不超过 30 个字符，关键词干净</td>
+      <td>名称过长、元数据塞满商标、其他应用名、价格或无关关键词</td>
+      <td>名称保持简短，关键词相关且为自己拥有</td>
+    </tr>
+    <tr>
+      <td>2.3.10 不得提及其他平台</td>
+      <td>不得提及其他平台或市场</td>
+      <td>在应用或元数据中点名 Android、Google Play 或替代市场</td>
+      <td>移除跨平台相关表述</td>
+    </tr>
+    <tr>
+      <td>2.3.14 创意素材（2026 年 10 月 16 日）</td>
+      <td>产品页头部与搜索结果中的创意素材应展示应用的内容、功能或品牌，遵守元数据规则，并适合所有受众</td>
+      <td>具体价格或折扣价、无法证实的产品声明、意在误导的指向其他应用的表述、不当内容</td>
+      <td>素材只围绕应用本身，删掉价格与无法证实的声明。来源：<a href="https://developer.apple.com/news/?id=92th7e5i">Apple，2026 年 10 月 16 日</a>、<a href="https://developer.apple.com/app-store/asset-best-practices/#asset-guidelines">Apple 素材指南</a></td>
+    </tr>
+    <tr>
+      <td>2.4.2 资源占用</td>
+      <td>不得过度消耗电量、热量，不得滥用后台</td>
+      <td>电量迅速耗尽、发热严重、与功能无关的后台任务（如加密货币挖矿）</td>
+      <td>对资源占用做性能分析，移除无关后台任务</td>
+    </tr>
+    <tr>
+      <td>2.5.1 软件要求</td>
+      <td>只用公开 API、适配当前 OS、不用废弃技术</td>
+      <td>使用私有 API、已废弃的框架、把 API 用在非预期用途</td>
+      <td>只使用有文档的公开 API</td>
+    </tr>
+    <tr>
+      <td>2.5.2 不得下载可执行代码</td>
+      <td>不得下载会改变应用功能的代码</td>
+      <td>下载或安装改变功能的代码</td>
+      <td>所有功能随二进制一并交付，服务端变更以数据而非代码形式下发</td>
+    </tr>
+    <tr>
+      <td>2.5.4 后台模式</td>
+      <td>后台服务只用于已申报的用途</td>
+      <td>滥用 VoIP、音频或定位后台模式</td>
+      <td>只申报真正使用的后台模式</td>
+    </tr>
+    <tr>
+      <td>2.5.18 广告行为</td>
+      <td>广告适龄、不欺骗，并有可见的关闭控件</td>
+      <td>欺骗性插屏广告、基于敏感数据的广告、没有关闭按钮的广告、儿童应用中的广告</td>
+      <td>使用合规的广告投放位置，绝不投放到健康、学校或儿童数据上</td>
+    </tr>
+    <tr>
+      <td>2.5.19 隐藏、休眠或未说明的功能（2026 年 10 月 16 日）</td>
+      <td>每个功能对用户和 App Review 都清晰可见。原属审核指南 2.3.1 条</td>
+      <td>服务端开关在过审后启用另一个应用（bait-and-switch，调包）、隐藏菜单或手势、为藏功能而混淆代码。这是下架并终止开发者账号的依据</td>
+      <td>让审核看到每个功能，并在 Notes for Review 中说明；远程配置只用于调参或灰度已过审的功能。来源：<a href="https://developer.apple.com/news/?id=92th7e5i">Apple，2026 年 10 月 16 日</a>、<a href="https://developer.apple.com/news/?id=vvzx6cul">Apple，2026 年 10 月 16 日</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="第-3-节商业business">第 3 节：商业（Business）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Guideline</th>
+      <th>要求</th>
+      <th>触发拒审的行为</th>
+      <th>规避方法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3.1.1 外购（external purchase）链接与店面（storefront）范围</td>
+      <td>无 entitlement 链接只是美国店面的特例</td>
+      <td>同一套链接 UI 铺向所有地区，在日本、加拿大、澳大利亚、英国和大多数其他店面仍属违反审核指南 3.1.1 条。审核按地区逐一评估。开发者反馈 2026 年上线前经历了两轮拒审</td>
+      <td>用 Storefront.current 或 countryCode 给链接加地区门槛，其他地区继续走 entitlement 路径。来源：<a href="https://developer.apple.com/news/?id=9txfddzf">Apple 指南更新，2025 年 5 月 1 日</a>、<a href="https://stora.sh/blog/2026-05-16-apple-app-store-external-purchase-links-implementation-guide">落地实测报告，2026 年 5 月</a></td>
+    </tr>
+    <tr>
+      <td>3.1.1 应用内购买</td>
+      <td>所有数字商品、服务与付费内容访问都必须走 Apple 的应用内购买</td>
+      <td>用激活码、二维码、加密货币或任何非 IAP 方式出售数字访问权限；开箱（loot box）不披露概率；IAP 之外售卖数字礼品卡；用外部按钮或链接购买 NFT（该禁令是全球性的，不只针对美国）</td>
+      <td>所有数字购买一律走 StoreKit 应用内购买，购买前披露开箱概率</td>
+    </tr>
+    <tr>
+      <td>3.1.1(a) 外链 entitlement</td>
+      <td>StoreKit External Purchase Link Entitlements（自 2026 年 10 月 16 日起也涵盖 Music Streaming Services Entitlement）只能在获批地区使用，且必须链接到允许的目的地</td>
+      <td>在未获批店面使用外购链接、链接到该地区不允许的目的地、借 entitlement 做误导性营销</td>
+      <td>申请正确的 entitlement，严格限定在获批地区与目的地。来源：<a href="https://developer.apple.com/news/?id=92th7e5i">Apple，2026 年 10 月 16 日</a></td>
+    </tr>
+    <tr>
+      <td>3.1.2 订阅</td>
+      <td>有持续价值、订阅期 7 天起、条款清晰、可跨设备使用</td>
+      <td>没有持续价值的订阅、隐藏条款、移除已付费功能逼迫订阅、订阅骗局</td>
+      <td>提供持续价值、公开条款，绝不移除老用户已购的功能</td>
+    </tr>
+    <tr>
+      <td>3.1.3 其他购买方式</td>
+      <td>外部支付只限明确的豁免类别，如阅读器、多平台、企业、个人对个人服务</td>
+      <td>不属于豁免类的应用用外部支付售卖应用内消耗的商品</td>
+      <td>除非应用属于有明确豁免的类别，否则使用 IAP</td>
+    </tr>
+    <tr>
+      <td>3.2.2 不可接受商业行为</td>
+      <td>不得做面向第三方应用的类商店界面、不得人为刷量、不得操纵其他服务、不得放高利贷</td>
+      <td>在应用内搭建应用商店、伪造广告展示量、发放 APR 超过 36% 或期限不足 60 天的个人贷款、强制用户评分或下载</td>
+      <td>彻底移除这类机制</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="第-4-节设计design">第 4 节：设计（Design）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Guideline</th>
+      <th>要求</th>
+      <th>触发拒审的行为</th>
+      <th>规避方法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>4.0 Sign in with Apple 中继域名</td>
+      <td>接受来自 private.icloud.com 与 privaterelay.appleid.com 的 Hide My Email 地址</td>
+      <td>邮箱校验或只放行 privaterelay.appleid.com 的白名单，会弄坏新中继域名的注册流程，等于破坏 Sign in with Apple 流程</td>
+      <td>服务端与客户端都同时接受两个域名。来源：<a href="https://developer.apple.com/news/?id=1ptvdtcm">Apple，2026 年 6 月 15 日（2026 年 8 月 24 日更正）</a></td>
+    </tr>
+    <tr>
+      <td>4.5.3 实时活动（Live Activities，2026 年 6 月 8 日）</td>
+      <td>不得借 Apple 服务发送垃圾信息、钓鱼信息或未经请求的消息</td>
+      <td>该条现在把 Live Activities 与 Game Center、推送通知并列点名。推广性质或与应用无关的 Live Activity 会被拒</td>
+      <td>每个实时活动都要绑定真实的、由用户发起的、有时限的活动。来源：<a href="https://developer.apple.com/app-store/review/guidelines/">应用审核指南</a></td>
+    </tr>
+    <tr>
+      <td>On-Demand Resources（WWDC26）</td>
+      <td>迁移到 Background Assets</td>
+      <td>自 iOS 27、iPadOS 27、tvOS 27 与 visionOS 27 起，On-Demand Resources 已废弃</td>
+      <td>把打了标记的资源迁到 Background Assets 框架。来源：<a href="https://developer.apple.com/wwdc26/guides/app-store/">WWDC26 App Store 指南</a></td>
+    </tr>
+    <tr>
+      <td>4.1 抄袭</td>
+      <td>应用原创，不得冒充，图标或名称不得使用第三方品牌</td>
+      <td>稍作修改就照搬热门应用、冒充某项服务、未经许可使用他人品牌的图标或名称</td>
+      <td>打造原创体验，用属于自己的品牌资产</td>
+    </tr>
+    <tr>
+      <td>4.2 最低功能要求</td>
+      <td>要有超出”重新包装网站”的真实功能、内容与 UI</td>
+      <td>重新包装的网站、功能单薄的 web clip、只有营销的应用、没有实用价值的内容聚合或链接合集</td>
+      <td>加入原生价值、持久实用或娱乐性</td>
+    </tr>
+    <tr>
+      <td>4.2.3 独立运行与下载披露</td>
+      <td>应用能独立运行，启动时披露下载体积</td>
+      <td>依赖另一个应用才能用、暗藏大体积下载</td>
+      <td>让应用自给自足，大体积下载前先行提示</td>
+    </tr>
+    <tr>
+      <td>4.2.6 模板应用</td>
+      <td>模板或生成类应用须由内容提供方直接提交</td>
+      <td>经销商批量提交大量近乎相同的模板应用</td>
+      <td>由内容所有者提交，或改用单一的聚合选择器应用</td>
+    </tr>
+    <tr>
+      <td>4.3(a) 垃圾应用与重复 bundle</td>
+      <td>一个应用，变体通过应用内购买实现，而不是拆成多个 bundle ID</td>
+      <td>同一应用按城市、球队或学校拆成多个 bundle ID</td>
+      <td>合并为一个应用，用应用内内容选择来区分</td>
+    </tr>
+    <tr>
+      <td>4.3(b) 垃圾应用与饱和品类</td>
+      <td>在拥挤品类中拿出独特的高质量体验</td>
+      <td>在饱和品类里做低投入克隆、反复进行商店刷量</td>
+      <td>提供真实的差异化，否则不要上线克隆应用</td>
+    </tr>
+    <tr>
+      <td>4.4 扩展（Extensions）</td>
+      <td>扩展遵守扩展类指南、如实披露，且不带广告或 IAP</td>
+      <td>键盘、Safari 或分享扩展不可用或未披露</td>
+      <td>做出真正可用的扩展、如实披露，并把广告挡在外面</td>
+    </tr>
+    <tr>
+      <td>4.7 小程序与聊天机器人</td>
+      <td>宿主内的软件同样遵守隐私（审核指南 5.1 条）、内容审核与应用内购买规则，并要有索引与年龄管控</td>
+      <td>宿主小程序、聊天机器人或插件绕过审核、隐私或 IAP 要求，或暴露原生 API</td>
+      <td>对每一份宿主软件都套用完整指南</td>
+    </tr>
+    <tr>
+      <td>4.8 登录服务</td>
+      <td>只要提供第三方社交登录，就必须有一个同等的替代登录：只收集姓名和邮箱，并支持隐藏邮箱</td>
+      <td>只提供 Facebook、Google 或类似社交登录，没有保护隐私的替代方案</td>
+      <td>加入 Sign in with Apple 或同等方案，让邮箱保持私密且不用于广告跟踪</td>
+    </tr>
+    <tr>
+      <td>4.9 Apple Pay</td>
+      <td>售卖前披露所有必备购买条款，Apple Pay UI 用法正确</td>
+      <td>缺少续订条款、Apple Pay 品牌使用不当</td>
+      <td>披露续订期限、扣费与取消方式</td>
+    </tr>
+    <tr>
+      <td>4.10 变现内置能力</td>
+      <td>不得把原生硬件或 Apple 服务拿来收费</td>
+      <td>对相机、推送、陀螺仪、Apple Music 访问或 iCloud 收费</td>
+      <td>不要把原生能力锁在付费墙后</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="第-5-节法律legal">第 5 节：法律（Legal）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Guideline</th>
+      <th>要求</th>
+      <th>触发拒审的行为</th>
+      <th>规避方法</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>5 贩运人口与剥削儿童（2026 年 10 月 16 日）</td>
+      <td>不得有帮助人口贩运或剥削儿童的应用</td>
+      <td>Apple 会通知有关部门、将应用从 App Store 下架，并禁止其通过替代分发上线</td>
+      <td>审核条目与消息，在成人可能接触未成年人的场景核验年龄，向 NCMEC 举报 CSAM。来源：<a href="https://developer.apple.com/news/?id=92th7e5i">Apple，2026 年 10 月 16 日</a>、<a href="https://developer.apple.com/news/?id=vvzx6cul">Apple，2026 年 10 月 16 日</a></td>
+    </tr>
+    <tr>
+      <td>5.1.1 年龄核验与 RESCIND_CONSENT</td>
+      <td>处理家长撤回同意的情况</td>
+      <td>当家长撤回同意时，RESCIND_CONSENT 这个 App Store Server Notification 会触发，Apple 随后阻止应用启动。若不处理，未成年人的数据与相应 entitlement 会继续有效。年龄核验还需要 iOS 26.2 SDK 配 Xcode 26.2（17C52）或更高版本</td>
+      <td>订阅服务器通知，收到 RESCIND_CONSENT 时撤销会话及以同意为边界的数据。来源：<a href="https://developer.apple.com/support/age-assurance">Apple 年龄核验支持页面</a></td>
+    </tr>
+    <tr>
+      <td>5.1.1(i) 隐私政策</td>
+      <td>在 App Store Connect 和应用内都链接隐私政策，说明收集的数据、第三方保护、保留期与删除方式</td>
+      <td>隐私政策缺失、无法访问或含糊其辞，第三方共享未披露</td>
+      <td>发布完整、可访问的隐私政策并保持准确</td>
+    </tr>
+    <tr>
+      <td>5.1.1(ii) 同意与用途说明</td>
+      <td>收集前先取得同意、付费功能不得以提供数据为门槛、用途说明清晰、撤回同意便捷</td>
+      <td>未取得同意、付费功能被权限卡住、用途说明含糊、无法撤回</td>
+      <td>主动请求同意、写清具体用途说明，绝不把购买与数据授权捆绑</td>
+    </tr>
+    <tr>
+      <td>5.1.1(iii) 数据最小化</td>
+      <td>只收集与核心功能相关的数据</td>
+      <td>收集过多或无关数据</td>
+      <td>只收集最少数据，用系统选择器或分享面板替代完全访问</td>
+    </tr>
+    <tr>
+      <td>5.1.1(v) 账号登录与删除</td>
+      <td>凡支持创建账号的应用必须提供应用内账号删除；非核心功能的登录应可跳过；社交凭据不得存到设备之外</td>
+      <td>能创建账号却没有应用内删除；非核心功能强制要求个人数据；社交登录 token 存在设备外</td>
+      <td>增加应用内账号删除，尽量让登录可跳过，绝不把社交凭据存到设备外</td>
+    </tr>
+    <tr>
+      <td>5.1.1(ix) 受监管行业</td>
+      <td>银行、医疗、博彩、大麻、航空出行与加密货币类应用须由对应法人主体提交，并按要求做地区限制</td>
+      <td>个人开发者账号提交受监管应用、大麻应用未做地区限制</td>
+      <td>以受监管的法人主体提交，并做好地区限制</td>
+    </tr>
+    <tr>
+      <td>5.1.2(i) 数据使用与共享</td>
+      <td>跟踪前先取得权限与应用跟踪透明度（App Tracking Transparency，ATT）同意；向第三方及第三方 AI 共享须披露；不得以授予系统权限或付费作为使用应用的前提</td>
+      <td>未经 ATT 同意就跟踪、共享未披露、把推送/定位/跟踪设为使用应用的必要条件、花钱向用户买数据</td>
+      <td>接入 ATT 弹窗、披露每一个接收方（包括 AI 服务商），绝不把应用锁在跟踪授权之后</td>
+    </tr>
+    <tr>
+      <td>5.1.2(vi) 敏感框架</td>
+      <td>HealthKit、HomeKit、ClassKit 等数据绝不用于广告、营销或数据挖掘</td>
+      <td>把健康、家庭或教育数据用于广告或分析</td>
+      <td>让敏感框架数据彻底远离营销</td>
+    </tr>
+    <tr>
+      <td>5.1.3 健康与研究</td>
+      <td>健康数据不用于广告；研究类应用须有知情同意与伦理委员会</td>
+      <td>出售或挖掘健康数据、未经同意或伦理批准就做研究</td>
+      <td>限制健康数据用途，取得同意并通过伦理审查</td>
+    </tr>
+    <tr>
+      <td>5.1.4 儿童隐私</td>
+      <td>遵守 COPPA、GDPR 与当地法律；儿童应用不得有第三方分析或广告；处理未成年人数据的应用要有隐私政策</td>
+      <td>儿童数据不合规、儿童应用里塞第三方 SDK、在儿童类别之外使用 For Kids 字样</td>
+      <td>遵守儿童隐私法律，移除收集儿童数据的第三方 SDK</td>
+    </tr>
+    <tr>
+      <td>5.1.5 定位服务</td>
+      <td>只在真正相关时使用定位，须有告知、同意与明确用途</td>
+      <td>收集无关定位、未取得同意、用途未披露</td>
+      <td>定位只用于真实功能，先解释并先征询</td>
+    </tr>
+    <tr>
+      <td>5.2 知识产权</td>
+      <td>商标、版权与内容全部自有或已获授权，元数据不得山寨</td>
+      <td>未经授权使用品牌、内容或媒体，山寨命名，未经授权从 YouTube 或流媒体服务下载</td>
+      <td>只用自有或已授权的 IP，绝不提供未授权媒体下载</td>
+    </tr>
+    <tr>
+      <td>5.3 游戏与博彩</td>
+      <td>真金游戏（real money gaming）须持照并做地区限制、可免费下载、附官方规则，且不得暗示 Apple 背书</td>
+      <td>无照真金游戏、付费博彩应用、用 IAP 充值真金筹码、非法博彩辅助工具</td>
+      <td>取得执照、做好地区限制、免费下载，绝不用 IAP 为真金游戏充值</td>
+    </tr>
+    <tr>
+      <td>5.4 VPN 应用</td>
+      <td>使用 NEVPNManager API、以组织身份注册、申报数据用途，不得出售或共享数据</td>
+      <td>非标准 VPN 实现、个人开发者、出售或共享数据</td>
+      <td>以组织身份注册、使用官方 API，绝不出售 VPN 数据</td>
+    </tr>
+    <tr>
+      <td>5.5 移动设备管理（MDM）</td>
+      <td>MDM capability 须由 Apple 授予，且只用于企业、教育或政府</td>
+      <td>个人或未获批主体擅自使用 MDM</td>
+      <td>先申请 capability，并限定在获批的主体类型</td>
+    </tr>
+    <tr>
+      <td>5.6 开发者行为准则</td>
+      <td>行为诚实、不得冒充、不得操纵评价</td>
+      <td>冒充其他应用或服务、操纵评分</td>
+      <td>诚实经营，做原创应用</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="2026-年必须立即行动的变更">2026 年必须立即行动的变更</h2>
+
+<p>以下内容已于 2026 年 9 月 30 日对照 Apple 官方页面核实；指南修订部分于 2026 年 10 月 17 日复核，11 月条目于 2026 年 11 月 14 日复核，11 月 16 日与 17 日的公告于 2026 年 11 月 21 日复核，中国大陆合规页面于 2026 年 11 月 22 日复核。</p>
+
+<ul>
+  <li>中国大陆应用合规（App Compliance）。凡在中国大陆 App Store 上架的应用，都要在 App Compliance 页面（侧边栏 General）完成两项申报，操作角色为 Account Holder 或 Admin。对 AI-Generated or Synthetic Content 与 Security Assessment 分别选择 Yes 或 No。选 No 适用于在中国大陆不存在、被禁用或被地域屏蔽的功能。AI-Generated or Synthetic Content 选 Yes（AI 聊天机器人、图像或视频生成、语音与人脸变造等服务）需要已获批的备案编号与备案名称。如果功能由他人的技术驱动，授权或使用协议须写明已备案的基础模型或算法及其备案编号、写明你或你的组织为被授权方，且授权方须与国家互联网信息办公室（CAC）审批名录中的主体一致。Security Assessment 选 Yes（分发该类内容、端到端加密即时消息等功能）需要一张全国互联网安全管理服务平台截图，图中可见应用名称、服务提供者名称以及”通过/审核通过”字样，并附报告，报告含应用名称、服务提供者名称与公司公章。涉密或专有信息请打码。状态共四种：Missing Info（缺少信息）、Pending Verification（待核验）、Verification Failed（核验失败）与 Active（生效）。应用仍可在其他选定国家和地区发布，核验通过前不会出现在中国大陆商店。核验失败会在 App Compliance 页面更新状态，并随下一次提交的版本再审。现有应用必须在 2027 年 1 月 31 日前完成申报并通过核验才能继续上架。Deadline ID：APPLE-CN-APP-COMPLIANCE-2027。TechNode 于 2026 年 11 月 17 日报道了该页面，并援引 IT 之家称新应用在提交时填报申报信息；Apple 页面只写明上架规则与 2027 年 1 月 31 日这一日期，并未写明该时间或该表述。<a href="https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/">Apple</a>、<a href="https://technode.com/2026/11/17/apple-adds-generative-ai-compliance-filings-to-app-store-connect-in-china/">TechNode</a>。</li>
+  <li>税项与价格更新，2026 年 11 月 17 日。自 2027 年 1 月 1 日起，SaaS、App Store Software、Software Training Material、Dating 与 Boosting 这些税类别适用加利福尼亚州销售与使用税（美国价格仍显示税前价，收益不变）。Pricing and Availability 中四个税类别新增 SaaS 属性。2026 年 12 月 3 日，Apple 将更新博茨瓦纳、哥伦比亚、埃及、卢旺达与土耳其的价格，此前博茨瓦纳（14%）与卢旺达（18%）开征新增值税。若其中一处是你的基准店面（base storefront），其价格保持你的设定不变，改为调整其他自动等价店面。自动续期订阅价格与你手动管理的店面不受影响。请检查你的税类别，以及写进截图或应用内文案的价格。<a href="https://developer.apple.com/news/?id=4o5ie73a">Apple</a></li>
+  <li>macOS 27.3 beta 2，2026 年 11 月 16 日。Device Control and Data Access 拆分为 System and App Protection Override 与 Accessibility 两项；用户可按文件夹授予 Full Disk Access，并可将应用设为每次访问都询问。已获授权的应用保留权限。请为”部分授权”做好适配，处理好只能访问部分文件夹或应用的情况。备份与辅助功能类应用可申请相应 entitlement，细节待公布。<a href="https://developer.apple.com/news/?id=oqng0zjk">Apple</a></li>
+  <li>许可协议接受。Apple 于 2026 年 10 月 13 日发布了更新版协议，Account Holder 必须在开发者账号内接受，才能继续完整使用 Certificates, Identifiers and Profiles、App Store Connect 与 App Store Connect API。公告未给出截止日期；具体日期只会显示在你自己账号的通知里，请以那里为准。如果上传或 API 开始报错，先登录 developer.apple.com/account 完成接受。<a href="https://developer.apple.com/news/?id=17mwd36z">Apple</a></li>
+  <li>
+    <p>订阅，无截止日期。取消订阅弹层上的挽留消息（retention messages）已可用，API 访问需申请。多席位团购（Group Purchases）在 App Store Connect 中默认开启，2026 年 11 月起可在 Sandbox 测试，今冬正式上线。如果你售卖席位，请在审核备注（review notes）里写清审核员如何进入席位购买流程。<a href="https://developer.apple.com/news/?id=fk9ps3gv">Apple</a>、<a href="https://developer.apple.com/news/?id=yfo21auu">Apple</a></p>
+  </li>
+  <li>
+    <p>App Review Guidelines 于 2026 年 10 月 16 日修订。审核指南 1.2 条现在点名社交媒体、用户生成内容平台与 AI 内容创作应用，并警告防护措施缺失或违规未整改将构成违反 Developer Code of Conduct。新增审核指南 2.3.14 条规范创意素材。新增审核指南 2.5.19 条，把隐藏、休眠与未说明功能从审核指南 2.3.1 条中拆出，并点名 bait-and-switch（调包）。审核指南 3.1.1(a) 条把 Music Streaming Services Entitlement 并入 StoreKit External Purchase Link 一项。第 5 节新增：删除帮助人口贩运或剥削儿童的应用，并禁止其通过替代分发上线。<a href="https://developer.apple.com/news/?id=92th7e5i">Apple</a>、<a href="https://developer.apple.com/news/?id=vvzx6cul">Apple</a></p>
+  </li>
+  <li>新增年龄分级描述项，2026 年 11 月 2 日。自 2026 年 11 月 16 日起，问卷新增 Shared Location 与 Dating and Relationships 两项；所有应用必须在 2027 年 1 月 12 日前回答这两项，且 Dating and Relationships 会把最低分级定为 18+。<a href="https://developer.apple.com/news/?id=yxkh08us">Apple</a></li>
+  <li>Developer Program License Agreement 于 2026 年 10 月 13 日更新。请登录接受。此次更新修改了安全要求（3.2），新增 Live Assistance API 与 App Replacement Entitlement 条款，并覆盖 Volume Purchasing 订阅与税务数据申报。<a href="https://developer.apple.com/news/?id=17mwd36z">Apple</a></li>
+  <li>台湾。自 2026 年 10 月 31 日起，iOS 与 iPadOS 的标准佣金从 30% 降至 26%，且享受该费率无需另行签署协议。<a href="https://developer.apple.com/news/?id=w9mxlhek">Apple</a></li>
+  <li>自 2026 年 9 月起，社交媒体能力申报成为提交门槛（最低 13+，13 岁以下需 Declared Age Range）。<a href="https://developer.apple.com/news/?id=0d2gpmml">Apple</a></li>
+  <li>年龄核验需要 iOS 26.2 SDK 配 Xcode 26.2（17C52）或更高版本，且必须处理 RESCIND_CONSENT。<a href="https://developer.apple.com/support/age-assurance">Apple</a></li>
+  <li>Sign in with Apple 的中继地址现在也会来自 private.icloud.com。<a href="https://developer.apple.com/news/?id=1ptvdtcm">Apple</a></li>
+  <li>欧盟。2026 年 10 月 1 日起 Core Technology Commission 取代 Core Technology Fee，Initial Acquisition 与 Store Services 两项费用取消，替代支付可与 In-App Purchase 并存，且必须接受附件 14（Attachment 14）。<a href="https://developer.apple.com/news/?id=gmws0jgp">Apple</a></li>
+  <li>巴西。依据 CADE 裁决，自 iOS 26.5 起开放替代分发；附件 12（Attachment 12）的接受截止日期为 2026 年 7 月 6 日。<a href="https://developer.apple.com/news/?id=dhwadr2x">Apple</a></li>
+  <li>自 2026 年 6 月 18 日起，澳大利亚取消 15+ 分级，越南要求按地区专项分级。韩国描述项于 2026 年 10 月升级。<a href="https://developer.apple.com/news/?id=yrrb45pw">Apple</a>、<a href="https://developer.apple.com/news/?id=oj3r9pvw">Apple</a></li>
+  <li>ADPLA，2026 年 6 月 8 日。AI 与机器学习并入 3.3.11 条，Foundation Models 条款更新，并新增多个框架义务（Trust Insights、Sensitive Content Analysis、Suggested Actions、Media Device Extension、Spatial Audio Extension、Customer Engagement APIs）。Foundation Models 的可接受使用规则禁止移除 AI 内容标签。<a href="https://developer.apple.com/news/?id=a233fmpw">Apple</a>、<a href="https://developer.apple.com/apple-intelligence/acceptable-use-requirements-for-the-foundation-models-framework/">Apple</a></li>
+  <li>App Store Connect API 4.3 与 4.4 移除了旧的年龄分级申报端点，新增 socialMedia 属性，并废弃了 v1 应用内购买本地化资源与 ACCESS_TO_REPORTS 角色。<a href="https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-release-notes">Apple</a></li>
+  <li>Rosetta 退役。Apple 在 2026 年 9 月 1 日的公告中表示 macOS 27 是支持 Rosetta 的最后一个版本；其 2026 年 9 月 9 日的提交公告则表示 macOS 26 是支持 Intel Mac 与 Rosetta 的最后一个版本，macOS 27 仅支持 Apple 芯片。无论如何，请在 macOS 27 到来前上线原生 arm64 构建。<a href="https://developer.apple.com/news/?id=w5ngl9k2">Apple</a>、<a href="https://developer.apple.com/news/?id=k1mtkt1k">Apple</a></li>
+  <li>自 2027 年 4 月起，上传的构建必须使用 iOS 27、iPadOS 27、tvOS 27、visionOS 27 或 watchOS 27 SDK 或更高版本编译。Apple 只公布了月份，没有公布具体日期。Xcode 27 已于 2026 年 9 月 9 日以 Release Candidate 形式发布。<a href="https://developer.apple.com/news/?id=k1mtkt1k">Apple</a></li>
+  <li>App Store Connect，2026 年 8 月 19 日。App Review 联系电话必须使用国际格式（例如 +852），且首个消耗型（consumable）、非消耗型（non-consumable）、自动续期订阅（auto-renewable subscription）与非续期订阅（non-renewing subscription）内购项目都必须随新应用版本一起提交。2026 年 9 月 9 日的更新新增了 iPhone Duo、iPhone 18 Pro 与 Pro Max、Apple Watch Ultra 4、Apple Watch Series 12 的截图规格。<a href="https://developer.apple.com/help/app-store-connect/release-notes/">Apple</a></li>
+  <li>欧盟的应用跟踪透明度（App Tracking Transparency，ATT），2026 年 9 月 16 日。自 iOS 27.2 与 iPadOS 27.2 起，ATT 系统弹窗的替代版本在整个欧盟为可选项；而对在德国、法国、意大利、波兰与罗马尼亚分发的应用，只有这一版本可用。何时必须请求跟踪授权没有变化。如果应用在这五个国家上架，请在 27.2 beta 上测试弹窗。<a href="https://developer.apple.com/news/?id=idsft9ai">Apple</a></li>
+  <li>多席位订阅购买，2026 年 9 月 16 日。App Store Connect 中订阅默认启用多席位购买。Volume Purchasing（Apple Business 与 Apple School Manager）于 2026 年 10 月 22 日上线，Group Purchases 随后于今冬推出。请在 10 月 22 日前逐个订阅做出决定，在席位共享会破坏定价或授权逻辑的地方把它关掉。Deadline ID：APPLE-MULTISEAT-VOLUME-PURCHASING。<a href="https://developer.apple.com/news/?id=likeohx4">Apple</a></li>
+  <li>Bundles 与 Suites，2026 年 9 月 16 日。多个订阅可打包为一项 In-App Purchase 出售：可以跨一个应用、同一开发者的多个应用或多个开发者（Bundles），也可以让一个订阅覆盖开发者的整组应用（Suites）。访问权限需申请，功能将于今年晚些时候随 27 系列系统推出；Apple 建议现在就把 In-App Purchase 处理逻辑迁移到 StoreKit 2。<a href="https://developer.apple.com/news/?id=likeohx4">Apple</a></li>
+  <li>税项与价格更新，2026 年 8 月 27 日。收益发生变化的有：摩洛哥（新征 20% 增值税）、刚果共和国（新征 18% 增值税）、坦桑尼亚（数字销售税从 2% 上调至 3%）。自 2026 年 9 月 14 日起，以色列、印度尼西亚、摩洛哥与刚果共和国的等价价格已更新，除非该店面是你的基准店面。自动续期订阅价格与手动管理的店面不变。<a href="https://developer.apple.com/news/?id=artln8br">Apple</a></li>
+  <li>27.2 beta，2026 年 9 月 16 日。iOS、iPadOS、macOS、tvOS、visionOS 与 watchOS 27.2 beta 已随 Xcode 27.2 提供。<a href="https://developer.apple.com/news/?id=rfb1rooi">Apple</a></li>
+  <li>On-Demand Resources 自 27 系列系统起废弃。<a href="https://developer.apple.com/wwdc26/guides/app-store/">Apple</a></li>
+  <li>承诺 12 个月的月度订阅已在全球开放，美国与新加坡除外。<a href="https://developer.apple.com/news/?id=agq42lxe">Apple</a></li>
+  <li>Mini Apps Partner Program 的 15% 费率要求使用 Declared Age Range API 与 Advanced Commerce API。<a href="https://developer.apple.com/programs/mini-apps-partner/">Apple</a></li>
+  <li>开发者账号就绪是审核之前的上线拦路虎。2026 年注册与身份核验动辄数周，据报道一个个人转组织迁移工单已开放 61 天仍未完成。请提前六周注册。<a href="https://developer.apple.com/forums/thread/817247">Apple Developer Forums</a>、<a href="https://developer.apple.com/forums/thread/816626">Apple Developer Forums</a></li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>变更</th>
+      <th>截止日期或状态</th>
+      <th>需要的行动</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>新年龄分级体系把旧档位重映射为 4+、9+、13+、16+、18+（旧 12+ 与 17+ 被直接取代，而非并行保留）</td>
+      <td>在 Apple 给出的截止日期前（报道为 2026 年 1 月 31 日，请在 App Store Connect 中核实）回答更新后的年龄分级问题，以免更新提交被拦</td>
+      <td>提交更新前，为每个应用完成新的年龄分级问卷</td>
+    </tr>
+    <tr>
+      <td>AI 助手与聊天机器人的内容计入分级</td>
+      <td>已生效</td>
+      <td>把所有 AI 生成内容纳入年龄分级考量；模型可能产出敏感内容的，加年龄限制</td>
+    </tr>
+    <tr>
+      <td>审核指南 5.1.2(i) 条下的第三方 AI 数据共享披露</td>
+      <td>已生效</td>
+      <td>在任何个人数据离开应用之前，加入弹窗同意声明，写明 AI 服务商与共享的数据类型</td>
+    </tr>
+    <tr>
+      <td>审核指南 1.2.1 条下的创作者内容年龄识别</td>
+      <td>已生效</td>
+      <td>让用户标记超出应用分级的内容，并按已验证或已申报年龄加以限制</td>
+    </tr>
+    <tr>
+      <td>AI 辅助审核与更严格的垃圾应用、隐私执法</td>
+      <td>持续进行中</td>
+      <td>预期稳定性、隐私字符串以及重复或 AI 批量生成的劣质应用将受到更深入的自动检查</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="notes-for-review-字段是工具不是走过场">Notes for Review 字段是工具，不是走过场</h2>
+
+<p>只要 Notes for Review 字段里写好一个可用的演示账号、为每个不明显功能配一句说明、解释每一项应用内购买，并附上地区性授权细节，大多数审核指南 2.1 条与 2.3 条拒审都能在一个周期内翻盘。审核员进不去的功能就会被拒。让每个功能都可达、都有说明。</p>
+
+<p>自 2026 年 8 月 19 日起，App Store Connect 有两条表单规则生效。App Review 联系电话须按带国家/地区区号的国际格式填写（例如 +852），不能只填一串数字。首个消耗型、首个非消耗型、首个自动续期订阅与首个非续期订阅，都必须随新应用版本一起提交；此后同类型的更多项目，只要应用已有过审版本，就无需再随新版本提交。<a href="https://developer.apple.com/help/app-store-connect/release-notes/">Apple</a></p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/APPLE.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

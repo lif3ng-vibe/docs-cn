@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Credits and Sources | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Credits and Sources" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CREDITS.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CREDITS.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Credits and Sources" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Credits and Sources","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CREDITS.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>This playbook stands on the shoulders of the open source community. The patterns below were learned from the repositories listed here, and we credit every one. Where a project uses a license that requires attribution, this page is that attribution. Where a project is permissively licensed, we credit anyway because it is the right thing to do.</p>
+
+<p>If you maintain one of these and want the wording changed or a link corrected, open an issue.</p>
+
+<h2 id="people-who-contributed">People who contributed</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Person</th>
+      <th>Contribution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Omar Albeik (<a href="https://github.com/omaralbeik">@omaralbeik</a>)</td>
+      <td>Corrected the Syria entry in the sanctions section (<a href="https://github.com/mjmirza/app-store-compliance/pull/967">#967</a>, landed in <a href="https://github.com/mjmirza/app-store-compliance/pull/1001">#1001</a>)</td>
+    </tr>
+    <tr>
+      <td>Akash Sharma (<a href="https://github.com/akash5852">@akash5852</a>)</td>
+      <td>Fixed vendor folder platform detection in the guard and added privacy manifest validation (<a href="https://github.com/mjmirza/app-store-compliance/pull/596">#596</a>)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="repositories-we-learned-from">Repositories we learned from</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>Author</th>
+      <th>License</th>
+      <th>What we adopted</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/truongduy2611/app-store-preflight-skills">app-store-preflight-skills</a></td>
+      <td>truongduy2611</td>
+      <td>MIT</td>
+      <td>The app type checklist structure, the macOS coverage, the review notes template and its six section completeness, the unused entitlements check, the Sign in with Apple UX rules, the unnecessary personal data rule, the subscription disclosure detail, and the idea of pulling live App Store Connect metadata with the asc CLI</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/lukylab/appstore-submission-checklist">appstore-submission-checklist</a></td>
+      <td>lukylab</td>
+      <td>CC BY 4.0</td>
+      <td>The split between a new app checklist and an update checklist, and concrete items such as hiding debug features, the StoreKit configuration in the scheme, deploying the CloudKit schema to production, keyword field formatting, and phased release</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/andrewmcwattersandco/app-store-rejections">app-store-rejections</a></td>
+      <td>andrewmcwattersandco</td>
+      <td>see repo</td>
+      <td>The real named rejection case studies in the mistake patterns doc</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/jaywcjlove/app-rejection-fixes">app-rejection-fixes</a></td>
+      <td>jaywcjlove</td>
+      <td>MIT</td>
+      <td>Confirmation of rejection reasons paired with their fixes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/hnxyzhw/AppStoreReviewsAndRejected">AppStoreReviewsAndRejected</a></td>
+      <td>hnxyzhw</td>
+      <td>see repo</td>
+      <td>The real Apple rejection email wording, the user generated content 24 hour action rule, and the finance app company account rule</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/aashishtamsya/Appstore-Review-Guidelines">Appstore-Review-Guidelines</a></td>
+      <td>aashishtamsya</td>
+      <td>see repo</td>
+      <td>An early curated guideline structure</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="tools-and-references-we-point-at">Tools and references we point at</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Source</th>
+      <th>What it gives</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://docs.fastlane.tools/actions/precheck/">fastlane precheck</a></td>
+      <td>The open source App Store metadata rule set, adopted as our metadata checks</td>
+    </tr>
+    <tr>
+      <td><a href="https://developer.android.com/studio/publish/insights">Play Policy Insights</a></td>
+      <td>Google’s own policy lint in Android Studio</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-security-lints">google/android-security-lints</a></td>
+      <td>Google’s open source security lint checks</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.appstorereviewguidelineshistory.com/">App Store Review Guidelines History</a></td>
+      <td>A tracker of how the guidelines changed over time</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/lukylab/ios-permissions-descriptions">lukylab/ios-permissions-descriptions</a></td>
+      <td>Sample permission purpose strings</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="primary-canonical-sources">Primary canonical sources</h2>
+
+<p>Every factual claim in this playbook traces to one of these.</p>
+
+<ul>
+  <li><a href="https://developer.apple.com/app-store/review/guidelines/">Apple App Store Review Guidelines</a></li>
+  <li><a href="https://developer.apple.com/news/">Apple developer news</a></li>
+  <li><a href="https://play.google/developer-content-policy/">Google Play Developer Program Policy</a></li>
+  <li><a href="https://support.google.com/googleplay/android-developer">Google Play Console help</a></li>
+</ul>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/CREDITS.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

@@ -1,188 +1,187 @@
-# Pre Submission Checklist
+# 提交前清单
 
-Run this before any upload to App Store Connect or the Play Console. Each item is phrased as a verifiable check. Every box ends in one of two states, checked or marked not applicable. An empty box is a release blocker.
+任何一次上传到 App Store Connect 或 Play Console 之前，都先执行本清单。每一项都表述为可验证的检查。每个勾选框最终只有两种状态：已勾选，或标注为不适用。空着的勾选框就是发布阻塞项。
 
-Not applicable is allowed one item at a time, and only with a one-line reason written next to the box, for example "N/A. no login, so no demo account" or "N/A. no in app purchases". An item with no reason counts as unchecked. Two items can never be marked not applicable, because every app has them:
+"不适用"一次只允许用于一项，且必须在勾选框旁写上一行原因，例如 "N/A。无登录功能，所以没有演示账号" 或 "N/A。无应用内购买"。没有写原因的条目视为未勾选。有两个条目永远不能标注为不适用，因为每个应用都有：
 
-- The privacy declaration matches what the app really collects at runtime, every SDK included.
-- A privacy policy URL is published and reachable from inside the app.
+- 隐私声明与应用运行时实际收集的数据一致，包括每一个 SDK。
+- 隐私政策 URL 已发布，且可从应用内访问。
 
-## Start here. Two checks, about five minutes
+## 从这里开始。两项检查，约五分钟
 
-These two stop most rejections on both stores. Do them before anything else.
+这两项能阻止两个商店的大多数拒审。先做它们，再做其他。
 
-- [ ] A working demo account with a live backend is in the review notes, and the login works today.
-- [ ] The privacy declaration (Apple privacy labels, Google Data Safety form) matches what the app really collects at runtime, every SDK included.
+- [ ] 审核备注中写明了一个后端真实可用的有效演示账号，且该登录今天仍能登录成功。
+- [ ] 隐私声明（Apple 隐私标签、Google 数据安全（Data safety）表单）与应用运行时实际收集的数据一致，包括每一个 SDK。
 
-Then work down the page. Do Shared first, then the store you ship to. Skip any section whose heading says "if" and does not match your app. The full list is about 100 boxes, so plan an hour for a first pass.
+然后从上到下过完本页。先做通用部分，再做你要上架的那个商店。标题里带"若"且与应用情况不符的小节可以跳过。完整清单约 100 个勾选框，首次过一遍请预留一个小时。
 
-## Shared (both stores)
+## 通用（两个商店）
 
-### Stability and completeness
-- [ ] The app launches and runs without a crash on a real device, on the oldest supported OS and the newest.
-- [ ] No placeholder text, lorem ipsum, dummy images, or temporary content anywhere in the build.
-- [ ] Every link, button, and navigation path works. No dead ends, no broken URLs.
-- [ ] The production backend is live and reachable for the entire review window.
-- [ ] A working demo account is provided, or a demo mode exists, for any feature behind login.
-- [ ] All in app purchases are live, visible, and complete a real transaction in the review build.
-- [ ] The review notes give the tap path to every feature behind login, region, or payment, so the reviewer never has to search.
-- [ ] The first launch works on the oldest and smallest device you support, signed out, on a slow network. A short screen recording of that first minute attached to the review notes answers most reviewer questions before they are asked.
-- [ ] These checks are recorded in `.app-review-readiness.json` in the app folder, so the guard reads them and blocks on a recorded fail. See [what the scan proves](WHAT-THE-SCAN-PROVES.md).
+### 稳定性与完整性
+- [ ] 应用在真机上启动并运行不崩溃，覆盖受支持的最旧和最新操作系统。
+- [ ] 构建包内没有任何占位文本、lorem ipsum、假图或临时内容。
+- [ ] 每个链接、按钮和导航路径都能正常工作。没有死胡同，没有失效 URL。
+- [ ] 生产后端在整个审核窗口期内保持在线可访问。
+- [ ] 任何需要登录的功能，都提供了可用的演示账号，或存在演示模式。
+- [ ] 所有应用内购买（In-App Purchase，IAP）在审核构建中均已上线、可见，并能完成一笔真实交易。
+- [ ] 审核备注写明了每个涉及登录、地区或付费的功能的点击路径，让审核员无需自行摸索。
+- [ ] 在你支持的最旧、最小的设备上，未登录状态、慢速网络下，首次启动一切正常。把第一分钟的简短屏幕录像附在审核备注里，可以在审核员提问之前就回答他们的大部分问题。
+- [ ] 这些检查结果记录在应用文件夹下的 `.app-review-readiness.json` 中，守卫会读取它，并在记录为失败时阻塞提交。参见[扫描证明了什么](WHAT-THE-SCAN-PROVES.md)。
 
-### Privacy and data
-- [ ] A privacy policy is published, reachable from inside the app, and accurate.
-- [ ] Every data collection has user consent before it happens.
-- [ ] Every permission has a specific reason string that names the real feature using it.
-- [ ] Account creating apps offer in app account deletion.
-- [ ] Account deletion tested on a real device. Delete the account, wait for the completion time you tell users, then check that the account and its sessions are gone, that its data is deleted except what you disclose keeping (Apple allows records the law requires, Google Play also allows security, fraud-prevention, and regulatory records), and that signing in again does not bring the old account back.
-- [ ] Apple. A custom screen before a permission alert has one button titled Continue or Next, never Allow, and no Close or Cancel, unless the screen also collects legally required consent (Apple HIG Privacy, 5.1.1(iv)).
-- [ ] Google Play. A screen that explains a permission before the request lets the user decline, and the app keeps working without it (Android permission guidance).
-- [ ] Users can withdraw consent and the app still works for non core features.
-- [ ] Every third party SDK and its data behavior is known and declared.
+### 隐私与数据
+- [ ] 隐私政策已发布、可从应用内访问且内容准确。
+- [ ] 每一次数据收集在发生之前都取得了用户同意。
+- [ ] 每个权限都有一条具体的原因说明字符串，写明使用它的真实功能。
+- [ ] 支持注册账号的应用提供应用内账号删除。
+- [ ] 账号删除已在真机上测试。删除账号，等待你告知用户的完成时长，然后确认账号及其会话已经消失，其数据已删除（你声明保留的除外——Apple 允许保留法律要求的记录，Google Play 还允许保留安全、反欺诈与监管记录），并且重新登录不会让旧账号复活。
+- [ ] Apple。权限弹窗之前的自定义页面只有一个按钮，标题为 Continue 或 Next，绝不能是 Allow，也没有 Close 或 Cancel，除非该页面同时收集法律要求的同意（Apple HIG Privacy，5.1.1(iv)）。
+- [ ] Google Play。在请求权限之前用一个页面加以说明，让用户可以拒绝，且应用在缺少该权限时仍能运行（Android 权限指南）。
+- [ ] 用户可以撤回同意，且应用的非核心功能仍可正常使用。
+- [ ] 每个第三方 SDK 及其数据行为都已摸清并声明。
 
-### Mobile Security and Best Practices
-For a deep-dive reference across platform best practices, see the [mobile security guide](MOBILE-SECURITY-2026.md).
-- [ ] **Secure Storage:** Sensitive items (session tokens, passwords, keys) are stored securely (iOS Keychain or Android EncryptedSharedPreferences/Keystore) and never in plaintext files, plain SharedPreferences, or unencrypted local databases.
-- [ ] **Biometrics:** Biometric login (FaceID, TouchID, BiometricPrompt) is crypto-backed, requiring biometric validation to unlock a secure cryptographic key rather than just returning a bypassable boolean.
-- [ ] **Jailbreak and Root Detection:** Device environment check is implemented locally (and backed by Google Play Integrity on Android) to block or gracefully degrade app features when run on compromised/rooted/jailbroken devices.
-- [ ] **Certificate Pinning and SSL:** SSL/TLS cleartext traffic is completely disabled. Public key pinning (SPKI hashes, a fingerprint of the server's public key) is implemented on critical endpoints with valid backup pins configured.
-- [ ] **Backup Exclusion:** Sensitive private directory files (database files, token preferences) are explicitly excluded from automatic iOS iCloud/iTunes backups and Android ADB/Google Drive backups.
-- [ ] **Deep Link and URL Schemes Verification:** Inputs from deep links, Universal Links, and App Links are treated as untrusted, sanitized, and thoroughly validated. Secure Universal Links (iOS) and verified App Links (Android) are used instead of easily hijackable custom schemes.
-- [ ] **Secure Auth and Session Flows:** Standard modern flows like OAuth 2.1 or OIDC with PKCE (a one-time proof that stops a stolen login code from being reused) are used without hardcoded client secrets. Session timeouts are enforced, and all local tokens, databases, and caches are thoroughly destroyed on logout or session expiration.
+### 移动安全与最佳实践
+如需跨平台最佳实践的深度参考，参见[移动安全指南](MOBILE-SECURITY-2026.md)。
+- [ ] **安全存储**：敏感数据（会话令牌、密码、密钥）被安全存储（iOS Keychain 或 Android EncryptedSharedPreferences/Keystore），绝不放在明文文件、普通 SharedPreferences 或未加密的本地数据库中。
+- [ ] **生物识别**：生物识别登录（FaceID、TouchID、BiometricPrompt）以密码学为后盾，需要通过生物识别验证才能解锁安全的加密密钥，而不是只返回一个可被绕过的布尔值。
+- [ ] **越狱与 Root 检测**：在本地实现设备环境检查（Android 上辅以 Google Play Integrity），当应用运行在被破解/已 root/已越狱的设备上时，阻断或优雅降级应用功能。
+- [ ] **证书固定与 SSL**：完全禁用 SSL/TLS 明文流量。在关键端点上实现公钥固定（SPKI 哈希，即服务器公钥的指纹），并配置有效的备用 pin。
+- [ ] **备份排除**：敏感的私有目录文件（数据库文件、令牌偏好设置）被明确排除在 iOS iCloud/iTunes 自动备份和 Android ADB/Google Drive 备份之外。
+- [ ] **深链与 URL Scheme 校验**：来自深链（deep link）、Universal Links 和 App Links 的输入被视为不可信，经过清洗和彻底校验。使用安全的 Universal Links（iOS）和经过验证的 App Links（Android），取代容易被劫持的自定义 scheme。
+- [ ] **认证与会话安全流程**：采用 OAuth 2.1 或带 PKCE 的 OIDC 等标准现代流程（PKCE 是一次性证明，可防止被盗的登录码被重用），不硬编码客户端密钥。强制执行会话超时，并在登出或会话过期时彻底销毁所有本地令牌、数据库和缓存。
 
-### Metadata and listing
-- [ ] The app name, description, and screenshots match what the app actually does.
-- [ ] Screenshots show the app in use, not a splash or login screen.
-- [ ] Screenshots are captured from this build on every device family you support, iPad included if the app runs on iPad.
-- [ ] Every price shown in a screenshot, preview, or description matches the price the store and your backend charge today.
-- [ ] App previews use only screen captures of the app itself, no filmed hands and no footage from outside the app (Apple 2.3.4). Developers report rejections for previews wrapped in device frames, so leave them out.
-- [ ] Creative assets (product page header, search result art) show the app or its brand, suit all audiences, and carry no prices, discounts, unverifiable claims, or references to other apps (Apple 2.3.14, 16 October 2026).
-- [ ] No keyword stuffing in the name, subtitle, or description.
-- [ ] The age or content rating questionnaire is answered honestly.
-- [ ] No references to the other platform or to alternative marketplaces.
+### 元数据与商店详情页
+- [ ] 应用名称、描述和截图与应用的实际功能一致。
+- [ ] 截图展示应用使用中的画面，而不是启动页或登录页。
+- [ ] 截图取自本构建，覆盖你支持的每个设备系列；如果应用运行在 iPad 上，则包含 iPad。
+- [ ] 截图、预览视频或描述中出现的每个价格，都与商店和你的后端今日实际收取的价格一致。
+- [ ] 应用预览视频只使用应用本身的屏幕录制，不拍手部操作，也不用来自应用外的素材（Apple 2.3.4）。有开发者报告预览视频套上设备边框会被拒审，因此不要这样做。
+- [ ] 创意素材（产品页头图、搜索结果配图）展示应用或其品牌，适合所有受众，且不含价格、折扣、无法证实的宣称或对其他应用的提及（Apple 2.3.14，2026 年 10 月 16 日）。
+- [ ] 名称、副标题或描述中没有关键词堆砌。
+- [ ] 年龄或内容分级问卷如实作答。
+- [ ] 不提及另一平台，也不提及第三方商店（marketplace）。
 
-### Monetization
-- [ ] Digital goods use the official store billing.
-- [ ] Subscription terms, renewal, charges, and cancellation are disclosed before purchase.
-- [ ] Free trial or intro offer wording shows only to users who are still eligible (StoreKit 2 `isEligibleForIntroOffer`), and states what is charged after the trial.
-- [ ] Loot boxes or random rewards disclose odds before purchase.
+### 变现
+- [ ] 数字商品使用官方商店的支付通道。
+- [ ] 订阅条款、续订、收费和取消在购买前均已披露。
+- [ ] 免费试用或首次优惠（intro offer）的文案只向仍符合条件的用户展示（StoreKit 2 的 `isEligibleForIntroOffer`），并说明试用期结束后将收取的费用。
+- [ ] 开箱（loot box）或随机奖励在购买前公示概率。
 
-## Apple specific
+## Apple 专属
 
-- [ ] Notes for Review explains every non obvious feature and every in app purchase.
-- [ ] No hidden, dormant, or undocumented feature, and no remote flag that turns on functionality App Review did not see (Apple 2.5.19, bait-and-switch, 16 October 2026).
-- [ ] Privacy nutrition labels match the app's real data collection and the SDKs.
-- [ ] App Tracking Transparency prompt is implemented before any cross app tracking.
-- [ ] Third party social login is paired with an equal privacy preserving alternative such as Sign in with Apple.
-- [ ] No private APIs, no deprecated frameworks, current OS support.
-- [ ] No downloaded code that changes app features. Server side changes are data, not code.
-- [ ] Background modes declared match what the app actually does.
-- [ ] The new age rating questionnaire (13 plus, 16 plus, 18 plus) is answered for every app.
-- [ ] Any AI feature that can produce sensitive content has an age restriction.
-- [ ] Any personal data shared with a third party AI has a consent modal naming the provider and data types.
-- [ ] Regulated category apps are submitted under the legal entity and geo restricted where required.
-- [ ] App name is 30 characters or fewer.
-- [ ] App Review contact phone number is in international format with the country code, for example +852, not digits only.
-- [ ] The first consumable, first non-consumable, first auto-renewable subscription, and first non-renewing subscription are each submitted together with a new app version, never added on their own to an already approved version.
-- [ ] Screenshots include at least one for iPhone with Dynamic Island (medium display), at least one iPad 13 inch screenshot if the app supports iPadOS, and, for watch apps, one Apple Watch size used consistently across every localization, checked against the current App Store Connect specification page.
-- [ ] iPhone Duo (APPLE-IPHONE-DUO-LAUNCH, ships 23 October 2026). Built with Xcode 27.1 and the iOS 27.1 SDK, and checked in the Duo simulator on the outer display, the inner display open, and the inner display partially folded, in each rotation.
-- [ ] iPhone Duo screenshots uploaded in App Store Connect (accepted since 5 October 2026, they earn the optimized for iPhone Duo badge). From April 2027 they are required for any app using the iOS 27.1 SDK or later (APPLE-IPHONE-DUO-SCREENSHOTS-REQ).
-- [ ] iPhone Duo layout. Layout comes from size classes and scene bounds, never `userInterfaceIdiom`, `UIInterfaceOrientation`, or fixed screen sizes. Custom views stay clear of reserved regions (cameras and the fold).
-- [ ] iPhone Duo bars. Navigation bars, toolbars, and tab bars come from the system navigation containers, and every toolbar item has both an icon and a title so it can present vertically.
-- [ ] The build meets the SDK floor. the 26 SDKs today, the 27 SDKs from April 2027.
+- [ ] 审核备注（Notes for Review）解释了每个不明显的功能和每个应用内购买。
+- [ ] 没有隐藏、休眠或未记录在案的功能，也没有会在应用审核（App Review）未曾见过的情况下开启功能的远程开关（Apple 2.5.19，诱饵调包（bait-and-switch），2026 年 10 月 16 日）。
+- [ ] 隐私营养标签与应用的真实数据收集及所用 SDK 一致。
+- [ ] 在任何跨应用跟踪发生之前，已实现应用跟踪透明度（App Tracking Transparency，ATT）弹窗。
+- [ ] 第三方社交登录配有同等保护隐私的替代选项，例如通过 Apple 登录（Sign in with Apple）。
+- [ ] 没有私有 API，没有已弃用的框架，支持当前操作系统。
+- [ ] 没有下载后可改变应用功能的代码。服务器端的变更应是数据，而非代码。
+- [ ] 声明的后台模式与应用的实际行为一致。
+- [ ] 新的年龄分级问卷（13+、16+、18+）已为每个应用作答。
+- [ ] 任何可能产生敏感内容的 AI 功能都设有年龄限制。
+- [ ] 与第三方 AI 共享的任何个人数据都有同意弹窗，写明提供方和数据类型。
+- [ ] 受监管类别的应用以法定实体提交，并在需要时做了地区限制。
+- [ ] 应用名称不超过 30 个字符。
+- [ ] 应用审核联系电话采用带国家/地区码的国际格式，例如 +852，而不是仅有数字。
+- [ ] 首个消耗型内购、首个非消耗型内购、首个自动续期订阅和首个非续期订阅，都各自随一个新的应用版本一起提交，绝不单独加到已过审的版本上。
+- [ ] 截图包含：至少一张 iPhone 灵动岛（Dynamic Island）机型（中等显示屏）的截图；若应用支持 iPadOS，至少一张 iPad 13 英寸截图；watch 应用则在每个本地化语言中统一使用同一 Apple Watch 尺寸，并对照最新的 App Store Connect 规格页面核对。
+- [ ] iPhone Duo（APPLE-IPHONE-DUO-LAUNCH，2026 年 10 月 23 日出货）。使用 Xcode 27.1 和 iOS 27.1 SDK 构建，并在 Duo 模拟器中检查外屏、内屏展开、内屏部分折叠三种形态下的每个旋转方向。
+- [ ] iPhone Duo 截图已上传到 App Store Connect（2026 年 10 月 5 日起接受，可获得 optimized for iPhone Duo 徽章）。自 2027 年 4 月起，任何使用 iOS 27.1 SDK 或更高版本的应用都必须提供（APPLE-IPHONE-DUO-SCREENSHOTS-REQ）。
+- [ ] iPhone Duo 布局。布局来自 size classes 和 scene bounds，绝不依赖 `userInterfaceIdiom`、`UIInterfaceOrientation` 或固定屏幕尺寸。自定义视图避开保留区域（摄像头和折痕）。
+- [ ] iPhone Duo 栏式控件。导航栏、工具栏和标签栏都来自系统导航容器，且每个工具栏项都同时具有图标和标题，以便垂直呈现。
+- [ ] 构建满足 SDK 底线要求：当前为 26 SDK，自 2027 年 4 月起为 27 SDK。
 
-## Google Play specific
+## Google Play 专属
 
-- [ ] The Data Safety form matches the app's real runtime data behavior, including every SDK. This is the top rejection cause.
-- [ ] Every sensitive permission has a qualifying core use case and the required declaration.
-- [ ] Background location, all files access, SMS, call log, and AccessibilityService each map to a visible core feature, or are removed.
-- [ ] The app targets the current required Android API level.
-- [ ] For a new personal developer account, the closed test of at least 12 testers over 14 consecutive days is complete.
-- [ ] Play Billing is used for in app digital goods.
-- [ ] The IARC content rating questionnaire is complete.
-- [ ] The listing makes no claim the app cannot deliver.
-- [ ] Apps for children follow the Families policy and use only Families certified ad SDKs.
+- [ ] 数据安全（Data safety）表单与应用运行时的真实数据行为一致，包括每个 SDK。这是排名第一的拒审原因。
+- [ ] 每个敏感权限都有一个符合条件的核心使用场景和所需的申报。
+- [ ] 后台定位、所有文件访问、短信、通话记录和 AccessibilityService 各自对应一个可见的核心功能，否则移除。
+- [ ] 应用使用当前要求的 Android 目标 API 级别（target API level）。
+- [ ] 对于新的个人开发者账号，至少 12 名测试人员、连续 14 天的封闭测试已完成。
+- [ ] 应用内数字商品使用 Play Billing。
+- [ ] IARC 内容分级问卷已填写完整。
+- [ ] 商店详情页没有应用兑现不了的宣称。
+- [ ] 儿童应用遵循 Families 政策，只使用通过 Families 认证的广告 SDK。
 
-## EU specific (legal layer, if the app reaches EU users)
+## 欧盟专属（法律层，若应用触达欧盟用户）
 
-Passing App Review does not make an app EU-legal. The full hard rules and sources are in the [EU regulatory guide](EU-REGULATORY-2026.md).
+通过应用审核不等于应用在欧盟合法。完整的硬性规则和来源见[欧盟监管指南](EU-REGULATORY-2026.md)。
 
-- [ ] DSA trader status is declared and verified in App Store Connect. A missing declaration removes the app from the EU App Store (Apple enforced 17 February 2025).
-- [ ] Any AI feature reaching EU users shows an in-app notice that the user is interacting with AI, at or before first interaction (EU AI Act Article 50(1), in force 2 August 2026).
-- [ ] AI-generated audio, image, video, or text carries a machine-readable and visible AI-generated marking (Article 50(2) and 50(4)).
-- [ ] A short AI-literacy record exists for the team building or operating the AI feature (Article 4, live since 2 February 2025).
-- [ ] No prohibited AI practice ships (manipulation, banned emotion inference, biometric categorisation) (Article 5, live since 2 February 2025).
-- [ ] Personal data shared with a third-party AI has a consent modal naming the provider and data types, shown before data leaves the device (Apple Guideline 5.1.2(i), 13 November 2025).
-- [ ] The app meets EN 301 549 and WCAG 2.1 AA and publishes its Annex V accessibility information in the terms and conditions or an equivalent document (European Accessibility Act, Directive (EU) 2019/882 Article 13(2), in force 28 June 2025). VoiceOver labels, Dynamic Type, contrast, and Reduce Motion are covered.
-- [ ] If the app offers alternative payments or out-of-app offers in the EU, the StoreKit External Purchases or Offers Entitlement is declared, the disclosure sheet is wired, In-App Purchase (when offered) is shown at the same time and at least as prominently, the chosen options stay in place for 12 months, and monthly reporting is wired (DMA, Attachment 14 terms from 1 October 2026).
-- [ ] Minors are protected on EU alternative payments. Kids category apps and users under the storefront's parental-consent age (13, or higher where set) get alternative processing only behind a parental gate. A Kids category app cannot offer an out-of-app purchase on a website, and users under that age see no out-of-app offers at all. Older minors get both only behind a parental gate.
+- [ ] DSA 商家身份（trader status）已在 App Store Connect 中声明并验证。缺少声明会导致应用从欧盟 App Store 下架（Apple 已于 2025 年 2 月 17 日开始执法）。
+- [ ] 任何触达欧盟用户的 AI 功能，都在首次交互时或之前显示应用内提示，告知用户正在与 AI 交互（EU AI Act Article 50(1)，2026 年 8 月 2 日生效）。
+- [ ] AI 生成的音频、图像、视频或文本带有可机器读取且可见的 AI 生成标记（Article 50(2) 与 50(4)）。
+- [ ] 构建或运营该 AI 功能的团队留有简短的 AI 素养（AI literacy）记录（Article 4，自 2025 年 2 月 2 日起适用）。
+- [ ] 不发布任何被禁止的 AI 行为——操纵、被禁止的情绪推断、生物识别分类（Article 5，自 2025 年 2 月 2 日起适用）。
+- [ ] 与第三方 AI 共享的个人数据有同意弹窗，写明提供方和数据类型，并在数据离开设备之前显示（Apple 审核指南 5.1.2(i) 条，2025 年 11 月 13 日）。
+- [ ] 应用符合 EN 301 549 和 WCAG 2.1 AA，并在条款与条件或同等文件中发布附件 V（Annex V）无障碍信息（European Accessibility Act，Directive (EU) 2019/882 Article 13(2)，2025 年 6 月 28 日生效）。VoiceOver 标签、Dynamic Type、对比度和 Reduce Motion 均已覆盖。
+- [ ] 如果应用在欧盟提供替代支付或应用外优惠（out-of-app offers），则已声明 StoreKit External Purchases or Offers Entitlement，已接好披露面板，应用内购买（如提供）与它同时展示且至少同等醒目，所选选项保持 12 个月不变，且月度报告已接好（DMA，2026 年 10 月 1 日起的 Attachment 14 条款）。
+- [ ] 未成年人在欧盟替代支付中受到保护。儿童（Kids）分类的应用，以及低于店面（storefront）家长同意年龄（13 岁，或已设置更高年龄则从其规定）的用户，只有在家长闸门（parental gate）之后才能使用替代支付。儿童分类的应用不能在网站上提供应用外购买，低于该年龄的用户完全看不到应用外优惠。年龄稍大的未成年人同样只有在家长闸门之后才能使用这两者。
 
-## Global specific (USA and other markets, if the app reaches those users)
+## 全球专属（美国及其他市场，若应用触达这些用户）
 
-The full hard rules and sources are in the [global regulatory guide](GLOBAL-REGULATORY-2026.md). This is legal, on top of App Review. Several dates are under active litigation, so re-verify each against the cited source.
+完整的硬性规则和来源见[全球监管指南](GLOBAL-REGULATORY-2026.md)。这是应用审核之上的法律层要求。若干日期仍在诉讼之中，请对照所引来源逐条复核。
 
-- [ ] Child-directed or under-13 data. COPPA verifiable parental consent, a separate opt-in for ad or third-party disclosure, a written retention policy and a written security program (general compliance date 22 April 2026).
-- [ ] US state App Store Accountability Acts (Utah, Texas, Louisiana, Alabama). the app requests an age category from the store, confirms parental consent for a minor, and re-requests on a major change, wired through the Declared Age Range API (iOS) or the Play Age Signals API (Android, ensuring strict ToS compliance prohibiting ads, marketing, user profiling, or analytics use of age data).
-- [ ] Age rating set to 4-plus, 9-plus, 13-plus, 16-plus, or 18-plus, never Unrated, questionnaire re-answered by 31 January 2026.
-- [ ] US storefront external links are allowed with no entitlement and no disclosure sheet, no in-app alternative payment, and the commission question is treated as unsettled.
-- [ ] California and US state privacy. a privacy policy, notice at collection, know, delete, correct, "Do Not Sell or Share", "Limit Use of Sensitive PI", and honoring Global Privacy Control.
-- [ ] Biometric. written consent before capture, a public retention and destruction schedule, and no sale (Illinois BIPA, Texas CUBI).
-- [ ] Health app. the HIPAA gate, else the FTC Health Breach Notification Rule with a 60-day breach notice.
-- [ ] 18-plus download gating handled for Brazil, Australia, and Singapore for the Apple block of 24 February 2026, and Google Play's Digital ECA age-assurance rollout for Brazil via the Play Age Signals API starting 17 March 2026.
-- [ ] UK Online Safety Act Highly Effective Age Assurance and the Children's-Code defaults for a likely-child service.
-- [ ] Australia under-16 age assurance for an age-restricted social media platform.
-- [ ] South Korea Korea-only binary with an approved payment provider if alternative billing is used.
-- [ ] China MIIT app filing with a local entity, plus PIPL and a Banhao license for a game.
-- [ ] China mainland App Store. On App Compliance, an Account Holder or Admin answers AI-Generated or Synthetic Content and Security Assessment for every app on that storefront, including No when the feature is absent, disabled, or geoblocked. A Yes answer includes the approved filing number and registered filing name, an authorization or usage agreement when someone else's technology powers the AI feature, and, for a Security Assessment, a National Internet Security Management Service Platform screenshot showing pass plus the report with the company seal. Existing apps must be completed and verified by 31 January 2027 to remain available. The app can release in other regions while China mainland stays unavailable until verification succeeds ([Apple](https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/)).
+- [ ] 面向儿童或 13 岁以下用户的数据。COPPA 可验证的家长同意（verifiable parental consent）、针对广告或第三方披露的单独选择加入（opt-in）、书面的数据保留政策和书面的安全计划（总体合规日期为 2026 年 4 月 22 日）。
+- [ ] 美国各州 App Store 问责法案（App Store Accountability Acts，犹他、得克萨斯、路易斯安那、亚拉巴马）。应用向商店请求年龄类别，为未成年人确认家长同意，并在发生重大变更时重新请求，通过 Declared Age Range API（iOS）或 Play Age Signals API（Android）接入（Android 侧须严格遵守 ToS：禁止将年龄数据用于广告、营销、用户画像或分析）。
+- [ ] 年龄分级设置为 4+、9+、13+、16+ 或 18+，绝不为 Unrated（未分级），问卷须在 2026 年 1 月 31 日前重新作答。
+- [ ] 美国店面的外链无需 entitlement、无需披露面板即可使用，但不提供应用内替代支付，且佣金问题视为尚未定论。
+- [ ] 加利福尼亚州及美国各州隐私。隐私政策、收集时告知（notice at collection）、知情、删除、更正、"Do Not Sell or Share"、"Limit Use of Sensitive PI"，以及尊重 Global Privacy Control。
+- [ ] 生物识别。采集前取得书面同意，公开保留与销毁时间表，且不出售（伊利诺伊州 BIPA、得克萨斯州 CUBI）。
+- [ ] 健康应用。先看 HIPAA 这道门槛，否则适用 FTC Health Breach Notification Rule，泄露须在 60 天内通知。
+- [ ] 已处理巴西、澳大利亚和新加坡的 18 岁以上下载门槛，以应对 Apple 2026 年 2 月 24 日的批次要求，以及 Google Play 自 2026 年 3 月 17 日起面向巴西、通过 Play Age Signals API 推行的 Digital ECA 年龄核验。
+- [ ] 英国 Online Safety Act：对可能面向儿童的服务启用高度有效年龄核验（Highly Effective Age Assurance）和儿童准则（Children's Code）默认设置。
+- [ ] 澳大利亚：年龄受限社交媒体平台的 16 岁以下年龄核验。
+- [ ] 韩国：若使用替代计费，须使用仅在韩国分发的二进制包，且支付服务方已获批准。
+- [ ] 中国：以本地实体完成 MIIT 应用备案；游戏还需 PIPL 合规和版号（Banhao）许可。
+- [ ] 中国大陆 App Store。在"App 合规"（App Compliance）中，账号持有人（Account Holder）或管理员（Admin）须为该店面上的每个应用回答"AI 生成或合成内容"（AI-Generated or Synthetic Content）和"安全评估"（Security Assessment）两项问题，功能不存在、已禁用或按地区屏蔽时也要回答"否"。回答"是"时须附已批准的备案号和备案名称；当 AI 功能由他人的技术驱动时，附授权或使用协议；安全评估则附一张全国互联网安全管理服务平台显示通过的截图，以及加盖公司公章的报告。既有应用必须在 2027 年 1 月 31 日前完成并验证通过，才能继续上架。验证成功之前，应用可以在其他地区发布，而中国大陆保持不可用（[Apple](https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/)）。
 
-## Platform mechanics gate (both stores, if the item applies)
+## 平台机制门槛（两个商店，若条目适用）
 
-The full detail with dated sources is in the [platform mechanics guide](PLATFORM-MECHANICS-2026.md). These are current, common, blocking causes the base maps did not carry.
+带日期来源的完整细节见[平台机制指南](PLATFORM-MECHANICS-2026.md)。这些是各基础拒审地图未收录、当前常见且会造成阻塞的原因。
 
-Apple.
+Apple。
 
-- [ ] macOS app distributed outside the Mac App Store is Developer ID signed with the hardened runtime, notarized with `notarytool`, and stapled with `stapler`.
-- [ ] Not a thin wrapper (Guideline 4.2) and not a duplicate, clone, or un-differentiated saturated-category app (Guideline 4.3, tightened June 2026).
-- [ ] Reader app using the External Link Account Entitlement meets every 3.1.3(a) condition and link rule, and offers no in-app purchase while the entitlement is used.
-- [ ] France ANSSI encryption declaration uploaded in App Store Connect if the app uses non-exempt encryption and ships on the French App Store.
-- [ ] App Store Connect content-rights question answered, with proof of rights available for any third-party content.
-- [ ] visionOS App Motion declared, and watchOS and tvOS built with the platform-26 SDK and Xcode 26 by 28 April 2026.
-- [ ] Fixed-odds betting apps distributed in Brazil provide a valid Secretariat of Prizes and Bets (SPA) license in the App Review Information, set the Brazil age rating to A18 via the questionnaire, and are submitted under a new app version for verification (since May 8, 2026).
+- [ ] 在 Mac App Store 之外分发的 macOS 应用已用 Developer ID 签名并启用 hardened runtime，已用 `notarytool` 公证，并用 `stapler` 附上公证票据。
+- [ ] 不是薄壳应用（审核指南 4.2 条），也不是重复、克隆或无差异的饱和品类应用（审核指南 4.3 条，2026 年 6 月收紧）。
+- [ ] 使用 External Link Account Entitlement 的阅读类应用满足 3.1.3(a) 的每一项条件和链接规则，且在使用该 entitlement 期间不提供应用内购买。
+- [ ] 如果应用使用非豁免加密并在法国 App Store 上架，已在 App Store Connect 上传法国 ANSSI 加密申报。
+- [ ] App Store Connect 的内容版权问题已作答，任何第三方内容都能提供权利证明。
+- [ ] visionOS App Motion 已申报，且 watchOS 和 tvOS 在 2026 年 4 月 28 日前改用 platform-26 SDK 和 Xcode 26 构建。
+- [ ] 在巴西分发的固定赔率投注应用在 App Review Information 中提供有效的 Secretariat of Prizes and Bets（SPA）牌照，通过问卷把巴西年龄分级设为 A18，并以新的应用版本提交核验（2026 年 5 月 8 日起）。
 
-Android.
+Android。
 
-- [ ] Developer identity verified if the app is distributed to Brazil, Indonesia, Singapore, or Thailand (required since 30 September 2026), and every Play package name registered in Play Console.
-- [ ] Every foreground service declares `foregroundServiceType` in the manifest with the matching permission, and each type is declared in the Play Console with a demo video.
-- [ ] No SafetyNet Attestation. attestation uses the Play Integrity API, verified server-side.
-- [ ] Play Billing Library at version 8 or later (required for new apps and updates since 31 August 2026, extension available to 1 November 2026), and digital goods route through Play Billing.
-- [ ] `targetSdkVersion` at least 36 for new apps and updates (required since 31 August 2026, extension available to 1 November 2026). Wear OS and Android Automotive OS at least 35, Android TV and Android XR at least 34.
-- [ ] No unexpected launch-time or mid-task full-screen interstitial, and every interstitial is closable by 15 seconds.
-- [ ] Health app has the Health Apps Declaration, a core-function justification per Health Connect permission, the migrated Organization Account, and the correct medical-device label or disclaimer.
-- [ ] Real-money game apps in supported countries have the required licenses or self-declarations, geo-restrictions, age-gating, and comply with any relevant Play Age Signals API terms.
+- [ ] 如果应用分发到巴西、印度尼西亚、新加坡或泰国，开发者身份已完成验证（2026 年 9 月 30 日起要求），且每个 Play 包名都已在 Play Console 登记。
+- [ ] 每个前台服务都在清单（manifest）中声明了 `foregroundServiceType` 及匹配的权限，且每种类型都已在 Play Console 申报并附演示视频。
+- [ ] 不使用 SafetyNet Attestation。鉴证（attestation）使用 Play Integrity API，并在服务端验证。
+- [ ] Play Billing Library 为版本 8 或更高（2026 年 8 月 31 日起对新应用和更新作此要求，可延期至 2026 年 11 月 1 日），且数字商品经由 Play Billing。
+- [ ] 新应用和更新的 `targetSdkVersion` 不低于 36（2026 年 8 月 31 日起要求，可延期至 2026 年 11 月 1 日）。Wear OS 和 Android Automotive OS 不低于 35，Android TV 和 Android XR 不低于 34。
+- [ ] 没有出现在启动时或任务中途的意外全屏插页广告，且每个插页广告都能在 15 秒内关闭。
+- [ ] 健康应用具备 Health Apps Declaration、每个 Health Connect 权限的核心功能正当性说明、迁移后的 Organization Account，以及正确的医疗器械标签或免责声明。
+- [ ] 受支持国家/地区的真金游戏应用具备所需牌照或自我声明、地区限制、年龄门槛，并遵守 Play Age Signals API 的相关条款。
 
-Cross-cutting.
+跨领域通用项。
 
-- [ ] A US-facing UGC app has a documented NCMEC CyberTipline report path on actual knowledge and a 1-year preservation policy.
-- [ ] A UGC or social app has a content filter, in-app report and block, published contact, and 24-hour remove-and-eject (Apple 1.2), plus the Google Play Child Safety Standards items for the Social and Dating categories.
-- [ ] Account-creating app has both an in-app account-and-data deletion flow and a publicly reachable web deletion URL, declared.
-- [ ] Not on the OFAC SDN list, and country availability excludes the embargoed territories.
-- [ ] Releasing in Syria. EAR jurisdiction, classification, and the license exception or license relied on are documented (15 CFR 746.9).
-- [ ] Non-store card payments for real goods implement PSD2 SCA and 3D Secure in the EU or UK, store no card number, and identify the correct PCI SAQ (the card industry self-assessment form that fits how the app takes payments).
+- [ ] 面向美国的用户生成内容（UGC）应用，在实际知情后有书面的 NCMEC CyberTipline 上报路径，以及 1 年期的数据保存政策。
+- [ ] UGC 或社交应用具备内容过滤、应用内举报和拉黑、公开联系方式，以及 24 小时移除并封禁机制（Apple 1.2）；社交（Social）和交友（Dating）类目另需满足 Google Play Child Safety Standards 的各项要求。
+- [ ] 支持注册账号的应用同时具备应用内账号与数据删除流程，以及一个公开可访问的网页删除 URL，且已申报。
+- [ ] 不在 OFAC SDN 名单上，且国家/地区可用范围不含被禁运地区。
+- [ ] 在叙利亚发布。EAR 管辖权、分类，以及所依据的许可例外或许可均已书面记录（15 CFR 746.9）。
+- [ ] 实物商品的非商店银行卡支付在欧盟或英国实现了 PSD2 SCA 和 3D Secure，不存储卡号，并确定了正确的 PCI SAQ（即与该应用收款方式相匹配的银行卡行业自评估表）。
 
-## The two checks that prevent the most rejections
+## 防止最多拒审的两项检查
 
-Two checks stop the majority of rejections across both stores. A working demo account with a live backend, and a privacy declaration that matches actual runtime behavior including SDKs. If you verify nothing else, verify these two.
+两项检查能阻止两个商店的大多数拒审：一个后端真实可用的有效演示账号，以及一份与真实运行时行为（包括 SDK）一致的隐私声明。如果其他都不验证，也要验证这两项。
 
-## Account and program readiness (added September 2026)
+## 账号与开发者计划就绪（2026 年 9 月新增）
 
-The checks above assume the developer account can submit. In 2026 that assumption fails often enough to plan for.
+以上检查假定开发者账号能够提交。在 2026 年，这个假设失效的频率之高，值得提前规划。
 
-- [ ] Apple Developer Program membership shows Active, not Pending. Enrollment and identity verification are taking two to six weeks, the ID upload link has failed for some accounts, and Developer Support replies take days. Enroll six weeks before the first submission ([Apple Developer Forums](https://developer.apple.com/forums/thread/817247), [thread 816626](https://developer.apple.com/forums/thread/816626)).
-- [ ] Every Apple Developer Program License Agreement update and attachment is accepted by the Account Holder. Attachment 12 (Brazil) was due 6 July 2026, Attachment 14 (EU) before 1 October 2026.
-- [ ] Any individual-to-organization migration was started a quarter ahead (a 61-day open migration was reported on 1 September 2026).
-- [ ] The social media capability question is answered in App Store Connect before uploading a new version.
-- [ ] Google Play account type is Organization with a D-U-N-S number if the app is financial, health, VPN, or government (30 September 2026).
-- [ ] Every distributed Play package name is registered for Android developer verification (30 September 2026).
-- [ ] Play content rating questionnaire is complete and current (unrated apps are not allowed).
-- [ ] If enrolled in US alternative billing or external links, transaction reporting is wired for 1 October 2026.
-
+- [ ] Apple Developer Program 会员资格显示 Active 而非 Pending。注册与身份验证要花两到六周，部分账号的身份证件上传链接会失效，Developer Support 的回复需要数天。请在首次提交前六周完成注册（[Apple Developer Forums](https://developer.apple.com/forums/thread/817247)、[thread 816626](https://developer.apple.com/forums/thread/816626)）。
+- [ ] 每一份 Apple Developer Program License Agreement 的更新和附件都由账号持有人接受。Attachment 12（巴西）截止日期为 2026 年 7 月 6 日，Attachment 14（欧盟）须在 2026 年 10 月 1 日前接受。
+- [ ] 任何个人账号转组织账号（individual-to-organization）的迁移都已提前一个季度启动（2026 年 9 月 1 日有报告称一次迁移已开放 61 天仍在进行）。
+- [ ] 上传新版本之前，已在 App Store Connect 中回答社交媒体能力问题。
+- [ ] 如果应用属于金融、健康、VPN 或政府类，Google Play 账号类型为 Organization 并带有 D-U-N-S 号码（2026 年 9 月 30 日）。
+- [ ] 每个已分发的 Play 包名都已为 Android 开发者验证完成登记（2026 年 9 月 30 日）。
+- [ ] Play 内容分级问卷已填写完整且为最新（不允许未分级的应用）。
+- [ ] 如果已加入美国替代计费或外链计划，交易上报已为 2026 年 10 月 1 日接好。

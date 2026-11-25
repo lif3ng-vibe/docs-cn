@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Cross-Platform Framework Coverage | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Cross-Platform Framework Coverage" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CROSS-PLATFORM-FRAMEWORKS.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CROSS-PLATFORM-FRAMEWORKS.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Cross-Platform Framework Coverage" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Cross-Platform Framework Coverage","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/CROSS-PLATFORM-FRAMEWORKS.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>The guard scans the app’s built artifact surface (Info.plist, AndroidManifest.xml,
+entitlements, gradle, PrivacyInfo.xcprivacy) which store review inspects regardless of
+what generated it. This page documents the checks specific to the framework that
+generated the app, on top of the native checks.</p>
+
+<h2 id="detection">Detection</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Framework</th>
+      <th>Detected by</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Flutter</td>
+      <td><code class="language-plaintext highlighter-rouge">pubspec.yaml</code> present within 12 levels of the project root</td>
+    </tr>
+    <tr>
+      <td>React Native / Expo</td>
+      <td><code class="language-plaintext highlighter-rouge">package.json</code> within 12 levels with a dependency on <code class="language-plaintext highlighter-rouge">react-native</code> or <code class="language-plaintext highlighter-rouge">expo</code></td>
+    </tr>
+    <tr>
+      <td>Ionic / Capacitor / Cordova</td>
+      <td><code class="language-plaintext highlighter-rouge">package.json</code> within 12 levels with a dependency on <code class="language-plaintext highlighter-rouge">@capacitor/*</code>, <code class="language-plaintext highlighter-rouge">@ionic/*</code>, or <code class="language-plaintext highlighter-rouge">cordova-*</code>, OR a <code class="language-plaintext highlighter-rouge">capacitor.config.*</code> / <code class="language-plaintext highlighter-rouge">config.xml</code> file within 12 levels</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>These depths come from the <code class="language-plaintext highlighter-rouge">find_app</code> calls in
+<code class="language-plaintext highlighter-rouge">agent-os/hooks/app-store-compliance-guard.sh</code>. Unity, .NET MAUI, Tauri mobile,
+and Kotlin Multiplatform are searched within 6 levels.</p>
+
+<p>A project can match more than one framework flag (a Capacitor app that also
+imports <code class="language-plaintext highlighter-rouge">expo</code> polyfills, for example); every matching check runs. Detection scans
+EVERY <code class="language-plaintext highlighter-rouge">package.json</code>/<code class="language-plaintext highlighter-rouge">config.xml</code> within depth, not only the first, so a monorepo
+whose root <code class="language-plaintext highlighter-rouge">package.json</code> is tooling-only still finds the real app deeper in the
+tree. A <code class="language-plaintext highlighter-rouge">config.xml</code> only counts as Cordova evidence when it carries a <code class="language-plaintext highlighter-rouge">&lt;widget&gt;</code>
+or <code class="language-plaintext highlighter-rouge">xmlns:cdv</code> marker, since that filename collides with unrelated tooling configs.</p>
+
+<p>Every framework-specific finding below is gated on <code class="language-plaintext highlighter-rouge">IOS_TARGET_ACTIVE</code>, not raw
+file-tree presence. A committed <code class="language-plaintext highlighter-rouge">ios/</code> folder is common in a real cross-platform
+repo even when the current build is Android-only, so file presence alone cannot
+tell <code class="language-plaintext highlighter-rouge">flutter build apk</code> apart from an iOS build. When the invoking command is
+known (hook mode) and clearly targets Android only (<code class="language-plaintext highlighter-rouge">build apk/appbundle</code>,
+<code class="language-plaintext highlighter-rouge">assembleRelease</code>, <code class="language-plaintext highlighter-rouge">bundleRelease</code>, <code class="language-plaintext highlighter-rouge">run-android</code>, <code class="language-plaintext highlighter-rouge">run:android</code>,
+<code class="language-plaintext highlighter-rouge">--platform android</code>, <code class="language-plaintext highlighter-rouge">capacitor android</code>, with no <code class="language-plaintext highlighter-rouge">ios</code>/<code class="language-plaintext highlighter-rouge">ipa</code>/<code class="language-plaintext highlighter-rouge">xcodebuild</code>
+token present), the command overrides the file-tree signal and these Apple-only
+checks stay silent. 2.0.0 also requires every other command in the line to be a
+known harmless one, so it never silences more than 1.0.0 did. Standalone mode (no command context) falls back to plain
+file-tree detection.</p>
+
+<h2 id="submission-commands-the-guard-recognizes">Submission commands the guard recognizes</h2>
+
+<p><code class="language-plaintext highlighter-rouge">fastlane deliver/pilot/supply/submit</code>, <code class="language-plaintext highlighter-rouge">eas submit</code>, <code class="language-plaintext highlighter-rouge">eas build</code>, <code class="language-plaintext highlighter-rouge">xcrun altool</code>,
+<code class="language-plaintext highlighter-rouge">xcrun notarytool</code>, <code class="language-plaintext highlighter-rouge">transporter</code>, <code class="language-plaintext highlighter-rouge">gradlew bundleRelease/assembleRelease</code>,
+<code class="language-plaintext highlighter-rouge">bundletool</code>, <code class="language-plaintext highlighter-rouge">xcodebuild archive</code>, <code class="language-plaintext highlighter-rouge">flutter build ipa/appbundle/apk</code>,
+<code class="language-plaintext highlighter-rouge">cap sync/build/run</code> (with or without <code class="language-plaintext highlighter-rouge">npx</code>), <code class="language-plaintext highlighter-rouge">ionic capacitor build/run</code>,
+<code class="language-plaintext highlighter-rouge">cordova build</code> (with or without <code class="language-plaintext highlighter-rouge">--release</code>), <code class="language-plaintext highlighter-rouge">Unity ... -buildTarget iOS/Android</code>,
+<code class="language-plaintext highlighter-rouge">dotnet publish -f net8.0-ios/android</code>, <code class="language-plaintext highlighter-rouge">tauri ios/android build</code>.</p>
+
+<h2 id="flutter-checks">Flutter checks</h2>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">FLUTTER-PRIVACY-MANIFEST-MISSING</code> (critical). A required-reason-API plugin
+(permission_handler, image_picker, geolocator, device_info_plus,
+package_info_plus, shared_preferences, sqflite, firebase_*) is a dependency and
+no <code class="language-plaintext highlighter-rouge">PrivacyInfo.xcprivacy</code> exists anywhere in the project. Since Flutter 3.19
+most first-party plugins ship their own manifest, but the aggregation only
+works when the app also ships one.</li>
+  <li><code class="language-plaintext highlighter-rouge">FLUTTER-NO-IOS-RUNNER-FOUND</code> (medium, advisory). No <code class="language-plaintext highlighter-rouge">Info.plist</code> was found, so
+every iOS-specific check in this guard was skipped. Run <code class="language-plaintext highlighter-rouge">flutter create .</code> or
+confirm the <code class="language-plaintext highlighter-rouge">ios/</code> platform folder exists before an iOS submission.</li>
+</ul>
+
+<p>Known limitation. The guard cannot see whether a purpose-string value that
+exists only in a localized <code class="language-plaintext highlighter-rouge">InfoPlist.strings</code> file was also copied into the
+real <code class="language-plaintext highlighter-rouge">Info.plist</code> shipped in the archive (ITMS-90683). Check this by hand
+before submitting.</p>
+
+<h2 id="react-native--expo-checks">React Native / Expo checks</h2>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">RN-OTA-UNDECLARED</code> (high). An over-the-air JS bundle updater
+(<code class="language-plaintext highlighter-rouge">react-native-code-push</code>, <code class="language-plaintext highlighter-rouge">expo-updates</code>, <code class="language-plaintext highlighter-rouge">react-native-ota-hot-update</code>,
+Stallion) is present with no App Review disclosure. Apple 3.3.2/2.5.2 allow
+bug-fix-only OTA updates when disclosed by name in the review notes; an
+undeclared swappable bundle reads as dormant functionality.</li>
+  <li><code class="language-plaintext highlighter-rouge">RN-PRIVACY-MANIFEST-MISSING</code> (critical). A native module touching
+required-reason APIs (Firebase, AsyncStorage, expo-file-system) is present
+transitively via a JS dependency and no <code class="language-plaintext highlighter-rouge">PrivacyInfo.xcprivacy</code> exists. This is
+the hardest of the three frameworks to audit by eye because the native SDK
+hides behind a JS package name.</li>
+</ul>
+
+<h2 id="ionic--capacitor--cordova-checks">Ionic / Capacitor / Cordova checks</h2>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">IONIC-4.2-THIN-WRAPPER</code> (high, advisory). The single most common Ionic
+rejection reason in the wild, but this check is a HEURISTIC PROXY, not the
+actual Apple 4.2 test, which is about features, content, and UI beyond a
+repackaged website, not a plugin count. A real app using unmatched plugins
+(<code class="language-plaintext highlighter-rouge">@capacitor/preferences</code>, private native plugins) can false-positive; a thin
+wrapper that imports two matched plugins for cosmetic reasons can false-negative.
+Review manually before treating this as a hard blocker. Counts distinct plugin
+identifiers, not files, so multiple plugin imports in one bootstrap file are
+counted correctly.</li>
+  <li><code class="language-plaintext highlighter-rouge">IONIC-UIWEBVIEW-DEPRECATED</code> (critical). The literal <code class="language-plaintext highlighter-rouge">UIWebView</code> symbol,
+usually pulled in by a stale plugin even when app code never references it
+directly. Apple auto-rejects (ITMS-90809) any binary that statically links it.</li>
+  <li><code class="language-plaintext highlighter-rouge">IONIC-PRIVACY-MANIFEST-MISSING</code> (high). Capacitor/Cordova plugin manifest
+support is less standardized than Flutter’s. Verify each plugin wrapping a
+native SDK ships its own <code class="language-plaintext highlighter-rouge">PrivacyInfo.xcprivacy</code>.</li>
+</ul>
+
+<h2 id="unity-net-maui-tauri-mobile-and-kotlin-multiplatform">Unity, .NET MAUI, Tauri mobile, and Kotlin Multiplatform</h2>
+
+<p>Added for issue 837. Each one is detected, named on the <code class="language-plaintext highlighter-rouge">Frameworks.</code> line, and has a bad and a clean project in the test suite.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Framework</th>
+      <th>Detected by</th>
+      <th>Source now read</th>
+      <th>Submit command that runs the scan</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unity</td>
+      <td><code class="language-plaintext highlighter-rouge">ProjectSettings/ProjectVersion.txt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">.cs</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Unity -batchmode ... -buildTarget iOS</code> or <code class="language-plaintext highlighter-rouge">Android</code></td>
+    </tr>
+    <tr>
+      <td>.NET MAUI</td>
+      <td>a <code class="language-plaintext highlighter-rouge">.csproj</code> with <code class="language-plaintext highlighter-rouge">UseMaui</code> or a <code class="language-plaintext highlighter-rouge">net8.0-ios</code> style target</td>
+      <td><code class="language-plaintext highlighter-rouge">.cs</code>, <code class="language-plaintext highlighter-rouge">.xaml</code>, <code class="language-plaintext highlighter-rouge">.csproj</code></td>
+      <td><code class="language-plaintext highlighter-rouge">dotnet publish -f net8.0-ios</code> or <code class="language-plaintext highlighter-rouge">net8.0-android</code></td>
+    </tr>
+    <tr>
+      <td>Tauri mobile</td>
+      <td><code class="language-plaintext highlighter-rouge">tauri.conf.json</code>, <code class="language-plaintext highlighter-rouge">tauri.conf.json5</code> or <code class="language-plaintext highlighter-rouge">Tauri.toml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">.rs</code>, <code class="language-plaintext highlighter-rouge">.toml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">tauri ios build</code>, <code class="language-plaintext highlighter-rouge">tauri android build</code>, with or without <code class="language-plaintext highlighter-rouge">cargo</code> or <code class="language-plaintext highlighter-rouge">npx</code></td>
+    </tr>
+    <tr>
+      <td>Kotlin Multiplatform</td>
+      <td>the multiplatform plugin in a Gradle file</td>
+      <td><code class="language-plaintext highlighter-rouge">commonMain</code> Kotlin, as before</td>
+      <td>the Gradle and <code class="language-plaintext highlighter-rouge">xcodebuild archive</code> commands already covered</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Four behaviours to know.</p>
+
+<ul>
+  <li>A Unity project is scanned for both stores when it is run by hand. As a hook the <code class="language-plaintext highlighter-rouge">-buildTarget</code> value picks the store.</li>
+  <li>A Unity project holds no Xcode or Gradle project until it is exported, so the export compliance check and the R8 check stay silent and the report says so. Scan the exported project too.</li>
+  <li>A Kotlin Multiplatform project is scanned as one app, so shared code in <code class="language-plaintext highlighter-rouge">commonMain</code> counts for both the iOS and the Android checks.</li>
+  <li>A bare Xcode or Android project under a root Expo, React Native, Flutter, or Capacitor app is scanned as its own app when it has its own <code class="language-plaintext highlighter-rouge">Info.plist</code> or <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> and no root build file names its path (<code class="language-plaintext highlighter-rouge">settings.gradle</code>, a <code class="language-plaintext highlighter-rouge">Podfile</code>, or an <code class="language-plaintext highlighter-rouge">.xcworkspace</code>). It counts as an app only with an <code class="language-plaintext highlighter-rouge">.xcodeproj</code> that builds an application (or names no product type) or an Android application module, so a library, a framework or a local native module stays with the app that uses it. A native host that embeds the root framework (React Native, Expo, Flutter, Capacitor or Cordova code in its sources, such as an <code class="language-plaintext highlighter-rouge">RCTAppDelegate</code>, or its Podfile or Gradle files) is a brownfield host and stays in the root scan, so the root’s framework checks still cover it. A native app that does split off, and the root it left, both keep every framework check the pooled tree showed, so every check that ran when they were scanned as one still runs, a framework marker found only inside the split app included. The root and its split native apps are also scanned together as in 1.0.0, and any finding the separate scans missed is added once, so evidence spread across a shared file and the split app still counts. A project in a folder named exactly <code class="language-plaintext highlighter-rouge">demo</code>, <code class="language-plaintext highlighter-rouge">example</code>, <code class="language-plaintext highlighter-rouge">sample</code>, or <code class="language-plaintext highlighter-rouge">playground</code> (or the plural) is treated as a repo demo and stays part of the root scan. A nested project splits off only when the root has its own project for that platform, so a managed Expo root with no native project keeps scanning the nested project and keeps its iOS checks. A native root app never splits off a nested project (issue #656).</li>
+</ul>
+
+<h2 id="what-stays-out-of-reach">What stays out of reach</h2>
+
+<p>These are limits, not bugs waiting for a fix. Plan around them.</p>
+
+<ul>
+  <li><strong>Anything that runs on a CI server.</strong> <code class="language-plaintext highlighter-rouge">gh workflow run</code>, a release started from a CI dashboard, and a fastlane lane run by a runner are never seen by a hook on your machine.</li>
+  <li><strong>Uploads from an app window.</strong> Xcode Organizer, the Transporter app, the Unity Editor build window and Android Studio’s Generate Signed Bundle do not run a shell command.</li>
+  <li><strong>A Unity build whose target is chosen in code.</strong> <code class="language-plaintext highlighter-rouge">-executeMethod</code> with no <code class="language-plaintext highlighter-rouge">-buildTarget iOS</code> or <code class="language-plaintext highlighter-rouge">Android</code> on the command line is not treated as a submit.</li>
+  <li><strong>Unity and .NET MAUI build settings.</strong> Info.plist keys and Gradle settings that the tool generates at build time are not read. For .NET MAUI the linker and target API settings in the <code class="language-plaintext highlighter-rouge">.csproj</code> are not checked, and <code class="language-plaintext highlighter-rouge">dotnet build -t:Publish</code> is not matched. A Mac Catalyst publish is not treated as a submit.</li>
+  <li><strong>Tauri before init.</strong> With no <code class="language-plaintext highlighter-rouge">src-tauri/gen/apple</code> or <code class="language-plaintext highlighter-rouge">src-tauri/gen/android</code> folder there is nothing native to scan. The report names the command to run.</li>
+  <li><strong>A Tauri app beside a native app.</strong> In a monorepo a Tauri folder with no <code class="language-plaintext highlighter-rouge">gen/apple</code> or <code class="language-plaintext highlighter-rouge">gen/android</code> is treated as a desktop app, so it does not stop a <code class="language-plaintext highlighter-rouge">CLEAR</code> for the native app next to it.</li>
+  <li><strong>Rust naming.</strong> The sign-in and account-deletion patterns look for camelCase names such as <code class="language-plaintext highlighter-rouge">signIn</code>. A Rust function named <code class="language-plaintext highlighter-rouge">sign_in</code> does not trigger them.</li>
+  <li><strong>Frameworks not detected.</strong> NativeScript and legacy Xamarin.Forms projects.</li>
+  <li><strong>More than one Xcode target.</strong> Targets are read as one body of source, so an app extension can satisfy, or trigger, a finding for the main app. A watchOS-only or visionOS-only workspace is treated as iOS.</li>
+  <li><strong>Pooled or split layouts that remain coarse (inherited from 1.0).</strong> A single nested managed Expo app is read through the root’s config only, shared packages and a brownfield host’s source outside the scanned root are not followed, every native target in one root is pooled, and two .NET MAUI or Unity apps in one repo are scanned as one.</li>
+  <li><strong>Workspace runners.</strong> A package script is followed one level deep, so a root script that runs <code class="language-plaintext highlighter-rouge">turbo run build</code>, which in turn runs a mobile package’s submit, is not seen. A pnpm graph selector (<code class="language-plaintext highlighter-rouge">web...</code>, <code class="language-plaintext highlighter-rouge">...web</code>, <code class="language-plaintext highlighter-rouge">{apps/web}</code>) is reduced to its package name, without following that package’s dependencies or dependents, and a change-set selector such as <code class="language-plaintext highlighter-rouge">"[origin/main]"</code> cannot be resolved, so it reads every package, which can block a web-only build in a repo that also holds a mobile app. Run the web build without the wrapper, or set <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK=1</code> once.</li>
+  <li><strong>Cross-platform purchase plugins.</strong> 1.0.0 checked the restore flow only for native StoreKit apps. 2.0.0 also checks a react-native-iap, RevenueCat or Flutter purchase plugin app, where a purchase list query (<code class="language-plaintext highlighter-rouge">getAvailablePurchases</code>, <code class="language-plaintext highlighter-rouge">queryPastPurchases</code>) or the plugin’s restore call counts as the restore flow. Check by hand that a visible Restore Purchases control calls it.</li>
+  <li><strong>Monitor source verification.</strong> The regulatory and privacy monitors mark a claim as corroborated when an official source shares its keywords, not when that source states the same claim. Read the official source before acting on a monitor item.</li>
+  <li><strong>Store console state.</strong> The guard cannot see App Store Connect or Play Console, so the age rating, social media declaration, and closed testing items are reminders, not proof of a problem.</li>
+</ul>
+
+<h2 id="known-gaps-found-by-codex-and-qwen-adversarial-review-not-yet-fixed">Known gaps (found by Codex and Qwen adversarial review, not yet fixed)</h2>
+
+<ul>
+  <li><strong>Newline-containing file paths.</strong> The <code class="language-plaintext highlighter-rouge">package.json</code>/<code class="language-plaintext highlighter-rouge">config.xml</code> scan loops
+are safe against spaces and shell metacharacters (quoted <code class="language-plaintext highlighter-rouge">IFS= read -r</code>), but
+not against a literal newline inside a path, which <code class="language-plaintext highlighter-rouge">find</code>’s newline-delimited
+output cannot represent. Extremely unlikely in practice, and not proven safe.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">config.xml</code> widget-marker check is spoofable by a comment.</strong> A commented-out
+<code class="language-plaintext highlighter-rouge">&lt;!-- &lt;widget ...&gt; --&gt;</code> or a look-alike tag like <code class="language-plaintext highlighter-rouge">&lt;widgetConfig&gt;</code> still counts
+as Cordova evidence. Low severity, no realistic false negative on a real
+Cordova project, though not a hard proof either.</li>
+  <li><strong>Android-side framework checks are thin.</strong> Apart from the Android
+permissions array a managed Expo app config declares, every check in this doc is
+Apple-side. Flutter/RN/Ionic apps also ship to Google Play, where Data Safety
+disclosure for bundled SDKs, WebView-controlled data collection, cleartext
+traffic, and mixed-content/debug flags are real, framework-relevant risks this
+guard does not yet check.</li>
+  <li><strong>The PrivacyInfo.xcprivacy check reads the app’s own manifest only.</strong>
+A manifest under <code class="language-plaintext highlighter-rouge">Pods</code>, <code class="language-plaintext highlighter-rouge">Carthage</code>, <code class="language-plaintext highlighter-rouge">node_modules</code>, SwiftPM <code class="language-plaintext highlighter-rouge">.build</code> or
+checkouts, <code class="language-plaintext highlighter-rouge">SourcePackages</code> or Flutter <code class="language-plaintext highlighter-rouge">.symlinks</code> does not count. A managed
+Expo app passes with <code class="language-plaintext highlighter-rouge">expo.ios.privacyManifests</code> in its app config, since EAS
+generates the native project at build time.</li>
+  <li><strong>Expo Continuous Native Generation (CNG) is modeled for config only.</strong> A
+managed Expo project with no committed <code class="language-plaintext highlighter-rouge">ios/</code> or <code class="language-plaintext highlighter-rouge">android/</code> folder has its
+<code class="language-plaintext highlighter-rouge">app.json</code> or <code class="language-plaintext highlighter-rouge">app.config</code> read for camera and location purpose strings,
+<code class="language-plaintext highlighter-rouge">ios.privacyManifests</code> and the sensitive <code class="language-plaintext highlighter-rouge">android.permissions</code> entries. Its
+native code is still NOT CHECKED until <code class="language-plaintext highlighter-rouge">npx expo prebuild</code> runs.</li>
+  <li><strong>Two frameworks have no coverage.</strong> NativeScript and legacy Xamarin.Forms
+are not detected. Unity, .NET MAUI, Tauri mobile, and Kotlin Multiplatform
+are, see the section above for what each one still cannot see.</li>
+  <li><strong>The submission regex errs toward firing.</strong> <code class="language-plaintext highlighter-rouge">SUBMIT_RE</code> in
+<code class="language-plaintext highlighter-rouge">agent-os/hooks/app-store-compliance-guard.sh</code> matches <code class="language-plaintext highlighter-rouge">eas build</code> with or
+without a <code class="language-plaintext highlighter-rouge">--platform</code> flag, also when global flags come before the
+subcommand. It also matches every <code class="language-plaintext highlighter-rouge">cap run</code> and <code class="language-plaintext highlighter-rouge">cap open</code>, so a local dev
+run with no release intent still triggers the guard.</li>
+</ul>
+
+<p>These are logged, not hidden. Track them before treating this guard as complete
+coverage for a cross-platform team; the checks that exist are a real
+improvement over native-only, not a finished answer.</p>
+
+<h2 id="the-honest-limit">The honest limit</h2>
+
+<p>The guard reads Swift, Kotlin, XML, Gradle, Plist, Dart, JS, TS, C#, and Rust source text.
+It does not execute the app, does not parse the Dart or JS AST, and cannot see
+runtime behavior (whether an OTA update actually changes the UI, for example).
+Treat every finding as a lead to verify, not a guaranteed defect, and treat a
+clean run as “nothing detectable from source text”, not a guarantee of approval.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/CROSS-PLATFORM-FRAMEWORKS.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

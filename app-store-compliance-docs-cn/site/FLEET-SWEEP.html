@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Fleet Sweep and the Waiver Ledger | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Fleet Sweep and the Waiver Ledger" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/FLEET-SWEEP.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/FLEET-SWEEP.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Fleet Sweep and the Waiver Ledger" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Fleet Sweep and the Waiver Ledger","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/FLEET-SWEEP.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>You ship more than one app. Fleet Sweep runs the guard over every one of them and gives you one release verdict, so a blocker in the app you forgot about cannot slip through. The Waiver Ledger lets a reviewed false positive step aside, with evidence, until a date you choose, after which it comes back on its own.</p>
+
+<h2 id="what-you-get">What you get</h2>
+
+<ul>
+  <li>One verdict for the whole fleet. <code class="language-plaintext highlighter-rouge">READY</code>, <code class="language-plaintext highlighter-rouge">READY_WITH_ACTIONS</code>, <code class="language-plaintext highlighter-rouge">NOT_CHECKED</code>, or <code class="language-plaintext highlighter-rouge">BLOCKED</code>, worst app wins. Exit codes 0, 3, 1 and 2, so only a truly ready fleet exits 0.</li>
+  <li>No silent passes. The guard prints a <code class="language-plaintext highlighter-rouge">Coverage.</code> line before every exit naming what it scanned. A partial scan, a platform you declared but the guard did not find, a timeout, a missing or doubled summary, counts that do not match the findings, or an exit code that contradicts them is <code class="language-plaintext highlighter-rouge">NOT_CHECKED</code>, never <code class="language-plaintext highlighter-rouge">READY</code>. A waiver can never turn a partial scan into a pass.</li>
+  <li>Owner actions in the same report. Account and console steps the scan cannot see (agreements, privacy answers, Data Safety, a test on a real device) sit beside the code findings. A step set to <code class="language-plaintext highlighter-rouge">false</code>, or no readiness list at all, stays open.</li>
+  <li>Waivers that expire and cover one occurrence. A waiver names the app, the finding ID, its severity and its file, so it never hides the same rule firing somewhere new or at a higher severity. It needs a reason, evidence, a reviewer, and an expiry no more than 180 days out. Two waivers for the same occurrence cancel each other. An expired, incomplete, duplicated, or stale waiver is named in the report and the finding returns.</li>
+  <li>The release rules a scan cannot see. Each app declares its <code class="language-plaintext highlighter-rouge">regions</code> and <code class="language-plaintext highlighter-rouge">features</code>, and every verified, in-force <a href="/docs-cn/app-store-compliance/RULING-REGISTER.html">Ruling Register</a> requirement that applies blocks the app until you attest to it.</li>
+  <li>A GitHub code-scanning file. <code class="language-plaintext highlighter-rouge">--scanning-export</code> writes findings in the SARIF 2.1.0 format GitHub requires, so they show in the Security tab and on pull requests.</li>
+</ul>
+
+<h2 id="from-install-to-first-verdict">From install to first verdict</h2>
+
+<ol>
+  <li>
+    <p>Copy the fleet template and list your apps.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp </span>templates/fleet.example.json fleet.json
+</code></pre></div>    </div>
+
+    <p>Each <code class="language-plaintext highlighter-rouge">name</code> must be unique. <code class="language-plaintext highlighter-rouge">path</code> may use <code class="language-plaintext highlighter-rouge">~</code> and environment variables. <code class="language-plaintext highlighter-rouge">platforms</code> lists what you ship (<code class="language-plaintext highlighter-rouge">ios</code>, <code class="language-plaintext highlighter-rouge">android</code>, <code class="language-plaintext highlighter-rouge">web</code>), and the sweep checks the guard actually found each one. <code class="language-plaintext highlighter-rouge">readiness</code> maps each account step to <code class="language-plaintext highlighter-rouge">true</code> or <code class="language-plaintext highlighter-rouge">false</code>. Leave it out and the app reports it as an open owner action.</p>
+  </li>
+  <li>
+    <p>Run the sweep.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 scripts/fleet-sweep.py fleet.json
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Read the verdict line at the bottom. Exit code 0 is ready, 3 is ready with open actions, 2 is blocked, 1 is not checked or bad input.</p>
+  </li>
+</ol>
+
+<h2 id="waive-a-reviewed-false-positive">Waive a reviewed false positive</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp </span>templates/waivers.example.json waivers.json
+python3 scripts/fleet-sweep.py fleet.json <span class="nt">--waivers</span> waivers.json
+</code></pre></div></div>
+
+<p>Each waiver copies the <code class="language-plaintext highlighter-rouge">app</code> name from the fleet file and the <code class="language-plaintext highlighter-rouge">finding_id</code>, <code class="language-plaintext highlighter-rouge">severity</code> and <code class="language-plaintext highlighter-rouge">file</code> exactly as the guard prints them. Leave <code class="language-plaintext highlighter-rouge">file</code> out only for a finding the guard prints without one. A waiver never applies to a different app, and one that matches nothing is reported so you can retire it.</p>
+
+<h2 id="outputs-for-ci">Outputs for CI</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 scripts/fleet-sweep.py fleet.json <span class="nt">--json</span> fleet-result.json <span class="nt">--scanning-export</span> fleet.sarif
+</code></pre></div></div>
+
+<p>Upload <code class="language-plaintext highlighter-rouge">fleet.sarif</code> with <code class="language-plaintext highlighter-rouge">github/codeql-action/upload-sarif</code> to see findings in code scanning. Paths carry the app name, waived findings stay in the file marked as suppressed with their evidence, and an app that was not checked marks the run unsuccessful. The JSON holds every app, its findings, the waived items with their evidence, waiver problems, and owner actions.</p>
+
+<h2 id="what-it-does-not-do">What it does not do</h2>
+
+<p>It does not change a single guard rule. The guard decides what is a finding. Fleet Sweep only gathers, applies waivers you signed, and refuses to call anything ready that it did not see checked.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/FLEET-SWEEP.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

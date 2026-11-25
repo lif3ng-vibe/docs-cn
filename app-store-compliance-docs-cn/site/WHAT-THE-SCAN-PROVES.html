@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>What the scan proves, and what it cannot | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="What the scan proves, and what it cannot" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="What the scan proves, and what it cannot" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"What the scan proves, and what it cannot","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <!-- freshness: 60d -->
+
+<p>This page answers the questions developers asked most after the playbook spread on X in November 2026. About 300 replies were read and sorted by theme on 19 November 2026. Every answer points at a file in this repo, so you can check it rather than trust it.</p>
+
+<h2 id="1-the-two-halves-of-being-ready">1. The two halves of being ready</h2>
+
+<p>A clean scan and a ready submission are different things. The guard reads your project. A reviewer reads your running build, your store listing, and your review notes. Most painful rejections live in the second half.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Half</th>
+      <th>What it covers</th>
+      <th>How you prove it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Checked by the scan</td>
+      <td>Selected patterns in source code, missing purpose-string keys in Info.plist, the privacy manifest, AndroidManifest permissions, Gradle and Xcode build settings, SDK names in your dependencies, placeholder text, signs of non-store payment code. Whether a purpose string fits its feature is a manual check</td>
+      <td><code class="language-plaintext highlighter-rouge">bash agent-os/hooks/app-store-compliance-guard.sh "/path/to/app"</code></td>
+    </tr>
+    <tr>
+      <td>Only a person can prove</td>
+      <td>A demo account that signs in, a backend that is live and holds test data, review notes that say where each feature is, screenshots of this build for each device family you support, account deletion working on a real device, privacy labels that match real traffic, an in-app purchase the reviewer can reach</td>
+      <td><code class="language-plaintext highlighter-rouge">.app-review-readiness.json</code>, read by the same guard</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Since version 2.5.0 the guard prints both halves on every run. With no readiness file it says plainly which checks it could not see. Copy <a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/app-review-readiness.json">the template</a> into your app folder, test each item on the release build, write <code class="language-plaintext highlighter-rouge">pass</code>, <code class="language-plaintext highlighter-rouge">fail</code>, <code class="language-plaintext highlighter-rouge">n/a</code>, or <code class="language-plaintext highlighter-rouge">todo</code>, and set <code class="language-plaintext highlighter-rouge">checked_on</code> to that day.</p>
+
+<ul>
+  <li>A check marked <code class="language-plaintext highlighter-rouge">fail</code> always blocks, so a broken demo login stops the submission the same way a missing purpose string does.</li>
+  <li>Set <code class="language-plaintext highlighter-rouge">"enforce": true</code> in the file, or <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_REQUIRE_READINESS=1</code>, and any check still <code class="language-plaintext highlighter-rouge">todo</code> blocks too. Use this in CI.</li>
+  <li>A readiness file that exists but cannot be read always blocks, whatever the settings, because a fail inside it cannot be seen. That covers broken JSON, a check value that is not plain text, a folder or broken link with the readiness file’s name, and a machine with no python3. A file saved as UTF-8 with a byte order mark, UTF-16, or UTF-32 is read normally.</li>
+  <li><code class="language-plaintext highlighter-rouge">n/a</code> counts only with a reason under <code class="language-plaintext highlighter-rouge">notes</code> for that check. The privacy labels check never accepts <code class="language-plaintext highlighter-rouge">n/a</code>, because every app has one.</li>
+  <li>A <code class="language-plaintext highlighter-rouge">checked_on</code> date older than 30 days, missing, or in the future is flagged, because a pass on last month’s build says nothing about this one.</li>
+  <li>In a monorepo each app is read on its own. The guard uses the nearest file above each app, up to the workspace root, and names the file it used. In a single app tree it reads only the file in the folder you scan. If another readiness file sits up to eight folders below it, outside node_modules, Pods, .pub-cache, and .git, the report names one as not read, so scan that app folder to use it. A repeated key in the file is reported, and a recorded fail among its values still counts.</li>
+</ul>
+
+<p>The full manual walk is <a href="/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html">the pre-submission checklist</a>. For the review notes themselves, use <a href="https://github.com/mjmirza/app-store-compliance/blob/main/templates/REVIEW-NOTES-TEMPLATE.md">the review notes template</a>.</p>
+
+<h2 id="2-how-current-are-the-rules">2. How current are the rules</h2>
+
+<p>A stale checklist gives false confidence, and several people said that is worse than none. So every report now opens with a line like this.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Rule pack. v2.5.0. Its 109 dated sources were verified between 2026-07-13 and 2026-11-21 (newest 0 days ago). The checks run against this dated snapshot, not the live guideline pages.
+Rule pack. 2 of 109 dated sources were last verified more than 60 days ago, so their rules may have changed since. Each one carries its date as verified_on in data/regulatory-deadlines.json.
+</code></pre></div></div>
+
+<ul>
+  <li>The checks are a snapshot, not a live read of Apple’s or Google’s pages. Each deadline in <a href="https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json">data/regulatory-deadlines.json</a> carries the <code class="language-plaintext highlighter-rouge">source_url</code> it was read from and the <code class="language-plaintext highlighter-rouge">verified_on</code> day.</li>
+  <li>The line shows the oldest and newest source date, and counts the sources older than the window, so one fresh record cannot hide old ones. When even the newest source is past 60 days, the guard prints <code class="language-plaintext highlighter-rouge">Rule pack STALE</code> and the command to update. Change the window with <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_STALE_DAYS</code>. If the date cannot be read or compared, it says freshness was not checked rather than staying quiet.</li>
+  <li>Sweeps run about every two months and are written up as gap analyses, the latest <a href="/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html">November 2026</a>. Between sweeps the monitors in <code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> watch Apple’s news feed and the Play policy pages.</li>
+</ul>
+
+<h2 id="3-both-stores-at-similar-depth">3. Both stores, at similar depth</h2>
+
+<p>The playbook covers the Apple App Store and Google Play. People asked whether Play is an afterthought. It is not, as the counts below show (taken from this repo on 21 November 2026).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>Apple</th>
+      <th>Google Play</th>
+      <th>Both</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Rejection patterns in <code class="language-plaintext highlighter-rouge">data/rejection-patterns.json</code></td>
+      <td>62</td>
+      <td>43</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <td>Distinct code checks in the guard</td>
+      <td>34</td>
+      <td>38 (20 Play policy, 18 Android build)</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>Rule map</td>
+      <td><a href="/docs-cn/app-store-compliance/APPLE.html">APPLE.md</a></td>
+      <td><a href="/docs-cn/app-store-compliance/GOOGLE-PLAY.html">GOOGLE-PLAY.md</a></td>
+      <td><a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">MISTAKE-PATTERNS.md</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>On Play, the guard reads every <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> for sensitive permissions (background location, SMS and call log, all files, accessibility, photos and videos, foreground service special use), checks target SDK and 64-bit ABIs in Gradle, looks for Play Billing on digital goods, and flags analytics or ad SDKs so you verify the Data Safety form. A screenshot that does not match the build is a manual check on both stores.</p>
+
+<p>The Mac App Store shares Apple’s guidelines and is covered where the code is shared. Notarization and Developer ID for apps outside the store are in <a href="/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html">PLATFORM-MECHANICS-2026.md</a>.</p>
+
+<p>Not covered by the guard. the rules of Huawei AppGallery and the other Chinese Android stores, Samsung Galaxy Store, and the rest. Their review rules are summarised in <a href="/docs-cn/app-store-compliance/OTHER-STORES.html">OTHER-STORES.md</a> for reading, with no code checks behind them. A new personal Google Play account also needs a closed test with at least 12 testers for 14 days in a row before production. The guard cannot see Play Console, so that one is a checklist item.</p>
+
+<h2 id="4-guideline-43-spam-and-42-minimum-functionality-honestly">4. Guideline 4.3 spam and 4.2 minimum functionality, honestly</h2>
+
+<p>Many replies asked about 4.3, often after eight or ten rejections. A static scan cannot decide 4.3. Apple judges it on whether your binary, metadata, and concept look like apps already in the store, including apps from other developers, and that store is not in your repo.</p>
+
+<p>What the playbook does for 4.3 and 4.2.</p>
+
+<ul>
+  <li>Flags a WebView, Capacitor, or Cordova shell with almost no native features (IONIC-4.2-THIN-WRAPPER). It is a heuristic, not a verdict.</li>
+  <li>Names the process causes behind 4.3 in <a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">MISTAKE-PATTERNS.md</a>. Many near identical apps from one account, template or reseller apps, duplicate bundle IDs for variations, and a low effort entry in a saturated niche.</li>
+  <li>Gives the reply that works in <a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html#申诉实战手册">the appeal playbook</a>. Do not resubmit blind. Answer App Review point by point in Resolution Center, say what is unique and who it is for, and attach a short screen recording of the feature that makes the difference.</li>
+</ul>
+
+<p>What it cannot do. Tell you that your concept is too close to someone else’s. Treat any tool that claims it can with suspicion.</p>
+
+<h2 id="5-rejections-people-reported-and-whether-this-catches-them">5. Rejections people reported, and whether this catches them</h2>
+
+<p>Taken from rejection reasons developers described in public replies in November 2026. They are the developers’ own accounts, not verified rejection letters. Where a reason was vague, the row says so.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Reported reason</th>
+      <th>Caught by</th>
+      <th>Strength</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Missing privacy manifest, purpose strings that did not match</td>
+      <td>Guard. APPLE-PRIVACY-MANIFEST-MISSING and APPLE-5.1.1-MISSING-USAGE-DESCRIPTION for a missing key, plus <code class="language-plaintext highlighter-rouge">scripts/validate-privacy-manifest.py</code>. Whether the wording fits the feature is not checked</td>
+      <td>Scan for missing keys, a person for the wording</td>
+    </tr>
+    <tr>
+      <td>Onboarding button said “Allow permissions” before the location prompt, Apple wanted “Continue”</td>
+      <td>Guard. APPLE-5.1.1-PRE-PROMPT-ALLOW-BUTTON, new in 2.5.0, when the button and the permission request sit in the same file</td>
+      <td>Scan, medium, reported as possible</td>
+    </tr>
+    <tr>
+      <td>Reviewer could not log in</td>
+      <td>Guard. APPLE-2.1-STAGING-BACKEND for a staging or localhost backend, plus <code class="language-plaintext highlighter-rouge">demo_account</code> in the readiness file</td>
+      <td>Scan flags part, a person proves the rest</td>
+    </tr>
+    <tr>
+      <td>Reviewer could not find the in-app purchase</td>
+      <td><code class="language-plaintext highlighter-rouge">iap_reachable_by_reviewer</code> and <code class="language-plaintext highlighter-rouge">review_notes</code> in the readiness file</td>
+      <td>Person</td>
+    </tr>
+    <tr>
+      <td>Five of six rejections were account information and the privacy policy</td>
+      <td>Guard. APPLE-5.1.1-MISSING-PRIVACY-POLICY and GOOGLE-MISSING-PRIVACY-POLICY, <code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> for the listing URL</td>
+      <td>Partial</td>
+    </tr>
+    <tr>
+      <td>Naming Google Play or an Android API inside the iOS app</td>
+      <td><code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code> APPLE-2.3-CROSS-PLATFORM-REFERENCE on listing text. Strings inside the binary are not checked</td>
+      <td>Partial</td>
+    </tr>
+    <tr>
+      <td>AI-built web wrapper bounced under 4.2</td>
+      <td>Guard. IONIC-4.2-THIN-WRAPPER for WebView shells</td>
+      <td>Scan, heuristic</td>
+    </tr>
+    <tr>
+      <td>4.3(a) and 4.3(b) spam, duplicate app, saturated niche</td>
+      <td>Not decidable by a scan. See section 4</td>
+      <td>Guidance only</td>
+    </tr>
+    <tr>
+      <td>UI not “1:1 and consistent across screens”</td>
+      <td>Not covered. The reason as reported is too vague to map to one guideline</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>iPad layout and iPad screenshots</td>
+      <td><code class="language-plaintext highlighter-rouge">screenshots_match_build</code> in the readiness file. Layout on iPad is not scanned</td>
+      <td>Person</td>
+    </tr>
+    <tr>
+      <td>Trial or intro offer text shown to an Apple ID that already used it</td>
+      <td>Not scanned. Check <code class="language-plaintext highlighter-rouge">Product.SubscriptionInfo.isEligibleForIntroOffer</code> (StoreKit 2) before you show trial wording, and state what is charged after the trial (3.1.2(a))</td>
+      <td>Guidance only</td>
+    </tr>
+    <tr>
+      <td>Account deletion that let the account sign back in</td>
+      <td>Guard. APPLE-5.1.1-NO-ACCOUNT-DELETION and APPLE-ACCOUNT-DELETION-WEAK, plus <code class="language-plaintext highlighter-rouge">account_deletion_device_test</code> in the readiness file</td>
+      <td>Scan finds the flow, a person proves it works</td>
+    </tr>
+    <tr>
+      <td>Permissions pulled in by a third-party SDK</td>
+      <td>Guard. APPLE-5.1.2-MISSING-ATT for tracking SDKs, APPLE-PRIVACY-MANIFEST-MISSING for required reason SDKs, GOOGLE-DATASAFETY-MISMATCH for analytics and ad SDKs</td>
+      <td>Partial</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Rows marked None or Guidance only are the honest gaps. If you were rejected for one of them, <a href="https://github.com/mjmirza/app-store-compliance/issues">open an issue</a> with the guideline number from the letter and it becomes a check or a documented pattern.</p>
+
+<h2 id="6-a-clear-scan-is-not-an-approval">6. A clear scan is not an approval</h2>
+
+<p><code class="language-plaintext highlighter-rouge">CLEAR.</code> means no critical risk in what the scan can see. It does not mean Apple or Google will approve. Reviewers are people, and a submission can still be rejected on a judgment call. What the playbook saves is the extra round after a rejection you could have prevented, not the queue time itself.</p>
+
+<p>On queue time, Apple’s App Review page says at least 50 percent of submissions are reviewed in under 24 hours and 90 percent in under 48 hours (<a href="https://developer.apple.com/distribute/app-review/">Apple</a>). Developers in the replies saw anything from same day to five weeks, longest for new apps and for the round after a rejection. If a critical bug fix is stuck, Apple accepts expedited review requests with the steps to reproduce the bug.</p>
+
+<h2 id="7-when-the-guard-runs-and-what-its-exit-code-means">7. When the guard runs, and what its exit code means</h2>
+
+<p>Run by hand, the report ends with a verdict, and the exit code matches it. A <code class="language-plaintext highlighter-rouge">Next.</code> line with the step to take can follow it.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Exit</th>
+      <th>Verdict line</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td><code class="language-plaintext highlighter-rouge">CLEAR.</code></td>
+      <td>No critical risk in what the scan can see. Not an approval</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code class="language-plaintext highlighter-rouge">BLOCKED.</code></td>
+      <td>A critical risk in the code, or a manual check recorded as failed</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><code class="language-plaintext highlighter-rouge">NOT CHECKED.</code></td>
+      <td>No iOS or Android project was found, so nothing was proven. Treat it as a failure in CI, never as a pass</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK=1</code> turns a block into exit 0 with the line <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_OK set.</code>, and the run is logged. Use it only for a finding you have checked by hand.</p>
+
+<p>As a hook inside an AI coding tool, the guard runs only when that tool is about to run a submit command (fastlane, eas submit, xcrun altool, a Gradle release bundle, and the others in the README). Two things follow.</p>
+
+<ul>
+  <li>A <code class="language-plaintext highlighter-rouge">NOT CHECKED</code> result lets the command through by default, so a hook never blocks work in a folder that is not an app. Set <code class="language-plaintext highlighter-rouge">APP_STORE_GUARD_BLOCK_UNCHECKED=1</code> to block it instead.</li>
+  <li>A submit you start yourself in a terminal, or in CI, does not pass through the hook. Call the guard there too. In a CI step, run it against the app folder and stop on any exit code other than 0.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash /path/to/app-store-compliance/agent-os/hooks/app-store-compliance-guard.sh "$PWD"
+</code></pre></div></div>
+
+<p>In Fastlane, the same command in a <code class="language-plaintext highlighter-rouge">before_all</code> block with <code class="language-plaintext highlighter-rouge">sh(...)</code> stops the lane, because <code class="language-plaintext highlighter-rouge">sh</code> fails on a non-zero exit.</p>
+
+<h2 id="8-is-it-safe-to-run">8. Is it safe to run</h2>
+
+<p>Read the scripts before you trust them, whatever the star count. Here is what to look for.</p>
+
+<ul>
+  <li>The guard is one Bash file, <a href="https://github.com/mjmirza/app-store-compliance/blob/main/agent-os/hooks/app-store-compliance-guard.sh">agent-os/hooks/app-store-compliance-guard.sh</a>. It reads your project and writes only its own temporary files, which it deletes on exit. It never edits, moves, or deletes a file in your app.</li>
+  <li>The guard makes no network call. It runs <code class="language-plaintext highlighter-rouge">python3</code> only for local helpers in this repo (the deadline list, the readiness file, a manifest parser).</li>
+  <li>The monitors in <code class="language-plaintext highlighter-rouge">scripts/monitor*.py</code> do fetch Apple and Google pages, and only when you run them.</li>
+  <li><code class="language-plaintext highlighter-rouge">scripts/install.sh</code> writes to your AI tool’s config folder and backs up any settings file it changes. Run <code class="language-plaintext highlighter-rouge">bash scripts/install.sh --dry-run</code> first to see every write.</li>
+  <li>To be stricter, run the guard in a container or a throwaway VM with your project mounted read only.</li>
+</ul>
+
+<p>Found a security issue in the scripts? Report it privately as described in <a href="https://github.com/mjmirza/app-store-compliance/blob/main/.github/SECURITY.md">SECURITY.md</a>.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/WHAT-THE-SCAN-PROVES.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

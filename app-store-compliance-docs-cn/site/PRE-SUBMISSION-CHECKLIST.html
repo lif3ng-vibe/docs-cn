@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>提交前清单 | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="提交前清单" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="提交前清单" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"提交前清单","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>任何一次上传到 App Store Connect 或 Play Console 之前，都先执行本清单。每一项都表述为可验证的检查。每个勾选框最终只有两种状态：已勾选，或标注为不适用。空着的勾选框就是发布阻塞项。</p>
+
+<p>“不适用”一次只允许用于一项，且必须在勾选框旁写上一行原因，例如 “N/A。无登录功能，所以没有演示账号” 或 “N/A。无应用内购买”。没有写原因的条目视为未勾选。有两个条目永远不能标注为不适用，因为每个应用都有：</p>
+
+<ul>
+  <li>隐私声明与应用运行时实际收集的数据一致，包括每一个 SDK。</li>
+  <li>隐私政策 URL 已发布，且可从应用内访问。</li>
+</ul>
+
+<h2 id="从这里开始两项检查约五分钟">从这里开始。两项检查，约五分钟</h2>
+
+<p>这两项能阻止两个商店的大多数拒审。先做它们，再做其他。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />审核备注中写明了一个后端真实可用的有效演示账号，且该登录今天仍能登录成功。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />隐私声明（Apple 隐私标签、Google 数据安全（Data safety）表单）与应用运行时实际收集的数据一致，包括每一个 SDK。</li>
+</ul>
+
+<p>然后从上到下过完本页。先做通用部分，再做你要上架的那个商店。标题里带”若”且与应用情况不符的小节可以跳过。完整清单约 100 个勾选框，首次过一遍请预留一个小时。</p>
+
+<h2 id="通用两个商店">通用（两个商店）</h2>
+
+<h3 id="稳定性与完整性">稳定性与完整性</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用在真机上启动并运行不崩溃，覆盖受支持的最旧和最新操作系统。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />构建包内没有任何占位文本、lorem ipsum、假图或临时内容。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个链接、按钮和导航路径都能正常工作。没有死胡同，没有失效 URL。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />生产后端在整个审核窗口期内保持在线可访问。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />任何需要登录的功能，都提供了可用的演示账号，或存在演示模式。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />所有应用内购买（In-App Purchase，IAP）在审核构建中均已上线、可见，并能完成一笔真实交易。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />审核备注写明了每个涉及登录、地区或付费的功能的点击路径，让审核员无需自行摸索。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />在你支持的最旧、最小的设备上，未登录状态、慢速网络下，首次启动一切正常。把第一分钟的简短屏幕录像附在审核备注里，可以在审核员提问之前就回答他们的大部分问题。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />这些检查结果记录在应用文件夹下的 <code class="language-plaintext highlighter-rouge">.app-review-readiness.json</code> 中，守卫会读取它，并在记录为失败时阻塞提交。参见<a href="/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html">扫描证明了什么</a>。</li>
+</ul>
+
+<h3 id="隐私与数据">隐私与数据</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />隐私政策已发布、可从应用内访问且内容准确。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每一次数据收集在发生之前都取得了用户同意。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个权限都有一条具体的原因说明字符串，写明使用它的真实功能。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />支持注册账号的应用提供应用内账号删除。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />账号删除已在真机上测试。删除账号，等待你告知用户的完成时长，然后确认账号及其会话已经消失，其数据已删除（你声明保留的除外——Apple 允许保留法律要求的记录，Google Play 还允许保留安全、反欺诈与监管记录），并且重新登录不会让旧账号复活。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Apple。权限弹窗之前的自定义页面只有一个按钮，标题为 Continue 或 Next，绝不能是 Allow，也没有 Close 或 Cancel，除非该页面同时收集法律要求的同意（Apple HIG Privacy，5.1.1(iv)）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Google Play。在请求权限之前用一个页面加以说明，让用户可以拒绝，且应用在缺少该权限时仍能运行（Android 权限指南）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />用户可以撤回同意，且应用的非核心功能仍可正常使用。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个第三方 SDK 及其数据行为都已摸清并声明。</li>
+</ul>
+
+<h3 id="移动安全与最佳实践">移动安全与最佳实践</h3>
+<p>如需跨平台最佳实践的深度参考，参见<a href="/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html">移动安全指南</a>。</p>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>安全存储</strong>：敏感数据（会话令牌、密码、密钥）被安全存储（iOS Keychain 或 Android EncryptedSharedPreferences/Keystore），绝不放在明文文件、普通 SharedPreferences 或未加密的本地数据库中。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>生物识别</strong>：生物识别登录（FaceID、TouchID、BiometricPrompt）以密码学为后盾，需要通过生物识别验证才能解锁安全的加密密钥，而不是只返回一个可被绕过的布尔值。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>越狱与 Root 检测</strong>：在本地实现设备环境检查（Android 上辅以 Google Play Integrity），当应用运行在被破解/已 root/已越狱的设备上时，阻断或优雅降级应用功能。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>证书固定与 SSL</strong>：完全禁用 SSL/TLS 明文流量。在关键端点上实现公钥固定（SPKI 哈希，即服务器公钥的指纹），并配置有效的备用 pin。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>备份排除</strong>：敏感的私有目录文件（数据库文件、令牌偏好设置）被明确排除在 iOS iCloud/iTunes 自动备份和 Android ADB/Google Drive 备份之外。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>深链与 URL Scheme 校验</strong>：来自深链（deep link）、Universal Links 和 App Links 的输入被视为不可信，经过清洗和彻底校验。使用安全的 Universal Links（iOS）和经过验证的 App Links（Android），取代容易被劫持的自定义 scheme。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>认证与会话安全流程</strong>：采用 OAuth 2.1 或带 PKCE 的 OIDC 等标准现代流程（PKCE 是一次性证明，可防止被盗的登录码被重用），不硬编码客户端密钥。强制执行会话超时，并在登出或会话过期时彻底销毁所有本地令牌、数据库和缓存。</li>
+</ul>
+
+<h3 id="元数据与商店详情页">元数据与商店详情页</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用名称、描述和截图与应用的实际功能一致。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />截图展示应用使用中的画面，而不是启动页或登录页。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />截图取自本构建，覆盖你支持的每个设备系列；如果应用运行在 iPad 上，则包含 iPad。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />截图、预览视频或描述中出现的每个价格，都与商店和你的后端今日实际收取的价格一致。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用预览视频只使用应用本身的屏幕录制，不拍手部操作，也不用来自应用外的素材（Apple 2.3.4）。有开发者报告预览视频套上设备边框会被拒审，因此不要这样做。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />创意素材（产品页头图、搜索结果配图）展示应用或其品牌，适合所有受众，且不含价格、折扣、无法证实的宣称或对其他应用的提及（Apple 2.3.14，2026 年 10 月 16 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />名称、副标题或描述中没有关键词堆砌。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />年龄或内容分级问卷如实作答。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />不提及另一平台，也不提及第三方商店（marketplace）。</li>
+</ul>
+
+<h3 id="变现">变现</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />数字商品使用官方商店的支付通道。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />订阅条款、续订、收费和取消在购买前均已披露。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />免费试用或首次优惠（intro offer）的文案只向仍符合条件的用户展示（StoreKit 2 的 <code class="language-plaintext highlighter-rouge">isEligibleForIntroOffer</code>），并说明试用期结束后将收取的费用。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />开箱（loot box）或随机奖励在购买前公示概率。</li>
+</ul>
+
+<h2 id="apple-专属">Apple 专属</h2>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />审核备注（Notes for Review）解释了每个不明显的功能和每个应用内购买。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />没有隐藏、休眠或未记录在案的功能，也没有会在应用审核（App Review）未曾见过的情况下开启功能的远程开关（Apple 2.5.19，诱饵调包（bait-and-switch），2026 年 10 月 16 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />隐私营养标签与应用的真实数据收集及所用 SDK 一致。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />在任何跨应用跟踪发生之前，已实现应用跟踪透明度（App Tracking Transparency，ATT）弹窗。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />第三方社交登录配有同等保护隐私的替代选项，例如通过 Apple 登录（Sign in with Apple）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />没有私有 API，没有已弃用的框架，支持当前操作系统。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />没有下载后可改变应用功能的代码。服务器端的变更应是数据，而非代码。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />声明的后台模式与应用的实际行为一致。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />新的年龄分级问卷（13+、16+、18+）已为每个应用作答。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />任何可能产生敏感内容的 AI 功能都设有年龄限制。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />与第三方 AI 共享的任何个人数据都有同意弹窗，写明提供方和数据类型。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />受监管类别的应用以法定实体提交，并在需要时做了地区限制。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用名称不超过 30 个字符。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用审核联系电话采用带国家/地区码的国际格式，例如 +852，而不是仅有数字。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />首个消耗型内购、首个非消耗型内购、首个自动续期订阅和首个非续期订阅，都各自随一个新的应用版本一起提交，绝不单独加到已过审的版本上。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />截图包含：至少一张 iPhone 灵动岛（Dynamic Island）机型（中等显示屏）的截图；若应用支持 iPadOS，至少一张 iPad 13 英寸截图；watch 应用则在每个本地化语言中统一使用同一 Apple Watch 尺寸，并对照最新的 App Store Connect 规格页面核对。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />iPhone Duo（APPLE-IPHONE-DUO-LAUNCH，2026 年 10 月 23 日出货）。使用 Xcode 27.1 和 iOS 27.1 SDK 构建，并在 Duo 模拟器中检查外屏、内屏展开、内屏部分折叠三种形态下的每个旋转方向。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />iPhone Duo 截图已上传到 App Store Connect（2026 年 10 月 5 日起接受，可获得 optimized for iPhone Duo 徽章）。自 2027 年 4 月起，任何使用 iOS 27.1 SDK 或更高版本的应用都必须提供（APPLE-IPHONE-DUO-SCREENSHOTS-REQ）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />iPhone Duo 布局。布局来自 size classes 和 scene bounds，绝不依赖 <code class="language-plaintext highlighter-rouge">userInterfaceIdiom</code>、<code class="language-plaintext highlighter-rouge">UIInterfaceOrientation</code> 或固定屏幕尺寸。自定义视图避开保留区域（摄像头和折痕）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />iPhone Duo 栏式控件。导航栏、工具栏和标签栏都来自系统导航容器，且每个工具栏项都同时具有图标和标题，以便垂直呈现。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />构建满足 SDK 底线要求：当前为 26 SDK，自 2027 年 4 月起为 27 SDK。</li>
+</ul>
+
+<h2 id="google-play-专属">Google Play 专属</h2>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />数据安全（Data safety）表单与应用运行时的真实数据行为一致，包括每个 SDK。这是排名第一的拒审原因。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个敏感权限都有一个符合条件的核心使用场景和所需的申报。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />后台定位、所有文件访问、短信、通话记录和 AccessibilityService 各自对应一个可见的核心功能，否则移除。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用使用当前要求的 Android 目标 API 级别（target API level）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />对于新的个人开发者账号，至少 12 名测试人员、连续 14 天的封闭测试已完成。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用内数字商品使用 Play Billing。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />IARC 内容分级问卷已填写完整。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />商店详情页没有应用兑现不了的宣称。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />儿童应用遵循 Families 政策，只使用通过 Families 认证的广告 SDK。</li>
+</ul>
+
+<h2 id="欧盟专属法律层若应用触达欧盟用户">欧盟专属（法律层，若应用触达欧盟用户）</h2>
+
+<p>通过应用审核不等于应用在欧盟合法。完整的硬性规则和来源见<a href="/docs-cn/app-store-compliance/EU-REGULATORY-2026.html">欧盟监管指南</a>。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />DSA 商家身份（trader status）已在 App Store Connect 中声明并验证。缺少声明会导致应用从欧盟 App Store 下架（Apple 已于 2025 年 2 月 17 日开始执法）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />任何触达欧盟用户的 AI 功能，都在首次交互时或之前显示应用内提示，告知用户正在与 AI 交互（EU AI Act Article 50(1)，2026 年 8 月 2 日生效）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />AI 生成的音频、图像、视频或文本带有可机器读取且可见的 AI 生成标记（Article 50(2) 与 50(4)）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />构建或运营该 AI 功能的团队留有简短的 AI 素养（AI literacy）记录（Article 4，自 2025 年 2 月 2 日起适用）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />不发布任何被禁止的 AI 行为——操纵、被禁止的情绪推断、生物识别分类（Article 5，自 2025 年 2 月 2 日起适用）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />与第三方 AI 共享的个人数据有同意弹窗，写明提供方和数据类型，并在数据离开设备之前显示（Apple 审核指南 5.1.2(i) 条，2025 年 11 月 13 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />应用符合 EN 301 549 和 WCAG 2.1 AA，并在条款与条件或同等文件中发布附件 V（Annex V）无障碍信息（European Accessibility Act，Directive (EU) 2019/882 Article 13(2)，2025 年 6 月 28 日生效）。VoiceOver 标签、Dynamic Type、对比度和 Reduce Motion 均已覆盖。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />如果应用在欧盟提供替代支付或应用外优惠（out-of-app offers），则已声明 StoreKit External Purchases or Offers Entitlement，已接好披露面板，应用内购买（如提供）与它同时展示且至少同等醒目，所选选项保持 12 个月不变，且月度报告已接好（DMA，2026 年 10 月 1 日起的 Attachment 14 条款）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />未成年人在欧盟替代支付中受到保护。儿童（Kids）分类的应用，以及低于店面（storefront）家长同意年龄（13 岁，或已设置更高年龄则从其规定）的用户，只有在家长闸门（parental gate）之后才能使用替代支付。儿童分类的应用不能在网站上提供应用外购买，低于该年龄的用户完全看不到应用外优惠。年龄稍大的未成年人同样只有在家长闸门之后才能使用这两者。</li>
+</ul>
+
+<h2 id="全球专属美国及其他市场若应用触达这些用户">全球专属（美国及其他市场，若应用触达这些用户）</h2>
+
+<p>完整的硬性规则和来源见<a href="/docs-cn/app-store-compliance/GLOBAL-REGULATORY-2026.html">全球监管指南</a>。这是应用审核之上的法律层要求。若干日期仍在诉讼之中，请对照所引来源逐条复核。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />面向儿童或 13 岁以下用户的数据。COPPA 可验证的家长同意（verifiable parental consent）、针对广告或第三方披露的单独选择加入（opt-in）、书面的数据保留政策和书面的安全计划（总体合规日期为 2026 年 4 月 22 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />美国各州 App Store 问责法案（App Store Accountability Acts，犹他、得克萨斯、路易斯安那、亚拉巴马）。应用向商店请求年龄类别，为未成年人确认家长同意，并在发生重大变更时重新请求，通过 Declared Age Range API（iOS）或 Play Age Signals API（Android）接入（Android 侧须严格遵守 ToS：禁止将年龄数据用于广告、营销、用户画像或分析）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />年龄分级设置为 4+、9+、13+、16+ 或 18+，绝不为 Unrated（未分级），问卷须在 2026 年 1 月 31 日前重新作答。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />美国店面的外链无需 entitlement、无需披露面板即可使用，但不提供应用内替代支付，且佣金问题视为尚未定论。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />加利福尼亚州及美国各州隐私。隐私政策、收集时告知（notice at collection）、知情、删除、更正、”Do Not Sell or Share”、”Limit Use of Sensitive PI”，以及尊重 Global Privacy Control。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />生物识别。采集前取得书面同意，公开保留与销毁时间表，且不出售（伊利诺伊州 BIPA、得克萨斯州 CUBI）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />健康应用。先看 HIPAA 这道门槛，否则适用 FTC Health Breach Notification Rule，泄露须在 60 天内通知。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />已处理巴西、澳大利亚和新加坡的 18 岁以上下载门槛，以应对 Apple 2026 年 2 月 24 日的批次要求，以及 Google Play 自 2026 年 3 月 17 日起面向巴西、通过 Play Age Signals API 推行的 Digital ECA 年龄核验。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />英国 Online Safety Act：对可能面向儿童的服务启用高度有效年龄核验（Highly Effective Age Assurance）和儿童准则（Children’s Code）默认设置。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />澳大利亚：年龄受限社交媒体平台的 16 岁以下年龄核验。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />韩国：若使用替代计费，须使用仅在韩国分发的二进制包，且支付服务方已获批准。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />中国：以本地实体完成 MIIT 应用备案；游戏还需 PIPL 合规和版号（Banhao）许可。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />中国大陆 App Store。在”App 合规”（App Compliance）中，账号持有人（Account Holder）或管理员（Admin）须为该店面上的每个应用回答”AI 生成或合成内容”（AI-Generated or Synthetic Content）和”安全评估”（Security Assessment）两项问题，功能不存在、已禁用或按地区屏蔽时也要回答”否”。回答”是”时须附已批准的备案号和备案名称；当 AI 功能由他人的技术驱动时，附授权或使用协议；安全评估则附一张全国互联网安全管理服务平台显示通过的截图，以及加盖公司公章的报告。既有应用必须在 2027 年 1 月 31 日前完成并验证通过，才能继续上架。验证成功之前，应用可以在其他地区发布，而中国大陆保持不可用（<a href="https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/">Apple</a>）。</li>
+</ul>
+
+<h2 id="平台机制门槛两个商店若条目适用">平台机制门槛（两个商店，若条目适用）</h2>
+
+<p>带日期来源的完整细节见<a href="/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html">平台机制指南</a>。这些是各基础拒审地图未收录、当前常见且会造成阻塞的原因。</p>
+
+<p>Apple。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />在 Mac App Store 之外分发的 macOS 应用已用 Developer ID 签名并启用 hardened runtime，已用 <code class="language-plaintext highlighter-rouge">notarytool</code> 公证，并用 <code class="language-plaintext highlighter-rouge">stapler</code> 附上公证票据。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />不是薄壳应用（审核指南 4.2 条），也不是重复、克隆或无差异的饱和品类应用（审核指南 4.3 条，2026 年 6 月收紧）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />使用 External Link Account Entitlement 的阅读类应用满足 3.1.3(a) 的每一项条件和链接规则，且在使用该 entitlement 期间不提供应用内购买。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />如果应用使用非豁免加密并在法国 App Store 上架，已在 App Store Connect 上传法国 ANSSI 加密申报。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />App Store Connect 的内容版权问题已作答，任何第三方内容都能提供权利证明。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />visionOS App Motion 已申报，且 watchOS 和 tvOS 在 2026 年 4 月 28 日前改用 platform-26 SDK 和 Xcode 26 构建。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />在巴西分发的固定赔率投注应用在 App Review Information 中提供有效的 Secretariat of Prizes and Bets（SPA）牌照，通过问卷把巴西年龄分级设为 A18，并以新的应用版本提交核验（2026 年 5 月 8 日起）。</li>
+</ul>
+
+<p>Android。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />如果应用分发到巴西、印度尼西亚、新加坡或泰国，开发者身份已完成验证（2026 年 9 月 30 日起要求），且每个 Play 包名都已在 Play Console 登记。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个前台服务都在清单（manifest）中声明了 <code class="language-plaintext highlighter-rouge">foregroundServiceType</code> 及匹配的权限，且每种类型都已在 Play Console 申报并附演示视频。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />不使用 SafetyNet Attestation。鉴证（attestation）使用 Play Integrity API，并在服务端验证。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Play Billing Library 为版本 8 或更高（2026 年 8 月 31 日起对新应用和更新作此要求，可延期至 2026 年 11 月 1 日），且数字商品经由 Play Billing。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />新应用和更新的 <code class="language-plaintext highlighter-rouge">targetSdkVersion</code> 不低于 36（2026 年 8 月 31 日起要求，可延期至 2026 年 11 月 1 日）。Wear OS 和 Android Automotive OS 不低于 35，Android TV 和 Android XR 不低于 34。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />没有出现在启动时或任务中途的意外全屏插页广告，且每个插页广告都能在 15 秒内关闭。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />健康应用具备 Health Apps Declaration、每个 Health Connect 权限的核心功能正当性说明、迁移后的 Organization Account，以及正确的医疗器械标签或免责声明。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />受支持国家/地区的真金游戏应用具备所需牌照或自我声明、地区限制、年龄门槛，并遵守 Play Age Signals API 的相关条款。</li>
+</ul>
+
+<p>跨领域通用项。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />面向美国的用户生成内容（UGC）应用，在实际知情后有书面的 NCMEC CyberTipline 上报路径，以及 1 年期的数据保存政策。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />UGC 或社交应用具备内容过滤、应用内举报和拉黑、公开联系方式，以及 24 小时移除并封禁机制（Apple 1.2）；社交（Social）和交友（Dating）类目另需满足 Google Play Child Safety Standards 的各项要求。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />支持注册账号的应用同时具备应用内账号与数据删除流程，以及一个公开可访问的网页删除 URL，且已申报。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />不在 OFAC SDN 名单上，且国家/地区可用范围不含被禁运地区。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />在叙利亚发布。EAR 管辖权、分类，以及所依据的许可例外或许可均已书面记录（15 CFR 746.9）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />实物商品的非商店银行卡支付在欧盟或英国实现了 PSD2 SCA 和 3D Secure，不存储卡号，并确定了正确的 PCI SAQ（即与该应用收款方式相匹配的银行卡行业自评估表）。</li>
+</ul>
+
+<h2 id="防止最多拒审的两项检查">防止最多拒审的两项检查</h2>
+
+<p>两项检查能阻止两个商店的大多数拒审：一个后端真实可用的有效演示账号，以及一份与真实运行时行为（包括 SDK）一致的隐私声明。如果其他都不验证，也要验证这两项。</p>
+
+<h2 id="账号与开发者计划就绪2026-年-9-月新增">账号与开发者计划就绪（2026 年 9 月新增）</h2>
+
+<p>以上检查假定开发者账号能够提交。在 2026 年，这个假设失效的频率之高，值得提前规划。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Apple Developer Program 会员资格显示 Active 而非 Pending。注册与身份验证要花两到六周，部分账号的身份证件上传链接会失效，Developer Support 的回复需要数天。请在首次提交前六周完成注册（<a href="https://developer.apple.com/forums/thread/817247">Apple Developer Forums</a>、<a href="https://developer.apple.com/forums/thread/816626">thread 816626</a>）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每一份 Apple Developer Program License Agreement 的更新和附件都由账号持有人接受。Attachment 12（巴西）截止日期为 2026 年 7 月 6 日，Attachment 14（欧盟）须在 2026 年 10 月 1 日前接受。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />任何个人账号转组织账号（individual-to-organization）的迁移都已提前一个季度启动（2026 年 9 月 1 日有报告称一次迁移已开放 61 天仍在进行）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />上传新版本之前，已在 App Store Connect 中回答社交媒体能力问题。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />如果应用属于金融、健康、VPN 或政府类，Google Play 账号类型为 Organization 并带有 D-U-N-S 号码（2026 年 9 月 30 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />每个已分发的 Play 包名都已为 Android 开发者验证完成登记（2026 年 9 月 30 日）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Play 内容分级问卷已填写完整且为最新（不允许未分级的应用）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />如果已加入美国替代计费或外链计划，交易上报已为 2026 年 10 月 1 日接好。</li>
+</ul>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/PRE-SUBMISSION-CHECKLIST.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

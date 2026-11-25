@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>应用为什么会被拒：根因分类与申诉实战手册 | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="应用为什么会被拒：根因分类与申诉实战手册" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="应用为什么会被拒：根因分类与申诉实战手册" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"应用为什么会被拒：根因分类与申诉实战手册","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>拒审很少是因为不了解规则。真正的成因是流程上的缺口，让一条已知规则漏了过去。本文档点名了反复出现的拒审模式、每种模式背后的人为根因，以及能防住它的纪律。最后给出申诉实战手册，供拒审仍然落到头上时使用。</p>
+
+<h2 id="根本教训">根本教训</h2>
+
+<p>商店审核员是一道对抗性的集成测试：只跑一次、跑在真机上、看不到你的意图、也没有耐心陪你完成配置。每一个被拒审吓了一跳的开发者，都犯了同一个错误——他们把全部优化都投在”构建应用”上，把提交当成最后的走形式，而提交本身就是一场有自身前置条件的测试。修复方法是：把审核标准前移到流程开头，把每一条都当成发布阻塞项，而不是最后一公里的清单。</p>
+
+<h2 id="八大根因模式">八大根因模式</h2>
+
+<h3 id="1-不可见的功能">1. 不可见的功能</h3>
+<p>根因：审核员触达不到某个功能，于是拒掉了自己看不见的东西。没有演示账号的登录墙、为了省成本在审核期间停掉的后端、藏在审核员不会购买的付费墙后面的功能、地区锁定的流程。</p>
+
+<p>纪律：提交时提供可用的演示账号和在线后端。在审核备注（Notes for Review）字段里把每一条不明显的路径都走一遍。审核员够不到的东西，就等于不存在。</p>
+
+<h3 id="2-声明不一致">2. 声明不一致</h3>
+<p>根因：应用在运行时的实际行为与声明不符。Apple 隐私营养标签或 Google 的数据安全（Data safety）表单写的是一回事，某个 SDK 实际干的是另一回事。用途字符串（purpose string）写得含糊。商店详情页承诺了构建版本里没有的功能。</p>
+
+<p>纪律：对照每一份声明，审计实际的运行时数据流，包括每一个第三方 SDK。声明就是契约。让应用严格兑现它。</p>
+
+<h3 id="3-支付捷径">3. 支付捷径</h3>
+<p>根因：试图绕开商店对数字商品的佣金，把支付引到官方计费之外。许可证密钥、外部结账、加密货币，或指向应用内数字内容的网页链接。</p>
+
+<p>纪律：所有数字商品一律使用 Apple 应用内购买（In-App Purchase，IAP）和 Google Play Billing，除非应用属于有据可查的豁免类别。把佣金当作分发的成本，而不是要绕开的 bug。</p>
+
+<h3 id="4-网页薄壳">4. 网页薄壳</h3>
+<p>根因：把一个网站装进原生壳里就上架，没有任何附加价值。应用只是一个 WebView、一个营销页面，或一组链接。审核指南 4.2 条和 Google 的最低功能政策都会拒掉这种做法。</p>
+
+<p>纪律：加入真正的原生能力、离线价值、设备集成，或网页版没有的内容。如果应用除了网站之外什么都没做，它就还没准备好。</p>
+
+<h3 id="5-垃圾应用特征">5. 垃圾应用特征</h3>
+<p>根因：提交大量近乎相同的应用；为不同变体重复注册 bundle ID；经销商批量产出的模板应用或生成应用；在饱和品类里做一个低投入的克隆。审核指南 4.3 条和 Google 的垃圾内容政策都会抓到这种行为，而且两家都会升级为账号层面的处置。</p>
+
+<p>纪律：一个概念只做一个应用，变体作为应用内内容处理。如果一个内容方拥有多个品牌资产，由该方统一提交，或做一个单一的选择器（picker）应用。</p>
+
+<h3 id="6-权限抢夺">6. 权限抢夺</h3>
+<p>根因：申请敏感权限，却没有与之匹配的核心功能。后台定位、所有文件访问权、短信或通话记录、用于数据收集的 AccessibilityService。Google 会因为缺少合格的使用场景而拒掉权限本身，Apple 则会拒掉含糊的用途字符串。</p>
+
+<p>纪律：只申请最小集合。每个敏感权限都必须能追溯到一项可见的核心功能，附上具体的理由说明，并在有要求时填写平台的声明表单。</p>
+
+<h3 id="7-缺失的出口">7. 缺失的出口</h3>
+<p>根因：应用收集数据或创建账号，却不给用户退路。支持注册账号的应用没有应用内账号删除；无法撤回同意；没有隐私政策；社交令牌存放在设备之外。</p>
+
+<p>纪律：每一个会创建账号的应用都需要应用内账号删除。每一次数据收集都需要同意和撤回路径。隐私政策必须存在、可达且准确。</p>
+
+<h3 id="8-叠加式重复提交">8. 叠加式重复提交</h3>
+<p>根因：把拒审当成抛硬币，原样重提同一个构建，指望换一个审核员。在 Google，这是从拒审走向停权、再走向账号终止的最快路径。</p>
+
+<p>纪律：在没有处理被引用的审核指南之前，绝不重新提交。读懂那条规则的确切原文，修掉成因，然后在 Resolution Center 或 Play 申诉里说明改了什么。</p>
+
+<h2 id="绝对不能犯的头号错误">绝对不能犯的头号错误</h2>
+
+<ol>
+  <li>账号类应用没有一个可用的演示账号就提交。</li>
+  <li>审核期间让后端宕机，或一直停在预发布环境。</li>
+  <li>隐私营养标签或数据安全（Data safety）表单与实际使用的 SDK 对不上。</li>
+  <li>权限用途字符串写得空泛，说不出真实理由。</li>
+  <li>会创建账号的应用没有应用内账号删除。</li>
+  <li>在应用内购买或 Play Billing 之外销售数字商品。</li>
+  <li>开箱（loot box）或随机奖励未公布概率。</li>
+  <li>截图用启动屏或登录页，而不是应用的实际使用画面。</li>
+  <li>在名称、副标题或描述里堆砌关键词。</li>
+  <li>Apple 平台上的第三方社交登录没有隐私友好的替代方案。</li>
+  <li>后台定位或所有文件访问权，却没有合格的核心功能支撑。</li>
+  <li>上架没有任何附加价值的网页薄壳。</li>
+  <li>重复的 bundle ID，或大量近乎相同的模板应用。</li>
+  <li>新的个人账号跳过 Google”12 名测试员、14 天”的封闭测试。</li>
+  <li>没有面向当前要求的 Android 目标 API 级别。</li>
+  <li>AI 功能在没有年龄限制的情况下产出敏感内容。</li>
+  <li>把个人数据交给第三方 AI，却没有指明服务商的同意弹窗。</li>
+  <li>2026 年更新前没有填写 Apple 新的年龄分级问卷。</li>
+  <li>应用内或元数据里出现对其他平台或第三方商店的提及。</li>
+  <li>拒审后原样重提未改动的构建。</li>
+</ol>
+
+<h2 id="申诉实战手册">申诉实战手册</h2>
+
+<p>拒审是可以挽回的。一次糟糕的申诉会把一次拒审变成一次记过。</p>
+
+<h3 id="appleresolution-center">Apple：Resolution Center</h3>
+
+<ol>
+  <li>读懂 Apple 引用的审核指南条目编号。拒审通知里写明了。</li>
+  <li>如果是误会，在 Resolution Center 里回复精确的解释、截图或录屏，以及演示路径。要基于事实、具体明确。</li>
+  <li>如果确实是问题，先修好，再在回复里准确说明改了什么、改在哪里。</li>
+  <li>如果你认为审核员对规则的解读有误，可以升级到 App Review Board。慎用，且只在有证据时使用。</li>
+  <li>永远不要争论规则的精神。直接回应被引用的那条审核指南。</li>
+</ol>
+
+<h3 id="googleplay-console-申诉">Google：Play Console 申诉</h3>
+
+<ol>
+  <li>执法邮件里写明了所依据的政策，并附申诉指引。使用那个链接。</li>
+  <li>准确说明应用做什么、为什么合规、改了什么（如有）。</li>
+  <li>先修声明不一致。当拒审引用的是数据安全（Data safety）不一致、某个 SDK 或某项权限时，改正表单或移除出问题的 SDK 或权限，而不是去争辩。</li>
+  <li>不要并行重提同一个被拒的构建。那只会叠加记过。</li>
+  <li>对于账号层面的处置，申诉是唯一渠道。要完整、诚实，因为第二次走错可能就是终点。</li>
+</ol>
+
+<h3 id="申诉的通用法则">申诉的通用法则</h3>
+
+<p>回应被引用的那条规则、给出证据、必要时更新构建，然后一次性把所有内容回复完。速度来自精确，而不是来自堆量。</p>
+
+<h2 id="真实拒审案例">真实拒审案例</h2>
+
+<p>有名有姓的真实拒审，比抽象规则更能说明问题。以下案例来自开源社区整理的合集。</p>
+
+<ul>
+  <li>Halide，一款获得 Apple Design Award 的相机应用，被拒是因为它没有说明应用为什么使用相机。连打磨到位、拿过奖的应用都会栽在权限用途检查上。这正是”缺失的出口”和”用途字符串含糊”两种模式的现实版。</li>
+  <li>iDOS，一个 DOS 模拟器，收到过 App Store 下架。模拟器处在有争议的品类，即便已经上架过一段时间也可能被下架。品类风险是真实存在的，而且可能在过审之后才到来。</li>
+  <li>一款七年没有更新的游戏因”过时”被移除。过审不是永久状态。一款相对当前要求已经陈旧的应用，也可能被下架。</li>
+  <li>一位开发者在一个 iOS 应用名下提交了 macOS 构建，结果被拒。平台和目标规则是严格的。Mac 构建是独立的目标，有自己的一套规则。</li>
+</ul>
+
+<p>四个案例的共同教训：过审是一个时刻，而不是一种状态。规则在提交时适用，之后持续适用，所以用途字符串、品类匹配度和当前 SDK 都必须在应用的整个生命周期内保持正确。</p>
+
+<h2 id="如何将其落地">如何将其落地</h2>
+
+<p>把提交前清单纳入每次发布的”完成的定义（definition of done）”。每次上传前运行自动化守卫。把这份分类法放进代码评审，让评审者能点出某处改动可能触发的模式。目标是：本文档里的任何一条拒审成因，都不至于在人工或钩子尚未拦截的情况下就走到提交。</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/MISTAKE-PATTERNS.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Platform Mechanics Hard Rules (2026). Apple and Android | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Platform Mechanics Hard Rules (2026). Apple and Android" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Platform Mechanics Hard Rules (2026). Apple and Android" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Platform Mechanics Hard Rules (2026). Apple and Android","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>This document covers the platform-mechanics and newer-policy gaps that sit alongside the legal layer (<a href="/docs-cn/app-store-compliance/EU-REGULATORY-2026.html">EU-REGULATORY-2026.md</a>, <a href="/docs-cn/app-store-compliance/GLOBAL-REGULATORY-2026.html">GLOBAL-REGULATORY-2026.md</a>) and the base rejection maps. These are current, common, and blocking causes that the base playbook did not carry. Every item is dated and sourced. Several dates and versions move, so re-verify against the cited source before relying on a figure. Items that could not be confirmed against a primary source are labelled unverified in the last section.</p>
+
+<h2 id="1-apple-platform-mechanics">1. Apple platform mechanics</h2>
+
+<h3 id="11-macos-notarization-for-distribution-outside-the-mac-app-store-hard">1.1 macOS notarization for distribution outside the Mac App Store (HARD)</h3>
+
+<p>An app distributed with a Developer ID (not through the Mac App Store) must be notarized or Gatekeeper blocks it. The four steps. build with every executable and dylib signed. sign with a Developer ID certificate plus a secure timestamp and the hardened runtime. submit with <code class="language-plaintext highlighter-rouge">xcrun notarytool</code> and wait for the ticket. staple with <code class="language-plaintext highlighter-rouge">xcrun stapler</code>. A bare executable cannot be notarized. it is wrapped in a ZIP, DMG, or PKG container first.</p>
+
+<ul>
+  <li>The original Developer ID Certification Authority expires on 1 February 2027 and certificates it issued stop working that day. Create a replacement from the Developer ID Certification Authority (G2) and re-sign installer packages before then. <a href="https://developer.apple.com/news/?id=w4atic4c">Apple</a></li>
+  <li>Hardened runtime is a notarization prerequisite (enable the capability and declare the needed entitlements).</li>
+  <li>The signing form is <code class="language-plaintext highlighter-rouge">codesign --options runtime --timestamp -s "Developer ID Application: NAME (TEAMID)" &lt;App&gt;</code> (the <code class="language-plaintext highlighter-rouge">--options runtime</code> flag is the hardened runtime, <code class="language-plaintext highlighter-rouge">--timestamp</code> is the secure timestamp).</li>
+  <li>Submit <code class="language-plaintext highlighter-rouge">xcrun notarytool submit &lt;container&gt; --apple-id ... --team-id TEAMID --password &lt;app-specific-password&gt; --wait</code>, then <code class="language-plaintext highlighter-rouge">xcrun stapler staple &lt;App&gt;</code>.</li>
+  <li>What breaks. an app that is not stapled fails to launch on an offline Mac, because Gatekeeper cannot fetch the ticket. an app that is not notarized at all shows the “Apple cannot check it for malicious software” or “app is damaged” dialog and is blocked on stricter policies.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution">Apple notarizing macOS software</a>, <a href="https://developer.apple.com/developer-id/">Apple Developer ID</a>, <a href="https://developer.apple.com/documentation/security/customizing-the-notarization-workflow">Apple customizing the notarization workflow</a>.</p>
+
+<h3 id="12-guideline-42-minimum-functionality-and-43-spam-or-duplicate-hard-top-rejection-bucket">1.2 Guideline 4.2 minimum functionality and 4.3 spam or duplicate (HARD, top rejection bucket)</h3>
+
+<ul>
+  <li>4.2 Minimum Functionality. an app includes features, content, and UI that lift it beyond a repackaged website. a thin web view or wrapper is rejected. web tech (WebView, React Native) is allowed only when the result feels native and has lasting value. Placeholder or incomplete content that reads as unfinished is rejected.</li>
+  <li>4.3(a) Spam or duplicate. apps that provide the same feature set as other apps and only vary in content or language are treated as spam. Submitting multiple similar apps, or repackaging one app many times, triggers this.</li>
+  <li>4.3(b) Copycat. cloning or imitating another developer’s app.</li>
+  <li>June 2026 tightening. Apple strengthened 4.3 and named saturated categories (dating, flashlight, sound effects, wallpaper, simple timers, fortune telling). New submissions in these categories are not accepted unless they offer a materially different or improved experience, and Apple may remove existing apps in these categories that are not updated, improved, or attracting customers.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/app-store/review/guidelines/">Apple App Review Guidelines</a>, <a href="https://developer.apple.com/news/?id=a233fmpw">Apple 8 June 2026 guideline update, 4.3(b) clarified with examples</a>, <a href="https://www.macrumors.com/2026/06/09/app-store-guidelines-low-quality-apps/">MacRumors on the 4.3 saturation tightening</a>.</p>
+
+<h3 id="13-reader-apps-the-external-link-account-entitlement-guideline-313a">1.3 Reader apps, the External Link Account Entitlement (Guideline 3.1.3(a))</h3>
+
+<p>A reader app provides magazines, newspapers, books, audio, music, or video as its primary function. The optional External Link Account Entitlement lets it include one informational link to a developer-owned site to create or manage an account. Conditions to qualify. the eligible content is the primary function. sign-in to an externally-created account. access to previously purchased content when signed in. NO in-app purchase offered while the entitlement is used. no real-time person-to-person services (tutoring, medical, fitness). Link rules, all required. links to a site you own. opens the default browser in a new window, not a web view. https scheme with no query or extra URL parameters. no redirects. defined statically in Info.plist before submission. shown once per page with standard HTML styling. Entitlement identifier <code class="language-plaintext highlighter-rouge">com.apple.developer.storekit.external-link.account</code> (iOS 16 or later). earlier OS uses Apple’s exact modal sheet.</p>
+
+<p>Source. <a href="https://developer.apple.com/support/reader-apps/">Apple reader apps</a>.</p>
+
+<h3 id="14-france-anssi-encryption-declaration-beyond-itsappusesnonexemptencryption">1.4 France ANSSI encryption declaration (beyond ITSAppUsesNonExemptEncryption)</h3>
+
+<p>Apple’s export-compliance documentation matrix.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Encryption in use</th>
+      <th>Documentation required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apple OS crypto only</td>
+      <td>none in App Store Connect</td>
+    </tr>
+    <tr>
+      <td>An industry-standard algorithm not provided by Apple’s OS</td>
+      <td>upload a French encryption declaration in App Store Connect, if distributing in France</td>
+    </tr>
+    <tr>
+      <td>A proprietary algorithm not accepted by IEEE, IETF, or ITU</td>
+      <td>upload both a US CCATS and the French encryption declaration</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The French declaration is required only when distributing on the French App Store, uploaded in App Store Connect, and the authority is ANSSI. Banking and Medical apps are exempt. <code class="language-plaintext highlighter-rouge">ITSAppUsesNonExemptEncryption</code> in Info.plist avoids re-answering the encryption question each submission. Note. the US annual self-classification report to BIS is an EAR obligation, not an App Store Connect field, so it is an external legal item to track, not a store check.</p>
+
+<p>Source. <a href="https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption/">Apple export compliance documentation for encryption</a>.</p>
+
+<h3 id="15-content-rights-declaration-in-app-store-connect-maps-to-guideline-52">1.5 Content-rights declaration in App Store Connect (maps to Guideline 5.2)</h3>
+
+<p>App Store Connect asks, before each submission, whether the app contains, shows, or accesses third-party content. If yes, the developer must hold the rights under the laws of each country the app is available in, and must be able to provide proof of rights to Apple (attach supporting documents in App Review notes). Source. <a href="https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/">Apple App Information reference</a>.</p>
+
+<h3 id="16-visionos-watchos-and-tvos-submission-specifics">1.6 visionOS, watchOS, and tvOS submission specifics</h3>
+
+<ul>
+  <li>visionOS App Motion. if the app contains movement such as quick turns or sudden camera changes, indicate it in App Store Connect. the product page then shows a motion badge for motion-sensitive users.</li>
+  <li>visionOS Developer Capture. screenshots and previews use the Developer Capture feature in Reality Composer Pro, not a Control Center screen recording (which is foveated and low resolution).</li>
+  <li>SDK minimums, effective 28 April 2026. watchOS apps build with the watchOS 26 SDK, tvOS apps with the tvOS 26 SDK, all with Xcode 26, the same deadline as iOS 26 and visionOS 26.</li>
+  <li>SDK minimums, from April 2027. uploads must be built with the iOS 27, iPadOS 27, tvOS 27, visionOS 27, or watchOS 27 SDK or later. Apple has named the month and not the day, tracked as 1 April 2027 in the deadline data. macOS is not in Apple’s list. Xcode 27 shipped as a Release Candidate on 9 September 2026.</li>
+  <li>App completeness (Guideline 2.1) and the privacy declarations apply to every platform, including watchOS and tvOS. Pull the exact per-device screenshot and asset dimensions live from the App Store Connect screenshot-spec page, as they change per device. The 9 September 2026 update added iPhone Duo (outer display 1398 x 2034, inner display 2007 x 2853), iPhone 18 Pro Max (1260 x 2736), iPhone 18 Pro (1179 x 2556), Apple Watch Ultra 4 (422 x 514), and Apple Watch Series 12 (416 x 496). Since 5 October 2026 App Store Connect accepts iPhone Duo screenshots, and from April 2027 they are required for any app using the iOS 27.1 SDK or later (deadline APPLE-IPHONE-DUO-SCREENSHOTS-REQ). Today the required iPhone size is at least one screenshot for iPhone with Dynamic Island (medium display), 1179 x 2556 or 1206 x 2622 portrait, plus at least one iPad 13 inch screenshot when the app supports iPadOS, and watch screenshots use one size across every localization.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/visionos/submit/">Apple submit visionOS apps</a>, <a href="https://developer.apple.com/news/?id=ueeok6yw">Apple SDK minimums 28 April 2026</a>, <a href="https://developer.apple.com/news/?id=k1mtkt1k">Apple submissions open for the 27 OS family, April 2027 SDK floor</a>, <a href="https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications">App Store Connect screenshot specifications</a>, <a href="https://developer.apple.com/help/app-store-connect/release-notes/">App Store Connect release notes</a>.</p>
+
+<h3 id="17-in-app-events-custom-product-pages-and-the-submission-concurrency-limit">1.7 In-App Events, Custom Product Pages, and the submission-concurrency limit</h3>
+
+<ul>
+  <li>In-App Events. up to 10 live at a time, up to 15 approved per app, each reviewed as a submission item against the guidelines.</li>
+  <li>Custom Product Pages. up to 70 additional product-page versions, metadata reviewed independently of an app update and still bound by the guidelines.</li>
+  <li>Submission concurrency. a platform can have at most two submissions under review at once, one with an app version and one with items (events or custom product pages) that carry no version.</li>
+  <li>StoreKit External Purchase entitlements are region-gated. the <code class="language-plaintext highlighter-rouge">allowed-regions</code> entitlement array must match the entitlement Apple granted (EU, and South Korea for external purchase, plus the separate US external-link path). Check the presence and configuration of the entitlement, not the fee math, which is fluid.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-in-app-event/">Apple In-App Events</a>, <a href="https://developer.apple.com/app-store/custom-product-pages/">Apple Custom Product Pages</a>, <a href="https://developer.apple.com/documentation/storekit/external-purchase">Apple StoreKit external purchase</a>.</p>
+
+<h3 id="18-iphone-duo-readiness-foldable-iphone-ships-23-october-2026">1.8 iPhone Duo readiness (foldable iPhone, ships 23 October 2026)</h3>
+
+<p>Deadline ID APPLE-IPHONE-DUO-LAUNCH, tracked in issue #724. iPhone Duo has a 5.4 inch outer display and a 7.6 inch inner display joined by a hinge, a front camera on each, and launches on iOS 27.1. Pre-orders open 16 October 2026 and it ships 23 October 2026. Apple does not require a Duo rebuild to stay on the store, but an app that ignores the form factor looks broken on it.</p>
+
+<ul>
+  <li>Build. Apps built with Xcode 26 or earlier run but do not extend under the status bar and camera. Build with Xcode 27.1 (beta from 18 September 2026) and the iOS 27.1 SDK, which ships the iPhone Duo simulator. Test the outer display, the inner display fully open, the inner display partially folded, and each rotation.</li>
+  <li>Resize, never assume a size. Use size classes (compact width on the outer display, regular width on the inner) and scene or container bounds. Apple says not to use <code class="language-plaintext highlighter-rouge">userInterfaceIdiom</code> or <code class="language-plaintext highlighter-rouge">UIInterfaceOrientation</code> for layout decisions, and not to size views from fixed iPhone dimensions or screen dimensions.</li>
+  <li>Reserved regions. The outer front camera always occludes content, the inner front camera does when active, and the folding region divides the inner display when partially open. System containers (split views, navigation stacks, sheets, alerts, context menus) adapt on their own. Custom views read <code class="language-plaintext highlighter-rouge">ReservedRegion</code> from the geometry proxy in SwiftUI or the view in UIKit and move content clear of them. <code class="language-plaintext highlighter-rouge">ArrangementView</code> (SwiftUI) and <code class="language-plaintext highlighter-rouge">UIArrangementViewController</code> (UIKit) lay out a primary and secondary view around the fold.</li>
+  <li>Vertical bars. On the outer display, and for trailing views on the inner display, the system presents navigation bars, toolbars, and tab bars vertically on the side. Only bars supplied through <code class="language-plaintext highlighter-rouge">NavigationStack</code>, <code class="language-plaintext highlighter-rouge">NavigationSplitView</code>, or a navigation controller get this. A hand-built <code class="language-plaintext highlighter-rouge">UIToolbar</code>, <code class="language-plaintext highlighter-rouge">UINavigationBar</code>, or <code class="language-plaintext highlighter-rouge">UITabBar</code> does not. A toolbar item with a title and no icon, or with a custom view, is never shown vertically, so give every item both an icon and a title.</li>
+  <li>Same function in every pose. Controls can move or overflow, but the same controls and content stay reachable whether the phone is open or closed. Games may lock orientation but must fill the display as the pose changes.</li>
+  <li>Camera apps. Opening, closing, or rotating the phone can move the app to the other display and flip which way the active camera faces. Choose cameras by the direction they face.</li>
+  <li>App Store assets. Screenshot specifications exist (outer 1398 x 2034, inner 2007 x 2853, both orientations). Since 5 October 2026 App Store Connect accepts iPhone Duo optimized apps and Duo screenshots, a product page with Duo screenshots shows a badge that the app is optimized for iPhone Duo, and a preview tool in App Store Connect shows how screenshots and metadata look on Duo. From April 2027 iPhone Duo screenshots are required for any app using the iOS 27.1 SDK or later (the screenshot specification page scopes the rule to that SDK), tracked as APPLE-IPHONE-DUO-SCREENSHOTS-REQ on 1 April 2027 because Apple has named the month only. No Duo-specific App Review guideline has been published, so none is enforced here. Re-check before claiming one.</li>
+</ul>
+
+<p>Sources. <a href="https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/">Apple Newsroom, iPhone Duo announcement</a>, <a href="https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo">Preparing your app for iPhone Duo</a>, <a href="https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo">Designing for iPhone Duo (HIG)</a>, <a href="https://developer.apple.com/iphone-duo/">Get ready for iPhone Duo</a>, <a href="https://developer.apple.com/news/?id=kkphp5qo">Prepare and submit your apps for iPhone Duo, 5 October 2026</a>, <a href="https://developer.apple.com/help/app-store-connect/release-notes/">App Store Connect release notes</a>, <a href="https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications">Screenshot specifications</a>.</p>
+
+<h2 id="2-google-play-and-android-mechanics">2. Google Play and Android mechanics</h2>
+
+<h3 id="21-android-developer-verification-identity-all-android-apps-including-sideloaded">2.1 Android developer verification (identity, all Android apps including sideloaded)</h3>
+
+<p>A device-level service checks whether an installed app is registered to a verified developer identity, for all Android apps on certified devices, including sideloaded and alternative-store apps, not only Play Store apps. Timeline. verification opened to all developers in March 2026. the verifier service began auto-installing on devices in June 2026. registration by a verified developer becomes required to install or update apps on certified devices in Brazil, Indonesia, Singapore, and Thailand from 30 September 2026, with participating stores including Google Play, Samsung, Xiaomi, and others. global rollout follows in 2027. A student or hobbyist can use a limited distribution account to share to up to 20 devices without a government ID or fee. Consequence. after the deadline in a participating country, an app from an unverified developer cannot be installed or updated on certified devices through participating stores.</p>
+
+<p>Sources. <a href="https://android-developers.googleblog.com/2026/06/android-developer-verification.html">Android developer verification</a>, <a href="https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html">Android verification rolling out to all developers</a>.</p>
+
+<h3 id="22-foreground-service-types-android-14-api-34-and-later-hard">2.2 Foreground Service types, Android 14 (API 34) and later (HARD)</h3>
+
+<p>An app targeting API 34 or later that runs a foreground service must declare <code class="language-plaintext highlighter-rouge">android:foregroundServiceType</code> in the manifest AND hold the matching <code class="language-plaintext highlighter-rouge">FOREGROUND_SERVICE_*</code> permission. a missing permission throws a runtime exception and the service cannot start. Separately, the Play Console requires a foreground-service-types declaration on the App content page for each type, including a description, the user impact if deferred, a demo video, and a mapped use case. a missing Play declaration is an update rejection under the Device and Network Abuse policy. Related. <code class="language-plaintext highlighter-rouge">USE_FULL_SCREEN_INTENT</code> on API 34 or later is auto-granted only for alarm and calling apps. all others declare it in Play Console or request it at runtime and degrade gracefully.</p>
+
+<p>Sources. <a href="https://developer.android.com/about/versions/14/changes/fgs-types-required">Android FGS types required</a>, <a href="https://support.google.com/googleplay/android-developer/answer/13392821?hl=en">Play Console FGS declaration</a>.</p>
+
+<h3 id="23-play-integrity-api-and-the-safetynet-retirement-hard">2.3 Play Integrity API and the SafetyNet retirement (HARD)</h3>
+
+<p>SafetyNet Attestation is fully shut down (turndown completed 31 January 2025). all attestation and anti-abuse checks must use the Play Integrity API. An app that still calls <code class="language-plaintext highlighter-rouge">com.google.android.gms:play-services-safetynet</code> is calling a dead service. Verify the server checks the Play Integrity verdict with <code class="language-plaintext highlighter-rouge">requestHash</code> request-binding. Source. <a href="https://developer.android.com/google/play/integrity">Play Integrity API</a>.</p>
+
+<h3 id="24-play-billing-library-minimum-version-hard">2.4 Play Billing Library minimum version (HARD)</h3>
+
+<p>By 31 August 2026, all new apps and updates to existing apps must use Play Billing Library version 8 or later (an extension is available on request until 1 November 2026). This is a publishing gate, not a runtime kill switch. an already-published version-7 binary keeps transacting, but no new release, including a security patch, can ship on version 7 after the gate. Version 9 shipped in May 2026, and there is no direct version-7-to-9 jump, so migrate to version 8 first. Verify the <code class="language-plaintext highlighter-rouge">com.android.billingclient:billing</code> dependency is at least version 8 before the deadline, and that an app selling digital goods actually uses Play Billing rather than a side payment flow. Source. <a href="https://developer.android.com/google/play/billing/deprecation-faq">Android Play Billing deprecation FAQ</a>.</p>
+
+<h3 id="25-target-api-level-annual-bump-hard">2.5 Target API level (annual bump, HARD)</h3>
+
+<p>New apps and updates must target Android 16 (API 36) or later from 31 August 2026 (Play Console extension to 1 November 2026), existing apps must target API 35 or later to stay visible to new users on newer devices, Wear OS and Automotive OS must target API 35 or later, TV and XR API 34 or later. Android 17 is API 37, released 16 June 2026, and its Play policy changes land 27 January 2027 (Wear OS, Android TV, and Automotive target API 34 or later), effective 31 August 2025 with an extension window. The 2026 bump to API 36 (Android 16) for new apps and updates, reported for 31 August 2026 with a version-35 minimum for existing apps, is consistent with Google’s yearly release pattern but should be verified live on the target-sdk page before it is written as a fixed date. Verify <code class="language-plaintext highlighter-rouge">targetSdkVersion</code> is at least 35 today and plan for at least 36 by the 2026 deadline.</p>
+
+<p>Sources. <a href="https://developer.android.com/google/play/requirements/target-sdk">Android target SDK requirement</a>, <a href="https://support.google.com/googleplay/android-developer/answer/11926878?hl=en">Play Console target API help</a>.</p>
+
+<h3 id="26-disruptive-ads-and-unexpected-full-screen-interstitials-hard">2.6 Disruptive ads and unexpected full-screen interstitials (HARD)</h3>
+
+<p>The Better Ads Experiences policy bans full-screen interstitials that appear unexpectedly (for example when a user is about to read an article or is mid-task), ads at the start of a content segment or before the app’s loading screen, and full-screen interstitials that cannot be closed after 15 seconds (opt-in and rewarded ads excepted). Allowed. interstitials at a natural transition point (end of a game level or chapter), non-full-screen ads, and genuine opt-in or rewarded ads. Verify no interstitial fires at app launch or mid-task, every interstitial has a close control that works by 15 seconds, and ads do not overlay system controls or the app’s own UI.</p>
+
+<p>Sources. <a href="https://support.google.com/googleplay/android-developer/answer/9857753?hl=en">Play Console ads policy</a>, <a href="https://support.google.com/googleplay/android-developer/answer/12271244?hl=en">Play Better Ads Experiences</a>.</p>
+
+<h3 id="27-health-connect-and-health-apps-data-policy">2.7 Health Connect and health-apps data policy</h3>
+
+<p>A health app completes the Health Apps Declaration (the Health Connect declaration form enforcement began in March 2025). A January 2026 tightening added a medical-device labeling system, stricter Health Connect data justifications, and a ban on using age-restricted signals for health profiling. requesting sensitive Health Connect read permissions requires proving the data is necessary to the app’s primary function. Existing health apps migrate to a verified Organization Account by 28 January 2026. an app without regulatory clearance shows the disclaimer that it is not a medical device. Verify the declaration is complete, each Health Connect permission has a core-function justification, the Organization Account is migrated, and the label or disclaimer is correct.</p>
+
+<p>Sources. <a href="https://support.google.com/googleplay/android-developer/answer/16679511?hl=en">Play Console Health content and services</a>, <a href="https://support.google.com/googleplay/android-developer/answer/12991134?hl=en">Play Console Health Connect permissions</a>.</p>
+
+<h3 id="28-real-money-games-and-brazilian-betting-license-hard">2.8 Real-money games and Brazilian betting license (HARD)</h3>
+
+<ul>
+  <li><strong>Google Real-Money Games</strong>: Google historically allowed real-money games only where a government licensing regime exists. a 2024 pilot opened a program for real-money games not covered by an existing regime (first in India, Mexico, Brazil), then Google paused the expansion of new types citing the absence of a central approval authority in some regions. India moved toward a developer self-declaration model in mid-2025, status evolving. Verify a real-money-game app is in a supported country with an accepted license or a valid self-declaration, with the real-money-game declarations, age-gating, geo-restriction, and the correct service-fee model in place.</li>
+  <li><strong>Apple Brazilian Betting License (May 8, 2026)</strong>: Following changes to Brazil’s fixed-odds betting regulation, apps with fixed-odds betting (gambling) features can only be distributed on the App Store in Brazil with a valid fixed-odds betting license from the <strong>Secretariat of Prizes and Bets (SPA)</strong>.
+    <ul>
+      <li>Answering “Yes” to the gambling question in the age rating questionnaire in App Store Connect will automatically set the app’s Brazil age rating to <strong>A18</strong>.</li>
+      <li>To trigger the license verification process, <strong>a new app version must be submitted</strong> for review; simply updating the App Review Information section in App Store Connect alone is insufficient and will not start the verification review.</li>
+      <li>License information must be explicitly provided in the App Review Information section during the submission of the new version.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Sources. <a href="https://android-developers.googleblog.com/2024/01/a-new-approach-to-real-money-games-on-google-play.html">Google real-money games approach</a>, <a href="https://next.io/news/regulation/google-halts-rmg-expansion-on-play-store/">Google pauses RMG expansion (NEXT.io)</a>, Apple Developer News, “Brazilian betting license requirement for App Store availability” (May 8, 2026).</p>
+
+<h3 id="29-media-permissions-exact-alarm-package-visibility-and-account-deletion-url">2.9 Media permissions, exact alarm, package visibility, and account-deletion URL</h3>
+
+<ul>
+  <li>Photo and Video permissions. only an app with a genuine broad-access need keeps <code class="language-plaintext highlighter-rouge">READ_MEDIA_IMAGES</code> or <code class="language-plaintext highlighter-rouge">READ_MEDIA_VIDEO</code>. one-time or limited use uses the Android Photo Picker. full compliance was mandatory from 28 May 2025, and a non-compliant app is subject to removal.</li>
+  <li>Account deletion. an app that allows in-app account creation provides both an in-app deletion path and a web-based deletion URL, both declared in the Data safety form. an unreachable deletion URL is a frequent rejection.</li>
+  <li><code class="language-plaintext highlighter-rouge">QUERY_ALL_PACKAGES</code> (package visibility) and <code class="language-plaintext highlighter-rouge">SCHEDULE_EXACT_ALARM</code> or <code class="language-plaintext highlighter-rouge">USE_EXACT_ALARM</code> remain declaration-gated permissions that require a justification against an approved use case.</li>
+</ul>
+
+<p>Sources. <a href="https://support.google.com/googleplay/android-developer/answer/14115180?hl=en">Play Console Photo and Video permissions</a>, <a href="https://support.google.com/googleplay/android-developer/answer/13327111?hl=en">Play Console account deletion</a>.</p>
+
+<h2 id="3-cross-cutting-both-platforms">3. Cross-cutting (both platforms)</h2>
+
+<h3 id="31-csam-reporting-for-ugc-apps-legal">3.1 CSAM reporting for UGC apps (LEGAL)</h3>
+
+<ul>
+  <li>US, 18 U.S.C. 2258A. a provider that gains actual knowledge of an apparent child-sexual-abuse violation must report to the NCMEC CyberTipline as soon as reasonably possible. the provider is not required to affirmatively search, but must report on knowledge. The REPORT Act (signed 7 May 2024) raised penalties (first offense 600,000 to 850,000 dollars, pattern up to 1,000,000 dollars, scaling with provider size), expanded reportable conduct to child sex trafficking and enticement, and extended evidence preservation from 90 days to 1 year.</li>
+  <li>UK, the Online Safety Act 2023. in-scope user-to-user and search services carry illegal-harm duties including child sexual exploitation and abuse. the first illegal-content Codes took effect 17 March 2025, and the children’s-access duties from 25 July 2025. penalty up to 18 million pounds or 10 percent of global revenue.</li>
+  <li>EU, the CSA Regulation is not yet a final permanent instrument (the mandatory-scanning push was dropped for voluntary detection, trilogues ongoing). the temporary derogation that permits voluntary scanning was reinstated to run to 2028. Do not hard-code an EU mandatory-scanning duty yet. track it as pending.</li>
+</ul>
+
+<p>Verify, for a US-facing UGC app. a documented escalation path to file a NCMEC report on actual knowledge, a 1-year preservation policy for the reported content, and a reporting mechanism. Sources. <a href="https://www.law.cornell.edu/uscode/text/18/2258A">18 U.S.C. 2258A</a>, <a href="https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/">Ofcom illegal harms</a>, <a href="https://www.consilium.europa.eu/en/press/press-releases/2025/11/26/child-sexual-abuse-council-reaches-position-on-law-protecting-children-from-online-abuse/">Council CSA Regulation position</a>.</p>
+
+<h3 id="32-ugc-minimum-requirements-and-child-safety-standards-store">3.2 UGC minimum requirements and Child Safety Standards (STORE)</h3>
+
+<ul>
+  <li>Apple Guideline 1.2. a UGC or social app has all four. a content filter, an in-app report mechanism with timely responses, the ability to block abusive users, and published developer contact info. Apps must remove reported content and eject the offending user within 24 hours of a report. a 6 February 2026 update states that random or anonymous chat apps are explicitly subject to 1.2.</li>
+  <li>Google Play UGC policy. an app with UGC requires terms acceptance before posting, defines and prohibits objectionable content, provides an in-app system to report and block objectionable content and users, and acts on reports.</li>
+  <li>Google Play Child Safety Standards, effective 19 March 2025 for the Social and Dating categories. five requirements. published CSAE standards on a globally reachable web page that names the app and developer with the link entered in Play Console, an in-app feedback mechanism, a CSAM response protocol, a named child-safety point of contact, and compliance with in-jurisdiction child-safety law. this applies regardless of whether the app actually has child users, and is a removal cause for the Social and Dating categories.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/app-store/review/guidelines/">Apple App Review Guidelines</a>, <a href="https://support.google.com/googleplay/android-developer/answer/14747720?hl=en">Google Play Child Safety Standards</a>.</p>
+
+<h3 id="33-accessibility-as-a-store-review-dimension">3.3 Accessibility as a store-review dimension</h3>
+
+<p>Neither store hard-rejects for failing WCAG, so this is a medium store risk and a high legal risk (see 3.6 and the European Accessibility Act in the EU doc).</p>
+
+<ul>
+  <li>Apple Accessibility Nutrition Labels, introduced 2025, appear on the product page and cover 9 features (VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, Audio Descriptions). they are voluntary now, and Apple states they will become required to submit over time. a claimed feature must let users complete all common tasks with it. Whether App Review acts on a misleading label under Guideline 2.3 (accurate metadata) is unverified, see <a href="/docs-cn/app-store-compliance/ACCESSIBILITY.html">ACCESSIBILITY.md</a> section 11.</li>
+  <li>Google Play provides tooling, not a gate. the Accessibility Scanner and TalkBack. checkable criteria include touch targets of at least 48dp, content descriptions on all interactive and graphical elements, and TalkBack-navigable controls.</li>
+</ul>
+
+<p>Verify. Apple Accessibility Nutrition Labels populated and not over-claimed, UIAccessibility labels and traits present, and on Android the 48dp targets, content descriptions, and a clean Accessibility Scanner run. Sources. <a href="https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/">Apple Accessibility Nutrition Labels</a>, <a href="https://developer.android.com/guide/topics/ui/accessibility/testing">Android accessibility testing</a>.</p>
+
+<h3 id="34-account-and-data-deletion-the-web-url-store-commonly-missed">3.4 Account and data deletion, the web URL (STORE, commonly missed)</h3>
+
+<ul>
+  <li>Apple Guideline 5.1.1(v). an account-creating app lets users start account and associated-data deletion in-app (in force since 30 June 2022). a public web deletion or privacy-choices page is provided through the optional Privacy Choices URL in App Store Connect.</li>
+  <li>Google Play. an account-creating app provides both an in-app deletion path and a web-link resource for account and data deletion that works even after uninstall, both declared in the Data safety form. an invalid or unreachable deletion URL is a frequent rejection.</li>
+</ul>
+
+<p>Verify the in-app delete flow deletes data (not deactivate), and that a publicly reachable web deletion URL (returns 200, no login wall) is declared. Sources. <a href="https://developer.apple.com/support/offering-account-deletion-in-your-app/">Apple offering account deletion</a>, <a href="https://support.google.com/googleplay/android-developer/answer/13327111?hl=en">Google Play account deletion</a>.</p>
+
+<h3 id="35-ofac-sanctions-and-embargoed-territory-availability-legal">3.5 OFAC sanctions and embargoed-territory availability (LEGAL)</h3>
+
+<p>US sanctions prohibit providing goods or services to blocked persons and embargoed territories. Apple itself settled with OFAC for 466,912 dollars in 2019 for hosting a blocked developer’s apps, and 2025 reporting found sanctioned-linked apps slipping into both stores, so the developer’s own compliance still matters. Verify the developer or entity is not on the OFAC SDN list, and the app’s country availability in App Store Connect and Play Console excludes the embargoed territories (Cuba, Iran, North Korea, and the sanctioned regions of Ukraine). Source. <a href="https://www.techtransparencyproject.org/articles/u.s.-sanctioned-firms-find-opening-in-apple-and-google-app-stores">TTP on sanctioned apps in the stores</a>.</p>
+
+<p>Syria is no longer a comprehensively embargoed territory, but it is not unrestricted either. The OFAC Syria sanctions program ended on 1 July 2025 under Executive Order 14312, OFAC then removed the Syrian Sanctions Regulations (31 CFR Part 542), and the State Department rescinded the state sponsor of terrorism designation effective 24 August 2026. Two controls remain. First, 15 CFR 746.9 still requires a Commerce license to export or reexport to Syria any item subject to the EAR, apart from EAR99 food and medicine, with listed license exceptions that include SPP for qualifying EAR99 items and CCD for qualifying consumer communications software. So before making an app available in Syria, document whether it is subject to the EAR, its classification, and the exception or license relied on. Published software can fall outside the EAR under 15 CFR 734.3(b)(3) and 734.7, but encryption needs its own analysis, and being in an app store does not by itself make an app published. Second, the list-based Assad accountability sanctions (31 CFR Part 569) still block designated persons and any entity they own 50 percent or more of, named or not, so screen counterparties and ownership, not only the developer’s own name. Whether Apple or Google serve a Syria storefront is their own decision and separate from US law. Sources. <a href="https://www.govinfo.gov/content/pkg/DCPD-202500725/html/DCPD-202500725.htm">Executive Order 14312</a>, <a href="https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-746/section-746.9">15 CFR 746.9</a>, <a href="https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-734/section-734.7">15 CFR 734.7</a>, <a href="https://www.ecfr.gov/current/title-31/subtitle-B/chapter-V/part-569/section-569.406">31 CFR 569.406</a>, <a href="https://ofac.treasury.gov/faqs/1220">OFAC FAQ 1220</a>, <a href="https://www.govinfo.gov/content/pkg/FR-2026-08-31/html/2026-17653.htm">SST rescission, Federal Register 2026-17653</a>.</p>
+
+<h3 id="36-ada-title-iii-accessibility-litigation-legal-us">3.6 ADA Title III accessibility litigation (LEGAL, US)</h3>
+
+<p>Federal Title III web-accessibility suits rose about 27 percent in 2025, and mobile-app suits are a growing share, with WCAG 2.1 AA as the de facto court standard, though there is no DOJ Title III technical rule for private businesses. the DOJ Title II rule requires state and local government apps to meet WCAG 2.1 AA. an interim final rule (FR Doc. 2026-07663, effective 20 April 2026) moved the dates to 26 April 2027 for populations of 50,000 or more and 26 April 2028 for smaller entities, see <a href="/docs-cn/app-store-compliance/ACCESSIBILITY.html">ACCESSIBILITY.md</a> section 6. Flag WCAG 2.1 AA as a legal risk-mitigation item for US consumer apps, and a hard deadline for government or public-entity apps. Source. <a href="https://businesslawtoday.org/2025/08/digital-accessibility-under-title-iii-of-the-ada/">ABA on Title III digital accessibility</a>.</p>
+
+<h3 id="37-psd2-sca-and-pci-dss-for-card-payments-outside-store-billing-legal-and-contractual">3.7 PSD2 SCA and PCI DSS for card payments outside store billing (LEGAL and contractual)</h3>
+
+<p>These apply only to legitimate non-store card payments for real-world goods and services. digital goods and subscriptions must still route through Apple in-app purchase or Google Play Billing.</p>
+
+<ul>
+  <li>PSD2 Strong Customer Authentication. an EU or UK remote card payment for real goods needs two of three factors (knowledge, possession, inherence), usually 3D Secure, with limited exemptions (low value, transaction-risk analysis). PSD3 is expected around 2026 to 2027, so monitor.</li>
+  <li>PCI DSS version 4.0.1 is the current standard, with all future-dated requirements mandatory from 31 March 2025. tokenization or Apple Pay or Google Pay keeps the app off the card number and reduces scope to roughly SAQ A. handling raw card data pulls in far heavier requirements.</li>
+</ul>
+
+<p>Verify. if the app takes EU or UK card payments for real goods, SCA and 3D Secure are implemented. if the app handles cards, no card number is stored, logged, or cached, entry goes to a tokenizing processor or a wallet, and the correct SAQ is identified. Sources. <a href="https://stripe.com/guides/strong-customer-authentication">Stripe SCA guide</a>, <a href="https://www.pcisecuritystandards.org/wp-content/uploads/2024/10/SAQs_for_PCI_DSS_v4.0.1_Bulletin.pdf">PCI SSC SAQ bulletin for v4.0.1</a>.</p>
+
+<h2 id="4-consolidated-audit-checklist-hard-gates">4. Consolidated audit checklist (HARD gates)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Gate</th>
+      <th>Verify</th>
+      <th>Platform</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>macOS notarization</td>
+      <td>Developer ID signed, hardened runtime, notarytool submitted, stapled</td>
+      <td>Apple (non-store macOS)</td>
+    </tr>
+    <tr>
+      <td>4.2 / 4.3</td>
+      <td>Not a thin wrapper, not a duplicate or clone, not an un-differentiated saturated-category app</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>Reader app entitlement</td>
+      <td>3.1.3(a) conditions and link rules met, no IAP while used</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>France encryption</td>
+      <td>French ANSSI declaration uploaded if non-exempt crypto and distributed in France</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>Content rights</td>
+      <td>ASC third-party-content question answered, proof available</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>visionOS App Motion</td>
+      <td>Declared, Developer Capture screenshots</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>SDK 26 (all platforms)</td>
+      <td>Built with Xcode 26 and the platform-26 SDK by 28 April 2026</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>SDK 27 (all platforms except macOS)</td>
+      <td>Built with the platform-27 SDK from April 2027, exact day not yet published</td>
+      <td>Apple</td>
+    </tr>
+    <tr>
+      <td>Developer verification</td>
+      <td>Verified before 30 Sep 2026 if distributing to Brazil, Indonesia, Singapore, Thailand</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Foreground service types</td>
+      <td>Manifest type + matching permission + Play Console declaration with demo video</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Play Integrity</td>
+      <td>No SafetyNet Attestation, verdict verified server-side</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Play Billing v8+</td>
+      <td>Billing Library at least version 8 before 31 Aug 2026</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Target API</td>
+      <td>targetSdkVersion at least 35 now, plan for 36 by Aug 2026</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Disruptive ads</td>
+      <td>No launch or mid-task interstitial, closable by 15 seconds</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>Health Connect</td>
+      <td>Declaration, core-function justification, org account, correct label</td>
+      <td>Android</td>
+    </tr>
+    <tr>
+      <td>UGC controls</td>
+      <td>Report, block, filter, published contact, 24-hour remove-and-eject (Apple 1.2)</td>
+      <td>Both</td>
+    </tr>
+    <tr>
+      <td>Child Safety Standards</td>
+      <td>Published CSAE URL, in-app report, response protocol, named contact (Social and Dating)</td>
+      <td>Google Play</td>
+    </tr>
+    <tr>
+      <td>CSAM reporting</td>
+      <td>NCMEC CyberTipline path and 1-year preservation for a US UGC app</td>
+      <td>Legal</td>
+    </tr>
+    <tr>
+      <td>Account and data deletion</td>
+      <td>In-app deletion plus a reachable web deletion URL, declared</td>
+      <td>Both</td>
+    </tr>
+    <tr>
+      <td>Sanctions</td>
+      <td>Entity and owners not SDN-listed, availability excludes embargoed territories, export-control review before a Syria release</td>
+      <td>Legal</td>
+    </tr>
+    <tr>
+      <td>Card payments</td>
+      <td>SCA and 3D Secure on EU or UK real-goods card flows, no PAN stored, correct PCI SAQ</td>
+      <td>Legal</td>
+    </tr>
+    <tr>
+      <td>Accessibility labels</td>
+      <td>Apple Accessibility Nutrition Labels populated and not over-claimed</td>
+      <td>Apple</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="5-sources-and-verification-note">5. Sources and verification note</h2>
+
+<p>Apple facts cite developer.apple.com. Android and Google Play facts cite developer.android.com and the Play Console help. legal facts cite the statute, the regulator, or the standards body. Where a government or Apple page rendered as a client-side app that resisted an automated read, the fact was cross-checked across reputable sources and is flagged here.</p>
+
+<h3 id="source-trust-hierarchy">Source Trust Hierarchy</h3>
+
+<p>All sources used for establishing regulatory requirements must adhere to the following priority guidelines:</p>
+
+<ul>
+  <li>Priority 1 (Primary Official): European Commission, EUR-Lex, Official Journal of the European Union, ENISA, EDPB, FTC, NIST, CISA, ICO, and official government publications.</li>
+  <li>Priority 2 (Highly Reputable News): Reuters, AP (Associated Press), Bloomberg.</li>
+  <li>Priority 3 (Academic): Academic papers and peer-reviewed journals.</li>
+  <li>Priority 4 (Industry): Industry blogs and vendor publications.</li>
+  <li>Priority 5 (Social &amp; Unverified): LinkedIn, Reddit, Twitter, and AI generated summaries.</li>
+</ul>
+
+<h3 id="compliance-pull-request-rules">Compliance Pull Request Rules</h3>
+
+<ul>
+  <li>Never trust secondary sources before official sources.</li>
+  <li>Never create compliance pull requests using Priority 4 or Priority 5 sources unless verified by a Priority 1 source. Any citation or claim sourced from Priority 4 or 5 must be traceably corroborated by an official publication from Priority 1.</li>
+</ul>
+
+<p>Marked unverified, confirm against the primary source before relying on a figure. the 2026 Android target API 36 date (widely reported, consistent with the annual release pattern, but the official target-sdk page still showed the 2025 text at fetch time). the exact <code class="language-plaintext highlighter-rouge">codesign</code>, <code class="language-plaintext highlighter-rouge">notarytool</code>, and <code class="language-plaintext highlighter-rouge">stapler</code> command strings (corroborated across sources, not copied from a rendered Apple page). the exact visionOS, watchOS, and tvOS per-device screenshot pixel dimensions (pull live from the App Store Connect screenshot page). the exact date Apple’s Accessibility Nutrition Labels become mandatory (Apple says over time, no date published). the Google real-money-games India final rollout status. the EU CSA Regulation final form (in trilogue). the US BIS annual self-classification report specifics. and the PSD3 timing.</p>
+
+<p>Treat this document as HARD on the existence and direction of each obligation, and advisory on any specific number, version, or date until re-verified against the cited source.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/PLATFORM-MECHANICS-2026.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

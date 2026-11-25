@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Mobile Security Requirements and Best Practices (2026) | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Mobile Security Requirements and Best Practices (2026)" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Mobile Security Requirements and Best Practices (2026)" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Mobile Security Requirements and Best Practices (2026)","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>This playbook establishes a rigorous, comprehensive security reference for mobile application development. It addresses the 17 core mobile security domains required to protect user data, prevent unauthorized access, and ensure compliance with platform policies and industry standards (e.g., OWASP MASVS).</p>
+
+<p>Each section provides a high-level review of the security domain, platform-specific mechanics (iOS and Android), concrete secure implementation recommendations, and rejection/compliance risks.</p>
+
+<hr />
+
+<h2 id="1-secure-storage">1. Secure Storage</h2>
+
+<h3 id="11-overview">1.1 Overview</h3>
+<p>Sensitive information (session tokens, passwords, personal data, API keys, private cryptographic keys) must never be stored in plaintext. Standard application sandbox structures—such as <code class="language-plaintext highlighter-rouge">UserDefaults</code> on iOS or standard <code class="language-plaintext highlighter-rouge">SharedPreferences</code> on Android—write content directly to XML or plist files in unencrypted formats, allowing easy retrieval on jailbroken/rooted devices, or via backup analysis.</p>
+
+<h3 id="12-platform-implementation--best-practices">1.2 Platform Implementation &amp; Best Practices</h3>
+
+<h4 id="ios-secure-storage">iOS: Secure Storage</h4>
+<ul>
+  <li><strong>Unsecure Options:</strong> <code class="language-plaintext highlighter-rouge">UserDefaults</code>, CoreData (without custom encryption), plain SQLite, or standard application documents/cache directories.</li>
+  <li><strong>Secure Option:</strong> Use the <strong>Keychain Services API</strong> for small pieces of data (tokens, credentials, keys). For larger databases, use SQLCipher to encrypt the local SQLite/CoreData database.</li>
+  <li><strong>Data Protection Class:</strong> When writing sensitive files directly to disk, use iOS Data Protection. Pass <code class="language-plaintext highlighter-rouge">Data.WritingOptions.completeFileProtection</code> to encrypt the file on disk, which remains encrypted when the device is locked.</li>
+</ul>
+
+<h4 id="android-secure-storage">Android: Secure Storage</h4>
+<ul>
+  <li><strong>Unsecure Options:</strong> Plain <code class="language-plaintext highlighter-rouge">SharedPreferences</code>, standard internal/external storage files, or standard SQLite databases.</li>
+  <li><strong>Secure Option:</strong> Use <strong>EncryptedSharedPreferences</strong> and <strong>EncryptedFile</strong> (from the Jetpack Security library), which automatically handle key management and encryption of storage components using AES-256 (for files) and AES-256-SIV (for keys/values).</li>
+  <li><strong>Database Encryption:</strong> If using SQLite or Room, encrypt the database with <strong>SQLCipher for Android</strong>, using a hardware-backed master key generated in the Android Keystore.</li>
+</ul>
+
+<hr />
+
+<h2 id="2-keychain-ios-specific">2. Keychain (iOS Specific)</h2>
+
+<h3 id="21-overview">2.1 Overview</h3>
+<p>The iOS Keychain provides a secure, hardware-accelerated enclave to store small, highly sensitive configuration and credential items. The items are encrypted and managed directly by the operating system, isolated from other applications.</p>
+
+<h3 id="22-secure-implementation-recommendations">2.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Accessibility Attributes:</strong> Always specify the strict accessibility attribute (<code class="language-plaintext highlighter-rouge">kSecAttrAccessible</code>) when creating or updating Keychain items:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</code>: <strong>Highly Recommended</strong> for background tasks or push notification handlers. The data is available after the user unlocks the device once, and is not restored to another physical device via backups.</li>
+      <li><code class="language-plaintext highlighter-rouge">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</code>: Use for foreground-only apps. The data is accessible only when the device is unlocked and is not backed up.</li>
+      <li><strong>Avoid:</strong> <code class="language-plaintext highlighter-rouge">kSecAttrAccessibleAlways</code> (deprecated) and non-<code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code> classes if you want to prevent migration of the credentials to other physical devices during backups.</li>
+    </ul>
+  </li>
+  <li><strong>Access Group Sharing:</strong> Limit Keychain sharing (<code class="language-plaintext highlighter-rouge">kSecAttrAccessGroup</code>) strictly to verified app suites from the same team using Keychain Sharing entitlements.</li>
+  <li><strong>Keychain Backups:</strong> Ensure the <code class="language-plaintext highlighter-rouge">kSecAttrSynchronizable</code> attribute is set to <code class="language-plaintext highlighter-rouge">false</code> (default) unless explicit iCloud Keychain synchronization is required.</li>
+</ul>
+
+<hr />
+
+<h2 id="3-android-keystore-android-specific">3. Android Keystore (Android Specific)</h2>
+
+<h3 id="31-overview">3.1 Overview</h3>
+<p>The Android Keystore system lets developers store cryptographic keys in a hardware-backed container (such as the Trusted Execution Environment (TEE) or StrongBox Security Chip), making them extremely difficult to extract from the device even if the operating system is compromised or rooted.</p>
+
+<h3 id="32-secure-implementation-recommendations">3.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Hardware Backing:</strong> Force the use of hardware-backed keys by checking <code class="language-plaintext highlighter-rouge">KeyInfo.isInsideSecureHardware()</code> after key generation. On devices supporting Android 9 (API 28) or higher, use <code class="language-plaintext highlighter-rouge">setIsStrongBoxBacked(true)</code> to enforce hardware protection using a dedicated HSM chip.</li>
+  <li><strong>Key Attestation:</strong> For high-security environments, use Key Attestation to mathematically prove to a backend server that the cryptographic key was created in hardware and has not been tampered with.</li>
+  <li><strong>Purpose and Encryption Modes:</strong> Strictly limit key capabilities during creation (e.g., allow ONLY decryption/encryption with specific padding schemes):
+    <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">keyGenerator</span> <span class="p">=</span> <span class="nc">KeyGenerator</span><span class="p">.</span><span class="nf">getInstance</span><span class="p">(</span><span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">KEY_ALGORITHM_AES</span><span class="p">,</span> <span class="s">"AndroidKeyStore"</span><span class="p">)</span>
+<span class="n">keyGenerator</span><span class="p">.</span><span class="nf">init</span><span class="p">(</span>
+    <span class="nc">KeyGenParameterSpec</span><span class="p">.</span><span class="nc">Builder</span><span class="p">(</span><span class="s">"MySecureKeyAlias"</span><span class="p">,</span> <span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">PURPOSE_ENCRYPT</span> <span class="n">or</span> <span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">PURPOSE_DECRYPT</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">setBlockModes</span><span class="p">(</span><span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">BLOCK_MODE_GCM</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">setEncryptionPaddings</span><span class="p">(</span><span class="nc">KeyProperties</span><span class="p">.</span><span class="nc">ENCRYPTION_PADDING_NONE</span><span class="p">)</span>
+        <span class="p">.</span><span class="nf">setUserAuthenticationRequired</span><span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="c1">// require passcode/biometrics to use the key</span>
+        <span class="p">.</span><span class="nf">build</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="4-biometric-authentication">4. Biometric Authentication</h2>
+
+<h3 id="41-overview">4.1 Overview</h3>
+<p>Biometric authentication (FaceID, TouchID, Android BiometricPrompt) must verify user identity safely. A critical mistake is treating biometrics as an offline UI lock that merely flips a boolean flag (e.g., <code class="language-plaintext highlighter-rouge">isLoggedIn = true</code>) upon success. Attackers can bypass boolean returns using runtime instrumentation (e.g., Frida hooks on <code class="language-plaintext highlighter-rouge">LAContext</code> or <code class="language-plaintext highlighter-rouge">BiometricPrompt</code>).</p>
+
+<h3 id="42-secure-implementation-recommendations">4.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Crypto-Backed Biometrics:</strong> Rather than relying on simple success callbacks, require biometric authentication to unlock or authorize a cryptographic key stored in the Keychain or Keystore.</li>
+  <li><strong>iOS Implementation:</strong>
+    <ul>
+      <li>Create Keychain item with <code class="language-plaintext highlighter-rouge">SecAccessControl</code> using <code class="language-plaintext highlighter-rouge">.biometryAny</code> or <code class="language-plaintext highlighter-rouge">.biometryCurrentSet</code>.</li>
+      <li>When accessing the item, the OS automatically prompts the user for FaceID/TouchID and releases the decrypted token ONLY if biometrics pass.</li>
+      <li><strong>Avoid</strong> simple offline <code class="language-plaintext highlighter-rouge">LAContext.evaluatePolicy</code> checks for session authorization unless paired with severe security constraints.</li>
+    </ul>
+  </li>
+  <li><strong>Android Implementation:</strong>
+    <ul>
+      <li>Pass an initialized <code class="language-plaintext highlighter-rouge">BiometricPrompt.CryptoObject</code> (wrapping a Cipher, Signature, or Mac associated with a Keystore key) to <code class="language-plaintext highlighter-rouge">biometricPrompt.authenticate()</code>.</li>
+      <li>The Keystore key must be configured with <code class="language-plaintext highlighter-rouge">.setUserAuthenticationRequired(true)</code> and <code class="language-plaintext highlighter-rouge">.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)</code>.</li>
+      <li>The key can only decrypt/sign if the user successfully passes strong biometric authentication.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="5-certificate-pinning">5. Certificate Pinning</h2>
+
+<h3 id="51-overview">5.1 Overview</h3>
+<p>Certificate Pinning (or public-key pinning) mitigates Man-in-the-Middle (MITM) attacks by ensuring the client connects strictly to a server presenting a pre-defined cryptographic public key. This prevents traffic interception even if an attacker installs a malicious root certificate on the user’s device (e.g., via corporate proxies, malware, or user-approved configuration profiles).</p>
+
+<h3 id="52-secure-implementation-recommendations">5.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Pin SPKI Hashes:</strong> Do not pin the leaf certificate itself (which changes frequently during standard certificate rotations, causing app outages). Instead, pin the <strong>Subject Public Key Info (SPKI)</strong> hash of the intermediate or leaf public key.</li>
+  <li><strong>Backup Pins:</strong> Always include at least one backup pin (representing a standby Certificate Authority or intermediate key) to prevent bricking the app if the primary certificate needs emergency replacement.</li>
+  <li><strong>Native Implementation:</strong>
+    <ul>
+      <li><strong>iOS:</strong> Use declarative Network Session Pinning in <code class="language-plaintext highlighter-rouge">Info.plist</code> using the <code class="language-plaintext highlighter-rouge">NSPinnedDomains</code> key (supported natively since iOS 14). This operates safely inside the networking stack without manual delegation code.</li>
+      <li><strong>Android:</strong> Declare a Network Security Configuration file (<code class="language-plaintext highlighter-rouge">res/xml/network_security_config.xml</code>) and specify the pins within <code class="language-plaintext highlighter-rouge">&lt;pin-set&gt;</code> elements. The system automatically enforces pinning for any <code class="language-plaintext highlighter-rouge">HttpURLConnection</code> or OkHttp client:
+        <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;network-security-config&gt;</span>
+    <span class="nt">&lt;domain-config&gt;</span>
+        <span class="nt">&lt;domain</span> <span class="na">includeSubdomains=</span><span class="s">"true"</span><span class="nt">&gt;</span>api.myproduction.com<span class="nt">&lt;/domain&gt;</span>
+        <span class="nt">&lt;pin-set</span> <span class="na">expiration=</span><span class="s">"2026-12-31"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;pin</span> <span class="na">digest=</span><span class="s">"SHA-256"</span><span class="nt">&gt;</span>Base64EncodedSPKIHashHere=<span class="nt">&lt;/pin&gt;</span>
+            <span class="nt">&lt;pin</span> <span class="na">digest=</span><span class="s">"SHA-256"</span><span class="nt">&gt;</span>Base64EncodedBackupSPKIHashHere=<span class="nt">&lt;/pin&gt;</span>
+        <span class="nt">&lt;/pin-set&gt;</span>
+    <span class="nt">&lt;/domain-config&gt;</span>
+<span class="nt">&lt;/network-security-config&gt;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="6-jailbreak-detection-ios">6. Jailbreak Detection (iOS)</h2>
+
+<h3 id="61-overview">6.1 Overview</h3>
+<p>A jailbroken iOS device bypasses critical platform sandboxing protections, allowing attackers to access private application data directories, hook runtime methods, and intercept secure communications.</p>
+
+<h3 id="62-secure-implementation-recommendations">6.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Multi-layered defense:</strong> Use multiple independent indicators to assess device compromise. Avoid single simple functions.</li>
+  <li><strong>Standard Checks:</strong>
+    <ol>
+      <li><strong>File Existence:</strong> Check for known jailbreak-related directories and binaries (e.g., <code class="language-plaintext highlighter-rouge">/Applications/Cydia.app</code>, <code class="language-plaintext highlighter-rouge">/Applications/Sileo.app</code>, <code class="language-plaintext highlighter-rouge">/Library/MobileSubstrate/MobileSubstrate.dylib</code>, <code class="language-plaintext highlighter-rouge">/bin/bash</code>, <code class="language-plaintext highlighter-rouge">/usr/sbin/sshd</code>, <code class="language-plaintext highlighter-rouge">/private/var/lib/apt</code>).</li>
+      <li><strong>Directory Permissions:</strong> Attempt to write a dummy file outside the app sandbox (e.g., to <code class="language-plaintext highlighter-rouge">/private/jailbreak.txt</code>). Standard apps will fail; jailbroken apps with root access may succeed.</li>
+      <li><strong>Symlink Analysis:</strong> Check if common directories like <code class="language-plaintext highlighter-rouge">/Library/Ringtones</code> or <code class="language-plaintext highlighter-rouge">/Applications</code> are symlinks, which jailbreak tools create to preserve disk space.</li>
+      <li><strong>Dynamic Linker (dyld) Inspection:</strong> Iterate over loaded dynamic libraries to detect hooks or injection libraries (e.g., <code class="language-plaintext highlighter-rouge">MobileSubstrate</code>, <code class="language-plaintext highlighter-rouge">Frida</code>).</li>
+    </ol>
+  </li>
+  <li><strong>Response:</strong> If jailbreaking is detected, wipe cached tokens and local databases, notify the backend, and safely terminate or gracefully degrade features.</li>
+</ul>
+
+<hr />
+
+<h2 id="7-root-detection-android">7. Root Detection (Android)</h2>
+
+<h3 id="71-overview">7.1 Overview</h3>
+<p>An Android device with root access grants administrative control, which bypasses critical security policies, memory isolation, and filesystem sandbox controls.</p>
+
+<h3 id="72-secure-implementation-recommendations">7.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Local Heuristics:</strong>
+    <ol>
+      <li><strong>Binary Search:</strong> Look for administrative binaries like <code class="language-plaintext highlighter-rouge">su</code>, <code class="language-plaintext highlighter-rouge">busybox</code>, or root-management tools across standard paths (<code class="language-plaintext highlighter-rouge">/system/bin/su</code>, <code class="language-plaintext highlighter-rouge">/system/xbin/su</code>, <code class="language-plaintext highlighter-rouge">/sbin/su</code>, <code class="language-plaintext highlighter-rouge">/system/sd/xbin/su</code>).</li>
+      <li><strong>Build Tags:</strong> Check <code class="language-plaintext highlighter-rouge">android.os.Build.TAGS</code> for <code class="language-plaintext highlighter-rouge">"test-keys"</code>, indicating a custom or rooted ROM build instead of a release-signed image.</li>
+      <li><strong>Superuser Apps:</strong> Inspect the package list for root management packages (e.g., <code class="language-plaintext highlighter-rouge">com.noshufou.android.su</code>, <code class="language-plaintext highlighter-rouge">eu.chainfire.supersu</code>, <code class="language-plaintext highlighter-rouge">com.topjohnwu.magisk</code>).</li>
+    </ol>
+  </li>
+  <li><strong>Hardware-Backed Attestation (Highly Recommended):</strong>
+    <ul>
+      <li>Standard local heuristics are easily bypassed using Magisk Hide or zygisk modules.</li>
+      <li>Rely on the <strong>Google Play Integrity API</strong>. Call the API from the device, forward the cryptographically signed verdict token to your backend server, and decrypt/verify it on the backend. This provides a hardware-backed verdict of device integrity and whether it runs on a certified Android build.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="8-ssl-configuration">8. SSL Configuration</h2>
+
+<h3 id="81-overview">8.1 Overview</h3>
+<p>Misconfigured Transport Layer Security (TLS) leaves mobile applications vulnerable to credential sniffing and traffic modification. Cleartext traffic (HTTP) must be completely disabled in production.</p>
+
+<h3 id="82-secure-implementation-recommendations">8.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Enforce TLS 1.3 or 1.2 minimum:</strong> Disable backward compatibility with deprecated SSL v3, TLS 1.0, and TLS 1.1.</li>
+  <li><strong>iOS Implementation:</strong>
+    <ul>
+      <li>Keep App Transport Security (ATS) enabled.</li>
+      <li><strong>Avoid</strong> setting <code class="language-plaintext highlighter-rouge">NSAllowsArbitraryLoads</code> to <code class="language-plaintext highlighter-rouge">true</code> in production <code class="language-plaintext highlighter-rouge">Info.plist</code>. If certain domains require HTTP exceptions, specify them explicitly under <code class="language-plaintext highlighter-rouge">NSExceptionDomains</code> with strict justifications.</li>
+    </ul>
+  </li>
+  <li><strong>Android Implementation:</strong>
+    <ul>
+      <li>Define cleartext policies in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> via <code class="language-plaintext highlighter-rouge">android:usesCleartextTraffic="false"</code>.</li>
+      <li>Alternatively, enforce it globally in the Network Security Configuration:
+        <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;network-security-config&gt;</span>
+    <span class="nt">&lt;base-config</span> <span class="na">cleartextTrafficPermitted=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;trust-anchors&gt;</span>
+            <span class="nt">&lt;certificates</span> <span class="na">src=</span><span class="s">"system"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;/trust-anchors&gt;</span>
+    <span class="nt">&lt;/base-config&gt;</span>
+<span class="nt">&lt;/network-security-config&gt;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="9-backup-rules">9. Backup Rules</h2>
+
+<h3 id="91-overview">9.1 Overview</h3>
+<p>By default, mobile operating systems include application sandboxed files in automated backups (iCloud backups on iOS, ADB / Google Drive backups on Android). This means sensitive data stored insecurely is automatically transferred to cloud drives or accessible via physical extraction.</p>
+
+<h3 id="92-secure-implementation-recommendations">9.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>iOS Backup Exclusion:</strong>
+    <ul>
+      <li>Exclude any sensitive database or local config file from automatic iCloud and iTunes backups by adding the <code class="language-plaintext highlighter-rouge">.isExcludedFromBackup</code> resource attribute to the file’s URL:
+        <div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">var</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">fileURLWithPath</span><span class="p">:</span> <span class="n">path</span><span class="p">)</span>
+<span class="k">var</span> <span class="nv">values</span> <span class="o">=</span> <span class="kt">URLResourceValues</span><span class="p">()</span>
+<span class="n">values</span><span class="o">.</span><span class="n">isExcludedFromBackup</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="k">try</span> <span class="n">url</span><span class="o">.</span><span class="nf">setResourceValues</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Android Backup Rules:</strong>
+    <ul>
+      <li><strong>Do not</strong> leave <code class="language-plaintext highlighter-rouge">android:allowBackup="true"</code> without defining tight filters. Backups allow extraction of private <code class="language-plaintext highlighter-rouge">/data/data/your.package/</code> files using simple <code class="language-plaintext highlighter-rouge">adb backup</code> commands.</li>
+      <li>For high-security applications, completely disable backup:
+        <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;application</span> <span class="na">android:allowBackup=</span><span class="s">"false"</span> <span class="err">...</span><span class="nt">&gt;</span>
+</code></pre></div>        </div>
+      </li>
+      <li>If backup is required, strictly configure <code class="language-plaintext highlighter-rouge">android:dataExtractionRules</code> (Android 12+) and <code class="language-plaintext highlighter-rouge">android:fullBackupContent</code> (Android 11-) in the manifest to target safe folders and explicitly exclude databases, shared preferences holding tokens, and credential files:
+        <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">&lt;!-- res/xml/data_extraction_rules.xml --&gt;</span>
+<span class="nt">&lt;data-extraction-rules&gt;</span>
+    <span class="nt">&lt;cloud-backup&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">domain=</span><span class="s">"sharedpref"</span> <span class="na">path=</span><span class="s">"auth_tokens.xml"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">domain=</span><span class="s">"database"</span> <span class="na">path=</span><span class="s">"secure_db.db"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/cloud-backup&gt;</span>
+    <span class="nt">&lt;device-to-device-backup&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">domain=</span><span class="s">"sharedpref"</span> <span class="na">path=</span><span class="s">"auth_tokens.xml"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">domain=</span><span class="s">"database"</span> <span class="na">path=</span><span class="s">"secure_db.db"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/device-to-device-backup&gt;</span>
+<span class="nt">&lt;/data-extraction-rules&gt;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="10-exported-activities-android-specific">10. Exported Activities (Android Specific)</h2>
+
+<h3 id="101-overview">10.1 Overview</h3>
+<p>Any activity declared in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> with <code class="language-plaintext highlighter-rouge">android:exported="true"</code> can be launched by any other application running on the device. Unintentionally exported activities expose internal business logic, allow authorization bypass, and can cause tapjacking or state manipulation.</p>
+
+<h3 id="102-secure-implementation-recommendations">10.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Strict Default:</strong> Set <code class="language-plaintext highlighter-rouge">android:exported="false"</code> for all internal activities.</li>
+  <li><strong>Enforcement since Android 12:</strong> Android 12 (API 31) requires every component (activity, service, receiver) that has intent filters to explicitly declare <code class="language-plaintext highlighter-rouge">android:exported</code>. If it lacks the tag, the app cannot be installed or submitted.</li>
+  <li><strong>Exported Component Protection:</strong>
+    <ul>
+      <li>If an activity must be exported (e.g., launching from the home screen or third-party launchers), protect it using custom permission limits:
+        <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;activity</span> <span class="na">android:name=</span><span class="s">".MyExportedActivity"</span>
+          <span class="na">android:exported=</span><span class="s">"true"</span>
+          <span class="na">android:permission=</span><span class="s">"com.mycompany.myapp.PERMISSION_LAUNCH_ACTIVITY"</span><span class="nt">&gt;</span>
+</code></pre></div>        </div>
+      </li>
+      <li>Ensure the permission uses <code class="language-plaintext highlighter-rouge">android:protectionLevel="signature"</code>, guaranteeing that only apps signed with your exact developer key can launch the activity.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="11-intent-filters-android-specific">11. Intent Filters (Android Specific)</h2>
+
+<h3 id="111-overview">11.1 Overview</h3>
+<p>Intent filters define which implicit intents an application component can respond to. Registering intent filters automatically exports the component, potentially exposing it to untrusted third-party apps.</p>
+
+<h3 id="112-secure-implementation-recommendations">11.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Intent Spoofing &amp; Hijacking Prevention:</strong> Validate the sender and verify incoming data within the receiving component before acting on it.
+    <ul>
+      <li>Use <code class="language-plaintext highlighter-rouge">getCallingActivity()</code> or <code class="language-plaintext highlighter-rouge">getCallingPackage()</code> to check if the caller matches a trusted package name and certificate.</li>
+    </ul>
+  </li>
+  <li><strong>Secure Intent Dispatches:</strong> When launching an internal component, use explicit intents (specifying the exact target class or package) instead of implicit intents. This prevents malicious third-party apps on the same device from intercepting or “hijacking” the intent.
+    <div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">explicitIntent</span> <span class="p">=</span> <span class="nc">Intent</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="nc">TargetActivity</span><span class="o">::</span><span class="k">class</span><span class="p">.</span><span class="n">java</span><span class="p">).</span><span class="nf">apply</span> <span class="p">{</span>
+    <span class="nf">putExtra</span><span class="p">(</span><span class="s">"param"</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="nf">startActivity</span><span class="p">(</span><span class="n">explicitIntent</span><span class="p">)</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="12-deep-links">12. Deep Links</h2>
+
+<h3 id="121-overview">12.1 Overview</h3>
+<p>Deep links let external sources invoke internal routes within the app. Standard deep links using custom URL schemes (e.g., <code class="language-plaintext highlighter-rouge">myapp://route</code>) are inherently insecure, as any other application on the device can register the exact same scheme and hijack the communication, potentially stealing auth tokens or parameters.</p>
+
+<h3 id="122-secure-implementation-recommendations">12.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Sanitize Input:</strong> Treat deep links as untrusted external inputs. Always sanitize, validate, and parse deep link parameters to prevent SQL injection, path traversal, or remote code execution.</li>
+  <li><strong>Do Not Transmit Secrets:</strong> Never include authentication tokens, session IDs, passwords, or transactional data in deep link URLs.</li>
+  <li><strong>Auth Token Exchange:</strong> If deep links are used for authentication (e.g., magic login links), pass a short-lived, single-use, cryptographically strong challenge token that is exchanged on the server using an explicit HTTPS request, never an active session token itself.</li>
+</ul>
+
+<hr />
+
+<h2 id="13-universal-links-ios-specific">13. Universal Links (iOS Specific)</h2>
+
+<h3 id="131-overview">13.1 Overview</h3>
+<p>Universal Links are iOS’s secure deep-linking mechanism. Instead of custom URL schemes, they use standard HTTPS links (e.g., <code class="language-plaintext highlighter-rouge">https://mycompany.com/profile</code>). Because domain validation is performed against the website’s configuration, Universal Links cannot be hijacked or duplicated by other applications.</p>
+
+<h3 id="132-secure-implementation-recommendations">13.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>AASA Configuration:</strong> Host a valid <strong>Apple App Site Association (AASA)</strong> file on your domain at <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/apple-app-site-association</code>.
+    <ul>
+      <li>Serve the file with <code class="language-plaintext highlighter-rouge">Content-Type: application/json</code> and no redirects.</li>
+      <li>The file specifies which app bundle IDs are authorized to handle specific URL paths:
+        <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"applinks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"appIDs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"TEAMID12345.com.mycompany.myapp"</span><span class="p">],</span><span class="w">
+        </span><span class="nl">"components"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w"> </span><span class="nl">"/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/profile/*"</span><span class="w"> </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Associated Domains Entitlement:</strong> Enable the “Associated Domains” capability in Xcode and add the domain in the format <code class="language-plaintext highlighter-rouge">applinks:yourdomain.com</code>.</li>
+</ul>
+
+<hr />
+
+<h2 id="14-app-links-android-specific">14. App Links (Android Specific)</h2>
+
+<h3 id="141-overview">14.1 Overview</h3>
+<p>Android App Links are standard HTTPS links that are configured to automatically launch the matching app directly, bypassing the platform “disambiguation dialog” by verifying domain ownership.</p>
+
+<h3 id="142-secure-implementation-recommendations">14.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>AssetLinks Verification:</strong> Host the <strong>Digital Asset Links</strong> JSON file on your domain at <code class="language-plaintext highlighter-rouge">https://yourdomain.com/.well-known/assetlinks.json</code>:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"relation"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"delegate_permission/common.handle_all_urls"</span><span class="p">],</span><span class="w">
+    </span><span class="nl">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"namespace"</span><span class="p">:</span><span class="w"> </span><span class="s2">"android_app"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"package_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"com.mycompany.myapp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"sha256_cert_fingerprints"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"AA:BB:CC:DD:EE:FF:11:22:33:44:55:66:77:88:99:00:11:22:33:44:55:66:77:88:99:00:11:22:33:44:55:66"</span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+  <li><strong>Manifest Verification Tag:</strong> Add <code class="language-plaintext highlighter-rouge">android:autoVerify="true"</code> to the intent filter within <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> to instruct the operating system to verify the domain ownership on app installation:
+    <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;intent-filter</span> <span class="na">android:autoVerify=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">"android.intent.action.VIEW"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.DEFAULT"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;category</span> <span class="na">android:name=</span><span class="s">"android.intent.category.BROWSABLE"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;data</span> <span class="na">android:scheme=</span><span class="s">"https"</span> <span class="na">android:host=</span><span class="s">"yourdomain.com"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/intent-filter&gt;</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="15-authentication-flows">15. Authentication Flows</h2>
+
+<h3 id="151-overview">15.1 Overview</h3>
+<p>Mobile authentication flows must handle user credentials securely, prevent reverse engineering of backend secrets, and implement cryptographic challenges to prevent replay attacks.</p>
+
+<h3 id="152-secure-implementation-recommendations">15.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>OAuth 2.1 / OIDC with PKCE:</strong> Always use <strong>Proof Key for Code Exchange (PKCE)</strong> (RFC 7636) for mobile OAuth integration. PKCE eliminates the need to store client secrets inside the mobile app binary (where they can easily be extracted via reverse engineering) and protects the authorization code exchange against intercept attacks.</li>
+  <li><strong>Embedded vs. System Browser:</strong> Use secure system components (like <code class="language-plaintext highlighter-rouge">ASWebAuthenticationSession</code> on iOS and <strong>Custom Tabs</strong> on Android) for authentication screens. Avoid using embedded <code class="language-plaintext highlighter-rouge">WKWebView</code> or Android <code class="language-plaintext highlighter-rouge">WebView</code> components, which allow the hosting app to sniff or manipulate credentials and passwords entered by the user.</li>
+</ul>
+
+<hr />
+
+<h2 id="16-session-handling">16. Session Handling</h2>
+
+<h3 id="161-overview">16.1 Overview</h3>
+<p>Session tokens must be securely generated, properly scoped, periodically rotated, and gracefully destroyed when no longer in use.</p>
+
+<h3 id="162-secure-implementation-recommendations">16.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>Server-Side Session Validation:</strong> The client must never make local assumptions about session validity. Every critical action must be authorized and validated on the server.</li>
+  <li><strong>Session Timeout &amp; Background Policy:</strong>
+    <ul>
+      <li>Clear sensitive screen data and cached sessions when the app is backgrounded.</li>
+      <li>Blur the app’s snapshot (multitasking view) to prevent sensitive user information from leaking to screenshots.</li>
+    </ul>
+  </li>
+  <li><strong>Logout Integrity:</strong> When a user logs out, perform a complete session invalidation on the server-side, and simultaneously clear all local access/refresh tokens, cookies, and local database keys on the device.</li>
+</ul>
+
+<hr />
+
+<h2 id="17-token-storage">17. Token Storage</h2>
+
+<h3 id="171-overview">17.1 Overview</h3>
+<p>Tokens (Access Tokens, Refresh Tokens, JWTs) are sensitive authorization credentials. If leaked, they allow full identity theft.</p>
+
+<h3 id="172-secure-implementation-recommendations">17.2 Secure Implementation Recommendations</h3>
+<ul>
+  <li><strong>No Disk Leakage:</strong> Never write tokens to regular files, unencrypted SQLite databases, standard logs, or console output (<code class="language-plaintext highlighter-rouge">NSLog</code>, <code class="language-plaintext highlighter-rouge">print</code>, <code class="language-plaintext highlighter-rouge">Log.d</code>).</li>
+  <li><strong>Secure Vaulting:</strong> Store tokens strictly inside the <strong>iOS Keychain</strong> or <strong>Android EncryptedSharedPreferences</strong> / Keystore-encrypted database.</li>
+  <li><strong>Refresh Token Isolation:</strong> Refresh tokens have long lifetimes and must be protected with additional security constraints (e.g., biometrics required or scoped to <code class="language-plaintext highlighter-rouge">ThisDeviceOnly</code>). Access tokens should be short-lived (e.g., 15 minutes), with refresh tokens rotated on each use.</li>
+</ul>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/MOBILE-SECURITY-2026.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

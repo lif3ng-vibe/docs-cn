@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Ruling Register | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Ruling Register" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/RULING-REGISTER.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/RULING-REGISTER.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Ruling Register" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Ruling Register","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/RULING-REGISTER.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>A code scan cannot tell you that India wants your lending app on an RBI list, that Australia wants under-16s kept off your social feed, or that the EU wants a 24 hour vulnerability report. The Ruling Register holds those release requirements as data, says how strongly each one binds today, and says how it is proven, so a missing finding is never mistaken for a pass.</p>
+
+<h2 id="what-you-get">What you get</h2>
+
+<ul>
+  <li>Legal standing on every requirement. <code class="language-plaintext highlighter-rouge">in_force</code>, <code class="language-plaintext highlighter-rouge">in_force_later</code> (with the date it starts), <code class="language-plaintext highlighter-rouge">store_policy</code>, <code class="language-plaintext highlighter-rouge">proposed</code>, or <code class="language-plaintext highlighter-rouge">guidance</code>. Only verified law or store policy that is in force today can block a release. A proposed law or a guidance note never can.</li>
+  <li>How it is proven. <code class="language-plaintext highlighter-rouge">automated</code> (a check can see it), <code class="language-plaintext highlighter-rouge">owner_attested</code> (only you can confirm it), or <code class="language-plaintext highlighter-rouge">mixed</code> (both). An owner-attested requirement asks for your signed attestation, because a scan finding nothing proves nothing here.</li>
+  <li>A quoted source for every premise. Each source carries the URL, the date it was checked, a verbatim quote, and <code class="language-plaintext highlighter-rouge">supports</code>, which says whether it proves the obligation, the start date, or both. A rule blocks only when quoted sources cover the obligation and, if it has one, the start date. A source that could not be re-read is marked <code class="language-plaintext highlighter-rouge">unverified</code> with the reason, and a rule missing a quoted premise is listed as “confirm the source” and never blocks.</li>
+  <li>Applies only where it should. Each entry names its jurisdiction (an ISO country code, <code class="language-plaintext highlighter-rouge">EU</code>, or <code class="language-plaintext highlighter-rouge">GLOBAL</code>), an optional store, and the app features it covers (<code class="language-plaintext highlighter-rouge">lending</code>, <code class="language-plaintext highlighter-rouge">crypto</code>, <code class="language-plaintext highlighter-rouge">medical</code>, <code class="language-plaintext highlighter-rouge">generative_ai</code>, <code class="language-plaintext highlighter-rouge">personal_data</code>, <code class="language-plaintext highlighter-rouge">subscriptions</code>, <code class="language-plaintext highlighter-rouge">social</code>, <code class="language-plaintext highlighter-rouge">marketplace</code>, <code class="language-plaintext highlighter-rouge">children</code>). A rule with no features applies to every app in that place.</li>
+  <li>Built into Fleet Sweep. Every app declares its <code class="language-plaintext highlighter-rouge">platforms</code>, <code class="language-plaintext highlighter-rouge">regions</code> and <code class="language-plaintext highlighter-rouge">features</code>, and leaving one out is an error, because an unknown scope would silently drop rules. Any verified, in-force rule that applies and has no valid attestation makes the app <code class="language-plaintext highlighter-rouge">BLOCKED</code>.</li>
+</ul>
+
+<h2 id="from-install-to-first-answer">From install to first answer</h2>
+
+<ol>
+  <li>
+    <p>Ask what applies to an app.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 scripts/ruling-register.py due <span class="nt">--regions</span> DE,AU,US <span class="nt">--stores</span> apple <span class="nt">--features</span> social,personal_data
+</code></pre></div>    </div>
+
+    <p>Each line says <code class="language-plaintext highlighter-rouge">BLOCKS</code>, <code class="language-plaintext highlighter-rouge">WATCH</code>, or <code class="language-plaintext highlighter-rouge">CONFIRM-SOURCE</code>, and whether it needs your attestation.</p>
+  </li>
+  <li>
+    <p>Add <code class="language-plaintext highlighter-rouge">regions</code>, <code class="language-plaintext highlighter-rouge">features</code> and, once you have checked a requirement, an attestation to the app in your fleet file.</p>
+
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"attestations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"RR-AU-APP1-PRIVACY-POLICY"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"attested_by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Your Name"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"attested_on"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-05"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"outcome"</span><span class="p">:</span><span class="w"> </span><span class="s2">"compliant"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"revision"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"covers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"auto-1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"owner-2"</span><span class="p">],</span><span class="w">
+    </span><span class="nl">"regions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"AU"</span><span class="p">],</span><span class="w">
+    </span><span class="nl">"evidence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Policy linked in app and listing, reviewed against APP 1 in the October release notes"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>    </div>
+
+    <p>An attestation is accepted only when <code class="language-plaintext highlighter-rouge">outcome</code> is <code class="language-plaintext highlighter-rouge">compliant</code>, <code class="language-plaintext highlighter-rouge">revision</code> matches the rule’s current revision, <code class="language-plaintext highlighter-rouge">covers</code> lists every proof item id of the rule (including the automated ones, with the check result as evidence), and <code class="language-plaintext highlighter-rouge">regions</code> lists every country of yours the rule reaches. It cannot be dated in the future and expires after a year. Raise a rule’s <code class="language-plaintext highlighter-rouge">revision</code> when it changes, and every attestation for it has to be made again.</p>
+  </li>
+  <li>
+    <p>Run Fleet Sweep. The register is read by default. Pass <code class="language-plaintext highlighter-rouge">--no-register</code> to leave it out.</p>
+  </li>
+</ol>
+
+<h2 id="add-or-change-a-requirement">Add or change a requirement</h2>
+
+<ol>
+  <li>Edit <code class="language-plaintext highlighter-rouge">data/ruling-register.json</code>. Give a new rule a new <code class="language-plaintext highlighter-rouge">RR-</code> id and <code class="language-plaintext highlighter-rouge">revision</code> 1. Never reuse an id for a different rule, and raise <code class="language-plaintext highlighter-rouge">revision</code> when an existing rule’s meaning changes.</li>
+  <li>Quote the primary source verbatim and record the date you read it. Never paste a URL you have not opened.</li>
+  <li>Run <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py validate</code> and fix every error.</li>
+  <li>To hand the register to another tool, run <code class="language-plaintext highlighter-rouge">python3 scripts/ruling-register.py export</code>. It writes <code class="language-plaintext highlighter-rouge">exports/ruling-register-v&lt;version&gt;.json</code>, stamped with the commit and the date.</li>
+</ol>
+
+<h2 id="how-the-results-are-measured">How the results are measured</h2>
+
+<p><code class="language-plaintext highlighter-rouge">python3 scripts/eval-scorecard.py</code> scores Fleet Sweep, the Waiver Ledger and the Ruling Register against the gold scenarios in <code class="language-plaintext highlighter-rouge">evals/gold-cases.json</code>. Each case checks the verdict, the exit code, that the fleet and app verdicts agree, and which rule ids must and must not appear, so a change that keeps the verdict but loses the reason still fails. It prints the false passes (something unsafe called ready) and the false blocks per feature, and fails on any miss or any unknown category. The false-pass count must stay at zero.</p>
+
+<h2 id="the-first-entries">The first entries</h2>
+
+<p>The first 14 entries came from an adversarial gap review of this playbook. Google Play lending in India and crypto in the EU, US medical device software and the DOJ data rule, China’s AI filing and labelling rules, Indonesia’s operator registration, the EU withdrawal function, DSA notice and action and CRA reporting, Vietnam’s account authentication, and Australia’s privacy policy, under-16 social media and Children’s Online Privacy Code rules. Every source was opened on 5 November 2026. The EU withdrawal entry is marked unverified because EUR-Lex refused automated reads that day. The Australian minimum-age obligation is quoted from the Act, but the Act sets its start date by ministerial instrument and the eSafety page carrying that date did not load, so that rule is flagged to confirm rather than blocking.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/RULING-REGISTER.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

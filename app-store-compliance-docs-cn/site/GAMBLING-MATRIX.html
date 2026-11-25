@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Loot Box and Gambling Matrix by Country | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Loot Box and Gambling Matrix by Country" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAMBLING-MATRIX.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAMBLING-MATRIX.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Loot Box and Gambling Matrix by Country" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Loot Box and Gambling Matrix by Country","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAMBLING-MATRIX.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>Random reward mechanics and real money gaming are regulated very differently per country, and a game that ships worldwide has to satisfy the strictest market it is sold in. This matrix captures the well documented positions per jurisdiction. Regulation in this area moves fast, so confirm the current law for any market before you rely on a row.</p>
+
+<p>Two rules sit above the whole matrix.</p>
+
+<ul>
+  <li>Apple 3.1.1 and Google both require odds disclosure for any random reward, in every market. That is the baseline regardless of country.</li>
+  <li>Real money gambling must be licensed, geo restricted to licensed regions, and free to download.</li>
+</ul>
+
+<h2 id="loot-box-and-paid-random-reward-positions">Loot box and paid random reward positions</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Country or region</th>
+      <th>Position on paid loot boxes</th>
+      <th>What you must do</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Belgium</td>
+      <td>Paid random items have been treated as gambling and effectively prohibited since the 2018 Gaming Commission ruling</td>
+      <td>Remove paid loot boxes for Belgium, or geo restrict</td>
+    </tr>
+    <tr>
+      <td>Netherlands</td>
+      <td>Enforcement action since 2018, with later court rulings, tradeable random items the most exposed</td>
+      <td>Avoid tradeable paid random items, follow the current Kansspelautoriteit position</td>
+    </tr>
+    <tr>
+      <td>China</td>
+      <td>Probability disclosure is mandatory under the MIIT rules, plus minor spending limits and real name and play time controls</td>
+      <td>Disclose exact drop rates in app, enforce minor protections</td>
+    </tr>
+    <tr>
+      <td>South Korea</td>
+      <td>A probability disclosure law amending the Game Industry Promotion Act requires odds disclosure, with enforcement from 2025</td>
+      <td>Disclose probabilities clearly, keep them accurate</td>
+    </tr>
+    <tr>
+      <td>Japan</td>
+      <td>Complete gacha, kompu gacha, has been banned since 2012, and odds disclosure is handled through industry self regulation</td>
+      <td>No complete gacha mechanics, disclose odds per the industry codes</td>
+    </tr>
+    <tr>
+      <td>United Kingdom</td>
+      <td>Loot boxes are not classified as gambling at present but are under active scrutiny, with industry self regulation and age controls</td>
+      <td>Follow the current industry guidance, do not sell paid random items to children</td>
+    </tr>
+    <tr>
+      <td>Australia</td>
+      <td>Reforms require a mandatory minimum age rating for games with paid random items, and classification changes apply</td>
+      <td>Apply the required age rating, disclose odds</td>
+    </tr>
+    <tr>
+      <td>Germany</td>
+      <td>The Interstate Treaty on Gambling and youth protection rules apply, with age rating through the USK</td>
+      <td>Age rate appropriately, follow youth protection</td>
+    </tr>
+    <tr>
+      <td>United States</td>
+      <td>No single federal loot box law, but the FTC has scrutinized the practice and store odds disclosure rules apply</td>
+      <td>Disclose odds per the store rules, watch state level proposals</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="real-money-gambling-and-adjacent-categories">Real money gambling and adjacent categories</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Treatment</th>
+      <th>What you must do</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Real money casino and betting</td>
+      <td>Licensed and geo restricted per country, free to download</td>
+      <td>Hold the license per region, restrict to licensed regions, free download</td>
+    </tr>
+    <tr>
+      <td>Brazil fixed-odds betting (sports &amp; virtual)</td>
+      <td>Regulated by the Secretariat of Prizes and Bets (SPA); license required for distribution in Brazil (enforced since May 8, 2026)</td>
+      <td>Provide a valid SPA license in the App Review Information section, submit a new app version for verification, and set the age rating to A18.</td>
+    </tr>
+    <tr>
+      <td>Social casino and simulated gambling</td>
+      <td>A distinct category from real money, with its own age rating, allowed more widely but still rated</td>
+      <td>Rate it correctly, no real money payout</td>
+    </tr>
+    <tr>
+      <td>Sweepstakes and dual currency sweeps coins</td>
+      <td>Frequently treated as gambling depending on the prize and consideration</td>
+      <td>Get legal review per market, geo restrict where it counts as gambling</td>
+    </tr>
+    <tr>
+      <td>Cash prize skill tournaments and daily fantasy</td>
+      <td>Often regulated as gambling or as a regulated contest per state or country</td>
+      <td>License or restrict per jurisdiction</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="how-to-use-this">How to use this</h2>
+
+<ol>
+  <li>List the markets the game ships in.</li>
+  <li>For each market, apply the strictest row that matches the mechanic.</li>
+  <li>Disclose odds everywhere, because that is the store baseline in every market.</li>
+  <li>Geo restrict any market where the mechanic is prohibited or unlicensed.</li>
+  <li>Get a legal review for real money, sweepstakes, and cash prize formats. This matrix is a starting map, not legal advice.</li>
+</ol>
+
+<p>Sources. National gaming regulators and the store gambling policies. Confirm the current position with the regulator for any market before you ship, because this area changes often.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/GAMBLING-MATRIX.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

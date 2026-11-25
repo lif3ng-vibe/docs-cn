@@ -1,0 +1,21 @@
+# App Store Compliance Playbook
+
+> 阻止 App Store 与 Google Play 拒审的开源实战手册与提交前守卫：把每类常见拒审对应到审核指南与修复方法，跟踪应用法规截止日期，并可内嵌在 AI 编码工具中运行。
+
+中文镜像：https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/
+
+## 核心篇
+- [提交前清单](https://mjmirza.github.io/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html)：提交前的每一项检查
+- [Apple 拒审地图](https://mjmirza.github.io/app-store-compliance/APPLE.html)：审核指南、触发条件与修复方法
+- [Google Play 拒审地图](https://mjmirza.github.io/app-store-compliance/GOOGLE-PLAY.html)：政策、触发条件与修复方法
+- [根因分析与申诉实战手册](https://mjmirza.github.io/app-store-compliance/MISTAKE-PATTERNS.html)
+- [按应用类型的拒审地图](https://mjmirza.github.io/app-store-compliance/BY-APP-TYPE.html)
+
+## 法规篇
+- [2026 年欧盟规则](https://mjmirza.github.io/app-store-compliance/EU-REGULATORY-2026.html)
+- [美国与全球规则](https://mjmirza.github.io/app-store-compliance/GLOBAL-REGULATORY-2026.html)
+- [平台机制](https://mjmirza.github.io/app-store-compliance/PLATFORM-MECHANICS-2026.html)
+
+## 数据
+- [拒审模式 JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/rejection-patterns.json)
+- [法规截止日期 JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json)

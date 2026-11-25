@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Competitive Gap Analysis. What Other Repositories Publish and What We Adopted | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Competitive Gap Analysis. What Other Repositories Publish and What We Adopted" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/COMPETITIVE-GAP-ANALYSIS.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/COMPETITIVE-GAP-ANALYSIS.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Competitive Gap Analysis. What Other Repositories Publish and What We Adopted" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Competitive Gap Analysis. What Other Repositories Publish and What We Adopted","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/COMPETITIVE-GAP-ANALYSIS.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>This document is the result of surveying the open source repositories that already publish App Store and Google Play compliance knowledge, studying why each one exists and what it captures, finding the gaps against this playbook, and folding the missing patterns back in. It is maintained so this playbook stays the most complete open reference, not a snapshot.</p>
+
+<p>Method. Each repository was read in full through the GitHub API, its structure and unique content extracted, then compared field by field against this playbook. The gaps it surfaced are listed, and the ones we adopted are marked.</p>
+
+<h2 id="the-repositories-surveyed">The repositories surveyed</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Repository</th>
+      <th>Stars</th>
+      <th>What it publishes</th>
+      <th>Why it exists</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>truongduy2611/app-store-preflight-skills</td>
+      <td>about 1,224</td>
+      <td>An AI agent skill that scans an iOS or macOS project, pulls App Store Connect metadata through the asc CLI, and checks it against a full index of 100 plus guidelines organized into 10 app type checklists</td>
+      <td>The most popular comparable. Built so an agent catches rejections before submission, the same goal as this playbook</td>
+    </tr>
+    <tr>
+      <td>lukylab/appstore-submission-checklist</td>
+      <td>about 17</td>
+      <td>Two practical checklists, one for new app submissions and one for app updates, from an indie developer with 10 plus live apps</td>
+      <td>New apps and updates fail review for different reasons, so it splits the two</td>
+    </tr>
+    <tr>
+      <td>andrewmcwattersandco/app-store-rejections</td>
+      <td>about 14</td>
+      <td>A community collection of real, named App Store rejection stories with links</td>
+      <td>To warn developers of marketplace risk and encourage self publishing</td>
+    </tr>
+    <tr>
+      <td>jaywcjlove/app-rejection-fixes</td>
+      <td>small</td>
+      <td>Rejection reasons paired with the fix that cleared each</td>
+      <td>A working developer logging the rejections they hit and resolved</td>
+    </tr>
+    <tr>
+      <td>hnxyzhw/AppStoreReviewsAndRejected</td>
+      <td>small</td>
+      <td>The actual Apple rejection email texts, by guideline, with the Chinese translation and the fix</td>
+      <td>Captures the exact reviewer wording, which is the most concrete signal of what triggers a rejection</td>
+    </tr>
+    <tr>
+      <td>aashishtamsya/Appstore-Review-Guidelines</td>
+      <td>about 90</td>
+      <td>An older curated guideline list by category</td>
+      <td>An early community attempt at a pre submission reference</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="gaps-these-repositories-surfaced-and-what-we-adopted">Gaps these repositories surfaced, and what we adopted</h2>
+
+<h3 id="1-app-type-specific-checklists-adopted">1. App type specific checklists. ADOPTED</h3>
+
+<p>The most popular repository organizes its checks into ten app types, because a games app and a finance app fail for very different reasons. Our playbook was flat. We adopted this as a new doc, <code class="language-plaintext highlighter-rouge">BY-APP-TYPE.md</code>, mapping each app type to the critical guidelines that hit it. This is the single biggest structural improvement from the survey.</p>
+
+<h3 id="2-macos-as-a-first-class-target-adopted">2. macOS as a first class target. ADOPTED</h3>
+
+<p>The leader covers macOS and the Mac App Store as a distinct checklist. Our playbook covered iOS and Android. macOS has its own rules, sandboxing, notarization, no non App Store update mechanism, and the 2.4.5 Mac specific set. We added a macOS section to the by app type doc.</p>
+
+<h3 id="3-pulling-real-app-store-connect-metadata-adopted-as-guidance">3. Pulling real App Store Connect metadata. ADOPTED as guidance</h3>
+
+<p>The leader integrates the asc CLI to pull the live listing metadata and inspect it, rather than only scanning source. Our guard scans source. We added guidance to the skill that the strongest audit pulls the real App Store Connect metadata, with the asc CLI or the App Store Connect API, and checks the words in the live listing, because a large share of rejections are metadata, not code.</p>
+
+<h3 id="4-specific-metadata-rejection-rules-adopted-into-the-taxonomy">4. Specific metadata rejection rules. ADOPTED into the taxonomy</h3>
+
+<p>The leader and the Chinese rejection email collection name precise triggers we did not have as patterns.</p>
+
+<ul>
+  <li>Apple device images or the Apple trademark in the app icon or screenshots, guideline 5.2.5.</li>
+  <li>Device frames around the app in preview videos, guideline 2.3.4.</li>
+  <li>Subscription pricing that shows the monthly price more prominently than the actual billed amount, guideline 3.1.2.</li>
+  <li>Missing Terms of Use or EULA and Privacy Policy links for a subscription, guideline 3.1.2.</li>
+  <li>In a China storefront, references to external AI services such as ChatGPT or Gemini can trigger a regional rejection.</li>
+  <li>Review notes for a new submission that omit a screen recording, the app purpose, test credentials, external service details, regional information, or regulatory documents, guideline 2.1.</li>
+</ul>
+
+<h3 id="5-the-user-generated-content-24-hour-rule-adopted">5. The user generated content 24 hour rule. ADOPTED</h3>
+
+<p>The real Safety 1.2 rejection email in the Chinese collection states the exact requirement. The developer must act on an objectionable content report within 24 hours by removing the content and ejecting the user. Our 1.2 coverage named filtering, reporting, and blocking, but not the 24 hour action window and the EULA with zero tolerance. Both are now captured.</p>
+
+<h3 id="6-financial-apps-require-a-company-developer-account-adopted">6. Financial apps require a company developer account. ADOPTED</h3>
+
+<p>The PLA 1.2 rejection email shows that a financial app submitted under an individual account is rejected. This reinforces our 5.1.1(ix) regulated fields rule, now stated plainly for finance.</p>
+
+<h3 id="7-new-app-versus-update-split-adopted-into-the-checklist">7. New app versus update split. ADOPTED into the checklist</h3>
+
+<p>An update fails for different reasons than a first submission. Our checklist is now framed so the first submission items, demo account, review notes, and metadata, are clearly the heavy ones, and the update items focus on what changed.</p>
+
+<h3 id="8-real-rejection-case-studies-adopted-into-the-mistake-patterns">8. Real rejection case studies. ADOPTED into the mistake patterns</h3>
+
+<p>The community collections hold named, real rejections that teach more than an abstract rule. The Halide camera app rejected for not explaining why it uses the camera, the iDOS emulator takedown, and the pattern of a long lived app pulled for not being updated. These are now examples in the mistake patterns doc.</p>
+
+<h3 id="9-a-guideline-history-reference-adopted-as-a-reference">9. A guideline history reference. ADOPTED as a reference</h3>
+
+<p>The checklist repository points at the App Store Review Guidelines History site, which tracks how the guidelines changed over time. Useful when a rejection cites a rule that was recently reworded.</p>
+
+<h2 id="what-we-already-had-that-they-did-not">What we already had that they did not</h2>
+
+<p>This survey also confirmed where this playbook is ahead.</p>
+
+<ul>
+  <li>Google Play depth. Most comparable repositories are iOS only. This playbook carries the full Google Play policy map, the four level enforcement ladder, the 12 tester rule, and Data Safety.</li>
+  <li>The legal layer. None of the surveyed repositories cover GDPR lawful basis, the EU AI Act, the DSA, or COPPA depth. This playbook does, with the explicit framing that store compliance is not legal compliance.</li>
+  <li>Cross store coverage. Huawei, the Chinese stores, Samsung, Amazon, Microsoft, and RuStore, in <code class="language-plaintext highlighter-rouge">OTHER-STORES.md</code>.</li>
+  <li>A working automated guard with a test suite, not only a written checklist.</li>
+</ul>
+
+<h2 id="the-two-edges-the-leader-had-now-closed">The two edges the leader had, now closed</h2>
+
+<p>The first pass of this analysis honestly noted two places the most popular repository was ahead. Both are now closed.</p>
+
+<ol>
+  <li>Live metadata pull and an autofix loop. We built <code class="language-plaintext highlighter-rouge">scripts/metadata-audit.py</code>, which audits the real store listing, name, subtitle, keywords, description, promotional text, review notes, and URLs, against the metadata rejection rules, with a propose and re validate loop, plus <code class="language-plaintext highlighter-rouge">scripts/pull-metadata.sh</code> to pull the live Apple listing through the asc CLI. The metadata layer is tested.</li>
+  <li>Per rule detection commands. Every rule in the <code class="language-plaintext highlighter-rouge">references/rules/</code> tree now carries a concrete detection command, generated from <code class="language-plaintext highlighter-rouge">data/detection-recipes.json</code>. An agent or a developer can run the exact grep, plist, or manifest check for each rule.</li>
+</ol>
+
+<p>What remains is not a capability gap, it is adoption. The most popular repository has the stars. That is earned over time through the launch, shares, and contributions, and the on ramp for that is in place.</p>
+
+<h2 id="second-survey-15-november-2026">Second survey, 15 November 2026</h2>
+
+<p>The survey was repeated a month later. Of the six repositories above, only <code class="language-plaintext highlighter-rouge">truongduy2611/app-store-preflight-skills</code> changed (a sync with the 16 October 2026 guidelines, which this playbook already carries). New repositories read through the GitHub API on 15 November 2026.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Repository</th>
+      <th>Stars</th>
+      <th>Last push</th>
+      <th>What it publishes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RevylAI/greenlight</td>
+      <td>2474</td>
+      <td>2026-08-05</td>
+      <td>Go scanner over source, privacy manifests, built IPA and AAB files, App Store Connect metadata, with SARIF output and runtime flow checks</td>
+    </tr>
+    <tr>
+      <td>safaiyeh/app-store-review-skill</td>
+      <td>454</td>
+      <td>2026-10-17</td>
+      <td>Agent skill with rules split by guideline section</td>
+    </tr>
+    <tr>
+      <td>devsemih/appstore-review-skill</td>
+      <td>106</td>
+      <td>2026-11-11</td>
+      <td>iOS and Play audit with build inspection, fixes, and rejection reply drafting</td>
+    </tr>
+    <tr>
+      <td>dabodamjan/app-store-rejection-checker</td>
+      <td>88</td>
+      <td>2026-11-05</td>
+      <td>Skill with a rejection taxonomy and a recent changes file</td>
+    </tr>
+    <tr>
+      <td>berkayturk/appstore-precheck</td>
+      <td>12</td>
+      <td>2026-10-22</td>
+      <td>Bash gate with a weekly guideline drift workflow</td>
+    </tr>
+    <tr>
+      <td>wajahatkarim3/play-data-safety-skill</td>
+      <td>11</td>
+      <td>2026-11-13</td>
+      <td>Generates the Play Data safety CSV from a per SDK evidence map</td>
+    </tr>
+    <tr>
+      <td>RobertoJoseph/appstore-rejections-mcp</td>
+      <td>16</td>
+      <td>2026-02-15</td>
+      <td>MCP server over real rejection cases</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="adopted-in-240">Adopted in 2.4.0</h3>
+
+<ul>
+  <li>Upload paths the guard missed. <code class="language-plaintext highlighter-rouge">helm-asc</code> uploads and <code class="language-plaintext highlighter-rouge">--submit</code>, the <code class="language-plaintext highlighter-rouge">asc</code> CLI, and the Codemagic <code class="language-plaintext highlighter-rouge">app-store-connect publish</code> command now trigger the scan.</li>
+  <li>IPv6 only review network (2.5.5). <code class="language-plaintext highlighter-rouge">inet_addr</code>, <code class="language-plaintext highlighter-rouge">inet_aton</code> and <code class="language-plaintext highlighter-rouge">gethostbyname</code> are flagged, and C and C++ sources are now scanned so native code is no longer invisible.</li>
+  <li>Debuggable Android builds, <code class="language-plaintext highlighter-rouge">specialUse</code> foreground services without their subtype property, and <code class="language-plaintext highlighter-rouge">abiFilters</code> that ship <code class="language-plaintext highlighter-rouge">armeabi-v7a</code> without <code class="language-plaintext highlighter-rouge">arm64-v8a</code>.</li>
+  <li>HealthKit and iCloud storage in the same app (5.1.3(ii)), reported for a human to confirm, because co-occurrence alone does not prove health data reaches iCloud.</li>
+</ul>
+
+<h3 id="considered-and-not-adopted-with-the-reason">Considered and not adopted, with the reason</h3>
+
+<ul>
+  <li>A 200 MB cellular download limit as a rejection rule. It is not an upload rejection threshold, so encoding it would block valid apps.</li>
+  <li>A launch storyboard requirement. <code class="language-plaintext highlighter-rouge">UILaunchScreen</code> in Info.plist is an accepted alternative, so a storyboard check would misfire.</li>
+  <li>Keyword blocking of trial toggles, countdowns and permission priming screens. These are not violations on their own, and <code class="language-plaintext highlighter-rouge">APPLE-3.1.2-MISLEADING-PRICING</code> already covers deceptive pricing.</li>
+</ul>
+
+<h3 id="open-larger-work-tracked-for-later-releases">Open, larger work tracked for later releases</h3>
+
+<ul>
+  <li>Inspecting the built IPA, APK and AAB, including the merged Android manifest, 16 KB ELF and ZIP alignment, and embedded framework privacy manifests and signatures.</li>
+  <li>Runtime proof that account deletion, restore purchases and Sign in with Apple work, with free XCUITest or Maestro flows.</li>
+  <li>A Data safety CSV generator, rejection message to reply drafting, an MCP server over the pattern data, and a weekly guideline page diff.</li>
+</ul>
+
+<h2 id="the-standing-process">The standing process</h2>
+
+<p>This analysis is repeatable. When a new comparable repository appears, read it through the API, extract its structure and unique rules, diff against this playbook, and fold in the net new patterns. Contributions that bring a pattern from another open source list are welcome, with a link to the source.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/COMPETITIVE-GAP-ANALYSIS.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

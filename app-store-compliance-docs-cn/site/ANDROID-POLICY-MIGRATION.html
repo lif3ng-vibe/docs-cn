@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>App Store Compliance Playbook | 避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="App Store Compliance Playbook" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ANDROID-POLICY-MIGRATION.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ANDROID-POLICY-MIGRATION.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="App Store Compliance Playbook" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"App Store Compliance Playbook","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ANDROID-POLICY-MIGRATION.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <!-- ANDROID_POLICY_MONITOR_START -->
+
+<blockquote>
+  <p><strong>Simulated output, not live announcements.</strong> This file was generated from sample
+announcements (the built-in set, the default, or a file passed with <code class="language-plaintext highlighter-rouge">--mock</code>). The titles,
+publish dates, and descriptions below are examples that show the shape of a migration
+report, not real publications. Only the linked official documentation URLs are real.
+Re-run the monitor with <code class="language-plaintext highlighter-rouge">--live</code> against the real feeds before treating anything here
+as an actual requirement.</p>
+</blockquote>
+
+<h1 id="android-and-google-play-policy-migration--requirements-report">Android and Google Play Policy Migration &amp; Requirements Report</h1>
+
+<p>This report is continuously generated and updated by <code class="language-plaintext highlighter-rouge">scripts/monitor-android.py</code> to track compliance areas.</p>
+
+<h2 id="monitored-requirements-update-log">Monitored Requirements Update Log</h2>
+
+<h3 id="1-google-play-developer-policies-google-play-enforcement-process">1. [Google Play Developer Policies] Google Play Enforcement Process</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 10 Jun 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/9899234">https://support.google.com/googleplay/android-developer/answer/9899234</a></li>
+  <li><strong>Description</strong>: Google Play’s enforcement process for policy violations covers rejection, removal, suspension, limited visibility, and account termination, based on app metadata, in-app experience, and account information.</li>
+</ul>
+
+<h3 id="2-play-console-announcements-new-play-console-mandatory-identity-verification-for-personal-accounts">2. [Play Console announcements] New Play Console Mandatory Identity Verification for Personal Accounts</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10788890">https://support.google.com/googleplay/android-developer/answer/10788890</a></li>
+  <li><strong>Description</strong>: To foster user trust, Google Play requires all personal developer accounts created before recent policy updates to complete mandatory identity verification by September 30, 2026. Failure to verify will result in update blockages and eventual listing removals.</li>
+</ul>
+
+<h3 id="3-target-sdk-requirements-google-play-target-sdk-policy-support-android-16-api-36-by-august-31-2026">3. [Target SDK requirements] Google Play Target SDK Policy: Support Android 16 (API 36) by August 31, 2026</h3>
+<ul>
+  <li><strong>Published Date</strong>: Sun, 01 Mar 2026 08:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/requirements/target-sdk">https://developer.android.com/google/play/requirements/target-sdk</a></li>
+  <li><strong>Description</strong>: Google Play is updating its Target SDK requirements. Starting August 31, 2026, all new apps and updates to existing apps must target Android 16 (API 36) or higher. Submissions failing to meet this threshold will be blocked by the publishing gate.</li>
+</ul>
+
+<h3 id="4-minimum-sdk-requirements-minimum-sdk-requirement-policy-change-for-android-50-deprecation">4. [Minimum SDK requirements] Minimum SDK Requirement Policy Change for Android 5.0 Deprecation</h3>
+<ul>
+  <li><strong>Published Date</strong>: Thu, 12 Mar 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
+  <li><strong>Description</strong>: To maintain high security and performance across the Google Play ecosystem, apps must set a minSdkVersion of 23 (Android 6.0) or higher to receive updates, formally deprecating support for legacy Android 5.0 and 5.1 (API 21/22).</li>
+</ul>
+
+<h3 id="5-android-api-deprecations-minimum-sdk-requirement-policy-change-for-android-50-deprecation">5. [Android API deprecations] Minimum SDK Requirement Policy Change for Android 5.0 Deprecation</h3>
+<ul>
+  <li><strong>Published Date</strong>: Thu, 12 Mar 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
+  <li><strong>Description</strong>: To maintain high security and performance across the Google Play ecosystem, apps must set a minSdkVersion of 23 (Android 6.0) or higher to receive updates, formally deprecating support for legacy Android 5.0 and 5.1 (API 21/22).</li>
+</ul>
+
+<h3 id="6-play-console-announcements-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">6. [Play Console announcements] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+</ul>
+
+<h3 id="7-android-api-deprecations-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">7. [Android API deprecations] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+</ul>
+
+<h3 id="8-play-integrity-api-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">8. [Play Integrity API] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+</ul>
+
+<h3 id="9-play-console-announcements-android-permission-model-update-scoped-media-and-storage-consent">9. [Play Console announcements] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+</ul>
+
+<h3 id="10-android-permission-model-android-permission-model-update-scoped-media-and-storage-consent">10. [Android permission model] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+</ul>
+
+<h3 id="11-user-data-policy-android-permission-model-update-scoped-media-and-storage-consent">11. [User Data policy] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+</ul>
+
+<h3 id="12-background-execution-restrictions-strict-restrictions-on-android-background-execution-and-exact-alarms">12. [Background execution restrictions] Strict Restrictions on Android Background execution and Exact Alarms</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 27 Mar 2026 15:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions/14/changes/schedule-exact-alarms">https://developer.android.com/about/versions/14/changes/schedule-exact-alarms</a></li>
+  <li><strong>Description</strong>: To conserve system battery life and improve device performance, Android is introducing tighter runtime checks. Tighter limitations on exact alarms (SCHEDULE_EXACT_ALARM) and background wake locks will trigger automatic job throttling.</li>
+</ul>
+
+<h3 id="13-play-console-announcements-new-foreground-service-type-declaration-mandate-on-play-console">13. [Play Console announcements] New Foreground Service Type Declaration Mandate on Play Console</h3>
+<ul>
+  <li><strong>Published Date</strong>: Tue, 31 Mar 2026 16:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
+  <li><strong>Description</strong>: All applications targeting API 34+ that run foreground services must declare valid foregroundServiceType attributes in their manifest, hold matching FOREGROUND_SERVICE permissions, and submit a detailed Play Console foreground service declaration and video.</li>
+</ul>
+
+<h3 id="14-foreground-service-policies-new-foreground-service-type-declaration-mandate-on-play-console">14. [Foreground service policies] New Foreground Service Type Declaration Mandate on Play Console</h3>
+<ul>
+  <li><strong>Published Date</strong>: Tue, 31 Mar 2026 16:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
+  <li><strong>Description</strong>: All applications targeting API 34+ that run foreground services must declare valid foregroundServiceType attributes in their manifest, hold matching FOREGROUND_SERVICE permissions, and submit a detailed Play Console foreground service declaration and video.</li>
+</ul>
+
+<h3 id="15-privacy-sandbox-privacy-sandbox-technologies-scheduled-for-phase-out-on-android">15. [Privacy Sandbox] Privacy Sandbox Technologies Scheduled for Phase-Out on Android</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 01 Apr 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies">https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies</a></li>
+  <li><strong>Description</strong>: Google has scheduled Privacy Sandbox technologies for phase-out, including the Topics and Attribution Reporting APIs on Android. Apps and SDKs should not build on these APIs and should review any code that still calls them.</li>
+</ul>
+
+<h3 id="16-google-play-developer-policies-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">16. [Google Play Developer Policies] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+</ul>
+
+<h3 id="17-play-console-announcements-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">17. [Play Console announcements] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+</ul>
+
+<h3 id="18-play-integrity-api-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">18. [Play Integrity API] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+</ul>
+
+<h3 id="19-play-billing-play-billing-library-v80-mandatory-migration-deadline">19. [Play Billing] Play Billing Library v8.0 Mandatory Migration Deadline</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 08 Apr 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/billing/deprecation-faq">https://developer.android.com/google/play/billing/deprecation-faq</a></li>
+  <li><strong>Description</strong>: By August 31, 2026, all new apps and updates to existing apps must migrate to the Play Billing Library version 8.0 or higher. Apps attempting to publish using earlier Billing Library versions (including v7.x or below) will be automatically blocked.</li>
+</ul>
+
+<h3 id="20-user-data-policy-google-play-user-data-deletion-and-web-url-mandate-update">20. [User Data policy] Google Play User Data Deletion and Web URL Mandate Update</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 10 Apr 2026 13:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/13327111">https://support.google.com/googleplay/android-developer/answer/13327111</a></li>
+  <li><strong>Description</strong>: All apps permitting in-app account creation must provide users with both an in-app account deletion flow and a public web-based data deletion URL. Unreachable or broken deletion URLs will trigger automated store rejections.</li>
+</ul>
+
+<h3 id="21-google-play-developer-policies-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">21. [Google Play Developer Policies] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+</ul>
+
+<h3 id="22-user-data-policy-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">22. [User Data policy] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+</ul>
+
+<h3 id="23-data-safety-section-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">23. [Data Safety section] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+</ul>
+
+<h3 id="24-firebase-policy-updates-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">24. [Firebase policy updates] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+</ul>
+
+<h3 id="25-ai-generated-content-policies-google-play-generative-ai-safeguards-and-in-app-reporting-requirements">25. [AI-generated content policies] Google Play Generative AI Safeguards and In-App Reporting Requirements</h3>
+<ul>
+  <li><strong>Published Date</strong>: Thu, 16 Apr 2026 15:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/14747720">https://support.google.com/googleplay/android-developer/answer/14747720</a></li>
+  <li><strong>Description</strong>: Applications integrating generative AI or conversational LLMs must provide robust user-safety controls, including prominent disclosures, an in-app content reporting/flagging mechanism, user blocking, and safeguards preventing deepfake/NSFW outputs.</li>
+</ul>
+
+<h3 id="26-accessibility-requirements-google-play-accessibility-service-misuse-and-touch-target-audit">26. [Accessibility requirements] Google Play Accessibility Service Misuse and Touch Target Audit</h3>
+<ul>
+  <li><strong>Published Date</strong>: Tue, 21 Apr 2026 16:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10964491">https://support.google.com/googleplay/android-developer/answer/10964491</a></li>
+  <li><strong>Description</strong>: Google Play will flag and reject non-accessibility apps requesting the BIND_ACCESSIBILITY_SERVICE permission. Additionally, apps face strict audits ensuring a minimum 48dp touch target size and content descriptions for all interactive elements.</li>
+</ul>
+
+<h3 id="27-device-compatibility-requirements-device-compatibility-and-foldable-layout-guidelines-update">27. [Device compatibility requirements] Device Compatibility and Foldable Layout Guidelines Update</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 24 Apr 2026 17:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens">https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens</a></li>
+  <li><strong>Description</strong>: Android releases update guidelines enforcing screen and aspect-ratio compatibility across multi-window systems, tablets, and foldable devices. Apps must support dynamic resizing and avoid fixed orientation limits where feasible.</li>
+</ul>
+
+<h3 id="28-google-play-developer-policies-android-security-bulletin-cryptographic-keystore-isolation-mandate">28. [Google Play Developer Policies] Android Security Bulletin: Cryptographic Keystore Isolation Mandate</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 27 Apr 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
+  <li><strong>Description</strong>: An Android Security Bulletin addresses high-severity vulnerabilities (CVE-2026-X). App developers are mandated to isolate sensitive user secrets and credentials inside the hardware-backed Android Keystore system and enforce biometrics.</li>
+</ul>
+
+<h3 id="29-security-bulletins-android-security-bulletin-cryptographic-keystore-isolation-mandate">29. [Security Bulletins] Android Security Bulletin: Cryptographic Keystore Isolation Mandate</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 27 Apr 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
+  <li><strong>Description</strong>: An Android Security Bulletin addresses high-severity vulnerabilities (CVE-2026-X). App developers are mandated to isolate sensitive user secrets and credentials inside the hardware-backed Android Keystore system and enforce biometrics.</li>
+</ul>
+
+<h3 id="30-play-console-announcements-android-enterprise-work-profile-security-policy-enhancements">30. [Play Console announcements] Android Enterprise Work Profile Security Policy Enhancements</h3>
+<ul>
+  <li><strong>Published Date</strong>: Thu, 30 Apr 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
+  <li><strong>Description</strong>: Google announces new Android Enterprise standards for corporate and work profile apps. Enhanced controls under the DevicePolicyManager allow secure data boundaries, blocking side-loading and personal app data leakage.</li>
+</ul>
+
+<h3 id="31-android-enterprise-requirements-android-enterprise-work-profile-security-policy-enhancements">31. [Android Enterprise requirements] Android Enterprise Work Profile Security Policy Enhancements</h3>
+<ul>
+  <li><strong>Published Date</strong>: Thu, 30 Apr 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
+  <li><strong>Description</strong>: Google announces new Android Enterprise standards for corporate and work profile apps. Enhanced controls under the DevicePolicyManager allow secure data boundaries, blocking side-loading and personal app data leakage.</li>
+</ul>
+
+<h3 id="32-google-play-developer-policies-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">32. [Google Play Developer Policies] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+</ul>
+
+<h3 id="33-android-api-deprecations-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">33. [Android API deprecations] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+</ul>
+
+<h3 id="34-firebase-policy-updates-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">34. [Firebase policy updates] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+</ul>
+
+<h2 id="automated-migration-recommendations--implementation-tasks">Automated Migration Recommendations &amp; Implementation Tasks</h2>
+
+<h3 id="tasks-for-google-play-developer-policies">Tasks for Google Play Developer Policies</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit app metadata, store listing content, and in-app experiences against Developer Policies.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review Play Console policy enforcement notices and clear active warnings.</li>
+</ul>
+
+<h3 id="tasks-for-play-console-announcements">Tasks for Play Console announcements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Complete mandatory Play Console identity verification for developer accounts.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Monitor Play Console inbox announcements weekly for mandatory publishing gate updates.</li>
+</ul>
+
+<h3 id="tasks-for-target-sdk-requirements">Tasks for Target SDK requirements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Update <code class="language-plaintext highlighter-rouge">targetSdkVersion</code> and <code class="language-plaintext highlighter-rouge">compileSdkVersion</code> in Gradle build files to API 36 (Android 16).</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Perform regression testing for Android 16 target API behavior changes.</li>
+</ul>
+
+<h3 id="tasks-for-minimum-sdk-requirements">Tasks for Minimum SDK requirements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Check <code class="language-plaintext highlighter-rouge">minSdkVersion</code> against the minimum your AndroidX, Play services, and Firebase dependencies require. Google Play itself sets a target API floor, not a minSdk floor.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Clean up legacy conditional checks for deprecated API levels 21/22.</li>
+</ul>
+
+<h3 id="tasks-for-android-api-deprecations">Tasks for Android API deprecations</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit codebase for deprecated APIs (e.g., legacy SafetyNet Attestation) and replace with modern APIs.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Remove references to deprecated Android classes across module dependencies.</li>
+</ul>
+
+<h3 id="tasks-for-play-integrity-api">Tasks for Play Integrity API</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement client-side Play Integrity API token requests with cryptographic nonces.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Deploy server-side token decryption and verification checks.</li>
+</ul>
+
+<h3 id="tasks-for-android-permission-model">Tasks for Android permission model</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit <code class="language-plaintext highlighter-rouge">&lt;uses-permission&gt;</code> tags in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> and eliminate unnecessary sensitive permissions.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Adopt native Android Photo Picker and scoped media storage permissions.</li>
+</ul>
+
+<h3 id="tasks-for-user-data-policy">Tasks for User Data policy</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement an in-app account and data deletion path for users.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Publish a public web data deletion URL and link it in the Play Console User Data safety form.</li>
+</ul>
+
+<h3 id="tasks-for-background-execution-restrictions">Tasks for Background execution restrictions</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit <code class="language-plaintext highlighter-rouge">WorkManager</code>, <code class="language-plaintext highlighter-rouge">JobScheduler</code>, and <code class="language-plaintext highlighter-rouge">AlarmManager</code> usage for execution time limits.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review <code class="language-plaintext highlighter-rouge">SCHEDULE_EXACT_ALARM</code> usage and migrate to inexact alarms where applicable.</li>
+</ul>
+
+<h3 id="tasks-for-foreground-service-policies">Tasks for Foreground service policies</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Specify <code class="language-plaintext highlighter-rouge">foregroundServiceType</code> inside manifest <code class="language-plaintext highlighter-rouge">&lt;service&gt;</code> declarations for API 34+.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Complete the foreground service declaration on the Play Console App content page, including a video link for each foreground service feature.</li>
+</ul>
+
+<h3 id="tasks-for-privacy-sandbox">Tasks for Privacy Sandbox</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Review Advertising ID and attribution SDK usage. Since October 2025 Google has scheduled the Topics and Attribution Reporting APIs on Android for phase-out, so do not adopt them.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Confirm the Advertising ID permission and the Data safety form match what the advertising and analytics SDKs actually collect.</li>
+</ul>
+
+<h3 id="tasks-for-play-billing">Tasks for Play Billing</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Migrate project dependencies to Play Billing Library version 8.0 or higher.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Perform test transactions on Google Play Console sandbox environment.</li>
+</ul>
+
+<h3 id="tasks-for-data-safety-section">Tasks for Data Safety section</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit runtime network traffic from third-party SDKs (Firebase, Facebook, AppsFlyer).</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Update Play Console Data Safety questionnaire declarations to align with runtime actions.</li>
+</ul>
+
+<h3 id="tasks-for-firebase-policy-updates">Tasks for Firebase policy updates</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Migrate deprecated Firebase Dynamic Links configurations to Firebase Hosting deep links or App Links.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Update Cloud Firestore and Realtime Database security rules to enforce strict data isolation.</li>
+</ul>
+
+<h3 id="tasks-for-ai-generated-content-policies">Tasks for AI-generated content policies</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Add safeguards so generative AI features cannot produce content restricted by the Play Inappropriate Content policies.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Provide in-app reporting or flagging for offensive AI-generated content that works without leaving the app.</li>
+</ul>
+
+<h3 id="tasks-for-accessibility-requirements">Tasks for Accessibility requirements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Ensure all touch targets measure at least 48dp in physical size.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Add <code class="language-plaintext highlighter-rouge">contentDescription</code> attributes on all ImageViews and ImageButtons.</li>
+</ul>
+
+<h3 id="tasks-for-device-compatibility-requirements">Tasks for Device compatibility requirements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Configure <code class="language-plaintext highlighter-rouge">android:resizeableActivity=true</code> in manifest.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Verify layout responsiveness on large screens, foldables, and tablet viewports.</li>
+</ul>
+
+<h3 id="tasks-for-security-bulletins">Tasks for Security Bulletins</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement cryptographic token storage wrapper backed by Android Keystore.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review Android Security Bulletins and resolve applicable CVE vulnerabilities.</li>
+</ul>
+
+<h3 id="tasks-for-android-enterprise-requirements">Tasks for Android Enterprise requirements</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement Work Profile boundaries and secure inter-profile data exchange under <code class="language-plaintext highlighter-rouge">DevicePolicyManager</code>.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Ensure compatibility with enterprise managed configurations.</li>
+</ul>
+
+<!-- ANDROID_POLICY_MONITOR_END -->
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/ANDROID-POLICY-MIGRATION.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

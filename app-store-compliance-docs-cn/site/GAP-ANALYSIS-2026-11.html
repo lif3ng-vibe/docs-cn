@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Gap analysis, November 2026 | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Gap analysis, November 2026" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Gap analysis, November 2026" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Gap analysis, November 2026","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-11.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <!-- freshness: 60d -->
+
+<p>What changed on the platforms and in law between 5 September and 14 November 2026, what this playbook added in response, and what could not be read from a primary source. It repeats the method of <a href="/docs-cn/app-store-compliance/GAP-ANALYSIS-2026-09.html">GAP-ANALYSIS-2026-09.md</a>. Every item encoded below was read on its primary source on 14 November 2026. Anything that could not be read there is listed under Unverified, not folded into a rule. The next sweep is due by 13 January 2027.</p>
+
+<h2 id="1-method">1. Method</h2>
+
+<ul>
+  <li>Apple. every Apple Developer news post from 5 September to 14 November 2026 (21 posts, none between 5 and 8 September) and the Upcoming Requirements page.</li>
+  <li>Google. the Play policy announcements in the window (one batch, 29 October 2026), the Play Policy Deadlines table, the Android Developers Blog, and the target API, Billing deprecation, and developer verification pages.</li>
+  <li>Regulation. four regional passes (EU and UK, United States, Asia-Pacific, and Canada, Australia, Brazil), each returning only dated items with a quoted sentence from the instrument. gov.ca.gov, ofcom.org.uk, and esafety.gov.au refused or timed out on scripted fetches, so their items are listed as unverified rather than encoded.</li>
+  <li>Repo. every finding was searched for across <code class="language-plaintext highlighter-rouge">docs/</code>, <code class="language-plaintext highlighter-rouge">data/</code>, and <code class="language-plaintext highlighter-rouge">references/</code> before anything was written, so items the October review had already added (the 16 October guideline revision, the EU ATT prompt, the DSA trader status) were not added twice.</li>
+  <li>Every finding a research pass returned was re-read on its primary page before it changed the data. Two claims that contradicted existing entries (the social media 13+ rule, the iPhone Duo SDK scope) were checked this way and turned out to be wrong, so the entries stand.</li>
+</ul>
+
+<h2 id="2-apple-verified-deltas">2. Apple, verified deltas</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Change</th>
+      <th>Source</th>
+      <th>Repo action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>New age rating descriptors, Shared Location and Dating and Relationships, in the questionnaire from 16 November 2026, every app answered by 12 January 2027, Dating sets an 18+ minimum</td>
+      <td><a href="https://developer.apple.com/news/?id=yxkh08us">yxkh08us</a></td>
+      <td>APPLE-AGE-RATING-LOCATION-DATING-2027, APPLE.md</td>
+    </tr>
+    <tr>
+      <td>Original Developer ID Sub-CA expires 1 February 2027, re-sign installer packages from the G2 authority</td>
+      <td><a href="https://developer.apple.com/news/?id=w4atic4c">w4atic4c</a></td>
+      <td>APPLE-DEVELOPER-ID-SUBCA-EXPIRY-2027, PLATFORM-MECHANICS section 1.1</td>
+    </tr>
+    <tr>
+      <td>Developer Program License Agreement updated 13 October 2026, acceptance needed</td>
+      <td><a href="https://developer.apple.com/news/?id=17mwd36z">17mwd36z</a></td>
+      <td>APPLE.md</td>
+    </tr>
+    <tr>
+      <td>Taiwan standard commission 30 to 26 percent from 31 October 2026</td>
+      <td><a href="https://developer.apple.com/news/?id=w9mxlhek">w9mxlhek</a></td>
+      <td>APPLE.md</td>
+    </tr>
+    <tr>
+      <td>App Review Guidelines revised 16 October 2026 (2.3.14, 2.5.19, 1.2 NCII) and EU ATT alternative prompt from iOS 27.2</td>
+      <td><a href="https://developer.apple.com/news/?id=92th7e5i">92th7e5i</a>, <a href="https://developer.apple.com/news/?id=idsft9ai">idsft9ai</a></td>
+      <td>Already in the repo from the October review, no change</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Checked and month-only, placeholders kept. the social media declaration (September 2026), the minimum SDK for uploads and the iPhone Duo screenshot rule (both April 2027).</p>
+
+<h2 id="3-google-play-and-android-verified-deltas">3. Google Play and Android, verified deltas</h2>
+
+<p>All from the policy announcement of 29 October 2026 and the Play Policy Deadlines table.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Deadline</th>
+      <th>Change</th>
+      <th>Repo action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 December 2026</td>
+      <td>Japan payments authorization, or payments held globally</td>
+      <td>GOOGLE-JAPAN-PAYMENTS-AUTHORIZATION-2026</td>
+    </tr>
+    <tr>
+      <td>27 January 2027</td>
+      <td>Eligibility-based subscription discounts disclose criteria, verification, and post-eligibility pricing</td>
+      <td>GOOGLE-SUBSCRIPTION-ELIGIBILITY-DISCOUNTS-2027</td>
+    </tr>
+    <tr>
+      <td>14 April 2027</td>
+      <td>AppFunctions API policy</td>
+      <td>GOOGLE-APPFUNCTIONS-POLICY-2027</td>
+    </tr>
+    <tr>
+      <td>25 August 2027</td>
+      <td>Local Network and Manage Contacts permission declarations</td>
+      <td>GOOGLE-LOCAL-NETWORK-MANAGE-CONTACTS-2027</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The same announcement says trader status must be declared in Play Console starting November 2026, which the repo already covers. Android developer verification still names 2027 for the global step with no day. The target API and Billing pages are unchanged.</p>
+
+<h2 id="4-regulation-verified-deltas">4. Regulation, verified deltas</h2>
+
+<ul>
+  <li>European Union. Cyber Resilience Act vulnerability and incident reporting applies from 11 September 2026, already encoded. The Commission proposed the Digital Fairness Act on 11 November 2026 (COM(2026) 1100), which would apply 12 months after entry into force, so it creates no obligation yet. The EDPB finalised its DSA and GDPR interplay guidelines and consulted on fines guidelines until 13 November 2026.</li>
+  <li>United Kingdom. The draft Consumer Subscription Contracts (Cancellation and Information) Regulations 2026 name 1 January 2027 and had not been made on 14 November 2026.</li>
+  <li>United States. New York S.9051B/A.10379C (signed 28 October 2026) bars unsafe AI chatbot features for minors and requires age verification with a non-ID option, with no effective date published. The FTC opened an advance notice of proposed rulemaking on impersonation scams on 1 October 2026 (comments to 30 November 2026). Louisiana Act 502 takes effect 1 January 2027. The DOJ ADA Title II rule is still the interim final rule and the FTC AI accuracy statement is still proposed.</li>
+</ul>
+
+<h2 id="5-asia-pacific-canada-australia-brazil-verified-deltas">5. Asia-Pacific, Canada, Australia, Brazil, verified deltas</h2>
+
+<p>The regional pass for Asia-Pacific, Canada, Australia, and Brazil was still running when this sweep merged. Its findings landed in a follow-up change on 15 November 2026 after each item was read on its primary source. Korea’s AI development reuse rule (Act No. 21910, from 9 March 2027), Indonesia’s PP TUNAS self-assessment deadline (31 December 2026), and China’s CAC filing window for platforms with a large minor audience (closing around 16 November 2026). Items already confirmed in <a href="https://github.com/mjmirza/app-store-compliance/issues/659">#659</a> on 14 November 2026. Korea’s mandatory privacy certification from 1 July 2027, Japan’s APPI amendment as Act No. 56 of 2026, and the India DPDP rule 4 Consent Manager date.</p>
+
+<h2 id="6-unverified-deliberately-not-encoded">6. Unverified, deliberately not encoded</h2>
+
+<ul>
+  <li>California bills signed in September 2026 (AB 1709 social media for under-16s, SB 1119 companion chatbots, AB 1856 age signals, AB 2246 replacing the Age-Appropriate Design Code, SB 1000 and AB 2713 AI transparency). A research pass read the Governor’s releases, but gov.ca.gov refused every fetch from this check, and none of the releases states an effective date. Read the chaptered text on leginfo before encoding.</li>
+  <li>Ofcom’s amended Illegal Content Codes of Practice (issued 12 October 2026, in force 2 November 2026) and its categorised-services risk assessment dates. ofcom.org.uk answers scripted reads with a browser challenge, so the wording was seen only through a search index.</li>
+  <li>The UK under-16 social media regulations, reported to be laid in December 2026 for spring 2027. Secondary only.</li>
+  <li>The Alabama App Store Accountability Act challenge (CCIA, reported 28 October 2026). No docket found.</li>
+  <li>The Australia App Distribution Services Code on the live eSafety register, carried over from <a href="https://github.com/mjmirza/app-store-compliance/issues/659">#659</a>. The Korea MyData dates from the same issue were read on 23 November 2026 and are encoded as <code class="language-plaintext highlighter-rouge">KR-PIPA-SELF-TRANSMISSION-2027</code>.</li>
+</ul>
+
+<h2 id="7-follow-up-15-november-2026">7. Follow-up, 15 November 2026</h2>
+
+<p>A second pass read the App Store Connect release notes and the Upcoming Requirements page line by line, which the first pass had only skimmed.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Change</th>
+      <th>Source</th>
+      <th>Repo action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>From early 2027 App Store Connect will no longer accept uploads containing On-Demand Resources from new apps or apps that have never used the feature (release notes, 12 November 2026)</td>
+      <td><a href="https://developer.apple.com/help/app-store-connect/release-notes/">release notes</a></td>
+      <td>APPLE-ODR-UPLOAD-BLOCK-2027, APPLE-ODR-DEPRECATED-27 expanded</td>
+    </tr>
+    <tr>
+      <td>iOS and iPadOS apps uploaded to App Store Connect must target iOS 13 or later</td>
+      <td><a href="https://developer.apple.com/news/upcoming-requirements/">Upcoming Requirements</a></td>
+      <td>APPLE-MIN-DEPLOYMENT-TARGET-IOS13, new guard check</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Checked and not encoded. The INSTALLS analytics report deprecation in App Store Connect API 4.6 affects reporting, not review. The Republic of Korea consent schedule for converting subscription offers to standard paid subscriptions (30 September 2026) is tracked for the next sweep, because its detail page failed to load on the first read.</p>
+
+<h2 id="8-follow-up-19-november-2026">8. Follow-up, 19 November 2026</h2>
+
+<p>The 29 October 2026 announcement says trader status must be declared in Play Console starting in November 2026. Section 3 above treated that line as already covered. The linked Play Console page (answer 17594752), read on 19 November 2026, states two dates the announcement does not. Existing accounts must declare trader or non-trader status by 1 February 2027, and the EEA and UK online marketplace display starts 1 March 2027. Those are <code class="language-plaintext highlighter-rouge">GOOGLE-PLAY-TRADER-STATUS-2027</code> and <code class="language-plaintext highlighter-rouge">GOOGLE-PLAY-MARKETPLACE-DISPLAY-2027</code>. They are not the February 2027 technical quality deadline (<code class="language-plaintext highlighter-rouge">GOOGLE-TECH-QUALITY-FEB-2027</code>) and not Apple’s DSA trader duty (<code class="language-plaintext highlighter-rouge">EU-DSA-TRADER-STATUS</code>).</p>
+
+<h2 id="9-follow-up-23-november-2026">9. Follow-up, 23 November 2026</h2>
+
+<p>The 29 October 2026 announcement (answer 18100766) also says that on 27 January 2027 account verification via phone call will no longer be a permitted use case for READ_CALL_LOG, and that the SMS User Consent API is a privacy-preserving alternative for account verification. Section 3 above did not record that sentence. Play Console Help answer 10208820, read on 23 November 2026, states the same date and names the Digital Credentials API, either directly or through a verification provider built upon it, and the SMS Retriever API. The exceptions table on that page still lists account verification via phone call until 27 January 2027. The September gap analysis had recorded 26 August 2026. The corrected deadline is <code class="language-plaintext highlighter-rouge">GOOGLE-PLAY-CALL-LOG-VERIFICATION-2027</code>.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/GAP-ANALYSIS-2026-11.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

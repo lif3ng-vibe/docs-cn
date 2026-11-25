@@ -61,7 +61,7 @@ What the playbook does for 4.3 and 4.2.
 
 - Flags a WebView, Capacitor, or Cordova shell with almost no native features (IONIC-4.2-THIN-WRAPPER). It is a heuristic, not a verdict.
 - Names the process causes behind 4.3 in [MISTAKE-PATTERNS.md](MISTAKE-PATTERNS.md). Many near identical apps from one account, template or reseller apps, duplicate bundle IDs for variations, and a low effort entry in a saturated niche.
-- Gives the reply that works in [the appeal playbook](MISTAKE-PATTERNS.md#the-appeal-playbook). Do not resubmit blind. Answer App Review point by point in Resolution Center, say what is unique and who it is for, and attach a short screen recording of the feature that makes the difference.
+- Gives the reply that works in [the appeal playbook](MISTAKE-PATTERNS.md#申诉实战手册). Do not resubmit blind. Answer App Review point by point in Resolution Center, say what is unique and who it is for, and attach a short screen recording of the feature that makes the difference.
 
 What it cannot do. Tell you that your concept is too close to someone else's. Treat any tool that claims it can with suspicion.
 

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>App Store Compliance Playbook | 避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="App Store Compliance Playbook" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/SECURITY-POLICY-MIGRATION.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/SECURITY-POLICY-MIGRATION.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="App Store Compliance Playbook" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"App Store Compliance Playbook","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/SECURITY-POLICY-MIGRATION.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <!-- SECURITY_POLICY_MONITOR_START -->
+
+<blockquote>
+  <p><strong>Simulated output, not live announcements.</strong> This file was generated from sample
+announcements (the built-in set, the default, or a file passed with <code class="language-plaintext highlighter-rouge">--mock</code>). The titles,
+publish dates, and descriptions below are examples that show the shape of a migration
+report, not real publications. Only the linked official documentation URLs are real.
+This monitor has no live feed (Android security bulletins publish no RSS), so check the
+linked official pages before treating anything here as an actual requirement.</p>
+</blockquote>
+
+<h1 id="mobile-security-requirements-policy-migration--report">Mobile Security Requirements Policy Migration &amp; Report</h1>
+
+<p>This report is continuously generated and updated by <code class="language-plaintext highlighter-rouge">scripts/monitor-security.py</code> to track compliance areas.</p>
+
+<h2 id="monitored-security-requirements-update-log">Monitored Security Requirements Update Log</h2>
+
+<h3 id="1-secure-storage-secure-storage-update-deprecating-insecure-sharedpreferences-and-plaintext-databases">1. [secure storage] Secure Storage Update: Deprecating Insecure SharedPreferences and Plaintext Databases</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
+  <li><strong>Description</strong>: Mobile applications must encrypt all sensitive localized data. Standard SharedPreferences and plain SQLite databases are declared insecure on rooted devices, requiring migration to SQLCipher or EncryptedSharedPreferences.</li>
+</ul>
+
+<h3 id="2-root-detection-secure-storage-update-deprecating-insecure-sharedpreferences-and-plaintext-databases">2. [root detection] Secure Storage Update: Deprecating Insecure SharedPreferences and Plaintext Databases</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
+  <li><strong>Description</strong>: Mobile applications must encrypt all sensitive localized data. Standard SharedPreferences and plain SQLite databases are declared insecure on rooted devices, requiring migration to SQLCipher or EncryptedSharedPreferences.</li>
+</ul>
+
+<h3 id="3-keychain-ios-keychain-security-enhancement-enforcing-thisdeviceonly-protection-classes">3. [Keychain] iOS Keychain Security Enhancement: Enforcing ThisDeviceOnly Protection Classes</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 17 Jun 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.apple.com/documentation/security/keychain_services">https://developer.apple.com/documentation/security/keychain_services</a></li>
+  <li><strong>Description</strong>: Apple developer security directives mandate migrating keychain items to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly to prevent unauthorized backup restoration on secondary physical devices.</li>
+</ul>
+
+<h3 id="4-android-keystore-android-keystore-system-mandatory-hardware-backed-key-attestation">4. [Android Keystore] Android Keystore System: Mandatory Hardware-Backed Key Attestation</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 19 Jun 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/articles/keystore">https://developer.android.com/training/articles/keystore</a></li>
+  <li><strong>Description</strong>: New security guidelines mandate hardware-backed (TEE or StrongBox) KeyGenParameterSpec initialization. Cryptographic keys used for financial or identity payload signing must enforce user authentication requirements.</li>
+</ul>
+
+<h3 id="5-keychain-biometric-authentication-transitioning-to-crypto-backed-secure-biometric-verification">5. [Keychain] Biometric Authentication: Transitioning to Crypto-Backed Secure Biometric Verification</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 22 Jun 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
+  <li><strong>Description</strong>: To prevent runtime instrumentation and hook-based bypasses of boolean returns, developers must wrap biometric prompts in a strong Keystore/Keychain CryptoObject or SecAccessControl structure.</li>
+</ul>
+
+<h3 id="6-biometric-authentication-biometric-authentication-transitioning-to-crypto-backed-secure-biometric-verification">6. [biometric authentication] Biometric Authentication: Transitioning to Crypto-Backed Secure Biometric Verification</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 22 Jun 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
+  <li><strong>Description</strong>: To prevent runtime instrumentation and hook-based bypasses of boolean returns, developers must wrap biometric prompts in a strong Keystore/Keychain CryptoObject or SecAccessControl structure.</li>
+</ul>
+
+<h3 id="7-certificate-pinning-certificate-pinning-guidelines-mandating-subject-public-key-info-spki-pinning">7. [certificate pinning] Certificate Pinning Guidelines: Mandating Subject Public Key Info (SPKI) Pinning</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 24 Jun 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning">https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning</a></li>
+  <li><strong>Description</strong>: Leaf-level certificate pinning is discouraged due to rotational outages. Best practices mandate pinning the Subject Public Key Info (SPKI) of the primary and backup intermediate certificate authorities.</li>
+</ul>
+
+<h3 id="8-jailbreak-detection-ios-jailbreak-detection-comprehensive-dynamic-linker-and-sandbox-write-auditing">8. [jailbreak detection] iOS Jailbreak Detection: Comprehensive Dynamic Linker and Sandbox Write Auditing</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 26 Jun 2026 15:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>Description</strong>: Static file existence checks are easily bypassed. Jailbreak detection must combine dynamic library (dyld) inspection, directory permission checking, and symlink integrity checks.</li>
+</ul>
+
+<h3 id="9-root-detection-android-root-detection-mandating-play-integrity-api-attestation-in-production">9. [root detection] Android Root Detection: Mandating Play Integrity API Attestation in Production</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 29 Jun 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>Description</strong>: Local heuristic root checks are unreliable against modern zygisk masking. High-security apps must leverage the Play Integrity API with cryptographically verified backend tokens.</li>
+</ul>
+
+<h3 id="10-ssl-configuration-ssl-configuration-policies-global-enforcement-of-tls-13-and-disabling-cleartext-traffic">10. [SSL configuration] SSL Configuration Policies: Global Enforcement of TLS 1.3 and Disabling Cleartext Traffic</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 01 Jul 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/articles/security-config">https://developer.android.com/training/articles/security-config</a></li>
+  <li><strong>Description</strong>: Mobile app stores enforce secure networking by default. Cleartext HTTP traffic must be disabled globally, and minimum TLS versions must be set to TLS 1.2 or TLS 1.3.</li>
+</ul>
+
+<h3 id="11-backup-rules-insecure-backup-controls-configuring-data-extraction-rules-and-backup-exclusions">11. [backup rules] Insecure Backup Controls: Configuring Data Extraction Rules and Backup Exclusions</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 03 Jul 2026 13:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/data/autobackup">https://developer.android.com/guide/topics/data/autobackup</a></li>
+  <li><strong>Description</strong>: By default, ADB backup transfers application local databases. Developers must declare allowBackup=’false’ or configure precise dataExtractionRules to exclude credentials.</li>
+</ul>
+
+<h3 id="12-exported-activities-exported-activities-security-mandatory-explicit-export-controls-on-android-components">12. [exported activities] Exported Activities Security: Mandatory Explicit Export Controls on Android Components</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 06 Jul 2026 14:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/activities/intro-activities">https://developer.android.com/guide/components/activities/intro-activities</a></li>
+  <li><strong>Description</strong>: Unintentionally exported activities expose internal application boundaries. Developers must set android:exported=’false’ for all internal classes to prevent intent injection.</li>
+</ul>
+
+<h3 id="13-intent-filters-intent-filter-audits-preventing-implicit-intent-spoofing-and-component-hijacking">13. [intent filters] Intent Filter Audits: Preventing Implicit Intent Spoofing and Component Hijacking</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 08 Jul 2026 16:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/intents-filters">https://developer.android.com/guide/components/intents-filters</a></li>
+  <li><strong>Description</strong>: Implicit intent filters automatically expose components. To secure transitions, apps should use explicit class intents and enforce signature-level custom permissions.</li>
+</ul>
+
+<h3 id="14-deep-links-deep-link-security-preventing-custom-url-scheme-hijacking-and-parameter-injection">14. [deep links] Deep Link Security: Preventing Custom URL Scheme Hijacking and Parameter Injection</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 10 Jul 2026 12:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/app-links/deep-linking">https://developer.android.com/training/app-links/deep-linking</a></li>
+  <li><strong>Description</strong>: Custom URL schemes can be registered by other applications, leading to session hijacking. All parameters must be parsed, validated, and sanitized as untrusted inputs.</li>
+</ul>
+
+<h3 id="15-universal-links-universal-links-verification-secure-association-via-aasa-hosting-on-ios">15. [universal links] Universal Links Verification: Secure Association via AASA Hosting on iOS</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 13 Jul 2026 10:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html">https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html</a></li>
+  <li><strong>Description</strong>: To prevent custom scheme hijacking, applications must adopt Universal Links verified by a secure apple-app-site-association file hosted on the target web domain.</li>
+</ul>
+
+<h3 id="16-app-links-android-app-links-verification-digitally-binding-web-domains-via-digital-asset-links">16. [app links] Android App Links Verification: Digitally Binding Web Domains via Digital Asset Links</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 15 Jul 2026 11:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/app-links/verify-site-associations">https://developer.android.com/training/app-links/verify-site-associations</a></li>
+  <li><strong>Description</strong>: Android App Links enable secure routing. The host domain must publish a digital assetlinks.json containing the application’s unique signing key certificate fingerprint.</li>
+</ul>
+
+<h3 id="17-authentication-flows-authentication-flows-requiring-oauth-21-and-pkce-to-secure-mobile-auth-tokens">17. [authentication flows] Authentication Flows: Requiring OAuth 2.1 and PKCE to Secure Mobile Auth Tokens</h3>
+<ul>
+  <li><strong>Published Date</strong>: Fri, 17 Jul 2026 09:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://oauth.net/2/pkce/">https://oauth.net/2/pkce/</a></li>
+  <li><strong>Description</strong>: Hardcoding client secrets inside mobile binaries is a critical risk. Modern mobile authentication must use Proof Key for Code Exchange (PKCE) over secure system browser custom tabs.</li>
+</ul>
+
+<h3 id="18-session-handling-session-handling-standards-mandatory-server-side-session-invalidation-and-snapshot-protection">18. [session handling] Session Handling Standards: Mandatory Server-Side Session Invalidation and Snapshot Protection</h3>
+<ul>
+  <li><strong>Published Date</strong>: Mon, 20 Jul 2026 15:00:00 GMT</li>
+  <li><strong>Official Resource</strong>: <a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</a></li>
+  <li><strong>Description</strong>: Client-side token deletion is insufficient. Applications must perform server-side session invalidation on logout and blur multitasking window snapshots to prevent data leakage.</li>
+</ul>
+
+<h3 id="19-keychain-token-storage-policies-securing-long-lived-refresh-tokens-and-session-credentials">19. [Keychain] Token Storage Policies: Securing Long-Lived Refresh Tokens and Session Credentials</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 22 Jul 2026 13:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>Description</strong>: Session and refresh tokens must be stored in encrypted enclaves (Keychain/Keystore) rather than local cache directories or standard plists. Access tokens must be short-lived.</li>
+</ul>
+
+<h3 id="20-token-storage-token-storage-policies-securing-long-lived-refresh-tokens-and-session-credentials">20. [token storage] Token Storage Policies: Securing Long-Lived Refresh Tokens and Session Credentials</h3>
+<ul>
+  <li><strong>Published Date</strong>: Wed, 22 Jul 2026 13:00:00 PDT</li>
+  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>Description</strong>: Session and refresh tokens must be stored in encrypted enclaves (Keychain/Keystore) rather than local cache directories or standard plists. Access tokens must be short-lived.</li>
+</ul>
+
+<h2 id="automated-migration-recommendations--implementation-tasks">Automated Migration Recommendations &amp; Implementation Tasks</h2>
+
+<h3 id="tasks-for-secure-storage">Tasks for secure storage</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Update standard preferences to EncryptedSharedPreferences on Android.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Test local database encryption with SQLCipher.</li>
+</ul>
+
+<h3 id="tasks-for-root-detection">Tasks for root detection</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for root detection are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-keychain">Tasks for Keychain</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Configure Keychain accessibility to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly.</li>
+</ul>
+
+<h3 id="tasks-for-android-keystore">Tasks for Android Keystore</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Enforce StrongBox and check KeyInfo.isInsideSecureHardware() on key creation.</li>
+</ul>
+
+<h3 id="tasks-for-biometric-authentication">Tasks for biometric authentication</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Integrate Keystore CryptoObject-backed BiometricPrompt.</li>
+</ul>
+
+<h3 id="tasks-for-certificate-pinning">Tasks for certificate pinning</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Populate SPKI pins inside network_security_config.xml.</li>
+</ul>
+
+<h3 id="tasks-for-jailbreak-detection">Tasks for jailbreak detection</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for jailbreak detection are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-ssl-configuration">Tasks for SSL configuration</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for SSL configuration are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-backup-rules">Tasks for backup rules</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for backup rules are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-exported-activities">Tasks for exported activities</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for exported activities are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-intent-filters">Tasks for intent filters</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for intent filters are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-deep-links">Tasks for deep links</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for deep links are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-universal-links">Tasks for universal links</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for universal links are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-app-links">Tasks for app links</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for app links are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-authentication-flows">Tasks for authentication flows</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for authentication flows are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-session-handling">Tasks for session handling</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for session handling are checked and handled.</li>
+</ul>
+
+<h3 id="tasks-for-token-storage">Tasks for token storage</h3>
+<ul class="task-list">
+  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for token storage are checked and handled.</li>
+</ul>
+
+<!-- SECURITY_POLICY_MONITOR_END -->
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/SECURITY-POLICY-MIGRATION.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

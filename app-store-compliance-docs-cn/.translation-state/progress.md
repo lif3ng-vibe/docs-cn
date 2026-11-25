@@ -30,9 +30,9 @@
 
 | 批 | 内容 | 词数 | 状态 |
 |---|---|---|---|
-| 0 | 脚手架 + 配置中文化 + EN 基线 | - | ✅ 本 commit |
-| 1 | index + PRE-SUBMISSION-CHECKLIST + APPLE | 9,801 | ⬜ |
-| 2 | GOOGLE-PLAY + BY-APP-TYPE + MISTAKE-PATTERNS（含锚点回修） | 6,030 | ⬜ |
+| 0 | 脚手架 + 配置中文化 + EN 基线 | - | ✅ 已提交 |
+| 1 | index + PRE-SUBMISSION-CHECKLIST + APPLE | 9,801 | ✅ 已提交（build 绿 / dist CLEAN / residue CLEAN） |
+| 2 | GOOGLE-PLAY + BY-APP-TYPE + MISTAKE-PATTERNS（含锚点回修） | 6,030 | 🔄 MISTAKE-PATTERNS ✅（含 #申诉实战手册 锚点，宿主已预回修）；GOOGLE-PLAY/BY-APP-TYPE 进行中 |
 | 3 | MOBILE-PRIVACY-MONITOR + MOBILE-SECURITY + CROSS-PLATFORM-FRAMEWORKS + WHAT-THE-SCAN-PROVES + ACCESSIBILITY | 13,286 | ⬜ |
 | 4 | PRIVACY-POLICY-MIGRATION + SECURITY-POLICY-MIGRATION + ANDROID-POLICY-MIGRATION + AI-POLICY-MIGRATION | 6,966 | ⬜ |
 | 5 | EU-REGULATORY-2026 + GLOBAL-REGULATORY-2026 | 14,861 | ⬜ |
@@ -49,6 +49,13 @@
 - 阶段 B（带 base 构建演练）：每批后跑 tools/build.sh 验证；终检跑全量（内链前缀/中文锚点/残留/字面 `**`）
 - 阶段 C（五处同步）：⬜ sites.json + gen-index、deploy-pages.yml（`cp -r site → _site/app-store-compliance`）、README 三处
 
+## 终检工具与白名单
+
+- tools/check-dist.cjs：字面 `**` / 片段锚点 / 内链存在性 / baseurl 前缀 —— 已就位，当前 CLEAN
+- tools/check-tables.cjs：表格单元格英文残留启发式（residue-check 跳表格的补充）—— 已就位
+- residue-check.cjs（skill 版）：批内 md 逐篇跑；白名单：index.md 的 JSON-LD `<script>` 行（红线：script 不动）
+- MISTAKE-PATTERNS 曾用「」引号 → 已统一 ""（后续子代理汇报里抽查此项）
+
 ## 下一步
 
-批次 1（index.md + PRE-SUBMISSION-CHECKLIST.md + APPLE.md）
+批次 2 收尾（GOOGLE-PLAY.md + BY-APP-TYPE.md 翻译中）→ 批次 3

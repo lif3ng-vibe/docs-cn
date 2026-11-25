@@ -1,19 +1,21 @@
 # App Store Compliance Playbook
 
-> Open playbook and pre-submission guard that stops App Store and Google Play rejections. Maps each common rejection to its guideline and fix, tracks app regulation deadlines, and runs inside AI coding tools.
+> 阻止 App Store 与 Google Play 拒审的开源实战手册与提交前守卫：把每类常见拒审对应到审核指南与修复方法，跟踪应用法规截止日期，并可内嵌在 AI 编码工具中运行。
 
-## Core
-- [Pre-submission checklist](https://mjmirza.github.io/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html): every check before you submit
-- [Apple rejection map](https://mjmirza.github.io/app-store-compliance/APPLE.html): guideline, trigger and fix
-- [Google Play rejection map](https://mjmirza.github.io/app-store-compliance/GOOGLE-PLAY.html): policy, trigger and fix
-- [Root causes and appeal playbook](https://mjmirza.github.io/app-store-compliance/MISTAKE-PATTERNS.html)
-- [Rejection map by app type](https://mjmirza.github.io/app-store-compliance/BY-APP-TYPE.html)
+中文镜像：https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/
 
-## Law
-- [EU rules 2026](https://mjmirza.github.io/app-store-compliance/EU-REGULATORY-2026.html)
-- [USA and worldwide rules](https://mjmirza.github.io/app-store-compliance/GLOBAL-REGULATORY-2026.html)
-- [Platform mechanics](https://mjmirza.github.io/app-store-compliance/PLATFORM-MECHANICS-2026.html)
+## 核心篇
+- [提交前清单](https://mjmirza.github.io/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html)：提交前的每一项检查
+- [Apple 拒审地图](https://mjmirza.github.io/app-store-compliance/APPLE.html)：审核指南、触发条件与修复方法
+- [Google Play 拒审地图](https://mjmirza.github.io/app-store-compliance/GOOGLE-PLAY.html)：政策、触发条件与修复方法
+- [根因分析与申诉实战手册](https://mjmirza.github.io/app-store-compliance/MISTAKE-PATTERNS.html)
+- [按应用类型的拒审地图](https://mjmirza.github.io/app-store-compliance/BY-APP-TYPE.html)
 
-## Data
-- [Rejection patterns JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/rejection-patterns.json)
-- [Regulatory deadlines JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json)
+## 法规篇
+- [2026 年欧盟规则](https://mjmirza.github.io/app-store-compliance/EU-REGULATORY-2026.html)
+- [美国与全球规则](https://mjmirza.github.io/app-store-compliance/GLOBAL-REGULATORY-2026.html)
+- [平台机制](https://mjmirza.github.io/app-store-compliance/PLATFORM-MECHANICS-2026.html)
+
+## 数据
+- [拒审模式 JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/rejection-patterns.json)
+- [法规截止日期 JSON](https://github.com/mjmirza/app-store-compliance/blob/main/data/regulatory-deadlines.json)

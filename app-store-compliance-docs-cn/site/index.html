@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>App Store 与 Google Play 拒审实战手册 | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="App Store 与 Google Play 拒审实战手册" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="如何避开常见的 App Store 与 Google Play 拒审：拒审地图、提交前清单、隐私清单与 Data safety 自检、应用法规截止日期，以及一个在你提交前运行的守卫。" />
+<meta name="twitter:description" property="og:description" content="如何避开常见的 App Store 与 Google Play 拒审：拒审地图、提交前清单、隐私清单与 Data safety 自检、应用法规截止日期，以及一个在你提交前运行的守卫。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="App Store 与 Google Play 拒审实战手册" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"如何避开常见的 App Store 与 Google Play 拒审：拒审地图、提交前清单、隐私清单与 Data safety 自检、应用法规截止日期，以及一个在你提交前运行的守卫。","headline":"App Store 与 Google Play 拒审实战手册","name":"Mirza Iqbal","sameAs":["https://github.com/mjmirza","https://twitter.com/MirzaJhanzaib","https://next8n.com"],"url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <h1 id="app-store-与-google-play-拒审实战手册">App Store 与 Google Play 拒审实战手册</h1>
+
+<p><strong>先说结论</strong>。大多数拒审都能追溯到少数有案可查的原因：给审核员的演示账号用不了、隐私声明与应用及其 SDK 实际收集的数据不符、缺少应用内账号删除、数字商品绕开了应用内购买，以及一个不完整或占位的构建。本手册把这些有案可查的拒审模式逐条对应到背后的审核规则与修复方法，并附带一个守卫（guard），在你提交前对项目中的选定风险发出提示。</p>
+
+<ul>
+  <li><strong>124 类拒审模式</strong>，各附审核指南、在你代码中的检测方法与修复方法。</li>
+  <li><strong>112 个已跟踪截止日期</strong>，覆盖 33 个司法辖区与平台范围，包括欧盟 AI 法案、数字服务法案、COPPA 与美国各州年龄法。</li>
+  <li><strong>一个提交前守卫</strong>，可在本地运行，也可内嵌在 Claude Code、Codex、Cursor 等 AI 编码工具中运行。</li>
+  <li><strong>一份诚实的分界</strong>，说明哪些是扫描能证明的、哪些只有人工才能确认，见<a href="/docs-cn/app-store-compliance/WHAT-THE-SCAN-PROVES.html">扫描能证明什么</a>。扫描干净不等于过审。</li>
+  <li>免费阅读，源码在 <a href="https://github.com/mjmirza/app-store-compliance">GitHub</a>。</li>
+</ul>
+
+<h2 id="从这里开始">从这里开始</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>你的处境</th>
+      <th>该读哪篇</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>即将提交</td>
+      <td><a href="/docs-cn/app-store-compliance/PRE-SUBMISSION-CHECKLIST.html">提交前清单</a></td>
+    </tr>
+    <tr>
+      <td>在 App Store 被拒</td>
+      <td><a href="/docs-cn/app-store-compliance/APPLE.html">Apple 拒审地图</a></td>
+    </tr>
+    <tr>
+      <td>在 Google Play 被拒</td>
+      <td><a href="/docs-cn/app-store-compliance/GOOGLE-PLAY.html">Google Play 拒审地图</a></td>
+    </tr>
+    <tr>
+      <td>想申诉</td>
+      <td><a href="/docs-cn/app-store-compliance/MISTAKE-PATTERNS.html">根因分析与申诉实战手册</a></td>
+    </tr>
+    <tr>
+      <td>在做某一类应用</td>
+      <td><a href="/docs-cn/app-store-compliance/BY-APP-TYPE.html">按应用类型的拒审地图</a></td>
+    </tr>
+    <tr>
+      <td>在用 Expo、React Native 或 Flutter</td>
+      <td><a href="/docs-cn/app-store-compliance/CROSS-PLATFORM-FRAMEWORKS.html">跨平台框架</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="法律与截止日期">法律与截止日期</h2>
+
+<ul>
+  <li><a href="/docs-cn/app-store-compliance/ACCESSIBILITY.html">App Store 与 Google Play 应用的无障碍要求</a>。营养标签（Nutrition Labels）、TalkBack 与 VoiceOver、ADA 第二章、静态扫描。</li>
+  <li><a href="/docs-cn/app-store-compliance/EU-REGULATORY-2026.html">2026 年欧盟应用法规</a>。欧盟 AI 法案、数字服务法案商家身份（trader status）、欧洲无障碍法案、DMA。</li>
+  <li><a href="/docs-cn/app-store-compliance/GLOBAL-REGULATORY-2026.html">美国与全球法规</a>。COPPA、各州应用商店问责法案、英国、澳大利亚、巴西等。</li>
+  <li><a href="/docs-cn/app-store-compliance/REGULATORY-TIMELINE.html">法规时间线</a>与<a href="/docs-cn/app-store-compliance/RULING-REGISTER.html">裁决登记册</a>。</li>
+  <li><a href="/docs-cn/app-store-compliance/PLATFORM-MECHANICS-2026.html">平台机制</a>。公证、Android 开发者验证、目标 API 级别、Play Billing。</li>
+</ul>
+
+<h2 id="隐私安全与支付">隐私、安全与支付</h2>
+
+<ul>
+  <li><a href="/docs-cn/app-store-compliance/MOBILE-PRIVACY-MONITOR-2026.html">移动隐私指南</a>。隐私清单、应用跟踪透明度（App Tracking Transparency）、Google Data safety。</li>
+  <li><a href="/docs-cn/app-store-compliance/MOBILE-SECURITY-2026.html">移动安全要求</a>。</li>
+  <li><a href="/docs-cn/app-store-compliance/GAMBLING-MATRIX.html">各国开箱与博彩规则</a>。</li>
+  <li><a href="/docs-cn/app-store-compliance/OTHER-STORES.html">其他应用商店</a>。</li>
+</ul>
+
+<h2 id="常见问题">常见问题</h2>
+
+<p><strong>为什么我的应用被 Apple 审核指南 2.1 条拒审</strong>？审核员无法完整使用你的应用。通常是演示账号失效、后端宕机、占位内容，或应用内购买没有加载出来。</p>
+
+<p><strong>我需要隐私清单吗</strong>？需要。凡调用了 required-reason API 的 iOS 应用都需要。Apple 常用 SDK 清单中的 SDK 必须自带清单，作为二进制依赖使用时还要附签名。缺少 API 声明会在上传时触发 ITMS-91053。</p>
+
+<p><strong>我需要应用内账号删除吗</strong>？需要。Apple 要求删除入口必须从应用内开始；Google 要求应用内提供路径，外加一个供用户申请删除的网页。</p>
+
+<p><strong>能用 Stripe 替代应用内购买吗</strong>？实物商品和现实世界服务可以。数字商品则取决于店面（storefront）：应用内购买是默认要求，欧盟允许替代支付处理，美国的站外链接规则在 2025 年有所放宽。</p>
+
+<p><strong>新的 Google Play 账号需要多少名测试者</strong>？2023 年 11 月 13 日之后创建的个人账号，需要先做一次封闭测试——至少 12 名测试者连续 14 天选择加入——才能申请正式版（production）访问权限。</p>
+
+<p><strong>欧盟 AI 法案会影响我的应用吗</strong>？可能会。第 50 条透明度义务自 2026 年 8 月 2 日起适用；具体哪些义务约束你，取决于你是提供者（provider）还是部署者（deployer）。</p>
+
+<p>来自 X 回复的问题在 <a href="/docs-cn/app-store-compliance/FAQ.html">FAQ</a> 中作答。更多回答见<a href="/docs-cn/app-store-compliance/questions.html">完整问题索引</a>与 <a href="https://github.com/mjmirza/app-store-compliance/discussions/categories/q-a">Q&amp;A 讨论</a>。</p>
+
+<h2 id="运行守卫">运行守卫</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/mjmirza/app-store-compliance ~/repositories/app-store-compliance
+bash ~/repositories/app-store-compliance/scripts/install.sh <span class="nb">install</span>
+</code></pre></div></div>
+
+<p>维护者：<a href="https://github.com/mjmirza">Mirza Iqbal</a>。与 Apple 或 Google 无隶属关系。App Store 是 Apple Inc. 的商标，Google Play 是 Google LLC 的商标。</p>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"App Store Compliance Playbook","description":"Open playbook and pre-submission guard to stop App Store and Google Play rejections.","codeRepository":"https://github.com/mjmirza/app-store-compliance","programmingLanguage":["Shell","Python"],"author":{"@type":"Person","name":"Mirza Iqbal","url":"https://github.com/mjmirza","sameAs":["https://twitter.com/MirzaJhanzaib","https://next8n.com"]},"keywords":"App Store rejection, Google Play rejection, app review guidelines, privacy manifest, Data safety, account deletion, EU AI Act, COPPA"}
+</script>
+
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/index.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

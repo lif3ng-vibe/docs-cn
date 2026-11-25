@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Accessibility for App Store and Google Play apps | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Accessibility for App Store and Google Play apps" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ACCESSIBILITY.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ACCESSIBILITY.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Accessibility for App Store and Google Play apps" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Accessibility for App Store and Google Play apps","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ACCESSIBILITY.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>Neither store rejects an app today for missing VoiceOver or TalkBack support, so accessibility is mostly a legal and quality duty rather than a review gate. The binding pressure comes from the law (the European Accessibility Act in the EU, the DOJ ADA Title II rule for US public entities, the Equality Act in the UK) and from what each store asks you to declare or shows you in its own test reports. This document covers the store-side declarations and checks, the per-platform implementation bar, the legal layer outside the EU, how to run the repo’s static accessibility scan, and, in section 12, the accessibility of this repository itself.</p>
+
+<p>Every item below was checked against a primary source on 7 November 2026. Anything that could not be confirmed is listed in section 11 and was left out of the body.</p>
+
+<h2 id="1-the-eu-layer-in-one-table">1. The EU layer in one table</h2>
+
+<p>The European Accessibility Act (Directive (EU) 2019/882) is covered in full in <a href="/docs-cn/app-store-compliance/EU-REGULATORY-2026.html#4-european-accessibility-act-eaa-directive-eu-2019882-hard-new-gap">section 4 of the EU regulatory document</a>. The duties in short.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Duty</th>
+      <th>What it means for an app</th>
+      <th>Where it is set</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Applicability</td>
+      <td>In force for in-scope consumer services since 28 June 2025, including e-commerce, banking, e-books, transport booking, telecom, and audiovisual media access, delivered through websites and mobile apps</td>
+      <td>EU doc section 4.1</td>
+    </tr>
+    <tr>
+      <td>Microenterprise exemption</td>
+      <td>Fewer than 10 employees and turnover or balance sheet not over 2,000,000 euro, services only (Article 4(5))</td>
+      <td>EU doc section 4.2</td>
+    </tr>
+    <tr>
+      <td>Technical bar</td>
+      <td>Harmonised standard EN 301 549 (V3.2.1 builds on WCAG 2.1 AA and adds Chapter 11 for non-web software). A WCAG-only audit does not cover Chapter 11</td>
+      <td>EU doc section 4.3</td>
+    </tr>
+    <tr>
+      <td>Accessibility information</td>
+      <td>Annex V information on how the service meets the Annex I requirements, published in the terms and conditions or an equivalent document (Article 13(2))</td>
+      <td>EU doc section 4.3</td>
+    </tr>
+    <tr>
+      <td>Penalties</td>
+      <td>Set per Member State. Germany up to 100,000 euro plus corrective measures or withdrawal</td>
+      <td>EU doc section 4.4</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="2-apple-accessibility-nutrition-labels">2. Apple Accessibility Nutrition Labels</h2>
+
+<p>Accessibility Nutrition Labels are a per-app declaration in App Store Connect that appears on the product page. Apple describes them this way. “The Accessibility Nutrition Labels help users learn if an app will be accessible to them before they download, and give developers the opportunity to better inform and educate their users on features that their app supports.”</p>
+
+<h3 id="21-the-nine-features-you-can-declare">2.1 The nine features you can declare</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Platform note from Apple</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VoiceOver</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Voice Control</td>
+      <td>Not supported on Apple TV and Apple Watch</td>
+    </tr>
+    <tr>
+      <td>Larger Text</td>
+      <td>Not supported on Mac</td>
+    </tr>
+    <tr>
+      <td>Dark Interface</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Differentiate Without Color Alone</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Sufficient Contrast</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Reduced Motion</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Captions</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Audio Descriptions</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The labels appear on devices running iOS 26, iPadOS 26, macOS 26, tvOS 26, visionOS 26, and watchOS 26 or later. You answer per device your app supports.</p>
+
+<h3 id="22-optional-now-required-later-no-date">2.2 Optional now, required later, no date</h3>
+
+<p>Apple states. “providing these labels will be voluntary to start.” and “You’ll be given ample time and evaluation resources before this is mandatory, but over time, you’ll be required to share accessibility support details to submit new apps and app updates to the App Store.” Apple publishes no date for the switch. Do not quote one.</p>
+
+<h3 id="23-the-bar-for-claiming-a-feature">2.3 The bar for claiming a feature</h3>
+
+<p>A feature may only be declared when it works across the whole app. Apple’s text. “To indicate support for an accessibility feature in the Accessibility Nutrition Labels, users must be able to complete all of the common tasks of your app using that feature.” Apple defines common tasks as the primary functionality users are expected to perform in the app, plus the functionality fundamental to using any app, namely the first launch experience, login, purchase, and settings. If known bugs would change the answer under these criteria, Apple says not to indicate support.</p>
+
+<p>Treat an over-claim as a metadata accuracy problem. A declared feature that fails on the login or purchase screen is a false statement on your product page.</p>
+
+<h3 id="24-how-to-publish">2.4 How to publish</h3>
+
+<ul>
+  <li>Role. Account Holder, Admin, Finance, App Manager, or Marketing.</li>
+  <li>Path. Apps, select the app, App Accessibility in the sidebar, Get Started, add support per device, select the features, save as draft, then Publish.</li>
+  <li>You can only publish support for devices that have a live version on the App Store.</li>
+  <li>Published responses go live immediately and can take up to 24 hours to be visible to all users. Apple’s help page does not say that publishing passes through App Review.</li>
+  <li>An optional accessibility URL on the product page can carry more detail, such as in-app accessibility settings, caption languages, or areas of the app that do not support a feature.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/">Overview of Accessibility Nutrition Labels</a>, <a href="https://developer.apple.com/help/app-store-connect/manage-app-accessibility/manage-accessibility-nutrition-labels/">Manage Accessibility Nutrition Labels</a>.</p>
+
+<h2 id="3-apple-app-review-guidelines-and-accessibility">3. Apple App Review Guidelines and accessibility</h2>
+
+<p>The current App Review Guidelines contain no guideline that requires an app to support VoiceOver, Dynamic Type, or any other assistive feature. The full text was searched for accessibility, accessible, VoiceOver, assistive, and disability. The only use of the word in the sense of disability is in Guideline 3.2.1(ii), which lists accessibility as an approved need for an app that collects third-party apps. “Displaying or recommending a collection of third-party apps that are designed for a specific approved need (such as health management, aviation, accessibility).”</p>
+
+<p>The other hits use “accessible” to mean reachable, not usable by people with disabilities. Guideline 2.3.1(a) requires new features to be “accessible for review”, and Guideline 5.1.1(i) requires the privacy policy link “within the app in an easily accessible manner”.</p>
+
+<p>So accessibility does not reach App Review as a feature requirement. It reaches the store through the Nutrition Labels in section 2 and through the law in sections 6 and 7.</p>
+
+<p>Source. <a href="https://developer.apple.com/app-store/review/guidelines/">App Review Guidelines</a>.</p>
+
+<h2 id="4-ios-and-ipados-implementation-checklist">4. iOS and iPadOS implementation checklist</h2>
+
+<p>Figures and wording in this section come from the Apple Human Interface Guidelines accessibility page. API names were checked against Apple’s documentation index.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>What to do</th>
+      <th>APIs and figures</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VoiceOver labels</td>
+      <td>Give every interactive element and every informative image a label that names its purpose. Mark decorative images so VoiceOver skips them</td>
+      <td><code class="language-plaintext highlighter-rouge">accessibilityLabel</code>, <code class="language-plaintext highlighter-rouge">accessibilityHint</code>, <code class="language-plaintext highlighter-rouge">accessibilityTraits</code> (UIKit), <code class="language-plaintext highlighter-rouge">.accessibilityLabel(_:)</code>, <code class="language-plaintext highlighter-rouge">.accessibilityHint(_:)</code>, <code class="language-plaintext highlighter-rouge">.accessibilityAddTraits(_:)</code>, <code class="language-plaintext highlighter-rouge">.accessibilityHidden(_:)</code>, <code class="language-plaintext highlighter-rouge">Image(decorative:)</code> (SwiftUI)</td>
+    </tr>
+    <tr>
+      <td>Voice Control</td>
+      <td>Label elements so a spoken command can target them. Provide alternative names where the visible label is long or ambiguous</td>
+      <td><code class="language-plaintext highlighter-rouge">accessibilityUserInputLabels</code> (UIKit), <code class="language-plaintext highlighter-rouge">.accessibilityInputLabels(_:)</code> (SwiftUI)</td>
+    </tr>
+    <tr>
+      <td>Larger Text</td>
+      <td>HIG asks you to let people enlarge text “by at least 200 percent (or 140 percent in watchOS apps)”. Default and minimum system sizes on iOS and iPadOS are 17 pt and 11 pt</td>
+      <td><code class="language-plaintext highlighter-rouge">UIFont.preferredFont(forTextStyle:)</code> with <code class="language-plaintext highlighter-rouge">adjustsFontForContentSizeCategory</code>, SwiftUI text styles such as <code class="language-plaintext highlighter-rouge">.body</code></td>
+    </tr>
+    <tr>
+      <td>Contrast</td>
+      <td>HIG minimum ratios. text up to 17 pt at 4.5 to 1, text 18 pt and up at 3 to 1, bold text at 3 to 1. If the default scheme falls short, provide a higher contrast scheme when Increase Contrast is on, and check both light and dark appearances</td>
+      <td><code class="language-plaintext highlighter-rouge">UIAccessibility.isDarkerSystemColorsEnabled</code>, system and asset catalog colors</td>
+    </tr>
+    <tr>
+      <td>Color alone</td>
+      <td>Do not carry meaning by color only</td>
+      <td><code class="language-plaintext highlighter-rouge">accessibilityDifferentiateWithoutColor</code> (SwiftUI environment)</td>
+    </tr>
+    <tr>
+      <td>Reduce Motion</td>
+      <td>When the setting is on, reduce “automatic and repetitive animations, including zooming, scaling, and peripheral motion”. HIG suggests fades in place of x, y, and z transitions</td>
+      <td><code class="language-plaintext highlighter-rouge">UIAccessibility.isReduceMotionEnabled</code>, <code class="language-plaintext highlighter-rouge">accessibilityReduceMotion</code> (SwiftUI environment)</td>
+    </tr>
+    <tr>
+      <td>Hit targets</td>
+      <td>HIG table for iOS and iPadOS. default control size 44x44 pt, minimum 28x28 pt. Add about 12 points of padding around bezeled elements and about 24 points around elements without a bezel</td>
+      <td>Layout constraints, <code class="language-plaintext highlighter-rouge">contentShape</code></td>
+    </tr>
+    <tr>
+      <td>Captions and audio descriptions</td>
+      <td>Do not deliver dialogue or important information through audio alone. Offer captions, subtitles, and audio descriptions</td>
+      <td>AVFoundation media selection, <code class="language-plaintext highlighter-rouge">AVMediaCharacteristic.describesVideoForAccessibility</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The 44x44 pt figure is the HIG default control size, and 28x28 pt is the HIG minimum. Plan for 44x44 pt on touch targets. WCAG 2.2 Success Criterion 2.5.8 Target Size (Minimum) sets 24 by 24 CSS pixels at Level AA, and WCAG 2.1 Success Criterion 2.5.5 Target Size sets 44 by 44 CSS pixels at Level AAA.</p>
+
+<p>Test each declared feature end to end with the real assistive technology (VoiceOver, Voice Control, Larger Text at the largest sizes) through the first launch, login, purchase, and settings flows, since those are the common tasks Apple’s label criteria name.</p>
+
+<p>Sources. <a href="https://developer.apple.com/design/human-interface-guidelines/accessibility">Apple HIG Accessibility</a>, <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html">WCAG 2.2 Understanding SC 2.5.8</a>, <a href="https://www.w3.org/WAI/WCAG21/Understanding/target-size.html">WCAG 2.1 Understanding SC 2.5.5</a>.</p>
+
+<h2 id="5-android-and-google-play">5. Android and Google Play</h2>
+
+<h3 id="51-implementation">5.1 Implementation</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>What Android’s documentation says</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Content labels</td>
+      <td>Describe each UI element’s purpose, usually in <code class="language-plaintext highlighter-rouge">contentDescription</code>. Do not add a description to <code class="language-plaintext highlighter-rouge">Text</code> composables or <code class="language-plaintext highlighter-rouge">TextView</code>, since TalkBack reads the text. Do not include the element type (“Submit”, not “Submit button”). Each description should be unique, including items in a list</td>
+    </tr>
+    <tr>
+      <td>Decorative elements</td>
+      <td>Compose. pass <code class="language-plaintext highlighter-rouge">null</code> as <code class="language-plaintext highlighter-rouge">contentDescription</code> for a purely decorative element, or use <code class="language-plaintext highlighter-rouge">hideFromAccessibility</code>. Views. set <code class="language-plaintext highlighter-rouge">android:importantForAccessibility="no"</code> (minSdkVersion 16 or higher)</td>
+    </tr>
+    <tr>
+      <td>Touch targets</td>
+      <td>At least 48dp x 48dp. In Views, <code class="language-plaintext highlighter-rouge">paddingLeft</code> plus <code class="language-plaintext highlighter-rouge">minWidth</code> plus <code class="language-plaintext highlighter-rouge">paddingRight</code> must reach 48dp, and the same for height, so the visible size can be smaller than the touch target. Many built-in Compose components such as <code class="language-plaintext highlighter-rouge">Button</code>, <code class="language-plaintext highlighter-rouge">IconButton</code>, and <code class="language-plaintext highlighter-rouge">ListItem</code> already enforce the minimum</td>
+    </tr>
+    <tr>
+      <td>Text size</td>
+      <td>The <code class="language-plaintext highlighter-rouge">sp</code> unit “is also scaled by the user’s font size preference. It is recommend you use this unit when specifying font sizes”</td>
+    </tr>
+    <tr>
+      <td>Contrast</td>
+      <td>At least 4.5 to 1 for text smaller than 18sp, or bold text smaller than 14sp. At least 3 to 1 for all other text</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="52-testing-tools">5.2 Testing tools</h3>
+
+<ul>
+  <li>TalkBack, the built-in screen reader. Swipe through each element and check that every element is reachable, that announcements convey purpose, and that the main workflows complete.</li>
+  <li>Switch Access and Voice Access, for motor and voice input.</li>
+  <li>Compose UI Check mode in Android Studio, which flags issues such as low color contrast in the problems panel.</li>
+  <li>Accessibility Scanner, which uses the Accessibility Test Framework and checks content labels, clickable items, contrast, and more. Android notes that the framework in Android Studio cannot detect issues that only occur on a device.</li>
+  <li>Compose testing APIs, which read the same semantics tree that accessibility services use.</li>
+</ul>
+
+<h3 id="53-play-pre-launch-report">5.3 Play pre-launch report</h3>
+
+<p>When you upload to a release track, Google Play runs accessibility tests with the Accessibility Test Framework and lists the results on the Accessibility tab of the pre-launch report. The categories are Touch target size, Low contrast, Content labeling, and Implementation (for example a traversal order that does not match the logical layout). The report also gives a launch recommendation. Neither page fetched states that accessibility findings block publishing, so treat them as findings to fix, not as a gate.</p>
+
+<h3 id="54-accessibilityservice-policy">5.4 AccessibilityService policy</h3>
+
+<p>This is the one accessibility area where Google Play enforces policy. The rules, from the Play policy page “Use of the AccessibilityService API”.</p>
+
+<ul>
+  <li>Only services designed to help people with disabilities access their device may declare <code class="language-plaintext highlighter-rouge">isAccessibilityTool</code>. Supporting people with disabilities must be the primary purpose. Examples include screen readers, switch-based and voice-based input systems, and braille-based access systems.</li>
+  <li>Apps that are not accessibility tools, such as antivirus software, automation tools, assistants, monitoring apps, cleaners, password managers, and launchers, may still use the API but must meet the prominent disclosure and consent requirements.</li>
+  <li>The disclosure must be inside the app, not only in the store description, on a website, or in a privacy policy or terms of service. It must be a separate disclosure explaining why the app needs the API, and consent needs an affirmative user action such as a tap to accept or a ticked check box.</li>
+  <li>Any use of the Accessibility API that enables an app to “autonomously initiate, plan, and execute actions or decisions is strictly prohibited”. Deterministic, rule-based automation that follows a static, human-defined script is not prohibited. Verified accessibility tools are exempt when the function serves the core accessibility purpose. The page gives no effective date for this clause.</li>
+  <li>Since 3 November 2021, apps targeting API level 31 that include an AccessibilityService must complete a declaration in Play Console. Accessibility tools describe a core feature, the disability types served, and the target users. Other apps explain why they need the API and whether they collect or share personal or sensitive data. Both provide a video showing the disclosure flow, the consent and non-consent paths, and a core feature. The <code class="language-plaintext highlighter-rouge">AccessibilityService_description</code> text does not replace the in-app disclosure.</li>
+  <li>Changes to how the app uses the API require resubmitting the declaration. Deceptive or undeclared use can lead to suspension or account termination.</li>
+</ul>
+
+<p>Sources. <a href="https://developer.android.com/guide/topics/ui/accessibility/apps">Make apps more accessible</a>, <a href="https://developer.android.com/guide/topics/ui/accessibility/views/apps-views">Make apps more accessible (Views)</a>, <a href="https://developer.android.com/guide/topics/resources/more-resources">Dimension resources</a>, <a href="https://developer.android.com/guide/topics/ui/accessibility/testing">Test your app’s accessibility</a>, <a href="https://support.google.com/googleplay/android-developer/answer/9842757">Pre-launch report</a>, <a href="https://support.google.com/googleplay/android-developer/answer/10964491">Use of the AccessibilityService API</a>.</p>
+
+<h2 id="6-united-states">6. United States</h2>
+
+<h3 id="61-ada-title-ii-state-and-local-government-apps-rule-in-force-dates-extended">6.1 ADA Title II, state and local government apps (rule in force, dates extended)</h3>
+
+<p>The DOJ rule at 28 CFR Part 35 Subpart H requires web content and mobile apps that a state or local government “provides or makes available” to meet WCAG 2.1 Level AA. A commercial developer is reached when it builds or licenses an app for a public entity.</p>
+
+<p>The compliance dates were extended by an interim final rule published in the Federal Register on 20 April 2026 (FR Doc. 2026-07663), effective the same day, with comments closing 22 June 2026.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Public entity</th>
+      <th>Original date (2024 rule)</th>
+      <th>Current date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Total population 50,000 or more</td>
+      <td>24 April 2026</td>
+      <td>26 April 2027</td>
+    </tr>
+    <tr>
+      <td>Total population under 50,000, and every special district government</td>
+      <td>26 April 2027</td>
+      <td>26 April 2028</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The interim final rule states that it leaves the requirements of the 2024 final rule unchanged. Only the dates moved, and WCAG 2.1 Level AA is still the standard. Whether a final rule has since replaced the interim rule was not checked here, so re-verify the dates against the Federal Register before quoting them to a client.</p>
+
+<h3 id="62-ada-title-iii-businesses-open-to-the-public-no-technical-regulation">6.2 ADA Title III, businesses open to the public (no technical regulation)</h3>
+
+<p>Title III applies to businesses open to the public, and DOJ states that “the ADA’s requirements apply to all the goods, services, privileges, or activities offered by public accommodations”, including those offered on the web. DOJ also states that it “does not have a regulation setting out detailed standards” and that businesses “have flexibility in how they comply”. DOJ points to WCAG and the Section 508 Standards as helpful references. In practice the exposure for a consumer app comes through litigation, not a fixed technical rule. Treat WCAG 2.1 AA as the working target. No case law is summarised here because none was verified in this pass.</p>
+
+<h3 id="63-section-508-federal-agencies">6.3 Section 508, federal agencies</h3>
+
+<p>Section 508 “applies to all federal agencies when they develop, procure, maintain, or use electronic and information technology.” The Revised 508 Standards incorporate WCAG 2.0 Level A and Level AA by reference and apply them to software (E207.2), with listed exceptions for non-web software such as Success Criteria 2.4.1, 2.4.5, 3.2.3, and 3.2.4. An app sold to or built for a federal agency is in scope.</p>
+
+<p>Sources. <a href="https://www.ada.gov/resources/2024-03-08-web-rule/">ADA.gov web rule fact sheet</a>, <a href="https://www.govinfo.gov/content/pkg/FR-2026-04-20/html/2026-07663.htm">Interim final rule, FR Doc. 2026-07663</a>, <a href="https://www.ada.gov/resources/web-guidance/">ADA.gov guidance on web accessibility</a>, <a href="https://www.section508.gov/manage/laws-and-policies/">Section508.gov laws and policies</a>, <a href="https://www.access-board.gov/ict/">US Access Board ICT standards</a>.</p>
+
+<h2 id="7-united-kingdom-and-canada">7. United Kingdom and Canada</h2>
+
+<p><strong>United Kingdom.</strong> The Equality Act 2010 section 29 applies to “A person (a “service-provider”) concerned with the provision of a service to the public”, who “must not discriminate against a person requiring the service by not providing the person with the service.” Section 29(7) applies “A duty to make reasonable adjustments” to a service provider. The Act names no technical standard, so for an app serving the UK public WCAG 2.1 AA is the usual measure of a reasonable adjustment, not a statutory one.</p>
+
+<p><strong>Canada.</strong> The Accessible Canada Act (long title “An Act to ensure a barrier-free Canada”) aims at “a Canada without barriers, on or before January 1, 2040.” Section 7 applies it to federal bodies and to entities operating works within federal legislative authority, for example banks, telecom, and interprovincial transport. A general consumer app outside that scope is not covered by this Act. Provincial laws were not reviewed here.</p>
+
+<p>Sources. <a href="https://www.legislation.gov.uk/ukpga/2010/15/section/29">Equality Act 2010 section 29</a>, <a href="https://laws-lois.justice.gc.ca/eng/acts/a-0.6/page-1.html">Accessible Canada Act</a>.</p>
+
+<h2 id="8-the-repos-static-accessibility-scan">8. The repo’s static accessibility scan</h2>
+
+<p><code class="language-plaintext highlighter-rouge">scripts/accessibility-audit.py</code> is a static scan of source files. It does not build or run the app, computes no contrast ratio, and cannot see focus order or runtime behaviour. A clean result means none of its patterns matched, not that the app is accessible. Test with VoiceOver, TalkBack, Accessibility Inspector, and Accessibility Scanner as well.</p>
+
+<h3 id="81-how-to-run-it">8.1 How to run it</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 scripts/accessibility-audit.py /path/to/your/app
+python3 scripts/accessibility-audit.py /path/to/your/app <span class="nt">--rule</span> ANDROID-ACCESSIBILITY-SCANNER
+bash scripts/accessibility-audit-test.sh
+</code></pre></div></div>
+
+<p>The directory defaults to the current directory. <code class="language-plaintext highlighter-rouge">--rule</code> runs one rule. The test script runs the fixture suite (51 cases at the time of writing), which CI also runs.</p>
+
+<p>Behaviour worth knowing.</p>
+
+<ul>
+  <li>It always exits 0 when it finds issues, since the findings are advisory. It exits 2 only for an unknown <code class="language-plaintext highlighter-rouge">--rule</code> value. A missing directory prints a message and exits 0, so do not rely on the exit code as a gate.</li>
+  <li>It skips <code class="language-plaintext highlighter-rouge">node_modules</code>, <code class="language-plaintext highlighter-rouge">Pods</code>, <code class="language-plaintext highlighter-rouge">.git</code>, <code class="language-plaintext highlighter-rouge">build</code>, <code class="language-plaintext highlighter-rouge">DerivedData</code>, <code class="language-plaintext highlighter-rouge">vendor</code>, <code class="language-plaintext highlighter-rouge">.dart_tool</code>, <code class="language-plaintext highlighter-rouge">Carthage</code>, <code class="language-plaintext highlighter-rouge">androidTest</code>, <code class="language-plaintext highlighter-rouge">__tests__</code>, and any folder whose name ends in <code class="language-plaintext highlighter-rouge">Tests</code>.</li>
+  <li>iOS files are <code class="language-plaintext highlighter-rouge">.swift</code>, <code class="language-plaintext highlighter-rouge">.m</code>, <code class="language-plaintext highlighter-rouge">.h</code>, <code class="language-plaintext highlighter-rouge">.plist</code>, <code class="language-plaintext highlighter-rouge">.storyboard</code>, and <code class="language-plaintext highlighter-rouge">.xib</code>. Android files are <code class="language-plaintext highlighter-rouge">.kt</code>, <code class="language-plaintext highlighter-rouge">.java</code>, and <code class="language-plaintext highlighter-rouge">.xml</code>. Only some rules read each type, as listed below. No rule reads <code class="language-plaintext highlighter-rouge">.java</code>, <code class="language-plaintext highlighter-rouge">.plist</code>, <code class="language-plaintext highlighter-rouge">.storyboard</code>, or <code class="language-plaintext highlighter-rouge">.xib</code> today.</li>
+  <li>Output lists each finding with severity, rule ID, file and line, the matched text, a reason, and a fix, then a summary count by severity.</li>
+</ul>
+
+<h3 id="82-what-each-rule-actually-matches">8.2 What each rule actually matches</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule ID</th>
+      <th>Severity</th>
+      <th>Files read</th>
+      <th>What triggers a finding</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-VOICEOVER</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code></td>
+      <td>A SwiftUI <code class="language-plaintext highlighter-rouge">Image(...)</code> that is not <code class="language-plaintext highlighter-rouge">decorative:</code> or <code class="language-plaintext highlighter-rouge">systemName:</code> and has no <code class="language-plaintext highlighter-rouge">accessibilityLabel</code>, <code class="language-plaintext highlighter-rouge">accessibilityIdentifier</code>, <code class="language-plaintext highlighter-rouge">accessibilityHidden</code>, or <code class="language-plaintext highlighter-rouge">accessibilityElement</code> in the next 300 characters of code. A possible icon-only <code class="language-plaintext highlighter-rouge">Button</code> whose label holds an <code class="language-plaintext highlighter-rouge">Image(systemName:)</code> with no <code class="language-plaintext highlighter-rouge">Text</code>, <code class="language-plaintext highlighter-rouge">Label</code>, or <code class="language-plaintext highlighter-rouge">accessibilityLabel</code>. A file that mentions <code class="language-plaintext highlighter-rouge">UIButton</code> or <code class="language-plaintext highlighter-rouge">UIImageView</code> but never <code class="language-plaintext highlighter-rouge">accessibilityLabel</code>, <code class="language-plaintext highlighter-rouge">accessibilityIdentifier</code>, or <code class="language-plaintext highlighter-rouge">isAccessibilityElement</code> (reported at line 1). Comments and string contents are excluded for the SwiftUI checks</td>
+    </tr>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-DYNAMICTYPE</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code>, <code class="language-plaintext highlighter-rouge">.m</code>, <code class="language-plaintext highlighter-rouge">.h</code></td>
+      <td>Every <code class="language-plaintext highlighter-rouge">.system(size: N</code> font. Every <code class="language-plaintext highlighter-rouge">UIFont.systemFont(ofSize: N</code> in a file that never sets <code class="language-plaintext highlighter-rouge">adjustsFontForContentSizeCategory</code></td>
+    </tr>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-REDUCEMOTION</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code>, <code class="language-plaintext highlighter-rouge">.m</code></td>
+      <td>A file that uses <code class="language-plaintext highlighter-rouge">withAnimation</code> or <code class="language-plaintext highlighter-rouge">UIView.animate</code> and never reads <code class="language-plaintext highlighter-rouge">isReduceMotionEnabled</code> or <code class="language-plaintext highlighter-rouge">accessibilityReduceMotion</code> (one finding per file, line 1)</td>
+    </tr>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-COLORCONTRAST</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code>, <code class="language-plaintext highlighter-rouge">.m</code></td>
+      <td>A <code class="language-plaintext highlighter-rouge">UIColor(red:</code> with a numeric value in a file that never references <code class="language-plaintext highlighter-rouge">isDarkerSystemColorsEnabled</code> or <code class="language-plaintext highlighter-rouge">darkerSystemColors</code>. It does not measure contrast</td>
+    </tr>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-HAPTICS</td>
+      <td>low</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code></td>
+      <td><code class="language-plaintext highlighter-rouge">.onTapGesture</code> or a <code class="language-plaintext highlighter-rouge">Button</code> in a file with no <code class="language-plaintext highlighter-rouge">FeedbackGenerator</code>, <code class="language-plaintext highlighter-rouge">CoreHaptics</code>, or <code class="language-plaintext highlighter-rouge">CHHapticEngine</code>. Advisory only, the rule title notes haptics are not required by WCAG 2.2 or EN 301 549</td>
+    </tr>
+    <tr>
+      <td>APPLE-ACCESSIBILITY-KEYBOARD</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.swift</code></td>
+      <td>A file containing <code class="language-plaintext highlighter-rouge">focusable</code> but neither <code class="language-plaintext highlighter-rouge">FocusState</code> nor <code class="language-plaintext highlighter-rouge">focused</code></td>
+    </tr>
+    <tr>
+      <td>ANDROID-ACCESSIBILITY-TALKBACK</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.xml</code>, <code class="language-plaintext highlighter-rouge">.kt</code></td>
+      <td>An <code class="language-plaintext highlighter-rouge">&lt;ImageView</code> or <code class="language-plaintext highlighter-rouge">&lt;ImageButton</code> opening tag without <code class="language-plaintext highlighter-rouge">contentDescription</code>. A Compose <code class="language-plaintext highlighter-rouge">Image(...)</code> whose arguments lack <code class="language-plaintext highlighter-rouge">contentDescription</code></td>
+    </tr>
+    <tr>
+      <td>ANDROID-ACCESSIBILITY-FONTSCALING</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.xml</code>, <code class="language-plaintext highlighter-rouge">.kt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">android:textSize</code> in <code class="language-plaintext highlighter-rouge">dp</code>. Compose <code class="language-plaintext highlighter-rouge">fontSize = N.dp</code></td>
+    </tr>
+    <tr>
+      <td>ANDROID-ACCESSIBILITY-HIGHCONTRAST</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.xml</code>, <code class="language-plaintext highlighter-rouge">.kt</code></td>
+      <td>A hardcoded hex <code class="language-plaintext highlighter-rouge">android:textColor</code> or <code class="language-plaintext highlighter-rouge">android:background</code>. A Compose <code class="language-plaintext highlighter-rouge">Color(0xFF......)</code> literal</td>
+    </tr>
+    <tr>
+      <td>ANDROID-ACCESSIBILITY-SCANNER</td>
+      <td>medium</td>
+      <td><code class="language-plaintext highlighter-rouge">.xml</code>, <code class="language-plaintext highlighter-rouge">.kt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">layout_width</code>, <code class="language-plaintext highlighter-rouge">layout_height</code>, <code class="language-plaintext highlighter-rouge">minWidth</code>, or <code class="language-plaintext highlighter-rouge">minHeight</code> between 1dp and 47dp, skipped for the whole file if it contains any <code class="language-plaintext highlighter-rouge">wrap_content</code> width or height. A Compose <code class="language-plaintext highlighter-rouge">.size(N.dp)</code> below 48</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Known gaps, read from the code.</p>
+
+<ul>
+  <li>The XML TalkBack check looks only for <code class="language-plaintext highlighter-rouge">contentDescription</code>. A decorative <code class="language-plaintext highlighter-rouge">ImageView</code> correctly marked <code class="language-plaintext highlighter-rouge">android:importantForAccessibility="no"</code> is still reported.</li>
+  <li>The touch target check reads each dimension alone and ignores padding, while Android counts padding toward the 48dp target (section 5.1). A 40dp <code class="language-plaintext highlighter-rouge">minWidth</code> with 4dp padding each side is reported even though it meets the Android recommendation. It also does not check whether the element is clickable.</li>
+  <li>Several Apple rules are file level. One reference to the right API anywhere in a file clears every use in that file.</li>
+  <li>The README lists further limits of the Button label heuristic and regex literal handling.</li>
+</ul>
+
+<h2 id="9-what-reviewers-and-regulators-actually-check">9. What reviewers and regulators actually check</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Who</th>
+      <th>What they check</th>
+      <th>Consequence</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apple App Review</td>
+      <td>No accessibility feature requirement in the guidelines. Nutrition Labels are voluntary today</td>
+      <td>None from review alone. A false label is a metadata accuracy problem</td>
+    </tr>
+    <tr>
+      <td>App Store product page</td>
+      <td>Your Accessibility Nutrition Labels, against the common-tasks criteria</td>
+      <td>Users see the claim. Over-claiming is a false statement on your listing</td>
+    </tr>
+    <tr>
+      <td>Google Play pre-launch report</td>
+      <td>Touch target size, low contrast, content labeling, implementation</td>
+      <td>Findings and a launch recommendation. No published statement that they block release</td>
+    </tr>
+    <tr>
+      <td>Google Play policy</td>
+      <td>AccessibilityService use, <code class="language-plaintext highlighter-rouge">isAccessibilityTool</code> eligibility, in-app disclosure and consent, the Play Console declaration, no autonomous actions</td>
+      <td>Rejection, suspension, or account termination for deceptive or undeclared use</td>
+    </tr>
+    <tr>
+      <td>EU market surveillance</td>
+      <td>EN 301 549 conformance and Annex V information for in-scope services</td>
+      <td>Fines per Member State, corrective measures, withdrawal</td>
+    </tr>
+    <tr>
+      <td>US DOJ (Title II)</td>
+      <td>WCAG 2.1 AA for apps a state or local government provides</td>
+      <td>Enforcement against the public entity, passed to the vendor through contract</td>
+    </tr>
+    <tr>
+      <td>US courts (Title III)</td>
+      <td>Whether the app gives full and equal enjoyment of the service</td>
+      <td>Litigation, no fixed technical rule</td>
+    </tr>
+    <tr>
+      <td>US federal procurement (Section 508)</td>
+      <td>WCAG 2.0 A and AA for ICT an agency uses</td>
+      <td>Procurement requirement</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="10-pre-ship-checklist">10. Pre-ship checklist</h2>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Every interactive element and informative image has a VoiceOver label and the right traits. Decorative images are hidden from VoiceOver.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Every Android interactive element has a unique, purpose-based <code class="language-plaintext highlighter-rouge">contentDescription</code>, and decorative elements are excluded.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Text scales with Larger Text and Dynamic Type on iOS (HIG asks for at least 200 percent) and uses <code class="language-plaintext highlighter-rouge">sp</code> on Android, and layouts hold at the largest sizes.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Text contrast meets 4.5 to 1 (3 to 1 for large text) in light and dark appearances, and meaning never depends on color alone.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Reduce Motion is honored and non-essential animation is reduced or replaced with fades.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Touch targets are 44x44 pt on iOS and at least 48dp x 48dp on Android, padding included.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Video and audio content has captions, and audio descriptions where visuals carry meaning.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />VoiceOver, Voice Control, and TalkBack complete first launch, login, purchase, and settings.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Accessibility Nutrition Labels declare only features that pass the common-tasks bar, per device.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />The Play pre-launch report Accessibility tab was reviewed and its findings fixed or justified.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Any AccessibilityService use has a correct <code class="language-plaintext highlighter-rouge">isAccessibilityTool</code> value, an in-app disclosure with affirmative consent where required, a current Play Console declaration, and no autonomous action.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />For EU in-scope services, the EN 301 549 and Annex V items in the <a href="/docs-cn/app-store-compliance/EU-REGULATORY-2026.html">EU regulatory document</a> are met.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />For apps built for a US state or local government, WCAG 2.1 AA conformance is planned against the current Title II date.</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><code class="language-plaintext highlighter-rouge">python3 scripts/accessibility-audit.py</code> was run and each finding fixed or recorded as a false positive.</li>
+</ul>
+
+<h2 id="11-unverified-and-left-out">11. Unverified and left out</h2>
+
+<ul>
+  <li>The date Apple Accessibility Nutrition Labels become mandatory. Apple publishes none.</li>
+  <li>Whether App Review contacts developers about misleading Nutrition Labels, and under which guideline. Neither Apple help page fetched says so, so it is not stated above.</li>
+  <li>Whether Play pre-launch report accessibility findings affect the launch recommendation or block release.</li>
+  <li>The effective date of the Play clause banning autonomous actions through the Accessibility API.</li>
+  <li>Whether a final ADA Title II rule has replaced the April 2026 interim final rule.</li>
+  <li>ADA Title III case law and lawsuit volumes.</li>
+  <li>UK public sector accessibility regulations and Canadian provincial laws.</li>
+</ul>
+
+<h2 id="12-accessibility-of-this-repository">12. Accessibility of this repository</h2>
+
+<p>GitHub reads an <code class="language-plaintext highlighter-rouge">ACCESSIBILITY.md</code> file from <code class="language-plaintext highlighter-rouge">.github</code>, the repository root, or <code class="language-plaintext highlighter-rouge">docs</code>, in that order, and shows it as an Accessibility tab on the repository. GitHub describes the file as a place for a project’s “accessibility priorities, supported environments, known barriers”, and the reporting process. This section is that page for this repository.</p>
+
+<p><strong>What is published.</strong> Markdown documents, a GitHub Pages site built from <code class="language-plaintext highlighter-rouge">docs/</code> with the Jekyll Primer theme, and command-line scripts in Python and Bash that print plain text.</p>
+
+<p><strong>Priorities.</strong> Every document reads in order as plain Markdown, with real headings, text links, and tables with header rows. Script output is line-based text with no color codes needed to understand a result.</p>
+
+<p><strong>Known barriers.</strong></p>
+
+<ul>
+  <li>Several documents use wide tables, which are slow to read with a screen reader and scroll sideways on a narrow screen.</li>
+  <li>The Pages site and the script output have not been tested with VoiceOver, NVDA, or JAWS, and no WCAG conformance claim is made for either.</li>
+</ul>
+
+<p><strong>Reporting a barrier.</strong> Open an issue on <a href="https://github.com/mjmirza/app-store-compliance/issues">mjmirza/app-store-compliance</a>. For a script, use the guard or monitor bug template and include the command and its output. Name the assistive technology you use if you are comfortable doing so.</p>
+
+<p>Sources. <a href="https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file">Creating a default community health file</a>, <a href="https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-an-accessibility-page-to-your-repository">Adding an accessibility page to your repository</a>.</p>
+
+<h2 id="sources">Sources</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Source</th>
+      <th>URL</th>
+      <th>Checked</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Apple, Overview of Accessibility Nutrition Labels</td>
+      <td>https://developer.apple.com/help/app-store-connect/manage-app-accessibility/overview-of-accessibility-nutrition-labels/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Apple, Manage Accessibility Nutrition Labels</td>
+      <td>https://developer.apple.com/help/app-store-connect/manage-app-accessibility/manage-accessibility-nutrition-labels/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Apple, App Review Guidelines</td>
+      <td>https://developer.apple.com/app-store/review/guidelines/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Apple, Human Interface Guidelines, Accessibility</td>
+      <td>https://developer.apple.com/design/human-interface-guidelines/accessibility</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Apple Developer Documentation (API names in section 4)</td>
+      <td>https://developer.apple.com/documentation/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>W3C, Understanding SC 2.5.8 Target Size (Minimum)</td>
+      <td>https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>W3C, Understanding SC 2.5.5 Target Size</td>
+      <td>https://www.w3.org/WAI/WCAG21/Understanding/target-size.html</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Android, Make apps more accessible</td>
+      <td>https://developer.android.com/guide/topics/ui/accessibility/apps</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Android, Make apps more accessible (Views)</td>
+      <td>https://developer.android.com/guide/topics/ui/accessibility/views/apps-views</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Android, Dimension resources</td>
+      <td>https://developer.android.com/guide/topics/resources/more-resources</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Android, Test your app’s accessibility</td>
+      <td>https://developer.android.com/guide/topics/ui/accessibility/testing</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Google Play, Pre-launch report</td>
+      <td>https://support.google.com/googleplay/android-developer/answer/9842757</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Google Play, Use of the AccessibilityService API</td>
+      <td>https://support.google.com/googleplay/android-developer/answer/10964491</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>ADA.gov, Title II web rule fact sheet</td>
+      <td>https://www.ada.gov/resources/2024-03-08-web-rule/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Federal Register, FR Doc. 2026-07663 (govinfo)</td>
+      <td>https://www.govinfo.gov/content/pkg/FR-2026-04-20/html/2026-07663.htm</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>ADA.gov, Guidance on web accessibility and the ADA</td>
+      <td>https://www.ada.gov/resources/web-guidance/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Section508.gov, Laws and policies</td>
+      <td>https://www.section508.gov/manage/laws-and-policies/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>US Access Board, ICT standards and guidelines</td>
+      <td>https://www.access-board.gov/ict/</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>legislation.gov.uk, Equality Act 2010 section 29</td>
+      <td>https://www.legislation.gov.uk/ukpga/2010/15/section/29</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>Justice Laws, Accessible Canada Act</td>
+      <td>https://laws-lois.justice.gc.ca/eng/acts/a-0.6/page-1.html</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>GitHub Docs, Creating a default community health file</td>
+      <td>https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file</td>
+      <td>2026-11-07</td>
+    </tr>
+    <tr>
+      <td>GitHub Docs, Adding an accessibility page to your repository</td>
+      <td>https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-an-accessibility-page-to-your-repository</td>
+      <td>2026-11-07</td>
+    </tr>
+  </tbody>
+</table>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/ACCESSIBILITY.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

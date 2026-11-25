@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>Beyond Apple and Google. Other App Stores and the Patterns Worth Adopting | App Store Compliance Playbook</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Beyond Apple and Google. Other App Stores and the Patterns Worth Adopting" />
+<meta name="author" content="Mirza Iqbal" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<meta name="twitter:description" property="og:description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
+<link rel="canonical" href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/OTHER-STORES.html" />
+<meta property="og:url" content="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/OTHER-STORES.html" />
+<meta property="og:site_name" content="App Store Compliance Playbook" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Beyond Apple and Google. Other App Stores and the Patterns Worth Adopting" />
+<meta name="twitter:site" content="@MirzaJhanzaib" />
+<meta name="twitter:creator" content="@Mirza Iqbal" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Beyond Apple and Google. Other App Stores and the Patterns Worth Adopting","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/OTHER-STORES.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/docs-cn/app-store-compliance/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
+      
+
+      <p>The base playbook covers Apple and Google because they carry most of the world’s app distribution. But a serious mobile strategy ships to more stores, and those stores publish their own review rules. This document captures what Huawei AppGallery, the Chinese Android stores, Samsung Galaxy Store, Amazon Appstore, the Microsoft Store, and RuStore enforce, then distils the cross cutting patterns worth adopting so the same mistake never repeats on a new store.</p>
+
+<p>Sourced from each platform’s own developer documentation. Confirm the current detail on the source before relying on it.</p>
+
+<h2 id="huawei-appgallery">Huawei AppGallery</h2>
+
+<p>The dominant store on Huawei devices, which ship without Google Mobile Services. The official AppGallery Review Guidelines are organized into four areas.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>What it covers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>App Information</td>
+      <td>Metadata, listing accuracy, app name and description</td>
+    </tr>
+    <tr>
+      <td>App Security</td>
+      <td>Malware, data handling, security review criteria</td>
+    </tr>
+    <tr>
+      <td>App Functions</td>
+      <td>Functional completeness, no crashes, the app does what it claims</td>
+    </tr>
+    <tr>
+      <td>App Content</td>
+      <td>Content policy, restricted content, age appropriateness</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The pattern that catches Android developers. An app built only against Google Mobile Services breaks on Huawei devices. Push, maps, in app purchase, and location must use Huawei Mobile Services equivalents, or the app fails on review and at runtime. Source. <a href="https://developer.huawei.com/consumer/en/doc/app/50104">AppGallery Review Guidelines</a>.</p>
+
+<h2 id="the-chinese-android-stores-huawei-tencent-xiaomi-oppo-vivo">The Chinese Android stores (Huawei, Tencent, Xiaomi, OPPO, vivo)</h2>
+
+<p>China has no single Google Play. Distribution is spread across many stores, and they share a set of national legal gates that have nothing to do with the app’s content. Miss any one and the app cannot publish on any of them.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Gate</th>
+      <th>What it is</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MIIT app filing</td>
+      <td>Mandatory registration of every app with the Ministry of Industry and Information Technology, required before publication since 1 September 2023</td>
+    </tr>
+    <tr>
+      <td>Software Copyright Certificate</td>
+      <td>Government certification of the app’s copyright, required for submission. Government fees run roughly 2,200 to 3,200 CNY</td>
+    </tr>
+    <tr>
+      <td>ICP filing</td>
+      <td>Every domain the app contacts must hold a valid ICP filing</td>
+    </tr>
+    <tr>
+      <td>Approved hosting</td>
+      <td>App backends must run on approved Chinese cloud providers</td>
+    </tr>
+    <tr>
+      <td>Domestic legal entity</td>
+      <td>Only a domestic legal entity can publish. An overseas company sets up a Chinese entity or partners with a licensed distributor</td>
+    </tr>
+    <tr>
+      <td>Processing time</td>
+      <td>ICP filing alone takes around 20 working days</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The pattern. In China the binding constraint is market entry compliance, not the build. A perfect app with no filing, no copyright certificate, and no domestic entity cannot ship. Sources. <a href="https://appinchina.co/blog/the-complete-guide-to-chinas-mobile-app-filing/">AppInChina app filing guide</a>, <a href="https://www.tmogroup.asia/insights/china-icp-license/">TMO Group ICP guide</a>.</p>
+
+<h2 id="samsung-galaxy-store">Samsung Galaxy Store</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>No copying</td>
+      <td>Copying aspects of a published app</td>
+    </tr>
+    <tr>
+      <td>No in app downloads of other apps</td>
+      <td>Offering downloads of other apps from inside the app</td>
+    </tr>
+    <tr>
+      <td>No Samsung identifiers</td>
+      <td>Displaying Samsung identifiers or implying a relationship with Samsung</td>
+    </tr>
+    <tr>
+      <td>Local legal compliance</td>
+      <td>Not observing the legal requirements and local customs of each country published in</td>
+    </tr>
+    <tr>
+      <td>User generated content</td>
+      <td>UGC without content filtering, an intellectual property resolution path, and a way for users to report content</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Source. <a href="https://developer.samsung.com/galaxy-store/distribution-guide.html">Samsung Galaxy Store distribution guide</a>.</p>
+
+<h2 id="amazon-appstore">Amazon Appstore</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Real value</td>
+      <td>An app that is a thin website, song, movie, or book with no added value</td>
+    </tr>
+    <tr>
+      <td>Stability</td>
+      <td>Fails to launch, crashes frequently, or has obvious defects</td>
+    </tr>
+    <tr>
+      <td>Automated plus manual review</td>
+      <td>Automated checks for malware and policy, followed by a manual content and functionality review</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Amazon publishes a presubmission checklist and test criteria, the same shape as the Apple and Google checklists. Sources. <a href="https://developer.amazon.com/docs/app-submission/presubmission-checklist.html">Amazon presubmission checklist</a>, <a href="https://developer.amazon.com/docs/app-testing/test-criteria.html">Amazon test criteria</a>.</p>
+
+<h2 id="microsoft-store">Microsoft Store</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Certification standards</td>
+      <td>A product that does not meet the Store certification standards</td>
+    </tr>
+    <tr>
+      <td>Useful and a good fit</td>
+      <td>A product that is not genuinely useful or a good fit for the Store</td>
+    </tr>
+    <tr>
+      <td>Certification report</td>
+      <td>On failure, Microsoft returns a certification report stating the technical or policy reason</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Certification takes up to about three business days. Source. <a href="https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/avoid-common-certification-failures">Avoid common certification failures</a>.</p>
+
+<h2 id="rustore-russia">RuStore (Russia)</h2>
+
+<p>A state backed Android store that Russian law increasingly requires devices to support.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Language</td>
+      <td>The app must use Russian or English, or offer a switch to one. Otherwise moderation cannot review it and the request is declined</td>
+    </tr>
+    <tr>
+      <td>Device adaptation</td>
+      <td>Errors or broken layout on modern devices</td>
+    </tr>
+    <tr>
+      <td>User generated content</td>
+      <td>UGC without a definition of inappropriate content and pre moderation or complaint based post moderation</td>
+    </tr>
+    <tr>
+      <td>Prohibited permissions</td>
+      <td>A permission with protection level not for use by third party applications is rejected on upload</td>
+    </tr>
+    <tr>
+      <td>Sensitive permissions</td>
+      <td>Sensitive permissions need a stated reason per permission</td>
+    </tr>
+    <tr>
+      <td>Security scan</td>
+      <td>Apps are scanned with Kaspersky plus a manual moderation step. Moderation is usually within about an hour</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Source. <a href="https://www.rustore.ru/help/en/developers/publishing-and-verifying-apps/requirement-apps">RuStore app review guidelines</a>.</p>
+
+<h2 id="the-cross-cutting-patterns-we-adopt">The cross cutting patterns we adopt</h2>
+
+<p>These are the lessons every store teaches, folded back into the way we build for any platform.</p>
+
+<ol>
+  <li>Market entry is a separate gate from the build. China makes this explicit with app filing, a copyright certificate, ICP filing, and a domestic entity. Before targeting a new market, list its legal gates first.</li>
+  <li>One binary rarely passes every store. Huawei needs Huawei Mobile Services in place of Google Mobile Services. Plan per store SDK swaps from the start.</li>
+  <li>Localization can be a review gate, not a nicety. RuStore declines apps it cannot read. Provide the store’s accepted language.</li>
+  <li>Never display or imply a relationship with the store vendor. Samsung bans Samsung identifiers, Apple bans implied Apple endorsement. Treat this as universal.</li>
+  <li>Every store wants a per permission reason. RuStore and Huawei make it explicit. The same minimization and justification discipline serves all stores.</li>
+  <li>Every store returns a reason on rejection. Microsoft’s certification report, Apple’s Resolution Center, Google’s policy email. Read the cited reason, fix that, and reply once. Never blind resubmit.</li>
+  <li>User generated content always needs filtering, reporting, and blocking. Apple, Google, Samsung, and RuStore all require it. Build moderation once and it satisfies every store.</li>
+  <li>Real added value over a thin wrapper is universal. Apple 4.2, Google minimum functionality, and Amazon all reject a thin website in a shell.</li>
+</ol>
+
+<h2 id="how-this-feeds-the-guard">How this feeds the guard</h2>
+
+<p>The Apple and Google checks stay the core of the automated guard, because they cover the most apps. The patterns above are documented here so that when a project targets Huawei, a Chinese store, Samsung, Amazon, Microsoft, or RuStore, the team applies the matching gate by hand and, where a check is automatable, it can be added to the rejection pattern taxonomy over time. Contributions that add per store detection are welcome.</p>
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        本站为开源项目，欢迎<a href="https://github.com/mjmirza/app-store-compliance/edit/gh-pages/OTHER-STORES.md">改进此页</a>。
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>
