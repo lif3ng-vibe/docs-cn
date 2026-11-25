@@ -25,7 +25,7 @@
 {"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"App Store Compliance Playbook","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/SECURITY-POLICY-MIGRATION.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=50455e578883eb8fcbd98d5de9332b7c3e6a34bc">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=777f856c816a4a37b9943aa6316932de18ca74a7">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -47,263 +47,259 @@
       <!-- SECURITY_POLICY_MONITOR_START -->
 
 <blockquote>
-  <p><strong>Simulated output, not live announcements.</strong> This file was generated from sample
-announcements (the built-in set, the default, or a file passed with <code class="language-plaintext highlighter-rouge">--mock</code>). The titles,
-publish dates, and descriptions below are examples that show the shape of a migration
-report, not real publications. Only the linked official documentation URLs are real.
-This monitor has no live feed (Android security bulletins publish no RSS), so check the
-linked official pages before treating anything here as an actual requirement.</p>
+  <p><strong>模拟输出，而非实时公告</strong>。本文件由示例公告生成（内置集合、默认集合，或通过 <code class="language-plaintext highlighter-rouge">--mock</code> 传入的文件）。下文中的标题、发布日期与描述只是展示迁移报告形态的示例，并非真实发布内容。只有所链接的官方文档 URL 是真实的。
+本监控器没有实时数据源（Android 安全公告不提供 RSS），因此在把这里的任何内容当作实际要求对待之前，请先核对所链接的官方页面。</p>
 </blockquote>
 
-<h1 id="mobile-security-requirements-policy-migration--report">Mobile Security Requirements Policy Migration &amp; Report</h1>
+<h1 id="移动安全要求政策迁移与报告">移动安全要求政策迁移与报告</h1>
 
-<p>This report is continuously generated and updated by <code class="language-plaintext highlighter-rouge">scripts/monitor-security.py</code> to track compliance areas.</p>
+<p>本报告由 <code class="language-plaintext highlighter-rouge">scripts/monitor-security.py</code> 持续生成并更新，用于跟踪各安全合规领域。</p>
 
-<h2 id="monitored-security-requirements-update-log">Monitored Security Requirements Update Log</h2>
+<h2 id="受监控安全要求更新日志">受监控安全要求更新日志</h2>
 
-<h3 id="1-secure-storage-secure-storage-update-deprecating-insecure-sharedpreferences-and-plaintext-databases">1. [secure storage] Secure Storage Update: Deprecating Insecure SharedPreferences and Plaintext Databases</h3>
+<h3 id="1-安全存储-安全存储更新弃用不安全的-sharedpreferences-与明文数据库">1. [安全存储] 安全存储更新：弃用不安全的 SharedPreferences 与明文数据库</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
-  <li><strong>Description</strong>: Mobile applications must encrypt all sensitive localized data. Standard SharedPreferences and plain SQLite databases are declared insecure on rooted devices, requiring migration to SQLCipher or EncryptedSharedPreferences.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 15 日（周一）10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
+  <li><strong>描述</strong>：移动应用必须加密所有敏感的本地化数据。标准 SharedPreferences 与明文 SQLite 数据库已被认定在已 root 的设备上不安全，必须迁移到 SQLCipher 或 EncryptedSharedPreferences。</li>
 </ul>
 
-<h3 id="2-root-detection-secure-storage-update-deprecating-insecure-sharedpreferences-and-plaintext-databases">2. [root detection] Secure Storage Update: Deprecating Insecure SharedPreferences and Plaintext Databases</h3>
+<h3 id="2-root-检测-安全存储更新弃用不安全的-sharedpreferences-与明文数据库">2. [root 检测] 安全存储更新：弃用不安全的 SharedPreferences 与明文数据库</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
-  <li><strong>Description</strong>: Mobile applications must encrypt all sensitive localized data. Standard SharedPreferences and plain SQLite databases are declared insecure on rooted devices, requiring migration to SQLCipher or EncryptedSharedPreferences.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 15 日（周一）10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/topic/security/data">https://developer.android.com/topic/security/data</a></li>
+  <li><strong>描述</strong>：移动应用必须加密所有敏感的本地化数据。标准 SharedPreferences 与明文 SQLite 数据库已被认定在已 root 的设备上不安全，必须迁移到 SQLCipher 或 EncryptedSharedPreferences。</li>
 </ul>
 
-<h3 id="3-keychain-ios-keychain-security-enhancement-enforcing-thisdeviceonly-protection-classes">3. [Keychain] iOS Keychain Security Enhancement: Enforcing ThisDeviceOnly Protection Classes</h3>
+<h3 id="3-keychain-ios-keychain-安全强化强制使用-thisdeviceonly-保护类">3. [Keychain] iOS Keychain 安全强化：强制使用 ThisDeviceOnly 保护类</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 17 Jun 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.apple.com/documentation/security/keychain_services">https://developer.apple.com/documentation/security/keychain_services</a></li>
-  <li><strong>Description</strong>: Apple developer security directives mandate migrating keychain items to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly to prevent unauthorized backup restoration on secondary physical devices.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 17 日（周三）11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.apple.com/documentation/security/keychain_services">https://developer.apple.com/documentation/security/keychain_services</a></li>
+  <li><strong>描述</strong>：Apple 开发者安全指令要求将 Keychain 条目迁移至 kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly，以防止在次级物理设备上进行未经授权的备份恢复。</li>
 </ul>
 
-<h3 id="4-android-keystore-android-keystore-system-mandatory-hardware-backed-key-attestation">4. [Android Keystore] Android Keystore System: Mandatory Hardware-Backed Key Attestation</h3>
+<h3 id="4-android-keystore-android-keystore-系统强制硬件级密钥认证">4. [Android Keystore] Android Keystore 系统：强制硬件级密钥认证</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 19 Jun 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/articles/keystore">https://developer.android.com/training/articles/keystore</a></li>
-  <li><strong>Description</strong>: New security guidelines mandate hardware-backed (TEE or StrongBox) KeyGenParameterSpec initialization. Cryptographic keys used for financial or identity payload signing must enforce user authentication requirements.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 19 日（周五）12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/articles/keystore">https://developer.android.com/training/articles/keystore</a></li>
+  <li><strong>描述</strong>：新的安全指南要求以硬件支持（TEE 或 StrongBox）的方式初始化 KeyGenParameterSpec。用于金融或身份载荷签名的加密密钥必须强制执行用户身份验证要求。</li>
 </ul>
 
-<h3 id="5-keychain-biometric-authentication-transitioning-to-crypto-backed-secure-biometric-verification">5. [Keychain] Biometric Authentication: Transitioning to Crypto-Backed Secure Biometric Verification</h3>
+<h3 id="5-keychain-生物识别认证转向基于密码学的安全生物识别验证">5. [Keychain] 生物识别认证：转向基于密码学的安全生物识别验证</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 22 Jun 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
-  <li><strong>Description</strong>: To prevent runtime instrumentation and hook-based bypasses of boolean returns, developers must wrap biometric prompts in a strong Keystore/Keychain CryptoObject or SecAccessControl structure.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 22 日（周一）09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
+  <li><strong>描述</strong>：为防止通过运行时 instrumentation 和 hook 手段绕过布尔返回值，开发者必须将生物识别提示封装在强化的 Keystore/Keychain CryptoObject 或 SecAccessControl 结构中。</li>
 </ul>
 
-<h3 id="6-biometric-authentication-biometric-authentication-transitioning-to-crypto-backed-secure-biometric-verification">6. [biometric authentication] Biometric Authentication: Transitioning to Crypto-Backed Secure Biometric Verification</h3>
+<h3 id="6-生物识别认证-生物识别认证转向基于密码学的安全生物识别验证">6. [生物识别认证] 生物识别认证：转向基于密码学的安全生物识别验证</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 22 Jun 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
-  <li><strong>Description</strong>: To prevent runtime instrumentation and hook-based bypasses of boolean returns, developers must wrap biometric prompts in a strong Keystore/Keychain CryptoObject or SecAccessControl structure.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 22 日（周一）09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/sign-in/biometric-auth">https://developer.android.com/training/sign-in/biometric-auth</a></li>
+  <li><strong>描述</strong>：为防止通过运行时 instrumentation 和 hook 手段绕过布尔返回值，开发者必须将生物识别提示封装在强化的 Keystore/Keychain CryptoObject 或 SecAccessControl 结构中。</li>
 </ul>
 
-<h3 id="7-certificate-pinning-certificate-pinning-guidelines-mandating-subject-public-key-info-spki-pinning">7. [certificate pinning] Certificate Pinning Guidelines: Mandating Subject Public Key Info (SPKI) Pinning</h3>
+<h3 id="7-证书固定-证书固定指南强制固定主题公钥信息spki">7. [证书固定] 证书固定指南：强制固定主题公钥信息（SPKI）</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 24 Jun 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning">https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning</a></li>
-  <li><strong>Description</strong>: Leaf-level certificate pinning is discouraged due to rotational outages. Best practices mandate pinning the Subject Public Key Info (SPKI) of the primary and backup intermediate certificate authorities.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 24 日（周三）14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning">https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning</a></li>
+  <li><strong>描述</strong>：由于证书轮换可能造成服务中断，不建议固定叶子证书。最佳实践要求固定主用与备用中间证书颁发机构的主题公钥信息（SPKI）。</li>
 </ul>
 
-<h3 id="8-jailbreak-detection-ios-jailbreak-detection-comprehensive-dynamic-linker-and-sandbox-write-auditing">8. [jailbreak detection] iOS Jailbreak Detection: Comprehensive Dynamic Linker and Sandbox Write Auditing</h3>
+<h3 id="8-越狱检测-ios-越狱检测全面的动态链接器与沙盒写入审计">8. [越狱检测] iOS 越狱检测：全面的动态链接器与沙盒写入审计</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 26 Jun 2026 15:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
-  <li><strong>Description</strong>: Static file existence checks are easily bypassed. Jailbreak detection must combine dynamic library (dyld) inspection, directory permission checking, and symlink integrity checks.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 26 日（周五）15:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>描述</strong>：静态文件存在性检查很容易被绕过。越狱检测必须结合动态库（dyld）检查、目录权限检查与符号链接（symlink）完整性检查。</li>
 </ul>
 
-<h3 id="9-root-detection-android-root-detection-mandating-play-integrity-api-attestation-in-production">9. [root detection] Android Root Detection: Mandating Play Integrity API Attestation in Production</h3>
+<h3 id="9-root-检测-android-root-检测在生产环境中强制使用-play-integrity-api-认证">9. [root 检测] Android root 检测：在生产环境中强制使用 Play Integrity API 认证</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 29 Jun 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
-  <li><strong>Description</strong>: Local heuristic root checks are unreliable against modern zygisk masking. High-security apps must leverage the Play Integrity API with cryptographically verified backend tokens.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 29 日（周一）10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>描述</strong>：本地启发式 root 检查难以应对现代 zygisk 伪装。高安全级应用必须使用 Play Integrity API，并在后端对令牌做密码学校验。</li>
 </ul>
 
-<h3 id="10-ssl-configuration-ssl-configuration-policies-global-enforcement-of-tls-13-and-disabling-cleartext-traffic">10. [SSL configuration] SSL Configuration Policies: Global Enforcement of TLS 1.3 and Disabling Cleartext Traffic</h3>
+<h3 id="10-ssl-配置-ssl-配置策略全局强制-tls-13-并禁用明文流量">10. [SSL 配置] SSL 配置策略：全局强制 TLS 1.3 并禁用明文流量</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 01 Jul 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/articles/security-config">https://developer.android.com/training/articles/security-config</a></li>
-  <li><strong>Description</strong>: Mobile app stores enforce secure networking by default. Cleartext HTTP traffic must be disabled globally, and minimum TLS versions must be set to TLS 1.2 or TLS 1.3.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 1 日（周三）11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/articles/security-config">https://developer.android.com/training/articles/security-config</a></li>
+  <li><strong>描述</strong>：移动应用商店默认强制安全网络。必须全局禁用明文 HTTP 流量，并将最低 TLS 版本设置为 TLS 1.2 或 TLS 1.3。</li>
 </ul>
 
-<h3 id="11-backup-rules-insecure-backup-controls-configuring-data-extraction-rules-and-backup-exclusions">11. [backup rules] Insecure Backup Controls: Configuring Data Extraction Rules and Backup Exclusions</h3>
+<h3 id="11-备份规则-不安全的备份控制配置数据提取规则与备份排除项">11. [备份规则] 不安全的备份控制：配置数据提取规则与备份排除项</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 03 Jul 2026 13:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/data/autobackup">https://developer.android.com/guide/topics/data/autobackup</a></li>
-  <li><strong>Description</strong>: By default, ADB backup transfers application local databases. Developers must declare allowBackup=’false’ or configure precise dataExtractionRules to exclude credentials.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 3 日（周五）13:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/topics/data/autobackup">https://developer.android.com/guide/topics/data/autobackup</a></li>
+  <li><strong>描述</strong>：默认情况下，ADB 备份会传输应用的本地数据库。开发者必须声明 allowBackup=’false’，或配置精确的 dataExtractionRules 来排除凭据。</li>
 </ul>
 
-<h3 id="12-exported-activities-exported-activities-security-mandatory-explicit-export-controls-on-android-components">12. [exported activities] Exported Activities Security: Mandatory Explicit Export Controls on Android Components</h3>
+<h3 id="12-导出-activity-导出-activity-安全强制对-android-组件进行显式导出控制">12. [导出 Activity] 导出 Activity 安全：强制对 Android 组件进行显式导出控制</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 06 Jul 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/activities/intro-activities">https://developer.android.com/guide/components/activities/intro-activities</a></li>
-  <li><strong>Description</strong>: Unintentionally exported activities expose internal application boundaries. Developers must set android:exported=’false’ for all internal classes to prevent intent injection.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 6 日（周一）14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/components/activities/intro-activities">https://developer.android.com/guide/components/activities/intro-activities</a></li>
+  <li><strong>描述</strong>：无意导出的 Activity 会暴露应用内部边界。开发者必须为所有内部类设置 android:exported=’false’，以防止 Intent 注入。</li>
 </ul>
 
-<h3 id="13-intent-filters-intent-filter-audits-preventing-implicit-intent-spoofing-and-component-hijacking">13. [intent filters] Intent Filter Audits: Preventing Implicit Intent Spoofing and Component Hijacking</h3>
+<h3 id="13-intent-过滤器-intent-过滤器审计防止隐式-intent-欺骗与组件劫持">13. [Intent 过滤器] Intent 过滤器审计：防止隐式 Intent 欺骗与组件劫持</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 08 Jul 2026 16:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/intents-filters">https://developer.android.com/guide/components/intents-filters</a></li>
-  <li><strong>Description</strong>: Implicit intent filters automatically expose components. To secure transitions, apps should use explicit class intents and enforce signature-level custom permissions.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 8 日（周三）16:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/components/intents-filters">https://developer.android.com/guide/components/intents-filters</a></li>
+  <li><strong>描述</strong>：隐式 Intent 过滤器会自动暴露组件。为保障跳转安全，应用应使用显式类 Intent，并强制使用签名级自定义权限。</li>
 </ul>
 
-<h3 id="14-deep-links-deep-link-security-preventing-custom-url-scheme-hijacking-and-parameter-injection">14. [deep links] Deep Link Security: Preventing Custom URL Scheme Hijacking and Parameter Injection</h3>
+<h3 id="14-深层链接-深层链接安全防止自定义-url-scheme-劫持与参数注入">14. [深层链接] 深层链接安全：防止自定义 URL Scheme 劫持与参数注入</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 10 Jul 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/app-links/deep-linking">https://developer.android.com/training/app-links/deep-linking</a></li>
-  <li><strong>Description</strong>: Custom URL schemes can be registered by other applications, leading to session hijacking. All parameters must be parsed, validated, and sanitized as untrusted inputs.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 10 日（周五）12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/app-links/deep-linking">https://developer.android.com/training/app-links/deep-linking</a></li>
+  <li><strong>描述</strong>：自定义 URL Scheme 可能被其他应用注册，从而导致会话劫持。所有参数都必须当作不可信输入进行解析、验证与清理。</li>
 </ul>
 
-<h3 id="15-universal-links-universal-links-verification-secure-association-via-aasa-hosting-on-ios">15. [universal links] Universal Links Verification: Secure Association via AASA Hosting on iOS</h3>
+<h3 id="15-通用链接-通用链接验证在-ios-上通过托管-aasa-实现安全关联">15. [通用链接] 通用链接验证：在 iOS 上通过托管 AASA 实现安全关联</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 13 Jul 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html">https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html</a></li>
-  <li><strong>Description</strong>: To prevent custom scheme hijacking, applications must adopt Universal Links verified by a secure apple-app-site-association file hosted on the target web domain.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 13 日（周一）10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html">https://developer.apple.com/library/archive/documentation/General/Conceptual/AppSearch/UniversalLinks.html</a></li>
+  <li><strong>描述</strong>：为防止自定义 Scheme 劫持，应用必须采用通用链接（Universal Links），并通过托管在目标 Web 域名上的安全 apple-app-site-association 文件完成验证。</li>
 </ul>
 
-<h3 id="16-app-links-android-app-links-verification-digitally-binding-web-domains-via-digital-asset-links">16. [app links] Android App Links Verification: Digitally Binding Web Domains via Digital Asset Links</h3>
+<h3 id="16-app-links-android-app-links-验证通过-digital-asset-links-以数字方式绑定-web-域名">16. [App Links] Android App Links 验证：通过 Digital Asset Links 以数字方式绑定 Web 域名</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 15 Jul 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/training/app-links/verify-site-associations">https://developer.android.com/training/app-links/verify-site-associations</a></li>
-  <li><strong>Description</strong>: Android App Links enable secure routing. The host domain must publish a digital assetlinks.json containing the application’s unique signing key certificate fingerprint.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 15 日（周三）11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/training/app-links/verify-site-associations">https://developer.android.com/training/app-links/verify-site-associations</a></li>
+  <li><strong>描述</strong>：Android App Links 提供安全路由。宿主域名必须发布包含应用唯一签名密钥证书指纹的 assetlinks.json 文件。</li>
 </ul>
 
-<h3 id="17-authentication-flows-authentication-flows-requiring-oauth-21-and-pkce-to-secure-mobile-auth-tokens">17. [authentication flows] Authentication Flows: Requiring OAuth 2.1 and PKCE to Secure Mobile Auth Tokens</h3>
+<h3 id="17-认证流程-认证流程要求使用-oauth-21-与-pkce-保护移动端认证令牌">17. [认证流程] 认证流程：要求使用 OAuth 2.1 与 PKCE 保护移动端认证令牌</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 17 Jul 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://oauth.net/2/pkce/">https://oauth.net/2/pkce/</a></li>
-  <li><strong>Description</strong>: Hardcoding client secrets inside mobile binaries is a critical risk. Modern mobile authentication must use Proof Key for Code Exchange (PKCE) over secure system browser custom tabs.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 17 日（周五）09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://oauth.net/2/pkce/">https://oauth.net/2/pkce/</a></li>
+  <li><strong>描述</strong>：在移动端二进制文件中硬编码 client secret 是重大风险。现代移动端认证必须在安全的系统浏览器自定义标签页（Custom Tabs）中使用 Proof Key for Code Exchange（PKCE）。</li>
 </ul>
 
-<h3 id="18-session-handling-session-handling-standards-mandatory-server-side-session-invalidation-and-snapshot-protection">18. [session handling] Session Handling Standards: Mandatory Server-Side Session Invalidation and Snapshot Protection</h3>
+<h3 id="18-会话处理-会话处理标准强制服务端会话失效与快照保护">18. [会话处理] 会话处理标准：强制服务端会话失效与快照保护</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 20 Jul 2026 15:00:00 GMT</li>
-  <li><strong>Official Resource</strong>: <a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</a></li>
-  <li><strong>Description</strong>: Client-side token deletion is insufficient. Applications must perform server-side session invalidation on logout and blur multitasking window snapshots to prevent data leakage.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 20 日（周一）15:00:00 GMT</li>
+  <li><strong>官方资源</strong>：<a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</a></li>
+  <li><strong>描述</strong>：仅删除客户端令牌并不足够。应用必须在登出时执行服务端会话失效，并对多任务窗口快照做模糊处理，以防数据泄露。</li>
 </ul>
 
-<h3 id="19-keychain-token-storage-policies-securing-long-lived-refresh-tokens-and-session-credentials">19. [Keychain] Token Storage Policies: Securing Long-Lived Refresh Tokens and Session Credentials</h3>
+<h3 id="19-keychain-令牌存储策略保护长期有效的刷新令牌与会话凭据">19. [Keychain] 令牌存储策略：保护长期有效的刷新令牌与会话凭据</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 22 Jul 2026 13:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
-  <li><strong>Description</strong>: Session and refresh tokens must be stored in encrypted enclaves (Keychain/Keystore) rather than local cache directories or standard plists. Access tokens must be short-lived.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 22 日（周三）13:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>描述</strong>：会话令牌与刷新令牌必须存储在加密安全区（Keychain/Keystore）中，而不是本地缓存目录或标准 plist 文件中。访问令牌必须是短效的。</li>
 </ul>
 
-<h3 id="20-token-storage-token-storage-policies-securing-long-lived-refresh-tokens-and-session-credentials">20. [token storage] Token Storage Policies: Securing Long-Lived Refresh Tokens and Session Credentials</h3>
+<h3 id="20-令牌存储-令牌存储策略保护长期有效的刷新令牌与会话凭据">20. [令牌存储] 令牌存储策略：保护长期有效的刷新令牌与会话凭据</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 22 Jul 2026 13:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
-  <li><strong>Description</strong>: Session and refresh tokens must be stored in encrypted enclaves (Keychain/Keystore) rather than local cache directories or standard plists. Access tokens must be short-lived.</li>
+  <li><strong>发布日期</strong>：2026 年 7 月 22 日（周三）13:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://mas.owasp.org/MASVS/">https://mas.owasp.org/MASVS/</a></li>
+  <li><strong>描述</strong>：会话令牌与刷新令牌必须存储在加密安全区（Keychain/Keystore）中，而不是本地缓存目录或标准 plist 文件中。访问令牌必须是短效的。</li>
 </ul>
 
-<h2 id="automated-migration-recommendations--implementation-tasks">Automated Migration Recommendations &amp; Implementation Tasks</h2>
+<h2 id="自动化迁移建议与实施任务">自动化迁移建议与实施任务</h2>
 
-<h3 id="tasks-for-secure-storage">Tasks for secure storage</h3>
+<h3 id="安全存储任务">安全存储任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Update standard preferences to EncryptedSharedPreferences on Android.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Test local database encryption with SQLCipher.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在 Android 上将标准偏好存储更新为 EncryptedSharedPreferences。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：使用 SQLCipher 测试本地数据库加密。</li>
 </ul>
 
-<h3 id="tasks-for-root-detection">Tasks for root detection</h3>
+<h3 id="root-检测任务">root 检测任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for root detection are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证 root 检测的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-keychain">Tasks for Keychain</h3>
+<h3 id="keychain-任务">Keychain 任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Configure Keychain accessibility to kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：将 Keychain 可访问性配置为 kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly。</li>
 </ul>
 
-<h3 id="tasks-for-android-keystore">Tasks for Android Keystore</h3>
+<h3 id="android-keystore-任务">Android Keystore 任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Enforce StrongBox and check KeyInfo.isInsideSecureHardware() on key creation.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：强制使用 StrongBox，并在创建密钥时检查 KeyInfo.isInsideSecureHardware()。</li>
 </ul>
 
-<h3 id="tasks-for-biometric-authentication">Tasks for biometric authentication</h3>
+<h3 id="生物识别认证任务">生物识别认证任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Integrate Keystore CryptoObject-backed BiometricPrompt.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：集成基于 Keystore CryptoObject 的 BiometricPrompt。</li>
 </ul>
 
-<h3 id="tasks-for-certificate-pinning">Tasks for certificate pinning</h3>
+<h3 id="证书固定任务">证书固定任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Populate SPKI pins inside network_security_config.xml.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在 network_security_config.xml 中填入 SPKI 固定值。</li>
 </ul>
 
-<h3 id="tasks-for-jailbreak-detection">Tasks for jailbreak detection</h3>
+<h3 id="越狱检测任务">越狱检测任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for jailbreak detection are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证越狱检测的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-ssl-configuration">Tasks for SSL configuration</h3>
+<h3 id="ssl-配置任务">SSL 配置任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for SSL configuration are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证 SSL 配置的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-backup-rules">Tasks for backup rules</h3>
+<h3 id="备份规则任务">备份规则任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for backup rules are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证备份规则的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-exported-activities">Tasks for exported activities</h3>
+<h3 id="导出-activity-任务">导出 Activity 任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for exported activities are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证导出 Activity 的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-intent-filters">Tasks for intent filters</h3>
+<h3 id="intent-过滤器任务">Intent 过滤器任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for intent filters are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证 Intent 过滤器的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-deep-links">Tasks for deep links</h3>
+<h3 id="深层链接任务">深层链接任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for deep links are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证深层链接的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-universal-links">Tasks for universal links</h3>
+<h3 id="通用链接任务">通用链接任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for universal links are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证通用链接的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-app-links">Tasks for app links</h3>
+<h3 id="app-links-任务">App Links 任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for app links are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证 App Links 的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-authentication-flows">Tasks for authentication flows</h3>
+<h3 id="认证流程任务">认证流程任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for authentication flows are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证认证流程的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-session-handling">Tasks for session handling</h3>
+<h3 id="会话处理任务">会话处理任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for session handling are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证会话处理的所有安全标准均已检查并处理。</li>
 </ul>
 
-<h3 id="tasks-for-token-storage">Tasks for token storage</h3>
+<h3 id="令牌存储任务">令牌存储任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Security audit mandates action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task</strong>: Verify that all security criteria for token storage are checked and handled.</li>
+  <li><strong>监管影响</strong>：高优先级。安全审计要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务</strong>：验证令牌存储的所有安全标准均已检查并处理。</li>
 </ul>
 
 <!-- SECURITY_POLICY_MONITOR_END -->

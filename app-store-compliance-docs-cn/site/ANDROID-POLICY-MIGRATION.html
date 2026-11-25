@@ -25,7 +25,7 @@
 {"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"App Store Compliance Playbook","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/ANDROID-POLICY-MIGRATION.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=50455e578883eb8fcbd98d5de9332b7c3e6a34bc">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=777f856c816a4a37b9943aa6316932de18ca74a7">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -47,391 +47,389 @@
       <!-- ANDROID_POLICY_MONITOR_START -->
 
 <blockquote>
-  <p><strong>Simulated output, not live announcements.</strong> This file was generated from sample
-announcements (the built-in set, the default, or a file passed with <code class="language-plaintext highlighter-rouge">--mock</code>). The titles,
-publish dates, and descriptions below are examples that show the shape of a migration
-report, not real publications. Only the linked official documentation URLs are real.
-Re-run the monitor with <code class="language-plaintext highlighter-rouge">--live</code> against the real feeds before treating anything here
-as an actual requirement.</p>
+  <p><strong>模拟输出，并非实时公告</strong>。本文件由示例公告生成（内置集合、默认集合，或通过
+<code class="language-plaintext highlighter-rouge">--mock</code> 传入的文件）。下方的标题、发布日期与说明均为示例，用于展示迁移报告的
+形态，并非真实发布内容。只有所链接的官方文档 URL 是真实的。在将此处任何内容
+视为实际要求之前，请先用 <code class="language-plaintext highlighter-rouge">--live</code> 针对真实订阅源重新运行监控。</p>
 </blockquote>
 
-<h1 id="android-and-google-play-policy-migration--requirements-report">Android and Google Play Policy Migration &amp; Requirements Report</h1>
+<h1 id="android-与-google-play-政策迁移与要求报告">Android 与 Google Play 政策迁移与要求报告</h1>
 
-<p>This report is continuously generated and updated by <code class="language-plaintext highlighter-rouge">scripts/monitor-android.py</code> to track compliance areas.</p>
+<p>本报告由 <code class="language-plaintext highlighter-rouge">scripts/monitor-android.py</code> 持续生成与更新，用于跟踪各合规领域。</p>
 
-<h2 id="monitored-requirements-update-log">Monitored Requirements Update Log</h2>
+<h2 id="受监控要求更新日志">受监控要求更新日志</h2>
 
-<h3 id="1-google-play-developer-policies-google-play-enforcement-process">1. [Google Play Developer Policies] Google Play Enforcement Process</h3>
+<h3 id="1-google-play-开发者政策-google-play-执法流程">1. [Google Play 开发者政策] Google Play 执法流程</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 10 Jun 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/9899234">https://support.google.com/googleplay/android-developer/answer/9899234</a></li>
-  <li><strong>Description</strong>: Google Play’s enforcement process for policy violations covers rejection, removal, suspension, limited visibility, and account termination, based on app metadata, in-app experience, and account information.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 10 日 星期三 10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/9899234">https://support.google.com/googleplay/android-developer/answer/9899234</a></li>
+  <li><strong>说明</strong>：Google Play 针对政策违规的执法流程涵盖拒审、下架、封停、限制可见性与账号终止，依据包括应用元数据、应用内体验与账号信息。</li>
 </ul>
 
-<h3 id="2-play-console-announcements-new-play-console-mandatory-identity-verification-for-personal-accounts">2. [Play Console announcements] New Play Console Mandatory Identity Verification for Personal Accounts</h3>
+<h3 id="2-play-console-公告-play-console-个人账号强制身份验证新规">2. [Play Console 公告] Play Console 个人账号强制身份验证新规</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 15 Jun 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10788890">https://support.google.com/googleplay/android-developer/answer/10788890</a></li>
-  <li><strong>Description</strong>: To foster user trust, Google Play requires all personal developer accounts created before recent policy updates to complete mandatory identity verification by September 30, 2026. Failure to verify will result in update blockages and eventual listing removals.</li>
+  <li><strong>发布日期</strong>：2026 年 6 月 15 日 星期一 09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10788890">https://support.google.com/googleplay/android-developer/answer/10788890</a></li>
+  <li><strong>说明</strong>：为增进用户信任，Google Play 要求所有在近期政策更新之前创建的个人开发者账号在 2026 年 9 月 30 日前完成强制身份验证。未完成验证将导致更新受阻，商店详情页最终会被移除。</li>
 </ul>
 
-<h3 id="3-target-sdk-requirements-google-play-target-sdk-policy-support-android-16-api-36-by-august-31-2026">3. [Target SDK requirements] Google Play Target SDK Policy: Support Android 16 (API 36) by August 31, 2026</h3>
+<h3 id="3-目标-sdk-要求-google-play-目标-sdk-政策2026-年-8-月-31-日前支持-android-16api-36">3. [目标 SDK 要求] Google Play 目标 SDK 政策：2026 年 8 月 31 日前支持 Android 16（API 36）</h3>
 <ul>
-  <li><strong>Published Date</strong>: Sun, 01 Mar 2026 08:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/requirements/target-sdk">https://developer.android.com/google/play/requirements/target-sdk</a></li>
-  <li><strong>Description</strong>: Google Play is updating its Target SDK requirements. Starting August 31, 2026, all new apps and updates to existing apps must target Android 16 (API 36) or higher. Submissions failing to meet this threshold will be blocked by the publishing gate.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 1 日 星期日 08:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/requirements/target-sdk">https://developer.android.com/google/play/requirements/target-sdk</a></li>
+  <li><strong>说明</strong>：Google Play 正在更新其目标 SDK 要求。自 2026 年 8 月 31 日起，所有新应用与现有应用的更新都必须以 Android 16（API 36）或更高版本为目标。未达到该门槛的提交将被发布门禁拦截。</li>
 </ul>
 
-<h3 id="4-minimum-sdk-requirements-minimum-sdk-requirement-policy-change-for-android-50-deprecation">4. [Minimum SDK requirements] Minimum SDK Requirement Policy Change for Android 5.0 Deprecation</h3>
+<h3 id="4-最低-sdk-要求-android-50-弃用对应的最低-sdk-要求政策变更">4. [最低 SDK 要求] Android 5.0 弃用对应的最低 SDK 要求政策变更</h3>
 <ul>
-  <li><strong>Published Date</strong>: Thu, 12 Mar 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
-  <li><strong>Description</strong>: To maintain high security and performance across the Google Play ecosystem, apps must set a minSdkVersion of 23 (Android 6.0) or higher to receive updates, formally deprecating support for legacy Android 5.0 and 5.1 (API 21/22).</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 12 日 星期四 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
+  <li><strong>说明</strong>：为在整个 Google Play 生态中保持高安全性与高性能，应用必须将 minSdkVersion 设为 23（Android 6.0）或更高才能获得更新，此举正式弃用对旧版 Android 5.0 与 5.1（API 21/22）的支持。</li>
 </ul>
 
-<h3 id="5-android-api-deprecations-minimum-sdk-requirement-policy-change-for-android-50-deprecation">5. [Android API deprecations] Minimum SDK Requirement Policy Change for Android 5.0 Deprecation</h3>
+<h3 id="5-android-api-弃用-android-50-弃用对应的最低-sdk-要求政策变更">5. [Android API 弃用] Android 5.0 弃用对应的最低 SDK 要求政策变更</h3>
 <ul>
-  <li><strong>Published Date</strong>: Thu, 12 Mar 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
-  <li><strong>Description</strong>: To maintain high security and performance across the Google Play ecosystem, apps must set a minSdkVersion of 23 (Android 6.0) or higher to receive updates, formally deprecating support for legacy Android 5.0 and 5.1 (API 21/22).</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 12 日 星期四 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/about/versions">https://developer.android.com/about/versions</a></li>
+  <li><strong>说明</strong>：为在整个 Google Play 生态中保持高安全性与高性能，应用必须将 minSdkVersion 设为 23（Android 6.0）或更高才能获得更新，此举正式弃用对旧版 Android 5.0 与 5.1（API 21/22）的支持。</li>
 </ul>
 
-<h3 id="6-play-console-announcements-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">6. [Play Console announcements] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<h3 id="6-play-console-公告-旧版-safetynet-attestation-api-的弃用与停用时间表">6. [Play Console 公告] 旧版 SafetyNet Attestation API 的弃用与停用时间表</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
-  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 20 日 星期五 12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>说明</strong>：如此前公告所述，旧版 SafetyNet Attestation API 已完全弃用并停用。所有反滥用、安全检查与完整性校验流程都必须迁移到现代的 Play Integrity API。</li>
 </ul>
 
-<h3 id="7-android-api-deprecations-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">7. [Android API deprecations] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<h3 id="7-android-api-弃用-旧版-safetynet-attestation-api-的弃用与停用时间表">7. [Android API 弃用] 旧版 SafetyNet Attestation API 的弃用与停用时间表</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
-  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 20 日 星期五 12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>说明</strong>：如此前公告所述，旧版 SafetyNet Attestation API 已完全弃用并停用。所有反滥用、安全检查与完整性校验流程都必须迁移到现代的 Play Integrity API。</li>
 </ul>
 
-<h3 id="8-play-integrity-api-legacy-safetynet-attestation-apis-deprecation--shutdown-schedule">8. [Play Integrity API] Legacy SafetyNet Attestation APIs Deprecation &amp; Shutdown Schedule</h3>
+<h3 id="8-play-integrity-api-旧版-safetynet-attestation-api-的弃用与停用时间表">8. [Play Integrity API] 旧版 SafetyNet Attestation API 的弃用与停用时间表</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 20 Mar 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
-  <li><strong>Description</strong>: As announced previously, the Legacy SafetyNet Attestation APIs are fully deprecated and shut down. All anti-abuse, security check, and integrity verification flows must migrate to the modern Play Integrity API.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 20 日 星期五 12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity/overview">https://developer.android.com/google/play/integrity/overview</a></li>
+  <li><strong>说明</strong>：如此前公告所述，旧版 SafetyNet Attestation API 已完全弃用并停用。所有反滥用、安全检查与完整性校验流程都必须迁移到现代的 Play Integrity API。</li>
 </ul>
 
-<h3 id="9-play-console-announcements-android-permission-model-update-scoped-media-and-storage-consent">9. [Play Console announcements] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<h3 id="9-play-console-公告-android-权限模型更新分区媒体与存储授权">9. [Play Console 公告] Android 权限模型更新：分区媒体与存储授权</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
-  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 23 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>说明</strong>：在更新后的用户数据政策与 Android 权限模型下，申请 READ_MEDIA_IMAGES 与 READ_MEDIA_VIDEO 权限的应用将面临更严格的核验。大范围照片访问受到限制，官方敦促开发者迁移到原生 Android Photo Picker。</li>
 </ul>
 
-<h3 id="10-android-permission-model-android-permission-model-update-scoped-media-and-storage-consent">10. [Android permission model] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<h3 id="10-android-权限模型-android-权限模型更新分区媒体与存储授权">10. [Android 权限模型] Android 权限模型更新：分区媒体与存储授权</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
-  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 23 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>说明</strong>：在更新后的用户数据政策与 Android 权限模型下，申请 READ_MEDIA_IMAGES 与 READ_MEDIA_VIDEO 权限的应用将面临更严格的核验。大范围照片访问受到限制，官方敦促开发者迁移到原生 Android Photo Picker。</li>
 </ul>
 
-<h3 id="11-user-data-policy-android-permission-model-update-scoped-media-and-storage-consent">11. [User Data policy] Android Permission Model Update: Scoped Media and Storage Consent</h3>
+<h3 id="11-用户数据政策-android-权限模型更新分区媒体与存储授权">11. [用户数据政策] Android 权限模型更新：分区媒体与存储授权</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 23 Mar 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
-  <li><strong>Description</strong>: Under the updated User Data and Android Permission Model, apps requesting READ_MEDIA_IMAGES and READ_MEDIA_VIDEO face stricter verification. Broad photo access is restricted, and developers are urged to migrate to the native Android Photo Picker.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 23 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/topics/permissions/overview">https://developer.android.com/guide/topics/permissions/overview</a></li>
+  <li><strong>说明</strong>：在更新后的用户数据政策与 Android 权限模型下，申请 READ_MEDIA_IMAGES 与 READ_MEDIA_VIDEO 权限的应用将面临更严格的核验。大范围照片访问受到限制，官方敦促开发者迁移到原生 Android Photo Picker。</li>
 </ul>
 
-<h3 id="12-background-execution-restrictions-strict-restrictions-on-android-background-execution-and-exact-alarms">12. [Background execution restrictions] Strict Restrictions on Android Background execution and Exact Alarms</h3>
+<h3 id="12-后台执行限制-android-后台执行与精确闹钟受到严格限制">12. [后台执行限制] Android 后台执行与精确闹钟受到严格限制</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 27 Mar 2026 15:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/about/versions/14/changes/schedule-exact-alarms">https://developer.android.com/about/versions/14/changes/schedule-exact-alarms</a></li>
-  <li><strong>Description</strong>: To conserve system battery life and improve device performance, Android is introducing tighter runtime checks. Tighter limitations on exact alarms (SCHEDULE_EXACT_ALARM) and background wake locks will trigger automatic job throttling.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 27 日 星期五 15:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/about/versions/14/changes/schedule-exact-alarms">https://developer.android.com/about/versions/14/changes/schedule-exact-alarms</a></li>
+  <li><strong>说明</strong>：为节省系统电量并提升设备性能，Android 正在引入更严格的运行时检查。对精确闹钟（SCHEDULE_EXACT_ALARM）与后台唤醒锁的更严限制将触发自动的任务节流。</li>
 </ul>
 
-<h3 id="13-play-console-announcements-new-foreground-service-type-declaration-mandate-on-play-console">13. [Play Console announcements] New Foreground Service Type Declaration Mandate on Play Console</h3>
+<h3 id="13-play-console-公告-play-console-新增前台服务类型声明强制要求">13. [Play Console 公告] Play Console 新增前台服务类型声明强制要求</h3>
 <ul>
-  <li><strong>Published Date</strong>: Tue, 31 Mar 2026 16:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
-  <li><strong>Description</strong>: All applications targeting API 34+ that run foreground services must declare valid foregroundServiceType attributes in their manifest, hold matching FOREGROUND_SERVICE permissions, and submit a detailed Play Console foreground service declaration and video.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 31 日 星期二 16:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
+  <li><strong>说明</strong>：所有以 API 34+ 为目标且运行前台服务的应用，都必须在其清单（manifest）中声明有效的 foregroundServiceType 属性、持有对应的 FOREGROUND_SERVICE 权限，并在 Play Console 提交详细的前台服务声明与视频。</li>
 </ul>
 
-<h3 id="14-foreground-service-policies-new-foreground-service-type-declaration-mandate-on-play-console">14. [Foreground service policies] New Foreground Service Type Declaration Mandate on Play Console</h3>
+<h3 id="14-前台服务政策-play-console-新增前台服务类型声明强制要求">14. [前台服务政策] Play Console 新增前台服务类型声明强制要求</h3>
 <ul>
-  <li><strong>Published Date</strong>: Tue, 31 Mar 2026 16:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
-  <li><strong>Description</strong>: All applications targeting API 34+ that run foreground services must declare valid foregroundServiceType attributes in their manifest, hold matching FOREGROUND_SERVICE permissions, and submit a detailed Play Console foreground service declaration and video.</li>
+  <li><strong>发布日期</strong>：2026 年 3 月 31 日 星期二 16:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/components/foreground-services">https://developer.android.com/guide/components/foreground-services</a></li>
+  <li><strong>说明</strong>：所有以 API 34+ 为目标且运行前台服务的应用，都必须在其清单（manifest）中声明有效的 foregroundServiceType 属性、持有对应的 FOREGROUND_SERVICE 权限，并在 Play Console 提交详细的前台服务声明与视频。</li>
 </ul>
 
-<h3 id="15-privacy-sandbox-privacy-sandbox-technologies-scheduled-for-phase-out-on-android">15. [Privacy Sandbox] Privacy Sandbox Technologies Scheduled for Phase-Out on Android</h3>
+<h3 id="15-privacy-sandbox-privacy-sandbox-技术已排定在-android-上逐步淘汰">15. [Privacy Sandbox] Privacy Sandbox 技术已排定在 Android 上逐步淘汰</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 01 Apr 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies">https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies</a></li>
-  <li><strong>Description</strong>: Google has scheduled Privacy Sandbox technologies for phase-out, including the Topics and Attribution Reporting APIs on Android. Apps and SDKs should not build on these APIs and should review any code that still calls them.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 1 日 星期三 10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies">https://privacysandbox.google.com/blog/update-on-plans-for-privacy-sandbox-technologies</a></li>
+  <li><strong>说明</strong>：Google 已排定逐步淘汰 Privacy Sandbox 技术，其中包括 Android 上的 Topics 与 Attribution Reporting API。应用与 SDK 不应再基于这些 API 构建，并应排查仍在调用它们的代码。</li>
 </ul>
 
-<h3 id="16-google-play-developer-policies-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">16. [Google Play Developer Policies] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<h3 id="16-google-play-开发者政策-play-integrity-api-更新nonce-校验与完整性令牌强制检查">16. [Google Play 开发者政策] Play Integrity API 更新：Nonce 校验与完整性令牌强制检查</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
-  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 6 日 星期一 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>说明</strong>：为缓解中间人重放攻击，Google Play Integrity API 现在强制要求在发放安全载荷之前完成服务端加密 nonce 校验和严格的完整性令牌检查。</li>
 </ul>
 
-<h3 id="17-play-console-announcements-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">17. [Play Console announcements] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<h3 id="17-play-console-公告-play-integrity-api-更新nonce-校验与完整性令牌强制检查">17. [Play Console 公告] Play Integrity API 更新：Nonce 校验与完整性令牌强制检查</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
-  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 6 日 星期一 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>说明</strong>：为缓解中间人重放攻击，Google Play Integrity API 现在强制要求在发放安全载荷之前完成服务端加密 nonce 校验和严格的完整性令牌检查。</li>
 </ul>
 
-<h3 id="18-play-integrity-api-play-integrity-api-update-nonce-verification-and-integrity-token-enforcement">18. [Play Integrity API] Play Integrity API Update: Nonce Verification and Integrity Token Enforcement</h3>
+<h3 id="18-play-integrity-api-play-integrity-api-更新nonce-校验与完整性令牌强制检查">18. [Play Integrity API] Play Integrity API 更新：Nonce 校验与完整性令牌强制检查</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 06 Apr 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
-  <li><strong>Description</strong>: To mitigate man-in-the-middle replay attacks, Google Play Integrity API now enforces server-side cryptographic nonce verification and strict integrity token checks before dispensing secure payloads.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 6 日 星期一 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/integrity">https://developer.android.com/google/play/integrity</a></li>
+  <li><strong>说明</strong>：为缓解中间人重放攻击，Google Play Integrity API 现在强制要求在发放安全载荷之前完成服务端加密 nonce 校验和严格的完整性令牌检查。</li>
 </ul>
 
-<h3 id="19-play-billing-play-billing-library-v80-mandatory-migration-deadline">19. [Play Billing] Play Billing Library v8.0 Mandatory Migration Deadline</h3>
+<h3 id="19-play-billing-play-billing-library-v80-强制迁移截止日期">19. [Play Billing] Play Billing Library v8.0 强制迁移截止日期</h3>
 <ul>
-  <li><strong>Published Date</strong>: Wed, 08 Apr 2026 12:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/google/play/billing/deprecation-faq">https://developer.android.com/google/play/billing/deprecation-faq</a></li>
-  <li><strong>Description</strong>: By August 31, 2026, all new apps and updates to existing apps must migrate to the Play Billing Library version 8.0 or higher. Apps attempting to publish using earlier Billing Library versions (including v7.x or below) will be automatically blocked.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 8 日 星期三 12:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/google/play/billing/deprecation-faq">https://developer.android.com/google/play/billing/deprecation-faq</a></li>
+  <li><strong>说明</strong>：到 2026 年 8 月 31 日，所有新应用与现有应用的更新都必须迁移到 Play Billing Library 8.0 或更高版本。尝试使用更早的 Billing Library 版本（包括 v7.x 及以下）发布的应用将被自动拦截。</li>
 </ul>
 
-<h3 id="20-user-data-policy-google-play-user-data-deletion-and-web-url-mandate-update">20. [User Data policy] Google Play User Data Deletion and Web URL Mandate Update</h3>
+<h3 id="20-用户数据政策-google-play-用户数据删除与-web-url-强制要求更新">20. [用户数据政策] Google Play 用户数据删除与 Web URL 强制要求更新</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 10 Apr 2026 13:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/13327111">https://support.google.com/googleplay/android-developer/answer/13327111</a></li>
-  <li><strong>Description</strong>: All apps permitting in-app account creation must provide users with both an in-app account deletion flow and a public web-based data deletion URL. Unreachable or broken deletion URLs will trigger automated store rejections.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 10 日 星期五 13:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/13327111">https://support.google.com/googleplay/android-developer/answer/13327111</a></li>
+  <li><strong>说明</strong>：所有允许应用内创建账号的应用，必须同时向用户提供应用内账号删除流程和一个公开的 Web 端数据删除 URL。无法访问或失效的删除 URL 将触发自动化的商店拒审。</li>
 </ul>
 
-<h3 id="21-google-play-developer-policies-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">21. [Google Play Developer Policies] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<h3 id="21-google-play-开发者政策-数据安全data-safety声明不一致执法自动静态-sdk-扫描">21. [Google Play 开发者政策] 数据安全（Data Safety）声明不一致执法：自动静态 SDK 扫描</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
-  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 13 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>说明</strong>：Google Play 正在引入针对编译后二进制文件的增强静态扫描。系统将自动扫描分析类（Firebase、Facebook、AppsFlyer）与广告类 SDK，凡数据安全声明与实际跟踪行为不符的提交一律拒审。</li>
 </ul>
 
-<h3 id="22-user-data-policy-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">22. [User Data policy] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<h3 id="22-用户数据政策-数据安全data-safety声明不一致执法自动静态-sdk-扫描">22. [用户数据政策] 数据安全（Data Safety）声明不一致执法：自动静态 SDK 扫描</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
-  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 13 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>说明</strong>：Google Play 正在引入针对编译后二进制文件的增强静态扫描。系统将自动扫描分析类（Firebase、Facebook、AppsFlyer）与广告类 SDK，凡数据安全声明与实际跟踪行为不符的提交一律拒审。</li>
 </ul>
 
-<h3 id="23-data-safety-section-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">23. [Data Safety section] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<h3 id="23-数据安全部分-数据安全data-safety声明不一致执法自动静态-sdk-扫描">23. [数据安全部分] 数据安全（Data Safety）声明不一致执法：自动静态 SDK 扫描</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
-  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 13 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>说明</strong>：Google Play 正在引入针对编译后二进制文件的增强静态扫描。系统将自动扫描分析类（Firebase、Facebook、AppsFlyer）与广告类 SDK，凡数据安全声明与实际跟踪行为不符的提交一律拒审。</li>
 </ul>
 
-<h3 id="24-firebase-policy-updates-data-safety-mismatch-enforcement-automatic-static-sdk-scanning">24. [Firebase policy updates] Data Safety Mismatch Enforcement: Automatic Static SDK Scanning</h3>
+<h3 id="24-firebase-政策更新-数据安全data-safety声明不一致执法自动静态-sdk-扫描">24. [Firebase 政策更新] 数据安全（Data Safety）声明不一致执法：自动静态 SDK 扫描</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 13 Apr 2026 14:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
-  <li><strong>Description</strong>: Google Play is introducing enhanced static scanning for compiled binaries. The system will auto-scan for analytics (Firebase, Facebook, AppsFlyer) and advertising SDKs, rejecting any submission whose Data Safety declarations fail to match active tracking behavior.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 13 日 星期一 14:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10787469">https://support.google.com/googleplay/android-developer/answer/10787469</a></li>
+  <li><strong>说明</strong>：Google Play 正在引入针对编译后二进制文件的增强静态扫描。系统将自动扫描分析类（Firebase、Facebook、AppsFlyer）与广告类 SDK，凡数据安全声明与实际跟踪行为不符的提交一律拒审。</li>
 </ul>
 
-<h3 id="25-ai-generated-content-policies-google-play-generative-ai-safeguards-and-in-app-reporting-requirements">25. [AI-generated content policies] Google Play Generative AI Safeguards and In-App Reporting Requirements</h3>
+<h3 id="25-ai-生成内容政策-google-play-生成式-ai-安全防护与应用内举报要求">25. [AI 生成内容政策] Google Play 生成式 AI 安全防护与应用内举报要求</h3>
 <ul>
-  <li><strong>Published Date</strong>: Thu, 16 Apr 2026 15:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/14747720">https://support.google.com/googleplay/android-developer/answer/14747720</a></li>
-  <li><strong>Description</strong>: Applications integrating generative AI or conversational LLMs must provide robust user-safety controls, including prominent disclosures, an in-app content reporting/flagging mechanism, user blocking, and safeguards preventing deepfake/NSFW outputs.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 16 日 星期四 15:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/14747720">https://support.google.com/googleplay/android-developer/answer/14747720</a></li>
+  <li><strong>说明</strong>：集成生成式 AI 或对话式 LLM 的应用必须提供可靠的用户安全控制，包括醒目的披露声明、应用内内容举报/标记机制、用户拉黑，以及防止深度伪造/NSFW 输出的防护措施。</li>
 </ul>
 
-<h3 id="26-accessibility-requirements-google-play-accessibility-service-misuse-and-touch-target-audit">26. [Accessibility requirements] Google Play Accessibility Service Misuse and Touch Target Audit</h3>
+<h3 id="26-无障碍要求-google-play-无障碍服务滥用与触摸目标审计">26. [无障碍要求] Google Play 无障碍服务滥用与触摸目标审计</h3>
 <ul>
-  <li><strong>Published Date</strong>: Tue, 21 Apr 2026 16:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://support.google.com/googleplay/android-developer/answer/10964491">https://support.google.com/googleplay/android-developer/answer/10964491</a></li>
-  <li><strong>Description</strong>: Google Play will flag and reject non-accessibility apps requesting the BIND_ACCESSIBILITY_SERVICE permission. Additionally, apps face strict audits ensuring a minimum 48dp touch target size and content descriptions for all interactive elements.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 21 日 星期二 16:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://support.google.com/googleplay/android-developer/answer/10964491">https://support.google.com/googleplay/android-developer/answer/10964491</a></li>
+  <li><strong>说明</strong>：Google Play 将标记并拒审申请 BIND_ACCESSIBILITY_SERVICE 权限的非无障碍应用。此外，应用还将面临严格审计，要求触摸目标尺寸不小于 48dp，且所有可交互元素都配有内容描述。</li>
 </ul>
 
-<h3 id="27-device-compatibility-requirements-device-compatibility-and-foldable-layout-guidelines-update">27. [Device compatibility requirements] Device Compatibility and Foldable Layout Guidelines Update</h3>
+<h3 id="27-设备兼容性要求-设备兼容性与折叠屏布局指南更新">27. [设备兼容性要求] 设备兼容性与折叠屏布局指南更新</h3>
 <ul>
-  <li><strong>Published Date</strong>: Fri, 24 Apr 2026 17:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens">https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens</a></li>
-  <li><strong>Description</strong>: Android releases update guidelines enforcing screen and aspect-ratio compatibility across multi-window systems, tablets, and foldable devices. Apps must support dynamic resizing and avoid fixed orientation limits where feasible.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 24 日 星期五 17:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens">https://developer.android.com/guide/topics/large-screens/get-started-with-large-screens</a></li>
+  <li><strong>说明</strong>：Android 版本更新了相关指南，强制要求在多窗口系统、平板与折叠屏设备上保持屏幕与宽高比兼容。应用必须支持动态调整大小，并在可行的情况下避免固定的方向限制。</li>
 </ul>
 
-<h3 id="28-google-play-developer-policies-android-security-bulletin-cryptographic-keystore-isolation-mandate">28. [Google Play Developer Policies] Android Security Bulletin: Cryptographic Keystore Isolation Mandate</h3>
+<h3 id="28-google-play-开发者政策-android-安全公告加密-keystore-隔离强制要求">28. [Google Play 开发者政策] Android 安全公告：加密 Keystore 隔离强制要求</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 27 Apr 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
-  <li><strong>Description</strong>: An Android Security Bulletin addresses high-severity vulnerabilities (CVE-2026-X). App developers are mandated to isolate sensitive user secrets and credentials inside the hardware-backed Android Keystore system and enforce biometrics.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 27 日 星期一 10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
+  <li><strong>说明</strong>：一份 Android 安全公告披露了高危漏洞（CVE-2026-X）。应用开发者被要求将敏感的用户机密与凭据隔离在基于硬件的 Android Keystore 系统中，并强制使用生物识别。</li>
 </ul>
 
-<h3 id="29-security-bulletins-android-security-bulletin-cryptographic-keystore-isolation-mandate">29. [Security Bulletins] Android Security Bulletin: Cryptographic Keystore Isolation Mandate</h3>
+<h3 id="29-安全公告-android-安全公告加密-keystore-隔离强制要求">29. [安全公告] Android 安全公告：加密 Keystore 隔离强制要求</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 27 Apr 2026 10:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
-  <li><strong>Description</strong>: An Android Security Bulletin addresses high-severity vulnerabilities (CVE-2026-X). App developers are mandated to isolate sensitive user secrets and credentials inside the hardware-backed Android Keystore system and enforce biometrics.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 27 日 星期一 10:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://source.android.com/docs/security/bulletin">https://source.android.com/docs/security/bulletin</a></li>
+  <li><strong>说明</strong>：一份 Android 安全公告披露了高危漏洞（CVE-2026-X）。应用开发者被要求将敏感的用户机密与凭据隔离在基于硬件的 Android Keystore 系统中，并强制使用生物识别。</li>
 </ul>
 
-<h3 id="30-play-console-announcements-android-enterprise-work-profile-security-policy-enhancements">30. [Play Console announcements] Android Enterprise Work Profile Security Policy Enhancements</h3>
+<h3 id="30-play-console-公告-android-enterprise-工作资料安全策略增强">30. [Play Console 公告] Android Enterprise 工作资料安全策略增强</h3>
 <ul>
-  <li><strong>Published Date</strong>: Thu, 30 Apr 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
-  <li><strong>Description</strong>: Google announces new Android Enterprise standards for corporate and work profile apps. Enhanced controls under the DevicePolicyManager allow secure data boundaries, blocking side-loading and personal app data leakage.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 30 日 星期四 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
+  <li><strong>说明</strong>：Google 宣布针对企业与工作资料应用的新 Android Enterprise 标准。DevicePolicyManager 下的增强控制可建立安全的数据边界，阻止侧载与个人应用数据泄露。</li>
 </ul>
 
-<h3 id="31-android-enterprise-requirements-android-enterprise-work-profile-security-policy-enhancements">31. [Android Enterprise requirements] Android Enterprise Work Profile Security Policy Enhancements</h3>
+<h3 id="31-android-enterprise-要求-android-enterprise-工作资料安全策略增强">31. [Android Enterprise 要求] Android Enterprise 工作资料安全策略增强</h3>
 <ul>
-  <li><strong>Published Date</strong>: Thu, 30 Apr 2026 11:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
-  <li><strong>Description</strong>: Google announces new Android Enterprise standards for corporate and work profile apps. Enhanced controls under the DevicePolicyManager allow secure data boundaries, blocking side-loading and personal app data leakage.</li>
+  <li><strong>发布日期</strong>：2026 年 4 月 30 日 星期四 11:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://developer.android.com/work">https://developer.android.com/work</a></li>
+  <li><strong>说明</strong>：Google 宣布针对企业与工作资料应用的新 Android Enterprise 标准。DevicePolicyManager 下的增强控制可建立安全的数据边界，阻止侧载与个人应用数据泄露。</li>
 </ul>
 
-<h3 id="32-google-play-developer-policies-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">32. [Google Play Developer Policies] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<h3 id="32-google-play-开发者政策-firebase-政策更新dynamic-links-强制弃用与隐私规则">32. [Google Play 开发者政策] Firebase 政策更新：Dynamic Links 强制弃用与隐私规则</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
-  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+  <li><strong>发布日期</strong>：2026 年 5 月 4 日 星期一 09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>说明</strong>：Firebase 正在逐步停用 Dynamic Links，要求开发者迁移到 Firebase Hosting Deep Links、App Links 或 universal links。此外，更新后的 Realtime Database 与 Cloud Firestore 规则强制执行严格的授权边界。</li>
 </ul>
 
-<h3 id="33-android-api-deprecations-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">33. [Android API deprecations] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<h3 id="33-android-api-弃用-firebase-政策更新dynamic-links-强制弃用与隐私规则">33. [Android API 弃用] Firebase 政策更新：Dynamic Links 强制弃用与隐私规则</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
-  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+  <li><strong>发布日期</strong>：2026 年 5 月 4 日 星期一 09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>说明</strong>：Firebase 正在逐步停用 Dynamic Links，要求开发者迁移到 Firebase Hosting Deep Links、App Links 或 universal links。此外，更新后的 Realtime Database 与 Cloud Firestore 规则强制执行严格的授权边界。</li>
 </ul>
 
-<h3 id="34-firebase-policy-updates-firebase-policy-update-mandatory-dynamic-links-deprecation-and-privacy-rules">34. [Firebase policy updates] Firebase Policy Update: Mandatory Dynamic Links Deprecation and Privacy Rules</h3>
+<h3 id="34-firebase-政策更新-firebase-政策更新dynamic-links-强制弃用与隐私规则">34. [Firebase 政策更新] Firebase 政策更新：Dynamic Links 强制弃用与隐私规则</h3>
 <ul>
-  <li><strong>Published Date</strong>: Mon, 04 May 2026 09:00:00 PDT</li>
-  <li><strong>Official Resource</strong>: <a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
-  <li><strong>Description</strong>: Firebase is sunsetting Dynamic Links, requiring developers to migrate to Firebase Hosting Deep Links, App Links, or universal links. Additionally, updated Realtime Database and Cloud Firestore rules enforce strict authorization boundaries.</li>
+  <li><strong>发布日期</strong>：2026 年 5 月 4 日 星期一 09:00:00 PDT</li>
+  <li><strong>官方资源</strong>：<a href="https://firebase.google.com/support/privacy">https://firebase.google.com/support/privacy</a></li>
+  <li><strong>说明</strong>：Firebase 正在逐步停用 Dynamic Links，要求开发者迁移到 Firebase Hosting Deep Links、App Links 或 universal links。此外，更新后的 Realtime Database 与 Cloud Firestore 规则强制执行严格的授权边界。</li>
 </ul>
 
-<h2 id="automated-migration-recommendations--implementation-tasks">Automated Migration Recommendations &amp; Implementation Tasks</h2>
+<h2 id="自动化迁移建议与实施任务">自动化迁移建议与实施任务</h2>
 
-<h3 id="tasks-for-google-play-developer-policies">Tasks for Google Play Developer Policies</h3>
+<h3 id="针对-google-play-开发者政策的任务">针对 Google Play 开发者政策的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit app metadata, store listing content, and in-app experiences against Developer Policies.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review Play Console policy enforcement notices and clear active warnings.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：对照开发者政策审计应用元数据、商店详情页内容与应用内体验。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：查看 Play Console 政策执法通知，并清除仍未解除的警告。</li>
 </ul>
 
-<h3 id="tasks-for-play-console-announcements">Tasks for Play Console announcements</h3>
+<h3 id="针对-play-console-公告的任务">针对 Play Console 公告的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Complete mandatory Play Console identity verification for developer accounts.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Monitor Play Console inbox announcements weekly for mandatory publishing gate updates.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：为开发者账号完成 Play Console 强制身份验证。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：每周查看 Play Console 收件箱公告，关注强制发布门禁的更新。</li>
 </ul>
 
-<h3 id="tasks-for-target-sdk-requirements">Tasks for Target SDK requirements</h3>
+<h3 id="针对目标-sdk-要求的任务">针对目标 SDK 要求的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Update <code class="language-plaintext highlighter-rouge">targetSdkVersion</code> and <code class="language-plaintext highlighter-rouge">compileSdkVersion</code> in Gradle build files to API 36 (Android 16).</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Perform regression testing for Android 16 target API behavior changes.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：将 Gradle 构建文件中的 <code class="language-plaintext highlighter-rouge">targetSdkVersion</code> 与 <code class="language-plaintext highlighter-rouge">compileSdkVersion</code> 更新到 API 36（Android 16）。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：针对 Android 16 目标 API 行为变更执行回归测试。</li>
 </ul>
 
-<h3 id="tasks-for-minimum-sdk-requirements">Tasks for Minimum SDK requirements</h3>
+<h3 id="针对最低-sdk-要求的任务">针对最低 SDK 要求的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Check <code class="language-plaintext highlighter-rouge">minSdkVersion</code> against the minimum your AndroidX, Play services, and Firebase dependencies require. Google Play itself sets a target API floor, not a minSdk floor.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Clean up legacy conditional checks for deprecated API levels 21/22.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：对照 AndroidX、Play 服务与 Firebase 依赖所要求的最低版本检查 <code class="language-plaintext highlighter-rouge">minSdkVersion</code>。Google Play 本身设定的是目标 API 下限，而非 minSdk 下限。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：清理针对已弃用 API 级别 21/22 的旧条件判断。</li>
 </ul>
 
-<h3 id="tasks-for-android-api-deprecations">Tasks for Android API deprecations</h3>
+<h3 id="针对-android-api-弃用的任务">针对 Android API 弃用的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit codebase for deprecated APIs (e.g., legacy SafetyNet Attestation) and replace with modern APIs.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Remove references to deprecated Android classes across module dependencies.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：审计代码库中的已弃用 API（例如旧版 SafetyNet Attestation），并替换为现代 API。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：移除各模块依赖中对已弃用 Android 类的引用。</li>
 </ul>
 
-<h3 id="tasks-for-play-integrity-api">Tasks for Play Integrity API</h3>
+<h3 id="针对-play-integrity-api-的任务">针对 Play Integrity API 的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement client-side Play Integrity API token requests with cryptographic nonces.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Deploy server-side token decryption and verification checks.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在客户端实现带加密 nonce 的 Play Integrity API 令牌请求。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：部署服务端令牌解密与校验检查。</li>
 </ul>
 
-<h3 id="tasks-for-android-permission-model">Tasks for Android permission model</h3>
+<h3 id="针对-android-权限模型的任务">针对 Android 权限模型的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit <code class="language-plaintext highlighter-rouge">&lt;uses-permission&gt;</code> tags in <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> and eliminate unnecessary sensitive permissions.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Adopt native Android Photo Picker and scoped media storage permissions.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：审计 <code class="language-plaintext highlighter-rouge">AndroidManifest.xml</code> 中的 <code class="language-plaintext highlighter-rouge">&lt;uses-permission&gt;</code> 标签，剔除不必要的敏感权限。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：采用原生 Android Photo Picker 与分区媒体存储权限。</li>
 </ul>
 
-<h3 id="tasks-for-user-data-policy">Tasks for User Data policy</h3>
+<h3 id="针对用户数据政策的任务">针对用户数据政策的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement an in-app account and data deletion path for users.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Publish a public web data deletion URL and link it in the Play Console User Data safety form.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：为用户提供应用内的账号与数据删除路径。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：发布公开的 Web 数据删除 URL，并在 Play Console 的用户数据安全表单中填写该链接。</li>
 </ul>
 
-<h3 id="tasks-for-background-execution-restrictions">Tasks for Background execution restrictions</h3>
+<h3 id="针对后台执行限制的任务">针对后台执行限制的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit <code class="language-plaintext highlighter-rouge">WorkManager</code>, <code class="language-plaintext highlighter-rouge">JobScheduler</code>, and <code class="language-plaintext highlighter-rouge">AlarmManager</code> usage for execution time limits.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review <code class="language-plaintext highlighter-rouge">SCHEDULE_EXACT_ALARM</code> usage and migrate to inexact alarms where applicable.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：审计 <code class="language-plaintext highlighter-rouge">WorkManager</code>、<code class="language-plaintext highlighter-rouge">JobScheduler</code> 与 <code class="language-plaintext highlighter-rouge">AlarmManager</code> 的使用情况，检查执行时长限制。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：检查 <code class="language-plaintext highlighter-rouge">SCHEDULE_EXACT_ALARM</code> 的使用，并在适用处迁移到非精确闹钟。</li>
 </ul>
 
-<h3 id="tasks-for-foreground-service-policies">Tasks for Foreground service policies</h3>
+<h3 id="针对前台服务政策的任务">针对前台服务政策的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Specify <code class="language-plaintext highlighter-rouge">foregroundServiceType</code> inside manifest <code class="language-plaintext highlighter-rouge">&lt;service&gt;</code> declarations for API 34+.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Complete the foreground service declaration on the Play Console App content page, including a video link for each foreground service feature.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在面向 API 34+ 的清单 <code class="language-plaintext highlighter-rouge">&lt;service&gt;</code> 声明中指定 <code class="language-plaintext highlighter-rouge">foregroundServiceType</code>。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：在 Play Console 的应用内容页面完成前台服务声明，并为每个前台服务功能附上视频链接。</li>
 </ul>
 
-<h3 id="tasks-for-privacy-sandbox">Tasks for Privacy Sandbox</h3>
+<h3 id="针对-privacy-sandbox-的任务">针对 Privacy Sandbox 的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Review Advertising ID and attribution SDK usage. Since October 2025 Google has scheduled the Topics and Attribution Reporting APIs on Android for phase-out, so do not adopt them.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Confirm the Advertising ID permission and the Data safety form match what the advertising and analytics SDKs actually collect.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：审查 Advertising ID 与归因类 SDK 的使用。自 2025 年 10 月起，Google 已将 Android 上的 Topics 与 Attribution Reporting API 排定逐步淘汰，因此不要采用它们。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：确认 Advertising ID 权限与数据安全表单同广告类与分析类 SDK 实际收集的内容一致。</li>
 </ul>
 
-<h3 id="tasks-for-play-billing">Tasks for Play Billing</h3>
+<h3 id="针对-play-billing-的任务">针对 Play Billing 的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Migrate project dependencies to Play Billing Library version 8.0 or higher.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Perform test transactions on Google Play Console sandbox environment.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：将项目依赖迁移到 Play Billing Library 8.0 或更高版本。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：在 Google Play Console 沙盒环境中执行测试交易。</li>
 </ul>
 
-<h3 id="tasks-for-data-safety-section">Tasks for Data Safety section</h3>
+<h3 id="针对数据安全部分的任务">针对数据安全部分的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Audit runtime network traffic from third-party SDKs (Firebase, Facebook, AppsFlyer).</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Update Play Console Data Safety questionnaire declarations to align with runtime actions.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：审计第三方 SDK（Firebase、Facebook、AppsFlyer）的运行时网络流量。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：更新 Play Console 数据安全问卷中的声明，使其与运行时行为保持一致。</li>
 </ul>
 
-<h3 id="tasks-for-firebase-policy-updates">Tasks for Firebase policy updates</h3>
+<h3 id="针对-firebase-政策更新的任务">针对 Firebase 政策更新的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Migrate deprecated Firebase Dynamic Links configurations to Firebase Hosting deep links or App Links.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Update Cloud Firestore and Realtime Database security rules to enforce strict data isolation.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：将已弃用的 Firebase Dynamic Links 配置迁移到 Firebase Hosting deep links 或 App Links。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：更新 Cloud Firestore 与 Realtime Database 的安全规则，强制执行严格的数据隔离。</li>
 </ul>
 
-<h3 id="tasks-for-ai-generated-content-policies">Tasks for AI-generated content policies</h3>
+<h3 id="针对-ai-生成内容政策的任务">针对 AI 生成内容政策的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Add safeguards so generative AI features cannot produce content restricted by the Play Inappropriate Content policies.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Provide in-app reporting or flagging for offensive AI-generated content that works without leaving the app.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：增加防护措施，确保生成式 AI 功能不会产出 Play 不当内容政策所限制的内容。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：为冒犯性 AI 生成内容提供应用内举报或标记功能，全程无需离开应用。</li>
 </ul>
 
-<h3 id="tasks-for-accessibility-requirements">Tasks for Accessibility requirements</h3>
+<h3 id="针对无障碍要求的任务">针对无障碍要求的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Ensure all touch targets measure at least 48dp in physical size.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Add <code class="language-plaintext highlighter-rouge">contentDescription</code> attributes on all ImageViews and ImageButtons.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：确保所有触摸目标的实际尺寸不小于 48dp。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：为所有 ImageView 与 ImageButton 添加 <code class="language-plaintext highlighter-rouge">contentDescription</code> 属性。</li>
 </ul>
 
-<h3 id="tasks-for-device-compatibility-requirements">Tasks for Device compatibility requirements</h3>
+<h3 id="针对设备兼容性要求的任务">针对设备兼容性要求的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Configure <code class="language-plaintext highlighter-rouge">android:resizeableActivity=true</code> in manifest.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Verify layout responsiveness on large screens, foldables, and tablet viewports.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在清单中配置 <code class="language-plaintext highlighter-rouge">android:resizeableActivity=true</code>。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：在大屏、折叠屏与平板视口上验证布局的响应式表现。</li>
 </ul>
 
-<h3 id="tasks-for-security-bulletins">Tasks for Security Bulletins</h3>
+<h3 id="针对安全公告的任务">针对安全公告的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement cryptographic token storage wrapper backed by Android Keystore.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Review Android Security Bulletins and resolve applicable CVE vulnerabilities.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：实现基于 Android Keystore 的加密令牌存储封装。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：查阅 Android 安全公告，并修复适用的 CVE 漏洞。</li>
 </ul>
 
-<h3 id="tasks-for-android-enterprise-requirements">Tasks for Android Enterprise requirements</h3>
+<h3 id="针对-android-enterprise-要求的任务">针对 Android Enterprise 要求的任务</h3>
 <ul class="task-list">
-  <li><strong>Regulatory Impact</strong>: High priority. Publishing gates require action.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 1</strong>: Implement Work Profile boundaries and secure inter-profile data exchange under <code class="language-plaintext highlighter-rouge">DevicePolicyManager</code>.</li>
-  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Task 2</strong>: Ensure compatibility with enterprise managed configurations.</li>
+  <li><strong>监管影响</strong>：高优先级。发布门禁要求采取行动。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 1</strong>：在 <code class="language-plaintext highlighter-rouge">DevicePolicyManager</code> 下实现工作资料边界与安全的跨资料数据交换。</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>任务 2</strong>：确保与企业托管配置的兼容性。</li>
 </ul>
 
 <!-- ANDROID_POLICY_MONITOR_END -->
