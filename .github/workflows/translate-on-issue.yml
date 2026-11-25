@@ -121,6 +121,45 @@ jobs:
             echo "全新开工：创建 $BRANCH"
           fi
 
+      - name: Push 权限预检（普通内容 + workflow 文件，失败即终止不进翻译）
+        id: preflight
+        run: |
+          set -euo pipefail
+          # 第一关：普通内容推送（凭据基本有效性）
+          git push origin "translate/$SLUG"
+          # 第二关：workflow 文件推送（推 deploy-pages.yml 构建段所需，fine-grained PAT
+          # 需 Workflows: Read and write）。临时文件用点前缀名不会被注册成 workflow，
+          # 加减两个 commit 后 PR diff 净值为零。
+          echo 'on: null' > .github/workflows/.push-preflight.yml
+          git add .github/workflows/.push-preflight.yml
+          git commit -q -m "ci: push 权限预检临时文件（随后移除）"
+          if git push origin "translate/$SLUG" 2>/tmp/preflight-err.log; then
+            git rm -q .github/workflows/.push-preflight.yml
+            git commit -q -m "ci: 移除 push 预检临时文件"
+            git push -q origin "translate/$SLUG"
+            echo "✅ push 预检通过：普通内容与 workflow 文件均可推送"
+          else
+            echo "::error::Push 预检失败——凭据推不了 workflow 文件。原始报错："
+            cat /tmp/preflight-err.log
+            exit 1
+          fi
+
+      - name: 预检失败回帖（终止，未进翻译零 token 消耗）
+        if: failure() && steps.preflight.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue comment "$ISSUE_NUMBER" --body "Push 权限预检失败 ⛔ 已在翻译开始前终止（零 token 消耗）。
+
+          checkout 凭据推不了分支或 workflow 文件。请检查那枚 fine-grained PAT（GitHub → Settings → Developer settings → Fine-grained tokens）：
+          - **Contents: Read and write**（推普通内容）
+          - **Workflows: Read and write**（推 deploy-pages.yml 构建段——最常漏）
+          - Repository access 含 docs-cn / docs-cn-1 / docs-cn-2 三仓
+
+          修好后无需改 issue：重新 dispatch（gh workflow run translate-on-issue.yml -f issue=${ISSUE_NUMBER}）或直接评论 \`/continue\`，预检通过才进翻译。"
+          gh issue edit "$ISSUE_NUMBER" --add-label blocked || true
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
