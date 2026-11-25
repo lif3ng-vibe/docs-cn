@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
-  <title>Documentation — CLI-Anything Hub</title>
-  <meta name="description" content="How to use cli-hub: install and launch agent-native CLIs from the catalog, and drive capability-based Workflow Matrices — search, preflight, progressive install, doctor, and JSON automation.">
+  <title>文档 — CLI-Anything Hub</title>
+  <meta name="description" content="cli-hub 使用指南：从目录安装并启动 Agent 原生 CLI，驱动基于能力的工作流矩阵——搜索、预检、渐进安装、doctor 与 JSON 自动化。">
   <meta name="author" content="HKUDS and Yuhao Yang">
   <meta name="copyright" content="Copyright: HKUDS. Lead author: Yuhao Yang (yuhao.page).">
   <link rel="canonical" href="https://clianything.cc/docs.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="CLI-Anything Hub">
-  <meta property="og:title" content="Documentation — CLI-Anything Hub">
-  <meta property="og:description" content="Use cli-hub to install agent-native CLIs and drive capability-based Workflow Matrices.">
+  <meta property="og:title" content="文档 — CLI-Anything Hub">
+  <meta property="og:description" content="用 cli-hub 安装 Agent 原生 CLI，驱动基于能力的工作流矩阵。">
   <meta property="og:url" content="https://clianything.cc/docs.html">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Documentation — CLI-Anything Hub">
-  <meta name="twitter:description" content="Install agent-native CLIs and drive Workflow Matrices from one command.">
+  <meta name="twitter:title" content="文档 — CLI-Anything Hub">
+  <meta name="twitter:description" content="一条命令安装 Agent 原生 CLI，驱动工作流矩阵。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
@@ -252,20 +252,20 @@
   <!-- Nav (shared with the Hub) -->
   <nav class="nav" id="nav">
     <div class="nav-in">
-      <a class="nav-brand" href="index.html" aria-label="Back to CLI-Anything Hub home"><span class="nav-brand-badge" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M8 16.5 18.5 24 8 31.5" stroke="currentColor" stroke-width="3.9" stroke-linecap="square" stroke-linejoin="miter" style="color: var(--accent);"/><path d="M24 29.2h16" stroke="currentColor" stroke-width="3.9" stroke-linecap="square" style="color: var(--ink);"/></svg></span>CLI-Hub</a>
+      <a class="nav-brand" href="index.html" aria-label="返回 CLI-Anything Hub 首页"><span class="nav-brand-badge" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M8 16.5 18.5 24 8 31.5" stroke="currentColor" stroke-width="3.9" stroke-linecap="square" stroke-linejoin="miter" style="color: var(--accent);"/><path d="M24 29.2h16" stroke="currentColor" stroke-width="3.9" stroke-linecap="square" style="color: var(--ink);"/></svg></span>CLI-Hub</a>
       <div class="nav-links">
         <div class="nav-menu" id="navMenu">
         <a class="nav-link" href="index.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
-          Home
+          首页
         </a>
         <a class="nav-link" href="index.html#matrices">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg>
-          Matrices
+          矩阵
         </a>
         <a class="nav-link active keep" href="docs.html" aria-current="page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.8A1.8 1.8 0 0 1 5.8 3H12v17H5.8A1.8 1.8 0 0 0 4 21.8z"/><path d="M20 4.8A1.8 1.8 0 0 0 18.2 3H12v17h6.2A1.8 1.8 0 0 1 20 21.8z"/></svg>
-          Docs
+          文档
         </a>
         <a class="nav-link" href="https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md" target="_blank">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 18.5 9.8-9.8"/><path d="m13.7 6.9 3.4 3.4"/><path d="M18 4v2.4"/><path d="M16.8 5.2h2.4"/><path d="M7.5 4.8v2"/><path d="M6.5 5.8h2"/><path d="M18.2 15.8v2"/><path d="M17.2 16.8h2"/></svg>
@@ -274,15 +274,15 @@
         <a class="nav-link" href="https://github.com/HKUDS/CLI-Anything" target="_blank">
           <svg viewBox="0 0 98 96" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6C29.304 70.25 17.9 66.013 17.9 47.02c0-5.52 1.94-10.046 5.127-13.58-.486-1.302-2.264-6.437.486-13.34 0 0 4.206-1.302 13.59 5.216 3.963-1.14 8.17-1.628 12.34-1.628 4.17 0 8.376.568 12.34 1.628 9.384-6.518 13.59-5.216 13.59-5.216 2.75 6.903.972 12.038.486 13.34 3.268 3.534 5.127 8.06 5.127 13.58 0 19.074-11.485 23.15-22.328 24.29 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>
           GitHub
-          <span class="nav-link-stars" data-github-stars aria-label="GitHub star count">--</span>
+          <span class="nav-link-stars" data-github-stars aria-label="GitHub star 数">--</span>
         </a>
-        <a class="nav-link" href="https://github.com/HKUDS/CLI-Anything/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
+        <a class="nav-link" href="https://github.com/HKUDS/CLI-Anything/blob/main/CONTRIBUTING.md" target="_blank">参与贡献</a>
         </div>
-        <button class="theme-toggle keep" onclick="toggleTheme()" aria-label="Toggle theme">
+        <button class="theme-toggle keep" onclick="toggleTheme()" aria-label="切换主题">
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button class="nav-toggle keep" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navMenu">
+        <button class="nav-toggle keep" id="navToggle" aria-label="菜单" aria-expanded="false" aria-controls="navMenu">
           <svg class="icon-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <svg class="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
@@ -293,24 +293,24 @@
 
   <!-- Page header -->
   <header class="phead">
-    <span class="klabel">Documentation</span>
-    <h1>Drive any app from the <em>command line</em></h1>
-    <p><span class="lead">CLI-Hub is a registry and installer for agent-native CLIs.</span> Install a tool by name, launch it, and — when a task spans several tools — pull in a capability-based <b>Workflow Matrix</b>. Every command is built for both humans and AI agents, with <code>--json</code> output and a documented exit-code contract.</p>
+    <span class="klabel">文档</span>
+    <h1>从<em>命令行</em>驱动任何应用</h1>
+    <p><span class="lead">CLI-Hub 是面向 Agent 原生 CLI 的注册表与安装器。</span>按名称安装工具、启动它；当一项任务横跨多个工具时，再引入基于能力的<b>工作流矩阵（Workflow Matrix）</b>。每条命令同时为人和 AI Agent 设计，带 <code>--json</code> 输出与成文的退出码契约。</p>
   </header>
 
   <div class="doc-wrap">
     <!-- Table of contents -->
-    <aside class="toc" aria-label="On this page">
-      <div class="toc-label">On this page</div>
+    <aside class="toc" aria-label="本页内容">
+      <div class="toc-label">本页内容</div>
       <nav id="toc-nav">
-        <a href="#install">Install</a>
-        <a href="#quickstart">Quick start</a>
-        <a href="#catalog">Catalog commands</a>
-        <a href="#matrices">Workflow matrices</a>
-        <a href="#matrix-cli">Matrix commands</a>
-        <a href="#exit">Exit codes</a>
-        <a href="#automation">JSON &amp; automation</a>
-        <a href="#config">Registries &amp; config</a>
+        <a href="#install">安装</a>
+        <a href="#quickstart">快速上手</a>
+        <a href="#catalog">目录命令</a>
+        <a href="#matrices">工作流矩阵</a>
+        <a href="#matrix-cli">矩阵命令</a>
+        <a href="#exit">退出码</a>
+        <a href="#automation">JSON 与自动化</a>
+        <a href="#config">注册表与配置</a>
       </nav>
     </aside>
 
@@ -318,260 +318,260 @@
 
       <!-- ===================== Install ===================== -->
       <section class="doc-sec reveal" id="install">
-        <span class="sec-eyebrow">Getting started</span>
-        <h2>Install</h2>
-        <p>CLI-Hub ships as the <code>cli-anything-hub</code> package and installs the <code>cli-hub</code> command. It needs Python 3.10 or newer.</p>
-        <div class="code"><button class="code-copy" onclick="copyCode(this)">Copy</button><pre><code><span class="pr">$</span> pip install cli-anything-hub
+        <span class="sec-eyebrow">开始上手</span>
+        <h2>安装</h2>
+        <p>CLI-Hub 以 <code>cli-anything-hub</code> 包发布，会装上 <code>cli-hub</code> 命令。需要 Python 3.10 或更高版本。</p>
+        <div class="code"><button class="code-copy" onclick="copyCode(this)">复制</button><pre><code><span class="pr">$</span> pip install cli-anything-hub
 <span class="pr">$</span> cli-hub --version</code></pre></div>
-        <p>That single command is the entry point for everything below — browsing the catalog, installing tools, and working with matrices. From here you can also hand an agent the <a href="https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md" target="_blank" rel="noopener">meta-skill <code>SKILL.md</code></a> so it can discover and install CLIs autonomously.</p>
+        <p>这一条命令就是下面一切的入口——浏览目录、安装工具、使用矩阵。你也可以把<a href="https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md" target="_blank" rel="noopener">元技能（meta-skill）<code>SKILL.md</code></a>交给 Agent，让它自主发现并安装 CLI。</p>
       </section>
 
       <!-- ===================== Quick start ===================== -->
       <section class="doc-sec reveal" id="quickstart">
-        <span class="sec-eyebrow">Two-minute tour</span>
-        <h2>Quick start</h2>
-        <p>Find a tool, install it, and run it — or scope a whole workflow to just what your task needs.</p>
-        <div class="code"><button class="code-copy" onclick="copyCode(this)">Copy</button><pre><code><span class="cm"># Browse and install a single CLI</span>
+        <span class="sec-eyebrow">两分钟速览</span>
+        <h2>快速上手</h2>
+        <p>找到一个工具、装上、跑起来——或者把整条工作流收窄到你的任务真正需要的那部分。</p>
+        <div class="code"><button class="code-copy" onclick="copyCode(this)">复制</button><pre><code><span class="cm"># 浏览并安装单个 CLI</span>
 <span class="pr">$</span> cli-hub search diagram
 <span class="pr">$</span> cli-hub install drawio
 <span class="pr">$</span> cli-hub launch drawio --help
 
-<span class="cm"># Ask what's needed for a task across every matrix</span>
+<span class="cm"># 跨所有矩阵询问某项任务需要什么</span>
 <span class="pr">$</span> cli-hub can <span class="hl">"transcribe audio"</span>
 
-<span class="cm"># Check a matrix, then install only the capability you need</span>
+<span class="cm"># 检查一个矩阵，然后只安装你需要的能力</span>
 <span class="pr">$</span> cli-hub matrix preflight video-creation --summary
 <span class="pr">$</span> cli-hub matrix install video-creation --capability text.transcribe</code></pre></div>
         <div class="callout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <p><b>Tip.</b> Add <code>--json</code> to almost any command for machine-readable output, and chain on exit codes (see <a href="#exit">Exit codes</a>) to make scripts and agents react without parsing text.</p>
+          <p><b>提示。</b>几乎所有命令都可以加 <code>--json</code> 获得机器可读输出，并结合退出码（见<a href="#exit">退出码</a>）让脚本和 Agent 无需解析文本即可做出反应。</p>
         </div>
       </section>
 
       <!-- ===================== Catalog commands ===================== -->
       <section class="doc-sec reveal" id="catalog">
-        <span class="sec-eyebrow">The catalog</span>
-        <h2>Catalog commands</h2>
-        <p>The catalog is the flat list of individual CLIs — first-party <em>harness</em> tools published by CLI-Anything and curated <em>public</em> tools. These commands discover, install, and run them.</p>
+        <span class="sec-eyebrow">目录</span>
+        <h2>目录命令</h2>
+        <p>目录是所有单个 CLI 的扁平列表——CLI-Anything 发布的第一方 <em>harness</em> 工具，加上精选的<em>公开</em>工具。这些命令负责发现、安装和运行它们。</p>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub list</div>
-          <div class="cmd-purpose">List every available CLI, grouped by category, with an installed marker.</div>
+          <div class="cmd-purpose">列出全部可用 CLI，按分类分组，并带已安装标记。</div>
           <div class="flags">
-            <div class="flag"><code>-c, --category &lt;name&gt;</code><span>Filter to one category.</span></div>
-            <div class="flag"><code>-s, --source &lt;harness|public|npm|all&gt;</code><span>Filter by source (<code>npm</code> is an alias for public).</span></div>
-            <div class="flag"><code>--json</code><span>Machine-readable output.</span></div>
+            <div class="flag"><code>-c, --category &lt;name&gt;</code><span>按单个分类过滤。</span></div>
+            <div class="flag"><code>-s, --source &lt;harness|public|npm|all&gt;</code><span>按来源过滤（<code>npm</code> 是 public 的别名）。</span></div>
+            <div class="flag"><code>--json</code><span>机器可读输出。</span></div>
           </div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub search <span class="arg">&lt;query&gt;</span></div>
-          <div class="cmd-purpose">Search CLIs by name, description, or category.</div>
+          <div class="cmd-purpose">按名称、描述或分类搜索 CLI。</div>
           <div class="flags">
-            <div class="flag"><code>--json</code><span>Machine-readable output.</span></div>
+            <div class="flag"><code>--json</code><span>机器可读输出。</span></div>
           </div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub info <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Show full detail for one CLI — description, category, source, version, requirements, entry point, homepage, and contributors.</div>
+          <div class="cmd-purpose">显示单个 CLI 的完整详情——描述、分类、来源、版本、依赖、入口点、主页与贡献者。</div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub install <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Install a CLI from the registry. Harness tools install via <code>pip</code>; public tools use their declared strategy (npm / uv / command).</div>
+          <div class="cmd-purpose">从注册表安装一个 CLI。harness 工具经 <code>pip</code> 安装；公开工具按其声明的策略安装（npm / uv / 命令）。</div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub launch <span class="arg">&lt;name&gt; [args…]</span></div>
-          <div class="cmd-purpose">Launch an installed CLI, passing every argument after the name straight through to it.</div>
+          <div class="cmd-purpose">启动已安装的 CLI，名称之后的每个参数都原样透传给它。</div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub update <span class="arg">&lt;name&gt;</span> &nbsp;·&nbsp; cli-hub uninstall <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Update an installed CLI to the latest version, or remove it.</div>
+          <div class="cmd-purpose">把已安装的 CLI 更新到最新版本，或将其移除。</div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub previews <span class="arg">&lt;inspect|html|watch|open&gt;</span></div>
-          <div class="cmd-purpose">Inspect, render, watch, or open preview bundles and live sessions produced by harness CLIs (e.g. FreeCAD / Blender preview loops). <code>watch</code> and <code>open</code> serve a live, auto-refreshing page.</div>
+          <div class="cmd-purpose">检查、渲染、监视或打开由 harness CLI 产生的预览包与实时会话（如 FreeCAD / Blender 预览循环）。<code>watch</code> 和 <code>open</code> 会伺服一个实时自动刷新的页面。</div>
         </div>
       </section>
 
       <!-- ===================== Workflow matrices ===================== -->
       <section class="doc-sec reveal" id="matrices">
-        <span class="sec-eyebrow">Concepts</span>
-        <h2>Workflow matrices</h2>
-        <p>A real task — &ldquo;make a captioned video&rdquo; — rarely maps to one tool. A <b>matrix</b> bundles a domain into <b>capabilities</b> (the verbs an agent calls) and, for each, several <b>providers</b> (concrete ways to fulfil it). You pick a path by <em>capability</em>, not by memorising which of fourteen packages to install.</p>
+        <span class="sec-eyebrow">核心概念</span>
+        <h2>工作流矩阵</h2>
+        <p>一个真实任务——&ldquo;给视频配字幕&rdquo;——很少只对应一个工具。<b>矩阵</b>把一个领域打包成若干<b>能力（capability）</b>（Agent 调用的动词），每种能力再配若干<b>提供方（provider）</b>（兑现它的具体途径）。你按<em>能力</em>选路径，而不是背下十四个包里该装哪个。</p>
 
-        <div class="concept"><pre><span class="n">Matrix</span>  <span class="tree">──</span> a capability bundle for one domain (e.g. video-creation)
+        <div class="concept"><pre><span class="n">Matrix</span>  <span class="tree">──</span> 一个领域的能力打包（如 video-creation）
 <span class="tree">│</span>
-<span class="tree">├─</span> <span class="n">capabilities[]</span>   verbs an agent can call — <span class="k">visual.generate</span>, <span class="k">text.transcribe</span> …
-<span class="tree">│   └─</span> <span class="n">providers[]</span>   concrete ways to fulfil a capability, each tagged with a <span class="n">kind</span>
+<span class="tree">├─</span> <span class="n">capabilities[]</span>   Agent 可调用的动词——<span class="k">visual.generate</span>、<span class="k">text.transcribe</span> …
+<span class="tree">│   └─</span> <span class="n">providers[]</span>   兑现某项能力的具体途径，每个都带<span class="n">类型</span>标注
 <span class="tree">│</span>
-<span class="tree">├─</span> <span class="n">recipes[]</span>        named subsets of capabilities for a specific task
-<span class="tree">├─</span> <span class="n">clis[]</span>           the flat list that <span class="k">matrix install</span> actually installs
-<span class="tree">└─</span> <span class="n">SKILL.md</span>         the provider-selection handbook, rendered locally on install</pre></div>
+<span class="tree">├─</span> <span class="n">recipes[]</span>        面向特定任务的具名能力子集
+<span class="tree">├─</span> <span class="n">clis[]</span>           <span class="k">matrix install</span> 实际安装的扁平列表
+<span class="tree">└─</span> <span class="n">SKILL.md</span>         提供方选择手册，安装时渲染到本地</pre></div>
 
-        <h3>Provider kinds</h3>
-        <p>Every provider declares a <code>kind</code> that tells you how it&rsquo;s obtained and what it costs:</p>
+        <h3>提供方类型</h3>
+        <p>每个提供方都声明一个 <code>kind</code>，告诉你它如何获取、要付出什么：</p>
         <div class="grid2">
-          <div class="kind"><h4>harness-cli</h4><p>A first-party CLI you can install with <code>cli-hub</code>; each ships its own SKILL.md.</p></div>
-          <div class="kind"><h4>public-cli</h4><p>A third-party CLI installed via brew / npm / pip.</p></div>
-          <div class="kind"><h4>python</h4><p>A Python library used directly (a free fallback).</p></div>
-          <div class="kind"><h4>native</h4><p>A native binary on the system, such as <code>ffmpeg</code>.</p></div>
-          <div class="kind"><h4>api</h4><p>A cloud API — needs a key and explicit user consent.</p></div>
-          <div class="kind"><h4>agent-skill</h4><p>An external agent skill the agent installs itself; not counted by preflight.</p></div>
+          <div class="kind"><h4>harness-cli</h4><p>可用 <code>cli-hub</code> 安装的第一方 CLI；每个都自带 SKILL.md。</p></div>
+          <div class="kind"><h4>public-cli</h4><p>经 brew / npm / pip 安装的第三方 CLI。</p></div>
+          <div class="kind"><h4>python</h4><p>直接使用的 Python 库（免费的兜底选项）。</p></div>
+          <div class="kind"><h4>native</h4><p>系统上的原生二进制，如 <code>ffmpeg</code>。</p></div>
+          <div class="kind"><h4>api</h4><p>云端 API——需要密钥与用户明确同意。</p></div>
+          <div class="kind"><h4>agent-skill</h4><p>Agent 自行安装的外部 Agent Skill；不计入预检。</p></div>
         </div>
 
         <div class="callout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <p><b>Preflight reports, it doesn&rsquo;t choose.</b> Registry order is documentation order, not a ranking. <code>preflight</code> tells you what&rsquo;s available; the agent picks the provider using the rules in the matrix&rsquo;s <code>SKILL.md</code>. Paid APIs are never used without configured keys and user consent.</p>
+          <p><b>预检只报告，不替你选。</b>注册表顺序是文档顺序，不是排名。<code>preflight</code> 告诉你有什么可用；Agent 按矩阵 <code>SKILL.md</code> 中的规则挑选提供方。未配置密钥且未经用户同意，付费 API 绝不会被使用。</p>
         </div>
       </section>
 
       <!-- ===================== Matrix commands ===================== -->
       <section class="doc-sec reveal" id="matrix-cli">
-        <span class="sec-eyebrow">The matrix command family</span>
-        <h2>Matrix commands</h2>
-        <p>All matrix operations live under <code>cli-hub matrix</code>, plus the top-level <code>cli-hub can</code> shortcut for capability search. Every subcommand supports <code>--json</code>.</p>
+        <span class="sec-eyebrow">矩阵命令家族</span>
+        <h2>矩阵命令</h2>
+        <p>所有矩阵操作都在 <code>cli-hub matrix</code> 之下，另有一个顶层的 <code>cli-hub can</code> 快捷方式用于能力搜索。每个子命令都支持 <code>--json</code>。</p>
 
-        <h3>Discover</h3>
+        <h3>发现</h3>
         <div class="cmd">
           <div class="cmd-name">cli-hub can <span class="arg">&lt;query&gt;</span></div>
-          <div class="cmd-purpose">Search capabilities across <em>all</em> matrices for a task, with per-provider availability on this machine. Exit 0 if there are hits, 1 if none.</div>
+          <div class="cmd-purpose">跨<em>所有</em>矩阵搜索某项任务的能力，并给出各提供方在本机的可用性。有命中退出 0，无命中退出 1。</div>
           <div class="flags">
-            <div class="flag"><code>--json</code><span>Emit capability matches as JSON.</span></div>
+            <div class="flag"><code>--json</code><span>以 JSON 输出能力匹配。</span></div>
           </div>
         </div>
-        <div class="code"><button class="code-copy" onclick="copyCode(this)">Copy</button><pre><code><span class="pr">$</span> cli-hub can <span class="hl">"download bilibili video"</span>
+        <div class="code"><button class="code-copy" onclick="copyCode(this)">复制</button><pre><code><span class="pr">$</span> cli-hub can <span class="hl">"download bilibili video"</span>
 <span class="ot">  video.download  (video-creation)</span>
 <span class="ot">    available here: yt-dlp · missing: BBDown, lux</span>
 <span class="ot">    next: cli-hub matrix preflight video-creation -c video.download</span></code></pre></div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix list</div>
-          <div class="cmd-purpose">List all matrices with their description and how many member CLIs are installed.</div>
-          <div class="flags"><div class="flag"><code>--json</code><span>Machine-readable output.</span></div></div>
+          <div class="cmd-purpose">列出全部矩阵及其描述，以及每个矩阵有多少成员 CLI 已安装。</div>
+          <div class="flags"><div class="flag"><code>--json</code><span>机器可读输出。</span></div></div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix search <span class="arg">&lt;query&gt;</span></div>
-          <div class="cmd-purpose">Search matrices by name, capability, provider, recipe, or gap — with match attribution (which capability matched, and on which field).</div>
-          <div class="flags"><div class="flag"><code>--json</code><span>Includes <code>matched_capabilities[]</code>.</span></div></div>
+          <div class="cmd-purpose">按名称、能力、提供方、配方或缺口搜索矩阵——并给出匹配归因（哪个能力命中、命中在哪个字段）。</div>
+          <div class="flags"><div class="flag"><code>--json</code><span>包含 <code>matched_capabilities[]</code>。</span></div></div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix info <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Full detail for one matrix — members and status, capabilities with provider counts, recipes, and known gaps.</div>
-          <div class="flags"><div class="flag"><code>--json</code><span>Machine-readable output.</span></div></div>
+          <div class="cmd-purpose">单个矩阵的完整详情——成员与状态、带提供方计数的能力、配方以及已知缺口。</div>
+          <div class="flags"><div class="flag"><code>--json</code><span>机器可读输出。</span></div></div>
         </div>
 
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix recipes</div>
-          <div class="cmd-purpose">List task-oriented recipes across every matrix, each with its capabilities and a ready-to-run preflight command.</div>
+          <div class="cmd-purpose">列出所有矩阵里面向任务的配方，每个配方附其能力与一条可直接运行的预检命令。</div>
           <div class="flags">
-            <div class="flag"><code>--search &lt;text&gt;</code><span>Filter by id, description, or capability.</span></div>
-            <div class="flag"><code>--json</code><span>Machine-readable output.</span></div>
+            <div class="flag"><code>--search &lt;text&gt;</code><span>按 id、描述或能力过滤。</span></div>
+            <div class="flag"><code>--json</code><span>机器可读输出。</span></div>
           </div>
         </div>
 
-        <h3>Preflight</h3>
-        <p>Preflight is the pivot of the whole flow: it reports which providers are actually usable in your current environment, so you (or an agent) decide what to install before touching anything.</p>
+        <h3>预检</h3>
+        <p>预检是整个流程的支点：它报告在你的当前环境里哪些提供方真正可用，让你（或 Agent）在动手之前决定要装什么。</p>
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix preflight <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Check provider availability per capability. Exits <code>0</code> when every (filtered) capability has at least one usable provider, <code>3</code> when there&rsquo;s a gap.</div>
+          <div class="cmd-purpose">逐能力检查提供方可用性。当每个（过滤后的）能力都至少有一个可用提供方时退出 <code>0</code>，存在缺口时退出 <code>3</code>。</div>
           <div class="flags">
-            <div class="flag"><code>-c, --capability &lt;id&gt;</code><span>Check just one capability.</span></div>
-            <div class="flag"><code>--recipe &lt;id&gt;</code><span>Check only the capabilities a recipe uses.</span></div>
-            <div class="flag"><code>--offline</code><span>Consider only offline-capable providers.</span></div>
-            <div class="flag"><code>--fix-hints</code><span>Print an install command under each missing provider.</span></div>
-            <div class="flag"><code>--summary</code><span>Print only the two-line summary.</span></div>
-            <div class="flag"><code>--json</code><span>Machine-readable output.</span></div>
+            <div class="flag"><code>-c, --capability &lt;id&gt;</code><span>只检查一个能力。</span></div>
+            <div class="flag"><code>--recipe &lt;id&gt;</code><span>只检查某配方用到的能力。</span></div>
+            <div class="flag"><code>--offline</code><span>只考虑可离线使用的提供方。</span></div>
+            <div class="flag"><code>--fix-hints</code><span>在每个缺失的提供方下方打印安装命令。</span></div>
+            <div class="flag"><code>--summary</code><span>只打印两行摘要。</span></div>
+            <div class="flag"><code>--json</code><span>机器可读输出。</span></div>
           </div>
         </div>
-        <div class="code"><button class="code-copy" onclick="copyCode(this)">Copy</button><pre><code><span class="cm"># Gate an action on coverage — only proceed if the recipe is fully satisfiable</span>
+        <div class="code"><button class="code-copy" onclick="copyCode(this)">复制</button><pre><code><span class="cm"># 用覆盖率给动作上闸——只有配方可以完全满足时才继续</span>
 <span class="pr">$</span> cli-hub matrix preflight video-creation --recipe screencast-tutorial --json \
     || echo <span class="hl">"capability gap — read the missing list before installing"</span></code></pre></div>
 
-        <h3>Install</h3>
+        <h3>安装</h3>
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix install <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Install a matrix&rsquo;s CLIs. With no scope flag it installs every member CLI; the scope flags below install just a subset. Installation is idempotent — already-installed tools are skipped.</div>
+          <div class="cmd-purpose">安装矩阵的 CLI。不带范围参数时安装全部成员 CLI；下方各范围参数只安装子集。安装是幂等的——已安装的工具会被跳过。</div>
           <div class="flags">
-            <div class="flag"><code>--dry-run</code><span>Show the install plan with zero side effects.</span></div>
-            <div class="flag"><code>-c, --capability &lt;id&gt;</code><span>Install only the CLIs behind one capability.</span></div>
-            <div class="flag"><code>--recipe &lt;id&gt;</code><span>Install only the CLIs a recipe uses.</span></div>
-            <div class="flag"><code>--only &lt;a,b,c&gt;</code><span>Install a named comma-separated subset of the matrix&rsquo;s CLIs.</span></div>
-            <div class="flag"><code>--resume</code><span>Retry only the CLIs that failed last time.</span></div>
-            <div class="flag"><code>--skill-only</code><span>Render the matrix skill (SKILL.md + references + scripts) without installing CLIs.</span></div>
-            <div class="flag"><code>--json</code><span>Machine-readable plan or result.</span></div>
+            <div class="flag"><code>--dry-run</code><span>零副作用地展示安装计划。</span></div>
+            <div class="flag"><code>-c, --capability &lt;id&gt;</code><span>只安装一个能力背后的 CLI。</span></div>
+            <div class="flag"><code>--recipe &lt;id&gt;</code><span>只安装某配方用到的 CLI。</span></div>
+            <div class="flag"><code>--only &lt;a,b,c&gt;</code><span>安装矩阵 CLI 中具名的逗号分隔子集。</span></div>
+            <div class="flag"><code>--resume</code><span>只重试上次失败的 CLI。</span></div>
+            <div class="flag"><code>--skill-only</code><span>只渲染矩阵技能（SKILL.md + 参考文档 + 脚本），不安装 CLI。</span></div>
+            <div class="flag"><code>--json</code><span>机器可读的计划或结果。</span></div>
           </div>
         </div>
-        <div class="code"><button class="code-copy" onclick="copyCode(this)">Copy</button><pre><code><span class="pr">$</span> cli-hub matrix install video-creation --dry-run
+        <div class="code"><button class="code-copy" onclick="copyCode(this)">复制</button><pre><code><span class="pr">$</span> cli-hub matrix install video-creation --dry-run
 <span class="ot">  Plan: video-creation</span>
 <span class="ot">  skip (already installed): audacity, gimp, kdenlive</span>
 <span class="ot">  install via pip:          inkscape, krita, obs-studio, …</span>
 <span class="ot">  not managed here:         python libs, native binaries, cloud APIs — see preflight</span></code></pre></div>
-        <p>The scope flags (<code>--capability</code>, <code>--recipe</code>, <code>--only</code>) are mutually exclusive. Per-matrix install state is recorded under <code>~/.cli-hub/matrix_state.json</code>, which is what powers <code>--resume</code>.</p>
+        <p>范围参数（<code>--capability</code>、<code>--recipe</code>、<code>--only</code>）互斥。每个矩阵的安装状态记录在 <code>~/.cli-hub/matrix_state.json</code>，这正是 <code>--resume</code> 的依据。</p>
 
-        <h3>Repair</h3>
+        <h3>修复</h3>
         <div class="cmd">
           <div class="cmd-name">cli-hub matrix doctor <span class="arg">&lt;name&gt;</span></div>
-          <div class="cmd-purpose">Audit install completeness for a matrix&rsquo;s CLIs — flags anything recorded as installed but missing from <code>PATH</code>, and suggests a fix. (Preflight asks &ldquo;is a provider usable?&rdquo;; doctor asks &ldquo;is what I installed still healthy?&rdquo;)</div>
-          <div class="flags"><div class="flag"><code>--json</code><span>Machine-readable audit.</span></div></div>
+          <div class="cmd-purpose">审计矩阵 CLI 的安装完整性——凡是记录为已安装却从 <code>PATH</code> 消失的都会被标出，并给出修复建议。（预检问的是「某个提供方可不可用？」；doctor 问的是「我装的东西还健康吗？」）</div>
+          <div class="flags"><div class="flag"><code>--json</code><span>机器可读审计。</span></div></div>
         </div>
       </section>
 
       <!-- ===================== Exit codes ===================== -->
       <section class="doc-sec reveal" id="exit">
-        <span class="sec-eyebrow">Contract</span>
-        <h2>Exit codes</h2>
-        <p>The matrix command family follows one exit-code contract, so scripts and agents can branch without reading text. Catalog commands use the simpler <code>0</code> / <code>1</code> success-or-failure convention.</p>
+        <span class="sec-eyebrow">契约</span>
+        <h2>退出码</h2>
+        <p>矩阵命令家族遵循统一的退出码契约，脚本和 Agent 无需读文本即可分支。目录命令使用更简单的 <code>0</code> / <code>1</code> 成败约定。</p>
         <div class="grid2">
-          <div class="exit ok"><span class="num">0</span><div><div class="x-label">Success</div><div class="x-desc">All checks passed, or every capability gap is covered.</div></div></div>
-          <div class="exit fail"><span class="num">1</span><div><div class="x-label">Failure</div><div class="x-desc">Matrix or capability not found; nothing could be installed.</div></div></div>
-          <div class="exit warn"><span class="num">2</span><div><div class="x-label">Usage error</div><div class="x-desc">Mutually exclusive flags, or an invalid capability / recipe / <code>--only</code> name.</div></div></div>
-          <div class="exit warn"><span class="num">3</span><div><div class="x-label">Partial</div><div class="x-desc">A capability gap, or some CLIs installed while others failed or are broken.</div></div></div>
+          <div class="exit ok"><span class="num">0</span><div><div class="x-label">成功</div><div class="x-desc">所有检查通过，或所有能力缺口均已覆盖。</div></div></div>
+          <div class="exit fail"><span class="num">1</span><div><div class="x-label">失败</div><div class="x-desc">矩阵或能力未找到；什么都没装成。</div></div></div>
+          <div class="exit warn"><span class="num">2</span><div><div class="x-label">用法错误</div><div class="x-desc">使用了互斥参数，或能力 / 配方 / <code>--only</code> 名称非法。</div></div></div>
+          <div class="exit warn"><span class="num">3</span><div><div class="x-label">部分完成</div><div class="x-desc">存在能力缺口，或部分 CLI 安装成功而其余失败或损坏。</div></div></div>
         </div>
       </section>
 
       <!-- ===================== Automation ===================== -->
       <section class="doc-sec reveal" id="automation">
-        <span class="sec-eyebrow">For agents &amp; scripts</span>
-        <h2>JSON &amp; automation</h2>
-        <p>CLI-Hub is built to be driven by AI agents as much as by people. Two design choices make that reliable:</p>
+        <span class="sec-eyebrow">面向 Agent 与脚本</span>
+        <h2>JSON 与自动化</h2>
+        <p>CLI-Hub 从设计上就同等地面向 AI Agent 与人。两个设计决定让它变得可靠：</p>
         <ul class="doc-list">
-          <li><b>Structured output everywhere.</b> Catalog commands and the whole matrix family accept <code>--json</code> — including <code>matrix install</code>, whose JSON carries the full plan or result. No screen-scraping required.</li>
-          <li><b>Exit codes as control flow.</b> Combine the contract above with <code>&amp;&amp;</code> / <code>||</code> to gate steps — e.g. preflight a recipe, and only install when it returns <code>0</code>.</li>
+          <li><b>处处结构化输出。</b>目录命令与整个矩阵家族都接受 <code>--json</code>——包括 <code>matrix install</code>，其 JSON 携带完整的计划或结果。无需抓屏解析。</li>
+          <li><b>退出码即控制流。</b>把上面的契约与 <code>&amp;&amp;</code> / <code>||</code> 组合起来给步骤上闸——比如先预检一个配方，返回 <code>0</code> 才安装。</li>
         </ul>
-        <p>After installing a matrix, its <code>SKILL.md</code> is rendered to your machine. Read it: it contains the provider-selection rules, the suggest-to-user template for paid upgrades, and references — the judgement an agent needs that the registry alone doesn&rsquo;t encode.</p>
+        <p>安装矩阵之后，它的 <code>SKILL.md</code> 会渲染到你的机器上。请读一读：里面有提供方选择规则、面向付费升级的「建议用户」模板和参考资料——这些是注册表本身编码不了的判断力，Agent 需要它们。</p>
         <div class="callout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="m7 11 5 5 5-5"/><path d="M12 4v12"/></svg>
-          <p>The meta-skill <code>SKILL.md</code> includes a <b>Workflow Matrices</b> section, and the site publishes <code>llms.txt</code> plus the machine-readable registries — give an agent those entry points and it can go from cold start to &ldquo;preflight → install by capability → JSON result&rdquo; on its own.</p>
+          <p>元技能 <code>SKILL.md</code> 内含<b>工作流矩阵</b>章节，本站也发布 <code>llms.txt</code> 与机器可读注册表——把这些入口交给 Agent，它就能从冷启动一路自主走到「预检 → 按能力安装 → JSON 结果」。</p>
         </div>
       </section>
 
       <!-- ===================== Config ===================== -->
       <section class="doc-sec reveal" id="config">
-        <span class="sec-eyebrow">Reference</span>
-        <h2>Registries &amp; config</h2>
-        <p>CLI-Hub reads three published registries and caches them locally (one-hour TTL) under <code>~/.cli-hub/</code>:</p>
+        <span class="sec-eyebrow">参考</span>
+        <h2>注册表与配置</h2>
+        <p>CLI-Hub 读取三个已发布的注册表，并缓存在本地 <code>~/.cli-hub/</code> 下（一小时 TTL）：</p>
         <ul class="doc-list">
-          <li><b>registry.json</b> — first-party harness CLIs.</li>
-          <li><b>public_registry.json</b> — curated public CLIs.</li>
-          <li><b>matrix_registry.json</b> — matrices: capabilities × providers, with preflight contracts.</li>
+          <li><b>registry.json</b>——第一方 harness CLI。</li>
+          <li><b>public_registry.json</b>——精选公开 CLI。</li>
+          <li><b>matrix_registry.json</b>——矩阵：能力 × 提供方，带预检契约。</li>
         </ul>
-        <p>They&rsquo;re served from the project&rsquo;s GitHub Pages domain (for example <code>…/CLI-Anything/matrix_registry.json</code>). Local state lives alongside the cache: <code>installed.json</code> tracks installed CLIs, and <code>matrix_state.json</code> records per-matrix install outcomes for <code>--resume</code>.</p>
-        <h3>Environment</h3>
+        <p>它们由项目的 GitHub Pages 域名伺服（例如 <code>…/CLI-Anything/matrix_registry.json</code>）。本地状态与缓存放在一起：<code>installed.json</code> 跟踪已安装的 CLI；<code>matrix_state.json</code> 记录每个矩阵的安装结果，供 <code>--resume</code> 使用。</p>
+        <h3>环境变量</h3>
         <ul class="doc-list">
-          <li><b><code>CLI_HUB_NO_ANALYTICS=1</code></b> — opt out of anonymous, fire-and-forget usage analytics.</li>
-          <li>CLI-Hub auto-detects when it&rsquo;s invoked by an AI agent (Claude Code, Codex, Cursor, and others) for analytics bucketing only.</li>
-          <li>Color is suppressed automatically when output is piped or not a TTY, keeping logs and parsers clean.</li>
+          <li><b><code>CLI_HUB_NO_ANALYTICS=1</code></b>——退出匿名的即发即忘使用统计。</li>
+          <li>CLI-Hub 会自动检测自己是否被 AI Agent 调用（Claude Code、Codex、Cursor 等），仅用于统计分桶。</li>
+          <li>输出被管道接管或非 TTY 时自动关闭着色，保持日志与解析器干净。</li>
         </ul>
         <div class="callout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/></svg>
-          <p>Analytics never block your workflow and can be turned off entirely. Matrices are the differentiator here — start from <a href="index.html#matrices">the Matrices section</a> or run <code>cli-hub matrix list</code> to see what&rsquo;s available.</p>
+          <p>统计绝不阻塞你的工作流，也可以彻底关闭。矩阵是这里真正的差异点——从<a href="index.html#matrices">矩阵章节</a>开始，或运行 <code>cli-hub matrix list</code> 看看有什么可用。</p>
         </div>
       </section>
 
@@ -579,32 +579,32 @@
   </div>
 
   <footer class="footer">
-    <span>CLI-Anything Hub — agent-friendly CLI registry.</span>
-    <span><a href="index.html">Home</a> · <a href="index.html#matrices">Matrices</a> · <a href="demos.html">Demos</a> · <a href="https://github.com/HKUDS/CLI-Anything" target="_blank">GitHub</a></span>
+    <span>CLI-Anything Hub——对 Agent 友好的 CLI 注册表。</span>
+    <span><a href="index.html">首页</a> · <a href="index.html#matrices">矩阵</a> · <a href="demos.html">演示</a> · <a href="https://github.com/HKUDS/CLI-Anything" target="_blank">GitHub</a></span>
   </footer>
 
   <script>
     // ===================== Palette + theme (shared with the Hub) =====================
     const PALETTES = {
-      steel: { label:'Steel', accentBand:209,
+      steel: { label:'钢青', accentBand:209,
         light:{ bg:'#f4f6f9', surface:'#ffffff', ink:'#14181f', ink2:'#4a5568', ink3:'#8595a8', line:'rgba(20,40,80,.10)', accent:'#2f6fb0', accent2:'#1f5793', accentRgb:'47,111,176', surfaceRgb:'255,255,255' },
         dark:{ bg:'#0d1117', surface:'#151b24', ink:'#e8edf4', ink2:'#9fb0c4', ink3:'#647488', line:'rgba(255,255,255,.08)', accent:'#5b9bd6', accent2:'#7db4e6', accentRgb:'91,155,214', surfaceRgb:'21,27,36' } },
-      steelsky: { label:'Steel Sky', accentBand:203,
+      steelsky: { label:'钢青天色', accentBand:203,
         light:{ bg:'#f4f6f9', surface:'#ffffff', ink:'#14181f', ink2:'#4a5568', ink3:'#8595a8', line:'rgba(20,40,80,.10)', accent:'#1c8ee0', accent2:'#1573bd', accentRgb:'28,142,224', surfaceRgb:'255,255,255' },
         dark:{ bg:'#0d1117', surface:'#151b24', ink:'#e8edf4', ink2:'#9fb0c4', ink3:'#647488', line:'rgba(255,255,255,.08)', accent:'#46b2f4', accent2:'#6cc6f8', accentRgb:'70,178,244', surfaceRgb:'21,27,36' } },
-      sky: { label:'Sky', accentBand:203,
+      sky: { label:'天蓝', accentBand:203,
         light:{ bg:'#f4f9fe', surface:'#ffffff', ink:'#0f1f2d', ink2:'#465a6b', ink3:'#8299ac', line:'rgba(20,70,115,.10)', accent:'#1c8ee0', accent2:'#1573bd', accentRgb:'28,142,224', surfaceRgb:'255,255,255' },
         dark:{ bg:'#0a1320', surface:'#121e2d', ink:'#e9f3fb', ink2:'#9bb4c9', ink3:'#5f7689', line:'rgba(255,255,255,.08)', accent:'#46b2f4', accent2:'#6cc6f8', accentRgb:'70,178,244', surfaceRgb:'18,30,45' } },
-      sage: { label:'Sage', accentBand:160,
+      sage: { label:'鼠尾草绿', accentBand:160,
         light:{ bg:'#f3f8f4', surface:'#ffffff', ink:'#13211b', ink2:'#475a51', ink3:'#7f968a', line:'rgba(20,65,48,.10)', accent:'#2c9b78', accent2:'#1d8062', accentRgb:'44,155,120', surfaceRgb:'255,255,255' },
         dark:{ bg:'#0b1410', surface:'#121d18', ink:'#e7f2eb', ink2:'#9ab4a7', ink3:'#5e7568', line:'rgba(255,255,255,.07)', accent:'#48c29c', accent2:'#67d0b1', accentRgb:'72,194,156', surfaceRgb:'18,29,24' } },
-      sand: { label:'Sand', accentBand:175,
+      sand: { label:'沙色', accentBand:175,
         light:{ bg:'#f8f5ef', surface:'#fffdf8', ink:'#221d15', ink2:'#585044', ink3:'#948979', line:'rgba(75,58,30,.12)', accent:'#1d7a71', accent2:'#145d57', accentRgb:'29,122,113', surfaceRgb:'255,253,248' },
         dark:{ bg:'#13110b', surface:'#1b1811', ink:'#f1ece1', ink2:'#b2a797', ink3:'#796e5e', line:'rgba(255,255,255,.07)', accent:'#3eb2a4', accent2:'#5cc3b6', accentRgb:'62,178,164', surfaceRgb:'27,24,17' } },
-      blush: { label:'Blush', accentBand:3,
+      blush: { label:'绯红', accentBand:3,
         light:{ bg:'#faf6f4', surface:'#fffefd', ink:'#271d1c', ink2:'#5e504e', ink3:'#9b8a87', line:'rgba(90,50,45,.11)', accent:'#c25e5a', accent2:'#a4453f', accentRgb:'194,94,90', surfaceRgb:'255,254,253' },
         dark:{ bg:'#140f0e', surface:'#1c1615', ink:'#f3eae8', ink2:'#b6a4a1', ink3:'#7d6b68', line:'rgba(255,255,255,.07)', accent:'#df8480', accent2:'#e89f9b', accentRgb:'223,132,128', surfaceRgb:'28,22,21' } },
-      mist: { label:'Mist', accentBand:222,
+      mist: { label:'雾蓝', accentBand:222,
         light:{ bg:'#f6f8fb', surface:'#ffffff', ink:'#171b22', ink2:'#4e586a', ink3:'#8893a6', line:'rgba(25,35,60,.09)', accent:'#3b6ef0', accent2:'#2f57cf', accentRgb:'59,110,240', surfaceRgb:'255,255,255' },
         dark:{ bg:'#0a0d14', surface:'#12161f', ink:'#eef1f7', ink2:'#9aa6bd', ink3:'#606b82', line:'rgba(255,255,255,.07)', accent:'#5b8bff', accent2:'#789fff', accentRgb:'91,139,255', surfaceRgb:'18,22,31' } },
     };
@@ -673,7 +673,7 @@
           if (badgeResp.ok) {
             const badge = await badgeResp.json();
             const badgeLabel = formatBadgeCount(badge.message || badge.value);
-            if (badgeLabel) { renderGitHubStars(badgeLabel, `${badgeLabel} GitHub stars`); return; }
+            if (badgeLabel) { renderGitHubStars(badgeLabel, `${badgeLabel} 个 GitHub star`); return; }
           }
         } catch (_) {}
         const resp = await fetch(GITHUB_REPO_API, { headers: { 'Accept': 'application/vnd.github+json' } });
@@ -681,7 +681,7 @@
         const repo = await resp.json();
         const stars = repo.stargazers_count;
         if (typeof stars !== 'number') return;
-        renderGitHubStars(formatCompactCount(stars), `${stars.toLocaleString('en-US')} GitHub stars`);
+        renderGitHubStars(formatCompactCount(stars), `${stars.toLocaleString('en-US')} 个 GitHub star`);
       } catch (_) {}
     })();
 
@@ -691,7 +691,7 @@
       const code = btn.parentElement.querySelector('code');
       if (!code || !navigator.clipboard) return;
       navigator.clipboard.writeText(code.innerText).then(() => {
-        const o = btn.textContent; btn.textContent = 'Copied';
+        const o = btn.textContent; btn.textContent = '已复制';
         setTimeout(() => { btn.textContent = o; }, 1200);
       }).catch(() => {});
     }
