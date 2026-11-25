@@ -167,6 +167,15 @@ jobs:
           mkdir -p _site
           cp -r diagram-design-docs-cn/site _site/diagram-design
 
+      # cli-anything 是 HKUDS/CLI-Anything 仓库内的手写静态站（clianything.cc，
+      # Pages 源为仓库 docs/hub/ 目录，无框架无构建，Apache-2.0）。
+      # 静态镜像汉化：site/ 资源与数据引用全相对路径（子路径零改写，
+      # 4 个注册表 JSON 已本地拷入自包含），CI 纯拷贝零构建（同 diagram-design 先例）。
+      - name: Deploy cli-anything-docs-cn from repo
+        run: |
+          mkdir -p _site
+          cp -r cli-anything-docs-cn/site _site/cli-anything
+
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph
         uses: actions/cache@v4
