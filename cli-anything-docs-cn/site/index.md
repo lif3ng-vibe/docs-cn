@@ -1,14 +1,14 @@
 # CLI-Anything Hub
 
-CLI-Anything Hub is an agent-friendly registry and package manager for CLI tools that let AI agents operate GUI applications, developer tools, creative software, web APIs, and public SaaS platforms.
+CLI-Anything Hub 是一个对 Agent 友好的 CLI 工具注册表与包管理器，让 AI Agent 能够发现、安装并驱动 GUI 应用、开发工具、创意软件、Web API 与公共 SaaS 平台。
 
-Canonical site: https://clianything.cc
+官方站点：https://clianything.cc
 
-Repository: https://github.com/HKUDS/CLI-Anything
+代码仓库：https://github.com/HKUDS/CLI-Anything
 
-PyPI package: https://pypi.org/project/cli-anything-hub/
+PyPI 包：https://pypi.org/project/cli-anything-hub/
 
-## Install
+## 安装
 
 ```bash
 pip install cli-anything-hub
@@ -20,7 +20,7 @@ pip install cli-anything-hub
 npx skills add HKUDS/CLI-Anything --skill cli-hub-meta-skill -g -y
 ```
 
-## Commands
+## 命令
 
 ```bash
 cli-hub list
@@ -32,7 +32,7 @@ cli-hub update <name>
 cli-hub launch <name> [args...]
 ```
 
-## Machine-Readable Resources
+## 机器可读资源
 
 - `https://clianything.cc/llms.txt`
 - `https://clianything.cc/llms-full.txt`
@@ -46,6 +46,6 @@ cli-hub launch <name> [args...]
 - `https://clianything.cc/.well-known/agent-skills/index.json`
 - `https://reeceyang.sgp1.cdn.digitaloceanspaces.com/SKILL.md`
 
-## Copyright
+## 版权
 
-Copyright: HKUDS. Lead author: Yuhao Yang (yuhao.page).
+版权所有：HKUDS。第一作者：Yuhao Yang（yuhao.page）。

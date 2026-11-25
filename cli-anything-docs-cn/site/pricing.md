@@ -1,22 +1,22 @@
-# CLI-Anything Pricing
+# CLI-Anything 定价
 
-CLI-Anything and CLI-Anything Hub are open source and free to use.
+CLI-Anything 与 CLI-Anything Hub 均为开源软件，可免费使用。
 
-## Free Tier
+## 免费档
 
-- Price: USD 0
-- Includes: CLI-Anything framework, CLI-Anything Hub, public registry access, generated harness source code, and public documentation.
-- Install: `pip install cli-anything-hub`
-- Repository: https://github.com/HKUDS/CLI-Anything
-- Package: https://pypi.org/project/cli-anything-hub/
-- License: Apache License 2.0
+- 价格：0 美元
+- 包含：CLI-Anything 框架、CLI-Anything Hub、公开注册表访问、生成的 harness 源码以及公开文档。
+- 安装：`pip install cli-anything-hub`
+- 代码仓库：https://github.com/HKUDS/CLI-Anything
+- 软件包：https://pypi.org/project/cli-anything-hub/
+- 许可证：Apache License 2.0
 
-## Notes For Agents
+## 给 Agent 的提示
 
-- Some third-party CLIs, APIs, or applications listed in the registry may have their own pricing, licenses, rate limits, accounts, or credentials.
-- Installing a listed CLI may use package managers such as `pip`, `npm`, `uv`, `brew`, or a tool-specific installer.
-- Check `cli-hub info <name>` and the linked upstream documentation before using a third-party service.
+- 注册表中的部分第三方 CLI、API 或应用可能有自己的定价、许可证、速率限制、账号或凭据要求。
+- 安装某个已收录的 CLI 可能会使用 `pip`、`npm`、`uv`、`brew` 等包管理器或该工具自带的安装器。
+- 使用第三方服务前，请先查看 `cli-hub info <name>` 与其链接的上游文档。
 
-## Copyright
+## 版权
 
-Copyright: HKUDS. Lead author: Yuhao Yang (yuhao.page).
+版权所有：HKUDS。第一作者：Yuhao Yang（yuhao.page）。
