@@ -39,7 +39,7 @@
 | 6 | PLATFORM-MECHANICS-2026 + ADVANCED-2026 + OPEN-SOURCE-PATTERNS | 9,389 | ✅ 已提交（3 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——余下命中均为政策名/机构名等专名） |
 | 7 | GAP-ANALYSIS-2026-09 + GAP-ANALYSIS-2026-11 + REGULATORY-GAP-REPORT-2026 + COMPETITIVE-GAP-ANALYSIS | 9,443 | ✅ 已提交（4 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——GAP-09 的证据原话引文按「逐字引文」有意保留英文） |
 | 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS + FAQ.md | 6,893 | ✅ 已提交（6 篇全译，含漏排的 FAQ；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留） |
-| 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 /tmp/asp-parts/ part 文件后拼接） | 21,041 | 🔄 段 1（1-400）翻译中 |
+| 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 /tmp/asp-parts/ part 文件后拼接） | 21,041 | ✅ 已提交（拼装 1325 行与原文逐行对应；URL 集合 diff 零差异；列表数一致；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——命中均为引号内报错原文、法条引用、Sign in with Apple 等） |
 | 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分 4 段并行译：1-105 / 106-223 / 224-900 / 898-1580 行，各段写 part 文件后拼接） | 27,855 | ⬜ |
 | 11 | 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜（llms.txt 已于批次 1 完成） |
 
@@ -58,7 +58,13 @@
 
 ## 下一步
 
-批次 9（questions.md 4 段：1-400 翻译中；401-724 / 725-930 / 931-1325 待开工；拼装校验行数=1325）→ 10 → 11 → 阶段 C
+批次 10（REGULATORY-TIMELINE.md 4 段：1-105 翻译中；106-223 / 224-897 / 898-1580 待开工；拼装校验行数=1580）→ 11 → 阶段 C
+
+## 上游疑点备忘（不阻断，已如实翻译）
+
+- questions.md 源第 898 行链接文字日期截断（"Mandatory from " 后缺日期），译文写「强制执行日期：原文缺失」
+- questions.md 源第 1204 行链接文字类目标签截断（"Regulatory Time"），按「监管时间线」译出
+- questions.md 源第 16 行引文在源文件即被截断（"needs an age restricti"），译文保留截断形态
 
 ## 环境备忘（CI 续跑用）
 
