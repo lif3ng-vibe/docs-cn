@@ -166,6 +166,7 @@ jobs:
 
           硬性边界（违者本轮作废）：
           - 只允许 push translate/${SLUG} 分支；git 身份已配置好，直接用
+          - push 一律用 origin 预配凭据（DOCS_CN_PAT，含 workflows 写权限），禁止用 GH_TOKEN 拼带 token 的 URL 推 git——App token 有 contents 但 GitHub 硬性禁止它推 workflow 文件
           - 每批 commit 后立即 git push origin HEAD，并 gh issue comment ${ISSUE_NUMBER} 回帖一行进度（批次名/页数/状态）
           - progress.md、.anchor-maps/、GLOSSARY.md 随批提交；dist 与 node_modules 不进 git
           - 持续 429 / 额度耗尽：按 429 协议回帖（已完成/剩余/如何 /continue）+ 打 quota-blocked label + STATUS 写 paused:quota 后正常退出；功能死局（要改需求才能继续）用 blocked label

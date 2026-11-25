@@ -43,6 +43,10 @@ env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，**可空=闭源站镜�
 2. 抽查已提交批次构建绿（不重译已 commit 的批次）
 3. 从 progress.md 的「下一步」继续
 
+### 推送凭据口径（CI）
+
+push 一律用 checkout 预配的 origin 凭据（`DOCS_CN_PAT`，fine-grained PAT 需含 **Contents rw + Workflows rw**——Workflows 缺失时推 `deploy-pages.yml` 改动会被服务端拒绝，报错形如 "refusing to allow a Personal Access Token to create or update workflow"）。**禁止用 `GH_TOKEN`/`gh` 拼带 token 的 URL 推 git**：App token（GITHUB_TOKEN）权限清单里没有 workflows scope，GitHub 硬性禁止它推任何 workflow 文件，绕过去只会把卡点推迟到阶段 C 收尾。
+
 ### 进度纪律（每批循环，死也不丢状态）
 
 1. 批次翻译完成 → commit（**必须含**：更新的 `.translation-state/progress.md`、`.anchor-maps/`、GLOSSARY.md）
