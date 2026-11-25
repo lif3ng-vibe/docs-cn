@@ -25,7 +25,7 @@ description: Use when the user asks to 汉化并部署 a documentation site, 收
 
 ## CI 模式协议
 
-env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，**可空=闭源站镜像汉化**）、`DOCS_URL`、`SLUG`（可空，workflow 从仓库名/域名自动推导）、`SUBDIR`（monorepo 子目录，可空）、`SCOPE`（范围裁剪，可空）、`GLOSSARY_NOTES`（可空）、`ISSUE_NUMBER`、`RESUME`（1=续跑，0=全新）。
+env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，**可空=闭源站镜像汉化**）、`DOCS_URL`、`SLUG`（可空，workflow 从仓库名/域名自动推导）、`SUBDIR`（monorepo 子目录，可空）、`SCOPE`（范围裁剪，可空）、`GLOSSARY_NOTES`（可空）、`DEPLOY_MODE`（auto=自动合 master 上线 / review=建 PR 等人工，缺省 auto）、`ISSUE_NUMBER`、`RESUME`（1=续跑，0=全新）。
 
 ### 状态契约（STATUS 文件）
 
@@ -73,7 +73,9 @@ push 一律用 checkout 预配的 origin 凭据（`DOCS_CN_PAT`，fine-grained P
 
 ### 收尾
 
-阶段 C 五处同步全部提交并最终 push 后，STATUS 写 `done`，回帖一行总结即结束。PR 创建、产物校验、label 收尾都由 workflow 负责，claude 不做。PR 建立后用户在 issue 里 `/reply 修改：…` 提迭代意见 → 新 run 续跑落实并推同一分支，PR 自动更新。
+阶段 C 五处同步提交后、最终 push 前：`git fetch origin master` 并 `git merge --no-edit origin/master` 把最新 master 并进分支——冲突规则：sites.json 双方条目**并存**并重跑 `node scripts/gen-index.cjs`、README 双方段落并存（这是自动合并能 ff 推 master 的前提）。然后最终 push → STATUS 写 `done` → 回帖一行总结即结束。
+
+上线两模式（workflow 按 `DEPLOY_MODE` 分路，claude 不做合并/PR）：**auto** = workflow 直接合入 master 并触发部署，无 PR；**review** = workflow 建 PR 等人工合并。两者之下用户都可在 issue 里 `/reply 修改：…` 提迭代意见 → 新 run 续跑落实并推同一分支。
 
 ## 流程
 

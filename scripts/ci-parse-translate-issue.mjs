@@ -15,6 +15,7 @@ const LABELS = [
   ['仓库内文档子目录', 'SUBDIR'],
   ['范围裁剪', 'SCOPE'],
   ['术语约定补充', 'GLOSSARY_NOTES'],
+  ['上线方式', 'DEPLOY_MODE'],
 ];
 
 const sections = {};
@@ -61,6 +62,10 @@ if (!out.SLUG) {
   }
 }
 
+// 上线方式归一：空/含「自动」= auto（直接合 master）；含「review/人工」= review（建 PR）
+const dm = (out.DEPLOY_MODE || '').toLowerCase();
+out.DEPLOY_MODE = /review|人工/.test(dm) ? 'review' : 'auto';
+
 const errs = [];
 if (out.UPSTREAM_REPO && !/^https?:\/\//i.test(out.UPSTREAM_REPO))
   errs.push('「上游 git 仓库 URL」必须是 http(s) 地址（闭源站请留空）');
@@ -80,5 +85,5 @@ for (const [, key] of LABELS) {
 }
 console.error(
   `表单解析成功：slug=${out.SLUG}${slugDerived ? '（自动推导）' : ''} ` +
-    `mode=${out.UPSTREAM_REPO ? 'git 源翻译' : '闭源站镜像汉化'} scope=${out.SCOPE || '全站'}`,
+    `mode=${out.UPSTREAM_REPO ? 'git 源翻译' : '闭源站镜像汉化'} scope=${out.SCOPE || '全站'} deploy=${out.DEPLOY_MODE}`,
 );

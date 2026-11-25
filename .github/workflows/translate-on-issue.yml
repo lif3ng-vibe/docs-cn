@@ -56,39 +56,46 @@ jobs:
           DISPATCH_ISSUE: ${{ inputs.issue }}
         run: |
           set -euo pipefail
+          SKIP=0
           case "$EVENT" in
             issues)
               if [ "$LABEL" != "translate" ]; then
-                echo "label=[$LABEL] 非 translate，跳过"
-                exit 78
+                echo "label=[$LABEL] 非 translate，跳过（run step 的 exit 78 不产生 neutral，用 DOCS_RUN 标志跳过剩余步骤保持绿）"
+                SKIP=1
+              else
+                ISSUE_NUMBER="${{ github.event.issue.number }}"
               fi
-              ISSUE_NUMBER="${{ github.event.issue.number }}"
               ;;
             issue_comment)
               TRIMMED="$(printf '%s' "$COMMENT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
               case "$TRIMMED" in
-                /continue|/reply*) ;;
+                /continue|/reply*) ISSUE_NUMBER="${{ github.event.issue.number }}" ;;
                 *) echo "非 /continue、/reply 评论，跳过"
-                   exit 78 ;;
+                   SKIP=1 ;;
               esac
-              ISSUE_NUMBER="${{ github.event.issue.number }}"
               ;;
             workflow_dispatch)
               ISSUE_NUMBER="$DISPATCH_ISSUE"
               ;;
             *)
               echo "未知事件 $EVENT，跳过"
-              exit 78
+              SKIP=1
               ;;
           esac
+          if [ "$SKIP" = "1" ]; then
+            echo "DOCS_RUN=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
           PERM="$(gh api "repos/${{ github.repository }}/collaborators/$SENDER/permission" --jq .permission)"
           case "$PERM" in
             admin|maintain|write) ;;
             *) echo "::error::触发者 $SENDER 对本仓库无写权限（$PERM），拒绝执行"; exit 1 ;;
           esac
           echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> "$GITHUB_ENV"
+          echo "DOCS_RUN=true" >> "$GITHUB_ENV"
 
       - name: checkout hub（PAT 持久凭据，供 checkpoint push）
+        if: env.DOCS_RUN != 'false'
         uses: actions/checkout@v4
         with:
           ref: master
@@ -96,6 +103,7 @@ jobs:
           fetch-depth: 1
 
       - name: 拉取 issue 并解析表单
+        if: env.DOCS_RUN != 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -105,6 +113,7 @@ jobs:
           node scripts/ci-parse-translate-issue.mjs issue-body.md >> "$GITHUB_ENV"
 
       - name: 配置 git 身份 + 续跑检测
+        if: env.DOCS_RUN != 'false'
         run: |
           set -euo pipefail
           git config user.name "lifeng"
@@ -123,6 +132,7 @@ jobs:
 
       - name: Push 权限预检（普通内容 + workflow 文件，失败即终止不进翻译）
         id: preflight
+        if: env.DOCS_RUN != 'false'
         run: |
           set -euo pipefail
           # 第一关：普通内容推送（凭据基本有效性）
@@ -145,7 +155,7 @@ jobs:
           fi
 
       - name: 预检失败回帖（终止，未进翻译零 token 消耗）
-        if: failure() && steps.preflight.outcome == 'failure'
+        if: failure() && steps.preflight.outcome == 'failure' && env.DOCS_RUN != 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -161,13 +171,16 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --add-label blocked || true
 
       - uses: actions/setup-node@v4
+        if: env.DOCS_RUN != 'false'
         with:
           node-version: '22'
 
       - name: 安装 Claude Code CLI
+        if: env.DOCS_RUN != 'false'
         run: npm install -g @anthropic-ai/claude-code
 
       - name: 运行翻译（阶段 A+B+C，按 publishing-docs-cn CI 模式）
+        if: env.DOCS_RUN != 'false'
         env:
           ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
           ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
@@ -193,6 +206,7 @@ jobs:
           - 仓库内文档子目录：${SUBDIR:-无}
           - 范围裁剪：${SCOPE:-全站}
           - 术语补充：${GLOSSARY_NOTES:-无}
+          - 上线方式：${DEPLOY_MODE}（auto=workflow 在 STATUS=done 后自动合并 master 并部署；review=建 PR 等人工）
           - 任务 issue：#${ISSUE_NUMBER}
 
           上游仓库为空时走「CI 模式协议」的「闭源站模式」：抓站 → HTML 就地翻译 → 静态镜像交付，管线细节与红线以 SKILL 该节为准。
@@ -209,7 +223,7 @@ jobs:
           - 每批 commit 后立即 git push origin HEAD，并 gh issue comment ${ISSUE_NUMBER} 回帖一行进度（批次名/页数/状态）
           - progress.md、.anchor-maps/、GLOSSARY.md 随批提交；dist 与 node_modules 不进 git
           - 持续 429 / 额度耗尽：按 429 协议回帖（已完成/剩余/如何 /continue）+ 打 quota-blocked label + STATUS 写 paused:quota 后正常退出；功能死局（要改需求才能继续）用 blocked label
-          - 阶段 C 五处同步全部提交并最终 push 后，STATUS 写 done，回帖一行总结即结束
+          - 阶段 C 五处同步提交后、最终 push 前：git fetch origin master 并 git merge --no-edit origin/master 把最新 master 并进分支（冲突规则：sites.json 双方条目并存并重跑 node scripts/gen-index.cjs、README 双方段落并存），再最终 push → STATUS 写 done → 回帖一行总结即结束
           EOF
           )"
           ARGS=(--dangerously-skip-permissions)
@@ -253,8 +267,30 @@ jobs:
           fi
           git push origin "translate/$SLUG"
 
-      - name: 创建 PR + 回帖 + 收 label
-        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done'
+      - name: 自动合并上线（auto 模式：合入 master 触发部署）
+        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin master
+          if git merge --no-edit origin/master; then
+            # 推送走 checkout 预配的 PAT 凭据——GITHUB_TOKEN 推 master 不会触发 deploy-pages
+            git push origin "HEAD:master"
+            gh issue comment "$ISSUE_NUMBER" --body "已自动合并进 master ✅ deploy-pages 部署已触发，几分钟后上线 https://lif3ng-vibe.github.io/docs-cn/${SLUG}/（新站首轮冷同步可能要 20 分钟）。对照登记（docs-compare）留待本地进行。"
+            gh issue edit "$ISSUE_NUMBER" --remove-label translate || true
+            gh issue edit "$ISSUE_NUMBER" --remove-label needs-input || true
+            gh issue edit "$ISSUE_NUMBER" --add-label deployed || true
+            echo "✅ 自动合并完成"
+          else
+            git merge --abort || true
+            gh issue comment "$ISSUE_NUMBER" --body "自动合并被冲突挡住 ⛔ 分支与 master 冲突（通常是 sites.json/README 相邻条目）。评论 \`/continue\`，claude 解冲突（规则：双方条目并存 + 重跑 gen-index）后再走合并。"
+            gh issue edit "$ISSUE_NUMBER" --add-label needs-input || true
+            echo "合并冲突，已回帖等 /continue"
+          fi
+
+      - name: 创建 PR + 回帖 + 收 label（review 模式）
+        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE != 'auto'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -290,25 +326,29 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --remove-label needs-input || true
           gh issue edit "$ISSUE_NUMBER" --add-label awaiting-review || true
 
-      - name: 失败回帖（429 → quota-blocked；其他 → blocked + /continue 指引）
-        if: always() && env.CLAUDE_CODE != '' && (env.CLAUDE_CODE != '0' || failure())
+      - name: 失败回帖（429/静默退出 → quota-blocked；其他 → blocked + /continue 指引）
+        if: always() && env.CLAUDE_CODE != '' && (env.CLAUDE_CODE != '0' || failure() || env.CLAUDE_STATUS == 'unknown')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if [ "${CLAUDE_CODE}" != "0" ] && [ -f claude-run.log ] \
+          if [ -f claude-run.log ] \
              && grep -Eiq '429|rate.?limit|quota|insufficient|credit|usage limit' claude-run.log; then
             LABEL="quota-blocked"
             REASON="额度/限流耗尽（上游端点持续 429 或 credit 不足）"
             NEXT="等额度恢复后在本 issue 评论 \`/continue\`，CI 会从最后一次 checkpoint 断点续跑，已完成批次不会重译。"
+          elif [ "${CLAUDE_CODE}" = "0" ] && [ "${CLAUDE_STATUS}" = "unknown" ]; then
+            LABEL="quota-blocked"
+            REASON="claude 中途静默退出（退出码 0 但未按状态契约写 STATUS，通常死在批次中途）——常见为端点断流或额度耗尽"
+            NEXT="评论 \`/continue\` 从断点续跑（已完成批次不会重译）；反复出现请检查中转端点额度与稳定性。"
           elif [ "${CLAUDE_CODE}" != "0" ]; then
             LABEL="blocked"
             REASON="翻译进程异常退出（退出码 ${CLAUDE_CODE}）"
             NEXT="检查下方日志末尾定位原因；处理后在评论 \`/continue\` 从断点续跑。"
           else
             LABEL="blocked"
-            REASON="翻译进程正常退出，但收尾阶段失败（产物校验 / 兜底提交 / PR 创建之一）"
-            NEXT="常见两种：① 交付物问题——\`/continue\` 从断点续跑修复；② 若日志见 GitHub Actions is not permitted to create or approve pull requests——仓库 Settings → Actions → General → Workflow permissions 取消勾选「Forbid GitHub Actions from creating or approving pull requests」后重跑，或本地 gh pr create 补建。看 run 日志定位。"
+            REASON="翻译进程正常退出，但收尾阶段失败（产物校验 / 兜底提交 / 合并或 PR 创建之一）"
+            NEXT="常见三种：① 交付物问题——\`/continue\` 从断点续跑修复；② 合并冲突——\`/continue\` 后 claude 解冲突（双方条目并存）；③ 若日志见 GitHub Actions is not permitted to create or approve pull requests——仓库 Settings → Actions → General 取消勾选「Forbid GitHub Actions from creating or approving pull requests」后重跑。看 run 日志定位。"
           fi
           {
             echo "翻译中断 ⛔ ${REASON}"
