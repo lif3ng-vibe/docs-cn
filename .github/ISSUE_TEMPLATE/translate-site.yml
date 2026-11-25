@@ -1,0 +1,56 @@
+name: 翻译文档站
+description: 提交英文文档站汉化任务——由有写权限的人打上 translate label 后，CI 自动翻译并开 PR
+title: "[translate] <站点名>"
+labels: ["translate-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        填完后**不会自动启动**：需要由有写权限的人补打 `translate` label 才触发 CI 翻译（防外部 issue 烧 token）。
+        - 上游没有公开 git 仓库的闭源站（抓站管线）不支持 CI，请走本地流程
+        - 大站（>150 页）务必填「范围裁剪」，否则 CI 会回帖 blocked 要范围
+        - 额度耗尽会回帖 quota-blocked；额度恢复后评论 `/continue` 从断点续跑（进度不丢）
+  - type: input
+    id: upstream-repo
+    attributes:
+      label: 上游 git 仓库 URL
+      description: 必填。源码仓库地址（GitHub Pages 站点找 footer 链接或同名 repo）
+      placeholder: https://github.com/user/repo
+    validations:
+      required: true
+  - type: input
+    id: docs-url
+    attributes:
+      label: 文档站 URL
+      placeholder: https://docs.example.com
+    validations:
+      required: true
+  - type: input
+    id: slug
+    attributes:
+      label: 站点 slug
+      description: 项目目录 <slug>-docs-cn，Pages 路径 /docs-cn/<slug>/；只允许字母/数字/连字符
+      placeholder: handy
+    validations:
+      required: true
+  - type: input
+    id: subdir
+    attributes:
+      label: 仓库内文档子目录
+      description: monorepo 时填文档所在目录（如 site/ 或 docs/），站根仓库留空
+    validations:
+      required: false
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围裁剪
+      description: 只翻译部分目录时填（如「仅 docs/guides/」）；留空 = 全站
+    validations:
+      required: false
+  - type: textarea
+    id: glossary
+    attributes:
+      label: 术语约定补充
+      description: 特殊译法/不译清单，会并入 GLOSSARY.md；留空按 skill 默认术语策略
+    validations:
+      required: false

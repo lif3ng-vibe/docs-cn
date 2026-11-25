@@ -1,0 +1,260 @@
+name: Translate docs site (issue 触发)
+
+# issue 表单 + translate label 触发翻译；/continue 评论从 translate/<slug> 分支
+# checkpoint 续跑。产出 = PR（翻译阶段 A+B+C，见 .claude/skills/publishing-docs-cn
+# 的「CI 模式」节），人工 review 合并 master 后由既有 deploy-pages.yml 上线。
+#
+# 防护与约定：
+# - 门禁：触发者必须对仓库有写权限（防外部 issue / 评论烧 token）
+# - 并发：全局串行（group: translate），重触发取消旧 run——并行是 429 主因，
+#   checkpoint 每批都推，被取消最多丢当前未提交批
+# - 429：瞬时 429 由 CLI 内建退避消化；持续耗尽回帖 quota-blocked；功能卡点
+#   回帖 blocked。注意 job 级 timeout 到点直接杀死整 job，兜底回帖不会执行，
+#   此场景直接 /continue 即可（checkpoint 已推）
+# - 硬超时 timeout-minutes: 350（GitHub job 上限 360，留余量）
+# - claude 走自定义中转端点：secrets ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN
+#   （可选 ANTHROPIC_MODEL 指定中转端模型名）
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: '翻译任务 issue 编号'
+        required: true
+        type: string
+
+concurrency:
+  group: translate
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: 触发门禁（类型过滤 + 写权限校验）
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          LABEL: ${{ github.event.label.name }}
+          COMMENT: ${{ github.event.comment.body }}
+          SENDER: ${{ github.event.sender.login }}
+          DISPATCH_ISSUE: ${{ inputs.issue }}
+        run: |
+          set -euo pipefail
+          case "$EVENT" in
+            issues)
+              if [ "$LABEL" != "translate" ]; then
+                echo "label=[$LABEL] 非 translate，跳过"
+                exit 78
+              fi
+              ISSUE_NUMBER="${{ github.event.issue.number }}"
+              ;;
+            issue_comment)
+              TRIMMED="$(printf '%s' "$COMMENT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+              if [ "$TRIMMED" != "/continue" ]; then
+                echo "非 /continue 评论，跳过"
+                exit 78
+              fi
+              ISSUE_NUMBER="${{ github.event.issue.number }}"
+              ;;
+            workflow_dispatch)
+              ISSUE_NUMBER="$DISPATCH_ISSUE"
+              ;;
+            *)
+              echo "未知事件 $EVENT，跳过"
+              exit 78
+              ;;
+          esac
+          PERM="$(gh api "repos/${{ github.repository }}/collaborators/$SENDER/permission" --jq .permission)"
+          case "$PERM" in
+            admin|maintain|write) ;;
+            *) echo "::error::触发者 $SENDER 对本仓库无写权限（$PERM），拒绝执行"; exit 1 ;;
+          esac
+          echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> "$GITHUB_ENV"
+
+      - name: checkout hub（PAT 持久凭据，供 checkpoint push）
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ secrets.DOCS_CN_PAT || github.token }}
+          fetch-depth: 1
+
+      - name: 拉取 issue 并解析表单
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue view "$ISSUE_NUMBER" --json title --jq .title
+          gh issue view "$ISSUE_NUMBER" --json body --jq .body > issue-body.md
+          node scripts/ci-parse-translate-issue.mjs issue-body.md >> "$GITHUB_ENV"
+
+      - name: 配置 git 身份 + 续跑检测
+        run: |
+          set -euo pipefail
+          git config user.name "lifeng"
+          git config user.email "294916781@qq.com"
+          BRANCH="translate/$SLUG"
+          if git ls-remote --heads origin "$BRANCH" | grep -q .; then
+            git fetch --depth=50 origin "$BRANCH"
+            git checkout "$BRANCH"
+            echo "RESUME=1" >> "$GITHUB_ENV"
+            echo "续跑模式：检出既有 $BRANCH"
+          else
+            git checkout -B "$BRANCH"
+            echo "RESUME=0" >> "$GITHUB_ENV"
+            echo "全新开工：创建 $BRANCH"
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安装 Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: 运行翻译（阶段 A+B+C，按 publishing-docs-cn CI 模式）
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_REPO: ${{ env.UPSTREAM_REPO }}
+          DOCS_URL: ${{ env.DOCS_URL }}
+          SLUG: ${{ env.SLUG }}
+          SUBDIR: ${{ env.SUBDIR }}
+          SCOPE: ${{ env.SCOPE }}
+          GLOSSARY_NOTES: ${{ env.GLOSSARY_NOTES }}
+          ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
+          RESUME: ${{ env.RESUME }}
+        run: |
+          set -o pipefail
+          PROMPT="$(cat <<EOF
+          你是本仓库（docs-cn hub）的文档站汉化执行器。先读 .claude/skills/publishing-docs-cn/SKILL.md 与 .claude/skills/translate-docs-site/SKILL.md，严格按 publishing-docs-cn 的「CI 模式」执行阶段 A+B+C：翻译 → 带 base 构建演练 → 五处同步入 hub。不要创建 PR，不要 push master，不要动 docs-compare；PR 由 workflow 创建。
+
+          任务参数（来自 issue 表单，workflow 已解析）：
+          - 上游 git 仓库：${UPSTREAM_REPO}
+          - 文档站 URL：${DOCS_URL}
+          - 站点 slug：${SLUG}（项目目录 ./${SLUG}-docs-cn/ 建在仓库根；Pages 路径 /docs-cn/${SLUG}/）
+          - 仓库内文档子目录：${SUBDIR:-无}
+          - 范围裁剪：${SCOPE:-全站}
+          - 术语补充：${GLOSSARY_NOTES:-无}
+          - 任务 issue：#${ISSUE_NUMBER}
+
+          RESUME=${RESUME}。=1 时先走「CI 模式协议」的开工探测：读 ./${SLUG}-docs-cn/.translation-state/progress.md 与 gh issue view ${ISSUE_NUMBER} --comments，git 已提交内容为权威，绝不重译已 commit 批次；=0 时全新开工。
+
+          硬性边界（违者本轮作废）：
+          - 只允许 push translate/${SLUG} 分支；git 身份已配置好，直接用
+          - 每批 commit 后立即 git push origin HEAD，并 gh issue comment ${ISSUE_NUMBER} 回帖一行进度（批次名/页数/状态）
+          - progress.md、.anchor-maps/、GLOSSARY.md 随批提交；dist 与 node_modules 不进 git
+          - 持续 429 / 额度耗尽：按 429 协议回帖（已完成/剩余/如何 /continue）+ 打 quota-blocked label 后正常退出；功能卡点（无源码/许可风险/构建死局/超范围）用 blocked label
+          - 阶段 C 五处同步全部提交并最终 push 后，回帖一行总结即结束
+          EOF
+          )"
+          ARGS=(--dangerously-skip-permissions)
+          if [ -n "${ANTHROPIC_MODEL:-}" ]; then ARGS+=(--model "$ANTHROPIC_MODEL"); fi
+          set +e
+          claude -p "$PROMPT" "${ARGS[@]}" 2>&1 | tee claude-run.log
+          CODE="${PIPESTATUS[0]}"
+          set -e
+          echo "CLAUDE_CODE=$CODE" >> "$GITHUB_ENV"
+          # 无论成败都继续跑后续回帖步骤，成败判定在下方各步 if 里
+          exit 0
+
+      - name: 产物校验（项目目录 + sites.json 收录）
+        if: success() && env.CLAUDE_CODE == '0'
+        run: |
+          set -euo pipefail
+          [ -d "${SLUG}-docs-cn" ] || { echo "::error::项目目录 ${SLUG}-docs-cn 不存在"; exit 1; }
+          SLUG="$SLUG" node -e 'const j=JSON.parse(require("fs").readFileSync("sites.json","utf8"));const a=Array.isArray(j)?j:(j.sites||[]);if(!a.some(x=>x.slug===process.env.SLUG)){console.error("sites.json 未含 "+process.env.SLUG+"（阶段C 未完成）");process.exit(1)}'
+          echo "产物校验通过"
+
+      - name: 兜底残留提交 + 最终 push
+        if: success() && env.CLAUDE_CODE == '0'
+        run: |
+          set -euo pipefail
+          git add -A -- "${SLUG}-docs-cn"
+          if ! git diff --cached --quiet; then
+            git commit -m "checkpoint: workflow 收尾兜底（issue #${ISSUE_NUMBER}）"
+          fi
+          git push origin "translate/$SLUG"
+
+      - name: 创建 PR + 回帖 + 收 label
+        if: success() && env.CLAUDE_CODE == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > pr-body.md <<EOF
+          ## 汉化收录：${SLUG}
+
+          由 issue #${ISSUE_NUMBER} 触发的 CI 翻译产出（publishing-docs-cn CI 模式，阶段 A+B+C）。
+
+          - 上游仓库：${UPSTREAM_REPO}
+          - 文档站：${DOCS_URL}
+          - Pages 路径（合并后）：/docs-cn/${SLUG}/
+
+          **合并即上线**：本 PR 合入 master 会自动触发 hub deploy-pages.yml 构建部署。
+          compare 对照登记（docs-compare 五处同步 + 锚点表）按惯例在本地进行。
+          EOF
+          cat > done-body.md <<EOF
+          翻译完成 ✅ 阶段 A+B+C 已交付：**PR 见上方关联链接**，请 review 后合并（合并即触发部署上线）。
+
+          - 翻译全程按批 commit + checkpoint 推送，进度与锚点映射都在 translate/${SLUG} 分支历史里
+          - 对照登记（docs-compare）留待本地进行
+          EOF
+          PR_URL="$(gh pr list --head "translate/$SLUG" --state open --json url --jq '.[0].url')"
+          if [ -z "$PR_URL" ]; then
+            PR_URL="$(gh pr create --base master --head "translate/$SLUG" --title "汉化收录：${SLUG}（issue #${ISSUE_NUMBER}）" --body-file pr-body.md)"
+          fi
+          DONE_BODY="$(sed "s|PR 见上方关联链接|PR：$PR_URL|" done-body.md)"
+          printf '%s\n' "$DONE_BODY" > done-body.md
+          gh issue comment "$ISSUE_NUMBER" --body-file done-body.md
+          gh issue edit "$ISSUE_NUMBER" --remove-label translate || true
+          gh issue edit "$ISSUE_NUMBER" --remove-label blocked || true
+          gh issue edit "$ISSUE_NUMBER" --remove-label quota-blocked || true
+          gh issue edit "$ISSUE_NUMBER" --add-label awaiting-review || true
+
+      - name: 失败回帖（429 → quota-blocked；其他 → blocked + /continue 指引）
+        if: always() && env.CLAUDE_CODE != '' && (env.CLAUDE_CODE != '0' || failure())
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${CLAUDE_CODE}" != "0" ] && [ -f claude-run.log ] \
+             && grep -Eiq '429|rate.?limit|quota|insufficient|credit|usage limit' claude-run.log; then
+            LABEL="quota-blocked"
+            REASON="额度/限流耗尽（上游端点持续 429 或 credit 不足）"
+            NEXT="等额度恢复后在本 issue 评论 \`/continue\`，CI 会从最后一次 checkpoint 断点续跑，已完成批次不会重译。"
+          elif [ "${CLAUDE_CODE}" != "0" ]; then
+            LABEL="blocked"
+            REASON="翻译进程异常退出（退出码 ${CLAUDE_CODE}）"
+            NEXT="检查下方日志末尾定位原因；处理后在评论 \`/continue\` 从断点续跑。"
+          else
+            LABEL="blocked"
+            REASON="产物校验/收尾失败（翻译进程正常退出，但项目目录或 sites.json 收录校验未过）"
+            NEXT="通常是阶段 C 五处同步没做完；处理后在评论 \`/continue\` 从断点续跑。"
+          fi
+          {
+            echo "翻译中断 ⛔ ${REASON}"
+            echo
+            echo "${NEXT}"
+            echo
+            echo "<details><summary>日志末尾（点击展开）</summary>"
+            echo
+            echo '```'
+            if [ -f claude-run.log ]; then tail -c 4000 claude-run.log; else echo "（无日志文件）"; fi
+            echo '```'
+            echo "</details>"
+          } > fail-body.md
+          gh issue comment "$ISSUE_NUMBER" --body-file fail-body.md
+          gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL" || true
