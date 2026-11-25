@@ -1,279 +1,279 @@
-# EU Regulatory Hard Rules (2026)
+# 欧盟法规硬性规则（2026）
 
-This document is the EU legal layer for App Store and Google Play compliance. It sits on top of the base rejection maps and the Advanced 2026 layer. The framing holds. Store compliance is not the same as legal compliance. Passing App Review does not make an app compliant with the EU AI Act, the Digital Markets Act, the Digital Services Act, or the European Accessibility Act. The store enforces a subset, a regulator enforces the rest, and for an app that reaches users in the EU both must be satisfied.
+本文档是 App Store 与 Google Play 合规的欧盟法律层，叠加在基础拒审地图与 Advanced 2026 层之上。这一框架依然成立：商店合规不等于法律合规。通过应用审核（app review）并不会让应用自动符合《欧盟人工智能法案》（EU AI Act）、《数字市场法案》（DMA）、《数字服务法案》（DSA）或《欧洲无障碍法案》（EAA）的要求。商店执法其中一部分，监管机构执法其余部分；对于触达欧盟用户的应用，两者都必须满足。
 
-Every item in this document is a HARD rule for any app distributed to, or reaching, users in the EU or EEA. Each carries the date it takes effect and a source. Regulatory dates and fee numbers move, so re-verify against the cited source before quoting a figure externally. Items that could not be confirmed against a primary source are labelled unverified in section 9.
+本文档中的每一项，对任何分发至欧盟或 EEA 用户、或触达这些用户的应用而言，都是硬性规则（HARD）。每一项都标注了生效日期与来源。监管日期与费用数字会变动，因此在对外引用任何数字之前，请对照所引来源重新核验。未能经一手来源确认的条目，在第 9 节中标注为未经验证（unverified）。
 
-## 1. EU AI Act, Regulation (EU) 2024/1689
+## 1. 欧盟 AI 法案（EU AI Act），Regulation (EU) 2024/1689
 
-Scope. Any app whose AI feature reaches EU users is in scope, wherever the developer is based. A typical consumer app with an AI chatbot, assistant, or generation feature sits in the limited-risk transparency tier, not high-risk and not prohibited.
+适用范围：无论开发者位于何处，任何 AI 功能触达欧盟用户的应用均在适用范围内。带有 AI 聊天机器人、助手或生成功能的典型消费级应用，属于有限风险透明度层级，既非高风险，也非被禁止。
 
-**MUST for every EU-facing AI app.** Sections 1.1 to 1.7 are a requirement, not a recommendation. An app with an AI feature that reaches EU users is not compliant, and must not be shipped to those users, until every HARD item in this section is satisfied. Treat this as a release blocker, the same weight as a working demo account or a matching privacy declaration.
+**面向欧盟用户的每个 AI 应用都必须遵守 MUST**。1.1 至 1.7 节是硬性要求，不是建议。在满足本节每一项硬性（HARD）条目之前，带有触达欧盟用户 AI 功能的应用即属不合规，也不得向这些用户发布。请把它当作发布阻塞项看待，其权重等同于一个可用的演示账号或一份相符的隐私声明。
 
-### 1.1 Timeline (HARD dates)
+### 1.1 时间线（硬性日期）
 
-| Date | What applies | Status mid-2026 |
+| 日期 | 适用内容 | 2026 年年中状态 |
 |---|---|---|
-| 1 Aug 2024 | Entry into force, no obligations yet | past |
-| 2 Feb 2025 | Article 5 prohibited practices, Article 4 AI literacy (Article 4 replaced 27 July 2026) | live now |
-| 2 Aug 2025 | GPAI-model obligations, governance, penalties (Articles 99 and 100) | live now |
-| 2 Aug 2026 | Article 50 transparency, and most remaining provisions | in force from this date |
-| 2 Dec 2026 | Article 111(4) marking retrofit for generative systems placed on the market before 2 August 2026. Article 5(1a) prohibits placing on the market or putting into service only where non-consensual intimate material or child sexual abuse material is the intended purpose, or where that output is a reasonably foreseeable and reproducible outcome and the system lacks safeguards and misuse correction. Use is prohibited only where the deployer uses the system for that purpose | future |
-| 2 Dec 2027 | Article 6(1) / Annex III High-risk AI systems (as deferred by the AI Omnibus, in force 27 July 2026) | future |
-| 2 Aug 2028 | Annex I High-risk AI embedded in physical products (as deferred by the AI Omnibus, in force 27 July 2026) | future |
+| 2024 年 8 月 1 日 | 生效，暂无义务 | 已过去 |
+| 2025 年 2 月 2 日 | Article 5 禁止行为（Prohibited Practices）、Article 4 AI 素养（Article 4 已于 2026 年 7 月 27 日被替换） | 现已生效 |
+| 2025 年 8 月 2 日 | GPAI 模型义务、治理、处罚（Article 99 与 Article 100） | 现已生效 |
+| 2026 年 8 月 2 日 | Article 50 透明度义务，以及大多数其余条款 | 自该日期起生效 |
+| 2026 年 12 月 2 日 | Article 111(4)：对 2026 年 8 月 2 日之前投放市场的生成式系统进行标记改造。Article 5(1a) 仅在以下情形禁止投放市场或投入使用：未经同意的亲密材料或儿童性虐待材料（CSAM）是其预期用途；或该输出是合理可预见且可复现的结果，且系统缺乏保障措施与滥用纠正机制。仅当部署者为该目的使用系统时，使用行为才被禁止 | 未来 |
+| 2027 年 12 月 2 日 | Article 6(1) / 附件 III 高风险 AI 系统（按 AI 综合法案推迟，该法案于 2026 年 7 月 27 日生效） | 未来 |
+| 2028 年 8 月 2 日 | 附件 I 嵌入实体产品的高风险 AI（按 AI 综合法案推迟，该法案于 2026 年 7 月 27 日生效） | 未来 |
 
-The Digital Omnibus simplification package (the AI Omnibus) was finalised in mid-2026 (Parliament 16 June 2026, Council final green light 29 June 2026, and entered into force on 27 July 2026). It postpones high-risk compliance deadlines (Annex III high-risk moved to 2 December 2027, Annex I physical high-risk moved to 2 August 2028), but **Article 50 transparency HOLDS at 2 August 2026**. Do not assume the transparency date moved. Sources. [artificialintelligenceact.eu timeline](https://artificialintelligenceact.eu/implementation-timeline/), [EUR-Lex 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng), [Council 29 June 2026](https://www.consilium.europa.eu/en/press/press-releases/2026/06/29/artificial-intelligence-council-gives-final-green-light-to-simplify-and-streamline-rules/), [EU Commission AI Omnibus Enters into Force 27 July 2026](https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force).
+《数字综合法案》简化一揽子方案（即 AI 综合法案，AI Omnibus）于 2026 年年中定稿（欧洲议会 2026 年 6 月 16 日，欧盟理事会 2026 年 6 月 29 日最终批准，并于 2026 年 7 月 27 日生效）。它推迟了高风险合规的截止日期（附件 III 高风险改为 2027 年 12 月 2 日，附件 I 实体高风险改为 2028 年 8 月 2 日），但 **Article 50 透明度义务维持 2026 年 8 月 2 日不变**。不要以为透明度日期也移动了。来源：[artificialintelligenceact.eu 时间线](https://artificialintelligenceact.eu/implementation-timeline/)、[EUR-Lex 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng)、[欧盟理事会 2026 年 6 月 29 日](https://www.consilium.europa.eu/en/press/press-releases/2026/06/29/artificial-intelligence-council-gives-final-green-light-to-simplify-and-streamline-rules/)、[欧盟委员会：AI 综合法案于 2026 年 7 月 27 日生效](https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force)。
 
-The 2 December 2026 date is the one in Article 111(4) and in Article 113 for Article 5(1), first subparagraph, points (ba) and (bb), and Article 5(1a) and (1b). Article 111(4) requires providers of AI systems, including general-purpose AI systems, that generate synthetic audio, image, video or text and were placed on the market before 2 August 2026 to take the necessary steps to comply with Article 50(2) by 2 December 2026. Article 5(1a) prohibits placing such a system on the market or putting it into service only where generation or manipulation of the material in points (ba) or (bb) is the intended purpose, or where the system's design, training, architecture, capabilities or user-facing functionalities make that outcome reasonably foreseeable and reproducible without significant technical modification and the system lacks reasonable and adequate technical safety measures and other safeguards to reliably prevent it, taking into account reasonably foreseeable misuse, and to correct observed or reported misuse. Use is prohibited only where the deployer uses the system for the purpose of generating or manipulating that material or performance. Point (ba) is realistic images, videos, audio or similar material of an identifiable natural person's intimate parts, or of an identifiable natural person engaged in sexually explicit activities, without that person's freely-given, specific, informed, unambiguous and explicit consent. Point (bb) is material or performance within Article 2(c) and (e) of Directive 2011/93/EU, except where a without-right defence applies under national law. Article 5(1b) says a manipulation that does not increase the exposure of any depicted intimate parts or alter the nature of any depicted sexually explicit activities is not manipulation under point (ba). Read 19 November 2026. [Consolidated text, CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727) (Publications Office CELLAR xhtml, because the EUR-Lex HTML and PDF return a bot challenge), [Regulation (EU) 2026/1744](http://data.europa.eu/eli/reg/2026/1744/oj) Article 1(7), (39)(b) and (40)(a).
+2026 年 12 月 2 日这一日期，见于 Article 111(4)，以及 Article 113 中针对 Article 5(1) 第一段 (ba)、(bb) 两项及 Article 5(1a)、(1b) 的规定。Article 111(4) 要求：生成合成音频、图像、视频或文本、且在 2026 年 8 月 2 日之前投放市场的 AI 系统（包括通用 AI 系统）的提供者，须在 2026 年 12 月 2 日之前采取必要步骤以符合 Article 50(2)。Article 5(1a) 仅在以下情形禁止将此类系统投放市场或投入使用：(ba) 或 (bb) 项材料的生成或篡改是其预期用途；或者系统的设计、训练、架构、能力或面向用户的功能，使得该结果在无需重大技术改造的情况下即可合理预见并复现，且系统在考虑合理可预见滥用的情况下，既缺乏能可靠防止该结果的合理且充分的技术安全措施与其他保障措施，也缺乏纠正已观察到或已被报告滥用的机制。仅当部署者为生成或篡改该材料或表演的目的而使用系统时，使用行为才被禁止。(ba) 项指：在未获得可识别自然人自由给出、具体、知情、明确且清晰同意的情况下，展示可识别自然人亲密部位、或展示可识别自然人从事性露骨活动的逼真图像、视频、音频或类似材料。(bb) 项指 Directive 2011/93/EU Article 2(c) 与 (e) 范围内的材料或表演，但在成员国法律下可适用"无权利"（without-right）抗辩的情形除外。Article 5(1b) 规定：未增加所描绘亲密部位暴露程度、也未改变所描绘性露骨活动性质的篡改，不属于 (ba) 项下的篡改。阅读于 2026 年 11 月 19 日：[合并文本，CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727)（Publications Office CELLAR xhtml，因为 EUR-Lex 的 HTML 与 PDF 会返回反爬验证）、[Regulation (EU) 2026/1744](http://data.europa.eu/eli/reg/2026/1744/oj) Article 1(7)、(39)(b) 与 (40)(a)。
 
-### 1.2 Article 50 transparency (HARD, from 2 Aug 2026)
+### 1.2 Article 50 透明度义务（硬性，自 2026 年 8 月 2 日起）
 
-An app with an AI feature reaching EU users MUST do all of the following.
+带有触达欧盟用户 AI 功能的应用，必须做到以下全部事项。
 
-- AI-interaction disclosure, Article 50(1). If the app has a chatbot or assistant that interacts directly with a person, the person is told they are interacting with an AI system, unless it is obvious to a reasonably informed person. A plain in-app line such as "You are chatting with an AI assistant" satisfies this.
-- Synthetic-content marking, Article 50(2). If the app generates synthetic audio, image, video, or text, the output is marked in a machine-readable format and detectable as artificially generated or manipulated, using state-of-the-art techniques. C2PA content provenance is a common implementation choice, but the Act does not name C2PA. It requires machine-readable and state-of-the-art, not a specific vendor.
-- Deepfake disclosure, Article 50(4). If the app produces a deepfake, the deployer discloses that the content has been artificially generated or manipulated, even without intent to deceive.
-- Timing and accessibility, Article 50(5). The information is given in a clear and distinguishable manner at the latest at the time of the first interaction or exposure, and it conforms to accessibility requirements (which ties this rule to the European Accessibility Act in section 4).
+- AI 交互披露，Article 50(1)。如果应用拥有与人直接交互的聊天机器人或助手，必须告知对方其正在与 AI 系统交互，除非这一点对具备合理认知能力的人来说显而易见。应用内一句朴素的话，例如"你正在与 AI 助手聊天"，即可满足此项。
+- 合成内容标记，Article 50(2)。如果应用生成合成音频、图像、视频或文本，输出必须以机器可读格式标记，并可被检测为人工生成或篡改，且使用最先进（state-of-the-art）技术。C2PA 内容溯源是常见的实现选择，但法案并未点名 C2PA；它要求的是机器可读与最先进，而非某个特定厂商方案。
+- 深度伪造披露，Article 50(4)。如果应用产出深度伪造（deepfake）内容，部署者必须披露该内容系人工生成或篡改，即便没有欺骗意图。
+- 时机与无障碍，Article 50(5)。相关信息必须以清晰、可辨别的方式，至迟在首次交互或曝光时给出，并符合无障碍要求（这也把本规则与第 4 节的《欧洲无障碍法案》联系起来）。
 
-The Commission published draft Article 50 implementation guidelines on 8 May 2026, intended to apply from 2 Aug 2026. Sources. [Article 50 text](https://artificialintelligenceact.eu/article/50/), [Commission draft Article 50 guidelines](https://digital-strategy.ec.europa.eu/en/library/draft-guidelines-implementation-transparency-obligations-certain-ai-systems-under-article-50-ai-act).
+欧盟委员会于 2026 年 5 月 8 日发布了 Article 50 实施指南草案，拟自 2026 年 8 月 2 日起适用。来源：[Article 50 条文](https://artificialintelligenceact.eu/article/50/)、[委员会 Article 50 指南草案](https://digital-strategy.ec.europa.eu/en/library/draft-guidelines-implementation-transparency-obligations-certain-ai-systems-under-article-50-ai-act)。
 
-### 1.3 Article 4 AI literacy (HARD, live since 2 Feb 2025, wording replaced 27 July 2026)
+### 1.3 Article 4 AI 素养（硬性，自 2025 年 2 月 2 日起生效，条文已于 2026 年 7 月 27 日替换）
 
-Regulation (EU) 2026/1744 Article 1(5) replaced Article 4. Providers and deployers of AI systems take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf. The measures take into account those persons' technical knowledge, experience, education and training, the context the systems are to be used in, and the persons or groups of persons on whom the systems are to be used. The obligation does not require providers or deployers to guarantee any specific level of AI literacy of any individual. There is no headcount carve-out, so a solo team is bound too. A short written policy, an induction, a refresh schedule, and a completion log are pragmatic evidence of the measures, not a stated legal mandate. The Commission and the Member States support those efforts, in particular for SMEs, and the Commission publishes practical examples on the single information platform in Article 62(3)(b). The 2 February 2025 application date is unchanged. The previous duty, to ensure a sufficient level of AI literacy, is the text from before 27 July 2026. Read 19 November 2026. [Consolidated Article 4, CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727) (Publications Office CELLAR xhtml, because the EUR-Lex HTML and PDF return a bot challenge), [Regulation (EU) 2026/1744](http://data.europa.eu/eli/reg/2026/1744/oj) Article 1(5).
+Regulation (EU) 2026/1744 Article 1(5) 替换了 Article 4。AI 系统的提供者与部署者应采取措施，支持其员工以及其他代表其操作和使用 AI 系统的人员发展 AI 素养（AI literacy）。这些措施应考虑上述人员的技术知识、经验、教育与培训，系统拟被使用的场景，以及系统拟被使用的人员或群体。该义务不要求提供者或部署者保证任何个人达到任何特定的 AI 素养水平。没有按人数豁免的例外，因此单人团队同样受约束。一份简短的书面政策、一次入职培训、一个更新计划与一份完成记录，是这些措施的务实证据，而非明文的法律强制。欧盟委员会与各成员国应支持这些努力，尤其是针对中小企业（SME），并且委员会在 Article 62(3)(b) 规定的统一信息平台上发布实际案例。2025 年 2 月 2 日的适用日期不变。此前"确保足够水平的 AI 素养"这一义务，是 2026 年 7 月 27 日之前的条文。阅读于 2026 年 11 月 19 日：[合并后 Article 4，CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727)（Publications Office CELLAR xhtml，因为 EUR-Lex 的 HTML 与 PDF 会返回反爬验证）、[Regulation (EU) 2026/1744](http://data.europa.eu/eli/reg/2026/1744/oj) Article 1(5)。
 
-### 1.4 Article 5 prohibited practices (HARD, live since 2 Feb 2025)
+### 1.4 Article 5 禁止行为（硬性，自 2025 年 2 月 2 日起生效）
 
-Never ship an AI feature that does any of the following. subliminal, manipulative, or deceptive techniques causing serious harm. exploiting vulnerabilities of children, disabled, or socio-economically disadvantaged people. social scoring. purely profiling-based crime prediction. untargeted facial-image scraping. emotion inference in the workplace or education (outside medical or safety). biometric categorisation inferring sensitive traits such as race, religion, or sexual orientation. real-time remote biometric identification in public for law enforcement. From 2 December 2026, points (ba) and (bb) are prohibited on the terms in section 1.1. Source. [Consolidated Article 5, CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727).
+绝不要发布做出以下任何行为的 AI 功能：造成严重伤害的阈下、操纵性或欺骗性技术；利用儿童、残障人士或社会经济弱势人群的弱点；社会评分；纯粹基于画像的犯罪预测；无差别抓取面部图像；工作场所或教育场景中的情绪推断（医疗或安全场景除外）；推断种族、宗教或性取向等敏感特征的生物识别归类；执法目的在公共场所的实时远程生物识别。自 2026 年 12 月 2 日起，(ba) 与 (bb) 两项按第 1.1 节所述条件被禁止。来源：[合并后 Article 5，CELEX 02024R1689-20260727](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727)。
 
-### 1.5 Provider versus deployer (scope the obligation correctly)
+### 1.5 提供者与部署者之别（正确界定义务范围）
 
-A developer building an AI feature on a third-party model (OpenAI, Anthropic, Google) through an API is a DEPLOYER by default. The heavy GPAI-model obligations (training-data summaries, model documentation, copyright, systemic risk) fall on the model vendor, not the app. The app becomes a PROVIDER under Article 25 only if it puts its own name or trademark on the system, makes a substantial modification, or puts it into service for a new intended purpose. Because a consumer app is usually the provider of its own assistant UI and the deployer of the model, it carries the visible disclosure duties of Article 50 regardless. Do not over-scope the developer into the model-vendor obligations. Source. [Commission GPAI guidance](https://digital-strategy.ec.europa.eu/en/policies/guidelines-gpai-providers).
+通过 API 在第三方模型（OpenAI、Anthropic、Google）之上构建 AI 功能的开发者，默认是部署者（DEPLOYER）。沉重的 GPAI 模型义务（训练数据摘要、模型文档、版权、系统性风险）落在模型供应商头上，而不是应用头上。只有当应用把自己的名称或商标贴在系统上、做出实质性修改、或将其投入某个新的预期用途时，才依据 Article 25 成为提供者（PROVIDER）。由于消费级应用通常既是自己助手界面的提供者，又是模型的部署者，因此无论如何都承担 Article 50 的可见披露义务。不要把开发者的义务范围过度扩大到模型供应商的义务。来源：[委员会 GPAI 指南](https://digital-strategy.ec.europa.eu/en/policies/guidelines-gpai-providers)。
 
-### 1.6 Penalties, Article 99
+### 1.6 处罚，Article 99
 
-| Violation | Maximum fine, whichever is higher |
+| 违规行为 | 最高罚款（取两者中较高者） |
 |---|---|
-| Prohibited practices (Article 5) | 35,000,000 euro or 7 percent of total worldwide annual turnover |
-| Other obligations including transparency (Article 50) | 15,000,000 euro or 3 percent of worldwide annual turnover |
-| Supplying incorrect or misleading information to authorities | 7,500,000 euro or 1 percent of worldwide annual turnover |
+| 禁止行为（Article 5） | 35,000,000 欧元或全球年总营业额的 7% |
+| 包括透明度在内的其他义务（Article 50） | 15,000,000 欧元或全球年营业额的 3% |
+| 向主管机关提供不正确或误导性信息 | 7,500,000 欧元或全球年营业额的 1% |
 
-For SMEs and start-ups each fine is capped at the LOWER of the euro amount or the percentage, the reverse of the default. So the penalty anchor for a transparency miss by a small developer is the lower of 15,000,000 euro or 3 percent. Source. [Article 99](https://artificialintelligenceact.eu/article/99/).
+对中小企业与初创企业，每项罚款以欧元金额或百分比中较低者为上限，与默认规则相反。因此，小开发者透明度违规的处罚锚点，是 15,000,000 欧元或 3% 中较低的那个。来源：[Article 99](https://artificialintelligenceact.eu/article/99/)。
 
-### 1.7 The Apple and Google rules that overlap the AI Act
+### 1.7 与 AI 法案重叠的 Apple 与 Google 规则
 
-- Apple Guideline 5.1.2(i), effective 13 November 2025. If an app shares personal data with a third-party AI (OpenAI, Anthropic, Gemini, ElevenLabs, and the like), it must clearly disclose the third party, name the AI provider and the data types, and obtain explicit opt-in consent before any transmission. On-device AI (the Apple Foundation Models framework, Core ML) does not trigger this, because data never leaves the device. Sources. [TechCrunch 13 Nov 2025](https://techcrunch.com/2025/11/13/apples-new-app-review-guidelines-clamp-down-on-apps-sharing-personal-data-with-third-party-ai/), [Apple guideline update](https://developer.apple.com/news/?id=ey6d8onl).
-- Google Play AI-generated content policy (2025). Developers must clearly inform users when content is AI-generated, and must prevent the generation of offensive or harmful content up front, not only react to reports. Source. [Google Play policy analysis](https://chatboq.com/blogs/google-play-ai-content-policy).
+- Apple 审核指南 5.1.2(i)，2025 年 11 月 13 日生效。如果应用与第三方 AI（OpenAI、Anthropic、Gemini、ElevenLabs 等）共享个人数据，必须清楚披露该第三方，写明 AI 提供方与数据类型，并在任何传输之前获得明确的选择加入同意。端侧 AI（Apple Foundation Models 框架、Core ML）不触发此项，因为数据从不离开设备。来源：[TechCrunch，2025 年 11 月 13 日](https://techcrunch.com/2025/11/13/apples-new-app-review-guidelines-clamp-down-on-apps-sharing-personal-data-with-third-party-ai/)、[Apple 审核指南更新](https://developer.apple.com/news/?id=ey6d8onl)。
+- Google Play AI 生成内容政策（2025）。开发者必须在内容为 AI 生成时明确告知用户，并且必须事前防止生成冒犯性或有害内容，而不是只在收到举报后才处理。来源：[Google Play 政策分析](https://chatboq.com/blogs/google-play-ai-content-policy)。
 
-Neither Apple nor Google states "you must comply with the AI Act". Both shipped AI-disclosure and consent policies that a compliant Article 50 implementation largely satisfies, and the reverse. Do not assert that Apple or Google requires AI Act compliance. they do not say that.
+Apple 与 Google 都没有说过"你必须遵守 AI 法案"。两者都上线了 AI 披露与同意政策，一个合规的 Article 50 实现大体上能同时满足它们，反之亦然。不要断言 Apple 或 Google 要求遵守 AI 法案；它们没有那样说。
 
-## 2. EU Digital Markets Act (DMA)
+## 2. 欧盟《数字市场法案》（DMA）
 
-Applies to apps distributed to users in the EU (NFC rules apply in the EEA). Apps outside the EU keep the standard worldwide App Store terms. On 8 July 2026 the EU General Court upheld Apple's DMA gatekeeper designation for the App Store and iOS.
+适用于分发给欧盟用户的应用（NFC 规则适用于 EEA）。欧盟以外的应用继续适用标准的全球 App Store 条款。2026 年 7 月 8 日，欧盟普通法院维持了 Apple 的 App Store 与 iOS DMA 守门人（gatekeeper）指定。
 
-### 2.1 Distribution channels and notarization (HARD)
+### 2.1 分发渠道与公证（硬性）
 
-There are three EU distribution channels, all still involving Apple. the App Store, Web Distribution (the developer hosts signed binaries on its own registered domain, iOS 17.5 or later), and Alternative App Marketplaces (via the Alternative App Marketplace Entitlement and the MarketplaceKit framework). Notarization is mandatory for every iOS and iPadOS app regardless of channel. Apple runs automated and human notarization checks for accuracy, functionality, safety, security, and privacy, and can revoke an app if malware is found after install. Sources. [Apple DMA and apps in the EU](https://developer.apple.com/support/dma-and-apps-in-the-eu/), [Apple alternative marketplace](https://developer.apple.com/support/alternative-app-marketplace-in-the-eu/).
+欧盟共有三种分发渠道，全部仍经由 Apple：App Store、Web Distribution（开发者在自己注册的域名上托管已签名的二进制文件，需 iOS 17.5 或更高），以及替代第三方商店（Alternative App Marketplace，经由 Alternative App Marketplace Entitlement 与 MarketplaceKit 框架）。无论走哪条渠道，每个 iOS 与 iPadOS 应用都必须经过公证（notarization）。Apple 会对准确性、功能性、安全性、安保与隐私运行自动与人工公证检查，若安装后发现恶意软件可撤销该应用。来源：[Apple：DMA 与欧盟应用](https://developer.apple.com/support/dma-and-apps-in-the-eu/)、[Apple：替代应用商店](https://developer.apple.com/support/alternative-app-marketplace-in-the-eu/)。
 
-### 2.2 External purchase links and alternative payments (HARD)
+### 2.2 外购链接与替代支付（硬性）
 
-- From 1 October 2026 the terms sit in Attachment 14 of the Apple Developer Program License Agreement. The Alternative Terms Addendum for Apps in the EU and the StoreKit External Purchase Link Entitlement (EU) Addendum are phased out.
-- Combining is allowed. An app on EU storefronts may sell through Apple In-App Purchase, alternative payment processing within the app, out-of-app offers, or any combination of them.
-- Once a payment option or combination is chosen, it MUST be kept across all EU storefronts for 12 months.
-- When alternatives are offered alongside In-App Purchase, In-App Purchase MUST be presented at the same time and at least as prominently, with Apple-provided artwork on a black or white background, payment flows may not discourage or disrupt it, and the App Store product page may not describe alternative payment options.
-- An app that offers only alternative payment options MUST give users a genuine choice of alternative payment processing within the app, viewable and selectable on the same screen as any out-of-app offers. An app subject to Guideline 3.1.3(b) Multiplatform Services must offer In-App Purchase or alternative processing within the app.
-- Child safety. An app in the Kids category places alternative payment flows behind a parental gate and cannot offer an out-of-app purchase on a website. For users under 13, alternative payments sit behind a parental gate and out-of-app offers are not permitted. For users 13 to 17, both alternative processing and out-of-app offers sit behind a parental gate. Where an EU storefront sets a higher age for parental consent, the same protections apply at that age instead of 13, for example under 16 and 16 to 17.
-- The entitlement is the StoreKit External Purchases or Offers Entitlement, key `com.apple.developer.storekit.custom-purchase-link.allowed-regions`, an array of the ISO country codes where the app offers alternatives. It works on EU storefronts on iOS and iPadOS 26.2 or later and macOS, tvOS, visionOS and watchOS 26.6 or later. Supporting earlier versions needs Apple's agreement.
-- Alternative payment processing in the app, and any out-of-app offer behind a link the user can tap, click, or scan, MUST use the `ExternalPurchaseCustomLink` API to show the system disclosure sheet stating the user will transact with the developer and not Apple.
-- Reporting. every alternative payment transaction, including refunds, renewals and transactions that did not result in a purchase, is reported monthly within 15 days after the end of the calendar month, through the External Purchase Server API for apps on OS 26.4 or later.
-- Transactions outside In-App Purchase do not appear in Report a Problem, Family Sharing, App Store purchase history, or subscription management, and Apple cannot help with their refunds.
+- 自 2026 年 10 月 1 日起，相关条款写入 Apple Developer Program License Agreement 的 Attachment 14。原《欧盟应用替代条款附录》（Alternative Terms Addendum for Apps in the EU）与《StoreKit External Purchase Link Entitlement (EU) 附录》被逐步淘汰。
+- 允许组合。欧盟店面（storefront）上的应用可以通过 Apple 应用内购买（In-App Purchase，IAP）、应用内的替代支付处理、应用外优惠（out-of-app offers），或它们之间的任意组合进行销售。
+- 一旦选定某种支付选项或组合，必须在所有欧盟店面保持 12 个月不变。
+- 当替代支付与应用内购买同时提供时，应用内购买必须同时呈现且醒目程度至少相当，并使用 Apple 提供的黑底或白底图形素材；支付流程不得劝阻或干扰它；App Store 产品页不得描述替代支付选项。
+- 只提供替代支付选项的应用，必须给用户真正的选择权：应用内的替代支付处理必须与任何应用外优惠在同一屏幕上可见且可选。受审核指南 3.1.3(b) 多平台服务（Multiplatform Services）约束的应用，必须提供应用内购买或应用内替代支付处理。
+- 儿童安全。儿童（Kids）分类的应用须将替代支付流程置于家长门槛（parental gate）之后，且不得在网站上提供应用外购买。对 13 岁以下用户，替代支付须置于家长门槛之后，且不允许应用外优惠。对 13 至 17 岁用户，替代支付处理与应用外优惠都须置于家长门槛之后。当某个欧盟店面为家长同意设定了更高年龄时，同样的保护改为在该年龄而非 13 岁适用，例如 16 岁以下与 16 至 17 岁。
+- 该 entitlement 是 StoreKit External Purchases or Offers Entitlement，键为 `com.apple.developer.storekit.custom-purchase-link.allowed-regions`，其值为应用提供替代选项的 ISO 国家代码数组。它在 iOS 与 iPadOS 26.2 或更高、以及 macOS、tvOS、visionOS 与 watchOS 26.6 或更高版本的欧盟店面生效。支持更早版本需要 Apple 同意。
+- 应用内的替代支付处理，以及任何经由用户可点按、点击或扫描的链接触达的应用外优惠，都必须使用 `ExternalPurchaseCustomLink` API 显示系统披露表单，说明用户将与开发者而非 Apple 交易。
+- 报告：每一笔替代支付交易，包括退款、续订以及未形成购买的交易，都须按月上报，在自然月结束后 15 天内通过 External Purchase Server API 完成（适用于 OS 26.4 或更高版本上的应用）。
+- 应用内购买之外的交易，不会出现在"报告问题"（Report a Problem）、家人共享、App Store 购买记录或订阅管理中，Apple 也无法协助其退款。
 
-Source, read 15 October 2026. [Apple payment options on the App Store in the EU](https://developer.apple.com/support/payment-options-on-the-app-store-in-the-eu/), [Apple communication and promotion of offers in the EU](https://developer.apple.com/support/communication-and-promotion-of-offers-on-the-app-store-in-the-eu/), [Apple apps in the EU, child safety protections](https://developer.apple.com/support/apps-in-the-eu/#child-safety-protections-for-alternative-payments-on-the-app-store).
+来源（阅读于 2026 年 10 月 15 日）：[Apple：欧盟 App Store 的支付选项](https://developer.apple.com/support/payment-options-on-the-app-store-in-the-eu/)、[Apple：欧盟优惠的沟通与推广](https://developer.apple.com/support/communication-and-promotion-of-offers-on-the-app-store-in-the-eu/)、[Apple：欧盟应用，替代支付的儿童安全保护](https://developer.apple.com/support/apps-in-the-eu/#child-safety-protections-for-alternative-payments-on-the-app-store)。
 
-### 2.3 The EU fee model (unified terms from 1 October 2026, verified 5 September 2026)
+### 2.3 欧盟费用模式（2026 年 10 月 1 日起统一条款，2026 年 9 月 5 日核验）
 
-On 18 August 2026 Apple announced updated business terms for apps in the EU, effective 1 October 2026, and added Attachment 14 to the Apple Developer Program License Agreement to carry them. Verbatim from Apple. "The Core Technology Fee, a per-install fee for developers who achieve extraordinary scale, will be replaced by the Core Technology Commission, a simple 5% commission on digital transactions in apps distributed outside the App Store." and "The new terms also eliminate the Initial Acquisition Fee and Store Services Fee."
+2026 年 8 月 18 日，Apple 宣布针对欧盟应用的更新版商业条款，2026 年 10 月 1 日生效，并在 Apple Developer Program License Agreement 中新增 Attachment 14 以承载这些条款。以下是 Apple 原文："Core Technology Fee——面向达到超大规模的开发者的按安装收费——将被 Core Technology Commission 取代，后者是对 App Store 之外分发的应用中的数字交易收取的简单 5% 佣金。"以及"新条款还取消了 Initial Acquisition Fee 与 Store Services Fee。"
 
-- Core Technology Commission (CTC). 5 percent on digital transactions in apps distributed outside the App Store, covering sales within alternative app marketplaces, apps distributed via alternative marketplaces, and apps distributed via Web Distribution. From 1 October 2026 it is the general replacement for the CTF, not only the promoted-external-offer case it covered from 26 June 2025.
-- Core Technology Fee (CTF). Replaced on 1 October 2026. The earlier 0.50 euro per first annual install above 1,000,000 installs applies only to releases under the pre-October terms.
-- Initial Acquisition Fee and Store Services Fee. Eliminated on 1 October 2026.
-- Alternative payments. Apps may offer alternative payment options alongside Apple In-App Purchase on the App Store.
-- Marketplace and Web Distribution eligibility. From 1 October 2026 a developer meeting at least one of seven alternative criteria may operate an alternative app marketplace, including a stand-by letter of credit of USD 1,000,000 or one million first annual installs worldwide.
-- Attachment 14. The Account Holder accepts it in the Apple Developer account. Accepting it moves the account to the unified EU business terms and unlocks the alternative payment entitlement and the alternative distribution tools in App Store Connect. Apple's pages read on 15 October 2026 do not say submissions are blocked without it.
+- Core Technology Commission（CTC）：对 App Store 之外分发的应用中的数字交易收取 5%，覆盖替代第三方商店内的销售、经由替代第三方商店分发的应用，以及经由 Web Distribution 分发的应用。自 2026 年 10 月 1 日起，它全面取代 CTF，而不再只是其自 2025 年 6 月 26 日起覆盖的"推广外购优惠"（promoted external offer）场景。
+- Core Technology Fee（CTF）：于 2026 年 10 月 1 日被取代。此前"超过 1,000,000 次安装后，每个首次年安装收取 0.50 欧元"仅适用于 10 月前条款下的版本。
+- Initial Acquisition Fee 与 Store Services Fee：于 2026 年 10 月 1 日取消。
+- 替代支付：应用可在 App Store 上与 Apple 应用内购买并行提供替代支付选项。
+- 第三方商店与 Web Distribution 资格：自 2026 年 10 月 1 日起，满足七项替代标准中至少一项的开发者即可运营替代第三方商店（marketplace），标准包括 1,000,000 美元的备用信用证，或全球 1,000,000 次首次年安装。
+- Attachment 14：由账号持有人（Account Holder）在 Apple Developer 账户中接受。接受后，账户转入统一的欧盟商业条款，并解锁替代支付 entitlement 与 App Store Connect 中的替代分发工具。Apple 页面（阅读于 2026 年 10 月 15 日）并未说明不接受它就会阻断提交（submission）。
 
-Rule for a compliance tool. verify the Account Holder has accepted Attachment 14, and re-check Apple's live page before encoding any fee number. Sources. [Apple, updated business terms for apps in the EU, 18 August 2026](https://developer.apple.com/news/?id=gmws0jgp), [Apple, Attachment 14 added to the ADPLA](https://developer.apple.com/news/?id=0cgo95n6), [Apple DMA and apps in the EU](https://developer.apple.com/support/dma-and-apps-in-the-eu/).
+合规工具的规则：核验账号持有人已接受 Attachment 14，并在写入任何费用数字之前重查 Apple 的线上页面。来源：[Apple：欧盟应用更新商业条款，2026 年 8 月 18 日](https://developer.apple.com/news/?id=gmws0jgp)、[Apple：ADPLA 新增 Attachment 14](https://developer.apple.com/news/?id=0cgo95n6)、[Apple：DMA 与欧盟应用](https://developer.apple.com/support/dma-and-apps-in-the-eu/)。
 
-### 2.4 Browser engine, NFC, interoperability
+### 2.4 浏览器引擎、NFC 与互操作性
 
-Alternative browser engines (non-WebKit) are allowed in the EU via the Alternative Browser Engine Entitlement. A browser choice screen is shown on first Safari launch for EU users on iOS 17.4 or later. Contactless via Host Card Emulation is allowed in the EEA via the HCE entitlement on iOS 17.4 or later, and a third-party contactless app can be set as default over Apple Pay. All DMA entitlements are scoped to EU or EEA storefronts only. Source. [Apple DMA and apps in the EU](https://developer.apple.com/support/dma-and-apps-in-the-eu/).
+在欧盟，替代浏览器引擎（非 WebKit）可通过 Alternative Browser Engine Entitlement 使用。对 iOS 17.4 或更高版本上的欧盟用户，首次启动 Safari 时会显示浏览器选择屏。在 EEA，基于主卡模拟（Host Card Emulation）的非接触功能可通过 HCE entitlement 在 iOS 17.4 或更高版本上使用，第三方非接触应用可被设为默认并置于 Apple Pay 之上。所有 DMA entitlement 都仅限于欧盟或 EEA 店面。来源：[Apple：DMA 与欧盟应用](https://developer.apple.com/support/dma-and-apps-in-the-eu/)。
 
-### 2.5 The enforcement backdrop
+### 2.5 执法背景
 
-The European Commission fined Apple 500,000,000 euro on 23 April 2025 for breaching the DMA anti-steering obligation (Article 5(4)). Apple's June 2025 EU fee and entitlement restructuring was its direct response. Apple appealed on 7 July 2025 and the appeal is pending. Sources. [Commission decision](https://digital-strategy.ec.europa.eu/en/news/commission-finds-apple-and-meta-breach-digital-markets-act), [CNBC appeal](https://www.cnbc.com/2025/07/07/apple-appeal-eu-fine-app-store.html).
+欧盟委员会于 2025 年 4 月 23 日，因 Apple 违反 DMA 反站外引导义务（Article 5(4)）对其处以 500,000,000 欧元罚款。Apple 2025 年 6 月的欧盟费用与 entitlement 重组正是其直接回应。Apple 于 2025 年 7 月 7 日提起申诉（appeal），目前申诉仍在进行中。来源：[委员会决定](https://digital-strategy.ec.europa.eu/en/news/commission-finds-apple-and-meta-breach-digital-markets-act)、[CNBC：Apple 申诉](https://www.cnbc.com/2025/07/07/apple-appeal-eu-fine-app-store.html)。
 
-### 2.6 What a compliance tool must CHECK for an EU app using DMA entitlements
+### 2.6 使用 DMA entitlement 的欧盟应用：合规工具必须核检什么
 
-- The StoreKit External Purchases or Offers Entitlement is declared when the app offers alternative payments or out-of-app offers.
-- Alternative payment processing and every linked out-of-app offer call the `ExternalPurchaseCustomLink` disclosure sheet.
-- If the app offers In-App Purchase, it is shown at the same time as any alternative and at least as prominently, and the product page does not describe alternative payment options.
-- If the app offers only alternatives, alternative processing within the app is selectable on the same screen as any out-of-app offer.
-- Kids category apps and users under the storefront's parental-consent age see alternative processing only behind a parental gate. A Kids category app cannot offer an out-of-app purchase on a website, and users under that age see no out-of-app offers at all. Older minors see both only behind a parental gate.
-- The chosen payment options stay in place across all EU storefronts for 12 months.
-- Monthly transaction reporting is wired (within 15 days of the calendar month end, External Purchase Server API on OS 26.4 or later).
-- Any non-App-Store build passed notarization.
-- A marketplace app uses MarketplaceKit, installs only from its own domain, and runs moderation, anti-fraud, and refund handling.
-- Payment entitlement code is gated to iOS and iPadOS 26.2, and macOS, tvOS, visionOS and watchOS 26.6, unless Apple has agreed to earlier versions.
-- Other DMA entitlement code is gated to its own minimum OS (iOS and iPadOS 17.4, macOS 14.4, visionOS 1.2, watchOS 10.4).
-- Browser-engine and HCE features carry their entitlements and are region-gated to EU or EEA.
+- 当应用提供替代支付或应用外优惠时，已声明 StoreKit External Purchases or Offers Entitlement。
+- 替代支付处理与每一个关联的应用外优惠，都调用了 `ExternalPurchaseCustomLink` 披露表单。
+- 如果应用提供应用内购买，它与任何替代支付同时展示且醒目程度至少相当，且产品页不描述替代支付选项。
+- 如果应用只提供替代支付，应用内替代支付处理与任何应用外优惠在同一屏幕上可选。
+- 儿童分类应用以及低于店面家长同意年龄的用户，只能在家长门槛之后看到替代支付处理。儿童分类应用不得在网站上提供应用外购买，低于该年龄的用户完全看不到应用外优惠。更大的未成年人两者都只能在家长门槛之后看到。
+- 选定的支付选项在所有欧盟店面保持 12 个月不变。
+- 月度交易报告已接入（自然月结束后 15 天内；OS 26.4 或更高版本使用 External Purchase Server API）。
+- 任何非 App Store 构建均已通过公证。
+- 第三方商店应用使用 MarketplaceKit，仅从自己的域名安装，并运行内容审核、反欺诈与退款处理。
+- 支付 entitlement 代码设有版本门槛：iOS 与 iPadOS 26.2，macOS、tvOS、visionOS 与 watchOS 26.6，除非 Apple 已同意更早版本。
+- 其他 DMA entitlement 代码设有各自的最低 OS 门槛（iOS 与 iPadOS 17.4、macOS 14.4、visionOS 1.2、watchOS 10.4）。
+- 浏览器引擎与 HCE 功能带有相应 entitlement，并按地区门槛限定为欧盟或 EEA。
 
-## 3. EU Digital Services Act, trader status (HARD)
+## 3. 欧盟《数字服务法案》与商家身份（硬性）
 
-The DSA (Articles 30 and 31) requires the App Store and Google Play to verify and display trader contact and identity information for traders distributing apps in the EU. Apple's enforcement date is below. Google's dated Play Console duty follows it. The Play help page states that duty without naming the Digital Services Act.
+《数字服务法案》（DSA，Article 30 与 Article 31）要求 App Store 与 Google Play 核验并展示在欧盟分发应用的商家（trader）的联系与身份信息。Apple 的执法日期见下；Google 带日期的 Play Console 义务紧随其后。Play 帮助页面陈述了该义务，但未点名《数字服务法案》。
 
-- Apple enforced this from 17 February 2025. apps whose developers had not provided and verified trader status were removed from the EU App Store on that date. Every developer must declare a status even when not distributing in the EU.
-- What a trader submits (App Store Connect, Business, then Digital Services Act). for an organization, the address (from D-U-N-S), phone number, and email. for an individual, an address or P.O. box, phone number, and email. all traders also provide payment-account details and certify EU-law compliance. Verification is two-factor (email plus phone SMS) with documentation upload.
-- Publication. once verified, Apple publishes the trader's address, phone, and email on the App Store product page across all 27 EU territories.
-- Non-trader declaration. if the developer declares "not a trader", EU consumers are notified that consumer-protection law does not apply to contracts with the developer. Confirm that is intended.
-- Google Play, read 19 November 2026 on Play Console Help. Every active developer account must declare trader or non-trader status under EEA and UK law, regardless of where its apps are targeted or distributed. An account that does not distribute in the EEA or the UK may declare non-trader. New accounts declare on creation. Existing accounts must declare by 1 February 2027. Missing that date may block updates and remove the app from Play globally. A trader self-certifies that it will offer only products or services that comply with applicable laws, provides each app's terms of service link, and on a personal account provides a contact phone number. The address is displayed. Declare under Manage account, Account details, About you, then confirm each trader app under Monitor and improve, Policy and programs, App content. The declaration is separate from developer identity verification. A trader does not repeat D-U-N-S verification. The number already on the account is shown on the app's detail page. Falsely claiming not to be a trader is prohibited under the EU Unfair Commercial Practices Directive and the UK Digital Markets, Competition and Consumers Act and may result in global removal. Misrepresenting status to bypass verification or self-certification violates section 11.4 of the DDA and may suspend or terminate the account globally under section 10.3(a) of the DDA. From 1 March 2027 Play uses an online marketplace model in the EEA and the UK. Where the account declared as a trader, users everywhere then see contact details, the D-U-N-S number in App support, and a terms link if one was provided. Users in the EEA and the UK also see the trader name in place of Google in Offered by, and the self-certification. In regions where trader status is displayed, including the EEA and the UK, a non-trader declaration is shown to consumers with a notice that consumer-protection rights do not apply to contracts with that developer. The Play page does not name the Digital Services Act. The 29 October 2026 policy announcement says the declaration starts in November 2026, links to the trader page, and does not state either date. The February 2027 technical quality deadline is a different requirement. Sources. [Trader status declaration](https://support.google.com/googleplay/android-developer/answer/17594752?hl=en), [Policy announcement, 29 October 2026](https://support.google.com/googleplay/android-developer/answer/18100766?hl=en).
+- Apple 自 2025 年 2 月 17 日起执法：未提供并核验商家身份（trader status）的开发者，其应用在该日被移出欧盟 App Store。每位开发者都必须申报状态，即便并不在欧盟分发。
+- 商家需要提交什么（App Store Connect → Business → Digital Services Act）：组织需提供地址（来自 D-U-N-S）、电话号码与邮箱；个人需提供地址或邮政信箱、电话号码与邮箱；所有商家还须提供支付账户详情，并证明符合欧盟法律。核验为双因素（邮箱加手机短信），并需上传证明文件。
+- 公示：核验通过后，Apple 会在全部 27 个欧盟地区的 App Store 产品页公示商家的地址、电话与邮箱。
+- 非商家申报：如果开发者申报"非商家"，欧盟消费者会被告知消费者保护法不适用于与该开发者的合同。请确认这是有意为之。
+- Google Play（Play Console 帮助，阅读于 2026 年 11 月 19 日）：每个有效的开发者账号都必须按 EEA 与英国法律申报商家或非商家身份，无论其应用面向或分发至何处。不在 EEA 或英国分发的账号可申报为非商家。新账号在创建时申报；现有账号必须在 2027 年 2 月 1 日前申报。错过该日期可能导致更新被阻断，且应用被从 Play 全球下架。商家需自我证明其只提供符合适用法律的产品或服务，提供每个应用的服务条款链接，个人账号还需提供联系电话。地址会被展示。申报路径为 Manage account → Account details → About you；然后在 Monitor and improve → Policy and programs → App content 下确认每个商家应用。该申报与开发者身份核验相互独立；商家无需重复 D-U-N-S 核验，账号上已有的编号会显示在应用详情页。虚假声称自己不是商家，违反《欧盟不公平商业行为指令》与英国《数字市场、竞争与消费者法案》，可能导致全球下架。为绕过核验或自我认证而虚报身份，违反 DDA 第 11.4 节，可能依据 DDA 第 10.3(a) 节在全球范围内暂停或终止账号。自 2027 年 3 月 1 日起，Play 在 EEA 与英国采用在线第三方商店（marketplace）模式。申报为商家的账号，全球用户都会看到联系详情、App support 中的 D-U-N-S 编号，以及（如已提供）条款链接；EEA 与英国用户还会在 Offered by 中看到商家名称替代 Google，并看到自我认证内容。在展示商家身份的地区（包括 EEA 与英国），非商家申报会展示给消费者，并附有"消费者保护权利不适用于与该开发者的合同"的提示。Play 页面并未点名《数字服务法案》。2026 年 10 月 29 日的政策公告称申报自 2026 年 11 月启动，并链接到商家页面，但未给出上述任一日期。2027 年 2 月的技术质量截止日期是另一项要求。来源：[商家身份申报](https://support.google.com/googleplay/android-developer/answer/17594752?hl=en)、[政策公告，2026 年 10 月 29 日](https://support.google.com/googleplay/android-developer/answer/18100766?hl=en)。
 
-What a compliance tool must CHECK. On Apple, trader versus non-trader declaration completed and verified before EU distribution, address, phone, and email present and 2FA-verified, and a missing declaration flagged as an EU-storefront removal risk. On Google Play, trader or non-trader declared for the account, each trader app confirmed, a terms link present for a trader, and a missing declaration on an existing account flagged as a global update-block and removal risk from 1 February 2027. Sources. [Apple manage DSA trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/), [Apple upcoming requirement 02172025a](https://developer.apple.com/news/upcoming-requirements/?id=02172025a), [Play trader status declaration](https://support.google.com/googleplay/android-developer/answer/17594752?hl=en).
+合规工具必须核检什么：在 Apple 侧，欧盟分发之前已完成商家/非商家申报并通过核验，地址、电话与邮箱齐备且经双因素（2FA）核验，缺失申报被标记为欧盟店面下架风险。在 Google Play 侧，账号已申报商家或非商家，每个商家应用已确认，商家备有条款链接，现有账号缺失申报被标记为自 2027 年 2 月 1 日起的全球更新阻断与下架风险。来源：[Apple：管理 DSA 商家要求](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/)、[Apple 即将到来的要求 02172025a](https://developer.apple.com/news/upcoming-requirements/?id=02172025a)、[Play 商家身份申报](https://support.google.com/googleplay/android-developer/answer/17594752?hl=en)。
 
-## 4. European Accessibility Act (EAA), Directive (EU) 2019/882 (HARD, NEW gap)
+## 4. 《欧洲无障碍法案》（EAA），Directive (EU) 2019/882（硬性，新增缺口）
 
-The EAA became applicable on 28 June 2025. This is the largest gap the base playbook did not cover.
+《欧洲无障碍法案》（EAA）自 2025 年 6 月 28 日起适用。这是基础实战手册（playbook）未曾覆盖的最大缺口。
 
-### 4.1 Scope
+### 4.1 适用范围
 
-In scope are consumer products and services delivered through websites AND mobile apps, including e-commerce, banking and financial services, e-books and e-readers, transport and travel booking, telecom services, and audiovisual media access. Any organization based in the EU, or offering these apps or services to EU consumers, is covered, so the reach is extraterritorial. Sources. [European Commission EAA](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en), [Level Access EAA](https://www.levelaccess.com/blog/eu-accessibility-requirements-and-eaa-compliance/).
+适用对象包括通过网站与移动应用交付的消费级产品与服务，涵盖电子商务、银行与金融服务、电子书与电子阅读器、交通与旅行预订、电信服务以及视听媒体访问。任何位于欧盟的组织，或向欧盟消费者提供这些应用或服务的组织，均被覆盖，因此其效力具有域外性。来源：[欧盟委员会 EAA 页面](https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/union-equality-strategy-rights-persons-disabilities-2021-2030/european-accessibility-act_en)、[Level Access EAA 解读](https://www.levelaccess.com/blog/eu-accessibility-requirements-and-eaa-compliance/)。
 
-### 4.2 Microenterprise exemption
+### 4.2 微型企业豁免
 
-A microenterprise with fewer than 10 employees AND annual turnover or balance-sheet total not exceeding 2,000,000 euro is exempt, and the exemption covers services only, not products (Article 4(5)). Accessibility funding does not remove that exemption. It matters elsewhere. Under Article 14(6), an operator that received outside funding meant to improve accessibility cannot rely on the disproportionate burden defence in Article 14(1)(b). Source. [Directive (EU) 2019/882, Articles 4(5) and 14](https://eur-lex.europa.eu/eli/dir/2019/882/oj).
+员工少于 10 人、且年营业额或资产负债表总额不超过 2,000,000 欧元的微型企业可获豁免，且该豁免仅覆盖服务，不覆盖产品（Article 4(5)）。获得无障碍用途的资助并不会取消该豁免；它影响的是别处：依据 Article 14(6)，接受了旨在改善无障碍的外部资助的运营者，不得援引 Article 14(1)(b) 的"不成比例负担"抗辩。来源：[Directive (EU) 2019/882，Article 4(5) 与 Article 14](https://eur-lex.europa.eu/eli/dir/2019/882/oj)。
 
-### 4.3 The technical bar for apps
+### 4.3 应用侧的技术门槛
 
-- The EAA is met through the harmonised standard EN 301 549. WCAG is the underlying guidelines set.
-- EN 301 549 version 3.2.1 is built on WCAG 2.1 Level AA and adds roughly 64 requirements beyond WCAG, in particular Chapter 11 for non-web software and mobile apps. A WCAG-only audit does NOT satisfy EN 301 549 Chapter 11.
-- EN 301 549 version 4.1.1 is published by ETSI (file dated 2 September 2026) and moves to WCAG 2.2. Its citation in the Official Journal as a harmonised standard under the EAA was not confirmed here, so check the Official Journal before relying on it for presumption of conformity. Source. [ETSI EN 301 549 V4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf).
-- Service providers must publish accessibility information. Directive (EU) 2019/882 Article 13(2). "Service providers shall prepare the necessary information in accordance with Annex V and shall explain how the services meet the applicable accessibility requirements. The information shall be made available to the public in written and oral format, including in a manner which is accessible to persons with disabilities." Annex V point 1 places it "in the general terms and conditions, or equivalent document", with a general description of the service, an explanation of its operation, and how the Annex I requirements are met. The Directive never uses the term "accessibility statement", which is the Directive (EU) 2016/2102 Article 7 term for public sector bodies. EN 301 549 V3.2.1 Annex B (informative) and Annex C (normative, determination of conformance) carry no such duty. the standard only names an accessibility statement as an example of product information in clause 12.1.1 NOTE 3. A missing or inaccurate notice can be a separate penalty in some Member States.
+- 满足 EAA 的路径是统一标准（harmonised standard）EN 301 549，WCAG 是其底层指南集。
+- EN 301 549 3.2.1 版构建于 WCAG 2.1 Level AA 之上，在 WCAG 之外新增约 64 项要求，尤其是面向非 Web 软件与移动应用的 Chapter 11。仅做 WCAG 审计并不能满足 EN 301 549 Chapter 11。
+- EN 301 549 4.1.1 版由 ETSI 发布（文件日期为 2026 年 9 月 2 日），并转向 WCAG 2.2。此处未能确认其在《官方公报》（Official Journal）中被引用为 EAA 下的统一标准，因此在依赖它获得"符合性推定"（presumption of conformity）之前，请先查《官方公报》。来源：[ETSI EN 301 549 V4.1.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/04.01.01_60/en_301549v040101p.pdf)。
+- 服务提供者必须发布无障碍信息。Directive (EU) 2019/882 Article 13(2)："服务提供者应按附件 V（Annex V）准备必要信息，并应说明服务如何满足适用的无障碍要求。该信息应以书面与口头形式向公众提供，包括以残障人士可访问的方式。"附件 V 第 1 点将其置于"通用条款与条件或同等文件"中，内容包括服务的一般描述、其运作方式的说明，以及如何满足附件 I（Annex I）的要求。该指令从未使用"无障碍声明"（accessibility statement）一词——那是 Directive (EU) 2016/2102 Article 7 中针对公共部门机构的用语。EN 301 549 V3.2.1 的附件 B（资料性）与附件 C（规范性，用于判定符合性）不含此类义务；该标准只在 clause 12.1.1 NOTE 3 中把无障碍声明作为产品信息的一个例子提及。在某些成员国，缺失或不准确的说明可单独构成处罚事由。
 
-Sources. [Directive (EU) 2019/882, Article 13 and Annex V](https://eur-lex.europa.eu/eli/dir/2019/882/oj), [ETSI EN 301 549 V3.2.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf), [Directive (EU) 2016/2102 Article 7](https://eur-lex.europa.eu/eli/dir/2016/2102/oj), [Deque EN 301 549](https://www.deque.com/en-301-549-compliance/), [EN 301 549 Chapter 11 for mobile apps](https://auditsu.com/resources/en-301-549-chapter-11-mobile-apps).
+来源：[Directive (EU) 2019/882，Article 13 与附件 V](https://eur-lex.europa.eu/eli/dir/2019/882/oj)、[ETSI EN 301 549 V3.2.1](https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf)、[Directive (EU) 2016/2102 Article 7](https://eur-lex.europa.eu/eli/dir/2016/2102/oj)、[Deque EN 301 549](https://www.deque.com/en-301-549-compliance/)、[EN 301 549 Chapter 11：移动应用](https://auditsu.com/resources/en-301-549-chapter-11-mobile-apps)。
 
-### 4.4 Penalties
+### 4.4 处罚
 
-Penalties are set per Member State. Germany, administrative fines up to 100,000 euro plus corrective measures or market withdrawal (verified, law-firm source). Other national figures cited by accessibility vendors (France around 25,000 euro per year for a missing statement, Ireland around 60,000 euro, Sweden around 900,000 euro) are unverified against national statutes and are marked so in section 9.
+处罚由各成员国自行设定。德国：最高 100,000 欧元的行政罚款，外加纠正措施或市场退出（已核验，律所来源）。无障碍厂商引用的其他国家数字（法国：缺失声明约每年 25,000 欧元；爱尔兰约 60,000 欧元；瑞典约 900,000 欧元）未经国家成文法核验，已在第 9 节中如此标注。
 
-### 4.5 What a compliance tool must CHECK for an EU app (maps to Apple accessibility)
+### 4.5 欧盟应用：合规工具必须核检什么（对应 Apple 无障碍要求）
 
-- VoiceOver labels and traits on every interactive element (accessibilityLabel, accessibilityTraits, accessibilityHint). every feature operable with VoiceOver, an external keyboard, and switch control.
-- Dynamic Type. system font scaling supported, no fixed layout that breaks at larger text.
-- Color contrast at WCAG 2.1 AA (4.5 to 1 for text, 3 to 1 for large text and UI), no information carried by color alone.
-- Reduce Motion honored, logical focus order, adequate touch-target size.
-- Annex V accessibility information (how the service meets the Annex I requirements) published in the terms and conditions or an equivalent document, accessible and reachable (Directive (EU) 2019/882 Article 13(2)).
-- A flag that WCAG-only coverage leaves an EN 301 549 Chapter 11 gap.
+- 每个可交互元素都有 VoiceOver 标签与特征（accessibilityLabel、accessibilityTraits、accessibilityHint）；每项功能都能用 VoiceOver、外接键盘与切换控制（switch control）操作。
+- 动态字体（Dynamic Type）：支持系统字体缩放，没有在大字号下破版的固定布局。
+- 颜色对比达到 WCAG 2.1 AA（正文 4.5 比 1，大号文本与 UI 3 比 1），不仅靠颜色承载信息。
+- 尊重"减弱动态效果"（Reduce Motion）、焦点顺序符合逻辑、触摸目标尺寸足够。
+- 附件 V 无障碍信息（服务如何满足附件 I 的要求）已发布在条款与条件或同等文件中，可访问且可触达（Directive (EU) 2019/882 Article 13(2)）。
+- 有一个标记提示：仅覆盖 WCAG 会留下 EN 301 549 Chapter 11 的缺口。
 
-These map onto the Apple accessibility discipline the setup already carries (Dynamic Type, VoiceOver, contrast, Reduce Motion). The difference the EAA adds is that this is now a legal requirement with fines, not only a quality bar.
+这些条目对应现有配置已具备的 Apple 无障碍自查项（Dynamic Type、VoiceOver、对比度、Reduce Motion）。EAA 带来的差异在于：它现在是一项带罚款的法律义务，而不仅是质量标准。
 
-## 5. Adjacent EU rules to track (dates, so the audit stays current)
+## 5. 需要跟踪的欧盟邻近法规（附日期，让审计保持最新）
 
-- EU Data Act, Regulation (EU) 2023/2854. core obligations from 12 September 2025, access-by-design from 12 September 2026. Relevant when an app interacts with a connected product (wearables, smart devices).
-- Cyber Resilience Act, Regulation (EU) 2024/2847. reporting obligations from 11 September 2026, main obligations from 11 December 2027. Relevant when the app ships as a standalone product with digital elements (security-by-design, vulnerability handling).
-- DSA protection of minors and age verification. Commission Guidelines on Protection of Minors published 14 July 2025. an EU age-verification blueprint became feature-ready 15 April 2026, with Member States urged to roll out by 31 December 2026.
-- GDPR children's data. EDPB Statement 1/2025 on age assurance (adopted 11 February 2025) sets ten principles, and age assurance must still respect data minimisation and purpose limitation.
+- 欧盟《数据法案》（Data Act），Regulation (EU) 2023/2854：核心义务自 2025 年 9 月 12 日起，"设计即访问"（access-by-design）自 2026 年 9 月 12 日起。当应用与互联产品（可穿戴设备、智能设备）交互时相关。
+- 《网络弹性法案》（Cyber Resilience Act），Regulation (EU) 2024/2847：报告义务自 2026 年 9 月 11 日起，主要义务自 2027 年 12 月 11 日起。当应用作为带数字元素的独立产品发布时相关（安全始于设计、漏洞处理）。
+- DSA 未成年人保护与年龄验证：欧盟委员会《未成年人保护指南》于 2025 年 7 月 14 日发布；欧盟年龄验证蓝图于 2026 年 4 月 15 日功能就绪，各成员国被敦促在 2026 年 12 月 31 日前推开。
+- GDPR 儿童数据：EDPB 关于年龄核验（age assurance）的第 1/2025 号声明（2025 年 2 月 11 日通过）确立了十项原则；年龄核验仍须尊重数据最小化与目的限定。
 
-Verified 5 September 2026 against EUR-Lex, four more dated items and one correction.
+已于 2026 年 9 月 5 日对照 EUR-Lex 核验：新增四个带日期条目与一处更正。
 
-- Product Liability Directive (EU) 2024/2853. From 9 December 2026 national law treats standalone software and app updates as a product under strict liability, for anything placed on the market or put into service on or after that date. Source. [Directive text](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402853).
-- Data Act, Regulation (EU) 2023/2854. The 12 September 2026 date is the Article 3(1) access-by-design duty for connected products, not cloud switching. Switching charges fall to zero on 12 January 2027 (Article 29(1)), and legacy long-dated contracts must meet Chapter IV by 12 September 2027. Source. [Regulation text](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202302854).
-- eIDAS 2, Regulation (EU) 2024/1183. Each Member State provides at least one EU Digital Identity Wallet by 24 December 2026 (derived), and a private relying party above micro or small size that uses strong user authentication in banking, finance, health, telecom, transport, energy, education, or digital infrastructure must accept the wallet on request by 24 December 2027 (derived). Source. [Consolidated eIDAS](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02014R0910-20241018).
-- Regulation (EU) 2026/1881 of 24 July 2026. The temporary ePrivacy derogation for voluntary CSAM detection in messaging expires 3 April 2028. Source. [Regulation text](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202601881).
-- European Accessibility Act correction. There is no general 28 June 2027 accessibility date. The only 2027 date in the Directive is the Article 31(3) deferral for 112 emergency-call answering. Service contracts run to 2030 under Article 32. Source. [Directive 2019/882](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019L0882).
-- Checked and carrying no new dated obligation. Digital Fairness Act (proposed 11 November 2026 as COM(2026) 1100, a regulation replacing the Unfair Commercial Practices Directive that would apply 12 months after it enters into force, so no obligation yet. Its free-trial reminder and express-consent rule is the one to design for. [Proposal](https://commission.europa.eu/document/download/0575d59f-554f-4a9e-b54b-e6b717175809_en?filename=Proposal+for+a+Digital+Fairness+Act.pdf)), Digital Omnibus GDPR and ePrivacy half (tabled, no adoption), ePrivacy Regulation (withdrawn 11 February 2025), NIS2 and DORA (Commission review clauses only), the EU age-verification app (non-binding Recommendation of 29 April 2026). The EDPB adopted its final DSA and GDPR interplay guidelines in September 2026, consulting on administrative fines until 13 November 2026. [EDPB](https://www.edpb.europa.eu/news/edpb-harmonises-fining-methodology-and-adopts-final-dsa-gdpr-guidelines_en)
+- 《产品责任指令》（Product Liability Directive），Directive (EU) 2024/2853：自 2026 年 12 月 9 日起，国家法律将独立软件与应用更新视为严格责任下的产品，适用于该日及之后投放市场或投入使用的任何产品。来源：[指令文本](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402853)。
+- 《数据法案》，Regulation (EU) 2023/2854：2026 年 9 月 12 日这一日期，是 Article 3(1) 针对互联产品的"设计即访问"义务，而非云服务切换。切换费用自 2027 年 1 月 12 日起降为零（Article 29(1)），存量长期合同须在 2027 年 9 月 12 日前满足第四章（Chapter IV）的要求。来源：[条例文本](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202302854)。
+- eIDAS 2，Regulation (EU) 2024/1183：每个成员国须在 2026 年 12 月 24 日前提供至少一个欧盟数字身份钱包（推导日期）；在银行、金融、健康、电信、交通、能源、教育或数字基础设施领域使用强用户认证、且规模超过微型或小型的私营依赖方（relying party），须在 2027 年 12 月 24 日前（推导日期）应请求接受该钱包。来源：[合并文本 eIDAS](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02014R0910-20241018)。
+- Regulation (EU) 2026/1881（2026 年 7 月 24 日）：针对消息服务中自愿 CSAM 检测的临时 ePrivacy 豁免，于 2028 年 4 月 3 日到期。来源：[条例文本](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202601881)。
+- 《欧洲无障碍法案》更正：并不存在普遍适用的 2027 年 6 月 28 日无障碍日期。指令中唯一的 2027 年日期，是 Article 31(3) 对 112 紧急呼叫应答的推迟；服务合同依据 Article 32 延续至 2030 年。来源：[Directive 2019/882](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019L0882)。
+- 已核验且无新的带日期义务：《数字公平法案》（Digital Fairness Act）（2026 年 11 月 11 日以 COM(2026) 1100 提出，是一项取代《不公平商业行为指令》的条例，将在其生效 12 个月后适用，因此暂无义务。其中值得为其做设计的是免费试用提醒与明示同意规则。[提案](https://commission.europa.eu/document/download/0575d59f-554f-4a9e-b54b-e6b717175809_en?filename=Proposal+for+a+Digital+Fairness+Act.pdf)）；《数字综合法案》的 GDPR 与 ePrivacy 部分（已提交，未获通过）；ePrivacy 条例（2025 年 2 月 11 日撤回）；NIS2 与 DORA（仅委员会审查条款）；欧盟年龄验证应用（2026 年 4 月 29 日的不具约束力建议）。EDPB 于 2026 年 9 月通过了其 DSA 与 GDPR 相互作用的最终指南，并就行政罚款征求意见至 2026 年 11 月 13 日。[EDPB](https://www.edpb.europa.eu/news/edpb-harmonises-fining-methodology-and-adopts-final-dsa-gdpr-guidelines_en)
 
-### 5.1 EU e-Evidence Package (Regulation (EU) 2023/1543 & Directive (EU) 2023/1544) (HARD, NEW)
+### 5.1 欧盟电子证据一揽子方案（Regulation (EU) 2023/1543 与 Directive (EU) 2023/1544）（硬性，新增）
 
-The EU e-Evidence Package fundamentally reshapes cross-border law enforcement access to electronic data by allowing judicial authorities of one Member State to directly compel service providers in another Member State to preserve or produce data, bypassing traditional mutual legal assistance frameworks.
+欧盟电子证据一揽子方案（e-Evidence Package）从根本上重塑了跨境执法获取电子数据的路径：允许一个成员国的司法机关直接命令另一成员国的服务提供者保存或提交数据，绕开传统的司法协助框架。
 
-- **Scope:** Applies to electronic communications service providers (instant messaging, VoIP, email), internet domain registries, and other information society services that facilitate intra-user communication (such as online marketplaces) or store/process data on behalf of users (such as cloud hosting and SaaS applications). This applies to any provider offering services in the EU, regardless of where they are headquartered.
-- **Key Obligations:**
-  - **Designation/Appointment of Addressees:** Under Directive (EU) 2023/1544, EU-established service providers must designate an establishment, and non-EU-established service providers must appoint a legal representative in the EU, to receive and execute European Production and Preservation Orders.
-  - **Notification Requirement:** Providers must notify the designated central authority of their representative's details and languages. The notification deadline is **18 August 2026**, or within six months of commencing services in the EU.
-  - **European Production Order Execution:** Compels providers to produce electronic evidence. The default compliance window is **10 days**, but in critical emergency situations, providers MUST produce the requested data within **8 hours**.
-  - **European Preservation Order Execution:** Compels providers to preserve electronic evidence for **60 days** to prevent deletion.
-- **Penalties:** Joint and several liability applies to the provider and their designated legal representative. Non-compliance can result in administrative fines of up to **2% of the provider's total annual global turnover** under national implementing legislation.
-- **Sources:** [Regulation (EU) 2023/1543 (EUR-Lex)](https://eur-lex.europa.eu/eli/reg/2023/1543/oj), [Directive (EU) 2023/1544 (EUR-Lex)](https://eur-lex.europa.eu/eli/dir/2023/1544/oj), [Bird & Bird EU e-Evidence Package Guide](https://www.twobirds.com/en/insights/2026/germany/e-evidence-richtlinie-umsetzungsfrist-abgelaufen--implementierungsstatus-und-handlungsbedarf).
+- **适用范围**：适用于电子通信服务提供者（即时通讯、VoIP、电子邮件）、互联网域名注册机构，以及其他便于用户间通信（如在线第三方商店）、或代用户存储/处理数据（如云托管与 SaaS 应用）的信息社会服务。适用于任何在欧盟提供服务的提供者，无论其总部位于何处。
+- **关键义务**：
+  - **指定/委任接收人**：依据 Directive (EU) 2023/1544，在欧盟设立的服务提供者必须指定一个机构（establishment），未在欧盟设立的服务提供者必须在欧盟委任一名法定代表，以接收并执行欧洲生产令（European Production Order）与欧洲保全令（European Preservation Order）。
+  - **通知义务**：提供者必须向指定的中央机关通报其代表的详情及所用语言。通知截止日期为 **2026 年 8 月 18 日**，或在欧盟开始提供服务后六个月内。
+  - **欧洲生产令的执行**：命令提供者提交电子证据。默认合规窗口为 **10 天**，但在紧急危急情况下，提供者必须在 **8 小时**内提交所需数据。
+  - **欧洲保全令的执行**：命令提供者将电子证据保全 **60 天**以防删除。
+- **处罚**：提供者与其被指定的法定代表承担连带责任。不合规可依据国家实施立法，对提供者处以最高 **为其全球年总营业额 2% 的行政罚款**。
+- **来源**：[Regulation (EU) 2023/1543（EUR-Lex）](https://eur-lex.europa.eu/eli/reg/2023/1543/oj)、[Directive (EU) 2023/1544（EUR-Lex）](https://eur-lex.europa.eu/eli/dir/2023/1544/oj)、[Bird & Bird：欧盟电子证据一揽子方案指南](https://www.twobirds.com/en/insights/2026/germany/e-evidence-richtlinie-umsetzungsfrist-abgelaufen--implementierungsstatus-und-handlungsbedarf)。
 
-### 5.2 EU Contract Withdrawal Button (Distance Marketing of Financial Services Directive (EU) 2023/2673) (HARD, NEW)
+### 5.2 欧盟合同撤回按钮（《金融服务远程营销指令》Directive (EU) 2023/2673）（硬性，新增）
 
-The Distance Marketing of Financial Services Directive introduces amendments to the Consumer Rights Directive (Directive 2011/83/EU), ensuring that consumers can easily exercise their statutory right of withdrawal from online contracts.
+《金融服务远程营销指令》（Distance Marketing of Financial Services Directive）对《消费者权利指令》（Directive 2011/83/EU）作出修订，确保消费者能够便捷地行使从在线合同撤回的法定权利。
 
-- **Scope:** Applies to all distance contracts concluded via an online user interface, including websites and mobile applications, that offer retail financial services or other consumer contracts and subscriptions.
-- **Key Obligations:**
-  - **Withdrawal Button/Function:** Service providers must ensure that where a contract is concluded online, consumers can withdraw from it via a prominent, dedicated, and easily accessible "withdrawal button" or "withdrawal function" on the online interface.
-  - **Frictionless Experience:** The cancellation/withdrawal path must be direct and cannot be buried behind multiple steps, contact forms, phone calls, or administrative obstacles. It must be at least as simple as the contract sign-up/subscription process.
-  - **Information Requirements:** The interface must clearly state the 14-day statutory withdrawal period and outline the consequences of withdrawal.
-- **Timelines:** Member States are expected to transpose and implement these requirements by **19 June 2026**.
-- **Sources:** [Directive (EU) 2023/2673 (EUR-Lex)](https://eur-lex.europa.eu/eli/dir/2023/2673/oj), [Reed Smith 2026 EU Regulations Overview](https://www.reedsmith.com/our-insights/blogs/viewpoints/102lyiv/2026-update-eu-regulations-for-tech-and-online-businesses/).
+- **适用范围**：适用于经由在线用户界面（包括网站与移动应用）订立的所有远程合同，覆盖零售金融服务及其他消费者合同与订阅。
+- **关键义务**：
+  - **撤回按钮/撤回功能**：服务提供者必须确保，凡在线订立的合同，消费者均可通过在线界面上醒目、专属且易于触达的"撤回按钮"（withdrawal button）或"撤回功能"（withdrawal function）撤回合同。
+  - **无摩擦体验**：取消/撤回路径必须直达，不得被埋在多个步骤、联系表单、电话或行政障碍之后；其简便程度至少须与合同注册/订阅流程相当。
+  - **信息要求**：界面必须清楚说明 14 天法定撤回期，并概述撤回的后果。
+- **时间线**：成员国预计在 **2026 年 6 月 19 日**前转化并实施这些要求。
+- **来源**：[Directive (EU) 2023/2673（EUR-Lex）](https://eur-lex.europa.eu/eli/dir/2023/2673/oj)、[Reed Smith：2026 年欧盟法规概览](https://www.reedsmith.com/our-insights/blogs/viewpoints/102lyiv/2026-update-eu-regulations-for-tech-and-online-businesses/)。
 
-Sources. [Morgan Lewis Data Act](https://www.morganlewis.com/blogs/sourcingatmorganlewis/2025/09/eu-data-act-begins-september-12-impacting-cloud-services-connected-products-and-other-data-industries), [Commission Cyber Resilience Act](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act), [Commission age verification](https://digital-strategy.ec.europa.eu/en/policies/eu-age-verification).
+来源：[Morgan Lewis《数据法案》解读](https://www.morganlewis.com/blogs/sourcingatmorganlewis/2025/09/eu-data-act-begins-september-12-impacting-cloud-services-connected-products-and-other-data-industries)、[欧盟委员会《网络弹性法案》](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act)、[欧盟委员会年龄验证](https://digital-strategy.ec.europa.eu/en/policies/eu-age-verification)。
 
-## 6. Apple platform changes 2025 and 2026 (beyond the base map)
+## 6. 2025 与 2026 年的 Apple 平台变化（基础地图之外）
 
-These are Apple App Review and App Store Connect changes, layered on top of the EU legal rules.
+这些是 Apple 应用审核与 App Store Connect 的变化，叠加在欧盟法律规则之上。
 
-- New age-rating system, HARD deadline 31 January 2026. Apple added 13 plus, 16 plus, and 18 plus tiers on top of 4 plus and 9 plus. Every app must answer the updated age-rating questionnaire by 31 January 2026 or be blocked from submitting updates. New questionnaire items cover user-generated content, messaging and chat, friend or follower systems, livestreaming, content-creation tools, and the presence of advertising, plus safeguards such as moderation, filtering, reporting, and parental controls. The declared capabilities must match real app behaviour. Sources. [Apple updated age ratings](https://developer.apple.com/news/?id=ks775ehf), [Apple upcoming requirement 07242025a](https://developer.apple.com/news/upcoming-requirements/?id=07242025a).
-- Declared Age Range API, new in iOS 26. a privacy-preserving age-band API returning bands (under 13, 13 to 15, 16 to 17, over 18), not a birthdate, plus whether parental controls are on. Rolled out globally in February 2026 to meet child-safety laws in regions including Brazil, Australia, Singapore, Utah, Louisiana, and Texas. Sources. [Apple Declared Age Range](https://developer.apple.com/documentation/declaredagerange/), [Apple age assurance](https://developer.apple.com/support/age-assurance/).
-- Guideline 5.1.2(i), third-party-AI data-sharing consent (13 November 2025). see section 1.7.
-- Guideline 1.2.1(a), creator apps. must let users flag content exceeding the app's age rating and use a verified or declared-age mechanism to limit underage access.
-- Guideline 4.7 and 4.7.2 and 4.7.4 and 4.7.5, HTML5 and JavaScript mini apps and mini games. now fully in scope. cannot expose native APIs without permission, must provide a verified or declared-age restriction, and must provide a full index of all mini apps with metadata.
-- Guideline 4.1(c), anti-clone. cannot use another developer's icon, brand, or product name in your icon or name without approval.
-- Guideline 5.1.1(ix), crypto exchanges added to highly regulated fields (need licensing and geo-restriction).
-- Guideline 5.1.1(v), account deletion. unchanged since 30 June 2022 but still a top rejection cause. genuine in-app deletion, not deactivation or a web form.
-- Xcode 26 and iOS 26 SDK, HARD deadline 28 April 2026. new uploads must be built with Xcode 26 and the iOS 26 (and matching platform 26) SDK.
-- App Tracking Transparency. the rule is unchanged, but France's competition authority fined Apple 150,000,000 euro in March 2025 over the ATT implementation, so the ATT prompt and the tracking-domain declaration remain a live audit item. Sources. [Apple updated App Review Guidelines 13 Nov 2025](https://developer.apple.com/news/?id=ey6d8onl), [Apple upcoming requirements](https://developer.apple.com/news/upcoming-requirements/).
+- 新年龄分级系统，硬性截止日期 2026 年 1 月 31 日。Apple 在 4+ 与 9+ 之上新增 13+、16+ 与 18+ 档位。每个应用必须在 2026 年 1 月 31 日前填写更新版年龄分级问卷，否则将被禁止提交更新。新问卷条目覆盖用户生成内容（UGC）、消息与聊天、好友或粉丝系统、直播、内容创作工具，以及是否存在广告，另含内容审核、过滤、举报与家长控制等保障措施。申报的能力必须与真实应用行为相符。来源：[Apple 更新年龄分级](https://developer.apple.com/news/?id=ks775ehf)、[Apple 即将到来的要求 07242025a](https://developer.apple.com/news/upcoming-requirements/?id=07242025a)。
+- Declared Age Range API，iOS 26 新增：一个隐私优先的年龄段 API，返回年龄段（13 岁以下、13 至 15、16 至 17、18 岁以上）而非出生日期，并附带家长控制是否开启。2026 年 2 月起全球推出，以满足巴西、澳大利亚、新加坡、犹他州、路易斯安那州与得克萨斯州等地区的儿童安全法律。来源：[Apple Declared Age Range](https://developer.apple.com/documentation/declaredagerange/)、[Apple 年龄核验](https://developer.apple.com/support/age-assurance/)。
+- 审核指南 5.1.2(i)，第三方 AI 数据共享同意（2025 年 11 月 13 日）。见第 1.7 节。
+- 审核指南 1.2.1(a)，创作者类应用。必须让用户举报超出应用年龄分级的内容，并使用经验证的或申报年龄的机制限制未成年人访问。
+- 审核指南 4.7、4.7.2、4.7.4 与 4.7.5，HTML5 与 JavaScript 小程序（mini apps）与小游戏。现已完全纳入范围：未经许可不得暴露原生 API，必须提供经验证的或申报年龄的限制，并必须提供带元数据的全部小程序完整索引。
+- 审核指南 4.1(c)，反克隆。未经批准，不得在图标或名称中使用其他开发者的图标、品牌或产品名。
+- 审核指南 5.1.1(ix)，加密货币交易所被列入高度监管领域（需要牌照与地区限制）。
+- 审核指南 5.1.1(v)，账号删除。自 2022 年 6 月 30 日以来未变，但仍是拒审的首要原因之一：必须是真正的应用内账号删除，不是停用或网页表单。
+- Xcode 26 与 iOS 26 SDK，硬性截止日期 2026 年 4 月 28 日。新上传的应用必须使用 Xcode 26 与 iOS 26（及对应平台 26）SDK 构建。
+- 应用跟踪透明度（ATT）。规则未变，但法国竞争管理机构于 2025 年 3 月因 ATT 的实现方式对 Apple 处以 150,000,000 欧元罚款，因此 ATT 弹窗与跟踪域名声明仍是活跃的审计条目。来源：[Apple 2025 年 11 月 13 日更新应用审核指南](https://developer.apple.com/news/?id=ey6d8onl)、[Apple 即将到来的要求](https://developer.apple.com/news/upcoming-requirements/)。
 
-## 7. Consolidated audit checklist (HARD gates for an EU app)
+## 7. 汇总审计清单（欧盟应用的硬性关卡）
 
-| Gate | Verify | Effective |
+| 关卡 | 核验内容 | 生效 |
 |---|---|---|
-| AI interaction disclosure | An in-app "you are talking to AI" notice at or before first interaction | 2 Aug 2026 |
-| AI content marking | Machine-readable plus visible label on generated media and text | 2 Aug 2026 |
-| AI literacy measures | Measures to support AI literacy. A written policy, induction, and log are evidence of those measures, and the Act does not require a specific literacy level | live since 2 Feb 2025, wording replaced 27 July 2026 |
-| No prohibited AI practice | No manipulation, no banned emotion inference, no biometric categorisation | live since 2 Feb 2025 |
-| Third-party-AI consent (Apple 5.1.2(i)) | A consent modal naming the AI provider and data types, shown before data leaves the device | live since 13 Nov 2025 |
-| DSA trader status | Trader or non-trader declared and verified before EU distribution | live since 17 Feb 2025 |
-| Google Play trader status | Every active account declares trader or non-trader. Existing accounts by 1 February 2027. New accounts on creation. A trader adds a terms link and, on a personal account, a phone number | 1 Feb 2027 |
-| Google Play marketplace display | EEA and UK marketplace model. Trader contact details, D-U-N-S, and terms shown to users everywhere. EEA and UK users also see the trader name in Offered by | 1 Mar 2027 |
-| Age-rating questionnaire | Answered for every app, capabilities match behaviour | deadline 31 Jan 2026 |
-| European Accessibility Act | EN 301 549 and WCAG 2.1 AA met, Annex V accessibility information published (Art. 13(2)) | live since 28 Jun 2025 |
-| DMA alternative payments | Entitlement declared, disclosure sheet wired, In-App Purchase at equal prominence when offered, minors behind parental gates, options kept 12 months, reporting wired | live, Attachment 14 terms from 1 Oct 2026 |
-| Notarization | Any non-App-Store build notarized | live |
-| Xcode 26 SDK | Build with Xcode 26 and the iOS 26 SDK | deadline 28 Apr 2026 |
-| EU e-Evidence Package | Legal representative designated and 8-hour emergency response protocol established | 18 Aug 2026 |
-| EU Contract Withdrawal | Prominent, Frictionless contract withdrawal button on user interface | 19 Jun 2026 |
+| AI 交互披露 | 应用内"你在与 AI 交谈"提示，在首次交互时或之前出现 | 2026 年 8 月 2 日 |
+| AI 内容标记 | 生成的媒体与文本上，既有机器可读标记，也有可见标签 | 2026 年 8 月 2 日 |
+| AI 素养措施 | 支持 AI 素养的各项措施。书面政策、入职培训与记录是这些措施的证据，法案不要求特定素养水平 | 自 2025 年 2 月 2 日起生效，条文已于 2026 年 7 月 27 日替换 |
+| 无禁止的 AI 行为 | 无操纵，无被禁止的情绪推断，无生物识别归类 | 自 2025 年 2 月 2 日起生效 |
+| 第三方 AI 同意（Apple 5.1.2(i)） | 同意弹窗写明 AI 提供方与数据类型，在数据离开设备之前展示 | 自 2025 年 11 月 13 日起生效 |
+| DSA 商家身份 | 欧盟分发前，商家或非商家身份已申报并通过核验 | 自 2025 年 2 月 17 日起生效 |
+| Google Play 商家身份 | 每个有效账号均申报商家或非商家。现有账号须在 2027 年 2 月 1 日前，新账号在创建时。商家添加条款链接，个人账号另加电话号码 | 2027 年 2 月 1 日 |
+| Google Play 第三方商店展示 | EEA 与英国第三方商店模式。商家联系详情、D-U-N-S 与条款向全球用户展示。EEA 与英国用户还会在 Offered by 中看到商家名称 | 2027 年 3 月 1 日 |
+| 年龄分级问卷 | 每个应用均已填写，申报能力与行为相符 | 截止日期 2026 年 1 月 31 日 |
+| 《欧洲无障碍法案》 | 满足 EN 301 549 与 WCAG 2.1 AA，附件 V 无障碍信息已发布（Art. 13(2)） | 自 2025 年 6 月 28 日起生效 |
+| DMA 替代支付 | entitlement 已声明，披露表单已接入，提供应用内购买时醒目程度相当，未成年人置于家长门槛之后，选项保持 12 个月，报告已接入 | 现已生效，Attachment 14 条款自 2026 年 10 月 1 日起 |
+| 公证 | 任何非 App Store 构建均已公证 | 现已生效 |
+| Xcode 26 SDK | 使用 Xcode 26 与 iOS 26 SDK 构建 | 截止日期 2026 年 4 月 28 日 |
+| 欧盟电子证据一揽子方案 | 已委任法定代表，并建立 8 小时应急响应流程 | 2026 年 8 月 18 日 |
+| 欧盟合同撤回 | 用户界面上的醒目、无摩擦合同撤回按钮 | 2026 年 6 月 19 日 |
 
-## 8. Sources
+## 8. 来源
 
-The inline links above are the primary and secondary sources. The authoritative pages to re-check for currency are the Apple developer support pages (DMA, external offers, Core Technology Fee, DSA trader, age ratings, upcoming requirements), the Play Console trader status page, the EU Commission digital-strategy pages, EUR-Lex for the regulation texts, and artificialintelligenceact.eu for the AI Act article texts.
+上文的内联链接即一手与二手来源。需要复查时效性的权威页面包括：Apple 开发者支持页面（DMA、外购优惠（external offers）、Core Technology Fee、DSA 商家、年龄分级、即将到来的要求）、Play Console 商家身份页面、欧盟委员会 digital-strategy 页面、用于条例文本的 EUR-Lex，以及用于 AI 法案条文的 artificialintelligenceact.eu。
 
-### Source Trust Hierarchy
+### 来源可信度层级
 
-All sources used for establishing regulatory requirements must adhere to the following priority guidelines:
+用于确立监管要求的全部来源，必须遵循以下优先级指南：
 
-- Priority 1 (Primary Official): European Commission, EUR-Lex, Official Journal of the European Union, ENISA, EDPB, FTC, NIST, CISA, ICO, and official government publications.
-- Priority 2 (Highly Reputable News): Reuters, AP (Associated Press), Bloomberg.
-- Priority 3 (Academic): Academic papers and peer-reviewed journals.
-- Priority 4 (Industry): Industry blogs and vendor publications.
-- Priority 5 (Social & Unverified): LinkedIn, Reddit, Twitter, and AI generated summaries.
+- 优先级 1（一手官方来源）：欧盟委员会、EUR-Lex、《欧盟官方公报》、ENISA、EDPB、FTC、NIST、CISA、ICO 及官方政府出版物。
+- 优先级 2（高可信新闻）：Reuters、AP（美联社）、Bloomberg。
+- 优先级 3（学术）：学术论文与同行评审期刊。
+- 优先级 4（行业）：行业博客与厂商出版物。
+- 优先级 5（社交媒体与未经验证）：LinkedIn、Reddit、Twitter 及 AI 生成的摘要。
 
-### Compliance Pull Request Rules
+### 合规 Pull Request 规则
 
-- Never trust secondary sources before official sources.
-- Never create compliance pull requests using Priority 4 or Priority 5 sources unless verified by a Priority 1 source. Any citation or claim sourced from Priority 4 or 5 must be traceably corroborated by an official publication from Priority 1.
+- 在官方来源之前，绝不轻信二手来源。
+- 绝不使用优先级 4 或优先级 5 来源创建合规 pull request，除非已由优先级 1 来源核验。任何出自优先级 4 或 5 的引用或论断，都必须能以优先级 1 的官方出版物可追溯地佐证。
 
-## 9. Verification and honesty note
+## 9. 核验与诚信说明
 
-Confidence is high on the core dates and the sourced facts. Confirmed against primary or law-firm sources. the AI Act timeline and Article 50 and Article 99 figures, the DMA 500,000,000 euro fine dated 23 April 2025, Apple's DSA trader fields and the 17 February 2025 removal, Google Play's trader declaration deadline of 1 February 2027 and the 1 March 2027 EEA and UK marketplace display (Play Console Help, read 19 November 2026), the EAA date of 28 June 2025 and EN 301 549 and WCAG 2.1 AA, and the Apple 2025-2026 guideline and deadline dates.
+对核心日期与有来源的事实，可信度高。已对照一手或律所来源确认的内容：AI 法案时间线及 Article 50、Article 99 的数字；2025 年 4 月 23 日的 DMA 500,000,000 欧元罚款；Apple 的 DSA 商家字段与 2025 年 2 月 17 日的下架；Google Play 商家申报截止日期 2027 年 2 月 1 日，以及 2027 年 3 月 1 日的 EEA 与英国第三方商店展示（Play Console 帮助，阅读于 2026 年 11 月 19 日）；EAA 的 2025 年 6 月 28 日以及 EN 301 549 与 WCAG 2.1 AA；以及 Apple 2025 至 2026 年的审核指南与截止日期。
 
-Marked unverified, confirm before quoting externally. the per-Member-State EAA penalty figures for France, Ireland, and Sweden (vendor-blog summaries, not national statutes). the exact post-January-2026 Apple EU fee percentages (the single-business-model unification announced for 1 January 2026 was not implemented as of mid-2026, so all fee numbers here are the June 2025 model and are advisory). the reported 60-day compliance window on the 500,000,000 euro ruling. and the reported 22 July 2026 signatory deadline for the AI-generated-content Code of Practice (conflicting sources). C2PA is an implementation convention for Article 50 marking, not a legal mandate.
+标注为未经验证、对外引用前请先确认的内容：法国、爱尔兰与瑞典的各成员国 EAA 处罚数字（厂商博客摘要，非国家成文法）；2026 年 1 月之后 Apple 欧盟费用的确切百分比（原定 2026 年 1 月 1 日的单一商业模式统一，截至 2026 年年中并未实施，因此此处全部费用数字仍是 2025 年 6 月模式，仅供参考）；500,000,000 欧元裁决所报道的 60 天合规窗口；以及所报道的 AI 生成内容行为准则（Code of Practice）签署截止日期 2026 年 7 月 22 日（来源相互冲突）。C2PA 是 Article 50 标记的一种实现约定，并非法律强制要求。
 
-Because these dates and figures move, an audit tool should treat this document as advisory on numbers and HARD on the existence and direction of each obligation, and re-verify any figure against the cited primary source before quoting it externally.
+由于这些日期与数字会变动，审计工具应把本文档在数字上视为参考性（advisory）、在每项义务的存在与方向上视为硬性（HARD），并在对外引用任何数字之前，对照所引一手来源重新核验。

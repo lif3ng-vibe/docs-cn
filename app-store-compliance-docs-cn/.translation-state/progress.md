@@ -19,7 +19,7 @@
 - [x] 5 处 `](../…)` 仓库根死链 → 改指 GitHub blob URL（上游线上站本就 404）：
   - templates/app-review-readiness.json、templates/REVIEW-NOTES-TEMPLATE.md、data/regulatory-deadlines.json、
     agent-os/hooks/app-store-compliance-guard.sh、.github/SECURITY.md
-- [ ] llms.txt：正文译、URL 一律不动（红线）
+- [x] llms.txt：正文译、URL 一律不动（红线）——批次 1 已完成
 
 ## 锚点预算（全站仅 1 个跨文件锚点，0 个同页锚点）
 
@@ -35,13 +35,13 @@
 | 2 | GOOGLE-PLAY + BY-APP-TYPE + MISTAKE-PATTERNS（含锚点回修） | 6,030 | ✅ 已提交（3 篇全译 + 锚点回修；build 绿 / dist CLEAN / residue CLEAN） |
 | 3 | MOBILE-PRIVACY-MONITOR + MOBILE-SECURITY + CROSS-PLATFORM-FRAMEWORKS + WHAT-THE-SCAN-PROVES + ACCESSIBILITY | 13,286 | ✅ 已提交（5 篇全译；build 绿 / dist CLEAN / residue CLEAN / tables 分诊 0 真残留） |
 | 4 | PRIVACY-POLICY-MIGRATION + SECURITY-POLICY-MIGRATION + ANDROID-POLICY-MIGRATION + AI-POLICY-MIGRATION | 6,966 | ✅ 已提交（4 篇全译；build 绿 / dist CLEAN / residue CLEAN / tables CLEAN） |
-| 5 | EU-REGULATORY-2026 + GLOBAL-REGULATORY-2026 | 14,861 | 🔄 两篇大文件并行翻译中 |
+| 5 | EU-REGULATORY-2026 + GLOBAL-REGULATORY-2026 | 14,861 | ✅ 已提交（2 篇全译；build 绿 / dist CLEAN / tables CLEAN / residue 分诊 0 真残留——命中均为 URL slug 误报） |
 | 6 | PLATFORM-MECHANICS-2026 + ADVANCED-2026 + OPEN-SOURCE-PATTERNS | 9,389 | ⬜ |
 | 7 | GAP-ANALYSIS-2026-09 + GAP-ANALYSIS-2026-11 + REGULATORY-GAP-REPORT-2026 + COMPETITIVE-GAP-ANALYSIS | 9,443 | ⬜ |
-| 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS | 3,789 | ⬜ |
-| 9 | questions.md（21k 词，单文件分多回复译） | 21,041 | ⬜ |
-| 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分多回复译） | 27,855 | ⬜ |
-| 11 | llms.txt + 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜ |
+| 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS + FAQ.md | 6,893 | ⬜（FAQ.md 3,104 词此前漏排批次，已并入本批） |
+| 9 | questions.md（21k 词，分 4 段并行译：1-400 / 401-724 / 725-930 / 931-1325 行，各段写 part 文件后拼接） | 21,041 | ⬜ |
+| 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分 4 段并行译：1-105 / 106-223 / 224-900 / 898-1580 行，各段写 part 文件后拼接） | 27,855 | ⬜ |
+| 11 | 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜（llms.txt 已于批次 1 完成） |
 
 ## 阶段
 
@@ -58,4 +58,11 @@
 
 ## 下一步
 
-批次 5 收尾 → 批次 6（PLATFORM-MECHANICS、ADVANCED、OPEN-SOURCE-PATTERNS）
+批次 6（PLATFORM-MECHANICS、ADVANCED、OPEN-SOURCE-PATTERNS）→ 7 → 8 → 9 → 10 → 11 → 阶段 C
+
+## 环境备忘（CI 续跑用）
+
+- jekyll 装在用户目录：`export PATH="/home/runner/.local/share/gem/ruby/3.3.0/bin:$PATH"` 后跑 `tools/build.sh`
+- site/ 是**入库产物**（每批连 md 一起提交构建后的 html/md 镜像），非 gitignore
+- 残留检查命令：`node /home/runner/work/docs-cn/docs-cn/.claude/skills/translate-docs-site/residue-check.cjs docs/<files>`
+  （命中先分诊：sed 剥链接与 URL 后重扫，0 真残留即过）
