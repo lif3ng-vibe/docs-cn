@@ -1,97 +1,97 @@
-# Rejection Map by App Type
+# 按应用类型的拒审地图
 
-A games app and a finance app fail review for very different reasons. This doc routes each app type to the guidelines that actually hit it, so you check the right things instead of all things. Adopted from the structure of the most popular open source preflight skill. Run the universal set for every app, then the set that matches your app type.
+游戏应用和金融应用被拒审的原因截然不同。本文档把每类应用路由到真正会命中它的审核指南，让你检查该检查的项，而不是检查所有项。文档结构借鉴自最受欢迎的开源提交前检查（preflight）skill。先对所有应用运行通用清单，再运行与你应用类型匹配的那一份。
 
-## Universal. Every app
+## 通用项：每个应用
 
-- Stability. No crashes, broken links, or placeholder content. Apple 2.1, Google spam and minimum functionality.
-- Demo account and live backend. A working demo account, no 2FA the reviewer cannot pass, a backend that stays up. Apple 2.1.
-- Review notes. A screen recording or path for every non obvious feature, the app purpose, test credentials, external services, regional notes, and any regulatory document. Apple 2.1.
-- Privacy policy. Published, reachable in the app, accurate. Apple 5.1.1, Google User Data.
-- Permissions. Each sensitive permission traces to a visible core feature with a specific reason string. Apple 5.1.1, Google permissions policy.
-- Privacy manifest. iOS PrivacyInfo.xcprivacy with approved reason codes, and every SDK ships its signed manifest. Apple upload enforcement.
-- Data declaration. Apple privacy labels and Google Data Safety match real runtime behavior including SDKs.
-- Metadata. Accurate name, screenshots of the app in use, no other platform mentions, no Apple device images in the icon, no device frames in the preview video. Apple 2.3, 5.2.5.
-- Account deletion. Genuine in app deletion for any account creating app, not a deactivate or a web form. Apple 5.1.1(v), Google account deletion.
-- Export compliance. ITSAppUsesNonExemptEncryption set so the build does not stall.
+- 稳定性。无崩溃、无失效链接、无占位内容。Apple 2.1，Google 垃圾应用与最低功能政策。
+- 演示账号与在线后端。提供一个可用的演示账号，不设置审核员无法通过的 2FA，后端保持可用。Apple 2.1。
+- 审核备注。为每个不明显功能提供屏幕录制或操作路径，说明应用用途、测试凭据、外部服务、地区性说明，以及任何监管文件。Apple 2.1。
+- 隐私政策。已发布、可在应用内访问、内容准确。Apple 5.1.1，Google User Data。
+- 权限。每项敏感权限都要能对应到一个可见的核心功能，并附上具体的用途说明字符串。Apple 5.1.1，Google 权限政策。
+- 隐私清单。iOS 的 PrivacyInfo.xcprivacy 使用经批准的原因代码（reason code），且每个 SDK 都随附其签名清单。Apple 在上传环节强制校验。
+- 数据声明。Apple 隐私营养标签与 Google 数据安全（Data safety）表单须与包含 SDK 在内的真实运行时行为一致。
+- 元数据。名称准确，截图展示应用实际使用场景，不提及其他平台，图标中不含 Apple 设备图像，预览视频中不带设备边框。Apple 2.3、5.2.5。
+- 账号删除。凡允许创建账号的应用都必须提供真正的应用内账号删除功能，而不是账号停用或一个网页表单。Apple 5.1.1(v)，Google 账号删除要求。
+- 出口合规。正确设置 ITSAppUsesNonExemptEncryption，避免构建流程被卡住。
 
-## Subscriptions and in app purchase
+## 订阅与应用内购买
 
-- All digital goods through Apple in app purchase and Google Play Billing. Apple 3.1.1.
-- Subscriptions show real ongoing value, clear terms, and the actual billed amount at least as prominent as the per month figure. Apple 3.1.2.
-- Terms of Use or EULA and Privacy Policy links present in the app and the metadata. Apple 3.1.2.
-- Restore Purchases control for non consumables. Apple 3.1.1.
-- Loot boxes and random rewards disclose odds before purchase. Apple 3.1.1, Google random items disclosure.
-- Physical goods use external payment, not in app purchase. Apple 3.1.5(a).
+- 所有数字商品都必须通过 Apple 应用内购买与 Google Play Billing 提供。Apple 3.1.1。
+- 订阅须展示真实的持续价值、清晰的条款，且实际扣费金额至少要与每月价格同样醒目。Apple 3.1.2。
+- 应用内和元数据中都须包含使用条款（Terms of Use）或 EULA 以及隐私政策的链接。Apple 3.1.2。
+- 为非消耗型项目提供"恢复购买"入口。Apple 3.1.1。
+- 开箱（loot box）与随机奖励须在购买前公示概率。Apple 3.1.1，Google 随机物品披露要求。
+- 实物商品使用应用外支付，而非应用内购买。Apple 3.1.5(a)。
 
-## Social and user generated content
+## 社交与用户生成内容
 
-- A EULA with zero tolerance for objectionable content, that users must agree to.
-- Content filtering, a report mechanism, and the ability to block abusive users.
-- The developer acts on an objectionable content report within 24 hours by removing the content and ejecting the user. Apple 1.2.
-- Published contact information.
-- For AI generated output, the same moderation applies. The model is a content source. Apple 1.2 and Google AI Generated Content.
-- China mainland App Store. An app that enables end-to-end encrypted instant messaging there answers the Security Assessment declaration on App Compliance, including No when that feature is absent, disabled, or geoblocked. The evidence, the failure mode, and the 31 January 2027 date for existing apps are in the AI and generative apps section and in docs/GLOBAL-REGULATORY-2026.md section 3.9.
+- 一份对令人反感内容零容忍的 EULA，且用户必须同意。
+- 内容过滤、举报机制，以及拉黑滥用用户的能力。
+- 开发者须在 24 小时内处理令人反感内容的举报，移除内容并将该用户逐出。Apple 1.2。
+- 公布联系信息。
+- 对 AI 生成内容适用同样的审核要求。模型本身就是一种内容来源。Apple 1.2 与 Google AI Generated Content 政策。
+- 中国大陆 App Store。在中国大陆提供端到端加密即时通信功能的应用，须填写 App Compliance 中的 Security Assessment 声明，即使该功能缺失、被禁用或受地区限制而回答 No 时也不例外。证据材料、失败模式，以及存量应用的 2027 年 1 月 31 日截止日期，见"AI 与生成式应用"一节以及 docs/GLOBAL-REGULATORY-2026.md 第 3.9 节。
 
-## Kids category and families
+## 儿童类别与家庭应用
 
-- COPPA, GDPR, and local child law. Under 13 is the COPPA threshold. Persistent identifiers are personal information for a child.
-- No third party analytics or behavioral ads. Use only a self certified ads SDK in the families program.
-- A valid parental gate for links and purchases, and a neutral age screen for a mixed audience.
-- Verifiable Parental Consent where data is collected, which is more than a parental gate. Apple 5.1.4, Google Families.
+- COPPA、GDPR 以及当地儿童法律。13 岁以下是 COPPA 的门槛；持久标识符对儿童而言属于个人信息。
+- 不接入第三方分析或行为广告。在家庭（families）计划中，只使用经自我认证的广告 SDK。
+- 链接和购买须有有效的家长闸门（parental gate），混合受众须有中立的年龄询问页（neutral age screen）。
+- 凡收集数据之处须取得可验证的家长同意（Verifiable Parental Consent），其要求高于家长闸门。Apple 5.1.4，Google Families。
 
-## Health, fitness, and medical
+## 健康、健身与医疗
 
-- Validated health claims only. No unproven measurement from device sensors. Apple 1.4.1.
-- Health data never used for advertising, marketing, or data mining. Apple 5.1.2(vi), 5.1.3.
-- Informed consent and an ethics review for research apps.
-- Special category data under GDPR Article 9 needs explicit consent.
-- A medical or regulated entity submits, not an individual. Apple 5.1.1(ix).
+- 只允许经过验证的健康声明。不得用设备传感器做未经证实的测量。Apple 1.4.1。
+- 健康数据绝不可用于广告、营销或数据挖掘。Apple 5.1.2(vi)、5.1.3。
+- 研究类应用须取得知情同意并通过伦理审查。
+- 属于 GDPR Article 9 特殊类别数据的信息需要取得明确同意。
+- 由医疗或受监管实体提交，而非个人。Apple 5.1.1(ix)。
 
-## Games
+## 游戏
 
-- In app purchase for all digital goods and currency. No external funding of real money play. Apple 3.1.
-- Loot boxes and gacha disclose odds before purchase. Google requires a random items disclosure.
-- Real money gaming is licensed, geo restricted, free to download, with official rules. Apple 5.3.
-- Simulated gambling and social casino is a separate category with its own rating.
-- Accurate age rating for the content and any chance mechanics.
-- For the per country loot box and gambling rules, see docs/GAMBLING-MATRIX.md.
+- 所有数字商品与虚拟货币都走应用内购买。不得通过应用外途径为真钱对局充值。Apple 3.1。
+- 开箱（loot box）与扭蛋（gacha）须在购买前公示概率。Google 要求提供随机物品披露。
+- 真钱游戏须持有牌照、限制地区、免费下载，并附官方规则。Apple 5.3。
+- 模拟博彩与社交赌场属于单独类别，有各自的年龄分级。
+- 年龄分级须准确反映内容以及任何概率机制。
+- 各国开箱与博彩规则见 docs/GAMBLING-MATRIX.md。
 
-## macOS and the Mac App Store
+## macOS 与 Mac App Store
 
-- Proper sandboxing and the macOS file system rules. Apple 2.4.5(i).
-- Packaged with Xcode, self contained, no third party installer. Apple 2.4.5(ii).
-- No auto launch, no Dock icon added without consent, no desktop shortcut left behind. Apple 2.4.5(iii).
-- No downloading standalone apps, kexts, or code that adds features. Apple 2.4.5(iv).
-- No root escalation or setuid. No custom license key or copy protection screen. No non App Store update mechanism. Apple 2.4.5(v) through (vii).
-- Runs on the current shipping OS. Apple 2.4.5(viii).
+- 正确启用沙盒并遵守 macOS 文件系统规则。Apple 2.4.5(i)。
+- 使用 Xcode 打包、自包含，不附带第三方安装器。Apple 2.4.5(ii)。
+- 不自启动，未经同意不添加 Dock 图标，不在桌面上遗留快捷方式。Apple 2.4.5(iii)。
+- 不下载独立应用、kext 或会添加功能的代码。Apple 2.4.5(iv)。
+- 不提权到 root、不使用 setuid。不设自定义许可证密钥或拷贝保护界面。不内置非 App Store 更新机制。Apple 2.4.5(v) 至 (vii)。
+- 可在当前正式发行的 OS 上运行。Apple 2.4.5(viii)。
 
-## AI and generative apps
+## AI 与生成式应用
 
-- AI generated content counts toward the age rating, and a model that can produce sensitive content needs an age restriction. Apple 2026 rules.
-- EU AI Act Article 111(4). A system that generates synthetic audio, image, video or text and was placed on the market before 2 August 2026 complies with Article 50(2) machine-readable marking by 2 December 2026.
-- EU AI Act Article 5(1)(ba), (bb), (1a) and (1b), from 2 December 2026. Placing on the market or putting into service is prohibited only where generation or manipulation of non-consensual intimate material, or of child sexual abuse material or performance within Directive 2011/93/EU Article 2(c) and (e), is the intended purpose, or is a reasonably foreseeable and reproducible outcome and the system lacks reasonable and adequate safeguards to reliably prevent it and to correct observed or reported misuse. Use is prohibited only where the deployer uses the system for that purpose. A change that does not increase the exposure of depicted intimate parts or alter the nature of depicted sexually explicit activities is not manipulation under point (ba).
-- EU AI Act Article 4, replaced 27 July 2026. Providers and deployers take measures to support the development of AI literacy of the people who operate or use the system on their behalf. The duty does not require guaranteeing any specific level of AI literacy of any individual.
-- A consent modal naming the AI provider and the data types before any personal data is sent to a third party AI. Apple 5.1.2, enforced since late 2025.
-- Moderation, reporting, and blocking on AI output, the same as user content. No NSFW, deepfake, face swap, or undress generation.
-- Self harm and crisis safeguards for a companion or character AI.
-- Not a thin wrapper over a third party model with no added value. Apple 4.2 and 4.3.
-- In a China storefront, references to external AI services such as ChatGPT or Gemini can trigger a regional rejection.
-- China mainland App Store. Every app on that storefront answers both App Compliance declarations, including an app that selects No because the feature is absent, disabled, or geoblocked there. The role is Account Holder or Admin, under General. AI-Generated or Synthetic Content covers services such as AI chatbots, image or video generation, and voice and face alteration. A Yes answer needs the approved filing number and registered filing name. If someone else's technology powers the feature, the authorization or usage agreement names the registered foundation model or algorithm and its filing number, names you or your organization as the authorized party, and names an authorizing entity that matches the Cyberspace Administration of China approval registry. Security Assessment covers features such as distributing that content or end-to-end encrypted instant messaging. A Yes answer needs a National Internet Security Management Service Platform screenshot showing the app name, the provider name, and pass or passed review, plus the report with the app name, the provider name, and the company seal or chop. Statuses are Missing Info, Pending Verification, Verification Failed, and Active. If verification fails, the app ships in other selected regions and stays off the China mainland store until a corrected declaration is reviewed with the next version and accepted. Existing apps must be completed and verified by 31 January 2027 to stay available. Source. [Apple, China mainland compliance](https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/).
-- A reviewer demo account needs a high or unlimited quota so the feature can be exercised.
+- AI 生成内容计入年龄分级，能产出敏感内容的模型需要年龄限制。Apple 2026 规则。
+- EU AI Act Article 111(4)：在 2026 年 8 月 2 日之前投放市场的合成音频、图像、视频或文本生成系统，须在 2026 年 12 月 2 日之前符合 Article 50(2) 的机器可读标记要求。
+- EU AI Act Article 5(1)(ba)、(bb)、(1a) 与 (1b)，自 2026 年 12 月 2 日起适用。只有在以下情形才禁止投放市场或投入服务：生成或操纵未经同意的亲密材料，或生成或操纵 Directive 2011/93/EU Article 2(c) 和 (e) 所指的儿童性虐待材料或其表现，属于系统的预期目的；或属于可合理预见且可复现的结果，而系统缺乏合理且充分的保障措施来可靠地阻止该结果并纠正已发现或被举报的滥用。只有在部署者将该系统用于上述目的时，才禁止其使用。不增加所描绘亲密部位暴露程度、也不改变所描绘露骨性活动性质的改动，不属于 (ba) 点所述的"操纵"。
+- EU AI Act Article 4，于 2026 年 7 月 27 日被替换。提供商与部署者须采取措施，支持代其运营或使用系统的人员发展 AI 素养。该义务不要求保证任何个人达到特定的 AI 素养水平。
+- 在向第三方 AI 发送任何个人数据之前，须弹出同意弹窗，写明 AI 提供商与相关数据类型。Apple 5.1.2，自 2025 年底起强制执行。
+- 对 AI 输出内容实施与用户内容相同的审核、举报与拉黑机制。不做 NSFW、深度伪造（deepfake）、换脸或"脱衣"生成。
+- 陪伴型或角色型 AI 须设置自残与危机干预防护。
+- 不能只是对第三方模型做无附加价值的薄封装。Apple 4.2 与 4.3。
+- 在中国店面中，提及 ChatGPT 或 Gemini 等外部 AI 服务可能触发地区性拒审。
+- 中国大陆 App Store。该店面上的每个应用都要回答 App Compliance 中的两项声明，包括因功能在当地缺失、被禁用或受地区限制而选择 No 的应用。操作角色为 Account Holder 或 Admin，位置在 General 下。AI-Generated or Synthetic Content（AI 生成或合成内容）涵盖 AI 聊天机器人、图像或视频生成、变声与换脸等服务。回答 Yes 需提供获批的备案编号与登记备案名称。如果该功能由他人的技术驱动，授权或使用协议须写明已登记的基础模型或算法及其备案编号，写明你或你的组织为被授权方，并写明与国家互联网信息办公室（Cyberspace Administration of China）批准名录相符的授权实体。Security Assessment 涵盖分发此类内容或端到端加密即时通信等功能。回答 Yes 需提供全国互联网安全管理服务平台（National Internet Security Management Service Platform）的截图，图中显示应用名称、提供商名称以及 pass 或 passed review 字样，并附载有应用名称、提供商名称和公司公章的报告。状态包括 Missing Info、Pending Verification、Verification Failed 和 Active。若核验失败，应用可在其他选定地区上架，但会从中国大陆商店下架，直到更正后的声明随下一个版本接受审核并通过。存量应用必须在 2027 年 1 月 31 日前完成填报并通过核验，才能继续可用。来源：[Apple，中国大陆合规信息](https://developer.apple.com/help/app-store-connect/manage-compliance-information/view-china-mainland-compliance-information/)。
+- 审核员演示账号需要有较高或不设上限的配额，以便审核员实际使用该功能。
 
-## Crypto, finance, and trading
+## 加密货币、金融与交易
 
-- A finance app is submitted by the company legal entity, not an individual account. Apple 5.1.1(ix) and PLA 1.2.
-- Licensing where required, and geo restriction to licensed regions.
-- No personal loans over 36 percent APR or under 60 day terms. Apple 3.2.2(ix).
-- No binary options, and CFD or FOREX needs proper licensing. Apple 3.2.2(viii).
-- NFT purchases through in app purchase, no external buttons or links to buy NFTs.
-- Crypto exchange apps come from a licensed exchange in the regions offered.
+- 金融应用由公司法人实体提交，而非个人账号。Apple 5.1.1(ix) 与 PLA 1.2。
+- 在有牌照要求的地区持牌运营，并将服务范围限制在有牌照的地区。
+- 不提供 APR 超过 36% 或期限短于 60 天的个人贷款。Apple 3.2.2(ix)。
+- 不提供二元期权；CFD 或 FOREX 须具备相应牌照。Apple 3.2.2(viii)。
+- NFT 购买走应用内购买，不提供指向外部购买 NFT 的按钮或链接。
+- 加密货币交易应用须来自其所服务地区内持有牌照的交易所。
 
-## VPN and networking
+## VPN 与网络工具
 
-- The NEVPNManager API, and the developer enrolled as an organization. Apple 5.4.
-- Declared data use, and no selling or sharing of any data.
-- License information in the review notes where a territory requires it.
-- Android, no misuse of the VPN service for tracking or ad injection.
+- 使用 NEVPNManager API，且开发者以组织身份注册。Apple 5.4。
+- 申报数据用途，且不出售、不共享任何数据。
+- 在有牌照要求的地区，审核备注中附上牌照信息。
+- Android 平台不得滥用 VPN 服务进行跟踪或注入广告。

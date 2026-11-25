@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Begin Jekyll SEO tag v2.9.1 -->
-<title>Google Play Developer Program Policies. Rejection Map | App Store Compliance Playbook</title>
+<title>Google Play 开发者计划政策。拒审地图 | App Store Compliance Playbook</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Google Play Developer Program Policies. Rejection Map" />
+<meta property="og:title" content="Google Play 开发者计划政策。拒审地图" />
 <meta name="author" content="Mirza Iqbal" />
 <meta property="og:locale" content="zh_CN" />
 <meta name="description" content="避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。" />
@@ -18,14 +18,14 @@
 <meta property="og:site_name" content="App Store Compliance Playbook" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Google Play Developer Program Policies. Rejection Map" />
+<meta name="twitter:title" content="Google Play 开发者计划政策。拒审地图" />
 <meta name="twitter:site" content="@MirzaJhanzaib" />
 <meta name="twitter:creator" content="@Mirza Iqbal" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Google Play Developer Program Policies. Rejection Map","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GOOGLE-PLAY.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","author":{"@type":"Person","name":"Mirza Iqbal"},"description":"避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、 隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。","headline":"Google Play 开发者计划政策。拒审地图","url":"https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/GOOGLE-PLAY.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=c66fbe73ada76af9efec9e1cd179c020404fa047">
+    <link rel="stylesheet" href="/docs-cn/app-store-compliance/assets/css/style.css?v=cd21097d316b82ae1559eb00755aeff44e533733">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -44,537 +44,537 @@
       <h1><a href="https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/">App Store Compliance Playbook</a></h1>
       
 
-      <p>Source. Google Play Developer Program Policy (play.google/developer-content-policy) and Play Console enforcement documentation (support.google.com/googleplay/android-developer). Empirical figures from Google’s 2025 platform safety reporting.</p>
+      <p>来源：Google Play 开发者计划政策（Developer Program Policy，play.google/developer-content-policy）与 Play Console 执法文档（support.google.com/googleplay/android-developer）。实证数据来自 Google 2025 年的平台安全报告。</p>
 
-<p>Google blocked more than 1.75 million Play submissions in 2025 for policy violations and stopped over 255,000 apps from gaining excessive access to sensitive user data. The single most common rejection cause is a Data Safety declaration that does not match the app’s real runtime behavior.</p>
+<p>2025 年，Google 以政策违规为由拦截了超过 175 万份 Play 提交，并阻止了超过 25.5 万个应用过度获取敏感用户数据。最常见的单一拒审原因，是数据安全（Data safety）声明与应用真实运行时行为不符。</p>
 
-<p>A critical difference from Apple. Google enforcement escalates against the developer account, not only the app. A rejection is mild, but repeated rejections, removals, or one egregious violation can suspend the account and then terminate it. After termination, registering a new account triggers immediate re termination.</p>
+<p>与 Apple 的关键差异：Google 的执法会升级到开发者账号层面，而不只针对应用本身。单次拒审后果尚轻，但反复拒审、反复下架，或一次严重违规，都可能先暂停账号、再终止账号。账号一旦终止，注册新账号会立即再次触发终止。</p>
 
-<h2 id="the-four-level-enforcement-ladder">The four level enforcement ladder</h2>
+<h2 id="四级执法阶梯">四级执法阶梯</h2>
 
 <table>
   <thead>
     <tr>
-      <th>Level</th>
-      <th>What happens</th>
-      <th>Account impact</th>
-      <th>Common cause</th>
+      <th>级别</th>
+      <th>发生什么</th>
+      <th>对账号的影响</th>
+      <th>常见原因</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Rejection</td>
-      <td>A new app or update is not published</td>
-      <td>None on account standing</td>
-      <td>Data Safety mismatch, crashes, broken privacy link, missing permission justification</td>
+      <td>拒审</td>
+      <td>新应用或更新不予发布</td>
+      <td>不影响账号状态</td>
+      <td>数据安全声明不符、崩溃、隐私链接失效、缺少权限使用理由</td>
     </tr>
     <tr>
-      <td>Removal</td>
-      <td>The app and prior versions are taken offline</td>
-      <td>None immediately, but multiple removals lead to suspension</td>
-      <td>Repeat policy violation, false advertising in the listing</td>
+      <td>下架</td>
+      <td>应用及其历史版本一并下线</td>
+      <td>短期内无影响，但多次下架会导致账号暂停</td>
+      <td>重复政策违规，商店详情页中存在虚假宣传</td>
     </tr>
     <tr>
-      <td>Suspension</td>
-      <td>The app is pulled, purchases stop, the code can no longer be used</td>
-      <td>Counts as a strike against the account</td>
-      <td>Egregious or multiple violations, repeated rejections or removals</td>
+      <td>暂停</td>
+      <td>应用被移除，购买停止，代码无法继续使用</td>
+      <td>计为账号的一次违规记分（strike）</td>
+      <td>严重违规或多次违规，反复拒审或下架</td>
     </tr>
     <tr>
-      <td>Account termination</td>
-      <td>Every app removed, no new publishing, new accounts re terminated</td>
-      <td>Permanent</td>
-      <td>Malware, fraud, harm to users or devices, severe repeat violations</td>
+      <td>账号终止</td>
+      <td>所有应用被移除，无法再发布新内容，新注册账号会被再次终止</td>
+      <td>永久性</td>
+      <td>恶意软件、欺诈、危害用户或设备、严重重复违规</td>
     </tr>
   </tbody>
 </table>
 
-<h2 id="policy-categories-and-what-triggers-enforcement">Policy categories and what triggers enforcement</h2>
+<h2 id="政策类别与触发执法的情形">政策类别与触发执法的情形</h2>
 
-<h3 id="restricted-content">Restricted content</h3>
+<h3 id="受限内容">受限内容</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Child endangerment</td>
-      <td>Any content that sexualizes or endangers minors</td>
-      <td>Zero tolerance design, proactive detection, reporting</td>
+      <td>危害儿童</td>
+      <td>任何对未成年人进行性化或构成危害的内容</td>
+      <td>零容忍设计、主动检测、举报机制</td>
     </tr>
     <tr>
-      <td>Sexual content and nudity</td>
-      <td>Pornographic or sexually explicit content</td>
-      <td>Remove explicit content, gate mature content correctly</td>
+      <td>色情内容与裸露</td>
+      <td>色情或性暴露内容</td>
+      <td>移除露骨内容，正确设置成人内容的访问门槛</td>
     </tr>
     <tr>
-      <td>Hate speech</td>
-      <td>Content targeting protected groups</td>
-      <td>Moderate and remove hateful content</td>
+      <td>仇恨言论</td>
+      <td>针对受保护群体的内容</td>
+      <td>审核并移除仇恨性内容</td>
     </tr>
     <tr>
-      <td>Violence and graphic content</td>
-      <td>Gore, realistic violence, glorification of harm</td>
-      <td>Remove or heavily restrict graphic content</td>
+      <td>暴力与血腥内容</td>
+      <td>血腥画面、写实暴力、美化伤害</td>
+      <td>移除或严格限制血腥内容</td>
     </tr>
     <tr>
-      <td>Illegal activities</td>
-      <td>Promoting illegal acts, drugs, weapons sales</td>
-      <td>Remove content that promotes illegal acts</td>
+      <td>非法活动</td>
+      <td>宣传非法行为、毒品、武器销售</td>
+      <td>移除宣传非法行为的内容</td>
     </tr>
     <tr>
-      <td>Real money gambling</td>
-      <td>Unlicensed gambling, outside permitted regions</td>
-      <td>License, geo restrict, follow the gambling program</td>
+      <td>真钱博彩</td>
+      <td>无牌照博彩、超出允许地区运营</td>
+      <td>取得牌照、按地区限制、遵守博彩计划</td>
     </tr>
     <tr>
-      <td>Financial services</td>
-      <td>Unlicensed lending, deceptive financial products, personal loan disclosure gaps</td>
-      <td>Disclose APR and terms, hold licenses, follow the financial services policy</td>
+      <td>金融服务</td>
+      <td>无牌照放贷、误导性金融产品、个人贷款披露不全</td>
+      <td>披露 APR 与条款、持有牌照、遵守金融服务政策</td>
     </tr>
     <tr>
-      <td>Health and medical</td>
-      <td>Unqualified or misleading medical claims</td>
-      <td>Substantiate claims, avoid unproven treatments</td>
+      <td>健康与医疗</td>
+      <td>不具备资质或误导性的医疗声明</td>
+      <td>为声明提供依据，避免未经证实的疗法</td>
     </tr>
     <tr>
-      <td>Blockchain and NFT</td>
-      <td>Deceptive crypto content, undisclosed risks</td>
-      <td>Disclose risk, follow gambling rules for tokenized chance</td>
+      <td>区块链与 NFT</td>
+      <td>误导性加密内容、未披露风险</td>
+      <td>披露风险，涉及代币化概率玩法时遵循博彩规则</td>
     </tr>
     <tr>
-      <td>Unmoderated UGC</td>
-      <td>User content that contains prohibited content with no moderation</td>
-      <td>Add reporting, filtering, and blocking before launch</td>
+      <td>无人审核的用户生成内容（UGC）</td>
+      <td>用户内容中包含违规内容且没有任何审核</td>
+      <td>上线前加入举报、过滤与拉黑功能</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="impersonation-and-intellectual-property">Impersonation and intellectual property</h3>
+<h3 id="冒充与知识产权">冒充与知识产权</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Impersonation</td>
-      <td>Misrepresenting the developer, copying another app, false authorship</td>
-      <td>Use your own identity and original branding</td>
+      <td>冒充</td>
+      <td>虚构开发者身份、抄袭其他应用、虚假署名</td>
+      <td>使用自己的身份与原创品牌</td>
     </tr>
     <tr>
-      <td>Intellectual property</td>
-      <td>Copyright or trademark infringement, counterfeiting, plagiarism</td>
-      <td>Own or license every asset and brand reference</td>
+      <td>知识产权</td>
+      <td>侵犯版权或商标、仿冒、剽窃</td>
+      <td>拥有或取得每一项素材与品牌引用的授权</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="privacy-deception-and-device-abuse">Privacy, deception, and device abuse</h3>
+<h3 id="隐私欺骗与设备滥用">隐私、欺骗与设备滥用</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>User data</td>
-      <td>Collecting personal data without clear disclosure, using data beyond stated purposes, sharing without consent, weak security</td>
-      <td>Disclose every collection and use, secure data, honor the stated purpose</td>
+      <td>用户数据</td>
+      <td>未作清晰披露即收集个人数据、将数据用于超出声明目的的用途、未经同意即共享、安全措施薄弱</td>
+      <td>披露每一项收集与使用，保障数据安全，恪守声明用途</td>
     </tr>
     <tr>
-      <td>Permissions and APIs</td>
-      <td>Requesting permissions beyond functional need, deceptive access to location, SMS, call log, contacts</td>
-      <td>Request the minimum, justify each sensitive permission</td>
+      <td>权限与 API</td>
+      <td>申请超出功能需要的权限、以欺骗方式获取位置、短信、通话记录、联系人</td>
+      <td>只申请最少权限，为每一项敏感权限给出理由</td>
     </tr>
     <tr>
-      <td>AccessibilityService misuse</td>
-      <td>Using accessibility APIs for data harvesting rather than accessibility</td>
-      <td>Use accessibility APIs only for genuine accessibility, declare the use</td>
+      <td>AccessibilityService 滥用</td>
+      <td>将无障碍 API 用于数据收集而非无障碍功能</td>
+      <td>仅将无障碍 API 用于真正的无障碍功能，并申报该用途</td>
     </tr>
     <tr>
-      <td>Background location</td>
-      <td>Background location without a clear core feature and disclosure</td>
-      <td>Use foreground location where possible, justify background use with a prominent disclosure</td>
+      <td>后台定位</td>
+      <td>在没有明确核心功能与披露的情况下使用后台定位</td>
+      <td>尽量使用前台定位，确需后台定位时以显著披露说明理由</td>
     </tr>
     <tr>
-      <td>SMS and Call Log</td>
-      <td>Requesting SMS or Call Log without an approved core use case</td>
-      <td>Use the permissions declaration, drop the permission if not core</td>
+      <td>SMS 与 Call Log</td>
+      <td>在没有获批核心用例的情况下申请 SMS 或 Call Log 权限</td>
+      <td>走权限申报流程，非核心用途则放弃该权限</td>
     </tr>
     <tr>
-      <td>All files access</td>
-      <td>MANAGE_EXTERNAL_STORAGE without a qualifying use case</td>
-      <td>Use scoped storage, request all files access only when truly required</td>
+      <td>所有文件访问权限</td>
+      <td>在没有合格用例的情况下使用 MANAGE_EXTERNAL_STORAGE</td>
+      <td>使用分区存储（scoped storage），仅在确有必要时申请所有文件访问权限</td>
     </tr>
     <tr>
       <td>Health Connect</td>
-      <td>Accessing Health Connect without an appropriate use case and disclosure</td>
-      <td>Limit to declared health use, disclose in Data Safety</td>
+      <td>在没有合适用例与披露的情况下访问 Health Connect</td>
+      <td>仅限声明的健康用途使用，并在数据安全表单中披露</td>
     </tr>
     <tr>
-      <td>Data Safety section</td>
-      <td>A Data Safety form that does not match the app’s real data behavior. This is the number one rejection cause</td>
-      <td>Audit runtime data flows and SDKs, declare every collection, sharing, and security practice accurately</td>
+      <td>数据安全（Data safety）部分</td>
+      <td>数据安全表单与应用真实数据行为不符。这是排名第一的拒审原因</td>
+      <td>审计运行时数据流与所有 SDK，如实申报每一项收集、共享与安全做法</td>
     </tr>
     <tr>
-      <td>Device and network abuse</td>
-      <td>Malware, botnets, resource hijacking, unauthorized system modification</td>
-      <td>Ship clean, well behaved code</td>
+      <td>设备与网络滥用</td>
+      <td>恶意软件、僵尸网络、资源劫持、未经授权修改系统</td>
+      <td>交付干净、行为良好的代码</td>
     </tr>
     <tr>
-      <td>Deceptive behavior and misrepresentation</td>
-      <td>False functionality claims, misleading descriptions or screenshots, fake system UI</td>
-      <td>Make the listing match the app exactly</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3 id="sdk-and-target-api-requirements">SDK and target API requirements</h3>
-
-<table>
-  <thead>
-    <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Third party SDKs</td>
-      <td>An SDK that violates policy through tracking, permissions, or malicious code. The developer is responsible for SDK behavior</td>
-      <td>Vet every SDK, keep them current, remove non compliant ones</td>
-    </tr>
-    <tr>
-      <td>Target API level</td>
-      <td>Failing to target the current required Android API level</td>
-      <td>Build against the current required target API before submission</td>
+      <td>欺骗行为与虚假陈述</td>
+      <td>虚假的功能声明、误导性的描述或截图、伪造系统界面</td>
+      <td>让商店详情页与应用完全一致</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="monetization-and-ads">Monetization and ads</h3>
+<h3 id="sdk-与目标-api-级别要求">SDK 与目标 API 级别要求</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Payments</td>
-      <td>Deceptive billing, hidden charges, unauthorized transactions, ignoring refund rules. Play Billing required for in app digital goods, with regional alternatives where permitted</td>
-      <td>Use Play Billing for digital goods, disclose all charges</td>
+      <td>第三方 SDK</td>
+      <td>SDK 通过跟踪、权限或恶意代码违反政策。SDK 行为由开发者负责</td>
+      <td>审查每一个 SDK，保持更新，移除不合规的 SDK</td>
     </tr>
     <tr>
-      <td>Subscriptions</td>
-      <td>Unclear terms, difficult cancellation, misleading trials, undisclosed auto renewal</td>
-      <td>Show full terms, easy cancellation, honest trials</td>
-    </tr>
-    <tr>
-      <td>Payments, donations</td>
-      <td>An in-app link to Open Collective, Ko-fi, Patreon, Buy Me a Coffee, GitHub Sponsors, or a PayPal donate page. Google reads the Payments policy exception literally, only donations to a tax-exempt charity (501(c)(3)-class) may bypass Play billing, a 501(c)(6) or an unincorporated project does not qualify. Open-source apps are the usual casualty (<a href="https://github.com/ankidroid/Anki-Android/issues/21656">AnkiDroid, August 2026</a>)</td>
-      <td>Remove the donation entry point from the Play build, sell it as a one-time Play billing product, or document the charity’s tax-exempt status in the review notes. Source. <a href="https://support.google.com/googleplay/android-developer/answer/9992660">Payments policy</a></td>
-    </tr>
-    <tr>
-      <td>Payments, chargebacks</td>
-      <td>Not a rejection, a cost shift. For orders placed after 3 August 2026 the developer bears the purchase price less the service fee plus the card-network chargeback fee, Google Play covers only its service fee. An app that never handles the refund-review notification loses every fraudulent dispute by default</td>
-      <td>Handle <code class="language-plaintext highlighter-rouge">PendingRefundReviewNotification</code> and call the Review Refund API within 24 hours with the refund preference and usage evidence. Source. <a href="https://support.google.com/googleplay/android-developer/answer/17068375">Play Console Help</a>, <a href="https://developer.android.com/google/play/billing/provide-refund-and-chargeback-suggestions">Review Refund API</a></td>
-    </tr>
-    <tr>
-      <td>Ads</td>
-      <td>Ads that mimic system UI, mislead, serve malware, or are intrusive and disruptive</td>
-      <td>Use compliant ad formats and placements</td>
-    </tr>
-    <tr>
-      <td>Families ads</td>
-      <td>Non compliant SDKs or behavioral advertising in apps for children</td>
-      <td>Use only Families certified ad SDKs, no behavioral ads to minors</td>
+      <td>目标 API 级别</td>
+      <td>未达到当前要求的 Android API 级别</td>
+      <td>提交前按当前要求的 target API 进行构建</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="store-listing-and-promotion">Store listing and promotion</h3>
+<h3 id="变现与广告">变现与广告</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Metadata</td>
-      <td>Spammy listings, misleading titles or descriptions, keyword stuffing, near identical repeat submissions</td>
-      <td>Write an accurate, clean listing, one app per concept</td>
+      <td>支付</td>
+      <td>欺骗性收费、隐藏扣费、未经授权的交易、无视退款规则。应用内数字商品必须使用 Play Billing，在允许的地区可使用替代方案</td>
+      <td>数字商品使用 Play Billing，披露所有收费</td>
     </tr>
     <tr>
-      <td>Ratings, reviews, installs</td>
-      <td>Fake reviews, artificial installs, incentivized reviews, rating manipulation</td>
-      <td>Never buy or incentivize ratings or installs</td>
+      <td>订阅</td>
+      <td>条款不清、取消困难、误导性试用、未披露自动续订</td>
+      <td>展示完整条款，提供便捷取消，如实呈现试用</td>
     </tr>
     <tr>
-      <td>Content ratings</td>
-      <td>A missing or inaccurate content rating questionnaire</td>
-      <td>Complete the IARC content rating questionnaire honestly</td>
+      <td>支付、捐赠</td>
+      <td>在应用内放置指向 Open Collective、Ko-fi、Patreon、Buy Me a Coffee、GitHub Sponsors 或 PayPal 捐赠页的链接。Google 对支付（Payments）政策中的例外作字面解读：只有捐给免税慈善组织（501(c)(3) 类）才可绕开 Play 结算，501(c)(6) 组织或未注册成立的项目均不符合条件。开源应用是常见的受害者（<a href="https://github.com/ankidroid/Anki-Android/issues/21656">AnkiDroid，2026 年 8 月</a>）</td>
+      <td>从 Play 构建中移除捐赠入口，改为以一次性 Play 结算商品的形式出售，或在审核备注中附上该慈善组织免税资质的证明。来源：<a href="https://support.google.com/googleplay/android-developer/answer/9992660">Payments 政策</a></td>
+    </tr>
+    <tr>
+      <td>支付、拒付（chargeback）</td>
+      <td>这不是拒审，而是成本转嫁。对 2026 年 8 月 3 日之后下达的订单，开发者须承担”购买价款减去服务费”再加卡组织的拒付手续费，Google Play 只承担自己的服务费。从不处理退款审核通知的应用，在每一笔欺诈性争议中都会默认败诉</td>
+      <td>处理 <code class="language-plaintext highlighter-rouge">PendingRefundReviewNotification</code>，并在 24 小时内调用 Review Refund API，提交退款倾向与使用证据。来源：<a href="https://support.google.com/googleplay/android-developer/answer/17068375">Play Console 帮助</a>、<a href="https://developer.android.com/google/play/billing/provide-refund-and-chargeback-suggestions">Review Refund API</a></td>
+    </tr>
+    <tr>
+      <td>广告</td>
+      <td>模仿系统界面、具有误导性、投放恶意软件或干扰性强的广告</td>
+      <td>使用合规的广告格式与投放位置</td>
+    </tr>
+    <tr>
+      <td>Families 广告</td>
+      <td>儿童应用中使用不合规的 SDK 或行为广告</td>
+      <td>只使用通过 Families 认证的广告 SDK，不向未成年人投放行为广告</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="spam-and-minimum-functionality">Spam and minimum functionality</h3>
+<h3 id="商店详情页与推广">商店详情页与推广</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Spam and minimum functionality</td>
-      <td>Minimal function, frequent crashes, unresponsive UI, broken features, duplicate or low effort submissions</td>
-      <td>Ship a stable app with real, working functionality</td>
+      <td>元数据</td>
+      <td>垃圾式详情页、误导性标题或描述、关键词堆砌、近乎重复的反复提交</td>
+      <td>撰写准确、干净的详情页，一个概念只对应一个应用</td>
+    </tr>
+    <tr>
+      <td>评分、评论、安装量</td>
+      <td>虚假评论、人工刷量、激励式评论、操纵评分</td>
+      <td>绝不购买或以奖励诱导评分与安装</td>
+    </tr>
+    <tr>
+      <td>内容分级</td>
+      <td>内容分级问卷缺失或填写不实</td>
+      <td>如实完成 IARC 内容分级问卷</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="malware-and-mobile-unwanted-software">Malware and mobile unwanted software</h3>
+<h3 id="垃圾内容与最低功能要求">垃圾内容与最低功能要求</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Malware</td>
-      <td>Spyware, ransomware, rootkits, credential theft, unauthorized system access</td>
-      <td>Ship clean code, scan dependencies</td>
-    </tr>
-    <tr>
-      <td>Ad fraud</td>
-      <td>Click injection, impression fraud, hidden ad networks</td>
-      <td>Use legitimate ad mediation only</td>
-    </tr>
-    <tr>
-      <td>Social engineering</td>
-      <td>Phishing, credential harvesting, deceptive permission prompts</td>
-      <td>Be honest in every prompt and flow</td>
-    </tr>
-    <tr>
-      <td>Hostile downloaders</td>
-      <td>Bundling or installing malicious software</td>
-      <td>Do not bundle or sideload other software</td>
-    </tr>
-    <tr>
-      <td>Unauthorized system imitation</td>
-      <td>Fake system alerts, spoofed dialogs, unauthorized dialer or SMS replacement</td>
-      <td>Never imitate system UI</td>
+      <td>垃圾内容与最低功能要求</td>
+      <td>功能极简、频繁崩溃、界面无响应、功能损坏、重复或低质提交</td>
+      <td>交付一款稳定且功能真实可用的应用</td>
     </tr>
   </tbody>
 </table>
 
-<h3 id="families-and-designed-for-families">Families and Designed for Families</h3>
+<h3 id="恶意软件与移动端不需要的软件">恶意软件与移动端不需要的软件</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Policy</th>
-      <th>Triggers enforcement</th>
-      <th>Avoid by</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Families program</td>
-      <td>Inappropriate content in child targeted apps, behavioral ads to minors, unclear parental controls, unsafe child data practices, COPPA noncompliance</td>
-      <td>Follow the Families policy, use compliant SDKs, comply with COPPA and local child law</td>
+      <td>恶意软件</td>
+      <td>间谍软件、勒索软件、rootkit、窃取凭据、未经授权访问系统</td>
+      <td>交付干净的代码，扫描依赖项</td>
+    </tr>
+    <tr>
+      <td>广告欺诈</td>
+      <td>点击注入、展示欺诈、隐藏广告网络</td>
+      <td>只使用正规的广告聚合服务</td>
+    </tr>
+    <tr>
+      <td>社会工程</td>
+      <td>钓鱼、凭据收集、欺骗性权限弹窗</td>
+      <td>每一个弹窗与流程都如实告知</td>
+    </tr>
+    <tr>
+      <td>恶意下载器</td>
+      <td>捆绑或安装恶意软件</td>
+      <td>不要捆绑或侧载其他软件</td>
+    </tr>
+    <tr>
+      <td>未经授权模仿系统</td>
+      <td>伪造系统警报、仿冒对话框、未经授权替换拨号器或短信应用</td>
+      <td>绝不模仿系统界面</td>
     </tr>
   </tbody>
 </table>
 
-<h2 id="the-12-tester-rule-for-new-personal-accounts">The 12 tester rule for new personal accounts</h2>
-
-<p>New personal developer accounts created after the policy change must run a closed test with at least 12 testers for 14 consecutive days before they can apply for production access. Skipping or under populating this test blocks production. Plan the closed test window into the release schedule from day one. Organization accounts are treated differently, so the account type chosen at signup matters.</p>
-
-<h2 id="the-recurring-google-failure-mode">The recurring Google failure mode</h2>
-
-<p>Most Google rejections are not about a forbidden feature. They are about a mismatch between what the app does and what the developer declared. The Data Safety form says no data is collected while an analytics SDK ships location. The listing promises a feature the app does not have. A permission is requested with no matching core feature. Close every one of these gaps by auditing actual runtime behavior, including every third party SDK, against every declaration before you submit.</p>
-
-<h2 id="2026-policy-rounds-you-must-act-on-verified-5-september-2026-updated-19-november-2026">2026 policy rounds you must act on (verified 5 September 2026, updated 19 November 2026)</h2>
-
-<p>Google restructured the Developer Program Policy on 26 August 2026 into one consolidated document with a standalone AI-generated content and blockchain section. Re-anchor policy links to the new pages. Every item below was read on Google’s own page.</p>
+<h3 id="families-与-designed-for-families">Families 与 Designed for Families</h3>
 
 <table>
   <thead>
     <tr>
-      <th>Deadline</th>
-      <th>Change</th>
-      <th>What to do</th>
-      <th>Source</th>
+      <th>政策</th>
+      <th>触发执法的情形</th>
+      <th>规避方法</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>1 December 2026</td>
-      <td>Developers selling into or out of Japan must complete the payments authorization form in Play Console, or payments are held globally (announced 29 October 2026)</td>
-      <td>Complete the authorization form</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/18100766">Policy announcement, 29 October 2026</a></td>
+      <td>Families 计划</td>
+      <td>儿童向应用中包含不宜内容、向未成年人投放行为广告、家长控制不清晰、儿童数据处理不安全、违反 COPPA</td>
+      <td>遵守 Families 政策，使用合规 SDK，遵守 COPPA 及当地儿童保护法律</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="新个人账号的-12-名测试者规则">新个人账号的 12 名测试者规则</h2>
+
+<p>政策调整后新注册的个人开发者账号，必须先完成一场至少 12 名测试者、连续 14 天的封闭测试（closed test），才能申请正式版（production）发布权限。跳过该测试或测试人数不足，都会卡住正式版发布。从第一天起就把封闭测试窗口纳入发布计划。组织账号适用不同规则，因此注册时选择的账号类型至关重要。</p>
+
+<h2 id="google-反复出现的失败模式">Google 反复出现的失败模式</h2>
+
+<p>Google 的大多数拒审并不是因为某个被禁止的功能，而是因为应用的实际行为与开发者声明的内容不一致。数据安全表单声称未收集任何数据，统计 SDK 却在上报位置信息。商店详情页承诺了应用并不具备的功能。申请了某个权限，却找不到与之对应的核心功能。提交之前，把实际运行时行为（包括每一个第三方 SDK）与每一项声明逐一对照审计，弥合所有这些落差。</p>
+
+<h2 id="必须行动的-2026-年政策批次核验于-2026-年-9-月-5-日更新于-2026-年-11-月-19-日">必须行动的 2026 年政策批次（核验于 2026 年 9 月 5 日，更新于 2026 年 11 月 19 日）</h2>
+
+<p>Google 于 2026 年 8 月 26 日重组了开发者计划政策（Developer Program Policy），整合为一份统一文档，并单列 AI 生成内容与区块链章节。请把政策链接重新指向新页面。以下每一项均直接读自 Google 官方页面。</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>截止日期</th>
+      <th>变化</th>
+      <th>要做什么</th>
+      <th>来源</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2026 年 12 月 1 日</td>
+      <td>向日本境内或境外销售的开发者必须在 Play Console 中完成付款授权表单，否则付款将在全球范围被暂扣（2026 年 10 月 29 日宣布）</td>
+      <td>完成授权表单</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/18100766">政策公告，2026 年 10 月 29 日</a></td>
     </tr>
     <tr>
-      <td>27 January 2027</td>
-      <td>Subscriptions with ongoing eligibility-based discounts, such as student plans, disclose eligibility criteria, the verification process, and post-eligibility pricing</td>
-      <td>Add the three disclosures to the offer</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play Policy Deadlines</a></td>
+      <td>2027 年 1 月 27 日</td>
+      <td>提供基于资格的持续折扣的订阅（如学生计划）须披露资格标准、核验流程以及资格失效后的价格</td>
+      <td>在优惠中补充这三项披露</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play 政策截止日期</a></td>
     </tr>
     <tr>
-      <td>27 January 2027</td>
-      <td>READ_CALL_LOG is no longer permitted for phone-call account verification. The exceptions table still lists that use case until this date</td>
-      <td>Use the Digital Credentials API, either directly or through a verification provider built upon it, the SMS Retriever API, or the SMS User Consent API</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/10208820?hl=en">Use of SMS or Call Log permission groups</a>, <a href="https://support.google.com/googleplay/android-developer/answer/18100766?hl=en-GB">Policy announcement, 29 October 2026</a></td>
+      <td>2027 年 1 月 27 日</td>
+      <td>不再允许将 READ_CALL_LOG 用于电话号码账号核验。例外表格在此时点前仍列有该用例</td>
+      <td>使用 Digital Credentials API（直接使用，或使用构建于其上的核验服务商方案）、SMS Retriever API 或 SMS User Consent API</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/10208820?hl=en">SMS 或 Call Log 权限组的使用</a>、<a href="https://support.google.com/googleplay/android-developer/answer/18100766?hl=en-GB">政策公告，2026 年 10 月 29 日</a></td>
     </tr>
     <tr>
-      <td>14 April 2027</td>
-      <td>New AppFunctions API policy. AppFunctions must not deceive or manipulate AI agents, bypass security controls, or interfere with other apps</td>
-      <td>Review every exposed AppFunction</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play Policy Deadlines</a></td>
+      <td>2027 年 4 月 14 日</td>
+      <td>AppFunctions API 新政策。AppFunctions 不得欺骗或操纵 AI 智能体（agent）、绕过安全控制或干扰其他应用</td>
+      <td>审查每一个暴露的 AppFunction</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play 政策截止日期</a></td>
     </tr>
     <tr>
-      <td>25 August 2027</td>
-      <td>Local Network and Manage Contacts permissions restricted to core functionality, each with a Play Console declaration (Local Network for apps targeting API 37+)</td>
-      <td>File the declarations or move to pickers and scoped intents</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play Policy Deadlines</a></td>
+      <td>2027 年 8 月 25 日</td>
+      <td>本地网络（Local Network）与管理联系人（Manage Contacts）权限限定于核心功能，各自需在 Play Console 中申报（本地网络适用于目标 API 37 及以上的应用）</td>
+      <td>提交申报，或改用选择器与限定范围的 intent</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/table/12921780">Play 政策截止日期</a></td>
     </tr>
     <tr>
-      <td>30 September 2026</td>
-      <td>Organization account required for financial products, health apps, VpnService apps, and government apps, with a D-U-N-S number matching the Dun and Bradstreet profile</td>
-      <td>Migrate the app to an organization account through the official Transfer ownership workflow (7-day cool-down)</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/10788890?hl=en">Play Console requirements</a>, <a href="https://support.google.com/googleplay/android-developer/answer/17125096?hl=en">preview</a></td>
+      <td>2026 年 9 月 30 日</td>
+      <td>金融产品、健康应用、VpnService 应用与政府应用必须使用组织账号，且 D-U-N-S 编号须与 Dun &amp; Bradstreet（邓白氏）档案一致</td>
+      <td>通过官方 Transfer ownership 工作流把应用迁移到组织账号（7 天冷却期）</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/10788890?hl=en">Play Console 要求</a>、<a href="https://support.google.com/googleplay/android-developer/answer/17125096?hl=en">预览</a></td>
     </tr>
     <tr>
-      <td>30 September 2026</td>
-      <td>Register every Play app package name in Play Console for Android developer verification. Global, separate from the Brazil, Indonesia, Singapore, Thailand sideloading leg. Non-registration risks global removal</td>
-      <td>Complete developer verification and register each distributed applicationId</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17134731">Policy announcement, 15 July 2026</a></td>
+      <td>2026 年 9 月 30 日</td>
+      <td>为配合 Android 开发者验证，需在 Play Console 中登记每一个 Play 应用包名。这是全球性要求，与巴西、印度尼西亚、新加坡、泰国的侧载验证支线相互独立。不登记可能被全球下架</td>
+      <td>完成开发者验证，并登记每一个已分发的 applicationId</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17134731">政策公告，2026 年 7 月 15 日</a></td>
     </tr>
     <tr>
-      <td>1 October 2026</td>
-      <td>US alternative billing and external links. transaction and download reporting plus the Play service fee begin</td>
-      <td>Wire reporting before the date if enrolled</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/16497028?hl=en">US alternative billing</a></td>
+      <td>2026 年 10 月 1 日</td>
+      <td>美国替代结算（alternative billing）与外部链接：交易与下载数据上报开始执行，Play 服务费开始收取</td>
+      <td>已加入计划的话，在该日期之前接好上报</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/16497028?hl=en">美国替代结算</a></td>
     </tr>
     <tr>
-      <td>22 July 2026 (live)</td>
-      <td>Play Catalog Access. registered third-party US stores list your app by default</td>
-      <td>Opt out in Play Console, Settings, Catalog Settings, if you do not want third-party distribution</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17117200?hl=en">Play Catalog Access Program</a></td>
+      <td>2026 年 7 月 22 日（已生效）</td>
+      <td>Play Catalog Access：已登记的美国第三方商店默认会上架你的应用</td>
+      <td>不想被第三方分发的话，在 Play Console 的 Settings、Catalog Settings 中选择退出</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17117200?hl=en">Play Catalog Access 计划</a></td>
     </tr>
     <tr>
-      <td>30 June 2026 (live)</td>
-      <td>Service fee restructure in the US, UK, and EEA. 10 percent service plus 5 percent billing fee, split by new versus existing install</td>
-      <td>Re-model revenue per region</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/16954621?hl=en">Lower service fees</a>, <a href="https://android-developers.googleblog.com/2026/06/play-expanded-billing.html">blog</a></td>
+      <td>2026 年 6 月 30 日（已生效）</td>
+      <td>美国、英国与 EEA 的服务费结构调整：10% 服务费加 5% 结算费，按新装机与既有装机分别计算</td>
+      <td>按地区重新建模营收</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/16954621?hl=en">下调服务费</a>、<a href="https://android-developers.googleblog.com/2026/06/play-expanded-billing.html">博客</a></td>
     </tr>
     <tr>
-      <td>26 August 2026 (live)</td>
-      <td>Random and anonymous chat apps must block minors, may not target children, and are in scope of the Child Safety Standards</td>
-      <td>Enable minor blocking, publish CSAE standards, add reporting and a child-safety contact</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17036597">Age-Restricted Content</a>, <a href="https://support.google.com/googleplay/android-developer/answer/17122218">Families</a>, <a href="https://support.google.com/googleplay/android-developer/answer/14747720?hl=en">Child Safety Standards</a></td>
+      <td>2026 年 8 月 26 日（已生效）</td>
+      <td>随机与匿名聊天应用必须屏蔽未成年人，不得以儿童为目标人群，并纳入儿童安全标准的适用范围</td>
+      <td>启用未成年人屏蔽，公布 CSAE 标准，增加举报入口与儿童安全联系方式</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17036597">年龄受限内容</a>、<a href="https://support.google.com/googleplay/android-developer/answer/17122218">Families</a>、<a href="https://support.google.com/googleplay/android-developer/answer/14747720?hl=en">儿童安全标准</a></td>
     </tr>
     <tr>
-      <td>26 August 2026 (live)</td>
-      <td>User Data policy explicitly covers third-party AI integrations. Unrated apps are not allowed. Earned Wage Access is a named financial sub-category (no interest, low flat fee, US APR under 36 percent)</td>
-      <td>Add the AI disclosure and consent, complete the content rating, file the EWA declaration</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17134731">Policy announcement</a>, <a href="https://support.google.com/googleplay/android-developer/answer/9876821">Financial Services</a></td>
+      <td>2026 年 8 月 26 日（已生效）</td>
+      <td>用户数据（User Data）政策明确覆盖第三方 AI 集成。不允许未分级的应用。Earned Wage Access 被明确点名为金融子类别（无利息、低固定费用、美国 APR 低于 36%）</td>
+      <td>加入 AI 披露与同意，完成内容分级，提交 EWA 申报</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17134731">政策公告</a>、<a href="https://support.google.com/googleplay/android-developer/answer/9876821">金融服务</a></td>
     </tr>
     <tr>
-      <td>25 August 2026 (live)</td>
-      <td>Generative AI. non-consensual intimate content enforcement. full-access test account, documented safety prompts and edge cases, customized input and output moderation. Suspended apps lose monetization and ads across Google</td>
-      <td>Add moderation and the review-notes evidence</td>
+      <td>2026 年 8 月 25 日（已生效）</td>
+      <td>生成式 AI：针对未经同意的亲密内容的执法。要求提供完全访问权限的测试账号、成文的安全提示与边界用例、定制化的输入与输出审核。被暂停的应用将在 Google 全平台失去变现与广告资格</td>
+      <td>加入内容审核机制，并在审核备注中附上证据</td>
       <td><a href="https://android-developers.googleblog.com/2026/08/ensuring-safety-genai-preventing-non-consensual-intimate-content.html">Android Developers Blog</a></td>
     </tr>
     <tr>
-      <td>27 October 2026</td>
-      <td>Pre-review checks in Play Console flag contacts and location permission issues</td>
-      <td>Run them before submitting</td>
-      <td><a href="https://android-developers.googleblog.com/2026/04/giving-users-clearer-choice-and-everyone-a-safer-more-trusted-app-ecosystem.html">Android Developers Blog, April 2026</a></td>
+      <td>2026 年 10 月 27 日</td>
+      <td>Play Console 的审核前检查会标出联系人与位置权限问题</td>
+      <td>提交前先跑一遍</td>
+      <td><a href="https://android-developers.googleblog.com/2026/04/giving-users-clearer-choice-and-everyone-a-safer-more-trusted-app-ecosystem.html">Android Developers Blog，2026 年 4 月</a></td>
     </tr>
     <tr>
-      <td>27 January 2027</td>
-      <td>API 37 targets. READ_CONTACTS only when the Contact Picker is insufficient (declaration required), the location button with onlyForLocationButton, geofencing removed as a foreground service use case</td>
-      <td>Adopt the Contact Picker, the location button, and the Geofence API</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/16909972?hl=en">Permissions and APIs preview</a>, <a href="https://support.google.com/googleplay/android-developer/answer/16965181?hl=en">Foreground service preview</a></td>
+      <td>2027 年 1 月 27 日</td>
+      <td>目标 API 37。READ_CONTACTS 仅在 Contact Picker 不够用时才可申请（需申报）、位置按钮需配合 onlyForLocationButton、地理围栏不再作为前台服务用例</td>
+      <td>采用 Contact Picker、位置按钮与 Geofence API</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/16909972?hl=en">权限与 API 预览</a>、<a href="https://support.google.com/googleplay/android-developer/answer/16965181?hl=en">前台服务预览</a></td>
     </tr>
     <tr>
-      <td>February 2027</td>
-      <td>Technical quality. R8 optimization at 25 percent minimum coverage, no bitmaps held in non-visible states, memory bad-behavior thresholds. Failure affects visibility and publishing. This is not the trader-status declaration</td>
-      <td>Enable R8 and profile memory now</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17492799?hl=en">Technical quality requirements</a></td>
+      <td>2027 年 2 月</td>
+      <td>技术质量。R8 优化覆盖率最低 25%，不可见状态下不得持有位图，并设有内存劣化行为阈值。不达标会影响可见性与发布。这不是商家身份申报</td>
+      <td>现在就启用 R8 并做内存分析</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17492799?hl=en">技术质量要求</a></td>
     </tr>
     <tr>
-      <td>1 February 2027</td>
-      <td>Trader or non-trader declaration for every active account, under EEA and UK law, wherever the apps are distributed. Existing accounts by this date. New accounts on creation. An account that does not distribute in the EEA or the UK may declare non-trader. Missing it may block updates and remove the app globally. A false non-trader declaration may mean global removal. Misrepresenting status to bypass verification or self-certification may suspend or terminate the account. The 29 October 2026 announcement says the declaration starts in November 2026 and links here. It does not state this date</td>
-      <td>Declare under Manage account, Account details, About you. A trader confirms each app under Monitor and improve, Policy and programs, App content, self-certifies, and adds each app’s terms link. A personal trader account also provides a phone number. The address is shown publicly. Keep the declaration current</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17594752?hl=en">Trader status declaration</a>, <a href="https://support.google.com/googleplay/android-developer/answer/18100766?hl=en">Policy announcement, 29 October 2026</a></td>
+      <td>2027 年 2 月 1 日</td>
+      <td>依据 EEA 与英国法律，每个有效账号都须申报商家或非商家身份（trader status），无论应用分发到哪里。存量账号在此日期前完成；新账号在创建时申报。不在 EEA 或英国分发的账号可申报为非商家。逾期未申报可能阻塞更新并导致应用被全球下架。虚假的非商家申报可能意味着全球下架。为绕过核验或自我认证而虚报身份，可能导致账号被暂停或终止。2026 年 10 月 29 日的公告称申报将于 2026 年 11 月启动并链接至此页，但并未写明这一日期</td>
+      <td>在 Manage account、Account details、About you 下完成申报。商家须在 Monitor and improve、Policy and programs、App content 下逐个确认应用、完成自我认证，并附上每个应用的服务条款链接。个人商家账号还须提供电话号码。地址会公开展示。保持申报信息随时有效</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17594752?hl=en">商家身份申报</a>、<a href="https://support.google.com/googleplay/android-developer/answer/18100766?hl=en">政策公告，2026 年 10 月 29 日</a></td>
     </tr>
     <tr>
-      <td>1 March 2027</td>
-      <td>EEA and UK online marketplace model. Where the account declared as a trader, users everywhere see contact details, the D-U-N-S number in App support, and a terms link if one was provided. An individual trader account shows a phone number and address. EEA and UK users also see the trader name instead of Google in Offered by, and the self-certification. The declaration deadline for existing accounts is 1 February 2027, not this date</td>
-      <td>Have the declaration, terms link, and contact details in place before the display starts</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17594752?hl=en">Trader status declaration</a></td>
+      <td>2027 年 3 月 1 日</td>
+      <td>EEA 与英国在线商店模式。已申报为商家的账号，各地用户都会看到联系方式、App support 中的 D-U-N-S 编号，以及（如提供）条款链接。个人商家账号还会显示电话号码与地址。EEA 与英国用户还会在 Offered by 一栏看到商家名称而非 Google，并看到自我认证信息。存量账号的申报截止日期是 2027 年 2 月 1 日，而不是这一天</td>
+      <td>在展示开始前，备好申报信息、条款链接与联系方式</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17594752?hl=en">商家身份申报</a></td>
     </tr>
     <tr>
-      <td>April 2027</td>
-      <td>Zero-Tap Sign-In. apps with sign-in must restore state on a new device with the Restore Credentials API (games out of scope)</td>
-      <td>Integrate Credential Manager restore credentials</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/17492799?hl=en">Technical quality requirements</a></td>
+      <td>2027 年 4 月</td>
+      <td>Zero-Tap Sign-In：带登录的应用必须使用 Restore Credentials API 在新设备上恢复状态（游戏不在范围内）</td>
+      <td>集成 Credential Manager 的恢复凭据</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/17492799?hl=en">技术质量要求</a></td>
     </tr>
     <tr>
-      <td>Android 17 (API 37, 16 June 2026)</td>
-      <td>Resizability opt-out removed, ACCESS_LOCAL_NETWORK mandatory, SMS OTP three-hour delay for non-recipient apps, native libraries must be read-only for System.load, CP2 PII columns restricted, background audio hardened, per-app memory limits</td>
-      <td>Test on Android 17 with API 37 before the 2027 target bump</td>
-      <td><a href="https://developer.android.com/about/versions/17/behavior-changes-17">Behavior changes, API 37</a>, <a href="https://developer.android.com/about/versions/17/behavior-changes-all">all apps</a>, <a href="https://android-developers.googleblog.com/2026/08/app-broader-memory-limits.html">memory limits</a></td>
+      <td>Android 17（API 37，2026 年 6 月 16 日）</td>
+      <td>移除 resizability 退出选项，ACCESS_LOCAL_NETWORK 变为强制，非接收方应用的短信验证码（SMS OTP）延迟 3 小时投递，原生库对 System.load 必须只读，CP2 PII 列受限，后台音频加固，按应用设定内存上限</td>
+      <td>在 2027 年目标级别上调之前，先在 API 37 的 Android 17 上测试</td>
+      <td><a href="https://developer.android.com/about/versions/17/behavior-changes-17">行为变化，API 37</a>、<a href="https://developer.android.com/about/versions/17/behavior-changes-all">所有应用</a>、<a href="https://android-developers.googleblog.com/2026/08/app-broader-memory-limits.html">内存上限</a></td>
     </tr>
     <tr>
-      <td>Target API and Billing ladder</td>
-      <td>API 36 by 31 August 2026 (extension to 1 November 2026, Wear and Automotive 35, TV and XR 34). Billing Library 8 for new submissions by 31 August 2026 (extension to 1 November 2026), for all apps by 31 August 2027, v9 by 31 August 2028</td>
-      <td>Plan the annual bump</td>
-      <td><a href="https://developer.android.com/google/play/requirements/target-sdk">Target API</a>, <a href="https://developer.android.com/google/play/billing/deprecation-faq">Billing deprecation FAQ</a></td>
+      <td>目标 API 与 Billing 阶梯</td>
+      <td>API 36 截止 2026 年 8 月 31 日（可延至 2026 年 11 月 1 日；Wear 与 Automotive 为 35，TV 与 XR 为 34）。新提交应用须在 2026 年 8 月 31 日前（可延至 2026 年 11 月 1 日）使用 Billing Library 8，全部应用截止 2027 年 8 月 31 日，v9 截止 2028 年 8 月 31 日</td>
+      <td>提前规划每年一次的级别上调</td>
+      <td><a href="https://developer.android.com/google/play/requirements/target-sdk">Target API</a>、<a href="https://developer.android.com/google/play/billing/deprecation-faq">Billing 弃用 FAQ</a></td>
     </tr>
     <tr>
-      <td>Account transfers, 27 May 2026 (live)</td>
-      <td>The official Transfer ownership workflow is the only permitted method, with a 7-day cool-down. News and magazine apps need the Play Console self-declaration or are removed</td>
-      <td>Use the workflow, file the declaration</td>
-      <td><a href="https://support.google.com/googleplay/android-developer/answer/16926792?hl=en">Policy announcement, 15 April 2026</a>, <a href="https://support.google.com/googleplay/android-developer/answer/16189314?hl=en">News declaration</a></td>
+      <td>账号转移，2026 年 5 月 27 日（已生效）</td>
+      <td>官方 Transfer ownership 工作流是唯一允许的方式，且带 7 天冷却期。新闻与杂志类应用需要完成 Play Console 自我申报，否则会被移除</td>
+      <td>使用官方工作流，提交申报</td>
+      <td><a href="https://support.google.com/googleplay/android-developer/answer/16926792?hl=en">政策公告，2026 年 4 月 15 日</a>、<a href="https://support.google.com/googleplay/android-developer/answer/16189314?hl=en">新闻类申报</a></td>
     </tr>
   </tbody>
 </table>
 
-<p>Checked and unchanged in this window. the 12-tester closed testing rule, Play Integrity (Automatic Integrity Protection stays opt-in), Photo and Video permissions, Data Safety form structure, SDK Console thresholds, the VpnService declaration form. Play Age Signals remains optional, rolled out to Brazil, Australia, and Canada with every market by the end of 2026.</p>
+<p>本窗口内已核对、无变化的项目：12 名测试者封闭测试规则、Play Integrity（Automatic Integrity Protection 仍为选择加入）、照片与视频权限、数据安全表单结构、SDK Console 阈值、VpnService 申报表单。Play Age Signals 仍为可选功能，已推广至巴西、澳大利亚与加拿大，并将在 2026 年底前覆盖所有市场。</p>
 
 
       
