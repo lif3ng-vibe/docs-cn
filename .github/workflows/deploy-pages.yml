@@ -176,6 +176,15 @@ jobs:
           mkdir -p _site
           cp -r cli-anything-docs-cn/site _site/cli-anything
 
+      # app-store-compliance 是 mjmirza/app-store-compliance 的 GitHub Pages 内建 Jekyll 站
+      # （docs/ 源目录 + jekyll-theme-primer，MIT）。翻译 markdown 源后用上游原班 Jekyll
+      # 本地构建出静态镜像 site/（baseurl 已带 /docs-cn/app-store-compliance 前缀），
+      # CI 纯拷贝零构建（同 herdr/diagram-design/cli-anything 先例）。
+      - name: Deploy app-store-compliance-docs-cn from repo
+        run: |
+          mkdir -p _site
+          cp -r app-store-compliance-docs-cn/site _site/app-store-compliance
+
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph
         uses: actions/cache@v4

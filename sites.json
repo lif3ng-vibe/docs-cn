@@ -1,593 +1,610 @@
 [
-  {
-    "name": "codegraph",
-    "slug": "codegraph",
-    "desc": "把代码库解析成可供 AI 智能体查询的知识图谱。",
-    "tags": [
-      "code-intelligence",
-      "cli-tool"
-    ],
-    "orig": "https://colbymchenry.github.io/codegraph/",
-    "repo": "https://github.com/colbymchenry/codegraph",
-    "meta": {
-      "pages": "18 页",
-      "stack": "Starlight",
-      "snap": "2026-08-18"
-    }
-  },
-  {
-    "name": "Orca",
-    "slug": "orca",
-    "desc": "跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。",
-    "tags": [
-      "ai-agent",
-      "multi-agent"
-    ],
-    "orig": "https://www.onorca.dev/docs",
-    "repo": "https://github.com/stablyai/orca",
-    "meta": {
-      "stack": "Starlight",
-      "snap": "2026-08-19"
-    }
-  },
-  {
-    "name": "Matt Pocock Skills",
-    "slug": "mattpocock-skills",
-    "desc": "Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。",
-    "tags": [
-      "skills",
-      "learning"
-    ],
-    "orig": "https://www.aihero.dev/skills",
-    "repo": "https://github.com/mattpocock/skills",
-    "meta": {
-      "pages": "25 篇",
-      "stack": "Starlight",
-      "snap": "2026-08-20"
-    }
-  },
-  {
-    "name": "Agency Agents",
-    "slug": "agency-agents",
-    "desc": "300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。",
-    "tags": [
-      "ai-agent",
-      "multi-agent",
-      "skills"
-    ],
-    "orig": "https://github.com/msitarzewski/agency-agents",
-    "repo": "https://github.com/msitarzewski/agency-agents",
-    "en": "agency-agents-en",
-    "meta": {
-      "pages": "326 篇",
-      "stack": "Starlight",
-      "snap": "2026-10-08"
-    }
-  },
-  {
-    "name": "Agency Agents (EN)",
-    "slug": "agency-agents-en",
-    "desc": "Unofficial English mirror of the Agency Agents roster docs (326 pages).",
-    "orig": "https://github.com/msitarzewski/agency-agents",
-    "repo": "https://github.com/msitarzewski/agency-agents",
-    "lang": "en",
-    "meta": {
-      "pages": "326 页",
-      "stack": "Starlight",
-      "snap": "2026-10-08"
-    }
-  },
-  {
-    "name": "AI 编码词典",
-    "slug": "ai-coding-dictionary",
-    "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
-    "tags": [
-      "learning"
-    ],
-    "orig": "https://www.aihero.dev/ai-coding-dictionary",
-    "repo": "https://github.com/mattpocock/dictionary-of-ai-coding",
-    "meta": {
-      "pages": "69 词条",
-      "stack": "Starlight",
-      "snap": "2026-08-20"
-    }
-  },
-  {
-    "name": "ai-memory",
-    "slug": "ai-memory",
-    "desc": "给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。",
-    "tags": [
-      "memory",
-      "cli-tool"
-    ],
-    "orig": "https://github.com/akitaonrails/ai-memory",
-    "repo": "https://github.com/akitaonrails/ai-memory",
-    "en": "ai-memory-en",
-    "meta": {
-      "pages": "36 篇",
-      "stack": "Starlight",
-      "snap": "2026-08-21"
-    }
-  },
-  {
-    "name": "Nimbus",
-    "slug": "nimbus",
-    "desc": "Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。",
-    "tags": [
-      "docs-engineering"
-    ],
-    "orig": "https://nimbus-docs.com",
-    "repo": "https://github.com/cloudflare/nimbus",
-    "meta": {
-      "pages": "66 篇",
-      "stack": "pnpm monorepo",
-      "snap": "2026-09-28"
-    }
-  },
-  {
-    "name": "OpenRig",
-    "slug": "openrig",
-    "desc": "多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。",
-    "tags": [
-      "ai-agent",
-      "multi-agent"
-    ],
-    "orig": "https://openrig.dev/",
-    "repo": "https://github.com/mvschwarz/openrig",
-    "en": "openrig-en",
-    "meta": {
-      "pages": "90 篇",
-      "stack": "Starlight",
-      "snap": "2026-09-30"
-    }
-  },
-  {
-    "name": "OpenRig (EN)",
-    "slug": "openrig-en",
-    "desc": "Unofficial English mirror of the OpenRig repository docs (90 pages).",
-    "orig": "https://github.com/mvschwarz/openrig",
-    "repo": "https://github.com/mvschwarz/openrig",
-    "lang": "en",
-    "meta": {
-      "pages": "90 页",
-      "stack": "Starlight",
-      "snap": "2026-09-30"
-    }
-  },
-  {
-    "name": "OpenShip",
-    "slug": "openship",
-    "desc": "开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。",
-    "tags": [
-      "deployment",
-      "sdk-api"
-    ],
-    "orig": "https://openship.io/docs",
-    "repo": "https://github.com/oblien/openship",
-    "meta": {
-      "pages": "164 篇",
-      "stack": "fumadocs + Next.js 16",
-      "snap": "2026-09-30"
-    }
-  },
-  {
-    "name": "Agent Skills",
-    "slug": "agent-skills",
-    "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
-    "tags": [
-      "skills",
-      "ai-agent"
-    ],
-    "orig": "https://skills.addy.ie/",
-    "repo": "https://github.com/addyosmani/agent-skills",
-    "meta": {
-      "pages": "36 页",
-      "stack": "Astro 5",
-      "snap": "2026-10-08"
-    }
-  },
-  {
-    "name": "e2e",
-    "slug": "tester-army-e2e",
-    "desc": "tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。",
-    "tags": [
-      "testing",
-      "ai-agent"
-    ],
-    "orig": "https://e2e.tester.army/docs",
-    "repo": "https://github.com/tester-army/e2e",
-    "meta": {
-      "pages": "52 篇",
-      "stack": "Mintlify 导出",
-      "snap": "2026-10-08"
-    }
-  },
-  {
-    "name": "Claude-Mem",
-    "slug": "claude-mem",
-    "desc": "Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。",
-    "tags": [
-      "memory",
-      "ai-agent"
-    ],
-    "orig": "https://docs.claude-mem.ai/",
-    "repo": "https://github.com/thedotmack/claude-mem",
-    "meta": {
-      "pages": "49 篇",
-      "stack": "Mintlify",
-      "snap": "2026-10-08"
-    }
-  },
-  {
-    "name": "AI SDK",
-    "slug": "ai-sdk",
-    "desc": "Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。",
-    "tags": [
-      "ai-app-dev",
-      "sdk-api"
-    ],
-    "orig": "https://ai-sdk.dev",
-    "repo": "https://github.com/vercel/ai",
-    "meta": {
-      "pages": "540 页",
-      "stack": "geistdocs + Next.js 16",
-      "snap": "2026-10-09"
-    },
-    "group": "docs-cn-2"
-  },
-  {
-    "name": "Pi",
-    "slug": "pi",
-    "desc": "Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。",
-    "tags": [
-      "ai-agent",
-      "cli-tool",
-      "sdk-api"
-    ],
-    "orig": "https://pi.dev/docs/latest",
-    "repo": "https://github.com/earendil-works/pi",
-    "meta": {
-      "pages": "40 篇",
-      "stack": "Mintlify",
-      "snap": "2026-10-09"
-    }
-  },
-  {
-    "name": "NVIDIA OpenShell",
-    "slug": "openshell",
-    "desc": "自主 AI 智能体的安全私有运行时——沙箱、网关、声明式策略与可观测性中文文档（65 篇全集）。",
-    "tags": [
-      "ai-agent",
-      "sdk-api"
-    ],
-    "orig": "https://docs.nvidia.com/openshell/latest/",
-    "repo": "https://github.com/NVIDIA/OpenShell",
-    "meta": {
-      "pages": "65 篇",
-      "stack": "Starlight",
-      "snap": "2026-10-25"
-    }
-  },
-  {
-    "name": "Tailscale",
-    "slug": "tailscale",
-    "desc": "Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。",
-    "tags": [
-      "networking",
-      "learning",
-      "sdk-api"
-    ],
-    "orig": "https://tailscale.com/docs",
-    "repo": "https://github.com/tailscale/tailscale",
-    "meta": {
-      "pages": "700 页",
-      "stack": "Starlight",
-      "snap": "2026-10-25"
-    },
-    "group": "docs-cn-1"
-  },
-  {
-    "name": "Impeccable",
-    "slug": "impeccable",
-    "desc": "给 AI 宿主补上设计词汇——1 个技能 24 个命令的完整中文文档：把 AI slop 打磨成可上线的界面（基于上游公开快照重建，内容为 2026-07 版）。",
-    "tags": [
-      "skills",
-      "frontend-design"
-    ],
-    "orig": "https://impeccable.style",
-    "repo": "https://github.com/pbakaus/impeccable",
-    "meta": {
-      "pages": "53 页",
-      "stack": "Astro 7",
-      "snap": "2026-10-25"
-    }
-  },
-  {
-    "name": "Impeccable（线上镜像）",
-    "slug": "impeccable-mirror",
-    "desc": "impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照，文档页/更新日志/命令台全译）。",
-    "tags": [
-      "skills",
-      "frontend-design"
-    ],
-    "orig": "https://impeccable.style",
-    "repo": "https://github.com/pbakaus/impeccable",
-    "meta": {
-      "pages": "49 页",
-      "stack": "构建产物镜像",
-      "snap": "2026-10-25"
-    },
-    "group": "docs-cn-2"
-  },
-  {
-    "name": "LiteLLM",
-    "slug": "litellm",
-    "desc": "LiteLLM 开源 AI 网关官方文档全站中文镜像——916 页：Python SDK、代理部署、路由与负载均衡、虚拟密钥与预算、防护栏、MCP 网关与 100+ 提供商接入。",
-    "tags": [
-      "sdk-api",
-      "deployment",
-      "ai-app-dev"
-    ],
-    "orig": "https://docs.litellm.ai/docs/",
-    "repo": "https://github.com/BerriAI/litellm-docs",
-    "meta": {
-      "pages": "715+ 文件",
-      "stack": "Docusaurus 3.8",
-      "snap": "2026-10-26"
-    },
-    "group": "docs-cn-2"
-  },
-  {
-    "name": "Coolify",
-    "slug": "coolify",
-    "desc": "Coolify 自托管 PaaS 官方文档中文镜像——开源的 Heroku/Netlify/Vercel 替代品：服务器管理、应用与数据库部署、反向代理、一键服务、备份恢复与 CLI/API/MCP 参考。",
-    "tags": [
-      "deployment",
-      "networking"
-    ],
-    "orig": "https://coolify.io/docs",
-    "repo": "https://github.com/coollabsio/coolify-docs",
-    "meta": {
-      "pages": "317 页（一期人工内容）",
-      "stack": "fumadocs + TanStack Start",
-      "snap": "main@2026-10-24"
-    },
-    "group": "docs-cn-1"
-  },
-  {
-    "name": "Hallmark",
-    "slug": "hallmark",
-    "desc": "Together AI 出品的设计 skill 官网中文镜像——让 Claude Code/Codex/OpenCode 生成的界面告别 AI 味：50 个主题、真实照片、自检 linter，73 页全量汉化含 README 完整译文。",
-    "tags": [
-      "frontend-design",
-      "skills",
-      "ai-agent"
-    ],
-    "orig": "https://www.usehallmark.com/",
-    "repo": "https://github.com/Nutlope/hallmark",
-    "meta": {
-      "pages": "73 页 + README 译文",
-      "stack": "纯静态 HTML（原班无构建）",
-      "snap": "main@6033bab 2026-10-28"
-    }
-  },
-  {
-    "name": "AI Hero",
-    "slug": "aihero",
-    "desc": "Matt Pocock 的 AI 工程学习平台中文镜像——LLM 基础、Claude Code、MCP、Vercel AI SDK 全站文章、AI 编码词典与技能讲解；视频与报名支付指回原站。",
-    "tags": [
-      "ai-agent",
-      "learning"
-    ],
-    "orig": "https://www.aihero.dev/",
-    "repo": "https://www.aihero.dev/",
-    "meta": {
-      "pages": "210 页",
-      "stack": "Next.js HTML 镜像（flight 同步汉化）",
-      "snap": "2026-10-30"
-    }
-  },
-  {
-    "name": "CopilotKit 文档",
-    "slug": "https://lif3ng.github.io/copilotkit-docs-cn",
-    "desc": "CopilotKit 官方文档全站中文镜像——4435 页静态导出（22 个智能体框架集成、React/Vue/Angular/React Native 前端参考、完整 API 文档与教程），Next.js 16 + fumadocs，独立仓库 Pages 部署。",
-    "tags": [
-      "ai-agent",
-      "multi-agent",
-      "sdk-api",
-      "docs-engineering"
-    ],
-    "orig": "https://docs.copilotkit.ai/",
-    "repo": "https://github.com/CopilotKit/CopilotKit",
-    "meta": {
-      "pages": "4435 页",
-      "stack": "Next.js 16 + fumadocs",
-      "snap": "2026-10-30"
-    }
-  },
-  {
-    "name": "Ollama",
-    "slug": "ollama",
-    "desc": "Ollama 官方文档中文镜像——本地/云端大模型运行平台：快速开始、九大能力（流式、思考、结构化输出、工具调用、视觉、嵌入、语音、网页搜索）与 27 个集成页（Claude Code、ChatGPT、Codex、Cline 等）、完整 API 参考；72 页全量汉化，端点参考页由 OpenAPI 规范生成。",
-    "tags": [
-      "cli-tool",
-      "ai-app-dev",
-      "sdk-api"
-    ],
-    "orig": "https://docs.ollama.com",
-    "repo": "https://github.com/ollama/ollama",
-    "meta": {
-      "pages": "72 页",
-      "stack": "Mintlify 原班工具链（匿名 export 静态导出汉化）",
-      "snap": "main@c1db5f9 2026-11-02"
-    }
-  },
-  {
-    "name": "Lightpanda",
-    "slug": "lightpanda",
-    "desc": "Lightpanda 官方文档中文镜像——用 Zig 从零编写的 AI 原生无头浏览器（10 倍速、10 倍省内存）：一行命令安装与 Docker、CDP/WebDriver/MCP 三协议接入（Puppeteer、Playwright、Selenium、Chromedp）、PandaScript 与 Lightpanda Agent、Cloud 服务与限额计费、浏览器工具/MCP 工具/CLI/Python SDK 参考；50 页全量汉化（含 3 个上游生成页快照）。",
-    "tags": [
-      "ai-agent",
-      "sdk-api",
-      "ai-app-dev"
-    ],
-    "orig": "https://lightpanda.io/docs/",
-    "repo": "https://github.com/lightpanda-io/browser",
-    "meta": {
-      "pages": "50 页",
-      "stack": "Nextra 4 + Next 15 原班构建（私有共享包本地桩实现）",
-      "snap": "main@e45234d 2026-10-26"
-    }
-  },
-  {
-    "name": "Handy",
-    "slug": "handy",
-    "desc": "Handy 官方文档站中文镜像——免费开源、完全本地运行的跨平台语音转文字工具。覆盖快速开始、模型选择（Whisper/Parakeet 等 7 系模型对比）、通用/高级设置、粘贴方式、后处理、Linux 配置、CLI、故障排查与 FAQ 等 13 篇文档；含落地页与 About/Buttons/Privacy 页。下载相关引导统一指向官方下载页。",
-    "tags": [
-      "ai-app-dev"
-    ],
-    "orig": "https://handy.computer/docs",
-    "repo": "https://github.com/cjpais/handy.computer",
-    "meta": {
-      "pages": "18 页",
-      "stack": "Astro 5.8 + React + Tailwind 4 原班构建（下载引导指官方）",
-      "snap": "main@6e48765b 2026-10-24"
-    }
-  },
-  {
-    "name": "Worktrunk",
-    "slug": "worktrunk",
-    "desc": "Worktrunk 官方文档站中文镜像——面向并行 AI agent 工作流的 Git worktree 管理 CLI（wt）：一条命令创建/切换/合并/清理 worktree。覆盖核心命令（switch/list/merge/remove/config/step/hook）与子命令参考、Shell 集成与调试、Claude Code/Codex/OpenCode 等 agent 集成、LLM 提交信息、扩展（钩子/别名/自定义子命令）、技巧与模式、FAQ 与代码签名策略；15 篇文档 18 页全量汉化，保留终端快照渲染与演示 GIF。",
-    "tags": [
-      "ai-agent",
-      "cli-tool"
-    ],
-    "orig": "https://worktrunk.dev/",
-    "repo": "https://github.com/max-sixty/worktrunk",
-    "meta": {
-      "pages": "18 页",
-      "stack": "Astro 7.4 + Starlight 0.42 原班构建（base-links 插件免 sed，Node ≥22.23.4）",
-      "snap": "main@5bdb832 2026-11-04"
-    }
-  },
-  {
-    "name": "gstack",
-    "slug": "gstack",
-    "desc": "gstack 中文文档（非官方翻译）——Garry Tan（YC 总裁）开源的 Claude Code 虚拟工程团队技能集：CEO/设计/工程经理/评审/QA/安全/发布全套 slash command。上游无 web 文档站，本站按 README 链接面自建 Starlight 组织其 README + docs/ 共 35 页：安装与多 Agent 宿主（Codex/Cursor/OpenCode 等 13 个）、技能深度指南、浏览器双引擎（Aside 优先）、GBrain 持久记忆、Captain 编队与合并列车、工厂计分卡、troubleshooting 排查手册（501 条目全量）。",
-    "tags": [
-      "ai-agent",
-      "skills",
-      "cli-tool"
-    ],
-    "orig": "https://github.com/garrytan/gstack",
-    "repo": "https://github.com/garrytan/gstack",
-    "meta": {
-      "pages": "35 页",
-      "stack": "Starlight 自建站（上游无文档站工程；base-links 顶层 rehype 免 sed）",
-      "snap": "main@eaf1701 2026-11-06"
-    }
-  },
-  {
-    "name": "agent-desktop",
-    "slug": "agent-desktop",
-    "desc": "agent-desktop 中文文档（非官方翻译）——Vercel 开源的桌面自动化 CLI 与 C 库：让 AI 智能体读取 macOS/Windows/Linux 原生应用的无障碍树，以快照—下钻—操作—验证循环安全地操作桌面 UI，支持引用追踪、骨架视图、批量、追踪记录与 FFI 嵌入。",
-    "tags": [
-      "ai-agent",
-      "cli-tool",
-      "sdk-api"
-    ],
-    "orig": "https://agent-browser.dev/desktop",
-    "repo": "https://github.com/vercel-labs/agent-desktop",
-    "meta": {
-      "pages": "38 页",
-      "stack": "geistdocs (Next.js 16 静态导出)",
-      "snap": "2026-11-05"
-    }
-  },
-  {
-    "name": "agent-browser",
-    "slug": "agent-browser",
-    "desc": "agent-browser 中文文档（非官方翻译）——Vercel 开源的 AI 浏览器自动化 CLI：快照—下钻—操作—验证循环驱动真实浏览器，紧凑文本输出节省 token，50+ 命令覆盖导航/表单/截图/网络/存储/标签页，支持无头/有头、CDP、会话与视频录制。",
-    "tags": [
-      "ai-agent",
-      "cli-tool",
-      "sdk-api"
-    ],
-    "orig": "https://agent-browser.dev",
-    "repo": "https://github.com/vercel-labs/agent-browser",
-    "meta": {
-      "pages": "38 页 + 首页",
-      "stack": "geistdocs (Next.js 16 静态导出)",
-      "snap": "2026-11-08"
-    }
-  },
-  {
-    "name": "astryx",
-    "slug": "astryx",
-    "desc": "Astryx 中文文档（非官方翻译）——Meta 开源的设计系统：180+ 可访问可定制 React 组件、7 套官方主题、令牌体系与页面模板，配 CLI 与 MCP 让智能体直接消费文档；StyleX 驱动、Next.js 16 构建。",
-    "tags": [
-      "design-system",
-      "frontend-design",
-      "cli-tool",
-      "ai-agent"
-    ],
-    "orig": "https://astryx.atmeta.com",
-    "repo": "https://github.com/meta/astryx",
-    "meta": {
-      "pages": "469 页（134 长文档 + 325 组件 + 模板/主题/博客）",
-      "stack": "Next.js 16 + StyleX pnpm monorepo 静态导出",
-      "snap": "2026-11-09（9624a0b）"
-    }
-  },
-  {
-    "name": "Herdr",
-    "slug": "herdr",
-    "desc": "Herdr 官网中文镜像（非官方翻译）——为运行编码智能体而生的原生应用：窗口布局与 mod 由智能体改造，关掉窗口智能体照常干活；herdr-core 让智能体互相编排、跨机器存活。",
-    "tags": [
-      "ai-agent",
-      "multi-agent",
-      "cli-tool"
-    ],
-    "orig": "https://herdr.dev",
-    "repo": "https://github.com/herdrdev/herdr",
-    "meta": {
-      "pages": "912 页（15 官方页全译 + 888 画廊页模板汉化；TUI 官方自带中文不镜像）",
-      "stack": "闭源 Astro 静态站 → HTML 产物镜像汉化",
-      "snap": "2026-11-12"
-    }
-  },
-  {
-    "name": "Diagram Design",
-    "slug": "diagram-design",
-    "desc": "Diagram Design 官网中文镜像（非官方翻译）——一个智能体技能，把大白话变成杂志级品质的图表：50 种图表类型，自包含 HTML + SVG，约 60 秒匹配你的网站品牌；Claude Code、Codex、Pi 等宿主通用。",
-    "tags": [
-      "skills",
-      "diagrams",
-      "design-system"
-    ],
-    "orig": "https://diagramdesign.dev",
-    "repo": "https://github.com/cathrynlavery/diagram-design",
-    "meta": {
-      "pages": "480 页（官网 9 页全译 + 画廊 /gallery/ 471 页：导航双语、235 张样张英文原版 + 235 张中文变体 EN/中文 切换默认中文）",
-      "stack": "闭源手写静态站 → HTML 产物镜像汉化",
-      "snap": "2026-11-20"
-    }
-  },
-  {
-    "name": "CLI-Anything Hub",
-    "slug": "cli-anything",
-    "desc": "CLI-Anything Hub 中文镜像（非官方翻译）——对 Agent 友好的 CLI 注册表与包管理器：让 AI Agent 发现、安装并驱动 GUI 应用、开发工具、创意软件、Web API 与公共 SaaS 平台；注册表浏览、基于能力的工作流矩阵（预检/按能力渐进安装）与真实演示一应俱全。",
-    "tags": [
-      "ai-agent",
-      "cli-tool",
-      "sdk-api"
-    ],
-    "orig": "https://clianything.cc/",
-    "repo": "https://github.com/HKUDS/CLI-Anything",
-    "meta": {
-      "pages": "8 个内容文件（index/docs/demos/index-modern 4 个 HTML 全译 + index/pricing.md + llms.txt/llms-full.txt；注册表 JSON 数据按上游不译）",
-      "stack": "手写静态站（上游仓库 docs/hub/）→ 静态镜像汉化",
-      "snap": "2026-11-25（34f5195）"
-    }
+ {
+  "name": "codegraph",
+  "slug": "codegraph",
+  "desc": "把代码库解析成可供 AI 智能体查询的知识图谱。",
+  "tags": [
+   "code-intelligence",
+   "cli-tool"
+  ],
+  "orig": "https://colbymchenry.github.io/codegraph/",
+  "repo": "https://github.com/colbymchenry/codegraph",
+  "meta": {
+   "pages": "18 页",
+   "stack": "Starlight",
+   "snap": "2026-08-18"
   }
+ },
+ {
+  "name": "Orca",
+  "slug": "orca",
+  "desc": "跨 git worktree 并行编排多个 AI 编码智能体的桌面应用。",
+  "tags": [
+   "ai-agent",
+   "multi-agent"
+  ],
+  "orig": "https://www.onorca.dev/docs",
+  "repo": "https://github.com/stablyai/orca",
+  "meta": {
+   "stack": "Starlight",
+   "snap": "2026-08-19"
+  }
+ },
+ {
+  "name": "Matt Pocock Skills",
+  "slug": "mattpocock-skills",
+  "desc": "Matt Pocock 的智能体技能集——追问、TDD、两轴代码评审等 25 个技能的逐篇详解。",
+  "tags": [
+   "skills",
+   "learning"
+  ],
+  "orig": "https://www.aihero.dev/skills",
+  "repo": "https://github.com/mattpocock/skills",
+  "meta": {
+   "pages": "25 篇",
+   "stack": "Starlight",
+   "snap": "2026-08-20"
+  }
+ },
+ {
+  "name": "Agency Agents",
+  "slug": "agency-agents",
+  "desc": "300+ 专业智能体组成的「代理公司」名册与 NEXUS 战略手册中文版——18 个部门 agent 定义全译。",
+  "tags": [
+   "ai-agent",
+   "multi-agent",
+   "skills"
+  ],
+  "orig": "https://github.com/msitarzewski/agency-agents",
+  "repo": "https://github.com/msitarzewski/agency-agents",
+  "en": "agency-agents-en",
+  "meta": {
+   "pages": "326 篇",
+   "stack": "Starlight",
+   "snap": "2026-10-08"
+  }
+ },
+ {
+  "name": "Agency Agents (EN)",
+  "slug": "agency-agents-en",
+  "desc": "Unofficial English mirror of the Agency Agents roster docs (326 pages).",
+  "orig": "https://github.com/msitarzewski/agency-agents",
+  "repo": "https://github.com/msitarzewski/agency-agents",
+  "lang": "en",
+  "meta": {
+   "pages": "326 页",
+   "stack": "Starlight",
+   "snap": "2026-10-08"
+  }
+ },
+ {
+  "name": "AI 编码词典",
+  "slug": "ai-coding-dictionary",
+  "desc": "AI 编码词汇表 69 词条中文版——模型、会话、上下文、失败模式到工作模式。",
+  "tags": [
+   "learning"
+  ],
+  "orig": "https://www.aihero.dev/ai-coding-dictionary",
+  "repo": "https://github.com/mattpocock/dictionary-of-ai-coding",
+  "meta": {
+   "pages": "69 词条",
+   "stack": "Starlight",
+   "snap": "2026-08-20"
+  }
+ },
+ {
+  "name": "ai-memory",
+  "slug": "ai-memory",
+  "desc": "给 AI 编码智能体的长期记忆——跨 CLI 共享的 git 版本化 markdown wiki。",
+  "tags": [
+   "memory",
+   "cli-tool"
+  ],
+  "orig": "https://github.com/akitaonrails/ai-memory",
+  "repo": "https://github.com/akitaonrails/ai-memory",
+  "en": "ai-memory-en",
+  "meta": {
+   "pages": "36 篇",
+   "stack": "Starlight",
+   "snap": "2026-08-21"
+  }
+ },
+ {
+  "name": "Nimbus",
+  "slug": "nimbus",
+  "desc": "Cloudflare 开源的文档框架——为智能体网络（agentic web）而生的文档。",
+  "tags": [
+   "docs-engineering"
+  ],
+  "orig": "https://nimbus-docs.com",
+  "repo": "https://github.com/cloudflare/nimbus",
+  "meta": {
+   "pages": "66 篇",
+   "stack": "pnpm monorepo",
+   "snap": "2026-09-28"
+  }
+ },
+ {
+  "name": "OpenRig",
+  "slug": "openrig",
+  "desc": "多智能体协作框架中文文档——让 Claude Code、Codex 与 Pi 作为一个团队工作（90 篇全集）。",
+  "tags": [
+   "ai-agent",
+   "multi-agent"
+  ],
+  "orig": "https://openrig.dev/",
+  "repo": "https://github.com/mvschwarz/openrig",
+  "en": "openrig-en",
+  "meta": {
+   "pages": "90 篇",
+   "stack": "Starlight",
+   "snap": "2026-09-30"
+  }
+ },
+ {
+  "name": "OpenRig (EN)",
+  "slug": "openrig-en",
+  "desc": "Unofficial English mirror of the OpenRig repository docs (90 pages).",
+  "orig": "https://github.com/mvschwarz/openrig",
+  "repo": "https://github.com/mvschwarz/openrig",
+  "lang": "en",
+  "meta": {
+   "pages": "90 页",
+   "stack": "Starlight",
+   "snap": "2026-09-30"
+  }
+ },
+ {
+  "name": "OpenShip",
+  "slug": "openship",
+  "desc": "开源自托管部署平台文档——164 页指南、控制台操作与 API/CLI/MCP 参考的中文镜像。",
+  "tags": [
+   "deployment",
+   "sdk-api"
+  ],
+  "orig": "https://openship.io/docs",
+  "repo": "https://github.com/oblien/openship",
+  "meta": {
+   "pages": "164 篇",
+   "stack": "fumadocs + Next.js 16",
+   "snap": "2026-09-30"
+  }
+ },
+ {
+  "name": "Agent Skills",
+  "slug": "agent-skills",
+  "desc": "Addy Osmani 的 agent-skills 官方站中文版——24 个 AI 编码智能体工程技能的目录、教程、生命周期与回路工程指南。",
+  "tags": [
+   "skills",
+   "ai-agent"
+  ],
+  "orig": "https://skills.addy.ie/",
+  "repo": "https://github.com/addyosmani/agent-skills",
+  "meta": {
+   "pages": "36 页",
+   "stack": "Astro 5",
+   "snap": "2026-10-08"
+  }
+ },
+ {
+  "name": "e2e",
+  "slug": "tester-army-e2e",
+  "desc": "tester.army 的智能体端到端测试框架「e2e」官方文档全站中文镜像——52 篇 MDX（Mintlify 导出）+ 全导航汉化。",
+  "tags": [
+   "testing",
+   "ai-agent"
+  ],
+  "orig": "https://e2e.tester.army/docs",
+  "repo": "https://github.com/tester-army/e2e",
+  "meta": {
+   "pages": "52 篇",
+   "stack": "Mintlify 导出",
+   "snap": "2026-10-08"
+  }
+ },
+ {
+  "name": "Claude-Mem",
+  "slug": "claude-mem",
+  "desc": "Claude Code 持久记忆压缩系统中文文档——安装、用法、配置、托管服务与架构全 49 篇。",
+  "tags": [
+   "memory",
+   "ai-agent"
+  ],
+  "orig": "https://docs.claude-mem.ai/",
+  "repo": "https://github.com/thedotmack/claude-mem",
+  "meta": {
+   "pages": "49 篇",
+   "stack": "Mintlify",
+   "snap": "2026-10-08"
+  }
+ },
+ {
+  "name": "AI SDK",
+  "slug": "ai-sdk",
+  "desc": "Vercel AI SDK 官方文档全站中文镜像——540 页 v7 全集：入门、Core/UI/智能体、提供商、Cookbook 与 API 参考。",
+  "tags": [
+   "ai-app-dev",
+   "sdk-api"
+  ],
+  "orig": "https://ai-sdk.dev",
+  "repo": "https://github.com/vercel/ai",
+  "meta": {
+   "pages": "540 页",
+   "stack": "geistdocs + Next.js 16",
+   "snap": "2026-10-09"
+  },
+  "group": "docs-cn-2"
+ },
+ {
+  "name": "Pi",
+  "slug": "pi",
+  "desc": "Earendil 的终端 AI 编码智能体「Pi」官方文档全站中文镜像——40 篇：快速开始、运行、自定义、扩展/SDK/RPC 参考。",
+  "tags": [
+   "ai-agent",
+   "cli-tool",
+   "sdk-api"
+  ],
+  "orig": "https://pi.dev/docs/latest",
+  "repo": "https://github.com/earendil-works/pi",
+  "meta": {
+   "pages": "40 篇",
+   "stack": "Mintlify",
+   "snap": "2026-10-09"
+  }
+ },
+ {
+  "name": "NVIDIA OpenShell",
+  "slug": "openshell",
+  "desc": "自主 AI 智能体的安全私有运行时——沙箱、网关、声明式策略与可观测性中文文档（65 篇全集）。",
+  "tags": [
+   "ai-agent",
+   "sdk-api"
+  ],
+  "orig": "https://docs.nvidia.com/openshell/latest/",
+  "repo": "https://github.com/NVIDIA/OpenShell",
+  "meta": {
+   "pages": "65 篇",
+   "stack": "Starlight",
+   "snap": "2026-10-25"
+  }
+ },
+ {
+  "name": "Tailscale",
+  "slug": "tailscale",
+  "desc": "Tailscale 零信任连接平台官方文档全站中文镜像——700 页全集：安装、使用场景、功能特性、Aperture、PAM、Kubernetes Operator、集成与技术参考。",
+  "tags": [
+   "networking",
+   "learning",
+   "sdk-api"
+  ],
+  "orig": "https://tailscale.com/docs",
+  "repo": "https://github.com/tailscale/tailscale",
+  "meta": {
+   "pages": "700 页",
+   "stack": "Starlight",
+   "snap": "2026-10-25"
+  },
+  "group": "docs-cn-1"
+ },
+ {
+  "name": "Impeccable",
+  "slug": "impeccable",
+  "desc": "给 AI 宿主补上设计词汇——1 个技能 24 个命令的完整中文文档：把 AI slop 打磨成可上线的界面（基于上游公开快照重建，内容为 2026-07 版）。",
+  "tags": [
+   "skills",
+   "frontend-design"
+  ],
+  "orig": "https://impeccable.style",
+  "repo": "https://github.com/pbakaus/impeccable",
+  "meta": {
+   "pages": "53 页",
+   "stack": "Astro 7",
+   "snap": "2026-10-25"
+  }
+ },
+ {
+  "name": "Impeccable（线上镜像）",
+  "slug": "impeccable-mirror",
+  "desc": "impeccable.style 线上版全站镜像汉化——与官方站逐页对照（2026-10 快照，文档页/更新日志/命令台全译）。",
+  "tags": [
+   "skills",
+   "frontend-design"
+  ],
+  "orig": "https://impeccable.style",
+  "repo": "https://github.com/pbakaus/impeccable",
+  "meta": {
+   "pages": "49 页",
+   "stack": "构建产物镜像",
+   "snap": "2026-10-25"
+  },
+  "group": "docs-cn-2"
+ },
+ {
+  "name": "LiteLLM",
+  "slug": "litellm",
+  "desc": "LiteLLM 开源 AI 网关官方文档全站中文镜像——916 页：Python SDK、代理部署、路由与负载均衡、虚拟密钥与预算、防护栏、MCP 网关与 100+ 提供商接入。",
+  "tags": [
+   "sdk-api",
+   "deployment",
+   "ai-app-dev"
+  ],
+  "orig": "https://docs.litellm.ai/docs/",
+  "repo": "https://github.com/BerriAI/litellm-docs",
+  "meta": {
+   "pages": "715+ 文件",
+   "stack": "Docusaurus 3.8",
+   "snap": "2026-10-26"
+  },
+  "group": "docs-cn-2"
+ },
+ {
+  "name": "Coolify",
+  "slug": "coolify",
+  "desc": "Coolify 自托管 PaaS 官方文档中文镜像——开源的 Heroku/Netlify/Vercel 替代品：服务器管理、应用与数据库部署、反向代理、一键服务、备份恢复与 CLI/API/MCP 参考。",
+  "tags": [
+   "deployment",
+   "networking"
+  ],
+  "orig": "https://coolify.io/docs",
+  "repo": "https://github.com/coollabsio/coolify-docs",
+  "meta": {
+   "pages": "317 页（一期人工内容）",
+   "stack": "fumadocs + TanStack Start",
+   "snap": "main@2026-10-24"
+  },
+  "group": "docs-cn-1"
+ },
+ {
+  "name": "Hallmark",
+  "slug": "hallmark",
+  "desc": "Together AI 出品的设计 skill 官网中文镜像——让 Claude Code/Codex/OpenCode 生成的界面告别 AI 味：50 个主题、真实照片、自检 linter，73 页全量汉化含 README 完整译文。",
+  "tags": [
+   "frontend-design",
+   "skills",
+   "ai-agent"
+  ],
+  "orig": "https://www.usehallmark.com/",
+  "repo": "https://github.com/Nutlope/hallmark",
+  "meta": {
+   "pages": "73 页 + README 译文",
+   "stack": "纯静态 HTML（原班无构建）",
+   "snap": "main@6033bab 2026-10-28"
+  }
+ },
+ {
+  "name": "AI Hero",
+  "slug": "aihero",
+  "desc": "Matt Pocock 的 AI 工程学习平台中文镜像——LLM 基础、Claude Code、MCP、Vercel AI SDK 全站文章、AI 编码词典与技能讲解；视频与报名支付指回原站。",
+  "tags": [
+   "ai-agent",
+   "learning"
+  ],
+  "orig": "https://www.aihero.dev/",
+  "repo": "https://www.aihero.dev/",
+  "meta": {
+   "pages": "210 页",
+   "stack": "Next.js HTML 镜像（flight 同步汉化）",
+   "snap": "2026-10-30"
+  }
+ },
+ {
+  "name": "CopilotKit 文档",
+  "slug": "https://lif3ng.github.io/copilotkit-docs-cn",
+  "desc": "CopilotKit 官方文档全站中文镜像——4435 页静态导出（22 个智能体框架集成、React/Vue/Angular/React Native 前端参考、完整 API 文档与教程），Next.js 16 + fumadocs，独立仓库 Pages 部署。",
+  "tags": [
+   "ai-agent",
+   "multi-agent",
+   "sdk-api",
+   "docs-engineering"
+  ],
+  "orig": "https://docs.copilotkit.ai/",
+  "repo": "https://github.com/CopilotKit/CopilotKit",
+  "meta": {
+   "pages": "4435 页",
+   "stack": "Next.js 16 + fumadocs",
+   "snap": "2026-10-30"
+  }
+ },
+ {
+  "name": "Ollama",
+  "slug": "ollama",
+  "desc": "Ollama 官方文档中文镜像——本地/云端大模型运行平台：快速开始、九大能力（流式、思考、结构化输出、工具调用、视觉、嵌入、语音、网页搜索）与 27 个集成页（Claude Code、ChatGPT、Codex、Cline 等）、完整 API 参考；72 页全量汉化，端点参考页由 OpenAPI 规范生成。",
+  "tags": [
+   "cli-tool",
+   "ai-app-dev",
+   "sdk-api"
+  ],
+  "orig": "https://docs.ollama.com",
+  "repo": "https://github.com/ollama/ollama",
+  "meta": {
+   "pages": "72 页",
+   "stack": "Mintlify 原班工具链（匿名 export 静态导出汉化）",
+   "snap": "main@c1db5f9 2026-11-02"
+  }
+ },
+ {
+  "name": "Lightpanda",
+  "slug": "lightpanda",
+  "desc": "Lightpanda 官方文档中文镜像——用 Zig 从零编写的 AI 原生无头浏览器（10 倍速、10 倍省内存）：一行命令安装与 Docker、CDP/WebDriver/MCP 三协议接入（Puppeteer、Playwright、Selenium、Chromedp）、PandaScript 与 Lightpanda Agent、Cloud 服务与限额计费、浏览器工具/MCP 工具/CLI/Python SDK 参考；50 页全量汉化（含 3 个上游生成页快照）。",
+  "tags": [
+   "ai-agent",
+   "sdk-api",
+   "ai-app-dev"
+  ],
+  "orig": "https://lightpanda.io/docs/",
+  "repo": "https://github.com/lightpanda-io/browser",
+  "meta": {
+   "pages": "50 页",
+   "stack": "Nextra 4 + Next 15 原班构建（私有共享包本地桩实现）",
+   "snap": "main@e45234d 2026-10-26"
+  }
+ },
+ {
+  "name": "Handy",
+  "slug": "handy",
+  "desc": "Handy 官方文档站中文镜像——免费开源、完全本地运行的跨平台语音转文字工具。覆盖快速开始、模型选择（Whisper/Parakeet 等 7 系模型对比）、通用/高级设置、粘贴方式、后处理、Linux 配置、CLI、故障排查与 FAQ 等 13 篇文档；含落地页与 About/Buttons/Privacy 页。下载相关引导统一指向官方下载页。",
+  "tags": [
+   "ai-app-dev"
+  ],
+  "orig": "https://handy.computer/docs",
+  "repo": "https://github.com/cjpais/handy.computer",
+  "meta": {
+   "pages": "18 页",
+   "stack": "Astro 5.8 + React + Tailwind 4 原班构建（下载引导指官方）",
+   "snap": "main@6e48765b 2026-10-24"
+  }
+ },
+ {
+  "name": "Worktrunk",
+  "slug": "worktrunk",
+  "desc": "Worktrunk 官方文档站中文镜像——面向并行 AI agent 工作流的 Git worktree 管理 CLI（wt）：一条命令创建/切换/合并/清理 worktree。覆盖核心命令（switch/list/merge/remove/config/step/hook）与子命令参考、Shell 集成与调试、Claude Code/Codex/OpenCode 等 agent 集成、LLM 提交信息、扩展（钩子/别名/自定义子命令）、技巧与模式、FAQ 与代码签名策略；15 篇文档 18 页全量汉化，保留终端快照渲染与演示 GIF。",
+  "tags": [
+   "ai-agent",
+   "cli-tool"
+  ],
+  "orig": "https://worktrunk.dev/",
+  "repo": "https://github.com/max-sixty/worktrunk",
+  "meta": {
+   "pages": "18 页",
+   "stack": "Astro 7.4 + Starlight 0.42 原班构建（base-links 插件免 sed，Node ≥22.23.4）",
+   "snap": "main@5bdb832 2026-11-04"
+  }
+ },
+ {
+  "name": "gstack",
+  "slug": "gstack",
+  "desc": "gstack 中文文档（非官方翻译）——Garry Tan（YC 总裁）开源的 Claude Code 虚拟工程团队技能集：CEO/设计/工程经理/评审/QA/安全/发布全套 slash command。上游无 web 文档站，本站按 README 链接面自建 Starlight 组织其 README + docs/ 共 35 页：安装与多 Agent 宿主（Codex/Cursor/OpenCode 等 13 个）、技能深度指南、浏览器双引擎（Aside 优先）、GBrain 持久记忆、Captain 编队与合并列车、工厂计分卡、troubleshooting 排查手册（501 条目全量）。",
+  "tags": [
+   "ai-agent",
+   "skills",
+   "cli-tool"
+  ],
+  "orig": "https://github.com/garrytan/gstack",
+  "repo": "https://github.com/garrytan/gstack",
+  "meta": {
+   "pages": "35 页",
+   "stack": "Starlight 自建站（上游无文档站工程；base-links 顶层 rehype 免 sed）",
+   "snap": "main@eaf1701 2026-11-06"
+  }
+ },
+ {
+  "name": "agent-desktop",
+  "slug": "agent-desktop",
+  "desc": "agent-desktop 中文文档（非官方翻译）——Vercel 开源的桌面自动化 CLI 与 C 库：让 AI 智能体读取 macOS/Windows/Linux 原生应用的无障碍树，以快照—下钻—操作—验证循环安全地操作桌面 UI，支持引用追踪、骨架视图、批量、追踪记录与 FFI 嵌入。",
+  "tags": [
+   "ai-agent",
+   "cli-tool",
+   "sdk-api"
+  ],
+  "orig": "https://agent-browser.dev/desktop",
+  "repo": "https://github.com/vercel-labs/agent-desktop",
+  "meta": {
+   "pages": "38 页",
+   "stack": "geistdocs (Next.js 16 静态导出)",
+   "snap": "2026-11-05"
+  }
+ },
+ {
+  "name": "agent-browser",
+  "slug": "agent-browser",
+  "desc": "agent-browser 中文文档（非官方翻译）——Vercel 开源的 AI 浏览器自动化 CLI：快照—下钻—操作—验证循环驱动真实浏览器，紧凑文本输出节省 token，50+ 命令覆盖导航/表单/截图/网络/存储/标签页，支持无头/有头、CDP、会话与视频录制。",
+  "tags": [
+   "ai-agent",
+   "cli-tool",
+   "sdk-api"
+  ],
+  "orig": "https://agent-browser.dev",
+  "repo": "https://github.com/vercel-labs/agent-browser",
+  "meta": {
+   "pages": "38 页 + 首页",
+   "stack": "geistdocs (Next.js 16 静态导出)",
+   "snap": "2026-11-08"
+  }
+ },
+ {
+  "name": "astryx",
+  "slug": "astryx",
+  "desc": "Astryx 中文文档（非官方翻译）——Meta 开源的设计系统：180+ 可访问可定制 React 组件、7 套官方主题、令牌体系与页面模板，配 CLI 与 MCP 让智能体直接消费文档；StyleX 驱动、Next.js 16 构建。",
+  "tags": [
+   "design-system",
+   "frontend-design",
+   "cli-tool",
+   "ai-agent"
+  ],
+  "orig": "https://astryx.atmeta.com",
+  "repo": "https://github.com/meta/astryx",
+  "meta": {
+   "pages": "469 页（134 长文档 + 325 组件 + 模板/主题/博客）",
+   "stack": "Next.js 16 + StyleX pnpm monorepo 静态导出",
+   "snap": "2026-11-09（9624a0b）"
+  }
+ },
+ {
+  "name": "Herdr",
+  "slug": "herdr",
+  "desc": "Herdr 官网中文镜像（非官方翻译）——为运行编码智能体而生的原生应用：窗口布局与 mod 由智能体改造，关掉窗口智能体照常干活；herdr-core 让智能体互相编排、跨机器存活。",
+  "tags": [
+   "ai-agent",
+   "multi-agent",
+   "cli-tool"
+  ],
+  "orig": "https://herdr.dev",
+  "repo": "https://github.com/herdrdev/herdr",
+  "meta": {
+   "pages": "912 页（15 官方页全译 + 888 画廊页模板汉化；TUI 官方自带中文不镜像）",
+   "stack": "闭源 Astro 静态站 → HTML 产物镜像汉化",
+   "snap": "2026-11-12"
+  }
+ },
+ {
+  "name": "Diagram Design",
+  "slug": "diagram-design",
+  "desc": "Diagram Design 官网中文镜像（非官方翻译）——一个智能体技能，把大白话变成杂志级品质的图表：50 种图表类型，自包含 HTML + SVG，约 60 秒匹配你的网站品牌；Claude Code、Codex、Pi 等宿主通用。",
+  "tags": [
+   "skills",
+   "diagrams",
+   "design-system"
+  ],
+  "orig": "https://diagramdesign.dev",
+  "repo": "https://github.com/cathrynlavery/diagram-design",
+  "meta": {
+   "pages": "480 页（官网 9 页全译 + 画廊 /gallery/ 471 页：导航双语、235 张样张英文原版 + 235 张中文变体 EN/中文 切换默认中文）",
+   "stack": "闭源手写静态站 → HTML 产物镜像汉化",
+   "snap": "2026-11-20"
+  }
+ },
+ {
+  "name": "CLI-Anything Hub",
+  "slug": "cli-anything",
+  "desc": "CLI-Anything Hub 中文镜像（非官方翻译）——对 Agent 友好的 CLI 注册表与包管理器：让 AI Agent 发现、安装并驱动 GUI 应用、开发工具、创意软件、Web API 与公共 SaaS 平台；注册表浏览、基于能力的工作流矩阵（预检/按能力渐进安装）与真实演示一应俱全。",
+  "tags": [
+   "ai-agent",
+   "cli-tool",
+   "sdk-api"
+  ],
+  "orig": "https://clianything.cc/",
+  "repo": "https://github.com/HKUDS/CLI-Anything",
+  "meta": {
+   "pages": "8 个内容文件（index/docs/demos/index-modern 4 个 HTML 全译 + index/pricing.md + llms.txt/llms-full.txt；注册表 JSON 数据按上游不译）",
+   "stack": "手写静态站（上游仓库 docs/hub/）→ 静态镜像汉化",
+   "snap": "2026-11-25（34f5195）"
+  }
+ },
+ {
+  "name": "App Store Compliance Playbook",
+  "slug": "app-store-compliance",
+  "desc": "App Store Compliance Playbook 中文镜像（非官方翻译）——避开常见 App Store 与 Google Play 拒审的开源实战手册与提交前守卫：117 类拒审模式与修复方法、隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪法规截止日期。",
+  "tags": [
+   "ai-app-dev",
+   "deployment",
+   "learning"
+  ],
+  "orig": "https://mjmirza.github.io/app-store-compliance/",
+  "repo": "https://github.com/mjmirza/app-store-compliance",
+  "meta": {
+   "pages": "32 篇 md + llms.txt 全译（125,565 词）：拒审地图、提交前清单、按应用类型、政策迁移指南、法规时间线（113 条合规记录）、问答索引（1302 条讨论链接）",
+   "stack": "GitHub Pages 内建 Jekyll（jekyll-theme-primer）→ 翻译 markdown 源 + 上游原班 Jekyll 本地构建静态镜像",
+   "snap": "2026-11-25（5ee6c45c）"
+  }
+ }
 ]
