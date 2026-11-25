@@ -11,7 +11,7 @@ App Store Compliance Playbook 官方文档站中文镜像（**非官方翻译**�
 
 ```text
 app-store-compliance-docs-cn/
-├── docs/                  # 汉化 Markdown 源（Jekyll 工程：_config.yml + 33 篇 md + llms.txt）
+├── docs/                  # 汉化 Markdown 源（Jekyll 工程：_config.yml + 32 篇 md + llms.txt）
 │   └── _layouts/default.html   # 覆盖主题 layout：仅页脚两句 UI 文案汉化，其余与主题 gem 逐字节一致
 ├── site/                  # 构建产物（静态镜像，hub CI 纯拷贝部署的就是它）
 ├── tools/build.sh         # site/ 的重建脚本（上游原班 Jekyll 工具链）
@@ -31,7 +31,7 @@ gem install jekyll jekyll-theme-primer jekyll-sitemap jekyll-seo-tag \
 
 ## 翻译范围与口径
 
-- 全站 33 篇 Markdown + `llms.txt` 全量汉化；`_config.yml` 的 title/description 同译。
+- 全站 32 篇 Markdown + `llms.txt` 全量汉化；`_config.yml` 的 title/description 同译。
 - 只译可见正文与 UI 文案；URL、法条编号、指南编号、代码、数据一律不动。
 - 上游站点配置改动仅四处（详见 `docs/_config.yml` 注释）：`url`/`baseurl`/`lang`，
   增加 `defaults.layout`（复现 GitHub Pages 服务端的默认 layout 注入），

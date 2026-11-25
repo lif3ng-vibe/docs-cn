@@ -101,8 +101,14 @@ ICP、FTC、ICO、CADE、ADPLA、StoreKit、entitlement、SDK 条款（如 `com.
 
 ## 终检补充
 
-（终检时统计各译法文件数，取多数派全文统一后回写本表。）
+（终检时统计各译法文件数，取多数派全文统一后回写本表。2026-11-25 终检回写。）
 
 | 英文 | 定稿译法 | 备注 |
 |---|---|---|
-| （待终检） | | |
+| playbook | 实战手册 | 17 篇用「实战手册」；产品/仓库名（App Store Compliance Playbook）保留英文 |
+| fleet / fleet sweep | 应用矩阵 / 应用矩阵扫描 | 作为该仓库工具名时保留英文（Fleet Sweep、Waiver Ledger） |
+| the guard | 守卫（guard） | 17 篇一致；首次出现附原词 |
+| 拒审错误原文 | 逐字保留英文 | questions.md 等处引号内的报错/拒审原文一律不译 |
+| docs/X.md section N | 逐字保留 | REGULATORY-TIMELINE 交叉引用 token（94 处一致） |
+| 引号 | "" 全站统一 | 「」终检 0 处 |
+| CJK 粗体闭合 | 句读/括注移出粗体 | `**……（gloss）**：` 型合法（两侧标点），dist 字面 `**` 为 0 |
