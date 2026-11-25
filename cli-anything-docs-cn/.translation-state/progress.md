@@ -13,9 +13,9 @@
 - [x] 批次 3：demos.html（演示页：6 个演示条目标题/简介/元信息/媒体 chrome 全量汉化，harness 名与命令保留；残留扫描 CLEAN）
 - [ ] 批次 4：index.md + pricing.md
 - [ ] 批次 5：llms.txt + llms-full.txt
-- [ ] 批次 6：index-modern.html（线上可达备选首页）
-- [ ] 终检：英文残留扫描（剥 script/style/pre/code）+ JS 内 UI 文案复核 + 子路径冒烟
-- [ ] 阶段 C：五处同步（sites.json / gen-index / deploy-pages.yml / README 三处 / commit）
+- [x] 批次 6：index-modern.html（备选首页全量汉化：hero/侧栏/排序菜单/卡片模板/结果计数；残留扫描 CLEAN）
+- [x] 终检：4 个 HTML 残留扫描全 CLEAN；子路径冒烟 14 个 URL 全 200；CJK 渲染确认；无残留 ../../ 引用
+- [ ] 阶段 C：五处同步（sites.json / gen-index / deploy-pages.yml / README 三处 / commit）——进行中
 
 ## 范围裁决记录
 
