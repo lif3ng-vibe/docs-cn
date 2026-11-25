@@ -1,0 +1,45 @@
+title: App Store Compliance Playbook
+description: >-
+  避开常见的 App Store 与 Google Play 拒审。开源实战手册与提交前守卫：117 类拒审模式与修复方法、
+  隐私清单与 Data safety 自检，覆盖 28 个司法辖区与平台范围的 95 个已跟踪截止日期。
+url: https://lif3ng-vibe.github.io
+baseurl: /docs-cn/app-store-compliance
+lang: zh-CN
+theme: jekyll-theme-primer
+author: Mirza Iqbal
+github_username: mjmirza
+twitter:
+  username: MirzaJhanzaib
+social:
+  name: Mirza Iqbal
+  links:
+    - https://github.com/mjmirza
+    - https://twitter.com/MirzaJhanzaib
+    - https://next8n.com
+# 中文镜像新增：把 github-metadata 钉在上游仓库（页脚 "Improve this page" 指回上游）
+repository: mjmirza/app-store-compliance
+github:
+  private: false
+  license:
+    key: mit
+    name: MIT License
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+  - jekyll-optional-front-matter
+  - jekyll-titles-from-headings
+relative_links:
+  enabled: true
+  collections: false
+titles_from_headings:
+  strip_title: true
+include:
+  - llms.txt
+# 中文镜像新增：复现 GitHub Pages 服务端的默认 layout 注入（裸 Jekyll 不会自动套主题 layout）
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+# 上游的 webmaster_verifications（Google 站长验证）属上游站点所有权声明，不随镜像迁移。

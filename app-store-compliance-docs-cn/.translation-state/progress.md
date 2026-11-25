@@ -1,0 +1,54 @@
+# progress — app-store-compliance-docs-cn
+
+任务：汉化 https://mjmirza.github.io/app-store-compliance/ （issue #3，CI 模式）
+上游快照：mjmirza/app-store-compliance@5ee6c45cf17db209b4348565fa6d6a1d949ed52e（2026-11-25）
+
+## 形态判定（已定，勿重开）
+
+- 上游 = GitHub Pages **内建 Jekyll**（docs/ 源目录 + jekyll-theme-primer，无 Pages workflow）
+- 交付 = **翻译 markdown 源（docs/）→ 上游原班 Jekyll 本地构建（tools/build.sh）→ 静态镜像 site/ 并入 hub**
+  （hub CI 纯拷贝零构建，同 herdr/diagram-design/cli-anything 先例）
+- 已验证：Jekyll 4.4.1 本地构建 OK；中文标题锚点保留 CJK（`id="中文标题一带全角冒号"`）；
+  jekyll-relative-links 自动改写 `.md` 内链并带 baseurl；raw `.md` 静态拷贝行为与线上站一致（200 text/markdown）
+- _config.yml 改动：url/baseurl/lang=zh-CN、+defaults(layout: default)（复现 GitHub Pages 注入）、
+  +repository/github 钉上游（页脚）、description 译、删 webmaster_verifications 与上游验证 txt（所有权声明不迁移）
+- docs/_layouts/default.html：覆盖主题 layout，仅译页脚两句（"本站为开源项目，欢迎改进此页。"），其余与 gem 逐字节一致
+
+## 配置期统一改写清单（已完成于源文件则打钩）
+
+- [x] 5 处 `](../…)` 仓库根死链 → 改指 GitHub blob URL（上游线上站本就 404）：
+  - templates/app-review-readiness.json、templates/REVIEW-NOTES-TEMPLATE.md、data/regulatory-deadlines.json、
+    agent-os/hooks/app-store-compliance-guard.sh、.github/SECURITY.md
+- [ ] llms.txt：正文译、URL 一律不动（红线）
+
+## 锚点预算（全站仅 1 个跨文件锚点，0 个同页锚点）
+
+- MISTAKE-PATTERNS.md 内 `#the-appeal-playbook` ←→ GOOGLE-PLAY.md？链接处待译时回填 `.anchor-maps/`
+- 英文锚点基线：/tmp/dist-en（旧锚点权威底稿，CI 内重建）
+
+## 批次（33 篇 md + llms.txt，共 125,565 词）
+
+| 批 | 内容 | 词数 | 状态 |
+|---|---|---|---|
+| 0 | 脚手架 + 配置中文化 + EN 基线 | - | ✅ 本 commit |
+| 1 | index + PRE-SUBMISSION-CHECKLIST + APPLE | 9,801 | ⬜ |
+| 2 | GOOGLE-PLAY + BY-APP-TYPE + MISTAKE-PATTERNS（含锚点回修） | 6,030 | ⬜ |
+| 3 | MOBILE-PRIVACY-MONITOR + MOBILE-SECURITY + CROSS-PLATFORM-FRAMEWORKS + WHAT-THE-SCAN-PROVES + ACCESSIBILITY | 13,286 | ⬜ |
+| 4 | PRIVACY-POLICY-MIGRATION + SECURITY-POLICY-MIGRATION + ANDROID-POLICY-MIGRATION + AI-POLICY-MIGRATION | 6,966 | ⬜ |
+| 5 | EU-REGULATORY-2026 + GLOBAL-REGULATORY-2026 | 14,861 | ⬜ |
+| 6 | PLATFORM-MECHANICS-2026 + ADVANCED-2026 + OPEN-SOURCE-PATTERNS | 9,389 | ⬜ |
+| 7 | GAP-ANALYSIS-2026-09 + GAP-ANALYSIS-2026-11 + REGULATORY-GAP-REPORT-2026 + COMPETITIVE-GAP-ANALYSIS | 9,443 | ⬜ |
+| 8 | OTHER-STORES + GAMBLING-MATRIX + FLEET-SWEEP + RULING-REGISTER + CREDITS | 3,789 | ⬜ |
+| 9 | questions.md（21k 词，单文件分多回复译） | 21,041 | ⬜ |
+| 10 | REGULATORY-TIMELINE.md（27.9k 词，207 表行，分多回复译） | 27,855 | ⬜ |
+| 11 | llms.txt + 项目 README + 终检（残留/CJK 粗体/锚点/构建） | - | ⬜ |
+
+## 阶段
+
+- 阶段 A（翻译）：进行中（批次表如上）
+- 阶段 B（带 base 构建演练）：每批后跑 tools/build.sh 验证；终检跑全量（内链前缀/中文锚点/残留/字面 `**`）
+- 阶段 C（五处同步）：⬜ sites.json + gen-index、deploy-pages.yml（`cp -r site → _site/app-store-compliance`）、README 三处
+
+## 下一步
+
+批次 1（index.md + PRE-SUBMISSION-CHECKLIST.md + APPLE.md）
