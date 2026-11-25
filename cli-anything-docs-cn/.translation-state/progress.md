@@ -11,11 +11,11 @@
 - [x] 批次 1：index.html（落地页静态层 + 注册表应用 UI 文案：调色板名/筛选分类全量中文映射/卡片模板/翻转控件/复制反馈/空态；残留扫描 CLEAN）
 - [x] 批次 2：docs.html（文档页：TOC/8 节正文/命令卡/退出码/调用块全量汉化，概念树 token 与命令保留英文；残留扫描 CLEAN）
 - [x] 批次 3：demos.html（演示页：6 个演示条目标题/简介/元信息/媒体 chrome 全量汉化，harness 名与命令保留；残留扫描 CLEAN）
-- [ ] 批次 4：index.md + pricing.md
-- [ ] 批次 5：llms.txt + llms-full.txt
+- [x] 批次 4：index.md + pricing.md（commit f6ced814）
+- [x] 批次 5：llms.txt + llms-full.txt（同 commit）
 - [x] 批次 6：index-modern.html（备选首页全量汉化：hero/侧栏/排序菜单/卡片模板/结果计数；残留扫描 CLEAN）
 - [x] 终检：4 个 HTML 残留扫描全 CLEAN；子路径冒烟 14 个 URL 全 200；CJK 渲染确认；无残留 ../../ 引用
-- [~] 阶段 C：五处同步完成 4.5/5——sites.json 第 36 条 / gen-index 31 站 / README 三处 已提交；deploy-pages.yml 构建段已改在工作树并存为 .translation-state/deploy-pages.yml.patch，**但推不上远端**（checkout PAT 403；App github.token 无 workflows 权限，GitHub 拒推 workflow 文件改动）——等用户处理（见 issue 回帖）
+- [~] 阶段 C → [x] **全部完成**：sites.json 第 36 条 / gen-index 31 站 / README 三处（commit 81f41209）+ deploy-pages.yml 纯拷贝构建段（commit fb0b67a6）。push 权限卡点已解除：用户修复 DOCS_CN_PAT（fine-grained，含 contents+workflows 写权限），2026-11-25 续跑 push 验证通过，workflow 文件改动成功上远端
 
 ## 范围裁决记录
 
@@ -27,17 +27,15 @@
 
 ## 下一步
 
-批次 4：index.md + pricing.md
+无——全部完成（STATUS=done）。等待 workflow 开 PR，人工合并后自动部署
 
 ## 交付
 
 - 部署：https://lif3ng-vibe.github.io/docs-cn/cli-anything/（人工合并 PR 后自动）
 - 全部批次完成：0 脚手架 / 1 index.html / 2 docs.html / 3 demos.html / 4 md×2 / 5 llms×2 / 6 index-modern / 终检 / 五处同步
 
-## 卡点（2026-11-25）
+## 卡点（2026-11-25，已解除）
 
 push 报错：`refusing to allow a GitHub App to create or update workflow .github/workflows/deploy-pages.yml without workflows permission`
-- translate-on-issue.yml checkout 用 `secrets.DOCS_CN_PAT || github.token`，当前 DOCS_CN_PAT（lif3ng）push 403
-- 本 run 已把 extraheader 换成 App token（github.token）：contents:write 正常（此前 8 个 checkpoint 都推上了），但缺 workflows:write
-- 候选：a) 修/换 DOCS_CN_PAT（需 contents+workflows 写权限）后 /continue；b) 给 workflow 的 permissions 加 workflows:write（若用 App token）；c) 用户手工套用 patch
-- 工作树保留 yml 改动未提交；patch 文件已入库（.translation-state/deploy-pages.yml.patch）
+- translate-on-issue.yml checkout 用 `secrets.DOCS_CN_PAT || github.token`，当时 DOCS_CN_PAT 403、App github.token 有 contents:write 无 workflows:write
+- 曾把 yml 改动暂存为 .translation-state/deploy-pages.yml.patch；用户修复 PAT 后 `/continue`，续跑套用 patch → commit fb0b67a6 → push 成功，卡点关闭（patch 文件保留作记录，可后续清理）
