@@ -28,7 +28,12 @@ for (const line of body.split(/\r?\n/)) {
   }
   if (cur) sections[cur].push(line);
 }
-const val = (label) => (sections[label] || []).join('\n').trim();
+// GitHub 表单对留空的可选字段填字面量 "_No response_"（或 "No response"），按空值处理
+const EMPTY_MARKERS = /^_?\s*no response\s*_?$/i;
+const val = (label) => {
+  const v = (sections[label] || []).join('\n').trim();
+  return EMPTY_MARKERS.test(v) ? '' : v;
+};
 
 const out = {};
 for (const [label, key] of LABELS) out[key] = val(label);
