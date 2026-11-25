@@ -1,103 +1,103 @@
-# Gap analysis, September 2026
+# 差距分析（2026 年 9 月）
 
 <!-- freshness: 60d -->
 
-What was checked, what changed on the platforms and in law since the previous sweep, what developers are reporting in public, and what this playbook added or corrected in response. Verified against primary sources on 5 September 2026. Anything that could not be read from a primary source is listed under Unverified, not folded into a rule.
+本篇记录：检查了什么；自上一轮扫描以来平台与法律发生了什么变化；开发者在公开渠道报告了什么；以及本实战手册据此新增或修正了什么。已于 2026 年 9 月 5 日对照一手来源完成核验。凡是无法从一手来源读到的内容，都列在"未经验证"一节之下，而不是揉进规则里。
 
-## 1. Method
+## 1. 方法
 
-- Apple. every App Store Connect, App Review, and Developer Program announcement since 1 June 2026 was fetched and read, with the June 8 guideline text diffed against the previous revision. 88 percent of items were read on developer.apple.com itself, the rest on Apple support pages.
-- Google. every Play Console Help policy announcement and Android Developers Blog post since 1 June 2026, plus the Android 17 (API 37) behaviour-change pages.
-- Regulation. five regional passes (EU, UK, US federal, APAC, and Canada, Australia, Brazil), each returning only dated items with a quoted sentence from the instrument. federalregister.gov, ecfr.gov, congress.gov, ofcom.org.uk, ico.org.uk, and meity.gov.in blocked scripted fetches. those items were read through govinfo bulk data, a headed browser session, or a mirror, and are marked as such.
-- Community. a 30-day sweep across Reddit, Hacker News, GitHub, and YouTube on App Store and Play rejections, plus a targeted sweep of r/appledevelopers on developer verification. Reddit rate-limited the sweep after 15 items and blocked every direct fetch, so Reddit coverage is partial and stated as partial.
-- Repo. every finding was diffed against `data/rejection-patterns.json`, `data/regulatory-deadlines.json`, the guard, and the docs before anything was written.
+- Apple：抓取并通读了 2026 年 6 月 1 日以来的每一条 App Store Connect、App Review 与 Developer Program 公告，并把 6 月 8 日的审核指南文本与上一版做了 diff。88% 的条目直接在 developer.apple.com 上读取，其余在 Apple 支持页面上读取。
+- Google：自 2026 年 6 月 1 日以来的每一条 Play Console 帮助政策公告与每一篇 Android Developers Blog 文章，外加 Android 17（API 37）的行为变更页面。
+- 法规：五轮区域扫描（欧盟、英国、美国联邦、亚太，以及加拿大、澳大利亚、巴西），每轮只返回带日期且附有法规原文引句的条目。federalregister.gov、ecfr.gov、congress.gov、ofcom.org.uk、ico.org.uk 与 meity.gov.in 拒绝了脚本抓取；这些条目改经 govinfo 批量数据、带请求头的浏览器会话或镜像读取，并如实标注。
+- 社区：围绕 App Store 与 Play 的拒审，在 Reddit、Hacker News、GitHub 与 YouTube 上做了一轮 30 天扫描，另外针对开发者核验专项扫描了 r/appledevelopers。Reddit 在扫到 15 条后触发限流并封锁了所有直接抓取，因此 Reddit 的覆盖是部分的，此处也如实写为部分覆盖。
+- 仓库：在写入任何东西之前，每一条发现都先与 `data/rejection-patterns.json`、`data/regulatory-deadlines.json`、守卫以及文档做了 diff。
 
-## 2. What developers are saying (the pains behind the gaps)
+## 2. 开发者在说什么（差距背后的痛点）
 
-Each item below produced a pattern, a deadline, or a doc change. Quotes are verbatim from the saved raw files under `~/Documents/Last30Days/`.
+下面每一项都产出了一条模式、一个截止日期或一处文档变更。引文逐字取自保存在 `~/Documents/Last30Days/` 下的原始文件。
 
-- Play chargebacks now land on the developer. r/androiddev, "Google Play's chargeback/dispute changes cost you $28.50 on a $5 sale". Verified on Play Console Help answer 17068375. orders after 3 August 2026 shift the disputed purchase amount to the developer, and the Review Refund API is the only way to contest one. Added GOOGLE-PLAY-CHARGEBACK-LIABILITY plus a guard check for Play Billing without refund-review handling.
-- Donation links are a Payments rejection. AnkiDroid issue 21656 (921 points on Hacker News). Google's own line, quoted in the issue, "501(c)(6) status does not suffice because user donations are not tax-exempt." Added GOOGLE-PAYMENTS-DONATION-LINK and a guard check for Open Collective, Ko-fi, Patreon, and similar links in an Android build.
-- External purchase links are a US-only carve-out. Multiple implementation reports say the same link UI shipped worldwide is rejected under 3.1.1 outside the United States and to "budget two rejection rounds". Added APPLE-3.1.1-EXTERNAL-LINK-REGION-GATING with a storefront-gating counter-signal.
-- Android developer verification confuses per-bundle-id setups. r/expo, "my app was automatically verified by Android for the new policy ... However, I do have separate bundle identifiers." Added GOOGLE-PLAY-APP-REGISTRATION-MISSING (register every distributed package name by 30 September 2026) and the account-readiness checklist.
-- Vibe-coded apps discover review late. "I thought being able to build was enough to launch an app. I was wrong." The pre-submission checklist gained an account and program readiness section so the blockers that sit before review are visible before the first build.
-- React Native and Expo builds flagged "App optimization: Low". Two separate r/reactnative threads. Traced to the February 2027 technical-quality requirement (R8 at 25 percent minimum coverage). Added ANDROID-R8-OPTIMIZATION-MISSING with a Gradle check.
+- Play 的拒付（chargeback）损失现在落在开发者身上。来源：r/androiddev，"Google Play's chargeback/dispute changes cost you $28.50 on a $5 sale"。已在 Play Console 帮助答案 17068375 上核验。2026 年 8 月 3 日之后的订单会把有争议的购买金额转由开发者承担，而 Review Refund API 是对拒付提出异议的唯一途径。已新增 GOOGLE-PLAY-CHARGEBACK-LIABILITY，外加一条针对"使用 Play Billing 却未处理退款复核"的守卫检查。
+- 捐赠链接会按 Payments 政策被判拒审。来源：AnkiDroid issue 21656（Hacker News 上 921 分）。Google 自己被 issue 引用的原话："501(c)(6) status does not suffice because user donations are not tax-exempt." 已新增 GOOGLE-PAYMENTS-DONATION-LINK，以及一条针对 Android 构建中 Open Collective、Ko-fi、Patreon 及类似链接的守卫检查。
+- 外购（external purchase）链接只是仅限美国的例外安排。多份实施报告都指出：全球同一套链接 UI 一旦上线，在美国以外会依据 3.1.1 被拒，而且要"预留两轮拒审的预算"。已新增 APPLE-3.1.1-EXTERNAL-LINK-REGION-GATING，并带有一个按店面（storefront）门控的反向信号。
+- Android 开发者核验会让按 bundle id 分别配置的做法感到困惑。来源：r/expo，"my app was automatically verified by Android for the new policy ... However, I do have separate bundle identifiers." 已新增 GOOGLE-PLAY-APP-REGISTRATION-MISSING（每个已分发的包名都要在 2026 年 9 月 30 日前完成登记）以及账号就绪清单。
+- Vibe coding 产出的应用很晚才发现要过审。来源："I thought being able to build was enough to launch an app. I was wrong." 提交前清单因此新增了"账号与开发者计划就绪"一节，让那些卡在审核之前的障碍在第一次构建之前就能看见。
+- React Native 与 Expo 构建被标记为"App optimization: Low"。来自 r/reactnative 的两个独立帖子。已溯源到 2027 年 2 月的技术质量要求（R8 覆盖率至少 25%）。已新增 ANDROID-R8-OPTIMIZATION-MISSING，并附带一个 Gradle 检查。
 
-## 3. The r/appledevelopers verification question, validated
+## 3. r/appledevelopers 核验问题的验证结果
 
-The ask was how many people on r/appledevelopers report actually getting verified, and whether the playbook covers those steps.
+这个问题要问的是：r/appledevelopers 上有多少人报告自己真的通过了核验，以及实战手册是否覆盖了这些步骤。
 
-- Subreddit evidence. the last30days sweep of r/appledevelopers returned four threads in the window (a Team Name change on an Individual account, a Guideline 5.6 removal for features hidden during review, a timer app launch, and a Private Cloud Compute entitlement question). None is a verification thread. Reddit returned HTTP 429 partway through and blocked every direct fetch, including a headless browser session, so this is partial coverage and not proof the topic is absent.
-- Forum evidence, which is where the pain actually shows. Apple Developer Forums thread 817247 has five replies on Developer Program enrollment stuck in identity verification. four still pending, one approved after about a month, one refunded. Thread 816626 reports the identity-upload link failing with "Sorry, you don't have access. Your account isn't authorized to upload files" for more than 45 days. Threads 816864, 817185, 813667, 821680, 814930, and 767809 report the same shape, and one individual-to-organization migration has been open for 61 days. Sources. [thread 817247](https://developer.apple.com/forums/thread/817247), [thread 816626](https://developer.apple.com/forums/thread/816626).
-- Was the playbook tackling it. No. Enrollment and account readiness appeared only as a VPN organization-enrollment row and a Health organization-migration line. Nothing said that the account can block a launch for weeks before review starts, and Guideline 5.6 existed only as a table row.
-- What changed. APPLE-ENROLLMENT-VERIFICATION-PENDING (manual pattern, six-week enrollment lead time, ADPLA attachment acceptance, migration a quarter ahead), the account and program readiness section in `docs/PRE-SUBMISSION-CHECKLIST.md`, and the account-readiness line in the Apple 2026 changes list. The honest count from the evidence read. of six enrollment reports with a stated outcome, one verified, one refunded, four still pending.
+- 子版块证据：last30days 对 r/appledevelopers 的扫描在窗口期内返回了四个帖子（一个 Individual 账号的 Team Name 修改、一例因审核期间隐藏功能而被以 Guideline 5.6 下架的案例、一个计时器应用上线，以及一个 Private Cloud Compute entitlement 问题）。其中没有任何一个是核验帖。Reddit 在中途返回 HTTP 429，并封锁了包括无头浏览器会话在内的所有直接抓取，因此这只是部分覆盖，并不能证明该话题不存在。
+- 论坛证据——痛点真正显形的地方。Apple Developer Forums 的帖子 817247 上有五条回复，讨论 Developer Program 注册卡在身份验证环节：四条仍在等待，一条约一个月后获批，一条已退款。帖子 816626 报告身份材料上传链接持续失败超过 45 天，报错为"Sorry, you don't have access. Your account isn't authorized to upload files"。帖子 816864、817185、813667、821680、814930 与 767809 报告的情况如出一辙，另有一桩个人转组织（individual-to-organization）迁移已挂起 61 天。来源：[帖子 817247](https://developer.apple.com/forums/thread/817247)、[帖子 816626](https://developer.apple.com/forums/thread/816626)。
+- 实战手册此前有没有覆盖它。没有。注册与账号就绪只以"VPN 组织注册"一行和"Health 组织迁移"一行的形式出现过。没有任何内容指出账号会在审核开始之前把上线卡住数周；Guideline 5.6 也只是表格中的一行。
+- 改了什么。新增 APPLE-ENROLLMENT-VERIFICATION-PENDING（人工维护模式、六周注册提前量、接受 ADPLA 附件、迁移提前一个季度启动）、`docs/PRE-SUBMISSION-CHECKLIST.md` 中的"账号与开发者计划就绪"一节，以及 Apple 2026 变更清单中的账号就绪条目。基于所读证据的诚实计数：六份给出明确结果的注册报告中，一份已核验，一份已退款，四份仍在等待。
 
-## 4. Apple, verified deltas
+## 4. Apple：已核实的差异
 
-| Change | Source | Repo action |
+| 变更 | 来源 | 仓库动作 |
 |---|---|---|
-| Social media capability declaration is a submission gate since September 2026, minimum 13+, Declared Age Range for under-13 | [0d2gpmml](https://developer.apple.com/news/?id=0d2gpmml), [tlur8uvi](https://developer.apple.com/news/?id=tlur8uvi) | APPLE-2.3.6-SOCIAL-MEDIA-DECLARATION, deadline, APPLE.md row |
-| Sign in with Apple relay addresses also arrive from private.icloud.com | [1ptvdtcm](https://developer.apple.com/news/?id=1ptvdtcm) | APPLE-4.0-SIWA-RELAY-DOMAIN, guard check |
-| Age assurance requires the iOS 26.2 SDK and handling RESCIND_CONSENT | [Age assurance support](https://developer.apple.com/support/age-assurance) | APPLE-5.1.1-RESCIND-CONSENT-UNHANDLED, guard check |
-| Guideline 1.2 UGC escalation and 4.5.3 Live Activities named (8 June 2026) | [Guidelines](https://developer.apple.com/app-store/review/guidelines/) | Pattern updates, APPLE-4.5.3-LIVE-ACTIVITY-SPAM |
-| On-Demand Resources deprecated from the 27 OS family | [WWDC26 App Store guide](https://developer.apple.com/wwdc26/guides/app-store/) | APPLE-ODR-DEPRECATED-27, guard check |
-| App Store Connect API 4.3 and 4.4 removed the old age-rating endpoints | [API 4.4 notes](https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-release-notes) | APPLE-ASCAPI-AGERATING-ENDPOINT-REMOVED, guard check |
-| Rosetta sunset, macOS 27 per the 1 September notice, macOS 26 per the 9 September notice | [w5ngl9k2](https://developer.apple.com/news/?id=w5ngl9k2), [k1mtkt1k](https://developer.apple.com/news/?id=k1mtkt1k) | APPLE-MACOS-ROSETTA-SUNSET |
-| April 2027 SDK 27 floor for uploads (iOS, iPadOS, tvOS, visionOS, watchOS) | [k1mtkt1k](https://developer.apple.com/news/?id=k1mtkt1k) | APPLE-SDK-27-REQ deadline, PLATFORM-MECHANICS section 1.6 |
-| App Review contact phone in international format, first in-app purchase of each type needs a new app version (19 August 2026) | [App Store Connect release notes](https://developer.apple.com/help/app-store-connect/release-notes/) | Pre-submission checklist, APPLE.md Notes for Review |
-| Screenshot specifications for iPhone Duo, iPhone 18 Pro and Pro Max, Apple Watch Ultra 4 and Series 12 (9 September 2026) | [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) | PLATFORM-MECHANICS section 1.6, checklist |
-| EU unified terms from 1 October 2026, CTC replaces CTF, Attachment 14 | [gmws0jgp](https://developer.apple.com/news/?id=gmws0jgp), [0cgo95n6](https://developer.apple.com/news/?id=0cgo95n6) | EU-DMA-UNIFIED-TERMS-2026, EU-REGULATORY section 2.3 rewritten |
-| Brazil alternative distribution from iOS 26.5, Attachment 12 by 6 July 2026 | [dhwadr2x](https://developer.apple.com/news/?id=dhwadr2x), [umq9wxmm](https://developer.apple.com/news/?id=umq9wxmm) | Deadline, GLOBAL-REGULATORY section 3.3 |
-| Australia 15+ removed, Vietnam Decree 147 rating, Korea descriptor move | [yrrb45pw](https://developer.apple.com/news/?id=yrrb45pw), [oj3r9pvw](https://developer.apple.com/news/?id=oj3r9pvw) | Deadline, GLOBAL-REGULATORY sections 3.2, 3.5, 3.10 |
-| Brazil betting licence check needs a new binary | [x4eyetnp](https://developer.apple.com/news/?id=x4eyetnp) | APPLE-GAMBLING-BRAZIL-LICENSE fix text |
+| 社交媒体能力声明自 2026 年 9 月起成为提交闸口，最低 13+，未满 13 岁须走 Declared Age Range | [0d2gpmml](https://developer.apple.com/news/?id=0d2gpmml), [tlur8uvi](https://developer.apple.com/news/?id=tlur8uvi) | APPLE-2.3.6-SOCIAL-MEDIA-DECLARATION、截止日期、APPLE.md 行 |
+| Sign in with Apple 的中继地址也会来自 private.icloud.com | [1ptvdtcm](https://developer.apple.com/news/?id=1ptvdtcm) | APPLE-4.0-SIWA-RELAY-DOMAIN、守卫检查 |
+| 年龄核验（age assurance）要求 iOS 26.2 SDK，并要求处理 RESCIND_CONSENT | [年龄核验支持](https://developer.apple.com/support/age-assurance) | APPLE-5.1.1-RESCIND-CONSENT-UNHANDLED、守卫检查 |
+| 明确点名 Guideline 1.2 的 UGC 升级与 4.5.3 的 Live Activities（2026 年 6 月 8 日） | [审核指南](https://developer.apple.com/app-store/review/guidelines/) | 模式更新、APPLE-4.5.3-LIVE-ACTIVITY-SPAM |
+| On-Demand Resources 自 27 OS 家族起废弃 | [WWDC26 App Store 指南](https://developer.apple.com/wwdc26/guides/app-store/) | APPLE-ODR-DEPRECATED-27、守卫检查 |
+| App Store Connect API 4.3 与 4.4 移除了旧的年龄分级端点 | [API 4.4 发布说明](https://developer.apple.com/documentation/appstoreconnectapi/app-store-connect-api-4-4-release-notes) | APPLE-ASCAPI-AGERATING-ENDPOINT-REMOVED、守卫检查 |
+| Rosetta 退场：按 9 月 1 日公告是 macOS 27，按 9 月 9 日公告是 macOS 26 | [w5ngl9k2](https://developer.apple.com/news/?id=w5ngl9k2), [k1mtkt1k](https://developer.apple.com/news/?id=k1mtkt1k) | APPLE-MACOS-ROSETTA-SUNSET |
+| 2027 年 4 月起上传须满足 SDK 27 下限（iOS、iPadOS、tvOS、visionOS、watchOS） | [k1mtkt1k](https://developer.apple.com/news/?id=k1mtkt1k) | APPLE-SDK-27-REQ 截止日期、PLATFORM-MECHANICS 第 1.6 节 |
+| App Review 联系电话须用国际格式；每种类型的首个应用内购买（In-App Purchase，IAP）都需要新的应用版本（2026 年 8 月 19 日） | [App Store Connect 发布说明](https://developer.apple.com/help/app-store-connect/release-notes/) | 提交前清单、APPLE.md 的 Notes for Review |
+| iPhone Duo、iPhone 18 Pro 与 Pro Max、Apple Watch Ultra 4 与 Series 12 的截屏规格（2026 年 9 月 9 日） | [截屏规格](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) | PLATFORM-MECHANICS 第 1.6 节、清单 |
+| 欧盟统一条款自 2026 年 10 月 1 日起，CTC 取代 CTF，附件 14（Attachment 14） | [gmws0jgp](https://developer.apple.com/news/?id=gmws0jgp), [0cgo95n6](https://developer.apple.com/news/?id=0cgo95n6) | EU-DMA-UNIFIED-TERMS-2026、EU-REGULATORY 第 2.3 节已重写 |
+| 巴西替代分发自 iOS 26.5 起，附件 12（Attachment 12）须在 2026 年 7 月 6 日前完成 | [dhwadr2x](https://developer.apple.com/news/?id=dhwadr2x), [umq9wxmm](https://developer.apple.com/news/?id=umq9wxmm) | 截止日期、GLOBAL-REGULATORY 第 3.3 节 |
+| 澳大利亚移除 15+ 档，越南 Decree 147 分级，韩国描述词调整 | [yrrb45pw](https://developer.apple.com/news/?id=yrrb45pw), [oj3r9pvw](https://developer.apple.com/news/?id=oj3r9pvw) | 截止日期、GLOBAL-REGULATORY 第 3.2、3.5、3.10 节 |
+| 巴西投注牌照检查需要新的二进制文件 | [x4eyetnp](https://developer.apple.com/news/?id=x4eyetnp) | APPLE-GAMBLING-BRAZIL-LICENSE 的修复方法文本 |
 
-Stale entries corrected. `docs/PLATFORM-MECHANICS-2026.md` cited the wrong announcement id for the June 2026 Guideline 4.3 tightening (now a233fmpw) and still said API 35 (now API 36 with the 1 November 2026 extension). `docs/EU-REGULATORY-2026.md` section 2.3 said the unified fee model was not implemented. it is, from 1 October 2026.
+已修正的过期条目：`docs/PLATFORM-MECHANICS-2026.md` 为 2026 年 6 月的 Guideline 4.3 收紧所引用的公告 id 有误（现为 a233fmpw），且仍写着 API 35（现为 API 36，并附带 2026 年 11 月 1 日的宽展）。`docs/EU-REGULATORY-2026.md` 第 2.3 节曾说统一费率模式尚未实施——实际已实施，自 2026 年 10 月 1 日起。
 
-## 5. Google Play and Android, verified deltas
+## 5. Google Play 与 Android：已核实的差异
 
-| Change | Source | Repo action |
+| 变更 | 来源 | 仓库动作 |
 |---|---|---|
-| Chargeback cost shift, 3 August 2026 | [Play Console Help 17068375](https://support.google.com/googleplay/android-developer/answer/17068375) | GOOGLE-PLAY-CHARGEBACK-LIABILITY, guard check, deadline, GOOGLE-PLAY.md row |
-| Donation links under the Payments policy | [Payments policy](https://support.google.com/googleplay/android-developer/answer/9992660) | GOOGLE-PAYMENTS-DONATION-LINK, guard check |
-| Organization account for regulated categories, 30 September 2026 | [Play Console requirements](https://support.google.com/googleplay/android-developer/answer/10788890) | GOOGLE-ORG-REGISTRATION-REQUIRED, guard check, deadline |
-| Register every package name for developer verification, 30 September 2026 | [15 July 2026 announcement](https://support.google.com/googleplay/android-developer/answer/17134731) | GOOGLE-PLAY-APP-REGISTRATION-MISSING, deadline |
-| READ_CALL_LOG no longer permitted for call verification, 26 August 2026 | same | GOOGLE-PERM-SMS-CALLLOG detection updated |
-| Anonymous and random chat apps in scope of Child Safety Standards | [17036597](https://support.google.com/googleplay/android-developer/answer/17036597) | GOOGLE-ANON-CHAT-MINOR-BLOCK, guard check |
-| Generative AI NCII controls, 25 August 2026 | [Android Developers Blog](https://android-developers.googleblog.com/2026/08/ensuring-safety-genai-preventing-non-consensual-intimate-content.html) | GOOGLE-GENAI-NCII-CONTROLS, guard check |
-| Unrated apps not allowed, third-party AI in the User Data policy | [17134731](https://support.google.com/googleplay/android-developer/answer/17134731) | GOOGLE-UNRATED-APP-BANNED |
-| API 37 targets. Contact Picker, location button, geofencing out of foreground services (27 January 2027) | [16909972](https://support.google.com/googleplay/android-developer/answer/16909972), [16965181](https://support.google.com/googleplay/android-developer/answer/16965181) | Three patterns, TSDK-gated guard block, deadline |
-| Technical quality, February 2027 (R8, memory) and Restore Credentials, April 2027 | [17492799](https://support.google.com/googleplay/android-developer/answer/17492799) | ANDROID-R8-OPTIMIZATION-MISSING, ANDROID-RESTORE-CREDENTIALS-REQUIRED, deadlines |
-| Android 17 ACCESS_LOCAL_NETWORK, read-only native libraries, per-app memory limits | [Behavior changes 17](https://developer.android.com/about/versions/17/behavior-changes-17) | ANDROID-LOCAL-NETWORK-PERMISSION, ANDROID-DYNAMIC-CODE-LOADING updated |
-| Target API 36 with 1 November 2026 extension, Billing v8 ladder to 2028 | [Target SDK](https://developer.android.com/google/play/requirements/target-sdk) | Deadline text updated, GOOGLE-TARGET-API updated |
-| US alternative billing reporting from 1 October 2026, Play Catalog Access default from 22 July 2026 | [16497028](https://support.google.com/googleplay/android-developer/answer/16497028), [17117200](https://support.google.com/googleplay/android-developer/answer/17117200) | Deadlines, GOOGLE-PLAY.md section |
+| 拒付（chargeback）成本转嫁，2026 年 8 月 3 日 | [Play Console 帮助 17068375](https://support.google.com/googleplay/android-developer/answer/17068375) | GOOGLE-PLAY-CHARGEBACK-LIABILITY、守卫检查、截止日期、GOOGLE-PLAY.md 行 |
+| Payments 政策下的捐赠链接 | [Payments 政策](https://support.google.com/googleplay/android-developer/answer/9992660) | GOOGLE-PAYMENTS-DONATION-LINK、守卫检查 |
+| 受监管类目须用组织账号，2026 年 9 月 30 日 | [Play Console 要求](https://support.google.com/googleplay/android-developer/answer/10788890) | GOOGLE-ORG-REGISTRATION-REQUIRED、守卫检查、截止日期 |
+| 为开发者核验登记每一个包名，2026 年 9 月 30 日 | [2026 年 7 月 15 日公告](https://support.google.com/googleplay/android-developer/answer/17134731) | GOOGLE-PLAY-APP-REGISTRATION-MISSING、截止日期 |
+| READ_CALL_LOG 不再允许用于电话核验，2026 年 8 月 26 日 | 同上 | GOOGLE-PERM-SMS-CALLLOG 检测已更新 |
+| 匿名与随机聊天应用纳入儿童安全标准（Child Safety Standards）范围 | [17036597](https://support.google.com/googleplay/android-developer/answer/17036597) | GOOGLE-ANON-CHAT-MINOR-BLOCK、守卫检查 |
+| 生成式 AI 的 NCII（未经同意的亲密影像）管控，2026 年 8 月 25 日 | [Android Developers Blog](https://android-developers.googleblog.com/2026/08/ensuring-safety-genai-preventing-non-consensual-intimate-content.html) | GOOGLE-GENAI-NCII-CONTROLS、守卫检查 |
+| 禁止未分级应用；用户数据政策纳入第三方 AI | [17134731](https://support.google.com/googleplay/android-developer/answer/17134731) | GOOGLE-UNRATED-APP-BANNED |
+| API 37 目标：Contact Picker、位置按钮、地理围栏退出前台服务（2027 年 1 月 27 日） | [16909972](https://support.google.com/googleplay/android-developer/answer/16909972), [16965181](https://support.google.com/googleplay/android-developer/answer/16965181) | 三条模式、按目标 SDK（TSDK）门控的守卫区块、截止日期 |
+| 技术质量（R8、内存）为 2027 年 2 月，Restore Credentials 为 2027 年 4 月 | [17492799](https://support.google.com/googleplay/android-developer/answer/17492799) | ANDROID-R8-OPTIMIZATION-MISSING、ANDROID-RESTORE-CREDENTIALS-REQUIRED、多个截止日期 |
+| Android 17 的 ACCESS_LOCAL_NETWORK、只读原生库、按应用内存上限 | [Android 17 行为变更](https://developer.android.com/about/versions/17/behavior-changes-17) | 新增 ANDROID-LOCAL-NETWORK-PERMISSION；ANDROID-DYNAMIC-CODE-LOADING 已更新 |
+| 目标 API 36，宽展至 2026 年 11 月 1 日；Billing v8 阶梯延至 2028 年 | [Target SDK](https://developer.android.com/google/play/requirements/target-sdk) | 截止日期文本已更新；GOOGLE-TARGET-API 已更新 |
+| 美国替代计费报告义务自 2026 年 10 月 1 日起；Play Catalog Access 自 2026 年 7 月 22 日起为默认 | [16497028](https://support.google.com/googleplay/android-developer/answer/16497028), [17117200](https://support.google.com/googleplay/android-developer/answer/17117200) | 截止日期；GOOGLE-PLAY.md 一节 |
 
-Correction, 23 November 2026. The READ_CALL_LOG row above recorded 26 August 2026 from the 15 July 2026 announcement (Play Console Help answer 17134731). That announcement named the change and did not state a day. Answer 10208820, read on 23 November 2026, says account verification via phone call stops being a permitted use case for READ_CALL_LOG on 27 January 2027, and the exceptions table on that page still lists the use case until then. The 29 October 2026 announcement (answer 18100766) states the same date and adds the SMS User Consent API. The replacements are the Digital Credentials API, either directly or through a verification provider built upon it, the SMS Retriever API, and the SMS User Consent API. The September row is left as it was written.
+更正（2026 年 11 月 23 日）：上面 READ_CALL_LOG 一行记录的 2026 年 8 月 26 日出自 2026 年 7 月 15 日的公告（Play Console 帮助答案 17134731）。该公告点名了这项变更，但没有给出具体日期。2026 年 11 月 23 日读到的答案 10208820 说明：以电话呼叫做账号核验自 2027 年 1 月 27 日起不再是 READ_CALL_LOG 的允许用途，且该页的例外表在此之前仍列出这一用途。2026 年 10 月 29 日的公告（答案 18100766）给出同一日期，并新增了 SMS User Consent API。替代方案是 Digital Credentials API（可直接使用，或经由构建于其上的核验服务商）、SMS Retriever API 以及 SMS User Consent API。9 月那一行按原样保留。
 
-## 6. Regulation, verified deltas
+## 6. 法规：已核实的差异
 
-Thirty-eight deadlines were added and eight corrected. The full dated list is in `data/regulatory-deadlines.json` and the compiled view in `docs/REGULATORY-TIMELINE.md`.
+共新增 38 个截止日期，修正 8 个。带日期的完整清单在 `data/regulatory-deadlines.json`，汇总视图在 `docs/REGULATORY-TIMELINE.md`。
 
-- United States. DOJ ADA Title II and HHS Section 504 mobile-app accessibility dates were extended by 2026 interim final rules to 26 April 2027 and 11 May 2027 (large entities) and 26 April 2028 and 10 May 2028 (small). The FTC COPPA age-verification policy statement (25 February 2026) is a live safe harbour. COPPA 2.0 passed the Senate and the KIDS Act passed the House, neither is law. The COPPA section 312.11 carve-outs bind Safe Harbor programs, not developers, a correction to the earlier text.
-- United Kingdom. DUAA commenced 5 February 2026 with the complaints process on 19 June 2026. ICO storage and access guidance published 29 April 2026. DMCCA subscription regime moves to January 2027 (earlier estimate was spring 2027). Under-16 social media ban regulations laid by end of 2026 for spring 2027, with an 18+ floor for AI romantic companions. Ofcom app stores report due by January 2027.
-- European Union. Regulation (EU) 2026/1744 is in force, so the Annex III and Annex I high-risk dates (2 December 2027, 2 August 2028) are law, and 2 December 2026 brings the marking retrofit and the NCII and CSAM prohibition. Data Act 12 September 2026 is access-by-design, not switching (switching charges hit zero 12 January 2027). Product Liability Directive applies from 9 December 2026. eIDAS wallet acceptance by 24 December 2027. CSAM ePrivacy derogation expires 3 April 2028. There is no general EAA 2027 date.
-- Asia-Pacific. Korea PIPA amendment effective 11 September 2026. China AI anthropomorphic services measures effective 15 July 2026 (no companion services to minors). Singapore OSRAA partially commenced 29 June 2026. India Consent Managers tranche 13 November 2026. Japan APPI amendment effective by 16 July 2028 with an under-16 threshold.
-- Canada, Australia, Brazil. Australia's App Distribution Services Code age-assurance duty bites 9 September 2026 (read from an archived copy, re-confirm live), Privacy Act automated-decision disclosure and the Children's Online Privacy Code land 10 December 2026. Brazil's Decreto 12.880 (18 March 2026) puts age signals on stores and operating systems, with ANPD enforcement from January 2027. Canada has no new dated app obligation.
-- US states. Utah moved to 6 May 2027 (HB 498), Louisiana to 1 July 2027 (HB 977), Texas is in force since 1 January 2026 after the Supreme Court left the Fifth Circuit stay in place, Alabama is confirmed for 1 January 2027. New 2027 dates for California (AB 1043, SB 976, AB 56, CPPA automated decision-making), New York SAFE for Kids (25 January 2027), Vermont, Washington, Oklahoma, and Colorado (2028).
+- 美国：DOJ 的 ADA Title II 与 HHS 的 Section 504 移动应用无障碍日期，已被 2026 年的临时最终规则（interim final rule）延至 2027 年 4 月 26 日和 2027 年 5 月 11 日（大型实体），以及 2028 年 4 月 26 日和 2028 年 5 月 10 日（小型实体）。FTC 关于 COPPA 年龄验证的政策声明（2026 年 2 月 25 日）仍是有效的安全港。COPPA 2.0 已过参议院，KIDS Act 已过众议院，但两者都还不是法律。COPPA 第 312.11 条的例外约束的是安全港（Safe Harbor）项目而非开发者——这是对早先文本的一处更正。
+- 英国：DUAA 于 2026 年 2 月 5 日生效，投诉流程自 2026 年 6 月 19 日起。ICO 的存储与访问指引于 2026 年 4 月 29 日发布。DMCCA 订阅制度推迟至 2027 年 1 月（此前的估计是 2027 年春）。16 岁以下社交媒体禁令的配套法规将于 2026 年底前提交议会、2027 年春生效，并对 AI 浪漫伴侣设 18+ 下限。Ofcom 的应用商店报告须在 2027 年 1 月前提交。
+- 欧盟：Regulation (EU) 2026/1744 已生效，因此附件 III 与附件 I 的高风险日期（2027 年 12 月 2 日、2028 年 8 月 2 日）已是法律，且 2026 年 12 月 2 日带来标识义务的追溯适用以及 NCII 与 CSAM 禁令。Data Act 在 2026 年 9 月 12 日落地的是 access-by-design（设计上即可访问），而非应用切换（切换费用于 2027 年 1 月 12 日归零）。Product Liability Directive 自 2026 年 12 月 9 日起适用。eIDAS 钱包接受义务的期限为 2027 年 12 月 24 日。CSAM 的 ePrivacy 减损条款于 2028 年 4 月 3 日到期。并不存在一个笼统的 EAA 2027 日期。
+- 亚太：韩国 PIPA 修正案于 2026 年 9 月 11 日生效。中国 AI 拟人化服务管理规定于 2026 年 7 月 15 日生效（不得向未成年人提供陪伴式服务）。新加坡 OSRAA 于 2026 年 6 月 29 日部分生效。印度 Consent Manager（同意管理者）批次为 2026 年 11 月 13 日。日本 APPI 修正案最迟于 2028 年 7 月 16 日生效，并设未满 16 岁的阈值。
+- 加拿大、澳大利亚、巴西：澳大利亚《App Distribution Services Code》的年龄核验义务自 2026 年 9 月 9 日起生效（读自存档副本，请对照实时页面再次确认）；《Privacy Act》的自动化决策披露与《Children's Online Privacy Code》于 2026 年 12 月 10 日落地。巴西的 Decreto 12.880（2026 年 3 月 18 日）把年龄信号加到商店和操作系统上，ANPD 自 2027 年 1 月起开始执法。加拿大没有新增带日期的应用义务。
+- 美国各州：犹他州推迟到 2027 年 5 月 6 日（HB 498），路易斯安那州推迟到 2027 年 7 月 1 日（HB 977）；最高法院让第五巡回法院的暂缓令维持原状之后，得克萨斯州自 2026 年 1 月 1 日起已生效；阿拉巴马州确认在 2027 年 1 月 1 日。新增 2027 年日期的有：加利福尼亚州（AB 1043、SB 976、AB 56、CPPA 自动化决策）、纽约州 SAFE for Kids（2027 年 1 月 25 日）、佛蒙特州、华盛顿州、俄克拉何马州，以及科罗拉多州（2028 年）。
 
-## 7. Process improvements shipped with this sweep
+## 7. 随本轮扫描一并交付的流程改进
 
-- Account and program readiness is now the first section a submitter reads, because the community evidence shows the account, not the binary, is what blocks a first launch in 2026.
-- Every deadline that has passed carries `absorbed_into`, so `scripts/deadline-checker.py` points at the pattern or doc section that now owns it instead of shouting overdue.
-- The guard gauntlet grew from 26 to 42 cases and its silent-case checks now match the finding line, so a deadline that names a pattern id can no longer false-fail a silence test.
-- A missing explicit project path now fails open in the guard instead of silently scanning the working directory.
+- "账号与开发者计划就绪"现在是提交者读到的第一节，因为社区证据表明：2026 年卡住首次上线的不是二进制文件，而是账号。
+- 每一个已过期的截止日期都带有 `absorbed_into`，`scripts/deadline-checker.py` 会指向现在接手它的模式或文档章节，而不是一味喊"逾期"。
+- 守卫的 gauntlet 用例从 26 个增至 42 个，其静默用例检查现在与发现行保持一致，因此写有模式 id 的截止日期不会再让静默测试误报失败。
+- 守卫在缺少显式项目路径时现在会放行（fail open），而不是静默扫描当前工作目录。
 
-## 8. Unverified, deliberately not encoded
+## 8. 未经验证：刻意不写入规则的内容
 
-- The exact day in September 2026 the social media declaration gate opened, the exact February and April 2027 days for Play technical quality and Restore Credentials, and the exact January 2027 day for the DMCCA regime. Tracked as the first of the month with the wording quoted.
-- The exact April 2027 day for the 27 SDK upload floor. Apple has named the month only. Tracked as 1 April 2027 with the wording quoted. The iPhone Duo asset upload date, resolved on 5 October 2026 when Apple opened Duo submissions and screenshots and set April 2027 for Duo screenshots to become required ([Apple](https://developer.apple.com/news/?id=kkphp5qo)).
-- The global rollout date for Android developer verification beyond Brazil, Indonesia, Singapore, and Thailand. Google has not published it.
-- Whether the DOJ ADA interim final rule has been finalised, and whether the FTC AI-accuracy policy statement was adopted after 31 July 2026.
-- Japan APPI law number and the six-month penalty commencement, Korea mandatory certification (1 July 2027), Korea MyData expansion dates. secondary sources only.
-- The India DPDP Rules Gazette text was confirmed from a mirror because meity.gov.in returned 403.
-- Re-checked on 14 November 2026 against primary sources (#659). The Apple social media gate, the Play February and April 2027 requirements, the SDK 27 floor, and the Duo screenshot rule still give a month only. Android developer verification expands globally in 2027 with no day. The DOJ ADA Title II rule is still the interim final rule, and the FTC AI accuracy statement is still listed as proposed. The UK subscription regime has draft regulations naming 1 January 2027. The Japan APPI amendment is Act No. 56 of 2026, with penal provisions from 17 January 2027 by calculation. Korea's mandatory privacy certification starts 1 July 2027. The India Gazette was read on meity.gov.in. The Australia App Distribution Services Code on the live eSafety register remains unread. The Korea MyData dates were read on 23 November 2026 in the PIPA Enforcement Decree on law.go.kr. 13 March 2025 for the health and telecom transmitters, 1 June 2026 for energy, 20 August 2026 for public system operators, and 20 February 2027 for large private handlers.
-- r/appledevelopers coverage is partial. the Reddit sweep was rate-limited after 15 items and every direct fetch was blocked.
+- 2026 年 9 月社交媒体声明闸口开放的确切日期、Play 技术质量与 Restore Credentials 在 2027 年 2 月与 4 月的确切日期，以及 DMCCA 制度在 2027 年 1 月的确切日期。均按当月 1 日跟踪，并引用原文措辞。
+- 27 SDK 上传下限在 2027 年 4 月的确切日期。Apple 只给了月份。按 2027 年 4 月 1 日跟踪，并引用原文措辞。iPhone Duo 素材上传日期已在 2026 年 10 月 5 日得到解决：Apple 当日开放 Duo 提交与截屏，并规定 Duo 截屏自 2027 年 4 月起变为必填（[Apple](https://developer.apple.com/news/?id=kkphp5qo)）。
+- Android 开发者核验在巴西、印度尼西亚、新加坡和泰国之外的全球铺开日期。Google 尚未公布。
+- DOJ 的 ADA 临时最终规则是否已定稿，以及 FTC 的 AI 准确性政策声明是否在 2026 年 7 月 31 日之后获得通过。
+- 日本 APPI 的法律编号与六个月后罚则的启动、韩国强制认证（2027 年 7 月 1 日）、韩国 MyData 扩展的日期。仅有二手来源。
+- 印度 DPDP Rules 的宪报文本是从镜像确认的，因为 meity.gov.in 返回了 403。
+- 已于 2026 年 11 月 14 日对照一手来源复查过（#659）。Apple 社交媒体闸口、Play 在 2027 年 2 月与 4 月的要求、SDK 27 下限与 Duo 截屏规则仍只给到月份。Android 开发者核验在 2027 年全球铺开，无具体日期。DOJ 的 ADA Title II 规则仍是临时最终规则，FTC 的 AI 准确性声明仍列为"已提案"。英国的订阅制度已有写明 2027 年 1 月 1 日的法规草案。日本 APPI 修正案为 2026 年第 56 号法（Act No. 56 of 2026），按推算罚则自 2027 年 1 月 17 日起适用。韩国的强制隐私认证自 2027 年 7 月 1 日开始。印度宪报已在 meity.gov.in 上读取。eSafety 实时名册上的澳大利亚《App Distribution Services Code》仍未读取。韩国 MyData 的日期已于 2026 年 11 月 23 日在 law.go.kr 的《PIPA 施行令》（Enforcement Decree）中读到：健康与电信数据传输方为 2025 年 3 月 13 日，能源为 2026 年 6 月 1 日，公共系统运营者为 2026 年 8 月 20 日，大型私人处理者为 2027 年 2 月 20 日。
+- r/appledevelopers 的覆盖是部分的：Reddit 扫描在 15 条之后被限流，且所有直接抓取均被封锁。

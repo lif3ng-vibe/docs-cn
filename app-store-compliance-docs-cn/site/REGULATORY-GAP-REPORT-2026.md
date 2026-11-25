@@ -1,277 +1,277 @@
-# Global and Regional Regulatory Compliance Gap Report (2026)
+# 全球与地区监管合规缺口报告（2026）
 
-This report audits the playbook itself. It takes six regulations that bind app developers shipping into the EU and the US, and checks honestly how far this repository already carries each one, what it only mentions in passing, and what it does not cover at all.
+本报告审计的对象是实战手册本身。它选取了六部约束面向欧盟与美国市场发行应用的开发者的法规，诚实地检查本仓库对每一部法规已经覆盖到什么程度、哪些只是一笔带过，以及哪些完全没有涉及。
 
-Read it as a work list for the playbook, not as legal advice for your company. Where it says something is missing, it means missing from this repository. Each framework is checked across eight angles, which are policy, documentation, code, disclosure, logging, testing, evidence, and audit trail.
+请把它当作实战手册的工作清单来读，而不是贵公司的法律意见。凡是说某项内容缺失，指的都是本仓库中缺失。每一部法规框架都从八个角度进行检查，分别是政策、文档、代码、披露、日志、测试、证据与审计追踪。
 
-## Source trust hierarchy and methodology
+## 来源可信度层级与方法论
 
-All analysis and cited legal frameworks within this report adhere to the strict source trust hierarchy.
-- Priority 1 (Official Primary): European Commission, EUR-Lex, Official Journal of the European Union, ENISA, EDPB, FTC, NIST, CISA, ICO, and official government publications.
-- Priority 2 (Reputable News Agencies): Reuters, AP (Associated Press), Bloomberg.
-- Priority 3 (Academic Publications): Academic papers and peer-reviewed journals.
-- Priority 4 (Industry Publications): Industry blogs and vendor publications.
-- Priority 5 (Social and Unverified): LinkedIn, Reddit, Twitter, and AI generated summaries.
+本报告中的全部分析与所引用的法律框架均遵循严格的信息源可信度层级。
+- 优先级 1（官方一手来源）：欧盟委员会、EUR-Lex、《欧盟官方公报》（Official Journal of the European Union）、ENISA、EDPB、FTC、NIST、CISA、ICO 以及官方政府出版物。
+- 优先级 2（可信新闻机构）：Reuters、AP（Associated Press）、Bloomberg。
+- 优先级 3（学术出版物）：学术论文与同行评审期刊。
+- 优先级 4（行业出版物）：行业博客与厂商出版物。
+- 优先级 5（社交媒体与未经验证来源）：LinkedIn、Reddit、Twitter 以及 AI 生成的摘要。
 
-No Priority 4 or Priority 5 sources are relied upon unless corroborated traceably by Priority 1 publications. In line with repository guidelines, this document is 100% emoji-free and contains no emoticons or graphical symbols of any kind.
-
----
-
-## 1. EU General Product Safety Regulation (GPSR)
-
-### 1.1 Regulatory Overview and Background
-The EU General Product Safety Regulation (GPSR), Regulation (EU) 2023/988, entered into force on 12 June 2023 and became fully applicable on 13 December 2024. It replaces the old General Product Safety Directive (2001/95/EC) to address the safety challenges of online marketplaces, digital products, and complex supply chains.
-
-The GPSR applies to all non-food consumer products placed on the EU market, both offline and online. For digital systems and software, the GPSR mandates that online marketplaces and e-commerce applications clearly display product safety warnings, instructions, manufacturer and importer identity, and contact details directly on the online interface.
-
-Official Citation: Regulation (EU) 2023/988 of the European Parliament and of the Council of 10 May 2023 on general product safety.
-
-### 1.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
-
-- **Missing Policy:**
-  The playbook gives a developer no way to decide whether their listing falls inside Regulation (EU) 2023/988, and no template policy to hand a client who asks.
-- **Missing Documentation:**
-  The repository is missing specific developer checklists, guides, or instructional manuals on how to structure online product listings to display GPSR-mandated safety warnings, manufacturer details, and technical instructions.
-- **Missing Code:**
-  The automated compliance guard and detection recipes lack any rules or patterns to scan codebase files for GPSR-related elements. Additionally, mock user interfaces and templates in this repository do not contain code blocks for displaying manufacturer identity or product safety warnings on EU storefronts.
-- **Missing Disclosure:**
-  Online interface templates do not provide placeholder components or guidance for displaying the manufacturer's name, registered trade name or trademark, postal address, and electronic address (such as email or website) as required under Article 19 of the GPSR.
-- **Missing Logging:**
-  There are no architectural provisions or schemas for logging product safety incidents, recalls, or corrective actions. The repository fails to supply templates for a centralized, secure incident log.
-- **Missing Testing:**
-  No automated tests exist to verify that online interface elements dynamically display required product safety information, manufacturer details, or warning notices based on the user's geographic location.
-- **Missing Evidence:**
-  The repository lacks physical templates or examples of compliance evidence, such as Technical Documentation sheets, safety risk assessments, or proof of a designated Responsible Person in the EU.
-- **Missing Audit Trail:**
-  There is no audit trail or historical record system to track when product safety policies were updated, when safety warnings were reviewed, or when corrective measures were implemented in response to a safety alert.
-
-### 1.3 Remediation and Action Plan
-1. Establish a written General Product Safety Policy outlining the designation of an EU-based Responsible Person and product classification criteria.
-2. Incorporate GPSR-specific metadata requirements (manufacturer address, email, product identifier) into `data/rejection-patterns.json` and `docs/PRE-SUBMISSION-CHECKLIST.md`.
-3. Add UI templates in the references directory that demonstrate compliant product detail pages including safety warning labels and electronic contact details.
-4. Integrate an automated test runner script that verifies the presence of safety disclosures prior to app submission.
+除非能被优先级 1 出版物可追溯地佐证，否则不依赖任何优先级 4 或优先级 5 来源。按照仓库准则，本文档 100% 不使用 emoji，也不包含任何表情符号或图形符号。
 
 ---
 
-## 2. EU e-Evidence Package
+## 1. 欧盟《通用产品安全条例》（GPSR）
 
-### 2.1 Regulatory Overview and Background
-The EU e-Evidence Package consists of Regulation (EU) 2023/1543 on European Production and Preservation Orders for electronic evidence in criminal matters and Directive (EU) 2023/1544 on the appointment of legal representatives for the purpose of gathering evidence. Adopted in 2023, the mandatory compliance enforcement date is 18 August 2026.
+### 1.1 法规概览与背景
+欧盟《通用产品安全条例》（GPSR），即 Regulation (EU) 2023/988，于 2023 年 6 月 12 日生效，并于 2024 年 12 月 13 日全面适用。它取代了旧的《通用产品安全指令》（2001/95/EC），以应对在线电商平台、数字产品和复杂供应链带来的安全挑战。
 
-This framework allows judicial authorities of an EU Member State to issue European Production Orders (EPOs) or European Preservation Orders directly to service providers offering services in the EU, regardless of where the provider is headquartered. The default compliance window to produce user data is 10 days, but in critical emergency cases, providers are legally required to produce the requested data within a strict 8-hour timeline.
+GPSR 适用于投放到欧盟市场的所有非食品类消费品，无论线下还是线上。对于数字系统与软件，GPSR 要求在线电商平台和电商应用直接在在线界面上清晰展示产品安全警告、使用说明、制造商与进口商身份以及联系方式。
 
-Official Citation: Regulation (EU) 2023/1543 and Directive (EU) 2023/1544 of the European Parliament and of the Council.
+官方引文：欧洲议会与理事会 2023 年 5 月 10 日《关于通用产品安全的条例》（Regulation (EU) 2023/988）。
 
-### 2.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
+### 1.2 八大合规类别的全面缺口分析
 
-- **Missing Policy:**
-  The playbook carries no template Law Enforcement Request Policy, so a small team receiving an EU judicial order has nothing to start from and no guidance on who may act on it.
-- **Missing Documentation:**
-  While the repository mentions the e-Evidence Package in general, it lacks concrete operational instructions, runbooks, or detailed manuals for handling 10-day standard orders and 8-hour emergency orders.
-- **Missing Code:**
-  There are no automated scripts or secure API endpoints in the repository's backend mock implementations to assist in securely exporting, filtering, and packaging user data in response to a valid legal order.
-- **Missing Disclosure:**
-  Public-facing documentation, including Privacy Policies, fails to explicitly disclose to EU users that their data may be preserved or disclosed to European law enforcement in accordance with Regulation (EU) 2023/1543.
-- **Missing Logging:**
-  The repository does not contain database schemas or logging systems designed to track incoming law enforcement requests, verification statuses, data access activities, or data releases.
-- **Missing Testing:**
-  There are no integration tests or validation flows to simulate the rapid 8-hour emergency retrieval and secure packaging of user data under simulated pressure.
-- **Missing Evidence:**
-  The repository is missing verified templates of European Production Order certificates (EPOC) or European Preservation Order certificates (EPOC-PR) for compliance officers to study and verify.
-- **Missing Audit Trail:**
-  A secure, unalterable audit trail system to record every administrative interaction, data extraction, and transmission made by compliance officers during a legal request is completely absent.
+- **缺失政策**：
+  实战手册没有给开发者任何办法判断自己的商店详情页是否落入 Regulation (EU) 2023/988 的适用范围，也没有可在客户询问时交付的模板政策。
+- **缺失文档**：
+  仓库缺少专门面向开发者的清单、指南或操作手册，说明如何组织在线商品详情页的结构，以展示 GPSR 强制要求的安全警告、制造商信息与技术说明。
+- **缺失代码**：
+  自动化合规守卫（guard）与检测配方缺少任何用于扫描代码库文件中 GPSR 相关元素的规则或模式。此外，本仓库中的模拟用户界面与模板也不包含在欧盟店面（storefront）上展示制造商身份或产品安全警告的代码块。
+- **缺失披露**：
+  在线界面模板没有按照 GPSR 第 19 条的要求，提供用于展示制造商名称、注册商号或商标、邮政地址以及电子联系方式（如电子邮件或网站）的占位组件或指引。
+- **缺失日志**：
+  没有任何用于记录产品安全事故、召回或纠正措施的架构设计或数据模式（schema）。仓库也未能提供集中式、安全的事故日志模板。
+- **缺失测试**：
+  没有任何自动化测试来验证在线界面元素会根据用户所在的地理位置动态展示所需的产品安全信息、制造商详情或警告通知。
+- **缺失证据**：
+  仓库缺少合规证据的实体模板或示例，例如技术文档（Technical Documentation）表、安全风险评估，或在欧盟指定负责人（Responsible Person）的证明。
+- **缺失审计追踪**：
+  没有任何审计追踪或历史记录系统来追踪产品安全政策于何时更新、安全警告于何时复审，或针对安全警报于何时落实纠正措施。
 
-### 2.3 Remediation and Action Plan
-1. Draft and implement a comprehensive Law Enforcement Response Protocol that specifically establishes the roles, responsibilities, and secure communication channels for executing EPOs.
-2. Formally designate an EU establishment or legal representative and notify the designated central authority before the 18 August 2026 deadline.
-3. Build secure backend scripts to automate the extraction and encryption of requested user datasets, ensuring execution can occur within the 8-hour emergency window.
-4. Establish a tamper-proof cryptographic audit trail to log all incoming certificates, verification checks, data extractions, and secure transmissions.
-
----
-
-## 3. EU Contract Withdrawal Button
-
-### 3.1 Regulatory Overview and Background
-The Distance Marketing of Financial Services Directive (EU) 2023/2673 amends the Consumer Rights Directive (Directive 2011/83/EU). It requires a prominent, easily accessible withdrawal button or withdrawal function on the online interface for distance contracts for financial services concluded by electronic means.
-
-Scope matters here, and it is easy to overstate. The withdrawal button obligation in this Directive attaches to distance financial services contracts, not to every consumer subscription. A general withdrawal button across all distance contracts has been proposed at EU level but is not yet law. Treat it as binding today if your app sells insurance, credit, payment, investment, or another financial service into the EU, and as a strong design default otherwise, since Apple already requires an easy in-app cancellation path regardless.
-
-The statutory withdrawal period is 14 days from the conclusion of the contract. The cancellation path must be direct, clear, and at least as simple as the sign-up path. Member States apply these rules from 19 June 2026.
-
-Official Citation: Directive (EU) 2023/2673 of the European Parliament and of the Council of 22 November 2023.
-
-### 3.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
-
-- **Missing Policy:**
-  The playbook carries no template policy for the 14 day withdrawal right, and no guidance separating apps that genuinely fall in scope from those adopting it as a design default.
-- **Missing Documentation:**
-  The repository does not provide UI design guidelines or checklists specifying the placement, size, prominence, and terminology required to make the withdrawal button compliant with EU expectations.
-- **Missing Code:**
-  The front-end user interface templates and billing mock codes in this repository do not contain any functional implementation of a withdrawal button or withdrawal modal sheet.
-- **Missing Disclosure:**
-  Subscription registration interfaces do not prominently disclose the 14-day statutory right of withdrawal or provide an in-app link explaining the consequences and terms of contract revocation.
-- **Missing Logging:**
-  There are no logging mechanisms designed to capture and record when a user clicks the withdrawal button, the timestamp of the request, the confirmation of contract termination, or the initiation of the refund flow.
-- **Missing Testing:**
-  No automated UI or unit tests exist in the repository to verify that the withdrawal flow can be completed successfully without administrative friction (such as requiring customer service interaction).
-- **Missing Evidence:**
-  The repository lacks templates of withdrawal forms, cancellation confirmation receipts, or standardized documentation to prove compliance in the event of consumer disputes.
-- **Missing Audit Trail:**
-  A systematic audit trail tracking the historical cancellation and refund rates, compliance audits of subscription flows, and updates to the cancellation interface is not implemented.
-
-### 3.3 Remediation and Action Plan
-1. Formulate a Consumer Cancellation and Refund Policy aligned with the Distance Marketing of Financial Services Directive.
-2. Develop a prominent, easily accessible "Withdrawal Button" component within the account settings of all EU-facing subscription templates.
-3. Establish robust logging of cancellation requests, timestamps, and refund transactions in a dedicated database schema.
-4. Implement automated end-to-end UI tests to verify that the withdrawal button executes a frictionless, self-service contract termination without requiring manual human approval.
+### 1.3 修复方法与行动计划
+1. 制定书面的通用产品安全政策，明确在欧盟境内指定负责人（Responsible Person）以及产品分类标准。
+2. 将 GPSR 特有的元数据要求（制造商地址、电子邮件、产品标识符）纳入 `data/rejection-patterns.json` 与 `docs/PRE-SUBMISSION-CHECKLIST.md`。
+3. 在 references 目录中添加展示合规商品详情页的 UI 模板，包含安全警告标签与电子联系方式。
+4. 集成自动化测试执行脚本，在应用提交前验证安全披露信息已就位。
 
 ---
 
-## 4. US State App Store Accountability Acts (ASAA)
+## 2. 欧盟电子证据一揽子方案（e-Evidence Package）
 
-### 4.1 Regulatory Overview and Background
-The US State App Store Accountability Acts (ASAA) represent a growing wave of state-level legislation (Utah SB 142, Texas SB 2420, Louisiana HB 977, Alabama HB 161) aimed at regulating minors' access to mobile applications, in-app purchases, and content updates.
+### 2.1 法规概览与背景
+欧盟电子证据一揽子方案（e-Evidence Package）由两部分组成：关于刑事事项中电子证据的欧洲调取令与保全令的 Regulation (EU) 2023/1543，以及关于为收集证据而指定法定代表人的 Directive (EU) 2023/1544。该一揽子方案于 2023 年通过，强制合规执法日期为 2026 年 8 月 18 日。
 
-These laws place strict operational obligations on both app stores and mobile application developers. Developers must request and process the user's age category (e.g., via Apple's Declared Age Range API or Google's Play Age Signals API) and obtain verifiable parental consent before allowing minors (under 18 or under 16, depending on the state) to download, purchase digital goods, or access major updates. Furthermore, verified age verification data must be deleted immediately after verification to protect children's privacy.
+该框架允许欧盟成员国的司法当局直接向在欧盟境内提供服务的服务提供商签发欧洲调取令（European Production Order，EPO）或欧洲保全令（European Preservation Order），无论提供商总部位于何处。提交用户数据的默认合规窗口为 10 天；但在紧急危急情况下，法律要求提供商在严格的 8 小时时限内提交所请求的数据。
 
-Official Citations: Utah SB 142 (2025), Texas SB 2420 (2025), Louisiana HB 977 (2026), Act No. 185, which replaces HB 570 (2025), Alabama HB 161 (2026).
+官方引文：欧洲议会与理事会的 Regulation (EU) 2023/1543 与 Directive (EU) 2023/1544。
 
-### 4.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
+### 2.2 八大合规类别的全面缺口分析
 
-- **Missing Policy:**
-  The playbook has no template minors policy showing how to detect a user in Utah, Texas, Louisiana, or Alabama, and how to handle a minor account once detected.
-- **Missing Documentation:**
-  The checklists in `docs/PRE-SUBMISSION-CHECKLIST.md` lack precise, step-by-step developer guidelines for integrating Apple's Declared Age Range API and Google's Play Age Signals API within the same multi-platform project.
-- **Missing Code:**
-  Although the rejection patterns contain entries for state-level laws, the mock client implementations in the codebase do not integrate with `DeclaredAgeRange` or `com.google.android.play:age-signals` to restrict app access dynamically.
-- **Missing Disclosure:**
-  The in-app onboarding flows do not display required state disclosures explaining that the user's age category is requested to comply with state accountability laws and that parental consent is mandatory for minors.
-- **Missing Logging:**
-  There is no secure backend system designed to log the receipt of parental consent, consent revocations (such as the `RESCIND_CONSENT` server notification), or the immediate deletion of raw age-verification documents.
-- **Missing Testing:**
-  The test suites do not include automated integration tests to verify that the application blocks minor accounts from accessing premium features or completing in-app purchases in the absence of valid consent signals.
-- **Missing Evidence:**
-  The repository does not contain templates or examples of parental consent agreements, identity verification logs, or data minimization records to prove compliance to state Attorneys General.
-- **Missing Audit Trail:**
-  An immutable audit trail to record the historical rollout of age-assurance features, changes in consent policies, and records of immediate verification data deletions is entirely absent.
+- **缺失政策**：
+  实战手册没有任何执法请求政策（Law Enforcement Request Policy）模板，因此收到欧盟司法命令的小团队无从下手，也不知道谁有权处理。
+- **缺失文档**：
+  仓库虽然笼统提及电子证据一揽子方案，但缺少处理 10 天标准命令与 8 小时紧急命令的具体操作说明、运维手册（runbook）或详细手册。
+- **缺失代码**：
+  仓库的后端模拟实现中没有任何自动化脚本或安全的 API 端点，无法协助在响应有效法律命令时安全地导出、筛选和打包用户数据。
+- **缺失披露**：
+  面向公众的文档（包括隐私政策）没有向欧盟用户明确披露：其数据可能依据 Regulation (EU) 2023/1543 被保全或披露给欧洲执法机构。
+- **缺失日志**：
+  仓库不包含用于追踪收到的执法请求、核验状态、数据访问活动或数据交出情况的数据库模式（schema）或日志系统。
+- **缺失测试**：
+  没有任何集成测试或验证流程来模拟在压力情境下于 8 小时内紧急取回并安全打包用户数据的过程。
+- **缺失证据**：
+  仓库缺少经过核实的欧洲调取令证书（EPOC）或欧洲保全令证书（EPOC-PR）模板，合规人员无从学习与核对。
+- **缺失审计追踪**：
+  完全缺失一套安全、不可篡改的审计追踪系统，用于记录合规人员在法律请求过程中的每一次行政交互、数据提取与传输。
 
-### 4.3 Remediation and Action Plan
-1. Create a detailed written Minor Age Assurance Policy that specifies how state-level requirements are identified and how children's data is strictly minimized.
-2. Implement cross-platform native hooks in the mobile codebases to query Apple's Declared Age Range API and Google's Play Age Signals API during onboarding.
-3. Build database triggers and automated procedures to purge raw age-verification data immediately after the user's age category is confirmed.
-4. Establish automated unit tests that verify that when the age category returns a minor band, in-app billing is disabled until a verifiable parental consent flag is successfully processed.
-
----
-
-## 5. EU AI Act Article 4 (AI Literacy)
-
-### 5.1 Regulatory Overview and Background
-Article 4 of the EU AI Act (Regulation (EU) 2024/1689) establishes a mandatory requirement for AI literacy. It mandates that any provider or deployer of AI systems (including mobile application developers utilizing third-party generative AI APIs) must take measures to ensure a sufficient level of AI literacy among their staff and other persons dealing with the operation of AI systems.
-
-This requirement applies to all organizations, with no headcount carve-out, meaning small development teams and solo creators are equally bound. The level of literacy required scales with the technical complexity and impact of the AI integration. Pragmatic compliance for a software engineering team requires maintaining a written policy, team induction records, a refresh schedule, and an active training log.
-
-Official Citation: Regulation (EU) 2024/1689, Article 4.
-
-### 5.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
-
-- **Missing Policy:**
-  The playbook carries no template AI literacy policy, and nothing that helps a small team judge what counts as a sufficient level under Article 4.
-- **Missing Documentation:**
-  The repository lacks developer-facing documentation or checklists explaining the team's obligations under Article 4 or how to stay updated on emerging AI safety and risk evaluation standards.
-- **Missing Code:**
-  Not applicable, since Article 4 binds people rather than code. A small helper that checks whether a literacy log exists and is current would still be useful.
-- **Missing Disclosure:**
-  Public-facing documentation, recruitment materials, or partner contracts do not disclose our commitment to or enforcement of AI literacy standards as mandated by Article 4.
-- **Missing Logging:**
-  The repository is missing an active, centralized training log or registry to track employee inductions, course completions, and regular literacy refreshers.
-- **Missing Testing:**
-  There are no automated internal lints, pre-commit hooks, or CLI tools to verify that team members committing AI-related changes have valid, up-to-date literacy records.
-- **Missing Evidence:**
-  The playbook has no example of what acceptable evidence looks like, such as a completed training log, a course record, or a written risk assessment.
-- **Missing Audit Trail:**
-  There is no historical audit trail documenting when the AI literacy policy was reviewed, when training modules were updated, or how team training records evolved over time.
-
-### 5.3 Remediation and Action Plan
-1. Draft and publish an internal AI Literacy Policy defining the required competency areas (AI safety, risk assessment, data privacy, bias identification).
-2. Create a centralized `AI_LITERACY_LOG.md` within the repository to track training dates, modules, team member names, and verification methods.
-3. Designate a compliance coordinator to review the team's literacy records on an annual basis.
-4. Set up an automated check in the CI pipeline that warns if the literacy log has not been reviewed or updated within the calendar year.
+### 2.3 修复方法与行动计划
+1. 起草并落实一套全面的执法响应协议，明确执行 EPO 所涉及的角色、职责与安全通信渠道。
+2. 在 2026 年 8 月 18 日截止日期前，正式指定欧盟境内机构或法定代表人，并通知指定的中央主管机关。
+3. 构建安全的后端脚本，将所请求用户数据集的提取与加密自动化，确保能够在 8 小时紧急窗口内完成执行。
+4. 建立防篡改的加密审计追踪，记录所有收到的证书、核验检查、数据提取与安全传输。
 
 ---
 
-## 6. EU AI Act Article 50 (Transparency Obligations)
+## 3. 欧盟合同撤回按钮
 
-### 6.1 Regulatory Overview and Background
-Article 50 of the EU AI Act dictates strict transparency obligations for certain AI systems, taking full legal effect on 2 August 2026. This framework is a critical release blocker for any application incorporating artificial intelligence that reaches users in the European Union.
+### 3.1 法规概览与背景
+《金融服务远程营销指令》（Directive (EU) 2023/2673）修订了《消费者权利指令》（Directive 2011/83/EU）。它要求对于以电子方式订立的金融服务远程合同，须在在线界面上设置醒目且易于访问的撤回按钮或撤回功能。
 
-Under Article 50(1), providers must ensure that AI systems intended to interact directly with natural persons are designed and developed in such a way that those persons are informed that they are interacting with an AI system. Article 50(2) mandates that outputs of generative AI systems (text, audio, images, or video) must be marked in a machine-readable format and detectable as artificially generated or manipulated. Article 50(4) requires deployers of deepfakes to disclose that the content has been artificially generated or manipulated.
+适用范围在这里很关键，而且很容易被夸大。本指令中的撤回按钮义务只针对金融服务远程合同，而非每一份消费者订阅。针对所有远程合同的通用撤回按钮已在欧盟层面被提出，但尚未成为法律。如果你的应用向欧盟销售保险、信贷、支付、投资或其他金融服务，应把它当作当前就有约束力的义务；否则应把它当作强有力的设计默认值——因为无论如何，Apple 都已要求提供便捷的应用内取消路径。
 
-Official Citation: Regulation (EU) 2024/1689, Article 50.
+法定撤回期为合同订立后的 14 天。取消路径必须直接、清晰，且至少与注册路径同样简单。成员国自 2026 年 6 月 19 日起适用这些规则。
 
-### 6.2 Comprehensive Gap Analysis Across the Eight Compliance Categories
+官方引文：欧洲议会与理事会 2023 年 11 月 22 日的 Directive (EU) 2023/2673。
 
-- **Missing Policy:**
-  The playbook carries no template AI transparency policy covering when disclosure must appear and how generated media should be marked.
-- **Missing Documentation:**
-  The checklists in `docs/PRE-SUBMISSION-CHECKLIST.md` mention Article 50 but lack detailed, technical, developer-facing instructions on how to implement machine-readable watermarking or deepfake disclosures.
-- **Missing Code:**
-  The codebase templates do not include helper classes, middle-tier layers, or utilities to inject in-audible or invisible machine-readable watermarks (such as C2PA metadata) into generated assets.
-- **Missing Disclosure:**
-  Chat and generation UI templates do not display the required immediate disclosure ("You are interacting with an AI system") at the time of the first user exposure.
-- **Missing Logging:**
-  There are no database logging schemas or tracking mechanisms to record that an AI transparency warning was successfully displayed to a specific user session.
-- **Missing Testing:**
-  The existing test runner scripts do not check for the presence of synthetic media markers or verify that generated outputs are machine-detectable as artificially created.
-- **Missing Evidence:**
-  The repository is missing factual evidence of compliance, such as independent security assessments of content moderation filters or proof of metadata retention.
-- **Missing Audit Trail:**
-  An unalterable audit trail recording our technical choices, vendor audits, model changes, and modifications to our transparency disclosures is not maintained.
+### 3.2 八大合规类别的全面缺口分析
 
-### 6.3 Remediation and Action Plan
-1. Formulate a corporate AI Transparency and Disclosure Policy that mandates direct disclosure and machine-readable output marking.
-2. Incorporate explicit, prominent notices (such as "You are chatting with an AI assistant") inside all conversational interface templates.
-3. Implement standard metadata injection (using the C2PA specification or cryptographic watermarking) inside all synthetic media generation pipelines.
-4. Establish automated integration tests to scan generated media outputs and verify that the machine-readable compliance headers are properly set and preserved.
+- **缺失政策**：
+  实战手册没有任何针对 14 天撤回权的模板政策，也没有指导如何区分真正落入适用范围的应用与只是把它当作设计默认值的应用。
+- **缺失文档**：
+  仓库没有提供 UI 设计准则或清单，说明撤回按钮在位置、尺寸、醒目程度与措辞上需要达到什么要求才能符合欧盟的预期。
+- **缺失代码**：
+  本仓库的前端用户界面模板与计费模拟代码中，不包含任何撤回按钮或撤回弹层（modal sheet）的功能性实现。
+- **缺失披露**：
+  订阅注册界面没有醒目披露 14 天法定撤回权，也没有提供应用内链接来解释合同解除的后果与条款。
+- **缺失日志**：
+  没有任何日志机制来采集并记录用户点击撤回按钮的时间、请求的时间戳、合同终止的确认，或退款流程的启动。
+- **缺失测试**：
+  仓库中没有任何自动化 UI 测试或单元测试来验证撤回流程可以在没有行政阻力的情况下顺利完成（例如不需要客服介入）。
+- **缺失证据**：
+  仓库缺少撤回表单、取消确认回执，或在发生消费者纠纷时证明合规的标准化文档模板。
+- **缺失审计追踪**：
+  没有实现系统性审计追踪，来追踪历史取消率与退款率、订阅流程的合规审计，以及取消界面的更新。
+
+### 3.3 修复方法与行动计划
+1. 制定与《金融服务远程营销指令》保持一致的消费者取消与退款政策。
+2. 在所有面向欧盟的订阅模板的账号设置中，开发一个醒目且易于访问的“撤回按钮”（Withdrawal Button）组件。
+3. 在专用的数据库模式（schema）中，为取消请求、时间戳与退款交易建立可靠的日志记录。
+4. 实现自动化端到端 UI 测试，验证撤回按钮能够以无阻力、自助的方式完成合同终止，而无需人工审批。
 
 ---
 
-## 7. Consolidated Gap Classification Matrix
+## 4. 美国各州 App Store Accountability Act（ASAA）
 
-Where the playbook already covers a framework, the cell says Covered. Partial means the rule is named with a dated source but a developer still has no step by step way to satisfy it. Missing means the playbook does not carry it at all.
+### 4.1 法规概览与背景
+美国各州 App Store Accountability Act（ASAA）代表着一股不断壮大的州级立法浪潮（犹他 SB 142、得克萨斯 SB 2420、路易斯安那 HB 977、阿拉巴马 HB 161），旨在监管未成年人对移动应用、应用内购买（In-App Purchase，IAP）与内容更新的访问。
 
-| Regulatory framework | Policy | Documentation | Code | Disclosure | Logging | Testing | Evidence | Audit trail |
+这些法律对应用商店和移动应用开发者双方都施加了严格的运营义务。开发者必须请求并处理用户的年龄类别（例如通过 Apple 的 Declared Age Range API 或 Google 的 Play Age Signals API），并在允许未成年人（视州而定，为 18 岁以下或 16 岁以下）下载、购买数字商品或访问重大更新之前，取得可验证的家长同意。此外，已完成核验的年龄验证数据必须在核验后立即删除，以保护儿童隐私。
+
+官方引文：犹他 SB 142（2025）、得克萨斯 SB 2420（2025）、路易斯安那 HB 977（2026）、第 185 号法案（Act No. 185，取代 HB 570，2025）、阿拉巴马 HB 161（2026）。
+
+### 4.2 八大合规类别的全面缺口分析
+
+- **缺失政策**：
+  实战手册没有未成年人政策模板，说明如何识别身处犹他、得克萨斯、路易斯安那或阿拉巴马的用户，以及识别出未成年人账号后如何处理。
+- **缺失文档**：
+  `docs/PRE-SUBMISSION-CHECKLIST.md` 中的清单缺少精确的、分步的开发者指引，说明如何在同一个多平台项目中集成 Apple 的 Declared Age Range API 与 Google 的 Play Age Signals API。
+- **缺失代码**：
+  虽然拒审模式（rejection patterns）包含州级法律的条目，但代码库中的模拟客户端实现并未集成 `DeclaredAgeRange` 或 `com.google.android.play:age-signals` 来动态限制应用访问。
+- **缺失披露**：
+  应用内的引导流程没有展示各州要求的披露内容，说明请求用户年龄类别是为了遵守各州问责法律，以及未成年人必须取得家长同意。
+- **缺失日志**：
+  没有任何安全的后端系统来记录家长同意的接收、同意的撤回（例如 `RESCIND_CONSENT` 服务器通知），或原始年龄验证文档的立即删除。
+- **缺失测试**：
+  测试套件不包含自动化集成测试，来验证在缺少有效同意信号时，应用会阻止未成年人账号访问高级功能或完成应用内购买。
+- **缺失证据**：
+  仓库不包含家长同意协议、身份验证日志或数据最小化记录的模板或示例，无法向各州总检察长（Attorneys General）证明合规。
+- **缺失审计追踪**：
+  完全缺失不可篡改的审计追踪，来记录年龄核验（age assurance）功能的历史上线情况、同意政策的变更，以及核验数据立即删除的记录。
+
+### 4.3 修复方法与行动计划
+1. 制定详细的书面未成年人年龄核验政策，明确如何识别各州的要求，以及如何严格最小化儿童数据。
+2. 在移动代码库中实现跨平台原生钩子（hook），在引导流程中查询 Apple 的 Declared Age Range API 与 Google 的 Play Age Signals API。
+3. 构建数据库触发器（trigger）与自动化流程，在用户的年龄类别确认后立即清除原始年龄验证数据。
+4. 建立自动化单元测试，验证当年龄类别返回未成年人区间时，应用内计费会被禁用，直到可验证的家长同意标志被成功处理。
+
+---
+
+## 5. 欧盟 AI 法案 Article 4（AI 素养）
+
+### 5.1 法规概览与背景
+欧盟 AI 法案（EU AI Act）第 4 条（Regulation (EU) 2024/1689）确立了 AI 素养（AI literacy）方面的强制要求。它规定任何 AI 系统的提供者或部署者（包括使用第三方生成式 AI API 的移动应用开发者）都必须采取措施，确保其员工以及其他参与 AI 系统运行的人员具备足够的 AI 素养。
+
+该要求适用于所有组织，没有按人数豁免的例外，因此小型开发团队和独立创作者同样受约束。所需素养的水平随 AI 集成的技术复杂度与影响而相应提高。对一个软件工程团队而言，务实的合规做法是维护一份书面政策、团队入职培训记录、更新计划以及一份持续更新的培训日志。
+
+官方引文：Regulation (EU) 2024/1689，Article 4。
+
+### 5.2 八大合规类别的全面缺口分析
+
+- **缺失政策**：
+  实战手册没有任何 AI 素养政策模板，也没有任何内容能帮助小团队判断在 Article 4 之下什么才算足够的水平。
+- **缺失文档**：
+  仓库缺少面向开发者的文档或清单，说明团队在 Article 4 下的义务，或如何紧跟新出现的 AI 安全与风险评估标准。
+- **缺失代码**：
+  不适用，因为 Article 4 约束的是人而不是代码。不过，一个检查素养日志是否存在且是否保持更新的小工具仍然有用。
+- **缺失披露**：
+  面向公众的文档、招聘材料或合作伙伴合同没有披露我们对 Article 4 所要求的 AI 素养标准的承诺或执行情况。
+- **缺失日志**：
+  仓库缺少一个活跃的、集中式的培训日志或登记表，来追踪员工入职培训、课程完成情况以及定期的素养复习培训。
+- **缺失测试**：
+  没有任何自动化的内部 lint、pre-commit 钩子或 CLI 工具，来验证提交 AI 相关变更的团队成员拥有有效且最新的素养记录。
+- **缺失证据**：
+  实战手册没有任何示例说明可接受的证据长什么样，例如填写完整的培训日志、课程记录或书面风险评估。
+- **缺失审计追踪**：
+  没有任何历史审计追踪来记录 AI 素养政策于何时复审、培训模块于何时更新，或团队培训记录随时间如何演变。
+
+### 5.3 修复方法与行动计划
+1. 起草并发布内部 AI 素养政策，定义所需的胜任力领域（AI 安全、风险评估、数据隐私、偏见识别）。
+2. 在仓库内创建集中式的 `AI_LITERACY_LOG.md`，追踪培训日期、模块、团队成员姓名与核验方法。
+3. 指定一名合规协调员，每年复审团队的素养记录。
+4. 在 CI 流水线中设置自动化检查，如果素养日志在当年内未复审或更新则发出警告。
+
+---
+
+## 6. 欧盟 AI 法案 Article 50（透明度义务）
+
+### 6.1 法规概览与背景
+欧盟 AI 法案第 50 条为特定 AI 系统规定了严格的透明度义务，于 2026 年 8 月 2 日全面产生法律效力。对任何包含人工智能且触达欧盟用户的应用而言，该框架都是一个关键的发布阻塞项。
+
+根据 Article 50(1)，提供者必须确保意图与自然人直接交互的 AI 系统在设计和开发上能让这些人知晓自己正在与 AI 系统交互。Article 50(2) 规定生成式 AI 系统的输出（文本、音频、图像或视频）必须以机器可读的格式进行标记，并能被检测出属于人工生成或人工处理。Article 50(4) 要求深度伪造（deepfake）的部署者披露相关内容系人工生成或人工处理。
+
+官方引文：Regulation (EU) 2024/1689，Article 50。
+
+### 6.2 八大合规类别的全面缺口分析
+
+- **缺失政策**：
+  实战手册没有任何 AI 透明度政策模板，说明披露必须在何时出现，以及生成的媒体应如何标记。
+- **缺失文档**：
+  `docs/PRE-SUBMISSION-CHECKLIST.md` 中的清单提到了 Article 50，但缺少关于如何实现机器可读水印或深度伪造披露的详细、技术性、面向开发者的说明。
+- **缺失代码**：
+  代码库模板不包含用于向生成资产注入听不见或不可见的机器可读水印（例如 C2PA 元数据）的辅助类、中间层或工具。
+- **缺失披露**：
+  聊天与生成式 UI 模板没有在用户首次接触时展示所需的即时披露（“你正在与一个 AI 系统交互”）。
+- **缺失日志**：
+  没有任何数据库日志模式（schema）或追踪机制来记录 AI 透明度警告已成功展示给某个特定的用户会话。
+- **缺失测试**：
+  现有的测试执行脚本不检查合成媒体标记是否存在，也不验证生成的输出能被机器检测出属于人工创建。
+- **缺失证据**：
+  仓库缺少合规的事实性证据，例如对内容审核过滤器的独立安全评估，或元数据留存的证明。
+- **缺失审计追踪**：
+  没有维护一套不可篡改的审计追踪来记录我们的技术选型、供应商审计、模型变更，以及透明度披露的修改。
+
+### 6.3 修复方法与行动计划
+1. 制定公司级的 AI 透明度与披露政策，强制要求直接披露与机器可读的输出标记。
+2. 在所有对话式界面模板中加入明确、醒目的提示（例如“你正在与一个 AI 助手聊天”）。
+3. 在所有合成媒体生成管线中实现标准元数据注入（使用 C2PA 规范或加密水印）。
+4. 建立自动化集成测试，扫描生成的媒体输出，验证机器可读的合规标头被正确设置并得以保留。
+
+---
+
+## 7. 缺口分类汇总矩阵
+
+凡是实战手册已覆盖的框架，对应单元格标注“已覆盖”。“部分覆盖”表示规则已被点名并附有注明日期的来源，但开发者仍然没有分步满足它的办法。“缺失”表示实战手册完全没有收录。
+
+| 法规框架 | 政策 | 文档 | 代码 | 披露 | 日志 | 测试 | 证据 | 审计追踪 |
 |---|---|---|---|---|---|---|---|---|
-| **EU GPSR** | Missing | Missing | Missing | Missing | Missing | Missing | Missing | Missing |
-| **EU e-Evidence** | Partial | Covered | Missing | Partial | Missing | Missing | Missing | Missing |
-| **EU withdrawal button** | Partial | Covered | Missing | Partial | Missing | Missing | Missing | Missing |
-| **US state ASAA** | Partial | Covered | Missing | Partial | Missing | Missing | Missing | Missing |
-| **EU AI Act Art 4**| Partial | Covered | N/A | Partial | Missing | Missing | Missing | Missing |
-| **EU AI Act Art 50**| Partial | Covered | Missing | Partial | Missing | Missing | Missing | Missing |
+| **欧盟 GPSR** | 缺失 | 缺失 | 缺失 | 缺失 | 缺失 | 缺失 | 缺失 | 缺失 |
+| **欧盟电子证据** | 部分覆盖 | 已覆盖 | 缺失 | 部分覆盖 | 缺失 | 缺失 | 缺失 | 缺失 |
+| **欧盟撤回按钮** | 部分覆盖 | 已覆盖 | 缺失 | 部分覆盖 | 缺失 | 缺失 | 缺失 | 缺失 |
+| **美国各州 ASAA** | 部分覆盖 | 已覆盖 | 缺失 | 部分覆盖 | 缺失 | 缺失 | 缺失 | 缺失 |
+| **欧盟 AI 法案 Article 4**| 部分覆盖 | 已覆盖 | 不适用 | 部分覆盖 | 缺失 | 缺失 | 缺失 | 缺失 |
+| **欧盟 AI 法案 Article 50**| 部分覆盖 | 已覆盖 | 缺失 | 部分覆盖 | 缺失 | 缺失 | 缺失 | 缺失 |
 
-The honest read. Five of the six are already named in `docs/EU-REGULATORY-2026.md`, `docs/GLOBAL-REGULATORY-2026.md`, `data/regulatory-deadlines.json`, and `data/rejection-patterns.json`, with dated sources and a deadline entry. What they lack is the implementation layer, meaning detection rules in the guard, code templates, and tests. GPSR is the only one absent end to end, so it is the first thing to add.
+诚实的判断：六部中有五部已经在 `docs/EU-REGULATORY-2026.md`、`docs/GLOBAL-REGULATORY-2026.md`、`data/regulatory-deadlines.json` 和 `data/rejection-patterns.json` 中被点名，并附有注明日期的来源与截止日期条目。它们缺少的是实现层，也就是守卫（guard）中的检测规则、代码模板与测试。GPSR 是唯一从头到尾都缺席的一部，所以它是第一个要补上的。
 
 ---
 
-## 8. Conclusion and Future Monitoring
+## 8. 结论与后续监控
 
-The playbook is strong on what gets an app rejected by a store reviewer, and thinner on the laws that bind the app once it is live. Five of the six frameworks here are already named with dated sources. What is missing is the layer a developer can act on, meaning detection rules the guard can fire on, code templates they can paste, and tests that prove the obligation is met.
+实战手册在“什么会让应用被商店审核员拒审”这方面很强，而对应用上线后约束应用的法律则着墨较少。这里六部框架中有五部已经被点名并附有注明日期的来源。缺失的是开发者可以着手执行的那一层，也就是守卫能据此触发的检测规则、开发者可以直接粘贴的代码模板，以及能证明义务已得到满足的测试。
 
-In priority order.
+按优先级排序：
 
-1. Add GPSR, the only framework absent end to end.
-2. Give the five Partial frameworks detection rules in `data/rejection-patterns.json` and checklist items a developer can tick.
-3. Add the code templates, starting with the AI Act Article 50 disclosure line and the withdrawal path, since both carry 2026 deadlines.
+1. 补上 GPSR，这是唯一从头到尾都缺席的框架。
+2. 为五部“部分覆盖”的框架在 `data/rejection-patterns.json` 中补充检测规则，并给出开发者可以逐项勾选的清单条目。
+3. 补充代码模板，从欧盟 AI 法案 Article 50 的披露文案与撤回路径开始，因为两者都带有 2026 年的截止日期。
 
-This report is a snapshot. It goes stale the moment a deadline moves, so re-run it against EUR-Lex and the other primary sources rather than trusting the dates here on their own.
+本报告只是一个快照。一旦某个截止日期发生变动，它就会过时，因此请对照 EUR-Lex 及其他一手来源重新核对，而不要单独采信本文中的日期。
 
-## 9. Sources
+## 9. 来源
 
-Every regulation named above, at its primary source.
+上述每一部法规的一手来源链接。
 
-- GPSR, [Regulation (EU) 2023/988](https://eur-lex.europa.eu/eli/reg/2023/988/oj)
-- e-Evidence Regulation, [Regulation (EU) 2023/1543](https://eur-lex.europa.eu/eli/reg/2023/1543/oj)
-- e-Evidence Directive, [Directive (EU) 2023/1544](https://eur-lex.europa.eu/eli/dir/2023/1544/oj)
-- Distance Marketing of Financial Services, [Directive (EU) 2023/2673](https://eur-lex.europa.eu/eli/dir/2023/2673/oj)
-- EU AI Act, [Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj)
+- GPSR：[Regulation (EU) 2023/988](https://eur-lex.europa.eu/eli/reg/2023/988/oj)
+- 电子证据条例：[Regulation (EU) 2023/1543](https://eur-lex.europa.eu/eli/reg/2023/1543/oj)
+- 电子证据指令：[Directive (EU) 2023/1544](https://eur-lex.europa.eu/eli/dir/2023/1544/oj)
+- 金融服务远程营销：[Directive (EU) 2023/2673](https://eur-lex.europa.eu/eli/dir/2023/2673/oj)
+- 欧盟 AI 法案：[Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj)
 
-The US state App Store Accountability Acts are cited to their bill texts in [docs/GLOBAL-REGULATORY-2026.md](GLOBAL-REGULATORY-2026.md), which is the source of record for that section rather than this report.
+美国各州 App Store Accountability Act 的法案文本在 [docs/GLOBAL-REGULATORY-2026.md](GLOBAL-REGULATORY-2026.md) 中引用，该文件才是这一部分的记录来源，而非本报告。
