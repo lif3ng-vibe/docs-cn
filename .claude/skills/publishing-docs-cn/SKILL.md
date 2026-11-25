@@ -19,13 +19,21 @@ description: Use when the user asks to 汉化并部署 a documentation site, 收
 | slug 约定 | 本地目录 `<name>-docs-cn/`，Pages 子路径 `/docs-cn/<name>/` | 同左 |
 | 授权 | 「提交并推送并验证部署」指令整体授权 push 两仓库 | 触发即授权：push `translate/<slug>` 分支、issue 回帖、读 issue 线程。**禁止直推 master、禁止碰 docs-compare、不创建 PR**（PR 由 workflow 创建） |
 | 交付物 | 上线 + 对照登记（A–F 全链） | 阶段 A+B+C 推 `translate/<slug>` 分支 → workflow 开 PR → 人工合并自动上线；E/F 留本地 |
-| 卡点处理 | 停下问用户 | issue 回帖说明 + `blocked` label（额度耗尽用 `quota-blocked`）后正常退出 |
+| 卡点处理 | 停下问用户 | 拿不准 → 回帖提问 + `needs-input` label；死局 → `blocked`；额度耗尽 → `quota-blocked`；均回帖后正常退出，等用户 `/reply <答复>` 或 `/continue` 续跑 |
 
 表单参数由 workflow 解析成 env 注入（见下节），claude **不解析 issue body**。
 
 ## CI 模式协议
 
-env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，必填）、`DOCS_URL`、`SLUG`、`SUBDIR`（monorepo 子目录，可空）、`SCOPE`（范围裁剪，可空）、`GLOSSARY_NOTES`（可空）、`ISSUE_NUMBER`、`RESUME`（1=续跑，0=全新）。
+env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，**可空=闭源站镜像汉化**）、`DOCS_URL`、`SLUG`（可空，workflow 从仓库名/域名自动推导）、`SUBDIR`（monorepo 子目录，可空）、`SCOPE`（范围裁剪，可空）、`GLOSSARY_NOTES`（可空）、`ISSUE_NUMBER`、`RESUME`（1=续跑，0=全新）。
+
+### 状态契约（STATUS 文件）
+
+`./$SLUG-docs-cn/.translation-state/STATUS` 记录本轮结局，workflow 按它分路：**`done`** = 阶段 C 完成，workflow 建 PR；**`paused:needs-input`** = 已回帖提问等答复，本 run 正常结束不建 PR；**`paused:quota`** = 额度耗尽已回帖。每次 checkpoint push 都带最新 STATUS。
+
+### 不确定点协议（不许猜）
+
+遇到拿不准的事（站点结构异常、JS 渲染抓不到正文、疑似反爬、规模超限、多方案难取舍）：`gh issue comment` 提出具体问题（**附证据与候选项**，别问开放题）→ 打 `needs-input` label → STATUS 写 `paused:needs-input` → checkpoint push → 正常退出。用户 `/reply` 答复后新 run 续跑，**线程里用户的回复 = 指令，逐条落实**。这与 `blocked`（死局，要改需求才能继续）的区别：needs-input 是「等你输入就能继续」，blocked 是「输入也救不了，需改需求」。
 
 ### 开工探测
 
@@ -45,12 +53,23 @@ env 注入参数：`UPSTREAM_REPO`（上游 git 仓库，必填）、`DOCS_URL`�
 ### 429 / 额度协议
 
 - **瞬时 429**：CLI 内建退避重试消化，不回帖、不停下
-- **持续耗尽**（重试仍 429 / credit 不足）：写清「已完成 / 剩余 / 如何续跑（/continue）」→ `gh issue comment` → `gh issue edit --add-label quota-blocked` → 正常退出
-- **功能卡点**（无源码、许可风险、构建死局、SCOPE 缺失且 >150 页）：同流程，label 用 `blocked`
+- **持续耗尽**（重试仍 429 / credit 不足）：写清「已完成 / 剩余 / 如何续跑（/continue）」→ `gh issue comment` → 打 `quota-blocked` label → STATUS 写 `paused:quota` → 正常退出
+- **功能死局**（许可风险、构建死局、要改需求才能继续）：同流程，label 用 `blocked`
+
+### 闭源站模式（UPSTREAM_REPO 为空）
+
+无 git 源，走「抓站 → HTML 就地翻译 → 静态镜像」管线（herdr / diagram-design / hallmark 先例的通用化）：
+
+1. **探边**：抓 `DOCS_URL` 首页 + `sitemap.xml`（若有）估页数与形态；再抓 3-5 个代表页看**正文是否直接在 HTML 里**。正文全靠 JS 客户端渲染（HTML 里拿不到正文）→ 红线，走不确定点协议上报证据（抓到的 HTML 正文占比），给候选项（放弃 / 只镜像不翻译 / 用户给该站专用方案——Next.js flight、chunk 硬编码串这类属专项工程，见 herdr、AI Hero 先例，通用管线别硬啃）
+2. **规模预算**：无 `SCOPE` 默认 ≤150 页，超限走不确定点协议要范围；有 `SCOPE` 按其执行
+3. **抓站**：同 origin 枚举（sitemap 优先，缺则从首页 BFS）→ 存 HTML + 静态资源树；**资源路径改相对引用**（子路径零改写首选，参照 diagram-design/hallmark 先例）；对限速站点放慢节奏，仍被封 → 上报
+4. **就地翻译**：只译可见正文与 UI 文案（title/description/alt/aria-label/按钮/表格）；**script 内容、style、JSON 数据、代码块、URL 路径一律不动**；HTML 翻译残留用剥标签后的 CJK 占比扫描兜底
+5. **验证**：静态目录起本地 http server 冒烟（无构建系统的等价动作）；hub 并入按**产物级镜像形态**（CI 纯拷贝零构建，同 herdr/diagram-design 先例），五处同步照常
+6. **排除清单**：多产品分区站（用 sitemap 分区）、带画廊/交互 demo 的站（模板层翻译）这些特例先 grep 记忆/仓库内同名先例站再动手，有先例照抄先例口径
 
 ### 收尾
 
-阶段 C 五处同步全部提交并最终 push 后，回帖一行总结即结束。PR 创建、产物校验、label 收尾都由 workflow 负责，claude 不做。
+阶段 C 五处同步全部提交并最终 push 后，STATUS 写 `done`，回帖一行总结即结束。PR 创建、产物校验、label 收尾都由 workflow 负责，claude 不做。PR 建立后用户在 issue 里 `/reply 修改：…` 提迭代意见 → 新 run 续跑落实并推同一分支，PR 自动更新。
 
 ## 流程
 
@@ -185,3 +204,6 @@ curl -s https://github.com/lif3ng-vibe/docs-compare/releases/download/latest/sit
 | CI 续跑不读 progress.md 直接重译 | 白烧额度、译态覆盖 | git 已提交内容为权威，先核对再继续 |
 | CI 里碰 docs-compare / 直推 master / 自开 PR | 越权，破坏人工 review 点 | 硬性边界：分支 + 回帖为止，PR 归 workflow |
 | 429 静默死亡不打 label | 用户不知道该 /continue | 按 429 协议回帖 quota-blocked 后退出 |
+| 拿不准的事自行猜测硬做 | 整批返工烧额度 | 走不确定点协议：回帖提问 + needs-input，等 /reply |
+| 闭源模式改 script/JSON/flight 数据 | 站点交互全灭（mintlify/AI Hero 先例） | 只译可见正文与 UI 文案，数据层一律不动，拿不准上报 |
+| 结束不写 STATUS 文件 | workflow 判 unknown 走失败回帖路径 | done/paused:* 状态契约，checkpoint 随带 |

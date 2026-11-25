@@ -7,17 +7,20 @@ body:
     attributes:
       value: |
         填完后**不会自动启动**：需要由有写权限的人补打 `translate` label 才触发 CI 翻译（防外部 issue 烧 token）。
-        - 上游没有公开 git 仓库的闭源站（抓站管线）不支持 CI，请走本地流程
-        - 大站（>150 页）务必填「范围裁剪」，否则 CI 会回帖 blocked 要范围
-        - 额度耗尽会回帖 quota-blocked；额度恢复后评论 `/continue` 从断点续跑（进度不丢）
+        - **有源码仓库（推荐）**：填「上游 git 仓库」，按 Markdown 源翻译，质量最好
+        - **闭源站**：上游仓库留空即可，CI 走「抓站 → HTML 就地翻译 → 静态镜像」模式；正文全靠 JS 渲染的站 CI 会先回帖问询
+        - CI 遇到不确定的点会回帖并打 `needs-input` label——**回复 `/reply <你的答复>`（或 `/continue`）即继续执行**，进度不丢
+        - PR 创建后仍可继续回复 `/reply 修改：…` 迭代，CI 会更新同一个 PR
+        - 大站（>150 页）务必填「范围裁剪」，否则 CI 会回帖询问
+        - 额度耗尽回帖 quota-blocked，额度恢复后 `/continue` 断点续跑
   - type: input
     id: upstream-repo
     attributes:
       label: 上游 git 仓库 URL
-      description: 必填。源码仓库地址（GitHub Pages 站点找 footer 链接或同名 repo）
-      placeholder: https://github.com/user/repo
+      description: 有源码仓库填这里（GitHub Pages 站点找 footer 链接或同名 repo）；闭源站留空走镜像模式
+      placeholder: https://github.com/user/repo（闭源站留空）
     validations:
-      required: true
+      required: false
   - type: input
     id: docs-url
     attributes:
@@ -29,10 +32,10 @@ body:
     id: slug
     attributes:
       label: 站点 slug
-      description: 项目目录 <slug>-docs-cn，Pages 路径 /docs-cn/<slug>/；只允许字母/数字/连字符
-      placeholder: handy
+      description: 项目目录 <slug>-docs-cn，Pages 路径 /docs-cn/<slug>/；留空自动从仓库名/域名推导
+      placeholder: handy（留空自动推导）
     validations:
-      required: true
+      required: false
   - type: input
     id: subdir
     attributes:
@@ -44,7 +47,7 @@ body:
     id: scope
     attributes:
       label: 范围裁剪
-      description: 只翻译部分目录时填（如「仅 docs/guides/」）；留空 = 全站
+      description: 只翻译部分目录/限抓页数时填（如「仅 docs/guides/」「≤80 页」）；留空 = 全站（≤150 页）
     validations:
       required: false
   - type: textarea

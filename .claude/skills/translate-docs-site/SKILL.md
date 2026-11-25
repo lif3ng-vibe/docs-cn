@@ -29,9 +29,10 @@ description: Use when the user asks to 汉化/translate a documentation website 
 被 GitHub CI 触发（存在 `UPSTREAM_REPO`/`SLUG`/`ISSUE_NUMBER` 等 env）时，运行规则以 [publishing-docs-cn](../publishing-docs-cn/SKILL.md) 的「CI 模式协议」为准，本页按此改判：
 
 - 「项目位置」：建在仓库根 `./$SLUG-docs-cn/`；**checkpoint 推 `translate/<slug>` 分支属授权范围**（"不建远端不 push"的例外）
-- 所有「停下问用户」类卡点（无源码、许可风险）：改为 issue 回帖说明 + `blocked` label 后正常退出，**不等待、不猜测**
-- 「规模异常 >150 页」：`SCOPE` env 有值则按裁剪范围执行；无值则回帖 `blocked` 说明要裁剪范围，不自行开翻
-- 术语补充（`GLOSSARY_NOTES` env）有值时并入 GLOSSARY.md；参数来源与续跑/429 协议见 publishing-docs-cn
+- **「无源码就停」的例外**：`UPSTREAM_REPO` 为空 = 用户明确提交的闭源站任务，走 publishing-docs-cn「闭源站模式」（抓站 → HTML 就地翻译 → 静态镜像）；仅当 JS 渲染抓不到正文等红线情况才上报
+- **卡点分级**：等你输入就能继续的（规模超限要范围、多方案取舍）→ 回帖提问 + `needs-input` label；死局（许可风险、要改需求）→ `blocked` label。两者都回帖后正常退出，用户 `/reply` 或 `/continue` 续跑——**不等待、不猜测**
+- 「规模异常 >150 页」：`SCOPE` env 有值按裁剪执行；无值回帖 `needs-input` 问范围，不自行开翻
+- 术语补充（`GLOSSARY_NOTES` env）有值时并入 GLOSSARY.md；状态契约（STATUS 文件）与续跑/429 协议见 publishing-docs-cn
 
 ## 术语表（第 4 步开工前先建）
 
@@ -63,7 +64,7 @@ digraph flow {
 
 ### 第 1 步：拿源（关键）
 
-GitHub Pages 站点几乎都有源 repo（页面 footer 的 GitHub 链接 / `https://github.com/<user>/<repo>`）。下载 tarball（`curl -L https://codeload.github.com/<user>/<repo>/tar.gz/refs/heads/main`）比 API 稳（API 有限流）。CI 模式下 `UPSTREAM_REPO` env 已给仓库地址（可带 `#<branch>` 或 `#<commit>`）；`SUBDIR` env 非空时文档在该子目录内。找 `site/`、`docs/`、`website/` 一类目录里的 Markdown。**翻译渲染后 HTML 是灾难**——没有源码就停下来（本地问用户 / CI 回帖 blocked）。
+GitHub Pages 站点几乎都有源 repo（页面 footer 的 GitHub 链接 / `https://github.com/<user>/<repo>`）。下载 tarball（`curl -L https://codeload.github.com/<user>/<repo>/tar.gz/refs/heads/main`）比 API 稳（API 有限流）。CI 模式下 `UPSTREAM_REPO` env 已给仓库地址（可带 `#<branch>` 或 `#<commit>`）；`SUBDIR` env 非空时文档在该子目录内。找 `site/`、`docs/`、`website/` 一类目录里的 Markdown。**翻译渲染后 HTML 是灾难**——没有源码就停下来：本地问用户；CI 模式 `UPSTREAM_REPO` 为空属用户明确提交的闭源任务，改走 publishing-docs-cn「闭源站模式」而非停止。
 
 ### 第 2 步：脚手架
 
@@ -125,4 +126,4 @@ GitHub Pages 站点几乎都有源 repo（页面 footer 的 GitHub 链接 / `htt
 
 ## 规模自适应
 
-≤30 页：如上单线流程。30–150 页：同流程但翻译批次按目录分片、可并行子代理（每片注入同一术语表；CI 模式总并发 ≤2，每批走 checkpoint 纪律）。>150 页：本地停下问用户（分批交付计划 / 是否继续）；CI 模式看 `SCOPE`——有值按裁剪执行，无值回帖 blocked 要范围，不自行开翻。
+≤30 页：如上单线流程。30–150 页：同流程但翻译批次按目录分片、可并行子代理（每片注入同一术语表；CI 模式总并发 ≤2，每批走 checkpoint 纪律）。>150 页：本地停下问用户（分批交付计划 / 是否继续）；CI 模式看 `SCOPE`——有值按裁剪执行，无值回帖 `needs-input` 问范围，不自行开翻。闭源站（CI 模式）：页数以探边抓 sitemap 估得为准，同样受 150 页预算约束。
