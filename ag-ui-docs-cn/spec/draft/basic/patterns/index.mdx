@@ -13,9 +13,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 
 ## 流式
 
-Long values arrive a piece at a time: a `*_START` opens an item, content
-events extend it, a `*_END` closes it — or a chunked shorthand compresses the
-three. Text messages, tool calls and reasoning messages all stream this way.
+长的值分片到达：一个 `*_START` 开启条目，content 事件延展它，一个 `*_END` 关闭它——或者用一个 chunk 简写把三者压缩。文本消息、工具调用与推理消息都这样流式传输。
 
 ```mermaid
 sequenceDiagram
