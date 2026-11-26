@@ -17,8 +17,8 @@ description: Use when the user asks to 汉化并部署 a documentation site, 收
 | hub 仓库 | `C:\Users\lif3n\src\docs`（Windows 写死，用户已确认） | 工作目录 = checkout 的 hub 仓库根（master） |
 | 对照仓库 | `C:\Users\lif3n\src\docs-compare`（分支 **main**） | **禁止碰**（CI 不做 compare 登记） |
 | slug 约定 | 本地目录 `<name>-docs-cn/`，Pages 子路径 `/docs-cn/<name>/` | 同左 |
-| 授权 | 「提交并推送并验证部署」指令整体授权 push 两仓库 | 触发即授权：push `translate/<slug>` 分支、issue 回帖、读 issue 线程。**禁止直推 master、禁止碰 docs-compare、不创建 PR**（PR 由 workflow 创建） |
-| 交付物 | 上线 + 对照登记（A–F 全链） | 阶段 A+B+C 推 `translate/<slug>` 分支 → workflow 开 PR → 人工合并自动上线；E/F 留本地 |
+| 授权 | 「提交并推送并验证部署」指令整体授权 push 两仓库 | 翻译阶段：push `translate/<slug>` 分支、issue 回帖、读 issue 线程。**禁止直推 master、不创建 PR**。对照登记阶段（仅 auto 模式收尾，第二次 claude 调用）：在 workflow 指定的 docs-compare 工作副本内操作并推 main，已授权 |
+| 交付物 | 上线 + 对照登记（A–F 全链） | auto 模式：阶段 A+B+C → 自动合并上线 → **部署就绪后自动做 E/F（compare 五处同步+锚点表+推送+Release 验证）→ issue 收官回帖**；review 模式：A+B+C 出 PR，E/F 留本地 |
 | 卡点处理 | 停下问用户 | 拿不准 → 回帖提问 + `needs-input` label；死局 → `blocked`；额度耗尽 → `quota-blocked`；均回帖后正常退出，等用户 `/reply <答复>` 或 `/continue` 续跑 |
 
 表单参数由 workflow 解析成 env 注入（见下节），claude **不解析 issue body**。
@@ -155,7 +155,7 @@ curl -sL https://lif3ng-vibe.github.io/docs-cn/<slug>/ | grep -c '[一-龥]'    
 
 CI 模式：workflow 开 PR → 人工 review 合并 → push master 自动触发 hub `deploy-pages.yml`（paths-ignore 只豁免 README/docs）→ 分仓站由 dispatch-siblings 惯例下发（需 `DOCS_DISPATCH_TOKEN` 已配）。验证由人工或后续 watch 完成。
 
-### 阶段 E：docs-compare 登记 + 锚点表（仅本地模式）
+### 阶段 E：docs-compare 登记 + 锚点表（本地模式；CI auto 模式由「对照登记」阶段自动执行，见 CI 模式协议）
 
 **代码五处同步**（上游有更新时先 `git pull --rebase`）：
 
@@ -181,7 +181,7 @@ node scripts/gen-anchor-map.mjs "$TMP/<id>-only.json"
 
 镜像站根**不放** anchor-map.json（现有实践：扩展打包 + Release 下发，无需二次部署）。改完 `npm test` + `npm run build` 全绿再提交。
 
-### 阶段 F：push compare 并验证（仅本地模式）
+### 阶段 F：push compare 并验证（本地模式；CI auto 模式随阶段 E 一并执行）
 
 ```bash
 git push origin main      # compare 分支是 main；远程领先时先 pull --rebase 再重跑测试
