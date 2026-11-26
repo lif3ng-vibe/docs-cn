@@ -19,7 +19,7 @@
 | B0 | 脚手架：快照拷入、上游 MDX 伤修复、导航中文化、GLOSSARY | ✅ commit 3c65caf2 |
 | 状态重建 | progress.md 重建 + 范围裁定 + .gitignore 修复 | ✅ commit 2f70064a |
 | B1 | 快速开始 11 文件（introduction, agentic-protocols, quickstart×5, migrating, talk-to-us, integrations+omnara） | ✅ |
-| B2 | 核心概念 concepts×14 | 🔄 进行中（6/14） |
+| B2 | 核心概念 concepts×14 | ✅（页内锚点改写 7 处，映射 14 份） |
 | B3 | 规范 spec/1.0×27（含 schema.mdx——不在导航但被 12+ 处 `#anchor` 深链，必须译） | ⬜ |
 | B4 | 规范 spec/draft×27（与 B3 同构；开工先读 .anchor-maps/B3/ 沿用同标题译文） | ⬜ |
 | B5a | SDK dotnet×10 + python×6 | ⬜ |
@@ -37,13 +37,19 @@
 
 ## 下一步
 
-1. B2 收尾（剩 8 个 concepts 文件）；B3 已开工
+1. B3 规范进行中；B5a 已开工（B4 特意排在 B3 完成后，沿用其完整锚点映射）
 2. 后续按批次表推进；B4 开工前必读 .anchor-maps/B3/ 沿用 spec/1.0 同标题译文
-3. B6 跨页锚点回修素材：B1 报告跨页锚点均为外站（本批 11 页互无锚点互链）；B2+ 各批汇报的跨页锚点清单逐批并入 progress「跨页锚点清单」节
+3. B6 收尾时按「跨页锚点清单」+ verify-anchors-cn.mjs 全站回修
 
 ## 跨页锚点清单（回修用，逐批追加）
 
 - B1：quickstart/server.mdx:40 → python-poetry.org#installation（外站）；omnara 两处外站锚点。站内互链锚点：无
+- B2 站内待回修（8 处，源文件 → 目标锚点）：
+  - concepts/events.mdx → /concepts/reasoning#migration-from-thinking-events
+  - concepts/interrupts.mdx → /concepts/subagents#suspension
+  - concepts/metadata.mdx → /concepts/interrupts#resuming-a-run
+  - concepts/reasoning.mdx → /concepts/events#reasoning-events（2 处）、/concepts/messages#reasoning-messages
+  - concepts/middleware.mdx → /spec/1.0/basic/versioning#version-negotiation
 
 ## 范围补充（本轮发现）
 

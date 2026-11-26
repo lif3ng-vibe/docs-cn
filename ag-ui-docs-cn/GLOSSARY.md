@@ -117,3 +117,32 @@ AG-UI、CopilotKit、LangGraph、LangChain、CrewAI、Mastra、AG2、Pydantic AI
 | enforcement stage | 强制执行阶段 |
 | 1st party / Supported / In Progress / Community / Partnership | 一方官方 / 已支持 / 进行中 / 社区 / 合作伙伴（introduction 集成大表取值列按此译） |
 | additional（保留英文） | harness、resolver、discriminator、dojo、AOT、profile（Omnara） |
+
+### B2 批次补充
+
+| 英文 | 中文 |
+|---|---|
+| capability discovery | 能力发现 |
+| instrumentation（文档语境） | 埋点；「Metadata and Instrumentation」→「元数据与埋点」 |
+| handoff | 交接 |
+| discriminated union | 可辨识联合 |
+| open-by-key | 按键开放 |
+| last write wins | 后写者胜 |
+| lineage / run lineage | 血统 / 运行血统 |
+| time travel | 时间旅行 |
+| suspension / suspended | 挂起 / 已挂起（枚举值原样保留） |
+| provenance | 来源（「归属是来源，不是所有权」） |
+| agents-as-tools pattern | 智能体即工具模式 |
+| supervisor | 主管 |
+| server-owned tool | 服务端持有的工具 |
+| approve with edits | 带编辑批准 |
+| audit trail | 审计链路 |
+| compatibility shim | 兼容垫片 |
+| wire-level field | 线级字段 |
+| envelope data | 信封数据 |
+| feature gating | 功能开关 |
+| adaptive UI | 自适应 UI |
+| escape hatch | 兜底出口 |
+| vendor-neutral | 供应商中立 |
+| chunk（TextMessageChunk 等） | 不译，作「chunk」 |
+| Execution（capabilities 页标题语境） | 执行控制 |

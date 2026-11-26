@@ -1,37 +1,29 @@
 ---
-title: "Tools"
+title: "工具"
 description:
-  "Understanding tools and how they enable human-in-the-loop AI workflows"
+  "理解工具及其如何支撑人在回路的 AI 工作流"
 ---
 
-# Tools
+# 工具
 
-Tools are a fundamental concept in the AG-UI protocol that enable AI agents to
-interact with external systems and incorporate human judgment into their
-workflows.
+工具是 AG-UI 协议中的一个基础概念，它让 AI 智能体能够与外部系统交互，并把人类判断融入自己的工作流。
 
-AG-UI distinguishes between tools that are defined by the agent backend and
-tools that are provided by the client at runtime. Backend-defined tools stay in
-the backend agent or framework configuration. Client-defined tools are passed in
-`RunAgentInput.tools` so the agent can call back into application-specific
-frontend behavior, such as UI actions, approvals, or user-mediated workflows.
+AG-UI 区分由智能体后端定义的工具与客户端在运行时提供的工具。后端定义的工具保留在后端智能体或框架配置中；客户端定义的工具通过 `RunAgentInput.tools` 传入，智能体借此可以回调应用专属的前端行为，例如 UI 操作、审批或需要用户参与的工作流。
 
-## What Are Tools?
+## 什么是工具？
 
-In AG-UI, tools are functions that agents can call to:
+在 AG-UI 中，工具是智能体可以调用的函数，用来：
 
-1. Request specific information
-2. Perform actions in external systems
-3. Ask for human input or confirmation
-4. Access specialized capabilities
+1. 请求特定的信息
+2. 在外部系统中执行操作
+3. 请求人类输入或确认
+4. 访问专门的能力
 
-Tools bridge the gap between AI reasoning and real-world actions, allowing
-agents to accomplish tasks that would be impossible through conversation alone.
+工具在 AI 推理与真实世界动作之间架起桥梁，让智能体能够完成单靠对话不可能完成的任务。
 
-## Tool Structure
+## 工具结构
 
-Tools follow a consistent structure that defines their name, purpose, and
-expected parameters:
+工具遵循一致的结构，定义其名称、用途与预期参数：
 
 ```typescript
 interface Tool {
@@ -48,15 +40,11 @@ interface Tool {
 }
 ```
 
-The `parameters` field uses [JSON Schema](https://json-schema.org/) to define
-the structure of arguments that the tool accepts. This schema is used by both
-the agent (to generate valid tool calls) and the frontend (to validate and parse
-tool arguments).
+`parameters` 字段使用 [JSON Schema](https://json-schema.org/) 定义工具所接受参数的结构。这份 schema 同时被智能体（用于生成合法的工具调用）和前端（用于校验与解析工具参数）使用。
 
-## Frontend-Defined Tools
+## 前端定义的工具
 
-A key aspect of AG-UI's tool system is that tools are defined in the frontend
-and passed to the agent during execution:
+AG-UI 工具系统的一个关键特点：工具在前端定义，并在执行期间传给智能体：
 
 ```typescript
 // Define tools in the frontend
@@ -87,29 +75,20 @@ agent.runAgent({
 })
 ```
 
-This approach has several advantages:
+这种方式有几个优点：
 
-1. **Frontend control**: The frontend determines what capabilities are available
-   to the agent
-2. **Dynamic capabilities**: Tools can be added or removed based on user
-   permissions, context, or application state
-3. **Separation of concerns**: Agents focus on reasoning while frontends handle
-   tool implementation
-4. **Security**: Sensitive operations are controlled by the application, not the
-   agent
+1. **前端掌控**：由前端决定智能体可以使用哪些能力
+2. **动态能力**：可以根据用户权限、上下文或应用状态增删工具
+3. **关注点分离**：智能体专注于推理，前端负责工具的实现
+4. **安全性**：敏感操作由应用控制，而不是由智能体控制
 
-`RunAgentInput.tools` is only for these client-provided tools. It is not
-intended to contain every tool available to the backend agent. If your
-integration has backend tools, define them in the backend framework or advertise
-them through agent capabilities instead of sending their schemas from the
-client.
+`RunAgentInput.tools` 只用于这些客户端提供的工具。它并不打算装下后端智能体可用的每一个工具。如果你的集成里有后端工具，请在后端框架中定义它们，或通过智能体能力宣告，而不是由客户端发送它们的 schema。
 
-## Tool Call Lifecycle
+## 工具调用生命周期
 
-When an agent needs to use a tool, it follows a standardized sequence of events:
+智能体需要使用工具时，遵循一套标准化的事件序列：
 
-1. **ToolCallStart**: Indicates the beginning of a tool call with a unique ID
-   and tool name
+1. **ToolCallStart**：以唯一 ID 和工具名称标志一次工具调用的开始
 
    ```typescript
    {
@@ -120,7 +99,7 @@ When an agent needs to use a tool, it follows a standardized sequence of events:
    }
    ```
 
-2. **ToolCallArgs**: Streams the tool arguments as they're generated
+2. **ToolCallArgs**：在参数生成的同时流式传输
 
    ```typescript
    {
@@ -146,7 +125,7 @@ When an agent needs to use a tool, it follows a standardized sequence of events:
    }
    ```
 
-3. **ToolCallEnd**: Marks the completion of the tool call
+3. **ToolCallEnd**：标志工具调用完成
    ```typescript
    {
      type: EventType.TOOL_CALL_END,
@@ -154,33 +133,24 @@ When an agent needs to use a tool, it follows a standardized sequence of events:
    }
    ```
 
-The frontend accumulates these deltas to construct the complete tool call
-arguments. Once the tool call is complete, the frontend can execute the tool and
-provide results back to the agent.
+前端累积这些增量，还原出完整的工具调用参数。工具调用完成后，前端即可执行该工具，并把结果回传给智能体。
 
-### Tool call metadata
+### 工具调用元数据
 
-All three of these events can carry a `metadata` object, and it accumulates onto
-the **tool call itself** rather than onto the assistant message that owns it:
+这三个事件都可以携带 `metadata` 对象，而且它累积在**工具调用本身**上，而不是拥有它的助手消息上：
 
 ```typescript
 assistantMessage.toolCalls[0].metadata
 // { provider: "anthropic", latencyMs: 84 }
 ```
 
-That is deliberate. One assistant message can own several tool calls, so folding
-their metadata into the parent would make the result depend on the order the
-calls happened to interleave. Giving each tool call its own keeps it
-unambiguous.
+这是有意为之。一条助手消息可能拥有多个工具调用，若把它们的元数据都折叠进父消息，结果就会取决于这些调用恰好交错的顺序。让每次工具调用拥有自己的元数据，才能保持无歧义。
 
-`ToolCallResult` is different — it creates a tool message, so its metadata
-merges into that message like any other message-building event. See
-[Metadata](/concepts/metadata).
+`ToolCallResult` 则不同——它会创建一条工具消息，因此其元数据会像其他构建消息的事件一样合并进那条消息。见[元数据](/concepts/metadata)。
 
-## Tool Results
+## 工具结果
 
-After a tool has been executed, the result is sent back to the agent as a "tool
-message":
+工具执行完成后，结果以“工具消息”的形式回传给智能体：
 
 ```typescript
 {
@@ -191,10 +161,9 @@ message":
 }
 ```
 
-This message becomes part of the conversation history, allowing the agent to
-reference and incorporate the tool's result in subsequent responses.
+这条消息会进入对话历史，智能体因此在后续响应中可以引用并利用工具的结果。
 
-If the tool did not succeed, set `error` to the failure message:
+如果工具没有执行成功，把 `error` 设为失败信息：
 
 ```typescript
 {
@@ -206,40 +175,31 @@ If the tool did not succeed, set `error` to the failure message:
 }
 ```
 
-`error` is how the protocol expresses a client-side tool failure. Without it, a
-tool that failed is indistinguishable from one that succeeded — whatever the
-frontend happened to put in `content` is all the agent has to go on. See
-[Messages](/concepts/messages) for the full `ToolMessage` shape.
+`error` 是协议表达客户端侧工具失败的方式。没有它，失败的工具与成功的工具将无从区分——前端碰巧放在 `content` 里的内容就是智能体拥有的全部线索。完整的 `ToolMessage` 结构见[消息](/concepts/messages)。
 
-## Human-in-the-Loop Workflows
+## 人在回路工作流
 
-The AG-UI tool system is especially powerful for implementing human-in-the-loop
-workflows. By defining tools that request human input or confirmation,
-developers can create AI experiences that seamlessly blend autonomous operation
-with human judgment.
+AG-UI 的工具系统在实现人在回路工作流方面尤为强大。通过定义请求人类输入或确认的工具，开发者可以创造出把自主运行与人类判断无缝结合的 AI 体验。
 
-For example:
+例如：
 
-1. Agent needs to make an important decision
-2. Agent calls the `confirmAction` tool with details about the decision
-3. Frontend displays a confirmation dialog to the user
-4. User provides their input
-5. Frontend sends the user's decision back to the agent
-6. Agent continues processing with awareness of the user's choice
+1. 智能体需要做一个重要决策
+2. 智能体带上决策细节调用 `confirmAction` 工具
+3. 前端向用户展示确认对话框
+4. 用户给出自己的输入
+5. 前端把用户的决定回传给智能体
+6. 智能体带着对用户选择的认知继续处理
 
-This pattern enables use cases like:
+这一模式支撑的用例包括：
 
-- **Approval workflows**: AI suggests actions that require human approval
-- **Data verification**: Humans verify or correct AI-generated data
-- **Collaborative decision-making**: AI and humans jointly solve complex
-  problems
-- **Supervised learning**: Human feedback improves future AI decisions
+- **审批工作流**：AI 建议需要人类批准的操作
+- **数据校验**：由人类核实或修正 AI 生成的数据
+- **协作决策**：AI 与人类共同解决复杂问题
+- **有监督学习**：人类反馈改进 AI 未来的决策
 
-## CopilotKit Integration
+## CopilotKit 集成
 
-[CopilotKit](https://docs.copilotkit.ai/) provides a simplified way to work with
-AG-UI tools in React applications through its
-[`useCopilotAction`](https://docs.copilotkit.ai/guides/frontend-actions) hook:
+[CopilotKit](https://docs.copilotkit.ai/) 通过其 [`useCopilotAction`](https://docs.copilotkit.ai/guides/frontend-actions) hook，为在 React 应用中使用 AG-UI 工具提供了简化方式：
 
 ```tsx
 import { useCopilotAction } from "@copilotkit/react-core"
@@ -266,14 +226,13 @@ useCopilotAction({
 })
 ```
 
-This approach makes it easy to define tools that integrate with your React
-components and handle the tool execution logic in a clean, declarative way.
+这种方式让定义工具变得简单：工具可以直接与你的 React 组件集成，并以干净、声明式的方式处理工具执行逻辑。
 
-## Tool Examples
+## 工具示例
 
-Here are some common types of tools used in AG-UI applications:
+下面是 AG-UI 应用中常见的几类工具：
 
-### User Confirmation
+### 用户确认
 
 ```typescript
 {
@@ -297,7 +256,7 @@ Here are some common types of tools used in AG-UI applications:
 }
 ```
 
-### Data Retrieval
+### 数据获取
 
 ```typescript
 {
@@ -323,7 +282,7 @@ Here are some common types of tools used in AG-UI applications:
 }
 ```
 
-### User Interface Control
+### 界面控制
 
 ```typescript
 {
@@ -346,7 +305,7 @@ Here are some common types of tools used in AG-UI applications:
 }
 ```
 
-### Content Generation
+### 内容生成
 
 ```typescript
 {
@@ -377,30 +336,19 @@ Here are some common types of tools used in AG-UI applications:
 }
 ```
 
-## Best Practices
+## 最佳实践
 
-When designing tools for AG-UI:
+为 AG-UI 设计工具时：
 
-1. **Clear naming**: Use descriptive, action-oriented names
-2. **Detailed descriptions**: Include thorough descriptions to help the agent
-   understand when and how to use the tool
-3. **Structured parameters**: Define precise parameter schemas with descriptive
-   field names and constraints
-4. **Required fields**: Only mark parameters as required if they're truly
-   necessary
-5. **Error handling**: Implement robust error handling in tool execution code
-6. **User experience**: Design tool UIs that provide appropriate context for
-   human decision-making
+1. **命名清晰**：使用描述性的、面向动作的名称
+2. **描述详尽**：写清楚工具的用途，帮助智能体理解何时以及如何使用它
+3. **参数结构化**：定义精确的参数 schema，字段名要有描述性并加上约束
+4. **必填字段**：只在真正必要时才把参数标记为必填
+5. **错误处理**：在工具执行代码中实现健壮的错误处理
+6. **用户体验**：为人类决策设计能提供恰当上下文的工具 UI
 
-## Conclusion
+## 结语
 
-Tools in AG-UI bridge the gap between AI reasoning and real-world actions,
-enabling sophisticated workflows that combine the strengths of AI and human
-intelligence. By defining tools in the frontend and passing them to agents,
-developers can create interactive experiences where AI and humans collaborate
-efficiently.
+AG-UI 的工具在 AI 推理与真实世界动作之间架起桥梁，支撑起结合 AI 与人类智慧各自优势的精细工作流。通过在前端定义工具并传给智能体，开发者可以打造出 AI 与人类高效协作的交互体验。
 
-The tool system is particularly powerful for implementing human-in-the-loop
-workflows, where AI can suggest actions but defer critical decisions to humans.
-This balances automation with human judgment, creating AI experiences that are
-both powerful and trustworthy.
+工具系统在实现人在回路工作流方面尤其强大：AI 可以建议操作，但把关键决策留给人类。这在自动化与人类判断之间取得平衡，造就既强大又可信的 AI 体验。
