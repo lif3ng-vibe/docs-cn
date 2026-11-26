@@ -423,12 +423,20 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://lif3ng-vibe.github.io/docs-cn/${SLUG}/"
+          MISS=0
           if [ "${COMPARE_ONLY:-}" = "true" ]; then
             echo "compare-only：站点此前已合并上线，跳过 deploy 轮询，直接验证 URL"
           else
           echo "等待 deploy-pages 完成（合并提交 ${MERGE_SHA:-unknown}），新站冷同步最长约 20 分钟…"
           for i in $(seq 1 60); do
             ROW="$(gh run list -R lif3ng-vibe/docs-cn -w "Deploy to GitHub Pages" -L 6 --json headSha,status,conclusion --jq "[.[] | select(.headSha==\"${MERGE_SHA:-}\")][0]" 2>/dev/null || true)"
+            # 连续 3 次无匹配 run = 合并推送没有产生新部署（分支与 master 已同步，无新内容）→ 直接落 URL 验证
+            if [ -z "$ROW" ]; then
+              MISS=$((MISS + 1))
+              [ "$MISS" -ge 3 ] && { echo "合并提交无对应 deploy run（无新内容需要部署），跳过轮询"; break; }
+            else
+              MISS=0
+            fi
             ST="$(printf '%s' "$ROW" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{console.log(JSON.parse(d).status||"")}catch{console.log("")}})')"
             CC="$(printf '%s' "$ROW" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{console.log(JSON.parse(d).conclusion||"")}catch{console.log("")}})')"
             [ -n "$ST" ] || { sleep 30; continue; }
