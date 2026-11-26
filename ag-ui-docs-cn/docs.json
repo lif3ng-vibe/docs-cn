@@ -308,17 +308,17 @@
       "anchors": [
         {
           "anchor": "TypeScript SDK",
-          "href": "https://docs.ag-ui.com/sdk/js/core/overview",
+          "href": "/sdk/js/core/overview",
           "icon": "square-js"
         },
         {
           "anchor": "Python SDK",
-          "href": "https://docs.ag-ui.com/sdk/python/core/overview",
+          "href": "/sdk/python/core/overview",
           "icon": "python"
         },
         {
           "anchor": ".NET SDK",
-          "href": "https://docs.ag-ui.com/sdk/dotnet/abstractions/overview",
+          "href": "/sdk/dotnet/abstractions/overview",
           "icon": "/logo/dotnet.svg"
         }
       ]

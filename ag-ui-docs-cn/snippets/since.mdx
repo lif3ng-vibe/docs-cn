@@ -1,5 +1,5 @@
 export const Since = ({ version, pr }) => {
-  const label = `New in ${version}`;
+  const label = `${version} 新增`;
   const style = {
     display: "inline-block",
     padding: "0.1em 0.55em",
@@ -17,12 +17,12 @@ export const Since = ({ version, pr }) => {
     <a
       href={`https://github.com/ag-ui-protocol/ag-ui/pull/${pr}`}
       style={style}
-      title={`Added in AG-UI ${version} (PR #${pr})`}
+      title={`AG-UI ${version} 新增（PR #${pr}）`}
     >
       {label} · #{pr}
     </a>
   ) : (
-    <span style={style} title={`Added in AG-UI ${version}`}>
+    <span style={style} title={`AG-UI ${version} 新增`}>
       {label}
     </span>
   );
