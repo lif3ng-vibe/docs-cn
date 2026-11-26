@@ -84,6 +84,9 @@ jobs:
           esac
           if [ "$SKIP" = "1" ]; then
             echo "DOCS_RUN=false" >> "$GITHUB_ENV"
+            # 哨兵：CLAUDE_CODE 不留空。GitHub 表达式里 '' == '0' 会被数字强转判真，
+            # 后续 startsWith/比较依赖非空非数字的明确值
+            echo "CLAUDE_CODE=skipped" >> "$GITHUB_ENV"
             exit 0
           fi
           PERM="$(gh api "repos/${{ github.repository }}/collaborators/$SENDER/permission" --jq .permission)"
@@ -257,20 +260,20 @@ jobs:
           exit 0
 
       - name: 读取状态契约（done / paused:*）
-        if: success() && env.CLAUDE_CODE == '0'
+        if: success() && startsWith(env.CLAUDE_CODE, '0')
         run: |
           STATUS="$(cat "${SLUG}-docs-cn/.translation-state/STATUS" 2>/dev/null || echo unknown)"
           echo "CLAUDE_STATUS=$STATUS" >> "$GITHUB_ENV"
           echo "claude 退出码=$CLAUDE_CODE，STATUS=$STATUS"
 
       - name: 暂停等待用户输入（claude 已回帖提问，本 run 正常结束）
-        if: success() && env.CLAUDE_CODE == '0' && startsWith(env.CLAUDE_STATUS, 'paused')
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && startsWith(env.CLAUDE_STATUS, 'paused')
         run: |
           echo "STATUS=${CLAUDE_STATUS}——claude 已在 issue #${ISSUE_NUMBER} 回帖说明并打 label。"
           echo "用户回复 /reply <答复> 或 /continue 后由新 run 断点续跑；本 run 不建 PR、正常结束。"
 
       - name: 产物校验（项目目录 + sites.json 收录）
-        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done'
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done'
         run: |
           set -euo pipefail
           [ -d "${SLUG}-docs-cn" ] || { echo "::error::项目目录 ${SLUG}-docs-cn 不存在"; exit 1; }
@@ -278,7 +281,7 @@ jobs:
           echo "产物校验通过"
 
       - name: 兜底残留提交 + 最终 push
-        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done'
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done'
         run: |
           set -euo pipefail
           git add -A -- "${SLUG}-docs-cn"
@@ -288,7 +291,7 @@ jobs:
           git push origin "translate/$SLUG"
 
       - name: 自动合并上线（auto 模式：合入 master 触发部署）
-        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto'
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -310,7 +313,7 @@ jobs:
           fi
 
       - name: 创建 PR + 回帖 + 收 label（review 模式）
-        if: success() && env.CLAUDE_CODE == '0' && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE != 'auto'
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE != 'auto'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -347,7 +350,7 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --add-label awaiting-review || true
 
       - name: 失败回帖（429/静默退出 → quota-blocked；其他 → blocked + /continue 指引）
-        if: always() && env.CLAUDE_CODE != '' && (env.CLAUDE_CODE != '0' || failure() || env.CLAUDE_STATUS == 'unknown')
+        if: always() && env.DOCS_RUN != 'false' && (!startsWith(env.CLAUDE_CODE, '0') || failure() || env.CLAUDE_STATUS == 'unknown')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -386,7 +389,7 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL" || true
 
       - name: 失败转红（回帖已发，job 状态要如实）
-        if: always() && env.CLAUDE_CODE != '' && env.CLAUDE_CODE != '0'
+        if: always() && env.DOCS_RUN != 'false' && !startsWith(env.CLAUDE_CODE, '0')
         run: |
           echo "::error::claude 退出码 $CLAUDE_CODE——失败详情与 /continue 指引见 issue #${ISSUE_NUMBER} 回帖"
           exit 1
